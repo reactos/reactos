@@ -110,7 +110,7 @@ IopInitDriverImplementation(VOID)
    IoDriverObjectType->OkayToClose = NULL;
    IoDriverObjectType->Create = IopCreateDriver;
    IoDriverObjectType->DuplicationNotify = NULL;
-   RtlRosInitUnicodeStringFromLiteral(&IoDriverObjectType->TypeName, L"Driver");
+   RtlInitUnicodeString(&IoDriverObjectType->TypeName, L"Driver");
 
    ObpCreateTypeObject(IoDriverObjectType);
 

@@ -240,10 +240,22 @@ struct ohci_regs {
 #define OHCI_CTRL_RWE	(1 << 10)	/* remote wakeup enable */
 
 /* pre-shifted values for HCFS */
-#	define OHCI_USB_RESET	(0 << 6)
-#	define OHCI_USB_RESUME	(1 << 6)
-#	define OHCI_USB_OPER	(2 << 6)
-#	define OHCI_USB_SUSPEND	(3 << 6)
+#define OHCI_USB_RESET	(0 << 6)
+#define OHCI_USB_RESUME	(1 << 6)
+#define OHCI_USB_OPER	(2 << 6)
+#define OHCI_USB_SUSPEND (3 << 6)
+
+// HCFS itself
+static char *hcfs2string (int state)
+{
+	switch (state) {
+		case OHCI_USB_RESET: return "reset";
+		case OHCI_USB_RESUME: return "resume";
+		case OHCI_USB_OPER: return "operational";
+		case OHCI_USB_SUSPEND: return "suspend";
+	}
+	return "?";
+}
 
 /*
  * HcCommandStatus (cmdstatus) register masks

@@ -15,7 +15,6 @@
 	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-lgcc</linkerflag>
 	<library>wine</library>
-	<library>wine_unicode</library>
 	<library>uuid</library>
 	<library>msvcrt</library>
 	<library>ntdll</library>

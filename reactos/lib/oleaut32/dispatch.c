@@ -256,9 +256,11 @@ static HRESULT WINAPI StdDispatch_QueryInterface(
 static ULONG WINAPI StdDispatch_AddRef(LPDISPATCH iface)
 {
     StdDispatch *This = (StdDispatch *)iface;
-    TRACE("()\n");
+    ULONG refCount = InterlockedIncrement(&This->ref);
 
-    return InterlockedIncrement(&This->ref);
+    TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
+
+    return refCount;
 }
 
 /******************************************************************************
@@ -269,18 +271,17 @@ static ULONG WINAPI StdDispatch_AddRef(LPDISPATCH iface)
 static ULONG WINAPI StdDispatch_Release(LPDISPATCH iface)
 {
     StdDispatch *This = (StdDispatch *)iface;
-    ULONG ref;
-    TRACE("(%p)->()\n", This);
+    ULONG refCount = InterlockedDecrement(&This->ref);
 
-    ref = InterlockedDecrement(&This->ref);
+    TRACE("(%p)->(ref before=%lu)\n", This, refCount + 1);
 
-    if (ref == 0)
+    if (!refCount)
     {
         ITypeInfo_Release(This->pTypeInfo);
         CoTaskMemFree(This);
     }
 
-    return ref;
+    return refCount;
 }
 
 /******************************************************************************

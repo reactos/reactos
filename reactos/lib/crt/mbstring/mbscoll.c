@@ -8,7 +8,7 @@
  *              12/04/99: Created
  */
 
-#include <msvcrt/mbstring.h>
+#include <mbstring.h>
 
 int colldif(unsigned short c1, unsigned short c2);
 

@@ -17,6 +17,8 @@ typedef enum
 
 typedef struct _WINSTATION_OBJECT
 {
+  PVOID SharedHeap; /* points to kmode memory! */
+
   CSHORT Type;
   CSHORT Size;
   KSPIN_LOCK Lock;
@@ -44,6 +46,8 @@ typedef struct _WINSTATION_OBJECT
 
 typedef struct _DESKTOP_OBJECT
 {
+  PVOID DesktopHeap; /* points to kmode memory! */
+
   CSHORT Type;
   CSHORT Size;
   LIST_ENTRY ListEntry;
@@ -119,6 +123,9 @@ ExfpInterlockedExchange64(LONGLONG volatile * Destination,
 
 NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
+
+NTSTATUS
+ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
 
 #define InterlockedDecrementUL(Addend) \
    (ULONG)InterlockedDecrement((PLONG)(Addend))

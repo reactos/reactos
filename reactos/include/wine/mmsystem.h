@@ -25,6 +25,7 @@
 
 #define DRV_SUCCESS		0x0001
 #define DRV_FAILURE		0x0000
+#define DRV_EXITAPPLICATION     0x000C
 
 #define MCI_OPEN_DRIVER			0x0801
 #define MCI_CLOSE_DRIVER		0x0802
@@ -34,10 +35,21 @@
 
 typedef LPCSTR		HPCSTR;         /* a huge version of LPCSTR */
 
-typedef struct tagMCI_SOUND_PARMS {
-       DWORD_PTR dwCallback;
-	LPCSTR  lpstrSoundName;
-} MCI_SOUND_PARMS, *LPMCI_SOUND_PARMS;
+typedef struct tagMCI_SOUND_PARMSA {
+    DWORD_PTR   dwCallback;
+    LPCSTR      lpstrSoundName;
+} MCI_SOUND_PARMSA, *LPMCI_SOUND_PARMSA;
+
+typedef struct tagMCI_SOUND_PARMSW {
+    DWORD_PTR   dwCallback;
+    LPCWSTR     lpstrSoundName;
+} MCI_SOUND_PARMSW, *LPMCI_SOUND_PARMSW;
+
+#ifdef UNICODE
+typedef MCI_SOUND_PARMSW MCI_SOUND_PARMS;
+#else
+typedef MCI_SOUND_PARMSA MCI_SOUND_PARMS;
+#endif
 
 typedef struct midievent_tag *LPMIDIEVENT;
 

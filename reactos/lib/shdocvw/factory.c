@@ -36,16 +36,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 static HRESULT WINAPI WBCF_QueryInterface(LPCLASSFACTORY iface,
                                           REFIID riid, LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-
-    TRACE ("\n");
-
-    /*
-     * Perform a sanity check on the parameters.
-     */
-    if ((This == NULL) || (ppobj == NULL) )
-        return E_INVALIDARG;
-
+    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+    
+    if (ppobj == NULL) return E_POINTER;
+    
     return E_NOINTERFACE;
 }
 
@@ -54,10 +48,9 @@ static HRESULT WINAPI WBCF_QueryInterface(LPCLASSFACTORY iface,
  */
 static ULONG WINAPI WBCF_AddRef(LPCLASSFACTORY iface)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    SHDOCVW_LockModule();
 
-    TRACE("\n");
-    return ++(This->ref);
+    return 2; /* non-heap based object */
 }
 
 /************************************************************************
@@ -65,11 +58,9 @@ static ULONG WINAPI WBCF_AddRef(LPCLASSFACTORY iface)
  */
 static ULONG WINAPI WBCF_Release(LPCLASSFACTORY iface)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    SHDOCVW_UnlockModule();
 
-    /* static class, won't be freed */
-    TRACE("\n");
-    return --(This->ref);
+    return 1; /* non-heap based object */
 }
 
 /************************************************************************
@@ -104,8 +95,13 @@ static HRESULT WINAPI WBCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOuter
  */
 static HRESULT WINAPI WBCF_LockServer(LPCLASSFACTORY iface, BOOL dolock)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-    FIXME("(%p)->(%d),stub!\n", This, dolock);
+    TRACE("(%d)\n", dolock);
+
+    if (dolock)
+	    SHDOCVW_LockModule();
+    else
+	    SHDOCVW_UnlockModule();
+    
     return S_OK;
 }
 
@@ -118,4 +114,4 @@ static IClassFactoryVtbl WBCF_Vtbl =
     WBCF_LockServer
 };
 
-IClassFactoryImpl SHDOCVW_ClassFactory = { &WBCF_Vtbl, 1 };
+IClassFactoryImpl SHDOCVW_ClassFactory = {&WBCF_Vtbl};

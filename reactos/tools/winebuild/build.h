@@ -207,4 +207,7 @@ extern const char *output_file_name;
 extern char **debug_channels;
 extern char **lib_path;
 
+extern char *ld_command;
+extern char *nm_command;
+
 #endif  /* __WINE_BUILD_H */

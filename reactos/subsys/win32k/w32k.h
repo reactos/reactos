@@ -28,6 +28,7 @@
 #include <rosrtl/string.h>
 #include <user32/callback.h>
 
+#include <include/ssec.h>
 #include <include/accelerator.h>
 #include <include/callback.h>
 #include <include/caret.h>

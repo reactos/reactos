@@ -18,7 +18,7 @@
 @ stub CM_Add_Range
 @ stub CM_Add_Res_Des
 @ stub CM_Add_Res_Des_Ex
-@ stub CM_Connect_MachineA
+@ stdcall CM_Connect_MachineA(str ptr)
 @ stdcall CM_Connect_MachineW(wstr ptr)
 @ stub CM_Create_DevNodeA
 @ stub CM_Create_DevNodeW
@@ -75,14 +75,14 @@
 @ stub CM_Get_Device_IDW
 @ stub CM_Get_Device_ID_ExA
 @ stub CM_Get_Device_ID_ExW
-@ stdcall CM_Get_Device_ID_ListA(ptr ptr long long)
-@ stub CM_Get_Device_ID_ListW
-@ stub CM_Get_Device_ID_List_ExA
-@ stub CM_Get_Device_ID_List_ExW
-@ stub CM_Get_Device_ID_List_SizeA
-@ stub CM_Get_Device_ID_List_SizeW
-@ stub CM_Get_Device_ID_List_Size_ExA
-@ stub CM_Get_Device_ID_List_Size_ExW
+@ stdcall CM_Get_Device_ID_ListA(str str long long)
+@ stdcall CM_Get_Device_ID_ListW(wstr wstr long long)
+@ stdcall CM_Get_Device_ID_List_ExA(str str long long long)
+@ stdcall CM_Get_Device_ID_List_ExW(wstr wstr long long long)
+@ stdcall CM_Get_Device_ID_List_SizeA(ptr str long)
+@ stdcall CM_Get_Device_ID_List_SizeW(ptr wstr long)
+@ stdcall CM_Get_Device_ID_List_Size_ExA(ptr str long long)
+@ stdcall CM_Get_Device_ID_List_Size_ExW(ptr wstr long long)
 @ stub CM_Get_Device_ID_Size
 @ stub CM_Get_Device_ID_Size_Ex
 @ stub CM_Get_Device_Interface_AliasA
@@ -190,8 +190,8 @@
 @ stub CM_Unregister_Device_InterfaceW
 @ stub CM_Unregister_Device_Interface_ExA
 @ stub CM_Unregister_Device_Interface_ExW
-@ stub CaptureAndConvertAnsiArg
-@ stub CaptureStringArg
+@ stdcall CaptureAndConvertAnsiArg(str ptr)
+@ stdcall CaptureStringArg(wstr ptr)
 @ stub CenterWindowRelativeToParent
 @ stub ConcatenatePaths
 @ stdcall DelayedMove(wstr wstr)

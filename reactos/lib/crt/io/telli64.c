@@ -1,5 +1,6 @@
-#include <msvcrt/errno.h>
-#include <msvcrt/io.h>
+#include <errno.h>
+#include <io.h>
+#include <stdio.h>
 
 
 /*

@@ -108,12 +108,12 @@ typedef struct _FILE_USER_QUOTA_INFORMATION {
 
 #ifndef __USE_NT_LPC__
 NTSTATUS STDCALL
-NtAcceptConnectPort (PHANDLE PortHandle,
-		     HANDLE NamedPortHandle,
-		     PLPC_MESSAGE ServerReply,
-		     BOOLEAN AcceptIt,
-		     PLPC_SECTION_WRITE WriteMap,
-		     PLPC_SECTION_READ ReadMap);
+NtAcceptConnectPort (OUT PHANDLE PortHandle,
+		     IN  PVOID Context,
+		     IN  PLPC_MESSAGE ServerReply,
+		     IN  BOOLEAN AcceptIt,
+		     IN  PLPC_SECTION_WRITE WriteMap,
+		     IN  PLPC_SECTION_READ ReadMap);
 #else
 NTSTATUS STDCALL
 NtAcceptConnectPort (PHANDLE PortHandle,
@@ -4423,28 +4423,28 @@ ZwShutdownSystem(
 /*
  * FUNCTION: Signals an object and wait for an other one.
  * ARGUMENTS: 
- *        SignalObject = Handle to the object that should be signaled
- *        WaitObject = Handle to the object that should be waited for
+ *        ObjectHandleToSignal = Handle to the object that should be signaled
+ *        WaitableObjectHandle = Handle to the object that should be waited for
  *        Alertable = True if the wait is alertable
- *        Time = The time to wait
+ *        TimeOut = The time to wait
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtSignalAndWaitForSingleObject(
-	IN	HANDLE		SignalObject,
-	IN	HANDLE		WaitObject,
+	IN	HANDLE		ObjectHandleToSignal,
+	IN	HANDLE		WaitableObjectHandle,
 	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time
+	IN	PLARGE_INTEGER	TimeOut  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 NtSignalAndWaitForSingleObject(
-	IN	HANDLE		SignalObject,
-	IN	HANDLE		WaitObject,
+	IN	HANDLE		ObjectHandleToSignal,
+	IN	HANDLE		WaitableObjectHandle,
 	IN	BOOLEAN		Alertable,
-	IN	PLARGE_INTEGER	Time
+	IN	PLARGE_INTEGER	TimeOut  OPTIONAL
 	);
 
 /*
@@ -4651,9 +4651,9 @@ ZwWriteVirtualMemory(
 /*
  * FUNCTION: Waits for an object to become signalled.
  * ARGUMENTS: 
- *       Object = The object handle
+ *       ObjectHandle = The object handle
  *       Alertable = If true the wait is alertable.
- *       Time = The maximum wait time.
+ *       TimeOut = The maximum wait time.
  * REMARKS:
  *       This function maps to the win32 WaitForSingleObjectEx.
  * RETURNS: Status
@@ -4661,17 +4661,17 @@ ZwWriteVirtualMemory(
 NTSTATUS
 STDCALL
 NtWaitForSingleObject (
-	IN HANDLE Object,
+	IN HANDLE ObjectHandle,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
+	IN PLARGE_INTEGER TimeOut  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwWaitForSingleObject (
-	IN HANDLE Object,
+	IN HANDLE ObjectHandle,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
+	IN PLARGE_INTEGER TimeOut  OPTIONAL
 	);
 
 /* --- EVENT PAIR OBJECT --- */
@@ -5420,10 +5420,10 @@ NTSTATUS
 STDCALL
 NtQuerySection(
 	IN HANDLE SectionHandle,
-	IN CINT SectionInformationClass,
+	IN SECTION_INFORMATION_CLASS SectionInformationClass,
 	OUT PVOID SectionInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN ULONG SectionInformationLength,
+	OUT PULONG ResultLength  OPTIONAL
 	);
 
 /*
@@ -5457,11 +5457,11 @@ NtQueryVirtualMemory(
  * FUNCTION: Raises a hard error (stops the system)
  * ARGUMENTS:
  *	  Status = Status code of the hard error
- *	  Unknown2 = ??
- *	  Unknown3 = ??
- *	  Unknown4 = ??
- *	  Unknown5 = ??
- *	  Unknown6 = ??
+ *	  NumberOfParameters = Number of (optional) parameters in Parameters
+ *	  UnicodeStringParameterMask = (optional) string parameter, one per error code
+ *	  Parameters = An Array of pointers for use in the error message string
+ *	  ResponseOption = Specifies the type of the message box
+ *	  Response = Specifies the user's response
  * RETURNS: Status
  *
  */
@@ -5469,12 +5469,12 @@ NtQueryVirtualMemory(
 NTSTATUS
 STDCALL
 NtRaiseHardError(
-	IN NTSTATUS Status,
-	ULONG Unknown2,
-	ULONG Unknown3,
-	ULONG Unknown4,
-	ULONG Unknown5,
-	ULONG Unknown6
+	IN NTSTATUS ErrorStatus,
+	IN ULONG NumberOfParameters,
+	IN PUNICODE_STRING UnicodeStringParameterMask  OPTIONAL,
+	IN PVOID *Parameters,
+	IN HARDERROR_RESPONSE_OPTION ResponseOption,
+	OUT PHARDERROR_RESPONSE Response
 	);
 
 /*
@@ -5583,11 +5583,11 @@ NtUnlockVirtualMemory(
 /*
  * FUNCTION: Waits for multiple objects to become signalled.
  * ARGUMENTS: 
- *       Count = The number of objects
- *       Object = The array of object handles
+ *       ObjectCount = The number of objects
+ *       ObjectsArray = The array of object handles
  *       WaitType = Can be one of the values UserMode or KernelMode
  *       Alertable = If true the wait is alertable.
- *       Time = The maximum wait time.
+ *       TimeOut = The maximum wait time.
  * REMARKS:
  *       This function maps to the win32 WaitForMultipleObjectEx.
  * RETURNS: Status
@@ -5595,11 +5595,11 @@ NtUnlockVirtualMemory(
 NTSTATUS
 STDCALL
 NtWaitForMultipleObjects (
-	IN ULONG Count,
-	IN HANDLE Object[],
+	IN ULONG ObjectCount,
+	IN PHANDLE ObjectsArray,
 	IN WAIT_TYPE WaitType,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
+	IN PLARGE_INTEGER TimeOut  OPTIONAL
 	);
 
 
@@ -6186,23 +6186,24 @@ ZwQueryVirtualMemory(
  * FUNCTION: Raises a hard error (stops the system)
  * ARGUMENTS:
  *	  Status = Status code of the hard error
- *	  Unknown2 = ??
- *	  Unknown3 = ??
- *	  Unknown4 = ??
- *	  Unknown5 = ??
- *	  Unknown6 = ??
+ *	  NumberOfParameters = Number of (optional) parameters in Parameters
+ *	  UnicodeStringParameterMask = (optional) string parameter, one per error code
+ *	  Parameters = An Array of pointers for use in the error message string
+ *	  ResponseOption = Specifies the type of the message box
+ *	  Response = Specifies the user's response
  * RETURNS: Status
  *
  */
+
 NTSTATUS
 STDCALL
 ZwRaiseHardError(
-	IN NTSTATUS Status,
-	ULONG Unknown2,
-	ULONG Unknown3,
-	ULONG Unknown4,
-	ULONG Unknown5,
-	ULONG Unknown6
+	IN NTSTATUS ErrorStatus,
+	IN ULONG NumberOfParameters,
+	IN PUNICODE_STRING UnicodeStringParameterMask  OPTIONAL,
+	IN PVOID *Parameters,
+	IN HARDERROR_RESPONSE_OPTION ResponseOption,
+	OUT PHARDERROR_RESPONSE Response
 	);
 
 /*
@@ -6356,11 +6357,11 @@ ZwUnlockVirtualMemory(
 /*
  * FUNCTION: Waits for multiple objects to become signalled.
  * ARGUMENTS: 
- *       Count = The number of objects
- *       Object = The array of object handles
+ *       ObjectCount = The number of objects
+ *       ObjectsArray = The array of object handles
  *       WaitType = Can be one of the values UserMode or KernelMode
  *       Alertable = If true the wait is alertable.
- *       Time = The maximum wait time.
+ *       TimeOut = The maximum wait time.
  * REMARKS:
  *       This function maps to the win32 WaitForMultipleObjectEx.
  * RETURNS: Status
@@ -6368,11 +6369,11 @@ ZwUnlockVirtualMemory(
 NTSTATUS
 STDCALL
 ZwWaitForMultipleObjects (
-	IN ULONG Count,
-	IN HANDLE Object[],
+	IN ULONG ObjectCount,
+	IN PHANDLE ObjectsArray,
 	IN WAIT_TYPE WaitType,
 	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
+	IN PLARGE_INTEGER TimeOut  OPTIONAL
 	);
 
 /*
@@ -6450,10 +6451,10 @@ NTSTATUS
 STDCALL
 ZwQuerySection(
 	IN HANDLE SectionHandle,
-	IN CINT SectionInformationClass,
+	IN SECTION_INFORMATION_CLASS SectionInformationClass,
 	OUT PVOID SectionInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN ULONG SectionInformationLength,
+	OUT PULONG ResultLength  OPTIONAL
 	);
 
 typedef struct _SECTION_IMAGE_INFORMATION

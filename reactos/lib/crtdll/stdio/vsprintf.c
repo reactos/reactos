@@ -8,7 +8,7 @@
  * @implemented
  */
 int
-vsprintf(char *str, const char *fmt, va_list ap)
+crt_vsprintf(char *str, const char *fmt, va_list ap)
 {
   FILE f;
   int len;
@@ -63,7 +63,7 @@ _vsnprintf(char *str, size_t maxlen, const char *fmt, va_list ap)
  * @implemented
  */
 int
-_vsnwprintf(wchar_t *str, size_t maxlen, const wchar_t *fmt, va_list ap)
+crt__vsnwprintf(wchar_t *str, size_t maxlen, const wchar_t *fmt, va_list ap)
 {
   FILE f;
   int len;

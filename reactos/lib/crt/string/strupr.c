@@ -9,8 +9,8 @@
  */
 
 
-#include <msvcrt/string.h>
-#include <msvcrt/ctype.h>
+#include <string.h>
+#include <ctype.h>
 
 /*
  * @implemented

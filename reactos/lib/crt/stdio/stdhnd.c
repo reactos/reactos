@@ -1,8 +1,8 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <internal/file.h>
 
-FILE _iob[5] =
+FILE _iob[20] =
 {
 	// stdin
 {
@@ -21,18 +21,6 @@ FILE _iob[5] =
  NULL, 0, NULL,
   _IOWRT | _IONBF,
   2,0,0, NULL
-},
-	// stdaux
-{
- NULL, 0, NULL,
-   _IOREAD | _IOWRT | _IONBF,
-  3,0,0, NULL
-},
-	// stdprn
-{
- NULL, 0, NULL,
-  _IOWRT | _IONBF,
-  4, 0,0,NULL
 }
 };
 

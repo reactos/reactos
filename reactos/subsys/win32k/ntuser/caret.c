@@ -240,11 +240,13 @@ NtUserCreateCaret(
     return FALSE;
   }
   
-  IntKillTimer(hWnd, IDCARETTIMER, TRUE);
-  
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-  
-  IntHideCaret(ThreadQueue->CaretInfo);
+
+  if (ThreadQueue->CaretInfo->Visible)
+  {
+    IntKillTimer(hWnd, IDCARETTIMER, TRUE);
+    IntHideCaret(ThreadQueue->CaretInfo);
+  }
   
   ThreadQueue->CaretInfo->hWnd = hWnd;
   if(hBitmap)

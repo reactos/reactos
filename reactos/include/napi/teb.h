@@ -105,8 +105,8 @@ typedef struct _PEB
    UCHAR InheritedAddressSpace;                     /* 00h */
    UCHAR ReadImageFileExecOptions;                  /* 01h */
    UCHAR BeingDebugged;                             /* 02h */
-   UCHAR Spare;                                     /* 03h */
-   PVOID Mutant;                                    /* 04h */
+   BOOLEAN SpareBool;                               /* 03h */
+   HANDLE Mutant;                                   /* 04h */
    PVOID ImageBaseAddress;                          /* 08h */
    PPEB_LDR_DATA Ldr;                               /* 0Ch */
    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;  /* 10h */
@@ -131,7 +131,6 @@ typedef struct _PEB
    PVOID UnicodeCaseTableData;                      /* 60h */
    ULONG NumberOfProcessors;                        /* 64h */
    ULONG NtGlobalFlag;                              /* 68h */
-   UCHAR Spare2[0x4];                               /* 6Ch */
    LARGE_INTEGER CriticalSectionTimeout;            /* 70h */
    ULONG HeapSegmentReserve;                        /* 78h */
    ULONG HeapSegmentCommit;                         /* 7Ch */
@@ -139,7 +138,7 @@ typedef struct _PEB
    ULONG HeapDeCommitFreeBlockThreshold;            /* 84h */
    ULONG NumberOfHeaps;                             /* 88h */
    ULONG MaximumNumberOfHeaps;                      /* 8Ch */
-   PVOID** ProcessHeaps;                            /* 90h */
+   PVOID* ProcessHeaps;                             /* 90h */
    PVOID GdiSharedHandleTable;                      /* 94h */
    PVOID ProcessStarterHelper;                      /* 98h */
    PVOID GdiDCAttributeList;                        /* 9Ch */
@@ -147,13 +146,19 @@ typedef struct _PEB
    ULONG OSMajorVersion;                            /* A4h */
    ULONG OSMinorVersion;                            /* A8h */
    USHORT OSBuildNumber;                            /* ACh */
-   UCHAR SPMajorVersion;                            /* AEh */
-   UCHAR SPMinorVersion;                            /* AFh */
+   USHORT OSCSDVersion;                             /* AEh */
    ULONG OSPlatformId;                              /* B0h */
    ULONG ImageSubSystem;                            /* B4h */
    ULONG ImageSubSystemMajorVersion;                /* B8h */
-   ULONG ImageSubSystemMinorVersion;                /* C0h */
+   ULONG ImageSubSystemMinorVersion;                /* BCh */
+   ULONG ImageProcessAffinityMask;                  /* C0h */
    ULONG GdiHandleBuffer[0x22];                     /* C4h */
+   PVOID PostProcessInitRoutine;                    /* 14Ch */
+   PVOID *TlsExpansionBitmap;                       /* 150h */
+   ULONG TlsExpansionBitmapBits[0x20];              /* 154h */
+   ULONG SessionId;                                 /* 1D4h */
+   PVOID AppCompatInfo;                             /* 1D8h */
+   UNICODE_STRING CSDVersion;                       /* 1DCh */
 } PEB;
 
 #ifndef __USE_W32API

@@ -35,6 +35,7 @@
 #define ID_GO_SEARCH                    40008
 #define ID_GO_UP                        40009
 #define ID_STOP                         40010
+#define ID_FILE_OPEN                    0xE140
 #define ID_FILE_EXIT                    0xE141
 #define ID_HELP                         0xE146
 #define IDC_STATIC                      -1

@@ -115,6 +115,14 @@ generated .def file. Only meaningful in \fB--def\fR mode.
 .BI \-K\  flags
 Ignored for compatibility with the C compiler.
 .TP
+.BI \--ld-cmd= ld-command
+Specify the command to use to link the object files; the default is
+\fBld\fR.
+.TP
+.BI \--nm-cmd= nm-command
+Specify the command to use to get the list of undefined symbols; the
+default is \fBnm\fR.
+.TP
 .BI \-L,\ --library-path= directory
 Append the specified directory to the list of directories that are
 searched for import libraries.

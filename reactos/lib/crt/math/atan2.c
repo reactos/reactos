@@ -1,5 +1,5 @@
 
-#include <msvcrt/math.h>
+#include <math.h>
 
 double atan2 (double __y, double __x);
 

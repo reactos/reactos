@@ -245,6 +245,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
   // shouldn't we initialize the lock event, and several other things here too?
   KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
+  KeInitializeEvent(&CreatedFileObject->Lock, SynchronizationEvent, TRUE);
 
   return CreatedFileObject;
 }

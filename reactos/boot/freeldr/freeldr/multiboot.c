@@ -4,7 +4,7 @@
  * FILE:            boot/freeldr/freeldr/multiboot.c
  * PURPOSE:         ReactOS Loader
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Hartmutt Birr - SMP/PAE Code
+ *                  Hartmut Birr - SMP/PAE Code
  */
 
 #include <freeldr.h>
@@ -54,7 +54,7 @@
 #define ApicPageTableIndexPae       (APIC_BASE >> 21)
 
 
-#define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) +  KernelBase
+#define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
 
 /* Load Address of Next Module */
 ULONG_PTR NextModuleBase = 0;
@@ -217,7 +217,7 @@ FrLdrSetupPae(ULONG Magic)
     /* Jump to Kernel */
     PagedJump = (ASMCODE)KernelEntryPoint;
     PagedJump(Magic, &LoaderBlock);
- }
+}
 
 /*++
  * FrLdrGetKernelBase 
@@ -239,27 +239,24 @@ VOID
 FASTCALL
 FrLdrGetKernelBase(VOID)
 {
-    PCHAR p1;
-    PCHAR p2;
+    PCHAR p;
      
     /* Read Command Line */
-    for(p1 = (PCHAR)&LoaderBlock.CommandLine; *p1 && (p2 = strchr(p1, '/')); p2++) {
+    p = (PCHAR)LoaderBlock.CommandLine;
+    while ((p = strchr(p, '/')) != NULL) {
         
         /* Find "/3GB" */
-        if (!strnicmp(p2, "3GB", 3)) {
+        if (!strnicmp(p + 1, "3GB", 3)) {
             
             /* Make sure there's nothing following it */
-            if (p2[3] == ' ' || p2[3] == 0) {
+            if (p[4] == ' ' || p[4] == 0) {
                 
                 /* Use 3GB */
                 KernelBase = 0xC0000000;
-                
-            } else {
-            
-                /* Use 2GB */
-                KernelBase = 0x80000000;
             }
         }
+
+        p++;
     }
           
     /* Set KernelBase */

@@ -1,13 +1,13 @@
 
-#include <msvcrt/mbstring.h>
-#include <msvcrt/mbctype.h>
-#include <msvcrt/ctype.h>
+#include <mbstring.h>
+#include <mbctype.h>
+#include <ctype.h>
 
 
 /*
  * @implemented
  */
-int _ismbbpunct(unsigned char c)
+int _ismbbpunct(unsigned int c)
 {
 // (0xA1 <= c <= 0xA6)
   return (ispunct(c) || _ismbbkana(c));

@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       services/fs/np/create.c
+ * FILE:       drivers/fs/np/create.c
  * PURPOSE:    Named pipe filesystem
  * PROGRAMMER: David Welch <welch@cwcom.net>
  */
@@ -48,21 +48,51 @@ static PNPFS_FCB
 NpfsFindListeningServerInstance(PNPFS_PIPE Pipe)
 {
   PLIST_ENTRY CurrentEntry;
-  PNPFS_FCB ServerFcb;
+  PNPFS_WAITER_ENTRY Waiter;
 
-  CurrentEntry = Pipe->ServerFcbListHead.Flink;
-  while (CurrentEntry != &Pipe->ServerFcbListHead)
+  CurrentEntry = Pipe->WaiterListHead.Flink;
+  while (CurrentEntry != &Pipe->WaiterListHead)
     {
-      ServerFcb = CONTAINING_RECORD(CurrentEntry, NPFS_FCB, FcbListEntry);
-      if (ServerFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+      Waiter = CONTAINING_RECORD(CurrentEntry, NPFS_WAITER_ENTRY, Entry);
+      if (Waiter->Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
 	{
-	  DPRINT("Server found! Fcb %p\n", ServerFcb);
-	  return ServerFcb;
+	  DPRINT("Server found! Fcb %p\n", Waiter->Fcb);
+	  return Waiter->Fcb;
 	}
+
       CurrentEntry = CurrentEntry->Flink;
     }
 
   return NULL;
+}
+
+
+static VOID
+NpfsSignalAndRemoveListeningServerInstance(PNPFS_PIPE Pipe,
+					   PNPFS_FCB Fcb)
+{
+  PLIST_ENTRY CurrentEntry;
+  PNPFS_WAITER_ENTRY Waiter;
+
+  CurrentEntry = Pipe->WaiterListHead.Flink;
+  while (CurrentEntry != &Pipe->WaiterListHead)
+    {
+      Waiter = CONTAINING_RECORD(CurrentEntry, NPFS_WAITER_ENTRY, Entry);
+      if (Waiter->Fcb == Fcb)
+	{
+	  DPRINT("Server found! Fcb %p\n", Waiter->Fcb);
+
+	  KeSetEvent(Waiter->Irp->UserEvent, 0, FALSE);
+	  Waiter->Irp->UserIosb->Status = FILE_PIPE_CONNECTED_STATE;
+	  Waiter->Irp->UserIosb->Information = 0;
+	  IoCompleteRequest(Waiter->Irp, IO_NO_INCREMENT);
+
+	  RemoveEntryList(&Waiter->Entry);
+	  ExFreePool(Waiter);
+	  return;
+	}
+      CurrentEntry = CurrentEntry->Flink;
+    }
 }
 
 
@@ -164,9 +194,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   ClientFcb->PipeState = SpecialAccess ? 0 : FILE_PIPE_DISCONNECTED_STATE;
 
   /* Initialize data list. */
-  if (Pipe->InboundQuota)
+  if (Pipe->OutboundQuota)
     {
-      ClientFcb->Data = ExAllocatePool(NonPagedPool, Pipe->InboundQuota);
+      ClientFcb->Data = ExAllocatePool(NonPagedPool, Pipe->OutboundQuota);
       if (ClientFcb->Data == NULL)
         {
           DPRINT("No memory!\n");
@@ -185,8 +215,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   ClientFcb->ReadPtr = ClientFcb->Data;
   ClientFcb->WritePtr = ClientFcb->Data;
   ClientFcb->ReadDataAvailable = 0;
-  ClientFcb->WriteQuotaAvailable = Pipe->InboundQuota;
-  ClientFcb->MaxDataLength = Pipe->InboundQuota;
+  ClientFcb->WriteQuotaAvailable = Pipe->OutboundQuota;
+  ClientFcb->MaxDataLength = Pipe->OutboundQuota;
   KeInitializeSpinLock(&ClientFcb->DataListLock);
   KeInitializeEvent(&ClientFcb->ConnectEvent, SynchronizationEvent, FALSE);
   KeInitializeEvent(&ClientFcb->Event, SynchronizationEvent, FALSE);
@@ -206,9 +236,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
       ClientFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
       ServerFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
 
-      /* Wake server thread */
-      DPRINT("Setting the ConnectEvent for %x\n", ServerFcb);
-      KeSetEvent(&ServerFcb->ConnectEvent, 0, FALSE);
+      /* Signal the server thread and remove it from the waiter list */
+      NpfsSignalAndRemoveListeningServerInstance(Pipe, ServerFcb);
     }
 
   KeUnlockMutex(&Pipe->FcbListLock);
@@ -318,6 +347,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
        InitializeListHead(&Pipe->ServerFcbListHead);
        InitializeListHead(&Pipe->ClientFcbListHead);
+       InitializeListHead(&Pipe->WaiterListHead);
        KeInitializeMutex(&Pipe->FcbListLock, 0);
 
        Pipe->PipeType = Buffer->NamedPipeType;
@@ -381,9 +411,9 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
        KeUnlockMutex(&DeviceExt->PipeListLock);
      }
 
-   if (Pipe->OutboundQuota)
+   if (Pipe->InboundQuota)
      {
-       Fcb->Data = ExAllocatePool(NonPagedPool, Pipe->OutboundQuota);
+       Fcb->Data = ExAllocatePool(NonPagedPool, Pipe->InboundQuota);
        if (Fcb->Data == NULL)
          {
            ExFreePool(Fcb);
@@ -407,8 +437,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    Fcb->ReadPtr = Fcb->Data;
    Fcb->WritePtr = Fcb->Data;
    Fcb->ReadDataAvailable = 0;
-   Fcb->WriteQuotaAvailable = Pipe->OutboundQuota;
-   Fcb->MaxDataLength = Pipe->OutboundQuota;
+   Fcb->WriteQuotaAvailable = Pipe->InboundQuota;
+   Fcb->MaxDataLength = Pipe->InboundQuota;
    KeInitializeSpinLock(&Fcb->DataListLock);
 
    Pipe->CurrentInstances++;
@@ -442,9 +472,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
 
 NTSTATUS STDCALL
-NpfsClose(
-   PDEVICE_OBJECT DeviceObject,
-   PIRP Irp)
+NpfsClose(PDEVICE_OBJECT DeviceObject,
+          PIRP Irp)
 {
    PNPFS_DEVICE_EXTENSION DeviceExt;
    PIO_STACK_LOCATION IoStack;
@@ -493,10 +522,8 @@ NpfsClose(
    {
       if (Fcb->OtherSide)
       {
-#ifndef FIN_WORKAROUND_READCLOSE
          Fcb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
          Fcb->OtherSide->OtherSide = NULL;
-#endif
          /*
           * Signaling the write event. If is possible that an other
           * thread waits for an empty buffer.
@@ -504,39 +531,15 @@ NpfsClose(
          KeSetEvent(&Fcb->OtherSide->Event, IO_NO_INCREMENT, FALSE);
       }
 
-#ifndef FIN_WORKAROUND_READCLOSE
       Fcb->PipeState = 0;
-#endif
    }
 
    FileObject->FsContext = NULL;
 
-#ifndef FIN_WORKAROUND_READCLOSE
    RemoveEntryList(&Fcb->FcbListEntry);
    if (Fcb->Data)
       ExFreePool(Fcb->Data);
    ExFreePool(Fcb);
-#else
-   Fcb->PipeState = FILE_PIPE_CLOSING_STATE;
-   if (Fcb->OtherSide == NULL ||
-       Fcb->OtherSide->PipeState == FILE_PIPE_CLOSING_STATE)
-   {
-      if (Server && Fcb->OtherSide != NULL &&
-          Fcb->OtherSide->PipeState == FILE_PIPE_CLOSING_STATE)
-      {
-         RemoveEntryList(&Fcb->OtherSide->FcbListEntry);
-         if (Fcb->OtherSide->Data)
-            ExFreePool(Fcb->OtherSide->Data);
-	 ExFreePool(Fcb->OtherSide);
-      }
-
-      RemoveEntryList(&Fcb->FcbListEntry);
-      if (Fcb->Data)
-         ExFreePool(Fcb->Data);
-
-      ExFreePool(Fcb);
-   }
-#endif
 
    KeUnlockMutex(&Pipe->FcbListLock);
 

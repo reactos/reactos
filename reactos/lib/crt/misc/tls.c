@@ -1,7 +1,7 @@
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/tls.h>
-#include <msvcrt/internal/rterror.h>
+#include <stdlib.h>
+#include <internal/tls.h>
+#include <internal/rterror.h>
 
 
 static unsigned long TlsIndex = (unsigned long)-1;

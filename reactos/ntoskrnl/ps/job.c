@@ -5,7 +5,8 @@
  * FILE:            ntoskrnl/ps/job.c
  * PURPOSE:         Job Native Functions
  * 
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) (stubs)
+ *                  Thomas Weidenmueller <w3seek@reactos.com>
  */
 
 /* Note: Jobs are only supported on Win2K+ */
@@ -74,7 +75,7 @@ PsInitJobManagment(VOID)
   PsJobType->Create = NULL;
   PsJobType->DuplicationNotify = NULL;
   
-  RtlRosInitUnicodeStringFromLiteral(&PsJobType->TypeName, L"Job");
+  RtlInitUnicodeString(&PsJobType->TypeName, L"Job");
   
   ObpCreateTypeObject(PsJobType);
   
@@ -111,6 +112,8 @@ NtAssignProcessToJobObject(HANDLE JobHandle,
   PEPROCESS Process;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
+  
+  PAGED_CODE();
   
   PreviousMode = ExGetPreviousMode();
   
@@ -199,6 +202,8 @@ NtCreateJobObject(PHANDLE JobHandle,
   KPROCESSOR_MODE PreviousMode;
   PEPROCESS CurrentProcess;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
   CurrentProcess = PsGetCurrentProcess();
@@ -304,6 +309,8 @@ NtIsProcessInJob(IN HANDLE ProcessHandle,
   
   PreviousMode = ExGetPreviousMode();
   
+  PAGED_CODE();
+  
   Status = ObReferenceObjectByHandle(ProcessHandle,
                                      PROCESS_QUERY_INFORMATION,
                                      PsProcessType,
@@ -366,6 +373,8 @@ NtOpenJobObject(PHANDLE JobHandle,
   KPROCESSOR_MODE PreviousMode;
   HANDLE hJob;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
 
@@ -460,6 +469,8 @@ NtTerminateJobObject(HANDLE JobHandle,
   KPROCESSOR_MODE PreviousMode;
   PEJOB Job;
   NTSTATUS Status;
+  
+  PAGED_CODE();
   
   PreviousMode = ExGetPreviousMode();
   

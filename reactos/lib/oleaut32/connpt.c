@@ -196,8 +196,11 @@ static HRESULT WINAPI ConnectionPointImpl_QueryInterface(
 static ULONG WINAPI ConnectionPointImpl_AddRef(IConnectionPoint* iface)
 {
   ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
-  TRACE("(%p)->(ref=%ld)\n", This, This->ref);
-  return InterlockedIncrement(&This->ref);
+  ULONG refCount = InterlockedIncrement(&This->ref);
+
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount - 1);
+
+  return refCount;
 }
 
 /************************************************************************
@@ -209,20 +212,16 @@ static ULONG WINAPI ConnectionPointImpl_Release(
       IConnectionPoint* iface)
 {
   ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
-  ULONG ref;
-  TRACE("(%p)->(ref=%ld)\n", This, This->ref);
+  ULONG refCount = InterlockedDecrement(&This->ref);
 
-  /*
-   * Decrease the reference count on this object.
-   */
-  ref = InterlockedDecrement(&This->ref);
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount + 1);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (ref == 0) ConnectionPointImpl_Destroy(This);
+  if (!refCount) ConnectionPointImpl_Destroy(This);
 
-  return ref;
+  return refCount;
 }
 
 /************************************************************************
@@ -470,11 +469,12 @@ static HRESULT WINAPI EnumConnectionsImpl_QueryInterface(
 static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
 {
   EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
-  ULONG ref;
-  TRACE("(%p)->(ref=%ld)\n", This, This->ref);
-  ref = InterlockedIncrement(&This->ref);
+  ULONG refCount = InterlockedIncrement(&This->ref);
+
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount - 1);
+
   IUnknown_AddRef(This->pUnk);
-  return ref;
+  return refCount;
 }
 
 /************************************************************************
@@ -485,22 +485,18 @@ static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
 static ULONG WINAPI EnumConnectionsImpl_Release(IEnumConnections* iface)
 {
   EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
-  ULONG ref;
-  TRACE("(%p)->(ref=%ld)\n", This, This->ref);
+  ULONG refCount = InterlockedDecrement(&This->ref);
+
+  TRACE("(%p)->(ref before=%ld)\n", This, refCount + 1);
 
   IUnknown_Release(This->pUnk);
 
   /*
-   * Decrease the reference count on this object.
-   */
-  ref = InterlockedDecrement(&This->ref);
-
-  /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (ref == 0) EnumConnectionsImpl_Destroy(This);
+  if (!refCount) EnumConnectionsImpl_Destroy(This);
 
-  return ref;
+  return refCount;
 }
 
 /************************************************************************

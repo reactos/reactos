@@ -101,6 +101,8 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
   
   if(PreviousMode != KernelMode)
@@ -245,6 +247,8 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   ANSI_STRING AName, AValue;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
   
@@ -807,13 +811,106 @@ QSI_DEF(SystemNonPagedPoolInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
+
+VOID
+ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
+                               PEPROCESS Process,
+                               int Count);
+
 /* Class 16 - Handle Information */
 QSI_DEF(SystemHandleInformation)
 {
-	/* FIXME */
-	DPRINT1("NtQuerySystemInformation - SystemHandleInformation not implemented\n");
-	return (STATUS_NOT_IMPLEMENTED);
+        PSYSTEM_HANDLE_INFORMATION Shi = 
+        	(PSYSTEM_HANDLE_INFORMATION) Buffer;
+
+        DPRINT("NtQuerySystemInformation - SystemHandleInformation\n");
+
+	if (Size < sizeof (SYSTEM_HANDLE_INFORMATION))
+        {
+		* ReqSize = sizeof (SYSTEM_HANDLE_INFORMATION);
+		return (STATUS_INFO_LENGTH_MISMATCH);
+	}
+
+	DPRINT("SystemHandleInformation 1\n");
+
+	PEPROCESS pr, syspr;
+	int curSize, i = 0;
+	ULONG hCount = 0;
+		
+        /* First Calc Size from Count. */
+        syspr = PsGetNextProcess(NULL);
+	pr = syspr;
+
+        do
+	  {
+            hCount = hCount + ObpGetHandleCountByHandleTable(&pr->HandleTable);
+            pr = PsGetNextProcess(pr);
+
+	    if ((pr == syspr) || (pr == NULL))
+		break;
+        } while ((pr != syspr) && (pr != NULL));
+
+	DPRINT("SystemHandleInformation 2\n");
+
+	if (pr != NULL)
+	  {
+	    ObDereferenceObject(pr);
+	  }
+
+        curSize = sizeof(SYSTEM_HANDLE_INFORMATION)+
+                  (  (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) - 
+                     (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) ));
+
+        Shi->NumberOfHandles = hCount;
+
+        if (curSize > Size)
+          {
+            *ReqSize = curSize;
+             return (STATUS_INFO_LENGTH_MISMATCH);
+          }
+
+	DPRINT("SystemHandleInformation 3\n");
+
+        /* Now get Handles from all processs. */
+        syspr = PsGetNextProcess(NULL);
+	pr = syspr;
+
+	 do
+	  {
+            int Count = 0, HandleCount = 0;
+
+            HandleCount = ObpGetHandleCountByHandleTable(&pr->HandleTable);
+
+            for (Count = 0; HandleCount > 0 ; HandleCount--)
+               {
+                 ObpGetNextHandleByProcessCount( &Shi->Handles[i], pr, Count);
+                 Count++;
+                 i++;
+               }
+
+	    pr = PsGetNextProcess(pr);
+
+	    if ((pr == syspr) || (pr == NULL))
+		break;
+	   } while ((pr != syspr) && (pr != NULL));
+
+
+	if (pr != NULL)
+	  {
+	    ObDereferenceObject(pr);
+	  }
+
+	DPRINT("SystemHandleInformation 4\n");
+	return (STATUS_SUCCESS);
+
 }
+/*
+SSI_DEF(SystemHandleInformation)
+{
+	
+	return (STATUS_SUCCESS);
+}
+*/
 
 /* Class 17 -  Information */
 QSI_DEF(SystemObjectInformation)
@@ -1371,6 +1468,8 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   PVOID SystemInformation;
   NTSTATUS Status;
   NTSTATUS FStatus;
+  
+  PAGED_CODE();
 
 /*	DPRINT("NtQuerySystemInformation Start. Class:%d\n",
 					SystemInformationClass );
@@ -1448,6 +1547,8 @@ NtSetSystemInformation (
 	IN	ULONG				SystemInformationLength
 	)
 {
+        PAGED_CODE();
+        
 	/*
 	 * If called from user mode, check 
 	 * possible unsafe arguments.
@@ -1496,6 +1597,8 @@ NtFlushInstructionCache (
 	IN	UINT	NumberOfBytesToFlush
 	)
 {
+        PAGED_CODE();
+        
 	__asm__("wbinvd\n");
 	return STATUS_SUCCESS;
 }

@@ -6,6 +6,8 @@ TARGET_TYPE = program
 
 TARGET_APPTYPE = native
 
+TARGET_SDKLIBS = ntdll.a smdll.a
+
 TARGET_NAME = smss
 
 TARGET_INSTALLDIR = system32
@@ -19,8 +21,8 @@ TARGET_OBJECTS = $(TARGET_NAME).o \
 		 init.o initheap.o initenv.o initobdir.o initdosdev.o \
 		 initrun.o initmv.o initwkdll.o initpage.o initss.o \
 		 initreg.o \
-		 smapi.o \
-		 client.o debug.o
+		 smapi.o smapicomp.o smapiexec.o \
+		 client.o debug.o print.o
 
 include $(PATH_TO_TOP)/rules.mak
 

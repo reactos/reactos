@@ -3,6 +3,8 @@
 
 #include <ddk/ntifs.h>
 
+#define USE_ROS_CC_AND_FS
+
 
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.BytesPerCluster > PAGE_SIZE ? \

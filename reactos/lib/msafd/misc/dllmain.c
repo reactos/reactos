@@ -16,8 +16,8 @@
 #include <rosrtl/string.h>
 
 #ifdef DBG
-DWORD DebugTraceLevel = DEBUG_ULTRA;
-//DWORD DebugTraceLevel = 0;
+//DWORD DebugTraceLevel = DEBUG_ULTRA;
+DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
 HANDLE GlobalHeap;
@@ -120,6 +120,7 @@ WSPSocket(
 	Socket->SharedData.GroupID = g;
 	Socket->SharedData.GroupType = 0;
 	Socket->SharedData.UseSAN = FALSE;
+        Socket->SharedData.NonBlocking = FALSE; /* Sockets start blocking */
 	Socket->SanData = NULL;
 
 	/* Ask alex about this */
@@ -137,6 +138,7 @@ WSPSocket(
 
 	/* Set up EA Buffer */
 	EABuffer = HeapAlloc(GlobalHeap, 0, SizeOfEA);
+        RtlZeroMemory(EABuffer, SizeOfEA);
 	EABuffer->NextEntryOffset = 0;
 	EABuffer->Flags = 0;
 	EABuffer->EaNameLength = AFD_PACKET_COMMAND_LENGTH;
@@ -265,19 +267,22 @@ error:
 
 DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
 			    LPDWORD ReturnedBytes ) {
-    switch (Status) {
-    case STATUS_CANT_WAIT: *Errno = WSAEWOULDBLOCK; break;
-    case STATUS_TIMEOUT:
-    case STATUS_SUCCESS: 
-	/* Return Number of bytes Read */
-	if( ReturnedBytes ) *ReturnedBytes = Received; break;
-    case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; *ReturnedBytes = 0; break;
-    case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
-    case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
-    default: {
-	DbgPrint("MSAFD: Error %x is unknown\n", Status);
-	*Errno = WSAEINVAL; break;
-    } break;
+    if( ReturnedBytes ) *ReturnedBytes = 0; 
+    if( Errno ) { 
+        switch (Status) {
+        case STATUS_CANT_WAIT: *Errno = WSAEWOULDBLOCK; break;
+        case STATUS_TIMEOUT:
+        case STATUS_SUCCESS: 
+            /* Return Number of bytes Read */
+            if( ReturnedBytes ) *ReturnedBytes = Received; break;
+        case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; *ReturnedBytes = 0; break;
+        case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
+        case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
+        default: {
+            DbgPrint("MSAFD: Error %x is unknown\n", Status);
+            *Errno = WSAEINVAL; break;
+        } break;
+        }
     }
 
     /* Success */
@@ -588,6 +593,9 @@ WSPSelect(
     PollBufferSize = sizeof(*PollInfo) + 
 	(HandleCount * sizeof(AFD_HANDLE));
     
+    AFD_DbgPrint(MID_TRACE,("HandleCount: %d BufferSize: %d\n", 
+                            HandleCount, PollBufferSize));
+
     /* Allocate */
     PollBuffer = HeapAlloc(GlobalHeap, 0, PollBufferSize);
     PollInfo = (PAFD_POLL_INFO)PollBuffer;

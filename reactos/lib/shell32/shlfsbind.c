@@ -179,22 +179,26 @@ static HRESULT WINAPI IFileSystemBindData_fnQueryInterface(IFileSystemBindData *
 static ULONG WINAPI IFileSystemBindData_fnAddRef(IFileSystemBindData *iface)
 {
 	IFileSystemBindDataImpl *This = (IFileSystemBindDataImpl *)iface;
-	TRACE("(%p)\n", This);
-	return InterlockedIncrement(&This->ref);
+	ULONG refCount = InterlockedIncrement(&This->ref);
+
+	TRACE("(%p)->(count=%li)\n", This, refCount - 1);
+
+	return refCount;
 }
 
 static ULONG WINAPI IFileSystemBindData_fnRelease(IFileSystemBindData *iface)
 {
 	IFileSystemBindDataImpl *This = (IFileSystemBindDataImpl *)iface;
-	TRACE("(%p)\n", This);
+	ULONG refCount = InterlockedDecrement(&This->ref);
+	
+	TRACE("(%p)->(count=%li)\n", This, refCount + 1);
 
-	if (!InterlockedDecrement(&This->ref))
+	if (!refCount)
 	{
 	  TRACE(" destroying ISFBindPidl(%p)\n",This);
 	  HeapFree(GetProcessHeap(), 0, This);
-	  return 0;
 	}
-	return This->ref;
+	return refCount;
 }
 
 static HRESULT WINAPI IFileSystemBindData_fnGetFindData(IFileSystemBindData *iface, WIN32_FIND_DATAW *pfd)

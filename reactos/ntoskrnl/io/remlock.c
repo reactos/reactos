@@ -10,6 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#define NDEBUG
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
@@ -27,7 +28,7 @@ IoInitializeRemoveLockEx(
   IN ULONG HighWatermark,
   IN ULONG RemlockSize)
 {
-  DPRINT("IoInitializeRemoveLockEx called");
+  DPRINT("IoInitializeRemoveLockEx called\n");
   RtlZeroMemory(RemoveLock, RemlockSize);
   RemoveLock->Common.IoCount = 1;
   KeInitializeEvent(&RemoveLock->Common.RemoveEvent, NotificationEvent, FALSE);
@@ -45,7 +46,7 @@ IoAcquireRemoveLockEx(
   IN ULONG Line,
   IN ULONG RemlockSize)
 {
-  DPRINT("IoAcquireRemoveLockEx called");
+  DPRINT("IoAcquireRemoveLockEx called\n");
   InterlockedIncrement(&RemoveLock->Common.IoCount);
   if (RemoveLock->Common.Removed)
   {
@@ -70,7 +71,7 @@ IoReleaseRemoveLockEx(
 {
   LONG IoCount;
 
-  DPRINT("IoReleaseRemoveLockEx called");
+  DPRINT("IoReleaseRemoveLockEx called\n");
   IoCount = InterlockedDecrement(&RemoveLock->Common.IoCount);
   if (IoCount == 0)
   {
@@ -88,7 +89,7 @@ IoReleaseRemoveLockAndWaitEx(
   IN PVOID Tag,
   IN ULONG RemlockSize)
 {
-  DPRINT("IoReleaseRemoveLockAndWaitEx called");
+  DPRINT("IoReleaseRemoveLockAndWaitEx called\n");
   RemoveLock->Common.Removed = TRUE;
   InterlockedDecrement(&RemoveLock->Common.IoCount);
   IoReleaseRemoveLockEx(RemoveLock, Tag, RemlockSize);

@@ -1,17 +1,16 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <stdarg.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/malloc.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <malloc.h>
+#include <internal/file.h>
 
 #ifdef __USE_W32API
 #include <ntdef.h>
 #endif
 
-int _isnanl(double x);
-int _isinfl(double x);
-int _isnan(double x);
-int _isinf(double x);
+
+
+extern int __mb_cur_max;
 
 
 
@@ -27,7 +26,7 @@ int vfprintf(FILE* f, const char* fmt, va_list ap)
     char localbuf[BUFSIZ];
 
 #if 0
-    __fileno_lock(fileno(f));
+    __fileno_lock(_fileno(f));
 #endif
     if (f->_flag & _IONBF) {
         f->_flag &= ~_IONBF;
@@ -43,7 +42,7 @@ int vfprintf(FILE* f, const char* fmt, va_list ap)
         len = __vfprintf(f,fmt, ap);
     }
 #if 0
-    __fileno_unlock(fileno(f));
+    __fileno_unlock(_fileno(f));
 #endif
     return (ferror(f) ? EOF : len);
 }
@@ -64,14 +63,13 @@ int vfprintf(FILE* f, const char* fmt, va_list ap)
  * Appropiated for the reactos kernel, March 1998 -- David Welch
  */
 
-#include <msvcrt/stdarg.h>
+#include <stdarg.h>
 
-#include <msvcrt/ctype.h>
-#include <msvcrt/string.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/math.h>
-#include <msvcrt/internal/ieee.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include <internal/ieee.h>
 
 
 #define ZEROPAD		1	/* pad with zero */
@@ -485,7 +483,7 @@ static int stringw(FILE *f, const wchar_t* sw, int len, int field_width, int pre
 		}
 	for (i = 0; i < len; ++i)
 	{
-#define MB_CUR_MAX 1
+//#define MB_CUR_MAX 1
 		char mb[MB_CUR_MAX];
 		int mbcount, j;
 		mbcount = wctomb(mb, *sw++);

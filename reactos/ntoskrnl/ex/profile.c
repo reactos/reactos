@@ -109,6 +109,8 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status = STATUS_SUCCESS;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
   
   if(BufferSize == 0)
@@ -271,6 +273,8 @@ NtQueryIntervalProfile(IN  KPROFILE_SOURCE ProfileSource,
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
   
   if(PreviousMode != KernelMode)
@@ -329,6 +333,8 @@ NtStartProfile(IN HANDLE ProfileHandle)
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
 
   Status = ObReferenceObjectByHandle(ProfileHandle,
@@ -352,6 +358,8 @@ NtStopProfile(IN HANDLE ProfileHandle)
   PKPROFILE Profile;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
+  
+  PAGED_CODE();
   
   PreviousMode = ExGetPreviousMode();
 

@@ -45,7 +45,7 @@
 257    pascal  midiStreamStop(word) midiStreamStop16
 301    pascal  midiInGetNumDevs() midiInGetNumDevs16
 302    pascal  midiInGetDevCaps(word ptr word) midiInGetDevCaps16
-303    pascal  midiInGetErrorText(word ptr word) midiInGetErrorText16
+303    pascal  midiInGetErrorText(word ptr word) midiOutGetErrorText16
 304    pascal  midiInOpen(ptr word long long long) midiInOpen16
 305    pascal  midiInClose(word) midiInClose16
 306    pascal  midiInPrepareHeader(word segptr word) midiInPrepareHeader16
@@ -84,7 +84,7 @@
 421    pascal  waveOutMessage(word word long long) waveOutMessage16
 501    pascal  waveInGetNumDevs() waveInGetNumDevs16
 502    pascal  waveInGetDevCaps(word ptr word) waveInGetDevCaps16
-503    pascal  waveInGetErrorText(word ptr word) waveInGetErrorText16
+503    pascal  waveInGetErrorText(word ptr word) waveOutGetErrorText16
 504    pascal  waveInOpen(ptr word ptr long long long) waveInOpen16
 505    pascal  waveInClose(word) waveInClose16
 506    pascal  waveInPrepareHeader(word segptr word) waveInPrepareHeader16

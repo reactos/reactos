@@ -1,9 +1,9 @@
-#include <msvcrt/mbstring.h>
+#include <mbstring.h>
 
 /*
  * @implemented
  */
-unsigned short _mbcjmstojis(unsigned short c)
+unsigned int _mbcjmstojis(unsigned int c)
 {
   int c1, c2;
 

@@ -1995,7 +1995,7 @@ HRESULT WINAPI SHGetFolderLocation(
             else if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
             {
                 /* unlike SHGetFolderPath, SHGetFolderLocation in shell32
-                 * version 6.0 returns E_FAIL for non-existing paths
+                 * version 6.0 returns E_FAIL for nonexistent paths
                  */
                 hr = E_FAIL;
             }

@@ -9,17 +9,18 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/stdlib.h>
+#include <stdlib.h>
+#include <tchar.h>
 
 
 /*
  * @implemented
  */
-char* _fullpath(char* absPath, const char* relPath, size_t maxLength)
+_TCHAR* _tfullpath(_TCHAR* absPath, const _TCHAR* relPath, size_t maxLength)
 {
-    char* lpFilePart;
+    _TCHAR* lpFilePart;
 
-    if (GetFullPathNameA(relPath,maxLength,absPath,&lpFilePart) == 0)
+    if (GetFullPathName(relPath,maxLength,absPath,&lpFilePart) == 0)
         return NULL;
 
     return absPath;

@@ -617,7 +617,7 @@ FsRtlNotifyReportChange (
 	);
 
 VOID STDCALL
-FsRtlNotifyInitializeSync(IN OUT PNOTIFY_SYNC NotifySync);
+FsRtlNotifyInitializeSync(IN OUT PNOTIFY_SYNC *NotifySync);
 
 NTSTATUS STDCALL
 FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,

@@ -861,6 +861,90 @@ static const char * debug_shfileops_action( DWORD op )
 #define ERROR_SHELL_INTERNAL_FILE_NOT_FOUND 1026
 #define HIGH_ADR (LPWSTR)0xffffffff
 
+static int file_operation_delete( WIN32_FIND_DATAW *wfd,SHFILEOPSTRUCTW nFileOp, LPWSTR pFromFile,LPWSTR pTempFrom,HANDLE *hFind)
+
+{
+    LPWSTR lpFileName;
+    BOOL    b_Mask = (NULL != StrPBrkW(&pFromFile[1], wWildcardChars));
+    int retCode = 0;
+    do
+    {
+        lpFileName = wfd->cAlternateFileName;
+        if (!lpFileName[0])
+            lpFileName = wfd->cFileName;
+        if (IsDotDir(lpFileName) ||
+                ((b_Mask) && IsAttribDir(wfd->dwFileAttributes) && (nFileOp.fFlags & FOF_FILESONLY)))
+            continue;
+        SHFileStrCpyCatW(&pFromFile[1], lpFileName, NULL);
+        /* TODO: Check the SHELL_DeleteFileOrDirectoryW() function in shell32.dll */
+        if (IsAttribFile(wfd->dwFileAttributes))
+        {
+            if(SHNotifyDeleteFileW(pTempFrom) != ERROR_SUCCESS)
+            {
+                nFileOp.fAnyOperationsAborted = TRUE;
+                retCode = 0x78; /* value unknown */
+            }
+        }
+        else if(!SHELL_DeleteDirectoryW(pTempFrom, (!(nFileOp.fFlags & FOF_NOCONFIRMATION))))
+        {
+            nFileOp.fAnyOperationsAborted = TRUE;
+            retCode = 0x79; /* value unknown */
+        }
+    }
+    while (!nFileOp.fAnyOperationsAborted && FindNextFileW(*hFind,wfd));
+    FindClose(*hFind);
+    *hFind = INVALID_HANDLE_VALUE;
+    return retCode;
+}
+
+/*
+ * Summary of flags:
+ *
+ * implemented flags:
+ * FOF_MULTIDESTFILES, FOF_NOCONFIRMATION, FOF_FILESONLY
+ *
+ * unimplememented and ignored flags:
+ * FOF_CONFIRMMOUSE, FOF_SILENT, FOF_NOCONFIRMMKDIR,
+ *       FOF_SIMPLEPROGRESS, FOF_NOCOPYSECURITYATTRIBS
+ *
+ * partially implemented, breaks if file exists:
+ * FOF_RENAMEONCOLLISION
+ *
+ * unimplemented and break if any other flag set:
+ * FOF_ALLOWUNDO, FOF_WANTMAPPINGHANDLE
+ */
+
+static int file_operation_checkFlags(SHFILEOPSTRUCTW nFileOp)
+{
+    FILEOP_FLAGS OFl = ((FILEOP_FLAGS)nFileOp.fFlags & 0xfff);
+    long FuncSwitch = (nFileOp.wFunc & FO_MASK);
+    long level= nFileOp.wFunc >> 4;
+
+    TRACE("%s level=%ld nFileOp.fFlags=0x%x\n", 
+            debug_shfileops_action(FuncSwitch), level, nFileOp.fFlags);
+    /*    OFl &= (-1 - (FOF_MULTIDESTFILES | FOF_FILESONLY)); */
+    /*    OFl ^= (FOF_SILENT | FOF_NOCONFIRMATION | FOF_SIMPLEPROGRESS | FOF_NOCONFIRMMKDIR); */
+    OFl &= (~(FOF_MULTIDESTFILES | FOF_NOCONFIRMATION | FOF_FILESONLY));  /* implemented */
+    OFl ^= (FOF_SILENT | FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_NOCOPYSECURITYATTRIBS); /* ignored, if one */
+    OFl &= (~FOF_SIMPLEPROGRESS); /* ignored, only with FOF_SILENT */
+    if (OFl)
+    {
+        if (OFl & (~(FOF_CONFIRMMOUSE | FOF_SILENT | FOF_RENAMEONCOLLISION |
+                        FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_NOCOPYSECURITYATTRIBS)))
+        {
+            TRACE("%s level=%ld lpFileOp->fFlags=0x%x not implemented, Aborted=TRUE, stub\n",
+                    debug_shfileops_action(FuncSwitch), level, OFl);
+            return 0x403; /* 1027, we need an extension to shlfileop */
+        }
+        else
+        {
+            TRACE("%s level=%ld lpFileOp->fFlags=0x%x not fully implemented, stub\n", 
+                    debug_shfileops_action(FuncSwitch), level, OFl);
+        } 
+    } 
+    return 0;
+}
+
 /*************************************************************************
  * SHFileOperationW          [SHELL32.@]
  *
@@ -884,8 +968,6 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 	int retCode = 0;
 	DWORD ToAttr;
 	DWORD ToPathAttr;
-	DWORD FromPathAttr;
-	FILEOP_FLAGS OFl = ((FILEOP_FLAGS)lpFileOp->fFlags & 0xfff);
 
 	BOOL b_Multi = (nFileOp.fFlags & FOF_MULTIDESTFILES);
 
@@ -903,6 +985,8 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 
 	long FuncSwitch = (nFileOp.wFunc & FO_MASK);
 	long level= nFileOp.wFunc>>4;
+
+        int ret;
 
 	/*  default no error */
 	nFileOp.fAnyOperationsAborted = FALSE;
@@ -932,47 +1016,12 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
          * create dir              0 0 0 0 0 0 1 0
          */
 
-        /*
-         * Summary of flags:
-         *
-         * implemented flags:
-         * FOF_MULTIDESTFILES, FOF_NOCONFIRMATION, FOF_FILESONLY
-         *
-         * unimplememented and ignored flags:
-         * FOF_CONFIRMMOUSE, FOF_SILENT, FOF_NOCONFIRMMKDIR,
-         *       FOF_SIMPLEPROGRESS, FOF_NOCOPYSECURITYATTRIBS
-         *
-         * partially implemented, breaks if file exists:
-         * FOF_RENAMEONCOLLISION
-         *
-         * unimplemented and break if any other flag set:
-         * FOF_ALLOWUNDO, FOF_WANTMAPPINGHANDLE
-         */
-
-        TRACE("%s level=%ld nFileOp.fFlags=0x%x\n", 
-                debug_shfileops_action(FuncSwitch), level, lpFileOp->fFlags);
-
-        /*    OFl &= (-1 - (FOF_MULTIDESTFILES | FOF_FILESONLY)); */
-        /*    OFl ^= (FOF_SILENT | FOF_NOCONFIRMATION | FOF_SIMPLEPROGRESS | FOF_NOCONFIRMMKDIR); */
-        OFl &= (~(FOF_MULTIDESTFILES | FOF_NOCONFIRMATION | FOF_FILESONLY));  /* implemented */
-        OFl ^= (FOF_SILENT | FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_NOCOPYSECURITYATTRIBS); /* ignored, if one */
-        OFl &= (~FOF_SIMPLEPROGRESS);                      /* ignored, only with FOF_SILENT */
-        if (OFl)
+        ret = file_operation_checkFlags(nFileOp);
+        if (ret != 0)
         {
-	    if (OFl & (~(FOF_CONFIRMMOUSE | FOF_SILENT | FOF_RENAMEONCOLLISION |
-	                 FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_NOCOPYSECURITYATTRIBS)))
-	    {
-                TRACE("%s level=%ld lpFileOp->fFlags=0x%x not implemented, Aborted=TRUE, stub\n",
-                      debug_shfileops_action(FuncSwitch), level, OFl);
-                retCode = 0x403; /* 1027, we need an extension to shlfileop */
-                goto shfileop_end;
-	    }
-	    else
-	    {
-                TRACE("%s level=%ld lpFileOp->fFlags=0x%x not fully implemented, stub\n", 
-                      debug_shfileops_action(FuncSwitch), level, OFl);
-	    } 
-        } 
+            retCode = ret;
+            goto shfileop_end;
+        }
 
         if ((pNextFrom) && (!(b_MultiTo) || (pNextTo)))
         {
@@ -1055,12 +1104,13 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
                     goto shfileop_end;
                 }
 	    }
-
+             
 	    hFind = FindFirstFileW(pFrom, &wfd);
 	    if (INVALID_HANDLE_VALUE == hFind)
 	    {
                 if ((FO_DELETE == FuncSwitch) && (b_Mask))
                 {
+                    DWORD FromPathAttr;
                     pFromFile[0] = '\0';
                     FromPathAttr = GetFileAttributesW(pTempFrom);
                     pFromFile[0] = '\\';
@@ -1080,37 +1130,13 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
             /* ??? b_Mask = (!SHFileStrICmpA(&pFromFile[1], &wfd.cFileName[0], HIGH_ADR, HIGH_ADR)); */
 	    if (!pTo) /* FO_DELETE */
 	    {
-                do
+                ret = file_operation_delete(&wfd,nFileOp,pFromFile,pTempFrom,&hFind);
+                /* if ret is not 0, nFileOp.fAnyOperationsAborted is TRUE */
+                if (ret != 0)
                 {
-                    lpFileName = wfd.cAlternateFileName;
-                    if (!lpFileName[0])
-                        lpFileName = wfd.cFileName;
-                    if (IsDotDir(lpFileName) ||
-                        ((b_Mask) && IsAttribDir(wfd.dwFileAttributes) && (nFileOp.fFlags & FOF_FILESONLY)))
-                        continue;
-                    SHFileStrCpyCatW(&pFromFile[1], lpFileName, NULL);
-                    /* TODO: Check the SHELL_DeleteFileOrDirectoryW() function in shell32.dll */
-                    if (IsAttribFile(wfd.dwFileAttributes))
-                    {
-                        if(SHNotifyDeleteFileW(pTempFrom) != ERROR_SUCCESS)
-                        {
-                            nFileOp.fAnyOperationsAborted = TRUE;
-                            retCode = 0x78; /* value unknown */
-                        }
-                    }
-                    else
-                    {
-                        if(!SHELL_DeleteDirectoryW(pTempFrom, (!(nFileOp.fFlags & FOF_NOCONFIRMATION))))
-                        {
-                            nFileOp.fAnyOperationsAborted = TRUE;
-                            retCode = 0x79; /* value unknown */
-                        }
-                    }
-                } while (!nFileOp.fAnyOperationsAborted && FindNextFileW(hFind, &wfd));
-                FindClose(hFind);
-                hFind = INVALID_HANDLE_VALUE;
-                if (nFileOp.fAnyOperationsAborted)
-                    goto shfileop_end;
+                  retCode = ret;
+                  goto shfileop_end;
+                }
                 continue;
 	    } /* FO_DELETE ends, pTo must be always valid from here */
 

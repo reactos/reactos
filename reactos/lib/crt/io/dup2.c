@@ -1,5 +1,5 @@
-#include <msvcrt/io.h>
-#include <msvcrt/internal/file.h>
+#include <io.h>
+#include <internal/file.h>
 
 /*
  * @implemented

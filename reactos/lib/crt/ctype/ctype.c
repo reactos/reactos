@@ -6,7 +6,7 @@
  * PROGRAMMER:       Copyright (C) 1995 DJ Delorie
  */
 
-#include <msvcrt/ctype.h>
+#include <ctype.h>
 
 unsigned short _ctype[] = {
 	0,			/* <EOF>, 0xFFFF */

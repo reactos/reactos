@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <signal.h>
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
@@ -45,7 +46,7 @@ int display_warnings = 0;
 int kill_at = 0;
 
 /* we only support relay debugging on i386 */
-#if defined(__i386__) && !defined(NO_TRACE_MSGS)
+#ifdef __i386__
 int debugging = 1;
 #else
 int debugging = 0;
@@ -56,6 +57,9 @@ char **lib_path = NULL;
 
 char *input_file_name = NULL;
 const char *output_file_name = NULL;
+
+char *ld_command = "ld";
+char *nm_command = "nm";
 
 static FILE *output_file;
 static const char *current_src_dir;
@@ -124,6 +128,11 @@ static void cleanup(void)
     if (output_file_name) unlink( output_file_name );
 }
 
+/* clean things up when aborting on a signal */
+static void exit_on_signal( int sig )
+{
+    exit(1);  /* this will call atexit functions */
+}
 
 /*******************************************************************
  *         command-line option handling
@@ -143,9 +152,11 @@ static const char usage_str[] =
 "    -I DIR                  Ignored for C flags compatibility\n"
 "    -k --kill-at            Kill stdcall decorations in generated .def files\n"
 "    -K FLAGS                Compiler flags (only -KPIC is supported)\n"
+"       --ld-cmd=LD          Command to use for linking (default: ld)\n"
 "    -l --library=LIB        Import the specified library\n"
 "    -L --library-path=DIR   Look for imports libraries in DIR\n"
 "    -M --main-module=MODULE Set the name of the main module for a Win16 dll\n"
+"       --nm-cmd=NM          Command to use to get undefined symbols (default: nm)\n"
 "    -N --dll-name=DLLNAME   Set the DLL name (default: from input file name)\n"
 "    -o --output=NAME        Set the output file name (default: stdout)\n"
 "    -r --res=RSRC.RES       Load resources from RSRC.RES\n"
@@ -168,6 +179,8 @@ enum long_options_values
     LONG_OPT_DEF,
     LONG_OPT_EXE,
     LONG_OPT_DEBUG,
+    LONG_OPT_LDCMD,
+    LONG_OPT_NMCMD,
     LONG_OPT_RELAY16,
     LONG_OPT_RELAY32,
     LONG_OPT_SUBSYSTEM,
@@ -183,6 +196,8 @@ static const struct option long_options[] =
     { "def",      1, 0, LONG_OPT_DEF },
     { "exe",      1, 0, LONG_OPT_EXE },
     { "debug",    0, 0, LONG_OPT_DEBUG },
+    { "ld-cmd",   1, 0, LONG_OPT_LDCMD },
+    { "nm-cmd",   1, 0, LONG_OPT_NMCMD },
     { "relay16",  0, 0, LONG_OPT_RELAY16 },
     { "relay32",  0, 0, LONG_OPT_RELAY32 },
     { "subsystem",1, 0, LONG_OPT_SUBSYSTEM },
@@ -331,6 +346,12 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
         case LONG_OPT_DEBUG:
             set_exec_mode( MODE_DEBUG );
             break;
+        case LONG_OPT_LDCMD:
+            ld_command = xstrdup( optarg );
+            break;
+        case LONG_OPT_NMCMD:
+            nm_command = xstrdup( optarg );
+            break;
         case LONG_OPT_RELAY16:
             set_exec_mode( MODE_RELAY16 );
             break;
@@ -406,6 +427,12 @@ static int parse_input_file( DLLSPEC *spec )
 int main(int argc, char **argv)
 {
     DLLSPEC *spec = alloc_dll_spec();
+
+#ifdef SIGHUP
+    signal( SIGHUP, exit_on_signal );
+#endif
+    signal( SIGTERM, exit_on_signal );
+    signal( SIGINT, exit_on_signal );
 
     output_file = stdout;
     argv = parse_options( argc, argv, spec );

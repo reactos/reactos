@@ -11,7 +11,7 @@ static void XMLCALL
 startElement(void *userData, const char *name, const char **atts)
 {
   int i;
-  int *depthPtr = userData;
+  int *depthPtr = (int *)userData;
   for (i = 0; i < *depthPtr; i++)
     putchar('\t');
   puts(name);
@@ -21,7 +21,7 @@ startElement(void *userData, const char *name, const char **atts)
 static void XMLCALL
 endElement(void *userData, const char *name)
 {
-  int *depthPtr = userData;
+  int *depthPtr = (int *)userData;
   *depthPtr -= 1;
 }
 

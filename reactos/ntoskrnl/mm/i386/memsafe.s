@@ -4,6 +4,9 @@
 .globl _MmSafeCopyToUser
 .globl _MmSafeCopyToUserUnsafeStart
 .globl _MmSafeCopyToUserRestart
+.globl @MmSafeReadPtr@4
+.globl _MmSafeReadPtrStart
+.globl _MmSafeReadPtrEnd
 
 	/*
 	 * NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, 
@@ -83,3 +86,16 @@ _MmSafeCopyToUserRestart:
 	popl    %ebp
 	ret
 
+/*****************************************************************************/
+
+	/*
+	 * PVOID FASTCALL MmSafeReadPtr(PVOID Source)
+	 */
+@MmSafeReadPtr@4:
+_MmSafeReadPtrStart:
+	/*
+	 * If we incur a pagefault, eax will be set NULL
+	 */
+	movl	(%ecx),%eax
+_MmSafeReadPtrEnd:
+	ret

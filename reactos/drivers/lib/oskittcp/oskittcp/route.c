@@ -314,8 +314,8 @@ ifa_ifwithroute(flags, dst, gateway)
 	register struct ifaddr *ifa;
 
 	OS_DbgPrint(OSK_MID_TRACE,("Called: flags %\n", flags));
-	OskitDumpBuffer( dst, sizeof(*dst) );
-	OskitDumpBuffer( gateway, sizeof(*gateway) );
+	OskitDumpBuffer( (void *)dst, sizeof(*dst) );
+	OskitDumpBuffer( (void *)gateway, sizeof(*gateway) );
 
 	if ((flags & RTF_GATEWAY) == 0) {
 		/*

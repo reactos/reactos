@@ -22,7 +22,7 @@ if test -e $tmpdir; then
 fi
 
 echo "Checking out into temporary area: $tmpdir"
-cvs -d "$CVSROOT" export -r "$1" -d $tmpdir expat || exit 1
+cvs -fq -d "$CVSROOT" export -r "$1" -d $tmpdir expat || exit 1
 
 echo ""
 echo "----------------------------------------------------------------------"

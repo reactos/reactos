@@ -192,6 +192,8 @@ NtGetContextThread(IN HANDLE ThreadHandle,
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
 
   if(PreviousMode != KernelMode)
@@ -315,6 +317,8 @@ NtSetContextThread(IN HANDLE ThreadHandle,
   CONTEXT Context;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
   
   PreviousMode = ExGetPreviousMode();
   

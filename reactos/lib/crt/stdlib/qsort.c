@@ -3,8 +3,9 @@
 #undef __USE_W32API
 #endif
 
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/tls.h>
+#include <stdlib.h>
+#include <search.h>
+#include <internal/tls.h>
 
 /*-
  * Copyright (c) 1980, 1983 The Regents of the University of California.
@@ -174,7 +175,7 @@ qst(PTHREADDATA pThreadData, char *base, char *max)
  * @implemented
  */
 void
-qsort(const void *base0, size_t n, size_t size, _pfunccmp_t compar)
+qsort(void *base0, size_t n, size_t size, int (*compar)(const void*, const void*))
 {
   PTHREADDATA pThreadData;
   char *base = (char *)base0;

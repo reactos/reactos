@@ -406,9 +406,25 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
       return(STATUS_INVALID_PARAMETER);
     }
 
+
+
   IrpStack = IoGetCurrentIrpStackLocation(Irp);  
   EndingOffset.QuadPart = IrpStack->Parameters.Read.ByteOffset.QuadPart +
                           IrpStack->Parameters.Read.Length;
+
+
+  DPRINT("Ending %I64d, and RealEnding %I64d! PartSize %I64d\n",EndingOffset.QuadPart,
+          DeviceExtension->PartitionLength.QuadPart,
+	  DeviceExtension->PartitionLength.QuadPart /
+          DeviceExtension->DiskGeometry->BytesPerSector);
+
+  if ((DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
+      (DeviceExtension->DiskGeometry->MediaType == RemovableMedia))
+    {
+/* Assume if removable media and if Partition length is 0, Partition not built yet! */
+	if (DeviceExtension->PartitionLength.QuadPart == 0)
+            return(STATUS_SUCCESS);
+    }
 
   if (EndingOffset.QuadPart > DeviceExtension->PartitionLength.QuadPart)
     {

@@ -48,6 +48,7 @@
 		<file>apc.c</file>
 		<file>bug.c</file>
 		<file>catch.c</file>
+		<file>clock.c</file>
 		<file>critical.c</file>
 		<file>device.c</file>
 		<file>dpc.c</file>

@@ -24,37 +24,11 @@ rmkdir_clean:
 	-@$(rm) $(RMKDIR_TARGET) $(RMKDIR_OBJECTS) 2>$(NUL)
 clean: rmkdir_clean
 
-
-BUILDNO_BASE = tools
-
-BUILDNO_TARGET = \
-	$(ROS_INTERMEDIATE)$(BUILDNO_BASE)$(SEP)buildno$(EXEPOSTFIX)
-
-BUILDNO_SOURCES = \
-	$(BUILDNO_BASE)$(SEP)buildno.c
-
-BUILDNO_OBJECTS = \
-	$(BUILDNO_SOURCES:.c=.o)
-
-BUILDNO_HOST_CFLAGS = -g -Werror -Wall
-
-BUILDNO_HOST_LFLAGS = -g
-
-$(BUILDNO_TARGET): $(BUILDNO_OBJECTS)
-	${host_gcc} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_LFLAGS) -o $(BUILDNO_TARGET)
-
-$(BUILDNO_OBJECTS): %.o : %.c
-	${host_gcc} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
-
-.PHONY: buildno_clean
-buildno_clean:
-	-@$(rm) $(BUILDNO_TARGET) $(BUILDNO_OBJECTS) 2>$(NUL)
-clean: buildno_clean
-
-include$(SEP)reactos$(SEP)buildno.h: $(BUILDNO_TARGET)
-	$(EXEPREFIX)$(BUILDNO_TARGET) include$(SEP)reactos$(SEP)buildno.h
-
+include tools/buildno/Makefile
 include tools/cdmake/makefile
 include tools/nci/makefile
 include tools/rbuild/makefile
+include tools/unicode/Makefile
 include tools/wmc/makefile
+include tools/wpp/Makefile
+include tools/wrc/makefile

@@ -1173,7 +1173,7 @@ NtUserPostThreadMessage(DWORD idThread,
   NTSTATUS Status;
   PMSGMEMORY MsgMemoryEntry;
 
-  Status = PsLookupThreadByThreadId((void *)idThread,&peThread);
+  Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
   
   if( Status == STATUS_SUCCESS ) {
     pThread = peThread->Tcb.Win32Thread;

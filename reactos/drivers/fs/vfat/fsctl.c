@@ -109,8 +109,8 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       }
       else if (DiskGeometry.MediaType == RemovableMedia &&
                PartitionInfo.PartitionNumber > 0 &&
-               PartitionInfo.StartingOffset.QuadPart == 0LL &&
-               PartitionInfo.PartitionLength.QuadPart > 0LL)
+               PartitionInfo.StartingOffset.QuadPart == 0 &&
+               PartitionInfo.PartitionLength.QuadPart > 0)
       {
          /* This is possible a removable media formated as super floppy */
          *RecognizedFS = TRUE;
@@ -298,7 +298,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
             FatInfo.SectorsPerCluster = BootFatX->SectorsPerCluster;
             FatInfo.rootDirectorySectors = BootFatX->SectorsPerCluster;
             FatInfo.BytesPerCluster = BootFatX->SectorsPerCluster * DiskGeometry.BytesPerSector;
-	    FatInfo.Sectors = PartitionInfo.PartitionLength.QuadPart / DiskGeometry.BytesPerSector;
+            FatInfo.Sectors = (ULONG)(PartitionInfo.PartitionLength.QuadPart / DiskGeometry.BytesPerSector);
             if (FatInfo.Sectors / FatInfo.SectorsPerCluster < 65525)
             {
                DPRINT("FATX16\n");

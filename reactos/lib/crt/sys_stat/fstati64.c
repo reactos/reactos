@@ -10,18 +10,18 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/sys/types.h>
-#include <msvcrt/sys/stat.h>
-#include <msvcrt/fcntl.h>
-#include <msvcrt/string.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <errno.h>
+#include <internal/file.h>
 
 
 /*
  * @implemented
  */
-__int64 _fstati64(int fd, struct _stati64* statbuf)
+int _fstati64(int fd, struct _stati64* statbuf)
 {
   BY_HANDLE_FILE_INFORMATION FileInformation;
   DWORD dwFileType;
@@ -33,7 +33,7 @@ __int64 _fstati64(int fd, struct _stati64* statbuf)
     return -1;
   }
 
-  if ((void*)-1 == (handle = _get_osfhandle(fd)))
+  if ((void*)-1 == (handle = (void*)_get_osfhandle(fd)))
   {
     __set_errno(EBADF);
     return -1;

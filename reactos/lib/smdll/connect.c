@@ -11,6 +11,9 @@
 #include <sm/helper.h>
 #include <pe.h>
 
+#define NDEBUG
+#include <debug.h>
+
 /**********************************************************************
  * NAME							EXPORTED
  *	SmConnectApiPort/4
@@ -44,16 +47,25 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
   SM_CONNECT_DATA             ConnectData = {0,{0}};
   ULONG                       ConnectDataLength = 0;
 
+  DPRINT("SMDLL: %s called\n", __FUNCTION__);
+
+  if (pSbApiPortName->Length > (sizeof pSbApiPortName->Buffer[0] * SM_SB_NAME_MAX_LENGTH))
+  {
+	  return STATUS_INVALID_PARAMETER_1;
+  }
   if (pSbApiPortName)
   {
     if (NULL == hSbApiPort || IMAGE_SUBSYSTEM_UNKNOWN == dwSubsystem)
     {
       return STATUS_INVALID_PARAMETER_MIX;
     }
+    RtlZeroMemory (& ConnectData, sizeof ConnectData);
     ConnectData.Subsystem = dwSubsystem;
-    memmove (& ConnectData.SbName, pSbApiPortName->Buffer, pSbApiPortName->Length);
+    RtlCopyMemory (& ConnectData.SbName,
+		   pSbApiPortName->Buffer,
+		   pSbApiPortName->Length);
   }
-  ConnectDataLength = sizeof (ConnectData);
+  ConnectDataLength = sizeof ConnectData;
 
   SecurityQos.Length              = sizeof (SecurityQos);
   SecurityQos.ImpersonationLevel  = SecurityIdentification;
@@ -76,7 +88,7 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
   {
     return STATUS_SUCCESS;
   }
-  DbgPrint ("%s failed (Status=0x%08lx)\n", __FUNCTION__, Status);
+  DPRINT("SMDLL: %s failed (Status=0x%08lx)\n", __FUNCTION__, Status);
   return Status;
 }
 

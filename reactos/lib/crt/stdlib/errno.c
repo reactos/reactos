@@ -5,9 +5,9 @@
 #undef __USE_W32API
 #endif 
 
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/tls.h>
-#include <msvcrt/internal/file.h>
+#include <errno.h>
+#include <internal/tls.h>
+#include <internal/file.h>
 
 #include "doserrmap.h"
 

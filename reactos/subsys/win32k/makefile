@@ -53,7 +53,7 @@ ENG_OBJECTS= eng/debug.o eng/error.o eng/mem.o eng/brush.o eng/bitblt.o \
 
 MAIN_OBJECTS = main/dllmain.o main/svctabm.o
 
-MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
+MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o misc/ssec.o
 
 LDR_OBJECTS = ldr/loader.o
 

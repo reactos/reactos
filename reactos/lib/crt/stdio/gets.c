@@ -25,7 +25,7 @@
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/stdio.h>
+#include <stdio.h>
 
 char* gets(char* s)
 {

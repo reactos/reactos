@@ -1103,6 +1103,7 @@ BEGIN
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Search"
     IDS_ABOUT_EXPLORER      "&About Explorer..."
+    IDS_PROPERTIES_EXPLORER "&Properties"
     IDS_LAUNCH_MANY_PROGRAMS 
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
     IDS_DESKTOPBAR_SETTINGS "Desktop Settings"

@@ -27,7 +27,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = wine.a wine_unicode.a ntdll.a kernel32.a
+TARGET_SDKLIBS = wine.a ntdll.a kernel32.a
 
 TARGET_OBJECTS = info.o stubs.o
 

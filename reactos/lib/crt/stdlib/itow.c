@@ -12,9 +12,9 @@
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/errno.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/file.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <internal/file.h>
 
 
 /*

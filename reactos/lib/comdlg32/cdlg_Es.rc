@@ -47,7 +47,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "&Guardar como..."
+CAPTION "Guardar como..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Nombre de &archivo:", 1090, 6, 6, 76, 9
@@ -85,7 +85,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Hasta:", 1091, 120, 80, 30, 9
  LTEXT "Calidad de impre&sión:", 1092, 6, 100, 76, 9
  COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "Impri&mir en un archivo", chx1, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Impri&mir en archivo", chx1, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Condensado", chx2, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -96,7 +96,7 @@ CAPTION "Configuración de impresión"
 FONT 8, "MS Shell Dlg"
 {
  GROUPBOX "Impresora:", grp1, 6, 10, 180, 65, BS_GROUPBOX
- RADIOBUTTON "Pre&determinada del sistema", rad1, 16, 20, 80, 12
+ RADIOBUTTON "Impresora por &defecto", rad1, 16, 20, 80, 12
  LTEXT "[ninguna]", 1088, 35, 35, 120, 9
  RADIOBUTTON "Impresora &específica:", rad2, 16, 50, 80, 12
  COMBOBOX cmb1, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -187,7 +187,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Buscar"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Buscar:",  -1, 4, 8, 42, 8
+ LTEXT "Buscar:", -1, 4, 8, 42, 8
  EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Sólo palabra entera", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Mayúsculas/minúsculas", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -202,7 +202,7 @@ FONT 8, "MS Shell Dlg"
 
 REPLACEDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 230, 94
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "R&eemplazar"
+CAPTION "Reemplazar"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Buscar:", -1, 4, 9, 48, 8
@@ -230,7 +230,7 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Ayuda",   pshHelp,  50, 161, 48,14, WS_GROUP
 
     GROUPBOX        "Impresora",      grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "Imprimir a a&rchivo", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
+    CONTROL         "Imprimir en a&rchivo", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
     PUSHBUTTON      "&Propiedades",   psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Nombre:",       stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
@@ -296,7 +296,7 @@ END
 
 PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Página de configuración"
+CAPTION "Configuración de página"
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
@@ -392,8 +392,8 @@ STRINGTABLE DISCARDABLE
 página.\n\ Por favor, introduzca un valor entre %d y %d."
     PD32_FROM_NOT_ABOVE_TO                "La entrada 'desde' no puede exceder \
 a la entrada 'hasta'."
-    PD32_MARGINS_OVERLAP                  "Los márgenes overlap o fall outside \
-los boundaries del papel.\nPor favor, reintroduzca los márgenes."
+    PD32_MARGINS_OVERLAP                  "Los márgenes se superponen o quedan \
+fuera de los límites del papel.\nPor favor, reintroduzca los márgenes."
     PD32_NR_OF_COPIES_EMPTY               "El número del valor 'Número de \
 copias' no puede estar vacío."
     PD32_TOO_LARGE_COPIES                 "Este número tan grande de copias no \
@@ -421,11 +421,11 @@ desconocido."
     PD32_PRINTER_STATUS_PAPER_OUT         "Sin papel; "
     PD32_PRINTER_STATUS_MANUAL_FEED       "Ponga papel a mano; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Problema con el papel; "
-    PD32_PRINTER_STATUS_OFFLINE           "Impresora apagada; "
+    PD32_PRINTER_STATUS_OFFLINE           "Impresora desconectada; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "E/S activa; "
     PD32_PRINTER_STATUS_BUSY              "Ocupada; "
     PD32_PRINTER_STATUS_PRINTING          "Imprimiendo; "
-    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "La bandeja de salida está llena; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Bandeja de salida llena; "
     PD32_PRINTER_STATUS_NOT_AVAILABLE     "No disponible; "
     PD32_PRINTER_STATUS_WAITING           "Esperando; "
     PD32_PRINTER_STATUS_PROCESSING        "Procesando; "
@@ -434,10 +434,9 @@ desconocido."
     PD32_PRINTER_STATUS_TONER_LOW         "Tóner bajo; "
     PD32_PRINTER_STATUS_NO_TONER          "Sin tóner; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
-    PD32_PRINTER_STATUS_USER_INTERVENTION "Interrumpido por el usuario; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Interrumpida por el usuario; "
     PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Sin memoria; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "La puerta de la impresora está \
-abierta; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "Puerta de la impresora abierta; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Servidor de impresión desconocido; "
     PD32_PRINTER_STATUS_POWER_SAVE        "Modo de ahorro de energía; "
 }
@@ -445,9 +444,9 @@ abierta; "
 STRINGTABLE DISCARDABLE /* Color names */
 {
     IDS_COLOR_BLACK     "Negro"
-    IDS_COLOR_MAROON    "Marrón"
+    IDS_COLOR_MAROON    "Granate"
     IDS_COLOR_GREEN     "Verde"
-    IDS_COLOR_OLIVE     "Oliva"
+    IDS_COLOR_OLIVE     "Verde oliva"
     IDS_COLOR_NAVY      "Azul marino"
     IDS_COLOR_PURPLE    "Morado"
     IDS_COLOR_TEAL      "Turquesa"
@@ -464,5 +463,10 @@ STRINGTABLE DISCARDABLE /* Color names */
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_FONT_SIZE   "Elija un tamaño de fuente entre %d and %d puntos."
+    IDS_FONT_SIZE   "Elija un tamaño de fuente entre %d y %d puntos."
+    IDS_SAVE_BUTTON "&Guardar"
+    IDS_SAVE_IN     "Guardar &en:"
+    IDS_SAVE        "Guardar"
+    IDS_SAVE_AS     "Guardar como"
+    IDS_OPEN_FILE   "Abrir archivo"
 }

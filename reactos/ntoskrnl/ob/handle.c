@@ -287,7 +287,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    HANDLE TargetHandle;
    NTSTATUS Status;
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
    
    Status = ObReferenceObjectByHandle(SourceProcessHandle,
 				      PROCESS_DUP_HANDLE,
@@ -552,6 +552,8 @@ ObDeleteHandle(PEPROCESS Process,
    PHANDLE_TABLE HandleTable;
    POBJECT_HEADER Header;
    HANDLE_BLOCK *Block;
+   
+   PAGED_CODE();
 
    DPRINT("ObDeleteHandle(Handle %x)\n",Handle);
 
@@ -630,6 +632,8 @@ ObCreateHandle(PEPROCESS Process,
    HANDLE_BLOCK* new_blk = NULL;
    PHANDLE_TABLE HandleTable;
    KIRQL oldlvl;
+   
+   PAGED_CODE();
 
    DPRINT("ObCreateHandle(Process %x, obj %x)\n",Process,ObjectBody);
 
@@ -723,6 +727,8 @@ ObQueryObjectAuditingByHandle(IN HANDLE Handle,
   PEPROCESS Process;
   KIRQL oldIrql;
   PHANDLE_ENTRY HandleEntry;
+  
+  PAGED_CODE();
 
   DPRINT("ObQueryObjectAuditingByHandle(Handle %x)\n", Handle);
 
@@ -777,7 +783,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
    ULONG Attributes;
    NTSTATUS Status;
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
    
    DPRINT("ObReferenceObjectByHandle(Handle %x, DesiredAccess %x, "
 	   "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
@@ -930,7 +936,7 @@ NtClose(IN HANDLE Handle)
    POBJECT_HEADER	Header;
    NTSTATUS Status;
    
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
    
    DPRINT("NtClose(Handle %x)\n",Handle);
    
@@ -966,6 +972,8 @@ ObInsertObject(IN PVOID Object,
 {
   POBJECT_HEADER ObjectHeader;
   ACCESS_MASK Access;
+  
+  PAGED_CODE();
 
   Access = DesiredAccess;
   ObjectHeader = BODY_TO_HEADER(Object);
@@ -1006,8 +1014,9 @@ ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable)
 	    {
 	      Header = BODY_TO_HEADER(ObjectBody);
 
-	      /* Make sure this is real. */
-	      if (Header->ObjectType != NULL)
+	      /* Make sure this is real. Okay! For real!*/
+	      if ((Header->ObjectType != NULL) &&
+		      (Header->ObjectType->Close != NULL))
 		Count++;
 	    }
 	}
@@ -1069,5 +1078,37 @@ ObFindHandleForObject(IN PEPROCESS Process,
   UNIMPLEMENTED;
   return STATUS_UNSUCCESSFUL;
 }
+
+VOID
+ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
+                               PEPROCESS Process,
+                               int Count)
+{
+      ULONG P;
+      KIRQL oldIrql;
+
+//      pshi->HandleValue;
+
+/* 
+   This will never work with ROS! M$, I guess uses 0 -> 65535.
+   Ros uses 0 -> 4294967295!
+ */
+
+      P = (ULONG) Process->UniqueProcessId;
+      pshi->UniqueProcessId = (USHORT) P;
+
+      KeAcquireSpinLock( &Process->HandleTable.ListLock, &oldIrql );
+
+//      pshi->GrantedAccess;
+//      pshi->Object;
+//      pshi->ObjectTypeIndex;
+//      pshi->HandleAttributes;
+
+      KeReleaseSpinLock( &Process->HandleTable.ListLock, oldIrql );
+
+      return;
+}
+
+
 
 /* EOF */

@@ -1,15 +1,16 @@
 #include "precomp.h"
-#include <msvcrt/ctype.h>
-#include <msvcrt/direct.h>
-#include <msvcrt/internal/file.h>
+#include <ctype.h>
+#include <direct.h>
+#include <internal/file.h>
+#include <tchar.h>
 
 /*
  * @implemented
  */
-int _chdir(const char* _path)
+int _tchdir(const _TCHAR* _path)
 {
-    if (!SetCurrentDirectoryA((char*)_path)) {
-    	_dosmaperr(GetLastError());
+    if (!SetCurrentDirectory(_path)) {
+      _dosmaperr(_path?GetLastError():0);
 		return -1;
 	}
     return 0;

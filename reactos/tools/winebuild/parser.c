@@ -788,6 +788,10 @@ static int parse_def_export( char *name, DLLSPEC *spec )
         remove_stdcall_decoration( odp->link_name );
         token = GetToken(1);
     }
+    else
+    {
+      odp->link_name = xstrdup( name );
+    }
 
     /* check for optional ordinal */
 

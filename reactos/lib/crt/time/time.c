@@ -16,8 +16,8 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/time.h>
-#include <msvcrt/internal/file.h>
+#include <time.h>
+#include <internal/file.h>
 
 
 VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);

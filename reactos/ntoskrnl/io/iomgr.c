@@ -105,15 +105,24 @@ IopDeleteFile(PVOID ObjectBody)
 			        UserMode);
 #endif   
      KeResetEvent( &FileObject->Event );
-     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLOSE,
-				        FileObject->DeviceObject,
-				        NULL,
-				        0,
-				        NULL,
-				        &FileObject->Event,
-				        NULL);
+
+     Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, TRUE);
+     if (Irp == NULL)
+     {
+        /*
+         * FIXME: This case should eventually be handled. We should wait
+         * until enough memory is available to allocate the IRP.
+         */
+        ASSERT(FALSE);
+     }
+   
+     Irp->UserEvent = &FileObject->Event;
+     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
      Irp->Flags |= IRP_CLOSE_OPERATION;
+   
      StackPtr = IoGetNextIrpStackLocation(Irp);
+     StackPtr->MajorFunction = IRP_MJ_CLOSE;
+     StackPtr->DeviceObject = FileObject->DeviceObject;
      StackPtr->FileObject = FileObject;
    
      Status = IoCallDriver(FileObject->DeviceObject, Irp);
@@ -410,7 +419,7 @@ IoInit (VOID)
   IoDeviceObjectType->Create = IopCreateDevice;
   IoDeviceObjectType->DuplicationNotify = NULL;
   
-  RtlRosInitUnicodeStringFromLiteral(&IoDeviceObjectType->TypeName, L"Device");
+  RtlInitUnicodeString(&IoDeviceObjectType->TypeName, L"Device");
 
   ObpCreateTypeObject(IoDeviceObjectType);
 
@@ -439,7 +448,7 @@ IoInit (VOID)
   IoFileObjectType->Create = IopCreateFile;
   IoFileObjectType->DuplicationNotify = NULL;
   
-  RtlRosInitUnicodeStringFromLiteral(&IoFileObjectType->TypeName, L"File");
+  RtlInitUnicodeString(&IoFileObjectType->TypeName, L"File");
 
   ObpCreateTypeObject(IoFileObjectType);
   
@@ -453,7 +462,7 @@ IoInit (VOID)
   IoAdapterObjectType->PeakObjects = 0;
   IoAdapterObjectType->PeakHandles = 0;
   IoDeviceObjectType->Mapping = &IopFileMapping;
-  RtlRosInitUnicodeStringFromLiteral(&IoAdapterObjectType->TypeName, L"Adapter");
+  RtlInitUnicodeString(&IoAdapterObjectType->TypeName, L"Adapter");
   ObpCreateTypeObject(IoAdapterObjectType);
 
   /*

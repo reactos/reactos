@@ -2,14 +2,14 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/stdio.h>
-#include <msvcrt/sys/types.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/string.h>
-#include <msvcrt/internal/file.h>
-#include <msvcrt/io.h>
-#include <msvcrt/wchar.h>
-#include <msvcrt/errno.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <string.h>
+#include <io.h>
+#include <wchar.h>
+#include <errno.h>
+#include <internal/file.h>
 
 int _readcnv(int fn, void* buf, size_t siz);
 
@@ -57,7 +57,7 @@ int _filbuf(FILE* f)
 
 
 
-  f->_cnt = _read(fileno(f), f->_base, f->_flag & _IONBF ? 1 : f->_bufsiz  );
+  f->_cnt = _read(_fileno(f), f->_base, f->_flag & _IONBF ? 1 : f->_bufsiz  );
   f->_flag |= _IOAHEAD;
 
   if(__is_text_file(f) && f->_cnt>0)
@@ -67,7 +67,7 @@ int _filbuf(FILE* f)
     if(cz)
     {
       int newcnt = cz - f->_base;
-      lseek(fileno(f), -(f->_cnt - newcnt), SEEK_CUR);
+      _lseek(_fileno(f), -(f->_cnt - newcnt), SEEK_CUR);
       f->_cnt = newcnt;
     }
   }

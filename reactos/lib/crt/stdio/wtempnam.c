@@ -1,25 +1,6 @@
-#include "precomp.h"
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
 
+#define _UNICODE
+#define UNICODE
 
-/*
- * @implemented
- */
-wchar_t* _wtempnam(const wchar_t* dir, const wchar_t* prefix)
-{
-    wchar_t* TempFileName = malloc(MAX_PATH);
-    wchar_t* d;
+#include "tempnam.c"
 
-    if (dir == NULL)
-        d = _wgetenv(L"TMP");
-    else
-        d = (wchar_t*)dir;
-
-    if (GetTempFileNameW(d, prefix, 1, TempFileName) == 0) {
-        free(TempFileName);
-        return NULL;
-    }
-
-    return TempFileName;
-}

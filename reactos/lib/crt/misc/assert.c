@@ -1,8 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/assert.h>
-#include <msvcrt/stdio.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/signal.h>
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
 
 
 /*

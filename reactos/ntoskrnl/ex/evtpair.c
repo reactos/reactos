@@ -95,6 +95,8 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
    
+   PAGED_CODE();
+   
    PreviousMode = ExGetPreviousMode();
 
    if(PreviousMode == UserMode)
@@ -168,6 +170,8 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
    HANDLE hEventPair;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
 
@@ -221,6 +225,8 @@ NtSetHighEventPair(IN HANDLE EventPairHandle)
    PKEVENT_PAIR EventPair;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("NtSetHighEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
@@ -252,6 +258,8 @@ NtSetHighWaitLowEventPair(IN HANDLE EventPairHandle)
    PKEVENT_PAIR EventPair;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("NtSetHighWaitLowEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
@@ -289,6 +297,8 @@ NtSetLowEventPair(IN HANDLE EventPairHandle)
    PKEVENT_PAIR EventPair;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("NtSetLowEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
@@ -320,6 +330,8 @@ NtSetLowWaitHighEventPair(IN HANDLE EventPairHandle)
    PKEVENT_PAIR EventPair;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("NtSetLowWaitHighEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
@@ -357,6 +369,8 @@ NtWaitLowEventPair(IN HANDLE EventPairHandle)
    PKEVENT_PAIR EventPair;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("NtWaitLowEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
@@ -390,6 +404,8 @@ NtWaitHighEventPair(IN HANDLE EventPairHandle)
    PKEVENT_PAIR EventPair;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("NtWaitHighEventPair(EventPairHandle %x)\n",
 	  EventPairHandle);
@@ -435,6 +451,8 @@ NtSetLowWaitHighThread(
 	PKEVENT_PAIR EventPair;
 	NTSTATUS Status;
 	KIRQL Irql;
+	
+	PAGED_CODE();
 	
 	PreviousMode = ExGetPreviousMode();
 
@@ -489,6 +507,8 @@ NtSetHighWaitLowThread(
 	PKEVENT_PAIR EventPair;
 	NTSTATUS Status;
 	KIRQL Irql;
+	
+	PAGED_CODE();
 
 	Thread = PsGetCurrentThread();
 

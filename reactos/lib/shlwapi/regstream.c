@@ -75,10 +75,11 @@ static HRESULT WINAPI IStream_fnQueryInterface(IStream *iface, REFIID riid, LPVO
 static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 {
 	ISHRegStream *This = (ISHRegStream *)iface;
+	ULONG refCount = InterlockedIncrement(&This->ref);
+	
+	TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
 
-	TRACE("(%p)->(count=%lu)\n",This, This->ref);
-
-	return InterlockedIncrement(&This->ref);
+	return refCount;
 }
 
 /**************************************************************************
@@ -87,10 +88,11 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 static ULONG WINAPI IStream_fnRelease(IStream *iface)
 {
 	ISHRegStream *This = (ISHRegStream *)iface;
+	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->()\n",This);
+	TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
 
-	if (!InterlockedDecrement(&This->ref))
+	if (!refCount)
 	{
 	  TRACE(" destroying SHReg IStream (%p)\n",This);
 
@@ -102,7 +104,8 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
 	  HeapFree(GetProcessHeap(),0,This);
 	  return 0;
 	}
-	return This->ref;
+
+	return refCount;
 }
 
 /**************************************************************************

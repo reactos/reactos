@@ -26,51 +26,18 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
 #include "precomp.h"
-#include <msvcrt/stdio.h>
-#include <msvcrt/internal/file.h>
-#include <msvcrt/string.h>
+#include <stdio.h>
+#include <internal/file.h>
+#include <string.h>
+#include <tchar.h>
 
 int
-fputs(const char *s, FILE *f)
+_fputts(const _TCHAR *s, FILE *f)
 {
   int r = 0;
   int c;
   int unbuffered;
-  char localbuf[BUFSIZ];
-
-  unbuffered = f->_flag & _IONBF;
-  if (unbuffered)
-  {
-    f->_flag &= ~_IONBF;
-    f->_ptr = f->_base = localbuf;
-    f->_bufsiz = BUFSIZ;
-  }
-
-  while ((c = *s++))
-    r = putc(c, f);
-
-  if (unbuffered)
-  {
-    fflush(f);
-    f->_flag |= _IONBF;
-    f->_base = NULL;
-    f->_bufsiz = 0;
-    f->_cnt = 0;
-  }
-
-  return(r);
-}
-
-/*
- * @implemented
- */
-int
-fputws(const wchar_t* s, FILE* f)
-{
-  int r = 0;
-  int unbuffered;
-  wchar_t c;
-  wchar_t localbuf[BUFSIZ];
+  _TCHAR localbuf[BUFSIZ];
 
   unbuffered = f->_flag & _IONBF;
   if (unbuffered)
@@ -81,7 +48,7 @@ fputws(const wchar_t* s, FILE* f)
   }
 
   while ((c = *s++))
-    r = putwc(c, f);
+    r = _puttc(c, f);
 
   if (unbuffered)
   {
@@ -91,5 +58,7 @@ fputws(const wchar_t* s, FILE* f)
     f->_bufsiz = 0;
     f->_cnt = 0;
   }
+
   return(r);
 }
+

@@ -64,7 +64,7 @@
  *     enablebtn.exe, getbmp.exe, getbtn.exe, getflags.exe, hidebtn.exe,
  *     indetbtn.exe, insbtn.exe, pressbtn.exe, setbtnsz.exe, setcmdid.exe,
  *     setparnt.exe, setrows.exe, toolwnd.exe.
- *   - Microsofts controlspy examples.
+ *   - Microsoft's controlspy examples.
  *   - Charles Petzold's 'Programming Windows': gadgets.exe
  */
 
@@ -6080,7 +6080,7 @@ TOOLBAR_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TRACKMOUSEEVENT trackinfo;
     INT   nHit;
     TBUTTON_INFO *btnPtr;
-
+    
     if (infoPtr->dwStyle & TBSTYLE_FLAT) {
         /* fill in the TRACKMOUSEEVENT struct */
         trackinfo.cbSize = sizeof(TRACKMOUSEEVENT);

@@ -15,6 +15,9 @@
 
 #include "hcd.h"	/* for usbcore internals */
 
+// ReactOS specific: No WAITQUEUEs here
+#define wake_up(a) do {} while(0)
+
 struct usb_api_data {
 	wait_queue_head_t wqh;
 	int done;

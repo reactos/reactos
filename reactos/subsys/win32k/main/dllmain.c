@@ -51,6 +51,8 @@ extern SSDT Win32kSSDT[];
 extern SSPT Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
+PSHARED_SECTION_POOL SessionSharedSectionPool = NULL;
+
 NTSTATUS STDCALL
 Win32kProcessCallback (struct _EPROCESS *Process,
 		     BOOLEAN Create)
@@ -75,6 +77,12 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       ExInitializeFastMutex(&Win32Process->DriverObjListLock);
 
       Win32Process->KeyboardLayout = W32kGetDefaultKeyLayout();
+      
+      if(Process->Peb != NULL)
+      {
+        /* map the gdi handle table to user land */
+        Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
+      }
       
       /* setup process flags */
       Win32Process->Flags = 0;
@@ -178,7 +186,6 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       InitializeListHead(&Win32Thread->WindowListHead);
       ExInitializeFastMutex(&Win32Thread->WindowListLock);
       InitializeListHead(&Win32Thread->W32CallbackListHead);
-      ExInitializeFastMutex(&Win32Thread->W32CallbackListLock);
     }
   else
     {
@@ -233,6 +240,13 @@ DriverEntry (
 			    0,
 			    sizeof(W32THREAD),
 			    sizeof(W32PROCESS));
+  
+  Status = IntUserCreateSharedSectionPool(48 * 1024 * 1024, /* 48 MB by default */
+                                          &SessionSharedSectionPool);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to initialize the shared section pool: Status 0x%x\n", Status);
+  }
   
   Status = InitWindowStationImpl();
   if (!NT_SUCCESS(Status))

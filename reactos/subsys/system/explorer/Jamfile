@@ -7,8 +7,7 @@
 import rc-mingw ;
 
 
-# -I$(INCLUDE) wird von jam offenbar ignoriert, ist aber notwendig, wenn die Headerfiles des
-# Plattform SDK anstatt der veralteten im MSDEV-Installationsverzeichnis verwendet werden sollen.
+EXPAT_INC = [ modules.peek : EXPAT_INC ] ;
 
 exe explorer :
 	explorer.cpp
@@ -44,8 +43,8 @@ exe explorer :
 	dialogs/settings.cpp
 	i386-stub-win32.c
  :	<define>WIN32 <define>_WIN32_IE=0x0600 <define>_WIN32_WINNT=0x0501 <define>WINVER=0x0500
-	<cxxflags>-I$(INCLUDE) <cxxflags>-I.
-#nur für GCC:	<cxxflags>-fexceptions <cxxflags>-Wall
+	<include>. <include>$(EXPAT_INC)
+# only for GCC:	<cxxflags>-fexceptions <cxxflags>-Wall
 	<find-shared-library>gdi32
 	<find-shared-library>ole32
 	<find-shared-library>comctl32

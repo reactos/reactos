@@ -6,6 +6,7 @@
 	<define name="WINVER">0x0501</define>
 	<library>rosrtl</library>
 	<library>ntdll</library>
+	<library>smdll</library>
 	<directory name="api">
 		<file>handle.c</file>
 		<file>process.c</file>

@@ -977,7 +977,7 @@ LPITEMIDLIST WINAPI ILCreateFromPathAW (LPCVOID path)
  *  IShellFolder uses that FileSystem Bind Data object of the BindContext
  *  to pass data about the current path element to the next object. This
  *  is used to avoid having to verify the current path element on disk, so
- *  that creating an ItemIDList from a non-existent path still can work.
+ *  that creating an ItemIDList from a nonexistent path still can work.
  */
 static HRESULT WINAPI _ILParsePathW(LPCWSTR path, LPWIN32_FIND_DATAW lpFindFile,
                              BOOL bBindCtx, LPITEMIDLIST *ppidl, LPDWORD prgfInOut)
@@ -1024,7 +1024,7 @@ static HRESULT WINAPI _ILParsePathW(LPCWSTR path, LPWIN32_FIND_DATAW lpFindFile,
  * SHSimpleIDListFromPath    [SHELL32.162]
  *
  * Creates a simple ItemIDList from a path and returns it. This function
- * does not fail on non-existent paths.
+ * does not fail on nonexistent paths.
  *
  * PARAMS
  *  path         [I]   path to parse and convert into an ItemIDList

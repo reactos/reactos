@@ -26,6 +26,18 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msimg32);
 
+/***********************************************************************
+ *           DllInitialize (MSIMG32.@)
+ *
+ * MSIMG32 initialisation routine.
+ */
+BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
+{
+    if (reason == DLL_PROCESS_ATTACH) DisableThreadLibraryCalls( inst );
+    return TRUE;
+}
+
+
 /******************************************************************************
  *           vSetDdrawflag   (MSIMG32.@)
  */

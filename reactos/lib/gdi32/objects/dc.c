@@ -193,12 +193,14 @@ BOOL
 STDCALL
 DeleteObject(HGDIOBJ hObject)
 {
-  if (0 != ((DWORD) hObject & 0x00800000))
+  if (0 != ((DWORD) hObject & GDI_HANDLE_STOCK_MASK))
     {
       DPRINT1("Trying to delete system object 0x%x\n", hObject);
       return TRUE;
     }
 
+  /* deleting a handle that doesn't belong to the caller should be rather rarely
+     so for the sake of speed just try to delete it without checking validity */
   return NtGdiDeleteObject(hObject);
 }
 
@@ -399,4 +401,70 @@ StartDocW(
 	)
 {
 	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1 );
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetObjectType(
+	HGDIOBJ h
+	)
+{
+  DWORD Ret = 0;
+  
+  if(GdiIsHandleValid(h))
+  {
+    LONG Type = GDI_HANDLE_GET_TYPE(h);
+    switch(Type)
+    {
+      case GDI_OBJECT_TYPE_PEN:
+        Ret = OBJ_PEN;
+        break;
+      case GDI_OBJECT_TYPE_BRUSH:
+        Ret = OBJ_BRUSH;
+        break;
+      case GDI_OBJECT_TYPE_BITMAP:
+        Ret = OBJ_BITMAP;
+        break;
+      case GDI_OBJECT_TYPE_FONT:
+        Ret = OBJ_FONT;
+        break;
+      case GDI_OBJECT_TYPE_PALETTE:
+        Ret = OBJ_PAL;
+        break;
+      case GDI_OBJECT_TYPE_REGION:
+        Ret = OBJ_REGION;
+        break;
+      case GDI_OBJECT_TYPE_DC:
+        Ret = OBJ_DC;
+        break;
+      case GDI_OBJECT_TYPE_METADC:
+        Ret = OBJ_METADC;
+        break;
+      case GDI_OBJECT_TYPE_METAFILE:
+        Ret = OBJ_METAFILE;
+        break;
+      case GDI_OBJECT_TYPE_ENHMETAFILE:
+        Ret = OBJ_ENHMETAFILE;
+        break;
+      case GDI_OBJECT_TYPE_ENHMETADC:
+        Ret = OBJ_ENHMETADC;
+        break;
+      case GDI_OBJECT_TYPE_EXTPEN:
+        Ret = OBJ_EXTPEN;
+        break;
+      case GDI_OBJECT_TYPE_MEMDC:
+        Ret = OBJ_MEMDC;
+        break;
+
+      default:
+        DPRINT1("GetObjectType: Magic 0x%08x not implemented\n", Type);
+        break;
+    }
+  }
+
+  return Ret;
 }

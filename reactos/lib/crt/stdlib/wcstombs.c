@@ -16,11 +16,10 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <msvcrt/stdlib.h>
-#include <msvcrt/wchar.h>
-
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <stdlib.h>
+#include <wchar.h>
+#include <errno.h>
+#include <internal/file.h>
 
 #ifndef EILSEQ
 #define EILSEQ EINVAL
@@ -39,7 +38,7 @@ static const unsigned char encoding_byte[] =
 
 /* We don't need the state really because we don't have shift states
    to maintain between calls to this function.  */
-typedef int mbstate_t;
+
 static mbstate_t mbstate_internal;
 
 

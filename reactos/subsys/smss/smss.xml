@@ -2,8 +2,10 @@
 	<include base="smss">.</include>
 	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
+	<library>smdll</library>
+	<linkerflag>-lgcc</linkerflag>
 	<file>client.c</file>
-	<file>Debug.c</file>
+	<file>debug.c</file>
 	<file>init.c</file>
 	<file>initdosdev.c</file>
 	<file>initenv.c</file>
@@ -15,7 +17,10 @@
 	<file>initrun.c</file>
 	<file>initss.c</file>
 	<file>initwkdll.c</file>
+	<file>print.c</file>
 	<file>smapi.c</file>
+	<file>smapicomp.c</file>
+	<file>smapiexec.c</file>
 	<file>smss.c</file>
 	<file>smss.rc</file>
 </module>

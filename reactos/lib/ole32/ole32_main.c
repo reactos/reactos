@@ -121,7 +121,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hinstDLL);
         OLE32_hInstance = hinstDLL;
         COMPOBJ_InitProcess();
 	if (TRACE_ON(ole)) CoRegisterMallocSpy((LPVOID)-1);
@@ -132,6 +131,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         COMPOBJ_UninitProcess();
         OLE32_hInstance = 0;
 	break;
+
+    case DLL_THREAD_DETACH:
+        COM_TlsDestroy();
+        break;
     }
     return TRUE;
 }

@@ -31,6 +31,10 @@
 
 /* GLOBALS *******************************************************************/
 
+#define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
+ULONG NtMajorVersion = 4;
+ULONG NtMinorVersion = 0;
+ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(6, 0);
 #ifdef  __GNUC__
 ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;

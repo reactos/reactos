@@ -9,8 +9,8 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/conio.h>
-#include <msvcrt/internal/console.h>
+#include <conio.h>
+#include <internal/console.h>
 
 
 /*

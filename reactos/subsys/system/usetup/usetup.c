@@ -2301,6 +2301,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 #ifndef NDEBUG
   ULONG Line;
   ULONG i;
+  PLIST_ENTRY Entry;
 #endif
 
 
@@ -2761,27 +2762,24 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
 
 static BOOLEAN
-PrepareCopyPageInfFile(HINF InfFile,
+AddSectionToCopyQueue(HINF InfFile,
+		       PWCHAR SectionName,
 		       PWCHAR SourceCabinet,
 		       PINPUT_RECORD Ir)
 {
-  WCHAR PathBuffer[MAX_PATH];
   INFCONTEXT FilesContext;
   INFCONTEXT DirContext;
-  PWCHAR KeyValue;
-  ULONG Length;
-  NTSTATUS Status;
   PWCHAR FileKeyName;
   PWCHAR FileKeyValue;
   PWCHAR DirKeyValue;
   PWCHAR TargetFileName;
-
-  /* Search for the 'SourceFiles' section */
-  if (!InfFindFirstLine (InfFile, L"SourceFiles", NULL, &FilesContext))
+  
+  /* Search for the SectionName section */
+  if (!InfFindFirstLine (InfFile, SectionName, NULL, &FilesContext))
     {
-      PopupError("Setup failed to find the 'SourceFiles' section\n"
-		 "in TXTSETUP.SIF.\n",  // FIXME
-		 "ENTER = Reboot computer");
+      char Buffer[128];
+      sprintf(Buffer, "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n", SectionName);
+      PopupError(Buffer, "ENTER = Reboot computer");
 
       while(TRUE)
 	{
@@ -2795,7 +2793,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     }
 
   /*
-   * Enumerate the files in the 'SourceFiles' section
+   * Enumerate the files in the section
    * and add them to the file queue.
    */
   do
@@ -2842,8 +2840,38 @@ PrepareCopyPageInfFile(HINF InfFile,
 	}
     }
   while (InfFindNextLine(&FilesContext, &FilesContext));
+  
+  return TRUE;
+}
 
+static BOOLEAN
+PrepareCopyPageInfFile(HINF InfFile,
+		       PWCHAR SourceCabinet,
+		       PINPUT_RECORD Ir)
+{
+  WCHAR PathBuffer[MAX_PATH];
+  INFCONTEXT DirContext;
+  PWCHAR AdditionalSectionName;
+  PWCHAR KeyValue;
+  ULONG Length;
+  NTSTATUS Status;
 
+  /* Add common files */
+  if (!AddSectionToCopyQueue(InfFile, L"SourceFiles", SourceCabinet, Ir))
+    return FALSE;
+  
+  /* Add specific files depending of computer type */
+  if (SourceCabinet == NULL)
+  {
+    if (!ProcessComputerFiles(InfFile, ComputerList, &AdditionalSectionName))
+      return FALSE;
+    if (AdditionalSectionName)
+    {
+      if (!AddSectionToCopyQueue(InfFile, AdditionalSectionName, SourceCabinet, Ir))
+        return FALSE;
+    }
+  }
+  
   /* Create directories */
 
   /*

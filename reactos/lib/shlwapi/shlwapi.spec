@@ -22,10 +22,10 @@
 22  stdcall -noname SHFindDataBlock(ptr long)
 23  stdcall -noname SHStringFromGUIDA(ptr ptr long)
 24  stdcall -noname SHStringFromGUIDW(ptr ptr long)
-25  stdcall -noname IsCharAlphaWrapW(long)
-26  stdcall -noname IsCharUpperWrapW(long)
-27  stdcall -noname IsCharLowerWrapW(long)
-28  stdcall -noname IsCharAlphaNumericWrapW(long)
+25  stdcall -noname IsCharAlphaWrapW(long) user32.IsCharAlphaW
+26  stdcall -noname IsCharUpperWrapW(long) user32.IsCharUpperW
+27  stdcall -noname IsCharLowerWrapW(long) user32.IsCharLowerW
+28  stdcall -noname IsCharAlphaNumericWrapW(long) user32.IsCharAlphaNumericW
 29  stdcall -noname IsCharSpaceW(long)
 30  stdcall -noname IsCharBlankW(long)
 31  stdcall -noname IsCharPunctW(long)
@@ -687,16 +687,16 @@
 @ stdcall SHQueryValueExA(long str ptr ptr ptr ptr)
 @ stdcall SHQueryValueExW(long wstr ptr ptr ptr ptr)
 @ stdcall SHRegCloseUSKey(ptr)
-@ stub    SHRegCreateUSKeyA
-@ stub    SHRegCreateUSKeyW
-@ stub    SHRegDeleteEmptyUSKeyA
-@ stub    SHRegDeleteEmptyUSKeyW
-@ stub    SHRegDeleteUSValueA
-@ stub    SHRegDeleteUSValueW
+@ stdcall SHRegCreateUSKeyA(str long long ptr long)
+@ stdcall SHRegCreateUSKeyW(wstr long long ptr long)
+@ stdcall SHRegDeleteEmptyUSKeyA(long str long)
+@ stdcall SHRegDeleteEmptyUSKeyW(long wstr long)
+@ stdcall SHRegDeleteUSValueA(long str long)
+@ stdcall SHRegDeleteUSValueW(long wstr long)
 @ stdcall SHRegEnumUSKeyA(long long str ptr long)
 @ stdcall SHRegEnumUSKeyW(long long wstr ptr long)
-@ stub    SHRegEnumUSValueA
-@ stub    SHRegEnumUSValueW
+@ stdcall SHRegEnumUSValueA(long long ptr ptr ptr ptr ptr long)
+@ stdcall SHRegEnumUSValueW(long long ptr ptr ptr ptr ptr long)
 @ stdcall SHRegGetBoolUSValueA(str str long long)
 @ stdcall SHRegGetBoolUSValueW(wstr wstr long long)
 @ stdcall SHRegGetUSValueA ( str str ptr ptr ptr long ptr long )
@@ -814,8 +814,8 @@
 @ stdcall _SHGetInstanceExplorer(ptr)
 @ stdcall PathUndecorateA(str)
 @ stdcall PathUndecorateW(wstr)
-@ stub    PathUnExpandEnvStringsA
-@ stub    PathUnExpandEnvStringsW
+@ stdcall PathUnExpandEnvStringsA(str ptr long)
+@ stdcall PathUnExpandEnvStringsW(wstr ptr long)
 @ stdcall SHCopyKeyA(long str long long)
 @ stdcall SHCopyKeyW(long wstr long long)
 @ stdcall SHAutoComplete(ptr long)

@@ -28,6 +28,7 @@
 
 #define NDEBUG
 #include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -177,21 +178,27 @@ RtlInitializeGenericTable (
 	UNIMPLEMENTED;
 }
 
+
 /*
-* @unimplemented
-*/
-VOID
-STDCALL
-RtlInitializeGenericTableAvl (
-	PRTL_AVL_TABLE Table,
-	PRTL_AVL_COMPARE_ROUTINE CompareRoutine,
-	PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
-	PRTL_AVL_FREE_ROUTINE FreeRoutine,
-	PVOID TableContext
-	)
+ * @implemented
+ */
+VOID STDCALL
+RtlInitializeGenericTableAvl(IN OUT PRTL_AVL_TABLE Table,
+                             IN PRTL_AVL_COMPARE_ROUTINE CompareRoutine,
+                             IN PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
+                             IN PRTL_AVL_FREE_ROUTINE FreeRoutine,
+                             IN PVOID TableContext)
 {
-	UNIMPLEMENTED;
+  RtlZeroMemory(Table,
+                sizeof(RTL_AVL_TABLE));
+  Table->BalancedRoot.Parent = &Table->BalancedRoot;
+
+  Table->CompareRoutine = CompareRoutine;
+  Table->AllocateRoutine = AllocateRoutine;
+  Table->FreeRoutine = FreeRoutine;
+  Table->TableContext = TableContext;
 }
+
 
 /*
 * @unimplemented
@@ -351,29 +358,22 @@ RtlLookupElementGenericTableFullAvl (
 
 
 /*
-* @unimplemented
-*/
-ULONG
-STDCALL
-RtlNumberGenericTableElements(
-	PRTL_GENERIC_TABLE Table
-	)
+ * @implemented
+ */
+ULONG STDCALL
+RtlNumberGenericTableElements(IN PRTL_GENERIC_TABLE Table)
 {
-	UNIMPLEMENTED;
-	return 0;
+  return Table->NumberGenericTableElements;
 }
 
+
 /*
-* @unimplemented
-*/
-ULONG
-STDCALL
-RtlNumberGenericTableElementsAvl (
-	PRTL_AVL_TABLE Table
-	)
+ * @implemented
+ */
+ULONG STDCALL
+RtlNumberGenericTableElementsAvl(IN PRTL_AVL_TABLE Table)
 {
-	UNIMPLEMENTED;
-	return 0;
+  return Table->NumberGenericTableElements;
 }
 
 /* EOF */

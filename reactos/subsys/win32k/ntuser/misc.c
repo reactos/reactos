@@ -131,10 +131,6 @@ NtUserCallNoParam(DWORD Routine)
       Result = (DWORD)CsrInit();
       break;
     
-    case NOPARAM_ROUTINE_GDI_QUERY_TABLE:
-      Result = (DWORD)GDI_MapHandleTable(NtCurrentProcess());
-      break;
-    
     case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
       return (DWORD)IntMsqClearWakeMask();
 
@@ -1179,7 +1175,7 @@ NtUserGetGUIThreadInfo(
   
   if(idThread)
   {
-    Status = PsLookupThreadByThreadId((PVOID)idThread, &Thread);
+    Status = PsLookupThreadByThreadId((HANDLE)idThread, &Thread);
     if(!NT_SUCCESS(Status))
     {
       SetLastWin32Error(ERROR_ACCESS_DENIED);

@@ -29,5 +29,6 @@ extern HINSTANCE OLE32_hInstance;
 
 void COMPOBJ_InitProcess( void );
 void COMPOBJ_UninitProcess( void );
+void COM_TlsDestroy( void );
 
 #endif /* __WINE_OLE32_MAIN_H */

@@ -402,7 +402,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
   Fcb->Entry.ExtentLocationL = 0;
   Fcb->Entry.DataLengthL = (DeviceExt->CdInfo.VolumeSpaceSize + DeviceExt->CdInfo.VolumeOffset) * BLOCKSIZE;
-
+#ifdef USE_ROS_CC_AND_FS
   Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject,
 				    PAGE_SIZE);
   if (!NT_SUCCESS (Status))
@@ -410,7 +410,13 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
       DbgPrint("CcRosInitializeFileCache failed\n");
       goto ByeBye;
     }
-
+#else
+  CcInitializeCacheMap(DeviceExt->StreamFileObject,
+                       (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+		       TRUE,
+		       NULL,
+		       NULL);
+#endif
   ExInitializeResourceLite(&DeviceExt->VcbResource);
   ExInitializeResourceLite(&DeviceExt->DirResource);
 

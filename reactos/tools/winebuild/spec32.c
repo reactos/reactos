@@ -263,7 +263,7 @@ static int output_exports( FILE *outfile, int nr_exports, DLLSPEC *spec )
             unsigned int j, args, mask = 0;
             const char *name;
 
-            /* skip non-existent entry points */
+            /* skip nonexistent entry points */
             if (!odp) goto ignore;
             /* skip non-functions */
             if ((odp->type != TYPE_STDCALL) && (odp->type != TYPE_CDECL)) goto ignore;
@@ -469,6 +469,19 @@ void output_dll_init( FILE *outfile, const char *constructor, const char *destru
         fprintf( outfile, "    \"\\t.section\\t\\\".text\\\"\\n\");\n" );
     }
 # endif /* __APPLE__ */
+#elif defined(__ALPHA__)
+    if (constructor)
+    {
+        fprintf( outfile, "asm(\"\\t.section\\t\\\".init\\\" ,\\\"ax\\\"\\n\"\n" );
+        fprintf( outfile, "    \"\\tjsr $26," __ASM_NAME("%s") "\\n\"\n", constructor );
+        fprintf( outfile, "    \"\\t.section\\t\\\".text\\\"\\n\");\n" );
+    }
+    if (destructor)
+    {
+        fprintf( outfile, "asm(\"\\t.section\\t\\\".fini\\\" ,\\\"ax\\\"\\n\"\n" );
+        fprintf( outfile, "    \"\\tjsr $26," __ASM_NAME("%s") "\\n\"\n", destructor );
+        fprintf( outfile, "    \"\\t.section\\t\\\".text\\\"\\n\");\n" );
+    }
 #else
 #error You need to define the DLL constructor for your architecture
 #endif
@@ -758,6 +771,8 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
     fprintf( outfile, "  { 0x%04x,\n", IMAGE_FILE_MACHINE_I386 );  /* Machine */
 #elif defined(__powerpc__)
     fprintf( outfile, "  { 0x%04x,\n", IMAGE_FILE_MACHINE_POWERPC ); /* Machine */
+#elif defined(__ALPHA__)
+    fprintf( outfile, "  { 0x%04x,\n", IMAGE_FILE_MACHINE_ALPHA ); /* Machine */
 #else
     fprintf( outfile, "  { 0x%04x,\n", IMAGE_FILE_MACHINE_UNKNOWN );  /* Machine */
 #endif
@@ -993,6 +1008,12 @@ void BuildDebugFile( FILE *outfile, const char *srcdir, char **argv )
     fprintf( outfile, "    \"\\tbl " __ASM_NAME("__wine_dbg_%s_fini") "\\n\"\n", prefix );
     fprintf( outfile, "    \"\\t.text\\n\");\n" );
 # endif
+#elif defined(__ALPHA__)
+    fprintf( outfile, "asm(\"\\t.section\\t\\\".init\\\" ,\\\"ax\\\"\\n\"\n" );
+    fprintf( outfile, "    \"\\tjsr $26," __ASM_NAME("__wine_dbg_%s_init") "\\n\"\n", prefix );
+    fprintf( outfile, "    \"\\t.section\\t\\\".fini\\\" ,\\\"ax\\\"\\n\"\n" );
+    fprintf( outfile, "    \"\\tjsr $26," __ASM_NAME("__wine_dbg_%s_fini") "\\n\"\n", prefix );
+    fprintf( outfile, "    \"\\t.section\\t\\\".text\\\"\\n\");\n" );
 #else
 #error You need to define the DLL constructor for your architecture
 #endif

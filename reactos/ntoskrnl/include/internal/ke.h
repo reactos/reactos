@@ -142,6 +142,8 @@ VOID STDCALL KiDeleteProfile(PVOID ObjectBody);
 VOID STDCALL KeUpdateSystemTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 
+VOID STDCALL KiExpireTimers(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2);
+
 KIRQL KeAcquireDispatcherDatabaseLock(VOID);
 VOID KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
 VOID KeReleaseDispatcherDatabaseLock(KIRQL Irql);
@@ -193,7 +195,7 @@ VOID KeInitTimer(VOID);
 VOID KeInitDpc(struct _KPCR* Pcr);
 VOID KeInitDispatcher(VOID);
 VOID KeInitializeDispatcher(VOID);
-VOID KeInitializeTimerImpl(VOID);
+VOID KiInitializeSystemClock(VOID);
 VOID KeInitializeBugCheck(VOID);
 VOID Phase1Initialization(PVOID Context);
 

@@ -403,7 +403,7 @@ NTSTATUS STDCALL PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 					    OUT struct _ETHREAD **Thread);
 					 /* OUT PETHREAD *Thread); */
 
-NTSTATUS STDCALL PsLookupThreadByThreadId(IN PVOID ThreadId,
+NTSTATUS STDCALL PsLookupThreadByThreadId(IN HANDLE ThreadId,
 					  OUT struct _ETHREAD **Thread);
 					/* OUT PETHREAD *Thread); */
 

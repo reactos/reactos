@@ -1,11 +1,12 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdlib.h>
+#include <stdlib.h>
+#include <tchar.h>
 
 /*
  * @implemented
  */
 int
-atoi(const char *str)
+_ttoi(const _TCHAR *str)
 {
-  return (int)strtol(str, 0, 10);
+  return (int)_tcstol(str, 0, 10);
 }

@@ -34,6 +34,11 @@ PGENERIC_LIST
 CreateDisplayDriverList(HINF InfFile);
 
 BOOLEAN
+ProcessComputerFiles(HINF InfFile,
+		       PGENERIC_LIST List,
+		       PWCHAR* AdditionalSectionName);
+
+BOOLEAN
 ProcessDisplayRegistry(HINF InfFile,
 		       PGENERIC_LIST List);
 

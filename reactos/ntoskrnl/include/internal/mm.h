@@ -563,6 +563,8 @@ NTSTATUS MmSafeCopyFromUser(PVOID Dest, const VOID *Src, ULONG Count);
 
 NTSTATUS MmSafeCopyToUser(PVOID Dest, const VOID *Src, ULONG Count);
 
+PVOID FASTCALL MmSafeReadPtr(PVOID Source);
+
 /* pageop.c ******************************************************************/
 
 VOID

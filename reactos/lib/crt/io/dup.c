@@ -1,7 +1,7 @@
 #include "precomp.h"
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <io.h>
+#include <errno.h>
+#include <internal/file.h>
 
 
 /*
@@ -14,7 +14,7 @@ int _dup(int handle)
   BOOL result;
   int fd;
   
-  hFile = _get_osfhandle(handle);
+  hFile = (HANDLE)_get_osfhandle(handle);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		__set_errno(EBADF);
 		return -1;
@@ -31,7 +31,7 @@ int _dup(int handle)
 		return -1;
 	}
 
-  fd = __fileno_alloc(hFile, __fileno_getmode(handle));
+  fd = alloc_fd(hFile, __fileno_getmode(handle));
   if (fd < 0)
   {
 	  CloseHandle(hFile);

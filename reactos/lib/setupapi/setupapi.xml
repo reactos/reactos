@@ -13,13 +13,13 @@
 	<define name="__WINESRC__" />
 	<define name="_SETUPAPI_" />
 	<library>wine</library>
-	<library>wine_unicode</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>rpcrt4</library>
 	<library>version</library>
+	<file>cfgmgr.c</file>
 	<file>devinst.c</file>
 	<file>dirid.c</file>
 	<file>diskspace.c</file>

@@ -24,7 +24,7 @@ MingwModuleHandler::fMakefile = NULL;
 
 string
 ReplaceExtension ( const string& filename,
-	               const string& newExtension )
+                   const string& newExtension )
 {
 	size_t index = filename.find_last_of ( '/' );
 	if (index == string::npos) index = 0;
@@ -676,16 +676,34 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
                                              const string& windresflagsMacro ) const
 {
 	string objectFilename = PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( sourceFilename ) );
+  string rciFilename = ReplaceExtension ( sourceFilename,
+                                          ".rci" );
+  string resFilename = ReplaceExtension ( sourceFilename,
+                                          ".res" );
 	fprintf ( fMakefile,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile,
-	         "\t%s %s -o %s ${%s}\n",
-	         "${windres}",
+	         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
+	         windresflagsMacro.c_str (),
 	         sourceFilename.c_str (),
-	         objectFilename.c_str (),
-	         windresflagsMacro.c_str () );
+	         rciFilename.c_str () );
+	fprintf ( fMakefile,
+	         "\t${wrc} ${%s} %s %s\n",
+           windresflagsMacro.c_str (),
+	         rciFilename.c_str (),
+	         resFilename.c_str () );
+	fprintf ( fMakefile,
+	         "\t${rm} %s\n",
+	         rciFilename.c_str () );
+	fprintf ( fMakefile,
+	         "\t${windres} %s -o %s\n",
+	         resFilename.c_str (),
+	         objectFilename.c_str () );
+	fprintf ( fMakefile,
+	         "\t${rm} %s\n",
+	         resFilename.c_str () );
 }
 
 void

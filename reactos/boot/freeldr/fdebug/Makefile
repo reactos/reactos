@@ -30,23 +30,23 @@ OBJS = rs232.o fdebug.o fdebug.res
 all: fdebug.exe
 
 fdebug.exe: $(OBJS)
-	@echo ===================================================== LINKING fdebug
+	@echo freeldr: LINKING fdebug
 	$(CC) $(FLAGS) -o fdebug.exe $(OBJS) -lgdi32 -lcomdlg32 -Wl,--subsystem,windows
 
 fdebug.res: fdebug.rc resource.h
-	@echo ===================================================== Compiling $*
+	@echo freeldr: Compiling $*
 	$(RC) -o fdebug.res fdebug.rc -O coff
 
 fdebug.o: fdebug.c rs232.h
-	@echo ===================================================== Compiling $*
+	@echo freeldr: Compiling $*
 	$(CC) $(FLAGS) -o fdebug.o -c fdebug.c
 
 rs232.o: rs232.c rs232.h
-	@echo ===================================================== Compiling $*
+	@echo freeldr: Compiling $*
 	$(CC) $(FLAGS) -o rs232.o -c rs232.c
 
 clean:
 	@-$(RM) *.o
 	@-$(RM) *.res
 	@-$(RM) *.exe
-	@echo Clean ALL done.
+	@echo freeldr: Clean ALL done.

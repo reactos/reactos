@@ -44,6 +44,7 @@
 #define SOCKET_STATE_CONNECTED          3
 #define SOCKET_STATE_LISTENING          4
 #define SOCKET_STATE_MASK               0x0000ffff
+#define SOCKET_STATE_EOF_READ           0x20000000
 #define SOCKET_STATE_LOCKED             0x40000000
 #define SOCKET_STATE_NEW                0x80000000
 #define SOCKET_STATE_CLOSED             0x00000100

@@ -1,5 +1,5 @@
-#include <msvcrt/float.h>
-#include <msvcrt/internal/ieee.h>
+#include <float.h>
+#include <internal/ieee.h>
 
 
 /*

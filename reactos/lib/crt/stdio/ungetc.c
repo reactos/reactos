@@ -1,76 +1,51 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
-#include <msvcrt/errno.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <errno.h>
+#include <internal/file.h>
+#include <tchar.h>
 
 
 /*
  * @implemented
  */
-int ungetc(int c, FILE *f)
+_TINT _ungettc(_TINT c, FILE *f)
 {
   if (!__validfp (f) || !OPEN4READING(f)) {
       __set_errno (EINVAL);
-      return EOF;
+      return _TEOF;
     }
 
-  if (c == EOF)
-    return EOF;
+  if (c == _TEOF)
+    return _TEOF;
 
   if (f->_ptr == NULL || f->_base == NULL)
-    return EOF;
+    return _TEOF;
 
   if (f->_ptr == f->_base)
     {
       if (f->_cnt == 0)
-        f->_ptr++;
+        f->_ptr+=sizeof(_TCHAR);
       else
-        return EOF;
+        return _TEOF;
     }
 
-  f->_cnt++;
-  f->_ptr--;
-  if (*f->_ptr != c)
+  f->_cnt+=sizeof(_TCHAR);
+  f->_ptr-=sizeof(_TCHAR);
+  
+#if 1  
+  if (*((_TCHAR*)(f->_ptr)) != c)
     {
       f->_flag |= _IOUNGETC;
-      *f->_ptr = c;
+      *((_TCHAR*)(f->_ptr)) = c;
     }
-  return c;
-}
-
-
-/*
- * @implemented
- */
-wint_t
-ungetwc(wchar_t c, FILE *f)
-{
-  if (!__validfp (f) || !OPEN4READING(f)) {
-      __set_errno(EINVAL);
-      return EOF;
-    }
-
-  if (c == (wchar_t)EOF)
-    return EOF;
-
-  if (f->_ptr == NULL || f->_base == NULL)
-    return EOF;
-
-  if (f->_ptr == f->_base)
-    {
-      if (f->_cnt == 0)
-        f->_ptr+=sizeof(wchar_t);
-      else
-        return EOF;
-    }
-
-  f->_cnt+=sizeof(wchar_t);
-  f->_ptr-=sizeof(wchar_t);
-
+#else 
+  /* This is the old unicode version. Dunno what version is most correct. -Gunnar */
   f->_flag |= _IOUNGETC;
-  *((wchar_t *)(f->_ptr)) = c;
+  *((_TCHAR*)(f->_ptr)) = c;
+#endif
 
   return c;
 }
+

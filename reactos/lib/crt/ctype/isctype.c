@@ -6,7 +6,7 @@
  * PROGRAMMER:       Copyright (C) 1995 DJ Delorie
  */
  
-#include <msvcrt/ctype.h>
+#include <ctype.h>
 
 
 extern unsigned short _ctype[];
@@ -34,7 +34,7 @@ unsigned short **__p__pwctype(void)
 /*
  * @implemented
  */
-int _isctype(unsigned int c, int ctypeFlags)
+int _isctype(int c, int ctypeFlags)
 {
    return (_pctype[(unsigned char)(c & 0xFF)] & ctypeFlags);
 }

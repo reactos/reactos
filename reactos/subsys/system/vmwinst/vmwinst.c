@@ -24,6 +24,7 @@
  * PROJECT:     ReactOS VMware(r) driver installation utility
  * FILE:        subsys/system/vmwinst/vmwinst.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *              Klemens Friedl (frik85@hotmail.com)
  */
 #include <windows.h>
 #include <commctrl.h>
@@ -131,6 +132,30 @@ FileExists(WCHAR *Path, WCHAR *File)
   CloseHandle(FileHandle);
   return TRUE;
 }
+
+static VOID
+CenterWindow(HWND hWnd)
+{
+  HWND hWndParent;
+  RECT rcParent;
+  RECT rcWindow;
+
+  hWndParent = GetParent(hWnd);
+  if (hWndParent == NULL)
+    hWndParent = GetDesktopWindow();
+
+  GetWindowRect(hWndParent, &rcParent);
+  GetWindowRect(hWnd, &rcWindow);
+
+  SetWindowPos(hWnd,
+	       HWND_TOP,
+	       ((rcParent.right - rcParent.left) - (rcWindow.right - rcWindow.left)) / 2,
+	       ((rcParent.bottom - rcParent.top) - (rcWindow.bottom - rcWindow.top)) / 2,
+	       0,
+	       0,
+	       SWP_NOSIZE);
+}
+
 
 /* Copy file */
 BOOL
@@ -383,6 +408,12 @@ PageWelcomeProc(
   {
     case WM_NOTIFY:
     {
+      HWND hwndControl;
+
+      /* Center the wizard window */
+      hwndControl = GetParent(hwndDlg);     
+      CenterWindow (hwndControl);
+
       LPNMHDR pnmh = (LPNMHDR)lParam;
       switch(pnmh->code)
       {
@@ -397,6 +428,7 @@ PageWelcomeProc(
           {
             if(!EnableVmwareDriver(FALSE, FALSE, TRUE))
             {
+
               WCHAR Msg[1024];
               LoadString(hAppInstance, IDS_FAILEDTOACTIVATEDRIVER, Msg, sizeof(Msg) / sizeof(WCHAR));
               MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
@@ -728,6 +760,12 @@ PageConfigProc(
     }
     case WM_NOTIFY:
     {
+      HWND hwndControl;
+
+      /* Center the wizard window */
+      hwndControl = GetParent(hwndDlg);     
+      CenterWindow (hwndControl);
+
       LPNMHDR pnmh = (LPNMHDR)lParam;
       switch(pnmh->code)
       {
@@ -969,33 +1007,92 @@ PageDoUninstallProc(
 static LONG
 CreateWizard(VOID)
 {
-  PROPSHEETPAGE psp[8];
   PROPSHEETHEADER psh;
+  HPROPSHEETPAGE ahpsp[8];
+  PROPSHEETPAGE psp;
   WCHAR Caption[1024];
   
   LoadString(hAppInstance, IDS_WIZARD_NAME, Caption, sizeof(Caption) / sizeof(TCHAR));
-  
-  ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+
+  /* Create the Welcome page */
+  ZeroMemory (&psp, sizeof(PROPSHEETPAGE));
+  psp.dwSize = sizeof(PROPSHEETPAGE);
+  psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+  psp.hInstance = hAppInstance;
+  psp.pfnDlgProc = PageWelcomeProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_WELCOMEPAGE);
+  ahpsp[0] = CreatePropertySheetPage(&psp);
+
+  /* Create the INSERT_VMWARE_TOOLS page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDD_INSERT_VMWARE_TOOLSTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_INSERT_VMWARE_TOOLSSUBTITLE);
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_INSERT_VMWARE_TOOLS);
+  psp.pfnDlgProc = PageInsertDiscProc;
+  ahpsp[1] = CreatePropertySheetPage(&psp);
+
+  /* Create the INSTALLING_VMWARE_TOOLS page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDD_INSTALLING_VMWARE_TOOLSTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_INSTALLING_VMWARE_TOOLSSUBTITLE);
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLING_VMWARE_TOOLS);
+  psp.pfnDlgProc = PageInstallingProc;
+  ahpsp[2] = CreatePropertySheetPage(&psp);
+
+  /* Create the CONFIG page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDD_CONFIGTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_CONFIGSUBTITLE);
+  psp.pfnDlgProc = PageConfigProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_CONFIG);
+  ahpsp[3] = CreatePropertySheetPage(&psp);
+
+  /* Create the INSTALLATION_FAILED page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDD_INSTALLATION_FAILEDTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_INSTALLATION_FAILEDSUBTITLE);
+  psp.pfnDlgProc = PageInstallFailedProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLATION_FAILED);
+  ahpsp[4] = CreatePropertySheetPage(&psp);
+
+  /* Create the CHOOSEACTION page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDD_CHOOSEACTIONTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_CHOOSEACTIONSUBTITLE);
+  psp.pfnDlgProc = PageChooseActionProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_CHOOSEACTION);
+  ahpsp[5] = CreatePropertySheetPage(&psp);
+
+  /* Create the SELECTDRIVER page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDD_SELECTDRIVERTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_SELECTDRIVERSUBTITLE);
+  psp.pfnDlgProc = PageSelectDriverProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_SELECTDRIVER);
+  ahpsp[6] = CreatePropertySheetPage(&psp); 
+
+  /* Create the DOUNINSTALL page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDD_DOUNINSTALLTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDD_DOUNINSTALLSUBTITLE);
+  psp.pfnDlgProc = PageDoUninstallProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_DOUNINSTALL);
+  ahpsp[7] = CreatePropertySheetPage(&psp); 
+
+  /* Create the property sheet */
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
-  psh.hwndParent = NULL;
+  psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
   psh.hInstance = hAppInstance;
-  psh.hIcon = 0;
-  psh.pszCaption = Caption;
+  psh.hwndParent = NULL;
   psh.nPages = 7;
   psh.nStartPage = (StartVMwConfigWizard ? 5 : 0);
-  psh.ppsp = psp;
+  psh.phpage = ahpsp;
   psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
   psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
-  
-  InitPropSheetPage(&psp[0], IDD_WELCOMEPAGE, PSP_HIDEHEADER, PageWelcomeProc);
-  InitPropSheetPage(&psp[1], IDD_INSERT_VMWARE_TOOLS, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageInsertDiscProc);
-  InitPropSheetPage(&psp[2], IDD_INSTALLING_VMWARE_TOOLS, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageInstallingProc);
-  InitPropSheetPage(&psp[3], IDD_CONFIG, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageConfigProc);
-  InitPropSheetPage(&psp[4], IDD_INSTALLATION_FAILED, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageInstallFailedProc);
-  InitPropSheetPage(&psp[5], IDD_CHOOSEACTION, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageChooseActionProc);
-  InitPropSheetPage(&psp[6], IDD_SELECTDRIVER, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageSelectDriverProc);
-  InitPropSheetPage(&psp[7], IDD_DOUNINSTALL, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageDoUninstallProc);
+
+  /* Display the wizard */
+  PropertySheet(&psh);
+
   
   return (LONG)(PropertySheet(&psh) != -1);
 }
@@ -1006,6 +1103,7 @@ WinMain(HINSTANCE hInstance,
 	LPSTR lpszCmdLine,
 	int nCmdShow)
 {
+  
   LPTOP_LEVEL_EXCEPTION_FILTER OldHandler;
   int Version;
   WCHAR *lc;
@@ -1014,7 +1112,7 @@ WinMain(HINSTANCE hInstance,
 
   /* Setup our exception "handler" ;-) */
   OldHandler = SetUnhandledExceptionFilter(ExceptionHandler);
-  
+
   if(!DetectVMware(&Version))
   {
     ExitProcess(1);
@@ -1044,7 +1142,7 @@ WinMain(HINSTANCE hInstance,
   
   /* Show the wizard */
   CreateWizard();
-  
+ 
   return 2;
 }
 

@@ -55,6 +55,8 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
    UNICODE_STRING RemainingPath;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      ObjectPath,
@@ -126,6 +128,8 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
    UNICODE_STRING RemainingPath;
    PVOID Object = NULL;
    NTSTATUS Status;
+   
+   PAGED_CODE();
 
    DPRINT("ObOpenObjectByName(...)\n");
 
@@ -391,7 +395,7 @@ ObInit(VOID)
   ObDirectoryType->Create = ObpCreateDirectory;
   ObDirectoryType->DuplicationNotify = NULL;
 
-  RtlRosInitUnicodeStringFromLiteral(&ObDirectoryType->TypeName,
+  RtlInitUnicodeString(&ObDirectoryType->TypeName,
 		       L"Directory");
 
   /* create 'type' object type*/
@@ -416,7 +420,7 @@ ObInit(VOID)
   ObTypeObjectType->Create = NULL;
   ObTypeObjectType->DuplicationNotify = NULL;
 
-  RtlRosInitUnicodeStringFromLiteral(&ObTypeObjectType->TypeName,
+  RtlInitUnicodeString(&ObTypeObjectType->TypeName,
 		       L"ObjectType");
 
   /* Create security descriptor */

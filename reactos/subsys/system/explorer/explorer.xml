@@ -1,6 +1,7 @@
 <module name="explorer" type="win32gui">
 	<linkerflag>-fexceptions</linkerflag>
 	<include base="explorer">.</include>
+	<include base="ReactOS">include/expat</include>
 	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="WIN32" />
@@ -8,6 +9,7 @@
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="WINVER">0x0500</define>
+	<define name="__WINDRES__" />
 	<library>uuid</library>
 	<library>kernel32</library>
 	<library>gdi32</library>

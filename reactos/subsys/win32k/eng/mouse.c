@@ -243,7 +243,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       RECTL DestRect;
       POINTL SrcPoint;
       SURFOBJ *ColorSurf;
-      SURFOBJ *MaskSurf;
+      SURFOBJ *MaskSurf = NULL;
 
       DestRect.left = max(pt.x, 0);
       DestRect.top = max(pt.y, 0);
@@ -257,7 +257,9 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       SrcPoint.x = max(-pt.x, 0);
       SrcPoint.y = max(-pt.y, 0);
 
-      MaskSurf = EngLockSurface(pgp->MaskSurface);
+      if (pgp->MaskSurface)
+        MaskSurf = EngLockSurface(pgp->MaskSurface);
+
       if (MaskSurf != NULL)
       {
         if (pgp->ColorSurface != NULL)

@@ -54,6 +54,10 @@ else
 TARGET_BASE = 0x80000000
 endif
 
+ifneq ($(DBG), 0)
+TARGET_CFLAGS += -DDBG
+endif
+
 # enable thread event pair features (NT4 only!)
 # TARGET_CFLAGS += -D_ENABLE_THRDEVTPAIR
 
@@ -96,6 +100,7 @@ OBJECTS_KE = \
 	ke/apc.o \
 	ke/bug.o \
 	ke/catch.o \
+	ke/clock.o \
 	ke/critical.o \
 	ke/dpc.o \
 	ke/device.o \

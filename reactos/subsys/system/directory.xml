@@ -22,9 +22,6 @@
 <directory name="regedit">
 	<xi:include href="regedit/regedit.xml" />
 </directory>
-<directory name="regedt32">
-	<xi:include href="regedt32/regedt32.xml" />
-</directory>
 <directory name="regsvr32">
 	<xi:include href="regsvr32/regsvr32.xml" />
 </directory>

@@ -1,18 +1,20 @@
 <module name="crt" type="staticlibrary">
 	<include base="crt">.</include>
+	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />
+	<define name="__MINGW_IMPORT">extern</define>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="__REACTOS__" />
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />
+	<define name="_MSVCRT_" />
 	<define name="_MT" />
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>
 		<file>cputs.c</file>
-		<file>cscanf.c</file>
 		<file>getch.c</file>
 		<file>getche.c</file>
 		<file>kbhit.c</file>
@@ -88,7 +90,7 @@
 		<file>read.c</file>
 		<file>setmode.c</file>
 		<file>sopen.c</file>
-	    <file>stubs.c</file>
+		<file>stubs.c</file>
 		<file>tell.c</file>
 		<file>telli64.c</file>
 		<file>umask.c</file>
@@ -245,7 +247,6 @@
 		<file>fputs.c</file>
 		<file>fread.c</file>
 		<file>freopen.c</file>
-		<file>fscanf.c</file>
 		<file>fseek.c</file>
 		<file>fsetpos.c</file>
 		<file>fsopen.c</file>
@@ -267,23 +268,20 @@
 		<file>rename.c</file>
 		<file>rewind.c</file>
 		<file>rmtmp.c</file>
-		<file>scanf.c</file>
 		<file>setbuf.c</file>
 		<file>setvbuf.c</file>
 		<file>sprintf.c</file>
-		<file>sscanf.c</file>
+		<file>swprintf.c</file>
 		<file>stdhnd.c</file>
 		<file>tempnam.c</file>
 		<file>tmpfile.c</file>
 		<file>tmpnam.c</file>
 		<file>ungetc.c</file>
 		<file>vfprintf.c</file>
-		<file>vfscanf.c</file>
 		<file>vfwprint.c</file>
 		<file>vprintf.c</file>
-		<file>vscanf.c</file>
 		<file>vsprintf.c</file>
-		<file>vsscanf.c</file>
+		<file>vswprintf.c</file>
 		<file>wfdopen.c</file>
 		<file>wrename.c</file>
 		<file>wtempnam.c</file>
@@ -381,6 +379,7 @@
 		<file>cpp.c</file>
 		<file>cppexcept.c</file>
 		<file>heap.c</file>
+		<file>scanf.c</file>
 		<file>thread.c</file>
 	</directory>
 </module>

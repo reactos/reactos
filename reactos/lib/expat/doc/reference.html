@@ -19,7 +19,7 @@
       <td class="banner"><h1>The Expat XML Parser</h1></td>
     </tr>
     <tr>
-      <td class="releaseno">Release 1.95.7</td>
+      <td class="releaseno">Release 1.95.8</td>
       <td></td>
     </tr>
   </table>
@@ -72,6 +72,9 @@ interface.</p>
       <li><a href="#XML_Parse">XML_Parse</a></li>
       <li><a href="#XML_ParseBuffer">XML_ParseBuffer</a></li>
       <li><a href="#XML_GetBuffer">XML_GetBuffer</a></li>
+      <li><a href="#XML_StopParser">XML_StopParser</a></li>
+      <li><a href="#XML_ResumeParser">XML_ResumeParser</a></li>
+      <li><a href="#XML_GetParsingStatus">XML_GetParsingStatus</a></li>
     </ul>
     </li>
     <li><a href="#setting">Handler Setting Functions</a>
@@ -317,12 +320,12 @@ and the definition of character types in the case of
 <dl class="cpp-symbols">
 <dt>XML_DTD</dt>
 <dd>Include support for using and reporting DTD-based content.  If
-this is defined, default attribute values from the DTD are reported
-and attribute value normalization occurs based on the type of
-attributes.  Callbacks can be registered which report information from
-the DTD (including content models and attribute definitions) only if
-this is defined.  Without this, Expat has a smaller memory footprint
-and can be faster.</dd>
+this is defined, default attribute values from an external DTD subset
+are reported and attribute value normalization occurs based on the
+type of attributes defined in the external subset.  Without
+this, Expat has a smaller memory footprint and can be faster, but will
+not load external entities or process conditional sections.  This does
+not affect the set of functions available in the API.</dd>
 
 <dt>XML_NS</dt>
 <dd>When defined, support for the <cite><a href=
@@ -345,10 +348,11 @@ short</code> is used.  Defining this implies
 <dd>The number of input bytes of markup context which the parser will
 ensure are available for reporting via <code><a href=
 "#XML_GetInputContext" >XML_GetInputContext</a></code>.  This is
-normally set to 1024.  If this is not defined, the input context will
-not be available and <code><a href= "#XML_GetInputContext"
->XML_GetInputContext</a></code> will always report NULL.  Without
-this, Expat has a smaller memory footprint and can be faster.</dd>
+normally set to 1024, and must be set to a positive interger.  If this
+is not defined, the input context will not be available and <code><a
+href= "#XML_GetInputContext" >XML_GetInputContext</a></code> will
+always report NULL.  Without this, Expat has a smaller memory
+footprint and can be faster.</dd>
 
 <dt>XML_STATIC</dt>
 <dd>On Windows, this should be set if Expat is going to be linked
@@ -415,7 +419,7 @@ by these functions is an opaque pointer (i.e. "expat.h" declares it as
 void *) to data with further internal structure. In order to free the
 memory associated with this object you must call <code><a href=
 "#XML_ParserFree" >XML_ParserFree</a></code>. Note that if you have
-provided any <a href="userdata">user data</a> that gets stored in the
+provided any <a href="#userdata">user data</a> that gets stored in the
 parser, then your application is responsible for freeing it prior to
 calling <code>XML_ParserFree</code>.</p>
 
@@ -509,7 +513,7 @@ argument received by most handlers.  In the <a href="#reference"
 data is passed; it will have the type <code>XML_Parser</code> if the
 parser itself is passed.  When the parser is passed, the user data may
 be retrieved using <code><a href="#XML_GetUserData"
->XML_GetUserData</code></a>.</p>
+>XML_GetUserData</a></code>.</p>
 
 <p>One common case where multiple calls to a single handler may need
 to communicate using an application data structure is the case when
@@ -587,12 +591,12 @@ this expanded form is a concatenation of the namespace URI, the
 separator character (which is the 2nd argument to <code><a href=
 "#XML_ParserCreateNS" >XML_ParserCreateNS</a></code>), and the local
 name (i.e. the part after the colon). Names with undeclared prefixes
-are passed through to the handlers unchanged, with the prefix and
-colon still attached. Unprefixed attribute names are never expanded,
+are not well-formed when namespace processing is enabled, and will
+trigger an error. Unprefixed attribute names are never expanded,
 and unprefixed element names are only expanded when they are in the
 scope of a default namespace.</p>
 
-<p>However if <code><a href= "XML_SetReturnNSTriplet"
+<p>However if <code><a href= "#XML_SetReturnNSTriplet"
 >XML_SetReturnNSTriplet</a></code> has been called with a non-zero
 <code>do_nst</code> parameter, then the expanded form for names with
 an explicit prefix is a concatenation of: URI, separator, local name,
@@ -602,7 +606,7 @@ separator, prefix.</p>
 for the end of a scope of a declaration with the <code><a href=
 "#XML_SetNamespaceDeclHandler" >XML_SetNamespaceDeclHandler</a></code>
 function.  The StartNamespaceDeclHandler is called prior to the start
-tag handler and the EndNamespaceDeclHandler is called before the
+tag handler and the EndNamespaceDeclHandler is called after the
 corresponding end tag that ends the namespace's scope.  The namespace
 start handler gets passed the prefix and URI for the namespace.  For a
 default namespace declaration (xmlns='...'), the prefix will be null.
@@ -727,6 +731,149 @@ arguments:</p>
 <p>In order to read an external DTD, you also have to set an external
 entity reference handler as described above.</p>
 
+<h3 id="stop-resume">Temporarily Stopping Parsing</h3>
+
+<p>Expat 1.95.8 introduces a new feature: its now possible to stop
+parsing temporarily from within a handler function, even if more data
+has already been passed into the parser.  Applications for this
+include</p>
+
+<ul>
+  <li>Supporting the <a href= "http://www.w3.org/TR/xinclude/"
+  >XInclude</a> specification.</li>
+
+  <li>Delaying further processing until additional information is
+  available from some other source.</li>
+
+  <li>Adjusting processor load as task priorities shift within an
+  application.</li>
+
+  <li>Stopping parsing completely (simply free or reset the parser
+  instead of resuming in the outer parsing loop).  This can be useful
+  if a application-domain error is found in the XML being parsed or if
+  the result of the parse is determined not to be useful after
+  all.</li>
+</ul>
+
+<p>To take advantage of this feature, the main parsing loop of an
+application needs to support this specifically.  It cannot be
+supported with a parsing loop compatible with Expat 1.95.7 or
+earlier (though existing loops will continue to work without
+supporting the stop/resume feature).</p>
+
+<p>An application that uses this feature for a single parser will have
+the rough structure (in pseudo-code):</p>
+
+<pre class="pseudocode">
+fd = open_input()
+p = create_parser()
+
+if parse_xml(p, fd) {
+  /* suspended */
+
+  int suspended = 1;
+
+  while (suspended) {
+    do_something_else()
+    if ready_to_resume() {
+      suspended = continue_parsing(p, fd);
+    }
+  }
+}
+</pre>
+
+<p>An application that may resume any of several parsers based on
+input (either from the XML being parsed or some other source) will
+certainly have more interesting control structures.</p>
+
+<p>This C function could be used for the <code>parse_xml</code>
+function mentioned in the pseudo-code above:</p>
+
+<pre class="eg">
+#define BUFF_SIZE 10240
+
+/* Parse a document from the open file descriptor 'fd' until the parse
+   is complete (the document has been completely parsed, or there's
+   been an error), or the parse is stopped.  Return non-zero when
+   the parse is merely suspended.
+*/
+int
+parse_xml(XML_Parser p, int fd)
+{
+  for (;;) {
+    int last_chunk;
+    int bytes_read;
+    enum XML_Status status;
+
+    void *buff = XML_GetBuffer(p, BUFF_SIZE);
+    if (buff == NULL) {
+      /* handle error... */
+      return 0;
+    }
+    bytes_read = read(fd, buff, BUFF_SIZE);
+    if (bytes_read &lt; 0) {
+      /* handle error... */
+      return 0;
+    }
+    status = XML_ParseBuffer(p, bytes_read, bytes_read == 0);
+    switch (status) {
+      case XML_STATUS_ERROR:
+        /* handle error... */
+        return 0;
+      case XML_STATUS_SUSPENDED:
+        return 1;
+    }
+    if (bytes_read == 0)
+      return 0;
+  }
+}
+</pre>
+
+<p>The corresponding <code>continue_parsing</code> function is
+somewhat simpler, since it only need deal with the return code from
+<code><a href= "#XML_ResumeParser">XML_ResumeParser</a></code>; it can
+delegate the input handling to the <code>parse_xml</code>
+function:</p>
+
+<pre class="eg">
+/* Continue parsing a document which had been suspended.  The 'p' and
+   'fd' arguments are the same as passed to parse_xml().  Return
+   non-zero when the parse is suspended.
+*/
+int
+continue_parsing(XML_Parser p, int fd)
+{
+  enum XML_Status status = XML_ResumeParser(p);
+  switch (status) {
+    case XML_STATUS_ERROR:
+      /* handle error... */
+      return 0;
+    case XML_ERROR_NOT_SUSPENDED:
+      /* handle error... */
+      return 0;.
+    case XML_STATUS_SUSPENDED:
+      return 1;
+  }
+  return parse_xml(p, fd);
+}
+</pre>
+
+<p>Now that we've seen what a mess the top-level parsing loop can
+become, what have we gained?  Very simply, we can now use the <code><a
+href= "#XML_StopParser" >XML_StopParser</a></code> function to stop
+parsing, without having to go to great lengths to avoid additional
+processing that we're expecting to ignore.  As a bonus, we get to stop
+parsing <em>temporarily</em>, and come back to it when we're
+ready.</p>
+
+<p>To stop parsing from a handler function, use the <code><a href=
+"#XML_StopParser" >XML_StopParser</a></code> function.  This function
+takes two arguments; the parser being stopped and a flag indicating
+whether the parse can be resumed in the future.</p>
+
+<!-- XXX really need more here -->
+
+
 <hr />
 <!-- ================================================================ -->
 
@@ -761,7 +908,11 @@ Constructs a new parser that has namespace processing in effect. Namespace
 expanded element names and attribute names are returned as a concatenation
 of the namespace URI, <em>sep</em>, and the local part of the name. This
 means that you should pick a character for <em>sep</em> that can't be
-part of a legal URI.</div>
+part of a legal URI. There is a special case when <em>sep</em> is the null
+character <code>'\0'</code>: the namespace URI and the local part will be
+concatenated without any separator - this is intended to support RDF processors.
+It is a programming error to use the null separator with 
+<a href= "#XML_SetReturnNSTriplet">namespace triplets</a>.</div>
 
 <pre class="fcndec" id="XML_ParserCreate_MM">
 XML_Parser XMLCALL
@@ -818,8 +969,10 @@ XML_ParserReset(XML_Parser p,
 <div class="fcndef">
 Clean up the memory structures maintained by the parser so that it may
 be used again.  After this has been called, <code>parser</code> is
-ready to start parsing a new document.  This function may not be used
-on a parser created using <code><a href=
+ready to start parsing a new document.  All handlers are cleared from
+the parser, except for the unknownEncodingHandler.  The parser's external
+state is re-initialized except for the values of ns and ns_triplets.
+This function may not be used on a parser created using <code><a href=
 "#XML_ExternalEntityParserCreate" >XML_ExternalEntityParserCreate</a
 ></code>; it will return <code>XML_FALSE</code> in that case.  Returns
 <code>XML_TRUE</code> on success.  Your application is responsible for
@@ -914,6 +1067,125 @@ for (;;) {
 }
 </pre>
 </div>
+
+<pre class="fcndec" id="XML_StopParser">
+enum XML_Status XMLCALL
+XML_StopParser(XML_Parser p,
+               XML_Bool resumable);
+</pre>
+<div class="fcndef">
+
+<p>Stops parsing, causing <code><a href= "#XML_Parse"
+>XML_Parse</a></code> or <code><a href= "#XML_ParseBuffer"
+>XML_ParseBuffer</a></code> to return.  Must be called from within a
+call-back handler, except when aborting (when <code>resumable</code>
+is <code>XML_FALSE</code>) an already suspended parser.  Some
+call-backs may still follow because they would otherwise get
+lost, including
+<ul>
+  <li> the end element handler for empty elements when stopped in the
+       start element handler,</li>
+  <li> end namespace declaration handler when stopped in the end
+       element handler,</li>
+</ul>
+and possibly others.</p>
+
+<p>This can be called from most handlers, including DTD related
+call-backs, except when parsing an external parameter entity and
+<code>resumable</code> is <code>XML_TRUE</code>.  Returns
+<code>XML_STATUS_OK</code> when successful,
+<code>XML_STATUS_ERROR</code> otherwise.  The possible error codes
+are:</p>
+<dl>
+  <dt><code>XML_ERROR_SUSPENDED</code></dt>
+  <dd>when suspending an already suspended parser.</dd>
+  <dt><code>XML_ERROR_FINISHED</code></dt>
+  <dd>when the parser has already finished.</dd>
+  <dt><code>XML_ERROR_SUSPEND_PE</code></dt>
+  <dd>when suspending while parsing an external PE.</dd>
+</dl>
+
+<p>Since the stop/resume feature requires application support in the
+outer parsing loop, it is an error to call this function for a parser
+not being handled appropriately; see <a href= "#stop-resume"
+>Temporarily Stopping Parsing</a> for more information.</p>
+
+<p>When <code>resumable</code> is <code>XML_TRUE</code> then parsing
+is <em>suspended</em>, that is, <code><a href= "#XML_Parse"
+>XML_Parse</a></code> and <code><a href= "#XML_ParseBuffer"
+>XML_ParseBuffer</a></code> return <code>XML_STATUS_SUSPENDED</code>.
+Otherwise, parsing is <em>aborted</em>, that is, <code><a href=
+"#XML_Parse" >XML_Parse</a></code> and <code><a href=
+"#XML_ParseBuffer" >XML_ParseBuffer</a></code> return
+<code>XML_STATUS_ERROR</code> with error code
+<code>XML_ERROR_ABORTED</code>.</p>
+
+<p><strong>Note:</strong>
+This will be applied to the current parser instance only, that is, if
+there is a parent parser then it will continue parsing when the
+external entity reference handler returns.  It is up to the
+implementation of that handler to call <code><a href=
+"#XML_StopParser" >XML_StopParser</a></code> on the parent parser
+(recursively), if one wants to stop parsing altogether.</p>
+
+<p>When suspended, parsing can be resumed by calling <code><a href=
+"#XML_ResumeParser" >XML_ResumeParser</a></code>.</p>
+
+<p>New in Expat 1.95.8.</p>
+</div>
+
+<pre class="fcndec" id="XML_ResumeParser">
+enum XML_Status XMLCALL
+XML_ResumeParser(XML_Parser p);
+</pre>
+<div class="fcndef">
+<p>Resumes parsing after it has been suspended with <code><a href=
+"#XML_StopParser" >XML_StopParser</a></code>.  Must not be called from
+within a handler call-back.  Returns same status codes as <code><a
+href= "#XML_Parse">XML_Parse</a></code> or <code><a href=
+"#XML_ParseBuffer" >XML_ParseBuffer</a></code>.  An additional error
+code, <code>XML_ERROR_NOT_SUSPENDED</code>, will be returned if the
+parser was not currently suspended.</p>
+
+<p><strong>Note:</strong>
+This must be called on the most deeply nested child parser instance
+first, and on its parent parser only after the child parser has
+finished, to be applied recursively until the document entity's parser
+is restarted.  That is, the parent parser will not resume by itself
+and it is up to the application to call <code><a href=
+"#XML_ResumeParser" >XML_ResumeParser</a></code> on it at the
+appropriate moment.</p>
+
+<p>New in Expat 1.95.8.</p>
+</div>
+
+<pre class="fcndec" id="XML_GetParsingStatus">
+void XMLCALL
+XML_GetParsingStatus(XML_Parser p,
+                     XML_ParsingStatus *status);
+</pre>
+<pre class="signature">
+enum XML_Parsing {
+  XML_INITIALIZED,
+  XML_PARSING,
+  XML_FINISHED,
+  XML_SUSPENDED
+};
+
+typedef struct {
+  enum XML_Parsing parsing;
+  XML_Bool finalBuffer;
+} XML_ParsingStatus;
+</pre>
+<div class="fcndef">
+<p>Returns status of parser with respect to being initialized,
+parsing, finished, or suspended, and whether the final buffer is being
+processed.  The <code>status</code> parameter <em>must not</em> be
+NULL.</p>
+
+<p>New in Expat 1.95.8.</p>
+</div>
+
 
 <h3><a name="setting">Handler Setting</a></h3>
 
@@ -1252,8 +1524,8 @@ href="#builtin_encodings">built in set</a>. This should be done before
 "#XML_ParseBuffer" >XML_ParseBuffer</a></code> have been called on the
 given parser.</p> <p>If the handler knows how to deal with an encoding
 with the given name, it should fill in the <code>info</code> data
-structure and return <code>XML_STATUS_ERROR</code>. Otherwise it
-should return <code>XML_STATUS_OK</code>. The handler will be called
+structure and return <code>XML_STATUS_OK</code>. Otherwise it
+should return <code>XML_STATUS_ERROR</code>. The handler will be called
 at most once per parsed (external) entity. The optional application
 data pointer <code>encodingHandlerData</code> will be passed back to
 the handler.</p>
@@ -1685,6 +1957,9 @@ untranslated bytes of the input.</p>
 <p>Only a limited amount of context is kept, so if the event
 triggering a call spans over a very large amount of input, the actual
 parse position may be before the beginning of the buffer.</p>
+
+<p>If <code>XML_CONTEXT_BYTES</code> is not defined, this will always
+return NULL.</p>
 </div>
 
 <h3><a name="miscellaneous">Miscellaneous functions</a></h3>
@@ -1837,6 +2112,11 @@ external entity reference handler set via <code><a href=
 DTD support, it returns
 <code>XML_ERROR_FEATURE_REQUIRES_XML_DTD</code>.  Otherwise, it
 returns <code>XML_ERROR_NONE</code>.</p>
+
+<p><b>Note:</b> For the purpose of checking WFC: Entity Declared, passing
+<code>useDTD == XML_TRUE</code> will make the parser behave as if
+the document had a DTD with an external subset. This holds true even if
+the external entity reference handler returns without action.</p>
 </div>
 
 <pre class="fcndec" id="XML_SetReturnNSTriplet">

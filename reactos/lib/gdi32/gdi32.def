@@ -358,7 +358,7 @@ GetMiterLimit@8
 GetNearestColor@8=NtGdiGetNearestColor@8
 GetNearestPaletteIndex@8=NtGdiGetNearestPaletteIndex@8
 GetObjectA@12
-GetObjectType@4=NtGdiGetObjectType@4
+GetObjectType@4
 GetObjectW@12
 GetOutlineTextMetricsA@12
 GetOutlineTextMetricsW@12
@@ -560,4 +560,3 @@ bInitSystemAndFontsDirectoriesW@8
 bMakePathNameW@16
 ;cGetTTFFromFOT
 gdiPlaySpoolStream@24
-                 

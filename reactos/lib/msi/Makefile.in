@@ -8,15 +8,21 @@ EXTRALIBS = -luuid $(LIBUNICODE)
 
 C_SRCS = \
 	action.c \
+	appsearch.c \
 	create.c \
+	custom.c \
+	dialog.c \
 	distinct.c \
+	format.c \
 	handle.c \
 	insert.c \
 	msi.c \
 	msiquery.c \
 	order.c \
 	package.c \
+	preview.c \
 	record.c \
+	registry.c \
 	regsvr.c \
 	select.c \
 	string.c \
@@ -26,7 +32,7 @@ C_SRCS = \
 	update.c \
 	where.c
 
-RC_SRCS = version.rc
+RC_SRCS = msi.rc
 
 EXTRA_SRCS = sql.y cond.y
 EXTRA_OBJS = sql.tab.o cond.tab.o

@@ -4,7 +4,7 @@
  //
  // xmlstorage.h
  //
- // Copyright (c) 2004, Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
 
@@ -612,6 +612,23 @@ struct XMLNode : public XS_String
 		return out;
 	}
 
+protected:
+	Children _children;
+	AttributeMap _attributes;
+
+	std::string _leading;
+	std::string _content;
+	std::string _end_leading;
+	std::string _trailing;
+
+	XMLNode* get_first_child() const
+	{
+		if (!_children.empty())
+			return _children.front();
+		else
+			return NULL;
+	}
+
 	XMLNode* find(const XS_String& name, int n=0) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
@@ -669,23 +686,6 @@ struct XMLNode : public XS_String
 
 	 /// relative XPath create function
 	XMLNode* create_relative(const char* path);
-
-protected:
-	Children _children;
-	AttributeMap _attributes;
-
-	std::string _leading;
-	std::string _content;
-	std::string _end_leading;
-	std::string _trailing;
-
-	XMLNode* get_first_child() const
-	{
-		if (!_children.empty())
-			return _children.front();
-		else
-			return NULL;
-	}
 
 	void write_worker(std::ostream& out, int indent) const;
 	void pretty_write_worker(std::ostream& out, int indent) const;
@@ -1533,6 +1533,8 @@ struct XMLReaderBase
 		return out.str();
 	}
 
+	std::string get_instructions() const {return _instructions;}
+
 	XML_Error	get_error_code() {return XML_GetErrorCode(_parser);}
 	std::string get_error_string() const;
 
@@ -1541,6 +1543,7 @@ protected:
 	XML_Parser	_parser;
 	std::string _xml_version;
 	std::string _encoding;
+	std::string	_instructions;
 
 	std::string _content;
 	enum {TAG_NONE, TAG_START, TAG_END} _last_tag;
@@ -1592,11 +1595,14 @@ struct XMLHeader
 
 		if (!_doctype.empty())
 			out << _doctype << '\n';
+		if (!_additional.empty())
+			out << _additional << '\n';
 	}
 
 	std::string _version;
 	std::string _encoding;
 	std::string _doctype;
+	std::string _additional;
 };
 
 
@@ -1640,6 +1646,8 @@ struct XMLDoc : public XMLNode
 	{
 		XML_Status status = reader.read();
 
+		_header._additional = reader.get_instructions();
+
 		if (status == XML_STATUS_ERROR) {
 			std::ostringstream out;
 
@@ -1656,6 +1664,8 @@ struct XMLDoc : public XMLNode
 	{
 		XML_Status status = reader.read();
 
+		_header._additional = reader.get_instructions();
+
 		if (status == XML_STATUS_ERROR) {
 			std::ostringstream out;
 
@@ -1669,9 +1679,9 @@ struct XMLDoc : public XMLNode
 	}
 
 	 /// write XML stream preserving previous white space and comments
-	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART, const XMLHeader& header=XMLHeader()) const
+	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART) const
 	{
-		header.print(out);
+		_header.print(out);
 
 		if (!_children.empty())
 			_children.front()->write(out);
@@ -1685,11 +1695,11 @@ struct XMLDoc : public XMLNode
 		return write(out, FORMAT_PRETTY);
 	}
 
-	void write(LPCTSTR path, WRITE_MODE mode=FORMAT_SMART, const XMLHeader& header=XMLHeader()) const
+	void write(LPCTSTR path, WRITE_MODE mode=FORMAT_SMART) const
 	{
 		tofstream out(path);
 
-		write(out, mode, header);
+		write(out, mode);
 	}
 
 	void write_formating(LPCTSTR path) const
@@ -1699,6 +1709,7 @@ struct XMLDoc : public XMLNode
 		write_formating(out);
 	}
 
+	XMLHeader	_header;
 	XML_Error	_last_error;
 	std::string _last_error_msg;
 };

@@ -63,9 +63,7 @@ IntCbAllocateMemory(ULONG Size)
   
   /* insert the callback memory into the thread's callback list */
   
-  ExAcquireFastMutex(&W32Thread->W32CallbackListLock);
   InsertTailList(&W32Thread->W32CallbackListHead, &Mem->ListEntry);
-  ExReleaseFastMutex(&W32Thread->W32CallbackListLock);
   
   return (Mem + 1);
 }
@@ -84,9 +82,7 @@ IntCbFreeMemory(PVOID Data)
   ASSERT(W32Thread);
   
   /* remove the memory block from the thread's callback list */
-  ExAcquireFastMutex(&W32Thread->W32CallbackListLock);
   RemoveEntryList(&Mem->ListEntry);
-  ExReleaseFastMutex(&W32Thread->W32CallbackListLock);
   
   /* free memory */
   ExFreePool(Mem);
@@ -98,7 +94,6 @@ IntCleanupThreadCallbacks(PW32THREAD W32Thread)
   PLIST_ENTRY CurrentEntry;
   PINT_CALLBACK_HEADER Mem;
   
-  ExAcquireFastMutex(&W32Thread->W32CallbackListLock);
   while (!IsListEmpty(&W32Thread->W32CallbackListHead))
   {
     CurrentEntry = RemoveHeadList(&W32Thread->W32CallbackListHead);
@@ -108,7 +103,6 @@ IntCleanupThreadCallbacks(PW32THREAD W32Thread)
     /* free memory */
     ExFreePool(Mem);
   }
-  ExReleaseFastMutex(&W32Thread->W32CallbackListLock);
 }
 
 /* FUNCTIONS *****************************************************************/

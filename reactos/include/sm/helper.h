@@ -1,30 +1,7 @@
-#ifndef _SM_HELPER_H
+#if !defined(INCLUDE_SM_HELPER_H)
+#define INCLUDE_SM_HELPER_H
 
-/*** DATA TYPES ******************************************************/
-
-#define SM_SB_NAME_MAX_LENGTH 120
-
-#pragma pack(push,4)
-
-/* SmConnectApiPort */
-typedef struct _SM_CONNECT_DATA
-{
-  ULONG  Subsystem;
-  WCHAR  SbName [SM_SB_NAME_MAX_LENGTH];
-
-} SM_CONNECT_DATA, *PSM_CONNECT_DATA;
-
-/* SmpConnectSbApiPort */
-typedef struct _SB_CONNECT_DATA
-{
-  ULONG SmApiMax;
-} SB_CONNECT_DATA, *PSB_CONNECT_DATA;
-
-#pragma pack(pop)
-
-
-/*** PROTOTYPES ******************************************************/
-
+/* $Id$ */
 
 /* smdll/connect.c */
 NTSTATUS STDCALL
@@ -43,4 +20,4 @@ SmExecuteProgram (IN     HANDLE           hSmApiPort,
 		  IN     PUNICODE_STRING  Pgm
 		  );
 
-#endif /* ndef _SM_HELPER_H */
+#endif /* ndef INCLUDE_SM_HELPER_H */

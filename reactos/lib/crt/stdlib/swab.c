@@ -1,4 +1,4 @@
-#include <msvcrt/stdlib.h>
+#include <stdlib.h>
 
 /*
  * @implemented

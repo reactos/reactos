@@ -28,7 +28,9 @@
 #include "winuser.h"
 #include "winreg.h"
 #include "winerror.h"
+#include "objbase.h"
 
+#include "compobj_private.h"
 #include "ole2.h"
 #include "olectl.h"
 
@@ -448,396 +450,27 @@ static struct regsvr_coclass const coclass_list[] = {
  *		interface list
  */
 
-/* FIXME: perhaps the interfaces that are proxied by another dll
- * should be registered in that dll?  Or maybe the choice of proxy is
- * arbitrary at this point? */
-
-static GUID const CLSID_PSFactoryBuffer_ole2disp = {
-    0x00020420, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
-
-static GUID const CLSID_PSFactoryBuffer_oleaut32 = {
-    0xB196B286, 0xBAB4, 0x101A, {0xB6,0x9C,0x00,0xAA,0x00,0x34,0x1D,0x07} };
-
-/* FIXME: these interfaces should be defined in ocidl.idl */
-
-static IID const IID_IFontEventsDisp = {
-    0x4EF6100A, 0xAF88, 0x11D0, {0x98,0x46,0x00,0xC0,0x4F,0xC2,0x99,0x93} };
-
-static IID const IID_IProvideMultipleClassInfo = {
-    0xA7ABA9C1, 0x8983, 0x11CF, {0x8F,0x20,0x00,0x80,0x5F,0x2C,0xD0,0x64} };
+#define INTERFACE_ENTRY(interface, base, clsid32, clsid16) { &IID_##interface, #interface, base, sizeof(interface##Vtbl)/sizeof(void*), clsid16, clsid32 }
+#define STD_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, &CLSID_PSFactoryBuffer, NULL)
 
 static struct regsvr_interface const interface_list[] = {
-    {   &IID_IUnknown,
-	"IUnknown",
-	NULL,
-	3,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IClassFactory,
-	"IClassFactory",
-	NULL,
-	5,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IStorage,
-	"IStorage",
-	NULL,
-	18,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IStream,
-	"IStream",
-	NULL,
-	14,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IPersistStorage,
-	"IPersistStorage",
-	&IID_IPersist,
-	10,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IDataObject,
-	"IDataObject",
-	NULL,
-	12,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IAdviseSink,
-	"IAdviseSink",
-	NULL,
-	8,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IOleObject,
-	"IOleObject",
-	NULL,
-	24,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IOleClientSite,
-	"IOleClientSite",
-	NULL,
-	9,
-	NULL,
-	&CLSID_PSFactoryBuffer
-    },
-    {   &IID_IDispatch,
-	"IDispatch",
-	NULL,
-	7,
-	&CLSID_PSFactoryBuffer_ole2disp,
-	&CLSID_PSFactoryBuffer_ole2disp
-    },
-    {   &IID_ITypeLib2,
-	"ITypeLib2",
-	NULL,
-	16,
-	NULL,
-	&CLSID_PSFactoryBuffer_ole2disp
-    },
-    {   &IID_ITypeInfo2,
-	"ITypeInfo2",
-	NULL,
-	32,
-	NULL,
-	&CLSID_PSFactoryBuffer_ole2disp
-    },
-    {   &IID_IPropertyPage2,
-	"IPropertyPage2",
-	NULL,
-	15,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IErrorInfo,
-	"IErrorInfo",
-	NULL,
-	8,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_ICreateErrorInfo,
-	"ICreateErrorInfo",
-	NULL,
-	8,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPersistPropertyBag2,
-	"IPersistPropertyBag2",
-	NULL,
-	8,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPropertyBag2,
-	"IPropertyBag2",
-	NULL,
-	8,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IErrorLog,
-	"IErrorLog",
-	NULL,
-	4,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPerPropertyBrowsing,
-	"IPerPropertyBrowsing",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPersistPropertyBag,
-	"IPersistPropertyBag",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IAdviseSinkEx,
-	"IAdviseSinkEx",
-	NULL,
-	9,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IFontEventsDisp,
-	"IFontEventsDisp",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPropertyBag,
-	"IPropertyBag",
-	NULL,
-	5,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPointerInactive,
-	"IPointerInactive",
-	NULL,
-	6,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_ISimpleFrameSite,
-	"ISimpleFrameSite",
-	NULL,
-	5,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPicture,
-	"IPicture",
-	NULL,
-	17,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPictureDisp,
-	"IPictureDisp",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPersistStreamInit,
-	"IPersistStreamInit",
-	NULL,
-	9,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IOleUndoUnit,
-	"IOleUndoUnit",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPropertyNotifySink,
-	"IPropertyNotifySink",
-	NULL,
-	5,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IOleInPlaceSiteEx,
-	"IOleInPlaceSiteEx",
-	NULL,
-	18,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IOleParentUndoUnit,
-	"IOleParentUndoUnit",
-	NULL,
-	12,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IProvideClassInfo2,
-	"IProvideClassInfo2",
-	NULL,
-	5,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IProvideMultipleClassInfo,
-	"IProvideMultipleClassInfo",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IProvideClassInfo,
-	"IProvideClassInfo",
-	NULL,
-	4,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IConnectionPointContainer,
-	"IConnectionPointContainer",
-	NULL,
-	5,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IEnumConnectionPoints,
-	"IEnumConnectionPoints",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IConnectionPoint,
-	"IConnectionPoint",
-	NULL,
-	8,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IEnumConnections,
-	"IEnumConnections",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IOleControl,
-	"IOleControl",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IOleControlSite,
-	"IOleControlSite",
-	NULL,
-	10,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_ISpecifyPropertyPages,
-	"ISpecifyPropertyPages",
-	NULL,
-	4,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPropertyPageSite,
-	"IPropertyPageSite",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPropertyPage,
-	"IPropertyPage",
-	NULL,
-	14,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IClassFactory2,
-	"IClassFactory2",
-	NULL,
-	8,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IEnumOleUndoUnits,
-	"IEnumOleUndoUnits",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IPersistMemory,
-	"IPersistMemory",
-	NULL,
-	9,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IFont,
-	"IFont",
-	NULL,
-	27,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IFontDisp,
-	"IFontDisp",
-	NULL,
-	7,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IQuickActivate,
-	"IQuickActivate",
-	NULL,
-	6,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IOleUndoManager,
-	"IOleUndoManager",
-	NULL,
-	15,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
-    {   &IID_IObjectWithSite,
-	"IObjectWithSite",
-	NULL,
-	5,
-	NULL,
-	&CLSID_PSFactoryBuffer_oleaut32
-    },
+    STD_INTERFACE_ENTRY(IUnknown),
+    STD_INTERFACE_ENTRY(IClassFactory),
+    STD_INTERFACE_ENTRY(IStorage),
+    STD_INTERFACE_ENTRY(IStream ),
+    STD_INTERFACE_ENTRY(IPersistStorage),
+    STD_INTERFACE_ENTRY(IDataObject),
+    STD_INTERFACE_ENTRY(IAdviseSink),
+    STD_INTERFACE_ENTRY(IOleObject),
+    STD_INTERFACE_ENTRY(IOleClientSite),
+    STD_INTERFACE_ENTRY(IRemUnknown),
     { NULL }			/* list terminator */
 };
 
 /***********************************************************************
  *		DllRegisterServer (OLE32.@)
  */
-HRESULT WINAPI OLE32_DllRegisterServer()
+HRESULT WINAPI DllRegisterServer()
 {
     HRESULT hr;
 
@@ -852,7 +485,7 @@ HRESULT WINAPI OLE32_DllRegisterServer()
 /***********************************************************************
  *		DllUnregisterServer (OLE32.@)
  */
-HRESULT WINAPI OLE32_DllUnregisterServer()
+HRESULT WINAPI DllUnregisterServer()
 {
     HRESULT hr;
 

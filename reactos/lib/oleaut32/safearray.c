@@ -1337,7 +1337,7 @@ HRESULT WINAPI SafeArrayDestroy(SAFEARRAY *psa)
   TRACE("(%p)\n", psa);
 
   if(!psa)
-    return E_INVALIDARG;
+    return S_OK;
 
   if(psa->cLocks > 0)
     return DISP_E_ARRAYISLOCKED;

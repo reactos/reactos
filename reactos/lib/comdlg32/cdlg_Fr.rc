@@ -3,6 +3,7 @@
  * French language support
  *
  * Copyright 1995 Alexandre Julliard
+ * Copyright 2005 Jonathan Ernst
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -461,4 +462,14 @@ STRINGTABLE DISCARDABLE /* Color names */
     IDS_COLOR_FUCHSIA   "Fuchsia"
     IDS_COLOR_AQUA      "Aqua"
     IDS_COLOR_WHITE     "Blanc"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Sélectionnez une taille de police entre %d et %d points."
+    IDS_SAVE_BUTTON "&Sauver"
+    IDS_SAVE_IN     "Sauver &dans:"
+    IDS_SAVE        "Enregistrer"
+    IDS_SAVE_AS     "Enregistrer sous"
+    IDS_OPEN_FILE   "Ouvrir Fichier"
 }

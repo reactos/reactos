@@ -20,8 +20,8 @@ PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
 
 POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
-LIST_ENTRY PsProcessListHead;
-static KSPIN_LOCK PsProcessListLock;
+LIST_ENTRY PsActiveProcessHead;
+FAST_MUTEX PspActiveProcessMutex;
 static LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 
 static GENERIC_MAPPING PiProcessMapping = {STANDARD_RIGHTS_READ | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -51,7 +51,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
   ICI_SQ_SAME( sizeof(PROCESS_WS_WATCH_INFORMATION),  sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessWorkingSetWatch */
   ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_SET ),                       /* ProcessUserModeIOPL */
   ICI_SQ_SAME( sizeof(BOOLEAN),                       sizeof(ULONG), ICIF_SET ),                       /* ProcessEnableAlignmentFaultFixup */
-  ICI_SQ_SAME( sizeof(PROCESS_PRIORITY_CLASS),        sizeof(USHORT), ICIF_SET ),                       /* ProcessPriorityClass */
+  ICI_SQ_SAME( sizeof(PROCESS_PRIORITY_CLASS),        sizeof(USHORT), ICIF_QUERY | ICIF_SET ),         /* ProcessPriorityClass */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessWx86Information */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessHandleCount */
   ICI_SQ_SAME( sizeof(KAFFINITY),                     sizeof(ULONG), ICIF_SET ),                       /* ProcessAffinityMask */
@@ -101,7 +101,6 @@ PsExitSpecialApc(PKAPC Apc,
 PEPROCESS
 PsGetNextProcess(PEPROCESS OldProcess)
 {
-   KIRQL oldIrql;
    PEPROCESS NextProcess;
    NTSTATUS Status;
    
@@ -119,13 +118,13 @@ PsGetNextProcess(PEPROCESS OldProcess)
        return PsInitialSystemProcess;
      }
    
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   ExAcquireFastMutex(&PspActiveProcessMutex);
    NextProcess = OldProcess;
    while (1)
      {
-       if (NextProcess->ProcessListEntry.Blink == &PsProcessListHead)
+       if (NextProcess->ProcessListEntry.Blink == &PsActiveProcessHead)
          {
-	   NextProcess = CONTAINING_RECORD(PsProcessListHead.Blink,
+	   NextProcess = CONTAINING_RECORD(PsActiveProcessHead.Blink,
 					   EPROCESS,
 					   ProcessListEntry);
          }
@@ -154,7 +153,7 @@ PsGetNextProcess(PEPROCESS OldProcess)
 	 }
      }
 
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   ExReleaseFastMutex(&PspActiveProcessMutex);
    ObDereferenceObject(OldProcess);
    
    return(NextProcess);
@@ -192,6 +191,8 @@ NtOpenProcessTokenEx(
    HANDLE hToken;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
    
    PreviousMode = ExGetPreviousMode();
    
@@ -281,14 +282,13 @@ PsOpenTokenOfProcess(HANDLE ProcessHandle,
 VOID 
 PiKillMostProcesses(VOID)
 {
-   KIRQL oldIrql;
    PLIST_ENTRY current_entry;
    PEPROCESS current;
    
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   ExAcquireFastMutex(&PspActiveProcessMutex);
    
-   current_entry = PsProcessListHead.Flink;
-   while (current_entry != &PsProcessListHead)
+   current_entry = PsActiveProcessHead.Flink;
+   while (current_entry != &PsActiveProcessHead)
      {
 	current = CONTAINING_RECORD(current_entry, EPROCESS, 
 				    ProcessListEntry);
@@ -301,7 +301,7 @@ PiKillMostProcesses(VOID)
 	  }
      }
    
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   ExReleaseFastMutex(&PspActiveProcessMutex);
 }
 
 
@@ -309,7 +309,6 @@ VOID INIT_FUNCTION
 PsInitProcessManagment(VOID)
 {
    PKPROCESS KProcess;
-   KIRQL oldIrql;
    NTSTATUS Status;
    
    ShortPsLockDelay.QuadPart = -100LL;
@@ -339,12 +338,12 @@ PsInitProcessManagment(VOID)
    PsProcessType->Create = NULL;
    PsProcessType->DuplicationNotify = NULL;
    
-   RtlRosInitUnicodeStringFromLiteral(&PsProcessType->TypeName, L"Process");
+   RtlInitUnicodeString(&PsProcessType->TypeName, L"Process");
    
    ObpCreateTypeObject(PsProcessType);
 
-   InitializeListHead(&PsProcessListHead);
-   KeInitializeSpinLock(&PsProcessListLock);
+   InitializeListHead(&PsActiveProcessHead);
+   ExInitializeFastMutex(&PspActiveProcessMutex);
 
    RtlZeroMemory(PiProcessNotifyRoutine, sizeof(PiProcessNotifyRoutine));
    RtlZeroMemory(PiLoadImageNotifyRoutine, sizeof(PiLoadImageNotifyRoutine));
@@ -412,11 +411,9 @@ PsInitProcessManagment(VOID)
    
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   InsertHeadList(&PsProcessListHead, 
+   InsertHeadList(&PsActiveProcessHead,
 		  &PsInitialSystemProcess->ProcessListEntry);
    InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
    SepCreateSystemProcessToken(PsInitialSystemProcess);
 }
@@ -424,7 +421,6 @@ PsInitProcessManagment(VOID)
 VOID STDCALL
 PiDeleteProcessWorker(PVOID pContext)
 {
-  KIRQL oldIrql;
   PDEL_CONTEXT Context;
   PEPROCESS CurrentProcess;
   PEPROCESS Process;
@@ -440,9 +436,9 @@ PiDeleteProcessWorker(PVOID pContext)
       KeAttachProcess(&Process->Pcb);
     }
 
-  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+  ExAcquireFastMutex(&PspActiveProcessMutex);
   RemoveEntryList(&Process->ProcessListEntry);
-  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+  ExReleaseFastMutex(&PspActiveProcessMutex);
 
   /* KDB hook */
   KDB_DELETEPROCESS_HOOK(Process);
@@ -511,6 +507,8 @@ PsCreatePeb(HANDLE ProcessHandle,
   ULONG ViewSize;
   PVOID TableBase;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   /* Allocate the Process Environment Block (PEB) */
   Process->TebBlock = (PVOID) MM_ROUND_DOWN(PEB_BASE, MM_VIRTMEM_GRANULARITY);
@@ -575,7 +573,7 @@ PsCreatePeb(HANDLE ProcessHandle,
   Peb->OSMinorVersion = 0;
   Peb->OSBuildNumber = 1381;
   Peb->OSPlatformId = 2; //VER_PLATFORM_WIN32_NT;
-  Peb->SPMajorVersion = 6;
+  Peb->OSCSDVersion = 6 << 8;
 
   Peb->AnsiCodePageData     = (char*)TableBase + NlsAnsiTableOffset;
   Peb->OemCodePageData      = (char*)TableBase + NlsOemTableOffset;
@@ -657,7 +655,6 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
    PEPROCESS Process;
    PEPROCESS pParentProcess;
    PKPROCESS KProcess;
-   KIRQL oldIrql;
    PVOID LdrStartupAddr;
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
@@ -863,10 +860,10 @@ exitdereferenceobjects:
    
    Process->Win32WindowStation = (HANDLE)0;
 
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   InsertHeadList(&PsProcessListHead, &Process->ProcessListEntry);
+   ExAcquireFastMutex(&PspActiveProcessMutex);
+   InsertHeadList(&PsActiveProcessHead, &Process->ProcessListEntry);
    InitializeListHead(&Process->ThreadListHead);
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   ExReleaseFastMutex(&PspActiveProcessMutex);
 
    ExInitializeFastMutex(&Process->TebLock);
    Process->Pcb.State = PROCESS_STATE_ACTIVE;
@@ -1170,6 +1167,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 {
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
   
    PreviousMode = ExGetPreviousMode();
    
@@ -1226,7 +1225,8 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 	  "ObjectAttributes %x, ClientId %x { UniP %d, UniT %d })\n",
 	  ProcessHandle, DesiredAccess, ObjectAttributes, ClientId,
 	  ClientId->UniqueProcess, ClientId->UniqueThread);
-	  
+
+   PAGED_CODE();
    
    /*
     * Not sure of the exact semantics 
@@ -1261,14 +1261,13 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
      }
    else
      {
-	KIRQL oldIrql;
 	PLIST_ENTRY current_entry;
 	PEPROCESS current;
 	NTSTATUS Status;
 	
-	KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-	current_entry = PsProcessListHead.Flink;
-	while (current_entry != &PsProcessListHead)
+	ExAcquireFastMutex(&PspActiveProcessMutex);
+	current_entry = PsActiveProcessHead.Flink;
+	while (current_entry != &PsActiveProcessHead)
 	  {
 	     current = CONTAINING_RECORD(current_entry, EPROCESS, 
 					 ProcessListEntry);
@@ -1285,7 +1284,7 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 					                  PsProcessType,
 					                  UserMode);
 		    }
-		  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+		  ExReleaseFastMutex(&PspActiveProcessMutex);
 		  if (NT_SUCCESS(Status))
 		    {
 		      Status = ObCreateHandle(PsGetCurrentProcess(),
@@ -1301,7 +1300,7 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 	       }
 	     current_entry = current_entry->Flink;
 	  }
-	KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+	ExReleaseFastMutex(&PspActiveProcessMutex);
 	DPRINT("NtOpenProcess() = STATUS_UNSUCCESSFUL\n");
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -1322,6 +1321,8 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
    
    PreviousMode = ExGetPreviousMode();
    
@@ -1795,6 +1796,8 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
    ACCESS_MASK Access;
    NTSTATUS Status = STATUS_SUCCESS;
    
+   PAGED_CODE();
+   
    PreviousMode = ExGetPreviousMode();
 
    DefaultSetInfoBufferCheck(ProcessInformationClass,
@@ -1846,86 +1849,79 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
       case ProcessDebugPort:
       {
-        if(ProcessInformationLength != sizeof(HANDLE))
+        HANDLE PortHandle = NULL;
+
+        /* make a safe copy of the buffer on the stack */
+        _SEH_TRY
         {
-          Status = STATUS_INFO_LENGTH_MISMATCH;
+          PortHandle = *(PHANDLE)ProcessInformation;
+          Status = (PortHandle != NULL ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER);
         }
-        else
+        _SEH_HANDLE
         {
-          HANDLE PortHandle = NULL;
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-          /* make a safe copy of the buffer on the stack */
-          _SEH_TRY
-          {
-            PortHandle = *(PHANDLE)ProcessInformation;
-            Status = (PortHandle != NULL ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER);
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
+        if(NT_SUCCESS(Status))
+        {
+          PEPORT DebugPort;
 
+          /* in case we had success reading from the buffer, verify the provided
+           * LPC port handle
+           */
+          Status = ObReferenceObjectByHandle(PortHandle,
+                                             0,
+                                             LpcPortObjectType,
+                                             PreviousMode,
+                                             (PVOID)&DebugPort,
+                                             NULL);
           if(NT_SUCCESS(Status))
           {
-            PEPORT DebugPort;
+            /* lock the process to be thread-safe! */
 
-            /* in case we had success reading from the buffer, verify the provided
-             * LPC port handle
-             */
-            Status = ObReferenceObjectByHandle(PortHandle,
-                                               0,
-                                               LpcPortObjectType,
-                                               PreviousMode,
-                                               (PVOID)&DebugPort,
-                                               NULL);
+            Status = PsLockProcess(Process, FALSE);
             if(NT_SUCCESS(Status))
             {
-              /* lock the process to be thread-safe! */
-
-              Status = PsLockProcess(Process, FALSE);
-              if(NT_SUCCESS(Status))
+              /*
+               * according to "NT Native API" documentation, setting the debug
+               * port is only permitted once!
+               */
+              if(Process->DebugPort == NULL)
               {
-                /*
-                 * according to "NT Native API" documentation, setting the debug
-                 * port is only permitted once!
-                 */
-                if(Process->DebugPort == NULL)
+                /* keep the reference to the handle! */
+                Process->DebugPort = DebugPort;
+                
+                if(Process->Peb)
                 {
-                  /* keep the reference to the handle! */
-                  Process->DebugPort = DebugPort;
-                  
-                  if(Process->Peb)
-                  {
-                    /* we're now debugging the process, so set the flag in the PEB
-                       structure. However, to access it we need to attach to the
-                       process so we're sure we're in the right context! */
+                  /* we're now debugging the process, so set the flag in the PEB
+                     structure. However, to access it we need to attach to the
+                     process so we're sure we're in the right context! */
 
-                    KeAttachProcess(&Process->Pcb);
-                    _SEH_TRY
-                    {
-                      Process->Peb->BeingDebugged = TRUE;
-                    }
-                    _SEH_HANDLE
-                    {
-                      DPRINT1("Trying to set the Peb->BeingDebugged field of process 0x%x failed, exception: 0x%x\n", Process, _SEH_GetExceptionCode());
-                    }
-                    _SEH_END;
-                    KeDetachProcess();
+                  KeAttachProcess(&Process->Pcb);
+                  _SEH_TRY
+                  {
+                    Process->Peb->BeingDebugged = TRUE;
                   }
-                  Status = STATUS_SUCCESS;
+                  _SEH_HANDLE
+                  {
+                    DPRINT1("Trying to set the Peb->BeingDebugged field of process 0x%x failed, exception: 0x%x\n", Process, _SEH_GetExceptionCode());
+                  }
+                  _SEH_END;
+                  KeDetachProcess();
                 }
-                else
-                {
-                  ObDereferenceObject(DebugPort);
-                  Status = STATUS_PORT_ALREADY_SET;
-                }
-                PsUnlockProcess(Process);
+                Status = STATUS_SUCCESS;
               }
               else
               {
                 ObDereferenceObject(DebugPort);
+                Status = STATUS_PORT_ALREADY_SET;
               }
+              PsUnlockProcess(Process);
+            }
+            else
+            {
+              ObDereferenceObject(DebugPort);
             }
           }
         }
@@ -1934,67 +1930,60 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
       case ProcessExceptionPort:
       {
-        if(ProcessInformationLength != sizeof(HANDLE))
-        {
-          Status = STATUS_INFO_LENGTH_MISMATCH;
-        }
-        else
-        {
-          HANDLE PortHandle = NULL;
+        HANDLE PortHandle = NULL;
 
-          /* make a safe copy of the buffer on the stack */
-          _SEH_TRY
-          {
-            PortHandle = *(PHANDLE)ProcessInformation;
-            Status = STATUS_SUCCESS;
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
+        /* make a safe copy of the buffer on the stack */
+        _SEH_TRY
+        {
+          PortHandle = *(PHANDLE)ProcessInformation;
+          Status = STATUS_SUCCESS;
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if(NT_SUCCESS(Status))
+        {
+          PEPORT ExceptionPort;
           
+          /* in case we had success reading from the buffer, verify the provided
+           * LPC port handle
+           */
+          Status = ObReferenceObjectByHandle(PortHandle,
+                                             0,
+                                             LpcPortObjectType,
+                                             PreviousMode,
+                                             (PVOID)&ExceptionPort,
+                                             NULL);
           if(NT_SUCCESS(Status))
           {
-            PEPORT ExceptionPort;
+            /* lock the process to be thread-safe! */
             
-            /* in case we had success reading from the buffer, verify the provided
-             * LPC port handle
-             */
-            Status = ObReferenceObjectByHandle(PortHandle,
-                                               0,
-                                               LpcPortObjectType,
-                                               PreviousMode,
-                                               (PVOID)&ExceptionPort,
-                                               NULL);
+            Status = PsLockProcess(Process, FALSE);
             if(NT_SUCCESS(Status))
             {
-              /* lock the process to be thread-safe! */
-              
-              Status = PsLockProcess(Process, FALSE);
-              if(NT_SUCCESS(Status))
+              /*
+               * according to "NT Native API" documentation, setting the exception
+               * port is only permitted once!
+               */
+              if(Process->ExceptionPort == NULL)
               {
-                /*
-                 * according to "NT Native API" documentation, setting the exception
-                 * port is only permitted once!
-                 */
-                if(Process->ExceptionPort == NULL)
-                {
-                  /* keep the reference to the handle! */
-                  Process->ExceptionPort = ExceptionPort;
-                  Status = STATUS_SUCCESS;
-                }
-                else
-                {
-                  ObDereferenceObject(ExceptionPort);
-                  Status = STATUS_PORT_ALREADY_SET;
-                }
-                PsUnlockProcess(Process);
+                /* keep the reference to the handle! */
+                Process->ExceptionPort = ExceptionPort;
+                Status = STATUS_SUCCESS;
               }
               else
               {
                 ObDereferenceObject(ExceptionPort);
+                Status = STATUS_PORT_ALREADY_SET;
               }
+              PsUnlockProcess(Process);
+            }
+            else
+            {
+              ObDereferenceObject(ExceptionPort);
             }
           }
         }
@@ -2003,129 +1992,129 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
       case ProcessAccessToken:
       {
-        if(ProcessInformationLength != sizeof(PROCESS_ACCESS_TOKEN))
+        HANDLE TokenHandle = NULL;
+
+        /* make a safe copy of the buffer on the stack */
+        _SEH_TRY
         {
-          Status = STATUS_INFO_LENGTH_MISMATCH;
+          TokenHandle = ((PPROCESS_ACCESS_TOKEN)ProcessInformation)->Token;
+          Status = STATUS_SUCCESS;
         }
-        else
+        _SEH_HANDLE
         {
-          HANDLE TokenHandle = NULL;
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-          /* make a safe copy of the buffer on the stack */
-          _SEH_TRY
-          {
-            TokenHandle = ((PPROCESS_ACCESS_TOKEN)ProcessInformation)->Token;
-            Status = STATUS_SUCCESS;
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
-
-          if(NT_SUCCESS(Status))
-          {
-            /* in case we had success reading from the buffer, perform the actual task */
-            Status = PspAssignPrimaryToken(Process, TokenHandle);
-          }
+        if(NT_SUCCESS(Status))
+        {
+          /* in case we had success reading from the buffer, perform the actual task */
+          Status = PspAssignPrimaryToken(Process, TokenHandle);
         }
 	break;
       }
 
       case ProcessDefaultHardErrorMode:
       {
-        if(ProcessInformationLength != sizeof(UINT))
+        _SEH_TRY
         {
-          Status = STATUS_INFO_LENGTH_MISMATCH;
+          InterlockedExchange((LONG*)&Process->DefaultHardErrorProcessing,
+                              *(PLONG)ProcessInformation);
+          Status = STATUS_SUCCESS;
         }
-        else
+        _SEH_HANDLE
         {
-          _SEH_TRY
-          {
-            InterlockedExchange((LONG*)&Process->DefaultHardErrorProcessing,
-                                *(PLONG)ProcessInformation);
-            Status = STATUS_SUCCESS;
-          }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
+          Status = _SEH_GetExceptionCode();
         }
+        _SEH_END;
         break;
       }
       
       case ProcessSessionInformation:
       {
-        if(ProcessInformationLength != sizeof(UINT))
+        PROCESS_SESSION_INFORMATION SessionInfo;
+        Status = STATUS_SUCCESS;
+        
+        _SEH_TRY
         {
-          Status = STATUS_INFO_LENGTH_MISMATCH;
+          /* copy the structure to the stack */
+          SessionInfo = *(PPROCESS_SESSION_INFORMATION)ProcessInformation;
         }
-        else
+        _SEH_HANDLE
         {
-          PROCESS_SESSION_INFORMATION SessionInfo;
-          Status = STATUS_SUCCESS;
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if(NT_SUCCESS(Status))
+        {
+          /* we successfully copied the structure to the stack, continue processing */
           
-          _SEH_TRY
+          /*
+           * setting the session id requires the SeTcbPrivilege!
+           */
+          if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
+                                     PreviousMode))
           {
-            /* copy the structure to the stack */
-            SessionInfo = *(PPROCESS_SESSION_INFORMATION)ProcessInformation;
+            DPRINT1("NtSetInformationProcess: Caller requires the SeTcbPrivilege privilege for setting ProcessSessionInformation!\n");
+            /* can't set the session id, bail! */
+            Status = STATUS_PRIVILEGE_NOT_HELD;
+            break;
           }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
           
+          /* FIXME - update the session id for the process token */
+
+          Status = PsLockProcess(Process, FALSE);
           if(NT_SUCCESS(Status))
           {
-            /* we successfully copied the structure to the stack, continue processing */
-            
-            /*
-             * setting the session id requires the SeTcbPrivilege!
-             */
-            if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
-                                       PreviousMode))
-            {
-              DPRINT1("NtSetInformationProcess: Caller requires the SeTcbPrivilege privilege for setting ProcessSessionInformation!\n");
-              /* can't set the session id, bail! */
-              Status = STATUS_PRIVILEGE_NOT_HELD;
-              break;
-            }
-            
-            /* FIXME - update the session id for the process token */
+            Process->SessionId = SessionInfo.SessionId;
 
-            Status = PsLockProcess(Process, FALSE);
-            if(NT_SUCCESS(Status))
+            /* Update the session id in the PEB structure */
+            if(Process->Peb != NULL)
             {
-              Process->SessionId = SessionInfo.SessionId;
+              /* we need to attach to the process to make sure we're in the right
+                 context to access the PEB structure */
+              KeAttachProcess(&Process->Pcb);
 
-              /* Update the session id in the PEB structure */
-              if(Process->Peb != NULL)
+              _SEH_TRY
               {
-                /* we need to attach to the process to make sure we're in the right
-                   context to access the PEB structure */
-                KeAttachProcess(&Process->Pcb);
+                /* FIXME: Process->Peb->SessionId = SessionInfo.SessionId; */
 
-                _SEH_TRY
-                {
-                  /* FIXME: Process->Peb->SessionId = SessionInfo.SessionId; */
-
-                  Status = STATUS_SUCCESS;
-                }
-                _SEH_HANDLE
-                {
-                  Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-
-                KeDetachProcess();
+                Status = STATUS_SUCCESS;
               }
+              _SEH_HANDLE
+              {
+                Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
 
-              PsUnlockProcess(Process);
+              KeDetachProcess();
             }
+
+            PsUnlockProcess(Process);
           }
         }
+        break;
+      }
+      
+      case ProcessPriorityClass:
+      {
+        PROCESS_PRIORITY_CLASS ppc;
+
+        _SEH_TRY
+        {
+          ppc = *(PPROCESS_PRIORITY_CLASS)ProcessInformation;
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if(NT_SUCCESS(Status))
+        {
+        }
+        
         break;
       }
 	
@@ -2135,7 +2124,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessWorkingSetWatch:
       case ProcessUserModeIOPL:
       case ProcessEnableAlignmentFaultFixup:
-      case ProcessPriorityClass:
       case ProcessAffinityMask:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
@@ -2178,7 +2166,6 @@ PiQuerySystemProcessInformation(PVOID Buffer,
    return STATUS_NOT_IMPLEMENTED;
 
 #if 0
-	KIRQL		OldIrql;
 	PLIST_ENTRY	CurrentEntryP;
 	PEPROCESS	CurrentP;
 	PLIST_ENTRY	CurrentEntryT;
@@ -2195,16 +2182,15 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 	
 
    /* Lock the process list. */
-   KeAcquireSpinLock(&PsProcessListLock,
-		     &OldIrql);
+   ExAcquireFastMutex(&PspActiveProcessMutex);
 
 	/*
 	 * Scan the process list. Since the
 	 * list is circular, the guard is false
 	 * after the last process.
 	 */
-	for (	CurrentEntryP = PsProcessListHead.Flink;
-		(CurrentEntryP != & PsProcessListHead);
+	for (	CurrentEntryP = PsActiveProcessHead.Flink;
+		(CurrentEntryP != & PsActiveProcessHead);
 		CurrentEntryP = CurrentEntryP->Flink
 		)
 	{
@@ -2340,9 +2326,8 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 	/*
 	 * Unlock the process list.
 	 */
-	KeReleaseSpinLock (
-		& PsProcessListLock,
-		OldIrql
+	ExReleaseFastMutex (
+		& PspActiveProcessMutex
 		);
 	/*
 	 * Return the proper error status code,
@@ -2576,14 +2561,13 @@ NTSTATUS STDCALL
 PsLookupProcessByProcessId(IN HANDLE ProcessId,
 			   OUT PEPROCESS *Process)
 {
-  KIRQL oldIrql;
   PLIST_ENTRY current_entry;
   PEPROCESS current;
 
-  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+  ExAcquireFastMutex(&PspActiveProcessMutex);
 
-  current_entry = PsProcessListHead.Flink;
-  while (current_entry != &PsProcessListHead)
+  current_entry = PsActiveProcessHead.Flink;
+  while (current_entry != &PsActiveProcessHead)
     {
       current = CONTAINING_RECORD(current_entry,
 				  EPROCESS,
@@ -2592,13 +2576,13 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
 	{
 	  *Process = current;
           ObReferenceObject(current);
-	  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+	  ExReleaseFastMutex(&PspActiveProcessMutex);
 	  return(STATUS_SUCCESS);
 	}
       current_entry = current_entry->Flink;
     }
 
-  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+  ExReleaseFastMutex(&PspActiveProcessMutex);
 
   return(STATUS_INVALID_PARAMETER);
 }
@@ -2916,6 +2900,8 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
   PLARGE_INTEGER Delay = (Timeout ? &PsLockTimeout : NULL);
   PKTHREAD CallingThread = KeGetCurrentThread();
   
+  PAGED_CODE();
+  
   KeEnterCriticalRegion();
   
   for(;;)
@@ -2973,6 +2959,8 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
 VOID
 PsUnlockProcess(PEPROCESS Process)
 {
+  PAGED_CODE();
+  
   ASSERT(Process->LockOwner == KeGetCurrentThread());
   
   if(InterlockedDecrementUL(&Process->LockCount) == 0)

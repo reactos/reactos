@@ -6,8 +6,8 @@
 6 stdcall MsiAdvertiseProductW(wstr wstr wstr long)
 7 stdcall MsiCloseAllHandles()
 8 stdcall MsiCloseHandle(long)
-9 stub MsiCollectUserInfoA
-10 stub MsiCollectUserInfoW
+9 stdcall MsiCollectUserInfoA(str)
+10 stdcall MsiCollectUserInfoW(wstr)
 11 stub MsiConfigureFeatureA
 12 stub MsiConfigureFeatureFromDescriptorA
 13 stub MsiConfigureFeatureFromDescriptorW
@@ -32,7 +32,7 @@
 32 stdcall MsiDatabaseOpenViewW(long wstr ptr)
 33 stdcall MsiDoActionA(long str)
 34 stdcall MsiDoActionW(long wstr)
-35 stub MsiEnableUIPreview
+35 stdcall MsiEnableUIPreview(long ptr)
 36 stdcall MsiEnumClientsA(str long ptr)
 37 stdcall MsiEnumClientsW(wstr long ptr)
 38 stdcall MsiEnumComponentQualifiersA(str long str ptr str ptr)
@@ -79,7 +79,7 @@
 79 stdcall MsiGetTargetPathA(long str ptr ptr)
 80 stdcall MsiGetTargetPathW(long wstr ptr ptr)
 81 stub MsiGetUserInfoA
-82 stub MsiGetUserInfoW
+82 stdcall MsiGetUserInfoW(wstr ptr ptr ptr ptr ptr ptr)
 83 stub MsiInstallMissingComponentA
 84 stub MsiInstallMissingComponentW
 85 stub MsiInstallMissingFileA
@@ -94,10 +94,10 @@
 94 stdcall MsiOpenPackageW(wstr ptr)
 95 stdcall MsiOpenProductA(str ptr)
 96 stdcall MsiOpenProductW(wstr ptr)
-97 stub MsiPreviewBillboardA
-98 stub MsiPreviewBillboardW
-99 stub MsiPreviewDialogA
-100 stub MsiPreviewDialogW
+97 stdcall MsiPreviewBillboardA(long str str)
+98 stdcall MsiPreviewBillboardW(long wstr wstr)
+99 stdcall MsiPreviewDialogA(long str)
+100 stdcall MsiPreviewDialogW(long wstr)
 101 stub MsiProcessAdvertiseScriptA
 102 stub MsiProcessAdvertiseScriptW
 103 stdcall MsiProcessMessage(long long long)
@@ -148,9 +148,9 @@
 148 stdcall MsiSummaryInfoGetPropertyA(long long ptr ptr ptr ptr ptr)
 149 stdcall MsiSummaryInfoGetPropertyCount(long ptr)
 150 stdcall MsiSummaryInfoGetPropertyW(long long ptr ptr ptr ptr ptr)
-151 stub MsiSummaryInfoPersist
-152 stub MsiSummaryInfoSetPropertyA
-153 stub MsiSummaryInfoSetPropertyW
+151 stdcall MsiSummaryInfoPersist(long)
+152 stdcall MsiSummaryInfoSetPropertyA(long long long long ptr str)
+153 stdcall MsiSummaryInfoSetPropertyW(long long long long ptr wstr)
 154 stub MsiUseFeatureA
 155 stub MsiUseFeatureW
 156 stdcall MsiVerifyPackageA(str)
@@ -186,21 +186,21 @@
 186 stub MsiCreateTransformSummaryInfoW
 187 stub MsiQueryFeatureStateFromDescriptorA
 188 stub MsiQueryFeatureStateFromDescriptorW
-189 stub MsiConfigureProductExA
-190 stub MsiConfigureProductExW
+189 stdcall MsiConfigureProductExA(str long long str)
+190 stdcall MsiConfigureProductExW(wstr long long wstr)
 191 stub MsiInvalidateFeatureCache
 192 stub MsiUseFeatureExA
-193 stub MsiUseFeatureExW
+193 stdcall MsiUseFeatureExW(wstr wstr long long)
 194 stdcall MsiGetFileVersionA(str str ptr str ptr)
 195 stdcall MsiGetFileVersionW(wstr wstr ptr wstr ptr)
 196 stdcall MsiLoadStringA(long long long long long)
 197 stdcall MsiLoadStringW(long long long long long)
 198 stdcall MsiMessageBoxA(long long long long long long)
 199 stdcall MsiMessageBoxW(long long long long long long)
-200 stub MsiDecomposeDescriptorA
-201 stub MsiDecomposeDescriptorW
+200 stdcall MsiDecomposeDescriptorA(str ptr ptr ptr ptr)
+201 stdcall MsiDecomposeDescriptorW(wstr ptr ptr ptr ptr)
 202 stub MsiProvideQualifiedComponentExA
-203 stub MsiProvideQualifiedComponentExW
+203 stdcall MsiProvideQualifiedComponentExW(wstr wstr long wstr long long ptr ptr)
 204 stdcall MsiEnumRelatedProductsA(str long long ptr)
 205 stdcall MsiEnumRelatedProductsW(wstr long long ptr)
 206 stub MsiSetFeatureAttributesA
@@ -213,13 +213,13 @@
 213 stub MsiSourceListForceResolutionW
 214 stub MsiIsProductElevatedA
 215 stub MsiIsProductElevatedW
-216 stub MsiGetShortcutTargetA
-217 stub MsiGetShortcutTargetW
+216 stdcall MsiGetShortcutTargetA(str ptr ptr ptr)
+217 stdcall MsiGetShortcutTargetW(wstr ptr ptr ptr)
 218 stub MsiGetFileHashA
 219 stub MsiGetFileHashW
 220 stub MsiEnumComponentCostsA
 221 stub MsiEnumComponentCostsW
-222 stub MsiCreateAndVerifyInstallerDirectory
+222 stdcall MsiCreateAndVerifyInstallerDirectory()
 223 stdcall MsiGetFileSignatureInformationA(str long ptr ptr ptr)
 224 stdcall MsiGetFileSignatureInformationW(wstr long ptr ptr ptr)
 225 stdcall MsiProvideAssemblyA(str str long long str ptr)

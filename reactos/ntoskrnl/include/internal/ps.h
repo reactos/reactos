@@ -73,7 +73,7 @@ typedef struct _KTHREAD
    
    /* Thread state (one of THREAD_STATE_xxx constants below) */
    UCHAR             State;               /* 2D */
-   UCHAR             Alerted[2];          /* 2E */
+   BOOLEAN           Alerted[2];          /* 2E */
    UCHAR             Iopl;                /* 30 */
    UCHAR             NpxState;            /* 31 */
    CHAR              Saturation;          /* 32 */

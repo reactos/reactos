@@ -9,13 +9,14 @@
  *              12/04/99: Created
  */
 
-#include <msvcrt/mbstring.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/mbctype.h>
+#include <mbstring.h>
+#include <stdlib.h>
+#include <mbctype.h>
+#include <internal/mbstring.h>
 
 size_t _mbclen2(const unsigned int s);
 
-char _jctype[257] = {
+unsigned char _mbctype[257] = {
 /*-1*/  ___,
 /*0x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
 /*1x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
@@ -35,13 +36,13 @@ char _jctype[257] = {
 /*Fx*/  _12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,___,___,___
 };
 
-char *_mbctype = _jctype;
+//unsigned char _mbctype = _jctype;
 /*
  * @implemented
  */
 int _ismbblead(unsigned int c)
 {
-	return ((_jctype+1)[(unsigned char)(c)] & _KNJ_1);
+   return ((_mbctype+1)[(unsigned char)(c)] & _KNJ_1);
 }
 //int _ismbblead(unsigned int byte)
 //{

@@ -127,10 +127,11 @@ static HRESULT WINAPI IStream_fnQueryInterface(IStream *iface, REFIID riid, LPVO
 static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 {
 	ISHFileStream *This = (ISHFileStream *)iface;
+	ULONG refCount = InterlockedIncrement(&This->ref);
 
-	TRACE("(%p)->(count=%lu)\n",This, This->ref);
+	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
 
-	return ++(This->ref);
+	return refCount;
 }
 
 /**************************************************************************
@@ -139,16 +140,17 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 static ULONG WINAPI IStream_fnRelease(IStream *iface)
 {
 	ISHFileStream *This = (ISHFileStream *)iface;
+	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->()\n",This);
+	TRACE("(%p)->(count=%lu)\n", This, refCount + 1);
 
-	if (!--(This->ref))
+	if (!refCount)
 	{
 		TRACE(" destroying SHFileStream (%p)\n",This);
 		CloseHandle(This->handle);
 		HeapFree(GetProcessHeap(),0,This);
 	}
-	return This->ref;
+	return refCount;
 }
 
 static HRESULT WINAPI IStream_fnRead (IStream * iface, void* pv, ULONG cb, ULONG* pcbRead)

@@ -1,14 +1,13 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrt/stdio.h>
-#include <msvcrt/wchar.h>
-#include <msvcrt/sys/types.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/file.h>
-#include <msvcrt/io.h>
-#include <msvcrt/errno.h>
-
+#include <stdio.h>
+#include <wchar.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <io.h>
+#include <errno.h>
+#include <internal/file.h>
 
 int cntcr(char* bufp, int bufsiz);
 int convert(char* endp, int bufsiz, int n);
@@ -31,7 +30,7 @@ int _flsbuf(int c, FILE* f)
     }
 
     // no file associated with buffer, this is a memory stream
-    if (fileno(f) == -1) {
+    if (_fileno(f) == -1) {
         return c;
     }
 
@@ -46,7 +45,7 @@ int _flsbuf(int c, FILE* f)
             f->_cnt = f->_bufsiz = size;
             f->_ptr = base;
             rn = 0;
-            if (f == stdout && isatty(fileno(stdout))) {
+            if (f == stdout && _isatty(_fileno(stdout))) {
                 f->_flag |= _IO_LBF;
             }
         }
@@ -76,13 +75,13 @@ int _flsbuf(int c, FILE* f)
         rn = f->_ptr - base;
         f->_ptr = base;
         if ((f->_flag & _IOAHEAD) == _IOAHEAD)
-            _lseek(fileno(f), -(rn+f->_cnt), SEEK_CUR);
+            _lseek(_fileno(f), -(rn+f->_cnt), SEEK_CUR);
         f->_cnt = f->_bufsiz;
         f->_flag &= ~_IOAHEAD;
     }
     f->_flag &= ~_IODIRTY;
     while (rn > 0) {
-        n = _write(fileno(f), base, rn);
+        n = _write(_fileno(f), base, rn);
         if (n <= 0) {
             f->_flag |= _IOERR;
             return EOF;

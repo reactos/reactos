@@ -9,6 +9,7 @@ DELAYIMPORTS = shell32
 EXTRALIBS = $(LIBUNICODE)
 
 C_SRCS = \
+	cfgmgr.c \
 	devinst.c \
 	dirid.c \
 	diskspace.c \

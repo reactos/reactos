@@ -37,6 +37,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
+LONG URLMON_refCount = 0;
+
 HINSTANCE URLMON_hInstance = 0;
 
 /***********************************************************************
@@ -76,9 +78,7 @@ HRESULT WINAPI URLMON_DllInstall(BOOL bInstall, LPCWSTR cmdline)
  */
 HRESULT WINAPI URLMON_DllCanUnloadNow(void)
 {
-    FIXME("(void): stub\n");
-
-    return S_FALSE;
+    return URLMON_refCount != 0 ? S_FALSE : S_OK;
 }
 
 
@@ -125,6 +125,8 @@ CF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj)
 static ULONG WINAPI CF_AddRef(LPCLASSFACTORY iface)
 {
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    URLMON_LockModule();
+    
     return InterlockedIncrement(&This->ref);
 }
 
@@ -136,6 +138,8 @@ static ULONG WINAPI CF_Release(LPCLASSFACTORY iface)
 
     if (ref == 0)
 	HeapFree(GetProcessHeap(), 0, This);
+
+    URLMON_UnlockModule();
 
     return ref;
 }
@@ -160,8 +164,13 @@ static HRESULT WINAPI CF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOuter,
 
 static HRESULT WINAPI CF_LockServer(LPCLASSFACTORY iface,BOOL dolock)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-    FIXME("(%p)->(%d),stub!\n",This,dolock);
+    TRACE("(%d)\n", dolock);
+
+    if (dolock)
+	   URLMON_LockModule();
+    else
+	   URLMON_UnlockModule();
+
     return S_OK;
 }
 

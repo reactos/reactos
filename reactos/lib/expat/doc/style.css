@@ -49,6 +49,17 @@ body {
   margin-right: 10%;
 }
 
+.pseudocode {
+  padding-left: 1em;
+  padding-top: .5em;
+  padding-bottom: .5em;
+  border: solid thin;
+  margin: 1em 0;
+  background-color: rgb(250,220,180);
+  margin-left: 2em;
+  margin-right: 10%;
+}
+
 .handler {
   width: 100%;
   border-top-width: thin;  

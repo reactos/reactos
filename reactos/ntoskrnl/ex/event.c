@@ -88,6 +88,8 @@ NtClearEvent(IN HANDLE EventHandle)
    PKEVENT Event;
    NTSTATUS Status;
    
+   PAGED_CODE();
+   
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
 				      ExEventObjectType,
@@ -118,6 +120,8 @@ NtCreateEvent(OUT PHANDLE EventHandle,
    PKEVENT Event;
    HANDLE hEvent;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
  
    PreviousMode = ExGetPreviousMode();
  
@@ -195,6 +199,8 @@ NtOpenEvent(OUT PHANDLE EventHandle,
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
    
+   PAGED_CODE();
+   
    DPRINT("NtOpenEvent(0x%x, 0x%x, 0x%x)\n", EventHandle, DesiredAccess, ObjectAttributes);
 
    PreviousMode = ExGetPreviousMode();
@@ -254,6 +260,8 @@ NtPulseEvent(IN HANDLE EventHandle,
    PKEVENT Event;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    DPRINT("NtPulseEvent(EventHandle 0%x PreviousState 0%x)\n",
 	  EventHandle, PreviousState);
@@ -322,6 +330,8 @@ NtQueryEvent(IN HANDLE EventHandle,
    PKEVENT Event;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
    
@@ -395,6 +405,8 @@ NtResetEvent(IN HANDLE EventHandle,
    PKEVENT Event;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    DPRINT("NtResetEvent(EventHandle 0%x PreviousState 0%x)\n",
 	  EventHandle, PreviousState);
@@ -460,6 +472,8 @@ NtSetEvent(IN HANDLE EventHandle,
    PKEVENT Event;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    DPRINT("NtSetEvent(EventHandle 0%x PreviousState 0%x)\n",
 	  EventHandle, PreviousState);

@@ -98,6 +98,8 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
      HANDLE Handle;
      PVOID Address;
   }u;
+  
+  PAGED_CODE();
 
   if (ThreadInformationClass <= MaxThreadInfoClass &&
       !SetInformationData[ThreadInformationClass].Implemented)
@@ -206,21 +208,23 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
       LARGE_INTEGER Count;
       BOOLEAN Last;
    }u;
+   
+   PAGED_CODE();
 
-  if (ThreadInformationClass <= MaxThreadInfoClass &&
-      !QueryInformationData[ThreadInformationClass].Implemented)
-    {
-      return STATUS_NOT_IMPLEMENTED;
-    }
-  if (ThreadInformationClass > MaxThreadInfoClass ||
-      QueryInformationData[ThreadInformationClass].Size == 0)
-    {
-      return STATUS_INVALID_INFO_CLASS;
-    }
-  if (ThreadInformationLength != QueryInformationData[ThreadInformationClass].Size)
-    {
-      return STATUS_INFO_LENGTH_MISMATCH;
-    }
+   if (ThreadInformationClass <= MaxThreadInfoClass &&
+       !QueryInformationData[ThreadInformationClass].Implemented)
+     {
+       return STATUS_NOT_IMPLEMENTED;
+     }
+   if (ThreadInformationClass > MaxThreadInfoClass ||
+       QueryInformationData[ThreadInformationClass].Size == 0)
+     {
+       return STATUS_INVALID_INFO_CLASS;
+     }
+   if (ThreadInformationLength != QueryInformationData[ThreadInformationClass].Size)
+     {
+       return STATUS_INFO_LENGTH_MISMATCH;
+     }
 
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_QUERY_INFORMATION,

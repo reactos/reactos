@@ -196,8 +196,8 @@ void enum_stream_names( IStorage *stg )
         if( FAILED( r ) || !count )
             break;
         decode_streamname( stat.pwcsName, name );
-        ERR("stream %2ld -> %s %s\n", n, 
-            debugstr_w(stat.pwcsName), debugstr_w(name) );
+        TRACE("stream %2ld -> %s %s\n", n, 
+              debugstr_w(stat.pwcsName), debugstr_w(name) );
         n++;
     }
 
@@ -356,12 +356,12 @@ static UINT write_stream_data( IStorage *stg, LPCWSTR stname,
     encname = encode_streamname(TRUE, stname );
     r = IStorage_OpenStream( stg, encname, NULL, 
             STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, &stm);
-    HeapFree( GetProcessHeap(), 0, encname );
     if( FAILED(r) )
     {
         r = IStorage_CreateStream( stg, encname,
                 STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
     }
+    HeapFree( GetProcessHeap(), 0, encname );
     if( FAILED( r ) )
     {
         ERR("open stream failed r = %08lx\n",r);
@@ -408,7 +408,7 @@ UINT read_table_from_storage( MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
 
     TRACE("%s\n",debugstr_w(name));
 
-    /* non-existing tables should be interpretted as empty tables */
+    /* nonexistent tables should be interpreted as empty tables */
     t = HeapAlloc( GetProcessHeap(), 0, 
                    sizeof (MSITABLE) + lstrlenW(name)*sizeof (WCHAR) );
     if( !t )
@@ -747,10 +747,8 @@ UINT load_string_table( MSIDATABASE *db )
     ret = ERROR_SUCCESS;
 
 end:
-    if( pool )
-        HeapFree( GetProcessHeap(), 0, pool );
-    if( data )
-        HeapFree( GetProcessHeap(), 0, data );
+    HeapFree( GetProcessHeap(), 0, pool );
+    HeapFree( GetProcessHeap(), 0, data );
 
     return ret;
 }
@@ -830,10 +828,8 @@ UINT save_string_table( MSIDATABASE *db )
     ret = ERROR_SUCCESS;
 
 err:
-    if( data )
-        HeapFree( GetProcessHeap(), 0, data );
-    if( pool )
-        HeapFree( GetProcessHeap(), 0, pool );
+    HeapFree( GetProcessHeap(), 0, data );
+    HeapFree( GetProcessHeap(), 0, pool );
 
     return ret;
 }
@@ -1288,9 +1284,10 @@ static UINT TABLE_get_column_info( struct tagMSIVIEW *view,
     return ERROR_SUCCESS;
 }
 
-static UINT TABLE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIHANDLE hrec)
+static UINT TABLE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
+                MSIRECORD *rec)
 {
-    FIXME("%p %d %ld\n", view, eModifyMode, hrec );
+    FIXME("%p %d %p\n", view, eModifyMode, rec );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 

@@ -1,4 +1,5 @@
-#include <msvcrt/io.h>
+#include <stdio.h>
+#include <io.h>
 
 /*
  * @implemented

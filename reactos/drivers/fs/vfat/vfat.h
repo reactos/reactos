@@ -28,6 +28,7 @@ typedef struct _ROS_QUERY_LCN_MAPPING { LARGE_INTEGER LcnDiskOffset; } ROS_QUERY
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
+#include <pshpack1.h>
 struct _BootSector
 {
   unsigned char  magic0, res0, magic1;
@@ -45,7 +46,7 @@ struct _BootSector
   unsigned char  VolumeLabel[11], SysType[8];
   unsigned char  Res2[448];
   unsigned short Signatur1;
-} __attribute__((packed));
+};
 
 struct _BootSector32
 {
@@ -73,7 +74,7 @@ struct _BootSector32
   unsigned char  VolumeLabel[11], SysType[8];		// 71
   unsigned char  Res2[420];				// 90
   unsigned short Signature1;				// 510
-} __attribute__((packed));
+};
 
 struct _BootSectorFatX
 {
@@ -83,7 +84,7 @@ struct _BootSectorFatX
    unsigned short FATCount;         // 12
    unsigned long Unknown;           // 14
    unsigned char Unused[4078];      // 18
-} __attribute__((packed));
+};
 
 struct _FsInfoSector
 {
@@ -94,9 +95,60 @@ struct _FsInfoSector
   unsigned long  NextCluster;				// 492
   unsigned char  Res7[12];				// 496
   unsigned long  Signatur2;				// 508
-} __attribute__((packed));
+};
 
 typedef struct _BootSector BootSector;
+
+struct _FATDirEntry
+{
+  union
+  {
+     struct { unsigned char Filename[8], Ext[3]; };
+     unsigned char ShortName[11];
+  };
+  unsigned char  Attrib;
+  unsigned char  lCase;
+  unsigned char  CreationTimeMs;
+  unsigned short CreationTime,CreationDate,AccessDate;
+  unsigned short FirstClusterHigh;                      // higher
+  unsigned short UpdateTime;                            //time create/update
+  unsigned short UpdateDate;                            //date create/update
+  unsigned short FirstCluster;
+  unsigned long  FileSize;
+};
+
+typedef struct _FATDirEntry FAT_DIR_ENTRY, *PFAT_DIR_ENTRY;
+
+struct _FATXDirEntry
+{
+   unsigned char FilenameLength; // 0
+   unsigned char Attrib;         // 1
+   unsigned char Filename[42];   // 2
+   unsigned long FirstCluster;   // 44
+   unsigned long FileSize;       // 48
+   unsigned short UpdateTime;    // 52
+   unsigned short UpdateDate;    // 54
+   unsigned short CreationTime;  // 56
+   unsigned short CreationDate;  // 58
+   unsigned short AccessTime;    // 60
+   unsigned short AccessDate;    // 62
+};
+
+struct _slot
+{
+  unsigned char id;               // sequence number for slot
+  WCHAR  name0_4[5];              // first 5 characters in name
+  unsigned char attr;             // attribute byte
+  unsigned char reserved;         // always 0
+  unsigned char alias_checksum;   // checksum for 8.3 alias
+  WCHAR  name5_10[6];             // 6 more characters in name
+  unsigned char start[2];         // starting cluster number
+  WCHAR  name11_12[2];            // last 2 characters in name
+};
+
+typedef struct _slot slot;
+
+#include <poppack.h>
 
 #define VFAT_CASE_LOWER_BASE	8  		// base is lower case
 #define VFAT_CASE_LOWER_EXT 	16 		// extension is lower case
@@ -120,37 +172,6 @@ typedef struct _BootSector BootSector;
 #define FAT_ENTRIES_PER_PAGE   (PAGE_SIZE / sizeof (FAT_DIR_ENTRY))
 #define FATX_ENTRIES_PER_PAGE  (PAGE_SIZE / sizeof (FATX_DIR_ENTRY))
 
-struct _FATDirEntry
-{
-  unsigned char  Filename[8], Ext[3];
-  unsigned char  Attrib;
-  unsigned char  lCase;
-  unsigned char  CreationTimeMs;
-  unsigned short CreationTime,CreationDate,AccessDate;
-  unsigned short FirstClusterHigh;                      // higher
-  unsigned short UpdateTime;                            //time create/update
-  unsigned short UpdateDate;                            //date create/update
-  unsigned short FirstCluster;
-  unsigned long  FileSize;
-} __attribute__((packed));
-
-typedef struct _FATDirEntry FAT_DIR_ENTRY, *PFAT_DIR_ENTRY;
-
-struct _FATXDirEntry
-{
-   unsigned char FilenameLength; // 0
-   unsigned char Attrib;         // 1
-   unsigned char Filename[42];   // 2
-   unsigned long FirstCluster;   // 44
-   unsigned long FileSize;       // 48
-   unsigned short UpdateTime;    // 52
-   unsigned short UpdateDate;    // 54
-   unsigned short CreationTime;  // 56
-   unsigned short CreationDate;  // 58
-   unsigned short AccessTime;    // 60
-   unsigned short AccessDate;    // 62
-} __attribute__((packed));
-
 typedef struct _FATXDirEntry FATX_DIR_ENTRY, *PFATX_DIR_ENTRY;
 
 union _DIR_ENTRY
@@ -160,21 +181,6 @@ union _DIR_ENTRY
 };
 
 typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
-
-struct _slot
-{
-  unsigned char id;               // sequence number for slot
-  WCHAR  name0_4[5];              // first 5 characters in name
-  unsigned char attr;             // attribute byte
-  unsigned char reserved;         // always 0
-  unsigned char alias_checksum;   // checksum for 8.3 alias
-  WCHAR  name5_10[6];             // 6 more characters in name
-  unsigned char start[2];         // starting cluster number
-  WCHAR  name11_12[2];            // last 2 characters in name
-} __attribute__((packed));
-
-
-typedef struct _slot slot;
 
 #define BLOCKSIZE 512
 

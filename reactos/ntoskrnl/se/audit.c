@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/se/audit.c
  * PURPOSE:         Audit functions
  * 
- * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMERS:     Eric Kohl <eric.kohl@t-online.de>
  */
 
 /* INCLUDES *****************************************************************/

@@ -106,7 +106,7 @@ static PETHREAD GspRunThread; /* NULL means run all threads */
 static PETHREAD GspDbgThread;
 static PETHREAD GspEnumThread;
 
-extern LIST_ENTRY PsProcessListHead;
+extern LIST_ENTRY PsActiveProcessHead;
 
 /* Number of Registers.  */
 #define NUMREGS	16
@@ -602,12 +602,14 @@ GspFindThread(PCHAR Data,
     }
     else
     {
-      ULONG ThreadId;
+      ULONG uThreadId;
+      HANDLE ThreadId;
       PCHAR ptr = &Data[0];
 
-      GspHex2Long (&ptr, (PLONG) &ThreadId);
+      GspHex2Long (&ptr, (PULONG) &uThreadId);
+      ThreadId = (HANDLE)uThreadId;
 
-      if (!NT_SUCCESS (PsLookupThreadByThreadId ((PVOID) ThreadId, &ThreadInfo)))
+      if (!NT_SUCCESS (PsLookupThreadByThreadId (ThreadId, &ThreadInfo)))
 			  {
           *Thread = NULL;
           return FALSE;
@@ -695,8 +697,8 @@ GspQuery(PCHAR Request)
 
     /* Get first thread id */
     GspEnumThread = NULL;
-    AProcess = PsProcessListHead.Flink;
-    while(AProcess != &PsProcessListHead)
+    AProcess = PsActiveProcessHead.Flink;
+    while(AProcess != &PsActiveProcessHead)
     {
       Process = CONTAINING_RECORD(AProcess, EPROCESS, ProcessListEntry);
       AThread = Process->ThreadListHead.Flink;
@@ -741,7 +743,7 @@ GspQuery(PCHAR Request)
       {
         PETHREAD Thread = NULL;
         AProcess = Process->ProcessListEntry.Flink;
-        while(AProcess != &PsProcessListHead)
+        while(AProcess != &PsActiveProcessHead)
         {
           Process = CONTAINING_RECORD(AProcess, EPROCESS, ProcessListEntry);
           AThread = Process->ThreadListHead.Flink;

@@ -974,10 +974,11 @@ static HRESULT WINAPI IShellLinkA_fnQueryInterface( IShellLinkA * iface, REFIID 
 static ULONG WINAPI IShellLinkA_fnAddRef(IShellLinkA * iface)
 {
 	IShellLinkImpl *This = (IShellLinkImpl *)iface;
+	ULONG refCount = InterlockedIncrement(&This->ref);
 
-	TRACE("(%p)->(count=%lu)\n",This,This->ref);
+	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
 
-	return ++(This->ref);
+	return refCount;
 }
 /******************************************************************************
  *	IShellLinkA_Release
@@ -985,11 +986,12 @@ static ULONG WINAPI IShellLinkA_fnAddRef(IShellLinkA * iface)
 static ULONG WINAPI IShellLinkA_fnRelease(IShellLinkA * iface)
 {
     IShellLinkImpl *This = (IShellLinkImpl *)iface;
+    ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(count=%lu)\n",This,This->ref);
+    TRACE("(%p)->(count=%lu)\n", This, refCount + 1);
 
-    if (--(This->ref))
-        return This->ref;
+    if (refCount)
+        return refCount;
 
     TRACE("-- destroying IShellLink(%p)\n",This);
 

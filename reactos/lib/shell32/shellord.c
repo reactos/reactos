@@ -673,7 +673,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     if (ret == ERROR_SUCCESS) {
 	if (!( (type == REG_DWORD) ||
 	       ((type == REG_BINARY) && (datalen == 4)) )) {
-	    ERR("Error policy data for \"NoRecentDocsHistory\" not formated correctly, type=%ld, len=%ld\n",
+	    ERR("Error policy data for \"NoRecentDocsHistory\" not formatted correctly, type=%ld, len=%ld\n",
 		type, datalen);
 	    return;
 	}

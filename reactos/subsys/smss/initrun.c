@@ -32,6 +32,9 @@
 HANDLE Children[2] = {0, 0}; /* csrss, winlogon */
 
 
+/**********************************************************************
+ * SmpRunBootAppsQueryRoutine/6
+ */
 static NTSTATUS STDCALL
 SmpRunBootAppsQueryRoutine(PWSTR ValueName,
 			  ULONG ValueType,
@@ -40,14 +43,10 @@ SmpRunBootAppsQueryRoutine(PWSTR ValueName,
 			  PVOID Context,
 			  PVOID EntryContext)
 {
-  PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
-  RTL_PROCESS_INFO ProcessInfo;
-  UNICODE_STRING ImagePathString;
-  UNICODE_STRING CommandLineString;
-  WCHAR Description[256];
-  WCHAR ImageName[256];
-  WCHAR ImagePath[256];
-  WCHAR CommandLine[256];
+  WCHAR Description [MAX_PATH];
+  WCHAR ImageName [MAX_PATH];
+  WCHAR ImagePath [MAX_PATH];
+  WCHAR CommandLine [MAX_PATH];
   PWSTR p1, p2;
   ULONG len;
   NTSTATUS Status;
@@ -96,54 +95,23 @@ SmpRunBootAppsQueryRoutine(PWSTR ValueName,
   wcscat(ImagePath, ImageName);
   wcscat(ImagePath, L".exe");
 
-  RtlInitUnicodeString(&ImagePathString,
-		       ImagePath);
-
-  RtlInitUnicodeString(&CommandLineString,
-		       CommandLine);
-
-  RtlCreateProcessParameters(&ProcessParameters,
-			     &ImagePathString,
-			     NULL,
-			     NULL,
-			     &CommandLineString,
-			     NULL,
-			     NULL,
-			     NULL,
-			     NULL,
-			     NULL);
-
-  Status = RtlCreateUserProcess(&ImagePathString,
-				OBJ_CASE_INSENSITIVE,
-				ProcessParameters,
+  /* Create NT process */
+  Status = SmCreateUserProcess (ImagePath,
+		  		CommandLine,
+				TRUE, /* wait */
 				NULL,
-				NULL,
-				NULL,
-				FALSE,
-				NULL,
-				NULL,
-				&ProcessInfo);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("Running %s failed (Status %lx)\n", Description, Status);
-      return(STATUS_SUCCESS);
-    }
-
-  RtlDestroyProcessParameters(ProcessParameters);
-
-  /* Wait for process termination */
-  NtWaitForSingleObject(ProcessInfo.ProcessHandle,
-			FALSE,
-			NULL);
-
-  NtClose(ProcessInfo.ThreadHandle);
-  NtClose(ProcessInfo.ProcessHandle);
+				TRUE, /* terminate */
+				NULL);
 
   return(STATUS_SUCCESS);
 }
 
 
-/*
+/**********************************************************************
+ * SmRunBootApplications/0
+ * 
+ * DESCRIPTION
+ *
  * Run native applications listed in the registry.
  *
  *  Key:

@@ -49,6 +49,8 @@ CcRemapBcb (
     )
 {
 	UNIMPLEMENTED;
+
+    return 0;
 }
 
 /*

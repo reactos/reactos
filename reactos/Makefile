@@ -60,7 +60,8 @@ PREAUTO := \
 	include$(SEP)reactos$(SEP)errcodes.h \
 	lib$(SEP)kernel32$(SEP)errcodes.rc
 
-Makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO)
+Makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(WRC_TARGET) \
+               $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO)
 	tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
 #	$(MAKE) $(MAKECMDGOALS)
 

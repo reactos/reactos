@@ -984,6 +984,17 @@ DECLARE_INTERFACE_(IClientSecurity,IUnknown)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IClientSecurity_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IClientSecurity_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IClientSecurity_Release(p) (p)->lpVtbl->Release(p)
+/*** IClientSecurity methods ***/
+#define IClientSecurity_QueryBlanket(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->QueryBlanket(p,a,b,c,d,e,f,g,h)
+#define IClientSecurity_SetBlanket(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->SetBlanket(p,a,b,c,d,e,f,g,h)
+#define IClientSecurity_CopyProxy(p,a,b) (p)->lpVtbl->CopyProxy(p,a,b)
+#endif
+
 EXTERN_C const IID IID_IServerSecurity;
 #define INTERFACE IServerSecurity
 DECLARE_INTERFACE_(IServerSecurity,IUnknown)
@@ -2004,6 +2015,79 @@ struct IInternalUnknownVtbl {
 #endif
 
 #endif  /* __IInternalUnknown_INTERFACE_DEFINED__ */
+
+#ifndef __IMultiQI_FWD_DEFINED__
+#define __IMultiQI_FWD_DEFINED__
+typedef struct IMultiQI IMultiQI;
+#endif
+
+typedef IMultiQI *LPMULTIQI;
+
+/*****************************************************************************
+ * IMultiQI interface
+ */
+#ifndef __IMultiQI_INTERFACE_DEFINED__
+#define __IMultiQI_INTERFACE_DEFINED__
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IMultiQI : public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE QueryMultipleInterfaces(
+        ULONG cMQIs,
+        MULTI_QI* pMQIs) = 0;
+
+};
+#else
+typedef struct IMultiQIVtbl IMultiQIVtbl;
+struct IMultiQI {
+    const IMultiQIVtbl* lpVtbl;
+};
+struct IMultiQIVtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IMultiQI* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IMultiQI* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IMultiQI* This);
+
+    /*** IMultiQI methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryMultipleInterfaces)(
+        IMultiQI* This,
+        ULONG cMQIs,
+        MULTI_QI* pMQIs);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IMultiQI_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IMultiQI_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IMultiQI_Release(p) (p)->lpVtbl->Release(p)
+/*** IMultiQI methods ***/
+#define IMultiQI_QueryMultipleInterfaces(p,a,b) (p)->lpVtbl->QueryMultipleInterfaces(p,a,b)
+#endif
+
+#endif
+
+HRESULT CALLBACK IMultiQI_QueryMultipleInterfaces_Proxy(
+    IMultiQI* This,
+    ULONG cMQIs,
+    MULTI_QI* pMQIs);
+void __RPC_STUB IMultiQI_QueryMultipleInterfaces_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+
+#endif  /* __IMultiQI_INTERFACE_DEFINED__ */
 
 
 #endif  /* __WINE_OBJIDL_H */

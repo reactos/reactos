@@ -10,10 +10,10 @@
  * ====================================================
  */
 
-#include <msvcrt/float.h>
-#include <msvcrt/math.h>
-#include <msvcrt/internal/ieee.h>
-
+#include <float.h>
+#include <math.h>
+#include <internal/ieee.h>
+#include <internal/math.h>
 
 
 //static const double one = 1.0;

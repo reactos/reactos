@@ -28,7 +28,9 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
    HANDLE ImpersonationToken;
    NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjAttr;
-   SECURITY_QUALITY_OF_SERVICE Sqos;   
+   SECURITY_QUALITY_OF_SERVICE Sqos;
+
+   PAGED_CODE_RTL();
    
    Status = NtOpenProcessToken(NtCurrentProcess(),
                                TOKEN_DUPLICATE,
@@ -97,6 +99,8 @@ RtlAdjustPrivilege(IN ULONG Privilege,
    ULONG ReturnLength;
    HANDLE TokenHandle;
    NTSTATUS Status;
+   
+   PAGED_CODE_RTL();
 
    DPRINT ("RtlAdjustPrivilege() called\n");
 

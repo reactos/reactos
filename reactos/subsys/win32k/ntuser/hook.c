@@ -460,7 +460,7 @@ NtUserSetWindowsHookEx(
         }
       Mod = NULL;
       Global = FALSE;
-      if (! NT_SUCCESS(PsLookupThreadByThreadId((PVOID) ThreadId, &Thread)))
+      if (! NT_SUCCESS(PsLookupThreadByThreadId((HANDLE) ThreadId, &Thread)))
         {
           DPRINT1("Invalid thread id 0x%x\n", ThreadId);
           SetLastWin32Error(ERROR_INVALID_PARAMETER);

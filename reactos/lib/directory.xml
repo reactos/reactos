@@ -229,9 +229,6 @@
 <directory name="twain">
 	<xi:include href="twain/twain_32.xml" />
 </directory>
-<directory name="unicode">
-	<xi:include href="unicode/unicode.xml" />
-</directory>
 <directory name="urlmon">
 	<xi:include href="urlmon/urlmon.xml" />
 </directory>

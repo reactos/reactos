@@ -240,8 +240,11 @@ static ULONG WINAPI IEnumIDList_fnAddRef(
 	IEnumIDList * iface)
 {
 	IEnumIDListImpl *This = (IEnumIDListImpl *)iface;
-	TRACE("(%p)->(%lu)\n",This,This->ref);
-	return ++(This->ref);
+	ULONG refCount = InterlockedIncrement(&This->ref);
+
+	TRACE("(%p)->(%lu)\n", This, refCount - 1);
+
+	return refCount;
 }
 /******************************************************************************
  * IEnumIDList_fnRelease
@@ -250,16 +253,16 @@ static ULONG WINAPI IEnumIDList_fnRelease(
 	IEnumIDList * iface)
 {
 	IEnumIDListImpl *This = (IEnumIDListImpl *)iface;
+	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->(%lu)\n",This,This->ref);
+	TRACE("(%p)->(%lu)\n", This, refCount + 1);
 
-	if (!--(This->ref)) {
+	if (!refCount) {
 	  TRACE(" destroying IEnumIDList(%p)\n",This);
 	  DeleteList((IEnumIDList*)This);
 	  HeapFree(GetProcessHeap(),0,This);
-	  return 0;
 	}
-	return This->ref;
+	return refCount;
 }
 
 /**************************************************************************

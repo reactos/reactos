@@ -23,6 +23,9 @@ NTSTATUS STDCALL NtCallTerminatePorts(PETHREAD Thread);
 
 LIST_ENTRY ThreadsToReapHead;
 
+#define TERMINATE_PROC	0x1
+#define TERMINATE_APC	0x2
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -110,9 +113,21 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    SIZE_T Length = PAGE_SIZE;
    PVOID TebBlock;
 
-   KeLowerIrql(PASSIVE_LEVEL);
+   DPRINT("PsTerminateCurrentThread(ExitStatus %x)\n", ExitStatus);
 
    CurrentThread = PsGetCurrentThread();
+
+   oldIrql = KeAcquireDispatcherDatabaseLock();
+   if (CurrentThread->HasTerminated & TERMINATE_PROC)
+   {
+      KeReleaseDispatcherDatabaseLock(oldIrql);
+      return;
+   }
+   CurrentThread->HasTerminated |= TERMINATE_PROC;
+   KeReleaseDispatcherDatabaseLock(oldIrql);
+
+   KeLowerIrql(PASSIVE_LEVEL);
+
    CurrentProcess = CurrentThread->ThreadsProcess;
 
    /* Can't terminate a thread if it attached another process */
@@ -130,7 +145,6 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    DPRINT("terminating %x\n",CurrentThread);
 
-   CurrentThread->HasTerminated = TRUE;
    CurrentThread->ExitStatus = ExitStatus;
    KeQuerySystemTime((PLARGE_INTEGER)&CurrentThread->ExitTime);
 
@@ -143,6 +157,9 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeReleaseDispatcherDatabaseLock(oldIrql);
  
    PsLockProcess(CurrentProcess, FALSE);
+
+   /* Cancel I/O for the thread. */
+   IoCancelThreadIo(CurrentThread);
 
    /* Remove the thread from the thread list of its process */
    RemoveEntryList(&CurrentThread->ThreadListEntry);
@@ -238,13 +255,7 @@ PiTerminateThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2)
 {
-  PETHREAD EThread = PsGetCurrentThread();
-  if (EThread->HasTerminated)
-  {
-     /* Someone else has already called PsTerminateCurrentThread */
-     return;
-  }
-  PsTerminateCurrentThread(PsGetCurrentThread()->ExitStatus);
+  PsTerminateCurrentThread((NTSTATUS)SystemArgument1);
 }
 
 VOID
@@ -262,14 +273,13 @@ PsTerminateOtherThread(PETHREAD Thread,
 	 Thread, ExitStatus);
 
   OldIrql = KeAcquireDispatcherDatabaseLock();
-  if (Thread->HasTerminated)
+  if (Thread->HasTerminated & TERMINATE_APC)
   {
      KeReleaseDispatcherDatabaseLock (OldIrql);
      return;
   }
-  Thread->HasTerminated = TRUE;
+  Thread->HasTerminated |= TERMINATE_APC;
   KeReleaseDispatcherDatabaseLock (OldIrql);
-  Thread->ExitStatus = ExitStatus;
   Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
   KeInitializeApc(Apc,
 		  &Thread->Tcb,
@@ -280,7 +290,7 @@ PsTerminateOtherThread(PETHREAD Thread,
 		  KernelMode,
 		  NULL);
   KeInsertQueueApc(Apc,
-		   NULL,
+		   (PVOID)ExitStatus,
 		   NULL,
 		   IO_NO_INCREMENT);
 
@@ -337,6 +347,8 @@ NtTerminateProcess(IN	HANDLE		ProcessHandle  OPTIONAL,
    NTSTATUS Status;
    PEPROCESS Process;
    
+   PAGED_CODE();
+   
    DPRINT("NtTerminateProcess(ProcessHandle %x, ExitStatus %x)\n",
 	   ProcessHandle, ExitStatus);
    
@@ -372,6 +384,8 @@ NtTerminateThread(IN	HANDLE		ThreadHandle,
 {
    PETHREAD Thread;
    NTSTATUS Status;
+   
+   PAGED_CODE();
    
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_TERMINATE,
@@ -425,6 +439,8 @@ NtCallTerminatePorts(PETHREAD Thread)
    PLIST_ENTRY current_entry;
    PEPORT_TERMINATION_REQUEST current;
    
+   PAGED_CODE();
+   
    KeAcquireSpinLock(&Thread->ActiveTimerListLock, &oldIrql);
    while ((current_entry = RemoveHeadList(&Thread->TerminationPortList)) !=
 	  &Thread->TerminationPortList);
@@ -450,6 +466,8 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
    PEPORT TerminationPort;
    KIRQL oldIrql;
    PETHREAD Thread;
+   
+   PAGED_CODE();
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,

@@ -254,6 +254,15 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","kernel32",0x0
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
  "C:\reactos\pagefile.sys"
 
+; Subsystems
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00070001,50,00,6f,00,73,00,69,00,78,00,00,00,4f,00,73,00,32,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Os2",0x00020000,"%SystemRoot%\system32\os2ss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00070001,44,00,65,00,62,00,75,00,67,00,00,00,57,00,69,00,6e,00,64,00,6f,00,77,00,73,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
+
 ; 3Com 3c905 Driver
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Group",0x00000000,"NDIS"
@@ -573,7 +582,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00020000,"System32\DRIVERS\usbuhci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ImagePath",0x00020000,"System32\DRIVERS\usbuhci.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Tag",0x00010001,0x0000000f
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","DisplayName",0x00000000,"ReactOS USB UHCI controller miniport driver"
 ;hard coded values for VMWARE
@@ -581,6 +590,21 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","0",0x00000000,"PCI\VEN_80
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","Count",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","NextInstance",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_8086&DEV_7112&SUBSYS_197615AD&REV_00\0000","Service",0x0000000,"usbuhci"
+
+;USB OHCI Driver (Cromwell), especially the same name as windows OHCI miniport
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ImagePath",0x00020000,"System32\drivers\ohci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Tag",0x00010001,0x0000000f
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","DisplayName",0x00000000,"ReactOS USB OHCI cromwell-type driver"
+;hard coded values for Virtual PC 6/7 (Mac)
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","0",0x00000000,"PCI\VEN_2955&DEV_6E61&SUBSYS_6E612955&REV_11\0000"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","Count",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","NextInstance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_2955&DEV_6E61&SUBSYS_6E612955&REV_11\0000","Service",0x0000000,"usbohci"
+
 
 ; ReactOS PCNet NIC driver 
 ; To use the AMD supplied driver change the driver name to pcntn5m.sys

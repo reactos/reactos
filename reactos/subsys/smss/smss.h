@@ -4,15 +4,19 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <sm/api.h>
+#include <sm/helper.h>
 
 #define CHILD_CSRSS     0
 #define CHILD_WINLOGON  1
 
+/* smss.c */
+extern HANDLE SmSsProcessId;
+
 /* init.c */
-extern HANDLE SmpHeap;
-NTSTATUS InitSessionManager(HANDLE Children[]);
+NTSTATUS InitSessionManager(VOID);
 
 /* initheap.c */
+extern HANDLE SmpHeap;
 NTSTATUS SmCreateHeap(VOID);
 
 /* initenv.c */
@@ -49,18 +53,56 @@ NTSTATUS SmRunCsrss(VOID);
 NTSTATUS SmRunWinlogon(VOID);
 
 /* smapi.c */
+#define SMAPI(n) \
+NTSTATUS FASTCALL n (PSM_PORT_MESSAGE Request)
+
+/* smapiexec.c */
+NTSTATUS STDCALL SmCreateUserProcess(LPWSTR ImagePath,
+				     LPWSTR CommandLine,
+				     BOOLEAN WaitForIt,
+				     PLARGE_INTEGER Timeout OPTIONAL,
+				     BOOLEAN TerminateIt,
+				     PRTL_PROCESS_INFO ProcessInfo OPTIONAL);
+NTSTATUS STDCALL
+SmLookupSubsystem (IN     PWSTR   Name,
+		   IN OUT PWSTR   Data,
+		   IN OUT PULONG  DataLength,
+		   IN OUT PULONG  DataType,
+		   IN     BOOLEAN Expand);
+NTSTATUS FASTCALL SmExecPgm(PSM_PORT_MESSAGE);
+
+/* smapicomp.c */
+NTSTATUS FASTCALL SmCompSes(PSM_PORT_MESSAGE);
+
 NTSTATUS SmCreateApiPort(VOID);
-VOID STDCALL SmpApiThread(HANDLE Port);
+VOID STDCALL SmpApiThread(PVOID);
 
 /* client.c */
+typedef struct _SM_CLIENT_DATA
+{
+	USHORT	SubsystemId;
+	BOOL	Initialized;
+	HANDLE	ServerProcess;
+	HANDLE	ApiPort;
+	HANDLE	ApiPortThread;
+	HANDLE	SbApiPort;
+	WCHAR	SbApiPortName [SM_SB_NAME_MAX_LENGTH];
+	struct _SM_CLIENT_DATA * Next;
+	
+} SM_CLIENT_DATA, *PSM_CLIENT_DATA;
 NTSTATUS SmInitializeClientManagement(VOID);
-NTSTATUS STDCALL SmpCreateClient(SM_PORT_MESSAGE);
-NTSTATUS STDCALL SmpDestroyClient(ULONG);
+NTSTATUS SmpRegisterSmss(VOID);
+NTSTATUS STDCALL SmCreateClient(PSM_PORT_MESSAGE,PSM_CLIENT_DATA*);
+NTSTATUS STDCALL SmDestroyClient(ULONG);
 
 /* debug.c */
 extern HANDLE DbgSsApiPort;
 extern HANDLE DbgUiApiPort;
 NTSTATUS SmInitializeDbgSs(VOID);
+
+/* print.c */
+VOID STDCALL DisplayString(LPCWSTR lpwString);
+VOID STDCALL PrintString (char* fmt, ...);
 
 #endif /* _SMSS_H_INCLUDED_ */
 

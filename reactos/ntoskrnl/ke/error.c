@@ -15,6 +15,10 @@
 
 /* FUNCTIONS ***************************************************************/
 
+BOOLEAN ExReadyForErrors = FALSE;
+PEPORT ExpDefaultErrorPort = NULL;
+PEPROCESS ExpDefaultErrorPortProcess = NULL;
+
 /*
  * @unimplemented
  */
@@ -40,22 +44,55 @@ KiUnexpectedInterrupt(
 }
 
 NTSTATUS STDCALL 
-NtRaiseHardError(IN NTSTATUS Status,
-		 ULONG Unknown2,
-		 ULONG Unknown3,
-		 ULONG Unknown4,
-		 ULONG Unknown5,
-		 ULONG Unknown6)
+NtRaiseHardError(IN NTSTATUS ErrorStatus,
+                 IN ULONG NumberOfParameters,
+                 IN PUNICODE_STRING UnicodeStringParameterMask  OPTIONAL,
+                 IN PVOID *Parameters,
+                 IN HARDERROR_RESPONSE_OPTION ResponseOption,
+                 OUT PHARDERROR_RESPONSE Response)
 {
-  DPRINT1("Hard error %x\n", Status);
+  DPRINT1("Hard error %x\n", ErrorStatus);
   return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL 
 NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
+                             PreviousMode))
+  {
+    DPRINT1("NtSetDefaultHardErrorPort: Caller requires the SeTcbPrivilege privilege!\n");
+    return STATUS_PRIVILEGE_NOT_HELD;
+  }
+  
+  /* serialization shouldn't be required here as it usually is just called once
+     during startup */
+  
+  if(!ExReadyForErrors)
+  {
+    Status = ObReferenceObjectByHandle(PortHandle,
+                                       0,
+                                       LpcPortObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&ExpDefaultErrorPort,
+                                       NULL);
+    if(NT_SUCCESS(Status))
+    {
+      ExpDefaultErrorPortProcess = PsGetCurrentProcess();
+      ExReadyForErrors = TRUE;
+    }
+  }
+  else
+  {
+    Status = STATUS_UNSUCCESSFUL;
+  }
+  
+  return Status;
 }
 
 /* EOF */

@@ -527,8 +527,15 @@ static IMallocSpyVtbl VT_IMallocSpy =
 /******************************************************************************
  *		CoGetMalloc	[OLE32.@]
  *
+ * Retrieves the current IMalloc interface for the process.
+ *
+ * PARAMS
+ *  dwMemContext [I]
+ *  lpMalloc     [O] Address where memory allocator object will be stored.
+ *
  * RETURNS
- *	The win32 IMalloc
+ *	Success: S_OK.
+ *  Failure: HRESULT code.
  */
 HRESULT WINAPI CoGetMalloc(DWORD dwMemContext, LPMALLOC *lpMalloc)
 {
@@ -538,15 +545,31 @@ HRESULT WINAPI CoGetMalloc(DWORD dwMemContext, LPMALLOC *lpMalloc)
 
 /***********************************************************************
  *           CoTaskMemAlloc     [OLE32.@]
+ *
+ * Allocates memory using the current process memory allocator.
+ *
+ * PARAMS
+ *  size [I] Size of the memory block to allocate.
+ *
  * RETURNS
- * 	pointer to newly allocated block
+ * 	Success: Pointer to newly allocated memory block.
+ *  Failure: NULL.
  */
 LPVOID WINAPI CoTaskMemAlloc(ULONG size)
 {
         return IMalloc_Alloc((LPMALLOC)&Malloc32,size);
 }
+
 /***********************************************************************
  *           CoTaskMemFree      [OLE32.@]
+ *
+ * Frees memory allocated from the current process memory allocator.
+ *
+ * PARAMS
+ *  ptr [I] Memory block to free.
+ *
+ * RETURNS
+ *  Nothing.
  */
 VOID WINAPI CoTaskMemFree(LPVOID ptr)
 {
@@ -555,8 +578,16 @@ VOID WINAPI CoTaskMemFree(LPVOID ptr)
 
 /***********************************************************************
  *           CoTaskMemRealloc   [OLE32.@]
+ *
+ * Allocates memory using the current process memory allocator.
+ *
+ * PARAMS
+ *  pvOld [I] Pointer to old memory block.
+ *  size  [I] Size of the new memory block.
+ *
  * RETURNS
- * 	pointer to newly allocated block
+ * 	Success: Pointer to newly allocated memory block.
+ *  Failure: NULL.
  */
 LPVOID WINAPI CoTaskMemRealloc(LPVOID pvOld, ULONG size)
 {
@@ -565,6 +596,16 @@ LPVOID WINAPI CoTaskMemRealloc(LPVOID pvOld, ULONG size)
 
 /***********************************************************************
  *           CoRegisterMallocSpy        [OLE32.@]
+ *
+ * Registers an object that receives notifications on memory allocations and
+ * frees.
+ *
+ * PARAMS
+ *  pMallocSpy [I] New spy object.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
  *
  * NOTES
  *  if a mallocspy is already registered, we can't do it again since
@@ -596,6 +637,16 @@ HRESULT WINAPI CoRegisterMallocSpy(LPMALLOCSPY pMallocSpy)
 
 /***********************************************************************
  *           CoRevokeMallocSpy  [OLE32.@]
+ *
+ * Revokes a previousl registered object that receives notifications on memory
+ * allocations and frees.
+ *
+ * PARAMS
+ *  pMallocSpy [I] New spy object.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
  *
  * NOTES
  *  we can't revoke a malloc spy as long as memory blocks allocated with
@@ -629,12 +680,16 @@ HRESULT WINAPI CoRevokeMallocSpy(void)
 /******************************************************************************
  *		IsValidInterface	[OLE32.@]
  *
+ * Determines whether a pointer is a valid interface.
+ *
+ * PARAMS
+ *  punk [I] Interface to be tested.
+ *
  * RETURNS
- *  True, if the passed pointer is a valid interface
+ *  TRUE, if the passed pointer is a valid interface, or FALSE otherwise.
  */
-BOOL WINAPI IsValidInterface(
-	LPUNKNOWN punk	/* [in] interface to be tested */
-) {
+BOOL WINAPI IsValidInterface(LPUNKNOWN punk)
+{
 	return !(
 		IsBadReadPtr(punk,4)					||
 		IsBadReadPtr(punk->lpVtbl,4)				||

@@ -6,7 +6,7 @@
 #include "precomp.h"
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/debug.h>
 
 #ifndef __GNUC__
 

@@ -3911,6 +3911,38 @@ VOID WINAPI PathUndecorateW(LPWSTR lpszPath)
 }
 
 /*************************************************************************
+ * PathUnExpandEnvStringsA [SHLWAPI.@]
+ *
+ * Substitute folder names in a path with their corresponding environment
+ * strings.
+ *
+ * PARAMS
+ *  pszPath  [I] Buffer containing the path to unexpand.
+ *  pszBuf   [O] Buffer to receive the unexpanded path.
+ *  cchBuf   [I] Size of pszBuf in characters.
+ *
+ * RETURNS
+ *  Success: TRUE
+ *  Failure: FALSE
+ */
+BOOL WINAPI PathUnExpandEnvStringsA(LPCSTR pszPath, LPSTR pszBuf, UINT cchBuf)
+{
+    FIXME("(%s,%s,0x%08x)\n", debugstr_a(pszPath), debugstr_a(pszBuf), cchBuf);
+    return FALSE;
+}
+
+/*************************************************************************
+ * PathUnExpandEnvStringsW [SHLWAPI.@]
+ *
+ * Unicode version of PathUnExpandEnvStringsA.
+ */
+BOOL WINAPI PathUnExpandEnvStringsW(LPCWSTR pszPath, LPWSTR pszBuf, UINT cchBuf)
+{
+    FIXME("(%s,%s,0x%08x)\n", debugstr_w(pszPath), debugstr_w(pszBuf), cchBuf);
+    return FALSE;
+}
+
+/*************************************************************************
  * @     [SHLWAPI.440]
  *
  * Find localised or default web content in "%WINDOWS%\web\".
@@ -3990,100 +4022,110 @@ HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR lpszFile, LPWSTR lpszPath, DWORD 
   return E_FAIL;
 }
 
-#define PATH_CHAR_CLASS_LETTER      0x0001
-#define PATH_CHAR_CLASS_ASTERIX     0x0002
-#define PATH_CHAR_CLASS_DOT         0x0004
-#define PATH_CHAR_CLASS_BACKSLASH   0x0008
-#define PATH_CHAR_CLASS_COLON       0x0010
-#define PATH_CHAR_CLASS_SEMICOLON   0x0020
-#define PATH_CHAR_CLASS_COMMA       0x0040
-#define PATH_CHAR_CLASS_SPACE       0x0080
-#define PATH_CHAR_CLASS_OTHER_VALID 0x0100
-#define PATH_CHAR_CLASS_DOUBLEQUOTE 0x0200
+#define PATH_CHAR_CLASS_LETTER      0x00000001
+#define PATH_CHAR_CLASS_ASTERIX     0x00000002
+#define PATH_CHAR_CLASS_DOT         0x00000004
+#define PATH_CHAR_CLASS_BACKSLASH   0x00000008
+#define PATH_CHAR_CLASS_COLON       0x00000010
+#define PATH_CHAR_CLASS_SEMICOLON   0x00000020
+#define PATH_CHAR_CLASS_COMMA       0x00000040
+#define PATH_CHAR_CLASS_SPACE       0x00000080
+#define PATH_CHAR_CLASS_OTHER_VALID 0x00000100
+#define PATH_CHAR_CLASS_DOUBLEQUOTE 0x00000200
 
-/*************************************************************************
- * PathIsValidCharAW     [internal]
- *
- * Check if a char is of a certain class
- */
-static BOOL WINAPI PathIsValidCharAW(unsigned Ch, DWORD Class)
+#define PATH_CHAR_CLASS_INVALID     0x00000000
+#define PATH_CHAR_CLASS_ANY         0xffffffff
+
+static const DWORD SHELL_charclass[] =
 {
-  static struct
-  {
-    char Ch;
-    DWORD Class;
-  } CharClass[] =
-  {
-    { ' ', PATH_CHAR_CLASS_SPACE },
-    { '!', PATH_CHAR_CLASS_OTHER_VALID },
-    { '"', PATH_CHAR_CLASS_DOUBLEQUOTE },
-    { '#', PATH_CHAR_CLASS_OTHER_VALID },
-    { '$', PATH_CHAR_CLASS_OTHER_VALID },
-    { '%', PATH_CHAR_CLASS_OTHER_VALID },
-    { '&', PATH_CHAR_CLASS_OTHER_VALID },
-    { '\'', PATH_CHAR_CLASS_OTHER_VALID },
-    { '(', PATH_CHAR_CLASS_OTHER_VALID },
-    { ')', PATH_CHAR_CLASS_OTHER_VALID },
-    { '*', PATH_CHAR_CLASS_ASTERIX },
-    { '+', PATH_CHAR_CLASS_OTHER_VALID },
-    { ',', PATH_CHAR_CLASS_COMMA },
-    { '-', PATH_CHAR_CLASS_OTHER_VALID },
-    { '.', PATH_CHAR_CLASS_DOT },
-    { ':', PATH_CHAR_CLASS_COLON },
-    { ';', PATH_CHAR_CLASS_SEMICOLON },
-    { '=', PATH_CHAR_CLASS_OTHER_VALID },
-    { '?', PATH_CHAR_CLASS_LETTER },
-    { '@', PATH_CHAR_CLASS_OTHER_VALID },
-    { '[', PATH_CHAR_CLASS_OTHER_VALID },
-    { '\\', PATH_CHAR_CLASS_BACKSLASH },
-    { ']', PATH_CHAR_CLASS_OTHER_VALID },
-    { '^', PATH_CHAR_CLASS_OTHER_VALID },
-    { '_', PATH_CHAR_CLASS_OTHER_VALID },
-    { '`', PATH_CHAR_CLASS_OTHER_VALID },
-    { '{', PATH_CHAR_CLASS_OTHER_VALID },
-    { '}', PATH_CHAR_CLASS_OTHER_VALID },
-    { '~', PATH_CHAR_CLASS_OTHER_VALID },
-    { 0x7f, PATH_CHAR_CLASS_OTHER_VALID }
-  };
-  unsigned Index;
-
-  if (('A' <= Ch && Ch <= 'Z') || ('a' <= Ch && Ch <= 'z'))
-  {
-    return (Class & PATH_CHAR_CLASS_LETTER);
-  }
-
-  if (('0' <= Ch && Ch <= '9') || 0x80 <= Ch)
-  {
-    return (Class & PATH_CHAR_CLASS_OTHER_VALID);
-  }
-
-  for (Index = 0; Index < sizeof(CharClass) / sizeof(CharClass[0]); Index++)
-  {
-    if (Ch == CharClass[Index].Ch)
-    {
-      return (Class & CharClass[Index].Class);
-    }
-  }
-
-  return FALSE;
-}
+    /* 0x00 */  PATH_CHAR_CLASS_INVALID,      /* 0x01 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x02 */  PATH_CHAR_CLASS_INVALID,      /* 0x03 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x04 */  PATH_CHAR_CLASS_INVALID,      /* 0x05 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x06 */  PATH_CHAR_CLASS_INVALID,      /* 0x07 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x08 */  PATH_CHAR_CLASS_INVALID,      /* 0x09 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x0a */  PATH_CHAR_CLASS_INVALID,      /* 0x0b */  PATH_CHAR_CLASS_INVALID,
+    /* 0x0c */  PATH_CHAR_CLASS_INVALID,      /* 0x0d */  PATH_CHAR_CLASS_INVALID,
+    /* 0x0e */  PATH_CHAR_CLASS_INVALID,      /* 0x0f */  PATH_CHAR_CLASS_INVALID,
+    /* 0x10 */  PATH_CHAR_CLASS_INVALID,      /* 0x11 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x12 */  PATH_CHAR_CLASS_INVALID,      /* 0x13 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x14 */  PATH_CHAR_CLASS_INVALID,      /* 0x15 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x16 */  PATH_CHAR_CLASS_INVALID,      /* 0x17 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x18 */  PATH_CHAR_CLASS_INVALID,      /* 0x19 */  PATH_CHAR_CLASS_INVALID,
+    /* 0x1a */  PATH_CHAR_CLASS_INVALID,      /* 0x1b */  PATH_CHAR_CLASS_INVALID,
+    /* 0x1c */  PATH_CHAR_CLASS_INVALID,      /* 0x1d */  PATH_CHAR_CLASS_INVALID,
+    /* 0x1e */  PATH_CHAR_CLASS_INVALID,      /* 0x1f */  PATH_CHAR_CLASS_INVALID,
+    /* ' '  */  PATH_CHAR_CLASS_SPACE,        /* '!'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '"'  */  PATH_CHAR_CLASS_DOUBLEQUOTE,  /* '#'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '$'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* '%'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '&'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* '\'' */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '('  */  PATH_CHAR_CLASS_OTHER_VALID,  /* ')'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '*'  */  PATH_CHAR_CLASS_ASTERIX,      /* '+'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* ','  */  PATH_CHAR_CLASS_COMMA,        /* '-'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '.'  */  PATH_CHAR_CLASS_DOT,          /* '/'  */  PATH_CHAR_CLASS_INVALID,
+    /* '0'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* '1'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '2'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* '3'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '4'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* '5'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '6'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* '7'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '8'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* '9'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* ':'  */  PATH_CHAR_CLASS_COLON,        /* ';'  */  PATH_CHAR_CLASS_SEMICOLON,
+    /* '<'  */  PATH_CHAR_CLASS_INVALID,      /* '='  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '>'  */  PATH_CHAR_CLASS_INVALID,      /* '?'  */  PATH_CHAR_CLASS_LETTER,
+    /* '@'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* 'A'  */  PATH_CHAR_CLASS_ANY,
+    /* 'B'  */  PATH_CHAR_CLASS_ANY,          /* 'C'  */  PATH_CHAR_CLASS_ANY,
+    /* 'D'  */  PATH_CHAR_CLASS_ANY,          /* 'E'  */  PATH_CHAR_CLASS_ANY,
+    /* 'F'  */  PATH_CHAR_CLASS_ANY,          /* 'G'  */  PATH_CHAR_CLASS_ANY,
+    /* 'H'  */  PATH_CHAR_CLASS_ANY,          /* 'I'  */  PATH_CHAR_CLASS_ANY,
+    /* 'J'  */  PATH_CHAR_CLASS_ANY,          /* 'K'  */  PATH_CHAR_CLASS_ANY,
+    /* 'L'  */  PATH_CHAR_CLASS_ANY,          /* 'M'  */  PATH_CHAR_CLASS_ANY,
+    /* 'N'  */  PATH_CHAR_CLASS_ANY,          /* 'O'  */  PATH_CHAR_CLASS_ANY,
+    /* 'P'  */  PATH_CHAR_CLASS_ANY,          /* 'Q'  */  PATH_CHAR_CLASS_ANY,
+    /* 'R'  */  PATH_CHAR_CLASS_ANY,          /* 'S'  */  PATH_CHAR_CLASS_ANY,
+    /* 'T'  */  PATH_CHAR_CLASS_ANY,          /* 'U'  */  PATH_CHAR_CLASS_ANY,
+    /* 'V'  */  PATH_CHAR_CLASS_ANY,          /* 'W'  */  PATH_CHAR_CLASS_ANY,
+    /* 'X'  */  PATH_CHAR_CLASS_ANY,          /* 'Y'  */  PATH_CHAR_CLASS_ANY,
+    /* 'Z'  */  PATH_CHAR_CLASS_ANY,          /* '['  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '\\' */  PATH_CHAR_CLASS_BACKSLASH,    /* ']'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '^'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* '_'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '`'  */  PATH_CHAR_CLASS_OTHER_VALID,  /* 'a'  */  PATH_CHAR_CLASS_ANY,
+    /* 'b'  */  PATH_CHAR_CLASS_ANY,          /* 'c'  */  PATH_CHAR_CLASS_ANY,
+    /* 'd'  */  PATH_CHAR_CLASS_ANY,          /* 'e'  */  PATH_CHAR_CLASS_ANY,
+    /* 'f'  */  PATH_CHAR_CLASS_ANY,          /* 'g'  */  PATH_CHAR_CLASS_ANY,
+    /* 'h'  */  PATH_CHAR_CLASS_ANY,          /* 'i'  */  PATH_CHAR_CLASS_ANY,
+    /* 'j'  */  PATH_CHAR_CLASS_ANY,          /* 'k'  */  PATH_CHAR_CLASS_ANY,
+    /* 'l'  */  PATH_CHAR_CLASS_ANY,          /* 'm'  */  PATH_CHAR_CLASS_ANY,
+    /* 'n'  */  PATH_CHAR_CLASS_ANY,          /* 'o'  */  PATH_CHAR_CLASS_ANY,
+    /* 'p'  */  PATH_CHAR_CLASS_ANY,          /* 'q'  */  PATH_CHAR_CLASS_ANY,
+    /* 'r'  */  PATH_CHAR_CLASS_ANY,          /* 's'  */  PATH_CHAR_CLASS_ANY,
+    /* 't'  */  PATH_CHAR_CLASS_ANY,          /* 'u'  */  PATH_CHAR_CLASS_ANY,
+    /* 'v'  */  PATH_CHAR_CLASS_ANY,          /* 'w'  */  PATH_CHAR_CLASS_ANY,
+    /* 'x'  */  PATH_CHAR_CLASS_ANY,          /* 'y'  */  PATH_CHAR_CLASS_ANY,
+    /* 'z'  */  PATH_CHAR_CLASS_ANY,          /* '{'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '|'  */  PATH_CHAR_CLASS_INVALID,      /* '}'  */  PATH_CHAR_CLASS_OTHER_VALID,
+    /* '~'  */  PATH_CHAR_CLASS_OTHER_VALID
+};
 
 /*************************************************************************
  * @     [SHLWAPI.455]
  *
- * Check if an Ascii char is of a certain class
+ * Check if an ASCII char is of a certain class
  */
-BOOL WINAPI PathIsValidCharA(char Ch, DWORD Class)
+BOOL WINAPI PathIsValidCharA( char c, DWORD class )
 {
-  return PathIsValidCharAW((unsigned) Ch, Class);
+    if ((unsigned)c > 0x7e)
+        return class & PATH_CHAR_CLASS_OTHER_VALID;
+
+    return class & SHELL_charclass[(unsigned)c];
 }
 
 /*************************************************************************
  * @     [SHLWAPI.456]
  *
- * Check if an Unicode char is of a certain class
+ * Check if a Unicode char is of a certain class
  */
-BOOL WINAPI PathIsValidCharW(WCHAR Ch, DWORD Class)
+BOOL WINAPI PathIsValidCharW( WCHAR c, DWORD class )
 {
-  return PathIsValidCharAW((unsigned) Ch, Class);
+    if (c > 0x7e)
+        return class & PATH_CHAR_CLASS_OTHER_VALID;
+
+    return class & SHELL_charclass[c];
 }

@@ -1,11 +1,10 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrt/stdio.h>
-#include <msvcrt/string.h>
-#include <msvcrt/stdlib.h>
-#include <msvcrt/internal/file.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <internal/file.h>
 
 
-FILE *	__alloc_file(void);
 
 char __validfp (FILE *f)
 {

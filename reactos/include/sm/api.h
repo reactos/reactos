@@ -2,11 +2,32 @@
 #ifndef __SM_API_H
 #define __SM_API_H
 
-#define SM_API_PORT_NAME   L"\\SmApiPort"
-#define SM_DBGSS_PORT_NAME L"\\DbgSsApiPort"
-#define SM_DBGUI_PORT_NAME L"\\DbgUiApiPort"
+#include <sm/ns.h>
 
 #pragma pack(push,4)
+
+/*** DATA TYPES ******************************************************/
+
+#define SM_SB_NAME_MAX_LENGTH 120
+
+#pragma pack(push,4)
+
+/* SmConnectApiPort */
+typedef struct _SM_CONNECT_DATA
+{
+  ULONG  Subsystem;
+  WCHAR  SbName [SM_SB_NAME_MAX_LENGTH];
+
+} SM_CONNECT_DATA, *PSM_CONNECT_DATA;
+
+/* SmpConnectSbApiPort */
+typedef struct _SB_CONNECT_DATA
+{
+  ULONG SmApiMax;
+} SB_CONNECT_DATA, *PSB_CONNECT_DATA;
+
+
+/*** SM API ***/
 
 /*** 1 ****************************************************************/
 
@@ -65,8 +86,9 @@ typedef struct _SM_PORT_MESSAGE
 
 /*** MACRO ***********************************************************/
 
-#define SM_PORT_DATA_SIZE(c)  (sizeof(DWORD)+sizeof(NTSTATUS)+sizeof(c))
-#define SM_PORT_MESSAGE_SIZE  (sizeof(SM_PORT_MESSAGE))
+#define SM_CONNECT_DATA_SIZE(m)  ((m).Header.DataSize-sizeof(ULONG))
+#define SM_PORT_DATA_SIZE(c)     (sizeof(DWORD)+sizeof(NTSTATUS)+sizeof(c))
+#define SM_PORT_MESSAGE_SIZE     (sizeof(SM_PORT_MESSAGE))
 
 
 #endif /* !def __SM_API_H */

@@ -1907,6 +1907,11 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
 /* VTBIT flags indicating a real number value */
 #define REAL_VTBITS (VTBIT_R4|VTBIT_R8|VTBIT_CY)
 
+/* Helper macros to check whether bit pattern fits in VARIANT (x is a ULONG64 ) */
+#define FITS_AS_I1(x) ((x) >> 8 == 0)
+#define FITS_AS_I2(x) ((x) >> 16 == 0)
+#define FITS_AS_I4(x) ((x) >> 32 == 0)
+
 /**********************************************************************
  *              VarNumFromParseNum [OLEAUT32.47]
  *
@@ -1977,52 +1982,43 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     l64=-ul64;
 
     /* Try signed and unsigned types in size order */
-    if (dwVtBits & VTBIT_I1 && ((ul64 <= I1_MAX)||(l64 >= I1_MIN)))
+    if (dwVtBits & VTBIT_I1 && FITS_AS_I1(ul64))
     {
       V_VT(pVarDst) = VT_I1;
-      if (ul64 <= I1_MAX)
-          V_I1(pVarDst) = ul64;
-      else
-          V_I1(pVarDst) = l64;
+      V_I1(pVarDst) = ul64;
       return S_OK;
     }
-    else if (dwVtBits & VTBIT_UI1 && ul64 <= UI1_MAX)
+    else if (dwVtBits & VTBIT_UI1 && FITS_AS_I1(ul64))
     {
       V_VT(pVarDst) = VT_UI1;
       V_UI1(pVarDst) = ul64;
       return S_OK;
     }
-    else if (dwVtBits & VTBIT_I2 && ((ul64 <= I2_MAX)||(l64 >= I2_MIN)))
+    else if (dwVtBits & VTBIT_I2 && FITS_AS_I2(ul64))
     {
       V_VT(pVarDst) = VT_I2;
-      if (ul64 <= I2_MAX)
-          V_I2(pVarDst) = ul64;
-      else
-          V_I2(pVarDst) = l64;
+      V_I2(pVarDst) = ul64;
       return S_OK;
     }
-    else if (dwVtBits & VTBIT_UI2 && ul64 <= UI2_MAX)
+    else if (dwVtBits & VTBIT_UI2 && FITS_AS_I2(ul64))
     {
       V_VT(pVarDst) = VT_UI2;
       V_UI2(pVarDst) = ul64;
       return S_OK;
     }
-    else if (dwVtBits & VTBIT_I4 && ((ul64 <= I4_MAX)||(l64 >= I4_MIN)))
+    else if (dwVtBits & VTBIT_I4 && FITS_AS_I4(ul64))
     {
       V_VT(pVarDst) = VT_I4;
-      if (ul64 <= I4_MAX)
-          V_I4(pVarDst) = ul64;
-      else
-          V_I4(pVarDst) = l64;
+      V_I4(pVarDst) = ul64;
       return S_OK;
     }
-    else if (dwVtBits & VTBIT_UI4 && ul64 <= UI4_MAX)
+    else if (dwVtBits & VTBIT_UI4 && FITS_AS_I4(ul64))
     {
       V_VT(pVarDst) = VT_UI4;
       V_UI4(pVarDst) = ul64;
       return S_OK;
     }
-    else if (dwVtBits & VTBIT_I8 && ((ul64 <= I4_MAX)||(l64>=I4_MIN)))
+    else if (dwVtBits & VTBIT_I8 && ((ul64 <= I8_MAX)||(l64>=I8_MIN)))
     {
       V_VT(pVarDst) = VT_I8;
       V_I8(pVarDst) = ul64;
@@ -2471,6 +2467,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
 	HRESULT hres;
 
         V_VT(out) = VT_BSTR;
+        VariantInit(&bstrvar);
         hres = VariantChangeTypeEx(&bstrvar,right,0,0,VT_BSTR);
 	if (hres) {
 	    FIXME("Failed to convert right side from vt %d to VT_BSTR?\n",V_VT(right));
@@ -2484,6 +2481,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
 	HRESULT hres;
 
         V_VT(out) = VT_BSTR;
+        VariantInit(&bstrvar);
         hres = VariantChangeTypeEx(&bstrvar,left,0,0,VT_BSTR);
 	if (hres) {
 	    FIXME("Failed to convert right side from vt %d to VT_BSTR?\n",V_VT(right));

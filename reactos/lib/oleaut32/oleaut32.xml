@@ -14,7 +14,6 @@
 	<define name="_OLEAUT32_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<library>wine</library>
-	<library>wine_unicode</library>
 	<library>uuid</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
