@@ -61,9 +61,9 @@ LoadStringA( HINSTANCE hInstance,
       SetLastErrorByStatus( Status );
       return 0;
     }
+  nBufferMax--;  // save room for the null
   if( nBufferMax > AString.Length )
     nBufferMax = AString.Length;
-  nBufferMax--;  // save room for the null
   memcpy( lpBuffer, AString.Buffer, nBufferMax );
   lpBuffer[nBufferMax] = 0;
   RtlFreeAnsiString( &AString );
