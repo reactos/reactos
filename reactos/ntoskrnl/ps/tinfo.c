@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.31 2004/11/19 22:19:33 gdalsnes Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,69 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+/* GLOBALS *****************************************************************/
+
+/*
+ * FIXME:
+ *   Remove the Implemented value if all functions are implemented.
+ */
+
+static const struct
+{
+   BOOLEAN Implemented;
+   ULONG Size;
+} QueryInformationData[MaxThreadInfoClass + 1] = 
+{
+    {TRUE, sizeof(THREAD_BASIC_INFORMATION)},	// ThreadBasicInformation
+    {TRUE, sizeof(KERNEL_USER_TIMES)},		// ThreadTimes
+    {TRUE, 0},					// ThreadPriority
+    {TRUE, 0},					// ThreadBasePriority
+    {TRUE, 0},					// ThreadAffinityMask
+    {TRUE, 0},					// ThreadImpersonationToken
+    {FALSE, 0},					// ThreadDescriptorTableEntry
+    {TRUE, 0},					// ThreadEnableAlignmentFaultFixup
+    {TRUE, 0},					// ThreadEventPair
+    {TRUE, sizeof(PVOID)},			// ThreadQuerySetWin32StartAddress
+    {TRUE, 0},					// ThreadZeroTlsCell
+    {TRUE, sizeof(LARGE_INTEGER)},		// ThreadPerformanceCount
+    {TRUE, sizeof(BOOLEAN)},			// ThreadAmILastThread
+    {TRUE, 0},					// ThreadIdealProcessor
+    {FALSE, 0},					// ThreadPriorityBoost
+    {TRUE, 0},					// ThreadSetTlsArrayAddress
+    {FALSE, 0},					// ThreadIsIoPending
+    {TRUE, 0}					// ThreadHideFromDebugger
+};
+
+static const struct
+{
+   BOOLEAN Implemented;
+   ULONG Size;
+} SetInformationData[MaxThreadInfoClass + 1] = 
+{
+    {TRUE, 0},			// ThreadBasicInformation
+    {TRUE, 0},			// ThreadTimes
+    {TRUE, sizeof(KPRIORITY)},	// ThreadPriority
+    {TRUE, sizeof(LONG)},	// ThreadBasePriority
+    {TRUE, sizeof(KAFFINITY)},	// ThreadAffinityMask
+    {TRUE, sizeof(HANDLE)},	// ThreadImpersonationToken
+    {TRUE, 0},			// ThreadDescriptorTableEntry
+    {FALSE, 0},			// ThreadEnableAlignmentFaultFixup
+#ifdef _ENABLE_THRDEVTPAIR
+    {TRUE, sizeof(HANDLE)},	// ThreadEventPair
+#else
+    {FALSE, 0},			// ThreadEventPair
+#endif
+    {TRUE, sizeof(PVOID)},	// ThreadQuerySetWin32StartAddress
+    {FALSE, 0},			// ThreadZeroTlsCell
+    {TRUE, 0},			// ThreadPerformanceCount
+    {TRUE, 0},			// ThreadAmILastThread
+    {FALSE, 0},			// ThreadIdealProcessor
+    {FALSE, 0},			// ThreadPriorityBoost
+    {FALSE, 0},			// ThreadSetTlsArrayAddress
+    {TRUE, 0},			// ThreadIsIoPending
+    {FALSE, 0}			// ThreadHideFromDebugger
+};
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -29,6 +92,29 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 {
   PETHREAD Thread;
   NTSTATUS Status;
+  union
+  {
+     KPRIORITY Priority;
+     LONG Increment;
+     KAFFINITY Affinity;
+     HANDLE Handle;
+     PVOID Address;
+  }u;
+
+  if (ThreadInformationClass <= MaxThreadInfoClass &&
+      !SetInformationData[ThreadInformationClass].Implemented)
+    {
+      return STATUS_NOT_IMPLEMENTED;
+    }
+  if (ThreadInformationClass > MaxThreadInfoClass ||
+      SetInformationData[ThreadInformationClass].Size == 0)
+    {
+      return STATUS_INVALID_INFO_CLASS;
+    }
+  if (ThreadInformationLength != SetInformationData[ThreadInformationClass].Size)
+    {
+      return STATUS_INFO_LENGTH_MISMATCH;
+    }
 
   Status = ObReferenceObjectByHandle (ThreadHandle,
 				      THREAD_SET_INFORMATION,
@@ -41,174 +127,62 @@ NtSetInformationThread (IN HANDLE ThreadHandle,
 	return Status;
      }
 
-  switch (ThreadInformationClass)
-    {
-      case ThreadBasicInformation:
-	/* Can only be queried */
-	Status = STATUS_INVALID_INFO_CLASS;
-	break;
+   Status = MmCopyFromCaller(&u.Priority,
+			     ThreadInformation,
+			     SetInformationData[ThreadInformationClass].Size);
+   if (NT_SUCCESS(Status))
+     {
+       switch (ThreadInformationClass)
+         {
+           case ThreadPriority:
+	     if (u.Priority < LOW_PRIORITY || u.Priority >= MAXIMUM_PRIORITY)
+	       {
+		 Status = STATUS_INVALID_PARAMETER;
+		 break;
+	       }
+	     KeSetPriorityThread(&Thread->Tcb, u.Priority);
+	     break;
 	
-      case ThreadTimes:
-	/* Can only be queried */
-	Status = STATUS_INVALID_INFO_CLASS;
-	break;
+           case ThreadBasePriority:
+	     KeSetBasePriorityThread (&Thread->Tcb, u.Increment);
+	     break;
 	
-      case ThreadPriority:
-	  {
-	    KPRIORITY Priority;
-
-	    if (ThreadInformationLength != sizeof(KPRIORITY))
-	      {
-		Status = STATUS_INFO_LENGTH_MISMATCH;
-		break;
-	      }
-	    Priority = *(KPRIORITY*)ThreadInformation;
-	    if (Priority < LOW_PRIORITY || Priority >= MAXIMUM_PRIORITY)
-	      {
-		Status = STATUS_INVALID_PARAMETER;
-		break;
-	      }
-	    KeSetPriorityThread(&Thread->Tcb, Priority);
-	    Status = STATUS_SUCCESS;
-	    break;
-	  }
+           case ThreadAffinityMask:
+	     Status = KeSetAffinityThread(&Thread->Tcb, u.Affinity);
+	     break;
 	
-      case ThreadBasePriority:
-	  {
-	    LONG Increment;
-
-	    if (ThreadInformationLength != sizeof(LONG))
-	      {
-	        Status = STATUS_INFO_LENGTH_MISMATCH;
-	        break;
-	      }
-	    Status = MmCopyFromCaller(&Increment,
-				      ThreadInformation,
-				      sizeof(ULONG));
-	    if (NT_SUCCESS(Status))
-	      {
-		KeSetBasePriorityThread (&Thread->Tcb, Increment);
-	      }
-	  }
-        break;
-	
-      case ThreadAffinityMask:
-	Thread->Tcb.UserAffinity = *((PULONG)ThreadInformation);
-	break;
-	
-      case ThreadImpersonationToken:
-	{
-	  HANDLE TokenHandle;
-
-	  if (ThreadInformationLength != sizeof(HANDLE))
-	    {
-	      Status = STATUS_INFO_LENGTH_MISMATCH;
-	      break;
-	    }
-	  TokenHandle = *((PHANDLE)ThreadInformation);
-	  Status = PsAssignImpersonationToken (Thread,
-					       TokenHandle);
-	  break;
-	}
-	
-      case ThreadDescriptorTableEntry:
-	/* Can only be queried */
-	Status = STATUS_INVALID_INFO_CLASS;
-	break;
-
+           case ThreadImpersonationToken:
+	     Status = PsAssignImpersonationToken (Thread, u.Handle);
+	     break;
+		
 #ifdef _ENABLE_THRDEVTPAIR
-      case ThreadEventPair:
-	{
-	  PKEVENT_PAIR EventPair;
+           case ThreadEventPair:
+	     {
+	       PKEVENT_PAIR EventPair;
 
-	  if (ThreadInformationLength != sizeof(HANDLE))
-	    {
-	      Status = STATUS_INFO_LENGTH_MISMATCH;
-	      break;
-	    }
-
-	  if (ExGetPreviousMode() == UserMode) /* FIXME: Validate this for all infoclasses and system services */
-	    {
-	      DPRINT("NtSetInformationThread:ThreadEventPair: Checking user pointer %08x...\n", ThreadInformation);
-	      ProbeForRead(ThreadInformation, sizeof(HANDLE), sizeof(HANDLE)); /* FIXME: This entire function should be
-	       * wrapped in an SEH frame... return (NTSTATUS)GetExceptionCode() on exception */
-	    }
-
-	  Status = ObReferenceObjectByHandle(*(PHANDLE)ThreadInformation,
-					     STANDARD_RIGHTS_ALL,
-					     ExEventPairObjectType,
-					     ExGetPreviousMode(),
-					     (PVOID*)&EventPair,
-					     NULL);
-
-	  if (!NT_SUCCESS(Status))
-	    {
-	      break;
-	    }
-
-	  ExpSwapThreadEventPair(Thread, EventPair); /* Note that the extra reference is kept intentionally */
-	  Status = STATUS_SUCCESS;
-	  break;
-	}
-#else /* !_ENABLE_THRDEVTPAIR */
-      case ThreadEventPair:
-	{
-          Status = STATUS_NOT_IMPLEMENTED;
-	  break;
-	}
+	       Status = ObReferenceObjectByHandle(u.Handle,
+					          STANDARD_RIGHTS_ALL,
+					          ExEventPairObjectType,
+					          ExGetPreviousMode(),
+					          (PVOID*)&EventPair,
+					          NULL);
+	       if (NT_SUCCESS(Status))
+	         {
+                   ExpSwapThreadEventPair(Thread, EventPair); /* Note that the extra reference is kept intentionally */
+		 }
+               break;
+	     }
 #endif /* _ENABLE_THRDEVTPAIR */
 	
-      case ThreadQuerySetWin32StartAddress:
-	if (ThreadInformationLength != sizeof(ULONG))
-	  {
-	    Status = STATUS_INFO_LENGTH_MISMATCH;
-	    break;
-	  }
-	Thread->Win32StartAddress = (PVOID)*((PULONG)ThreadInformation);
-	Status = STATUS_SUCCESS;
-	break;
+           case ThreadQuerySetWin32StartAddress:
+	     Thread->Win32StartAddress = u.Address;
+	     break;
 
-      case ThreadZeroTlsCell:
-	{
-	  Status = STATUS_NOT_IMPLEMENTED;
-	  break;
-	}
-
-      case ThreadPerformanceCount:
-	/* Can only be queried */
-	Status = STATUS_INVALID_INFO_CLASS;
-	break;
-
-      case ThreadAmILastThread:
-	/* Can only be queried */
-	Status = STATUS_INVALID_INFO_CLASS;
-	break;
-
-      case ThreadIdealProcessor:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
-      case ThreadPriorityBoost:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
-      case ThreadSetTlsArrayAddress:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
-       case ThreadIsIoPending:
-	/* Can only be queried */
-	Status = STATUS_INVALID_INFO_CLASS;
-	break;
-
-      case ThreadHideFromDebugger:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
-      default:
-	Status = STATUS_UNSUCCESSFUL;
-    }
-
+           default:
+	     /* Shoult never occure if the data table is correct */
+	     KEBUGCHECK(0);
+	 }
+     }
   ObDereferenceObject (Thread);
 
   return Status;
@@ -226,6 +200,29 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 {
    PETHREAD Thread;
    NTSTATUS Status;
+   union
+   {
+      THREAD_BASIC_INFORMATION TBI;
+      KERNEL_USER_TIMES TTI;
+      PVOID Address;
+      LARGE_INTEGER Count;
+      BOOLEAN Last;
+   }u;
+
+  if (ThreadInformationClass <= MaxThreadInfoClass &&
+      !QueryInformationData[ThreadInformationClass].Implemented)
+    {
+      return STATUS_NOT_IMPLEMENTED;
+    }
+  if (ThreadInformationClass > MaxThreadInfoClass ||
+      QueryInformationData[ThreadInformationClass].Size == 0)
+    {
+      return STATUS_INVALID_INFO_CLASS;
+    }
+  if (ThreadInformationLength != QueryInformationData[ThreadInformationClass].Size)
+    {
+      return STATUS_INFO_LENGTH_MISMATCH;
+    }
 
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_QUERY_INFORMATION,
@@ -240,161 +237,70 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 
    switch (ThreadInformationClass)
      {
-     case ThreadBasicInformation:
-       {
-	 PTHREAD_BASIC_INFORMATION TBI;
-	 
-	 TBI = (PTHREAD_BASIC_INFORMATION)ThreadInformation;
-	 
-	 if (ThreadInformationLength != sizeof(THREAD_BASIC_INFORMATION))
-	   {
-	     Status = STATUS_INFO_LENGTH_MISMATCH;
-	     break;
-	   }
-	 
-    /* A test on W2K agains ntdll shows NtQueryInformationThread return STATUS_PENDING
-     * as ExitStatus for current/running thread, while KETHREAD's ExitStatus is 
-     * 0. So do the conversion here:
-     * -Gunnar     */
-    TBI->ExitStatus = (Thread->ExitStatus == 0) ? STATUS_PENDING : Thread->ExitStatus;
-	 TBI->TebBaseAddress = Thread->Tcb.Teb;
-	 TBI->ClientId = Thread->Cid;
-	 TBI->AffinityMask = Thread->Tcb.Affinity;
-	 TBI->Priority = Thread->Tcb.Priority;
-	 TBI->BasePriority = Thread->Tcb.BasePriority;
-	 Status = STATUS_SUCCESS;
+       case ThreadBasicInformation:
+         /* A test on W2K agains ntdll shows NtQueryInformationThread return STATUS_PENDING
+          * as ExitStatus for current/running thread, while KETHREAD's ExitStatus is 
+          * 0. So do the conversion here:
+          * -Gunnar     */
+         u.TBI.ExitStatus = (Thread->ExitStatus == 0) ? STATUS_PENDING : Thread->ExitStatus;
+	 u.TBI.TebBaseAddress = Thread->Tcb.Teb;
+	 u.TBI.ClientId = Thread->Cid;
+	 u.TBI.AffinityMask = Thread->Tcb.Affinity;
+	 u.TBI.Priority = Thread->Tcb.Priority;
+	 u.TBI.BasePriority = Thread->Tcb.BasePriority;
 	 break;
-       }
        
-     case ThreadTimes:
-	 {
-	    PKERNEL_USER_TIMES TTI;
-	 
-	    TTI = (PKERNEL_USER_TIMES)ThreadInformation;
-	 
-	    if (ThreadInformationLength != sizeof(KERNEL_USER_TIMES))
-	      {
-	        Status = STATUS_INFO_LENGTH_MISMATCH;
-	        break;
-	      }
+       case ThreadTimes:
+	 u.TTI.KernelTime.QuadPart = Thread->Tcb.KernelTime * 100000LL;
+         u.TTI.UserTime.QuadPart = Thread->Tcb.UserTime * 100000LL;
+         u.TTI.CreateTime = (TIME) Thread->CreateTime;
+         /*This works*/
+	 u.TTI.ExitTime = (TIME) Thread->ExitTime;
+         break;
 
-            TTI->KernelTime.QuadPart = Thread->Tcb.KernelTime * 100000LL;
-            TTI->UserTime.QuadPart = Thread->Tcb.UserTime * 100000LL;
-            TTI->CreateTime = (TIME) Thread->CreateTime;
-            /*This works*/
-	    TTI->ExitTime = (TIME) Thread->ExitTime;
-	 
-            Status = STATUS_SUCCESS;
-            break;
-         }
-       
-     case ThreadPriority:
-       /* Can be set only */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
-       
-     case ThreadBasePriority:
-       /* Can be set only */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
-       
-     case ThreadAffinityMask:
-       /* Can be set only */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
+       case ThreadQuerySetWin32StartAddress:
+         u.Address = Thread->Win32StartAddress;
+         break;
 
-     case ThreadImpersonationToken:
-       /* Can be set only */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
-       
-     case ThreadDescriptorTableEntry:
-       /* Nebbett says nothing about this */
-       Status = STATUS_NOT_IMPLEMENTED;
-       break;
+       case ThreadPerformanceCount:
+         /* Nebbett says this class is always zero */
+         u.Count.QuadPart = 0;
+         break;
 
-     case ThreadEnableAlignmentFaultFixup:
-       /* Can be set only */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
-       
-     case ThreadEventPair:
-       /* Can be set only */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
-
-     case ThreadQuerySetWin32StartAddress:
-       if (ThreadInformationLength != sizeof(PVOID))
-	 {
-	   Status = STATUS_INFO_LENGTH_MISMATCH;
-	   break;
-	 }
-       *((PVOID*)ThreadInformation) = Thread->Win32StartAddress;
-       Status = STATUS_SUCCESS;
-       break;
-
-     case ThreadZeroTlsCell:
-       /* Can only be set */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
-
-     case ThreadPerformanceCount:
-       /* Nebbett says this class is always zero */
-       if (ThreadInformationLength != sizeof(LARGE_INTEGER))
-	 {
-	   Status = STATUS_INFO_LENGTH_MISMATCH;
-	   break;
-	 }
-       ((PLARGE_INTEGER)ThreadInformation)->QuadPart = 0;
-       Status = STATUS_SUCCESS;
-       break;
-
-     case ThreadAmILastThread:
-       {
-	 if (ThreadInformationLength != sizeof(BOOLEAN))
-	   {
-	     Status = STATUS_INFO_LENGTH_MISMATCH;
-	     break;
-	   }
-	 if (Thread->ThreadsProcess->ThreadListHead.Flink->Flink ==
+       case ThreadAmILastThread:
+         if (Thread->ThreadsProcess->ThreadListHead.Flink->Flink ==
 	     &Thread->ThreadsProcess->ThreadListHead)
 	   {
-	     *((PBOOLEAN)ThreadInformation) = TRUE;
+	     u.Last = TRUE;
 	   }
-	 else
+         else
 	   {
-	     *((PBOOLEAN)ThreadInformation) = FALSE;
+	     u.Last = FALSE;
 	   }
-	 Status = STATUS_SUCCESS;
-	 break;
-       }
-
-     case ThreadIdealProcessor:
-       /* Can only be set */
-       Status = STATUS_INFO_LENGTH_MISMATCH;
-       break;
-
-     case ThreadPriorityBoost:
-       Status = STATUS_NOT_IMPLEMENTED;
-       break;
-
-     case ThreadSetTlsArrayAddress:
-       /* Can only be set */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
-
-     case ThreadIsIoPending:
-       Status = STATUS_NOT_IMPLEMENTED;
-       break;
-       
-     case ThreadHideFromDebugger:
-       /* Can only be set */
-       Status = STATUS_INVALID_INFO_CLASS;
-       break;
-
-      default:
-	Status = STATUS_INVALID_INFO_CLASS;
+         break;
+       default:
+	 /* Shoult never occure if the data table is correct */
+	 KEBUGCHECK(0);
      }
+   if (QueryInformationData[ThreadInformationClass].Size)
+     {
+       Status = MmCopyToCaller(ThreadInformation,
+                               &u.TBI,
+			       QueryInformationData[ThreadInformationClass].Size);
+     }
+   if (ReturnLength)
+     {
+       NTSTATUS Status2;
+       static ULONG Null = 0;
+       Status2 = MmCopyToCaller(ReturnLength,
+	                        NT_SUCCESS(Status) ? &QueryInformationData[ThreadInformationClass].Size : &Null,
+				sizeof(ULONG));
+       if (NT_SUCCESS(Status))
+         {
+	   Status = Status2;
+	 }
+     }
+
    ObDereferenceObject(Thread);
    return(Status);
 }
