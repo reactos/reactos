@@ -1,4 +1,5 @@
-/* $Id: process.c,v 1.8 2003/08/07 09:14:14 hbirr Exp $ */
+/* $Id: process.c,v 1.9 2004/01/23 20:11:03 ekohl Exp $ */
+#include <windows.h>
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
