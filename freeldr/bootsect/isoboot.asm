@@ -237,8 +237,8 @@ found_drive:
 	int	13h
 	jnc	params_ok
 
-	mov	si, nosecsize_msg
-	call	writemsg
+	; mov	si, nosecsize_msg	No use in reporting this
+	; call	writemsg
 
 params_ok:
 	; Check for the sector size (should be 2048, but
