@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.21 2004/05/10 17:07:17 weiden Exp $
+/* $Id: palette.c,v 1.22 2004/06/28 15:53:17 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -32,22 +32,18 @@
  * @implemented
  */
 HPALETTE STDCALL
-EngCreatePalette(ULONG Mode,
-		 ULONG NumColors,
-		 ULONG *Colors,
-		 ULONG Red,
-		 ULONG Green,
-		 ULONG Blue)
+EngCreatePalette(ULONG Mode, ULONG NumColors, ULONG *Colors,
+                 ULONG Red, ULONG Green, ULONG Blue)
 {
-  HPALETTE Palette;
+   HPALETTE Palette;
 
-  Palette = PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
-  if (NULL != Palette)
-    {
+   Palette = PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
+   if (Palette != NULL)
+   {
       GDIOBJ_SetOwnership(Palette, NULL);
-    }
+   }
 
-  return Palette;
+   return Palette;
 }
 
 /*
@@ -56,34 +52,31 @@ EngCreatePalette(ULONG Mode,
 BOOL STDCALL
 EngDeletePalette(IN HPALETTE Palette)
 {
-  GDIOBJ_SetOwnership(Palette, PsGetCurrentProcess());
+   GDIOBJ_SetOwnership(Palette, PsGetCurrentProcess());
 
-  return PALETTE_FreePalette(Palette);
+   return PALETTE_FreePalette(Palette);
 }
 
 /*
  * @implemented
  */
 ULONG STDCALL
-PALOBJ_cGetColors(PALOBJ *PalObj,
-		  ULONG Start,
-		  ULONG Colors,
-		  ULONG *PaletteEntry)
+PALOBJ_cGetColors(PALOBJ *PalObj, ULONG Start, ULONG Colors, ULONG *PaletteEntry)
 {
-  ULONG i;
-  PALGDI *PalGDI;
+   PALGDI *PalGDI;
 
-  PalGDI = (PALGDI*)PalObj;
-  //PalGDI = (PALGDI*)AccessInternalObjectFromUserObject(PalObj);
+   PalGDI = (PALGDI*)PalObj;
+   /* PalGDI = (PALGDI*)AccessInternalObjectFromUserObject(PalObj); */
 
-  for(i=Start; i<Colors; i++)
-  {
-    PaletteEntry[i] = RGB(
-      PalGDI->IndexedColors[i].peRed,
-      PalGDI->IndexedColors[i].peGreen,
-      PalGDI->IndexedColors[i].peBlue);
-  }
+   if (Start >= PalGDI->NumColors)
+      return 0;
 
-  return Colors;
+   Colors = min(Colors, PalGDI->NumColors - Start);
+
+   /* NOTE: PaletteEntry ULONGs are in the same order as PALETTEENTRY. */
+   RtlCopyMemory(PaletteEntry, PalGDI->IndexedColors + Start, sizeof(ULONG) * Colors);
+
+   return Colors;
 }
+
 /* EOF */
