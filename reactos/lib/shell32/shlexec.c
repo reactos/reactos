@@ -232,8 +232,12 @@ static HRESULT SHELL_ResolveShortCutW(LPWSTR wcmd, LPWSTR args, LPWSTR wdir, HWN
 
 			if (SUCCEEDED(hr)) {
 			    /* get command line arguments, working directory and display mode if available */
-			    IShellLinkW_GetWorkingDirectory(psl, wdir, MAX_PATH);
-			    IShellLinkW_GetArguments(psl, args, MAX_PATH);
+			    if (SUCCEEDED(IShellLinkW_GetWorkingDirectory(psl, wdir, MAX_PATH)))
+				;
+
+			    if (SUCCEEDED(IShellLinkW_GetArguments(psl, args, MAX_PATH)))
+				;
+
 			    IShellLinkW_GetShowCmd(psl, pshowcmd);
 			}
 		    }
@@ -296,7 +300,7 @@ static UINT SHELL_ExecuteA(const char *lpCmd, void *env, BOOL shWait,
     startup.wShowWindow = psei->nShow;
 
     if (CreateProcessA(NULL, (LPSTR)lpCmd, NULL, NULL, FALSE, 0,
-                       env, psei->lpDirectory, &startup, &info))
+                       env, *psei->lpDirectory? psei->lpDirectory: NULL, &startup, &info))
     {
         /* Give 30 seconds to the app to come up, if desired. Probably only needed
            when starting app immediately before making a DDE connection. */
