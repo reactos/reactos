@@ -23,7 +23,7 @@ export LD	= ld
 export AR	= ar
 export RM	= cmd /C del
 export CP	= cmd /C copy
-export NASM	= nasm
+export NASM_CMD	= nasm
 export MAKE	= make
 
 .PHONY : bootsect freeldr install clean
