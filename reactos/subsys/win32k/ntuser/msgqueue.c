@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.76 2004/03/11 16:17:25 weiden Exp $
+/* $Id: msgqueue.c,v 1.77 2004/03/23 22:24:27 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -240,7 +240,7 @@ MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
 
 BOOL STATIC STDCALL
 MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
-			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
+			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed, BOOL RemoveWhenFreed,
 			 PWINDOW_OBJECT ScopeWin, PUSHORT HitTest,
 			 PPOINT ScreenPoint, BOOL FromGlobalQueue)
 {
@@ -298,6 +298,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         else
         {
           IntReleaseWindowObject(Window);
+          if(RemoveWhenFreed)
+          {
+            RemoveEntryList(&Message->ListEntry);
+          }
           ExFreePool(Message);
           *Freed = TRUE;
           return(FALSE);
@@ -346,6 +350,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   if (Window == NULL)
   {
+    if(RemoveWhenFreed)
+    {
+      RemoveEntryList(&Message->ListEntry);
+    }
     ExFreePool(Message);
     *Freed = TRUE;
     return(FALSE);
@@ -377,6 +385,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     {
       /* we do not hold more than one WM_MOUSEMOVE message in the queue */
       Window->MessageQueue->MouseMoveMsg->Msg = Message->Msg;
+      if(RemoveWhenFreed)
+      {
+        RemoveEntryList(&Message->ListEntry);
+      }
       ExFreePool(Message);
       *Freed = TRUE;
     }
@@ -404,6 +416,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     {
       /* we do not hold more than one WM_MOUSEMOVE message in the queue */
       Window->MessageQueue->MouseMoveMsg->Msg = Message->Msg;
+      if(RemoveWhenFreed)
+      {
+        RemoveEntryList(&Message->ListEntry);
+      }
       ExFreePool(Message);
       *Freed = TRUE;
     }
@@ -527,7 +543,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
-					    Current, Remove, &Freed,
+					    Current, Remove, &Freed, TRUE,
 					    DesktopWindow, &HitTest,
 					    &ScreenPoint, FALSE);
 	  if (Accept)
@@ -546,9 +562,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
-	  
-	  if(Freed)
-	    RemoveEntryList(&Current->ListEntry);
+
 	}
     }
   IntUnLockHardwareMessageQueue(MessageQueue);
@@ -598,7 +612,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  const ULONG ActiveStamp = HardwareMessageQueueStamp;
 	  /* Translate the message. */
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
-					    Current, Remove, &Freed,
+					    Current, Remove, &Freed, FALSE,
 					    DesktopWindow, &HitTest,
 					    &ScreenPoint, TRUE);
 	  if (Accept)
