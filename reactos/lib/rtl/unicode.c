@@ -2195,11 +2195,14 @@ RtlCopyString(
       return;
    }
 
-   copylen = min (DestinationString->MaximumLength - sizeof(CHAR),
+   copylen = min (DestinationString->MaximumLength,
                   SourceString->Length);
 
    memcpy(DestinationString->Buffer, SourceString->Buffer, copylen);
-   DestinationString->Buffer[copylen] = 0;
+   if (DestinationString->MaximumLength >= copylen + sizeof(CHAR))
+   {
+      DestinationString->Buffer[copylen] = 0;
+   }
    DestinationString->Length = copylen;
 }
 
@@ -2222,10 +2225,13 @@ RtlCopyUnicodeString(
       return;
    }
 
-   copylen = min (DestinationString->MaximumLength - sizeof(WCHAR),
+   copylen = min (DestinationString->MaximumLength,
                   SourceString->Length);
    memcpy(DestinationString->Buffer, SourceString->Buffer, copylen);
-   DestinationString->Buffer[copylen / sizeof(WCHAR)] = 0;
+   if (DestinationString->MaximumLength >= copylen + sizeof(WCHAR))
+   {
+     DestinationString->Buffer[copylen / sizeof(WCHAR)] = 0;
+   }
    DestinationString->Length = copylen;
 }
 
