@@ -39,11 +39,6 @@
 #define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)
 #endif
 
-/*
- * Print a message and hang for unimplemented functions.
- */
-#define UNIMPLEMENTED DbgPrint("%s:%d UNIMPLEMENTED", __FILE__, __LINE__); for (;;)
-
 #ifdef DBG
 #define DPRINT(arg) DbgPrint arg;
 #else

@@ -142,7 +142,7 @@ InitializeVideoAddressSpace(VOID)
     */
 
    NullAddress = (PVOID)0x0; /* Workaround for GCC 3.4 */
-   memcpy(NullAddress, IVT, 1024);
+   VideoPortMoveMemory(NullAddress, IVT, 1024);
    
    /*
     * Get the BDA from the kernel
@@ -159,7 +159,7 @@ InitializeVideoAddressSpace(VOID)
     * Copy the BDA into the right place
     */
 
-   memcpy((PVOID)0x400, BDA, 256);
+   VideoPortMoveMemory((PVOID)0x400, BDA, 256);
 
    return TRUE;
 }
@@ -216,8 +216,8 @@ VBEFindAdapter(
     */
    
    VbeInfo = (PVBE_INFO)VBEDeviceExtension->TrampolineMemory;
-   strncpy(VbeInfo->Signature, "VBE2", 4);
-   memset(&BiosRegisters, 0, sizeof(BiosRegisters));
+   VideoPortMoveMemory(VbeInfo->Signature, "VBE2", 4);
+   VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = 0x4F00;
    BiosRegisters.Edi = VBEDeviceExtension->PhysicalAddress.QuadPart & 0xFF;
    BiosRegisters.Es = VBEDeviceExtension->PhysicalAddress.QuadPart >> 4;
@@ -282,8 +282,8 @@ VBEInitialize(PVOID HwDeviceExtension)
     */
    
    VbeInfo = (PVBE_INFO)VBEDeviceExtension->TrampolineMemory;
-   strncpy(VbeInfo->Signature, "VBE2", 4);
-   memset(&BiosRegisters, 0, sizeof(BiosRegisters));
+   VideoPortMoveMemory(VbeInfo->Signature, "VBE2", 4);
+   VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = 0x4F00;
    BiosRegisters.Edi = VBEDeviceExtension->PhysicalAddress.QuadPart & 0xFF;
    BiosRegisters.Es = VBEDeviceExtension->PhysicalAddress.QuadPart >> 4;
@@ -336,9 +336,9 @@ VBEInitialize(PVOID HwDeviceExtension)
           VbeModeInfo->YResolution >= 480 &&
           (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR))
       {
-         memcpy(VBEDeviceExtension->ModeInfo + ModeCount, 
-                VBEDeviceExtension->TrampolineMemory,
-                sizeof(VBE_MODEINFO));
+         VideoPortMoveMemory(VBEDeviceExtension->ModeInfo + ModeCount, 
+                             VBEDeviceExtension->TrampolineMemory,
+                             sizeof(VBE_MODEINFO));
          VBEDeviceExtension->ModeNumbers[ModeCount] = ModeList[CurrentMode] | 0x4000;
          if (VbeModeInfo->XResolution == 640 &&
              VbeModeInfo->YResolution == 480 &&
@@ -354,15 +354,12 @@ VBEInitialize(PVOID HwDeviceExtension)
     * Exchange the default mode so it's at the first place in list.
     */
 
-   memcpy(&TempVbeModeInfo,
-          VBEDeviceExtension->ModeInfo,
-          sizeof(VBE_MODEINFO));
-   memcpy(VBEDeviceExtension->ModeInfo,
-          VBEDeviceExtension->ModeInfo + DefaultMode,
-          sizeof(VBE_MODEINFO));
-   memcpy(VBEDeviceExtension->ModeInfo + DefaultMode,
-          &TempVbeModeInfo,
-          sizeof(VBE_MODEINFO));
+   VideoPortMoveMemory(&TempVbeModeInfo, VBEDeviceExtension->ModeInfo,
+      sizeof(VBE_MODEINFO));
+   VideoPortMoveMemory(VBEDeviceExtension->ModeInfo, VBEDeviceExtension->ModeInfo + DefaultMode,
+      sizeof(VBE_MODEINFO));
+   VideoPortMoveMemory(VBEDeviceExtension->ModeInfo + DefaultMode, &TempVbeModeInfo,
+      sizeof(VBE_MODEINFO));
    TempVbeModeNumber = VBEDeviceExtension->ModeNumbers[0];
    VBEDeviceExtension->ModeNumbers[0] = VBEDeviceExtension->ModeNumbers[DefaultMode];
    VBEDeviceExtension->ModeNumbers[DefaultMode] = TempVbeModeNumber;
@@ -473,10 +470,6 @@ VBEStartIO(
             RequestPacket->StatusBlock);
          break;
 
-      case IOCTL_VIDEO_QUERY_CURRENT_MODE:
-         UNIMPLEMENTED;
-         break;
-
       case IOCTL_VIDEO_SET_COLOR_REGISTERS:
          /*
           * FIXME: Check buffer size!
@@ -487,6 +480,7 @@ VBEStartIO(
             RequestPacket->StatusBlock);
          break;
 
+      case IOCTL_VIDEO_QUERY_CURRENT_MODE:
       default:
          RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
          return FALSE;
@@ -542,7 +536,7 @@ VBESetCurrentMode(
 {
    KV86M_REGISTERS BiosRegisters;
 
-   memset(&BiosRegisters, 0, sizeof(BiosRegisters));
+   VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = 0x4F02;
    BiosRegisters.Ebx = DeviceExtension->ModeNumbers[RequestedMode->RequestedMode];
    Ke386CallBios(0x10, &BiosRegisters);
@@ -572,7 +566,7 @@ VBEResetDevice(
 {
    VIDEO_X86_BIOS_ARGUMENTS BiosRegisters;
 
-   memset(&BiosRegisters, 0, sizeof(BiosRegisters));
+   VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = 0x4F02;
    BiosRegisters.Ebx = 0x3;
    VideoPortInt10(NULL, &BiosRegisters);
@@ -790,7 +784,7 @@ VBESetColorRegisters(
        * not work at all or that Red and Blue colors will be swapped.
        */
 
-      memcpy(DeviceExtension->TrampolineMemory,
+      VideoPortMoveMemory(DeviceExtension->TrampolineMemory,
          &ColorLookUpTable->LookupTable[0].RgbArray,
          sizeof(DWORD) * ColorLookUpTable->NumEntries);
       BiosRegisters.Eax = 0x4F09;
