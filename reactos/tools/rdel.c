@@ -1,4 +1,4 @@
-/*  $Id: rdel.c,v 1.2 2003/11/10 19:29:24 mf Exp $  
+/*  $Id: rdel.c,v 1.3 2004/07/18 21:15:47 blight Exp $  
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  * PURPOSE:               Platform independent delete command
@@ -10,6 +10,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef __WIN32__
+# include <io.h>
+#endif
+#include <sys/types.h>
+#include <sys/stat.h>
 
 void 
 convertPath (char * pathToConvert)
@@ -73,6 +78,11 @@ main (int argc, char* argv[])
     }
     else
     {
+#ifdef __WIN32__
+      _chmod (argv [idx], _S_IREAD | _S_IWRITE);
+#else
+      chmod (argv [idx], 0666);
+#endif
       returnCode = remove (argv [idx]);
       if (returnCode != 0 && errno != ENOENT)
       {
