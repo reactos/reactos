@@ -27,11 +27,6 @@
 extern "C" {
 #endif
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-
 
 void display_error(HWND hWnd, DWORD error);
 void frame_get_clientspace(HWND hWnd, PRECT prect);

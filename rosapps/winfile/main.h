@@ -30,9 +30,6 @@
 extern "C" {
 #endif
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include "resource.h"
 #include "entries.h"
@@ -69,12 +66,15 @@ enum IMAGE {
 
 #define	IDW_FIRST_CHILD		0xC000	//0x200
 
-#define IDW_TREE_LEFT		3
-#define IDW_TREE_RIGHT		6
-#define IDW_HEADER_LEFT		2
-#define IDW_HEADER_RIGHT	5
+//#define IDW_TREE_LEFT		3
+//#define IDW_TREE_RIGHT		6
+//#define IDW_HEADER_LEFT		2
+//#define IDW_HEADER_RIGHT	5
 
 #define IDW_STATUS_WINDOW   7
+
+#define TREE_WINDOW         8
+#define LIST_WINDOW         9
 
 ////////////////////////////////////////////////////////////////////////////////
 void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);

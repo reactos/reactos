@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,7 +29,6 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
     
 #include <windowsx.h>
 #include <ctype.h>
@@ -41,7 +37,7 @@
 #include "listview.h"
 #include "utils.h"
 #include "sort.h"
-#include "draw.h"
+
 
 #define	FRM_CALC_CLIENT		0xBF83
 #define	Frame_CalcFrameClient(hWnd, prt) ((BOOL)SNDMSG(hWnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
@@ -314,24 +310,24 @@ void set_curdir(ChildWnd* child, Entry* entry)
 {
 	TCHAR path[MAX_PATH];
 
-	child->left.cur = entry;
-	child->right.root = entry;
-	child->right.cur = entry;
+//	child->left.cur = entry;
+//	child->right.root = entry;
+//	child->right.cur = entry;
 
 	if (!entry->scanned)
 		scan_entry(child, entry);
 	else {
-//		ListBox_ResetContent(child->right.hWnd);
+//		ListBox_ResetContent(child->hListWnd);
 //		insert_entries(&child->right, entry->down, -1);
 
-//        RefreshList(child->right.hWnd, entry);
+//        RefreshList(child->hListWnd, entry);
 
 //		calc_widths(&child->right, FALSE);
 //#ifndef _NO_EXTENSIONS
 //		set_header(&child->right);
 //#endif
 	}
-        RefreshList(child->right.hWnd, entry->down);
+        RefreshList(child->hListWnd, entry->down);
 
 	get_path(entry, path);
 	lstrcpy(child->szPath, path);

@@ -27,13 +27,11 @@
 extern "C" {
 #endif
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 
 void CreateListWnd(HWND parent, Pane* pane, int id, LPTSTR lpszPathName);
 void RefreshList(HWND hWnd, Entry* entry);
+
+HWND CreateListView(HWND hwndParent, ChildWnd* pChildWnd, int id);
 
 
 #ifdef __cplusplus

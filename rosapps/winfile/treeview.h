@@ -27,14 +27,21 @@
 extern "C" {
 #endif
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
+//void CreateTreeWnd(HWND parent, Pane* pane, int id);
+//HTREEITEM AddItemToTree(HWND hwndTV, LPTSTR lpszItem, int nLevel);
 
-void CreateTreeWnd(HWND parent, Pane* pane, int id);
+HWND CreateTreeView(HWND hwndParent, ChildWnd* pChildWnd, int id);
+void UpdateStatus(HWND hWnd, Entry* pEntry);
 
-HTREEITEM AddItemToTree(HWND hwndTV, LPTSTR lpszItem, int nLevel);
+BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv);
+
+#ifndef _MSC_VER
+#define NMTVDISPINFO TV_DISPINFO
+#define NMTVDISPINFO TV_DISPINFO
+#endif
+
+void OnGetDispInfo(NMTVDISPINFO* ptvdi);
 
 
 #ifdef __cplusplus

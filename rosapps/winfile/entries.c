@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,7 +29,6 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
     
 #include <windowsx.h>
 
@@ -176,21 +172,20 @@ void free_entries(Entry* parent)
 }
 
 // insert listbox entries after index idx
-void insert_entries(Pane* pane, Entry* parent, int idx)
+void insert_entries(HWND hWnd, Entry* parent, int idx)
 {
-/*
 	Entry* entry = parent;
 
 	if (!entry)
 		return;
-	ShowWindow(pane->hWnd, SW_HIDE);
+	ShowWindow(hWnd, SW_HIDE);
 	for(; entry; entry=entry->next) {
 #ifndef _LEFT_FILES
-		if (pane->treePane && !(entry->data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+		if (!(entry->data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
 			continue;
 #endif
 		 // don't display entries "." and ".." in the left pane
-		if (pane->treePane && (entry->data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
+		if ((entry->data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
 				&& entry->data.cFileName[0]==_T('.'))
 			if (
 #ifndef _NO_EXTENSIONS
@@ -200,12 +195,11 @@ void insert_entries(Pane* pane, Entry* parent, int idx)
 				continue;
 		if (idx != -1)
 			idx++;
-		ListBox_InsertItemData(pane->hWnd, idx, entry);
-		if (pane->treePane && entry->expanded)
-			insert_entries(pane, entry->down, idx);
+		ListBox_InsertItemData(hWnd, idx, entry);
+		if (entry->expanded)
+			insert_entries(hWnd, entry->down, idx);
 	}
-	ShowWindow(pane->hWnd, SW_SHOW);
- */
+	ShowWindow(hWnd, SW_SHOW);
 }
 
 
@@ -213,22 +207,22 @@ void scan_entry(ChildWnd* child, Entry* entry)
 {
 	TCHAR path[MAX_PATH];
 /*
-	int idx = ListBox_GetCurSel(child->left.hWnd);
+	int idx = ListBox_GetCurSel(child->hTreeWnd);
 	HCURSOR crsrOld = SetCursor(LoadCursor(0, IDC_WAIT));
 
 	 // delete sub entries in left pane
 	for(;;) {
-		LRESULT res = ListBox_GetItemData(child->left.hWnd, idx+1);
+		LRESULT res = ListBox_GetItemData(child->hTreeWnd, idx+1);
 		Entry* sub = (Entry*) res;
 
 		if (res==LB_ERR || !sub || sub->level<=entry->level)
 			break;
 
-		ListBox_DeleteString(child->left.hWnd, idx+1);
+		ListBox_DeleteString(child->hTreeWnd, idx+1);
 	}
 
 	 // empty right pane
-	ListBox_ResetContent(child->right.hWnd);
+	ListBox_ResetContent(child->hListWnd);
  */
 	 // release memory
 	free_entries(entry);
@@ -274,12 +268,12 @@ BOOL expand_entry(ChildWnd* child, Entry* dir)
 	if (!(p->data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
 		return FALSE;
 /*
-	idx = ListBox_FindItemData(child->left.hWnd, 0, dir);
+	idx = ListBox_FindItemData(child->hTreeWnd, 0, dir);
  */
 	dir->expanded = TRUE;
 
 	 // insert entries in left pane
-	insert_entries(&child->left, p, idx);
+	insert_entries(child->hTreeWnd, p, idx);
 /*
 	if (!child->header_wdths_ok) {
 		if (calc_widths(&child->left, FALSE)) {
@@ -335,7 +329,7 @@ void activate_entry(ChildWnd* child, Pane* pane)
 		if (entry->data.cFileName[0]=='.' && entry->data.cFileName[1]=='\0')
 			return;
 #endif
-
+/*
 		if (entry->data.cFileName[0]=='.' && entry->data.cFileName[1]=='.' && entry->data.cFileName[2]=='\0') {
 			entry = child->left.cur->up;
 			collapse_entry(&child->left, entry);
@@ -346,15 +340,14 @@ void activate_entry(ChildWnd* child, Pane* pane)
 			expand_entry(child, child->left.cur);
 
 			if (!pane->treePane) focus_entry: {
-				int idx = ListBox_FindItemData(child->left.hWnd, ListBox_GetCurSel(child->left.hWnd), entry);
-				ListBox_SetCurSel(child->left.hWnd, idx);
+				int idx = ListBox_FindItemData(child->hTreeWnd, ListBox_GetCurSel(child->hTreeWnd), entry);
+				ListBox_SetCurSel(child->hTreeWnd, idx);
 				set_curdir(child, entry);
 			}
 		}
-
+ */
 		if (!scanned_old) {
 			calc_widths(pane, FALSE);
-
 #ifndef _NO_EXTENSIONS
 			set_header(pane);
 #endif

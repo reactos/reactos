@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,7 +29,6 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
     
 #include "main.h"
 #include "network.h"
@@ -160,7 +156,7 @@ static void NetErrorHandler(HWND hwnd, DWORD dwResult, LPTSTR str)
 static void DisplayStruct(HDC hdc, LPNETRESOURCE lpnrLocal)
 {
     LPTSTR str = NULL;
-    TRACE(_T("DisplayStruct(%p)"), lpnrLocal);
+    //TRACE(_T("DisplayStruct(%p)\n"), lpnrLocal);
 
     switch (lpnrLocal->dwScope) {
     case RESOURCE_CONNECTED: str = _T("Enumerate currently connected resources. The dwUsage member cannot be specified."); break;
@@ -168,7 +164,7 @@ static void DisplayStruct(HDC hdc, LPNETRESOURCE lpnrLocal)
     case RESOURCE_REMEMBERED: str = _T("Enumerate remembered (persistent) connections. The dwUsage member cannot be specified."); break;
     default: str = _T("Unknown Scope."); break;
     }
-    TRACE(_T("    %s\n"), str);
+    //TRACE(_T("    %s\n"), str);
 
     switch (lpnrLocal->dwType) {
     case RESOURCETYPE_ANY: str = _T("All resources."); break;
@@ -176,7 +172,7 @@ static void DisplayStruct(HDC hdc, LPNETRESOURCE lpnrLocal)
     case RESOURCETYPE_PRINT: str = _T("Print resources."); break;
     default: str = _T("Unknown Type."); break;
     }
-    TRACE(_T("    %s\n"), str);
+    //TRACE(_T("    %s\n"), str);
 
     switch (lpnrLocal->dwDisplayType) {
     case RESOURCEDISPLAYTYPE_DOMAIN: str = _T("The object should be displayed as a domain."); break;
@@ -185,15 +181,15 @@ static void DisplayStruct(HDC hdc, LPNETRESOURCE lpnrLocal)
     case RESOURCEDISPLAYTYPE_GENERIC: str = _T("The method used to display the object does not matter."); break;
     default: str = _T("Unknown DisplayType."); break;
     }
-    TRACE(_T("    %s\n"), str);
+    //TRACE(_T("    %s\n"), str);
 
 //    switch (lpnrLocal->dwUsage ) {
 //    case RESOURCEUSAGE_CONNECTABLE: str = _T("The resource is a connectable resource; the name pointed to by the lpRemoteName member can be passed to the WNetAddConnection function to make a network connection."); break;
 //    case RESOURCEUSAGE_CONTAINER: str = _T("The resource is a container resource; the name pointed to by the lpRemoteName member can be passed to the WNetOpenEnum function to enumerate the resources in the container."); break;
 //    default: str = _T("Unknown Usage."); break;
 //    }
-    TRACE(_T("\tLocalName: %s\tRemoteName: %s"), lpnrLocal->lpLocalName, lpnrLocal->lpRemoteName);
-    TRACE(_T("\tComment: %s\tProvider: %s\n"), lpnrLocal->lpComment, lpnrLocal->lpProvider);
+    //TRACE(_T("\tLocalName: %s\tRemoteName: %s"), lpnrLocal->lpLocalName, lpnrLocal->lpRemoteName);
+    //TRACE(_T("\tComment: %s\tProvider: %s\n"), lpnrLocal->lpComment, lpnrLocal->lpProvider);
 }
 
 ////////////////////////////////////

@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,7 +29,6 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
     
 #include <windowsx.h>
 #include <ctype.h>
@@ -65,7 +61,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
 //
-
+/*
 static BOOL pane_command(Pane* pane, UINT cmd)
 {
 	switch(cmd) {
@@ -100,7 +96,7 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 	}
 	return TRUE;
 }
-
+ */
 static void draw_splitbar(HWND hWnd, int x)
 {
 	RECT rt;
@@ -119,8 +115,8 @@ static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
 	RECT rt = {0, 0, cx, cy};
 
 	cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-	DeferWindowPos(hdwp, pChildWnd->left.hWnd, 0, rt.left, rt.top, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
-	DeferWindowPos(hdwp, pChildWnd->right.hWnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 	EndDeferWindowPos(hdwp);
 }
 
@@ -250,6 +246,61 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
+BOOL OnNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	ChildWnd* pChildWnd = (ChildWnd*)GetWindowLong(hWnd, GWL_USERDATA);
+    {
+        if ((int)wParam == TREE_WINDOW) {
+
+            switch (((LPNMHDR)lParam)->code) { 
+            case TVN_ITEMEXPANDING: 
+//                return !OnTreeExpanding(pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
+                OnTreeExpanding(pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
+				return FALSE;
+
+            case TVN_SELCHANGED:
+                {
+                Entry* entry = (Entry*)((NMTREEVIEW*)lParam)->itemNew.lParam;
+                if (entry != NULL) {
+                    //RefreshList(pChildWnd->hListWnd, entry);
+                    //void set_curdir(ChildWnd* child, Entry* entry)
+//                    set_curdir(pChildWnd, entry);
+
+//					UpdateStatus(hWnd, pChildWnd->left.cur->down);
+
+                }
+			case TVN_GETDISPINFO: 
+                OnGetDispInfo((NMTVDISPINFO*)lParam); 
+                break; 
+/*
+                    HKEY hKey;
+                    TCHAR keyPath[1000];
+                    int keyPathLen = 0;
+                    keyPath[0] = _T('\0');
+                    hKey = FindRegRoot(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath)/sizeof(TCHAR));
+                    RefreshListView(pChildWnd->hListWnd, hKey, keyPath);
+
+                    keyPathLen = 0;
+                    keyPath[0] = _T('\0');
+                    MakeFullRegPath(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath)/sizeof(TCHAR));
+                    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)keyPath);
+ */
+                }
+                break;
+            default:
+                break;
+            }
+        } else
+        if ((int)wParam == LIST_WINDOW) {
+            if (!SendMessage(pChildWnd->hListWnd, WM_NOTIFY, wParam, lParam)) {
+                return FALSE;
+            }
+        }
+    }
+
+	return TRUE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
@@ -261,20 +312,22 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //  WM_DESTROY  - post a quit message and return
 //
 //
+
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	static int last_split;
-
 	ChildWnd* pChildWnd = (ChildWnd*)GetWindowLong(hWnd, GWL_USERDATA);
-	ASSERT(pChildWnd);
+	ASSERT(pChildWnd || (message == WM_CREATE));
 
 	switch(message) {
 	case WM_CREATE:
-        CreateTreeWnd(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT);
-        CreateListWnd(pChildWnd->hWnd, &pChildWnd->right, IDW_TREE_RIGHT, pChildWnd->szPath);
-        //create_tree_window(pChildWnd->hWnd, &pChildWnd->left, IDW_TREE_LEFT, IDW_HEADER_LEFT, pChildWnd->szPath);
-        //create_list_window(pChildWnd->hWnd, &pChildWnd->right, IDW_TREE_RIGHT, IDW_HEADER_RIGHT);
-        return 0;
+        pChildWnd = (ChildWnd*)((MDICREATESTRUCT*)((CREATESTRUCT*)lParam)->lpCreateParams)->lParam;
+        ASSERT(pChildWnd);
+        SetWindowLong(hWnd, GWL_USERDATA, (LONG)pChildWnd);
+
+        pChildWnd->nSplitPos = 250;
+        pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd, TREE_WINDOW);
+        pChildWnd->hListWnd = CreateListView(hWnd, pChildWnd/*, pChildWnd->szPath*/, LIST_WINDOW);
+		//return -1; // terminate window creation on error
 		break;
     case WM_PAINT:
         OnPaint(hWnd, pChildWnd);
@@ -299,8 +352,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		int x = LOWORD(lParam);
 		GetClientRect(hWnd, &rt);
 		if (x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1) {
-			last_split = pChildWnd->nSplitPos;
-			draw_splitbar(hWnd, last_split);
+			pChildWnd->last_split = pChildWnd->nSplitPos;
+			draw_splitbar(hWnd, pChildWnd->last_split);
 			SetCapture(hWnd);
 		}
 		break;}
@@ -309,8 +362,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		if (GetCapture() == hWnd) {
 			RECT rt;
 			int x = LOWORD(lParam);
-			draw_splitbar(hWnd, last_split);
-			last_split = -1;
+			draw_splitbar(hWnd, pChildWnd->last_split);
+			pChildWnd->last_split = -1;
 			GetClientRect(hWnd, &rt);
 			pChildWnd->nSplitPos = x;
 			ResizeWnd(pChildWnd, rt.right, rt.bottom);
@@ -319,18 +372,18 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		break;
 
 	case WM_CAPTURECHANGED:
-		if (GetCapture()==hWnd && last_split>=0)
-			draw_splitbar(hWnd, last_split);
+		if (GetCapture()==hWnd && pChildWnd->last_split>=0)
+			draw_splitbar(hWnd, pChildWnd->last_split);
 		break;
 
     case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE)
 			if (GetCapture() == hWnd) {
 				RECT rt;
-				draw_splitbar(hWnd, last_split);
+				draw_splitbar(hWnd, pChildWnd->last_split);
 				GetClientRect(hWnd, &rt);
                 ResizeWnd(pChildWnd, rt.right, rt.bottom);
-				last_split = -1;
+				pChildWnd->last_split = -1;
 				ReleaseCapture();
 				SetCursor(LoadCursor(0, IDC_ARROW));
 			}
@@ -342,10 +395,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			int x = LOWORD(lParam);
 			HDC hdc = GetDC(hWnd);
 			GetClientRect(hWnd, &rt);
-			rt.left = last_split-SPLIT_WIDTH/2;
-			rt.right = last_split+SPLIT_WIDTH/2+1;
+			rt.left = pChildWnd->last_split-SPLIT_WIDTH/2;
+			rt.right = pChildWnd->last_split+SPLIT_WIDTH/2+1;
 			InvertRect(hdc, &rt);
-			last_split = x;
+			pChildWnd->last_split = x;
 			rt.left = x-SPLIT_WIDTH/2;
 			rt.right = x+SPLIT_WIDTH/2+1;
 			InvertRect(hdc, &rt);
@@ -355,15 +408,15 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 	case WM_SETFOCUS:
 		SetCurrentDirectory(pChildWnd->szPath);
-		SetFocus(pChildWnd->nFocusPanel? pChildWnd->right.hWnd: pChildWnd->left.hWnd);
+		SetFocus(pChildWnd->nFocusPanel? pChildWnd->hListWnd: pChildWnd->hTreeWnd);
 		break;
 
 	case WM_DISPATCH_COMMAND:
         if (_CmdWndProc(hWnd, message, wParam, lParam)) break;
         if (1) {
-            return SendMessage(pChildWnd->right.hWnd, message, wParam, lParam);
+            return SendMessage(pChildWnd->hListWnd, message, wParam, lParam);
         } else {
-            return SendMessage(pChildWnd->left.hWnd, message, wParam, lParam);
+            return SendMessage(pChildWnd->hTreeWnd, message, wParam, lParam);
         }
 		break;
 
@@ -372,7 +425,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			return DefMDIChildProc(hWnd, message, wParam, lParam);
 
 //        if (LOWORD(wParam) > ID_CMD_FIRST && LOWORD(wParam) < ID_CMD_LAST) {
-//            if (!SendMessage(pChildWnd->right.hWnd, message, wParam, lParam)) {
+//            if (!SendMessage(pChildWnd->hListWnd, message, wParam, lParam)) {
 //                return DefMDIChildProc(hWnd, message, wParam, lParam);
 //            }
 //        } else {
@@ -380,29 +433,35 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 //        }
 		break;
 	case WM_NOTIFY:
+
+		if (!OnNotify(hWnd, wParam, lParam)) {
+            return DefMDIChildProc(hWnd, message, wParam, lParam);
+		}
+/*
         {
         int idCtrl = (int)wParam; 
 		//NMHDR* pnmh = (NMHDR*)lParam;
 		//return pane_notify(pnmh->idFrom==IDW_HEADER_LEFT? &pChildWnd->left: &pChildWnd->right, pnmh);
-        if ((int)wParam == IDW_TREE_LEFT) {
+        if ((int)wParam == TREE_WINDOW) {
             if ((((LPNMHDR)lParam)->code) == TVN_SELCHANGED) {
                 Entry* entry = (Entry*)((NMTREEVIEW*)lParam)->itemNew.lParam;
                 if (entry != NULL) {
-                    //RefreshList(pChildWnd->right.hWnd, entry);
+                    //RefreshList(pChildWnd->hListWnd, entry);
                     //void set_curdir(ChildWnd* child, Entry* entry)
                     set_curdir(pChildWnd, entry);
                 }
             }
-            if (!SendMessage(pChildWnd->left.hWnd, message, wParam, lParam)) {
+            if (!SendMessage(pChildWnd->hTreeWnd, message, wParam, lParam)) {
                 return DefMDIChildProc(hWnd, message, wParam, lParam);
             }
         } else
-        if ((int)wParam == IDW_TREE_RIGHT) {
-            if (!SendMessage(pChildWnd->right.hWnd, message, wParam, lParam)) {
+        if ((int)wParam == LIST_WINDOW) {
+            if (!SendMessage(pChildWnd->hListWnd, message, wParam, lParam)) {
                 return DefMDIChildProc(hWnd, message, wParam, lParam);
             }
         }
         }
+*/
         break;
 
 	case WM_SIZE:

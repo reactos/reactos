@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,7 +29,6 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
     
 #include <windowsx.h>
 #include "main.h"
@@ -423,7 +419,7 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 	case WM_KEYDOWN:
 		if (wParam == VK_TAB) {
 			//TODO: SetFocus(Globals.hDriveBar)
-			SetFocus(child->nFocusPanel ? child->left.hWnd: child->right.hWnd);
+			SetFocus(child->nFocusPanel ? child->hTreeWnd: child->hListWnd);
 		}
         break;
 	}
@@ -435,7 +431,7 @@ void CreateListWnd(HWND parent, Pane* pane, int id, LPTSTR lpszPathName)
     RECT rcClient;  // dimensions of client area 
 	Entry* entry = pane->root;
 
-	pane->treePane = 0;
+//	pane->treePane = 0;
 
     GetClientRect(parent, &rcClient); 
     pane->hWnd = CreateWindowEx(0, WC_LISTVIEW, _T("List View"), 
@@ -462,3 +458,30 @@ void CreateListWnd(HWND parent, Pane* pane, int id, LPTSTR lpszPathName)
 		InsertListEntries(pane->hWnd, entry, -1);
     }
 }
+
+HWND CreateListView(HWND hwndParent, ChildWnd* pChildWnd, int id)
+{ 
+    RECT rcClient;
+    HWND hwndLV;
+ 
+    // Get the dimensions of the parent window's client area, and create the list view control. 
+    GetClientRect(hwndParent, &rcClient); 
+    hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"), 
+        WS_VISIBLE | WS_CHILD | LVS_REPORT, 
+        0, 0, rcClient.right, rcClient.bottom, 
+        hwndParent, (HMENU)id, hInst, NULL); 
+    ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
+ 
+    // Initialize the image list, and add items to the control. 
+/*
+    if (!InitListViewImageLists(hwndLV) || 
+            !InitListViewItems(hwndLV, szName)) { 
+        DestroyWindow(hwndLV); 
+        return FALSE; 
+    } 
+ */
+    CreateListColumns(hwndLV);
+	g_orgListWndProc = SubclassWindow(hwndLV, ListWndProc);
+    return hwndLV;
+} 
+

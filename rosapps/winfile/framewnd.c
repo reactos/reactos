@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 //#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,7 +29,6 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
     
 //#include <shellapi.h>
 #include <windowsx.h>
@@ -150,19 +146,25 @@ BOOL FindChildWindow(int cmd)
 static ChildWnd* alloc_child_window(LPCTSTR path)
 {
 	TCHAR drv[_MAX_DRIVE+1], dir[_MAX_DIR], name[_MAX_FNAME], ext[_MAX_EXT];
-	ChildWnd* pChildWnd = (ChildWnd*)malloc(sizeof(ChildWnd));
-	Root* root = &pChildWnd->root;
 	Entry* entry;
+	Root* root;
+//	ChildWnd* pChildWnd = (ChildWnd*)malloc(sizeof(ChildWnd));
+//	memset(pChildWnd, 0, sizeof(ChildWnd));
+	ChildWnd* pChildWnd = (ChildWnd*)malloc(sizeof(ChildWnd)+sizeof(Root));
+	memset(pChildWnd, 0, sizeof(ChildWnd)+sizeof(Root));
+	pChildWnd->pRoot = (Root*)((BYTE*)pChildWnd + sizeof(ChildWnd));
+	pChildWnd->pRoot = (Root*)&pChildWnd[1];
+	root = pChildWnd->pRoot;
 
-	memset(pChildWnd, 0, sizeof(ChildWnd));
-	pChildWnd->left.treePane = TRUE;
-	pChildWnd->left.visible_cols = 0;
-	pChildWnd->right.treePane = FALSE;
-#ifndef _NO_EXTENSIONS
-	pChildWnd->right.visible_cols = COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_INDEX|COL_LINKS;
-#else
-	pChildWnd->right.visible_cols = COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES;
-#endif
+//	root = &pChildWnd->root;
+//	pChildWnd->left.treePane = TRUE;
+//	pChildWnd->left.visible_cols = 0;
+//	pChildWnd->right.treePane = FALSE;
+//#ifndef _NO_EXTENSIONS
+//	pChildWnd->right.visible_cols = COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_INDEX|COL_LINKS;
+//#else
+//	pChildWnd->right.visible_cols = COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES;
+//#endif
 	pChildWnd->pos.length = sizeof(WINDOWPLACEMENT);
 	pChildWnd->pos.flags = 0;
 	pChildWnd->pos.showCmd = SW_SHOWNORMAL;
@@ -173,7 +175,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path)
 	pChildWnd->nFocusPanel = 0;
 	pChildWnd->nSplitPos = 300;
 	pChildWnd->sortOrder = SORT_NAME;
-	pChildWnd->header_wdths_ok = FALSE;
+//	pChildWnd->header_wdths_ok = FALSE;
 	lstrcpy(pChildWnd->szPath, path);
 	_tsplitpath(path, drv, dir, name, ext);
 #if !defined(_NO_EXTENSIONS) && defined(__linux__)
@@ -233,7 +235,7 @@ HWND CreateChildWindow(int drv_id)
 //            CW_USEDEFAULT, CW_USEDEFAULT,
 //            CW_USEDEFAULT, CW_USEDEFAULT,
             20, 20, 200, 200, 
-            WS_MAXIMIZE, 0
+            WS_MAXIMIZE, (LPARAM)pChildWnd
 //            0/*style*/, 0/*lParam*/
 		};
         hcbthook = SetWindowsHookEx(WH_CBT, CBTProc, 0, GetCurrentThreadId());
@@ -346,7 +348,8 @@ static BOOL activate_drive_window(LPCTSTR path)
 		 child_wnd = GetNextWindow(child_wnd, GW_HWNDNEXT)) {
 		ChildWnd* pChildWnd = (ChildWnd*) GetWindowLong(child_wnd, GWL_USERDATA);
 		if (pChildWnd) {
-			_tsplitpath(pChildWnd->root.path, drv2, 0, 0, 0);
+			//_tsplitpath(pChildWnd->root.path, drv2, 0, 0, 0);
+			_tsplitpath(pChildWnd->pRoot->path, drv2, 0, 0, 0);
 			if (!lstrcmpi(drv2, drv1)) {
 				SendMessage(Globals.hMDIClient, WM_MDIACTIVATE, (WPARAM)child_wnd, 0);
 				if (IsMinimized(child_wnd))
@@ -563,7 +566,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case ID_HELP_ABOUT:
 #ifdef WINSHELLAPI
-            ShellAbout(hWnd, szTitle, "", LoadIcon(Globals.hInstance, (LPCTSTR)IDI_WINFILE));
+            ShellAbout(hWnd, szTitle, _T(""), LoadIcon(Globals.hInstance, (LPCTSTR)IDI_WINFILE));
 #else
             ShowAboutBox(hWnd);
 #endif

@@ -27,11 +27,6 @@
 extern "C" {
 #endif
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-
 
 typedef struct _Entry {
 	struct _Entry*	next;
@@ -74,9 +69,6 @@ typedef struct {
 
 typedef struct {
 	HWND	hWnd;
-#ifndef _NO_EXTENSIONS
-	HWND	hwndHeader;
-#endif
 
 #ifndef _NO_EXTENSIONS
 #define	COLUMNS	10
@@ -86,29 +78,30 @@ typedef struct {
 	int		widths[COLUMNS];
 	int		positions[COLUMNS+1];
 
-	BOOL	treePane;
-	int		visible_cols;
 	Entry*	root;
 	Entry*	cur;
 } Pane;
 
 typedef struct {
 	HWND	hWnd;
+    HWND    hTreeWnd;
+    HWND    hListWnd;
+    int     nFocusPanel;      // 0: left  1: right
+	int		nSplitPos;
+	WINDOWPLACEMENT pos;
+	TCHAR	szPath[MAX_PATH];
+
+//	Root	root;
+	Root*	pRoot;
 	Pane	left;
 	Pane	right;
-    int     nFocusPanel;      // 0: left  1: right
-	WINDOWPLACEMENT pos;
-	int		nSplitPos;
-	BOOL	header_wdths_ok;
-
-	TCHAR	szPath[MAX_PATH];
-	Root	root;
-
 	SORT_ORDER sortOrder;
+	int last_split;
+
 } ChildWnd;
 
 
-void insert_entries(Pane* pane, Entry* parent, int idx);
+void insert_entries(HWND hWnd, Entry* parent, int idx);
 void scan_entry(ChildWnd* child, Entry* entry);
 void activate_entry(ChildWnd* child, Pane* pane);
 void collapse_entry(Pane* pane, Entry* dir);

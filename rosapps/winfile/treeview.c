@@ -20,9 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef _MSC_VER
-#include "stdafx.h"
-#else
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -32,7 +29,6 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-#endif
 
 #include <windowsx.h>
 #include <shellapi.h>
@@ -56,75 +52,47 @@ int Image_Open;
 int Image_Closed; 
 int Image_Root; 
 
+static int s_init = 0;
+
 #define CX_BITMAP    16
 #define CY_BITMAP    16
 #define NUM_BITMAPS  3
 
 
-#if 0
-/*
-// AddItemToTree - adds items to a tree view control. 
-// Returns the handle to the newly added item. 
-// hwndTV - handle to the tree view control. 
-// lpszItem - text of the item to add. 
-// nLevel - level at which to add the item. 
+Root* FindPathRoot(HWND hwndTV, HTREEITEM hItem, LPTSTR szPath, int* pPathLen, int max)
+{
+	Root* pRoot = NULL;
+    TVITEM item;
+    item.mask = TVIF_PARAM;
+    item.hItem = TreeView_GetParent(hwndTV, hItem);
 
-HTREEITEM AddItemToTree(HWND hwndTV, LPTSTR lpszItem, int nLevel)
-{ 
-    TVITEM tvi; 
-    TVINSERTSTRUCT tvins; 
-    static HTREEITEM hPrev = (HTREEITEM)TVI_FIRST; 
-    static HTREEITEM hPrevRootItem = NULL; 
-    static HTREEITEM hPrevLev2Item = NULL; 
-    HTREEITEM hti; 
- 
-    tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN  | TVIF_PARAM; 
-    // Set the text of the item. 
-    tvi.pszText = lpszItem; 
-    tvi.cchTextMax = lstrlen(lpszItem); 
-    // Assume the item is not a parent item, so give it an image. 
-    tvi.iImage = Image_Root; 
-    tvi.iSelectedImage = Image_Root; 
-    tvi.cChildren = 1; 
-
-    // Save the heading level in the item's application-defined data area. 
-    tvi.lParam = (LPARAM)nLevel; 
- 
-    tvins.item = tvi; 
-    tvins.hInsertAfter = hPrev; 
- 
-    // Set the parent item based on the specified level. 
-    if (nLevel == 1) 
-        tvins.hParent = TVI_ROOT; 
-    else if (nLevel == 2) 
-        tvins.hParent = hPrevRootItem; 
-    else 
-        tvins.hParent = hPrevLev2Item; 
- 
-    // Add the item to the tree view control. 
-    hPrev = (HTREEITEM)SendMessage(hwndTV, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT)&tvins); 
- 
-    // Save the handle to the item. 
-    if (nLevel == 1) 
-        hPrevRootItem = hPrev; 
-    else if (nLevel == 2) 
-        hPrevLev2Item = hPrev; 
- 
-    // The new item is a child item. Give the parent item a 
-    // closed folder bitmap to indicate it now has child items. 
-    if (nLevel > 1) { 
-        hti = TreeView_GetParent(hwndTV, hPrev); 
-        tvi.mask = TVIF_IMAGE | TVIF_SELECTEDIMAGE; 
-        tvi.hItem = hti; 
-        tvi.iImage = Image_Closed; 
-        tvi.iSelectedImage = Image_Closed; 
-        TreeView_SetItem(hwndTV, &tvi); 
-    } 
-    return hPrev; 
-} 
- */
-#endif
-
+    if (TreeView_GetItem(hwndTV, &item)) {
+        if (item.lParam == 0) {
+            // recurse
+            pRoot = FindPathRoot(hwndTV, item.hItem, szPath, pPathLen, max);
+            szPath[*pPathLen] = _T('\\');
+            ++(*pPathLen);
+            item.mask = TVIF_TEXT;
+            item.hItem = hItem;
+            item.pszText = &szPath[*pPathLen];
+            item.cchTextMax = max - *pPathLen;
+            if (TreeView_GetItem(hwndTV, &item)) {
+                *pPathLen += _tcslen(item.pszText);
+            }
+        } else {
+            // found root key with valid key value
+            pRoot = (Root*)item.lParam;
+            item.mask = TVIF_TEXT;
+            item.hItem = hItem;
+            item.pszText = szPath;
+            item.cchTextMax = max;
+            if (TreeView_GetItem(hwndTV, &item)) {
+                *pPathLen += _tcslen(item.pszText);
+            }
+        }
+    }
+    return pRoot;
+}
 
 static void init_output(HWND hWnd)
 {
@@ -143,6 +111,7 @@ static void init_output(HWND hWnd)
 	ReleaseDC(hWnd, hdc);
 }
 
+#if 0
 
 HTREEITEM AddEntryToTree(HWND hwndTV, Entry* entry)
 { 
@@ -154,19 +123,7 @@ HTREEITEM AddEntryToTree(HWND hwndTV, Entry* entry)
     static HTREEITEM hPrevLev2Item = NULL; 
 
     //TRACE("AddEntryToTree(level:%u - %s)\n", entry->level, entry->data.cFileName); 
-    
     tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN | TVIF_PARAM; 
-/*
-    // Set the text of the item. 
-    tvi.pszText = entry->data.cFileName; 
-    tvi.cchTextMax = lstrlen(entry->data.cFileName); 
-    // Assume the item is not a parent item, so give it an image. 
-    tvi.iImage = Image_Root; 
-    tvi.iSelectedImage = Image_Root; 
-    tvi.cChildren = 1; 
-    // Save the heading level in the item's application-defined data area. 
-    //tvi.lParam = (LPARAM)entry->level; 
- */
     tvi.pszText = LPSTR_TEXTCALLBACK;
     tvi.cchTextMax = 0;
     tvi.iImage = I_IMAGECALLBACK;
@@ -174,10 +131,8 @@ HTREEITEM AddEntryToTree(HWND hwndTV, Entry* entry)
     tvi.cChildren = I_CHILDRENCALLBACK;
     // Save the entry pointer in the item's application-defined data area. 
     tvi.lParam = (LPARAM)entry; 
- 
     tvins.item = tvi; 
     tvins.hInsertAfter = hPrev; 
- 
     // Set the parent item based on the specified level. 
     if (entry->level == 0) {
         tvins.hParent = TVI_ROOT; 
@@ -189,50 +144,51 @@ HTREEITEM AddEntryToTree(HWND hwndTV, Entry* entry)
             tvins.hParent = entry->up->hTreeItem; 
         }
     }
- 
     // Add the item to the tree view control. 
     hPrev = (HTREEITEM)SendMessage(hwndTV, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT)&tvins); 
- 
     // Save the handle to the item. 
     if (entry->level == 0) 
         hPrevRootItem = hPrev; 
     else if (entry->level == 1) 
         hPrevLev2Item = hPrev; 
-/* 
-    // The new item is a child item. Give the parent item a 
-    // closed folder bitmap to indicate it now has child items. 
-    if (entry->level > 1) { 
-        HTREEITEM hti; 
-        hti = TreeView_GetParent(hwndTV, hPrev); 
-        tvi.mask = TVIF_IMAGE | TVIF_SELECTEDIMAGE; 
-        tvi.hItem = hti; 
-        tvi.iImage = Image_Closed; 
-        tvi.iSelectedImage = Image_Closed; 
-        TreeView_SetItem(hwndTV, &tvi); 
-    } 
- */
     hItem = hPrev; 
     return hItem;
 }
 
+#else
 
-static BOOL InitTreeViewItems(HWND hwndTV) 
+static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, Root* entry, DWORD dwChildren)
 { 
-    return TRUE; 
-} 
- 
+    HTREEITEM hItem = 0;
+    TVITEM tvi; 
+    TVINSERTSTRUCT tvins; 
+
+    tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN | TVIF_PARAM; 
+    tvi.pszText = label; 
+    tvi.cchTextMax = lstrlen(tvi.pszText); 
+    tvi.iImage = Image_Closed; 
+    tvi.iSelectedImage = Image_Open; 
+    tvi.cChildren = dwChildren; 
+    tvi.lParam = (LPARAM)entry;
+    tvins.item = tvi; 
+    if (entry) tvins.hInsertAfter = (HTREEITEM)TVI_LAST; 
+    else       tvins.hInsertAfter = (HTREEITEM)TVI_SORT; 
+    tvins.hParent = hParent; 
+    hItem = (HTREEITEM)SendMessage(hwndTV, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT)&tvins);
+    return hItem;
+}
+
+#endif
+
 // insert treectrl entries after index idx
-static void insert_tree_entries(HWND hWnd, Entry* entry, int idx)
+static void insert_tree_entries(HWND hWnd, Entry* entry/*Root* pRoot*/, int idx)
 {
     static HTREEITEM hItemVisible;
     static int hItemVisibleIdx;
+//	Entry* entry = &pRoot->entry;
 
-	if (!entry)
-		return;
-
-	if (entry->hTreeItem)
-		return;
-
+	if (!entry)	return;
+	if (entry->hTreeItem) return;
 	ShowWindow(hWnd, SW_HIDE);
 	for(; entry; entry=entry->next) {
 #ifndef _LEFT_FILES
@@ -247,17 +203,18 @@ static void insert_tree_entries(HWND hWnd, Entry* entry, int idx)
 				continue;
             }
         }
-//		if (idx != -1)
-//			idx++;
-//		ListBox_InsertItemData(hWnd, idx, entry);
-        //TRACE("Adding item %u [level:%u] - %s\n", ++idx, entry->level, entry->data.cFileName); 
-
-	
         if (entry->hTreeItem) continue;
+//        entry->hTreeItem = AddEntryToTree(hWnd, entry); 
 
-
-        entry->hTreeItem = AddEntryToTree(hWnd, entry); 
+		if (entry->up && entry->up->hTreeItem) {
+//            entry->hTreeItem = AddEntryToTree(hWnd, entry->up->hTreeItem, entry->data.cFileName, entry, 0); 
+            entry->hTreeItem = AddEntryToTree(hWnd, entry->up->hTreeItem, entry->data.cFileName, NULL, 1); 
+		} else {
+            entry->hTreeItem = AddEntryToTree(hWnd, TVI_ROOT, entry->data.cFileName, NULL, 0); 
+//                AddEntryToTree(hwndTV, pnmtv->itemNew.hItem, Name, NULL, dwCount);
+		}
         if (entry->expanded) {
+//            insert_tree_entries(hWnd, entry->down, idx + 1);
             insert_tree_entries(hWnd, entry->down, idx + 1);
             TreeView_Expand(hWnd, entry->hTreeItem, TVE_EXPAND);
         }
@@ -271,6 +228,44 @@ static void insert_tree_entries(HWND hWnd, Entry* entry, int idx)
     }
 	ShowWindow(hWnd, SW_SHOW);
 }
+
+static BOOL InitTreeViewItems(HWND hwndTV, ChildWnd* pChildWnd) 
+{ 
+    TVITEM tvi;
+    TVINSERTSTRUCT tvins;
+    HTREEITEM hRoot;
+	TCHAR buffer[MAX_PATH];
+
+	wsprintf(buffer, _T("%s - [%s]"), pChildWnd->pRoot->path, pChildWnd->pRoot->fs);
+    tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN | TVIF_PARAM; 
+    tvi.pszText = buffer;
+    tvi.cchTextMax = lstrlen(tvi.pszText);
+    tvi.iImage = Image_Root;
+    tvi.iSelectedImage = Image_Root;
+    tvi.cChildren = 5;
+//    tvi.lParam = (LPARAM)&pChildWnd->pRoot->entry;
+    tvi.lParam = (LPARAM)pChildWnd->pRoot;
+//    tvi.lParam = (LPARAM)pChildWnd;
+    tvins.item = tvi;
+    tvins.hInsertAfter = (HTREEITEM)TVI_FIRST;
+    tvins.hParent = TVI_ROOT;
+    // Add the item to the tree view control.
+    hRoot = (HTREEITEM)SendMessage(hwndTV, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT)&tvins);
+    pChildWnd->pRoot->entry.hTreeItem = hRoot;
+//    TreeView_Expand(hwndTV, hRoot, TVE_EXPAND);
+//    insert_tree_entries(hwndTV, &pChildWnd->pRoot->entry, 0);
+    // insert entries into treectrl
+//    if (pChildWnd->pRoot) {
+//		insert_tree_entries(hwndTV, &pChildWnd->pRoot->entry, 0);
+//    }
+//    TreeView_Expand(hwndTV, pChildWnd->pRoot->entry.hTreeItem, TVE_EXPAND);
+	// calculate column widths
+	if (!s_init) {
+		s_init = 1;
+		init_output(hwndTV);
+	}
+    return TRUE; 
+} 
 
 
 // InitTreeViewImageLists - creates an image list, adds three bitmaps 
@@ -313,31 +308,171 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
 
 BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
 { 
+	Root* pRoot = NULL;
+    TCHAR szPath[1000];
+    int keyPathLen = 0;
+
     static int expanding;
-
-    Entry* entry = (Entry*)pnmtv->itemNew.lParam;
-
     if (expanding) return FALSE;
+    if (pnmtv->itemNew.state & TVIS_EXPANDEDONCE ) {
+        return TRUE;
+    }
     expanding = TRUE;
-    if (entry) {
-        insert_tree_entries(hwndTV, entry->down, 0);
-//		insert_tree_entries(hwndTV, entry, 0);
+    // check if this is either the root or a subkey item...
+    if ((Root*)pnmtv->itemNew.lParam == NULL) {
+        szPath[0] = _T('\0');
+        pRoot = FindPathRoot(hwndTV, pnmtv->itemNew.hItem, szPath, &keyPathLen, sizeof(szPath)/sizeof(TCHAR));
+    } else {
+        pRoot = (Root*)pnmtv->itemNew.lParam;
+        szPath[0] = _T('\0');
+    }
+    if (pRoot != NULL) {
+//        Root* pNewRoot = NULL;
+//        insert_tree_entries(hwndTV, &pRoot->entry, 0);
+
+        insert_tree_entries(hwndTV, pRoot->entry.down, 0);
+
+//		entry->hTreeItem = AddEntryToTree(hWnd, entry->up->hTreeItem, entry->data.cFileName, NULL, 1); 
+
+/*
+		HKEY hNewKey;
+        LONG errCode = RegOpenKeyEx(hKey, szPath, 0, KEY_READ, &hNewKey);
+        if (errCode == ERROR_SUCCESS) {
+            TCHAR Name[MAX_PATH];
+            DWORD cName = MAX_PATH;
+            FILETIME LastWriteTime;
+            DWORD dwIndex = 0L;
+            //ShowWindow(hwndTV, SW_HIDE);
+            while (RegEnumKeyEx(hNewKey, dwIndex, Name, &cName, NULL, NULL, NULL, &LastWriteTime) == ERROR_SUCCESS) {
+                DWORD dwCount = 0L;
+                errCode = RegOpenKeyEx(hNewKey, Name, 0, KEY_READ, &hKey);
+                if (errCode == ERROR_SUCCESS) {
+                    TCHAR SubName[MAX_PATH];
+                    DWORD cSubName = MAX_PATH;
+                    while (RegEnumKeyEx(hKey, dwCount, SubName, &cSubName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+                        ++dwCount;
+                    }
+                }
+                RegCloseKey(hKey);
+                AddEntryToTree(hwndTV, pnmtv->itemNew.hItem, Name, NULL, dwCount);
+                cName = MAX_PATH;
+                ++dwIndex;
+            }
+	        //ShowWindow(hwndTV, SW_SHOWNOACTIVATE);
+            RegCloseKey(hNewKey);
+        }
+ */
+    } else {
     }
     expanding = FALSE;
     return TRUE;
 } 
+/*
+static void read_directory_win(Entry* parent, LPCTSTR path)
+{
+	Entry* entry = (Entry*)malloc(sizeof(Entry));
+	int level = parent->level + 1;
+	Entry* last = 0;
+	HANDLE hFind;
+	HANDLE hFile;
 
-#ifndef _MSC_VER
-#define NMTVDISPINFO TV_DISPINFO
-#define NMTVDISPINFO TV_DISPINFO
-#endif
+	TCHAR buffer[MAX_PATH], *p;
+	for(p=buffer; *path; )
+		*p++ = *path++;
+	lstrcpy(p, _T("\\*"));
+    memset(entry, 0, sizeof(Entry));
+	hFind = FindFirstFile(buffer, &entry->data);
+	if (hFind != INVALID_HANDLE_VALUE) {
+		parent->down = entry;
+		do {
+			entry->down = 0;
+			entry->up = parent;
+			entry->expanded = FALSE;
+			entry->scanned = FALSE;
+			entry->level = level;
+			entry->unix_dir = FALSE;
+			entry->bhfi_valid = FALSE;
+			lstrcpy(p+1, entry->data.cFileName);
+			hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+								0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+			if (hFile != INVALID_HANDLE_VALUE) {
+				if (GetFileInformationByHandle(hFile, &entry->bhfi))
+					entry->bhfi_valid = TRUE;
 
-static void OnGetDispInfo(NMTVDISPINFO* ptvdi)
+				CloseHandle(hFile);
+			}
+			last = entry;
+			entry = (Entry*) malloc(sizeof(Entry));
+            memset(entry, 0, sizeof(Entry));
+			if (last)
+				last->next = entry;
+		} while(FindNextFile(hFind, &entry->data));
+		last->next = 0;
+		FindClose(hFind);
+	} else {
+		parent->down = 0;
+	}
+	free(entry);
+	parent->scanned = TRUE;
+}
+
+
+void read_directory(Entry* parent, LPCTSTR path, int sortOrder)
+{
+	TCHAR buffer[MAX_PATH];
+	Entry* entry;
+	LPCTSTR s;
+	PTSTR d;
+
+		read_directory_win(parent, path);
+		if (Globals.prescan_node) {
+			s = path;
+			d = buffer;
+			while(*s)
+				*d++ = *s++;
+			*d++ = _T('\\');
+			for(entry=parent->down; entry; entry=entry->next)
+				if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					lstrcpy(d, entry->data.cFileName);
+					read_directory_win(entry, buffer);
+					SortDirectory(entry, sortOrder);
+				}
+		}
+		SortDirectory(parent, sortOrder);
+}
+
+Entry* read_tree_win(Root* root, LPCTSTR path, int sortOrder)
+{
+	TCHAR buffer[MAX_PATH];
+	Entry* entry = &root->entry;
+	LPCTSTR s = path;
+	PTSTR d = buffer;
+
+	entry->unix_dir = FALSE;
+	while(entry) {
+		while(*s && *s!=_T('\\') && *s!=_T('/'))
+			*d++ = *s++;
+		while(*s==_T('\\') || *s==_T('/'))
+			s++;
+		*d++ = _T('\\');
+		*d = _T('\0');
+		read_directory(entry, buffer, sortOrder);
+		if (entry->down)
+			entry->expanded = TRUE;
+		if (!*s)
+			break;
+		entry = find_entry_win(entry, s);
+	}
+	return entry;
+}
+
+ */
+void OnGetDispInfo(NMTVDISPINFO* ptvdi)
 {
 //    static TCHAR buffer[200];
 //    LVITEM* pItem = &(ptvdi->item);
 //    Entry* entry = (Entry*)pItem->lParam;
-    Entry* entry = (Entry*)ptvdi->item.lParam;
+    Root* entry = (Root*)ptvdi->item.lParam;
     ASSERT(entry);
 
     if (ptvdi->item.mask & TVIF_CHILDREN ) {
@@ -350,26 +485,9 @@ static void OnGetDispInfo(NMTVDISPINFO* ptvdi)
         ptvdi->item.iSelectedImage = Image_Closed; 
     }
     if (ptvdi->item.mask & TVIF_TEXT) {
-        ptvdi->item.pszText = entry->data.cFileName; 
-        ptvdi->item.cchTextMax = lstrlen(entry->data.cFileName); 
+//        ptvdi->item.pszText = entry->data.cFileName; 
+//        ptvdi->item.cchTextMax = lstrlen(entry->data.cFileName); 
     }
-} 
-
-// OnEndLabelEdit - processes the LVN_ENDLABELEDIT notification message. 
-// Returns TRUE if the label is changed, or FALSE otherwise. 
-
-static BOOL OnEndLabelEdit(NMTVDISPINFO* ptvdi)
-{ 
-//    if (ptvdi->item.iItem == -1) 
-//        return FALSE; 
- 
-    // Copy the new label text to the application-defined structure. 
-//    lstrcpyn(rgPetInfo[ptvdi->item.iItem].szKind, ptvdi->item.pszText, 10);
-    
-    return TRUE;
-    // To make a more robust application you should send an EM_LIMITTEXT
-    // message to the edit control to prevent the user from entering too
-    // many characters in the field. 
 } 
 
 void UpdateStatus(HWND hWnd, Entry* pEntry)
@@ -388,7 +506,6 @@ void UpdateStatus(HWND hWnd, Entry* pEntry)
         }
         pEntry = pEntry->next;
     };
-
     _tcscpy(suffix, _T(" bytes"));
     {
         NUMBERFMT numFmt;
@@ -410,8 +527,52 @@ void UpdateStatus(HWND hWnd, Entry* pEntry)
     }
 }
 
+// CreateTreeView - creates a tree view control. 
+// Returns the handle to the new control if successful, or NULL otherwise. 
+// hwndParent - handle to the control's parent window. 
+
+HWND CreateTreeView(HWND hwndParent, ChildWnd* pChildWnd, int id) 
+{ 
+    RECT rcClient;
+    HWND hwndTV;
+ 
+    // Get the dimensions of the parent window's client area, and create the tree view control. 
+    GetClientRect(hwndParent, &rcClient); 
+    hwndTV = CreateWindowEx(0, WC_TREEVIEW, _T("Tree View"), 
+        WS_VISIBLE | WS_CHILD | WS_BORDER | WS_EX_CLIENTEDGE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
+        0, 0, rcClient.right, rcClient.bottom, 
+        hwndParent, (HMENU)id, hInst, NULL); 
+    // Initialize the image list, and add items to the control. 
+    if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV, pChildWnd)) { 
+        DestroyWindow(hwndTV); 
+        return NULL; 
+    } 
+	SendMessage(hwndTV, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
+    return hwndTV;
+} 
+
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef _SUBWND_TREEVIEW
+
 static WNDPROC g_orgTreeWndProc;
+
+// OnEndLabelEdit - processes the LVN_ENDLABELEDIT notification message. 
+// Returns TRUE if the label is changed, or FALSE otherwise. 
+
+static BOOL OnEndLabelEdit(NMTVDISPINFO* ptvdi)
+{ 
+//    if (ptvdi->item.iItem == -1) 
+//        return FALSE; 
+ 
+    // Copy the new label text to the application-defined structure. 
+//    lstrcpyn(rgPetInfo[ptvdi->item.iItem].szKind, ptvdi->item.pszText, 10);
+    
+    return TRUE;
+    // To make a more robust application you should send an EM_LIMITTEXT
+    // message to the edit control to prevent the user from entering too
+    // many characters in the field. 
+} 
 
 static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -468,50 +629,22 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 	case WM_KEYDOWN:
 		if (wParam == VK_TAB) {
 			//TODO: SetFocus(Globals.hDriveBar)
-			SetFocus(child->nFocusPanel ? child->left.hWnd: child->right.hWnd);
+			SetFocus(child->nFocusPanel ? child->hTreeWnd: child->hListWnd);
 		}
         break;
 	}
 	return CallWindowProc(g_orgTreeWndProc, hWnd, message, wParam, lParam);
 }
 
-// CreateTreeView - creates a tree view control. 
-// Returns the handle to the new control if successful, or NULL otherwise. 
-// hwndParent - handle to the control's parent window. 
-
-static HWND CreateTreeView(HWND hwndParent, int id) 
-{ 
-    RECT rcClient;
-    HWND hwndTV;
- 
-    // Get the dimensions of the parent window's client area, and create the tree view control. 
-    GetClientRect(hwndParent, &rcClient); 
-    hwndTV = CreateWindowEx(0, WC_TREEVIEW, _T("Tree View"), 
-        WS_VISIBLE | WS_CHILD | WS_BORDER | WS_EX_CLIENTEDGE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
-        0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)id, hInst, NULL); 
-    // Initialize the image list, and add items to the control. 
-    if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV)) { 
-        DestroyWindow(hwndTV); 
-        return NULL; 
-    } 
-    return hwndTV;
-} 
-
-//void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPTSTR lpszFileName)
 void CreateTreeWnd(HWND parent, Pane* pane, int id)
 {
-	static int s_init = 0;
 	Entry* entry = pane->root;
-
-	pane->treePane = 1;
-
-    pane->hWnd = CreateTreeView(parent, id);
+    pane->hWnd = CreateTreeView(parent, NULL, id);
     SetWindowLong(pane->hWnd, GWL_USERDATA, (LPARAM)pane);
 	g_orgTreeWndProc = SubclassWindow(pane->hWnd, TreeWndProc);
 	SendMessage(pane->hWnd, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
 
-	 // insert entries into treectrl
+    // insert entries into treectrl
     if (entry) {
 		insert_tree_entries(pane->hWnd, entry, 0);
     }
@@ -521,8 +654,6 @@ void CreateTreeWnd(HWND parent, Pane* pane, int id)
 		s_init = 1;
 		init_output(pane->hWnd);
 	}
-//	calc_widths(pane, TRUE);
-//#ifndef _NO_EXTENSIONS
-//	pane->hwndHeader = create_header(parent, pane, id_header);
-//#endif
 }
+
+#endif
