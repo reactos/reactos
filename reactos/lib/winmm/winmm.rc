@@ -8,7 +8,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 /*
  *  These strings are exactly as the original winmm's. I think we might be
  *  able to improve on them, as most of them are meaningless to the end
- *  user!
+ *  user! Also, translations need to be done
 */
 
 STRINGTABLE
