@@ -459,11 +459,6 @@ InterlockedPopEntrySList(IN PSLIST_HEADER ListHead)
     newslh.Sequence = oldslh.Sequence + 1;
     newslh.Depth = oldslh.Depth - 1;
     newslh.Next.Next = MmSafeReadPtr(&le->Next);
-    if(newslh.Next.Next == NULL)
-    {
-      /* try again */
-      continue;
-    }
   } while(ExfInterlockedCompareExchange64(&ListHead->Alignment,
                                           &newslh.Alignment,
                                           &oldslh.Alignment) != oldslh.Alignment);
