@@ -7,6 +7,7 @@
 
 
 #include <windows.h>
+#include "explorer.h"
 
 const char DesktopClassName[] = "DesktopWindow";
 
@@ -61,9 +62,15 @@ LRESULT CALLBACK DeskWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 
-int main()
+int main(int argc, char *argv[])
 {
+    int Width, Height;
     WNDCLASSEX wc;
+    HWND Desktop;
+
+    STARTUPINFO startupinfo;
+    int cmdshow = SW_SHOWNORMAL;
+
 
     wc.cbSize       = sizeof(WNDCLASSEX);
     wc.style        = 0;
@@ -81,10 +88,6 @@ int main()
     if (! RegisterClassEx(&wc))
         return 1; // error
 
-
-    HWND Desktop;
-    int Width, Height;
-
     Width = GetSystemMetrics(SM_CXSCREEN);
     Height = GetSystemMetrics(SM_CYSCREEN);
 
@@ -94,15 +97,15 @@ int main()
                             NULL, NULL, GetModuleHandle(NULL), NULL);
 
     if (! Desktop)
-        return 1;   // error
+    	return 1;   // error
 
-    MSG Msg;
+	// call winefile/menu startup routine
+	startupinfo.wShowWindow = SW_SHOWNORMAL;
+	GetStartupInfo(&startupinfo);
 
-    while (GetMessage(&Msg, 0, 0, 0) != 0)
-    {
-        TranslateMessage(&Msg);
-        DispatchMessage(&Msg);
-    }
+	if (startupinfo.dwFlags & STARTF_USESHOWWINDOW)
+		cmdshow = startupinfo.wShowWindow;
 
-    return 0;   // get the return code!
+	return Ex_BarMain(GetModuleHandle(NULL), Desktop, NULL, cmdshow);
+	//return startup(argc, argv); // invoke the startup groups
 }

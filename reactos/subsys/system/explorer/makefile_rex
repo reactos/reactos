@@ -9,7 +9,9 @@ TARGET_SDKLIBS = gdi32.a
 TARGET_NAME = explorer
 
 TARGET_OBJECTS = \
-	desktop.o
+	desktop.o \
+	ex_bar.o \
+	startup.o
 
 include $(PATH_TO_TOP)/rules.mak
 
