@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.51 2003/05/31 08:51:58 gvg Exp $
+/* $Id: window.c,v 1.52 2003/06/03 15:43:57 jvangael Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -94,6 +94,29 @@ NtUserGetAncestor(HWND hWnd, UINT Flags)
 
       return(hParent);
     }
+  else if (Flags & GA_ROOT)
+  {
+	  PWINDOW_OBJECT Window;
+	  PWINDOW_OBJECT pChainEnumerator;
+	  HWND hRoot;
+
+	  Window = W32kGetWindowObject(hWnd);
+	  if(Window == NULL)
+	  {
+		  return(NULL);
+	  }
+
+	  pChainEnumerator = Window;
+	  while(pChainEnumerator->Parent != NULL)
+	  {
+		  pChainEnumerator = pChainEnumerator->Parent;
+	  }
+
+	  hRoot = pChainEnumerator->Self;
+	  W32kReleaseWindowObject(Window);
+
+	  return(hRoot);
+  }	  
   else
     {
       UNIMPLEMENTED;
