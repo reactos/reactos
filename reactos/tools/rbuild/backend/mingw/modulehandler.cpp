@@ -1234,7 +1234,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	fprintf (
 		fMakefile,
-		"%s += $(%s)",
+		"%s += $(%s)\n",
 		linkDepsMacro.c_str (),
 		libsMacro.c_str () );
 
@@ -1281,17 +1281,18 @@ MingwModuleHandler::GenerateRules ()
 		module.name.c_str (),
 		GetTargetMacro ( module ).c_str () );
 
+	string ar_target;
+	if ( module.type != ObjectLibrary )
+		ar_target = GenerateArchiveTarget ( ar, objectsMacro );
+
+	GenerateObjectFileTargets ( cc,
+								cppc,
+								cflagsMacro,
+								nasmflagsMacro,
+								windresflagsMacro );
+
 	if ( module.type != ObjectLibrary )
 	{
-		string ar_target =
-			GenerateArchiveTarget ( ar, objectsMacro );
-
-		GenerateObjectFileTargets ( cc,
-									cppc,
-									cflagsMacro,
-									nasmflagsMacro,
-									windresflagsMacro );
-
 		if ( targetMacro != ar_target )
 		{
 			CLEAN_FILE ( ar_target );
@@ -1722,8 +1723,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies =
-			objectsMacro + " " + linkDepsMacro;
+		string dependencies = objectsMacro + " " + linkDepsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
 		                                     module.entrypoint.c_str (),

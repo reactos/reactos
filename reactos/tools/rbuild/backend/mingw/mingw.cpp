@@ -143,6 +143,7 @@ MingwBackend::Process ()
 
 	for ( i = 0; i < iend; i++ )
 		v[i]->GenerateObjectMacro();
+	fprintf ( fMakefile, "\n" );
 	for ( i = 0; i < iend; i++ )
 		v[i]->GenerateTargetMacro();
 	fprintf ( fMakefile, "\n" );

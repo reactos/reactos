@@ -561,11 +561,6 @@ Module::GetDependencyPath () const
 	if ( HasImportLibrary () )
 	{
 		return ReplaceExtension ( GetPath(), ".a" );
-		/*return ssprintf ( "dk%cnkm%clib%clib%s.a",
-		                  CSEP,
-		                  CSEP,
-		                  CSEP,
-		                  name.c_str () );*/
 	}
 	else
 		return GetPath();
