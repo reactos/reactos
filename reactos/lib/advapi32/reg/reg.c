@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.24 2003/03/24 13:44:15 ekohl Exp $
+/* $Id: reg.c,v 1.25 2003/07/10 15:05:55 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -241,6 +241,8 @@ OpenCurrentConfigKey(PHANDLE KeyHandle)
 
 /************************************************************************
  *  RegCloseKey
+ *
+ * @implemented
  */
 LONG STDCALL
 RegCloseKey(HKEY hKey)
@@ -264,6 +266,8 @@ RegCloseKey(HKEY hKey)
 
 /************************************************************************
  *  RegConnectRegistryA
+ *
+ * @unimplemented
  */
 LONG STDCALL
 RegConnectRegistryA(LPCSTR lpMachineName,
@@ -277,6 +281,8 @@ RegConnectRegistryA(LPCSTR lpMachineName,
 
 /************************************************************************
  *  RegConnectRegistryW
+ *
+ * @unimplemented
  */
 LONG STDCALL
 RegConnectRegistryW(LPCWSTR lpMachineName,
@@ -290,6 +296,8 @@ RegConnectRegistryW(LPCWSTR lpMachineName,
 
 /************************************************************************
  *  RegCreateKeyExA
+ *
+ * @implemented
  */
 LONG STDCALL
 RegCreateKeyExA(HKEY hKey,
@@ -352,6 +360,8 @@ RegCreateKeyExA(HKEY hKey,
 
 /************************************************************************
  *  RegCreateKeyExW
+ *
+ * @implemented
  */
 LONG STDCALL
 RegCreateKeyExW(HKEY hKey,
@@ -406,6 +416,8 @@ RegCreateKeyExW(HKEY hKey,
 
 /************************************************************************
  *  RegCreateKeyA
+ *
+ * @implemented
  */
 LONG STDCALL
 RegCreateKeyA(HKEY hKey,
@@ -426,6 +438,8 @@ RegCreateKeyA(HKEY hKey,
 
 /************************************************************************
  *  RegCreateKeyW
+ *
+ * @implemented
  */
 LONG STDCALL
 RegCreateKeyW(HKEY hKey,
@@ -446,6 +460,8 @@ RegCreateKeyW(HKEY hKey,
 
 /************************************************************************
  *  RegDeleteKeyA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -502,6 +518,8 @@ RegDeleteKeyA(
 
 /************************************************************************
  *  RegDeleteKeyW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -548,6 +566,8 @@ RegDeleteKeyW(
 
 /************************************************************************
  *  RegDeleteValueA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -582,6 +602,8 @@ RegDeleteValueA(
 
 /************************************************************************
  *  RegDeleteValueW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -614,6 +636,8 @@ RegDeleteValueW(
 
 /************************************************************************
  *  RegEnumKeyExW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -708,6 +732,8 @@ RegEnumKeyExW(
 
 /************************************************************************
  *  RegEnumKeyW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -732,6 +758,8 @@ RegEnumKeyW(
 
 /************************************************************************
  *  RegEnumKeyExA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -812,6 +840,8 @@ RegEnumKeyExA(
 
 /************************************************************************
  *  RegEnumKeyA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -836,6 +866,8 @@ RegEnumKeyA(
 
 /************************************************************************
  *  RegEnumValueW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -928,6 +960,8 @@ RegEnumValueW(
 
 /************************************************************************
  *  RegEnumValueA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -1009,6 +1043,8 @@ RegEnumValueA(
 
 /************************************************************************
  *  RegFlushKey
+ *
+ * @implemented
  */
 LONG STDCALL
 RegFlushKey(HKEY hKey)
@@ -1042,6 +1078,8 @@ RegFlushKey(HKEY hKey)
 
 /************************************************************************
  *  RegGetKeySecurity
+ *
+ * @unimplemented
  */
 LONG STDCALL
 RegGetKeySecurity (HKEY hKey,
@@ -1057,6 +1095,8 @@ RegGetKeySecurity (HKEY hKey,
 
 /************************************************************************
  *  RegLoadKeyA
+ *
+ * @implemented
  */
 LONG STDCALL
 RegLoadKeyA (HKEY hKey,
@@ -1085,6 +1125,8 @@ RegLoadKeyA (HKEY hKey,
 
 /************************************************************************
  *  RegLoadKeyW
+ *
+ * @implemented
  */
 LONG STDCALL
 RegLoadKeyW (HKEY hKey,
@@ -1152,6 +1194,8 @@ RegLoadKeyW (HKEY hKey,
 
 /************************************************************************
  *  RegNotifyChangeKeyValue
+ *
+ * @unimplemented
  */
 LONG STDCALL
 RegNotifyChangeKeyValue(HKEY hKey,
@@ -1205,6 +1249,8 @@ RegNotifyChangeKeyValue(HKEY hKey,
 
 /************************************************************************
  *  RegOpenKeyA
+ *
+ * @implemented
  */
 LONG STDCALL
 RegOpenKeyA(HKEY hKey,
@@ -1245,6 +1291,8 @@ RegOpenKeyA(HKEY hKey,
  *
  *  19981101 Ariadne
  *  19990525 EA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -1283,6 +1331,8 @@ RegOpenKeyW(
 
 /************************************************************************
  *  RegOpenKeyExA
+ *
+ * @implemented
  */
 LONG STDCALL
 RegOpenKeyExA(HKEY hKey,
@@ -1322,6 +1372,8 @@ RegOpenKeyExA(HKEY hKey,
 
 /************************************************************************
  *  RegOpenKeyExW
+ *
+ * @implemented
  */
 LONG STDCALL
 RegOpenKeyExW(HKEY hKey,
@@ -1364,6 +1416,8 @@ RegOpenKeyExW(HKEY hKey,
 
 /************************************************************************
  *  RegQueryInfoKeyW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -1468,6 +1522,8 @@ RegQueryInfoKeyW(
 
 /************************************************************************
  *  RegQueryInfoKeyA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -1522,6 +1578,8 @@ RegQueryInfoKeyA(
 
 /************************************************************************
  *  RegQueryMultipleValuesA
+ *
+ * @unimplemented
  */
 LONG
 STDCALL
@@ -1540,6 +1598,8 @@ RegQueryMultipleValuesA(
 
 /************************************************************************
  *  RegQueryMultipleValuesW
+ *
+ * @unimplemented
  */
 LONG
 STDCALL
@@ -1558,6 +1618,8 @@ RegQueryMultipleValuesW(
 
 /************************************************************************
  *  RegQueryValueExW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -1635,6 +1697,8 @@ RegQueryValueExW(
 
 /************************************************************************
  *  RegQueryValueExA
+ *
+ * @unimplemented
  */
 LONG
 STDCALL
@@ -1715,6 +1779,8 @@ RegQueryValueExA(
 
 /************************************************************************
  *  RegQueryValueW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -1775,6 +1841,8 @@ RegQueryValueW(
 
 /************************************************************************
  *  RegQueryValueA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -1836,6 +1904,8 @@ RegQueryValueA(
 
 /************************************************************************
  *  RegReplaceKeyA
+ *
+ * @unimplemented
  */
 LONG
 STDCALL
@@ -1853,6 +1923,8 @@ RegReplaceKeyA(
 
 /************************************************************************
  *  RegReplaceKeyW
+ *
+ * @unimplemented
  */
 LONG
 STDCALL
@@ -1870,6 +1942,8 @@ RegReplaceKeyW(
 
 /************************************************************************
  *  RegRestoreKeyA
+ *
+ * @unimplemented
  */
 LONG
 STDCALL
@@ -1886,6 +1960,8 @@ RegRestoreKeyA(
 
 /************************************************************************
  *  RegRestoreKeyW
+ *
+ * @unimplemented
  */
 LONG
 STDCALL
@@ -1902,6 +1978,8 @@ RegRestoreKeyW(
 
 /************************************************************************
  *  RegSaveKeyA
+ *
+ * @unimplemented
  */
 LONG STDCALL
 RegSaveKeyA(HKEY hKey,
@@ -1920,6 +1998,8 @@ RegSaveKeyA(HKEY hKey,
 
 /************************************************************************
  *  RegSaveKeyW
+ *
+ * @implemented
  */
 LONG STDCALL
 RegSaveKeyW(HKEY hKey,
@@ -1998,6 +2078,8 @@ RegSaveKeyW(HKEY hKey,
 
 /************************************************************************
  *  RegSetKeySecurity
+ *
+ * @unimplemented
  */
 LONG STDCALL
 RegSetKeySecurity(HKEY hKey,
@@ -2012,6 +2094,8 @@ RegSetKeySecurity(HKEY hKey,
 
 /************************************************************************
  *  RegSetValueExW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -2059,6 +2143,8 @@ RegSetValueExW(
 
 /************************************************************************
  *  RegSetValueExA
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -2120,6 +2206,8 @@ RegSetValueExA(
 
 /************************************************************************
  *  RegSetValueW
+ *
+ * @implemented
  */
 LONG
 STDCALL
@@ -2178,6 +2266,8 @@ RegSetValueW(
 
 /************************************************************************
  *  RegSetValueA
+ *
+ * @implemented
  */
 LONG STDCALL
 RegSetValueA(HKEY  hKey,
@@ -2225,6 +2315,8 @@ RegSetValueA(HKEY  hKey,
 
 /************************************************************************
  *  RegUnLoadKeyA
+ *
+ * @implemented
  */
 LONG STDCALL
 RegUnLoadKeyA (HKEY hKey,
@@ -2247,6 +2339,8 @@ RegUnLoadKeyA (HKEY hKey,
 
 /************************************************************************
  *  RegUnLoadKeyW
+ *
+ * @implemented
  */
 LONG STDCALL
 RegUnLoadKeyW (HKEY  hKey,

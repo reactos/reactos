@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.9 2003/02/02 19:27:17 hyperion Exp $
+/* $Id: sctrl.c,v 1.10 2003/07/10 15:05:55 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -151,6 +151,8 @@ ScServiceMainStub(LPVOID Context)
 
 /**********************************************************************
  *	RegisterServiceCtrlHandlerA
+ *
+ * @implemented
  */
 SERVICE_STATUS_HANDLE STDCALL
 RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
@@ -178,6 +180,8 @@ RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
 
 /**********************************************************************
  *	RegisterServiceCtrlHandlerW
+ *
+ * @implemented
  */
 SERVICE_STATUS_HANDLE STDCALL
 RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
@@ -199,6 +203,8 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
 
 /**********************************************************************
  *	SetServiceBits
+ *
+ * @unimplemented
  */
 BOOL STDCALL
 SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
@@ -213,6 +219,8 @@ SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
 
 /**********************************************************************
  *	SetServiceObjectSecurity
+ *
+ * @unimplemented
  */
 WINBOOL STDCALL
 SetServiceObjectSecurity(SC_HANDLE hService,
@@ -226,6 +234,8 @@ SetServiceObjectSecurity(SC_HANDLE hService,
 
 /**********************************************************************
  *	SetServiceStatus
+ *
+ * @implemented
  */
 BOOL STDCALL
 SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
@@ -250,6 +260,8 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 
 /**********************************************************************
  *	StartServiceCtrlDispatcherA
+ *
+ * @unimplemented
  */
 BOOL STDCALL
 StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
@@ -312,6 +324,8 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
 
 /**********************************************************************
  *	StartServiceCtrlDispatcherW
+ *
+ * @unimplemented
  */
 BOOL STDCALL
 StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)

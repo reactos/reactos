@@ -6,6 +6,9 @@
 #include <windows.h>
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 AreAllAccessesGranted(DWORD GrantedAccess,
 		      DWORD DesiredAccess)
@@ -15,6 +18,9 @@ AreAllAccessesGranted(DWORD GrantedAccess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 AreAnyAccessesGranted(DWORD GrantedAccess,
 		      DWORD DesiredAccess)
@@ -24,6 +30,9 @@ AreAnyAccessesGranted(DWORD GrantedAccess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetKernelObjectSecurity(HANDLE Handle,
 			SECURITY_INFORMATION RequestedInformation,
@@ -47,6 +56,9 @@ GetKernelObjectSecurity(HANDLE Handle,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SetKernelObjectSecurity(HANDLE Handle,
 			SECURITY_INFORMATION SecurityInformation,
@@ -66,6 +78,9 @@ SetKernelObjectSecurity(HANDLE Handle,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 MapGenericMask(PDWORD AccessMask,
 	       PGENERIC_MAPPING GenericMapping)
@@ -75,6 +90,9 @@ MapGenericMask(PDWORD AccessMask,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ImpersonateLoggedOnUser(HANDLE hToken)
@@ -82,6 +100,9 @@ ImpersonateLoggedOnUser(HANDLE hToken)
     return FALSE;
 }
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
@@ -97,6 +118,9 @@ ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 RevertToSelf(VOID)
 {

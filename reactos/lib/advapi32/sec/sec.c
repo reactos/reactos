@@ -15,6 +15,9 @@
 #include <windows.h>
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetSecurityDescriptorControl (
@@ -38,6 +41,9 @@ GetSecurityDescriptorControl (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetSecurityDescriptorDacl (
@@ -68,6 +74,9 @@ GetSecurityDescriptorDacl (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetSecurityDescriptorGroup (
@@ -94,6 +103,9 @@ GetSecurityDescriptorGroup (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetSecurityDescriptorLength (
@@ -104,6 +116,9 @@ GetSecurityDescriptorLength (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetSecurityDescriptorOwner (
@@ -130,6 +145,9 @@ GetSecurityDescriptorOwner (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetSecurityDescriptorSacl (
@@ -160,6 +178,9 @@ GetSecurityDescriptorSacl (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 InitializeSecurityDescriptor (
@@ -180,6 +201,10 @@ InitializeSecurityDescriptor (
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 IsValidSecurityDescriptor (
@@ -196,6 +221,9 @@ IsValidSecurityDescriptor (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 MakeAbsoluteSD (
@@ -235,6 +263,9 @@ MakeAbsoluteSD (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 MakeSelfRelativeSD (
@@ -258,6 +289,9 @@ MakeSelfRelativeSD (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 SetSecurityDescriptorDacl (
@@ -283,6 +317,9 @@ SetSecurityDescriptorDacl (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 SetSecurityDescriptorGroup (
@@ -306,6 +343,9 @@ SetSecurityDescriptorGroup (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 SetSecurityDescriptorOwner (
@@ -329,6 +369,9 @@ SetSecurityDescriptorOwner (
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 SetSecurityDescriptorSacl (
@@ -353,18 +396,30 @@ SetSecurityDescriptorSacl (
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 GetUserNameA(LPSTR lpBuffer, LPDWORD nSize)
 {
   return(FALSE);
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 GetUserNameW(LPWSTR lpBuffer, LPDWORD nSize)
 {
   return(FALSE);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetFileSecurityA (
@@ -378,6 +433,10 @@ GetFileSecurityA (
   return(FALSE);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetFileSecurityW (
@@ -391,6 +450,10 @@ GetFileSecurityW (
   return(FALSE);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetFileSecurityA (

@@ -12,6 +12,9 @@
 #include <ntos.h>
 #include <windows.h>
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 AdjustTokenGroups (
@@ -33,6 +36,10 @@ AdjustTokenGroups (
 	return TRUE;	
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 AdjustTokenPrivileges (
@@ -54,6 +61,9 @@ AdjustTokenPrivileges (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetTokenInformation (
@@ -74,6 +84,10 @@ GetTokenInformation (
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetTokenInformation (
@@ -93,6 +107,10 @@ SetTokenInformation (
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 AccessCheck (
@@ -123,7 +141,9 @@ AccessCheck (
 }
 
 
-
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 OpenProcessToken (
@@ -142,7 +162,9 @@ OpenProcessToken (
 }
 
 
-
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 OpenThreadToken (
@@ -162,6 +184,9 @@ OpenThreadToken (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetThreadToken (
@@ -182,6 +207,9 @@ SetThreadToken (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DuplicateTokenEx (
@@ -221,6 +249,9 @@ DuplicateTokenEx (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DuplicateToken (
@@ -238,9 +269,5 @@ DuplicateToken (
                   DuplicateTokenHandle
                    );
 }
-
-
-
-
 
 /* EOF */

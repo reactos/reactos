@@ -1,5 +1,21 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/advapi32/misc/shutdown.c: Add @implemented and @unimplemented
+	to APIs.
+	* lib/advapi32/misc/stubs.c: Ditto.
+	* lib/advapi32/misc/sysfunc.c: Ditto.
+	* lib/advapi32/reg/reg.c: Ditto.
+	* lib/advapi32/sec/ac.c: Ditto.
+	* lib/advapi32/sec/misc.c: Ditto.
+	* lib/advapi32/sec/sec.c: Ditto.
+	* lib/advapi32/sec/sid.c: Ditto.
+	* lib/advapi32/service/scm.c: Ditto.
+	* lib/advapi32/service/sctrl.c: Ditto.
+	* lib/advapi32/token/privilege.c: Ditto.
+	* lib/advapi32/token/token.c: Ditto.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* tools/rgenstat/rgenstat.c (parse_file): Be silent.
 
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>

@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.9 2003/02/02 19:27:16 hyperion Exp $
+/* $Id: shutdown.c,v 1.10 2003/07/10 15:05:55 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -19,6 +19,8 @@
 
 /**********************************************************************
  *      AbortSystemShutdownW
+ *
+ * @unimplemented
  */
 WINBOOL
 STDCALL
@@ -31,6 +33,8 @@ AbortSystemShutdownW(LPCWSTR lpMachineName)
 
 /**********************************************************************
  *      AbortSystemShutdownA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -57,6 +61,8 @@ AbortSystemShutdownA(LPCSTR lpMachineName)
 
 /**********************************************************************
  *      InitiateSystemShutdownW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -85,7 +91,9 @@ InitiateSystemShutdownW(
 
 /**********************************************************************
  *      InitiateSystemShutdownA
-*/
+ *
+ * @unimplemented
+ */
 BOOL
 STDCALL
 InitiateSystemShutdownA(

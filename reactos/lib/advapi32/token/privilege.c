@@ -1,4 +1,4 @@
-/* $Id: privilege.c,v 1.3 2002/09/08 10:22:37 chorns Exp $ 
+/* $Id: privilege.c,v 1.4 2003/07/10 15:05:55 chorns Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,8 @@
 /**********************************************************************
  *	LookupPrivilegeValueA				EXPORTED
  *	LookupPrivilegeValueW				EXPORTED
+ *
+ * @implemented
  */
 BOOL STDCALL LookupPrivilegeValueA (
 	LPCSTR	lpSystemName, 
@@ -119,6 +121,8 @@ BOOL STDCALL LookupPrivilegeValueW (
 /**********************************************************************
  *	LookupPrivilegeDisplayNameA			EXPORTED
  *	LookupPrivilegeDisplayNameW			EXPORTED
+ *
+ * @unimplemented
  */
 BOOL STDCALL LookupPrivilegeDisplayNameA (
 	LPCSTR	lpSystemName, 
@@ -133,6 +137,9 @@ BOOL STDCALL LookupPrivilegeDisplayNameA (
 }
 	
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL LookupPrivilegeDisplayNameW (
 	LPCWSTR	lpSystemName, 
 	LPCWSTR	lpName, 
@@ -149,6 +156,8 @@ BOOL STDCALL LookupPrivilegeDisplayNameW (
 /**********************************************************************
  *	LookupPrivilegeNameA				EXPORTED
  *	LookupPrivilegeNameW				EXPORTED
+ *
+ * @unimplemented
  */
 BOOL STDCALL LookupPrivilegeNameA (
 	LPCSTR	lpSystemName, 
@@ -160,8 +169,12 @@ BOOL STDCALL LookupPrivilegeNameA (
 	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
 	return (FALSE);
 }
- 
 
+
+/*
+ *
+ * @unimplemented
+ */
 BOOL STDCALL LookupPrivilegeNameW (
 	LPCWSTR	lpSystemName, 
 	PLUID	lpLuid, 

@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.16 2003/02/02 19:27:16 hyperion Exp $
+/* $Id: scm.c,v 1.17 2003/07/10 15:05:55 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,6 +25,8 @@
 
 /**********************************************************************
  *  ChangeServiceConfigA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -48,6 +50,8 @@ ChangeServiceConfigA(
 
 /**********************************************************************
  *  ChangeServiceConfigW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -71,6 +75,8 @@ ChangeServiceConfigW(
 
 /**********************************************************************
  *  CloseServiceHandle
+ *
+ * @implemented
  */
 BOOL 
 STDCALL
@@ -90,6 +96,8 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 
 /**********************************************************************
  *  ControlService
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -104,6 +112,8 @@ ControlService(SC_HANDLE        hService,
 
 /**********************************************************************
  *  CreateServiceA
+ *
+ * @unimplemented
  */
 SC_HANDLE
 STDCALL
@@ -129,6 +139,8 @@ CreateServiceA(
 
 /**********************************************************************
  *  CreateServiceW
+ *
+ * @unimplemented
  */
 SC_HANDLE
 STDCALL
@@ -154,6 +166,8 @@ CreateServiceW(
 
 /**********************************************************************
  *  DeleteService
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -166,6 +180,8 @@ DeleteService(SC_HANDLE hService)
 
 /**********************************************************************
  *  EnumDependentServicesA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -184,6 +200,8 @@ EnumDependentServicesA(
 
 /**********************************************************************
  *  EnumDependentServicesW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -203,7 +221,7 @@ EnumDependentServicesW(
 /**********************************************************************
  *  EnumServiceGroupW
  *
- * (unknown)
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -225,6 +243,8 @@ EnumServiceGroupW (
 
 /**********************************************************************
  *  EnumServicesStatusA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -245,6 +265,8 @@ EnumServicesStatusA (
 
 /**********************************************************************
  *  EnumServicesStatusExA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -266,6 +288,8 @@ EnumServicesStatusExA(SC_HANDLE  hSCManager,
 
 /**********************************************************************
  *  EnumServicesStatusExW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -287,6 +311,8 @@ EnumServicesStatusExW(SC_HANDLE  hSCManager,
 
 /**********************************************************************
  *  EnumServicesStatusW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -307,6 +333,8 @@ EnumServicesStatusW(
 
 /**********************************************************************
  *  GetServiceDisplayNameA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -323,6 +351,8 @@ GetServiceDisplayNameA(
 
 /**********************************************************************
  *  GetServiceDisplayNameW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -339,6 +369,8 @@ GetServiceDisplayNameW(
 
 /**********************************************************************
  *  GetServiceKeyNameA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -355,6 +387,8 @@ GetServiceKeyNameA(
 
 /**********************************************************************
  *  GetServiceKeyNameW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -370,6 +404,8 @@ GetServiceKeyNameW(
 
 /**********************************************************************
  *  LockServiceDatabase
+ *
+ * @unimplemented
  */
 SC_LOCK
 STDCALL
@@ -382,6 +418,8 @@ LockServiceDatabase(SC_HANDLE   hSCManager)
 
 /**********************************************************************
  *  OpenSCManagerA
+ *
+ * @unplemented
  */
 SC_HANDLE STDCALL
 OpenSCManagerA(LPCSTR lpMachineName,
@@ -413,6 +451,8 @@ OpenSCManagerA(LPCSTR lpMachineName,
 
 /**********************************************************************
  *  OpenSCManagerW
+ *
+ * @unimplemented
  */
 SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR lpMachineName,
                                  LPCWSTR lpDatabaseName,
@@ -575,6 +615,8 @@ SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR lpMachineName,
 
 /**********************************************************************
  *  OpenServiceA
+ *
+ * @unimplemented
  */
 SC_HANDLE STDCALL
 OpenServiceA(SC_HANDLE hSCManager,
@@ -588,6 +630,8 @@ OpenServiceA(SC_HANDLE hSCManager,
 
 /**********************************************************************
  *  OpenServiceW
+ *
+ * @unimplemented
  */
 SC_HANDLE
 STDCALL
@@ -604,6 +648,8 @@ OpenServiceW(
 
 /**********************************************************************
  *  PrivilegedServiceAuditAlarmA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -621,6 +667,8 @@ PrivilegedServiceAuditAlarmA(
 
 /**********************************************************************
  *  PrivilegedServiceAuditAlarmW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -638,6 +686,8 @@ PrivilegedServiceAuditAlarmW(
 
 /**********************************************************************
  *  QueryServiceConfigA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -654,6 +704,8 @@ QueryServiceConfigA(
 
 /**********************************************************************
  *  QueryServiceConfigW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -670,6 +722,8 @@ QueryServiceConfigW(
 
 /**********************************************************************
  *  QueryServiceLockStatusA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -686,6 +740,8 @@ QueryServiceLockStatusA(
 
 /**********************************************************************
  *  QueryServiceLockStatusW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -702,6 +758,8 @@ QueryServiceLockStatusW(
 
 /**********************************************************************
  *  QueryServiceObjectSecurity
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -719,6 +777,8 @@ QueryServiceObjectSecurity(
 
 /**********************************************************************
  *  QueryServiceStatus
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -733,6 +793,8 @@ QueryServiceStatus(
 
 /**********************************************************************
  *  QueryServiceStatusEx
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -749,6 +811,8 @@ QueryServiceStatusEx(SC_HANDLE  hService,
 
 /**********************************************************************
  *  StartServiceA
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -766,6 +830,8 @@ StartServiceA(
 
 /**********************************************************************
  *  StartServiceW
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -781,6 +847,8 @@ StartServiceW(
 
 /**********************************************************************
  *  UnlockServiceDatabase
+ *
+ * @unimplemented
  */
 BOOL
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.6 2003/02/02 17:21:06 ekohl Exp $
+/* $Id: ac.c,v 1.7 2003/07/10 15:05:55 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,6 +13,9 @@
 
 /* --- ACL --- */
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetAclInformation (
@@ -120,6 +123,9 @@ GetExplicitEntriesFromAclW (
 #endif
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 InitializeAcl (
@@ -143,6 +149,9 @@ InitializeAcl (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 IsValidAcl (
@@ -153,6 +162,9 @@ IsValidAcl (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetAclInformation (
@@ -211,6 +223,9 @@ SetEntriesInAclW (
 
 /* --- ACE --- */
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 AddAccessAllowedAce (
@@ -236,6 +251,9 @@ AddAccessAllowedAce (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 AddAccessDeniedAce (
@@ -261,6 +279,9 @@ AddAccessDeniedAce (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 AddAce (
@@ -288,6 +309,9 @@ AddAce (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 AddAuditAccessAce (
@@ -317,6 +341,9 @@ AddAuditAccessAce (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DeleteAce (
@@ -338,6 +365,9 @@ DeleteAce (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 FindFirstFreeAce (
@@ -350,6 +380,9 @@ FindFirstFreeAce (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetAce (

@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.7 2002/11/14 18:21:04 chorns Exp $
+/* $Id: sid.c,v 1.8 2003/07/10 15:05:55 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,6 +11,9 @@
 #include <windows.h>
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 AllocateLocallyUniqueId(PLUID Luid)
 {
@@ -25,6 +28,10 @@ AllocateLocallyUniqueId(PLUID Luid)
    return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 AllocateAndInitializeSid (
 	PSID_IDENTIFIER_AUTHORITY	pIdentifierAuthority,
@@ -62,6 +69,10 @@ AllocateAndInitializeSid (
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 CopySid (
@@ -84,6 +95,10 @@ CopySid (
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 EqualPrefixSid (
@@ -94,6 +109,9 @@ EqualPrefixSid (
 	return RtlEqualPrefixSid (pSid1, pSid2);
 }
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 EqualSid (
@@ -104,6 +122,10 @@ EqualSid (
 	return RtlEqualSid (pSid1, pSid2);
 }
 
+
+/*
+ * @implemented
+ */
 PVOID
 STDCALL
 FreeSid (
@@ -113,6 +135,10 @@ FreeSid (
 	return RtlFreeSid (pSid);
 }
 
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetLengthSid (
@@ -122,6 +148,10 @@ GetLengthSid (
 	return (DWORD)RtlLengthSid (pSid);
 }
 
+
+/*
+ * @implemented
+ */
 PSID_IDENTIFIER_AUTHORITY
 STDCALL
 GetSidIdentifierAuthority (
@@ -131,6 +161,10 @@ GetSidIdentifierAuthority (
 	return RtlIdentifierAuthoritySid (pSid);
 }
 
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetSidLengthRequired (
@@ -140,6 +174,10 @@ GetSidLengthRequired (
 	return (DWORD)RtlLengthRequiredSid (nSubAuthorityCount);
 }
 
+
+/*
+ * @implemented
+ */
 PDWORD
 STDCALL
 GetSidSubAuthority (
@@ -150,6 +188,10 @@ GetSidSubAuthority (
 	return (PDWORD)RtlSubAuthoritySid (pSid, nSubAuthority);
 }
 
+
+/*
+ * @implemented
+ */
 PUCHAR
 STDCALL
 GetSidSubAuthorityCount (
@@ -159,6 +201,10 @@ GetSidSubAuthorityCount (
 	return RtlSubAuthorityCountSid (pSid);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 InitializeSid (
@@ -182,6 +228,9 @@ InitializeSid (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 IsValidSid(PSID pSid)
 {
@@ -189,6 +238,9 @@ IsValidSid(PSID pSid)
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 LookupAccountNameA(LPCSTR lpSystemName,
 		   LPCSTR lpAccountName,
@@ -202,6 +254,9 @@ LookupAccountNameA(LPCSTR lpSystemName,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 LookupAccountNameW(LPCWSTR lpSystemName,
 		   LPCWSTR lpAccountName,
@@ -215,6 +270,9 @@ LookupAccountNameW(LPCWSTR lpSystemName,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 LookupAccountSidA(LPCSTR lpSystemName,
 		  PSID Sid,
@@ -228,6 +286,9 @@ LookupAccountSidA(LPCSTR lpSystemName,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 LookupAccountSidW(LPCWSTR lpSystemName,
 		  PSID Sid,

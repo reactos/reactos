@@ -1,4 +1,4 @@
-/* $Id: sysfunc.c,v 1.6 2003/06/27 15:19:19 sedwards Exp $
+/* $Id: sysfunc.c,v 1.7 2003/07/10 15:05:55 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,6 +13,8 @@
 
 /**********************************************************************
  *	SystemFunction001
+ *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -25,6 +27,7 @@ SystemFunction001(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -37,6 +40,7 @@ SystemFunction002(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -49,6 +53,7 @@ SystemFunction003(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -61,6 +66,7 @@ SystemFunction004(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -73,6 +79,7 @@ SystemFunction005(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -85,6 +92,7 @@ SystemFunction006(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -97,6 +105,7 @@ SystemFunction007(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -109,6 +118,7 @@ SystemFunction008(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -121,6 +131,7 @@ SystemFunction009(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -133,6 +144,7 @@ SystemFunction010(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -145,6 +157,7 @@ SystemFunction011(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -157,6 +170,7 @@ SystemFunction012(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -169,6 +183,7 @@ SystemFunction013(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -181,6 +196,7 @@ SystemFunction014(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -193,6 +209,7 @@ SystemFunction015(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -205,6 +222,7 @@ SystemFunction016(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -217,6 +235,7 @@ SystemFunction017(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -229,6 +248,7 @@ SystemFunction018(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -241,6 +261,7 @@ SystemFunction019(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -253,6 +274,7 @@ SystemFunction020(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -265,6 +287,7 @@ SystemFunction021(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -277,6 +300,7 @@ SystemFunction022(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -289,6 +313,7 @@ SystemFunction023(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -301,6 +326,7 @@ SystemFunction024(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -313,6 +339,7 @@ SystemFunction025(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -325,6 +352,7 @@ SystemFunction026(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -337,6 +365,7 @@ SystemFunction027(INT a, INT b, INT c)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -349,6 +378,7 @@ SystemFunction028(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -361,6 +391,7 @@ SystemFunction029(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -373,6 +404,7 @@ SystemFunction030(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -385,6 +417,7 @@ SystemFunction031(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -397,6 +430,7 @@ SystemFunction032(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -408,6 +442,7 @@ SystemFunction033(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL
@@ -420,6 +455,7 @@ SystemFunction034(INT a, INT b)
 
 /**********************************************************************
  *
+ * @unimplemented
  */
 INT
 STDCALL

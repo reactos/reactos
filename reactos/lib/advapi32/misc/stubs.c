@@ -6,6 +6,9 @@
 #include <ntos.h>
 #include <windows.h>
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DeregisterEventSource (
@@ -15,6 +18,9 @@ DeregisterEventSource (
   return(FALSE);
 }
 
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 RegisterEventSourceA (
@@ -25,6 +31,9 @@ RegisterEventSourceA (
   return(FALSE);
 }
 
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 RegisterEventSourceW (
@@ -35,6 +44,9 @@ RegisterEventSourceW (
   return(FALSE);
 }
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ReportEventA (
@@ -52,6 +64,9 @@ ReportEventA (
   return(FALSE);
 }
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ReportEventW (
@@ -69,6 +84,9 @@ ReportEventW (
   return(FALSE);
 }
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetFileSecurityW (
