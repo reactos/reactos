@@ -428,7 +428,7 @@ namespace TechBot.IRCLibrary
 		}
 
 		private const string IrcSpecial = @"-[]\`^{}";
-		private const string IrcSpecialNonSpecs = @"_";
+		private const string IrcSpecialNonSpecs = @"_|";
 
 		/// <summary>
 		/// Returns wether a character is an IRC special character.

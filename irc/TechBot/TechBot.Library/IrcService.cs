@@ -104,13 +104,44 @@ namespace TechBot.Library
 			}
 		}
 
+		private string GetMessageSource(MessageContext context)
+		{
+			if (context is ChannelMessageContext)
+			{
+				ChannelMessageContext channelContext = context as ChannelMessageContext;
+				return String.Format("#{0}",
+				                     channelContext.Channel.Name);
+			}
+			else if (context is UserMessageContext)
+			{
+				UserMessageContext userContext = context as UserMessageContext;
+				return userContext.User.Nickname;
+			}
+			else
+			{
+				throw new InvalidOperationException(String.Format("Unhandled message context '{0}'",
+				                                                  context.GetType()));
+			}
+		}
+
 		public void WriteLine(MessageContext context,
 		                      string message)
 		{
-			Console.WriteLine(String.Format("Sending: {0} to #{1}",
-			                                message,
-			                                context.Channel != null ? context.Channel.Name : "(null)"));
-			context.Channel.Talk(message);
+			if (context is ChannelMessageContext)
+			{
+				ChannelMessageContext channelContext = context as ChannelMessageContext;
+				channelContext.Channel.Talk(message);
+			}
+			else if (context is UserMessageContext)
+			{
+				UserMessageContext userContext = context as UserMessageContext;
+				userContext.User.Talk(message);
+			}
+			else
+			{
+				throw new InvalidOperationException(String.Format("Unhandled message context '{0}'",
+				                                                  context.GetType()));
+			}
 		}
 
 		private void ExtractMessage(string parameters,
@@ -139,7 +170,26 @@ namespace TechBot.Library
 			int index = message.Parameters.IndexOf(' ');
 			if (index == -1)
 				index = message.Parameters.Length;
-			channelName = message.Parameters.Substring(1, index - 1);
+			else
+				index = index - 1;
+			channelName = message.Parameters.Substring(1, index);
+			return true;
+		}
+
+		private bool GetTargetNickname(IrcMessage message,
+		                               out string nickname)
+		{
+			if (message.Parameters == null)
+			{
+				nickname = null;
+				return false;
+			}
+
+			int index = message.Parameters.IndexOf(' ');
+			if (index == -1)
+				index = message.Parameters.Length;
+			nickname = message.Parameters.Substring(0, index);
+			Console.WriteLine("nickname: " + nickname);
 			return true;
 		}
 
@@ -149,6 +199,7 @@ namespace TechBot.Library
 			if (message.Command.ToUpper().Equals("PRIVMSG"))
 			{
 				string channelName;
+				string nickname;
 				if (GetChannelName(message,
 				                   out channelName))
 				{
@@ -156,9 +207,22 @@ namespace TechBot.Library
 					{
 						if (String.Compare(channel.Name, channelName, true) == 0)
 						{
-							context = new MessageContext(channel);
+							context = new ChannelMessageContext(channel);
 							return true;
 						}
+					}
+				}
+				else if (GetTargetNickname(message,
+				                           out nickname))
+				{
+					IrcUser targetUser = new IrcUser(client,
+					                                 nickname);
+					if (String.Compare(targetUser.Nickname, botname, true) == 0)
+					{
+						IrcUser sourceUser = new IrcUser(client,
+						                                 message.PrefixNickname);
+						context = new UserMessageContext(sourceUser);
+						return true;
 					}
 				}
 			}
@@ -180,9 +244,9 @@ namespace TechBot.Library
 					if (ShouldAcceptMessage(message,
 					                        out context))
 					{
-						Console.WriteLine(String.Format("Injecting: {0} from #{1}",
+						Console.WriteLine(String.Format("Injecting: {0} from {1}",
 						                                injectMessage,
-						                                context.Channel.Name));
+						                                GetMessageSource(context)));
 						service.InjectMessage(context,
 						                      injectMessage);
 					}

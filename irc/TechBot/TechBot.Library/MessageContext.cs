@@ -3,7 +3,13 @@ using TechBot.IRCLibrary;
 
 namespace TechBot.Library
 {
-	public class MessageContext
+	public abstract class MessageContext
+	{
+	}
+
+
+
+	public class ChannelMessageContext : MessageContext
 	{
 		private IrcChannel channel;
 
@@ -15,9 +21,29 @@ namespace TechBot.Library
 			}
 		}
 		
-		public MessageContext(IrcChannel channel)
+		public ChannelMessageContext(IrcChannel channel)
 		{
 			this.channel = channel;
+		}
+	}
+
+	
+	
+	public class UserMessageContext : MessageContext
+	{
+		private IrcUser user;
+
+		public IrcUser User
+		{
+			get
+			{
+				return user;
+			}
+		}
+		
+		public UserMessageContext(IrcUser user)
+		{
+			this.user = user;
 		}
 	}
 }

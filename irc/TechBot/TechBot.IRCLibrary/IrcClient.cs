@@ -391,7 +391,8 @@ namespace TechBot.IRCLibrary
 				IrcUser user = channel.LocateUser(nickname.Substring(1));
 				if (user == null)
 				{
-					user = new IrcUser(nickname.Substring(1));
+					user = new IrcUser(this,
+					                   nickname.Substring(1));
 					channel.Users.Add(user);
 				}
 				for (int i = 4; i < parameters.Length; i++)
@@ -400,7 +401,8 @@ namespace TechBot.IRCLibrary
 					user = channel.LocateUser(nickname);
 					if (user == null)
 					{
-						user = new IrcUser(nickname);
+						user = new IrcUser(this,
+						                   nickname);
 						channel.Users.Add(user);
 					}
 				}
@@ -509,7 +511,7 @@ namespace TechBot.IRCLibrary
 			{
 				throw new NotConnectedException();
 			}
-
+			
 			/* Serialize sending messages */
 			lock (typeof(IrcClient))
 			{
@@ -545,16 +547,6 @@ namespace TechBot.IRCLibrary
 		/// <param name="text">Text to send to the channel.</param>
 		public void TalkTo(string nickname, string text)
 		{
-			if (nickname == null)
-			{
-				throw new ArgumentNullException("nickname", "Nickname cannot be null.");
-			}
-			if (text == null)
-			{
-				throw new ArgumentNullException("text", "Text cannot be null.");
-			}
-
-			SendMessage(new IrcMessage(IRC.PRIVMSG, String.Format("{0} :{1}", nickname, text)));
 		}
 
 		/// <summary>

@@ -128,7 +128,10 @@ namespace TechBot.IRCLibrary
 		/// <param name="text">Text to send to the channel.</param>
 		public void Talk(string text)
 		{
-			owner.SendMessage(new IrcMessage(IRC.PRIVMSG, String.Format("#{0} :{1}", name, text)));
+			owner.SendMessage(new IrcMessage(IRC.PRIVMSG,
+			                                 String.Format("#{0} :{1}",
+			                                               name,
+			                                               text)));
 		}
 	}
 }
