@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.41 2003/02/24 23:17:32 hbirr Exp $
+/* $Id: conio.c,v 1.42 2003/03/02 01:24:37 mdill Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -926,7 +926,7 @@ VOID Console_Api( DWORD RefreshEvent )
 	      /* this does not seem to work
 		 RtlUnicodeStringToAnsiString( &Title, &SwapConsole->Title, FALSE ); */
 	      // temp hack
-	      for( src = 0, dst = 0; src < SwapConsole->Title.Length; src++, dst++ )
+	      for( src = 0, dst = 0; src <= SwapConsole->Title.Length; src += sizeof(WCHAR), dst++ )
 		Title.Buffer[dst] = (char)SwapConsole->Title.Buffer[dst];
 	      
 	      pos->Y = PhysicalConsoleSize.Y / 2;
@@ -1694,10 +1694,10 @@ CSR_API(CsrGetTitle)
 			Request->Data.GetTitleRequest.ConsoleHandle,
 			(Object_t **) & Console
 			);
-	if ( !NT_SUCCESS( Status ) )
-	{
-		Reply->Status = Status;
-	}
+   if ( !NT_SUCCESS( Status ) )
+   {
+      Reply->Status = Status;
+   }
 	else
 	{
 		HANDLE ConsoleHandle = Request->Data.GetTitleRequest.ConsoleHandle;
@@ -1710,6 +1710,8 @@ CSR_API(CsrGetTitle)
 		Reply->Data.GetTitleReply.ConsoleHandle = ConsoleHandle;
 		Reply->Data.GetTitleReply.Length = Console->Title.Length;
 		wcscpy (Reply->Data.GetTitleReply.Title, Console->Title.Buffer);
+		Reply->Header.MessageSize += Console->Title.Length;
+		Reply->Header.DataSize += Console->Title.Length;
 		Reply->Status = STATUS_SUCCESS;
 	}
 	UNLOCK;
