@@ -51,6 +51,7 @@
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "cmd.h"
 
@@ -81,8 +82,8 @@ VOID CleanHistory(VOID);
 VOID History_del_current_entry(LPTSTR str);
 
 /*service functions*/
-VOID del(LPHIST_ENTRY item);
-VOID add_at_bottom(LPTSTR string);
+static VOID del(LPHIST_ENTRY item);
+static VOID add_at_bottom(LPTSTR string);
 /*VOID add_before_last(LPTSTR string);*/
 VOID set_size(INT new_size);
 
@@ -95,8 +96,6 @@ INT CommandHistory (LPTSTR cmd, LPTSTR param)
 	LPHIST_ENTRY h_tmp;
 	TCHAR szBuffer[2048];
 
-
-	
 	tmp=_tcschr(param,_T('/'));
 
 	if (tmp)
@@ -107,6 +106,7 @@ INT CommandHistory (LPTSTR cmd, LPTSTR param)
 			case _T('F'):/*delete history*/
 				CleanHistory();InitHistory();
 				break;
+
 			case _T('R'):/*read history from standard in*/
 				//hIn=GetStdHandle (STD_INPUT_HANDLE);
 
@@ -117,19 +117,18 @@ INT CommandHistory (LPTSTR cmd, LPTSTR param)
 						History(0,szBuffer);
 					else
 						break;
-					
 				}
-				
-
-
 				break;
+
 			case _T('A'):/*add an antry*/
 				History(0,param+2);
 				break;
+
 			case _T('S'):/*set history size*/
-				if (tmp_int=_ttoi(param+2))
+				if ((tmp_int=_ttoi(param+2)))
 					set_size(tmp_int);
 				break;
+
 			default:
 				return 1;
 		}
@@ -139,7 +138,7 @@ INT CommandHistory (LPTSTR cmd, LPTSTR param)
 		for(h_tmp=Top->prev;h_tmp!=Bottom;h_tmp=h_tmp->prev)
 			ConErrPuts(h_tmp->string);
 	}
-
+	return 0;
 }
 
 VOID set_size(INT new_size)

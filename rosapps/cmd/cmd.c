@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.18 1999/12/28 23:06:21 ekohl Exp $
+/* $Id: cmd.c,v 1.19 2000/02/18 00:53:11 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -1170,13 +1170,7 @@ int main (int argc, char *argv[])
 	INT nExitCode;
 
 	AllocConsole ();
-#ifndef __REACTOS__
 	SetFileApisToOEM ();
-#endif
-
-#ifdef __REACTOS__
-	SetCurrentDirectory (_T("C:\\"));
-#endif
 
 	/* check switches on command-line */
 	Initialize (argc, argv);
