@@ -5,7 +5,7 @@ ifneq ($(HOST),mingw32-windows)
     DLLMAIN=
   else
     DLLTARGET=ntdll.dll
-    DLLMAIN=main/dllmain.c
+    DLLMAIN=main/dllmain.o
   endif
 else
   DLLTARGET=ntdll.dll
@@ -36,7 +36,8 @@ ntdll.dll: $(DLLMAIN) $(OBJECTS)
 	           --output-exp temp.exp --def def/ntdll.def
 	- $(RM) base.tmp
 	$(CC) -specs=ntdll_specs -mdll -o ntdll.dll ntdll.o \
-	      -Wl,--image-base,0x40000000 \
+	      -Wl,--entry=_LdrStartup \
+	      -Wl,--image-base,0x80000000 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
 	      -Wl,--defsym,_end=end \
