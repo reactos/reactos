@@ -27,7 +27,7 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
 {
   LIST_ENTRY FsChangeNotifyList;
   PDRIVER_OBJECT DriverObject;
-  PFSDNOTIFICATIONPROC FSDNotificationProc;
+  PDRIVER_FS_NOTIFICATION FSDNotificationProc;
 } FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
 
 /* GLOBALS ******************************************************************/
@@ -730,7 +730,7 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
  */
 NTSTATUS STDCALL
 IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
-			       IN PFSDNOTIFICATIONPROC FSDNotificationProc)
+			       IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
 {
   PFS_CHANGE_NOTIFY_ENTRY Entry;
 
@@ -756,7 +756,7 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
  */
 VOID STDCALL
 IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
-				 IN PFSDNOTIFICATIONPROC FSDNotificationProc)
+				 IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
 {
   PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
   PLIST_ENTRY Entry;

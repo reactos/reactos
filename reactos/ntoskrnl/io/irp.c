@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.72 2004/12/26 21:18:34 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -212,7 +212,9 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
   return DriverObject->MajorFunction[Param->MajorFunction](DeviceObject, Irp);
 }
 
-
+#ifdef IoCallDriver
+#undef IoCallDriver
+#endif
 /*
  * @implemented
  */
@@ -277,7 +279,9 @@ IoAllocateIrp(CCHAR StackSize,
   return(Irp);
 }
 
-
+#ifdef IoCompleteRequest
+#undef IoCompleteRequest
+#endif
 /*
  * @implemented
  */
@@ -326,7 +330,7 @@ IofCompleteRequest(PIRP Irp,
       */
       if (Irp->CurrentLocation < Irp->StackCount - 1)
       {
-         IoSetPreviousIrpStackLocation(Irp);
+         IoSkipCurrentIrpStackLocation(Irp);
          DeviceObject = IoGetCurrentIrpStackLocation(Irp)->DeviceObject;
       }
       else

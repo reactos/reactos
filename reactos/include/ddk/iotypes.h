@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.73 2004/12/30 18:30:04 ion Exp $
+/* $Id$
  *
  */
 
@@ -85,6 +85,10 @@ typedef VOID STDCALL_FUNC
 		   struct _IO_STATUS_BLOCK* IoStatusBlock,
 		   ULONG Reserved);
 
+typedef VOID (NTAPI *PDRIVER_FS_NOTIFICATION) (
+    IN struct _DEVICE_OBJECT* DeviceObject,
+    IN BOOLEAN        DriverActive
+);
 
 /* STRUCTURE TYPES ***********************************************************/
 
@@ -886,7 +890,7 @@ struct _FAST_IO_DISPATCH_TABLE
 } FAST_IO_DISPATCH_TABLE, * PFAST_IO_DISPATCH_TABLE;
 #endif
 
-#define IO_DRIVER_OBJECT 4L
+#define IO_TYPE_DRIVER 4L
 #define DRVO_UNLOAD_INVOKED 0x1L
 #define DRVO_LEGACY_DRIVER  0x2L
 #define DRVO_BUILTIN_DRIVER 0x4L

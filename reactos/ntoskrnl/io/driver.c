@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.58 2004/12/30 18:30:05 ion Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1643,7 +1643,7 @@ IoCreateDriver (
     
     /* Set up the Object */
     RtlZeroMemory(DriverObject, ObjectSize);
-    DriverObject->Type = IO_DRIVER_OBJECT;
+    DriverObject->Type = IO_TYPE_DRIVER;
     DriverObject->Size = sizeof(DRIVER_OBJECT);
     DriverObject->Flags = DRVO_BUILTIN_DRIVER;
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
