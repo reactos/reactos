@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id */
+/* $Id: fstypes.h,v 1.3 2001/09/07 21:37:47 ea Exp $ */
 
 
 typedef
