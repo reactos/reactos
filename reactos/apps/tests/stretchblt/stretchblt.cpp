@@ -10,14 +10,22 @@
 // if you have any questions about this code.
 // ------------------------------------------------------------------
 
+// Modified by Aleksey Bragin (aleksey at studiocerebral.com)
+// to support non-uniform scaling, and output via sretchdibits
+// (type something in the command line to invoke this mode,
+// in future it will be source BPP)
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #include <windows.h>
+#include <stdio.h>
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
 HWND HListBox = NULL;
+HWND VListBox = NULL;
 const int ID_LISTBOX = 101;
+const int ID_LISTBOX2 = 102;
+BOOL useDIBits=FALSE; // How to display the image - via StretchDIBits
 
 HINSTANCE HInst;
 HINSTANCE HPrevInst;
@@ -47,7 +55,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
    if (RegisterClass(&wc))
    {
       HWND HWnd = 
-         CreateWindow(WndClassName, TEXT("StretchBlt Zooming Demo"),
+         CreateWindow(WndClassName, TEXT("StretchBlt NonUniform Zooming Demo"),
                       WS_OVERLAPPEDWINDOW | WS_CAPTION | 
                       WS_VISIBLE | WS_CLIPSIBLINGS,
                       0, 0, 675, 560,
@@ -61,8 +69,16 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
                            530, 5, 130, 150, HWnd, 
                            reinterpret_cast<HMENU>(ID_LISTBOX),
                            HInst, NULL);
-         if (HListBox)
+         VListBox =
+            CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", 
+                           LBS_NOTIFY | WS_CHILD | WS_VISIBLE, 
+                           530, 5+170, 130, 150, HWnd, 
+                           reinterpret_cast<HMENU>(ID_LISTBOX2),
+                           HInst, NULL);
+
+         if (HListBox && VListBox)
          {
+// horizontal zoom
             SNDMSG(HListBox, LB_ADDSTRING, 0, 
                    reinterpret_cast<LPARAM>("Zoom 25%"));
             SNDMSG(HListBox, LB_ADDSTRING, 0, 
@@ -79,6 +95,24 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
                    reinterpret_cast<LPARAM>("Zoom 200%"));
             SNDMSG(HListBox, LB_ADDSTRING, 0, 
                    reinterpret_cast<LPARAM>("Zoom 300%"));
+// vertical zoom
+            SNDMSG(VListBox, LB_ADDSTRING, 0, 
+                   reinterpret_cast<LPARAM>("Zoom 25%"));
+            SNDMSG(VListBox, LB_ADDSTRING, 0, 
+                   reinterpret_cast<LPARAM>("Zoom 50%"));
+            SNDMSG(VListBox, LB_ADDSTRING, 0, 
+                   reinterpret_cast<LPARAM>("Zoom 75%"));
+            SNDMSG(VListBox, LB_ADDSTRING, 0, 
+                   reinterpret_cast<LPARAM>("Zoom 100%"));
+            SNDMSG(VListBox, LB_ADDSTRING, 0, 
+                   reinterpret_cast<LPARAM>("Zoom 125%"));
+            SNDMSG(VListBox, LB_ADDSTRING, 0, 
+                   reinterpret_cast<LPARAM>("Zoom 150%"));
+            SNDMSG(VListBox, LB_ADDSTRING, 0, 
+                   reinterpret_cast<LPARAM>("Zoom 200%"));
+            SNDMSG(VListBox, LB_ADDSTRING, 0, 
+                   reinterpret_cast<LPARAM>("Zoom 300%"));
+
          }
 
          ShowWindow(HWnd, nCmdShow);
@@ -99,12 +133,15 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
 
 // image related
 BITMAP bmp;
+BITMAPINFO bmInfo;
+char *bbits = NULL; // bitmap bits
 const char* filename = "LENA.BMP";
 HDC HMemDC = NULL;
 HBITMAP HOldBmp = NULL;
 
 // zooming related
-float zoom_factor = 0.5;
+float zoom_factor_h = 0.5;
+float zoom_factor_v = 0.5;
 RECT RDest = {5, 5, 0, 0};
 enum {ID_ZOOM25, ID_ZOOM50, ID_ZOOM75, ID_ZOOM100, 
       ID_ZOOM125, ID_ZOOM150, ID_ZOOM200, ID_ZOOM300};
@@ -116,6 +153,15 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    {
       case WM_CREATE:
       {         
+		 // check commandline
+		 if (strlen(cmdline) != 0)
+		 {
+
+			 useDIBits = TRUE;
+		 }
+		 else
+			 useDIBits = FALSE;
+
          // create a memory DC
          HMemDC = CreateCompatibleDC(NULL);
          if (HMemDC)
@@ -131,34 +177,76 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
                // extract dimensions of the bitmap
                GetObject(HBmp, sizeof(BITMAP), &bmp);
 
-               // associate the bitmap with the memory DC
+			   // fill the BITMAPINFO stucture for further use by StretchDIBits
+			   bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+			   bmInfo.bmiHeader.biWidth = bmp.bmWidth;
+			   bmInfo.bmiHeader.biHeight = bmp.bmHeight;
+               bmInfo.bmiHeader.biPlanes = 1;//bmp.bmPlanes;
+               bmInfo.bmiHeader.biBitCount = bmp.bmBitsPixel;
+               bmInfo.bmiHeader.biCompression = BI_RGB;
+               bmInfo.bmiHeader.biSizeImage = 0;
+               bmInfo.bmiHeader.biXPelsPerMeter = 0;
+               bmInfo.bmiHeader.biClrImportant = 0;
+			   bmInfo.bmiHeader.biClrUsed = 0;
+               
+			   // associate the bitmap with the memory DC
                HOldBmp = static_cast<HBITMAP>(
                   SelectObject(HMemDC, HBmp)
                   );
+
+			   if (useDIBits)
+			   {
+			       bbits = new char[bmp.bmHeight*bmp.bmWidthBytes*(bmp.bmBitsPixel / 8)];
+				   //GetDIBits(HMemDC, HBmp, 0, bmp.bmHeight, bbits, &bmInfo, DIB_RGB_COLORS);
+
+				   // Here goes a temp hack, since GetDIBits doesn't exist in ReactOS yet
+				   FILE *f = fopen(filename, "rb");
+				   BITMAPFILEHEADER bmpHeader;
+
+				   fread(&bmpHeader, sizeof(BITMAPFILEHEADER), 1, f);
+				   fread(&bmInfo, sizeof(BITMAPINFO), 1, f);
+				   fseek(f, bmpHeader.bfOffBits, SEEK_SET);
+				   fread(bbits, bmp.bmHeight*bmp.bmWidthBytes*(bmp.bmBitsPixel / 8), 1, f);
+
+				   fclose(f);
+			   }
             }
          }         
       }
       case WM_COMMAND:
       {
-         if (WParam == MAKEWPARAM(ID_LISTBOX, LBN_SELCHANGE))
+         if (WParam == MAKEWPARAM(ID_LISTBOX, LBN_SELCHANGE) || 
+			 WParam == MAKEWPARAM(ID_LISTBOX2, LBN_SELCHANGE))
          {
             switch (SNDMSG(HListBox, LB_GETCURSEL, 0, 0))
             {
-               case ID_ZOOM25: zoom_factor = 0.25; break;
-               case ID_ZOOM50: zoom_factor = 0.50; break;
-               case ID_ZOOM75: zoom_factor = 0.75; break;
-               case ID_ZOOM100: zoom_factor = 1.00; break;
-               case ID_ZOOM125: zoom_factor = 1.25; break;
-               case ID_ZOOM150: zoom_factor = 1.50; break;
-               case ID_ZOOM200: zoom_factor = 2.00; break;
-               case ID_ZOOM300: zoom_factor = 3.00; break;
+               case ID_ZOOM25: zoom_factor_h = 0.25; break;
+               case ID_ZOOM50: zoom_factor_h = 0.50; break;
+               case ID_ZOOM75: zoom_factor_h = 0.75; break;
+               case ID_ZOOM100: zoom_factor_h = 1.00; break;
+               case ID_ZOOM125: zoom_factor_h = 1.25; break;
+               case ID_ZOOM150: zoom_factor_h = 1.50; break;
+               case ID_ZOOM200: zoom_factor_h = 2.00; break;
+               case ID_ZOOM300: zoom_factor_h = 3.00; break;
+            }
+
+            switch (SNDMSG(VListBox, LB_GETCURSEL, 0, 0))
+            {
+               case ID_ZOOM25: zoom_factor_v = 0.25; break;
+               case ID_ZOOM50: zoom_factor_v = 0.50; break;
+               case ID_ZOOM75: zoom_factor_v = 0.75; break;
+               case ID_ZOOM100: zoom_factor_v = 1.00; break;
+               case ID_ZOOM125: zoom_factor_v = 1.25; break;
+               case ID_ZOOM150: zoom_factor_v = 1.50; break;
+               case ID_ZOOM200: zoom_factor_v = 2.00; break;
+               case ID_ZOOM300: zoom_factor_v = 3.00; break;
             }
 
             // calculate the new width and height
             const int new_width = 
-               static_cast<int>(zoom_factor * bmp.bmWidth);
+               static_cast<int>(zoom_factor_h * bmp.bmWidth);
             const int new_height = 
-               static_cast<int>(zoom_factor * bmp.bmHeight);
+               static_cast<int>(zoom_factor_v * bmp.bmHeight);
 
             // is zooming in?
             bool zoom_in = (new_width > RDest.right - RDest.left);
@@ -210,34 +298,57 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             //
             // TODO: add palette support (see Chapter 9)...
             //
+			if (useDIBits)
+			{
+	            if (RDest.right - RDest.left > 0)
+		        {				
+				      if (zoom_factor_h < 1.0 || zoom_factor_v < 1.0)
+					  {
+	                     SetStretchBltMode(Hdc, COLORONCOLOR);
+		              }
 
-            if (RDest.right - RDest.left > 0)
-            {
-               // use BitBlt when not zooming
-               if (zoom_factor == 1.0)
-               {
-                  BitBlt(Hdc, RDest.left, RDest.top, 
-                         RDest.right - RDest.left, 
-                         RDest.bottom - RDest.top,
-                         HMemDC, 0, 0, 
-                         SRCCOPY);  
-               }
-               else
-               {
-                  if (zoom_factor < 1.0)
-                  {
-                     SetStretchBltMode(Hdc, COLORONCOLOR);
-                  }
+			          // render the zoomed image
+				      StretchDIBits(Hdc, RDest.left, RDest.top, 
+					                RDest.right - RDest.left, 
+						            RDest.bottom - RDest.top,
+							        0, 0, 
+								    bmp.bmWidth, bmp.bmHeight,
+									bbits, &bmInfo,
+									DIB_RGB_COLORS,
+	                                SRCCOPY);  
+		        }
+			}
+			else
+			{
+	            if (RDest.right - RDest.left > 0)
+		        {
+				
+				   // use BitBlt when not zooming
+	               if (zoom_factor_h == 1.0 && zoom_factor_v == 1.0)
+		           {
+			          BitBlt(Hdc, RDest.left, RDest.top, 
+				             RDest.right - RDest.left, 
+					         RDest.bottom - RDest.top,
+						     HMemDC, 0, 0, 
+							 SRCCOPY);  
+	               }
+		           else
+			       {
+				      if (zoom_factor_h < 1.0 || zoom_factor_v < 1.0)
+					  {
+	                     SetStretchBltMode(Hdc, COLORONCOLOR);
+		              }
 
-                  // render the zoomed image
-                  StretchBlt(Hdc, RDest.left, RDest.top, 
-                             RDest.right - RDest.left, 
-                             RDest.bottom - RDest.top,
-                             HMemDC, 0, 0, 
-                             bmp.bmWidth, bmp.bmHeight,
-                             SRCCOPY);  
-               }
-            }
+			          // render the zoomed image
+				      StretchBlt(Hdc, RDest.left, RDest.top, 
+					             RDest.right - RDest.left, 
+						         RDest.bottom - RDest.top,
+							     HMemDC, 0, 0, 
+								 bmp.bmWidth, bmp.bmHeight,
+	                             SRCCOPY);  
+		           }
+		        }
+			}
          }
 #if 0           
          catch (...)
@@ -253,6 +364,9 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          // clean up
          DeleteObject(SelectObject(HMemDC, HOldBmp));
          DeleteDC(HMemDC);
+
+		 if (bbits)
+			 delete bbits;
 
          PostQuitMessage(0);
          return 0;
