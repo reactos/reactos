@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.1 2002/01/07 21:12:10 jfilby Exp $
+# $Id: makefile,v 1.2 2002/01/26 01:37:35 sedwards Exp $
 #
 # Jurgen Van Gael [jurgen.vangael@student.kuleuven.ac.be]
 #
 # Makefile for ReactOS regsvr32.dll
 #
 
-PATH_TO_TOP = ../..
+PATH_TO_TOP=../../reactos
 
 TARGET_NORC = yes
 
