@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.5 2002/05/14 23:16:23 ekohl Exp $
+/* $Id: dirctl.c,v 1.6 2002/06/06 16:20:52 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -141,6 +141,9 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 {
   WCHAR name[256];
   WCHAR TempStr[2];
+  WCHAR ShortNameBuffer[12];
+  UNICODE_STRING ShortName;
+  UNICODE_STRING LongName;
   PVOID Block;
   NTSTATUS Status;
   ULONG len;
@@ -153,6 +156,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
   PUCHAR Ptr;
   PDIR_RECORD Record;
   LARGE_INTEGER StreamOffset;
+  BOOLEAN HasSpaces;
+  GENERATE_NAME_CONTEXT NameContext;
 
   DPRINT("FindFile(Parent %x, FileToFind '%S', DirIndex: %d)\n",
 	 Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
@@ -252,7 +257,32 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
       DPRINT("Name '%S'\n", name);
 
-      if (wstrcmpjoki(name, FileToFind)) /* || wstrcmpjoki (name2, FileToFind)) */
+      RtlInitUnicodeString(&LongName, name);
+      ShortName.Length = 0;
+      ShortName.MaximumLength = 26;
+      ShortName.Buffer = ShortNameBuffer;
+
+      if ((RtlIsNameLegalDOS8Dot3(&LongName, NULL, &HasSpaces) == FALSE) ||
+	  (HasSpaces == TRUE))
+	{
+	  /* Build short name */
+	  RtlGenerate8dot3Name(&LongName,
+			       FALSE,
+			       &NameContext,
+			       &ShortName);
+	}
+      else
+	{
+	  /* copy short name */
+	  RtlUpcaseUnicodeString(&ShortName,
+				 &LongName,
+				 FALSE);
+	}
+
+      DPRINT("ShortName '%wZ'\n", &ShortName);
+
+      if (wstrcmpjoki(name, FileToFind) ||
+	  wstrcmpjoki(ShortNameBuffer, FileToFind))
 	{
 	  if (Parent && Parent->PathName)
 	    {
@@ -276,6 +306,11 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
 	  memcpy(&Fcb->Entry, Ptr, sizeof(DIR_RECORD));
 	  wcsncpy(Fcb->ObjectName, name, MAX_PATH);
+
+	  /* Copy short name */
+	  Fcb->ShortNameLength = ShortName.Length;
+	  memcpy(Fcb->ShortName, ShortName.Buffer, ShortName.Length);
+
 	  if (pDirIndex)
 	    *pDirIndex = DirIndex;
 
@@ -460,21 +495,9 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
 //  Info->FileIndex=;
   Info->EaSize = 0;
 
-  if (DeviceExt->CdInfo.JolietLevel == 0)
-    {
-      /* Standard ISO-9660 format */
-      Info->ShortNameLength = Length;
-      memcpy(Info->ShortName, Fcb->ObjectName, Length);
-    }
-  else
-    {
-      /* Joliet extension */
-
-      /* FIXME: Copy or create a short file name */
-
-      Info->ShortName[0] = 0;
-      Info->ShortNameLength = 0;
-    }
+  /* Copy short name */
+  Info->ShortNameLength = Fcb->ShortNameLength;
+  memcpy(Info->ShortName, Fcb->ShortName, Fcb->ShortNameLength);
 
   return(STATUS_SUCCESS);
 }

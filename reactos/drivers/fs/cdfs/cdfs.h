@@ -168,6 +168,8 @@ typedef struct _FCB
 
   WCHAR *ObjectName;		/* point on filename (250 chars max) in PathName */
   WCHAR PathName[MAX_PATH];	/* path+filename 260 max */
+  WCHAR ShortName[13];
+  USHORT ShortNameLength;
 
 //  ERESOURCE PagingIoResource;
   ERESOURCE MainResource;
