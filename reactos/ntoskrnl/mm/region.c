@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.7 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: region.c,v 1.8 2004/06/13 14:05:53 navaraf Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/region.c
@@ -160,6 +160,7 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
    {
       RemainingLength = 0;
    }
+
    /*
     * If necessary then split the region into the affected and unaffected parts.
     */
@@ -186,7 +187,8 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
    CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION,
                                      RegionListEntry);
    CurrentBaseAddress = (char*)StartAddress + NewRegion->Length;
-   while (RemainingLength > 0 && CurrentRegion->Length <= RemainingLength)
+   while (RemainingLength > 0 && CurrentRegion->Length <= RemainingLength &&
+          CurrentEntry != RegionListHead)
    {
       if (CurrentRegion->Type != NewType &&
             CurrentRegion->Protect != NewProtect)
@@ -217,7 +219,7 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
    /*
     * Split any final region.
     */
-   if (RemainingLength > 0)
+   if (RemainingLength > 0 && CurrentEntry != RegionListHead)
    {
       CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION,
                                         RegionListEntry);
