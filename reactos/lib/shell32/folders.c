@@ -210,16 +210,37 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 
 	else if (_ILIsDrive (pSimplePidl))
 	{
-	  static WCHAR drive[] = { 'D','r','i','v','e',0 };
+	  static const WCHAR drive[] = { 'D','r','i','v','e',0 };
 
-	  if (HCR_GetDefaultIconW(drive, szIconFile, cchMax, &dwNr))
+	  int icon_idx = -1;
+
+	  if (_ILGetDrive(pSimplePidl, sTemp, MAX_PATH))
 	  {
-	    *piIndex = dwNr;
+		switch(GetDriveTypeA(sTemp))
+		{
+		  case DRIVE_REMOVABLE:	  icon_idx =  5;	break;
+		  case DRIVE_CDROM:		  icon_idx = 11;	break;
+		  case DRIVE_REMOTE:	  icon_idx =  9;	break;
+		  case DRIVE_RAMDISK: 	  icon_idx = 12;	break;
+		}
+	  }
+
+	  if (icon_idx != -1)
+	  {
+		lstrcpynW(szIconFile, swShell32Name, cchMax);
+		*piIndex = icon_idx;
 	  }
 	  else
 	  {
-	    lstrcpynW(szIconFile, swShell32Name, cchMax);
-	    *piIndex = 8;
+		if (HCR_GetDefaultIconW(drive, szIconFile, cchMax, &dwNr))
+		{
+		  *piIndex = dwNr;
+		}
+		else
+		{
+		  lstrcpynW(szIconFile, swShell32Name, cchMax);
+		  *piIndex = 8;
+		}
 	  }
 	}
 
