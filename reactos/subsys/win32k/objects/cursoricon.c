@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.65 2004/11/20 16:46:06 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.66 2004/11/21 21:23:24 weiden Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -791,7 +791,6 @@ NtUserGetClipCursor(
   {
     DPRINT("Validation of window station handle (0x%X) failed\n",
       PROCESS_WINDOW_STATION());
-    SetLastNtError(Status);
     return FALSE;
   }
   
