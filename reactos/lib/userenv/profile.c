@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.3 2004/01/16 15:31:53 ekohl Exp $
+/* $Id: profile.c,v 1.4 2004/01/23 10:39:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -246,7 +246,6 @@ CreateUserProfileW (PSID Sid,
   /* Create user hive name */
   wcscat (szUserProfilePath, L"\\ntuser.dat");
 
-#if 0
   /* Create new user hive */
   if (RegLoadKeyW (HKEY_USERS,
 		   SidString.Buffer,
@@ -257,7 +256,7 @@ CreateUserProfileW (PSID Sid,
       return FALSE;
     }
 
-  /* Create user hive */
+  /* Initialize user hive */
   if (!CreateUserHive (SidString.Buffer))
     {
       DPRINT1("Error: %lu\n", GetLastError());
@@ -267,7 +266,6 @@ CreateUserProfileW (PSID Sid,
 
   RegUnLoadKeyW (HKEY_USERS,
 		 SidString.Buffer);
-#endif
 
   RtlFreeUnicodeString (&SidString);
 
