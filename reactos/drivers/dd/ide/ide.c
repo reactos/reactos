@@ -81,7 +81,7 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 #include "idep.h"
 #include "partitio.h"
 
-#define  VERSION  "V0.1.3"
+#define  VERSION  "V0.1.4"
 
 //  -------------------------------------------------------  File Static Data
 
