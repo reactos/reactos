@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.29 1999/11/27 03:29:46 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.30 1999/12/01 15:10:42 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -74,7 +74,6 @@ ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
 HalRegisterServiceTable
-;InitializeObjectAttributes
 IoAllocateController
 IoAttachDeviceToDeviceStack
 IoBuildSynchronousFsdRequest
