@@ -1,66 +1,31 @@
-# Makefile - Proj_Listing1_5.dsp
 
-ifndef CFG
-CFG=Proj_Listing1_5 - Win32 Debug
-endif
-CC=gcc
-CFLAGS=
-CXX=g++
-CXXFLAGS=$(CFLAGS)
-RC=windres -O COFF
-ifeq "$(CFG)"  "Proj_Listing1_5 - Win32 Release"
-CFLAGS+=-fexceptions -O2 -DWIN32 -DNDEBUG -D_WINDOWS -D_MBCS -W
-LD=$(CXX) $(CXXFLAGS)
-LDFLAGS=
-LDFLAGS+=-Wl,--subsystem,windows
-LIBS+=-lkernel32 -luser32 -lgdi32
-else
-ifeq "$(CFG)"  "Proj_Listing1_5 - Win32 Debug"
-CFLAGS+=-fexceptions -g -O0 -DWIN32 -D_DEBUG -D_WINDOWS -D_MBCS -W
-LD=$(CXX) $(CXXFLAGS)
-LDFLAGS=
-LDFLAGS+=-Wl,--subsystem,windows
-LIBS+=-lkernel32 -luser32 -lgdi32
-endif
-endif
+PATH_TO_TOP = ../../..
 
-ifndef TARGET
-TARGET=stretchblt.exe
-endif
+TARGET_TYPE = program
 
-.PHONY: all
-all: $(TARGET)
+TARGET_APPTYPE = windows
 
-%.o: %.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
+TARGET_NAME = stretchblt
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ -c $<
+TARGET_NORC = yes
 
-%.res: %.rc
-	$(RC) $(CPPFLAGS) -o $@ -i $<
+TARGET_CFLAGS = -fexceptions -g -O0 -DWIN32 -D_DEBUG -D_WINDOWS -D_MBCS -W -D__USE_W32API
+	
+TARGET_CPPFLAGS = -fexceptions -g -O0 -DWIN32 -D_DEBUG -D_WINDOWS -D_MBCS -W -D__USE_W32API
 
-SOURCE_FILES= \
-	stretchblt.cpp
+TARGET_SDKLIBS = \
+	kernel32.a \
+	user32.a \
+	gdi32.a
 
-HEADER_FILES=
+TARGET_OBJECTS = \
+stretchblt.o
 
-RESOURCE_FILES=
+include $(PATH_TO_TOP)/rules.mak
 
-SRCS=$(SOURCE_FILES) $(HEADER_FILES) $(RESOURCE_FILES) 
+include $(TOOLS_PATH)/helper.mk
 
-OBJS=$(patsubst %.rc,%.res,$(patsubst %.cpp,%.o,$(patsubst %.c,%.o,$(filter %.c %.cpp %.rc,$(SRCS)))))
+# overide LD_CC to use g++ for linking of the executable
+LD_CC = $(CXX)
 
-$(TARGET): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
-
-.PHONY: clean
-clean:
-	-del $(OBJS) $(TARGET)
-
-.PHONY: depends
-depends:
-	-$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MM $(filter %.c %.cpp,$(SRCS)) > Proj_Listing1_5.dep
-
--include Proj_Listing1_5.dep
-
+# EOF

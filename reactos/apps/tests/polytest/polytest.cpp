@@ -819,7 +819,7 @@ Polygon ( CONST PPOINT UnsafePoints, int Count, int polyFillMode )
 }
 
 
-void main()
+int main()
 {
   memset ( screen, ' ', sizeof(screen) );
   POINT pts[] =
