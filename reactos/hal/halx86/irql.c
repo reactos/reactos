@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.12 2003/11/05 22:37:42 gvg Exp $
+/* $Id: irql.c,v 1.13 2003/11/19 21:04:10 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,8 @@
  * PURPOSE: Current irq level
  */
 static KIRQL CurrentIrql = HIGH_LEVEL;
+static BOOLEAN ApcRequested = FALSE;
+static BOOLEAN DpcRequested = FALSE;
 
 typedef union
 {
@@ -440,6 +442,26 @@ BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
      }
 
   return TRUE;
+}
+
+
+VOID FASTCALL
+HalRequestSoftwareInterrupt(
+  IN KIRQL Request)
+{
+  switch (Request)
+  {
+    case APC_LEVEL:
+      ApcRequested = TRUE;
+      break;
+
+    case DISPATCH_LEVEL:
+      DpcRequested = TRUE;
+      break;
+      
+    default:
+      KEBUGCHECK(0);
+  }
 }
 
 /* EOF */

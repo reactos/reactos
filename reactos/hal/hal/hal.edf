@@ -86,6 +86,7 @@ KfAcquireSpinLock=@KfAcquireSpinLock@4
 KfLowerIrql=@KfLowerIrql@4
 KfRaiseIrql=@KfRaiseIrql@4
 KfReleaseSpinLock=@KfReleaseSpinLock@8
+HalRequestSoftwareInterrupt=@HalRequestSoftwareInterrupt@4
 READ_PORT_BUFFER_UCHAR=READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG=READ_PORT_BUFFER_ULONG@12
 READ_PORT_BUFFER_USHORT=READ_PORT_BUFFER_USHORT@12

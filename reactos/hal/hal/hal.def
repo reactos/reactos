@@ -86,6 +86,7 @@ KeStallExecutionProcessor@4
 @KfLowerIrql@4
 @KfRaiseIrql@4
 @KfReleaseSpinLock@8
+@HalRequestSoftwareInterrupt@4
 READ_PORT_BUFFER_UCHAR@12
 READ_PORT_BUFFER_ULONG@12
 READ_PORT_BUFFER_USHORT@12
