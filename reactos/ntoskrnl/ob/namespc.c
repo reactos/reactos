@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.47 2004/08/15 16:39:10 chorns Exp $
+/* $Id: namespc.c,v 1.48 2004/09/05 22:25:36 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -77,7 +77,7 @@ CHECKPOINT;
 DPRINT("Object %p\n", Object);
 	*ObjectPtr = NULL;
 	RtlFreeUnicodeString (&RemainingPath);
-	return(STATUS_UNSUCCESSFUL);
+	return(STATUS_OBJECT_NAME_NOT_FOUND);
      }
    *ObjectPtr = Object;
    RtlFreeUnicodeString (&RemainingPath);
