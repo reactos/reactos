@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.38 2003/03/24 01:36:10 rcampbell Exp $
+/* $Id: window.c,v 1.39 2003/03/24 23:08:51 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -851,41 +851,17 @@ NtUserMoveWindow(
     uExStyle = Window->ExStyle;
     pWinPos.hwnd = hWnd;
     
-        /* FIXME:  Is this the correct behavior? */  
-    if (X)
-    {
-        pWinPos.x = X;
-    }
-    else
-    {
-        pWinPos.x = Window->WindowRect.left;
-    }
-    if (Y)
-    {
-        pWinPos.y = Y;
-    }
-    else
-    {
-        pWinPos.y = Window->WindowRect.top;
-    }
-    
-    if (nWidth)
-    {
+    pWinPos.x = X;
+    pWinPos.y = Y;
+    if (nWidth > NtUserGetSystemMetrics(SM_CXMIN))
         pWinPos.cx = pWinPos.x + nWidth;
-    }
     else
-    {
-        pWinPos.cx = pWinPos.x + (Window->WindowRect.right - Window->WindowRect.left);
-    }
-    if (nHeight)
-    {
-        pWinPos.cy = pWinPos.y + nHeight;
-    }
+        pWinPos.cx = pWinPos.x + NtUserGetSystemMetrics(SM_CXMIN);
+        
+    if (nHeight > NtUserGetSystemMetrics(SM_CYMIN))
+        pWinPos.cy = pWinPos.x + nHeight;
     else
-    {
-        pWinPos.cy = pWinPos.y + (Window->WindowRect.bottom - Window->WindowRect.top);
-    }
-    
+        pWinPos.cy = pWinPos.y + NtUserGetSystemMetrics(SM_CYMIN);
     NtUserSendMessage(hWnd, WM_WINDOWPOSCHANGING, 0, (LPARAM)&pWinPos);
     
     Window->WindowRect.top = Window->ClientRect.top = pWinPos.y;
@@ -901,7 +877,7 @@ NtUserMoveWindow(
       Window->ClientRect.right -= NtUserGetSystemMetrics(SM_CXSIZEFRAME);
     }
     if (uStyle & WS_CAPTION)
-       Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION) + 1;
+       Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION);
     if ( Window->Class->Class.lpszMenuName)
     {
         Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYMENU);
@@ -1173,6 +1149,18 @@ NtUserShowWindowAsync(DWORD Unknown0,
   UNIMPLEMENTED
 
   return 0;
+}
+
+BOOL STDCALL NtUserUpdateWindow( HWND hWnd )
+{
+    PWINDOW_OBJECT pWindow = W32kGetWindowObject( hWnd);
+
+    if (!pWindow)
+        return FALSE;
+    if (pWindow->UpdateRegion)
+        NtUserSendMessage( hWnd, WM_PAINT,0,0);
+
+    return TRUE;
 }
 
 DWORD STDCALL

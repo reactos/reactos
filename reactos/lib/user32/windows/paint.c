@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.10 2003/03/18 09:16:44 gvg Exp $
+/* $Id: paint.c,v 1.11 2003/03/24 23:08:51 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -144,7 +144,7 @@ STDCALL
 UpdateWindow(
   HWND hWnd)
 {
-  return FALSE;
+  return NtUserUpdateWindow( hWnd );
 }
 WINBOOL
 STDCALL

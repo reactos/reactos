@@ -1640,6 +1640,9 @@ NtUserUpdateInstance(
   DWORD Unknown1,
   DWORD Unknown2);
 
+BOOL STDCALL
+NtUserUpdateWindow( HWND hWnd );
+
 DWORD
 STDCALL
 NtUserUpdateLayeredWindow(

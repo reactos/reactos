@@ -529,6 +529,7 @@ NtUserUnregisterClass                   3
 NtUserUnregisterHotKey                  2
 NtUserUpdateInputContext                3
 NtUserUpdateInstance                    3
+NtUserUpdateWindow			1
 NtUserUpdateLayeredWindow               9
 NtUserUpdatePerUserSystemParameters     2
 NtUserUserHandleGrantAccess             3
