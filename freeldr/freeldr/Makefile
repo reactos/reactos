@@ -223,7 +223,6 @@ ARCH_OBJS	=	fathelp.o	\
 			xboxmem.o	\
 			xboxrtc.o	\
 			xboxvideo.o	\
-			flashleds.o	\
 			_alloca.o		# For Mingw32 builds
 
 
