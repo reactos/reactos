@@ -27,4 +27,5 @@ VOID PiInitProcessManager(VOID)
    PsInitProcessManagment();
    PsInitThreadManagment();
    PsInitIdleThread();
+   PiInitApcManagement();
 }
