@@ -478,7 +478,7 @@ bool IDropTargetImpl::QueryDrop(DWORD grfKeyState, LPDWORD pdwEffect)
 	//no modifier -- DROPEFFECT_MOVE or whatever is allowed by src
 	*pdwEffect = (grfKeyState & MK_CONTROL) ?
 				 ( (grfKeyState & MK_SHIFT) ? DROPEFFECT_LINK : DROPEFFECT_COPY ):
-				 ( (grfKeyState & MK_SHIFT) ? DROPEFFECT_MOVE : 0 );
+				 ( (grfKeyState & MK_SHIFT) ? DROPEFFECT_MOVE : DROPEFFECT_NONE );
 	if (*pdwEffect == 0) 
 	{
 	   // No modifier keys used by user while dragging. 

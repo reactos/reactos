@@ -448,7 +448,7 @@ HRESULT ShellBrowserChild::OnDefaultCommand(IShellView* ppshv)
 		return hr;
 
 
-	STGMEDIUM stgm = {sizeof(STGMEDIUM)};
+	STGMEDIUM stgm = {sizeof(STGMEDIUM), {0}, 0};
 
     hr = selection->GetData(&fetc, &stgm);
 	if (FAILED(hr))
