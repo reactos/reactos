@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.25 2000/10/22 16:36:53 ekohl Exp $
+/* $Id: handle.c,v 1.26 2001/01/29 00:31:24 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -186,7 +186,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 	
 	for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++)
 	  {
-	     ObjectBody = current->handles[i].ObjectBody;	   	     
+	     ObjectBody = current->handles[i].ObjectBody;
 	     
 	     if (ObjectBody != NULL)
 	       {
@@ -343,7 +343,7 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
    ObjectBody = Rep->ObjectBody;
    DPRINT("ObjectBody %x\n", ObjectBody);
    if (ObjectBody != NULL)
-     {     
+     {
 	Header = BODY_TO_HEADER(ObjectBody);
 	BODY_TO_HEADER(ObjectBody)->HandleCount--;
 	ObReferenceObjectByPointer(ObjectBody,
@@ -351,7 +351,7 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
 				   NULL,
 				   UserMode);
 	Rep->ObjectBody = NULL;
-     
+   
 	KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
    
 	if ((Header->ObjectType != NULL) &&
@@ -362,7 +362,7 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
      }
    else
      {
-	KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);	
+	KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
      }
    
    DPRINT("Finished ObDeleteHandle()\n");
@@ -410,11 +410,11 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
      {
 	HANDLE_BLOCK* blk = CONTAINING_RECORD(current,HANDLE_BLOCK,entry);
 
-        DPRINT("Current %x\n",current);
+	DPRINT("Current %x\n",current);
 
 	for (i=0;i<HANDLE_BLOCK_ENTRIES;i++)
 	  {
-             DPRINT("Considering slot %d containing %x\n",i,blk->handles[i]);
+	     DPRINT("Considering slot %d containing %x\n",i,blk->handles[i]);
 	     if (blk->handles[i].ObjectBody==NULL)
 	       {
 		  blk->handles[i].ObjectBody = ObjectBody;
@@ -442,7 +442,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    new_blk->handles[0].GrantedAccess = GrantedAccess;
    new_blk->handles[0].Inherit = Inherit;
    *HandleReturn = (HANDLE)(handle << 2);
-   return(STATUS_SUCCESS);   
+   return(STATUS_SUCCESS);
 }
 
 
@@ -543,7 +543,7 @@ NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
      {
 	CHECKPOINT;
 	return(STATUS_OBJECT_TYPE_MISMATCH);
-     }   
+     }
    
    if (ObjectHeader->ObjectType == PsProcessType)
      {

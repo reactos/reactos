@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.95 2001/01/20 18:33:31 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.96 2001/01/29 00:32:13 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -349,7 +349,7 @@ KeInitializeDeviceQueue@4
 KeInitializeDpc@12
 KeInitializeEvent@12
 KeInitializeInterrupt@44
-;KeInitializeMutant
+;KeInitializeMutant@8
 KeInitializeMutex@8
 ;KeInitializeQueue
 KeInitializeSemaphore@12
@@ -556,7 +556,7 @@ ObDereferenceObject@4
 ;ObInsertObject@24
 ObMakeTemporaryObject@4
 ObOpenObjectByName@28
-;ObOpenObjectByPointer@28
+ObOpenObjectByPointer@28
 ;ObQueryNameString@16
 ;ObQueryObjectAuditingByHandle@8
 ObReferenceObjectByHandle@24

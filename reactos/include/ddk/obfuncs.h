@@ -1,5 +1,10 @@
 /* OBJECT MANAGER ************************************************************/
 
+PVOID STDCALL ObCreateObject(PHANDLE Handle,
+			     ACCESS_MASK DesiredAccess,
+			     POBJECT_ATTRIBUTES ObjectAttributes,
+			     POBJECT_TYPE Type);
+
 /*
  * FUNCTION: Decrements the object's reference count and performs retention
  * checks
@@ -8,13 +13,23 @@
  */
 VOID STDCALL ObDereferenceObject(PVOID Object);
 
-NTSTATUS STDCALL ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
-				    POBJECT_TYPE ObjectType,
-				    ULONG Unknown3,	/* ?? */
-				    KPROCESSOR_MODE AccessMode,
-				    ACCESS_MASK DesiredAccess,
-				    PACCESS_STATE PassedAccessState,
-				    PHANDLE Handle);
+VOID STDCALL ObMakeTemporaryObject(PVOID ObjectBody);
+
+NTSTATUS STDCALL ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
+				    IN POBJECT_TYPE ObjectType,
+				    IN PVOID ParseContext,
+				    IN KPROCESSOR_MODE AccessMode,
+				    IN ACCESS_MASK DesiredAccess,
+				    IN PACCESS_STATE PassedAccessState,
+				    OUT PHANDLE Handle);
+
+NTSTATUS STDCALL ObOpenObjectByPointer(IN PVOID Object,
+				       IN ULONG HandleAttributes,
+				       IN PACCESS_STATE PassedAccessState,
+				       IN ACCESS_MASK DesiredAccess,
+				       IN POBJECT_TYPE ObjectType,
+				       IN KPROCESSOR_MODE AccessMode,
+				       OUT PHANDLE Handle);
 
 /*
  * FUNCTION: Performs access validation on an object handle and if access
@@ -60,9 +75,3 @@ NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 					 PVOID ParseContext,
 					 PVOID* ObjectPtr);
 
-PVOID STDCALL ObCreateObject(PHANDLE Handle,
-			     ACCESS_MASK DesiredAccess,
-			     POBJECT_ATTRIBUTES ObjectAttributes,
-			     POBJECT_TYPE Type);
-
-VOID STDCALL ObMakeTemporaryObject(PVOID ObjectBody);
