@@ -105,6 +105,7 @@ SerialInterruptService(
 			if (READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DR)
 			{
 				DPRINT1("Serial: Byte received: 0x%x\n", READ_PORT_UCHAR(SER_RBR(ComPortBase)));
+				DeviceExtension->SerialPerfStats.ReceivedCount++;
 				return TRUE;
 			}
 			break;

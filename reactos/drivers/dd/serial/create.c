@@ -41,7 +41,15 @@ SerialCreate(
 		goto ByeBye;
 	}
 	
+	if(DeviceExtension->IsOpened)
+	{
+		DPRINT("Serial: COM%lu is already opened", DeviceExtension->ComPort);
+		Status = STATUS_ACCESS_DENIED;
+		goto ByeBye;
+	}
+	
 	DPRINT("Serial: open COM%lu: successfull\n", DeviceExtension->ComPort);
+	DeviceExtension->IsOpened = TRUE;
 	Status = STATUS_SUCCESS;
 	
 ByeBye:

@@ -67,6 +67,9 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	SERIAL_LINE_CONTROL SerialLineControl;
 	ULONG WaitMask;
 	
+	SERIALPERF_STATS SerialPerfStats;
+	BOOL IsOpened;
+	
 	/* Current values */
 	UCHAR IER; /* Base+1, Interrupt Enable Register */
 	UCHAR MCR; /* Base+4, Modem Control Register */

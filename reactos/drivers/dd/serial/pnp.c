@@ -219,6 +219,7 @@ SerialPnp(
 {
 	ULONG MinorFunction;
 	PIO_STACK_LOCATION Stack;
+	ULONG Information = 0;
 	PDEVICE_OBJECT LowerDevice;
 	NTSTATUS Status;
 	
@@ -236,8 +237,6 @@ SerialPnp(
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
 			if (NT_SUCCESS(Status))
 				Status = SerialPnpStartDevice(DeviceObject, Irp);
-			Irp->IoStatus.Status = Status;
-			IoCompleteRequest(Irp, IO_NO_INCREMENT);
 			break;
 		}
 		/* IRP_MN_QUERY_STOP_DEVICE (FIXME: required) */
@@ -270,6 +269,9 @@ SerialPnp(
 			break;
 		}
 	}
-
+	
+	Irp->IoStatus.Information = Information;
+	Irp->IoStatus.Status = Status;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return Status;
 }

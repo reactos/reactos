@@ -80,6 +80,7 @@ SerialWrite(
 		while ((READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_TBE) == 0)
 			;
 		WRITE_PORT_UCHAR(SER_THR(ComPortBase), Buffer[i]);
+		DeviceExtension->SerialPerfStats.TransmittedCount++;
 	}
 	IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
 	

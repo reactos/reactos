@@ -145,6 +145,32 @@ SerialSetLineControl(
 	return Status;
 }
 
+BOOL
+SerialClearPerfStats(
+	IN PSERIALPERF_STATS pSerialPerfStats)
+{
+	RtlZeroMemory(pSerialPerfStats, sizeof(SERIALPERF_STATS));
+	return TRUE;
+}
+
+BOOL
+SerialGetPerfStats(IN PIRP pIrp)
+{
+	PSERIAL_DEVICE_EXTENSION pDeviceExtension;
+	pDeviceExtension = (PSERIAL_DEVICE_EXTENSION)
+		IoGetCurrentIrpStackLocation(pIrp)->DeviceObject->DeviceExtension;
+	/*
+	 * we assume buffer is big enough to hold SerialPerfStats structure
+	 * caller must verify this
+	 */
+	RtlCopyMemory(
+		pIrp->AssociatedIrp.SystemBuffer,
+		&pDeviceExtension->SerialPerfStats,
+		sizeof(SERIALPERF_STATS)
+	);
+	return TRUE;
+}
+
 NTSTATUS STDCALL
 SerialDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -175,9 +201,12 @@ SerialDeviceControl(
 	{
 		case IOCTL_SERIAL_CLEAR_STATS:
 		{
-			/* FIXME */
-			DPRINT1("Serial: IOCTL_SERIAL_CLEAR_STATS not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			DPRINT("Serial: IOCTL_SERIAL_CLEAR_STATS\n");
+			KeSynchronizeExecution(
+				DeviceExtension->Interrupt,
+				(PKSYNCHRONIZE_ROUTINE)SerialClearPerfStats,
+				&DeviceExtension->SerialPerfStats);
+			Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_SERIAL_CLR_DTR:
@@ -320,9 +349,24 @@ SerialDeviceControl(
 		}
 		case IOCTL_SERIAL_GET_STATS:
 		{
-			/* FIXME */
-			DPRINT1("Serial: IOCTL_SERIAL_GET_STATS not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			DPRINT1("Serial: IOCTL_SERIAL_GET_STATS\n");
+			if (LengthOut < sizeof(SERIALPERF_STATS))
+			{
+				DPRINT("Serial: return STATUS_BUFFER_TOO_SMALL\n");
+				Status = STATUS_BUFFER_TOO_SMALL;
+			}
+			else if (Buffer == NULL)
+			{
+				DPRINT("Serial: return STATUS_INVALID_PARAMETER\n");
+				Status = STATUS_INVALID_PARAMETER;
+			}
+			else
+			{
+				KeSynchronizeExecution(DeviceExtension->Interrupt,
+					(PKSYNCHRONIZE_ROUTINE)SerialGetPerfStats, Irp);
+					Status = STATUS_SUCCESS;
+					Information = sizeof(SERIALPERF_STATS);
+			}
 			break;
 		}
 		case IOCTL_SERIAL_GET_TIMEOUTS:

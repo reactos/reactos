@@ -16,7 +16,14 @@ SerialClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
+	PSERIAL_DEVICE_EXTENSION pDeviceExtension;
+	
 	DPRINT("Serial: IRP_MJ_CLOSE\n");
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	pDeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	pDeviceExtension->IsOpened = FALSE;
+	
+	Irp->IoStatus.Information = 0;
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+ 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
