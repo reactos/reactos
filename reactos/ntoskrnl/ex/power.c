@@ -23,11 +23,13 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL 
-NtSetSystemPowerState(VOID)
+NtSetSystemPowerState(IN POWER_ACTION SystemAction,
+		      IN SYSTEM_POWER_STATE MinSystemState,
+		      IN ULONG Flags)
 {
-   UNIMPLEMENTED;
+  /* Windows 2000 only */
+  return(STATUS_UNIMPLEMENTED);
 }
-
 
 NTSTATUS STDCALL 
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)

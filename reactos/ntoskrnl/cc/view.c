@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.27 2001/08/03 09:36:18 ei Exp $
+/* $Id: view.c,v 1.28 2001/09/02 15:38:46 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -126,7 +126,8 @@ CcRosGetCacheSegment(PBCB Bcb,
    current_entry = Bcb->CacheSegmentListHead.Flink;
    while (current_entry != &Bcb->CacheSegmentListHead)
      {
-	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbListEntry);
+	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+				    BcbListEntry);
 	if (current->FileOffset <= FileOffset &&
 	    (current->FileOffset + Bcb->CacheSegmentSize) > FileOffset)
 	  {
