@@ -30,19 +30,20 @@ RCFLAGS = -DGCC -D_WIN32_IE=0x0400
 
 
 OBJS =	about.o \
-	debug.o \
+        framewnd.o \
+        childwnd.o \
+        debug.o \
         draw.o \
         entries.o \
-        main.o \
-        mdiclient.o \
         run.o \
         settings.o \
         splitpath.o \
         sort.o \
         utils.o \
-	treeview.o \
-	listview.o \
-	$(TARGET).o
+        treeview.o \
+        listview.o \
+        trace.o \
+        main.o
 
 LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
 
@@ -57,15 +58,19 @@ $(TARGET).exe:	$(OBJS) $(TARGET).coff
 
 about.o:	about.c about.h resource.h
 
+main.o:		main.c main.h childwnd.h framewnd.h resource.h
+
+childwnd.o:	childwnd.c childwnd.h resource.h
+
+framewnd.o:	framewnd.c framewnd.h resource.h
+
 debug.o:	debug.c debug.h
 
 font.o:		font.c font.h
 
-setttings.o:	setttings.c setttings.h resource.h
-
 run.o:		run.c run.h
 
-mdiclient.o:	mdiclient.c mdiclient.h resource.h
+setttings.o:	setttings.c setttings.h resource.h
 
 $(TARGET).o:	$(TARGET).c $(TARGET).h resource.h
 
@@ -76,4 +81,4 @@ clean:
 	- $(RM) $(TARGET).sym
 	- $(RM) $(TARGET).coff
 
-include ../rules.mak
+include $(PATH_TO_TOP)/rules.mak

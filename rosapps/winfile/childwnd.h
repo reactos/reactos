@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  listview.h
+ *  childwnd.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __LISTVIEW_H__
-#define __LISTVIEW_H__
+#ifndef __CHILD_WND_H__
+#define __CHILD_WND_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,14 +31,12 @@ extern "C" {
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "resource.h"
 
-
-void CreateListWnd(HWND parent, Pane* pane, int id, LPSTR lpszPathName);
+LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __LISTVIEW_H__
+#endif // __CHILD_WND_H__

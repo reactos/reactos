@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  listview.h
+ *  framewnd.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __LISTVIEW_H__
-#define __LISTVIEW_H__
+#ifndef __FRAME_WND_H__
+#define __FRAME_WND_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,14 +31,17 @@ extern "C" {
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "resource.h"
 
+LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
+HWND CreateChildWindow(int drv_id);
 
-void CreateListWnd(HWND parent, Pane* pane, int id, LPSTR lpszPathName);
+void resize_frame_client(HWND hWnd);
+//BOOL activate_drive_window(LPCTSTR path);
+//void toggle_child(HWND hWnd, UINT cmd, HWND hchild);
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __LISTVIEW_H__
+#endif // __FRAME_WND_H__

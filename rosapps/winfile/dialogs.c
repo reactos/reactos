@@ -42,7 +42,7 @@
 #include <assert.h>
 #define ASSERT assert
 
-#include "winfile.h"
+#include "main.h"
 #include "about.h"
 #include "dialogs.h"
 #include "utils.h"
@@ -55,25 +55,25 @@ struct ExecuteDialog {
 };
 
 
-BOOL CALLBACK ExecuteDialogWndProg(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+BOOL CALLBACK ExecuteDialogWndProg(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static struct ExecuteDialog* dlg;
 
-	switch(nmsg) {
+	switch(message) {
 		case WM_INITDIALOG:
-			dlg = (struct ExecuteDialog*) lparam;
+			dlg = (struct ExecuteDialog*) lParam;
 			return 1;
 
 		case WM_COMMAND: {
-			int id = (int)wparam;
+			int id = (int)wParam;
 
 			if (id == IDOK) {
-				GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
-				dlg->cmdshow = Button_GetState(GetDlgItem(hwnd,214))&BST_CHECKED?
+				GetWindowText(GetDlgItem(hDlg, 201), dlg->cmd, MAX_PATH);
+				dlg->cmdshow = Button_GetState(GetDlgItem(hDlg,214))&BST_CHECKED?
 												SW_SHOWMINIMIZED: SW_SHOWNORMAL;
-				EndDialog(hwnd, id);
+				EndDialog(hDlg, id);
 			} else if (id == IDCANCEL)
-				EndDialog(hwnd, id);
+				EndDialog(hDlg, id);
 
 			return 1;}
 	}

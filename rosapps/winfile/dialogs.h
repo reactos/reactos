@@ -34,7 +34,7 @@ extern "C" {
 #include "resource.h"
 
 
-BOOL CALLBACK ExecuteDialogWndProg(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+BOOL CALLBACK ExecuteDialogWndProg(HWND, UINT, WPARAM, LPARAM);
 
 
 

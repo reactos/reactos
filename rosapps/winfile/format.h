@@ -10,8 +10,8 @@
    up the same dialog box that the Shell uses for disk formatting.
 
    PARAMETERS
-      hwnd    = The window handle of the window that will own the
-                dialog. NOTE that hwnd == NULL does not cause this
+      hWnd    = The window handle of the window that will own the
+                dialog. NOTE that hWnd == NULL does not cause this
                 dialog to come up as a "top level application"
                 window. This parameter should always be non-null,
                 this dialog box is only designed to be the child of
@@ -59,7 +59,7 @@
          "format the same type you did last time".
 
    *****************************************************************/ 
-   DWORD WINAPI SHFormatDrive(HWND hwnd,
+   DWORD WINAPI SHFormatDrive(HWND hWnd,
                               UINT drive,
                               UINT fmtID,
                               UINT options);

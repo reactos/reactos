@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  winfile.c
+ *  splitpath.c
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -34,7 +34,7 @@
 #include <stdio.h>
 #endif
     
-#include "winfile.h"
+#include "main.h"
 
 
 #ifdef UNICODE

@@ -42,166 +42,22 @@
 #include <assert.h>
 #define ASSERT assert
 
-#include "winfile.h"
+#include "main.h"
 #include "listview.h"
 //#include "entries.h"
 #include "utils.h"
 
+#include "trace.h"
 
 // Global Variables:
 extern HINSTANCE hInst;
 
 
-HWND CreateListView(HWND hwndParent, LPSTR lpszFileName) 
-{ 
-    RECT rcClient;  // dimensions of client area 
-    HWND hwndLV;    // handle to list view control 
- 
-    // Get the dimensions of the parent window's client area, and create the list view control. 
-    GetClientRect(hwndParent, &rcClient); 
-    hwndLV = CreateWindowEx(0, WC_LISTVIEW, "List View", 
-        WS_VISIBLE | WS_CHILD | WS_BORDER | TVS_HASLINES, 
-        0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)LIST_WINDOW, hInst, NULL); 
- 
-    // Initialize the image list, and add items to the control. 
-/*
-    if (!InitListViewImageLists(hwndLV) || 
-            !InitListViewItems(hwndLV, lpszFileName)) { 
-        DestroyWindow(hwndLV); 
-        return FALSE; 
-    } 
- */
-    return hwndLV;
-} 
-
-const static LPTSTR g_pos_names[COLUMNS] = {
-	_T(""),			// symbol
-	_T("Name"),
-	_T("Size"),
-	_T("CDate"),
-#ifndef _NO_EXTENSIONS
-	_T("ADate"),
-	_T("MDate"),
-	_T("Index/Inode"),
-	_T("Links"),
-#endif
-	_T("Attributes"),
-#ifndef _NO_EXTENSIONS
-	_T("Security")
-#endif
-};
-
-const static int g_pos_align[] = {
-	0,
-	HDF_LEFT,	// Name
-	HDF_RIGHT,	// Size
-	HDF_LEFT,	// CDate
-#ifndef _NO_EXTENSIONS
-	HDF_LEFT,	// ADate
-	HDF_LEFT,	// MDate
-	HDF_LEFT,	// Index
-	HDF_CENTER,	// Links
-#endif
-	HDF_CENTER,	// Attributes
-#ifndef _NO_EXTENSIONS
-	HDF_LEFT	// Security
-#endif
-};
-
-void resize_tree(ChildWnd* child, int cx, int cy)
-{
-	HDWP hdwp = BeginDeferWindowPos(4);
-	RECT rt = {0, 0, cx, cy};
-
-	cx = child->split_pos + SPLIT_WIDTH/2;
-
-#ifndef _NO_EXTENSIONS
-	{
-		WINDOWPOS wp;
-		HD_LAYOUT hdl = {&rt, &wp};
-
-		Header_Layout(child->left.hwndHeader, &hdl);
-
-		DeferWindowPos(hdwp, child->left.hwndHeader, wp.hwndInsertAfter,
-						wp.x-1, wp.y, child->split_pos-SPLIT_WIDTH/2+1, wp.cy, wp.flags);
-		DeferWindowPos(hdwp, child->right.hwndHeader, wp.hwndInsertAfter,
-						rt.left+cx+1, wp.y, wp.cx-cx+2, wp.cy, wp.flags);
-	}
-#endif
-
-	DeferWindowPos(hdwp, child->left.hwnd, 0, rt.left, rt.top, child->split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
-	DeferWindowPos(hdwp, child->right.hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
-
-	EndDeferWindowPos(hdwp);
-}
-
-
-#ifndef _NO_EXTENSIONS
-
-HWND create_header(HWND parent, Pane* pane, int id)
-{
-	HD_ITEM hdi = {HDI_TEXT|HDI_WIDTH|HDI_FORMAT};
-	int idx;
-
-	HWND hwnd = CreateWindow(WC_HEADER, 0, WS_CHILD|WS_VISIBLE|HDS_HORZ/*TODO: |HDS_BUTTONS + sort orders*/,
-								0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
-	if (!hwnd)
-		return 0;
-
-	SendMessage(hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), FALSE);
-
-	for(idx=0; idx<COLUMNS; idx++) {
-		hdi.pszText = g_pos_names[idx];
-		hdi.fmt = HDF_STRING | g_pos_align[idx];
-		hdi.cxy = pane->widths[idx];
-		Header_InsertItem(hwnd, idx, &hdi);
-	}
-
-	return hwnd;
-}
-
-#endif
-
-
-////////////////////////////////////////////////////////////////////////////////
-static WNDPROC g_orgListWndProc;
-
-LRESULT CALLBACK ListWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
-{
-	ChildWnd* child = (ChildWnd*)GetWindowLong(GetParent(hwnd), GWL_USERDATA);
-	Pane* pane = (Pane*)GetWindowLong(hwnd, GWL_USERDATA);
-	ASSERT(child);
-
-	switch(nmsg) {
-#ifndef _NO_EXTENSIONS
-		case WM_HSCROLL:
-			set_header(pane);
-			break;
-#endif
-
-		case WM_SETFOCUS:
-			child->focus_pane = pane==&child->right? 1: 0;
-			ListBox_SetSel(hwnd, TRUE, 1);
-			//TODO: check menu items
-			break;
-
-		case WM_KEYDOWN:
-			if (wparam == VK_TAB) {
-				//TODO: SetFocus(Globals.hDriveBar)
-				SetFocus(child->focus_pane? child->left.hwnd: child->right.hwnd);
-			}
-	}
-
-	return CallWindowProc(g_orgListWndProc, hwnd, nmsg, wparam, lparam);
-}
-
-
-static void init_output(HWND hwnd)
+static void init_output(HWND hWnd)
 {
 	TCHAR b[16];
 	HFONT old_font;
-	HDC hdc = GetDC(hwnd);
+	HDC hdc = GetDC(hWnd);
 
 	if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, _T("1000"), 0, b, 16) > 4)
 		Globals.num_sep = b[1];
@@ -211,40 +67,280 @@ static void init_output(HWND hwnd)
 	old_font = SelectFont(hdc, Globals.hFont);
 	GetTextExtentPoint32(hdc, _T(" "), 1, &Globals.spaceSize);
 	SelectFont(hdc, old_font);
-	ReleaseDC(hwnd, hdc);
+	ReleaseDC(hWnd, hdc);
+}
+
+static void AddEntryToList(HWND hwndLV, int idx, Entry* entry)
+{ 
+    LVITEM item;
+
+    item.mask = LVIF_TEXT | LVIF_PARAM; 
+    item.iItem = 0;//idx; 
+    item.iSubItem = 0; 
+    item.state = 0; 
+    item.stateMask = 0; 
+//    item.pszText = entry->data.cFileName; 
+    item.pszText = LPSTR_TEXTCALLBACK; 
+    item.cchTextMax = strlen(entry->data.cFileName); 
+    item.iImage = 0; 
+//    item.iImage = I_IMAGECALLBACK; 
+    item.lParam = (LPARAM)entry;
+#if (_WIN32_IE >= 0x0300)
+    item.iIndent = 0;
+#endif
+    ListView_InsertItem(hwndLV, &item);
+}
+
+// insert listctrl entries after index idx
+static void InsertListEntries(Pane* pane, Entry* parent, int idx)
+{
+	Entry* entry = parent;
+
+	if (!entry)
+		return;
+	ShowWindow(pane->hWnd, SW_HIDE);
+
+    if (idx == -1) {
+    }
+    idx = 0;
+
+	for(; entry; entry=entry->next) {
+#ifndef _LEFT_FILES
+		if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			continue;
+#endif
+        //ListBox_InsertItemData(pane->hWnd, idx, entry);
+        AddEntryToList(pane->hWnd, idx, entry); 
+        ++idx;
+	}
+	ShowWindow(pane->hWnd, SW_SHOW);
+}
+
+static void CreateListColumns(HWND hWndListView)
+{
+    char szText[50];
+    int index;
+    LV_COLUMN lvC;
+ 
+    // Create columns.
+    lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+    lvC.fmt = LVCFMT_LEFT;
+    lvC.cx = 175;
+    lvC.pszText = szText;
+
+    // Load the column labels from the resource file.
+    for (index = 0; index < 4; index++) {
+        lvC.iSubItem = index;
+        LoadString(hInst, IDS_LIST_COLUMN_FIRST + index, szText, sizeof(szText));
+        if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) {
+            // TODO: handle failure condition...
+            break;
+        }
+    }
+}
+
+static HWND CreateListView(HWND hwndParent, int id) 
+{ 
+    RECT rcClient;  // dimensions of client area 
+    HWND hwndLV;    // handle to list view control 
+
+    // Get the dimensions of the parent window's client area, and create the list view control. 
+    GetClientRect(hwndParent, &rcClient); 
+    hwndLV = CreateWindowEx(0, WC_LISTVIEW, "List View", 
+//        WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT | LVS_NOCOLUMNHEADER, 
+        WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT, 
+//        WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_LIST | LVS_NOCOLUMNHEADER,
+        0, 0, rcClient.right, rcClient.bottom, 
+        hwndParent, (HMENU)id, hInst, NULL); 
+
+    // Initialize the image list, and add items to the control. 
+/*
+    if (!InitListViewImageLists(hwndLV) || 
+            !InitListViewItems(hwndLV, lpszPathName)) { 
+        DestroyWindow(hwndLV); 
+        return FALSE; 
+    } 
+ */
+    ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
+    CreateListColumns(hwndLV);
+
+    return hwndLV;
+} 
+
+// OnGetDispInfo - processes the LVN_GETDISPINFO 
+// notification message. 
+ 
+void OnGetDispInfo(NMLVDISPINFO* plvdi)
+{
+    static buffer[200];
+
+//    LVITEM* pItem = &(plvdi->item);
+//    Entry* entry = (Entry*)pItem->lParam;
+    Entry* entry = (Entry*)plvdi->item.lParam;
+    ASSERT(entry);
+
+    switch (plvdi->item.iSubItem) {
+    case 0:
+        plvdi->item.pszText = entry->data.cFileName; 
+//    item.cchTextMax = strlen(entry->data.cFileName); 
+//        plvdi->item.pszText = rgPetInfo[plvdi->item.iItem].szKind;
+        break;
+    case 1:
+        if (entry->bhfi_valid) {
+            //entry->bhfi.nFileSizeLow;
+            //entry->bhfi.nFileSizeHigh;
+
+            //entry->bhfi.ftCreationTime
+
+            sprintf(buffer, "%u", entry->bhfi.nFileSizeLow);
+            plvdi->item.pszText = buffer;
+        } else {
+            plvdi->item.pszText = "unknown";
+        }
+        break;
+    case 2:
+        plvdi->item.pszText = "TODO:";
+        break;
+    case 3:
+            //entry->bhfi.dwFileAttributes
+//        plvdi->item.pszText = "rhsa";
+        strcpy(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) strcat(buffer, "a"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED) strcat(buffer, "c"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) strcat(buffer, "d"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED) strcat(buffer, "e"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) strcat(buffer, "h"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_NORMAL) strcat(buffer, "n"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_OFFLINE) strcat(buffer, "o"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_READONLY) strcat(buffer, "r"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) strcat(buffer, "p"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_SPARSE_FILE) strcat(buffer, "f"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) strcat(buffer, "s"); else strcat(buffer, " ");
+        if (entry->bhfi.dwFileAttributes & FILE_ATTRIBUTE_TEMPORARY) strcat(buffer, "t"); else strcat(buffer, " ");
+        plvdi->item.pszText = buffer;
+/*
+FILE_ATTRIBUTE_ARCHIVE The file or directory is an archive file. Applications use this attribute to mark files for backup or removal. 
+FILE_ATTRIBUTE_COMPRESSED The file or directory is compressed. For a file, this means that all of the data in the file is compressed. For a directory, this means that compression is the default for newly created files and subdirectories. 
+FILE_ATTRIBUTE_DIRECTORY The handle identifies a directory. 
+FILE_ATTRIBUTE_ENCRYPTED The file or directory is encrypted. For a file, this means that all data in the file is encrypted. For a directory, this means that encryption is the default for newly created files and subdirectories. 
+FILE_ATTRIBUTE_HIDDEN The file or directory is hidden. It is not included in an ordinary directory listing. 
+FILE_ATTRIBUTE_NORMAL The file has no other attributes. This attribute is valid only if used alone. 
+FILE_ATTRIBUTE_OFFLINE The file data is not immediately available. This attribute indicates that the file data has been physically moved to offline storage. This attribute is used by Remote Storage, the hierarchical storage management software in Windows 2000. Applications should not arbitrarily change this attribute. 
+FILE_ATTRIBUTE_READONLY The file or directory is read-only. Applications can read the file but cannot write to it or delete it. In the case of a directory, applications cannot delete it. 
+FILE_ATTRIBUTE_REPARSE_POINT The file has an associated reparse point. 
+FILE_ATTRIBUTE_SPARSE_FILE The file is a sparse file. 
+FILE_ATTRIBUTE_SYSTEM The file or directory is part of the operating system or is used exclusively by the operating system. 
+FILE_ATTRIBUTE_TEMPORARY The file is being used for temporary storage. File systems attempt to keep all the data in memory for quicker access, rather than flushing the data back to mass storage. A temporary file should be deleted by the application as soon as it is no longer needed.
+ */
+        break;
+    default:
+        break;
+    }
+} 
+/*
+typedef struct _BY_HANDLE_FILE_INFORMATION {
+  DWORD    dwFileAttributes; 
+  FILETIME ftCreationTime; 
+  FILETIME ftLastAccessTime; 
+  FILETIME ftLastWriteTime; 
+  DWORD    dwVolumeSerialNumber; 
+  DWORD    nFileSizeHigh; 
+  DWORD    nFileSizeLow; 
+  DWORD    nNumberOfLinks; 
+  DWORD    nFileIndexHigh; 
+  DWORD    nFileIndexLow; 
+} BY_HANDLE_FILE_INFORMATION, *PBY_HANDLE_FILE_INFORMATION;  
+ */ 
+
+
+ // OnEndLabelEdit - processes the LVN_ENDLABELEDIT 
+ // notification message. 
+ // Returns TRUE if the label is changed, or FALSE otherwise. 
+
+BOOL OnEndLabelEdit(NMLVDISPINFO* plvdi)
+{ 
+    if (plvdi->item.iItem == -1) 
+        return FALSE; 
+ 
+    // Copy the new label text to the application-defined structure. 
+//    lstrcpyn(rgPetInfo[plvdi->item.iItem].szKind, plvdi->item.pszText, 10);
+    
+    return TRUE;
+    // To make a more robust application you should send an EM_LIMITTEXT
+    // message to the edit control to prevent the user from entering too
+    // many characters in the field. 
+ } 
+
+
+////////////////////////////////////////////////////////////////////////////////
+static WNDPROC g_orgListWndProc;
+
+static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	ChildWnd* child = (ChildWnd*)GetWindowLong(GetParent(hWnd), GWL_USERDATA);
+	Pane* pane = (Pane*)GetWindowLong(hWnd, GWL_USERDATA);
+	ASSERT(child);
+
+	switch (message) {
+/*
+        case WM_CREATE:
+            //CreateListView(hWnd);
+            return 0;
+ */
+        case WM_NOTIFY:
+            switch (((LPNMHDR)lParam)->code) { 
+            case LVN_GETDISPINFO: 
+                OnGetDispInfo((NMLVDISPINFO*)lParam); 
+                break; 
+            case LVN_ENDLABELEDIT: 
+                return OnEndLabelEdit((NMLVDISPINFO*)lParam);
+                break;
+            }
+			break;
+//            return 0;
+
+		case WM_SETFOCUS:
+			child->nFocusPanel = pane==&child->right? 1: 0;
+			ListBox_SetSel(hWnd, TRUE, 1);
+			//TODO: check menu items
+			break;
+
+		case WM_KEYDOWN:
+			if (wParam == VK_TAB) {
+				//TODO: SetFocus(Globals.hDriveBar)
+				SetFocus(child->nFocusPanel? child->left.hWnd: child->right.hWnd);
+			}
+	}
+	return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
 }
 
 
-void create_list_window(HWND parent, Pane* pane, int id, int id_header)
+void CreateListWnd(HWND parent, Pane* pane, int id, LPSTR lpszPathName)
 {
-	static int s_init = 0;
+//	static int s_init = 0;
 	Entry* entry = pane->root;
 
-	pane->hwnd = CreateWindow(_T("ListBox"), _T(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
+	pane->treePane = 0;
+#if 1
+    pane->hWnd = CreateListView(parent, id);
+#else
+	pane->hWnd = CreateWindow(_T("ListBox"), _T(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
 								LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
 								0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
-
-	SetWindowLong(pane->hwnd, GWL_USERDATA, (LPARAM)pane);
-	g_orgListWndProc = SubclassWindow(pane->hwnd, ListWndProc);
-
-	SendMessage(pane->hwnd, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
+#endif
+	SetWindowLong(pane->hWnd, GWL_USERDATA, (LPARAM)pane);
+	g_orgListWndProc = SubclassWindow(pane->hWnd, ListWndProc);
+	SendMessage(pane->hWnd, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
 
 	 // insert entries into listbox
 	if (entry)
-		insert_entries(pane, entry, -1);
+		InsertListEntries(pane, entry, -1);
 
 	 // calculate column widths
-	if (!s_init) {
-		s_init = 1;
-		init_output(pane->hwnd);
-	}
-
-	calc_widths(pane, TRUE);
-
-#ifndef _NO_EXTENSIONS
-	pane->hwndHeader = create_header(parent, pane, id_header);
-#endif
+//	if (!s_init) {
+//		s_init = 1;
+//		init_output(pane->hWnd);
+//	}
+//	calc_widths(pane, TRUE);
 }
-
-
 

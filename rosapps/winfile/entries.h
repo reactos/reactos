@@ -43,6 +43,7 @@ typedef struct _Entry {
 	int		level;
 
 	WIN32_FIND_DATA	data;
+    HTREEITEM hTreeItem;
 
 #ifndef _NO_EXTENSIONS
 	BY_HANDLE_FILE_INFORMATION bhfi;
@@ -72,7 +73,7 @@ typedef struct {
 
 
 typedef struct {
-	HWND	hwnd;
+	HWND	hWnd;
 #ifndef _NO_EXTENSIONS
 	HWND	hwndHeader;
 #endif
@@ -92,15 +93,15 @@ typedef struct {
 } Pane;
 
 typedef struct {
-	HWND	hwnd;
+	HWND	hWnd;
 	Pane	left;
 	Pane	right;
-	int		focus_pane;		// 0: left  1: right
+    int     nFocusPanel;      // 0: left  1: right
 	WINDOWPLACEMENT pos;
-	int		split_pos;
+	int		nSplitPos;
 	BOOL	header_wdths_ok;
 
-	TCHAR	path[MAX_PATH];
+	TCHAR	szPath[MAX_PATH];
 	Root	root;
 
 	SORT_ORDER sortOrder;

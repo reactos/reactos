@@ -31,19 +31,27 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_WINFILE             ICON    DISCARDABLE     "winfile.ICO"
-IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+IDI_WINFILE             ICON    DISCARDABLE     "res/winfile.ico"
+IDI_SMALL               ICON    DISCARDABLE     "res/small.ico"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Bitmaps
 //
 
-IDB_OPEN_FILE           BITMAP	DISCARDABLE     "folder1.bmp"
-IDB_CLOSED_FILE         BITMAP	DISCARDABLE     "folder2.bmp"
-IDB_ROOT                BITMAP	DISCARDABLE     "folder3.bmp"
-IDB_TOOLBAR				BITMAP	DISCARDABLE     "toolbar.bmp"
-IDB_DRIVEBAR			BITMAP	DISCARDABLE     "drivebar.bmp"
-IDB_IMAGES			    BITMAP	DISCARDABLE     "images.bmp"
+//IDB_FOLDER_PLUS         BITMAP	DISCARDABLE     "res/folder_plus.bmp"
+//IDB_FOLDER_MINUS        BITMAP	DISCARDABLE     "res/folder_minus.bmp"
+//IDB_FOLDER_OPEN_PLUS	BITMAP	DISCARDABLE     "res/folder_open_plus.bmp"
+//IDB_FOLDER_OPEN_MINUS	BITMAP	DISCARDABLE     "res/folder_open_minus.bmp"
+
+IDB_FOLDER              BITMAP	DISCARDABLE     "res/folder1.bmp"
+IDB_FOLDER_RED          BITMAP	DISCARDABLE     "res/folder3.bmp"
+IDB_FOLDER_OPEN         BITMAP	DISCARDABLE     "res/folder_open.bmp"
+
+IDB_ROOT                BITMAP	DISCARDABLE     "res/folder2.bmp"
+
+IDB_TOOLBAR				BITMAP	DISCARDABLE     "res/toolbar.bmp"
+IDB_DRIVEBAR			BITMAP	DISCARDABLE     "res/drivebar.bmp"
+IDB_IMAGES			    BITMAP	DISCARDABLE     "res/images.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +79,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Cr&eate directory...\t",      ID_FILE_CREATE_DIRECTORY, GRAYED
         MENUITEM "Searc&h...\t",                ID_FILE_SEARCH, GRAYED
-        MENUITEM "Select &Files...\t",          ID_FILE_SEARCH_FILES, GRAYED
+        MENUITEM "Select &Files...\t",          ID_FILE_SELECT_FILES, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT
     END
@@ -100,20 +108,20 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "T&ree and Directory",          ID_VIEW_TREE_DIRECTORY, GRAYED
-        MENUITEM "Tr&ee Only",                   ID_VIEW_TREE_ONLY, GRAYED
-        MENUITEM "Directory &Only",              ID_VIEW_DIRECTORY_ONLY, GRAYED
+        MENUITEM "T&ree and Directory",         ID_VIEW_TREE_DIRECTORY, GRAYED
+        MENUITEM "Tr&ee Only",                  ID_VIEW_TREE_ONLY, GRAYED
+        MENUITEM "Directory &Only",             ID_VIEW_DIRECTORY_ONLY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Sp&lit",                       ID_VIEW_SPLIT, GRAYED
+        MENUITEM "Sp&lit",                      ID_VIEW_SPLIT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Name",                        ID_VIEW_NAME
-        MENUITEM "&All File Details",            ID_VIEW_ALL_FILE_DETAILS
-        MENUITEM "&Partial Details...",          ID_VIEW_PARTIAL_DETAILS, GRAYED
+        MENUITEM "&Name",                       ID_VIEW_NAME
+        MENUITEM "&All File Details",           ID_VIEW_ALL_FILE_DETAILS
+        MENUITEM "&Partial Details...",         ID_VIEW_PARTIAL_DETAILS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Sort by Name",                ID_VIEW_SORT_BY_NAME
-        MENUITEM "Sort &by Type",                ID_VIEW_SORT_BY_TYPE
-        MENUITEM "Sort by Si&ze",                ID_VIEW_SORT_BY_SIZE
-        MENUITEM "Sort by &Date",                ID_VIEW_SORT_BY_DATE
+        MENUITEM "&Sort by Name",               ID_VIEW_SORT_BY_NAME
+        MENUITEM "Sort &by Type",               ID_VIEW_SORT_BY_TYPE
+        MENUITEM "Sort by Si&ze",               ID_VIEW_SORT_BY_SIZE
+        MENUITEM "Sort by &Date",               ID_VIEW_SORT_BY_DATE
         MENUITEM SEPARATOR
         MENUITEM "By File &Type...",            ID_VIEW_BY_FILE_TYPE, GRAYED
     END
@@ -208,7 +216,6 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_APP_TITLE           "ReactOS File Manager"
-    IDS_HELLO               "Hello World!"
 
     ID_FILE_MENU            "Commands for working with files"
     ID_DISK_MENU            "Commands for working with disk"
@@ -219,11 +226,49 @@ BEGIN
     ID_WINDOW_MENU          "Commands for manipulating windows"
     ID_HELP_MENU            "Commands for displaying help and information about file manager"
 
-    ID_FILE_DELETE          "Deletes the selection"
-    ID_FILE_RENAME          "Renames the selection"
-    ID_FILE_SEARCH          "Finds a text string in a key, value or data"
-    ID_FILE_SEARCH_FILES    "Finds next occurrence of text specified in previous search"
-    ID_FILE_EXIT            "Quits the file manager"
+    ID_FILE_OPEN             "Opens selected item"
+    ID_FILE_MOVE			 "Moves selected item"
+    ID_FILE_COPY			 "Copies files and directories"
+    ID_FILE_COPY_CLIPBOARD	 "Copies selected item to the clipboard"
+    ID_FILE_DELETE			 "Deletes files and directories"
+    ID_FILE_RENAME			 "Renames a file or directory"
+    ID_FILE_PROPERTIES		 "Set file attributes and display file properties"
+    ID_FILE_COMPRESS		 "Compresses files or directories"
+    ID_FILE_UNCOMPRESS		 "Uncompresses files or directories"
+    ID_FILE_RUN				 "Starts or opens and application or file"
+    ID_FILE_PRINT		 	 "Prints a file"
+    ID_FILE_ASSOCIATE		 "associates a file type with an application"
+    ID_FILE_CREATE_DIRECTORY "Creates a directory"
+    ID_FILE_SEARCH			 "Searches for files and directories"
+    ID_FILE_SELECT_FILES	 "Selects files and directories"
+    ID_FILE_EXIT             "Quits the file manager"
+
+    ID_DISK_COPY_DISK				 "Copies a floppy disk"
+    ID_DISK_LABEL_DISK				 "Assigns or changes the volume lable of the disk"
+    ID_DISK_FORMAT_DISK				 "Formats a floppy disk"
+    ID_DISK_CONNECT_NETWORK_DRIVE	 "Connects to a network drive"
+    ID_DISK_DISCONNECT_NETWORK_DRIVE "Disconnects from a network drive"
+    ID_DISK_SHARE_AS				 "Shares a directory"
+    ID_DISK_STOP_SHARING			 "Stops sharing a directory"
+    ID_DISK_SELECT_DRIVE			 "Selects a different drive or volume"
+
+    ID_TREE_EXPAND_ONE_LEVEL             "Displays another level of a directory"
+    ID_TREE_EXPAND_BRANCH				 "Displays all levels of a directory"
+    ID_TREE_EXPAND_ALL					 "Displays all levels of all directories"
+    ID_TREE_INDICATE_EXPANDABLE_BRANCHES "Indicates directories that have sub-directories"
+
+    ID_VIEW_TREE_DIRECTORY	 "Displays the directory tree and the contents of the current directory"
+    ID_VIEW_TREE_ONLY		 "Displays the directory tree"
+    ID_VIEW_DIRECTORY_ONLY	 "Displays the contents of the current directory"
+    ID_VIEW_SPLIT			 "Splits a directory window or moves the split bar"
+    ID_VIEW_NAME			 "Show filenames only"
+    ID_VIEW_ALL_FILE_DETAILS "Show all file details"
+    ID_VIEW_PARTIAL_DETAILS	 "Show partial file details"
+    ID_VIEW_SORT_BY_NAME	 "Sorts files by name"
+    ID_VIEW_SORT_BY_TYPE	 "Sorts files by type"
+    ID_VIEW_SORT_BY_SIZE	 "Sorts files by size"
+    ID_VIEW_SORT_BY_DATE	 "Sorts files by date"
+    ID_VIEW_BY_FILE_TYPE     "Shows files of a specified type and filters filenames"
 
     ID_OPTIONS_CONFIRMATION      "Controls confirmation messages..."
     ID_OPTIONS_FONT              "Changes the File Manager Font..."
@@ -235,16 +280,30 @@ BEGIN
     ID_OPTIONS_MINIMISE_ON_USE   "Reduces File Manager to an icon at startup"
     ID_OPTIONS_SAVE_ON_EXIT      "Saves settings when exiting File Manager"
 
-    ID_VIEW_SPLIT           "Change position of split between two panes"
-    ID_WINDOW_REFRESH       "Refreshes the window"
+    ID_SECURITY_PERMISSIONS "View or set permission information on the selected items"
+    ID_SECURITY_AUDITING    "View or set auditing information on the selected items"
+    ID_SECURITY_OWNER       "View or take ownership of the selected items"
+
+    ID_WINDOW_NEW_WINDOW    "Opens a new window"
+    ID_WINDOW_CASCADE	    "Cascades windows"
+    ID_WINDOW_TILE_HORZ		"Tiles windows horizontally"
+    ID_WINDOW_TILE_VERT		"Tiles windows vertically"
+    ID_WINDOW_ARRANGE_ICONS	"Arranges icons"
+    ID_WINDOW_REFRESH       "Updates the contents of a window"
 
 	ID_HELP_CONTENTS        "Displays contents for File Manager Help"
 	ID_HELP_SEARCH_HELP     "Searches for a topic in File Manager Help"
 	ID_HELP_HOW_TO_USE_HELP "Displays information about using help"
     ID_HELP_ABOUT           "Displays program information, version number and copyright"
 
-    IDC_WINFILE             "WINFILE"
-    IDC_WINFILE_FRAME       "WINFILE_FRAME"
+    IDC_WINFILE             "ROSFILE"
+    IDC_WINFILE_CHILD       "ROSFILE_CHILD"
+
+    IDS_LIST_COLUMN_NAME    "Name"
+    IDS_LIST_COLUMN_SIZE    "Size"
+    IDS_LIST_COLUMN_DATE    "Date"
+    IDS_LIST_COLUMN_ATTRIB  "Attributes"
+    IDS_LIST_COLUMN_DOSNAME "DOS-Name"
 END
 
 #endif    // English (U.S.) resources

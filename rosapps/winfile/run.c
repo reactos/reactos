@@ -34,7 +34,7 @@
 #include <stdio.h>
 #endif
 	
-#include "winfile.h"
+#include "main.h"
 #include "run.h"
 
 

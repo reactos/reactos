@@ -28,10 +28,7 @@ extern "C" {
 #endif
 
 
-
 void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol);
-void draw_splitbar(HWND hwnd, int x);
-
 
 
 #ifdef __cplusplus

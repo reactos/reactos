@@ -34,7 +34,7 @@
 #include <stdio.h>
 #endif
     
-#include "winfile.h"
+#include "main.h"
 #include "utils.h"
 #include "draw.h"
 
@@ -514,22 +514,4 @@ void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 #endif
 #endif
 }
-
-
-
-#ifdef _NO_EXTENSIONS
-
-void draw_splitbar(HWND hwnd, int x)
-{
-	RECT rt;
-	HDC hdc = GetDC(hwnd);
-
-	GetClientRect(hwnd, &rt);
-	rt.left = x - SPLIT_WIDTH/2;
-	rt.right = x + SPLIT_WIDTH/2+1;
-	InvertRect(hdc, &rt);
-	ReleaseDC(hwnd, hdc);
-}
-
-#endif
 

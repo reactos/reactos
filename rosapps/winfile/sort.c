@@ -42,7 +42,7 @@
 #include <assert.h>
 #define ASSERT assert
 
-#include "winfile.h"
+#include "main.h"
 #include "sort.h"
 
 
@@ -160,6 +160,7 @@ void SortDirectory(Entry* parent, SORT_ORDER sortOrder)
 #else
 		array = (Entry**) malloc(len*sizeof(Entry*));
 #endif
+        memset(array, 0, len*sizeof(Entry*));
 		p = array;
 		for(entry=parent->down; entry; entry=entry->next)
 			*p++ = entry;

@@ -33,10 +33,10 @@ extern "C" {
 
 
 
-void display_error(HWND hwnd, DWORD error);
-void frame_get_clientspace(HWND hwnd, PRECT prect);
-BOOL toggle_fullscreen(HWND hwnd);
-void fullscreen_move(HWND hwnd);
+void display_error(HWND hWnd, DWORD error);
+void frame_get_clientspace(HWND hWnd, PRECT prect);
+BOOL toggle_fullscreen(HWND hWnd);
+void fullscreen_move(HWND hWnd);
 
 BOOL calc_widths(Pane* pane, BOOL anyway);
 void calc_single_width(Pane* pane, int col);
