@@ -60,8 +60,43 @@ MingwBackend::GenerateHeader ()
 }
 
 void
+MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
+                                           const vector<Include*>& includes,
+                                           const vector<Define*>& defines ) const
+{
+	size_t i;
+
+	fprintf (
+		fMakefile,
+		"PROJECT_CFLAGS %s",
+		assignmentOperation );
+	for ( i = 0; i < includes.size(); i++ )
+	{
+		fprintf (
+			fMakefile,
+			" -I%s",
+			includes[i]->directory.c_str() );
+	}
+	
+	for ( i = 0; i < defines.size(); i++ )
+	{
+		Define& d = *defines[i];
+		fprintf (
+			fMakefile,
+			" -D%s",
+			d.name.c_str() );
+		if ( d.value.size() )
+			fprintf (
+				fMakefile,
+				"=%s",
+				d.value.c_str() );
+	}
+	fprintf ( fMakefile, "\n" );
+}
+
+void
 MingwBackend::GenerateGlobalCFlagsAndProperties (
-	const char* op,
+	const char* assignmentOperation,
 	const vector<Property*>& properties,
 	const vector<Include*>& includes,
 	const vector<Define*>& defines,
@@ -79,31 +114,9 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 
 	if ( includes.size() || defines.size() )
 	{
-		fprintf (
-			fMakefile,
-			"PROJECT_CFLAGS %s",
-			op );
-		for ( i = 0; i < includes.size(); i++ )
-		{
-			fprintf (
-				fMakefile,
-				" -I%s",
-				includes[i]->directory.c_str() );
-		}
-		for ( i = 0; i < defines.size(); i++ )
-		{
-			Define& d = *defines[i];
-			fprintf (
-				fMakefile,
-				" -D%s",
-				d.name.c_str() );
-			if ( d.value.size() )
-				fprintf (
-					fMakefile,
-					"=%s",
-					d.value.c_str() );
-		}
-		fprintf ( fMakefile, "\n" );
+		GenerateProjectCFlagsMacro ( assignmentOperation,
+                                     includes,
+                                     defines );
 	}
 
 	for ( i = 0; i < ifs.size(); i++ )

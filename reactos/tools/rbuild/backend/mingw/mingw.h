@@ -14,13 +14,14 @@ private:
 	void CreateMakefile ();
 	void CloseMakefile ();
 	void GenerateHeader ();
-	void
-	MingwBackend::GenerateGlobalCFlagsAndProperties (
-		const char* op,
-		const std::vector<Property*>& properties,
-		const std::vector<Include*>& includes,
-		const std::vector<Define*>& defines,
-		const std::vector<If*>& ifs );
+	void GenerateProjectCFlagsMacro ( const char* assignmentOperation,
+	                                  const std::vector<Include*>& includes,
+	                                  const std::vector<Define*>& defines ) const;
+	void GenerateGlobalCFlagsAndProperties ( const char* op,
+	                                         const std::vector<Property*>& properties,
+	                                         const std::vector<Include*>& includes,
+	                                         const std::vector<Define*>& defines,
+	                                         const std::vector<If*>& ifs );
 	std::string GenerateProjectLFLAGS ();
 	void GenerateGlobalVariables ();
 	void GenerateAllTarget ();
