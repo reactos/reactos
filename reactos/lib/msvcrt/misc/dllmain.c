@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.11 2002/04/01 21:55:09 hbirr Exp $
+/* $Id: dllmain.c,v 1.12 2002/04/28 22:37:00 hbirr Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -129,6 +129,7 @@ DllMain(PVOID hinstDll,
 				nAttachCount--;
 
 				/* FIXME: more cleanup... */
+				_fcloseall();
 
 				/* destroy tls stuff */
 				DestroyThreadData();
