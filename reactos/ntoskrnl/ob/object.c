@@ -169,7 +169,7 @@ failbasiccleanup:
           {
             ProbeForRead(OriginalCopy.Buffer,
                          OriginalCopy.Length,
-                         sizeof(ULONG));
+                         sizeof(WCHAR));
           }
         }
         _SEH_HANDLE

@@ -2205,7 +2205,7 @@ ZwOpenSection(
 NTSTATUS
 STDCALL
 NtOpenSemaphore(
-	IN HANDLE SemaphoreHandle,
+	OUT PHANDLE SemaphoreHandle,
 	IN ACCESS_MASK DesiredAcces,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
@@ -3108,7 +3108,7 @@ NTSTATUS
 STDCALL
 NtQuerySystemEnvironmentValue(
 	IN PUNICODE_STRING VariableName,
-	OUT PWSTR ValueBuffer,
+	OUT PWCHAR ValueBuffer,
 	IN ULONG ValueBufferLength,
 	OUT PULONG ReturnLength  OPTIONAL
 	);
@@ -3117,7 +3117,7 @@ NTSTATUS
 STDCALL
 ZwQuerySystemEnvironmentValue(
 	IN PUNICODE_STRING VariableName,
-	OUT PWSTR ValueBuffer,
+	OUT PWCHAR ValueBuffer,
 	IN ULONG ValueBufferLength,
 	OUT PULONG ReturnLength  OPTIONAL
 	);

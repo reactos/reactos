@@ -25,6 +25,11 @@ static GENERIC_MAPPING ExSemaphoreMapping = {
 	STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | SEMAPHORE_QUERY_STATE,
 	SEMAPHORE_ALL_ACCESS};
 
+static const INFORMATION_CLASS_INFO ExSemaphoreInfoClass[] =
+{
+  ICI_SQ_SAME( sizeof(SEMAPHORE_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SemaphoreBasicInformation */
+};
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL
@@ -73,6 +78,9 @@ ExpInitializeSemaphoreImplementation(VOID)
    ObpCreateTypeObject(ExSemaphoreObjectType);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
 		  IN ACCESS_MASK DesiredAccess,
@@ -81,58 +89,135 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
 		  IN LONG MaximumCount)
 {
    PKSEMAPHORE Semaphore;
-   NTSTATUS Status;
+   HANDLE hSemaphore;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(SemaphoreHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
 
-   Status = ObCreateObject(ExGetPreviousMode(),
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+
+   Status = ObCreateObject(PreviousMode,
 			   ExSemaphoreObjectType,
 			   ObjectAttributes,
-			   ExGetPreviousMode(),
+			   PreviousMode,
 			   NULL,
 			   sizeof(KSEMAPHORE),
 			   0,
 			   0,
 			   (PVOID*)&Semaphore);
    if (!NT_SUCCESS(Status))
+   {
+     KeInitializeSemaphore(Semaphore,
+			   InitialCount,
+			   MaximumCount);
+
+     Status = ObInsertObject ((PVOID)Semaphore,
+			      NULL,
+			      DesiredAccess,
+			      0,
+			      NULL,
+			      &hSemaphore);
+
+     ObDereferenceObject(Semaphore);
+   
+     if(NT_SUCCESS(Status))
      {
-	return(Status);
+       _SEH_TRY
+       {
+         *SemaphoreHandle = hSemaphore;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
-
-   KeInitializeSemaphore(Semaphore,
-			 InitialCount,
-			 MaximumCount);
-
-   Status = ObInsertObject ((PVOID)Semaphore,
-			    NULL,
-			    DesiredAccess,
-			    0,
-			    NULL,
-			    SemaphoreHandle);
-
-   ObDereferenceObject(Semaphore);
+   }
 
    return Status;
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
-NtOpenSemaphore(IN HANDLE SemaphoreHandle,
+NtOpenSemaphore(OUT PHANDLE SemaphoreHandle,
 		IN ACCESS_MASK	DesiredAccess,
 		IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   NTSTATUS Status;
+   HANDLE hSemaphore;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   PreviousMode = ExGetPreviousMode();
+
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(SemaphoreHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
    
    Status = ObOpenObjectByName(ObjectAttributes,
 			       ExSemaphoreObjectType,
 			       NULL,
-			       UserMode,
+			       PreviousMode,
 			       DesiredAccess,
 			       NULL,
-			       SemaphoreHandle);
+			       &hSemaphore);
+   if(NT_SUCCESS(Status))
+   {
+     _SEH_TRY
+     {
+       *SemaphoreHandle = hSemaphore;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
    
    return Status;
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtQuerySemaphore(IN HANDLE SemaphoreHandle,
 		 IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
@@ -140,62 +225,132 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
 		 IN ULONG SemaphoreInformationLength,
 		 OUT PULONG ReturnLength  OPTIONAL)
 {
-   PSEMAPHORE_BASIC_INFORMATION Info;
    PKSEMAPHORE Semaphore;
-   NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
-   Info = (PSEMAPHORE_BASIC_INFORMATION)SemaphoreInformation;
+   PreviousMode = ExGetPreviousMode();
 
-   if (SemaphoreInformationClass > SemaphoreBasicInformation)
-     return STATUS_INVALID_INFO_CLASS;
-
-   if (SemaphoreInformationLength < sizeof(SEMAPHORE_BASIC_INFORMATION))
-     return STATUS_INFO_LENGTH_MISMATCH;
+   DefaultQueryInfoBufferCheck(SemaphoreInformationClass,
+                               ExSemaphoreInfoClass,
+                               SemaphoreInformation,
+                               SemaphoreInformationLength,
+                               ReturnLength,
+                               PreviousMode,
+                               &Status);
+   if(!NT_SUCCESS(Status))
+   {
+     DPRINT1("NtQueryEvent() failed, Status: 0x%x\n", Status);
+     return Status;
+   }
 
    Status = ObReferenceObjectByHandle(SemaphoreHandle,
-				      SEMAPHORE_QUERY_STATE,
+				      EVENT_QUERY_STATE,
 				      ExSemaphoreObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Semaphore,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     return Status;
+   if(NT_SUCCESS(Status))
+   {
+     switch(SemaphoreInformationClass)
+     {
+       case SemaphoreBasicInformation:
+       {
+         PSEMAPHORE_BASIC_INFORMATION BasicInfo = (PSEMAPHORE_BASIC_INFORMATION)SemaphoreInformation;
 
-   Info->CurrentCount = KeReadStateSemaphore(Semaphore);
-   Info->MaximumCount = Semaphore->Limit;
+         _SEH_TRY
+         {
+           BasicInfo->CurrentCount = KeReadStateSemaphore(Semaphore);
+           BasicInfo->MaximumCount = Semaphore->Limit;
 
-   if (ReturnLength != NULL)
-     *ReturnLength = sizeof(SEMAPHORE_BASIC_INFORMATION);
+           if(ReturnLength != NULL)
+           {
+             *ReturnLength = sizeof(SEMAPHORE_BASIC_INFORMATION);
+           }
+         }
+         _SEH_HANDLE
+         {
+           Status = _SEH_GetExceptionCode();
+         }
+         _SEH_END;
+         break;
+       }
 
-   ObDereferenceObject(Semaphore);
+       default:
+         Status = STATUS_NOT_IMPLEMENTED;
+         break;
+     }
 
-   return STATUS_SUCCESS;
+     ObDereferenceObject(Semaphore);
+   }
+
+   return Status;
 }
 
+
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
 		   IN LONG ReleaseCount,
 		   OUT PLONG PreviousCount  OPTIONAL)
 {
+   KPROCESSOR_MODE PreviousMode;
    PKSEMAPHORE Semaphore;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousCount != NULL && PreviousMode == UserMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(PreviousCount,
+                     sizeof(LONG),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
    
    Status = ObReferenceObjectByHandle(SemaphoreHandle,
 				      SEMAPHORE_MODIFY_STATE,
 				      ExSemaphoreObjectType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Semaphore,
 				      NULL);
-   if (!NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status))
+   {
+     LONG PrevCount = KeReleaseSemaphore(Semaphore,
+                                         IO_NO_INCREMENT,
+                                         ReleaseCount,
+                                         FALSE);
+     ObDereferenceObject(Semaphore);
+     
+     if(PreviousCount != NULL)
      {
-	return(Status);
+       _SEH_TRY
+       {
+         *PreviousCount = PrevCount;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
-   KeReleaseSemaphore(Semaphore,
-		      IO_NO_INCREMENT,
-		      ReleaseCount,
-		      FALSE);
-   ObDereferenceObject(Semaphore);
-   return(STATUS_SUCCESS);
+   }
+
+   return Status;
 }
 
 /* EOF */
