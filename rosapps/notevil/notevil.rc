@@ -1,4 +1,4 @@
-/* $Id: notevil.rc,v 1.8 2002/09/03 18:44:17 chorns Exp $ */
+/* $Id: notevil.rc,v 1.9 2003/01/04 15:21:18 ea Exp $ */
 #include <windows.h>
 #include "../../reactos/include/reactos/resource.h"
 
@@ -73,6 +73,11 @@ BEGIN
  23, "Steven Edwards"
  24, "KJK::Hyperion"
  25, "Robert Dickenson"
+ 26, "Eugene Ingerman"
+ 27, "Guido de Jong"
+ 28, "Jurgen van Gael"
+ 29, "Marty Dill"
+ 30, "Ge van Geldorp"
 END
 
 /* EOF */
