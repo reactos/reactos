@@ -32,22 +32,24 @@ reactos/tools/bin2res		# Resource to binary converter
 
 The following shared libraries are a 100% port from Winehq sourcs.
 
-reactos/lib/cabinet
-reactos/lib/comctl32            # Synced to Wine-20040121
-reactos/lib/comdlg32		
+reactos/lib/cabinet             # Synced to Wine-20040309
+reactos/lib/comctl32            # Synced to Wine-20040309
+reactos/lib/comdlg32		# Synced to Wine-20040309
 reactos/lib/imagehlp		# Out of sync
 reactos/lib/imm32
-reactos/lib/msvideo		# Syned to WINE-20040213
 reactos/lib/msvcrt20
-reactos/lib/mpr                 # Imported 20040201
-reactos/lib/ole32               # Synced to Wine-20040121
-reactos/lib/richedit		# Synced 20040201
+reactos/lib/mpr                 # Synced to Wine-20040309
+reactos/lib/ole32               # Synced to Wine-20040309
+reactos/lib/oledlg              # Synced to Wine-20040309
+reactos/lib/richedit		# Synced to Wine-20040309
 reactos/lib/rpcrt4		# Out of date+Hack. In need of new merge
 reactos/lib/shell32             # 2004/01/22: Heavy syncing in progress
-reactos/lib/shlwapi             # Synced to Wine-20040121
+reactos/lib/shlwapi             # Synced to Wine-20040309
 reactos/lib/twain		# Out of sync
-reactos/lib/unicode		# make this go away.
-reactos/lib/winmm		# Syned to WINE-20040213
+reactos/lib/unicode		# make this go away. Synced to Wine-20040309
+reactos/lib/winmm		# Synced to Wine-20040309
+reactos/lib/winmm/midimap       # Synced to Wine-20040309
+reactos/lib/winmm/wavemap       # Synced to Wine-20040309
 
 ReactOS shares the following programs with Winehq.
 reactos/subsys/system/regedit	#Out of sync
