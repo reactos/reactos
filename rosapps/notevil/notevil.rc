@@ -1,4 +1,4 @@
-/* $Id: notevil.rc,v 1.10 2003/06/02 12:30:05 ea Exp $ */
+/* $Id: notevil.rc,v 1.11 2003/06/07 09:43:16 ea Exp $ */
 #include <windows.h>
 #include "../../reactos/include/reactos/resource.h"
 
@@ -84,6 +84,7 @@ BEGIN
  30, "Ge van Geldorp"
  31, "Richard Campbell"
  32, "Gunnar Andre' Dalsnes"
+ 33, "Aleksey Bragin"
 END
 
 /* EOF */
