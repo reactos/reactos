@@ -1,0 +1,24 @@
+                **********************************************
+                *** Console Telnet 2.1 beta 2.  Known Bugs ***
+                **********************************************
+
+
+Wrap_Line = 0   Doesn't work very well. It works with elvis or talk on linux,
+                but messes up bash at last line.
+
+Enable_Mouse=1  Causes the display to slow in fullscreen mode, since the
+                mouse has to be erased and then drawn again for every
+                screen write.
+
+Term_Width or Term_Height != -1 or Wide_Enable=1
+                Specifying any of these can cause display problems if
+                the font size is not set to auto.
+
+Resizing the current window while running telnet can cause problems, especially
+if doing so makes the buffer smaller.  This should be more of a problem on
+NT/W2K than on 95/98.  Part of the problem is that the telnet NAWS option
+negotiation isn't done properly.  On a related note, turning on scrollbars can
+decrease performance.
+
+There are many other bugs, most of which are documented in the code.  Just
+grep the source for "FIX ME".
