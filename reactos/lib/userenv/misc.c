@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.3 2004/07/11 22:35:07 weiden Exp $
+/* $Id: misc.c,v 1.4 2004/07/11 23:08:31 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -129,8 +129,7 @@ LoadDynamicImports(PDYN_MODULE Module, PDYN_FUNCS DynFuncs)
     return FALSE;
   }
   
-  /* begin with the first function */
-  fn = &DynFuncs->fn.foo; /* warning: assignment from incompatible pointer type */
+  fn = &DynFuncs->fn.foo;
   
   /* load the imports */
   for(i = 0; i < Module->nFunctions; i++)
