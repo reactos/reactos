@@ -1,4 +1,4 @@
-/* $Id: regcontrol.h,v 1.3 2003/06/25 23:59:43 sedwards Exp $
+/* $Id: regcontrol.h,v 1.4 2003/08/15 15:12:14 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -10,6 +10,9 @@
  */
 #ifndef ROS_REGCONTROL_H
 #define ROS_REGCONTROL_H
+
+#define IS_ATOM(x) \
+  (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
 
 /* Built-in class names (see _Undocumented_Windows_ p.418) */
 #define ICONTITLE_CLASS_ATOM MAKEINTATOMA(32772)  /* IconTitle */
@@ -32,6 +35,7 @@ extern const struct builtin_class_descr BUTTON_builtin_class;
 extern const struct builtin_class_descr COMBO_builtin_class;
 extern const struct builtin_class_descr COMBOLBOX_builtin_class;
 extern const struct builtin_class_descr DIALOG_builtin_class;
+extern const struct builtin_class_descr POPUPMENU_builtin_class;
 extern const struct builtin_class_descr DESKTOP_builtin_class;
 extern const struct builtin_class_descr EDIT_builtin_class;
 extern const struct builtin_class_descr ICONTITLE_builtin_class;

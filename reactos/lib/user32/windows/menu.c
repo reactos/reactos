@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.23 2003/08/09 14:25:07 chorns Exp $
+/* $Id: menu.c,v 1.24 2003/08/15 15:12:14 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -36,6 +36,9 @@
 #include <window.h>
 #include <strpool.h>
 
+#include "user32/regcontrol.h"
+#include "../controls/controls.h"
+
 /* TYPES *********************************************************************/
 
 #define MENU_TYPE_MASK ((MF_STRING | MF_BITMAP | MF_OWNERDRAW | MF_SEPARATOR))
@@ -47,10 +50,6 @@
 #define SEPARATOR_HEIGHT (5)
 #define MENU_TAB_SPACE (8)
 
-#define MENU_MAGIC (0x554D)
-
-#define NO_SELECTED_ITEM (0xffff)
-
 #ifndef MF_END
 #define MF_END             (0x0080)
 #endif
@@ -58,6 +57,25 @@
 #ifndef MIIM_STRING
 #define MIIM_STRING      (0x00000040)
 #endif
+
+#define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
+#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
+#define POPUPMENU_CLASS_ATOMA   MAKEINTATOMA(32768)  /* PopupMenu */
+#define POPUPMENU_CLASS_ATOMW   MAKEINTATOMW(32768)  /* PopupMenu */
+
+/*********************************************************************
+ * PopupMenu class descriptor
+ */
+const struct builtin_class_descr POPUPMENU_builtin_class =
+{
+    POPUPMENU_CLASS_ATOMA,                     /* name */
+    CS_GLOBALCLASS | CS_SAVEBITS | CS_DBLCLKS, /* style  */
+    (WNDPROC) NULL,                            /* FIXME - procA */
+    (WNDPROC) NULL,                            /* FIXME - procW */
+    sizeof(MENUINFO *),                        /* extra */
+    (LPCSTR) IDC_ARROW,                        /* cursor */
+    (HBRUSH)COLOR_MENU                         /* brush */
+};
 
 
 /* INTERNAL FUNCTIONS ********************************************************/
