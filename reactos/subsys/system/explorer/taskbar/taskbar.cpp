@@ -192,12 +192,12 @@ void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize)
 	HWND hwnd = it->first;
 
 	if (can_minimize && (hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd)) {
-		ShowWindowAsync(hwnd, SW_MINIMIZE);
+		PostMessage(hwnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
 		_last_foreground_wnd = 0;
 	} else {
 		 // switch to selected application window
 		if (IsIconic(hwnd))
-			ShowWindowAsync(hwnd, SW_RESTORE);
+			PostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
 
 		SetForegroundWindow(hwnd);
 
@@ -297,8 +297,10 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 		++entry._used;
 		btn.idCommand = entry._id;
 
-		if (hwnd == GetForegroundWindow())
+		if (hwnd == GetForegroundWindow()) {
 			btn.fsState |= TBSTATE_PRESSED|TBSTATE_CHECKED;
+			pThis->_last_foreground_wnd = hwnd;
+		}
 
 		if (!last_id) {
 			 // create new toolbar buttons for new windows
