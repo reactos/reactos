@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.102 2004/12/15 03:00:33 royce Exp $
+/* $Id: utils.c,v 1.103 2004/12/20 02:31:48 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2017,7 +2017,6 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
           {
             DPRINT1("Failed to create or open dll section of '%wZ' (Status %lx)\n", &AdjustedName, Status);
             RtlFreeUnicodeString(&AdjustedName);
-            RtlFreeUnicodeString(&FullDosName);
             return Status;
           }
         RtlFreeUnicodeString(&AdjustedName);
