@@ -29,27 +29,28 @@
 #include <cache.h>
 #include <machine.h>
 
-
-PFAT_BOOTSECTOR		FatVolumeBootSector = NULL;
-PFAT32_BOOTSECTOR	Fat32VolumeBootSector = NULL;
-PFATX_BOOTSECTOR	FatXVolumeBootSector = NULL;
-
 U32			BytesPerSector;			/* Number of bytes per sector */
 U32			SectorsPerCluster;		/* Number of sectors per cluster */
 U32			FatVolumeStartSector;		/* Absolute starting sector of the partition */
-U32			SectorsPerFat;			// Sectors per FAT table
-U32			RootDirSectorStart;		// Starting sector of the root directory (non-fat32)
-U32			RootDirSectors;			// Number of sectors of the root directory (non-fat32)
+U32			FatSectorStart;			/* Starting sector of 1st FAT table */
+U32			ActiveFatSectorStart;		/* Starting sector of active FAT table */
+U32			NumberOfFats;			/* Number of FAT tables */
+U32			SectorsPerFat;			/* Sectors per FAT table */
+U32			RootDirSectorStart;		/* Starting sector of the root directory (non-fat32) */
+U32			RootDirSectors;			/* Number of sectors of the root directory (non-fat32) */
 U32			RootDirStartCluster;		/* Starting cluster number of the root directory (fat32 only) */
-U32			DataSectorStart;		// Starting sector of the data area
+U32			DataSectorStart;		/* Starting sector of the data area */
 
-U32			FatType = 0;			// FAT12, FAT16, FAT32, FATX16 or FATX32
+U32			FatType = 0;			/* FAT12, FAT16, FAT32, FATX16 or FATX32 */
 U32			FatDriveNumber = 0;
 
 BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCount)
 {
 	char ErrMsg[80];
 	U32 FatSize;
+	PFAT_BOOTSECTOR	FatVolumeBootSector;
+	PFAT32_BOOTSECTOR Fat32VolumeBootSector;
+	PFATX_BOOTSECTOR FatXVolumeBootSector;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatOpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector));
 
@@ -57,18 +58,7 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
 	FatDriveNumber = DriveNumber;
 
 	//
-	// Free any memory previously allocated
-	//
-	if (FatVolumeBootSector != NULL)
-	{
-		MmFreeMemory(FatVolumeBootSector);
-
-		FatVolumeBootSector = NULL;
-		Fat32VolumeBootSector = NULL;
-	}
-
-	//
-	// Now allocate the memory to hold the boot sector
+	// Allocate the memory to hold the boot sector
 	//
 	FatVolumeBootSector = (PFAT_BOOTSECTOR) MmAllocateMemory(512);
 	Fat32VolumeBootSector = (PFAT32_BOOTSECTOR) FatVolumeBootSector;
@@ -87,6 +77,7 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
 	// If this fails then abort
 	if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PVOID)DISKREADBUFFER))
 	{
+		MmFreeMemory(FatVolumeBootSector);
 		return FALSE;
 	}
 	RtlCopyMemory(FatVolumeBootSector, (PVOID)DISKREADBUFFER, 512);
@@ -186,6 +177,7 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
 		sprintf(ErrMsg, "Invalid boot sector magic on drive 0x%x (expected 0xaa55 found 0x%x)",
                         DriveNumber, FatVolumeBootSector->BootSectorMagic);
 		FileSystemError(ErrMsg);
+		MmFreeMemory(FatVolumeBootSector);
 		return FALSE;
 	}
 
@@ -197,12 +189,16 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
             (! ISFATX(FatType) && 64 * 1024 < FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector))
 	{
 		FileSystemError("This file system has cluster sizes bigger than 64k.\nFreeLoader does not support this.");
+		MmFreeMemory(FatVolumeBootSector);
 		return FALSE;
 	}
 
 	//
 	// Clear our variables
 	//
+	FatSectorStart = 0;
+	ActiveFatSectorStart = 0;
+	NumberOfFats = 0;
 	RootDirSectorStart = 0;
 	DataSectorStart = 0;
 	SectorsPerFat = 0;
@@ -217,11 +213,14 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
 	{
 		BytesPerSector = 512;
 		SectorsPerCluster = FatXVolumeBootSector->SectorsPerCluster;
+		FatSectorStart = (4096 / BytesPerSector);
+		ActiveFatSectorStart = FatSectorStart;
+		NumberOfFats = 1;
 		FatSize = PartitionSectorCount / SectorsPerCluster *
 		          (FATX16 == FatType ? 2 : 4);
 		SectorsPerFat = (((FatSize + 4095) / 4096) * 4096) / BytesPerSector;
 
-		RootDirSectorStart = (4096 / BytesPerSector) + SectorsPerFat;
+		RootDirSectorStart = FatSectorStart + NumberOfFats * SectorsPerFat;
 		RootDirSectors = FatXVolumeBootSector->SectorsPerCluster;
 
 		DataSectorStart = RootDirSectorStart + RootDirSectors;
@@ -230,22 +229,28 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
 	{
 		BytesPerSector = FatVolumeBootSector->BytesPerSector;
 		SectorsPerCluster = FatVolumeBootSector->SectorsPerCluster;
+		FatSectorStart = FatVolumeBootSector->ReservedSectors;
+		ActiveFatSectorStart = FatSectorStart;
+		NumberOfFats = FatVolumeBootSector->NumberOfFats;
 		SectorsPerFat = FatVolumeBootSector->SectorsPerFat;
 
-		RootDirSectorStart = (FatVolumeBootSector->NumberOfFats * SectorsPerFat) + FatVolumeBootSector->ReservedSectors;
+		RootDirSectorStart = FatSectorStart + NumberOfFats * SectorsPerFat;
 		RootDirSectors = ((FatVolumeBootSector->RootDirEntries * 32) + (BytesPerSector - 1)) / BytesPerSector;
 
-		DataSectorStart = FatVolumeBootSector->ReservedSectors + (FatVolumeBootSector->NumberOfFats * FatVolumeBootSector->SectorsPerFat) + RootDirSectors;
+		DataSectorStart = RootDirSectorStart + RootDirSectors;
 	}
 	else
 	{
 		BytesPerSector = Fat32VolumeBootSector->BytesPerSector;
 		SectorsPerCluster = Fat32VolumeBootSector->SectorsPerCluster;
+		FatSectorStart = Fat32VolumeBootSector->ReservedSectors;
+		ActiveFatSectorStart = FatSectorStart +
+		                       ((Fat32VolumeBootSector->ExtendedFlags & 0x80) ? ((Fat32VolumeBootSector->ExtendedFlags & 0x0f) * Fat32VolumeBootSector->SectorsPerFatBig) : 0);
+		NumberOfFats = Fat32VolumeBootSector->NumberOfFats;
 		SectorsPerFat = Fat32VolumeBootSector->SectorsPerFatBig;
 
 		RootDirStartCluster = Fat32VolumeBootSector->RootDirStartCluster;
-		DataSectorStart = FatVolumeBootSector->ReservedSectors + (FatVolumeBootSector->NumberOfFats * Fat32VolumeBootSector->SectorsPerFatBig) + RootDirSectors;
-		
+		DataSectorStart = FatSectorStart + NumberOfFats * SectorsPerFat;
 
 		//
 		// Check version
@@ -257,6 +262,7 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
 			return FALSE;
 		}
 	}
+	MmFreeMemory(FatVolumeBootSector);
 
 	//
 	// Initialize the disk cache for this drive
@@ -273,7 +279,7 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector, U32 PartitionSectorCo
 	//
 	if (FatType != FAT32 && FatType != FATX32)
 	{
-		if (!CacheForceDiskSectorsIntoCache(DriveNumber, FatVolumeStartSector + FatVolumeBootSector->ReservedSectors, FatVolumeBootSector->SectorsPerFat))
+		if (!CacheForceDiskSectorsIntoCache(DriveNumber, ActiveFatSectorStart, SectorsPerFat))
 		{
 			return FALSE;
 		}
@@ -832,7 +838,7 @@ BOOL FatGetFatEntry(U32 Cluster, U32* ClusterPointer)
 	case FAT12:
 
 		FatOffset = Cluster + (Cluster / 2);
-		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / BytesPerSector);
+		ThisFatSecNum = ActiveFatSectorStart + (FatOffset / BytesPerSector);
 		ThisFatEntOffset = (FatOffset % BytesPerSector);
 
 		DbgPrint((DPRINT_FILESYSTEM, "FatOffset: %d\n", FatOffset));
@@ -866,7 +872,7 @@ BOOL FatGetFatEntry(U32 Cluster, U32* ClusterPointer)
 	case FATX16:
 		
 		FatOffset = (Cluster * 2);
-		ThisFatSecNum = FatVolumeBootSector->ReservedSectors + (FatOffset / BytesPerSector);
+		ThisFatSecNum = ActiveFatSectorStart + (FatOffset / BytesPerSector);
 		ThisFatEntOffset = (FatOffset % BytesPerSector);
 
 		if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
@@ -882,8 +888,7 @@ BOOL FatGetFatEntry(U32 Cluster, U32* ClusterPointer)
 	case FATX32:
 
 		FatOffset = (Cluster * 4);
-		ThisFatSecNum = (Fat32VolumeBootSector->ExtendedFlags & 0x80) ? ((Fat32VolumeBootSector->ExtendedFlags & 0x0f) * Fat32VolumeBootSector->SectorsPerFatBig) : 0; // Get the active fat sector offset
-		ThisFatSecNum += FatVolumeBootSector->ReservedSectors + (FatOffset / BytesPerSector);
+		ThisFatSecNum = ActiveFatSectorStart + (FatOffset / BytesPerSector);
 		ThisFatEntOffset = (FatOffset % BytesPerSector);
 
 		if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
