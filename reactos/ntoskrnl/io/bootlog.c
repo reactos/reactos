@@ -1,4 +1,4 @@
-/* $Id: bootlog.c,v 1.4 2004/09/26 11:29:50 ekohl Exp $
+/* $Id: bootlog.c,v 1.5 2004/09/28 12:50:23 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -142,14 +142,11 @@ IopBootLog(PUNICODE_STRING DriverName,
 static NTSTATUS
 IopWriteLogFile(PWSTR LogText)
 {
-  FILE_STANDARD_INFORMATION FileInformation;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING FileName;
   IO_STATUS_BLOCK IoStatusBlock;
   HANDLE FileHandle;
-  LARGE_INTEGER ByteOffset;
   PWSTR CrLf = L"\r\n";
-
   NTSTATUS Status;
 
   DPRINT("IopWriteLogFile() called\n");
@@ -163,7 +160,7 @@ IopWriteLogFile(PWSTR LogText)
 			     NULL);
 
   Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_DATA, /* FILE_APPEND_DATA */
+			FILE_APPEND_DATA,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -179,20 +176,6 @@ IopWriteLogFile(PWSTR LogText)
       return Status;
     }
 
-  Status = NtQueryInformationFile(FileHandle,
-				  &IoStatusBlock,
-				  &FileInformation,
-				  sizeof(FILE_STANDARD_INFORMATION),
-				  FileStandardInformation);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtQueryInformationFile() failed (Status %lx)\n", Status);
-      return Status;
-    }
-
-
-  ByteOffset.QuadPart = FileInformation.EndOfFile.QuadPart;
-
   if (LogText != NULL)
     {
       Status = NtWriteFile(FileHandle,
@@ -202,7 +185,7 @@ IopWriteLogFile(PWSTR LogText)
 			   &IoStatusBlock,
 			   (PVOID)LogText,
 			   wcslen(LogText) * sizeof(WCHAR),
-			   &ByteOffset,
+			   NULL,
 			   NULL);
       if (!NT_SUCCESS(Status))
 	{
@@ -210,8 +193,6 @@ IopWriteLogFile(PWSTR LogText)
 	  NtClose(FileHandle);
 	  return Status;
 	}
-
-      ByteOffset.QuadPart += (wcslen(LogText) * sizeof(WCHAR));
     }
 
   /* L"\r\n" */
@@ -222,7 +203,7 @@ IopWriteLogFile(PWSTR LogText)
 		       &IoStatusBlock,
 		       (PVOID)CrLf,
 		       2 * sizeof(WCHAR),
-		       &ByteOffset,
+		       NULL,
 		       NULL);
 
   NtClose(FileHandle);
