@@ -108,6 +108,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    ULONG* mdl_pages=NULL;
    int i;
    MEMORY_AREA* marea;
+   PVOID Address;
    
    DPRINT("MmProbeAndLockPages(Mdl %x)\n",Mdl);
    DPRINT("StartVa %x\n",Mdl->StartVa);
@@ -166,12 +167,11 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
     */
    mdl_pages = (ULONG *)(Mdl + 1);
    
-   for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE);i++)
+   for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
      {
-	mdl_pages[i]=MmGetPhysicalAddress((PVOID)(PAGE_ROUND_DOWN(Mdl->StartVa)
-					  +(i*PAGESIZE))).LowPart;
+        Address = Mdl->StartVa + (i*PAGESIZE);
+	mdl_pages[i]=MmGetPhysicalAddress(Address).LowPart;
 	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
-	DPRINT("&mdl_pages[i] %x\n",&mdl_pages[i]);
      }
 }
 
