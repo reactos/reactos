@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.10 2002/06/11 22:09:02 dwelch Exp $
+/* $Id: pageop.c,v 1.11 2002/08/10 16:41:19 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -80,7 +80,7 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   /*
    * Calcuate the hash value for pageop structure
    */
-  if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+  if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
       Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGESIZE));
     }
@@ -98,7 +98,7 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   PageOp = MmPageOpHashTable[Hash];
   while (PageOp != NULL)
     {
-      if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+      if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
 	{
 	  if (PageOp->Segment == Segment &&
 	      PageOp->Offset == Offset)
@@ -147,7 +147,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   /*
    * Calcuate the hash value for pageop structure
    */
-  if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+  if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
       Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGESIZE));
     }
@@ -165,7 +165,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   PageOp = MmPageOpHashTable[Hash];
   while (PageOp != NULL)
     {
-      if (MArea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+      if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
 	{
 	  if (PageOp->Segment == Segment &&
 	      PageOp->Offset == Offset)
@@ -206,7 +206,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
       return(NULL);
     }
   
-  if (MArea->Type != MEMORY_AREA_SECTION_VIEW_COMMIT)
+  if (MArea->Type != MEMORY_AREA_SECTION_VIEW)
     {
       PageOp->Pid = Pid;
       PageOp->Address = Address;

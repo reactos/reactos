@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.38 2002/06/10 21:34:38 hbirr Exp $
+/* $Id: page.c,v 1.39 2002/08/10 16:41:20 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -1082,14 +1082,14 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
      Process, Address, flProtect);
 
    Attributes = ProtectToPTE(flProtect);
-   if (Process != CurrentProcess)
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
    PageEntry = MmGetPageEntry(Address);
    (*PageEntry) = PAGE_MASK(*PageEntry) | Attributes;
    FLUSH_TLB;
-   if (Process != CurrentProcess)
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeDetachProcess();
      }

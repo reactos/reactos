@@ -17,19 +17,17 @@ struct _MM_PAGEOP;
 typedef ULONG SWAPENTRY;
 
 #define MEMORY_AREA_INVALID              (0)
-#define MEMORY_AREA_SECTION_VIEW_COMMIT  (1)
+#define MEMORY_AREA_SECTION_VIEW         (1)
 #define MEMORY_AREA_CONTINUOUS_MEMORY    (2)
 #define MEMORY_AREA_NO_CACHE             (3)
 #define MEMORY_AREA_IO_MAPPING           (4)
 #define MEMORY_AREA_SYSTEM               (5)
 #define MEMORY_AREA_MDL_MAPPING          (7)
 #define MEMORY_AREA_VIRTUAL_MEMORY       (8)
-#define MEMORY_AREA_SECTION_VIEW_RESERVE (9)
-#define MEMORY_AREA_CACHE_SEGMENT        (10)
-#define MEMORY_AREA_SHARED_DATA          (11)
-#define MEMORY_AREA_WORKING_SET          (12)
-#define MEMORY_AREA_KERNEL_STACK         (13)
-#define MEMORY_AREA_PAGED_POOL           (14)
+#define MEMORY_AREA_CACHE_SEGMENT        (9)
+#define MEMORY_AREA_SHARED_DATA          (10)
+#define MEMORY_AREA_KERNEL_STACK         (11)
+#define MEMORY_AREA_PAGED_POOL           (12)
 
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
                           ((x) / (4*1024*1024))
@@ -137,10 +135,11 @@ typedef struct
       LIST_ENTRY ViewListEntry;
       PMM_SECTION_SEGMENT Segment;
       BOOLEAN WriteCopyView;
+      LIST_ENTRY RegionListHead;
     } SectionData;
     struct
     {
-      LIST_ENTRY SegmentListHead;
+      LIST_ENTRY RegionListHead;
     } VirtualMemoryData;
   } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
@@ -547,4 +546,52 @@ MmDumpToPagingFile(ULONG BugCode,
 		   ULONG BugCodeParameter4,
 		   struct _KTRAP_FRAME* TrapFrame);
 
+typedef VOID (*PMM_ALTER_REGION_FUNC)(PMADDRESS_SPACE AddressSpace,
+				      PVOID BaseAddress, ULONG Length,
+				      ULONG OldType, ULONG OldProtect,
+				      ULONG NewType, ULONG NewProtect);
+
+typedef struct _MM_REGION
+{
+   ULONG Type;
+   ULONG Protect;
+   ULONG Length;
+   LIST_ENTRY RegionListEntry;
+} MM_REGION, *PMM_REGION;
+
+NTSTATUS
+MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress, 
+	      PLIST_ENTRY RegionListHead, PVOID StartAddress, ULONG Length, 
+	      ULONG NewType, ULONG NewProtect, 
+	      PMM_ALTER_REGION_FUNC AlterFunc);
+VOID
+MmInitialiseRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
+		   ULONG Protect);
+PMM_REGION
+MmFindRegion(PVOID BaseAddress, PLIST_ENTRY RegionListHead, PVOID Address,
+	     PVOID* RegionBaseAddress);
+NTSTATUS STDCALL
+MmQueryAnonMem(PMEMORY_AREA MemoryArea,
+	       PVOID Address,
+	       PMEMORY_BASIC_INFORMATION Info,
+	       PULONG ResultLength);
+NTSTATUS STDCALL
+MmQuerySectionView(PMEMORY_AREA MemoryArea,
+		   PVOID Address,
+		   PMEMORY_BASIC_INFORMATION Info,
+		   PULONG ResultLength);
+NTSTATUS
+MmProtectAnonMem(PMADDRESS_SPACE AddressSpace,
+		 PMEMORY_AREA MemoryArea,
+		 PVOID BaseAddress,
+		 ULONG Length,
+		 ULONG Protect,
+		 PULONG OldProtect);
+NTSTATUS
+MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
+		     PMEMORY_AREA MemoryArea,
+		     PVOID BaseAddress,
+		     ULONG Length,
+		     ULONG Protect,
+		     PULONG OldProtect);
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.6 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: rmap.c,v 1.7 2002/08/10 16:41:19 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -86,7 +86,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   MmLockAddressSpace(&Process->AddressSpace);
   MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace, Address);
   Type = MemoryArea->Type;
-  if (Type == MEMORY_AREA_SECTION_VIEW_COMMIT)
+  if (Type == MEMORY_AREA_SECTION_VIEW)
     {
       Offset.QuadPart = (ULONG)((Address - (ULONG)MemoryArea->BaseAddress) +
 	MemoryArea->Data.SectionData.ViewOffset);

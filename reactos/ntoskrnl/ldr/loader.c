@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.118 2002/07/18 00:25:31 dwelch Exp $
+/* $Id: loader.c,v 1.119 2002/08/10 16:41:18 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -35,6 +35,7 @@
 #include <internal/ldr.h>
 #include <internal/pool.h>
 #include <internal/kd.h>
+#include <ntos/minmax.h>
 
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
@@ -1096,6 +1097,30 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 
           ImportModuleDirectory++;
         }
+    }
+
+  /* Set the protections for the various parts of the driver */
+  for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
+    {
+      ULONG Characteristics = PESectionHeaders[Idx].Characteristics;
+      ULONG Length;
+      PVOID BaseAddress;
+      ULONG i;
+      Length = 
+	max(PESectionHeaders[Idx].Misc.VirtualSize,
+	    PESectionHeaders[Idx].SizeOfRawData);
+      BaseAddress = PESectionHeaders[Idx].VirtualAddress + DriverBase;
+      if (Characteristics & IMAGE_SECTION_CHAR_CODE &&
+	  !(Characteristics & IMAGE_SECTION_CHAR_WRITABLE ||
+	    Characteristics & IMAGE_SECTION_CHAR_DATA ||
+	    Characteristics & IMAGE_SECTION_CHAR_BSS))
+	{
+	  for (i = 0; i < PAGE_ROUND_DOWN(Length); i++)
+	    {
+	      MmSetPageProtect(NULL, BaseAddress + (i * PAGESIZE), 
+			       PAGE_READONLY);
+	    }
+	}
     }
 
   /* Create the module */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.57 2002/06/04 15:26:56 dwelch Exp $
+/* $Id: mm.c,v 1.58 2002/08/10 16:41:19 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -59,8 +59,7 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
    
    switch (Marea->Type)
      {
-     case MEMORY_AREA_SECTION_VIEW_COMMIT:
-     case MEMORY_AREA_SECTION_VIEW_RESERVE:
+     case MEMORY_AREA_SECTION_VIEW:
 	Status = MmUnmapViewOfSection(Process, Marea->BaseAddress);
 	assert(Status == STATUS_SUCCESS);
 	return(STATUS_SUCCESS);
@@ -214,7 +213,7 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
        Status = STATUS_SUCCESS;
        break;
 	
-      case MEMORY_AREA_SECTION_VIEW_COMMIT:
+      case MEMORY_AREA_SECTION_VIEW:
 	Status = MmAccessFaultSectionView(AddressSpace,
 					  MemoryArea, 
 					  (PVOID)Address,
@@ -346,7 +345,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	   Status = STATUS_UNSUCCESSFUL;
 	   break;
 	   
-	 case MEMORY_AREA_SECTION_VIEW_COMMIT:
+	 case MEMORY_AREA_SECTION_VIEW:
 	   Status = MmNotPresentFaultSectionView(AddressSpace,
 						 MemoryArea, 
 						 (PVOID)Address,

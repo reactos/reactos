@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.52 2002/08/08 17:54:13 dwelch Exp $
+/* $Id: utils.c,v 1.53 2002/08/10 16:41:17 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -112,11 +112,13 @@ LdrAdjustDllName (PUNICODE_STRING FullDllName,
 	Pointer++;
 	Length = Extension - Pointer;
 	memmove (Buffer, Pointer, Length * sizeof(WCHAR));
+	Buffer[Length] = L'\0';
      }
    else
      {
 	/* get the full dll name */
 	memmove (Buffer, DllName->Buffer, DllName->Length);
+	Buffer[DllName->Length / sizeof(WCHAR)] = L'\0';
      }
 
    /* Build the DLL's absolute name */
@@ -941,6 +943,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
    ULONG Ordinal;
    PVOID BaseAddress;
    NTSTATUS Status;
+   ULONG IATSize;
    
    DPRINT("LdrFixupImports(NTHeaders %x, ImageBase %x)\n", NTHeaders, 
 	   ImageBase);
@@ -961,6 +964,8 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	UNICODE_STRING DllName;
 	DWORD	pName;
 	WORD	pHint;
+	PVOID   IATBase;
+	ULONG   OldProtect;
 
 	DPRINT("ImportModule->Directory->dwRVAModuleName %s\n",
 	       (PCHAR)(ImageBase + ImportModuleDirectory->dwRVAModuleName));
@@ -1008,6 +1013,31 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	       (PULONG)(ImageBase 
 			+ ImportModuleDirectory->dwRVAFunctionAddressList);
 	  }
+
+	/*
+	 * Get the size of IAT.
+	 */
+	IATSize = 0;
+	while (FunctionNameList[IATSize] != 0L)
+	  {
+	    IATSize++;
+	  }
+
+	/*
+	 * Unprotect the region we are about to write into.
+	 */
+	IATBase = (PVOID)ImportAddressList;
+	Status = NtProtectVirtualMemory(NtCurrentProcess(),
+					IATBase,
+					IATSize * sizeof(PVOID*),
+					PAGE_READWRITE,
+					&OldProtect);
+	if (!NT_SUCCESS(Status))
+	  {
+	    DbgPrint("LDR: Failed to unprotect IAT.\n");
+	    return(Status);
+	  }
+
 	/*
 	 * Walk through function list and fixup addresses.
 	 */
@@ -1036,6 +1066,21 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	     ImportAddressList++;
 	     FunctionNameList++;
 	  }
+
+	/*
+	 * Protect the region we are about to write into.
+	 */
+	Status = NtProtectVirtualMemory(NtCurrentProcess(),
+					IATBase,
+					IATSize * sizeof(PVOID*),
+					OldProtect,
+					&OldProtect);
+	if (!NT_SUCCESS(Status))
+	  {
+	    DbgPrint("LDR: Failed to protect IAT.\n");
+	    return(Status);
+	  }
+
 	ImportModuleDirectory++;
      }
    return STATUS_SUCCESS;

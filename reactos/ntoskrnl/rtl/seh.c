@@ -62,6 +62,19 @@ extern DWORD CDECL SEHFilterRoutine(VOID);
 extern VOID CDECL SEHHandlerRoutine(VOID);
 #endif
 
+DWORD CDECL SEHFilterRoutine(VOID)
+{
+  DbgPrint("Within filter routine.\n");
+  return EXCEPTION_EXECUTE_HANDLER;
+  //return EXCEPTION_CONTINUE_EXECUTION;
+}
+
+VOID CDECL SEHHandlerRoutine(VOID)
+{
+  DbgPrint("Within exception handler.\n");
+  DbgPrint("System halted.\n");
+  for (;;);
+}
 
 EXCEPTION_DISPOSITION
 CDECL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.87 2002/08/08 17:54:15 dwelch Exp $
+/* $Id: section.c,v 1.88 2002/08/10 16:41:19 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -36,6 +36,7 @@
 #include <internal/pool.h>
 #include <internal/cc.h>
 #include <ddk/ntifs.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -432,6 +433,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    ULONG Entry1;
    ULONG Attributes;
    PMM_PAGEOP PageOp;
+   PMM_REGION Region;
 
    /*
     * There is a window between taking the page fault and locking the
@@ -456,6 +458,9 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
     */
    Segment = MemoryArea->Data.SectionData.Segment;
    Section = MemoryArea->Data.SectionData.Section;
+   Region = MmFindRegion(MemoryArea->BaseAddress,
+			 &MemoryArea->Data.SectionData.RegionListHead, 
+			 Address, NULL);
    MmLockSection(Section);
    MmLockSectionSegment(Segment);
    
@@ -591,7 +596,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        
        Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
 				       Address,
-				       MemoryArea->Attributes,
+				       Region->Protect,
 				       Page,
 				       FALSE);
        while (Status == STATUS_NO_MEMORY)
@@ -599,7 +604,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   MmUnlockAddressSpace(AddressSpace);	   
 	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					   Address,
-					   MemoryArea->Attributes,
+					   Region->Protect,
 					   Page,
 					   TRUE);
 	   MmLockAddressSpace(AddressSpace);
@@ -646,7 +651,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	*/
        Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				       Address,
-				       MemoryArea->Attributes,
+				       Region->Protect,
 				       Offset,
 				       FALSE);
        /* 
@@ -689,7 +694,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
        Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				       Address,
-				       MemoryArea->Attributes,
+				       Region->Protect,
 				       Page,
 				       FALSE);
        MmInsertRmap(Page, PsGetCurrentProcess(), 
@@ -715,14 +720,14 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
     * Check if this page needs to be mapped COW
     */
    if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
-       (MemoryArea->Attributes == PAGE_READWRITE ||
-	MemoryArea->Attributes == PAGE_EXECUTE_READWRITE))
+       (Region->Protect == PAGE_READWRITE ||
+	Region->Protect == PAGE_EXECUTE_READWRITE))
      {
        Attributes = PAGE_READONLY;
      }
    else
      {
-       Attributes = MemoryArea->Attributes;
+       Attributes = Region->Protect;
      }
 
    /*
@@ -971,6 +976,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
   ULONG PAddress;
   LARGE_INTEGER Offset;
   PMM_PAGEOP PageOp;
+  PMM_REGION Region;
 
   /*
    * Check if the page has been paged out or has already been set readwrite
@@ -993,6 +999,9 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     */
    Segment = MemoryArea->Data.SectionData.Segment;
    Section = MemoryArea->Data.SectionData.Section;
+   Region = MmFindRegion(MemoryArea->BaseAddress,
+			 &MemoryArea->Data.SectionData.RegionListHead,
+			 Address, NULL);
    MmLockSection(Section);
    MmLockSectionSegment(Segment);
 
@@ -1009,8 +1018,8 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     * Check if we are doing COW
     */
    if (!((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
-	 (MemoryArea->Attributes == PAGE_READWRITE ||
-	  MemoryArea->Attributes == PAGE_EXECUTE_READWRITE)))
+	 (Region->Protect == PAGE_READWRITE ||
+	  Region->Protect == PAGE_EXECUTE_READWRITE)))
      {
        MmUnlockSection(Section);
        MmUnlockSectionSegment(Segment);
@@ -1094,7 +1103,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    MmLockAddressSpace(AddressSpace);
    Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				   Address,
-				   MemoryArea->Attributes,
+				   Region->Protect,
 				   NewPage,
 				   FALSE);   
    MmInsertRmap(NewPage, PsGetCurrentProcess(), 
@@ -1491,6 +1500,125 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   PageOp->Status = STATUS_SUCCESS;
   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
   MmReleasePageOp(PageOp);
+  return(STATUS_SUCCESS);
+}
+
+VOID STATIC
+MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
+		      PVOID BaseAddress,
+		      ULONG RegionSize,
+		      ULONG OldType,
+		      ULONG OldProtect,
+		      ULONG NewType,
+		      ULONG NewProtect)
+{
+  PMEMORY_AREA MemoryArea;
+  PMM_SECTION_SEGMENT Segment;
+  BOOL DoCOW = FALSE;
+  ULONG i;
+
+  MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, BaseAddress);
+  Segment = MemoryArea->Data.SectionData.Segment;
+
+  if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
+       (NewProtect == PAGE_READWRITE || NewProtect == PAGE_EXECUTE_READWRITE))
+     {
+       DoCOW = TRUE;
+     }
+
+  if (OldProtect != NewProtect)
+    {
+      for (i = 0; i < (RegionSize / PAGESIZE); i++)
+	{
+	  PVOID Address = BaseAddress + (i * PAGESIZE);
+	  ULONG Protect = NewProtect;
+
+	  /* 
+	   * If we doing COW for this segment then check if the page is
+	   * already private.
+	   */
+	  if (DoCOW && MmIsPagePresent(AddressSpace->Process, Address))
+	    {
+	      LARGE_INTEGER Offset;
+	      ULONG Entry;
+	      LARGE_INTEGER PhysicalAddress;
+
+	      Offset.QuadPart = 
+		(ULONG)(Address - (ULONG)MemoryArea->BaseAddress) +
+		MemoryArea->Data.SectionData.ViewOffset;
+	      Entry = MmGetPageEntrySectionSegment(Segment, Offset.QuadPart);
+	      PhysicalAddress = 
+		MmGetPhysicalAddressForProcess(AddressSpace->Process, Address);
+
+	      Protect = PAGE_READONLY;
+	      if ((Segment->Characteristics & IMAGE_SECTION_CHAR_BSS ||
+		   IS_SWAP_FROM_SSE(Entry) || 
+		   (LONGLONG)PAGE_FROM_SSE(Entry) != PhysicalAddress.QuadPart))
+		{
+		  Protect = NewProtect;
+		}
+	    }
+
+	  if (MmIsPagePresent(AddressSpace->Process, Address))
+	    {
+	      MmSetPageProtect(AddressSpace->Process, BaseAddress, 
+			       Protect);
+	    }
+	}
+    }
+}
+
+NTSTATUS
+MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
+		     PMEMORY_AREA MemoryArea,
+		     PVOID BaseAddress,
+		     ULONG Length,
+		     ULONG Protect,
+		     PULONG OldProtect)
+{
+  PMM_REGION Region;
+  NTSTATUS Status;
+
+  Length = min(Length, MemoryArea->Length);
+  Region = MmFindRegion(MemoryArea->BaseAddress,
+			&MemoryArea->Data.SectionData.RegionListHead,
+			BaseAddress, NULL);
+  *OldProtect = Region->Protect;
+  Status = MmAlterRegion(AddressSpace, MemoryArea->BaseAddress,
+			 &MemoryArea->Data.SectionData.RegionListHead,
+			 BaseAddress, Length, Region->Type, Protect,
+			 MmAlterViewAttributes);
+
+  return(Status);
+}
+
+NTSTATUS STDCALL
+MmQuerySectionView(PMEMORY_AREA MemoryArea,
+		   PVOID Address,
+		   PMEMORY_BASIC_INFORMATION Info,
+		   PULONG ResultLength)
+{
+  PMM_REGION Region;
+  PVOID RegionBaseAddress;
+  
+  Region = MmFindRegion(MemoryArea->BaseAddress,
+			&MemoryArea->Data.SectionData.RegionListHead,
+			Address, &RegionBaseAddress);
+  Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
+  Info->AllocationBase = MemoryArea->BaseAddress;
+  Info->AllocationProtect = MemoryArea->Attributes;
+  Info->RegionSize = MemoryArea->Length;
+  Info->State = MEM_COMMIT;
+  Info->Protect = Region->Protect;
+  if (MemoryArea->Data.SectionData.Section->Flags & MM_IMAGE_SECTION)
+    {
+      Info->Type = MEM_IMAGE;
+    }
+  else
+    {
+      Info->Type = MEM_MAPPED;
+    }
+
   return(STATUS_SUCCESS);
 }
 
@@ -2187,6 +2315,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
     {
       ULONG i;
       ULONG Size;
+      ULONG Characteristics;
 
       Size = sizeof(MM_IMAGE_SECTION_OBJECT) + 
 	(sizeof(MM_SECTION_SEGMENT) * NrSegments);
@@ -2226,27 +2355,27 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	  /*
 	   * Set up the protection and write copy variables.
 	   */
-	  if ((ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_READABLE) ||
-	      (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_WRITABLE) ||
-	      (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_EXECUTABLE))
+	  Characteristics = ImageSections[i - 1].Characteristics;
+	  if ((Characteristics & IMAGE_SECTION_CHAR_READABLE) ||
+	      (Characteristics & IMAGE_SECTION_CHAR_WRITABLE) ||
+	      (Characteristics & IMAGE_SECTION_CHAR_EXECUTABLE))
 	    {
 	      SectionSegments[i].Protection = 
-		SectionCharacteristicsToProtect[ImageSections[i-1].Characteristics >> 28];
+		SectionCharacteristicsToProtect[Characteristics >> 28];
 	      SectionSegments[i].WriteCopy = 
-		!(ImageSections[i - 1].Characteristics & IMAGE_SECTION_CHAR_SHARED);
+		!(Characteristics & IMAGE_SECTION_CHAR_SHARED);
 	    }
-	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_CODE)	    
+	  else if (Characteristics & IMAGE_SECTION_CHAR_CODE)	    
 	    {
 	      SectionSegments[i].Protection = PAGE_EXECUTE_READ;
 	      SectionSegments[i].WriteCopy = TRUE;
 	    }
-	  else if (ImageSections[i-1].Characteristics & 
-		   IMAGE_SECTION_CHAR_DATA)	    
+	  else if (Characteristics & IMAGE_SECTION_CHAR_DATA)	    
 	    {
 	      SectionSegments[i].Protection = PAGE_READWRITE;
 	      SectionSegments[i].WriteCopy = TRUE;
 	    }
-	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_BSS)
+	  else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
 	    {
 	      SectionSegments[i].Protection = PAGE_READWRITE;
 	      SectionSegments[i].WriteCopy = TRUE;
@@ -2260,15 +2389,15 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	  /*
 	   * Set up the attributes.
 	   */
-	  if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_CODE)	    
+	  if (Characteristics & IMAGE_SECTION_CHAR_CODE)	    
 	    {
 	      SectionSegments[i].Attributes = 0;
 	    }
-	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_DATA)	    
+	  else if (Characteristics & IMAGE_SECTION_CHAR_DATA)	    
 	    {
 	      SectionSegments[i].Attributes = 0;
 	    }
-	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_BSS)
+	  else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
 	    {
 	      SectionSegments[i].Attributes = MM_SECTION_SEGMENT_BSS;
 	    }
@@ -2409,14 +2538,9 @@ MmMapViewOfSegment(PEPROCESS Process,
   NTSTATUS Status;
   KIRQL oldIrql;
 
-  if (Protect == PAGE_NOACCESS || Protect == PAGE_GUARD)
-    {
-      DPRINT1("Mapping inaccessible region between 0x%.8X and 0x%.8X\n",
-	      (*BaseAddress), (*BaseAddress) + ViewSize);
-    }
   Status = MmCreateMemoryArea(Process,
 			      &Process->AddressSpace,
-			      MEMORY_AREA_SECTION_VIEW_COMMIT,
+			      MEMORY_AREA_SECTION_VIEW,
 			      BaseAddress,
 			      ViewSize,
 			      Protect,
@@ -2442,6 +2566,8 @@ MmMapViewOfSegment(PEPROCESS Process,
   MArea->Data.SectionData.Section = Section;
   MArea->Data.SectionData.ViewOffset = ViewOffset;
   MArea->Data.SectionData.WriteCopyView = FALSE;
+  MmInitialiseRegion(&MArea->Data.SectionData.RegionListHead,
+		     ViewSize, 0, Protect);
   
   return(STATUS_SUCCESS);
 }
@@ -2612,7 +2738,9 @@ MmUnmapViewOfSection(PEPROCESS Process,
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
    KIRQL oldIrql;
-
+   PLIST_ENTRY CurrentEntry;
+   PMM_REGION CurrentRegion;
+   
    AddressSpace = &Process->AddressSpace;
    
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
@@ -2632,6 +2760,16 @@ MmUnmapViewOfSection(PEPROCESS Process,
    KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
    RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
    KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+
+   CurrentEntry = MemoryArea->Data.SectionData.RegionListHead.Flink;
+   while (CurrentEntry != &MemoryArea->Data.SectionData.RegionListHead)
+     {
+       CurrentRegion = 
+	 CONTAINING_RECORD(CurrentEntry, MM_REGION, RegionListEntry);
+       CurrentEntry = CurrentEntry->Flink;
+       ExFreePool(CurrentRegion);
+     }
+
    if (MemoryArea->Data.SectionData.Section->Flags & SO_PHYSICAL_MEMORY)
      {
        Status = MmFreeMemoryArea(&Process->AddressSpace,
@@ -3029,7 +3167,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    return(STATUS_SUCCESS);
 }
-
 
 BOOLEAN STDCALL
 MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS	SectionObjectPointer,
