@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hid.c,v 1.1 2004/07/12 15:08:43 weiden Exp $
+/* $Id: hid.c,v 1.2 2004/07/12 16:04:37 weiden Exp $
  *
  * PROJECT:         ReactOS Hid User Library
  * FILE:            lib/hid/hid.c
@@ -30,6 +30,9 @@
 #include "internal.h"
 
 HINSTANCE hDllInstance;
+
+/* device interface GUID for HIDClass devices */
+const GUID HidClassGuid = {0x4D1E55B2, 0xF16F, 0x11CF, {0x88,0xCB,0x00,0x11,0x11,0x00,0x00,0x30}};
 
 BOOL STDCALL
 DllMain(HINSTANCE hinstDLL,
@@ -54,6 +57,7 @@ DllMain(HINSTANCE hinstDLL,
   return TRUE;
 }
 
+
 /*
  * HidP_GetButtonCaps							EXPORTED
  *
@@ -67,6 +71,19 @@ HidP_GetButtonCaps(IN HIDP_REPORT_TYPE ReportType,
                    IN PHIDP_PREPARSED_DATA PreparsedData)
 {
   return HidP_GetSpecificButtonCaps(ReportType, 0, 0, 0, ButtonCaps, ButtonCapsLength, PreparsedData);
+}
+
+
+/*
+ * HidD_GetHidGuid							EXPORTED
+ *
+ * @implemented
+ */
+HIDAPI
+VOID DDKAPI
+HidD_GetHidGuid(OUT LPGUID HidGuid)
+{
+  *HidGuid = HidClassGuid;
 }
 
 
@@ -103,7 +120,7 @@ HidD_Hello(OUT PCHAR Buffer,
            IN ULONG BufferLength)
 {
   const PCHAR const HelloString = "Hello\nI hate Jello\n";
-  int StrSize = lstrlenA(HelloString) + sizeof(CHAR);
+  ULONG StrSize = lstrlenA(HelloString) + sizeof(CHAR);
   
   memcpy(Buffer, HelloString, min(StrSize, BufferLength));
   return StrSize;

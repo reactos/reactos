@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2004/07/12 15:08:43 weiden Exp $
+/* $Id: stubs.c,v 1.2 2004/07/12 16:04:37 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Hid User Library
@@ -79,17 +79,6 @@ HidD_GetFeature(IN HANDLE HidDeviceObject,
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-VOID DDKAPI
-HidD_GetHidGuid(OUT LPGUID HidGuid)
-{
-  UNIMPLEMENTED;
 }
 
 
