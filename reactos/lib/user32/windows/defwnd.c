@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.68 2003/08/15 21:56:48 gvg Exp $
+/* $Id: defwnd.c,v 1.69 2003/08/16 20:16:50 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1937,7 +1937,7 @@ DefWindowProcA(HWND hWnd,
 	if (0 == WindowTextAtom)
 	  {
 	    WindowTextAtom =
-	      (LPSTR)(DWORD)GlobalAddAtomA("USER32!WindowTextAtomW");
+	      (LPSTR)(DWORD)GlobalAddAtomA("USER32!WindowTextAtomA");
 	  }
 	if (WindowTextAtom != 0 &&
 	    (WindowText = GetPropA(hWnd, WindowTextAtom)) == NULL)
@@ -2042,7 +2042,7 @@ DefWindowProcW(HWND hWnd,
 
     case WM_SETTEXT:
       {
-	if (WindowTextAtom != 0)
+	if (WindowTextAtom == 0)
 	  {
 	    WindowTextAtom =
 	      (LPWSTR)(DWORD)GlobalAddAtomW(L"USER32!WindowTextAtomW");
