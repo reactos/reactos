@@ -81,6 +81,16 @@ services\eventlog\eventlog.exe          1
 services\rpcss\rpcss.exe                1
 media\fonts\helb____.ttf                3
 media\fonts\timr____.ttf                3
+media\fonts\Vera.ttf			3
+media\fonts\VeraBd.ttf			3
+media\fonts\VeraBI.ttf			3
+media\fonts\VeraIt.ttf			3
+media\fonts\VeraMoBd.ttf		3
+media\fonts\VeraMoBI.ttf		3
+media\fonts\VeraMoIt.ttf		3
+media\fonts\VeraMono.ttf		3
+media\fonts\VeraSe.ttf			3
+media\fonts\VeraSeBd.ttf		3
 media\nls\c_037.nls                     1
 media\nls\c_500.nls                     1
 media\nls\c_737.nls                     1
