@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.13 2003/07/11 13:50:23 royce Exp $
+/* $Id: critical.c,v 1.14 2003/08/21 22:40:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -122,7 +122,7 @@ RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
 	return;
      }
    CriticalSection->OwningThread = 0;
-   if (InterlockedIncrement(&CriticalSection->LockCount) >= 0)
+   if (InterlockedDecrement(&CriticalSection->LockCount) >= 0)
      {
 	NTSTATUS Status;
 	
@@ -161,16 +161,17 @@ BOOLEAN STDCALL
 RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    if (InterlockedCompareExchange((PVOID*)&CriticalSection->LockCount, 
-				  (PVOID)1, (PVOID)0 ) == 0)
+				  (PVOID)0, (PVOID)-1 ) == -1)
      {
 	CriticalSection->OwningThread = 
 	  (HANDLE) NtCurrentTeb()->Cid.UniqueThread;
-	CriticalSection->RecursionCount++;
+	CriticalSection->RecursionCount = 1;
 	return TRUE;
      }
    if (CriticalSection->OwningThread == 
        (HANDLE)NtCurrentTeb()->Cid.UniqueThread)
      {
+        InterlockedIncrement(&CriticalSection->LockCount);
 	CriticalSection->RecursionCount++;
 	return TRUE;
      }
