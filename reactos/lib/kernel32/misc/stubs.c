@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.98 2004/12/07 20:18:49 royce Exp $
+/* $Id: stubs.c,v 1.99 2004/12/09 17:28:10 weiden Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -1159,20 +1159,6 @@ FindNextVolumeMountPointW(
  */
 DWORD
 STDCALL
-GetDllDirectoryW(
-    DWORD nBufferLength,
-    LPWSTR lpBuffer
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
 GetFirmwareEnvironmentVariableW(
     LPCWSTR lpName,
     LPCWSTR lpGuid,
@@ -1304,19 +1290,6 @@ SetComputerNameExW (
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetDllDirectoryW(
-    LPCWSTR lpPathName
-    )
-{
-    STUB;
-    return TRUE;
 }
 
 /*
@@ -1473,20 +1446,6 @@ FindNextVolumeMountPointA(
  */
 DWORD
 STDCALL
-GetDllDirectoryA(
-    DWORD nBufferLength,
-    LPSTR lpBuffer
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
 GetFirmwareEnvironmentVariableA(
     LPCSTR lpName,
     LPCSTR lpGuid,
@@ -1618,19 +1577,6 @@ SetComputerNameExA (
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetDllDirectoryA(
-    LPCSTR lpPathName
-    )
-{
-    STUB;
-    return TRUE;
 }
 
 /*

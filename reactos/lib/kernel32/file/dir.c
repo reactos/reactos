@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.50 2004/10/07 21:05:36 gvg Exp $
+/* $Id: dir.c,v 1.51 2004/12/09 17:28:10 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,6 +20,7 @@
 #define NDEBUG
 #include "../include/debug.h"
 
+UNICODE_STRING DllDirectory = {0, 0, NULL};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -876,6 +877,186 @@ SearchPathW (
                 }
         }
         return retCode / sizeof(WCHAR);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetDllDirectoryW(
+    LPCWSTR lpPathName
+    )
+{
+  UNICODE_STRING PathName;
+  
+  RtlInitUnicodeString(&PathName, lpPathName);
+  
+  RtlEnterCriticalSection(&DllLock);
+  if(PathName.Length > 0)
+  {
+    if(PathName.Length + sizeof(WCHAR) <= DllDirectory.MaximumLength)
+    {
+      RtlCopyUnicodeString(&DllDirectory, &PathName);
+    }
+    else
+    {
+      RtlFreeUnicodeString(&DllDirectory);
+      if(!(DllDirectory.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                                        0,
+                                                        PathName.Length + sizeof(WCHAR))))
+      {
+        RtlLeaveCriticalSection(&DllLock);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+      }
+      DllDirectory.Length = 0;
+      DllDirectory.MaximumLength = PathName.Length + sizeof(WCHAR);
+      
+      RtlCopyUnicodeString(&DllDirectory, &PathName);
+    }
+  }
+  else
+  {
+    RtlFreeUnicodeString(&DllDirectory);
+  }
+  RtlLeaveCriticalSection(&DllLock);
+
+  return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetDllDirectoryA(
+    LPCSTR lpPathName
+    )
+{
+  UNICODE_STRING PathNameU;
+  ANSI_STRING PathNameA;
+  BOOL Ret;
+  
+  if(lpPathName != NULL)
+  {
+    RtlInitAnsiString(&PathNameA, lpPathName);
+    if(bIsFileApiAnsi)
+    {
+      RtlAnsiStringToUnicodeString(&PathNameU, &PathNameA, TRUE);
+    }
+    else
+    {
+      RtlOemStringToUnicodeString(&PathNameU, &PathNameA, TRUE);
+    }
+  }
+  else
+  {
+    PathNameU.Buffer = NULL;
+  }
+  
+  Ret = SetDllDirectoryW(PathNameU.Buffer);
+  
+  if(lpPathName != NULL)
+  {
+    RtlFreeUnicodeString(&PathNameU);
+  }
+
+  return Ret;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetDllDirectoryW(
+    DWORD nBufferLength,
+    LPWSTR lpBuffer
+    )
+{
+  DWORD Ret;
+  
+  RtlEnterCriticalSection(&DllLock);
+  if(nBufferLength > 0)
+  {
+    Ret = DllDirectory.Length / sizeof(WCHAR);
+    if(Ret > nBufferLength - 1)
+    {
+      Ret = nBufferLength - 1;
+    }
+    
+    if(Ret > 0)
+    {
+      RtlCopyMemory(lpBuffer, DllDirectory.Buffer, Ret * sizeof(WCHAR));
+    }
+    lpBuffer[Ret] = L'\0';
+  }
+  else
+  {
+    /* include termination character, even if the string is empty! */
+    Ret = (DllDirectory.Length / sizeof(WCHAR)) + 1;
+  }
+  RtlLeaveCriticalSection(&DllLock);
+  
+  return Ret;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetDllDirectoryA(
+    DWORD nBufferLength,
+    LPSTR lpBuffer
+    )
+{
+  UNICODE_STRING PathNameU;
+  ANSI_STRING PathNameA;
+  DWORD Ret;
+  
+  if(nBufferLength > 0)
+  {
+    if(!(PathNameU.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(),
+                                                   0,
+                                                   nBufferLength * sizeof(WCHAR))))
+    {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return 0;
+    }
+    PathNameU.Length = 0;
+    PathNameU.MaximumLength = nBufferLength * sizeof(WCHAR);
+  }
+
+  Ret = GetDllDirectoryW(nBufferLength,
+                         ((nBufferLength > 0) ? PathNameU.Buffer : NULL));
+
+  if(nBufferLength > 0)
+  {
+    PathNameU.Length = Ret * sizeof(WCHAR);
+    
+    PathNameA.Length = 0;
+    PathNameA.MaximumLength = nBufferLength;
+    PathNameA.Buffer = lpBuffer;
+    
+    if(Ret > 0)
+    {
+      if(bIsFileApiAnsi)
+      {
+        RtlUnicodeStringToAnsiString(&PathNameA, &PathNameU, FALSE);
+      }
+      else
+      {
+        RtlUnicodeStringToOemString(&PathNameA, &PathNameU, FALSE);
+      }
+    }
+    lpBuffer[Ret] = '\0';
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, PathNameU.Buffer);
+  }
+  
+  return Ret;
 }
 
 /* EOF */
