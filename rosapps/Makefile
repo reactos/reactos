@@ -13,7 +13,7 @@ include rules.mak
 #
 # Available applications
 #
-APPS = cmd cmdutils notevil sysutils
+APPS = cmd cmdutils notevil sysutils dflat32
 
 all: $(APPS)
 .PHONY: all

@@ -1,0 +1,1350 @@
+Window Classes:
+
+Window classes define the behavior of windows. Each class has its own
+unique reaction to messages. Classes derive from other classes.
+
+    NORMAL       base window for all window classes
+    APPLICATION  application window. has the menu 
+                 (derived from NORMAL)
+    TEXTBOX      textbox. base window for listbox, editbox, etc.
+                 (derived from NORMAL)
+    LISTBOX      listbox. base window for menubar
+                 (derived from TEXTBOX)
+    PICTUREBOX   picturebox. a text box onto which you can draw lines
+                 (derived from TEXTBOX)
+    EDITBOX      editbox
+                 (derived from TEXTBOX)
+    MENUBAR      the application's menu bar
+                 (derived from NORMAL)
+    POPDOWNMENU  popdown menu
+                 (derived from LISTBOX)
+    BUTTON       command button in a dialog box
+                 (derived from TEXTBOX)
+    SPINBUTTON   spin button in a dialog box
+                 (derived from LISTBOX)
+    COMBOBOX	 combination editbox/listbox
+		 (derived from EDITBOX)
+    DIALOG       dialog box. parent to editbox, button, listbox, etc.
+                 (derived from NORMAL)
+    ERRORBOX     for displaying an error message
+                 (derived from DIALOG)
+    MESSAGEBOX   for displaying a message
+                 (derived from DIALOG)
+    HELPBOX      help window
+                 (derived from DIALOG)
+    TEXT         static text on a dialog box
+                 (derived from TEXTBOX)
+    RADIOBUTTON  radio button on a dialog box
+                 (derived from TEXTBOX)
+    CHECKBOX     check box on a dialog box
+                 (derived from TEXTBOX)
+    STATUSBAR    status bar at the bottom of application window
+                 (derived from TEXTBOX)
+
+               D-Flat Window Class Tree
+    ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+    ³                                             ³
+    ³      NORMAL                                 ³
+    ³        ³                                    ³
+    ³        ÃÄÄ APPLICATION                      ³
+    ³        ³                                    ³
+    ³        ÃÄÄ MENUBAR                          ³
+    ³        ³                                    ³
+    ³        ÃÄÄ TEXTBOX                          ³
+    ³        ³      ³                             ³
+    ³        ³      ÃÄÄ LISTBOX                   ³
+    ³        ³      ³      ³                      ³
+    ³        ³      ³      ÃÄÄÄÄ POPDOWNMENU      ³
+    ³        ³      ³      ³                      ³
+    ³        ³      ³      ÀÄÄÄÄ SPINBUTTON       ³
+    ³        ³      ³                             ³
+    ³        ³      ÃÄÄ EDITBOX                   ³
+    ³        ³      ³      ³                      ³
+    ³        ³      ³      ÀÄÄÄÄ COMBOBOX         ³
+    ³        ³      ³                             ³
+    ³        ³      ÃÄÄ PICTUREBOX                ³
+    ³        ³      ³                             ³
+    ³        ³      ÃÄÄ STATUSBAR                 ³
+    ³        ³      ³                             ³
+    ³        ³      ÃÄÄ TEXT                      ³
+    ³        ³      ³                             ³
+    ³        ³      ÃÄÄ BUTTON                    ³
+    ³        ³      ³                             ³
+    ³        ³      ÃÄÄ RADIOBUTTON               ³
+    ³        ³      ³                             ³
+    ³        ³      ÀÄÄ CHECKBOX                  ³
+    ³        ³                                    ³
+    ³        ÀÄÄ DIALOG                           ³
+    ³              ³                              ³
+    ³              ÃÄÄ ERRORBOX                   ³
+    ³              ³                              ³
+    ³              ÃÄÄ MESSAGEBOX                 ³
+    ³              ³                              ³
+    ³              ÀÄÄ HELPBOX                    ³
+    ³                                             ³
+    ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+Window Attributes:
+
+Every window has an attribute word that defines some of its
+appearance and behavior. The following values are bitwise flags that
+OR together to make a window's attributes.
+
+You can establish default attributes for a window's class, add
+additional attributes when you create the window, and use the
+AddAttribute, ClearAttribute, and TestAttribute macros to change and
+test a window's attributes.
+
+    SHADOW       has a shadow
+    MOVEABLE     can move the window with mouse or cursor
+    SIZEABLE     can resize the window with mouse or cursor
+    HASMENUBAR   has a menubar (an application window)
+    VSCROLLBAR   has a vertical scroll bar
+    HSCROLLBAR   has a horizontal scroll bar
+    VISIBLE      is visible
+    SAVESELF     saves its own video memory
+    TITLEBAR     has a title bar 
+    CONTROLBOX   has a control box and control menu
+    MINMAXBOX    has a min/max box 
+    NOCLIP       is not clipped to its parent's borders
+    READONLY     is a readonly textbox
+    MULTILINE    is a multiline editbox or listbox
+    HASBORDER    has a border
+    HASSTATUSBAR has a statusbar (application window only)
+
+Messages:
+
+A D-Flat program is message-driven. You initiate message processing
+with the init_messages function, create a window with the
+CreateWindow function, and go into the message dispatching loop with
+the dispatch_message function. 
+
+A window can have a window-processing function. When the user causes
+events to occur by pressing keys and using the mouse, D-Flat sends
+messages to the window's function. That function can send messages to
+itself and other windows with the SendMessage and PostMessage
+functions.
+
+Windows are declared as members of a class. Every class has a default
+window-processing function. If you do not provide one for an instance
+of a window class, the default one receives messages for the window.
+Your custom window-processing function--if one exists--should chain to
+the default window-processing function for the blass by calling the
+DefaultWndProc function.
+
+There are five things a window-processing function can do with a
+message:
+  - ignore it and let the D-Flat default processing occur.
+  - suppress it by returning without chaining to the default
+    window-processing function for the window class.
+  - chain to the default window-processing function and then do some
+    additional processing.
+  - do some preliminary processing and then chain to the default
+    window-processing function.
+  - do all the processing of the message and then return without 
+    chaining to the default window-processing function for the 
+    window class.
+
+Following are the messages that an application program would use.
+There are other messages, but they are used by D-Flat only.
+
+Process Communication Messages  
+
+START                  start message processing (not used now)
+  Sent:    
+  P1:      
+  P2:      
+  Returns: 
+
+STOP                   stop message processing        
+  Sent:    by application window to NULL to stop message 
+           dispatch loop
+  P1:      
+  P2:      
+  Returns: 
+
+COMMAND                send a command to a window
+  Sent:    to send command
+  P1:      command code (commands.h)
+  P2:      additional data (command-dependent)
+           If the command code is a menu selection, P2 is the
+           position of the selection on the menu (1,2,...)
+           If the command code is a dialog box control, P2 is
+           ENTERFOCUS when the command gets the focus, LEAVEFOCUS
+           when the command loses the focus, and 0 when the user
+           executes the control's command, e.g. presses a button.
+  Returns: Nothing if sent by PostCommand
+           Command-dependent value if sent by SendCommand
+
+
+Window Management Messages  
+
+CREATE_WINDOW          create a window                
+  Sent:    by DFLAT to new window after window is created
+  P1:      
+  P2:      
+  Returns: 
+
+OPEN_WINDOW           open a window                
+  Sent:    (posted) by DFLAT to new window after window is created
+  P1:      
+  P2:      
+  Returns: 
+
+SHOW_WINDOW            show a window                  
+  Sent:    by the app to the window to display the window
+  P1:      
+  P2:      
+  Returns: 
+
+HIDE_WINDOW            hide a window                  
+  Sent:    by the app to the window to hide the window
+  P1:      
+  P2:      
+  Returns: 
+
+CLOSE_WINDOW           delete a window                
+  Sent:    by the app to destroy a window
+  P1:      
+  P2:      
+  Returns: 
+
+SETFOCUS               set and clear the focus        
+  Sent:    by D-Flat or the app to set or release the focus
+  P1:      true = set, false = release
+  P2:      
+  Returns: 
+
+PAINT                  paint the window's data space  
+  Sent:    to paint the client area of a window
+  P1:      address of RECT relative to window (0/0 = upper left) 
+           to paint or 0 to paint entire client area
+  P2:      True to make non-focus window paint without clipping
+  Returns: 
+
+BORDER                 paint the window's border      
+  Sent:    to paint a window's border
+  P1:      address of RECT relative to window (0/0 = upper left) 
+           to paint or 0 to paint entire border
+  P2:      
+  Returns: FALSE to suppress D-Flat title display 
+           (e.g. the window displays its own border)
+
+TITLE                  display the window's title     
+  Sent:    by D-Flat when it is about to display a window's title
+  P1:      address of RECT relative to window (0/0 = upper left) 
+           to paint or 0 to paint entire title
+  P2:      
+  Returns: FALSE to suppress D-Flat title display 
+           (e.g. the window displays its own title)
+
+MOVE                   move the window                
+  Sent:    to move a window
+  P1:      new left coordinate
+  P2:      new upper coordinate
+  Returns: 
+
+SIZE                   change the window's size       
+  Sent:    to resize a window
+  P1:      new right coordinate
+  P2:      new lower coordinate
+  Returns: 
+
+MAXIMIZE               maximize the window            
+  Sent:    to maximize a window within its parent's client area
+  P1:      
+  P2:      
+  Returns: 
+
+MINIMIZE               minimize the window            
+  Sent:    to minimize a window to an icon 
+  P1:      
+  P2:      
+  Returns: 
+
+RESTORE                restore the window             
+  Sent:    to restore a window to its position and size prior to the
+           maximize or minimize operation
+  P1:      
+  P2:      
+  Returns: 
+
+INSIDE_WINDOW          test x/y inside a window       
+  Sent:    to test to see if coordinates are inside a window
+  P1:      x
+  P2:      y
+  Returns: true or false
+
+
+Clock Messages  
+
+CLOCKTICK              the clock ticked               
+  Sent:    every second to a window that has captured the clock
+  P1:      segment of time display string
+  P2:      offset of time display string
+  Returns: 
+
+CAPTURE_CLOCK          capture clock into a window    
+  Sent:    to capture the clock. To chain clock ticks, send this
+           message to wnd->PrevClock when you receive the message.
+  P1:      
+  P2:      
+  Returns: 
+
+RELEASE_CLOCK          release clock to the system    
+  Sent:    to release the captured clock
+  P1:      
+  P2:      
+  Returns: 
+
+
+Keyboard and Screen Messages  
+
+KEYBOARD               key was pressed                
+  Sent:    when key is pressed. sent to the window that has the focus 
+  P1:      keystroke
+  P2:      shift key mask
+  Returns: 
+
+CAPTURE_KEYBOARD       capture keyboard into a window 
+  Sent:    by window to itself to capture the keyboard 
+           regardless of focus
+  P1:      
+  P2:      
+  Returns: 
+
+RELEASE_KEYBOARD       release keyboard to system     
+  Sent:    by window to itelf to release the captured keyboard
+  P1:      
+  P2:      
+  Returns: 
+
+KEYBOARD_CURSOR        position the keyboard cursor   
+  Sent:    to position the keyboard cursor
+  P1:      x (if sent by window, 0 = left client area)
+  P2:      y (if sent by window, 0 = top client area)
+           if sent with NULL, x/y are relative to the screen
+  Returns: 
+
+CURRENT_KEYBOARD_CURSOR    read the cursor position
+  Sent:    to retrieve the cursor position
+  P1:      x (relative to the screen)
+  P2:      y (relative to the screen)
+  Returns: 
+
+HIDE_CURSOR            hide the keyboard cursor       
+  Sent:    to hide the keyboard cursor
+  P1:      
+  P2:      
+  Returns: 
+
+SHOW_CURSOR            display the keyboard cursor    
+  Sent:    to display the keyboard cursor
+  P1:      
+  P2:      
+  Returns: 
+
+SAVE_CURSOR            save the cursor's configuration
+  Sent:    to save the keyboard cursor's current configuration 
+  P1:      
+  P2:      
+  Returns: 
+
+RESTORE_CURSOR         restore the saved cursor       
+  Sent:    to restore a keyboard cursor's saved configuration 
+  P1:      
+  P2:      
+  Returns: 
+
+SHIFT_CHANGED          the shift status changed       
+  Sent:    to in-focus window when the user presses or 
+           releases shift, alt, or ctrl key
+  P1:      BIOS shift key mask
+  P2:      
+  Returns: 
+
+WAITKEYBOARD            wait for key release
+  Sent:    to wait for a keypress release
+  P1:
+  P2:      
+  Returns: 
+
+
+Mouse Messages  
+
+RESET_MOUSE            reset the mouse
+  Sent:    to reset the mouse to the current screen configuration
+  P1:
+  P2:      
+  Returns: 
+
+MOUSE_TRAVEL        set the mouse's travel
+  Sent:    to limit the mouse travel to a screen rectangle
+  P1:      address of a RECT
+  P2:      
+  Returns: 
+
+MOUSE_INSTALLED        test for mouse installed       
+  Sent:    to see if the mouse is installed
+  P1:      
+  P2:      
+  Returns: true or false
+
+RIGHT_BUTTON           right button pressed           
+  Sent:    to window when the user presses the right button
+           (sent only when mouse cursor is within the window
+            or the window has captured the mouse)
+  P1:      x
+  P2:      y
+  Returns: 
+
+LEFT_BUTTON            left button pressed            
+  Sent:    to window when the user presses the left button
+           (sent only when mouse cursor is within the window
+            or the window has captured the mouse)
+  P1:      x
+  P2:      y
+  Returns: 
+
+DOUBLE_CLICK           left button doubleclicked    
+  Sent:    to window when the user double-clicks the left button
+           (sent only when mouse cursor is within the window
+            or the window has captured the mouse)
+           (a LEFT_BUTTON message will have preceded this one)
+  P1:      x
+  P2:      y
+  Returns: 
+
+MOUSE_MOVED            mouse changed position         
+  Sent:    to window when the mouse has moved
+           (sent only when mouse cursor is within the window
+            or the window has captured the mouse)
+  P1:      x
+  P2:      y
+  Returns: 
+
+BUTTON_RELEASED        mouse button released          
+  Sent:    to window when user releases mouse button
+           (sent only when mouse cursor is within the window
+            or the window has captured the mouse)
+  P1:      x
+  P2:      y
+  Returns: 
+
+CURRENT_MOUSE_CURSOR   get mouse position             
+  Sent:    to determine the current mouse position
+  P1:      address of x
+  P2:      address of y
+  Returns: mouse coordinates in x and y. If no mouse is installed,
+           returns -1 in x and y.
+
+MOUSE_CURSOR           set mouse position             
+  Sent:    to set the current mouse position
+  P1:      x
+  P2:      y
+  Returns: 
+
+SHOW_MOUSE             make mouse cursor visible      
+  Sent:    to display the mouse cursor
+  P1:      
+  P2:      
+  Returns: 
+
+HIDE_MOUSE             hide mouse cursor              
+  Sent:    to hide the mouse cursor
+  P1:      
+  P2:      
+  Returns: 
+
+WAITMOUSE              wait until button released     
+  Sent:    to wait until the user releases the mouse button
+  P1:      
+  P2:      
+  Returns: 
+
+TESTMOUSE              test any mouse button pressed  
+  Sent:    to see if either mouse button is pressed
+  P1:      
+  P2:      
+  Returns: true or false
+
+CAPTURE_MOUSE          capture mouse into a window    
+  Sent:    by/to a window to capture all mouse activity 
+           regardless of whether it occurs inside this window
+  P1:      
+  P2:      
+  Returns: 
+
+RELEASE_MOUSE          release the mouse to system    
+  Sent:    release a captured mouse
+  P1:      
+  P2:      
+  Returns: 
+
+
+Text Box Messages  
+
+ADDTEXT                add text to the text box       
+  Sent:    to append a line of text to the text box
+  P1:      address of null-terminated string without \n
+           (textbox makes its own copy. string can go out of scope.)
+  P2:      
+  Returns: 
+
+DELETETEXT         delete line of text from the text box       
+  Sent:    to delete a line of text from the text box
+  P1:      line number relative to zero
+  P2:      
+  Returns: 
+
+INSERTTEXT           insert line of text into the text box       
+  Sent:    to insert a line of text into the text box
+  P1:      address of null-terminated string without \n
+  P2:      line number relative to zero that will follow new line.
+  Returns: 
+
+CLEARTEXT              clear the text box             
+  Sent:    clear all text from the text box
+  P1:      
+  P2:      
+  Returns: 
+
+SETTEXT                set text buffer contents
+  Sent:    To set text buffer to caller's text.
+  P1:      address of text buffer
+           (lines are terminated by \n without \0)
+           (textbox makes its own copy. string can go out of scope.)
+  P2:      length of text buffer
+  Returns: 
+
+SCROLL                 vertical scroll of text box    
+  Sent:    to scroll a text window vertically one line
+  P1:      true = scroll up, false = scroll down
+  P2:
+  Returns: 
+
+HORIZSCROLL            horizontal scroll of text box 
+  Sent:    to scroll a text window horizontally one column
+  P1:      true = scroll left, false = scroll right
+  P2:
+  Returns: 
+
+SCROLLPAGE             vertical scroll of text box 1 page
+  Sent:    to scroll a text window vertically one page
+  P1:      true = scroll up, false = scroll down
+  P2:
+  Returns: 
+
+HORIZSCROLLPAGE        horizontal scroll of text box 1 page
+  Sent:    to scroll a text window horizontally one page
+  P1:      true = scroll left, false = scroll right
+  P2:
+  Returns: 
+
+SCROLLDOC             document scroll of text box
+  Sent:    to scroll a text window to beginning/end of document
+  P1:      true = scroll to beginning, false = scroll to end
+  P2:
+  Returns: 
+
+Edit Box Messages  
+
+GETTEXT             get text from an edit box      
+  Sent:    Get the line of text from a single-line editbox
+  P1:      address of receiving buffer
+  P2:      max length to copy
+  Returns: 
+
+SETTEXTLENGTH        set maximum text length in an edit box      
+  Sent:    to set the maximum number of characters that an editbox
+           may hold in its buffer.
+  P1:      maximum character count
+  P2:      
+  Returns: 
+
+
+Application Window Messages
+
+ADDSTATUS               write text to the status bar
+  Sent:    to write to or clear status bar text area
+  P1:      address of text (null-terminated string) or NULL to clear
+  P2:      
+  Returns: 
+
+List Box Messages  
+
+LB_SELECTION               list box selection
+  Sent:    sent by list box to self and to parent (if parent is not
+           a simple LISTBOX window) when user moves to an entry on 
+           the list box.
+  P1:      selection number: 0, 1, ...
+  P2:      if multi-line selection listbox, shift status mask
+           if not, true = selection was same as choice (e.g. mouse)
+  Returns: 
+
+LB_CHOOSE               list box choice        
+  Sent:    sent to parent of list box when user chooses an item 
+           from the list box
+  P1:      selection number: 0, 1, ...
+  P2:      
+  Returns: 
+
+LB_CURRENTSELECTION    return the current selection   
+  Sent:    To get the current selection number (where the listbox
+           cursor is positioned)
+  P1:      
+  P2:      
+  Returns: selection number: 0, 1, ..., or -1 if listbox is empty or
+           no line is selected.
+
+LB_GETTEXT             return the text of selection   
+  Sent:    To get a copy of the text at a specified line
+  P1:      Address of string to receive copy of text
+  P2:      Line number: 0, 1, ...
+  Returns: 
+
+LB_SETSELECTION        sets the listbox selection     
+  Sent:    To change where the listbox cursor points
+  P1:      Line number: 0, 1, ...
+  P2:      
+  Returns: 
+
+Picture Box Messages
+
+DRAWVECTOR           Draws a vector
+  Sent:    To draw a vector in the window's client area
+  P1:      address of RECT that describes the vector relative to the
+           window's client area
+           (either lf = rt [vertical vector] or tp = bt [horizontal
+           vector])
+  P2:      
+  Returns: 
+
+DRAWBOX             Draws a box
+  Sent:    To draw a box in the window's client area
+  P1:      address of RECT that describes the box relative to the
+           window's client area
+  P2:      
+  Returns: 
+
+DRAWBAR             Draws a barchart bar
+  Sent:    To draw a bar in the window's client area
+  P1:      address of RECT that describes the bar relative to the
+           window's client area
+           (either lf = rt [vertical vector] or tp = bt [horizontal
+           vector])
+  P2:      one of these: SOLIDBAR, HEAVYBAR, CROSSBAR, LIGHTBAR
+             (4 different bar textures)
+  Returns: 
+
+=====================================================
+
+API Functions & Macros:
+
+These are functions and macros defined for use by applications
+programs. There are many others defined in the header files. These
+others are for D-Flat to use, and programmers need not be concerned
+about them except as an expression of their curiosity about how
+D-Flat works.
+
+
+(Note: These specifications are not in any orderly sequence yet.)
+
+
+-------------------------------------------------------------------
+void init_messages(void)
+
+Call this function first to initialize message processing. Continue
+only if the function returns a true value. Otherwise, terminate the
+processing of your program. A false return occurs from a longjmp that
+is executed when D-Flat attempts to allocate memory that is not
+available.
+
+-------------------------------------------------------------------
+WINDOW CreateWindow(
+    CLASS Class,              /* class of this window       */
+    char *ttl,                /* title or NULL              */
+    int left, int top,        /* upper left coordinates     */
+    int height, int width,    /* dimensions                 */
+    void *extension,          /* pointer to additional data */
+    WINDOW parent,            /* parent of this window      */
+    int (*wndproc)(struct window *,MESSAGE,PARAM,PARAM),
+    int attrib)               /* window attribute           */
+
+This function creates a window. It returns the WINDOW handle that
+messages and functions use to identify the window. If you specify
+NULL for the parent, the APPLICATION window becomes the parent.
+
+-------------------------------------------------------------------
+void PostMessage(WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
+
+Post a message to a window. The window will receive the message in
+turn during the message-dispatching loop.
+
+-------------------------------------------------------------------
+int SendMessage(WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
+
+Send a message to a window. The window will receive the message
+immediately. Control returns to the sender after the window has
+processed the message. The window can return an integer value.
+
+This function can send system messages to NULL. System messages
+are ones that D-Flat processes without regard to a particular window.
+-------------------------------------------------------------------
+int dispatch_message(void)
+
+The message dispatching loop. After opening the first window (usually
+the applications window), continue to call this function until it
+returns a FALSE value.
+-------------------------------------------------------------------
+void handshake(void)
+
+This function dispatches messages without allowing any keyboard or
+click events to pass through. You use it to allow the clock to run or
+the watch icon to move during a lengthy process without allowing
+anything to execute a command that might interfere with what your
+program is doing.
+
+-------------------------------------------------------------------
+int TestCriticalError(void)
+
+-------------------------------------------------------------------
+int DefaultWndProc(WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
+
+Call this from a window-processing function to chain to the default
+window-processing function for the window's class.
+
+-------------------------------------------------------------------
+int BaseWndProc(CLASS Class, WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
+
+Call this from the window-processing function of a derived window
+class to chain to the window-processing function of the base window's
+class.
+
+-------------------------------------------------------------------
+int WindowHeight(WINDOW wnd)
+int WindowWidth(WINDOW wnd)
+
+These functions return the window's height and width.
+-------------------------------------------------------------------
+int ClientWidth(WINDOW wnd)
+int ClientHeight(WINDOW wnd)
+
+These functions return the height and width of the window's client
+area.
+
+-------------------------------------------------------------------
+int GetTop(WINDOW wnd)
+int GetBottom(WINDOW wnd)
+int GetLeft(WINDOW wnd)
+int GetRight(WINDOW wnd)
+
+These functions return the screen coordinates of the four corners of
+the window.
+
+-------------------------------------------------------------------
+int GetClientTop(WINDOW wnd)
+int GetClientBottom(WINDOW wnd)
+int GetClientLeft(WINDOW wnd)
+int GetClientRight(WINDOW wnd)
+
+These functions return the screen coordinates of the four corners of
+the window's client area.
+
+-------------------------------------------------------------------
+WINDOW GetParent(WINDOW wnd)
+
+Returns the parent of the window or NULL if the window has no
+parent.
+
+-------------------------------------------------------------------
+WINDOW FirstWindow(wnd)
+
+Returns the first child window that wnd is a parent of or NULL if
+wnd has no children.
+
+-------------------------------------------------------------------
+WINDOW LastWindow(wnd) 
+
+Returns the last child window that wnd is a parent of or NULL if
+wnd has no children.
+
+-------------------------------------------------------------------
+WINDOW NextWindow(wnd)
+
+Returns the next adjacent sibling window of wnd or NULL if wnd has no
+siblings.
+
+-------------------------------------------------------------------
+WINDOW PrevWindow(wnd) 
+
+Returns the previous adjacent sibling window of wnd or NULL if wnd
+has no siblings.
+
+-------------------------------------------------------------------
+int CharInView(WINDOW wnd, int x, int y)
+
+Returns true if the x/y character position, relative to the window,
+is in view (not clipped at the border of a parent window or the
+screen.
+
+-------------------------------------------------------------------
+int TopBorderAdj(WINDOW wnd)
+
+Returns the value to add to a y coordinate of the window's client
+area to make it relative to the window top.
+
+-------------------------------------------------------------------
+int BorderAdj(WINDOW wnd)
+
+Returns the value to add to an x coordinate relative to the window's
+client area to make it relative to the window's left edge.
+
+-------------------------------------------------------------------
+char *GetTitle(WINDOW wnd)
+
+Returns the address of a window's title, or NULL if the window has no
+title.
+
+-------------------------------------------------------------------
+void AddTitle(WINDOW wnd, char *title)
+
+Adds or changes the title to an existing window.
+
+-------------------------------------------------------------------
+CLASS GetClass(WINDOW wnd)
+
+Returns the class of the window.
+
+-------------------------------------------------------------------
+int GetAttribute(WINDOW wnd)
+
+Returns the attribute word of a window.
+
+-------------------------------------------------------------------
+void AddAttribute(WINDOW wnd, int attrib)
+
+Adds one or more attributes to a window. OR the attribute values
+together.
+
+-------------------------------------------------------------------
+void ClearAttribute(WINDOW wnd, int attrib)
+
+Clears one or more attributes from a window. OR the attribute values
+together.
+
+-------------------------------------------------------------------
+int TestAttribute(WINDOW wnd, int attrib)
+
+Tests one or more attributes in a window. Returns true if any of them
+are set. OR the attribute values together.
+
+-------------------------------------------------------------------
+int isVisible(WINDOW wnd)
+
+Returns true if the window is visible.
+
+-------------------------------------------------------------------
+char *GetText(WINDOW wnd)
+
+Returns the address of the text buffer for a TEXTBOX or derived
+window class.
+
+-------------------------------------------------------------------
+int GetTextLines(WINDOW wnd)
+
+Returns the number of text lines in a TEXTBOX or derived
+window class.
+
+-------------------------------------------------------------------
+char *TextLine(WINDOW wnd, int line)
+
+Returns the address of a specified line of text (0, 1, ...) in a
+TEXTBOX or derived class.
+
+-------------------------------------------------------------------
+void SetProtected(WINDOW wnd)
+
+Protects a TEXTBOX or control derived from a TEXT from having its
+data displayed. Displays * for each displayable character. Typically
+used for EDITBOX controls used for password input.
+
+-------------------------------------------------------------------
+int isActive(MENU *mnu, int command)
+
+Returns true if the command (commands.h) on the menu is active
+(enabled).
+
+-------------------------------------------------------------------
+char *GetCommandText(MBAR *mn, int cmd)
+
+Returns the address of a menu command's title text.
+
+-------------------------------------------------------------------
+void ActivateCommand(MENU *mnu, int command)
+void DeactivateCommand(MENU *mnu, int command)
+
+Activate (enable) or deactivate (disable) a command (commands.h) on a
+menu.
+
+-------------------------------------------------------------------
+int GetCommandToggle(MENU *mnu, int command)
+void SetCommandToggle(MENU *mnu, int command)
+void ClearCommandToggle(MENU *mnu, int command)
+void InvertCommandToggle(MENU *mnu, int command)
+
+Some menu commands are toggles rather than executors of processes. 
+Examples are the Insert and Word wrap commands on the Options menu.
+These functions get, set, clear, and invert the toggle setting for a
+specified command on a specified menu.
+
+-------------------------------------------------------------------
+int ItemSelected(WINDOW wnd, int line)
+
+This function returns true if the specified item (0, 1, ...) on a
+multiple-line selection listbox is selected.
+
+-------------------------------------------------------------------
+int DialogBox(
+  WINDOW wnd,        /* parent window of the dialog box        */
+  DBOX *db,          /* address of dialog box definition array */
+  int Modal,         /* true if it is a modal dialog box       */
+  int (*wndproc)(struct window *, MESSAGE, PARAM, PARAM)
+                     /* the window processing function or NULL */
+)
+
+This function executes a dialog box. If it is a modal dialog box, the
+function does not return until the user completes the dialog box. The
+return value will be true if the user has selected OK and false if
+the user has selected Cancel on the dialog box. If the dialog box is
+modeless, the function returns immediately, and the user can select
+other things from the screen while the dialog box is still active.
+
+-------------------------------------------------------------------
+WINDOW ControlWindow(DBOX *db, enum commands cmd)
+
+This function returns the WINDOW handle of the control specified by
+the cmd parameter.
+-------------------------------------------------------------------
+void MessageBox(char *title, char *message)
+void CancelBox(wnd, char *message)
+void ErrorMessage(char *message)
+int TestErrorMessage(char *message)
+int YesNoBox(char *question)
+WINDOW MomentaryMessage(char *message)
+
+These functions display generic message boxes. The message text is
+one null-terminated string with newlines (\n) to indicate where lines
+are to be broken. The size of the boxes adjusts to the width of the
+longest line and the number of lines of text. A message may have no
+more lines of text than will fit into the largest window that the
+screen can display. You must account for the window's border's and
+the presence at the bottom of one or more command buttons.
+
+The MessageBox function displays a message in a window with a title
+provided by the caller. The window contains the message and an OK
+command button.
+
+The CancelBox function displays a message in a window with a
+"Wait..." title. The window contains the message and a Cancel command
+button. If the user presses the Cancel button before the program
+closes the window, the COMMAND, ID_CANCEL message is sent to the
+parent window.
+
+The ErrorMessage function displays the message in an error box window
+with an OK command button.
+
+The TestErrorMessage function is an error message with OK and Cancel
+command buttons. The function returns true if the user selects OK or
+presses Enter and false if the user selects Cancel or presses Esc.
+
+The YesNoBox function displays the message with Yes and No command
+buttons. The function returns true if the user selects Yes or
+presses Enter and false if the user selects No or presses Esc.
+
+The MomentaryMessage function displays a message box and returns its
+WINDOW handle. The caller must close the window. The purpose of this
+function is to allow you to display a message while some time
+consuming process is underway and then erase the message after the
+process is done but without any action required from the user.
+
+-------------------------------------------------------------------
+int InputBox(WINDOW wnd, char *ttl, char *msg, char *text, int len, int wd)
+
+This function executes a generic one-line user input dialog box. The
+wnd parameter is the parent window of the dialog box. The ttl
+parameter points to a title string for the dialog box. The msg
+parameter points to a prompting text message. The text parameter
+points to the string that will receive the user's input. The len
+parameter is the length of the input string not including the null
+terminator. The wd parameter is the width of the string display. If
+the wd parameter is 0, the function computes a width based on the len
+parameter.
+
+The function returns a true value if the user chooses the OK command
+button and false if the user selects Cancel.
+
+-------------------------------------------------------------------
+WINDOW SliderBox(int len, char *ttl, char *msg)
+
+This function displays a dialog box with the specified title and
+message, a slider bar of the specified length, and a Cancel button.
+The slider bar displays a percent value.
+
+You use the slider box to display feedback to the user when the
+program is doing a time-consuming task, such as printing a file.
+Periodically, through your process, you send a PAINT message to the
+window handle that the SliderBox function returns. The second
+parameter is the new percent value. When you have sent 100, the
+slider dialog box closes itself. If the user chooses the Cancel
+command on the dialog box, your next PAINT message returns FALSE.
+Otherwise it returns TRUE.
+
+-------------------------------------------------------------------
+int RadioButtonSetting(DBOX *db, enum commands cmd)
+
+This function returns true if the specified command on the specified
+dialog box is a pressed radio button.
+
+-------------------------------------------------------------------
+void EnableButton(DBOX *db, enum commands cmd)
+
+This function enables a command button on a dialog box. command
+buttons are initially enabled when the dialog box is first opened.
+
+-------------------------------------------------------------------
+void DisableButton(DBOX *db, enum commands cmd)
+
+This function disables a command button on a dialog box. command
+buttons are initially enabled when the dialog box is first opened.
+
+-------------------------------------------------------------------
+int ButtonEnabled(DBOX *db, enum commands cmd)
+
+Returns true if the button is enabled.
+-------------------------------------------------------------------
+void PushRadioButton(DBOX *db, enum commands cmd)
+
+This function presses the specified radio button command on the
+specified dialog box.
+
+-------------------------------------------------------------------
+void PutItemText(WINDOW wnd, enum commands cmd, char *text)
+
+This function appends a line of text to a TEXT, TEXTBOX, EDITBOX,
+LISTBOX, SPINBUTTON, or COMBOBOX control window in a dialog box. The
+wnd parameter is the WINDOW handle of the dialog box. The cmd
+parameter specifies the command associated with the control item. The
+text parameter points to the text to be added. The control window
+makes its own copy of the text, so the caller's copy can go out of
+scope.  If the control window is a COMBOBOX, TEXTBOX, or EDITBOX
+window, you must send a PAINT message to the control window so that
+the new text will display.
+
+You must call this function while the dialog box is active. That
+means that if the dialog box is modal, you must call this function
+from within a custom window processing function that you supply when
+you call DialogBox.
+
+-------------------------------------------------------------------
+void PutComboListText(WINDOW wnd, enum commands cmd, char *text)
+
+This function appends a line of text to the LISTBOX of a COMBOBOX
+control window in a dialog box. The wnd parameter is the WINDOW
+handle of the dialog box. The cmd parameter specifies the command
+associated with the combo box. The text parameter points to the
+text to be added. The control window makes its own copy of the text,
+so the caller's copy can go out of scope.
+
+You must call this function while the dialog box is active. That
+means that if the dialog box is modal, you must call this function
+from within a custom window processing function that you supply when
+you call DialogBox.
+
+-------------------------------------------------------------------
+void GetItemText(WINDOW wnd, enum commands cmd, char *text, int length)
+
+This function copies the text from a TEXT, TEXTBOX, COMBOBOX, or
+EDITBOX control window in a dialog box. The wnd parameter is the
+WINDOW handle of the dialog box. The cmd parameter specifies the
+command associated with the control item. The text parameter points
+to the caller's buffer where the text will be copied. The length
+parameter specifies the maximum number of characters to copy.
+
+You must call this function while the dialog box is active. That
+means that if the dialog box is modal, you must call this function
+from within a custom window processing function that you supply when
+you call DialogBox.
+
+-------------------------------------------------------------------
+char *GetEditBoxText(DBOX *db, enum commands cmd)
+
+This function returns a pointer to the text associated with an
+editbox control in a dialog box. You can call it after the dialog box
+has completed processing. The buffer is on the heap. Do not free it.
+Instead, call SetEditBoxText with a NULL pointer.
+
+-------------------------------------------------------------------
+char *GetComboBoxText(DBOX *db, enum commands cmd)
+
+This function returns a pointer to the text associated with an
+combo box control in a dialog box. You can call it after the dialog box
+has completed processing. The buffer is on the heap. Do not free it.
+Instead, call SetEditBoxText with a NULL pointer.
+
+-------------------------------------------------------------------
+void SetEditBoxText(DBOX *db, enum commands cmd, char *text)
+
+This function sets the text of a dialog box editbox. You can call
+this function before or while the dialog box is open. The dialog box
+makes its own copy on the heap, so your text can go out of scope.
+
+-------------------------------------------------------------------
+void SetComboBoxText(DBOX *db, enum commands cmd, char *text)
+
+This function sets the text of a dialog box combo box. You can call
+this function before or while the dialog box is open. The dialog box
+makes its own copy on the heap, so your text can go out of scope.
+
+-------------------------------------------------------------------
+char *GetDlgText(DBOX *db, enum commands cmd, char *text)
+
+Similar to GetEditBoxText except that it works with text controls.
+
+-------------------------------------------------------------------
+char *SetDlgText(DBOX *db, enum commands cmd, char *text)
+
+Similar to SetEditBoxText except that it works with text controls.
+
+-------------------------------------------------------------------
+char *GetDlgTextBox(DBOX *db, enum commands cmd, char *text)
+
+Similar to GetEditBoxText except that it works with textbox controls.
+
+-------------------------------------------------------------------
+char *SetDlgTextBox(DBOX *db, enum commands cmd, char *text)
+
+Similar to SetEditBoxText except that it works with textbox controls.
+
+-------------------------------------------------------------------
+void SetCheckBox(DBOX *db, enum commands cmd)
+void ClearCheckBox(DBOX *db, enum commands cmd)
+int CheckBoxSetting(DBOX *db, enum commands cmd)
+
+These functions set, clear, and test the setting of a specified check
+box control item on a dialog box.
+
+-------------------------------------------------------------------
+void SetDlgTitle(DBOX *db, char *ttl)
+
+This function changes the specified dialog box's title.
+-------------------------------------------------------------------
+void LoadHelpFile(char *apname);
+
+This function loads the help file. The apname parameter points to 
+the helpfile name without the .hlp extension.
+
+Call this function at the beginning of an application program or to
+change the help file midstream.
+
+-------------------------------------------------------------------
+void DisplayHelp(WINDOW wnd, char *Help)
+
+Display the help window identified by the Help parameter. See the
+comments in memopad.txt for the format of a help database. You can
+get the same effect by sending the DISPLAY_HELP message with a
+pointer to the Help string as the first parameter after the message
+id.
+
+-------------------------------------------------------------------
+char *HelpComment(char *Help)
+
+Retrieve a pointer to the comment text associated with the specified
+Help parameter.
+
+-------------------------------------------------------------------
+void UnLoadHelpFile(void);
+
+Call this function at the end of a D-Flat application to free the
+memory used by a help file.
+
+-------------------------------------------------------------------
+void SearchText(WINDOW wnd)
+
+Opens a dialog box for the user to enter a search string. Searches
+the wnd TEXTBOX for a match on the string.
+
+-------------------------------------------------------------------
+void ReplaceText(WINDOW wnd)
+
+Opens a dialog box for the user to enter search and replacement
+strings. Searches the wnd TEXTBOX for a match on the string and
+replaces it if found. The dialog box includes an option to replace
+all matches.
+
+-------------------------------------------------------------------
+void SearchNext(WINDOW wnd)
+
+Assumes that a previous SearchText call has found a match. Searches
+for the next match of the same string in the specified EDITBOX
+window.
+
+-------------------------------------------------------------------
+void WriteTextLine(WINDOW wnd, RECT *rcc, int y, int reverse)
+
+This function displays a text line from a TEXTBOX or derived window
+class. The text has already been added to the window with ADDTEXT,
+etc. The y parameter specifies which line (0, 1, ...) relative to the
+window's text buffer to display. If the specified line is not in
+view, the function does nothing. If the reverse parameter is true,
+the line displays in the reverse-video colors of the window. The rcc
+RECT pointer is usually NULL for applications calls. It points to a
+rectangle relative to the window outside of which displays will not
+occur. 
+
+-------------------------------------------------------------------
+void PutWindowLine(WINDOW wnd, void *s, int x, int y)
+
+This function writes a line of text to a window. The x and y
+coordinates point to the first character in the window's client area
+where the line is to be written. The text must be null-terminated.
+This function clips the line if it goes beyond the window or the
+screen. The function clips the line if it goes outside the borders of
+the window's parent. If other windows overlap the target window, the
+text is clipped. Do not use negative values in x or y.
+
+You can assign color values to the global variables foreground and
+background to affect the color of the line's display.
+
+-------------------------------------------------------------------
+void PutWindowChar(WINDOW wnd, int c, int x, int y)
+
+This function writes the character c to a window. The x and y
+coordinates are relative to the window's client area.
+
+The function performs clipping. If the character is beyond the
+window's or the screen's borders it is not written. If the window
+does not have the NOCLIP attribute, the character is not written if
+its coordinates are beyond the margins of its parent window (if the
+window has a parent). If other windows overlap the target window, the
+text is clipped. Do not use negative values in x or y.
+
+You can assign color values to the global variables foreground and
+background to affect the color of the character's display.
+
+-------------------------------------------------------------------
+void DrawVector(WINDOW wnd, int x, int y, int len, int hv)
+
+Draw a horizontal vector in a picture box. x and y are character
+coordinates relative to the starting position of the vector. len is
+the length. hv is TRUE for a horizontal vector and FALSE for a
+vertical vector. Sends a DRAWVECTOR message to the window.
+
+Send a PAINT message to the window to display the vectors.
+
+-------------------------------------------------------------------
+void DrawBox(WINDOW wnd, int x, int y, int ht, int wd)
+
+Draw a box in a picture box. x and y are character coordinates
+relative to the upper left corner of the box. ht and wd are the
+height and width of the box. Sends a DRAWBOX message to the window.
+
+Send a PAINT message to the window to display the box.
+
+-------------------------------------------------------------------
+void DrawBar(WINDOW wnd, enum VectTypes vt, int x, int y, int len, int hv)
+
+Draw a graph bar in a picture box. vt is one of the following values
+to specify the character box used to display the bar: SOLIDBAR,
+HEAVYBAR, CROSSBAR, LIGHTBAR. x and y are character coordinates
+relative to the starting position of the bar. len is the length. hv
+is TRUE for a horizontal bar and FALSE for a vertical bar. Sends a
+DRAWBAR message to the window.
+
+Send a PAINT message to the window to display the bars.
+
+-------------------------------------------------------------------
+void WindowClientColor(WINDOW wnd, int fg, int bg)
+
+Changes the window client space's foreground and background colors.
+-------------------------------------------------------------------
+void WindowReverseColor(WINDOW wnd, int fg, int bg)
+
+Changes the window's foreground and background reverse colors, which
+are used to display such things as selected text blocks.
+-------------------------------------------------------------------
+void WindowFrameColor(WINDOW wnd, int fg, int bg)
+
+Changes the window's foreground and background frame colors.
+-------------------------------------------------------------------
+void WindowHighlightColor(WINDOW wnd, int fg, int bg)
+
+Changes the window's foreground and background highlight colors,
+which are used to display highlighted items such as menu selector
+bars.
+-------------------------------------------------------------------
+void MarkTextBlock(WINDOW wnd, int BegLine, int BegCol,
+                               int EndLine, int EndCol)
+
+Marks a block in the specified TEXTBOX window.
+
+-------------------------------------------------------------------
+void ClearTextBlock(WINDOW wnd)
+
+Unmarks a marked block in the specified TEXTBOX window.
+
+-------------------------------------------------------------------
+void CopyToClipboard(WINDOW wnd)
+
+Copies the marked block from the WINDOW into the Clipboard.
+
+-------------------------------------------------------------------
+void CopyTextToClipboard(char *string)
+
+Copies a null-terminated string into the Clipboard.
+
+-------------------------------------------------------------------
+void PasteFromClipboard(WINDOW wnd)
+
+Pastes the Clipboard's contents into the specified EDITBOX window at
+the current cursor location.
+
+-------------------------------------------------------------------
+void ClearClipboard(void)
+
+Clears the clipboard and frees the memory allocated for it. Called by
+D-Flat when message processing terminates. 
+
+-------------------------------------------------------------------
+WINDOW WatchIcon(void)
+
+Displays a wristwatch icon on the screen. The icon has control of the
+keyboard and mouse. You must send the CLOSE_WINDOW message to the
+WINDOW handle that WatchIcon returns to get rid of the icon.
+
+Use this icon to tell the user to please stand by during long
+processes. Call handshake frequently during these processes to
+update the date display in the status bar and to allow the watch icon
+to move when the user moves the mouse.
+
+-------------------------------------------------------------------
+Configurable Items
+
+Global Symbol File      Value Description
+------------- --------- ----- ---------------------------------------
+MAXMESSAGES   DFLAT.H    50   Maximum D-Flat messages queued
+MAXCONTROLS   DIALBOX.H  26   Maximum Controls on a dialog box
+MAXRADIOS     DIALBOX.H  20   Maximum radio buttons in a group
+MAXSAVES      SYSTEM.H   50   Maximum cursor saves
+MAXPULLDOWNS  MENU.H     15   Maximum number of pull-down menus on
+                              a menu bar (including cascading menus)
+MAXSELECTIONS MENU.H     15   Maximum number of selections on 
+                              a pull-down menu (includes separators)
+MAXCASCADES   MENU.H      3   Maximum nesting level of cascaded menus
+MAXTEXTLEN    DFLAT.H 65000   Maximum text buffer
+EDITLEN       DFLAT.H  1024   Starting length for multiline EDITBOX
+ENTRYLEN      DFLAT.H   256   Starting length for single-line EDITBOX
+GROWLENGTH    DFLAT.H    64   EDITBOX buffers grow by this much
+
+
