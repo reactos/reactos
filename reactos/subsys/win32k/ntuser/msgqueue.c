@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.79 2004/03/28 21:46:26 weiden Exp $
+/* $Id: msgqueue.c,v 1.80 2004/03/31 19:44:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -248,8 +248,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   USHORT Msg = Message->Msg.message;
   PWINDOW_OBJECT CaptureWin, Window = NULL;
   POINT Point;
-  LPARAM SpareLParam;
-  LRESULT Result;
 
   if (Msg == WM_LBUTTONDOWN || 
       Msg == WM_MBUTTONDOWN ||
@@ -269,11 +267,11 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     {
       if(Window->Self != IntGetFocusWindow())
       {
-        SpareLParam = MAKELONG(*HitTest, Msg);
         
         if(*HitTest != (USHORT)HTTRANSPARENT)
         {
-          Result = IntSendMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
+          LRESULT Result;
+          Result = IntSendMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)MAKELONG(*HitTest, Msg));
           
           switch (Result)
           {

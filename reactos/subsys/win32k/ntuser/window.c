@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.206 2004/03/31 19:20:18 gvg Exp $
+/* $Id: window.c,v 1.207 2004/03/31 19:44:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2124,40 +2124,38 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
    switch (Type)
    {
       case GA_PARENT:
+      {
          WndAncestor = IntGetParentObject(Wnd);
          break;
+      }
 
       case GA_ROOT:
+      {
+         PWINDOW_OBJECT tmp;
          WndAncestor = Wnd;
          Parent = NULL;
-#if 0
-         while (0 != (WndAncestor->Style & WS_CHILD))
-         {
-           Parent = IntGetParentObject(WndAncestor);
-           if (WndAncestor != Wnd)
-           {
-             IntReleaseWindowObject(WndAncestor);
-           }
-           WndAncestor = Parent;
-         }
-#else
+
          for(;;)
          {
-           if(Parent)
-           {
-             IntReleaseWindowObject(Parent);
-           }
-           if(!(Parent = IntGetParentObject(WndAncestor)) ||
-              !IntIsDesktopWindow(WndAncestor))
+           tmp = Parent;
+           if(!(Parent = IntGetParentObject(WndAncestor)))
            {
              break;
            }
+           if(IntIsDesktopWindow(Parent))
+           {
+             IntReleaseWindowObject(Parent);
+             break;
+           }
+           if(tmp)
+             IntReleaseWindowObject(tmp);
            WndAncestor = Parent;
          }
-#endif
          break;
+      }
     
       case GA_ROOTOWNER:
+      {
          WndAncestor = Wnd;
          IntReferenceWindowObject(WndAncestor);
          for (;;)
@@ -2173,21 +2171,19 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
             WndAncestor = Parent;
          }
          break;
+      }
 
       default:
+      {
          IntReleaseWindowObject(Wnd);
          return NULL;
+      }
    }
    
+   hWndAncestor = (WndAncestor ? WndAncestor->Self : NULL);
    IntReleaseWindowObject(Wnd);
    
-   if(!WndAncestor)
-   {
-     return NULL;
-   }
-   
-   hWndAncestor = WndAncestor->Self;
-   if(WndAncestor != Wnd)
+   if(WndAncestor && (WndAncestor != Wnd))
      IntReleaseWindowObject(WndAncestor);
 
    return hWndAncestor;
