@@ -72,6 +72,7 @@ lib\syssetup\syssetup.dll               1
 lib\twain\twain_32.dll                  1
 lib\unicode\libwine_unicode.dll         1
 lib\user32\user32.dll                   1
+lib\userenv\userenv.dll                 1
 lib\version\version.dll                 1
 lib\winspool\winspool.drv               1
 lib\ws2_32\ws2_32.dll                   1
