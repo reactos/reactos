@@ -101,18 +101,18 @@ WINE_OTHER = unicode library
 
 WINE_TOOLS = bin2res wrc winebuild
 
-WINE_DLLS = comcat crtdll comctl32 commdlg dsound dplayx richedit shlwapi twain \
-ole32 shell32 winspool \
+WINE_DLLS = comcat crtdll comctl32 commdlg dsound dplayx imagehlp ole32 richedit \
+shlwapi shell32 shdocvw twain urlmon winspool \
 rpcrt4 # needed to make rcprt4 implib 
 
-# mapi32 oleaut32 oledlg olepro32 olecli olesvr shfolder shdocvw 
-# winmm ddraw dinput dplay serialui tapi32 urlmon winspool wintrust 
+# mapi32 oleaut32 oledlg olepro32 olecli olesvr shfolder
+# winmm ddraw dinput dplay serialui tapi32 urlmon wintrust 
 # msinfo lzexpand (missing imports)
 
-WINE_PROGS = control expand osversioncheck regedit regsrv32 winver
+WINE_PROGS = control expand osversioncheck regedit regsrv32 winver uninstaller
 # (waiting on wrc fix for the rest of these)
 # clock cmdlgtst  notepad  progman wcmd  
-# uninstaller winefile winemine winetest 
+# winefile winemine winetest uninstaller
 
 
 ifeq ($(ROS_BUILD_WINE),yes)
