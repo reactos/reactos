@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.8 2003/08/24 20:56:16 dwelch Exp $
+/* $Id: display.c,v 1.9 2003/08/25 12:26:50 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -135,7 +135,7 @@
 #define VGA_SEQ_INDEX           0x3c4
 #define VGA_SEQ_DATA            0x3c5
 
-#define VGA_DAC_MASK            0x3c8
+#define VGA_DAC_MASK            0x3c6
 #define VGA_DAC_READ_INDEX      0x3c7
 #define VGA_DAC_WRITE_INDEX     0x3c8
 #define VGA_DAC_DATA            0x3c9
