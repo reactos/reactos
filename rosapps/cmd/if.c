@@ -21,6 +21,9 @@
  *
  *    01-Sep-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed help text.
+ *
+ *    17-Feb-2001 (ea)
+ *        IF DEFINED variable command
  */
 
 #include "config.h"
@@ -36,7 +39,6 @@
 
 #define X_EXEC 1
 #define X_EMPTY 0x80
-
 
 INT cmd_if (LPTSTR cmd, LPTSTR param)
 {
@@ -54,6 +56,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		               "  IF [NOT] ERRORLEVEL number command\n"
 		               "  IF [NOT] string1==string2 command\n"
 		               "  IF [NOT] EXIST filename command\n"
+			       "  IF [NOT] DEFINED variable command\n"
 		               "\n"
 		               "NOT               Specifies that CMD should carry out the command only if\n"
 		               "                  the condition is false\n"
@@ -62,7 +65,9 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		               "command           Specifies the command to carry out if the condition is met.\n"
 		               "string1==string2  Specifies a true condition if the specified text strings\n"
 		               "                  match.\n"
-		               "EXIST filename    Specifies a true condition if the specified filename exists."));
+		               "EXIST filename    Specifies a true condition if the specified filename exists.\n"
+			       "DEFINED variable  Specifies a true condition if the specified variable is\n"
+			       "                  defined."));
 		return 0;
 	}
 
@@ -93,9 +98,42 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 			*pp++ = _T('\0');
 			hFind = FindFirstFile (param, &f);
-			x_flag ^= (hFind != INVALID_HANDLE_VALUE) ? 0 : X_EXEC;
+			x_flag ^= (hFind == INVALID_HANDLE_VALUE) ? 0 : X_EXEC;
 			if (hFind != INVALID_HANDLE_VALUE)
+			{
 				FindClose (hFind);
+			}
+		}
+		else
+			return 0;
+	}
+
+	/* Check for 'defined' form */
+	else if (!_tcsnicmp (param, _T("defined"), 7) && _istspace (*(param + 7)))
+	{
+		TCHAR Value [1];
+		INT   ValueSize = 0;
+
+		param += 7;
+		/* IF [NOT] DEFINED var COMMAND */
+		/*                 ^            */
+		while (_istspace (*param))
+			param++;
+		/* IF [NOT] DEFINED var COMMAND */
+		/*                  ^           */
+		pp = param;
+		while (*pp && !_istspace (*pp))
+			pp++;
+		/* IF [NOT] DEFINED var COMMAND */
+		/*                     ^        */
+		if (*pp)
+		{
+			*pp++ = _T('\0');
+			ValueSize = GetEnvironmentVariable(param, Value, sizeof Value);
+			x_flag ^= (0 == ValueSize)
+					? 0 
+					: X_EXEC;
+			x_flag |= X_EMPTY;
 		}
 		else
 			return 0;
@@ -166,7 +204,9 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 	}
 
 	if (x_flag & X_EXEC)
+	{
 		ParseCommandLine (pp);
+	}
 
 	return 0;
 }

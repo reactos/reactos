@@ -68,7 +68,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	               SHELLVER "\n"
 	               "\n"
 	               "Copyright (C) 1994-1998 Tim Norman and others."));
-	ConOutPuts (_T("Copyright (C) 1998-2000 Eric Kohl and others."));
+	ConOutPuts (_T("Copyright (C) 1998-2001 Eric Kohl and others."));
 
 	/* Basic copyright notice */
 	if (param[0] == _T('\0'))
