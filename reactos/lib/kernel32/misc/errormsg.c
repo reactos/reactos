@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.10 2003/11/05 20:42:02 sedwards Exp $
+/* $Id: errormsg.c,v 1.11 2003/11/16 10:45:15 mf Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -732,6 +732,8 @@ FormatMessageW(
 
 // RtlFormatMessage
 
+    FIXME("FormatMessageW: unimplemented\n");
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
@@ -790,6 +792,8 @@ FormatMessageA(
           NULL)
         )
  */
+    FIXME("FormatMessageA: unimplemented\n");
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
