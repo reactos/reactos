@@ -126,12 +126,12 @@ CmiCreateRegistry(PWSTR  Filename)
  DWORD  FreeOffset;
  int i, j;
  BLOCK_OFFSET BlockOffset;
-DPRINT1("CmiCreateRegistry() Filename '%S'\n", Filename);
+DPRINT("CmiCreateRegistry() Filename '%S'\n", Filename);
   RegistryFile = ExAllocatePool(NonPagedPool, sizeof(REGISTRY_FILE));
-CHECKPOINT1;
+
   if (RegistryFile == NULL)
     return NULL;
-CHECKPOINT1;
+
   if (Filename != NULL)
    {
      UNICODE_STRING TmpFileName;
@@ -219,7 +219,7 @@ CHECKPOINT1;
       if (RegistryFile->BlockList[0] == NULL)
       {
 //        Status = STATUS_INSUFFICIENT_RESOURCES;
-	DPRINT1("error allocating %d bytes for registry\n"
+	DPRINT("error allocating %d bytes for registry\n"
 	   ,RegistryFile->FileSize-4096);
 	ZwClose(FileHandle);
 	return NULL;
@@ -232,7 +232,7 @@ CHECKPOINT1;
       ZwClose(FileHandle);
       if (!NT_SUCCESS(Status))
       {
-	DPRINT1("error %x reading registry file at offset %x\n"
+	DPRINT("error %x reading registry file at offset %x\n"
 			,Status,fileOffset.u.LowPart);
         return NULL;
       }
@@ -244,7 +244,7 @@ CHECKPOINT1;
         tmpHeap = (PHEAP_BLOCK)(((char *)RegistryFile->BlockList [0])+BlockOffset);
 	if (tmpHeap->BlockId != REG_HEAP_ID )
 	{
-	  DPRINT1("bad BlockId %x,offset %x\n",tmpHeap->BlockId,fileOffset.u.LowPart);
+	  DPRINT("bad BlockId %x,offset %x\n",tmpHeap->BlockId,fileOffset.u.LowPart);
 	}
 	RegistryFile->BlockList [i]
 	   = tmpHeap;

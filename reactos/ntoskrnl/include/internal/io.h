@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.13 2001/09/01 15:36:44 chorns Exp $
+/* $Id: io.h,v 1.14 2001/09/16 13:19:31 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,7 +44,7 @@ typedef struct _DEVICE_NODE
   UNICODE_STRING InstancePath;
   UNICODE_STRING ServiceName;
   //TargetDeviceNotifyList?
-  DEVICE_CAPABILITIES CapabilityFlags;
+  PDEVICE_CAPABILITIES CapabilityFlags;
   ULONG Flags;
   ULONG UserFlags;
   ULONG DisableableDepends;
@@ -52,6 +52,14 @@ typedef struct _DEVICE_NODE
   PCM_RESOURCE_LIST CmResourceList;
   PCM_RESOURCE_LIST BootResourcesList;
   PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
+  /* Not NT's */
+  UNICODE_STRING DeviceID;
+  UNICODE_STRING InstanceID;
+  UNICODE_STRING HardwareIDs;
+  UNICODE_STRING CompatibleIDs;
+  UNICODE_STRING DeviceText;
+  UNICODE_STRING DeviceTextLocation;
+  PPNP_BUS_INFORMATION BusInformation;
 } DEVICE_NODE, *PDEVICE_NODE;
 
 /* For Flags field */
@@ -103,21 +111,127 @@ typedef struct _DEVICE_NODE
 #define CM_PROB_FAILED_INSTALL  28
 #define CM_PROB_FAILED_ADD      31
 
+/*
+ * VOID
+ * IopDeviceNodeSetFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Flag);
+ */
+#define IopDeviceNodeSetFlag(DeviceNode, Flag)((DeviceNode)->Flags |= (Flag))
+
+/*
+ * VOID
+ * IopDeviceNodeClearFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Flag);
+ */
+#define IopDeviceNodeClearFlag(DeviceNode, Flag)((DeviceNode)->Flags &= ~(Flag))
+
+/*
+ * BOOLEAN
+ * IopDeviceNodeHasFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Flag);
+ */
+#define IopDeviceNodeHasFlag(DeviceNode, Flag)(((DeviceNode)->Flags & (Flag)) > 0)
+
+/*
+ * VOID
+ * IopDeviceNodeSetUserFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG UserFlag);
+ */
+#define IopDeviceNodeSetUserFlag(DeviceNode, UserFlag)((DeviceNode)->UserFlags |= (UserFlag))
+
+/*
+ * VOID
+ * IopDeviceNodeClearUserFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG UserFlag);
+ */
+#define IopDeviceNodeClearUserFlag(DeviceNode, UserFlag)((DeviceNode)->UserFlags &= ~(UserFlag))
+
+/*
+ * BOOLEAN
+ * IopDeviceNodeHasUserFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG UserFlag);
+ */
+#define IopDeviceNodeHasUserFlag(DeviceNode, UserFlag)(((DeviceNode)->UserFlags & (UserFlag)) > 0)
+
+ /*
+ * VOID
+ * IopDeviceNodeSetProblem(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Problem);
+ */
+#define IopDeviceNodeSetProblem(DeviceNode, Problem)((DeviceNode)->Problem |= (Problem))
+
+/*
+ * VOID
+ * IopDeviceNodeClearProblem(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Problem);
+ */
+#define IopDeviceNodeClearProblem(DeviceNode, Problem)((DeviceNode)->Problem &= ~(Problem))
+
+/*
+ * BOOLEAN
+ * IopDeviceNodeHasProblem(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Problem);
+ */
+#define IopDeviceNodeHasProblem(DeviceNode, Problem)(((DeviceNode)->Problem & (Problem)) > 0)
+
+
+/*
+   Called on every visit of a node during a preorder-traversal of the device
+   node tree.
+   If the routine returns STATUS_UNSUCCESSFUL the traversal will stop and
+   STATUS_SUCCESS is returned to the caller who initiated the tree traversal.
+   Any other returned status code will be returned to the caller. If a status
+   code that indicates an error (other than STATUS_UNSUCCESSFUL) is returned,
+   the traversal is stopped immediately and the status code is returned to
+   the caller.
+ */
+typedef NTSTATUS (*DEVICETREE_TRAVERSE_ROUTINE)(
+  PDEVICE_NODE DeviceNode,
+  PVOID Context);
+
+/* Context information for traversing the device tree */
+typedef struct _DEVICETREE_TRAVERSE_CONTEXT
+{
+  /* Current device node during a traversal */
+  PDEVICE_NODE DeviceNode;
+  /* Initial device node where we start the traversal */
+  PDEVICE_NODE FirstDeviceNode;
+  /* Action routine to be called for every device node */
+  DEVICETREE_TRAVERSE_ROUTINE Action;
+  /* Context passed to the action routine */
+  PVOID Context;
+} DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
+
+/*
+ * VOID
+ * IopInitDeviceTreeTraverseContext(
+ *   PDEVICETREE_TRAVERSE_CONTEXT DeviceTreeTraverseContext,
+ *   PDEVICE_NODE DeviceNode,
+ *   DEVICETREE_TRAVERSE_ROUTINE Action,
+ *   PVOID Context);
+ */
+#define IopInitDeviceTreeTraverseContext( \
+  _DeviceTreeTraverseContext, _DeviceNode, _Action, _Context) { \
+  (_DeviceTreeTraverseContext)->FirstDeviceNode = (_DeviceNode); \
+  (_DeviceTreeTraverseContext)->Action = (_Action); \
+  (_DeviceTreeTraverseContext)->Context = (_Context); }
+
+
 extern PDEVICE_NODE IopRootDeviceNode;
 
 extern POBJECT_TYPE IoSymbolicLinkType;
 
 VOID
 PnpInit(VOID);
-
-NTSTATUS
-STDCALL
-PnpRootDriverEntry(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PUNICODE_STRING RegistryPath);
-NTSTATUS
-PnpRootCreateDevice(
-  PDEVICE_OBJECT *PhysicalDeviceObject);
 
 NTSTATUS
 IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject);
@@ -129,7 +243,7 @@ NTSTATUS
 IopFreeDeviceNode(PDEVICE_NODE DeviceNode);
 NTSTATUS
 IopInterrogateBusExtender(PDEVICE_NODE DeviceNode,
-                          PDEVICE_OBJECT FunctionDeviceObject,
+                          PDEVICE_OBJECT Pdo,
                           BOOLEAN BootDriversOnly);
 VOID
 IopLoadBootStartDrivers(VOID);
@@ -202,5 +316,24 @@ IopInitiatePnpIrp(
   PIO_STATUS_BLOCK IoStatusBlock,
   ULONG MinorFunction,
   PIO_STACK_LOCATION Stack);
+
+BOOLEAN
+IopCreateUnicodeString(
+  PUNICODE_STRING	Destination,
+  PWSTR Source,
+  POOL_TYPE PoolType);
+
+
+/* pnproot.c */
+
+NTSTATUS
+STDCALL
+PnpRootDriverEntry(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PUNICODE_STRING RegistryPath);
+
+NTSTATUS
+PnpRootCreateDevice(
+  PDEVICE_OBJECT *PhysicalDeviceObject);
 
 #endif

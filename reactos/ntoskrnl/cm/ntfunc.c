@@ -210,6 +210,7 @@ NtEnumerateKey (
                                      NULL);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("ObReferenceObjectByHandle() failed with status %x\n", Status);
       return  Status;
     }
 
@@ -223,6 +224,7 @@ NtEnumerateKey (
     if (RegistryFile == CmiVolatileFile)
     {
       ObDereferenceObject (KeyObject);
+      DPRINT("No more volatile entries\n");
       return  STATUS_NO_MORE_ENTRIES;
     }
     else
@@ -241,6 +243,7 @@ NtEnumerateKey (
       if(Index >= KeyBlock->NumberOfSubKeys)
       {
         ObDereferenceObject (KeyObject);
+        DPRINT("No more non-volatile entries\n");
         return  STATUS_NO_MORE_ENTRIES;
       }
       SubKeyBlock = CurKey->KeyBlock;
@@ -256,6 +259,7 @@ NtEnumerateKey (
   if (SubKeyBlock == NULL)
   {
     ObDereferenceObject (KeyObject);
+    DPRINT("No more entries\n");
     return  STATUS_NO_MORE_ENTRIES;
   }
 
@@ -363,6 +367,8 @@ NtEnumerateKey (
     }
   CmiReleaseBlock(RegistryFile, SubKeyBlock);
   ObDereferenceObject (KeyObject);
+
+  DPRINT("Returning status %x\n", Status);
 
   return  Status;
 }

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.7 2001/09/01 15:36:43 chorns Exp $
+/* $Id: registry.c,v 1.8 2001/09/16 13:19:31 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -582,7 +582,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
      }
 
-   if (Path[0] != L'\\')
+   if ((RelativeTo == RTL_REGISTRY_ABSOLUTE) || (Path[0] != L'\\'))
      {
 	RtlAppendUnicodeToString(&KeyName,
 				 Path);

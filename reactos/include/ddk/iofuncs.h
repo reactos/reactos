@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.25 2001/09/05 09:21:09 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.26 2001/09/16 13:19:31 chorns Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -625,6 +625,10 @@ IoGetConfigurationInformation (
 	((Irp)->Tail.Overlay.CurrentStackLocation)
 */
 
+#define IoSetNextIrpStackLocation(Irp) { \
+  (Irp)->CurrentLocation--; \
+  (Irp)->Tail.Overlay.CurrentStackLocation--; }
+
 #define IoCopyCurrentIrpStackLocationToNext(Irp) { \
   PIO_STACK_LOCATION IrpSp; \
   PIO_STACK_LOCATION NextIrpSp; \
@@ -633,6 +637,10 @@ IoGetConfigurationInformation (
   RtlCopyMemory(NextIrpSp, IrpSp, \
     FIELD_OFFSET(IO_STACK_LOCATION, CompletionRoutine)); \
   NextIrpSp->Control = 0; }
+
+#define IoSkipCurrentIrpStackLocation(Irp) \
+  (Irp)->CurrentLocation++; \
+  (Irp)->Tail.Overlay.CurrentStackLocation++;
 
 struct _EPROCESS*
 STDCALL

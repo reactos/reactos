@@ -25,6 +25,7 @@ copy services\fs\ms\msfs.sys %ROS_INSTALL%\system32\drivers
 copy services\fs\np\npfs.sys %ROS_INSTALL%\system32\drivers
 copy services\bus\acpi\acpi.sys %ROS_INSTALL%\system32\drivers
 copy services\bus\isapnp\isapnp.sys %ROS_INSTALL%\system32\drivers
+copy services\bus\pci\pci.sys %ROS_INSTALL%\system32\drivers
 copy services\dd\ide\ide.sys %ROS_INSTALL%\system32\drivers
 copy services\dd\floppy\floppy.sys %ROS_INSTALL%\system32\drivers
 copy services\input\keyboard\keyboard.sys %ROS_INSTALL%\system32\drivers

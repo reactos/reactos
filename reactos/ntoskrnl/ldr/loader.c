@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.89 2001/09/01 15:36:44 chorns Exp $
+/* $Id: loader.c,v 1.90 2001/09/16 13:19:32 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -883,6 +883,11 @@ VOID LdrLoadAutoConfigDrivers (VOID)
 #endif /* KDBG */
 
    /*
+    * PCI bus driver
+    */
+   //LdrLoadAutoConfigDriver( L"pci.sys" );
+
+   /*
     * Keyboard driver
     */
    LdrLoadAutoConfigDriver( L"keyboard.sys" );
@@ -951,7 +956,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    /*
     * Ancillary Function Driver
     */
-   //LdrLoadAutoConfigDriver(L"afd.sys");
+   LdrLoadAutoConfigDriver(L"afd.sys");
 #endif
 }
 
@@ -990,13 +995,36 @@ NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename,
                        BOOLEAN BootDriversOnly)
 {
   PMODULE_OBJECT ModuleObject;
+  WCHAR Buffer[MAX_PATH];
   NTSTATUS Status;
+  ULONG Length;
+  LPWSTR Start;
+  LPWSTR Ext;
 
   ModuleObject = LdrLoadModule(Filename);
   if (!ModuleObject)
     {
       return STATUS_UNSUCCESSFUL;
     }
+
+  /* Set a service name for the device node */
+
+  /* Get the service name from the module name */
+  Start = wcsrchr(ModuleObject->BaseName.Buffer, L'\\');
+  if (Start == NULL)
+    Start = ModuleObject->BaseName.Buffer;
+  else
+    Start++;
+
+  Ext = wcsrchr(ModuleObject->BaseName.Buffer, L'.');
+  if (Ext != NULL)
+    Length = Ext - Start;
+  else
+    Length = wcslen(Start);
+
+  wcsncpy(Buffer, Start, Length);
+  RtlInitUnicodeString(&DeviceNode->ServiceName, Buffer);
+
 
   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
   if (!NT_SUCCESS(Status))

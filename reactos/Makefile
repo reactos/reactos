@@ -11,7 +11,7 @@ include $(PATH_TO_TOP)/rules.mak
 #
 COMPONENTS = iface_native iface_additional hallib ntoskrnl
 HALS = halx86
-BUS = acpi isapnp
+BUS = acpi isapnp pci
 DLLS = ntdll kernel32 advapi32 crtdll msvcrt fmifs gdi32 msafd \
 	user32 oleaut32 secur32 shell32 ws2_32 version
 SUBSYS = smss win32k csrss

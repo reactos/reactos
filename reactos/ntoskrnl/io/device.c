@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.33 2001/09/01 15:36:44 chorns Exp $
+/* $Id: device.c,v 1.34 2001/09/16 13:19:32 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -358,17 +358,18 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
         DriverObject, DeviceNode->Pdo);
       if (!NT_SUCCESS(Status))
         {
-          ExFreePool(DriverObject->DriverExtension);
-	        ExFreePool(DriverObject);
 	        return(Status);
         }
+
+      IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
+
       DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
 
       Fdo = IoGetAttachedDeviceReference(DeviceNode->Pdo);
 
       if (Fdo == DeviceNode->Pdo)
         {
-          /* FIXME: What do we do? Unload the driver? */
+          /* FIXME: What do we do? Unload the driver or just disable the device? */
           DbgPrint("An FDO was not attached\n");
           KeBugCheck(0);
         }
@@ -386,8 +387,6 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
         {
           DPRINT("IopInitiatePnpIrp() failed\n");
           ObDereferenceObject(Fdo);
-          ExFreePool(DriverObject->DriverExtension);
-	        ExFreePool(DriverObject);
 	        return(Status);
         }
 
@@ -400,8 +399,6 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
           if (!NT_SUCCESS(Status))
             {
               ObDereferenceObject(Fdo);
-              ExFreePool(DriverObject->DriverExtension);
-	            ExFreePool(DriverObject);
 	            return(Status);
             }
         }
@@ -456,7 +453,9 @@ IopInitializeService(
 
   ObDereferenceObject(ModuleObject);
 
-  return STATUS_SUCCESS;
+  Status = IopInitializeDevice(DeviceNode, TRUE);
+
+  return Status;
 }
 
 NTSTATUS
@@ -515,6 +514,8 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
+ *   DriverEntry = Pointer to driver entry routine
+ *   DeviceNode  = Pointer to device node
  */
 {
   WCHAR RegistryKeyBuffer[MAX_PATH];

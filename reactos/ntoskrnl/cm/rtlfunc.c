@@ -398,7 +398,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
     break;
      }
 
-   if (Path[0] != L'\\')
+   if ((RelativeTo == RTL_REGISTRY_ABSOLUTE) || (Path[0] != L'\\'))
      {
 	RtlAppendUnicodeToString(&KeyName,
 				 Path);
