@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.65 2003/11/27 20:49:07 gdalsnes Exp $
+/* $Id: create.c,v 1.66 2004/01/18 22:31:23 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -446,9 +446,10 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   ULONG RequestedDisposition, RequestedOptions;
   PVFATCCB pCcb;
   PVFATFCB pFcb;
-  PWCHAR c;
+  PWCHAR c, last;
   BOOLEAN PagingFileCreate = FALSE;
   LARGE_INTEGER AllocationSize;
+  BOOLEAN Dots;
   
   /* Unpack the various parameters. */
   Stack = IoGetCurrentIrpStackLocation (Irp);
@@ -498,12 +499,28 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     }
 
   /*
-   * Check for illegal characters in the file name
+   * Check for illegal characters and illegale dot sequences in the file name
    */
   c = FileObject->FileName.Buffer + FileObject->FileName.Length / sizeof(WCHAR);
+  last = c - 1;
+  Dots = TRUE;
   while (c-- > FileObject->FileName.Buffer)
     {
-      if (*c != '\\' && vfatIsLongIllegal(*c))
+      if (*c == L'\\' || c == FileObject->FileName.Buffer)
+        {
+	  if (Dots && last > c)
+	    {
+              return(STATUS_OBJECT_NAME_INVALID);
+	    }
+	  last = c - 1;
+	  Dots = TRUE;
+	}
+      else if (*c != L'.')
+        {
+	  Dots = FALSE;
+	}
+
+      if (*c != '\\' && vfatIsLongIllegal(*c)) 
         {
           return(STATUS_OBJECT_NAME_INVALID);
 	}
