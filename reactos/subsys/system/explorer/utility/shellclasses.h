@@ -78,7 +78,7 @@ struct COMExceptionBase
 				LocalFree(pBuf);
 			 } else {
 				TCHAR buffer[128];
-				_stprintf(buffer, TEXT("unknown Exception: 0x%08X"), _hr);
+				_stprintf(buffer, TEXT("unknown Exception: 0x%08lX"), _hr);
 				_msg = buffer;
 			 }
 		}
