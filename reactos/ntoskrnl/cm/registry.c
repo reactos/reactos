@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.43 2000/10/11 13:20:39 jean Exp $
+/* $Id: registry.c,v 1.44 2000/10/11 15:06:31 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,7 @@
 #include <internal/ob.h>
 #include <wchar.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /*  -----------------------------------------------------  Typedefs  */
@@ -475,10 +475,12 @@ CmInitializeRegistry2(VOID)
   /* connect the SYSTEM Hive */
   Status=CmConnectHive(SYSTEM_REG_FILE,REG_SYSTEM_KEY_NAME
 			,"System",CmiMachineKey);
+/*
 for(;;)
 {
 __asm__ ("hlt\n\t");
 }
+*/
   if (!NT_SUCCESS(Status))
   {
     /* FIXME : search SYSTEM.alt, or create new */
