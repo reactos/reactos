@@ -4,6 +4,8 @@
 
 #include <windows.h>
 
+#define  DDI_DRIVER_VERSION  0x00010000
+
 /*  EngCreateBitmap format types  */
 enum _BMF_TYPES
 {
