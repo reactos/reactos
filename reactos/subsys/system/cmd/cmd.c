@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.6 2003/08/10 23:58:52 royce Exp $
+/* $Id: cmd.c,v 1.7 2003/08/18 11:55:43 hbirr Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -853,7 +853,7 @@ ProcessInput (BOOL bFlag)
 /*
  * control-break handler.
  */
-BOOL BreakHandler (DWORD dwCtrlType)
+BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 {
 	if ((dwCtrlType != CTRL_C_EVENT) &&
 	    (dwCtrlType != CTRL_BREAK_EVENT))
@@ -877,18 +877,13 @@ BOOL BreakHandler (DWORD dwCtrlType)
 
 VOID AddBreakHandler (VOID)
 {
-#ifndef __REACTOS__
-	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler,
-	                       TRUE);
-#endif
+	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)BreakHandler, TRUE);
 }
 
 
 VOID RemoveBreakHandler (VOID)
 {
-#ifndef __REACTOS__
-	SetConsoleCtrlHandler (NULL, FALSE);
-#endif
+	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)BreakHandler, FALSE);
 }
 
 
