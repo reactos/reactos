@@ -82,6 +82,8 @@ volatile BOOLEAN bInDebuggerShell=FALSE; // TRUE while in DebuggerShell()
 BOOLEAN bIrqStateAtBreak;
 
 ULONG ulRealStackPtr;
+static ULONG PCR_SEL = PCR_SELECTOR;
+static ULONG OLD_PCR;
 
 char tempShell[256]; // temporary string container
 
@@ -1038,8 +1040,8 @@ void RealIsr(ULONG dwReasonForBreak)
 
     bIrqStateAtBreak = ((CurrentEFL&(1<<9))!=0);
 
-	DPRINT((2,"\nbInDebuggerShell %x, dwReasonForBreak: %x, bIrqStateAtBreak: %d\n", bInDebuggerShell, dwReasonForBreak, bIrqStateAtBreak));
-	DPRINT((2,"CurrentEIP: %x, CurrentESP: %x\n", CurrentEIP, CurrentESP));
+	DPRINT((0,"\nbInDebuggerShell %x, dwReasonForBreak: %x, bIrqStateAtBreak: %d\n", bInDebuggerShell, dwReasonForBreak, bIrqStateAtBreak));
+	DPRINT((0,"CurrentEIP: %x, CurrentESP: %x\n", CurrentEIP, CurrentESP));
 
     // came in because TF flag was set
 	if(dwReasonForBreak == REASON_SINGLESTEP)
@@ -1527,6 +1529,15 @@ afterswitch:
     // get reason code
     mov 0x28(%esp),%ebx
 
+	/*
+	 * Load the PCR selector.
+	 */
+
+	movl 	%fs, %eax
+	movl	%eax, _OLD_PCR
+	movl	_PCR_SEL, %eax
+	movl	%eax, %fs
+
     // setup a large work stack
 	movl %esp,%eax
 	movl %eax,_ulRealStackPtr
@@ -1535,7 +1546,12 @@ afterswitch:
 	call _RealIsr
     addl $4,%esp
 
-    // restore all regs
+	pushl 	%eax
+	movl	_OLD_PCR, %eax
+	movl	%eax, %fs
+	popl	%eax
+
+	// restore all regs
 	popal
 
 	// do an EOI to IRQ controller (because we definitely pressed some key)

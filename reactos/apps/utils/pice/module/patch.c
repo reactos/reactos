@@ -82,13 +82,14 @@ BOOLEAN PiceKbdIsr (
 	UCHAR ucKey = *pByte & 0x7f;
 
     ENTER_FUNC();
-	// BUG!! should protect with spinlock since bControl is static.
-    DPRINT((5,"PiceKbdIsr(pByte: %x, val: %x,%u)\n",pByte,*pByte,isDown));
-    DPRINT((5,"PiceKbdIsr(1): bControl = %u bForward = %u bEnterNow = %u\n",bControl,bForward,bEnterNow));
+
+	// BUG?? should protect with spinlock since bControl is static.
+    DPRINT((0,"PiceKbdIsr(pByte: %x, val: %x,%u)\n",pByte,*pByte,isDown));
+    DPRINT((0,"PiceKbdIsr(1): bControl = %u bForward = %u bEnterNow = %u\n",bControl,bForward,bEnterNow));
 
 	if(isDown)
 	{
-		DPRINT((2,"bControl: %x, ucKey: %x, breakkey: %x\n", bControl, ucKey, AsciiToScan(ucBreakKey)));
+		DPRINT((0,"bControl: %x, ucKey: %x, breakkey: %x\n", bControl, ucKey, AsciiToScan(ucBreakKey)));
 		// CTRL pressed
 		if(ucKey==0x1d)
 		{

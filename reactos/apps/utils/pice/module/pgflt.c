@@ -46,6 +46,8 @@ extern void NewInt31Handler(void);
 ULONG OldIntEHandler=0;
 ULONG error_code;
 BOOLEAN bInPageFaultHandler = FALSE;
+static ULONG PCR_SEL = PCR_SELECTOR;
+static ULONG OLD_PCR;
 
 ////////////////////////////////////////////////////
 // FUNCTIONS
@@ -61,15 +63,14 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
 
     ENTER_FUNC();
 
-	DPRINT((0,"HandleInDebuggerFault(): ###### page fault @ %.8X while inside debugger\n",address));
+	DPRINT((2,"HandleInDebuggerFault(): ###### page fault @ %.8X while inside debugger, eip: %x\n",address, ptr->eip));
 
 	// fault in this page fault handler
 	if(bInPageFaultHandler)
 	{
-    	DPRINT((0,"HandleInDebuggerFault(): ###### page fault @ %.8X while in page fault handler\n",address));
+    	DPRINT((2,"HandleInDebuggerFault(): ###### page fault @ %.8X while in page fault handler\n",address));
 
-        DPRINT((0,"!!! machine is halted !!!\n"));
-
+        DPRINT((2,"!!! machine is halted !!!\n"));
         __asm__ __volatile__ ("hlt");
 
         LEAVE_FUNC();
@@ -82,7 +83,7 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
     // so the current task is different as well
     tsk = IoGetCurrentProcess();
 
-    DPRINT((0,"%.8X (%.4X:%.8X %.8X %s %s %s task=%.8X )\n",
+    DPRINT((2,"%.8X (%.4X:%.8X %.8X %s %s %s task=%.8X )\n",
         address,
         ptr->cs,
         ptr->eip,
@@ -127,7 +128,6 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
     IntelStackWalk(ptr->eip,CurrentEBP,ulRealStackPtr);
 
     DPRINT((0,"!!! machine is halted !!!\n"));
-
     __asm__ __volatile__ ("hlt");
 
     LEAVE_FUNC();
@@ -146,31 +146,32 @@ ULONG HandleInDebuggerFault(FRAME* ptr,ULONG address)
 ULONG HandlePageFault(FRAME* ptr)
 {
     PVOID address;
-	PEPROCESS tsk;
+	PEPROCESS tsk, tsk1;
 	PMADDRESS_SPACE vma;
     PLIST_ENTRY current_entry;
 	MEMORY_AREA* current;
+    ULONG value;
+	PKTHREAD CurrentThread;
+	PETHREAD CurrentEThread;
 
-	//for some reason stack is corrupted. disable for now.
-	return 0;
+	// get linear address of page fault
+	__asm__ __volatile__("movl %%cr2,%0"
+					      :"=r" (address));
 
-    // get linear address of page fault
-	__asm__("movl %%cr2,%0":"=r" (address));
-
-    // current process
-    tsk = IoGetCurrentProcess();
-	DPRINT((2,"\nPageFault: Name: %s, bInDebShell: %d, error: %d, addr: %x\n", tsk->ImageFileName, bInDebuggerShell, ptr->error_code, address));
+  	DPRINT((0,"\nPageFault: bInDebShell: %d, error: %d, addr: %x\n", bInDebuggerShell, ptr->error_code, address));
 
     // there's something terribly wrong if we get a fault in our command handler
     if(bInDebuggerShell)
     {
+		DPRINT((2,"return handleindebuggerfault\n"));
 		return HandleInDebuggerFault(ptr,(ULONG)address);
     }
 
+	ASSERT(IsAddressValid((ULONG)ptr));
     // remember error code so we can push it back on the stack
     error_code = ptr->error_code;
 
-    // interrupt handlers can't have page faults
+    //ei Check IRQL here!!!
 /*
     if(in_interrupt())
     {
@@ -178,16 +179,32 @@ ULONG HandlePageFault(FRAME* ptr)
         return 1;
     }
 */
-    // lookup VMA for this address
+	// current process
+    tsk = IoGetCurrentProcess();
+	if( !tsk || !(IsAddressValid((ULONG)tsk))){
+		DPRINT((0,"tsk address not valid: tsk: %x\n", tsk));
+		return 0;
+	}
+
+	// lookup VMA for this address
 	vma = &(tsk->AddressSpace);
+	if( !vma || !(IsAddressValid((ULONG)vma))){
+		DPRINT((0,"vma not valid: vma: %x\n", vma));
+		return 0;
+	}
+
 	current_entry = vma->MAreaListHead.Flink;
+	ASSERT(current_entry);
+	DPRINT((0,"vma: %x, current_entry: %x, kernel arena: %x\n", vma, current_entry, my_init_mm));
 	while(current_entry != &vma->MAreaListHead)
 	{
+		ASSERT(current_entry);
+		ASSERT(IsAddressValid((ULONG)current_entry));
 		current = CONTAINING_RECORD(current_entry,
 						MEMORY_AREA,
 						Entry);
-		DPRINT((2,"address: %x    %x - %x Attrib: %x, Type: %x\n", address, current->BaseAddress, current->BaseAddress + current->Length, current->Attributes, current->Type));
-		return 0;
+		DPRINT((0,"address: %x    %x - %x Attrib: %x, Type: %x\n", address, current->BaseAddress, current->BaseAddress + current->Length, current->Attributes, current->Type));
+
 		if( (address >= current->BaseAddress) && (address <= current->BaseAddress + current->Length ))
 		{
 			//page not present
@@ -196,12 +213,15 @@ ULONG HandlePageFault(FRAME* ptr)
 				if( current->Type == MEMORY_AREA_SECTION_VIEW_COMMIT ||
 					current->Type == MEMORY_AREA_SECTION_VIEW_RESERVE ||
 					current->Type == MEMORY_AREA_VIRTUAL_MEMORY ||
-					current->Type == MEMORY_AREA_PAGED_POOL
+					current->Type == MEMORY_AREA_PAGED_POOL ||
+					current->Type == MEMORY_AREA_SHARED_DATA
 						){
-	                Print(OUTPUT_WINDOW,"pICE: VMA Pageable Section.\n");
+	                //Print(OUTPUT_WINDOW,"pICE: VMA Pageable Section.\n");
+					DPRINT((2,"return 0 1\n"));
 					return 0; //let the system handle this
 				}
 				Print(OUTPUT_WINDOW,"pICE: VMA Page not present in non-pageable Section!\n");
+				DPRINT((2,"Type: currenttype: %x return 1 2\n", current->Type));
 				return 1;
 			}
 			else{ //access violation
@@ -211,8 +231,10 @@ ULONG HandlePageFault(FRAME* ptr)
 					if( (ULONG)address >= KERNEL_BASE )
 					{
 						Print(OUTPUT_WINDOW,"pICE: User mode program trying to access kernel memory!\n");
+						DPRINT((2,"return 1 3\n"));
 						return 1;
 					}
+					DPRINT((2,"return 0 4\n"));
 					return 0;
 				}
 				/*
@@ -245,6 +267,7 @@ ULONG HandlePageFault(FRAME* ptr)
 					*/
 
 		        // let the system handle it
+				DPRINT((2,"return 0 5\n"));
 		        return 0;
 			}
 		}
@@ -252,7 +275,8 @@ ULONG HandlePageFault(FRAME* ptr)
 	}
 
     Print(OUTPUT_WINDOW,"pICE: no virtual memory arena at this address!\n");
-    return 0;
+	DPRINT((2,"return 0 6\n"));
+	return 0;
 
     // let the system handle it
 //    return 0;
@@ -274,11 +298,24 @@ NewIntEHandler:
 	    movw %ss,%ax
 	    movw %ax,%ds
 
+		/*
+		 * Load the PCR selector.
+		 */
+		movl 	%fs, %eax
+		movl	%eax, _OLD_PCR
+	 	movl	_PCR_SEL, %eax
+		movl	%eax, %fs
+
         // get frame ptr
         lea 40(%esp),%eax
         pushl %eax
         call _HandlePageFault
         addl $4,%esp
+
+		pushl 	%eax
+	 	movl	_OLD_PCR, %eax
+		movl	%eax, %fs
+		popl	%eax
 
         cmpl $0,%eax
         je call_old_inte_handler
@@ -330,7 +367,7 @@ void InstallIntEHook(void)
 	MaskIrqs();
 	if(!OldIntEHandler)
 	{
-		__asm__("mov $NewIntEHandler,%0"
+		__asm__ __volatile__("mov $NewIntEHandler,%0"
 			:"=r" (LocalIntEHandler)
 			:
 			:"eax");

@@ -247,6 +247,7 @@ void InstallPrintkHook(void)
 {
 
 	ENTER_FUNC();
+	//ei disabled for now
 	return;
 	if( bIsPrintkPatched )
 			return;

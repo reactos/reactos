@@ -1941,13 +1941,14 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
 {
 	PEPROCESS my_current = IoGetCurrentProcess();
     PLIST_ENTRY current_entry;
-	PMADDRESS_SPACE vma;
+	PMADDRESS_SPACE vma = NULL;
 	MEMORY_AREA* current;
     char filename[64];
 
 	DPRINT((0,"ShowVirtualMemory()\n"));
+	if( my_current )
+    	vma = &(my_current->AddressSpace);
 
-    vma = &(my_current->AddressSpace);
     if(vma)
     {
         if(pArgs->Count == 0)
@@ -2475,8 +2476,9 @@ COMMAND_PROTOTYPE(SwitchTables)
 		char temp[DEBUG_MODULE_NAME_LEN];
 		CopyWideToAnsi(temp,pMod->name);
 
-		pCurrentSymbols = (PICE_SYMBOLFILE_HEADER*)pArgs->Value[0];
+		pCurrentSymbols = FindModuleSymbolsByModuleName( temp );
 		DPRINT((2,"TableSwitchSym: pCurrentSymbols: %x, Name: %S\n", pCurrentSymbols, pCurrentSymbols->name));
+
 		pTempMod = IsModuleLoaded(temp);
 		if( pTempMod )
 			pCurrentMod = pTempMod;

@@ -1622,7 +1622,7 @@ size_t PICE_strnlen(const char * s, size_t count)
 {
          const char *sc;
 
-         for (sc = s; count-- && *sc != '\0'; ++sc)
+         for (sc = s; count-- && IsAddressValid((ULONG)sc) && *sc != '\0'; ++sc)
                  /* nothing */;
          return sc - s;
 }
@@ -2187,7 +2187,7 @@ int PICE_close (HANDLE	hFile)
 	{
 		return 0;
 	}
-	DPRINT((2,"ZwClose failed:\n"));
+	DPRINT((0,"ZwClose failed:\n"));
 	return -1;
 }
 

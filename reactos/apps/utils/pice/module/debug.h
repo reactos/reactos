@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -34,8 +34,8 @@ Copyright notice:
 
 #define LEAVE_FUNC() DPRINT((0,"leave "__FUNCTION__"()\n"))
 
-VOID Pice_dprintf(ULONG DebugLevel, PCHAR DebugMessage, ...); 
-#define DPRINT(arg) Pice_dprintf arg 
+VOID Pice_dprintf(ULONG DebugLevel, PCHAR DebugMessage, ...);
+#define DPRINT(arg) Pice_dprintf arg
 
 #else // DEBUG
 

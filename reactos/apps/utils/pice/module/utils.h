@@ -272,7 +272,7 @@ ULONG  inl(PULONG port);
 
 //struct mm_struct *GetInitMm(void);
 
-PEPROCESS my_init_mm;
+PMADDRESS_SPACE my_init_mm;
 LIST_ENTRY* pPsProcessListHead;
 
 void EnablePassThrough(void);

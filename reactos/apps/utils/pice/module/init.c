@@ -129,7 +129,7 @@ BOOLEAN InitPICE(void)
 
     DPRINT((0,"InitPICE(): trace step 7\n"));
 	ScanExports("_KernelAddressSpace", &ulAddr);
-	my_init_mm = (PEPROCESS) ulAddr;
+	my_init_mm = (PMADDRESS_SPACE) ulAddr;
 	DPRINT((0,"init_mm %x @ %x\n",&my_init_mm,my_init_mm));
 	if(!my_init_mm)
 	{
@@ -282,7 +282,6 @@ BOOLEAN InitPICE(void)
     InstallDblFltHook();
     InstallGPFaultHook();
     InstallIntEHook();
-	//__asm__("int3");
     InstallPrintkHook();
 
     DPRINT((0,"InitPICE(): trace step 16\n"));

@@ -152,29 +152,33 @@ BOOLEAN ListUserModules( PPEB peb )
 	PLIST_ENTRY ModuleListHead;
 	PLIST_ENTRY Entry;
 	PLDR_MODULE Module;
+	PPEB_LDR_DATA Ldr;
 
 	ENTER_FUNC();
 
-	ModuleListHead = &peb->Ldr->InLoadOrderModuleList;
-	Entry = ModuleListHead->Flink;
-	while (Entry != ModuleListHead)
-	{
-		Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
-		//DbgPrint("Module: %x, BaseAddress: %x\n", Module, Module->BaseAddress);
+	Ldr = peb->Ldr;
+	if( Ldr && IsAddressValid((ULONG)Ldr)){
+		ModuleListHead = &Ldr->InLoadOrderModuleList;
+		ASSERT(IsAddressValid((ULONG)ModuleListHead));
+		Entry = ModuleListHead->Flink;
+		while (Entry != ModuleListHead)
+		{
+			Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+			//DbgPrint("Module: %x, BaseAddress: %x\n", Module, Module->BaseAddress);
 
-		DPRINT((0,"FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x, BaseAddress: %x\n", Module->FullDllName.Buffer,
-				Module->BaseDllName.Buffer, Module->SizeOfImage, Module->EntryPoint, Module->BaseAddress ));
+			DPRINT((0,"FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x, BaseAddress: %x\n", Module->FullDllName.Buffer,
+					Module->BaseDllName.Buffer, Module->SizeOfImage, Module->EntryPoint, Module->BaseAddress ));
 
-		pdebug_module_tail->size = Module->SizeOfImage;
-		pdebug_module_tail->BaseAddress = Module->BaseAddress;
-		pdebug_module_tail->EntryPoint = (PVOID)(Module->EntryPoint);
-		ASSERT(Module->BaseDllName.Length<DEBUG_MODULE_NAME_LEN); //name length is limited
-		PICE_wcscpy( pdebug_module_tail->name, Module->BaseDllName.Buffer );
-		pdebug_module_tail = pdebug_module_tail->next;
+			pdebug_module_tail->size = Module->SizeOfImage;
+			pdebug_module_tail->BaseAddress = Module->BaseAddress;
+			pdebug_module_tail->EntryPoint = (PVOID)(Module->EntryPoint);
+			ASSERT(Module->BaseDllName.Length<DEBUG_MODULE_NAME_LEN); //name length is limited
+			PICE_wcscpy( pdebug_module_tail->name, Module->BaseDllName.Buffer );
+			pdebug_module_tail = pdebug_module_tail->next;
 
-		Entry = Entry->Flink;
+			Entry = Entry->Flink;
+		}
 	}
-
 	LEAVE_FUNC();
 	return TRUE;
 }
@@ -248,15 +252,21 @@ BOOLEAN ListDriverModules( void )
 BOOLEAN BuildModuleList( void )
 {
  	PPEB peb;
+	PEPROCESS tsk;
 	ENTER_FUNC();
 
 	pdebug_module_tail = pdebug_module_head;
 
-	peb = IoGetCurrentProcess()->Peb;
-	if( peb ){
-		if( !ListUserModules( peb ) ){
-			LEAVE_FUNC();
-			return FALSE;
+	tsk = IoGetCurrentProcess();
+	ASSERT(IsAddressValid((ULONG)tsk));
+	if( tsk  ){
+		peb = tsk->Peb;
+		ASSERT(IsAddressValid((ULONG)peb));
+		if( peb ){
+			if( !ListUserModules( peb ) ){
+				LEAVE_FUNC();
+				return FALSE;
+			}
 		}
 	}
 	if( !ListDriverModules() ){
@@ -450,6 +460,7 @@ PICE_SYMBOLFILE_HEADER* FindModuleSymbols(ULONG addr)
         pd = pdebug_module_head;
         do
         {
+			DPRINT((0,"pd: %x\n", pd));
             if(pd->size)
 			{
                 start = (ULONG)pd->BaseAddress;
@@ -591,8 +602,11 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 	LPSTR pName;
 
 	ENTER_FUNC();
+	DPRINT((0,"In ScanExportsByAddress:\n"));
 
     pSymbols = FindModuleSymbols(ulValue);
+	DPRINT((0,"pSymbols: %x\n", pSymbols));
+
 	if(BuildModuleList()){
 		if(pSymbols && pdebug_module_head)
 		{
@@ -1961,37 +1975,37 @@ PICE_SYMBOLFILE_HEADER* LoadSymbols(LPSTR filename)
 
 	if( !( conv = PICE_MultiByteToWideChar(CP_ACP, NULL, filename, -1, tempstr, 256 ) ) )
 	{
-		DPRINT((2,"Can't convert module name.\n"));
+		DPRINT((0,"Can't convert module name.\n"));
 		return NULL;
 	}
-	DPRINT((2,"LoadSymbols: filename %s, tempstr %S, conv: %d\n", filename, tempstr, conv));
+	DPRINT((0,"LoadSymbols: filename %s, tempstr %S, conv: %d\n", filename, tempstr, conv));
 
     if(ulNumSymbolsLoaded<DIM(apSymbols))
     {
 	    hf = PICE_open(tempstr,OF_READ);
-		DPRINT((2,"LoadSymbols: hf: %x, file: %S\n",hf, tempstr));
+		DPRINT((0,"LoadSymbols: hf: %x, file: %S\n",hf, tempstr));
 	    if(hf)
 	    {
 		    //mm_segment_t oldfs;
 		    size_t len;
 
-            DPRINT((2,"hf = %x\n",hf));
+            DPRINT((0,"hf = %x\n",hf));
 
 		    len = PICE_len(hf);
-		    DPRINT((2,"file len = %d\n",len));
+		    DPRINT((0,"file len = %d\n",len));
 
             if(len)
             {
 		        pSymbols = PICE_malloc(len+1,NONPAGEDPOOL);  // maybe make pool setting an option
-		        DPRINT((2,"pSymbols = %x\n",pSymbols));
+		        DPRINT((0,"pSymbols = %x\n",pSymbols));
 
 		        if(pSymbols)
 		        {
         		    //oldfs = get_fs(); set_fs(KERNEL_DS);
 			        if(len == PICE_read(hf,(PVOID)pSymbols,len))
 			        {
-				        DPRINT((2,"LoadSymbols(): success reading symbols!\n"));
-				        DPRINT((2,"LoadSymbols(): pSymbols->magic = %X\n",pSymbols->magic));
+				        DPRINT((0,"LoadSymbols(): success reading symbols!\n"));
+				        DPRINT((0,"LoadSymbols(): pSymbols->magic = %X\n",pSymbols->magic));
 			        }
         		    //set_fs(oldfs);
 
@@ -2022,7 +2036,7 @@ PICE_SYMBOLFILE_HEADER* LoadSymbols(LPSTR filename)
 	    }
         else
         {
-			DPRINT((2,"pICE: could not load symbols for %s...\n",filename));
+			DPRINT((0,"pICE: could not load symbols for %s...\n",filename));
         }
     }
 
@@ -2183,7 +2197,7 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
                         {
 							DPRINT((0,"Load symbols from file %s\n", temp));
 							pSymbols = LoadSymbols(temp);
-							DPRINT((2,"Load symbols from file %s, pSymbols: %x\n", temp, pSymbols));
+							DPRINT((0,"Load symbols from file %s, pSymbols: %x\n", temp, pSymbols));
                             if(pSymbols)
                             {
                                 PICE_SYMBOLFILE_SOURCE* pSrc;
