@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.17 2001/05/05 19:13:09 chorns Exp $
+/* $Id: fs.c,v 1.18 2001/07/15 15:36:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -95,6 +95,7 @@ NtFsControlFile (
    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->Parameters.FileSystemControl.InputBufferLength = InputBufferSize;
    StackPtr->Parameters.FileSystemControl.OutputBufferLength = 
