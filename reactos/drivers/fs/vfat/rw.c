@@ -375,7 +375,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
 
    ASSERT(WriteOffset.QuadPart + Length <= Fcb->RFCB.AllocationSize.QuadPart);
    ASSERT(WriteOffset.u.LowPart % BytesPerSector == 0);
-   ASSERT(Length % BytesPerSector == 0)
+   ASSERT(Length % BytesPerSector == 0);
 
    // Is this a write of the volume ?
    if (Fcb->Flags & FCB_IS_VOLUME)
@@ -705,7 +705,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       CHECKPOINT;
       if (ByteOffset.QuadPart + Length > ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector))
       {
-         Length = ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart;
+         Length = (ULONG)(ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
       }
 
       Status = VfatLockUserBuffer(IrpContext->Irp, Length, IoWriteAccess);
@@ -719,8 +719,8 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       if (Status == STATUS_VERIFY_REQUIRED)
       {
          DPRINT("VfatReadFile returned STATUS_VERIFY_REQUIRED\n");
-         DeviceToVerify = IoGetDeviceToVerify((struct _ETHREAD*)KeGetCurrentThread());
-         IoSetDeviceToVerify((struct _ETHREAD*)KeGetCurrentThread(), NULL);
+         DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
+         IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
          Status = IoVerifyVolume (DeviceToVerify, FALSE);
 
          if (NT_SUCCESS(Status))

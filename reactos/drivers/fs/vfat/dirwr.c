@@ -151,7 +151,7 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
         return FALSE;
       }
       // clear the new dir cluster
-      FileOffset.u.LowPart = (DWORD)(pDirFcb->RFCB.FileSize.QuadPart -
+      FileOffset.u.LowPart = (ULONG)(pDirFcb->RFCB.FileSize.QuadPart -
                                      DeviceExt->FatInfo.BytesPerCluster);
       CcMapData (pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster,
                  TRUE, &Context, (PVOID*)&pFatEntry);
@@ -195,7 +195,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   PVOID Context = NULL;
   PFAT_DIR_ENTRY pFatEntry;
   slot *pSlots;
-  short nbSlots = 0, j, posCar;
+  USHORT nbSlots = 0, j, posCar;
   PUCHAR Buffer;
   BOOLEAN needTilde = FALSE, needLong = FALSE;
   BOOLEAN lCaseBase = FALSE, uCaseBase, lCaseExt = FALSE, uCaseExt;
@@ -402,11 +402,11 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
           pSlots[i].attr = 0xf;
           if (i)
             {
-              pSlots[i].id = nbSlots - i - 1;
+              pSlots[i].id = (unsigned char)(nbSlots - i - 1);
             }
           else
             {
-              pSlots[i].id = nbSlots - i - 1 + 0x40;
+              pSlots[i].id = (unsigned char)(nbSlots - i - 1 + 0x40);
             }
           pSlots[i].alias_checksum = pSlots[0].alias_checksum;
           RtlCopyMemory (pSlots[i].name0_4, DirContext.LongNameU.Buffer + (nbSlots - i - 2) * 13, 10);

@@ -479,7 +479,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
   ULONG NewSize = AllocationSize->u.LowPart;
   ULONG NCluster;
-  BOOL AllocSizeChanged = FALSE;
+  BOOLEAN AllocSizeChanged = FALSE;
 
   DPRINT("VfatSetAllocationSizeInformation()\n");
 
@@ -746,7 +746,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   PVFATFCB FCB = NULL;
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
-  BOOL CanWait = IrpContext->Flags & IRPCONTEXT_CANWAIT;
+  BOOLEAN CanWait = (IrpContext->Flags & IRPCONTEXT_CANWAIT) != 0;
   
   /* PRECONDITION */
   ASSERT(IrpContext);

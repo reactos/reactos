@@ -56,7 +56,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    LARGE_INTEGER Offset;
    struct _BootSector* Boot;
    struct _BootSectorFatX* BootFatX;
-   BOOL PartitionInfoIsValid = FALSE;
+   BOOLEAN PartitionInfoIsValid = FALSE;
 
    DPRINT("VfatHasFileSystem\n");
 

@@ -45,7 +45,7 @@ vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
   return  cluster;
 }
 
-BOOL FATIsDirectoryEmpty(PVFATFCB Fcb)
+BOOLEAN FATIsDirectoryEmpty(PVFATFCB Fcb)
 {
    LARGE_INTEGER FileOffset;
    PVOID Context = NULL;
@@ -98,7 +98,7 @@ BOOL FATIsDirectoryEmpty(PVFATFCB Fcb)
    return TRUE;
 }
 
-BOOL FATXIsDirectoryEmpty(PVFATFCB Fcb)
+BOOLEAN FATXIsDirectoryEmpty(PVFATFCB Fcb)
 {
    LARGE_INTEGER FileOffset;
    PVOID Context = NULL;
@@ -144,7 +144,7 @@ BOOL FATXIsDirectoryEmpty(PVFATFCB Fcb)
    return TRUE;
 }
 
-BOOL VfatIsDirectoryEmpty(PVFATFCB Fcb)
+BOOLEAN VfatIsDirectoryEmpty(PVFATFCB Fcb)
 {
    if (Fcb->Flags & FCB_IS_FATX_ENTRY)
       return FATXIsDirectoryEmpty(Fcb);

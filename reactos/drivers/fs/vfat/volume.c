@@ -169,7 +169,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   PDIR_ENTRY Entry;
   PVFATFCB pRootFcb;
   LARGE_INTEGER FileOffset;
-  BOOL LabelFound = FALSE;
+  BOOLEAN LabelFound = FALSE;
   DIR_ENTRY VolumeLabelDirEntry;
   ULONG VolumeLabelDirIndex;
   ULONG LabelLen;

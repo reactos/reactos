@@ -179,7 +179,7 @@ typedef struct
   ULONG NumberOfClusters;
   ULONG FatType;
   ULONG Sectors;
-  BOOL FixedMedia;
+  BOOLEAN FixedMedia;
 } FATINFO, *PFATINFO;
 
 struct _VFATFCB;
@@ -356,17 +356,17 @@ typedef struct _VFATCCB
 
 typedef struct __DOSTIME
 {
-   WORD	Second:5;
-   WORD	Minute:6;
-   WORD Hour:5;
+   USHORT Second:5;
+   USHORT Minute:6;
+   USHORT Hour:5;
 }
 DOSTIME, *PDOSTIME;
 
 typedef struct __DOSDATE
 {
-   WORD	Day:5;
-   WORD	Month:4;
-   WORD Year:5;
+   USHORT Day:5;
+   USHORT Month:4;
+   USHORT Year:5;
 }
 DOSDATE, *PDOSDATE;
 
@@ -441,15 +441,15 @@ NTSTATUS VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT);
 
-BOOL FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt,
-                                 WORD wDosDate,
-                                 WORD wDosTime,
-                                 PLARGE_INTEGER SystemTime);
+BOOLEAN FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt,
+                                    USHORT DosDate,
+                                    USHORT DosTime,
+                                    PLARGE_INTEGER SystemTime);
 
-BOOL FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt,
-                                 PLARGE_INTEGER SystemTime,
-                                 WORD *pwDosDate,
-                                 WORD *pwDosTime);
+BOOLEAN FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt,
+                                    PLARGE_INTEGER SystemTime,
+                                    USHORT *pDosDate,
+                                    USHORT *pDosTime);
 
 /*  --------------------------------------------------------  create.c  */
 
@@ -602,7 +602,7 @@ WriteCluster(PDEVICE_EXTENSION DeviceExt,
 ULONG  vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
                                     PDIR_ENTRY  pDirEntry);
 
-BOOL VfatIsDirectoryEmpty(PVFATFCB Fcb);
+BOOLEAN VfatIsDirectoryEmpty(PVFATFCB Fcb);
 
 NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 			     PVOID * pPage,
@@ -641,9 +641,9 @@ PVFATFCB vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB);
 
 PVFATFCB vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB);
 
-BOOL vfatFCBIsDirectory (PVFATFCB FCB);
+BOOLEAN vfatFCBIsDirectory (PVFATFCB FCB);
 
-BOOL vfatFCBIsRoot(PVFATFCB FCB);
+BOOLEAN vfatFCBIsRoot(PVFATFCB FCB);
 
 NTSTATUS vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
                                     PVFATFCB  fcb,

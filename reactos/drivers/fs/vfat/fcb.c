@@ -151,13 +151,13 @@ vfatDestroyFCB(PVFATFCB pFCB)
   ExFreeToNPagedLookasideList(&VfatGlobalData->FcbLookasideList, pFCB);
 }
 
-BOOL
+BOOLEAN
 vfatFCBIsDirectory(PVFATFCB FCB)
 {
   return  *FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY;
 }
 
-BOOL
+BOOLEAN
 vfatFCBIsRoot(PVFATFCB FCB)
 {
   return  FCB->PathNameU.Length == sizeof(WCHAR) && FCB->PathNameU.Buffer[0] == L'\\' ? TRUE : FALSE;
