@@ -133,7 +133,7 @@ Path::RelativeFromWorkingDirectory ( const string& path )
 	if ( i < vwork.size() )
 	{
 		// path goes above our working directory, we will need some ..'s
-		for ( int j = 0; j < i; j++ )
+		for ( size_t j = 0; j < i; j++ )
 			vout.push_back ( ".." );
 	}
 	while ( i < vpath.size() )
@@ -384,7 +384,7 @@ XMLElement::GetAttribute ( const string& attribute,
 {
 	// this would be faster with a tree-based container, but our attribute
 	// lists are likely to stay so short as to not be an issue.
-	for ( int i = 0; i < attributes.size(); i++ )
+	for ( size_t i = 0; i < attributes.size(); i++ )
 	{
 		if ( attribute == attributes[i]->name )
 			return attributes[i];
@@ -403,7 +403,7 @@ XMLElement::GetAttribute ( const string& attribute,
 {
 	// this would be faster with a tree-based container, but our attribute
 	// lists are likely to stay so short as to not be an issue.
-	for ( int i = 0; i < attributes.size(); i++ )
+	for ( size_t i = 0; i < attributes.size(); i++ )
 	{
 		if ( attribute == attributes[i]->name )
 			return attributes[i];
@@ -606,7 +606,7 @@ main ( int argc, char** argv )
 		proj->ProcessXML ( *head, "." );
 
 		// REM TODO FIXME actually do something with Project object...
-		printf ( "Found %lu modules:\n", proj->modules.size() );
+		printf ( "Found %d modules:\n", proj->modules.size() );
 		for ( size_t i = 0; i < proj->modules.size(); i++ )
 		{
 			Module& m = *proj->modules[i];
