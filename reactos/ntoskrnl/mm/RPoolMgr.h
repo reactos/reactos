@@ -1,4 +1,4 @@
-/* $Id: RPoolMgr.h,v 1.1 2004/12/17 13:20:05 royce Exp $
+/* $Id: RPoolMgr.h,v 1.2 2004/12/18 21:30:17 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -124,6 +124,27 @@ typedef struct _R_POOL
 	R_MUTEX Mutex;
 }
 R_POOL, *PR_POOL;
+
+#if !R_STACK
+#define RiPrintLastOwner(Block)
+#else
+static void
+RiPrintLastOwner ( PR_USED Block )
+{
+	int i;
+	for ( i = 0; i < R_STACK; i++ )
+	{
+		if ( Block->LastOwnerStack[i] != 0xDEADBEEF )
+		{
+			R_DEBUG(" ");
+			if (!R_PRINT_ADDRESS ((PVOID)Block->LastOwnerStack[i]) )
+			{
+				R_DEBUG("<%X>", Block->LastOwnerStack[i] );
+			}
+		}
+	}
+}
+#endif//R_STACK
 
 static int
 RQueWhich ( rulong size )
@@ -384,17 +405,7 @@ RiBadBlock ( PR_USED pUsed, char* Addr, const char* violation, const char* file,
 	R_DEBUG ( "\n" );
 
 	R_DEBUG ( "First few Stack Frames:" );
-	for ( i = 0; i < R_STACK; i++ )
-	{
-		if ( pUsed->LastOwnerStack[i] != 0xDEADBEEF )
-		{
-			R_DEBUG(" ");
-			if (!R_PRINT_ADDRESS ((PVOID)pUsed->LastOwnerStack[i]) )
-			{
-				R_DEBUG("<%X>", pUsed->LastOwnerStack[i] );
-			}
-		}
-	}
+	RiPrintLastOwner ( pUsed );
 	R_DEBUG ( "\n" );
 
 	R_PANIC();
@@ -419,6 +430,21 @@ RUsedRedZoneCheck ( PR_POOL pool, PR_USED pUsed, char* Addr, const char* file, i
 		RiBadBlock ( pUsed, Addr, "bad magic", file, line, 0 );
 	}
 #endif//R_MAGIC
+	switch ( pUsed->Status )
+	{
+	case 0: // freed into main pool
+	case 2: // in ques
+		RiBadBlock ( pUsed, Addr, "double-free", file, line, 0 );
+		// no need for break here - RiBadBlock doesn't return
+	case 1: // allocated - this is okay
+		break;
+	default:
+		RiBadBlock ( pUsed, Addr, "corrupt status", file, line, 0 );
+	}
+	if ( pUsed->Status != 1 )
+	{
+		RiBadBlock ( pUsed, Addr, "double-free", file, line, 0 );
+	}
 	if ( pUsed->Size > pool->PoolSize || pUsed->Size == 0 )
 	{
 		RiBadBlock ( pUsed, Addr, "invalid size", file, line, 0 );
