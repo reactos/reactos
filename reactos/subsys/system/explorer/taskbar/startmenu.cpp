@@ -432,6 +432,9 @@ bool StartMenu::SelectButton(int id, bool open_sub)
 	if (id == -1)
 		return false;
 
+	if (id == _selected_id)
+		return true;
+
 	InvalidateSelection();
 
 	const SMBtnInfo* btn = GetButtonInfo(id);
@@ -515,15 +518,27 @@ void StartMenu::ProcessKey(int vk)
 		Navigate(+1);
 		break;
 
+	  case VK_HOME:
+		SelectButtonIndex(0, false);
+		break;
+
+	  case VK_END:
+		SelectButtonIndex(_buttons.size()-1, false);
+		break;
+
 	  case VK_LEFT:
 		if (_submenu)
 			CloseOtherSubmenus();
-		else
+		else if (!(GetWindowStyle(_hwnd) & WS_CAPTION))	// don't automatically close floating menus
 			DestroyWindow(_hwnd);
 		break;
 
 	  case VK_RIGHT:
 		OpenSubmenu(true);
+		break;
+
+	  case VK_ESCAPE:
+		CloseStartMenu();
 		break;
 	}
 }
@@ -551,7 +566,7 @@ bool StartMenu::Navigate(int step)
 	return false;
 }
 
-#endif
+#endif // _LIGHT_STARTMENU
 
 
 bool StartMenu::GetButtonRect(int id, PRECT prect) const
@@ -766,23 +781,28 @@ void StartMenu::ResizeButtons(int cx)
 
 int StartMenu::Command(int id, int code)
 {
+#ifndef _LIGHT_STARTMENU
 	switch(id) {
 	  case IDCANCEL:
 		CloseStartMenu(id);
 		break;
 
 	  default: {
+#endif
 		ShellEntryMap::iterator found = _entries.find(id);
 
 		if (found != _entries.end()) {
 			ActivateEntry(id, found->second._entries);
-			break;
+			return 0;
 		}
 
-		return super::Command(id, code);}
+		return super::Command(id, code);
+#ifndef _LIGHT_STARTMENU
+	  }
 	}
 
 	return 0;
+#endif
 }
 
 
