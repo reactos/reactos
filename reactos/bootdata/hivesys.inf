@@ -7,12 +7,7 @@ Signature = "$ReactOS$"
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
 
-; NLS Codepage settings
-
-;; Currently selected language for input
-HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","(Default)",0x00000000,"00000409"
-
-;; Keyboard Layouts
+; Keyboard Layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout File",0x00000000,"kbdgr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout Text",0x00000000,"GR"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000409","Layout File",0x00000000,"kbdus.dll"
@@ -20,7 +15,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000409","Layout Text",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout File",0x00000000,"kbdfr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout Text",0x00000000,"FR"
 
-;; NLS Files
+; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10000",0x00000000,"c_10000.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","1252",0x00000000,"c_1252.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","437",0x00000000,"c_437.nls"
@@ -48,6 +43,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040f",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0410",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409"
+
+; Currently selected language for input
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","(Default)",0x00000000,"00000409"
 
 ; Service groups
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
@@ -103,20 +101,35 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","kernel32",0x0
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
  "C:\reactos\pagefile.sys"
 
-; --------------------------- BUS drivers ---------------------------
 
-; PCI driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus Extender"
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ImagePath",0x00020000,"system32\drivers\pci.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
+; 3Com 3c905 Driver
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Group",0x00000000,"NDIS"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ImagePath",0x00020000,"system32\drivers\el90Xbc5.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Bind",0x00010000,"\Device\3c90x1"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Export",0x00010000,"\Device\3c90x1"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Route",0x00010000,"3c90x1"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","0",0x00000000,"PCI\VEN_1022&DEV_2000\0000"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","Count",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","NextInstance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Service",0x00000000,"3c90x"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Class",0x00000000,"Net"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
 
-; ----------------------- End of BUS drivers ------------------------
+; 3Com Adapter 1
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","Type",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Bind",0x00010000,"\Device\3c90x1"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Export",0x00010000,"\Device\3c90x1"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Route",0x00010000,"3c90x1"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters","SlotNumber",0x00000000,"10"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters","BusNumber",0x00000000,"0"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; Afd driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ErrorControl",0x00010001,0x00000001
@@ -145,6 +158,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Group",0x00000000,"Video Init"
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ImagePath",0x00020000,"system32\drivers\blue.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
+
+; Boot Video Driver
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ImagePath",0x00020000,"system32\drivers\bootvid.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Type",0x00010001,0x00000002
 
 ; Cdfs (ISO96660) filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000000
@@ -281,6 +301,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGatewa
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
+; PCI driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ImagePath",0x00020000,"system32\drivers\pci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
+
 ; AMD PCNet NIC driver
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
@@ -320,35 +351,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","BusNumber",0x0000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
-
-; 3Com 3c905 Driver
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Group",0x00000000,"NDIS"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ImagePath",0x00020000,"system32\drivers\el90Xbc5.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Bind",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Export",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Route",0x00010000,"3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","0",0x00000000,"PCI\VEN_1022&DEV_2000\0000"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","Count",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","NextInstance",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Service",0x00000000,"3c90x"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Class",0x00000000,"Net"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
-
-; 3Com Adapter 1
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","Type",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Bind",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Export",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Route",0x00010000,"3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters","SlotNumber",0x00000000,"10"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters","BusNumber",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; ReactOS PCNet Driver
 ;HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000001
@@ -439,13 +441,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux\Parameters","DisableExtensionDetection",0x00010001,0x00000000
 
-; Serial mouse driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Group",0x00000000,"Pointer Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ImagePath",0x00020000,"system32\drivers\sermouse.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Type",0x00010001,0x00000001
-
 ; RPC service
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
@@ -458,6 +453,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Group",0x00000000,"SCSI Port"
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath",0x00020000,"system32\drivers\scsiport.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
+
+; Serial mouse driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Group",0x00000000,"Pointer Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ImagePath",0x00020000,"system32\drivers\sermouse.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Type",0x00010001,0x00000001
 
 ; TCP/IP driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ErrorControl",0x00010001,0x00000001
@@ -492,12 +494,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
 
-; Boot Video Driver
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ImagePath",0x00020000,"system32\drivers\bootvid.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Type",0x00010001,0x00000002
 
 ; VGA miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
@@ -543,7 +539,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Group",0x00000000,"Extended
 HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","ImagePath",0x00020000,"system32\drivers\kmregtests.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Type",0x00010001,0x00000001
-
 
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001

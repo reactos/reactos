@@ -4,10 +4,37 @@ Signature="$ReactOS$
 [AddReg]
 
 HKCU,"Control Panel",,0x00000012
-
 HKCU,"Control Panel\Appearance",,0x00000012
+HKCU,"Control Panel\Desktop","CursorBlinkRate",0x00000002,"530"
+HKCU,"Control Panel\Desktop","DragFullWindows",0x00000002,"0"
 
 HKCU,"Environment",,0x00000012
+
+
+HKCU,"SOFTWARE",,0x00000012
+HKCU,"SOFTWARE\Microsoft",,0x00000012
+
+; Current user shell folder settings
+HKCU,"SOFTWARE\Microsoft\Windows",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"%SystemDrive%\Documents and Settings\Default\Desktop"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"%SystemDrive%\Documents and Settings\Default\Application Data"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Programs",0x00020000,"%SystemDrive%\Documents and Settings\Default\Start Menu\Programs"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"%SystemDrive%\Documents and Settings\Default\Start Menu"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Favorites",0x00020000,"%SystemDrive%\Documents and Settings\Default\Favorites"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Startup",0x00020000,"%SystemDrive%\Documents and Settings\Default\Start Menu\Programs\Startup"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Templates",0x00020000,"%SystemDrive%\Documents and Settings\Default\Templates"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Personal",0x00020000,"%SystemDrive%\Documents and Settings\Default\My Documents"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","SendTo",0x00020000,"%SystemDrive%\Documents and Settings\Default\SendTo"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Recent",0x00020000,"%SystemDrive%\Documents and Settings\Default\Recent"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","NetHood",0x00020000,"%SystemDrive%\Documents and Settings\Default\NetHood"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders","Personal",0x00020000,"%SystemDrive%\Documents and Settings\Default\My Documents"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders","Favorites",0x00020000,"%SystemDrive%\Documents and Settings\Default\Favorites"
+
+
+HKCU,"SOFTWARE\Microsoft\Windows NT",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion",,0x00000012
 
 ; application compatibility settings for Windows 95
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN95","MajorVersion",0x00010001,0x00000004
