@@ -211,3 +211,5 @@ DOT_CLEANUP            = YES
 # Configuration::addtions related to the search engine   
 #---------------------------------------------------------------------------
 SEARCHENGINE           = YES
+
+SHOW_DIRECTORIES       = YES
