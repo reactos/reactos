@@ -1,4 +1,4 @@
-/* $Id: button.c,v 1.5 2003/07/11 17:08:44 chorns Exp $
+/* $Id: button.c,v 1.6 2003/07/25 23:50:37 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -17,8 +17,6 @@
 #define HFONT_GWL_OFFSET  (sizeof(LONG))
 #define HIMAGE_GWL_OFFSET (2*sizeof(LONG))
 #define NB_EXTRA_BYTES    (3*sizeof(LONG))
-
-#define BS_FLAT              0x00008000L
 
 #define BUTTON_UNCHECKED       0x00
 #define BUTTON_CHECKED         0x01
