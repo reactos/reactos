@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.3 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: port.c,v 1.4 2001/01/28 17:38:12 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,6 +30,12 @@
 POBJECT_TYPE	ExPortType = NULL;
 ULONG		EiNextLpcMessageId = 0;
 
+static GENERIC_MAPPING ExpPortMapping = {
+	STANDARD_RIGHTS_READ,
+	STANDARD_RIGHTS_WRITE,
+	0,
+	PORT_ALL_ACCESS};
+
 /* FUNCTIONS *****************************************************************/
 
 
@@ -45,6 +51,7 @@ NTSTATUS NiInitPort (VOID)
    ExPortType->TotalHandles = 0;
    ExPortType->PagedPoolCharge = 0;
    ExPortType->NonpagedPoolCharge = sizeof(EPORT);
+   ExPortType->Mapping = &ExpPortMapping;
    ExPortType->Dump = NULL;
    ExPortType->Open = NULL;
    ExPortType->Close = NiClosePort;

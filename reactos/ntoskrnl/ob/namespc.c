@@ -24,6 +24,12 @@ POBJECT_TYPE ObDirectoryType = NULL;
 
 PDIRECTORY_OBJECT NameSpaceRoot = NULL;
 
+static GENERIC_MAPPING ObpDirectoryMapping = {
+	STANDARD_RIGHTS_READ|DIRECTORY_QUERY|DIRECTORY_TRAVERSE,
+	STANDARD_RIGHTS_WRITE|DIRECTORY_CREATE_OBJECT|DIRECTORY_CREATE_SUBDIRECTORY,
+	STANDARD_RIGHTS_EXECUTE|DIRECTORY_QUERY|DIRECTORY_TRAVERSE,
+	DIRECTORY_ALL_ACCESS};
+
 /* FUNCTIONS **************************************************************/
 
 NTSTATUS STDCALL
@@ -83,8 +89,8 @@ DPRINT("Object %p\n", Object);
  *		...
  *	ObjectType
  *		...
- *	Unknown3
- *		???
+ *	ParseContext
+ *		...
  *	AccessMode
  *		...
  *	DesiredAccess
@@ -100,7 +106,7 @@ DPRINT("Object %p\n", Object);
 NTSTATUS STDCALL
 ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
 		   POBJECT_TYPE ObjectType,
-		   ULONG Unknown3,			/* ?? */
+		   PVOID ParseContext,
 		   KPROCESSOR_MODE AccessMode,
 		   ACCESS_MASK DesiredAccess,
 		   PACCESS_STATE PassedAccessState,
@@ -308,6 +314,7 @@ VOID ObInit(VOID)
    ObDirectoryType->MaxHandles = ULONG_MAX;
    ObDirectoryType->PagedPoolCharge = 0;
    ObDirectoryType->NonpagedPoolCharge = sizeof(DIRECTORY_OBJECT);
+   ObDirectoryType->Mapping = &ObpDirectoryMapping;
    ObDirectoryType->Dump = NULL;
    ObDirectoryType->Open = NULL;
    ObDirectoryType->Close = NULL;

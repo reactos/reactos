@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.17 2000/10/22 16:36:50 ekohl Exp $
+/* $Id: symlink.c,v 1.18 2001/01/28 17:37:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,6 +29,12 @@ typedef struct
 } SYMLNK_OBJECT, *PSYMLNK_OBJECT;
 
 POBJECT_TYPE IoSymbolicLinkType = NULL;
+
+static GENERIC_MAPPING IopSymbolicLinkMapping = {
+	STANDARD_RIGHTS_READ|SYMBOLIC_LINK_QUERY,
+	STANDARD_RIGHTS_WRITE,
+	STANDARD_RIGHTS_EXECUTE|SYMBOLIC_LINK_QUERY,
+	SYMBOLIC_LINK_ALL_ACCESS};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -171,6 +177,7 @@ VOID IoInitSymbolicLinkImplementation (VOID)
    IoSymbolicLinkType->MaxHandles = ULONG_MAX;
    IoSymbolicLinkType->PagedPoolCharge = 0;
    IoSymbolicLinkType->NonpagedPoolCharge = sizeof (SYMLNK_OBJECT);
+   IoSymbolicLinkType->Mapping = &IopSymbolicLinkMapping;
    IoSymbolicLinkType->Dump = NULL;
    IoSymbolicLinkType->Open = NULL;
    IoSymbolicLinkType->Close = NULL;
@@ -180,7 +187,7 @@ VOID IoInitSymbolicLinkImplementation (VOID)
    IoSymbolicLinkType->QueryName = NULL;
    IoSymbolicLinkType->OkayToClose = NULL;
    IoSymbolicLinkType->Create = IopCreateSymbolicLink;
-    
+   
    RtlInitUnicodeString(&IoSymbolicLinkType->TypeName,
 			L"SymbolicLink");
 }

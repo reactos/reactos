@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.55 2001/01/21 14:54:29 dwelch Exp $
+/* $Id: process.c,v 1.56 2001/01/28 17:38:40 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -38,6 +38,11 @@ POBJECT_TYPE EXPORTED PsProcessType = NULL;
 static LIST_ENTRY PsProcessListHead;
 static KSPIN_LOCK PsProcessListLock;
 static ULONG PiNextProcessUniqueId = 0;
+
+static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
+					   PROCESS_WRITE,
+					   PROCESS_EXECUTE,
+					   PROCESS_ALL_ACCESS};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -176,6 +181,7 @@ VOID PsInitProcessManagment(VOID)
    PsProcessType->MaxHandles = ULONG_MAX;
    PsProcessType->PagedPoolCharge = 0;
    PsProcessType->NonpagedPoolCharge = sizeof(EPROCESS);
+   PsProcessType->Mapping = &PiProcessMapping;
    PsProcessType->Dump = NULL;
    PsProcessType->Open = NULL;
    PsProcessType->Close = NULL;
@@ -799,10 +805,9 @@ NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
 }
 
 
-#if 0
 /**********************************************************************
  * NAME							INTERNAL
- * 	PiSnapshotProcessTable
+ * 	PiQuerySystemProcessInformation
  *
  * DESCRIPTION
  * 	Compute the size of a process+thread snapshot as 
@@ -816,13 +821,13 @@ NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
  * 	We assume (sizeof (PVOID) == sizeof (ULONG)) holds.
  */
 NTSTATUS
-STDCALL
-PiSnapshotProcessTable (
-	IN	PVOID	SnapshotBuffer,
-	IN	ULONG	Size,
-	IN	PULONG	pRequiredSize
-	)
+PiQuerySystemProcessInformation(PVOID Buffer,
+				ULONG Size,
+				PULONG ReqSize)
 {
+   return STATUS_NOT_IMPLEMENTED;
+
+#if 0
 	KIRQL		OldIrql;
 	PLIST_ENTRY	CurrentEntryP;
 	PEPROCESS	CurrentP;
@@ -839,13 +844,10 @@ PiSnapshotProcessTable (
 	PSYSTEM_THREAD_INFO		pInfoT = NULL;
 	
 
-	/*
-	 * Lock the process list.
-	 */
-	KeAcquireSpinLock (
-		& PsProcessListLock,
-		& OldIrql
-		);
+   /* Lock the process list. */
+   KeAcquireSpinLock(&PsProcessListLock,
+		     &OldIrql);
+
 	/*
 	 * Scan the process list. Since the
 	 * list is circular, the guard is false
@@ -1010,7 +1012,7 @@ PiSnapshotProcessTable (
 	pInfoP->RelativeOffset = 0L;
 	/* OK */	
 	return STATUS_SUCCESS;
-}
 #endif
+}
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.67 2001/01/21 14:54:30 dwelch Exp $
+/* $Id: thread.c,v 1.68 2001/01/28 17:38:40 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -48,6 +48,11 @@ ULONG PiNrThreads = 0;
 ULONG PiNrRunnableThreads = 0;
 
 static PETHREAD CurrentThread = NULL;
+
+static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
+					  THREAD_WRITE,
+					  THREAD_EXECUTE,
+					  THREAD_ALL_ACCESS};
 
 /* FUNCTIONS ***************************************************************/
 
@@ -273,6 +278,7 @@ PsInitThreadManagment(VOID)
    PsThreadType->MaxHandles = 0;
    PsThreadType->PagedPoolCharge = 0;
    PsThreadType->NonpagedPoolCharge = sizeof(ETHREAD);
+   PsThreadType->Mapping = &PiThreadMapping;
    PsThreadType->Dump = NULL;
    PsThreadType->Open = NULL;
    PsThreadType->Close = PiCloseThread;

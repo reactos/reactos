@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.16 2000/10/05 19:15:50 ekohl Exp $
+/* $Id: iomgr.c,v 1.17 2001/01/28 17:37:48 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -31,6 +31,11 @@ ULONG        EXPORTED IoReadTransferCount = 0;	/* FIXME: unknown type */
 ULONG        EXPORTED IoWriteOperationCount = 0; /* FIXME: unknown type */
 ULONG        EXPORTED IoWriteTransferCount = 0;	/* FIXME: unknown type */
 ULONG        EXPORTED IoStatisticsLock = 0;	/* FIXME: unknown type */
+
+static GENERIC_MAPPING IopFileMapping = {FILE_GENERIC_READ,
+					 FILE_GENERIC_WRITE,
+					 FILE_GENERIC_EXECUTE,
+					 FILE_ALL_ACCESS};
 
 /* FUNCTIONS ****************************************************************/
 
@@ -121,6 +126,7 @@ VOID IoInit (VOID)
 	IoDeviceObjectType->MaxHandles = ULONG_MAX;
 	IoDeviceObjectType->PagedPoolCharge = 0;
 	IoDeviceObjectType->NonpagedPoolCharge = sizeof (DEVICE_OBJECT);
+	IoDeviceObjectType->Mapping = &IopFileMapping;
 	IoDeviceObjectType->Dump = NULL;
 	IoDeviceObjectType->Open = NULL;
 	IoDeviceObjectType->Close = NULL;
@@ -151,6 +157,7 @@ VOID IoInit (VOID)
 	IoFileObjectType->MaxHandles = ULONG_MAX;
 	IoFileObjectType->PagedPoolCharge = 0;
 	IoFileObjectType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
+	IoFileObjectType->Mapping = &IopFileMapping;
 	IoFileObjectType->Dump = NULL;
 	IoFileObjectType->Open = NULL;
 	IoFileObjectType->Close = IopCloseFile;
@@ -243,6 +250,13 @@ VOID IoInit (VOID)
 	                      L"\\??");
 	IoCreateSymbolicLink (&UnicodeString,
 	                      &DeviceName);
+}
+
+
+PGENERIC_MAPPING STDCALL
+IoGetFileObjectGenericMapping(VOID)
+{
+   return &IopFileMapping;
 }
 
 /* EOF */

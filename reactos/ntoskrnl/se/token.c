@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.8 2000/07/01 22:38:15 ekohl Exp $
+/* $Id: token.c,v 1.9 2001/01/28 17:42:56 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -20,6 +20,11 @@
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE EXPORTED SeTokenType = NULL;
+
+static GENERIC_MAPPING SepTokenMapping = {TOKEN_READ,
+					  TOKEN_WRITE,
+					  TOKEN_EXECUTE,
+					  TOKEN_ALL_ACCESS};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -227,6 +232,7 @@ VOID SeInitializeTokenManager(VOID)
    SeTokenType->TotalHandles = 0;
    SeTokenType->PagedPoolCharge = 0;
    SeTokenType->NonpagedPoolCharge = 0;
+   SeTokenType->Mapping = &SepTokenMapping;
    SeTokenType->Dump = NULL;
    SeTokenType->Open = NULL;
    SeTokenType->Close = NULL;

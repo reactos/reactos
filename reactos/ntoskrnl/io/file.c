@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.11 2000/09/03 14:49:17 ekohl Exp $
+/* $Id: file.c,v 1.12 2001/01/28 17:37:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -201,14 +201,6 @@ NtSetInformationFile (
 	}
 
 	return Status;
-}
-
-
-PGENERIC_MAPPING
-STDCALL
-IoGetFileObjectGenericMapping(VOID)
-{
-	UNIMPLEMENTED;
 }
 
 
