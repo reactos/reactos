@@ -25,6 +25,7 @@
 
 #include <locale.h>
 
+#define NONAMELESSUNION
 #include "winefile.h"
 #include "resource.h"
 
@@ -37,6 +38,10 @@
 # include <unistd.h>
 #endif
 #include <time.h>
+#endif
+
+#ifdef UNICODE
+extern int swprintf(wchar_t*, const wchar_t*, ...);
 #endif
 
 #ifdef _NO_EXTENSIONS
@@ -442,17 +447,25 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 	Entry* last = NULL;
 	Entry* entry;
 
-	int level = dir->level + 1;
+#ifdef UNICODE
+	char cpath[MAX_PATH];
 
-	DIR* pdir = opendir(path);
+	WideCharToMultiByte(CP_UNIXCP, 0, path, -1, cpath, MAX_PATH, NULL, NULL);
+#else
+	const char* cpath = path;
+#endif
+
+	DIR* pdir = opendir(cpath);
+
+	int level = dir->level + 1;
 
 	if (pdir) {
 		struct stat st;
 		struct dirent* ent;
-		TCHAR buffer[MAX_PATH], *p;
+		char buffer[MAX_PATH], *p, *s;
 
-		for(p=buffer; *path; )
-			*p++ = *path++;
+		for(p=buffer,s=cpath; *s; )
+			*p++ = *s++;
 
 		if (p==buffer || p[-1]!='/')
 			*p++ = '/';
@@ -468,7 +481,12 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 
 			entry->etype = ET_UNIX;
 
+#ifdef UNICODE
+			MultiByteToWideChar(CP_UNIXCP, 0, ent->d_name, -1, entry->data.cFileName, MAX_PATH);
+#else
 			lstrcpy(entry->data.cFileName, ent->d_name);
+#endif
+
 			entry->data.dwFileAttributes = ent->d_name[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
 
 			strcpy(p, ent->d_name);
@@ -1957,18 +1975,28 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 #ifdef __WINE__
 				case ID_DRIVE_UNIX_FS: {
 					TCHAR path[MAX_PATH];
+#ifdef UNICODE
+					char cpath[MAX_PATH];
+#endif
 					ChildWnd* child;
 
 					if (activate_fs_window(RS(b1,IDS_UNIXFS)))
 						break;
 
+	
+#ifdef UNICODE
+					getcwd(cpath, MAX_PATH);
+					MultiByteToWideChar(CP_UNIXCP, 0, cpath, -1, path, MAX_PATH);
+#else
 					getcwd(path, MAX_PATH);
+#endif
 					child = alloc_child_window(path, NULL, hwnd);
 
 					if (!create_child_window(child))
 						free(child);
 					break;}
 #endif
+
 #ifdef _SHELL_FOLDERS
 				case ID_DRIVE_SHELL_NS: {
 					TCHAR path[MAX_PATH];
@@ -2003,7 +2031,7 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 					ShellAbout(hwnd, RS(b2,IDS_WINE), RS(b1,IDS_WINEFILE), 0);
 					break;
 
-				case ID_ABOUT:	/*ID_ABOUT_WINE:*/
+				case ID_ABOUT:
 					ShellAbout(hwnd, RS(b1,IDS_WINEFILE), NULL, 0);
 					break;
 #endif	/* _NO_EXTENSIONS */
@@ -2767,7 +2795,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 		{
 			ULONGLONG size;
 
-                        size = ((ULONGLONG)entry->data.nFileSizeHigh << 32) | entry->data.nFileSizeLow;
+			size = ((ULONGLONG)entry->data.nFileSizeHigh << 32) | entry->data.nFileSizeLow;
 
 			_stprintf(buffer, sLongNumFmt, size);
 
@@ -2877,6 +2905,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 			' ','\t',' ','\t',' ','\t',' ',
 			'\0'
 		};
+
 		DWORD rights = get_access_mask();
 
 		tcscpy(buffer, sSecTabs);
