@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.18 2004/05/10 17:07:17 weiden Exp $
+/* $Id: transblt.c,v 1.19 2004/05/16 09:51:26 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -268,8 +268,10 @@ IntEngTransparentBlt(SURFOBJ *Dest,
   
   if(!Ret)
   {
+    IntLockGDIDriver(SurfGDIDest);
     Ret = EngTransparentBlt(Dest, Source, Clip, ColorTranslation, &OutputRect, 
                             SourceRect, iTransColor, Reserved);
+    IntUnLockGDIDriver(SurfGDIDest);
   }
   
   if(Ret)

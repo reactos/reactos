@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.52 2004/05/14 16:56:48 navaraf Exp $ */
+/* $Id: region.c,v 1.53 2004/05/16 09:51:27 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -1387,7 +1387,7 @@ static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 /*!
  * Adds a rectangle to a REGION
  */
-static void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
+void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
 {
     ROSRGNDATA region;
 
@@ -1740,12 +1740,6 @@ NtGdiCreateRectRgnIndirect(CONST PRECT rc)
       return(NULL);
     }
   return(UnsafeIntCreateRectRgnIndirect(&SafeRc));
-}
-
-HRGN FASTCALL
-UnsafeIntCreateRectRgnIndirect(CONST PRECT  rc)
-{
-  return(NtGdiCreateRectRgn(rc->left, rc->top, rc->right, rc->bottom));
 }
 
 HRGN
@@ -2256,12 +2250,6 @@ NtGdiSetRectRgn(HRGN  hRgn,
 
   RGNDATA_UnlockRgn( hRgn );
   return TRUE;
-}
-
-VOID FASTCALL
-UnsafeIntUnionRectWithRgn(PROSRGNDATA RgnDest, CONST PRECT Rect)
-{
-  REGION_UnionRectWithRegion(Rect, RgnDest);
 }
 
 HRGN STDCALL
