@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.29 2002/10/05 10:53:37 dwelch Exp $
+/* $Id: iomgr.c,v 1.30 2002/11/05 20:24:33 hbirr Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -54,7 +54,7 @@ IopCloseFile(PVOID ObjectBody,
    
    DPRINT("IopCloseFile()\n");
    
-   if (HandleCount > 0)
+   if (HandleCount > 0 || FileObject->DeviceObject == NULL)
      {
 	return;
      }
@@ -63,7 +63,8 @@ IopCloseFile(PVOID ObjectBody,
 			      STANDARD_RIGHTS_REQUIRED,
 			      IoFileObjectType,
 			      UserMode);
-   
+   KeResetEvent( &FileObject->Event );
+  
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLEANUP,
 				      FileObject->DeviceObject,
 				      NULL,
@@ -75,6 +76,10 @@ IopCloseFile(PVOID ObjectBody,
    StackPtr->FileObject = FileObject;
    
    Status = IoCallDriver(FileObject->DeviceObject, Irp);
+   if (Status == STATUS_PENDING)
+   {
+      KeWaitForSingleObject(&FileObject->Event, Executive, KernelMode, FALSE, NULL);
+   }
 }
 
 VOID STDCALL
@@ -86,23 +91,31 @@ IopDeleteFile(PVOID ObjectBody)
    NTSTATUS Status;
    
    DPRINT("IopDeleteFile()\n");
+
+   if (FileObject->DeviceObject)
+   {
+     ObReferenceObjectByPointer(ObjectBody,
+			        STANDARD_RIGHTS_REQUIRED,
+			        IoFileObjectType,
+			        UserMode);
    
-   ObReferenceObjectByPointer(ObjectBody,
-			      STANDARD_RIGHTS_REQUIRED,
-			      IoFileObjectType,
-			      UserMode);
+     KeResetEvent( &FileObject->Event );
+     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLOSE,
+				        FileObject->DeviceObject,
+				        NULL,
+				        0,
+				        NULL,
+				        NULL,
+				        NULL);
+     StackPtr = IoGetNextIrpStackLocation(Irp);
+     StackPtr->FileObject = FileObject;
    
-   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLOSE,
-				      FileObject->DeviceObject,
-				      NULL,
-				      0,
-				      NULL,
-				      NULL,
-				      NULL);
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->FileObject = FileObject;
-   
-   Status = IoCallDriver(FileObject->DeviceObject, Irp);
+     Status = IoCallDriver(FileObject->DeviceObject, Irp);
+     if (Status == STATUS_PENDING)
+     {
+        KeWaitForSingleObject(&FileObject->Event, Executive, KernelMode, FALSE, NULL);
+     }
+   }
    
    if (FileObject->FileName.Buffer != NULL)
      {
