@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.50 2002/11/11 21:49:18 hbirr Exp $
+/* $Id: rw.c,v 1.51 2003/01/03 23:58:31 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -273,6 +273,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
   NTSTATUS Status;
   ULONG BytesDone;
   ULONG BytesPerSector;
+  LARGE_INTEGER BytesPerSectorLarge;
   ULONG BytesPerCluster;
 
   /* PRECONDITION */
@@ -292,6 +293,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
   Ccb = (PVFATCCB)IrpContext->FileObject->FsContext2;
   Fcb = Ccb->pFcb;
   BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
+  BytesPerSectorLarge.QuadPart = BytesPerSector;
   BytesPerCluster = DeviceExt->FatInfo.BytesPerCluster;
 
   assert(ReadOffset.QuadPart + Length <= ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector));
@@ -375,7 +377,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext, PVOID Buffer,
   while (Length > 0 && CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
   {
     StartCluster = CurrentCluster;
-    StartOffset.QuadPart = ClusterToSector(DeviceExt, StartCluster) * BytesPerSector;
+    StartOffset.QuadPart = ClusterToSector(DeviceExt, StartCluster) * BytesPerSectorLarge.QuadPart;
     BytesDone = 0;
     ClusterCount = 0;
 
