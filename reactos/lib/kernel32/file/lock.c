@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.6 2002/09/07 15:12:26 chorns Exp $
+/* $Id: lock.c,v 1.7 2002/09/08 10:22:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,13 +14,12 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 #include <wchar.h>
 #include <string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
 

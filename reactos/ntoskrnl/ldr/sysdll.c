@@ -11,11 +11,15 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/module.h>
+#include <internal/ntoskrnl.h>
+#include <internal/ob.h>
+#include <internal/ps.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 

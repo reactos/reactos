@@ -23,9 +23,6 @@
 #define CHECKED
 #endif
 
-#undef ASSERT
-#undef assert
-
 #ifndef NASSERT
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
 #define ASSERT(x) assert(x)

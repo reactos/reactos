@@ -8,12 +8,14 @@
  *		Modified from Taiji Yamada japanese code system utilities
  *              12/04/99: Created
  */
-#include <msvcrti.h>
 
+#include <msvcrt/mbstring.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/mbctype.h>
 
 size_t _mbclen2(const unsigned int s);
 
-unsigned char _mbctype[257] = {
+char _jctype[257] = {
 /*-1*/  ___,
 /*0x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
 /*1x*/  ___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,___,
@@ -33,6 +35,7 @@ unsigned char _mbctype[257] = {
 /*Fx*/  _12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,_12,___,___,___
 };
 
+char *_mbctype = _jctype;
 int _ismbblead(unsigned int c)
 {
 	return ((_jctype+1)[(unsigned char)(c)] & _KNJ_1);

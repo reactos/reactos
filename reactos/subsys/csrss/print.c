@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.4 2002/09/07 15:13:07 chorns Exp $
+/* $Id: print.c,v 1.5 2002/09/08 10:23:44 chorns Exp $
  *
  * smss.c - Session Manager
  * 
@@ -27,8 +27,8 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+
 #include <csrss/csrss.h>
 
 

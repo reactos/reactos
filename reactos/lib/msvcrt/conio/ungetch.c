@@ -9,8 +9,11 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrti.h>
 
+#include <msvcrt/conio.h>
+#include <msvcrt/internal/console.h>
+
+#define EOF -1
 
 int char_avail = 0;
 int ungot_char = 0;

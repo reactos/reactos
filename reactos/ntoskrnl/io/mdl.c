@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.9 2002/09/07 15:12:53 chorns Exp $
+/* $Id: mdl.c,v 1.10 2002/09/08 10:23:25 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/pool.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -48,8 +47,6 @@ IoAllocateMdl(PVOID VirtualAddress,
 				    TAG_MDL);
      }
    MmInitializeMdl(Mdl,VirtualAddress,Length);
-   Mdl->Process = PsGetCurrentProcess();
-
    if (Irp!=NULL && !SecondaryBuffer)
      {
 	Irp->MdlAddress = Mdl;
@@ -68,9 +65,9 @@ IoBuildPartialMdl(PMDL SourceMdl,
    PULONG SourcePages = (PULONG)(SourceMdl + 1);
    ULONG Va;
    ULONG Delta = (PAGE_ROUND_DOWN(VirtualAddress) - (ULONG)SourceMdl->StartVa)/
-                 PAGE_SIZE;
+                 PAGESIZE;
 
-   for (Va = 0; Va < (PAGE_ROUND_UP(Length)/PAGE_SIZE); Va++)
+   for (Va = 0; Va < (PAGE_ROUND_UP(Length)/PAGESIZE); Va++)
      {
 	TargetPages[Va] = SourcePages[Va+Delta];
      }

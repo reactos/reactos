@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.8 2002/09/07 15:12:59 chorns Exp $
+/* $Id: send.c,v 1.9 2002/09/08 10:23:32 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ob.h>
+#include <internal/port.h>
+#include <internal/dbg.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>

@@ -8,8 +8,8 @@
  *                  Created 01/11/98
  */
 
-#include <advapi32.h>
-
+#include <windows.h>
+#include <ddk/ntddk.h>
 
 WINBOOL
 STDCALL

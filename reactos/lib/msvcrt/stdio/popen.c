@@ -1,8 +1,13 @@
-/* $Id: popen.c,v 1.3 2002/09/07 15:12:35 chorns Exp $ */
-#include <msvcrti.h>
-
+/* $Id: popen.c,v 1.4 2002/09/08 10:22:56 chorns Exp $ */
+#include <windows.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/file.h>
 #define NDEBUG
-#include <msvcrtdbg.h>
+#include <msvcrt/msvcrtdbg.h>
 
 
 FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
@@ -26,7 +31,7 @@ FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 
   if (szComSpec == NULL)
   {
-    szComSpec = _strdup("cmd.exe");
+    szComSpec = strdup("cmd.exe");
     if (szComSpec == NULL)
       return NULL;
   }
@@ -103,7 +108,7 @@ FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
       CloseHandle(hReadPipe);
     }
 
-  pf->_tmpfname = ProcessInformation.hProcess;
+  pf->_name_to_remove = ProcessInformation.hProcess;
 
   return pf;
 }
@@ -112,7 +117,7 @@ FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 int _pclose (FILE *pp)
 {
   fclose(pp);
-  if (!TerminateProcess(pp->_tmpfname,0))
+  if (!TerminateProcess(pp->_name_to_remove,0))
     return -1;
   return 0;
 }
@@ -216,7 +221,7 @@ FILE *_wpopen (const wchar_t *cm, const wchar_t *md) /* program name, pipe mode 
       CloseHandle(hReadPipe);
     }
 
-  pf->_tmpfname = ProcessInformation.hProcess;
+  pf->_name_to_remove = ProcessInformation.hProcess;
 
   return pf;
 }

@@ -1,5 +1,6 @@
-#include <msvcrti.h>
-
+#include <msvcrt/process.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/stdarg.h>
 
 int _execlp(const char *szPath, const char *szArgv0, ...)
 {

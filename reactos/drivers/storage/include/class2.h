@@ -1,4 +1,4 @@
-/* $Id: class2.h,v 1.5 2002/09/07 15:12:09 chorns Exp $
+/* $Id: class2.h,v 1.6 2002/09/08 10:22:23 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,10 +10,8 @@
 #ifndef __STORAGE_INCLUDE_CLASS2_H
 #define __STORAGE_INCLUDE_CLASS2_H
 
-#include <ddk/ntdddisk.h>
-#include <ddk/ntddscsi.h>
-#include <ddk/srb.h>
-#include <ddk/scsi.h>
+#include "ntddscsi.h"
+#include "srb.h"
 
 #define MAXIMUM_RETRIES    4
 

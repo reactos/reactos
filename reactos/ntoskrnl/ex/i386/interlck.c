@@ -1,9 +1,9 @@
-/* $Id: interlck.c,v 1.3 2002/09/07 15:12:50 chorns Exp $
+/* $Id: interlck.c,v 1.4 2002/09/08 10:23:20 chorns Exp $
  *
  * reactos/ntoskrnl/ex/i386/interlck.c
  *
  */
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
 
 INTERLOCKED_RESULT FASTCALL
@@ -64,11 +64,10 @@ __asm__("\n\t.global _Exi386InterlockedDecrementLong@4\n\t"
 	"ret $4\n\t");
 
 
-#if 0
 ULONG STDCALL
 Exi386InterlockedExchangeUlong(IN PULONG Target,
 			       IN ULONG Value);
-#endif
+
 __asm__("\n\t.global _Exi386InterlockedExchangeUlong@8\n\t"
 	"_Exi386InterlockedExchangeUlong@8:\n\t"
 	"movl 4(%esp),%edx\n\t"
@@ -81,10 +80,8 @@ __asm__("\n\t.global _Exi386InterlockedExchangeUlong@8\n\t"
  * FASTCALL: @InterlockedIncrement@4
  * STDCALL : _InterlockedIncrement@4
  */
-#if 0
 LONG FASTCALL
 InterlockedIncrement(PLONG Addend);
-#endif
 /*
  * FUNCTION: Increments a caller supplied variable of type LONG as an 
  * atomic operation
@@ -105,10 +102,9 @@ __asm__("\n\t.global @InterlockedIncrement@4\n\t"
  * FASTCALL: @InterlockedDecrement@4
  * STDCALL : _InterlockedDecrement@4
  */
-#if 0
 LONG FASTCALL
 InterlockedDecrement(PLONG Addend);
-#endif
+
 __asm__("\n\t.global @InterlockedDecrement@4\n\t"
 	"@InterlockedDecrement@4:\n\t"
 	"movl $-1,%eax\n\t"
@@ -121,11 +117,11 @@ __asm__("\n\t.global @InterlockedDecrement@4\n\t"
  * FASTCALL: @InterlockedExchange@8
  * STDCALL : _InterlockedExchange@8
  */
-#if 0
+
 LONG FASTCALL
 InterlockedExchange(PLONG Target,
 		    LONG Value);
-#endif
+
 __asm__("\n\t.global @InterlockedExchange@8\n\t"
 	"@InterlockedExchange@8:\n\t"
 	"movl (%ecx),%eax\n"
@@ -137,11 +133,10 @@ __asm__("\n\t.global @InterlockedExchange@8\n\t"
  * FASTCALL: @InterlockedExchangeAdd@8
  * STDCALL: _InterlockedExchangeAdd@8
  */
-#if 0
 LONG FASTCALL
 InterlockedExchangeAdd(PLONG Addend,
 		       LONG Value);
-#endif
+
 __asm__("\n\t.global @InterlockedExchangeAdd@8\n\t"
 	"@InterlockedExchangeAdd@8:\n\t"
 	"xaddl %edx,(%ecx)\n\t"

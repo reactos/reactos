@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.6 2002/09/07 15:13:09 chorns Exp $
+/* $Id: database.c,v 1.7 2002/09/08 10:23:47 chorns Exp $
  *
  * service control manager
  * 
@@ -25,7 +25,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_USER_MODE
+#define NTOS_MODE_USER
 #include <ntos.h>
 
 #include <windows.h>
@@ -719,3 +719,5 @@ ScmAutoStartServices(VOID)
       ServiceEntry = ServiceEntry->Flink;
     }
 }
+
+/* EOF */

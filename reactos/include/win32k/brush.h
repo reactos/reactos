@@ -8,14 +8,14 @@
 #define NB_HATCH_STYLES  6
 
 #define  BRUSHOBJ_AllocBrush()  \
-  ((HBRUSH) GDIOBJ_AllocObj (sizeof (ROS_BRUSHOBJ), GO_BRUSH_MAGIC))
+  ((HBRUSH) GDIOBJ_AllocObj (sizeof (BRUSHOBJ), GO_BRUSH_MAGIC))
 #define  BRUSHOBJ_FreeBrush(hBrush)  GDIOBJ_FreeObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC)
 /*#define  BRUSHOBJ_HandleToPtr(hBrush)  \
-  ((BRUSHOBJ*) GDIOBJ_HandleToPtr ((HGDIOBJ) hBrush, GO_BRUSH_MAGIC))
+  ((PBRUSHOBJ) GDIOBJ_HandleToPtr ((HGDIOBJ) hBrush, GO_BRUSH_MAGIC))
 #define  BRUSHOBJ_PtrToHandle(pBrushObj)  \
   ((HBRUSH) GDIOBJ_PtrToHandle ((PGDIOBJ) pBrushObj, GO_BRUSH_MAGIC))
 */
-#define  BRUSHOBJ_LockBrush(hBrush) ((BRUSHOBJ*)GDIOBJ_LockObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC))
+#define  BRUSHOBJ_LockBrush(hBrush) ((PBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC))
 #define  BRUSHOBJ_UnlockBrush(hBrush) GDIOBJ_UnlockObj((HGDIOBJ)hBrush, GO_BRUSH_MAGIC)
 
 HBRUSH

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.29 2002/09/07 15:12:40 chorns Exp $
+/* $Id: process.c,v 1.30 2002/09/08 10:23:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,12 +11,14 @@
 
 /* INCLUDES ****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <napi/i386/segment.h>
+#include <ntdll/ldr.h>
 #include <ntdll/base.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -55,10 +57,10 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
   else
     InitialTeb.StackCommit = PAGESIZE;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
 
   /* add guard page size */
-  InitialTeb.StackCommit += PAGE_SIZE;
+  InitialTeb.StackCommit += PAGESIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -107,7 +109,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
   /* Protect guard page */
   Status = NtProtectVirtualMemory(ProcessHandle,
 				  InitialTeb.StackLimit,
-				  PAGE_SIZE,
+				  PAGESIZE,
 				  PAGE_GUARD | PAGE_READWRITE,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))
@@ -177,7 +179,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
 }
 
 static NTSTATUS
-RtlpMapFile(PRTL_ROS_USER_PROCESS_PARAMETERS Ppb,
+RtlpMapFile(PRTL_USER_PROCESS_PARAMETERS Ppb,
 	    ULONG Attributes,
 	    PHANDLE Section,
 	    PCHAR ImageFileName)
@@ -193,7 +195,7 @@ RtlpMapFile(PRTL_ROS_USER_PROCESS_PARAMETERS Ppb,
    
    hFile = NULL;
 
-   RtlRosDeNormalizeProcessParams (Ppb);
+   RtlDeNormalizeProcessParams (Ppb);
 
 //   DbgPrint("ImagePathName %x\n", Ppb->ImagePathName.Buffer);
    
@@ -203,7 +205,7 @@ RtlpMapFile(PRTL_ROS_USER_PROCESS_PARAMETERS Ppb,
 			      NULL,
 			      SecurityDescriptor);
 
-   RtlRosNormalizeProcessParams (Ppb);
+   RtlNormalizeProcessParams (Ppb);
    
    /*
     * 
@@ -267,7 +269,7 @@ RtlpMapFile(PRTL_ROS_USER_PROCESS_PARAMETERS Ppb,
 }
 
 static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
-			   PRTL_ROS_USER_PROCESS_PARAMETERS Ppb,
+			   PRTL_USER_PROCESS_PARAMETERS	Ppb,
 			   PVOID* ImageBaseAddress)
 {
    NTSTATUS Status;
@@ -321,7 +323,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 
    /* create the PPB */
    PpbBase = NULL;
-   PpbSize = Ppb->AllocationSize;
+   PpbSize = Ppb->MaximumLength;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -333,19 +335,19 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 	return(Status);
      }
 
-   DPRINT("Ppb->AllocationSize %x\n", Ppb->AllocationSize);
+   DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
 
    /* write process parameters block*/
-   RtlRosDeNormalizeProcessParams (Ppb);
+   RtlDeNormalizeProcessParams (Ppb);
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->AllocationSize,
+			Ppb->MaximumLength,
 			&BytesWritten);
-   RtlRosNormalizeProcessParams (Ppb);
+   RtlNormalizeProcessParams (Ppb);
 
    /* write pointer to environment */
-   Offset = FIELD_OFFSET(RTL_ROS_USER_PROCESS_PARAMETERS, Environment);
+   Offset = FIELD_OFFSET(RTL_USER_PROCESS_PARAMETERS, Environment);
    NtWriteVirtualMemory(ProcessHandle,
 			(PVOID)(PpbBase + Offset),
 			&EnvPtr,
@@ -373,9 +375,9 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 
 
 NTSTATUS STDCALL
-RtlRosCreateUserProcess(PUNICODE_STRING ImageFileName,
+RtlCreateUserProcess(PUNICODE_STRING ImageFileName,
 		     ULONG Attributes,
-		     PRTL_ROS_USER_PROCESS_PARAMETERS ProcessParameters,
+		     PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
 		     PSECURITY_DESCRIPTOR ProcessSecurityDescriptor,
 		     PSECURITY_DESCRIPTOR ThreadSecurityDescriptor,
 		     HANDLE ParentProcess,

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.73 2002/09/07 15:12:38 chorns Exp $
+# $Id: makefile,v 1.74 2002/09/08 10:23:02 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = ntdll
 
-TARGET_CFLAGS = -g -D__NTDLL__ -DNTOSAPI=
+TARGET_CFLAGS = -g -D__NTDLL__
 
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
@@ -14,7 +14,7 @@ TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
 
 TARGET_GCCLIBS = gcc
 
-TARGET_BASE = 0x78800000
+TARGET_BASE = 0x77f60000
 
 TARGET_PATH = def
 

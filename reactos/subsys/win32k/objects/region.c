@@ -1784,7 +1784,7 @@ W32kPaintRgn(HDC  hDC,
   PROSRGNDATA visrgn;
   CLIPOBJ* ClipRegion;
   BOOL bRet = FALSE;
-  BRUSHOBJ *pBrush;
+  PBRUSHOBJ pBrush;
   POINTL BrushOrigin;
   SURFOBJ	*SurfObj;
 

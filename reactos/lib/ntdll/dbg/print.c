@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.5 2002/09/07 15:12:39 chorns Exp $
+/* $Id: print.c,v 1.6 2002/09/08 10:23:03 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,16 +9,11 @@
  *                  Created 28/12/1999
  */
 
-/* INCLUDES ***************************************************************/
-
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#define NDEBUG
-#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 

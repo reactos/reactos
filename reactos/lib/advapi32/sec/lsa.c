@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.3 2002/09/07 15:12:22 chorns Exp $
+/* $Id: lsa.c,v 1.4 2002/09/08 10:22:37 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,8 +9,8 @@
  *	19990322 EA created
  *	19990515 EA stubs
  */
-
-#include <advapi32.h>
+#include <windows.h>
+#include <ddk/ntddk.h>
 
 
 /**********************************************************************

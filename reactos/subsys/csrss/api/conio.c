@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.33 2002/09/07 15:13:08 chorns Exp $
+/* $Id: conio.c,v 1.34 2002/09/08 10:23:45 chorns Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -9,11 +9,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+
 #include <csrss/csrss.h>
 #include "api.h"
+#include <ntdll/rtl.h>
+#include <ddk/ntddblue.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -21,6 +22,7 @@
 #define LOCK   RtlEnterCriticalSection(&ActiveConsoleLock)
 #define UNLOCK RtlLeaveCriticalSection(&ActiveConsoleLock)
 
+/* FIXME: Is there a way to create real aliasses with gcc? [CSH] */
 #define ALIAS(Name, Target) typeof(Target) Name = Target
 
 
@@ -29,7 +31,7 @@
 static HANDLE ConsoleDeviceHandle;
 static HANDLE KeyboardDeviceHandle;
 static PCSRSS_CONSOLE ActiveConsole;
-RTL_CRITICAL_SECTION ActiveConsoleLock;
+CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
 
 /* FUNCTIONS *****************************************************************/
@@ -43,7 +45,7 @@ CSR_API(CsrAllocConsole)
 
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+     sizeof(LPC_MESSAGE_HEADER);
    if( ProcessData->Console )
       {
 	 Reply->Status = STATUS_INVALID_PARAMETER;
@@ -112,7 +114,7 @@ CSR_API(CsrFreeConsole)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+     sizeof(LPC_MESSAGE_HEADER);
 
    Reply->Status = STATUS_NOT_IMPLEMENTED;
    
@@ -133,7 +135,7 @@ CSR_API(CsrReadConsole)
    nNumberOfCharsToRead = Request->Data.ReadConsoleRequest.NrCharactersToRead > CSRSS_MAX_READ_CONSOLE_REQUEST ? CSRSS_MAX_READ_CONSOLE_REQUEST : Request->Data.ReadConsoleRequest.NrCharactersToRead;
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = Reply->Header.MessageSize -
-     sizeof(LPC_MESSAGE);
+     sizeof(LPC_MESSAGE_HEADER);
    Buffer = Reply->Data.ReadConsoleReply.Buffer;
    Reply->Data.ReadConsoleReply.EventHandle = ProcessData->ConsoleEvent;
    LOCK;   
@@ -612,7 +614,7 @@ CSR_API(CsrWriteConsole)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+     sizeof(LPC_MESSAGE_HEADER);
 
    LOCK;
    if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.WriteConsoleRequest.ConsoleHandle,
@@ -1114,7 +1116,7 @@ CSR_API(CsrGetScreenBufferInfo)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+     sizeof(LPC_MESSAGE_HEADER);
 
    LOCK;
    if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.ScreenBufferInfoRequest.ConsoleHandle,
@@ -1157,7 +1159,7 @@ CSR_API(CsrSetCursor)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+     sizeof(LPC_MESSAGE_HEADER);
 
    LOCK;
    if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.SetCursorRequest.ConsoleHandle,
@@ -1192,7 +1194,7 @@ CSR_API(CsrWriteConsoleOutputChar)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+     sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle, (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
       {
@@ -1235,7 +1237,7 @@ CSR_API(CsrFillOutputChar)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+     sizeof(LPC_MESSAGE_HEADER);
 
    LOCK;
    if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.FillOutputRequest.ConsoleHandle, (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
@@ -1271,7 +1273,7 @@ CSR_API(CsrReadInputEvent)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-      sizeof(LPC_MESSAGE);
+      sizeof(LPC_MESSAGE_HEADER);
    Reply->Data.ReadInputReply.Event = ProcessData->ConsoleEvent;
    
    LOCK;
@@ -1321,7 +1323,7 @@ CSR_API(CsrWriteConsoleOutputAttrib)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-      sizeof(LPC_MESSAGE);
+      sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData, Request->Data.WriteConsoleOutputAttribRequest.ConsoleHandle, (Object_t **)&Buff );
    if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
@@ -1379,7 +1381,7 @@ CSR_API(CsrFillOutputAttrib)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-      sizeof(LPC_MESSAGE);
+      sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData, Request->Data.FillOutputAttribRequest.ConsoleHandle, (Object_t **)&Buff );
    if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
@@ -1434,7 +1436,7 @@ CSR_API(CsrGetCursorInfo)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-      sizeof(LPC_MESSAGE);
+      sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData, Request->Data.GetCursorInfoRequest.ConsoleHandle, (Object_t **)&Buff );
    if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
@@ -1456,7 +1458,7 @@ CSR_API(CsrSetCursorInfo)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-      sizeof(LPC_MESSAGE);
+      sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData,
      Request->Data.SetCursorInfoRequest.ConsoleHandle, (Object_t **)&Buff );
@@ -1490,7 +1492,7 @@ CSR_API(CsrSetTextAttrib)
    
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-      sizeof(LPC_MESSAGE);
+      sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData, Request->Data.SetAttribRequest.ConsoleHandle, (Object_t **)&Buff );
    if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? 0 : STATUS_INVALID_HANDLE ))
@@ -1524,7 +1526,7 @@ CSR_API(CsrSetConsoleMode)
    PCSRSS_SCREEN_BUFFER Buff;
 
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData,
      Request->Data.SetConsoleModeRequest.ConsoleHandle,
@@ -1558,7 +1560,7 @@ CSR_API(CsrGetConsoleMode)
    PCSRSS_SCREEN_BUFFER Buff;   /* gee, I really wish I could use an anonymous union here */
 
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData,
      Request->Data.GetConsoleModeRequest.ConsoleHandle,
@@ -1586,7 +1588,7 @@ CSR_API(CsrCreateScreenBuffer)
    NTSTATUS Status;
    
    Reply->Header.MessageSize = sizeof( CSRSS_API_REPLY );
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
    if( !Buff )
       Reply->Status = STATUS_INSUFFICIENT_RESOURCES;
    LOCK;
@@ -1609,7 +1611,7 @@ CSR_API(CsrSetScreenBuffer)
    PCSRSS_SCREEN_BUFFER Buff;
    
    Reply->Header.MessageSize = sizeof( CSRSS_API_REPLY );
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData, Request->Data.SetActiveScreenBufferRequest.OutputHandle, (Object_t **)&Buff );
    if( !NT_SUCCESS( Status ) )
@@ -1637,7 +1639,7 @@ CSR_API(CsrSetTitle)
   PCSRSS_CONSOLE Console;
   
   Reply->Header.MessageSize = sizeof( CSRSS_API_REPLY );
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
   LOCK;
   Status = CsrGetObject( ProcessData, Request->Data.SetTitleRequest.Console, (Object_t **)&Console );
   if( !NT_SUCCESS( Status ) )
@@ -1660,7 +1662,7 @@ CSR_API(CsrGetTitle)
 	Reply->Header.MessageSize = sizeof (CSRSS_API_REPLY);
 	Reply->Header.DataSize =
 		sizeof (CSRSS_API_REPLY)
-		- sizeof(LPC_MESSAGE);
+		- sizeof(LPC_MESSAGE_HEADER);
 	LOCK;
 	Status = CsrGetObject (
 			ProcessData,
@@ -1704,7 +1706,7 @@ CSR_API(CsrWriteConsoleOutput)
    DWORD PSize;
 
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
    LOCK;
    Status = CsrGetObject( ProcessData, Request->Data.WriteConsoleOutputRequest.ConsoleHandle, (Object_t **)&Buff );
    if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
@@ -1774,7 +1776,7 @@ CSR_API(CsrFlushInputBuffer)
   NTSTATUS Status;
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
   LOCK;
   Status = CsrGetObject( ProcessData, Request->Data.FlushInputBufferRequest.ConsoleInput, (Object_t **)&Console );
   if( !NT_SUCCESS( Status ) || (Status = Console->Header.Type == CSRSS_CONSOLE_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
@@ -1823,7 +1825,7 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   ALIAS(Fill,Request->Data.ScrollConsoleScreenBufferRequest.Fill);
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
   LOCK;
   Status = CsrGetObject( ProcessData, ConsoleHandle, (Object_t **)&Buff );
   if( !NT_SUCCESS( Status ) || (Status = Buff->Header.Type == CSRSS_SCREEN_BUFFER_MAGIC ? STATUS_SUCCESS : STATUS_INVALID_HANDLE ))
@@ -1909,7 +1911,7 @@ CSR_API(CsrReadConsoleOutputChar)
   DWORD i;
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = Reply->Header.MessageSize - sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = Reply->Header.MessageSize - sizeof(LPC_MESSAGE_HEADER);
   ReadBuffer = Reply->Data.ReadConsoleOutputCharReply.String;
 
   LOCK;

@@ -1,12 +1,14 @@
-/* $Id: errno.c,v 1.7 2002/09/07 15:12:36 chorns Exp $
+/* $Id: errno.c,v 1.8 2002/09/08 10:22:57 chorns Exp $
  *
  */
-#include <msvcrti.h>
 
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/tls.h>
+#include <msvcrt/internal/file.h>
 
 int* __doserrno(void)
 {
-  return((int *)&GetThreadData()->tdoserrno);
+  return(&GetThreadData()->tdoserrno);
 }
 
 int *_errno(void)

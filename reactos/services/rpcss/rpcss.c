@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rpcss.c,v 1.2 2002/09/07 15:13:07 chorns Exp $
+/* $Id: rpcss.c,v 1.3 2002/09/08 10:23:44 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,9 +29,9 @@
 
 #define UNICODE
 
-#include <windows.h>
-#define NTOS_USER_MODE
+#define NTOS_MODE_USER
 #include <ntos.h>
+#include <windows.h>
 
 //#include "services.h"
 

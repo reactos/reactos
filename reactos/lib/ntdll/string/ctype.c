@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.9 2002/09/07 15:12:41 chorns Exp $
+/* $Id: ctype.c,v 1.10 2002/09/08 10:23:07 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -278,17 +278,17 @@ unsigned short _ctype[] = {
 	0			/* 0xff */
 };
 
-//unsigned short *_pctype = _ctype + 1;
-//unsigned short *_pwctype = _ctype + 1;
+unsigned short *_pctype = _ctype + 1;
+unsigned short *_pwctype = _ctype + 1;
 
 int _isctype (int c, int ctypeFlags)
 {
-  return (_ctype[1+(unsigned char)(c & 0xFF)] & ctypeFlags);
+  return (_pctype[(unsigned char)(c & 0xFF)] & ctypeFlags);
 }
 
 int iswctype(wint_t wc, wctype_t wctypeFlags)
 {
-   return (_ctype[1+(unsigned char)(wc & 0xFF)] & wctypeFlags);
+   return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
 }
 
 int isalpha(int c)

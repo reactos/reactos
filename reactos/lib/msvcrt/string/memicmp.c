@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/ctype.h>
+#include <msvcrt/string.h>
 
 int
 _memicmp(const void *s1, const void *s2, size_t n)

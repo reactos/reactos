@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.20 2002/09/07 15:13:07 chorns Exp $
+/* $Id: token.c,v 1.21 2002/09/08 10:23:43 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,23 +11,25 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <limits.h>
+#include <ddk/ntddk.h>
+#include <internal/ps.h>
+#include <internal/se.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE SepTokenObjectType = NULL;
 
-#undef SYSTEM_LUID
-#define SYSTEM_LUID 999
-
 static GENERIC_MAPPING SepTokenMapping = {TOKEN_READ,
 					  TOKEN_WRITE,
 					  TOKEN_EXECUTE,
 					  TOKEN_ALL_ACCESS};
+
+#define SYSTEM_LUID                      0x3E7;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -42,10 +44,10 @@ NTSTATUS SepCopyProxyData(PVOID* Dest, PVOID Src)
 }
 
 NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
-				PIACCESS_TOKEN NewToken,
-				PIACCESS_TOKEN* OldTokenP)
+				PACCESS_TOKEN NewToken,
+				PACCESS_TOKEN* OldTokenP)
 {
-   PIACCESS_TOKEN OldToken;
+   PACCESS_TOKEN OldToken;
    
    if (NewToken->TokenType != TokenPrimary)
      {
@@ -67,24 +69,23 @@ NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
    return(STATUS_SUCCESS);
 }
 
-
 static ULONG
 RtlLengthSidAndAttributes(ULONG Count,
-			  PSID_AND_ATTRIBUTES_ARRAY Src)
+			  PSID_AND_ATTRIBUTES Src)
 {
   ULONG i;
   ULONG uLength;
 
   uLength = Count * sizeof(SID_AND_ATTRIBUTES);
   for (i = 0; i < Count; i++)
-    uLength += RtlLengthSid(Src[i]->Sid);
+    uLength += RtlLengthSid(Src[i].Sid);
 
   return(uLength);
 }
 
 
 NTSTATUS
-SepFindPrimaryGroupAndDefaultOwner(PIACCESS_TOKEN Token,
+SepFindPrimaryGroupAndDefaultOwner(PACCESS_TOKEN Token,
 				   PSID PrimaryGroup,
 				   PSID DefaultOwner)
 {
@@ -101,14 +102,14 @@ SepFindPrimaryGroupAndDefaultOwner(PIACCESS_TOKEN Token,
   for (i = 0; i < Token->UserAndGroupCount; i++)
     {
       if (DefaultOwner &&
-	  RtlEqualSid(Token->UserAndGroups[i]->Sid, DefaultOwner))
+	  RtlEqualSid(Token->UserAndGroups[i].Sid, DefaultOwner))
 	{
 	  Token->DefaultOwnerIndex = i;
 	}
 
-      if (RtlEqualSid(Token->UserAndGroups[i]->Sid, PrimaryGroup))
+      if (RtlEqualSid(Token->UserAndGroups[i].Sid, PrimaryGroup))
 	{
-	  Token->PrimaryGroup = Token->UserAndGroups[i]->Sid;
+	  Token->PrimaryGroup = Token->UserAndGroups[i].Sid;
 	}
     }
 
@@ -127,13 +128,13 @@ SepFindPrimaryGroupAndDefaultOwner(PIACCESS_TOKEN Token,
 
 
 NTSTATUS
-SepDuplicateToken(PIACCESS_TOKEN Token,
+SepDuplicateToken(PACCESS_TOKEN Token,
 		  POBJECT_ATTRIBUTES ObjectAttributes,
 		  TOKEN_TYPE TokenType,
 		  SECURITY_IMPERSONATION_LEVEL Level,
 		  SECURITY_IMPERSONATION_LEVEL ExistingLevel,
 		  KPROCESSOR_MODE PreviousMode,
-		  PIACCESS_TOKEN* NewAccessToken)
+		  PACCESS_TOKEN* NewAccessToken)
 {
   NTSTATUS Status;
   ULONG uLength;
@@ -141,16 +142,16 @@ SepDuplicateToken(PIACCESS_TOKEN Token,
   
   PVOID EndMem;
 
-  PIACCESS_TOKEN AccessToken;
+  PACCESS_TOKEN AccessToken;
 
-  Status = ObRosCreateObject(0,
+  Status = ObCreateObject(0,
 			  TOKEN_ALL_ACCESS,
 			  ObjectAttributes,
 			  SepTokenObjectType,
 			  (PVOID*)&AccessToken);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ObRosCreateObject() failed (Status %lx)\n");
+      DPRINT1("ObCreateObject() failed (Status %lx)\n");
       return(Status);
     }
 
@@ -181,10 +182,10 @@ SepDuplicateToken(PIACCESS_TOKEN Token,
 
   uLength = sizeof(SID_AND_ATTRIBUTES) * AccessToken->UserAndGroupCount;
   for (i = 0; i < Token->UserAndGroupCount; i++)
-    uLength += RtlLengthSid(Token->UserAndGroups[i]->Sid);
+    uLength += RtlLengthSid(Token->UserAndGroups[i].Sid);
 
   AccessToken->UserAndGroups = 
-    (PSID_AND_ATTRIBUTES_ARRAY)ExAllocatePoolWithTag(NonPagedPool,
+    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
 					       uLength,
 					       TAG('T', 'O', 'K', 'u'));
 
@@ -211,16 +212,16 @@ SepDuplicateToken(PIACCESS_TOKEN Token,
 
       uLength = AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
       AccessToken->Privileges =
-	(PLUID_AND_ATTRIBUTES_ARRAY)ExAllocatePoolWithTag(NonPagedPool,
+	(PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
 						    uLength,
 						    TAG('T', 'O', 'K', 'p'));
 
       for (i = 0; i < AccessToken->PrivilegeCount; i++)
 	{
-	  RtlCopyLuid(&AccessToken->Privileges[i]->Luid,
-	    &Token->Privileges[i]->Luid);
-	  AccessToken->Privileges[i]->Attributes = 
-	    Token->Privileges[i]->Attributes;
+	  RtlCopyLuid(&AccessToken->Privileges[i].Luid,
+	    &Token->Privileges[i].Luid);
+	  AccessToken->Privileges[i].Attributes = 
+	    Token->Privileges[i].Attributes;
 	}
 
       if ( Token->DefaultDacl )
@@ -255,12 +256,12 @@ SepInitializeNewProcess(struct _EPROCESS* NewProcess,
 			struct _EPROCESS* ParentProcess)
 {
   NTSTATUS Status;
-  PIACCESS_TOKEN pNewToken;
-  PIACCESS_TOKEN pParentToken;
+  PACCESS_TOKEN pNewToken;
+  PACCESS_TOKEN pParentToken;
   
   OBJECT_ATTRIBUTES ObjectAttributes;
 
-  pParentToken = (PIACCESS_TOKEN) ParentProcess->Token;
+  pParentToken = (PACCESS_TOKEN) ParentProcess->Token;
 
   InitializeObjectAttributes(&ObjectAttributes,
 			    NULL,
@@ -282,10 +283,11 @@ SepInitializeNewProcess(struct _EPROCESS* NewProcess,
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS SeCopyClientToken(PIACCESS_TOKEN Token,
+
+NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
 			   SECURITY_IMPERSONATION_LEVEL Level,
 			   KPROCESSOR_MODE PreviousMode,
-			   PIACCESS_TOKEN* NewToken)
+			   PACCESS_TOKEN* NewToken)
 {
    NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -315,11 +317,11 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
    TOKEN_TYPE TokenType;
    UCHAR b;
    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-   PIACCESS_TOKEN iToken;
+   PACCESS_TOKEN Token;
    ULONG g;
-   PIACCESS_TOKEN NewToken;
+   PACCESS_TOKEN NewToken;
    
-   iToken = PsReferenceEffectiveToken(Thread,
+   Token = PsReferenceEffectiveToken(Thread,
 				     &TokenType,
 				     &b,
 				     &ImpersonationLevel);
@@ -331,9 +333,9 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
      {
 	if (Qos->ImpersonationLevel > ImpersonationLevel)
 	  {
-	     if (iToken != NULL)
+	     if (Token != NULL)
 	       {
-		  ObDereferenceObject(iToken);
+		  ObDereferenceObject(Token);
 	       }
 	     return(STATUS_UNSUCCESSFUL);
 	  }
@@ -341,9 +343,9 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
 	    ImpersonationLevel == 1 ||
 	    (RemoteClient != FALSE && ImpersonationLevel != 3))
 	  {
-	     if (iToken != NULL)
+	     if (Token != NULL)
 	       {
-		  ObDereferenceObject(iToken);
+		  ObDereferenceObject(Token);
 	       }
 	     return(STATUS_UNSUCCESSFUL);
 	  }
@@ -361,14 +363,14 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
    if (Qos->ContextTrackingMode == 0)
      {
 	ClientContext->DirectlyAccessClientToken = FALSE;
-	g = SeCopyClientToken(iToken, ImpersonationLevel, 0, &NewToken);
+	g = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
 	if (g >= 0)
 	  {
 //	     ObDeleteCapturedInsertInfo(NewToken);
 	  }
-	if (TokenType == TokenPrimary || iToken != NULL)
+	if (TokenType == TokenPrimary || Token != NULL)
 	  {
-	     ObDereferenceObject(iToken);
+	     ObDereferenceObject(Token);
 	  }
 	if (g < 0)
 	  {
@@ -380,16 +382,16 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
 	ClientContext->DirectlyAccessClientToken = TRUE;
 	if (RemoteClient != FALSE)
 	  {
-//	     SeGetTokenControlInformation(iToken, &ClientContext->Unknown11);
+//	     SeGetTokenControlInformation(Token, &ClientContext->Unknown11);
 	  }
-	NewToken = iToken;
+	NewToken = Token;
     }
   ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
   ClientContext->SecurityQos.ImpersonationLevel = Qos->ImpersonationLevel;
   ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
   ClientContext->SecurityQos.EffectiveOnly = Qos->EffectiveOnly;
   ClientContext->ServerIsRemote = RemoteClient;
-  ClientContext->ClientToken = NewToken;
+  ClientContext->Token = NewToken;
 
   return(STATUS_SUCCESS);
 }
@@ -414,7 +416,7 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
       ServerThread = PsGetCurrentThread();
     }
   PsImpersonateClient(ServerThread,
-		      ClientContext->ClientToken,
+		      ClientContext->Token,
 		      1,
 		      (ULONG)b,
 		      ClientContext->SecurityQos.ImpersonationLevel);
@@ -424,7 +426,7 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
 VOID STDCALL
 SepDeleteToken(PVOID ObjectBody)
 {
-  PIACCESS_TOKEN AccessToken = (PIACCESS_TOKEN)ObjectBody;
+  PACCESS_TOKEN AccessToken = (PACCESS_TOKEN)ObjectBody;
 
   if (AccessToken->UserAndGroups)
     ExFreePool(AccessToken->UserAndGroups);
@@ -448,7 +450,7 @@ SepInitializeTokenImplementation(VOID)
   SepTokenObjectType->TotalObjects = 0;
   SepTokenObjectType->TotalHandles = 0;
   SepTokenObjectType->PagedPoolCharge = 0;
-  SepTokenObjectType->NonpagedPoolCharge = sizeof(IACCESS_TOKEN);
+  SepTokenObjectType->NonpagedPoolCharge = sizeof(ACCESS_TOKEN);
   SepTokenObjectType->Mapping = &SepTokenMapping;
   SepTokenObjectType->Dump = NULL;
   SepTokenObjectType->Open = NULL;
@@ -465,6 +467,7 @@ SepInitializeTokenImplementation(VOID)
 			 L"Token");
 }
 
+
 NTSTATUS STDCALL
 NtQueryInformationToken(IN HANDLE TokenHandle,
 			IN TOKEN_INFORMATION_CLASS TokenInformationClass,
@@ -473,7 +476,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 			OUT PULONG ReturnLength)
 {
   NTSTATUS Status;
-  PIACCESS_TOKEN iToken;
+  PACCESS_TOKEN Token;
   PVOID UnusedInfo;
   PVOID EndMem;
   PTOKEN_GROUPS PtrTokenGroups;
@@ -485,7 +488,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 				     (TokenInformationClass == TokenSource) ? TOKEN_QUERY_SOURCE : TOKEN_QUERY,
 				     SepTokenObjectType,
 				     UserMode,
-				     (PVOID*)&iToken,
+				     (PVOID*)&Token,
 				     NULL);
   if (!NT_SUCCESS(Status))
     {
@@ -496,7 +499,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
     {
       case TokenUser:
         DPRINT("NtQueryInformationToken(TokenUser)\n");
-	uLength = RtlLengthSidAndAttributes(1, iToken->UserAndGroups);
+	uLength = RtlLengthSidAndAttributes(1, Token->UserAndGroups);
 	if (TokenInformationLength < uLength)
 	  {
 	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
@@ -506,7 +509,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	else
 	  {
 	    Status = RtlCopySidAndAttributesArray(1,
-						  iToken->UserAndGroups,
+						  Token->UserAndGroups,
 						  TokenInformationLength,
 						  TokenInformation,
 						  TokenInformation + 8,
@@ -522,7 +525,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	
       case TokenGroups:
         DPRINT("NtQueryInformationToken(TokenGroups)\n");
-	uLength = RtlLengthSidAndAttributes(iToken->UserAndGroupCount - 1, &iToken->UserAndGroups[1]) + sizeof(DWORD);
+	uLength = RtlLengthSidAndAttributes(Token->UserAndGroupCount - 1, &Token->UserAndGroups[1]) + sizeof(DWORD);
 	if (TokenInformationLength < uLength)
 	  {
 	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
@@ -531,13 +534,13 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	  }
 	else
 	  {
-	    EndMem = TokenInformation + iToken->UserAndGroupCount * sizeof(SID_AND_ATTRIBUTES);
+	    EndMem = TokenInformation + Token->UserAndGroupCount * sizeof(SID_AND_ATTRIBUTES);
 	    PtrTokenGroups = (PTOKEN_GROUPS)TokenInformation;
-	    PtrTokenGroups->GroupCount = iToken->UserAndGroupCount - 1;
-	    Status = RtlCopySidAndAttributesArray(iToken->UserAndGroupCount - 1,
-						  (PSID_AND_ATTRIBUTES_ARRAY)&iToken->UserAndGroups[1],
+	    PtrTokenGroups->GroupCount = Token->UserAndGroupCount - 1;
+	    Status = RtlCopySidAndAttributesArray(Token->UserAndGroupCount - 1,
+						  &Token->UserAndGroups[1],
 						  TokenInformationLength,
-						  (PSID_AND_ATTRIBUTES_ARRAY)&PtrTokenGroups->Groups[0],
+						  PtrTokenGroups->Groups,
 						  EndMem,
 						  &UnusedInfo,
 						  &uLength);
@@ -551,7 +554,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 
       case TokenPrivileges:
         DPRINT("NtQueryInformationToken(TokenPrivileges)\n");
-	uLength = sizeof(DWORD) + iToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+	uLength = sizeof(DWORD) + Token->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
 	if (TokenInformationLength < uLength)
 	  {
 	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
@@ -563,11 +566,11 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	    ULONG i;
 	    TOKEN_PRIVILEGES* pPriv = (TOKEN_PRIVILEGES*)TokenInformation;
 
-	    pPriv->PrivilegeCount = iToken->PrivilegeCount;
-	    for (i = 0; i < iToken->PrivilegeCount; i++)
+	    pPriv->PrivilegeCount = Token->PrivilegeCount;
+	    for (i = 0; i < Token->PrivilegeCount; i++)
 	      {
-		RtlCopyLuid(&pPriv->Privileges[i].Luid, &iToken->Privileges[i]->Luid);
-		pPriv->Privileges[i].Attributes = iToken->Privileges[i]->Attributes;
+		RtlCopyLuid(&pPriv->Privileges[i].Luid, &Token->Privileges[i].Luid);
+		pPriv->Privileges[i].Attributes = Token->Privileges[i].Attributes;
 	      }
 	    Status = STATUS_SUCCESS;
 	  }
@@ -575,7 +578,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 
       case TokenOwner:
         DPRINT("NtQueryInformationToken(TokenOwner)\n");
-	uLength = RtlLengthSid(iToken->UserAndGroups[iToken->DefaultOwnerIndex]->Sid) + sizeof(TOKEN_OWNER);
+	uLength = RtlLengthSid(Token->UserAndGroups[Token->DefaultOwnerIndex].Sid) + sizeof(TOKEN_OWNER);
 	if (TokenInformationLength < uLength)
 	  {
 	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
@@ -588,7 +591,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	      (PSID)(((PTOKEN_OWNER)TokenInformation) + 1);
 	    RtlCopySid(TokenInformationLength - sizeof(TOKEN_OWNER),
 		       ((PTOKEN_OWNER)TokenInformation)->Owner,
-		       iToken->UserAndGroups[iToken->DefaultOwnerIndex]->Sid);
+		       Token->UserAndGroups[Token->DefaultOwnerIndex].Sid);
 	    Status = STATUS_SUCCESS;
 	  }
 	break;
@@ -596,7 +599,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
       case TokenPrimaryGroup:
         DPRINT("NtQueryInformationToken(TokenPrimaryGroup),"
 	       "Token->PrimaryGroup = 0x%08x\n", Token->PrimaryGroup);
-	uLength = RtlLengthSid(iToken->PrimaryGroup) + sizeof(TOKEN_PRIMARY_GROUP);
+	uLength = RtlLengthSid(Token->PrimaryGroup) + sizeof(TOKEN_PRIMARY_GROUP);
 	if (TokenInformationLength < uLength)
 	  {
 	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
@@ -609,7 +612,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	      (PSID)(((PTOKEN_PRIMARY_GROUP)TokenInformation) + 1);
 	    RtlCopySid(TokenInformationLength - sizeof(TOKEN_PRIMARY_GROUP),
 		       ((PTOKEN_PRIMARY_GROUP)TokenInformation)->PrimaryGroup,
-		       iToken->PrimaryGroup);
+		       Token->PrimaryGroup);
 	    Status = STATUS_SUCCESS;
 	  }
 	break;
@@ -617,14 +620,14 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
       case TokenDefaultDacl:
         DPRINT("NtQueryInformationToken(TokenDefaultDacl)\n");
 	PtrDefaultDacl = (PTOKEN_DEFAULT_DACL) TokenInformation;
-	uLength = (iToken->DefaultDacl ? iToken->DefaultDacl->AclSize : 0) + sizeof(TOKEN_DEFAULT_DACL);
+	uLength = (Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0) + sizeof(TOKEN_DEFAULT_DACL);
 	if (TokenInformationLength < uLength)
 	  {
 	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
 	    if (NT_SUCCESS(Status))
 	      Status = STATUS_BUFFER_TOO_SMALL;
 	  }
-	else if (!iToken->DefaultDacl)
+	else if (!Token->DefaultDacl)
 	  {
 	    PtrDefaultDacl->DefaultDacl = 0;
 	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
@@ -633,8 +636,8 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	  {
 	    PtrDefaultDacl->DefaultDacl = (PACL) (PtrDefaultDacl + 1);
 	    memmove(PtrDefaultDacl->DefaultDacl,
-		    iToken->DefaultDacl,
-		    iToken->DefaultDacl->AclSize);
+		    Token->DefaultDacl,
+		    Token->DefaultDacl->AclSize);
 	    Status = MmCopyToCaller(ReturnLength, &uLength, sizeof(ULONG));
 	  }
 	break;
@@ -650,7 +653,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	  }
 	else
 	  {
-	    Status = MmCopyToCaller(TokenInformation, &iToken->TokenSource, sizeof(TOKEN_SOURCE));
+	    Status = MmCopyToCaller(TokenInformation, &Token->TokenSource, sizeof(TOKEN_SOURCE));
 	  }
 	break;
 
@@ -665,7 +668,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	  }
 	else
 	  {
-	    Status = MmCopyToCaller(TokenInformation, &iToken->TokenType, sizeof(TOKEN_TYPE));
+	    Status = MmCopyToCaller(TokenInformation, &Token->TokenType, sizeof(TOKEN_TYPE));
 	  }
 	break;
 
@@ -680,8 +683,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	  }
 	else
 	  {
-	    Status = MmCopyToCaller(TokenInformation, &iToken->ImpersonationLevel,
-        sizeof(SECURITY_IMPERSONATION_LEVEL));
+	    Status = MmCopyToCaller(TokenInformation, &Token->ImpersonationLevel, sizeof(SECURITY_IMPERSONATION_LEVEL));
 	  }
 	break;
 
@@ -697,25 +699,23 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	else
 	  {
 	    PtrTokenStatistics = (PTOKEN_STATISTICS)TokenInformation;
-	    PtrTokenStatistics->TokenId = iToken->TokenId;
-	    PtrTokenStatistics->AuthenticationId = iToken->AuthenticationId;
-	    PtrTokenStatistics->ExpirationTime = iToken->ExpirationTime;
-	    PtrTokenStatistics->TokenType = iToken->TokenType;
-	    PtrTokenStatistics->ImpersonationLevel = iToken->ImpersonationLevel;
-	    PtrTokenStatistics->DynamicCharged = iToken->DynamicCharged;
-	    PtrTokenStatistics->DynamicAvailable = iToken->DynamicAvailable;
-	    PtrTokenStatistics->GroupCount = iToken->UserAndGroupCount - 1;
-	    PtrTokenStatistics->PrivilegeCount = iToken->PrivilegeCount;
-	    PtrTokenStatistics->ModifiedId = iToken->ModifiedId;
+	    PtrTokenStatistics->TokenId = Token->TokenId;
+	    PtrTokenStatistics->AuthenticationId = Token->AuthenticationId;
+	    PtrTokenStatistics->ExpirationTime = Token->ExpirationTime;
+	    PtrTokenStatistics->TokenType = Token->TokenType;
+	    PtrTokenStatistics->ImpersonationLevel = Token->ImpersonationLevel;
+	    PtrTokenStatistics->DynamicCharged = Token->DynamicCharged;
+	    PtrTokenStatistics->DynamicAvailable = Token->DynamicAvailable;
+	    PtrTokenStatistics->GroupCount = Token->UserAndGroupCount - 1;
+	    PtrTokenStatistics->PrivilegeCount = Token->PrivilegeCount;
+	    PtrTokenStatistics->ModifiedId = Token->ModifiedId;
 
 	    Status = STATUS_SUCCESS;
 	  }
 	break;
-  default:
-    break;
     }
 
-  ObDereferenceObject(iToken);
+  ObDereferenceObject(Token);
 
   return(Status);
 }
@@ -732,16 +732,16 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
 
 NTSTATUS STDCALL
-NtDuplicateToken(IN HANDLE  ExistingTokenHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN BOOLEAN  EffectiveOnly,
-  IN TOKEN_TYPE  TokenType,
-  OUT PHANDLE  NewTokenHandle)
+NtDuplicateToken(IN HANDLE ExistingTokenHandle,
+		 IN ACCESS_MASK DesiredAccess,
+		 IN POBJECT_ATTRIBUTES ObjectAttributes,
+		 IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+		 IN TOKEN_TYPE TokenType,
+		 OUT PHANDLE NewTokenHandle)
 {
 #if 0
-   PIACCESS_TOKEN Token;
-   PIACCESS_TOKEN NewToken;
+   PACCESS_TOKEN Token;
+   PACCESS_TOKEN NewToken;
    NTSTATUS Status;
    ULONG ExistingImpersonationLevel;
    
@@ -765,10 +765,10 @@ NtDuplicateToken(IN HANDLE  ExistingTokenHandle,
 #endif
 }
 
-VOID SepAdjustGroups(PIACCESS_TOKEN Token,
+VOID SepAdjustGroups(PACCESS_TOKEN Token,
 		     ULONG a,
 		     BOOLEAN ResetToDefault,
-		     PSID_AND_ATTRIBUTES_ARRAY Groups,
+		     PSID_AND_ATTRIBUTES Groups,
 		     ULONG b,
 		     KPROCESSOR_MODE PreviousMode,
 		     ULONG c,
@@ -790,7 +790,7 @@ NtAdjustGroupsToken(IN HANDLE TokenHandle,
 {
 #if 0
    NTSTATUS Status;
-   PIACCESS_TOKEN Token;
+   PACCESS_TOKEN Token;
    ULONG a;
    ULONG b;
    ULONG c;
@@ -820,7 +820,7 @@ NtAdjustGroupsToken(IN HANDLE TokenHandle,
 
 
 #if 0
-NTSTATUS SepAdjustPrivileges(PIACCESS_TOKEN Token,           // 0x8
+NTSTATUS SepAdjustPrivileges(PACCESS_TOKEN Token,           // 0x8
 			     ULONG a,                       // 0xC
 			     KPROCESSOR_MODE PreviousMode,  // 0x10
 			     ULONG PrivilegeCount,          // 0x14
@@ -928,32 +928,33 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
   ULONG uAuthUserLength    = RtlLengthSid(SeAuthenticatedUserSid);
   ULONG uAdminsLength      = RtlLengthSid(SeAliasAdminsSid);
 
-  PIACCESS_TOKEN AccessToken;
+  PACCESS_TOKEN AccessToken;
 
   PVOID SidArea;
-
-  DPRINT("SepCreateSystemProcessToken\n");
 
  /*
   * Initialize the token
   */
-  Status = ObRosCreateObject(NULL,
+  Status = ObCreateObject(NULL,
 			 TOKEN_ALL_ACCESS,
 			 NULL,
 			 SepTokenObjectType,
 			 (PVOID*)&AccessToken);
+
   Status = NtAllocateLocallyUniqueId(&AccessToken->TokenId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
       return(Status);
     }
+
   Status = NtAllocateLocallyUniqueId(&AccessToken->ModifiedId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
       return(Status);
     }
+
   AccessToken->AuthenticationId.QuadPart = SYSTEM_LUID;
 
   AccessToken->TokenType = TokenPrimary;
@@ -970,31 +971,31 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
   uSize += uAdminsLength;
 
   AccessToken->UserAndGroups = 
-    (PSID_AND_ATTRIBUTES_ARRAY)ExAllocatePoolWithTag(NonPagedPool,
+    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
 					       uSize,
 					       TAG('T', 'O', 'K', 'u'));
   SidArea = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
 
   i = 0;
-  AccessToken->UserAndGroups[i]->Sid = (PSID) SidArea;
-  AccessToken->UserAndGroups[i++]->Attributes = 0;
+  AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
+  AccessToken->UserAndGroups[i++].Attributes = 0;
   RtlCopySid(uLocalSystemLength, SidArea, SeLocalSystemSid);
   SidArea += uLocalSystemLength;
 
   AccessToken->DefaultOwnerIndex = i;
-  AccessToken->UserAndGroups[i]->Sid = (PSID) SidArea;
+  AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
   AccessToken->PrimaryGroup = (PSID) SidArea;
-  AccessToken->UserAndGroups[i++]->Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT;
+  AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT;
   Status = RtlCopySid(uAdminsLength, SidArea, SeAliasAdminsSid);
   SidArea += uAdminsLength;
 
-  AccessToken->UserAndGroups[i]->Sid = (PSID) SidArea;
-  AccessToken->UserAndGroups[i++]->Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
+  AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
+  AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
   RtlCopySid(uWorldLength, SidArea, SeWorldSid);
   SidArea += uWorldLength;
 
-  AccessToken->UserAndGroups[i]->Sid = (PSID) SidArea;
-  AccessToken->UserAndGroups[i++]->Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
+  AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
+  AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
   RtlCopySid(uAuthUserLength, SidArea, SeAuthenticatedUserSid);
   SidArea += uAuthUserLength;
 
@@ -1002,83 +1003,83 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
 
   uSize = AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
   AccessToken->Privileges =
-	(PLUID_AND_ATTRIBUTES_ARRAY)ExAllocatePoolWithTag(NonPagedPool,
+	(PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
 						    uSize,
 						    TAG('T', 'O', 'K', 'p'));
 
   i = 0;
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeTcbPrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeTcbPrivilege;
 
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeCreateTokenPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeCreateTokenPrivilege;
 
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeTakeOwnershipPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeTakeOwnershipPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeCreatePagefilePrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeCreatePagefilePrivilege;
   
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeLockMemoryPrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeLockMemoryPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeAssignPrimaryTokenPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeAssignPrimaryTokenPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeIncreaseQuotaPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeIncreaseQuotaPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeIncreaseBasePriorityPrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeIncreaseBasePriorityPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeCreatePermanentPrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeCreatePermanentPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeDebugPrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeDebugPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeAuditPrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeAuditPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeSecurityPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeSecurityPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeSystemEnvironmentPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeSystemEnvironmentPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeChangeNotifyPrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeChangeNotifyPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeBackupPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeBackupPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeRestorePrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeRestorePrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeShutdownPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeShutdownPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeLoadDriverPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeLoadDriverPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
-  AccessToken->Privileges[i++]->Luid = SeProfileSingleProcessPrivilege;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeProfileSingleProcessPrivilege;
   
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeSystemtimePrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeSystemtimePrivilege;
 #if 0
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeUndockPrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeUndockPrivilege;
 
-  AccessToken->Privileges[i]->Attributes = 0;
-  AccessToken->Privileges[i++]->Luid = SeManageVolumePrivilege;
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeManageVolumePrivilege;
 #endif
 
   assert( i == 20 );
 
   uSize = sizeof(ACL);
-  uSize += sizeof(ROS_ACE_HEADER) + uLocalSystemLength;
-  uSize += sizeof(ROS_ACE_HEADER) + uAdminsLength;
+  uSize += sizeof(ACE_HEADER) + uLocalSystemLength;
+  uSize += sizeof(ACE_HEADER) + uAdminsLength;
   uSize = (uSize & (~3)) + 8;
   AccessToken->DefaultDacl =
     (PACL) ExAllocatePoolWithTag(NonPagedPool,
@@ -1089,15 +1090,18 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
     {
       Status = RtlAddAccessAllowedAce(AccessToken->DefaultDacl, ACL_REVISION, GENERIC_ALL, SeLocalSystemSid);
     }
+
   if ( NT_SUCCESS(Status) )
     {
       Status = RtlAddAccessAllowedAce(AccessToken->DefaultDacl, ACL_REVISION, GENERIC_READ|GENERIC_EXECUTE|READ_CONTROL, SeAliasAdminsSid);
     }
+
   if ( ! NT_SUCCESS(Status) )
     {
       ObDereferenceObject(AccessToken);
       return Status;
     }
+
   Process->Token = AccessToken;
   return(STATUS_SUCCESS);
 }
@@ -1118,7 +1122,7 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 	      IN PTOKEN_SOURCE TokenSource)
 {
   HANDLE TokenHandle;
-  PIACCESS_TOKEN AccessToken;
+  PACCESS_TOKEN AccessToken;
   NTSTATUS Status;
   OBJECT_ATTRIBUTES SafeObjectAttributes;
   POBJECT_ATTRIBUTES ObjectAttributes;
@@ -1144,14 +1148,14 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  Status = ObRosCreateObject(&TokenHandle,
+  Status = ObCreateObject(&TokenHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  SepTokenObjectType,
 			  (PVOID*)&AccessToken);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ObRosCreateObject() failed (Status %lx)\n");
+      DPRINT1("ObCreateObject() failed (Status %lx)\n");
       return(Status);
     }
 
@@ -1172,12 +1176,11 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   AccessToken->Privileges        = 0;
 
   AccessToken->TokenType = TokenType;
-  AccessToken->ImpersonationLevel = ((PSECURITY_QUALITY_OF_SERVICE)
-		ObjectAttributes->SecurityQualityOfService)->ImpersonationLevel;
+  AccessToken->ImpersonationLevel = ObjectAttributes->SecurityQualityOfService->ImpersonationLevel;
 
   /*
    * Normally we would just point these members into the variable information
-   * area; however, our ObRosCreateObject() call can't allocate a variable information
+   * area; however, our ObCreateObject() call can't allocate a variable information
    * area, so we allocate them seperately and provide a destroy function.
    */
 
@@ -1187,23 +1190,23 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
     uLength += RtlLengthSid(TokenGroups->Groups[i].Sid);
 
   AccessToken->UserAndGroups = 
-    (PSID_AND_ATTRIBUTES_ARRAY)ExAllocatePoolWithTag(NonPagedPool,
+    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
 					       uLength,
 					       TAG('T', 'O', 'K', 'u'));
 
   EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
 
   Status = RtlCopySidAndAttributesArray(1,
-					(PSID_AND_ATTRIBUTES_ARRAY)&TokenUser->User,
+					&TokenUser->User,
 					uLength,
-					(PSID_AND_ATTRIBUTES_ARRAY)AccessToken->UserAndGroups,
+					AccessToken->UserAndGroups,
 					EndMem,
 					&EndMem,
 					&uLength);
   if (NT_SUCCESS(Status))
     {
       Status = RtlCopySidAndAttributesArray(TokenGroups->GroupCount,
-					    (PSID_AND_ATTRIBUTES_ARRAY)&TokenGroups->Groups[0],
+					    TokenGroups->Groups,
 					    uLength,
 					    &AccessToken->UserAndGroups[1],
 					    EndMem,
@@ -1223,7 +1226,7 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
     {
       uLength = TokenPrivileges->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
       AccessToken->Privileges =
-	(PLUID_AND_ATTRIBUTES_ARRAY)ExAllocatePoolWithTag(NonPagedPool,
+	(PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
 						    uLength,
 						    TAG('T', 'O', 'K', 'p'));
 
@@ -1270,18 +1273,14 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 SECURITY_IMPERSONATION_LEVEL STDCALL
 SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
 {
-  PIACCESS_TOKEN iToken = (PIACCESS_TOKEN)Token;
-
-  return(iToken->ImpersonationLevel);
+  return(Token->ImpersonationLevel);
 }
 
 
 TOKEN_TYPE STDCALL
 SeTokenType(IN PACCESS_TOKEN Token)
 {
-  PIACCESS_TOKEN iToken = (PIACCESS_TOKEN)Token;
-
-  return(iToken->TokenType);
+  return(Token->TokenType);
 }
 
 /* EOF */

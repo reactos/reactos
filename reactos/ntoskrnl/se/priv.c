@@ -1,4 +1,4 @@
-/* $Id: priv.c,v 1.4 2002/09/07 15:13:06 chorns Exp $
+/* $Id: priv.c,v 1.5 2002/09/08 10:23:43 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,9 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/se.h>
 
-#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -75,14 +75,14 @@ SepInitPrivileges(VOID)
 }
 
 
-BOOLEAN SepPrivilegeCheck(PIACCESS_TOKEN Token,
+BOOLEAN SepPrivilegeCheck(PACCESS_TOKEN Token,
 			  PLUID_AND_ATTRIBUTES Privileges,
 			  ULONG PrivilegeCount,
 			  ULONG PrivilegeControl,
 			  KPROCESSOR_MODE PreviousMode)
 {
    ULONG i;
-   PLUID_AND_ATTRIBUTES_ARRAY Current;
+   PLUID_AND_ATTRIBUTES Current;
    ULONG j;
    ULONG k;
    
@@ -101,11 +101,11 @@ BOOLEAN SepPrivilegeCheck(PIACCESS_TOKEN Token,
 	     Current = Token->Privileges;
 	     for (i = 0; i < Token->PrivilegeCount; i++)
 	       {
-		  if (!(Current[i]->Attributes & SE_PRIVILEGE_ENABLED) &&
+		  if (!(Current[i].Attributes & SE_PRIVILEGE_ENABLED) &&
 		      Privileges[i].Luid.u.LowPart == 
-		      Current[i]->Luid.u.LowPart &&
+		      Current[i].Luid.u.LowPart &&
 		      Privileges[i].Luid.u.HighPart == 
-		      Current[i]->Luid.u.HighPart)
+		      Current[i].Luid.u.HighPart)
 		    {
 		       Privileges[i].Attributes = 
 			 Privileges[i].Attributes | 
@@ -195,7 +195,7 @@ NtPrivilegeCheck(IN HANDLE ClientToken,
 		 IN PBOOLEAN Result)
 {
    NTSTATUS Status;
-   PIACCESS_TOKEN iToken;
+   PACCESS_TOKEN Token;
    ULONG PrivilegeCount;
    BOOLEAN TResult;
    ULONG PrivilegeControl;
@@ -206,16 +206,16 @@ NtPrivilegeCheck(IN HANDLE ClientToken,
 				      0,
 				      SepTokenObjectType,
 				      UserMode,
-				      (PVOID*)&iToken,
+				      (PVOID*)&Token,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-   if (iToken->TokenType == TokenImpersonation &&
-       iToken->ImpersonationLevel < SecurityAnonymous)
+   if (Token->TokenType == TokenImpersonation &&
+       Token->ImpersonationLevel < SecurityAnonymous)
      {
-	ObDereferenceObject(iToken);
+	ObDereferenceObject(Token);
 	return(STATUS_UNSUCCESSFUL);
      }
    PrivilegeCount = RequiredPrivileges->PrivilegeCount;
@@ -232,10 +232,10 @@ NtPrivilegeCheck(IN HANDLE ClientToken,
 					    &Length);
    if (!NT_SUCCESS(Status))
      {
-	ObDereferenceObject(iToken);
+	ObDereferenceObject(Token);
 	return(STATUS_UNSUCCESSFUL);
      }
-   TResult = SepPrivilegeCheck(iToken,
+   TResult = SepPrivilegeCheck(Token,
 			       Privilege,
 			       PrivilegeCount,
 			       PrivilegeControl,
@@ -251,22 +251,22 @@ SePrivilegeCheck(PPRIVILEGE_SET Privileges,
 		 PSECURITY_SUBJECT_CONTEXT SubjectContext,
 		 KPROCESSOR_MODE PreviousMode)
 {
-   PIACCESS_TOKEN iToken = NULL;
+   PACCESS_TOKEN Token = NULL;
    
    if (SubjectContext->ClientToken == NULL)
      {
-	iToken = SubjectContext->PrimaryToken;
+	Token = SubjectContext->PrimaryToken;
      }
    else
      {
-	iToken = SubjectContext->ClientToken;
+	Token = SubjectContext->ClientToken;
 	if (SubjectContext->ImpersonationLevel < 2)
 	  {
 	     return(FALSE);
 	  }
      }
    
-   return(SepPrivilegeCheck(iToken,
+   return(SepPrivilegeCheck(Token,
 			    Privileges->Privilege,
 			    Privileges->PrivilegeCount,
 			    Privileges->Control,

@@ -1,4 +1,4 @@
-/* $Id: parttab.c,v 1.2 2002/09/07 15:12:53 chorns Exp $
+/* $Id: parttab.c,v 1.3 2002/09/08 10:23:25 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,11 +13,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -25,9 +23,9 @@ NTSTATUS STDCALL
 IoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		     ULONG SectorSize,
 		     BOOLEAN ReturnRecognizedPartitions,
-		     struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer)
+		     PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
 {
-	return HalDispatchTable->HalIoReadPartitionTable(DeviceObject,
+	return HalDispatchTable.HalIoReadPartitionTable(DeviceObject,
 	                                                SectorSize,
 	                                                ReturnRecognizedPartitions,
 	                                                PartitionBuffer);
@@ -40,7 +38,7 @@ IoSetPartitionInformation(PDEVICE_OBJECT DeviceObject,
 			  ULONG PartitionNumber,
 			  ULONG PartitionType)
 {
-   return HalDispatchTable->HalIoSetPartitionInformation(DeviceObject,
+   return HalDispatchTable.HalIoSetPartitionInformation(DeviceObject,
 							SectorSize,
 							PartitionNumber,
 							PartitionType);
@@ -52,9 +50,9 @@ IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
 		      ULONG SectorSize,
 		      ULONG SectorsPerTrack,
 		      ULONG NumberOfHeads,
-		      struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+		      PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
-   return HalDispatchTable->HalIoWritePartitionTable(DeviceObject,
+   return HalDispatchTable.HalIoWritePartitionTable(DeviceObject,
 						    SectorSize,
 						    SectorsPerTrack,
 						    NumberOfHeads,

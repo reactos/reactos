@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.21 $
+ * $Revision: 1.22 $
  * $Author: chorns $
- * $Date: 2002/09/07 15:11:59 $
+ * $Date: 2002/09/08 10:22:07 $
  *
  */
 
@@ -74,7 +74,7 @@ DrvEnableDriver(IN ULONG EngineVersion,
 
   DriveEnableData->pdrvfn = FuncList;
   DriveEnableData->c = sizeof(FuncList) / sizeof(DRVFN);
-  DriveEnableData->iDriverVersion = DDI_DRIVER_VERSION_NT4;
+  DriveEnableData->iDriverVersion = DDI_DRIVER_VERSION;
 
   return  TRUE;
 }
@@ -115,6 +115,7 @@ DrvDisableDriver(VOID)
 //    IN HANDLE      Driver        handle to KM driver
 //  RETURNS:
 //    DHPDEV  a handle to a DPev object
+
 DHPDEV STDCALL
 DrvEnablePDEV(IN DEVMODEW *DM,
 	      IN LPWSTR LogAddress,
@@ -124,7 +125,7 @@ DrvEnablePDEV(IN DEVMODEW *DM,
 	      OUT ULONG *DevCaps,
 	      IN ULONG DevInfoSize,
 	      OUT DEVINFO *DI,
-	      IN HDEV hDev,
+	      IN LPWSTR DevDataFile,
 	      IN LPWSTR DeviceName,
 	      IN HANDLE Driver)
 {

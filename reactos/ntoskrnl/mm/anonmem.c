@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.5 2002/09/07 15:12:59 chorns Exp $
+/* $Id: anonmem.c,v 1.6 2002/09/08 10:23:32 chorns Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -26,7 +26,12 @@
  
 /* INCLUDE *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/mm.h>
+#include <internal/ob.h>
+#include <internal/io.h>
+#include <internal/ps.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -94,7 +99,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
   /*
    * Write the page to the pagefile
    */
-  Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
+  Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
   Status = MmWriteToSwapPage(SwapEntry, Mdl);
   if (!NT_SUCCESS(Status))
@@ -194,7 +199,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Write the page to the pagefile
     */
-   Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
+   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
    MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
@@ -360,7 +365,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        PMDL Mdl;
 
        MmDeletePageFileMapping(NULL, Address, &SwapEntry);
-       Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
+       Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
        MmBuildMdlFromPages(Mdl, (PULONG)&Page);
        Status = MmReadFromSwapPage(SwapEntry, Mdl);
        if (!NT_SUCCESS(Status))
@@ -434,25 +439,25 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
     {
       ULONG i;
       
-      for (i=0; i <= (RegionSize/PAGE_SIZE); i++)
+      for (i=0; i <= (RegionSize/PAGESIZE); i++)
 	{
 	  LARGE_INTEGER PhysicalAddr;
 
 	  if (MmIsPageSwapEntry(AddressSpace->Process,
-				BaseAddress + (i * PAGE_SIZE)))
+				BaseAddress + (i * PAGESIZE)))
 	    {
 	      SWAPENTRY SwapEntry;
 	      
 	      MmDeletePageFileMapping(AddressSpace->Process,
-				      BaseAddress + (i * PAGE_SIZE),
+				      BaseAddress + (i * PAGESIZE),
 				      &SwapEntry);
 	      MmFreeSwapPage(SwapEntry);
 	    }
 	  else
 	    {
-	      PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGE_SIZE));
+	      PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGESIZE));
 	      MmDeleteVirtualMapping(AddressSpace->Process,
-				     BaseAddress + (i*PAGE_SIZE),
+				     BaseAddress + (i*PAGESIZE),
 				     FALSE, NULL, NULL);
 	      if (PhysicalAddr.QuadPart != 0)
 		{
@@ -464,7 +469,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 		      MmSetSavedSwapEntryPage(PhysicalAddr, 0);
 		    }
 		  MmDeleteRmap(PhysicalAddr, AddressSpace->Process,
-			       BaseAddress + (i * PAGE_SIZE));
+			       BaseAddress + (i * PAGESIZE));
 		  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
 		}
 	    }
@@ -480,13 +485,13 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
     {
       ULONG i;
    
-      for (i=0; i <= (RegionSize/PAGE_SIZE); i++)
+      for (i=0; i <= (RegionSize/PAGESIZE); i++)
 	{
 	  if (MmIsPagePresent(AddressSpace->Process, 
-			      BaseAddress + (i*PAGE_SIZE)))
+			      BaseAddress + (i*PAGESIZE)))
 	    {
 	      MmSetPageProtect(AddressSpace->Process,
-			       BaseAddress + (i*PAGE_SIZE), 
+			       BaseAddress + (i*PAGESIZE), 
 			       NewProtect);
 	    }
 	}
@@ -685,7 +690,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
    */
   if (MemoryArea->PageOpCount > 0)
     {
-      for (i = 0; i < (PAGE_ROUND_UP(MemoryArea->Length) / PAGE_SIZE); i++)
+      for (i = 0; i < (PAGE_ROUND_UP(MemoryArea->Length) / PAGESIZE); i++)
 	{
 	  PMM_PAGEOP PageOp;
 
@@ -695,7 +700,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
 	    }
 	  
 	  PageOp = MmCheckForPageOp(MemoryArea, Process->UniqueProcessId,
-				    MemoryArea->BaseAddress + (i * PAGE_SIZE),
+				    MemoryArea->BaseAddress + (i * PAGESIZE),
 				    NULL, 0);
 	  if (PageOp != NULL)
 	    {
@@ -745,7 +750,7 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
  *        ProcessHandle = Points to the process that allocated the virtual 
  *                        memory
  *        BaseAddress = Points to the memory address, rounded down to a 
- *                      multiple of the PAGE_SIZE
+ *                      multiple of the pagesize
  *        RegionSize = Limits the range to free, rounded up to a multiple of 
  *                     the paging size
  *        FreeType = Can be one of the values:  MEM_DECOMMIT, or MEM_RELEASE

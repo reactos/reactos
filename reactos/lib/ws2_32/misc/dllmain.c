@@ -264,14 +264,14 @@ closesocket(
 }
 
 
-int
+INT
 EXPORT
 select(
-    IN      int nfds, 
-    IN OUT  fd_set *readfds, 
-    IN OUT  fd_set *writefds, 
-    IN OUT  fd_set *exceptfds, 
-    IN      const struct timeval FAR *timeout)
+    IN      INT nfds, 
+    IN OUT  LPFD_SET readfds, 
+    IN OUT  LPFD_SET writefds, 
+    IN OUT  LPFD_SET exceptfds, 
+    IN      CONST LPTIMEVAL timeout)
 /*
  * FUNCTION: Returns status of one or more sockets
  * ARGUMENTS:
@@ -322,7 +322,7 @@ select(
   }
 
   Count = Provider->ProcTable.lpWSPSelect(
-    nfds, readfds, writefds, exceptfds, (CONST LPTIMEVAL)timeout, &Errno);
+    nfds, readfds, writefds, exceptfds, timeout, &Errno);
 
   WS_DbgPrint(MAX_TRACE, ("Provider (0x%X).\n", Provider));
 
@@ -337,12 +337,12 @@ select(
 }
 
 
-int
+INT
 EXPORT
 bind(
   IN  SOCKET s,
-  IN  const struct sockaddr FAR *name,
-  IN  int namelen)
+  IN  CONST LPSOCKADDR name,
+  IN  INT namelen)
 {
   PCATALOG_ENTRY Provider;
   INT Status;
@@ -359,7 +359,7 @@ bind(
   }
 
   Status = Provider->ProcTable.lpWSPBind(
-    s, (CONST LPSOCKADDR)name, namelen, &Errno);
+    s, name, namelen, &Errno);
 
   DereferenceProviderByPointer(Provider);
 
@@ -451,23 +451,23 @@ WSAAccept(
 }
 
 
-int
+INT
 EXPORT
 connect(
   IN  SOCKET s,
-  IN  const struct sockaddr *name,
-  IN  int namelen)
+  IN  CONST LPSOCKADDR name,
+  IN  INT namelen)
 {
   return WSAConnect(s, name, namelen, NULL, NULL, NULL, NULL);
 }
 
 
-int
+INT
 EXPORT
 WSAConnect(
   IN  SOCKET s,
-  IN  const struct sockaddr *name,
-  IN  int namelen,
+  IN  CONST LPSOCKADDR name,
+  IN  INT namelen,
   IN  LPWSABUF lpCallerData,
   OUT LPWSABUF lpCalleeData,
   IN  LPQOS lpSQOS,
@@ -488,7 +488,7 @@ WSAConnect(
   }
 
   Status = Provider->ProcTable.lpWSPConnect(
-    s, (CONST LPSOCKADDR)name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, &Errno);
+    s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, &Errno);
 
   DereferenceProviderByPointer(Provider);
 

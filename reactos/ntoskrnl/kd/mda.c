@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mda.c,v 1.2 2002/09/07 15:12:54 chorns Exp $
+/* $Id: mda.c,v 1.3 2002/09/08 10:23:27 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kd/mda.c
@@ -26,7 +26,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ntoskrnl.h>
+#include <internal/kd.h>
+#include <internal/mm.h>
+#include <roscfg.h>
 #include "../dbg/kdb.h"
 
 /* VARIABLES ***************************************************************/

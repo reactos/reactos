@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.30 2002/09/07 15:12:26 chorns Exp $
+/* $Id: curdir.c,v 1.31 2002/09/08 10:22:41 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,9 +11,9 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

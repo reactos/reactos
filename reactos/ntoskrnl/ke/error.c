@@ -11,11 +11,9 @@
 
 /* INCLUDE *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS ***************************************************************/
 

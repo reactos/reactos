@@ -5,13 +5,13 @@
  * PURPOSE:     Checks for kana character
  * PROGRAMER:   Boudewijn Dekker, Taiji Yamada
  * UPDATE HISTORY:
- *   Modified from Taiji Yamada japanese code system utilities
+		Modified from Taiji Yamada japanese code system utilities
  *              12/04/99: Created
  */
-#include <msvcrti.h>
+#include <msvcrt/mbstring.h>
+#include <msvcrt/mbctype.h>
 
-
-int _ismbbkana(unsigned int c)
+int _ismbbkana(unsigned char c)
 {
   return ((_jctype+1)[(unsigned char)(c)] & (_KNJ_M|_KNJ_P));
 }

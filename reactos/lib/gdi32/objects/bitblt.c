@@ -200,7 +200,7 @@ STDCALL
 CreateDIBSection(HDC hDC,
 	CONST BITMAPINFO  *bmi,
 	UINT  Usage,
-	VOID  **Bits,
+	VOID  *Bits,
 	HANDLE  hSection,
 	DWORD  dwOffset)
 {

@@ -15,8 +15,19 @@
    License along with the GNU C Library; see the file COPYING.LIB.  If not,
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
-#include <msvcrti.h>
 
+#include <stdarg.h>
+#include <msvcrt/errno.h>
+#include <limits.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/malloc.h>
+#include <msvcrt/mbstring.h>
+#include <msvcrt/internal/file.h>
+#include <msvcrt/internal/stdio.h>
 
 /* The internal entry points for `strtoX' take an extra flag argument
    saying whether or not to parse locale-dependent number grouping.  */
@@ -171,7 +182,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	 otherwise it is the next argument after the state now in ARG.  */
 #define ARG(type)	va_arg(argptr,type)
 
-      if (!__isascii (*f))
+      if (!isascii (*f))
 	{
 	  /* Non-ASCII, may be a multibyte.  */
 	 // int len = mblen (f, strlen (f));

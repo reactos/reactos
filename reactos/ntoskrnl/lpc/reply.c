@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.10 2002/09/07 15:12:58 chorns Exp $
+/* $Id: reply.c,v 1.11 2002/09/08 10:23:32 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,7 +11,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ob.h>
+#include <internal/port.h>
+#include <internal/dbg.h>
+#include <internal/pool.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -57,8 +62,8 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
 	memcpy(&MessageReply->Message, LpcReply, LpcReply->MessageSize);
      }
    
-   MessageReply->Message.ClientId.UniqueProcess = PsGetCurrentProcessId();
-   MessageReply->Message.ClientId.UniqueThread = PsGetCurrentThreadId();
+   MessageReply->Message.Cid.UniqueProcess = PsGetCurrentProcessId();
+   MessageReply->Message.Cid.UniqueThread = PsGetCurrentThreadId();
    MessageReply->Message.MessageType = MessageType;
    MessageReply->Message.MessageId = InterlockedIncrement(&EiNextLpcMessageId);
    
@@ -228,13 +233,13 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
-       LPC_MESSAGE Header;
+       LPC_MESSAGE_HEADER Header;
        PEPORT_CONNECT_REQUEST_MESSAGE CRequest;
 
        CRequest = (PEPORT_CONNECT_REQUEST_MESSAGE)&Request->Message;
-       memcpy(&Header, &Request->Message, sizeof(LPC_MESSAGE));
+       memcpy(&Header, &Request->Message, sizeof(LPC_MESSAGE_HEADER));
        Header.DataSize = CRequest->ConnectDataLength;
-       Header.MessageSize = Header.DataSize + sizeof(LPC_MESSAGE);
+       Header.MessageSize = Header.DataSize + sizeof(LPC_MESSAGE_HEADER);
        Status = MmCopyToCaller(LpcMessage, &Header, sizeof(LPC_MESSAGE));
        if (!NT_SUCCESS(Status))
 	 {

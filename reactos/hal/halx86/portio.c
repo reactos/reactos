@@ -1,4 +1,4 @@
-/* $Id: portio.c,v 1.2 2002/09/07 15:12:10 chorns Exp $
+/* $Id: portio.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,10 +9,7 @@
  *                  Created 18/10/99
  */
 
-#include <hal.h>
-
-#define NDEBUG
-#include <internal/debug.h>
+#include <ddk/ntddk.h>
 
 
 /* FUNCTIONS ****************************************************************/

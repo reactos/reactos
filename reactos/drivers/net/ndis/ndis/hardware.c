@@ -11,7 +11,7 @@
 
 
 ULONG
-STDCALL
+EXPORT
 NdisImmediateReadPciSlotInformation(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       SlotNumber,
@@ -26,7 +26,7 @@ NdisImmediateReadPciSlotInformation(
 
 
 ULONG 
-STDCALL
+EXPORT
 NdisImmediateWritePciSlotInformation(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       SlotNumber,
@@ -41,7 +41,7 @@ NdisImmediateWritePciSlotInformation(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMPciAssignResources(
     IN  NDIS_HANDLE             MiniportHandle,
     IN  ULONG                   SlotNumber,
@@ -54,7 +54,7 @@ NdisMPciAssignResources(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMQueryAdapterResources(
     OUT     PNDIS_STATUS        Status,
     IN      NDIS_HANDLE         WrapperConfigurationContext,
@@ -66,7 +66,7 @@ NdisMQueryAdapterResources(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisQueryMapRegisterCount(
     IN  NDIS_INTERFACE_TYPE BusType,
     OUT PUINT               MapRegisterCount)
@@ -78,7 +78,7 @@ NdisQueryMapRegisterCount(
 
 
 VOID
-STDCALL
+EXPORT
 NdisReadEisaSlotInformation(
     OUT PNDIS_STATUS                    Status,
     IN  NDIS_HANDLE			            WrapperConfigurationContext,
@@ -90,7 +90,7 @@ NdisReadEisaSlotInformation(
 
 
 VOID
-STDCALL
+EXPORT
 NdisReadEisaSlotInformationEx(
     OUT PNDIS_STATUS                    Status,
     IN  NDIS_HANDLE                     WrapperConfigurationContext,
@@ -103,7 +103,7 @@ NdisReadEisaSlotInformationEx(
 
 
 ULONG
-STDCALL
+EXPORT
 NdisReadPciSlotInformation(
     IN  NDIS_HANDLE NdisAdapterHandle,
     IN  ULONG       SlotNumber,
@@ -118,7 +118,7 @@ NdisReadPciSlotInformation(
 
 
 ULONG
-STDCALL
+EXPORT
 NdisWritePciSlotInformation(
     IN  NDIS_HANDLE NdisAdapterHandle,
     IN  ULONG       SlotNumber,

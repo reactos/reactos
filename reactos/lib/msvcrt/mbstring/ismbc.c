@@ -1,5 +1,7 @@
-#include <msvcrti.h>
+#include <msvcrt/mbstring.h>
 
+int _ismbbalpha(unsigned char c);
+int _ismbbalnum(unsigned char c);
 
 int _ismbcalnum( unsigned int c )
 {

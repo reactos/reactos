@@ -1,6 +1,7 @@
 #include <ddk/winddi.h>
 #include "objects.h"
 #include "../dib/dib.h"
+
 #include <include/mouse.h>
 #include <include/object.h>
 #include <include/surface.h>
@@ -16,7 +17,6 @@ EngLineTo(SURFOBJ *Surface,
 	  RECTL *RectBounds,
 	  MIX mix)
 {
-  ROS_BRUSHOBJ *bo = (ROS_BRUSHOBJ *)Brush;
   BOOLEAN ret;
   SURFGDI *SurfGDI;
   LONG x, y, d, deltax, deltay, i, length, xchange, ychange, error, hx, vy;
@@ -90,8 +90,8 @@ EngLineTo(SURFOBJ *Surface,
     vy = y1;
   }
 
-  if(y1==y2) { DIB_HLine(Surface, hx, hx + deltax, y1, bo->iSolidColor); MouseSafetyOnDrawEnd(Surface, SurfGDI); return TRUE; }
-  if(x1==x2) { DIB_VLine(Surface, x1, vy, vy + deltay, bo->iSolidColor); MouseSafetyOnDrawEnd(Surface, SurfGDI); return TRUE; }
+  if(y1==y2) { DIB_HLine(Surface, hx, hx + deltax, y1, Brush->iSolidColor); MouseSafetyOnDrawEnd(Surface, SurfGDI); return TRUE; }
+  if(x1==x2) { DIB_VLine(Surface, x1, vy, vy + deltay, Brush->iSolidColor); MouseSafetyOnDrawEnd(Surface, SurfGDI); return TRUE; }
 
   error=0;
   i=0;
@@ -101,7 +101,7 @@ EngLineTo(SURFOBJ *Surface,
     length=deltay+1;
     while(i<length)
     {
-      DIB_PutPixel(Surface, x, y, bo->iSolidColor);
+      DIB_PutPixel(Surface, x, y, Brush->iSolidColor);
       y=y+ychange;
       error=error+deltax;
 
@@ -117,7 +117,7 @@ EngLineTo(SURFOBJ *Surface,
     length=deltax+1;
     while(i<length)
     {
-      DIB_PutPixel(Surface, x, y, bo->iSolidColor);
+      DIB_PutPixel(Surface, x, y, Brush->iSolidColor);
       x=x+xchange;
       error=error+deltay;
       if(error>deltax)

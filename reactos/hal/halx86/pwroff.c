@@ -1,4 +1,4 @@
-/* $Id: pwroff.c,v 1.2 2002/09/07 15:12:10 chorns Exp $
+/* $Id: pwroff.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
  *
  * FILE       : reactos/hal/x86/apm.c
  * DESCRIPTION: Turn CPU off...
@@ -8,12 +8,6 @@
  * REVISIONS  :
  * 	1999-12-26
  */
-
-#include <hal.h>
-
-#define NDEBUG
-#include <internal/debug.h>
-
 
 #define APM_FUNCTION_AVAILABLE	0x5300
 #define APM_FUNCTION_CONNREAL	0x5301

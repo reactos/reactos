@@ -1,4 +1,4 @@
-/* $Id: query.c,v 1.4 2002/09/07 15:12:58 chorns Exp $
+/* $Id: query.c,v 1.5 2002/09/08 10:23:32 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ob.h>
+#include <internal/port.h>
+#include <internal/dbg.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -40,7 +42,7 @@
  * 	P. Dabak reports that this system service seems to return
  * 	no information.
  */
-NTSTATUS STDCALL
+EXPORTED NTSTATUS STDCALL
 NtQueryInformationPort (IN	HANDLE	PortHandle,
 			IN	CINT	PortInformationClass,	
 			OUT	PVOID	PortInformation,    

@@ -15,8 +15,13 @@ You should have received a copy of the GNU Library General Public
 License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
-#include <msvcrti.h>
 
+#include <msvcrt/errno.h>
+#include <msvcrt/stdarg.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/file.h>
+#include <msvcrt/internal/stdio.h>
 
 #undef  vsscanf
 

@@ -7,7 +7,8 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/conio.h>
 
 int _putch(int c)
 {

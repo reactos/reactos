@@ -1,5 +1,5 @@
-#include <msvcrti.h>
-
+#include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 int _dup2(int handle1, int handle2)
 {

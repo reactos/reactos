@@ -2,8 +2,6 @@
  * Structure ids
  */
 
-#ifndef AS_INVOKED
-
 #define InternalBaseType                      (0xcc)
 #define InternalNotificationEvent             (InternalBaseType + 1)
 #define InternalSynchronizationEvent          (InternalBaseType + 2)
@@ -18,4 +16,4 @@
 #define InternalSynchronizationTimer          (InternalBaseType + 11)
 #define InternalQueueType                     (InternalBaseType + 12)
 
-#endif /* !AS_INVOKED */
+

@@ -1,5 +1,5 @@
-#include <msvcrti.h>
 
+#include <msvcrt/internal/rterror.h>
 
 void _purecall(void)
 {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.23 2002/09/07 15:12:57 chorns Exp $
+/* $Id: irq.c,v 1.24 2002/09/08 10:23:29 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -35,16 +35,19 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
-
-#define NDEBUG
-#include <internal/debug.h>
-
+#include <ddk/ntddk.h>
+#include <roscfg.h>
+#include <internal/ke.h>
+#include <internal/ps.h>
+#include <internal/i386/segment.h>
+#include <internal/pool.h>
 
 #ifdef MP
 #include <internal/hal/mps.h>
 #endif /* MP */
 
+#define NDEBUG
+#include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/
 
@@ -311,7 +314,6 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
 #endif /* DBG */
 
    DPRINT("I(%d) ", Vector);
-   DbgPrint("I(%d) ", Vector);
 
    /*
     * Notify the rest of the kernel of the raised irq level
@@ -389,7 +391,6 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
     }
 
   HalEndSystemInterrupt (old_level, 0);
-   DbgPrint("I(%d)exit", Vector);
 }
 
 #else /* MP */

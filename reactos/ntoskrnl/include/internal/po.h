@@ -1,4 +1,4 @@
-/* $Id: po.h,v 1.2 2002/09/07 15:12:51 chorns Exp $
+/* $Id: po.h,v 1.3 2002/09/08 10:23:23 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,8 +12,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_PO_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_PO_H
 
-#ifndef AS_INVOKED
-
 #include <ddk/ntddk.h>
 #include <internal/io.h>
 
@@ -25,7 +23,5 @@ PoInit(VOID);
 NTSTATUS
 PopSetSystemPowerState(
   SYSTEM_POWER_STATE PowerState);
-
-#endif /* !AS_INVOKED */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_PO_H */

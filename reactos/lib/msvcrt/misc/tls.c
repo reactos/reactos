@@ -1,4 +1,8 @@
-#include <msvcrti.h>
+/* tls.c */
+
+#include <windows.h>
+#include <msvcrt/internal/tls.h>
+#include <msvcrt/internal/rterror.h>
 
 
 static unsigned long TlsIndex = (unsigned long)-1;

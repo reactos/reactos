@@ -1,8 +1,9 @@
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
 
 #define NDEBUG
-#include <msvcrtdbg.h>
-
+#include <msvcrt/msvcrtdbg.h>
 
 void _searchenv(const char *file,const char *var,char *path )
 {

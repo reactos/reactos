@@ -1,6 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/string.h>
 
 char *
 strncpy(char *dst, const char *src, size_t n)

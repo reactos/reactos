@@ -1,8 +1,15 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
 
+#include <msvcrt/stdio.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/file.h>
+#include <msvcrt/io.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/errno.h>
 
 int _readcnv(int fn, void *buf, size_t siz  );
 
@@ -57,7 +64,7 @@ _filbuf(FILE *f)
 
 
 
-  f->_cnt = _read(_fileno(f), f->_base, f->_flag & _IONBF ? 1 : f->_bufsiz  );
+  f->_cnt = _read(fileno(f), f->_base, f->_flag & _IONBF ? 1 : f->_bufsiz  );
   f->_flag |= _IOAHEAD;
 
   if(__is_text_file(f) && f->_cnt>0)
@@ -67,7 +74,7 @@ _filbuf(FILE *f)
     if(cz)
     {
       int newcnt = cz - f->_base;
-      _lseek(_fileno(f), -(f->_cnt - newcnt), SEEK_CUR);
+      lseek(fileno(f), -(f->_cnt - newcnt), SEEK_CUR);
       f->_cnt = newcnt;
     }
   }

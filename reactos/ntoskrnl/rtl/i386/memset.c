@@ -1,4 +1,4 @@
-/* $Id: memset.c,v 1.2 2002/09/07 15:13:06 chorns Exp $
+/* $Id: memset.c,v 1.3 2002/09/08 10:23:43 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,7 +9,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
 #include <string.h>
 
 #define NDEBUG

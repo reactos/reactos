@@ -1,6 +1,7 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
 
+#include <msvcrt/process.h>
+#include <msvcrt/stdlib.h>
 
 int _spawnv(int nMode, const char* szPath, char* const* szaArgv)
 {

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.52 2002/09/07 15:12:25 chorns Exp $
+# $Id: makefile,v 1.53 2002/09/08 10:22:41 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,13 +6,15 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = kernel32
 
-TARGET_BASE = 0x78600000
+TARGET_BASE = 0x77f00000
 
-TARGET_CFLAGS = -I./include
+TARGET_CFLAGS = -DKERNEL32_BASE=$(TARGET_DLLBASE)
 
-TARGET_LFLAGS = -nostartfiles -nostdlib
+TARGET_LFLAGS = -nostartfiles
 
 TARGET_SDKLIBS = ntdll.a
+
+TARGET_GCCLIBS = gcc
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

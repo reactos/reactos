@@ -7,11 +7,10 @@
 #ifndef __AFD_H
 #define __AFD_H
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
-#include <ddk/tdikrnl.h>
-#include <ddk/tdiinfo.h>
 #include <winsock2.h>
+#include <ddk/ntddk.h>
+#include <net/tdikrnl.h>
+#include <net/tdiinfo.h>
 #include <afd/shared.h>
 #include <debug.h>
 
@@ -35,6 +34,21 @@ typedef struct _AFDCCB {
 
 /* Flags for CCB structure */
 #define	CCB_CLEANED     0x00000001
+
+/* Borrowed from http://www.acc.umu.se/~bosse/ntifs.h by Bo Branten */
+typedef struct _FSRTL_COMMON_FCB_HEADER {
+    CSHORT          NodeTypeCode;
+    CSHORT          NodeByteSize;
+    UCHAR           Flags;
+    UCHAR           IsFastIoPossible;
+    UCHAR           Flags2;
+    UCHAR           Reserved;
+    PERESOURCE      Resource;
+    PERESOURCE      PagingIoResource;
+    LARGE_INTEGER   AllocationSize;
+    LARGE_INTEGER   FileSize;
+    LARGE_INTEGER   ValidDataLength;
+} FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
 
 typedef struct _FsdNTRequiredFCB {
     FSRTL_COMMON_FCB_HEADER CommonFCBHeader;

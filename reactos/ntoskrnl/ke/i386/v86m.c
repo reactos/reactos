@@ -25,11 +25,15 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/v86m.h>
+#include <internal/trap.h>
+#include <internal/mm.h>
+#include <internal/i386/segment.h>
+#include <string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 

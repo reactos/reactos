@@ -24,11 +24,8 @@
  *                  Created 22/05/98
  */
 
-#include <ntoskrnl.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
+#include <string.h>
 
 void *memchr(const void *s, int c, size_t n)
 {

@@ -10,7 +10,6 @@
 
 #include <ndissys.h>
 
-#define ETH_LENGTH_OF_ADDRESS 6
 
 typedef struct _HARDWARE_ADDRESS {
     union {

@@ -1,7 +1,8 @@
-/* $Id: obsolete.c,v 1.4 2002/09/07 15:12:07 chorns Exp $
+/* $Id: obsolete.c,v 1.5 2002/09/08 10:22:20 chorns Exp $
  *
  */
-#include <ddk/ntddk.h>
+
+#include <ntos.h>
 
 VOID
 STDCALL

@@ -1,5 +1,5 @@
-#include <msvcrti.h>
-
+#include <windows.h>
+#include <msvcrt/direct.h>
 
 char* _getdcwd (int nDrive, char* caBuffer, int nBufLen)
 {

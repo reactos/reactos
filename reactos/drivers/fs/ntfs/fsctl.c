@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.3 2002/09/07 15:12:03 chorns Exp $
+/* $Id: fsctl.c,v 1.4 2002/09/08 10:22:11 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -277,7 +277,7 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   DeviceExt->StreamFileObject->Flags = DeviceExt->StreamFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   DeviceExt->StreamFileObject->FsContext = (PVOID)&Fcb->RFCB;
   DeviceExt->StreamFileObject->FsContext2 = Ccb;
-  DeviceExt->StreamFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+  DeviceExt->StreamFileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
   DeviceExt->StreamFileObject->PrivateCacheMap = NULL;
   DeviceExt->StreamFileObject->Vpb = DeviceExt->Vpb;
   Ccb->Fcb = Fcb;

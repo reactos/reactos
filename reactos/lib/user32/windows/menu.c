@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.4 2002/09/07 15:12:45 chorns Exp $
+/* $Id: menu.c,v 1.5 2002/09/08 10:23:12 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -28,7 +28,9 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <windows.h>
 #include <user32.h>
+#include <debug.h>
 
 /* TYPES *********************************************************************/
 
@@ -255,11 +257,11 @@ GetMenuDefaultItem(
   return 0;
 }
 
-BOOL
+WINBOOL
 STDCALL
 GetMenuInfo(
   HMENU hmenu,
-  LPMENUINFO lpcmi)
+  LPCMENUINFO lpcmi)
 {
   return FALSE;
 }
@@ -281,24 +283,24 @@ GetMenuItemID(
   return 0;
 }
 
-BOOL
+WINBOOL
 STDCALL
 GetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
-  BOOL fByPosition,
-  LPMENUITEMINFOA lpmii)
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii)
 {
   return FALSE;
 }
 
-BOOL
+WINBOOL
 STDCALL
 GetMenuItemInfoW(
   HMENU hMenu,
   UINT uItem,
-  BOOL fByPosition,
-  LPMENUITEMINFOW lpmii)
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii)
 {
   return FALSE;
 }
@@ -383,7 +385,7 @@ InsertMenuItemA(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPCMENUITEMINFOA lpmii)
+  LPCMENUITEMINFO lpmii)
 {
   return FALSE;
 }
@@ -394,7 +396,7 @@ InsertMenuItemW(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPCMENUITEMINFOW lpmii)
+  LPCMENUITEMINFO lpmii)
 {
   return FALSE;
 }
@@ -536,8 +538,8 @@ STDCALL
 SetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
-  BOOL fByPosition,
-  LPCMENUITEMINFOA lpmii)
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii)
 {
   return FALSE;
 }
@@ -547,8 +549,8 @@ STDCALL
 SetMenuItemInfoW(
   HMENU hMenu,
   UINT uItem,
-  BOOL fByPosition,
-  LPCMENUITEMINFOW lpmii)
+  WINBOOL fByPosition,
+  LPMENUITEMINFO lpmii)
 {
   return FALSE;
 }

@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.3 2002/09/07 15:12:40 chorns Exp $
+/* $Id: atom.c,v 1.4 2002/09/08 10:23:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
+#include <ntos/heap.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
+
 
 /* LOCAL TYPES ***************************************************************/
 
@@ -625,11 +627,11 @@ RtlpInitAtomTableLock(PRTL_ATOM_TABLE AtomTable)
 {
    AtomTable->Lock = RtlAllocateHeap(RtlGetProcessHeap(),
 				     HEAP_ZERO_MEMORY,
-				     sizeof(RTL_CRITICAL_SECTION));
+				     sizeof(CRITICAL_SECTION));
    if (AtomTable->Lock == NULL)
      return STATUS_NO_MEMORY;
 
-   RtlInitializeCriticalSection((PRTL_CRITICAL_SECTION)AtomTable->Lock);
+   RtlInitializeCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
 
    return STATUS_SUCCESS;
 }
@@ -640,7 +642,7 @@ RtlpDestroyAtomTableLock(PRTL_ATOM_TABLE AtomTable)
 {
    if (AtomTable->Lock)
      {
-	RtlDeleteCriticalSection((PRTL_CRITICAL_SECTION)AtomTable->Lock);
+	RtlDeleteCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
 	RtlFreeHeap(RtlGetProcessHeap(),
 		    0,
 		    AtomTable->Lock);
@@ -652,7 +654,7 @@ RtlpDestroyAtomTableLock(PRTL_ATOM_TABLE AtomTable)
 static BOOLEAN
 RtlpLockAtomTable(PRTL_ATOM_TABLE AtomTable)
 {
-   RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)AtomTable->Lock);
+   RtlEnterCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
    return TRUE;
 }
 
@@ -660,7 +662,7 @@ RtlpLockAtomTable(PRTL_ATOM_TABLE AtomTable)
 static VOID
 RtlpUnlockAtomTable(PRTL_ATOM_TABLE AtomTable)
 {
-   RtlLeaveCriticalSection((PRTL_CRITICAL_SECTION)AtomTable->Lock);
+   RtlLeaveCriticalSection((PCRITICAL_SECTION)AtomTable->Lock);
 }
 
 

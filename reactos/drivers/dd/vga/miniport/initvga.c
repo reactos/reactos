@@ -1,7 +1,4 @@
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
-#include <ntos/ntddvid.h>
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <debug.h>
 #include "vgavideo.h"
 
@@ -71,7 +68,7 @@ void InitVGAMode()
 {
   int i;
   VIDEO_X86_BIOS_ARGUMENTS vxba;
-  NTSTATUS vps;
+  VP_STATUS vps;
   
   // FIXME: Use Vidport to map the memory properly
   vidmem = (char *)(0xd0000000 + 0xa0000);
@@ -105,7 +102,7 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
   UNICODE_STRING Name = UNICODE_STRING_INITIALIZER(L"\\TextConsoleRefreshEvent");
   NTSTATUS Status;
   VIDEO_X86_BIOS_ARGUMENTS vxba;
-  NTSTATUS vps;
+  VP_STATUS vps;
   ULONG ThreadRelease = 1;
   
   CHECKPOINT;
@@ -126,3 +123,6 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
     ZwClose( Event );
   }
 }
+
+
+

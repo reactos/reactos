@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.28 2002/09/07 15:12:28 chorns Exp $
+/* $Id: thread.c,v 1.29 2002/09/08 10:22:46 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,15 +12,16 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
-#include <string.h>
-#include <kernel32/error.h>
 #include <kernel32/thread.h>
+#include <ntdll/ldr.h>
+#include <string.h>
+#include <napi/i386/segment.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 static VOID ThreadAttachDlls (VOID);
@@ -97,10 +98,10 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
 #if 0
   InitialTeb.StackCommit = (dwStackSize == 0) ? PAGESIZE : dwStackSize;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
 
   /* size of guard page */
-  InitialTeb.StackCommit += PAGE_SIZE;
+  InitialTeb.StackCommit += PAGESIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -153,7 +154,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
   /* Protect guard page */
   Status = NtProtectVirtualMemory(hProcess,
 				  InitialTeb.StackLimit,
-				  PAGE_SIZE,
+				  PAGESIZE,
 				  PAGE_GUARD | PAGE_READWRITE,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))

@@ -1,9 +1,9 @@
 
-/* $Id: stubs.c,v 1.5 2002/09/07 15:12:07 chorns Exp $
+/* $Id: stubs.c,v 1.6 2002/09/08 10:22:20 chorns Exp $
  *
  */
-#include <ddk/ntddk.h>
-#include <ddk/tdi.h>
+#include <ntos.h>
+#include <net/tdi.h>
 
 VOID 
 STDCALL

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2002/09/07 15:12:28 chorns Exp $
+# $Id: makefile,v 1.7 2002/09/08 10:22:46 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = msafd
 
-TARGET_BASE = 0x77300000
+TARGET_BASE = 0x777a0000
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

@@ -1,8 +1,8 @@
 #ifndef _INCLUDE_KERNEL32_H
 #define _INCLUDE_KERNEL32_H
-/* $Id: error.h,v 1.2 2002/09/07 15:12:16 chorns Exp $ */
+/* $Id: error.h,v 1.3 2002/09/08 10:22:30 chorns Exp $ */
 #include <windows.h>
-#define NTOS_USER_MODE
+#define NTOS_MODE_USER
 #include <ntos.h>
 DWORD
 STDCALL

@@ -9,13 +9,13 @@
 
 /* INCLUDES ****************************************************************/
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <string.h>
 #include <ntos/keyboard.h>
+#include <ntos/minmax.h>
+
 #include <ddk/ntddkbd.h>
 #include <ddk/ntdd8042.h>
-#include <string.h>
-#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <debug.h>

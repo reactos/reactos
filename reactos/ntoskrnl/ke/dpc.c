@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.23 2002/09/07 15:12:56 chorns Exp $
+/* $Id: dpc.c,v 1.24 2002/09/08 10:23:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,11 +36,11 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* TYPES *******************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.30 2002/09/07 15:12:53 chorns Exp $
+/* $Id: symlink.c,v 1.31 2002/09/08 10:23:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <limits.h>
+#include <ddk/ntddk.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS ******************************************************************/
 
@@ -303,7 +304,7 @@ IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 		NULL,
 		NULL
 		);
-	Status = ObRosCreateObject(
+	Status = ObCreateObject(
 			NULL,
 			SYMBOLIC_LINK_ALL_ACCESS,
 			& ObjectAttributes,
@@ -416,7 +417,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 	  ObjectAttributes,
 	  DeviceName->Buffer);
 
-   Status = ObRosCreateObject(SymbolicLinkHandle,
+   Status = ObCreateObject(SymbolicLinkHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   IoSymbolicLinkType,

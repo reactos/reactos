@@ -7,12 +7,12 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#include <ddk/ntddndis.h>
 #include <miniport.h>
 #include <protocol.h>
 #ifdef DBG
 #include <buffer.h>
 #endif /* DBG */
+
 
 /* Number of media we know */
 #define MEDIA_ARRAY_SIZE    15
@@ -142,8 +142,8 @@ MiniIndicateData(
 
         KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
-        (*AdapterBinding->ProtocolBinding->Chars.ReceiveHandler)(
-            AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+        (*AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler)(
+            AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
             MacReceiveContext,
             HeaderBuffer,
             HeaderBufferSize,
@@ -187,7 +187,7 @@ MiniEthReceiveComplete(
         KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
         (*AdapterBinding->ProtocolBinding->Chars.ReceiveCompleteHandler)(
-            AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext);
+            AdapterBinding->NdisOpenBlock.ProtocolBindingContext);
 
         KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
@@ -260,8 +260,8 @@ MiniSendComplete(
 
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
-    (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
-        AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+    (*AdapterBinding->ProtocolBinding->Chars.u2.SendCompleteHandler)(
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
 }
@@ -287,8 +287,8 @@ MiniTransferDataComplete(
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-    (*AdapterBinding->ProtocolBinding->Chars.TransferDataCompleteHandler)(
-        AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+    (*AdapterBinding->ProtocolBinding->Chars.u3.TransferDataCompleteHandler)(
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status,
         BytesTransferred);
@@ -493,11 +493,9 @@ MiniQueueWorkItem(
     } else {
         Item = ExAllocatePool(NonPagedPool, sizeof(NDIS_MINIPORT_WORK_ITEM));
         if (Item) {
-#if 0
             /* Set flag so we know that the buffer should be freed
                when work item is dequeued */
             Item->Allocated = TRUE;
-#endif
         } else {
             NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
             return NDIS_STATUS_RESOURCES;
@@ -506,9 +504,8 @@ MiniQueueWorkItem(
 
     Item->WorkItemType    = WorkItemType;
     Item->WorkItemContext = WorkItemContext;
-#if 0
     Item->Initiator       = Initiator;
-#endif
+
     Item->Link.Next = NULL;
     if (!Adapter->WorkQueueHead) {
         Adapter->WorkQueueHead = Item;
@@ -554,12 +551,9 @@ MiniDequeueWorkItem(
 
         *WorkItemType    = Item->WorkItemType;
         *WorkItemContext = Item->WorkItemContext;
-#if 0
         *Initiator       = Item->Initiator;
+
         if (Item->Allocated) {
-#else
-        if (TRUE) {
-#endif
             ExFreePool(Item);
         } else {
             Adapter->WorkQueueLevel--;
@@ -716,7 +710,7 @@ VOID STDCALL MiniportDpc(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCloseLog(
     IN  NDIS_HANDLE LogHandle)
 {
@@ -725,7 +719,7 @@ NdisMCloseLog(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMCreateLog(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  UINT            Size,
@@ -738,7 +732,7 @@ NdisMCreateLog(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMDeregisterAdapterShutdownHandler(
     IN  NDIS_HANDLE MiniportHandle)
 {
@@ -747,7 +741,7 @@ NdisMDeregisterAdapterShutdownHandler(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMFlushLog(
     IN  NDIS_HANDLE LogHandle)
 {
@@ -755,10 +749,8 @@ NdisMFlushLog(
 }
 
 
-#undef NdisMIndicateStatus
-
 VOID
-STDCALL
+EXPORT
 NdisMIndicateStatus(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS GeneralStatus,
@@ -769,10 +761,8 @@ NdisMIndicateStatus(
 }
 
 
-#undef NdisMIndicateStatusComplete
-
 VOID
-STDCALL
+EXPORT
 NdisMIndicateStatusComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
@@ -781,7 +771,7 @@ NdisMIndicateStatusComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisInitializeWrapper(
     OUT PNDIS_HANDLE    NdisWrapperHandle,
     IN  PVOID           SystemSpecific1,
@@ -826,10 +816,8 @@ NdisInitializeWrapper(
 }
 
 
-#undef NdisMQueryInformationComplete
-
 VOID
-STDCALL
+EXPORT
 NdisMQueryInformationComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS Status)
@@ -840,14 +828,14 @@ NdisMQueryInformationComplete(
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     (*AdapterBinding->ProtocolBinding->Chars.RequestCompleteHandler)(
-        AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Adapter->NdisMiniportBlock.MediaRequest,
         Status);
 }
 
 
 VOID
-STDCALL
+EXPORT
 NdisMRegisterAdapterShutdownHandler(
     IN  NDIS_HANDLE                 MiniportHandle,
     IN  PVOID                       ShutdownContext,
@@ -954,7 +942,7 @@ DoQueries(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMRegisterMiniport(
     IN  NDIS_HANDLE                     NdisWrapperHandle,
     IN  PNDIS_MINIPORT_CHARACTERISTICS  MiniportCharacteristics,
@@ -984,15 +972,15 @@ NdisMRegisterMiniport(
 
     switch (MiniportCharacteristics->MajorNdisVersion) {
     case 0x03:
-        MinSize = sizeof(NDIS30_MINIPORT_CHARACTERISTICS);
+        MinSize = sizeof(NDIS30_MINIPORT_CHARACTERISTICS_S);
         break;
 
     case 0x04:
-        MinSize = sizeof(NDIS40_MINIPORT_CHARACTERISTICS);
+        MinSize = sizeof(NDIS40_MINIPORT_CHARACTERISTICS_S);
         break;
 
     case 0x05:
-        MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS);
+        MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS_S);
         break;
 
     default:
@@ -1042,7 +1030,7 @@ NdisMRegisterMiniport(
 
     /* Create the device object for this adapter */
     /* FIXME: Use GUIDs */
-    RtlInitUnicodeString(&Adapter->DeviceName, L"\\Device\\ne2000");
+    RtlInitUnicodeStringFromLiteral(&Adapter->DeviceName, L"\\Device\\ne2000");
     Status = IoCreateDevice(Miniport->DriverObject,
                             0,
                             &Adapter->DeviceName,
@@ -1109,11 +1097,11 @@ NdisMRegisterMiniport(
             AddressOID = OID_802_3_CURRENT_ADDRESS;
             Adapter->AddressLength = ETH_LENGTH_OF_ADDRESS;
 
-            Adapter->NdisMiniportBlock.FilterDbs.EthDB = ExAllocatePool(NonPagedPool,
+            Adapter->NdisMiniportBlock.FilterDbs.u.EthDB = ExAllocatePool(NonPagedPool,
                                                         sizeof(ETH_FILTER));
-            if (Adapter->NdisMiniportBlock.FilterDbs.EthDB) {
-                RtlZeroMemory(Adapter->NdisMiniportBlock.FilterDbs.EthDB, sizeof(ETH_FILTER));
-                Adapter->NdisMiniportBlock.FilterDbs.EthDB->Miniport = (PNDIS_MINIPORT_BLOCK)Adapter;
+            if (Adapter->NdisMiniportBlock.FilterDbs.u.EthDB) {
+                RtlZeroMemory(Adapter->NdisMiniportBlock.FilterDbs.u.EthDB, sizeof(ETH_FILTER));
+                Adapter->NdisMiniportBlock.FilterDbs.u.EthDB->Miniport = (PNDIS_MINIPORT_BLOCK)Adapter;
             } else
                 MemError = TRUE;
             break;
@@ -1154,7 +1142,7 @@ NdisMRegisterMiniport(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMResetComplete(
     IN NDIS_HANDLE MiniportAdapterHandle,
     IN NDIS_STATUS Status,
@@ -1167,7 +1155,7 @@ NdisMResetComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMSendComplete(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  PNDIS_PACKET    Packet,
@@ -1188,7 +1176,7 @@ NdisMSendComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMSendResourcesAvailable(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
@@ -1197,7 +1185,7 @@ NdisMSendResourcesAvailable(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMTransferDataComplete(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  PNDIS_PACKET    Packet,
@@ -1211,10 +1199,8 @@ NdisMTransferDataComplete(
 }
 
 
-#undef NdisMSetInformationComplete
-
 VOID
-STDCALL
+EXPORT
 NdisMSetInformationComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS Status)
@@ -1225,16 +1211,14 @@ NdisMSetInformationComplete(
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     (*AdapterBinding->ProtocolBinding->Chars.RequestCompleteHandler)(
-        AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Adapter->NdisMiniportBlock.MediaRequest,
         Status);
 }
 
 
-#undef NdisMSetAttributes
-
 VOID
-STDCALL
+EXPORT
 NdisMSetAttributes(
     IN  NDIS_HANDLE         MiniportAdapterHandle,
     IN  NDIS_HANDLE         MiniportAdapterContext,
@@ -1261,7 +1245,7 @@ NdisMSetAttributes(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMSetAttributesEx(
     IN  NDIS_HANDLE         MiniportAdapterHandle,
     IN  NDIS_HANDLE         MiniportAdapterContext,
@@ -1284,7 +1268,7 @@ NdisMSetAttributesEx(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMSleep(
     IN  ULONG   MicrosecondsToSleep)
 {
@@ -1293,7 +1277,7 @@ NdisMSleep(
 
 
 BOOLEAN
-STDCALL
+EXPORT
 NdisMSynchronizeWithInterrupt(
     IN  PNDIS_MINIPORT_INTERRUPT    Interrupt,
     IN  PVOID                       SynchronizeFunction,
@@ -1306,7 +1290,7 @@ NdisMSynchronizeWithInterrupt(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMWriteLogData(
     IN  NDIS_HANDLE LogHandle,
     IN  PVOID       LogBuffer,
@@ -1319,7 +1303,7 @@ NdisMWriteLogData(
 
 
 VOID
-STDCALL
+EXPORT
 NdisTerminateWrapper(
     IN  NDIS_HANDLE NdisWrapperHandle,
     IN  PVOID       SystemSpecific)

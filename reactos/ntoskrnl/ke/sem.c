@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sem.c,v 1.10 2002/09/07 15:12:57 chorns Exp $
+/* $Id: sem.c,v 1.11 2002/09/08 10:23:29 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
@@ -28,11 +28,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ke.h>
+#include <internal/id.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 

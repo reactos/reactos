@@ -1,4 +1,4 @@
-/* $Id: timezone.c,v 1.3 2002/09/07 15:13:06 chorns Exp $
+/* $Id: timezone.c,v 1.4 2002/09/08 10:23:42 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,10 +11,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/registry.h>
+#include <ntos/time.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <ntdll/ntdll.h>
 
 
 /* FUNCTIONS *****************************************************************/
@@ -78,7 +80,7 @@ RtlQueryTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
    QueryTable[6].Name = L"Daylight Start";
    QueryTable[6].Flags = RTL_QUERY_REGISTRY_DIRECT;
    QueryTable[6].EntryContext = &TimeZoneInformation->DaylightDate;
-
+   
    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
 				   (PWSTR)KeyHandle,
 				   QueryTable,

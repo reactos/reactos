@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.7 2002/09/07 15:12:40 chorns Exp $
+/* $Id: acl.c,v 1.8 2002/09/08 10:23:04 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,11 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
 
 /* FUNCTIONS ***************************************************************/
 
@@ -108,7 +106,7 @@ RtlpAddKnownAce(PACL Acl,
 		PSID Sid,
 		ULONG Type)
 {
-  PROS_ACE Ace;
+  PACE Ace;
 
   if (!RtlValidSid(Sid))
     {
@@ -123,7 +121,7 @@ RtlpAddKnownAce(PACL Acl,
     {
       Revision = Acl->AclRevision;
     }
-  if (!RtlFirstFreeAce(Acl, (PACE*)&Ace))
+  if (!RtlFirstFreeAce(Acl, &Ace))
     {
       return(STATUS_INVALID_ACL);
     }
@@ -131,14 +129,14 @@ RtlpAddKnownAce(PACL Acl,
     {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
     }
-  if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ROS_ACE)) >=
+  if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >=
       ((PVOID)Acl + Acl->AclSize))
     {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
     }
   Ace->Header.AceFlags = 0;
   Ace->Header.AceType = Type;
-  Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ROS_ACE);
+  Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
   Ace->Header.AccessMask = AccessMask;
   RtlCopySid(RtlLengthSid(Sid), (PSID)(Ace + 1), Sid);
   Acl->AceCount++;
@@ -275,7 +273,7 @@ RtlAddAuditAccessAce(PACL Acl,
 		     BOOLEAN Success,
 		     BOOLEAN Failure)
 {
-  PROS_ACE Ace;
+  PACE Ace;
   ULONG Flags = 0;
 
   if (Success != FALSE)
@@ -304,7 +302,7 @@ RtlAddAuditAccessAce(PACL Acl,
       Revision = Acl->AclRevision;
     }
 
-  if (!RtlFirstFreeAce(Acl, (PACE*)&Ace))
+  if (!RtlFirstFreeAce(Acl, &Ace))
     {
       return(STATUS_INVALID_ACL);
     }

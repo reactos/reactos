@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <defines.h>
 #include <reactos/resource.h>
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US

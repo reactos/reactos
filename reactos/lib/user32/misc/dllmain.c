@@ -1,5 +1,6 @@
-
-#include <user32.h>
+#include <windows.h>
+#include <debug.h>
+#include <user32/callback.h>
 
 #ifdef DBG
 

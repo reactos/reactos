@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.12 2002/09/07 15:12:57 chorns Exp $
+/* $Id: spinlock.c,v 1.13 2002/09/08 10:23:29 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,11 +16,10 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <roscfg.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -61,11 +60,11 @@ KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
  *           SpinLock = Caller supplied storage for the spinlock
  */
 {
-   *SpinLock = 0;
+   SpinLock->Lock = 0;
 }
 
-VOID FASTCALL
-KefAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
+VOID STDCALL
+KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 /*
  * FUNCTION: Acquires a spinlock when the caller is already running at 
  * dispatch level
@@ -79,13 +78,13 @@ KefAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
     * FIXME: This depends on gcc assembling this test to a single load from
     * the spinlock's value.
     */
-   if ((ULONG)*SpinLock >= 2)
+   if ((ULONG)SpinLock->Lock >= 2)
      {
-	DbgPrint("Lock %x has bad value %x\n", SpinLock, *SpinLock);
+	DbgPrint("Lock %x has bad value %x\n", SpinLock, SpinLock->Lock);
 	KeBugCheck(0);
      }
    
-   while ((i = InterlockedExchange(SpinLock, 1)) == 1)
+   while ((i = InterlockedExchange(&SpinLock->Lock, 1)) == 1)
      {
 #ifndef MP
        DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
@@ -96,39 +95,6 @@ KefAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
      }
 }
 
-#undef KeAcquireSpinLockAtDpcLevel
-
-VOID STDCALL
-KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
-/*
- * FUNCTION: Acquires a spinlock when the caller is already running at 
- * dispatch level
- * ARGUMENTS:
- *        SpinLock = Spinlock to acquire
- */
-{
-  KefAcquireSpinLockAtDpcLevel (SpinLock);
-}
-
-VOID FASTCALL
-KefReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
-/*
- * FUNCTION: Releases a spinlock when the caller was running at dispatch
- * level before acquiring it
- * ARGUMENTS: 
- *         SpinLock = Spinlock to release
- */
-{
-   if (*SpinLock != 1)
-     {
-	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
-	KeBugCheck(0);
-     }
-   (void)InterlockedExchange(SpinLock, 0);
-}
-
-#undef KeReleaseSpinLockFromDpcLevel
-
 VOID STDCALL
 KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
 /*
@@ -138,7 +104,12 @@ KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
  *         SpinLock = Spinlock to release
  */
 {
-  KefReleaseSpinLockFromDpcLevel (SpinLock);
+   if (SpinLock->Lock != 1)
+     {
+	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
+	KeBugCheck(0);
+     }
+   (void)InterlockedExchange(&SpinLock->Lock, 0);
 }
 
 /* EOF */

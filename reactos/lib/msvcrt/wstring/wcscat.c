@@ -1,5 +1,6 @@
-#include <msvcrti.h>
 
+
+#include <msvcrt/string.h>
 
 wchar_t * wcscat(wchar_t * dest,const wchar_t * src)
 {

@@ -1,5 +1,8 @@
-#include <msvcrti.h>
-
+#include <msvcrt/signal.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/file.h>
 
 void _default_handler(int signal);
 
@@ -7,7 +10,7 @@ typedef struct _sig_element
 {
 	int signal;
 	char *signame;
-	__p_sig_fn_t handler;
+	_p_sig_fn_t handler;
 } sig_element;
 
 static sig_element signal_list[SIGMAX] =
@@ -35,9 +38,9 @@ static sig_element signal_list[SIGMAX] =
 
 int nsignal = 21;
 
-__p_sig_fn_t	signal(int sig, __p_sig_fn_t func)
+_p_sig_fn_t	signal(int sig, _p_sig_fn_t func)
 {
-  __p_sig_fn_t temp;
+  _p_sig_fn_t temp;
   int i;
   if(sig <= 0 || sig > SIGMAX || sig == SIGKILL)
   {
@@ -46,7 +49,7 @@ __p_sig_fn_t	signal(int sig, __p_sig_fn_t func)
   }
 // check with IsBadCodePtr
 
-  if ( func < (__p_sig_fn_t)4096 ) {
+  if ( func < (_p_sig_fn_t)4096 ) {
 	__set_errno(EINVAL);
 	return SIG_ERR;
   }
@@ -72,7 +75,7 @@ __p_sig_fn_t	signal(int sig, __p_sig_fn_t func)
 int
 raise(int sig)
 {
-  __p_sig_fn_t temp = SIG_DFL;
+  _p_sig_fn_t temp = SIG_DFL;
   int i;
   if(sig <= 0)
     return -1;
@@ -83,10 +86,10 @@ raise(int sig)
   		temp = signal_list[i].handler;
 	}
   }
-  if(temp == (__p_sig_fn_t)SIG_IGN
-     || (sig == SIGQUIT && temp == (__p_sig_fn_t)SIG_DFL))
+  if(temp == (_p_sig_fn_t)SIG_IGN
+     || (sig == SIGQUIT && temp == (_p_sig_fn_t)SIG_DFL))
     return 0;			/* Ignore it */
-  if(temp == (__p_sig_fn_t)SIG_DFL)
+  if(temp == (_p_sig_fn_t)SIG_DFL)
     _default_handler(sig); /* this does not return */
   else
     temp(sig);

@@ -11,7 +11,7 @@
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisAnsiStringToUnicodeString(
     IN OUT  PNDIS_STRING        DestinationString,
     IN      PNDIS_ANSI_STRING   SourceString)
@@ -28,10 +28,8 @@ NdisAnsiStringToUnicodeString(
 }
 
 
-#undef NdisEqualString
-
 BOOLEAN
-STDCALL
+EXPORT
 NdisEqualString(
     IN  PNDIS_STRING    String1,
     IN  PNDIS_STRING    String2,
@@ -45,14 +43,14 @@ NdisEqualString(
  */
 {
     return RtlEqualUnicodeString(
-        (CONST UNICODE_STRING*)String1,
-        (CONST UNICODE_STRING*)String2,
+        (PUNICODE_STRING)String1,
+        (PUNICODE_STRING)String2,
         CaseInsensitive);
 }
 
 
 VOID
-STDCALL
+EXPORT
 NdisInitAnsiString(
     IN OUT  PNDIS_ANSI_STRING   DestinationString,
     IN      PCSTR               SourceString)
@@ -70,7 +68,7 @@ NdisInitAnsiString(
 
 
 VOID
-STDCALL
+EXPORT
 NdisInitializeString(
     IN OUT  PNDIS_STRING    DestinationString,
     IN      PUCHAR          SourceString)
@@ -95,7 +93,7 @@ NdisInitializeString(
 
 
 VOID
-STDCALL
+EXPORT
 NdisInitUnicodeString(
     IN OUT  PNDIS_STRING    DestinationString,
     IN      PCWSTR          SourceString)
@@ -113,7 +111,7 @@ NdisInitUnicodeString(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisUnicodeStringToAnsiString(
     IN OUT  PNDIS_ANSI_STRING   DestinationString,
     IN      PNDIS_STRING        SourceString)
@@ -132,7 +130,7 @@ NdisUnicodeStringToAnsiString(
 
 
 NTSTATUS
-STDCALL
+EXPORT
 NdisUpcaseUnicodeString(
     OUT PUNICODE_STRING DestinationString,  
     IN  PUNICODE_STRING SourceString)

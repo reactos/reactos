@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_INTERNAL_PORT_H
 #define __INCLUDE_INTERNAL_PORT_H
 
-#ifndef AS_INVOKED
+#include <napi/lpc.h>
 
 typedef struct _EPORT_LISTENER
 {
@@ -43,7 +43,7 @@ typedef struct _EPORT_TERMINATION_REQUEST
 
 typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
 {
-  LPC_MESSAGE MessageHeader;
+  LPC_MESSAGE_HEADER MessageHeader;
   PEPROCESS ConnectingProcess;
   struct _SECTION_OBJECT* SendSectionObject;
   LARGE_INTEGER SendSectionOffset;
@@ -54,7 +54,7 @@ typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
 
 typedef struct _EPORT_CONNECT_REPLY_MESSAGE
 {
-  LPC_MESSAGE MessageHeader;
+  LPC_MESSAGE_HEADER MessageHeader;
   PVOID SendServerViewBase;
   ULONG ReceiveClientViewSize;
   PVOID ReceiveClientViewBase;
@@ -142,6 +142,5 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
 		      IN	ULONG		MessageType,
 		      IN	PEPORT		Sender);
 
-#endif /* !AS_INVOKED */
 
 #endif /* __INCLUDE_INTERNAL_PORT_H */

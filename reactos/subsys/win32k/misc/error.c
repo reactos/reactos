@@ -7,8 +7,7 @@
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  */
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <include/error.h>
 
 

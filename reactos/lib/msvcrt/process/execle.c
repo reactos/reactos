@@ -1,4 +1,6 @@
-#include <msvcrti.h>
+#include <msvcrt/process.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/stdarg.h>
 
 
 // fixme rewrite to pass the array variants to va_list variant

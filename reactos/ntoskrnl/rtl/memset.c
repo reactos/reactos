@@ -1,8 +1,5 @@
-#include <ntoskrnl.h>
 
-#define NDEBUG
-#include <internal/debug.h>
-
+#include <string.h>
 
 void * memset(void *src, int val, size_t count)
 {

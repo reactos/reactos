@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.18 2002/09/07 15:13:08 chorns Exp $
+/* $Id: wapi.c,v 1.19 2002/09/08 10:23:45 chorns Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -10,13 +10,13 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ntdll/rtl.h>
 #include <csrss/csrss.h>
-#include "api.h"
-
 #include <debug.h>
+
+#include "api.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -81,7 +81,7 @@ static void Thread_Api2(HANDLE ServerPort)
 	if ( LpcRequest.Header.MessageType == LPC_PORT_CLOSED )
 
 	  {
-	     CsrFreeProcessData( (ULONG)LpcRequest.Header.ClientId.UniqueProcess );
+	     CsrFreeProcessData( (ULONG)LpcRequest.Header.Cid.UniqueProcess );
 	     NtClose(ServerPort);
 	     NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
 	     continue;
@@ -91,7 +91,7 @@ static void Thread_Api2(HANDLE ServerPort)
 	Reply = (PCSRSS_API_REPLY)&LpcReply;
 	
 	ProcessData = CsrGetProcessData(
-				  (ULONG)LpcRequest.Header.ClientId.UniqueProcess);
+				  (ULONG)LpcRequest.Header.Cid.UniqueProcess);
 	
 //	DisplayString(L"CSR: Received request\n");
 	if( Request->Type >= (sizeof( CsrFuncs ) / sizeof( CsrFunc )) - 1 )
@@ -141,7 +141,7 @@ void Thread_Api(PVOID PortHandle)
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }
 
-	ProcessData = CsrGetProcessData(Request.Header.ClientId.UniqueProcess);
+	ProcessData = CsrGetProcessData(Request.Header.Cid.UniqueProcess);
 	ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
 	ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
 	

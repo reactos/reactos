@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.34 2002/09/07 15:11:58 chorns Exp $
+/* $Id: blue.c,v 1.35 2002/09/08 10:22:04 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -11,9 +11,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntddblue.h>
 #include <string.h>
+#include <defines.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.6 2002/09/07 15:12:53 chorns Exp $
+/* $Id: shutdown.c,v 1.7 2002/09/08 10:23:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* LOCAL DATA ***************************************************************/
 

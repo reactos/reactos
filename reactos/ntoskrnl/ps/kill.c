@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.56 2002/09/07 15:13:05 chorns Exp $
+/* $Id: kill.c,v 1.57 2002/09/08 10:23:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,16 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ps.h>
+#include <internal/ke.h>
+#include <internal/mm.h>
+#include <internal/ob.h>
+#include <internal/port.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.4 2002/09/07 15:12:02 chorns Exp $
+/* $Id: finfo.c,v 1.5 2002/09/08 10:22:10 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -9,6 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <ddk/ntddk.h>
 #include "msfs.h"
 
 #define NDEBUG
@@ -30,19 +31,19 @@ MsfsQueryMailslotInformation(PMSFS_FCB Fcb,
 
    Mailslot = Fcb->Mailslot;
 
-   Buffer->MaximumMessageSize = Mailslot->MaxMessageSize;
-   Buffer->ReadTimeout = Mailslot->TimeOut;
+   Buffer->MaxMessageSize = Mailslot->MaxMessageSize;
+   Buffer->Timeout = Mailslot->TimeOut;
 
    KeAcquireSpinLock(&Mailslot->MessageListLock, &oldIrql);
-   Buffer->MessagesAvailable = Mailslot->MessageCount;
+   Buffer->MessageCount = Mailslot->MessageCount;
    if (Mailslot->MessageCount == 0)
      {
-	Buffer->NextMessageSize = 0;
+	Buffer->NextSize = 0;
      }
    else
      {
 	/* FIXME: read size of first message (head) */
-	Buffer->NextMessageSize = 0;
+	Buffer->NextSize = 0;
      }
    KeReleaseSpinLock(&Mailslot->MessageListLock, oldIrql);
    
@@ -60,7 +61,7 @@ MsfsSetMailslotInformation(PMSFS_FCB Fcb,
    if (*BufferLength < sizeof(FILE_MAILSLOT_SET_INFORMATION))
      return(STATUS_BUFFER_OVERFLOW);
 
-   Fcb->Mailslot->TimeOut = Buffer->ReadTimeout;
+   Fcb->Mailslot->TimeOut = Buffer->Timeout;
 
    return(STATUS_SUCCESS);
 }

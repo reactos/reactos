@@ -1,13 +1,10 @@
 #ifndef __INTERNAL_POOL_H
 #define __INTERNAL_POOL_H
 
-#ifndef AS_INVOKED
-
-PVOID STDCALL 
-ExAllocateNonPagedPoolWithTag(ULONG Type,
-  ULONG Size,
-  ULONG Tag,
-  PVOID Caller);
+PVOID STDCALL ExAllocateNonPagedPoolWithTag (POOL_TYPE	type, 
+					     ULONG		size, 
+					     ULONG		Tag,
+					     PVOID		Caller);
 
 PVOID STDCALL ExAllocatePagedPoolWithTag (POOL_TYPE	Type,
 					  ULONG		size,
@@ -27,7 +24,5 @@ extern ULONG MmPagedPoolSize;
  * Maximum size of the kmalloc area (this is totally arbitary)
  */
 #define NONPAGED_POOL_SIZE   (100*1024*1024)
-
-#endif /* !AS_INVOKED */
 
 #endif /* __INTERNAL_POOL_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdfs.c,v 1.6 2002/09/07 15:12:01 chorns Exp $
+/* $Id: cdfs.c,v 1.7 2002/09/08 10:22:09 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,9 +28,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <ddk/ntdddisk.h>
-#include <ddk/ntddcdrm.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -122,7 +119,7 @@ FsRecCdfsFsControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IRP_MN_LOAD_FILE_SYSTEM:
 	DPRINT("Cdfs: IRP_MN_LOAD_FILE_SYSTEM\n");
-	RtlInitUnicodeString(&RegistryPath,
+	RtlInitUnicodeStringFromLiteral(&RegistryPath,
 			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Cdfs");
 	Status = ZwLoadDriver(&RegistryPath);
 	if (!NT_SUCCESS(Status))

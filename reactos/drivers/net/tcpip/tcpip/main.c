@@ -717,7 +717,7 @@ DriverEntry(
   /* FIXME: Create symbolic links in Win32 namespace */
 
   /* Create IP device object */
-  RtlInitUnicodeString(&strDeviceName, DD_IP_DEVICE_NAME);
+  RtlInitUnicodeStringFromLiteral(&strDeviceName, DD_IP_DEVICE_NAME);
   Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
     FILE_DEVICE_NETWORK, 0, FALSE, &IPDeviceObject);
   if (!NT_SUCCESS(Status)) {
@@ -726,7 +726,7 @@ DriverEntry(
   }
 
   /* Create RawIP device object */
-  RtlInitUnicodeString(&strDeviceName, DD_RAWIP_DEVICE_NAME);
+  RtlInitUnicodeStringFromLiteral(&strDeviceName, DD_RAWIP_DEVICE_NAME);
   Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
     FILE_DEVICE_NETWORK, 0, FALSE, &RawIPDeviceObject);
   if (!NT_SUCCESS(Status)) {
@@ -736,7 +736,7 @@ DriverEntry(
   }
 
   /* Create UDP device object */
-  RtlInitUnicodeString(&strDeviceName, DD_UDP_DEVICE_NAME);
+  RtlInitUnicodeStringFromLiteral(&strDeviceName, DD_UDP_DEVICE_NAME);
   Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
     FILE_DEVICE_NETWORK, 0, FALSE, &UDPDeviceObject);
   if (!NT_SUCCESS(Status)) {
@@ -746,7 +746,7 @@ DriverEntry(
   }
 
   /* Create TCP device object */
-  RtlInitUnicodeString(&strDeviceName, DD_TCP_DEVICE_NAME);
+  RtlInitUnicodeStringFromLiteral(&strDeviceName, DD_TCP_DEVICE_NAME);
   Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
     FILE_DEVICE_NETWORK, 0, FALSE, &TCPDeviceObject);
   if (!NT_SUCCESS(Status)) {

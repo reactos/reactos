@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.5 2002/09/07 15:12:10 chorns Exp $
+/* $Id: kdbg.c,v 1.6 2002/09/08 10:22:24 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <hal.h>
+#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -65,7 +65,7 @@
 
 /* GLOBAL VARIABLES *********************************************************/
 
-ULONG KdComPortInUse = 0;
+ULONG EXPORTED KdComPortInUse = 0;
 
 
 /* STATIC VARIABLES *********************************************************/

@@ -11,7 +11,7 @@
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisCoCreateVc(
     IN  NDIS_HANDLE         NdisBindingHandle,
     IN  NDIS_HANDLE         NdisAfHandle  OPTIONAL,
@@ -31,7 +31,7 @@ NdisCoCreateVc(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisCoDeleteVc(
     IN  NDIS_HANDLE NdisVcHandle)
 /*
@@ -48,7 +48,7 @@ NdisCoDeleteVc(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisCoRequest(
     IN      NDIS_HANDLE     NdisBindingHandle,
     IN      NDIS_HANDLE     NdisAfHandle    OPTIONAL,
@@ -69,7 +69,7 @@ NdisCoRequest(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCoRequestComplete(
     IN  NDIS_STATUS     Status,
     IN  NDIS_HANDLE     NdisAfHandle,
@@ -88,7 +88,7 @@ NdisCoRequestComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCoSendPackets(
     IN  NDIS_HANDLE     NdisVcHandle,
     IN  PPNDIS_PACKET   PacketArray,
@@ -106,7 +106,7 @@ NdisCoSendPackets(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCoActivateVcComplete(
     IN  NDIS_STATUS         Status,
     IN  NDIS_HANDLE         NdisVcHandle,
@@ -123,7 +123,7 @@ NdisMCoActivateVcComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCoDeactivateVcComplete(
     IN  NDIS_STATUS Status,
     IN  NDIS_HANDLE NdisVcHandle)
@@ -139,7 +139,7 @@ NdisMCoDeactivateVcComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCoIndicateReceivePacket(
     IN  NDIS_HANDLE     NdisVcHandle,
     IN  PPNDIS_PACKET   PacketArray,
@@ -156,7 +156,7 @@ NdisMCoIndicateReceivePacket(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCoIndicateStatus(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_HANDLE NdisVcHandle    OPTIONAL,
@@ -175,7 +175,7 @@ NdisMCoIndicateStatus(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCoReceiveComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 /*
@@ -190,7 +190,7 @@ NdisMCoReceiveComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCoRequestComplete(
     IN  NDIS_STATUS     Status,
     IN  NDIS_HANDLE     MiniportAdapterHandle,
@@ -207,7 +207,7 @@ NdisMCoRequestComplete(
 
 
 VOID 
-STDCALL
+EXPORT
 NdisMCoSendComplete(
     IN  NDIS_STATUS     Status,
     IN  NDIS_HANDLE     NdisVcHandle,

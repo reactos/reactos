@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/float.h>
 
 void _fpreset(void)
 {

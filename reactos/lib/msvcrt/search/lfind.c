@@ -1,4 +1,5 @@
-#include <msvcrti.h>
+#include <msvcrt/search.h>
+#include <msvcrt/stdlib.h>
 
 
 void *_lfind(const void *key, const void *base, size_t *nelp,

@@ -1,7 +1,6 @@
-#include <msvcrti.h>
+#include <msvcrt/mbstring.h>
 
-
-unsigned int _mbcjistojms(unsigned int c)
+unsigned short _mbcjistojms(unsigned short c)
 {
   int c1, c2;
 

@@ -1,11 +1,7 @@
 #ifndef CDFS_H
 #define CDFS_H
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
 #include <ddk/ntifs.h>
-
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 #define CDFS_BASIC_SECTOR 2048
 #define CDFS_PRIMARY_DESCRIPTOR_LOCATION 16
@@ -206,9 +202,7 @@ typedef struct _CCB
   ULONG LastOffset;
 } CCB, *PCCB;
 
-#ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
 
@@ -350,7 +344,7 @@ CdfsSwapString(PWCHAR Out,
 
 VOID
 CdfsDateTimeToFileTime(PFCB Fcb,
-		       LARGE_INTEGER *FileTime);
+		       TIME *FileTime);
 
 VOID
 CdfsFileFlagsToAttributes(PFCB Fcb,

@@ -1,8 +1,7 @@
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <win32k/fillshap.h>
 #include <win32k/dc.h>
 #include <win32k/pen.h>
@@ -81,7 +80,7 @@ W32kRectangle(HDC  hDC,
 {
   DC		*dc = DC_HandleToPtr(hDC);
   SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
-  ROS_BRUSHOBJ	*BrushObj;
+  PBRUSHOBJ	BrushObj;
   BOOL ret;
   PRECTL	RectBounds;
   PENOBJ * pen;
@@ -99,7 +98,7 @@ W32kRectangle(HDC  hDC,
     // Draw the rectangle with the current pen
     pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
     ASSERT(pen);
-    BrushObj = (ROS_BRUSHOBJ*)PenToBrushObj(dc, pen);
+    BrushObj = (PBRUSHOBJ)PenToBrushObj(dc, pen);
     GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC );
 
     LeftRect += dc->w.DCOrgX;

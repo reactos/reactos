@@ -8,21 +8,18 @@
  *                 3/7/1999: Created
  */
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
 #include <ddk/winddi.h>
 
 PVOID STDCALL
-BRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ  *BrushObj,
+BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ  BrushObj,
 		       IN ULONG  ObjSize)
 {
-  ROS_BRUSHOBJ *bo = (ROS_BRUSHOBJ *)BrushObj;
-  bo->pvRbrush=EngAllocMem(0, ObjSize, 0);
-  return(bo->pvRbrush);
+  BrushObj->pvRbrush=EngAllocMem(0, ObjSize, 0);
+  return(BrushObj->pvRbrush);
 }
 
-PVOID STDCALL BRUSHOBJ_pvGetRbrush(IN BRUSHOBJ  *BrushObj)
+PVOID STDCALL
+BRUSHOBJ_pvGetRbrush(IN PBRUSHOBJ  BrushObj)
 {
-  ROS_BRUSHOBJ *bo = (ROS_BRUSHOBJ *)BrushObj;
-  return(bo->pvRbrush);
+  return(BrushObj->pvRbrush);
 }

@@ -1,5 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
+#include <limits.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/stdlib.h>
 
 /*
  * Convert a string to an unsigned long integer.

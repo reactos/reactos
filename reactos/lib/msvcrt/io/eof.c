@@ -1,5 +1,5 @@
-#include <msvcrti.h>
-
+//#include <windows.h>
+#include <msvcrt/io.h>
 
 int _eof(int _fd)
 {

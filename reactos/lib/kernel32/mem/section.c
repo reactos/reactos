@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.15 2002/09/07 15:12:27 chorns Exp $
+/* $Id: section.c,v 1.16 2002/09/08 10:22:43 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -9,12 +9,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <kernel32/error.h>
+#include <windows.h>
 
-#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS *****************************************************************/

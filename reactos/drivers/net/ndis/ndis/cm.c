@@ -11,7 +11,7 @@
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisCmActivateVc(
     IN      NDIS_HANDLE         NdisVcHandle,
     IN OUT  PCO_CALL_PARAMETERS CallParameters)
@@ -29,7 +29,7 @@ NdisCmActivateVc(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmAddPartyComplete(
     IN  NDIS_STATUS         Status,
     IN  NDIS_HANDLE         NdisPartyHandle,
@@ -47,7 +47,7 @@ NdisCmAddPartyComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmCloseAddressFamilyComplete(
     IN  NDIS_STATUS Status,
     IN  NDIS_HANDLE NdisAfHandle)
@@ -63,7 +63,7 @@ NdisCmCloseAddressFamilyComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmCloseCallComplete(
     IN  NDIS_STATUS Status,
     IN  NDIS_HANDLE NdisVcHandle,
@@ -80,7 +80,7 @@ NdisCmCloseCallComplete(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisCmDeactivateVc(
     IN  NDIS_HANDLE NdisVcHandle)
 /*
@@ -97,7 +97,7 @@ NdisCmDeactivateVc(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmDeregisterSapComplete(
     IN  NDIS_STATUS Status,
     IN  NDIS_HANDLE NdisSapHandle)
@@ -113,7 +113,7 @@ NdisCmDeregisterSapComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmDispatchCallConnected(
     IN  NDIS_HANDLE NdisVcHandle)
 /*
@@ -128,7 +128,7 @@ NdisCmDispatchCallConnected(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisCmDispatchIncomingCall(
     IN  NDIS_HANDLE         NdisSapHandle,
     IN  NDIS_HANDLE         NdisVcHandle,
@@ -147,7 +147,7 @@ NdisCmDispatchIncomingCall(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmDispatchIncomingCallQoSChange(
     IN  NDIS_HANDLE         NdisVcHandle,
     IN  PCO_CALL_PARAMETERS CallParameters)
@@ -163,7 +163,7 @@ NdisCmDispatchIncomingCallQoSChange(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmDispatchIncomingCloseCall(
     IN  NDIS_STATUS CloseStatus,
     IN  NDIS_HANDLE NdisVcHandle,
@@ -181,7 +181,7 @@ NdisCmDispatchIncomingCloseCall(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmDispatchIncomingDropParty(
     IN  NDIS_STATUS DropStatus,
     IN  NDIS_HANDLE NdisPartyHandle,
@@ -199,7 +199,7 @@ NdisCmDispatchIncomingDropParty(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmDropPartyComplete(
     IN  NDIS_STATUS Status,
     IN  NDIS_HANDLE NdisPartyHandle)
@@ -215,7 +215,7 @@ NdisCmDropPartyComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmMakeCallComplete(
     IN  NDIS_STATUS         Status,
     IN  NDIS_HANDLE         NdisVcHandle,
@@ -234,7 +234,7 @@ NdisCmMakeCallComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmModifyCallQoSComplete(
     IN  NDIS_STATUS         Status,
     IN  NDIS_HANDLE         NdisVcHandle,
@@ -251,7 +251,7 @@ NdisCmModifyCallQoSComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmOpenAddressFamilyComplete(
     IN  NDIS_STATUS Status,
     IN  NDIS_HANDLE NdisAfHandle,
@@ -268,7 +268,7 @@ NdisCmOpenAddressFamilyComplete(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisCmRegisterAddressFamily(
     IN  NDIS_HANDLE                         NdisBindingHandle,
     IN  PCO_ADDRESS_FAMILY                  AddressFamily,
@@ -288,7 +288,7 @@ NdisCmRegisterAddressFamily(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCmRegisterSapComplete(
     IN  NDIS_STATUS Status,
     IN  NDIS_HANDLE NdisSapHandle,
@@ -306,7 +306,7 @@ NdisCmRegisterSapComplete(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMCmActivateVc(
     IN  NDIS_HANDLE         NdisVcHandle,
     IN  PCO_CALL_PARAMETERS CallParameters)
@@ -324,7 +324,7 @@ NdisMCmActivateVc(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMCmCreateVc(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  NDIS_HANDLE     NdisAfHandle,
@@ -344,7 +344,7 @@ NdisMCmCreateVc(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMCmDeactivateVc(
     IN  NDIS_HANDLE NdisVcHandle)
 /*
@@ -361,7 +361,7 @@ NdisMCmDeactivateVc(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMCmDeleteVc(
     IN  NDIS_HANDLE NdisVcHandle)
 /*
@@ -378,7 +378,7 @@ NdisMCmDeleteVc(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMCmRegisterAddressFamily(
     IN  NDIS_HANDLE                         MiniportAdapterHandle,
     IN  PCO_ADDRESS_FAMILY                  AddressFamily,
@@ -397,7 +397,7 @@ NdisMCmRegisterAddressFamily(
 }
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMCmRequest(
     IN      NDIS_HANDLE     NdisAfHandle,
     IN      NDIS_HANDLE     NdisVcHandle    OPTIONAL,

@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.28 2002/09/07 15:12:52 chorns Exp $
+/* $Id: fs.c,v 1.29 2002/09/08 10:23:25 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,9 +11,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/io.h>
+#include <internal/ps.h>
+#include <internal/pool.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -29,7 +32,7 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
 {
   LIST_ENTRY FsChangeNotifyList;
   PDRIVER_OBJECT DriverObject;
-  PDRIVER_FS_NOTIFICATION FSDNotificationProc;
+  PFSDNOTIFICATIONPROC FSDNotificationProc;
 } FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
 
 
@@ -70,7 +73,7 @@ NtFsControlFile (
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
-   PEXTENDED_IO_STACK_LOCATION StackPtr;
+   PIO_STACK_LOCATION StackPtr;
    PKEVENT ptrEvent;
    IO_STATUS_BLOCK IoSB;
 
@@ -130,7 +133,7 @@ NtFsControlFile (
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
-   StackPtr = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->Parameters.FileSystemControl.InputBufferLength = InputBufferSize;
@@ -679,7 +682,7 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS STDCALL
 IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
-			       IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
+			       IN PFSDNOTIFICATIONPROC FSDNotificationProc)
 {
   PFS_CHANGE_NOTIFY_ENTRY Entry;
 
@@ -700,9 +703,9 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 }
 
 
-NTSTATUS STDCALL
+VOID STDCALL
 IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
-				 IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
+				 IN PFSDNOTIFICATIONPROC FSDNotificationProc)
 {
   PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
   PLIST_ENTRY Entry;
@@ -720,12 +723,11 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 	  KeReleaseSpinLock(&FsChangeNotifyListLock,oldlvl);
 
 	  ExFreePool(Entry);
-	  return(STATUS_SUCCESS);
+	  return;
 	}
 
       Entry = Entry->Flink;
     }
-  return(STATUS_SUCCESS);
 }
 
 /* EOF */

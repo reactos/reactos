@@ -1,4 +1,4 @@
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #define NDEBUG
 #include <debug.h>
 #include "../vgaddi.h"
@@ -7,12 +7,12 @@
 #include "bitblt.h"
 
 BOOL STDCALL
-DrvTransparentBlt(SURFOBJ *Dest,
-		  SURFOBJ *Source,
-		  CLIPOBJ *Clip,
-		  XLATEOBJ *ColorTranslation,
-		  RECTL *DestRect,
-		  RECTL *SourceRect,
+DrvTransparentBlt(PSURFOBJ Dest,
+		  PSURFOBJ Source,
+		  PCLIPOBJ Clip,
+		  PXLATEOBJ ColorTranslation,
+		  PRECTL DestRect,
+		  PRECTL SourceRect,
 		  ULONG TransparentColor,
 		  ULONG Reserved)
 {

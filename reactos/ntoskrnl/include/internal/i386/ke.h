@@ -19,8 +19,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
 
-#define KTSS_ESP0 	0x4
-
 #define KTRAP_FRAME_DEBUGEBP     (0x0)
 #define KTRAP_FRAME_DEBUGEIP     (0x4)
 #define KTRAP_FRAME_DEBUGARGMARK (0x8)
@@ -67,7 +65,7 @@
 #define KTRAP_FRAME_RESERVED9      (0x8A)
 #define KTRAP_FRAME_SIZE           (0x8C)
 
-#ifndef AS_INVOKED
+#ifndef __ASM__
 
 typedef struct _KTRAP_FRAME
 {
@@ -115,11 +113,11 @@ typedef struct _KTRAP_FRAME
    USHORT Reserved8;
    USHORT V86_Gs;
    USHORT Reserved9;
-} KTRAP_FRAME, *PIKTRAP_FRAME;
+} KTRAP_FRAME, *PKTRAP_FRAME;
 
-struct _IKPCR;
+struct _KPCR;
 VOID
-KiInitializeGdt(struct _IKPCR* Pcr);
+KiInitializeGdt(struct _KPCR* Pcr);
 VOID
 Ki386ApplicationProcessorInitializeTSS(VOID);
 VOID
@@ -133,7 +131,7 @@ VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
 
-#endif /* !AS_INVOKED */
+#endif /* __ASM__ */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */
 

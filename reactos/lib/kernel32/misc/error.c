@@ -1,15 +1,12 @@
-/* $Id: error.c,v 1.15 2002/09/07 15:12:27 chorns Exp $
+/* $Id: error.c,v 1.16 2002/09/08 10:22:44 chorns Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
  */
-
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <ddk/ntddbeep.h>
 
-#define NDEBUG
+// #define NDEBUG
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
 

@@ -1,13 +1,8 @@
-/* $Id: nls.c,v 1.3 2002/09/07 15:13:03 chorns Exp $
+/* $Id: nls.c,v 1.4 2002/09/08 10:23:37 chorns Exp $
  *
  * reactos/ntoskrnl/nls/nls.c
  */
-
-#include <ntoskrnl.h>
-
-#define NDEBUG
-#include <internal/debug.h>
-
+#include <ntos.h>
 
 #if 0
 BYTE

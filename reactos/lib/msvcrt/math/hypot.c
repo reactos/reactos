@@ -15,8 +15,10 @@
  * inflicting too much of a performance hit.
  *
  */
-#include <msvcrti.h>
-
+ 
+#include <msvcrt/float.h>
+#include <msvcrt/math.h>
+#include <msvcrt/errno.h>
  
 /* Approximate square roots of DBL_MAX and DBL_MIN.  Numbers
    between these two shouldn't neither overflow nor underflow

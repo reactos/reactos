@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.2 2002/09/07 15:13:00 chorns Exp $
+/* $Id: region.c,v 1.3 2002/09/08 10:23:36 chorns Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/region.c
@@ -26,7 +26,13 @@
  
 /* INCLUDE *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/mm.h>
+#include <internal/ob.h>
+#include <internal/io.h>
+#include <internal/ps.h>
+#include <internal/pool.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>

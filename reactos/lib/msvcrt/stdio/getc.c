@@ -1,5 +1,8 @@
-#include <msvcrti.h>
-
+#include <windows.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 //getc can be a macro
 #undef getc

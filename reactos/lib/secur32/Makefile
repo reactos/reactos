@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2002/09/07 15:12:43 chorns Exp $
+# $Id: Makefile,v 1.9 2002/09/08 10:23:08 chorns Exp $
 
 
 PATH_TO_TOP = ../..
@@ -7,7 +7,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = secur32
 
-TARGET_BASE = 0x77100000
+TARGET_BASE = 0x10000000
 
 TARGET_SDKLIBS = ntdll.a
 

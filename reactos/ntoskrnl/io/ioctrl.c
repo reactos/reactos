@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.15 2002/09/07 15:12:53 chorns Exp $
+/* $Id: ioctrl.c,v 1.16 2002/09/08 10:23:25 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,11 +15,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
-
+#include <ddk/ntddk.h>
+#include <internal/io.h>
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 

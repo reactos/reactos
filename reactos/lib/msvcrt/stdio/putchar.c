@@ -8,8 +8,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrti.h>
-
+#include <msvcrt/stdio.h>
 
 #undef putc
 #undef putchar

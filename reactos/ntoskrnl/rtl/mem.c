@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.15 2002/09/07 15:13:05 chorns Exp $
+/* $Id: mem.c,v 1.16 2002/09/08 10:23:41 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/mm.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -61,12 +61,13 @@ MmCopyFromCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
     }
 }
 
+
 ULONG
 STDCALL
 RtlCompareMemory (
-  IN CONST VOID  *Source1,
-  IN CONST VOID  *Source2,
-  IN SIZE_T  Length
+	PVOID	Source1,
+	PVOID	Source2,
+	ULONG	Length
 	)
 /*
  * FUNCTION: Compares blocks of memory and returns the number of equal bytes
@@ -121,17 +122,16 @@ RtlCompareMemoryUlong (
 }
 
 
-#undef RtlCopyBytes
-
+#if 0
 VOID RtlCopyBytes(PVOID Destination,
 		  CONST VOID* Source,
 		  ULONG Length)
 {
    RtlCopyMemory(Destination,Source,Length);
 }
+#endif
 
-#undef RtlCopyMemory
-
+#if 0
 VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
 {
    DPRINT("RtlCopyMemory(Destination %x Source %x Length %d\n",
@@ -139,8 +139,7 @@ VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
    memcpy(Destination,Source,Length);
    DPRINT("*Destination %x\n",*(PULONG)Destination);
 }
-
-#undef RtlFillMemory
+#endif
 
 VOID
 STDCALL
@@ -173,7 +172,6 @@ RtlFillMemoryUlong (
 	}
 }
 
-#undef RtlMoveMemory
 
 VOID
 STDCALL
@@ -190,8 +188,6 @@ RtlMoveMemory (
 		);
 }
 
-
-#undef RtlZeroMemory
 
 VOID
 STDCALL

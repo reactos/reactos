@@ -10,11 +10,14 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/io.h>
+#include <internal/ob.h>
+#include <internal/mm.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -35,7 +38,7 @@ IopCompleteRequest1(struct _KAPC* Apc,
    Irp = (PIRP)(*SystemArgument1);
    PriorityBoost = (CCHAR)(LONG)(*SystemArgument2);
    
-	 IoStack = IoGetSpecificIrpStackLocation(Irp, Irp->CurrentLocation);
+   IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
    FileObject = IoStack->FileObject;
    
    (*SystemArgument1) = (PVOID)Irp->UserIosb;
@@ -177,8 +180,8 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
    
    DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d)\n",
 	  Irp, PriorityBoost);
-
-   IoStack = IoGetSpecificIrpStackLocation(Irp, Irp->CurrentLocation);
+   
+   IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
    FileObject = IoStack->FileObject;
    
    DeviceObject = IoStack->DeviceObject;

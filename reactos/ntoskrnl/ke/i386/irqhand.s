@@ -1,5 +1,5 @@
 
-#include <ntoskrnl.h>
+#include <internal/i386/segment.h>
 
 .global _irq_handler_0
 _irq_handler_0:

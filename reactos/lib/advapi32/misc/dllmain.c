@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.5 2002/09/07 15:12:22 chorns Exp $
+/* $Id: dllmain.c,v 1.6 2002/09/08 10:22:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,12 +9,13 @@
  *                  Created ???
  */
 
-#include <advapi32.h>
+#include <ddk/ntddk.h>
+#include <windows.h>
 
 #define NDEBUG
-//#include <debug.h>
+#include <debug.h>
 
-#if 0
+
 INT STDCALL
 DllMain(PVOID hinstDll,
 	ULONG dwReason,
@@ -34,5 +35,5 @@ DllMain(PVOID hinstDll,
 
    return TRUE;
 }
-#endif
+
 /* EOF */

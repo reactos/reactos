@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.7 2002/09/07 15:13:06 chorns Exp $
+/* $Id: sd.c,v 1.8 2002/09/08 10:23:43 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,9 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/se.h>
 
-#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -47,8 +47,8 @@ RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 ULONG STDCALL
 RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-   PISID Owner;
-   PISID Group;
+   PSID Owner;
+   PSID Group;
    ULONG Length;
    PACL Dacl;
    PACL Sacl;
@@ -57,10 +57,10 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
    
    if (SecurityDescriptor->Owner != NULL)
      {
-	Owner = (PISID)SecurityDescriptor->Owner;
+	Owner = SecurityDescriptor->Owner;
 	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
-	     Owner = (PISID)((ULONG)Owner + 
+	     Owner = (PSID)((ULONG)Owner + 
 			    (ULONG)SecurityDescriptor);
 	  }
 	Length = Length + ((sizeof(SID) + (Owner->SubAuthorityCount - 1) * 
@@ -68,10 +68,10 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
      }
    if (SecurityDescriptor->Group != NULL)
      {
-	Group = (PISID)SecurityDescriptor->Group;
+	Group = SecurityDescriptor->Group;
 	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
-	     Group = (PISID)((ULONG)Group + (ULONG)SecurityDescriptor);
+	     Group = (PSID)((ULONG)Group + (ULONG)SecurityDescriptor);
 	  }
 	Length = Length + ((sizeof(SID) + (Group->SubAuthorityCount - 1) *
 			   sizeof(ULONG) + 3) & 0xfc);
@@ -388,5 +388,7 @@ RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
   UNIMPLEMENTED;
   return(STATUS_NOT_IMPLEMENTED);
 }
+
+
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.12 2002/09/07 15:13:09 chorns Exp $
+/* $Id: smss.c,v 1.13 2002/09/08 10:23:46 chorns Exp $
  *
  * smss.c - Session Manager
  * 
@@ -26,9 +26,8 @@
  * 	19990529 (Emanuele Aliberti)
  * 		Compiled successfully with egcs 1.1.2
  */
+#include <ddk/ntddk.h>
 
-#define NTOS_USER_MODE
-#include <ntos.h>
 #include "smss.h"
 
 

@@ -92,7 +92,7 @@ endif
 
 CXXFLAGS = $(CFLAGS)
 NFLAGS = -i$(PATH_TO_TOP)/include/ -f$(NASM_FORMAT) -d$(NASM_FORMAT)
-ASFLAGS := $(ASFLAGS) -I$(PATH_TO_TOP)/include -D AS_INVOKED
+ASFLAGS := $(ASFLAGS) -I$(PATH_TO_TOP)/include -D__ASM__
 
 
 # Developer Kits
@@ -100,11 +100,11 @@ DK_PATH=$(PATH_TO_TOP)/dk
 # Native and kernel mode
 DDK_PATH=$(DK_PATH)/nkm
 DDK_PATH_LIB=$(DDK_PATH)/lib
-DDK_PATH_INC=$(DDK_PATH)/include
+DDK_PATH_INC=$(PATH_TO_TOP)/include
 # Win32
 SDK_PATH=$(DK_PATH)/w32
 SDK_PATH_LIB=$(SDK_PATH)/lib
-SDK_PATH_INC=$(SDK_PATH)/include
+SDK_PATH_INC=$(PATH_TO_TOP)/include
 # POSIX+
 XDK_PATH=$(DK_PATH)/psx
 XDK_PATH_LIB=$(XDK_PATH)/lib

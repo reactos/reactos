@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.8 2002/09/07 15:12:52 chorns Exp $
+/* $Id: arcname.c,v 1.9 2002/09/08 10:23:24 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,7 +28,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+
+#include "internal/io.h"
+#include "internal/xhal.h"
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -142,7 +145,7 @@ IoCreateArcNames(VOID)
 
   /* create ARC names for cdrom drives */
   DPRINT("CD-ROM drives: %lu\n", ConfigInfo->CDRomCount);
-  for (i = 0; i < ConfigInfo->CdRomCount; i++)
+  for (i = 0; i < ConfigInfo->CDRomCount; i++)
     {
       swprintf(DeviceNameBuffer,
 	       L"\\Device\\CdRom%lu",
@@ -188,7 +191,7 @@ IopCheckCdromDevices(PULONG DeviceNumber)
   FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
 
   ConfigInfo = IoGetConfigurationInformation();
-  for (i = 0; i < ConfigInfo->CdRomCount; i++)
+  for (i = 0; i < ConfigInfo->CDRomCount; i++)
     {
       swprintf(DeviceNameBuffer,
 	       L"\\Device\\CdRom%lu\\",

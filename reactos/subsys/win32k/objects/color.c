@@ -6,10 +6,9 @@
 #include <ddk/winddi.h>
 #include <win32k/dc.h>
 #include <win32k/color.h>
-#include <include/eng.h>
 #include "../eng/handle.h"
 
-#define NDEBUG
+// #define NDEBUG
 #include <win32k/debug1.h>
 
 int COLOR_gapStart = 256;
@@ -20,7 +19,7 @@ int COLOR_max = 256;
 static HPALETTE hPrimaryPalette = 0; // used for WM_PALETTECHANGED
 static HPALETTE hLastRealizedPalette = 0; // UnrealizeObject() needs it
 
-const PALETTEENTRY COLOR_sysPalTemplate[NO_RESERVED_COLORS] = 
+const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 {
   // first 10 entries in the system palette
   // red  green blue  flags
@@ -123,13 +122,12 @@ HPALETTE STDCALL W32kCreateHalftonePalette(HDC  hDC)
 
 HPALETTE STDCALL W32kCreatePalette(CONST PLOGPALETTE palette)
 {
-// FIXME: PALOBJ is not correct - reimplement
-  ROS_PALOBJ*  PalObj;
+  PPALOBJ  PalObj;
 
   HPALETTE NewPalette = (HPALETTE)EngCreatePalette(PAL_INDEXED, palette->palNumEntries, (PULONG*) palette->palPalEntry, 0, 0, 0);
   ULONG size;
 
-  PalObj = (ROS_PALOBJ*)AccessUserObject(NewPalette);
+  PalObj = (PPALOBJ)AccessUserObject(NewPalette);
 
   size = sizeof(LOGPALETTE) + (palette->palNumEntries * sizeof(PALETTEENTRY));
   PalObj->logpalette = ExAllocatePool(NonPagedPool, size);
@@ -151,12 +149,12 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
 {
   COLORREF nearest = CLR_INVALID;
   PDC dc;
-  ROS_PALOBJ* palObj;
+  PPALOBJ palObj;
 
   if( (dc = DC_HandleToPtr(hDC) ) )
   {
     HPALETTE hpal = (dc->w.hPalette)? dc->w.hPalette : W32kGetStockObject(DEFAULT_PALETTE);
-    palObj = (ROS_PALOBJ*)AccessUserObject(hpal);
+    palObj = (PPALOBJ)AccessUserObject(hpal);
     if (!palObj) {
 //      GDI_ReleaseObj(hdc);
       return nearest;
@@ -175,7 +173,7 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
 UINT STDCALL W32kGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
-  ROS_PALOBJ*     palObj = (ROS_PALOBJ*)AccessUserObject(hpal);
+  PPALOBJ     palObj = (PPALOBJ)AccessUserObject(hpal);
   UINT index  = 0;
 
   if( palObj )
@@ -193,10 +191,10 @@ UINT STDCALL W32kGetPaletteEntries(HPALETTE  hpal,
                             UINT  Entries,
                             LPPALETTEENTRY  pe)
 {
-  ROS_PALOBJ* palPtr;
+  PPALOBJ palPtr;
   UINT numEntries;
 
-  palPtr = (ROS_PALOBJ*)AccessUserObject(hpal);
+  palPtr = (PPALOBJ)AccessUserObject(hpal);
   if (!palPtr) return 0;
 
   numEntries = palPtr->logpalette->palNumEntries;
@@ -274,7 +272,7 @@ A logical palette is a buffer between color-intensive applications and the syste
 -- If it is an RGB palette, then an XLATEOBJ is created between the RGB values and the dc palette.
 */
 {
-  ROS_PALOBJ *palPtr, *sysPtr;
+  PPALOBJ palPtr, sysPtr;
   PPALGDI palGDI, sysGDI;
   int realized = 0;
   PDC dc = (PDC)AccessUserObject(hDC);
@@ -284,10 +282,10 @@ A logical palette is a buffer between color-intensive applications and the syste
 
   if (!dc) return 0;
 
-  palPtr = (ROS_PALOBJ*)AccessUserObject(dc->w.hPalette);
+  palPtr = (PPALOBJ)AccessUserObject(dc->w.hPalette);
   SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(dc->Surface);
   systemPalette = W32kGetStockObject(STOCK_DEFAULT_PALETTE);
-  sysPtr = (ROS_PALOBJ*)AccessInternalObject(systemPalette);
+  sysPtr = (PPALOBJ)AccessInternalObject(systemPalette);
   palGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
   sysGDI = (PPALGDI)AccessInternalObject(systemPalette);
 
@@ -327,7 +325,7 @@ A logical palette is a buffer between color-intensive applications and the syste
 BOOL STDCALL W32kResizePalette(HPALETTE  hpal,
                         UINT  Entries)
 {
-/*  PALOBJ* palPtr = (PALOBJ*)AccessUserObject(hPal);
+/*  PPALOBJ palPtr = (PPALOBJ)AccessUserObject(hPal);
   UINT cPrevEnt, prevVer;
   INT prevsize, size = sizeof(LOGPALETTE) + (cEntries - 1) * sizeof(PALETTEENTRY);
   PXLATEOBJ XlateObj = NULL;
@@ -393,10 +391,10 @@ UINT STDCALL W32kSetPaletteEntries(HPALETTE  hpal,
                             UINT  Entries,
                             CONST LPPALETTEENTRY  pe)
 {
-  ROS_PALOBJ* palPtr;
+  PPALOBJ palPtr;
   INT numEntries;
 
-  palPtr = (ROS_PALOBJ*)AccessUserObject(hpal);
+  palPtr = (PPALOBJ)AccessUserObject(hpal);
   if (!palPtr) return 0;
 
   numEntries = palPtr->logpalette->palNumEntries;
@@ -447,7 +445,7 @@ BOOL STDCALL W32kUpdateColors(HDC  hDC)
 }
 
 int COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, int size,
-                             XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved)
+                             PXLATEOBJ XlateObj, COLORREF col, BOOL skipReserved)
 {
   int i, best = 0, diff = 0x7fffffff;
   int r, g, b;

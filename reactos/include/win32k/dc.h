@@ -183,7 +183,7 @@ INT STDCALL  W32kDrawEscape(HDC  hDC,
                             LPCSTR  lpszInData);
 
 /* FIXME: this typedef should go somewhere else...  */
-//typedef VOID (*GOBJENUMPROC)(PVOID, LPARAM);
+typedef VOID (*GOBJENUMPROC)(PVOID, LPARAM);
 
 INT STDCALL  W32kEnumObjects(HDC  hDC,
                              INT  ObjectType,

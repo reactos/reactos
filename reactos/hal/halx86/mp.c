@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.2 2002/09/07 15:12:10 chorns Exp $
+/* $Id: mp.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,13 +14,21 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <hal.h>
+#include <ddk/ntddk.h>
+#include <roscfg.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-
 #ifdef MP
+
+#include <hal.h>
+#include <mps.h>
+
+#include <internal/ntoskrnl.h>
+#include <internal/i386/segment.h>
+#include <internal/ke.h>
+#include <internal/ps.h>
 
 /*
    Address of area to be used for communication between Application

@@ -1,4 +1,4 @@
-/* $Id: null.c,v 1.9 2002/09/07 15:11:58 chorns Exp $
+/* $Id: null.c,v 1.10 2002/09/08 10:22:05 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -113,7 +113,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  DriverObject->DriverUnload = NullUnload;
 
  /* create null device */
- RtlInitUnicodeString(&wstrDeviceName, L"\\Device\\Null");
+ RtlInitUnicodeStringFromLiteral(&wstrDeviceName, L"\\Device\\Null");
 
  nErrCode = IoCreateDevice
  (
@@ -135,7 +135,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  pdoNullDevice->DeviceExtension = (PVOID)&nxNull;
 
  /* create zero device */
- RtlInitUnicodeString(&wstrDeviceName, L"\\Device\\Zero");
+ RtlInitUnicodeStringFromLiteral(&wstrDeviceName, L"\\Device\\Zero");
 
  nErrCode = IoCreateDevice
  (

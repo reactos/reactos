@@ -6,17 +6,16 @@
 
 #define INCLUDE_THE_DDK_HEADERS
 #ifdef INCLUDE_THE_DDK_HEADERS
-#define NTOS_USER_MODE
-#include <ntos.h>
-#define ROS_ACE_HEADER ROS_ACE_HEADER
-#define ROS_ACE IACE
+#include <ddk/ntddk.h>
+#define ROS_ACE_HEADER ACE_HEADER
+#define ROS_ACE ACE
 
 //
 // Allocate the System Luid.  The first 1000 LUIDs are reserved.
 // Use #999 here (0x3E7 = 999)
 //
 
-//#define SYSTEM_LUID                     { 0x3E7, 0x0 }
+#define SYSTEM_LUID                     { 0x3E7, 0x0 }
 #define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
 #define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
 #define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
@@ -252,7 +251,7 @@ DisplayDacl(PACL pAcl)
 		LPWSTR wszType = 0;
 		PSID pSid;
 
-		status = RtlGetAce(pAcl, i, (PACE*) &pAce);
+		status = RtlGetAce(pAcl, i, (ROS_ACE**) &pAce);
 		if ( ! NT_SUCCESS(status) )
 		{
 			printf("RtlGetAce(): status = 0x%08x\n", status);

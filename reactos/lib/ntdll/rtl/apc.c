@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: apc.c,v 1.6 2002/09/07 15:12:40 chorns Exp $
+/* $Id: apc.c,v 1.7 2002/09/08 10:23:04 chorns Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           User-mode APC support
@@ -26,12 +26,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <string.h>
-
-#define NDEBUG
-#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 

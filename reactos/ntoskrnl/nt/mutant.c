@@ -28,11 +28,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <limits.h>
+#include <ddk/ntddk.h>
+#include <ntos/synch.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 POBJECT_TYPE ExMutantObjectType = NULL;
 
@@ -112,7 +113,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
   PKMUTEX Mutant;
   NTSTATUS Status;
 
-  Status = ObRosCreateObject(MutantHandle,
+  Status = ObCreateObject(MutantHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  ExMutantObjectType,

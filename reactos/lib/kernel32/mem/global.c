@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.8 2002/09/07 15:12:26 chorns Exp $
+/* $Id: global.c,v 1.9 2002/09/08 10:22:43 chorns Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -11,9 +11,9 @@
  * NOTE: Only fixed memory is implemented!!
  */
 
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -219,7 +219,7 @@ VOID STDCALL
 GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
 	NTSTATUS		Status;
-	SYSTEM_PERFORMANCE_INFORMATION	Spi;
+	SYSTEM_PERFORMANCE_INFO	Spi;
 	QUOTA_LIMITS		Ql;
 	VM_COUNTERS		Vmc;
 	PIMAGE_NT_HEADERS	ImageNtHeader;

@@ -1,6 +1,5 @@
 #ifndef _KEYBOARD_H_
 #define _KEYBOARD_H_
-
 #include <ddk/ntddkbd.h>
 #include <ddk/ntdd8042.h>
 

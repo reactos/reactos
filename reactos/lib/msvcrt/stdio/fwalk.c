@@ -1,7 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/internal/file.h>
 
-
+// not exported by crtdll
 __file_rec *__file_rec_list;
 
 void

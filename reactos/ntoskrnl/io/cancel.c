@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cancel.c,v 1.7 2002/09/07 15:12:52 chorns Exp $
+/* $Id: cancel.c,v 1.8 2002/09/08 10:23:24 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/cancel.c
@@ -28,11 +28,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -60,7 +59,7 @@ IoCancelIrp(PIRP Irp)
      {
 	return(FALSE);
      }
-   (Irp->CancelRoutine)(IoGetFirstIrpStackLocation(Irp)->DeviceObject, Irp);
+   Irp->CancelRoutine(Irp->Stack[0].DeviceObject, Irp);
    IoReleaseCancelSpinLock(oldlvl);
    return(TRUE);
 }

@@ -1,4 +1,6 @@
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/direct.h>
 
 
 unsigned int _getdiskfree(unsigned int _drive, struct _diskfree_t *_diskspace)

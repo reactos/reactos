@@ -6,24 +6,22 @@
 #include <debug.h>
 #include "../eng/handle.h"
 #include <ntos/minmax.h>
-#include <include/eng.h>
 
-VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, SURFOBJ *SurfObj, PBITMAPOBJ Bitmap);
+VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
 
 UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
                            CONST RGBQUAD  *Colors)
 {
-  // FIXME: PALOBJ changed, reimplement
   PDC dc;
   PALETTEENTRY * palEntry;
-  ROS_PALOBJ* palette;
+  PPALOBJ palette;
   RGBQUAD *end;
 
   if (!(dc = (PDC)AccessUserObject(hDC))) return 0;
 
-  if (!(palette = (ROS_PALOBJ*)AccessUserObject(dc->DevInfo.hpalDefault)))
+  if (!(palette = (PPALOBJ)AccessUserObject(dc->DevInfo.hpalDefault)))
   {
 //    GDI_ReleaseObj( hdc );
     return 0;
@@ -69,12 +67,12 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   HBITMAP SourceBitmap, DestBitmap;
   INT result;
   BOOL copyBitsResult;
-  SURFOBJ *DestSurf, *SourceSurf;
+  PSURFOBJ DestSurf, SourceSurf;
   PSURFGDI DestGDI;
   SIZEL	SourceSize;
   POINTL ZeroPoint;
   RECTL	DestRect;
-  XLATEOBJ* XlateObj;
+  PXLATEOBJ XlateObj;
   PPALGDI hDCPalette;
   RGBQUAD *lpRGB;
   HPALETTE DDB_Palette, DIB_Palette;
@@ -100,7 +98,7 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   // Create a temporary surface for the destination bitmap
   DestBitmap = (HBITMAP)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ));
 
-  DestSurf   = (SURFOBJ*) AccessUserObject( DestBitmap );
+  DestSurf   = (PSURFOBJ) AccessUserObject( DestBitmap );
   DestGDI    = (PSURFGDI) AccessInternalObject( DestBitmap );
 
   BitmapToSurf(hDC, DestGDI, DestSurf, bitmap);
@@ -111,7 +109,7 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   SourceBitmap = EngCreateBitmap(SourceSize, DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount),
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
                                  0, Bits);
-  SourceSurf = (SURFOBJ*)AccessUserObject(SourceBitmap);
+  SourceSurf = (PSURFOBJ)AccessUserObject(SourceBitmap);
 
   // Destination palette obtained from the hDC
   hDCPalette = (PPALGDI)AccessInternalObject(dc->DevInfo.hpalDefault);
@@ -660,11 +658,10 @@ PBITMAPOBJ DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should be remove
 
 RGBQUAD *DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
 {
-  // FIXME: PALOBJ changed, reimplement
   RGBQUAD *lpRGB;
   int nNumColors,i;
   DWORD *lpIndex;
-  ROS_PALOBJ* palObj;
+  PPALOBJ palObj;
 
   palObj = AccessUserObject(dc->DevInfo.hpalDefault);
 

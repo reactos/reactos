@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: udelay.c,v 1.2 2002/09/07 15:12:10 chorns Exp $
+/* $Id: udelay.c,v 1.3 2002/09/08 10:22:25 chorns Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -32,11 +32,10 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <hal.h>
+#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS ******************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.18 2002/09/07 15:12:26 chorns Exp $
+/* $Id: rw.c,v 1.19 2002/09/08 10:22:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,9 +11,8 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 #include <wchar.h>
 #include <string.h>
 

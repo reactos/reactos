@@ -1,4 +1,4 @@
-/* $Id: isapnp.c,v 1.3 2002/09/07 15:11:57 chorns Exp $
+/* $Id: isapnp.c,v 1.4 2002/09/08 10:22:03 chorns Exp $
  *
  * PROJECT:         ReactOS ISA PnP Bus driver
  * FILE:            isapnp.c
@@ -925,7 +925,7 @@ static BOOLEAN CreateLogicalDevice(PISAPNP_DEVICE_EXTENSION DeviceExtension,
   PISAPNP_LOGICAL_DEVICE LogicalDevice;
   BOOLEAN Small;
   ULONG Priority = 0;
-  ULONG Option = IO_RESOURCE_DEFAULT;
+  ULONG Option = IO_RESOURCE_REQUIRED;
 
   DPRINT("Card %d  Size %d\n", Card->CardId, Size);
 
@@ -955,7 +955,7 @@ static BOOLEAN CreateLogicalDevice(PISAPNP_DEVICE_EXTENSION DeviceExtension,
 			  	skip = 1;
 			  }
         Priority = 0;
-        Option = IO_RESOURCE_DEFAULT;
+        Option = IO_RESOURCE_REQUIRED;
 			  compat = 0;
 			  break;
 
@@ -1011,7 +1011,7 @@ static BOOLEAN CreateLogicalDevice(PISAPNP_DEVICE_EXTENSION DeviceExtension,
 	  		if (Size != 0)
 		  		goto skip;
         Priority = 0;
-        Option = IO_RESOURCE_DEFAULT;
+        Option = IO_RESOURCE_REQUIRED;
         LogicalDevice->CurrentDescriptorCount = 0;
 			  break;
 
@@ -1558,7 +1558,7 @@ ISAPNPDispatchOpenClose(
   DPRINT("Called\n");
 
   Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
+  Irp->IoStatus.Information = FILE_OPENED;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return STATUS_SUCCESS;

@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.13 2002/09/07 15:12:40 chorns Exp $
+/* $Id: ppb.c,v 1.14 2002/09/08 10:23:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,11 +11,14 @@
 
 /* INCLUDES ****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ntdll/ldr.h>
+#include <napi/teb.h>
+#include <ntdll/base.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
 
 /* MACROS ****************************************************************/
 
@@ -58,7 +61,7 @@ RtlpCopyParameterString(PWCHAR *Ptr,
 
 
 NTSTATUS STDCALL
-RtlRosCreateProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS *ProcessParameters,
+RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 			   PUNICODE_STRING ImagePathName,
 			   PUNICODE_STRING DllPath,
 			   PUNICODE_STRING CurrentDirectory,
@@ -70,7 +73,7 @@ RtlRosCreateProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS *ProcessParameter
 			   PUNICODE_STRING RuntimeInfo)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   PRTL_ROS_USER_PROCESS_PARAMETERS Param = NULL;
+   PRTL_USER_PROCESS_PARAMETERS Param = NULL;
    ULONG RegionSize = 0;
    ULONG Length = 0;
    PWCHAR Dest;
@@ -122,7 +125,7 @@ RtlRosCreateProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS *ProcessParameter
      RuntimeInfo = &EmptyString;
 
    /* size of process parameter block */
-   Length = sizeof(RTL_ROS_USER_PROCESS_PARAMETERS);
+   Length = sizeof(RTL_USER_PROCESS_PARAMETERS);
 
    /* size of current directory buffer */
    Length += (MAX_PATH * sizeof(WCHAR));
@@ -137,7 +140,7 @@ RtlRosCreateProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS *ProcessParameter
    Length += ALIGN(RuntimeInfo->MaximumLength, sizeof(ULONG));
 
    /* Calculate the required block size */
-   RegionSize = ROUNDUP(Length, PAGE_SIZE);
+   RegionSize = ROUNDUP(Length, PAGESIZE);
 
    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
 				    (PVOID*)&Param,
@@ -153,7 +156,7 @@ RtlRosCreateProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS *ProcessParameter
 
    DPRINT ("Process parameters allocated\n");
 
-   Param->AllocationSize = RegionSize;
+   Param->MaximumLength = RegionSize;
    Param->Length = Length;
    Param->Flags = PPF_NORMALIZED;
    Param->Environment = Environment;
@@ -161,7 +164,7 @@ RtlRosCreateProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS *ProcessParameter
    Param->ConsoleHandle = ConsoleHandle;
    Param->ConsoleFlags = ConsoleFlags;
 
-   Dest = (PWCHAR)(((PBYTE)Param) + sizeof(RTL_ROS_USER_PROCESS_PARAMETERS));
+   Dest = (PWCHAR)(((PBYTE)Param) + sizeof(RTL_USER_PROCESS_PARAMETERS));
 
    /* copy current directory */
    RtlpCopyParameterString(&Dest,
@@ -225,7 +228,7 @@ RtlRosCreateProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS *ProcessParameter
 			   RuntimeInfo,
 			   0);
 
-   RtlRosDeNormalizeProcessParams(Param);
+   RtlDeNormalizeProcessParams(Param);
    *ProcessParameters = Param;
    RtlReleasePebLock();
 
@@ -233,7 +236,7 @@ RtlRosCreateProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS *ProcessParameter
 }
 
 VOID STDCALL
-RtlRosDestroyProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS ProcessParameters)
+RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 {
    ULONG RegionSize = 0;
 
@@ -246,8 +249,8 @@ RtlRosDestroyProcessParameters(PRTL_ROS_USER_PROCESS_PARAMETERS ProcessParameter
 /*
  * denormalize process parameters (Pointer-->Offset)
  */
-PRTL_ROS_USER_PROCESS_PARAMETERS STDCALL
-RtlRosDeNormalizeProcessParams(PRTL_ROS_USER_PROCESS_PARAMETERS Params)
+PRTL_USER_PROCESS_PARAMETERS STDCALL
+RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
    if (Params && (Params->Flags & PPF_NORMALIZED))
      {
@@ -269,8 +272,8 @@ RtlRosDeNormalizeProcessParams(PRTL_ROS_USER_PROCESS_PARAMETERS Params)
 /*
  * normalize process parameters (Offset-->Pointer)
  */
-PRTL_ROS_USER_PROCESS_PARAMETERS STDCALL
-RtlRosNormalizeProcessParams(PRTL_ROS_USER_PROCESS_PARAMETERS Params)
+PRTL_USER_PROCESS_PARAMETERS STDCALL
+RtlNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
    if (Params && !(Params->Flags & PPF_NORMALIZED))
      {

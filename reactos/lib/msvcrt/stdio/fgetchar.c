@@ -1,12 +1,12 @@
-#include <msvcrti.h>
-
+#include <msvcrt/stdio.h>
+#include <msvcrt/conio.h>
 
 int _fgetchar(void)
 {
   return _getch();
 }
 
-wint_t _fgetwchar(void)
+int _fgetwchar(void)
 {
   return _getch();
 }

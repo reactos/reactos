@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/mbstring.h>
 
 size_t _mbsnccnt(const unsigned char *str, size_t n)
 {

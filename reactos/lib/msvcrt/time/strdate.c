@@ -7,10 +7,12 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrti.h>
+#include <msvcrt/time.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
-
-char *_strdate( char *datestr )
+char *_strdate( const char *datestr )
 {
   time_t t;
   struct tm *d;
@@ -27,7 +29,7 @@ char *_strdate( char *datestr )
   return dt;
 }
 
-wchar_t *_wstrdate( wchar_t *datestr )
+wchar_t *_wstrdate( const wchar_t *datestr )
 {
   time_t t;
   struct tm *d;

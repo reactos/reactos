@@ -2,8 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
 HANDLE OutputHandle;
 HANDLE InputHandle;

@@ -1,5 +1,8 @@
-#include <msvcrti.h>
-
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/sys/utime.h>
+#include <msvcrt/internal/file.h>
 
 int _utime(const char* filename, struct _utimbuf* buf)
 {

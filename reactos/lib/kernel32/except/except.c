@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.8 2002/09/07 15:12:25 chorns Exp $
+/* $Id: except.c,v 1.9 2002/09/08 10:22:41 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,10 +10,14 @@
  *                  Created 01/11/98
  */
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+
 #include <kernel32/error.h>
+
+typedef LONG (STDCALL *LPTOP_LEVEL_EXCEPTION_FILTER)(
+	struct _EXCEPTION_POINTERS *ExceptionInfo
+	);
 
 UINT GlobalErrMode;
 LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;

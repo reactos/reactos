@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.3 2002/09/07 15:12:45 chorns Exp $
+/* $Id: draw.c,v 1.4 2002/09/08 10:23:12 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,7 +28,9 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <windows.h>
 #include <user32.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -67,7 +69,6 @@ GrayStringW(
 {
   return FALSE;
 }
-
 WINBOOL
 STDCALL
 InvertRect(
@@ -76,7 +77,6 @@ InvertRect(
 {
   return FALSE;
 }
-
 LONG
 STDCALL
 TabbedTextOutA(
@@ -106,7 +106,6 @@ TabbedTextOutW(
 {
   return 0;
 }
-
 int
 STDCALL
 FrameRect(
@@ -116,8 +115,7 @@ FrameRect(
 {
   return 0;
 }
-
-BOOL
+WINBOOL
 STDCALL
 FlashWindow(
   HWND hWnd,
@@ -168,7 +166,7 @@ STDCALL
 DrawCaption(
   HWND hwnd,
   HDC hdc,
-  LPCRECT lprc,
+  LPRECT lprc,
   UINT uFlags)
 {
   return FALSE;
@@ -193,6 +191,7 @@ DrawFocusRect(
 {
   return FALSE;
 }
+
 
 WINBOOL
 STDCALL

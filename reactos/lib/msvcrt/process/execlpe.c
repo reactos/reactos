@@ -1,7 +1,9 @@
-#include <msvcrti.h>
+#include <msvcrt/process.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/stdarg.h>
 
 
-int _execlpe(const char *path, const char *szArgv0, ... /*, const char **envp */)
+int execlpe(const char *path, const char *szArgv0, ... /*, const char **envp */)
 {
   char *szArg[100];
   const char *a;
@@ -23,5 +25,5 @@ int _execlpe(const char *path, const char *szArgv0, ... /*, const char **envp */
   }
   else
 	ptr = NULL;
-  return _spawnvpe(P_OVERLAY, path, (char * const *)szArg, (char * const *)ptr);
+  return spawnvpe(P_OVERLAY, path, (char * const *)szArg, (char * const *)ptr);
 }

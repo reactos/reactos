@@ -1,10 +1,15 @@
 /* INCLUDES ******************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <internal/mm.h>
+#include <internal/cc.h>
+#include <internal/pool.h>
+#include <internal/io.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -65,9 +70,9 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
 		IN PCC_FILE_SIZES FileSizes)
 {
   KIRQL oldirql;
-  PROS_BCB Bcb;
+  PBCB Bcb;
   PLIST_ENTRY current_entry;
-  PROS_CACHE_SEGMENT current;
+  PCACHE_SEGMENT current;
 
   DPRINT("CcSetFileSizes(FileObject %x, FileSizes %x)\n", 
 	 FileObject, FileSizes);
@@ -85,7 +90,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
       current_entry = Bcb->BcbSegmentListHead.Flink;
       while (current_entry != &Bcb->BcbSegmentListHead)
 	{
-	  current = CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, 
+	  current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
 				      BcbSegmentListEntry);
 	  current_entry = current_entry->Flink;
 	  if (current->FileOffset > FileSizes->AllocationSize.QuadPart)

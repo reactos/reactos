@@ -1,5 +1,5 @@
-#include <msvcrti.h>
-
+#include <msvcrt/string.h>
+#include <msvcrt/internal/tls.h>
 
 wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 {

@@ -1,6 +1,12 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
 
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/sys/stat.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 // changed check for writable stream
 
@@ -22,17 +28,17 @@ fclose(FILE *f)
   	if ( OPEN4WRITING(f) )
     		r = fflush(f);
   	
-  	if (_close(_fileno(f)) < 0)
+  	if (_close(fileno(f)) < 0)
       		r = EOF;
   	if (f->_flag&_IOMYBUF)
       		free(f->_base);
   
 // Kernel might do this later
-  	if (f->_flag & _IORMONCL && f->_tmpfname)
+  	if (f->_flag & _IORMONCL && f->_name_to_remove)
   	{
-    		remove(f->_tmpfname);
-    		free(f->_tmpfname);
-    		f->_tmpfname = 0;
+    		remove(f->_name_to_remove);
+    		free(f->_name_to_remove);
+    		f->_name_to_remove = 0;
   	}
   }
   f->_cnt = 0;

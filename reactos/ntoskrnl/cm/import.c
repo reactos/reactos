@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.7 2002/09/07 15:12:47 chorns Exp $
+/* $Id: import.c,v 1.8 2002/09/08 10:23:17 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,12 +7,20 @@
  * PROGRAMMERS:     Rex Jolliff
  */
 
-#include <ntoskrnl.h>
-#include "cm.h"
+#include <ctype.h>
+
+#include <ddk/ntddk.h>
+#include <roscfg.h>
+#include <internal/ob.h>
+#include <limits.h>
+#include <string.h>
+#include <internal/pool.h>
+#include <internal/registry.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+#include "cm.h"
 
 static PCHAR 
 checkAndSkipMagic (PCHAR  regChunk)

@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.13 2002/09/07 15:12:50 chorns Exp $
+/* $Id: time.c,v 1.14 2002/09/08 10:23:19 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,9 +11,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ex.h>
+#include <internal/safe.h>
+#include <ddk/halfuncs.h>
+#include <ddk/kefuncs.h>
 
-#define NDEBUG
 #include <internal/debug.h>
 
 

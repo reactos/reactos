@@ -7,15 +7,16 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 #define NDEBUG
-#include <msvcrtdbg.h>
-
+#include <msvcrt/msvcrtdbg.h>
 
 #define BUFSIZE	4096
 
-int _write(int _fd, const void *_buf, unsigned int _nbyte)
+size_t _write(int _fd, const void *_buf, size_t _nbyte)
 {
    char *tmp, *in, *out;
    int count, result;
@@ -41,7 +42,7 @@ int _write(int _fd, const void *_buf, unsigned int _nbyte)
 	    count--;
 	    if (count == 0)
 	    {
-	       	if (!WriteFile((HANDLE)_get_osfhandle(_fd), tmp, BUFSIZE, &wbyte, NULL))
+	       	if (!WriteFile(_get_osfhandle(_fd), tmp, BUFSIZE, &wbyte, NULL))
 		{
 		   result = -1;
 		   break;
@@ -59,7 +60,7 @@ int _write(int _fd, const void *_buf, unsigned int _nbyte)
 	 count--;
 	 if (count == 0 || _nbyte == 0)
 	 {
-	    if (!WriteFile((HANDLE)_get_osfhandle(_fd), tmp, BUFSIZE - count, &wbyte, NULL))
+	    if (!WriteFile(_get_osfhandle(_fd), tmp, BUFSIZE - count, &wbyte, NULL))
 	    {
 		result = -1; 
 		break;
@@ -78,7 +79,7 @@ int _write(int _fd, const void *_buf, unsigned int _nbyte)
    }
    else
    {
-      if(!WriteFile((HANDLE)_get_osfhandle(_fd), _buf, _nbyte, &wbyte, NULL))
+      if(!WriteFile(_get_osfhandle(_fd), _buf, _nbyte, &wbyte, NULL))
       {
 	  return -1;
       }

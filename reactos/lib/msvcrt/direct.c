@@ -1,8 +1,0 @@
-#include "direct/chdir.c"
-#include "direct/chdrive.c"
-#include "direct/getcwd.c"
-#include "direct/getdcwd.c"
-#include "direct/getdfree.c"
-#include "direct/getdrive.c"
-#include "direct/mkdir.c"
-#include "direct/rmdir.c"

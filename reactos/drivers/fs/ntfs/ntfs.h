@@ -1,14 +1,14 @@
 #ifndef NTFS_H
 #define NTFS_H
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
 #include <ddk/ntifs.h>
 
 
 #define CACHEPAGESIZE(pDeviceExt) \
-	((pDeviceExt)->NtfsInfo.BytesPerCluster > PAGE_SIZE ? \
-	 (pDeviceExt)->NtfsInfo.BytesPerCluster : PAGE_SIZE)
+	((pDeviceExt)->NtfsInfo.BytesPerCluster > PAGESIZE ? \
+	 (pDeviceExt)->NtfsInfo.BytesPerCluster : PAGESIZE)
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
@@ -117,6 +117,8 @@ typedef struct _CCB
   ULONG LastCluster;
   ULONG LastOffset;
 } CCB, *PCCB;
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
 

@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.8 2002/09/07 15:13:06 chorns Exp $
+/* $Id: acl.c,v 1.9 2002/09/08 10:23:43 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,19 +11,18 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/se.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 #define TAG_ACL    TAG('A', 'C', 'L', 'T')
 
 
 /* GLOBALS ******************************************************************/
 
-PACL SePublicDefaultDacl = NULL;
-PACL SeSystemDefaultDacl = NULL;
+PACL EXPORTED SePublicDefaultDacl = NULL;
+PACL EXPORTED SeSystemDefaultDacl = NULL;
 
 PACL SePublicDefaultUnrestrictedDacl = NULL;
 PACL SePublicOpenDacl = NULL;
@@ -41,11 +40,11 @@ SepInitDACLs(VOID)
   ULONG AclLength4;
 
   AclLength2 = sizeof(ACL) +
-	       2 * (RtlLengthRequiredSid(1) + sizeof(ROS_ACE_HEADER));
+	       2 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
   AclLength3 = sizeof(ACL) +
-	       3 * (RtlLengthRequiredSid(1) + sizeof(ROS_ACE_HEADER));
+	       3 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
   AclLength4 = sizeof(ACL) +
-	       4 * (RtlLengthRequiredSid(1) + sizeof(ROS_ACE_HEADER));
+	       4 * (RtlLengthRequiredSid(1) + sizeof(ACE_HEADER));
 
   /* create PublicDefaultDacl */
   SePublicDefaultDacl = ExAllocatePoolWithTag(NonPagedPool,
@@ -180,7 +179,7 @@ RtlpAddKnownAce(PACL Acl,
 		PSID Sid,
 		ULONG Type)
 {
-  PROS_ACE Ace;
+  PACE Ace;
 
   if (!RtlValidSid(Sid))
     {
@@ -195,7 +194,7 @@ RtlpAddKnownAce(PACL Acl,
     {
       Revision = Acl->AclRevision;
     }
-  if (!RtlFirstFreeAce(Acl, (PACE*)&Ace))
+  if (!RtlFirstFreeAce(Acl, &Ace))
     {
       return(STATUS_BUFFER_TOO_SMALL);
     }
@@ -203,14 +202,14 @@ RtlpAddKnownAce(PACL Acl,
     {
       return(STATUS_UNSUCCESSFUL);
     }
-  if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ROS_ACE)) >= 
+  if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= 
       ((PVOID)Acl + Acl->AclSize))
     {
       return(STATUS_BUFFER_TOO_SMALL);
     }
   Ace->Header.AceFlags = 0;
   Ace->Header.AceType = Type;
-  Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ROS_ACE);
+  Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
   Ace->Header.AccessMask = AccessMask;
   RtlCopySid(RtlLengthSid(Sid), (PSID)(Ace + 1), Sid);
   Acl->AceCount++;

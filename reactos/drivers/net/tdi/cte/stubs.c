@@ -1,7 +1,7 @@
-/* $Id: stubs.c,v 1.3 2002/09/07 15:12:06 chorns Exp $
+/* $Id: stubs.c,v 1.4 2002/09/08 10:22:19 chorns Exp $
  *
  */
-#include <ddk/ntddk.h>
+#include <ntos.h>
 
 
 NTSTATUS

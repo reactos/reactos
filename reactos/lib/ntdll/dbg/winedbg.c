@@ -1,8 +1,7 @@
 /*
  * Debugging functions for WINE
  */
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ntddk.h>
 #include <wine/debugtools.h>
 
 DECLARE_DEBUG_CHANNEL(tid);

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2002/09/07 15:12:10 chorns Exp $
+# $Id: Makefile,v 1.5 2002/09/08 10:22:24 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -22,9 +22,9 @@ TARGET_DEFNAME = ../hal/hal
 
 TARGET_LIBPATH = .
 
-TARGET_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include
+TARGET_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include -D__ASM__
 
-TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include
+TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/ntoskrnl/include -g
 
 
 TARGET_NAME_UP = halx86up
@@ -94,6 +94,6 @@ include $(TOOLS_PATH)/helper.mk
 #
 # Include automatic dependancy tracking
 #
-# include $(TOOLS_PATH)/depend.mk
+include $(TOOLS_PATH)/depend.mk
 
 # EOF

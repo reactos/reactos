@@ -13,8 +13,7 @@
 
 /* System library's private includes ***************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ntdll/pagesize.h>
 
 /* definitions */
 #define HEAP_ADMIN_SIZE		(sizeof(HEAP_BLOCK))

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.10 2002/09/07 15:12:53 chorns Exp $
+/* $Id: resource.c,v 1.11 2002/09/08 10:23:26 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -28,23 +28,22 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
+
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
 static CONFIGURATION_INFORMATION
-IopSystemConfigurationInformation = {0, 0, 0, 0, 0, 0, 0, FALSE, FALSE};
+SystemConfigurationInformation = {0, 0, 0, 0, 0, 0, 0, FALSE, FALSE};
 
 /* FUNCTIONS *****************************************************************/
 
 PCONFIGURATION_INFORMATION STDCALL
 IoGetConfigurationInformation(VOID)
 {
-  return(&IopSystemConfigurationInformation);
+  return(&SystemConfigurationInformation);
 }
 
 NTSTATUS STDCALL

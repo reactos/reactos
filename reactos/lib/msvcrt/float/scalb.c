@@ -1,5 +1,5 @@
-#include <msvcrti.h>
-
+#include <msvcrt/float.h>
+#include <msvcrt/internal/ieee.h>
 
 double _scalb( double __x, long e )
 {

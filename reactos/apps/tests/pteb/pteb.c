@@ -1,4 +1,3 @@
-#define NTOS_USER_MODE
 #include <ntos.h>
 #include <stdio.h>
 

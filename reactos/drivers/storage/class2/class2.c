@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.23 2002/09/07 15:12:09 chorns Exp $
+/* $Id: class2.c,v 1.24 2002/09/08 10:22:22 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,9 +33,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ddk/scsi.h>
-#include <ddk/ntdddisk.h>
-#include <ddk/ntddscsi.h>
+#include "../include/scsi.h"
 #include "../include/class2.h"
 
 #define NDEBUG
@@ -43,8 +41,6 @@
 
 
 #define VERSION "0.0.1"
-
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 #define TAG_SRBT  TAG('S', 'r', 'b', 'T')
 
@@ -410,6 +406,7 @@ ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
     }
 
   RtlFreeUnicodeString(&DeviceName);
+
   return(Status);
 }
 
@@ -1537,11 +1534,11 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
       /* Adjust the maximum transfer length */
       CurrentTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages;
 
-      if (MaximumTransferLength > CurrentTransferPages * PAGE_SIZE)
-	  MaximumTransferLength = CurrentTransferPages * PAGE_SIZE;
+      if (MaximumTransferLength > CurrentTransferPages * PAGESIZE)
+	  MaximumTransferLength = CurrentTransferPages * PAGESIZE;
 
       if (MaximumTransferLength == 0)
-	  MaximumTransferLength = PAGE_SIZE;
+	  MaximumTransferLength = PAGESIZE;
 
       IoMarkIrpPending(Irp);
 

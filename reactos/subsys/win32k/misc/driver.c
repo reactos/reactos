@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.21 2002/09/07 15:13:11 chorns Exp $
+/* $Id: driver.c,v 1.22 2002/09/08 10:23:51 chorns Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -8,13 +8,13 @@
 #undef WIN32_LEAN_AND_MEAN
 #define WIN32_NO_PEHDR
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <windows.h>
-#include <ddk/winddi.h>
-#include <ddk/ntddvdeo.h>
 #include <win32k/driver.h>
 #include <wchar.h>
+//#include "../../ntoskrnl/include/internal/module.h"
+#include <ddk/winddi.h>
+#include <ddk/ntddvid.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -159,7 +159,7 @@ BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
   return TRUE;
 }
 
-typedef NTSTATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
+typedef VP_STATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
 
 HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
 {

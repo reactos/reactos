@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/math.h>
 
 double cos (double __x);
 

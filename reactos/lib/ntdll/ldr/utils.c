@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.55 2002/09/07 15:12:39 chorns Exp $
+/* $Id: utils.c,v 1.56 2002/09/08 10:23:04 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,18 +17,19 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
-#include <pe.h>
 #include <reactos/config.h>
+#include <ddk/ntddk.h>
+#include <windows.h>
 #include <string.h>
 #include <wchar.h>
+#include <ntdll/ldr.h>
+#include <ntos/minmax.h>
+
 
 #ifdef DBG_NTDLL_LDR_UTILS
 #define NDEBUG
 #endif
-#include <debug.h>
+#include <ntdll/ntdll.h>
 
 /* PROTOTYPES ****************************************************************/
 
@@ -892,7 +893,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS	NTHeaders,
 	  Status = NtProtectVirtualMemory(NtCurrentProcess(),
 					  ImageBase + 
 					  RelocationDir->VirtualAddress,
-					  PAGE_SIZE,
+					  PAGESIZE,
 					  PAGE_READWRITE,
 					  &OldProtect);
 	  if (!NT_SUCCESS(Status))
@@ -944,7 +945,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS	NTHeaders,
 	  Status = NtProtectVirtualMemory(NtCurrentProcess(),
 					  ImageBase + 
 					  RelocationDir->VirtualAddress,
-					  PAGE_SIZE,
+					  PAGESIZE,
 					  OldProtect,
 					  &OldProtect);
 	  if (!NT_SUCCESS(Status))

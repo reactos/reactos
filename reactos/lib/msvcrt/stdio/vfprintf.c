@@ -1,6 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <stdarg.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/malloc.h>
+#include <msvcrt/internal/file.h>
 
 int _isnanl(double x);
 int _isinfl(double x);
@@ -51,13 +53,14 @@ vfprintf(FILE *f, const char *fmt, va_list ap)
  * Appropiated for the reactos kernel, March 1998 -- David Welch
  */
 
-#include <stdarg.h>
+#include <msvcrt/stdarg.h>
 
-#include <ctype.h>
-#include <string.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/string.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/math.h>
+#include <msvcrt/internal/ieee.h>
 
 
 #define ZEROPAD		1	/* pad with zero */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.59 2002/09/07 15:12:59 chorns Exp $
+/* $Id: mm.c,v 1.60 2002/09/08 10:23:35 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -29,14 +29,20 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/i386/segment.h>
+#include <internal/mm.h>
+#include <internal/ntoskrnl.h>
+#include <internal/io.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-
 /* GLOBALS *****************************************************************/
 
+PVOID EXPORTED MmUserProbeAddress = NULL; 
+PVOID EXPORTED MmHighestUserAddress = NULL;
 MM_STATS MmStats; 
 
 /* FUNCTIONS ****************************************************************/
@@ -154,7 +160,6 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {
 	DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
-KeDumpStackFrames((PULONG)__builtin_frame_address(0));
 	return(STATUS_UNSUCCESSFUL);
      }
    if (PsGetCurrentProcess() == NULL)
@@ -427,8 +432,8 @@ MmGrowKernelStack (
 BOOLEAN
 STDCALL
 MmSetAddressRangeModified (
-  IN PVOID  Address,
-  IN ULONG  Length
+	DWORD	Unknown0,
+	DWORD	Unknown1
 	)
 {
 	UNIMPLEMENTED;

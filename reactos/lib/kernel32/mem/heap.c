@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.20 2002/09/07 15:12:26 chorns Exp $
+/* $Id: heap.c,v 1.21 2002/09/08 10:22:43 chorns Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -27,8 +27,8 @@
  * Put the type definitions of the heap in a seperate header. Boudewijn Dekker
  */
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

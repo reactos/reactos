@@ -26,11 +26,11 @@
 #define KTHREAD_STACK_LIMIT       0x1C
 #define KTHREAD_TEB               0x20
 #define KTHREAD_KERNEL_STACK      0x28
-#define KTHREAD_PREVIOUS_MODE     0x13B
-#define KTHREAD_TRAP_FRAME        0x12C
-#define KTHREAD_CALLBACK_STACK    0x124
+#define KTHREAD_PREVIOUS_MODE     0x137
+#define KTHREAD_TRAP_FRAME        0x128
+#define KTHREAD_CALLBACK_STACK    0x120
 
-#define ETHREAD_THREADS_PROCESS   0x26C
+#define ETHREAD_THREADS_PROCESS   0x234
 
 #define KPROCESS_DIRECTORY_TABLE_BASE 0x18
 
@@ -38,20 +38,43 @@
 
 #define KPCR_EXCEPTION_LIST       0x0
 #define KPCR_SELF                 0x18
-#define KPCR_TSS                  0x3C
-#define KPCR_CURRENT_THREAD       0x5C
+#define KPCR_TSS                  0x28
+#define KPCR_CURRENT_THREAD       0x124	
 
-#ifndef AS_INVOKED
+#ifndef __ASM__
 
 /*
  * Processor Control Region
  */
-typedef struct _IKPCR
+typedef struct _KPCR
 {
-  KPCR KPCR;                      /* 00 */
-  UCHAR Reserved[0x0C];           /* 50 */
-  struct _KTHREAD* CurrentThread; /* 5C */
-} IKPCR, *PIKPCR;                 /* 60 */
+  PVOID ExceptionList;               /* 00 */
+  PVOID StackBase;                   /* 04 */
+  PVOID StackLimit;                  /* 08 */
+  PVOID SubSystemTib;                /* 0C */
+  PVOID Reserved1;                   /* 10 */
+  PVOID ArbitraryUserPointer;        /* 14 */
+  struct _KPCR* Self;                /* 18 */
+  UCHAR ProcessorNumber;             /* 1C */
+  KIRQL Irql;                        /* 1D */
+  UCHAR Reserved2[0x2];              /* 1E */
+  PUSHORT IDT;                       /* 20 */
+  PUSHORT GDT;                       /* 24 */
+  KTSS* TSS;                         /* 28 */
+  UCHAR Reserved3[0xF8];             /* 2C */
+  struct _KTHREAD* CurrentThread;    /* 124 */
+} __attribute__((packed)) KPCR, *PKPCR;
+
+static inline PKPCR KeGetCurrentKPCR(VOID)
+{
+  ULONG value;
+
+  __asm__ __volatile__ ("movl %%fs:0x18, %0\n\t"
+	  : "=r" (value)
+    : /* no inputs */
+    );
+  return((PKPCR)value);
+}
 
 VOID
 Ki386ContextSwitch(struct _KTHREAD* NewThread, 
@@ -64,7 +87,7 @@ Ke386InitThreadWithContext(struct _KTHREAD* Thread, PCONTEXT Context);
 NTSTATUS
 Ki386ValidateUserContext(PCONTEXT Context);
 
-#endif /* AS_INVOKED */
+#endif /* __ASM__ */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_PS_H */
 

@@ -3,10 +3,8 @@
  * 
  */
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
-#include <ddk/ntddvdeo.h>
-#include <ntos/ntddvid.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntddvid.h>
 
 #define UNIMPLEMENTED do {DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__); for(;;);} while (0)
 

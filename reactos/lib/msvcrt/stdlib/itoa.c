@@ -9,8 +9,8 @@
  *              1998: Added ltoa Boudewijn Dekker
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/errno.h>
+#include <msvcrt/stdlib.h>
 
 char *
 _itoa(int value, char *string, int radix)

@@ -3,9 +3,6 @@
 /* ms uses a smaller jmp_buf structure */
 /* might do a realloc in setjmp */
 
-#include <msvcrti.h>
-
-
 typedef struct {
   unsigned int __eax, __ebx, __ecx, __edx, __esi;
   unsigned int __edi, __ebp, __esp, __eip, __eflags;

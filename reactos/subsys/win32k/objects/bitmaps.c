@@ -1,7 +1,5 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
 #include <stdlib.h>
 #include <win32k/bitmaps.h>
 //#include <win32k/debug.h>
@@ -22,16 +20,16 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
 {
   PDC DCDest = DC_HandleToPtr(hDCDest);
   PDC DCSrc  = DC_HandleToPtr(hDCSrc);
-  SURFOBJ *SurfDest, *SurfSrc;
+  PSURFOBJ SurfDest, SurfSrc;
   PSURFGDI SurfGDIDest, SurfGDISrc;
   RECTL DestRect;
   POINTL SourcePoint;
   PBITMAPOBJ DestBitmapObj;
   PBITMAPOBJ SrcBitmapObj;
   BOOL Status, SurfDestAlloc, SurfSrcAlloc;
-  ROS_PALOBJ* DCLogPal;
+  PPALOBJ DCLogPal;
   PPALGDI PalDestGDI, PalSourceGDI;
-  XLATEOBJ* XlateObj = NULL;
+  PXLATEOBJ XlateObj = NULL;
   HPALETTE SourcePalette, DestPalette;
 
   /* Offset the destination and source by the origin of their DCs. */
@@ -52,14 +50,14 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   SurfSrcAlloc  = FALSE;
 
   // Determine surfaces to be used in the bitblt
-  SurfDest = (SURFOBJ*)AccessUserObject(DCDest->Surface);
-  SurfSrc  = (SURFOBJ*)AccessUserObject(DCSrc->Surface);
+  SurfDest = (PSURFOBJ)AccessUserObject(DCDest->Surface);
+  SurfSrc  = (PSURFOBJ)AccessUserObject(DCSrc->Surface);
 
-  SurfGDIDest = (SURFGDI*)AccessInternalObjectFromUserObject(SurfDest);
-  SurfGDISrc  = (SURFGDI*)AccessInternalObjectFromUserObject(SurfSrc);
+  SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
+  SurfGDISrc  = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
 
   // Retrieve the logical palette of the destination DC
-  DCLogPal = (ROS_PALOBJ*)AccessUserObject(DCDest->w.hPalette);
+  DCLogPal = (PPALOBJ)AccessUserObject(DCDest->w.hPalette);
 
   if(DCLogPal)
     if(DCLogPal->logicalToSystem)
@@ -83,7 +81,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
     PalDestGDI   = (PPALGDI)AccessInternalObject(DestPalette);
     PalSourceGDI = (PPALGDI)AccessInternalObject(SourcePalette);
 
-    XlateObj = (XLATEOBJ*)EngCreateXlate(PalDestGDI->Mode, PalSourceGDI->Mode, DestPalette, SourcePalette);
+    XlateObj = (PXLATEOBJ)EngCreateXlate(PalDestGDI->Mode, PalSourceGDI->Mode, DestPalette, SourcePalette);
   }
 
   // Perform the bitblt operation

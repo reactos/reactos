@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fs_rec.c,v 1.3 2002/09/07 15:12:01 chorns Exp $
+/* $Id: fs_rec.c,v 1.4 2002/09/08 10:22:09 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,7 +28,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -151,7 +150,7 @@ FsRecRegisterFs(PDRIVER_OBJECT DriverObject,
 			NULL,
 			0,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			FILE_OPEN_IF,
+			OPEN_EXISTING,
 			0,
 			NULL,
 			0);
@@ -205,7 +204,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
   ConfigInfo = IoGetConfigurationInformation();
 
-  if (ConfigInfo->CdRomCount > 0)
+  if (ConfigInfo->CDRomCount > 0)
     {
       Status = FsRecRegisterFs(DriverObject,
 			       L"\\Cdfs",

@@ -1,7 +1,8 @@
-#include <msvcrti.h>
+#include <msvcrt/mbctype.h>
+#include <msvcrt/ctype.h>
 
 
-int _ismbbalnum(unsigned int c)
+int _ismbbalnum(unsigned char c)
 {
   return (isalnum(c) || _ismbbkalnum(c));
 }

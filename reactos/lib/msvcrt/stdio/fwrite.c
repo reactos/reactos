@@ -1,7 +1,10 @@
-#include <msvcrti.h>
-
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 #define NDEBUG
-#include <msvcrtdbg.h>
+#include <msvcrt/msvcrtdbg.h>
 
 
 size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
@@ -72,7 +75,7 @@ size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
 	{
 	   while (to_write > 0)
 	   {
-	      n_written = _write(_fileno(iop), ptr, to_write);
+	      n_written = _write(fileno(iop), ptr, to_write);
 	      if (n_written <= 0)
 	      {
 	         iop->_flag |= _IOERR;

@@ -1,4 +1,4 @@
-/* $Id: access.c,v 1.2 2002/09/07 15:13:06 chorns Exp $
+/* $Id: access.c,v 1.3 2002/09/08 10:23:43 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,10 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
-
-#define NDEBUG
-#include <internal/debug.h>
+#include <ddk/ntddk.h>
 
 
 /* FUNCTIONS ***************************************************************/

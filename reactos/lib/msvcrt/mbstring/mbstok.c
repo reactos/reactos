@@ -1,7 +1,6 @@
-#include <msvcrti.h>
+#include <msvcrt/mbstring.h>
 
-
-unsigned char * _mbstok(unsigned char *s, const unsigned char *delim)
+unsigned char * _mbstok(unsigned char *s, unsigned char *delim)
 {
   const char *spanp;
   int c, sc;
@@ -9,8 +8,8 @@ unsigned char * _mbstok(unsigned char *s, const unsigned char *delim)
   static char *last;
 
 
-  if (s == (void *)0 && (s = last) == (void *)0)
-    return ((void *)0);
+  if (s == NULL && (s = last) == NULL)
+    return (NULL);
 
   /*
    * Skip (span) leading delimiters (s += strspn(s, delim), sort of).
@@ -25,8 +24,8 @@ unsigned char * _mbstok(unsigned char *s, const unsigned char *delim)
   }
 
   if (c == 0) {			/* no non-delimiter characters */
-    last = (void *)0;
-    return ((void *)0);
+    last = NULL;
+    return (NULL);
   }
   tok = s - 1;
 
@@ -41,7 +40,7 @@ unsigned char * _mbstok(unsigned char *s, const unsigned char *delim)
     do {
       if ((sc = *spanp) == c) {
 	if (c == 0)
-	  s = (void *)0;
+	  s = NULL;
 	else
 	  s[-1] = 0;
 	last = s;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slab.c,v 1.6 2002/09/07 15:13:02 chorns Exp $
+/* $Id: slab.c,v 1.7 2002/09/08 10:23:36 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -29,11 +29,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/mm.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* TYPES ********************************************************************/
 
@@ -92,7 +92,7 @@ ExCreateSlabCache(PUNICODE_STRING Name, ULONG Size, ULONG Align,
   AlignSize = Align - (ObjectSize % Align);
   Slab->ObjectSize = ObjectSize + AlignSize;
   Slab->ObjectsPerPage = 
-    (PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) / Slab->ObjectSize;
+    (PAGESIZE - sizeof(SLAB_CACHE_PAGE)) / Slab->ObjectSize;
   InitializeListHead(&Slab->PageListHead);
   KeInitializeSpinLock(&Slab->SlabLock);
   
@@ -123,7 +123,7 @@ ExGrowSlabCache(PSLAB_CACHE Slab)
       return(NULL);
     }
 
-  SlabPage = (PSLAB_CACHE_PAGE)(Page + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE));
+  SlabPage = (PSLAB_CACHE_PAGE)(Page + PAGESIZE - sizeof(SLAB_CACHE_PAGE));
   SlabPage->ReferenceCount = 0;
   SlabPage->FirstFreeBuffer = (PSLAB_CACHE_BUFCTL)Page;
   for (i = 0; i < Slab->ObjectsPerPage; i++)
@@ -261,9 +261,9 @@ ExFreeSlabCache(PSLAB_CACHE Slab, PVOID Object)
       current = CONTAINING_RECORD(current_entry,
 				  SLAB_CACHE_PAGE,
 				  PageListEntry);
-      Base = (PVOID)current + sizeof(SLAB_CACHE_PAGE) - PAGE_SIZE;
+      Base = (PVOID)current + sizeof(SLAB_CACHE_PAGE) - PAGESIZE;
       if (Base >= Object && 
-	  (Base + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) >= 
+	  (Base + PAGESIZE - sizeof(SLAB_CACHE_PAGE)) >= 
 	   (Object + Slab->ObjectSize))
 	{
 	  ExFreeFromPageSlabCache(Slab, current, Object);
@@ -304,7 +304,7 @@ ExDestroySlabCache(PSLAB_CACHE Slab)
       current = CONTAINING_RECORD(current_entry,
 				  SLAB_CACHE_PAGE,
 				  PageListEntry);
-      Base = (PVOID)current + sizeof(SLAB_CACHE_PAGE) - PAGE_SIZE;
+      Base = (PVOID)current + sizeof(SLAB_CACHE_PAGE) - PAGESIZE;
       if (Slab->Destructor != NULL)
 	{
 	  for (i = 0; i < Slab->ObjectsPerPage; i++)

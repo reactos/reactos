@@ -11,11 +11,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <napi/i386/segment.h>
+#include <napi/teb.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -48,15 +51,15 @@ RtlCreateUserThread(HANDLE ProcessHandle,
 
   /* FIXME: use correct commit size */
 #if 0
-  if ((StackCommit != NULL) && (*StackCommit > PAGE_SIZE))
+  if ((StackCommit != NULL) && (*StackCommit > PAGESIZE))
     InitialTeb.StackCommit = *StackCommit;
   else
     InitialTeb.StackCommit = PAGESIZE;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
 
   /* add size of guard page */
-  InitialTeb.StackCommit += PAGE_SIZE;
+  InitialTeb.StackCommit += PAGESIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -107,7 +110,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
   /* Protect guard page */
   Status = NtProtectVirtualMemory(ProcessHandle,
 				  InitialTeb.StackLimit,
-				  PAGE_SIZE,
+				  PAGESIZE,
 				  PAGE_GUARD | PAGE_READWRITE,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))

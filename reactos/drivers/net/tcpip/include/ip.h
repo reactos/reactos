@@ -184,7 +184,7 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
 #define LOOPBACK_ADDRMASK_IPv4  ((IPv4_RAW_ADDRESS)DH2N(0xFFFFFF00))
 
 /* Protocol definitions */
-//#define IPPROTO_RAW     0   /* Raw IP */
+#define IPPROTO_RAW     0   /* Raw IP */
 #define IPPROTO_ICMP    1   /* Internet Control Message Protocol */
 #define IPPROTO_IGMP    2   /* Internet Group Management Protocol */
 #define IPPROTO_TCP     6   /* Transmission Control Protocol */

@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.3 2002/09/07 15:12:32 chorns Exp $
+/* $Id: pipe.c,v 1.4 2002/09/08 10:22:50 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -8,7 +8,10 @@
  * UPDATE HISTORY:
  *              28/12/98: Appropriated for Reactos
  */
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 
 int _pipe(int _fildes[2], unsigned int size, int mode )

@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.14 2002/09/07 15:12:27 chorns Exp $
+/* $Id: cmdline.c,v 1.15 2002/09/08 10:22:45 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,14 +11,14 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
-
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
+#include <napi/teb.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -37,11 +37,11 @@ static WINBOOL bCommandLineInitialized = FALSE;
 static VOID
 InitCommandLines (VOID)
 {
-	PRTL_ROS_USER_PROCESS_PARAMETERS Params;
+	PRTL_USER_PROCESS_PARAMETERS Params;
 
 	// get command line
 	Params = NtCurrentPeb()->ProcessParameters;
-	RtlRosNormalizeProcessParams (Params);
+	RtlNormalizeProcessParams (Params);
 
 	// initialize command line buffers
 	CommandLineStringW.Length = Params->CommandLine.Length;

@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.5 2002/09/07 15:13:06 chorns Exp $
+/* $Id: luid.c,v 1.6 2002/09/08 10:23:43 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,11 +11,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -60,7 +58,6 @@ RtlCopyLuid(IN PLUID LuidDest,
   LuidDest->QuadPart = LuidSrc->QuadPart;
 }
 
-#undef RtlEqualLuid
 
 BOOLEAN STDCALL
 RtlEqualLuid(IN PLUID Luid1,

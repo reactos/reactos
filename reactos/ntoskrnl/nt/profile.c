@@ -27,11 +27,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/mm.h>
+#include <internal/ps.h>
+#include <internal/pool.h>
+#include <limits.h>
+#include <internal/safe.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 /* TYPES ********************************************************************/
 
@@ -89,7 +92,7 @@ typedef struct _KPROFILE
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE ExProfileObjectType = NULL;
+POBJECT_TYPE EXPORTED ExProfileObjectType = NULL;
 
 static GENERIC_MAPPING ExpProfileMapping = {
 	STANDARD_RIGHTS_READ,
@@ -454,7 +457,7 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
   /*
    * Create the object
    */
-  Status = ObRosCreateObject(&ProfileHandle,
+  Status = ObCreateObject(&ProfileHandle,
 			  STANDARD_RIGHTS_ALL,
 			  NULL,
 			  ExProfileObjectType,

@@ -1,7 +1,8 @@
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/stdlib.h>
 
 #define NDEBUG
-#include <msvcrtdbg.h>
+#include <msvcrt/msvcrtdbg.h>
 
 
 char *getenv(const char *name)

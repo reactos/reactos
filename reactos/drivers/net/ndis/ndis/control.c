@@ -10,7 +10,7 @@
 #include <ndissys.h>
 
 VOID
-STDCALL
+EXPORT
 NdisReinitializePacket(
      IN OUT  PNDIS_PACKET    Packet)
 {
@@ -19,7 +19,7 @@ NdisReinitializePacket(
 }
 
 VOID
-STDCALL
+EXPORT
 NdisAcquireReadWriteLock(
     IN  PNDIS_RW_LOCK   Lock,
     IN  BOOLEAN         fWrite,
@@ -34,10 +34,9 @@ NdisAcquireReadWriteLock(
     UNIMPLEMENTED
 }
 
-#undef NdisAcquireSpinLock
 
 VOID
-STDCALL
+EXPORT
 NdisAcquireSpinLock(
     IN  PNDIS_SPIN_LOCK SpinLock)
 /*
@@ -49,10 +48,9 @@ NdisAcquireSpinLock(
     UNIMPLEMENTED
 }
 
-#undef NdisAllocateSpinLock
 
 VOID
-STDCALL
+EXPORT
 NdisAllocateSpinLock(
     IN  PNDIS_SPIN_LOCK SpinLock)
 /*
@@ -64,10 +62,9 @@ NdisAllocateSpinLock(
     UNIMPLEMENTED
 }
 
-#undef NdisDprAcquireSpinLock
 
 VOID
-STDCALL
+EXPORT
 NdisDprAcquireSpinLock(
     IN  PNDIS_SPIN_LOCK SpinLock)
 /*
@@ -79,10 +76,9 @@ NdisDprAcquireSpinLock(
     UNIMPLEMENTED
 }
 
-#undef NdisDprReleaseSpinLock
 
 VOID
-STDCALL
+EXPORT
 NdisDprReleaseSpinLock(
     IN  PNDIS_SPIN_LOCK SpinLock)
 /*
@@ -95,10 +91,8 @@ NdisDprReleaseSpinLock(
 }
 
 
-#undef NdisFreeSpinLock
-
 VOID
-STDCALL
+EXPORT
 NdisFreeSpinLock(
     IN  PNDIS_SPIN_LOCK SpinLock)
 /*
@@ -112,7 +106,7 @@ NdisFreeSpinLock(
 
 
 VOID
-STDCALL
+EXPORT
 NdisGetCurrentProcessorCpuUsage(
     PULONG  pCpuUsage)
 /*
@@ -126,7 +120,7 @@ NdisGetCurrentProcessorCpuUsage(
 
 
 VOID
-STDCALL
+EXPORT
 NdisInitializeEvent(
     IN  PNDIS_EVENT Event)
 /*
@@ -139,10 +133,8 @@ NdisInitializeEvent(
 }
 
 
-#undef NdisReleaseSpinLock
-
 VOID
-STDCALL
+EXPORT
 NdisReleaseSpinLock(
     IN  PNDIS_SPIN_LOCK SpinLock)
 /*
@@ -156,7 +148,7 @@ NdisReleaseSpinLock(
 
 
 VOID
-STDCALL
+EXPORT
 NdisResetEvent(
     IN  PNDIS_EVENT Event)
 /*
@@ -170,7 +162,7 @@ NdisResetEvent(
 
 
 VOID
-STDCALL
+EXPORT
 NdisSetEvent(
     IN  PNDIS_EVENT Event)
 /*
@@ -184,7 +176,7 @@ NdisSetEvent(
 
 
 BOOLEAN
-STDCALL
+EXPORT
 NdisWaitEvent(
     IN  PNDIS_EVENT Event,
     IN  UINT        MsToWait)

@@ -1,6 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/string.h>
 
 size_t strcspn(const char *s1, const char *s2)
 {

@@ -27,12 +27,11 @@
  * UPDATE HISTORY:
  *      15-03-2002  CSH  Created
  */
-
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ex.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS ****************************************************************/
 

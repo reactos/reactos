@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.17 2002/09/07 15:12:09 chorns Exp $
+/* $Id: disk.c,v 1.18 2002/09/08 10:22:22 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,11 +27,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
-#include <ddk/ntdddisk.h>
-#include <ddk/ntddscsi.h>
+#include <ddk/ntddk.h>
+
+#include "../include/scsi.h"
 #include "../include/class2.h"
+#include "../include/ntddscsi.h"
 
 #define NDEBUG
 #include <debug.h>

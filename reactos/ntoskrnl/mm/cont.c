@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.22 2002/09/07 15:12:59 chorns Exp $
+/* $Id: cont.c,v 1.23 2002/09/08 10:23:32 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/mm.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -70,12 +70,12 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 			NULL);
        return(NULL);
      }
-   for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE); i++)
+   for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
      {
 	MmCreateVirtualMapping(NULL,
-			       BaseAddress + (i * PAGE_SIZE),
+			       BaseAddress + (i * 4096),
 			       PAGE_EXECUTE_READWRITE | PAGE_SYSTEM,
-			       (LARGE_INTEGER)(PBase.QuadPart + (i * PAGE_SIZE)),
+			       (LARGE_INTEGER)(PBase.QuadPart + (i * 4096)),
 			       TRUE);
      }
    return(BaseAddress);
@@ -113,7 +113,7 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
 {
   return(MmAllocateContiguousAlignedMemory(NumberOfBytes,
 					   HighestAcceptableAddress,
-					   PAGE_SIZE));
+					   PAGESIZE));
 }
 
 

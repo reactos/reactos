@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.3 2002/09/07 15:12:01 chorns Exp $
+/* $Id: misc.c,v 1.4 2002/09/08 10:22:09 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -103,7 +103,7 @@ CdfsSwapString(PWCHAR Out,
 
 VOID
 CdfsDateTimeToFileTime(PFCB Fcb,
-		       LARGE_INTEGER *FileTime)
+		       TIME *FileTime)
 {
   TIME_FIELDS TimeFields;
 

@@ -1,8 +1,6 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
-#include <ddk/ntapi.h>
-
 ULONG STDCALL
 NtUserGetSystemMetrics(ULONG Index);
 DWORD STDCALL

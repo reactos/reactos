@@ -1,16 +1,15 @@
-/* $Id: sysinfo.c,v 1.4 2002/09/07 15:12:27 chorns Exp $
+/* $Id: sysinfo.c,v 1.5 2002/09/08 10:22:45 chorns Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
  */
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 
 #define PV_NT351 0x00030033
@@ -56,14 +55,14 @@ GetSystemInfo (
 	 *	PROCESSOR_ARCHITECTURE_PPC   3
 	 *	PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
 	 */
-	Si->wProcessorArchitecture	= Spi.ProcessorArchitecture;
+	Si->u.s.wProcessorArchitecture	= Spi.ProcessorArchitecture;
 	/* For future use: always zero */
-	Si->wReserved		= 0;
-	Si->dwPageSize			= Sbi.PhysicalPageSize;
-	Si->lpMinimumApplicationAddress	= (PVOID)Sbi.LowestUserAddress;
-	Si->lpMaximumApplicationAddress	= (PVOID)Sbi.HighestUserAddress;
-	Si->dwActiveProcessorMask	= Sbi.ActiveProcessors;
-	Si->dwNumberOfProcessors	= Sbi.NumberProcessors;
+	Si->u.s.wReserved		= 0;
+	Si->dwPageSize			= Sbi.PageSize;
+	Si->lpMinimumApplicationAddress	= (PVOID)Sbi.MinimumUserModeAddress;
+	Si->lpMaximumApplicationAddress	= (PVOID)Sbi.MaximumUserModeAddress;
+	Si->dwActiveProcessorMask	= Sbi.ActiveProcessorsAffinityMask;
+	Si->dwNumberOfProcessors	= Sbi.NumberOfProcessors;
 	/*
 	 * Compatibility (no longer relevant):
 	 *	PROCESSOR_INTEL_386	386

@@ -10,11 +10,10 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -35,7 +34,7 @@ KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
    
    DPRINT("KeInsertByKeyDeviceQueue()\n");
    
-   DeviceQueueEntry->SortKey=SortKey;
+   DeviceQueueEntry->Key=SortKey;
 
    KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
    
@@ -46,21 +45,21 @@ KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
 	return(FALSE);
      }
       
-   current=DeviceQueue->DeviceListHead.Flink;
-   while (current!=(&DeviceQueue->DeviceListHead))
+   current=DeviceQueue->ListHead.Flink;
+   while (current!=(&DeviceQueue->ListHead))
      {
-	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
-	if (entry->SortKey < SortKey)
+	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,Entry);
+	if (entry->Key < SortKey)
 	  {
-	     InsertBeforeEntryInList(&DeviceQueue->DeviceListHead,
-				     &DeviceQueueEntry->DeviceListEntry,
+	     InsertBeforeEntryInList(&DeviceQueue->ListHead,
+				     &DeviceQueueEntry->Entry,
 				     current);
 	     KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
 	     return(TRUE);
 	  }
 	current = current->Flink;
      }   
-   InsertTailList(&DeviceQueue->DeviceListHead,&DeviceQueueEntry->DeviceListEntry);
+   InsertTailList(&DeviceQueue->ListHead,&DeviceQueueEntry->Entry);
    
    KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
    return(TRUE);
@@ -83,12 +82,12 @@ KeRemoveByKeyDeviceQueue (
    
    KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
    
-   current = DeviceQueue->DeviceListHead.Flink;
-   while (current != &DeviceQueue->DeviceListHead)
+   current = DeviceQueue->ListHead.Flink;
+   while (current != &DeviceQueue->ListHead)
      {
-	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
-	if (entry->SortKey < SortKey ||
-	    current->Flink == &DeviceQueue->DeviceListHead)
+	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,Entry);
+	if (entry->Key < SortKey ||
+	    current->Flink == &DeviceQueue->ListHead)
 	  {
 	     RemoveEntryList(current);
 	     KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
@@ -125,8 +124,8 @@ KeRemoveDeviceQueue (
    
    KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
    
-   list_entry = RemoveHeadList(&DeviceQueue->DeviceListHead);
-   if (list_entry==(&DeviceQueue->DeviceListHead))
+   list_entry = RemoveHeadList(&DeviceQueue->ListHead);
+   if (list_entry==(&DeviceQueue->ListHead))
      {
 	DeviceQueue->Busy=FALSE;
 	KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
@@ -134,7 +133,7 @@ KeRemoveDeviceQueue (
      }
    KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
    
-   entry = CONTAINING_RECORD(list_entry,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
+   entry = CONTAINING_RECORD(list_entry,KDEVICE_QUEUE_ENTRY,Entry);
    return(entry);
 }
 
@@ -150,7 +149,7 @@ KeInitializeDeviceQueue (
  */
 {
    assert(DeviceQueue!=NULL);
-   InitializeListHead(&DeviceQueue->DeviceListHead);
+   InitializeListHead(&DeviceQueue->ListHead);
    DeviceQueue->Busy=FALSE;
    KeInitializeSpinLock(&DeviceQueue->Lock);
 }
@@ -181,9 +180,9 @@ KeInsertDeviceQueue (
 	return(FALSE);
      }
    
-   InsertTailList(&DeviceQueue->DeviceListHead,
-		  &DeviceQueueEntry->DeviceListEntry);
-   DeviceQueueEntry->SortKey=0;
+   InsertTailList(&DeviceQueue->ListHead,
+		  &DeviceQueueEntry->Entry);
+   DeviceQueueEntry->Key=0;
    
    KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
    return(TRUE);

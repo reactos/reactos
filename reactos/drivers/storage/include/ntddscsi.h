@@ -1,4 +1,4 @@
-/* $Id: ntddscsi.h,v 1.4 2002/09/07 15:12:09 chorns Exp $
+/* $Id: ntddscsi.h,v 1.5 2002/09/08 10:22:23 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <windows.h>
 
 int _abnormal_termination(void)
 {

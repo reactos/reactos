@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.4 2002/09/07 15:13:05 chorns Exp $
+/* $Id: error.c,v 1.5 2002/09/08 10:23:41 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -19,12 +19,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
-#include <winerror.h>
+#include <ddk/ntddk.h>
+#include <errors.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+#define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
+#define LOWORD(l) ((WORD)(l))
 
 /* TYPES *******************************************************************/
 

@@ -8,8 +8,10 @@
  *                  Created 19/01/99
  * NOTE		    Not tested.
  */
-#include <msvcrti.h>
 
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/file.h>
 
 #ifndef F_OK
  #define F_OK	0x01
@@ -49,9 +51,9 @@ loop files and check for name_to_remove
 
     /* If one of the existing slots is available, return it */
     for (i=0; i<fr->count; i++) {
-      if (fr->files[i]->_tmpfname != NULL) {
-		if ( _access(fr->files[i]->_tmpfname,W_OK) ) {
-			strcpy(temp_name,fr->files[i]->_tmpfname);
+      if (fr->files[i]->_name_to_remove != NULL) {
+		if ( _access(fr->files[i]->_name_to_remove,W_OK) ) {
+			strcpy(temp_name,fr->files[i]->_name_to_remove);
 			fclose(fr->files[i]);
 			remove(temp_name);
 			total_closed++;

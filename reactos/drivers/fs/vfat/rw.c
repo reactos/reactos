@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.47 2002/09/07 15:12:03 chorns Exp $
+/* $Id: rw.c,v 1.48 2002/09/08 10:22:12 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -696,9 +696,9 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       {
 	  ULONG CacheSize;
 	  CacheSize = IrpContext->DeviceExt->FatInfo.BytesPerCluster;
-	  if (CacheSize < PAGE_SIZE)
+	  if (CacheSize < PAGESIZE)
 	  {
-	     CacheSize = PAGE_SIZE;
+	     CacheSize = PAGESIZE;
 	  }
 	  CcRosInitializeFileCache(IrpContext->FileObject, &Fcb->RFCB.Bcb, CacheSize);
       }
@@ -967,9 +967,9 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       {
 	  ULONG CacheSize;
 	  CacheSize = IrpContext->DeviceExt->FatInfo.BytesPerCluster;
-	  if (CacheSize < PAGE_SIZE)
+	  if (CacheSize < PAGESIZE)
 	  {
-	     CacheSize = PAGE_SIZE;
+	     CacheSize = PAGESIZE;
 	  }
 	  CcRosInitializeFileCache(IrpContext->FileObject, &Fcb->RFCB.Bcb, CacheSize);
       }

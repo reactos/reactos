@@ -24,8 +24,10 @@
  *                  Created 09/10/00
  */
 
-#include <ntoskrnl.h>
-
+#include <internal/v86m.h>
+#include <ddk/i386/tss.h>
+#include <internal/trap.h>
+#include <internal/ps.h>
 			
 .globl _Ki386RetToV86Mode
 .globl _KiV86Complete

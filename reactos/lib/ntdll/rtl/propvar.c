@@ -1,15 +1,12 @@
-/* $Id: propvar.c,v 1.2 2002/09/07 15:12:40 chorns Exp $
+/* $Id: propvar.c,v 1.3 2002/09/08 10:23:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/csr/propvar.c
  * PURPOSE:         CSRSS properties and variants API
  */
-#define NTOS_USER_MODE
+#define NTOS_MODE_USER
 #include <ntos.h>
-
-#define NDEBUG
-#include <debug.h>
 
 NTSTATUS
 STDCALL

@@ -15,8 +15,8 @@
 #include <tdiinfo.h>
 #else
 #include <ddk/ntddk.h>
-#include <ddk/tdikrnl.h>
-#include <ddk/tdiinfo.h>
+#include <net/tdikrnl.h>
+#include <net/tdiinfo.h>
 #endif
 
 #include <debug.h>

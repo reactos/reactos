@@ -1,4 +1,4 @@
-/* $Id: xhaldisp.c,v 1.6 2002/09/07 15:12:53 chorns Exp $
+/* $Id: xhaldisp.c,v 1.7 2002/09/08 10:23:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,15 +11,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
-
-#define NDEBUG
-#include <internal/debug.h>
-
+#include <ddk/ntddk.h>
+#include <internal/xhal.h>
 
 /* DATA **********************************************************************/
 
-HAL_DISPATCH_TABLE IopHalDispatchTable =
+
+HAL_DISPATCH EXPORTED HalDispatchTable =
 {
 	HAL_DISPATCH_VERSION,
 	(pHalQuerySystemInformation) NULL,	// HalQuerySystemInformation
@@ -36,10 +34,8 @@ HAL_DISPATCH_TABLE IopHalDispatchTable =
 	(pHalReferenceBusHandler) NULL		// HalDereferenceBusHandler
 };
 
-PHAL_DISPATCH_TABLE HalDispatchTable = &IopHalDispatchTable;
 
-
-HAL_PRIVATE_DISPATCH_TABLE IopHalPrivateDispatchTable =
+HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
 {
 	HAL_PRIVATE_DISPATCH_VERSION
 				// HalHandlerForBus
@@ -48,8 +44,6 @@ HAL_PRIVATE_DISPATCH_TABLE IopHalPrivateDispatchTable =
 				// HalRegisterBusHandler
 				// any more??
 };
-
-PHAL_PRIVATE_DISPATCH_TABLE HalPrivateDispatchTable = &IopHalPrivateDispatchTable;
 
 /* EOF */
 

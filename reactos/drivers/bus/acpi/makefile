@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 2002/09/07 15:11:56 chorns Exp $
+# $Id: makefile,v 1.9 2002/09/08 10:22:02 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = driver
 
 TARGET_NAME = acpi
 
-TARGET_CFLAGS = -I./include -I./ospm/include -I$(PATH_TO_TOP)/include
+TARGET_CFLAGS = -I./include -I./ospm/include
 
 OBJECTS_PATH = objects
 

@@ -18,8 +18,6 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-#undef assert
-
 #include <internal/ntoskrnl.h>
 #include <internal/dbg.h>
 #include <roscfg.h>

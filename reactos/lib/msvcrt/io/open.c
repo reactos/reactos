@@ -1,4 +1,4 @@
-/* $Id: open.c,v 1.9 2002/09/07 15:12:32 chorns Exp $
+/* $Id: open.c,v 1.10 2002/09/08 10:22:50 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -13,11 +13,21 @@
 
 // possibly store extra information at the handle
 
-#include <msvcrti.h>
+#include <windows.h>
+#if !defined(NDEBUG) && defined(DBG)
+#include <msvcrt/stdarg.h>
+#endif
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/sys/stat.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/internal/file.h>
+#include <msvcrt/string.h>
+#include <msvcrt/share.h>
+#include <msvcrt/errno.h>
 
 #define NDEBUG
-#include <msvcrtdbg.h>
-
+#include <msvcrt/msvcrtdbg.h>
 
 #define STD_AUX_HANDLE 3
 #define STD_PRINTER_HANDLE 4
@@ -394,15 +404,14 @@ int __fileno_close(int _fd)
 	return 0;
 }
 
-int _open_osfhandle (long osfhandle, int flags )
+int _open_osfhandle (void *osfhandle, int flags )
 {
 	return __fileno_alloc((HANDLE)osfhandle, flags);
 }
 
-long _get_osfhandle( int fileno )
+void *_get_osfhandle( int fileno )
 {
-  /* FIXME: 32-bit only */
-	return (int)filehnd(fileno);
+	return filehnd(fileno);
 }
 
 void __fileno_init(void)

@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.12 2002/09/07 15:12:25 chorns Exp $
+; $Id: kernel32.edf,v 1.13 2002/09/08 10:22:41 chorns Exp $
 ;
 ; kernel32.edf
 ;
@@ -238,7 +238,7 @@ GetCurrencyFormatW=GetCurrencyFormatW@24
 GetCurrentConsoleFont=GetCurrentConsoleFont@12
 GetCurrentDirectoryA=GetCurrentDirectoryA@8
 GetCurrentDirectoryW=GetCurrentDirectoryW@8
-GetCurrentFiber=InternalGetCurrentFiber@0
+GetCurrentFiber=GetCurrentFiber@0
 GetCurrentProcess=GetCurrentProcess@0
 GetCurrentProcessId=GetCurrentProcessId@0
 GetCurrentThread=GetCurrentThread@0
@@ -260,7 +260,7 @@ GetEnvironmentVariableA=GetEnvironmentVariableA@12
 GetEnvironmentVariableW=GetEnvironmentVariableW@12
 GetExitCodeProcess=GetExitCodeProcess@8
 GetExitCodeThread=GetExitCodeThread@8
-GetFiberData=InternalGetFiberData@0
+GetFiberData=GetFiberData@0
 GetFileAttributesA=GetFileAttributesA@4
 GetFileAttributesW=GetFileAttributesW@4
 GetFileInformationByHandle=GetFileInformationByHandle@8

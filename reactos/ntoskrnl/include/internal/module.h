@@ -2,8 +2,8 @@
 #ifndef __MODULE_H
 #define __MODULE_H
 
-#ifndef AS_INVOKED
-
+#include <ddk/ntddk.h>
+#include <roscfg.h>
 #include <pe.h>
 #include <ntos/kdbgsyms.h>
 
@@ -56,8 +56,6 @@ typedef struct _INSTANCE
 } INSTANCE, *PINSTANCE;
 
 BOOLEAN process_boot_module(unsigned int start);
-
-#endif /* !AS_INVOKED */
 
 #endif
 

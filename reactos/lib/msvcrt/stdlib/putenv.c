@@ -1,7 +1,9 @@
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
 
 #define NDEBUG
-#include <msvcrtdbg.h>
+#include <msvcrt/msvcrtdbg.h>
 
 
 extern int BlockEnvToEnviron(); // defined in misc/dllmain.c
@@ -37,7 +39,7 @@ int _wputenv(const wchar_t *val)
   epos = wcsrchr(val, L'=');
   if ( epos == NULL )
 	return -1;
-  buffer = (wchar_t*)malloc((epos - val + 1) * sizeof (wchar_t));
+  buffer = (char*)malloc((epos - val + 1) * sizeof (wchar_t));
   if (buffer == NULL)
 	return -1;
   wcsncpy(buffer, val, epos - val);

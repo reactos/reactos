@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.55 2002/09/07 15:11:58 chorns Exp $
+/* $Id: ide.c,v 1.56 2002/09/08 10:22:04 chorns Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -68,7 +68,6 @@
 //  -------------------------------------------------------------------------
 
 #include <ddk/ntddk.h>
-#include <winioctl.h>
 
 #define NDEBUG
 #include <debug.h>

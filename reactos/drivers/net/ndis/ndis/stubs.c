@@ -11,7 +11,7 @@
 
 
 VOID
-STDCALL
+EXPORT
 NdisCompleteBindAdapter(
     IN  NDIS_HANDLE BindAdapterContext,
     IN  NDIS_STATUS Status,
@@ -22,7 +22,7 @@ NdisCompleteBindAdapter(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCompleteQueryStatistics(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  PNDIS_REQUEST   NdisRequest,
@@ -33,7 +33,7 @@ NdisCompleteQueryStatistics(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCompleteUnbindAdapter(
     IN  NDIS_HANDLE UnbindAdapterContext,
     IN  NDIS_STATUS Status)
@@ -41,20 +41,18 @@ NdisCompleteUnbindAdapter(
     UNIMPLEMENTED
 }
 
-#undef NdisInitializeListHead
 
 VOID
-STDCALL
+EXPORT
 NdisInitializeListHead(
     IN  PLIST_ENTRY ListHead)
 {
     UNIMPLEMENTED
 }
 
-#undef NdisInterlockedAddUlong
 
 VOID
-STDCALL
+EXPORT
 NdisInterlockedAddUlong (
     IN  PULONG          Addend,
     IN  ULONG           Increment,
@@ -63,10 +61,9 @@ NdisInterlockedAddUlong (
     UNIMPLEMENTED
 }
 
-#undef NdisInterlockedInsertHeadList
 
 PLIST_ENTRY
-STDCALL
+EXPORT
 NdisInterlockedInsertHeadList(
     IN  PLIST_ENTRY     ListHead,
     IN  PLIST_ENTRY     ListEntry,
@@ -78,10 +75,8 @@ NdisInterlockedInsertHeadList(
 }
 
 
-#undef NdisInterlockedInsertTailList
-
 PLIST_ENTRY
-STDCALL
+EXPORT
 NdisInterlockedInsertTailList(
     IN  PLIST_ENTRY     ListHead,
     IN  PLIST_ENTRY     ListEntry,
@@ -92,10 +87,9 @@ NdisInterlockedInsertTailList(
 	return NULL;
 }
 
-#undef NdisInterlockedRemoveHeadList
 
 PLIST_ENTRY
-STDCALL
+EXPORT
 NdisInterlockedRemoveHeadList(
     IN  PLIST_ENTRY     ListHead,
     IN  PNDIS_SPIN_LOCK SpinLock)
@@ -107,7 +101,7 @@ NdisInterlockedRemoveHeadList(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCompleteBufferPhysicalMapping(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  PNDIS_BUFFER    Buffer,
@@ -117,7 +111,7 @@ NdisMCompleteBufferPhysicalMapping(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMStartBufferPhysicalMapping(
     IN  NDIS_HANDLE                 MiniportAdapterHandle,
     IN  PNDIS_BUFFER                Buffer,
@@ -131,7 +125,7 @@ NdisMStartBufferPhysicalMapping(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMapFile(
     OUT PNDIS_STATUS    Status,
     OUT PVOID           * MappedBuffer,
@@ -142,7 +136,7 @@ NdisMapFile(
 
 
 VOID
-STDCALL
+EXPORT
 NdisWriteConfiguration(
     OUT PNDIS_STATUS                    Status,
     IN  NDIS_HANDLE                     WrapperConfigurationContext,
@@ -154,19 +148,19 @@ NdisWriteConfiguration(
 
 
 VOID
-CDECL
+EXPORT
 NdisWriteErrorLogEntry(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  NDIS_ERROR_CODE ErrorCode,
     IN  ULONG           NumberOfErrorValues,
-    IN  ...)
+ /* IN  ULONG */        ...)
 {
     UNIMPLEMENTED
 }
 
 
 VOID
-STDCALL
+EXPORT
 NdisCloseConfiguration(
     IN  NDIS_HANDLE ConfigurationHandle)
 {
@@ -175,7 +169,7 @@ NdisCloseConfiguration(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCloseFile(
     IN  NDIS_HANDLE FileHandle)
 {
@@ -184,7 +178,7 @@ NdisCloseFile(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisIMDeInitializeDeviceInstance(
     IN  NDIS_HANDLE NdisMiniportHandle)
 {
@@ -193,10 +187,9 @@ NdisIMDeInitializeDeviceInstance(
 	return NDIS_STATUS_FAILURE;
 }
 
-#undef NdisIMInitializeDeviceInstance
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisIMInitializeDeviceInstance(
     IN  NDIS_HANDLE     DriverHandle,
     IN  PNDIS_STRING    DeviceInstance)
@@ -208,7 +201,7 @@ NdisIMInitializeDeviceInstance(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisIMRegisterLayeredMiniport(
     IN  NDIS_HANDLE                     NdisWrapperHandle,
     IN  PNDIS_MINIPORT_CHARACTERISTICS  MiniportCharacteristics,
@@ -222,7 +215,7 @@ NdisIMRegisterLayeredMiniport(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMWanIndicateReceive(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     MiniportAdapterHandle,
@@ -235,7 +228,7 @@ NdisMWanIndicateReceive(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMWanIndicateReceiveComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
@@ -244,7 +237,7 @@ NdisMWanIndicateReceiveComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMWanSendComplete(
     IN  NDIS_HANDLE         MiniportAdapterHandle,
     IN  PNDIS_WAN_PACKET    Packet,
@@ -255,7 +248,7 @@ NdisMWanSendComplete(
 
 
 VOID
-STDCALL
+EXPORT
 NdisOpenConfiguration(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_HANDLE    ConfigurationHandle,
@@ -272,7 +265,7 @@ NdisOpenConfigurationKeyByName
 
 
 VOID
-STDCALL
+EXPORT
 NdisOpenFile(
     OUT PNDIS_STATUS            Status,
     OUT PNDIS_HANDLE            FileHandle,
@@ -289,7 +282,7 @@ NdisOpenGlobalConfiguration
 */
 
 VOID
-STDCALL
+EXPORT
 NdisOpenProtocolConfiguration(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_HANDLE    ConfigurationHandle,
@@ -300,7 +293,7 @@ NdisOpenProtocolConfiguration(
 
 
 VOID
-STDCALL
+EXPORT
 NdisReadConfiguration(
     OUT PNDIS_STATUS                    Status,
     OUT PNDIS_CONFIGURATION_PARAMETER   * ParameterValue,
@@ -313,7 +306,7 @@ NdisReadConfiguration(
 
 
 VOID
-STDCALL
+EXPORT
 NdisReadNetworkAddress(
     OUT PNDIS_STATUS    Status,
     OUT PVOID           * NetworkAddress,
@@ -326,7 +319,7 @@ NdisReadNetworkAddress(
 
 #if 0
 VOID
-STDCALL
+EXPORT
 NdisRegisterTdiCallBack(
     IN  TDI_REGISTER_CALLBACK   RegsterCallback)
 {
@@ -342,7 +335,7 @@ NdisScheduleWorkItem
 
 #if 0
 VOID
-STDCALL
+EXPORT
 NdisSetProtocolFilter(
     OUT PNDIS_STATUS            Status,
     IN  NDIS_HANDLE             NdisBindingHandle,
@@ -359,7 +352,7 @@ NdisSetProtocolFilter(
 
 
 CCHAR
-STDCALL
+EXPORT
 NdisSystemProcessorCount(
     VOID)
 {
@@ -368,7 +361,7 @@ NdisSystemProcessorCount(
 
 
 VOID
-STDCALL
+EXPORT
 NdisUnmapFile(
     IN  NDIS_HANDLE FileHandle)
 {
@@ -391,7 +384,7 @@ NdisWriteEventLogEntry
 /* NDIS 5.0 extensions */
 
 VOID
-STDCALL
+EXPORT
 NdisCompletePnPEvent(
     IN  NDIS_STATUS     Status,
     IN  NDIS_HANDLE     NdisBindingHandle,
@@ -406,10 +399,9 @@ NdisCompletePnPEvent(
     UNIMPLEMENTED
 }
 
-typedef PVOID PATM_ADDRESS;
 
 VOID
-STDCALL
+EXPORT
 NdisConvertStringToAtmAddress(
     OUT PNDIS_STATUS    Status,
     IN  PNDIS_STRING    String,
@@ -426,7 +418,7 @@ NdisConvertStringToAtmAddress(
 
 
 VOID
-STDCALL
+EXPORT
 NdisGetCurrentProcessorCounts(
     OUT PULONG  pIdleCount,
     OUT PULONG  pKernelAndUser,
@@ -443,7 +435,7 @@ NdisGetCurrentProcessorCounts(
 
 
 VOID
-STDCALL
+EXPORT
 NdisGetDriverHandle(
     IN  PNDIS_HANDLE    NdisBindingHandle,
     OUT PNDIS_HANDLE    NdisDriverHandle)
@@ -459,7 +451,7 @@ NdisGetDriverHandle(
 
 
 PNDIS_PACKET
-STDCALL
+EXPORT
 NdisGetReceivedPacket(
     IN  PNDIS_HANDLE    NdisBindingHandle,
     IN  PNDIS_HANDLE    MacContext)
@@ -477,7 +469,7 @@ NdisGetReceivedPacket(
 
 
 VOID
-STDCALL
+EXPORT
 NdisGetSystemUptime(
     OUT PULONG  pSystemUpTime)
 /*
@@ -492,7 +484,7 @@ NdisGetSystemUptime(
 
 
 VOID
-STDCALL
+EXPORT
 NdisInitializeReadWriteLock(
     IN  PNDIS_RW_LOCK   Lock)
 /*
@@ -505,10 +497,9 @@ NdisInitializeReadWriteLock(
     UNIMPLEMENTED
 }
 
-#undef NdisInterlockedDecrement
 
 LONG
-STDCALL
+EXPORT
 NdisInterlockedDecrement(
     IN  PLONG   Addend)
 /*
@@ -523,10 +514,9 @@ NdisInterlockedDecrement(
     return 0;
 }
 
-#undef NdisInterlockedIncrement
 
 LONG
-STDCALL
+EXPORT
 NdisInterlockedIncrement(
     IN  PLONG   Addend)
 /*
@@ -543,7 +533,7 @@ NdisInterlockedIncrement(
 
 
 PSINGLE_LIST_ENTRY 
-STDCALL
+EXPORT
 NdisInterlockedPopEntrySList(
     IN  PSLIST_HEADER   ListHead,
     IN  PKSPIN_LOCK     Lock)
@@ -561,7 +551,7 @@ NdisInterlockedPopEntrySList(
 
 
 PSINGLE_LIST_ENTRY 
-STDCALL
+EXPORT
 NdisInterlockedPushEntrySList(
     IN  PSLIST_HEADER       ListHead,
     IN  PSINGLE_LIST_ENTRY  ListEntry,
@@ -580,7 +570,7 @@ NdisInterlockedPushEntrySList(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMDeregisterDevice(
     IN  NDIS_HANDLE NdisDeviceHandle)
 /*
@@ -597,7 +587,7 @@ NdisMDeregisterDevice(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMGetDeviceProperty(
     IN      NDIS_HANDLE         MiniportAdapterHandle,
     IN OUT  PDEVICE_OBJECT      *PhysicalDeviceObject           OPTIONAL,
@@ -617,7 +607,7 @@ NdisMGetDeviceProperty(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMInitializeScatterGatherDma(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  BOOLEAN     Dma64BitAddresses,
@@ -636,7 +626,7 @@ NdisMInitializeScatterGatherDma(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMPromoteMiniport(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 /*
@@ -653,7 +643,7 @@ NdisMPromoteMiniport(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMQueryAdapterInstanceName(
     OUT PNDIS_STRING    AdapterInstanceName,
     IN  NDIS_HANDLE     MiniportAdapterHandle)
@@ -671,7 +661,7 @@ NdisMQueryAdapterInstanceName(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMRegisterDevice(
     IN  NDIS_HANDLE         NdisWrapperHandle,
     IN  PNDIS_STRING        DeviceName,
@@ -693,7 +683,7 @@ NdisMRegisterDevice(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMRegisterUnloadHandler(
     IN  NDIS_HANDLE     NdisWrapperHandle,
     IN  PDRIVER_UNLOAD  UnloadHandler)
@@ -709,7 +699,7 @@ NdisMRegisterUnloadHandler(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMRemoveMiniport(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 /*
@@ -726,7 +716,7 @@ NdisMRemoveMiniport(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMSetMiniportSecondary(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_HANDLE PrimaryMiniportAdapterHandle)
@@ -744,7 +734,7 @@ NdisMSetMiniportSecondary(
 
 
 VOID
-STDCALL
+EXPORT
 NdisOpenConfigurationKeyByIndex(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     ConfigurationHandle,
@@ -763,7 +753,7 @@ NdisOpenConfigurationKeyByIndex(
 
 
 VOID
-STDCALL
+EXPORT
 NdisOpenConfigurationKeyByName(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     ConfigurationHandle,
@@ -781,7 +771,7 @@ NdisOpenConfigurationKeyByName(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisQueryAdapterInstanceName(
     OUT PNDIS_STRING    AdapterInstanceName,
     IN  NDIS_HANDLE     NdisBindingHandle)
@@ -799,7 +789,7 @@ NdisQueryAdapterInstanceName(
 
 
 VOID
-STDCALL
+EXPORT
 NdisQueryBufferSafe(
     IN  PNDIS_BUFFER    Buffer,
     OUT PVOID           *VirtualAddress OPTIONAL,
@@ -817,7 +807,7 @@ NdisQueryBufferSafe(
 
 
 ULONG
-STDCALL
+EXPORT
 NdisReadPcmciaAttributeMemory(
     IN  NDIS_HANDLE NdisAdapterHandle,
     IN  ULONG       Offset,
@@ -837,7 +827,7 @@ NdisReadPcmciaAttributeMemory(
 
 
 VOID
-STDCALL
+EXPORT
 NdisReleaseReadWriteLock(
     IN  PNDIS_RW_LOCK   Lock,
     IN  PLOCK_STATE     LockState)
@@ -853,7 +843,7 @@ NdisReleaseReadWriteLock(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisWriteEventLogEntry(
     IN  PVOID       LogHandle,
     IN  NDIS_STATUS EventCode,
@@ -876,7 +866,7 @@ NdisWriteEventLogEntry(
 
 
 ULONG
-STDCALL
+EXPORT
 NdisWritePcmciaAttributeMemory(
     IN  NDIS_HANDLE NdisAdapterHandle,
     IN  ULONG       Offset,
@@ -898,7 +888,7 @@ NdisWritePcmciaAttributeMemory(
 /* NDIS 5.0 extensions for intermediate drivers */
 
 VOID
-STDCALL
+EXPORT
 NdisIMAssociateMiniport(
     IN  NDIS_HANDLE DriverHandle,
     IN  NDIS_HANDLE ProtocolHandle)
@@ -914,7 +904,7 @@ NdisIMAssociateMiniport(
 
 
 NDIS_STATUS 
-STDCALL
+EXPORT
 NdisIMCancelInitializeDeviceInstance(
     IN  NDIS_HANDLE     DriverHandle,
     IN  PNDIS_STRING    DeviceInstance)
@@ -932,7 +922,7 @@ NdisIMCancelInitializeDeviceInstance(
 
 
 VOID
-STDCALL
+EXPORT
 NdisIMCopySendCompletePerPacketInfo(
     IN  PNDIS_PACKET    DstPacket,
     IN  PNDIS_PACKET    SrcPacket)
@@ -948,7 +938,7 @@ NdisIMCopySendCompletePerPacketInfo(
 
 
 VOID
-STDCALL
+EXPORT
 NdisIMCopySendPerPacketInfo(
     IN  PNDIS_PACKET    DstPacket,
     IN  PNDIS_PACKET    SrcPacket)
@@ -964,7 +954,7 @@ NdisIMCopySendPerPacketInfo(
 
 
 VOID
-STDCALL
+EXPORT
 NdisIMDeregisterLayeredMiniport(
     IN  NDIS_HANDLE DriverHandle)
 /*
@@ -979,7 +969,7 @@ NdisIMDeregisterLayeredMiniport(
 
 
 NDIS_HANDLE
-STDCALL
+EXPORT
 NdisIMGetBindingContext(
     IN  NDIS_HANDLE NdisBindingHandle)
 /*
@@ -996,7 +986,7 @@ NdisIMGetBindingContext(
 
 
 NDIS_HANDLE
-STDCALL
+EXPORT
 NdisIMGetDeviceContext(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 /*
@@ -1013,7 +1003,7 @@ NdisIMGetDeviceContext(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisIMInitializeDeviceInstanceEx(
     IN  NDIS_HANDLE     DriverHandle,
     IN  PNDIS_STRING    DriverInstance,

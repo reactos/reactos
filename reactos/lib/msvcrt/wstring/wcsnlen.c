@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/wchar.h>
 
 size_t _wcsnlen(const wchar_t * s, size_t count)
 {

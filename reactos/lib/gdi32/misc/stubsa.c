@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.7 2002/09/07 15:12:24 chorns Exp $
+/* $Id: stubsa.c,v 1.8 2002/09/08 10:22:40 chorns Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -97,7 +97,7 @@ STDCALL
 EnumFontFamiliesExA(
 	HDC		a0,
 	LPLOGFONT	a1,
-	FONTENUMPROCA	a2,
+	FONTENUMEXPROC	a2,
 	LPARAM		a3,
 	DWORD		a4
 	)
@@ -112,7 +112,7 @@ STDCALL
 EnumFontFamiliesA(
 	HDC		a0,
 	LPCSTR		a1,
-	FONTENUMPROCA	a2,
+	FONTENUMPROC	a2,
 	LPARAM		a3
 	)
 {
@@ -126,7 +126,7 @@ STDCALL
 EnumFontsA(
 	HDC		a0,
 	LPCSTR		a1,
-	FONTENUMPROCA	a2,
+	ENUMFONTSPROC	a2,
 	LPARAM		a3
 	)
 {

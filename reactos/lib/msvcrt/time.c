@@ -1,6 +1,0 @@
-#include "time/clock.c"
-#include "time/difftime.c"
-#include "time/strdate.c"
-#include "time/strftime.c"
-#include "time/strtime.c"
-#include "time/time.c"

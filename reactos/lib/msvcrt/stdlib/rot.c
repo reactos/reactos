@@ -7,8 +7,8 @@
  * UPDATE HISTORY:
  *              03/04/99: Created
  */
-#include <msvcrti.h>
 
+#include <msvcrt/stdlib.h>
 
 unsigned int _rotl( unsigned int value, int shift )
 {

@@ -24,17 +24,18 @@
  * UPDATE HISTORY:
  *      04-06-2001  CSH  Created
  */
-
-#include <ntoskrnl.h>
+#include <limits.h>
+#include <ddk/ntddk.h>
+#include <internal/ex.h>
+#include <wchar.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-
 /* DATA **********************************************************************/
 
-POBJECT_TYPE ExWindowStationObjectType = NULL;
-POBJECT_TYPE ExDesktopObjectType = NULL;
+POBJECT_TYPE EXPORTED ExWindowStationObjectType = NULL;
+POBJECT_TYPE EXPORTED ExDesktopObjectType = NULL;
 
 static GENERIC_MAPPING ExpWindowStationMapping = {
     FILE_GENERIC_READ,

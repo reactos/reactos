@@ -11,7 +11,7 @@
 
 
 VOID
-STDCALL
+EXPORT
 NdisCompleteCloseAdapter(
     IN  NDIS_HANDLE NdisBindingContext,
     IN  NDIS_STATUS Status)
@@ -27,7 +27,7 @@ NdisCompleteCloseAdapter(
 
 
 VOID
-STDCALL
+EXPORT
 NdisCompleteOpenAdapter(
     IN  NDIS_HANDLE NdisBindingContext,
     IN  NDIS_STATUS Status,
@@ -44,7 +44,7 @@ NdisCompleteOpenAdapter(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisDeregisterAdapter(
     IN  NDIS_HANDLE NdisAdapterHandle)
 /*
@@ -61,7 +61,7 @@ NdisDeregisterAdapter(
 
 
 VOID
-STDCALL
+EXPORT
 NdisDeregisterAdapterShutdownHandler(
     IN  NDIS_HANDLE NdisAdapterHandle)
 /*
@@ -76,7 +76,7 @@ NdisDeregisterAdapterShutdownHandler(
 
 
 VOID
-STDCALL
+EXPORT
 NdisDeregisterMac(
     OUT PNDIS_STATUS    Status,
     IN  NDIS_HANDLE     NdisMacHandle)
@@ -92,7 +92,7 @@ NdisDeregisterMac(
 
 
 VOID
-STDCALL
+EXPORT
 NdisFreeDmaChannel(
     IN  PNDIS_HANDLE    NdisDmaHandle)
 /*
@@ -107,7 +107,7 @@ NdisFreeDmaChannel(
 
 
 VOID
-STDCALL
+EXPORT
 NdisFreeSharedMemory(
     IN NDIS_HANDLE              NdisAdapterHandle,
     IN ULONG                    Length,
@@ -126,7 +126,7 @@ NdisFreeSharedMemory(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisIMQueueMiniportCallback(
     IN  NDIS_HANDLE         MiniportAdapterHandle,
     IN  W_MINIPORT_CALLBACK CallbackRoutine,
@@ -145,7 +145,7 @@ NdisIMQueueMiniportCallback(
 
 
 VOID
-STDCALL
+EXPORT
 NdisIMRevertBack(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_HANDLE SwitchHandle)
@@ -161,7 +161,7 @@ NdisIMRevertBack(
 
 
 BOOLEAN
-STDCALL
+EXPORT
 NdisIMSwitchToMiniport(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     OUT PNDIS_HANDLE    SwitchHandle)
@@ -179,7 +179,7 @@ NdisIMSwitchToMiniport(
 
 
 VOID
-STDCALL
+EXPORT
 NdisInitializeInterrupt(
     OUT     PNDIS_STATUS                Status,
     IN OUT  PNDIS_INTERRUPT             Interrupt,
@@ -203,7 +203,7 @@ NdisInitializeInterrupt(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMapIoSpace(
     OUT PNDIS_STATUS            Status,
     OUT PVOID                   *VirtualAddress,
@@ -222,7 +222,7 @@ NdisMapIoSpace(
 
 
 VOID
-STDCALL
+EXPORT
 NdisOverrideBusNumber(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  NDIS_HANDLE MiniportAdapterHandle   OPTIONAL,
@@ -239,7 +239,7 @@ NdisOverrideBusNumber(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisQueryReceiveInformation(
     IN  NDIS_HANDLE NdisBindingHandle,
     IN  NDIS_HANDLE MacContext,
@@ -262,7 +262,7 @@ NdisQueryReceiveInformation(
 
 
 VOID
-STDCALL
+EXPORT
 NdisReadMcaPosInformation(
     OUT PNDIS_STATUS        Status,
     IN  NDIS_HANDLE         WrapperConfigurationContext,
@@ -280,7 +280,7 @@ NdisReadMcaPosInformation(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisRegisterAdapter(
     OUT PNDIS_HANDLE    NdisAdapterHandle,
     IN  NDIS_HANDLE     NdisMacHandle,
@@ -302,7 +302,7 @@ NdisRegisterAdapter(
 
 
 VOID
-STDCALL
+EXPORT
 NdisRegisterAdapterShutdownHandler(
     IN  NDIS_HANDLE                 NdisAdapterHandle,
     IN  PVOID                       ShutdownContext,
@@ -319,7 +319,7 @@ NdisRegisterAdapterShutdownHandler(
 
 
 VOID
-STDCALL
+EXPORT
 NdisRegisterMac(
     OUT PNDIS_STATUS                Status,
     OUT PNDIS_HANDLE                NdisMacHandle,
@@ -339,7 +339,7 @@ NdisRegisterMac(
 
 
 VOID
-STDCALL
+EXPORT
 NdisReleaseAdapterResources(
     IN  NDIS_HANDLE NdisAdapterHandle)
 /*
@@ -354,7 +354,7 @@ NdisReleaseAdapterResources(
 
 
 VOID
-STDCALL
+EXPORT
 NdisRemoveInterrupt(
     IN  PNDIS_INTERRUPT Interrupt)
 /*
@@ -369,7 +369,7 @@ NdisRemoveInterrupt(
 
 
 VOID
-STDCALL
+EXPORT
 NdisSetupDmaTransfer(
     OUT PNDIS_STATUS    Status,
     IN  PNDIS_HANDLE    NdisDmaHandle,
@@ -388,10 +388,8 @@ NdisSetupDmaTransfer(
 }
 
 
-#undef NdisUpdateSharedMemory
-
 VOID
-STDCALL
+EXPORT
 NdisUpdateSharedMemory(
     IN  NDIS_HANDLE             NdisAdapterHandle,
     IN  ULONG                   Length,

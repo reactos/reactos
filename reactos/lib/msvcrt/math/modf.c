@@ -9,7 +9,11 @@
  * is preserved.
  * ====================================================
  */
-#include <msvcrti.h>
+
+#include <msvcrt/float.h>
+#include <msvcrt/math.h>
+#include <msvcrt/internal/ieee.h>
+
 
 
 //static const double one = 1.0;

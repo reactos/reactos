@@ -11,7 +11,7 @@
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisAllocateMemoryWithTag(
     OUT PVOID   *VirtualAddress,
     IN  UINT    Length,
@@ -29,10 +29,8 @@ NdisAllocateMemoryWithTag(
 }
 
 
-#undef NdisCreateLookaheadBufferFromSharedMemory
-
 VOID
-STDCALL
+EXPORT
 NdisCreateLookaheadBufferFromSharedMemory(
     IN  PVOID   pSharedMemory,
     IN  UINT    LookaheadLength,
@@ -42,10 +40,8 @@ NdisCreateLookaheadBufferFromSharedMemory(
 }
 
 
-#undef NdisDestroyLookaheadBufferFromSharedMemory
-
 VOID
-STDCALL
+EXPORT
 NdisDestroyLookaheadBufferFromSharedMemory(
     IN  PVOID   pLookaheadBuffer)
 {
@@ -53,10 +49,8 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 }
 
 
-#undef NdisMoveFromMappedMemory
-
 VOID
-STDCALL
+EXPORT
 NdisMoveFromMappedMemory(
     OUT PVOID   Destination,
     IN  PVOID   Source,
@@ -66,10 +60,8 @@ NdisMoveFromMappedMemory(
 }
 
 
-#undef NdisMoveMappedMemory
-
 VOID
-STDCALL
+EXPORT
 NdisMoveMappedMemory(
     OUT PVOID   Destination,
     IN  PVOID   Source,
@@ -79,10 +71,8 @@ NdisMoveMappedMemory(
 }
 
 
-#undef NdisMoveToMappedMemory
-
 VOID
-STDCALL
+EXPORT
 NdisMoveToMappedMemory(
     OUT PVOID   Destination,
     IN  PVOID   Source,
@@ -92,10 +82,8 @@ NdisMoveToMappedMemory(
 }
 
 
-#undef NdisMUpdateSharedMemory
-
 VOID
-STDCALL
+EXPORT
 NdisMUpdateSharedMemory(
     IN  NDIS_HANDLE             MiniportAdapterHandle,
     IN  ULONG                   Length,
@@ -107,7 +95,7 @@ NdisMUpdateSharedMemory(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisAllocateMemory(
     OUT PVOID                   *VirtualAddress,
     IN  UINT                    Length,
@@ -148,7 +136,7 @@ NdisAllocateMemory(
 
 
 VOID
-STDCALL
+EXPORT
 NdisFreeMemory(
     IN  PVOID   VirtualAddress,
     IN  UINT    Length,
@@ -177,7 +165,7 @@ NdisFreeMemory(
 
 
 VOID
-STDCALL
+EXPORT
 NdisImmediateReadSharedMemory(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       SharedMemoryAddress,
@@ -188,7 +176,7 @@ NdisImmediateReadSharedMemory(
 
 
 VOID
-STDCALL
+EXPORT
 NdisImmediateWriteSharedMemory(
     IN  NDIS_HANDLE WrapperConfigurationContext,
     IN  ULONG       SharedMemoryAddress,
@@ -200,7 +188,7 @@ NdisImmediateWriteSharedMemory(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMAllocateSharedMemory(
     IN	NDIS_HANDLE             MiniportAdapterHandle,
     IN	ULONG                   Length,
@@ -213,7 +201,7 @@ NdisMAllocateSharedMemory(
 
 
 NDIS_STATUS
-STDCALL
+EXPORT
 NdisMAllocateSharedMemoryAsync(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  ULONG       Length,
@@ -227,7 +215,7 @@ NdisMAllocateSharedMemoryAsync(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMFreeSharedMemory(
     IN  NDIS_HANDLE             MiniportAdapterHandle,
     IN  ULONG                   Length,

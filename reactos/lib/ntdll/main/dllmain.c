@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.9 2002/09/07 15:12:39 chorns Exp $
+/* $Id: dllmain.c,v 1.10 2002/09/08 10:23:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,14 +7,11 @@
  * PROGRAMMER:      
  */
 
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <stdio.h>
-
-#define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
+#include <windows.h>
 
 BOOL WINAPI DllMainCRTStartup(HINSTANCE hinstDll,
 			      DWORD fdwReason,

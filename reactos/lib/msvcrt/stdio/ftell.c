@@ -1,6 +1,12 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
+
+#include <msvcrt/stdio.h>
+//#include <crtdll/unistd.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 
 long ftell(FILE *f)
@@ -28,7 +34,7 @@ long ftell(FILE *f)
   else
     return -1;
 
-  tres = _lseek(_fileno(f), 0L, SEEK_CUR);
+  tres = lseek(fileno(f), 0L, SEEK_CUR);
   if (tres<0)
     return tres;
   tres += adjust;

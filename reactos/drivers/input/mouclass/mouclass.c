@@ -90,14 +90,12 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    PDEVICE_OBJECT PortDeviceObject = NULL;
    PFILE_OBJECT FileObject = NULL;
    NTSTATUS status;
-   UNICODE_STRING PortName;
+   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\Device\\Mouse");
    IO_STATUS_BLOCK ioStatus;
    KEVENT event;
    PIRP irp;
    CLASS_INFORMATION ClassInformation;
    PDEVICE_EXTENSION DeviceExtension = ClassDeviceObject->DeviceExtension;
-
-   RtlInitUnicodeString(&PortName, L"\\Device\\Mouse");
 
    DeviceExtension->GDIInformation.CallBack = NULL;
 
@@ -264,11 +262,8 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName;
-   UNICODE_STRING SymlinkName;
-
-   RtlInitUnicodeString(&DeviceName, L"\\Device\\MouseClass");
-   RtlInitUnicodeString(&SymlinkName, L"\\??\\MouseClass");
+   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\MouseClass");
+   UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\MouseClass");
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MouseClassDispatch;
 //   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = MouseClassDispatch;

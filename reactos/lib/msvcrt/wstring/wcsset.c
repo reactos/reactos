@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/string.h>
 
 wchar_t* _wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
 {

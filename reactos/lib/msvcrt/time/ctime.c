@@ -38,10 +38,23 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 ** POSIX-style TZ environment variable handling from Guy Harris
 ** (guy@auspex.com).
 */
-#include <msvcrti.h>
-#include "tzfile.h"
-#include "posixrul.h"
 
+
+
+
+#include <msvcrt/fcntl.h>
+#include <msvcrt/time.h>
+#include <msvcrt/string.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+
+#include <windows.h>
+#include "tzfile.h"
+
+#include <msvcrt/io.h>
+
+#include "posixrul.h"
 
 #define P(s)		s
 #define alloc_size_t	size_t
@@ -72,7 +85,7 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 ** that tzname[0] has the "normal" length of three characters).
 */
 int _daylight;
-long _timezone;
+int _timezone;
 
 static char WILDABBR[] = "   ";
 
@@ -274,7 +287,7 @@ tzload(const char *name, struct state * const sp)
     name = fullname;
   }
 
-  if ((fid = _open(name, OPEN_MODE)) == -1)
+  if ((fid = open(name, OPEN_MODE)) == -1)
   {
     const char *base = strrchr(name, '/');
     if (base)
@@ -290,8 +303,8 @@ tzload(const char *name, struct state * const sp)
   }
   else
   {
-    i = _read(fid, buf, sizeof buf);
-    if (_close(fid) != 0 || i < sizeof *tzhp)
+    i = read(fid, buf, sizeof buf);
+    if (close(fid) != 0 || i < sizeof *tzhp)
       return -1;
   }
 
@@ -999,10 +1012,7 @@ localsub(const time_t * const timep, const long offset, struct tm * const tmp)
   timesub(&t, ttisp->tt_gmtoff, sp, tmp);
   tmp->tm_isdst = ttisp->tt_isdst;
   _tzname[tmp->tm_isdst] = (char *)&sp->chars[ttisp->tt_abbrind];
-#if 0
-  // FIXME: tmp->tm_zone does not appear to be in MS headers
   tmp->tm_zone = (char *)&sp->chars[ttisp->tt_abbrind];
-#endif
 }
 
 struct tm *
@@ -1031,8 +1041,6 @@ gmtsub(const time_t * const timep, const long offset, struct tm * const tmp)
       gmtload(gmtptr);
   }
   timesub(timep, offset, gmtptr, tmp);
-#if 0
-  // FIXME: tmp->tm_zone does not appear to be in MS headers
   /*
    ** Could get fancy here and deliver something such as
    ** "GMT+xxxx" or "GMT-xxxx" if offset is non-zero,
@@ -1052,7 +1060,6 @@ gmtsub(const time_t * const timep, const long offset, struct tm * const tmp)
     tmp->tm_zone = gmtptr->chars;
 #endif /* State Farm */
   }
-#endif
 }
 
 struct tm *
@@ -1156,10 +1163,7 @@ timesub(const time_t * const timep, const long offset, const struct state * cons
     days = days - (long) ip[tmp->tm_mon];
   tmp->tm_mday = (int) (days + 1);
   tmp->tm_isdst = 0;
-#if 0
-  // FIXME: tmp->tm_gmtoff does not appear to be in MS headers
   tmp->tm_gmtoff = offset;
-#endif
 }
 
 /*

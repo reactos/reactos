@@ -1,7 +1,9 @@
 /*
  */
 
-#include <advapi32.h>
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
+#include <windows.h>
 
 
 WINBOOL STDCALL

@@ -10,11 +10,6 @@
 #ifndef __ENG_OBJECTS_H
 #define __ENG_OBJECTS_H
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
-#include <win32k/dc.h>
-#include <win32k/pen.h>
-
 #include <freetype/freetype.h>
 
 /* Structure of internal gdi objects that win32k manages for ddi engine:
@@ -100,44 +95,44 @@ typedef struct _STRGDI {
   //STROBJ		StrObj;
 } STRGDI;
 
-typedef BOOL STDCALL (*PFN_BitBlt)(SURFOBJ*, SURFOBJ*, SURFOBJ*, CLIPOBJ*,
-                           XLATEOBJ*, RECTL*, POINTL*, POINTL*,
-                           ROS_BRUSHOBJ*, POINTL*, ROP4);
+typedef BOOL STDCALL (*PFN_BitBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
+                           PXLATEOBJ, PRECTL, PPOINTL, PPOINTL,
+                           PBRUSHOBJ, PPOINTL, ROP4);
 
-typedef BOOL STDCALL (*PFN_TransparentBlt)(SURFOBJ*, SURFOBJ*, CLIPOBJ*, XLATEOBJ*, RECTL*, RECTL*, ULONG, ULONG);
+typedef BOOL STDCALL (*PFN_TransparentBlt)(PSURFOBJ, PSURFOBJ, PCLIPOBJ, PXLATEOBJ, PRECTL, PRECTL, ULONG, ULONG);
 
-typedef BOOL STDCALL (*PFN_StretchBlt)(SURFOBJ*, SURFOBJ*, SURFOBJ*, CLIPOBJ*,
-                               XLATEOBJ*, COLORADJUSTMENT*, POINTL*,
-                               RECTL*, RECTL*, POINT*, ULONG);
+typedef BOOL STDCALL (*PFN_StretchBlt)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PCLIPOBJ,
+                               PXLATEOBJ, PCOLORADJUSTMENT, PPOINTL,
+                               PRECTL, PRECTL, PPOINT, ULONG);
 
-typedef BOOL STDCALL (*PFN_TextOut)(SURFOBJ*, STROBJ*, FONTOBJ*, CLIPOBJ*,
-                            RECTL*, RECTL*, ROS_BRUSHOBJ*, ROS_BRUSHOBJ*,
-                            POINTL*, MIX);
+typedef BOOL STDCALL (*PFN_TextOut)(PSURFOBJ, PSTROBJ, PFONTOBJ, PCLIPOBJ,
+                            PRECTL, PRECTL, PBRUSHOBJ, PBRUSHOBJ,
+                            PPOINTL, MIX);
 
-typedef BOOL STDCALL (*PFN_Paint)(SURFOBJ*, CLIPOBJ*, ROS_BRUSHOBJ*, POINTL*, MIX);
+typedef BOOL STDCALL (*PFN_Paint)(PSURFOBJ, PCLIPOBJ, PBRUSHOBJ, PPOINTL, MIX);
 
-typedef BOOL STDCALL (*PFN_StrokePath)(SURFOBJ*, PATHOBJ*, CLIPOBJ*, XFORMOBJ*,
-                               ROS_BRUSHOBJ*, POINTL*, LINEATTRS*, MIX);
+typedef BOOL STDCALL (*PFN_StrokePath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ, PXFORMOBJ,
+                               PBRUSHOBJ, PPOINTL, PLINEATTRS, MIX);
 
-typedef BOOL STDCALL (*PFN_FillPath)(SURFOBJ*, PATHOBJ*, CLIPOBJ*, ROS_BRUSHOBJ*,
-                             POINTL*, MIX, ULONG);
+typedef BOOL STDCALL (*PFN_FillPath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ, PBRUSHOBJ,
+                             PPOINTL, MIX, ULONG);
 
-typedef BOOL STDCALL (*PFN_StrokeAndFillPath)(SURFOBJ*, PATHOBJ*, CLIPOBJ*,
-                XFORMOBJ*, ROS_BRUSHOBJ*, LINEATTRS*, ROS_BRUSHOBJ*,
-                POINTL*, MIX, ULONG);
+typedef BOOL STDCALL (*PFN_StrokeAndFillPath)(PSURFOBJ, PPATHOBJ, PCLIPOBJ,
+                PXFORMOBJ, PBRUSHOBJ, PLINEATTRS, PBRUSHOBJ,
+                PPOINTL, MIX, ULONG);
 
-typedef BOOL STDCALL (*PFN_LineTo)(SURFOBJ*, CLIPOBJ*, ROS_BRUSHOBJ*,
-                           LONG, LONG, LONG, LONG, RECTL*, MIX);
+typedef BOOL STDCALL (*PFN_LineTo)(PSURFOBJ, PCLIPOBJ, PBRUSHOBJ,
+                           LONG, LONG, LONG, LONG, PRECTL, MIX);
 
-typedef BOOL STDCALL (*PFN_CopyBits)(SURFOBJ*, SURFOBJ*, CLIPOBJ*,
-                             XLATEOBJ*, RECTL*, POINTL*);
+typedef BOOL STDCALL (*PFN_CopyBits)(PSURFOBJ, PSURFOBJ, PCLIPOBJ,
+                             PXLATEOBJ, PRECTL, PPOINTL);
 
-typedef VOID STDCALL (*PFN_Synchronize)(DHPDEV, RECTL*);
+typedef VOID STDCALL (*PFN_Synchronize)(DHPDEV, PRECTL);
 
-typedef VOID STDCALL (*PFN_MovePointer)(SURFOBJ*, LONG, LONG, RECTL*);
+typedef VOID STDCALL (*PFN_MovePointer)(PSURFOBJ, LONG, LONG, PRECTL);
 
-typedef VOID STDCALL (*PFN_SetPointerShape)(SURFOBJ*, SURFOBJ*, SURFOBJ*, XLATEOBJ*,
-			    LONG, LONG, LONG, LONG, RECTL*, ULONG);
+typedef VOID STDCALL (*PFN_SetPointerShape)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PXLATEOBJ,
+			    LONG, LONG, LONG, LONG, PRECTL, ULONG);
 
 typedef HBITMAP STDCALL (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 

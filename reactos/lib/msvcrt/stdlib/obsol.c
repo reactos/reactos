@@ -1,5 +1,5 @@
-#include <msvcrti.h>
-
+#include <windows.h>
+#include <msvcrt/stdlib.h>
 
 #undef _cpumode
 unsigned char _cpumode = 0;

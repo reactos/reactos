@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.60 2002/09/07 15:12:52 chorns Exp $
+/* $Id: create.c,v 1.61 2002/09/08 10:23:24 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,14 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ob.h>
+#include <internal/io.h>
+#include <internal/id.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -190,7 +193,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
   assert_irql(PASSIVE_LEVEL);
 
-  Status = ObRosCreateObject(&FileHandle,
+  Status = ObCreateObject(&FileHandle,
 			  STANDARD_RIGHTS_REQUIRED,
 			  NULL,
 			  IoFileObjectType,
@@ -323,14 +326,14 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    
    *FileHandle = 0;
 
-   Status = ObRosCreateObject(FileHandle,
+   Status = ObCreateObject(FileHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   IoFileObjectType,
 			   (PVOID*)&FileObject);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("ObRosCreateObject() failed! (Status %lx)\n", Status);
+	DPRINT("ObCreateObject() failed! (Status %lx)\n", Status);
 	return(Status);
      }
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.50 2002/09/07 15:13:10 chorns Exp $
+# $Id: makefile,v 1.51 2002/09/08 10:23:48 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -18,7 +18,7 @@ else
 CFLAGS_DBG :=
 endif
 
-TARGET_CFLAGS = $(CFLAGS_DBG) -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE -D_WIN32K_ -D__MINGW_IMPORT=extern -Wall
+TARGET_CFLAGS = $(CFLAGS_DBG) -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE -Wall
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
     eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \

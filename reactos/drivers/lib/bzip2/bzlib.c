@@ -75,7 +75,7 @@
 
 #ifdef BZ_DECOMPRESS_ONLY
 #define __NTDRIVER__
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include <debug.h>
 #endif
 

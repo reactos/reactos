@@ -1,4 +1,4 @@
-/* $Id: scsi.h,v 1.5 2002/09/07 15:12:09 chorns Exp $
+/* $Id: scsi.h,v 1.6 2002/09/08 10:22:23 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -843,18 +843,6 @@ typedef struct _SENSE_DATA
 #define SCSI_SENSEQ_SETMARK_DETECTED 0x03
 #define SCSI_SENSEQ_END_OF_MEDIA_DETECTED 0x02
 #define SCSI_SENSEQ_BEGINNING_OF_MEDIA_DETECTED 0x04
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* SCSI IO Device Control Codes */
 

@@ -1,6 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-
-#include <msvcrti.h>
+#include <msvcrt/ctype.h>
 
 unsigned short _ctype[] = {
 	0,			/* <EOF>, 0xFFFF */
@@ -262,12 +261,7 @@ unsigned short _ctype[] = {
 	0			/* 0xff */
 };
 
-#undef _pctype
-
-extern unsigned short * _pctype;
-
 unsigned short *_pctype = _ctype + 1;
-
 unsigned short *_pwctype = _ctype + 1;
 
 unsigned short **__p__pctype(void)
@@ -280,7 +274,7 @@ unsigned short **__p__pwctype(void)
    return &_pwctype;
 }
 
-int _isctype(int c, int ctypeFlags)
+int _isctype(unsigned int c, int ctypeFlags)
 {
    return (_pctype[(unsigned char)(c & 0xFF)] & ctypeFlags);
 }

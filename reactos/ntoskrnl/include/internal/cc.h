@@ -1,17 +1,20 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-
-/* $Id: cc.h,v 1.15 2002/09/07 15:12:51 chorns Exp $ */
-
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
-#ifndef AS_INVOKED
-
+/* $Id: cc.h,v 1.16 2002/09/08 10:23:21 chorns Exp $ */
 #include <ddk/ntifs.h>
 
-typedef struct _ROS_CACHE_SEGMENT
+typedef struct _BCB
+{
+  LIST_ENTRY BcbSegmentListHead;
+  PFILE_OBJECT FileObject;
+  ULONG CacheSegmentSize;
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER FileSize;
+  KSPIN_LOCK BcbLock;
+  ULONG RefCount;
+} BCB;
+
+typedef struct _CACHE_SEGMENT
 {
   /* Base address of the region where the cache segment data is mapped. */
   PVOID BaseAddress;
@@ -39,69 +42,48 @@ typedef struct _ROS_CACHE_SEGMENT
   /* Number of references. */
   ULONG ReferenceCount;
   /* Pointer to the BCB for the file which this cache segment maps data for. */
-  PROS_BCB Bcb;
+  PBCB Bcb;
   /* Pointer to the next cache segment in a chain. */
-  struct _ROS_CACHE_SEGMENT* NextInChain;
-} ROS_CACHE_SEGMENT, *PROS_CACHE_SEGMENT;
+  struct _CACHE_SEGMENT* NextInChain;
+} CACHE_SEGMENT;
 
 VOID STDCALL
 CcMdlReadCompleteDev (IN	PMDL		MdlChain,
 		      IN	PDEVICE_OBJECT	DeviceObject);
 NTSTATUS
-CcRosGetCacheSegment(PROS_BCB Bcb,
+CcRosGetCacheSegment(PBCB Bcb,
 		  ULONG FileOffset,
 		  PULONG BaseOffset,
 		  PVOID* BaseAddress,
 		  PBOOLEAN UptoDate,
-		  PROS_CACHE_SEGMENT* CacheSeg);
-
-NTSTATUS STDCALL 
-CcRosFreeCacheSegment(PROS_BCB Bcb, PROS_CACHE_SEGMENT CacheSeg);
-
+		  PCACHE_SEGMENT* CacheSeg);
 VOID
 CcInitView(VOID);
 
-NTSTATUS STDCALL CcRosFreeCacheSegment(PROS_BCB, PROS_CACHE_SEGMENT);
 
-NTSTATUS STDCALL 
-CcRosRequestCacheSegment(PROS_BCB Bcb,
-		      ULONG FileOffset,
-		      PVOID* BaseAddress,
-		      PBOOLEAN UptoDate,
-		      PROS_CACHE_SEGMENT* CacheSeg);
+NTSTATUS STDCALL CcRosFreeCacheSegment(PBCB, PCACHE_SEGMENT);
 
-NTSTATUS STDCALL 
-CcRosReleaseCacheSegment(PROS_BCB Bcb,
-			 PROS_CACHE_SEGMENT CacheSeg,
-			 BOOLEAN Valid,
-			 BOOLEAN Dirty,
-			 BOOLEAN Mapped);
+NTSTATUS ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
 
-NTSTATUS ReadCacheSegment(PROS_CACHE_SEGMENT CacheSeg);
-
-NTSTATUS WriteCacheSegment(PROS_CACHE_SEGMENT CacheSeg);
+NTSTATUS WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 VOID CcInit(VOID);
 NTSTATUS
-CcRosUnmapCacheSegment(PROS_BCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
+CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
 NTSTATUS
-CcRosSuggestFreeCacheSegment(PROS_BCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
+CcRosSuggestFreeCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
 NTSTATUS
-CcRosGetCacheSegmentChain(PROS_BCB Bcb,
+CcRosGetCacheSegmentChain(PBCB Bcb,
 			  ULONG FileOffset,
 			  ULONG Length,
-			  PROS_CACHE_SEGMENT* CacheSeg);
-
+			  PCACHE_SEGMENT* CacheSeg);
 VOID CcInitCacheZeroPage(VOID);
-
 NTSTATUS
-CcRosMarkDirtyCacheSegment(PROS_BCB Bcb, ULONG FileOffset);
+CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset);
 NTSTATUS
 CcRosFlushDirtyPages(ULONG Target, PULONG Count);
 
 VOID CcRosDereferenceCache(PFILE_OBJECT FileObject);
 VOID CcRosReferenceCache(PFILE_OBJECT FileObject);
-
-#endif /* !AS_INVOKED */
 
 #endif

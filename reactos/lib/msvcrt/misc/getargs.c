@@ -1,5 +1,6 @@
-#include <msvcrti.h>
-
+#include <windows.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
 
 extern char *_acmdln;
 extern char *_pgmptr;
@@ -72,7 +73,7 @@ int expand(char* name)
             if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 	    {
                strcpy(&buffer[pos], fd.cFileName);
-	       if (add(_strdup(buffer)) < 0)
+	       if (add(strdup(buffer)) < 0)
 	       {
 		  FindClose(hFile);
 		  return -1;
@@ -130,7 +131,7 @@ int __getmainargs(int *argc,char ***argv,char ***env,int flag)
    *argv = __argv;
    *env  = _environ;
 
-   _pgmptr = _strdup((char *)argv[0]);
+   _pgmptr = strdup((char *)argv[0]);
 
    return 0;
 }

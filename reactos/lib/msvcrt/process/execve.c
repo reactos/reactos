@@ -1,8 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/process.h>
 
 int _execve(const char* szPath, char* const* szaArgv, char* const* szaEnv)
 {
-  return _spawnve(P_OVERLAY, szPath, szaArgv, szaEnv);
+  return spawnve(P_OVERLAY, szPath, szaArgv, szaEnv);
 }

@@ -7,11 +7,10 @@
 #ifndef __WS2_32_H
 #define __WS2_32_H
 
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <winsock2.h>
 #include <ws2spi.h>
+#include <windows.h>
 #include <debug.h>
 
 /* Exported by ntdll.dll, but where is the prototype? */

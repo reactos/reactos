@@ -1,4 +1,4 @@
-/* $Id: hal.c,v 1.4 2002/09/07 15:12:10 chorns Exp $
+/* $Id: hal.c,v 1.5 2002/09/08 10:22:24 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -11,8 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <roscfg.h>
 
 #define NDEBUG
@@ -20,7 +19,7 @@
 
 /* DATA **********************************************************************/
 
-ULONG KdComPortInUse = 0;
+ULONG EXPORTED KdComPortInUse = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -615,20 +614,6 @@ KdPortInitialize(
   PKD_PORT_INFORMATION PortInformation,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED;
-
-  return TRUE;
-}
-
-
-BOOLEAN
-STDCALL
-KdPortInitializeEx (
-	PKD_PORT_INFORMATION	PortInformation,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
 {
   UNIMPLEMENTED;
 

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.78 2002/09/07 15:12:39 chorns Exp $
+; $Id: ntdll.edf,v 1.79 2002/09/08 10:23:03 chorns Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -57,13 +57,13 @@ NlsMbOemCodePageTag DATA
 NtAcceptConnectPort=NtAcceptConnectPort@24
 NtAccessCheck=NtAccessCheck@32
 NtAccessCheckAndAuditAlarm=NtAccessCheckAndAuditAlarm@44
-NtAddAtom=NtAddAtom@12
+NtAddAtom=NtAddAtom@8
 NtAdjustGroupsToken=NtAdjustGroupsToken@24
 NtAdjustPrivilegesToken=NtAdjustPrivilegesToken@24
 NtAlertResumeThread=NtAlertResumeThread@8
 NtAlertThread=NtAlertThread@4
 NtAllocateLocallyUniqueId=NtAllocateLocallyUniqueId@4
-NtAllocateUuids=NtAllocateUuids@16
+NtAllocateUuids=NtAllocateUuids@12
 NtAllocateVirtualMemory=NtAllocateVirtualMemory@24
 NtCallbackReturn=NtCallbackReturn@12
 NtCancelIoFile=NtCancelIoFile@8
@@ -108,7 +108,7 @@ NtDuplicateToken=NtDuplicateToken@24
 NtEnumerateKey=NtEnumerateKey@24
 NtEnumerateValueKey=NtEnumerateValueKey@24
 NtExtendSection=NtExtendSection@8
-NtFindAtom=NtFindAtom@12
+NtFindAtom=NtFindAtom@8
 NtFlushBuffersFile=NtFlushBuffersFile@8
 NtFlushInstructionCache=NtFlushInstructionCache@12
 NtFlushKey=NtFlushKey@4
@@ -333,7 +333,7 @@ RtlCreateAcl=RtlCreateAcl@12
 RtlCreateAtomTable=RtlCreateAtomTable@8
 RtlCreateEnvironment=RtlCreateEnvironment@8
 RtlCreateHeap=RtlCreateHeap@24
-RtlRosCreateProcessParameters=RtlRosCreateProcessParameters@40
+RtlCreateProcessParameters=RtlCreateProcessParameters@40
 ;RtlCreatePropertySet
 ;RtlCreateQueryDebugBuffer
 RtlCreateRegistryKey=RtlCreateRegistryKey@8
@@ -341,12 +341,12 @@ RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 ;RtlCreateTagHeap
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
-RtlRosCreateUserProcess=RtlRosCreateUserProcess@40
+RtlCreateUserProcess=RtlCreateUserProcess@40
 ;RtlCreateUserSecurityObject
 RtlCreateUserThread=RtlCreateUserThread@40
 RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
 ;RtlCutoverTimeToSystemTime
-RtlRosDeNormalizeProcessParams=RtlRosDeNormalizeProcessParams@4
+RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
 RtlDecompressBuffer=RtlDecompressBuffer@24
 RtlDecompressFragment=RtlDecompressFragment@32
 ;RtlDelete
@@ -362,7 +362,7 @@ RtlDestroyAtomTable=RtlDestroyAtomTable@4
 RtlDestroyEnvironment=RtlDestroyEnvironment@4
 RtlDestroyHandleTable=RtlDestroyHandleTable@4
 RtlDestroyHeap=RtlDestroyHeap@4
-RtlRosDestroyProcessParameters=RtlRosDestroyProcessParameters@4
+RtlDestroyProcessParameters=RtlDestroyProcessParameters@4
 ;RtlDestroyQueryDebugBuffer
 RtlDetermineDosPathNameType_U=RtlDetermineDosPathNameType_U@4
 RtlDoesFileExists_U=RtlDoesFileExists_U@4
@@ -482,7 +482,7 @@ RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
 ;RtlNewInstanceSecurityObject
 ;RtlNewSecurityGrantedAccess
 ;RtlNewSecurityObject
-RtlRosNormalizeProcessParams=RtlRosNormalizeProcessParams@4
+RtlNormalizeProcessParams=RtlNormalizeProcessParams@4
 RtlNtStatusToDosError=RtlNtStatusToDosError@4
 RtlNtStatusToPsxErrno=RtlNtStatusToPsxErrno@4
 ;RtlNumberGenericTableElements
@@ -609,13 +609,13 @@ RtlxUnicodeStringToOemSize=RtlxUnicodeStringToOemSize@4
 ZwAcceptConnectPort=ZwAcceptConnectPort@24
 ZwAccessCheck=ZwAccessCheck@32
 ZwAccessCheckAndAuditAlarm=ZwAccessCheckAndAuditAlarm@44
-ZwAddAtom=ZwAddAtom@12
+ZwAddAtom=ZwAddAtom@8
 ZwAdjustGroupsToken=ZwAdjustGroupsToken@24
 ZwAdjustPrivilegesToken=ZwAdjustPrivilegesToken@24
 ZwAlertResumeThread=ZwAlertResumeThread@8
 ZwAlertThread=ZwAlertThread@4
 ZwAllocateLocallyUniqueId=ZwAllocateLocallyUniqueId@4
-ZwAllocateUuids=ZwAllocateUuids@16
+ZwAllocateUuids=ZwAllocateUuids@12
 ZwAllocateVirtualMemory=ZwAllocateVirtualMemory@24
 ZwCallbackReturn=ZwCallbackReturn@12
 ZwCancelIoFile=ZwCancelIoFile@8
@@ -659,7 +659,7 @@ ZwDuplicateToken=ZwDuplicateToken@24
 ZwEnumerateKey=ZwEnumerateKey@24
 ZwEnumerateValueKey=ZwEnumerateValueKey@24
 ZwExtendSection=ZwExtendSection@8
-ZwFindAtom=ZwFindAtom@12
+ZwFindAtom=ZwFindAtom@8
 ZwFlushBuffersFile=ZwFlushBuffersFile@8
 ZwFlushInstructionCache=ZwFlushInstructionCache@12
 ZwFlushKey=ZwFlushKey@4
@@ -944,8 +944,4 @@ wine_dbgstr_guid
 wine_dbg_vprintf
 wine_dbg_printf
 wine_dbg_log
-InterlockedIncrement@4
-InterlockedDecrement@4
-InterlockedExchange@8
-InterlockedCompareExchange@12
-InterlockedExchangeAdd@8
+;EOF

@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.14 2002/09/07 15:12:52 chorns Exp $
+/* $Id: dir.c,v 1.15 2002/09/08 10:23:24 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/io.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -85,7 +85,7 @@ NtQueryDirectoryFile(
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
-   PEXTENDED_IO_STACK_LOCATION IoStack;
+   PIO_STACK_LOCATION IoStack;
    IO_STATUS_BLOCK IoSB;
    
    DPRINT("NtQueryDirectoryFile()\n");
@@ -117,7 +117,7 @@ NtQueryDirectoryFile(
    KeResetEvent( &FileObject->Event );
    Irp->UserBuffer=FileInformation;
    
-   IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
+   IoStack = IoGetNextIrpStackLocation(Irp);
    
    IoStack->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
    IoStack->MinorFunction = IRP_MN_QUERY_DIRECTORY;

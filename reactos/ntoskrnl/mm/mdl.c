@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.43 2002/09/07 15:12:59 chorns Exp $
+/* $Id: mdl.c,v 1.44 2002/09/08 10:23:34 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -11,11 +11,13 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/mm.h>
+#include <internal/ps.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -56,7 +58,7 @@ MmInitializeMdlImplementation(VOID)
 
   MiMdlMappingRegionAllocMap = 
     ExAllocatePool(NonPagedPool,
-		   MI_MDL_MAPPING_REGION_SIZE / (PAGE_SIZE * 32));
+		   MI_MDL_MAPPING_REGION_SIZE / (PAGESIZE * 32));
   MiMdlMappingRegionHighWaterMark = 0;
   KeInitializeSpinLock(&MiMdlMappingRegionLock);
 }
@@ -68,7 +70,7 @@ MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
    
    MdlPages = (PULONG)(Mdl + 1);
    
-   return((PVOID)MdlPages[((ULONG)Offset) / PAGE_SIZE]);
+   return((PVOID)MdlPages[((ULONG)Offset) / PAGESIZE]);
 }
 
 VOID STDCALL 
@@ -103,7 +105,7 @@ MmUnlockPages(PMDL Mdl)
      }
    
    MdlPages = (PULONG)(Mdl + 1);
-   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGE_SIZE); i++)
+   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGESIZE); i++)
      {
 	MmUnlockPage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
 	MmDereferencePage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
@@ -143,11 +145,11 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
      }
 
    /* Calculate the number of pages required. */
-   RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
+   RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGESIZE;
 
    /* Allocate that number of pages from the mdl mapping region. */
    KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
-   Base = MiMdlMappingRegionBase + MiMdlMappingRegionHighWaterMark * PAGE_SIZE;
+   Base = MiMdlMappingRegionBase + MiMdlMappingRegionHighWaterMark * PAGESIZE;
    for (i = 0; i < RegionSize; i++)
      {
        ULONG Offset = MiMdlMappingRegionHighWaterMark + i;
@@ -162,7 +164,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
      {
        NTSTATUS Status;
        Status = MmCreateVirtualMapping(NULL,
-				       (PVOID)((ULONG)Base+(i*PAGE_SIZE)),
+				       (PVOID)((ULONG)Base+(i*PAGESIZE)),
 				       PAGE_READWRITE,
 				       (LARGE_INTEGER)(LONGLONG)MdlPages[i],
 				       FALSE);
@@ -205,13 +207,13 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
     }
 
   /* Calculate the number of pages we mapped. */
-  RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
+  RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGESIZE;
 
   /* Unmap all the pages. */
   for (i = 0; i < RegionSize; i++)
     {
       MmDeleteVirtualMapping(NULL, 
-			     BaseAddress + (i * PAGE_SIZE),
+			     BaseAddress + (i * PAGESIZE),
 			     FALSE,
 			     NULL,
 			     NULL);
@@ -220,7 +222,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
   KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
   /* Deallocate all the pages used. */
   Base = (ULONG)(BaseAddress - MiMdlMappingRegionBase - Mdl->ByteOffset);
-  Base = Base / PAGE_SIZE;
+  Base = Base / PAGESIZE;
   for (i = 0; i < RegionSize; i++)
     {
       ULONG Offset = Base + i;
@@ -250,7 +252,7 @@ MmBuildMdlFromPages(PMDL Mdl, PULONG Pages)
    
    MdlPages = (PULONG)(Mdl + 1);
    
-   for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE);i++)
+   for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
      {
         MdlPages[i] = Pages[i];
      }
@@ -306,12 +308,12 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 
    MmLockAddressSpace(&Mdl->Process->AddressSpace);
    MdlPages = (ULONG *)(Mdl + 1);      
-   NrPages = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
+   NrPages = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGESIZE;
    for (i = 0; i < NrPages; i++)
      {
 	PVOID Address;
 	
-	Address = Mdl->StartVa + (i*PAGE_SIZE);       
+	Address = Mdl->StartVa + (i*PAGESIZE);       
 	
 	if (!MmIsPagePresent(NULL, Address))
 	  {
@@ -391,7 +393,7 @@ MmBuildMdlForNonPagedPool (PMDL	Mdl)
    for (va=0; va < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); va++)
      {
         ((PULONG)(Mdl + 1))[va] =
-            (MmGetPhysicalAddress(Mdl->StartVa + (va * PAGE_SIZE))).u.LowPart;
+            (MmGetPhysicalAddress(Mdl->StartVa + (va * PAGESIZE))).u.LowPart;
      }
    Mdl->MappedSystemVa = Mdl->StartVa + Mdl->ByteOffset;
 }
@@ -425,7 +427,6 @@ MmCreateMdl (PMDL	MemoryDescriptorList,
      }
    
    MmInitializeMdl(MemoryDescriptorList,Base,Length);
-   MemoryDescriptorList->Process = PsGetCurrentProcess();
    
    return(MemoryDescriptorList);
 }

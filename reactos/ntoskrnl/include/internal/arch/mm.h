@@ -20,7 +20,7 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
 
 #ifdef i386
-#include "../i386/mm.h"
+#include <internal/i386/mm.h>
 #else
 #error "Unknown processor"
 #endif

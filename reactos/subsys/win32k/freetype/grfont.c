@@ -275,10 +275,10 @@ const unsigned char  font_8x8[2048] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-static SURFOBJ *CharCellSurfObj;
+static PSURFOBJ CharCellSurfObj;
 static HBITMAP  hCharCellBitmap;
 
-VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, SURFOBJ *SurfObj, PBITMAPOBJ Bitmap);
+VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap);
 
 // Set things up for a character cell surface
 void CreateCellCharSurface()
@@ -298,7 +298,7 @@ void CreateCellCharSurface()
    BITMAPOBJ_ReleasePtr( hCharCellBitmap );
 }
 
-void  grWriteCellChar(SURFOBJ  *target,
+void  grWriteCellChar(PSURFOBJ  target,
                       int        x,
                       int        y,
                       int        charcode,
@@ -349,7 +349,7 @@ void  grWriteCellChar(SURFOBJ  *target,
    ExFreePool(bigbit);
 }
 
-void  grWriteCellString(SURFOBJ  *target,
+void  grWriteCellString(PSURFOBJ  target,
                         int         x,
                         int         y,
                         const char* string,

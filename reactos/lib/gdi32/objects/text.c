@@ -58,41 +58,17 @@ BOOL
 STDCALL 
 GetTextMetricsA(
 	HDC		hdc, 
-	LPTEXTMETRICA	tm
+	LPTEXTMETRIC	tm
 	)
 {
-  TEXTMETRICW tmw;
-	BOOL Success;
-
-  Success = GetTextMetricsW(hdc, &tmw);
-	tm->tmHeight = tmw.tmHeight;
-	tm->tmAscent = tmw.tmAscent;
-	tm->tmDescent = tmw.tmDescent;
-	tm->tmInternalLeading = tmw.tmInternalLeading;
-	tm->tmExternalLeading = tmw.tmExternalLeading;
-	tm->tmAveCharWidth = tmw.tmAveCharWidth;
-	tm->tmMaxCharWidth = tmw.tmMaxCharWidth;
-	tm->tmWeight = tmw.tmWeight;
-	tm->tmOverhang = tmw.tmOverhang;
-	tm->tmDigitizedAspectX = tmw.tmDigitizedAspectX;
-	tm->tmDigitizedAspectY = tmw.tmDigitizedAspectY;
-	tm->tmFirstChar = (BYTE)tmw.tmFirstChar;
-	tm->tmLastChar = (BYTE)tmw.tmLastChar;
-	tm->tmDefaultChar = (BYTE)tmw.tmDefaultChar;
-	tm->tmBreakChar = (BYTE)tmw.tmBreakChar;
-	tm->tmItalic = tmw.tmItalic;
-	tm->tmUnderlined = tmw.tmUnderlined;
-	tm->tmStruckOut = tmw.tmStruckOut;
-	tm->tmPitchAndFamily = tmw.tmPitchAndFamily;
-	tm->tmCharSet = tmw.tmCharSet;
-  return Success;
+	return W32kGetTextMetrics(hdc, tm);
 }
 
 BOOL 
 STDCALL 
 GetTextMetricsW(
 	HDC		hdc, 
-	LPTEXTMETRICW	tm
+	LPTEXTMETRIC	tm
 	)
 {
 	return W32kGetTextMetrics(hdc, tm);
@@ -179,7 +155,7 @@ ExtTextOutW(
 HFONT
 STDCALL
 CreateFontIndirectA(
-	CONST LOGFONTA	*lf
+	CONST LOGFONT		*lf
 	)
 {
         ANSI_STRING StringA;
@@ -192,7 +168,7 @@ CreateFontIndirectA(
         memcpy(&tlf, lf, sizeof(LOGFONT));
         memcpy(&tlf.lfFaceName, &StringU.Buffer, StringU.Length);
 
-        ret = CreateFontIndirectW((CONST LOGFONTW *)&lf);
+        ret = CreateFontIndirectW((CONST LOGFONT *)&lf);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -202,7 +178,7 @@ CreateFontIndirectA(
 HFONT
 STDCALL
 CreateFontIndirectW(
-	CONST LOGFONTW		*lf
+	CONST LOGFONT		*lf
 	)
 {
 	return W32kCreateFontIndirect((CONST LPLOGFONT)lf);

@@ -9,10 +9,12 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <msvcrti.h>
+
+#include <msvcrt/conio.h>
+#include <msvcrt/internal/console.h>
 
 
-int _getche(void)
+int getche(void)
 {
   if (char_avail)
     /*
@@ -24,6 +26,6 @@ int _getche(void)
      * hasn't been got by a conio function.
      * We don't echo again.
      */ 
-    return(_getch());
-  return (_putch(_getch()));
+    return(getch());
+  return (_putch(getch()));
 }

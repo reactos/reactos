@@ -1,4 +1,4 @@
-/* $Id: probe.c,v 1.2 2002/09/07 15:12:38 chorns Exp $
+/* $Id: probe.c,v 1.3 2002/09/08 10:23:02 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,13 +7,11 @@
  * AUTHOR:          Eric Kohl
  * DATE:            2001-06-17
  */
-
-#define NTOS_USER_MODE
+#define NTOS_MODE_USER
 #include <ntos.h>
 
 #define NDEBUG
-#include <debug.h>
-
+#include <ntdll/rtl.h>
 
 VOID STDCALL
 CsrProbeForRead(IN CONST PVOID Address,

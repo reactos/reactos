@@ -35,11 +35,17 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/i386/segment.h>
+#include <internal/module.h>
+#include <internal/ntoskrnl.h>
+#include <internal/ob.h>
+#include <internal/ps.h>
+#include <internal/ldr.h>
+#include <napi/teb.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -173,10 +179,10 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    DPRINT("NTHeaders %x\n", NTHeaders);
    InitialTeb.StackReserve = NTHeaders->OptionalHeader.SizeOfStackReserve;
    /* FIXME: use correct commit size */
-   InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackReserve - PAGE_SIZE;
+   InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackReserve - PAGESIZE;
    //   InitialTeb.StackCommit = NTHeaders->OptionalHeader.SizeOfStackCommit;
    /* add guard page size */
-   InitialTeb.StackCommit += PAGE_SIZE;
+   InitialTeb.StackCommit += PAGESIZE;
    DPRINT("StackReserve 0x%lX  StackCommit 0x%lX\n",
 	  InitialTeb.StackReserve, InitialTeb.StackCommit);
    KeDetachProcess();
@@ -232,7 +238,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
    /* Protect guard page */
    Status = NtProtectVirtualMemory(ProcessHandle,
 				   InitialTeb.StackLimit,
-				   PAGE_SIZE,
+				   PAGESIZE,
 				   PAGE_GUARD | PAGE_READWRITE,
 				   &OldPageProtection);
    if (!NT_SUCCESS(Status))
@@ -287,7 +293,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 			   ProcessHandle,
 			   NULL,
 			   &Context,
-			   (PUSER_STACK)&InitialTeb,
+			   &InitialTeb,
 			   FALSE);
   if (!NT_SUCCESS(Status))
     {

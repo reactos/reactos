@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.11 2002/09/07 15:12:41 chorns Exp $
+/* $Id: time.c,v 1.12 2002/09/08 10:23:07 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,11 +12,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
-
-#define NDEBUG
-#include <debug.h>
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 
 
 #define TICKSPERSEC        10000000

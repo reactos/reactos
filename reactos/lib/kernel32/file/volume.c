@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.25 2002/09/07 15:12:26 chorns Exp $
+/* $Id: volume.c,v 1.26 2002/09/08 10:22:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,9 +19,9 @@
  * Copyright 1996 Alexandre Julliard
  */
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

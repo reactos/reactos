@@ -24,11 +24,7 @@
  *                  Created 01/10/00
  */
 
-#include <ntoskrnl.h>
-
-#define NDEBUG
-#include <internal/debug.h>
-
+#include <string.h>
 
 int memcmp(const void* _s1, const void* _s2, size_t n)
 {

@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/string.h>
 
 size_t wcsxfrm(wchar_t *dst,const wchar_t *src, size_t n)
 {

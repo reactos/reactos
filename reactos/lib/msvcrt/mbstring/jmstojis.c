@@ -1,6 +1,6 @@
-#include <msvcrti.h>
+#include <msvcrt/mbstring.h>
 
-unsigned int _mbcjmstojis(unsigned int c)
+unsigned short _mbcjmstojis(unsigned short c)
 {
   int c1, c2;
 

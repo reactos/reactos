@@ -124,11 +124,10 @@ EngPaint(IN SURFOBJ *Surface,
 	 IN POINTL *BrushOrigin,
 	 IN MIX  Mix)
 {
-  ROS_BRUSHOBJ *bo = (ROS_BRUSHOBJ*)Brush;
   BOOLEAN ret;
 
   // FIXME: We only support a brush's solid color attribute
-  ret = EngPaintRgn(Surface, ClipRegion, bo->iSolidColor, Mix, NULL, BrushOrigin);
+  ret = EngPaintRgn(Surface, ClipRegion, Brush->iSolidColor, Mix, NULL, BrushOrigin);
 
   return ret;
 }

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.89 2002/09/07 15:12:39 chorns Exp $
+; $Id: ntdll.def,v 1.90 2002/09/08 10:23:03 chorns Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -57,13 +57,13 @@ NlsMbOemCodePageTag DATA
 NtAcceptConnectPort@24
 NtAccessCheck@32
 NtAccessCheckAndAuditAlarm@44
-NtAddAtom@12
+NtAddAtom@8
 NtAdjustGroupsToken@24
 NtAdjustPrivilegesToken@24
 NtAlertResumeThread@8
 NtAlertThread@4
 NtAllocateLocallyUniqueId@4
-NtAllocateUuids@16
+NtAllocateUuids@12
 NtAllocateVirtualMemory@24
 NtCallbackReturn@12
 NtCancelIoFile@8
@@ -108,7 +108,7 @@ NtDuplicateToken@24
 NtEnumerateKey@24
 NtEnumerateValueKey@24
 NtExtendSection@8
-NtFindAtom@12
+NtFindAtom@8
 NtFlushBuffersFile@8
 NtFlushInstructionCache@12
 NtFlushKey@4
@@ -333,7 +333,7 @@ RtlCreateAcl@12
 RtlCreateAtomTable@8
 RtlCreateEnvironment@8
 RtlCreateHeap@24
-RtlRosCreateProcessParameters@40
+RtlCreateProcessParameters@40
 ;RtlCreatePropertySet
 ;RtlCreateQueryDebugBuffer
 RtlCreateRegistryKey@8
@@ -341,12 +341,12 @@ RtlCreateSecurityDescriptor@8
 ;RtlCreateTagHeap
 RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz@8
-RtlRosCreateUserProcess@40
+RtlCreateUserProcess@40
 ;RtlCreateUserSecurityObject
 RtlCreateUserThread@40
 RtlCustomCPToUnicodeN@24
 ;RtlCutoverTimeToSystemTime
-RtlRosDeNormalizeProcessParams@4
+RtlDeNormalizeProcessParams@4
 RtlDecompressBuffer@24
 RtlDecompressFragment@32
 ;RtlDelete
@@ -362,7 +362,7 @@ RtlDestroyAtomTable@4
 RtlDestroyEnvironment@4
 RtlDestroyHandleTable@4
 RtlDestroyHeap@4
-RtlRosDestroyProcessParameters@4
+RtlDestroyProcessParameters@4
 ;RtlDestroyQueryDebugBuffer
 RtlDetermineDosPathNameType_U@4
 RtlDoesFileExists_U@4
@@ -483,7 +483,7 @@ RtlMultiByteToUnicodeSize@12
 ;RtlNewInstanceSecurityObject
 ;RtlNewSecurityGrantedAccess
 ;RtlNewSecurityObject
-RtlRosNormalizeProcessParams@4
+RtlNormalizeProcessParams@4
 RtlNtStatusToDosError@4
 RtlNtStatusToPsxErrno@4
 ;RtlNumberGenericTableElements
@@ -610,13 +610,13 @@ RtlxUnicodeStringToOemSize@4
 ZwAcceptConnectPort@24
 ZwAccessCheck@32
 ZwAccessCheckAndAuditAlarm@44
-ZwAddAtom@12
+ZwAddAtom@8
 ZwAdjustGroupsToken@24
 ZwAdjustPrivilegesToken@24
 ZwAlertResumeThread@8
 ZwAlertThread@4
 ZwAllocateLocallyUniqueId@4
-ZwAllocateUuids@16
+ZwAllocateUuids@12
 ZwAllocateVirtualMemory@24
 ZwCallbackReturn@12
 ZwCancelIoFile@8
@@ -660,7 +660,7 @@ ZwDuplicateToken@24
 ZwEnumerateKey@24
 ZwEnumerateValueKey@24
 ZwExtendSection@8
-ZwFindAtom@12
+ZwFindAtom@8
 ZwFlushBuffersFile@8
 ZwFlushInstructionCache@12
 ZwFlushKey@4
@@ -945,4 +945,4 @@ InterlockedIncrement@4
 InterlockedDecrement@4
 InterlockedExchange@8
 InterlockedCompareExchange@12
-InterlockedExchangeAdd@8
+;EOF

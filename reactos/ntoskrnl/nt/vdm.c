@@ -10,11 +10,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -35,9 +33,8 @@ NtEarlyInitVdm(VOID)
   memcpy(OrigBDA, (PVOID)0x400, 256);
 }
 
-NTSTATUS STDCALL
-NtVdmControl(IN ULONG  ControlCode,
-  IN PVOID  ControlData)
+NTSTATUS STDCALL NtVdmControl(ULONG ControlCode,
+			      PVOID ControlData)
 {
   switch (ControlCode)
     {

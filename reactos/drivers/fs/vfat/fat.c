@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.38 2002/09/07 15:12:03 chorns Exp $
+ * $Id: fat.c,v 1.39 2002/09/08 10:22:12 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,8 +24,8 @@
 
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
-#define  CACHEPAGE_SIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
-		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
+#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGESIZE ? \
+		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGESIZE)
 
 /* FUNCTIONS ****************************************************************/
 
@@ -45,7 +45,7 @@ Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   PVOID Context;
   LARGE_INTEGER Offset;
 
-  ChunkSize = CACHEPAGE_SIZE(DeviceExt);
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   FATOffset = CurrentCluster * sizeof(ULONG);
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
   if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
@@ -75,7 +75,7 @@ Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   PVOID Context;
   LARGE_INTEGER Offset;
 
-  ChunkSize = CACHEPAGE_SIZE(DeviceExt);
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   FATOffset = CurrentCluster * 2;
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
   if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
@@ -150,7 +150,7 @@ FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt,
   LARGE_INTEGER Offset;
   PUSHORT Block;
 
-  ChunkSize = CACHEPAGE_SIZE(DeviceExt);
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   FatLength = (DeviceExt->FatInfo.NumberOfClusters +2 ) * 2;
   *Cluster = 0;
   StartCluster = DeviceExt->LastAvailableCluster;
@@ -266,7 +266,7 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   LARGE_INTEGER Offset;
   PULONG Block;
 
-  ChunkSize = CACHEPAGE_SIZE(DeviceExt);
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2) * 4;
   *Cluster = 0;
   StartCluster = DeviceExt->LastAvailableCluster;
@@ -374,7 +374,7 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
   LARGE_INTEGER Offset;
   ULONG FatLength;
 
-  ChunkSize = CACHEPAGE_SIZE(DeviceExt);
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2) * 2;
 
   for (i = 4; i< FatLength; i += 2, Block++)
@@ -421,7 +421,7 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
   LARGE_INTEGER Offset;
   ULONG FatLength;
 
-  ChunkSize = CACHEPAGE_SIZE(DeviceExt);
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2) * 4;
 
   for (i = 8; i< FatLength; i += 4, Block++)
@@ -542,7 +542,7 @@ FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
   LARGE_INTEGER Offset;
   PUSHORT Cluster;
 
-  ChunkSize = CACHEPAGE_SIZE(DeviceExt);
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   FATOffset = ClusterToWrite * 2;
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
   if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
@@ -577,7 +577,7 @@ FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
   LARGE_INTEGER Offset;
   PULONG Cluster;
 
-  ChunkSize = CACHEPAGE_SIZE(DeviceExt);
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
 
   FATOffset = (ClusterToWrite * 4);
   Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);

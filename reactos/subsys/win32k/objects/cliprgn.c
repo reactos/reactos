@@ -1,6 +1,8 @@
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
+
+#undef WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <ddk/ntddk.h>
 #include <win32k/dc.h>
 #include <win32k/region.h>
 #include <win32k/cliprgn.h>

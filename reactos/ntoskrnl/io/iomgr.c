@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.26 2002/09/07 17:08:31 chorns Exp $
+/* $Id: iomgr.c,v 1.27 2002/09/08 10:23:25 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -11,7 +11,11 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
+#include <limits.h>
+#include <ddk/ntddk.h>
+#include <internal/ob.h>
+#include <internal/io.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -24,13 +28,13 @@
 /* DATA ********************************************************************/
 
 
-POBJECT_TYPE IoDeviceObjectType = NULL;
-POBJECT_TYPE IoFileObjectType = NULL;
-ULONG        IoReadOperationCount = 0;	/* FIXME: unknown type */
-ULONG        IoReadTransferCount = 0;	/* FIXME: unknown type */
-ULONG        IoWriteOperationCount = 0; /* FIXME: unknown type */
-ULONG        IoWriteTransferCount = 0;	/* FIXME: unknown type */
-ULONG        IoStatisticsLock = 0;	/* FIXME: unknown type */
+POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
+POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
+ULONG        EXPORTED IoReadOperationCount = 0;	/* FIXME: unknown type */
+ULONG        EXPORTED IoReadTransferCount = 0;	/* FIXME: unknown type */
+ULONG        EXPORTED IoWriteOperationCount = 0; /* FIXME: unknown type */
+ULONG        EXPORTED IoWriteTransferCount = 0;	/* FIXME: unknown type */
+ULONG        EXPORTED IoStatisticsLock = 0;	/* FIXME: unknown type */
 
 static GENERIC_MAPPING IopFileMapping = {FILE_GENERIC_READ,
 					 FILE_GENERIC_WRITE,
@@ -201,8 +205,6 @@ VOID IoInit (VOID)
   /*
    * Create the '\Device' directory
    */
-  RtlInitUnicodeString(&DirName,
-		       L"\\Device");
   RtlInitUnicodeStringFromLiteral(&DirName,
 		       L"\\Device");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -210,8 +212,7 @@ VOID IoInit (VOID)
 			     0,
 			     NULL,
 			     NULL);
-
-  NtCreateDirectoryObject(&Handle,
+  ZwCreateDirectoryObject(&Handle,
 			  0,
 			  &ObjectAttributes);
 
@@ -225,7 +226,7 @@ VOID IoInit (VOID)
 			     0,
 			     NULL,
 			     NULL);
-  NtCreateDirectoryObject(&Handle,
+  ZwCreateDirectoryObject(&Handle,
 			  0,
 			  &ObjectAttributes);
 
@@ -239,7 +240,7 @@ VOID IoInit (VOID)
 			     0,
 			     NULL,
 			     NULL);
-  NtCreateDirectoryObject(&Handle,
+  ZwCreateDirectoryObject(&Handle,
 			  0,
 			  &ObjectAttributes);
 

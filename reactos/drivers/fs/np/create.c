@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.13 2002/09/07 15:12:02 chorns Exp $
+/* $Id: create.c,v 1.14 2002/09/08 10:22:11 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -8,6 +8,8 @@
  */
 
 /* INCLUDES ******************************************************************/
+
+#include <ddk/ntddk.h>
 
 #include "npfs.h"
 

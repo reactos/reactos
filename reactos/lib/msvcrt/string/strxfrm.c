@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <string.h>
+#include <msvcrt/string.h>
 
 #if 1
 size_t strxfrm( char *dest, const char *src, size_t n )

@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <crtdll/math.h>
 
 double _jn(int n, double x)
 {

@@ -1,13 +1,10 @@
-/* $Id: notify.c,v 1.4 2002/09/07 15:12:50 chorns Exp $
+/* $Id: notify.c,v 1.5 2002/09/08 10:23:20 chorns Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
  */
-
-#include <ntoskrnl.h>
-
-#define NDEBUG
-#include <internal/debug.h>
+#include <ntos.h>
+#include <ddk/ntifs.h>
 
 
 /**********************************************************************
@@ -142,10 +139,24 @@ FsRtlNotifyFullReportChange (
 VOID
 STDCALL
 FsRtlNotifyInitializeSync (
-	IN	PNOTIFY_SYNC	NotifySync
+	IN	PNOTIFY_SYNC	* NotifySync
 	)
 {
-  UNIMPLEMENTED
+	*NotifySync = NULL;
+	*NotifySync = ExAllocatePoolWithTag (
+			0x10,			// PoolType???
+			sizeof (NOTIFY_SYNC),	// NumberOfBytes = 0x28
+			FSRTL_TAG
+			);
+#if 0
+	*NotifySync->Unknown0 = 1;
+	*NotifySync->Unknown2 = 0;
+	*NotifySync->Unknown3 = 1;
+	*NotifySync->Unknown4 = 4;
+	*NotifySync->Unknown5 = 0;
+	*NotifySync->Unknown9 = 0;
+	*NotifySync->Unknown10 = 0;
+#endif
 }
 
 
@@ -192,7 +203,9 @@ FsRtlNotifyReportChange (
  *	Uninitialize a NOTIFY_SYNC object.
  *
  * ARGUMENTS
- *	NotifySync - Pointer to caller allocated space for NOTIFY_SYNC
+ *	NotifySync is the address of a pointer
+ *      to a PNOTIFY_SYNC object previously initialized by
+ *      FsRtlNotifyInitializeSync().
  *
  * RETURN VALUE
  *	None.
@@ -200,10 +213,14 @@ FsRtlNotifyReportChange (
 VOID
 STDCALL
 FsRtlNotifyUninitializeSync (
-	IN OUT	PNOTIFY_SYNC	NotifySync
+	IN OUT	PNOTIFY_SYNC	* NotifySync
 	)
 {
-  UNIMPLEMENTED
+	if (NULL != *NotifySync) 
+	{
+		ExFreePool (*NotifySync);
+		*NotifySync = NULL;
+	}
 }
 
 /**********************************************************************

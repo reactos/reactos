@@ -1,11 +1,8 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
 #include <win32k/debug.h>
 #include <win32k/bitmaps.h>
 #include <win32k/color.h>
-#include <include/eng.h>
 #include <debug.h>
 
 static int           PALETTE_firstFree = 0; 
@@ -29,16 +26,16 @@ HPALETTE PALETTE_Init(void)
   int i;
   HPALETTE hpalette;
   PLOGPALETTE palPtr;
-  ROS_PALOBJ *palObj;
+  PPALOBJ palObj;
   const PALETTEENTRY* __sysPalTemplate = (const PALETTEENTRY*)COLOR_GetSystemPaletteTemplate();
 
   // create default palette (20 system colors)
-  palPtr = ExAllocatePool(NonPagedPool, sizeof(LOGPALETTE) + (NO_RESERVED_COLORS * sizeof(PALETTEENTRY)));
+  palPtr = ExAllocatePool(NonPagedPool, sizeof(LOGPALETTE) + (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)));
   if (!palPtr) return FALSE;
 
   palPtr->palVersion = 0x300;
-  palPtr->palNumEntries = NO_RESERVED_COLORS;
-  for(i=0; i<NO_RESERVED_COLORS; i++)
+  palPtr->palNumEntries = NB_RESERVED_COLORS;
+  for(i=0; i<NB_RESERVED_COLORS; i++)
   {
     palPtr->palPalEntry[i].peRed = __sysPalTemplate[i].peRed;
     palPtr->palPalEntry[i].peGreen = __sysPalTemplate[i].peGreen;
@@ -49,7 +46,7 @@ HPALETTE PALETTE_Init(void)
   hpalette = W32kCreatePalette(palPtr);
   ExFreePool(palPtr);
 
-  palObj = (PALOBJ*)AccessUserObject(hpalette);
+  palObj = (PPALOBJ)AccessUserObject(hpalette);
   if (palObj)
   {
     if (!(palObj->mapping = ExAllocatePool(NonPagedPool, sizeof(int) * 20)))
@@ -68,10 +65,10 @@ static void PALETTE_FormatSystemPalette(void)
   // Build free list so we'd have an easy way to find
   // out if there are any available colorcells. 
 
-  int i, j = PALETTE_firstFree = NO_RESERVED_COLORS/2;
+  int i, j = PALETTE_firstFree = NB_RESERVED_COLORS/2;
 
   COLOR_sysPal[j].peFlags = 0;
-  for(i = NO_RESERVED_COLORS/2 + 1 ; i < 256 - NO_RESERVED_COLORS/2 ; i++)
+  for(i = NB_RESERVED_COLORS/2 + 1 ; i < 256 - NB_RESERVED_COLORS/2 ; i++)
   {
     if( i < COLOR_gapStart || i > COLOR_gapEnd )
     {
@@ -92,15 +89,12 @@ void PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, int size)
 
 // Set the color-mapping table for selected palette. 
 // Return number of entries which mapping has changed.
-int PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
+int PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
 {
-  ROS_PALOBJ *po;
   char flag;
-  int  prevMapping;
+  int  prevMapping = (palPtr->mapping) ? 1 : 0;
   int  index, iRemapped = 0;
   int *mapping;
-
-  prevMapping = (po->mapping) ? 1 : 0;
 
   // reset dynamic system palette entries
 
@@ -109,22 +103,22 @@ int PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
   // initialize palette mapping table
  
   //mapping = HeapReAlloc( GetProcessHeap(), 0, palPtr->mapping,
-  //                       sizeof(int)*po->logpalette->palNumEntries);
-  ExFreePool(po->mapping);
-  mapping = ExAllocatePool(NonPagedPool, sizeof(int)*po->logpalette->palNumEntries);
+  //                       sizeof(int)*palPtr->logpalette->palNumEntries);
+  ExFreePool(palPtr->mapping);
+  mapping = ExAllocatePool(NonPagedPool, sizeof(int)*palPtr->logpalette->palNumEntries);
 
-  po->mapping = mapping;
+  palPtr->mapping = mapping;
 
   for(uNum += uStart; uStart < uNum; uStart++)
   {
     index = -1;
     flag = PC_SYS_USED;
 
-    switch( po->logpalette->palPalEntry[uStart].peFlags & 0x07 )
+    switch( palPtr->logpalette->palPalEntry[uStart].peFlags & 0x07 )
     {
       case PC_EXPLICIT:   // palette entries are indices into system palette
                           // The PC_EXPLICIT flag is used to copy an entry from the system palette into the logical palette
-        index = *(WORD*)(po->logpalette->palPalEntry + uStart);
+        index = *(WORD*)(palPtr->logpalette->palPalEntry + uStart);
         if(index > 255 || (index >= COLOR_gapStart && index <= COLOR_gapEnd))
         {
           DbgPrint("Win32k: PC_EXPLICIT: idx %d out of system palette, assuming black.\n", index); 
@@ -139,7 +133,7 @@ int PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
       // fall through
       default: // try to collapse identical colors
         index = COLOR_PaletteLookupExactIndex(COLOR_sysPal, 256,  
-                                              *(COLORREF*)(po->logpalette->palPalEntry + uStart));
+                                              *(COLORREF*)(palPtr->logpalette->palPalEntry + uStart));
             // fall through
 
       case PC_NOCOLLAPSE:
@@ -159,13 +153,13 @@ int PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
             PALETTE_firstFree = PALETTE_freeList[index];
 
             color.pixel = (PALETTE_PaletteToXPixel) ? PALETTE_PaletteToXPixel[index] : index;
-            color.red = po->logpalette->palPalEntry[uStart].peRed << 8;
-            color.green = po->logpalette->palPalEntry[uStart].peGreen << 8;
-            color.blue = po->logpalette->palPalEntry[uStart].peBlue << 8;
+            color.red = palPtr->logpalette->palPalEntry[uStart].peRed << 8;
+            color.green = palPtr->logpalette->palPalEntry[uStart].peGreen << 8;
+            color.blue = palPtr->logpalette->palPalEntry[uStart].peBlue << 8;
             color.flags = DoRed | DoGreen | DoBlue;
             TSXStoreColor(display, PALETTE_PaletteXColormap, &color);
 
-            COLOR_sysPal[index] = po->logpalette->palPalEntry[uStart];
+            COLOR_sysPal[index] = palPtr->logpalette->palPalEntry[uStart];
             COLOR_sysPal[index].peFlags = flag;
             PALETTE_freeList[index] = 0;
 
@@ -175,23 +169,23 @@ int PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
 /*          else if (PALETTE_PaletteFlags & PALETTE_VIRTUAL)
           {
             index = PALETTE_ToPhysical(NULL, 0x00ffffff &
-                                       *(COLORREF*)(po->logpalette->palPalEntry + uStart));
+                                       *(COLORREF*)(palPtr->logpalette->palPalEntry + uStart));
              break;     
            } FIXME */
 
            // we have to map to existing entry in the system palette
 
            index = COLOR_PaletteLookupPixel(COLOR_sysPal, 256, NULL,
-                                            *(COLORREF*)(po->logpalette->palPalEntry + uStart), TRUE);
+                                            *(COLORREF*)(palPtr->logpalette->palPalEntry + uStart), TRUE);
            }
-           po->logpalette->palPalEntry[uStart].peFlags |= PC_SYS_USED;
+           palPtr->logpalette->palPalEntry[uStart].peFlags |= PC_SYS_USED;
 
 /*         if(PALETTE_PaletteToXPixel) index = PALETTE_PaletteToXPixel[index]; FIXME */
            break;
         }
 
-        if( !prevMapping || po->mapping[uStart] != index ) iRemapped++;
-        po->mapping[uStart] = index;
+        if( !prevMapping || palPtr->mapping[uStart] != index ) iRemapped++;
+        palPtr->mapping[uStart] = index;
 
   }
   return iRemapped;

@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/mbstring.h>
 
 size_t _mbclen2(const unsigned int s);
 unsigned int _mbbtoupper(unsigned int c);

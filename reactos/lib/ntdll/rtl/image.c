@@ -1,4 +1,4 @@
-/* $Id: image.c,v 1.3 2002/09/07 15:12:40 chorns Exp $
+/* $Id: image.c,v 1.4 2002/09/08 10:23:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,11 +9,11 @@
  *                  17/03/2000 Created
  */
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
 
 /* FUNCTIONS ****************************************************************/
 

@@ -83,11 +83,15 @@
  *
  ****************************************************************************/
 
-#include <ntoskrnl.h>
+#include <ntddk.h>
+#include <internal/kd.h>
+#include <internal/ke.h>
+#include <internal/ps.h>
+#include <internal/module.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 extern LIST_ENTRY PiThreadListHead;
 

@@ -11,17 +11,16 @@
 
 
 VOID
-STDCALL
+EXPORT
 NdisCancelTimer(
     IN  PNDIS_TIMER Timer,
     OUT PBOOLEAN    TimerCancelled)
 {
 } 
 
-#undef NdisGetCurrentSystemTime
 
 VOID
-STDCALL
+EXPORT
 NdisGetCurrentSystemTime (
     IN  OUT PLONGLONG   pSystemTime)
 {
@@ -29,7 +28,7 @@ NdisGetCurrentSystemTime (
 
 
 VOID
-STDCALL
+EXPORT
 NdisInitializeTimer(
     IN OUT  PNDIS_TIMER             Timer,
     IN      PNDIS_TIMER_FUNCTION    TimerFunction,
@@ -39,7 +38,7 @@ NdisInitializeTimer(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMCancelTimer(
     IN  PNDIS_MINIPORT_TIMER    Timer,
     OUT PBOOLEAN                TimerCancelled)
@@ -48,7 +47,7 @@ NdisMCancelTimer(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMInitializeTimer(
     IN OUT  PNDIS_MINIPORT_TIMER    Timer,
     IN      NDIS_HANDLE             MiniportAdapterHandle,
@@ -59,7 +58,7 @@ NdisMInitializeTimer(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMSetPeriodicTimer(
     IN	PNDIS_MINIPORT_TIMER    Timer,
     IN	UINT                    MillisecondsPeriod)
@@ -68,7 +67,7 @@ NdisMSetPeriodicTimer(
 
 
 VOID
-STDCALL
+EXPORT
 NdisMSetTimer(
     IN  PNDIS_MINIPORT_TIMER    Timer,
     IN  UINT                    MillisecondsToDelay)
@@ -77,7 +76,7 @@ NdisMSetTimer(
 
 
 VOID
-STDCALL
+EXPORT
 NdisSetTimer(
     IN  PNDIS_TIMER Timer,
     IN  UINT        MillisecondsToDelay)

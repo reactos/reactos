@@ -1,4 +1,6 @@
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/direct.h>
 
 
 extern int cur_drive;

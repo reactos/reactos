@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/stdlib.h>
+#include <msvcrt/internal/tls.h>
 
 int
 rand(void)

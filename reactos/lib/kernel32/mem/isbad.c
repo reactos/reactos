@@ -1,14 +1,11 @@
-/* $Id: isbad.c,v 1.3 2002/09/07 15:12:26 chorns Exp $
+/* $Id: isbad.c,v 1.4 2002/09/08 10:22:43 chorns Exp $
  *
  * lib/kernel32/mem/isbad.c
  *
  * ReactOS Operating System
  *
  */
-
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 
 /* FIXME: Stubs. What is it for? */
 UINT

@@ -1,5 +1,6 @@
-#include <msvcrti.h>
-
+#include <msvcrt/conio.h>
+#include <msvcrt/stdarg.h>
+#include <msvcrt/stdio.h>
 
 int _cscanf(char *fmt, ...)
 {

@@ -6,11 +6,19 @@
  * UPDATE HISTORY:
 */
 
-#include <ntoskrnl.h>
-#include "cm.h"
+#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <roscfg.h>
+#include <internal/ob.h>
+#include <limits.h>
+#include <string.h>
+#include <internal/pool.h>
+#include <internal/registry.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+#include "cm.h"
 
 
 
@@ -57,7 +65,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
   RootKeyCell->CellSize = -sizeof(KEY_CELL);
   RootKeyCell->Id = REG_KEY_CELL_ID;
   RootKeyCell->Type = REG_ROOT_KEY_CELL_TYPE;
-  ZwQuerySystemTime((PLARGE_INTEGER) &RootKeyCell->LastWriteTime);
+  ZwQuerySystemTime((PTIME) &RootKeyCell->LastWriteTime);
   RootKeyCell->ParentKeyOffset = 0;
   RootKeyCell->NumberOfSubKeys = 0;
   RootKeyCell->HashTableOffset = -1;
@@ -1051,7 +1059,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     {
 	    NewKeyCell->Id = REG_KEY_CELL_ID;
 	    NewKeyCell->Type = REG_KEY_CELL_TYPE;
-	    ZwQuerySystemTime((PLARGE_INTEGER) &NewKeyCell->LastWriteTime);
+	    ZwQuerySystemTime((PTIME) &NewKeyCell->LastWriteTime);
 	    NewKeyCell->ParentKeyOffset = -1;
 	    NewKeyCell->NumberOfSubKeys = 0;
 	    NewKeyCell->HashTableOffset = -1;
@@ -1505,7 +1513,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 
       /* Update time of heap */
       if (IsPermanentHive(RegistryHive))
-	ZwQuerySystemTime((PLARGE_INTEGER) &pBin->DateModified);
+	ZwQuerySystemTime((PTIME) &pBin->DateModified);
     }
 
   Status = CmiDestroyBlock(RegistryHive, ValueCell, VBOffset);
@@ -1513,7 +1521,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
   /* Update time of heap */
   if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
     {
-      ZwQuerySystemTime((PLARGE_INTEGER) &pBin->DateModified);
+      ZwQuerySystemTime((PTIME) &pBin->DateModified);
     }
 
   return Status;
@@ -1540,7 +1548,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   RegistryHive->FileSize += REG_BLOCK_SIZE;
   tmpBin->BlockSize = REG_BLOCK_SIZE;
   tmpBin->Unused1 = 0;
-  ZwQuerySystemTime((PLARGE_INTEGER) &tmpBin->DateModified);
+  ZwQuerySystemTime((PTIME) &tmpBin->DateModified);
   tmpBin->Unused2 = 0;
 
   /* Increase size of list of blocks */
@@ -1631,7 +1639,7 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
                Temp = CmiGetBlock(RegistryHive, RegistryHive->FreeListOffset[i], &pBin);
 
 			         if (Temp)
-			           ZwQuerySystemTime((PLARGE_INTEGER) &pBin->DateModified);
+			           ZwQuerySystemTime((PTIME) &pBin->DateModified);
 
 			         if ((i + 1) < RegistryHive->FreeListSize)
                  {
@@ -1707,7 +1715,7 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
 
 	    /* Update time of heap */
 	    if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
-	      ZwQuerySystemTime((PLARGE_INTEGER) &pBin->DateModified);
+	      ZwQuerySystemTime((PTIME) &pBin->DateModified);
 
 	      /* FIXME: Set first dword to block_offset of another free block ? */
 	      /* FIXME: Concatenate with previous and next block if free */

@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.11 2002/09/07 15:12:47 chorns Exp $
+/* $Id: copy.c,v 1.12 2002/09/08 10:23:16 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,16 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <internal/mm.h>
+#include <internal/cc.h>
+#include <internal/pool.h>
+#include <internal/io.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -45,12 +50,12 @@ CcInitCacheZeroPage(VOID)
 }
 
 NTSTATUS
-ReadCacheSegmentChain(PROS_BCB Bcb, ULONG ReadOffset, ULONG Length,
+ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 		      PVOID Buffer)
 {
-  PROS_CACHE_SEGMENT head;
-  PROS_CACHE_SEGMENT current;
-  PROS_CACHE_SEGMENT previous;
+  PCACHE_SEGMENT head;
+  PCACHE_SEGMENT current;
+  PCACHE_SEGMENT previous;
   IO_STATUS_BLOCK Iosb;
   LARGE_INTEGER SegOffset;
   NTSTATUS Status;
@@ -84,7 +89,7 @@ ReadCacheSegmentChain(PROS_BCB Bcb, ULONG ReadOffset, ULONG Length,
        */
       else
 	{
-	  PROS_CACHE_SEGMENT current2;
+	  PCACHE_SEGMENT current2;
 	  ULONG current_size;
 	  PMDL Mdl;
 	  ULONG i;
@@ -111,11 +116,11 @@ ReadCacheSegmentChain(PROS_BCB Bcb, ULONG ReadOffset, ULONG Length,
 	  offset = 0;
 	  while (current2 != NULL && !current2->Valid)
 	    {
-	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
+	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
 		{
 		  PVOID address;
 		  PHYSICAL_ADDRESS page;
-		  address = current2->BaseAddress + (i * PAGE_SIZE);
+		  address = current2->BaseAddress + (i * PAGESIZE);
 		  page = MmGetPhysicalAddressForProcess(NULL, address);
 		  ((PULONG)(Mdl + 1))[offset] = page.u.LowPart;
 		  offset++;
@@ -164,7 +169,7 @@ ReadCacheSegmentChain(PROS_BCB Bcb, ULONG ReadOffset, ULONG Length,
 }
 
 NTSTATUS 
-ReadCacheSegment(PROS_CACHE_SEGMENT CacheSeg)
+ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
 {
   ULONG Size;
   PMDL Mdl;
@@ -204,7 +209,7 @@ ReadCacheSegment(PROS_CACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS 
-WriteCacheSegment(PROS_CACHE_SEGMENT CacheSeg)
+WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
 {
   ULONG Size;
   PMDL Mdl;
@@ -250,13 +255,13 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
   ULONG TempLength;
   NTSTATUS Status = STATUS_SUCCESS;
   PVOID BaseAddress;
-  PROS_CACHE_SEGMENT CacheSeg;
+  PCACHE_SEGMENT CacheSeg;
   BOOLEAN Valid;
   ULONG ReadLength = 0;
-  PROS_BCB Bcb;
+  PBCB Bcb;
   KIRQL oldirql;
   PLIST_ENTRY current_entry;
-  PROS_CACHE_SEGMENT current;
+  PCACHE_SEGMENT current;
   
   DPRINT("CcCopyRead(FileObject %x, FileOffset %x, "
 	 "Length %d, Wait %d, Buffer %x, IoStatus %x)\n",
@@ -280,7 +285,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
       current_entry = Bcb->BcbSegmentListHead.Flink;
       while (current_entry != &Bcb->BcbSegmentListHead)
 	{
-	  current = CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, 
+	  current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
 				      BcbSegmentListEntry);
 	  if (!current->Valid && current->FileOffset < ReadOffset + Length
 	      && current->FileOffset + Bcb->CacheSegmentSize > ReadOffset)
@@ -353,9 +358,9 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
    NTSTATUS Status;
    ULONG WriteOffset;
    KIRQL oldirql;
-   PROS_BCB Bcb;
+   PBCB Bcb;
    PLIST_ENTRY current_entry;
-   PROS_CACHE_SEGMENT CacheSeg;
+   PCACHE_SEGMENT CacheSeg;
    ULONG TempLength;
    PVOID BaseAddress;
    BOOLEAN Valid;
@@ -374,7 +379,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
        current_entry = Bcb->BcbSegmentListHead.Flink;
        while (current_entry != &Bcb->BcbSegmentListHead)
 	 {
-	   CacheSeg = CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, 
+	   CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
 					BcbSegmentListEntry);
 	   if (!CacheSeg->Valid)
 	     {
@@ -470,28 +475,28 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   /* 
    * FIXME: NT uses the shared cache map field for cached/non cached detection
    */
-  if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
+  if (FileObject->SectionObjectPointers->SharedCacheMap == NULL)
     {
       /* File is not cached */
       WriteOffset.QuadPart = StartOffset->QuadPart;
       
       while (Length > 0)
 	{
-	  if (Length + WriteOffset.u.LowPart % PAGE_SIZE > 262144)
+	  if (Length + WriteOffset.u.LowPart % PAGESIZE > 262144)
 	    {
 	      Mdl = MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, 
-				262144 - WriteOffset.u.LowPart % PAGE_SIZE);
+				262144 - WriteOffset.u.LowPart % PAGESIZE);
 	      WriteOffset.QuadPart += 
-		(262144 - WriteOffset.u.LowPart % PAGE_SIZE);
-	      Length -= (262144 - WriteOffset.u.LowPart % PAGE_SIZE);
+		(262144 - WriteOffset.u.LowPart % PAGESIZE);
+	      Length -= (262144 - WriteOffset.u.LowPart % PAGESIZE);
 	    }
 	  else
 	    {
 	      Mdl = 
 		MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, 
-			    Length - WriteOffset.u.LowPart % PAGE_SIZE);
+			    Length - WriteOffset.u.LowPart % PAGESIZE);
 	      WriteOffset.QuadPart += 
-		(Length - WriteOffset.u.LowPart % PAGE_SIZE);
+		(Length - WriteOffset.u.LowPart % PAGESIZE);
 	      Length = 0;
 	    }
 	  if (Mdl == NULL)
@@ -520,9 +525,9 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
     {
       /* File is cached */
       KIRQL oldirql;
-      PROS_BCB Bcb;
+      PBCB Bcb;
       PLIST_ENTRY current_entry;
-      PROS_CACHE_SEGMENT CacheSeg, current, previous;
+      PCACHE_SEGMENT CacheSeg, current, previous;
       ULONG TempLength;
       ULONG Start;
       ULONG count;
@@ -538,7 +543,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	  current_entry = Bcb->BcbSegmentListHead.Flink;
 	  while (current_entry != &Bcb->BcbSegmentListHead)
 	    {
-	      CacheSeg = CONTAINING_RECORD(current_entry, ROS_CACHE_SEGMENT, 
+	      CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
 					   BcbSegmentListEntry);
 	      if (!CacheSeg->Valid)
 		{
@@ -628,11 +633,11 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	      Length -= TempLength;
 	      
 	      size = ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG));
-	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE) && 
+	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE) && 
 		     count < size; i++)
 		{
 		  PVOID Address;
-		  Address = current->BaseAddress + (i * PAGE_SIZE);
+		  Address = current->BaseAddress + (i * PAGESIZE);
 		  page = 
 		    MmGetPhysicalAddressForProcess(NULL, Address);
 		  ((PULONG)(Mdl + 1))[count++] = page.u.LowPart;

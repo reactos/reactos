@@ -27,7 +27,12 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ntoskrnl.h>
+#include <internal/ps.h>
+#include <internal/i386/segment.h>
+#include <internal/i386/mm.h>
+#include <internal/ke.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -134,7 +139,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   TrapFrame->Gs = Context->SegGs;
   TrapFrame->Es = Context->SegEs;
   TrapFrame->Ds = Context->SegDs;
-  TrapFrame->Edx = Context->Edx;
+  TrapFrame->Edx = Context->Ebx;
   TrapFrame->Ecx = Context->Ecx;
   TrapFrame->Eax = Context->Eax;
   TrapFrame->PreviousMode = UserMode;

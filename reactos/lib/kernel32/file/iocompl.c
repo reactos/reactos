@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.5 2002/09/07 15:12:26 chorns Exp $
+/* $Id: iocompl.c,v 1.6 2002/09/08 10:22:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,11 +9,19 @@
  *                  Created 01/11/98
  */
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 #include <wchar.h>
+
+
 #include <kernel32/error.h>
+
+
+typedef struct _FILE_COMPLETION_INFORMATION {
+    HANDLE CompletionPort;
+    ULONG CompletionKey;
+} FILE_COMPLETION_INFORMATION;
+typedef FILE_COMPLETION_INFORMATION *PFILE_COMPLETION_INFORMATION;
 
 
 VOID
@@ -57,8 +65,8 @@ CreateIoCompletionPort(
         }
         if ( FileHandle != INVALID_HANDLE_VALUE ) {
 
-		CompletionInformation.Port = CompletionPort;
-                CompletionInformation.Key  = CompletionKey;
+		CompletionInformation.CompletionPort = CompletionPort;
+                CompletionInformation.CompletionKey  = CompletionKey;
 
                 errCode = NtSetInformationFile(FileHandle, &IoStatusBlock,&CompletionInformation,sizeof(FILE_COMPLETION_INFORMATION),FileCompletionInformation);
                 if ( !NT_SUCCESS(errCode) ) {

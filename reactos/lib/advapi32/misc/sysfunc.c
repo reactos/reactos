@@ -1,4 +1,4 @@
-/* $Id: sysfunc.c,v 1.4 2002/09/07 15:12:22 chorns Exp $
+/* $Id: sysfunc.c,v 1.5 2002/09/08 10:22:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,8 +9,7 @@
  *	19990413 EA	created
  *	19990415 EA
  */
-
-#include <advapi32.h>
+#include <windows.h>
 
 /**********************************************************************
  *	SystemFunction001

@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.18 2002/09/07 15:12:53 chorns Exp $
+/* $Id: vpb.c,v 1.19 2002/09/08 10:23:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/io.h>
+#include <internal/mm.h>
+#include <internal/pool.h>
+
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -53,7 +56,8 @@ IoAttachVpb(PDEVICE_OBJECT DeviceObject)
    Vpb->RealDevice = DeviceObject;
    Vpb->SerialNumber = 0;
    Vpb->ReferenceCount = 0;
-   RtlZeroMemory(Vpb->VolumeLabel, MAXIMUM_VOLUME_LABEL_LENGTH);
+   RtlZeroMemory(Vpb->VolumeLabel,
+		 sizeof(WCHAR) * MAXIMUM_VOLUME_LABEL_LENGTH);
    
    DeviceObject->Vpb = Vpb;
    
@@ -268,7 +272,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
    NTSTATUS Status;
-   PEXTENDED_IO_STACK_LOCATION StackPtr;
+   PIO_STACK_LOCATION StackPtr;
    PVOID SystemBuffer;
    IO_STATUS_BLOCK IoSB;
    
@@ -312,7 +316,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
    Irp->UserIosb = &IoSB;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
-   StackPtr = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_SET_VOLUME_INFORMATION;
    StackPtr->MinorFunction = 0;
    StackPtr->Flags = 0;

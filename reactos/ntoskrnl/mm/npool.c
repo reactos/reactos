@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.60 2002/09/07 15:13:00 chorns Exp $
+/* $Id: npool.c,v 1.61 2002/09/08 10:23:35 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -16,7 +16,10 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/mm.h>
+#include <internal/ntoskrnl.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -200,6 +203,10 @@ MiAddToTagHashTable(BLOCK_HDR* block)
 	  return;
 	}
       previous = current;
+      if ((PVOID)current->tag_next >= (PVOID)0xc1123160)
+	{
+	  DbgPrint("previous %x\n", previous);
+	}
       current = current->tag_next;
     }
   block->tag_next = NULL;
@@ -380,7 +387,7 @@ static void validate_free_list(void)
 	  {
 	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		      current);
-	     KeBugCheck(0); //(KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	
 	if (base_addr < (kernel_pool_base) ||
@@ -390,13 +397,13 @@ static void validate_free_list(void)
 	     DbgPrint("Size %d\n",current->Size);
 	     DbgPrint("Limits are %x %x\n",kernel_pool_base,
 		    kernel_pool_base+NONPAGED_POOL_SIZE);
-	     KeBugCheck(0); //KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	blocks_seen++;
 	if (blocks_seen > EiNrFreeBlocks)
 	  {
 	     DbgPrint("Too many blocks on free list\n");
-	     KeBugCheck(0); //KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	if (current->ListEntry.Flink != &FreeBlockListHead &&
 	    current->ListEntry.Flink->Blink != &current->ListEntry)
@@ -405,7 +412,7 @@ static void validate_free_list(void)
 		    "current->next->previous %x)\n",
 		    __FILE__,__LINE__,current, current->ListEntry.Flink,
 		    current->ListEntry.Flink->Blink);
-	     KeBugCheck(0); //KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 
 	current_entry = current_entry->Flink;
@@ -433,27 +440,27 @@ static void validate_used_list(void)
 	  {
 	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		      current);
-	     KeBugCheck(0); //KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	if (base_addr < (kernel_pool_base) ||
 	    (base_addr+current->Size) >
 	    (kernel_pool_base)+NONPAGED_POOL_SIZE)
 	  {
 	     DbgPrint("Block %x found outside pool area\n",current);
-	     KeBugCheck(0); //KBUG_POOL_FREE_LIST_CORRUPT);
+	     for(;;);
 	  }
 	blocks_seen++;
 	if (blocks_seen > EiNrUsedBlocks)
 	  {
 	     DbgPrint("Too many blocks on used list\n");
-	     KeBugCheck(0); //KBUG_POOL_FREE_LIST_CORRUPT);
+	     for(;;);
 	  }
 	if (current->ListEntry.Flink != &UsedBlockListHead &&
 	    current->ListEntry.Flink->Blink != &current->ListEntry)
 	  {
 	     DbgPrint("Break in list (current %x next %x)\n",
 		    current, current->ListEntry.Flink);
-	     KeBugCheck(0); //KBUG_POOL_FREE_LIST_CORRUPT);
+	     for(;;);
 	  }
 
 	current_entry = current_entry->Flink;
@@ -482,7 +489,7 @@ static void check_duplicates(BLOCK_HDR* blk)
 	 {
 	   DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		    current);
-	     KeBugCheck(0); //KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	 }
        
        if ( (int)current > base && (int)current < last ) 
@@ -684,7 +691,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
  */
 {
    unsigned int total_size = size + sizeof(BLOCK_HDR);
-   unsigned int nr_pages = PAGE_ROUND_UP(total_size) / PAGE_SIZE;
+   unsigned int nr_pages = PAGE_ROUND_UP(total_size) / PAGESIZE;
    unsigned int start;
    BLOCK_HDR* used_blk=NULL;
    BLOCK_HDR* free_blk=NULL;
@@ -708,7 +715,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 	   return(NULL);
 	 }
        Status = MmCreateVirtualMapping(NULL,
-				       (PVOID)(start + (i*PAGE_SIZE)),
+				       (PVOID)(start + (i*PAGESIZE)),
 				       PAGE_READWRITE,
 				       Page,
 				       FALSE);
@@ -720,7 +727,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
      }
 
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
-   if ((PAGE_SIZE-(total_size%PAGE_SIZE))>(2*sizeof(BLOCK_HDR)))
+   if ((PAGESIZE-(total_size%PAGESIZE))>(2*sizeof(BLOCK_HDR)))
      {
 	used_blk = (struct _BLOCK_HDR *)start;
 	DPRINT("Creating block at %x\n",start);
@@ -731,7 +738,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 	free_blk = (BLOCK_HDR *)(start + sizeof(BLOCK_HDR) + size);
 	DPRINT("Creating block at %x\n",free_blk);
 	free_blk->Magic = BLOCK_HDR_FREE_MAGIC;
-	free_blk->Size = (nr_pages * PAGE_SIZE) -((sizeof(BLOCK_HDR)*2) + size);
+	free_blk->Size = (nr_pages * PAGESIZE) -((sizeof(BLOCK_HDR)*2) + size);
 	add_to_free_list(free_blk);
 	
 	EiFreeNonPagedPool = EiFreeNonPagedPool + free_blk->Size;
@@ -741,7 +748,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
      {
 	used_blk = (struct _BLOCK_HDR *)start;
 	used_blk->Magic = BLOCK_HDR_USED_MAGIC;
-	used_blk->Size = (nr_pages * PAGE_SIZE) - sizeof(BLOCK_HDR);
+	used_blk->Size = (nr_pages * PAGESIZE) - sizeof(BLOCK_HDR);
 	add_to_used_list(used_blk);
 	
 	EiUsedNonPagedPool = EiUsedNonPagedPool + used_blk->Size;
@@ -870,7 +877,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
    
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
             ((PULONG)&block)[-1]);
-
+   
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
 
    VALIDATE_POOL;
@@ -889,9 +896,9 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 	KeBugCheck(0);
 	return;
      }
-
+   
    memset(block, 0xcc, blk->Size);
-
+   
 #ifdef TAG_STATISTICS_TRACKING
    MiRemoveFromTagHashTable(blk);
 #endif /* TAG_STATISTICS_TRACKING */
@@ -909,10 +916,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 }
 
 PVOID STDCALL 
-ExAllocateNonPagedPoolWithTag(ULONG Type,
-  ULONG Size,
-  ULONG Tag,
-  PVOID Caller)
+ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 {
 #ifdef WHOLE_PAGE_ALLOCATIONS
    PVOID block;
@@ -943,7 +947,7 @@ ExAllocateNonPagedPoolWithTag(ULONG Type,
    PVOID block;
    BLOCK_HDR* best = NULL;
    KIRQL oldIrql;
-
+   
    POOL_TRACE("ExAllocatePool(NumberOfBytes %d) caller %x ",
 	      Size,Caller);
    
@@ -983,7 +987,6 @@ ExAllocateNonPagedPoolWithTag(ULONG Type,
 	VALIDATE_POOL;
 	memset(block,0,Size);
 	KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-
 	return(block);
      }
 	  
@@ -993,9 +996,7 @@ ExAllocateNonPagedPoolWithTag(ULONG Type,
     */
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
    block=block_to_address(grow_kernel_pool(Size, Tag, Caller));
-
    memset(block, 0, Size);
-
    return(block);
 #endif /* WHOLE_PAGE_ALLOCATIONS */
 }
@@ -1012,7 +1013,7 @@ ExAllocateWholePageBlock(ULONG UserSize)
   ULONG NrPages;
 
   Size = sizeof(ULONG) + UserSize;
-  NrPages = ROUND_UP(Size, PAGE_SIZE) / PAGE_SIZE;
+  NrPages = ROUND_UP(Size, PAGESIZE) / PAGESIZE;
 
   Address = MiAllocNonPagedPoolRegion(NrPages + 1);
 
@@ -1024,14 +1025,14 @@ ExAllocateWholePageBlock(ULONG UserSize)
 	  KeBugCheck(0);
 	}
       MmCreateVirtualMapping(NULL, 
-			     Address + (i * PAGE_SIZE),
+			     Address + (i * PAGESIZE),
 			     PAGE_READWRITE | PAGE_SYSTEM,
 			     Page,
 			     TRUE);
     }
 
-  *((PULONG)((ULONG)Address + (NrPages * PAGE_SIZE) - Size)) = NrPages;
-  return((PVOID)((ULONG)Address + (NrPages * PAGE_SIZE) - UserSize));
+  *((PULONG)((ULONG)Address + (NrPages * PAGESIZE) - Size)) = NrPages;
+  return((PVOID)((ULONG)Address + (NrPages * PAGESIZE) - UserSize));
 }
 
 VOID STDCALL

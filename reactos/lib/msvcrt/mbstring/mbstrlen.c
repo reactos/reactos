@@ -1,5 +1,5 @@
-#include <msvcrti.h>
-
+#include <msvcrt/mbstring.h>
+#include <msvcrt/stdlib.h>
 
 size_t _mbstrlen( const char *string )
 {

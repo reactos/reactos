@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.136 2002/09/07 17:08:31 chorns Exp $
+/* $Id: main.c,v 1.137 2002/09/08 10:23:29 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -28,21 +28,43 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ntoskrnl.h>
+#include <reactos/resource.h>
+#include <internal/mm.h>
+#include <internal/module.h>
+#include <internal/ldr.h>
+#include <internal/ex.h>
+#include <internal/ps.h>
+#include <internal/ke.h>
+#include <internal/io.h>
+#include <internal/po.h>
+#include <internal/cc.h>
+#include <internal/se.h>
+#include <internal/v86m.h>
+#include <internal/kd.h>
+#include <internal/trap.h>
 #include "../dbg/kdb.h"
+#include <internal/registry.h>
+#include <reactos/bugcodes.h>
+
+#ifdef HALDBG
+#include <internal/ntosdbg.h>
+#else
+#define ps(args...)
+#endif
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
-ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
-ULONG NtGlobalFlag = 0;
-CHAR KeNumberProcessors;
-LOADER_PARAMETER_BLOCK KeLoaderBlock;
-ULONG KeDcacheFlushCount = 0;
-ULONG KeIcacheFlushCount = 0;
-
+ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
+ULONG EXPORTED NtGlobalFlag = 0;
+CHAR  EXPORTED KeNumberProcessors;
+LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
+ULONG EXPORTED KeDcacheFlushCount = 0;
+ULONG EXPORTED KeIcacheFlushCount = 0;
 static LOADER_MODULE KeLoaderModules[64];
 static UCHAR KeLoaderModuleStrings[64][256];
 static UCHAR KeLoaderCommandLine[256];
@@ -261,8 +283,16 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 }
 
 VOID
-ExpVerifyOffsets()
+ExpInitializeExecutive(VOID)
 {
+  ULONG BootDriverCount;
+  ULONG i;
+  ULONG start;
+  ULONG length;
+  PCHAR name;
+  CHAR str[50];
+  NTSTATUS Status;
+
   /*
    * Fail at runtime if someone has changed various structures without
    * updating the offsets used for the assembler code.
@@ -279,41 +309,10 @@ ExpVerifyOffsets()
   assert(FIELD_OFFSET(KTRAP_FRAME, Reserved9) == KTRAP_FRAME_RESERVED9);
   assert(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
   assert(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
-  assert(FIELD_OFFSET(IKPCR, KPCR.Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
-  assert(FIELD_OFFSET(IKPCR, KPCR.Self) == KPCR_SELF);
-  assert(FIELD_OFFSET(IKPCR, KPCR.TSS) == KPCR_TSS);
-  assert(FIELD_OFFSET(IKPCR, CurrentThread) == KPCR_CURRENT_THREAD);
-  assert(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Ebp) == KV86M_REGISTERS_EBP);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Edi) == KV86M_REGISTERS_EDI);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Esi) == KV86M_REGISTERS_ESI);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Edx) == KV86M_REGISTERS_EDX);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Ecx) == KV86M_REGISTERS_ECX);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Ebx) == KV86M_REGISTERS_EBX);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Eax) == KV86M_REGISTERS_EAX);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Ds) == KV86M_REGISTERS_DS);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Es) == KV86M_REGISTERS_ES);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Fs) == KV86M_REGISTERS_FS);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Gs) == KV86M_REGISTERS_GS);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Eip) == KV86M_REGISTERS_EIP);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Cs) == KV86M_REGISTERS_CS);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Eflags) == KV86M_REGISTERS_EFLAGS);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Esp) == KV86M_REGISTERS_ESP);
-  assert(FIELD_OFFSET(KV86M_REGISTERS, Ss) == KV86M_REGISTERS_SS);
-}
-
-VOID
-ExpInitializeExecutive(VOID)
-{
-  ULONG BootDriverCount;
-  ULONG i;
-  ULONG start;
-  ULONG length;
-  PCHAR name;
-  CHAR str[50];
-  NTSTATUS Status;
-
-  ExpVerifyOffsets();
+  
+  assert(FIELD_OFFSET(KPCR, ExceptionList) == KPCR_EXCEPTION_LIST);
+  assert(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+  assert(FIELD_OFFSET(KPCR, CurrentThread) == KPCR_CURRENT_THREAD);
 
   LdrInit1();
 
@@ -326,7 +325,7 @@ ExpInitializeExecutive(VOID)
 	  LastKernelAddress,
 	  (PADDRESS_RANGE)&KeMemoryMap,
 	  KeMemoryMapRangeCount);
-
+  
   /* create default nls tables */
   RtlpInitNlsTables();
   
@@ -372,9 +371,11 @@ ExpInitializeExecutive(VOID)
 
   /* Initialize all processors */
   KeNumberProcessors = 0;
+
   while (!HalAllProcessorsStarted())
     {
       PVOID ProcessorStack;
+
       if (KeNumberProcessors != 0)
 	{
 	  KePrepareForApplicationProcessorInit(KeNumberProcessors);
@@ -384,7 +385,6 @@ ExpInitializeExecutive(VOID)
       /* FIXME: The nonpaged memory for the stack is not released after use */
       ProcessorStack = 
 	ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
-
       Ki386InitialStackArray[((int)KeNumberProcessors)] = 
 	(PVOID)(ProcessorStack - MM_STACK_SIZE);
       HalInitializeProcessor(KeNumberProcessors, ProcessorStack);
@@ -688,7 +688,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
       strcpy(KeLoaderCommandLine, (PUCHAR)_LoaderBlock->CommandLine);
     }
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
- 
+  
   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
   KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
   KeLoaderModules[0].ModStart = 0xC0000000;
@@ -748,7 +748,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
           i += size;
         }
     }
-
+  
   KiSystemStartup(1);
 }
 

@@ -1,7 +1,12 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
+
+#include <msvcrt/stdio.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 
 int fseek(FILE *f, long offset, int ptrname)
@@ -34,7 +39,7 @@ int fseek(FILE *f, long offset, int ptrname)
       }
     }
 
-    p = _lseek(_fileno(f), offset, ptrname);
+    p = lseek(fileno(f), offset, ptrname);
     f->_cnt = 0;
     f->_ptr = f->_base;
     f->_flag &= ~_IOUNGETC;
@@ -42,7 +47,7 @@ int fseek(FILE *f, long offset, int ptrname)
   else 
   {
     p = fflush(f);
-    return _lseek(_fileno(f), offset, ptrname) == -1 || p == EOF ?
+    return lseek(fileno(f), offset, ptrname) == -1 || p == EOF ?
       -1 : 0;
   }
   return p==-1 ? -1 : 0;

@@ -1,13 +1,10 @@
-/* $Id: tunnel.c,v 1.3 2002/09/07 15:12:50 chorns Exp $
+/* $Id: tunnel.c,v 1.4 2002/09/08 10:23:20 chorns Exp $
  *
  * reactos/ntoskrnl/fs/tunnel.c
  *
  */
-
-#include <ntoskrnl.h>
-
-#define NDEBUG
-#include <internal/debug.h>
+#include <ntos.h>
+#include <ddk/ntifs.h>
 
 
 /**********************************************************************
@@ -88,7 +85,7 @@ FsRtlDeleteTunnelCache (
  * RETURN VALUE
  *
  */
-BOOLEAN
+VOID
 STDCALL
 FsRtlFindInTunnelCache (
     IN PTUNNEL          Cache,
@@ -100,8 +97,6 @@ FsRtlFindInTunnelCache (
     OUT PVOID           Data
     )
 {
-  UNIMPLEMENTED
-  return 0;
 }
 
 

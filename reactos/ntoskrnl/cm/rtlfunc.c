@@ -6,12 +6,18 @@
  * UPDATE HISTORY:
 */
 
-#include <ntoskrnl.h>
-#include "cm.h"
+#include <ddk/ntddk.h>
+#include <roscfg.h>
+#include <internal/ob.h>
+#include <limits.h>
+#include <string.h>
+#include <internal/pool.h>
+#include <internal/registry.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
+#include "cm.h"
 
 NTSTATUS STDCALL
 RtlCheckRegistryKey(IN ULONG RelativeTo,
@@ -55,8 +61,8 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 
 NTSTATUS STDCALL
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
-		       IN PCWSTR Path,
-		       IN PCWSTR ValueName)
+		       IN PWSTR Path,
+		       IN PWSTR ValueName)
 {
   HANDLE KeyHandle;
   NTSTATUS Status;
@@ -119,7 +125,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 
 NTSTATUS STDCALL
 RtlQueryRegistryValues(IN ULONG RelativeTo,
-		       IN PCWSTR Path,
+		       IN PWSTR Path,
 		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
 		       IN PVOID Context,
 		       IN PVOID Environment)
@@ -488,8 +494,8 @@ ByeBye:
 
 NTSTATUS STDCALL
 RtlWriteRegistryValue(IN ULONG RelativeTo,
-		      IN PCWSTR Path,
-		      IN PCWSTR ValueName,
+		      IN PWSTR Path,
+		      IN PWSTR ValueName,
 		      IN ULONG ValueType,
 		      IN PVOID ValueData,
 		      IN ULONG ValueLength)
@@ -536,7 +542,7 @@ RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
 
 NTSTATUS
 RtlpGetRegistryHandle(ULONG RelativeTo,
-		      PCWSTR Path,
+		      PWSTR Path,
 		      BOOLEAN Create,
 		      PHANDLE KeyHandle)
 {
@@ -552,7 +558,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 				 PsGetCurrentProcessId(),
 				 KeyHandle,
 				 0,
-				 0,
+				 FALSE,
 				 DUPLICATE_SAME_ACCESS);
       return(Status);
     }

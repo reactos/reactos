@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/string.h>
 
 wchar_t *_wcsupr(wchar_t *x)
 {

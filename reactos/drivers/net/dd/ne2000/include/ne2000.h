@@ -7,7 +7,16 @@
 #ifndef __NE2000_H
 #define __NE2000_H
 
-#include <ddk/ndis.h>
+#ifdef _MSC_VER
+
+#ifndef ULONG_PTR
+#define ULONG ULONG_PTR
+#endif
+
+#include <ndis.h>
+#else
+#include <net/ndis.h>
+#endif
 #include <8390.h>
 #include <debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.24 2002/09/07 15:12:53 chorns Exp $
+/* $Id: xhaldrv.c,v 1.25 2002/09/08 10:23:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/xhal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* LOCAL MACROS and TYPES ***************************************************/
 
@@ -558,7 +558,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
   /* Assign cdrom drives */
   DPRINT("CD-Rom drives: %d\n", ConfigInfo->CDRomCount);
-  for (i = 0; i < ConfigInfo->CdRomCount; i++)
+  for (i = 0; i < ConfigInfo->CDRomCount; i++)
     {
       swprintf(Buffer1,
 	       L"\\Device\\CdRom%d",

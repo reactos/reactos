@@ -1,5 +1,5 @@
 #include <ddk/ntddk.h>
-#include <ddk/ntddvdeo.h>
+#include <ddk/ntddvid.h>
 #include <ddk/winddi.h>
 #include <ntos/minmax.h>
 #include "vgavideo.h"

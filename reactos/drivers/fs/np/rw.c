@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.7 2002/09/07 15:12:02 chorns Exp $
+/* $Id: rw.c,v 1.8 2002/09/08 10:22:11 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -9,6 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <ddk/ntddk.h>
 #include "npfs.h"
 
 #define NDEBUG

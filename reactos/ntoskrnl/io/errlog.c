@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.7 2002/09/07 15:12:52 chorns Exp $
+/* $Id: errlog.c,v 1.8 2002/09/08 10:23:24 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,17 +11,34 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
 
-#define NDEBUG
+#include <internal/port.h>
+
 #include <internal/debug.h>
-
 
 /* TYPES *********************************************************************/
 
 #define  LOG_FILE_APPLICATION	L"\\SystemRoot\\System32\\Config\\AppEvent.Evt"
 #define  LOG_FILE_SECURITY	L"\\SystemRoot\\System32\\Config\\SecEvent.Evt"
 #define  LOG_FILE_SYSTEM	L"\\SystemRoot\\System32\\Config\\SysEvent.Evt"
+
+typedef struct _IO_ERROR_LOG_PACKET
+{
+   UCHAR MajorFunctionCode;
+   UCHAR RetryCount;
+   USHORT DumpDataSize;
+   USHORT NumberOfStrings;
+   USHORT StringOffset;
+   USHORT EventCategory;
+   NTSTATUS ErrorCode;
+   ULONG UniqueErrorValue;
+   NTSTATUS FinalStatus;
+   ULONG SequenceNumber;
+   ULONG IoControlCode;
+   LARGE_INTEGER DeviceOffset;
+   ULONG DumpData[1];
+} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
 
 /* FUNCTIONS *****************************************************************/
 

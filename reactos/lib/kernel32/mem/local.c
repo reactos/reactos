@@ -1,4 +1,4 @@
-/* $Id: local.c,v 1.6 2002/09/07 15:12:27 chorns Exp $
+/* $Id: local.c,v 1.7 2002/09/08 10:22:43 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -21,9 +21,9 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

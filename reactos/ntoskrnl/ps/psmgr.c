@@ -1,4 +1,4 @@
-/* $Id: psmgr.c,v 1.13 2002/09/07 15:13:05 chorns Exp $
+/* $Id: psmgr.c,v 1.14 2002/09/08 10:23:40 chorns Exp $
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
@@ -9,11 +9,13 @@
 
 /* INCLUDES **************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ke.h>
+#include <internal/ps.h>
+#include <reactos/version.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS ***************************************************************/
 

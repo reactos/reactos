@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.13 2002/09/07 15:12:40 chorns Exp $
+/* $Id: path.c,v 1.14 2002/09/08 10:23:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,14 +10,15 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <ddk/obfuncs.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
 
 /* DEFINITONS and MACROS ******************************************************/
 

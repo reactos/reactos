@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
-#include <msvcrti.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/tls.h>
 
 char *strtok(char *s, const char *delim)
 {

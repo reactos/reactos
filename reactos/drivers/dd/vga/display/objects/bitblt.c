@@ -1,4 +1,4 @@
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #define NDEBUG
 #include <debug.h>
 #include "../vgaddi.h"
@@ -101,7 +101,7 @@ BOOL VGAtoDIB(
   // Used by the temporary DFB
   PDEVSURF	TargetSurf;
   DEVSURF	DestDevSurf;
-  SURFOBJ	*TargetBitmapSurf;
+  PSURFOBJ	TargetBitmapSurf;
   HBITMAP	hTargetBitmap;
   SIZEL		InterSize;
   POINTL	ZeroPoint;

@@ -1,4 +1,4 @@
-/* $Id: capture.c,v 1.4 2002/09/07 15:12:38 chorns Exp $
+/* $Id: capture.c,v 1.5 2002/09/08 10:23:02 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -8,13 +8,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ntdll/csr.h>
 #include <string.h>
+
 #include <csrss/csrss.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
 
 /* GLOBALS *******************************************************************/
 

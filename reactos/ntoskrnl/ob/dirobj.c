@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.15 2002/09/07 15:13:04 chorns Exp $
+/* $Id: dirobj.c,v 1.16 2002/09/08 10:23:38 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,7 +11,9 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/ob.h>
+#include <internal/io.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -49,6 +51,7 @@ NTSTATUS STDCALL NtOpenDirectoryObject(PHANDLE DirectoryHandle,
 {
    PVOID Object;
    NTSTATUS Status;
+
    *DirectoryHandle = 0;
    
    Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
@@ -63,6 +66,7 @@ NTSTATUS STDCALL NtOpenDirectoryObject(PHANDLE DirectoryHandle,
      {
 	return Status;
      }
+   
    Status = ObCreateHandle(PsGetCurrentProcess(),
 			   Object,
 			   DesiredAccess,
@@ -334,7 +338,7 @@ NtCreateDirectoryObject(PHANDLE DirectoryHandle,
 	  DirectoryHandle, DesiredAccess, ObjectAttributes,
 	  ObjectAttributes->ObjectName);
    
-   return(ObRosCreateObject(DirectoryHandle,
+   return(ObCreateObject(DirectoryHandle,
 			 DesiredAccess,
 			 ObjectAttributes,
 			 ObDirectoryType,

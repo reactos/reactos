@@ -1,11 +1,22 @@
-/* $Id: spawnve.c,v 1.4 2002/09/07 15:12:34 chorns Exp $ */
+/* $Id: spawnve.c,v 1.5 2002/09/08 10:22:53 chorns Exp $ */
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
+
+#include <windows.h>
+
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/errno.h>
+//#include <msvcrt/limits.h>
+#include <msvcrt/process.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
 
 #define NDEBUG
-#include <msvcrtdbg.h>
+#include <msvcrt/msvcrtdbg.h>
 
 
 #ifndef F_OK
@@ -48,7 +59,7 @@ direct_exec_tail(int mode, const char *program,
 
         for (last = i = 0; i < maxfno; i++)
 	{
-	   if ((HANDLE)-1 != (HANDLE)_get_osfhandle(i))
+	   if ((void*)-1 != _get_osfhandle(i))
 	   {
 	      last = i + 1;
 	   }
@@ -69,7 +80,7 @@ direct_exec_tail(int mode, const char *program,
 	   for (i = 0; i < last; i++)
 	   {
               int mode = __fileno_getmode(i);
-	      HANDLE h = (HANDLE)_get_osfhandle(i);
+	      HANDLE h = _get_osfhandle(i);
 	      /* FIXME: The test of console handles (((ULONG)Handle) & 0x10000003) == 0x3) 
 	       *        is possible wrong 
 	       */
@@ -113,42 +124,20 @@ direct_exec_tail(int mode, const char *program,
 	return (int)ProcessInformation.hProcess;
 }
 
-static int vdm_exec(int mode, const char *program, char **argv, char **envp)
+static int vdm_exec(int mode, const char *program, char **argv, char *envp)
 {
-	char * penvblock, * ptr;
-	int i, len, result;
 	static char args[1024];
-
-	i = 0;
+	int i = 0;
 	args[0] = 0;
+
 	strcpy(args,"vdm.exe ");
 	while(argv[i] != NULL ) {
         strcat(args,argv[i]);
         strcat(args," ");
         i++; 
 	}
-
-	for (i = 0, len = 0; envp[i]; i++) {
-	  len += strlen(envp[i]) + 1;
-	}
-	penvblock = ptr = (char*)malloc(len + 1);
-	if (penvblock == NULL)
-	  return -1;
-
-	for(i = 0, *ptr = 0; envp[i]; i++) {
-	   strcpy(ptr, envp[i]);
-	   ptr += strlen(envp[i]) + 1;
-	}
-	*ptr = 0;
-
-	for(i = 0, len = 0; argv[i]; i++) {
-	  len += strlen(argv[i]) + 1;
-	}
-
-	result = direct_exec_tail(mode, program,args,(const char*)penvblock);
-	free(penvblock);
-
-	return result;
+  
+	return direct_exec_tail(mode,program,args,envp);
 }
 
 static int go32_exec(int mode, const char *program, char **argv, char **envp)
@@ -196,42 +185,24 @@ static int go32_exec(int mode, const char *program, char **argv, char **envp)
 }
 
 int
-command_exec(int mode, const char *program, char **argv, char **envp)
+command_exec(int mode, const char *program, char **argv, char *envp)
 {
-	char * penvblock, * ptr;
-	int i, len, result;
-	static char args[1024];
+ 	static char args[1024];
+	int i = 0;
 
-	i = 0;
+
+
 	args[0] = 0;
+
 	strcpy(args,"cmd.exe  /c ");
 	while(argv[i] != NULL ) {
         strcat(args,argv[i]);
         strcat(args," ");
         i++; 
 	}
+  
+	return direct_exec_tail(mode,program,args,envp);
 
-	for (i = 0, len = 0; envp[i]; i++) {
-	  len += strlen(envp[i]) + 1;
-	}
-	penvblock = ptr = (char*)malloc(len + 1);
-	if (penvblock == NULL)
-	  return -1;
-
-	for(i = 0, *ptr = 0; envp[i]; i++) {
-	   strcpy(ptr, envp[i]);
-	   ptr += strlen(envp[i]) + 1;
-	}
-	*ptr = 0;
-
-	for(i = 0, len = 0; argv[i]; i++) {
-	  len += strlen(argv[i]) + 1;
-	}
-
-	result = direct_exec_tail(mode, program,args,(const char*)penvblock);
-	free(penvblock);
-
-	return result;
 }
 
 static int script_exec(int mode, const char *program, char **argv, char **envp)

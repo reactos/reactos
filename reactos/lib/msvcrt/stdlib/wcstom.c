@@ -1,5 +1,4 @@
-#include <msvcrti.h>
-
+#include <msvcrt/stdlib.h>
 
 size_t wcstombs (char* mbsDest, const wchar_t* wsConvert, size_t size)
 {

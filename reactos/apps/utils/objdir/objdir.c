@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.9 2002/09/07 15:11:56 chorns Exp $
+/* $Id: objdir.c,v 1.10 2002/09/08 10:22:01 chorns Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -16,8 +16,8 @@
  * 	2001-05-02 (ea)
  * 		Added -r option.
  */
-#define NTOS_USER_MODE
-#include <ntos.h>
+
+#include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
@@ -75,6 +75,8 @@ StatusToName (NTSTATUS Status)
 			return "STATUS_OBJECT_NAME_INVALID";
 		case STATUS_OBJECT_NAME_NOT_FOUND:
 			return "STATUS_OBJECT_NAME_NOT_FOUND";
+		case STATUS_PATH_SYNTAX_BAD:
+			return "STATUS_PATH_SYNTAX_BAD";
 		case STATUS_NO_MORE_ENTRIES:
 			return "STATUS_NO_MORE_ENTRIES";
 		case STATUS_UNSUCCESSFUL:

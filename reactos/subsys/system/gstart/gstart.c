@@ -1,11 +1,11 @@
-/* $Id: gstart.c,v 1.2 2002/09/07 15:13:09 chorns Exp $
+/* $Id: gstart.c,v 1.3 2002/09/08 10:23:47 chorns Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS GUI Startup
  * LICENSE    : See top level directory
  *
  */
-#define NTOS_USER_MODE
+#define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
 #include <stdarg.h>

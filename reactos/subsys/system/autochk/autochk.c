@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: autochk.c,v 1.2 2002/09/07 15:13:09 chorns Exp $
+/* $Id: autochk.c,v 1.3 2002/09/08 10:23:46 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,8 +27,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <napi/shared_data.h>
 
 /* FUNCTIONS ****************************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.51 2002/09/07 15:12:27 chorns Exp $
+/* $Id: create.c,v 1.52 2002/09/08 10:22:45 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,23 +11,25 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <ddk/ntddk.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
-#include <csrss/csrss.h>
+#include <napi/i386/segment.h>
+#include <ntdll/ldr.h>
+#include <napi/teb.h>
 #include <ntdll/base.h>
+#include <ntdll/rtl.h>
+#include <csrss/csrss.h>
+#include <ntdll/csr.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
 
 /* FUNCTIONS ****************************************************************/
-
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 WINBOOL STDCALL
 CreateProcessA (LPCSTR			lpApplicationName,
@@ -209,10 +211,10 @@ KlCreateFirstThread(HANDLE ProcessHandle,
 #if 0
   InitialTeb.StackCommit = (StackCommit < PAGESIZE) ? PAGESIZE : StackCommit;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
 
   /* size of guard page */
-  InitialTeb.StackCommit += PAGE_SIZE;
+  InitialTeb.StackCommit += PAGESIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -264,7 +266,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   /* Protect guard page */
   Status = NtProtectVirtualMemory(ProcessHandle,
 				  InitialTeb.StackLimit,
-				  PAGE_SIZE,
+				  PAGESIZE,
 				  PAGE_GUARD | PAGE_READWRITE,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))
@@ -407,7 +409,7 @@ KlMapFile(LPCWSTR lpApplicationName)
 
 static NTSTATUS 
 KlInitPeb (HANDLE ProcessHandle,
-	   PRTL_ROS_USER_PROCESS_PARAMETERS	Ppb,
+	   PRTL_USER_PROCESS_PARAMETERS	Ppb,
 	   PVOID* ImageBaseAddress)
 {
    NTSTATUS Status;
@@ -475,7 +477,7 @@ KlInitPeb (HANDLE ProcessHandle,
 
    /* create the PPB */
    PpbBase = NULL;
-   PpbSize = Ppb->AllocationSize;
+   PpbSize = Ppb->MaximumLength;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
 				    0,
@@ -491,11 +493,11 @@ KlInitPeb (HANDLE ProcessHandle,
    NtWriteVirtualMemory(ProcessHandle,
 			PpbBase,
 			Ppb,
-			Ppb->AllocationSize,
+			Ppb->MaximumLength,
 			&BytesWritten);
 
    /* write pointer to environment */
-   Offset = FIELD_OFFSET(RTL_ROS_USER_PROCESS_PARAMETERS, Environment);
+   Offset = FIELD_OFFSET(RTL_USER_PROCESS_PARAMETERS, Environment);
    NtWriteVirtualMemory(ProcessHandle,
 			(PVOID)(PpbBase + Offset),
 			&EnvPtr,
@@ -541,7 +543,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    UNICODE_STRING ImagePathName_U;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
-   PRTL_ROS_USER_PROCESS_PARAMETERS Ppb;
+   PRTL_USER_PROCESS_PARAMETERS Ppb;
    UNICODE_STRING CommandLine_U;
    CSRSS_API_REQUEST CsrRequest;
    CSRSS_API_REPLY CsrReply;
@@ -717,7 +719,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
          ULONG i, Count = *(ULONG*)lpStartupInfo->lpReserved2;
          HANDLE * hFile;  
 	 HANDLE hTemp;
-	 PRTL_ROS_USER_PROCESS_PARAMETERS CurrPpb = NtCurrentPeb()->ProcessParameters;  
+	 PRTL_USER_PROCESS_PARAMETERS CurrPpb = NtCurrentPeb()->ProcessParameters;  
 
 
          /* FIXME:
@@ -735,7 +737,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /*
     * Create the PPB
     */
-   RtlRosCreateProcessParameters(&Ppb,
+   RtlCreateProcessParameters(&Ppb,
 			      &ImagePathName_U,
 			      NULL,
 			      lpCurrentDirectory ? &CurrentDirectory_U : NULL,
@@ -760,7 +762,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			 hProcess,
 			 &Ppb->CurrentDirectory.Handle,
 			 0,
-			 HANDLE_FLAG_INHERIT,
+			 TRUE,
 			 DUPLICATE_SAME_ACCESS);
    }
 
@@ -771,7 +773,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			 hProcess,
 			 &Ppb->ConsoleHandle,
 			 0,
-			 HANDLE_FLAG_INHERIT,
+			 TRUE,
 			 DUPLICATE_SAME_ACCESS);
    }
 
@@ -843,7 +845,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			          hProcess,
 			          &Ppb->InputHandle,
 			          0,
-			          HANDLE_FLAG_INHERIT,
+			          TRUE,
 			          DUPLICATE_SAME_ACCESS);
       if(!NT_SUCCESS(Status))
       {
@@ -863,7 +865,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			          hProcess,
 			          &Ppb->OutputHandle,
 			          0,
-			          HANDLE_FLAG_INHERIT,
+			          TRUE,
 			          DUPLICATE_SAME_ACCESS);
       if(!NT_SUCCESS(Status))
       {
@@ -882,7 +884,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			          hProcess,
 			          &Ppb->ErrorHandle,
 			          0,
-			          HANDLE_FLAG_INHERIT,
+			          TRUE,
 			          DUPLICATE_SAME_ACCESS);
       if(!NT_SUCCESS(Status))
       {
@@ -922,7 +924,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 
    KlInitPeb(hProcess, Ppb, &ImageBaseAddress);
 
-   RtlRosDestroyProcessParameters (Ppb);
+   RtlDestroyProcessParameters (Ppb);
 
    Status = NtSetInformationProcess(hProcess,
 				    ProcessImageFileName,

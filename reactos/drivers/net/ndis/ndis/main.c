@@ -20,9 +20,7 @@ DWORD DebugTraceLevel = MIN_TRACE;
 #endif /* DBG */
 
 
-VOID
-STDCALL
-MainUnload(
+VOID MainUnload(
     PDRIVER_OBJECT DriverObject)
 /*
  * FUNCTION: Unloads the driver
@@ -35,7 +33,9 @@ MainUnload(
 
 
 NTSTATUS
+#ifndef _MSC_VER
 STDCALL
+#endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath)
@@ -59,8 +59,11 @@ DriverEntry(
     InitializeListHead(&AdapterListHead);
     KeInitializeSpinLock(&AdapterListLock);
 
+#ifdef _MSC_VER
     DriverObject->DriverUnload = MainUnload;
-    //DriverObject->DriverUnload = (PDRIVER_UNLOAD)MainUnload;
+#else
+    DriverObject->DriverUnload = (PDRIVER_UNLOAD)MainUnload;
+#endif
 
     return STATUS_SUCCESS;
 }

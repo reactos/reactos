@@ -61,7 +61,7 @@ W32kSetAbortProc(HDC  hDC,
 INT
 STDCALL
 W32kStartDoc(HDC  hDC,
-                  CONST LPDOCINFO  di)
+                  CONST PDOCINFO  di)
 {
   UNIMPLEMENTED;
 }

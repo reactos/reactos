@@ -210,12 +210,12 @@ W32kGetTextFace(HDC  hDC,
 BOOL
 STDCALL
 W32kGetTextMetrics(HDC  hDC,
-                         LPTEXTMETRICW  tm);
+                         LPTEXTMETRIC  tm);
 
 BOOL
 STDCALL
 W32kPolyTextOut(HDC  hDC,
-                      CONST PPOLYTEXTW  txt,
+                      CONST LPPOLYTEXT  txt,
                       int  Count);
 
 BOOL

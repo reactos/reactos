@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.4 2002/09/07 15:12:27 chorns Exp $
+/* $Id: debug.c,v 1.5 2002/09/08 10:22:43 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,10 +9,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ntdll/dbg.h>
 #include <kernel32/error.h>
+#include <windows.h>
 #include <stdarg.h>
 #include <stdio.h>
 

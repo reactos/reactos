@@ -1,12 +1,12 @@
-/* $Id: vidport.c,v 1.24 2002/09/07 15:12:00 chorns Exp $
+/* $Id: vidport.c,v 1.25 2002/09/08 10:22:08 chorns Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
  */
 
-#define NTOS_KERNEL_MODE
-#include <ntos.h>
-#include <ntos/ntddvid.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntddvid.h>
+
 #include "../../../ntoskrnl/include/internal/v86m.h"
 
 #include "vidport.h"
@@ -792,7 +792,7 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   vrp->OutputBufferLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
 
   // Call the Miniport Driver with the VRP
-  ((PDRIVER_STARTIO)DeviceObject->DriverObject->DriverStartIo)(DeviceObject->DeviceExtension, (PIRP)vrp);
+  DeviceObject->DriverObject->DriverStartIo(DeviceObject->DeviceExtension, (PIRP)vrp);
 
   // Translate the VRP back into the IRP for OutputBuffer
   Irp->UserBuffer                                             = vrp->OutputBuffer;

@@ -162,7 +162,7 @@ INT
 EXPORT
 WSHGetWSAProtocolInfo(
     IN  LPWSTR ProviderName,
-    OUT LPWSAPROTOCOL_INFOW* ProtocolInfo,
+    OUT LPWSAPROTOCOL_INFOW *ProtocolInfo,
     OUT LPDWORD ProtocolInfoEntries)
 {
     UNIMPLEMENTED
@@ -292,18 +292,18 @@ WSHOpenSocket2(
 
     switch (*SocketType) {
     case SOCK_STREAM:
-        RtlInitUnicodeString(&String, DD_TCP_DEVICE_NAME);
+        RtlInitUnicodeStringFromLiteral(&String, DD_TCP_DEVICE_NAME);
         break;
 
     case SOCK_DGRAM:
-        RtlInitUnicodeString(&String, DD_UDP_DEVICE_NAME);
+        RtlInitUnicodeStringFromLiteral(&String, DD_UDP_DEVICE_NAME);
         break;
 
     case SOCK_RAW:
         if ((*Protocol < 0) || (*Protocol > 255))
           return WSAEINVAL;
 
-        RtlInitUnicodeString(&String, DD_RAW_IP_DEVICE_NAME);
+        RtlInitUnicodeStringFromLiteral(&String, DD_RAW_IP_DEVICE_NAME);
         break;
 
     default:

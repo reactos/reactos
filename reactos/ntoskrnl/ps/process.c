@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.91 2002/09/07 15:13:05 chorns Exp $
+/* $Id: process.c,v 1.92 2002/09/08 10:23:40 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -11,18 +11,33 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntoskrnl.h>
+#include <limits.h>
+#include <ddk/ntddk.h>
+#include <internal/ob.h>
+#include <internal/mm.h>
+#include <internal/ke.h>
+#include <internal/ps.h>
+#include <internal/se.h>
+#include <internal/id.h>
+#include <napi/teb.h>
+#include <internal/ldr.h>
+#include <internal/port.h>
+#include <napi/dbg.h>
+#include <internal/dbg.h>
+#include <internal/pool.h>
+#include <roscfg.h>
+#include <internal/se.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-
 /* GLOBALS ******************************************************************/
 
-PEPROCESS PsInitialSystemProcess = NULL;
+PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
 HANDLE SystemProcessHandle = NULL;
 
-POBJECT_TYPE PsProcessType = NULL;
+POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
 LIST_ENTRY PsProcessListHead;
 static KSPIN_LOCK PsProcessListLock;
@@ -41,6 +56,7 @@ PiProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
 
 /* FUNCTIONS *****************************************************************/
 
+
 PEPROCESS 
 PsGetNextProcess(PEPROCESS OldProcess)
 {
@@ -56,7 +72,7 @@ PsGetNextProcess(PEPROCESS OldProcess)
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    if (OldProcess->ProcessListEntry.Flink == &PsProcessListHead)
      {
-	NextProcess = CONTAINING_RECORD (PsProcessListHead.Flink,
+	NextProcess = CONTAINING_RECORD(PsProcessListHead.Flink,
 					EPROCESS,
 					ProcessListEntry);
      }
@@ -87,21 +103,21 @@ _NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 		   IN	ACCESS_MASK	DesiredAccess,
 		   OUT	PHANDLE		TokenHandle)
 {
-   PIACCESS_TOKEN iToken;
+   PACCESS_TOKEN Token;
    NTSTATUS Status;
   
    Status = PsOpenTokenOfProcess(ProcessHandle,
-				 &iToken);
+				 &Token);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    Status = ObCreateHandle(PsGetCurrentProcess(),
-			   iToken,
+			   Token,
 			   DesiredAccess,
 			   FALSE,
 			   TokenHandle);
-   ObDereferenceObject(iToken);
+   ObDereferenceObject(Token);
    return(Status);
 }
 
@@ -128,7 +144,7 @@ PsReferencePrimaryToken(PEPROCESS Process)
 
 NTSTATUS
 PsOpenTokenOfProcess(HANDLE ProcessHandle,
-		     PIACCESS_TOKEN* Token)
+		     PACCESS_TOKEN* Token)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -216,7 +232,7 @@ PsInitProcessManagment(VOID)
    /*
     * Initialize the system process
     */
-   Status = ObRosCreateObject(NULL,
+   Status = ObCreateObject(NULL,
 			   PROCESS_ALL_ACCESS,
 			   NULL,
 			   PsProcessType,
@@ -253,12 +269,7 @@ PsInitProcessManagment(VOID)
    
    strcpy(PsInitialSystemProcess->ImageFileName, "SYSTEM");
 
-   Status = SepCreateSystemProcessToken(PsInitialSystemProcess);
-   if (!NT_SUCCESS(Status))
-     {
-       assertmsg(FALSE, ("SepCreateSystemProcessToken() failed with status 0x%.08x\n", Status));
-       KeBugCheck(0);
-     }
+   SepCreateSystemProcessToken(PsInitialSystemProcess);
 
    ObCreateHandle(PsInitialSystemProcess,
 		  PsInitialSystemProcess,
@@ -352,8 +363,6 @@ PsGetCurrentProcessId(VOID)
 {
    return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
 }
-
-#undef PsGetCurrentProcess
 
 /*
  * FUNCTION: Returns a pointer to the current process
@@ -452,7 +461,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	return(Status);
      }
 
-   Status = ObRosCreateObject(ProcessHandle,
+   Status = ObCreateObject(ProcessHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   PsProcessType,
@@ -460,7 +469,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
      {
 	ObDereferenceObject(ParentProcess);
-	DPRINT("ObRosCreateObject() = %x\n",Status);
+	DPRINT("ObCreateObject() = %x\n",Status);
 	return(Status);
      }
 
@@ -592,7 +601,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			       &Process->AddressSpace,
 			       MEMORY_AREA_SHARED_DATA,
 			       &BaseAddress,
-			       PAGE_SIZE,
+			       PAGESIZE,
 			       PAGE_READONLY,
 			       &MemoryArea,
 			       FALSE);
@@ -787,10 +796,10 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 
 NTSTATUS STDCALL
 NtQueryInformationProcess(IN  HANDLE ProcessHandle,
-			  IN  PROCESSINFOCLASS ProcessInformationClass,
+			  IN  CINT ProcessInformationClass,
 			  OUT PVOID ProcessInformation,
 			  IN  ULONG ProcessInformationLength,
-			  OUT PULONG ReturnLength OPTIONAL)
+			  OUT PULONG ReturnLength)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -870,32 +879,32 @@ NTSTATUS
 PspAssignPrimaryToken(PEPROCESS Process,
 		      HANDLE TokenHandle)
 {
-   PIACCESS_TOKEN iToken;
-   PIACCESS_TOKEN OldToken;
+   PACCESS_TOKEN Token;
+   PACCESS_TOKEN OldToken;
    NTSTATUS Status;
    
    Status = ObReferenceObjectByHandle(TokenHandle,
 				      0,
 				      SepTokenObjectType,
 				      UserMode,
-				      (PVOID*)&iToken,
+				      (PVOID*)&Token,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-   Status = SeExchangePrimaryToken(Process, iToken, &OldToken);
+   Status = SeExchangePrimaryToken(Process, Token, &OldToken);
    if (NT_SUCCESS(Status))
      {
 	ObDereferenceObject(OldToken);
      }
-   ObDereferenceObject(iToken);
+   ObDereferenceObject(Token);
    return(Status);
 }
 
 NTSTATUS STDCALL
 NtSetInformationProcess(IN HANDLE ProcessHandle,
-			IN PROCESSINFOCLASS ProcessInformationClass,
+			IN CINT ProcessInformationClass,
 			IN PVOID ProcessInformation,
 			IN ULONG ProcessInformationLength)
 {
@@ -1177,10 +1186,12 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 #endif
 }
 
-ULONGLONG STDCALL
+LARGE_INTEGER STDCALL
 PsGetProcessExitTime(VOID)
 {
-  return PsGetCurrentProcess()->ExitTime.QuadPart;
+  LARGE_INTEGER Li;
+  Li.QuadPart = PsGetCurrentProcess()->ExitTime.QuadPart;
+  return Li;
 }
 
 BOOLEAN STDCALL

@@ -8,11 +8,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <hal.h>
+#include <ddk/ntddk.h>
+#include <string.h>
+#include <mps.h>
+#include <bus.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* MACROS and CONSTANTS ******************************************************/
 

@@ -1,19 +1,20 @@
-/* $Id: thread.c,v 1.2 2002/09/07 15:12:38 chorns Exp $
+/* $Id: thread.c,v 1.3 2002/09/08 10:23:02 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/csr/propvar.c
  * PURPOSE:         CSRSS threads API
  */
-
-#define NTOS_USER_MODE
+#define NTOS_MODE_USER
 #include <ntos.h>
+
+#include <ntdll/csr.h>
 #include <string.h>
+
 #include <csrss/csrss.h>
 
 #define NDEBUG
-#include <debug.h>
-
+#include <ntdll/ntdll.h>
 
 NTSTATUS STDCALL
 CsrNewThread(VOID)

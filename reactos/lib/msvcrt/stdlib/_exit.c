@@ -1,5 +1,8 @@
-#include <msvcrti.h>
-
+#include <windows.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/internal/atexit.h>
 
 struct __atexit *__atexit_ptr = 0;
 

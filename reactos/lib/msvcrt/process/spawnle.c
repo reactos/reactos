@@ -1,4 +1,6 @@
-#include <msvcrti.h>
+#include <msvcrt/process.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/stdarg.h>
 
 
 int _spawnle(int mode, const char *path, const char *szArgv0, ... /*, const char **envp */)

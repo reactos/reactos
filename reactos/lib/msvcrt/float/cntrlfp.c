@@ -1,7 +1,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <msvcrti.h>
-
+#include <msvcrt/float.h>
 
 unsigned int _controlfp(unsigned int unNew, unsigned int unMask)
 {

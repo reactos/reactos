@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.9 2002/09/07 15:12:03 chorns Exp $
+/* $Id: fsctl.c,v 1.10 2002/09/08 10:22:12 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,18 +27,17 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ddk/ntdddisk.h>
 #include <wchar.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/
 
-#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
-		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
+#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGESIZE ? \
+		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGESIZE)
 
 
 static NTSTATUS
@@ -182,14 +181,14 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
       return(Status);
    }
 
-   if (DeviceExt->FatInfo.BytesPerCluster >= PAGE_SIZE &&
-      (DeviceExt->FatInfo.BytesPerCluster % PAGE_SIZE) != 0)
+   if (DeviceExt->FatInfo.BytesPerCluster >= PAGESIZE &&
+      (DeviceExt->FatInfo.BytesPerCluster % PAGESIZE) != 0)
    {
       DbgPrint("(%s:%d) Invalid cluster size\n", __FILE__, __LINE__);
       KeBugCheck(0);
    }
-   else if (DeviceExt->FatInfo.BytesPerCluster < PAGE_SIZE &&
-      (PAGE_SIZE % DeviceExt->FatInfo.BytesPerCluster) != 0)
+   else if (DeviceExt->FatInfo.BytesPerCluster < PAGESIZE &&
+      (PAGESIZE % DeviceExt->FatInfo.BytesPerCluster) != 0)
    {
       DbgPrint("(%s:%d) Invalid cluster size2\n", __FILE__, __LINE__);
       KeBugCheck(0);
@@ -304,7 +303,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    DeviceExt->FATFileObject->Flags = DeviceExt->FATFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
    DeviceExt->FATFileObject->FsContext = (PVOID) &Fcb->RFCB;
    DeviceExt->FATFileObject->FsContext2 = Ccb;
-   DeviceExt->FATFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+   DeviceExt->FATFileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
    DeviceExt->FATFileObject->PrivateCacheMap = NULL;
    DeviceExt->FATFileObject->Vpb = DeviceObject->Vpb;
    Ccb->pFcb = Fcb;
@@ -324,7 +323,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    }
    else
    {
-      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, 2 * PAGE_SIZE);
+      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, 2 * PAGESIZE);
    }
    if (!NT_SUCCESS (Status))
    {

@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.10 2002/09/07 15:13:00 chorns Exp $
+/* $Id: ppool.c,v 1.11 2002/09/08 10:23:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <internal/pool.h>
+#include <internal/mm.h>
 
-#define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 

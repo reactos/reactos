@@ -1,8 +1,7 @@
-/* $Id: sectest.c,v 1.3 2002/09/07 15:11:55 chorns Exp $ */
+/* $Id: sectest.c,v 1.4 2002/09/08 10:22:01 chorns Exp $ */
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
-#include <tchar.h>
 
 int main(int argc, char* argv[])
 {
@@ -69,3 +68,4 @@ int main(int argc, char* argv[])
   
   return 0;
 }
+

@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.6 2002/09/07 15:12:47 chorns Exp $
+/* $Id: pin.c,v 1.7 2002/09/08 10:23:16 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,16 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
+#include <internal/mm.h>
+#include <internal/cc.h>
+#include <internal/pool.h>
+#include <internal/io.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -26,7 +31,7 @@
 typedef struct _INTERNAL_BCB
 {
   PUBLIC_BCB PFCB;
-  PROS_CACHE_SEGMENT CacheSegment;
+  PCACHE_SEGMENT CacheSegment;
   BOOLEAN Dirty;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
@@ -40,8 +45,8 @@ CcMapData (IN PFILE_OBJECT FileObject,
 {
   ULONG ReadOffset;
   BOOLEAN Valid;
-  PROS_BCB Bcb;
-  PROS_CACHE_SEGMENT CacheSeg;
+  PBCB Bcb;
+  PCACHE_SEGMENT CacheSeg;
   NTSTATUS Status;
   PINTERNAL_BCB iBcb;
   ULONG ROffset;

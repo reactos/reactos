@@ -1,4 +1,6 @@
-#include <msvcrti.h>
+#include <windows.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
 
 
 int rename(const char *old_, const char *new_)

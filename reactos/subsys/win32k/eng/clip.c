@@ -85,7 +85,7 @@ EngDeleteClip(CLIPOBJ *ClipRegion)
 }
 
 ULONG STDCALL
-CLIPOBJ_cEnumStart(IN CLIPOBJ *ClipObj,
+CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
 		   IN BOOL ShouldDoAll,
 		   IN ULONG ClipType,
 		   IN ULONG BuildOrder,
@@ -111,7 +111,7 @@ CLIPOBJ_cEnumStart(IN CLIPOBJ *ClipObj,
 }
 
 BOOL STDCALL
-CLIPOBJ_bEnum(IN CLIPOBJ *ClipObj,
+CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
 	      IN ULONG ObjSize,
 	      OUT ULONG *EnumRects)
 {
@@ -120,8 +120,8 @@ CLIPOBJ_bEnum(IN CLIPOBJ *ClipObj,
   PENUMRECTS pERects = (PENUMRECTS)EnumRects;
 
   //calculate how many rectangles we should copy
-  nCopy = min( ClipGDI->EnumMax-ClipGDI->EnumPos,
-  				min( ClipGDI->EnumRects.c, (ObjSize-sizeof(ULONG))/sizeof(RECTL)));
+  nCopy = MIN( ClipGDI->EnumMax-ClipGDI->EnumPos,
+  				MIN( ClipGDI->EnumRects.c, (ObjSize-sizeof(ULONG))/sizeof(RECTL)));
 
   RtlCopyMemory( &(pERects->arcl), &(ClipGDI->EnumRects.arcl), nCopy*sizeof(RECTL) );
   pERects->c = nCopy;

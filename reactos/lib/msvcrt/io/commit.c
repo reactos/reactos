@@ -1,7 +1,7 @@
-#include <msvcrti.h>
-
-
-#define _IOCOMMIT 0x008000
+#include <windows.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 int _commode = _IOCOMMIT;
 
@@ -13,7 +13,7 @@ int *__p__commode(void)
 
 int _commit(int _fd)
 {
-   if (! FlushFileBuffers((HANDLE)_get_osfhandle(_fd)) )
+   if (! FlushFileBuffers(_get_osfhandle(_fd)) )
      {
 	__set_errno(EBADF);
 	return -1;

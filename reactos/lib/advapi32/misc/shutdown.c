@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.4 2002/09/07 15:12:22 chorns Exp $
+/* $Id: shutdown.c,v 1.5 2002/09/08 10:22:36 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,8 +10,8 @@
  * 	19990515 EA
  */
 
-#include <advapi32.h>
-
+#include <windows.h>
+#include <ddk/ntddk.h>
 
 #define USZ {0,0,0}
 
@@ -21,7 +21,7 @@
 BOOL
 STDCALL
 AbortSystemShutdownW(
-	LPCWSTR	lpMachineName
+	LPWSTR	lpMachineName
 	)
 {
 	NTSTATUS Status;
@@ -37,7 +37,7 @@ AbortSystemShutdownW(
 BOOL
 STDCALL
 AbortSystemShutdownA(
-	LPCSTR	lpMachineName
+	LPSTR	lpMachineName
 	)
 {
         ANSI_STRING     MachineNameA;

@@ -7,8 +7,10 @@
  * UPDATE HISTORY:
  *              04/03/99: Created
  */
-#include <msvcrti.h>
-
+#include <windows.h>
+#include <msvcrt/process.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 int _cwait(int* pnStatus, int hProc, int nAction)
 {

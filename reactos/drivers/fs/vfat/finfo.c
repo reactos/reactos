@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.19 2002/09/07 15:12:03 chorns Exp $
+/* $Id: finfo.c,v 1.20 2002/09/08 10:22:12 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -463,7 +463,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   Fcb->RFCB.FileSize.QuadPart = NewSize;
   Fcb->RFCB.ValidDataLength.QuadPart = NewSize;
 
-  if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+  if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
   {
      CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
   }

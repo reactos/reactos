@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: listbox.c,v 1.7 2002/09/07 15:12:44 chorns Exp $
+/* $Id: listbox.c,v 1.8 2002/09/08 10:23:09 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/controls/listbox.c
@@ -28,7 +28,9 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <windows.h>
 #include <user32.h>
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -935,9 +935,9 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.CloseAdapterCompleteHandler    = ProtocolCloseAdapterComplete;
     ProtChars.ResetCompleteHandler           = ProtocolResetComplete;
     ProtChars.RequestCompleteHandler         = ProtocolRequestComplete;
-    ProtChars.SendCompleteHandler            = ProtocolSendComplete;
-    ProtChars.TransferDataCompleteHandler    = ProtocolTransferDataComplete;
-    ProtChars.ReceiveHandler                 = ProtocolReceive;
+    ProtChars.u2.SendCompleteHandler         = ProtocolSendComplete;
+    ProtChars.u3.TransferDataCompleteHandler = ProtocolTransferDataComplete;
+    ProtChars.u4.ReceiveHandler              = ProtocolReceive;
     ProtChars.ReceiveCompleteHandler         = ProtocolReceiveComplete;
     ProtChars.StatusHandler                  = ProtocolStatus;
     ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;

@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.11 2002/09/07 15:13:10 chorns Exp $
+/* $Id: winlogon.c,v 1.12 2002/09/08 10:23:48 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,9 +10,9 @@
  */
 
 /* INCLUDES *****************************************************************/
-#include <windows.h>
-#define NTOS_USER_MODE
+
 #include <ntos.h>
+#include <windows.h>
 #include <stdio.h>
 #include <lsass/ntsecapi.h>
 

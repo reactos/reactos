@@ -1,6 +1,10 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
 
+#include <msvcrt/sys/types.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
+//#include <msvcrt/internal/file.h>
 
 //might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
 
@@ -59,7 +63,7 @@ FILE* fopen(const char *file, const char *mode)
 // ms crtdll ensures that writes will end up at the end of file in append mode
 // we just move the file pointer to the end of file initially
   if (*mode == 'a')
-    _lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_END);
 
   f->_cnt = 0;
   f->_file = fd;
@@ -124,7 +128,7 @@ FILE* _wfopen(const wchar_t *file, const wchar_t *mode)
 // ms crtdll ensures that writes will end up at the end of file in append mode
 // we just move the file pointer to the end of file initially
   if (*mode == L'a')
-    _lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_END);
 
   f->_cnt = 0;
   f->_file = fd;

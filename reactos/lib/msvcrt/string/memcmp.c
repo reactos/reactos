@@ -1,6 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/string.h>
 
 int
 memcmp(const void *s1, const void *s2, size_t n)

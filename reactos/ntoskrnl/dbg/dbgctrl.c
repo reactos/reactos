@@ -25,11 +25,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <roscfg.h>
+#include <internal/ldr.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -44,6 +46,7 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
   switch (ControlCode) {
     case DebugGetTraceInformation:
     case DebugSetInternalBreakpoint:
+    case DebugSetSpecialCalls:
     case DebugClearSpecialCalls:
     case DebugQuerySpecialCalls:
     case DebugDbgBreakPoint:

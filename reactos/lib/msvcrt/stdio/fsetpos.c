@@ -1,6 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/stdio.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 int fsetpos(FILE *stream,const fpos_t *pos)
 {

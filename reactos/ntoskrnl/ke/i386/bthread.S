@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bthread.S,v 1.4 2002/09/07 15:12:57 chorns Exp $
+/* $Id: bthread.S,v 1.5 2002/09/08 10:23:29 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,7 +27,10 @@
 
 /* INCLUDES ******************************************************************/
 	
-#include <ntoskrnl.h>
+#include <ddk/status.h>
+#include <internal/i386/segment.h>
+#include <internal/ps.h>
+#include <ddk/defines.h>
 
 /* FUNCTIONS *****************************************************************/
 

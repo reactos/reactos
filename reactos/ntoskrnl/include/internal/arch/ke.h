@@ -20,7 +20,7 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_ARCH_KE_H
 
 #ifdef i386
-#include "../i386/ke.h"
+#include <internal/i386/ke.h>
 #else
 #error "Unknown processor"
 #endif

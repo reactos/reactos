@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.12 2002/09/07 15:12:27 chorns Exp $
+/* $Id: ldr.c,v 1.13 2002/09/08 10:22:44 chorns Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -7,9 +7,9 @@
  * AUTHOR   : Boudewijn Dekker
  */
 
+#include <ddk/ntddk.h>
+#include <ntdll/ldr.h>
 #include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

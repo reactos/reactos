@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.16 2002/09/07 15:13:04 chorns Exp $
+/* $Id: ntsem.c,v 1.17 2002/09/08 10:23:38 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <limits.h>
+#include <ddk/ntddk.h>
+#include <ntos/synch.h>
+#include <internal/pool.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* GLOBALS ******************************************************************/
 
@@ -82,7 +85,7 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
    PKSEMAPHORE Semaphore;
    NTSTATUS Status;
    
-   Status = ObRosCreateObject(SemaphoreHandle,
+   Status = ObCreateObject(SemaphoreHandle,
 			   DesiredAccess,
 			   ObjectAttributes,
 			   ExSemaphoreType,

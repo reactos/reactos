@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.11 2002/09/07 15:12:40 chorns Exp $
+/* $Id: critical.c,v 1.12 2002/09/08 10:23:04 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,25 +10,23 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
+#include <ntos/synch.h>
 
-#define NDEBUG
-#include <debug.h>
+#include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
 
-#define SPIN_COUNT(CriticalSection)((CriticalSection)->Reserved)
-
 VOID STDCALL
-RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
+RtlDeleteCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    NtClose(CriticalSection->LockSemaphore);
-   SPIN_COUNT(CriticalSection) = -1;
+   CriticalSection->Reserved = -1;
 }
 
 VOID STDCALL
-RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
+RtlEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
    ULONG ret;
@@ -77,14 +75,14 @@ RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 }
 
 NTSTATUS STDCALL
-RtlInitializeCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
+RtlInitializeCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    NTSTATUS Status;
    
    CriticalSection->LockCount = -1;
    CriticalSection->RecursionCount = 0;
    CriticalSection->OwningThread = (HANDLE)0;
-   SPIN_COUNT(CriticalSection) = 0;
+   CriticalSection->Reserved = 0;
    
    Status = NtCreateSemaphore(&CriticalSection->LockSemaphore,
 			      SEMAPHORE_ALL_ACCESS,
@@ -95,7 +93,7 @@ RtlInitializeCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 }
 
 VOID STDCALL
-RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
+RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
    
@@ -145,10 +143,10 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 }
 
 BOOLEAN STDCALL
-RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
+RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
-   if (InterlockedCompareExchange((PLONG)&CriticalSection->LockCount, 
-				  1, 0 ) == 0)
+   if (InterlockedCompareExchange((PVOID*)&CriticalSection->LockCount, 
+				  (PVOID)1, (PVOID)0 ) == 0)
      {
 	CriticalSection->OwningThread = 
 	  (HANDLE) NtCurrentTeb()->Cid.UniqueThread;

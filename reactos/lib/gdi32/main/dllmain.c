@@ -1,14 +1,13 @@
 /*
  * dllmain.c
  *
- * $Revision: 1.5 $
+ * $Revision: 1.6 $
  * $Author: chorns $
- * $Date: 2002/09/07 15:12:24 $
+ * $Date: 2002/09/08 10:22:40 $
  *
  */
 
 #include <windows.h>
-#include <ntos/gdi.h>
 #include <win32k/win32k.h>
 
 /*

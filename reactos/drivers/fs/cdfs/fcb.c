@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.8 2002/09/07 15:12:00 chorns Exp $
+/* $Id: fcb.c,v 1.9 2002/09/08 10:22:09 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,10 +38,7 @@
 
 /* MACROS *******************************************************************/
 
-#ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
-
 #define TAG_FCB TAG('I', 'F', 'C', 'B')
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
@@ -240,7 +237,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
 
   FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
-  FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+  FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
   FileObject->FsContext = (PVOID) &Fcb->RFCB;
   FileObject->FsContext2 = newCCB;
   newCCB->Fcb = Fcb;
@@ -250,7 +247,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
 
   Status = CcRosInitializeFileCache(FileObject,
 				    &Fcb->RFCB.Bcb,
-				    PAGE_SIZE);
+				    PAGESIZE);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("CcRosInitializeFileCache failed\n");
@@ -417,7 +414,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 
   FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
       FO_DIRECT_CACHE_PAGING_READ;
-  FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+  FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
   FileObject->FsContext = (PVOID)&Fcb->RFCB;
   FileObject->FsContext2 = newCCB;
   newCCB->Fcb = Fcb;
@@ -428,7 +425,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
     {
       Status = CcRosInitializeFileCache(FileObject,
 					&Fcb->RFCB.Bcb,
-					PAGE_SIZE);
+					PAGESIZE);
       if (!NT_SUCCESS(Status))
 	{
 	  DbgPrint("CcRosInitializeFileCache failed\n");

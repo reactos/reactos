@@ -7,8 +7,9 @@
  * Copyright 1996 Jukka Iivonen
  * Copyright 1997 Uwe Bonnes
  */
-#include <msvcrti.h>
 
+#include <msvcrt/string.h>
+#include <msvcrt/ctype.h>
 
 char * _strlwr(char *x)
 {

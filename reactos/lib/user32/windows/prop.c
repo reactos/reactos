@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.3 2002/09/07 15:12:45 chorns Exp $
+/* $Id: prop.c,v 1.4 2002/09/08 10:23:12 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,31 +28,33 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <windows.h>
 #include <user32.h>
+#include <debug.h>
 
 
 /* FUNCTIONS *****************************************************************/
 
 int STDCALL
-EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
+EnumPropsA(HWND hWnd, PROPENUMPROC lpEnumFunc)
 {
   return 0;
 }
 
 int STDCALL
-EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
+EnumPropsExA(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
 {
   return 0;
 }
 
 int STDCALL
-EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
+EnumPropsExW(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
 {
   return 0;
 }
 
 int STDCALL
-EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
+EnumPropsW(HWND hWnd, PROPENUMPROC lpEnumFunc)
 {
   return 0;
 }

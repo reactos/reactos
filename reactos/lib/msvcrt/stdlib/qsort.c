@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <msvcrti.h>
-
+#include <msvcrt/stdlib.h>
+#include <msvcrt/internal/tls.h>
 
 /*-
  * Copyright (c) 1980, 1983 The Regents of the University of California.
@@ -168,8 +168,7 @@ qst(PTHREADDATA pThreadData, char *base, char *max)
  * It's not...
  */
 void
-qsort(const void *base0, size_t n, size_t size,int (__cdecl * compar)
-        (const void *, const void *))
+qsort(const void *base0, size_t n, size_t size, _pfunccmp_t compar)
 {
   PTHREADDATA pThreadData;
   char *base = (char *)base0;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.23 2002/09/07 15:12:56 chorns Exp $
+/* $Id: catch.c,v 1.24 2002/09/08 10:23:28 chorns Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -26,11 +26,15 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntoskrnl.h>
+#include <ddk/ntddk.h>
+#include <roscfg.h>
+#include <internal/ke.h>
+#include <internal/ldr.h>
+#include <internal/ps.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
 
 /* FUNCTIONS ****************************************************************/
 
@@ -111,20 +115,20 @@ RtlpDispatchException(
 #if 0
     if (Thread->KernelStack > RegistrationFrameEnd)
     {
-      ExceptionRecord->ExceptionFlags |= EH_STACK_INVALID;
+      ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
       return ExceptionDismiss;
     }
     // FIXME: Correct?
     if (Thread->StackLimit < RegistrationFrameEnd)
     {
-      ExceptionRecord->ExceptionFlags |= EH_STACK_INVALID;
+      ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
       return ExceptionDismiss;
     }
  
     // Make sure stack is DWORD aligned
     if ((ULONG_PTR)RegistrationFrame & 3)
     {
-      ExceptionRecord->ExceptionFlags |= EH_STACK_INVALID;
+      ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
       return ExceptionDismiss;
     }
 #endif
@@ -140,7 +144,7 @@ RtlpDispatchException(
 
     if (RegistrationFrame == NULL)
     {
-      ExceptionRecord->ExceptionFlags &= ~EH_NESTED_CALL;  // Turn off flag
+      ExceptionRecord->ExceptionFlags &= ~EXCEPTION_NESTED_CALL;  // Turn off flag
     }
 
     if (ReturnValue == ExceptionContinueExecution)
@@ -151,11 +155,11 @@ RtlpDispatchException(
     }
     else if (ReturnValue == ExceptionDismiss)
     {
-      if (ExceptionRecord->ExceptionFlags & EH_NONCONTINUABLE)
+      if (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
       {
         ExceptionRecord2.ExceptionRecord = ExceptionRecord;
         ExceptionRecord2.ExceptionCode = STATUS_NONCONTINUABLE_EXCEPTION;
-        ExceptionRecord2.ExceptionFlags = EH_NONCONTINUABLE;
+        ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
         ExceptionRecord2.NumberParameters = 0;
         RtlRaiseException(&ExceptionRecord2);
       }
@@ -163,7 +167,7 @@ RtlpDispatchException(
     }
     else if (ReturnValue == ExceptionNestedException)
     {
-      ExceptionRecord->ExceptionFlags |= EH_EXIT_UNWIND;
+      ExceptionRecord->ExceptionFlags |= EXCEPTION_EXIT_UNWIND;
       if (DispatcherContext > Temp)
           Temp = DispatcherContext;
     }
@@ -171,7 +175,7 @@ RtlpDispatchException(
     {
       ExceptionRecord2.ExceptionRecord = ExceptionRecord;
       ExceptionRecord2.ExceptionCode = STATUS_INVALID_DISPOSITION;
-      ExceptionRecord2.ExceptionFlags = EH_NONCONTINUABLE;
+      ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
       ExceptionRecord2.NumberParameters = 0;
       RtlRaiseException(&ExceptionRecord2);
     }
@@ -273,7 +277,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	  Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
 	}
 #ifdef KDBG
-      else if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_KDB)
+      else if (KdDebuggerEnable && KdDebugState & KD_DEBUG_KDB)
 	{
 	  Action = KdbEnterDebuggerException (ExceptionRecord, Context, Tf);
 	}
@@ -393,7 +397,7 @@ RtlpExceptionHandler(
   // If unwind flag set, return DISPOSITION_CONTINUE_SEARCH, else
   // assign DispatcherContext context and return DISPOSITION_NESTED_EXCEPTION
 
-  if (ExceptionRecord->ExceptionFlags & EH_UNWINDING)
+  if (ExceptionRecord->ExceptionFlags & EXCEPTION_UNWINDING)
   {
     DPRINT("RtlpExceptionHandler(). Returning ExceptionContinueSearch\n");
     return ExceptionContinueSearch;
@@ -417,7 +421,7 @@ RtlpUnwindHandler(
   // If unwind flag set, return DISPOSITION_CONTINUE_SEARCH, else
   // assign DispatcherContext and return DISPOSITION_COLLIDED_UNWIND
 
-  if (ExceptionRecord->ExceptionFlags & EH_UNWINDING)
+  if (ExceptionRecord->ExceptionFlags & EXCEPTION_UNWINDING)
   {
     DPRINT("RtlpUnwindHandler(). Returning ExceptionContinueSearch\n");
     return ExceptionContinueSearch;
@@ -445,7 +449,7 @@ RtlpExecuteHandlerForException(
     Context,
     DispatcherContext,
     Handler,
-    (PEXCEPTION_HANDLER)RtlpExceptionHandler);
+    RtlpExceptionHandler);
 }
 
 
@@ -463,7 +467,7 @@ RtlpExecuteHandlerForUnwind(
     Context,
     DispatcherContext,
     Handler,
-    (PEXCEPTION_HANDLER)RtlpUnwindHandler);
+    RtlpUnwindHandler);
 }
 
 
@@ -502,9 +506,9 @@ RtlUnwind(
   }
  
   if (RegistrationFrame)
-    pExceptRec->ExceptionFlags |= EH_UNWINDING;
+    pExceptRec->ExceptionFlags |= EXCEPTION_UNWINDING;
   else
-    pExceptRec->ExceptionFlags |= (EH_UNWINDING|EH_EXIT_UNWIND);
+    pExceptRec->ExceptionFlags |= (EXCEPTION_UNWINDING|EXCEPTION_EXIT_UNWIND);
  
   Context.ContextFlags =
     (CONTEXT_i386 | CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS);
@@ -514,7 +518,7 @@ RtlUnwind(
   Context.Esp += 0x10;
   Context.Eax = EaxValue;
  
-  // Begin traversing the list of EH_REGISTRATION
+  // Begin traversing the list of EXCEPTION_REGISTRATION
   while ((ULONG_PTR)ERHead != -1)
   {
     EXCEPTION_RECORD er2;
@@ -539,7 +543,7 @@ RtlUnwind(
         er2.ExceptionRecord = pExceptRec;
         er2.NumberParameters = 0;
         er2.ExceptionCode = STATUS_INVALID_UNWIND_TARGET;
-        er2.ExceptionFlags = EH_NONCONTINUABLE;    
+        er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;    
  
         RtlRaiseException(&er2);
       }
@@ -578,7 +582,7 @@ RtlUnwind(
           er2.ExceptionRecord = pExceptRec;
           er2.NumberParameters = 0;
           er2.ExceptionCode = STATUS_INVALID_DISPOSITION;
-          er2.ExceptionFlags = EH_NONCONTINUABLE;    
+          er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;    
  
           RtlRaiseException(&er2);
         } else
@@ -594,7 +598,7 @@ RtlUnwind(
         RegistrationFrame->prev);
 
       // Unlink the exception handler
-      KeGetCurrentKPCR()->Tib.ExceptionList = RegistrationFrame->prev;
+      KeGetCurrentKPCR()->ExceptionList = RegistrationFrame->prev;
     }
     else // The stack looks goofy! Raise an exception to bail out
     {
@@ -603,7 +607,7 @@ RtlUnwind(
       er2.ExceptionRecord = pExceptRec;
       er2.NumberParameters = 0;
       er2.ExceptionCode = STATUS_BAD_STACK;
-      er2.ExceptionFlags = EH_NONCONTINUABLE;    
+      er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;    
  
       RtlRaiseException(&er2);
     }

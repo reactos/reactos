@@ -1,4 +1,5 @@
-#include <msvcrti.h>
+#include <msvcrt/conio.h>
+#include <msvcrt/stdlib.h>
 
 
 char *_cgets(char *string)

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.11 2002/09/07 15:13:08 chorns Exp $
+/* $Id: handle.c,v 1.12 2002/09/08 10:23:45 chorns Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -9,12 +9,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
-#define NTOS_USER_MODE
-#include <ntos.h>
+#include <ddk/ntddk.h>
 
 #include <csrss/csrss.h>
 #include "api.h"
+#include <ntdll/rtl.h>
 
 /* FUNCTIONS *****************************************************************/
 

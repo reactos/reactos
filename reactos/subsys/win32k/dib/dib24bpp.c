@@ -8,26 +8,26 @@
 #include "../eng/objects.h"
 #include "dib.h"
 
-PFN_DIB_PutPixel DIB_24BPP_PutPixel(SURFOBJ* SurfObj, LONG x, LONG y, ULONG c)
+PFN_DIB_PutPixel DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
-  RGBTRIPLE *addr = (RGBTRIPLE*)byteaddr + x;
+  PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
 
   *(PULONG)(addr) = c;
 }
 
-PFN_DIB_GetPixel DIB_24BPP_GetPixel(SURFOBJ* SurfObj, LONG x, LONG y)
+PFN_DIB_GetPixel DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
-  RGBTRIPLE *addr = (RGBTRIPLE*)byteaddr + x;
+  PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
 
   return (PFN_DIB_GetPixel)(*(PULONG)(addr));
 }
 
-PFN_DIB_HLine DIB_24BPP_HLine(SURFOBJ* SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+PFN_DIB_HLine DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
-  RGBTRIPLE *addr = (RGBTRIPLE*)byteaddr + x1;
+  PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x1;
   LONG cx = x1;
 
   while(cx <= x2) {
@@ -37,10 +37,10 @@ PFN_DIB_HLine DIB_24BPP_HLine(SURFOBJ* SurfObj, LONG x1, LONG x2, LONG y, ULONG 
   }
 }
 
-PFN_DIB_VLine DIB_24BPP_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+PFN_DIB_VLine DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y1 * SurfObj->lDelta;
-  RGBTRIPLE *addr = (RGBTRIPLE*)byteaddr + x;
+  PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
   ULONG  lDelta = SurfObj->lDelta;
 
   byteaddr = (PBYTE)addr;
@@ -48,15 +48,15 @@ PFN_DIB_VLine DIB_24BPP_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG 
     *(PULONG)(addr) = c;
 
     byteaddr += lDelta;
-    addr = (RGBTRIPLE*)byteaddr;
+    addr = (PRGBTRIPLE)byteaddr;
   }
 }
 
-VOID DIB_24BPP_BltTo_24BPP(SURFOBJ* dstpsd, LONG dstx, LONG dsty, LONG w, LONG h,
-  SURFOBJ* srcpsd, LONG srcx, LONG srcy)
+VOID DIB_24BPP_BltTo_24BPP(PSURFOBJ dstpsd, LONG dstx, LONG dsty, LONG w, LONG h,
+  PSURFOBJ srcpsd, LONG srcx, LONG srcy)
 {
-  RGBTRIPLE  *dst;
-  RGBTRIPLE  *src;
+  PRGBTRIPLE  dst;
+  PRGBTRIPLE  src;
   PBYTE  bytedst;
   PBYTE  bytesrc;
   int  i;
@@ -65,12 +65,12 @@ VOID DIB_24BPP_BltTo_24BPP(SURFOBJ* dstpsd, LONG dstx, LONG dsty, LONG w, LONG h
 
   bytedst = (char *)dstpsd->pvBits + dsty * dlDelta;
   bytesrc = (char *)srcpsd->pvBits + srcy * slDelta;
-  dst = (RGBTRIPLE*)bytedst + dstx;
-  src = (RGBTRIPLE*)bytesrc + srcx;
+  dst = (PRGBTRIPLE)bytedst + dstx;
+  src = (PRGBTRIPLE)bytesrc + srcx;
 
   while(--h >= 0) {
-    RGBTRIPLE  *d = dst;
-    RGBTRIPLE  *s = src;
+    PRGBTRIPLE  d = dst;
+    PRGBTRIPLE  s = src;
     LONG  dx = dstx;
     LONG  sx = srcx;
     for(i=0; i<w; ++i) {
@@ -90,7 +90,7 @@ BOOLEAN DIB_To_24BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 {
   ULONG    i, j, sx, xColor, f1;
   PBYTE    DestBits, SourceBits_24BPP, DestLine, SourceLine_24BPP;
-  RGBTRIPLE  *SPDestBits, *SPSourceBits_24BPP, *SPDestLine, *SPSourceLine_24BPP; // specially for 24-to-24 blit
+  PRGBTRIPLE  SPDestBits, SPSourceBits_24BPP, SPDestLine, SPSourceLine_24BPP; // specially for 24-to-24 blit
   PBYTE    SourceBits_4BPP, SourceBits_8BPP, SourceLine_4BPP, SourceLine_8BPP;
   PWORD    SourceBits_16BPP, SourceLine_16BPP;
   PDWORD    SourceBits_32BPP, SourceLine_32BPP;
