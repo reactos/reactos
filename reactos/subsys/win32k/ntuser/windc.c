@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.13 2003/07/10 00:24:04 chorns Exp $
+/* $Id: windc.c,v 1.14 2003/07/11 17:08:44 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -274,7 +274,7 @@ NtUserGetDC(HWND hWnd)
     return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
 
-DCE * FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
+PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
 {
   HDCE DceHandle;
   DCE* Dce;

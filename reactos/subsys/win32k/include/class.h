@@ -38,7 +38,7 @@ W32kCreateClass(LPWNDCLASSEXW lpwcx,
 		BOOL bUnicodeClass);
 struct _WINDOW_OBJECT;
 ULONG FASTCALL
-W32kGetClassLong(struct _WINDOW_OBJECT* WindowObject, ULONG Offset);
+W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset);
 
 #endif /* __WIN32K_CLASS_H */
 

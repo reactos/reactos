@@ -1,4 +1,4 @@
-/* $Id: button.c,v 1.4 2003/06/27 17:49:07 chorns Exp $
+/* $Id: button.c,v 1.5 2003/07/11 17:08:44 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -693,6 +693,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     LONG state = get_button_state( hwnd );
     LONG style = GetWindowLongA( hwnd, GWL_STYLE );
     BOOL pushedState = (state & BUTTON_HIGHLIGHTED);
+    UINT uState;
 
     GetClientRect( hwnd, &rc );
 
@@ -709,7 +710,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 	InflateRect( &rc, -1, -1 );
     }
 
-    UINT uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
+    uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
 
         if (style & BS_FLAT)
             uState |= DFCS_MONO;
@@ -922,6 +923,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
     HBRUSH hbr;
     HFONT hFont;
     UINT dtFlags;
+    TEXTMETRICW tm;
     LONG style = GetWindowLongA( hwnd, GWL_STYLE );
 
     if (action != ODA_DRAWENTIRE) return;
@@ -934,7 +936,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
 				     (WPARAM)hDC, (LPARAM)hwnd);
 
     GetClientRect( hwnd, &rc);
-    	TEXTMETRICW tm;
+
 	rcFrame = rc;
 
 	GetTextMetricsW (hDC, &tm);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.62 2003/07/10 00:24:04 chorns Exp $
+/* $Id: window.c,v 1.63 2003/07/11 17:08:44 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1197,7 +1197,7 @@ NtUserDestroyWindow(HWND Wnd)
 }
 
 VOID FASTCALL
-DestroyThreadWindows(PETHREAD Thread)
+DestroyThreadWindows(struct _ETHREAD *Thread)
 {
   PLIST_ENTRY LastHead;
   PW32PROCESS Win32Process;

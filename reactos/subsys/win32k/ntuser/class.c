@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.18 2003/06/20 16:26:14 ekohl Exp $
+/* $Id: class.c,v 1.19 2003/07/11 17:08:44 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -282,7 +282,7 @@ NtUserRegisterClassExWOW(LPWNDCLASSEXW lpwcx,
 }
 
 ULONG FASTCALL
-W32kGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset)
+W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset)
 {
   LONG Ret;
   switch (Offset)

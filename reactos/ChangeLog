@@ -1,5 +1,16 @@
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/user32/controls/button.c (PB_Paint, GB_Paint): Declare variables
+	before any statements are processed in the scope.
+	* lib/user32/controls/combo.c (CBPaintButton): Ditto.
+	* lib/user32/windows/accel.c (TranslateAcceleratorA): Ditto.
+	* subsys/win32k/include/class.h (W32kGetClassLong): Fix prototype.
+	* subsys/win32k/ntuser/class.c (W32kGetClassLong): Match prototype.
+	* subsys/win32k/ntuser/windc.c (DceAllocDCE): Ditto.
+	* subsys/win32k/ntuser/window.c (DestroyThreadWindows): Ditto.
+
+2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* tools/rgenstat/rgenstat.c (process_directory): Fix building on Windows.
 
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>

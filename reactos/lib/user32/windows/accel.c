@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.8 2003/07/10 21:04:31 chorns Exp $
+/* $Id: accel.c,v 1.9 2003/07/11 17:08:44 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -372,10 +372,11 @@ int WINAPI TranslateAcceleratorA(HWND hWnd, HACCEL hAccTable, LPMSG lpMsg)
  MSG mCopy = *lpMsg;
  CHAR cChar;
  WCHAR wChar;
+ NTSTATUS nErrCode;
 
  if(!U32IsValidAccelMessage(lpMsg->message)) return 0;
 
- NTSTATUS nErrCode =
+ nErrCode =
   RtlMultiByteToUnicodeN(&wChar, sizeof(wChar), NULL, &cChar, sizeof(cChar));
 
  if(!nErrCode)

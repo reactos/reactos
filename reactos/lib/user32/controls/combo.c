@@ -682,10 +682,12 @@ static void CBPaintButton(
   HDC         hdc,
   RECT        rectButton)
 {
+  UINT buttonState;
+
     if( lphc->wState & CBF_NOREDRAW )
       return;
 
-        UINT buttonState = DFCS_SCROLLCOMBOBOX;
+        buttonState = DFCS_SCROLLCOMBOBOX;
 
 	if (lphc->wState & CBF_BUTTONDOWN)
 	{
