@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.30 2002/12/09 20:11:56 hbirr Exp $
+# $Id: Makefile,v 1.31 2002/12/10 19:09:26 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -505,8 +505,5 @@ OBJECTS = \
 $(TARGET_NAME).o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o
 
-
-DEP_OBJECTS := $(OBJECTS)
-include $(PATH_TO_TOP)/tools/depend.mk
 
 # EOF
