@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.57 2001/05/01 23:08:18 chorns Exp $
+/* $Id: registry.c,v 1.58 2001/05/05 09:31:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -220,7 +220,8 @@ static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
 		     PWSTR *Path,
-		     POBJECT_TYPE ObjectType);
+		     POBJECT_TYPE ObjectType,
+		     ULONG Attribute);
 static NTSTATUS CmiObjectCreate(PVOID ObjectBody,
 		      PVOID Parent,
 		      PWSTR RemainingPath,
@@ -229,7 +230,9 @@ static NTSTATUS CmiObjectCreate(PVOID ObjectBody,
 static VOID  CmiObjectDelete(PVOID  DeletedObject);
 static VOID  CmiAddKeyToList(PKEY_OBJECT ParentKey,PKEY_OBJECT  NewKey);
 static NTSTATUS  CmiRemoveKeyFromList(PKEY_OBJECT  NewKey);
-static PKEY_OBJECT  CmiScanKeyList(PKEY_OBJECT Parent,PCHAR  KeyNameBuf);
+static PKEY_OBJECT  CmiScanKeyList(PKEY_OBJECT Parent,
+                                   PCHAR KeyNameBuf,
+                                   ULONG Attributes);
 static PREGISTRY_FILE  CmiCreateRegistry(PWSTR  Filename);
 static ULONG  CmiGetMaxNameLength(PREGISTRY_FILE  RegistryFile,
                                   PKEY_BLOCK  KeyBlock);
@@ -239,19 +242,20 @@ static ULONG  CmiGetMaxValueNameLength(PREGISTRY_FILE  RegistryFile,
                                        PKEY_BLOCK  KeyBlock);
 static ULONG  CmiGetMaxValueDataLength(PREGISTRY_FILE  RegistryFile,
                                        PKEY_BLOCK  KeyBlock);
-static NTSTATUS  CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile, 
-                                  IN PKEY_BLOCK  KeyBlock, 
+static NTSTATUS  CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
+                                  IN PKEY_BLOCK  KeyBlock,
                                   OUT PKEY_BLOCK  *SubKeyBlock,
-				  OUT BLOCK_OFFSET *BlockOffset,
+                                  OUT BLOCK_OFFSET *BlockOffset,
                                   IN PCHAR  KeyName,
-                                  IN ACCESS_MASK  DesiredAccess);
-static NTSTATUS  CmiAddSubKey(IN PREGISTRY_FILE  RegistryFile, 
-             		      IN PKEY_OBJECT Parent,
+                                  IN ACCESS_MASK  DesiredAccess,
+                                  IN ULONG Attributes);
+static NTSTATUS  CmiAddSubKey(IN PREGISTRY_FILE  RegistryFile,
+                              IN PKEY_OBJECT Parent,
                               OUT PKEY_OBJECT SubKey,
                               IN PWSTR  NewSubKeyName,
                               IN USHORT  NewSubKeyNameSize,
                               IN ULONG  TitleIndex,
-                              IN PUNICODE_STRING  Class, 
+                              IN PUNICODE_STRING  Class,
                               IN ULONG  CreateOptions);
 static NTSTATUS  CmiScanKeyForValue(IN PREGISTRY_FILE  RegistryFile,
                                     IN PKEY_BLOCK  KeyBlock,
@@ -272,7 +276,7 @@ static NTSTATUS  CmiDeleteValueFromKey(IN PREGISTRY_FILE  RegistryFile,
                                        IN PCHAR  ValueName);
 static NTSTATUS  CmiAllocateHashTableBlock(IN PREGISTRY_FILE  RegistryFile,
                                            OUT PHASH_TABLE_BLOCK  *HashBlock,
-                          		   OUT BLOCK_OFFSET  *HBOffset,
+                                           OUT BLOCK_OFFSET  *HBOffset,
                                            IN ULONG  HashTableSize);
 static PKEY_BLOCK  CmiGetKeyFromHashByIndex(PREGISTRY_FILE RegistryFile,
                                             PHASH_TABLE_BLOCK  HashBlock,
@@ -283,7 +287,7 @@ static NTSTATUS  CmiAddKeyToHashTable(PREGISTRY_FILE  RegistryFile,
                                       BLOCK_OFFSET  NKBOffset);
 static NTSTATUS  CmiAllocateValueBlock(IN PREGISTRY_FILE  RegistryFile,
                                        OUT PVALUE_BLOCK  *ValueBlock,
-                      		       OUT BLOCK_OFFSET  *VBOffset,
+                                       OUT BLOCK_OFFSET  *VBOffset,
                                        IN PCHAR  ValueNameBuf);
 static NTSTATUS  CmiDestroyValueBlock(PREGISTRY_FILE  RegistryFile,
                      PVALUE_BLOCK  ValueBlock, BLOCK_OFFSET VBOffset);
@@ -2060,7 +2064,8 @@ static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
 		     PWSTR *Path,
-		     POBJECT_TYPE ObjectType)
+		     POBJECT_TYPE ObjectType,
+		     ULONG Attributes)
 {
  CHAR cPath[MAX_PATH];
  PWSTR end;
@@ -2091,9 +2096,8 @@ static NTSTATUS CmiObjectParse(PVOID ParsedObject,
      wcstombs(cPath,(*Path),wcslen((*Path)));
      cPath[wcslen( (*Path))]=0;
    }
-   /* FIXME : we must treat the OBJ_CASE_INSENTIVE Flag */
-   /*        ... but actually CmiObjectParse don't receive this information */
-   FoundObject = CmiScanKeyList(ParsedKey,cPath);
+   
+   FoundObject = CmiScanKeyList(ParsedKey,cPath,Attributes);
    if (FoundObject == NULL)
    {
       Status = CmiScanForSubKey(ParsedKey->RegistryFile,
@@ -2101,7 +2105,8 @@ static NTSTATUS CmiObjectParse(PVOID ParsedObject,
                                 &SubKeyBlock,
                                 &BlockOffset,
                                 cPath,
-                                0);
+                                0,
+                                Attributes);
        if(!NT_SUCCESS(Status) || SubKeyBlock == NULL)
        {
 	if (end != NULL)
@@ -2258,7 +2263,9 @@ CmiRemoveKeyFromList(PKEY_OBJECT  KeyToRemove)
 }
 
 static PKEY_OBJECT
-CmiScanKeyList(PKEY_OBJECT Parent,PCHAR  KeyName)
+CmiScanKeyList(PKEY_OBJECT Parent,
+	       PCHAR KeyName,
+	       ULONG Attributes)
 {
  KIRQL  OldIrql;
  PKEY_OBJECT  CurKey;
@@ -2270,13 +2277,23 @@ CmiScanKeyList(PKEY_OBJECT Parent,PCHAR  KeyName)
   for (Index=0; Index < Parent->NumberOfSubKeys; Index++)
   {
     CurKey=Parent->SubKeys[Index];
-    /* FIXME : perhaps we must not ignore case if NtCreateKey has not been */
-    /*         called with OBJ_CASE_INSENSITIVE flag ? */
-    if( NameSize == CurKey->NameSize
-	&& !_strnicmp(KeyName,CurKey->Name,NameSize))
+    if (Attributes & OBJ_CASE_INSENSITIVE)
     {
-       KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
-       return CurKey;
+      if( NameSize == CurKey->NameSize
+	 && !_strnicmp(KeyName,CurKey->Name,NameSize))
+      {
+         KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+         return CurKey;
+      }
+    }
+    else
+    {
+      if( NameSize == CurKey->NameSize
+	 && !strncmp(KeyName,CurKey->Name,NameSize))
+      {
+         KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+         return CurKey;
+      }
     }
   }
   KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
@@ -2580,12 +2597,13 @@ CmiGetMaxValueDataLength(PREGISTRY_FILE  RegistryFile,
 }
 
 static NTSTATUS
-CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile, 
-                 IN PKEY_BLOCK  KeyBlock, 
+CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
+                 IN PKEY_BLOCK  KeyBlock,
                  OUT PKEY_BLOCK  *SubKeyBlock,
                  OUT BLOCK_OFFSET *BlockOffset,
                  IN PCHAR  KeyName,
-                 IN ACCESS_MASK  DesiredAccess)
+                 IN ACCESS_MASK  DesiredAccess,
+                 IN ULONG Attributes)
 {
   ULONG  Idx;
   PHASH_TABLE_BLOCK  HashBlock;
@@ -2602,28 +2620,50 @@ CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
   for (Idx = 0; Idx < KeyBlock->NumberOfSubKeys
 		&& Idx < HashBlock->HashTableSize; Idx++)
     {
-      /* FIXME : perhaps we must not ignore case if NtCreateKey has not been */
-      /*         called with OBJ_CASE_INSENSITIVE flag ? */
-      if (HashBlock->Table[Idx].KeyOffset != 0 &&
-           HashBlock->Table[Idx].KeyOffset != -1 &&
-          !_strnicmp(KeyName, (PCHAR) &HashBlock->Table[Idx].HashValue, 4))
+      if (Attributes & OBJ_CASE_INSENSITIVE)
         {
-          CurSubKeyBlock = CmiGetBlock(RegistryFile,
-                                          HashBlock->Table[Idx].KeyOffset,NULL);
-          if ( CurSubKeyBlock->NameSize == KeyLength
-                && !_strnicmp(KeyName, CurSubKeyBlock->Name, KeyLength))
+          if (HashBlock->Table[Idx].KeyOffset != 0 &&
+              HashBlock->Table[Idx].KeyOffset != -1 &&
+              !_strnicmp(KeyName, (PCHAR) &HashBlock->Table[Idx].HashValue, 4))
             {
-              *SubKeyBlock = CurSubKeyBlock;
-	      *BlockOffset = HashBlock->Table[Idx].KeyOffset;
-              break;
+              CurSubKeyBlock = CmiGetBlock(RegistryFile,
+                                           HashBlock->Table[Idx].KeyOffset,NULL);
+              if ( CurSubKeyBlock->NameSize == KeyLength
+                  && !_strnicmp(KeyName, CurSubKeyBlock->Name, KeyLength))
+                {
+                  *SubKeyBlock = CurSubKeyBlock;
+                  *BlockOffset = HashBlock->Table[Idx].KeyOffset;
+                  break;
+                }
+              else
+                {
+                  CmiReleaseBlock(RegistryFile, CurSubKeyBlock);
+                }
             }
-          else
+        }
+      else
+        {
+          if (HashBlock->Table[Idx].KeyOffset != 0 &&
+              HashBlock->Table[Idx].KeyOffset != -1 &&
+              !strncmp(KeyName, (PCHAR) &HashBlock->Table[Idx].HashValue, 4))
             {
-              CmiReleaseBlock(RegistryFile, CurSubKeyBlock);
+              CurSubKeyBlock = CmiGetBlock(RegistryFile,
+                                           HashBlock->Table[Idx].KeyOffset,NULL);
+              if ( CurSubKeyBlock->NameSize == KeyLength
+                  && !_strnicmp(KeyName, CurSubKeyBlock->Name, KeyLength))
+                {
+                  *SubKeyBlock = CurSubKeyBlock;
+                  *BlockOffset = HashBlock->Table[Idx].KeyOffset;
+                  break;
+                }
+              else
+                {
+                  CmiReleaseBlock(RegistryFile, CurSubKeyBlock);
+                }
             }
         }
     }
-
+  
   CmiReleaseBlock(RegistryFile, HashBlock);
   
   return  STATUS_SUCCESS;

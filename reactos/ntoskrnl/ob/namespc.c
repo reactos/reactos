@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.22 2001/05/04 21:44:21 ea Exp $
+/* $Id: namespc.c,v 1.23 2001/05/05 09:33:16 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -149,9 +149,10 @@ ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
 }
 
 
-VOID STDCALL ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
-				 POBJECT Object,
-				 PWSTR Name)
+VOID STDCALL
+ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
+		    POBJECT Object,
+		    PWSTR Name)
 /*
  * FUNCTION: Add an entry to a namespace directory
  * ARGUMENTS:
@@ -171,9 +172,10 @@ VOID STDCALL ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
    KeReleaseSpinLock(&Parent->Lock, oldlvl);
 }
 
-PVOID ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
-			    PWSTR Name,
-			    ULONG Attributes)
+PVOID
+ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
+		      PWSTR Name,
+		      ULONG Attributes)
 {
    PLIST_ENTRY current = DirectoryObject->head.Flink;
    POBJECT_HEADER current_obj;
@@ -219,22 +221,21 @@ PVOID ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
 }
 
 NTSTATUS
-ObpParseDirectory (
-	PVOID		Object,
-	PVOID		* NextObject,
-	PUNICODE_STRING	FullPath,
-	PWSTR		* Path,
-	POBJECT_TYPE	ObjectType
-	)
+ObpParseDirectory(PVOID Object,
+		  PVOID * NextObject,
+		  PUNICODE_STRING FullPath,
+		  PWSTR * Path,
+		  POBJECT_TYPE ObjectType,
+		  ULONG Attributes)
 {
    PWSTR end;
    PVOID FoundObject;
    
    DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %S)\n",
 	  Object,Path,*Path);
-
+   
    *NextObject = NULL;
-
+   
    if ((*Path) == NULL)
      {
 	return STATUS_UNSUCCESSFUL;
@@ -245,8 +246,8 @@ ObpParseDirectory (
      {
 	*end = 0;
      }
-
-   FoundObject = ObpFindEntryDirectory(Object, (*Path)+1, 0);
+   
+   FoundObject = ObpFindEntryDirectory(Object, (*Path)+1, Attributes);
    
    if (FoundObject == NULL)
      {
@@ -271,16 +272,17 @@ ObpParseDirectory (
      {
 	*Path = NULL;
      }
-
+   
    *NextObject = FoundObject;
-
+   
    return STATUS_SUCCESS;
 }
 
-NTSTATUS ObpCreateDirectory(PVOID ObjectBody,
-			    PVOID Parent,
-			    PWSTR RemainingPath,
-			    POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS
+ObpCreateDirectory(PVOID ObjectBody,
+		   PVOID Parent,
+		   PWSTR RemainingPath,
+		   POBJECT_ATTRIBUTES ObjectAttributes)
 {
    PDIRECTORY_OBJECT DirectoryObject = (PDIRECTORY_OBJECT)ObjectBody;
    

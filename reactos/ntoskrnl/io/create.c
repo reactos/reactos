@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.40 2001/05/01 23:08:19 chorns Exp $
+/* $Id: create.c,v 1.41 2001/05/05 09:32:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,16 +78,16 @@ IopCreateFile (PVOID			ObjectBody,
    
    if (NULL == DeviceObject)
      {
-  /* This is probably an attempt to create a meta fileobject (eg. for FAT)
-     for the cache manager, so return STATUS_SUCCESS */
+	/* This is probably an attempt to create a meta fileobject (eg. for FAT)
+	   for the cache manager, so return STATUS_SUCCESS */
 	DPRINT("DeviceObject was NULL\n");
 	return (STATUS_SUCCESS);
      }
    if (IoDeviceObjectType != BODY_TO_HEADER(Parent)->ObjectType)
      {
 	CPRINT("Parent is a %S which not a device type\n",
-    BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
-  assert(FALSE);
+	       BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
+	assert(FALSE);
 	return (STATUS_UNSUCCESSFUL);
      }
    Status = ObReferenceObjectByPointer (DeviceObject,
@@ -126,7 +126,7 @@ IopCreateFile (PVOID			ObjectBody,
 	    && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
 	  {
 	     CPRINT ("Device was wrong type\n");
-       assert(FALSE);
+	     assert(FALSE);
 	     return (STATUS_UNSUCCESSFUL);
 	  }
 

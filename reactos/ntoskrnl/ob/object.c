@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.36 2001/05/01 23:08:20 chorns Exp $
+/* $Id: object.c,v 1.37 2001/05/05 09:33:16 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -174,7 +174,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 
 	DPRINT("Current ObjectType %wZ\n",
-    &CurrentHeader->ObjectType->TypeName);
+	       &CurrentHeader->ObjectType->TypeName);
 
 	if (CurrentHeader->ObjectType->Parse == NULL)
 	  {
@@ -185,7 +185,8 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 						  &NextObject,
 						  &PathString,
 						  &current,
-						  ObjectType);
+						  ObjectType,
+						  ObjectAttributes->Attributes);
 	if (Status == STATUS_REPARSE)
 	  {
 	     /* reparse the object path */
@@ -285,10 +286,10 @@ ObCreateObject(PHANDLE Handle,
 					    ObjectAttributes);
 	if (!NT_SUCCESS(Status))
 	  {
-      if (Parent)
-        {
-	        ObDereferenceObject( Parent );
-        }
+	     if (Parent)
+	       {
+		  ObDereferenceObject( Parent );
+	       }
 	    RtlFreeUnicodeString( &Header->Name );
 	    RtlFreeUnicodeString( &RemainingPath );
 	    ExFreePool( Header );
