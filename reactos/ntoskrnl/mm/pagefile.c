@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.27 2002/10/01 19:27:23 chorns Exp $
+/* $Id: pagefile.c,v 1.28 2003/01/11 15:49:33 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -136,7 +136,7 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
 
-   if (i > MAX_PAGING_FILES)
+   if (i >= MAX_PAGING_FILES)
      {
        DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
        KeBugCheck(0);
@@ -180,7 +180,7 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
 
-   if (i > MAX_PAGING_FILES)
+   if (i >= MAX_PAGING_FILES)
      {
        DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
        KeBugCheck(0);
