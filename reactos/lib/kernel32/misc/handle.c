@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.10 2003/02/12 00:39:31 hyperion Exp $
+/* $Id: handle.c,v 1.11 2003/03/09 21:37:57 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,17 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+
+/* GLOBALS *******************************************************************/
+
+WINBOOL STDCALL
+GetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
+
+HANDLE STDCALL
+DuplicateConsoleHandle (HANDLE	hConsole,
+			DWORD   dwDesiredAccess,
+			BOOL	bInheritHandle,
+			DWORD	dwOptions);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -119,18 +130,20 @@ WINBOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 				DWORD dwOptions)
 {
    NTSTATUS errCode;
+   DWORD SourceProcessId, TargetProcessId;
    if (IsConsoleHandle(hSourceHandle))
    {
-      /* FIXME: call CSRSS for console handle duplication */
-      if (hSourceProcessHandle == hTargetProcessHandle)
+      if (FALSE == GetProcessId(hSourceProcessHandle, &SourceProcessId) || 
+	  FALSE == GetProcessId(hTargetProcessHandle, &TargetProcessId) ||
+	  SourceProcessId != TargetProcessId ||
+	  SourceProcessId != GetCurrentProcessId())
       {
-	 *lpTargetHandle = hSourceHandle;
-	 return TRUE;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
       }
-      else
-      {
-	 return FALSE;
-      }
+
+      *lpTargetHandle = DuplicateConsoleHandle(hSourceHandle, dwDesiredAccess, bInheritHandle, dwOptions);
+      return *lpTargetHandle != INVALID_HANDLE_VALUE ? TRUE : FALSE;
    }
       
    errCode = NtDuplicateObject(hSourceProcessHandle,
