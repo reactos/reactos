@@ -27,8 +27,6 @@
  // Martin Fuchs, 02.10.2003
  //
 
-#include <stack>
-
 
 typedef void (*COLLECT_CALLBACK)(Entry* entry, void* param);
 typedef stack<ShellDirectory*> ShellDirectoryStack;

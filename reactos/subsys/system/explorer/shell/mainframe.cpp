@@ -77,11 +77,11 @@ MainFrame::MainFrame(HWND hwnd)
 		{5, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 */
 		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
-		{7, ID_BROWSE_BACK, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{8, ID_BROWSE_FORWARD, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{9, ID_BROWSE_UP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{10, ID_BROWSE_HOME, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{11, ID_BROWSE_SEARCH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{7, ID_GO_BACK, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{8, ID_GO_FORWARD, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{9, ID_GO_UP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{10, ID_GO_HOME, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{11, ID_GO_SEARCH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{12, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{13, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 	};
@@ -259,13 +259,15 @@ MainFrame::MainFrame(HWND hwnd)
 	DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 	HFONT hfont = GetStockFont(DEFAULT_GUI_FONT);
 
-	_haddressedit = CreateWindow(TEXT("EDIT"), TEXT("file://C:\\"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
+	_haddressedit = CreateWindow(TEXT("EDIT"), NULL, WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
 							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
 	SetWindowFont(_haddressedit, hfont, FALSE);
+	new EditController(_haddressedit);
 
-	_hcommandedit = CreateWindow(TEXT("EDIT"), TEXT("> Command"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
+	_hcommandedit = CreateWindow(TEXT("EDIT"), TEXT("> "), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
 							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
 	SetWindowFont(_hcommandedit, hfont, FALSE);
+	new EditController(_hcommandedit);
 
 	/* CreateStatusWindow does not accept WS_BORDER
 		_hstatusbar = CreateWindowEx(WS_EX_NOPARENTNOTIFY, STATUSCLASSNAME, 0,
@@ -481,7 +483,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			path = buffer;
 		}
 
-		if (_tcsstr(path, TEXT("://"))) {	// "http://...", "ftp://", ...
+		if (path && _tcsstr(path, TEXT("://"))) {	// "http://...", "ftp://", ...
 			OBJ_CONTEXT("create WebChild window", path);
 
 			return (LRESULT)GET_WINDOW(ChildWindow, create_webchildwindow(WebChildWndInfo(_hmdiclient, path)));
@@ -511,6 +513,10 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case PM_SETSTATUSTEXT:
 		SendMessage(_hstatusbar, SB_SETTEXT, 0, lparam);
+		break;
+
+	  case PM_URL_CHANGED:
+		SetWindowText(_haddressedit, (LPCTSTR)lparam);
 		break;
 
 	  default: def:
@@ -747,8 +753,16 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  case IDW_ADDRESSBAR:
+		if (code == 1) {
+			TCHAR url[BUFFER_LEN];
+
+			if (GetWindowText(_haddressedit, url, BUFFER_LEN))
+				go_to(url, false);
+		}
+		break;
+
 	  case IDW_COMMANDBAR:
-		//@@
+		//@todo execute command in command bar
 		break;
 
 	  default:
@@ -803,8 +817,11 @@ int MainFrame::Notify(int id, NMHDR* pnmh)
 		if (lparam) {
 			const BookmarkNode& node = *(BookmarkNode*)lparam;
 
-			if (node._type == BookmarkNode::BMNT_BOOKMARK)
-				jump_to(node._pbookmark->_url);
+			if (node._type == BookmarkNode::BMNT_BOOKMARK) {
+				bool new_window = GetAsyncKeyState(VK_SHIFT)<0;
+
+				go_to(node._pbookmark->_url, new_window);
+			}
 		}
 		break;}
 	}
@@ -1093,15 +1110,22 @@ void MainFrame::FillBookmarks()
 #endif
 
 
-void MainFrame::jump_to(LPCTSTR url)
+bool MainFrame::go_to(LPCTSTR url, bool new_window)
 {
 #ifndef _NO_MDI
-	HWND hwndClient = (HWND) SendMessage(_hmdiclient, WM_MDIGETACTIVE, 0, 0);
+	if (!new_window) {
+		HWND hwndClient = (HWND) SendMessage(_hmdiclient, WM_MDIGETACTIVE, 0, 0);
 
-	if (hwndClient)
-		if (SendMessage(hwndClient, PM_JUMP_TO, 0, (LPARAM)url))
-			return;
+		if (hwndClient)
+			if (SendMessage(hwndClient, PM_JUMP_TO_URL, 0, (LPARAM)url))
+				return true;
+	}
+
+	if (CreateChild(url))
+		return true;
+#else
+	///@todo SDI implementation
 #endif
 
-	CreateChild(url);	
+	return false;
 }

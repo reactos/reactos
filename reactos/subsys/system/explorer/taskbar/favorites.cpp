@@ -34,6 +34,25 @@
 #include "startmenu.h"
 
 
+String DecodeURLString(const char* s)
+{
+	TCHAR buffer[BUFFER_LEN];
+	LPTSTR o = buffer;
+
+	for(const char* p=s; *p; ++p)
+		if (*p == '%') {
+			if (!strncmp(p+1, "20", 2)) {
+				*o++ = ' ';
+				p += 2;
+			} else
+				*o++ = *p;
+		} else
+			*o++ = *p;
+
+	return String(buffer, o-buffer);
+}
+
+
  /// read .URL file
 bool Bookmark::read_url(LPCTSTR path)
 {
@@ -57,9 +76,9 @@ bool Bookmark::read_url(LPCTSTR path)
 				++cont;
 
 			if (!strnicmp(keyword, "URL", 3))
-				_url = cont;
+				_url = DecodeURLString(cont);
 			else if (!strnicmp(keyword, "IconFile", 8))
-				_icon_path = cont;
+				_icon_path = DecodeURLString(cont);
 		}
 	}
 

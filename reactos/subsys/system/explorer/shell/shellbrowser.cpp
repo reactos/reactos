@@ -42,6 +42,10 @@ ShellBrowserChild::ShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
 	_pDropTarget = NULL;
 	_himlSmall = 0;
 	_last_sel = 0;
+
+	 // store path into history
+	if (*info._path)
+		_url_history.push(info._path);
 }
 
 ShellBrowserChild::~ShellBrowserChild()
@@ -346,6 +350,19 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 			return;
 		}
 
+		TCHAR path[MAX_PATH];
+
+		if (entry->get_path(path)) {
+			String url;
+
+			if (path[0] == ':')
+				url.printf(TEXT("shell://%s"), path);
+			else
+				url.printf(TEXT("file://%s"), path);
+
+			set_url(url);
+		}
+
 		UpdateFolderView(folder);
 	}
 }
@@ -405,27 +422,15 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			ShellBrowserChild::create(_create_info);
 			break;}
 
-		  case ID_BROWSE_BACK:
-			break;//@todo
-
-		  case ID_BROWSE_FORWARD:
-			break;//@todo
-
-		  case ID_BROWSE_UP:
-			break;//@todo
+		  case ID_REFRESH:
+			//@todo refresh shell child
+			break;
 
 		  default:
-			return FALSE;
+			return super::WndProc(nmsg, wparam, lparam);
 		}
 		return TRUE;}
 	
-	  case PM_JUMP_TO: {
-		LPCTSTR url = (LPCTSTR)lparam;
-
-		if (0)	///@todo
-			return TRUE;
-		break;}
-
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -514,16 +519,27 @@ bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
 }
 
 
-void ShellBrowserChild::jump_to(LPCTSTR path)
+String ShellBrowserChild::jump_to_int(LPCTSTR url)
 {
-	///@todo implement "file://", ... parsing
-	jump_to(ShellPath(path));
+	String dir, fname;
+
+	if (!_tcsnicmp(url, TEXT("shell://"), 8)) {
+		if (jump_to_pidl(ShellPath(url+8)))
+			return url;
+	}
+
+	if (SplitFileSysURL(url, dir, fname))
+		if (jump_to_pidl(ShellPath(dir)))
+			return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
+
+	return String();
 }
 
 
-void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
+bool ShellBrowserChild::jump_to_pidl(LPCITEMIDLIST pidl)
 {
 
 //@@
 
+	return false;
 }

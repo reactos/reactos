@@ -295,11 +295,13 @@ struct ChildWindow : public Window
 	static ChildWindow* create(const ChildWndInfo& info, const RECT& rect, CREATORFUNC_INFO creator,
 								LPCTSTR classname, LPCTSTR title=NULL);
 
+	bool	go_to(LPCTSTR url);
+
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	virtual void resize_children(int cx, int cy);
-	virtual void jump_to(LPCTSTR path) = 0;
+	virtual String jump_to_int(LPCTSTR url) = 0;
 
 protected:
 	MenuInfo*_menu_info;
@@ -313,6 +315,11 @@ protected:
 
 	HWND	_hwndFrame;
 	String	_statusText;
+	String	_url;
+
+	stack<String> _url_history;
+
+	void	set_url(LPCTSTR url);
 };
 
 #define	PM_SETSTATUSTEXT		(WM_APP+0x1E)
@@ -379,6 +386,8 @@ protected:
 #define	PM_FRM_CALC_CLIENT		(WM_APP+0x03)
 #define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, PM_FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
 
+#define	PM_JUMP_TO_URL			(WM_APP+0x25)
+#define	PM_URL_CHANGED			(WM_APP+0x26)
 
 
 struct PropSheetPage : public PROPSHEETPAGE
@@ -512,9 +521,9 @@ template<typename BASE> struct ResizeController : public BASE
 	{
 	}
 
-	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	{
-		switch(message) {
+		switch(nmsg) {
 		  case PM_FRM_CALC_CLIENT:
 			GetClientSpace((PRECT)lparam);
 			return TRUE;
@@ -529,7 +538,7 @@ template<typename BASE> struct ResizeController : public BASE
 			goto def;
 
 		  default: def:
-			return super::WndProc(message, wparam, lparam);
+			return super::WndProc(nmsg, wparam, lparam);
 		}
 	}
 
@@ -775,9 +784,9 @@ struct ColorStatic : public SubclassedWindow
 	}
 
 protected:
-	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	{
-		if (message == PM_DISPATCH_CTLCOLOR) {
+		if (nmsg == PM_DISPATCH_CTLCOLOR) {
 			HDC hdc = (HDC) wparam;
 
 			SetTextColor(hdc, _textColor);
@@ -792,7 +801,7 @@ protected:
 				return (LRESULT)GetStockBrush(HOLLOW_BRUSH);
 			}
 		} else
-			return super::WndProc(message, wparam, lparam);
+			return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	COLORREF	_textColor;
@@ -820,7 +829,7 @@ protected:
 	HFONT	 _hfont;
 	HCURSOR	_crsr_link;
 
-	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	void init();
 
@@ -1036,9 +1045,9 @@ template<typename BASE> struct TrayIconControllerTemplate : public BASE
 	{
 	}
 
-	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	{
-		if (message == PM_TRAYICON) {
+		if (nmsg == PM_TRAYICON) {
 			switch(lparam) {
 			  case WM_MOUSEMOVE:
 				TrayMouseOver(wparam);
@@ -1070,11 +1079,11 @@ template<typename BASE> struct TrayIconControllerTemplate : public BASE
 			}
 
 			return 0;
-		} else if (message == WM_TASKBARCREATED) {
+		} else if (nmsg == WM_TASKBARCREATED) {
 			AddTrayIcons();
 			return 0;
 		} else
-			return super::WndProc(message, wparam, lparam);
+			return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	virtual void AddTrayIcons() = 0;
@@ -1084,4 +1093,25 @@ template<typename BASE> struct TrayIconControllerTemplate : public BASE
 
 protected:
 	const UINT WM_TASKBARCREATED;
+};
+
+
+struct EditController : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	EditController(HWND hwnd)
+	 :	super(hwnd)
+	{
+	}
+
+protected:
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+	{
+		if (nmsg==WM_KEYDOWN && wparam==VK_RETURN) {
+			SendParent(WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(_hwnd),1), (LPARAM)_hwnd);
+			return 0;
+		} else
+			return super::WndProc(nmsg, wparam, lparam);
+	}
 };

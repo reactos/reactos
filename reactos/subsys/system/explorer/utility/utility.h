@@ -152,6 +152,9 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in);
  // read DWORD value from registry
 DWORD RegGetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD def);
 
+ // test for existing directory
+BOOL exists_path(LPCTSTR path);
+
 
 #ifdef __cplusplus
 } // extern "C"
@@ -173,6 +176,7 @@ using namespace std;
 #include <map>
 #include <set>
 #include <list>
+#include <stack>
 #include <vector>
 
 
@@ -1004,6 +1008,9 @@ protected:
 #define	CONTEXT(c) Context __ctx__(c)
 #define	CURRENT_CONTEXT Context::current()
 #define	OBJ_CONTEXT(c, o) Context __ctx__(c, o);
+
+
+extern bool SplitFileSysURL(LPCTSTR url, String& dir_out, String& fname_out);
 
 
 #endif // __cplusplus

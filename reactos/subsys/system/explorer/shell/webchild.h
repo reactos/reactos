@@ -422,15 +422,15 @@ template<typename BASE, typename SMARTPTR> struct IPCtrlWindow : public BASE
 	}
 
 protected:
-	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	{
-		if (message == WM_SIZE) {
+		if (nmsg == WM_SIZE) {
 			if (_in_place_object) {
 				RECT rect = {0, 0, LOWORD(lparam), HIWORD(lparam)};
 
 				_in_place_object->SetObjectRects(&rect, &rect);
 			}
-		} else if (message == WM_CLOSE) {
+		} else if (nmsg == WM_CLOSE) {
 			_in_place_object = NULL;
 
 			if (_control) {
@@ -439,7 +439,7 @@ protected:
 			}
 		}
 
-		return super::WndProc(message, wparam, lparam);
+		return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	ComInit _usingCOM;
@@ -922,8 +922,9 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 
     void NavigateComplete2(IDispatch* pDisp, const Variant& url)
 	{
-		//String adr = (BStr)url;
 		web_super::NavigateComplete2(pDisp, url);
+
+		set_url(String(BStr(url)));
 	}
 
     void StatusTextChange(const BStr& text)
@@ -1074,7 +1075,7 @@ protected:
 	BrowserNavigator _navigator;
 	auto_ptr<EventConnector> _connector;
 
-	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
-	virtual void jump_to(LPCTSTR path);
+	virtual String jump_to_int(LPCTSTR url);
 };

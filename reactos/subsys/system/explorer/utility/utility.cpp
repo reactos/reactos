@@ -352,3 +352,53 @@ DWORD RegGetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD def)
 	} else
 		return def;
 }
+
+
+BOOL exists_path(LPCTSTR path)
+{
+	WIN32_FIND_DATA fd;
+
+	HANDLE hfind = FindFirstFile(path, &fd);
+
+	if (hfind != INVALID_HANDLE_VALUE) {
+		FindClose(hfind);
+
+		return TRUE;
+	} else
+		return FALSE;
+}
+
+
+bool SplitFileSysURL(LPCTSTR url, String& dir_out, String& fname_out)
+{
+	if (!_tcsnicmp(url, TEXT("file://"), 7)) {
+		url += 7;
+
+		 // remove third slash in front of drive characters
+		if (*url == '/')
+			++url;
+	}
+
+	if (exists_path(url)) {
+		TCHAR path[_MAX_PATH];
+
+		 // convert slashes to back slashes
+		GetFullPathName(url, _MAX_PATH, path, NULL);
+
+		if (GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY)
+			fname_out.erase();
+		else {
+			TCHAR drv[_MAX_DRIVE], dir[_MAX_DIR], fname[_MAX_FNAME], ext[_MAX_EXT];
+
+			_tsplitpath(path, drv, dir, fname, ext);
+			_stprintf(path, TEXT("%s%s"), drv, dir);
+
+			fname_out.printf(TEXT("%s%s"), fname, ext);
+		}
+
+		dir_out = path;
+
+		return true;
+	} else
+		return false;
+}

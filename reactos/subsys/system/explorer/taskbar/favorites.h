@@ -26,6 +26,9 @@
  //
 
 
+extern String DecodeURLString(const char* s);
+
+
 struct Bookmark
 {
 	Bookmark() : _icon_idx(0) {}

@@ -31,6 +31,7 @@
 #include "window.h"
 
 #include "../globals.h"
+#include "../explorer_intres.h"	// for ID_GO_BACK, ...
 
 
 WindowClass::WindowClass(LPCTSTR classname, UINT style_, WNDPROC wndproc)
@@ -491,13 +492,45 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		break;
 
-	  case PM_DISPATCH_COMMAND:
-		return FALSE;
+ 	  case PM_DISPATCH_COMMAND:
+		switch(LOWORD(wparam)) {
+		  case ID_GO_BACK:
+			if (!_url_history.empty()) {
+				const String& url = jump_to_int(_url_history.top());
+
+				if (jump_to_int(url))
+					set_url(url);
+
+				_url_history.pop();
+			}
+			break;
+
+		  case ID_GO_FORWARD:
+			//@@
+			break;
+
+		  case ID_GO_UP:
+			///@todo
+			break;
+
+		  case ID_GO_HOME:
+			//@@
+			break;
+
+		  default:
+			return FALSE;
+		}
+		return TRUE;
 
 	  case WM_MDIACTIVATE:
-		if ((HWND)lparam == _hwnd)
+		if ((HWND)lparam == _hwnd) {
 			SendMessage(_hwndFrame, PM_SETSTATUSTEXT, 0, (LPARAM)_statusText.c_str());
+			SendMessage(_hwndFrame, PM_URL_CHANGED, 0, (LPARAM)_url.c_str());
+		}
 		break;
+
+	  case PM_JUMP_TO_URL:
+		return go_to((LPCTSTR)lparam)? TRUE: FALSE;
 
 	  default: def:
 		return DefMDIChildProc(_hwnd, nmsg, wparam, lparam);
@@ -530,6 +563,30 @@ void ChildWindow::resize_children(int cx, int cy)
 		hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
 	EndDeferWindowPos(hdwp);
+}
+
+
+bool ChildWindow::go_to(LPCTSTR url)
+{
+	const String& url_str = jump_to_int(url);
+
+	if (!url_str.empty()) {
+		set_url(url_str);
+
+		_url_history.push(url_str);
+
+		return true;
+	} else
+		return false;
+}
+
+void ChildWindow::set_url(LPCTSTR url)
+{
+	if (_url != url) {
+		_url = url;
+
+		SendMessage(_hwndFrame, PM_URL_CHANGED, 0, (LPARAM)url);
+	}
 }
 
 
@@ -813,13 +870,13 @@ Button::Button(HWND parent, LPCTSTR title, int left, int top, int width, int hei
 }
 
 
-LRESULT OwnerdrawnButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+LRESULT OwnerdrawnButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	if (message == PM_DISPATCH_DRAWITEM) {
+	if (nmsg == PM_DISPATCH_DRAWITEM) {
 		DrawItem((LPDRAWITEMSTRUCT)lparam);
 		return TRUE;
 	} else
-		return super::WndProc(message, wparam, lparam);
+		return super::WndProc(nmsg, wparam, lparam);
 }
 
 
@@ -1170,9 +1227,9 @@ HyperlinkCtrl::~HyperlinkCtrl()
 		DeleteObject(_hfont);
 }
 
-LRESULT HyperlinkCtrl::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+LRESULT HyperlinkCtrl::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	switch(message) {
+	switch(nmsg) {
 	  case PM_DISPATCH_CTLCOLOR: {
 		if (!_hfont) {
 			HFONT hfont = (HFONT) SendMessage(_hwnd, WM_GETFONT, 0, 0);
@@ -1208,7 +1265,7 @@ LRESULT HyperlinkCtrl::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 		return 0;
 
 	  default:
-		return super::WndProc(message, wparam, lparam);
+		return super::WndProc(nmsg, wparam, lparam);
 	}
 }
 

@@ -228,10 +228,10 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 	}
 }
 
-LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+LRESULT WebChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	try {
-		switch(message) {
+		switch(nmsg) {
 		  case WM_ERASEBKGND:
 			if (!_control) {
 				HDC hdc = (HDC)wparam;
@@ -252,23 +252,23 @@ LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 				HRESULT hr = E_FAIL;
 
 				switch(LOWORD(wparam)) {
-				  case ID_BROWSE_BACK:
+				  case ID_GO_BACK:
 					hr = _control->GoBack();
 					break;
 
-				  case ID_BROWSE_FORWARD:
+				  case ID_GO_FORWARD:
 					hr = _control->GoForward();
 					break;
 
-				  case ID_BROWSE_UP:
+				  case ID_GO_UP:
 					///@todo
 					break;
 
-				  case ID_BROWSE_HOME:
+				  case ID_GO_HOME:
 					hr = _control->GoHome();
 					break;
 
-				  case ID_BROWSE_SEARCH:
+				  case ID_GO_SEARCH:
 					hr = _control->GoSearch();
 					break;
 
@@ -281,7 +281,7 @@ LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 					break;
 
 				  default:
-					return FALSE;
+					return super::WndProc(nmsg, wparam, lparam);
 				}
 
 				if (FAILED(hr) && hr!=E_FAIL)
@@ -290,15 +290,8 @@ LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 
 			return TRUE;}
 
-		  case PM_JUMP_TO: {
-			LPCTSTR url = (LPCTSTR)lparam;
-
-			if (0)	///@todo
-				return TRUE;
-			break;}
-
 		  default:
-			return super::WndProc(message, wparam, lparam);
+			return super::WndProc(nmsg, wparam, lparam);
 		}
 	} catch(COMException& e) {
 		HandleException(e, _hwnd);
@@ -308,9 +301,10 @@ LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 }
 
 
-void WebChildWindow::jump_to(LPCTSTR path)
+String WebChildWindow::jump_to_int(LPCTSTR url)
 {
 
 //@@
 
+	return String();
 }

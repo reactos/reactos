@@ -90,7 +90,6 @@ struct FileChildWindow : public ChildWindow
 	typedef ChildWindow super;
 
 	FileChildWindow(HWND hwnd, const FileChildWndInfo& info);
-	~FileChildWindow();
 
 	static FileChildWindow* create(const FileChildWndInfo& info);
 
@@ -100,7 +99,7 @@ protected:
 	int		Notify(int id, NMHDR* pnmh);
 
 	virtual void resize_children(int cx, int cy);
-	virtual void jump_to(LPCTSTR path);
+	virtual String jump_to_int(LPCTSTR url);
 
 	void	scan_entry(Entry* entry, HWND hwnd);
 

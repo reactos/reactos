@@ -244,10 +244,9 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 
 	 ///@todo scroll to visibility
 
-}
-
-FileChildWindow::~FileChildWindow()
-{
+	 // store path into history
+	if (*info._path)
+		_url_history.push(info._path);
 }
 
 
@@ -278,7 +277,9 @@ void FileChildWindow::set_curdir(Entry* entry, HWND hwnd)
 		SetWindowText(hwnd, _path);
 
 	if (_path[0])
-		if (!SetCurrentDirectory(_path))
+		if (SetCurrentDirectory(_path))
+			set_url(_path);	//@@ use "file://" format?
+		else
 			_path[0] = TEXT('\0');
 }
 
@@ -468,17 +469,11 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				activate_entry(pane, _hwnd);
 				break;}
 
-			  case ID_BROWSE_BACK:
-				break;//@todo
-
-			  case ID_BROWSE_FORWARD:
-				break;//@todo
-
-			  case ID_BROWSE_UP:
-				break;//@todo
-
 			  default:
-				return pane->command(LOWORD(wparam));
+				if (pane->command(LOWORD(wparam)))
+					return TRUE;
+				else
+					return super::WndProc(nmsg, wparam, lparam);
 			}
 
 			return TRUE;}
@@ -521,13 +516,6 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 					}
 				}
 			}
-			break;}
-
-		  case PM_JUMP_TO: {
-			LPCTSTR url = (LPCTSTR)lparam;
-
-			if (0)	///@todo
-				return TRUE;
 			break;}
 
 		default: def:
@@ -653,9 +641,15 @@ int FileChildWindow::Notify(int id, NMHDR* pnmh)
 }
 
 
-void FileChildWindow::jump_to(LPCTSTR path)
+String FileChildWindow::jump_to_int(LPCTSTR url)
 {
+	String dir, fname;
 
-//@@
+	if (SplitFileSysURL(url, dir, fname)) {
+		//@@jump_to(path);
 
+		return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
+	}
+
+	return String();
 }

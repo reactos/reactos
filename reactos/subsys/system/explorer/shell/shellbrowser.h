@@ -125,8 +125,8 @@ protected:
 	int		InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
 	bool	InitDragDrop();
 
-	virtual void jump_to(LPCTSTR path);
-	void	jump_to(LPCITEMIDLIST pidl);
+	virtual String jump_to_int(LPCTSTR url);
+	bool	jump_to_pidl(LPCITEMIDLIST pidl);
 
 	HRESULT OnDefaultCommand(LPIDA pida);
 
