@@ -8,7 +8,6 @@
 #include <limits.h>
 #include <wchar.h>
 #include <string.h>
-#include <assert.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntddbeep.h>
 #include <ddk/ntddser.h>

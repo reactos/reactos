@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.12 2004/10/24 20:37:26 weiden Exp $
+/* $Id: fiber.c,v 1.13 2004/11/05 12:26:36 ekohl Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
@@ -246,7 +246,7 @@ l_CleanupFiber:
  RtlFreeHeap(pTeb->Peb->ProcessHeap, 0, pfCurFiber);
 
  /* failure */
- assert(!NT_SUCCESS(nErrCode));
+ ASSERT(!NT_SUCCESS(nErrCode));
  SetLastErrorByStatus(nErrCode);
  return NULL;
 }

@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.71 2004/11/02 21:51:25 weiden Exp $
+/* $Id: proc.c,v 1.72 2004/11/05 12:26:55 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -635,7 +635,7 @@ ExitProcess(UINT uExitCode)
 		      uExitCode);
 
   /* should never get here */
-  assert(0);
+  ASSERT(0);
   while(1);
 }
 
