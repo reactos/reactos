@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.37 2001/03/07 16:48:41 dwelch Exp $
+/* $Id: create.c,v 1.38 2001/03/21 23:30:20 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -115,13 +115,18 @@ IopCreateFile (PVOID			ObjectBody,
      }
    else
      {
+
 	if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
-	    && (DeviceObject->DeviceType != FILE_DEVICE_DISK))
+	    && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
+        && (DeviceObject->DeviceType != FILE_DEVICE_NETWORK))
 	  {
 	     DPRINT ("Device was wrong type\n");
 	     return (STATUS_UNSUCCESSFUL);
 	  }
-	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+
+    if (DeviceObject->DeviceType != FILE_DEVICE_NETWORK)
+    {
+	  if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
 	  {
 	     DPRINT("Trying to mount storage device\n");
 	     Status = IoTryToMountStorageDevice (DeviceObject);
@@ -134,6 +139,7 @@ IopCreateFile (PVOID			ObjectBody,
 	       }
 	     DeviceObject = IoGetAttachedDevice(DeviceObject);
 	  }
+    }
 	RtlCreateUnicodeString(&(FileObject->FileName),
 			       RemainingPath);
      }
