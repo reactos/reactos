@@ -11,13 +11,16 @@ OBJECTS = cdmake.o llmosrt.o
 
 CLEAN_FILES = *.o cdmake$(EXE_POSTFIX)
 
-cdmake$(EXE_POSTFIX): $(OBJECTS)
-	$(HOST_CC) $(OBJECTS) -o cdmake$(EXE_POSTFIX)
-
 HOST_CFLAGS = -I.
 
-#create_nls.o: create_nls.c
-#	$(HOST_CC) $(HOST_CFLAGS) -c create_nls.c -o create_nls.o
+cdmake.o: cdmake.c
+	$(HOST_CC) $(HOST_CFLAGS) -c cdmake.c -o cdmake.o
+
+llmosrt.o: llmosrt.c
+	$(HOST_CC) $(HOST_CFLAGS) -c llmosrt.c -o llmosrt.o
+
+cdmake$(EXE_POSTFIX): $(OBJECTS)
+	$(HOST_CC) $(OBJECTS) -o cdmake$(EXE_POSTFIX)
 
 ifeq ($(HOST),mingw32-linux)
 clean:

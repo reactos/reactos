@@ -1,3 +1,16 @@
+2003-04-12  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* tools/cdmake/Makefile: Use HOST_CC.
+	* tools/cdmake/cdmake.c (MAX_PATH, DIR_SEPARATOR_CHAR,
+	DIR_SEPARATOR_STRING): Define.
+	(directory_record): Add fields name_on_cd and extension_on_cd.
+	(error_exit): Make a macro. Avoid using vfprintf and fprintf.
+	(write_directory_record, new_directory_record, compare_directory_order,
+	pass): Use name_on_cd and extension_on_cd.
+	(make_directory_records, get_file_specifications): Use DIR_SEPARATOR_CHAR.
+	(new_directory_record, make_directory_records): Linux implementations.
+	(main): Use DIR_SEPARATOR_CHAR.
+
 2003-04-06  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/freetype/.cvsignore: Ignore nul.

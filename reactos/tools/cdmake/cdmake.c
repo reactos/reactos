@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.2 2003/04/11 21:02:21 phreak Exp $ */
+/* $Id: cdmake.c,v 1.3 2003/04/12 14:53:56 chorns Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -7,20 +7,41 @@
   ElTorito-Support
   by Eric Kohl
   ekohl@rz-online.de
+
+  Linux port
+  by Casper S. Hornstrup
+  chorns@users.sourceforge.net
   */
 
 /* According to his website, this file was released into the public domain by Phillip J. Erdelsky */
 
 #include <stdio.h>
 #include <fcntl.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dir.h>
+#ifdef WIN32
+#include <io.h>
 #include <dos.h>
+#else
+#include <sys/io.h>
+#include <errno.h>
+#include <sys/types.h> 
+#include <dirent.h>
+#endif
 #include <ctype.h>
 #include <setjmp.h>
 #include <time.h>
+#ifndef WIN32
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+#define DIR_SEPARATOR_CHAR '/'
+#define DIR_SEPARATOR_STRING "/"
+#else
+#define DIR_SEPARATOR_CHAR '\\'
+#define DIR_SEPARATOR_STRING "\\"
+#endif
 
 
 typedef unsigned char BYTE;
@@ -72,7 +93,9 @@ typedef struct directory_record
   struct directory_record *parent;
   BYTE flags;
   char name[MAX_NAME_LENGTH+1];
+  char name_on_cd[MAX_NAME_LENGTH+1];
   char extension[MAX_EXTENSION_LENGTH+1];
+  char extension_on_cd[MAX_EXTENSION_LENGTH+1];
   DATE_AND_TIME date_and_time;
   DWORD sector;
   DWORD size;
@@ -176,14 +199,14 @@ This function edits and displays an error message and then jumps back to the
 error exit point in main().
 -----------------------------------------------------------------------------*/
 
-static void error_exit(const char *format, ...)
-{
-  vfprintf(stderr, format, (char*)&format + 1);
-  fprintf(stderr, "\n");
-  if (cd.file != NULL)
-    fclose(cd.file);
-  release_memory();
-  longjmp(error, 1);
+#define error_exit(fmt,args...) \
+{ \
+  printf(fmt,##args); \
+  printf("\n"); \
+  if (cd.file != NULL) \
+    fclose(cd.file); \
+  release_memory(); \
+  exit(1); \
 }
 
 /*-----------------------------------------------------------------------------
@@ -323,12 +346,12 @@ write_directory_record(PDIR_RECORD d,
       identifier_size = 1;
       break;
     case SUBDIRECTORY_RECORD:
-      identifier_size = strlen(d->name);
+      identifier_size = strlen(d->name_on_cd);
       break;
     case FILE_RECORD:
-      identifier_size = strlen(d->name) + 2;
-      if (d->extension[0] != 0)
-        identifier_size += 1 + strlen(d->extension);
+      identifier_size = strlen(d->name_on_cd) + 2;
+      if (d->extension_on_cd[0] != 0)
+        identifier_size += 1 + strlen(d->extension_on_cd);
       break;
   }
   record_size = 33 + identifier_size;
@@ -361,14 +384,14 @@ write_directory_record(PDIR_RECORD d,
       write_byte(1);
       break;
     case SUBDIRECTORY_RECORD:
-      write_string(d->name);
+      write_string(d->name_on_cd);
       break;
     case FILE_RECORD:
-      write_string(d->name);
-      if (d->extension[0] != 0)
+      write_string(d->name_on_cd);
+      if (d->extension_on_cd[0] != 0)
       {
         write_byte('.');
-        write_string(d->extension);
+        write_string(d->extension_on_cd);
       }
       write_string(";1");
       break;
@@ -417,6 +440,9 @@ specified ffblk. It links it into the beginning of the directory list
 for the specified parent and returns a pointer to the new record.
 -----------------------------------------------------------------------------*/
 
+#if WIN32
+
+/* Win32 version */
 PDIR_RECORD
 new_directory_record (struct _finddata_t *f,
 		      PDIR_RECORD parent)
@@ -424,6 +450,7 @@ new_directory_record (struct _finddata_t *f,
   PDIR_RECORD d;
   char *s;
   char *t;
+  char *n;
 
   d = malloc(sizeof(DIR_RECORD));
   if (d == NULL)
@@ -432,7 +459,9 @@ new_directory_record (struct _finddata_t *f,
   root.next_in_memory = d;
   {
     s = f->name;
-    t = d->name;
+    t = d->name_on_cd;
+    n = d->name;
+
     while (*s != 0)
     {
       if (*s == '.')
@@ -440,13 +469,19 @@ new_directory_record (struct _finddata_t *f,
         s++;
         break;
       }
-      *t++ = check_for_punctuation(*s++, f->name);
+
+      *t++ = check_for_punctuation(*s, f->name);
+      *n = *s;
+      s++;
+      n++;
     }
     *t = 0;
-    t = d->extension;
+    strcpy(d->extension, s);
+    t = d->extension_on_cd;
     while (*s != 0)
       *t++ = check_for_punctuation(*s++, f->name);
     *t = 0;
+    *n = 0;
   }
   convert_date_and_time(&d->date_and_time, &f->time_create);
   if (f->attrib & _A_SUBDIR)
@@ -464,6 +499,69 @@ new_directory_record (struct _finddata_t *f,
   return d;
 }
 
+#else
+
+/* Linux version */
+PDIR_RECORD
+new_directory_record (struct dirent *entry,
+		      struct stat *stbuf,
+		      PDIR_RECORD parent)
+{
+  PDIR_RECORD d;
+  char *s;
+  char *t;
+  char *n;
+
+  d = malloc(sizeof(DIR_RECORD));
+  if (d == NULL)
+    error_exit("Insufficient memory");
+  d->next_in_memory = root.next_in_memory;
+  root.next_in_memory = d;
+  {
+    s = entry->d_name;
+    t = d->name_on_cd;
+    n = d->name;
+
+    while (*s != 0)
+    {
+      if (*s == '.')
+      {
+        s++;
+        break;
+      }
+
+      *t++ = check_for_punctuation(*s, entry->d_name);
+      *n = *s;
+      s++;
+      n++;
+    }
+    *t = 0;
+    strcpy(d->extension, s);
+    t = d->extension_on_cd;
+    while (*s != 0)
+      *t++ = check_for_punctuation(*s++, entry->d_name);
+    *t = 0;
+    *n = 0;
+  }
+
+  convert_date_and_time(&d->date_and_time, &stbuf->st_mtime);
+  if (entry->d_type == DT_DIR)
+  {
+    if (d->extension[0] != 0)
+      error_exit("Directory with extension %s", entry->d_name);
+    d->flags = DIRECTORY_FLAG;
+  }
+  else
+    d->flags = entry->d_name[0] == '.' ? HIDDEN_FLAG : 0;
+  d->size = stbuf->st_size;
+  d->next_in_directory = parent->first_record;
+  parent->first_record = d;
+  d->parent = parent;
+  return d;
+}
+
+#endif
+
 /*-----------------------------------------------------------------------------
 This function compares two directory records according to the ISO9660 rules
 for directory sorting and returns a negative value if p is before q, or a
@@ -472,9 +570,9 @@ positive value if p is after q.
 
 static int compare_directory_order(PDIR_RECORD p, PDIR_RECORD q)
 {
-  int n = strcmp(p->name, q->name);
+  int n = strcmp(p->name_on_cd, q->name_on_cd);
   if (n == 0)
-    n = strcmp(p->extension, q->extension);
+    n = strcmp(p->extension_on_cd, q->extension_on_cd);
   return n;
 }
 
@@ -514,6 +612,8 @@ and represents a directory already in the database as d),
 and puts the appropriate directory records into the database in memory, with
 the specified root. It calls itself recursively to scan all subdirectories.
 -----------------------------------------------------------------------------*/
+
+#ifdef WIN32
 
 static void
 make_directory_records (PDIR_RECORD d)
@@ -565,7 +665,7 @@ make_directory_records (PDIR_RECORD d)
 	    {
 	      old_end_source = end_source;
 	      append_string_to_source(f.name);
-	      *end_source++ = '\\';
+	      *end_source++ = DIR_SEPARATOR_CHAR;
 	      if (verbosity == VERBOSE)
 		{
 		  *end_source = 0;
@@ -595,6 +695,132 @@ make_directory_records (PDIR_RECORD d)
   d->first_record = sort_linked_list(d->first_record, 0, compare_directory_order);
 }
 
+#else
+
+/* Linux version */
+static void
+make_directory_records (PDIR_RECORD d)
+{
+  PDIR_RECORD new_d;
+  DIR *dirp;
+  struct dirent *entry;
+  char *old_end_source;
+  struct stat stbuf;
+  char buf[MAX_PATH];
+
+  d->first_record = NULL;
+
+  dirp = opendir(source); 
+
+  if (dirp != NULL)
+    {
+      while ((entry = readdir (dirp)) != NULL)
+	  {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+          continue; // skip self and parent
+
+        if (entry->d_type == DT_REG) // normal file
+		    {
+              // Check for an absolute path
+              if (source[0] == DIR_SEPARATOR_CHAR)
+                {
+                  strcpy(buf, source);
+                  strcat(buf, DIR_SEPARATOR_STRING);
+                  strcat(buf, entry->d_name);
+                }
+              else
+                {
+                  getcwd(buf, sizeof(buf));
+                  strcat(buf, DIR_SEPARATOR_STRING);
+                  strcat(buf, source);
+                  strcat(buf, entry->d_name);
+                }
+              if (stat(buf, &stbuf) == -1)
+                {
+                  error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
+                  return;
+                }
+
+		      if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
+			{
+			  convert_date_and_time(&d->date_and_time, &stbuf.st_size);
+			}
+		      else
+			{
+			  if (verbosity == VERBOSE)
+			    {
+			      printf("%d: file %s\n", d->level, buf);
+			    }
+			  (void) new_directory_record(entry, &stbuf, d);
+			}
+         }
+       }
+      closedir (dirp);
+    }
+  else
+    {
+      error_exit("Can't open %s\n", source);
+      return;
+    }
+
+  dirp = opendir(source); 
+  if (dirp != NULL)
+    {
+      while ((entry = readdir (dirp)) != NULL)
+	{
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+          continue; // skip self and parent
+
+	  if (entry->d_type == DT_DIR) // directory
+	    {
+	      old_end_source = end_source;
+	      append_string_to_source(entry->d_name);
+	      *end_source++ = DIR_SEPARATOR_CHAR;
+	      if (verbosity == VERBOSE)
+		{
+		  *end_source = 0;
+		  printf("%d: directory %s\n", d->level + 1, source);
+		}
+	      if (d->level < MAX_LEVEL)
+		{
+          // Check for an absolute path
+          if (source[0] == DIR_SEPARATOR_CHAR)
+            {
+              strcpy(buf, source);
+            }
+          else
+            {
+              getcwd(buf, sizeof(buf));
+              strcat(buf, DIR_SEPARATOR_STRING);
+              strcat(buf, source);
+            }
+          if (stat(buf, &stbuf) == -1)
+            {
+              error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
+              return;
+            }
+		  new_d = new_directory_record(entry, &stbuf, d);
+		  new_d->next_in_path_table = root.next_in_path_table;
+		  root.next_in_path_table = new_d;
+		  new_d->level = d->level + 1;
+		  make_directory_records(new_d);
+		}
+	      else
+		{
+		  error_exit("Directory is nested too deep");
+		}
+	      end_source = old_end_source;
+	    }
+       }
+      closedir (dirp);
+    }
+
+  // sort directory
+  d->first_record = sort_linked_list(d->first_record, 0, compare_directory_order);
+}
+
+#endif
+
 /*-----------------------------------------------------------------------------
 This function loads the file specifications for the file or directory
 corresponding to the specified directory record into the source[] buffer. It
@@ -613,7 +839,7 @@ static void get_file_specifications(PDIR_RECORD d)
       append_string_to_source(d->extension);
     }
     if (d->flags & DIRECTORY_FLAG)
-      *end_source++ = '\\';
+      *end_source++ = DIR_SEPARATOR_CHAR;
   }
 }
 
@@ -773,12 +999,12 @@ static void pass(void)
   root.path_table_index = 1;
   for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
     {
-      name_length = strlen(d->name);
+      name_length = strlen(d->name_on_cd);
       write_byte(name_length);
       write_byte(0);  // number of sectors in extended attribute record
       write_little_endian_dword(d->sector);
       write_little_endian_word(d->parent->path_table_index);
-      write_string(d->name);
+      write_string(d->name_on_cd);
       if (name_length & 1)
         write_byte(0);
       d->path_table_index = ++index;
@@ -800,12 +1026,12 @@ static void pass(void)
 
   for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
     {
-      name_length = strlen(d->name);
+      name_length = strlen(d->name_on_cd);
       write_byte(name_length);
       write_byte(0);  // number of sectors in extended attribute record
       write_big_endian_dword(d->sector);
       write_big_endian_word(d->parent->path_table_index);
-      write_string(d->name);
+      write_string(d->name_on_cd);
       if (name_length & 1)
         write_byte(0);
     }
@@ -1010,13 +1236,13 @@ int main(int argc, char **argv)
     error_exit("Missing image file specifications");
 
 
-  // set source[] and end_source to source directory, with a terminating \
+  // set source[] and end_source to source directory, with a terminating directory separator
 
   end_source = source + strlen(source);
   if (end_source[-1] == ':')
     *end_source++ = '.';
-  if (end_source[-1] != '\\')
-    *end_source++ = '\\';
+  if (end_source[-1] != DIR_SEPARATOR_CHAR)
+    *end_source++ = DIR_SEPARATOR_CHAR;
 
   // scan all files and create directory structure in memory
 
