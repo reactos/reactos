@@ -339,9 +339,7 @@ bool DesktopShellView::DoContextMenu(int x, int y)
 	for(int i=pida->cidl; i>0; --i)
 		apidl[i-1] = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[i]);
 
-	ShellFolder folder(parent_pidl);
-
-	hr = ShellFolderContextMenu(folder, _hwnd, pida->cidl, apidl, x, y);
+	hr = ShellFolderContextMenu(ShellFolder(parent_pidl), _hwnd, pida->cidl, apidl, x, y);
 
 	selection->Release();
 

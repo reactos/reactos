@@ -469,7 +469,5 @@ HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int 
 		pcm->Release();
 	}
 
-	shell_folder->Release();
-
 	return hr;
 }

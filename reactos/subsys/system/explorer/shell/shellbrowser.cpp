@@ -211,24 +211,11 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 	if (itemData) {
 		Entry* entry = (Entry*)itemData;
 
-		IShellFolder* shell_folder;
-		ShellDirectory* dir;
+		ShellDirectory* dir = static_cast<ShellDirectory*>(entry->_up);
+		ShellFolder folder = dir? dir->_folder: Desktop();
+		LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			dir = static_cast<ShellDirectory*>(entry);
-			shell_folder = dir->_folder;
-		} else {
-			dir = static_cast<ShellDirectory*>(entry->_up);
-			shell_folder = dir? dir->_folder: Desktop();
-		}
-
-		shell_folder->AddRef();
-
-		if (shell_folder) {
-			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
-
-			ShellFolderContextMenu(shell_folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y);
-		}
+		CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y));
 	}
 }
 
