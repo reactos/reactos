@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.15 2003/02/18 22:06:53 chorns Exp $
+/* $Id: copy.c,v 1.16 2003/05/25 21:50:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -196,7 +196,6 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
 
   if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
     {
-      CcRosReleaseCacheSegment(CacheSeg->Bcb, CacheSeg, FALSE, FALSE, FALSE);
       DPRINT1("IoPageRead failed, Status %x\n", Status);
       return Status;
     }
@@ -322,6 +321,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 	    {
 	      IoStatus->Information = 0;
 	      IoStatus->Status = Status;
+              CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	      return FALSE;
 	    }
 	}
@@ -440,6 +440,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 	 {
 	   if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
 	     {
+               CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	       return FALSE;
 	     }
 	 }
