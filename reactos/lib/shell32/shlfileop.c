@@ -248,6 +248,8 @@ static DWORD SHNotifyCreateDirectoryA(LPCSTR path, LPSECURITY_ATTRIBUTES sec)
 	return SHNotifyCreateDirectoryW(wPath, sec);
 }
 
+/**********************************************************************/
+
 static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
 {
 	TRACE("(%s, %p)\n", debugstr_w(path), sec);
@@ -272,6 +274,8 @@ static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
 	}
 	return GetLastError();
 }
+
+/**********************************************************************/
 
 BOOL WINAPI Win32CreateDirectoryAW(LPCVOID path, LPSECURITY_ATTRIBUTES sec)
 {

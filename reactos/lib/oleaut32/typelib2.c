@@ -86,6 +86,36 @@ WINE_DEFAULT_DEBUG_CHANNEL(typelib2);
  * METHODS
  */
 
+/******************************************************************************
+ * ITypeLib2 {OLEAUT32}
+ *
+ * NOTES
+ *  The ITypeLib2 interface provides an interface whereby one may query MSFT
+ *  format type library (.tlb) files.
+ *
+ *  This interface inherits from ITypeLib, and can be freely cast back and
+ *  forth between an ITypeLib and an ITypeLib2 on local clients. This
+ *  dispensation applies only to ITypeLib objects obtained on MSFT format type
+ *  libraries (those made through CreateTypeLib2).
+ *
+ * METHODS
+ */
+
+/******************************************************************************
+ * ITypeInfo2 {OLEAUT32}
+ *
+ * NOTES
+ *  The ITypeInfo2 interface provides an interface whereby one may query type
+ *  information stored in MSFT format type library (.tlb) files.
+ *
+ *  This interface inherits from ITypeInfo, and can be freely cast back and
+ *  forth between an ITypeInfo and an ITypeInfo2 on local clients. This
+ *  dispensation applies only to ITypeInfo objects obtained on MSFT format type
+ *  libraries (those made through CreateTypeLib2).
+ *
+ * METHODS
+ */
+
 /*================== Implementation Structures ===================================*/
 
 enum MSFT_segment_index {
@@ -137,6 +167,9 @@ typedef struct tagICreateTypeLib2Impl
     struct tagICreateTypeInfo2Impl *last_typeinfo;
 } ICreateTypeLib2Impl;
 
+#define _ITypeLib2_Offset(impl) ((int)(&(((impl*)0)->lpVtblTypeLib2)))
+#define ICOM_THIS_From_ITypeLib2(impl, iface) impl* This = (impl*)(((char*)iface)-_ITypeLib2_Offset(impl))
+
 typedef struct tagICreateTypeInfo2Impl
 {
     ICOM_VFIELD(ICreateTypeInfo2);
@@ -181,7 +214,7 @@ static void ctl2_init_header(
     This->typelib_header.posguid = -1;
     This->typelib_header.lcid = 0x0409; /* or do we use the current one? */
     This->typelib_header.lcid2 = 0x0409;
-    This->typelib_header.varflags = 0x41;
+    This->typelib_header.varflags = 0x40;
     This->typelib_header.version = 0;
     This->typelib_header.flags = 0;
     This->typelib_header.nrtypeinfos = 0;
@@ -274,7 +307,7 @@ static int ctl2_find_name(
 static int ctl2_encode_name(
 	ICreateTypeLib2Impl *This, /* [I] The typelib to operate against (used for LCID only). */
 	WCHAR *name,               /* [I] The name string to encode. */
-	char **result)             /* [O] A pointer to a pointer to recieve the encoded name. */
+	char **result)             /* [O] A pointer to a pointer to receive the encoded name. */
 {
     int length;
     static char converted_name[0x104];
@@ -318,7 +351,7 @@ static int ctl2_encode_name(
 static int ctl2_encode_string(
 	ICreateTypeLib2Impl *This, /* [I] The typelib to operate against (not used?). */
 	WCHAR *string,             /* [I] The string to encode. */
-	char **result)             /* [O] A pointer to a pointer to recieve the encoded string. */
+	char **result)             /* [O] A pointer to a pointer to receive the encoded string. */
 {
     int length;
     static char converted_string[0x104];
@@ -657,6 +690,89 @@ static int ctl2_alloc_importfile(
 }
 
 /****************************************************************************
+ *	ctl2_alloc_custdata
+ *
+ *  Allocates and initializes a "custom data" value in a type library.
+ *
+ * RETURNS
+ *
+ *  Success: The offset of the new custdata.
+ *  Failure:
+ *
+ *    -1: Out of memory.
+ *    -2: Unable to encode VARIANT data (typically a bug).
+ */
+static int ctl2_alloc_custdata(
+	ICreateTypeLib2Impl *This, /* [I] The type library in which to encode the value. */
+	VARIANT *pVarVal)          /* [I] The value to encode. */
+{
+    int offset;
+
+    TRACE("(%p,%p(%d))\n",This,pVarVal,V_VT(pVarVal));
+
+    switch (V_VT(pVarVal)) {
+    case VT_UI4:
+	offset = ctl2_alloc_segment(This, MSFT_SEG_CUSTDATA, 8, 0);
+	if (offset == -1) return offset;
+
+	*((unsigned short *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset]) = VT_UI4;
+	*((unsigned long *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+2]) = V_UI4(pVarVal);
+	break;
+
+    default:
+	FIXME("Unknown variable encoding vt %d.\n", V_VT(pVarVal));
+	return -2;
+    }
+
+    return offset;
+}
+
+/****************************************************************************
+ *	ctl2_set_custdata
+ *
+ *  Adds a custom data element to an object in a type library.
+ *
+ * RETURNS
+ *
+ *  Success: S_OK.
+ *  Failure: One of E_INVALIDARG or E_OUTOFMEMORY.
+ */
+static HRESULT ctl2_set_custdata(
+	ICreateTypeLib2Impl *This, /* [I] The type library to store the custom data in. */
+	REFGUID guid,              /* [I] The GUID used as a key to retrieve the custom data. */
+	VARIANT *pVarVal,          /* [I] The custom data itself. */
+	int *offset)               /* [I/O] The list of custom data to prepend to. */
+{
+    MSFT_GuidEntry guidentry;
+    int dataoffset;
+    int guidoffset;
+    int custoffset;
+    int *custdata;
+
+    guidentry.guid = *guid;
+
+    guidentry.unk10 = -1;
+    guidentry.unk14 = -1;
+
+    guidoffset = ctl2_alloc_guid(This, &guidentry);
+    if (guidoffset == -1) return E_OUTOFMEMORY;
+    dataoffset = ctl2_alloc_custdata(This, pVarVal);
+    if (dataoffset == -1) return E_OUTOFMEMORY;
+    if (dataoffset == -2) return E_INVALIDARG;
+
+    custoffset = ctl2_alloc_segment(This, MSFT_SEG_CUSTDATAGUID, 12, 0);
+    if (custoffset == -1) return E_OUTOFMEMORY;
+
+    custdata = (int *)&This->typelib_segment_data[MSFT_SEG_CUSTDATAGUID][custoffset];
+    custdata[0] = guidoffset;
+    custdata[1] = dataoffset;
+    custdata[2] = *offset;
+    *offset = custoffset;
+
+    return S_OK;
+}
+
+/****************************************************************************
  *	ctl2_encode_typedesc
  *
  *  Encodes a type description, storing information in the TYPEDESC and ARRAYDESC
@@ -699,6 +815,17 @@ static int ctl2_encode_typedesc(
 	*alignment = 1;
 	break;
 
+    case VT_INT:
+	*encoded_tdesc = 0x80000000 | (VT_I4 << 16) | VT_INT;
+	if ((This->typelib_header.varflags & 0x0f) == SYS_WIN16) {
+	    *width = 2;
+	    *alignment = 2;
+	} else {
+	    *width = 4;
+	    *alignment = 4;
+	}
+	break;
+
     case VT_UINT:
 	*encoded_tdesc = 0x80000000 | (VT_UI4 << 16) | VT_UINT;
 	if ((This->typelib_header.varflags & 0x0f) == SYS_WIN16) {
@@ -711,6 +838,8 @@ static int ctl2_encode_typedesc(
 	break;
 
     case VT_UI2:
+    case VT_I2:
+    case VT_BOOL:
 	*encoded_tdesc = default_tdesc;
 	*width = 2;
 	*alignment = 2;
@@ -718,12 +847,19 @@ static int ctl2_encode_typedesc(
 
     case VT_I4:
     case VT_UI4:
+    case VT_R4:
     case VT_ERROR:
     case VT_BSTR:
     case VT_HRESULT:
 	*encoded_tdesc = default_tdesc;
 	*width = 4;
 	*alignment = 4;
+	break;
+
+    case VT_CY:
+	*encoded_tdesc = default_tdesc;
+	*width = 8;
+	*alignment = 4; /* guess? */
 	break;
 
     case VT_VOID:
@@ -857,6 +993,31 @@ static int ctl2_encode_typedesc(
     }
 
     return 0;
+}
+
+/****************************************************************************
+ *	ctl2_find_nth_reference
+ *
+ *  Finds a reference by index into the linked list of reference records.
+ *
+ * RETURNS
+ *
+ *  Success: Offset of the desired reference record.
+ *  Failure: -1.
+ */
+static int ctl2_find_nth_reference(
+	ICreateTypeLib2Impl *This, /* [I] The type library in which to search. */
+	int offset,                /* [I] The starting offset of the reference list. */
+	int index)                 /* [I] The index of the reference to find. */
+{
+    MSFT_RefRecord *ref;
+
+    for (; index && (offset != -1); index--) {
+	ref = (MSFT_RefRecord *)&This->typelib_segment_data[MSFT_SEG_REFERENCES][offset];
+	offset = ref->onext;
+    }
+
+    return offset;
 }
 
 /*================== ICreateTypeInfo2 Implementation ===================================*/
@@ -1102,13 +1263,12 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddRefTypeInfo(
 
     if (container == (ITypeLib *)&This->typelib->lpVtblTypeLib2) {
 	*phRefType = This->typelib->typelib_typeinfo_offsets[index];
-	This->typelib->ref--; /* FIXME: no vtbl yet. */
-	return S_OK;
     } else {
 	FIXME("(%p,%p,%p), pTInfo from different typelib.\n", iface, pTInfo, phRefType);
-	ITypeLib_Release(container);
-	return S_OK;
     }
+
+    ITypeLib_Release(container);
+    return S_OK;
 }
 
 /******************************************************************************
@@ -1205,8 +1365,63 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddImplType(
         UINT index,
         HREFTYPE hRefType)
 {
-    FIXME("(%p,%d,%ld), stub!\n", iface, index, hRefType);
-    return E_OUTOFMEMORY;
+    ICOM_THIS(ICreateTypeInfo2Impl, iface);
+
+    TRACE("(%p,%d,%ld)\n", iface, index, hRefType);
+
+    if ((This->typeinfo->typekind & 15) == TKIND_COCLASS) {
+	int offset;
+	MSFT_RefRecord *ref;
+
+	if (index == 0) {
+	    if (This->typeinfo->datatype1 != -1) return TYPE_E_ELEMENTNOTFOUND;
+
+	    offset = ctl2_alloc_segment(This->typelib, MSFT_SEG_REFERENCES, sizeof(MSFT_RefRecord), 0);
+	    if (offset == -1) return E_OUTOFMEMORY;
+
+	    This->typeinfo->datatype1 = offset;
+	} else {
+	    int lastoffset;
+
+	    lastoffset = ctl2_find_nth_reference(This->typelib, This->typeinfo->datatype1, index - 1);
+	    if (lastoffset == -1) return TYPE_E_ELEMENTNOTFOUND;
+
+	    ref = (MSFT_RefRecord *)&This->typelib->typelib_segment_data[MSFT_SEG_REFERENCES][lastoffset];
+	    if (ref->onext != -1) return TYPE_E_ELEMENTNOTFOUND;
+
+	    offset = ctl2_alloc_segment(This->typelib, MSFT_SEG_REFERENCES, sizeof(MSFT_RefRecord), 0);
+	    if (offset == -1) return E_OUTOFMEMORY;
+
+	    ref->onext = offset;
+	}
+
+	ref = (MSFT_RefRecord *)&This->typelib->typelib_segment_data[MSFT_SEG_REFERENCES][offset];
+
+	ref->reftype = hRefType;
+	ref->flags = 0;
+	ref->oCustData = -1;
+	ref->onext = -1;
+    } else if ((This->typeinfo->typekind & 15) == TKIND_DISPATCH) {
+	FIXME("dispatch case unhandled.\n");
+    } else if ((This->typeinfo->typekind & 15) == TKIND_INTERFACE) {
+	if (This->typeinfo->cImplTypes) {
+	    return (index == 1)? TYPE_E_BADMODULEKIND: TYPE_E_ELEMENTNOTFOUND;
+	}
+
+	if (index != 0)  return TYPE_E_ELEMENTNOTFOUND;
+
+	This->typeinfo->cImplTypes++;
+
+	/* hacked values for IDispatch only, and maybe only for stdole. */
+	This->typeinfo->cbSizeVft += 0x0c; /* hack */
+	This->typeinfo->datatype1 = hRefType;
+	This->typeinfo->datatype2 = (3 << 16) | 1; /* ? */
+    } else {
+	FIXME("AddImplType unsupported on typekind %d\n", This->typeinfo->typekind & 15);
+	return E_OUTOFMEMORY;
+    }
+
+    return S_OK;
 }
 
 /******************************************************************************
@@ -1219,8 +1434,23 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetImplTypeFlags(
         UINT index,
         INT implTypeFlags)
 {
-    FIXME("(%p,%d,0x%x), stub!\n", iface, index, implTypeFlags);
-    return E_OUTOFMEMORY;
+    ICOM_THIS(ICreateTypeInfo2Impl, iface);
+    int offset;
+    MSFT_RefRecord *ref;
+
+    TRACE("(%p,%d,0x%x)\n", iface, index, implTypeFlags);
+
+    if ((This->typeinfo->typekind & 15) != TKIND_COCLASS) {
+	return TYPE_E_BADMODULEKIND;
+    }
+
+    offset = ctl2_find_nth_reference(This->typelib, This->typeinfo->datatype1, index);
+    if (offset == -1) return TYPE_E_ELEMENTNOTFOUND;
+
+    ref = (MSFT_RefRecord *)&This->typelib->typelib_segment_data[MSFT_SEG_REFERENCES][offset];
+    ref->flags = implTypeFlags;
+
+    return S_OK;
 }
 
 /******************************************************************************
@@ -1232,8 +1462,39 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetAlignment(
         ICreateTypeInfo2* iface,
         WORD cbAlignment)
 {
-    FIXME("(%p,%d), stub!\n", iface, cbAlignment);
-    return E_OUTOFMEMORY;
+    ICOM_THIS(ICreateTypeInfo2Impl, iface);
+
+    TRACE("(%p,%d)\n", iface, cbAlignment);
+
+    if (!cbAlignment) return E_INVALIDARG;
+    if (cbAlignment > 16) return E_INVALIDARG;
+
+    This->typeinfo->typekind &= ~0xffc0;
+    This->typeinfo->typekind |= cbAlignment << 6;
+
+    /* FIXME: There's probably some way to simplify this. */
+    switch (This->typeinfo->typekind & 15) {
+    case TKIND_ALIAS:
+    default:
+	break;
+
+    case TKIND_ENUM:
+    case TKIND_INTERFACE:
+    case TKIND_DISPATCH:
+    case TKIND_COCLASS:
+	if (cbAlignment > 4) cbAlignment = 4;
+	break;
+
+    case TKIND_RECORD:
+    case TKIND_MODULE:
+    case TKIND_UNION:
+	cbAlignment = 1;
+	break;
+    }
+
+    This->typeinfo->typekind |= cbAlignment << 11;
+
+    return S_OK;
 }
 
 /******************************************************************************
@@ -2560,34 +2821,34 @@ static ICreateTypeInfo2 *ICreateTypeInfo2_Constructor(ICreateTypeLib2Impl *typel
 
     pCreateTypeInfo2Impl->typeinfo = typeinfo;
 
-    if (tkind == TKIND_ENUM) {
-	typeinfo->typekind |= TKIND_ENUM | 0x2120;
+    typeinfo->typekind |= tkind | 0x20;
+    ICreateTypeInfo2_SetAlignment((ICreateTypeInfo2 *)pCreateTypeInfo2Impl, 4);
+
+    switch (tkind) {
+    case TKIND_ENUM:
+    case TKIND_INTERFACE:
+    case TKIND_DISPATCH:
+    case TKIND_COCLASS:
 	typeinfo->size = 4;
-    } else if (tkind == TKIND_RECORD) {
-	typeinfo->typekind |= TKIND_RECORD | 0x0920;
+	break;
+
+    case TKIND_RECORD:
+    case TKIND_UNION:
 	typeinfo->size = 0;
-    } else if (tkind == TKIND_MODULE) {
-	typeinfo->typekind |= TKIND_MODULE | 0x0920;
+	break;
+
+    case TKIND_MODULE:
 	typeinfo->size = 2;
-    } else if (tkind == TKIND_INTERFACE) {
-	typeinfo->typekind |= TKIND_INTERFACE | 0x2120;
-	typeinfo->size = 4;
-    } else if (tkind == TKIND_DISPATCH) {
-	typeinfo->typekind |= TKIND_DISPATCH | 0x2120;
-	typeinfo->size = 4;
-    } else if (tkind == TKIND_COCLASS) {
-	typeinfo->typekind |= TKIND_COCLASS | 0x2120;
-	typeinfo->size = 4;
-    } else if (tkind == TKIND_ALIAS) {
-	typeinfo->typekind |= TKIND_ALIAS | 0x2120;
-	typeinfo->size = -0x75; /* ??? */
-    } else if (tkind == TKIND_UNION) {
-	typeinfo->typekind |= TKIND_UNION | 0x0920;
-	typeinfo->size = 0;
-    } else {
+	break;
+
+    case TKIND_ALIAS:
+	typeinfo->size = -0x75;
+	break;
+
+    default:
 	FIXME("(%s,%d), unrecognized typekind %d\n", debugstr_w(szName), tkind, tkind);
-	typeinfo->typekind |= tkind;
 	typeinfo->size = 0xdeadbeef;
+	break;
     }
 
     if (typelib->last_typeinfo) typelib->last_typeinfo->next_typeinfo = pCreateTypeInfo2Impl;
@@ -2624,7 +2885,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnQueryInterface(
         *ppvObject = This;
     } else if (IsEqualIID(riid, &IID_ITypeLib) ||
 	       IsEqualIID(riid, &IID_ITypeLib2)) {
-	FIXME("QI for ITypeLib interfaces not supported yet.\n");
+	*ppvObject = &This->lpVtblTypeLib2;
     }
 
     if(*ppvObject)
@@ -2944,6 +3205,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSaveAllChanges(ICreateTypeLib2 * iface)
     filepos += ctl2_finalize_segment(This, filepos, MSFT_SEG_GUID);
     filepos += ctl2_finalize_segment(This, filepos, MSFT_SEG_IMPORTINFO);
     filepos += ctl2_finalize_segment(This, filepos, MSFT_SEG_IMPORTFILES);
+    filepos += ctl2_finalize_segment(This, filepos, MSFT_SEG_REFERENCES);
     filepos += ctl2_finalize_segment(This, filepos, MSFT_SEG_NAMEHASH);
     filepos += ctl2_finalize_segment(This, filepos, MSFT_SEG_NAME);
     filepos += ctl2_finalize_segment(This, filepos, MSFT_SEG_STRING);
@@ -2962,6 +3224,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSaveAllChanges(ICreateTypeLib2 * iface)
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_GUID        )) return retval;
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_IMPORTINFO  )) return retval;
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_IMPORTFILES )) return retval;
+    if (!ctl2_write_segment(This, hFile, MSFT_SEG_REFERENCES  )) return retval;
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_NAMEHASH    )) return retval;
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_NAME        )) return retval;
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_STRING      )) return retval;
@@ -3012,8 +3275,11 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetCustData(
 	REFGUID guid,            /* [I] The GUID used as a key to retrieve the custom data. */
 	VARIANT *pVarVal)        /* [I] The custom data itself. */
 {
-    FIXME("(%p,%s,%p), stub!\n", iface, debugstr_guid(guid), pVarVal);
-    return E_OUTOFMEMORY;
+    ICOM_THIS(ICreateTypeLib2Impl, iface);
+
+    TRACE("(%p,%s,%p)\n", iface, debugstr_guid(guid), pVarVal);
+
+    return ctl2_set_custdata(This, guid, pVarVal, &This->typelib_header.CustomDataOffset);
 }
 
 /******************************************************************************
@@ -3052,6 +3318,307 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetHelpStringDll(
     return E_OUTOFMEMORY;
 }
 
+/*================== ITypeLib2 Implementation ===================================*/
+
+/******************************************************************************
+ * ITypeLib2_QueryInterface {OLEAUT32}
+ *
+ *  See IUnknown_QueryInterface.
+ */
+static HRESULT WINAPI ITypeLib2_fnQueryInterface(ITypeLib2 * iface, REFIID riid, LPVOID * ppv)
+{
+    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+
+    return ICreateTypeLib2_QueryInterface((ICreateTypeLib2 *)This, riid, ppv);
+}
+
+/******************************************************************************
+ * ITypeLib2_AddRef {OLEAUT32}
+ *
+ *  See IUnknown_AddRef.
+ */
+static ULONG WINAPI ITypeLib2_fnAddRef(ITypeLib2 * iface)
+{
+    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+
+    return ICreateTypeLib2_AddRef((ICreateTypeLib2 *)This);
+}
+
+/******************************************************************************
+ * ITypeLib2_Release {OLEAUT32}
+ *
+ *  See IUnknown_Release.
+ */
+static ULONG WINAPI ITypeLib2_fnRelease(ITypeLib2 * iface)
+{
+    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+
+    return ICreateTypeLib2_Release((ICreateTypeLib2 *)This);
+}
+
+/******************************************************************************
+ * ITypeLib2_GetTypeInfoCount {OLEAUT32}
+ *
+ *  See ITypeLib_GetTypeInfoCount.
+ */
+static UINT WINAPI ITypeLib2_fnGetTypeInfoCount(
+        ITypeLib2 * iface)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p), stub!\n", iface);
+
+    return 0;
+}
+
+/******************************************************************************
+ * ITypeLib2_GetTypeInfo {OLEAUT32}
+ *
+ *  See ITypeLib_GetTypeInfo.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetTypeInfo(
+        ITypeLib2 * iface,
+        UINT index,
+        ITypeInfo** ppTInfo)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%d,%p), stub!\n", iface, index, ppTInfo);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ITypeLib2_GetTypeInfoType {OLEAUT32}
+ *
+ *  See ITypeLib_GetTypeInfoType.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetTypeInfoType(
+        ITypeLib2 * iface,
+        UINT index,
+        TYPEKIND* pTKind)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%d,%p), stub!\n", iface, index, pTKind);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ITypeLib2_GetTypeInfoOfGuid {OLEAUT32}
+ *
+ *  See ITypeLib_GetTypeInfoOfGuid.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetTypeInfoOfGuid(
+        ITypeLib2 * iface,
+        REFGUID guid,
+        ITypeInfo** ppTinfo)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%s,%p), stub!\n", iface, debugstr_guid(guid), ppTinfo);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ITypeLib2_GetLibAttr {OLEAUT32}
+ *
+ *  See ITypeLib_GetLibAttr.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetLibAttr(
+        ITypeLib2 * iface,
+        TLIBATTR** ppTLibAttr)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%p), stub!\n", iface, ppTLibAttr);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ITypeLib2_GetTypeComp {OLEAUT32}
+ *
+ *  See ITypeLib_GetTypeComp.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetTypeComp(
+        ITypeLib2 * iface,
+        ITypeComp** ppTComp)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%p), stub!\n", iface, ppTComp);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ITypeLib2_GetDocumentation {OLEAUT32}
+ *
+ *  See ITypeLib_GetDocumentation.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetDocumentation(
+        ITypeLib2 * iface,
+        INT index,
+        BSTR* pBstrName,
+        BSTR* pBstrDocString,
+        DWORD* pdwHelpContext,
+        BSTR* pBstrHelpFile)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%d,%p,%p,%p,%p), stub!\n", iface, index, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ITypeLib2_IsName {OLEAUT32}
+ *
+ *  See ITypeLib_IsName.
+ */
+static HRESULT WINAPI ITypeLib2_fnIsName(
+        ITypeLib2 * iface,
+        LPOLESTR szNameBuf,
+        ULONG lHashVal,
+        BOOL* pfName)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%s,%lx,%p), stub!\n", iface, debugstr_w(szNameBuf), lHashVal, pfName);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ITypeLib2_FindName {OLEAUT32}
+ *
+ *  See ITypeLib_FindName.
+ */
+static HRESULT WINAPI ITypeLib2_fnFindName(
+        ITypeLib2 * iface,
+        LPOLESTR szNameBuf,
+        ULONG lHashVal,
+        ITypeInfo** ppTInfo,
+        MEMBERID* rgMemId,
+        USHORT* pcFound)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%s,%lx,%p,%p,%p), stub!\n", iface, debugstr_w(szNameBuf), lHashVal, ppTInfo, rgMemId, pcFound);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ITypeLib2_ReleaseTLibAttr {OLEAUT32}
+ *
+ *  See ITypeLib_ReleaseTLibAttr.
+ */
+static void WINAPI ITypeLib2_fnReleaseTLibAttr(
+        ITypeLib2 * iface,
+        TLIBATTR* pTLibAttr)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%p), stub!\n", iface, pTLibAttr);
+}
+
+/******************************************************************************
+ * ICreateTypeLib2_GetCustData {OLEAUT32}
+ *
+ *  Retrieves a custom data value stored on a type library.
+ *
+ * RETURNS
+ *
+ *  Success: S_OK
+ *  Failure: E_OUTOFMEMORY or E_INVALIDARG.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetCustData(
+        ITypeLib2 * iface, /* [I] The type library in which to find the custom data. */
+        REFGUID guid,      /* [I] The GUID under which the custom data is stored. */
+        VARIANT* pVarVal)  /* [O] The custom data. */
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%s,%p), stub!\n", iface, debugstr_guid(guid), pVarVal);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ICreateTypeLib2_GetLibStatistics {OLEAUT32}
+ *
+ *  Retrieves some statistics about names in a type library, supposedly for
+ *  hash table optimization purposes.
+ *
+ * RETURNS
+ *
+ *  Success: S_OK
+ *  Failure: E_OUTOFMEMORY or E_INVALIDARG.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetLibStatistics(
+        ITypeLib2 * iface,      /* [I] The type library to get statistics about. */
+        ULONG* pcUniqueNames,   /* [O] The number of unique names in the type library. */
+        ULONG* pcchUniqueNames) /* [O] The number of changed (?) characters in names in the type library. */
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%p,%p), stub!\n", iface, pcUniqueNames, pcchUniqueNames);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ICreateTypeLib2_GetDocumentation2 {OLEAUT32}
+ *
+ *  Obtain locale-aware help string information.
+ *
+ * RETURNS
+ *
+ *  Success: S_OK
+ *  Failure: STG_E_INSUFFICIENTMEMORY or E_INVALIDARG.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetDocumentation2(
+        ITypeLib2 * iface,
+        INT index,
+        LCID lcid,
+        BSTR* pbstrHelpString,
+        DWORD* pdwHelpStringContext,
+        BSTR* pbstrHelpStringDll)
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%d,%ld,%p,%p,%p), stub!\n", iface, index, lcid, pbstrHelpString, pdwHelpStringContext, pbstrHelpStringDll);
+
+    return E_OUTOFMEMORY;
+}
+
+/******************************************************************************
+ * ICreateTypeLib2_GetAllCustData {OLEAUT32}
+ *
+ *  Retrieve all of the custom data for a type library.
+ *
+ * RETURNS
+ *
+ *  Success: S_OK
+ *  Failure: E_OUTOFMEMORY or E_INVALIDARG.
+ */
+static HRESULT WINAPI ITypeLib2_fnGetAllCustData(
+        ITypeLib2 * iface,   /* [I] The type library in which to find the custom data. */
+        CUSTDATA* pCustData) /* [O] The structure in which to place the custom data. */
+{
+/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+
+    FIXME("(%p,%p), stub!\n", iface, pCustData);
+
+    return E_OUTOFMEMORY;
+}
+
+
+/*================== ICreateTypeLib2 & ITypeLib2 VTABLEs And Creation ===================================*/
 
 static ICOM_VTABLE(ICreateTypeLib2) ctypelib2vt =
 {
@@ -3078,6 +3645,31 @@ static ICOM_VTABLE(ICreateTypeLib2) ctypelib2vt =
     ICreateTypeLib2_fnSetHelpStringDll
 };
 
+static ICOM_VTABLE(ITypeLib2) typelib2vt =
+{
+    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
+
+    ITypeLib2_fnQueryInterface,
+    ITypeLib2_fnAddRef,
+    ITypeLib2_fnRelease,
+
+    ITypeLib2_fnGetTypeInfoCount,
+    ITypeLib2_fnGetTypeInfo,
+    ITypeLib2_fnGetTypeInfoType,
+    ITypeLib2_fnGetTypeInfoOfGuid,
+    ITypeLib2_fnGetLibAttr,
+    ITypeLib2_fnGetTypeComp,
+    ITypeLib2_fnGetDocumentation,
+    ITypeLib2_fnIsName,
+    ITypeLib2_fnFindName,
+    ITypeLib2_fnReleaseTLibAttr,
+
+    ITypeLib2_fnGetCustData,
+    ITypeLib2_fnGetLibStatistics,
+    ITypeLib2_fnGetDocumentation2,
+    ITypeLib2_fnGetAllCustData,
+};
+
 static ICreateTypeLib2 *ICreateTypeLib2_Constructor(SYSKIND syskind, LPCOLESTR szFile)
 {
     ICreateTypeLib2Impl *pCreateTypeLib2Impl;
@@ -3098,6 +3690,8 @@ static ICreateTypeLib2 *ICreateTypeLib2_Constructor(SYSKIND syskind, LPCOLESTR s
     ctl2_init_header(pCreateTypeLib2Impl);
     ctl2_init_segdir(pCreateTypeLib2Impl);
 
+    pCreateTypeLib2Impl->typelib_header.varflags |= syskind;
+
     /*
      * The following two calls return an offset or -1 if out of memory. We
      * specifically need an offset of 0, however, so...
@@ -3112,6 +3706,7 @@ static ICreateTypeLib2 *ICreateTypeLib2_Constructor(SYSKIND syskind, LPCOLESTR s
     memset(pCreateTypeLib2Impl->typelib_namehash_segment, 0xff, 0x200);
 
     pCreateTypeLib2Impl->lpVtbl = &ctypelib2vt;
+    pCreateTypeLib2Impl->lpVtblTypeLib2 = &typelib2vt;
     pCreateTypeLib2Impl->ref = 1;
 
     if (failed) {

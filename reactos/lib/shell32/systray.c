@@ -246,6 +246,8 @@ void SYSTRAY_ItemSetMessage(SystrayItem *ptrayItem, UINT uCallbackMessage)
 
 void SYSTRAY_ItemSetIcon(SystrayItem *ptrayItem, HICON hIcon)
 {
+  if(ptrayItem->notifyIcon.hIcon)
+    DestroyIcon(ptrayItem->notifyIcon.hIcon);
   ptrayItem->notifyIcon.hIcon = CopyIcon(hIcon);
   InvalidateRect(ptrayItem->hWnd, NULL, TRUE);
 }

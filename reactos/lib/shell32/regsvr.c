@@ -28,6 +28,7 @@
 #include "winerror.h"
 
 #include "ole2.h"
+#include "shlguid.h"
 
 #include "wine/debug.h"
 
@@ -471,6 +472,12 @@ static GUID const CLSID_Shortcut = {
 static struct regsvr_coclass const coclass_list[] = {
     {   &CLSID_Desktop,
 	"Desktop",
+	NULL,
+	"shell32.dll",
+	"Apartment"
+    },
+    {   &CLSID_MyComputer,
+	"My Computer",
 	NULL,
 	"shell32.dll",
 	"Apartment"
