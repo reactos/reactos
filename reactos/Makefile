@@ -18,7 +18,7 @@ include rules.mak
 COMPONENTS = iface_native iface_additional ntoskrnl
 BUS = acpi isapnp
 DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32 ws2_32 \
-       msafd msvcrt
+       msafd msvcrt shell32
 SUBSYS = smss win32k csrss
 
 #
