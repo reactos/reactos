@@ -1,6 +1,11 @@
 2003-05-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
-  Changes for compiling with w32api
+	* subsys/system/usetup/progress.c (ProgressNextStep): Check if NewPos
+	is odd.
+
+2003-05-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	Changes for compiling with w32api
 
 	* include/ddk/haltypes.h: Move ...
 	* include/ntos/haltypes.h: ... here.

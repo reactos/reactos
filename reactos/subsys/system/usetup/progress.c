@@ -223,7 +223,7 @@ ProgressNextStep(PPROGRESS Bar)
 				     &Written);
 	  coPos.X += Bar->Pos/2;
 
-	  if (Pos & 1)
+	  if (NewPos & 1)
 	    {
 	      FillConsoleOutputCharacter(0xDD,
 					 1,
