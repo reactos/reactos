@@ -55,6 +55,6 @@ BEGIN
 	IDS_SHV_COLUMN5         "Atributos"
 	IDS_SHV_COLUMN6         "Tamaño"
 	IDS_SHV_COLUMN7         "Tamaño disponible"
-	IDS_SHV_COLUMN8		"Name" /*FIXME*/
-	IDS_SHV_COLUMN9		"Comments" /*FIXME*/
+	IDS_SHV_COLUMN8         "Nombre"
+	IDS_SHV_COLUMN9         "Comentarios"
 END

@@ -174,7 +174,7 @@ BEGIN
 	IDS_SHV_COLUMN4		"Modificado"
 	IDS_SHV_COLUMN5		"Atributos"
 	IDS_SHV_COLUMN6		"Tamanho"
-	IDS_SHV_COLUMN7		"Disponível"
-	IDS_SHV_COLUMN8		"Name" /*FIXME*/
-	IDS_SHV_COLUMN9		"Comments" /*FIXME*/
+	IDS_SHV_COLUMN7		"Espaço disponível"
+	IDS_SHV_COLUMN8		"Nome"
+	IDS_SHV_COLUMN9		"Comentários"
 END

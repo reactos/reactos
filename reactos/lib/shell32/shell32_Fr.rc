@@ -177,6 +177,6 @@ BEGIN
 	IDS_SHV_COLUMN5		"Attributs"
 	IDS_SHV_COLUMN6		"Capacité"
 	IDS_SHV_COLUMN7		"Espace disponible"
-	IDS_SHV_COLUMN8		"Name" /*FIXME*/
-	IDS_SHV_COLUMN9		"Comments" /*FIXME*/
+	IDS_SHV_COLUMN8		"Nom"
+	IDS_SHV_COLUMN9		"Commentaires"
 END
