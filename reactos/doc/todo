@@ -1,31 +1,51 @@
-* Kernel things implemented [exceptions in brackets]
+* Function groups totally or partially unimplemented
 
-Spinlocks [Uniprocessor only]
-IRQ levels [Not APC_LEVEL or WAKE_LEVEL, uniprocessor only]
-ISRs [Partial, uniprocessor only]
-Timers [Untested]
-DPCs [Untested]
-Objects [Partial]
-Namespace [Partial]
-Handle tables [One process only]
-Threads [Some initial work]
-RTL list functions [All except sequenced lists]
-Zones [Untested]
-Memory pool [Working but semantics partially incompatiable]
-Device objects [Some but no support for layering]
-IRP [Partial]
-Memory sections [Partial, no file mappings]
-PCI interface [Probes but no support]
-CreateFile API [Device only]
-ReadFile/WriteFile API [Device only]
-MDL functions [Untested]
+       Dma functions (see hal/x86/dma.c)
+       PCI interface functions (see hal/x86/bios32.c, hal/x86/pci.c)
+       HalExamineMbr
+       Locale support (see ex/locale.c)
+       Shutdown support (see ex/power.c)
+       Zw(Set/Get)SystemInformation (see ex/sysinfo.c)
+       Adapter functions (see io/adapter.c)
+       Io cancelation support (see io/cancel, et al)
+       Directory change notification (see io/dir.c)
+       Error logging (see io/errlog.c)
+       Buffer flushing (see io/flush.c)
+       Io completion ports (see io/iocomp.c)
+       DeviceIoControl support (see io/ioctrl.c)
+       File locking (see io/lock.c)
+       Mailslots (see io/mailslot.c)
+       Named pipes (see io/npipe.c)
+       Hardware resource management (see io/resource.c)
+       File access checking (see io/share.c)
+       APCs to user-mode (see ke/apc.c, ke/apchelp.asm)
+       Exception support (see ke/catch.c)
+       Mutex support (see ke/mutex.c)
+       Semaphore support (see ke/sem.c)
+       Timer support (see ke/timer.c)
+       Properly calibrate delay loop (see ke/timer.c)
+       Waiting for multiple objects (see ke/wait.c)
+       Single linked lists (see rtl/slist.c)
+       Sequenced lists (see rtl/seqlist.c)
+       
+* Verify implementation
 
-* Kernel things unimplemented (partial)
+       Fast mutexes (see ex/fmutex.c)
+       
+* Major areas
 
-Add support for source level debugging to Bochs
-Support for remote debugging
-Process managment
-Dispatcher objects (Mutex, Semaphore etc)
-Investigate user and kernel mode APCs
-Asynchronous I/O
-Optimization
+       Security support (see se/*.c)
+       Registry support (see cm/*.c)
+       Paging support
+       File system cache support
+       SCSI miniport driver
+       Network support
+       Video drivers
+       USER and GDI modules
+       
+* Drivers
+       NTFS, EXT2 filesystems
+       Many others (use oem's where possible)
+       
+* For the future
+       DOS, Win16, POSIX subsystems
