@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.3 2000/04/15 23:14:32 ekohl Exp $
+/* $Id: sd.c,v 1.4 2001/12/04 20:47:26 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,24 +17,26 @@
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS STDCALL RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
-				     ULONG Revision)
+NTSTATUS STDCALL
+RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			    ULONG Revision)
 {
-   if (Revision != 1)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   SecurityDescriptor->Revision = 1;
-   SecurityDescriptor->Sbz1 = 0;
-   SecurityDescriptor->Control = 0;
-   SecurityDescriptor->Owner = NULL;
-   SecurityDescriptor->Group = NULL;
-   SecurityDescriptor->Sacl = NULL;
-   SecurityDescriptor->Dacl = NULL;
-   return(STATUS_SUCCESS);
+  if (Revision != 1)
+    return(STATUS_UNSUCCESSFUL);
+
+  SecurityDescriptor->Revision = 1;
+  SecurityDescriptor->Sbz1 = 0;
+  SecurityDescriptor->Control = 0;
+  SecurityDescriptor->Owner = NULL;
+  SecurityDescriptor->Group = NULL;
+  SecurityDescriptor->Sacl = NULL;
+  SecurityDescriptor->Dacl = NULL;
+
+  return(STATUS_SUCCESS);
 }
 
-ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor)
+ULONG STDCALL
+RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
    PSID Owner;
    PSID Group;
@@ -47,7 +49,7 @@ ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescript
    if (SecurityDescriptor->Owner != NULL)
      {
 	Owner = SecurityDescriptor->Owner;
-	if (SecurityDescriptor->Control & 0x80)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     Owner = (PSID)((ULONG)Owner + 
 			    (ULONG)SecurityDescriptor);
@@ -58,28 +60,28 @@ ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescript
    if (SecurityDescriptor->Group != NULL)
      {
 	Group = SecurityDescriptor->Group;
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     Group = (PSID)((ULONG)Group + (ULONG)SecurityDescriptor);
 	  }
 	Length = Length + ((sizeof(SID) + (Group->SubAuthorityCount - 1) *
 			   sizeof(ULONG) + 3) & 0xfc);
      }
-      if (SecurityDescriptor->Control & 0x4 &&
+      if (SecurityDescriptor->Control & SE_DACL_PRESENT &&
        SecurityDescriptor->Dacl != NULL)
      {
 	Dacl = SecurityDescriptor->Dacl;
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     Dacl = (PACL)((ULONG)Dacl + (PVOID)SecurityDescriptor);
 	  }
 	Length = Length + ((Dacl->AclSize + 3) & 0xfc);
      }
-   if (SecurityDescriptor->Control & 0x10 &&
+   if (SecurityDescriptor->Control & SE_SACL_PRESENT &&
        SecurityDescriptor->Sacl != NULL)
      {
 	Sacl = SecurityDescriptor->Sacl;
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     Sacl = (PACL)((ULONG)Sacl + (PVOID)SecurityDescriptor);
 	  }
@@ -88,16 +90,18 @@ ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescript
    return(Length);
 }
 
-NTSTATUS STDCALL RtlGetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
-				      PBOOLEAN DaclPresent,
-				      PACL* Dacl,
-				      PBOOLEAN DaclDefaulted)
+
+NTSTATUS STDCALL
+RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			     PBOOLEAN DaclPresent,
+			     PACL* Dacl,
+			     PBOOLEAN DaclDefaulted)
 {
    if (SecurityDescriptor->Revision != 1)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (!(SecurityDescriptor->Control & 0x4))
+   if (!(SecurityDescriptor->Control & SE_DACL_PRESENT))
      {
 	*DaclPresent = 0;
 	return(STATUS_SUCCESS);
@@ -109,7 +113,7 @@ NTSTATUS STDCALL RtlGetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDesc
      }
    else
      {
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     *Dacl = (PACL)((ULONG)SecurityDescriptor->Dacl +
 			    (PVOID)SecurityDescriptor);
@@ -119,7 +123,7 @@ NTSTATUS STDCALL RtlGetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDesc
 	     *Dacl = SecurityDescriptor->Dacl;
 	  }
      }
-   if (SecurityDescriptor->Control & 0x8)
+   if (SecurityDescriptor->Control & SE_DACL_DEFAULTED)
      {
 	*DaclDefaulted = 1;
      }
@@ -130,63 +134,71 @@ NTSTATUS STDCALL RtlGetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDesc
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL RtlSetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
-				      BOOLEAN DaclPresent,
-				      PACL Dacl,
-				      BOOLEAN DaclDefaulted)
+
+NTSTATUS STDCALL
+RtlSetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			     BOOLEAN DaclPresent,
+			     PACL Dacl,
+			     BOOLEAN DaclDefaulted)
 {
    if (SecurityDescriptor->Revision != 1)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (SecurityDescriptor->Control & 0x8000)
+   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
    if (!DaclPresent)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x4);
+	SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_DACL_PRESENT);
 	return(STATUS_SUCCESS);
      }
-   SecurityDescriptor->Control = SecurityDescriptor->Control | 0x4;
+   SecurityDescriptor->Control = SecurityDescriptor->Control | SE_DACL_PRESENT;
    SecurityDescriptor->Dacl = Dacl;
-   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x8);
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_DACL_DEFALTED);
    if (DaclDefaulted)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control | 0x80;
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_DACL_DEFALTED;
      }
    return(STATUS_SUCCESS);
 }
 
-BOOLEAN STDCALL RtlValidSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor)
+
+BOOLEAN STDCALL
+RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL RtlSetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
-				      PSID Owner,
-				      BOOLEAN OwnerDefaulted)
+
+NTSTATUS STDCALL
+RtlSetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      PSID Owner,
+			      BOOLEAN OwnerDefaulted)
 {
    if (SecurityDescriptor->Revision != 1)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (SecurityDescriptor->Control & 0x8000)
+   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
    SecurityDescriptor->Owner = Owner;
-   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x1);
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_OWNER_DEFAULTED);
    if (OwnerDefaulted)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control | 0x1;
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_OWNER_DEFAULTED;
      }
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL RtlGetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
-				       PSID* Owner,
-				       PBOOLEAN OwnerDefaulted)
+
+NTSTATUS STDCALL
+RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      PSID* Owner,
+			      PBOOLEAN OwnerDefaulted)
 {
    if (SecurityDescriptor->Revision != 1)
      {
@@ -194,7 +206,7 @@ NTSTATUS STDCALL RtlGetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
      }
    if (SecurityDescriptor->Owner != NULL)
      {
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     *Owner = (PSID)((ULONG)SecurityDescriptor->Owner +
 			     (PVOID)SecurityDescriptor);
@@ -208,7 +220,7 @@ NTSTATUS STDCALL RtlGetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
      {
 	*Owner = NULL;
      }
-   if (SecurityDescriptor->Control & 0x1)
+   if (SecurityDescriptor->Control & SE_OWNER_DEFAULTED)
      {
 	*OwnerDefaulted = 1;
      }
@@ -219,30 +231,34 @@ NTSTATUS STDCALL RtlGetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL RtlSetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
-				       PSID Group,
-				       BOOLEAN GroupDefaulted)
+
+NTSTATUS STDCALL
+RtlSetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      PSID Group,
+			      BOOLEAN GroupDefaulted)
 {
    if (SecurityDescriptor->Revision != 1)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (SecurityDescriptor->Control & 0x8000)
+   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
    SecurityDescriptor->Group = Group;
-   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x2);
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_GROUP_DEFAULTED);
    if (GroupDefaulted)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control | 0x2;
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_GROUP_DEFAULTED;
      }
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
-				       PSID* Group,
-				       PBOOLEAN GroupDefaulted)
+
+NTSTATUS STDCALL
+RtlGetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      PSID* Group,
+			      PBOOLEAN GroupDefaulted)
 {
    if (SecurityDescriptor->Revision != 1)
      {
@@ -250,7 +266,7 @@ NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
      }
    if (SecurityDescriptor->Group != NULL)
      {
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     *Group = (PSID)((ULONG)SecurityDescriptor->Group +
 			     (PVOID)SecurityDescriptor);
@@ -264,7 +280,7 @@ NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
      {
 	*Group = NULL;
      }
-   if (SecurityDescriptor->Control & 0x2)
+   if (SecurityDescriptor->Control & SE_GROUP_DEFAULTED)
      {
 	*GroupDefaulted = 1;
      }
@@ -275,13 +291,12 @@ NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-STDCALL
-RtlGetSaclSecurityDescriptor (
-	PSECURITY_DESCRIPTOR	SecurityDescriptor,
-	PBOOLEAN		SaclPresent,
-	PACL			*Sacl,
-	PBOOLEAN		SaclDefaulted)
+
+NTSTATUS STDCALL
+RtlGetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			     PBOOLEAN SaclPresent,
+			     PACL *Sacl,
+			     PBOOLEAN SaclDefaulted)
 {
    if (SecurityDescriptor->Revision != 1)
      {
@@ -320,14 +335,12 @@ RtlGetSaclSecurityDescriptor (
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-STDCALL
-RtlSetSaclSecurityDescriptor (
-	PSECURITY_DESCRIPTOR	SecurityDescriptor,
-	BOOLEAN			SaclPresent,
-	PACL			Sacl,
-	BOOLEAN			SaclDefaulted
-	)
+
+NTSTATUS STDCALL
+RtlSetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
+			     BOOLEAN SaclPresent,
+			     PACL Sacl,
+			     BOOLEAN SaclDefaulted)
 {
    if (SecurityDescriptor->Revision != 1)
      {
@@ -352,15 +365,21 @@ RtlSetSaclSecurityDescriptor (
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD,
-				     PSECURITY_DESCRIPTOR RelSD,
-				     PULONG BufferLength)
+
+NTSTATUS STDCALL
+RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
+			    PSECURITY_DESCRIPTOR RelSD,
+			    PULONG BufferLength)
 {
-   if (AbsSD->Control & 0x8000)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   UNIMPLEMENTED;
+  if (AbsSD->Control & SE_SELF_RELATIVE)
+    return(STATUS_BAD_DESCRIPTOR_FORMAT);
+
+//  return(RtlPMakeSelfRelativeSD (AbsSD, RelSD, BufferLength));
+
+  UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
+
+
 
 /* EOF */

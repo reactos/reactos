@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.5 2001/08/07 14:10:42 ekohl Exp $
+/* $Id: sd.c,v 1.6 2001/12/04 20:47:54 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -49,7 +49,7 @@ RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor)
    if (SecurityDescriptor->Owner != NULL)
      {
 	Owner = SecurityDescriptor->Owner;
-	if (SecurityDescriptor->Control & 0x80)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     Owner = (PSID)((ULONG)Owner + 
 			    (ULONG)SecurityDescriptor);
@@ -60,28 +60,28 @@ RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor)
    if (SecurityDescriptor->Group != NULL)
      {
 	Group = SecurityDescriptor->Group;
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     Group = (PSID)((ULONG)Group + (ULONG)SecurityDescriptor);
 	  }
 	Length = Length + ((sizeof(SID) + (Group->SubAuthorityCount - 1) *
 			   sizeof(ULONG) + 3) & 0xfc);
      }
-      if (SecurityDescriptor->Control & 0x4 &&
+      if (SecurityDescriptor->Control & SE_DACL_PRESENT &&
        SecurityDescriptor->Dacl != NULL)
      {
 	Dacl = SecurityDescriptor->Dacl;
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     Dacl = (PACL)((ULONG)Dacl + (PVOID)SecurityDescriptor);
 	  }
 	Length = Length + ((Dacl->AclSize + 3) & 0xfc);
      }
-   if (SecurityDescriptor->Control & 0x10 &&
+   if (SecurityDescriptor->Control & SE_SACL_PRESENT &&
        SecurityDescriptor->Sacl != NULL)
      {
 	Sacl = SecurityDescriptor->Sacl;
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     Sacl = (PACL)((ULONG)Sacl + (PVOID)SecurityDescriptor);
 	  }
@@ -100,7 +100,7 @@ RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (!(SecurityDescriptor->Control & 0x4))
+   if (!(SecurityDescriptor->Control & SE_DACL_PRESENT))
      {
 	*DaclPresent = 0;
 	return(STATUS_SUCCESS);
@@ -112,7 +112,7 @@ RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      }
    else
      {
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     *Dacl = (PACL)((ULONG)SecurityDescriptor->Dacl +
 			    (PVOID)SecurityDescriptor);
@@ -122,7 +122,7 @@ RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 	     *Dacl = SecurityDescriptor->Dacl;
 	  }
      }
-   if (SecurityDescriptor->Control & 0x8)
+   if (SecurityDescriptor->Control & SE_DACL_DEFAULTED)
      {
 	*DaclDefaulted = 1;
      }
@@ -143,21 +143,21 @@ RtlSetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (SecurityDescriptor->Control & 0x8000)
+   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
    if (!DaclPresent)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x4);
+	SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_DACL_PRESENT);
 	return(STATUS_SUCCESS);
      }
-   SecurityDescriptor->Control = SecurityDescriptor->Control | 0x4;
+   SecurityDescriptor->Control = SecurityDescriptor->Control | SE_DACL_PRESENT;
    SecurityDescriptor->Dacl = Dacl;
-   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x8);
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_DACL_DEFAULTED);
    if (DaclDefaulted)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control | 0x8;
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_DACL_DEFAULTED;
      }
    return(STATUS_SUCCESS);
 }
@@ -177,15 +177,15 @@ RtlSetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (SecurityDescriptor->Control & 0x8000)
+   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
    SecurityDescriptor->Owner = Owner;
-   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x1);
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_OWNER_DEFAULTED);
    if (OwnerDefaulted)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control | 0x1;
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_OWNER_DEFAULTED;
      }
    return(STATUS_SUCCESS);
 }
@@ -201,7 +201,7 @@ RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      }
    if (SecurityDescriptor->Owner != NULL)
      {
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     *Owner = (PSID)((ULONG)SecurityDescriptor->Owner +
 			     (PVOID)SecurityDescriptor);
@@ -215,7 +215,7 @@ RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      {
 	*Owner = NULL;
      }
-   if (SecurityDescriptor->Control & 0x1)
+   if (SecurityDescriptor->Control & SE_OWNER_DEFAULTED)
      {
 	*OwnerDefaulted = 1;
      }
@@ -235,15 +235,15 @@ RtlSetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (SecurityDescriptor->Control & 0x8000)
+   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
    SecurityDescriptor->Group = Group;
-   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(0x2);
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_GROUP_DEFAULTED);
    if (GroupDefaulted)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control | 0x2;
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_GROUP_DEFAULTED;
      }
    return(STATUS_SUCCESS);
 }
@@ -259,7 +259,7 @@ RtlGetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      }
    if (SecurityDescriptor->Group != NULL)
      {
-	if (SecurityDescriptor->Control & 0x8000)
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     *Group = (PSID)((ULONG)SecurityDescriptor->Group +
 			     (PVOID)SecurityDescriptor);
@@ -273,7 +273,7 @@ RtlGetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      {
 	*Group = NULL;
      }
-   if (SecurityDescriptor->Control & 0x2)
+   if (SecurityDescriptor->Control & SE_GROUP_DEFAULTED)
      {
 	*GroupDefaulted = 1;
      }
