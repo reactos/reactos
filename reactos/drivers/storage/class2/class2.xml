@@ -1,4 +1,5 @@
 <module name="class2" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<importlibrary definition="class2.def" />
 	<library>ntoskrnl</library>
 	<library>hal</library>

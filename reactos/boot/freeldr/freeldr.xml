@@ -1,14 +1,6 @@
-<module name="bootsector" type="bootsector">
-	<directory name="bootsect">
-		<file>dosmbr.asm</file>
-		<file>ext2.asm</file>
-		<file>fat32.asm</file>
-		<file>fat.asm</file>
-		<file>isoboot.asm</file>
-		<file>win2k.asm</file>
-		<file>wxpfat16.asm</file>
-	</directory>
-</module>
+<directory name="bootsect">
+	<xi:include href="bootsect/bootsect.xml" />
+</directory>
 <directory name="freeldr">
 	<xi:include href="freeldr/freeldr_startup.xml" />
 	<xi:include href="freeldr/freeldr_base64k.xml" />

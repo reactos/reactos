@@ -1,4 +1,5 @@
 <module name="ntdll" type="nativedll" baseaddress="${BASEADDRESS_NTDLL}">
+	<bootstrap base="reactos/system32" />
 	<importlibrary definition="def/ntdll.def" />
 	<define name="__NTDLL__" />
 	<define name="_DISABLE_TIDENTS" />

@@ -1,4 +1,5 @@
 <module name="ntfs" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<include base="ntfs">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

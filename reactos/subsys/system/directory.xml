@@ -40,6 +40,9 @@
 <directory name="userinit">
 	<xi:include href="userinit/userinit.xml" />
 </directory>
+<directory name="usetup">
+	<xi:include href="usetup/usetup.xml" />
+</directory>
 <directory name="vmwinst">
 	<xi:include href="vmwinst/vmwinst.xml" />
 </directory>

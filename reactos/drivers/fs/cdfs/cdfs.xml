@@ -1,4 +1,5 @@
 <module name="cdfs" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<include base="cdfs">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

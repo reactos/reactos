@@ -1,4 +1,5 @@
 <module name="scsiport" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<importlibrary definition="scsiport.def" />
 	<include base="scsiport">.</include>
 	<library>ntoskrnl</library>

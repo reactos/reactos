@@ -1,4 +1,5 @@
 <module name="keyboard" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<include base="keyboard">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

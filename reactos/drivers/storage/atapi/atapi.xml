@@ -1,4 +1,5 @@
 <module name="atapi" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<include base="atapi">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

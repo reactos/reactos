@@ -293,6 +293,8 @@ private:
 	void GenerateIsoModuleTarget ( const Module& module );
 	std::string GetCdDirectories ( const std::string bootcdDirectory,
 	                               const Module& module ) const;
+	std::string GetCdFiles ( const std::string bootcdDirectory,
+	                         const Module& module ) const;
 	void OutputBootstrapfileCopyCommands ( const std::string bootcdDirectory,
 	                                       const Module& module ) const;
 };

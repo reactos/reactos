@@ -16,6 +16,7 @@ ifeq ($(HOST),mingw32-linux)
 	dlltool = mingw32-dlltool
 	windres = mingw32-windres
 	rm = rm -f
+	cp = cp
 	NUL = /dev/null
 else # mingw32-windows
 	EXEPREFIX =
@@ -30,6 +31,7 @@ else # mingw32-windows
 	dlltool = dlltool
 	windres = windres
 	rm = del /f /q
+	cp = copy /y
 	NUL = NUL
 endif
 

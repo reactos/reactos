@@ -1,4 +1,5 @@
 <module name="disk" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>class2</library>

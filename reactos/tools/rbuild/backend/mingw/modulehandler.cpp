@@ -1989,6 +1989,24 @@ MingwIsoModuleHandler::GetCdDirectories ( const string bootcdDirectory,
 	return directories;
 }
 
+string
+MingwIsoModuleHandler::GetCdFiles ( const string bootcdDirectory,
+	                                const Module& module ) const
+{
+	string files;
+	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	{
+		const Module& m = *module.project.modules[i];
+		if ( m.bootstrap != NULL )
+		{
+			if ( files.size () > 0 )
+				files += " ";
+			files += FixupTargetFilename ( m.GetPath () );
+		}
+	}
+	return files;
+}
+
 void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 {
@@ -2001,14 +2019,17 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 	string reactosDff = NormalizeFilename ( "bootdata/packages/reactos.dff" );
 	string cdDirectories = bootcdReactos + " " + GetCdDirectories ( bootcdDirectory,
 	                                                                module );
+	string cdFiles = GetCdFiles ( bootcdDirectory,
+	                              module );
 
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 		      module.name.c_str ());
 	fprintf ( fMakefile,
-	          "%s: all %s %s\n",
+	          "%s: all %s %s %s\n",
 	          module.name.c_str (),
 	          isoboot.c_str (),
-	          cdDirectories.c_str () );
+	          cdDirectories.c_str (),
+	          cdFiles.c_str () );
 	fprintf ( fMakefile,
 	          "\t${cabman} /C %s /L %s /I\n",
 	          reactosDff.c_str (),

@@ -1,4 +1,5 @@
 <module name="vfatfs" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<include base="vfatfs">.</include>
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>

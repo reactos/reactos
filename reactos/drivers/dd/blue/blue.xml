@@ -1,4 +1,5 @@
 <module name="blue" type="kernelmodedriver">
+	<bootstrap base="reactos" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>blue.c</file>

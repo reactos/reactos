@@ -1,4 +1,5 @@
 <module name="ntoskrnl" type="kernel">
+	<bootstrap base="reactos" />
 	<importlibrary definition="ntoskrnl.def" />
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_DISABLE_TIDENTS" />
