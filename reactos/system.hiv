@@ -38,7 +38,10 @@ REGEDIT4
 "InstallLanguage"="0409"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\ServiceGroupOrder]
-"List"="SCSI Port;SCSI Miniport;Primary Disk;SCSI Class Helper;SCSI Class;Boot File System;Base;Pointer Port;Keyboard Port;Pointer Class;Keyboard Class;Video;File System"
+"List"=multi:"SCSI Port", "SCSI Miniport", "Primary Disk", "SCSI Class Helper", \
+             "SCSI Class", "Boot File System", "Base", "Pointer Port", \
+             "Keyboard Port", "Pointer Class", "Keyboard Class", "Video", \
+             "File System", "NDIS", "PNP_TDI", "TDI", "Extended Base"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager]
 "BootExecute"=multi:"autocheck autochk *"
@@ -63,91 +66,134 @@ REGEDIT4
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services]
 
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Afd]
+"ErrorControl"=dword:00000001
+"Group"="TDI"
+"ImagePath"="system32\drivers\afd.sys"
+"Start"=dword:00000002
+"Type"=dword:00000001
+
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Atapi]
+"ErrorControl"=dword:00000000
 "Group"="SCSI Miniport"
 "ImagePath"="system32\drivers\atapi.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Beep]
+"ErrorControl"=dword:00000000
 "Group"="Base"
 "ImagePath"="system32\drivers\beep.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdfs]
+"ErrorControl"=dword:00000000
 "Group"="File System"
 "ImagePath"="system32\drivers\cdfs.sys"
 "Start"=dword:00000004
 "Type"=dword:00000002
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdrom]
+"ErrorControl"=dword:00000000
 "Group"="SCSI Class"
 "ImagePath"="system32\drivers\cdrom.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Class2]
+"ErrorControl"=dword:00000000
 "Group"="SCSI Class Helper"
 "ImagePath"="system32\drivers\class2.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Disk]
+"ErrorControl"=dword:00000000
 "Group"="SCSI Class"
 "ImagePath"="system32\drivers\disk.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\EventLog]
+"ErrorControl"=dword:00000000
 "Group"="Error log"
 "ImagePath"="%SystemRoot%\system32\services.exe"
 "Start"=dword:00000004
 "Type"=dword:00000020
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Floppy]
+"ErrorControl"=dword:00000000
 "Group"="Primary Disk"
 "ImagePath"="system32\drivers\floppy.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Fs_Rec]
+"ErrorControl"=dword:00000000
 "Group"="Boot file system"
 "ImagePath"="system32\drivers\fs_rec.sys"
 "Start"=dword:00000000
 "Type"=dword:00000008
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ide]
+"ErrorControl"=dword:00000000
 "Group"="Primary Disk"
 "ImagePath"="system32\drivers\ide.sys"
 "Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Msfs]
+"ErrorControl"=dword:00000000
 "Group"="File System"
 "ImagePath"="system32\drivers\msfs.sys"
 "Start"=dword:00000001
 "Type"=dword:00000002
 
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ne2000]
+"ErrorControl"=dword:00000001
+"Group"="NDIS"
+"ImagePath"="system32\drivers\ne2000.sys"
+"Start"=dword:00000004
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ndis]
+"ErrorControl"=dword:00000001
+"Group"="NDIS"
+"ImagePath"="system32\drivers\ndis.sys"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Npfs]
+"ErrorControl"=dword:00000000
 "Group"="File System"
 "ImagePath"="system32\drivers\npfs.sys"
 "Start"=dword:00000001
 "Type"=dword:00000002
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Null]
+"ErrorControl"=dword:00000000
 "Group"="Base"
 "ImagePath"="system32\drivers\null.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Scsiport]
+"ErrorControl"=dword:00000000
 "Group"="SCSI Port"
 "ImagePath"="system32\drivers\scsiport.sys"
 "Start"=dword:00000000
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Tcpip]
+"ErrorControl"=dword:00000001
+"Group"="PNP_TDI"
+"ImagePath"="system32\drivers\tcpip.sys"
+"Start"=dword:00000002
+"Type"=dword:00000001
+
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Vfatfs]
+"ErrorControl"=dword:00000000
 "Group"="Boot File System"
 "ImagePath"="system32\drivers\vfatfs.sys"
 "Start"=dword:00000000

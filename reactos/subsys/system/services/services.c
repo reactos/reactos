@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.5 2002/02/08 02:57:05 chorns Exp $
+/* $Id: services.c,v 1.6 2002/06/07 20:09:57 ekohl Exp $
  *
  * service control manager
  * 
@@ -31,11 +31,15 @@
 
 #define NTOS_MODE_USER
 #include <ntos.h>
-
 #include <windows.h>
 
-#define NDEBUG
+#include "services.h"
+
+#define DBG
+//#define NDEBUG
 #include <debug.h>
+
+
 
 /* GLOBALS ******************************************************************/
 
@@ -45,7 +49,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-void PrintString (char* fmt,...)
+void
+PrintString(char* fmt,...)
 {
 #ifdef DBG
    char buffer[512];
@@ -60,35 +65,36 @@ void PrintString (char* fmt,...)
 }
 
 
-BOOL ScmCreateStartEvent(PHANDLE StartEvent)
+BOOL
+ScmCreateStartEvent(PHANDLE StartEvent)
 {
-   HANDLE hEvent;
+  HANDLE hEvent;
 
-   hEvent = CreateEvent(NULL,
-			TRUE,
-			FALSE,
-			_T("SvcctrlStartEvent_A3725DX"));
-   if (hEvent == NULL)
-     {
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
-	  {
-	     hEvent = OpenEvent(EVENT_ALL_ACCESS,
-				FALSE,
-				"SvcctrlStartEvent_A3725DX");
-	     if (hEvent == NULL)
-	       {
-		  return FALSE;
-	       }
-	  }
-	else
-	  {
-	     return FALSE;
-	  }
-     }
+  hEvent = CreateEvent(NULL,
+		       TRUE,
+		       FALSE,
+		       _T("SvcctrlStartEvent_A3725DX"));
+  if (hEvent == NULL)
+    {
+      if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+	  hEvent = OpenEvent(EVENT_ALL_ACCESS,
+			     FALSE,
+			     _T("SvcctrlStartEvent_A3725DX"));
+	  if (hEvent == NULL)
+	    {
+	      return(FALSE);
+	    }
+	}
+      else
+	{
+	  return(FALSE);
+	}
+    }
 
-   *StartEvent = hEvent;
+  *StartEvent = hEvent;
 
-   return TRUE;
+  return(TRUE);
 }
 
 
@@ -167,51 +173,48 @@ BOOL ScmCreateNamedPipe(VOID)
   HANDLE hThread;
   HANDLE hPipe;
 
-  hPipe = CreateNamedPipe(
-    "\\\\.\\pipe\\Ntsvcs",
-		PIPE_ACCESS_DUPLEX,
-    PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-    PIPE_UNLIMITED_INSTANCES,
-		PIPE_BUFSIZE,
-		PIPE_BUFSIZE,
-		PIPE_TIMEOUT,
-		NULL);
+  hPipe = CreateNamedPipe("\\\\.\\pipe\\Ntsvcs",
+			  PIPE_ACCESS_DUPLEX,
+			  PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+			  PIPE_UNLIMITED_INSTANCES,
+			  PIPE_BUFSIZE,
+			  PIPE_BUFSIZE,
+			  PIPE_TIMEOUT,
+			  NULL);
   if (hPipe == INVALID_HANDLE_VALUE)
-  {
-	  DPRINT("CreateNamedPipe() failed (%d)\n", GetLastError());
-	  return FALSE;
-  }
-
-  fConnected = ConnectNamedPipe(
-    hPipe,
-		NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
-  if (fConnected)
-  {
-    DPRINT("Pipe connected\n");
-
-    hThread = CreateThread(
-      NULL,
-		  0,
-			ScmNamedPipeThread,
-			(LPVOID)hPipe,
-			0,
-      &dwThreadId);
-    if (!hThread)
     {
-      DPRINT("Could not create thread (%d)\n", GetLastError());
+      DPRINT("CreateNamedPipe() failed (%d)\n", GetLastError());
+      return(FALSE);
+    }
 
-      DisconnectNamedPipe(hPipe);
+  fConnected = ConnectNamedPipe(hPipe,
+				NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
+  if (fConnected)
+    {
+      DPRINT("Pipe connected\n");
+
+      hThread = CreateThread(NULL,
+			     0,
+			     ScmNamedPipeThread,
+			     (LPVOID)hPipe,
+			     0,
+			     &dwThreadId);
+      if (!hThread)
+	{
+	  DPRINT("Could not create thread (%d)\n", GetLastError());
+
+	  DisconnectNamedPipe(hPipe);
+	  CloseHandle(hPipe);
+	  return(FALSE);
+	}
+    }
+  else
+    {
+      DPRINT("Pipe not connected\n");
+
       CloseHandle(hPipe);
       return FALSE;
     }
-	}
-	else
-  {
-    DPRINT("Pipe not connected\n");
-
-    CloseHandle(hPipe);
-    return FALSE;
-	}
 
   return TRUE;
 }
@@ -223,28 +226,34 @@ WinMain(HINSTANCE hInstance,
 	LPSTR lpCmdLine,
 	int nShowCmd)
 {
-   HANDLE hScmStartEvent;
-   HANDLE hEvent;
-   
-   PrintString("Service Control Manager\n");
-   
-   /* Create start event */
-   if (!ScmCreateStartEvent(&hScmStartEvent))
-     {
-	PrintString("SERVICES: Failed to create start event\n");
-	ExitThread(0);
-     }
-   
+  HANDLE hScmStartEvent;
+  HANDLE hEvent;
+  NTSTATUS Status;
+
+  PrintString("Service Control Manager\n");
+
+  /* Create start event */
+  if (!ScmCreateStartEvent(&hScmStartEvent))
+    {
+      PrintString("SERVICES: Failed to create start event\n");
+      ExitThread(0);
+    }
 
 
+  /* FIXME: more initialization */
 
-   /* FIXME: more initialization */
 
-   /* FIXME: create service database */
-//   ScmCreateServiceDB();
+  /* Create the service database */
+  Status = ScmCreateServiceDataBase();
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("ScmCreateServiceDataBase() failed (Status %lx)\n", Status);
+      ExitThread(0);
+    }
 
-   /* FIXME: update service database */
-//   ScmGetBootAndSystemDriverState();
+  /* Update service database */
+  ScmGetBootAndSystemDriverState();
+
 #if 0
    /* Create named pipe */
    if (!ScmCreateNamedPipe())
@@ -255,31 +264,29 @@ WinMain(HINSTANCE hInstance,
 #endif
    /* FIXME: create listener thread for pipe */
 
-   /* FIXME: register process as service process */
-//   RegisterServiceProcess();
 
-   PrintString("SERVICES: Initialized.\n");
+  /* FIXME: register process as service process */
+//  RegisterServiceProcess();
 
-   /* Signal start event */
-   SetEvent(hScmStartEvent);
+  PrintString("SERVICES: Initialized.\n");
 
-   /* FIXME: register event handler (used for system shutdown) */
-//   SetConsoleCtrlHandler(...);
+  /* Signal start event */
+  SetEvent(hScmStartEvent);
 
-
-   /* FIXME: start auto-start services */
-//   ScmAutoStartServices();
-
-   /* FIXME: more to do ? */
+  /* FIXME: register event handler (used for system shutdown) */
+//  SetConsoleCtrlHandler(...);
 
 
-   PrintString("SERVICES: Running.\n");
-   
-   hEvent = CreateEvent(NULL,
-			TRUE,
-			FALSE,
-			NULL);
-   WaitForSingleObject(hEvent, INFINITE);
+  /* Start auto-start services */
+  ScmAutoStartServices();
+
+  /* FIXME: more to do ? */
+
+
+  PrintString("SERVICES: Running.\n");
+
+  hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+  WaitForSingleObject(hEvent, INFINITE);
 #if 0
     for (;;)
       {
@@ -287,10 +294,10 @@ WinMain(HINSTANCE hInstance,
       }
 #endif
 
-   PrintString("SERVICES: Finished.\n");
+  PrintString("SERVICES: Finished.\n");
 
-   ExitThread (0);
-   return 0;
+  ExitThread(0);
+  return(0);
 }
 
 /* EOF */

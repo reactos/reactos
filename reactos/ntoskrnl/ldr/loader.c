@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.104 2002/05/16 06:41:30 ekohl Exp $
+/* $Id: loader.c,v 1.105 2002/06/07 20:09:06 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -970,26 +970,6 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * NDIS library
     */
    LdrLoadAutoConfigDriver(L"ndis.sys");
-
-   /*
-    * Novell Eagle 2000 driver
-    */
-   //LdrLoadAutoConfigDriver(L"ne2000.sys");
-
-   /*
-    * TCP/IP protocol driver
-    */
-   LdrLoadAutoConfigDriver(L"tcpip.sys");
-
-   /*
-    * TDI test driver
-    */
-   //LdrLoadAutoConfigDriver(L"tditest.sys");
-
-   /*
-    * Ancillary Function Driver
-    */
-   LdrLoadAutoConfigDriver(L"afd.sys");
 #endif
 }
 
