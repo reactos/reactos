@@ -1,0 +1,8 @@
+Makefile
+config.log
+config.cache
+config.status
+dist_tmp
+adns-*.tar.gz
+settings.make
+*.tmp*
