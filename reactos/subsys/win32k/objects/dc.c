@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.110 2003/12/13 13:45:18 weiden Exp $
+/* $Id: dc.c,v 1.111 2003/12/13 15:49:32 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -50,6 +50,8 @@
 #include <include/palette.h>
 #include <include/guicheck.h>
 #include <include/desktop.h>
+#include <include/intgdi.h>
+#include <include/cleanup.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -136,6 +138,7 @@ NtGdiCreateCompatableDC(HDC hDC)
   HDC hNewDC, DisplayDC;
   HRGN hVisRgn;
   BITMAPOBJ *pb;
+  UNICODE_STRING DriverName;
 
   DisplayDC = NULL;
   if (hDC == NULL)
@@ -143,7 +146,8 @@ NtGdiCreateCompatableDC(HDC hDC)
       hDC = IntGetScreenDC();
       if (NULL == hDC)
         {
-          DisplayDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+          RtlInitUnicodeString(&DriverName, L"DISPLAY");
+          DisplayDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
           if (NULL == DisplayDC)
             {
               return NULL;
@@ -162,7 +166,7 @@ NtGdiCreateCompatableDC(HDC hDC)
         }
       return NULL;
     }
-  hNewDC = DC_AllocDC(OrigDC->DriverName);
+  hNewDC = DC_AllocDC(&OrigDC->DriverName);
 
   if (NULL == hNewDC)
     {
@@ -660,19 +664,22 @@ IntDestroyPrimarySurface()
     ObDereferenceObject(PrimarySurface.VideoFileObject);
   }
 
-HDC STDCALL
-NtGdiCreateDC(LPCWSTR  Driver,
-             LPCWSTR  Device,
-             LPCWSTR  Output,
-             CONST PDEVMODEW  InitData)
+HDC FASTCALL
+IntGdiCreateDC(PUNICODE_STRING Driver,
+               PUNICODE_STRING Device,
+               PUNICODE_STRING Output,
+               CONST PDEVMODEW InitData)
 {
   HDC      hNewDC;
   PDC      NewDC;
   HDC      hDC = NULL;
   PSURFGDI SurfGDI;
   HRGN     hVisRgn;
-
-  if (NULL == Driver || 0 == _wcsicmp(Driver, L"DISPLAY"))
+  UNICODE_STRING StdDriver;
+  
+  RtlInitUnicodeString(&StdDriver, L"DISPLAY");
+  
+  if (NULL == Driver || 0 == RtlCompareUnicodeString(Driver, &StdDriver, TRUE))
     {
       if (! IntGraphicsCheck(TRUE))
         {
@@ -740,8 +747,56 @@ NtGdiCreateDC(LPCWSTR  Driver,
   NtGdiSetTextAlign(hNewDC, TA_TOP);
   NtGdiSetBkColor(hNewDC, RGB(255, 255, 255));
   NtGdiSetBkMode(hNewDC, OPAQUE);
-
+  
   return hNewDC;
+}
+
+HDC STDCALL
+NtGdiCreateDC(PUNICODE_STRING Driver,
+              PUNICODE_STRING Device,
+              PUNICODE_STRING Output,
+              CONST PDEVMODEW InitData)
+{
+  UNICODE_STRING SafeDriver, SafeDevice;
+  DEVMODEW SafeInitData;
+  HDC Ret;
+  NTSTATUS Status;
+  
+  if(InitData)
+  {
+    Status = MmCopyFromCaller(&SafeInitData, InitData, sizeof(DEVMODEW));
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return NULL;
+    }
+    /* FIXME - InitData can have some more bytes! */
+  }
+  
+  if(Driver)
+  {
+    Status = IntSafeCopyUnicodeString(&SafeDriver, Driver);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return NULL;
+    }
+  }
+  
+  if(Device)
+  {
+    Status = IntSafeCopyUnicodeString(&SafeDevice, Device);
+    if(!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&SafeDriver);
+      SetLastNtError(Status);
+      return NULL;
+    }
+  }
+  
+  Ret = IntGdiCreateDC(&SafeDriver, &SafeDevice, NULL, &SafeInitData);
+  
+  return Ret;
 }
 
 HDC STDCALL
@@ -751,7 +806,8 @@ NtGdiCreateIC(LPCWSTR  Driver,
              CONST PDEVMODEW  DevMode)
 {
   /* FIXME: this should probably do something else...  */
-  return  NtGdiCreateDC(Driver, Device, Output, DevMode);
+  //return  NtGdiCreateDC(Driver, Device, Output, DevMode);
+  return NULL;
 }
 
 BOOL STDCALL
@@ -1837,23 +1893,38 @@ DC_SET_MODE( NtGdiSetStretchBltMode, w.stretchBltMode, BLACKONWHITE, HALFTONE )
 //  ----------------------------------------------------  Private Interface
 
 HDC FASTCALL
-DC_AllocDC(LPCWSTR Driver)
+DC_AllocDC(PUNICODE_STRING Driver)
 {
   PDC  NewDC;
   HDC  hDC;
+  PWSTR Buf = NULL;
+  
+  if (Driver != NULL)
+  {
+    Buf = ExAllocatePoolWithTag(PagedPool, Driver->MaximumLength, TAG_DC);
+    if(!Buf)
+    {
+      return NULL;
+    }
+    RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
+  }
 
   hDC = (HDC) GDIOBJ_AllocObj(sizeof(DC), GDI_OBJECT_TYPE_DC, (GDICLEANUPPROC) DC_InternalDeleteDC);
   if (hDC == NULL)
   {
+    if(Buf)
+    {
+      ExFreePool(Buf);
+    }
     return  NULL;
   }
 
   NewDC = DC_LockDc(hDC);
-
+  
   if (Driver != NULL)
   {
-    NewDC->DriverName = ExAllocatePoolWithTag(PagedPool, (wcslen(Driver) + 1) * sizeof(WCHAR), TAG_DC);
-    wcscpy(NewDC->DriverName, Driver);
+    RtlCopyMemory(&NewDC->DriverName, Driver, sizeof(UNICODE_STRING));
+    NewDC->DriverName.Buffer = Buf;
   }
 
   NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
@@ -1875,7 +1946,7 @@ DC_AllocDC(LPCWSTR Driver)
 }
 
 HDC FASTCALL
-DC_FindOpenDC(LPCWSTR  Driver)
+DC_FindOpenDC(PUNICODE_STRING  Driver)
 {
   return NULL;
 }
@@ -1909,11 +1980,7 @@ BOOL FASTCALL
 DC_InternalDeleteDC( PDC DCToDelete )
 {
 
-  if (NULL != DCToDelete->DriverName)
-    {
-      ExFreePool(DCToDelete->DriverName);
-    }
-
+  RtlFreeUnicodeString(&DCToDelete->DriverName);
   return TRUE;
 }
 

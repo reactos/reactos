@@ -435,12 +435,19 @@ CreateDCW (
 	CONST DEVMODEW	* lpInitData
 	)
 {
-	return NtGdiCreateDC (
-			lpwszDriver,
-			lpwszDevice,
-			lpwszOutput,
-			(PDEVMODEW)lpInitData
-			);
+	UNICODE_STRING Driver, Device, Output;
+
+	if(lpwszDriver)
+		RtlInitUnicodeString(&Driver, lpwszDriver);
+	if(lpwszDevice)
+		RtlInitUnicodeString(&Driver, lpwszDevice);
+	if(lpwszOutput)
+		RtlInitUnicodeString(&Driver, lpwszOutput);
+
+	return NtGdiCreateDC((lpwszDriver ? &Driver : NULL),
+						 (lpwszDevice ? &Device : NULL),
+						 (lpwszOutput ? &Output : NULL),
+						 (PDEVMODEW)lpInitData);
 }
 
 

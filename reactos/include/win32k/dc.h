@@ -86,7 +86,7 @@ typedef struct _DC
   HSURF  Surface;
 
   DRIVER_FUNCTIONS  DriverFunctions;
-  PWSTR  DriverName;
+  UNICODE_STRING    DriverName;
   HANDLE  DeviceDriver;
 
   INT  wndOrgX;          /* Window origin */
@@ -125,9 +125,9 @@ typedef struct
   GDIOBJ_UnlockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC)
 
 HDC  FASTCALL RetrieveDisplayHDC(VOID);
-HDC  FASTCALL DC_AllocDC(LPCWSTR  Driver);
+HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
-HDC  FASTCALL DC_FindOpenDC(LPCWSTR  Driver);
+HDC  FASTCALL DC_FindOpenDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_FreeDC(HDC  DCToFree);
 HDC  FASTCALL DC_GetNextDC (PDC pDC);
 VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC);
@@ -141,10 +141,10 @@ BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
 BOOL STDCALL  NtGdiCancelDC(HDC  hDC);
 HDC STDCALL  NtGdiCreateCompatableDC(HDC  hDC);
-HDC STDCALL  NtGdiCreateDC(LPCWSTR  Driver,
-                          LPCWSTR  Device,
-                          LPCWSTR  Output,
-                          CONST PDEVMODEW  InitData);
+HDC STDCALL  NtGdiCreateDC(PUNICODE_STRING Driver,
+                           PUNICODE_STRING Device,
+                           PUNICODE_STRING Output,
+                           CONST PDEVMODEW  InitData);
 HDC STDCALL NtGdiCreateIC(LPCWSTR  Driver,
                          LPCWSTR  Device,
                          LPCWSTR  Output,

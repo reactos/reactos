@@ -108,5 +108,11 @@ IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point);
 INT FASTCALL
 IntGdiGetObject(HANDLE handle, INT count, LPVOID buffer);
 
+HDC FASTCALL
+IntGdiCreateDC(PUNICODE_STRING Driver,
+               PUNICODE_STRING Device,
+               PUNICODE_STRING Output,
+               CONST PDEVMODEW InitData);
+
 #endif /* _WIN32K_INTGDI_H */
 

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.32 2003/11/30 20:03:47 navaraf Exp $
+/* $Id: misc.c,v 1.33 2003/12/13 15:49:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -668,5 +668,42 @@ NtUserGetGuiResources(
   ObDereferenceObject(Process);
 
   return Ret;
+}
+
+NTSTATUS FASTCALL
+IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
+                         PUNICODE_STRING Source)
+{
+  NTSTATUS Status;
+  PWSTR Src;
+  
+  Status = MmCopyFromCaller(Dest, Source, sizeof(UNICODE_STRING));
+  if(!NT_SUCCESS(Status))
+  {
+    return Status;
+  }
+  
+  if(Dest->MaximumLength > 0)
+  {
+    Src = Dest->Buffer;
+    
+    Dest->Buffer = ExAllocatePool(NonPagedPool, Dest->MaximumLength);
+    if(!Dest->Buffer)
+    {
+      return STATUS_NO_MEMORY;
+    }
+    
+    Status = MmCopyFromCaller(Dest->Buffer, Src, Dest->MaximumLength);
+    if(!NT_SUCCESS(Status))
+    {
+      ExFreePool(Dest->Buffer);
+      Dest->Buffer = NULL;
+      return Status;
+    }
+    
+    
+    return STATUS_SUCCESS;
+  }
+  return STATUS_UNSUCCESSFUL;
 }
 

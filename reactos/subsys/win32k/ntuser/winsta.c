@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.52 2003/12/13 11:34:53 navaraf Exp $
+ *  $Id: winsta.c,v 1.53 2003/12/13 15:49:32 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -51,6 +51,7 @@
 #include <include/mouse.h>
 #include <include/callback.h>
 #include <include/guicheck.h>
+#include <include/intgdi.h>
 /* Needed for DIRECTORY_OBJECT */
 #include <internal/ob.h>
 
@@ -200,11 +201,13 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
 BOOL FASTCALL
 IntInitializeDesktopGraphics(VOID)
 {
+  UNICODE_STRING DriverName;
   if (! IntCreatePrimarySurface())
     {
       return FALSE;
     }
-  ScreenDeviceContext = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+  RtlInitUnicodeString(&DriverName, L"DISPLAY");
+  ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
   if (NULL == ScreenDeviceContext)
     {
       IntDestroyPrimarySurface();

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.44 2003/12/12 18:18:21 weiden Exp $
+/* $Id: windc.c,v 1.45 2003/12/13 15:49:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,6 +42,7 @@
 #include <include/dce.h>
 #include <include/vis.h>
 #include <include/object.h>
+#include <include/intgdi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -127,14 +128,17 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
 {
   HDCE DceHandle;
   DCE* Dce;
+  UNICODE_STRING DriverName;
 
   DceHandle = DCEOBJ_AllocDCE();
   if(!DceHandle)
     return NULL;
   
+  RtlInitUnicodeString(&DriverName, L"DISPLAY");
+  
   Dce = DCEOBJ_LockDCE(DceHandle);
   Dce->Self = DceHandle;
-  Dce->hDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+  Dce->hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
   if (NULL == defaultDCstate)
     {
       defaultDCstate = NtGdiGetDCState(Dce->hDC);
