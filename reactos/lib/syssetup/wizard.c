@@ -1165,7 +1165,7 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
           AdjustTokenPrivileges(hToken,
                                 FALSE,
                                 &previouspriv,
-                                PrevSize,
+                                0,
                                 NULL,
                                 0);
         }
