@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.10 2002/07/04 19:56:35 dwelch Exp $
+/* $Id: kd.h,v 1.11 2002/07/17 22:56:10 dwelch Exp $
  *
  * kernel debugger prototypes
  */
@@ -66,5 +66,15 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 			 PKTRAP_FRAME TrapFrame);
 VOID KdInitializeMda(VOID);
 VOID KdPrintMda(PCH pch);
+
+#ifndef KDBG
+#define KDB_DELETEPROCESS_HOOK(PROCESS)
+#define KDB_LOADDRIVER_HOOK(MODULE)
+#define KDB_UNLOADDRIVER_HOOK(MODULE)
+#else
+#define KDB_DELETEPROCESS_HOOK(PROCESS) XXXX
+#define KDB_LOADDRIVER_HOOK(MODULE) XXXX
+#define KDB_UNLOADDRIVER_HOOK(MODULE) XXXX
+#endif /* KDBG */
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

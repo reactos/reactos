@@ -45,17 +45,6 @@
 
 /* GLOBALS *****************************************************************/
 
-#ifdef DBG
-
-NTSTATUS
-LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
-  IN ULONG_PTR  RelativeAddress,
-  OUT PULONG LineNumber,
-  OUT PCH FileName  OPTIONAL,
-  OUT PCH FunctionName  OPTIONAL);
-
-#endif /* DBG */
-
 static char *ExceptionTypeStrings[] = 
   {
     "Divide Error",
@@ -88,12 +77,6 @@ print_user_address(PVOID address)
    PEPROCESS CurrentProcess;
    PPEB Peb = NULL;
    ULONG_PTR RelativeAddress;
-#ifdef DBG
-   NTSTATUS Status;
-   ULONG LineNumber;
-   CHAR FileName[256];
-   CHAR FunctionName[256];
-#endif
 
    CurrentProcess = PsGetCurrentProcess();
    if (NULL != CurrentProcess)
@@ -118,27 +101,10 @@ print_user_address(PVOID address)
 	if (address >= (PVOID)current->BaseAddress &&
 	    address < (PVOID)(current->BaseAddress + current->SizeOfImage))
 	  {
-            RelativeAddress = (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
-#ifdef DBG
-            Status = LdrGetAddressInformation(&current->SymbolInfo,
-              RelativeAddress,
-              &LineNumber,
-              FileName,
-              FunctionName);
-            if (NT_SUCCESS(Status))
-              {
-                DbgPrint("<%wZ: %x (%s:%d (%s))>",
-                  &current->BaseDllName, RelativeAddress, FileName, LineNumber, FunctionName);
-              }
-            else
-             {
-               DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
-             }
-#else /* !DBG */
-             DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
-#endif /* !DBG */
-
-	     return(TRUE);
+            RelativeAddress = 
+	      (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
+	    DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
+	    return(TRUE);
 	  }
 
 	current_entry = current_entry->Flink;

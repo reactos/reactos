@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.5 2002/06/10 23:03:33 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.6 2002/07/17 22:56:10 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -350,7 +350,10 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
       Node->Parent = ParentNode;
       Node->NextSibling = ParentNode->Child;
-      ParentNode->Child->PrevSibling = Node;
+      if (ParentNode->Child != NULL)
+	{
+	  ParentNode->Child->PrevSibling = Node;	  
+	}
       ParentNode->Child = Node;
       KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
     }
@@ -1060,17 +1063,6 @@ IopInterrogateBusExtender(
   }
 
   DPRINT("Got %d PDOs\n", DeviceRelations->Count);
-
-#ifdef DBG
-  {
-    ULONG i;
-
-    DPRINT("DeviceRelations %x\n", DeviceRelations);
-    DPRINT("Count %x\n", DeviceRelations->Count);
-    for (i = 0; i < DeviceRelations->Count; i++)
-      DPRINT("Object(PDO) %x\n", DeviceRelations->Objects[i]);
-  }
-#endif
 
   /* Create device nodes for all discovered devices */
   for (i = 0; i < DeviceRelations->Count; i++)

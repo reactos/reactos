@@ -45,17 +45,6 @@
 
 /* GLOBALS *****************************************************************/
 
-#ifdef DBG
-
-NTSTATUS
-LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
-  IN ULONG_PTR  RelativeAddress,
-  OUT PULONG LineNumber,
-  OUT PCH FileName  OPTIONAL,
-  OUT PCH FunctionName  OPTIONAL);
-
-#endif /* DBG */
-
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
@@ -139,12 +128,6 @@ print_address(PVOID address)
    MODULE_TEXT_SECTION* current;
    extern LIST_ENTRY ModuleTextListHead;
    ULONG_PTR RelativeAddress;
-#ifdef DBG
-   NTSTATUS Status;
-   ULONG LineNumber;
-   CHAR FileName[256];
-   CHAR FunctionName[256];
-#endif
 
    current_entry = ModuleTextListHead.Flink;
    
@@ -158,25 +141,8 @@ print_address(PVOID address)
 	    address < (PVOID)(current->Base + current->Length))
 	  {
             RelativeAddress = (ULONG_PTR) address - current->Base;
-#ifdef DBG
-            Status = LdrGetAddressInformation(&current->SymbolInfo,
-              RelativeAddress,
-              &LineNumber,
-              FileName,
-              FunctionName);
-            if (NT_SUCCESS(Status))
-              {
-                DbgPrint("<%ws: %x (%s:%d (%s))>",
-                  current->Name, RelativeAddress, FileName, LineNumber, FunctionName);
-              }
-            else
-             {
-               DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
-             }
-#else /* !DBG */
-             DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
-#endif /* !DBG */
-	     return(TRUE);
+	    DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
+	    return(TRUE);
 	  }
 	current_entry = current_entry->Flink;
      }
