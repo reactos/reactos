@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.121 2003/10/28 13:43:56 navaraf Exp $
+/* $Id: window.c,v 1.122 2003/10/28 20:24:09 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -419,7 +419,13 @@ IntGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
       return Wnd;
     
     case GA_ROOTOWNER:
-      while ((Wnd = IntGetParent(Wnd)));
+      if (Wnd->Self == IntGetDesktopWindow()) return 0;
+      for (;;)
+      {
+         PWINDOW_OBJECT Parent = IntGetParent(Wnd);
+         if (!Parent) break;
+         Wnd = Parent;
+      }
       return Wnd;
   }
 
@@ -475,7 +481,13 @@ IntGetParent(PWINDOW_OBJECT Wnd)
 {
   if (Wnd->Style & WS_POPUP)
   {
-    return IntGetWindowObject(Wnd->ParentHandle); /* wine use HWND for owner window (unknown reason) */
+/* wine use HWND for owner window (unknown reason) */
+/*    return IntGetWindowObject(Wnd->ParentHandle); */
+/* 
+ * I don't understand this either, but I trust Wine test suite.
+ * -- Filip, 28/oct/2003
+ */
+    return IntGetWindowObject(Wnd->hWndOwner);
   }
   else if (Wnd->Style & WS_CHILD) 
   {
@@ -845,6 +857,11 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
   PWINDOW_OBJECT WndOldParent;
   BOOL was_visible;
   HWND hWnd, hWndNewParent, hWndOldParent;
+
+  if (Wnd->Self == IntGetDesktopWindow())
+  {
+    return NULL;
+  }
 
   if (!WndNewParent) WndNewParent = IntGetWindowObject(IntGetDesktopWindow());
 
@@ -2229,6 +2246,12 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
   NTSTATUS Status;
   LONG Result;
 
+  if (hWnd == IntGetDesktopWindow() && Index != GWL_HWNDPARENT)
+    {
+      SetLastWin32Error(STATUS_ACCESS_DENIED);
+      return 0;
+    }
+
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
 			       hWnd,
@@ -2276,7 +2299,14 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 	  break;
 
 	case GWL_HWNDPARENT:
-	  Result = (LONG) WindowObject->ParentHandle;
+	  if (WindowObject->ParentHandle == IntGetDesktopWindow())
+	  {
+		Result = 0;
+	  }
+	  else
+	  {
+		Result = (LONG) WindowObject->ParentHandle;
+	  }
 	  break;
 
 	case GWL_ID:
@@ -2797,7 +2827,7 @@ STDCALL
 NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
   PWINDOW_OBJECT Wnd = NULL, WndParent = NULL, WndOldParent;
-  HWND hWndOldParent;
+  HWND hWndOldParent = NULL;
 
   if (IntIsBroadcastHwnd(hWndChild) || IntIsBroadcastHwnd(hWndNewParent))
   {
@@ -2926,6 +2956,12 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
   LONG OldValue;
   STYLESTRUCT Style;
 
+  if (hWnd == IntGetDesktopWindow())
+    {
+      SetLastWin32Error(STATUS_ACCESS_DENIED);
+      return 0;
+    }
+
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
 			       hWnd,
@@ -2999,9 +3035,7 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
 	case GWL_HWNDPARENT:
 	  OldValue = (LONG) WindowObject->ParentHandle;
-	  WindowObject->ParentHandle = (HWND) NewValue;
-	  /* FIXME: Need to update window lists of old and new parent */
-	  UNIMPLEMENTED;
+	  IntSetParent(WindowObject, (HWND) NewValue);
 	  break;
 
 	case GWL_ID:
