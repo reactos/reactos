@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.26 2004/03/11 16:17:25 weiden Exp $
+/* $Id: keyboard.c,v 1.27 2004/03/15 19:06:35 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -541,9 +541,10 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 
 	RtlFreeUnicodeString(&LayoutFile);
 
-	KeyboardLayoutWSTR = ExAllocatePoolWithTag(PagedPool,
-						   (FullLayoutPath.Length + 1) * 
-						   sizeof(WCHAR), TAG_STRING);
+	KeyboardLayoutWSTR = 
+	  ExAllocatePoolWithTag(PagedPool,
+				FullLayoutPath.Length + sizeof(WCHAR), 
+				TAG_STRING);
 
 	if( !KeyboardLayoutWSTR ) {
 	  DPRINT1("Couldn't allocate a string for the keyboard layout name.\n");
@@ -551,8 +552,8 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 	  return;
 	}
 	memcpy(KeyboardLayoutWSTR,FullLayoutPath.Buffer,
-	       (FullLayoutPath.Length + 1) * sizeof(WCHAR));
-	KeyboardLayoutWSTR[FullLayoutPath.Length] = 0;
+	       FullLayoutPath.Length + sizeof(WCHAR));
+	KeyboardLayoutWSTR[FullLayoutPath.Length / sizeof(WCHAR)] = 0;
 
 	kbModule = EngLoadImage(KeyboardLayoutWSTR);
 	DPRINT( "Load Keyboard Layout: %S\n", KeyboardLayoutWSTR );
