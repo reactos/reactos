@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.6 2002/06/14 15:21:43 jfilby Exp $
+/* $Id: class.c,v 1.7 2002/06/14 20:56:17 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -218,8 +218,8 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
   }
 
   objectSize = sizeof(WNDCLASS_OBJECT) +
-    (lpwcx->lpszMenuName != 0 ? wcslen (lpwcx->lpszMenuName) + 1 : 0) +
-    wcslen (lpwcx->lpszClassName) + 1;
+    (lpwcx->lpszMenuName != 0 ? ((wcslen (lpwcx->lpszMenuName) + 1) * 2) : 0) +
+    ((wcslen (lpwcx->lpszClassName) + 1) * 2);
   ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
   if (ClassObject == 0)
     {
