@@ -78,20 +78,21 @@ STATIC BOOLEAN
 print_address(PVOID address)
 {
    PLIST_ENTRY current_entry;
-   PMODULE_OBJECT current;
-   extern LIST_ENTRY ModuleListHead;
+   MODULE_TEXT_SECTION* current;
+   extern LIST_ENTRY ModuleTextListHead;
    
-   current_entry = ModuleListHead.Flink;
+   current_entry = ModuleTextListHead.Flink;
    
-   while (current_entry != &ModuleListHead &&
+   while (current_entry != &ModuleTextListHead &&
 	  current_entry != NULL)
      {
-	current = CONTAINING_RECORD(current_entry, MODULE_OBJECT, ListEntry);
+	current = 
+	  CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
 	
-	if (address >= current->Base &&
-	    address < (current->Base + current->Length))
+	if (address >= (PVOID)current->Base &&
+	    address < (PVOID)(current->Base + current->Length))
 	  {
-	     DbgPrint("<%wZ: %x>", &current->FullName, 
+	     DbgPrint("<%ws: %x>", current->Name, 
 		      address - current->Base);
 	     return(TRUE);
 	  }
@@ -194,7 +195,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      };
 
    /* Use the address of the trap frame as approximation to the ring0 esp */
-   Esp0 = (ULONG)Tf;
+   Esp0 = (ULONG)&Tf->Eip;
    
    /* Get CR2 */
    __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));

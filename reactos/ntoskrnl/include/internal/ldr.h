@@ -73,7 +73,8 @@ RtlImageDirectoryEntryToData (
 	IN BOOLEAN	ImageLoaded,
 	IN ULONG	Directory,
 	OUT PULONG	Size);
-
+VOID
+LdrInit1(VOID);
 
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

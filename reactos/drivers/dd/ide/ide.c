@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.38 2001/03/04 00:46:46 ekohl Exp $
+/* $Id: ide.c,v 1.39 2001/03/27 21:43:43 dwelch Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -258,6 +258,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     {
       IDEInitialized = TRUE;
     }
+
   DPRINT( "Returning from DriverEntry\n" );
   return  WeGotSomeDisks ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE;
 }

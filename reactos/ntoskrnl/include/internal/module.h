@@ -5,6 +5,14 @@
 #include <ddk/ntddk.h>
 #include <pe.h>
 
+typedef struct _MODULE_TEXT_SECTION
+{
+  ULONG Base;
+  ULONG Length;
+  LIST_ENTRY ListEntry;
+  PWCH Name;
+} MODULE_TEXT_SECTION;
+
 typedef struct _MODULE_OBJECT
 {
   CSHORT  ObjectType;

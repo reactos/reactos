@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.84 2001/03/26 20:46:53 dwelch Exp $
+/* $Id: main.c,v 1.85 2001/03/27 21:43:42 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -431,6 +431,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     */
    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
    KeInit1();
+   LdrInit1();
    KeLowerIrql(DISPATCH_LEVEL);
 
    /*

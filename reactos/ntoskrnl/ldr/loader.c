@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.69 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: loader.c,v 1.70 2001/03/27 21:43:43 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -45,6 +45,9 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 
 LIST_ENTRY ModuleListHead;
 POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
+LIST_ENTRY ModuleTextListHead;
+STATIC MODULE_TEXT_SECTION NtoskrnlTextSection;
+/* STATIC MODULE_TEXT_SECTION HalTextSection; */
 
 #define TAG_DRIVER_MEM  TAG('D', 'R', 'V', 'M')
 #define TAG_SYM_BUF     TAG('S', 'Y', 'M', 'B')
@@ -72,6 +75,31 @@ static PVOID LdrPEFixupForward(PCHAR ForwardName);
 
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+LdrInit1(VOID)
+{
+  PIMAGE_DOS_HEADER DosHeader;
+  PIMAGE_FILE_HEADER FileHeader;
+  PIMAGE_OPTIONAL_HEADER OptionalHeader;
+  PIMAGE_SECTION_HEADER SectionList;
+
+  InitializeListHead(&ModuleTextListHead);
+
+  DosHeader = (PIMAGE_DOS_HEADER) KERNEL_BASE;
+  FileHeader =
+    (PIMAGE_FILE_HEADER) ((DWORD)KERNEL_BASE + 
+			  DosHeader->e_lfanew + sizeof(ULONG));
+  OptionalHeader = (PIMAGE_OPTIONAL_HEADER)
+    ((DWORD)FileHeader + sizeof(IMAGE_FILE_HEADER));
+  SectionList = (PIMAGE_SECTION_HEADER)
+    ((DWORD)OptionalHeader + sizeof(IMAGE_OPTIONAL_HEADER));
+  NtoskrnlTextSection.Base = KERNEL_BASE;
+  NtoskrnlTextSection.Length = SectionList[0].Misc.VirtualSize +
+    SectionList[0].VirtualAddress;
+  NtoskrnlTextSection.Name = L"ntoskrnl.exe";
+  InsertTailList(&ModuleTextListHead, &NtoskrnlTextSection.ListEntry);
+}
 
 VOID LdrInitModuleManagement(VOID)
 {
@@ -618,6 +646,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   OBJECT_ATTRIBUTES  ObjectAttributes;
   UNICODE_STRING  ModuleName;
   WCHAR  NameBuffer[60];
+  MODULE_TEXT_SECTION* ModuleTextSection;
 
   DPRINT("Processing PE Module at module base:%08lx\n", ModuleLoadBase);
 
@@ -930,6 +959,16 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
     (PIMAGE_SECTION_HEADER) ((unsigned int) DriverBase + PEDosHeader->e_lfanew + sizeof(ULONG) +
     sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_OPTIONAL_HEADER));
   DPRINT("SectionList at %x\n", ModuleObject->Image.PE.SectionList);
+
+  ModuleTextSection = ExAllocatePool(NonPagedPool, 
+				     sizeof(MODULE_TEXT_SECTION));
+  ModuleTextSection->Base = (ULONG)DriverBase;
+  ModuleTextSection->Length = DriverSize;
+  ModuleTextSection->Name = 
+    ExAllocatePool(NonPagedPool, 
+		   (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
+  wcscpy(ModuleTextSection->Name, NameBuffer);
+  InsertTailList(&ModuleTextListHead, &ModuleTextSection->ListEntry);
 
   return  ModuleObject;
 }
