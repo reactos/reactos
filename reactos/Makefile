@@ -178,6 +178,13 @@ else
 endif
 OUTPUT_ := $(OUTPUT)$(SEP)
 
+ifneq ($(ROS_TEMPORARY),)
+  TEMPORARY := $(ROS_TEMPORARY)
+else
+  TEMPORARY := .
+endif
+TEMPORARY_ := $(TEMPORARY)$(SEP)
+
 ifneq ($(ROS_INSTALL),)
   INSTALL := $(ROS_INSTALL)
 else

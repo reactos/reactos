@@ -10,7 +10,7 @@ using std::vector;
 
 #define CLEAN_FILE(f) clean_files.push_back ( f ); /*if ( module.name == "crt" ) printf ( "%s(%i): clean: %s\n", __FILE__, __LINE__, f.c_str() )*/
 
-static string ros_temp = "$(ROS_TEMPORARY)";
+static string ros_temp = "$(TEMPORARY)";
 MingwBackend*
 MingwModuleHandler::backend = NULL;
 FILE*
@@ -339,6 +339,8 @@ MingwModuleHandler::GetObjectFilename (
 	const string& sourceFilename,
 	string_list* pclean_files ) const
 {
+	Directory* directoryTree;
+
 	string newExtension;
 	string extension = GetExtension ( sourceFilename );
 	if ( extension == ".rc" || extension == ".RC" )
@@ -347,11 +349,17 @@ MingwModuleHandler::GetObjectFilename (
 		newExtension = ".stubs.o";
 	else
 		newExtension = ".o";
+	
+	if ( module.type == BootSector )
+		directoryTree = backend->outputDirectory;
+	else
+		directoryTree = backend->intermediateDirectory;
+
 	string obj_file = PassThruCacheDirectory (
 		NormalizeFilename ( ReplaceExtension (
 			RemoveVariables ( sourceFilename ),
 			                  newExtension ) ),
-			backend->intermediateDirectory );
+			directoryTree );
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
@@ -2188,7 +2196,9 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 		if ( m.bootstrap != NULL )
 		{
 			string targetFilenameNoFixup ( bootcdDirectory + SSEP + m.bootstrap->base + SSEP + m.bootstrap->nameoncd );
-			string targetFilename ( GetTargetMacro ( module ) );
+			string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
+				NormalizeFilename ( targetFilenameNoFixup ),
+				backend->outputDirectory );
 			fprintf ( fMakefile,
 			          "\t$(ECHO_CP)\n" );
 			fprintf ( fMakefile,
@@ -2272,7 +2282,12 @@ MingwIsoModuleHandler::GetBootstrapCdFiles (
 	{
 		const Module& m = *module.project.modules[i];
 		if ( m.bootstrap != NULL )
-			out.push_back ( NormalizeFilename ( m.GetPath () ) );
+		{
+			string filename = PassThruCacheDirectory (
+				NormalizeFilename ( m.GetPath () ),
+				backend->outputDirectory );
+			out.push_back ( filename );
+		}
 	}
 }
 
@@ -2283,7 +2298,7 @@ MingwIsoModuleHandler::GetNonModuleCdFiles (
 	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
 	{
 		const CDFile& cdfile = *module.project.cdfiles[i];
-		out.push_back ( NormalizeFilename ( cdfile.GetPath () ) );
+		out.push_back ( cdfile.GetPath () );
 	}
 }
 
@@ -2299,7 +2314,9 @@ void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	string bootcdDirectory = "cd";
-	string isoboot = NormalizeFilename ( "boot/freeldr/bootsect/isoboot.o" );
+	string isoboot = PassThruCacheDirectory (
+		NormalizeFilename ( "boot/freeldr/bootsect/isoboot.o" ),
+		backend->intermediateDirectory );
 	string bootcdReactosNoFixup = bootcdDirectory + "/reactos";
 	string bootcdReactos = PassThruCacheDirectory (
 		NormalizeFilename ( bootcdReactosNoFixup ),

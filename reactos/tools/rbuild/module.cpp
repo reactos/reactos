@@ -589,7 +589,10 @@ Module::GetBasePath () const
 string
 Module::GetPath () const
 {
-	return path + CSEP + GetTargetName ();
+	if ( path.length() > 0 )
+		return path + CSEP + GetTargetName ();
+	else
+		return GetTargetName ();
 }
 
 string
