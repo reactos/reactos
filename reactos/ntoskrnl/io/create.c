@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.45 2001/06/16 14:07:30 ekohl Exp $
+/* $Id: create.c,v 1.46 2001/07/04 20:40:21 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -108,7 +108,7 @@ IopCreateFile (PVOID			ObjectBody,
 	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
 	FileObject->FileName.Buffer = 
 	  ExAllocatePoolWithTag(NonPagedPool,
-				(ObjectAttributes->ObjectName->Length+1)*2,
+				(ObjectAttributes->ObjectName->Length+1)*sizeof(WCHAR),
 				TAG_FILE_NAME);
 	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
 	FileObject->FileName.MaximumLength = 
@@ -333,7 +333,7 @@ IoCreateFile(
 			   (PVOID*)&FileObject);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT1("ObCreateObject() failed!\n");
+	DPRINT("ObCreateObject() failed!\n");
 	return (Status);
      }
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
@@ -357,6 +357,7 @@ IoCreateFile(
    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
    if (Irp == NULL)
      {
+	ZwClose(*FileHandle);
 	return (STATUS_UNSUCCESSFUL);
      }
      
@@ -413,7 +414,6 @@ IoCreateFile(
      {
 	DPRINT("Failing create request with status %x\n", Status);
 	ZwClose(*FileHandle);
-	(*FileHandle) = 0;
      }
    
    assert_irql(PASSIVE_LEVEL);

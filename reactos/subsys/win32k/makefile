@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.34 2001/06/22 12:17:24 ekohl Exp $
+# $Id: makefile,v 1.35 2001/07/04 20:40:24 chorns Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -9,7 +9,7 @@ TARGET=win32k
 # from atheos appserver makefile
 COPTS   = -pipe -O3 -I./freetype/include -c -Wall
 
-CFLAGS = -D__NTDRIVER__ -I. -DUNICODE
+CFLAGS = -D__NTDRIVER__ -I. -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE
 
 #define FT_FLAT_COMPILE
 

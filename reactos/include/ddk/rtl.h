@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.54 2001/06/25 12:31:00 ekohl Exp $
+/* $Id: rtl.h,v 1.55 2001/07/04 20:40:18 chorns Exp $
  * 
  */
 
@@ -380,7 +380,7 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 static
 inline
 PSINGLE_LIST_ENTRY
-PopEntryList (
+ PopEntryList(
 	PSINGLE_LIST_ENTRY	ListHead
 	)
 {
@@ -393,7 +393,6 @@ PopEntryList (
 	}
 	return ListEntry;
 }
-
 
 /*
 VOID
@@ -417,6 +416,47 @@ PushEntryList (
 {
 	Entry->Next = ListHead->Next;
 	ListHead->Next = Entry;
+}
+
+
+/*
+ * An ReactOS extension
+ */
+static
+inline
+PSINGLE_LIST_ENTRY
+ PopEntrySList(
+	PSLIST_HEADER	ListHead
+	)
+{
+	PSINGLE_LIST_ENTRY ListEntry;
+
+	ListEntry = ListHead->s.Next.Next;
+	if (ListEntry!=NULL)
+	{
+		ListHead->s.Next.Next = ListEntry->Next;
+    ListHead->s.Depth++;
+    ListHead->s.Sequence++;
+  }
+	return ListEntry;
+}
+
+
+/*
+ * An ReactOS extension
+ */
+static
+inline
+VOID
+PushEntrySList (
+	PSLIST_HEADER	ListHead,
+	PSINGLE_LIST_ENTRY	Entry
+	)
+{
+	Entry->Next = ListHead->s.Next.Next;
+	ListHead->s.Next.Next = Entry;
+  ListHead->s.Depth++;
+  ListHead->s.Sequence++;
 }
 
 

@@ -17,6 +17,18 @@ LIST_ENTRY FIBListHead;
 KSPIN_LOCK FIBLock;
 
 
+VOID FreeFIB(
+    PVOID Object)
+/*
+ * FUNCTION: Frees an forward information base object
+ * ARGUMENTS:
+ *     Object = Pointer to an forward information base structure
+ */
+{
+    ExFreePool(Object);
+}
+
+
 VOID DestroyFIBE(
     PFIB_ENTRY FIBE)
 /*
@@ -47,7 +59,7 @@ VOID DestroyFIBE(
 #endif
 
     /* And free the FIB entry */
-    PoolFreeBuffer(FIBE);
+    FreeFIB(FIBE);
 }
 
 
@@ -286,12 +298,13 @@ PFIB_ENTRY RouterAddRoute(
     TI_DbgPrint(DEBUG_ROUTER, ("NetworkAddress (%s)  Netmask (%s)  NTE (%s)  Router (%s).\n",
         A2S(NetworkAddress), A2S(Netmask), A2S(NTE->Address), A2S(Router->Address)));
 
-    FIBE = PoolAllocateBuffer(sizeof(FIB_ENTRY));
+    FIBE = ExAllocatePool(NonPagedPool, sizeof(FIB_ENTRY));
     if (!FIBE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
 
+    FIBE->Free           = FreeFIB;
     FIBE->NetworkAddress = NetworkAddress;
     FIBE->Netmask        = Netmask;
     FIBE->NTE            = NTE;
@@ -424,20 +437,20 @@ PFIB_ENTRY RouterCreateRouteIPv4(
     PFIB_ENTRY FIBE;
 
     pNetworkAddress = AddrBuildIPv4(NetworkAddress);
-    if (!NetworkAddress) {
+    if (!pNetworkAddress) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
 
     pNetmask = AddrBuildIPv4(Netmask);
-    if (!Netmask) {
+    if (!pNetmask) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         DereferenceObject(pNetworkAddress);
         return NULL;
     }
 
     pRouterAddress = AddrBuildIPv4(RouterAddress);
-    if (!RouterAddress) {
+    if (!pRouterAddress) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         DereferenceObject(pNetworkAddress);
         DereferenceObject(pNetmask);
@@ -464,9 +477,13 @@ PFIB_ENTRY RouterCreateRouteIPv4(
     if (!FIBE) {
         /* Not enough free resources */
         NBRemoveNeighbor(NCE);
-        PoolFreeBuffer(pNetworkAddress);
-        PoolFreeBuffer(pNetmask);
-        PoolFreeBuffer(pRouterAddress);
+        DereferenceObject(pNetworkAddress);
+        DereferenceObject(pNetmask);
+        DereferenceObject(pRouterAddress);
+
+        (pNetworkAddress->Free)(pNetworkAddress);
+        (pNetmask->Free)(pNetmask);
+        (pRouterAddress->Free)(pRouterAddress);
     }
 
     return FIBE;

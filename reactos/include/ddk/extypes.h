@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.4 2000/07/04 01:25:27 ekohl Exp $ */
+/* $Id: extypes.h,v 1.5 2001/07/04 20:40:18 chorns Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -103,39 +103,44 @@ typedef union _SLIST_HEADER
      } s;
 } SLIST_HEADER, *PSLIST_HEADER;
 
-typedef struct
+typedef struct _NPAGED_LOOKASIDE_LIST
 {
    SLIST_HEADER ListHead;
-   USHORT Depth;
-   USHORT Pad;
+   USHORT MinimumDepth;
+   USHORT MaximumDepth;
    ULONG TotalAllocates;
    ULONG AllocateMisses;
    ULONG TotalFrees;
-   ULONG TotalMisses;
+   ULONG FreeMisses;
    POOL_TYPE Type;
    ULONG Tag;
    ULONG Size;
    PALLOCATE_FUNCTION Allocate;
    PFREE_FUNCTION Free;
    LIST_ENTRY ListEntry;
+   ULONG LastTotalAllocates;
+   ULONG LastAllocateMisses;
+   ULONG Pad[2];
    KSPIN_LOCK Lock;
 } NPAGED_LOOKASIDE_LIST, *PNPAGED_LOOKASIDE_LIST;
 
-typedef struct
+typedef struct _PAGED_LOOKASIDE_LIST
 {
    SLIST_HEADER ListHead;
-   USHORT Depth;
-   USHORT Pad;
+   USHORT MinimumDepth;
+   USHORT MaximumDepth;
    ULONG TotalAllocates;
    ULONG AllocateMisses;
    ULONG TotalFrees;
-   ULONG TotalMisses;
+   ULONG FreeMisses;
    POOL_TYPE Type;
    ULONG Tag;
    ULONG Size;
    PALLOCATE_FUNCTION Allocate;
    PFREE_FUNCTION Free;
    LIST_ENTRY ListEntry;
+   ULONG LastTotalAllocates;
+   ULONG LastAllocateMisses;
    FAST_MUTEX Lock;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
 

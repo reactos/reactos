@@ -177,7 +177,8 @@ AfdCreate(
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
     if (!NT_SUCCESS(Status)) {
-        /* FIXME: Cleanup */
+      /* FIXME: Cleanup */
+      AFD_DbgPrint(MAX_TRACE, ("FIXME: Cleanup.\n"));
     }
 
     Irp->IoStatus.Status = Status;
@@ -252,7 +253,10 @@ AfdClose(
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
 
+    AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", Irp));
+
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
     return Status;
 }
 

@@ -13,212 +13,268 @@
 INT
 EXPORT
 recv(
-    IN  SOCKET s,
-    OUT CHAR FAR* buf,
-    IN  INT len,
-    IN  INT flags)
+  IN  SOCKET s,
+  OUT CHAR FAR* buf,
+  IN  INT len,
+  IN  INT flags)
 {
-    UNIMPLEMENTED
+  DWORD BytesReceived;
+  WSABUF WSABuf;
 
-    return 0;
+  WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
+      s, buf, len, flags));
+
+  WSABuf.len = len;
+  WSABuf.buf = (CHAR FAR*)buf;
+
+  WSARecv(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, NULL, NULL);
+
+  return BytesReceived;
 }
 
 
 INT
 EXPORT
 recvfrom(
-    IN      SOCKET s,
-    OUT     CHAR FAR* buf,
-    IN      INT len,
-    IN      INT flags,
-    OUT     LPSOCKADDR from,
-    IN OUT  INT FAR* fromlen)
+  IN      SOCKET s,
+  OUT     CHAR FAR* buf,
+  IN      INT len,
+  IN      INT flags,
+  OUT     LPSOCKADDR from,
+  IN OUT  INT FAR* fromlen)
 {
-    DWORD BytesReceived;
-    WSABUF WSABuf;
+  DWORD BytesReceived;
+  WSABUF WSABuf;
 
-    WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
-        s, buf, len, flags));
+  WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
+      s, buf, len, flags));
 
-    WSABuf.len = len;
-    WSABuf.buf = (CHAR FAR*)buf;
+  WSABuf.len = len;
+  WSABuf.buf = (CHAR FAR*)buf;
 
-    WSARecvFrom(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, from, fromlen, NULL, NULL);
+  WSARecvFrom(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, from, fromlen, NULL, NULL);
 
-    return BytesReceived;
+  return BytesReceived;
 }
 
 
 INT
 EXPORT
 send( 
-    IN  SOCKET s, 
-    IN  CONST CHAR FAR* buf, 
-    IN  INT len, 
-    IN  INT flags)
+  IN  SOCKET s, 
+  IN  CONST CHAR FAR* buf, 
+  IN  INT len, 
+  IN  INT flags)
 {
-    UNIMPLEMENTED
+  DWORD BytesSent;
+  WSABUF WSABuf;
 
-    return 0;
+  WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
+      s, buf, len, flags));
+
+  WSABuf.len = len;
+  WSABuf.buf = (CHAR FAR*)buf;
+
+  return WSASend(s, &WSABuf, 1, &BytesSent, flags, NULL, NULL);
 }
 
 
 INT
 EXPORT
 sendto(
-    IN  SOCKET s,
-    IN  CONST CHAR FAR* buf,
-    IN  INT len,
-    IN  INT flags,
-    IN  CONST LPSOCKADDR to, 
-    IN  INT tolen)
+  IN  SOCKET s,
+  IN  CONST CHAR FAR* buf,
+  IN  INT len,
+  IN  INT flags,
+  IN  CONST LPSOCKADDR to, 
+  IN  INT tolen)
 {
-    DWORD BytesSent;
-    WSABUF WSABuf;
+  DWORD BytesSent;
+  WSABUF WSABuf;
 
-    WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
-        s, buf, len, flags));
+  WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
+      s, buf, len, flags));
 
-    WSABuf.len = len;
-    WSABuf.buf = (CHAR FAR*)buf;
+  WSABuf.len = len;
+  WSABuf.buf = (CHAR FAR*)buf;
 
-    return WSASendTo(s, &WSABuf, 1, &BytesSent, flags, to, tolen, NULL, NULL);
+  return WSASendTo(s, &WSABuf, 1, &BytesSent, flags, to, tolen, NULL, NULL);
 }
 
 
 INT
 EXPORT
 WSARecv(
-    IN      SOCKET s,
-    IN OUT  LPWSABUF lpBuffers,
-    IN      DWORD dwBufferCount,
-    OUT     LPDWORD lpNumberOfBytesRecvd,
-    IN OUT  LPDWORD lpFlags,
-    IN      LPWSAOVERLAPPED lpOverlapped,
-    IN      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+  IN      SOCKET s,
+  IN OUT  LPWSABUF lpBuffers,
+  IN      DWORD dwBufferCount,
+  OUT     LPDWORD lpNumberOfBytesRecvd,
+  IN OUT  LPDWORD lpFlags,
+  IN      LPWSAOVERLAPPED lpOverlapped,
+  IN      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-    UNIMPLEMENTED
+  PCATALOG_ENTRY Provider;
+  INT Errno;
+  INT Code;
 
-    return 0;
+  WS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
+
+  assert(Provider->ProcTable.lpWSPRecv);
+
+  Code = Provider->ProcTable.lpWSPRecv(s, lpBuffers, dwBufferCount,
+    lpNumberOfBytesRecvd, lpFlags, lpOverlapped,
+    lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
+
+  DereferenceProviderByPointer(Provider);
+
+  if (Code == SOCKET_ERROR)
+    WSASetLastError(Errno);
+
+  return Code;
 }
 
 
 INT
 EXPORT
 WSARecvDisconnect(
-    IN  SOCKET s,
-    OUT LPWSABUF lpInboundDisconnectData)
+  IN  SOCKET s,
+  OUT LPWSABUF lpInboundDisconnectData)
 {
-    UNIMPLEMENTED
+  UNIMPLEMENTED
 
-    return 0;
+  return 0;
 }
 
 
 INT
 EXPORT
 WSARecvFrom(
-    IN      SOCKET s,
-    IN OUT  LPWSABUF lpBuffers,
-    IN      DWORD dwBufferCount,
-    OUT     LPDWORD lpNumberOfBytesRecvd,
-    IN OUT  LPDWORD lpFlags,
-    OUT	    LPSOCKADDR lpFrom,
-    IN OUT  LPINT lpFromlen,
-    IN      LPWSAOVERLAPPED lpOverlapped,
-    IN      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+  IN      SOCKET s,
+  IN OUT  LPWSABUF lpBuffers,
+  IN      DWORD dwBufferCount,
+  OUT     LPDWORD lpNumberOfBytesRecvd,
+  IN OUT  LPDWORD lpFlags,
+  OUT	    LPSOCKADDR lpFrom,
+  IN OUT  LPINT lpFromlen,
+  IN      LPWSAOVERLAPPED lpOverlapped,
+  IN      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-    PCATALOG_ENTRY Provider;
-    INT Errno;
-    INT Code;
+  PCATALOG_ENTRY Provider;
+  INT Errno;
+  INT Code;
 
-    WS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  WS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
-        WSASetLastError(WSAENOTSOCK);
-        return SOCKET_ERROR;
-    }
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
 
-    assert(Provider->ProcTable.lpWSPRecvFrom);
+  assert(Provider->ProcTable.lpWSPRecvFrom);
 
-    Code = Provider->ProcTable.lpWSPRecvFrom(s, lpBuffers, dwBufferCount,
-        lpNumberOfBytesRecvd, lpFlags, lpFrom, lpFromlen, lpOverlapped,
-        lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
+  Code = Provider->ProcTable.lpWSPRecvFrom(s, lpBuffers, dwBufferCount,
+    lpNumberOfBytesRecvd, lpFlags, lpFrom, lpFromlen, lpOverlapped,
+    lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
 
-    DereferenceProviderByPointer(Provider);
+  DereferenceProviderByPointer(Provider);
 
-    if (Code == SOCKET_ERROR)
-        WSASetLastError(Errno);
+  if (Code == SOCKET_ERROR)
+    WSASetLastError(Errno);
 
-    return Code;
+  return Code;
 }
 
 
 INT
 EXPORT
 WSASend(
-    IN  SOCKET s,
-    IN  LPWSABUF lpBuffers,
-    IN  DWORD dwBufferCount,
-    OUT LPDWORD lpNumberOfBytesSent,
-    IN  DWORD dwFlags,
-    IN  LPWSAOVERLAPPED lpOverlapped,
-    IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+  IN  SOCKET s,
+  IN  LPWSABUF lpBuffers,
+  IN  DWORD dwBufferCount,
+  OUT LPDWORD lpNumberOfBytesSent,
+  IN  DWORD dwFlags,
+  IN  LPWSAOVERLAPPED lpOverlapped,
+  IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-    UNIMPLEMENTED
+  PCATALOG_ENTRY Provider;
+  INT Errno;
+  INT Code;
 
-    return 0;
+  WS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
+
+  assert(Provider->ProcTable.lpWSPSend);
+
+  Code = Provider->ProcTable.lpWSPSend(s, lpBuffers, dwBufferCount,
+    lpNumberOfBytesSent, dwFlags, lpOverlapped,
+    lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
+
+  DereferenceProviderByPointer(Provider);
+
+  if (Code == SOCKET_ERROR)
+    WSASetLastError(Errno);
+
+  return Code;
 }
 
 
 INT
 EXPORT
 WSASendDisconnect(
-    IN  SOCKET s,
-    IN  LPWSABUF lpOutboundDisconnectData)
+  IN  SOCKET s,
+  IN  LPWSABUF lpOutboundDisconnectData)
 {
-    UNIMPLEMENTED
+  UNIMPLEMENTED
 
-    return 0;
+  return 0;
 }
 
 
 INT
 EXPORT
 WSASendTo(
-    IN  SOCKET s,
-    IN  LPWSABUF lpBuffers,
-    IN  DWORD dwBufferCount,
-    OUT LPDWORD lpNumberOfBytesSent,
-    IN  DWORD dwFlags,
-    IN  CONST LPSOCKADDR lpTo,
-    IN  INT iToLen,
-    IN  LPWSAOVERLAPPED lpOverlapped,
-    IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+  IN  SOCKET s,
+  IN  LPWSABUF lpBuffers,
+  IN  DWORD dwBufferCount,
+  OUT LPDWORD lpNumberOfBytesSent,
+  IN  DWORD dwFlags,
+  IN  CONST LPSOCKADDR lpTo,
+  IN  INT iToLen,
+  IN  LPWSAOVERLAPPED lpOverlapped,
+  IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-    PCATALOG_ENTRY Provider;
-    INT Errno;
-    INT Code;
+  PCATALOG_ENTRY Provider;
+  INT Errno;
+  INT Code;
 
-    WS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  WS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
-        WSASetLastError(WSAENOTSOCK);
-        return SOCKET_ERROR;
-    }
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
 
-    assert(Provider->ProcTable.lpWSPSendTo);
+  assert(Provider->ProcTable.lpWSPSendTo);
 
-    Code = Provider->ProcTable.lpWSPSendTo(s, lpBuffers, dwBufferCount,
-        lpNumberOfBytesSent, dwFlags, lpTo, iToLen, lpOverlapped,
-        lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
+  Code = Provider->ProcTable.lpWSPSendTo(s, lpBuffers, dwBufferCount,
+    lpNumberOfBytesSent, dwFlags, lpTo, iToLen, lpOverlapped,
+    lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
 
-    DereferenceProviderByPointer(Provider);
+  DereferenceProviderByPointer(Provider);
 
-    if (Code == SOCKET_ERROR)
-        WSASetLastError(Errno);
+  if (Code == SOCKET_ERROR)
+    WSASetLastError(Errno);
 
-    return Code;
+  return Code;
 }
 
 /* EOF */

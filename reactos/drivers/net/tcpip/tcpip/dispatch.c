@@ -6,6 +6,7 @@
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ * TODO:        Validate device object in all dispatch routines
  */
 #include <tcpip.h>
 #include <dispatch.h>
@@ -227,7 +228,7 @@ VOID DispDataRequestComplete(
 
 
 NTSTATUS DispTdiAccept(
-    PIRP Irp)
+  PIRP Irp)
 /*
  * FUNCTION: TDI_ACCEPT handler
  * ARGUMENTS:
@@ -236,7 +237,7 @@ NTSTATUS DispTdiAccept(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
 	return STATUS_NOT_IMPLEMENTED;
 }
@@ -252,14 +253,94 @@ NTSTATUS DispTdiAssociateAddress(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  PTDI_REQUEST_KERNEL_ASSOCIATE Parameters;
+  PTRANSPORT_CONTEXT TranContext;
+  PIO_STACK_LOCATION IrpSp;
+  PCONNECTION_ENDPOINT Connection;
+  PFILE_OBJECT FileObject;
+  PADDRESS_FILE AddrFile;
+  NTSTATUS Status;
 
-	return STATUS_NOT_IMPLEMENTED;
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+  /* Get associated connection endpoint file object. Quit if none exists */
+
+  TranContext = IrpSp->FileObject->FsContext;
+  if (!TranContext) {
+    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+  if (!Connection) {
+    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  if (Connection->AddressFile) {
+    TI_DbgPrint(MID_TRACE, ("An address file is already asscociated.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  Parameters = (PTDI_REQUEST_KERNEL_ASSOCIATE)&IrpSp->Parameters;
+
+  Status = ObReferenceObjectByHandle(
+    Parameters->AddressHandle,
+    0,
+    IoFileObjectType,
+    KernelMode,
+    (PVOID*)&FileObject,
+    NULL);
+  if (!NT_SUCCESS(Status)) {
+    TI_DbgPrint(MID_TRACE, ("Bad address file object handle (0x%X).\n",
+      Parameters->AddressHandle));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
+    ObDereferenceObject(FileObject);
+    TI_DbgPrint(MID_TRACE, ("Bad address file object. Magic (0x%X).\n",
+      FileObject->FsContext2));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  /* Get associated address file object. Quit if none exists */
+
+  TranContext = FileObject->FsContext;
+  if (!TranContext) {
+    ObDereferenceObject(FileObject);
+    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+  if (!AddrFile) {
+    ObDereferenceObject(FileObject);
+    TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  /* The connection endpoint references the address file object */
+  ReferenceObject(AddrFile);
+  Connection->AddressFile = AddrFile;
+
+  /* Add connection endpoint to connection list on the address file */
+  ExInterlockedInsertTailList(
+    &AddrFile->Connections,
+    &Connection->AddrFileEntry,
+    &AddrFile->Lock);
+
+  /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
+  ObDereferenceObject(FileObject);
+
+  return STATUS_SUCCESS;
 }
 
 
 NTSTATUS DispTdiConnect(
-    PIRP Irp)
+  PIRP Irp)
 /*
  * FUNCTION: TDI_CONNECT handler
  * ARGUMENTS:
@@ -268,14 +349,49 @@ NTSTATUS DispTdiConnect(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  PCONNECTION_ENDPOINT Connection;
+  PTDI_REQUEST_KERNEL Parameters;
+  PTRANSPORT_CONTEXT TranContext;
+  PIO_STACK_LOCATION IrpSp;
+  TDI_REQUEST Request;
+  NTSTATUS Status;
 
-	return STATUS_NOT_IMPLEMENTED;
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+  /* Get associated connection endpoint file object. Quit if none exists */
+
+  TranContext = IrpSp->FileObject->FsContext;
+  if (!TranContext) {
+    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+    return STATUS_INVALID_CONNECTION;
+  }
+
+  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+  if (!Connection) {
+    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+    return STATUS_INVALID_CONNECTION;
+  }
+
+  Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
+
+  /* Initialize a connect request */
+  Request.Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
+  Request.RequestNotifyObject      = DispDataRequestComplete;
+  Request.RequestContext           = Irp;
+
+  Status = TCPConnect(
+    &Request,
+    Parameters->RequestConnectionInformation,
+    Parameters->ReturnConnectionInformation);
+
+  return Status;
 }
 
 
 NTSTATUS DispTdiDisassociateAddress(
-    PIRP Irp)
+  PIRP Irp)
 /*
  * FUNCTION: TDI_DISASSOCIATE_ADDRESS handler
  * ARGUMENTS:
@@ -284,14 +400,47 @@ NTSTATUS DispTdiDisassociateAddress(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  PCONNECTION_ENDPOINT Connection;
+  PTRANSPORT_CONTEXT TranContext;
+  PIO_STACK_LOCATION IrpSp;
+  KIRQL OldIrql;
 
-	return STATUS_NOT_IMPLEMENTED;
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+  /* Get associated connection endpoint file object. Quit if none exists */
+
+  TranContext = IrpSp->FileObject->FsContext;
+  if (!TranContext) {
+    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+  if (!Connection) {
+    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  if (!Connection->AddressFile) {
+    TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+  RemoveEntryList(&Connection->AddrFileEntry);
+  KeReleaseSpinLock(&Connection->Lock, OldIrql);
+
+  /* Remove the reference put on the address file object */
+  DereferenceObject(Connection->AddressFile);
+
+  return STATUS_SUCCESS;
 }
 
 
 NTSTATUS DispTdiDisconnect(
-    PIRP Irp)
+  PIRP Irp)
 /*
  * FUNCTION: TDI_DISCONNECT handler
  * ARGUMENTS:
@@ -300,14 +449,14 @@ NTSTATUS DispTdiDisconnect(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
 	return STATUS_NOT_IMPLEMENTED;
 }
 
 
 NTSTATUS DispTdiListen(
-    PIRP Irp)
+  PIRP Irp)
 /*
  * FUNCTION: TDI_LISTEN handler
  * ARGUMENTS:
@@ -316,15 +465,15 @@ NTSTATUS DispTdiListen(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
 	return STATUS_NOT_IMPLEMENTED;
 }
 
 
 NTSTATUS DispTdiQueryInformation(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp)
 /*
  * FUNCTION: TDI_QUERY_INFORMATION handler
  * ARGUMENTS:
@@ -334,14 +483,14 @@ NTSTATUS DispTdiQueryInformation(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
 	return STATUS_NOT_IMPLEMENTED;
 }
 
 
 NTSTATUS DispTdiReceive(
-    PIRP Irp)
+  PIRP Irp)
 /*
  * FUNCTION: TDI_RECEIVE handler
  * ARGUMENTS:
@@ -350,7 +499,7 @@ NTSTATUS DispTdiReceive(
  *     Status of operation
  */
 {
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
 	return STATUS_NOT_IMPLEMENTED;
 }
@@ -366,42 +515,47 @@ NTSTATUS DispTdiReceiveDatagram(
  *     Status of operation
  */
 {
-    PIO_STACK_LOCATION IrpSp;
-    PTDI_REQUEST_KERNEL_RECEIVEDG DgramInfo;
-    PTRANSPORT_CONTEXT TranContext;
-    TDI_REQUEST Request;
-    NTSTATUS Status;
-    ULONG BytesReceived;
+  PIO_STACK_LOCATION IrpSp;
+  PTDI_REQUEST_KERNEL_RECEIVEDG DgramInfo;
+  PTRANSPORT_CONTEXT TranContext;
+  TDI_REQUEST Request;
+  NTSTATUS Status;
+  ULONG BytesReceived;
 
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
-    IrpSp     = IoGetCurrentIrpStackLocation(Irp);
-    DgramInfo = (PTDI_REQUEST_KERNEL_RECEIVEDG)&(IrpSp->Parameters);
+  IrpSp     = IoGetCurrentIrpStackLocation(Irp);
+  DgramInfo = (PTDI_REQUEST_KERNEL_RECEIVEDG)&(IrpSp->Parameters);
 
-    TranContext = IrpSp->FileObject->FsContext;
-    /* Initialize a receive request */
-    Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
-    Request.RequestNotifyObject  = DispDataRequestComplete;
-    Request.RequestContext       = Irp;
-    Status = DispPrepareIrpForCancel(IrpSp->FileObject->FsContext, Irp, (PDRIVER_CANCEL)DispCancelRequest);
-    if (NT_SUCCESS(Status)) {
-        Status = UDPReceiveDatagram(&Request,
-            DgramInfo->ReceiveDatagramInformation,
-            (PNDIS_BUFFER)Irp->MdlAddress,
-            DgramInfo->ReceiveLength,
-            DgramInfo->ReceiveFlags,
-            DgramInfo->ReturnDatagramInformation,
-            &BytesReceived);
-        if (Status != STATUS_PENDING) {
-            DispDataRequestComplete(Irp, Status, BytesReceived);
-            /* Return STATUS_PENDING because DispPrepareIrpForCancel marks Irp as pending */
-            Status = STATUS_PENDING;
-        }
+  TranContext = IrpSp->FileObject->FsContext;
+  /* Initialize a receive request */
+  Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
+  Request.RequestNotifyObject  = DispDataRequestComplete;
+  Request.RequestContext       = Irp;
+  Status = DispPrepareIrpForCancel(
+    IrpSp->FileObject->FsContext,
+    Irp,
+    (PDRIVER_CANCEL)DispCancelRequest);
+  if (NT_SUCCESS(Status)) {
+    Status = UDPReceiveDatagram(
+      &Request,
+      DgramInfo->ReceiveDatagramInformation,
+      (PNDIS_BUFFER)Irp->MdlAddress,
+      DgramInfo->ReceiveLength,
+      DgramInfo->ReceiveFlags,
+      DgramInfo->ReturnDatagramInformation,
+      &BytesReceived);
+    if (Status != STATUS_PENDING) {
+      DispDataRequestComplete(Irp, Status, BytesReceived);
+      /* Return STATUS_PENDING because DispPrepareIrpForCancel marks
+         the Irp as pending */
+      Status = STATUS_PENDING;
     }
+  }
 
-    TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
+  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
-    return Status;
+  return Status;
 }
 
 
@@ -475,7 +629,7 @@ NTSTATUS DispTdiSendDatagram(
 
 
 NTSTATUS DispTdiSetEventHandler(
-    PIRP Irp)
+  PIRP Irp)
 /*
  * FUNCTION: TDI_SET_EVENT_HANDER handler
  * ARGUMENTS:
@@ -484,130 +638,158 @@ NTSTATUS DispTdiSetEventHandler(
  *     Status of operation
  */
 {
-    PTDI_REQUEST_KERNEL_SET_EVENT Parameters;
-    PTRANSPORT_CONTEXT TranContext;
-    PIO_STACK_LOCATION IrpSp;
-    PADDRESS_FILE AddrFile;
-    NTSTATUS Status;
-    KIRQL OldIrql;
+  PTDI_REQUEST_KERNEL_SET_EVENT Parameters;
+  PTRANSPORT_CONTEXT TranContext;
+  PIO_STACK_LOCATION IrpSp;
+  PADDRESS_FILE AddrFile;
+  NTSTATUS Status;
+  KIRQL OldIrql;
 
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-    /* Get associated address file object. Quit if none exists */
-    TranContext = IrpSp->FileObject->FsContext;
-    if (!TranContext) {
-        TI_DbgPrint(MIN_TRACE, ("Bad transport context.\n"));
-        return STATUS_INVALID_PARAMETER;
+  /* Get associated address file object. Quit if none exists */
+
+  TranContext = IrpSp->FileObject->FsContext;
+  if (!TranContext) {
+    TI_DbgPrint(MIN_TRACE, ("Bad transport context.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+  if (!AddrFile) {
+    TI_DbgPrint(MIN_TRACE, ("No address file object.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  Parameters = (PTDI_REQUEST_KERNEL_SET_EVENT)&IrpSp->Parameters;
+  Status     = STATUS_SUCCESS;
+  
+  KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+
+  /* Set the event handler. if an event handler is associated with
+     a specific event, it's flag (RegisteredXxxHandler) is TRUE.
+     If an event handler is not used it's flag is FALSE */
+  switch (Parameters->EventType) {
+  case TDI_EVENT_CONNECT:
+    if (!Parameters->EventHandler) {
+      AddrFile->ConnectHandlerContext    = NULL;
+      AddrFile->RegisteredConnectHandler = FALSE;
+    } else {
+      AddrFile->ConnectHandler =
+        (PTDI_IND_CONNECT)Parameters->EventHandler;
+      AddrFile->ConnectHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredConnectHandler = TRUE;
     }
+    break;
 
-    AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
-    if (!AddrFile) {
-        TI_DbgPrint(MIN_TRACE, ("No address file object.\n"));
-        return STATUS_INVALID_PARAMETER;
+  case TDI_EVENT_DISCONNECT:
+    if (!Parameters->EventHandler) {
+      AddrFile->DisconnectHandlerContext    = NULL;
+      AddrFile->RegisteredDisconnectHandler = FALSE;
+    } else {
+      AddrFile->DisconnectHandler =
+        (PTDI_IND_DISCONNECT)Parameters->EventHandler;
+      AddrFile->DisconnectHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredDisconnectHandler = TRUE;
     }
-
-    Parameters = (PTDI_REQUEST_KERNEL_SET_EVENT)&IrpSp->Parameters;
-    Status     = STATUS_SUCCESS;
-    
-    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-
-    /* Set the event handler. if an event handler is associated with
-       a specific event, it's flag (RegisteredXxxHandler) is TRUE.
-       If an event handler is not used it's flag is FALSE */
-    switch (Parameters->EventType) {
-    case TDI_EVENT_CONNECT:
-        if (!Parameters->EventHandler) {
-//            AddrFile->ConnectionHandler =
-//                (PTDI_IND_CONNECT)TdiDefaultConnectHandler;
-            AddrFile->ConnectionHandlerContext    = NULL;
-            AddrFile->RegisteredConnectionHandler = FALSE;
-        } else {
-            AddrFile->ConnectionHandler =
-                (PTDI_IND_CONNECT)Parameters->EventHandler;
-            AddrFile->ConnectionHandlerContext    = Parameters->EventContext;
-            AddrFile->RegisteredConnectionHandler = TRUE;
-        }
-        break;
-
-    case TDI_EVENT_DISCONNECT:
-        if (!Parameters->EventHandler) {
-//            AddrFile->DisconnectHandler =
-//                (PTDI_IND_DISCONNECT)TdiDefaultDisconnectHandler;
-            AddrFile->DisconnectHandlerContext    = NULL;
-            AddrFile->RegisteredDisconnectHandler = FALSE;
-        } else {
-            AddrFile->DisconnectHandler =
-                (PTDI_IND_DISCONNECT)Parameters->EventHandler;
-            AddrFile->DisconnectHandlerContext    = Parameters->EventContext;
-            AddrFile->RegisteredDisconnectHandler = TRUE;
-        }
-        break;
-
-    case TDI_EVENT_RECEIVE:
-        if (Parameters->EventHandler == NULL) {
-//            AddrFile->ReceiveHandler =
-//                (PTDI_IND_RECEIVE)TdiDefaultReceiveHandler;
-            AddrFile->ReceiveHandlerContext    = NULL;
-            AddrFile->RegisteredReceiveHandler = FALSE;
-        } else {
-            AddrFile->ReceiveHandler =
-                (PTDI_IND_RECEIVE)Parameters->EventHandler;
-            AddrFile->ReceiveHandlerContext    = Parameters->EventContext;
-            AddrFile->RegisteredReceiveHandler = TRUE;
-        }
-        break;
-
-    case TDI_EVENT_RECEIVE_EXPEDITED:
-        if (Parameters->EventHandler == NULL) {
-//            AddrFile->ExpeditedReceiveHandler =
-//                (PTDI_IND_RECEIVE_EXPEDITED)TdiDefaultRcvExpeditedHandler;
-            AddrFile->ExpeditedReceiveHandlerContext    = NULL;
-            AddrFile->RegisteredExpeditedReceiveHandler = FALSE;
-        } else {
-            AddrFile->ExpeditedReceiveHandler =
-                (PTDI_IND_RECEIVE_EXPEDITED)Parameters->EventHandler;
-            AddrFile->ExpeditedReceiveHandlerContext    = Parameters->EventContext;
-            AddrFile->RegisteredExpeditedReceiveHandler = TRUE;
-        }
-        break;
-
-    case TDI_EVENT_RECEIVE_DATAGRAM:
-        if (Parameters->EventHandler == NULL) {
-//            AddrFile->ReceiveDatagramHandler =
-//                (PTDI_IND_RECEIVE_DATAGRAM)TdiDefaultRcvDatagramHandler;
-            AddrFile->ReceiveDatagramHandlerContext    = NULL;
-            AddrFile->RegisteredReceiveDatagramHandler = FALSE;
-        } else {
-            AddrFile->ReceiveDatagramHandler =
-                (PTDI_IND_RECEIVE_DATAGRAM)Parameters->EventHandler;
-            AddrFile->ReceiveDatagramHandlerContext    = Parameters->EventContext;
-            AddrFile->RegisteredReceiveDatagramHandler = TRUE;
-        }
-        break;
+    break;
 
     case TDI_EVENT_ERROR:
-        if (Parameters->EventHandler == NULL) {
-//            AddrFile->ErrorHandler =
-//                (PTDI_IND_ERROR)TdiDefaultErrorHandler;
-            AddrFile->ErrorHandlerContext    = NULL;
-            AddrFile->RegisteredErrorHandler = FALSE;
-        } else {
-            AddrFile->ErrorHandler =
-                (PTDI_IND_ERROR)Parameters->EventHandler;
-            AddrFile->ErrorHandlerContext    = Parameters->EventContext;
-            AddrFile->RegisteredErrorHandler = TRUE;
-        }
-        break;
-
-    default:
-        Status = STATUS_INVALID_PARAMETER;
+    if (Parameters->EventHandler == NULL) {
+      AddrFile->ErrorHandlerContext    = NULL;
+      AddrFile->RegisteredErrorHandler = FALSE;
+    } else {
+      AddrFile->ErrorHandler =
+        (PTDI_IND_ERROR)Parameters->EventHandler;
+      AddrFile->ErrorHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredErrorHandler = TRUE;
     }
+    break;
 
-    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  case TDI_EVENT_RECEIVE:
+    if (Parameters->EventHandler == NULL) {
+      AddrFile->ReceiveHandlerContext    = NULL;
+      AddrFile->RegisteredReceiveHandler = FALSE;
+    } else {
+      AddrFile->ReceiveHandler =
+        (PTDI_IND_RECEIVE)Parameters->EventHandler;
+      AddrFile->ReceiveHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredReceiveHandler = TRUE;
+    }
+    break;
 
-    return Status;
+  case TDI_EVENT_RECEIVE_DATAGRAM:
+    if (Parameters->EventHandler == NULL) {
+      AddrFile->ReceiveDatagramHandlerContext    = NULL;
+      AddrFile->RegisteredReceiveDatagramHandler = FALSE;
+    } else {
+      AddrFile->ReceiveDatagramHandler =
+        (PTDI_IND_RECEIVE_DATAGRAM)Parameters->EventHandler;
+      AddrFile->ReceiveDatagramHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredReceiveDatagramHandler = TRUE;
+    }
+    break;
+
+  case TDI_EVENT_RECEIVE_EXPEDITED:
+    if (Parameters->EventHandler == NULL) {
+      AddrFile->ExpeditedReceiveHandlerContext    = NULL;
+      AddrFile->RegisteredExpeditedReceiveHandler = FALSE;
+    } else {
+      AddrFile->ExpeditedReceiveHandler =
+        (PTDI_IND_RECEIVE_EXPEDITED)Parameters->EventHandler;
+      AddrFile->ExpeditedReceiveHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredExpeditedReceiveHandler = TRUE;
+    }
+    break;
+
+  case TDI_EVENT_CHAINED_RECEIVE:
+    if (Parameters->EventHandler == NULL) {
+      AddrFile->ChainedReceiveHandlerContext    = NULL;
+      AddrFile->RegisteredChainedReceiveHandler = FALSE;
+    } else {
+      AddrFile->ChainedReceiveHandler =
+        (PTDI_IND_CHAINED_RECEIVE)Parameters->EventHandler;
+      AddrFile->ChainedReceiveHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredChainedReceiveHandler = TRUE;
+    }
+    break;
+
+  case TDI_EVENT_CHAINED_RECEIVE_DATAGRAM:
+    if (Parameters->EventHandler == NULL) {
+      AddrFile->ChainedReceiveDatagramHandlerContext    = NULL;
+      AddrFile->RegisteredChainedReceiveDatagramHandler = FALSE;
+    } else {
+      AddrFile->ChainedReceiveDatagramHandler =
+        (PTDI_IND_CHAINED_RECEIVE_DATAGRAM)Parameters->EventHandler;
+      AddrFile->ChainedReceiveDatagramHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredChainedReceiveDatagramHandler = TRUE;
+    }
+    break;
+
+  case TDI_EVENT_CHAINED_RECEIVE_EXPEDITED:
+    if (Parameters->EventHandler == NULL) {
+      AddrFile->ChainedReceiveExpeditedHandlerContext    = NULL;
+      AddrFile->RegisteredChainedReceiveExpeditedHandler = FALSE;
+    } else {
+      AddrFile->ChainedReceiveExpeditedHandler =
+        (PTDI_IND_CHAINED_RECEIVE_EXPEDITED)Parameters->EventHandler;
+      AddrFile->ChainedReceiveExpeditedHandlerContext    = Parameters->EventContext;
+      AddrFile->RegisteredChainedReceiveExpeditedHandler = TRUE;
+    }
+    break;
+
+  default:
+    TI_DbgPrint(MIN_TRACE, ("Unknown event type (0x%X).\n",
+      Parameters->EventType));
+
+    Status = STATUS_INVALID_PARAMETER;
+  }
+
+  KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+
+  return Status;
 }
 
 

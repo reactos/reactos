@@ -20,7 +20,8 @@
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
-//DWORD DebugTraceLevel = MAX_TRACE | DEBUG_ICMP | DEBUG_BUFFER;
+//DWORD DebugTraceLevel = MAX_TRACE;
+//DWORD DebugTraceLevel = DEBUG_ULTRA;
 
 #endif /* DBG */
 
@@ -103,8 +104,8 @@ VOID TiWriteErrorLog(
 
 
 NTSTATUS TiGetProtocolNumber(
-    PUNICODE_STRING FileName,
-    PULONG Protocol)
+  PUNICODE_STRING FileName,
+  PULONG Protocol)
 /*
  * FUNCTION: Returns the protocol number from a file name
  * ARGUMENTS:
@@ -114,30 +115,30 @@ NTSTATUS TiGetProtocolNumber(
  *     Status of operation
  */
 {
-    UNICODE_STRING us;
-    NTSTATUS Status;
-    ULONG Value;
-    PWSTR Name;
+  UNICODE_STRING us;
+  NTSTATUS Status;
+  ULONG Value;
+  PWSTR Name;
 
-    TI_DbgPrint(MAX_TRACE, ("Called. FileName (%wZ).\n", FileName));
+  TI_DbgPrint(MAX_TRACE, ("Called. FileName (%wZ).\n", FileName));
 
-    Name = FileName->Buffer;
+  Name = FileName->Buffer;
 
-    if (*Name++ != (WCHAR)L'\\')
-        return STATUS_UNSUCCESSFUL;
+  if (*Name++ != (WCHAR)L'\\')
+    return STATUS_UNSUCCESSFUL;
 
-    if (*Name == (WCHAR)NULL)
-        return STATUS_UNSUCCESSFUL;
+  if (*Name == (WCHAR)NULL)
+    return STATUS_UNSUCCESSFUL;
 
-    RtlInitUnicodeString(&us, Name);
+  RtlInitUnicodeString(&us, Name);
 
-    Status = RtlUnicodeStringToInteger(&us, 10, &Value);
-    if (!NT_SUCCESS(Status) || ((Value > 255)))
-        return STATUS_UNSUCCESSFUL;
+  Status = RtlUnicodeStringToInteger(&us, 10, &Value);
+  if (!NT_SUCCESS(Status) || ((Value > 255)))
+    return STATUS_UNSUCCESSFUL;
 
-    *Protocol = Value;
+  *Protocol = Value;
 
-    return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 
@@ -150,104 +151,138 @@ NTSTATUS TiGetProtocolNumber(
  *     Status of the operation
  */
 NTSTATUS TiCreateFileObject(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp)
 {
-    PIO_STACK_LOCATION IrpSp;
-    PFILE_FULL_EA_INFORMATION EaInfo;
-    PTA_ADDRESS_IP Address;
-    PTRANSPORT_CONTEXT Context;
-    TDI_REQUEST Request;
-    NTSTATUS Status;
-    ULONG Protocol;
+  PFILE_FULL_EA_INFORMATION EaInfo;
+  PTRANSPORT_CONTEXT Context;
+  PIO_STACK_LOCATION IrpSp;
+  PTA_ADDRESS_IP Address;
+  TDI_REQUEST Request;
+  PVOID ClientContext;
+  NTSTATUS Status;
+  ULONG Protocol;
 
-    TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
+  TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
 
-    EaInfo = Irp->AssociatedIrp.SystemBuffer;
-
-    /* Parameter check */
-    if (!EaInfo) {
-        TI_DbgPrint(MIN_TRACE, ("No EA information in IRP.\n"));
-        return STATUS_INVALID_PARAMETER;
+  EaInfo = Irp->AssociatedIrp.SystemBuffer;
+CP
+  /* Parameter check */
+  if (!EaInfo) {
+    TI_DbgPrint(MIN_TRACE, ("No EA information in IRP.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+CP
+  /* Allocate resources here. We release them again if something failed */
+  Context = ExAllocatePool(NonPagedPool, sizeof(TRANSPORT_CONTEXT));
+  if (!Context) {
+    TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+CP
+  Context->RefCount   = 1;
+  Context->CancelIrps = FALSE;
+  KeInitializeEvent(&Context->CleanupEvent, NotificationEvent, FALSE);
+CP
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  IrpSp->FileObject->FsContext = Context;
+  Request.RequestContext       = Irp;
+CP
+  /* Branch to the right handler */
+  if ((EaInfo->EaNameLength == TDI_TRANSPORT_ADDRESS_LENGTH) && 
+    (RtlCompareMemory(&EaInfo->EaName, TdiTransportAddress,
+     TDI_TRANSPORT_ADDRESS_LENGTH) == TDI_TRANSPORT_ADDRESS_LENGTH)) {
+    /* This is a request to open an address */
+CP
+    /* Parameter checks */
+    Address = (PTA_ADDRESS_IP)(EaInfo->EaName + EaInfo->EaNameLength);
+    if ((EaInfo->EaValueLength < sizeof(TA_ADDRESS_IP)) ||
+      (Address->TAAddressCount != 1) ||
+      (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
+      (Address->Address[0].AddressType != TDI_ADDRESS_TYPE_IP)) {
+      TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
+      ExFreePool(Context);
+      return STATUS_INVALID_PARAMETER;
     }
-    
-    /* Allocate resources here. We release them again if something failed */
-    Context = ExAllocatePool(NonPagedPool, sizeof(TRANSPORT_CONTEXT));
-    if (!Context) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+CP
+    /* Open address file object */
 
-    Context->RefCount   = 1;
-    Context->CancelIrps = FALSE;
-    KeInitializeEvent(&Context->CleanupEvent, NotificationEvent, FALSE);
-
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    IrpSp->FileObject->FsContext = Context;
-    Request.RequestContext       = Irp;
-
-    /* Branch to the right handler */
-    if ((EaInfo->EaNameLength==TDI_TRANSPORT_ADDRESS_LENGTH) && 
-        (RtlCompareMemory(&EaInfo->EaName, TdiTransportAddress,
-         TDI_TRANSPORT_ADDRESS_LENGTH) == TDI_TRANSPORT_ADDRESS_LENGTH)) {
-        /* This is a request to open an address */
-
-        /* Parameter checks */
-        Address = (PTA_ADDRESS_IP)(EaInfo->EaName + EaInfo->EaNameLength);
-        if ((EaInfo->EaValueLength < sizeof(TA_ADDRESS_IP)) ||
-            (Address->TAAddressCount != 1) ||
-            (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
-            (Address->Address[0].AddressType != TDI_ADDRESS_TYPE_IP)) {
-            TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
-            ExFreePool(Context);
-            return STATUS_INVALID_PARAMETER;
-        }
-
-        /* Open address file object */
-
-        /* Protocol depends on device object so find the protocol */
-        if (DeviceObject == TCPDeviceObject)
-            Protocol = IPPROTO_TCP;
-        else if (DeviceObject == UDPDeviceObject)
-            Protocol = IPPROTO_UDP;
-        else if (DeviceObject == IPDeviceObject)
-            Protocol = IPPROTO_RAW;
-        else if (DeviceObject == RawIPDeviceObject) {
-            Status = TiGetProtocolNumber(&IrpSp->FileObject->FileName, &Protocol);
-            if (!NT_SUCCESS(Status)) {
-                TI_DbgPrint(MIN_TRACE, ("Raw IP protocol number is invalid.\n"));
-                ExFreePool(Context);
-                return STATUS_INVALID_PARAMETER;
-            }
-        } else {
-            TI_DbgPrint(MIN_TRACE, ("Invalid device object at (0x%X).\n", DeviceObject));
-            ExFreePool(Context);
-            return STATUS_INVALID_PARAMETER;
-        }
-
-        Status = FileOpenAddress(&Request, Address, Protocol, NULL);
-        if (NT_SUCCESS(Status)) {
-            IrpSp->FileObject->FsContext2 = (PVOID)TDI_TRANSPORT_ADDRESS_FILE;
-            Context->Handle.AddressHandle = Request.Handle.AddressHandle;
-        }
-    } else {
-        TI_DbgPrint(MIN_TRACE, ("Connection endpoint, and control connections are not supported.\n"));
-        /* FIXME: Open a connection endpoint, or control connection */
-        Status = STATUS_NOT_IMPLEMENTED;
-    }
-
-    if (!NT_SUCCESS(Status))
+    /* Protocol depends on device object so find the protocol */
+    if (DeviceObject == TCPDeviceObject)
+      Protocol = IPPROTO_TCP;
+    else if (DeviceObject == UDPDeviceObject)
+      Protocol = IPPROTO_UDP;
+    else if (DeviceObject == IPDeviceObject)
+      Protocol = IPPROTO_RAW;
+    else if (DeviceObject == RawIPDeviceObject) {
+      Status = TiGetProtocolNumber(&IrpSp->FileObject->FileName, &Protocol);
+      if (!NT_SUCCESS(Status)) {
+        TI_DbgPrint(MIN_TRACE, ("Raw IP protocol number is invalid.\n"));
         ExFreePool(Context);
+        return STATUS_INVALID_PARAMETER;
+      }
+    } else {
+      TI_DbgPrint(MIN_TRACE, ("Invalid device object at (0x%X).\n", DeviceObject));
+      ExFreePool(Context);
+      return STATUS_INVALID_PARAMETER;
+    }
+CP
+    Status = FileOpenAddress(&Request, Address, Protocol, NULL);
+    if (NT_SUCCESS(Status)) {
+      IrpSp->FileObject->FsContext2 = (PVOID)TDI_TRANSPORT_ADDRESS_FILE;
+      Context->Handle.AddressHandle = Request.Handle.AddressHandle;
+    }
+CP
+  } else if ((EaInfo->EaNameLength == TDI_CONNECTION_CONTEXT_LENGTH) && 
+    (RtlCompareMemory(&EaInfo->EaName, TdiConnectionContext,
+     TDI_CONNECTION_CONTEXT_LENGTH) == TDI_CONNECTION_CONTEXT_LENGTH)) {
+    /* This is a request to open a connection endpoint */
+CP
+    /* Parameter checks */
 
-    TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
+    if (EaInfo->EaValueLength < sizeof(PVOID)) {
+      TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
+      ExFreePool(Context);
+      return STATUS_INVALID_PARAMETER;
+    }
 
-    return Status;
+    /* Can only do connection oriented communication using TCP */
+
+    if (DeviceObject != TCPDeviceObject) {
+      TI_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+      ExFreePool(Context);
+      return STATUS_INVALID_PARAMETER;
+    }
+
+    ClientContext = *((PVOID*)(EaInfo->EaName + EaInfo->EaNameLength));
+
+    /* Open connection endpoint file object */
+
+    Status = FileOpenConnection(&Request, ClientContext);
+    if (NT_SUCCESS(Status)) {
+      IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONNECTION_FILE;
+      Context->Handle.ConnectionContext = Request.Handle.ConnectionContext;
+    }
+  } else {
+    /* This is a request to open a control connection */
+
+    TI_DbgPrint(MIN_TRACE, ("Control connections are not implemented yet\n"));
+
+    Status = STATUS_NOT_IMPLEMENTED;
+  }
+
+  if (!NT_SUCCESS(Status))
+    ExFreePool(Context);
+
+  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
+
+  return Status;
 }
 
 
 VOID TiCleanupFileObjectComplete(
-    PVOID Context,
-    NTSTATUS Status)
+  PVOID Context,
+  NTSTATUS Status)
 /*
  * FUNCTION: Completes an object cleanup IRP I/O request
  * ARGUMENTS:
@@ -255,30 +290,30 @@ VOID TiCleanupFileObjectComplete(
  *     Status  = Final status of the operation
  */
 {
-    PIRP Irp;
-    PIO_STACK_LOCATION IrpSp;
-    PTRANSPORT_CONTEXT TranContext;
-    KIRQL OldIrql;
+  PIRP Irp;
+  PIO_STACK_LOCATION IrpSp;
+  PTRANSPORT_CONTEXT TranContext;
+  KIRQL OldIrql;
 
-    Irp         = (PIRP)Context;
-    IrpSp       = IoGetCurrentIrpStackLocation(Irp);
-    TranContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
+  Irp         = (PIRP)Context;
+  IrpSp       = IoGetCurrentIrpStackLocation(Irp);
+  TranContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
 
-    Irp->IoStatus.Status = Status;
-    
-    IoAcquireCancelSpinLock(&OldIrql);
+  Irp->IoStatus.Status = Status;
+  
+  IoAcquireCancelSpinLock(&OldIrql);
 
-    /* Remove the initial reference provided at object creation time */
-    TranContext->RefCount--;
+  /* Remove the initial reference provided at object creation time */
+  TranContext->RefCount--;
 
 #ifdef DBG
-    if (TranContext->RefCount != 0)
-        TI_DbgPrint(DEBUG_REFCOUNT, ("TranContext->RefCount is %i, should be 0.\n", TranContext->RefCount));
+  if (TranContext->RefCount != 0)
+    TI_DbgPrint(DEBUG_REFCOUNT, ("TranContext->RefCount is %i, should be 0.\n", TranContext->RefCount));
 #endif
 
-    KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
+  KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
 
-    IoReleaseCancelSpinLock(OldIrql);
+  IoReleaseCancelSpinLock(OldIrql);
 }
 
 
@@ -293,67 +328,67 @@ VOID TiCleanupFileObjectComplete(
  *     This function does not pend
  */
 NTSTATUS TiCleanupFileObject(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp)
 {
-    PIO_STACK_LOCATION IrpSp;
-    PTRANSPORT_CONTEXT Context;
-    TDI_REQUEST Request;
-    NTSTATUS Status;
-    KIRQL OldIrql;
+  PIO_STACK_LOCATION IrpSp;
+  PTRANSPORT_CONTEXT Context;
+  TDI_REQUEST Request;
+  NTSTATUS Status;
+  KIRQL OldIrql;
 
-    IrpSp   = IoGetCurrentIrpStackLocation(Irp);
-    Context = IrpSp->FileObject->FsContext;    
-    if (!Context) {
-        TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
-        return STATUS_INVALID_PARAMETER;
-    }
+  IrpSp   = IoGetCurrentIrpStackLocation(Irp);
+  Context = IrpSp->FileObject->FsContext;    
+  if (!Context) {
+    TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  IoAcquireCancelSpinLock(&OldIrql);
+
+  Context->CancelIrps = TRUE;
+  KeResetEvent(&Context->CleanupEvent);
+
+  IoReleaseCancelSpinLock(OldIrql);
+
+  Request.RequestNotifyObject = TiCleanupFileObjectComplete;
+  Request.RequestContext      = Irp;
+
+  switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
+  case TDI_TRANSPORT_ADDRESS_FILE:
+    Request.Handle.AddressHandle = Context->Handle.AddressHandle;
+    Status = FileCloseAddress(&Request);
+    break;
+
+  case TDI_CONNECTION_FILE:
+    Request.Handle.ConnectionContext = Context->Handle.ConnectionContext;
+    Status = FileCloseConnection(&Request);
+    break;
+
+  case TDI_CONTROL_CHANNEL_FILE:
+    Request.Handle.ControlChannel = Context->Handle.ControlChannel;
+    Status = FileCloseControlChannel(&Request);
+    break;
+
+  default:
+    /* This should never happen */
+
+    TI_DbgPrint(MIN_TRACE, ("Unknown transport context.\n"));
 
     IoAcquireCancelSpinLock(&OldIrql);
-
-    Context->CancelIrps = TRUE;
-    KeResetEvent(&Context->CleanupEvent);
-
+    Context->CancelIrps = FALSE;
     IoReleaseCancelSpinLock(OldIrql);
 
-    Request.RequestNotifyObject = TiCleanupFileObjectComplete;
-    Request.RequestContext      = Irp;
+    return STATUS_INVALID_PARAMETER;
+  }
 
-    switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
-    case TDI_TRANSPORT_ADDRESS_FILE:
-        Request.Handle.AddressHandle = Context->Handle.AddressHandle;
-        Status = FileCloseAddress(&Request);
-        break;
-
-    case TDI_CONNECTION_FILE:
-        Request.Handle.ConnectionContext = Context->Handle.ConnectionContext;
-        Status = FileCloseConnection(&Request);
-        break;
-
-    case TDI_CONTROL_CHANNEL_FILE:
-        Request.Handle.ControlChannel = Context->Handle.ControlChannel;
-        Status = FileCloseControlChannel(&Request);
-        break;
-
-    default:
-        /* This should never happen */
-
-        TI_DbgPrint(MIN_TRACE, ("Unknown transport context.\n"));
-
-        IoAcquireCancelSpinLock(&OldIrql);
-        Context->CancelIrps = FALSE;
-        IoReleaseCancelSpinLock(OldIrql);
-
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    if (Status != STATUS_PENDING)
-       TiCleanupFileObjectComplete(Irp, Status);
-    
-    KeWaitForSingleObject(&Context->CleanupEvent,
-        UserRequest, KernelMode, FALSE, NULL);
-    
-    return Irp->IoStatus.Status;
+  if (Status != STATUS_PENDING)
+    TiCleanupFileObjectComplete(Irp, Status);
+  
+  KeWaitForSingleObject(&Context->CleanupEvent,
+    UserRequest, KernelMode, FALSE, NULL);
+  
+  return Irp->IoStatus.Status;
 }
 
 
@@ -362,8 +397,8 @@ NTSTATUS
 STDCALL
 #endif
 TiDispatchOpenClose(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp)
 /*
  * FUNCTION: Main dispath routine
  * ARGUMENTS:
@@ -373,54 +408,54 @@ TiDispatchOpenClose(
  *     Status of the operation
  */
 {
-    PIO_STACK_LOCATION IrpSp;
-    NTSTATUS Status;
-    PTRANSPORT_CONTEXT Context;
+  PIO_STACK_LOCATION IrpSp;
+  NTSTATUS Status;
+  PTRANSPORT_CONTEXT Context;
 
-    TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
+  TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
 
-    IoMarkIrpPending(Irp);
-    Irp->IoStatus.Status      = STATUS_PENDING;
-    Irp->IoStatus.Information = 0;
+  IoMarkIrpPending(Irp);
+  Irp->IoStatus.Status      = STATUS_PENDING;
+  Irp->IoStatus.Information = 0;
 
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-    switch (IrpSp->MajorFunction) {
-    /* Open an address file, connection endpoint, or control connection */
-    case IRP_MJ_CREATE:
-        Status = TiCreateFileObject(DeviceObject, Irp);
-        break;
+  switch (IrpSp->MajorFunction) {
+  /* Open an address file, connection endpoint, or control connection */
+  case IRP_MJ_CREATE:
+    Status = TiCreateFileObject(DeviceObject, Irp);
+    break;
 
-    /* Close an address file, connection endpoint, or control connection */
-    case IRP_MJ_CLOSE:
-        Context = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
-        if (Context)
-            ExFreePool(Context);
-        Status = STATUS_SUCCESS;
-        break;
+  /* Close an address file, connection endpoint, or control connection */
+  case IRP_MJ_CLOSE:
+    Context = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
+    if (Context)
+        ExFreePool(Context);
+    Status = STATUS_SUCCESS;
+    break;
 
-    /* Release resources bound to an address file, connection endpoint, 
-       or control connection */
-    case IRP_MJ_CLEANUP:
-        Status = TiCleanupFileObject(DeviceObject, Irp);
-        break;
+  /* Release resources bound to an address file, connection endpoint, 
+     or control connection */
+  case IRP_MJ_CLEANUP:
+    Status = TiCleanupFileObject(DeviceObject, Irp);
+    break;
 
-	default:
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-    }
+  default:
+    Status = STATUS_INVALID_DEVICE_REQUEST;
+  }
 
-    if (Status != STATUS_PENDING) {
-        IrpSp->Control &= ~SL_PENDING_RETURNED;
-        Irp->IoStatus.Status = Status;
+  if (Status != STATUS_PENDING) {
+    IrpSp->Control &= ~SL_PENDING_RETURNED;
+    Irp->IoStatus.Status = Status;
 
-        TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
+    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-    }
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+  }
 
-    TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
+  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
-    return Status;
+  return Status;
 }
 
 
@@ -429,8 +464,8 @@ NTSTATUS
 STDCALL
 #endif
 TiDispatchInternal(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp)
 /*
  * FUNCTION: Internal IOCTL dispatch routine
  * ARGUMENTS:
@@ -441,87 +476,87 @@ TiDispatchInternal(
  */
 {
 	NTSTATUS Status;
-    PIO_STACK_LOCATION IrpSp;
+  PIO_STACK_LOCATION IrpSp;
 
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-    TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X) MN (%d).\n",
-        DeviceObject, Irp, IrpSp->MinorFunction));
+  TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X) MN (%d).\n",
+    DeviceObject, Irp, IrpSp->MinorFunction));
 
-    Irp->IoStatus.Status      = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
+  Irp->IoStatus.Status      = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
 
-    switch (IrpSp->MinorFunction) {
-    case TDI_RECEIVE:
-        Status = DispTdiReceive(Irp);
-        break;
+  switch (IrpSp->MinorFunction) {
+  case TDI_RECEIVE:
+    Status = DispTdiReceive(Irp);
+    break;
 
-    case TDI_RECEIVE_DATAGRAM:
-        Status = DispTdiReceiveDatagram(Irp);
-        break;
+  case TDI_RECEIVE_DATAGRAM:
+    Status = DispTdiReceiveDatagram(Irp);
+    break;
 
-    case TDI_SEND:
-        Status = DispTdiSend(Irp);
-        break;
+  case TDI_SEND:
+    Status = DispTdiSend(Irp);
+    break;
 
-    case TDI_SEND_DATAGRAM:
-        Status = DispTdiSendDatagram(Irp);
-        break;
+  case TDI_SEND_DATAGRAM:
+    Status = DispTdiSendDatagram(Irp);
+    break;
 
-    case TDI_ACCEPT:
-        Status = DispTdiAccept(Irp);
-        break;
+  case TDI_ACCEPT:
+    Status = DispTdiAccept(Irp);
+    break;
 
-    case TDI_LISTEN:
-        Status = DispTdiListen(Irp);
-        break;
+  case TDI_LISTEN:
+    Status = DispTdiListen(Irp);
+    break;
 
-    case TDI_CONNECT:
-        Status = DispTdiConnect(Irp);
-        break;
+  case TDI_CONNECT:
+    Status = DispTdiConnect(Irp);
+    break;
 
-    case TDI_DISCONNECT:
-        Status = DispTdiDisconnect(Irp);
-        break;
+  case TDI_DISCONNECT:
+    Status = DispTdiDisconnect(Irp);
+    break;
 
-    case TDI_ASSOCIATE_ADDRESS:
-        Status = DispTdiAssociateAddress(Irp);
-        break;
+  case TDI_ASSOCIATE_ADDRESS:
+    Status = DispTdiAssociateAddress(Irp);
+    break;
 
-    case TDI_DISASSOCIATE_ADDRESS:
-        Status = DispTdiDisassociateAddress(Irp);
-        break;
+  case TDI_DISASSOCIATE_ADDRESS:
+    Status = DispTdiDisassociateAddress(Irp);
+    break;
 
-    case TDI_QUERY_INFORMATION:
-        Status = DispTdiQueryInformation(DeviceObject, Irp);
-        break;
+  case TDI_QUERY_INFORMATION:
+    Status = DispTdiQueryInformation(DeviceObject, Irp);
+    break;
 
-    case TDI_SET_INFORMATION:
-        Status = DispTdiSetInformation(Irp);
-        break;
+  case TDI_SET_INFORMATION:
+    Status = DispTdiSetInformation(Irp);
+    break;
 
-    case TDI_SET_EVENT_HANDLER:
-        Status = DispTdiSetEventHandler(Irp);
-        break;
+  case TDI_SET_EVENT_HANDLER:
+    Status = DispTdiSetEventHandler(Irp);
+    break;
 
-    case TDI_ACTION:
-        Status = STATUS_SUCCESS;
-        break;
+  case TDI_ACTION:
+    Status = STATUS_SUCCESS;
+    break;
 
-    /* An unsupported IOCTL code was submitted */
-    default:
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-    }
+  /* An unsupported IOCTL code was submitted */
+  default:
+    Status = STATUS_INVALID_DEVICE_REQUEST;
+  }
 
-    if (Status != STATUS_PENDING) {
-        Irp->IoStatus.Status = Status;
+  if (Status != STATUS_PENDING) {
+    Irp->IoStatus.Status = Status;
 
-        TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
+    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-    }
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+  }
 
-    TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
+  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
 	return Status;
 }
@@ -532,8 +567,8 @@ NTSTATUS
 STDCALL
 #endif
 TiDispatch(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp)
 /*
  * FUNCTION: Dispatch routine for IRP_MJ_DEVICE_CONTROL requests
  * ARGUMENTS:
@@ -543,57 +578,57 @@ TiDispatch(
  *     Status of the operation
  */
 {
-    NTSTATUS Status;
-    PIO_STACK_LOCATION IrpSp;
+  NTSTATUS Status;
+  PIO_STACK_LOCATION IrpSp;
 
-    TI_DbgPrint(DEBUG_IRP, ("Called. IRP is at (0x%X).\n", Irp));
+  TI_DbgPrint(DEBUG_IRP, ("Called. IRP is at (0x%X).\n", Irp));
 
-    Irp->IoStatus.Information = 0;
+  Irp->IoStatus.Information = 0;
 
-    IrpSp  = IoGetCurrentIrpStackLocation(Irp);
+  IrpSp  = IoGetCurrentIrpStackLocation(Irp);
 #ifdef _MSC_VER
-    Status = TdiMapUserRequest(DeviceObject, Irp, IrpSp);
-    if (NT_SUCCESS(Status)) {
-        TiDispatchInternal(DeviceObject, Irp);
-        Status = STATUS_PENDING;
-    } else {
+  Status = TdiMapUserRequest(DeviceObject, Irp, IrpSp);
+  if (NT_SUCCESS(Status)) {
+    TiDispatchInternal(DeviceObject, Irp);
+    Status = STATUS_PENDING;
+  } else {
 #else
-    if (TRUE) {
+  if (TRUE) {
 #endif
-        /* See if this request is TCP/IP specific */
-        switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
-        case IOCTL_TCP_QUERY_INFORMATION_EX:
-            Status = DispTdiQueryInformationEx(Irp, IrpSp);
-            break;
+    /* See if this request is TCP/IP specific */
+    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
+    case IOCTL_TCP_QUERY_INFORMATION_EX:
+      Status = DispTdiQueryInformationEx(Irp, IrpSp);
+      break;
 
-        case IOCTL_TCP_SET_INFORMATION_EX:
-            Status = DispTdiSetInformationEx(Irp, IrpSp);
-            break;
+    case IOCTL_TCP_SET_INFORMATION_EX:
+      Status = DispTdiSetInformationEx(Irp, IrpSp);
+      break;
 
-        default:
-            TI_DbgPrint(MIN_TRACE, ("Unknown IOCTL 0x%X\n",
-                IrpSp->Parameters.DeviceIoControl.IoControlCode));
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-        }
+    default:
+      TI_DbgPrint(MIN_TRACE, ("Unknown IOCTL 0x%X\n",
+          IrpSp->Parameters.DeviceIoControl.IoControlCode));
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
     }
+  }
 
-    if (Status != STATUS_PENDING) {
-        Irp->IoStatus.Status = Status;
+  if (Status != STATUS_PENDING) {
+    Irp->IoStatus.Status = Status;
 
-        TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
+    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-    }
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+  }
 
-    TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
+  TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
-    return Status;
+  return Status;
 }
 
 
 VOID TiUnload(
-    PDRIVER_OBJECT DriverObject)
+  PDRIVER_OBJECT DriverObject)
 /*
  * FUNCTION: Unloads the driver
  * ARGUMENTS:
@@ -601,56 +636,56 @@ VOID TiUnload(
  */
 {
 #ifdef DBG
-    KIRQL OldIrql;
+  KIRQL OldIrql;
 
-    KeAcquireSpinLock(&AddressFileListLock, &OldIrql);
-    if (!IsListEmpty(&AddressFileListHead)) {
-        TI_DbgPrint(MIN_TRACE, ("Open address file objects exists.\n"));
-    }
-    KeReleaseSpinLock(&AddressFileListLock, OldIrql);
+  KeAcquireSpinLock(&AddressFileListLock, &OldIrql);
+  if (!IsListEmpty(&AddressFileListHead)) {
+    TI_DbgPrint(MIN_TRACE, ("Open address file objects exists.\n"));
+  }
+  KeReleaseSpinLock(&AddressFileListLock, OldIrql);
 #endif
 
-    /* Unregister loopback adapter */
-    LoopUnregisterAdapter(NULL);
+  /* Unregister loopback adapter */
+  LoopUnregisterAdapter(NULL);
 
-    /* Unregister protocol with NDIS */
-    LANUnregisterProtocol();
+  /* Unregister protocol with NDIS */
+  LANUnregisterProtocol();
 
-    /* Shutdown transport level protocol subsystems */
-    TCPShutdown();
-    UDPShutdown();
-    RawIPShutdown();
-    DGShutdown();
+  /* Shutdown transport level protocol subsystems */
+  TCPShutdown();
+  UDPShutdown();
+  RawIPShutdown();
+  DGShutdown();
 
-    /* Shutdown network level protocol subsystem */
-    IPShutdown();
+  /* Shutdown network level protocol subsystem */
+  IPShutdown();
 
-    /* Free NDIS buffer descriptors */
-    if (GlobalBufferPool)
-        NdisFreeBufferPool(GlobalBufferPool);
+  /* Free NDIS buffer descriptors */
+  if (GlobalBufferPool)
+    NdisFreeBufferPool(GlobalBufferPool);
 
-    /* Free NDIS packet descriptors */
-    if (GlobalPacketPool)
-        NdisFreePacketPool(GlobalPacketPool);
+  /* Free NDIS packet descriptors */
+  if (GlobalPacketPool)
+    NdisFreePacketPool(GlobalPacketPool);
 
-    /* Release all device objects */
+  /* Release all device objects */
 
-    if (TCPDeviceObject)
-        IoDeleteDevice(TCPDeviceObject);
+  if (TCPDeviceObject)
+    IoDeleteDevice(TCPDeviceObject);
 
-    if (UDPDeviceObject)
-        IoDeleteDevice(UDPDeviceObject);
+  if (UDPDeviceObject)
+    IoDeleteDevice(UDPDeviceObject);
 
-    if (RawIPDeviceObject)
-        IoDeleteDevice(RawIPDeviceObject);
+  if (RawIPDeviceObject)
+    IoDeleteDevice(RawIPDeviceObject);
 
-    if (IPDeviceObject)
-        IoDeleteDevice(IPDeviceObject);
+  if (IPDeviceObject)
+    IoDeleteDevice(IPDeviceObject);
 
-    if (EntityList)
-        ExFreePool(EntityList);
+  if (EntityList)
+    ExFreePool(EntityList);
 
-    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
 
@@ -659,8 +694,8 @@ NTSTATUS
 STDCALL
 #endif
 DriverEntry(
-    PDRIVER_OBJECT DriverObject,
-    PUNICODE_STRING RegistryPath)
+  PDRIVER_OBJECT DriverObject,
+  PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Main driver entry point
  * ARGUMENTS:
@@ -670,171 +705,175 @@ DriverEntry(
  *     Status of driver initialization
  */
 {
-    NTSTATUS Status;
-    UNICODE_STRING strDeviceName;
-    STRING strNdisDeviceName;
-    NDIS_STATUS NdisStatus;
-    PLAN_ADAPTER Adapter;
-    NDIS_STRING DeviceName;
+  NTSTATUS Status;
+  UNICODE_STRING strDeviceName;
+  STRING strNdisDeviceName;
+  NDIS_STATUS NdisStatus;
+  PLAN_ADAPTER Adapter;
+  NDIS_STRING DeviceName;
 
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    /* FIXME: Create symbolic links in Win32 namespace */
+  /* FIXME: Create symbolic links in Win32 namespace */
 
-    /* Create IP device object */
-    RtlInitUnicodeString(&strDeviceName, DD_IP_DEVICE_NAME);
-    Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
-        FILE_DEVICE_NETWORK, 0, FALSE, &IPDeviceObject);
-    if (!NT_SUCCESS(Status)) {
-        TI_DbgPrint(MIN_TRACE, ("Failed to create IP device object. Status (0x%X).\n", Status));
-        return Status;
-    }
+  /* Create IP device object */
+  RtlInitUnicodeString(&strDeviceName, DD_IP_DEVICE_NAME);
+  Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
+    FILE_DEVICE_NETWORK, 0, FALSE, &IPDeviceObject);
+  if (!NT_SUCCESS(Status)) {
+    TI_DbgPrint(MIN_TRACE, ("Failed to create IP device object. Status (0x%X).\n", Status));
+    return Status;
+  }
 
-    /* Create RawIP device object */
-    RtlInitUnicodeString(&strDeviceName, DD_RAWIP_DEVICE_NAME);
-    Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
-        FILE_DEVICE_NETWORK, 0, FALSE, &RawIPDeviceObject);
-    if (!NT_SUCCESS(Status)) {
-        TI_DbgPrint(MIN_TRACE, ("Failed to create RawIP device object. Status (0x%X).\n", Status));
-        TiUnload(DriverObject);
-        return Status;
-    }
+  /* Create RawIP device object */
+  RtlInitUnicodeString(&strDeviceName, DD_RAWIP_DEVICE_NAME);
+  Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
+    FILE_DEVICE_NETWORK, 0, FALSE, &RawIPDeviceObject);
+  if (!NT_SUCCESS(Status)) {
+    TI_DbgPrint(MIN_TRACE, ("Failed to create RawIP device object. Status (0x%X).\n", Status));
+    TiUnload(DriverObject);
+    return Status;
+  }
 
-    /* Create UDP device object */
-    RtlInitUnicodeString(&strDeviceName, DD_UDP_DEVICE_NAME);
-    Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
-        FILE_DEVICE_NETWORK, 0, FALSE, &UDPDeviceObject);
-    if (!NT_SUCCESS(Status)) {
-        TI_DbgPrint(MIN_TRACE, ("Failed to create UDP device object. Status (0x%X).\n", Status));
-        TiUnload(DriverObject);
-        return Status;
-    }
+  /* Create UDP device object */
+  RtlInitUnicodeString(&strDeviceName, DD_UDP_DEVICE_NAME);
+  Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
+    FILE_DEVICE_NETWORK, 0, FALSE, &UDPDeviceObject);
+  if (!NT_SUCCESS(Status)) {
+    TI_DbgPrint(MIN_TRACE, ("Failed to create UDP device object. Status (0x%X).\n", Status));
+    TiUnload(DriverObject);
+    return Status;
+  }
 
-    /* Create TCP device object */
-    RtlInitUnicodeString(&strDeviceName, DD_TCP_DEVICE_NAME);
-    Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
-        FILE_DEVICE_NETWORK, 0, FALSE, &TCPDeviceObject);
-    if (!NT_SUCCESS(Status)) {
-        TI_DbgPrint(MIN_TRACE, ("Failed to create TCP device object. Status (0x%X).\n", Status));
-        TiUnload(DriverObject);
-        return Status;
-    }
+  /* Create TCP device object */
+  RtlInitUnicodeString(&strDeviceName, DD_TCP_DEVICE_NAME);
+  Status = IoCreateDevice(DriverObject, 0, &strDeviceName,
+    FILE_DEVICE_NETWORK, 0, FALSE, &TCPDeviceObject);
+  if (!NT_SUCCESS(Status)) {
+    TI_DbgPrint(MIN_TRACE, ("Failed to create TCP device object. Status (0x%X).\n", Status));
+    TiUnload(DriverObject);
+    return Status;
+  }
 
-    /* Allocate NDIS packet descriptors */
-    NdisAllocatePacketPool(&NdisStatus, &GlobalPacketPool, 100, sizeof(PACKET_CONTEXT));
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TiUnload(DriverObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+  /* Allocate NDIS packet descriptors */
+  NdisAllocatePacketPool(&NdisStatus, &GlobalPacketPool, 100, sizeof(PACKET_CONTEXT));
+  if (NdisStatus != NDIS_STATUS_SUCCESS) {
+    TiUnload(DriverObject);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
-    /* Allocate NDIS buffer descriptors */
-    NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 100);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TiUnload(DriverObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+  /* Allocate NDIS buffer descriptors */
+  NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 100);
+  if (NdisStatus != NDIS_STATUS_SUCCESS) {
+    TiUnload(DriverObject);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
-    /* Initialize address file list and protecting spin lock */
-    InitializeListHead(&AddressFileListHead);
-    KeInitializeSpinLock(&AddressFileListLock);
+  /* Initialize address file list and protecting spin lock */
+  InitializeListHead(&AddressFileListHead);
+  KeInitializeSpinLock(&AddressFileListLock);
 
-    /* Initialize interface list and protecting spin lock */
-    InitializeListHead(&InterfaceListHead);
-    KeInitializeSpinLock(&InterfaceListLock);
+  /* Initialize connection endpoint list and protecting spin lock */
+  InitializeListHead(&ConnectionEndpointListHead);
+  KeInitializeSpinLock(&ConnectionEndpointListLock);
 
-    /* Initialize network level protocol subsystem */
-    IPStartup(DriverObject, RegistryPath);
+  /* Initialize interface list and protecting spin lock */
+  InitializeListHead(&InterfaceListHead);
+  KeInitializeSpinLock(&InterfaceListLock);
 
-    /* Initialize transport level protocol subsystems */
-    DGStartup();
-    RawIPStartup();
-    UDPStartup();
-    TCPStartup();
+  /* Initialize network level protocol subsystem */
+  IPStartup(DriverObject, RegistryPath);
 
-    /* Register protocol with NDIS */
-    RtlInitString(&strNdisDeviceName, IP_DEVICE_NAME);
-    Status = LANRegisterProtocol(&strNdisDeviceName);
-    if (!NT_SUCCESS(Status)) {
-		TiWriteErrorLog(
-            DriverObject,
-            EVENT_TRANSPORT_REGISTER_FAILED,
-            TI_ERROR_DRIVERENTRY,
-            Status,
-            NULL,
-            0,
-            NULL);
-        TiUnload(DriverObject);
-        return Status;
-    }
+  /* Initialize transport level protocol subsystems */
+  DGStartup();
+  RawIPStartup();
+  UDPStartup();
+  TCPStartup();
 
-    /* Open loopback adapter */
-    if (!NT_SUCCESS(LoopRegisterAdapter(NULL, NULL))) {
-        TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
-        TiUnload(DriverObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+  /* Register protocol with NDIS */
+  RtlInitString(&strNdisDeviceName, IP_DEVICE_NAME);
+  Status = LANRegisterProtocol(&strNdisDeviceName);
+  if (!NT_SUCCESS(Status)) {
+	  TiWriteErrorLog(
+      DriverObject,
+      EVENT_TRANSPORT_REGISTER_FAILED,
+      TI_ERROR_DRIVERENTRY,
+      Status,
+      NULL,
+      0,
+      NULL);
+    TiUnload(DriverObject);
+    return Status;
+  }
 
-	/* Open underlying adapter(s) we are bound to */
+  /* Open loopback adapter */
+  if (!NT_SUCCESS(LoopRegisterAdapter(NULL, NULL))) {
+    TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
+    TiUnload(DriverObject);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
-    /* FIXME: Get binding information from registry */
+/* Open underlying adapter(s) we are bound to */
 
-    /* Put your own NDIS adapter device name here */
+  /* FIXME: Get binding information from registry */
+
+  /* Put your own NDIS adapter device name here */
 #if 0
-    /* ReactOS */
-    NdisInitUnicodeString(&DeviceName, L"\\Device\\ne2000");
+  /* ReactOS */
+  NdisInitUnicodeString(&DeviceName, L"\\Device\\ne2000");
 
-    /* NT4 style */
-    //NdisInitUnicodeString(&DeviceName, L"\\Device\\El90x1");
+  /* NT4 style */
+  //NdisInitUnicodeString(&DeviceName, L"\\Device\\El90x1");
 
-    /* NT5 style */
-    //NdisInitUnicodeString(&DeviceName, L"\\Device\\{56388B49-67BB-4419-A3F4-28DF190B9149}");
+  /* NT5 style */
+  //NdisInitUnicodeString(&DeviceName, L"\\Device\\{56388B49-67BB-4419-A3F4-28DF190B9149}");
 
-    NdisStatus = LANRegisterAdapter(&DeviceName, &Adapter);
+  NdisStatus = LANRegisterAdapter(&DeviceName, &Adapter);
 
-    /* Skip network adapter if it does not exist */
-    if (!NT_SUCCESS(NdisStatus)) {
-        TI_DbgPrint(MIN_TRACE, ("Failed to intialize adapter. Status (0x%X).\n", Status));
-		TiWriteErrorLog(
-            DriverObject,
-            EVENT_TRANSPORT_ADAPTER_NOT_FOUND,
-            TI_ERROR_DRIVERENTRY,
-            NdisStatus,
-            NULL,
-            0,
-            NULL);
-        TiUnload(DriverObject);
-        return STATUS_DEVICE_DOES_NOT_EXIST;
-    }
+  /* Skip network adapter if it does not exist */
+  if (!NT_SUCCESS(NdisStatus)) {
+    TI_DbgPrint(MIN_TRACE, ("Failed to intialize adapter. Status (0x%X).\n", Status));
+	  TiWriteErrorLog(
+      DriverObject,
+      EVENT_TRANSPORT_ADAPTER_NOT_FOUND,
+      TI_ERROR_DRIVERENTRY,
+      NdisStatus,
+      NULL,
+      0,
+      NULL);
+    TiUnload(DriverObject);
+    return STATUS_DEVICE_DOES_NOT_EXIST;
+  }
 #endif
-    /* Setup network layer and transport layer entities */
-    EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * 2);
-    if (!NT_SUCCESS(Status)) {
-        TiUnload(DriverObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+  /* Setup network layer and transport layer entities */
+  EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * 2);
+  if (!NT_SUCCESS(Status)) {
+    TiUnload(DriverObject);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
-    EntityList[0].tei_entity   = CL_NL_ENTITY;
-    EntityList[0].tei_instance = 0;
-    EntityList[1].tei_entity   = CL_TL_ENTITY;
-    EntityList[1].tei_instance = 0;
-    EntityCount = 2;
+  EntityList[0].tei_entity   = CL_NL_ENTITY;
+  EntityList[0].tei_instance = 0;
+  EntityList[1].tei_entity   = CL_TL_ENTITY;
+  EntityList[1].tei_instance = 0;
+  EntityCount = 2;
 
-    /* Use direct I/O */
-    IPDeviceObject->Flags    |= DO_DIRECT_IO;
-    RawIPDeviceObject->Flags |= DO_DIRECT_IO;
-    UDPDeviceObject->Flags   |= DO_DIRECT_IO;
-    TCPDeviceObject->Flags   |= DO_DIRECT_IO;
+  /* Use direct I/O */
+  IPDeviceObject->Flags    |= DO_DIRECT_IO;
+  RawIPDeviceObject->Flags |= DO_DIRECT_IO;
+  UDPDeviceObject->Flags   |= DO_DIRECT_IO;
+  TCPDeviceObject->Flags   |= DO_DIRECT_IO;
 
-    /* Initialize the driver object with this driver's entry points */
-    DriverObject->MajorFunction[IRP_MJ_CREATE]  = TiDispatchOpenClose;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE]   = TiDispatchOpenClose;
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = TiDispatchOpenClose;
-    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = TiDispatchInternal;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = TiDispatch;
+  /* Initialize the driver object with this driver's entry points */
+  DriverObject->MajorFunction[IRP_MJ_CREATE]  = TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE]   = TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = TiDispatchInternal;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = TiDispatch;
 
-    DriverObject->DriverUnload = (PDRIVER_UNLOAD)TiUnload;
+  DriverObject->DriverUnload = (PDRIVER_UNLOAD)TiUnload;
 
-    return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 

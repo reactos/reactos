@@ -46,53 +46,6 @@ ExAcquireSharedWaitForExclusive (
 	BOOLEAN		Wait
 	);
 
-/*
- * PVOID
- * ExAllocateFromNPagedLookasideList (
- *	PNPAGED_LOOKASIDE_LIST	LookSide
- *	);
- *
- * FUNCTION:
- *	Removes (pops) the first entry from the specified nonpaged
- *	lookaside list.
- *
- * ARGUMENTS:
- *	Lookaside = Pointer to a nonpaged lookaside list
- *
- * RETURNS:
- *	Address of the allocated list entry
- */
-static
-inline
-PVOID
-ExAllocateFromNPagedLookasideList (
-	IN	PNPAGED_LOOKASIDE_LIST	Lookaside
-	)
-{
-#if 0
-	PVOID Entry;
-
-	Lookaside->TotalAllocates++;
-	Entry = ExInterlockedPopEntrySList (&Lookaside->ListHead,
-	                                    &Lookaside->Lock);
-	if (Entry == NULL)
-	{
-		Lookaside->AllocateMisses++;
-		Entry = (Lookaside->Allocate)(Lookaside->Type,
-		                              Lookaside->Size,
-		                              Lookaside->Tag);
-	}
-
-	return Entry;
-#endif
-	return NULL;
-}
-
-PVOID
-STDCALL
-ExAllocateFromPagedLookasideList (
-	PPAGED_LOOKASIDE_LIST	LookSide
-	);
 PVOID
 STDCALL
 ExAllocateFromZone (
@@ -170,16 +123,6 @@ ExCreateCallback (
 	IN	BOOLEAN			AllowMultipleCallbacks
 	);
 
-VOID
-STDCALL
-ExDeleteNPagedLookasideList (
-	PNPAGED_LOOKASIDE_LIST	Lookaside
-	);
-VOID
-STDCALL
-ExDeletePagedLookasideList (
-	PPAGED_LOOKASIDE_LIST	Lookaside
-	);
 NTSTATUS
 STDCALL
 ExDeleteResource (
@@ -214,52 +157,6 @@ VOID
 STDCALL
 ExFreePool (
 	PVOID	block
-	);
-
-/*
- * VOID
- * ExFreeToNPagedLookasideList (
- *	PNPAGED_LOOKASIDE_LIST	Lookaside,
- *	PVOID			Entry
- *	);
- *
- * FUNCTION:
- *	Inserts (pushes) the specified entry into the specified
- *	nonpaged lookaside list.
- *
- * ARGUMENTS:
- *	Lookaside = Pointer to the nonpaged lookaside list
- *	Entry = Pointer to the entry that is inserted in the lookaside list
- */
-static
-inline
-VOID
-ExFreeToNPagedLookasideList (
-	IN	PNPAGED_LOOKASIDE_LIST	Lookaside,
-	IN	PVOID			Entry
-	)
-{
-#if 0
-	Lookaside->TotalFrees++;
-	if (ExQueryDepthSList (&Lookaside->ListHead) >= Lookaside->Depth)
-	{
-		Lookaside->FreeMisses++;
-		(Lookaside->Free)(Entry);
-	}
-	else
-	{
-		ExInterlockedPushEntrySList (&Lookaside->ListHead,
-		                             (PSINGLE_LIST_ENTRY)Entry,
-		                             &Lookaside->Lock);
-	}
-#endif
-}
-
-VOID
-STDCALL
-ExFreeToPagedLookasideList (
-	PPAGED_LOOKASIDE_LIST	Lookaside,
-	PVOID			Entry
 	);
 
 /*
@@ -315,35 +212,13 @@ ExGetSharedWaiterCount (
  *	);
  */
 #define ExInitializeFastMutex(_FastMutex) \
-	(_FastMutex)->Count = 1; \
-	(_FastMutex)->Owner = NULL; \
-	(_FastMutex)->Contention = 0; \
-	KeInitializeEvent(&(_FastMutex)->Event, \
+	((PFAST_MUTEX)_FastMutex)->Count = 1; \
+	((PFAST_MUTEX)_FastMutex)->Owner = NULL; \
+	((PFAST_MUTEX)_FastMutex)->Contention = 0; \
+	KeInitializeEvent(&((PFAST_MUTEX)_FastMutex)->Event, \
 	                  SynchronizationEvent, \
 	                  FALSE);
 
-VOID
-STDCALL
-ExInitializeNPagedLookasideList (
-	PNPAGED_LOOKASIDE_LIST	Lookaside,
-	PALLOCATE_FUNCTION	Allocate,
-	PFREE_FUNCTION		Free,
-	ULONG			Flags,
-	ULONG			Size,
-	ULONG			Tag,
-	USHORT			Depth
-	);
-VOID
-STDCALL
-ExInitializePagedLookasideList (
-	PPAGED_LOOKASIDE_LIST	Lookaside,
-	PALLOCATE_FUNCTION	Allocate,
-	PFREE_FUNCTION		Free,
-	ULONG			Flags,
-	ULONG			Size,
-	ULONG			Tag,
-	USHORT			Depth
-	);
 NTSTATUS
 STDCALL
 ExInitializeResource (
@@ -597,12 +472,12 @@ ExPostSystemEvent (
 
 /*
  * USHORT
- * ExQueryDepthSListHead (
+ * ExQueryDepthSList (
  *	PSLIST_HEADER	SListHead
  *	);
-*/
-#define ExQueryDepthSListHead(ListHead) \
-	(USHORT)(ListHead)->Depth
+ */
+#define ExQueryDepthSList(ListHead) \
+	(USHORT)(ListHead)->s.Depth
 
 VOID
 STDCALL
@@ -710,6 +585,133 @@ STDCALL
 ExUnregisterCallback (
 	IN	PVOID	CallbackRegistration
 	);
+
+
+/*
+ * PVOID
+ * ExAllocateFromNPagedLookasideList (
+ *	PNPAGED_LOOKASIDE_LIST	LookSide
+ *	);
+ *
+ * FUNCTION:
+ *	Removes (pops) the first entry from the specified nonpaged
+ *	lookaside list.
+ *
+ * ARGUMENTS:
+ *	Lookaside = Pointer to a nonpaged lookaside list
+ *
+ * RETURNS:
+ *	Address of the allocated list entry
+ */
+static
+inline
+PVOID
+ExAllocateFromNPagedLookasideList (
+	IN	PNPAGED_LOOKASIDE_LIST	Lookaside
+	)
+{
+	PVOID Entry;
+
+	Lookaside->TotalAllocates++;
+	Entry = ExInterlockedPopEntrySList (&Lookaside->ListHead,
+	                                    &Lookaside->Lock);
+	if (Entry == NULL)
+	{
+		Lookaside->AllocateMisses++;
+		Entry = (Lookaside->Allocate)(Lookaside->Type,
+		                              Lookaside->Size,
+		                              Lookaside->Tag);
+	}
+
+  return Entry;
+}
+
+PVOID
+STDCALL
+ExAllocateFromPagedLookasideList (
+	PPAGED_LOOKASIDE_LIST	LookSide
+	);
+
+VOID
+STDCALL
+ExDeleteNPagedLookasideList (
+	PNPAGED_LOOKASIDE_LIST	Lookaside
+	);
+
+VOID
+STDCALL
+ExDeletePagedLookasideList (
+	PPAGED_LOOKASIDE_LIST	Lookaside
+	);
+
+
+/*
+ * VOID
+ * ExFreeToNPagedLookasideList (
+ *	PNPAGED_LOOKASIDE_LIST	Lookaside,
+ *	PVOID			Entry
+ *	);
+ *
+ * FUNCTION:
+ *	Inserts (pushes) the specified entry into the specified
+ *	nonpaged lookaside list.
+ *
+ * ARGUMENTS:
+ *	Lookaside = Pointer to the nonpaged lookaside list
+ *	Entry = Pointer to the entry that is inserted in the lookaside list
+ */
+static
+inline
+VOID
+ExFreeToNPagedLookasideList (
+	IN	PNPAGED_LOOKASIDE_LIST	Lookaside,
+	IN	PVOID			Entry
+	)
+{
+	Lookaside->TotalFrees++;
+	if (ExQueryDepthSList (&Lookaside->ListHead) >= Lookaside->MinimumDepth)
+	{
+		Lookaside->FreeMisses++;
+		(Lookaside->Free)(Entry);
+	}
+	else
+	{
+		ExInterlockedPushEntrySList (&Lookaside->ListHead,
+		                             (PSINGLE_LIST_ENTRY)Entry,
+		                             &Lookaside->Lock);
+	}
+}
+
+VOID
+STDCALL
+ExFreeToPagedLookasideList (
+	PPAGED_LOOKASIDE_LIST	Lookaside,
+	PVOID			Entry
+	);
+
+VOID
+STDCALL
+ExInitializeNPagedLookasideList (
+	PNPAGED_LOOKASIDE_LIST	Lookaside,
+	PALLOCATE_FUNCTION	Allocate,
+	PFREE_FUNCTION		Free,
+	ULONG			Flags,
+	ULONG			Size,
+	ULONG			Tag,
+	USHORT			Depth
+	);
+VOID
+STDCALL
+ExInitializePagedLookasideList (
+	PPAGED_LOOKASIDE_LIST	Lookaside,
+	PALLOCATE_FUNCTION	Allocate,
+	PFREE_FUNCTION		Free,
+	ULONG			Flags,
+	ULONG			Size,
+	ULONG			Tag,
+	USHORT			Depth
+	);
+
 
 /*
 LONG

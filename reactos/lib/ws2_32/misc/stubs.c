@@ -9,42 +9,6 @@
  */
 #include <ws2_32.h>
 
-SOCKET
-EXPORT
-accept(
-    IN  SOCKET s,
-    OUT LPSOCKADDR addr,
-    OUT INT FAR* addrlen)
-{
-    UNIMPLEMENTED
-
-    return INVALID_SOCKET;
-}
-
-INT
-EXPORT
-bind(
-    IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
-    IN  INT namelen)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-connect(
-    IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
-    IN  INT namelen)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
 INT
 EXPORT
 getpeername(
@@ -83,63 +47,12 @@ getsockopt(
     return 0;
 }
 
-ULONG
-EXPORT
-htonl(
-    IN  ULONG hostlong)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-USHORT
-EXPORT
-htons(
-    IN  USHORT hostshort)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
 INT
 EXPORT
 ioctlsocket(
     IN      SOCKET s,
     IN      LONG cmd,
     IN OUT  ULONG FAR* argp)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-listen(
-    IN  SOCKET s,
-    IN  INT backlog)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-ULONG
-EXPORT
-ntohl(
-    IN  ULONG netlong)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-USHORT
-EXPORT
-ntohs(
-    IN  USHORT netshort)
 {
     UNIMPLEMENTED
 
@@ -171,32 +84,6 @@ shutdown(
     return 0;
 }
 
-SOCKET
-EXPORT
-socket(
-    IN  INT af,
-    IN  INT type,
-    IN  INT protocol)
-{
-    UNIMPLEMENTED
-
-    return INVALID_SOCKET;
-}
-
-SOCKET
-EXPORT
-WSAAccept(
-    IN      SOCKET s,
-    OUT     LPSOCKADDR addr,
-    IN OUT  LPINT addrlen,
-    IN      LPCONDITIONPROC lpfnCondition,
-    IN      DWORD dwCallbackData)
-{
-    UNIMPLEMENTED
-
-    return INVALID_SOCKET;
-}
-
 INT
 EXPORT
 WSAAsyncSelect(
@@ -213,22 +100,6 @@ WSAAsyncSelect(
 INT
 EXPORT
 WSACancelBlockingCall(VOID)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-WSAConnect(
-    IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
-    IN  INT namelen,
-    IN  LPWSABUF lpCallerData,
-    OUT LPWSABUF lpCalleeData,
-    IN  LPQOS lpSQOS,
-    IN  LPQOS lpGQOS)
 {
     UNIMPLEMENTED
 
@@ -261,18 +132,6 @@ WSADuplicateSocketW(
 
 INT
 EXPORT
-WSAEnumNetworkEvents(
-    IN  SOCKET s,
-    IN  WSAEVENT hEventObject,
-    OUT LPWSANETWORKEVENTS lpNetworkEvents)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
 WSAEnumProtocolsA(
     IN      LPINT lpiProtocols,
     OUT     LPWSAPROTOCOL_INFOA lpProtocolBuffer,
@@ -289,18 +148,6 @@ WSAEnumProtocolsW(
     IN      LPINT lpiProtocols,
     OUT     LPWSAPROTOCOL_INFOW lpProtocolBuffer,
     IN OUT  LPDWORD lpdwBufferLength)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-WSAEventSelect(
-    IN  SOCKET s,
-    IN  WSAEVENT hEventObject,
-    IN  LONG lNetworkEvents)
 {
     UNIMPLEMENTED
 

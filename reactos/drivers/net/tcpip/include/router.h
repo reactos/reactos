@@ -14,6 +14,7 @@
 typedef struct _FIB_ENTRY {
     LIST_ENTRY ListEntry;         /* Entry on list */
     ULONG RefCount;               /* Reference count */
+    OBJECT_FREE_ROUTINE Free;     /* Routine used to free resources for the object */
     PIP_ADDRESS NetworkAddress;   /* Address of network */
     PIP_ADDRESS Netmask;          /* Netmask of network */
     PNET_TABLE_ENTRY NTE;         /* Pointer to NTE to use */

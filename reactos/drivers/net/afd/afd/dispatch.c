@@ -9,6 +9,74 @@
  */
 #include <afd.h>
 
+NTSTATUS AfdpDispRecv(
+    PIRP Irp,
+    PAFDFCB FCB,
+    PFILE_REQUEST_RECVFROM Request,
+    PFILE_REPLY_RECVFROM Reply)
+/*
+ * FUNCTION: Receives data
+ * ARGUMENTS:
+ *     Irp     = Pointer to I/O request packet
+ *     FCB     = Pointer to file control block
+ *     Request = Address of request buffer
+ *     Reply   = Address of reply buffer (same as request buffer)
+ * RETURNS:
+ *     Status of operation
+ */
+{
+  PAFD_READ_REQUEST ReadRequest;
+  NTSTATUS Status;
+  KIRQL OldIrql;
+  ULONG Count;
+
+  KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
+  if (IsListEmpty(&FCB->ReceiveQueue)) {
+    KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
+
+    /* Queue a read request and return STATUS_PENDING */
+
+    AFD_DbgPrint(MAX_TRACE, ("Queueing read request.\n"));
+
+    /*ReadRequest = (PAFD_READ_REQUEST)ExAllocateFromNPagedLookasideList(
+        &ReadRequestLookasideList);*/
+    ReadRequest = (PAFD_READ_REQUEST)ExAllocatePool(
+      NonPagedPool,
+      sizeof(AFD_READ_REQUEST));
+    if (ReadRequest) {
+      ReadRequest->Irp = Irp;
+      ReadRequest->RecvFromRequest = Request;
+      ReadRequest->RecvFromReply = Reply;
+
+      ExInterlockedInsertTailList(
+        &FCB->ReadRequestQueue,
+        &ReadRequest->ListEntry,
+        &FCB->ReadRequestQueueLock);
+      Status = STATUS_PENDING;
+    } else {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+  } else {
+    AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
+
+    /* Satisfy the request at once */
+    Status = FillWSABuffers(
+      FCB,
+      Request->Buffers,
+      Request->BufferCount,
+      &Count);
+    KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
+
+    Reply->NumberOfBytesRecvd = Count;
+    Reply->Status = NO_ERROR;
+
+    AFD_DbgPrint(MAX_TRACE, ("Bytes received (0x%X).\n", Count));
+  }
+
+  return Status;
+}
+
+
 NTSTATUS AfdDispBind(
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp)
@@ -27,6 +95,7 @@ NTSTATUS AfdDispBind(
   PFILE_REQUEST_BIND Request;
   PFILE_REPLY_BIND Reply;
   PAFDFCB FCB;
+  INT Errno;
 
   InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
   OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
@@ -39,21 +108,19 @@ NTSTATUS AfdDispBind(
     Request = (PFILE_REQUEST_BIND)Irp->AssociatedIrp.SystemBuffer;
     Reply   = (PFILE_REPLY_BIND)Irp->AssociatedIrp.SystemBuffer;
 
-    switch (Request->Name.sa_family) {
-    case AF_INET:
-      Status = TdiOpenAddressFileIPv4(&FCB->TdiDeviceName,
-          &Request->Name,
-          &FCB->TdiAddressObjectHandle,
-          &FCB->TdiAddressObject);
-      break;
-    default:
-      AFD_DbgPrint(MIN_TRACE, ("Bad address family (%d).\n", Request->Name.sa_family));
-      Status = STATUS_INVALID_PARAMETER;
-    }
+    Status = TdiOpenAddressFile(
+      &FCB->TdiDeviceName,
+      &Request->Name,
+      &FCB->TdiAddressObjectHandle,
+      &FCB->TdiAddressObject);
 
     if (NT_SUCCESS(Status)) {
       AfdRegisterEventHandlers(FCB);
       FCB->State = SOCKET_STATE_BOUND;
+      Reply->Status = NO_ERROR;
+    } else {
+      //FIXME: WSAEADDRNOTAVAIL
+      Reply->Status = WSAEINVAL;
     }
   } else
       Status = STATUS_INVALID_PARAMETER;
@@ -87,14 +154,41 @@ NTSTATUS AfdDispListen(
   OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
 
   /* Validate parameters */
+  Status = STATUS_INVALID_PARAMETER;
   if ((InputBufferLength >= sizeof(FILE_REQUEST_LISTEN)) &&
     (OutputBufferLength >= sizeof(FILE_REPLY_LISTEN))) {
     FCB = IrpSp->FileObject->FsContext;
 
     Request = (PFILE_REQUEST_LISTEN)Irp->AssociatedIrp.SystemBuffer;
     Reply   = (PFILE_REPLY_LISTEN)Irp->AssociatedIrp.SystemBuffer;
-  } else
-    Status = STATUS_INVALID_PARAMETER;
+
+    if (FCB->State == SOCKET_STATE_BOUND) {
+
+      /* We have a bound socket so go ahead and create a connection endpoint
+         and associate it with the address file object */
+
+      Status = TdiOpenConnectionEndpointFile(
+        &FCB->TdiDeviceName,
+        &FCB->TdiConnectionObjectHandle,
+        &FCB->TdiConnectionObject);
+
+      if (NT_SUCCESS(Status)) {
+        Status = TdiAssociateAddressFile(
+          FCB->TdiAddressObjectHandle,
+          FCB->TdiConnectionObject);
+      }
+
+      if (NT_SUCCESS(Status)) {
+        Reply->Status = NO_ERROR;
+      } else {
+        Reply->Status = WSAEINVAL;
+      }
+    } else if (FCB->State == SOCKET_STATE_CONNECTED) {
+      Reply->Status = WSAEISCONN;
+    } else {
+      Reply->Status = WSAEINVAL;
+    }
+  }
 
   AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
 
@@ -140,6 +234,9 @@ NTSTATUS AfdDispSendTo(
     FCB = IrpSp->FileObject->FsContext;
     Request = (PFILE_REQUEST_SENDTO)Irp->AssociatedIrp.SystemBuffer;
     Reply   = (PFILE_REPLY_SENDTO)Irp->AssociatedIrp.SystemBuffer;
+
+    /* Since we're using bufferred I/O */
+    Request->Buffers = (LPWSABUF)(Request + 1);
     BufferSize = WSABufferSize(Request->Buffers, Request->BufferCount);
 
 
@@ -274,9 +371,7 @@ NTSTATUS AfdDispRecvFrom(
   UINT OutputBufferLength;
   PFILE_REQUEST_RECVFROM Request;
   PFILE_REPLY_RECVFROM Reply;
-  PAFD_READ_REQUEST ReadRequest;
   DWORD NumberOfBytesRecvd;
-  KIRQL OldIrql;
   PAFDFCB FCB;
 
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -291,48 +386,14 @@ NTSTATUS AfdDispRecvFrom(
 
     Request = (PFILE_REQUEST_RECVFROM)Irp->AssociatedIrp.SystemBuffer;
     Reply   = (PFILE_REPLY_RECVFROM)Irp->AssociatedIrp.SystemBuffer;
+    /* Since we're using bufferred I/O */
+    Request->Buffers = (LPWSABUF)(Request + 1);
 
-    KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
-    if (IsListEmpty(&FCB->ReceiveQueue)) {
-      KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
-
-      /* Queue a read request and return STATUS_PENDING */
-
-      AFD_DbgPrint(MAX_TRACE, ("Queueing read request.\n"));
-
-      /*ReadRequest = (PAFD_READ_REQUEST)ExAllocateFromNPagedLookasideList(
-          &ReadRequestLookasideList);*/
-      ReadRequest = (PAFD_READ_REQUEST)ExAllocatePool(
-        NonPagedPool,
-        sizeof(AFD_READ_REQUEST));
-      if (ReadRequest) {
-        ReadRequest->Irp = Irp;
-        ReadRequest->RecvFromRequest = Request;
-        ReadRequest->RecvFromReply = Reply;
-
-        ExInterlockedInsertTailList(
-          &FCB->ReadRequestQueue,
-          &ReadRequest->ListEntry,
-          &FCB->ReadRequestQueueLock);
-        Status = STATUS_PENDING;
-      } else {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-      }
-    } else {
-      AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
-
-      /* Satisfy the request at once */
-      Status = FillWSABuffers(
-        FCB,
-        Request->Buffers,
-        Request->BufferCount,
-        &NumberOfBytesRecvd);
-      KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
-      Reply->Status = NO_ERROR;
-      Reply->NumberOfBytesRecvd = NumberOfBytesRecvd;
-      AFD_DbgPrint(MAX_TRACE, ("NumberOfBytesRecvd (0x%X).\n",
-        NumberOfBytesRecvd));
-    }
+    Status = AfdpDispRecv(
+      Irp,
+      FCB,
+      Request,
+      Reply);
   } else {
     Status = STATUS_INVALID_PARAMETER;
   }
@@ -350,10 +411,11 @@ typedef enum {
 } SelectOperation;
 
 
-DWORD AfdDispSelectEx(
+DWORD AfdpDispSelectEx(
     LPFD_SET FDSet,
     SelectOperation Operation)
 {
+  PFILE_OBJECT FileObject;
   NTSTATUS Status;
   PAFDFCB Current;
   KIRQL OldIrql;
@@ -367,14 +429,20 @@ DWORD AfdDispSelectEx(
 
   Count = 0;
   for (i = 0; i < FDSet->fd_count; i++) {
+
+    AFD_DbgPrint(MAX_TRACE, ("Handle (0x%X).\n", FDSet->fd_array[i]));
+
     Status = ObReferenceObjectByHandle(
       (HANDLE)FDSet->fd_array[i],
       0,
       IoFileObjectType,
       KernelMode,
-      (PVOID*)&Current,
+      (PVOID*)&FileObject,
       NULL);
     if (NT_SUCCESS(Status)) {
+      AFD_DbgPrint(MAX_TRACE, ("File object is at (0x%X).\n", FileObject));
+
+      Current = FileObject->FsContext;
 
       switch (Operation) {
       case soRead:
@@ -395,7 +463,7 @@ DWORD AfdDispSelectEx(
         break;
       }
 
-      ObDereferenceObject(Current);
+      ObDereferenceObject(FileObject);
     }
   }
 
@@ -407,6 +475,7 @@ NTSTATUS AfdDispSelect(
     PIO_STACK_LOCATION IrpSp)
 /*
  * FUNCTION: Checks if sockets have data in the receive buffers
+ *           and/or if client can send data
  * ARGUMENTS:
  *     Irp   = Pointer to I/O request packet
  *     IrpSp = Pointer to current stack location of Irp
@@ -438,16 +507,16 @@ NTSTATUS AfdDispSelect(
 
     SocketCount = 0;
 
-    if (Request->ReadFDSet) {
-      AFD_DbgPrint(MAX_TRACE, ("Read.\n"));
-      SocketCount += AfdDispSelectEx(Request->ReadFDSet, soRead);
-    }
     if (Request->WriteFDSet) {
       AFD_DbgPrint(MAX_TRACE, ("Write.\n"));
-      SocketCount += AfdDispSelectEx(Request->WriteFDSet, soWrite);
+      SocketCount += AfdpDispSelectEx(Request->WriteFDSet, soWrite);
+    }
+    if (Request->ReadFDSet) {
+      AFD_DbgPrint(MAX_TRACE, ("Read.\n"));
+      SocketCount += AfdpDispSelectEx(Request->ReadFDSet, soRead);
     }
     if (Request->ExceptFDSet) {
-      SocketCount += AfdDispSelectEx(Request->ExceptFDSet, soExcept);
+      SocketCount += AfdpDispSelectEx(Request->ExceptFDSet, soExcept);
     }
 
     AFD_DbgPrint(MAX_TRACE, ("Sockets selected (0x%X).\n", SocketCount));
@@ -457,6 +526,314 @@ NTSTATUS AfdDispSelect(
     Status = STATUS_SUCCESS;
   } else
     Status = STATUS_INVALID_PARAMETER;
+
+  AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+
+  return Status;
+}
+
+NTSTATUS AfdDispEventSelect(
+  PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+/*
+ * FUNCTION: Associate an event object with one or more network events
+ * ARGUMENTS:
+ *     Irp   = Pointer to I/O request packet
+ *     IrpSp = Pointer to current stack location of Irp
+ * RETURNS:
+ *     Status of operation
+ */
+{
+  NTSTATUS Status;
+  UINT InputBufferLength;
+  UINT OutputBufferLength;
+  PFILE_REQUEST_EVENTSELECT Request;
+  PFILE_REPLY_EVENTSELECT Reply;
+  PAFDFCB FCB;
+  ULONG i;
+
+  InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+  OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+  /* Validate parameters */
+  if ((InputBufferLength >= sizeof(FILE_REQUEST_EVENTSELECT)) &&
+    (OutputBufferLength >= sizeof(FILE_REPLY_EVENTSELECT))) {
+    FCB = IrpSp->FileObject->FsContext;
+
+    Request = (PFILE_REQUEST_EVENTSELECT)Irp->AssociatedIrp.SystemBuffer;
+    Reply   = (PFILE_REPLY_EVENTSELECT)Irp->AssociatedIrp.SystemBuffer;
+
+    FCB->NetworkEvents.lNetworkEvents = Request->lNetworkEvents;
+    for (i = 0; i < FD_MAX_EVENTS; i++) {
+      if ((Request->lNetworkEvents & (1 << i)) > 0) {
+        FCB->EventObjects[i] = Request->hEventObject;
+      } else {
+        /* The effect of any previous call to this function is cancelled */
+        FCB->EventObjects[i] = (WSAEVENT)0;
+      }
+    }
+
+    Reply->Status = NO_ERROR;
+    Status = STATUS_SUCCESS;
+  } else
+    Status = STATUS_INVALID_PARAMETER;
+
+  AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+
+  return Status;
+}
+
+NTSTATUS AfdDispEnumNetworkEvents(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp)
+/*
+ * FUNCTION: Reports network events
+ * ARGUMENTS:
+ *     Irp   = Pointer to I/O request packet
+ *     IrpSp = Pointer to current stack location of Irp
+ * RETURNS:
+ *     Status of operation
+ */
+{
+  NTSTATUS Status;
+  UINT InputBufferLength;
+  UINT OutputBufferLength;
+  PFILE_REQUEST_ENUMNETWORKEVENTS Request;
+  PFILE_REPLY_ENUMNETWORKEVENTS Reply;
+  HANDLE EventObject;
+  PAFDFCB FCB;
+
+  InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+  OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+  /* Validate parameters */
+  if ((InputBufferLength >= sizeof(FILE_REQUEST_ENUMNETWORKEVENTS)) &&
+    (OutputBufferLength >= sizeof(FILE_REPLY_ENUMNETWORKEVENTS))) {
+    FCB = IrpSp->FileObject->FsContext;
+
+    Request = (PFILE_REQUEST_ENUMNETWORKEVENTS)Irp->AssociatedIrp.SystemBuffer;
+    Reply   = (PFILE_REPLY_ENUMNETWORKEVENTS)Irp->AssociatedIrp.SystemBuffer;
+
+    EventObject = (HANDLE)Request->hEventObject;
+
+    RtlCopyMemory(
+      &Reply->NetworkEvents,
+      &FCB->NetworkEvents,
+      sizeof(WSANETWORKEVENTS));
+
+    RtlZeroMemory(
+      &FCB->NetworkEvents,
+      sizeof(WSANETWORKEVENTS));
+
+    if (EventObject != NULL) {
+      ZwClearEvent(EventObject);
+    }
+
+    Reply->Status = NO_ERROR;
+    Status = STATUS_SUCCESS;
+  } else
+    Status = STATUS_INVALID_PARAMETER;
+
+  AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+
+  return Status;
+}
+
+
+NTSTATUS AfdDispRecv(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp)
+/*
+ * FUNCTION: Receives data from an address
+ * ARGUMENTS:
+ *     Irp   = Pointer to I/O request packet
+ *     IrpSp = Pointer to current stack location of Irp
+ * RETURNS:
+ *     Status of operation
+ */
+{
+#if 0
+  NTSTATUS Status;
+  UINT InputBufferLength;
+  UINT OutputBufferLength;
+  PFILE_REQUEST_RECV Request;
+  PFILE_REPLY_RECV Reply;
+  DWORD NumberOfBytesRecvd;
+  PAFDFCB FCB;
+
+  AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+  OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+  /* Validate parameters */
+  if ((InputBufferLength >= sizeof(FILE_REQUEST_RECV)) &&
+    (OutputBufferLength >= sizeof(FILE_REPLY_RECV))) {
+    FCB = IrpSp->FileObject->FsContext;
+
+    Request = (PFILE_REQUEST_RECV)Irp->AssociatedIrp.SystemBuffer;
+    Reply   = (PFILE_REPLY_RECV)Irp->AssociatedIrp.SystemBuffer;
+
+    Status = AfdpDispRecv(
+      Irp,
+      FCB,
+      Request->Buffers,
+      Request->BufferCount,
+      &NumberOfBytesRecvd);
+    Reply->NumberOfBytesRecvd = NumberOfBytesRecvd;
+    Reply->Status = NO_ERROR;
+  } else {
+    Status = STATUS_INVALID_PARAMETER;
+  }
+
+  AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+
+  return Status;
+#else
+  return STATUS_SUCCESS;
+#endif
+}
+
+
+NTSTATUS AfdDispSend(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp)
+/*
+ * FUNCTION: Sends data
+ * ARGUMENTS:
+ *     Irp   = Pointer to I/O request packet
+ *     IrpSp = Pointer to current stack location of Irp
+ * RETURNS:
+ *     Status of operation
+ */
+{
+  NTSTATUS Status;
+  UINT InputBufferLength;
+  UINT OutputBufferLength;
+  PFILE_REQUEST_SEND Request;
+  PFILE_REPLY_SEND Reply;
+  PAFDFCB FCB;
+
+  InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+  OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+  /* Validate parameters */
+  if ((InputBufferLength >= sizeof(FILE_REQUEST_SEND)) &&
+    (OutputBufferLength >= sizeof(FILE_REPLY_SEND))) {
+    FCB = IrpSp->FileObject->FsContext;
+
+    Request = (PFILE_REQUEST_SEND)Irp->AssociatedIrp.SystemBuffer;
+    Reply   = (PFILE_REPLY_SEND)Irp->AssociatedIrp.SystemBuffer;
+
+    Reply->NumberOfBytesSent = 0;
+    Reply->Status = NO_ERROR;
+  } else
+    Status = STATUS_INVALID_PARAMETER;
+
+  AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+
+  return Status;
+}
+
+
+NTSTATUS AfdDispConnect(
+  PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+/*
+ * FUNCTION: Connect to a remote peer
+ * ARGUMENTS:
+ *     Irp   = Pointer to I/O request packet
+ *     IrpSp = Pointer to current stack location of Irp
+ * RETURNS:
+ *     Status of operation
+ */
+{
+  NTSTATUS Status;
+  UINT InputBufferLength;
+  UINT OutputBufferLength;
+  PFILE_REQUEST_CONNECT Request;
+  PFILE_REPLY_CONNECT Reply;
+  PAFDFCB FCB;
+  SOCKADDR_IN LocalAddress;
+
+  AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+  InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+  OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+  /* Validate parameters */
+  Status = STATUS_INVALID_PARAMETER;
+  if ((InputBufferLength >= sizeof(FILE_REQUEST_CONNECT)) &&
+    (OutputBufferLength >= sizeof(FILE_REPLY_CONNECT))) {
+    FCB = IrpSp->FileObject->FsContext;
+
+    Request = (PFILE_REQUEST_CONNECT)Irp->AssociatedIrp.SystemBuffer;
+    Reply   = (PFILE_REPLY_CONNECT)Irp->AssociatedIrp.SystemBuffer;
+
+    AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+    if (FCB->State == SOCKET_STATE_BOUND) {
+      Reply->Status = WSAEADDRINUSE;
+    } else if (FCB->State == SOCKET_STATE_CONNECTED) {
+      Reply->Status = WSAEISCONN;
+    } else {
+      /* We have an unbound socket so go ahead and create an address
+         file object and a connection endpoint and associate the two */
+
+      AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+      /* FIXME: Get from client */
+      LocalAddress.sin_family = AF_INET;
+      LocalAddress.sin_port = 1700;
+      LocalAddress.sin_addr.S_un.S_addr = 0x0; /* Dynamically allocate */
+
+      Status = TdiOpenAddressFile(
+        &FCB->TdiDeviceName,
+        (LPSOCKADDR)&LocalAddress,
+        &FCB->TdiAddressObjectHandle,
+        &FCB->TdiAddressObject);
+
+      if (NT_SUCCESS(Status)) {
+        AfdRegisterEventHandlers(FCB);
+        FCB->State = SOCKET_STATE_BOUND;
+      }
+
+      AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+      if (NT_SUCCESS(Status)) {
+        Status = TdiOpenConnectionEndpointFile(
+          &FCB->TdiDeviceName,
+          &FCB->TdiConnectionObjectHandle,
+          &FCB->TdiConnectionObject);
+      }
+
+      AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+      if (NT_SUCCESS(Status)) {
+        Status = TdiAssociateAddressFile(
+          FCB->TdiAddressObjectHandle,
+          FCB->TdiConnectionObject);
+      }
+
+      AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+      if (NT_SUCCESS(Status)) {
+        /* Now attempt to connect to the remote peer */
+        Status = TdiConnect(
+          FCB->TdiConnectionObject,
+          Request->name);
+      }
+
+      AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+      if (NT_SUCCESS(Status)) {
+        FCB->State = SOCKET_STATE_CONNECTED;
+        Reply->Status = NO_ERROR;
+      } else {
+        Reply->Status = WSAEINVAL;
+      }
+    }
+  }
 
   AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
 

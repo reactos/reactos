@@ -131,8 +131,6 @@ typedef struct _PEB
    ULONG ImageSubSystemMajorVersion;                // B8h
    ULONG ImageSubSystemMinorVersion;                // C0h
    ULONG GdiHandleBuffer[0x22];                     // C4h
-
-   PVOID ProcessWindowStation;                      // ???
 } PEB, *PPEB;
 
 
@@ -217,8 +215,6 @@ typedef struct _NT_TEB
    PVOID StackCommit;                  // F88h
    PVOID StackCommitMax;               // F8Ch
    PVOID StackReserve;                 // F90h
-
-   PVOID MessageQueue;                 // ???
 } NT_TEB, *PNT_TEB;
 
 #define PEB_STARTUPINFO (0xb0003000)

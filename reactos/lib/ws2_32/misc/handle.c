@@ -28,80 +28,80 @@ GetProviderByHandle(
  *     NULL on failure
  */
 {
-    PPROVIDER_HANDLE_BLOCK Current;
-    PLIST_ENTRY CurrentEntry;
-    ULONG i;
-   
-    WS_DbgPrint(MAX_TRACE, ("HandleTable (0x%X)  Handle (0x%X).\n", HandleTable, Handle));
+  PPROVIDER_HANDLE_BLOCK Current;
+  PLIST_ENTRY CurrentEntry;
+  ULONG i;
+  
+  WS_DbgPrint(MAX_TRACE, ("HandleTable (0x%X)  Handle (0x%X).\n", HandleTable, Handle));
 
-    CurrentEntry = HandleTable->Entry.Flink;
-   
-    while (CurrentEntry != &HandleTable->Entry) {
-        Current = CONTAINING_RECORD(CurrentEntry, PROVIDER_HANDLE_BLOCK, Entry);
+  CurrentEntry = HandleTable->Entry.Flink;
+  
+  while (CurrentEntry != &HandleTable->Entry) {
+    Current = CONTAINING_RECORD(CurrentEntry, PROVIDER_HANDLE_BLOCK, Entry);
 
-	    for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++) {
-	        if ((Current->Handles[i].Provider != NULL) && 
-                (Current->Handles[i].Handle == Handle)) {
-
-                return &Current->Handles[i];
-	        }
-        }
-	    CurrentEntry = CurrentEntry->Flink;
-    }
-
-    return NULL;
-}
-
-
-VOID
-CloseAllHandles(PPROVIDER_HANDLE_BLOCK HandleTable)
-{
-    PPROVIDER_HANDLE_BLOCK Current;
-    PLIST_ENTRY CurrentEntry;
-    PCATALOG_ENTRY Provider;
-    ULONG i;
-   
-    WS_DbgPrint(MAX_TRACE, ("HandleTable (0x%X).\n", HandleTable));
-
-    CurrentEntry = HandleTable->Entry.Flink;
-   
-    while (CurrentEntry != &HandleTable->Entry) {
-        Current = CONTAINING_RECORD(CurrentEntry, PROVIDER_HANDLE_BLOCK, Entry);
-	
-	    for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++) {
-            Provider = Current->Handles[i].Provider;
-	     
-	        if (Provider != NULL) {
-                DereferenceProviderByPointer(Provider);
-                Current->Handles[i].Handle   = (HANDLE)0;
-		        Current->Handles[i].Provider = NULL;
-                break;
-	        }
+	  for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++) {
+	    if ((Current->Handles[i].Provider != NULL) && 
+        (Current->Handles[i].Handle == Handle)) {
+        return &Current->Handles[i];
 	    }
-	    CurrentEntry = CurrentEntry->Flink;
     }
+	  CurrentEntry = CurrentEntry->Flink;
+  }
+
+  return NULL;
 }
 
 
 VOID
-DeleteHandleTable(PPROVIDER_HANDLE_BLOCK HandleTable)
+CloseAllHandles(
+  PPROVIDER_HANDLE_BLOCK HandleTable)
 {
-    PPROVIDER_HANDLE_BLOCK Current;
-    PLIST_ENTRY CurrentEntry;
+  PPROVIDER_HANDLE_BLOCK Current;
+  PLIST_ENTRY CurrentEntry;
+  PCATALOG_ENTRY Provider;
+  ULONG i;
+  
+  WS_DbgPrint(MAX_TRACE, ("HandleTable (0x%X).\n", HandleTable));
 
-    CloseAllHandles(HandleTable);
-   
-    CurrentEntry = RemoveHeadList(&HandleTable->Entry);
-   
-    while (CurrentEntry != &HandleTable->Entry) {
-        Current = CONTAINING_RECORD(CurrentEntry,
-            PROVIDER_HANDLE_BLOCK,
-    		Entry);
+  CurrentEntry = HandleTable->Entry.Flink;
 
-	    HeapFree(GlobalHeap, 0, Current);
+  while (CurrentEntry != &HandleTable->Entry) {
+    Current = CONTAINING_RECORD(CurrentEntry, PROVIDER_HANDLE_BLOCK, Entry);
 
-	    CurrentEntry = RemoveHeadList(&HandleTable->Entry);
-    }
+	  for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++) {
+      Provider = Current->Handles[i].Provider;
+	    if (Provider != NULL) {
+        DereferenceProviderByPointer(Provider);
+        Current->Handles[i].Handle   = (HANDLE)0;
+	      Current->Handles[i].Provider = NULL;
+	    }
+	  }
+	  CurrentEntry = CurrentEntry->Flink;
+  }
+}
+
+
+VOID
+DeleteHandleTable(
+  PPROVIDER_HANDLE_BLOCK HandleTable)
+{
+  PPROVIDER_HANDLE_BLOCK Current;
+  PLIST_ENTRY CurrentEntry;
+
+  CloseAllHandles(HandleTable);
+  
+  CurrentEntry = RemoveHeadList(&HandleTable->Entry);
+  
+  while (CurrentEntry != &HandleTable->Entry) {
+    Current = CONTAINING_RECORD(
+      CurrentEntry,
+      PROVIDER_HANDLE_BLOCK,
+  	  Entry);
+
+	  HeapFree(GlobalHeap, 0, Current);
+
+	  CurrentEntry = RemoveHeadList(&HandleTable->Entry);
+  }
 }
 
 
@@ -109,96 +109,95 @@ PCATALOG_ENTRY
 DeleteProviderHandle(PPROVIDER_HANDLE_BLOCK HandleTable,
                      HANDLE Handle)
 {
-    PPROVIDER_HANDLE Entry;
-    PCATALOG_ENTRY Provider;
+  PPROVIDER_HANDLE Entry;
+  PCATALOG_ENTRY Provider;
 
-    WS_DbgPrint(MAX_TRACE, ("HandleTable (0x%X)  Handle (0x%X).\n", HandleTable, Handle));
+  WS_DbgPrint(MAX_TRACE, ("HandleTable (0x%X)  Handle (0x%X).\n", HandleTable, Handle));
 
-    Entry = GetProviderByHandle(HandleTable, Handle);
-    if (!Entry) {
-	    return NULL;
-    }
+  Entry = GetProviderByHandle(HandleTable, Handle);
+  if (!Entry)
+	  return NULL;
 
-    Provider = Entry->Provider;
+  Provider = Entry->Provider;
+  Entry->Handle = (HANDLE)0;
+  Entry->Provider = NULL;
 
-    if (Provider != NULL) {
-        Entry->Handle = (HANDLE)0;
-	    Entry->Provider = NULL;
-    }
-
-    return Provider;
+  return Provider;
 }
 
 
 HANDLE
-CreateProviderHandleTable(PPROVIDER_HANDLE_BLOCK HandleTable,
-                          HANDLE Handle,
-                          PCATALOG_ENTRY Provider)
+CreateProviderHandleTable(
+  PPROVIDER_HANDLE_BLOCK HandleTable,
+  HANDLE Handle,
+  PCATALOG_ENTRY Provider)
 {
-    PPROVIDER_HANDLE_BLOCK NewBlock;
-    PLIST_ENTRY CurrentEntry;
-    ULONG i;
+  PPROVIDER_HANDLE_BLOCK NewBlock;
+  PLIST_ENTRY CurrentEntry;
+  ULONG i;
 
-    WS_DbgPrint(MAX_TRACE, ("HandleTable (0x%X)  Handle (0x%X)  Provider (0x%X).\n", HandleTable, Handle, Provider));
+  WS_DbgPrint(MAX_TRACE, ("HandleTable (0x%X)  Handle (0x%X)  Provider (0x%X).\n",
+    HandleTable, Handle, Provider));
 
-    /* Scan through the currently allocated handle blocks looking for a free slot */
-    CurrentEntry = HandleTable->Entry.Flink;
-    while (CurrentEntry != &HandleTable->Entry) {
-        PPROVIDER_HANDLE_BLOCK Block = CONTAINING_RECORD(
-            CurrentEntry, PROVIDER_HANDLE_BLOCK, Entry);
+  /* Scan through the currently allocated handle blocks looking for a free slot */
+  CurrentEntry = HandleTable->Entry.Flink;
+  while (CurrentEntry != &HandleTable->Entry) {
+    PPROVIDER_HANDLE_BLOCK Block = CONTAINING_RECORD(
+      CurrentEntry, PROVIDER_HANDLE_BLOCK, Entry);
 
-        for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++) {
-            WS_DbgPrint(MAX_TRACE, ("Considering slot %ld containing 0x%X.\n", i, Block->Handles[i].Provider));
-	        if (!Block->Handles[i].Provider) {
-                Block->Handles[i].Handle   = Handle;
-		        Block->Handles[i].Provider = Provider;
-    	        return Handle;
-	        }
+    for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++) {
+      WS_DbgPrint(MAX_TRACE, ("Considering slot %ld containing 0x%X.\n",
+        i, Block->Handles[i].Provider));
+	    if (Block->Handles[i].Provider == NULL) {
+        Block->Handles[i].Handle   = Handle;
+	      Block->Handles[i].Provider = Provider;
+  	    return Handle;
 	    }
-	    CurrentEntry = CurrentEntry->Flink;
-    }
-   
-    /* Add a new handle block to the end of the list */
-    NewBlock = (PPROVIDER_HANDLE_BLOCK)HeapAlloc(
-        GlobalHeap, 0, sizeof(PROVIDER_HANDLE_BLOCK));
-
-    if (!NewBlock) {
-        return NULL;
 	  }
+	  CurrentEntry = CurrentEntry->Flink;
+  }
 
-    ZeroMemory(NewBlock, sizeof(PROVIDER_HANDLE_BLOCK));
-    InsertTailList(&HandleTable->Entry, &NewBlock->Entry);
+  /* Add a new handle block to the end of the list */
+  NewBlock = (PPROVIDER_HANDLE_BLOCK)HeapAlloc(
+      GlobalHeap, 0, sizeof(PROVIDER_HANDLE_BLOCK));
 
-    NewBlock->Handles[0].Handle   = Handle;
-    NewBlock->Handles[0].Provider = Provider;
+  if (!NewBlock)
+      return (HANDLE)0;
 
-    return Handle;
+  ZeroMemory(NewBlock, sizeof(PROVIDER_HANDLE_BLOCK));
+  InsertTailList(&HandleTable->Entry, &NewBlock->Entry);
+
+  NewBlock->Handles[0].Handle   = Handle;
+  NewBlock->Handles[0].Provider = Provider;
+
+  return Handle;
 }
 
 
 HANDLE
-CreateProviderHandle(HANDLE Handle,
-                     PCATALOG_ENTRY Provider)
+CreateProviderHandle(
+  HANDLE Handle,
+  PCATALOG_ENTRY Provider)
 {
-    HANDLE h;
+  HANDLE h;
 
-    //EnterCriticalSection(&ProviderHandleTableLock);
+  EnterCriticalSection(&ProviderHandleTableLock);
 
-    h = CreateProviderHandleTable(ProviderHandleTable, Handle, Provider);
+  h = CreateProviderHandleTable(ProviderHandleTable, Handle, Provider);
 
-    //LeaveCriticalSection(&ProviderHandleTableLock);
+  LeaveCriticalSection(&ProviderHandleTableLock);
 
-    if (h != NULL) {
-        ReferenceProviderByPointer(Provider);
-    }
+  if (h != NULL)
+    ReferenceProviderByPointer(Provider);
 
-    return h;
+  return h;
 }
 
     
 BOOL
-ReferenceProviderByHandle(HANDLE Handle,
-                          PCATALOG_ENTRY* Provider)
+ReferenceProviderByHandle(
+  HANDLE Handle,
+  PCATALOG_ENTRY* Provider)
 /*
  * FUNCTION: Increments the reference count for a provider and returns a pointer to it
  * ARGUMENTS:
@@ -208,72 +207,71 @@ ReferenceProviderByHandle(HANDLE Handle,
  *     TRUE if handle was valid, FALSE if not
  */
 {
-    PPROVIDER_HANDLE ProviderHandle;
+  PPROVIDER_HANDLE ProviderHandle;
 
 	WS_DbgPrint(MAX_TRACE, ("Handle (0x%X)  Provider (0x%X).\n", Handle, Provider));
 
-    //EnterCriticalSection(&ProviderHandleTableLock);
+  EnterCriticalSection(&ProviderHandleTableLock);
 
-    ProviderHandle = GetProviderByHandle(ProviderHandleTable, Handle);
+  ProviderHandle = GetProviderByHandle(ProviderHandleTable, Handle);
 
-    //LeaveCriticalSection(&ProviderHandleTableLock);
+  LeaveCriticalSection(&ProviderHandleTableLock);
 
-    if (ProviderHandle) {
-        ReferenceProviderByPointer(ProviderHandle->Provider);
-        *Provider = ProviderHandle->Provider;
-    }
+  if (ProviderHandle) {
+    ReferenceProviderByPointer(ProviderHandle->Provider);
+    *Provider = ProviderHandle->Provider;
+  }
 
-    return (ProviderHandle != NULL);
+  return (ProviderHandle != NULL);
 }
 
 
 BOOL
-CloseProviderHandle(HANDLE Handle)
+CloseProviderHandle(
+  HANDLE Handle)
 {
-    PCATALOG_ENTRY Provider;
-   
-    WS_DbgPrint(MAX_TRACE, ("Handle (0x%X).\n", Handle));
+  PCATALOG_ENTRY Provider;
+  
+  WS_DbgPrint(MAX_TRACE, ("Handle (0x%X).\n", Handle));
 
-    //EnterCriticalSection(&ProviderHandleTableLock);
+  EnterCriticalSection(&ProviderHandleTableLock);
 
-    Provider = DeleteProviderHandle(ProviderHandleTable, Handle);
-    if (!Provider) {
-        return FALSE;
-	  }
+  Provider = DeleteProviderHandle(ProviderHandleTable, Handle);
+  if (!Provider)
+    return FALSE;
 
-    //LeaveCriticalSection(&ProviderHandleTableLock);
+  LeaveCriticalSection(&ProviderHandleTableLock);
 
-    DereferenceProviderByPointer(Provider);
+  DereferenceProviderByPointer(Provider);
 
-    return TRUE;
+  return TRUE;
 }
 
 
 BOOL
 InitProviderHandleTable(VOID)
 {
-    ProviderHandleTable = (PPROVIDER_HANDLE_BLOCK)
-        HeapAlloc(GlobalHeap, 0, sizeof(PROVIDER_HANDLE_BLOCK));
-    if (!ProviderHandleTable) {
-        return FALSE;
-	  }
+  ProviderHandleTable = (PPROVIDER_HANDLE_BLOCK)
+    HeapAlloc(GlobalHeap, 0, sizeof(PROVIDER_HANDLE_BLOCK));
+  if (!ProviderHandleTable)
+    return FALSE;
 
-    ZeroMemory(ProviderHandleTable, sizeof(PROVIDER_HANDLE_BLOCK));
+  ZeroMemory(ProviderHandleTable, sizeof(PROVIDER_HANDLE_BLOCK));
 
-    InitializeListHead(&ProviderHandleTable->Entry);
+  InitializeListHead(&ProviderHandleTable->Entry);
 
-    //InitializeCriticalSection(&ProviderHandleTableLock);
+  InitializeCriticalSection(&ProviderHandleTableLock);
 
-    return TRUE;
+  return TRUE;
 }
 
 
 VOID
 FreeProviderHandleTable(VOID)
 {
-    DeleteHandleTable(ProviderHandleTable);
+  DeleteHandleTable(ProviderHandleTable);
 
-    //DeleteCriticalSection(&ProviderHandleTableLock);
+  DeleteCriticalSection(&ProviderHandleTableLock);
 }
 
 /* EOF */

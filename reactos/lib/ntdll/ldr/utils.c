@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.45 2001/07/02 20:27:41 phreak Exp $
+/* $Id: utils.c,v 1.46 2001/07/04 20:40:19 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1096,7 +1096,7 @@ LdrUnloadDll (IN PVOID BaseAddress)
    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
    Entry = ModuleListHead->Flink;
 
-   while (Entry != ModuleListHead);
+   while (Entry != ModuleListHead)
      {
 	Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
 	if (Module->BaseAddress == BaseAddress)

@@ -6,7 +6,8 @@ CFLAGS = -I./include -DUNICODE -DDBG
 
 TARGETNAME=msafd
 
-MISC_OBJECTS = misc/dllmain.o misc/helpers.o misc/sndrcv.o misc/stubs.o
+MISC_OBJECTS = misc/dllmain.o misc/event.o misc/helpers.o \
+               misc/sndrcv.o misc/stubs.o
 
 RESOURCE_OBJECT = $(TARGETNAME).coff
 

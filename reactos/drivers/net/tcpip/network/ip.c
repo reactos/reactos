@@ -9,6 +9,7 @@
  */
 #include <tcpip.h>
 #include <ip.h>
+#include <tcp.h>
 #include <loopback.h>
 #include <neighbor.h>
 #include <receive.h>
@@ -29,13 +30,61 @@ KSPIN_LOCK PrefixListLock;
 UINT MaxLLHeaderSize; /* Largest maximum header size */
 UINT MinLLFrameSize;  /* Largest minimum frame size */
 BOOLEAN IPInitialized = FALSE;
+NPAGED_LOOKASIDE_LIST IPPacketList;
 
 IP_PROTOCOL_HANDLER ProtocolTable[IP_PROTOCOL_TABLE_SIZE];
 
 
+VOID FreePacket(
+    PVOID Object)
+/*
+ * FUNCTION: Frees an IP packet object
+ * ARGUMENTS:
+ *     Object = Pointer to an IP packet structure
+ */
+{
+    ExFreeToNPagedLookasideList(&IPPacketList, Object);
+}
+
+
+VOID FreeADE(
+    PVOID Object)
+/*
+ * FUNCTION: Frees an address entry object
+ * ARGUMENTS:
+ *     Object = Pointer to an address entry structure
+ */
+{
+    ExFreePool(Object);
+}
+
+
+VOID FreeNTE(
+    PVOID Object)
+/*
+ * FUNCTION: Frees a net table entry object
+ * ARGUMENTS:
+ *     Object = Pointer to an net table entry structure
+ */
+{
+    ExFreePool(Object);
+}
+
+
+VOID FreeIF(
+    PVOID Object)
+/*
+ * FUNCTION: Frees an interface object
+ * ARGUMENTS:
+ *     Object = Pointer to an interface structure
+ */
+{
+    ExFreePool(Object);
+}
+
+
 PADDRESS_ENTRY CreateADE(
-    PIP_INTERFACE IF,
-    PIP_ADDRESS Address,
+    PIP_INTERFACE IF,    PIP_ADDRESS Address,
     UCHAR Type,
     PNET_TABLE_ENTRY NTE)
 /*
@@ -64,12 +113,14 @@ PADDRESS_ENTRY CreateADE(
         A2S(Address), A2S(NTE->Address)));
 
     /* Allocate space for an ADE and set it up */
-    ADE = PoolAllocateBuffer(sizeof(ADDRESS_ENTRY));
+    ADE = ExAllocatePool(NonPagedPool, sizeof(ADDRESS_ENTRY));
     if (!ADE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
 
+    INIT_TAG(ADE, TAG('A','D','E',' '));
+    ADE->Free     = FreeADE;
     ADE->RefCount = 1;
     ADE->NTE      = NTE;
     ADE->Type     = Type;
@@ -116,8 +167,7 @@ VOID DestroyADE(
 #endif
 
     /* And free the ADE */
-    PoolFreeBuffer(ADE);
-    TI_DbgPrint(MIN_TRACE, ("Check.\n"));
+    FreeADE(ADE);
 }
 
 
@@ -141,11 +191,40 @@ VOID DestroyADEs(
     CurrentEntry = IF->ADEListHead.Flink;
     while (CurrentEntry != &IF->ADEListHead) {
         NextEntry = CurrentEntry->Flink;
-	    Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_ENTRY, ListEntry);
+  	    Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_ENTRY, ListEntry);
         /* Destroy the ADE */
         DestroyADE(IF, Current);
         CurrentEntry = NextEntry;
     }
+}
+
+
+PIP_PACKET IPCreatePacket(
+  ULONG Type)
+/*
+ * FUNCTION: Creates an IP packet object
+ * ARGUMENTS:
+ *     Type = Type of IP packet
+ * RETURNS:
+ *     Pointer to the created IP packet. NULL if there was not enough free resources.
+ */
+{
+  PIP_PACKET IPPacket;
+
+  IPPacket = ExAllocateFromNPagedLookasideList(&IPPacketList);
+  if (!IPPacket)
+    return NULL;
+
+    /* FIXME: Is this needed? */
+  RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
+
+  INIT_TAG(IPPacket, TAG('I','P','K','T'));
+
+  IPPacket->Free     = FreePacket;
+  IPPacket->RefCount = 1;
+  IPPacket->Type     = Type;
+
+  return IPPacket;
 }
 
 
@@ -174,12 +253,13 @@ PPREFIX_LIST_ENTRY CreatePLE(
     TI_DbgPrint(DEBUG_IP, ("Prefix (%s).\n", A2S(Prefix)));
 
     /* Allocate space for an PLE and set it up */
-    PLE = PoolAllocateBuffer(sizeof(PREFIX_LIST_ENTRY));
+    PLE = ExAllocatePool(NonPagedPool, sizeof(PREFIX_LIST_ENTRY));
     if (!PLE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
 
+    INIT_TAG(PLE, TAG('P','L','E',' '));
     PLE->RefCount     = 1;
     PLE->Interface    = IF;
     PLE->Prefix       = Prefix;
@@ -224,7 +304,7 @@ VOID DestroyPLE(
 #endif
 
     /* And free the PLE */
-    PoolFreeBuffer(PLE);
+    ExFreePool(PLE);
 }
 
 
@@ -247,7 +327,7 @@ VOID DestroyPLEs(
     CurrentEntry = PrefixListHead.Flink;
     while (CurrentEntry != &PrefixListHead) {
         NextEntry = CurrentEntry->Flink;
-	    Current = CONTAINING_RECORD(CurrentEntry, PREFIX_LIST_ENTRY, ListEntry);
+	      Current = CONTAINING_RECORD(CurrentEntry, PREFIX_LIST_ENTRY, ListEntry);
         /* Destroy the PLE */
         DestroyPLE(Current);
         CurrentEntry = NextEntry;
@@ -283,11 +363,15 @@ PNET_TABLE_ENTRY IPCreateNTE(
     TI_DbgPrint(DEBUG_IP, ("Address (%s).\n", A2S(Address)));
 
     /* Allocate room for an NTE */
-    NTE = PoolAllocateBuffer(sizeof(NET_TABLE_ENTRY));
+    NTE = ExAllocatePool(NonPagedPool, sizeof(NET_TABLE_ENTRY));
     if (!NTE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
+
+    INIT_TAG(NTE, TAG('N','T','E',' '));
+
+    NTE->Free = FreeNTE;
 
     NTE->Interface = IF;
 
@@ -306,7 +390,7 @@ PNET_TABLE_ENTRY IPCreateNTE(
     ADE = CreateADE(IF, NTE->Address, ADE_UNICAST, NTE);
     if (!ADE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        PoolFreeBuffer(NTE);
+        ExFreePool(NTE);
         return NULL;
     }
 
@@ -314,7 +398,7 @@ PNET_TABLE_ENTRY IPCreateNTE(
     NTE->PLE = CreatePLE(IF, NTE->Address, PrefixLength);
     if (!NTE->PLE) {
         DestroyADE(IF, ADE);
-        PoolFreeBuffer(NTE);
+        ExFreePool(NTE);
         return NULL;
     }
 
@@ -370,7 +454,7 @@ VOID DestroyNTE(
     }
 #endif
     /* And free the NTE */
-    PoolFreeBuffer(NTE);
+    ExFreePool(NTE);
 }
 
 
@@ -395,7 +479,7 @@ VOID DestroyNTEs(
     CurrentEntry = IF->NTEListHead.Flink;
     while (CurrentEntry != &IF->NTEListHead) {
         NextEntry = CurrentEntry->Flink;
-	    Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
+	      Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
         /* Destroy the NTE */
         DestroyNTE(IF, Current);
         CurrentEntry = NextEntry;
@@ -434,7 +518,7 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
     /* Search the list and return the NTE if found */
     CurrentEntry = IF->ADEListHead.Flink;
     while (CurrentEntry != &IF->ADEListHead) {
-	    Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_ENTRY, ListEntry);
+	      Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_ENTRY, ListEntry);
         if (AddrIsEqual(Address, Current->Address)) {
             ReferenceObject(Current->NTE);
             *AddressType = Current->Type;
@@ -480,7 +564,7 @@ PNET_TABLE_ENTRY IPLocateNTE(
     /* Search the list and return the NTE if found */
     CurrentEntry = NetTableListHead.Flink;
     while (CurrentEntry != &NetTableListHead) {
-	    Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, NTListEntry);
+	      Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, NTListEntry);
         NTE = IPLocateNTEOnInterface(Current->Interface, Address, AddressType);
         if (NTE) {
             ReferenceObject(NTE);
@@ -527,7 +611,7 @@ PADDRESS_ENTRY IPLocateADE(
     /* Search the interface list */
     CurrentIFEntry = InterfaceListHead.Flink;
     while (CurrentIFEntry != &InterfaceListHead) {
-	    CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
+	      CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
 
         /* Search the address entry list and return the ADE if found */
         CurrentADEEntry = CurrentIF->ADEListHead.Flink;
@@ -577,7 +661,7 @@ PADDRESS_ENTRY IPGetDefaultADE(
     /* Search the interface list */
     CurrentIFEntry = InterfaceListHead.Flink;
     while (CurrentIFEntry != &InterfaceListHead) {
-	    CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
+	      CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
 
         if (CurrentIF != Loopback) {
             /* Search the address entry list and return the first appropriate ADE found */
@@ -636,6 +720,9 @@ VOID IPTimeout(
 
     /* Clean possible outdated cached neighbor addresses */
     NBTimeout();
+
+    /* Call upper layer timeout routines */
+    TCPTimeout();
 }
 
 
@@ -694,21 +781,24 @@ PIP_INTERFACE IPCreateInterface(
     }
 #endif
 
-    IF = PoolAllocateBuffer(sizeof(IP_INTERFACE));
+    IF = ExAllocatePool(NonPagedPool, sizeof(IP_INTERFACE));
     if (!IF) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
 
+    INIT_TAG(IF, TAG('F','A','C','E'));
+
+    IF->Free       = FreeIF;
     IF->RefCount   = 1;
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
-	if (IF->HeaderSize > MaxLLHeaderSize)
-		MaxLLHeaderSize = IF->HeaderSize;
+	  if (IF->HeaderSize > MaxLLHeaderSize)
+	  	MaxLLHeaderSize = IF->HeaderSize;
 
     IF->MinFrameSize = BindInfo->MinFrameSize;
-	if (IF->MinFrameSize > MinLLFrameSize)
-		MinLLFrameSize = IF->MinFrameSize;
+	  if (IF->MinFrameSize > MinLLFrameSize)
+  		MinLLFrameSize = IF->MinFrameSize;
 
     IF->MTU           = BindInfo->MTU;
     IF->Address       = BindInfo->Address;
@@ -751,7 +841,7 @@ VOID IPDestroyInterface(
         TI_DbgPrint(MIN_TRACE, ("Interface at (0x%X) has (%d) references (should be 0).\n", IF, IF->RefCount));
     }
 #endif
-    PoolFreeBuffer(IF);
+    ExFreePool(IF);
 }
 
 
@@ -930,8 +1020,45 @@ NTSTATUS IPStartup(
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-	MaxLLHeaderSize = 0;
+  	MaxLLHeaderSize = 0;
     MinLLFrameSize  = 0;
+
+    /* Initialize lookaside lists */
+    ExInitializeNPagedLookasideList(
+      &IPDRList,                      /* Lookaside list */
+	    NULL,                           /* Allocate routine */
+	    NULL,                           /* Free routine */
+	    0,                              /* Flags */
+	    sizeof(IPDATAGRAM_REASSEMBLY),  /* Size of each entry */
+	    TAG('I','P','D','R'),           /* Tag */
+	    0);                             /* Depth */
+
+    ExInitializeNPagedLookasideList(
+      &IPPacketList,                  /* Lookaside list */
+	    NULL,                           /* Allocate routine */
+	    NULL,                           /* Free routine */
+	    0,                              /* Flags */
+	    sizeof(IP_PACKET),              /* Size of each entry */
+	    TAG('I','P','P','K'),           /* Tag */
+	    0);                             /* Depth */
+
+    ExInitializeNPagedLookasideList(
+      &IPFragmentList,                /* Lookaside list */
+	    NULL,                           /* Allocate routine */
+	    NULL,                           /* Free routine */
+	    0,                              /* Flags */
+	    sizeof(IP_FRAGMENT),            /* Size of each entry */
+	    TAG('I','P','F','G'),           /* Tag */
+	    0);                             /* Depth */
+
+    ExInitializeNPagedLookasideList(
+      &IPHoleList,                    /* Lookaside list */
+	    NULL,                           /* Allocate routine */
+	    NULL,                           /* Free routine */
+	    0,                              /* Flags */
+	    sizeof(IPDATAGRAM_HOLE),        /* Size of each entry */
+	    TAG('I','P','H','L'),           /* Tag */
+	    0);                             /* Depth */
 
     /* Start routing subsystem */
     RouterStartup();
@@ -1007,6 +1134,12 @@ NTSTATUS IPShutdown(
 
     /* Clear prefix list */
     DestroyPLEs();
+
+    /* Destroy lookaside lists */
+    ExDeleteNPagedLookasideList(&IPHoleList);
+    ExDeleteNPagedLookasideList(&IPDRList);
+    ExDeleteNPagedLookasideList(&IPPacketList);
+    ExDeleteNPagedLookasideList(&IPFragmentList);
 
     IPInitialized = FALSE;
 

@@ -103,25 +103,27 @@ WPUModifyIFSHandle(
     IN  SOCKET ProposedHandle,
     OUT LPINT lpErrno)
 {
-    PCATALOG_ENTRY Provider;
-    SOCKET Socket;
+  PCATALOG_ENTRY Provider;
+  SOCKET Socket;
 
-    WS_DbgPrint(MAX_TRACE, ("dwCatalogEntryId (%d)  ProposedHandle (0x%X).\n",
-        dwCatalogEntryId, ProposedHandle));
+  WS_DbgPrint(MAX_TRACE, ("dwCatalogEntryId (%d)  ProposedHandle (0x%X).\n",
+    dwCatalogEntryId, ProposedHandle));
 
-    Provider = LocateProviderById(dwCatalogEntryId);
-    if (!Provider) {
-        WS_DbgPrint(MIN_TRACE, ("Provider with catalog entry id (%d) was not found.\n",
-            dwCatalogEntryId));
-        *lpErrno = WSAEINVAL;
-        return INVALID_SOCKET;
-    }
+  Provider = LocateProviderById(dwCatalogEntryId);
+  if (!Provider) {
+    WS_DbgPrint(MIN_TRACE, ("Provider with catalog entry id (%d) was not found.\n",
+      dwCatalogEntryId));
+    *lpErrno = WSAEINVAL;
+    return INVALID_SOCKET;
+  }
 
-    Socket = (SOCKET)CreateProviderHandle(ProposedHandle, Provider);
+  Socket = (SOCKET)CreateProviderHandle(
+    ProposedHandle,
+    Provider);
 
-    *lpErrno = NO_ERROR;
+  *lpErrno = NO_ERROR;
 
-    return Socket;
+  return Socket;
 }
 
 

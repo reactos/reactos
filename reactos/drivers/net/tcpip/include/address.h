@@ -7,7 +7,6 @@
 #ifndef __ADDRESS_H
 #define __ADDRESS_H
 
-
 /*
  * Initialize an IPv4 style address
  * VOID AddrInitIPv4(
@@ -16,9 +15,11 @@
  */
 #define AddrInitIPv4(IPAddress, RawAddress)           \
 {                                                     \
+    INIT_TAG((IPAddress), TAG('I','P','V','4'));      \
     (IPAddress)->RefCount            = 1;             \
     (IPAddress)->Type                = IP_ADDRESS_V4; \
     (IPAddress)->Address.IPv4Address = (RawAddress);  \
+    (IPAddress)->Free =                IPAddressFree; \
 }
 
 #ifdef DBG
@@ -28,6 +29,9 @@ PCHAR A2S(
 
 #endif /* DBG */
 
+VOID IPAddressFree(
+    PVOID Object);
+
 BOOLEAN AddrIsUnspecified(
     PIP_ADDRESS Address);
 
@@ -36,6 +40,11 @@ NTSTATUS AddrGetAddress(
     PIP_ADDRESS *Address,
     PUSHORT Port,
     PIP_ADDRESS *Cache);
+
+NTSTATUS AddrBuildAddress(
+    PTA_ADDRESS TdiAddress,
+    PIP_ADDRESS *Address,
+    PUSHORT Port);
 
 BOOLEAN AddrIsEqual(
     PIP_ADDRESS Address1,

@@ -54,6 +54,21 @@ PCHAR A2S(
 
 #endif /* DBG */
 
+
+VOID IPAddressFree(
+    PVOID Object)
+/*
+ * FUNCTION: Frees an IP_ADDRESS object
+ * ARGUMENTS:
+ *     Object = Pointer to an IP address structure
+ * RETURNS:
+ *     Nothing
+ */
+{
+    ExFreePool(Object);
+}
+
+
 BOOLEAN AddrIsUnspecified(
     PIP_ADDRESS Address)
 /*
@@ -108,7 +123,7 @@ NTSTATUS AddrGetAddress(
 
                 *Port = ValidAddr->sin_port;
 
-                if (*Cache) {
+                if ((Cache) && (*Cache)) {
                     if (((*Cache)->Type == IP_ADDRESS_V4) &&
                         ((*Cache)->Address.IPv4Address == ValidAddr->in_addr)) {
                         *Address = *Cache;
@@ -120,14 +135,16 @@ NTSTATUS AddrGetAddress(
                     }
                 }
 
-                IPAddress = PoolAllocateBuffer(sizeof(IP_ADDRESS));
+                IPAddress = ExAllocatePool(NonPagedPool, sizeof(IP_ADDRESS));
                 if (IPAddress) {
                     AddrInitIPv4(IPAddress, ValidAddr->in_addr);
                     *Address = IPAddress;
 
                     /* Update address cache */
-                    *Cache = IPAddress;
-                    ReferenceObject(*Cache);
+                    if (Cache) {
+                      *Cache = IPAddress;
+                      ReferenceObject(*Cache);
+                    }
                     return STATUS_SUCCESS;
                 } else
                     return STATUS_INSUFFICIENT_RESOURCES;
@@ -141,6 +158,43 @@ NTSTATUS AddrGetAddress(
     }
 
     return STATUS_INVALID_ADDRESS;
+}
+
+
+/*
+ * FUNCTION: Extract IP address from TDI address structure
+ * ARGUMENTS:
+ *     TdiAddress = Pointer to transport address list to extract from
+ *     Address    = Address of a pointer to where an IP address is stored
+ *     Port       = Pointer to where port number is stored
+ * RETURNS:
+ *     Status of operation
+ */
+NTSTATUS AddrBuildAddress(
+    PTA_ADDRESS TdiAddress,
+    PIP_ADDRESS *Address,
+    PUSHORT Port)
+{
+  PTDI_ADDRESS_IP ValidAddr;
+  PIP_ADDRESS IPAddress;
+
+  if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP)
+    return STATUS_INVALID_ADDRESS;
+
+  if (TdiAddress->AddressLength >= TDI_ADDRESS_LENGTH_IP)
+    return STATUS_INVALID_ADDRESS;
+
+  ValidAddr = (PTDI_ADDRESS_IP)TdiAddress->Address;
+
+  IPAddress = ExAllocatePool(NonPagedPool, sizeof(IP_ADDRESS));
+  if (!IPAddress)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  AddrInitIPv4(IPAddress, ValidAddr->in_addr);
+  *Address = IPAddress;
+  *Port = ValidAddr->sin_port;
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -245,11 +299,12 @@ PIP_ADDRESS AddrBuildIPv4(
 {
     PIP_ADDRESS IPAddress;
 
-    IPAddress = PoolAllocateBuffer(sizeof(IP_ADDRESS));
+    IPAddress = ExAllocatePool(NonPagedPool, sizeof(IP_ADDRESS));
     if (IPAddress) {
         IPAddress->RefCount            = 1;
         IPAddress->Type                = IP_ADDRESS_V4;
         IPAddress->Address.IPv4Address = Address;
+        IPAddress->Free                = IPAddressFree;
     }
 
     return IPAddress;

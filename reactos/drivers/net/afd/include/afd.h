@@ -83,12 +83,16 @@ typedef struct _AFDFCB {
     KSPIN_LOCK          ReceiveQueueLock;
     LIST_ENTRY          ReadRequestQueue;
     KSPIN_LOCK          ReadRequestQueueLock;
+    /* For WSAEventSelect() */
+    WSANETWORKEVENTS    NetworkEvents;
+    WSAEVENT            EventObjects[FD_MAX_EVENTS];
 } AFDFCB, *PAFDFCB;
 
 /* Socket states */
 #define SOCKET_STATE_CREATED    0
 #define SOCKET_STATE_BOUND      1
 #define SOCKET_STATE_LISTENING  2
+#define SOCKET_STATE_CONNECTED  3
 
 typedef struct _AFD_BUFFER {
   LIST_ENTRY ListEntry;
@@ -242,6 +246,26 @@ NTSTATUS AfdDispSelect(
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp);
 
+NTSTATUS AfdDispEventSelect(
+  PIRP Irp,
+  PIO_STACK_LOCATION IrpSp);
+
+NTSTATUS AfdDispEnumNetworkEvents(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp);
+
+NTSTATUS AfdDispRecv(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp);
+
+NTSTATUS AfdDispSend(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp);
+
+NTSTATUS AfdDispConnect(
+  PIRP Irp,
+  PIO_STACK_LOCATION IrpSp);
+
 /* Prototypes from event.c */
 
 NTSTATUS AfdRegisterEventHandlers(
@@ -312,60 +336,73 @@ VOID BuildIPv4Header(
 /* Prototypes from tdi.c */
 
 NTSTATUS TdiCloseDevice(
-    HANDLE Handle,
-    PFILE_OBJECT FileObject);
+  HANDLE Handle,
+  PFILE_OBJECT FileObject);
 
 NTSTATUS TdiOpenAddressFileIPv4(
-    PUNICODE_STRING DeviceName,
-    LPSOCKADDR Name,
-    PHANDLE AddressHandle,
-    PFILE_OBJECT *AddressObject);
+  PUNICODE_STRING DeviceName,
+  LPSOCKADDR Name,
+  PHANDLE AddressHandle,
+  PFILE_OBJECT *AddressObject);
 
 NTSTATUS TdiOpenAddressFile(
-    PUNICODE_STRING DeviceName,
-    LPSOCKADDR Name,
-    PHANDLE AddressHandle,
-    PFILE_OBJECT *AddressObject);
+  PUNICODE_STRING DeviceName,
+  LPSOCKADDR Name,
+  PHANDLE AddressHandle,
+  PFILE_OBJECT *AddressObject);
+
+NTSTATUS TdiOpenConnectionEndpointFile(
+  PUNICODE_STRING DeviceName,
+  PHANDLE ConnectionHandle,
+  PFILE_OBJECT *ConnectionObject);
+
+NTSTATUS TdiConnect(
+  PFILE_OBJECT ConnectionObject,
+  LPSOCKADDR RemoteAddress);
+
+NTSTATUS TdiAssociateAddressFile(
+  HANDLE AddressHandle,
+  PFILE_OBJECT ConnectionObject);
 
 NTSTATUS TdiSetEventHandler(
-    PFILE_OBJECT FileObject,
-    LONG EventType,
-    PVOID Handler,
-    PVOID Context);
+  PFILE_OBJECT FileObject,
+  LONG EventType,
+  PVOID Handler,
+  PVOID Context);
 
 NTSTATUS TdiQueryDeviceControl(
-    PFILE_OBJECT FileObject,
-    ULONG IoControlCode,
-    PVOID InputBuffer,
-    ULONG InputBufferLength,
-    PVOID OutputBuffer,
-    ULONG OutputBufferLength,
-    PULONG Return);
+  PFILE_OBJECT FileObject,
+  ULONG IoControlCode,
+  PVOID InputBuffer,
+  ULONG InputBufferLength,
+  PVOID OutputBuffer,
+  ULONG OutputBufferLength,
+  PULONG Return);
 
 NTSTATUS TdiQueryInformationEx(
-    PFILE_OBJECT FileObject,
-    ULONG Entity,
-    ULONG Instance,
-    ULONG Class,
-    ULONG Type,
-    ULONG Id,
-    PVOID OutputBuffer,
-    PULONG OutputLength);
+  PFILE_OBJECT FileObject,
+  ULONG Entity,
+  ULONG Instance,
+  ULONG Class,
+  ULONG Type,
+  ULONG Id,
+  PVOID OutputBuffer,
+  PULONG OutputLength);
 
 NTSTATUS TdiQueryAddress(
-    PFILE_OBJECT FileObject,
-    PULONG Address);
+  PFILE_OBJECT FileObject,
+  PULONG Address);
 
 NTSTATUS TdiSend(
-    PFILE_OBJECT TransportObject,
-    PVOID Buffer,
-    ULONG BufferSize);
+  PFILE_OBJECT TransportObject,
+  PVOID Buffer,
+  ULONG BufferSize);
 
 NTSTATUS TdiSendDatagram(
-    PFILE_OBJECT TransportObject,
-    LPSOCKADDR Address,
-    PMDL Mdl,
-    ULONG BufferSize);
+  PFILE_OBJECT TransportObject,
+  LPSOCKADDR Address,
+  PMDL Mdl,
+  ULONG BufferSize);
 
 #endif /*__AFD_H */
 

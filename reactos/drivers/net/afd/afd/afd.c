@@ -81,6 +81,26 @@ AfdDispatch(
         Status = AfdDispSelect(Irp, IrpSp);
         break;
 
+    case IOCTL_AFD_EVENTSELECT:
+        Status = AfdDispEventSelect(Irp, IrpSp);
+        break;
+
+    case IOCTL_AFD_ENUMNETWORKEVENTS:
+        Status = AfdDispEnumNetworkEvents(Irp, IrpSp);
+        break;
+
+    case IOCTL_AFD_RECV:
+        Status = AfdDispRecv(Irp, IrpSp);
+        break;
+
+    case IOCTL_AFD_SEND:
+        Status = AfdDispSend(Irp, IrpSp);
+        break;
+
+    case IOCTL_AFD_CONNECT:
+        Status = AfdDispConnect(Irp, IrpSp);
+        break;
+
     default:
         AFD_DbgPrint(MIN_TRACE, ("Unknown IOCTL (0x%X).\n",
             IrpSp->Parameters.DeviceIoControl.IoControlCode));

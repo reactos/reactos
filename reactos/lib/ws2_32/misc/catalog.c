@@ -144,7 +144,7 @@ PCATALOG_ENTRY LocateProvider(
     CurrentEntry = CurrentEntry->Flink;
   }
 
-  LeaveCriticalSection(&CatalogLock);
+  //LeaveCriticalSection(&CatalogLock);
 
   return NULL;
 }
@@ -210,12 +210,6 @@ INT LoadProvider(
           &Provider->ProcTable);
 
         /* FIXME: Validate the procedure table */
-
-        WS_DbgPrint(MAX_TRACE, ("OFFSET2 (0x%X)\n",
-          FIELD_OFFSET(WSPPROC_TABLE, lpWSPSocket)));
-
-        assert(Provider->ProcTable.lpWSPSocket);
-
       } else
         Status = ERROR_BAD_PROVIDER;
     } else
@@ -241,8 +235,9 @@ INT UnloadProvider(
       Provider->ProcTable.lpWSPCleanup));
       Provider->ProcTable.lpWSPCleanup(&Status);
 
+    WS_DbgPrint(MAX_TRACE, ("Calling FreeLibrary(0x%X).\n", Provider->hModule));
     if (!FreeLibrary(Provider->hModule)) {
-      WS_DbgPrint(MIN_TRACE, ("Could not free library.\n"));
+      WS_DbgPrint(MIN_TRACE, ("Could not free library at (0x%X).\n", Provider->hModule));
       Status = GetLastError();
     }
 
@@ -274,17 +269,26 @@ VOID CreateCatalog(VOID)
   /* Assume one Service Provider with id 1 */
   Provider->ProtocolInfo.dwCatalogEntryId = 1;
 
-  Provider->Mapping = HeapAlloc(GlobalHeap, 0, sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
-  if (!Provider->Mapping) {
-	  WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
+  Provider->Mapping = HeapAlloc(GlobalHeap,
+    0,
+    3 * sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
+  if (!Provider->Mapping)
     return;
-	}
 
-  Provider->Mapping->Rows    = 1;
+  Provider->Mapping->Rows    = 3;
   Provider->Mapping->Columns = 3;
+
   Provider->Mapping->Mapping[0].AddressFamily = AF_INET;
-  Provider->Mapping->Mapping[0].SocketType    = SOCK_RAW;
-  Provider->Mapping->Mapping[0].Protocol      = 0;
+  Provider->Mapping->Mapping[0].SocketType    = SOCK_STREAM;
+  Provider->Mapping->Mapping[0].Protocol      = IPPROTO_TCP;
+
+  Provider->Mapping->Mapping[1].AddressFamily = AF_INET;
+  Provider->Mapping->Mapping[1].SocketType    = SOCK_DGRAM;
+  Provider->Mapping->Mapping[1].Protocol      = IPPROTO_UDP;
+
+  Provider->Mapping->Mapping[2].AddressFamily = AF_INET;
+  Provider->Mapping->Mapping[2].SocketType    = SOCK_RAW;
+  Provider->Mapping->Mapping[2].Protocol      = 0;
 #endif
 }
 

@@ -35,16 +35,13 @@ extern DWORD DebugTraceLevel;
 #ifdef NASSERT
 #define ASSERT(x)
 #else /* NASSERT */
-#define ASSERT(x) if (!(x)) { WSH_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) { WSH_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); ExitProcess(0); }
 #endif /* NASSERT */
-
-#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
 #else /* DBG */
 
 #define WSH_DbgPrint(_t_, _x_)
 
-#define ASSERT_IRQL(x)
 #define ASSERT(x)
 
 #endif /* DBG */

@@ -43,7 +43,6 @@ VOID RealTransmit(
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-
     KeAcquireSpinLockAtDpcLevel(&LoopLock);
 
     for (;;) {
@@ -52,10 +51,10 @@ VOID RealTransmit(
         if (!NdisPacket)
             break;
 
+        TI_DbgPrint(MAX_TRACE, ("NdisPacket (0x%X)\n", NdisPacket));
+
         LoopQueueHead = *(PNDIS_PACKET*)NdisPacket->u.s3.MacReserved;
-
         KeReleaseSpinLockFromDpcLevel(&LoopLock);
-
         IPPacket.NdisPacket = NdisPacket;
 
         NdisGetFirstBufferFromPacket(NdisPacket,
@@ -63,25 +62,16 @@ VOID RealTransmit(
                                      &IPPacket.Header,
                                      &IPPacket.ContigSize,
                                      &IPPacket.TotalSize);
-
         IPReceive(Context, &IPPacket);
-
         AdjustPacket(NdisPacket, 0, PC(NdisPacket)->DLOffset);
-
         PC(NdisPacket)->DLComplete(Context, NdisPacket, NDIS_STATUS_SUCCESS);
-
         /* Lower IRQL for a moment to prevent starvation */
         KeLowerIrql(OldIrql);
-
         KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-
         KeAcquireSpinLockAtDpcLevel(&LoopLock);
     }
-
     LoopBusy = FALSE;
-
     KeReleaseSpinLockFromDpcLevel(&LoopLock);
-
     KeLowerIrql(OldIrql);
 }
 
@@ -132,8 +122,8 @@ VOID LoopTransmit(
 
     /* If LoopTransmit is not running (or scheduled), schedule it to run */
     if (!LoopBusy) {
-        ExQueueWorkItem(&LoopWorkItem, CriticalWorkQueue);
         LoopBusy = TRUE;
+        ExQueueWorkItem(&LoopWorkItem, CriticalWorkQueue);
     }
 
     KeReleaseSpinLock(&LoopLock, OldIrql);

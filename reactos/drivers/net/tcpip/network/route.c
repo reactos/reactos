@@ -20,6 +20,7 @@
 PROUTE_CACHE_NODE ExternalRCN;
 PROUTE_CACHE_NODE RouteCache;
 KSPIN_LOCK RouteCacheLock;
+NPAGED_LOOKASIDE_LIST IPRCNList;
 
 
 #if DBG
@@ -48,6 +49,18 @@ VOID PrintTree(
             Node, Node->Parent, Node->Left, Node->Right));
 }
 #endif
+
+
+VOID FreeRCN(
+    PVOID Object)
+/*
+ * FUNCTION: Frees an route cache node object
+ * ARGUMENTS:
+ *     Object = Pointer to an route cache node structure
+ */
+{
+  ExFreeToNPagedLookasideList(&IPRCNList, Object);
+}
 
 
 VOID RemoveAboveExternal(VOID)
@@ -157,11 +170,13 @@ PROUTE_CACHE_NODE ExpandExternalRCN(VOID)
 
     TI_DbgPrint(DEBUG_RCACHE, ("Called.\n"));
 
-    RCN = PoolAllocateBuffer(sizeof(ROUTE_CACHE_NODE));
+    RCN = ExAllocateFromNPagedLookasideList(&IPRCNList);
     if (!RCN) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
+
+    RCN->Free = FreeRCN;
 
     if (ExternalRCN->Left)
         /* Register RCN as a child with it's parent */
@@ -370,12 +385,24 @@ NTSTATUS RouteStartup(
 {
     TI_DbgPrint(DEBUG_RCACHE, ("Called.\n"));
 
+    ExInitializeNPagedLookasideList(
+      &IPRCNList,                     /* Lookaside list */
+	    NULL,                           /* Allocate routine */
+	    NULL,                           /* Free routine */
+	    0,                              /* Flags */
+	    sizeof(ROUTE_CACHE_NODE),       /* Size of each entry */
+	    TAG('I','P','R','C'),           /* Tag */
+	    0);                             /* Depth */
+
     /* Initialize the pseudo external route cache node */
-    ExternalRCN = PoolAllocateBuffer(sizeof(ROUTE_CACHE_NODE));
+    ExternalRCN = ExAllocateFromNPagedLookasideList(&IPRCNList);
     if (!ExternalRCN) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    INIT_TAG(ExternalRCN, TAG('R','C','N',' '));
+
+    ExternalRCN->Free   = FreeRCN;
     ExternalRCN->Parent = NULL;
     ExternalRCN->Left   = NULL;
     ExternalRCN->Right  = NULL;
@@ -413,9 +440,11 @@ NTSTATUS RouteShutdown(
     /* Clear route cache */
     RemoveSubtree(RouteCache);
 
-    PoolFreeBuffer(ExternalRCN);
+    FreeRCN(ExternalRCN);
 
     KeReleaseSpinLock(&RouteCacheLock, OldIrql);
+
+    ExDeleteNPagedLookasideList(&IPRCNList);
 
     return STATUS_SUCCESS;
 }
@@ -588,6 +617,8 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
     }
 
     /* Initialize the newly created internal node */
+
+    INIT_TAG(RCN, TAG('R','C','N',' '));
 
     /* Reference once for beeing alive */
     RCN->RefCount    = 1;

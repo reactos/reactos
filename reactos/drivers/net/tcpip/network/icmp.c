@@ -39,7 +39,7 @@ VOID SendICMPComplete(
 
     TI_DbgPrint(DEBUG_ICMP, ("Freeing IP packet at %X.\n", IPPacket));
 
-    PoolFreeBuffer(IPPacket);
+    (*IPPacket->Free)(IPPacket);
 }
 
 
@@ -68,11 +68,11 @@ PIP_PACKET PrepareICMPPacket(
     TI_DbgPrint(DEBUG_ICMP, ("Called. DataSize (%d).\n", DataSize));
 
     /* Prepare ICMP packet */
-    IPPacket = PoolAllocateBuffer(sizeof(IP_PACKET));
+
+    /* FIXME: Assumes IPv4*/
+    IPPacket = IPCreatePacket(IP_ADDRESS_V4);
     if (!IPPacket)
         return NULL;
-
-    TI_DbgPrint(DEBUG_ICMP, ("IPPacket at (0x%X).\n", IPPacket));
 
     /* No special flags */
     IPPacket->Flags = 0;
@@ -81,7 +81,7 @@ PIP_PACKET PrepareICMPPacket(
         sizeof(ICMP_HEADER) + DataSize;
     DataBuffer = ExAllocatePool(NonPagedPool, Size);
     if (!DataBuffer) {
-        PoolFreeBuffer(IPPacket);
+        (*IPPacket->Free)(IPPacket);
         return NULL;
     }
 
@@ -90,7 +90,7 @@ PIP_PACKET PrepareICMPPacket(
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        PoolFreeBuffer(IPPacket);
+        (*IPPacket->Free)(IPPacket);
         ExFreePool(DataBuffer);
         return NULL;
     }
@@ -101,7 +101,7 @@ PIP_PACKET PrepareICMPPacket(
     NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
         DataBuffer, Size);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        PoolFreeBuffer(IPPacket);
+        (*IPPacket->Free)(IPPacket);
         NdisFreePacket(NdisPacket);
         ExFreePool(DataBuffer);
         return NULL;
@@ -249,7 +249,7 @@ VOID ICMPTransmit(
         /* Send the packet */
         if (IPSendDatagram(IPPacket, RCN) != STATUS_SUCCESS) {
             FreeNdisPacket(IPPacket->NdisPacket);
-            PoolFreeBuffer(IPPacket);
+            (*IPPacket->Free)(IPPacket);
         }
         /* We're done with the RCN */
         DereferenceObject(RCN);
@@ -261,7 +261,7 @@ VOID ICMPTransmit(
             IPPacket->DstAddr.Address.IPv4Address));
         /* Discard packet */
         FreeNdisPacket(IPPacket->NdisPacket);
-        PoolFreeBuffer(IPPacket);
+        (*IPPacket->Free)(IPPacket);
     }
 }
 
@@ -295,10 +295,8 @@ VOID ICMPReply(
         DataSize = 576;
 
     NewPacket = PrepareICMPPacket(NTE, &IPPacket->SrcAddr, DataSize);
-    if (!NewPacket) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+    if (!NewPacket)
         return;
-    }
 
     RtlCopyMemory((PVOID)((ULONG_PTR)NewPacket->Data + sizeof(ICMP_HEADER)),
         IPPacket->Header, DataSize);

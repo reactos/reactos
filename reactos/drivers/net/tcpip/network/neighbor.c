@@ -22,6 +22,13 @@
 NEIGHBOR_CACHE_TABLE NeighborCache[NB_HASHMASK + 1];
 
 
+VOID FreeNCE(
+    PVOID Object)
+{
+    ExFreePool(Object);
+}
+
+
 VOID NCETimeout(
     PNEIGHBOR_CACHE_ENTRY NCE)
 /*
@@ -250,11 +257,16 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
         "LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
         Interface, Address, LinkAddress, LinkAddressLength, State));
 
-    NCE = PoolAllocateBuffer(sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
+    NCE = ExAllocatePool(NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
     if (!NCE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
+
+    INIT_TAG(NCE, TAG('N','C','E',' '));
+
+    /* Initialize NCE free routine */
+    NCE->Free = FreeNCE;
 
     /* Reference once for beeing alive and once for the caller */
     NCE->RefCount  = 2;
@@ -455,11 +467,11 @@ VOID NBRemoveNeighbor(
 
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
 
-	HashValue  = *(PULONG)(&NCE->Address->Address);
+	  HashValue  = *(PULONG)(&NCE->Address->Address);
     HashValue ^= HashValue >> 16;
-	HashValue ^= HashValue >> 8;
-	HashValue ^= HashValue >> 4;
-	HashValue &= NB_HASHMASK;
+	  HashValue ^= HashValue >> 8;
+	  HashValue ^= HashValue >> 4;
+	  HashValue &= NB_HASHMASK;
 
     KeAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
 
@@ -492,8 +504,8 @@ VOID NBRemoveNeighbor(
                 TI_DbgPrint(DEBUG_REFCOUNT, ("NCE at (0x%X) has (%d) references (should be 0).\n", CurNCE, CurNCE->RefCount));
             }
 #endif
-            PoolFreeBuffer(CurNCE);
-            
+            ExFreePool(CurNCE);
+
             KeReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
             return;

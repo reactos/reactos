@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.44 2001/06/14 21:05:07 jfilby Exp $
+# $Id: Makefile,v 1.45 2001/07/04 20:40:20 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -492,13 +492,13 @@ OBJECTS := \
 
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = $(OBJECTS_PATH)\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o \
+CLEAN_FILES = $(OBJECTS_PATH)\*.o cc\*.o cm\*.o dbg\*.o dbg\i386\*.o ex\*.o hal\x86\*.o io\*.o \
               ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
               ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o lpc\*.o \
               kd\*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(D1_FILES)
 else
-CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
+CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
               ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
               kd/*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \

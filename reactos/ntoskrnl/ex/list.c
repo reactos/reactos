@@ -1,11 +1,14 @@
-/* $Id: list.c,v 1.3 2001/06/20 19:59:35 ekohl Exp $
+/* $Id: list.c,v 1.4 2001/07/04 20:40:20 chorns Exp $
  *
- * COPYRIGHT:           See COPYING in the top level directory
- * PROJECT:             ReactOS kernel
- * FILE:                ntoskrnl/ex/list.c
- * PURPOSE:             Manages double linked lists, single linked lists and
- *                      sequenced lists
- * PROGRAMMER:          David Welch (welch@mcmail.com)
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ex/list.c
+ * PURPOSE:         Manages double linked lists, single linked lists and
+ *                  sequenced lists
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * UPDATE HISTORY:
+ *   02-07-2001 CSH Implemented sequenced lists
  */
 
 /* INCLUDES *****************************************************************/
@@ -27,9 +30,9 @@ ExInterlockedInsertHeadList (
 /*
  * FUNCTION: Inserts an entry at the head of a doubly linked list
  * ARGUMENTS:
- *          ListHead = Points to the head of the list
+ *          ListHead  = Points to the head of the list
  *          ListEntry = Points to the entry to be inserted
- *          Lock = Caller supplied spinlock used to synchronise access
+ *          Lock      = Caller supplied spinlock used to synchronize access
  * RETURNS: The previous head of the list
  */
 {
@@ -86,7 +89,7 @@ ExInterlockedRemoveHeadList (
 /*
  * FUNCTION: Removes the head of a double linked list
  * ARGUMENTS:
- *          Head = List head
+ *          Head = Points to the head of the list
  *          Lock = Lock for synchronizing access to the list
  * RETURNS: The removed entry
  */
@@ -115,7 +118,7 @@ ExInterlockedRemoveTailList (
 /*
  * FUNCTION: Removes the tail of a double linked list
  * ARGUMENTS:
- *          Head = List head
+ *          Head = Points to the head of the list
  *          Lock = Lock for synchronizing access to the list
  * RETURNS: The removed entry
  */
@@ -138,19 +141,56 @@ ExInterlockedRemoveTailList (
 
 
 PSINGLE_LIST_ENTRY FASTCALL
-ExInterlockedPopEntrySList(PSLIST_HEADER ListHead,
-			   PKSPIN_LOCK Lock)
+ExInterlockedPopEntrySList(
+  PSLIST_HEADER ListHead,
+	PKSPIN_LOCK Lock)
+/*
+ * FUNCTION: Removes (pops) an entry from a sequenced list
+ * ARGUMENTS:
+ *          ListHead = Points to the head of the list
+ *          Lock     = Lock for synchronizing access to the list
+ * RETURNS: The removed entry
+ */
 {
-   UNIMPLEMENTED;
+   PSINGLE_LIST_ENTRY ret;
+   KIRQL oldlvl;
+
+   KeAcquireSpinLock(Lock,&oldlvl);
+   ret = PopEntryList(&ListHead->s.Next);
+   if (ret)
+      {
+   ListHead->s.Depth--;
+   ListHead->s.Sequence++;
+      }
+   KeReleaseSpinLock(Lock,oldlvl);
+   return(ret);
 }
 
 
 PSINGLE_LIST_ENTRY FASTCALL
-ExInterlockedPushEntrySList(PSLIST_HEADER ListHead,
-			    PSINGLE_LIST_ENTRY ListEntry,
-			    PKSPIN_LOCK Lock)
+ExInterlockedPushEntrySList(
+  PSLIST_HEADER ListHead,
+  PSINGLE_LIST_ENTRY ListEntry,
+  PKSPIN_LOCK Lock)
+/*
+ * FUNCTION: Inserts (pushes) an entry into a sequenced list
+ * ARGUMENTS:
+ *          ListHead  = Points to the head of the list
+ *          ListEntry = Points to the entry to be inserted
+ *          Lock      = Caller supplied spinlock used to synchronize access
+ * RETURNS: The previous head of the list
+ */
 {
-   UNIMPLEMENTED;
+   KIRQL oldlvl;
+   PSINGLE_LIST_ENTRY ret;
+
+   KeAcquireSpinLock(Lock,&oldlvl);
+   ret=ListHead->s.Next.Next;
+   PushEntryList(&ListHead->s.Next,ListEntry);
+   ListHead->s.Depth++;
+   ListHead->s.Sequence++;
+   KeReleaseSpinLock(Lock,oldlvl);
+   return(ret);
 }
 
 
@@ -160,6 +200,13 @@ ExInterlockedPopEntryList (
 	PSINGLE_LIST_ENTRY	ListHead,
 	PKSPIN_LOCK		Lock
 	)
+/*
+ * FUNCTION: Removes (pops) an entry from a singly list
+ * ARGUMENTS:
+ *          ListHead = Points to the head of the list
+ *          Lock     = Lock for synchronizing access to the list
+ * RETURNS: The removed entry
+ */
 {
    PSINGLE_LIST_ENTRY ret;
    KIRQL oldlvl;
@@ -178,6 +225,14 @@ ExInterlockedPushEntryList (
 	PSINGLE_LIST_ENTRY	ListEntry,
 	PKSPIN_LOCK		Lock
 	)
+/*
+ * FUNCTION: Inserts (pushes) an entry into a singly linked list
+ * ARGUMENTS:
+ *          ListHead  = Points to the head of the list
+ *          ListEntry = Points to the entry to be inserted
+ *          Lock      = Caller supplied spinlock used to synchronize access
+ * RETURNS: The previous head of the list
+ */
 {
    KIRQL oldlvl;
    PSINGLE_LIST_ENTRY ret;

@@ -61,7 +61,7 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest alive mstest nptest \
        objdir atomtest
 
-#NET_APPS = ping roshttpd
+#NET_APPS = ping roshttpd telnet
 NET_APPS = ping
 
 
@@ -71,8 +71,9 @@ all: buildno $(COMPONENTS) $(BUS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES
 
 .PHONY: all
 
-clean: buildno_clean $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
-       $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) $(SYS_APPS:%=%_clean) $(APPS:%=%_clean)
+clean: buildno_clean $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
+       $(LOADERS:%=%_clean) $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) \
+       $(SYS_APPS:%=%_clean) $(APPS:%=%_clean) $(NET_APPS:%=%_clean)
 
 .PHONY: clean
 
@@ -104,7 +105,7 @@ install: rcopy$(EXE_POSTFIX) rmkdir$(EXE_POSTFIX) make_install_dirs autoexec_ins
 dist: rcopy$(EXE_POSTFIX) clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) \
       $(BUS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
-      $(SYS_APPS:%=%_dist) $(APPS:%=%_dist)
+      $(SYS_APPS:%=%_dist) $(APPS:%=%_dist) $(NET_APPS:%=%_dist)
 
 #
 # Build number generator

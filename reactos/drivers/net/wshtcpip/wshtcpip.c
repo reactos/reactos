@@ -290,13 +290,25 @@ WSHOpenSocket2(
 
     WSH_DbgPrint(MAX_TRACE, ("\n"));
 
-    /* FIXME: Raw IP only. Support UDP and TCP */
-    ASSERT(*SocketType == SOCK_RAW);
+    switch (*SocketType) {
+    case SOCK_STREAM:
+        RtlInitUnicodeString(&String, DD_TCP_DEVICE_NAME);
+        break;
 
-    if (*Protocol < 0 || *Protocol > 255)
+    case SOCK_DGRAM:
+        RtlInitUnicodeString(&String, DD_UDP_DEVICE_NAME);
+        break;
+
+    case SOCK_RAW:
+        if ((*Protocol < 0) || (*Protocol > 255))
+          return WSAEINVAL;
+
+        RtlInitUnicodeString(&String, DD_RAW_IP_DEVICE_NAME);
+        break;
+
+    default:
         return WSAEINVAL;
-
-    RtlInitUnicodeString(&String, DD_RAW_IP_DEVICE_NAME);
+    }
 
     RtlInitUnicodeString(TransportDeviceName, NULL);
 
@@ -315,19 +327,21 @@ WSHOpenSocket2(
     /* Append the transport device name */
     Status = RtlAppendUnicodeStringToString(TransportDeviceName, &String);
 
-    /* Append a separator */
-    TransportDeviceName->Buffer[TransportDeviceName->Length / sizeof(WCHAR)] = OBJ_NAME_PATH_SEPARATOR;
-    TransportDeviceName->Length += sizeof(WCHAR);
-    TransportDeviceName->Buffer[TransportDeviceName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    if (*SocketType == SOCK_RAW) {
+        /* Append a separator */
+        TransportDeviceName->Buffer[TransportDeviceName->Length / sizeof(WCHAR)] = OBJ_NAME_PATH_SEPARATOR;
+        TransportDeviceName->Length += sizeof(WCHAR);
+        TransportDeviceName->Buffer[TransportDeviceName->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-    /* Append the protocol number */
-    String.Buffer = TransportDeviceName->Buffer + (TransportDeviceName->Length / sizeof(WCHAR));
-    String.Length = 0;
-    String.MaximumLength = TransportDeviceName->MaximumLength - TransportDeviceName->Length;
+        /* Append the protocol number */
+        String.Buffer = TransportDeviceName->Buffer + (TransportDeviceName->Length / sizeof(WCHAR));
+        String.Length = 0;
+        String.MaximumLength = TransportDeviceName->MaximumLength - TransportDeviceName->Length;
 
-    Status = RtlIntegerToUnicodeString((ULONG)*Protocol, 10, &String);
+        Status = RtlIntegerToUnicodeString((ULONG)*Protocol, 10, &String);
 
-    TransportDeviceName->Length += String.Length;
+        TransportDeviceName->Length += String.Length;
+    }
 
     /* Setup a socket context area */
 

@@ -10,22 +10,6 @@
 #include <msafd.h>
 
 
-SOCKET
-WSPAPI
-WSPAccept(
-    IN      SOCKET s,
-    OUT     LPSOCKADDR addr,
-    IN OUT  LPINT addrlen,
-    IN      LPCONDITIONPROC lpfnCondition,
-    IN      DWORD dwCallbackData,
-    OUT     LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return INVALID_SOCKET;
-}
-
-
 INT
 WSPAPI
 WSPAddressToString(
@@ -55,56 +39,10 @@ WSPCancelBlockingCall(
 
 INT
 WSPAPI
-WSPConnect(
-    IN  SOCKET s,
-    IN  CONST LPSOCKADDR name,
-    IN  INT namelen,
-    IN  LPWSABUF lpCallerData,
-    OUT LPWSABUF lpCalleeData,
-    IN  LPQOS lpSQOS,
-    IN  LPQOS lpGQOS,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
-INT
-WSPAPI
 WSPDuplicateSocket(
     IN  SOCKET s,
     IN  DWORD dwProcessId,
     OUT LPWSAPROTOCOL_INFOW lpProtocolInfo,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
-INT
-WSPAPI
-WSPEnumNetworkEvents(
-    IN  SOCKET s, 
-    IN  WSAEVENT hEventObject, 
-    OUT LPWSANETWORKEVENTS lpNetworkEvents, 
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
-INT
-WSPAPI
-WSPEventSelect(
-    IN  SOCKET s,
-    IN  WSAEVENT hEventObject,
-    IN  LONG lNetworkEvents,
     OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
@@ -224,19 +162,6 @@ WSPJoinLeaf(
     UNIMPLEMENTED
 
     return (SOCKET)0;
-}
-
-
-INT
-WSPAPI
-WSPListen(
-    IN  SOCKET s,
-    IN  INT backlog,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
 }
 
 

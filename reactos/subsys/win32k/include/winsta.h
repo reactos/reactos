@@ -3,22 +3,14 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <../ntoskrnl/include/internal/ex.h>
-
-/*
-* FIXME: NtCurrentPeb() does not work (returns 0)
-#define PROCESS_WINDOW_STATION() \
-  (HWINSTA)(NtCurrentPeb()->ProcessWindowStation);
-
-#define SET_PROCESS_WINDOW_STATION(WinSta) \
-  (NtCurrentPeb()->ProcessWindowStation = (PVOID)(WinSta));
-*/
+#include <internal/ex.h>
+#include <internal/ps.h>
 
 #define PROCESS_WINDOW_STATION() \
-  ((HWINSTA)(((PPEB)PEB_BASE)->ProcessWindowStation))
+  ((HWINSTA)(IoGetCurrentProcess()->Win32WindowStation))
 
 #define SET_PROCESS_WINDOW_STATION(WinSta) \
-  (((PPEB)PEB_BASE)->ProcessWindowStation = (PVOID)(WinSta))
+  ((IoGetCurrentProcess()->Win32WindowStation) = (PVOID)(WinSta))
 
 
 NTSTATUS

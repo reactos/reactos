@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.108 2001/06/16 14:05:29 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.109 2001/07/04 20:40:20 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -41,8 +41,8 @@ ExFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount@4
 ExGetPreviousMode@0
 ExGetSharedWaiterCount@4
-ExInitializeNPagedLookasideList
-ExInitializePagedLookasideList
+ExInitializeNPagedLookasideList@28
+ExInitializePagedLookasideList@28
 ExInitializeResource@4
 ExInitializeResourceLite@4
 ExInitializeZone@16

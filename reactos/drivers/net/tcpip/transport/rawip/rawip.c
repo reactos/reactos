@@ -49,31 +49,29 @@ NTSTATUS BuildRawIPPacket(
     TI_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteOffset is (0x%X).\n", SendRequest->Buffer->ByteOffset));
 
     /* Prepare packet */
-    Packet = PoolAllocateBuffer(sizeof(IP_PACKET));
-    if (!Packet) {
-        TI_DbgPrint(MIN_TRACE, ("Cannot allocate memory for packet.\n"));
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
 
-    RtlZeroMemory(Packet, sizeof(IP_PACKET));
+    /* FIXME: Assumes IPv4 */
+    Packet = IPCreatePacket(IP_ADDRESS_V4);
+    if (!Packet)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
     Packet->Flags      = IP_PACKET_FLAG_RAW;    /* Don't touch IP header */
-    Packet->RefCount   = 1;
     Packet->TotalSize  = SendRequest->BufferSize;
 
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &Packet->NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS packet. NdisStatus = (0x%X)\n", NdisStatus));
-        PoolFreeBuffer(Packet);
+        TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS packet. NdisStatus = (0x%X)\n", NdisStatus))
+        (*Packet->Free)(Packet);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     if (MaxLLHeaderSize != 0) {
-        Header = PoolAllocateBuffer(MaxLLHeaderSize);
+        Header = ExAllocatePool(NonPagedPool, MaxLLHeaderSize);
         if (!Header) {
             TI_DbgPrint(MIN_TRACE, ("Cannot allocate memory for packet headers.\n"));
             NdisFreePacket(Packet->NdisPacket);
-            PoolFreeBuffer(Packet);
+            (*Packet->Free)(Packet);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -88,9 +86,9 @@ NTSTATUS BuildRawIPPacket(
             MaxLLHeaderSize);
         if (NdisStatus != NDIS_STATUS_SUCCESS) {
             TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS buffer for packet headers. NdisStatus = (0x%X)\n", NdisStatus));
-            PoolFreeBuffer(Header);
+            ExFreePool(Header);
             NdisFreePacket(Packet->NdisPacket);
-            PoolFreeBuffer(Packet);
+            (*Packet->Free)(Packet);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         /* Chain header at front of packet */

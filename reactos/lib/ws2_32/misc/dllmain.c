@@ -16,7 +16,7 @@
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
-//DWORD DebugTraceLevel = MAX_TRACE;
+//DWORD DebugTraceLevel = DEBUG_ULTRA;
 
 #endif /* DBG */
 
@@ -89,6 +89,17 @@ WSACleanup(VOID)
   }
 
   return NO_ERROR;
+}
+
+
+SOCKET
+EXPORT
+socket(
+  IN  INT af,
+  IN  INT type,
+  IN  INT protocol)
+{
+  return WSASocketA(af, type, protocol, NULL, 0, 0);
 }
 
 
@@ -226,8 +237,8 @@ closesocket(
  */
 {
   PCATALOG_ENTRY Provider;
+  INT Status;
   INT Errno;
-  INT Code;
 
   WS_DbgPrint(MAX_TRACE, ("s (0x%X).\n", s));
 
@@ -245,8 +256,8 @@ closesocket(
 
   DereferenceProviderByPointer(Provider);
 
-  Code = Provider->ProcTable.lpWSPCloseSocket(s, &Errno);
-  if (Code == SOCKET_ERROR)
+  Status = Provider->ProcTable.lpWSPCloseSocket(s, &Errno);
+  if (Status == SOCKET_ERROR)
     WSASetLastError(Errno);
 
   return 0;
@@ -317,12 +328,175 @@ select(
 
   DereferenceProviderByPointer(Provider);
 
-  WSASetLastError(Errno);
-
-  if (Errno != NO_ERROR)
+  if (Errno != NO_ERROR) {
+    WSASetLastError(Errno);
     return SOCKET_ERROR;
+  }
 
   return Count;
+}
+
+
+INT
+EXPORT
+bind(
+  IN  SOCKET s,
+  IN  CONST LPSOCKADDR name,
+  IN  INT namelen)
+{
+  PCATALOG_ENTRY Provider;
+  INT Status;
+  INT Errno;
+
+  if (!WSAINITIALIZED) {
+    WSASetLastError(WSANOTINITIALISED);
+    return SOCKET_ERROR;
+  }
+
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
+
+  Status = Provider->ProcTable.lpWSPBind(
+    s, name, namelen, &Errno);
+
+  DereferenceProviderByPointer(Provider);
+
+  if (Status == SOCKET_ERROR) {
+    WSASetLastError(Errno);
+  }
+
+  return Status;
+}
+
+
+INT
+EXPORT
+listen(
+    IN  SOCKET s,
+    IN  INT backlog)
+{
+  PCATALOG_ENTRY Provider;
+  INT Status;
+  INT Errno;
+
+  if (!WSAINITIALIZED) {
+    WSASetLastError(WSANOTINITIALISED);
+    return SOCKET_ERROR;
+  }
+
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
+
+  Status = Provider->ProcTable.lpWSPListen(
+    s, backlog, &Errno);
+
+  DereferenceProviderByPointer(Provider);
+
+  if (Status == SOCKET_ERROR) {
+    WSASetLastError(Errno);
+  }
+
+  return Status;
+}
+
+
+SOCKET
+EXPORT
+accept(
+  IN  SOCKET s,
+  OUT LPSOCKADDR addr,
+  OUT INT FAR* addrlen)
+{
+  return WSAAccept(s, addr, addrlen, NULL, 0);
+}
+
+
+SOCKET
+EXPORT
+WSAAccept(
+  IN      SOCKET s,
+  OUT     LPSOCKADDR addr,
+  IN OUT  LPINT addrlen,
+  IN      LPCONDITIONPROC lpfnCondition,
+  IN      DWORD dwCallbackData)
+{
+  PCATALOG_ENTRY Provider;
+  SOCKET Socket;
+  INT Errno;
+
+  if (!WSAINITIALIZED) {
+    WSASetLastError(WSANOTINITIALISED);
+    return SOCKET_ERROR;
+  }
+
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
+
+  Socket = Provider->ProcTable.lpWSPAccept(
+    s, addr, addrlen, lpfnCondition, dwCallbackData, &Errno);
+
+  DereferenceProviderByPointer(Provider);
+
+  if (Socket == INVALID_SOCKET) {
+    WSASetLastError(Errno);
+  }
+
+  return Socket;
+}
+
+
+INT
+EXPORT
+connect(
+  IN  SOCKET s,
+  IN  CONST LPSOCKADDR name,
+  IN  INT namelen)
+{
+  return WSAConnect(s, name, namelen, NULL, NULL, NULL, NULL);
+}
+
+
+INT
+EXPORT
+WSAConnect(
+  IN  SOCKET s,
+  IN  CONST LPSOCKADDR name,
+  IN  INT namelen,
+  IN  LPWSABUF lpCallerData,
+  OUT LPWSABUF lpCalleeData,
+  IN  LPQOS lpSQOS,
+  IN  LPQOS lpGQOS)
+{
+  PCATALOG_ENTRY Provider;
+  INT Status;
+  INT Errno;
+
+  if (!WSAINITIALIZED) {
+    WSASetLastError(WSANOTINITIALISED);
+    return SOCKET_ERROR;
+  }
+
+  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+    WSASetLastError(WSAENOTSOCK);
+    return SOCKET_ERROR;
+  }
+
+  Status = Provider->ProcTable.lpWSPConnect(
+    s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, &Errno);
+
+  DereferenceProviderByPointer(Provider);
+
+  if (Status == SOCKET_ERROR) {
+    WSASetLastError(Errno);
+  }
+
+  return Status;
 }
 
 

@@ -229,7 +229,12 @@ typedef struct
    SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
 } PS_IMPERSONATION_INFO, *PPS_IMPERSONATION_INFO;
 
-struct _WIN32THREADDATA;
+
+typedef struct _W32THREAD
+{
+  PVOID MessageQueue;
+} __attribute__((packed)) W32THREAD, *PW32THREAD;
+
 
 typedef struct _ETHREAD
 {
@@ -279,8 +284,7 @@ typedef struct _ETHREAD
    */
   struct _EPROCESS* OldProcess;                     /* 240/26C */
 
-  /* Pointer to win32 private thread data */
-  struct _WIN32THREADDATA *Win32ThreadData; 
+  PW32THREAD Win32Thread;
   
 } __attribute__((packed)) ETHREAD, *PETHREAD;
 
@@ -349,7 +353,11 @@ typedef struct _KPROCESS
   UCHAR		        DisableBoost;                 /* 067 */
 } KPROCESS, *PKPROCESS;
 
-struct _WIN32PROCESSDATA;
+
+typedef struct _W32PROCESS
+{
+} __attribute__((packed)) W32PROCESS, *PW32PROCESS;
+
 
 struct _EPROCESS
 {
@@ -450,7 +458,8 @@ struct _EPROCESS
   UCHAR                 SubSystemMinorVersion;
   UCHAR                 SubSystemMajorVersion;
   USHORT                SubSystemVersion;
-  struct _WIN32PROCESSDATA *Win32Process;
+  PW32PROCESS           Win32Process;
+  HANDLE                Win32WindowStation;
    
    /*
     * Added by David Welch (welch@mcmail.com)

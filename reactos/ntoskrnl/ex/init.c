@@ -41,6 +41,7 @@ ExInit (VOID)
 {
   ExInitTimeZoneInfo();
   ExInitializeWorkerThreads();
+  ExpInitLookasideLists();
   ExpWin32kInit();
 }
 

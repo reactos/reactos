@@ -36,6 +36,53 @@ typedef struct _WINSOCK_THREAD_BLOCK {
 
 #define WSASETINITIALIZED (((PWINSOCK_THREAD_BLOCK)NtCurrentTeb()->WinSockData)->Initialized = TRUE)
 
+
+#ifdef LE
+
+/* DWORD network to host byte order conversion for little endian machines */
+#define DN2H(dw) \
+  ((((dw) & 0xFF000000L) >> 24) | \
+   (((dw) & 0x00FF0000L) >> 8) | \
+	 (((dw) & 0x0000FF00L) << 8) | \
+	 (((dw) & 0x000000FFL) << 24))
+
+/* DWORD host to network byte order conversion for little endian machines */
+#define DH2N(dw) \
+	((((dw) & 0xFF000000L) >> 24) | \
+	 (((dw) & 0x00FF0000L) >> 8) | \
+	 (((dw) & 0x0000FF00L) << 8) | \
+	 (((dw) & 0x000000FFL) << 24))
+
+/* WORD network to host order conversion for little endian machines */
+#define WN2H(w) \
+	((((w) & 0xFF00) >> 8) | \
+	 (((w) & 0x00FF) << 8))
+
+/* WORD host to network byte order conversion for little endian machines */
+#define WH2N(w) \
+	((((w) & 0xFF00) >> 8) | \
+	 (((w) & 0x00FF) << 8))
+
+#else /* LE */
+
+/* DWORD network to host byte order conversion for big endian machines */
+#define DN2H(dw) \
+    (dw)
+
+/* DWORD host to network byte order conversion big endian machines */
+#define DH2N(dw) \
+    (dw)
+
+/* WORD network to host order conversion for big endian machines */
+#define WN2H(w) \
+    (w)
+
+/* WORD host to network byte order conversion for big endian machines */
+#define WH2N(w) \
+    (w)
+
+#endif /* LE */
+
 #endif /* __WS2_32_H */
 
 /* EOF */

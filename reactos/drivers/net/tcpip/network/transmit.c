@@ -103,7 +103,7 @@ NTSTATUS SendFragments(
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)  PathMTU (%d).\n",
         IPPacket, NCE, PathMTU));
 
-    IFC = PoolAllocateBuffer(sizeof(IPFRAGMENT_CONTEXT));
+    IFC = ExAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
     if (!IFC)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -111,7 +111,7 @@ NTSTATUS SendFragments(
        it for all fragments */
     Data = ExAllocatePool(NonPagedPool, MaxLLHeaderSize + PathMTU);
     if (!IFC->Header) {
-        PoolFreeBuffer(IFC);
+        ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -119,7 +119,7 @@ NTSTATUS SendFragments(
     NdisAllocatePacket(&NdisStatus, &IFC->NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         ExFreePool(Data);
-        PoolFreeBuffer(IFC);
+        ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -129,7 +129,7 @@ NTSTATUS SendFragments(
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         NdisFreePacket(IFC->NdisPacket);
         ExFreePool(Data);
-        PoolFreeBuffer(IFC);
+        ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -206,7 +206,7 @@ VOID IPSendComplete(
             /* There are no more fragments to transmit, so call completion handler */
             NdisPacket = IFC->Datagram;
             FreeNdisPacket(IFC->NdisPacket);
-            PoolFreeBuffer(IFC);
+            ExFreePool(IFC);
             (*PC(NdisPacket)->Complete)(PC(NdisPacket)->Context, NdisPacket, NdisStatus);
         }
     }

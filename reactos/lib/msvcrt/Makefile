@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2001/07/04 16:39:36 ekohl Exp $
+# $Id: Makefile,v 1.14 2001/07/04 20:40:19 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -295,6 +295,7 @@ CLEAN_FILES = \
 	conio\*.o \
 	ctype\*.o \
 	direct\*.o \
+	except\*.o \
 	float\*.o \
 	io\*.o \
 	math\*.o \
@@ -318,6 +319,7 @@ CLEAN_FILES = \
 	conio/*.o \
 	ctype/*.o \
 	direct/*.o \
+	except/*.o \
 	float/*.o \
 	io/*.o \
 	math/*.o \

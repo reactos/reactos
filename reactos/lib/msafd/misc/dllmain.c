@@ -86,7 +86,7 @@ NTSTATUS OpenSocket(
     AFD_SOCKET_LENGTH);
   EaInfo->EaValueLength = sizeof(AFD_SOCKET_INFORMATION);
 
-  SocketInfo = (PAFD_SOCKET_INFORMATION)(EaInfo->EaName + AFD_SOCKET_LENGTH);
+  SocketInfo = (PAFD_SOCKET_INFORMATION)((ULONG_PTR)EaInfo->EaName + AFD_SOCKET_LENGTH);
   SocketInfo->CommandChannel     = FALSE;
   SocketInfo->AddressFamily      = AddressFamily;
   SocketInfo->SocketType         = SocketType;
@@ -207,6 +207,7 @@ WSPSocket(
     &HelperContext,
     &NotificationEvents);
   if (Status != NO_ERROR) {
+    AFD_DbgPrint(MAX_TRACE, ("WinSock Helper DLL failed (0x%X).\n", Status));
     *lpErrno = Status;
     return INVALID_SOCKET;
   }
@@ -290,13 +291,12 @@ WSPBind(
  *     0, or SOCKET_ERROR if the socket could not be bound
  */
 {
-  AFD_DbgPrint(MAX_TRACE, ("s (0x%X)  name (0x%X)  namelen (%d).\n", s, name, namelen));
-
-#if 0
   FILE_REQUEST_BIND Request;
   FILE_REPLY_BIND Reply;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
+
+  AFD_DbgPrint(MAX_TRACE, ("s (0x%X)  name (0x%X)  namelen (%d).\n", s, name, namelen));
 
   RtlCopyMemory(&Request.Name, name, sizeof(SOCKADDR));
 
@@ -311,21 +311,68 @@ WSPBind(
 		sizeof(FILE_REQUEST_BIND),
 		&Reply,
 		sizeof(FILE_REPLY_BIND));
-
-	if (Status == STATUS_PENDING) {
-		if (!NT_SUCCESS(NtWaitForSingleObject((HANDLE)s, FALSE, NULL))) {
-      /* FIXME: What error code should be returned? */
-			*lpErrno = WSAENOBUFS;
-			return SOCKET_ERROR;
-		}
+  if (Status == STATUS_PENDING) {
+    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+    /* FIXME: Wait only for blocking sockets */
+		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
   }
 
   if (!NT_SUCCESS(Status)) {
-	  *lpErrno = WSAENOBUFS;
+	  *lpErrno = Reply.Status;
     return SOCKET_ERROR;
 	}
-#endif
-    return 0;
+
+  return 0;
+}
+
+INT
+WSPAPI
+WSPListen(
+    IN  SOCKET s,
+    IN  INT backlog,
+    OUT LPINT lpErrno)
+/*
+ * FUNCTION: Listens for incoming connections
+ * ARGUMENTS:
+ *     s       = Socket descriptor
+ *     backlog = Maximum number of pending connection requests
+ *     lpErrno = Address of buffer for error information
+ * RETURNS:
+ *     0, or SOCKET_ERROR if the socket could not be bound
+ */
+{
+  FILE_REQUEST_LISTEN Request;
+  FILE_REPLY_LISTEN Reply;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+
+  AFD_DbgPrint(MAX_TRACE, ("s (0x%X)  backlog (%d).\n", s, backlog));
+
+  Request.Backlog = backlog;
+
+  Status = NtDeviceIoControlFile(
+    (HANDLE)s,
+    NULL,
+		NULL,
+		NULL,
+		&Iosb,
+		IOCTL_AFD_LISTEN,
+		&Request,
+		sizeof(FILE_REQUEST_LISTEN),
+		&Reply,
+		sizeof(FILE_REPLY_LISTEN));
+  if (Status == STATUS_PENDING) {
+    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+    /* FIXME: Wait only for blocking sockets */
+		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
+  }
+
+  if (!NT_SUCCESS(Status)) {
+	  *lpErrno = Reply.Status;
+    return SOCKET_ERROR;
+	}
+
+  return 0;
 }
 
 
@@ -466,6 +513,107 @@ WSPSelect(
   return Reply.SocketCount;
 }
 
+SOCKET
+WSPAPI
+WSPAccept(
+  IN      SOCKET s,
+  OUT     LPSOCKADDR addr,
+  IN OUT  LPINT addrlen,
+  IN      LPCONDITIONPROC lpfnCondition,
+  IN      DWORD dwCallbackData,
+  OUT     LPINT lpErrno)
+{
+  FILE_REQUEST_ACCEPT Request;
+  FILE_REPLY_ACCEPT Reply;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+
+  AFD_DbgPrint(MAX_TRACE, ("s (0x%X).\n", s));
+
+  Request.addr = addr;
+  Request.addrlen = *addrlen;
+  Request.lpfnCondition = lpfnCondition;
+  Request.dwCallbackData = dwCallbackData;
+
+  Status = NtDeviceIoControlFile(
+    (HANDLE)s,
+    NULL,
+		NULL,
+		NULL,
+		&Iosb,
+		IOCTL_AFD_ACCEPT,
+		&Request,
+		sizeof(FILE_REQUEST_ACCEPT),
+		&Reply,
+		sizeof(FILE_REPLY_ACCEPT));
+  if (Status == STATUS_PENDING) {
+    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+    /* FIXME: Wait only for blocking sockets */
+		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
+  }
+
+  if (!NT_SUCCESS(Status)) {
+	  *lpErrno = Reply.Status;
+    return INVALID_SOCKET;
+	}
+
+  *addrlen = Reply.addrlen;
+
+  return Reply.Socket;
+}
+
+
+INT
+WSPAPI
+WSPConnect(
+  IN  SOCKET s,
+  IN  CONST LPSOCKADDR name,
+  IN  INT namelen,
+  IN  LPWSABUF lpCallerData,
+  OUT LPWSABUF lpCalleeData,
+  IN  LPQOS lpSQOS,
+  IN  LPQOS lpGQOS,
+  OUT LPINT lpErrno)
+{
+  FILE_REQUEST_CONNECT Request;
+  FILE_REPLY_CONNECT Reply;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+
+  AFD_DbgPrint(MAX_TRACE, ("s (0x%X).\n", s));
+
+  Request.name = name;
+  Request.namelen = namelen;
+  Request.lpCallerData = lpCallerData;
+  Request.lpCalleeData = lpCalleeData;
+  Request.lpSQOS = lpSQOS;
+  Request.lpGQOS = lpGQOS;
+
+  Status = NtDeviceIoControlFile(
+    (HANDLE)s,
+    NULL,
+		NULL,
+		NULL,
+		&Iosb,
+		IOCTL_AFD_CONNECT,
+		&Request,
+		sizeof(FILE_REQUEST_CONNECT),
+		&Reply,
+		sizeof(FILE_REPLY_CONNECT));
+  if (Status == STATUS_PENDING) {
+    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+    /* FIXME: Wait only for blocking sockets */
+		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
+  }
+
+  if (!NT_SUCCESS(Status)) {
+	  *lpErrno = Reply.Status;
+    return INVALID_SOCKET;
+	}
+
+  return 0;
+}
+
 
 NTSTATUS OpenCommandChannel(
   VOID)
@@ -489,7 +637,7 @@ NTSTATUS OpenCommandChannel(
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
-    EaShort = sizeof(FILE_FULL_EA_INFORMATION) +
+  EaShort = sizeof(FILE_FULL_EA_INFORMATION) +
     AFD_SOCKET_LENGTH +
     sizeof(AFD_SOCKET_INFORMATION);
 
@@ -507,7 +655,7 @@ NTSTATUS OpenCommandChannel(
     AFD_SOCKET_LENGTH);
   EaInfo->EaValueLength = sizeof(AFD_SOCKET_INFORMATION);
 
-  SocketInfo = (PAFD_SOCKET_INFORMATION)(EaInfo->EaName + AFD_SOCKET_LENGTH);
+  SocketInfo = (PAFD_SOCKET_INFORMATION)((ULONG_PTR)EaInfo->EaName + AFD_SOCKET_LENGTH);
   SocketInfo->CommandChannel = TRUE;
 
   RtlInitUnicodeString(&DeviceName, L"\\Device\\Afd");
@@ -590,8 +738,6 @@ WSPStartup(
 
   if (StartupCount == 0) {
     /* First time called */
-
-    Status = WSAVERNOTSUPPORTED;
 
     Status = OpenCommandChannel();
     if (NT_SUCCESS(Status)) {
@@ -686,6 +832,8 @@ WSPCleanup(
 
   LeaveCriticalSection(&InitCriticalSection);
 
+  AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
   *lpErrno = NO_ERROR;
 
   return 0;
@@ -720,9 +868,11 @@ DllMain(HANDLE hInstDll,
         break;
 
     case DLL_PROCESS_DETACH:
+
         DestroyHelperDLLDatabase();
 
         DeleteCriticalSection(&InitCriticalSection);
+
         break;
     }
 

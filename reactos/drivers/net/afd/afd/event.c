@@ -96,11 +96,13 @@ NTSTATUS AfdEventReceiveDatagramHandler(
 {
   PAFDFCB FCB = (PAFDFCB)TdiEventContext;
   PAFD_READ_REQUEST ReadRequest;
+  PIO_STACK_LOCATION IrpSp;
   PVOID ReceiveBuffer;
   PAFD_BUFFER Buffer;
   PLIST_ENTRY Entry;
   NTSTATUS Status;
   KIRQL OldIrql;
+  ULONG Count;
 
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -108,9 +110,8 @@ NTSTATUS AfdEventReceiveDatagramHandler(
     BytesAvailable, *(PULONG)SourceAddress));
 
   ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);
-  if (!ReceiveBuffer) {
+  if (!ReceiveBuffer)
     return STATUS_INSUFFICIENT_RESOURCES;
-  }
 
   /*Buffer = (PAFD_BUFFER)ExAllocateFromNPagedLookasideList(
     &BufferLookasideList);*/
@@ -134,6 +135,8 @@ NTSTATUS AfdEventReceiveDatagramHandler(
   KeAcquireSpinLock(&FCB->ReadRequestQueueLock, &OldIrql);
 
   if (!IsListEmpty(&FCB->ReadRequestQueue)) {
+    AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
+
     Entry = RemoveHeadList(&FCB->ReceiveQueue);
     ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
 
@@ -141,11 +144,15 @@ NTSTATUS AfdEventReceiveDatagramHandler(
       FCB,
       ReadRequest->RecvFromRequest->Buffers,
       ReadRequest->RecvFromRequest->BufferCount,
-      &ReadRequest->RecvFromReply->NumberOfBytesRecvd);
+      &Count);
+    ReadRequest->RecvFromReply->NumberOfBytesRecvd = Count;
     ReadRequest->RecvFromReply->Status = NO_ERROR;
 
     ReadRequest->Irp->IoStatus.Information = 0;
     ReadRequest->Irp->IoStatus.Status = Status;
+
+    AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", ReadRequest->Irp));
+
     IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
   }
 

@@ -44,6 +44,9 @@ typedef struct IPDATAGRAM_REASSEMBLY {
 
 extern LIST_ENTRY ReassemblyListHead;
 extern KSPIN_LOCK ReassemblyListLock;
+extern NPAGED_LOOKASIDE_LIST IPDRList;
+extern NPAGED_LOOKASIDE_LIST IPFragmentList;
+extern NPAGED_LOOKASIDE_LIST IPHoleList;
 
 
 VOID IPFreeReassemblyList(

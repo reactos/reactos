@@ -1,4 +1,4 @@
-/* $Id: guicheck.c,v 1.1 2001/06/12 17:50:29 chorns Exp $
+/* $Id: guicheck.c,v 1.2 2001/07/04 20:40:24 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,10 +24,10 @@
 VOID
 GuiCheck(VOID)
 {
-  if (NtCurrentTeb()->MessageQueue)
+/*  if (NtCurrentTeb()->MessageQueue)
     return;
 
-  NtCurrentTeb()->MessageQueue = MsqCreateMessageQueue();
+  NtCurrentTeb()->MessageQueue = MsqCreateMessageQueue();*/
 }
 
 /* EOF */

@@ -2,12 +2,13 @@
 
 PATH_TO_TOP = ../..
 
-CFLAGS = -Iinclude -DUNICODE -DDBG
+CFLAGS = -Iinclude -DUNICODE -DDBG -DLE
 
 TARGETNAME=ws2_32
 
-MISC_OBJECTS = misc/dllmain.o misc/catalog.o misc/event.o misc/handle.o \
-               misc/ns.o misc/sndrcv.o misc/stubs.o misc/upcall.o
+MISC_OBJECTS = misc/bsd.o misc/catalog.o misc/dllmain.o \
+               misc/event.o misc/handle.o misc/ns.o \
+               misc/sndrcv.o misc/stubs.o misc/upcall.o
 
 RESOURCE_OBJECT = $(TARGETNAME).coff
 
