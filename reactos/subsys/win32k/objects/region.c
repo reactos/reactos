@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.24 2003/05/24 17:26:39 hbirr Exp $ */
+/* $Id: region.c,v 1.25 2003/07/10 21:36:39 jimtabor Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1642,7 +1642,25 @@ W32kFillRgn(HDC  hDC,
                   HRGN  hRgn,
                   HBRUSH  hBrush)
 {
-  UNIMPLEMENTED;
+HBRUSH oldhBrush;
+PROSRGNDATA rgn;
+
+        if( !(rgn = RGNDATA_LockRgn(hRgn)))
+                return FALSE;
+
+        if ((oldhBrush = W32kSelectObject(hDC, hBrush)) == NULL)
+        {
+                RGNDATA_UnlockRgn( hRgn );
+                return(FALSE);
+        }
+        W32kPatBlt(hDC, rgn->rdh.rcBound.left, rgn->rdh.rcBound.top,
+                        rgn->rdh.rcBound.right - rgn->rdh.rcBound.left,
+                        rgn->rdh.rcBound.bottom - rgn->rdh.rcBound.top, PATCOPY
+
+        W32kSelectObject(hDC, oldhBrush);
+        RGNDATA_UnlockRgn( hRgn );
+
+        return(TRUE);
 }
 
 BOOL
