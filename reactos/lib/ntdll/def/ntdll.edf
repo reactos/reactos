@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.76 2002/08/15 16:11:01 dwelch Exp $
+; $Id: ntdll.edf,v 1.77 2002/08/18 18:50:26 hyperion Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -426,7 +426,6 @@ RtlGetNtGlobalFlags=RtlGetNtGlobalFlags@0
 RtlGetNtProductType=RtlGetNtProductType@4
 RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeaps=RtlGetProcessHeaps@8
-RtlGetProcessHeap=RtlGetProcessHeap@0
 RtlGetSaclSecurityDescriptor=RtlGetSaclSecurityDescriptor@16
 ;RtlGetUserInfoHeap
 ;RtlGuidToPropertySetName

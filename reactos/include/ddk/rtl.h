@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.63 2002/07/29 15:33:31 ekohl Exp $
+/* $Id: rtl.h,v 1.64 2002/08/18 18:50:25 hyperion Exp $
  * 
  */
 
@@ -1011,11 +1011,7 @@ RtlGetDefaultCodePage (
 	PUSHORT OemCodePage
 	);
 
-HANDLE
-STDCALL
-RtlGetProcessHeap (
-	VOID
-	);
+#define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
 
 PVOID
 STDCALL

@@ -1552,14 +1552,6 @@ HW_end:
 }
 #endif
 
-
-HANDLE STDCALL
-RtlGetProcessHeap(VOID)
-{
-   DPRINT("RtlGetProcessHeap()\n");
-   return (HANDLE)NtCurrentPeb()->ProcessHeap;
-}
-
 VOID
 RtlInitializeHeapManager(VOID)
 {
