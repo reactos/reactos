@@ -1,7 +1,16 @@
+/*
+ * VideoPort driver
+ *   Written by Rex Jolliff
+ */
 
-#include <ntddk.h>
-#include <ntddvid.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntddvid.h>
 
+#define UNIMPLEMENTED DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__)
+
+#define VERSION "0.0.0"
+
+static VOID VidStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 static NTSTATUS VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
@@ -32,12 +41,12 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   DbgPrint("VideoPort Driver %s\n", VERSION);
 
     //  Export other driver entry points...
-  DriverObject->DriverStartIo = VidtartIo;
+  DriverObject->DriverStartIo = VidStartIo;
   DriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatchDeviceControl;
 
-// FIXME: should the miniport driver be loaded here?
+  /* FIXME: should the miniport driver be loaded here?  */
 
   return  STATUS_SUCCESS;
 }
@@ -62,6 +71,7 @@ VideoPortDisableInterrupt(IN PVOID  HwDeviceExtension)
 {
   UNIMPLEMENTED;
 }
+
 VP_STATUS 
 VideoPortEnableInterrupt(IN PVOID  HwDeviceExtension)
 {
@@ -139,7 +149,66 @@ VideoPortInitialize(IN PVOID  Context1,
                     IN PVIDEO_HW_INITIALIZATION_DATA  HwInitializationData,
                     IN PVOID  HwContext)
 {
-  UNIMPLEMENTED;
+  UCHAR  Again;
+  WCHAR  UnicodeBuffer[18];
+  NTSTATUS  RC;
+  ANSI_STRING  AnsiName;
+  UNICODE_STRING  UnicodeName;
+  PDRIVER_OBJECT  MPDriverObject = (PDRIVER_OBJECT) Context1;
+  PDEVICE_OBJECT  MPDeviceObject;
+  VIDEO_PORT_CONFIG_INFO  ConfigInfo;
+
+  /*  Build Dispatch table from passed data  */
+  MPDriverObject->DriverStartIo = HwInitializationData->HwStartIO;
+
+  /*  Create a unicode device name  */
+  do
+    {
+      /* FIXME: Need to add a device index for multiple adapters  */
+      RtlInitAnsiString(&AnsiName, "\\Device\\Display");
+      UnicodeName.MaximumLength = 18 * sizeof(WCHAR);
+      UnicodeName.Buffer = UnicodeBuffer;
+      RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, FALSE);
+
+      /*  Create the device  */
+      RC = IoCreateDevice(MPDriverObject, 
+                          HwInitializationData->HwDeviceExtensionSize, 
+                          &UnicodeName, 
+                          FILE_DEVICE_VIDEO, 
+                          0, 
+                          TRUE, 
+                          &MPDeviceObject);
+      if (!NT_SUCCESS(RC)) 
+        {
+          DbgPrint("IoCreateDevice call failed\n",0);
+          return RC;
+        }
+
+      /*  Set the buffering strategy here...  */
+      MPDeviceObject->Flags |= DO_BUFFERED_IO;
+
+      /*  Call HwFindAdapter entry point  */
+      /* FIXME: Need to figure out what string to pass as param 3  */
+      if (!HwInitializationData->HwFindAdapter(MPDeviceObject->DeviceExtension,
+                                               Context2,
+                                               "",
+                                               &ConfigInfo,
+                                               &Again))
+        {
+          DbgPrint("HwFindAdapter call failed");
+          /* FIXME: should deallocate device here  */
+
+          return  STATUS_UNSUCCESSFUL;
+        }
+
+      /* FIXME: Allocate hardware resources for device  */
+      /* FIXME: Allocate interrupt for device  */
+    }
+  while (&Again);
+
+  /* FIXME: initialize timer routine for MP Driver  */
+
+  return  STATUS_SUCCESS;
 }
 
 VP_STATUS 
@@ -163,7 +232,7 @@ VideoPortMapBankedMemory(IN PVOID  HwDeviceExtension,
                          IN PHYSICAL_ADDRESS  PhysicalAddress,
                          IN PULONG  Length,
                          IN PULONG  InIoSpace,
-                         INOUT PVOID  *VirtualAddress,
+                         OUT PVOID  *VirtualAddress,
                          IN ULONG  BankLength,
                          IN UCHAR  ReadWriteBank,
                          IN PBANKED_SECTION_ROUTINE  BankRoutine,
@@ -177,7 +246,7 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
                    IN PHYSICAL_ADDRESS  PhysicalAddress,
                    IN PULONG  Length,
                    IN PULONG  InIoSpace,
-                   INOUT PVOID  *VirtualAddress)
+                   OUT PVOID  *VirtualAddress)
 {
   UNIMPLEMENTED;
 }
@@ -333,7 +402,7 @@ BOOLEAN
 VideoPortSynchronizeExecution(IN PVOID  HwDeviceExtension,
                               IN VIDEO_SYNCHRONIZE_PRIORITY  Priority,
                               IN PMINIPORT_SYNCHRONIZE_ROUTINE  SynchronizeRoutine,
-                              INOUT PVOID  Context)
+                              OUT PVOID  Context)
 {
   UNIMPLEMENTED;
 }
@@ -483,6 +552,28 @@ VidDispatchOpenClose(IN PDEVICE_OBJECT pDO,
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return STATUS_SUCCESS;
+}
+
+//    VidStartIo
+//
+//  DESCRIPTION:
+//    Get the next requested I/O packet started
+//
+//  RUN LEVEL:
+//    DISPATCH_LEVEL
+//
+//  ARGUMENTS:
+//    Dispatch routine standard arguments
+//
+//  RETURNS:
+//    NTSTATUS
+//
+
+static  VOID  
+VidStartIo(IN PDEVICE_OBJECT DeviceObject, 
+           IN PIRP Irp) 
+{
+  UNIMPLEMENTED;
 }
 
 //    VidDispatchDeviceControl

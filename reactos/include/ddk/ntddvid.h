@@ -2,6 +2,8 @@
  * NTDDVID.H - Video Port and MiniPort driver interface
  */
 
+#include <ddk/miniport.h>
+
 /*
  * the rough idea:
  *  init:
@@ -30,6 +32,22 @@
 #define VIDEO_MEMORY_SPACE_USER_MODE 0x02
 #define VIDEO_MEMORY_SPACE_DENSE     0x04
 #define VIDEO_MEMORY_SPACE_P6CACHE   0x08
+
+typedef enum _VIDEO_DEVICE_DATA_TYPE 
+{
+  VpMachineData,
+  VpCmosData,
+  VpBusData,
+  VpControllerData,
+  VpMonitorData
+} VIDEO_DEVICE_DATA_TYPE, *PVIDEO_DEVICE_DATA_TYPE;
+
+typedef enum _VIDEO_SYNCHRONIZE_PRIORITY 
+{
+  VpLowPriority,
+  VpMediumPriority,
+  VpHighPriority
+} VIDEO_SYNCHRONIZE_PRIORITY, *PVIDEO_SYNCHRONIZE_PRIORITY;
 
 typedef LONG VP_STATUS, *PVP_STATUS;
 
@@ -113,6 +131,27 @@ typedef VP_STATUS (*PMINIPORT_QUERY_DEVICE_ROUTINE)(PVOID  HwDeviceExtension,
                                                     ULONG  ComponentInformationLength);
 typedef BOOLEAN (*PMINIPORT_SYNCHRONIZE_ROUTINE)(PVOID  Context);
 
+typedef struct _VIDEO_ACCESS_RANGE 
+{
+  PHYSICAL_ADDRESS  RangeStart;
+  ULONG  RangeLength;
+  UCHAR  RangeInIoSpace;
+  UCHAR  RangeVisible;
+  UCHAR  RangeShareable;
+} VIDEO_ACCESS_RANGE, *PVIDEO_ACCESS_RANGE;
+
+typedef struct _VIDEO_X86_BIOS_ARGUMENTS 
+{
+  ULONG  Eax;
+  ULONG  Ebx;
+  ULONG  Ecx;
+  ULONG  Edx;
+  ULONG  Esi;
+  ULONG  Edi;
+  ULONG  Ebp;
+} VIDEO_X86_BIOS_ARGUMENTS, *PVIDEO_X86_BIOS_ARGUMENTS;
+
+typedef VOID (*PBANKED_SECTION_ROUTINE)(IN ULONG  ReadBank, IN ULONG  WriteBank, IN PVOID  Context);
 
 ULONG VideoPortCompareMemory(IN PVOID  Source1, IN PVOID  Source2, IN ULONG  Length);
 VOID VideoPortDebugPrint(IN ULONG DebugPrintLevel, IN PCHAR DebugMessage, ...);
@@ -161,7 +200,7 @@ VP_STATUS VideoPortMapBankedMemory(IN PVOID  HwDeviceExtension,
                                    IN PHYSICAL_ADDRESS  PhysicalAddress,
                                    IN PULONG  Length,
                                    IN PULONG  InIoSpace,
-                                   INOUT PVOID  *VirtualAddress,
+                                   OUT PVOID  *VirtualAddress,
                                    IN ULONG  BankLength,
                                    IN UCHAR  ReadWriteBank,
                                    IN PBANKED_SECTION_ROUTINE  BankRoutine,
@@ -170,7 +209,7 @@ VP_STATUS VideoPortMapMemory(IN PVOID  HwDeviceExtension,
                              IN PHYSICAL_ADDRESS  PhysicalAddress,
                              IN PULONG  Length,
                              IN PULONG  InIoSpace,
-                             INOUT PVOID  *VirtualAddress);
+                             OUT PVOID  *VirtualAddress);
 VOID VideoPortMoveMemory(OUT PVOID  Destination,
                          IN PVOID  Source,
                          IN ULONG  Length);
@@ -209,7 +248,7 @@ VOID VideoPortStopTimer(IN PVOID  HwDeviceExtension);
 BOOLEAN VideoPortSynchronizeExecution(IN PVOID  HwDeviceExtension,
                                       IN VIDEO_SYNCHRONIZE_PRIORITY  Priority,
                                       IN PMINIPORT_SYNCHRONIZE_ROUTINE  SynchronizeRoutine,
-                                      INOUT PVOID  Context);
+                                      OUT PVOID  Context);
 VP_STATUS VideoPortUnmapMemory(IN PVOID  HwDeviceExtension,
                                IN PVOID  VirtualAddress,
                                IN HANDLE  ProcessHandle);
