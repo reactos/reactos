@@ -51,6 +51,8 @@ QuickLaunchMap::~QuickLaunchMap()
 QuickLaunchBar::QuickLaunchBar(HWND hwnd)
  :	super(hwnd)
 {
+	_dir = NULL;
+
 	_next_id = IDC_FIRST_QUICK_ID;
 
 	HWND hwndToolTip = (HWND) SendMessage(hwnd, TB_GETTOOLTIPS, 0, 0);
@@ -93,11 +95,12 @@ void QuickLaunchBar::AddShortcuts()
 		_stprintf(path, _T("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
 
 		_dir = new ShellDirectory(Desktop(), path, _hwnd);
+
+		_dir->smart_scan();
 	} catch(COMException&) {
 		return;
 	}
 
-	_dir->smart_scan();
 
 	ShellFolder desktop_folder;
 	WindowCanvas canvas(_hwnd);

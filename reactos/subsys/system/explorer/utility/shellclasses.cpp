@@ -164,6 +164,9 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
 	IShellFolder* ptr;
 
+	if (!pidl)
+		CheckError(E_INVALIDARG);
+
 	if (pidl && pidl->mkid.cb)
 		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&ptr));
 	else

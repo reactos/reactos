@@ -125,7 +125,11 @@ void StartMenu::AddEntries()
 		StartMenuDirectory& smd = *it;
 		ShellDirectory& dir = smd._dir;
 
-		dir.smart_scan();
+		try {
+			dir.smart_scan();
+		} catch(COMException& e) {
+			HandleException(e, g_Globals._hMainWnd);
+		}
 
 		AddShellEntries(dir, -1, smd._subfolders);
 	}
@@ -389,31 +393,38 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREAT
 
 void StartMenu::CreateSubmenu(int id, int folder_id, CREATORFUNC creator)
 {
-	StartMenuFolders new_folders;
+	try {
+		SpecialFolderPath folder(folder_id, _hwnd);
 
-	SpecialFolderPath folder(folder_id, _hwnd);
-
-	if (folder)
+		StartMenuFolders new_folders;
 		new_folders.push_back(folder);
 
-	CreateSubmenu(id, new_folders, creator);
+		CreateSubmenu(id, new_folders, creator);
+	} catch(COMException&) {
+		// ignore Exception and don't display anything
+	}
 }
 
 void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, CREATORFUNC creator)
 {
 	StartMenuFolders new_folders;
 
-	SpecialFolderPath folder1(folder_id1, _hwnd);
+	try {
+		SpecialFolderPath folder1(folder_id1, _hwnd);
 
-	if (folder1)
 		new_folders.push_back(folder1);
+	} catch(COMException&) {
+	}
 
-	SpecialFolderPath folder2(folder_id2, _hwnd);
+	try {
+		SpecialFolderPath folder2(folder_id2, _hwnd);
 
-	if (folder2)
 		new_folders.push_back(folder2);
+	} catch(COMException&) {
+	}
 
-	CreateSubmenu(id, new_folders, creator);
+	if (!new_folders.empty())
+		CreateSubmenu(id, new_folders, creator);
 }
 
 
@@ -540,13 +551,21 @@ void StartMenuButton::DrawItem(LPDRAWITEMSTRUCT dis)
 StartMenuRoot::StartMenuRoot(HWND hwnd)
  :	super(hwnd)
 {
-	 // insert directory "All Users\Start Menu"
-	ShellDirectory cmn_startmenu(Desktop(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
-	_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// don't add subfolders
+	try {
+		 // insert directory "All Users\Start Menu"
+		ShellDirectory cmn_startmenu(Desktop(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
+		_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// don't add subfolders
+	} catch(COMException&) {
+		// ignore exception and don't show additional shortcuts
+	}
 
-	 // insert directory "<user name>\Start Menu"
-	ShellDirectory usr_startmenu(Desktop(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
-	_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// don't add subfolders
+	try {
+		 // insert directory "<user name>\Start Menu"
+		ShellDirectory usr_startmenu(Desktop(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
+		_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// don't add subfolders
+	} catch(COMException&) {
+		// ignore exception and don't show additional shortcuts
+	}
 
 	 // read size of logo bitmap
 	BITMAP bmp_hdr;
@@ -839,7 +858,11 @@ void RecentStartMenu::AddEntries()
 		StartMenuDirectory& smd = *it;
 		ShellDirectory& dir = smd._dir;
 
-		dir.smart_scan();
+		try {
+			dir.smart_scan();
+		} catch(COMException& e) {
+			HandleException(e, g_Globals._hMainWnd);
+		}
 
 		dir.sort_directory(SORT_DATE);
 		AddShellEntries(dir, 16, smd._subfolders);	//TODO: read max. count of entries from registry

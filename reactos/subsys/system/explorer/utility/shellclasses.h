@@ -61,6 +61,11 @@ struct COMException
 	{
 	}
 
+	HRESULT Error() const
+	{
+		return _hr;
+	}
+
 	LPCTSTR ErrorMessage() const
 	{
 		if (_msg.empty()) {
@@ -696,7 +701,8 @@ struct SpecialFolderPath : public ShellPath
 {
 	SpecialFolderPath(int folder, HWND hwnd)
 	{
-		/*HRESULT hr = */SHGetSpecialFolderLocation(hwnd, folder, &_p);
+		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
+		CheckError(hr);
 	}
 };
 
@@ -745,6 +751,7 @@ struct SpecialFolderFSPath : public FileSysShellPath
 	SpecialFolderFSPath(int folder, HWND hwnd)
 	{
 		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
+		CheckError(hr);
 	}
 };
 

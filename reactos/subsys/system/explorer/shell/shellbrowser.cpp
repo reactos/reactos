@@ -319,7 +319,11 @@ void ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShe
 
 	SendMessage(_left_hwnd, WM_SETREDRAW, FALSE, 0);
 
-	entry->smart_scan();
+	try {
+		entry->smart_scan();
+	} catch(COMException& e) {
+		HandleException(e, g_Globals._hMainWnd);
+	}
 
 	TV_ITEM tvItem;
 	TV_INSERTSTRUCT tvInsert;
@@ -486,7 +490,11 @@ HRESULT ShellBrowserChild::OnDefaultCommand(IShellView* ppshv)
 			ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
 
 			if (parent) {
-				parent->smart_scan();
+				try {
+					parent->smart_scan();
+				} catch(COMException& e) {
+					return e.Error();
+				}
 
 				Entry* entry = parent->find_entry(pidl);
 

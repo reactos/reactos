@@ -166,18 +166,18 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #endif
 
 	 // If there is given the command line option "-desktop", create desktop window anyways
-	if (!lstrcmp(lpCmdLine,TEXT("-desktop")))
+	if (_tcsstr(lpCmdLine,TEXT("-desktop")))
 		startup_desktop = TRUE;
 
-	if (!lstrcmp(lpCmdLine,TEXT("-nodesktop")))
+	if (_tcsstr(lpCmdLine,TEXT("-nodesktop")))
 		startup_desktop = FALSE;
 
-	if (!lstrcmp(lpCmdLine,TEXT("-noexplorer"))) {
+	if (_tcsstr(lpCmdLine,TEXT("-noexplorer"))) {
 		nShowCmd = SW_HIDE;
 		startup_desktop = TRUE;
 	}
 
-	if (!lstrcmp(lpCmdLine,TEXT("-noautostart")))
+	if (!_tcsstr(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
 
 	g_Globals._hInstance = hInstance;
