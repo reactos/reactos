@@ -118,7 +118,11 @@ ExReleaseRundownProtectionEx (
             /* Get Pointer */
             PRUNDOWN_DESCRIPTOR RundownDescriptor = (PRUNDOWN_DESCRIPTOR)((ULONG_PTR)RunRef->Ptr & ~EX_RUNDOWN_ACTIVE);
             
-            ASSERT(RundownDescriptor != NULL);
+            if (RundownDescriptor == NULL)
+            {
+                /* the rundown was completed and there's no one to notify */
+                break;
+            }
             
             Current = RundownDescriptor->References;
 
