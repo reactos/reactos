@@ -324,6 +324,7 @@ extern "C" {
 #define SetCurrentDirectory  SetCurrentDirectoryW
 #define GetCurrentDirectory  GetCurrentDirectoryW
 #define GetDiskFreeSpace  GetDiskFreeSpaceW
+#define GetDiskFreeSpaceEx GetDiskFreeSpaceExW
 #define CreateDirectory  CreateDirectoryW
 #define CreateDirectoryEx  CreateDirectoryExW
 #define RemoveDirectory  RemoveDirectoryW
@@ -727,6 +728,7 @@ extern "C" {
 #define SetCurrentDirectory  SetCurrentDirectoryA
 #define GetCurrentDirectory  GetCurrentDirectoryA
 #define GetDiskFreeSpace  GetDiskFreeSpaceA
+#define GetDiskFreeSpaceEx GetDiskFreeSpaceExA
 #define CreateDirectory  CreateDirectoryA
 #define CreateDirectoryEx  CreateDirectoryExA
 #define RemoveDirectory  RemoveDirectoryA
