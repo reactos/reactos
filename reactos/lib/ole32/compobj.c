@@ -30,16 +30,10 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "objbase.h"
 #include "ole2.h"
@@ -47,9 +41,7 @@
 #include "rpc.h"
 #include "winerror.h"
 #include "winreg.h"
-#ifndef __REACTOS__
 #include "wownt32.h"
-#endif
 #include "wine/unicode.h"
 #include "objbase.h"
 #include "ole32_main.h"
@@ -573,11 +565,7 @@ HRESULT WINAPI __CLSIDFromStringA(
 /*****************************************************************************/
 
 HRESULT WINAPI CLSIDFromString(
-#ifdef __REACTOS__
 	LPOLESTR idstr,		/* [in] string representation of GUID */
-#else
-	LPCOLESTR idstr,	/* [in] string representation of GUID */
-#endif
 	CLSID *id )		/* [out] GUID represented by above string */
 {
     char xid[40];
@@ -744,7 +732,6 @@ HRESULT WINAPI ProgIDFromCLSID(
  * RETURNS
  *	riid associated with the progid
  */
-#ifndef __REACTOS__
 HRESULT WINAPI CLSIDFromProgID16(
 	LPCOLESTR16 progid,	/* [in] program id as found in registry */
 	LPCLSID riid		/* [out] associated CLSID */
@@ -769,7 +756,6 @@ HRESULT WINAPI CLSIDFromProgID16(
 	RegCloseKey(xhkey);
 	return __CLSIDFromStringA(buf2,riid);
 }
-#endif
 
 /******************************************************************************
  *		CLSIDFromProgID	[OLE32.@]

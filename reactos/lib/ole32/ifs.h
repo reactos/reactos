@@ -31,6 +31,7 @@
 
 typedef struct IMalloc16 IMalloc16, *LPMALLOC16;
 
+#undef INTERFACE
 #define INTERFACE IMalloc16
 #define IMalloc16_METHODS \
     IUnknown_METHODS \

@@ -49,14 +49,8 @@
 #include <stdarg.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "winerror.h"
 #include "wine/unicode.h"
@@ -931,7 +925,7 @@ static HRESULT WINAPI DefaultHandler_GetMoniker(
 
   }
 
-  return E_FAIL;
+  return E_UNSPEC;
 }
 
 /************************************************************************

@@ -34,14 +34,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "objbase.h"
 #include "ole2.h"

@@ -30,7 +30,6 @@
 #include "windows.h"
 #include "controls.h"
 #include "user32/regcontrol.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(combo);
@@ -2136,9 +2135,9 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		if( unicode )
                 {
                     if( lphc->dwStyle & CBS_LOWERCASE )
-                        strlwrW((LPWSTR)lParam);
+                        _wcslwr((LPWSTR)lParam);
                     else if( lphc->dwStyle & CBS_UPPERCASE )
-                        struprW((LPWSTR)lParam);
+                        _wcsupr((LPWSTR)lParam);
                     return SendMessageW(lphc->hWndLBox, LB_ADDSTRING, 0, lParam);
                 }
                 else
@@ -2159,9 +2158,9 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		if( unicode )
                 {
                     if( lphc->dwStyle & CBS_LOWERCASE )
-                        strlwrW((LPWSTR)lParam);
+                        _wcslwr((LPWSTR)lParam);
                     else if( lphc->dwStyle & CBS_UPPERCASE )
-                        struprW((LPWSTR)lParam);
+                        _wcsupr((LPWSTR)lParam);
                     return SendMessageW(lphc->hWndLBox, LB_INSERTSTRING, wParam, lParam);
                 }
                 else

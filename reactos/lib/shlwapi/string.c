@@ -28,9 +28,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include "wine/icom.h"
-#endif
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
@@ -67,7 +64,7 @@ static BOOL WINAPI SHLWAPI_ChrCmpHelperA(WORD ch1, WORD ch2, DWORD dwFlags)
   char str1[3], str2[3];
 
   str1[0] = LOBYTE(ch1);
-  if (IsDBCSLeadByte(ch1))
+  if (IsDBCSLeadByte(str1[0]))
   {
     str1[1] = HIBYTE(ch1);
     str1[2] = '\0';
@@ -76,7 +73,7 @@ static BOOL WINAPI SHLWAPI_ChrCmpHelperA(WORD ch1, WORD ch2, DWORD dwFlags)
     str1[1] = '\0';
 
   str2[0] = LOBYTE(ch2);
-  if (IsDBCSLeadByte(ch2))
+  if (IsDBCSLeadByte(str2[0]))
   {
     str2[1] = HIBYTE(ch2);
     str2[2] = '\0';
@@ -512,13 +509,8 @@ static LPSTR WINAPI SHLWAPI_StrStrHelperA(LPCSTR lpszStr, LPCSTR lpszSearch,
  *
  * Internal implementation of StrStrW/StrStrIW
  */
-#ifndef __REACTOS__
 static LPWSTR WINAPI SHLWAPI_StrStrHelperW(LPCWSTR lpszStr, LPCWSTR lpszSearch,
                                           int (*pStrCmpFn)(LPCWSTR,LPCWSTR,int))
-#else
-static LPWSTR WINAPI SHLWAPI_StrStrHelperW(LPCWSTR lpszStr, LPCWSTR lpszSearch,
-                                          int (*pStrCmpFn)(const wchar_t*,const wchar_t*,size_t))
-#endif
 {
   int iLen;
 
@@ -564,11 +556,7 @@ LPWSTR WINAPI StrStrW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
 {
   TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
 
-#ifdef __REACTOS__
-  return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, wcsncmp);
-#else
-  return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, strncmpW);
-#endif
+  return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, (int (*)(LPCWSTR,LPCWSTR,int))wcsncmp);
 }
 
 /*************************************************************************
@@ -677,11 +665,7 @@ LPWSTR WINAPI StrStrIW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
 {
   TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
 
-#ifdef __REACTOS__
-  return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, _wcsnicmp);
-#else
-  return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, strncmpiW);
-#endif
+  return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, (int (*)(LPCWSTR,LPCWSTR,int))_wcsnicmp);
 }
 
 /*************************************************************************
@@ -1359,7 +1343,7 @@ LPWSTR WINAPI StrCatBuffW(LPWSTR lpszStr, LPCWSTR lpszCat, INT cchMax)
  *           CoTaskMemFree() and its type set to STRRET_CSTRA.
  *  Failure: E_FAIL, if any parameters are invalid.
  */
-HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, DWORD len)
+HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, UINT len)
 {
 	/* NOTE:
 	 *  This routine is identical to that in dlls/shell32/shellstring.c.
@@ -1408,7 +1392,7 @@ HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, D
  *
  * See StrRetToBufA.
  */
-HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, DWORD len)
+HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, UINT len)
 {
 	TRACE("dest=%p len=0x%lx strret=%p pidl=%p stub\n",dest,len,src,pidl);
 

@@ -1,3 +1,4 @@
+
 /*
  *	OLE2 library
  *
@@ -40,17 +41,11 @@
 #include "commctrl.h"
 #include "ole2.h"
 #include "ole2ver.h"
-#ifndef __REACTOS__
 #include "wownt32.h"
-#else
-BOOL WINAPI IsValidInterface(LPUNKNOWN punk);
-#endif
 
-#ifndef __REACTOS__
 #include "wine/winbase16.h"
 #include "wine/wingdi16.h"
 #include "wine/winuser16.h"
-#endif
 #include "ole32_main.h"
 
 #include "wine/debug.h"
@@ -1424,7 +1419,7 @@ HRESULT WINAPI OleSetMenuDescriptor(
  */
 BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* lpwCmd)
 {
-#ifndef __REACTOS__
+#if 0 /* Not implemented for ReactOS */
     /* YES, Accel16! */
     LPACCEL16 lpAccelTbl;
     int i;

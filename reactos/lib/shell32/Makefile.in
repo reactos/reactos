@@ -1,0 +1,88 @@
+EXTRADEFS = -D_SHELL32_ -DCOM_NO_WINDOWS_H
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = shell32.dll
+# fixme: avoid ole32.dll import
+IMPORTS   = ole32 shlwapi comctl32 user32 gdi32 advapi32 kernel32 ntdll
+ALTNAMES  = shell.dll
+EXTRALIBS = $(LIBUUID) $(LIBUNICODE)
+
+SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
+
+C_SRCS = \
+	authors.c \
+	brsfolder.c \
+	changenotify.c \
+	classes.c \
+	clipboard.c \
+	control.c \
+	dataobject.c \
+	debughlp.c \
+	dialogs.c \
+	dragdrophelper.c \
+	enumidlist.c \
+	folders.c \
+	iconcache.c \
+	memorystream.c \
+	pidl.c \
+	regsvr.c \
+	shell32_main.c \
+	shelllink.c \
+	shellole.c \
+	shellord.c \
+	shellpath.c \
+	shellreg.c \
+	shellstring.c \
+	shfldr_desktop.c \
+	shfldr_fs.c \
+	shfldr_mycomp.c \
+	shlexec.c \
+	shlfileop.c \
+	shlfolder.c \
+	shlfsbind.c \
+	shlmenu.c \
+	shlview.c \
+	shpolicy.c \
+	shv_bg_cmenu.c \
+	shv_item_cmenu.c \
+	systray.c \
+	shlcpanel.c
+
+RC_SRCS = shres.rc version.rc
+RC_BINSRC = shres.rc
+RC_BINARIES = \
+	desktop.ico \
+	document.ico \
+	drive.ico \
+	folder.ico \
+	folder_open.ico \
+	mycomputer.ico
+
+C_SRCS16  = shell.c
+RC_SRCS16 = version16.rc
+
+SUBDIRS = tests
+
+@MAKE_DLL_RULES@
+
+# Special rules for 16-bit resource files
+
+version16.res: version16.rc
+	$(LDPATH) $(RC16) $(RC16FLAGS) -fo$@ $(SRCDIR)/version16.rc
+
+shell.spec.c: shell.spec version16.res
+	$(WINEBUILD) $(DEFS) $(DLLFLAGS) -o $@ --main-module $(MODULE) --res version16.res --spec $(SRCDIR)/shell.spec
+
+authors.c: $(TOPSRCDIR)/AUTHORS
+	(echo 'const char * const SHELL_Authors[] = {' && \
+	 sed -e '1,2d' -e 's/\(.*\)/  \"\1\",/' $(TOPSRCDIR)/AUTHORS && \
+	 echo '  0 };') >$@ || ($(RM) $@ && false)
+
+depend: authors.c
+
+clean::
+	$(RM) authors.c
+
+### Dependencies:

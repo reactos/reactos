@@ -21,14 +21,8 @@
 
 #include <stdarg.h>
 #include <string.h>
-#ifdef __REACTOS__
-#include "wine/icom.h"
-#endif
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "winreg.h"
 #include "wine/debug.h"
@@ -238,7 +232,7 @@ LONG WINAPI SHRegOpenUSKeyW(
  *  Success: ERROR_SUCCESS
  *  Failure: An error code from RegCloseKey().
  */
-LONG WINAPI SHRegCloseUSKey(
+DWORD WINAPI SHRegCloseUSKey(
         HUSKEY hUSKey) /* [I] Key to close */
 {
     LPInternal_HUSKEY mihk = (LPInternal_HUSKEY)hUSKey;
@@ -640,7 +634,7 @@ BOOL WINAPI SHRegGetBoolUSValueW(
  *  Success: ERROR_SUCCESS
  *  Failure: An error code from RegQueryInfoKeyA().
  */
-LONG WINAPI SHRegQueryInfoUSKeyA(
+DWORD WINAPI SHRegQueryInfoUSKeyA(
 	HUSKEY hUSKey, /* [I] Key to query */
 	LPDWORD pcSubKeys, /* [O] Destination for number of sub keys */
 	LPDWORD pcchMaxSubKeyLen, /* [O] Destination for the length of the biggest sub key name */
@@ -681,7 +675,7 @@ LONG WINAPI SHRegQueryInfoUSKeyA(
  *
  * See SHRegQueryInfoUSKeyA.
  */
-LONG WINAPI SHRegQueryInfoUSKeyW(
+DWORD WINAPI SHRegQueryInfoUSKeyW(
 	HUSKEY hUSKey,
 	LPDWORD pcSubKeys,
 	LPDWORD pcchMaxSubKeyLen,
@@ -726,7 +720,7 @@ LONG WINAPI SHRegQueryInfoUSKeyW(
  *  Success: ERROR_SUCCESS
  *  Failure: An error code from RegEnumKeyExA().
  */
-LONG WINAPI SHRegEnumUSKeyA(
+DWORD WINAPI SHRegEnumUSKeyA(
 	HUSKEY hUSKey,                 /* [in] Key to enumerate */
 	DWORD dwIndex,                 /* [in] Index within hUSKey */
 	LPSTR pszName,                 /* [out] Name of the enumerated value */
@@ -761,7 +755,7 @@ LONG WINAPI SHRegEnumUSKeyA(
  *
  * See SHRegEnumUSKeyA.
  */
-LONG WINAPI SHRegEnumUSKeyW(
+DWORD WINAPI SHRegEnumUSKeyW(
 	HUSKEY hUSKey,
 	DWORD dwIndex,
 	LPWSTR pszName,
@@ -1110,8 +1104,8 @@ DWORD WINAPI SHSetValueW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue,
  * RETURNS
  *  The result of calling RegQueryInfoKeyA().
  */
-LONG WINAPI SHQueryInfoKeyA(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
-                            LPDWORD pwValues, LPDWORD pwValueMax)
+DWORD WINAPI SHQueryInfoKeyA(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
+                             LPDWORD pwValues, LPDWORD pwValueMax)
 {
   TRACE("(hkey=%p,%p,%p,%p,%p)\n", hKey, pwSubKeys, pwSubKeyMax,
         pwValues, pwValueMax);
@@ -1124,8 +1118,8 @@ LONG WINAPI SHQueryInfoKeyA(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
  *
  * See SHQueryInfoKeyA.
  */
-LONG WINAPI SHQueryInfoKeyW(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
-                            LPDWORD pwValues, LPDWORD pwValueMax)
+DWORD WINAPI SHQueryInfoKeyW(HKEY hKey, LPDWORD pwSubKeys, LPDWORD pwSubKeyMax,
+                             LPDWORD pwValues, LPDWORD pwValueMax)
 {
   TRACE("(hkey=%p,%p,%p,%p,%p)\n", hKey, pwSubKeys, pwSubKeyMax,
         pwValues, pwValueMax);
@@ -1246,6 +1240,8 @@ DWORD WINAPI SHQueryValueExW(HKEY hKey, LPCWSTR lpszValue,
   if (pcbData) dwUnExpDataLen = *pcbData;
 
   dwRet = RegQueryValueExW(hKey, lpszValue, lpReserved, &dwType, pvData, &dwUnExpDataLen);
+  if (dwRet!=ERROR_SUCCESS && dwRet!=ERROR_MORE_DATA)
+      return dwRet;
 
   if (pcbData && (dwType == REG_EXPAND_SZ))
   {
@@ -1254,7 +1250,7 @@ DWORD WINAPI SHQueryValueExW(HKEY hKey, LPCWSTR lpszValue,
     /* Expand type REG_EXPAND_SZ into REG_SZ */
     LPWSTR szData;
 
-    /* If the caller didn't supply a buffer or the buffer is to small we have
+    /* If the caller didn't supply a buffer or the buffer is too small we have
      * to allocate our own
      */
     if ((!pvData) || (dwRet == ERROR_MORE_DATA) )
@@ -1597,8 +1593,8 @@ DWORD WINAPI SHDeleteValueW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue)
  *   Success: ERROR_SUCCESS. lpszSubKey and pwLen are updated.
  *   Failure: An error code from RegEnumKeyExA().
  */
-LONG WINAPI SHEnumKeyExA(HKEY hKey, DWORD dwIndex, LPSTR lpszSubKey,
-                         LPDWORD pwLen)
+DWORD WINAPI SHEnumKeyExA(HKEY hKey, DWORD dwIndex, LPSTR lpszSubKey,
+                          LPDWORD pwLen)
 {
   TRACE("(hkey=%p,%ld,%s,%p)\n", hKey, dwIndex, debugstr_a(lpszSubKey), pwLen);
 
@@ -1610,8 +1606,8 @@ LONG WINAPI SHEnumKeyExA(HKEY hKey, DWORD dwIndex, LPSTR lpszSubKey,
  *
  * See SHEnumKeyExA.
  */
-LONG WINAPI SHEnumKeyExW(HKEY hKey, DWORD dwIndex, LPWSTR lpszSubKey,
-                         LPDWORD pwLen)
+DWORD WINAPI SHEnumKeyExW(HKEY hKey, DWORD dwIndex, LPWSTR lpszSubKey,
+                          LPDWORD pwLen)
 {
   TRACE("(hkey=%p,%ld,%s,%p)\n", hKey, dwIndex, debugstr_w(lpszSubKey), pwLen);
 
@@ -1636,9 +1632,9 @@ LONG WINAPI SHEnumKeyExW(HKEY hKey, DWORD dwIndex, LPWSTR lpszSubKey,
  *   Success: ERROR_SUCCESS. Output parameters are updated.
  *   Failure: An error code from RegEnumValueA().
  */
-LONG WINAPI SHEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpszValue,
-                         LPDWORD pwLen, LPDWORD pwType,
-                         LPVOID pvData, LPDWORD pcbData)
+DWORD WINAPI SHEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpszValue,
+                          LPDWORD pwLen, LPDWORD pwType,
+                          LPVOID pvData, LPDWORD pcbData)
 {
   TRACE("(hkey=%p,%ld,%s,%p,%p,%p,%p)\n", hKey, dwIndex,
         debugstr_a(lpszValue), pwLen, pwType, pvData, pcbData);
@@ -1652,9 +1648,9 @@ LONG WINAPI SHEnumValueA(HKEY hKey, DWORD dwIndex, LPSTR lpszValue,
  *
  * See SHEnumValueA.
  */
-LONG WINAPI SHEnumValueW(HKEY hKey, DWORD dwIndex, LPWSTR lpszValue,
-                         LPDWORD pwLen, LPDWORD pwType,
-                         LPVOID pvData, LPDWORD pcbData)
+DWORD WINAPI SHEnumValueW(HKEY hKey, DWORD dwIndex, LPWSTR lpszValue,
+                          LPDWORD pwLen, LPDWORD pwType,
+                          LPVOID pvData, LPDWORD pcbData)
 {
   TRACE("(hkey=%p,%ld,%s,%p,%p,%p,%p)\n", hKey, dwIndex,
         debugstr_w(lpszValue), pwLen, pwType, pvData, pcbData);

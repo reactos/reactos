@@ -26,9 +26,6 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"

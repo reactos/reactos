@@ -8765,10 +8765,10 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return LISTVIEW_EnsureVisible(infoPtr, (INT)wParam, (BOOL)lParam);
 
   case LVM_FINDITEMW:
-    return LISTVIEW_FindItemW(infoPtr, (INT)wParam, (LPFINDINFOW)lParam);
+    return LISTVIEW_FindItemW(infoPtr, (INT)wParam, (LPLVFINDINFOW)lParam);
 
   case LVM_FINDITEMA:
-    return LISTVIEW_FindItemA(infoPtr, (INT)wParam, (LPFINDINFOA)lParam);
+    return LISTVIEW_FindItemA(infoPtr, (INT)wParam, (LPLVFINDINFOA)lParam);
 
   case LVM_GETBKCOLOR:
     return infoPtr->clrBk;

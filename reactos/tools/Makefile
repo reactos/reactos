@@ -18,7 +18,7 @@ TOOLS = \
 CLEAN_FILES = $(TOOLS)
 
 all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
-	wine2ros_target pipetools_target
+	wine2ros_target pipetools_target winebuild_target bin2res_target
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
@@ -123,6 +123,12 @@ ifeq ($(HOST),mingw32-windows)
 	$(MAKE) -C pipetools
 endif
 
+winebuild_target:
+	$(MAKE) -C winebuild winebuild$(EXE_POSTFIX)
+
+bin2res_target:
+	$(MAKE) -C bin2res bin2res$(EXE_POSTFIX)
+
 .PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target
 
 
@@ -133,6 +139,9 @@ clean:
 	$(MAKE) -C mkhive clean
 	$(MAKE) -C wmc clean
 	$(MAKE) -C rgenstat clean
+	$(MAKE) -C wine2ros clean
+	$(MAKE) -C winebuild clean
+	$(MAKE) -C bin2res clean
 	rm mkconfig
 	rm $(TOOLS)
 endif
@@ -144,6 +153,9 @@ clean:
 	$(MAKE) -C wmc clean
 	$(MAKE) -C rgenstat clean
 	$(MAKE) -C pipetools clean
+	$(MAKE) -C wine2ros clean
+	$(MAKE) -C winebuild clean
+	$(MAKE) -C bin2res clean
 	-del *$(EXE_POSTFIX)
 endif
 

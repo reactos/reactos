@@ -18,9 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef __REACTOS__
-#include "wine/icom.h"
-#endif
 #include "config.h"
 #include "wine/port.h"
 #include <stdarg.h>
@@ -37,9 +34,9 @@
 #include "shlwapi.h"
 #include "wine/debug.h"
 
-HMODULE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
-BOOL    WINAPI MLFreeLibrary(HMODULE);
-HRESULT WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
+HINSTANCE WINAPI MLLoadLibraryW(LPCWSTR,HANDLE,DWORD,LPCWSTR,BOOL);
+BOOL      WINAPI MLFreeLibrary(HMODULE);
+HRESULT   WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1133,7 +1130,7 @@ HRESULT WINAPI UrlEscapeW(
  *  the first occurrence of either a '?' or '#' character.
  */
 HRESULT WINAPI UrlUnescapeA(
-	LPCSTR pszUrl,
+	LPSTR pszUrl,
 	LPSTR pszUnescaped,
 	LPDWORD pcchUnescaped,
 	DWORD dwFlags)
@@ -1197,7 +1194,7 @@ HRESULT WINAPI UrlUnescapeA(
  * See UrlUnescapeA.
  */
 HRESULT WINAPI UrlUnescapeW(
-	LPCWSTR pszUrl,
+	LPWSTR pszUrl,
 	LPWSTR pszUnescaped,
 	LPDWORD pcchUnescaped,
 	DWORD dwFlags)
@@ -1399,14 +1396,14 @@ INT WINAPI UrlCompareW(
  *  Success: TRUE. lpDest is filled with the computed hash value.
  *  Failure: FALSE, if any argument is invalid.
  */
-BOOL WINAPI HashData(const unsigned char *lpSrc, INT nSrcLen,
-                     unsigned char *lpDest, INT nDestLen)
+HRESULT WINAPI HashData(LPBYTE lpSrc, DWORD nSrcLen,
+                     LPBYTE lpDest, DWORD nDestLen)
 {
   INT srcCount = nSrcLen - 1, destCount = nDestLen - 1;
 
   if (IsBadReadPtr(lpSrc, nSrcLen) ||
       IsBadWritePtr(lpDest, nDestLen))
-    return FALSE;
+    return ERROR_INVALID_PARAMETER;
 
   while (destCount >= 0)
   {
@@ -1424,7 +1421,7 @@ BOOL WINAPI HashData(const unsigned char *lpSrc, INT nSrcLen,
     }
     srcCount--;
   }
-  return TRUE;
+  return ERROR_SUCCESS;
 }
 
 /*************************************************************************
@@ -1441,7 +1438,7 @@ BOOL WINAPI HashData(const unsigned char *lpSrc, INT nSrcLen,
  *  Success: S_OK. lpDest is filled with the computed hash value.
  *  Failure: E_INVALIDARG, if any argument is invalid.
  */
-HRESULT WINAPI UrlHashA(LPCSTR pszUrl, unsigned char *lpDest, INT nDestLen)
+HRESULT WINAPI UrlHashA(LPCSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
 {
   if (IsBadStringPtrA(pszUrl, -1) || IsBadWritePtr(lpDest, nDestLen))
     return E_INVALIDARG;
@@ -1455,7 +1452,7 @@ HRESULT WINAPI UrlHashA(LPCSTR pszUrl, unsigned char *lpDest, INT nDestLen)
  *
  * See UrlHashA.
  */
-HRESULT WINAPI UrlHashW(LPCWSTR pszUrl, unsigned char *lpDest, INT nDestLen)
+HRESULT WINAPI UrlHashW(LPCWSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
 {
   char szUrl[MAX_PATH];
 
@@ -1903,9 +1900,9 @@ static LONG URL_ParseUrl(LPCWSTR pszUrl, WINE_PARSE_URL *pl)
     memset(pl, 0, sizeof(WINE_PARSE_URL));
     pl->pScheme = pszUrl;
     work = URL_ScanID(pl->pScheme, &pl->szScheme, SCHEME);
-    if (!*work || (*work != L':')) goto _ERROR;
+    if (!*work || (*work != L':')) goto ErrorExit;
     work++;
-    if ((*work != L'/') || (*(work+1) != L'/')) goto _ERROR;
+    if ((*work != L'/') || (*(work+1) != L'/')) goto ErrorExit;
     pl->pUserName = work + 2;
     work = URL_ScanID(pl->pUserName, &pl->szUserName, USERPASS);
     if (*work == L':' ) {
@@ -1929,7 +1926,7 @@ static LONG URL_ParseUrl(LPCWSTR pszUrl, WINE_PARSE_URL *pl)
 	pl->szUserName = pl->szPassword = 0;
 	work = pl->pUserName - 1;
 	pl->pUserName = pl->pPassword = 0;
-    } else goto _ERROR;
+    } else goto ErrorExit;
 
     /* now start parsing hostname or hostnumber */
     work++;
@@ -1954,7 +1951,7 @@ static LONG URL_ParseUrl(LPCWSTR pszUrl, WINE_PARSE_URL *pl)
 	  pl->pPort, pl->szPort,
 	  pl->pQuery, pl->szQuery);
     return S_OK;
-  _ERROR:
+  ErrorExit:
     FIXME("failed to parse %s\n", debugstr_w(pszUrl));
     return E_INVALIDARG;
 }
@@ -2436,7 +2433,7 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
     dwDestLen -= (szResLen + 1);
     memcpy(lpszDest, szRes, sizeof(szRes));
 
-    hMod = MLLoadLibraryW(lpszLibName, hMod, dwFlags);
+    hMod = MLLoadLibraryW(lpszLibName, hMod, dwFlags, NULL, FALSE);
 
     if (hMod)
     {

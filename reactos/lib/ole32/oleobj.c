@@ -19,16 +19,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+
 #include <stdarg.h>
 #include <string.h>
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "winerror.h"
 #include "wine/debug.h"

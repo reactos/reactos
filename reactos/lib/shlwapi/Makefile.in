@@ -1,0 +1,28 @@
+EXTRADEFS = -D_SHLWAPI_
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = shlwapi.dll
+IMPORTS   = ole32 user32 gdi32 advapi32 kernel32
+EXTRALIBS = $(LIBUUID) $(LIBUNICODE)
+
+C_SRCS = \
+	assoc.c \
+	clist.c \
+	istream.c \
+	ordinal.c \
+	path.c \
+	reg.c \
+	regstream.c \
+	shlwapi_main.c \
+	string.c \
+	thread.c \
+	url.c \
+	wsprintf.c
+
+SUBDIRS = tests
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

@@ -22,9 +22,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
@@ -712,7 +709,7 @@ HRESULT WINAPI FileMonikerImpl_BindToStorage(IMoniker* iface,
         else
             if ( (IsEqualIID(&IID_IStream, riid)) || (IsEqualIID(&IID_ILockBytes, riid)) )
 
-                return E_FAIL;
+                return E_UNSPEC;
             else
 
                 return E_NOINTERFACE;
@@ -1338,14 +1335,12 @@ HRESULT WINAPI FileMonikerROTDataImpl_GetComparaisonData(IROTData* iface,
 /******************************************************************************
  *        CreateFileMoniker (OLE2.28)
  ******************************************************************************/
-#ifndef __REACTOS__
 HRESULT WINAPI CreateFileMoniker16(LPCOLESTR16 lpszPathName,LPMONIKER* ppmk)
 {
 
     FIXME("(%s,%p),stub!\n",lpszPathName,ppmk);
     return E_NOTIMPL;
 }
-#endif
 
 /******************************************************************************
  *        CreateFileMoniker (OLE32.@)

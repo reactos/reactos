@@ -22,17 +22,11 @@
 #include <stdarg.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "winnls.h"
 #include "wine/debug.h"
@@ -966,7 +960,6 @@ HRESULT WINAPI ItemMonikerROTDataImpl_GetComparaisonData(IROTData* iface,
 /******************************************************************************
  *        CreateItemMoniker16	[OLE2.28]
  ******************************************************************************/
-#ifndef __REACTOS__
 HRESULT WINAPI CreateItemMoniker16(LPCOLESTR16 lpszDelim,LPCOLESTR  lpszItem,LPMONIKER* ppmk)
 {
 
@@ -974,7 +967,6 @@ HRESULT WINAPI CreateItemMoniker16(LPCOLESTR16 lpszDelim,LPCOLESTR  lpszItem,LPM
     *ppmk = NULL;
     return E_NOTIMPL;
 }
-#endif
 
 /******************************************************************************
  *        CreateItemMoniker	[OLE32.@]

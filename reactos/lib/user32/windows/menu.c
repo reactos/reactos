@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.39 2003/12/28 00:19:24 weiden Exp $
+/* $Id: menu.c,v 1.40 2004/01/02 19:49:47 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -39,7 +39,6 @@
 #include <user32/callback.h>
 #include "user32/regcontrol.h"
 #include "../controls/controls.h"
-#include "wine/unicode.h"
 
 /* TYPES *********************************************************************/
 
@@ -138,7 +137,7 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
       /* Align the text on a word boundary.  */
       res += (~((int)res - 1)) & 1;
       mii.dwTypeData = (LPWSTR) res;
-      res += (1 + strlenW(mii.dwTypeData)) * sizeof(WCHAR);
+      res += (1 + wcslen(mii.dwTypeData)) * sizeof(WCHAR);
       /* Align the following fields on a dword boundary.  */
       res += (~((int)res - 1)) & 3;
 
@@ -203,7 +202,7 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
     if(!unicode)
       res += strlen(str) + 1;
     else
-      res += (strlenW((LPCWSTR)str) + 1) * sizeof(WCHAR);
+      res += (wcslen((LPCWSTR)str) + 1) * sizeof(WCHAR);
     if (flags & MF_POPUP)
     {
       hSubMenu = CreatePopupMenu();

@@ -25,9 +25,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "ole2.h"
 #include "objidl.h"
@@ -50,16 +47,11 @@ HRESULT WINAPI  OleCreateLinkToFile(LPCOLESTR lpszFileName, REFIID riid,
 /******************************************************************************
  *              OleDuplicateData        [OLE32.@]
  */
-#ifdef __REACTOS__
 HANDLE WINAPI OleDuplicateData(HANDLE hSrc, CLIPFORMAT cfFormat,
 	                          UINT uiFlags)
-#else
-HRESULT WINAPI OleDuplicateData(HANDLE hSrc, CLIPFORMAT cfFormat,
-	                          UINT uiFlags)
-#endif
 {
     FIXME("(%p,%x,%x), stub!\n", hSrc, cfFormat, uiFlags);
-    return E_NOTIMPL;
+    return NULL;
 }
 
 

@@ -39,7 +39,6 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "wine/debug.h"
-#include "comctl32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 

@@ -38,16 +38,10 @@
 #include <string.h>
 #include <limits.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "winerror.h"
 #include "objbase.h"

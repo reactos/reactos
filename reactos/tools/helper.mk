@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.48 2003/12/08 19:10:44 navaraf Exp $
+# $Id: helper.mk,v 1.49 2004/01/02 19:49:47 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -16,6 +16,7 @@
 #                        gdi_driver = Kernel mode graphics driver that link with win32k.sys
 #                        subsystem = Kernel subsystem
 #                        kmdll = Kernel mode DLL
+#                        winedll = DLL imported from wine
 #   $TARGET_APPTYPE    = Application type (windows,native,console)
 #   $TARGET_NAME       = Base name of output file and .rc, .def, and .edf files
 #   $TARGET_OBJECTS    = Object files that compose the module
@@ -401,9 +402,44 @@ ifeq ($(TARGET_TYPE),kmdll)
   MK_RES_BASE := $(TARGET_NAME)
 endif
 
+ifeq ($(TARGET_TYPE),winedll)
+-include Makefile.ros
+  MK_GENERATED_MAKEFILE = Makefile.ros
+  MK_MODE := user
+  MK_EXETYPE := dll
+  MK_DEFEXT := .dll
+  MK_DEFENTRY := _DllMain@12
+  MK_DDKLIBS :=
+  MK_SDKLIBS :=
+  MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -DCOBJMACROS -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
+  MK_IMPLIB := yes
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
+  MK_IMPLIB_EXT := .a
+  MK_INSTALLDIR := system32
+  MK_BOOTCDDIR := system32
+  MK_DISTDIR := dlls
+  MK_RES_BASE := $(TARGET_NAME)
+ifeq ($(TARGET_DEFNAME),)
+  MK_DEFBASENAME := $(TARGET_NAME).spec
+  MK_SPECDEF := $(MK_DEFBASENAME).def
+else
+  MK_DEFBASENAME := $(TARGET_DEFNAME)
+endif
+  MK_KILLAT := --kill-at
+  TARGET_DEFONLY := yes
+  MK_RC_BINARIES = $(TARGET_RC_BINARIES)
+endif
 
-MK_RESOURCE := $(MK_RES_BASE).coff
-
+ifeq ($(TARGET_RC_SRCS),)
+  MK_RES_SRC := $(TARGET_PATH)/$(MK_RES_BASE).rc
+  MK_RESOURCE := $(MK_RES_BASE).coff
+else
+  MK_RES_SRC := $(TARGET_RC_SRCS)
+  MK_RESOURCE := $(TARGET_RC_SRCS:.rc=.coff)
+endif
 
 ifneq ($(TARGET_INSTALLDIR),)
   MK_INSTALLDIR := $(TARGET_INSTALLDIR)
@@ -442,17 +478,19 @@ else
   MK_FULLRES := $(TARGET_PATH)/$(MK_RESOURCE)
 endif
 
+ifneq ($(TARGET_TYPE),winedll)
 ifeq ($(TARGET_DEFNAME),)
-  MK_DEFBASE := $(TARGET_NAME)
+  MK_DEFBASENAME := $(TARGET_NAME)
 else
-  MK_DEFBASE := $(TARGET_DEFNAME)
+  MK_DEFBASENAME := $(TARGET_DEFNAME)
+endif
 endif
 
-MK_DEFNAME := $(TARGET_PATH)/$(MK_DEFBASE).def
+MK_DEFNAME := $(TARGET_PATH)/$(MK_DEFBASENAME).def
 ifeq ($(TARGET_DEFONLY),yes)
   MK_EDFNAME := $(MK_DEFNAME)
 else
-  MK_EDFNAME := $(TARGET_PATH)/$(MK_DEFBASE).edf
+  MK_EDFNAME := $(TARGET_PATH)/$(MK_DEFBASENAME).edf
 endif
 
 
@@ -489,7 +527,6 @@ endif
 ifeq ($(TARGET_ENTRY),)
   TARGET_ENTRY := $(MK_DEFENTRY)
 endif
-
 
 #
 # Include details of the OS configuration
@@ -555,7 +592,6 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS) $(MK_DEFNAME)
 
 else # MK_IMPLIBONLY
 
-
 all: $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
 
 
@@ -598,7 +634,7 @@ ifeq ($(MK_EXETYPE),dll)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp $(MK_EXTRACMD)
+		--output-exp temp.exp $(MK_KILLAT) $(MK_EXTRACMD)
 	- $(RM) base.tmp
 endif
 	$(LD_CC) $(TARGET_LFLAGS) \
@@ -641,7 +677,7 @@ ifeq ($(MK_EXETYPE),dll)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp $(MK_EXTRACMD)
+		--output-exp temp.exp $(MK_KILLAT) $(MK_EXTRACMD)
 	- $(RM) base.tmp
 endif
 	$(LD_CC) $(TARGET_LFLAGS) \
@@ -751,7 +787,7 @@ endif # MK_MODE
 endif # MK_IMPLIBONLY
 
 
-$(MK_FULLRES): $(PATH_TO_TOP)/include/reactos/buildno.h $(TARGET_PATH)/$(MK_RES_BASE).rc
+$(MK_FULLRES): $(PATH_TO_TOP)/include/reactos/buildno.h $(MK_RES_SRC)
 
 ifeq ($(MK_DEPENDS),yes)
 depends:
@@ -777,9 +813,9 @@ MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d)
 MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
 clean: $(SUBDIRS:%=%_clean)
-	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
+	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
-	  junk.tmp base.tmp temp.exp \
+	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_GENERATED_MAKEFILE) \
 	  $(TARGET_CLEAN)
 
 ifneq ($(TARGET_HEADERS),)
@@ -844,6 +880,15 @@ endif # MK_MODE
 
 endif # MK_IMPLIBONLY
 
+ifeq ($(TARGET_TYPE),winedll)
+Makefile.ros: Makefile.in Makefile.ros-template
+	$(TOOLS_PATH)/wine2ros/wine2ros Makefile.in Makefile.ros-template Makefile.ros
+
+$(MK_RC_BINARIES): $(TARGET_RC_BINSRC)
+	$(TOOLS_PATH)/bin2res/bin2res -f -o $@ $(TARGET_RC_BINSRC)
+
+$(MK_RESOURCE): $(MK_RC_BINARIES)
+endif
 
 .PHONY: all depends implib clean install dist bootcd depends
 
@@ -913,6 +958,8 @@ endif # ROS_USE_PCH
 	$(NASM_CMD) $(NFLAGS) $(TARGET_NFLAGS) $< -o $@
 %.coff: %.rc
 	$(RC) $(TARGET_RCFLAGS) $(RCINC) $< -o $@
+%.spec.def: %.spec
+	$(WINEBUILD) $(DEFS) -o $@ --def $<
 # Kill implicit rule
 .o:;
 

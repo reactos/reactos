@@ -26,14 +26,8 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "objbase.h"
 #include "ole2.h"
@@ -41,15 +35,12 @@
 #include "rpc.h"
 #include "winerror.h"
 #include "winreg.h"
-#ifndef __REACTOS__
 #include "wownt32.h"
-#endif
 #include "wtypes.h"
 #include "wine/unicode.h"
-#ifndef __REACTOS__
 #include "wine/winbase16.h"
-#endif
 #include "compobj_private.h"
+#include "ifs.h"
 
 #include "wine/debug.h"
 

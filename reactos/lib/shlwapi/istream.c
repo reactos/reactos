@@ -20,9 +20,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include "wine/icom.h"
-#endif
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
@@ -163,7 +160,7 @@ static HRESULT WINAPI IStream_fnSeek(IStream *iface, LARGE_INTEGER dlibMove,
   ICOM_THIS(ISHFileStream, iface);
   DWORD dwPos;
 
-  TRACE("(%p,%ld,%ld,%p)\n", This, dlibMove.u.LowPart, dwOrigin, pNewPos);
+  TRACE("(%p,%ld,%ld,%p)\n", This, dlibMove.s.LowPart, dwOrigin, pNewPos);
 
   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
   dwPos = SetFilePointer(This->hFile, dlibMove.u.LowPart, NULL, dwOrigin);
@@ -181,11 +178,9 @@ static HRESULT WINAPI IStream_fnSeek(IStream *iface, LARGE_INTEGER dlibMove,
  */
 static HRESULT WINAPI IStream_fnSetSize(IStream *iface, ULARGE_INTEGER libNewSize)
 {
-#ifndef NDEBUG
   ICOM_THIS(ISHFileStream, iface);
-#endif
 
-  TRACE("(%p,%ld)\n", This, libNewSize.u.LowPart);
+  TRACE("(%p,%ld)\n", This, libNewSize.s.LowPart);
   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
   return E_NOTIMPL;
 }
@@ -196,14 +191,12 @@ static HRESULT WINAPI IStream_fnSetSize(IStream *iface, ULARGE_INTEGER libNewSiz
 static HRESULT WINAPI IStream_fnCopyTo(IStream *iface, IStream* pstm, ULARGE_INTEGER cb,
                                        ULARGE_INTEGER* pcbRead, ULARGE_INTEGER* pcbWritten)
 {
-#ifndef NDEBUG
   ICOM_THIS(ISHFileStream, iface);
-#endif
   char copyBuff[1024];
   ULONGLONG ulSize;
   HRESULT hRet = S_OK;
 
-  TRACE("(%p,%p,%ld,%p,%p)\n", This, pstm, cb.u.LowPart, pcbRead, pcbWritten);
+  TRACE("(%p,%p,%ld,%p,%p)\n", This, pstm, cb.s.LowPart, pcbRead, pcbWritten);
 
   if (pcbRead)
     pcbRead->QuadPart = 0;
@@ -247,9 +240,7 @@ static HRESULT WINAPI IStream_fnCopyTo(IStream *iface, IStream* pstm, ULARGE_INT
  */
 static HRESULT WINAPI IStream_fnCommit(IStream *iface, DWORD grfCommitFlags)
 {
-#ifndef NDEBUG
   ICOM_THIS(ISHFileStream, iface);
-#endif
 
   TRACE("(%p,%ld)\n", This, grfCommitFlags);
   /* Currently unbuffered: This function is not needed */
@@ -261,9 +252,7 @@ static HRESULT WINAPI IStream_fnCommit(IStream *iface, DWORD grfCommitFlags)
  */
 static HRESULT WINAPI IStream_fnRevert(IStream *iface)
 {
-#ifndef NDEBUG
   ICOM_THIS(ISHFileStream, iface);
-#endif
 
   TRACE("(%p)\n", This);
   return E_NOTIMPL;
@@ -275,10 +264,8 @@ static HRESULT WINAPI IStream_fnRevert(IStream *iface)
 static HRESULT WINAPI IStream_fnLockUnlockRegion(IStream *iface, ULARGE_INTEGER libOffset,
                                                  ULARGE_INTEGER cb, DWORD dwLockType)
 {
-#ifndef NDEBUG
   ICOM_THIS(ISHFileStream, iface);
-#endif
-  TRACE("(%p,%ld,%ld,%ld)\n", This, libOffset.u.LowPart, cb.u.LowPart, dwLockType);
+  TRACE("(%p,%ld,%ld,%ld)\n", This, libOffset.s.LowPart, cb.s.LowPart, dwLockType);
   return E_NOTIMPL;
 }
 
@@ -325,9 +312,7 @@ static HRESULT WINAPI IStream_fnStat(IStream *iface, STATSTG* lpStat,
  */
 static HRESULT WINAPI IStream_fnClone(IStream *iface, IStream** ppstm)
 {
-#ifndef NDEBUG
   ICOM_THIS(ISHFileStream, iface);
-#endif
 
   TRACE("(%p)\n",This);
   if (ppstm)

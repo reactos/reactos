@@ -1503,7 +1503,7 @@ TRACKBAR_SetFocus (TRACKBAR_INFO *infoPtr, HWND hwndLoseFocus)
 static LRESULT
 TRACKBAR_Size (TRACKBAR_INFO *infoPtr, DWORD fwSizeType, INT nWidth, INT nHeight)
 {
-    TRACKBAR_CalcChannel (infoPtr);
+    TRACKBAR_InitializeThumb (infoPtr);
     TRACKBAR_AlignBuddies (infoPtr);
 
     return 0;

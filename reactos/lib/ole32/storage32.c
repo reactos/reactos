@@ -30,17 +30,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -49,9 +43,7 @@
 #include "ole2.h"      /* For Write/ReadClassStm */
 
 #include "winreg.h"
-#ifndef __REACTOS__
 #include "wine/wingdi16.h"
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
@@ -5811,11 +5803,7 @@ HRESULT WINAPI StgOpenStorageOnILockBytes(
  *
  *
  */
-#ifdef __REACTOS__
 HRESULT WINAPI StgSetTimes(OLECHAR const *str, FILETIME const *a, FILETIME const *b, FILETIME const *c )
-#else
-HRESULT WINAPI StgSetTimes(OLECHAR *str, FILETIME *a, FILETIME *b, FILETIME *c )
-#endif
 {
   FIXME("(%s, %p, %p, %p),stub!\n", debugstr_w(str), a, b, c);
   return S_OK;
@@ -6892,17 +6880,7 @@ HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName
         strcpy(IStorageCompObj.strProgIDName, strOleTypeName);
 
         /* Get the CLSID */
-#ifdef __REACTOS__
-        {
-            LPOLESTR WideBuffer;
-            WideBuffer = HeapAlloc(GetProcessHeap(), 0, IStorageCompObj.dwProgIDNameLength * sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, strOleTypeName, -1, WideBuffer, IStorageCompObj.dwProgIDNameLength);
-            hRes = CLSIDFromProgID(WideBuffer, &(IStorageCompObj.clsid));
-            HeapFree(GetProcessHeap(), 0, WideBuffer);
-        }
-#else
         hRes = CLSIDFromProgID16(IStorageCompObj.strProgIDName, &(IStorageCompObj.clsid));
-#endif
 
         if(hRes == S_OK)
         {
@@ -7017,19 +6995,11 @@ void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, DWORD d
         OlePres.dwExtentY = -dwExtentY;
 
         /* Set Data and Length */
-#ifdef __REACTOS__
-        if(dwDataLength > sizeof(METAFILEPICT))
-        {
-            OlePres.dwSize = dwDataLength - sizeof(METAFILEPICT);
-            OlePres.pData = &(pData[8]);
-        }
-#else
         if(dwDataLength > sizeof(METAFILEPICT16))
         {
             OlePres.dwSize = dwDataLength - sizeof(METAFILEPICT16);
             OlePres.pData = &(pData[8]);
         }
-#endif
         /* Save OlePres000 Data to Stream */
         hRes = IStream_Write(pStream, OlePres.byUnknown1, nHeaderSize, NULL);
         hRes = IStream_Write(pStream, &(OlePres.dwExtentX), sizeof(OlePres.dwExtentX), NULL);
@@ -7253,11 +7223,7 @@ void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
     if(hRes == S_OK)
     {
         LARGE_INTEGER iSeekPos;
-#ifdef __REACTOS__
-        METAFILEPICT MetaFilePict;
-#else
         METAFILEPICT16 MetaFilePict;
-#endif
         char strMetafilePictName[] = "METAFILEPICT";
 
         /* Set the TypeID for a Metafile */
@@ -7282,11 +7248,7 @@ void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
         if(olePress.dwSize > 0)
         {
             /* Set Length */
-#ifdef __REACTOS__
-            pOleStreamData[1].dwDataLength = olePress.dwSize + sizeof(METAFILEPICT);
-#else
-            pOleStreamData[1].dwDataLength = olePress.dwSize + sizeof(METAFILEPICT16);
-#endif
+            pOleStreamData[1].dwDataLength  = olePress.dwSize + sizeof(METAFILEPICT16);
 
             /* Set MetaFilePict struct */
             MetaFilePict.mm = 8;
@@ -7297,11 +7259,7 @@ void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
             /* Get Metafile Data */
             pOleStreamData[1].pData = (BYTE *) HeapAlloc(GetProcessHeap(),0,pOleStreamData[1].dwDataLength);
             memcpy(pOleStreamData[1].pData, &MetaFilePict, sizeof(MetaFilePict));
-#ifdef __REACTOS__
-            IStream_Read(pStream, &(pOleStreamData[1].pData[sizeof(MetaFilePict)]), pOleStreamData[1].dwDataLength-sizeof(METAFILEPICT), NULL);
-#else
             IStream_Read(pStream, &(pOleStreamData[1].pData[sizeof(MetaFilePict)]), pOleStreamData[1].dwDataLength-sizeof(METAFILEPICT16), NULL);
-#endif
         }
         IStream_Release(pStream);
     }
@@ -7477,13 +7435,8 @@ HRESULT WINAPI OleConvertIStorageToOLESTREAM (
 /***********************************************************************
  *		GetConvertStg (OLE32.@)
  */
-#ifdef __REACTOS__
-HRESULT WINAPI GetConvertStg(LPSTORAGE guid) {
-    FIXME("(%s), unimplemented stub!\n",debugstr_guid((LPGUID)guid));
-#else
-HRESULT WINAPI GetConvertStg(LPGUID guid) {
-    FIXME("(%s), unimplemented stub!\n",debugstr_guid(guid));
-#endif
+HRESULT WINAPI GetConvertStg(IStorage *stg) {
+    FIXME("unimplemented stub!\n");
     return E_FAIL;
 }
 

@@ -25,23 +25,17 @@
 #include <stdarg.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
-#ifndef __REACTOS__
 #include "wine/winbase16.h"
-#endif
 #include "objbase.h"
 #include "ole2.h"
 #include "winerror.h"
+
+#include "ifs.h"
 
 #include "wine/debug.h"
 

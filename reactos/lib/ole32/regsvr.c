@@ -23,23 +23,14 @@
 #include <stdarg.h>
 #include <string.h>
 
-#ifdef __REACTOS__
-#include <wine/icom.h>
-#endif
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "winreg.h"
 #include "winerror.h"
 
 #include "ole2.h"
 #include "olectl.h"
-#ifdef __REACTOS__
-#include "ocidl.h"
-#endif
 
 #include "wine/debug.h"
 

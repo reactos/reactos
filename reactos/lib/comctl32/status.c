@@ -886,12 +886,10 @@ STATUSBAR_WMCreate (HWND hwnd, LPCREATESTRUCTA lpCreate)
 
     dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
 
-#ifndef __REACTOS__
     /* statusbars on managed windows should not have SIZEGRIP style */
     if ((dwStyle & SBARS_SIZEGRIP) && lpCreate->hwndParent)
         if (GetWindowLongW (lpCreate->hwndParent, GWL_EXSTYLE) & WS_EX_MANAGED)
             SetWindowLongW (hwnd, GWL_STYLE, dwStyle & ~SBARS_SIZEGRIP);
-#endif
 
     if ((hdc = GetDC (hwnd))) {
 	TEXTMETRICW tm;

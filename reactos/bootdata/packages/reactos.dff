@@ -48,6 +48,7 @@ drivers\net\tdi\tdi.sys                 2
 drivers\net\wshtcpip\wshtcpip.dll       1
 drivers\net\dd\ne2000\ne2000.sys        2
 lib\advapi32\advapi32.dll               1
+lib\comctl32\comctl32.dll               1
 lib\crtdll\crtdll.dll                   1
 lib\fmifs\fmifs.dll                     1
 lib\freetype\freetype.dll               1
@@ -63,9 +64,13 @@ lib\msgina\msgina.dll                   1
 lib\msvcrt\msvcrt.dll                   1
 lib\msvcrt\msvcrt20.dll                 1
 lib\ntdll\ntdll.dll                     1
+lib\ole32\ole32.dll                     1
 lib\secur32\secur32.dll                 1
+lib\shell32\shell32.dll                 1
+lib\shlwapi\shlwapi.dll	                1
 lib\syssetup\syssetup.dll               1
 lib\twain\twain_32.dll                  1
+lib\unicode\libwine_unicode.dll         1
 lib\user32\user32.dll                   1
 lib\version\version.dll                 1
 lib\winspool\winspool.drv               1

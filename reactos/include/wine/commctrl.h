@@ -15,6 +15,22 @@ extern "C" {
 #endif
 #endif
 
+#ifndef SNDMSGA
+#ifdef __cplusplus
+#define SNDMSGA ::SendMessageA
+#else
+#define SNDMSGA SendMessageA
+#endif
+#endif /* ifndef SNDMSGA */
+
+#ifndef SNDMSGW
+#ifdef __cplusplus
+#define SNDMSGW ::SendMessageW
+#else
+#define SNDMSGW SendMessageW
+#endif
+#endif /* ifndef SNDMSGA */
+
 #ifndef SNDMSG
 #ifdef __cplusplus
 #define SNDMSG ::SendMessage
@@ -1677,6 +1693,7 @@ extern "C" {
 #define RBBIM_IDEALSIZE 512
 #define RBBIM_LPARAM 1024
 #define RBBIM_HEADERSIZE 2048
+#define RB_GETBANDINFO (WM_USER+5)
 #define RB_HITTEST (WM_USER+8)
 #define RB_GETRECT (WM_USER+9)
 #define RB_IDTOINDEX (WM_USER+16)
@@ -1721,11 +1738,9 @@ extern "C" {
 #ifdef UNICODE
 #define SB_SETTIPTEXT	SB_SETTIPTEXTW
 #define SB_GETTIPTEXT	SB_GETTIPTEXTW
-#define RB_GETBANDINFO	RB_GETBANDINFOW
 #else
 #define SB_SETTIPTEXT	SB_SETTIPTEXTA
 #define SB_GETTIPTEXT	SB_GETTIPTEXTA
-#define RB_GETBANDINFO	RB_GETBANDINFOA
 #endif
 #else
 #define RB_GETBANDINFO (WM_USER+5)
@@ -2350,7 +2365,7 @@ typedef struct tagLVFINDINFOA {
 	LPARAM lParam;
 	POINT pt;
 	UINT vkDirection;
-} LVFINDINFOA, FAR* LPFINDINFOA;
+} LVFINDINFOA, FAR* LPLVFINDINFOA;
 #define _LV_FINDINFOA tagLVFINDINFOA
 #define LV_FINDINFOA LVFINDINFOA
 typedef struct tagLVFINDINFOW {
@@ -2359,7 +2374,7 @@ typedef struct tagLVFINDINFOW {
 	LPARAM lParam;
 	POINT pt;
 	UINT vkDirection;
-} LVFINDINFOW, FAR* LPFINDINFOW;
+} LVFINDINFOW, FAR* LPLVFINDINFOW;
 #define _LV_FINDINFOW tagLVFINDINFOW
 #define LV_FINDINFOW LVFINDINFOW
 typedef struct _LVHITTESTINFO {
@@ -2833,7 +2848,11 @@ void WINAPI GetEffectiveClientRect(HWND,LPRECT,LPINT);
 #define Header_GetItemCount(w) (int)SNDMSG((w),HDM_GETITEMCOUNT,0,0)
 #define Header_InsertItem(w,i,phdi) (int)SNDMSG((w),HDM_INSERTITEM,(WPARAM)(int)(i),(LPARAM)(const HD_ITEM*)(phdi))
 #define Header_DeleteItem(w,i) (BOOL)SNDMSG((w),HDM_DELETEITEM,(WPARAM)(int)(i),0)
+#define Header_GetItemA(w,i,phdi) (BOOL)SNDMSGA((w),HDM_GETITEMA,(WPARAM)(int)(i),(LPARAM)(HD_ITEMA*)(phdi))
+#define Header_GetItemW(w,i,phdi) (BOOL)SNDMSGW((w),HDM_GETITEMW,(WPARAM)(int)(i),(LPARAM)(HD_ITEMW*)(phdi))
 #define Header_GetItem(w,i,phdi) (BOOL)SNDMSG((w),HDM_GETITEM,(WPARAM)(int)(i),(LPARAM)(HD_ITEM*)(phdi))
+#define Header_SetItemA(w,i,phdi) (BOOL)SNDMSGA((w),HDM_SETITEMA,(WPARAM)(int)(i),(LPARAM)(const HD_ITEMA*)(phdi))
+#define Header_SetItemW(w,i,phdi) (BOOL)SNDMSGW((w),HDM_SETITEMW,(WPARAM)(int)(i),(LPARAM)(const HD_ITEMW*)(phdi))
 #define Header_SetItem(w,i,phdi) (BOOL)SNDMSG((w),HDM_SETITEM,(WPARAM)(int)(i),(LPARAM)(const HD_ITEM*)(phdi))
 #define Header_Layout(w,l) (BOOL)SNDMSG((w),HDM_LAYOUT,0,(LPARAM)(HD_LAYOUT*)(l))
 #if (_WIN32_IE >= 0x0300)
@@ -2930,16 +2949,24 @@ int WINAPI LBItemFromPt(HWND,POINT,BOOL);
 #define ListView_GetBkColor(w) (COLORREF)SNDMSG((w),LVM_GETBKCOLOR,0,0)
 #define ListView_GetImageList(w,i) (HIMAGELIST)SNDMSG((w),LVM_GETIMAGELIST,(i),0)
 #define ListView_GetItemCount(w) (int)SNDMSG((w),LVM_GETITEMCOUNT,0,0)
+#define ListView_GetItemA(hwnd,pitem) (BOOL)SNDMSGA((hwnd),LVM_GETITEMA,0,(LPARAM)(LVITEMA *)(pitem))
+#define ListView_GetItemW(hwnd,pitem) (BOOL)SNDMSGW((hwnd),LVM_GETITEMW,0,(LPARAM)(LVITEMW *)(pitem))
 #define ListView_GetItem(w,i) (BOOL)SNDMSG((w),LVM_GETITEM,0,(LPARAM)(i))
 #define ListView_SetBkColor(w,c) (BOOL)SNDMSG((w),LVM_SETBKCOLOR,0,(LPARAM)c)
 #define ListView_SetImageList(w,h,i) (HIMAGELIST)(UINT)SNDMSG((w),LVM_SETIMAGELIST,(i),(LPARAM)(h))
+#define ListView_SetItemA(hwnd,pitem) (BOOL)SNDMSGA((hwnd),LVM_SETITEMA,0,(LPARAM)(const LVITEMA *)(pitem))
+#define ListView_SetItemW(hwnd,pitem) (BOOL)SNDMSGW((hwnd),LVM_SETITEMW,0,(LPARAM)(const LVITEMW *)(pitem))
 #define ListView_SetItem(w,i) (BOOL)SNDMSG((w),LVM_SETITEM,0,(LPARAM)(const LV_ITEM*)(i))
+#define ListView_InsertItemA(hwnd,pitem) (int)SNDMSGA((hwnd),LVM_INSERTITEMA,0,(LPARAM)(const LVITEMA *)(pitem))
+#define ListView_InsertItemW(hwnd,pitem) (int)SNDMSGW((hwnd),LVM_INSERTITEMW,0,(LPARAM)(const LVITEMW *)(pitem))
 #define ListView_InsertItem(w,i) (int)SNDMSG((w),LVM_INSERTITEM,0,(LPARAM)(const LV_ITEM*)(i))
 #define ListView_DeleteItem(w,i) (BOOL)SNDMSG((w),LVM_DELETEITEM,i,0)
 #define ListView_DeleteAllItems(w) (BOOL)SNDMSG((w),LVM_DELETEALLITEMS,0,0)
 #define ListView_GetCallbackMask(w) (BOOL)SNDMSG((w),LVM_GETCALLBACKMASK,0,0)
 #define ListView_SetCallbackMask(w,m) (BOOL)SNDMSG((w),LVM_SETCALLBACKMASK,m,0)
 #define ListView_GetNextItem(w,i,f) (int)SNDMSG((w),LVM_GETNEXTITEM,i,MAKELPARAM((f),0))
+#define ListView_FindItemA(w,i,p) (int)SNDMSGA((w), LVM_FINDITEMA,i,(LPARAM)(const LV_FINDINFOA*)(p))
+#define ListView_FindItemW(w,i,p) (int)SNDMSGW((w), LVM_FINDITEMW,i,(LPARAM)(const LV_FINDINFOW*)(p))
 #define ListView_FindItem(w,i,p) (int)SNDMSG((w), LVM_FINDITEM,i,(LPARAM)(const LV_FINDINFO*)(p))
 #define ListView_GetItemRect(w,i,p,c) (BOOL)SNDMSG((w),LVM_GETITEMRECT,i,((p)?(((LPRECT)(p))->left=(c),(LPARAM)(LPRECT)(p)):0))
 #define ListView_SetItemPosition(w,i,x,y) (BOOL)SNDMSG((w),LVM_SETITEMPOSITION,i,MAKELPARAM(x,y))
@@ -2951,10 +2978,14 @@ int WINAPI LBItemFromPt(HWND,POINT,BOOL);
 #define ListView_Scroll(w,dx,dy) (BOOL)SNDMSG((w),LVM_SCROLL,dx,dy)
 #define ListView_RedrawItems(w,f,l) (BOOL)SNDMSG((w),LVM_REDRAWITEMS,f,l)
 #define ListView_Arrange(w,c) (BOOL)SNDMSG((w),LVM_ARRANGE,c,0)
+#define ListView_EditLabelA(hwndLV, i) (HWND)SNDMSGA((hwndLV),LVM_EDITLABELA,(WPARAM)(int)(i), 0L)
+#define ListView_EditLabelW(hwndLV, i) (HWND)SNDMSGW((hwndLV),LVM_EDITLABELW,(WPARAM)(int)(i), 0L)
 #define ListView_EditLabel(w,i) (HWND)SNDMSG((w),LVM_EDITLABEL,i,0)
 #define ListView_GetEditControl(w) (HWND)SNDMSG((w),LVM_GETEDITCONTROL,0,0)
 #define ListView_GetColumn(w,i,p) (BOOL)SNDMSG((w),LVM_GETCOLUMN,i,(LPARAM)(LV_COLUMN*)(p))
 #define ListView_SetColumn(w,i,p) (BOOL)SNDMSG((w),LVM_SETCOLUMN,i,(LPARAM)(const LV_COLUMN*)(p))
+#define ListView_InsertColumnA(hwnd,iCol,pcol) (int)SNDMSGA((hwnd),LVM_INSERTCOLUMNA,(WPARAM)(INT)(iCol),(LPARAM)(const LVCOLUMNA *)(pcol))
+#define ListView_InsertColumnW(hwnd,iCol,pcol) (int)SNDMSGW((hwnd),LVM_INSERTCOLUMNW,(WPARAM)(INT)(iCol),(LPARAM)(const LVCOLUMNW *)(pcol))
 #define ListView_InsertColumn(w,i,p) (int)SNDMSG((w),LVM_INSERTCOLUMN,i,(LPARAM)(const LV_COLUMN*)(p))
 #define ListView_DeleteColumn(w,i) (BOOL)SNDMSG((w),LVM_DELETECOLUMN,i,0)
 #define ListView_GetColumnWidth(w,i) (int)SNDMSG((w),LVM_GETCOLUMNWIDTH,i,0)
@@ -3049,6 +3080,8 @@ BOOL WINAPI ShowHideMenuCtl(HWND,UINT,PINT);
 #define TabCtrl_SetImageList(w,h) (HIMAGELIST)SNDMSG((w),TCM_SETIMAGELIST,0,(LPARAM)(UINT)(h))
 #define TabCtrl_GetItemCount(w) (int)SNDMSG((w),TCM_GETITEMCOUNT,0,0)
 BOOL WINAPI _TrackMouseEvent(LPTRACKMOUSEEVENT);
+#define TreeView_InsertItemA(w,i) (HTREEITEM)SNDMSGA((w),TVM_INSERTITEMA,0,(LPARAM)(LPTV_INSERTSTRUCTA)(i))
+#define TreeView_InsertItemW(w,i) (HTREEITEM)SNDMSGW((w),TVM_INSERTITEMW,0,(LPARAM)(LPTV_INSERTSTRUCTW)(i))
 #define TreeView_InsertItem(w,i) (HTREEITEM)SNDMSG((w),TVM_INSERTITEM,0,(LPARAM)(LPTV_INSERTSTRUCT)(i))
 #define TreeView_DeleteItem(w,i) (BOOL)SNDMSG((w),TVM_DELETEITEM,0,(LPARAM)(HTREEITEM)(i))
 #define TreeView_DeleteAllItems(w) (BOOL)SNDMSG((w),TVM_DELETEITEM,0,(LPARAM)TVI_ROOT)
@@ -3478,4 +3511,24 @@ typedef REBARBANDINFOA REBARBANDINFO,*LPREBARBANDINFO;
 #ifdef __cplusplus
 }
 #endif
+
+#define TBSTYLE_EX_UNDOC1               0x00000004 /* similar to TBSTYLE_WRAPABLE */
+
+/* undocumented messages in Toolbar */
+#define TB_UNKWN45D              (WM_USER+93)
+#define TB_UNKWN45E              (WM_USER+94)
+#define TB_UNKWN460              (WM_USER+96)
+#define TB_UNKWN463              (WM_USER+99)
+#define TB_UNKWN464              (WM_USER+100)
+
+#define RBBS_USECHEVRON         0x00000200
+#define RBHT_CHEVRON            0x0008
+#define RBN_CHEVRONPUSHED       (RBN_FIRST-10)
+#define RB_PUSHCHEVRON          (WM_USER+43)
+
+#define HDM_SETBITMAPMARGIN     (HDM_FIRST+20)
+#define HDM_GETBITMAPMARGIN     (HDM_FIRST+21)
+
+#define FLATSB_CLASSA         "flatsb_class32"
+
 #endif

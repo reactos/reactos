@@ -26,21 +26,16 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef __REACTOS__
-#include "wine/icom.h"
-#endif
 #include "wine/unicode.h"
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
 #include "winreg.h"
+#include "winnls.h"
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
 #include "wine/debug.h"
-#ifdef __REACTOS__
-UINT WINAPI GetSystemWindowsDirectoryW(LPWSTR,UINT);
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -2950,7 +2945,7 @@ static BOOL WINAPI SHLWAPI_UseSystemForSystemFolders()
  *  TRUE  If the path was changed to/already was a system folder
  *  FALSE If the path is invalid or SetFileAttributesA() fails
  */
-BOOL WINAPI PathMakeSystemFolderA(LPCSTR lpszPath)
+BOOL WINAPI PathMakeSystemFolderA(LPSTR lpszPath)
 {
   BOOL bRet = FALSE;
 
@@ -2970,7 +2965,7 @@ BOOL WINAPI PathMakeSystemFolderA(LPCSTR lpszPath)
  *
  * See PathMakeSystemFolderA.
  */
-BOOL WINAPI PathMakeSystemFolderW(LPCWSTR lpszPath)
+BOOL WINAPI PathMakeSystemFolderW(LPWSTR lpszPath)
 {
   DWORD dwDefaultAttr = FILE_ATTRIBUTE_READONLY, dwAttr;
   WCHAR buff[MAX_PATH];
@@ -3217,7 +3212,7 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR lpszUrl, LPWSTR lpszPath,
   if (lpszUrl[1] != ':' && lpszUrl[1] != '|' && isalphaW(*lpszUrl))
     return E_INVALIDARG;
 
-  hr = UrlUnescapeW(lpszUrl, lpszPath, pcchPath, dwFlags);
+  hr = UrlUnescapeW((LPWSTR) lpszUrl, lpszPath, pcchPath, dwFlags);
   if (lpszPath[1] == '|')
     lpszPath[1] = ':';
 
@@ -3365,7 +3360,7 @@ BOOL WINAPI PathRelativePathToW(LPWSTR lpszPath, LPCWSTR lpszFrom, DWORD dwAttrF
  *  Failure: FALSE, if lpszPath is NULL, empty, not a directory, or calling
  *           SetFileAttributesA() fails.
  */
-BOOL WINAPI PathUnmakeSystemFolderA(LPCSTR lpszPath)
+BOOL WINAPI PathUnmakeSystemFolderA(LPSTR lpszPath)
 {
   DWORD dwAttr;
 
@@ -3384,7 +3379,7 @@ BOOL WINAPI PathUnmakeSystemFolderA(LPCSTR lpszPath)
  *
  * See PathUnmakeSystemFolderA.
  */
-BOOL WINAPI PathUnmakeSystemFolderW(LPCWSTR lpszPath)
+BOOL WINAPI PathUnmakeSystemFolderW(LPWSTR lpszPath)
 {
   DWORD dwAttr;
 
@@ -3694,7 +3689,7 @@ BOOL WINAPI PathIsDirectoryEmptyW(LPCWSTR lpszPath)
  *  The match is made against the end of the suffix string, so for example:
  *  lpszSuffix="fooBAR" matches "BAR", but lpszSuffix="fooBARfoo" does not.
  */
-int WINAPI PathFindSuffixArrayA(LPCSTR lpszSuffix, LPCSTR *lppszArray, int dwCount)
+LPCSTR WINAPI PathFindSuffixArrayA(LPCSTR lpszSuffix, LPCSTR *lppszArray, int dwCount)
 {
   size_t dwLen;
   int dwRet = 0;
@@ -3711,13 +3706,13 @@ int WINAPI PathFindSuffixArrayA(LPCSTR lpszSuffix, LPCSTR *lppszArray, int dwCou
       if (dwCompareLen < dwLen)
       {
         if (!strcmp(lpszSuffix + dwLen - dwCompareLen, *lppszArray))
-          return dwRet; /* Found */
+          return *lppszArray; /* Found */
       }
       dwRet++;
       lppszArray++;
     }
   }
-  return 0;
+  return NULL;
 }
 
 /*************************************************************************
@@ -3725,7 +3720,7 @@ int WINAPI PathFindSuffixArrayA(LPCSTR lpszSuffix, LPCSTR *lppszArray, int dwCou
  *
  * See PathFindSuffixArrayA.
  */
-int WINAPI PathFindSuffixArrayW(LPCWSTR lpszSuffix, LPCWSTR *lppszArray, int dwCount)
+LPCWSTR WINAPI PathFindSuffixArrayW(LPCWSTR lpszSuffix, LPCWSTR *lppszArray, int dwCount)
 {
   size_t dwLen;
   int dwRet = 0;
@@ -3742,13 +3737,13 @@ int WINAPI PathFindSuffixArrayW(LPCWSTR lpszSuffix, LPCWSTR *lppszArray, int dwC
       if (dwCompareLen < dwLen)
       {
         if (!strcmpW(lpszSuffix + dwLen - dwCompareLen, *lppszArray))
-          return dwRet; /* Found */
+          return *lppszArray; /* Found */
       }
       dwRet++;
       lppszArray++;
     }
   }
-  return 0;
+  return NULL;
 }
 
 /*************************************************************************

@@ -5,7 +5,7 @@
 #include <stdarg.h>
 #include <wchar.h>
 
-ULONG DbgPrint(PCH Format,...);
+unsigned long DbgPrint(char *Format,...);
 
 #define DPRINT1 DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
 
@@ -30,16 +30,16 @@ struct _GUID;
    quotes.  The string will be valid for some time, but not indefinitely
    as strings are re-used.  */
 extern const char *wine_dbgstr_an( const char * s, int n );
-extern const char *wine_dbgstr_wn( const WCHAR *s, int n );
+extern const char *wine_dbgstr_wn( const wchar_t *s, int n );
 extern const char *wine_dbgstr_guid( const struct _GUID *id );
 
 inline static const char *debugstr_an( const char * s, int n ) { return wine_dbgstr_an( s, n ); }
-inline static const char *debugstr_wn( const WCHAR *s, int n ) { return wine_dbgstr_wn( s, n ); }
+inline static const char *debugstr_wn( const wchar_t *s, int n ) { return wine_dbgstr_wn( s, n ); }
 inline static const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
 inline static const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, 80 ); }
-inline static const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, 80 ); }
+inline static const char *debugstr_w( const wchar_t *s ) { return wine_dbgstr_wn( s, 80 ); }
 inline static const char *debugres_a( const char *s )  { return wine_dbgstr_an( s, 80 ); }
-inline static const char *debugres_w( const WCHAR *s ) { return wine_dbgstr_wn( s, 80 ); }
+inline static const char *debugres_w( const wchar_t *s ) { return wine_dbgstr_wn( s, 80 ); }
 
 #define TRACE        DPRINT
 #define TRACE_(ch)   DPRINT

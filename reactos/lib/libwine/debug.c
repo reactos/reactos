@@ -199,3 +199,11 @@ const char *wine_dbgstr_guid(const GUID *id)
     }
     return str;
 }
+
+/* varargs wrapper for __wine_dbg_vsprintf */
+const char *wine_dbg_sprintf( const char *format, ... )
+{
+    static char fixme[] = "FIXME: implement wine_dbg_sprintf";
+
+    return fixme;
+}

@@ -26,17 +26,10 @@
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
-#ifdef __REACTOS__
-#include "wingdi.h"
-#endif
 #include "winuser.h"
 #include "wtypes.h"
 #include "wine/debug.h"
 #include "ole2.h"
-#ifdef __REACTOS__
-#include <wine/icom.h>
-BOOL WINAPI IsValidInterface(LPUNKNOWN punk);
-#endif
 
 #include "compobj_private.h"
 

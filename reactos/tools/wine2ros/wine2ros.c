@@ -94,7 +94,7 @@ static void
 write_line(char *line)
 {
   int n_out;
-  char buf[200];
+  char buf[2000];
 
   memset(buf, 0, sizeof(buf));
   strcpy(buf, line);
@@ -642,7 +642,7 @@ write_makefile(PMAKEFILE_INFO makefile_info)
 
   close_file();
 
-  printf("ReactOS makefile successfully generated.");
+  printf("ReactOS makefile successfully generated.\n");
 }
 
 static char HELP[] =

@@ -1,6 +1,14 @@
 *.coff
 *.dll
-*.o
 *.d
+*.a
+*.o
 *.sym
 *.map
+*.tmp
+Makefile.ros
+drag_copy.cur
+drag_link.cur
+drag_move.cur
+nodrop.cur 
+ole32.spec.def

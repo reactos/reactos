@@ -1,4 +1,4 @@
-/* $Id: listbox.c,v 1.14 2003/12/14 19:36:15 sedwards Exp $
+/* $Id: listbox.c,v 1.15 2004/01/02 19:49:47 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -16,7 +16,6 @@
 #include "windows.h"
 #include "controls.h"
 #include "user32/regcontrol.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 /* Unimplemented yet:
@@ -611,14 +610,14 @@ static void LISTBOX_PaintItem( HWND hwnd, LB_DESCR *descr, HDC hdc,
         else if (!(descr->style & LBS_USETABSTOPS))
             ExtTextOutW( hdc, rect->left + 1, rect->top,
                          ETO_OPAQUE | ETO_CLIPPED, rect, item->str,
-                         strlenW(item->str), NULL );
+                         wcslen(item->str), NULL );
         else
 	{
 	    /* Output empty string to paint background in the full width. */
             ExtTextOutW( hdc, rect->left + 1, rect->top,
                          ETO_OPAQUE | ETO_CLIPPED, rect, NULL, 0, NULL );
             TabbedTextOutW( hdc, rect->left + 1 , rect->top,
-                            item->str, strlenW(item->str),
+                            item->str, wcslen(item->str),
                             descr->nb_tabs, descr->tabs, 0);
 	}
         if (item && item->selected)
@@ -762,15 +761,15 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPARAM lParam, BOOL 
     if (HAS_STRINGS(descr))
     {
         if (!lParam)
-            return strlenW(descr->items[index].str);
+            return wcslen(descr->items[index].str);
 
 	TRACE("index %d (0x%04x) %s\n", index, index, debugstr_w(descr->items[index].str));
 
         if(unicode)
         {
             LPWSTR buffer = (LPWSTR)lParam;
-            strcpyW( buffer, descr->items[index].str );
-            return strlenW(buffer);
+            wcscpy( buffer, descr->items[index].str );
+            return wcslen(buffer);
         }
         else
         {
@@ -903,20 +902,20 @@ static INT LISTBOX_FindString( HWND hwnd, LB_DESCR *descr, INT start,
 #define CHECK_DRIVE(item) \
     if ((item)->str[0] == '[') \
     { \
-        if (!strncmpiW( str, (item)->str+1, len )) return i; \
-        if (((item)->str[1] == '-') && !strncmpiW(str, (item)->str+2, len)) \
+        if (!_wcsnicmp( str, (item)->str+1, len )) return i; \
+        if (((item)->str[1] == '-') && !_wcsnicmp(str, (item)->str+2, len)) \
         return i; \
     }
 
-            INT len = strlenW(str);
+            INT len = wcslen(str);
             for (i = start + 1; i < descr->nb_items; i++, item++)
             {
-               if (!strncmpiW( str, item->str, len )) return i;
+               if (!_wcsnicmp( str, item->str, len )) return i;
                CHECK_DRIVE(item);
             }
             for (i = 0, item = descr->items; i <= start; i++, item++)
             {
-               if (!strncmpiW( str, item->str, len )) return i;
+               if (!_wcsnicmp( str, item->str, len )) return i;
                CHECK_DRIVE(item);
             }
 #undef CHECK_DRIVE
@@ -1549,12 +1548,12 @@ static LRESULT LISTBOX_InsertString( HWND hwnd, LB_DESCR *descr, INT index,
     {
         static const WCHAR empty_stringW[] = { 0 };
         if (!str) str = empty_stringW;
-        if (!(new_str = HeapAlloc( GetProcessHeap(), 0, (strlenW(str) + 1) * sizeof(WCHAR) )))
+        if (!(new_str = HeapAlloc( GetProcessHeap(), 0, (wcslen(str) + 1) * sizeof(WCHAR) )))
         {
             SEND_NOTIFICATION( hwnd, descr, LBN_ERRSPACE );
             return LB_ERRSPACE;
         }
-        strcpyW(new_str, str);
+        wcscpy(new_str, str);
     }
     else data = (DWORD)str;
 
@@ -1739,11 +1738,11 @@ static LRESULT LISTBOX_Directory( HWND hwnd, LB_DESCR *descr, UINT attrib,
                     static const WCHAR bracketW[]  = { ']',0 };
                     static const WCHAR dotW[] = { '.',0 };
                     if (!(attrib & DDL_DIRECTORY) ||
-                        !strcmpW( entry.cAlternateFileName, dotW )) continue;
+                        !wcscmp( entry.cAlternateFileName, dotW )) continue;
                     buffer[0] = '[';
-                    if (long_names) strcpyW( buffer + 1, entry.cFileName );
-                    else strcpyW( buffer + 1, entry.cAlternateFileName );
-                    strcatW(buffer, bracketW);
+                    if (long_names) wcscpy( buffer + 1, entry.cFileName );
+                    else wcscpy( buffer + 1, entry.cAlternateFileName );
+                    wcscat(buffer, bracketW);
                 }
                 else  /* not a directory */
                 {
@@ -1754,8 +1753,8 @@ static LRESULT LISTBOX_Directory( HWND hwnd, LB_DESCR *descr, UINT attrib,
                         ((attrib & ATTRIBS) != (entry.dwFileAttributes & ATTRIBS)))
                         continue;
 #undef ATTRIBS
-                    if (long_names) strcpyW( buffer, entry.cFileName );
-                    else strcpyW( buffer, entry.cAlternateFileName );
+                    if (long_names) wcscpy( buffer, entry.cFileName );
+                    else wcscpy( buffer, entry.cAlternateFileName );
                 }
                 if (!long_names) CharLowerW( buffer );
                 pos = LISTBOX_FindFileStrPos( hwnd, descr, buffer );
@@ -2593,9 +2592,9 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         if ((INT)wParam >= descr->nb_items || (INT)wParam < 0)
             return LB_ERR;
         if (!HAS_STRINGS(descr)) return sizeof(DWORD);
-        if (unicode) return strlenW( descr->items[wParam].str );
+        if (unicode) return wcslen( descr->items[wParam].str );
         return WideCharToMultiByte( CP_ACP, 0, descr->items[wParam].str,
-                                    strlenW(descr->items[wParam].str), NULL, 0, NULL, NULL );
+                                    wcslen(descr->items[wParam].str), NULL, 0, NULL, NULL );
 
     case LB_GETCURSEL:
         if (descr->nb_items==0)
