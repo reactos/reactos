@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.30 2003/10/15 20:48:19 weiden Exp $
+/* $Id: stubs.c,v 1.31 2003/11/02 16:33:33 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -850,18 +850,6 @@ NtUserQueryUserCounters(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserRegisterHotKey(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL
@@ -1019,17 +1007,6 @@ DWORD
 STDCALL
 NtUserUnloadKeyboardLayout(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserUnregisterHotKey(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 

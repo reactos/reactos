@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.46 2003/11/02 06:58:57 navaraf Exp $
+/* $Id: stubs.c,v 1.47 2003/11/02 16:32:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -293,20 +293,6 @@ RegisterDeviceNotificationW(
 }
 #endif
 
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-RegisterHotKey(
-  HWND hWnd,
-  int id,
-  UINT fsModifiers,
-  UINT vk)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
 
 /*
  * @unimplemented
@@ -380,20 +366,6 @@ WINBOOL
 STDCALL
 UnregisterDeviceNotification(
   HDEVNOTIFY Handle)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-UnregisterHotKey(
-  HWND hWnd,
-  int id)
 {
   UNIMPLEMENTED;
   return FALSE;

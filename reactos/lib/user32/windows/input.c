@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.19 2003/10/09 06:13:04 gvg Exp $
+/* $Id: input.c,v 1.20 2003/11/02 16:32:25 ekohl Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -335,10 +335,24 @@ OemKeyScan(WORD wOemChar)
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-SetDoubleClickTime(
-  UINT uInterval)
+WINBOOL STDCALL
+RegisterHotKey(HWND hWnd,
+	       int id,
+	       UINT fsModifiers,
+	       UINT vk)
+{
+  return (WINBOOL)NtUserRegisterHotKey(hWnd,
+                                       id,
+                                       fsModifiers,
+                                       vk);
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL
+SetDoubleClickTime(UINT uInterval)
 {
   return (WINBOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
                                              uInterval,
@@ -452,6 +466,17 @@ UnloadKeyboardLayout(HKL hkl)
 {
   UNIMPLEMENTED;
   return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL
+UnregisterHotKey(HWND hWnd,
+		 int id)
+{
+  return (WINBOOL)NtUserUnregisterHotKey(hWnd, id);
 }
 
 

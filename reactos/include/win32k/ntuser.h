@@ -1196,14 +1196,12 @@ NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
 			 DWORD Unknown4,
 			 DWORD Unknown5);
 
-
-DWORD
+BOOL
 STDCALL
-NtUserRegisterHotKey(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+NtUserRegisterHotKey(HWND hWnd,
+		     int id,
+		     UINT fsModifiers,
+		     UINT vk);
 
 DWORD
 STDCALL
@@ -1720,11 +1718,10 @@ NtUserUnregisterClass(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 STDCALL
-NtUserUnregisterHotKey(
-  DWORD Unknown0,
-  DWORD Unknown1);
+NtUserUnregisterHotKey(HWND hWnd,
+		       int id);
 
 DWORD
 STDCALL

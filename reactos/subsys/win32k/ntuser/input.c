@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.15 2003/10/18 20:41:10 vizzini Exp $
+/* $Id: input.c,v 1.16 2003/11/02 16:33:33 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -102,8 +102,8 @@ KeyboardThreadMain(PVOID StartContext)
 	  KEY_EVENT_RECORD KeyEvent;
 	  LPARAM lParam = 0;
 	  BOOLEAN SysKey;
-	  
-	  Status = NtReadFile (KeyboardDeviceHandle, 
+
+	  Status = NtReadFile (KeyboardDeviceHandle,
 			       NULL,
 			       NULL,
 			       NULL,
@@ -112,9 +112,9 @@ KeyboardThreadMain(PVOID StartContext)
 			       sizeof(KEY_EVENT_RECORD),
 			       NULL,
 			       NULL);
-    DPRINT( "KeyRaw: %s %04x\n",
-	      KeyEvent.bKeyDown ? "down" : "up",
-	      KeyEvent.wVirtualScanCode );
+	  DPRINT( "KeyRaw: %s %04x\n",
+		 KeyEvent.bKeyDown ? "down" : "up",
+		 KeyEvent.wVirtualScanCode );
 
 	  if (Status == STATUS_ALERTED && !InputThreadsRunning)
 	    {
@@ -125,9 +125,9 @@ KeyboardThreadMain(PVOID StartContext)
 	      DPRINT1("Win32K: Failed to read from keyboard.\n");
 	      return; //(Status);
 	    }
-	  
-    SysKey = KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED);
-	DPRINT( "Key: %s\n", KeyEvent.bKeyDown ? "down" : "up" );
+
+	  SysKey = KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED);
+	  DPRINT( "Key: %s\n", KeyEvent.bKeyDown ? "down" : "up" );
 
 	  /*
 	   * Post a keyboard message.
@@ -138,19 +138,19 @@ KeyboardThreadMain(PVOID StartContext)
 		      ((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0x40000000;
 
 	      /* Bit 24 indicates if this is an extended key */
-        if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
-          {
-            lParam |= (1 << 24);
-          }
+	      if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
+		{
+		  lParam |= (1 << 24);
+		}
 
-        if (SysKey)
-          {
-            lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
-          }
+	      if (SysKey)
+		{
+		  lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
+		}
 
-	MsqPostKeyboardMessage(SysKey ? WM_SYSKEYDOWN : WM_KEYDOWN, 
-			       KeyEvent.wVirtualKeyCode, 
-			       lParam);
+	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYDOWN : WM_KEYDOWN,
+				     KeyEvent.wVirtualKeyCode,
+				     lParam);
 	    }
 	  else
 	    {
@@ -158,16 +158,18 @@ KeyboardThreadMain(PVOID StartContext)
 		      ((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0xC0000000;
 
 	      /* Bit 24 indicates if this is an extended key */
-        if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
-          {
-            lParam |= (1 << 24);
-          }
+	      if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
+		{
+		  lParam |= (1 << 24);
+		}
 
-        if (SysKey)
-          {
-            lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
-          }
-	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYUP : WM_KEYUP, KeyEvent.wVirtualKeyCode, 
+	      if (SysKey)
+		{
+		  lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
+		}
+
+	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYUP : WM_KEYUP,
+				     KeyEvent.wVirtualKeyCode,
 				     lParam);
 	    }
 	}
