@@ -12,6 +12,9 @@
 class Directory;
 class MingwModuleHandler;
 
+extern std::string
+v2s ( const string_list& v, int wrap_at );
+
 class MingwBackend : public Backend
 {
 public:
@@ -41,6 +44,12 @@ private:
 	void DetectPipeSupport ();
 	void DetectPCHSupport ();
 	void ProcessModules ();
+	std::string GetNonModuleInstallDirectories ( const std::string& installDirectory );
+	std::string GetInstallDirectories ( const std::string& installDirectory );
+	void GetNonModuleInstallFiles ( std::vector<std::string>& out ) const;
+	void GetInstallFiles ( std::vector<std::string>& out ) const;
+	void OutputInstallfileCopyCommands ( const std::string& installDirectory );
+	void GenerateInstallTarget ();
 	FILE* fMakefile;
 	bool use_pch;
 	Directory *int_directories, *out_directories;

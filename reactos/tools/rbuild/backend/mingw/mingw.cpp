@@ -20,6 +20,28 @@ using std::map;
 typedef set<string> set_string;
 typedef map<string,Directory*> directory_map;
 
+
+string
+v2s ( const string_list& v, int wrap_at )
+{
+	if ( !v.size() )
+		return "";
+	string s;
+	int wrap_count = 0;
+	for ( size_t i = 0; i < v.size(); i++ )
+	{
+		if ( !v[i].size() )
+			continue;
+		if ( wrap_at > 0 && wrap_count++ == wrap_at )
+			s += " \\\n\t\t";
+		else if ( s.size() )
+			s += " ";
+		s += v[i];
+	}
+	return s;
+}
+
+
 class Directory
 {
 public:
@@ -262,6 +284,7 @@ MingwBackend::Process ()
 	GenerateGlobalVariables ();
 	GenerateXmlBuildFilesMacro ();
 	ProcessModules ();
+	GenerateInstallTarget ();
 	GenerateDirectories ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
@@ -589,4 +612,86 @@ MingwBackend::DetectPCHSupport ()
 
 	// TODO FIXME - eventually check for ROS_USE_PCH env var and
 	// allow that to override use_pch if true
+}
+
+string
+MingwBackend::GetNonModuleInstallDirectories ( const string& installDirectory )
+{
+	string directories;
+	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
+	{
+		const InstallFile& installfile = *ProjectNode.installfiles[i];
+		string targetDirectory ( installDirectory + SSEP + installfile.base );
+		if ( directories.size () > 0 )
+			directories += " ";
+		directories += MingwModuleHandler::PassThruCacheDirectory (
+			FixupTargetFilename ( targetDirectory ),
+			true );
+	}
+	return directories;
+}
+
+string
+MingwBackend::GetInstallDirectories ( const string& installDirectory )
+{
+	return GetNonModuleInstallDirectories ( installDirectory );
+}
+
+void
+MingwBackend::GetNonModuleInstallFiles (
+	vector<string>& out ) const
+{
+	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
+	{
+		const InstallFile& installfile = *ProjectNode.installfiles[i];
+		out.push_back ( NormalizeFilename ( installfile.GetPath () ) );
+	}
+}
+
+void
+MingwBackend::GetInstallFiles (
+	vector<string>& out ) const
+{
+	GetNonModuleInstallFiles ( out );
+}
+
+void
+MingwBackend::OutputInstallfileCopyCommands ( const string& installDirectory )
+{
+	for ( size_t i = 0; i < ProjectNode.installfiles.size (); i++ )
+	{
+		const InstallFile& installfile = *ProjectNode.installfiles[i];
+		string targetFilenameNoFixup = installDirectory + SSEP + installfile.base + SSEP + installfile.newname;
+		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
+			FixupTargetFilename ( targetFilenameNoFixup ),
+			true );
+		fprintf ( fMakefile,
+		          "\t$(ECHO_CP)\n" );
+		fprintf ( fMakefile,
+		          "\t${cp} %s %s\n",
+		          installfile.GetPath ().c_str (),
+		          targetFilename.c_str () );
+	}
+}
+
+void
+MingwBackend::GenerateInstallTarget ()
+{
+	string installDirectoryNoFixup = "reactos";
+	string installDirectory = MingwModuleHandler::PassThruCacheDirectory (
+		FixupTargetFilename ( installDirectoryNoFixup ),
+		true );
+	string installDirectories = GetInstallDirectories ( installDirectoryNoFixup );
+	vector<string> vInstallFiles;
+	GetInstallFiles ( vInstallFiles );
+	string installFiles = v2s ( vInstallFiles, 5 );
+
+	fprintf ( fMakefile,
+	          "install: all %s %s %s\n",
+	          installDirectory.c_str (),
+	          installDirectories.c_str (),
+	          installFiles.c_str () );
+	OutputInstallfileCopyCommands ( installDirectoryNoFixup );
+	fprintf ( fMakefile,
+	          "\n" );
 }

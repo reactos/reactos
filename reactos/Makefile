@@ -21,6 +21,11 @@
 #        a path separator at the end. The variable defaults to the current
 #        directory.
 #
+#    ROS_INSTALL
+#        This variable controls where to install output files to when using
+#        'make install'. N.B. Don't put a path separator at the end. The variable
+#        defaults to .\reactos.
+#
 #    ROS_BUILDMAP
 #        This variable controls if map files are to be generated for executable
 #        output files. Map files have the extension .map. The value can be either
@@ -63,6 +68,7 @@ else
 endif
 endif
 ifeq ($(HALFVERBOSEECHO),yes)
+  ECHO_CP      =@echo [COPY]     $@
   ECHO_MKDIR   =@echo [MKDIR]    $@
   ECHO_BUILDNO =@echo [BUILDNO]  $@
   ECHO_INVOKE  =@echo [INVOKE]   $<
@@ -87,6 +93,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_REGTESTS=@echo [REGTESTS] $@
   ECHO_TEST    =@echo [TEST]     $@
 else
+  ECHO_CP      =
   ECHO_MKDIR   =
   ECHO_BUILDNO =
   ECHO_INVOKE  =

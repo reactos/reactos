@@ -24,6 +24,8 @@ Project::~Project ()
 		delete linkerFlags[i];
 	for ( i = 0; i < cdfiles.size (); i++ )
 		delete cdfiles[i];
+	for ( i = 0; i < installfiles.size (); i++ )
+		delete installfiles[i];
 	delete head;
 }
 
@@ -220,6 +222,8 @@ Project::ProcessXML ( const string& path )
 	non_if_data.ProcessXML ();
 	for ( i = 0; i < cdfiles.size (); i++ )
 		cdfiles[i]->ProcessXML ();
+	for ( i = 0; i < installfiles.size (); i++ )
+		installfiles[i]->ProcessXML ();
 }
 
 void
@@ -249,6 +253,12 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		CDFile* cdfile = new CDFile ( *this, e, path );
 		cdfiles.push_back ( cdfile );
+		subs_invalid = true;
+	}
+	else if ( e.name == "installfile" )
+	{
+		InstallFile* installfile = new InstallFile ( *this, e, path );
+		installfiles.push_back ( installfile );
 		subs_invalid = true;
 	}
 	else if ( e.name == "directory" )

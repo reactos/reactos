@@ -58,6 +58,7 @@ class Property;
 class AutomaticDependency;
 class Bootstrap;
 class CDFile;
+class InstallFile;
 class PchFile;
 class StubbedComponent;
 class StubbedSymbol;
@@ -89,6 +90,7 @@ public:
 	std::vector<Module*> modules;
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<CDFile*> cdfiles;
+	std::vector<InstallFile*> installfiles;
 	IfableData non_if_data;
 
 	Project ( const std::string& filename );
@@ -514,6 +516,25 @@ public:
 	         const std::string& path );
 	~CDFile ();
 	void ProcessXML();
+	std::string GetPath () const;
+};
+
+
+class InstallFile
+{
+public:
+	const Project& project;
+	const XMLElement& node;
+	std::string name;
+	std::string base;
+	std::string newname;
+	std::string path;
+
+	InstallFile ( const Project& project,
+	              const XMLElement& bootstrapNode,
+	              const std::string& path );
+	~InstallFile ();
+	void ProcessXML ();
 	std::string GetPath () const;
 };
 

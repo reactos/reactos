@@ -117,6 +117,7 @@ RBUILD_COMMON_SOURCES = \
 		define.cpp \
 		exception.cpp \
 		include.cpp \
+		installfile.cpp \
 		linkerflag.cpp \
 		module.cpp \
 		project.cpp \
@@ -206,6 +207,10 @@ $(RBUILD_INT_)exception.o: $(RBUILD_BASE_)exception.cpp $(RBUILD_INT)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)include.o: $(RBUILD_BASE_)include.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)installfile.o: $(RBUILD_BASE_)installfile.cpp $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

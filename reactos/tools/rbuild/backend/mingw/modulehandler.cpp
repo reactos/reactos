@@ -41,26 +41,6 @@ PrefixFilename (
 }
 
 string
-v2s ( const string_list& v, int wrap_at )
-{
-	if ( !v.size() )
-		return "";
-	string s;
-	int wrap_count = 0;
-	for ( size_t i = 0; i < v.size(); i++ )
-	{
-		if ( !v[i].size() )
-			continue;
-		if ( wrap_at > 0 && wrap_count++ == wrap_at )
-			s += " \\\n\t\t";
-		else if ( s.size() )
-			s += " ";
-		s += v[i];
-	}
-	return s;
-}
-
-string
 GetTargetMacro ( const Module& module, bool with_dollar )
 {
 	string s ( module.name );
@@ -1570,6 +1550,7 @@ MingwModuleHandler::GetDefinitionDependencies (
 	}
 }
 
+
 MingwBuildToolModuleHandler::MingwBuildToolModuleHandler ( const Module& module_ )
 	: MingwModuleHandler ( module_ )
 {
@@ -2206,6 +2187,8 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 			string targetFilenameNoFixup ( bootcdDirectory + SSEP + m.bootstrap->base + SSEP + m.bootstrap->nameoncd );
 			string targetFilename ( GetTargetMacro ( module ) );
 			fprintf ( fMakefile,
+			          "\t$(ECHO_CP)\n" );
+			fprintf ( fMakefile,
 			          "\t${cp} %s %s\n",
 			          m.GetPath ().c_str (),
 			          targetFilename.c_str () );
@@ -2221,7 +2204,11 @@ MingwIsoModuleHandler::OutputCdfileCopyCommands (
 	{
 		const CDFile& cdfile = *module.project.cdfiles[i];
 		string targetFilenameNoFixup = bootcdDirectory + SSEP + cdfile.base + SSEP + cdfile.nameoncd;
-		string targetFilename = GetTargetMacro(module);
+		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
+			FixupTargetFilename ( targetFilenameNoFixup ),
+			true );
+		fprintf ( fMakefile,
+		          "\t$(ECHO_CP)\n" );
 		fprintf ( fMakefile,
 		          "\t${cp} %s %s\n",
 		          cdfile.GetPath ().c_str (),
