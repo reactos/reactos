@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.42 2003/12/26 22:52:11 gvg Exp $
+/* $Id: message.c,v 1.43 2003/12/27 10:08:31 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -795,30 +795,37 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg)
   /* Determine required size */
   Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam);
 
-  /* Allocate kernel mem */
-  KernelMem = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
-  if (NULL == KernelMem)
+  if (0 != Size)
     {
-      DPRINT1("Not enough memory to copy message to kernel mem\n");
-      return STATUS_NO_MEMORY;
-    }
-  KernelModeMsg->lParam = (LPARAM) KernelMem;
-
-  /* Copy data if required */
-  if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
-    {
-      Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
-      if (! NT_SUCCESS(Status))
+      /* Allocate kernel mem */
+      KernelMem = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
+      if (NULL == KernelMem)
         {
-          DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
-          ExFreePool(KernelMem);
-          return Status;
+          DPRINT1("Not enough memory to copy message to kernel mem\n");
+          return STATUS_NO_MEMORY;
+        }
+      KernelModeMsg->lParam = (LPARAM) KernelMem;
+
+      /* Copy data if required */
+      if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
+        {
+          Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
+          if (! NT_SUCCESS(Status))
+            {
+              DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
+              ExFreePool(KernelMem);
+              return Status;
+            }
+        }
+      else
+        {
+          /* Make sure we don't pass any secrets to usermode */
+          RtlZeroMemory(KernelMem, Size);
         }
     }
   else
     {
-      /* Make sure we don't pass any secrets to usermode */
-      RtlZeroMemory(KernelMem, Size);
+      KernelModeMsg->lParam = 0;
     }
 
   return STATUS_SUCCESS;
@@ -842,19 +849,22 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
   /* Determine required size */
   Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam);
 
-  /* Copy data if required */
-  if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_WRITE))
+  if (0 != Size)
     {
-      Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
-      if (! NT_SUCCESS(Status))
+      /* Copy data if required */
+      if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_WRITE))
         {
-          DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
-          ExFreePool((PVOID) KernelModeMsg->lParam);
-          return Status;
+          Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
+          if (! NT_SUCCESS(Status))
+            {
+              DPRINT1("Failed to copy message from kernel: invalid usermode buffer\n");
+              ExFreePool((PVOID) KernelModeMsg->lParam);
+              return Status;
+            }
         }
-    }
 
-  ExFreePool((PVOID) KernelModeMsg->lParam);
+      ExFreePool((PVOID) KernelModeMsg->lParam);
+    }
 
   return STATUS_SUCCESS;
 }
@@ -875,10 +885,15 @@ NtUserSendMessage(HWND Wnd,
 
   /* FIXME: Check for a broadcast or topmost destination. */
 
+  RtlZeroMemory(&Info, sizeof(NTUSERSENDMESSAGEINFO));
+
   /* FIXME: Call hooks. */
   Window = IntGetWindowObject(Wnd);
   if (NULL == Window)
     {
+      /* Tell usermode to not touch this one */
+      Info.HandledByKernel = TRUE;
+      MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
     }
