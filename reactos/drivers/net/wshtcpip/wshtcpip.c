@@ -162,7 +162,7 @@ INT
 EXPORT
 WSHGetWSAProtocolInfo(
     IN  LPWSTR ProviderName,
-    OUT LPWSAPROTOCOL_INFOW ProtocolInfo,
+    OUT LPWSAPROTOCOL_INFOW* ProtocolInfo,
     OUT LPDWORD ProtocolInfoEntries)
 {
     UNIMPLEMENTED
