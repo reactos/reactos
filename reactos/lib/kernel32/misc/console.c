@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.63 2003/08/09 04:13:24 jimtabor Exp $
+/* $Id: console.c,v 1.64 2003/08/13 06:53:54 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,15 +19,22 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
+#define _NOACHS(__X) (sizeof(__X) / sizeof((__X)[0]))
+extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
+
 /* GLOBALS *******************************************************************/
 
 static BOOL IgnoreCtrlEvents = FALSE;
-static ULONG NrCtrlHandlers = 0;
-static PHANDLER_ROUTINE* CtrlHandlers = NULL;
+
+static PHANDLER_ROUTINE StaticCtrlHandlers[] =
+                        { (PHANDLER_ROUTINE) &DefaultConsoleCtrlHandler };
+static PHANDLER_ROUTINE* CtrlHandlers = StaticCtrlHandlers;
+static ULONG NrCtrlHandlers = _NOACHS(StaticCtrlHandlers);
+static ULONG CtrlHandlersArraySize = 0;
 
 /* Default Console Handler *****************************************************************/
 
-BOOL WINAPI DefaultConsoleHandler(DWORD Event)
+BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 {
 	UINT ExitCode;
 	switch(Event)
