@@ -85,8 +85,27 @@ CreatePolyPolygonRgn(
 	int		fnPolyFillMode
 	)
 {
-  return NtGdiCreatePolyPolygonRgn ( (CONST PPOINT)lppt,
-    (CONST PINT)lpPolyCounts, nCount, fnPolyFillMode );
+  return NtGdiCreatePolyPolygonRgn((CONST PPOINT)lppt,
+                                   (CONST PINT)lpPolyCounts,
+				   nCount,
+				   fnPolyFillMode);
+}
+
+
+/*
+ * @implemented
+ */
+HRGN
+STDCALL
+CreatePolygonRgn(
+	CONST POINT	*lppt,
+	int		cPoints,
+	int		fnPolyFillMode
+	)
+{
+  return NtGdiCreatePolygonRgn((CONST PPOINT)lppt,
+                               cPoints,
+			       fnPolyFillMode);
 }
 
 
@@ -312,3 +331,4 @@ FrameRgn(
 {
   return NtGdiFrameRgn(hdc, hrgn, hbr, nWidth, nHeight);
 }
+

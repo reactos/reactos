@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.53 2004/05/16 09:51:27 weiden Exp $ */
+/* $Id: region.c,v 1.54 2004/05/18 13:57:41 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -1692,23 +1692,168 @@ NtGdiCreateEllipticRgnIndirect(CONST PRECT Rect)
                                  SafeRect.right - SafeRect.left, SafeRect.bottom - SafeRect.top);
 }
 
+HRGN FASTCALL
+IntCreatePolyPolgonRgn(PPOINT pt,
+                       PINT PolyCounts,
+		       INT Count,
+                       INT PolyFillMode)
+{
+  return (HRGN)0;
+}
+
 HRGN
 STDCALL
 NtGdiCreatePolygonRgn(CONST PPOINT  pt,
-                           INT  Count,
-                           INT  PolyFillMode)
+                      INT  Count,
+                      INT  PolyFillMode)
 {
-  UNIMPLEMENTED;
+   POINT *SafePoints;
+   NTSTATUS Status;
+   HRGN hRgn;
+   
+   
+   if (pt == NULL || Count == 0 ||
+       (PolyFillMode != WINDING && PolyFillMode != ALTERNATE))
+   {
+      /* Windows doesn't set a last error here */
+      return (HRGN)0;
+   }
+   
+   if (Count == 1)
+   {
+      /* can't create a region with only one point! */
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return (HRGN)0;
+   }
+   
+   if (Count == 2)
+   {
+      /* Windows creates an empty region! */
+      ROSRGNDATA *rgn;
+      
+      if(!(hRgn = RGNDATA_AllocRgn(1)))
+      {
+	 return (HRGN)0;
+      }
+      if(!(rgn = RGNDATA_LockRgn(hRgn)))
+      {
+        NtGdiDeleteObject(hRgn);
+	return (HRGN)0;
+      }
+      
+      EMPTY_REGION(rgn);
+      
+      RGNDATA_UnlockRgn(hRgn);
+      return hRgn;
+   }
+   
+   if (!(SafePoints = ExAllocatePool(PagedPool, Count * sizeof(POINT))))
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return (HRGN)0;
+   }
+   
+   Status = MmCopyFromCaller(SafePoints, pt, Count * sizeof(POINT));
+   if (!NT_SUCCESS(Status))
+   {
+      ExFreePool(SafePoints);
+      SetLastNtError(Status);
+      return (HRGN)0;
+   }
+   
+   hRgn = IntCreatePolyPolgonRgn(SafePoints, &Count, 1, PolyFillMode);
+   
+   ExFreePool(SafePoints);
+   return hRgn;
 }
 
 HRGN
 STDCALL
 NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
-                               CONST PINT  PolyCounts,
-                               INT  Count,
-                               INT  PolyFillMode)
+                          CONST PINT  PolyCounts,
+                          INT  Count,
+                          INT  PolyFillMode)
 {
-  UNIMPLEMENTED;
+   POINT *Safept;
+   INT *SafePolyCounts;
+   INT nPoints, nEmpty, nInvalid, i;
+   HRGN hRgn;
+   NTSTATUS Status;
+   
+   if (pt == NULL || PolyCounts == NULL || Count == 0 ||
+       (PolyFillMode != WINDING && PolyFillMode != ALTERNATE))
+   {
+      /* Windows doesn't set a last error here */
+      return (HRGN)0;
+   }
+   
+   if (!(SafePolyCounts = ExAllocatePool(PagedPool, Count * sizeof(INT))))
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return (HRGN)0;
+   }
+   
+   Status = MmCopyFromCaller(SafePolyCounts, PolyCounts, Count * sizeof(INT));
+   if (!NT_SUCCESS(Status))
+   {
+      ExFreePool(SafePolyCounts);
+      SetLastNtError(Status);
+      return (HRGN)0;
+   }
+   
+   /* validate poligons */
+   nPoints = 0;
+   nEmpty = 0;
+   nInvalid = 0;
+   for (i = 0; i < Count; i++)
+   {
+      if (SafePolyCounts[i] == 0)
+      {
+         nEmpty++;
+      }
+      if (SafePolyCounts[i] == 1)
+      {
+         nInvalid++;
+      }
+      nPoints += SafePolyCounts[i];
+   }
+   
+   if (nEmpty == Count)
+   {
+      /* if all polygon counts are zero, return without setting a last error code. */
+      ExFreePool(SafePolyCounts);
+      return (HRGN)0;
+   }
+   if (nInvalid != 0)
+   {
+     /* if at least one poly count is 1, fail */
+     ExFreePool(SafePolyCounts);
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return (HRGN)0;
+   }
+   
+   /* copy points */
+   if (!(Safept = ExAllocatePool(PagedPool, nPoints * sizeof(POINT))))
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return (HRGN)0;
+   }
+   
+   Status = MmCopyFromCaller(Safept, pt, nPoints * sizeof(POINT));
+   if (!NT_SUCCESS(Status))
+   {
+      ExFreePool(Safept);
+      ExFreePool(SafePolyCounts);
+      SetLastNtError(Status);
+      return (HRGN)0;
+   }
+   
+   /* now we're ready to calculate the region safely */
+   hRgn = IntCreatePolyPolgonRgn(Safept, SafePolyCounts, Count, PolyFillMode);
+   
+   ExFreePool(Safept);
+   ExFreePool(SafePolyCounts);
+   return hRgn;
 }
 
 HRGN STDCALL
