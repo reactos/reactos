@@ -12,7 +12,7 @@ TARGET_INSTALLDIR = system32
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a rpcrt4.a
 
-TARGET_OBJECTS = umpnpmgr.o pnp_s.o
+TARGET_OBJECTS = pnp_s.o umpnpmgr.o
 
 TARGET_CFLAGS = -Wall -Werror -D__USE_W32API -DUNICODE -D_UNICODE
 
