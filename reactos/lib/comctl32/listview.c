@@ -2024,7 +2024,8 @@ calc_label:
 		         infoPtr->iconSize.cy + ICON_BOTTOM_PADDING;
 	    Label.right = Label.left + labelSize.cx;
 	    Label.bottom = Label.top + infoPtr->nItemHeight;
-	    if (!oversizedBox && labelSize.cy > infoPtr->ntmHeight)
+	    if (!oversizedBox && labelSize.cy > infoPtr->ntmHeight &&
+	        infoPtr->ntmHeight)
 	    {
 		labelSize.cy = min(Box.bottom - Label.top, labelSize.cy);
 		labelSize.cy /= infoPtr->ntmHeight;
@@ -9516,7 +9517,8 @@ static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style,
         hOldFont = SelectObject(hdc, infoPtr->hFont);
 
     /*Get String Length in pixels */
-    GetTextExtentPoint32W(hdc, text, lstrlenW(text), &sz);
+    if(!GetTextExtentPoint32W(hdc, text, lstrlenW(text), &sz))
+        sz.cx = 0;
 
     /*Add Extra spacing for the next character */
     GetTextMetricsW(hdc, &textMetric);
