@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.5 2003/10/04 17:10:54 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.6 2003/10/15 16:59:36 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -204,6 +204,7 @@ typedef struct _OBJECT_HEADER
    BOOLEAN Inherit;
    struct _DIRECTORY_OBJECT* Parent;
    POBJECT_TYPE ObjectType;
+   PSECURITY_DESCRIPTOR SecurityDescriptor;
    
    /*
     * PURPOSE: Object type
