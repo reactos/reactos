@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.48 2003/10/20 17:57:05 gvg Exp $
+ * $Id: gdiobj.c,v 1.49 2003/11/08 14:58:34 gvg Exp $
  *
  */
 
@@ -628,8 +628,6 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       else if (ObjHdr->hProcessId != GDI_GLOBAL_PROCESS
 	   && ObjHdr->hProcessId != PsGetCurrentProcessId())
 	{
-DPRINT1("object proc 0x%x current proc 0x%x\n", ObjHdr->hProcessId, PsGetCurrentProcessId());
-__asm__("int $3\n");
 	  reason = 3;
 	}
       else if (GDI_HANDLE_GET_TYPE(hObj) != ObjectType && ObjectType != GDI_OBJECT_TYPE_DONTCARE)
