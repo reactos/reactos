@@ -55,7 +55,7 @@ REGEDIT4
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Atapi]
 "ImagePath"="system32\drivers\atapi.sys"
 "Group"="SCSI Miniport"
-"Start"=dword:00000004
+"Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Beep]
@@ -73,19 +73,19 @@ REGEDIT4
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdrom]
 "ImagePath"="system32\drivers\cdrom.sys"
 "Group"="SCSI Class"
-"Start"=dword:00000004
+"Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Class2]
 "ImagePath"="system32\drivers\class2.sys"
 "Group"="SCSI Class Helper"
-"Start"=dword:00000004
+"Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Disk]
 "ImagePath"="system32\drivers\disk.sys"
 "Group"="SCSI Class"
-"Start"=dword:00000004
+"Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Floppy]
@@ -97,7 +97,7 @@ REGEDIT4
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Ide]
 "ImagePath"="system32\drivers\ide.sys"
 "Group"="Primary Disk"
-"Start"=dword:00000000
+"Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Msfs]
@@ -121,7 +121,7 @@ REGEDIT4
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Scsiport]
 "ImagePath"="system32\drivers\scsiport.sys"
 "Group"="SCSI Port"
-"Start"=dword:00000004
+"Start"=dword:00000000
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Vfatfs]
