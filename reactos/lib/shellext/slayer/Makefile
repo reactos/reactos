@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/09/26 09:56:23 weiden Exp $
+# $Id: Makefile,v 1.2 2004/09/26 10:43:00 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,7 +11,6 @@ TARGET_INSTALLDIR = system32
 TARGET_BASE = 0x5C7E0000
 
 TARGET_CFLAGS = \
- -I./include \
  -DUNICODE \
  -D_UNICODE \
  -D__REACTOS__ \
@@ -27,7 +26,7 @@ TARGET_SDKLIBS = kernel32.a advapi32.a user32.a gdi32.a wine_uuid.a ole32.a \
 
 TARGET_GCCLIBS = gcc
 
-TARGET_PCH = 
+TARGET_PCH = precomp.h
 
 TARGET_CLEAN = 
 

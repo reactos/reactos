@@ -121,34 +121,6 @@ HRESULT STDMETHODCALLTYPE ICompatibilityPage_fnLockServer(LPCOMPATIBILITYPAGE th
                                                           BOOL fLock);
 
 
-static ifaceICompatibilityPageVbtl efvt =
-{
-  /* IUnknown methods */
-  ICompatibilityPage_fnQueryInterface,
-  ICompatibilityPage_fnAddRef,
-  ICompatibilityPage_fnRelease,
-};
-
-static ifaceIShellPropSheetExtVbtl efvtIShellPropSheetExt =
-{
-  /* IShellPropSheetExt */
-  ICompatibilityPage_fnAddPages,
-  ICompatibilityPage_fnReplacePage,
-};
-
-static ifaceIShellExtInitVbtl efvtIShellExtInit =
-{
-  /* IShellExtInit */
-  ICompatibilityPage_fnInitialize,
-};
-
-static ifaceIClassFactoryVbtl efvtIClassFactory =
-{
-  /* IClassFactory */
-  ICompatibilityPage_fnCreateInstance,
-  ICompatibilityPage_fnLockServer,
-};
-
 #endif /* __SLAYER_H */
 
 /* EOF */

@@ -1,5 +1,6 @@
 *.coff
-*.cpl
+*.dll
+*.gch
 *.d
 *.a
 *.o

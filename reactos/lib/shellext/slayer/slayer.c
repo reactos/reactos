@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slayer.c,v 1.1 2004/09/26 09:56:23 weiden Exp $
+/* $Id: slayer.c,v 1.2 2004/09/26 10:43:00 weiden Exp $
  *
  * PROJECT:         ReactOS Compatibility Layer Shell Extension
  * FILE:            lib/shellext/cplsample/cplsample.c
@@ -25,19 +25,7 @@
  * UPDATE HISTORY:
  *      09/25/2004  Created
  */
-#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
-#define INITGUID
-#include <windows.h>
-#include <commctrl.h>
-#include <shlobj.h>
-#include <tchar.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <objbase.h>
-#include <basetyps.h>
-#include <unknwn.h>
-#include "resource.h"
-#include "slayer.h"
+#include "precomp.h"
 
 HINSTANCE hInstance = NULL;
 LONG dllrefs = 0;
@@ -45,6 +33,34 @@ LONG dllrefs = 0;
 /* FIXME - they should be exported somewhere instead of defined here... */
 DEFINE_SHLGUID(IID_IPropSheetPage,      0x000214F6L, 0, 0);
 DEFINE_SHLGUID(IID_IShellPropSheetExt,  0x000214E9L, 0, 0);
+
+static ifaceICompatibilityPageVbtl efvt =
+{
+  /* IUnknown methods */
+  ICompatibilityPage_fnQueryInterface,
+  ICompatibilityPage_fnAddRef,
+  ICompatibilityPage_fnRelease,
+};
+
+static ifaceIShellPropSheetExtVbtl efvtIShellPropSheetExt =
+{
+  /* IShellPropSheetExt */
+  ICompatibilityPage_fnAddPages,
+  ICompatibilityPage_fnReplacePage,
+};
+
+static ifaceIShellExtInitVbtl efvtIShellExtInit =
+{
+  /* IShellExtInit */
+  ICompatibilityPage_fnInitialize,
+};
+
+static ifaceIClassFactoryVbtl efvtIClassFactory =
+{
+  /* IClassFactory */
+  ICompatibilityPage_fnCreateInstance,
+  ICompatibilityPage_fnLockServer,
+};
 
 /******************************************************************************
    ICompatibilityPage
