@@ -1604,19 +1604,21 @@ LPITEMIDLIST _ILCreateFromFindDataA(WIN32_FIND_DATAA * stffile )
     return pidl;
 }
 
-LPITEMIDLIST _ILCreateFromPathA(LPCSTR szPath)
+HRESULT _ILCreateFromPathA(LPCSTR szPath, LPITEMIDLIST* ppidl)
 {
 	HANDLE hFile;
 	WIN32_FIND_DATAA stffile;
-	LPITEMIDLIST pidl = NULL;
-	
+
 	hFile = FindFirstFileA(szPath, &stffile);
-	if (hFile != INVALID_HANDLE_VALUE) 
-	{
-	  pidl = _ILCreateFromFindDataA(&stffile);
-	  FindClose(hFile);
-	}
-	return pidl;
+
+	if (hFile == INVALID_HANDLE_VALUE)
+		return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+	FindClose(hFile);
+
+	*ppidl = _ILCreateFromFindDataA(&stffile);
+
+	return S_OK;
 }
 
 LPITEMIDLIST _ILCreateDrive( LPCSTR lpszNew)

@@ -197,7 +197,7 @@ static HRESULT WINAPI ISF_Desktop_fnParseDisplayName (IShellFolder2 * iface,
     WCHAR szElement[MAX_PATH];
     LPCWSTR szNext = NULL;
     LPITEMIDLIST pidlTemp = NULL;
-    HRESULT hr = E_INVALIDARG;
+    HRESULT hr = S_OK;
     char szPath[MAX_PATH];
     DWORD len;
     CLSID clsid;
@@ -234,10 +234,7 @@ static HRESULT WINAPI ISF_Desktop_fnParseDisplayName (IShellFolder2 * iface,
 	    PathAddBackslashA(szPath);
 	    len = lstrlenA(szPath);
 	    WideCharToMultiByte(CP_ACP, 0, lpszDisplayName, -1, szPath + len, MAX_PATH - len, NULL, NULL);
-	    pidlTemp = _ILCreateFromPathA(szPath);
-
-	    if (!pidlTemp)
-		hr = 0x80070002L;   /* file not found */
+	    hr = _ILCreateFromPathA(szPath, &pidlTemp);
 	} else {
 	    pidlTemp = _ILCreateMyComputer();
 	}
@@ -245,13 +242,12 @@ static HRESULT WINAPI ISF_Desktop_fnParseDisplayName (IShellFolder2 * iface,
 	szNext = NULL;
     }
 
-    if (pidlTemp) {
+    if (SUCCEEDED(hr) && pidlTemp) {
 	if (szNext && *szNext) {
 	    hr = SHELL32_ParseNextElement (iface, hwndOwner, pbc, &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
 	} else {
-	    hr = S_OK;
 	    if (pdwAttributes && *pdwAttributes) {
-		SHELL32_GetItemAttributes (_IShellFolder_ (This), pidlTemp, pdwAttributes);
+		hr = SHELL32_GetItemAttributes (_IShellFolder_ (This), pidlTemp, pdwAttributes);
 	    }
 	}
     }

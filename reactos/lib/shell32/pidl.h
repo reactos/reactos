@@ -199,7 +199,7 @@ LPITEMIDLIST	_ILCreateGuidFromStrA(LPCSTR szGUID);
 /* Commonly used PIDLs representing file system objects. */
 LPITEMIDLIST	_ILCreateDesktop	(void);
 LPITEMIDLIST	_ILCreateFromFindDataA(WIN32_FIND_DATAA *stffile);
-LPITEMIDLIST	_ILCreateFromPathA	(LPCSTR szPath);
+HRESULT		_ILCreateFromPathA	(LPCSTR szPath, LPITEMIDLIST* ppidl);
 
 /* Other helpers */
 LPITEMIDLIST	_ILCreateMyComputer	(void);

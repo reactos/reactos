@@ -353,24 +353,22 @@ IShellFolder_fnParseDisplayName (IShellFolder2 * iface,
 	WideCharToMultiByte(CP_ACP, 0, szElement, -1, szPath + len, MAX_PATH - len, NULL, NULL);
 
 	/* get the pidl */
-	pidlTemp = _ILCreateFromPathA(szPath);
-	if (!pidlTemp)
-	    hr = 0x80070002L;   /* file not found */
-	else {
+	hr = _ILCreateFromPathA(szPath, &pidlTemp);
+
+	if (SUCCEEDED(hr)) {
 	    if (szNext && *szNext) {
 		/* try to analyse the next element */
 		hr = SHELL32_ParseNextElement (iface, hwndOwner, pbc, &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
 	    } else {
 		/* it's the last element */
 		if (pdwAttributes && *pdwAttributes) {
-		    SHELL32_GetItemAttributes (_IShellFolder_ (This), pidlTemp, pdwAttributes);
+		    hr = SHELL32_GetItemAttributes (_IShellFolder_ (This), pidlTemp, pdwAttributes);
 		}
-		hr = S_OK;
 	    }
 	}
     }
 
-    if (!hr)
+    if (SUCCEEDED(hr))
 	*ppidl = pidlTemp;
     else
 	*ppidl = NULL;
@@ -750,14 +748,16 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface, HWND hwnd
     szDest[MAX_PATH - 1] = 0;
     TRACE ("src=%s dest=%s\n", szSrc, szDest);
     if (MoveFileA (szSrc, szDest)) {
-	if (pPidlOut) {
-	    *pPidlOut = _ILCreateFromPathA(szDest);
-	    if (!*pPidlOut)
-	        return 0x80070002L;   /* file not found */
-	}
+	HRESULT hr = S_OK;
+
+	if (pPidlOut)
+	    hr = _ILCreateFromPathA(szDest, pPidlOut);
+
 	SHChangeNotify (bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM, SHCNF_PATHA, szSrc, szDest);
+
 	return S_OK;
     }
+
     return E_FAIL;
 }
 
@@ -984,12 +984,8 @@ static HRESULT WINAPI ISFHelper_fnAddFolder (ISFHelper * iface, HWND hwnd, LPCST
 
 	hres = S_OK;
 
-	if (ppidlOut) {
-    	    *ppidlOut = _ILCreateFromPathA(lpstrNewDir);
-
-	    if (!*ppidlOut)
-		hres = 0x80070002L;   /* file not found */
-	}
+	if (ppidlOut)
+    	    hres = _ILCreateFromPathA(lpstrNewDir, ppidlOut);
     } else {
 	char lpstrText[128 + MAX_PATH];
 	char lpstrTempText[128];
