@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.14 2004/04/20 19:01:47 gdalsnes Exp $
+/* $Id: mdl.c,v 1.15 2004/05/15 22:51:38 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/pool.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -92,16 +93,31 @@ IoBuildPartialMdl(PMDL SourceMdl,
 {
    PULONG TargetPages = (PULONG)(TargetMdl + 1);
    PULONG SourcePages = (PULONG)(SourceMdl + 1);
-   ULONG Va;
-   ULONG Delta = (PAGE_ROUND_DOWN(VirtualAddress) - (ULONG)SourceMdl->StartVa)/
-                 PAGE_SIZE;
+   ULONG Count;
+   ULONG Delta;
 
-   for (Va = 0; Va < (PAGE_ROUND_UP(Length)/PAGE_SIZE); Va++)
-   {
-      TargetPages[Va] = SourcePages[Va+Delta];
-   }
-   
+   DPRINT("VirtualAddress %x, SourceMdl->StartVa %x, SourceMdl->MappedSystemVa %x\n",
+          VirtualAddress, SourceMdl->StartVa, SourceMdl->MappedSystemVa);
+
+   TargetMdl->StartVa = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);
+   TargetMdl->ByteOffset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)TargetMdl->StartVa;
+   TargetMdl->ByteCount = Length;
+   TargetMdl->Process = SourceMdl->Process;
+   Delta = (ULONG_PTR)VirtualAddress - ((ULONG_PTR)SourceMdl->StartVa + SourceMdl->ByteOffset);
+   TargetMdl->MappedSystemVa = SourceMdl->MappedSystemVa + Delta;
+
+   TargetMdl->MdlFlags = SourceMdl->MdlFlags & (MDL_IO_PAGE_READ|MDL_SOURCE_IS_NONPAGED_POOL|MDL_MAPPED_TO_SYSTEM_VA);
    TargetMdl->MdlFlags |= MDL_PARTIAL;
+
+   Delta = ((ULONG_PTR)TargetMdl->StartVa - (ULONG_PTR)SourceMdl->StartVa) / PAGE_SIZE;
+   Count = ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress,Length);
+
+   SourcePages += Delta;
+
+   DPRINT("Delta %d, Count %d\n", Delta, Count);
+
+   memcpy(TargetPages, SourcePages, Count * sizeof(ULONG));
+
 }
 
 /*
