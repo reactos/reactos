@@ -28,7 +28,7 @@ int system(const char *command)
 // system should return 0 if command is null and the shell is found
 	
 	if ( command == NULL ) {
-		if ( szComspec == NULL )
+		if ( szComSpec == NULL )
 			return 0;
 		else
 			return -1;

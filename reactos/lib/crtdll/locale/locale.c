@@ -115,7 +115,26 @@ const struct map_cntr {
 };
 
 
-struct lconv _lconv;
+struct lconv _lconv =  {
+	'.',   // decimal_point
+	',',   // thousands_sep
+	"",    // grouping;
+	"DOL", // int_curr_symbol
+	"$",   // currency_symbol
+	'.',   // mon_decimal_point
+	',',   // mon_thousands_sep
+	"",    // mon_grouping;
+	'+',   // positive_sign
+	'-',   // negative_sign
+	2,     // int_frac_digits
+	2,     // frac_digits
+	1,     // p_cs_precedes
+	1,     // p_sep_by_space
+	1,     // n_cs_precedes
+	1,     // n_sep_by_space
+	1,     // p_sign_posn;
+	1      // n_sign_posn;
+	};
 
 struct lconv *localeconv(void)
 {
