@@ -1,4 +1,4 @@
-/* $Id: input.c,v 1.4 2002/10/31 00:03:31 dwelch Exp $
+/* $Id: input.c,v 1.5 2003/03/09 18:44:59 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,7 +18,7 @@
 #include <include/error.h>
 #include <include/winsta.h>
 #include <include/msgqueue.h>
-#include "../../drivers/input/include/mouse.h"
+#include <ddk/ntddmou.h>
 
 #define NDEBUG
 #include <debug.h>
