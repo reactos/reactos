@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.32 2004/02/26 16:16:17 navaraf Exp $
+; $Id: advapi32.edf,v 1.33 2004/02/28 22:26:34 navaraf Exp $
 ;
 ; advapi32.edf
 ;
@@ -182,7 +182,7 @@ InitiateSystemShutdownA=InitiateSystemShutdownA@20
 InitiateSystemShutdownW=InitiateSystemShutdownW@20
 ;IsAccessPermittedA=IsAccessPermittedA@20
 ;IsAccessPermittedW=IsAccessPermittedW@20
-IsTextUnicode=NTDLL.RtlIsTextUnicode@12
+IsTextUnicode=NTDLL.RtlIsTextUnicode
 IsValidAcl=IsValidAcl@4
 IsValidSecurityDescriptor=IsValidSecurityDescriptor@4
 IsValidSid=IsValidSid@4
