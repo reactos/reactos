@@ -1,9 +1,12 @@
-/* $Id: stubs.c,v 1.4 2002/09/08 10:22:19 chorns Exp $
+/* $Id: stubs.c,v 1.5 2003/07/10 19:54:13 chorns Exp $
  *
  */
 #include <ntos.h>
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 CTEBlock (
@@ -14,6 +17,9 @@ CTEBlock (
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 CTEInitEvent (
@@ -24,6 +30,9 @@ CTEInitEvent (
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 CTEInitTimer (
@@ -33,6 +42,9 @@ CTEInitTimer (
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 STDCALL
 CTEInitialize (
@@ -44,6 +56,9 @@ CTEInitialize (
 }
 	
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 CTELogEvent (
@@ -64,6 +79,9 @@ CTELogEvent (
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 STDCALL
 CTEScheduleEvent (
@@ -75,6 +93,9 @@ CTEScheduleEvent (
 }
 
 
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 CTESignal (
@@ -95,6 +116,9 @@ CTESignal (
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN
 STDCALL
 CTEStartTimer (
@@ -108,6 +132,9 @@ CTEStartTimer (
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG
 STDCALL
 CTESystemUpTime (
@@ -116,6 +143,5 @@ CTESystemUpTime (
 {
 	return 0;
 }
-
 
 /* EOF */

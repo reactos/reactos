@@ -1,4 +1,4 @@
-/* $Id: dereg.c,v 1.4 2002/09/08 10:22:20 chorns Exp $
+/* $Id: dereg.c,v 1.5 2003/07/10 19:54:13 chorns Exp $
  *
  */
 #include <ntos.h>
@@ -35,6 +35,9 @@ TdiDeRegister (
 
 /* ADDRESS_CHANGE_HANDLER */
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiRegisterAddressChangeHandler (
@@ -54,6 +57,9 @@ TdiRegisterAddressChangeHandler (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiDeregisterAddressChangeHandler (
@@ -69,6 +75,9 @@ TdiDeregisterAddressChangeHandler (
 
 /* DEVICE_OBJECT */
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiRegisterDeviceObject (
@@ -87,6 +96,9 @@ TdiRegisterDeviceObject (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiDeregisterDeviceObject (
@@ -102,6 +114,9 @@ TdiDeregisterDeviceObject (
 
 /* NET_ADDRESS */
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiRegisterNetAddress (
@@ -120,6 +135,9 @@ TdiRegisterNetAddress (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiDeregisterNetAddress (
@@ -135,6 +153,9 @@ TdiDeregisterNetAddress (
 
 /* NOTIFICATION_HANDLER */
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiRegisterNotificationHandler (
@@ -154,6 +175,9 @@ TdiRegisterNotificationHandler (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiDeregisterNotificationHandler (

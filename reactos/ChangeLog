@@ -1,5 +1,15 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/net/tdi/cte/string.c: Add @implemented and @unimplemented to
+	APIs.
+	* drivers/net/tdi/cte/stubs.c: Ditto.
+	* drivers/net/tdi/tdi/dereg.c: Ditto.
+	* drivers/net/tdi/tdi/handler.c: Ditto.
+	* drivers/net/tdi/tdi/obsolete.c: Ditto.
+	* drivers/net/tdi/tdi/stubs.c: Ditto.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/snmpapi/snmpapi.c: Add @implemented and @unimplemented to APIs.
 
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>

@@ -1,10 +1,13 @@
 
-/* $Id: stubs.c,v 1.6 2002/09/08 10:22:20 chorns Exp $
+/* $Id: stubs.c,v 1.7 2003/07/10 19:54:13 chorns Exp $
  *
  */
 #include <ntos.h>
 #include <net/tdi.h>
 
+/*
+ * @unimplemented
+ */
 VOID 
 STDCALL
 TdiBuildNetbiosAddress (
@@ -16,6 +19,9 @@ TdiBuildNetbiosAddress (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiBuildNetbiosAddressEa (
@@ -28,6 +34,9 @@ TdiBuildNetbiosAddressEa (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS 
 STDCALL
 TdiCopyBufferToMdl (
@@ -43,6 +52,9 @@ TdiCopyBufferToMdl (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS 
 STDCALL
 TdiCopyMdlToBuffer (
@@ -58,6 +70,9 @@ TdiCopyMdlToBuffer (
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 TdiInitialize (
@@ -67,6 +82,9 @@ TdiInitialize (
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 TdiMapUserRequest (
@@ -79,6 +97,9 @@ TdiMapUserRequest (
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 TdiOpenNetbiosAddress (
@@ -91,6 +112,9 @@ TdiOpenNetbiosAddress (
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 TdiReturnChainedReceives (
@@ -99,6 +123,5 @@ TdiReturnChainedReceives (
         )
 {
 }
-
 
 /* EOF */
