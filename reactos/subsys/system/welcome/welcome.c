@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: welcome.c,v 1.1 2003/07/24 19:37:20 chorns Exp $
+/* $Id: welcome.c,v 1.2 2003/07/31 22:00:18 mf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS welcome/autorun application
@@ -24,7 +24,7 @@
  * PROGRAMMERS: Eric Kohl (ekohl@rz-online.de)
  *              Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
-#include "../../reactos/include/reactos/version.h"
+#include "../../../include/reactos/version.h"
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
