@@ -225,7 +225,6 @@ NtSetEaFile@16
 NtSetEvent@8
 NtSetHighEventPair@4
 NtSetHighWaitLowEventPair@4
-NtSetHighWaitLowThread@0
 NtSetInformationFile@20
 NtSetInformationJobObject@16
 NtSetInformationKey@16
@@ -238,7 +237,6 @@ NtSetIoCompletion@20
 NtSetLdtEntries@24
 NtSetLowEventPair@4
 NtSetLowWaitHighEventPair@4
-NtSetLowWaitHighThread@0
 NtSetSecurityObject@12
 NtSetSystemEnvironmentValue@8
 NtSetSystemInformation@12
@@ -298,6 +296,7 @@ RtlAddAuditAccessAce@24
 RtlAddAuditAccessAceEx@28
 ;RtlAddCompoundAce
 RtlAddRange@36
+RtlAddVectoredExceptionHandler@8
 RtlAdjustPrivilege@16
 RtlAllocateAndInitializeSid@44
 RtlAllocateHandle@8
@@ -364,6 +363,7 @@ RtlCreateUserThread@40
 RtlCustomCPToUnicodeN@24
 RtlCutoverTimeToSystemTime@16
 RtlDeNormalizeProcessParams@4
+RtlDecodePointer=RtlEncodePointer@4
 RtlDecompressBuffer@24
 RtlDecompressFragment@32
 RtlDelete@4
@@ -396,6 +396,7 @@ RtlDowncaseUnicodeString@12
 RtlDumpResource@4
 RtlDuplicateUnicodeString@12
 RtlEmptyAtomTable@8
+RtlEncodePointer@4
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply@8
@@ -593,6 +594,7 @@ RtlRealSuccessor@4
 RtlReleasePebLock@0
 RtlReleaseResource@4
 ;RtlRemoteCall
+RtlRemoveVectoredExceptionHandler@4
 RtlResetRtlTranslations@4
 RtlRestoreLastWin32Error@4=RtlSetLastWin32Error@4
 RtlRunDecodeUnicodeString@8
@@ -849,7 +851,6 @@ ZwSetEaFile@16
 ZwSetEvent@8
 ZwSetHighEventPair@4
 ZwSetHighWaitLowEventPair@4
-ZwSetHighWaitLowThread@0
 ZwSetInformationFile@20
 ZwSetInformationKey@16
 ZwSetInformationObject@16
@@ -861,7 +862,6 @@ ZwSetIoCompletion@20
 ZwSetLdtEntries@24
 ZwSetLowEventPair@4
 ZwSetLowWaitHighEventPair@4
-ZwSetLowWaitHighThread@0
 ZwSetSecurityObject@12
 ZwSetSystemEnvironmentValue@8
 ZwSetSystemInformation@12

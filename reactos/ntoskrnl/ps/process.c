@@ -67,6 +67,18 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
   ICI_SQ_SAME( sizeof(BOOLEAN),                       sizeof(ULONG), ICIF_SET ),                       /* ProcessForegroundInformation */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessWow64Information */
   ICI_SQ_SAME( sizeof(UNICODE_STRING),                sizeof(ULONG), ICIF_QUERY | ICIF_SIZE_VARIABLE), /* ProcessImageFileName */
+
+  /* FIXME */
+  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessLUIDDeviceMapsEnabled */
+  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessBreakOnTermination */
+  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessDebugObjectHandle */
+  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessDebugFlags */
+  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessHandleTracing */
+  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessUnknown33 */
+  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessUnknown34 */
+  ICI_SQ_SAME( 0,                                     0,             0 ),                              /* ProcessUnknown35 */
+  
+  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY),                      /* ProcessCookie */
 };
 
 #define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
@@ -1338,23 +1350,28 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
      DPRINT1("NtQueryInformationProcess() failed, Status: 0x%x\n", Status);
      return Status;
    }
-
-   /*
-    * TODO: Here we should probably check that ProcessInformationLength
-    * bytes indeed are writable at address ProcessInformation.
-    */
-
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_QUERY_INFORMATION,
-				      PsProcessType,
-				      PreviousMode,
-				      (PVOID*)&Process,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-
+   
+   if(ProcessInformationClass != ProcessCookie)
+   {
+     Status = ObReferenceObjectByHandle(ProcessHandle,
+  				      PROCESS_QUERY_INFORMATION,
+  				      PsProcessType,
+  				      PreviousMode,
+  				      (PVOID*)&Process,
+  				      NULL);
+     if (!NT_SUCCESS(Status))
+       {
+  	return(Status);
+       }
+   }
+   else if(ProcessHandle != NtCurrentProcess())
+   {
+     /* retreiving the process cookie is only allowed for the calling process
+        itself! XP only allowes NtCurrentProcess() as process handles even if a
+        real handle actually represents the current process. */
+     return STATUS_INVALID_PARAMETER;
+   }
+   
    switch (ProcessInformationClass)
      {
       case ProcessBasicInformation:
@@ -1731,6 +1748,60 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
         }
         break;
       }
+      
+      case ProcessCookie:
+      {
+        ULONG Cookie;
+        
+        /* receive the process cookie, this is only allowed for the current
+           process! */
+
+        Process = PsGetCurrentProcess();
+
+        Cookie = Process->Cookie;
+        if(Cookie == 0)
+        {
+          LARGE_INTEGER SystemTime;
+          ULONG NewCookie;
+          PKPRCB Prcb;
+          
+          /* generate a new cookie */
+          
+          KeQuerySystemTime(&SystemTime);
+          
+          Prcb = &KeGetCurrentKPCR()->PrcbData;
+
+          NewCookie = Prcb->KeSystemCalls ^ Prcb->InterruptTime ^
+                      SystemTime.u.LowPart ^ SystemTime.u.HighPart;
+          
+          /* try to set the new cookie, return the current one if another thread
+             set it in the meanwhile */
+          Cookie = InterlockedCompareExchange((LONG*)&Process->Cookie,
+                                              NewCookie,
+                                              Cookie);
+          if(Cookie == 0)
+          {
+            /* successfully set the cookie */
+            Cookie = NewCookie;
+          }
+        }
+        
+        _SEH_TRY
+        {
+          *(PULONG)ProcessInformation = Cookie;
+	  if (ReturnLength)
+          {
+	    *ReturnLength = sizeof(ULONG);
+	  }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        break;
+      }
 
       /*
        * Note: The following 10 information classes are verified to not be
@@ -1750,7 +1821,11 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	Status = STATUS_INVALID_INFO_CLASS;
      }
 
-   ObDereferenceObject(Process);
+   if(ProcessInformationClass != ProcessCookie)
+   {
+     ObDereferenceObject(Process);
+   }
+   
    return Status;
 }
 

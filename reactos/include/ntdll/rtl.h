@@ -770,6 +770,13 @@ NTSTATUS
 STDCALL
 RtlDeleteTimerQueue(HANDLE TimerQueue);
 
+PVOID
+STDCALL
+RtlEncodePointer(IN PVOID Pointer);
+
+PVOID
+STDCALL
+RtlDecodePointer(IN PVOID Pointer);
 
 #ifndef __NTDRIVER__
 

@@ -1219,9 +1219,17 @@ extern IMPORTED ULONG NtBuildNumber;
 #define ProcessSessionInformation		24
 #define ProcessForegroundInformation		25
 #define ProcessWow64Information			26
-/* ReactOS private. */
 #define ProcessImageFileName			27
-#define MaxProcessInfoClass			28
+#define ProcessLUIDDeviceMapsEnabled            28
+#define ProcessBreakOnTermination               29
+#define ProcessDebugObjectHandle                30
+#define ProcessDebugFlags                       31
+#define ProcessHandleTracing                    32
+#define ProcessUnknown33                        33
+#define ProcessUnknown34                        34
+#define ProcessUnknown35                        35
+#define ProcessCookie                           36
+#define MaxProcessInfoClass                     36
 
 /*
  * thread query / set information class

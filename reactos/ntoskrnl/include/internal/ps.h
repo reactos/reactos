@@ -416,6 +416,7 @@ struct _EPROCESS
   PRTL_BITMAP           VadPhysicalPagesBitMap;
   ULONG                 VadPhysicalPages;
   KSPIN_LOCK            AweLock;
+  ULONG                 Cookie;
 
   /*
    * FIXME - ReactOS specified - remove the following fields ASAP!!!
