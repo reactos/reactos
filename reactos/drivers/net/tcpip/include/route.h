@@ -55,6 +55,10 @@ NTSTATUS RouteStartup(
 NTSTATUS RouteShutdown(
     VOID);
 
+UINT CountRouteNodes( PROUTE_CACHE_NODE Node );
+
+UINT CopyRouteNodes( PROUTE_CACHE_NODE None, PROUTE_CACHE_NODE Target );
+
 UINT RouteGetRouteToDestination(
     PIP_ADDRESS Destination,
     PNET_TABLE_ENTRY NTE,

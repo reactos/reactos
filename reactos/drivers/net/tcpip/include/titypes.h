@@ -65,7 +65,7 @@
 #else /* DBG */
 
 #define DEFINE_TAG
-#define INIT_TAG (Object, Tag)
+#define INIT_TAG(Object, Tag)
 
 /*
  * VOID ReferenceObject(

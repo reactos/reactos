@@ -15,7 +15,7 @@
  *
  *		Implementation of the Transmission Control Protocol(TCP).
  *
- * Version:	$Id: tcp_ipv4.c,v 1.1 2003/01/15 21:57:31 chorns Exp $
+ * Version:	$Id: tcp_ipv4.c,v 1.1.16.1 2004/03/29 07:01:37 arty Exp $
  *
  *		IPv4 specific functions
  *
@@ -57,6 +57,7 @@
  *	Andi Kleen		:	Fix accept error reporting.
  */
 
+#include <roscfg.h>
 #if 0
 #include <linux/config.h>
 #include <linux/types.h>

@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <icmp.h>
 #include <rawip.h>
@@ -202,9 +203,10 @@ VOID ICMPReceive(
         ((PICMP_HEADER)NewPacket->Data)->Code     = 0;
         ((PICMP_HEADER)NewPacket->Data)->Checksum = 0;
 
+#ifdef DBG
         DisplayIPPacket(IPPacket);
-
         DisplayIPPacket(NewPacket);
+#endif
 
         ICMPTransmit(NTE, NewPacket);
 

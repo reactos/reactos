@@ -17,6 +17,7 @@
 #include <udp.h>
 #include <tcp.h>
 #include <rosrtl/string.h>
+#include <info.h>
 
 #ifdef DBG
 DWORD DebugTraceLevel = 0x7fffffff;
@@ -29,7 +30,7 @@ PDEVICE_OBJECT RawIPDeviceObject = NULL;
 NDIS_HANDLE GlobalPacketPool     = NULL;
 NDIS_HANDLE GlobalBufferPool     = NULL;
 KSPIN_LOCK EntityListLock;
-TDIEntityID *EntityList          = NULL;
+TDIEntityInfo *EntityList        = NULL;
 ULONG EntityCount                = 0;
 ULONG EntityMax                  = 0;
 UDP_STATISTICS UDPStats;
@@ -766,6 +767,28 @@ DriverEntry(
     return Status;
   }
 
+  /* Setup network layer and transport layer entities */
+  KeInitializeSpinLock(&EntityListLock);
+  EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
+  if (!NT_SUCCESS(Status)) {
+	  TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+    TiUnload(DriverObject);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  EntityList[0].tei_entity   = CL_NL_ENTITY;
+  EntityList[0].tei_instance = 0;
+  EntityList[0].context      = 0;
+  EntityList[0].info_req     = InfoNetworkLayerTdiQueryEx;
+  EntityList[0].info_set     = InfoNetworkLayerTdiSetEx;
+  EntityList[1].tei_entity   = CL_TL_ENTITY;
+  EntityList[1].tei_instance = 0;
+  EntityList[1].context      = 0;
+  EntityList[1].info_req     = InfoTransportLayerTdiQueryEx;
+  EntityList[1].info_set     = InfoTransportLayerTdiSetEx;
+  EntityCount = 2;
+  EntityMax   = MAX_TDI_ENTITIES;
+
   /* Allocate NDIS packet descriptors */
   NdisAllocatePacketPool(&NdisStatus, &GlobalPacketPool, 100, sizeof(PACKET_CONTEXT));
   if (NdisStatus != NDIS_STATUS_SUCCESS) {
@@ -825,22 +848,6 @@ DriverEntry(
     TiUnload(DriverObject);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
-
-  /* Setup network layer and transport layer entities */
-  KeInitializeSpinLock(&EntityListLock);
-  EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
-  if (!NT_SUCCESS(Status)) {
-	  TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-    TiUnload(DriverObject);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  EntityList[0].tei_entity   = CL_NL_ENTITY;
-  EntityList[0].tei_instance = 0;
-  EntityList[1].tei_entity   = CL_TL_ENTITY;
-  EntityList[1].tei_instance = 0;
-  EntityCount = 2;
-  EntityMax   = MAX_TDI_ENTITIES;
 
   /* Use direct I/O */
   IPDeviceObject->Flags    |= DO_DIRECT_IO;

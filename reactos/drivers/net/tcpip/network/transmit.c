@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <transmit.h>
 #include <routines.h>
@@ -307,7 +308,7 @@ NTSTATUS IPSendDatagram(
 
     NCE = RCN->NCE;
 
-#if DBG
+#ifdef DBG
     if (!NCE) {
         TI_DbgPrint(MIN_TRACE, ("No NCE to use.\n"));
         FreeNdisPacket(IPPacket->NdisPacket);

@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <tcp.h>
 #include <pool.h>
@@ -620,6 +621,13 @@ NTSTATUS TCPConnect(
     KeReleaseSpinLock(&Connection->Lock, OldIrql);
     return STATUS_SUCCESS;
   }
+
+  TI_DbgPrint(MID_TRACE, ("AF: %08x\n", 
+			  Connection->AddressFile));
+  TI_DbgPrint(MID_TRACE, ("ADE: %08x\n", 
+			  Connection->AddressFile->ADE));
+  TI_DbgPrint(MID_TRACE, ("ADEA: %08x\n", 
+			  Connection->AddressFile->ADE->Address));
 
   Connection->LocalAddress = Connection->AddressFile->ADE->Address;
   Connection->LocalPort    = Connection->AddressFile->Port;

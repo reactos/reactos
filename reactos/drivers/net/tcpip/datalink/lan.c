@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <lan.h>
 #include <address.h>
@@ -717,6 +718,7 @@ VOID BindAdapter(
     BindInfo.Transmit      = LANTransmit;
 
     IF = IPCreateInterface(&BindInfo);
+
     if (!IF) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         FreeTDPackets(Adapter);

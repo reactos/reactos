@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <loopback.h>
 #include <ip.h>
@@ -169,6 +170,7 @@ NDIS_STATUS LoopRegisterAdapter(
       BindInfo.Transmit = LoopTransmit;
 
       Loopback = IPCreateInterface(&BindInfo);
+
       if ((Loopback != NULL) && (IPCreateNTE(Loopback, Address, 8)))
         {
           /* Reference the interface for the NTE. The reference for

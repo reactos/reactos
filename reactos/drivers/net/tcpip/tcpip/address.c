@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <address.h>
 #include <pool.h>
@@ -164,7 +165,9 @@ NTSTATUS AddrGetAddress(
                     }
                 }
 
-                IPAddress = ExAllocatePool(NonPagedPool, sizeof(IP_ADDRESS));
+                IPAddress = ExAllocatePoolWithTag(NonPagedPool,
+					          sizeof(IP_ADDRESS),
+						  FOURCC('I','P','v','4'));
                 if (IPAddress) {
                     AddrInitIPv4(IPAddress, ValidAddr->in_addr);
                     *Address = IPAddress;

@@ -9,6 +9,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <receive.h>
 #include <routines.h>
@@ -596,7 +597,7 @@ VOID IPv4Receive(
     if (NCE) {
       /* FIXME: Possibly fragment datagram */
       /* Forward the packet */
-      IPSendFragment(IPPacket, NCE);
+	IPSendFragment(IPPacket, NCE);
     } else {
       TI_DbgPrint(MIN_TRACE, ("No route to destination (0x%X).\n",
         IPPacket->DstAddr.Address.IPv4Address));

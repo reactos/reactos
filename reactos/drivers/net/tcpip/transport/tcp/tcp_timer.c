@@ -15,7 +15,7 @@
  *
  *		Implementation of the Transmission Control Protocol(TCP).
  *
- * Version:	$Id: tcp_timer.c,v 1.1 2003/01/15 21:57:31 chorns Exp $
+ * Version:	$Id: tcp_timer.c,v 1.1.16.1 2004/03/29 07:01:37 arty Exp $
  *
  * Authors:	Ross Biro, <bir7@leland.Stanford.Edu>
  *		Fred N. van Kempen, <waltje@uWalt.NL.Mugnet.ORG>
@@ -30,6 +30,7 @@
  *		Jorge Cwik, <jorge@laser.satlink.net>
  */
 
+#include <roscfg.h>
 #if 0
 #include <net/tcp.h>
 #else
