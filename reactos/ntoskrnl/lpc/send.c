@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.14 2004/01/07 21:13:22 ea Exp $
+/* $Id: send.c,v 1.15 2004/05/31 11:47:05 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 #include <internal/port.h>
 #include <internal/dbg.h>
 #include <internal/safe.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -222,6 +223,8 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 			PLPC_MESSAGE UnsafeLpcRequest,    
 			PLPC_MESSAGE UnsafeLpcReply)
 {
+   PETHREAD CurrentThread;
+   struct _EPROCESS *AttachedProcess;
    NTSTATUS Status;
    PEPORT Port;
    PQUEUEDMESSAGE Message;
@@ -243,22 +246,49 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 	return(Status);
      }
 
+   /* win32k sometimes needs to KeAttach() the CSRSS process in order to make
+      the PortHandle valid. Now that we've got the EPORT structure from the
+      handle we can undo this, so everything is normal again. Need to
+      re-KeAttach() before returning though */
+   CurrentThread = PsGetCurrentThread();
+   if (NULL == CurrentThread->OldProcess)
+     {
+       AttachedProcess = NULL;
+     }
+   else
+     {
+       AttachedProcess = CurrentThread->ThreadsProcess;
+       KeDetachProcess();
+     }
+
    Status = MmCopyFromCaller(&LpcRequestMessageSize,
 			     &UnsafeLpcRequest->MessageSize,
 			     sizeof(USHORT));
    if (!NT_SUCCESS(Status))
      {
+       if (NULL != AttachedProcess)
+         {
+           KeAttachProcess(AttachedProcess);
+         }
        ObDereferenceObject(Port);
        return(Status);
      }
    if (LpcRequestMessageSize > (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
      {
+       if (NULL != AttachedProcess)
+         {
+           KeAttachProcess(AttachedProcess);
+         }
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
      }
    LpcRequest = ExAllocatePool(NonPagedPool, LpcRequestMessageSize);
    if (LpcRequest == NULL)
      {
+       if (NULL != AttachedProcess)
+         {
+           KeAttachProcess(AttachedProcess);
+         }
        ObDereferenceObject(Port);
        return(STATUS_NO_MEMORY);
      }
@@ -267,6 +297,10 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
    if (!NT_SUCCESS(Status))
      {
        ExFreePool(LpcRequest);
+       if (NULL != AttachedProcess)
+         {
+           KeAttachProcess(AttachedProcess);
+         }
        ObDereferenceObject(Port);
        return(Status);
      }
@@ -274,12 +308,20 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
    if (LpcRequestMessageSize > (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
      {
        ExFreePool(LpcRequest);
+       if (NULL != AttachedProcess)
+         {
+           KeAttachProcess(AttachedProcess);
+         }
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
      }
    if (LpcRequest->DataSize != (LpcRequest->MessageSize - sizeof(LPC_MESSAGE)))
      {
        ExFreePool(LpcRequest);
+       if (NULL != AttachedProcess)
+         {
+           KeAttachProcess(AttachedProcess);
+         }
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
      }
@@ -290,8 +332,12 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 				 Port);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("Enqueue failed\n");
+	DPRINT1("Enqueue failed\n");
 	ExFreePool(LpcRequest);
+        if (NULL != AttachedProcess)
+          {
+            KeAttachProcess(AttachedProcess);
+          }
 	ObDereferenceObject(Port);
 	return(Status);
      }
@@ -333,6 +379,10 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
          {
 	   Status = STATUS_UNSUCCESSFUL;
 	 }
+     }
+   if (NULL != AttachedProcess)
+     {
+       KeAttachProcess(AttachedProcess);
      }
    ObDereferenceObject(Port);
    
