@@ -24,7 +24,7 @@
 #ifndef TMTM_H
 #define TMTM_H
 
-#define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
+#define Li2Double(x) ((double)((x).u.HighPart) * 4.294967296E9 + (double)((x).u.LowPart))
 
 typedef struct _PERFDATA
 {
@@ -52,5 +52,8 @@ typedef struct _PERFDATA
 	TIME				UserTime;
 	TIME				KernelTime;
 } PERFDATA, *PPERFDATA;
+
+#define SystemTimeInformation			3
+
 
 #endif
