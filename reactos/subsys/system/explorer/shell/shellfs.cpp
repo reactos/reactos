@@ -299,60 +299,64 @@ void ShellDirectory::read_directory()
 
 			bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi, !removeable);
 
-			Entry* entry;
+			try {
+				Entry* entry;
 
-			if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				entry = new ShellDirectory(this, pidls[n], _hwnd);
-			else
-				entry = new ShellEntry(this, pidls[n]);
+				if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+					entry = new ShellDirectory(this, pidls[n], _hwnd);
+				else
+					entry = new ShellEntry(this, pidls[n]);
 
-			if (!first_entry)
-				first_entry = entry;
+				if (!first_entry)
+					first_entry = entry;
 
-			if (last)
-				last->_next = entry;
+				if (last)
+					last->_next = entry;
 
-			memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
+				memcpy(&entry->_data, &w32fd, sizeof(WIN32_FIND_DATA));
 
-			if (bhfi_valid)
-				memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
+				if (bhfi_valid)
+					memcpy(&entry->_bhfi, &bhfi, sizeof(BY_HANDLE_FILE_INFORMATION));
 
-			if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
-				if (!entry->_data.cFileName[0])
-					_tcscpy(entry->_data.cFileName, name);
-				else if (_tcscmp(entry->_display_name, name))
-					entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
-			}
-
-			 // get display icons for files and virtual objects
-			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-				!(attribs & SFGAO_FILESYSTEM)) {
-				entry->_hIcon = extract_icon(_folder, pidls[n]/*, (ShellEntry*)entry*/);
-
-				if (!entry->_hIcon) {
-					if (!entry->_hIcon) {
-						ShellPath pidl_abs = static_cast<ShellEntry*>(entry)->create_absolute_pidl();
-						LPCITEMIDLIST pidl = pidl_abs;
-
-						SHFILEINFO sfi;
-
-						if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
-							entry->_hIcon = sfi.hIcon;
-					}
-
-					if (!entry->_hIcon)
-						entry->_hIcon = (HICON)-1;	// don't try again later
+				if (SUCCEEDED(name_from_pidl(_folder, pidls[n], name, MAX_PATH, SHGDN_INFOLDER|0x2000/*0x2000=SHGDN_INCLUDE_NONFILESYS*/))) {
+					if (!entry->_data.cFileName[0])
+						_tcscpy(entry->_data.cFileName, name);
+					else if (_tcscmp(entry->_display_name, name))
+						entry->_display_name = _tcsdup(name);	// store display name separate from file name; sort display by file name
 				}
+
+				 // get display icons for files and virtual objects
+				if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+					!(attribs & SFGAO_FILESYSTEM)) {
+					entry->_hIcon = extract_icon(_folder, pidls[n]/*, (ShellEntry*)entry*/);
+
+					if (!entry->_hIcon) {
+						if (!entry->_hIcon) {
+							ShellPath pidl_abs = static_cast<ShellEntry*>(entry)->create_absolute_pidl();
+							LPCITEMIDLIST pidl = pidl_abs;
+
+							SHFILEINFO sfi;
+
+							if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
+								entry->_hIcon = sfi.hIcon;
+						}
+
+						if (!entry->_hIcon)
+							entry->_hIcon = (HICON)-1;	// don't try again later
+					}
+				}
+
+				entry->_down = NULL;
+				entry->_expanded = false;
+				entry->_scanned = false;
+				entry->_level = level;
+				entry->_shell_attribs = attribs;
+				entry->_bhfi_valid = bhfi_valid;
+
+				last = entry;
+			} catch(COMException& e) {
+				HandleException(e, _hwnd);
 			}
-
-			entry->_down = NULL;
-			entry->_expanded = false;
-			entry->_scanned = false;
-			entry->_level = level;
-			entry->_shell_attribs = attribs;
-			entry->_bhfi_valid = bhfi_valid;
-
-			last = entry;
 		}
 	} while(SUCCEEDED(hr_next));
 
