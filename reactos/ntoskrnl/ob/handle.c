@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.46 2003/06/24 11:34:28 gvg Exp $
+/* $Id: handle.c,v 1.47 2003/07/10 21:34:29 royce Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -154,6 +154,9 @@ ObDuplicateObject(PEPROCESS SourceProcess,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
 NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 		   IN	HANDLE		SourceHandle,
@@ -600,6 +603,9 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ObReferenceObjectByHandle(HANDLE Handle,
 			  ACCESS_MASK DesiredAccess,
@@ -751,6 +757,8 @@ ObReferenceObjectByHandle(HANDLE Handle,
  *		
  * RETURN VALUE
  * 	Status.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL NtClose(HANDLE Handle)
 {
@@ -775,6 +783,9 @@ NTSTATUS STDCALL NtClose(HANDLE Handle)
    return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ObInsertObject(PVOID Object,
 	       PACCESS_STATE PassedAccessState,

@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.38 2003/06/07 12:23:14 chorns Exp $
+/* $Id: namespc.c,v 1.39 2003/07/10 21:34:29 royce Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -43,6 +43,9 @@ static GENERIC_MAPPING ObpTypeMapping = {
 
 /* FUNCTIONS **************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 			ULONG Attributes,
@@ -113,6 +116,8 @@ DPRINT("Object %p\n", Object);
  *
  * RETURN VALUE
  * 	Status.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,

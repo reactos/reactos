@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.63 2003/06/07 12:23:14 chorns Exp $
+/* $Id: object.c,v 1.64 2003/07/10 21:34:29 royce Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -231,6 +231,8 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
  * ARGUMENTS
  *
  * RETURN VALUE
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 ObQueryNameString (IN PVOID Object,
@@ -471,6 +473,8 @@ ObRosCreateObject (OUT PHANDLE Handle,
  * ARGUMENTS
  *
  * RETURN VALUE
+ *
+ * @unimplemented
  */
 NTSTATUS STDCALL
 ObCreateObject (IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
@@ -487,6 +491,9 @@ ObCreateObject (IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
   return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ObReferenceObjectByPointer(IN PVOID Object,
 			   IN ACCESS_MASK DesiredAccess,
@@ -543,6 +550,9 @@ ObReferenceObjectByPointer(IN PVOID Object,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ObOpenObjectByPointer(IN POBJECT Object,
 		      IN ULONG HandleAttributes,
@@ -636,6 +646,8 @@ ObpPerformRetentionChecks(POBJECT_HEADER Header)
  *
  * RETURN VALUE
  * 	None.
+ *
+ * @implemented
  */
 VOID FASTCALL
 ObfReferenceObject(IN PVOID Object)
@@ -669,6 +681,8 @@ ObfReferenceObject(IN PVOID Object)
  *
  * RETURN VALUE
  * 	None.
+ *
+ * @implemented
  */
 VOID FASTCALL
 ObfDereferenceObject(IN PVOID Object)
@@ -711,6 +725,8 @@ ObfDereferenceObject(IN PVOID Object)
  *
  * RETURN VALUE
  * 	Reference count.
+ *
+ * @implemented
  */
 ULONG STDCALL
 ObGetObjectPointerCount(PVOID Object)

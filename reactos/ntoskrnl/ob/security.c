@@ -17,6 +17,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 ObAssignSecurity(IN PACCESS_STATE AccessState,
 		 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -27,6 +30,9 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 ObGetObjectSecurity(IN PVOID Object,
 		    OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
@@ -36,6 +42,9 @@ ObGetObjectSecurity(IN PVOID Object,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 			IN BOOLEAN MemoryAllocated)
