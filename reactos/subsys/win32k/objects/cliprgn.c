@@ -16,11 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.26 2003/11/26 21:48:35 gvg Exp $ */
+/* $Id: cliprgn.c,v 1.27 2003/12/13 12:12:41 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <internal/safe.h>
 #include <win32k/dc.h>
 #include <win32k/region.h>
 #include <win32k/cliprgn.h>
@@ -157,8 +158,9 @@ int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-int STDCALL NtGdiGetClipBox(HDC  hDC,
-			   LPRECT  rc)
+int FASTCALL
+IntGdiGetClipBox(HDC    hDC,
+			     LPRECT rc)
 {
   int retval;
   DC *dc;
@@ -170,6 +172,26 @@ int STDCALL NtGdiGetClipBox(HDC  hDC,
   DC_UnlockDc( hDC );
   NtGdiDPtoLP(hDC, (LPPOINT)rc, 2);
   return(retval);
+}
+
+int STDCALL NtGdiGetClipBox(HDC  hDC,
+			   LPRECT  rc)
+{
+  int Ret;
+  NTSTATUS Status;
+  RECT Saferect;
+  
+  Ret = IntGdiGetClipBox(hDC, &Saferect);
+  
+  Status = MmCopyToCaller(rc, &Saferect, sizeof(RECT));
+  if(!NT_SUCCESS(Status))
+  {
+  
+    SetLastNtError(Status);
+    return ERROR;
+  }
+  
+  return Ret;
 }
 
 int STDCALL NtGdiGetMetaRgn(HDC  hDC,

@@ -94,5 +94,11 @@ IntGdiPolyPolygon(DC      *dc,
                   LPINT   PolyCounts,
                   int     Count);
 
+/* Rgn functions */
+
+int FASTCALL
+IntGdiGetClipBox(HDC    hDC,
+			     LPRECT rc);
+
 #endif /* _WIN32K_INTGDI_H */
 

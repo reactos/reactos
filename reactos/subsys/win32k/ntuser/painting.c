@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.45 2003/12/12 18:18:21 weiden Exp $
+ *  $Id: painting.c,v 1.46 2003/12/13 12:12:41 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -49,6 +49,7 @@
 #include <win32k/coord.h>
 #include <win32k/region.h>
 #include <include/vis.h>
+#include <include/intgdi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -766,7 +767,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    }
 
    IntGetClientRect(Window, &ClientRect);
-   NtGdiGetClipBox(lPs->hdc, &ClipRect);
+   IntGdiGetClipBox(lPs->hdc, &ClipRect);
    NtGdiLPtoDP(lPs->hdc, (LPPOINT)&ClipRect, 2);
    NtGdiIntersectRect(&lPs->rcPaint, &ClientRect, &ClipRect);
    NtGdiDPtoLP(lPs->hdc, (LPPOINT)&lPs->rcPaint, 2);
@@ -986,13 +987,13 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
    if (lprcScroll)
       rSrc = *lprcScroll;
    else
-      NtGdiGetClipBox(hDC, &rSrc);
+      IntGdiGetClipBox(hDC, &rSrc);
    NtGdiLPtoDP(hDC, (LPPOINT)&rSrc, 2);
 
    if (lprcClip)
       rClip = *lprcClip;
    else
-      NtGdiGetClipBox(hDC, &rClip);
+      IntGdiGetClipBox(hDC, &rClip);
    NtGdiLPtoDP(hDC, (LPPOINT)&rClip, 2);
 
    NtGdiIntersectRect(&rClipped_src, &rSrc, &rClip);
