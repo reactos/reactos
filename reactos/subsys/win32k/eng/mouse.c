@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.21 2003/03/24 22:49:54 gvg Exp $
+/* $Id: mouse.c,v 1.22 2003/03/28 15:27:47 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -248,7 +248,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     Msg.time = TickCount;
     Msg.pt.x = mouse_x + mouse_cx;
     Msg.pt.y = mouse_y + mouse_cy;
-    if ((mouse_cx > 0) || (mouse_cy > 0))
+    if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
     {
       MsqInsertSystemMessage(&Msg);
     }
