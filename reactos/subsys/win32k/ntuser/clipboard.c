@@ -61,7 +61,7 @@ NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
    ClipboardThread = PsGetWin32Thread();
    return TRUE;
 #else
-   UNIMPLEMENTED
+   DPRINT1("NtUserOpenClipboard is unimplemented\n");
    return FALSE;
 #endif
 }
