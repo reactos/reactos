@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.41 2004/01/16 13:18:23 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.42 2004/01/16 15:39:28 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -87,6 +87,15 @@ IntCopyBitmap(HBITMAP bmp)
   return ret;
 }
 
+STATIC VOID FASTCALL
+SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
+{
+  CurInfo->PointerRectLeft = PointerRect->left;
+  CurInfo->PointerRectRight = PointerRect->right;
+  CurInfo->PointerRectTop = PointerRect->top;
+  CurInfo->PointerRectBottom = PointerRect->bottom;
+}
+
 #define COLORCURSORS_ALLOWED FALSE
 HCURSOR FASTCALL
 IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange)
@@ -102,6 +111,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
   HBITMAP hMask = (HBITMAP)0, hColor = (HBITMAP)0;
   PSURFOBJ soMask = NULL, soColor = NULL;
   PXLATEOBJ XlateObj = NULL;
+  RECTL PointerRect;
   
   CurInfo = &WinStaObject->SystemCursor;
   OldCursor = CurInfo->CurrentCursorObject;
@@ -136,8 +146,9 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       0,
                                                       CurInfo->x, 
                                                       CurInfo->y, 
-                                                      &CurInfo->PointerRect,
+                                                      &PointerRect,
                                                       SPS_CHANGE);
+    SetPointerRect(CurInfo, &PointerRect);
     
     CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
     CurInfo->ShowingCursor = 0;
@@ -210,8 +221,9 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       NewCursor->IconInfo.yHotspot,
                                                       CurInfo->x, 
                                                       CurInfo->y, 
-                                                      &CurInfo->PointerRect,
+                                                      &PointerRect,
                                                       SPS_CHANGE);
+    SetPointerRect(CurInfo, &PointerRect);
     
     if(hMask)
     {
