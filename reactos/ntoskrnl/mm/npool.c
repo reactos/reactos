@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.44 2001/03/25 02:34:28 dwelch Exp $
+/* $Id: npool.c,v 1.45 2001/05/03 17:24:00 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -26,7 +26,7 @@
 #include <internal/debug.h>
 
 /* Enable strict checking of the nonpaged pool on every allocation */
-/* #define ENABLE_VALIDATE_POOL */
+//#define ENABLE_VALIDATE_POOL
 
 /* Enable tracking of statistics about the tagged blocks in the pool */
 #define TAG_STATISTICS_TRACKING
@@ -433,7 +433,7 @@ static void validate_used_list(void)
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	if (base_addr < (kernel_pool_base) ||
-	    (base_addr+current->size) >
+	    (base_addr+current->Size) >
 	    (kernel_pool_base)+NONPAGED_POOL_SIZE)
 	  {
 	     DbgPrint("Block %x found outside pool area\n",current);
@@ -466,7 +466,7 @@ static void check_duplicates(BLOCK_HDR* blk)
  */
 {
    unsigned int base = (int)blk;
-   unsigned int last = ((int)blk) + +sizeof(BLOCK_HDR) + blk->size;   
+   unsigned int last = ((int)blk) + +sizeof(BLOCK_HDR) + blk->Size;
    BLOCK_HDR* current;
    PLIST_ENTRY current_entry;
    
@@ -488,7 +488,7 @@ static void check_duplicates(BLOCK_HDR* blk)
 	   for(;;);
 	 }
        if  ( (int)current < base &&
-	     ((int)current + current->size + sizeof(BLOCK_HDR))
+	     ((int)current + current->Size + sizeof(BLOCK_HDR))
 	     > base )
 	 {
 	   DbgPrint("intersecting blocks on list\n");
@@ -509,7 +509,7 @@ static void check_duplicates(BLOCK_HDR* blk)
 	   for(;;);
 	 }
        if  ( (int)current < base &&
-	     ((int)current + current->size + sizeof(BLOCK_HDR))
+	     ((int)current + current->Size + sizeof(BLOCK_HDR))
 	     > base )
 	 {
 	   DbgPrint("intersecting blocks on list\n");
@@ -822,7 +822,9 @@ VOID STDCALL ExFreePool (PVOID block)
 {
    BLOCK_HDR* blk=address_to_block(block);
    KIRQL oldIrql;
-   
+
+   assert(block);
+
    OLD_DPRINT("(%s:%d) freeing block %x\n",__FILE__,__LINE__,blk);
    
    POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,

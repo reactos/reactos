@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.21 2001/05/01 23:08:20 chorns Exp $
+/* $Id: mminit.c,v 1.22 2001/05/03 17:23:59 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -256,7 +256,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
        /* add 1MB for standard memory (not extended) */
        MmStats.NrTotalPages += 256;
      }
-#if 1
+#ifdef BIOS_MEM_FIX
   MmStats.NrTotalPages += 16;
 #endif
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGESIZE) / 1024);
