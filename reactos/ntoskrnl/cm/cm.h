@@ -353,6 +353,12 @@ typedef struct _KEY_OBJECT
 
   /* List of subkeys loaded */
   struct _KEY_OBJECT **SubKeys;
+
+  /* List entry into the global key object list */
+  LIST_ENTRY ListEntry;
+  
+  /* Time stamp for the last access by the parse routine */
+  ULONG TimeStamp;
 } KEY_OBJECT, *PKEY_OBJECT;
 
 /* Bits 31-22 (top 10 bits) of the cell index is the directory index */
@@ -529,10 +535,11 @@ CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
 NTSTATUS
 CmiRemoveKeyFromList(IN PKEY_OBJECT NewKey);
 
-PKEY_OBJECT
+NTSTATUS
 CmiScanKeyList(IN PKEY_OBJECT Parent,
 	       IN PUNICODE_STRING KeyName,
-	       IN ULONG Attributes);
+	       IN ULONG Attributes,
+	       PKEY_OBJECT* ReturnedObject);
 
 NTSTATUS
 CmiCreateVolatileHive(PREGISTRY_HIVE *RegistryHive);

@@ -21,6 +21,7 @@
 
 extern POBJECT_TYPE  CmiKeyType;
 extern PREGISTRY_HIVE  CmiVolatileHive;
+extern LIST_ENTRY CmiKeyObjectListHead;
 
 static BOOLEAN CmiRegistryInitialized = FALSE;
 
@@ -300,6 +301,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
+  InsertTailList(&CmiKeyObjectListHead, &KeyObject->ListEntry);
+
   /* add key to subkeys of parent if needed */
   Status = CmiAddSubKey(KeyObject->RegistryHive,
 			KeyObject->ParentKey,
@@ -355,7 +358,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
-  ObDereferenceObject(KeyObject);
+  
   ObDereferenceObject(Object);
 
   if (Disposition)
@@ -419,6 +422,9 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   /* Dereference the object */
   ObDereferenceObject(KeyObject);
+  /* Remove the keep-alive reference */
+  ObDereferenceObject(KeyObject);
+
   if (KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
     ObDereferenceObject(KeyObject);
 
@@ -513,8 +519,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
 	{
 	  CurKey = KeyObject->SubKeys[i];
-	  if (CurKey->RegistryHive == CmiVolatileHive ||
-	      CurKey->RegistryHive != RegistryHive)
+	  if (CurKey->RegistryHive != RegistryHive)
 	    {
 	      if (j == Index)
 		break;
