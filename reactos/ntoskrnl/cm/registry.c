@@ -19,10 +19,26 @@
 /* FILE STATICS *************************************************************/
 
 #if PROTO_REG
-POBJECT_TYPE  CmKeyType = NULL;
-PKEY_OBJECT  RootKey = NULL;
 
-static PVOID  CmpObjectParse(PVOID  ParsedObject, PWSTR  *Path);
+typedef struct _KEY_OBJECT
+/*
+ * Type defining the Object Manager Key Object
+ */
+{
+  CSHORT Type;
+  CSHORT Size;
+  
+  ULONG Flags;
+  WCHAR *Name;
+  struct _KEY_OBJECT *NextKey;
+} KEY_OBJECT, *PKEY_OBJECT;
+
+#define  KO_MARKED_FOR_DELETE  0x00000001
+
+static POBJECT_TYPE  CmiKeyType = NULL;
+static PKEY_OBJECT  CmiKeyList = NULL;
+
+static PVOID  CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path);
 #endif
 
 /* FUNCTIONS *****************************************************************/
@@ -35,30 +51,31 @@ CmInitializeRegistry(VOID)
   OBJECT_ATTRIBUTES  ObjectAttributes;
   
   /*  Initialize the Key object type  */
-  CmKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-  CmKeyType->TotalObjects = 0;
-  CmKeyType->TotalHandles = 0;
-  CmKeyType->MaxObjects = ULONG_MAX;
-  CmKeyType->MaxHandles = ULONG_MAX;
-  CmKeyType->PagedPoolCharge = 0;
-  CmKeyType->NonpagedPoolCharge = sizeof(KEY_OBJECT);
-  CmKeyType->Dump = NULL;
-  CmKeyType->Open = NULL;
-  CmKeyType->Close = NULL;
-  CmKeyType->Delete = NULL;
-  CmKeyType->Parse = CmpObjectParse;
-  CmKeyType->Security = NULL;
-  CmKeyType->QueryName = NULL;
-  CmKeyType->OkayToClose = NULL;
-  RtlInitUnicodeString(&CmKeyType->TypeName, L"Key");
+  CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+  CmiKeyType->TotalObjects = 0;
+  CmiKeyType->TotalHandles = 0;
+  CmiKeyType->MaxObjects = ULONG_MAX;
+  CmiKeyType->MaxHandles = ULONG_MAX;
+  CmiKeyType->PagedPoolCharge = 0;
+  CmiKeyType->NonpagedPoolCharge = sizeof(KEY_OBJECT);
+  CmiKeyType->Dump = NULL;
+  CmiKeyType->Open = NULL;
+  CmiKeyType->Close = NULL;
+  CmiKeyType->Delete = NULL;
+  CmiKeyType->Parse = CmpObjectParse;
+  CmiKeyType->Security = NULL;
+  CmiKeyType->QueryName = NULL;
+  CmiKeyType->OkayToClose = NULL;
+  RtlInitUnicodeString(&CmiKeyType->TypeName, L"Key");
 
   /*  Build the Root Key Object  */
+  /*  FIXME: This should be split into two objects, 1 system and 1 user  */
   RtlInitUnicodeString(&RootKeyName, L"\\Registry");
   InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   Status = ObCreateObject(&RootKeyHandle,
                           STANDARD_RIGHTS_REQUIRED,
                           &ObjectAttributes,
-                          ObKeyType);
+                          CmiKeyType);
 
   /* FIXME: map / build registry data  */
   /* FIXME: Create initial predefined symbolic links  */
@@ -97,161 +114,52 @@ ZwCreateKey(PHANDLE KeyHandle,
             PULONG Disposition)
 {
 #if PROTO_REG
+  NTSTATUS  Status;
+  PKEY_TYPE  CurKey;
+
   /* FIXME: Should CurLevel be alloced to handle arbitrary size components? */
   WCHAR *S, *T, CurLevel[255];
   PKEY_OBJECT ParentKey, CurSubKey, NewKey;
   
   assert(ObjectAttributes != NULL);
 
-  /* FIXME: Verify ObjectAttributes is in \\Registry space */
-  if (ObjectAttributes->RootDirectory == NULL)
+  Status = CmiBuildKeyPath(&KeyNameBuf, ObjectAttributes);
+  if (!NT_SUCCESS(Status))
     {
-      S = ObjectAttributes->ObjectName;
-      if (wstrncmp(S, "\\Registry", 9))
-        {
-          return STATUS_UNSUCCESSFUL;
-        }
-      ParentKey = RootKey;
-
-      /*  Get remainder of full key path after removal of \\Registry */
-      S += 9;
-      if (S[0] != '\\')
-        {
-          return STATUS_UNSUCCESSFUL;
-        }
-      S++;
-
-      /*  Walk through key path and fail if any component does not exist */
-      while ((T = wstrchr(S, '\\')) != NULL)
-        {
-          /*  Move Key Object pointer to first child  */
-          ParentKey = ParentKey->SubKeys;
-          
-          /*  Extract the next path component from requested path  */
-          wstrncpy(CurLevel, S, T-S);
-          CurLevel[T-S] = 0;
-          DPRINT("CurLevel:[%w]", CurLevel);
-          
-          /*  Walk through children looking for path component  */
-          while (ParentKey != NULL)
-            {
-              if (wstrcmp(CurLevel, ParentKey->Name) == 0)
-                {
-                  break;
-                }
-              ParentKey = ParentKey->NextKey;
-            }
-          
-          /*  Fail if path component was not one of the children  */
-          if (ParentKey == NULL)
-            {
-              return STATUS_UNSUCCESSFUL;
-            }
-          
-          /*  Advance path string pointer to next component  */
-          S = wstrchr(S, '\\') + 1;
-        }
-
-      /*  Check for existance of subkey , return if it exists */
-      CurSubKey = ParentKey->SubKeys;
-      while (CurSubKey != NULL && wstrcmp(S, CurSubKey->Name) != 0)
-        {
-          CurSubKey = CurSubKey->NextKey;
-        }
-      if (CurSubKey != NULL)
-        {
-          /* FIXME: Fail if key is marked for deletion  */
-          *Disposition = REG_KEY_ALREADY_EXISTS;
-          *KeyHandle = ObInsertHandle(KeGetCurrentProcess(),
-                                      HEADER_TO_BODY(CurSubKey),
-                                      DesiredAccess,
-                                      FALSE);
-
-          return STATUS_SUCCESS;
-        }
-      else
-        {
-          /*  If KeyHandle is not the parent key, or is not open with */
-          /*  KEY_CREATE_SUB_KEY permission, then fail */
-          KeyHandleRep = ObTranslateHandle(KeGetCurrentProcess(), KeyHandle);
-          if (KeyHandleRep == NULL ||
-              KeyHandleRep->ObjectBody != ParentKey ||
-              (KeyHandleRep->GrantedAccess & KEY_CREATE_SUB_KEY) == 0)
-            {
-              return STATUS_UNSUCCESSFUL;
-            }
-          
-          /*  Build new CmKeyType object */
-          NewKey = ObGenericCreateObject(KeyHandle, 
-                                         DesiredAccess, 
-                                         NULL, 
-                                         CmKeyType);
-          if (NewKey == NULL)
-            {
-              return STATUS_UNSUCCESSFUL;
-            }
-          NewKey->Flags = 0;
-          KeQuerySystemTime(&NewKey->LastWriteTime);
-          NewKey->TitleIndex = 0;
-          NewKey->NumSubKeys = 0;
-          NewKey->MaxSubNameLength = 0;
-          NewKey->MaxSubClassLength = 0;
-          NewKey->SubKeys = NULL;
-          NewKey->NumValues = 0;
-          NewKey->MaxValueNameLength = 0;
-          NewKey->MaxValueDataLength = 0;
-          NewKey->Values = NULL;
-          NewKey->Name = ExAllocatePool(NonPagedPool, 
-                                        (wstrlen(S) + 1) * sizeof(WCHAR));
-          wstrcpy(NewKey->Name, S);
-          if (Class != NULL)
-            {
-              NewKey->Class = ExAllocatePool(NonPagedPool, 
-                                             (wstrlen(Class) + 1) * 
-                                               sizeof(WCHAR));
-              wstrcpy(NewKey->Class, Class);
-            }
-          else
-            {
-              NewKey->Class = NULL;
-            }
-          NewKey->NextKey = NULL;
-          
-          /*  Add to end of parent key subkey list */
-          if (ParentKey->SubKeys == NULL)
-            {
-              ParentKey->SubKeys = NewKey;
-            }
-          else
-            {
-              CurSubKey = ParentKey->SubKeys;
-              while (CurSubKey->NextKey != NULL)
-                {
-                  CurSubKey = CurSubKey->NextKey;
-                }
-              NewKey->TitleIndex = CurSubKey->TitleIndex + 1;
-              CurSubKey->NextKey = NewKey;
-            }
-          
-          /*  Increment parent key subkey count and set parent subkey maxes */
-          ParentKey->NumSubKeys++;
-          if (ParentKey->MaxSubNameLength < wstrlen(NewKey->Name))
-            {
-              ParentKey->MaxSubNameLength = wstrlen(NewKey->Name);
-            }
-          if (NewKey->Class != NULL &&
-              ParentKey->MaxSubClassLength < wstrlen(NewKey->Class))
-            {
-              ParentKey->MaxSubClassLength = wstrlen(NewKey->Class);
-            }
-          
-          return STATUS_SUCCESS;
-        }
+      return Status;
     }
-  else
+
+  /* FIXME: Scan the key list to see if key already open  */
+  CurKey = CmiKeyList;
+  while (CurKey != NULL && wcscmp(KeyPath, CurKey->Name) != 0)
     {
-      return STATUS_UNSUCCESSFUL;
+      CurKey = CurKey->Next;
     }
+  if (CurKey != NULL)
+    {
+      /* FIXME: If so, return a reference to it  */
+      /* FIXME: destroy KeyNameBuf before return  */
+      /* FIXME:(?) we could check to see if the key still exists here...  */
+    }
+
+  /* FIXME: Call CmiCreateKey to create/open the key in the registry file  */
+  Status = CmiCreateKey(KeyNameBuf, TitleIndex, Class, Disposition);
+
+  /*  Create new key object and put into linked list  */
+  NewKey = ObGenericCreateObject(KeyHandle, 
+                                 DesiredAccess, 
+                                 NULL, 
+                                 CmiKeyType);
+  if (NewKey == NULL)
+    {
+      return  STATUS_UNSUCCESSFUL;
+    }
+  NewKey->Flags = 0;
+  NewKey->Name = KeyNameBuf;
+  NewKey->NextKey = CmiKeyList;
+  CmiKeyList = NewKey;
+
+  return  STATUS_SUCCESS;
 #endif
   
   UNIMPLEMENTED;
@@ -679,9 +587,9 @@ NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
 
 /*  ------------------------------------------  Private Implementation  */
 
-#if 0
+#if PROTO_REG
 static PVOID 
-CmpObjectParse(PVOID ParsedObject, PWSTR* Path)
+CmiObjectParse(PVOID ParsedObject, PWSTR* Path)
 {
   PWSTR  S, SubKeyBuffer;
   PKEY_OBJECT  CurrentKey, ChildKey;
@@ -732,6 +640,65 @@ CmpObjectParse(PVOID ParsedObject, PWSTR* Path)
   /* %%% Return object for SubKey  */
 
   ExFreePool(SubKeyBuffer);
+
+}
+
+static NTSTATUS
+CmiBuildKeyPath(PWSTR  *KeyPath, POBJECT_ATTRIBUTES  ObjectAttributes)
+{
+  /* FIXME: Verify ObjectAttributes is in \\Registry space and comppute size for path */
+  KeyNameSize = 0;
+  if (ObjectAttributes->RootDirectory != NULL)
+    {
+      /* FIXME: determine type of object for RootDirectory  */
+      /* FIXME: if object type is ObDirType  */
+        /* FIXME: fail if RootDirectory != '\\'  */
+        /* FIXME: check for 'Registry' in ObjectName, fail if missing  */
+        /* FIXME: add size for remainder to KeyNameSize  */
+      /* FIXME: else if object type is CmiKeyType  */
+        /* FIXME: add size of Name from RootDirectory object to KeyNameSize  */
+        /* FIXME: add 1 to KeyNamesize for '\\'  */
+        /* FIXME: add size of ObjectName to KeyNameSize  */
+      /* FIXME: else fail on incorrect type  */
+    }
+  else
+    {
+      /* FIXME: check for \\Registry and fail if missing  */
+      /* FIXME: add size of remainder to KeyNameSize  */
+    }
+
+  KeyNameBuf = ExAllocatePool(NonPagedPool, KeyNameSize);
+
+  /* FIXME: Construct relative pathname  */
+  KeyNameBuf[0] = 0;
+  if (ObjectAttributes->RootDirectory != NULL)
+    {
+      /* FIXME: determine type of object for RootDirectory  */
+      /* FIXME: if object type is ObDirType  */
+        /* FIXME: fail if RootDirectory != '\\'  */
+        /* FIXME: check for 'Registry' in ObjectName, fail if missing  */
+        /* FIXME: copy remainder into KeyNameBuf  */
+      /* FIXME: else if object type is CmiKeyType  */
+        /* FIXME: copy Name from RootDirectory object into KeyNameBuf  */
+        /* FIXME: append '\\' into KeyNameBuf  */
+        /* FIXME: append ObjectName into KeyNameBuf  */
+    }
+  else
+    {
+      /* FIXME: check for \\Registry\\ and fail if missing  */
+      /* FIXME: copy remainder into KeyNameBuf  */
+    }
+
+  *KeyPath = KeyNameBuf;
+  return  STATUS_SUCCESS;
+}
+
+static NTSTATUS
+CmiCreateKey(PWSTR  KeyNameBuf,
+             ULONG TitleIndex,
+             PUNICODE_STRING Class, 
+             PULONG Disposition)
+{
 
 }
 #endif

@@ -3,42 +3,6 @@
  * Object Manager structures and typedefs
  */
 
-typedef struct _KEY_VALUE
-{
-  ULONG Flags;
-  ULONG TitleIndex;
-  ULONG Type;
-  WCHAR *Name;
-  ULONG DataLength;
-  PVOID Data;
-} KEY_VALUE, *PKEY_VALUE;
-
-typedef struct _KEY_OBJECT
-/*
- * Type defining the Object Manager Key Object
- */
-{
-  CSHORT Type;
-  CSHORT Size;
-  
-  ULONG Flags;
-  LARGE_INTEGER LastWriteTime;
-  ULONG TitleIndex;
-  ULONG NumSubKeys;
-  ULONG MaxSubNameLength;
-  ULONG MaxSubClassLength;
-  struct _KEY_OBJECT *SubKeys;
-  ULONG NumValues;
-  ULONG MaxValueNameLength;
-  ULONG MaxValueDataLength;
-  PKEY_VALUE *Values;
-  WCHAR *Name;
-  WCHAR *Class;
-  struct _KEY_OBJECT *NextKey;
-} KEY_OBJECT, *PKEY_OBJECT;
-
-#define  KO_MARKED_FOR_DELETE  0x00000001
-
 /*
  * key query information class 
  */
