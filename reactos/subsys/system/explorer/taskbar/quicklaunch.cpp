@@ -68,7 +68,7 @@ HWND QuickLaunchBar::Create(HWND hwndParent)
 
 	HWND hwnd = CreateToolbarEx(hwndParent,
 								WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_NORESIZE|
-								TBSTYLE_FLAT|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE,
+								TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE|TBSTYLE_FLAT,
 								IDW_QUICKLAUNCHBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
 
 	if (hwnd)
@@ -98,7 +98,7 @@ void QuickLaunchBar::AddShortcuts()
 	ShellFolder desktop_folder;
 	WindowCanvas canvas(_hwnd);
 
-	TBBUTTON btn = {-2/*I_IMAGENONE*/, 0, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0};
+	TBBUTTON btn = {0, 0, TBSTATE_ENABLED, BTNS_BUTTON|BTNS_NOPREFIX, {0, 0}, 0, 0};
 
 	for(Entry*entry=_dir->_down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
@@ -151,6 +151,25 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 int QuickLaunchBar::Command(int id, int code)
 {
 	_entries[id]._entry->launch_entry(_hwnd);
+
+	return 0;
+}
+
+int QuickLaunchBar::Notify(int id, NMHDR* pnmh)
+{
+	switch(pnmh->code) {
+	  case TTN_GETDISPINFO: {
+		NMTTDISPINFO* ttdi = (NMTTDISPINFO*) pnmh;
+
+		int id = ttdi->hdr.idFrom;
+		ttdi->lpszText = (LPTSTR)_entries[id]._title.c_str();
+#ifdef TTF_DI_SETITEM
+		ttdi->uFlags |= TTF_DI_SETITEM;
+#endif
+		break;}
+
+		return super::Notify(id, pnmh);
+	}
 
 	return 0;
 }
