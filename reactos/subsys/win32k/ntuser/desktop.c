@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.3 2003/12/12 18:18:21 weiden Exp $
+ *  $Id: desktop.c,v 1.4 2003/12/12 20:44:52 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -373,6 +373,8 @@ NtUserCreateDesktop(
     NULL,
     &Desktop);
 
+  DesktopObject->Self = (HANDLE)Desktop;
+  
   ObDereferenceObject(DesktopObject);
   ExFreePool(DesktopName.Buffer);
 
@@ -533,7 +535,7 @@ NtUserOpenInputDesktop(
 
    Status = IntValidateDesktopHandle(
       InputDesktop,
-      KernelMode,
+      UserMode,
       0,
       &Object);
 
@@ -598,7 +600,7 @@ NtUserCloseDesktop(HDESK hDesktop)
 
    Status = IntValidateDesktopHandle(
       hDesktop,
-      KernelMode,
+      UserMode,
       0,
       &Object);
 
@@ -738,14 +740,51 @@ NtUserResolveDesktopForWOW(DWORD Unknown0)
  * NtUserGetThreadDesktop
  *
  * Status
- *    @unimplemented
+ *    @implemented
  */
 
 HDESK STDCALL
 NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 {
-   UNIMPLEMENTED
-   return 0;
+  PDESKTOP_OBJECT Desktop;
+  NTSTATUS Status;
+  PETHREAD Thread;
+  HDESK Ret;
+  
+  if(!dwThreadId)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  Status = PsLookupThreadByThreadId((PVOID)dwThreadId, &Thread);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  Desktop = Thread->Win32Thread->Desktop;
+  
+  if(Desktop)
+  {
+    Status = ObReferenceObjectByPointer(Desktop,
+                                        0,
+                                        ExDesktopObjectType,
+                                        UserMode);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return 0;
+    }
+    
+    Ret = (HDESK)Desktop->Self;
+    
+    ObDereferenceObject(Desktop);
+    return Ret;
+  }
+  
+  return 0;
 }
 
 /*
@@ -764,7 +803,7 @@ NtUserSetThreadDesktop(HDESK hDesktop)
    /* Validate the new desktop. */
    Status = IntValidateDesktopHandle(
       hDesktop,
-      KernelMode,
+      UserMode,
       0,
       &DesktopObject);
 

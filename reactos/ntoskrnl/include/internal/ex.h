@@ -39,10 +39,11 @@ typedef struct _SYSTEM_CURSORINFO
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
 typedef struct _WINSTATION_OBJECT
-{   
+{
+  HANDLE Self;
+
   CSHORT Type;
   CSHORT Size;
-
   KSPIN_LOCK Lock;
   UNICODE_STRING Name;
   LIST_ENTRY DesktopListHead;
@@ -60,7 +61,9 @@ typedef struct _WINSTATION_OBJECT
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 typedef struct _DESKTOP_OBJECT
-{   
+{
+  HANDLE Self;
+
   CSHORT Type;
   CSHORT Size;
   LIST_ENTRY ListEntry;
