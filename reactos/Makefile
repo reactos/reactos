@@ -102,8 +102,10 @@ WINE_OTHER = unicode library
 WINE_TOOLS = bin2res wrc winebuild
 
 WINE_DLLS = comcat crtdll comctl32 commdlg dsound dplayx imagehlp ole32 richedit \
-shlwapi shell32 shdocvw twain urlmon winspool \
-rpcrt4 # needed to make rcprt4 implib 
+shlwapi shell32 shdocvw twain winspool
+
+#wininet urlmon winspool \
+#rpcrt4 # needed to make rcprt4 implib 
 
 # mapi32 oleaut32 oledlg olepro32 olecli olesvr shfolder
 # winmm ddraw dinput dplay serialui tapi32 urlmon wintrust 
