@@ -70,5 +70,6 @@ extern U32			BootPartition;		// Boot Partition, 1-4
 extern BOOL			UserInterfaceUp;	// Tells us if the user interface is displayed
 
 void	BootMain(void);
+VOID	RunLoader(VOID);
 
 #endif  // defined __FREELDR_H

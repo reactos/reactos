@@ -1,3 +1,13 @@
+Changes in v1.7.6 (8/31/2002) (ekohl)
+
+- bootsect/isoboot.asm: Reduced read transfer size to ensure that
+  the read buffer for an int13/ah=42h (exended read) does not
+  cross a segment boundary.
+- freeldr.c, bootmgr.c, setupldr.c, makefile: Renamed
+  LoadBootManager() and ReactOSRunSetupLoader() to RunLoader().
+  Either bootmgr.o or setupldr.o is used to build freeldr.sys or
+  setupldr.sys  
+
 Changes in v1.7.5 (8/21/2002) (brianp)
 
 - biosvid.S (BiosVideoDisableBlinkBit): Added code to

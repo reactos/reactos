@@ -32,6 +32,9 @@
 #include "registry.h"
 #include "hwdetect.h"
 
-VOID ReactOSRunSetupLoader(VOID)
+VOID RunLoader(VOID)
 {
+  printf("RunLoader() called!\n");
+  printf("*** System stopped ***\n");
+  for(;;);
 }

@@ -124,13 +124,7 @@ else
 COMPILER_DEBUG_DEFINES =
 endif
 
-ifeq ($(MAKECMDGOALS),setupldr)
-COMPILER_SETUPLDR_DEFINES = -D__SETUPLDR__
-else
-COMPILER_SETUPLDR_DEFINES =
-endif
-
-COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES) $(COMPILER_SETUPLDR_DEFINES)
+COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES)
 
 #############################################
 # INCLUDE DIRECTORY OPTIONS
@@ -206,8 +200,7 @@ REACTOS_OBJS=	reactos.o	\
 				arcname.o	\
 				hwdetect.o	\
 				reghive.o	\
-				registry.o	\
-				setupldr.o
+				registry.o
 
 COMM_OBJS	=	rs232.o		\
 				portio.o
@@ -234,21 +227,21 @@ VIDEO_OBJS	=	video.o		\
 # This code was taken from the GCC v3.1 source
 MATH_OBJS	=	libgcc2.o
 
-FREELDR_OBJS=	freeldr.o	\
-				miscboot.o	\
-				options.o	\
-				linuxboot.o	\
+BASE_OBJS	=	freeldr.o \
+				debug.o \
+				drivemap.o \
 				multiboot.o	\
-				debug.o		\
-				oslist.o	\
-				bootmgr.o	\
-				drivemap.o	\
 				version.o
 
-#############################################
-# ALL THE OBJECTS
-#
-OBJS		=	$(ARCH_OBJS)		\
+FREELDR_OBJS=	bootmgr.o \
+				miscboot.o \
+				options.o \
+				linuxboot.o	\
+				oslist.o
+
+SETUPLDR_OBJS=	setupldr.o
+
+COMMON_OBJS	=	$(ARCH_OBJS)		\
 				$(RTL_OBJS)			\
 				$(FS_OBJS)			\
 				$(UI_OBJS)			\
@@ -260,7 +253,21 @@ OBJS		=	$(ARCH_OBJS)		\
 				$(INIFILE_OBJS)		\
 				$(VIDEO_OBJS)		\
 				$(MATH_OBJS)		\
+				$(BASE_OBJS)
+
+F_OBJS		=	$(COMMON_OBJS)		\
 				$(FREELDR_OBJS)
+
+S_OBJS		=	$(COMMON_OBJS)		\
+				$(SETUPLDR_OBJS)
+
+#############################################
+# ALL THE OBJECTS
+#
+ALL_OBJS	=	$(COMMON_OBJS)		\
+				$(FREELDR_OBJS)		\
+				$(SETUPLDR_OBJS)
+
 
 #############################################
 # SET THE VPATH SO MAKE CAN FIND THE SOURCE FILES
@@ -282,30 +289,25 @@ VPATH		=	$(SRCDIR)/					\
 
 #############################################
 
-all : freeldr.sys
+all : freeldr.sys setupldr.sys
 	@echo Make ALL done.
 
 #############################################
 
-freeldr.sys : $(OBJS)
+freeldr.sys : $(ALL_OBJS)
 	@echo ===================================================== LINKING $@
-#	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys $(OBJS)
-	@$(LD) $(LFLAGS) -Map freeldr.map -o freeldr.exe $(OBJS)
-#	@$(CC) -Wl,-Ttext=0x8000,-N,-Map,freeldr.map -o freeldr.exe $(OBJS)
+#	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys $(F_OBJS)
+	@$(LD) $(LFLAGS) -Map freeldr.map -o freeldr.exe $(F_OBJS)
+#	@$(CC) -Wl,-Ttext=0x8000,-N,-Map,freeldr.map -o freeldr.exe $(F_OBJS)
 	@$(NM) --numeric-sort freeldr.exe > freeldr.sym
 	@$(OBJCOPY) -O binary freeldr.exe freeldr.sys
 
 #############################################
 
-setupldr : setupldr.sys
-	@echo Make SETUPLDR done.
-
-#############################################
-
-setupldr.sys : $(OBJS)
+setupldr.sys : $(ALL_OBJS)
 	@echo ===================================================== LINKING $@
-#	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o setupldr.sys $(OBJS)
-	@$(LD) $(LFLAGS) -Map setupldr.map -o setupldr.exe $(OBJS)
+#	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o setupldr.sys $(S_OBJS)
+	@$(LD) $(LFLAGS) -Map setupldr.map -o setupldr.exe $(S_OBJS)
 	@$(NM) --numeric-sort setupldr.exe > setupldr.sym
 	@$(OBJCOPY) -O binary setupldr.exe setupldr.sys
 
@@ -328,7 +330,7 @@ setupldr.sys : $(OBJS)
 #############################################
 
 # Include the automagically generated dependencies
--include $(OBJS:%.o=%.d)
+-include $(ALL_OBJS:%.o=%.d)
 
 #############################################
 

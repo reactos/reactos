@@ -21,7 +21,6 @@
 #define __BOOTMGR_H
 
 
-VOID	RunBootManager(VOID);
 U32		GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], U32 OperatingSystemCount);
 S32		GetTimeOut(VOID);
 

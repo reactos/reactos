@@ -33,7 +33,7 @@
 #include <bootmgr.h>
 #include <drivemap.h>
 
-VOID RunBootManager(VOID)
+VOID RunLoader(VOID)
 {
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];

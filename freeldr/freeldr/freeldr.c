@@ -47,9 +47,5 @@ VOID BootMain(VOID)
 		return;
 	}
 
-#ifdef __SETUPLDR__
-	ReactOSRunSetupLoader();
-#else
-	RunBootManager();
-#endif // defined __SETUPLDR__
+	RunLoader();
 }
