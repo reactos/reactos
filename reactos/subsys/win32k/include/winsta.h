@@ -23,6 +23,29 @@ InitWindowStationImpl(VOID);
 NTSTATUS FASTCALL
 CleanupWindowStationImpl(VOID);
 
+NTSTATUS 
+STDCALL
+IntWinStaObjectCreate(PVOID ObjectBody,
+                      PVOID Parent,
+                      PWSTR RemainingPath,
+                      struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+                      
+VOID STDCALL
+IntWinStaObjectDelete(PVOID DeletedObject);
+
+PVOID STDCALL
+IntWinStaObjectFind(PVOID Object,
+                    PWSTR Name,
+                    ULONG Attributes);
+            
+NTSTATUS 
+STDCALL
+IntWinStaObjectParse(PVOID Object,
+                     PVOID *NextObject,
+                     PUNICODE_STRING FullPath,
+                     PWSTR *Path,
+                     ULONG Attributes);
+
 NTSTATUS FASTCALL
 IntValidateWindowStationHandle(
    HWINSTA WindowStation,

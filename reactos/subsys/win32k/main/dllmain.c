@@ -35,11 +35,45 @@ typedef NTSTATUS (STDCALL *PW32_THREAD_CALLBACK)(
    struct _ETHREAD *Thread,
    BOOLEAN Create);
 
+/* 
+ * Callbacks used for Win32 objects... this define won't be needed after the Object Manager
+ * rewrite -- Alex
+ */
+typedef NTSTATUS STDCALL_FUNC
+(*OBJECT_CREATE_ROUTINE)(PVOID ObjectBody,
+                         PVOID Parent,
+                         PWSTR RemainingPath,
+                         struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+
+typedef NTSTATUS STDCALL_FUNC
+(*OBJECT_PARSE_ROUTINE)(PVOID Object,
+                        PVOID *NextObject,
+                        PUNICODE_STRING FullPath,
+                        PWSTR *Path,
+                        ULONG Attributes);
+                        
+typedef VOID STDCALL_FUNC
+(*OBJECT_DELETE_ROUTINE)(PVOID DeletedObject);
+
+typedef PVOID STDCALL_FUNC
+(*OBJECT_FIND_ROUTINE)(PVOID WinStaObject,
+                       PWSTR Name,
+                       ULONG Attributes);
+                       
+typedef struct _W32_OBJECT_CALLBACK {
+    OBJECT_CREATE_ROUTINE WinStaCreate;
+    OBJECT_PARSE_ROUTINE WinStaParse;
+    OBJECT_DELETE_ROUTINE WinStaDelete;
+    OBJECT_FIND_ROUTINE WinStaFind;
+    OBJECT_CREATE_ROUTINE DesktopCreate;
+    OBJECT_DELETE_ROUTINE DesktopDelete;    
+} W32_OBJECT_CALLBACK, *PW32_OBJECT_CALLBACK;
+
 VOID STDCALL
 PsEstablishWin32Callouts(
    PW32_PROCESS_CALLBACK W32ProcessCallback,
    PW32_THREAD_CALLBACK W32ThreadCallback,
-   PVOID Param3,
+   PW32_OBJECT_CALLBACK W32ObjectCallback,
    PVOID Param4,
    ULONG W32ThreadSize,
    ULONG W32ProcessSize);
@@ -219,6 +253,7 @@ DllMain (
 {
   NTSTATUS Status;
   BOOLEAN Result;
+  W32_OBJECT_CALLBACK Win32kObjectCallbacks;
 
   /*
    * Register user mode call interface
@@ -234,13 +269,22 @@ DllMain (
       DPRINT1("Adding system services failed!\n");
       return STATUS_UNSUCCESSFUL;
     }
-
+    
+  /* 
+   * Register Object Manager Callbacks
+   */
+    Win32kObjectCallbacks.WinStaCreate = IntWinStaObjectCreate;
+    Win32kObjectCallbacks.WinStaParse = IntWinStaObjectParse;
+    Win32kObjectCallbacks.WinStaDelete = IntWinStaObjectDelete;
+    Win32kObjectCallbacks.WinStaFind = IntWinStaObjectFind;
+    Win32kObjectCallbacks.DesktopCreate = IntDesktopObjectCreate;
+    Win32kObjectCallbacks.DesktopDelete = IntDesktopObjectDelete;
   /*
    * Register our per-process and per-thread structures.
    */
   PsEstablishWin32Callouts (Win32kProcessCallback,
 			    Win32kThreadCallback,
-			    0,
+			    &Win32kObjectCallbacks,
 			    0,
 			    sizeof(W32THREAD),
 			    sizeof(W32PROCESS));
