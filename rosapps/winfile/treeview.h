@@ -31,17 +31,10 @@ extern "C" {
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "resource.h"
-
 
 void CreateTreeWnd(HWND parent, Pane* pane, int id);
 
-HTREEITEM AddItemToTree(HWND hwndTV, LPSTR lpszItem, int nLevel);
-
-//HWND CreateTreeView(HWND hwndParent);
-//void create_tree_window(HWND parent, Pane* pane, int id, int id_header);
-//LRESULT CALLBACK TreeWndProc(HWND, UINT, WPARAM, LPARAM);
-
+HTREEITEM AddItemToTree(HWND hwndTV, LPTSTR lpszItem, int nLevel);
 
 
 #ifdef __cplusplus

@@ -28,7 +28,6 @@ extern "C" {
 #endif
 
 
-void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol);
 
 
 #ifdef __cplusplus

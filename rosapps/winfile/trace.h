@@ -43,9 +43,9 @@
 //  MACRO: TRACE()
 //=============================================================================
 
-void Assert(void* assert, char* file, int line, void* msg);
-void Trace(char* lpszFormat, ...);
-void Trace1(int code, char* lpszFormat, ...);
+void Assert(void* assert, TCHAR* file, int line, void* msg);
+void Trace(TCHAR* lpszFormat, ...);
+void Trace1(int code, TCHAR* lpszFormat, ...);
 
 #define TRACE  Trace
 #define TRACE0 Trace
@@ -60,8 +60,8 @@ void Trace1(int code, char* lpszFormat, ...);
 //#define TRACE0 TRACE
 //#define TRACE1 TRACE
 
-void Assert(void* assert, char* file, int line, void* msg);
-void Trace(char* lpszFormat, ...);
+void Assert(void* assert, TCHAR* file, int line, void* msg);
+void Trace(TCHAR* lpszFormat, ...);
 
 #define TRACE 0 ? (void)0 : Trace
 

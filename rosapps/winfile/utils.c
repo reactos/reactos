@@ -35,8 +35,10 @@
 #endif
     
 #include <windowsx.h>
+#include <ctype.h>
 
 #include "main.h"
+#include "listview.h"
 #include "utils.h"
 #include "sort.h"
 #include "draw.h"
@@ -361,13 +363,13 @@ BOOL calc_widths(Pane* pane, BOOL anyway)
 	hfontOld = SelectFont(hdc, Globals.hFont);
 
 	for (cnt = 0; cnt < entries; cnt++) {
+#if 0
 		Entry* entry = (Entry*) ListBox_GetItemData(pane->hWnd, cnt);
-
 		DRAWITEMSTRUCT dis = {0/*CtlType*/, 0/*CtlID*/,
 			0/*itemID*/, 0/*itemAction*/, 0/*itemState*/,
 			pane->hWnd/*hwndItem*/, hdc};
-
 		draw_item(pane, &dis, entry, COLUMNS);
+#endif
 	}
 	SelectObject(hdc, hfontOld);
 	ReleaseDC(pane->hWnd, hdc);
@@ -418,9 +420,11 @@ void calc_single_width(Pane* pane, int col)
 	hdc = GetDC(pane->hWnd);
 	hfontOld = SelectFont(hdc, Globals.hFont);
 	for (cnt = 0; cnt < entries; cnt++) {
+#if 0
 		Entry* entry = (Entry*) ListBox_GetItemData(pane->hWnd, cnt);
 		DRAWITEMSTRUCT dis = {0, 0, 0, 0, 0, pane->hWnd, hdc};
 		draw_item(pane, &dis, entry, col);
+#endif
 	}
 	SelectObject(hdc, hfontOld);
 	ReleaseDC(pane->hWnd, hdc);

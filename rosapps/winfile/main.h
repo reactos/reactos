@@ -65,6 +65,8 @@ enum IMAGE {
 #define IDW_STATUSBAR		0x100
 #define IDW_TOOLBAR			0x101
 #define IDW_DRIVEBAR		0x102
+#define IDW_DRIVEBOX        0x103
+
 #define	IDW_FIRST_CHILD		0xC000	//0x200
 
 #define IDW_TREE_LEFT		3
@@ -78,11 +80,19 @@ enum IMAGE {
 void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
 void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
 
-#ifdef UNICODE
+#ifdef _UNICODE
 #define _tsplitpath _wsplitpath
 #else
 #define _tsplitpath _splitpath
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum OPTION_FLAGS {
+    OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT = 0x01,
+    OPTIONS_MINIMISE_ON_USE            = 0x02,
+    OPTIONS_SAVE_ON_EXIT          	   = 0x04,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -128,6 +138,7 @@ typedef struct
 
   LPCSTR	lpszLanguage;
   UINT		wStringTableOffset;
+  enum OPTION_FLAGS Options;
 
 } WINFILE_GLOBALS;
 
@@ -164,6 +175,10 @@ extern UINT		wStringTableOffset;
 #define Globals.
 
 #endif
+
+extern UINT OemCodePage;
+extern UINT AnsiCodePage;
+extern LCID UserDefaultLCID;
 
 extern HINSTANCE hInst;
 extern TCHAR szTitle[];

@@ -1,7 +1,7 @@
 /*
  *  ReactOS Application Debug Routines
  *
- *  debug.cpp
+ *  debug.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *

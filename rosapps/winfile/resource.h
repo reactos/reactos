@@ -2,21 +2,23 @@
 // Microsoft Developer Studio generated include file.
 // Used by winfile.rc
 //
-#define ID_FILE_MENU                    0
-#define ID_DISK_MENU                    1
-#define ID_TREE_MENU                    2
-#define ID_VIEW_MENU                    3
-#define ID_OPTIONS_MENU                 4
-#define ID_SECURITY_MENU                5
-#define ID_WINDOW_MENU                  6
-#define ID_HELP_MENU                    7
+#define ID_FILE_MENU                    1
+#define ID_DISK_MENU                    2
+#define ID_TREE_MENU                    3
+#define ID_VIEW_MENU                    4
+#define ID_OPTIONS_MENU                 5
+#define ID_SECURITY_MENU                6
+#define ID_WINDOW_MENU                  7
+#define ID_HELP_MENU                    8
+
 #define IDS_LIST_COLUMN_FIRST           91
 #define IDS_LIST_COLUMN_NAME            91
 #define IDS_LIST_COLUMN_SIZE            92
 #define IDS_LIST_COLUMN_DATE            93
-#define IDS_LIST_COLUMN_ATTRIB          94
-#define IDS_LIST_COLUMN_DOSNAME         95
-#define IDS_LIST_COLUMN_LAST            95
+#define IDS_LIST_COLUMN_TIME            94
+#define IDS_LIST_COLUMN_ATTRIB          95
+#define IDS_LIST_COLUMN_DOSNAME         96
+#define IDS_LIST_COLUMN_LAST            96
 #define IDD_ABOUTBOX                    104
 #define IDS_APP_TITLE                   105
 #define IDI_WINFILE                     107
@@ -35,6 +37,7 @@
 #define IDD_DIALOG_DIRECTORY            144
 #define IDD_DIALOG_VIEW_TYPE            145
 #define IDD_DIALOG_OPTIONS_CONFIRMATON  146
+#define IDR_ACCELERATOR1                147
 #define ID_WINDOW_CLOSE                 798
 #define ID_WINDOW_CLOSEALL              799
 #define IDC_VIEW_TYPE_MASK              999
@@ -51,6 +54,10 @@
 #define IDC_CONFIRMATION_MOUSE_ACTIONS  1009
 #define IDC_CONFIRMATION_DISK_COMMANDS  1010
 #define IDC_CONFIRMATION_MODIFY_SYSTEM  1011
+
+#define ID_CMD_FIRST                    100
+#define ID_CMD_LAST                     32830
+
 #define ID_FILE_OPEN                    32769
 #define ID_FILE_MOVE                    32770
 #define ID_FILE_COPY                    32771
@@ -78,6 +85,7 @@
 #define ID_TREE_EXPAND_ONE_LEVEL        32793
 #define ID_TREE_EXPAND_BRANCH           32794
 #define ID_TREE_EXPAND_ALL              32795
+#define ID_TREE_COLLAPSE_BRANCH         32768
 #define ID_TREE_INDICATE_EXPANDABLE_BRANCHES 32796
 #define ID_VIEW_TREE_DIRECTORY          32797
 #define ID_VIEW_TREE_ONLY               32798
@@ -121,7 +129,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        147
+#define _APS_NEXT_RESOURCE_VALUE        148
 #define _APS_NEXT_COMMAND_VALUE         32832
 #define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           110

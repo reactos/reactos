@@ -42,11 +42,12 @@
 #include "main.h"
 #include "childwnd.h"
 #include "framewnd.h"
-#include "utils.h"
 #include "treeview.h"
 #include "listview.h"
-#include "debug.h"
-#include "draw.h"
+#include "dialogs.h"
+#include "utils.h"
+#include "run.h"
+#include "trace.h"
 
 
 #ifdef _NO_EXTENSIONS
@@ -60,13 +61,11 @@
 // Global Variables:
 //
 
-HWND hSplitWnd;                  // Splitter Bar Control Window
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
 //
-
+/*
 #ifndef _NO_EXTENSIONS
 
 void set_header(Pane* pane)
@@ -148,7 +147,6 @@ static LRESULT pane_notify(Pane* pane, NMHDR* pnmh)
 
 #endif
 
-
 static BOOL pane_command(Pane* pane, UINT cmd)
 {
 	switch(cmd) {
@@ -193,8 +191,10 @@ static BOOL pane_command(Pane* pane, UINT cmd)
 	}
 	return TRUE;
 }
-
+ */
 ////////////////////////////////////////////////////////////////////////////////
+//
+//HWND hSplitWnd;                  // Splitter Bar Control Window
 //
 //    hSplitWnd = CreateWindow(szFrameClass, "splitter window", WS_VISIBLE|WS_CHILD,
 //                            CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, 
@@ -297,6 +297,111 @@ static void OnSize(ChildWnd* pChildWnd, WPARAM wParam, LPARAM lParam)
 		ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));
     }
 }
+
+void OnFileMove(HWND hWnd)
+{
+	struct ExecuteDialog dlg = {{0}};
+    if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_FILE_MOVE), hWnd, MoveFileWndProc, (LPARAM)&dlg) == IDOK) {
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
+//
+//  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
+//
+//
+
+static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	UINT cmd = LOWORD(wParam);
+	//HWND hChildWnd;
+
+    if (1) {
+		switch (cmd) {
+/*
+//        case ID_FILE_MOVE:
+//            OnFileMove(hWnd);
+//            break;
+        case ID_FILE_COPY:
+        case ID_FILE_COPY_CLIPBOARD:
+        case ID_FILE_DELETE:
+        case ID_FILE_RENAME:
+        case ID_FILE_PROPERTIES:
+        case ID_FILE_COMPRESS:
+        case ID_FILE_UNCOMPRESS:
+            break;
+//        case ID_FILE_RUN:
+//            OnFileRun();
+//            break;
+        case ID_FILE_PRINT:
+        case ID_FILE_ASSOCIATE:
+        case ID_FILE_CREATE_DIRECTORY:
+        case ID_FILE_SEARCH:
+        case ID_FILE_SELECT_FILES:
+            break;
+ */
+        case ID_FILE_EXIT:
+            SendMessage(hWnd, WM_CLOSE, 0, 0);
+            break;
+/*
+        case ID_DISK_COPY_DISK:
+			break;
+        case ID_DISK_LABEL_DISK:
+			break;
+        case ID_DISK_CONNECT_NETWORK_DRIVE:
+            MapNetworkDrives(hWnd, TRUE);
+			break;
+        case ID_DISK_DISCONNECT_NETWORK_DRIVE:
+            MapNetworkDrives(hWnd, FALSE);
+			break;
+        case ID_DISK_SHARE_AS:
+			break;
+        case ID_DISK_STOP_SHARING:
+			break;
+        case ID_DISK_SELECT_DRIVE:
+			break;
+ */
+/*
+        case ID_TREE_EXPAND_ONE_LEVEL:
+        case ID_TREE_EXPAND_ALL:
+        case ID_TREE_EXPAND_BRANCH:
+        case ID_TREE_COLLAPSE_BRANCH:
+            MessageBeep(-1);
+			break;
+ */
+        case ID_VIEW_BY_FILE_TYPE:
+			{
+			struct ExecuteDialog dlg = {{0}};
+            if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_VIEW_TYPE), hWnd, ViewFileTypeWndProc, (LPARAM)&dlg) == IDOK) {
+            }
+			}
+			break;
+        case ID_OPTIONS_CONFIRMATION:
+			{
+			struct ExecuteDialog dlg = {{0}};
+            if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_OPTIONS_CONFIRMATON), hWnd, OptionsConfirmationWndProc, (LPARAM)&dlg) == IDOK) {
+            }
+			}
+            break;
+		case ID_WINDOW_NEW_WINDOW:
+            CreateChildWindow(-1);
+//			{
+//			ChildWnd* pChildWnd = alloc_child_window(path);
+//			if (!create_child_window(pChildWnd))
+//				free(pChildWnd);
+//			}
+			break;
+		default:
+//  			return DefMDIChildProc(hWnd, message, wParam, lParam);
+            return FALSE;
+            break;
+		}
+	}
+	return TRUE;
+}
+
 
 //
 //  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
@@ -450,6 +555,37 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			SetFocus(pChildWnd->nFocusPanel? pChildWnd->right.hWnd: pChildWnd->left.hWnd);
 			break;
 
+	case WM_DISPATCH_COMMAND:
+        if (_CmdWndProc(hWnd, message, wParam, lParam)) break;
+        if (1) {
+            return SendMessage(pChildWnd->right.hWnd, message, wParam, lParam);
+        } else {
+            return SendMessage(pChildWnd->left.hWnd, message, wParam, lParam);
+        }
+		break;
+
+	case WM_COMMAND:
+/*
+        if (!SendMessage(pChildWnd->right.hWnd, message, wParam, lParam)) {
+            return DefMDIChildProc(hWnd, message, wParam, lParam);
+        } else {
+    		return _CmdWndProc(hWnd, message, wParam, lParam);
+//  		return DefMDIChildProc(hWnd, message, wParam, lParam);
+        }
+		break;
+ */
+        if (_CmdWndProc(hWnd, message, wParam, lParam)) break;
+			return DefMDIChildProc(hWnd, message, wParam, lParam);
+
+//        if (LOWORD(wParam) > ID_CMD_FIRST && LOWORD(wParam) < ID_CMD_LAST) {
+//            if (!SendMessage(pChildWnd->right.hWnd, message, wParam, lParam)) {
+//                return DefMDIChildProc(hWnd, message, wParam, lParam);
+//            }
+//        } else {
+//    		return _CmdWndProc(hWnd, message, wParam, lParam);
+//        }
+		break;
+/*
 		case WM_COMMAND:
             {
 			Pane* pane = GetFocus()==pChildWnd->left.hWnd? &pChildWnd->left: &pChildWnd->right;
@@ -510,11 +646,11 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			}
 
 			return TRUE;}
-
+ */
 //#ifndef _NO_EXTENSIONS
 		case WM_NOTIFY: {
             int idCtrl = (int)wParam; 
-			NMHDR* pnmh = (NMHDR*)lParam;
+			//NMHDR* pnmh = (NMHDR*)lParam;
 			//return pane_notify(pnmh->idFrom==IDW_HEADER_LEFT? &pChildWnd->left: &pChildWnd->right, pnmh);
             if (idCtrl == IDW_TREE_LEFT) {
                 if ((((LPNMHDR)lParam)->code) == TVN_SELCHANGED) {
@@ -525,10 +661,14 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                         set_curdir(pChildWnd, entry);
                     }
                 }
-                SendMessage(pChildWnd->left.hWnd, message, wParam, lParam);
+                if (!SendMessage(pChildWnd->left.hWnd, message, wParam, lParam)) {
+                    return DefMDIChildProc(hWnd, message, wParam, lParam);
+                }
             }
             if (idCtrl == IDW_TREE_RIGHT) {
-                SendMessage(pChildWnd->right.hWnd, message, wParam, lParam);
+                if (!SendMessage(pChildWnd->right.hWnd, message, wParam, lParam)) {
+                    return DefMDIChildProc(hWnd, message, wParam, lParam);
+                }
             }
                         }
 //#endif

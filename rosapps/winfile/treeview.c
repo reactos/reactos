@@ -75,7 +75,7 @@ int Image_Root;
 // lpszItem - text of the item to add. 
 // nLevel - level at which to add the item. 
 
-HTREEITEM AddItemToTree(HWND hwndTV, LPSTR lpszItem, int nLevel)
+HTREEITEM AddItemToTree(HWND hwndTV, LPTSTR lpszItem, int nLevel)
 { 
     TVITEM tvi; 
     TVINSERTSTRUCT tvins; 
@@ -156,7 +156,7 @@ HTREEITEM AddEntryToTree(HWND hwndTV, Entry* entry)
 #if 0
     hItem = AddItemToTree(hwndTV, entry->data.cFileName, entry->level);
 #else
-//HTREEITEM AddItemToTree(HWND hwndTV, LPSTR lpszItem, int nLevel)
+//HTREEITEM AddItemToTree(HWND hwndTV, LPTSTR lpszItem, int nLevel)
     TVITEM tvi; 
     TVINSERTSTRUCT tvins; 
     static HTREEITEM hPrev = (HTREEITEM)TVI_FIRST; 
@@ -335,15 +335,10 @@ static HWND CreateTreeView(HWND hwndParent, int id)
     // Get the dimensions of the parent window's client area, and create 
     // the tree view control. 
     GetClientRect(hwndParent, &rcClient); 
-    hwndTV = CreateWindowEx(0, WC_TREEVIEW, "Tree View", 
+    hwndTV = CreateWindowEx(0, WC_TREEVIEW, _T("Tree View"), 
         WS_VISIBLE | WS_CHILD | WS_BORDER | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
         0, 0, rcClient.right, rcClient.bottom, 
         hwndParent, (HMENU)id, hInst, NULL); 
-/* 
-    hwndTV = CreateWindow(_T("ListBox"), _T(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
-						LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
-						0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
- */
     // Initialize the image list, and add items to the control. 
     if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV)) { 
         DestroyWindow(hwndTV); 
@@ -352,10 +347,14 @@ static HWND CreateTreeView(HWND hwndParent, int id)
     return hwndTV;
 } 
 
+#ifndef _MSC_VER
+#define NMTVDISPINFO TV_DISPINFO
+#define NMTVDISPINFO TV_DISPINFO
+#endif
+
 static void OnGetDispInfo(NMTVDISPINFO* ptvdi)
 {
-    static char buffer[200];
-
+//    static TCHAR buffer[200];
 //    LVITEM* pItem = &(ptvdi->item);
 //    Entry* entry = (Entry*)pItem->lParam;
     Entry* entry = (Entry*)ptvdi->item.lParam;
@@ -397,21 +396,6 @@ If the structure is receiving item text, you typically copy the text to the buff
  
  */
 
-/*
-typedef struct _BY_HANDLE_FILE_INFORMATION {
-  DWORD    dwFileAttributes; 
-  FILETIME ftCreationTime; 
-  FILETIME ftLastAccessTime; 
-  FILETIME ftLastWriteTime; 
-  DWORD    dwVolumeSerialNumber; 
-  DWORD    nFileSizeHigh; 
-  DWORD    nFileSizeLow; 
-  DWORD    nNumberOfLinks; 
-  DWORD    nFileIndexHigh; 
-  DWORD    nFileIndexLow; 
-} BY_HANDLE_FILE_INFORMATION, *PBY_HANDLE_FILE_INFORMATION;  
- */ 
-
 // OnEndLabelEdit - processes the LVN_ENDLABELEDIT notification message. 
 // Returns TRUE if the label is changed, or FALSE otherwise. 
 
@@ -432,7 +416,7 @@ static BOOL OnEndLabelEdit(NMTVDISPINFO* ptvdi)
 
 static BOOL OnExpand(int flag, HTREEITEM* pti)
 { 
-    TRACE("TreeWndProc(...) OnExpand()\n");
+    TRACE(_T("TreeWndProc(...) OnExpand()\n"));
 //    pnmtv = (NMTREEVIEW) lParam 
     //TRACE("OnExpand(...) entry name: %s\n", entry->data.cFileName);
     /*
@@ -452,7 +436,7 @@ static BOOL OnExpanding(HWND hWnd, NMTREEVIEW* pnmtv)
     //LPARAM parm = pnmtv->itemNew.lParam;
     Entry* entry = (Entry*)pnmtv->itemNew.lParam;
 
-    TRACE("TreeWndProc(...) OnExpanding() entry: %p\n", entry);
+    TRACE(_T("TreeWndProc(...) OnExpanding() entry: %p\n"), entry);
 
     if (expanding) return FALSE;
     expanding = TRUE;
@@ -481,7 +465,7 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 	Pane* pane = (Pane*)GetWindowLong(hWnd, GWL_USERDATA);
 	ASSERT(child);
 
-	switch(message) {
+	switch (message) {
 #ifndef _NO_EXTENSIONS
 		case WM_HSCROLL:
 			set_header(pane);
@@ -502,6 +486,7 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 //            case TVN_SELCHANGED:
 //                return OnSelChanged((NMTREEVIEW*)lParam);
 //                break;
+#if 0
             case TVN_SINGLEEXPAND:
                 TRACE("TreeWndProc(...) TVN_SINGLEEXPAND\n");
                 //lpnmtv = (LPNMTREEVIEW)lParam;
@@ -509,10 +494,12 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 //                return TVNRET_SKIPOLD; // Skip default processing of the item being unselected. 
 //                return TVNRET_SKIPNEW; // Skip default processing of the item being selected. 
                 break;
+#endif
             case TVN_ENDLABELEDIT: 
                 return OnEndLabelEdit((NMTVDISPINFO*)lParam);
                 break;
             }
+            return 0;
 			break;
 		case WM_SETFOCUS:
 			child->nFocusPanel = pane == &child->right? 1: 0;
@@ -529,7 +516,7 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 	return CallWindowProc(g_orgTreeWndProc, hWnd, message, wParam, lParam);
 }
 
-//void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPSTR lpszFileName)
+//void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPTSTR lpszFileName)
 void CreateTreeWnd(HWND parent, Pane* pane, int id)
 {
 	static int s_init = 0;

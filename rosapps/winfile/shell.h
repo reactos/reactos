@@ -1,7 +1,7 @@
 /*
  *  ReactOS Application Debug Routines
  *
- *  debug.h
+ *  shell.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,18 +20,23 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
     
-#ifndef __DEBUG_H__
-#define __DEBUG_H__
+#ifndef __SHELL_H__
+#define __SHELL_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
+BOOL CheckShellAvailable(void);
+void FormatDisk(HWND hWnd);
+void CopyDisk(HWND hWnd);
+void LabelDisk(HWND hWnd);
+void ModifySharing(HWND hWnd, BOOL create);
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __DEBUG_H__
+#endif // __SHELL_H__

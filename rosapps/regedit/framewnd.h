@@ -1,7 +1,7 @@
 /*
- *  ReactOS Application Debug Routines
+ *  ReactOS regedit
  *
- *  debug.h
+ *  framewnd.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -19,19 +19,29 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-    
-#ifndef __DEBUG_H__
-#define __DEBUG_H__
+
+#ifndef __FRAMEWND_H__
+#define __FRAMEWND_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
 
+
+
+extern HWND hTreeWnd;                   // Tree Control Window
+extern HWND hListWnd;                   // List Control Window
+extern HWND hSplitWnd;                  // Splitter Bar Control Window
+
+LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __DEBUG_H__
+#endif // __FRAMEWND_H__

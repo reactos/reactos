@@ -31,10 +31,8 @@ extern "C" {
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "resource.h"
 
-
-void CreateListWnd(HWND parent, Pane* pane, int id, LPSTR lpszPathName);
+void CreateListWnd(HWND parent, Pane* pane, int id, LPTSTR lpszPathName);
 void RefreshList(HWND hWnd, Entry* entry);
 
 

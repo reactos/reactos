@@ -37,6 +37,7 @@ extern "C" {
 
 
 void OnFileRun(void);
+BOOL OpenTarget(HWND hWnd, TCHAR* target);
 
 typedef	void (WINAPI *RUNFILEDLG)(
 						HWND    hwndOwner, 

@@ -37,6 +37,8 @@ OBJS =	about.o \
         draw.o \
         entries.o \
         run.o \
+        shell.o \
+        network.o \
         settings.o \
         splitpath.o \
         sort.o \

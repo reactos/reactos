@@ -1,7 +1,7 @@
 /*
- *  ReactOS winfile
+ *  ReactOS About Dialog Box
  *
- *  draw.c
+ *  about.c
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
+    
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
@@ -35,6 +35,35 @@
 #endif
     
 #include "main.h"
-#include "draw.h"
+#include "about.h"
 
+
+extern HINSTANCE hInst;
+
+
+LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    HWND    hLicenseEditWnd;
+    TCHAR   strLicense[0x1000];
+
+    switch (message) {
+    case WM_INITDIALOG:
+        hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE_EDIT);
+        LoadString(hInst, IDS_LICENSE, strLicense, 0x1000);
+        SetWindowText(hLicenseEditWnd, strLicense);
+        return TRUE;
+    case WM_COMMAND:
+        if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL)) {
+            EndDialog(hDlg, LOWORD(wParam));
+            return TRUE;
+        }
+        break;
+    }
+    return 0;
+}
+
+void ShowAboutBox(HWND hWnd)
+{
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, (DLGPROC)AboutDialogWndProc);
+}
 

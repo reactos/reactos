@@ -1,6 +1,5 @@
 //Microsoft Developer Studio generated resource script.
 //
-#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -31,12 +30,12 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_REGEDIT             ICON    DISCARDABLE     "regedit.ICO"
-IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+IDI_REGEDIT             ICON    DISCARDABLE     "res/regedit.ico"
+IDI_SMALL               ICON    DISCARDABLE     "res/small.ico"
 
-IDB_OPEN_FILE           BITMAP	DISCARDABLE     "folder1.bmp"
-IDB_CLOSED_FILE         BITMAP	DISCARDABLE     "folder2.bmp"
-IDB_ROOT                BITMAP	DISCARDABLE     "folder3.bmp"
+IDB_OPEN_FILE           BITMAP	DISCARDABLE     "res/folder1.bmp"
+IDB_CLOSED_FILE         BITMAP	DISCARDABLE     "res/folder2.bmp"
+IDB_ROOT                BITMAP	DISCARDABLE     "res/folder3.bmp"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -48,11 +47,11 @@ IDC_REGEDIT MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "E&xit",                       IDM_EXIT
+        MENUITEM "E&xit",                       ID_REGISTRY_EXIT
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About ...",                  IDM_ABOUT
+        MENUITEM "&About ...",                  ID_HELP_ABOUT
     END
 END
 
@@ -60,21 +59,20 @@ IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
     POPUP "&Registry"
     BEGIN
-        MENUITEM "&Import Registry File...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Import Registry File...",    ID_REGISTRY_IMPORTREGISTRYFILE, GRAYED
 
-        MENUITEM "&Export Registry File...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Export Registry File...",    ID_REGISTRY_EXPORTREGISTRYFILE, GRAYED
 
         MENUITEM SEPARATOR
         MENUITEM "&Connect Network Registry...", 
-                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
+                                                ID_REGISTRY_CONNECTNETWORKREGISTRY, GRAYED
 
         MENUITEM "&Disconnect Network Registry...", 
-                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-        , GRAYED
+                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Print\tCtrl+P",              ID_REGISTRY_PRINT
+        MENUITEM "&Print\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       IDM_EXIT
+        MENUITEM "E&xit",                       ID_REGISTRY_EXIT
     END
     POPUP "&Edit"
     BEGIN
@@ -94,8 +92,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copy Key Name",              ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Find\tCtrl+F",               ID_EDIT_FIND
-        MENUITEM "Find Ne&xt\tF3",              ID_EDIT_FINDNEXT
+        MENUITEM "&Find\tCtrl+F",               ID_EDIT_FIND, GRAYED
+        MENUITEM "Find Ne&xt\tF3",              ID_EDIT_FINDNEXT, GRAYED
     END
     POPUP "&View"
     BEGIN
@@ -107,7 +105,7 @@ BEGIN
     END
     POPUP "&Favourites"
     BEGIN
-        MENUITEM "&Add to Favourites",          ID_FAVOURITES_ADDTOFAVOURITES
+        MENUITEM "&Add to Favourites",          ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remove Favourite",           ID_FAVOURITES_REMOVEFAVOURITE
         , GRAYED
     END
@@ -115,8 +113,15 @@ BEGIN
     BEGIN
         MENUITEM "&Help Topics",                ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&About Registry Editor",      IDM_ABOUT
+        MENUITEM "&About Registry Editor",      ID_HELP_ABOUT
     END
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LIST_COLUMN_NAME    "Name"
+    IDS_LIST_COLUMN_TYPE    "Type"
+    IDS_LIST_COLUMN_DATA    "Data"
 END
 
 
@@ -170,7 +175,6 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_APP_TITLE           "ReactOS Registry Editor"
-    IDS_HELLO               "Hello World!"
 
     ID_REGISTRY_MENU        "Contains commands for working with the whole registry"
     ID_EDIT_MENU            "Contains commands for editing values or keys"
@@ -184,7 +188,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY	  "Connects to a remote computer's registry"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Disconnects from a remote computer's registry"
     ID_REGISTRY_PRINT       "Prints all or part of the registry"
-    IDM_EXIT                "Quits the registry editor"
+    ID_REGISTRY_EXIT        "Quits the registry editor"
 
 	ID_EDIT_MODIFY          "Modifies the value's data"
     ID_EDIT_NEW_KEY         "Adds a new key"
@@ -206,7 +210,7 @@ BEGIN
     ID_FAVOURITES_REMOVEFAVOURITE "Removes keys from the favourites list"
 
 	ID_HELP_HELPTOPICS      "Opens registry editor help"
-    IDM_ABOUT               "Displays program information, version number and copyright"
+    ID_HELP_ABOUT           "Displays program information, version number and copyright"
 
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
@@ -285,7 +289,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDM_ABOUT               "Displays program information, version number, and copyright."
+    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
 END
 
 #endif    // English (Australia) resources

@@ -1,7 +1,7 @@
 /*
  *  ReactOS Application Debug Routines
  *
- *  debug.h
+ *  debug.c
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -19,19 +19,21 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#ifdef _MSC_VER
+#include "stdafx.h"
+#else
+#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <process.h>
+#include <stdio.h>
+#endif
     
-#ifndef __DEBUG_H__
-#define __DEBUG_H__
+#include "main.h"
+#include "debug.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-
-
-#ifdef __cplusplus
-};
-#endif
-
-#endif // __DEBUG_H__

@@ -9,11 +9,14 @@
 #define ID_HELP_MENU                    4
 #define ID_EDIT_NEW_MENU                5
 
+#define IDS_LIST_COLUMN_FIRST           91
+#define IDS_LIST_COLUMN_NAME            91
+#define IDS_LIST_COLUMN_TYPE            92
+#define IDS_LIST_COLUMN_DATA            93
+#define IDS_LIST_COLUMN_LAST            93
+
 #define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
-#define IDM_ABOUT                       104
-#define IDM_EXIT                        105
-#define IDS_HELLO                       106
 #define IDI_REGEDIT                     107
 #define IDI_SMALL                       108
 #define IDC_REGEDIT                     109
@@ -24,6 +27,7 @@
 #define IDB_CLOSED_FILE                 133
 #define IDB_ROOT                        134
 
+#define ID_REGISTRY_EXIT                32770
 #define ID_HELP_HELPTOPICS              32771
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772
 #define ID_FAVOURITES_REMOVEFAVOURITE   32773
@@ -45,7 +49,7 @@
 #define ID_REGISTRY_CONNECTNETWORKREGISTRY 32791
 #define ID_REGISTRY_DISCONNECTNETWORKREGISTRY 32792
 #define ID_REGISTRY_PRINT               32793
-#define ID_HELP_CONTENTS                32795
+#define ID_HELP_ABOUT                   32795
 #define ID_WINDOW_CASCADE               32797
 #define ID_WINDOW_TILE                  32798
 #define ID_WINDOW_ARRANGEICONS          32799

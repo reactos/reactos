@@ -1,7 +1,7 @@
 /*
- *  ReactOS winfile
+ *  ReactOS regedit
  *
- *  dialogs.h
+ *  main.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __DIALOGS_H__
-#define __DIALOGS_H__
+#ifndef __MAIN_H__
+#define __MAIN_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,20 +33,41 @@ extern "C" {
 
 #include "resource.h"
 
-struct ExecuteDialog {
-	TCHAR	cmd[MAX_PATH];
-	int		cmdshow;
-};
 
+#define STATUS_WINDOW   2001
+#define TREE_WINDOW     2002
+#define LIST_WINDOW     2003
+#define SPLIT_WINDOW    2004
 
-BOOL CALLBACK ExecuteDialogWndProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK ViewFileTypeWndProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK OptionsConfirmationWndProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK MoveFileWndProc(HWND, UINT, WPARAM, LPARAM);
+#define MAX_LOADSTRING  100
+#define	SPLIT_WIDTH		3
 
+////////////////////////////////////////////////////////////////////////////////
+// Global Variables:
+extern HINSTANCE hInst;
+extern HWND hMainWnd;
+extern HWND hStatusBar;
+
+extern TCHAR szTitle[];
+extern TCHAR szFrameClass[];
+//extern TCHAR szWindowClass[];
+
+#ifndef _MSC_VER
+typedef struct tagNMITEMACTIVATE{
+    NMHDR   hdr;
+    int     iItem;
+    int     iSubItem;
+    UINT    uNewState;
+    UINT    uOldState;
+    UINT    uChanged;
+    POINT   ptAction;
+    LPARAM  lParam;
+    UINT    uKeyFlags;
+} NMITEMACTIVATE, FAR *LPNMITEMACTIVATE;
+#endif
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __DIALOGS_H__
+#endif // __MAIN_H__

@@ -3,8 +3,9 @@
 //
 #include <stdio.h> 
 #include <stdarg.h>
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
 #include "trace.h"
-//#include "windows.h"
 
 DeclAssertFile;  // Should be added at the begining of each .C/.CPP
 
@@ -18,9 +19,9 @@ DeclAssertFile;  // Should be added at the begining of each .C/.CPP
 //WINBASEAPI VOID WINAPI DebugBreak(VOID);
 //WINBASEAPI VOID WINAPI OutputDebugStringA(LPCSTR lpOutputString);
 //WINBASEAPI VOID WINAPI OutputDebugStringW(LPCWSTR lpOutputString);
-void __stdcall DebugBreak(void);
-void __stdcall OutputDebugStringA(char* lpOutputString);
-void __stdcall OutputDebugStringW(wchar_t* lpOutputString);
+//void __stdcall DebugBreak(void);
+//void __stdcall OutputDebugStringA(char* lpOutputString);
+//void __stdcall OutputDebugStringW(wchar_t* lpOutputString);
 #ifdef UNICODE
 #define OutputDebugString  OutputDebugStringW
 #else
@@ -40,23 +41,27 @@ void _DebugBreak(void)
     DebugBreak();
 }
 
-void Trace(char* lpszFormat, ...)
+void Trace(TCHAR* lpszFormat, ...)
 {
     va_list args;
     int nBuf;
-    char szBuffer[512];
+    TCHAR szBuffer[512];
 
     va_start(args, lpszFormat);
 //  nBuf = vsprintf(szBuffer, lpszFormat, args);
 //  nBuf = _vsntprintf(szBuffer, _countof(szBuffer), lpszFormat, args);
+#ifdef _UNICODE
+    nBuf = _vsnwprintf(szBuffer, sizeof(szBuffer), lpszFormat, args);
+#else
     nBuf = _vsnprintf(szBuffer, sizeof(szBuffer), lpszFormat, args);
+#endif
     OutputDebugString(szBuffer);
     // was there an error? was the expanded string too long?
-    ASSERT(nBuf >= 0);
+//    ASSERT(nBuf >= 0);
     va_end(args);
 }
 
-void Assert(void* assert, char* file, int line, void* msg)
+void Assert(void* assert, TCHAR* file, int line, void* msg)
 {
     if (msg == NULL) {
         printf("ASSERT -- %s occured on line %u of file %s.\n",
@@ -70,10 +75,10 @@ void Assert(void* assert, char* file, int line, void* msg)
 
 #else
 
-//inline void Trace(char* lpszFormat, ...) { };
-//inline void Assert(void* assert, char* file, int line, void* msg) { };
-void Trace(char* lpszFormat, ...) { };
-void Assert(void* assert, char* file, int line, void* msg) { };
+//inline void Trace(TCHAR* lpszFormat, ...) { };
+//inline void Assert(void* assert, TCHAR* file, int line, void* msg) { };
+void Trace(TCHAR* lpszFormat, ...) { };
+void Assert(void* assert, TCHAR* file, int line, void* msg) { };
 
 #endif //_DEBUG
 /////////////////////////////////////////////////////////////////////////////

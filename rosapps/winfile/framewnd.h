@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __FRAME_WND_H__
-#define __FRAME_WND_H__
+#ifndef __FRAMEWND_H__
+#define __FRAMEWND_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,4 +44,4 @@ void resize_frame_client(HWND hWnd);
 };
 #endif
 
-#endif // __FRAME_WND_H__
+#endif // __FRAMEWND_H__

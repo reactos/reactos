@@ -34,10 +34,13 @@
 #include <stdio.h>
 #endif
 	
+#include <shellapi.h>
+
 #include "main.h"
 #include "run.h"
 
 
+// Show "Run..." dialog
 void OnFileRun(void)
 {
 	HMODULE			hShell32;
@@ -45,27 +48,69 @@ void OnFileRun(void)
 	OSVERSIONINFO	versionInfo;
 	WCHAR			wTitle[40];
 	WCHAR			wText[256];
-	char			szTitle[40] = "Create New Task";
-	char			szText[256] = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
+	CHAR			szTitle[40] = "Create New Task";
+	CHAR			szText[256] = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
 
-	hShell32 = LoadLibrary("SHELL32.DLL");
-	RunFileDlg = (RUNFILEDLG)(FARPROC)GetProcAddress(hShell32, (char*)((long)0x3D));
-
-	// Show "Run..." dialog
-	if (RunFileDlg)
-	{
+	hShell32 = LoadLibrary(_T("SHELL32.DLL"));
+	RunFileDlg = (RUNFILEDLG)(FARPROC)GetProcAddress(hShell32, (CHAR*)((long)0x3D));
+	if (RunFileDlg)	{
 		versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 		GetVersionEx(&versionInfo);
-
-		if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
-		{
+		if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTitle, -1, wTitle, 40);
 			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szText, -1, wText, 256);
 			RunFileDlg(Globals.hMainWnd, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
-		}
-		else
+        } else {
 			RunFileDlg(Globals.hMainWnd, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+        }
 	}
-
 	FreeLibrary(hShell32);
+}
+
+
+/*
+typedef struct _SHELLEXECUTEINFO{
+    DWORD cbSize; 
+    ULONG fMask; 
+    HWND hwnd; 
+    LPCTSTR lpVerb; 
+    LPCTSTR lpFile; 
+    LPCTSTR lpParameters; 
+    LPCTSTR lpDirectory; 
+    int nShow; 
+    HINSTANCE hInstApp; 
+ 
+    // Optional members 
+    LPVOID lpIDList; 
+    LPCSTR lpClass; 
+    HKEY hkeyClass; 
+    DWORD dwHotKey; 
+	union {
+		HANDLE hIcon;
+		HANDLE hMonitor;
+	};
+    HANDLE hProcess; 
+} SHELLEXECUTEINFO, *LPSHELLEXECUTEINFO; 
+ */
+
+BOOL OpenTarget(HWND hWnd, TCHAR* target)
+{
+    BOOL result = FALSE;
+    SHELLEXECUTEINFO shExecInfo;
+
+    memset(&shExecInfo, 0, sizeof(shExecInfo));
+    shExecInfo.cbSize = sizeof(shExecInfo);
+    shExecInfo.fMask = 0;
+    shExecInfo.hwnd = hWnd;
+    shExecInfo.lpVerb = NULL;
+    shExecInfo.lpFile = target;
+    shExecInfo.lpParameters = NULL;
+    shExecInfo.lpDirectory = NULL;
+    shExecInfo.nShow = SW_SHOW;
+    shExecInfo.hInstApp = 0;
+
+    result = ShellExecuteEx(&shExecInfo);
+
+
+    return result;
 }

@@ -56,9 +56,9 @@ IDC_WINFILE MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Open\tEnter",                ID_FILE_OPEN, GRAYED
-        MENUITEM "&Move...\tF8",                ID_FILE_MOVE
-        MENUITEM "&Copy...\tF9",                ID_FILE_COPY, GRAYED
+        MENUITEM "&Open\tEnter",                ID_FILE_OPEN
+        MENUITEM "&Move...\tF7",                ID_FILE_MOVE
+        MENUITEM "&Copy...\tF8",                ID_FILE_COPY, GRAYED
         MENUITEM "Copy to Clip&board...\tF9",   ID_FILE_COPY_CLIPBOARD
         , GRAYED
         MENUITEM "&Delete...\tDel",             ID_FILE_DELETE, GRAYED
@@ -87,7 +87,10 @@ BEGIN
         MENUITEM "&Format Disk..\t",            ID_DISK_FORMAT_DISK
         MENUITEM SEPARATOR
         MENUITEM "Connect &Network Drive...",   ID_DISK_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Disconnect Network Drive...",ID_DISK_DISCONNECT_NETWORK_DRIVE
+
+        MENUITEM "&Disconnect Network Drive...", 
+                                                ID_DISK_DISCONNECT_NETWORK_DRIVE
+
         MENUITEM SEPARATOR
         MENUITEM "Share &As...",                ID_DISK_SHARE_AS, GRAYED
         MENUITEM "S&top Sharing...",            ID_DISK_STOP_SHARING, GRAYED
@@ -99,10 +102,12 @@ BEGIN
         MENUITEM "E&xpand One Level\t+",        ID_TREE_EXPAND_ONE_LEVEL
         MENUITEM "Expand &Branch\t*",           ID_TREE_EXPAND_BRANCH
         MENUITEM "Expand &All\tCtrl+*",         ID_TREE_EXPAND_ALL
+        MENUITEM "Collapse Branch\t-",          ID_TREE_COLLAPSE_BRANCH
+
         MENUITEM SEPARATOR
         MENUITEM "&Indicate Expandable Branches", 
                                                 ID_TREE_INDICATE_EXPANDABLE_BRANCHES
-
+        , CHECKED, GRAYED
     END
     POPUP "&View"
     BEGIN
@@ -114,8 +119,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sp&lit",                      ID_VIEW_SPLIT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Name",                       ID_VIEW_NAME
+        MENUITEM "&Name",                       ID_VIEW_NAME, GRAYED
         MENUITEM "&All File Details",           ID_VIEW_ALL_FILE_DETAILS
+        , CHECKED, GRAYED
         MENUITEM "&Partial Details...",         ID_VIEW_PARTIAL_DETAILS
         , GRAYED
         MENUITEM SEPARATOR
@@ -131,7 +137,6 @@ BEGIN
         MENUITEM "&Confirmation...",            ID_OPTIONS_CONFIRMATION
         MENUITEM "&Font...",                    ID_OPTIONS_FONT, GRAYED
         MENUITEM "Customise Tool&bar...",       ID_OPTIONS_CUSTOMISE_TOOLBAR
-        , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Toolbar",                    ID_OPTIONS_TOOLBAR
         MENUITEM "&Drivebar",                   ID_OPTIONS_DRIVEBAR
@@ -160,10 +165,9 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Contents",                   ID_HELP_CONTENTS, GRAYED
-        MENUITEM "&Search for Help on...",      ID_HELP_SEARCH_HELP, GRAYED
+        MENUITEM "&Contents",                   ID_HELP_CONTENTS
+        MENUITEM "&Search for Help on...",      ID_HELP_SEARCH_HELP
         MENUITEM "&How to Use Help",            ID_HELP_HOW_TO_USE_HELP
-        , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&About File Manager",         ID_HELP_ABOUT
     END
@@ -219,6 +223,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    IDS_LIST_COLUMN_DOSNAME "DOS-Name"
     IDS_APP_TITLE           "ReactOS File Manager"
     IDC_WINFILE             "ROSFILE"
     IDC_WINFILE_CHILD       "ROSFILE_CHILD"
@@ -269,6 +274,7 @@ BEGIN
     ID_TREE_EXPAND_ONE_LEVEL "Displays another level of a directory"
     ID_TREE_EXPAND_BRANCH   "Displays all levels of a directory"
     ID_TREE_EXPAND_ALL      "Displays all levels of all directories"
+    ID_TREE_COLLAPSE_BRANCH "Collapses all directories of the selected directory"
     ID_TREE_INDICATE_EXPANDABLE_BRANCHES 
                             "Indicates directories that have sub-directories"
     ID_VIEW_TREE_DIRECTORY  "Displays the directory tree and the contents of the current directory"
@@ -321,8 +327,8 @@ BEGIN
     IDS_LIST_COLUMN_NAME    "Name"
     IDS_LIST_COLUMN_SIZE    "Size"
     IDS_LIST_COLUMN_DATE    "Date"
+    IDS_LIST_COLUMN_TIME    "Time"
     IDS_LIST_COLUMN_ATTRIB  "Attributes"
-    IDS_LIST_COLUMN_DOSNAME "DOS-Name"
 END
 
 #endif    // English (U.S.) resources
@@ -468,6 +474,77 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "0c0904b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "None\0"
+            VALUE "FileDescription", "winfile\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "winfile\0"
+            VALUE "LegalCopyright", "Copyright © 2002\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "winfile.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "None winfile\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc09, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE 
+BEGIN
+    "+",            ID_DISK_SELECT_DRIVE,   ASCII,  NOINVERT
+    "+",            ID_TREE_EXPAND_ONE_LEVEL, ASCII, NOINVERT
+    "-",            ID_TREE_EXPAND_ALL,     ASCII,  NOINVERT
+    "8",            ID_TREE_EXPAND_BRANCH,  VIRTKEY, SHIFT, NOINVERT
+    VK_DELETE,      ID_FILE_DELETE,         VIRTKEY, NOINVERT
+    VK_F4,          ID_WINDOW_TILE_VERT,    VIRTKEY, SHIFT, NOINVERT
+    VK_F5,          ID_WINDOW_REFRESH,      VIRTKEY, NOINVERT
+    VK_F5,          ID_WINDOW_CASCADE,      VIRTKEY, SHIFT, NOINVERT
+    VK_F7,          ID_FILE_MOVE,           VIRTKEY, NOINVERT
+    VK_F8,          ID_FILE_COPY,           VIRTKEY, NOINVERT
+    VK_F9,          ID_FILE_COPY_CLIPBOARD, VIRTKEY, NOINVERT
+    VK_MULTIPLY,    ID_TREE_EXPAND_BRANCH,  VIRTKEY, CONTROL, NOINVERT
+    VK_RETURN,      ID_FILE_OPEN,           VIRTKEY, NOINVERT
+    VK_RETURN,      ID_FILE_PROPERTIES,     VIRTKEY, ALT, NOINVERT
+    VK_SUBTRACT,    ID_TREE_EXPAND_ALL,     VIRTKEY, NOINVERT
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

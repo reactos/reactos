@@ -44,8 +44,8 @@
 #include "framewnd.h"
 #include "childwnd.h"
 #include "utils.h"
-#include "run.h"
-#include "format.h"
+#include "shell.h"
+#include "network.h"
 #include "dialogs.h"
 
 
@@ -76,7 +76,8 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
 	if (IsWindowVisible(Globals.hDriveBar)) {
 		SendMessage(Globals.hDriveBar, WM_SIZE, 0, 0);
 		GetClientRect(Globals.hDriveBar, &rt);
-		new_top = --prect->top + rt.bottom+3;
+//		new_top = --prect->top + rt.bottom+3;
+		new_top = --prect->top + rt.bottom+1;
 		MoveWindow(Globals.hDriveBar, 0, prect->top, rt.right, new_top, TRUE);
 		prect->top = new_top;
 		prect->bottom -= rt.bottom+2;
@@ -226,19 +227,22 @@ HWND CreateChildWindow(int drv_id)
 	if (pChildWnd != NULL) {
         MDICREATESTRUCT mcs = {
             szChildClass, path, hInst,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            0/*style*/, 0/*lParam*/
+//            CW_USEDEFAULT, CW_USEDEFAULT,
+//            CW_USEDEFAULT, CW_USEDEFAULT,
+            20, 20, 200, 200, 
+            WS_MAXIMIZE, 0
+//            0/*style*/, 0/*lParam*/
 		};
         hcbthook = SetWindowsHookEx(WH_CBT, CBTProc, 0, GetCurrentThreadId());
     	newchild = pChildWnd;
         pChildWnd->hWnd = (HWND)SendMessage(Globals.hMDIClient, WM_MDICREATE, 0, (LPARAM)&mcs);
         UnhookWindowsHookEx(hcbthook);
-        if (pChildWnd->hWnd == NULL) {
+        if (pChildWnd->hWnd != NULL) {
+            return pChildWnd->hWnd;
+        } else {
             free(pChildWnd);
         	newchild = pChildWnd = NULL;
         }
-        return pChildWnd->hWnd;
 	}
     return 0;
 }
@@ -286,11 +290,29 @@ void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
     TCHAR str[100];
 
-    strcpy(str, TEXT(""));
+    if (hSysMenu == NULL) return;
+
+    _tcscpy(str, _T(""));
     if (nFlags & MF_POPUP) {
-        if (hSysMenu != GetMenu(hWnd)) {
-            if (nItemID == 2) nItemID = 5;
+        switch (nItemID) {
+        case ID_FILE_MENU:
+            //EnableMenuItem(hSysMenu, uIDEnableItem,  MF_BYCOMMAND|MF_ENABLED);
+            break;
+        case ID_DISK_MENU:
+//            EnableMenuItem(hSysMenu, ID_DISK_COPY_DISK,  MF_BYCOMMAND|MF_GRAYED);
+            EnableMenuItem(hSysMenu, ID_DISK_COPY_DISK,  MF_BYCOMMAND|MF_ENABLED);
+            break;
+        case ID_TREE_MENU:
+        case ID_VIEW_MENU:
+        case ID_OPTIONS_MENU:
+        case ID_SECURITY_MENU:
+        case ID_WINDOW_MENU:
+        case ID_HELP_MENU:
+            break;
         }
+//        if (hSysMenu != GetMenu(hWnd)) {
+//            if (nItemID == 2) nItemID = 5;
+//        }
     }
     if (LoadString(Globals.hInstance, nItemID, str, 100)) {
         // load appropriate string
@@ -344,67 +366,6 @@ static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-LRESULT CALLBACK EnumNetConnectionsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    return 0;
-}
-
-/*
-DWORD WNetOpenEnum(
-  DWORD dwScope,                // scope of enumeration
-  DWORD dwType,                 // resource types to list
-  DWORD dwUsage,                // resource usage to list
-  LPNETRESOURCE lpNetResource,  // resource structure
-  LPHANDLE lphEnum              // enumeration handle buffer
-);
-
-    result = WNetOpenEnum(RESOURCE_CONNECTED, RESOURCETYPE_DISK, RESOURCEUSAGE_ALL, NULL, &EnumNetConnectionsProc);
-
- */
-DWORD MapNetworkDrives(HWND hWnd, BOOL connect)
-{
-    DWORD result = 0L;
-#if 1
-    if (connect) {
-        WNetConnectionDialog(hWnd, RESOURCETYPE_DISK);
-    } else {
-        WNetDisconnectDialog(hWnd, RESOURCETYPE_DISK);
-    }
-#else
-    if (connect) {
-        NETRESOURCE netResouce;
-        CONNECTDLGSTRUCT connectDlg;
-
-        //netResouce.dwScope; 
-        //netResouce.dwType; 
-        netResouce.dwDisplayType = 0;
-        //netResouce.dwUsage; 
-        //netResouce.lpLocalName; 
-        //netResouce.lpRemoteName; 
-        //netResouce.lpComment; 
-        //netResouce.lpProvider; 
-
-        //connectDlg.cbStructure;
-        connectDlg.hwndOwner = hWnd;
-        connectDlg.lpConnRes = &netResouce;
-        //connectDlg.dwFlags;
-        //connectDlg.dwDevNum;
-
-        result = WNetConnectionDialog1(&connectDlg);
-    } else {
-        DISCDLGSTRUCT disconnectDlg;
-        //disconnectDlg.cbStructure;
-        disconnectDlg.hwndOwner = hWnd;
-        //disconnectDlg.lpLocalName;
-        //disconnectDlg.lpRemoteName;
-        //disconnectDlg.dwFlags;
-        result = WNetDisconnectDialog1(&disconnectDlg);
-    }
-#endif
-    return result;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
@@ -413,7 +374,7 @@ DWORD MapNetworkDrives(HWND hWnd, BOOL connect)
 //
 //
 
-LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UINT cmd = LOWORD(wParam);
 	HWND hChildWnd;
@@ -431,12 +392,13 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		for (i = cmd - ID_DRIVE_FIRST; i--; root++)
 			while (*root)
 				root++;
-		if (activate_drive_window(root))
-			return 0;
+        if (activate_drive_window(root)) {
+            return TRUE;
+        }
 		_tsplitpath(root, drv, 0, 0, 0);
 		if (!SetCurrentDirectory(drv)) {
 			display_error(hWnd, GetLastError());
-			return 0;
+            return TRUE;
 		}
 		//GetCurrentDirectory(MAX_PATH, path); //@@ letztes Verzeichnis pro Laufwerk speichern
         //CreateChildWindow(path);
@@ -455,17 +417,16 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (!SendMessage(hChildWnd, WM_QUERYENDSESSION, 0, 0))
                 SendMessage(Globals.hMDIClient, WM_MDIDESTROY, (WPARAM)hChildWnd, 0);
             break;
-        case ID_FILE_EXIT:
-            SendMessage(hWnd, WM_CLOSE, 0, 0);
-            break;
-        case ID_FILE_RUN:
-            OnFileRun();
-            break;
+
         case ID_DISK_COPY_DISK:
+            CopyDisk(hWnd);
 			break;
         case ID_DISK_LABEL_DISK:
+            LabelDisk(hWnd);
 			break;
         case ID_DISK_FORMAT_DISK:
+            FormatDisk(hWnd);
+#if 0
 //			SHFormatDrive(hWnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
 			{
 				UINT OldMode = SetErrorMode(0); // Get the current Error Mode settings.
@@ -474,6 +435,7 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				SHFormatDrive(hWnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
 				SetErrorMode(OldMode); // Put it back the way it was. 			
 			}
+#endif
 			break;
         case ID_DISK_CONNECT_NETWORK_DRIVE:
             MapNetworkDrives(hWnd, TRUE);
@@ -482,12 +444,13 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             MapNetworkDrives(hWnd, FALSE);
 			break;
         case ID_DISK_SHARE_AS:
+            ModifySharing(hWnd, TRUE);
 			break;
         case ID_DISK_STOP_SHARING:
+            ModifySharing(hWnd, FALSE);
 			break;
         case ID_DISK_SELECT_DRIVE:
 			break;
-
 
         case ID_VIEW_BY_FILE_TYPE:
 			{
@@ -506,6 +469,7 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_OPTIONS_FONT:
             break;
 		case ID_OPTIONS_CUSTOMISE_TOOLBAR:
+            SendMessage(Globals.hToolBar, TB_CUSTOMIZE, 0, 0);
             break;
 		case ID_OPTIONS_TOOLBAR:
 			toggle_child(hWnd, cmd, Globals.hToolBar);
@@ -517,19 +481,34 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			toggle_child(hWnd, cmd, Globals.hStatusBar);
             break;
 		case ID_OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT:
+            if (Globals.Options & OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT) {
+                Globals.Options &= ~OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT;
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_CHECKED);
+            } else {
+                Globals.Options |= OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT;
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND | MF_CHECKED);
+            }
             break;
 		case ID_OPTIONS_MINIMISE_ON_USE:
+            if (Globals.Options & ID_OPTIONS_MINIMISE_ON_USE) {
+                Globals.Options &= ~ID_OPTIONS_MINIMISE_ON_USE;
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_CHECKED);
+            } else {
+                Globals.Options |= ID_OPTIONS_MINIMISE_ON_USE;
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND | MF_CHECKED);
+            }
             break;
         case ID_OPTIONS_SAVE_ON_EXIT:
+            if (Globals.Options & OPTIONS_SAVE_ON_EXIT) {
+                Globals.Options &= ~OPTIONS_SAVE_ON_EXIT;
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_CHECKED);
+            } else {
+                Globals.Options |= OPTIONS_SAVE_ON_EXIT;
+                CheckMenuItem(Globals.hMenuOptions, cmd, MF_BYCOMMAND | MF_CHECKED);
+            }
             break;
-
 		case ID_WINDOW_NEW_WINDOW:
             CreateChildWindow(-1);
-//			{
-//			ChildWnd* pChildWnd = alloc_child_window(path);
-//			if (!create_child_window(pChildWnd))
-//				free(pChildWnd);
-//			}
 			break;
 		case ID_WINDOW_CASCADE:
 			SendMessage(Globals.hMDIClient, WM_MDICASCADE, 0, 0);
@@ -543,18 +522,24 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_WINDOW_ARRANGE_ICONS:
 			SendMessage(Globals.hMDIClient, WM_MDIICONARRANGE, 0, 0);
             break;
+        case ID_WINDOW_REFRESH:
+            // TODO:
+            break;
 		case ID_HELP_CONTENTS:
-			WinHelp(hWnd, _T("winfile"), HELP_INDEX, 0);
+			WinHelp(hWnd, _T("winfile"), HELP_CONTENTS, 0);
             break;
 		case ID_HELP_SEARCH_HELP:
+			WinHelp(hWnd, _T("winfile"), HELP_FINDER, 0);
             break;
 		case ID_HELP_HOW_TO_USE_HELP:
-#ifdef WINSHELLAPI
-            ShellAbout(hWnd, szTitle, "", LoadIcon(Globals.hInstance, (LPCTSTR)IDI_WINFILE));
-#endif
+			WinHelp(hWnd, _T("winfile"), HELP_HELPONHELP, 0);
             break;
         case ID_HELP_ABOUT:
+#ifdef WINSHELLAPI
+            ShellAbout(hWnd, szTitle, "", LoadIcon(Globals.hInstance, (LPCTSTR)IDI_WINFILE));
+#else
             ShowAboutBox(hWnd);
+#endif
             break;
 		default:
 /*
@@ -564,16 +549,150 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			return DefFrameProc(hWnd, Globals.hMDIClient, message, wParam, lParam);
  */
+/*
             hChildWnd = (HWND)SendMessage(Globals.hMDIClient, WM_MDIGETACTIVE, 0, 0);
             if (IsWindow(hChildWnd))
                 SendMessage(hChildWnd, WM_COMMAND, wParam, lParam);
             else
 			    return DefFrameProc(hWnd, Globals.hMDIClient, message, wParam, lParam);
+ */
+            return FALSE;
 		}
 	}
-	return 0;
+	return TRUE;
 }
 
+
+static TBBUTTON tbButtonNew[] = {
+	{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+	{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+	{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+	{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+	{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+};
+        
+LRESULT MsgNotify(HWND hwnd, UINT uMessage, WPARAM wparam, LPARAM lparam)
+{
+    LPNMHDR     lpnmhdr;
+
+//LPNMHDR                lpnmhdr;
+static int             nResetCount;
+static LPTBBUTTON      lpSaveButtons;
+//LPARAM                 lParam;
+
+    
+    lpnmhdr = (LPNMHDR)lparam;
+/*
+    // The following code allows the toolbar to be customized. 
+    // If you return FALSE the Customize Toolbar dialog flashes
+    // and goes away.
+  
+    if (lpnmhdr->code == TBN_QUERYINSERT || lpnmhdr->code == TBN_QUERYDELETE) {
+        return TRUE;
+    }
+        
+    if (lpnmhdr->code == TBN_GETBUTTONINFO) {
+        LPTBNOTIFY lpTbNotify = (LPTBNOTIFY)lparam;
+        char szBuffer[20];
+
+//        int tbButtonNew[20] = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 };
+		TBBUTTON tbButtonNew[] = {
+			{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+			{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+			{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+			{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+			{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
+		};
+        
+		// 20 = total number of buttons.
+		// tbButton and tbButtonNew send information about
+		// the other 12 buttons in tbButtonNew.
+        if (lpTbNotify->iItem < 5) {
+            lpTbNotify->tbButton = tbButtonNew[lpTbNotify->iItem];
+//            LoadString(hInst, 4000+lpTbNotify->iItem, szBuffer, sizeof(szBuffer));
+            LoadString(hInst, lpTbNotify->iItem, szBuffer, sizeof(szBuffer));
+            lstrcpy (lpTbNotify->pszText, szBuffer);
+            lpTbNotify->cchText = sizeof (szBuffer);
+            return TRUE;
+        } else {
+            return 0;
+        }
+    }
+ */
+    switch (lpnmhdr->code) {
+    case TBN_QUERYINSERT:
+    case TBN_QUERYDELETE:
+        return TRUE;
+
+    case TBN_GETBUTTONINFO:
+        {
+        LPTBNOTIFY lpTbNotify = (LPTBNOTIFY)lparam;
+        char szBuffer[20];
+/*
+typedef struct _TBBUTTON {
+    int iBitmap; 
+    int idCommand; 
+    BYTE fsState; 
+    BYTE fsStyle; 
+    DWORD dwData; 
+    INT_PTR iString; 
+} TBBUTTON, NEAR* PTBBUTTON, FAR* LPTBBUTTON; 
+ */
+		// 20 = total number of buttons.
+		// tbButton and tbButtonNew send information about
+		// the other 12 buttons in tbButtonNew.
+        if (lpTbNotify->iItem < 12) {
+            lpTbNotify->tbButton = tbButtonNew[lpTbNotify->iItem];
+            LoadString(hInst, lpTbNotify->iItem + 32769, szBuffer, sizeof(szBuffer));
+            lstrcpy (lpTbNotify->pszText, szBuffer);
+            lpTbNotify->cchText = sizeof (szBuffer);
+            return TRUE;
+        } else {
+            return 0;
+        }
+        }
+        break;
+
+    case TBN_BEGINADJUST: // Start customizing the toolbar.
+        {
+	    LPTBNOTIFY  lpTB = (LPTBNOTIFY)lparam;
+        int i;
+	   
+        // Allocate memory to store the button information.
+        nResetCount = SendMessage(lpTB->hdr.hwndFrom, TB_BUTTONCOUNT, 0, 0);
+        lpSaveButtons = (LPTBBUTTON)GlobalAlloc(GPTR, sizeof(TBBUTTON) * nResetCount);
+      
+        // Save the current configuration so if the user presses
+        // reset, the original toolbar can be restored.
+        for (i = 0; i < nResetCount; i++) {
+            SendMessage(lpTB->hdr.hwndFrom, TB_GETBUTTON, i, (LPARAM)(lpSaveButtons + i));
+        }
+        }
+        return TRUE;
+   
+    case TBN_RESET:
+        {
+        LPTBNOTIFY  lpTB = (LPTBNOTIFY)lparam;
+        int         nCount, i;
+	
+        // Remove all of the existing buttons starting with the last and working down.
+        nCount = SendMessage(lpTB->hdr.hwndFrom, TB_BUTTONCOUNT, 0, 0);
+        for (i = nCount - 1; i >= 0; i--) {
+            SendMessage(lpTB->hdr.hwndFrom, TB_DELETEBUTTON, i, 0);
+        }
+      
+        // Restore the buttons that were saved.
+        SendMessage(lpTB->hdr.hwndFrom, TB_ADDBUTTONS, (WPARAM)nResetCount, (LPARAM)lpSaveButtons);
+        }
+        return TRUE;
+   
+    case TBN_ENDADJUST:
+        // Free the memory allocated during TBN_BEGINADJUST
+        GlobalFree((HGLOBAL)lpSaveButtons);
+        return TRUE;
+    }
+    return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -593,22 +712,46 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         {
         HMENU hMenuWindow = GetSubMenu(Globals.hMenuFrame, GetMenuItemCount(Globals.hMenuFrame)-2);
         CLIENTCREATESTRUCT ccs = { hMenuWindow, IDW_FIRST_CHILD };
-#if 0
-        hMDIClient = CreateWindow(_T("MDICLIENT"), NULL,
-                    WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE,
-                    0, 0, 0, 0,
-                    hWnd, (HMENU)1, hInst, &ccs);
-#else
         Globals.hMDIClient = CreateWindowEx(0, _T("MDICLIENT"), NULL,
                 //WS_CHILD|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL|WS_VISIBLE|WS_BORDER,
-                WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE,
+                WS_EX_MDICHILD|WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE,
                 0, 0, 0, 0,
                 hWnd, (HMENU)0, hInst, &ccs);
-#endif
         }
+        CheckShellAvailable();
+        CheckNetworkAvailable();
+        CreateChildWindow(-1);
 		break;
+
+    case WM_NOTIFY:
+
+        if (MsgNotify(hWnd, message, wParam, lParam)) return TRUE;
+//        return MsgNotify(hWnd, message, wParam, lParam);
+        switch (((LPNMHDR)lParam)->code) { 
+        case TTN_GETDISPINFO: 
+            { 
+            LPTOOLTIPTEXT lpttt; 
+            lpttt = (LPTOOLTIPTEXT)lParam; 
+            lpttt->hinst = hInst; 
+            // load appropriate string
+            lpttt->lpszText = MAKEINTRESOURCE(lpttt->hdr.idFrom); 
+            } 
+            break; 
+        default:
+            break;
+        }
+        break;
+   
 	case WM_COMMAND:
-		return _CmdWndProc(hWnd, message, wParam, lParam);
+        if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
+//            if (LOWORD(wParam) > ID_CMD_FIRST && LOWORD(wParam) < ID_CMD_LAST) {
+                HWND hChildWnd = (HWND)SendMessage(Globals.hMDIClient, WM_MDIGETACTIVE, 0, 0);
+                if (IsWindow(hChildWnd))
+                    if (SendMessage(hChildWnd, WM_DISPATCH_COMMAND, wParam, lParam))
+                        break;
+//            }
+   		    return DefFrameProc(hWnd, Globals.hMDIClient, message, wParam, lParam);
+        }
 		break;
 	case WM_SIZE:
         resize_frame_client(hWnd);
@@ -623,6 +766,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
 		break;
 	case WM_DESTROY:
+		WinHelp(hWnd, _T("winfile"), HELP_QUIT, 0);
 		PostQuitMessage(0);
 		break;
     case WM_QUERYENDSESSION:
@@ -631,7 +775,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         if (GetWindow(Globals.hMDIClient, GW_CHILD) != NULL)
             return 0;
         // else fall thru...
-    default:
+    default: //def:
         return DefFrameProc(hWnd, Globals.hMDIClient, message, wParam, lParam);
 	}
 	return 0;

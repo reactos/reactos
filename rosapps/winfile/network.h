@@ -1,7 +1,7 @@
 /*
  *  ReactOS Application Debug Routines
  *
- *  debug.h
+ *  network.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,18 +20,20 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
     
-#ifndef __DEBUG_H__
-#define __DEBUG_H__
+#ifndef __NETWORK_H__
+#define __NETWORK_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
+BOOL CheckNetworkAvailable(void);
+DWORD MapNetworkDrives(HWND hWnd, BOOL connect);
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __DEBUG_H__
+#endif // __NETWORK_H__

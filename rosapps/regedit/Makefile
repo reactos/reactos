@@ -30,10 +30,10 @@ RCFLAGS = -DGCC -D_WIN32_IE=0x0400
 
 
 OBJS =	about.o \
-	debug.o \
-	regtree.o \
-	reglist.o \
-	$(TARGET).o
+        framewnd.o \
+        listview.o \
+        treeview.o \
+        main.o
 
 LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
 
@@ -46,41 +46,20 @@ $(TARGET).exe:	$(OBJS) $(TARGET).coff
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 
-about.o:	about.cpp about.h resource.h
+main.h:		resource.h
 
-affinity.o:	affinity.cpp affinity.h
+about.o:	about.c about.h main.h
 
-applicationpage.o:	applicationpage.cpp applicationpage.h processpage.h $(TARGET).h resource.h
+main.o:		main.c main.h framewnd.h
 
-column.o:	column.cpp column.h resource.h
+framewnd.o:	framewnd.c framewnd.h listview.h treeview.h main.h
 
-debug.o:	debug.cpp debug.h
+listview.o:	listview.c listview.h main.h 
 
-endproc.o:	endproc.cpp endproc.h
+treeview.o:	treeview.c treeview.h main.h 
 
-font.o:		font.cpp font.h
+debug.o:	debug.c debug.h main.h
 
-graph.o:	graph.cpp graph.h resource.h
-
-graphctrl.o:	graphctrl.cpp graphctrl.h resource.h
-
-optnmenu.o:	optnmenu.cpp optnmenu.h resource.h
-
-perfdata.o:	perfdata.cpp perfdata.h
-
-performancepage.o:	performancepage.cpp performancepage.h perfdata.h graphctrl.h graph.h $(TARGET).h resource.h
-
-priority.o:	priority.cpp priority.h
-
-processpage.o:	processpage.cpp processpage.h perfdata.h column.h proclist.h $(TARGET).h resource.h
-
-proclist.o:	proclist.cpp proclist.h
-
-run.o:		run.cpp run.h
-
-trayicon.o:	trayicon.cpp trayicon.h resource.h
-
-$(TARGET).o:	$(TARGET).cpp $(TARGET).h resource.h
 
 clean:
 	- $(RM) $(OBJS)
@@ -88,4 +67,4 @@ clean:
 	- $(RM) $(TARGET).sym
 	- $(RM) $(TARGET).coff
 
-include ../rules.mak
+include $(PATH_TO_TOP)/rules.mak
