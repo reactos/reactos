@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.68 2004/04/14 07:10:58 jimtabor Exp $
+/* $Id: timer.c,v 1.69 2004/04/14 17:14:45 jimtabor Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -600,9 +600,10 @@ KiUpdateSystemTime(KIRQL oldIrql,
  */
 {
    LARGE_INTEGER Time;
+/*
    PKTHREAD CurrentThread;
    PKPROCESS CurrentProcess;
-   
+ */  
    assert(KeGetCurrentIrql() == PROFILE_LEVEL);
 
    KiRawTicks++;
@@ -633,7 +634,7 @@ KiUpdateSystemTime(KIRQL oldIrql,
    SharedUserData->SystemTime.LowPart = Time.u.LowPart;
    SharedUserData->SystemTime.High1Part = Time.u.HighPart;
 
-
+/*
    CurrentThread = KeGetCurrentThread();
    CurrentProcess = KeGetCurrentProcess();
 
@@ -649,7 +650,8 @@ KiUpdateSystemTime(KIRQL oldIrql,
    	++CurrentThread->KernelTime;
    	++KiKernelTime;
      }
-
+ */
+ 
    KiReleaseSpinLock(&TimerValueLock);
 
    /*
