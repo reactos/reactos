@@ -36,6 +36,7 @@
 #include "inicache.h"
 #include "filequeue.h"
 #include "progress.h"
+#include "bootsup.h"
 
 
 #define START_PAGE			0
@@ -48,7 +49,8 @@
 #define PREPARE_COPY_PAGE		7
 #define INSTALL_DIRECTORY_PAGE		8
 #define FILE_COPY_PAGE			9
-#define INIT_SYSTEM_PAGE		10
+#define REGISTRY_PAGE			10
+#define BOOT_LOADER_PAGE		11
 
 #define REPAIR_INTRO_PAGE		20
 
@@ -72,10 +74,17 @@ HANDLE ProcessHeap;
 BOOLEAN PartDataValid;
 PARTDATA PartData;
 
-WCHAR InstallDir[51];
+BOOLEAN ActivePartitionValid;
+PARTDATA ActivePartition;
 
 UNICODE_STRING SourcePath;
 UNICODE_STRING SourceRootPath;
+
+UNICODE_STRING InstallPath;
+UNICODE_STRING DestinationPath;
+UNICODE_STRING DestinationRootPath;
+
+UNICODE_STRING SystemRootPath; /* Path to the active partition */
 
 PINICACHE IniCache;
 
@@ -627,6 +636,7 @@ InstallIntroPage(PINPUT_RECORD Ir)
 static ULONG
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
+  WCHAR PathBuffer[MAX_PATH];
   PPARTLIST PartList;
   SHORT xScreen;
   SHORT yScreen;
@@ -640,6 +650,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
   SetTextXY(8, 17, "\xf9  Press D to delete an existing partition.");
 
   SetStatusText("   Please wait...");
+
+  RtlFreeUnicodeString(&DestinationPath);
+  RtlFreeUnicodeString(&DestinationRootPath);
 
   GetScreenSize(&xScreen, &yScreen);
 
@@ -678,8 +691,28 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  PartDataValid = GetPartitionData(PartList, &PartData);
+	  PartDataValid = GetSelectedPartition(PartList,
+					       &PartData);
+	  ActivePartitionValid = GetActiveBootPartition(PartList,
+							&ActivePartition);
 	  DestroyPartitionList(PartList);
+
+	  RtlFreeUnicodeString(&DestinationRootPath);
+	  swprintf(PathBuffer,
+		   L"\\Device\\Harddisk%lu\\Partition%lu",
+		   PartData.DiskNumber,
+		   PartData.PartNumber);
+	  RtlCreateUnicodeString(&DestinationRootPath,
+				 PathBuffer);
+
+	  RtlFreeUnicodeString(&SystemRootPath);
+	  swprintf(PathBuffer,
+		   L"\\Device\\Harddisk%lu\\Partition%lu",
+		   ActivePartition.DiskNumber,
+		   ActivePartition.PartNumber);
+	  RtlCreateUnicodeString(&SystemRootPath,
+				 PathBuffer);
+
 	  return(SELECT_FILE_SYSTEM_PAGE);
 	}
 
@@ -846,6 +879,8 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 static ULONG
 InstallDirectoryPage(PINPUT_RECORD Ir)
 {
+  WCHAR PathBuffer[MAX_PATH];
+  WCHAR InstallDir[51];
   ULONG Length;
 
   SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
@@ -876,6 +911,21 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
+	  /* Create 'DestinationPath' string */
+	  RtlFreeUnicodeString(&InstallPath);
+	  RtlCreateUnicodeString(&InstallPath,
+				 InstallDir);
+
+	  /* Create 'DestinationPath' string */
+	  RtlFreeUnicodeString(&DestinationPath);
+	  wcscpy(PathBuffer,
+		 DestinationRootPath.Buffer);
+	  if (InstallDir[0] != L'\\')
+	    wcscat(PathBuffer,
+		   L"\\");
+	  wcscat(PathBuffer, InstallDir);
+	  RtlCreateUnicodeString(&DestinationPath,
+				 PathBuffer);
 
 	  return(PREPARE_COPY_PAGE);
 	}
@@ -1048,14 +1098,8 @@ PrepareCopyPage(PINPUT_RECORD Ir)
    * Install directories like '\reactos\test' are not handled yet.
    */
 
-  /* Build full install directory name */
-  swprintf(PathBuffer,
-	   L"\\Device\\Harddisk%lu\\Partition%lu",
-	   PartData.DiskNumber,
-	   PartData.PartNumber);
-  if (InstallDir[0] != L'\\')
-    wcscat(PathBuffer, L"\\");
-  wcscat(PathBuffer, InstallDir);
+  /* Get destination path */
+  wcscpy(PathBuffer, DestinationPath.Buffer);
 
   /* Remove trailing backslash */
   Length = wcslen(PathBuffer);
@@ -1095,10 +1139,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
       {
         DPRINT("Absolute Path: '%S'\n", KeyValue);
 
-	swprintf(PathBuffer,
-		 L"\\Device\\Harddisk%lu\\Partition%lu",
-		 PartData.DiskNumber,
-		 PartData.PartNumber);
+	wcscpy(PathBuffer, DestinationRootPath.Buffer);
 	wcscat(PathBuffer, KeyValue);
 
 	DPRINT("FullPath: '%S'\n", PathBuffer);
@@ -1106,14 +1147,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
       else if (KeyValue[0] != L'\\')
       {
 	DPRINT("RelativePath: '%S'\n", KeyValue);
-	swprintf(PathBuffer,
-		 L"\\Device\\Harddisk%lu\\Partition%lu",
-		 PartData.DiskNumber,
-		 PartData.PartNumber);
-
-	if (InstallDir[0] != L'\\')
-	  wcscat(PathBuffer, L"\\");
-	wcscat(PathBuffer, InstallDir);
+	wcscpy(PathBuffer, DestinationPath.Buffer);
 	wcscat(PathBuffer, L"\\");
 	wcscat(PathBuffer, KeyValue);
 
@@ -1214,7 +1248,6 @@ FileCopyCallback(PVOID Context,
 static ULONG
 FileCopyPage(PINPUT_RECORD Ir)
 {
-  WCHAR TargetRootPath[MAX_PATH];
   COPYCONTEXT CopyContext;
   SHORT xScreen;
   SHORT yScreen;
@@ -1232,14 +1265,9 @@ FileCopyPage(PINPUT_RECORD Ir)
 					      xScreen - 7,
 					      yScreen - 10);
 
-  swprintf(TargetRootPath,
-	   L"\\Device\\Harddisk%lu\\Partition%lu",
-	   PartData.DiskNumber,
-	   PartData.PartNumber);
-
   SetupCommitFileQueue(SetupFileQueue,
-		       TargetRootPath,
-		       InstallDir,
+		       DestinationRootPath.Buffer,
+		       InstallPath.Buffer,
 		       (PSP_FILE_CALLBACK)FileCopyCallback,
 		       &CopyContext);
 
@@ -1262,7 +1290,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(INIT_SYSTEM_PAGE);
+	  return(REGISTRY_PAGE);
 	}
     }
 
@@ -1272,16 +1300,13 @@ FileCopyPage(PINPUT_RECORD Ir)
 
 
 static ULONG
-InitSystemPage(PINPUT_RECORD Ir)
+RegistryPage(PINPUT_RECORD Ir)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
+  UNICODE_STRING ValueName;
   HANDLE KeyHandle;
   NTSTATUS Status;
-
-  WCHAR TargetPath[MAX_PATH];
-  UNICODE_STRING ValueName;
-
 
   SetTextXY(6, 8, "Initializing system settings");
 
@@ -1290,7 +1315,6 @@ InitSystemPage(PINPUT_RECORD Ir)
 
   SetTextXY(6, 14, "Update registry hives");
 
-  SetTextXY(6, 16, "Install/update boot manager");
 
   SetStatusText("   Please wait...");
 
@@ -1314,20 +1338,12 @@ InitSystemPage(PINPUT_RECORD Ir)
   RtlInitUnicodeStringFromLiteral(&ValueName,
 				  L"InstallPath");
 
-  swprintf(TargetPath,
-	   L"\\Device\\Harddisk%lu\\Partition%lu",
-	   PartData.DiskNumber,
-	   PartData.PartNumber);
-  if (InstallDir[0] != L'\\')
-    wcscat(TargetPath, L"\\");
-  wcscat(TargetPath, InstallDir);
-
   Status = NtSetValueKey(KeyHandle,
 			 &ValueName,
 			 0,
 			 REG_SZ,
-			 (PVOID)TargetPath,
-			 wcslen(TargetPath) * sizeof(WCHAR));
+			 (PVOID)DestinationPath.Buffer,
+			 DestinationPath.Length);
   NtClose(KeyHandle);
   if (!NT_SUCCESS(Status))
   {
@@ -1366,12 +1382,143 @@ InitSystemPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
+	  return(BOOT_LOADER_PAGE);
+	}
+    }
+
+  return(REGISTRY_PAGE);
+}
+
+
+static ULONG
+BootLoaderPage(PINPUT_RECORD Ir)
+{
+  WCHAR SrcPath[MAX_PATH];
+  WCHAR DstPath[MAX_PATH];
+  PINICACHE IniCache;
+  PINICACHESECTION IniSection;
+
+  SetTextXY(6, 8, "Installing the boot loader");
+
+  SetStatusText("   Please wait...");
+
+  if (ActivePartitionValid == FALSE)
+    {
+      SetTextXY(6, 10, "Error: no active partition found");
+      for(;;);
+    }
+
+  if (ActivePartition.PartType == PARTITION_ENTRY_UNUSED)
+    {
+      SetTextXY(6, 10, "Error: active partition invalid (unused)");
+      for(;;);
+    }
+
+  if (ActivePartition.PartType == 0x0A)
+    {
+      /* OS/2 boot manager partition */
+      SetTextXY(6, 12, "Found OS/2 boot manager");
+
+    }
+  else if (ActivePartition.PartType == 0x83)
+    {
+      /* Linux ext2 partition */
+      SetTextXY(6, 12, "Found Linux ext2 partition");
+
+    }
+  else if (ActivePartition.PartType == PARTITION_IFS)
+    {
+      /* NTFS partition */
+      SetTextXY(6, 12, "Found NTFS partition");
+
+    }
+  else if ((ActivePartition.PartType == PARTITION_FAT_12) ||
+	   (ActivePartition.PartType == PARTITION_FAT_16) ||
+	   (ActivePartition.PartType == PARTITION_HUGE) ||
+	   (ActivePartition.PartType == PARTITION_XINT13) ||
+	   (ActivePartition.PartType == PARTITION_FAT32) ||
+	   (ActivePartition.PartType == PARTITION_FAT32_XINT13))
+    {
+      /* FAT or FAT 32 partition */
+      PrintTextXY(6, 10, "System path: '%wZ'", &SystemRootPath);
+
+      if (DoesFileExist(SystemRootPath.Buffer, L"ntldr") == TRUE ||
+	  DoesFileExist(SystemRootPath.Buffer, L"boot.ini") == TRUE)
+	{
+	  /* Search root directory for 'ntldr' and 'boot.ini'. */
+	  SetTextXY(6, 12, "Found Microsoft Windows NT/2000/XP boot loader");
+
+
+	}
+      else if (DoesFileExist(SystemRootPath.Buffer, L"io.sys") == TRUE ||
+	       DoesFileExist(SystemRootPath.Buffer, L"msdos.sys") == TRUE)
+	{
+	  /* Search for root directory for 'io.sys' and 'msdos.sys'. */
+	  SetTextXY(6, 12, "Found Microsoft DOS or Windows 9x boot loader");
+
+	  /* Copy FreeLoader to the boot partition */
+	  wcscpy(SrcPath, SourceRootPath.Buffer);
+	  wcscat(SrcPath, L"\\loader\\freeldr.sys");
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\freeldr.sys");
+
+	  PrintTextXY(6, 14, "Copy: %S ==> %S", SrcPath, DstPath);
+
+	  SetupCopyFile(SrcPath, DstPath);
+
+	  /* Create freeldr.ini */
+	  wcscpy(DstPath, SystemRootPath.Buffer);
+	  wcscat(DstPath, L"\\freeldr.ini");
+
+	  CreateFreeLoaderIniForDos(DstPath,
+				    DestinationPath.Buffer);
+
+	  /* Copy current bootsector to 'BOOTSECT.DOS' */
+	  if ((ActivePartition.PartType == PARTITION_FAT32) ||
+	      (ActivePartition.PartType == PARTITION_FAT32_XINT13))
+	    {
+
+	    }
+	  else
+	    {
+
+	    }
+	}
+      else
+	{
+
+	  SetTextXY(6, 12, "No or unknown boot loader found");
+
+	}
+    }
+  else
+    {
+      /* unknown partition */
+      SetTextXY(6, 12, "Unknown partition found");
+    }
+
+  SetStatusText("   ENTER = Continue   F3 = Quit");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return(QUIT_PAGE);
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
 	  return(SUCCESS_PAGE);
 	}
     }
 
-  return(INIT_SYSTEM_PAGE);
+  return(BOOT_LOADER_PAGE);
 }
+
 
 
 static ULONG
@@ -1445,6 +1592,15 @@ NtProcessStartup(PPEB Peb)
 
   PartDataValid = FALSE;
 
+  /* Initialize global unicode strings */
+  RtlInitUnicodeString(&SourcePath, NULL);
+  RtlInitUnicodeString(&SourceRootPath, NULL);
+  RtlInitUnicodeString(&InstallPath, NULL);
+  RtlInitUnicodeString(&DestinationPath, NULL);
+  RtlInitUnicodeString(&DestinationRootPath, NULL);
+  RtlInitUnicodeString(&SystemRootPath, NULL);
+
+
   Page = START_PAGE;
   while (Page != REBOOT_PAGE)
     {
@@ -1503,8 +1659,12 @@ NtProcessStartup(PPEB Peb)
 	    Page = FileCopyPage(&Ir);
 	    break;
 
-	  case INIT_SYSTEM_PAGE:
-	    Page = InitSystemPage(&Ir);
+	  case REGISTRY_PAGE:
+	    Page = RegistryPage(&Ir);
+	    break;
+
+	  case BOOT_LOADER_PAGE:
+	    Page = BootLoaderPage(&Ir);
 	    break;
 
 

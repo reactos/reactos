@@ -32,7 +32,7 @@
 typedef struct _INICACHEKEY
 {
   PWCHAR Name;
-  PWCHAR Value;
+  PWCHAR Data;
 
   struct _INICACHEKEY *Next;
   struct _INICACHEKEY *Prev;
@@ -65,6 +65,14 @@ typedef struct _PINICACHEITERATOR
 } INICACHEITERATOR, *PINICACHEITERATOR;
 
 
+typedef enum
+{
+  INSERT_FIRST,
+  INSERT_BEFORE,
+  INSERT_AFTER,
+  INSERT_LAST
+} INSERTATION_TYPE;
+
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
@@ -81,22 +89,41 @@ IniCacheGetSection(PINICACHE Cache,
 NTSTATUS
 IniCacheGetKey(PINICACHESECTION Section,
 	       PWCHAR KeyName,
-	       PWCHAR *KeyValue);
+	       PWCHAR *KeyData);
 
 
 
 PINICACHEITERATOR
 IniCacheFindFirstValue(PINICACHESECTION Section,
 		       PWCHAR *KeyName,
-		       PWCHAR *KeyValue);
+		       PWCHAR *KeyData);
 
 BOOLEAN
 IniCacheFindNextValue(PINICACHEITERATOR Iterator,
 		      PWCHAR *KeyName,
-		      PWCHAR *KeyValue);
+		      PWCHAR *KeyData);
 
 VOID
 IniCacheFindClose(PINICACHEITERATOR Iterator);
+
+
+PINICACHEKEY
+IniCacheInsertKey(PINICACHESECTION Section,
+		  PINICACHEKEY AnchorKey,
+		  INSERTATION_TYPE InsertationType,
+		  PWCHAR Name,
+		  PWCHAR Data);
+
+PINICACHE
+IniCacheCreate(VOID);
+
+NTSTATUS
+IniCacheSave(PINICACHE Cache,
+	     PWCHAR FileName);
+
+PINICACHESECTION
+IniCacheAppendSection(PINICACHE Cache,
+		      PWCHAR Name);
 
 
 #endif /* __INICACHE_H__ */

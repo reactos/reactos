@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: inicache.c,v 1.1 2002/11/13 18:25:18 ekohl Exp $
+/* $Id: inicache.c,v 1.2 2003/01/17 13:18:15 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/inicache.c
@@ -53,12 +53,12 @@ IniCacheFreeKey(PINICACHEKEY Key)
       Key->Name = NULL;
     }
 
-  if (Key->Value != NULL)
+  if (Key->Data != NULL)
     {
       RtlFreeHeap(ProcessHeap,
 		  0,
-		  Key->Value);
-      Key->Value = NULL;
+		  Key->Data);
+      Key->Data = NULL;
     }
 
   RtlFreeHeap(ProcessHeap,
@@ -129,8 +129,8 @@ static PINICACHEKEY
 IniCacheAddKey(PINICACHESECTION Section,
 	       PCHAR Name,
 	       ULONG NameLength,
-	       PCHAR Value,
-	       ULONG ValueLength)
+	       PCHAR Data,
+	       ULONG DataLength)
 {
   PINICACHEKEY Key;
   ULONG i;
@@ -140,8 +140,8 @@ IniCacheAddKey(PINICACHESECTION Section,
   if (Section == NULL ||
       Name == NULL ||
       NameLength == 0 ||
-      Value == NULL ||
-      ValueLength == 0)
+      Data == NULL ||
+      DataLength == 0)
     {
       DPRINT("Invalid parameter\n");
       return(NULL);
@@ -180,10 +180,10 @@ IniCacheAddKey(PINICACHESECTION Section,
   Key->Name[NameLength] = 0;
 
 
-  Key->Value = RtlAllocateHeap(ProcessHeap,
-			       0,
-			       (ValueLength + 1) * sizeof(WCHAR));
-  if (Key->Value == NULL)
+  Key->Data = RtlAllocateHeap(ProcessHeap,
+			      0,
+			      (DataLength + 1) * sizeof(WCHAR));
+  if (Key->Data == NULL)
     {
       DPRINT("RtlAllocateHeap() failed\n");
       RtlFreeHeap(ProcessHeap,
@@ -196,11 +196,11 @@ IniCacheAddKey(PINICACHESECTION Section,
     }
 
   /* Copy value data */
-  for (i = 0; i < ValueLength; i++)
+  for (i = 0; i < DataLength; i++)
     {
-      Key->Value[i] = (WCHAR)Value[i];
+      Key->Data[i] = (WCHAR)Data[i];
     }
-  Key->Value[ValueLength] = 0;
+  Key->Data[DataLength] = 0;
 
 
   if (Section->FirstKey == NULL)
@@ -711,7 +711,7 @@ IniCacheGetSection(PINICACHE Cache,
       return(NULL);
     }
 
-  /* iterate through list of sections */
+  /* Iterate through list of sections */
   Section = Cache->FirstSection;
   while (Section != NULL)
     {
@@ -734,17 +734,17 @@ IniCacheGetSection(PINICACHE Cache,
 NTSTATUS
 IniCacheGetKey(PINICACHESECTION Section,
 	       PWCHAR KeyName,
-	       PWCHAR *KeyValue)
+	       PWCHAR *KeyData)
 {
   PINICACHEKEY Key;
 
-  if (Section == NULL || KeyName == NULL || KeyValue == NULL)
+  if (Section == NULL || KeyName == NULL || KeyData == NULL)
     {
       DPRINT("Invalid parameter\n");
       return(STATUS_INVALID_PARAMETER);
     }
 
-  *KeyValue = NULL;
+  *KeyData = NULL;
 
   Key = IniCacheFindKey(Section, KeyName, wcslen(KeyName));
   if (Key == NULL)
@@ -752,7 +752,7 @@ IniCacheGetKey(PINICACHESECTION Section,
       return(STATUS_INVALID_PARAMETER);
     }
 
-  *KeyValue = Key->Value;
+  *KeyData = Key->Data;
 
   return(STATUS_SUCCESS);
 }
@@ -761,12 +761,12 @@ IniCacheGetKey(PINICACHESECTION Section,
 PINICACHEITERATOR
 IniCacheFindFirstValue(PINICACHESECTION Section,
 		       PWCHAR *KeyName,
-		       PWCHAR *KeyValue)
+		       PWCHAR *KeyData)
 {
   PINICACHEITERATOR Iterator;
   PINICACHEKEY Key;
 
-  if (Section == NULL || KeyName == NULL || KeyValue == NULL)
+  if (Section == NULL || KeyName == NULL || KeyData == NULL)
     {
       DPRINT("Invalid parameter\n");
       return(NULL);
@@ -780,7 +780,7 @@ IniCacheFindFirstValue(PINICACHESECTION Section,
     }
 
   *KeyName = Key->Name;
-  *KeyValue = Key->Value;
+  *KeyData = Key->Data;
 
   Iterator = (PINICACHEITERATOR)RtlAllocateHeap(ProcessHeap,
 						0,
@@ -801,11 +801,11 @@ IniCacheFindFirstValue(PINICACHESECTION Section,
 BOOLEAN
 IniCacheFindNextValue(PINICACHEITERATOR Iterator,
 		      PWCHAR *KeyName,
-		      PWCHAR *KeyValue)
+		      PWCHAR *KeyData)
 {
   PINICACHEKEY Key;
 
-  if (Iterator == NULL || KeyName == NULL || KeyValue == NULL)
+  if (Iterator == NULL || KeyName == NULL || KeyData == NULL)
     {
       DPRINT("Invalid parameter\n");
       return(FALSE);
@@ -819,7 +819,7 @@ IniCacheFindNextValue(PINICACHEITERATOR Iterator,
     }
 
   *KeyName = Key->Name;
-  *KeyValue = Key->Value;
+  *KeyData = Key->Data;
 
   Iterator->Key = Key;
 
@@ -836,6 +836,336 @@ IniCacheFindClose(PINICACHEITERATOR Iterator)
   RtlFreeHeap(ProcessHeap,
 	      0,
 	      Iterator);
+}
+
+
+PINICACHEKEY
+IniCacheInsertKey(PINICACHESECTION Section,
+		  PINICACHEKEY AnchorKey,
+		  INSERTATION_TYPE InsertationType,
+		  PWCHAR Name,
+		  PWCHAR Data)
+{
+  PINICACHEKEY Key;
+  ULONG i;
+
+  Key = NULL;
+
+  if (Section == NULL ||
+      Name == NULL ||
+      *Name == 0 ||
+      Data == NULL ||
+      *Data == 0)
+    {
+      DPRINT("Invalid parameter\n");
+      return(NULL);
+    }
+
+  /* Allocate key buffer */
+  Key = (PINICACHEKEY)RtlAllocateHeap(ProcessHeap,
+				      0,
+				      sizeof(INICACHEKEY));
+  if (Key == NULL)
+    {
+      DPRINT("RtlAllocateHeap() failed\n");
+      return(NULL);
+    }
+  RtlZeroMemory(Key,
+		sizeof(INICACHEKEY));
+
+  /* Allocate name buffer */
+  Key->Name = RtlAllocateHeap(ProcessHeap,
+			      0,
+			      (wcslen(Name) + 1) * sizeof(WCHAR));
+  if (Key->Name == NULL)
+    {
+      DPRINT("RtlAllocateHeap() failed\n");
+      RtlFreeHeap(ProcessHeap,
+		  0,
+		  Key);
+      return(NULL);
+    }
+
+  /* Copy value name */
+  wcscpy(Key->Name, Name);
+
+  /* Allocate data buffer */
+  Key->Data = RtlAllocateHeap(ProcessHeap,
+			      0,
+			      (wcslen(Data) + 1) * sizeof(WCHAR));
+  if (Key->Data == NULL)
+    {
+      DPRINT("RtlAllocateHeap() failed\n");
+      RtlFreeHeap(ProcessHeap,
+		  0,
+		  Key->Name);
+      RtlFreeHeap(ProcessHeap,
+		  0,
+		  Key);
+      return(NULL);
+    }
+
+  /* Copy value data */
+  wcscpy(Key->Data, Data);
+
+  /* Insert key into section */
+  if (Section->FirstKey == NULL)
+    {
+      Section->FirstKey = Key;
+      Section->LastKey = Key;
+    }
+  else if ((InsertationType == INSERT_FIRST) ||
+	   ((InsertationType == INSERT_BEFORE) && ((AnchorKey == NULL) || (AnchorKey == Section->FirstKey))))
+    {
+      /* Insert at the head of the list */
+      Section->FirstKey->Prev = Key;
+      Key->Next = Section->FirstKey;
+      Section->FirstKey = Key;
+    }
+  else if ((InsertationType == INSERT_BEFORE) && (AnchorKey != NULL))
+    {
+      /* Insert before the anchor key */
+      Key->Next = AnchorKey;
+      Key->Prev = AnchorKey->Prev;
+      AnchorKey->Prev->Next = Key;
+      AnchorKey->Prev = Key;
+    }
+  else if ((InsertationType == INSERT_LAST) ||
+	   ((InsertationType == INSERT_AFTER) && ((AnchorKey == NULL) || (AnchorKey == Section->LastKey))))
+    {
+      Section->LastKey->Next = Key;
+      Key->Prev = Section->LastKey;
+      Section->LastKey = Key;
+    }
+  else if ((InsertationType == INSERT_AFTER) && (AnchorKey != NULL))
+    {
+      /* Insert before the anchor key */
+      Key->Next = AnchorKey->Next;
+      Key->Prev = AnchorKey;
+      AnchorKey->Next->Prev = Key;
+      AnchorKey->Next = Key;
+    }
+
+  return(Key);
+}
+
+
+PINICACHE
+IniCacheCreate(VOID)
+{
+  PINICACHE Cache;
+
+  /* Allocate inicache header */
+  Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
+				     0,
+				     sizeof(INICACHE));
+  if (Cache == NULL)
+    {
+      DPRINT("RtlAllocateHeap() failed\n");
+      return(NULL);
+    }
+
+  /* Initialize inicache header */
+  RtlZeroMemory(Cache,
+		sizeof(INICACHE));
+
+  return(Cache);
+}
+
+
+NTSTATUS
+IniCacheSave(PINICACHE Cache,
+	     PWCHAR FileName)
+{
+  UNICODE_STRING Name;
+  PINICACHESECTION Section;
+  PINICACHEKEY Key;
+  ULONG BufferSize;
+  PCHAR Buffer;
+  PCHAR Ptr;
+  ULONG Len;
+  NTSTATUS Status;
+
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  LARGE_INTEGER Offset;
+  HANDLE FileHandle;
+
+
+  /* Calculate required buffer size */
+  BufferSize = 0;
+  Section = Cache->FirstSection;
+  while (Section != NULL)
+    {
+      BufferSize += (Section->Name ? wcslen(Section->Name) : 0)
+		    + 4; /* "[]\r\n" */
+
+      Key = Section->FirstKey;
+      while (Key != NULL)
+	{
+	  BufferSize += wcslen(Key->Name)
+			+ (Key->Data ? wcslen(Key->Data) : 0)
+			+ 3; /* "=\r\n" */
+	  Key = Key->Next;
+	}
+
+      Section = Section->Next;
+      if (Section != NULL)
+	BufferSize += 2; /* extra "\r\n" at end of each section */
+    }
+  BufferSize++; /* Null-terminator */
+
+  DPRINT1("BufferSize: %lu\n", BufferSize);
+
+  /* Allocate file buffer */
+  Buffer = RtlAllocateHeap(ProcessHeap,
+			   0,
+			   BufferSize);
+  if (Buffer == NULL)
+    {
+      DPRINT1("RtlAllocateHeap() failed\n");
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+  RtlZeroMemory(Buffer, BufferSize);
+
+  /* Fill file buffer */
+  Ptr = Buffer;
+  Section = Cache->FirstSection;
+  while (Section != NULL)
+    {
+      Len = sprintf(Ptr, "[%S]\r\n", Section->Name);
+      Ptr += Len;
+
+      Key = Section->FirstKey;
+      while (Key != NULL)
+	{
+	  Len = sprintf(Ptr, "%S=%S\r\n", Key->Name, Key->Data);
+	  Ptr += Len;
+	  Key = Key->Next;
+	}
+
+      Section = Section->Next;
+      if (Section != NULL)
+	{
+	  Len = sprintf(Ptr, "\r\n");
+	  Ptr += Len;
+	}
+    }
+
+  /* Create ini file */
+  RtlInitUnicodeString(&Name,
+		       FileName);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = NtCreateFile(&FileHandle,
+			FILE_WRITE_ACCESS,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			NULL,
+			FILE_ATTRIBUTE_NORMAL,
+			0,
+			FILE_OVERWRITE_IF,
+			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
+			NULL,
+			0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      RtlFreeHeap(ProcessHeap,
+		  0,
+		  Buffer);
+      return(Status);
+    }
+
+  Offset.QuadPart = 0LL;
+  Status = NtWriteFile(FileHandle,
+		       NULL,
+		       NULL,
+		       NULL,
+		       &IoStatusBlock,
+		       Buffer,
+		       BufferSize,
+		       &Offset,
+		       NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+      NtClose(FileHandle);
+      RtlFreeHeap(ProcessHeap,
+		  0,
+		  Buffer);
+      return(Status);
+    }
+
+  NtClose(FileHandle);
+
+  RtlFreeHeap(ProcessHeap,
+	      0,
+	      Buffer);
+
+  return(STATUS_SUCCESS);
+}
+
+
+PINICACHESECTION
+IniCacheAppendSection(PINICACHE Cache,
+		      PWCHAR Name)
+{
+  PINICACHESECTION Section = NULL;
+  ULONG i;
+
+  if (Cache == NULL || Name == NULL || *Name == 0)
+    {
+      DPRINT("Invalid parameter\n");
+      return(NULL);
+    }
+
+  Section = (PINICACHESECTION)RtlAllocateHeap(ProcessHeap,
+					      0,
+					      sizeof(INICACHESECTION));
+  if (Section == NULL)
+    {
+      DPRINT("RtlAllocateHeap() failed\n");
+      return(NULL);
+    }
+  RtlZeroMemory(Section,
+		sizeof(INICACHESECTION));
+
+  /* Allocate and initialize section name */
+  Section->Name = RtlAllocateHeap(ProcessHeap,
+				  0,
+				  (wcslen(Name) + 1) * sizeof(WCHAR));
+  if (Section->Name == NULL)
+    {
+      DPRINT("RtlAllocateHeap() failed\n");
+      RtlFreeHeap(ProcessHeap,
+		  0,
+		  Section);
+      return(NULL);
+    }
+
+  /* Copy section name */
+  wcscpy(Section->Name, Name);
+
+  /* Append section */
+  if (Cache->FirstSection == NULL)
+    {
+      Cache->FirstSection = Section;
+      Cache->LastSection = Section;
+    }
+  else
+    {
+      Cache->LastSection->Next = Section;
+      Section->Prev = Cache->LastSection;
+      Cache->LastSection = Section;
+    }
+
+  return(Section);
 }
 
 /* EOF */

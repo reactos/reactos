@@ -16,29 +16,22 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.h,v 1.3 2003/01/17 13:18:15 ekohl Exp $
+/* $Id: bootsup.h,v 1.1 2003/01/17 13:18:15 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            subsys/system/usetup/filesup.h
- * PURPOSE:         File support functions
+ * FILE:            subsys/system/usetup/bootsup.h
+ * PURPOSE:         Bootloader support functions
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __FILESUP_H__
-#define __FILESUP_H__
+#ifndef __BOOTSUP_H__
+#define __BOOTSUP_H__
 
 NTSTATUS
-CreateDirectory(PWCHAR DirectoryName);
-
-NTSTATUS
-SetupCopyFile(PWCHAR SourceFileName,
-	      PWCHAR DestinationFileName);
-
-BOOLEAN
-DoesFileExist(PWSTR PathName,
-	      PWSTR FileName);
+CreateFreeLoaderIniForDos(PWCHAR IniPath,
+			  PWCHAR SystemPath);
 
 
-#endif /* __FILESUP_H__ */
+#endif /* __BOOTSUP_H__ */
 
 /* EOF */

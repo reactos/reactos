@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.c,v 1.3 2003/01/11 16:03:55 hbirr Exp $
+/* $Id: filesup.c,v 1.4 2003/01/17 13:18:15 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.c
@@ -274,6 +274,52 @@ CHECKPOINT1;
   }
 
   return(STATUS_SUCCESS);
+}
+
+
+BOOLEAN
+DoesFileExist(PWSTR PathName,
+	      PWSTR FileName)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  UNICODE_STRING Name;
+  WCHAR FullName[MAX_PATH];
+  HANDLE FileHandle;
+  NTSTATUS Status;
+
+  wcscpy(FullName, PathName);
+  if (FileName != NULL)
+    {
+      if (FileName[0] != L'\\')
+	wcscat(FullName, L"\\");
+      wcscat(FullName, FileName);
+    }
+
+  RtlInitUnicodeString(&Name,
+		       FullName);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenFile(&FileHandle,
+		      FILE_READ_ACCESS,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      0,
+		      FILE_SYNCHRONOUS_IO_ALERT);
+  if (!NT_SUCCESS(Status))
+  {
+CHECKPOINT1;
+    return(FALSE);
+  }
+
+  NtClose(FileHandle);
+
+  return(TRUE);
 }
 
 /* EOF */

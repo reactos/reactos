@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.5 2002/11/28 19:20:37 ekohl Exp $
+/* $Id: partlist.c,v 1.6 2003/01/17 13:18:15 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -104,6 +104,7 @@ AddPartitionList(ULONG DiskNumber,
 	      PartEntry->PartSize = LayoutBuffer->PartitionEntry[i].PartitionLength.QuadPart;
 	      PartEntry->PartNumber = LayoutBuffer->PartitionEntry[i].PartitionNumber,
 	      PartEntry->PartType = LayoutBuffer->PartitionEntry[i].PartitionType;
+	      PartEntry->Active = LayoutBuffer->PartitionEntry[i].BootIndicator;
 
 	      PartEntry->DriveLetter = GetDriveLetter(DiskNumber,
 						      LayoutBuffer->PartitionEntry[i].PartitionNumber);
@@ -817,8 +818,8 @@ ScrollUpPartitionList(PPARTLIST List)
 
 
 BOOL
-GetPartitionData(PPARTLIST List,
-		 PPARTDATA Data)
+GetSelectedPartition(PPARTLIST List,
+		     PPARTDATA Data)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
@@ -872,5 +873,70 @@ GetPartitionData(PPARTLIST List,
 
   return(TRUE);
 }
+
+
+BOOL
+GetActiveBootPartition(PPARTLIST List,
+		       PPARTDATA Data)
+{
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+  ULONG i;
+
+  if (List->CurrentDisk >= List->DiskCount)
+    return(FALSE);
+
+  DiskEntry = &List->DiskArray[0];
+
+  if (DiskEntry->FixedDisk == FALSE)
+    return(FALSE);
+
+  for (i = 0; i < DiskEntry->PartCount; i++)
+    {
+      if (DiskEntry->PartArray[i].Active)
+	{
+	  PartEntry = &DiskEntry->PartArray[i];
+
+	  if (PartEntry->Used == FALSE)
+	    return(FALSE);
+
+	  /* Copy disk-specific data */
+	  Data->DiskSize = DiskEntry->DiskSize;
+	  Data->DiskNumber = DiskEntry->DiskNumber;
+	  Data->Port = DiskEntry->Port;
+	  Data->Bus = DiskEntry->Bus;
+	  Data->Id = DiskEntry->Id;
+
+	  /* Copy driver name */
+	  RtlInitUnicodeString(&Data->DriverName,
+			       NULL);
+	  if (DiskEntry->DriverName.Length != 0)
+	    {
+	      Data->DriverName.Buffer = RtlAllocateHeap(ProcessHeap,
+							0,
+							DiskEntry->DriverName.MaximumLength);
+	      if (Data->DriverName.Buffer != NULL)
+		{
+		  Data->DriverName.MaximumLength = DiskEntry->DriverName.MaximumLength;
+		  Data->DriverName.Length = DiskEntry->DriverName.Length;
+		  RtlCopyMemory(Data->DriverName.Buffer,
+				DiskEntry->DriverName.Buffer,
+				DiskEntry->DriverName.MaximumLength);
+		}
+	    }
+
+	  /* Copy partition-specific data */
+	  Data->PartSize = PartEntry->PartSize;
+	  Data->PartNumber = PartEntry->PartNumber;
+	  Data->PartType = PartEntry->PartType;
+	  Data->DriveLetter = PartEntry->DriveLetter;
+
+	  return(TRUE);
+	}
+    }
+
+  return(FALSE);
+}
+
 
 /* EOF */
