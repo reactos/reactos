@@ -16,6 +16,11 @@ KDBG := 0
 DBG := 0
 
 #
+# Whether to compile with optimizations
+#
+OPTIMIZED := 0
+
+#
 # Whether to compile a multiprocessor or single processor version
 #
 MP := 0

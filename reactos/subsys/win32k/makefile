@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.101 2004/07/03 13:55:36 navaraf Exp $
+# $Id: makefile,v 1.102 2004/07/19 04:52:24 ion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,6 +26,12 @@ else
 CFLAGS_DBG :=
 endif
 
+ifeq ($(OPTIMIZED), 1)
+CFLAGS_OPT := -O2 -Wno-strict-aliasing
+else
+CFLAGS_OPT :=
+endif
+
 TARGET_CFLAGS =\
  $(CFLAGS_DBG) \
  -I. \
@@ -34,7 +40,8 @@ TARGET_CFLAGS =\
  -DUNICODE \
  -Wall -Werror \
  -D__USE_W32API -D_WIN32_WINNT=0x0501 \
- -DWINVER=0x600 -D_WIN32K_
+ -DWINVER=0x600 -D_WIN32K_ \
+ $(CFLAGS_OPT)
 
 TARGET_LFLAGS =\
  $(PATH_TO_TOP)/dk/nkm/lib/freetype.a \

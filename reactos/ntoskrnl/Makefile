@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.132 2004/07/17 05:13:05 ion Exp $
+# $Id: Makefile,v 1.133 2004/07/19 04:52:23 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -25,6 +25,12 @@ LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 endif
 
+ifeq ($(OPTIMIZED), 1)
+CFLAGS_OPT := -O2 -fno-strict-aliasing
+else
+CFLAGS_OPT :=
+endif
+
 ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
                 dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/profile.o \
@@ -40,10 +46,10 @@ endif
 
 ifeq ($(strip $(SDK_PATH_INC)),)
 ASFLAGS += -I./include
-CFLAGS += -I./include -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
+CFLAGS += -I./include -D__NTOSKRNL__ $(CFLAGS_DBG) $(CFLAGS_OPT) -Wall -Werror
 else
 ASFLAGS += -I./include -I$(SDK_PATH_INC)
-CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
+CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) $(CFLAGS_OPT) -Wall -Werror
 endif
 
 # ASFLAGS += -D__USE_W32API -D_NTOSKRNL_
