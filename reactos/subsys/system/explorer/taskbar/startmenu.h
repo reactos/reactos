@@ -258,6 +258,7 @@ protected:
 	virtual void ProcessKey(int vk);
 	bool	Navigate(int step);
 	bool	OpenSubmenu(bool select_first=false);
+	bool	JumpToNextShortcut(char c);
 #endif
 
 	 // member functions

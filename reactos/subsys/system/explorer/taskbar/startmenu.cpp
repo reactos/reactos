@@ -542,6 +542,10 @@ void StartMenu::ProcessKey(int vk)
 	  case VK_ESCAPE:
 		CloseStartMenu();
 		break;
+
+	  default:
+		if (vk>='0' && vk<='Z')
+			JumpToNextShortcut(vk);
 	}
 }
 
@@ -566,6 +570,56 @@ bool StartMenu::Navigate(int step)
 	}
 
 	return false;
+}
+
+bool StartMenu::JumpToNextShortcut(char c)
+{
+	int cur_idx = GetSelectionIndex();
+
+	if (cur_idx == -1)
+		cur_idx = 0;
+
+	int first_found = 0;
+	int found_more = 0;
+
+	SMBtnVector::const_iterator cur_it = _buttons.begin();
+	cur_it += cur_idx + 1;
+
+	 // first search down from current item...
+	SMBtnVector::const_iterator it = cur_it;
+	for(; it!=_buttons.end(); ++it) {
+		const SMBtnInfo& btn = *it;
+
+		if (!btn._title.empty() && toupper((TBYTE)btn._title.at(0)) == c) {
+			if (!first_found)
+				first_found = btn._id;
+			else
+				++found_more;
+		}
+	}
+
+	 // ...now search from top to the current item
+	it = _buttons.begin();
+	for(; it!=_buttons.end() && it!=cur_it; ++it) {
+		const SMBtnInfo& btn = *it;
+
+		if (!btn._title.empty() && toupper((TBYTE)btn._title.at(0)) == c) {
+			if (!first_found)
+				first_found = btn._id;
+			else
+				++found_more;
+		}
+	}
+
+	if (first_found) {
+		SelectButton(first_found);
+
+		if (!found_more)
+			Command(first_found, BN_CLICKED);
+
+		return true;
+	} else
+		return false;
 }
 
 #endif // _LIGHT_STARTMENU
