@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.38 2002/05/05 14:57:42 chorns Exp $
+/* $Id: view.c,v 1.39 2002/05/13 18:10:38 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -284,7 +284,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   ExReleaseFastMutex(&ViewLock);
   for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
     {
-      PVOID Page;
+      ULONG_PTR Page;
       
       Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page);
       if (!NT_SUCCESS(Status))
@@ -295,7 +295,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
       Status = MmCreateVirtualMapping(NULL,
 				      current->BaseAddress + (i * PAGESIZE),
 				      PAGE_READWRITE,
-				      (ULONG)Page,
+				      Page,
 				      TRUE);
       if (!NT_SUCCESS(Status))
 	{
@@ -452,14 +452,22 @@ CcRosRequestCacheSegment(PBCB Bcb,
 			   CacheSeg));
 }
 
-STATIC VOID 
-CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-		ULONG PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty)
+VOID
+CcFreeCachePage(IN BOOLEAN Before,
+  IN PVOID  Context,
+  IN PMEMORY_AREA  MemoryArea,
+  IN PVOID  Address,
+  IN ULONG_PTR  PhysicalAddress,
+  IN SWAPENTRY  SwapEntry,
+  IN BOOLEAN  Dirty)
 {
-  assert(SwapEntry == 0);
-  if (PhysAddr != 0)
+  if (!Before)
     {
-      MmReleasePageMemoryConsumer(MC_CACHE, (PVOID)PhysAddr);
+		  assert(SwapEntry == 0);
+		  if (PhysicalAddress != 0)
+		    {
+				MmReleasePageMemoryConsumer(MC_CACHE, PhysicalAddress);
+		    }
     }
 }
 

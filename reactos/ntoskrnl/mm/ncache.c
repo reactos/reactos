@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.15 2002/01/01 00:21:56 dwelch Exp $
+/* $Id: ncache.c,v 1.16 2002/05/13 18:10:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -73,7 +73,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
      PAGE_WRITETHROUGH;
    for (i = 0; i <= (NumberOfBytes / PAGESIZE); i++)
      {
-       PVOID NPage;
+       ULONG_PTR NPage;
 
        Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &NPage);
        MmCreateVirtualMapping (NULL,
@@ -85,14 +85,22 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
    return ((PVOID)Result);
 }
 
-VOID STATIC
-MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
-		    SWAPENTRY SwapEntry, BOOLEAN Dirty)
+VOID
+MmFreeNonCachedPage(IN BOOLEAN Before,
+  IN PVOID  Context,
+  IN PMEMORY_AREA  MemoryArea,
+  IN PVOID  Address,
+  IN ULONG_PTR  PhysicalAddress,
+  IN SWAPENTRY  SwapEntry,
+  IN BOOLEAN  Dirty)
 {
-  assert(SwapEntry == 0);
-  if (PhysAddr != 0)
+  if (!Before)
     {
-      MmDereferencePage((PVOID)PhysAddr);
+		  assert(SwapEntry == 0);
+		  if (PhysicalAddress != 0)
+		    {
+		      MmDereferencePage(PhysicalAddress);
+		    }
     }
 }
 

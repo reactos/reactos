@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.31 2002/02/15 14:44:13 ekohl Exp $
+/* $Id: ps.h,v 1.32 2002/05/13 18:10:39 chorns Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -584,6 +584,10 @@ PiTimeoutThread(struct _KDPC *dpc,
 
 VOID STDCALL
 PsDispatchThread(ULONG NewThreadStatus);
+
+NTSTATUS
+PiSetPriorityThread(IN HANDLE  ThreadHandle,
+  IN KPRIORITY  Priority);
 
 #endif /* ASSEMBLER */
 

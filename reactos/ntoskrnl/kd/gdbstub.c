@@ -87,6 +87,7 @@
 #include <internal/kd.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
+#include <internal/module.h>
 #include <internal/ldr.h>
 
 #define NDEBUG
@@ -100,8 +101,10 @@ extern LIST_ENTRY PiThreadListHead;
 /* at least NUMREGBYTES*2 are needed for register packets */
 #define BUFMAX 1000
 
-static BOOLEAN GspInitialized;  /* boolean flag. TRUE means we've been initialized */
+static BOOLEAN GspInitialized;
+#if 0
 static PKINTERRUPT GspInterrupt;
+#endif
 
 static BOOLEAN GspRemoteDebug;
 
@@ -1237,10 +1240,12 @@ extern ULONG KdpPortIrq;
 VOID
 KdGdbStubInit(ULONG Phase)
 {
+#if 0
   KAFFINITY Affinity;
   NTSTATUS Status;
   ULONG MappedIrq;
   KIRQL Dirql;
+#endif
 
   if (Phase == 0)
     {
@@ -1250,9 +1255,12 @@ KdGdbStubInit(ULONG Phase)
 		  GspRunThread = PsGetCurrentThread();
 		  GspDbgThread = PsGetCurrentThread();
 		  GspEnumThread = NULL;
+
+      DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
     }
   else if (Phase == 1)
     {
+#if 0
 		  /* Hook an interrupt handler to allow the debugger to break into
 		     the system */
 		  MappedIrq = HalGetInterruptVector (Internal,
@@ -1283,30 +1291,58 @@ KdGdbStubInit(ULONG Phase)
        KdPortEnableInterrupts();
 
        DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
+#endif
   }
 }
 
-/* This function will generate a breakpoint exception.  It is used at the
-   beginning of a program to sync up with a debugger and can be used
-   otherwise as a quick means to stop program execution and "break" into
-   the debugger. */
 
 VOID
-KdGdbDebugPrint (LPSTR Message)
+KdGdbDebugPrint(LPSTR Message)
 {
-/* This can be quite annoying! */
 #if 0
+  /* This can be quite annoying! */
   if (GspInitialized)
-  {
-    ULONG Length;
-
-    GspOutBuffer[0] = 'O';
-    GspOutBuffer[1] = '\0';
-    strcat (&GspOutBuffer[0], Message);
-    Length = strlen (Message);
-    GspOutBuffer[2 + Length] = '\n';
-    GspOutBuffer[3 + Length] = '\0';
-    GspPutPacketNoWait (&GspOutBuffer[0]);
-  }
+	  {
+	    ULONG Length;
+	
+	    GspOutBuffer[0] = 'O';
+	    GspOutBuffer[1] = '\0';
+	    strcat (&GspOutBuffer[0], Message);
+	    Length = strlen (Message);
+	    GspOutBuffer[2 + Length] = '\n';
+	    GspOutBuffer[3 + Length] = '\0';
+	    GspPutPacketNoWait (&GspOutBuffer[0]);
+	  }
+#else
+  HalDisplayString(Message);
 #endif
+}
+
+
+extern LIST_ENTRY ModuleListHead;
+
+VOID
+KdGdbListModules()
+{
+  PLIST_ENTRY CurrentEntry;
+  PMODULE_OBJECT Current;
+  ULONG ModuleCount;
+
+  DPRINT1("\n");
+
+  ModuleCount = 0;
+
+  CurrentEntry = ModuleListHead.Flink;
+  while (CurrentEntry != (&ModuleListHead))
+    {
+	    Current = CONTAINING_RECORD (CurrentEntry, MODULE_OBJECT, ListEntry);
+
+      DbgPrint ("Module %S  Base 0x%.08x  Length 0x%.08x\n",
+        Current->BaseName.Buffer, Current->Base, Current->Length);
+
+      ModuleCount++;
+      CurrentEntry = CurrentEntry->Flink;
+    }
+
+  DbgPrint ("%d modules listed\n", ModuleCount);
 }

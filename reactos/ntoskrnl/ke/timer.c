@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.48 2002/04/26 13:11:28 ekohl Exp $
+/* $Id: timer.c,v 1.49 2002/05/13 18:10:39 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -138,7 +138,7 @@ KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
    KeSetTimer(&Thread->Timer, *Interval, NULL);
    return (KeWaitForSingleObject(&Thread->Timer,
 				 Executive,
-				 UserMode,
+				 WaitMode,
 				 Alertable,
 				 NULL));
 }

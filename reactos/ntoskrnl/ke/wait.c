@@ -35,6 +35,127 @@ static PKTHREAD Owner = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+#ifdef DBG
+
+VOID
+KiValidateDispatcherObject(IN PDISPATCHER_HEADER  Object)
+{
+  if ((Object->Type < InternalBaseType)
+    || (Object->Type > InternalTypeMaximum))
+		{
+      assertmsg(FALSE, ("Bad dispatcher object type %d\n", Object->Type));
+		}
+}
+
+
+PKTHREAD
+KiGetDispatcherObjectOwner(IN PDISPATCHER_HEADER  Header)
+{
+  switch (Header->Type)
+  {
+    case InternalMutexType:
+    {
+      PKMUTEX Mutex = (PKMUTEX)Header;
+      return Mutex->OwnerThread;
+    }
+
+  default:
+    /* No owner */
+    return NULL;
+  }
+}
+
+
+VOID KiDeadlockDetectionMutualResource(IN PDISPATCHER_HEADER  CurrentObject,
+  IN PKTHREAD  CurrentThread,
+  IN PKTHREAD  OwnerThread)
+/*
+ * PURPOSE: Perform deadlock detection. 
+ *          At this point, OwnerThread owns CurrentObject and CurrentThread
+ *          is waiting on CurrentObject
+ *          Deadlock happens if OwnerThread is waiting on a resource that
+ *          InitialThread owns.
+ * NOTE: Called with the dispatcher database locked
+ */
+{
+  PDISPATCHER_HEADER Object;
+  PKWAIT_BLOCK WaitBlock;
+  PKTHREAD Thread;
+
+  DPRINT("KiDeadlockDetectionMutualResource("
+    "CurrentObject 0x%.08x,  CurrentThread 0x%.08x  OwnerThread 0x%.08x)\n",
+    CurrentObject, CurrentThread, OwnerThread);
+
+  /* Go through all dispather objects that OwnerThread is waiting on */
+  for (WaitBlock = OwnerThread->WaitBlockList;
+    WaitBlock;
+    WaitBlock = WaitBlock->NextWaitBlock)
+    {
+      Object = WaitBlock->Object;
+
+      /* If OwnerThread is waiting on a resource that CurrentThread has
+       * acquired then we have a deadlock */
+      Thread = KiGetDispatcherObjectOwner(Object);
+      if ((Thread != NULL) && (Thread == CurrentThread))
+        {
+          DbgPrint("Deadlock detected!\n");
+          DbgPrint("Thread 0x%.08x is waiting on Object 0x%.08x of type %d "
+            " which is owned by Thread 0x%.08x\n",
+            Thread, CurrentObject, CurrentObject->Type, OwnerThread);
+          DbgPrint("Thread 0x%.08x is waiting on Object 0x%.08x of type %d "
+            " which is owned by Thread 0x%.08x\n",
+            OwnerThread, Object, Object->Type, Thread);
+          KeBugCheck(0);
+        }
+    }
+}
+
+
+VOID KiDeadlockDetection(IN PDISPATCHER_HEADER  Header)
+/*
+ * PURPOSE: Perform deadlock detection
+ * NOTE: Called with the dispatcher database locked
+ */
+{
+  PLIST_ENTRY CurrentEntry;
+  PKWAIT_BLOCK WaitBlock;
+  PKWAIT_BLOCK Current;
+  PKTHREAD OwnerThread;
+  PKTHREAD Thread;
+
+  DPRINT("KiDeadlockDetection(Header %x)\n", Header);
+  if (IsListEmpty(&(Header->WaitListHead)))
+    return;
+
+  CurrentEntry = Header->WaitListHead.Flink;
+  Current = CONTAINING_RECORD(CurrentEntry, KWAIT_BLOCK, WaitListEntry);
+
+  /* Go through all threads waiting on this dispatcher object */
+  for (WaitBlock = Current->Thread->WaitBlockList;
+    WaitBlock;
+    WaitBlock = WaitBlock->NextWaitBlock)
+    {
+      Thread = WaitBlock->Thread;
+
+      DPRINT("KiDeadlockDetection: WaitBlock->Thread %x  waiting on  WaitBlock->Object %x\n",
+        WaitBlock->Thread, WaitBlock->Object);
+
+      /* If another thread is currently owning this dispatcher object,
+         see if we have a deadlock */
+      OwnerThread = KiGetDispatcherObjectOwner(Current->Object);
+      DPRINT("KiDeadlockDetection: OwnerThread %x\n", OwnerThread);
+      if ((OwnerThread != NULL) && (OwnerThread != Thread))
+        {
+          KiDeadlockDetectionMutualResource(Current->Object,
+            Current->Thread,
+            OwnerThread);
+        }
+    }
+}
+
+#endif /* DBG */
+
+
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header,
 				  ULONG Type,
 				  ULONG Size,
@@ -136,6 +257,7 @@ static VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr,
 		      DPRINT1("Thread == NULL!\n");
 		      KeBugCheck(0);
 		    }
+
 		  if (Abandoned != NULL)
 		    *Abandoned = Mutex->Abandoned;
 		  if (Thread != NULL)
@@ -433,6 +555,10 @@ KeWaitForSingleObject(PVOID Object,
    KIRQL WaitIrql;
    BOOLEAN Abandoned;
 
+   assert_irql(DISPATCH_LEVEL);
+
+   VALIDATE_DISPATCHER_OBJECT(Object);
+
    CurrentThread = KeGetCurrentThread();
    WaitIrql = KeGetCurrentIrql();
 
@@ -488,10 +614,23 @@ KeWaitForSingleObject(PVOID Object,
 	     }
 	   return(STATUS_TIMEOUT);
 	 }
-       
-       /*
-	* Set up for a wait
-	*/
+
+#ifdef DBG
+
+   if (hdr->Type == InternalMutexType)
+     {
+        PKMUTEX Mutex;
+
+	      Mutex = CONTAINING_RECORD(hdr, KMUTEX, Header);
+        assertmsg(Mutex->OwnerThread != CurrentThread,
+				  ("Recursive locking of mutex (0x%.08x)\n", Mutex));
+    }
+
+#endif /* DBG */
+		
+	/*
+   * Set up for a wait
+ 	 */
        CurrentThread->WaitStatus = STATUS_UNSUCCESSFUL;
        /* Append wait block to the KTHREAD wait block list */
        CurrentThread->WaitBlockList = &CurrentThread->WaitBlock[0];
@@ -517,6 +656,16 @@ KeWaitForSingleObject(PVOID Object,
 	 {
 	   CurrentThread->WaitBlock[0].NextWaitBlock = NULL;
 	 }
+
+#ifdef DBG
+			/*
+		   * Do deadlock detection in checked version
+       * NOTE: This must be done after the the dispatcher object is put on
+       * the wait block list.
+		 	 */
+		  KiDeadlockDetection(Object);
+#endif /* DBG */
+
        PsBlockThread(&Status, (UCHAR)Alertable, WaitMode, TRUE, WaitIrql);
      } while (Status == STATUS_KERNEL_APC);
    
@@ -551,6 +700,8 @@ KeWaitForMultipleObjects(ULONG Count,
 
   DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
 	 "PsGetCurrentThread() %x\n",Count,Object,PsGetCurrentThread());
+
+  assert_irql(APC_LEVEL);
 
   CountSignaled = 0;
   CurrentThread = KeGetCurrentThread();
@@ -609,6 +760,8 @@ KeWaitForMultipleObjects(ULONG Count,
        for (i = 0; i < Count; i++)
 	 {
 	   hdr = (DISPATCHER_HEADER *)Object[i];
+
+     VALIDATE_DISPATCHER_OBJECT(hdr);
 	   
 	   if (KiIsObjectSignalled(hdr, CurrentThread, &Abandoned))
 	     {
@@ -655,7 +808,7 @@ KeWaitForMultipleObjects(ULONG Count,
        for (i = 0; i < Count; i++)
 	 {
 	   hdr = (DISPATCHER_HEADER *)Object[i];
-	   
+	   assertmsg(hdr != NULL, ("Waiting on uninitialized object\n"));
 	   blk->Object = Object[i];
 	   blk->Thread = CurrentThread;
 	   blk->WaitKey = STATUS_WAIT_0 + i;
@@ -675,7 +828,7 @@ KeWaitForMultipleObjects(ULONG Count,
 	     {
 	       blk->NextWaitBlock = blk + 1;
 	     }
-	   
+
 	   InsertTailList(&hdr->WaitListHead, &blk->WaitListEntry);
 	   
 	   blk = blk->NextWaitBlock;

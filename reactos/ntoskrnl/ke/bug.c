@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.21 2002/05/02 23:45:32 dwelch Exp $
+/* $Id: bug.c,v 1.22 2002/05/13 18:10:39 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -103,9 +103,10 @@ KeBugCheckEx(ULONG BugCheckCode,
 {
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
-  
-  /* PJS: disable interrupts first, then do the rest */
-  __asm__("cli\n\t");
+  KIRQL OldIrql;
+
+  KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
 	   BugCheckCode,
 	   BugCheckParameter1,
@@ -133,12 +134,19 @@ KeBugCheckEx(ULONG BugCheckCode,
   if (InBugCheck == 1)
     {
       DbgPrint("Recursive bug check halting now\n");
+
+  if (KdDebuggerEnabled)
+    {
+      DbgBreakPoint();
+    }
+
       for (;;)
 	{
 	  __asm__("hlt\n\t");
 	}
     }
   InBugCheck = 1;
+
   if (PsGetCurrentProcess() != NULL)
     {
       DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
@@ -150,12 +158,10 @@ KeBugCheckEx(ULONG BugCheckCode,
 	       PsGetCurrentThread(),
 	       PsGetCurrentThread()->Cid.UniqueThread);
     }
-//   PsDumpThreads();
-  KeDumpStackFrames((PULONG)__builtin_frame_address(0));
-  
+  KeDumpStackFrames((PULONG)__builtin_frame_address(0));	
+
   if (KdDebuggerEnabled)
     {
-      __asm__("sti\n\t");
       DbgBreakPoint();
     }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slab.c,v 1.2 2002/01/03 22:52:29 dwelch Exp $
+/* $Id: slab.c,v 1.3 2002/05/13 18:10:41 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -103,20 +103,20 @@ PSLAB_CACHE_PAGE
 ExGrowSlabCache(PSLAB_CACHE Slab)
 {
   PSLAB_CACHE_PAGE SlabPage;
-  PVOID PhysicalPage;
+  ULONG_PTR PhysicalPage;
   PVOID Page;
   NTSTATUS Status;
   ULONG i;
   PSLAB_CACHE_BUFCTL BufCtl;
   PVOID Object;
-  
+
   Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PhysicalPage);
   if (!NT_SUCCESS(Status))
     {
       return(NULL);
     }
 
-  Page = ExAllocatePageWithPhysPage((ULONG)PhysicalPage);
+  Page = ExAllocatePageWithPhysPage(PhysicalPage);
   if (Page == NULL)
     {
       MmReleasePageMemoryConsumer(MC_NPPOOL, PhysicalPage);
@@ -299,22 +299,22 @@ ExDestroySlabCache(PSLAB_CACHE Slab)
   while (current_entry != &Slab->PageListHead)
     {
       PVOID Base;
-      PVOID PhysicalPage;
+      ULONG_PTR PhysicalPage;
 
       current = CONTAINING_RECORD(current_entry,
 				  SLAB_CACHE_PAGE,
 				  PageListEntry);
-      Base = (PVOID)current + sizeof(SLAB_CACHE_PAGE) - PAGESIZE;
+      Base = (PVOID)(current + sizeof(SLAB_CACHE_PAGE) - PAGESIZE);
       if (Slab->Destructor != NULL)
 	{
 	  for (i = 0; i < Slab->ObjectsPerPage; i++)
 	    {
-	      Object = Base + (i * Slab->ObjectSize) + 
-		sizeof(SLAB_CACHE_BUFCTL);
+	      Object = (PVOID)(Base + (i * Slab->ObjectSize) +
+		sizeof(SLAB_CACHE_BUFCTL));
 	      Slab->Destructor(Object, Slab->BaseSize);
 	    }
 	}
-      PhysicalPage = (PVOID)MmGetPhysicalAddressForProcess(NULL, Base);
+      PhysicalPage = MmGetPhysicalAddressForProcess(NULL, Base);
       ExUnmapPage(Base);
       MmReleasePageMemoryConsumer(MC_NPPOOL, PhysicalPage);
     }

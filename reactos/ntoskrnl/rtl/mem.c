@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.11 2001/03/16 10:58:47 dwelch Exp $
+/* $Id: mem.c,v 1.12 2002/05/13 18:10:41 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,6 +24,8 @@ MmCopyToCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
 {
   NTSTATUS Status;
 
+  //assertmsg(KeGetCurrentIrql() < DISPATCH_LEVEL, ("MmCopyToCaller() called at >= DISPATCH_LEVEL\n"));
+
   if (ExGetPreviousMode() == UserMode)
     {
       if ((ULONG)Dest >= KERNEL_BASE)
@@ -44,6 +46,8 @@ NTSTATUS
 MmCopyFromCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
 {
   NTSTATUS Status;
+
+  //assertmsg(KeGetCurrentIrql() < DISPATCH_LEVEL, ("MmCopyFromCaller() called at >= DISPATCH_LEVEL\n"));
 
   if (ExGetPreviousMode() == UserMode)
     {

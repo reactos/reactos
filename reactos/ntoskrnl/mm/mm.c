@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.54 2002/01/23 23:39:26 chorns Exp $
+/* $Id: mm.c,v 1.55 2002/05/13 18:10:40 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -41,12 +41,51 @@
 
 /* GLOBALS *****************************************************************/
 
-PVOID EXPORTED MmUserProbeAddress = NULL; 
+PVOID EXPORTED MmUserProbeAddress = NULL;
 PVOID EXPORTED MmHighestUserAddress = NULL;
-MM_STATS MmStats; 
+MM_STATS MmStats;
 extern PVOID MmSharedDataPagePhysicalAddress;
 
 /* FUNCTIONS ****************************************************************/
+
+#ifdef DBG
+
+VOID
+DbgMmDumpProtection(IN ULONG  Value)
+{
+	if (Value & PAGE_NOACCESS)
+		DbgPrint("No access\n");
+
+	if (Value & PAGE_GUARD)
+		DbgPrint("Guard\n");
+
+	if (Value & PAGE_READWRITE)
+		DbgPrint("Read/Write\n");
+
+	if (Value & PAGE_EXECUTE_READWRITE)
+		DbgPrint("Execute/Read/Write\n");
+
+	if (Value & PAGE_READONLY)
+		DbgPrint("Read only\n");
+
+	if (Value & PAGE_EXECUTE)
+		DbgPrint("Execute\n");
+
+	if (Value & PAGE_EXECUTE_READ)
+		DbgPrint("Execute/Read\n");
+
+	if (Value & PAGE_SYSTEM)
+		DbgPrint("System\n");
+
+	if (Value & PAGE_NOCACHE)
+		DbgPrint("No cache\n");
+
+	if (Value & PAGE_WRITETHROUGH)
+		DbgPrint("No cache\n");
+}
+
+#endif /* DBG */
+
 
 NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 {
@@ -245,7 +284,7 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
 {
   NTSTATUS Status;
-  PVOID AllocatedPage;
+  ULONG_PTR AllocatedPage;
   Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
   if (!NT_SUCCESS(Status))
     {

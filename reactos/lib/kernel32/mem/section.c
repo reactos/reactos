@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.13 2001/02/17 17:42:46 ekohl Exp $
+/* $Id: section.c,v 1.14 2002/05/13 18:10:38 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -156,7 +156,9 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
      {
 	BaseAddress = lpBaseAddress;
      }
-   
+
+   ViewSize = (ULONG) dwNumberOfBytesToMap;
+
    Status = ZwMapViewOfSection(hFileMappingObject,
 			       NtCurrentProcess(),
 			       &BaseAddress,

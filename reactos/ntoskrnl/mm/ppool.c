@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.7 2002/02/14 00:07:23 hbirr Exp $
+/* $Id: ppool.c,v 1.8 2002/05/13 18:10:40 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -74,6 +74,8 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
   PMM_PPOOL_FREE_BLOCK_HEADER PreviousBlock;
   PMM_PPOOL_FREE_BLOCK_HEADER BestPreviousBlock;
   PVOID BlockAddress;
+
+  assert_irql(APC_LEVEL);
 
   /*
    * Don't bother allocating anything for a zero-byte block.

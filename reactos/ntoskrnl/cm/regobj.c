@@ -206,7 +206,7 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
 
   if (ParentKey->SizeOfSubKeys <= ParentKey->NumberOfSubKeys)
 	  {
-	    PKEY_OBJECT *tmpSubKeys = ExAllocatePool(PagedPool,
+	    PKEY_OBJECT *tmpSubKeys = ExAllocatePool(NonPagedPool,
         (ParentKey->NumberOfSubKeys + 1) * sizeof(DWORD));
 
 	    if (ParentKey->NumberOfSubKeys > 0)

@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.11 2001/08/26 17:26:23 ekohl Exp $
+/* $Id: work.c,v 1.12 2002/05/13 18:10:39 chorns Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -99,9 +99,9 @@ ExWorkerThreadEntryPoint(PVOID context)
 static VOID ExInitializeWorkQueue(PWORK_QUEUE WorkQueue,
 				  KPRIORITY Priority)
 {
+   NTSTATUS Status;
    ULONG i;
-   PETHREAD Thread;
-   
+
    InitializeListHead(&WorkQueue->Head);
    KeInitializeSpinLock(&WorkQueue->Lock);
    KeInitializeSemaphore(&WorkQueue->Sem,
@@ -116,15 +116,13 @@ static VOID ExInitializeWorkQueue(PWORK_QUEUE WorkQueue,
 			     NULL,
 			     ExWorkerThreadEntryPoint,
 			     WorkQueue);
-	ObReferenceObjectByHandle(WorkQueue->Thread[i],
-				  THREAD_ALL_ACCESS,
-				  PsThreadType,
-				  KernelMode,
-				  (PVOID*)&Thread,
-				  NULL);
-	KeSetPriorityThread(&Thread->Tcb,
-			    Priority);
-	ObDereferenceObject(Thread);
+  Status = PiSetPriorityThread(WorkQueue->Thread[i], Priority);
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("PiSetThreadPriority() failed with status 0x%.08x\n", Status);
+      KeBugCheck(0);
+    }
      }
 }
 
