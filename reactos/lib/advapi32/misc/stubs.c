@@ -805,7 +805,11 @@ CreateProcessAsUserA (
  LPPROCESS_INFORMATION lpProcessInformation
  )
 {
-  return(FALSE);
+  /* redirect call to CreateProcess() as long as we don't support user logins */
+  return CreateProcessA(lpApplicationName, lpCommandLine, lpProcessAttributes,
+                        lpThreadAttributes, bInheritHandles, dwCreationFlags,
+                        lpEnvironment, lpCurrentDirectory, lpStartupInfo,
+                        lpProcessInformation);
 }
 
 /*
@@ -1002,7 +1006,11 @@ CreateProcessAsUserW (
  LPPROCESS_INFORMATION lpProcessInformation
  )
 {
-  return(FALSE);
+  /* redirect call to CreateProcess() as long as we don't support user logins */
+  return CreateProcessW(lpApplicationName, lpCommandLine, lpProcessAttributes,
+                        lpThreadAttributes, bInheritHandles, dwCreationFlags,
+                        lpEnvironment, lpCurrentDirectory, lpStartupInfo,
+                        lpProcessInformation);
 }
 
 /*
