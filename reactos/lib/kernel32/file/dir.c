@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.46 2004/06/28 19:46:17 navaraf Exp $
+/* $Id: dir.c,v 1.47 2004/07/01 22:35:35 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -753,75 +753,120 @@ SearchPathW (
         PWCHAR EnvironmentBufferW = NULL;
         PWCHAR AppPathW = NULL;
         WCHAR Buffer;
-        //WCHAR drv[3];
-
+        BOOL HasExtension;
+        LPCWSTR p;
+        PWCHAR Name;
 
         DPRINT("SearchPath\n");
 
-        if (lpPath == NULL)
+        HasExtension = FALSE;
+        p = lpFileName + wcslen(lpFileName);
+        while (lpFileName < p &&
+               L'\\' != *(p - 1) &&
+               L'/' != *(p - 1) &&
+               L':' != *(p - 1))
         {
-
-                AppPathW = (PWCHAR) RtlAllocateHeap(GetProcessHeap(),
-                                                HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
-                                                MAX_PATH * sizeof(WCHAR));
-
-
-                wcscat (AppPathW, NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer);
-
-                len = wcslen (AppPathW);
-
-                while (len && AppPathW[len - 1] != L'\\')
-                        len--;
-
-                if (len) AppPathW[len-1] = L'\0';
-
-                len = GetEnvironmentVariableW(L"PATH", &Buffer, 0);
-                len += 1 + GetCurrentDirectoryW(0, &Buffer);
-                len += 1 + GetSystemDirectoryW(&Buffer, 0);
-                len += 1 + GetWindowsDirectoryW(&Buffer, 0);
-                len += 1 + wcslen(AppPathW) * sizeof(WCHAR);
-
-                EnvironmentBufferW = (PWCHAR) RtlAllocateHeap(GetProcessHeap(),
-                                                HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
-                                                len * sizeof(WCHAR));
-                if (EnvironmentBufferW == NULL)
+                HasExtension = HasExtension || L'.' == *(p - 1);
+                p--;
+        }
+        if (lpFileName < p)
+        {
+                if (HasExtension || NULL == lpExtension)
                 {
-                        SetLastError(ERROR_OUTOFMEMORY);
-                        return 0;
+                        Name = (PWCHAR) lpFileName;
+                }
+                else
+                {
+                        Name = RtlAllocateHeap(GetProcessHeap(), 
+                                               HEAP_GENERATE_EXCEPTIONS,
+                                               (wcslen(lpFileName) + wcslen(lpExtension) + 1)
+                                               * sizeof(WCHAR));
+                        if (NULL == Name)
+                        {
+                                SetLastError(ERROR_OUTOFMEMORY);
+                                return 0;
+                        }
+                        wcscat(wcscpy(Name, lpFileName), lpExtension);
+                }
+	        if (RtlDoesFileExists_U(Name))
+                {
+                        retCode = RtlGetFullPathName_U (Name,
+                                                        nBufferLength * sizeof(WCHAR),
+                                                        lpBuffer,
+                                                        lpFilePart);
+                }
+                if (Name != lpFileName)
+                {
+                        RtlFreeHeap(GetProcessHeap(), 0, Name);
+                }
+        }
+        else
+        {
+                if (lpPath == NULL)
+                {
+
+                        AppPathW = (PWCHAR) RtlAllocateHeap(GetProcessHeap(),
+                                                        HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
+                                                        MAX_PATH * sizeof(WCHAR));
+
+
+                        wcscat (AppPathW, NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer);
+
+                        len = wcslen (AppPathW);
+
+                        while (len && AppPathW[len - 1] != L'\\')
+                                len--;
+
+                        if (len) AppPathW[len-1] = L'\0';
+
+                        len = GetEnvironmentVariableW(L"PATH", &Buffer, 0);
+                        len += 1 + GetCurrentDirectoryW(0, &Buffer);
+                        len += 1 + GetSystemDirectoryW(&Buffer, 0);
+                        len += 1 + GetWindowsDirectoryW(&Buffer, 0);
+                        len += 1 + wcslen(AppPathW) * sizeof(WCHAR);
+
+                        EnvironmentBufferW = (PWCHAR) RtlAllocateHeap(GetProcessHeap(),
+                                                        HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
+                                                        len * sizeof(WCHAR));
+                        if (EnvironmentBufferW == NULL)
+                        {
+                                SetLastError(ERROR_OUTOFMEMORY);
+                                return 0;
+                        }
+
+                        pos = GetCurrentDirectoryW(len, EnvironmentBufferW);
+                        EnvironmentBufferW[pos++] = L';';
+                        EnvironmentBufferW[pos] = 0;
+                        pos += GetSystemDirectoryW(&EnvironmentBufferW[pos], len - pos);
+                        EnvironmentBufferW[pos++] = L';';
+                        EnvironmentBufferW[pos] = 0;
+                        pos += GetWindowsDirectoryW(&EnvironmentBufferW[pos], len - pos);
+                        EnvironmentBufferW[pos++] = L';';
+                        EnvironmentBufferW[pos] = 0;
+                        pos += GetEnvironmentVariableW(L"PATH", &EnvironmentBufferW[pos], len - pos);
+                        EnvironmentBufferW[pos++] = L';';
+                        EnvironmentBufferW[pos] = 0;
+                        wcscat (EnvironmentBufferW, AppPathW);
+
+                        RtlFreeHeap (RtlGetProcessHeap (),
+                             0,
+                             AppPathW);
+
+                        lpPath = EnvironmentBufferW;
+
                 }
 
-                pos = GetCurrentDirectoryW(len, EnvironmentBufferW);
-                EnvironmentBufferW[pos++] = L';';
-                EnvironmentBufferW[pos] = 0;
-                pos += GetSystemDirectoryW(&EnvironmentBufferW[pos], len - pos);
-                EnvironmentBufferW[pos++] = L';';
-                EnvironmentBufferW[pos] = 0;
-                pos += GetWindowsDirectoryW(&EnvironmentBufferW[pos], len - pos);
-                EnvironmentBufferW[pos++] = L';';
-                EnvironmentBufferW[pos] = 0;
-                pos += GetEnvironmentVariableW(L"PATH", &EnvironmentBufferW[pos], len - pos);
-                EnvironmentBufferW[pos++] = L';';
-                EnvironmentBufferW[pos] = 0;
-                wcscat (EnvironmentBufferW, AppPathW);
+                retCode = RtlDosSearchPath_U ((PWCHAR)lpPath, (PWCHAR)lpFileName, (PWCHAR)lpExtension,
+                                              nBufferLength * sizeof(WCHAR), lpBuffer, lpFilePart);
 
-                RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     AppPathW);
-
-                lpPath = EnvironmentBufferW;
-
-        }
-
-        retCode = RtlDosSearchPath_U ((PWCHAR)lpPath, (PWCHAR)lpFileName, (PWCHAR)lpExtension,
-                                      nBufferLength * sizeof(WCHAR), lpBuffer, lpFilePart);
-
-        if (EnvironmentBufferW != NULL)
-        {
-                RtlFreeHeap(GetProcessHeap(), 0, EnvironmentBufferW);
-        }
-        if (retCode == 0)
-        {
-                SetLastError(ERROR_FILE_NOT_FOUND);
+                if (EnvironmentBufferW != NULL)
+                {
+                        RtlFreeHeap(GetProcessHeap(), 0, EnvironmentBufferW);
+                }
+                if (retCode == 0)
+                {
+                        SetLastError(ERROR_FILE_NOT_FOUND);
+                }
         }
         return retCode / sizeof(WCHAR);
 }
