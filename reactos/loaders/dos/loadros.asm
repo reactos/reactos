@@ -6,15 +6,15 @@
 ;
 ; Base address of the kernel
 ;
-KERNEL_BASE      equ     0c0000000h
+KERNEL_BASE	equ     0c0000000h
 
 ;
 ; Segment selectors
 ;
-USER_CS       equ     08h
-USER_DS       equ     010h
-KERNEL_CS     equ     020h
-KERNEL_DS     equ     028h
+USER_CS		equ     08h
+USER_DS		equ     010h
+KERNEL_CS	equ     020h
+KERNEL_DS	equ     028h
                                      
 ;
 ; Space reserved in the gdt for tss descriptors
@@ -31,6 +31,26 @@ org 100h
 ;
 BITS 16
 
+%define NDEBUG 1
+
+%macro	DPRINT	1+
+%ifndef	NDEBUG
+		jmp	%%end_str
+
+%%str:		db	%1
+
+%%end_str:
+		push	di
+		push	ds
+		push	es
+		pop	ds
+		mov	di, %%str
+		call	print_string
+		pop	ds
+		pop	di
+%endif
+%endmacro
+
 entry:
         ;
         ; Load stack
@@ -38,6 +58,8 @@ entry:
         cli
         push    ds
         pop     ss
+        push    ds
+        pop     es
         mov     sp,real_stack_end
         sti
 
@@ -126,9 +148,9 @@ l14:
         ; Process the arguments
         ;
         mov     di,loading_msg
-        call    _print_string
+        call    print_string
         mov     di,dx
-        call    _print_string
+        call    print_string
         mov     ah,02h
         mov     dl,0dh
         int     021h
@@ -141,7 +163,8 @@ l14:
         ;
         push    di
         mov     dx,di
-        call    _load_file
+;        call    _load_file
+	call	pe_load_module
         pop     di
 
         ;
@@ -180,146 +203,10 @@ exit:
         ;
 _error:
         mov     di,err_msg
-        call    _print_string
+        call    print_string
         jmp     exit
 
 end_cmd_line dw 0
-
-
-;
-; Read in a file to kernel_base, set kernel base to the end of the file in
-; memory rounded up to the nearest page
-;
-; In:
-;       DI = filename
-;
-_load_file:
-        inc     dword [_nr_files]
-
-        ;
-        ; Open the file
-        ;
-        mov     ah,03dh
-        mov     al,0
-        mov     dx,di
-        int     021h
-        jc      _error
-        mov     [file_handle],ax
-        
-        ;
-        ; Find filelength
-        ;
-        mov     ah,042h
-        mov     al,2
-        mov     bx,[file_handle]
-        mov     cx,0
-        mov     dx,0
-        int     021h
-
-        ;
-        ; Convert the filelength in DX:AX to a dword in EBX
-        ;
-        movzx   ebx,dx
-        shl     ebx,16
-        mov     bx,ax
-
-        ;
-        ; Record the length of the module in boot parameter table
-        ;
-        mov     esi,[_nr_files]
-        dec     esi
-        mov     [_module_lengths+esi*4],ebx
-
-        ; 
-        ; Convert the length into 
-        ;
-        mov     [size_mod_4k],bx
-        and     word [size_mod_4k],0fffh
-
-        shr     ebx,12
-        mov     [size_div_4k],ebx
-
-
-        ;
-        ; Seek to beginning of file
-        ;
-        mov     ah,042h
-        mov     al,0
-        mov     bx,[file_handle]
-        mov     cx,0
-        mov     dx,0
-        int     021h
-        jc      _error
-
-        ;
-        ;  Read in the module
-        ;
-        push    ds
-
-        ;
-        ; Convert the linear point to the load address into a seg:off
-        ;
-        mov     edi,[next_load_base]
-        call    convert_to_seg
-        mov     dx,di
-
-        ;
-        ; Move onto the next position in prepartion for a future read
-        ;
-        mov     eax,[size_div_4k]
-        mov     bx,[size_mod_4k]
-        cmp     bx,0
-        je      l20
-        inc     eax        
-l20:
-        shl     eax,0ch
-        add     [next_load_base],eax
-
-        push    fs
-        pop     ds
-       
-        ;
-        ; We read the kernel in 4k chunks (because)
-        ;
-l6:
-        ;
-        ; Check if we have read it all
-        ;
-        mov     ax,[es:size_div_4k]
-        cmp     ax,0
-        je      l5
-
-        ;
-        ; Make the call (dx was loaded above)
-        ;
-        mov     ah,3fh
-        mov     bx,[es:file_handle]
-        mov     cx,01000h
-        int     21h               
-
-        ;
-        ; We move onto the next pointer by altering ds
-        ;
-        mov     ax,ds
-        add     ax,0100h
-        mov     ds,ax
-        dec     word [es:size_div_4k]
-        jmp     l6
-
-l5:
-        ;
-        ; Read the last section
-        ;
-        mov     ah,3fh
-        mov     bx,[es:file_handle]
-        mov     cx,[es:size_mod_4k]
-        int     21h
-        pop     ds
-        jnc     _no_error
-        jmp     _error
-
-_no_error:
-        ret
 
 ;
 ; In: EDI = address
@@ -330,11 +217,14 @@ convert_to_seg:
         push    eax
 
         mov     eax,edi
-        shr     eax,16
-        shl     eax,12
-        mov     fs,ax
+;        shr     eax,16
+;        shl     eax,12
+;        mov     fs,ax
+	shr	eax, 4
+	mov	fs, ax
+	and	edi, 0xf
 
-        and     edi,0ffffh
+;        and     edi,0ffffh
 
         pop     eax
         ret
@@ -342,23 +232,540 @@ convert_to_seg:
 ;
 ; Print string in DS:DI
 ;
-_print_string:
-        push    ax
-        push    dx
-        push    di
-        mov     ah,02h
-l3:
-        mov     dl,[di]
-        cmp     dl,0
-        je      l4
-        int     021h
+print_string:
+	push	ebp
+	mov	bp, sp
+        push    eax
+        push    edx
+        push    edi
+
+        mov     ax, 0x0200
+.loop:
+        mov     dl, [di]
+        cmp     dl, 0
+        je      .end_loop
+	cmp	dl, '%'
+	jne	.print_char
+	inc	di
+        mov     dl, [di]
+	cmp	dl, 'a'
+	jne	.not_ax
+	push	eax
+	mov	eax, [ss:bp - 4]
+	call	print_ax
+	pop	eax
+	jmp	.next_char
+
+.not_ax:
+	cmp	dl, 'A'
+	jne	.not_eax
+	push	eax
+	mov	eax, [ss:bp - 4]
+	call	print_eax
+	pop	eax
+	jmp	.next_char
+
+.not_eax:
+	cmp	dl, 'c'
+	jne	.not_cx
+	push	ax
+	mov	ax, cx
+	call	print_ax
+	pop	ax
+	jmp	.next_char
+
+.not_cx:
+
+.print_char:
+        int     0x21
+
+.next_char:
         inc     di
-        jmp     l3
-l4:
-        pop     di
-        pop     dx
-        pop     ax
+        jmp     .loop
+
+.end_loop:
+        pop     edi
+        pop     edx
+        pop     eax
+	pop	ebp
         ret
+
+;
+; print_ax - print the number in the ax register
+;
+
+print_ax:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+
+	mov	bx, ax
+	mov	ax, 0x0200
+	mov	cx, 4
+.loop:
+	mov	dx, bx
+	shr	dx, 12
+	and	dl, 0x0f
+	cmp	dl, 0x0a
+	jge	.hex_val
+	add	dl, '0'
+	jmp	.not_hex
+
+.hex_val:
+	add	dl, 'a' - 10
+
+.not_hex:	
+	int	0x21
+	shl	bx, 4
+	dec	cx
+	jnz	.loop
+
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+
+print_eax:
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+
+	mov	ebx, eax
+	mov	ax, 0x0200
+	mov	cx, 8
+.loop:
+	mov	edx, ebx
+	shr	edx, 28
+	and	dl, 0x0f
+	cmp	dl, 0x0a
+	jge	.hex_val
+	add	dl, '0'
+	jmp	.not_hex
+
+.hex_val:
+	add	dl, 'a' - 10
+
+.not_hex:	
+	int	0x21
+	shl	ebx, 4
+	dec	cx
+	jnz	.loop
+
+	pop	edx
+	pop	ecx
+	pop	ebx
+	pop	eax
+	ret
+
+
+STRUC	DOS_HDR
+e_magic:	resw	1
+e_cblp:		resw	1
+e_cp:		resw	1
+e_crlc:		resw	1
+e_cparhdr:	resw	1
+e_minalloc:	resw	1
+e_maxalloc:	resw	1
+e_ss:		resw	1
+e_sp:		resw	1
+e_csum:		resw	1
+e_ip:		resw	1
+e_cs:		resw	1
+e_lfarlc:	resw	1
+e_ovno:		resw	1
+e_res:		resw	4
+e_oemid:	resw	1
+e_oeminfo:	resw	1
+e_res2:		resw	10
+e_lfanew:	resd	1
+ENDSTRUC
+
+STRUC	NT_HDRS
+nth_sig:	resd	1
+ntf_mach:	resw	1    
+ntf_num_secs:	resw	1
+ntf_timestamp:	resd	1
+ntf_symtab_ptr:	resd	1
+ntf_num_syms:	resd	1
+ntf_opt_hdr_sz:	resw	1
+ntf_chars:	resw	1
+
+nto_magic:	resw	1
+nto_mjr_lnk_vr:	resb	1
+nto_mnr_lnk_vr:	resb	1
+nto_code_sz:	resd	1
+nto_data_sz:	resd	1   
+nto_bss_sz:	resd	1   
+nto_entry_offs:	resd	1   
+nto_code_offs:	resd	1   
+nto_data_offs:	resd	1   
+nto_image_base:	resd	1   
+nto_sec_align:	resd	1   
+nto_file_align:	resd	1   
+nto_mjr_os_ver:	resw	1    
+nto_Mnr_os_ver:	resw	1    
+nto_mjr_img_vr:	resw	1    
+nto_Mnr_img_vr:	resw	1    
+nto_mjr_subsys:	resw	1    
+nto_mnr_subsys:	resw	1    
+nto_w32_ver:	resd	1   
+nto_image_sz:	resd	1   
+nto_hdr_sz:	resd	1   
+nto_chksum:	resd	1   
+nto_subsys:	resw	1    
+nto_dll_chars:	resw	1    
+nto_stk_res_sz:	resd	1   
+nto_stk_cmt_sz:	resd	1   
+nto_hp_res_sz:	resd	1   
+nto_hp_cmt_sz:	resd	1   
+nto_ldr_flags:	resd	1   
+nto_dir_cnt:	resd	1   
+nto_dir_ent:	resq	16
+ENDSTRUC
+
+STRUC	DATA_DIR
+dd_rva:		resd	1
+dd_sz:		resd	1
+ENDSTRUC
+
+STRUC  SCN_HDR
+se_name:	resb	8
+se_vsz:		resd	1
+se_vaddr:	resd	1
+se_rawsz:	resd	1
+se_raw_ofs:	resd	1
+se_reloc_ofs:	resd	1
+se_lnum_ofs:	resd	1
+se_num_relocs:	resw	1
+se_num_lnums:	resw	1
+se_chars:	resd	1
+ENDSTRUC
+
+;
+; pe_load_module - load a PE module into memory
+;
+;	DI - Filename
+;
+;	[_nr_files] - total files loaded (incremented)
+;	[next_load_base] - load base for file (updated to next loc)
+;	[_module_lengths] - correct slot is set.
+;
+
+pe_load_module:
+	push	dx
+	push	ds
+
+	push	ds
+	pop	es
+
+	mov	eax, [next_load_base]
+	mov	[load_base], eax
+DPRINT	'next_load_base %A', 13, 10, 0
+
+        ;
+        ; Open the file
+        ;
+        mov     ax, 0x3d00
+        mov     dx, di
+        int     0x21
+        jnc	.open_good
+	jmp	.error
+.open_good:
+        mov     [file_handle],ax
+        
+        ;
+        ; Seek to beginning of file
+        ;
+        mov     ax,0x4200
+        mov     bx, [file_handle]
+        mov     cx, 0
+        mov     dx, 0
+        int     0x21
+	jnc	.rewind_good
+        jmp	.error
+.rewind_good:
+
+	;
+	; Compute load address for PE headers
+	;
+        mov     edi,[load_base]
+        call    convert_to_seg
+        mov     dx,di
+        push    fs
+        pop     ds
+
+	;
+	; Load the headers
+	;
+        mov     ax, 0x3f00
+        mov     bx, [es:file_handle]
+        mov     cx, 0x1000
+        int     0x21
+
+	;
+	;  Check DOS MZ Header
+	;
+	mov	bx, dx
+	mov	ax, word [bx + e_magic]
+	cmp	ax, 'MZ'
+	je	.mz_hdr_good
+        push    es
+        pop     ds
+	mov	dx, bad_mz_msg
+	mov	di, dx
+	call	print_string
+	jmp	.error
+
+.mz_hdr_good:
+	;
+	;  Check PE Header
+	;
+	mov	eax, dword [bx + e_lfanew]
+DPRINT	'lfanew %A ', 0
+	add	bx, ax
+	mov	eax, dword [bx + nth_sig]
+	cmp	eax, 0x00004550
+	je	.pe_hdr_good
+        push    es
+        pop     ds
+	mov	dx, bad_pe_msg
+	mov	di, dx
+	call	print_string
+	jmp	.error
+	
+.pe_hdr_good:
+	;
+	;  Get header size and bump next_load_base
+	;
+	mov	eax, [bx + nto_hdr_sz]
+DPRINT	'header size %A ', 0
+	add	dword [es:next_load_base], eax
+
+	;
+	;  Setup section pointer
+	;
+	mov	ax, [bx + ntf_num_secs]
+DPRINT	'num sections %a', 13, 10, 0
+	mov	[es:num_sections], ax
+	add	bx, NT_HDRS_size
+	mov	[es:cur_section], bx
+	mov	[es:cur_section + 2], ds
+	;
+	;  Load each section or fill with zeroes
+	;
+.scn_loop:
+	;
+	;  Compute size of data to load from file
+	;
+	mov	eax, [bx + se_rawsz]
+DPRINT	'raw size %A ', 0
+	cmp	eax, 0
+	jne	.got_data
+	jmp	.no_data
+.got_data:
+        mov     [es:size_mod_4k], ax
+        and     word [es:size_mod_4k], 0x0fff
+        shr     eax, 12
+        mov     dword [es:size_div_4k], eax
+
+	;
+	;  Seek to section offset
+	;
+	mov	eax, [bx + se_raw_ofs]
+DPRINT	'raw offset %A ', 0
+	mov	dx, ax
+	shr	eax, 16
+	mov	cx, ax
+        mov     ax,0x4200
+        mov     bx, [es:file_handle]
+        int     0x21
+	jnc	.seek_good
+        jmp	.error
+.seek_good:
+
+	;
+	;  Load the base pointer
+	;
+        mov     edi,[es:next_load_base]
+        call    convert_to_seg
+        mov     dx, di
+        push    fs
+        pop     ds
+
+        ;
+        ;  Read data in 4k chunks
+        ;
+.do_chunk:
+        ;
+        ; Check if we have read it all
+        ;
+        mov     eax, [es:size_div_4k]
+        cmp     eax, 0
+        je      .chunk_done
+
+        ;
+        ; Make the call (dx was loaded above)
+        ;
+        mov     ax, 0x3f00
+        mov     bx, [es:file_handle]
+        mov     cx, 0x1000
+        int     0x21               
+	; FIXME: should check return status and count
+
+        ;
+        ; We move onto the next pointer by altering ds
+        ;
+        mov     ax, ds
+        add     ax, 0x0100
+        mov     ds, ax
+        dec     word [es:size_div_4k]
+        jmp     .do_chunk
+
+.chunk_done:
+        ;
+        ; Read the last section
+        ;
+        mov     ax, 0x3f00
+        mov     bx, [es:file_handle]
+        mov     cx, [es:size_mod_4k]
+        int     0x21
+	jnc	.last_read_good
+        jmp	.error
+.last_read_good:
+
+.no_data:
+	;
+	;  Zero out uninitialized data sections
+	;
+	lds	bx, [es:cur_section]
+mov	eax, dword [bx + se_chars]
+DPRINT	'section chars %A', 13, 10, 0
+	test	dword [bx + se_chars], 0x80
+	jz	.no_fill
+	
+	;
+	;  Compute size of section to zero fill
+	;
+	mov	eax, [bx + se_vsz]
+	cmp	eax, 0
+	je	.no_fill
+        mov     [es:size_mod_4k], ax
+        and     word [es:size_mod_4k], 0x0fff
+        shr     eax, 12
+        mov     [size_div_4k], eax
+
+	;
+	;  Load the base pointer
+	;
+        mov     edi,[es:next_load_base]
+        call    convert_to_seg
+        mov     dx, di
+        push    fs
+        pop     ds
+
+.do_fill:
+        ;
+        ; Check if we have read it all
+        ;
+        mov     eax, [es:size_div_4k]
+        cmp     eax, 0
+        je      .fill_done
+
+        ;
+        ; Zero out a chunk
+        ;
+	mov	ax, 0x0000	
+        mov     cx, 0x1000
+	push	di
+	push	es
+	push	ds
+	pop	es
+rep	stosb
+	pop	es
+	pop	di
+
+        ;
+        ; We move onto the next pointer by altering ds
+        ;
+        mov     ax, ds
+        add     ax, 0x0100
+        mov     ds, ax
+        dec     word [es:size_div_4k]
+        jmp     .do_fill
+
+.fill_done:
+        ;
+        ; Read the last section
+        ;
+	mov	ax, 0x0000	
+        mov     cx, [es:size_mod_4k]
+	push	di
+	push	es
+	push	ds
+	pop	es
+rep	stosb
+	pop	es
+	pop	di
+
+.no_fill:
+
+	;
+	;  Update raw data offset in section header
+	;
+	lds	bx, [es:cur_section]
+	mov	eax, [es:next_load_base]
+	sub	eax, [es:load_base]
+DPRINT	'new raw offset %A ', 0
+	mov	[bx + se_raw_ofs], eax
+	
+	;
+	;  Update next_load_base
+	;
+	mov	eax, [bx + se_vsz]
+DPRINT	'scn virtual sz %A ', 0
+	and	eax, 0xfffff000
+	add	dword [es:next_load_base], eax
+	test	dword [bx + se_vsz], 0xfff
+	jz	.even_scn
+	add	dword [es:next_load_base], 0x1000
+
+.even_scn:
+mov	eax, [es:next_load_base]
+DPRINT	'next load base %A', 13, 10, 0
+
+	;
+	;  Setup for next section or exit loop
+	;
+	dec	word [es:num_sections]
+	jz	.scn_done
+	add	bx, SCN_HDR_size
+	mov	[es:cur_section], bx
+	jmp	.scn_loop
+
+.scn_done:
+	;
+	;  Update module_length
+	;
+	mov	eax, [es:next_load_base]
+	sub	eax, [es:load_base]
+	mov	esi, [es:_nr_files]
+	mov	[es:_module_lengths + esi * 4], eax
+
+        inc     dword [es:_nr_files]
+
+	pop	ds
+	pop	dx
+	ret
+
+.error:
+	push	es
+	pop	ds
+        mov     di, err_msg
+        call    print_string
+        jmp     exit
 
 ;
 ; Handle of the currently open file
@@ -375,6 +782,10 @@ size_mod_4k dw 0
 ;
 size_div_4k dd 0
 
+load_base	dd	0
+num_sections	dw	0
+cur_section	dd	0
+
 ;
 ;
 ;
@@ -383,17 +794,15 @@ last_addr dw 0
 ;
 ; Generic error message
 ;
-err_msg db 'Error during operation',0
-rostitle db '',0
+err_msg		db	'Error during operation',10, 13, 0
+bad_mz_msg	db	'Module has bad MZ header', 10, 13, 0
+bad_pe_msg	db	'Module has bad PE header', 10, 13, 0
+rostitle	db	'',0
+loading_msg	db	'Loading: ',0
+death_msg	db	'death', 0
 
-;
-;
-;
-loading_msg db 'Loading: ',0
-death_msg: db 'death', 0
-
-filelength_lo dw 0
-filelength_hi dw 0
+filelength_lo	dw 0
+filelength_hi	dw 0
 
 kernel_page_directory_base dd 0
 system_page_table_base dd 0

@@ -264,6 +264,7 @@ MmUnlockPages
 MmUnlockPagableImageSection
 MmUnmapIoSpace
 MmUnmapLockedPages
+NtCreateToken
 ObDereferenceObject
 ObReferenceObjectByHandle
 ObReferenceObjectByPointer
@@ -356,6 +357,7 @@ ZwClose
 ZwCreateDirectoryObject
 ZwCreateFile
 ZwCreateKey
+ZwCreateToken
 ZwDeleteKey
 ZwEnumerateKey
 ZwEnumerateValueKey

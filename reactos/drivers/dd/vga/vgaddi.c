@@ -5,6 +5,8 @@
 
 #include <winddi.h>
 
+#include "vgaddi.h"
+
 VOID VGADDIAssertMode(IN DHPDEV  DPev, 
                       IN BOOL  Enable); 
 VOID VGADDICompletePDEV(IN DHPDEV  PDev,
@@ -90,7 +92,9 @@ DrvEnableDriver(IN ULONG  EngineVersion,
 {
   DriveEnableData->pdrvfn = FuncList;
   DriveEnableData->c = sizeof FuncList / sizeof &FuncList[0];
-  
+  DriveEnableData->iDriverVersion = DDI_DRIVER_VERSION;
+
+  return  TRUE;
 }
 
 //    DrvDisableDriver
@@ -103,16 +107,32 @@ DrvEnableDriver(IN ULONG  EngineVersion,
 
 VOID DrvDisableDriver(VOID)
 {
+  return;
 }
 
 //  -----------------------------------------------  Driver Implementation 
 
-VOID VGADDIAssertMode(IN DHPDEV  DPev, 
-                      IN BOOL  Enable); 
-VOID VGADDICompletePDEV(IN DHPDEV  PDev,
-                        IN HDEV  Dev);
-VOID VGADDIDisablePDEV(IN DHPDEV PDev); 
-VOID VGADDIDisableSurface(IN DHPDEV PDev); 
+
+//    DrvEnablePDEV
+//  DESCRIPTION:
+//    This function is called after DrvEnableDriver to get information
+//    about the mode that is to be used.  This function just returns
+//    information, and should not yet initialize the mode.
+//  ARGUMENTS:
+//    IN DEVMODEW *  DM            Describes the mode requested
+//    IN LPWSTR      LogAddress    
+//    IN ULONG       PatternCount  number of patterns expected
+//    OUT HSURF *    SurfPatterns  array to contain pattern handles
+//    IN ULONG       CapsSize      the size of the DevCaps object passed in
+//    OUT ULONG *    DevCaps       Device Capabilities object
+//    IN ULONG       DevInfoSize   the size of the DevInfo object passed in
+//    OUT DEVINFO *  DI            Device Info object
+//    IN LPWSTR      DevDataFile   ignore
+//    IN LPWSTR      DeviceName    Device name
+//    IN HANDLE      Driver        handle to KM driver
+//  RETURNS:
+//    DHPDEV  a handle to a DPev object
+
 DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
                         IN LPWSTR  LogAddress,
                         IN ULONG  PatternCount,
@@ -123,9 +143,45 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
                         OUT DEVINFO  *DI,
                         IN LPWSTR  DevDataFile,
                         IN LPWSTR  DeviceName,
-                        IN HANDLE  Driver);
+                        IN HANDLE  Driver)
+{
+  PPDEV  PDev;
+
+  PDev = EngAllocMem(FL_ZERO_MEMORY, sizeof(PDEV), ALLOC_TAG);
+  if (PDev == NULL)
+    {
+      EngDebugPrint(1, "EngAllocMem failed for PDEV\n");
+      
+      return  NULL;
+    }
+  PDev->KMDriver = Driver;
+
+  /* FIXME: fill out DevCaps  */
+  /* FIXME: full out DevInfo  */
+
+  return  PDev;
+}
+
+//    DrvEnablePDEV
+//  DESCRIPTION
+//    Called after initialization of PDEV is complete.  Supplies
+//    a reference to the GDI handle for the PDEV.
+
+VOID VGADDICompletePDEV(IN DHPDEV  PDev,
+                        IN HDEV  Dev)
+{
+  ((PPDEV) PDev)->GDIDevHandle = Dev;
+}
+
+
+VOID VGADDIAssertMode(IN DHPDEV  DPev, 
+                      IN BOOL  Enable); 
+VOID VGADDIDisablePDEV(IN DHPDEV PDev); 
+VOID VGADDIDisableSurface(IN DHPDEV PDev); 
 HSURF VGADDIEnableSurface(IN DHPDEV  PDev);
 ULONG VGADDIGetModes(IN HANDLE Driver,
                      IN ULONG DataSize,
                      OUT PDEVMODEW DM);
+
+
 

@@ -121,7 +121,7 @@ asmlinkage void _main(boot_param* _bp)
    boot_param bp;
    unsigned int last_kernel_address;
    
-   memset((void *)&edata,0,((int)&end)-((int)&edata));
+//   memset((void *)&edata,0,((int)&end)-((int)&edata));
    
    /*
     * Copy the parameters to a local buffer because lowmem will go away
@@ -169,12 +169,14 @@ asmlinkage void _main(boot_param* _bp)
    DPRINT("%d files loaded\n",bp.nr_files);
     
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
-   start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
+//   start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
+   start1 = start + bp.module_length[1];
    for (i=1;i<bp.nr_files;i++)
      {
         DPRINT("process module at %08lx\n", start);
       	LdrProcessDriver((PVOID)start);
-        start=start+PAGE_ROUND_UP(bp.module_length[i]);
+//        start=start+PAGE_ROUND_UP(bp.module_length[i]);
+        start = start + bp.module_length[i];
      }
    
    /*

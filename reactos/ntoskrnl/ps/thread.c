@@ -260,7 +260,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
 					      &PiNextThreadUniqueId);
    Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
-   DbgPrint("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
+   DPRINT("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
    ObReferenceObjectByPointer(Thread,
 			      THREAD_ALL_ACCESS,
 			      PsThreadType,

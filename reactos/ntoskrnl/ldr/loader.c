@@ -53,6 +53,7 @@ NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
 PMODULE_OBJECT  LdrLoadModule(PUNICODE_STRING Filename);
 PMODULE_OBJECT  LdrProcessModule(PVOID ModuleLoadBase);
 PVOID  LdrGetExportAddress(PMODULE_OBJECT ModuleObject, char *Name, unsigned short Hint);
+static PMODULE_OBJECT LdrOpenModule(PUNICODE_STRING  Filename);
 static PIMAGE_SECTION_HEADER LdrPEGetEnclosingSectionHeader(DWORD  RVA,
                                                             PMODULE_OBJECT  ModuleObject);
 static NTSTATUS LdrCreateModule(PVOID ObjectBody,
@@ -252,38 +253,13 @@ LdrLoadModule(PUNICODE_STRING Filename)
   PWSTR  RemainingPath;
   UNICODE_STRING  ModuleName;
 
-  DPRINT("Loading Module %W...\n", Filename);
-
   /*  Check for module already loaded  */
-  wcscpy(NameBuffer, MODULE_ROOT_NAME);
-  if (wcsrchr(Filename->Buffer, '\\') != 0)
+  if ((ModuleObject = LdrOpenModule(Filename)) != NULL)
     {
-      wcscat(NameBuffer, wcsrchr(Filename->Buffer, '\\') + 1);
+      return  ModuleObject;
     }
-  else
-    {
-      wcscat(NameBuffer, Filename->Buffer);
-    }  
-  ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
-  ModuleName.Buffer = NameBuffer;
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &ModuleName, 
-                             0,
-                             NULL,
-                             NULL);
-  Status = ObFindObject(&ObjectAttributes,
-                        (PVOID *) &ModuleObject,
-                        &RemainingPath);
-  CHECKPOINT;
-  if (NT_SUCCESS(Status) && *RemainingPath == 0)
-    {
-      return ModuleObject;
-    }
-  CHECKPOINT;
-  if (!wcsncmp(Filename->Buffer, MODULE_ROOT_NAME, wcslen(MODULE_ROOT_NAME)))
-    {
-      return  0;
-    }
+
+  DPRINT("Loading Module %W...\n", Filename);
 
   /*  Open the Module  */
   InitializeObjectAttributes(&ObjectAttributes,
@@ -391,6 +367,46 @@ LdrProcessModule(PVOID ModuleLoadBase)
 #endif
 
   return 0;
+}
+
+static PMODULE_OBJECT 
+LdrOpenModule(PUNICODE_STRING  Filename)
+{
+  NTSTATUS  Status;
+  WCHAR  NameBuffer[60];
+  UNICODE_STRING  ModuleName;
+  OBJECT_ATTRIBUTES  ObjectAttributes;
+  PMODULE_OBJECT  ModuleObject;
+  PWSTR  RemainingPath;
+
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  if (wcsrchr(Filename->Buffer, '\\') != 0)
+    {
+      wcscat(NameBuffer, wcsrchr(Filename->Buffer, '\\') + 1);
+    }
+  else
+    {
+      wcscat(NameBuffer, Filename->Buffer);
+    }
+  ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+  ModuleName.Buffer = NameBuffer;
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &ModuleName, 
+                             0,
+                             NULL,
+                             NULL);
+  Status = ObFindObject(&ObjectAttributes,
+                        (PVOID *) &ModuleObject,
+                        &RemainingPath);
+  CHECKPOINT;
+  if (NT_SUCCESS(Status) && (RemainingPath == NULL || *RemainingPath == 0))
+    {
+      DPRINT("Module %W at %p\n", Filename, ModuleObject);
+
+      return  ModuleObject;
+    }
+
+  return  NULL;
 }
 
 PVOID  
@@ -617,12 +633,14 @@ LdrPEProcessModule(PVOID ModuleLoadBase)
           /*  Check to make sure that import lib is kernel  */
           pName = (PCHAR) DriverBase + 
             ImportModuleDirectory->dwRVAModuleName;
+#if 0
           if (!strcmp(pName, "ntoskrnl.exe") || !strcmp(pName, "HAL.dll"))
             {
               LibraryModuleObject = NULL;
               DPRINT("Kernel imports\n");
             }
           else
+#endif
             {
               wcscpy(NameBuffer, MODULE_ROOT_NAME);
               for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
@@ -799,19 +817,21 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
   OrdinalList = (PWORD)((DWORD)ExportDirectory->AddressOfNameOrdinals - 
     Delta + ModuleObject->Base);
   DPRINT("Delta:%08x\n", Delta);
-  DPRINT("Func:%08x  RVA:%08x  Name:%08x  RVA:%08x  Ord:%08x  RVA:%08x\n", FunctionList,
-         ExportDirectory->AddressOfFunctions, NameList,
-         ExportDirectory->AddressOfNames, OrdinalList,
-         ExportDirectory->AddressOfNameOrdinals);
+  DPRINT("Func:%08x  RVA:%08x  Name:%08x  RVA:%08x\nOrd:%08x  RVA:%08x  ", 
+         FunctionList, ExportDirectory->AddressOfFunctions, 
+         NameList, ExportDirectory->AddressOfNames, 
+         OrdinalList, ExportDirectory->AddressOfNameOrdinals);
   DPRINT("NumNames:%d NumFuncs:%d\n", ExportDirectory->NumberOfNames, 
          ExportDirectory->NumberOfFunctions);
-for(;;);
   ExportAddress = 0;
   if (Name != NULL)
     {
       for (Idx = 0; Idx < ExportDirectory->NumberOfNames; Idx++)
         {
-          DPRINT("  Name:%s  NameList[%d]:%s\n", Name, Idx, NameList[Idx]);
+          DPRINT("  Name:%s  NameList[%d]:%s\n", 
+                 Name, 
+                 Idx, 
+                 (DWORD) ModuleObject->Base + NameList[Idx]);
           if (!strcmp(Name, (PCHAR) ((DWORD)ModuleObject->Base + NameList[Idx])))
             {
               ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
