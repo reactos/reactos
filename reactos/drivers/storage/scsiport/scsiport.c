@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.34 2003/09/05 11:48:03 ekohl Exp $
+/* $Id: scsiport.c,v 1.35 2003/09/05 15:05:52 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -402,9 +402,49 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 			   IN PVOID VirtualAddress,
 			   OUT ULONG *Length)
 {
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  SCSI_PHYSICAL_ADDRESS PhysicalAddress;
+  ULONG BufferLength = 0;
+  ULONG Offset;
+
   DPRINT1("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
 	  HwDeviceExtension, Srb, VirtualAddress, Length);
-  UNIMPLEMENTED;
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      SCSI_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  *Length = 0;
+
+  if (Srb == NULL)
+    {
+      if ((ULONG_PTR)DeviceExtension->VirtualAddress > (ULONG_PTR)VirtualAddress)
+	{
+	  PhysicalAddress.QuadPart = 0ULL;
+	  return PhysicalAddress;
+	}
+
+      Offset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)DeviceExtension->VirtualAddress;
+      if (Offset >= DeviceExtension->CommonBufferLength)
+	{
+	  PhysicalAddress.QuadPart = 0ULL;
+	  return PhysicalAddress;
+	}
+
+      PhysicalAddress.QuadPart =
+	DeviceExtension->PhysicalAddress.QuadPart + (ULONGLONG)Offset;
+      BufferLength = DeviceExtension->CommonBufferLength - Offset;
+    }
+  else
+    {
+      /* FIXME */
+      DPRINT1("Srb != NULL is not implemented yet!\n");
+      UNIMPLEMENTED;
+    }
+
+  *Length = BufferLength;
+
+  return PhysicalAddress;
 }
 
 
@@ -496,14 +536,30 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID STDCALL
 ScsiPortGetVirtualAddress(IN PVOID HwDeviceExtension,
 			  IN SCSI_PHYSICAL_ADDRESS PhysicalAddress)
 {
-  DPRINT("ScsiPortGetVirtualAddress()\n");
-  UNIMPLEMENTED;
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  ULONG Offset;
+
+  DPRINT("ScsiPortGetVirtualAddress(%p %I64x)\n",
+	 HwDeviceExtension, PhysicalAddress.QuadPart);
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      SCSI_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  if (DeviceExtension->PhysicalAddress.QuadPart > PhysicalAddress.QuadPart)
+    return NULL;
+
+  Offset = (ULONG)(PhysicalAddress.QuadPart - DeviceExtension->PhysicalAddress.QuadPart);
+  if (Offset >= DeviceExtension->CommonBufferLength)
+    return NULL;
+
+  return (PVOID)((ULONG_PTR)DeviceExtension->VirtualAddress + Offset);
 }
 
 
