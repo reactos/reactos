@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.67 2004/03/31 03:30:36 jimtabor Exp $
+/* $Id: create.c,v 1.68 2004/06/23 20:23:59 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -338,11 +338,11 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 {
   PVFATFCB ParentFcb;
   PVFATFCB Fcb;
-  DISK_GEOMETRY DiskGeometry;
   NTSTATUS Status;
   UNICODE_STRING NameU;
   WCHAR Name[MAX_PATH];
   ULONG Size;
+  ULONG MediaChangeCount;
 
 //  PDEVICE_OBJECT DeviceObject = DeviceExt->StorageDevice->Vpb->DeviceObject;
   
@@ -370,50 +370,41 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
   DPRINT ("PathName to open: '%wZ'\n", FileNameU);
 
-   Size = sizeof(DISK_GEOMETRY);
-   Status = VfatBlockDeviceIoControl(DeviceExt->StorageDevice,
-				     IOCTL_DISK_GET_DRIVE_GEOMETRY,
-				     NULL,
-				     0,
-				     &DiskGeometry,
-				     &Size,
-				     FALSE);
-
-  if (DiskGeometry.MediaType != FixedMedia )
-     {
-
-  	Status = VfatBlockDeviceIoControl (DeviceExt->StorageDevice,
-					IOCTL_DISK_CHECK_VERIFY,
-					NULL,
-					0,
-					NULL,
-					0,
-					TRUE);
-
-      if (Status == STATUS_VERIFY_REQUIRED)
-    	    {
-      PDEVICE_OBJECT DeviceToVerify;
-
-      DPRINT ("Media change detected!\n");
-      DPRINT ("Device %p\n", DeviceObject);
-
-      DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
-      IoSetDeviceToVerify (PsGetCurrentThread (),
-			   NULL);
-
-      Status = IoVerifyVolume (DeviceToVerify,
-			       FALSE);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT ("Status %lx\n", Status);
-	  return Status;
-	}
-    }
-  else if (!NT_SUCCESS(Status))
+  if (!DeviceExt->FatInfo.FixedMedia)
     {
-      DPRINT ("Status %lx\n", Status);
-      return Status;
-    }
+      Size = sizeof(ULONG);
+      Status = VfatBlockDeviceIoControl (DeviceExt->StorageDevice,
+					 IOCTL_DISK_CHECK_VERIFY,
+					 NULL,
+					 0,
+					 &MediaChangeCount,
+					 &Size,
+					 FALSE);
+
+      if (Status == STATUS_VERIFY_REQUIRED || MediaChangeCount != DeviceExt->MediaChangeCount)
+        {
+          PDEVICE_OBJECT DeviceToVerify;
+
+          DPRINT ("Media change detected!\n");
+          DPRINT ("Device %p\n", DeviceExt->StorageDevice);
+
+          DeviceToVerify = IoGetDeviceToVerify (PsGetCurrentThread ());
+          IoSetDeviceToVerify (PsGetCurrentThread (),
+			       NULL);
+
+          Status = IoVerifyVolume (DeviceToVerify,
+			          FALSE);
+          if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT ("Status %lx\n", Status);
+	      return Status;
+	    }
+        }
+      else if (!NT_SUCCESS(Status))
+        {
+          DPRINT ("Status %lx\n", Status);
+          return Status;
+        }
     }
 
 

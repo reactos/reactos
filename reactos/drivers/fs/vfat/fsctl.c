@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.31 2004/06/20 09:52:58 navaraf Exp $
+/* $Id: fsctl.c,v 1.32 2004/06/23 20:23:59 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,7 @@
 #include <rosrtl/string.h>
 #include <wchar.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "vfat.h"
@@ -74,6 +74,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
       return Status;
    }
+   FatInfo.FixedMedia = DiskGeometry.MediaType == FixedMedia ? TRUE : FALSE;
    if (DiskGeometry.MediaType == FixedMedia || DiskGeometry.MediaType == RemovableMedia)
    {
       // We have found a hard disk
@@ -274,6 +275,7 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
 {
    NTSTATUS Status;
    BOOLEAN RecognizedFS;
+   ULONG Size;
 
    DPRINT("Mounting VFAT device...\n");
 
@@ -283,6 +285,22 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
       return(Status);
    }
    DPRINT("MountVfatdev %d, PAGE_SIZE = %d\n", DeviceExt->FatInfo.BytesPerCluster, PAGE_SIZE);
+
+   if (!DeviceExt->FatInfo.FixedMedia)
+     {
+       Size = sizeof(ULONG);
+       Status = VfatBlockDeviceIoControl (DeviceToMount,
+					  IOCTL_DISK_CHECK_VERIFY,
+					  NULL,
+					  0,
+					  &DeviceExt->MediaChangeCount,
+					  &Size,
+					  FALSE);
+       if (!NT_SUCCESS(Status))
+         {
+	   return Status;
+	 }
+     }
 
    return(STATUS_SUCCESS);
 }
@@ -478,29 +496,50 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
 {
   PDEVICE_OBJECT DeviceToVerify;
   NTSTATUS Status = STATUS_SUCCESS;
-
+  FATINFO FatInfo;
+  BOOLEAN RecognizedFS;
+  ULONG Size;
+  PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
 
   DPRINT("VfatVerify(IrpContext %x)\n", IrpContext);
 
   DeviceToVerify = IrpContext->Stack->Parameters.VerifyVolume.DeviceObject;
+  Size = sizeof(ULONG);
   Status = VfatBlockDeviceIoControl(DeviceToVerify,
 				    IOCTL_DISK_CHECK_VERIFY,
 				    NULL,
 				    0,
-				    NULL,
-				    NULL,
+				    &DeviceExt->MediaChangeCount,
+				    &Size,
 				    FALSE);
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status) && Status != STATUS_VERIFY_REQUIRED)
     {
       DPRINT("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);
-
-      /* FIXME: Compare volume label */
-
-      DPRINT("  returning STATUS_WRONG_VOLUME\n");
-
       Status = STATUS_WRONG_VOLUME;
     }
-  DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
+  else
+    {
+      Status = VfatHasFileSystem(DeviceToVerify, &RecognizedFS, &FatInfo);
+      if (!NT_SUCCESS(Status) || RecognizedFS == FALSE)
+        {
+          Status = STATUS_WRONG_VOLUME;
+        }
+      else if (sizeof(FATINFO) == RtlCompareMemory(&FatInfo, &DeviceExt->FatInfo, sizeof(FATINFO)))
+        {
+          /*
+           * FIXME:
+           *   Preformated floppy disks have very often a serial number of 0000:0000. 
+           *   We should calculate a crc sum over the sectors from the root directory as secondary volume number. 
+	   *   Each write to the root directory must update this crc sum.
+           */
+  
+          DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
+        }
+      else
+      	{
+      	  Status = STATUS_WRONG_VOLUME;
+        }
+     }
     
   return Status;
 }
