@@ -1,5 +1,9 @@
 2003-05-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* Makefile: Update bootcd target.
+
+2003-05-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* subsys/system/usetup/progress.c (ProgressNextStep): Check if NewPos
 	is odd.
 

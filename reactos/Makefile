@@ -148,17 +148,16 @@ dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
 bootcd_directory_layout:
 	$(RMKDIR) $(BOOTCD_DIR)
 	$(RMKDIR) $(BOOTCD_DIR)/bootdisk
-	$(RMKDIR) $(BOOTCD_DIR)/install
+	$(RMKDIR) $(BOOTCD_DIR)/loader
 	$(RMKDIR) $(BOOTCD_DIR)/reactos
 	$(RMKDIR) $(BOOTCD_DIR)/reactos/system32
-	$(RMKDIR) $(BOOTCD_DIR)/loader
 
 bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \
 	$(LIB_STATIC:%=%_bootcd) $(LIB_FSLIB:%=%_bootcd) $(DLLS:%=%_bootcd) $(KERNEL_DRIVERS:%=%_bootcd) \
 	$(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
 
 bootcd: all bootcd_directory_layout bootcd_bootstrap_files
-	$(MAKE) install INSTALL_DIR=$(BOOTCD_DIR)/install INSTALL_SYMBOLS=no BOOTCD_INSTALL=yes
+	$(MAKE) install INSTALL_DIR=$(BOOTCD_DIR)/reactos INSTALL_SYMBOLS=no BOOTCD_INSTALL=yes
 
 .PHONY: all depends implib clean clean_before install dist bootcd_directory_layout \
 bootcd_bootstrap_files bootcd
@@ -772,8 +771,8 @@ install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)
 
 install_before:
-#	$(CP) bootdata/autorun.inf $(INSTALL_DIR)/../autorun.inf
-	$(CP) bootdata/readme.txt $(INSTALL_DIR)/../readme.txt
+#	$(RLINE) bootdata/autorun.inf $(INSTALL_DIR)/../autorun.inf
+	$(RLINE) bootdata/readme.txt $(INSTALL_DIR)/../readme.txt
 	$(RLINE) bootdata/hivecls.inf $(INSTALL_DIR)/hivecls.inf
 	$(RLINE) bootdata/hivedef.inf $(INSTALL_DIR)/hivedef.inf
 	$(RLINE) bootdata/hivesft.inf $(INSTALL_DIR)/hivesft.inf
@@ -782,7 +781,7 @@ install_before:
 	$(CP) media/fonts $(INSTALL_DIR)
 	$(CP) media/nls $(INSTALL_DIR)
 
-else # BOOTCD_INSTALL
+else # !BOOTCD_INSTALL
 
 install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)
