@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.55 2003/12/14 18:02:34 hbirr Exp $
+/* $Id: ps.h,v 1.56 2003/12/30 00:12:47 hyperion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -542,6 +542,14 @@ PsTerminateWin32Thread (PETHREAD Thread);
 
 VOID
 PsInitialiseW32Call(VOID);
+
+VOID
+STDCALL
+PspRunCreateThreadNotifyRoutines(PETHREAD, BOOLEAN);
+
+VOID
+STDCALL
+PspRunCreateProcessNotifyRoutines(PEPROCESS, BOOLEAN);
 
 #endif /* ASSEMBLER */
 

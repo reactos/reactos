@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.45 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: thread.c,v 1.46 2003/12/30 00:12:47 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,6 +8,7 @@
  *			Tls functions are modified from WINE
  * UPDATE HISTORY:
  *                  Created 01/11/98
+ *
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.67 2003/11/02 03:09:06 ekohl Exp $
+/* $Id: kill.c,v 1.68 2003/12/30 00:12:47 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -95,52 +95,18 @@ PsReapThreads(VOID)
 	
 	if (current->Tcb.State == THREAD_STATE_TERMINATED_1)
 	  {
-	     PEPROCESS Process = current->ThreadsProcess;
-	     NTSTATUS Status = current->ExitStatus;
-	     BOOLEAN Last;
-	     
 	     PiNrThreadsAwaitingReaping--;
 	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
-	     RemoveEntryList(&current->Tcb.ProcessThreadListEntry);
-	     Last = IsListEmpty(&Process->ThreadListHead);
-	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-
-	     if (Last)
-	     {
-		  PiTerminateProcess(Process, Status);
-	     }
-	     else
-	     {
-		if (current->Tcb.Teb)
-		{
-		  /* If this is not the last thread for the process then free the memory
-		     from user stack and teb. */
-		  NTSTATUS Status;
-		  ULONG Length;
-		  ULONG Offset;
-		  PVOID DeallocationStack;
-		  HANDLE ProcessHandle;
-		  Status = ObCreateHandle(PsGetCurrentProcess(), Process, PROCESS_ALL_ACCESS, FALSE, &ProcessHandle);
-		  if (!NT_SUCCESS(Status))
-		  {
-		     DPRINT1("ObCreateHandle failed, status = %x\n", Status);
-		     KEBUGCHECK(0);
-		  }
-		  Offset = FIELD_OFFSET(TEB, DeallocationStack);
-		  Length = 0;
-		  NtReadVirtualMemory(ProcessHandle, (PVOID)current->Tcb.Teb + Offset,
-		                      (PVOID)&DeallocationStack, sizeof(PVOID), &Length);
-		  if (DeallocationStack && Length == sizeof(PVOID))
-		  {
-		     NtFreeVirtualMemory(ProcessHandle, &DeallocationStack, &Length, MEM_RELEASE);
-		  }
-		  Length = PAGE_SIZE;
-		  NtFreeVirtualMemory(ProcessHandle, (PVOID*)&current->Tcb.Teb, &Length, MEM_RELEASE);
-		  NtClose(ProcessHandle);
-		}
-	     }
+           
+             /*
+              An unbelievably complex chain of events would cause a system crash
+              if PiThreadListLock was still held when the thread object is about
+              to be destroyed
+             */
+             KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	     ObDereferenceObject(current);
-	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+             KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+
 	     current_entry = PiThreadListHead.Flink;
 	  }
      }
@@ -155,23 +121,35 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 {
    KIRQL oldIrql;
    PETHREAD CurrentThread;
-   PKTHREAD Thread;
    PLIST_ENTRY current_entry;
    PKMUTANT Mutant;
+   BOOLEAN Last;
+   PEPROCESS CurrentProcess;
+
+   KeLowerIrql(PASSIVE_LEVEL);
+
+   CurrentThread = PsGetCurrentThread();
+   CurrentProcess = CurrentThread->ThreadsProcess;
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 
-   CurrentThread = PsGetCurrentThread();
    DPRINT("terminating %x\n",CurrentThread);
 
    CurrentThread->ExitStatus = ExitStatus;
-   Thread = KeGetCurrentThread();
-   KeCancelTimer(&Thread->Timer);
+   KeCancelTimer(&CurrentThread->Tcb.Timer);
+ 
+   /* Remove the thread from the thread list of its process */
+   RemoveEntryList(&CurrentThread->Tcb.ProcessThreadListEntry);
+   Last = IsListEmpty(&CurrentProcess->ThreadListHead);
+
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
+   PspRunCreateThreadNotifyRoutines(CurrentThread, FALSE);
+   PsTerminateWin32Thread(CurrentThread);
+
    /* abandon all owned mutants */
-   current_entry = Thread->MutantListHead.Flink;
-   while (current_entry != &Thread->MutantListHead)
+   current_entry = CurrentThread->Tcb.MutantListHead.Flink;
+   while (current_entry != &CurrentThread->Tcb.MutantListHead)
      {
 	Mutant = CONTAINING_RECORD(current_entry, KMUTANT,
 				   MutantListEntry);
@@ -179,13 +157,21 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 			MUTANT_INCREMENT,
 			TRUE,
 			FALSE);
-	current_entry = Thread->MutantListHead.Flink;
+	current_entry = CurrentThread->Tcb.MutantListHead.Flink;
      }
 
    oldIrql = KeAcquireDispatcherDatabaseLock();
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock (oldIrql);
+
+   /* The last thread shall close the door on exit */
+   if(Last)
+   {
+    PspRunCreateProcessNotifyRoutines(CurrentProcess, FALSE);
+    PsTerminateWin32Process(CurrentProcess);
+    PiTerminateProcess(CurrentProcess, ExitStatus);
+   }
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 

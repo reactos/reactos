@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.67 2003/09/25 20:08:36 ekohl Exp $
+/* $Id: create.c,v 1.68 2003/12/30 00:12:47 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -288,37 +288,18 @@ PiDeleteThread(PVOID ObjectBody)
 {
   KIRQL oldIrql;
   PETHREAD Thread;
-  ULONG i;
-  PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
-  ULONG NotifyRoutineCount;
 
   Thread = (PETHREAD)ObjectBody;
 
   DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
 
-  /* Terminate Win32 thread */
-  PsTerminateWin32Thread (Thread);
-
   ObDereferenceObject(Thread->ThreadsProcess);
   Thread->ThreadsProcess = NULL;
 
   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-  for (i = 0; i < PiThreadNotifyRoutineCount; i++)
-  {
-     NotifyRoutine[i] = PiThreadNotifyRoutine[i];
-  }
-  NotifyRoutineCount = PiThreadNotifyRoutineCount;
   PiNrThreads--;
   RemoveEntryList(&Thread->Tcb.ThreadListEntry);
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-
-  for (i = 0; i < NotifyRoutineCount; i++)
-  {
-     //must be called below DISPATCH_LVL
-     NotifyRoutine[i](Thread->Cid.UniqueProcess,
-                      Thread->Cid.UniqueThread,
-                      FALSE);
-  }
 
   KeReleaseThread(Thread);
   DPRINT("PiDeleteThread() finished\n");
@@ -336,9 +317,6 @@ PsInitializeThread(HANDLE ProcessHandle,
    NTSTATUS Status;
    KIRQL oldIrql;
    PEPROCESS Process;
-   ULONG i;
-   ULONG NotifyRoutineCount;
-   PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
 
    /*
     * Reference process
@@ -421,23 +399,10 @@ PsInitializeThread(HANDLE ProcessHandle,
    
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    InsertTailList(&PiThreadListHead, &Thread->Tcb.ThreadListEntry);
-   for (i = 0; i < PiThreadNotifyRoutineCount; i++)
-   {
-      NotifyRoutine[i] = PiThreadNotifyRoutine[i];
-   }
-   NotifyRoutineCount = PiThreadNotifyRoutineCount;
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
    Thread->Tcb.BasePriority = Thread->ThreadsProcess->Pcb.BasePriority;
    Thread->Tcb.Priority = Thread->Tcb.BasePriority;
-
-  for (i = 0; i < NotifyRoutineCount; i++)
-  {
-      //must be called below DISPATCH_LVL
-      NotifyRoutine[i](Thread->Cid.UniqueProcess,
-			       Thread->Cid.UniqueThread,
-			       TRUE);
-  }
 
   return(STATUS_SUCCESS);
 }
@@ -735,6 +700,20 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
+VOID
+STDCALL
+PspRunCreateThreadNotifyRoutines
+(
+ PETHREAD CurrentThread,
+ BOOLEAN Create
+)
+{
+ ULONG i;
+ CLIENT_ID Cid = CurrentThread->Cid;
+
+ for(i = 0; i < PiThreadNotifyRoutineCount; ++ i)
+  PiThreadNotifyRoutine[i](Cid.UniqueProcess, Cid.UniqueThread, Create);
+}
 
 /*
  * @implemented
@@ -742,18 +721,13 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 NTSTATUS STDCALL
 PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {
-  KIRQL oldIrql;
-
-  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-  if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
+ if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
   {
-    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
     return(STATUS_INSUFFICIENT_RESOURCES);
   }
 
   PiThreadNotifyRoutine[PiThreadNotifyRoutineCount] = NotifyRoutine;
   PiThreadNotifyRoutineCount++;
-  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
   return(STATUS_SUCCESS);
 }
