@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.15 2003/10/04 17:11:58 ekohl Exp $
+/* $Id: ntobj.c,v 1.16 2003/10/14 14:49:05 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -103,8 +103,8 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	       IN ULONG Length,
 	       OUT PULONG ReturnLength OPTIONAL)
 {
-  POBJECT_TYPE_INFORMATION typeinfo;
   POBJECT_HEADER ObjectHeader;
+  ULONG InfoLength;
   PVOID Object;
   NTSTATUS Status;
 
@@ -124,21 +124,56 @@ NtQueryObject (IN HANDLE ObjectHandle,
   switch (ObjectInformationClass)
     {
       case ObjectBasicInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
+	InfoLength = sizeof(OBJECT_BASIC_INFORMATION);
+	if (Length != sizeof(OBJECT_BASIC_INFORMATION))
+	  {
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
+	  }
+	else
+	  {
+	    POBJECT_BASIC_INFORMATION BasicInfo;
+
+	    BasicInfo = (POBJECT_BASIC_INFORMATION)ObjectInformation;
+	    BasicInfo->Attributes = 0; /* FIXME*/
+	    BasicInfo->GrantedAccess = 0; /* FIXME*/
+	    BasicInfo->HandleCount = ObjectHeader->HandleCount;
+	    BasicInfo->PointerCount = ObjectHeader->RefCount;
+	    BasicInfo->PagedPoolUsage = 0; /* FIXME*/
+	    BasicInfo->NonPagedPoolUsage = 0; /* FIXME*/
+	    BasicInfo->NameInformationLength = 0; /* FIXME*/
+	    BasicInfo->TypeInformationLength = 0; /* FIXME*/
+	    BasicInfo->SecurityDescriptorLength = 0; /* FIXME*/
+	    if (ObjectHeader->ObjectType == ObSymbolicLinkType)
+	      {
+		BasicInfo->CreateTime.QuadPart =
+		  ((PSYMLINK_OBJECT)Object)->CreateTime.QuadPart;
+	      }
+	    else
+	      {
+		BasicInfo->CreateTime.QuadPart = 0ULL;
+	      }
+	    Status = STATUS_SUCCESS;
+	  }
 	break;
 
       case ObjectNameInformation:
 	Status = ObQueryNameString (Object,
 				    (POBJECT_NAME_INFORMATION)ObjectInformation,
 				    Length,
-				    ReturnLength);
+				    &InfoLength);
 	break;
 
       case ObjectTypeInformation:
-	typeinfo = (POBJECT_TYPE_INFORMATION)ObjectInformation;
-	if (Length!=sizeof(OBJECT_TYPE_INFORMATION))
-	  return STATUS_INVALID_BUFFER_SIZE;
+//	InfoLength =
+	if (Length != sizeof(OBJECT_TYPE_INFORMATION))
+	  {
+	    Status = STATUS_INVALID_BUFFER_SIZE;
+	  }
+	else
+	  {
+	    POBJECT_TYPE_INFORMATION typeinfo;
 
+	typeinfo = (POBJECT_TYPE_INFORMATION)ObjectInformation;
 	// FIXME: Is this supposed to only be the header's Name field?
 	// Can somebody check/verify this?
 	RtlCopyUnicodeString(&typeinfo->Name,&ObjectHeader->Name);
@@ -152,6 +187,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	//This should be info from the object header, not the object type, right?
 	typeinfo->TotalHandles = ObjectHeader-> HandleCount;
 	typeinfo->ReferenceCount = ObjectHeader -> RefCount;
+	  }
 	break;
 
       case ObjectAllTypesInformation:
@@ -168,6 +204,9 @@ NtQueryObject (IN HANDLE ObjectHandle,
     }
 
   ObDereferenceObject(Object);
+
+  if (ReturnLength != NULL)
+    *ReturnLength = InfoLength;
 
   return Status;
 }
@@ -209,8 +248,7 @@ ObMakeTemporaryObject (IN PVOID ObjectBody)
  *
  * REVISIONS
  */
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 NtMakeTemporaryObject (IN HANDLE Handle)
 {
   POBJECT_HEADER ObjectHeader;
