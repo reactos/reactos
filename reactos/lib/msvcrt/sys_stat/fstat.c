@@ -26,6 +26,14 @@ int _fstat(int fd, struct stat *statbuf)
       return -1;
     }
 
+  if (fd >= 0 && fd <= 4)
+  {
+    memset(statbuf, 0, sizeof(struct stat));
+    statbuf->st_dev = fd;
+    statbuf->st_mode = S_IFCHR;
+    return 0;
+  }
+
   if (!GetFileInformationByHandle(_get_osfhandle(fd),&FileInformation))
     {
       __set_errno(EBADF);
