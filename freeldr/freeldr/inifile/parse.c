@@ -123,7 +123,7 @@ BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
 			// First check to make sure we're inside a [section]
 			if (CurrentSection == NULL)
 			{
-				printf("Error: freeldr.ini:%d: Setting \'%s\' found outside of a [section].\n", CurrentLineNumber, IniFileLine);
+				printf("Error: freeldr.ini:%ld: Setting '%s' found outside of a [section].\n", CurrentLineNumber, IniFileLine);
 				CurrentLineNumber++;
 				continue;
 			}

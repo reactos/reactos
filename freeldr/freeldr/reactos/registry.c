@@ -28,10 +28,8 @@
 #include <freeldr.h>
 #include <mm.h>
 #include <rtl.h>
+#include <debug.h>
 #include "registry.h"
-
-#define NDEBUG
-
 
 static HKEY RootKey;
 
@@ -61,7 +59,7 @@ RegCreateKey(HKEY ParentKey,
 	     PHKEY Key)
 {
   PLIST_ENTRY Ptr;
-  HKEY SearchKey;
+  HKEY SearchKey = INVALID_HANDLE_VALUE;
   HKEY CurrentKey;
   HKEY NewKey;
   PCHAR p;
@@ -69,9 +67,7 @@ RegCreateKey(HKEY ParentKey,
   int subkeyLength;
   int stringLength;
 
-#ifndef NDEBUG
-  printf("RegCreateKey(%s) called\n", KeyName);
-#endif
+	DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
 
   if (*KeyName == '\\')
     {
@@ -90,9 +86,8 @@ RegCreateKey(HKEY ParentKey,
 
   while (*KeyName != 0)
     {
-#ifndef NDEBUG
-      printf("RegCreateKey(): KeyName '%s'\n", KeyName);
-#endif
+	    DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
+
       if (*KeyName == '\\')
 	KeyName++;
       p = strchr(KeyName, '\\');
@@ -112,16 +107,13 @@ RegCreateKey(HKEY ParentKey,
       Ptr = CurrentKey->SubKeyList.Flink;
       while (Ptr != &CurrentKey->SubKeyList)
 	{
-#ifndef NDEBUG
-	  printf("RegCreateKey(): Ptr 0x%x\n", Ptr);
-#endif
+    DbgPrint((DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr));
+
 	  SearchKey = CONTAINING_RECORD(Ptr,
 					KEY,
 					KeyList);
-#ifndef NDEBUG
-	  printf("RegCreateKey(): SearchKey 0x%x\n", SearchKey);
-	  printf("RegCreateKey(): searching '%s'\n", SearchKey->Name);
-#endif
+    DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
+    DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
 	  if (strncmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
@@ -150,10 +142,8 @@ RegCreateKey(HKEY ParentKey,
 	  memcpy(NewKey->Name, name, subkeyLength);
 	  NewKey->Name[subkeyLength] = 0;
 
-#ifndef NDEBUG
-	  printf("RegCreateKey(): new key 0x%x\n", NewKey);
-	  printf("RegCreateKey(): new key '%s' length %d\n", NewKey->Name, NewKey->NameSize);
-#endif
+    DbgPrint((DPRINT_REGISTRY, "NewKey 0x%x\n", NewKey));
+    DbgPrint((DPRINT_REGISTRY, "NewKey '%s'  Length %d\n", NewKey->Name, NewKey->NameSize));
 
 	  CurrentKey = NewKey;
 	}
@@ -215,9 +205,7 @@ RegEnumKey(HKEY Key,
 				KEY,
 				KeyList);
 
-#ifndef NDEBUG
-  printf("RegEnumKey(): name '%s' length %d\n", SearchKey->Name, SearchKey->NameSize);
-#endif
+  DbgPrint((DPRINT_REGISTRY, "Name '%s'  Length %d\n", SearchKey->Name, SearchKey->NameSize));
 
   Size = min(SearchKey->NameSize, *NameSize);
   *NameSize = Size;
@@ -233,16 +221,14 @@ RegOpenKey(HKEY ParentKey,
 	   PHKEY Key)
 {
   PLIST_ENTRY Ptr;
-  HKEY SearchKey;
+  HKEY SearchKey = INVALID_HANDLE_VALUE;
   HKEY CurrentKey;
   PCHAR p;
   PCHAR name;
   int subkeyLength;
   int stringLength;
 
-#ifndef NDEBUG
-  printf("RegOpenKey(%s) called\n", KeyName);
-#endif
+  DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
 
   *Key = NULL;
 
@@ -263,9 +249,8 @@ RegOpenKey(HKEY ParentKey,
 
   while (*KeyName != 0)
     {
-#ifndef NDEBUG
-      printf("RegOpenKey(): KeyName '%s'\n", KeyName);
-#endif
+      DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
+
       if (*KeyName == '\\')
 	KeyName++;
       p = strchr(KeyName, '\\');
@@ -285,16 +270,15 @@ RegOpenKey(HKEY ParentKey,
       Ptr = CurrentKey->SubKeyList.Flink;
       while (Ptr != &CurrentKey->SubKeyList)
 	{
-#ifndef NDEBUG
-	  printf("RegCreateKey(): Ptr 0x%x\n", Ptr);
-#endif
+    DbgPrint((DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr));
+
 	  SearchKey = CONTAINING_RECORD(Ptr,
 					KEY,
 					KeyList);
-#ifndef NDEBUG
-	  printf("RegOpenKey(): SearchKey 0x%x\n", SearchKey);
-	  printf("RegOpenKey(): searching '%s'\n", SearchKey->Name);
-#endif
+
+    DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
+    DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
+
 	  if (strncmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
@@ -328,11 +312,11 @@ RegSetValue(HKEY Key,
 	    ULONG DataSize)
 {
   PLIST_ENTRY Ptr;
-  PVALUE Value;
+  PVALUE Value = NULL;
 
-#ifndef NDEBUG
-  printf("RegSetValue(%x, '%s', %d, %x, %d)\n", (int)Key, ValueName, (int)Type, (int)Data, (int)DataSize);
-#endif
+  DbgPrint((DPRINT_REGISTRY, "Key 0x%x, ValueName '%s', Type %d, Data 0x%x, DataSize %d\n",
+    (int)Key, ValueName, (int)Type, (int)Data, (int)DataSize));
+
   if ((ValueName == NULL) || (*ValueName == 0))
     {
       /* set default value */
@@ -352,9 +336,9 @@ RegSetValue(HKEY Key,
 	  Value = CONTAINING_RECORD(Ptr,
 				    VALUE,
 				    ValueList);
-#ifndef NDEBUG
-	  printf("Value->Name: '%s'\n", Value->Name);
-#endif
+
+    DbgPrint((DPRINT_REGISTRY, "Value->Name '%s'\n", Value->Name));
+
 	  if (stricmp(Value->Name, ValueName) == 0)
 	    break;
 
@@ -364,9 +348,8 @@ RegSetValue(HKEY Key,
       if (Ptr == &Key->ValueList)
 	{
 	  /* add new value */
-#ifndef NDEBUG
-	  printf("No value found - adding new value\n");
-#endif
+    DbgPrint((DPRINT_REGISTRY, "No value found - adding new value\n"));
+
 	  Value = (PVALUE)MmAllocateMemory(sizeof(VALUE));
 	  if (Value == NULL)
 	    return(ERROR_OUTOFMEMORY);
@@ -411,7 +394,7 @@ RegQueryValue(HKEY Key,
 {
   ULONG Size;
   PLIST_ENTRY Ptr;
-  PVALUE Value;
+  PVALUE Value = NULL;
 
   if ((ValueName == NULL) || (*ValueName == 0))
     {
@@ -437,9 +420,9 @@ RegQueryValue(HKEY Key,
 	  Value = CONTAINING_RECORD(Ptr,
 				    VALUE,
 				    ValueList);
-#ifndef NDEBUG
-	  printf("Name: %s\n", Value->Name);
-#endif
+
+    DbgPrint((DPRINT_REGISTRY, "Value name '%s'\n", Value->Name));
+
 	  if (stricmp(Value->Name, ValueName) == 0)
 	    break;
 
@@ -477,7 +460,7 @@ RegDeleteValue(HKEY Key,
 	       PCHAR ValueName)
 {
   PLIST_ENTRY Ptr;
-  PVALUE Value;
+  PVALUE Value = NULL;
 
   if ((ValueName == NULL) || (*ValueName == 0))
     {

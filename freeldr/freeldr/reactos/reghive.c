@@ -22,16 +22,12 @@
 #include <freeldr.h>
 #include <rtl.h>
 #include <mm.h>
+#include <debug.h>
 
 #include "registry.h"
 
-#define NDEBUG
-
 
 #define  REGISTRY_FILE_MAGIC    "REGEDIT4"
-
-#define INVALID_HANDLE_VALUE    NULL
-
 
 static PCHAR 
 checkAndSkipMagic (PCHAR  regChunk)
@@ -40,20 +36,16 @@ checkAndSkipMagic (PCHAR  regChunk)
                REGISTRY_FILE_MAGIC, 
                strlen (REGISTRY_FILE_MAGIC)) != 0)
   {
-#ifndef NDEBUG
-    printf("incorrect magic number in registry chunk. expected: %s got:%.*s\n",
-           REGISTRY_FILE_MAGIC,
-           strlen (REGISTRY_FILE_MAGIC),
-           regChunk);
-#endif
+    DbgPrint((DPRINT_REGISTRY, "Incorrect magic number in registry chunk. Expected: '%s' Got: '%.*s'\n",
+      REGISTRY_FILE_MAGIC, strlen(REGISTRY_FILE_MAGIC), regChunk));
+
     return  0;
   }
   regChunk += strlen (REGISTRY_FILE_MAGIC);
-#ifndef NDEBUG
-  printf("Found registry chunk magic value\n");
-#endif
 
-  return  regChunk;
+  DbgPrint((DPRINT_REGISTRY, "Found registry chunk magic value\n"));
+
+  return regChunk;
 }
 
 static PCHAR
@@ -128,17 +120,13 @@ createNewKey (PCHAR newKeyName)
 {
   HKEY handleToReturn = NULL;
 
-#ifndef NDEBUG
-  printf("Adding new key '%s'\n", newKeyName);
-#endif
+  DbgPrint((DPRINT_REGISTRY, "Adding new key '%s'\n", newKeyName));
 
   RegCreateKey(NULL,
 	       newKeyName,
 	       &handleToReturn);
 
-#ifndef NDEBUG
-  printf("  returned handle: 0x%x\n", handleToReturn);
-#endif
+  DbgPrint((DPRINT_REGISTRY, "Returned handle: 0x%x\n", handleToReturn));
 
   return handleToReturn;
 }
@@ -360,12 +348,9 @@ setKeyValue (HKEY currentKey,
 {
   LONG status;
 
-#ifndef NDEBUG
-  printf("Adding value (%s) to current key, with data type %d size %d\n",
-         newValueName,
-         (int)keyValueType,
-         (int)dataSize);
-#endif
+  DbgPrint((DPRINT_REGISTRY, "Adding value (%s) to current key, with data type %d and size %d\n",
+    newValueName, (int)keyValueType, (int)dataSize));
+
   status = RegSetValue(currentKey,
 		       newValueName,
 		       keyValueType,
@@ -373,9 +358,7 @@ setKeyValue (HKEY currentKey,
 		       dataSize);
   if (status != ERROR_SUCCESS)
   {
-#ifndef NDEBUG
-    printf("could not set key value, rc:%d\n", status);
-#endif
+    DbgPrint((DPRINT_REGISTRY, "Could not set key value. status: %d\n", status));
     return  FALSE;
   }
 
@@ -397,9 +380,7 @@ RegImportHive(PCHAR ChunkBase,
   PVOID  data = 0;
   PCHAR regChunk;
 
-#ifndef NDEBUG
-  printf("ChunkBase 0x%x  ChunkSize %x\n", ChunkBase, ChunkSize);
-#endif
+  DbgPrint((DPRINT_REGISTRY, "ChunkBase 0x%x  ChunkSize %d\n", ChunkBase, ChunkSize));
 
   regChunk = checkAndSkipMagic (ChunkBase);
   if (regChunk == 0)
@@ -413,14 +394,12 @@ RegImportHive(PCHAR ChunkBase,
 
     if (*regChunk == '[')
     {
-#ifndef NDEBUG
-    printf("Line: %s\n", regChunk);
-#endif
+      DbgPrint((DPRINT_REGISTRY, "Line: %s\n", regChunk));
+
       if (currentKey != NULL)
       {
-#ifndef NDEBUG
-        printf("Closing current key: 0x%lx\n", currentKey);
-#endif
+        DbgPrint((DPRINT_REGISTRY, "Closing current key: 0x%lx\n", currentKey));
+
         currentKey = NULL;
       }
 
@@ -507,9 +486,7 @@ RegImportHive(PCHAR ChunkBase,
   return;
 }
 
-
-
-
+#if 0
 static PCHAR
 bprintf(char *buffer, char *format, ... )
 {
@@ -559,7 +536,7 @@ bprintf(char *buffer, char *format, ... )
     }
   return(p);
 }
-
+#endif
 
 BOOL
 RegExportHive(PCHAR ChunkBase, PULONG ChunkSize)

@@ -111,7 +111,7 @@ BOOL UiInitialize(VOID)
 
 			if (!VideoSetMode(VideoMode))
 			{
-				printf("Error: unable to set video display mode 0x%x\n", VideoMode);
+				printf("Error: unable to set video display mode 0x%lx\n", VideoMode);
 				printf("Press any key to continue.\n");
 				getch();
 			}
@@ -202,6 +202,7 @@ VOID UiDrawBackdrop(VOID)
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiDrawBackdrop();
 	}
 }
@@ -214,6 +215,7 @@ VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiFillArea(Left, Top, Right, Bottom, FillChar, Attr);
 	}
 }
@@ -226,6 +228,7 @@ VOID UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiDrawShadow(Left, Top, Right, Bottom);
 	}
 }
@@ -238,6 +241,7 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiDrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
 	}
 }
@@ -250,6 +254,7 @@ VOID UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiDrawText(X, Y, Text, Attr);
 	}
 }
@@ -262,6 +267,7 @@ VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiDrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 	}
 }
@@ -274,6 +280,7 @@ VOID UiDrawStatusText(PUCHAR StatusText)
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiDrawStatusText(StatusText);
 	}
 }
@@ -286,6 +293,7 @@ VOID UiUpdateDateTime(VOID)
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//TuiUpdateDateTime();
 	}
 }
@@ -313,6 +321,7 @@ VOID UiMessageBox(PUCHAR MessageText)
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiMessageBox(UiMessageBoxLineText);
 	}
 
@@ -339,6 +348,7 @@ VOID UiMessageBoxCritical(PUCHAR MessageText)
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiMessageBoxCritical(MessageText);
 	}
 }
@@ -357,6 +367,8 @@ UCHAR UiTextToColor(PUCHAR ColorText)
 	}
 	else
 	{
+    UNIMPLEMENTED
+    return 0;
 		//return GuiTextToColor(ColorText);
 	}
 }
@@ -369,6 +381,8 @@ UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 	}
 	else
 	{
+    UNIMPLEMENTED
+    return 0;
 		//return GuiTextToFillStyle(FillStyleText);
 	}
 }
@@ -381,6 +395,7 @@ VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range)
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiDrawProgressBarCenter(Position, Range);
 	}
 }
@@ -393,6 +408,7 @@ VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG P
 	}
 	else
 	{
+    UNIMPLEMENTED
 		//GuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range);
 	}
 }
@@ -441,6 +457,7 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 
 VOID UiTruncateStringEllipsis(PUCHAR StringText, ULONG MaxChars)
 {
+    UNIMPLEMENTED
 }
 
 BOOL UiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem)
@@ -451,6 +468,8 @@ BOOL UiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenu
 	}
 	else
 	{
+    UNIMPLEMENTED
+    return FALSE;
 		//return GuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem);
 	}
 }

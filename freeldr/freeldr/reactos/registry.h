@@ -21,6 +21,8 @@
 #ifndef __REGISTRY_H
 #define __REGISTRY_H
 
+#define INVALID_HANDLE_VALUE  NULL
+
 typedef struct _LIST_ENTRY
 {
   struct _LIST_ENTRY *Flink;

@@ -24,12 +24,33 @@
 
 #ifdef DEBUG
 
-//ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
-//						 DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
-//						 DPRINT_LINUX;
-ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_UI | DPRINT_MEMORY |
-						 /*DPRINT_CACHE |*/ DPRINT_LINUX;
-//ULONG	DebugPrintMask = DPRINT_INIFILE;
+//#define DEBUG_ULTRA
+//#define DEBUG_INIFILE
+//#define DEBUG_REACTOS
+//#define DEBUG_CUSTOM
+#define DEBUG_NONE
+
+#ifdef DEBUG_ULTRA
+ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
+                       DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
+	                     DPRINT_LINUX;
+#endif
+
+#ifdef DEBUG_INIFILE
+ULONG	DebugPrintMask = DPRINT_INIFILE;
+#endif
+
+#ifdef DEBUG_REACTOS
+ULONG	DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
+#endif
+
+#ifdef DEBUG_CUSTOM
+ULONG	DebugPrintMask = 0;
+#endif
+
+#ifdef DEBUG_NONE
+ULONG	DebugPrintMask = 0;
+#endif
 
 #define	SCREEN				0
 #define	RS232				1
@@ -86,6 +107,10 @@ VOID DebugPrintChar(UCHAR Character)
 
 VOID DebugPrintHeader(ULONG Mask)
 {
+  /* No header */
+  if (Mask == 0)
+    return;
+
 	switch (Mask)
 	{
 	case DPRINT_WARNING:
@@ -151,6 +176,18 @@ VOID DebugPrintHeader(ULONG Mask)
 		DebugPrintChar('C');
 		DebugPrintChar('H');
 		DebugPrintChar('E');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_REGISTRY:
+		DebugPrintChar('R');
+		DebugPrintChar('E');
+		DebugPrintChar('G');
+		DebugPrintChar('I');
+		DebugPrintChar('S');
+		DebugPrintChar('T');
+		DebugPrintChar('R');
+		DebugPrintChar('Y');
 		DebugPrintChar(':');
 		DebugPrintChar(' ');
 		break;

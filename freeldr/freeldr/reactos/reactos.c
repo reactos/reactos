@@ -391,7 +391,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
 	mb_info.mods_count = 0;
 	mb_info.mods_addr = (unsigned long)multiboot_modules;
-	mb_info.mmap_length = GetBiosMemoryMap(&multiboot_memory_map);
+	mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)&multiboot_memory_map);
 	if (mb_info.mmap_length)
 	{
 		mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;

@@ -43,7 +43,7 @@ ULONG	GetSystemMemorySize(VOID);								// Returns the amount of total memory in
 // These functions are implemented in mem.S
 ULONG	GetExtendedMemorySize(VOID);							// Returns extended memory size in KB
 ULONG	GetConventionalMemorySize(VOID);						// Returns conventional memory size in KB
-ULONG	GetBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32]);	// Fills mem_map structure with BIOS memory map and returns length of memory map
+ULONG	GetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap);	// Fills mem_map structure with BIOS memory map and returns length of memory map
 
 
 

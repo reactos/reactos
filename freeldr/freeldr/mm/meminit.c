@@ -61,7 +61,7 @@ BOOL MmInitializeMemoryManager(VOID)
 
 	RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
 
-	BiosMemoryMapEntryCount = GetBiosMemoryMap(BiosMemoryMap);
+	BiosMemoryMapEntryCount = GetBiosMemoryMap((PBIOS_MEMORY_MAP)&BiosMemoryMap);
 	ExtendedMemorySize = GetExtendedMemorySize();
 	ConventionalMemorySize = GetConventionalMemorySize();
 
