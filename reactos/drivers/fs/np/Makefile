@@ -1,16 +1,16 @@
-# $Id: Makefile,v 1.9 2001/07/15 21:18:59 rex Exp $
+# $Id: Makefile,v 1.10 2001/07/28 14:46:27 ea Exp $
 #
 # Named Pipes File System
 #
-PATH_TO_TOP = ../../..
+PATH_TO_TOP=../../..
 
 TARGETNAME=npfs
 
-CFLAGS = -D__NTDRIVER__ -I../../../include
+CFLAGS=-D__NTDRIVER__ -I../../../include
 
-OBJECTS = create.o finfo.o fsctrl.o mount.o rw.o volume.o npfs.coff
+OBJECTS=create.o finfo.o fsctrl.o mount.o rw.o volume.o npfs.coff
 
-LIBS = ../../../ntoskrnl/ntoskrnl.a
+LIBS=$(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 all: $(TARGETNAME).sys
 
@@ -23,7 +23,6 @@ clean:
 
 $(TARGETNAME).sys: $(OBJECTS) $(LIBS)
 	$(CC) \
-		-specs=../../svc_specs \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--defsym,_end=end \
@@ -42,7 +41,6 @@ $(TARGETNAME).sys: $(OBJECTS) $(LIBS)
 		--verbose \
 		-Wl,--image-base,0x10000 \
 		-Wl,-e,_DriverEntry@8 \
-		-specs=../../svc_specs \
 		-mdll \
 		-o $(TARGETNAME).sys \
 		$(OBJECTS) $(LIBS) \
@@ -50,6 +48,6 @@ $(TARGETNAME).sys: $(OBJECTS) $(LIBS)
 	$(RM) temp.exp
 	$(NM) --numeric-sort npfs.sys > npfs.sym
 
-npfs.coff: ../../../include/reactos/buildno.h npfs.rc
+$(TARGETNAME).coff: $(PATH_TO_TOP)/include/reactos/buildno.h npfs.rc
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak
