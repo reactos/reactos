@@ -22,7 +22,6 @@ APPS = 	calc \
 	mc \
 	notevil \
 	sysutils \
-	sysutils$(SEP)regexpl \
 	sysutils$(SEP)tlist \
 	net$(SEP)finger \
 	net$(SEP)ncftp \
@@ -33,8 +32,16 @@ APPS = 	calc \
 	welcome \
 	winfile
 
+# Removed due to dependance on C++ compiler
+#
+#	sysutils$(SEP)regexpl \
+#
+
 all: $(APPS)
 .PHONY: all
+
+implib:
+.PHONY: implib
 
 clean: $(APPS:%=%_clean)
 .PHONY: clean
@@ -66,8 +73,8 @@ $(APPS:%=%_dist): %_dist:
 # Make an install floppy
 #
 
-install: all
-	./install.sh /mnt/hda1
+#install: all
+#	./install.sh /mnt/hda1
 
 make_floppy_dirs:
 ifeq ($(DOSCLI),yes)
