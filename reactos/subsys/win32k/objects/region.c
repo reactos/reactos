@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.51 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: region.c,v 1.52 2004/05/14 16:56:48 navaraf Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -1711,47 +1711,21 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
   UNIMPLEMENTED;
 }
 
-HRGN
-STDCALL
-NtGdiCreateRectRgn(INT LeftRect,
-                   INT TopRect,
-                   INT RightRect,
-                   INT BottomRect)
+HRGN STDCALL
+NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
-  HRGN hRgn;
-  PROSRGNDATA pRgnData;
-  PRECT pRect;
+   HRGN hRgn;
 
-  if (RightRect < LeftRect || BottomRect < TopRect)
-    {
-      DPRINT1("Invalid parameters (%d, %d) - (%d, %d)\n", LeftRect, TopRect, RightRect, BottomRect);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return NULL;
-    }
+   /* Allocate region data structure with space for 1 RECT */
+   if ((hRgn = RGNDATA_AllocRgn(1)))
+   {
+      if (NtGdiSetRectRgn(hRgn, LeftRect, TopRect, RightRect, BottomRect))
+         return hRgn;
+      NtGdiDeleteObject(hRgn);
+   }
 
-  /* Allocate region data structure with space for 1 RECT */
-  if ((hRgn = RGNDATA_AllocRgn(1)))
-    {
-      if ((pRgnData = RGNDATA_LockRgn(hRgn)))
-	{
-	  pRect = (PRECT)pRgnData->Buffer;
-	  ASSERT(pRect);
-
-    	  /* Fill in the region data header */
-	  pRgnData->rdh.iType = (LeftRect == RightRect || TopRect == BottomRect) ? NULLREGION : SIMPLEREGION;
-	  NtGdiSetRect(&(pRgnData->rdh.rcBound), LeftRect, TopRect, RightRect, BottomRect);
-
-	  /* use NtGdiCopyRect when implemented */
-	  NtGdiSetRect(pRect, LeftRect, TopRect, RightRect, BottomRect);
-	  RGNDATA_UnlockRgn(hRgn);
-
-	  return hRgn;
-	}
-      NtGdiDeleteObject( hRgn );
-    }
-
-  DPRINT1("NtGdiCreateRectRgn: can't allocate region\n");
-  return NULL;
+   SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+   return NULL;
 }
 
 HRGN STDCALL
