@@ -84,7 +84,9 @@ HANDLE RPCRT4_RpcssNPConnect(void)
     if (! WaitNamedPipeA(NAME_RPCSS_NAMED_PIPE, MASTER_MUTEX_WAITNAMEDPIPE_TIMEOUT))
     {
       ERR("Named pipe unavailable after waiting.  Something is probably wrong.\n");
-      return NULL;
+      CloseHandle(the_pipe);
+      the_pipe = NULL;
+      break;
     }
 
   }
