@@ -133,6 +133,25 @@ NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 		   IN	ACCESS_MASK	DesiredAccess,
 		   OUT	PHANDLE		TokenHandle)
 {
+  return NtOpenProcessTokenEx(ProcessHandle,
+                              DesiredAccess,
+                              0,
+                              TokenHandle);
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtOpenProcessTokenEx(
+    IN HANDLE ProcessHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN ULONG HandleAttributes,
+    OUT PHANDLE TokenHandle
+    )
+{
    PACCESS_TOKEN Token;
    HANDLE hToken;
    NTSTATUS Status;
@@ -149,29 +168,12 @@ NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 			   FALSE,
 			   &hToken);
    ObDereferenceObject(Token);
-   
+
    if(NT_SUCCESS(Status))
      {
         Status = MmCopyToCaller(TokenHandle, &hToken, sizeof(HANDLE));
      }
    return(Status);
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-NtOpenProcessTokenEx(
-    IN HANDLE ProcessHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN ULONG HandleAttributes,
-    OUT PHANDLE TokenHandle
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
 }
 
 
