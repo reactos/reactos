@@ -936,6 +936,7 @@ extern "C" {
 #define DSS_UNION	(16)
 #define DSS_DISABLED	(32)
 #define DSS_MONO	(128)
+#define DSS_RIGHT   (0x8000)    // Undocumented
 
 /* DrawStatusText */
 #define SBT_NOBORDERS	(256)

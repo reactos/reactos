@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.60 2003/08/17 17:32:58 royce Exp $
+/* $Id: window.c,v 1.61 2003/08/17 19:07:11 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -707,7 +707,7 @@ CreateWindowExW(DWORD dwExStyle,
 				hMenu,
 				hInstance,
 				lpParam,
-				0);
+				sw);
 
   return (HWND)Handle;
 }

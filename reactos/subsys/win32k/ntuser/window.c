@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.94 2003/08/15 11:11:02 weiden Exp $
+/* $Id: window.c,v 1.95 2003/08/17 19:07:11 silverblade Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -676,7 +676,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    */
   WindowObject->Class = ClassObject;
   WindowObject->ExStyle = dwExStyle;
-  WindowObject->Style = dwStyle;
+  WindowObject->Style = dwStyle & ~WS_VISIBLE;
   DbgPrint("1: Style is now %d\n", WindowObject->Style);
   
   WindowObject->x = x;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.20 2003/08/17 02:51:42 silverblade Exp $
+/* $Id: draw.c,v 1.21 2003/08/17 19:07:11 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1606,15 +1606,16 @@ DrawFocusRect(
 // are only implemented for DSS_NORMAL and DST_TEXT, although some handling
 // for DST_BITMAP has been included.
 
-WINBOOL DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC func, LPARAM lData,
-                      WPARAM wData, LPRECT rc, UINT dtflags, BOOL unicode)
+WINBOOL INTERNAL_DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC lpOutputFunc,
+                        LPARAM lData, WPARAM wData, LPRECT rc, UINT dtflags,
+                        BOOL unicode)
 {
 //    HDC MemDC;
 //    HBITMAP MemBMP;
     BOOL retval = FALSE;
-//    INT cx = rc->right - rc->left;
-//    INT cy = rc->bottom - rc->top;
-    
+    INT cx = rc->right - rc->left;
+    INT cy = rc->bottom - rc->top;
+
     switch(type)
     {
         case DST_TEXT :
@@ -1640,8 +1641,16 @@ WINBOOL DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC func, LPARAM lData,
         
         case DST_COMPLEX :
         {
-            // TODO
-            return retval;
+            // Call lpOutputFunc, if necessary
+            if (lpOutputFunc)
+            {
+                OffsetViewportOrgEx(hdc, rc->left, rc->top, NULL);
+                retval = lpOutputFunc(hdc, lData, wData, cx, cy);
+                OffsetViewportOrgEx(hdc, -rc->left, -rc->top, NULL);
+                return retval;
+            }
+            else
+                return FALSE;
         }
     }
     
@@ -1649,7 +1658,7 @@ WINBOOL DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC func, LPARAM lData,
 }
 
 
-WINBOOL DoDrawState(
+WINBOOL INTERNAL_DrawState(
   HDC hdc,
   HBRUSH hbr,
   DRAWSTATEPROC lpOutputFunc,
@@ -1669,20 +1678,24 @@ WINBOOL DoDrawState(
     if ((! lpOutputFunc) && (fuFlags & DST_COMPLEX))
         return FALSE;
     
-    UINT type = fuFlags & 0xf;
-    UINT state = fuFlags & 0x7ff0;    // Correct?
-    INT len = wData;
-    RECT rect, subrect;
-    UINT dtflags = DT_NOCLIP;
-    BOOL retval = FALSE;
-//    HBRUSH ourbrush = NULL;
-
-    // Call lpOutputFunc, if necessary
-    if (((type == DST_COMPLEX) || (type == DST_TEXT)) && (lpOutputFunc))
-        lpOutputFunc(hdc, lData, wData, cx, cy);
-
+    UINT type = fuFlags & 0xf;          // DST_xxx
+    UINT state = fuFlags & 0x7ff0;      // DSS_xxx
+    INT len = wData;                    // Data length
+    RECT rect;
+    UINT dtflags = DT_NOCLIP;           // Flags for DrawText
+    BOOL retval = FALSE;                // Return value
     
-    DbgPrint("[draw.c] In DrawState()\n");
+    COLORREF ForeColor,                 // Foreground color
+             BackColor;                 // Background color
+
+    HDC MemDC = NULL;                   // Memory DC
+    HBITMAP MemBMP = NULL,              // Memory bitmap (for MemDC)
+            OldBMP = NULL;              // Old memory bitmap (for MemDC)
+    HFONT   Font = NULL;                // Old font (for MemDC)
+    HBRUSH  OldBrush = NULL,            // Old brush (for MemDC)
+            TempBrush = NULL;           // Temporary brush (for MemDC)
+
+    DbgPrint("Entered DrawState, fuFlags %d, type %d, state %d\n", fuFlags, type, state);
     
     if ((type == DST_TEXT || type == DST_PREFIXTEXT) && ! len)
     {
@@ -1705,6 +1718,8 @@ WINBOOL DoDrawState(
             case DST_TEXT :
             case DST_PREFIXTEXT :
             {
+                DbgPrint("DST_TEXT / DST_PREFIXTEXT\n");
+            
                 BOOL success;
                 if (unicode)
                     success = GetTextExtentPoint32W(hdc, (LPWSTR) lData, len, &s);
@@ -1717,12 +1732,15 @@ WINBOOL DoDrawState(
 
             case DST_ICON :
             {
+                DbgPrint("DST_ICON\n");
                 // TODO
                 break;
             }
 
             case DST_BITMAP :
             {
+                DbgPrint("DST_BITMAP\n");
+
                 if (!GetObjectA((HBITMAP) lData, sizeof(bm), &bm))
                     return FALSE;
                 
@@ -1732,6 +1750,7 @@ WINBOOL DoDrawState(
             }
 
             case DST_COMPLEX :  // cx and cy must be set in this mode
+                DbgPrint("DST_COMPLEX\n");
                 return FALSE;
         }
         
@@ -1739,79 +1758,117 @@ WINBOOL DoDrawState(
         if (! cy) cy = s.cy;
     }
 
-    SetRect(&rect, x, y, x + cx, y + cy);
-    SetRect(&subrect, 0, 0, cx, cy);
-    
     // Flags for DrawText
-//    if (fuFlags & DSS_RIGHT)  // Undocumented
-//        dtflags |= DT_RIGHT;
+    if (fuFlags & DSS_RIGHT)  // Undocumented
+        dtflags |= DT_RIGHT;
     if (type == DST_TEXT)
         dtflags |= DT_NOPREFIX;
         
-    // We need to do additional processing if not DSS_NORMAL   
+    // No additional processing needed for DSS_NORMAL
     if (state == DSS_NORMAL)
     {
-        return DrawStateDraw(hdc, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);    
+        DbgPrint("DSS_NORMAL\n");
+        SetRect(&rect, x, y, x + cx, y + cy);
+        return INTERNAL_DrawStateDraw(hdc, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
     }
 
-    HDC MemDC = NULL;
-    HBITMAP MemBMP = NULL, OldBMP = NULL;
+    // Set the rectangle to that of the memory DC
+    SetRect(&rect, 0, 0, cx, cy);
+    
+    // Set colors
+    ForeColor = SetTextColor(hdc, RGB(0, 0, 0));
+    BackColor = SetBkColor(hdc, RGB(255, 255, 255));
 
+    // Create and initialize the memory DC
     MemDC = CreateCompatibleDC(hdc);
     if (! MemDC) goto cleanup;
-    
-    MemBMP = CreateCompatibleBitmap(hdc, cx, cy);
+    MemBMP = CreateBitmap(cx, cy, 1, 1, NULL);
     if (! MemBMP) goto cleanup;
-    
     OldBMP = (HBITMAP) SelectObject(MemDC, MemBMP);
     if (! OldBMP) goto cleanup;
+    
+    DbgPrint("Created and inited MemDC\n");
+    
+    // Set up the default colors and font
+    if (! FillRect(MemDC, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH))) goto cleanup;
+    SetBkColor(MemDC, RGB(255, 255, 255));
+    SetTextColor(MemDC, RGB(0, 0, 0));
+    Font = (HFONT)SelectObject(MemDC, GetCurrentObject(hdc, OBJ_FONT));
+    
+    DbgPrint("Selected font and set colors\n");
 
-    DbgPrint("[draw.c] MemDC = 0x%x  MemBMP = 0x%x  OldBMP = 0x%x\n", MemDC, MemBMP, OldBMP);
+    // Enable this line to use the current DC image to begin with (wrong?)
+//    if (! BitBlt(MemDC, 0, 0, cx, cy, hdc, x, y, SRCCOPY)) goto cleanup;
 
-    // Copy the actual image into the memory DC (necessary?)
-    BitBlt(MemDC, 0, 0, cx, cy, hdc, x, y, SRCCOPY);
+    // DST_COMPLEX may draw text as well, so make sure font is selected
+    if (! Font && (type <= DST_PREFIXTEXT)) goto cleanup;   // THIS FAILS
+    BOOL TempResult = INTERNAL_DrawStateDraw(MemDC, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
+    if (Font) SelectObject(MemDC, Font);
+    if (! TempResult) goto cleanup;
 
+    DbgPrint("Done drawing\n");
 
     // Apply state(s?)
-
     if (state & DSS_UNION)
     {
-        // Dither the image
+        DbgPrint("DSS_UNION\n");
+        // Dither the image (not implemented in ReactOS yet?)
         // TODO
     }
-    
+
+    // Prepare shadow brush
+    if (state & DSS_DISABLED)
+        TempBrush = CreateSolidBrush(GetSysColor(COLOR_3DHILIGHT));
+    // else if (state & DSS_DEFAULT)
+    // TempBrush = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
+
+    // Draw shadow
+    if (state & (DSS_DISABLED /*|DSS_DEFAULT*/))
+    {
+        DbgPrint("DSS_DISABLED - Drawing shadow\n");
+        if (! TempBrush) goto cleanup;
+        OldBrush = (HBRUSH)SelectObject(hdc, TempBrush);
+        if (! OldBrush) goto cleanup;
+        if (! BitBlt(hdc, x + 1, y + 1, cx, cy, MemDC, 0, 0, 0x00B8074A)) goto cleanup;
+        SelectObject(hdc, OldBrush);
+        DeleteObject(TempBrush);
+        TempBrush = NULL;
+    }
+
     if (state & DSS_DISABLED)
     {
-        hbr = CreateSolidBrush(GetSysColor(COLOR_3DHILIGHT));
-        if (! hbr) goto cleanup;
+        DbgPrint("DSS_DISABLED - Creating shadow brush 2\n");
+        hbr = TempBrush = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
+        if (! TempBrush) goto cleanup;
     }
     else if (! hbr)
     {
+        DbgPrint("Creating a brush\n");
         hbr = (HBRUSH) GetStockObject(BLACK_BRUSH);
     }
-
-//    else if (state & DSS_DEFAULT)
-//    ....
-
-    if (state & (DSS_DISABLED /*|DSS_DEFAULT*/))
-    {
-        // TODO
-    }
     
-//    HBRUSH oldbrush = (HBRUSH) SelectObject(MemDC, ourbrush);
+    DbgPrint("Selecting new brush\n");
+    OldBrush = (HBRUSH) SelectObject(hdc, hbr);
 
     // Copy to hdc from MemDC    
-    if (! BitBlt(hdc, x, y, cx, cy, MemDC, 0, 0, SRCCOPY)) goto cleanup;
-    
-    DbgPrint("[draw.c] Success!\n");
+    DbgPrint("Blitting\n");
+    if (! BitBlt(hdc, x, y, cx, cy, MemDC, 0, 0, 0x00B8074A)) goto cleanup;
     
     retval = TRUE;
 
     
     cleanup :
-        if (OldBMP) SelectObject(MemDC, OldBMP);
-        if (MemBMP) DeleteObject(MemBMP);
-        if (MemDC)  DeleteDC(MemDC);
+        DbgPrint("In cleanup : Font %x  OldBrush %x  OldBMP %x  Tempbrush %x  MemBMP %x  MemDC %x\n",
+                  Font, OldBrush, OldBMP, TempBrush, MemBMP, MemDC);
+        SetTextColor(hdc, ForeColor);
+        SetBkColor(hdc, BackColor);
+        if (OldBrush)   SelectObject(MemDC, OldBrush);
+        if (OldBMP)     SelectObject(MemDC, OldBMP);
+        if (TempBrush)  DeleteObject(TempBrush);
+        if (MemBMP)     DeleteObject(MemBMP);
+        if (MemDC)      DeleteDC(MemDC);
+        
+        DbgPrint("Leaving DrawState() with retval %d\n", retval);
         
         return retval;
 }
@@ -1834,7 +1891,7 @@ DrawStateA(
   int cy,
   UINT fuFlags)
 {
-    return DoDrawState(hdc, hbr, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, FALSE);
+    return INTERNAL_DrawState(hdc, hbr, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, FALSE);
 }
 
 
@@ -1855,5 +1912,5 @@ DrawStateW(
   int cy,
   UINT fuFlags)
 {
-    return DoDrawState(hdc, hbr, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, TRUE);
+    return INTERNAL_DrawState(hdc, hbr, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, TRUE);
 }
