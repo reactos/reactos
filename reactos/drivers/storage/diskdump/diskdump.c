@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: diskdump.c,v 1.3 2003/11/13 15:24:14 ekohl Exp $
+/* $Id: diskdump.c,v 1.4 2004/06/07 18:03:12 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,6 +37,8 @@
 #define NDEBUG
 #include <debug.h>
 
+/* It's already defined in scsiport_int.h */
+#undef VERSION
 #define VERSION  "0.0.1"
 
 /* PROTOTYPES ***************************************************************/
