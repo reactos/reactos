@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.30 2004/02/24 15:42:06 vizzini Exp $
+; $Id: msvcrt.def,v 1.31 2004/02/27 22:39:37 sedwards Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -86,11 +86,11 @@ _CItan
 _CItanh
 _CxxThrowException
 _EH_prolog
-;_Getdays
-;_Getmonths
-;_Gettnames
+_Getdays
+_Getmonths
+_Gettnames
 _HUGE DATA
-;_Strftime
+_Strftime
 _XcptFilter
 ;__CxxCallUnwindDtor
 __CxxDetectRethrow
@@ -108,9 +108,9 @@ __RTtypeid=MSVCRT___RTtypeid
 __argc DATA
 __argv DATA
 ;__badioinfo
-;__crtCompareStringA
+__crtCompareStringA ;=NTDLL.RtlCompareString
 ;__crtGetLocaleInfoW
-;__crtLCMapStringA
+__crtLCMapStringA
 __dllonexit
 __doserrno
 __fpecode
@@ -119,9 +119,9 @@ __initenv DATA
 __isascii
 __iscsym
 __iscsymf
-;__lc_codepage
-;__lc_collate_cp
-;__lc_handle
+__lc_codepage
+__lc_collate_cp
+__lc_handle
 ;__lconv_init
 __mb_cur_max DATA
 __p___argc
@@ -156,14 +156,14 @@ __p__winver
 __pioinfo
 ;__pxcptinfoptrs
 __set_app_type
-;__setlc_active
+__setlc_active
 __setusermatherr
 __threadhandle
 __threadid
 __toascii
 __unDName
 ;__unDNameEx
-;__unguarded_readlc_active
+__unguarded_readlc_active
 ;__wargv
 __wgetmainargs
 ;__winitenv

@@ -15,5 +15,5 @@ Convert all C++ style comments to C style comments.
 ????
 
 WINE Port Notes:
-Remove the internal headers in msvcrt/wine/msvcrt
+More cleanup
 Disable of remove duplicate code. (When in doubt check the def)

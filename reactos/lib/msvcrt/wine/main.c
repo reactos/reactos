@@ -54,6 +54,11 @@ static inline BOOL msvcrt_init_tls(void);
 static inline BOOL msvcrt_free_tls(void);
 //const char* msvcrt_get_reason(DWORD reason) WINE_UNUSED;
 
+typedef void* (*MSVCRT_malloc_func)(MSVCRT_size_t);
+
+char* MSVCRT___unDName(char *,const char*,int,MSVCRT_malloc_func,MSVCRT_free_func,unsigned short int);
+char* MSVCRT___unDNameEx(char *,const char*,int,MSVCRT_malloc_func,MSVCRT_free_func,void *,unsigned short int);
+
 #if 0 /* __REACTOS__ */
 
 /*********************************************************************
@@ -148,58 +153,65 @@ void MSVCRT_I10_OUTPUT(void)
 }
 
 /*********************************************************************
- *		__unDName (MSVCRT.@)
+ *		__unDNameEx (MSVCRT.@)
  *
  * Demangle a C++ identifier.
  *
  * PARAMS
- *  unknown  [I] Not yet determined
+ *  OutStr   [O] If not NULL, the place to put the demangled string
  *  mangled  [I] Mangled name of the function
- *  unknown2 [I] Not yet determined
+ *  OutStrLen[I] Length of OutStr
  *  memget   [I] Function to allocate memory with
  *  memfree  [I] Function to free memory with
+ *  unknown  [?] Unknown, possibly a call back
  *  flags    [I] Flags determining demangled format
  *
  * RETURNS
  *  Success: A string pointing to the unmangled name, allocated with memget.
  *  Failure: NULL.
  */
-char* MSVCRT___unDName(int unknown, const char* mangled, int unknown2,
+char* MSVCRT___unDNameEx(char * OutStr, const char* mangled, int OutStrLen,
                        MSVCRT_malloc_func memget,
                        MSVCRT_free_func memfree,
-                       unsigned int flags)
+                       void * unknown,
+                       unsigned short int flags)
 {
-  char* ret;
-
-  FIXME("(%d,%s,%d,%p,%p,%x) stub!\n", unknown, mangled, unknown2, memget, memfree, flags);
+  FIXME("(%p,%s,%d,%p,%p,%p,%x) stub!\n",
+          OutStr, mangled, OutStrLen, memget, memfree, unknown, flags);
 
   /* FIXME: The code in tools/winebuild/msmangle.c is pretty complete and
    * could be used here.
    */
 
   /* Experimentation reveals the following flag meanings when set:
-   * 0x0001 - Dont show __ in calling convention
-   * 0x0002 - Dont show calling convention at all
-   * 0x0004 - Dont show function/method return value
+   * 0x0001 - Don't show __ in calling convention
+   * 0x0002 - Don't show calling convention at all
+   * 0x0004 - Don't show function/method return value
    * 0x0010 - Same as 0x1
-   * 0x0080 - Dont show access specifier (public/protected/private)
-   * 0x0200 - Dont show static specifier
+   * 0x0080 - Don't show access specifier (public/protected/private)
+   * 0x0200 - Don't show static specifier
    * 0x0800 - Unknown, passed by type_info::name()
    * 0x1000 - Only report the variable/class name
    * 0x2000 - Unknown, passed by type_info::name()
    */
   /* Duplicate the mangled name; for comparisons it doesn't matter anyway */
-  ret = memget(strlen(mangled) + 1);
-  strcpy(ret, mangled);
-  return ret;
+  if( OutStr == NULL) {
+      OutStrLen = strlen(mangled) + 1;
+      OutStr = memget( OutStrLen);
+  }
+  strncpy( OutStr, mangled, OutStrLen);
+  return OutStr;
 }
 
 
 /*********************************************************************
- *		__unDNameEx (MSVCRT.@)
- * Function not really understood but needed to make the DLL work
+ *		__unDName (MSVCRT.@)
  */
-char* MSVCRT___unDNameEx(void)
+char* MSVCRT___unDName(char * OutStr, const char* mangled, int OutStrLen,
+                       MSVCRT_malloc_func memget,
+                       MSVCRT_free_func memfree,
+                       unsigned short int flags)
 {
-   return NULL;
+   return MSVCRT___unDNameEx( OutStr, mangled, OutStrLen, memget, memfree,
+           NULL, flags);
 }

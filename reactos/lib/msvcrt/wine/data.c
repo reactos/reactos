@@ -24,8 +24,8 @@
 #include <math.h>
 #include "msvcrt.h"
 
-#include "msvcrt/stdlib.h"
-#include "msvcrt/string.h"
+#include "stdlib.h"
+#include "string.h"
 
 //#include "wine/library.h"
 #include "wine/unicode.h"

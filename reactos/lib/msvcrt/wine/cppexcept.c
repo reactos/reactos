@@ -303,7 +303,7 @@ inline static void *call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame
             /* setup an exception block for nested exceptions */
 
             //nested_frame.frame.Handler = catch_function_nested_handler;
-			nested_frame.frame.handler = catch_function_nested_handler; //ros
+			nested_frame.frame.handler = catch_function_nested_handler;
 			nested_frame.prev_rec  = thread_data->exc_record;
             nested_frame.cxx_frame = frame;
             nested_frame.descr     = descr;

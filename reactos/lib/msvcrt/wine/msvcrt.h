@@ -29,7 +29,7 @@
 #include "winnls.h"
 
 #include "msvcrt/string.h"
-#include "msvcrt/eh.h"
+#include "eh.h"
 
 /* TLS data */
 extern DWORD MSVCRT_tls_index;
@@ -72,7 +72,9 @@ int    MSVCRT__set_new_mode(int mode);
 
 void* MSVCRT_operator_new(unsigned long size);
 void MSVCRT_operator_delete(void*);
+#ifndef __REACTOS__
 typedef void* (*MSVCRT_malloc_func)(MSVCRT_size_t);
+#endif
 typedef void (*MSVCRT_free_func)(void*);
 #ifndef __REACTOS__
 extern char* MSVCRT___unDName(int,const char*,int,MSVCRT_malloc_func,MSVCRT_free_func,unsigned int);

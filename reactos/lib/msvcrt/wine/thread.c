@@ -22,7 +22,7 @@
 #include "msvcrt.h"
 
 #include "msvcrt/malloc.h"
-#include "msvcrt/process.h"
+#include "process.h"
 
 #include "wine/debug.h"
 

@@ -164,3 +164,15 @@ void _setmbcp(int cp)
 DPRINT1("_setmbcp - stub\n");
 return;
 }
+
+
+/*********************************************************************
+ *		__lc_collate_cp (MSVCRT.@)
+ *
+ * @unimplemented
+ */
+void __lc_collate_cp(int cp)
+{
+DPRINT1("__lc_collate_cp - stub\n");
+return;
+}
