@@ -84,8 +84,8 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 ** manual page of what this "time zone abbreviation" means (doing this so
 ** that tzname[0] has the "normal" length of three characters).
 */
-int _daylight_dll;
-int _timezone_dll;
+int _daylight;
+int _timezone;
 
 static char WILDABBR[] = "   ";
 

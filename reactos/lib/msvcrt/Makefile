@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.16 2001/07/06 12:53:03 ekohl Exp $
+# $Id: Makefile,v 1.17 2001/07/12 16:31:03 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -102,6 +102,9 @@ OBJECTS_IO = \
 	io/utime.o \
 	io/write.o
 
+OBJECTS_LOCALE = \
+	locale/locale.o
+
 OBJECTS_MATH = \
 	math/acos.o \
 	math/adjust.o \
@@ -145,13 +148,22 @@ OBJECTS_MISC = \
 	misc/tls.o
 
 OBJECTS_PROCESS = \
+	process/_cwait.o \
+	process/_system.o \
 	process/dll.o \
 	process/procid.o \
 	process/thread.o \
 	process/threadid.o
+
+OBJECTS_SEARCH = \
+	search/lfind.o \
+	search/lsearch.o
+
+OBJECTS_SETJMP = \
+	setjmp/setjmp.o
 	
 OBJECTS_SIGNAL = \
-	signal/signal.o \
+	signal/signal.o
 
 OBJECTS_STDIO = \
 	stdio/allocfil.o \
@@ -215,7 +227,6 @@ OBJECTS_STDIO = \
 	stdio/vsprintf.o \
 	stdio/vsscanf.o
 
-#incomplete
 OBJECTS_STDLIB = \
 	stdlib/_exit.o \
 	stdlib/abort.o \
@@ -339,9 +350,12 @@ OBJECTS = \
 	$(OBJECTS_EXCEPT) \
 	$(OBJECTS_FLOAT) \
 	$(OBJECTS_IO) \
+	$(OBJECTS_LOCALE) \
 	$(OBJECTS_MATH) \
 	$(OBJECTS_MISC) \
 	$(OBJECTS_PROCESS) \
+	$(OBJECTS_SEARCH) \
+	$(OBJECTS_SETJMP) \
 	$(OBJECTS_SIGNAL) \
 	$(OBJECTS_STDIO) \
 	$(OBJECTS_STDLIB) \
@@ -359,9 +373,12 @@ CLEAN_FILES = \
 	except\*.o \
 	float\*.o \
 	io\*.o \
+	locale\*.o \
 	math\*.o \
 	misc\*.o \
 	process\*.o \
+	search\*.o \
+	setjmp\*.o \
 	signal\*.o \
 	stdio\*.o \
 	stdlib\*.o \
@@ -383,9 +400,12 @@ CLEAN_FILES = \
 	except/*.o \
 	float/*.o \
 	io/*.o \
+	locale/*.o \
 	math/*.o \
 	misc/*.o \
 	process/*.o \
+	search/*.o \
+	setjmp/*.o \
 	signal/*.o \
 	stdio/*.o \
 	stdlib/*.o \

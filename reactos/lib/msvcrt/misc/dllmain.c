@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.7 2001/04/10 19:18:59 ekohl Exp $
+/* $Id: dllmain.c,v 1.8 2001/07/12 16:28:24 ekohl Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -24,6 +24,8 @@ char **__initenv = NULL;
 char *_pgmptr = NULL;		/* pointer to program name */
 
 int __app_type = 0; //_UNKNOWN_APP;	/* application type */
+
+int __mb_cur_max = 1;
 
 static int envAlloced = 0;
 
@@ -125,6 +127,11 @@ char ***__p__environ(void)
 char ***__p___initenv(void)
 {
    return &__initenv;
+}
+
+int *__p___mb_cur_max(void)
+{
+   return &__mb_cur_max;
 }
 
 unsigned int *__p__osver(void)

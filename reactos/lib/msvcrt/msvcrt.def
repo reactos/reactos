@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.12 2001/07/06 21:17:36 ekohl Exp $
+; $Id: msvcrt.def,v 1.13 2001/07/12 16:31:03 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -89,8 +89,8 @@ _XcptFilter
 ; __RTDynamicCast
 ; __RTtypeid
 ; __STRINGTOLD
-__argc
-__argv
+__argc DATA
+__argv DATA
 ; __badioinfo
 ; __crtCompareStringA
 ; __crtGetLocaleInfoW
@@ -99,7 +99,7 @@ __dllonexit
 ; __doserrno
 __fpecode
 __getmainargs
-; __initenv
+__initenv DATA
 __isascii
 __iscsym
 __iscsymf
@@ -107,11 +107,11 @@ __iscsymf
 ; __lc_collate_cp
 ; __lc_handle
 ; __lconv_init
-; __mb_cur_max
+__mb_cur_max DATA
 __p___argc
 __p___argv
 __p___initenv
-; __p___mb_cur_max
+__p___mb_cur_max
 ; __p___wargv
 ; __p___winitenv
 __p__acmdln
@@ -200,8 +200,8 @@ _cputs
 _creat
 _cscanf
 _ctype DATA
-; _cwait
-; _daylight
+_cwait
+_daylight DATA
 ; _dstbias
 _dup
 _dup2
@@ -229,7 +229,7 @@ _fdopen
 _fgetchar
 _fgetwchar
 _filbuf
-; _fileinfo
+; _fileinfo DATA
 _filelength
 _filelengthi64
 _fileno
@@ -324,7 +324,7 @@ _j0
 _j1
 _jn
 _kbhit
-; _lfind
+_lfind
 _loaddll
 _local_unwind2
 ; _lock
@@ -333,7 +333,7 @@ _logb
 ; _longjmpex
 _lrotl
 _lrotr
-; _lsearch
+_lsearch
 _lseek
 _lseeki64
 _ltoa
@@ -433,7 +433,7 @@ _searchenv
 ; _set_error_mode
 ; _set_sbh_threshold
 _seterrormode
-; _setjmp
+_setjmp
 ; _setjmp3
 ; _setmaxstdio
 ; _setmbcp
@@ -476,10 +476,10 @@ _sys_nerr DATA
 _tell
 _telli64
 _tempnam
-; _timezone
+_timezone DATA
 _tolower
 _toupper
-; _tzname
+_tzname DATA
 _tzset
 _ui64toa
 _ui64tow
@@ -662,11 +662,11 @@ isxdigit
 labs
 ldexp
 ldiv
-; localeconv
+localeconv
 localtime
 log
 log10
-; longjmp
+longjmp
 malloc
 ; mblen
 ; mbstowcs
@@ -695,7 +695,7 @@ rename
 rewind
 scanf
 setbuf
-; setlocale
+setlocale
 setvbuf
 signal
 sin
@@ -727,7 +727,7 @@ strtoul
 strxfrm
 swprintf
 swscanf
-; system
+system
 tan
 tanh
 time
