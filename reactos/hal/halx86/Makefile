@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2003/04/27 18:12:15 ekohl Exp $
+# $Id: Makefile,v 1.10 2003/06/19 16:00:03 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -55,14 +55,13 @@ HAL_OBJECTS = \
 	misc.o \
 	mp.o \
 	pci.o \
-	perfcnt.o \
 	portio.o \
 	reboot.o \
 	spinlock.o \
 	sysbus.o \
 	sysinfo.o \
 	time.o \
-	udelay.o
+	timer.o
 
 	#pwroff.o
 
