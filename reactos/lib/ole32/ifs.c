@@ -34,7 +34,7 @@
 
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(olemalloc);
 
 /******************************************************************************
  *	IMalloc32 implementation
@@ -596,7 +596,7 @@ HRESULT WINAPI CoRegisterMallocSpy(LPMALLOCSPY pMallocSpy)
  *           CoRevokeMallocSpy  [OLE32.@]
  *
  * NOTES
- *  we can't rewoke a malloc spy as long as memory blocks allocated with
+ *  we can't revoke a malloc spy as long as memory blocks allocated with
  *  the spy are active since only the spy knows how to free them
  */
 HRESULT WINAPI CoRevokeMallocSpy(void)

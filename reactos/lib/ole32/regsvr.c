@@ -500,7 +500,7 @@ static struct regsvr_interface const interface_list[] = {
     },
     {   &IID_IPersistStorage,
 	"IPersistStorage",
-	NULL,
+	&IID_IPersist,
 	10,
 	NULL,
 	&CLSID_PSFactoryBuffer

@@ -467,7 +467,7 @@ HRESULT WINAPI RunningObjectTableImpl_GetObjectIndex(RunningObjectTableImpl* Thi
 }
 
 /******************************************************************************
- *		GetRunningObjectTable	[OLE2.@]
+ *		GetRunningObjectTable (OLE2.30)
  */
 HRESULT WINAPI GetRunningObjectTable16(DWORD reserved, LPRUNNINGOBJECTTABLE *pprot)
 {
@@ -527,7 +527,7 @@ HRESULT WINAPI MkParseDisplayName(LPBC pbc, LPCOLESTR szUserName,
 }
 
 /******************************************************************************
- *              CreateClassMoniker        [OLE32.*]
+ *              CreateClassMoniker        [OLE32.@]
  */
  HRESULT WINAPI CreateClassMoniker(REFCLSID rclsid, IMoniker ** ppmk)
  {
