@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.22 2003/07/27 18:37:23 dwelch Exp $
+/* $Id: brush.c,v 1.23 2003/08/02 19:52:03 dwelch Exp $
  */
 
 
@@ -229,8 +229,8 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 	}
       else
 	{
-	  DestRect.left = XLeft + Width + dc->w.DCOrgX;
-	  DestRect.right = XLeft + dc->w.DCOrgX;
+	  DestRect.left = XLeft + Width + 1 + dc->w.DCOrgX;
+	  DestRect.right = XLeft + dc->w.DCOrgX + 1;
 	}
       if (Height > 0)
 	{
@@ -239,8 +239,8 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 	}
       else
 	{
-	  DestRect.top = YLeft + Height + dc->w.DCOrgY;
-	  DestRect.bottom = YLeft + dc->w.DCOrgY;
+	  DestRect.top = YLeft + Height + dc->w.DCOrgY + 1;
+	  DestRect.bottom = YLeft + dc->w.DCOrgY + 1;
 	}
       ret = IntEngBitBlt(SurfObj,
 		         NULL,
