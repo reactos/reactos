@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.48 2001/11/07 02:16:25 ekohl Exp $
+/* $Id: kill.c,v 1.49 2001/11/07 22:36:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -154,12 +154,14 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 			FALSE);
 	current_entry = Thread->MutantListHead.Flink;
      }
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
    
    KeAcquireDispatcherDatabaseLock(FALSE);
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock(FALSE);
-   
+
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
    KeBugCheck(0);
 }
