@@ -37,9 +37,10 @@
 #define IDD_DIALOG_OPTIONS_CONFIRMATON  146
 #define ID_WINDOW_CLOSE                 798
 #define ID_WINDOW_CLOSEALL              799
-#define IDC_EDIT1                       1000
+#define IDC_VIEW_TYPE_MASK              999
+#define IDC_FILE_MOVE_FROM              1000
 #define IDC_VIEW_TYPE_DIRECTORIES       1001
-#define IDC_EDIT2                       1001
+#define IDC_FILE_MOVE_TO                1001
 #define IDC_VIEW_TYPE_PROGRAMS          1002
 #define IDC_VIEW_TYPE_DOCUMENTS         1003
 #define IDC_VIEW_TYPE_OTHERS            1004

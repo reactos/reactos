@@ -35,4 +35,12 @@
 #endif
     
 #include "main.h"
+#include "settings.h"
+
+
+DWORD Confirmation;
+DWORD ViewType;
+TCHAR ViewTypeMaskStr[MAX_TYPE_MASK_LEN];
+//LPCTSTR lpViewTypeMaskStr;
+
 
