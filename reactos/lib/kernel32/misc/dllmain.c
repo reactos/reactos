@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.25 2003/01/15 21:24:34 chorns Exp $
+/* $Id: dllmain.c,v 1.26 2003/02/12 00:39:31 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -79,6 +79,8 @@ DllMain(HANDLE hInst,
 	ULONG ul_reason_for_call,
 	LPVOID lpReserved)
 {
+ (void)lpReserved;
+
    DPRINT("DllMain(hInst %x, ul_reason_for_call %d)\n",
 	  hInst, ul_reason_for_call);
 

@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.14 2003/01/15 21:24:35 chorns Exp $
+/* $Id: ldr.c,v 1.15 2003/02/12 00:39:31 hyperion Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -56,6 +56,8 @@ LoadLibraryExA (
 	HINSTANCE hInst;
 	NTSTATUS Status;
 
+        (void)hFile;
+
 	RtlInitAnsiString (&LibFileName,
 	                   (LPSTR)lpLibFileName);
 
@@ -107,6 +109,8 @@ LoadLibraryExW (
 	UNICODE_STRING DllName;
 	HINSTANCE hInst;
 	NTSTATUS Status;
+
+        (void)hFile;
 
 	if ( lpLibFileName == NULL )
 		return NULL;

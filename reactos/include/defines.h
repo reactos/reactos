@@ -4500,6 +4500,9 @@ extern "C" {
 /* GetFileAttributes */
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
 
+/* GetFileCompressedSize */
+#define INVALID_FILE_SIZE ((DWORD)-1)
+
 /* --------------------- old stuff, need to organize! --------------- */
 
 /* BEGINNING of windowsx.h stuff from old headers: */

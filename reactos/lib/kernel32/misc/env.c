@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.19 2003/02/01 19:58:17 hyperion Exp $
+/* $Id: env.c,v 1.20 2003/02/12 00:39:31 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -497,7 +497,8 @@ FreeEnvironmentStringsW (
 	LPWSTR	EnvironmentStrings
 	)
 {
-	return TRUE;
+ (void)EnvironmentStrings;
+ return TRUE;
 }
 
 

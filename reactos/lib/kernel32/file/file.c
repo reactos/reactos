@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.40 2003/01/15 21:24:33 chorns Exp $
+/* $Id: file.c,v 1.41 2003/02/12 00:39:31 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -405,10 +405,14 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
      {
 	CloseHandle(hFile);
 	SetLastErrorByStatus(errCode);
-	return 0;
+	return INVALID_FILE_SIZE;
      }
    CloseHandle(hFile);
-   return 0;
+
+   if(lpFileSizeHigh)
+    *lpFileSizeHigh = FileCompression.CompressedFileSize.u.HighPart;
+
+   return FileCompression.CompressedFileSize.u.LowPart;
 }
 
 

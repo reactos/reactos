@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.9 2003/01/15 21:24:35 chorns Exp $
+/* $Id: handle.c,v 1.10 2003/02/12 00:39:31 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -62,11 +62,11 @@ WINBOOL STDCALL SetHandleInformation(HANDLE hObject,
      }
    if (dwMask & HANDLE_FLAG_INHERIT)
      {
-	HandleInfo.bInheritHandle = TRUE;
+	HandleInfo.bInheritHandle = dwFlags & HANDLE_FLAG_INHERIT;
      }	
    if (dwMask & HANDLE_FLAG_PROTECT_FROM_CLOSE) 
      {
-	HandleInfo.bProtectFromClose = TRUE;
+	HandleInfo.bProtectFromClose = dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE;
      }
    
    errCode = NtSetInformationObject(hObject,

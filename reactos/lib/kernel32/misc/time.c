@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.19 2003/01/15 21:24:35 chorns Exp $
+/* $Id: time.c,v 1.20 2003/02/12 00:39:31 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -173,13 +173,11 @@ FileTimeToSystemTime(
   TIME_FIELDS TimeFields;
   LARGE_INTEGER liTime;
 
+  if(lpFileTime->dwHighDateTime & 0x80000000)
+   return FALSE;
+
   liTime.u.LowPart = lpFileTime->dwLowDateTime;
   liTime.u.HighPart = lpFileTime->dwHighDateTime;
-
-  if (liTime.u.HighPart >= 0x80000000)
-  {
-     return FALSE;
-  }
 
   RtlTimeToTimeFields(&liTime, &TimeFields);
 

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.4 2002/11/16 00:08:45 ekohl Exp $
+/* $Id: rtl.h,v 1.5 2003/02/12 00:39:30 hyperion Exp $
  * 
  */
 
@@ -776,7 +776,7 @@ STDCALL
 RtlCompareUnicodeString (
 	PUNICODE_STRING	String1,
 	PUNICODE_STRING	String2,
-	BOOLEAN		BaseInsensitive
+	BOOLEAN		CaseInsensitive
 	);
 
 NTSTATUS STDCALL
