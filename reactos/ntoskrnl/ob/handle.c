@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.23 2000/07/04 08:52:46 dwelch Exp $
+/* $Id: handle.c,v 1.24 2000/08/19 01:21:17 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -552,8 +552,9 @@ NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
 	DPRINT("Reference from %x\n", ((PULONG)&Handle)[-1]);
      }
    
-   if (!(GrantedAccess & DesiredAccess) &&
-       !((~GrantedAccess) & DesiredAccess))
+   if ((AccessMode == UserMode) &&
+       (!(GrantedAccess & DesiredAccess) &&
+        !((~GrantedAccess) & DesiredAccess)))
      {
 	CHECKPOINT;
 	return(STATUS_ACCESS_DENIED);

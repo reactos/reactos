@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.19 2000/08/19 00:02:55 ekohl Exp $
+/* $Id: device.c,v 1.20 2000/08/19 01:20:52 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -136,7 +136,7 @@ IoGetDeviceObjectPointer (
 		return Status;
 
 	Status = ObReferenceObjectByHandle (FileHandle,
-	                                    DesiredAccess,
+	                                    0,
 	                                    IoFileObjectType,
 	                                    KernelMode,
 	                                    (PVOID*)&LocalFileObject,
