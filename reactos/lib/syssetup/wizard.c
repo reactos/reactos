@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.5 2004/08/03 13:43:00 ekohl Exp $
+/* $Id: wizard.c,v 1.5.2.1 2004/08/31 14:53:36 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -450,27 +450,18 @@ InstallWizard(VOID)
   ahpsp[2] = CreatePropertySheetPage(&psp);
 
 
-  /* Create the Locale page */
-  psp.dwFlags = PSP_DEFAULT; // | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-//  psp.pszHeaderTitle =    MAKEINTRESOURCE(IDS_TITLE2);
-//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_SUBTITLE2);
-  psp.pfnDlgProc = LocalePageDlgProc;
-  psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
-  ahpsp[3] = CreatePropertySheetPage(&psp);
-
-
   /* Create the Finish page */
   psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
   psp.pfnDlgProc = FinishDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
-  ahpsp[4] = CreatePropertySheetPage(&psp);
+  ahpsp[3] = CreatePropertySheetPage(&psp);
 
   /* Create the property sheet */
   psh.dwSize = sizeof(PROPSHEETHEADER);
   psh.dwFlags = PSH_WIZARD; //97 | PSH_WATERMARK | PSH_HEADER;
   psh.hInstance = hDllInstance;
   psh.hwndParent = NULL;
-  psh.nPages = 5;
+  psh.nPages = 4;
   psh.nStartPage = 0;
   psh.phpage = ahpsp;
 //  psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
