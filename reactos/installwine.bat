@@ -32,6 +32,7 @@ copy ..\wine\dlls\shdocvw\shdocvw.dll	%WINE_INSTALL%
 copy ..\wine\dlls\shell32\shell32.dll	%WINE_INSTALL%
 copy ..\wine\dlls\shfolder\shfolder.dll	%WINE_INSTALL%
 copy ..\wine\dlls\shlwapi\shlwapi.dll	%WINE_INSTALL%
+copy ..\wine\dlls\urlmon\urlmon.dll	%WINE_INSTALL%
 REM
 echo Installing winelib programs to %ROS_INSTALL%\bin
 REM
