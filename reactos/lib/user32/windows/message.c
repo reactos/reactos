@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.25 2003/10/09 06:13:04 gvg Exp $
+/* $Id: message.c,v 1.26 2003/11/08 09:33:14 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -98,57 +98,188 @@ SetMessageExtraInfo(
 }
 
 
-VOID STATIC
-User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
+BOOL
+MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
 {
-  switch(Msg)
+  *UnicodeMsg = *AnsiMsg;
+  switch (AnsiMsg->message)
     {
     case WM_GETTEXT:
+    case WM_ASKCBFORMATNAME:
       {
-	ANSI_STRING AnsiString;
-	UNICODE_STRING UnicodeString;
-	LPSTR TempString;
-	LPSTR InString;
-	InString = (LPSTR)lParam;
-	TempString = RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen(InString) + 1);
-	strcpy(TempString, InString);
-	RtlInitAnsiString(&AnsiString, TempString);
-	UnicodeString.Length = wParam * sizeof(WCHAR);
-	UnicodeString.MaximumLength = wParam * sizeof(WCHAR);
-	UnicodeString.Buffer = (PWSTR)lParam;
-	if (! NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeString,
-	                                              &AnsiString,
-	                                              FALSE)))
-	  {
-	    if (1 <= wParam)
-	      {
-		UnicodeString.Buffer[0] = L'\0';
-	      }
-	  }
-	RtlFreeHeap(RtlGetProcessHeap(), 0, TempString);
-	break;
+        LPWSTR Buffer = HeapAlloc(GetProcessHeap(), 0,
+           AnsiMsg->wParam * sizeof(WCHAR));
+        if (!Buffer)
+          {
+            return FALSE;
+          }
+        UnicodeMsg->lParam = (LPARAM)Buffer;
+        break;
       }
-    case WM_SETTEXT:
-      {
-	ANSI_STRING AnsiString;
-	RtlInitAnsiString(&AnsiString, (PSTR) lParam);
-	RtlFreeAnsiString(&AnsiString);
-	break;
-      }
-    case WM_NCCREATE:
-      {
-	CREATESTRUCTA* Cs;
 
-	Cs = (CREATESTRUCTA*)lParam;
-	RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszName);
-	if (HIWORD((ULONG)Cs->lpszClass) != 0)
-	  {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszClass);
-	  }
-	RtlFreeHeap(RtlGetProcessHeap(), 0, Cs);
-	break;
+    /* AnsiMsg->lParam is string (0-terminated) */
+    case WM_SETTEXT:
+    case WM_WININICHANGE:
+    case WM_DEVMODECHANGE:
+    case CB_DIR:
+    case LB_DIR:
+    case LB_ADDFILE:
+    case EM_REPLACESEL:
+      {
+        UNICODE_STRING UnicodeString;
+        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
+        UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
+        break;
+      }
+
+    case WM_NCCREATE:
+    case WM_CREATE:
+      {
+        UNICODE_STRING UnicodeBuffer;
+        struct s
+        {
+           CREATESTRUCTW cs;    /* new structure */
+           LPCWSTR lpszName;    /* allocated Name */
+           LPCWSTR lpszClass;   /* allocated Class */
+        };
+        struct s *xs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct s));
+        if (!xs)
+          {
+            return FALSE;
+          }
+        xs->cs = *(CREATESTRUCTW *)AnsiMsg->lParam;
+        if (HIWORD(xs->cs.lpszName))
+          {
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)xs->cs.lpszName);
+            xs->lpszName = xs->cs.lpszName = UnicodeBuffer.Buffer;
+          }
+        if (HIWORD(xs->cs.lpszClass))
+          {
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)xs->cs.lpszClass);
+            xs->lpszClass = xs->cs.lpszClass = UnicodeBuffer.Buffer;
+          }
+        UnicodeMsg->lParam = (LPARAM)xs;
+        break;
+      }
+
+    case WM_MDICREATE:
+      {
+        UNICODE_STRING UnicodeBuffer;
+        MDICREATESTRUCTW *cs =
+            (MDICREATESTRUCTW *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
+
+        if (!cs)
+          {
+            return FALSE;
+          }
+
+        *cs = *(MDICREATESTRUCTW *)AnsiMsg->lParam;
+
+        if (HIWORD(cs->szClass))
+          {
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)cs->szClass);
+            cs->szClass = UnicodeBuffer.Buffer;
+          }
+
+        RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)cs->szTitle);
+        cs->szTitle = UnicodeBuffer.Buffer;
+
+        UnicodeMsg->lParam = (LPARAM)cs;
+        break;
       }
     }
+
+  return TRUE;
+}
+
+
+BOOL
+MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
+{
+  switch (AnsiMsg->message)
+    {
+    case WM_GETTEXT:
+    case WM_ASKCBFORMATNAME:
+      {
+        LPWSTR Buffer = (LPWSTR)UnicodeMsg->lParam;
+        LPSTR AnsiBuffer = (LPSTR)AnsiMsg->lParam;
+        if (UnicodeMsg->wParam > 0 &&
+            !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
+            AnsiBuffer, UnicodeMsg->wParam, NULL, NULL))
+          {
+            AnsiBuffer[UnicodeMsg->wParam - 1] = 0;
+          }
+        HeapFree(GetProcessHeap(), 0, Buffer);
+        break;
+      }
+
+    case WM_GETTEXTLENGTH:
+    case CB_GETLBTEXTLEN:
+    case LB_GETTEXTLEN:
+      {
+        /* FIXME: There may be one DBCS char for each Unicode char */
+        *Result *= 2;
+        break;
+      }
+
+    case WM_SETTEXT:
+    case WM_WININICHANGE:
+    case WM_DEVMODECHANGE:
+    case CB_DIR:
+    case LB_DIR:
+    case LB_ADDFILE:
+    case EM_REPLACESEL:
+      {
+        UNICODE_STRING UnicodeString;
+        RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
+        RtlFreeUnicodeString(&UnicodeString);
+        break;
+      }
+
+    case WM_NCCREATE:
+    case WM_CREATE:
+      {
+	UNICODE_STRING UnicodeString;
+        struct s
+        {
+           CREATESTRUCTW cs;	/* new structure */
+           LPWSTR lpszName;	/* allocated Name */
+           LPWSTR lpszClass;	/* allocated Class */
+        };
+        struct s *xs = (struct s *)UnicodeMsg->lParam;
+        if (xs->lpszName)
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)xs->lpszName);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        if (xs->lpszClass)
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)xs->lpszClass);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        HeapFree(GetProcessHeap(), 0, xs);
+      }
+      break;
+
+    case WM_MDICREATE:
+      {
+	UNICODE_STRING UnicodeString;
+        MDICREATESTRUCTW *cs = (MDICREATESTRUCTW *)UnicodeMsg->lParam;
+        if (HIWORD(cs->szTitle))
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szTitle);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        if (HIWORD(cs->szClass))
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szClass);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        HeapFree(GetProcessHeap(), 0, cs);
+      }
+      break;
+    }
+  return(TRUE);
 }
 
 
@@ -157,6 +288,7 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 {
   switch((*Msg))
     {
+    case WM_CREATE:
     case WM_NCCREATE:
       {
 	CREATESTRUCTA* CsA;
@@ -198,16 +330,57 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 
 
 VOID STATIC
-User32FreeUnicodeConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
+User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  UNIMPLEMENTED;
-}
+  switch(Msg)
+    {
+    case WM_GETTEXT:
+      {
+	ANSI_STRING AnsiString;
+	UNICODE_STRING UnicodeString;
+	LPSTR TempString;
+	LPSTR InString;
+	InString = (LPSTR)lParam;
+	TempString = RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen(InString) + 1);
+	strcpy(TempString, InString);
+	RtlInitAnsiString(&AnsiString, TempString);
+	UnicodeString.Length = wParam * sizeof(WCHAR);
+	UnicodeString.MaximumLength = wParam * sizeof(WCHAR);
+	UnicodeString.Buffer = (PWSTR)lParam;
+	if (! NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeString,
+	                                              &AnsiString,
+	                                              FALSE)))
+	  {
+	    if (1 <= wParam)
+	      {
+		UnicodeString.Buffer[0] = L'\0';
+	      }
+	  }
+	RtlFreeHeap(RtlGetProcessHeap(), 0, TempString);
+	break;
+      }
+    case WM_SETTEXT:
+      {
+	ANSI_STRING AnsiString;
+	RtlInitAnsiString(&AnsiString, (PSTR) lParam);
+	RtlFreeAnsiString(&AnsiString);
+	break;
+      }
+    case WM_CREATE:
+    case WM_NCCREATE:
+      {
+	CREATESTRUCTA* Cs;
 
-
-VOID STATIC
-User32ConvertToUnicodeMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
-{
-  UNIMPLEMENTED;
+	Cs = (CREATESTRUCTA*)lParam;
+	RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszName);
+	if (HIWORD((ULONG)Cs->lpszClass) != 0)
+	  {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszClass);
+	  }
+	RtlFreeHeap(RtlGetProcessHeap(), 0, Cs);
+	break;
+      }
+    }
 }
 
 
@@ -221,22 +394,37 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
+  MSG AnsiMsg;
+  MSG UnicodeMsg;
+  LRESULT Result;
   BOOL IsHandle;
+
   if ((DWORD)lpPrevWndFunc > 0x80000000)
-  {
-	  lpPrevWndFunc -= 0x80000000;
-	  IsHandle = TRUE;
-  }
+    {
+      lpPrevWndFunc -= 0x80000000;
+      IsHandle = TRUE;
+    }
   else
-  {
-	  IsHandle = FALSE;
-  }
+    {
+      IsHandle = FALSE;
+    }
+
+  AnsiMsg.hwnd = hWnd;
+  AnsiMsg.message = Msg;
+  AnsiMsg.wParam = wParam;
+  AnsiMsg.lParam = lParam;
+  
   if (IsWindowUnicode(hWnd))
     {
-      LRESULT Result;
-      User32ConvertToUnicodeMessage(&Msg, &wParam, &lParam);
+      if (!MsgiAnsiToUnicodeMessage(&UnicodeMsg, &AnsiMsg))
+        {
+          return(FALSE);
+        }
       Result = lpPrevWndFunc(hWnd, Msg, wParam, lParam);
-      User32FreeUnicodeConvertedMessage(Msg, wParam, lParam);
+      if (!MsgiAnsiToUnicodeReply(&UnicodeMsg, &AnsiMsg, &Result))
+        {
+          return(FALSE);
+        }
       return(Result);
     }
   else
@@ -278,71 +466,6 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
     {
       return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
     }
-}
-
-
-BOOL
-MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
-{
-  *UnicodeMsg = *AnsiMsg;
-  switch (AnsiMsg->message)
-    {
-    case WM_GETTEXT:
-      {
-	UnicodeMsg->wParam = UnicodeMsg->wParam / 2;
-	break;
-      }
-    case WM_SETTEXT:
-      {
-	ANSI_STRING AnsiString;
-	UNICODE_STRING UnicodeString;
-	RtlInitAnsiString(&AnsiString, (PSTR) AnsiMsg->lParam);
-	if (! NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeString,
-	                                              &AnsiString,
-	                                              TRUE)))
-	  {
-	  return FALSE;
-	  }
-	UnicodeMsg->lParam = (LPARAM) UnicodeString.Buffer;
-	break;
-      }
-    }
-  return TRUE;
-}
-
-
-BOOL
-MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT Result)
-{
-  switch (AnsiMsg->message)
-    {
-    case WM_GETTEXT:
-      {
-	ANSI_STRING AnsiString;
-	UNICODE_STRING UnicodeString;
-	LPWSTR TempString;
-	LPWSTR InString;
-	InString = (LPWSTR)UnicodeMsg->lParam;
-	TempString = RtlAllocateHeap(RtlGetProcessHeap(), 0, 
-				     wcslen(InString) * sizeof(WCHAR));
-	wcscpy(TempString, InString);
-	RtlInitUnicodeString(&UnicodeString, TempString);
-	AnsiString.Length = AnsiMsg->wParam;
-	AnsiString.MaximumLength = AnsiMsg->wParam;
-	AnsiString.Buffer = (PSTR)AnsiMsg->lParam;
-	RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
-	RtlFreeHeap(RtlGetProcessHeap(), 0, TempString);
-	break;
-      }
-    case WM_SETTEXT:
-      {
-	UNICODE_STRING UnicodeString;
-	RtlInitUnicodeString(&UnicodeString, (PCWSTR) UnicodeMsg->lParam);
-	RtlFreeUnicodeString(&UnicodeString);
-	break;
-      }
-    }
-  return(TRUE);
 }
 
 
@@ -559,7 +682,7 @@ SendMessageA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       return(FALSE);
     }
   Result = SendMessageW(UcMsg.hwnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
-  if (!MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, Result))
+  if (!MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
     {
       return(FALSE);
     }
