@@ -444,6 +444,11 @@ XMLElement::Parse(const string& token,
 				p++;
 			p += strspn ( p, WS );
 		}
+		else if ( name[0] != '!' )
+		{
+			throw XMLSyntaxErrorException ( location,
+			                                "attributes must have values" );
+		}
 		attributes.push_back ( new XMLAttribute ( attribute, value ) );
 	}
 	return !( *p == '/' ) && !end_tag;

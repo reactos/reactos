@@ -104,7 +104,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		const XMLAttribute* att = e.GetAttribute ( "first", false );
 		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ),
-		                         att != NULL );
+		                         att && atoi(att->value.c_str()) != 0 );
 		if ( pIf )
 			pIf->files.push_back ( pFile );
 		else
