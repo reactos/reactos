@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.97 2002/02/09 19:20:44 chorns Exp $
+/* $Id: loader.c,v 1.98 2002/02/10 13:35:37 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -347,11 +347,23 @@ LdrpOpenModuleDirectory(PHANDLE Handle)
 static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
 {
    WCHAR TmpFileName [MAX_PATH];
+   CHAR Buffer [256];
    UNICODE_STRING	DriverName;
    PDEVICE_NODE DeviceNode;
    NTSTATUS Status;
+   ULONG x, y, cx, cy;
 
-   CPRINT("Loading %S\n",RelativeDriverName);
+   HalQueryDisplayParameters(&x, &y, &cx, &cy);
+   RtlFillMemory(Buffer, x, ' ');
+   Buffer[x] = '\0';
+   HalSetDisplayParameters(0, y-1);
+   HalDisplayString(Buffer);
+
+   sprintf(Buffer, "Loading %S...\n",RelativeDriverName);
+   HalSetDisplayParameters(0, y-1);
+   HalDisplayString(Buffer);
+   HalSetDisplayParameters(cx, cy);
+   //CPRINT("Loading %S\n",RelativeDriverName);
 
    wcscpy(TmpFileName, L"\\SystemRoot\\system32\\drivers\\");
    wcscat(TmpFileName, RelativeDriverName);
