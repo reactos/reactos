@@ -161,6 +161,34 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   while ((QueryEntry->QueryRoutine != NULL) ||
 	 (QueryEntry->Name != NULL))
     {
+/* TODO: (from RobD)
+
+  packet.sys has this code which calls this (and fails here) with:
+
+    RtlZeroMemory(ParamTable, sizeof(ParamTable));
+    //
+    //  change to the linkage key
+    //
+    ParamTable[0].QueryRoutine = NULL;                 // NOTE: QueryRoutine is set to NULL
+    ParamTable[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
+    ParamTable[0].Name = L"Linkage";
+    //
+    //  Get the name of the mac driver we should bind to
+    //
+    ParamTable[1].QueryRoutine = PacketQueryRegistryRoutine;
+    ParamTable[1].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_NOEXPAND;
+    ParamTable[1].Name = L"Bind";
+    ParamTable[1].EntryContext = (PVOID)MacDriverName;
+    ParamTable[1].DefaultType = REG_MULTI_SZ;
+
+    Status = RtlQueryRegistryValues(
+	           IN ULONG RelativeTo = RTL_REGISTRY_ABSOLUTE,
+               IN PWSTR Path = Path,
+               IN PRTL_QUERY_REGISTRY_TABLE QueryTable = ParamTable,
+               IN PVOID Context = NULL,
+               IN PVOID Environment = NULL);
+
+ */
       //CSH: Was:
       //if ((QueryEntry->QueryRoutine == NULL) &&
       //  ((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_DIRECT)) != 0))
