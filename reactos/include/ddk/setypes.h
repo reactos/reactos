@@ -1,4 +1,5 @@
-/*
+/* $Id: setypes.h,v 1.3 1999/12/26 17:22:18 ea Exp $
+ *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
  * FILE:              include/ddk/setypes.h
@@ -198,7 +199,7 @@ typedef struct _SECURITY_DESCRIPTOR {
   PACL Dacl;
 } SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR;
 
-BOOLEAN RtlValidSid(PSID Sid);
+BOOLEAN STDCALL RtlValidSid (PSID Sid);
 
 /*
  * from ntoskrnl/se/token.c:

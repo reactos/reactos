@@ -1,4 +1,5 @@
-/*
+/* $Id: sid.c,v 1.2 1999/12/26 17:22:19 ea Exp $
+ *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Security manager
@@ -16,7 +17,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN RtlValidSid(PSID Sid)
+BOOLEAN STDCALL RtlValidSid (PSID Sid)
 {
    if ((Sid->Revision & 0xf) != 1)
      {
@@ -29,12 +30,12 @@ BOOLEAN RtlValidSid(PSID Sid)
    return(TRUE);
 }
 
-ULONG RtlLengthRequiredSid(UCHAR SubAuthorityCount)
+ULONG STDCALL RtlLengthRequiredSid (UCHAR SubAuthorityCount)
 {
    return(sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG));
 }
 
-NTSTATUS RtlInitializeSid(PSID Sid,
+NTSTATUS STDCALL RtlInitializeSid (PSID Sid,
 			  PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 			  UCHAR SubAuthorityCount)
 {
@@ -45,17 +46,17 @@ NTSTATUS RtlInitializeSid(PSID Sid,
    return(STATUS_SUCCESS);
 }
 
-PULONG RtlSubAuthoritySid(PSID Sid, ULONG SubAuthority)
+PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority)
 {
    return(&Sid->SubAuthority[SubAuthority]);
 }
 
-PUCHAR RtlSubAuthorityCountSid(PSID Sid)
+PUCHAR STDCALL RtlSubAuthorityCountSid (PSID Sid)
 {
    return(&Sid->SubAuthorityCount);
 }
 
-BOOLEAN RtlEqualSid(PSID Sid1, PSID Sid2)
+BOOLEAN STDCALL RtlEqualSid (PSID Sid1, PSID Sid2)
 {
    if (Sid1->Revision != Sid2->Revision)
      {
@@ -73,13 +74,13 @@ BOOLEAN RtlEqualSid(PSID Sid1, PSID Sid2)
    return(TRUE);
 }
 
-ULONG RtlLengthSid(PSID Sid)
+ULONG STDCALL RtlLengthSid (PSID Sid)
 {
    return(sizeof(SID) + (Sid->SubAuthorityCount-1)*4);
 }
 
 
-NTSTATUS RtlCopySid(ULONG BufferLength, PSID Src, PSID Dest)
+NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Src, PSID Dest)
 {
    if (BufferLength < RtlLengthSid(Src))
      {
@@ -88,3 +89,6 @@ NTSTATUS RtlCopySid(ULONG BufferLength, PSID Src, PSID Dest)
    memmove(Dest, Src, RtlLengthSid(Src));
    return(STATUS_SUCCESS);
 }
+
+
+/* EOF */

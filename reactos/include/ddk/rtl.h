@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.21 1999/12/18 10:15:11 ea Exp $
+/* $Id: rtl.h,v 1.22 1999/12/26 17:22:18 ea Exp $
  * 
  */
 
@@ -367,6 +367,7 @@ RtlCreateRegistryKey (
 	);
 
 NTSTATUS
+STDCALL
 RtlCreateSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	SecurityDescriptor,
 	ULONG			Revision
@@ -760,6 +761,7 @@ RtlLargeIntegerSubtract (
 	);
 
 ULONG
+STDCALL
 RtlLengthSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	SecurityDescriptor
 	);
@@ -864,6 +866,7 @@ RtlRetrieveUshort (
 	);
 
 NTSTATUS
+STDCALL
 RtlSetDaclSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	SecurityDescriptor,
 	BOOLEAN			DaclPresent,
@@ -1058,6 +1061,7 @@ RtlValidateHeap (
 	);
 
 BOOLEAN
+STDCALL
 RtlValidSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	SecurityDescriptor
 	);

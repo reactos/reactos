@@ -1,4 +1,5 @@
-/*
+/* $Id: token.c,v 1.2 1999/12/26 17:22:19 ea Exp $
+ *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Security manager
@@ -118,3 +119,5 @@ NTSTATUS STDCALL NtCreateToken(OUT PHANDLE TokenHandle,
 	UNIMPLEMENTED;
 }
 
+
+/* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.42 1999/12/26 16:36:44 ea Exp $
+# $Id: makefile_rex,v 1.43 1999/12/26 17:22:18 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -58,8 +58,6 @@ EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o \
 FS_OBJECTS = fs/mcb.o fs/util.o
 
 SE_OBJECTS = se/semgr.o se/acl.o se/sid.o se/sd.o se/token.o se/luid.o
-
-SE_OBJECTS = se/semgr.o
 
 CM_OBJECTS = cm/registry.o
 

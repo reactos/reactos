@@ -1,5 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
+/* $Id: fsfuncs.h,v 1.2 1999/12/26 17:22:18 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (

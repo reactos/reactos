@@ -1,4 +1,5 @@
-/*
+/* $Id: semgr.c,v 1.13 1999/12/26 17:22:19 ea Exp $
+ *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Security manager
@@ -199,12 +200,12 @@ NtDeleteObjectAuditAlarm (
  UNIMPLEMENTED;
 }
 
-VOID SeReleaseSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext)
+VOID STDCALL SeReleaseSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
    
 }
 
-VOID SeCaptureSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext)
+VOID STDCALL SeCaptureSubjectContext (PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
    PEPROCESS Process;
    ULONG a;
@@ -276,7 +277,7 @@ BOOLEAN SepPrivilegeCheck(PACCESS_TOKEN Token,
    return(FALSE);
 }
    
-BOOLEAN SePrivilegeCheck(PPRIVILEGE_SET Privileges,
+BOOLEAN STDCALL SePrivilegeCheck(PPRIVILEGE_SET Privileges,
 			 PSECURITY_SUBJECT_CONTEXT SubjectContext,
 			 KPROCESSOR_MODE PreviousMode)
 {
@@ -302,7 +303,7 @@ BOOLEAN SePrivilegeCheck(PPRIVILEGE_SET Privileges,
 			    PreviousMode));			    
 }
 
-BOOLEAN SeSinglePrivilegeCheck(LUID PrivilegeValue,
+BOOLEAN STDCALL SeSinglePrivilegeCheck(LUID PrivilegeValue,
 			       KPROCESSOR_MODE PreviousMode)
 {
    SECURITY_SUBJECT_CONTEXT SubjectContext;
@@ -330,12 +331,12 @@ BOOLEAN SeSinglePrivilegeCheck(LUID PrivilegeValue,
    return(r);
 }
 
-NTSTATUS SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
+NTSTATUS STDCALL SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
 {
    UNIMPLEMENTED;
 }
 
-NTSTATUS SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
+NTSTATUS STDCALL SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 			  PSECURITY_DESCRIPTOR ExplicitDescriptor,
 			  BOOLEAN IsDirectoryObject,
 			  PSECURITY_SUBJECT_CONTEXT SubjectContext,
@@ -345,7 +346,7 @@ NTSTATUS SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
    UNIMPLEMENTED;
 }
 
-BOOLEAN SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+BOOLEAN STDCALL SeAccessCheck (IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 		      IN PSECURITY_DESCRIPTOR_CONTEXT SubjectSecurityContext,
 		      IN BOOLEAN SubjectContextLocked,
 		      IN ACCESS_MASK DesiredAccess,
@@ -436,3 +437,4 @@ BOOLEAN SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 }
 
 
+/* EOF */
