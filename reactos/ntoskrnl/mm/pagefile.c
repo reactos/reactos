@@ -726,7 +726,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                    IN PLARGE_INTEGER MaximumSize,
                    IN ULONG Reserved)
 {
-   NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE FileHandle;
    IO_STATUS_BLOCK IoStatus;
@@ -747,6 +746,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    KPROCESSOR_MODE PreviousMode;
    UNICODE_STRING CapturedFileName;
    LARGE_INTEGER SafeInitialSize, SafeMaximumSize;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
           FileName, InitialSize->QuadPart);
