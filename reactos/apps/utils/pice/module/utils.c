@@ -389,8 +389,8 @@ ULONG PICE_fnncmp(char* s1,char* s2, ULONG len)
 		len1--;
 		len2--;
     }
-	// strings same length
-	if((len1==0 || *s1=='@') && (len2==0 || *s2 =='@')){
+	// strings are the same length
+	if((*s1=='\0' || *s1=='@') && (*s2=='\0' || *s2 =='@')){
         result=0;
 	}
 	return result;

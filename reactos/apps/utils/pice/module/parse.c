@@ -2622,7 +2622,7 @@ COMMAND_PROTOTYPE(ShowLocals)
 	if(pArgs->Count==0)
 	{
 		p = FindLocalsByAddress(GetLinearAddress(CurrentCS,CurrentEIP));
-		DPRINT((0,"ShowLocals: %x", p));
+		DPRINT((0,"ShowLocals: %x\n", p));
 		if(p)
 		{
 			DPRINT((0,"ShowLocals: name %s, type_name %s\n", p->name, p->type_name));
@@ -2757,6 +2757,7 @@ COMMAND_PROTOTYPE(EvaluateExpression)
 
 			if( (pSymbols = FindModuleSymbols(addr) ) )
 			{
+				DPRINT((0,"EvaluateExpression: %s\n", (LPSTR)pArgs->Value[0]));
 				Evaluate(pSymbols,(LPSTR)pArgs->Value[0]);
 			}
 		}

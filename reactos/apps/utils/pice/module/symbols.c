@@ -57,6 +57,21 @@ ULONG kernel_end=0;
 
 char tempSym[1024]; // temp buffer for output
 
+
+PULONG LocalRegs[]=
+{
+    &CurrentEAX,
+    &CurrentECX,
+    &CurrentEDX,
+    &CurrentEBX,
+    &CurrentESP,
+    &CurrentEBP,
+    &CurrentESI,
+    &CurrentEDI,
+    &CurrentEIP,
+    &CurrentEFL
+};
+
 typedef struct _VRET
 {
 	ULONG value;
@@ -677,12 +692,6 @@ BOOLEAN ScanExportsByAddress(LPSTR *pFind,ULONG ulValue)
 								pSym += pSym->NumberOfAuxSymbols + 1;
 							}
 							*pFind = temp3;
-							if(0)
-							{
-								PIMAGE_SECTION_HEADER pShdrThis = (PIMAGE_SECTION_HEADER)pShdr + (pFoundSym->SectionNumber-1);
-								//check that ulValue is below the limit for the section where best match is found
-								ASSERT(ulValue < ((ULONG)pdTemp->BaseAddress+pShdrThis->SizeOfRawData));
-							}
 							if( pFoundSym->N.Name.Short ){
 								pName = pFoundSym->N.ShortName;  //name is in the header
 								PICE_sprintf(temp3,"%S!%.8s",pdTemp->name,pName); //if name is in the header it may be nonzero terminated
@@ -972,8 +981,13 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname, PDEBUG_MODULE pd)
 		while( pSym < pSymEnd )
 		{
 			//symbol is a function is it's type is 0x20, storage class is external and section>0
-			if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_EXTERNAL) &&
-			   (pSym->SectionNumber > 0 )))
+			//if(( (pSym->Type == 0x20)  && (pSym->StorageClass==IMAGE_SYM_CLASS_EXTERNAL) &&
+			//   (pSym->SectionNumber > 0 )))
+
+			if(((pSym->Type == 0x0) || (pSym->Type == 0x20) )  &&
+			   ((pSym->StorageClass == IMAGE_SYM_CLASS_EXTERNAL) || (pSym->StorageClass==IMAGE_SYM_CLASS_STATIC)) &&
+			   (pSym->SectionNumber > 0 ))
+
 			{
                 ULONG start;
                 LPSTR pName;
@@ -984,6 +998,7 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname, PDEBUG_MODULE pd)
 
 				if(pSym->N.Name.Short){ //if name is stored in the structure
 					//name may be not zero terminated but 8 characters max
+					DPRINT((0,"FindFunctionInModuleByName: %.8s\n", pSym->N.ShortName));
 					pName = pSym->N.ShortName;  //name is in the header
 			        if((PICE_fnncmp(pName,szFunctionname, 8) == 0) && start)
 			        {
@@ -993,6 +1008,7 @@ ULONG FindFunctionInModuleByName(LPSTR szFunctionname, PDEBUG_MODULE pd)
 			        }
 				}else{
 					pName = pStr+pSym->N.Name.Long;
+					DPRINT((0,"FindFunctionInModuleByName: %s\n", pName));
 					if((PICE_fncmp(pName,szFunctionname) == 0) && start)
 	                {
 	                    DPRINT((0,"FindFunctionInModuleByName(): symbol was in string table, start: %x\n", start));
@@ -1062,6 +1078,8 @@ LPSTR FindTypeDefinitionForCombinedTypes(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG 
     nStabLen = pSymbols->ulSizeOfStabs;
     pStr = (LPSTR)((ULONG)pSymbols + pSymbols->ulOffsetToStabsStrings);
 
+	DPRINT((0,"FindTypeDefinitionForCombinedTypes()\n"));
+
     for(i=0;i<(nStabLen/sizeof(STAB_ENTRY));i++)
     {
         pName = &pStr[pStab->n_strx + nOffset];
@@ -1097,7 +1115,8 @@ LPSTR FindTypeDefinitionForCombinedTypes(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG 
 				}
 				break;
 			case N_GSYM:
-                if(ulCurrentFileNumber == ulFileNumber)
+				//ei File number count is not reliable
+				if( 1 /*ulCurrentFileNumber == ulFileNumber*/)
                 {
                     DPRINT((0,"FindTypeDefinitionForCombinedTypes(): %s\n",pName));
 
@@ -1197,11 +1216,11 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
                         if(PICE_strlen(szCurrentPath))
                         {
                             PICE_strcat(szCurrentPath,pName);
-                            DPRINT((0,"FindTypeDefinition(): changing source file %s\n",szCurrentPath));
+                            DPRINT((0,"FindTypeDefinition()1: cha %s, %u\n",szCurrentPath, ulCurrentFileNumber));
                         }
                         else
                         {
-                            DPRINT((0,"FindTypeDefinition(): changing source file %s\n",pName));
+                            DPRINT((0,"FindTypeDefinition(): cha %s, %u\n",pName, ulCurrentFileNumber));
                         }
                     }
                     else
@@ -1214,7 +1233,8 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
 				break;
 			case N_LSYM:
 				// stab has no value -> must be type definition
-				if(pStab->n_value == 0 && ulCurrentFileNumber==ulFileNumber)
+				//ei File number count is not reliable
+				if(pStab->n_value == 0 /*&& ulCurrentFileNumber==ulFileNumber*/)
 				{
                     DPRINT((0,"FindTypeDefinition(): pre type definition %s\n",pName));
 					// handle multi-line symbols
@@ -1234,7 +1254,7 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
 					}
 					else
 					{
-                        DPRINT((0,"FindTypeDefinition(): [3] accum. %s\n",szAccumulatedName));
+                        DPRINT((0,"FindTypeDefinition(): [3] accum. %s, pname: %s\n",szAccumulatedName, pName));
 						if(PICE_strlen(szAccumulatedName)==0)
                         {
                             PICE_strcpy(szAccumulatedName,pName);
@@ -1248,9 +1268,9 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
                         pTypeSymbol = PICE_strchr(pTypeString,':');
 						if(pTypeSymbol && (*(pTypeSymbol+1)=='t' || *(pTypeSymbol+1)=='T'))
 						{
-                            DPRINT((0,"FindTypeDefinition(): LSYM is type %s\n",pName));
 							// parse it
 							ulCurrentTypeNumber = ExtractTypeNumber(pTypeString);
+                            DPRINT((0,"FindTypeDefinition(): ulCurrType: %u, LSYM is type %s\n",ulCurrentTypeNumber,pName));
 							if(ulCurrentTypeNumber == ulTypeNumber)
 							{
                                 DPRINT((0,"FindTypeDefinition(): type definition %s\n",pTypeString));
@@ -1349,11 +1369,11 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
                                 if(PICE_strlen(szCurrentPath))
                                 {
                                     PICE_strcat(szCurrentPath,pName);
-                                    DPRINT((0,"changing source file %s\n",szCurrentPath));
+                                    DPRINT((0,"changing source file1 %s, %u\n",szCurrentPath,ulCurrentFileNumber));
                                 }
                                 else
                                 {
-                                    DPRINT((0,"changing source file %s\n",pName));
+                                    DPRINT((0,"changing source file %s, %u\n",pName,ulCurrentFileNumber));
                                 }
                             }
                             else
@@ -1368,14 +1388,15 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
 						// if we're in the function we're looking for
                         if(szCurrentFunction[0] && PICE_fncmp(szCurrentFunction,pFunctionName)==0)
                         {
-                            DPRINT((0,"local variable %.8X %.8X %.8X %.8X %.8X %s\n",pStab->n_strx,pStab->n_type,pStab->n_other,pStab->n_desc,pStab->n_value,pName));
+                            DPRINT((0,"local variable1 %.8X %.8X %.8X %.8X %.8X %s\n",pStab->n_strx,pStab->n_type,pStab->n_other,pStab->n_desc,pStab->n_value,pName));
 							ulTypeNumber = ExtractTypeNumber(pName);
-							DPRINT((0,"type number = %x\n",ulTypeNumber));
+							DPRINT((0,"type number = %u\n",ulTypeNumber));
 							if((pTypedef = FindTypeDefinition(pSymbols,ulTypeNumber,ulCurrentFileNumber)))
 							{
+								DPRINT((0,"pTypedef: %x\n", pTypedef));
 								PICE_strcpy(local_vars[ulNumLocalVars].type_name,TruncateString(pTypedef,':'));
 								PICE_strcpy(local_vars[ulNumLocalVars].name,TruncateString(pName,':'));
-								local_vars[ulNumLocalVars].value = 0;
+								local_vars[ulNumLocalVars].value = (CurrentEBP+pStab->n_value);
 								local_vars[ulNumLocalVars].offset = pStab->n_value;
 								local_vars[ulNumLocalVars].line = pStab->n_desc;
                                 local_vars[ulNumLocalVars].bRegister = FALSE;
@@ -1394,7 +1415,7 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
 							{
 								PICE_strcpy(local_vars[ulNumLocalVars].type_name,TruncateString(pTypedef,':'));
 								PICE_strcpy(local_vars[ulNumLocalVars].name,TruncateString(pName,':'));
-								local_vars[ulNumLocalVars].value = 0;
+								local_vars[ulNumLocalVars].value = (CurrentEBP+pStab->n_value);
 								local_vars[ulNumLocalVars].offset = pStab->n_value;
 								ulNumLocalVars++;
 							}
@@ -1404,14 +1425,14 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
 						// if we're in the function we're looking for
                         if(szCurrentFunction[0] && PICE_fncmp(szCurrentFunction,pFunctionName)==0)
                         {
-                            DPRINT((0,"local variable %.8X %.8X %.8X %.8X %.8X %s\n",pStab->n_strx,pStab->n_type,pStab->n_other,pStab->n_desc,pStab->n_value,pName));
+                            DPRINT((0,"local variable2 %.8X %.8X %.8X %.8X %.8X %s\n",pStab->n_strx,pStab->n_type,pStab->n_other,pStab->n_desc,pStab->n_value,pName));
 							ulTypeNumber = ExtractTypeNumber(pName);
 							DPRINT((0,"type number = %x\n",ulTypeNumber));
 							if((pTypedef = FindTypeDefinition(pSymbols,ulTypeNumber,ulCurrentFileNumber)))
 							{
 								PICE_strcpy(local_vars[ulNumLocalVars].type_name,TruncateString(pTypedef,':'));
 								PICE_strcpy(local_vars[ulNumLocalVars].name,TruncateString(pName,':'));
-								local_vars[ulNumLocalVars].value = 0;
+								local_vars[ulNumLocalVars].value = (LocalRegs[pStab->n_value]);
 								local_vars[ulNumLocalVars].offset = pStab->n_value;
 								local_vars[ulNumLocalVars].line = pStab->n_desc;
                                 local_vars[ulNumLocalVars].bRegister = TRUE;
@@ -1548,7 +1569,6 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
 						else
                         {// if it has a length it's the start of a function
                             ULONG len;
-//DPRINT((2,"function: %s @ %x line: %u\n", pName, pStab->n_value, pStab->n_desc));
                             // extract the name only, the type string is of no use here
 	                        len=StrLenUpToWhiteChar(pName,":");
 	                        PICE_strncpy(szCurrentFunction,pName,len);
@@ -1701,7 +1721,7 @@ BOOLEAN FindAddressForSourceLine(ULONG ulLineNumber,LPSTR pFilename,PDEBUG_MODUL
                     nNextOffset = pStab->n_value;
                     break;
                 case N_SO:
-                    if((strLen = PICE_strlen(pName)))
+					if((strLen = PICE_strlen(pName)))
                     {
                         if(pName[strLen-1]!='/')
                         {

@@ -36,6 +36,72 @@ Pice will load the symbols during boot. For large .dbg files it may take a
 while (ntoskrnl.dbg is ~3Mb). You may find that loading time under bochs is
 quite slow, although otherwise performance should be fine.
 
+Key combination to break into debugger is CTRL-D.
+You may need to press CTRL button upon return from the debugger if you get
+"funny" symbols when you type.
+
+List of commands:
+
+gdt      display current global descriptor table
+idt	 display current interrupt descriptor table
+x 	 return to Reactos
+t	 single step one instruction
+vma	 displays VMAs
+h	 list help on commands
+page	 dump page directories
+proc	 list all processes
+dd	 display dword memory
+db	 display byte memory
+u	 disassemble at address
+mod	 displays all modules
+bpx	 set code breakpoint
+bl	 list breakpoints
+bc	 clear breakpoints
+ver	 display pICE version and state information
+hboot	 hard boot the system
+cpu	 display CPU special registers
+stack	 display call stack
+.	 unassemble at current instruction
+p	 single step over call
+i	 single step into call
+locals	 display local symbols
+table	 display loaded symbol tables
+file	 display source files in symbol table
+sym	 list known symbol information
+?	 evaluate an expression     (global symbols only)
+src	 sets disassembly mode
+wc	 change size of code window
+wd	 change size of data window
+r	 sets or displays registers
+cls	 clear output window
+pci	 show PCI devices
+next	 advance EIP to next instruction
+i3here	 catch INT 3s
+layout	 sets keyboard layout
+syscall	 displays syscall (table)
+altkey	 set alternate break key
+addr	 show/set address contexts
+
+[CTRL/SHIFT/ALT] arrow up/down
+TAB
+
+Not implemented yet:
+
+dpd	 display dword physical memory
+code	 toggle code display
+peek	 peek at physical memory
+poke	 poke to physical memory
+phys	 show all mappings for linear address
+timers	 show all active timers
+
+TODO:
+1. Break into pice on KeBugCheck().
+2. Evaluation of pointers.
+3. Virtual breakpoints
+4. Unimplemented commands.
+5. Video mode switching (to debug gdi applications).
+
+
 Enjoy,
 Eugene
 
