@@ -755,9 +755,7 @@ BOOL WINAPI SymGetTypeInfo(HANDLE hProcess, DWORD64 ModBase,
     module = module_find_by_addr(pcs, ModBase, DMT_UNKNOWN);
     if (!(module = module_get_debug(pcs, module)))
     {
-#ifndef __REACTOS__
         FIXME("Someone didn't properly set ModBase (%s)\n", wine_dbgstr_longlong(ModBase));
-#endif
         return FALSE;
     }
 
