@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.3 1999/05/27 23:08:13 rex Exp $
+; $Id: win32k.def,v 1.4 1999/07/17 23:10:31 ea Exp $
 ;
 ; win32k.def
 ;
@@ -6,7 +6,7 @@
 ;
 LIBRARY win32k
 EXPORTS
-W32kGetVectors
+;W32kGetVectors
 BRUSHOBJ_pvAllocRbrush
 BRUSHOBJ_pvGetRbrush
 BRUSHOBJ_ulGetBrushColor

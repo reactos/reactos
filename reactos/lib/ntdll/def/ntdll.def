@@ -1,867 +1,436 @@
 EXPORTS
 InitializeObjectAttributes
 NtAcceptConnectPort@24
-NtAcceptConnectPort = NtAcceptConnectPort@24
 NtAccessCheck@32
-NtAccessCheck = NtAccessCheck@32
 NtAccessCheckAndAuditAlarm@44
-NtAccessCheckAndAuditAlarm = NtAccessCheckAndAuditAlarm@44
 NtAddAtom@8
-NtAddAtom = NtAddAtom@8
 NtAdjustGroupsToken@24
-NtAdjustGroupsToken = NtAdjustGroupsToken@24
 NtAdjustPrivilegesToken@24
-NtAdjustPrivilegesToken = NtAdjustPrivilegesToken@24
 NtAlertResumeThread@8
-NtAlertResumeThread = NtAlertResumeThread@8
 NtAlertThread@4
-NtAlertThread = NtAlertThread@4
 NtAllocateLocallyUniqueId@4
-NtAllocateLocallyUniqueId = NtAllocateLocallyUniqueId@4
 NtAllocateUuids@12
-NtAllocateUuids = NtAllocateUuids@12
 NtAllocateVirtualMemory@24
-NtAllocateVirtualMemory = NtAllocateVirtualMemory@24
 NtCallbackReturn@12
-NtCallbackReturn = NtCallbackReturn@12
 NtCancelIoFile@8
-NtCancelIoFile = NtCancelIoFile@8
 NtCancelTimer@8
-NtCancelTimer = NtCancelTimer@8
 NtClearEvent@4
-NtClearEvent = NtClearEvent@4
 NtClose@4
-NtClose = NtClose@4
 NtCloseObjectAuditAlarm@12
-NtCloseObjectAuditAlarm = NtCloseObjectAuditAlarm@12
 NtCompleteConnectPort@4
-NtCompleteConnectPort = NtCompleteConnectPort@4
 NtConnectPort@32
-NtConnectPort = NtConnectPort@32
 NtContinue@8
-NtContinue = NtContinue@8
 NtCreateChannel@8
-NtCreateChannel = NtCreateChannel@8
 NtCreateDirectoryObject@12
-NtCreateDirectoryObject = NtCreateDirectoryObject@12
 NtCreateEvent@20
-NtCreateEvent = NtCreateEvent@20
 NtCreateEventPair@12
-NtCreateEventPair = NtCreateEventPair@12
 NtCreateFile@44
-NtCreateFile = NtCreateFile@44
 NtCreateIoCompletion@16
-NtCreateIoCompletion = NtCreateIoCompletion@16
 NtCreateKey@28
-NtCreateKey = NtCreateKey@28
 NtCreateMailslotFile@32
-NtCreateMailslotFile = NtCreateMailslotFile@32
 NtCreateMutant@16
-NtCreateMutant = NtCreateMutant@16
 NtCreateNamedPipeFile@56
-NtCreateNamedPipeFile = NtCreateNamedPipeFile@56
 NtCreatePagingFile@16
-NtCreatePagingFile = NtCreatePagingFile@16
 NtCreatePort@20
-NtCreatePort = NtCreatePort@20
 NtCreateProcess@32
-NtCreateProcess = NtCreateProcess@32
 NtCreateProfile@36
-NtCreateProfile = NtCreateProfile@36
 NtCreateSection@28
-NtCreateSection = NtCreateSection@28
 NtCreateSemaphore@20
-NtCreateSemaphore = NtCreateSemaphore@20
 NtCreateSymbolicLinkObject@16
-NtCreateSymbolicLinkObject = NtCreateSymbolicLinkObject@16
 NtCreateThread@32
-NtCreateThread = NtCreateThread@32
 NtCreateTimer@16
-NtCreateTimer = NtCreateTimer@16
 NtCreateToken@52
-NtCreateToken = NtCreateToken@52
 NtDelayExecution@8
-NtDelayExecution = NtDelayExecution@8
 NtDeleteAtom@4
-NtDeleteAtom = NtDeleteAtom@4
 NtDeleteFile@4
-NtDeleteFile = NtDeleteFile@4
 NtDeleteKey@4
-NtDeleteKey = NtDeleteKey@4
 NtDeleteObjectAuditAlarm@12
-NtDeleteObjectAuditAlarm = NtDeleteObjectAuditAlarm@12
 NtDeleteValueKey@8
-NtDeleteValueKey = NtDeleteValueKey@8
 NtDeviceIoControlFile@40
-NtDeviceIoControlFile = NtDeviceIoControlFile@40
 NtDisplayString@4
-NtDisplayString = NtDisplayString@4
 NtDuplicateObject@28
-NtDuplicateObject = NtDuplicateObject@28
 NtDuplicateToken@24
-NtDuplicateToken = NtDuplicateToken@24
 NtEnumerateKey@24
-NtEnumerateKey = NtEnumerateKey@24
 NtEnumerateValueKey@24
-NtEnumerateValueKey = NtEnumerateValueKey@24
 NtExtendSection@8
-NtExtendSection = NtExtendSection@8
 NtFindAtom@8
-NtFindAtom = NtFindAtom@8
 NtFlushBuffersFile@8
-NtFlushBuffersFile = NtFlushBuffersFile@8
 NtFlushInstructionCache@12
-NtFlushInstructionCache = NtFlushInstructionCache@12
 NtFlushKey@4
-NtFlushKey = NtFlushKey@4
 NtFlushVirtualMemory@16
-NtFlushVirtualMemory = NtFlushVirtualMemory@16
 NtFlushWriteBuffer@0
-NtFlushWriteBuffer = NtFlushWriteBuffer@0
 NtFreeVirtualMemory@16
-NtFreeVirtualMemory = NtFreeVirtualMemory@16
 NtFsControlFile@40
-NtFsControlFile = NtFsControlFile@40
 NtGetContextThread@8
-NtGetContextThread = NtGetContextThread@8
 NtGetPlugPlayEvent@16
-NtGetPlugPlayEvent = NtGetPlugPlayEvent@16
 NtGetTickCount@4
-NtGetTickCount = NtGetTickCount@4
 NtImpersonateClientOfPort@8
-NtImpersonateClientOfPort = NtImpersonateClientOfPort@8
 NtImpersonateThread@12
-NtImpersonateThread = NtImpersonateThread@12
 NtInitializeRegistry@4
-NtInitializeRegistry = NtInitializeRegistry@4
 NtListenChannel@8
-NtListenChannel = NtListenChannel@8
 NtListenPort@8
-NtListenPort = NtListenPort@8
 NtLoadDriver@4
-NtLoadDriver = NtLoadDriver@4
 NtLoadKey@8
-NtLoadKey = NtLoadKey@8
 NtLoadKey2@12
-NtLoadKey2 = NtLoadKey2@12
 NtLockFile@40
-NtLockFile = NtLockFile@40
 NtLockVirtualMemory@16
-NtLockVirtualMemory = NtLockVirtualMemory@16
 NtMakeTemporaryObject@4
-NtMakeTemporaryObject = NtMakeTemporaryObject@4
 NtMapViewOfSection@40
-NtMapViewOfSection = NtMapViewOfSection@40
 NtNotifyChangeDirectoryFile@36
-NtNotifyChangeDirectoryFile = NtNotifyChangeDirectoryFile@36
 NtNotifyChangeKey@40
-NtNotifyChangeKey = NtNotifyChangeKey@40
 NtOpenChannel@8
-NtOpenChannel = NtOpenChannel@8
 NtOpenDirectoryObject@12
-NtOpenDirectoryObject = NtOpenDirectoryObject@12
 NtOpenEvent@12
-NtOpenEvent = NtOpenEvent@12
 NtOpenEventPair@12
-NtOpenEventPair = NtOpenEventPair@12
 NtOpenFile@24
-NtOpenFile = NtOpenFile@24
 NtOpenIoCompletion@12
-NtOpenIoCompletion = NtOpenIoCompletion@12
 NtOpenKey@12
-NtOpenKey = NtOpenKey@12
 NtOpenMutant@12
-NtOpenMutant = NtOpenMutant@12
 NtOpenObjectAuditAlarm@48
-NtOpenObjectAuditAlarm = NtOpenObjectAuditAlarm@48
 NtOpenProcess@16
-NtOpenProcess = NtOpenProcess@16
 NtOpenProcessToken@12
-NtOpenProcessToken = NtOpenProcessToken@12
 NtOpenSection@12
-NtOpenSection = NtOpenSection@12
 NtOpenSemaphore@12
-NtOpenSemaphore = NtOpenSemaphore@12
 NtOpenSymbolicLinkObject@12
-NtOpenSymbolicLinkObject = NtOpenSymbolicLinkObject@12
 NtOpenThread@16
-NtOpenThread = NtOpenThread@16
 NtOpenThreadToken@16
-NtOpenThreadToken = NtOpenThreadToken@16
 NtOpenTimer@12
-NtOpenTimer = NtOpenTimer@12
 NtPlugPlayControl@16
-NtPlugPlayControl = NtPlugPlayControl@16
 NtPrivilegeCheck@12
-NtPrivilegeCheck = NtPrivilegeCheck@12
 NtPrivilegedServiceAuditAlarm@20
-NtPrivilegedServiceAuditAlarm = NtPrivilegedServiceAuditAlarm@20
 NtPrivilegeObjectAuditAlarm@24
-NtPrivilegeObjectAuditAlarm = NtPrivilegeObjectAuditAlarm@24
 NtProtectVirtualMemory@20
-NtProtectVirtualMemory = NtProtectVirtualMemory@20
 NtPulseEvent@8
-NtPulseEvent = NtPulseEvent@8
 NtQueueApcThread@20
-NtQueueApcThread = NtQueueApcThread@20
 NtQueryAttributesFile@8	
-NtQueryAttributesFile = NtQueryAttributesFile@8
 NtQueryDefaultLocale@8	
-NtQueryDefaultLocale = NtQueryDefaultLocale@8
 NtQueryDirectoryFile@44	
-NtQueryDirectoryFile = NtQueryDirectoryFile@44
 NtQueryDirectoryObject@28
-NtQueryDirectoryObject = NtQueryDirectoryObject@28
 NtQueryEaFile@36
-NtQueryEaFile = NtQueryEaFile@36
 NtQueryEvent@20
-NtQueryEvent = NtQueryEvent@20
 NtQueryFullAttributesFile@8
-NtQueryFullAttributesFile = NtQueryFullAttributesFile@8
 NtQueryInformationAtom@20
-NtQueryInformationAtom = NtQueryInformationAtom@20
 NtQueryInformationFile@20
-NtQueryInformationFile = NtQueryInformationFile@20
 NtQueryInformationPort@20
-NtQueryInformationPort = NtQueryInformationPort@20
 NtQueryInformationProcess@20
-NtQueryInformationProcess = NtQueryInformationProcess@20
 NtQueryInformationThread@20
-NtQueryInformationThread = NtQueryInformationThread@20
 NtQueryInformationToken@20
-NtQueryInformationToken = NtQueryInformationToken@20
 NtQueryIoCompletion@20
-NtQueryIoCompletion = NtQueryIoCompletion@20
 NtQueryIntervalProfile@8
-NtQueryIntervalProfile = NtQueryIntervalProfile@8
 NtQueryKey@20
-NtQueryKey = NtQueryKey@20
 NtQueryMultipleValueKey@24
-NtQueryMultipleValueKey = NtQueryMultipleValueKey@24
 NtQueryMutant@20
-NtQueryMutant = NtQueryMutant@20
 NtQueryObject@20
-NtQueryObject = NtQueryObject@20
 NtQueryOleDirectoryFile@44
-NtQueryOleDirectoryFile = NtQueryOleDirectoryFile@44
 NtQueryPerformanceCounter@8
-NtQueryPerformanceCounter = NtQueryPerformanceCounter@8
 NtQuerySection@20
-NtQuerySection = NtQuerySection@20
 NtQuerySecurityObject@20
-NtQuerySecurityObject = NtQuerySecurityObject@20
 NtQuerySemaphore@20
-NtQuerySemaphore = NtQuerySemaphore@20
 NtQuerySymbolicLinkObject@12
-NtQuerySymbolicLinkObject = NtQuerySymbolicLinkObject@12
 NtQuerySystemEnvironmentValue@16
-NtQuerySystemEnvironmentValue = NtQuerySystemEnvironmentValue@16
 NtQuerySystemInformation@16
-NtQuerySystemInformation = NtQuerySystemInformation@16
 NtQuerySystemTime@4
-NtQuerySystemTime = NtQuerySystemTime@4
 NtQueryTimer@20
-NtQueryTimer = NtQueryTimer@20
 NtQueryTimerResolution@12
-NtQueryTimerResolution = NtQueryTimerResolution@12
 NtQueryValueKey@24
-NtQueryValueKey = NtQueryValueKey@24
 NtQueryVirtualMemory@24
-NtQueryVirtualMemory = NtQueryVirtualMemory@24
 NtQueryVolumeInformationFile@20
-NtQueryVolumeInformationFile = NtQueryVolumeInformationFile@20
 NtRaiseException@12
-NtRaiseException = NtRaiseException@12
 NtRaiseHardError@24
-NtRaiseHardError = NtRaiseHardError@24
 NtReadFile@36
-NtReadFile = NtReadFile@36
 NtReadFileScatter@36
-NtReadFileScatter = NtReadFileScatter@36
 NtReadRequestData@24
-NtReadRequestData = NtReadRequestData@24
 NtReadVirtualMemory@20
-NtReadVirtualMemory = NtReadVirtualMemory@20
 NtRegisterThreadTerminatePort@4
-NtRegisterThreadTerminatePort = NtRegisterThreadTerminatePort@4
 NtReleaseMutant@8
-NtReleaseMutant = NtReleaseMutant@8
 NtReleaseSemaphore@12
-NtReleaseSemaphore = NtReleaseSemaphore@12
 NtRemoveIoCompletion@20
-NtRemoveIoCompletion = NtRemoveIoCompletion@20
 NtReplaceKey@12
-NtReplaceKey = NtReplaceKey@12
 NtReplyPort@8
-NtReplyPort = NtReplyPort@8
 NtReplyWaitReceivePort@16
-NtReplyWaitReceivePort = NtReplyWaitReceivePort@16
 NtReplyWaitReplyPort@8
-NtReplyWaitReplyPort = NtReplyWaitReplyPort@8
 NtReplyWaitSendChannel@12
-NtReplyWaitSendChannel = NtReplyWaitSendChannel@12
 NtRequestPort@8
-NtRequestPort = NtRequestPort@8
 NtRequestWaitReplyPort@12
-NtRequestWaitReplyPort = NtRequestWaitReplyPort@12
 NtResetEvent@8
-NtResetEvent = NtResetEvent@8
 NtRestoreKey@12
-NtRestoreKey = NtRestoreKey@12
 NtResumeThread@8
-NtResumeThread = NtResumeThread@8
 NtSaveKey@8
-NtSaveKey = NtSaveKey@8
 NtSendWaitReplyChannel@16
-NtSendWaitReplyChannel = NtSendWaitReplyChannel@16
 NtSetContextChannel@4
-NtSetContextChannel = NtSetContextChannel@4
 NtSetContextThread@8
-NtSetContextThread = NtSetContextThread@8
 NtSetDefaultHardErrorPort@4
-NtSetDefaultHardErrorPort = NtSetDefaultHardErrorPort@4
 NtSetDefaultLocale@8
-NtSetDefaultLocale = NtSetDefaultLocale@8
 NtSetEaFile@16
-NtSetEaFile = NtSetEaFile@16
 NtSetEvent@8
-NtSetEvent = NtSetEvent@8
 NtSetHighEventPair@4
-NtSetHighEventPair = NtSetHighEventPair@4
 NtSetHighWaitLowEventPair@4
-NtSetHighWaitLowEventPair = NtSetHighWaitLowEventPair@4
 NtSetInformationFile@20
-NtSetInformationFile = NtSetInformationFile@20
 NtSetInformationKey@16
-NtSetInformationKey = NtSetInformationKey@16
 NtSetInformationObject@16
-NtSetInformationObject = NtSetInformationObject@16
 NtSetInformationProcess@16
-NtSetInformationProcess = NtSetInformationProcess@16
 NtSetInformationThread@16
-NtSetInformationThread = NtSetInformationThread@16
 NtSetInformationToken@16
-NtSetInformationToken = NtSetInformationToken@16
 NtSetIntervalProfile@8
-NtSetIntervalProfile = NtSetIntervalProfile@8
 NtSetIoCompletion@20
-NtSetIoCompletion = NtSetIoCompletion@20
 NtSetLdtEntries@24
-NtSetLdtEntries = NtSetLdtEntries@24
 NtSetLowEventPair@4
-NtSetLowEventPair = NtSetLowEventPair@4
 NtSetLowWaitHighEventPair@4
-NtSetLowWaitHighEventPair = NtSetLowWaitHighEventPair@4
 NtSetSecurityObject@12
-NtSetSecurityObject = NtSetSecurityObject@12
 NtSetSystemEnvironmentValue@8
-NtSetSystemEnvironmentValue = NtSetSystemEnvironmentValue@8
 NtSetSystemInformation@12
-NtSetSystemInformation = NtSetSystemInformation@12
 NtSetSystemPowerState@12
-NtSetSystemPowerState = NtSetSystemPowerState@12
 NtSetSystemTime@8
-NtSetSystemTime = NtSetSystemTime@8
 NtSetTimer@28
-NtSetTimer = NtSetTimer@28
 NtSetTimerResolution@12
-NtSetTimerResolution = NtSetTimerResolution@12
 NtSetValueKey@24
-NtSetValueKey = NtSetValueKey@24
 NtSetVolumeInformationFile@20
-NtSetVolumeInformationFile = NtSetVolumeInformationFile@20
 NtShutdownSystem@4
-NtShutdownSystem = NtShutdownSystem@4
 NtSignalAndWaitForSingleObject@16
-NtSignalAndWaitForSingleObject = NtSignalAndWaitForSingleObject@16
 NtStartProfile@4
-NtStartProfile = NtStartProfile@4
 NtStopProfile@4
-NtStopProfile = NtStopProfile@4
 NtSuspendThread@8
-NtSuspendThread = NtSuspendThread@8
 NtSystemDebugControl@24
-NtSystemDebugControl = NtSystemDebugControl@24
 NtTerminateProcess@8
-NtTerminateProcess = NtTerminateProcess@8
 NtTerminateThread@8
-NtTerminateThread = NtTerminateThread@8
 NtTestAlert@0
-NtTestAlert = NtTestAlert@0
 NtUnloadDriver@4
-NtUnloadDriver = NtUnloadDriver@4
 NtUnloadKey@4
-NtUnloadKey = NtUnloadKey@4
 NtUnlockFile@20
-NtUnlockFile = NtUnlockFile@20
 NtUnlockVirtualMemory@16
-NtUnlockVirtualMemory = NtUnlockVirtualMemory@16
 NtUnmapViewOfSection@8
-NtUnmapViewOfSection = NtUnmapViewOfSection@8
 NtVdmControl@8
-NtVdmControl = NtVdmControl@8
 NtWaitForMultipleObjects@20
-NtWaitForMultipleObjects = NtWaitForMultipleObjects@20
 NtWaitForSingleObject@12
-NtWaitForSingleObject = NtWaitForSingleObject@12
 NtWaitHighEventPair@4
-NtWaitHighEventPair = NtWaitHighEventPair@4
 NtWaitLowEventPair@4
-NtWaitLowEventPair = NtWaitLowEventPair@4
 NtWriteFile@36
-NtWriteFile = NtWriteFile@36
 NtWriteFileGather@36
-NtWriteFileGather = NtWriteFileGather@36
 NtWriteRequestData@24
-NtWriteRequestData = NtWriteRequestData@24
 NtWriteVirtualMemory@20
-NtWriteVirtualMemory = NtWriteVirtualMemory@20
 NtW32Call@20
-NtW32Call = NtW32Call@20
 NtYieldExecution@0
-NtYieldExecution = NtYieldExecution@0
 ZwAcceptConnectPort@24
-ZwAcceptConnectPort = ZwAcceptConnectPort@24
 ZwAccessCheck@32
-ZwAccessCheck = ZwAccessCheck@32
 ZwAccessCheckAndAuditAlarm@44
-ZwAccessCheckAndAuditAlarm = ZwAccessCheckAndAuditAlarm@44
 ZwAddAtom@8
-ZwAddAtom = ZwAddAtom@8
 ZwAdjustGroupsToken@24
-ZwAdjustGroupsToken = ZwAdjustGroupsToken@24
 ZwAdjustPrivilegesToken@24
-ZwAdjustPrivilegesToken = ZwAdjustPrivilegesToken@24
 ZwAlertResumeThread@8
-ZwAlertResumeThread = ZwAlertResumeThread@8
 ZwAlertThread@4
-ZwAlertThread = ZwAlertThread@4
 ZwAllocateLocallyUniqueId@4
-ZwAllocateLocallyUniqueId = ZwAllocateLocallyUniqueId@4
 ZwAllocateUuids@12
-ZwAllocateUuids = ZwAllocateUuids@12
 ZwAllocateVirtualMemory@24
-ZwAllocateVirtualMemory = ZwAllocateVirtualMemory@24
 ZwCallbackReturn@12
-ZwCallbackReturn = ZwCallbackReturn@12
 ZwCancelIoFile@8
-ZwCancelIoFile = ZwCancelIoFile@8
 ZwCancelTimer@8
-ZwCancelTimer = ZwCancelTimer@8
 ZwClearEvent@4
-ZwClearEvent = ZwClearEvent@4
 ZwClose@4
-ZwClose = ZwClose@4
 ZwCloseObjectAuditAlarm@12
-ZwCloseObjectAuditAlarm = ZwCloseObjectAuditAlarm@12
 ZwCompleteConnectPort@4
-ZwCompleteConnectPort = ZwCompleteConnectPort@4
 ZwConnectPort@32
-ZwConnectPort = ZwConnectPort@32
 ZwContinue@8
-ZwContinue = ZwContinue@8
 ZwCreateChannel@8
-ZwCreateChannel = ZwCreateChannel@8
 ZwCreateDirectoryObject@12
-ZwCreateDirectoryObject = ZwCreateDirectoryObject@12
 ZwCreateEvent@20
-ZwCreateEvent = ZwCreateEvent@20
 ZwCreateEventPair@12
-ZwCreateEventPair = ZwCreateEventPair@12
 ZwCreateFile@44
-ZwCreateFile = ZwCreateFile@44
 ZwCreateIoCompletion@16
-ZwCreateIoCompletion = ZwCreateIoCompletion@16
 ZwCreateKey@28
-ZwCreateKey = ZwCreateKey@28
 ZwCreateMailslotFile@32
-ZwCreateMailslotFile = ZwCreateMailslotFile@32
 ZwCreateMutant@16
-ZwCreateMutant = ZwCreateMutant@16
 ZwCreateNamedPipeFile@56
-ZwCreateNamedPipeFile = ZwCreateNamedPipeFile@56
 ZwCreatePagingFile@16
-ZwCreatePagingFile = ZwCreatePagingFile@16
 ZwCreatePort@20
-ZwCreatePort = ZwCreatePort@20
 ZwCreateProcess@32
-ZwCreateProcess = ZwCreateProcess@32
 ZwCreateProfile@36
-ZwCreateProfile = ZwCreateProfile@36
 ZwCreateSection@28
-ZwCreateSection = ZwCreateSection@28
 ZwCreateSemaphore@20
-ZwCreateSemaphore = ZwCreateSemaphore@20
 ZwCreateSymbolicLinkObject@16
-ZwCreateSymbolicLinkObject = ZwCreateSymbolicLinkObject@16
 ZwCreateThread@32
-ZwCreateThread = ZwCreateThread@32
 ZwCreateTimer@16
-ZwCreateTimer = ZwCreateTimer@16
 ZwCreateToken@52
-ZwCreateToken = ZwCreateToken@52
 ZwDelayExecution@8
-ZwDelayExecution = ZwDelayExecution@8
 ZwDeleteAtom@4
-ZwDeleteAtom = ZwDeleteAtom@4
 ZwDeleteFile@4
-ZwDeleteFile = ZwDeleteFile@4
 ZwDeleteKey@4
-ZwDeleteKey = ZwDeleteKey@4
 ZwDeleteObjectAuditAlarm@12
-ZwDeleteObjectAuditAlarm = ZwDeleteObjectAuditAlarm@12
 ZwDeleteValueKey@8
-ZwDeleteValueKey = ZwDeleteValueKey@8
 ZwDeviceIoControlFile@40
-ZwDeviceIoControlFile = ZwDeviceIoControlFile@40
 ZwDisplayString@4
-ZwDisplayString = ZwDisplayString@4
 ZwDuplicateObject@28
-ZwDuplicateObject = ZwDuplicateObject@28
 ZwDuplicateToken@24
-ZwDuplicateToken = ZwDuplicateToken@24
 ZwEnumerateKey@24
-ZwEnumerateKey = ZwEnumerateKey@24
 ZwEnumerateValueKey@24
-ZwEnumerateValueKey = ZwEnumerateValueKey@24
 ZwExtendSection@8
-ZwExtendSection = ZwExtendSection@8
 ZwFindAtom@8
-ZwFindAtom = ZwFindAtom@8
 ZwFlushBuffersFile@8
-ZwFlushBuffersFile = ZwFlushBuffersFile@8
 ZwFlushInstructionCache@12
-ZwFlushInstructionCache = ZwFlushInstructionCache@12
 ZwFlushKey@4
-ZwFlushKey = ZwFlushKey@4
 ZwFlushVirtualMemory@16
-ZwFlushVirtualMemory = ZwFlushVirtualMemory@16
 ZwFlushWriteBuffer@0
-ZwFlushWriteBuffer = ZwFlushWriteBuffer@0
 ZwFreeVirtualMemory@16
-ZwFreeVirtualMemory = ZwFreeVirtualMemory@16
 ZwFsControlFile@40
-ZwFsControlFile = ZwFsControlFile@40
 ZwGetContextThread@8
-ZwGetContextThread = ZwGetContextThread@8
 ZwGetPlugPlayEvent@16
-ZwGetPlugPlayEvent = ZwGetPlugPlayEvent@16
 ZwGetTickCount@4
-ZwGetTickCount = ZwGetTickCount@4
 ZwImpersonateClientOfPort@8
-ZwImpersonateClientOfPort = ZwImpersonateClientOfPort@8
 ZwImpersonateThread@12
-ZwImpersonateThread = ZwImpersonateThread@12
 ZwInitializeRegistry@4
-ZwInitializeRegistry = ZwInitializeRegistry@4
 ZwListenChannel@8
-ZwListenChannel = ZwListenChannel@8
 ZwListenPort@8
-ZwListenPort = ZwListenPort@8
 ZwLoadDriver@4
-ZwLoadDriver = ZwLoadDriver@4
 ZwLoadKey@8
-ZwLoadKey = ZwLoadKey@8
 ZwLoadKey2@12
-ZwLoadKey2 = ZwLoadKey2@12
 ZwLockFile@40
-ZwLockFile = ZwLockFile@40
 ZwLockVirtualMemory@16
-ZwLockVirtualMemory = ZwLockVirtualMemory@16
 ZwMakeTemporaryObject@4
-ZwMakeTemporaryObject = ZwMakeTemporaryObject@4
 ZwMapViewOfSection@40
-ZwMapViewOfSection = ZwMapViewOfSection@40
 ZwNotifyChangeDirectoryFile@36
-ZwNotifyChangeDirectoryFile = ZwNotifyChangeDirectoryFile@36
 ZwNotifyChangeKey@40
-ZwNotifyChangeKey = ZwNotifyChangeKey@40
 ZwOpenChannel@8
-ZwOpenChannel = ZwOpenChannel@8
 ZwOpenDirectoryObject@12
-ZwOpenDirectoryObject = ZwOpenDirectoryObject@12
 ZwOpenEvent@12
-ZwOpenEvent = ZwOpenEvent@12
 ZwOpenEventPair@12
-ZwOpenEventPair = ZwOpenEventPair@12
 ZwOpenFile@24
-ZwOpenFile = ZwOpenFile@24
 ZwOpenIoCompletion@12
-ZwOpenIoCompletion = ZwOpenIoCompletion@12
 ZwOpenKey@12
-ZwOpenKey = ZwOpenKey@12
 ZwOpenMutant@12
-ZwOpenMutant = ZwOpenMutant@12
 ZwOpenObjectAuditAlarm@48
-ZwOpenObjectAuditAlarm = ZwOpenObjectAuditAlarm@48
 ZwOpenProcess@16
-ZwOpenProcess = ZwOpenProcess@16
 ZwOpenProcessToken@12
-ZwOpenProcessToken = ZwOpenProcessToken@12
 ZwOpenSection@12
-ZwOpenSection = ZwOpenSection@12
 ZwOpenSemaphore@12
-ZwOpenSemaphore = ZwOpenSemaphore@12
 ZwOpenSymbolicLinkObject@12
-ZwOpenSymbolicLinkObject = ZwOpenSymbolicLinkObject@12
 ZwOpenThread@16
-ZwOpenThread = ZwOpenThread@16
 ZwOpenThreadToken@16
-ZwOpenThreadToken = ZwOpenThreadToken@16
 ZwOpenTimer@12
-ZwOpenTimer = ZwOpenTimer@12
 ZwPlugPlayControl@16
-ZwPlugPlayControl = ZwPlugPlayControl@16
 ZwPrivilegeCheck@12
-ZwPrivilegeCheck = ZwPrivilegeCheck@12
 ZwPrivilegedServiceAuditAlarm@20
-ZwPrivilegedServiceAuditAlarm = ZwPrivilegedServiceAuditAlarm@20
 ZwPrivilegeObjectAuditAlarm@24
-ZwPrivilegeObjectAuditAlarm = ZwPrivilegeObjectAuditAlarm@24
 ZwProtectVirtualMemory@20
-ZwProtectVirtualMemory = ZwProtectVirtualMemory@20
 ZwPulseEvent@8
-ZwPulseEvent = ZwPulseEvent@8
 ZwQueueApcThread@20
-ZwQueueApcThread = ZwQueueApcThread@20
 ZwQueryInformationAtom@20
-ZwQueryInformationAtom = ZwQueryInformationAtom@20
 ZwQueryAttributesFile@8
-ZwQueryAttributesFile = ZwQueryAttributesFile@8
 ZwQueryDefaultLocale@8
-ZwQueryDefaultLocale = ZwQueryDefaultLocale@8
 ZwQueryDirectoryFile@44
-ZwQueryDirectoryFile = ZwQueryDirectoryFile@44
 ZwQueryDirectoryObject@28
-ZwQueryDirectoryObject = ZwQueryDirectoryObject@28
 ZwQueryEaFile@36
-ZwQueryEaFile = ZwQueryEaFile@36
 ZwQueryEvent@20
-ZwQueryEvent = ZwQueryEvent@20
 ZwQueryFullAttributesFile@8
-ZwQueryFullAttributesFile = ZwQueryFullAttributesFile@8
 ZwQueryInformationFile@20
-ZwQueryInformationFile = ZwQueryInformationFile@20
 ZwQueryInformationPort@20
-ZwQueryInformationPort = ZwQueryInformationPort@20
 ZwQueryInformationProcess@20
-ZwQueryInformationProcess = ZwQueryInformationProcess@20
 ZwQueryInformationThread@20
-ZwQueryInformationThread = ZwQueryInformationThread@20
 ZwQueryInformationToken@20
-ZwQueryInformationToken = ZwQueryInformationToken@20
 ZwQueryIntervalProfile@8
-ZwQueryIntervalProfile = ZwQueryIntervalProfile@8
 ZwQueryIoCompletion@20
-ZwQueryIoCompletion = ZwQueryIoCompletion@20
 ZwQueryKey@20
-ZwQueryKey = ZwQueryKey@20
 ZwQueryMultipleValueKey@24
-ZwQueryMultipleValueKey = ZwQueryMultipleValueKey@24
 ZwQueryMutant@20
-ZwQueryMutant = ZwQueryMutant@20
 ZwQueryObject@20
-ZwQueryObject = ZwQueryObject@20
 ZwQueryOleDirectoryFile@44
-ZwQueryOleDirectoryFile = ZwQueryOleDirectoryFile@44
 ZwQueryPerformanceCounter@8
-ZwQueryPerformanceCounter = ZwQueryPerformanceCounter@8
 ZwQuerySection@20
-ZwQuerySection = ZwQuerySection@20
 ZwQuerySecurityObject@20
-ZwQuerySecurityObject = ZwQuerySecurityObject@20
 ZwQuerySemaphore@20
-ZwQuerySemaphore = ZwQuerySemaphore@20
 ZwQuerySymbolicLinkObject@12
-ZwQuerySymbolicLinkObject = ZwQuerySymbolicLinkObject@12
 ZwQuerySystemEnvironmentValue@16
-ZwQuerySystemEnvironmentValue = ZwQuerySystemEnvironmentValue@16
 ZwQuerySystemInformation@16
-ZwQuerySystemInformation = ZwQuerySystemInformation@16
 ZwQuerySystemTime@4
-ZwQuerySystemTime = ZwQuerySystemTime@4
 ZwQueryTimer@20
-ZwQueryTimer = ZwQueryTimer@20
 ZwQueryTimerResolution@12
-ZwQueryTimerResolution = ZwQueryTimerResolution@12
 ZwQueryValueKey@24
-ZwQueryValueKey = ZwQueryValueKey@24
 ZwQueryVirtualMemory@24
-ZwQueryVirtualMemory = ZwQueryVirtualMemory@24
 ZwQueryVolumeInformationFile@20
-ZwQueryVolumeInformationFile = ZwQueryVolumeInformationFile@20
 ZwRaiseException@12
-ZwRaiseException = ZwRaiseException@12
 ZwRaiseHardError@24
-ZwRaiseHardError = ZwRaiseHardError@24
 ZwReadFile@36
-ZwReadFile = ZwReadFile@36
 ZwReadFileScatter@36
-ZwReadFileScatter = ZwReadFileScatter@36
 ZwReadRequestData@24
-ZwReadRequestData = ZwReadRequestData@24
 ZwReadVirtualMemory@20
-ZwReadVirtualMemory = ZwReadVirtualMemory@20
 ZwRegisterThreadTerminatePort@4
-ZwRegisterThreadTerminatePort = ZwRegisterThreadTerminatePort@4
 ZwReleaseMutant@8
-ZwReleaseMutant = ZwReleaseMutant@8
 ZwReleaseSemaphore@12
-ZwReleaseSemaphore = ZwReleaseSemaphore@12
 ZwRemoveIoCompletion@20
-ZwRemoveIoCompletion = ZwRemoveIoCompletion@20
 ZwReplaceKey@12
-ZwReplaceKey = ZwReplaceKey@12
 ZwReplyPort@8
-ZwReplyPort = ZwReplyPort@8
 ZwReplyWaitReceivePort@16
-ZwReplyWaitReceivePort = ZwReplyWaitReceivePort@16
 ZwReplyWaitReplyPort@8
-ZwReplyWaitReplyPort = ZwReplyWaitReplyPort@8
 ZwReplyWaitSendChannel@12
-ZwReplyWaitSendChannel = ZwReplyWaitSendChannel@12
 ZwRequestPort@8
-ZwRequestPort = ZwRequestPort@8
 ZwRequestWaitReplyPort@12
-ZwRequestWaitReplyPort = ZwRequestWaitReplyPort@12
 ZwResetEvent@8
-ZwResetEvent = ZwResetEvent@8
 ZwRestoreKey@12
-ZwRestoreKey = ZwRestoreKey@12
 ZwResumeThread@8
-ZwResumeThread = ZwResumeThread@8
 ZwSaveKey@8
-ZwSaveKey = ZwSaveKey@8
 ZwSendWaitReplyChannel@16
-ZwSendWaitReplyChannel = ZwSendWaitReplyChannel@16
 ZwSetContextChannel@4
-ZwSetContextChannel = ZwSetContextChannel@4
 ZwSetContextThread@8
-ZwSetContextThread = ZwSetContextThread@8
 ZwSetDefaultHardErrorPort@4
-ZwSetDefaultHardErrorPort = ZwSetDefaultHardErrorPort@4
 ZwSetDefaultLocale@8
-ZwSetDefaultLocale = ZwSetDefaultLocale@8
 ZwSetEaFile@16
-ZwSetEaFile = ZwSetEaFile@16
 ZwSetEvent@8
-ZwSetEvent = ZwSetEvent@8
 ZwSetHighEventPair@4
-ZwSetHighEventPair = ZwSetHighEventPair@4
 ZwSetHighWaitLowEventPair@4
-ZwSetHighWaitLowEventPair = ZwSetHighWaitLowEventPair@4
 ZwSetInformationFile@20
-ZwSetInformationFile = ZwSetInformationFile@20
 ZwSetInformationKey@16
-ZwSetInformationKey = ZwSetInformationKey@16
 ZwSetInformationObject@16
-ZwSetInformationObject = ZwSetInformationObject@16
 ZwSetInformationProcess@16
-ZwSetInformationProcess = ZwSetInformationProcess@16
 ZwSetInformationThread@16
-ZwSetInformationThread = ZwSetInformationThread@16
 ZwSetInformationToken@16
-ZwSetInformationToken = ZwSetInformationToken@16
 ZwSetIntervalProfile@8
-ZwSetIntervalProfile = ZwSetIntervalProfile@8
 ZwSetIoCompletion@20
-ZwSetIoCompletion = ZwSetIoCompletion@20
 ZwSetLdtEntries@24
-ZwSetLdtEntries = ZwSetLdtEntries@24
 ZwSetLowEventPair@4
-ZwSetLowEventPair = ZwSetLowEventPair@4
 ZwSetLowWaitHighEventPair@4
-ZwSetLowWaitHighEventPair = ZwSetLowWaitHighEventPair@4
 ZwSetSecurityObject@12
-ZwSetSecurityObject = ZwSetSecurityObject@12
 ZwSetSystemEnvironmentValue@8
-ZwSetSystemEnvironmentValue = ZwSetSystemEnvironmentValue@8
 ZwSetSystemInformation@12
-ZwSetSystemInformation = ZwSetSystemInformation@12
 ZwSetSystemPowerState@12
-ZwSetSystemPowerState = ZwSetSystemPowerState@12
 ZwSetSystemTime@8
-ZwSetSystemTime = ZwSetSystemTime@8
 ZwSetTimer@28
-ZwSetTimer = ZwSetTimer@28
 ZwSetTimerResolution@12
-ZwSetTimerResolution = ZwSetTimerResolution@12
 ZwSetValueKey@24
-ZwSetValueKey = ZwSetValueKey@24
 ZwSetVolumeInformationFile@20
-ZwSetVolumeInformationFile = ZwSetVolumeInformationFile@20
 ZwShutdownSystem@4
-ZwShutdownSystem = ZwShutdownSystem@4
 ZwSignalAndWaitForSingleObject@16
-ZwSignalAndWaitForSingleObject = ZwSignalAndWaitForSingleObject@16
 ZwStartProfile@4
-ZwStartProfile = ZwStartProfile@4
 ZwStopProfile@4
-ZwStopProfile = ZwStopProfile@4
 ZwSuspendThread@8
-ZwSuspendThread = ZwSuspendThread@8
 ZwSystemDebugControl@24
-ZwSystemDebugControl = ZwSystemDebugControl@24
 ZwTerminateProcess@8
-ZwTerminateProcess = ZwTerminateProcess@8
 ZwTerminateThread@8
-ZwTerminateThread = ZwTerminateThread@8
 ZwTestAlert@0
-ZwTestAlert = ZwTestAlert@0
 ZwUnloadDriver@4
-ZwUnloadDriver = ZwUnloadDriver@4
 ZwUnloadKey@4
-ZwUnloadKey = ZwUnloadKey@4
 ZwUnlockFile@20
-ZwUnlockFile = ZwUnlockFile@20
 ZwUnlockVirtualMemory@16
-ZwUnlockVirtualMemory = ZwUnlockVirtualMemory@16
 ZwUnmapViewOfSection@8
-ZwUnmapViewOfSection = ZwUnmapViewOfSection@8
 ZwVdmControl@8
-ZwVdmControl = ZwVdmControl@8
 ZwWaitForMultipleObjects@20
-ZwWaitForMultipleObjects = ZwWaitForMultipleObjects@20
 ZwWaitForSingleObject@12
-ZwWaitForSingleObject = ZwWaitForSingleObject@12
 ZwWaitHighEventPair@4
-ZwWaitHighEventPair = ZwWaitHighEventPair@4
 ZwWaitLowEventPair@4
-ZwWaitLowEventPair = ZwWaitLowEventPair@4
 ZwWriteFile@36
-ZwWriteFile = ZwWriteFile@36
 ZwWriteFileGather@36
-ZwWriteFileGather = ZwWriteFileGather@36
 ZwWriteRequestData@24
-ZwWriteRequestData = ZwWriteRequestData@24
 ZwWriteVirtualMemory@20
-ZwWriteVirtualMemory = ZwWriteVirtualMemory@20
 ZwW32Call@20
-ZwW32Call = ZwW32Call@20
 ZwYieldExecution@0
-ZwYieldExecution = ZwYieldExecution@0
 RtlAllocateHeap@12
-RtlAllocateHeap = RtlAllocateHeap@12
 RtlCreateHeap@24
-RtlCreateHeap = RtlCreateHeap@24
 RtlCompactHeap@8
-RtlCompactHeap = RtlCompactHeap@8
 RtlDestroyHeap@4
-RtlDestroyHeap = RtlDestroyHeap@4
 RtlFreeHeap@12
-RtlFreeHeap = RtlFreeHeap@12
 RtlGetProcessHeap@0
-RtlGetProcessHeap = RtlGetProcessHeap@0
 RtlLockHeap@4
-RtlLockHeap = RtlLockHeap@4
 RtlReAllocHeap@16
-RtlReAllocHeap = RtlReAllocHeap@16
 RtlSizeHeap@12
-RtlSizeHeap = RtlSizeHeap@12
 RtlUnlockHeap@4
-RtlUnlockHeap = RtlUnlockHeap@4
 RtlValidateHeap@12
-RtlValidateHeap = RtlValidateHeap@12
 RtlInitAnsiString
 RtlInitUnicodeString
 RtlLargeIntegerAdd

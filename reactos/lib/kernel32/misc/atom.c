@@ -16,12 +16,15 @@
 #include <string.h>
 //#include <stdlib.h>
 
+/*
+ * System global and local atom tables.
+ * What does "global" mean? The scope is
+ * the attached process or ANY process?
+ * In the second case, we need to call 
+ * csrss.exe.
+ */
 
 #if 0
-
-
-
-/* system global and local atom tables */
 
 static ATOMTABLE GlobalAtomTable;
 
@@ -43,8 +46,8 @@ int ansi2unicode( WCHAR *uni,const char *ansi, int s);
 ATOM
 STDCALL
 GlobalDeleteAtom(
-    ATOM nAtom
-    )
+	ATOM	nAtom
+	)
 {
 	return GLDeleteAtom(&GlobalAtomTable, nAtom);
 }
@@ -58,14 +61,20 @@ InitAtomTable(
 {
 // nSize should be a prime number
 	
-	if ( nSize < 4 || nSize >= 512 ) {
+	if ( nSize < 4 || nSize >= 512 )
+	{
 		nSize = 37;
 	}
 	
-	if ( (GetCurrentPeb()->LocalAtomTable).lpDrvData == NULL ) {
-		(GetCurrentPeb()->LocalAtomTable).lpDrvData = HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,nSize*sizeof(ATOMENTRY));
+	if ( (GetCurrentPeb()->LocalAtomTable).lpDrvData == NULL )
+	{
+		(GetCurrentPeb()->LocalAtomTable).lpDrvData =
+			HeapAlloc(
+				GetProcessHeap(),
+				(HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY),
+				(nSize * sizeof (ATOMENTRY))
+				);
 	}
-	
 	
 	return TRUE;
 }
@@ -77,8 +86,10 @@ DeleteAtom(
     ATOM nAtom
     )
 {
-	return GLDeleteAtom(&GetCurrentPeb()->LocalAtomTable, nAtom);
-	
+	return GLDeleteAtom(
+			& GetCurrentPeb()->LocalAtomTable,
+			nAtom
+			);
 }
 
 
@@ -91,9 +102,14 @@ GlobalAddAtomA(
     )
 {
 
-	UINT	 BufLen = strlen(lpString);
-	WCHAR *lpBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,BufLen*sizeof(WCHAR));
-	ATOM atom;
+	UINT	BufLen = strlen(lpString);
+	WCHAR	* lpBuffer = (WCHAR *) HeapAlloc(
+					GetProcessHeap(),
+					(HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY),
+					(BufLen * sizeof (WCHAR))
+					);
+	ATOM	atom;
+	
 	ansi2unicode(lpBuffer, lpString,BufLen);
 	atom = AWGLAddAtom(&GlobalAtomTable,lpBuffer );
 	HeapFree(GetProcessHeap(),0,lpBuffer);
@@ -514,7 +530,8 @@ int ansi2unicode( WCHAR *uni,const char *ansi, int s)
 	return i;
 }
 
-int unicode2ansi( char *ansi,const WCHAR *uni, int s)
+int
+unicode2ansi( char *ansi,const WCHAR *uni, int s)
 {
 	register int i;
 	
@@ -524,6 +541,6 @@ int unicode2ansi( char *ansi,const WCHAR *uni, int s)
 }
 
 
-
-
 #endif
+
+/* EOF */

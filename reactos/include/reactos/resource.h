@@ -7,7 +7,7 @@
 #define RES_UINT_FV_MINOR	0
 #define RES_UINT_FV_REVISION	14
 /* Build number as YYYYMMDD */
-#define RES_UINT_FV_BUILD	19990618
+#define RES_UINT_FV_BUILD	19990717
 
 /* ReactOS Product Version UINTs */
 
@@ -15,7 +15,7 @@
 #define RES_UINT_PV_MINOR	0
 #define RES_UINT_PV_REVISION	14
 /* Build number as YYYYMMDD */
-#define RES_UINT_PV_BUILD	19990618
+#define RES_UINT_PV_BUILD	19990606
 
 /* Common version strings for rc scripts */
 

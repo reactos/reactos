@@ -8,11 +8,8 @@
  *                  Created 01/11/98
  *                  19990309 EA Stubs
  */
-//#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <wchar.h>
 #include <ddk/ntddk.h>
-
 
 /************************************************************************
  *	RegCloseKey
@@ -45,22 +42,6 @@ RegConnectRegistryA(
 
 
 /************************************************************************
- *	RegConnectRegistryW
- */
-LONG
-STDCALL
-RegConnectRegistryW(
-	LPWSTR	lpMachineName,
-	HKEY	hKey,
-	PHKEY	phkResult
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegCreateKeyA
  */
 LONG
@@ -68,22 +49,6 @@ STDCALL
 RegCreateKeyA(
 	HKEY	hKey,
 	LPCSTR	lpSubKey,
-	PHKEY	phkResult
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegCreateKeyW
- */
-LONG
-STDCALL
-RegCreateKeyW(
-	HKEY	hKey,
-	LPCWSTR lpSubKey,
 	PHKEY	phkResult
 	)
 {
@@ -115,28 +80,6 @@ RegCreateKeyExA(
 
 
 /************************************************************************
- *	RegCreateKeyExW
- */
-LONG
-STDCALL
-RegCreateKeyExW(
-	HKEY			hKey,
-	LPCWSTR			lpSubKey,
-	DWORD			Reserved,
-	LPWSTR			lpClass,
-	DWORD			dwOptions,
-	REGSAM			samDesired,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes,
-	PHKEY			phkResult,
-	LPDWORD			lpdwDisposition
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegDeleteKeyA
  */
 LONG
@@ -144,21 +87,6 @@ STDCALL
 RegDeleteKeyA(
 	HKEY	hKey,
 	LPCSTR	lpSubKey
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegDeleteKeyW
- */
-LONG
-STDCALL
-RegDeleteKeyW(
-	HKEY	hKey,
-	LPCWSTR	lpSubKey
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -182,21 +110,6 @@ RegDeleteValueA(
 
 
 /************************************************************************
- *	RegDeleteValueW
- */
-LONG
-STDCALL
-RegDeleteValueW(
-	HKEY	hKey,
-	LPCWSTR	lpValueName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegEnumKeyA
  */
 LONG
@@ -205,23 +118,6 @@ RegEnumKeyA(
 	HKEY	hKey,
 	DWORD	dwIndex,
 	LPSTR	lpName,
-	DWORD	cbName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegEnumKeyW
- */
-LONG
-STDCALL
-RegEnumKeyW(
-	HKEY	hKey,
-	DWORD	dwIndex,
-	LPWSTR	lpName,
 	DWORD	cbName
 	)
 {
@@ -252,27 +148,6 @@ RegEnumKeyExA(
 
 
 /************************************************************************
- *	RegEnumKeyExW
- */
-LONG
-STDCALL
-RegEnumKeyExW(
-	HKEY		hKey,
-	DWORD		dwIndex,
-	LPWSTR		lpName,
-	LPDWORD		lpcbName,
-	LPDWORD		lpReserved,
-	LPWSTR		lpClass,
-	LPDWORD		lpcbClass,
-	PFILETIME	lpftLastWriteTime
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegEnumValueA
  */
 LONG
@@ -281,27 +156,6 @@ RegEnumValueA(
 	HKEY	hKey,
 	DWORD	dwIndex,
 	LPSTR	lpValueName,
-	LPDWORD	lpcbValueName,
-	LPDWORD	lpReserved,
-	LPDWORD	lpType,
-	LPBYTE	lpData,
-	LPDWORD	lpcbData
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegEnumValueW
- */
-LONG
-STDCALL
-RegEnumValueW(
-	HKEY	hKey,
-	DWORD	dwIndex,
-	LPWSTR	lpValueName,
 	LPDWORD	lpcbValueName,
 	LPDWORD	lpReserved,
 	LPDWORD	lpType,
@@ -335,7 +189,7 @@ LONG
 STDCALL
 RegGetKeySecurity (
 	HKEY			hKey,
-	SECURITY_INFORMATION	SecurityInformation,
+	SECURITY_INFORMATION	SecurityInformation,	/* FIXME: ULONG ? */
 	PSECURITY_DESCRIPTOR	pSecurityDescriptor,
 	LPDWORD			lpcbSecurityDescriptor
 	)
@@ -352,22 +206,8 @@ LONG
 STDCALL
 RegLoadKey(
 	HKEY	hKey,
+	LPCSTR	lpSubKey,
 	LPCSTR	lpFile
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegLoadKeyW
- */
-LONG
-STDCALL
-RegLoadKeyW(
-	HKEY	hKey,
-	LPCWSTR	lpFile
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -411,48 +251,6 @@ RegOpenKeyA(
 
 
 /************************************************************************
- *	RegOpenKeyW
- *
- *	19981101 Ariadne
- *	19990525 EA
- */
-LONG
-STDCALL
-RegOpenKeyW (
-	HKEY	hKey,
-	LPCWSTR	lpSubKey,
-	PHKEY	phkResult
-	)
-{
-	NTSTATUS		errCode;
-	UNICODE_STRING		SubKeyString;
-	OBJECT_ATTRIBUTES	ObjectAttributes;
-
-
-	SubKeyString.Buffer = (LPWSTR) lpSubKey;
-	SubKeyString.Length = wcslen(lpSubKey);
-	SubKeyString.MaximumLength = SubKeyString.Length;
-
-	ObjectAttributes.RootDirectory =  hKey;
-	ObjectAttributes.ObjectName = & SubKeyString;
-	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE; 
-	errCode = NtOpenKey(
-			phkResult,
-			GENERIC_ALL,
-			& ObjectAttributes
-			);
-	if ( !NT_SUCCESS(errCode) )
-	{
-		LONG LastError = RtlNtStatusToDosError(errCode);
-		
-		SetLastError(LastError);
-		return LastError;
-	}
-	return ERROR_SUCCESS;
-}
-
-
-/************************************************************************
  *	RegOpenKeyExA
  */
 LONG
@@ -461,23 +259,7 @@ RegOpenKeyExA(
 	HKEY	hKey,
 	LPCSTR	lpSubKey,
 	DWORD	ulOptions,
-	PHKEY	phkResult
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegOpenKeyExW
- */
-LONG
-STDCALL
-RegOpenKeyExW(
-	HKEY	hKey,
-	LPCWSTR	lpSubKey,
-	DWORD	ulOptions,
+	REGSAM	samDesired,
 	PHKEY	phkResult
 	)
 {
@@ -502,30 +284,7 @@ RegQueryInfoKeyA(
 	LPDWORD 	lpcValues,
 	LPDWORD 	lpcbMaxValueNameLen,
 	LPDWORD 	lpcbMaxValueLen,
-	PFILETIME	lpftLastWriteTime
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegQueryInfoKeyW
- */
-LONG
-STDCALL
-RegQueryInfoKeyW(
-	HKEY		hKey,
-	LPWSTR		lpClass,
-	LPDWORD		lpcbClass,
-	LPDWORD		lpReserved,
-	LPDWORD		lpcSubKeys,
-	LPDWORD 	lpcbMaxSubKeyLen,
-	LPDWORD 	lpcbMaxClassLen,
-	LPDWORD 	lpcValues,
-	LPDWORD 	lpcbMaxValueNameLen,
-	LPDWORD 	lpcbMaxValueLen,
+	LPDWORD		lpcbSecurityDescriptor,
 	PFILETIME	lpftLastWriteTime
 	)
 {
@@ -553,24 +312,6 @@ RegQueryMultipleValuesA(
 
 
 /************************************************************************
- *	RegQueryMultipleValuesW
- */
-LONG
-STDCALL
-RegQueryMultipleValuesW(
-	HKEY	hKey,
-	PVALENT	val_list,
-	DWORD	num_vals,
-	LPWSTR	lpValueBuf,
-	LPDWORD	ldwTotsize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegQueryValueA
  */
 LONG
@@ -588,49 +329,13 @@ RegQueryValueA(
 
 
 /************************************************************************
- *	RegQueryValueW
- */
-LONG
-STDCALL
-RegQueryValueW(
-	HKEY	hKey,
-	LPCWSTR	lpSubKey,
-	LPWSTR	lpValue,
-	PLONG	lpcbValue
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegQueryValueExA
  */
 LONG
 STDCALL
 RegQueryValueExA(
 	HKEY	hKey,
-	LPSTR	lpValueName,
-	LPDWORD	lpReserved,
-	LPDWORD	lpType,
-	LPBYTE	lpData,
-	LPDWORD	lpcbData
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegQueryValueExW
- */
-LONG
-STDCALL
-RegQueryValueExW(
-	HKEY	hKey,
-	LPWSTR	lpValueName,
+	LPCSTR	lpValueName,
 	LPDWORD	lpReserved,
 	LPDWORD	lpType,
 	LPBYTE	lpData,
@@ -660,23 +365,6 @@ RegReplaceKeyA(
 
 
 /************************************************************************
- *	RegReplaceKeyW
- */
-LONG
-STDCALL
-RegReplaceKeyW(
-	HKEY	hKey,
-	LPCWSTR	lpSubKey,
-	LPCWSTR	lpNewFile,
-	LPCWSTR	lpOldFile
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegRestoreKeyA
  */
 LONG
@@ -684,22 +372,6 @@ STDCALL
 RegRestoreKeyA(
 	HKEY	hKey,
 	LPCSTR	lpFile,
-	DWORD	dwFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegRestoreKeyW
- */
-LONG
-STDCALL
-RegRestoreKeyW(
-	HKEY	hKey,
-	LPCWSTR	lpFile,
 	DWORD	dwFlags
 	)
 {
@@ -725,29 +397,13 @@ RegSaveKeyA(
 
 
 /************************************************************************
- *	RegSaveKeyW
- */
-LONG
-STDCALL
-RegSaveKeyW(
-	HKEY			hKey,
-	LPCWSTR			lpFile,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes 
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegSetKeySecurity
  */
 LONG
 STDCALL
 RegSetKeySecurity(
 	HKEY			hKey,
-	SECURITY_INFORMATION	SecurityInformation,
+	SECURITY_INFORMATION	SecurityInformation,	/* FIXME: ULONG? */
 	PSECURITY_DESCRIPTOR	pSecurityDescriptor
 	)
 {
@@ -766,24 +422,6 @@ RegSetValueA(
 	LPCSTR	lpSubKey,
 	DWORD	dwType,
 	LPCSTR	lpData,
-	DWORD	cbData
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegSetValueW
- */
-LONG
-STDCALL
-RegSetValueW(
-	HKEY	hKey,
-	LPCWSTR	lpSubKey,
-	DWORD	dwType,
-	LPCWSTR	lpData,
 	DWORD	cbData
 	)
 {
@@ -812,25 +450,6 @@ RegSetValueExA(
 
 
 /************************************************************************
- *	RegSetValueExW
- */
-LONG
-STDCALL
-RegSetValueExW(
-	HKEY		hKey,
-	LPCWSTR		lpValueName,
-	DWORD		Reserved,
-	DWORD		dwType,
-	CONST BYTE	*lpData,
-	DWORD		cbData
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *	RegUnLoadKeyA
  */
 LONG
@@ -838,21 +457,6 @@ STDCALL
 RegUnLoadKeyA(
 	HKEY	hKey,
 	LPCSTR	lpSubKey
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
- *	RegUnLoadKeyW
- */
-LONG
-STDCALL
-RegUnLoadKeyW(
-	HKEY	hKey,
-	LPCWSTR	lpSubKey
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

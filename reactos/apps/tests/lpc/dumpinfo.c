@@ -1,4 +1,4 @@
-/* $Id: dumpinfo.c,v 1.1 1999/07/04 22:04:31 ea Exp $
+/* $Id: dumpinfo.c,v 1.2 1999/07/17 23:10:12 ea Exp $
  *
  * reactos/apps/lpc/dumpinfo.c
  *
@@ -11,6 +11,8 @@
  * 19990704 (EA)
  * 	Added code to find the basic information buffer size
  * 	for the LPC port object.
+ * 19990710 (EA)
+ * 
  */
 #include <windows.h>
 #include <stdio.h>
@@ -30,6 +32,17 @@ NTSTATUS
 	IN	ULONG	Length,
 	OUT	PULONG	ResultLength
 	);
+
+extern
+NTSTATUS
+(STDCALL * QueryInformationPort)(
+	IN	HANDLE	PortHandle,
+	IN	CINT	PortInformationClass,	/* guess */
+	OUT	PVOID	PortInformation,	/* guess */
+	IN	ULONG	PortInformationLength,	/* guess */
+	OUT	PULONG	ReturnLength		/* guess */
+	);
+
 
 /*
 static
@@ -56,16 +69,20 @@ DumpBuffer(
 
 VOID
 DumpInfo (
-	LPCSTR		Name,
+	LPCWSTR		Name,
 	NTSTATUS	Status,
-	LPCSTR		Comment,
+	LPCWSTR		Comment,
 	HANDLE		Port
 	)
 {
 	BYTE			ObjectInformation [BUF_SIZE] = {0};
 	ULONG			ResultLength;
 	
-	printf("Port \"%s\" %s:\n",Name,Comment);
+	wprintf(
+		L"Port \"%s\" %s:\n",
+		Name,
+		Comment
+		);
 
 	printf("\tStatus = %08X\n",Status);
 	printf("\tPort   = %08X\n\n",Port);
@@ -191,6 +208,31 @@ FIXME: why this always raise an access violation exception?
 	{
 		printf("\tStatus = %08X\n",Status);
 	}
+//---
+	printf("Port Information:\n");
+/*	Status = QueryInformationPort(
+			Port,
+			1, /* info class * /
+			ObjectInformation,
+			sizeof ObjectInformation,
+			& ResultLength
+			);
+	if (Status == STATUS_SUCCESS)
+	{
+		DWORD * i = ObjectInformation;
+		int j = 0;
+
+		while (j < ResultLength / sizeof (DWORD))
+		{
+			printf("\t%08X\n",i[j]);
+			++j;
+		}
+	}
+	else
+	{
+		printf("\tStatus = %08X\n",Status);
+	}
+*/
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.15 1999/07/13 01:08:47 rex Exp $
+/* $Id: zw.h,v 1.16 1999/07/17 23:10:15 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1069,14 +1069,14 @@ ZwCreateSymbolicLinkObject(
 NTSTATUS
 STDCALL 
 NtCreateThread(
-	OUT PHANDLE ThreadHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN HANDLE ProcessHandle,
-	OUT PCLIENT_ID ClientId,
-	IN PCONTEXT ThreadContext,
-	IN PINITIAL_TEB InitialTeb,
-	IN BOOLEAN CreateSuspended
+	OUT	PHANDLE			ThreadHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
+	IN	HANDLE			ProcessHandle,
+	OUT	PCLIENT_ID		ClientId,
+	IN	PCONTEXT		ThreadContext,
+	IN	PINITIAL_TEB		InitialTeb,
+	IN	BOOLEAN			CreateSuspended
 	);
 
 NTSTATUS
@@ -4638,51 +4638,7 @@ ZwSetVolumeInformationFile(
 	PVOID VolumeInformation,
 	ULONG Length
 	);
-/*
- * FUNCTION: Shuts the system down
- * ARGUMENTS: 
- *        Action: Specifies the type of shutdown, it can be one of the following values:
-			ShutdownNoReboot, ShutdownReboot, ShutdownPowerOff
- * RETURNS: Status
- */ 
-NTSTATUS 
-STDCALL 
-NtShutdownSystem(
-	IN SHUTDOWN_ACTION Action
-	);
-
-NTSTATUS 
-STDCALL 
-ZwShutdownSystem(
-	IN SHUTDOWN_ACTION Action
-	);
-/*
- * FUNCTION: Signals an event and wait for it to be signaled again.
- * ARGUMENTS: 
- *        EventHandle = Handle to the event that should be signaled
- *        Alertable =  True if the wait is alertable
- *        Time = The time to wait
- *        NumberOfWaitingThreads = Number of waiting threads
- * RETURNS: Status
- */ 
-
-NTSTATUS 
-STDCALL 
-NtSignalAndWaitForSingleObject(
-        IN HANDLE EventHandle,
-	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time,
-	PULONG NumberOfWaitingThreads OPTIONAL 
-	);
-
-NTSTATUS 
-STDCALL 
-ZwSignalAndWaitForSingleObject(
-        IN HANDLE EventHandle,
-	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time,
-	PULONG NumberOfWaitingThreads OPTIONAL 
-	);
+/* --- PROFILING --- */
 
 /*
  * FUNCTION: Starts profiling
@@ -4723,29 +4679,7 @@ ZwStopProfile(
 	HANDLE ProfileHandle
 	);
 
-/*
- * FUNCTION: Increments a thread's resume count
- * ARGUMENTS: 
- *        ThreadHandle = Handle to the thread that should be resumed
- *        PreviousSuspendCount =  The resulting/previous suspend count.
- * REMARK:
- *	  A thread will be suspended if its suspend count is greater than 0. This procedure maps to
- *        the win32 SuspendThread function. ( documentation about the the suspend count can be found here aswell )
- *        The suspend count is not increased if it is greater than MAXIMUM_SUSPEND_COUNT.
- * RETURNS: Status
- */ 
-NTSTATUS 
-STDCALL 
-NtSuspendThread(
-	IN HANDLE ThreadHandle,
-	IN PULONG PreviousSuspendCount 
-	);
-NTSTATUS 
-STDCALL 
-ZwSuspendThread(
-	IN HANDLE ThreadHandle,
-	IN PULONG PreviousSuspendCount 
-	);
+/* --- PROCESS MANAGEMENT --- */
 
 //--NtSystemDebugControl
 /*
@@ -4769,39 +4703,9 @@ ZwTerminateProcess(
 	IN HANDLE ProcessHandle ,
 	IN NTSTATUS ExitStatus
 	);
-/*
- * FUNCTION: Terminates the execution of a thread. 
- * ARGUMENTS: 
- *      ThreadHandle = Handle to the thread
- *      ExitStatus  = The exit status of the thread to terminate with.
- * RETURNS: Status
- */	
-NTSTATUS 
-STDCALL 
-NtTerminateThread(
-	IN HANDLE ThreadHandle ,
-	IN NTSTATUS ExitStatus
-	);
-NTSTATUS 
-STDCALL 
-ZwTerminateThread(
-	IN HANDLE ThreadHandle ,
-	IN NTSTATUS ExitStatus
-	);
-/*
- * FUNCTION: Tests to see if there are any pending alerts for the calling thread 
- * RETURNS: Status
- */	
-NTSTATUS 
-STDCALL 
-NtTestAlert(
-	VOID 
-	);
-NTSTATUS 
-STDCALL 
-ZwTestAlert(
-	VOID 
-	);
+
+/* --- DEVICE DRIVER CONTROL --- */
+
 /*
  * FUNCTION: Unloads a driver. 
  * ARGUMENTS: 
@@ -4819,63 +4723,40 @@ ZwUnloadDriver(
 	IN PUNICODE_STRING DriverServiceName
 	);
 
-//FIXME: NtUnloadKey needs more arguments
-/*
- * FUNCTION: Unloads a registry key. 
- * ARGUMENTS: 
- *       KeyHandle = Handle to the registry key
- * REMARK:
-	This procedure maps to the win32 procedure RegUnloadKey 
- * RETURNS: Status
- */	
-NTSTATUS 
-STDCALL
-NtUnloadKey(
-	HANDLE KeyHandle
-	);
-NTSTATUS 
-STDCALL
-ZwUnloadKey(
-	HANDLE KeyHandle
-	);
+/* --- VIRTUAL MEMORY MANAGEMENT --- */
 
 /*
- * FUNCTION: Unlocks a range of bytes in a file. 
+ * FUNCTION: Writes a range of virtual memory
  * ARGUMENTS: 
- *       FileHandle = Handle to the file
- *       IoStatusBlock = Caller should supply storage for a structure containing
- *			 the completion status and information about the requested unlock operation.
-			The information field is set to the number of bytes unlocked.
- *       ByteOffset = Offset to start the range of bytes to unlock 
- *       Length = Number of bytes to unlock.
- *       Key = Special value to enable other threads to unlock a file than the
-		thread that locked the file. The key supplied must match with the one obtained
-		in a previous call to NtLockFile.
- * REMARK:
-	This procedure maps to the win32 procedure UnlockFileEx. STATUS_PENDING is returned if the lock could
-	not be obtained immediately, the device queue is busy and the IRP is queued.
- * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES |
-	STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST | STATUS_RANGE_NOT_LOCKED ]
- */	
-NTSTATUS 
-STDCALL
-NtUnlockFile(
-	IN HANDLE FileHandle,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN PLARGE_INTEGER ByteOffset,
-	IN PLARGE_INTEGER Lenght,
-	OUT PULONG Key OPTIONAL
+ *       ProcessHandle = The handle to the process owning the address space.
+ *       BaseAddress  = The points to the address to  write to
+ *       Buffer = Pointer to the buffer to write
+ *       NumberOfBytesToWrite = Offset to the upper boundary to write
+ *       NumberOfBytesWritten = Total bytes written
+ * REMARKS:
+ *	 This function maps to the win32 WriteProcessMemory
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL 
+NtWriteVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID  BaseAddress,
+	IN PVOID Buffer,
+	IN ULONG NumberOfBytesToWrite,
+	OUT PULONG NumberOfBytesWritten
 	);
-NTSTATUS 
-STDCALL
-ZwUnlockFile(
-	IN HANDLE FileHandle,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN PLARGE_INTEGER ByteOffset,
-	IN PLARGE_INTEGER Lenght,
-	OUT PULONG Key OPTIONAL
+
+NTSTATUS
+STDCALL 
+ZwWriteVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID  BaseAddress,
+	IN PVOID Buffer,
+	IN ULONG NumberOfBytesToWrite,
+	OUT PULONG NumberOfBytesWritten
 	);
-	
+
 /*
  * FUNCTION: Unlocks a range of virtual memory. 
  * ARGUMENTS: 
@@ -4925,6 +4806,37 @@ ZwUnmapViewOfSection(
 	IN HANDLE ProcessHandle,
 	IN PVOID BaseAddress
 	);
+
+/* --- OBJECT SYNCHRONIZATION --- */
+
+/*
+ * FUNCTION: Signals an event and wait for it to be signaled again.
+ * ARGUMENTS: 
+ *        EventHandle = Handle to the event that should be signaled
+ *        Alertable =  True if the wait is alertable
+ *        Time = The time to wait
+ *        NumberOfWaitingThreads = Number of waiting threads
+ * RETURNS: Status
+ */ 
+
+NTSTATUS 
+STDCALL 
+NtSignalAndWaitForSingleObject(
+        IN HANDLE EventHandle,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Time,
+	PULONG NumberOfWaitingThreads OPTIONAL 
+	);
+
+NTSTATUS 
+STDCALL 
+ZwSignalAndWaitForSingleObject(
+        IN HANDLE EventHandle,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Time,
+	PULONG NumberOfWaitingThreads OPTIONAL 
+	);
+
 /*
  * FUNCTION: Waits for multiple objects to become signalled. 
  * ARGUMENTS: 
@@ -4982,6 +4894,8 @@ ZwWaitForSingleObject (
 	IN PLARGE_INTEGER Time 
 	);
 
+/* --- EVENT PAIR OBJECT --- */
+
 /*
  * FUNCTION: Waits for the high part of an eventpair to become signalled
  * ARGUMENTS: 
@@ -5013,6 +4927,46 @@ STDCALL
 ZwWaitLowEventPair(
 	IN HANDLE EventPairHandle
 	);
+
+/* --- FILE MANAGEMENT --- */
+
+/*
+ * FUNCTION: Unlocks a range of bytes in a file. 
+ * ARGUMENTS: 
+ *       FileHandle = Handle to the file
+ *       IoStatusBlock = Caller should supply storage for a structure containing
+ *			 the completion status and information about the requested unlock operation.
+			The information field is set to the number of bytes unlocked.
+ *       ByteOffset = Offset to start the range of bytes to unlock 
+ *       Length = Number of bytes to unlock.
+ *       Key = Special value to enable other threads to unlock a file than the
+		thread that locked the file. The key supplied must match with the one obtained
+		in a previous call to NtLockFile.
+ * REMARK:
+	This procedure maps to the win32 procedure UnlockFileEx. STATUS_PENDING is returned if the lock could
+	not be obtained immediately, the device queue is busy and the IRP is queued.
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES |
+	STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST | STATUS_RANGE_NOT_LOCKED ]
+ */	
+NTSTATUS 
+STDCALL
+NtUnlockFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PLARGE_INTEGER ByteOffset,
+	IN PLARGE_INTEGER Lenght,
+	OUT PULONG Key OPTIONAL
+	);
+NTSTATUS 
+STDCALL
+ZwUnlockFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PLARGE_INTEGER ByteOffset,
+	IN PLARGE_INTEGER Lenght,
+	OUT PULONG Key OPTIONAL
+	);
+	
 /*
  * FUNCTION: Writes data to a file
  * ARGUMENTS: 
@@ -5113,37 +5067,67 @@ ZwWriteFileGather(
 	); 
 
 
+/* --- THREAD MANAGEMENT --- */
+
 /*
- * FUNCTION: Writes a range of virtual memory
+ * FUNCTION: Increments a thread's resume count
  * ARGUMENTS: 
- *       ProcessHandle = The handle to the process owning the address space.
- *       BaseAddress  = The points to the address to  write to
- *       Buffer = Pointer to the buffer to write
- *       NumberOfBytesToWrite = Offset to the upper boundary to write
- *       NumberOfBytesWritten = Total bytes written
- * REMARKS:
- *	 This function maps to the win32 WriteProcessMemory
+ *        ThreadHandle = Handle to the thread that should be resumed
+ *        PreviousSuspendCount =  The resulting/previous suspend count.
+ * REMARK:
+ *	  A thread will be suspended if its suspend count is greater than 0. This procedure maps to
+ *        the win32 SuspendThread function. ( documentation about the the suspend count can be found here aswell )
+ *        The suspend count is not increased if it is greater than MAXIMUM_SUSPEND_COUNT.
  * RETURNS: Status
- */
-NTSTATUS
+ */ 
+NTSTATUS 
 STDCALL 
-NtWriteVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID  BaseAddress,
-	IN PVOID Buffer,
-	IN ULONG NumberOfBytesToWrite,
-	OUT PULONG NumberOfBytesWritten
+NtSuspendThread(
+	IN HANDLE ThreadHandle,
+	IN PULONG PreviousSuspendCount 
 	);
 
-NTSTATUS
+NTSTATUS 
 STDCALL 
-ZwWriteVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID  BaseAddress,
-	IN PVOID Buffer,
-	IN ULONG NumberOfBytesToWrite,
-	OUT PULONG NumberOfBytesWritten
+ZwSuspendThread(
+	IN HANDLE ThreadHandle,
+	IN PULONG PreviousSuspendCount 
 	);
+
+/*
+ * FUNCTION: Terminates the execution of a thread. 
+ * ARGUMENTS: 
+ *      ThreadHandle = Handle to the thread
+ *      ExitStatus  = The exit status of the thread to terminate with.
+ * RETURNS: Status
+ */	
+NTSTATUS 
+STDCALL 
+NtTerminateThread(
+	IN HANDLE ThreadHandle ,
+	IN NTSTATUS ExitStatus
+	);
+NTSTATUS 
+STDCALL 
+ZwTerminateThread(
+	IN HANDLE ThreadHandle ,
+	IN NTSTATUS ExitStatus
+	);
+/*
+ * FUNCTION: Tests to see if there are any pending alerts for the calling thread 
+ * RETURNS: Status
+ */	
+NTSTATUS 
+STDCALL 
+NtTestAlert(
+	VOID 
+	);
+NTSTATUS 
+STDCALL 
+ZwTestAlert(
+	VOID 
+	);
+
 /*
  * FUNCTION: Yields the callers thread.
  * RETURNS: Status
@@ -5200,15 +5184,15 @@ STDCALL
 NtAcceptConnectPort ( /* @24 */
 	IN	HANDLE	PortHandle,
 	OUT	PHANDLE	ConnectedPort,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5
+	IN	DWORD	Unknown2,
+	IN	DWORD	Unknown3,
+	IN	DWORD	Unknown4,
+	IN	DWORD	Unknown5
 	);
 NTSTATUS
 STDCALL
 NtCompleteConnectPort ( /* @4 */
-	HANDLE	PortHandle
+	IN	HANDLE	PortHandle
 	);
 NTSTATUS
 STDCALL
@@ -5307,38 +5291,174 @@ NtWriteRequestData ( /* @24 */
 	);
 #endif /* ndef PROTO_LPC */
 
-NTSTATUS STDCALL NtGetPlugPlayEvent(VOID);
+/* --- REGISTRY --- */
 
-NTSTATUS STDCALL NtLoadKey2(VOID);
+//FIXME: NtUnloadKey needs more arguments
+/*
+ * FUNCTION: Unloads a registry key. 
+ * ARGUMENTS: 
+ *       KeyHandle = Handle to the registry key
+ * REMARK:
+	This procedure maps to the win32 procedure RegUnloadKey 
+ * RETURNS: Status
+ */	
+NTSTATUS 
+STDCALL
+NtUnloadKey(
+	HANDLE KeyHandle
+	);
+NTSTATUS 
+STDCALL
+ZwUnloadKey(
+	HANDLE KeyHandle
+	);
+
+NTSTATUS
+STDCALL
+NtLoadKey2 (
+	VOID
+	);
+
+/* --- PLUG AND PLAY --- */
+
+NTSTATUS
+STDCALL
+NtPlugPlayControl (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtGetPlugPlayEvent (
+	VOID
+	);
+
+/* --- NATIONAL LANGUAGE SUPPORT (NLS) --- */
+
+NTSTATUS
+STDCALL
+NtQueryDefaultLocale (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtSetDefaultLocale (
+	VOID
+	);
+
+/* --- POWER MANAGEMENT --- */
+
+NTSTATUS
+STDCALL
+NtSetSystemPowerState (
+	VOID
+	);
+
+/* --- DEBUG SUBSYSTEM --- */
+
+NTSTATUS
+STDCALL
+NtSystemDebugControl (
+	VOID
+	);
 
 
-NTSTATUS STDCALL NtPlugPlayControl(VOID);
+/* --- VIRTUAL DOS MACHINE (VDM) --- */
 
-NTSTATUS STDCALL NtQueryDefaultLocale(VOID);
+NTSTATUS
+STDCALL
+NtVdmControl (
+	VOID
+	);
 
+/* --- WIN32 --- */
 
-NTSTATUS STDCALL NtQueryOleDirectoryFile(VOID);
+NTSTATUS
+STDCALL
+NtW32Call (
+	VOID
+	);
 
-NTSTATUS STDCALL NtRaiseHardError(VOID);
+/* --- CHANNELS --- */
 
-NTSTATUS STDCALL NtSetDefaultLocale(VOID);
+NTSTATUS
+STDCALL
+NtCreateChannel (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtListenChannel (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtOpenChannel (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtReplyWaitSendChannel (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtSendWaitReplyChannel (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtSetContextChannel (
+	VOID
+	);
+
+/* --- MISCELLANEA --- */
 
 //NTSTATUS STDCALL NtSetLdtEntries(VOID);
-NTSTATUS STDCALL NtSetLdtEntries(PETHREAD Thread,
-				 ULONG FirstEntry,
-				 PULONG Entries);
+NTSTATUS
+STDCALL
+NtSetLdtEntries (
+	PETHREAD	Thread,
+	ULONG		FirstEntry,
+	PULONG	Entries
+	);
 
-NTSTATUS STDCALL NtSetSystemPowerState(VOID);
+/*
+ * FUNCTION: Shuts the system down
+ * ARGUMENTS: 
+ *        Action: Specifies the type of shutdown, it can be one of the following values:
+			ShutdownNoReboot, ShutdownReboot, ShutdownPowerOff
+ * RETURNS: Status
+ */ 
+NTSTATUS 
+STDCALL 
+NtShutdownSystem(
+	IN SHUTDOWN_ACTION Action
+	);
 
-NTSTATUS STDCALL NtSystemDebugControl(VOID);
-NTSTATUS STDCALL NtVdmControl(VOID);
+NTSTATUS 
+STDCALL 
+ZwShutdownSystem(
+	IN SHUTDOWN_ACTION Action
+	);
 
-NTSTATUS STDCALL NtW32Call(VOID);
-NTSTATUS STDCALL NtCreateChannel(VOID);
-NTSTATUS STDCALL NtListenChannel(VOID);
-NTSTATUS STDCALL NtOpenChannel(VOID);
-NTSTATUS STDCALL NtReplyWaitSendChannel(VOID);
-NTSTATUS STDCALL NtSendWaitReplyChannel(VOID);
-NTSTATUS STDCALL NtSetContextChannel(VOID);
+NTSTATUS
+STDCALL
+NtQueryOleDirectoryFile (
+	VOID
+	);
+
+NTSTATUS
+STDCALL
+NtRaiseHardError (
+	VOID
+	);
+
  
 #endif /* __DDK_ZW_H */

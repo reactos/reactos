@@ -1,4 +1,5 @@
-/*
+/* $Id: winlogon.c,v 1.4 1999/07/17 23:10:30 ea Exp $
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/winlogon/winlogon.c
@@ -86,6 +87,13 @@ HasSystemActiveSession (VOID)
  * 	
  * DESCRIPTION
  * 	Graphical login procedure
+ *
+ * NOTE
+ * 	Read values from
+ * 	
+ *	HKEY_LOCAL-MACHINE
+ *		SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon
+ *
  */
 VOID
 GuiLogin (VOID)
@@ -112,6 +120,13 @@ GuiMonitor (VOID)
  * 	
  * DESCRIPTION
  * 	Text mode (console) login procedure
+ *
+ * NOTE
+ * 	Read values from
+ * 	
+ *	HKEY_LOCAL-MACHINE
+ *		SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon
+ *
  */
 VOID
 CuiLogin (VOID)
@@ -211,20 +226,45 @@ Use the Task Manager to close an application that is not responding.\n\n\
 }
 
 
+HANDLE
+ConnectToSmApiPort(VOID)
+{
+	HANDLE			PortHandle;
+	NTSTATUS		Status = STATUS_SUCCESS;
+	UNICODE_STRING		SmApiPort;
+	LPWSTR			PortName = L"\\SmApiPort";
+	OBJECT_ATTRIBUTES	PortAttributes = {0};
+
+	SmApiPort.Length    = wcslen(PortName) * sizeof (WCHAR);
+	SmApiPort.MaxLength = SmApiPort.Length + sizeof (WCHAR);
+	SmApiPort.Buffer    = PortName;
+	Status = NtConnectPort(
+			& PortHandle,
+			& SmApiPort,
+			& PortAttributes, /* FIXME: ? */
+			0, /* FIXME: ? */
+			0, /* FIXME: ? */
+			0, /* FIXME: ? */
+			0, /* FIXME: ? */
+			0x00010000 /* FIXME: ? */
+			);
+	return (NT_SUCCESS(Status))
+		? PortHandle
+		: INVALID_HANDLE_VALUE;
+}
+
+
 /* Native process entry point */
 void
 NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
 {
-	NTSTATUS	Status = STATUS_SUCCESS;
+	NTSTATUS		Status = STATUS_SUCCESS;
 
 	/* FIXME: connnect to the Session Manager
 	 * for LPC calls
 	 */
-	Status = NtConnectPort(
-			"\\SmApiPort",
-			& SM
-			);
-	if (!NT_SUCCESS(Status))
+	SM = ConnectToSmApiPort();
+	if (INVALID_HANDLE_VALUE == SM)
 	{
 		NtTerminateProcess(
 			NtCurrentProcess(),

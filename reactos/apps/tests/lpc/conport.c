@@ -1,4 +1,4 @@
-/* $Id: conport.c,v 1.4 1999/07/04 22:04:31 ea Exp $
+/* $Id: conport.c,v 1.5 1999/07/17 23:10:12 ea Exp $
  *
  * reactos/apps/lpc/conport.c
  *
@@ -119,7 +119,7 @@ TryConnectPort(char *port_name)
 	if (Status == STATUS_SUCCESS)
 	{
 		DumpInfo(
-			port_name_save,
+			Name,
 			Status,
 			"connected",
 			Port

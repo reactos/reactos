@@ -303,13 +303,21 @@ BOOLEAN RtlEqualUnicodeString(PUNICODE_STRING String1, PUNICODE_STRING String2,
         return TRUE;
 };
 
-VOID RtlFreeAnsiString(IN PANSI_STRING AnsiString)
+
+VOID
+RtlFreeAnsiString(IN PANSI_STRING AnsiString)
 {
+	if (NULL == AnsiString) return;
 //        ExFreePool(AnsiString->Buffer);
 };
 
-VOID RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
+
+VOID
+RtlFreeUnicodeString (
+	IN	PUNICODE_STRING	UnicodeString
+	)
 {
+	if (NULL == UnicodeString) return;
 //        ExFreePool(UnicodeString->Buffer);
 };
 

@@ -1,3 +1,5 @@
+/* $Id: brush.c,v 1.3 1999/07/17 23:10:31 ea Exp $
+ */
 
 
 #undef WIN32_LEAN_AND_MEAN

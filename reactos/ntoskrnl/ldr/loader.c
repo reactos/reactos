@@ -1,4 +1,5 @@
-/*
+/* $Id: loader.c,v 1.30 1999/07/17 23:10:26 ea Exp $
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/loader.c
@@ -33,6 +34,9 @@
 
 #define NDEBUG
 #include <internal/debug.h>
+
+#include "syspath.h"
+
 
 /* FIXME: this should appear in a kernel header file  */
 NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
@@ -168,32 +172,64 @@ VOID LdrInitModuleManagement(VOID)
 /*
  * load the auto config drivers.
  */
-VOID LdrLoadAutoConfigDrivers(VOID)
+static
+VOID
+LdrLoadAutoConfigDriver (
+	LPWSTR	RelativeDriverName
+	)
 {
-  NTSTATUS Status;
-  ANSI_STRING AnsiDriverName;
-  UNICODE_STRING DriverName;
+	WCHAR		TmpFileName [MAX_PATH];
+	NTSTATUS	Status;
+	UNICODE_STRING	DriverName;
 
-  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\keyboard.sys"); 
-  RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
-  Status = LdrLoadDriver(&DriverName);
-  RtlFreeUnicodeString(&DriverName);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
-      DbgPrintErrorMessage(Status);
-    }
-  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\blue.sys");
-  RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
-  Status = LdrLoadDriver(&DriverName);
-  RtlFreeUnicodeString(&DriverName);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
-      DbgPrintErrorMessage(Status);
-    }
- 
+	GetSystemDirectory(
+		TmpFileName,
+		(MAX_PATH * sizeof(WCHAR))
+		);
+	wcscat(
+		TmpFileName,
+		L"\\drivers\\"
+		);
+	wcscat(
+		TmpFileName,
+		RelativeDriverName
+		);
+
+	DriverName.Buffer = 
+		TmpFileName;
+	DriverName.Length = 
+		wcslen(TmpFileName) 
+		* sizeof (WCHAR);
+	DriverName.MaximumLength = 
+		DriverName.Length 
+		+ sizeof(WCHAR);
+	
+	Status = LdrLoadDriver(&DriverName);
+	if (!NT_SUCCESS(Status))
+	{
+		DbgPrint(
+			"driver load failed, status;%d(%x)\n",
+			Status,
+			Status
+			);
+		DbgPrintErrorMessage(Status);
+	}
 }
+
+
+VOID
+LdrLoadAutoConfigDrivers (VOID)
+{
+	/*
+	 * Keyboard driver
+	 */
+	LdrLoadAutoConfigDriver( L"keyboard.sys" );
+	/*
+	 * Raw console driver
+	 */
+	LdrLoadAutoConfigDriver( L"blue.sys" );
+}
+
 
 static NTSTATUS 
 LdrCreateModule(PVOID ObjectBody,

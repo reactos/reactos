@@ -1,8 +1,11 @@
 /* IO MANAGER ***************************************************************/
 
-BOOLEAN IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
-				      PUNICODE_STRING String,
-				      PKTHREAD Thread);
+BOOLEAN
+IoRaiseInformationalHardError (
+	NTSTATUS	ErrorStatus,
+	PUNICODE_STRING	String,
+	PKTHREAD	Thread
+	);
 
 
 /*
@@ -20,12 +23,19 @@ BOOLEAN IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
  * ARGUMENTS:
  *          Irpl = Variable to store the current IRQ level 
  */
-VOID IoAcquireCancelSpinLock(PKIRQL Irpl);
+VOID
+IoAcquireCancelSpinLock (
+	PKIRQL	Irpl
+	);
 
-typedef IO_ALLOCATION_ACTION (*PDRIVER_CONTROL)(PDEVICE_OBJECT DeviceObject,
-					PIRP irp,
-					PVOID MapRegisterBase,
-					PVOID Context);
+typedef
+IO_ALLOCATION_ACTION
+(*PDRIVER_CONTROL) (
+	PDEVICE_OBJECT	DeviceObject,
+	PIRP		irp,
+	PVOID		MapRegisterBase,
+	PVOID		Context
+	);
 
 /*
  * FUNCTION: Allocates an adaptor object for a DMA operation on the target
@@ -40,11 +50,14 @@ typedef IO_ALLOCATION_ACTION (*PDRIVER_CONTROL)(PDEVICE_OBJECT DeviceObject,
  *                   execution routine
  * RETURNS: Success or failure code
  */
-NTSTATUS IoAllocateAdapterChannel(PADAPTER_OBJECT AdaperObject,
-				  PDEVICE_OBJECT DeviceObject,
-				  ULONG NumberOfMapRegisters,
-				  PDRIVER_CONTROL ExecutionRoutine,
-				  PVOID Context);
+NTSTATUS
+IoAllocateAdapterChannel (
+	PADAPTER_OBJECT	AdaperObject,
+	PDEVICE_OBJECT	DeviceObject,
+	ULONG		NumberOfMapRegisters,
+	PDRIVER_CONTROL	ExecutionRoutine,
+	PVOID		Context
+	);
 
 /*
  * FUNCTION: Sets up a call to a driver supplied controller object as 
@@ -55,10 +68,13 @@ NTSTATUS IoAllocateAdapterChannel(PADAPTER_OBJECT AdaperObject,
  *        ExecutionObject = Routine to be called
  *        Context = Driver determined context to be based to the routine
  */
-VOID IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
-			  PDEVICE_OBJECT DeviceObject,
-			  PDRIVER_CONTROL ExecutionRoutine,
-			  PVOID Context);
+VOID
+IoAllocateController (
+	PCONTROLLER_OBJECT	ControllerObject,
+	PDEVICE_OBJECT		DeviceObject,
+	PDRIVER_CONTROL		ExecutionRoutine,
+	PVOID			Context
+	);
 
 /*
  * FUNCTION: Allocates an error log packet
@@ -68,7 +84,11 @@ VOID IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
  * RETURNS: On success a pointer to the allocated packet
  *          On failure returns NULL
  */
-PVOID IoAllocateErrorLogEntry(PVOID IoObject, UCHAR EntrySize);
+PVOID
+IoAllocateErrorLogEntry (
+	PVOID	IoObject,
+	UCHAR	EntrySize
+	);
 
 /*
  * FUNCTION: Allocates an IRP
@@ -78,7 +98,11 @@ PVOID IoAllocateErrorLogEntry(PVOID IoObject, UCHAR EntrySize);
  * RETURNS: On success the allocated IRP
  *          On failure NULL
  */
-PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota);
+PIRP
+IoAllocateIrp (
+	CCHAR	StackSize,
+	BOOLEAN	ChargeQuota
+	);
 
 /*
  * FUNCTION: Allocates an MDL large enough to map the supplied buffer
@@ -91,9 +115,14 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota);
  * RETURNS: On the success the allocated MDL
  *          On failure NULL
  */
-PMDL IoAllocateMdl(PVOID VirtualAddress, ULONG Length, 
-		   BOOLEAN SecondaryBuffer, BOOLEAN ChargeQuota,
-		   PIRP Irp);
+PMDL
+IoAllocateMdl (
+	PVOID	VirtualAddress,
+	ULONG	Length, 
+	BOOLEAN	SecondaryBuffer,
+	BOOLEAN	ChargeQuota,
+	PIRP	Irp
+	);
 
 /*
  * FUNCTION: Creates a symbolic link between the ARC name of a physical
@@ -102,7 +131,11 @@ PMDL IoAllocateMdl(PVOID VirtualAddress, ULONG Length,
  *        ArcName = ARC name of the device
  *        DeviceName = Name of the device object
  */
-VOID IoAssignArcName(PUNICODE_STRING ArcName, PUNICODE_STRING DeviceName);
+VOID
+IoAssignArcName (
+	PUNICODE_STRING	ArcName,
+	PUNICODE_STRING	DeviceName
+	);
 
 enum
 {
@@ -119,12 +152,15 @@ enum
  *        RequestedResources = List of resources
  * RETURNS: 
  */
-NTSTATUS IoAssignResources(PUNICODE_STRING RegistryPath,
-			   PUNICODE_STRING DriverClassName,
-			   PDRIVER_OBJECT DriverObject,
-			   PDEVICE_OBJECT DeviceObject,
-			   PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources,
-			   PCM_RESOURCE_LIST* AllocatedResources);
+NTSTATUS
+IoAssignResources (
+	PUNICODE_STRING			RegistryPath,
+	PUNICODE_STRING			DriverClassName,
+	PDRIVER_OBJECT			DriverObject,
+	PDEVICE_OBJECT			DeviceObject,
+	PIO_RESOURCE_REQUIREMENTS_LIST	RequestedResources,
+	PCM_RESOURCE_LIST		* AllocatedResources
+	);
 
 /*
  * FUNCTION: Attaches the callers device object to a named target device
@@ -135,9 +171,12 @@ NTSTATUS IoAssignResources(PUNICODE_STRING RegistryPath,
  *                         a pointer to the target device
  * RETURNS: Success or failure code
  */
-NTSTATUS IoAttachDevice(PDEVICE_OBJECT SourceDevice,
-			PUNICODE_STRING TargetDevice,
-			PDEVICE_OBJECT* AttachedDevice);
+NTSTATUS
+IoAttachDevice (
+	PDEVICE_OBJECT	SourceDevice,
+	PUNICODE_STRING	TargetDevice,
+	PDEVICE_OBJECT	* AttachedDevice
+	);
 
 /*
  * FUNCTION: Obsolete
@@ -146,8 +185,11 @@ NTSTATUS IoAttachDevice(PDEVICE_OBJECT SourceDevice,
  *       TargetDevice = device to be attached to
  * RETURNS: Success or failure code
  */
-NTSTATUS IoAttachDeviceByPointer(PDEVICE_OBJECT SourceDevice,
-				 PDEVICE_OBJECT TargetDevice);
+NTSTATUS
+IoAttachDeviceByPointer (
+	PDEVICE_OBJECT	SourceDevice,
+	PDEVICE_OBJECT	TargetDevice
+	);
 
 /*
  * FUNCTION: Attaches the callers device to the highest device in the chain
@@ -157,8 +199,11 @@ NTSTATUS IoAttachDeviceByPointer(PDEVICE_OBJECT SourceDevice,
  * RETURNS: On success the previously highest device
  *          On failure NULL
  */
-PDEVICE_OBJECT IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
-					   PDEVICE_OBJECT TargetDevice);
+PDEVICE_OBJECT
+IoAttachDeviceToDeviceStack (
+	PDEVICE_OBJECT	SourceDevice,
+	PDEVICE_OBJECT	TargetDevice
+	);
 
 /*
  * FUNCTION: Builds a irp to be sent to lower level drivers
@@ -172,12 +217,15 @@ PDEVICE_OBJECT IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
  * RETURNS: On success the IRP allocated
  *          On failure NULL
  */
-PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
-				   PDEVICE_OBJECT DeviceObject,
-				   PVOID Buffer,
-				   ULONG Length,
-				   PLARGE_INTEGER StartingOffset,
-				   PIO_STATUS_BLOCK IoStatusBlock);
+PIRP
+IoBuildAsynchronousFsdRequest (
+	ULONG			MajorFunction,
+	PDEVICE_OBJECT		DeviceObject,
+	PVOID			Buffer,
+	ULONG			Length,
+	PLARGE_INTEGER		StartingOffset,
+	PIO_STATUS_BLOCK	IoStatusBlock
+	);
 
 /*
  * FUNCTION: Allocates and sets up an IRP for a device control request
@@ -195,42 +243,61 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
  *                        completed
  * RETURNS: Returns the IRP created
  */
-PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
-				   PDEVICE_OBJECT DeviceObject,
-				   PVOID InputBuffer,
-				   ULONG InputBufferLength,
-				   PVOID OutputBuffer,
-				   ULONG OutputBufferLength,
-				   BOOLEAN InternalDeviceIoControl,
-				   PKEVENT Event,
-				   PIO_STATUS_BLOCK IoStatusBlock);
+PIRP
+IoBuildDeviceIoControlRequest (
+	ULONG			IoControlCode,
+	PDEVICE_OBJECT		DeviceObject,
+	PVOID			InputBuffer,
+	ULONG			InputBufferLength,
+	PVOID			OutputBuffer,
+	ULONG			OutputBufferLength,
+	BOOLEAN			InternalDeviceIoControl,
+	PKEVENT			Event,
+	PIO_STATUS_BLOCK	IoStatusBlock
+	);
    
 
-VOID IoBuildPartialMdl(PMDL SourceMdl,
-		       PMDL TargetMdl,
-		       PVOID VirtualAddress,
-		       ULONG Length);
+VOID
+IoBuildPartialMdl (
+	PMDL	SourceMdl,
+	PMDL	TargetMdl,
+	PVOID	VirtualAddress,
+	ULONG	Length
+	);
 
-PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
-				  PDEVICE_OBJECT DeviceObject,
-				  PVOID Buffer,
-				  ULONG Length,
-				  PLARGE_INTEGER StartingOffset,
-				  PKEVENT Event,
-				  PIO_STATUS_BLOCK IoStatusBlock);
+PIRP
+IoBuildSynchronousFsdRequest (
+	ULONG			MajorFunction,
+	PDEVICE_OBJECT		DeviceObject,
+	PVOID			Buffer,
+	ULONG			Length,
+	PLARGE_INTEGER		StartingOffset,
+	PKEVENT			Event,
+	PIO_STATUS_BLOCK	IoStatusBlock
+	);
 
 /*
  * FUNCTION: Sends an irp to the next lower driver
  */
-NTSTATUS IoCallDriver(PDEVICE_OBJECT DeviceObject, PIRP irp);
+NTSTATUS
+IoCallDriver (
+	PDEVICE_OBJECT	DeviceObject,
+	PIRP		irp
+	);
 
-BOOLEAN IoCancelIrp(PIRP Irp);
+BOOLEAN
+IoCancelIrp (
+	PIRP	Irp
+	);
 
-NTSTATUS IoCheckShareAccess(ACCESS_MASK DesiredAccess,
-			    ULONG DesiredShareAccess,
-			    PFILE_OBJECT FileObject,
-			    PSHARE_ACCESS ShareAccess,
-			    BOOLEAN Update);
+NTSTATUS
+IoCheckShareAccess (
+	ACCESS_MASK	DesiredAccess,
+	ULONG		DesiredShareAccess,
+	PFILE_OBJECT	FileObject,
+	PSHARE_ACCESS	ShareAccess,
+	BOOLEAN		Update
+	);
 
 /*
  * FUNCTION: Indicates the caller has finished all processing for a given
@@ -240,21 +307,31 @@ NTSTATUS IoCheckShareAccess(ACCESS_MASK DesiredAccess,
  *         PriorityBoost = Increment by which to boost the priority of the
  *                         thread making the request
  */
-VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost);
+VOID
+IoCompleteRequest (
+	PIRP	Irp,
+	CCHAR	PriorityBoost
+	);
 
-NTSTATUS IoConnectInterrupt(PKINTERRUPT* InterruptObject,
-			    PKSERVICE_ROUTINE ServiceRoutine,
-			    PVOID ServiceContext,
-			    PKSPIN_LOCK SpinLock,
-			    ULONG Vector,
-			    KIRQL Irql,
-			    KIRQL SynchronizeIrql,
-			    KINTERRUPT_MODE InterruptMode,
-			    BOOLEAN ShareVector,
-			    KAFFINITY ProcessorEnableMask,
-			    BOOLEAN FloatingSave);
+NTSTATUS
+IoConnectInterrupt (
+	PKINTERRUPT		* InterruptObject,
+	PKSERVICE_ROUTINE	ServiceRoutine,
+	PVOID			ServiceContext,
+	PKSPIN_LOCK		SpinLock,
+	ULONG			Vector,
+	KIRQL			Irql,
+	KIRQL			SynchronizeIrql,
+	KINTERRUPT_MODE		InterruptMode,
+	BOOLEAN			ShareVector,
+	KAFFINITY		ProcessorEnableMask,
+	BOOLEAN			FloatingSave
+	);
 
-PCONTROLLER_OBJECT IoCreateController(ULONG Size);
+PCONTROLLER_OBJECT
+IoCreateController (
+	ULONG	Size
+	);
 
 /*
  * FUNCTION: Allocates memory for and intializes a device object for use for
@@ -274,86 +351,167 @@ PCONTROLLER_OBJECT IoCreateController(ULONG Size);
  *                        if the call succeeded
  * NOTES: See the DDK documentation for more information        
  */
-NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
-			ULONG DeviceExtensionSize,
-			PUNICODE_STRING DeviceName,
-			DEVICE_TYPE DeviceType,
-			ULONG DeviceCharacteristics,
-			BOOLEAN Exclusive,
-                        PDEVICE_OBJECT* DeviceObject);
+NTSTATUS
+IoCreateDevice (
+	PDRIVER_OBJECT	DriverObject,
+	ULONG		DeviceExtensionSize,
+	PUNICODE_STRING	DeviceName,
+	DEVICE_TYPE	DeviceType,
+	ULONG		DeviceCharacteristics,
+	BOOLEAN		Exclusive,
+	PDEVICE_OBJECT	* DeviceObject
+	);
 
 
-PKEVENT IoCreateNotificationEvent(PUNICODE_STRING EventName,
-				  PHANDLE EventHandle);
+PKEVENT
+IoCreateNotificationEvent (
+	PUNICODE_STRING	EventName,
+	PHANDLE	EventHandle
+	);
 
-NTSTATUS IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
-			      PUNICODE_STRING DeviceName);
+NTSTATUS
+IoCreateSymbolicLink (
+	PUNICODE_STRING	SymbolicLinkName,
+	PUNICODE_STRING	DeviceName
+	);
 
-PKEVENT IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
-				     PHANDLE EventHandle);
+PKEVENT
+IoCreateSynchronizationEvent (
+	PUNICODE_STRING	EventName,
+	PHANDLE	EventHandle
+	);
 
-NTSTATUS IoCreateUnprotectedSymbolicLink(PUNICODE_STRING SymbolicLinkName,
-					 PUNICODE_STRING DeviceName);
+NTSTATUS
+IoCreateUnprotectedSymbolicLink (
+	PUNICODE_STRING	SymbolicLinkName,
+	PUNICODE_STRING	DeviceName
+	);
 
 
-VOID IoDeassignArcName(PUNICODE_STRING ArcName);
+VOID
+IoDeassignArcName (
+	PUNICODE_STRING	ArcName
+	);
 
-VOID IoDeleteController(PCONTROLLER_OBJECT ControllerObject);
+VOID
+IoDeleteController (
+	PCONTROLLER_OBJECT	ControllerObject
+	);
 
-VOID IoDeleteDevice(PDEVICE_OBJECT DeviceObject);
+VOID
+IoDeleteDevice (
+	PDEVICE_OBJECT	DeviceObject
+	);
 
-NTSTATUS IoDeleteSymbolicLink(PUNICODE_STRING SymbolicLinkName);
+NTSTATUS
+IoDeleteSymbolicLink (
+	PUNICODE_STRING	SymbolicLinkName
+	);
 
-VOID IoDetachDevice(PDEVICE_OBJECT TargetDevice);
+VOID
+IoDetachDevice (
+	PDEVICE_OBJECT	TargetDevice
+	);
 
-VOID IoDisconnectInterrupt(PKINTERRUPT InterruptObject);
+VOID
+IoDisconnectInterrupt (
+	PKINTERRUPT	InterruptObject
+	);
 
-BOOLEAN IoFlushAdapterBuffers(PADAPTER_OBJECT AdapterObject,
-			      PMDL Mdl,
-			      PVOID MapRegisterBase,
-			      PVOID CurrentVa,
-			      ULONG Length,
-			      BOOLEAN WriteToDevice);
+BOOLEAN
+IoFlushAdapterBuffers (
+	PADAPTER_OBJECT	AdapterObject,
+	PMDL		Mdl,
+	PVOID		MapRegisterBase,
+	PVOID		CurrentVa,
+	ULONG		Length,
+	BOOLEAN		WriteToDevice
+	);
 
-VOID IoFreeAdapterChannel(PADAPTER_OBJECT AdapterObject);
-VOID IoFreeController(PCONTROLLER_OBJECT ControllerObject);
-VOID IoFreeIrp(PIRP Irp);
-VOID IoFreeMapRegisters(PADAPTER_OBJECT AdapterObject,
-			PVOID MapRegisterBase,
-			ULONG NumberOfMapRegisters);
-VOID IoFreeMdl(PMDL Mdl);
-PCONFIGURATION_INFORMATION IoGetConfigurationInformation(VOID);
+VOID
+IoFreeAdapterChannel (
+	PADAPTER_OBJECT	AdapterObject
+	);
+
+VOID
+IoFreeController (
+	PCONTROLLER_OBJECT	ControllerObject
+	);
+
+VOID
+IoFreeIrp (
+	PIRP	Irp
+	);
+
+VOID
+IoFreeMapRegisters (
+	PADAPTER_OBJECT	AdapterObject,
+	PVOID		MapRegisterBase,
+	ULONG		NumberOfMapRegisters
+	);
+
+VOID
+IoFreeMdl (
+	PMDL	Mdl
+	);
+
+PCONFIGURATION_INFORMATION
+IoGetConfigurationInformation (VOID);
 
 
 /*
  * FUNCTION: Returns a pointer to the callers stack location in the irp 
  */
-PIO_STACK_LOCATION IoGetCurrentIrpStackLocation(IRP* irp);
+PIO_STACK_LOCATION
+IoGetCurrentIrpStackLocation (
+	IRP	* irp
+	);
 
-struct _EPROCESS* IoGetCurrentProcess(VOID);
+struct _EPROCESS *
+IoGetCurrentProcess (VOID);
 
-NTSTATUS IoGetDeviceObjectPointer(PUNICODE_STRING ObjectName,
-				  ACCESS_MASK DesiredAccess,
-				  PFILE_OBJECT* FileObject,
-				  PDEVICE_OBJECT* DeviceObject);
+NTSTATUS
+IoGetDeviceObjectPointer (
+	PUNICODE_STRING	ObjectName,
+	ACCESS_MASK	DesiredAccess,
+	PFILE_OBJECT	* FileObject,
+	PDEVICE_OBJECT	* DeviceObject
+	);
 
-PDEVICE_OBJECT IoGetDeviceToVerify(PETHREAD Thread);
+PDEVICE_OBJECT
+IoGetDeviceToVerify (
+	PETHREAD	Thread
+	);
 
-PGENERIC_MAPPING IoGetFileObjectGenericMapping(VOID);
+PGENERIC_MAPPING
+IoGetFileObjectGenericMapping (VOID);
 
-ULONG IoGetFunctionCodeFromCtlCode(ULONG ControlCode);
+ULONG
+IoGetFunctionCodeFromCtlCode (
+	ULONG	ControlCode
+	);
 
-PVOID IoGetInitialStack(VOID);
+PVOID
+IoGetInitialStack (VOID);
 
 /*
  * FUNCTION:  
  */
-PIO_STACK_LOCATION IoGetNextIrpStackLocation(IRP* irp);
+PIO_STACK_LOCATION
+IoGetNextIrpStackLocation (
+	IRP	* irp
+	);
 
-PDEVICE_OBJECT IoGetRelatedDeviceObject(PFILE_OBJECT FileObject);
+PDEVICE_OBJECT
+IoGetRelatedDeviceObject (
+	PFILE_OBJECT	FileObject
+	);
 
-VOID IoInitializeDpcRequest(PDEVICE_OBJECT DeviceObject,
-			    PIO_DPC_ROUTINE DpcRoutine);
+VOID
+IoInitializeDpcRequest (
+	PDEVICE_OBJECT	DeviceObject,
+	PIO_DPC_ROUTINE	DpcRoutine
+	);
 
 /*
  * FUNCTION: Initalizes an irp allocated by the caller
@@ -362,24 +520,45 @@ VOID IoInitializeDpcRequest(PDEVICE_OBJECT DeviceObject,
  *          PacketSize = Size in bytes of the IRP
  *          StackSize = Number of stack locations in the IRP
  */
-VOID IoInitializeIrp(PIRP Irp, USHORT PacketSize, CCHAR StackSize);
+VOID
+IoInitializeIrp (
+	PIRP	Irp,
+	USHORT	PacketSize,
+	CCHAR	StackSize
+	);
 
-NTSTATUS IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
-			   PIO_TIMER_ROUTINE TimerRoutine,
-			   PVOID Context);
+NTSTATUS
+IoInitializeTimer (
+	PDEVICE_OBJECT		DeviceObject,
+	PIO_TIMER_ROUTINE	TimerRoutine,
+	PVOID			Context
+	);
 
-BOOLEAN IoIsErrorUserInduced(NTSTATUS Status);
+BOOLEAN
+IoIsErrorUserInduced (
+	NTSTATUS	Status
+	);
 
-BOOLEAN IoIsTotalDeviceFailure(NTSTATUS Status);
+BOOLEAN
+IoIsTotalDeviceFailure (
+	NTSTATUS	Status
+	);
 
-PIRP IoMakeAssociatedIrp(PIRP Irp, CCHAR StackSize);
+PIRP
+IoMakeAssociatedIrp (
+	PIRP	Irp,
+	CCHAR	StackSize
+	);
 
-PHYSICAL_ADDRESS IoMapTransfer(PADAPTER_OBJECT AdapterObject,
-			       PMDL Mdl,
-			       PVOID MapRegisterBase,
-			       PVOID CurrentVa,
-			       PULONG Length,
-			       BOOLEAN WriteToDevice);
+PHYSICAL_ADDRESS
+IoMapTransfer (
+	PADAPTER_OBJECT	AdapterObject,
+	PMDL		Mdl,
+	PVOID		MapRegisterBase,
+	PVOID		CurrentVa,
+	PULONG		Length,
+	BOOLEAN		WriteToDevice
+	);
 
 /*
  * FUNCTION: Marks an IRP as pending
@@ -389,75 +568,130 @@ PHYSICAL_ADDRESS IoMapTransfer(PADAPTER_OBJECT AdapterObject,
  * must mark it pending otherwise the I/O manager will complete it on
  * return from the dispatch routine.
  */
-VOID IoMarkIrpPending(PIRP Irp);
+VOID
+IoMarkIrpPending (
+	PIRP	Irp
+	);
 
-NTSTATUS IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
-				  PULONG BusNumber,
-				  PCONFIGURATION_TYPE ControllerType,
-				  PULONG ControllerNumber,
-				  PCONFIGURATION_TYPE PeripheralType,
-				  PULONG PeripheralNumber,
-				  PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
-				  PVOID Context);
+NTSTATUS
+IoQueryDeviceDescription (
+	PINTERFACE_TYPE			BusType,
+	PULONG				BusNumber,
+	PCONFIGURATION_TYPE		ControllerType,
+	PULONG				ControllerNumber,
+	PCONFIGURATION_TYPE		PeripheralType,
+	PULONG				PeripheralNumber,
+	PIO_QUERY_DEVICE_ROUTINE	CalloutRoutine,
+	PVOID				Context
+	);
 
-VOID IoRaiseHardError(PIRP Irp, PVPB Vpb, PDEVICE_OBJECT RealDeviceObject);
+VOID
+IoRaiseHardError (
+	PIRP		Irp,
+	PVPB		Vpb,
+	PDEVICE_OBJECT	RealDeviceObject
+	);
 
-BOOLEAN IoRaiseHardInformationalError(NTSTATUS ErrorStatus,
-				      PUNICODE_STRING String,
-				      PKTHREAD Thread);
+BOOLEAN
+IoRaiseHardInformationalError (
+	NTSTATUS	ErrorStatus,
+	PUNICODE_STRING	String,
+	PKTHREAD	Thread
+	);
 
-NTSTATUS IoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
-			      ULONG SectorSize,
-			      BOOLEAN ReturnedRecognizedPartitions,
-			      struct _DRIVE_LAYOUT_INFORMATION** PBuffer);
+NTSTATUS
+IoReadPartitionTable (
+	PDEVICE_OBJECT				DeviceObject,
+	ULONG					SectorSize,
+	BOOLEAN					ReturnedRecognizedPartitions,
+	struct _DRIVE_LAYOUT_INFORMATION	** PBuffer
+	);
 
-VOID IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
-				      PDRIVER_REINITIALIZE ReinitRoutine,
-				      PVOID Context);
+VOID
+IoRegisterDriverReinitialization (
+	PDRIVER_OBJECT		DriverObject,
+	PDRIVER_REINITIALIZE	ReinitRoutine,
+	PVOID			Context
+	);
 
-NTSTATUS IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject);
+NTSTATUS
+IoRegisterShutdownNotification (
+	PDEVICE_OBJECT	DeviceObject
+	);
 
-VOID IoReleaseCancelSpinLock(KIRQL Irql);
+VOID
+IoReleaseCancelSpinLock (
+	KIRQL	Irql
+	);
 
-VOID IoRemoveShareAccess(PFILE_OBJECT FileObject,
-			 PSHARE_ACCESS ShareAccess);
+VOID
+IoRemoveShareAccess (
+	PFILE_OBJECT	FileObject,
+	PSHARE_ACCESS	ShareAccess
+	);
 
-NTSTATUS IoReportResourceUsage(PUNICODE_STRING DriverClassName,
-			       PDRIVER_OBJECT DriverObject,
-			       PCM_RESOURCE_LIST DriverList,
-			       ULONG DriverListSize,
-			       PDEVICE_OBJECT DeviceObject,
-			       PCM_RESOURCE_LIST DeviceList,
-			       ULONG DeviceListSize,
-			       BOOLEAN OverrideConflict,
-			       PBOOLEAN ConflictDetected);
+NTSTATUS
+IoReportResourceUsage (
+	PUNICODE_STRING		DriverClassName,
+	PDRIVER_OBJECT		DriverObject,
+	PCM_RESOURCE_LIST	DriverList,
+	ULONG			DriverListSize,
+	PDEVICE_OBJECT		DeviceObject,
+	PCM_RESOURCE_LIST	DeviceList,
+	ULONG			DeviceListSize,
+	BOOLEAN			OverrideConflict,
+	PBOOLEAN		ConflictDetected
+	);
 
-VOID IoRequestDpc(PDEVICE_OBJECT DeviceObject,
-		  PIRP Irp,
-		  PVOID Context);
+VOID
+IoRequestDpc (
+	PDEVICE_OBJECT	DeviceObject,
+	PIRP		Irp,
+	PVOID		Context
+	);
 
-PDRIVER_CANCEL IoSetCancelRoutine(PIRP Irp, PDRIVER_CANCEL CancelRoutine);
+PDRIVER_CANCEL
+IoSetCancelRoutine (
+	PIRP		Irp,
+	PDRIVER_CANCEL	CancelRoutine
+	);
 
-VOID IoSetCompletionRoutine(PIRP Irp,
-			    PIO_COMPLETION_ROUTINE CompletionRoutine,
-			    PVOID Context,
-			    BOOLEAN InvokeOnSuccess,
-			    BOOLEAN InvokeOnError,
-			    BOOLEAN InvokeOnCancel);
+VOID
+IoSetCompletionRoutine (
+	PIRP			Irp,
+	PIO_COMPLETION_ROUTINE	CompletionRoutine,
+	PVOID			Context,
+	BOOLEAN			InvokeOnSuccess,
+	BOOLEAN			InvokeOnError,
+	BOOLEAN			InvokeOnCancel
+	);
 
-VOID IoSetHardErrorOrVerifyDevice(PIRP Irp, PDEVICE_OBJECT DeviceObject);
+VOID
+IoSetHardErrorOrVerifyDevice (
+	PIRP		Irp,
+	PDEVICE_OBJECT	DeviceObject
+	);
 
-VOID IoSetNextIrpStackLocation(PIRP Irp);
+VOID
+IoSetNextIrpStackLocation (
+	PIRP	Irp
+	);
 
-NTSTATUS IoSetPartitionInformation(PDEVICE_OBJECT DeviceObject,
-				   ULONG SectorSize,
-				   ULONG PartitionNumber,
-				   ULONG PartitionType);
+NTSTATUS
+IoSetPartitionInformation (
+	PDEVICE_OBJECT	DeviceObject,
+	ULONG		SectorSize,
+	ULONG		PartitionNumber,
+	ULONG		PartitionType
+	);
 
-VOID IoSetShareAccess(ACCESS_MASK DesiredAccess,
-		      ULONG DesiredShareAccess,
-		      PFILE_OBJECT FileObject,
-		      PSHARE_ACCESS ShareAccess);
+VOID
+IoSetShareAccess (
+	ACCESS_MASK	DesiredAccess,
+	ULONG		DesiredShareAccess,
+	PFILE_OBJECT	FileObject,
+	PSHARE_ACCESS	ShareAccess
+	);
 
 /*
  * FUNCTION:  Determines the size of an IRP
@@ -465,7 +699,10 @@ VOID IoSetShareAccess(ACCESS_MASK DesiredAccess,
  *           StackSize = number of stack locations in the IRP
  * RETURNS: The size of the IRP in bytes 
  */
-USHORT IoSizeOfIrp(CCHAR StackSize);
+USHORT
+IoSizeOfIrp (
+	CCHAR	StackSize
+	);
 
 /*
  * FUNCTION: Dequeues the next IRP from the device's associated queue and
@@ -474,11 +711,18 @@ USHORT IoSizeOfIrp(CCHAR StackSize);
  *          DeviceObject = Device object
  *          Cancelable = True if IRPs in the queue can be cancelled
  */
-VOID IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable);
+VOID
+IoStartNextPacket (
+	PDEVICE_OBJECT	DeviceObject,
+	BOOLEAN		Cancelable
+	);
    
-VOID IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject, 
-			    BOOLEAN Cancelable,
-			    ULONG Key);
+VOID
+IoStartNextPacketByKey (
+	PDEVICE_OBJECT	DeviceObject, 
+	BOOLEAN		Cancelable,
+	ULONG		Key
+	);
 
 /*
  * FUNCTION: Calls the drivers StartIO routine with the IRP or queues it if
@@ -489,43 +733,84 @@ VOID IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
  *         Key = Optional value for where to insert the IRP
  *         CancelFunction = Entry point for a driver supplied cancel function
  */
-VOID IoStartPacket(PDEVICE_OBJECT DeviceObject, PIRP Irp, PULONG Key,
-		   PDRIVER_CANCEL CancelFunction);
+VOID
+IoStartPacket (
+	PDEVICE_OBJECT	DeviceObject,
+	PIRP		Irp,
+	PULONG		Key,
+	PDRIVER_CANCEL	CancelFunction
+	);
 
-VOID IoStartTimer(PDEVICE_OBJECT DeviceObject);
+VOID
+IoStartTimer (
+	PDEVICE_OBJECT	DeviceObject
+	);
 
-VOID IoStopTimer(PDEVICE_OBJECT DeviceObject);
+VOID
+IoStopTimer (
+	PDEVICE_OBJECT	DeviceObject
+	);
 
-VOID IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject);
+VOID
+IoUnregisterShutdownNotification (
+	PDEVICE_OBJECT	DeviceObject
+	);
 
-VOID IoUpdateShareAccess(PFILE_OBJECT FileObject, PSHARE_ACCESS ShareAccess);
+VOID
+IoUpdateShareAccess (
+	PFILE_OBJECT	FileObject,
+	PSHARE_ACCESS	ShareAccess
+	);
 
-VOID IoWriteErrorLogEntry(PVOID ElEntry);
+VOID
+IoWriteErrorLogEntry (
+	PVOID	ElEntry
+	);
 
-NTSTATUS IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
-			       ULONG SectorSize,
-			       ULONG SectorsPerTrack,
-			       ULONG NumberOfHeads,
-			       struct _DRIVE_LAYOUT_INFORMATION* PBuffer);
+NTSTATUS
+IoWritePartitionTable (
+	PDEVICE_OBJECT	DeviceObject,
+	ULONG SectorSize,
+	ULONG SectorsPerTrack,
+	ULONG NumberOfHeads,
+	struct _DRIVE_LAYOUT_INFORMATION* PBuffer
+	);
 
 
 // Preliminary guess
-NTKERNELAPI NTSTATUS IoQueryFileVolumeInformation(IN PFILE_OBJECT FileObject, 
-				  IN FS_INFORMATION_CLASS FsInformationClass, 
-						  IN ULONG Length, 
-						  OUT PVOID FsInformation, 
-						  OUT PULONG ReturnedLength);
+NTKERNELAPI
+NTSTATUS
+IoQueryFileVolumeInformation (
+	IN	PFILE_OBJECT		FileObject, 
+	IN	FS_INFORMATION_CLASS	FsInformationClass, 
+	IN	ULONG			Length, 
+	OUT	PVOID			FsInformation, 
+	OUT	PULONG			ReturnedLength
+	);
 
 NTKERNELAPI // confirmed - Undocumented because it does not require a valid file handle 
 NTSTATUS 
-IoQueryFileInformation(
-IN PFILE_OBJECT FileObject,
-IN FILE_INFORMATION_CLASS FileInformationClass,
-IN ULONG Length,
-OUT PVOID FileInformation,
-OUT PULONG ReturnedLength
-);
-VOID IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject);
-PDEVICE_OBJECT IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject);
-PFILE_OBJECT IoCreateStreamFileObject(PFILE_OBJECT FileObject,
-				      PDEVICE_OBJECT DeviceObject);
+IoQueryFileInformation (
+	IN	PFILE_OBJECT		FileObject,
+	IN	FILE_INFORMATION_CLASS	FileInformationClass,
+	IN	ULONG			Length,
+	OUT	PVOID			FileInformation,
+	OUT	PULONG			ReturnedLength	
+	);
+
+VOID
+IoRegisterFileSystem (
+	PDEVICE_OBJECT	DeviceObject
+	);
+
+PDEVICE_OBJECT
+IoGetAttachedDevice (
+	PDEVICE_OBJECT	DeviceObject
+	);
+
+PFILE_OBJECT
+IoCreateStreamFileObject (
+	PFILE_OBJECT	FileObject,
+	PDEVICE_OBJECT	DeviceObject
+	);
+

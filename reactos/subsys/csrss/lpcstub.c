@@ -1,4 +1,4 @@
-/* $Id: lpcstub.c,v 1.1 1999/06/08 22:50:59 ea Exp $
+/* $Id: lpcstub.c,v 1.2 1999/07/17 23:10:30 ea Exp $
  *
  * lpcstub.c
  *
@@ -7,7 +7,6 @@
  *
  */
 #include <ddk/ntddk.h>
-#include <internal/lpc.h>
 #include "api.h"
 
 

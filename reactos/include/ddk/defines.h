@@ -1,3 +1,6 @@
+#ifndef _DDK_DEFINES_H
+#define _DDK_DEFINES_H
+
 /* GENERAL DEFINITIONS ****************************************************/
 
 #include <internal/hal/irq.h>
@@ -234,3 +237,5 @@ enum
 #define DISPATCH_LEVEL               (3)
 #define FIRST_DEVICE_SPECIFIC_LEVEL  (4)
 #define HIGH_LEVEL (FIRST_DEVICE_SPECIFIC_LEVEL + NR_DEVICE_SPECIFIC_LEVELS)
+
+#endif /* ndef _DDK_DEFINES_H */

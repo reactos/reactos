@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.27 1999/07/16 23:37:05 rex Exp $
+# $Id: makefile_rex,v 1.28 1999/07/17 23:10:25 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -55,7 +55,7 @@ CM_OBJECTS = cm/registry.o
 
 DBG_OBJECTS = dbg/brkpoint.o dbg/errinfo.o
 
-LDR_OBJECTS = ldr/loader.o ldr/init.o
+LDR_OBJECTS = ldr/loader.o ldr/init.o ldr/syspath.o
 
 CC_OBJECTS = cc/cacheman.o cc/view.o
 
@@ -134,6 +134,7 @@ $(TARGET).exe: $(OBJECTS) $(TARGET).def
 	$(DLLTOOL) \
 		--dllname $(TARGET).exe \
 		--def $(TARGET).def \
+		--kill-at \
 		--output-lib $(TARGET).a
 	$(CC) \
 		$(TARGET).o \
@@ -152,7 +153,7 @@ $(TARGET).exe: $(OBJECTS) $(TARGET).def
 		--dllname $(TARGET).exe \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGET).def
+		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
 		$(TARGET).o \

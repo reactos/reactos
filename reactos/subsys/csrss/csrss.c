@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.1 1999/06/08 22:50:59 ea Exp $
+/* $Id: csrss.c,v 1.2 1999/07/17 23:10:30 ea Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -32,7 +32,6 @@
  * 		actually does nothing but running).
  */
 #include <ddk/ntddk.h>
-//#include <internal/lpc.h>
 
 BOOL TerminationRequestPending = FALSE;
 

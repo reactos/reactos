@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 1999/06/18 22:10:58 ea Exp $
+# $Id: makefile,v 1.4 1999/07/17 23:10:18 ea Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -17,7 +17,7 @@ endif
 MISC_OBJECTS = misc/dllmain.o misc/shutdown.o \
 		misc/sysfunc.o
 
-REGISTRY_OBJECTS = reg/reg.o
+REGISTRY_OBJECTS = reg/reg.o reg/regw.o
 
 SECURITY_OBJECTS = sec/lsa.o sec/sec.o
 #SECURITY_OBJECTS = sec/lsa.o sec/rtlsec.o sec/sec.o
@@ -42,6 +42,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
 		--def $(TARGET).def \
+		--kill-at \
 		--output-lib $(TARGET).a
 	$(CC) \
 		$(TARGET).o \
@@ -56,7 +57,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--dllname $(TARGET).dll \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGET).def
+		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
 		$(TARGET).o

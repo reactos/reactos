@@ -61,10 +61,16 @@ endif
 
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
-CFLAGS = -O2 -I../../../include -I../../include  \
-         -I../include -fno-builtin $(LEAN_AND_MEAN_DEFINE)  \
-         $(DEFINES) -Wall -Wstrict-prototypes $(DEBUGGING_CFLAGS) \
-	 $(EXTRA_CFLAGS)
+CFLAGS = \
+	-pipe \
+	-O2 \
+	-I../../../include \
+	-I../../include  \
+	-I../include \
+	-fno-builtin $(LEAN_AND_MEAN_DEFINE)  \
+	$(DEFINES) -Wall \
+	-Wstrict-prototypes $(DEBUGGING_CFLAGS) \
+	$(EXTRA_CFLAGS)
 CXXFLAGS = $(CFLAGS)
 NFLAGS = -i../../include/ -i../include/ -pinternal/asm.inc -f$(NASM_FORMAT) -d$(NASM_FORMAT)
 LD = $(PREFIX)ld

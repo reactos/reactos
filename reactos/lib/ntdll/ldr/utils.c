@@ -1,4 +1,5 @@
-/*
+/* $Id: utils.c,v 1.9 1999/07/17 23:10:24 ea Exp $
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/ldr/startup.c
@@ -30,7 +31,7 @@ typedef WINBOOL STDCALL (*PDLLMAIN_FUNC)(HANDLE hInst,
 
 static NTSTATUS LdrLoadDll(PDLL* Dll, PCHAR Name)
 {
-   char fqname[255] = "\\??\\C:\\reactos\\system\\";
+   char fqname[255] = "\\??\\C:\\reactos\\system32\\";
    ANSI_STRING AnsiString;
    UNICODE_STRING UnicodeString;
    OBJECT_ATTRIBUTES FileObjectAttributes;

@@ -1,4 +1,5 @@
-/*
+/* $Id: port.c,v 1.7 1999/07/17 23:10:28 ea Exp $
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/nt/port.c
@@ -280,12 +281,25 @@ NTSTATUS STDCALL NtQueryInformationPort(VOID)
    UNIMPLEMENTED;
 }
 
+NTSTATUS
+STDCALL
+NtReadRequestData(VOID)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS
+STDCALL
+NtWriteRequestData(VOID)
+{
+   UNIMPLEMENTED;
+}
 #else
 NTSTATUS
 STDCALL
 NtAcceptConnectPort ( /* @24 */
 	IN	HANDLE	PortHandle,
-	DWORD	a1,
+	OUT	PHANDLE	ConnectedPort,
 	DWORD	a2,
 	DWORD	a3,
 	DWORD	a4,
@@ -309,15 +323,14 @@ NtCompleteConnectPort ( /* @4 */
 NTSTATUS
 STDCALL
 NtConnectPort ( /* @32 */
-	IN	HANDLE	PortHandle,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5,
-	DWORD	a6,
-	DWORD	a7,
-	DWORD	a8
+	OUT	PHANDLE			ConnectedPort,
+	IN	PUNICODE_STRING		PortName,
+	IN	POBJECT_ATTRIBUTES	PortAttributes,
+	IN	DWORD			a3,
+	IN	DWORD			a4,
+	IN	DWORD			a5,
+	IN	DWORD			a6,
+	IN	ULONG			Flags
 	)
 {
 	UNIMPLEMENTED;
@@ -330,8 +343,8 @@ NtCreatePort ( /* @20 */
 	OUT	PHANDLE			PortHandle,
 	IN	ACCESS_MASK		DesiredAccess,
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,  
-	IN	DWORD			a3,
-	IN	DWORD			a4
+	IN	DWORD			a3,	/* unknown */
+	IN	DWORD			a4	/* unknown */
 	)
 {
 	UNIMPLEMENTED;
@@ -432,6 +445,24 @@ NtRequestWaitReplyPort ( /* @12 */
 }
 
  
+/**********************************************************************
+ * NAME							SYSTEM
+ *	NtReadRequestData				NOT EXPORTED
+ *
+ * DESCRIPTION
+ * 	Probably used only for FastLPC, to read data from the
+ * 	recipient's address space directly.
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * NOTE
+ * 	The number of arguments is the same as in NT's.
+ *
+ * REVISIONS
+ * 
+ */
 NTSTATUS
 STDCALL
 NtReadRequestData ( /* @24 */
@@ -447,6 +478,24 @@ NtReadRequestData ( /* @24 */
 }
 
 
+/**********************************************************************
+ * NAME							SYSTEM
+ *	NtWriteRequestData				NOT EXPORTED
+ *
+ * DESCRIPTION
+ * 	Probably used only for FastLPC, to write data in the
+ * 	recipient's address space directly.
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * NOTE
+ * 	The number of arguments is the same as in NT's.
+ *
+ * REVISIONS
+ * 
+ */
 NTSTATUS
 STDCALL
 NtWriteRequestData ( /* @24 */

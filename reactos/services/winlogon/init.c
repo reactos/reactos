@@ -1,6 +1,6 @@
-/* $Id: init.c,v 1.1 1999/06/18 22:40:47 ea Exp $
+/* $Id: init.c,v 1.2 1999/07/17 23:10:29 ea Exp $
  *
- * resctos/services/winlogon/init.c
+ * reactos/services/winlogon/init.c
  *
  */
 #include <windows.h>
@@ -10,11 +10,11 @@ Initialize(VOID)
 {
 	/* SERVICES CONTROLLER */
 	NtCreateProcess(
-		L"\\\\??\\C:\reactos\system\services.exe"
+		L"\\\\??\\C:\\reactos\\system\\services.exe"
 		);
 	/* LOCAL SECURITY AUTORITY SUBSYSTEM */
 	NtCreateProcess(
-		L"\\\\??\\C:\reactos\system\lsass.exe"
+		L"\\\\??\\C:\\reactos\\system\\lsass.exe"
 		);
 	return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.1 1999/06/08 22:50:59 ea Exp $
+/* $Id: process.c,v 1.2 1999/07/17 23:10:30 ea Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -6,20 +6,22 @@
  *
  * ReactOS Operating System
  */
-#include <internal/lpc.h>
+#define PROTO_LPC
+#include <ddk/ntddk.h>
 
-LPC_RETURN_CODE
+
+DWORD
 CSR_CreateProcess (
-	PLPC_REQUEST_REPLY	pLpcRequestReply
+	PLPC_MESSAGE	pLpcMessage
 	)
 {
 	return LPC_ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
-LPC_RETURN_CODE
+DWORD
 CSR_TerminateProcess(
-	PLPC_REQUEST_REPLY	pLpcRequestReply
+	PLPC_MESSAGE	pLpcMessage
 	)
 {
 	return LPC_ERROR_CALL_NOT_IMPLEMENTED;

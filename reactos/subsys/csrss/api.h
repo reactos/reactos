@@ -1,13 +1,13 @@
-#include <internal/lpc.h>
+#include <ddk/ntddk.h>
 
-LPC_RETURN_CODE
+DWORD
 CSR_CreateProcess (
-	PLPC_REQUEST_REPLY	pLpcRequestReply
+	PLPC_MESSAGE	pLpcMessage
 	);
 
-LPC_RETURN_CODE
+DWORD
 CSR_TerminateProcess(
-	PLPC_REQUEST_REPLY	pLpcRequestReply
+	PLPC_MESSAGE	pLpcMessage
 	);
 
 

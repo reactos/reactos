@@ -16,17 +16,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtWriteRequestData(VOID)
-{
-   UNIMPLEMENTED;
-}
-
 NTSTATUS STDCALL NtVdmControl(VOID)
 {
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtReadRequestData(VOID)
-{
-   UNIMPLEMENTED;
-}
+/* EOF */

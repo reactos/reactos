@@ -39,7 +39,7 @@
 //
 // File: pedump.c ( I included header file into source file. )
 
-# include "ccx.h"
+//# include "ccx.h"
 
 //typedef char                CHAR;
 //typedef short               WCHAR;

@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.1 1999/05/19 16:43:30 ea Exp $
+/* $Id: shutdown.c,v 1.2 1999/07/17 23:10:18 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -83,7 +83,7 @@ InitiateSystemShutdownW(
 
 	if (lpMachineName)
 	{
-		/* remote machine shutdown not supported yet */
+		/* FIXME: remote machine shutdown not supported yet */
 		SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 		return FALSE;
 	}

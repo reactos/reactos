@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 1999/07/12 21:01:06 ea Exp $
+/* $Id: stubs.c,v 1.2 1999/07/17 23:10:20 ea Exp $
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
@@ -330,7 +330,7 @@ CompareStringW (
 
 WINBOOL
 STDCALL
-ConnectNamedPipe(
+ConnectNamedPipe (
 	HANDLE		hNamedPipe,
 	LPOVERLAPPED	lpOverlapped
 	)
@@ -355,7 +355,7 @@ ConsoleMenuControl (
 
 WINBOOL
 STDCALL
-ContinueDebugEvent(
+ContinueDebugEvent (
 	DWORD	dwProcessId,
 	DWORD	dwThreadId,
 	DWORD	dwContinueStatus
@@ -457,7 +457,7 @@ CreateNamedPipeW (
 
 HANDLE
 STDCALL
-CreateNamedPipeA(
+CreateNamedPipeA (
 	LPCSTR			lpName,
 	DWORD			dwOpenMode,
 	DWORD			dwPipeMode,
@@ -707,11 +707,11 @@ EnumResourceNamesA (
 
 WINBOOL
 STDCALL
-EnumResourceTypesW(
-    HINSTANCE hModule,
-    ENUMRESTYPEPROC lpEnumFunc,
-    LONG lParam
-    )
+EnumResourceTypesW (
+	HINSTANCE	hModule,
+	ENUMRESTYPEPROC	lpEnumFunc,
+	LONG		lParam
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -721,11 +721,11 @@ EnumResourceTypesW(
 
 WINBOOL
 STDCALL
-EnumResourceTypesA(
-		   HINSTANCE hModule,
-		   ENUMRESTYPEPROC lpEnumFunc,
-		   LONG lParam
-		   )
+EnumResourceTypesA (
+	HINSTANCE	hModule,
+	ENUMRESTYPEPROC	lpEnumFunc,
+	LONG		lParam
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -734,10 +734,10 @@ EnumResourceTypesA(
 
 WINBOOL
 STDCALL
-EnumSystemCodePagesW(
-    CODEPAGE_ENUMPROC lpCodePageEnumProc,
-    DWORD              dwFlags
-    )
+EnumSystemCodePagesW (
+	CODEPAGE_ENUMPROC	lpCodePageEnumProc,
+	DWORD			dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -746,10 +746,10 @@ EnumSystemCodePagesW(
 
 WINBOOL
 STDCALL
-EnumSystemCodePagesA(
-    CODEPAGE_ENUMPROC lpCodePageEnumProc,
-    DWORD              dwFlags
-    )
+EnumSystemCodePagesA (
+	CODEPAGE_ENUMPROC	lpCodePageEnumProc,
+	DWORD			dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -758,10 +758,10 @@ EnumSystemCodePagesA(
 
 WINBOOL
 STDCALL
-EnumSystemLocalesW(
-    LOCALE_ENUMPROC lpLocaleEnumProc,
-    DWORD            dwFlags
-    )
+EnumSystemLocalesW (
+	LOCALE_ENUMPROC	lpLocaleEnumProc,
+	DWORD		dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -770,10 +770,10 @@ EnumSystemLocalesW(
 
 WINBOOL
 STDCALL
-EnumSystemLocalesA(
-    LOCALE_ENUMPROC lpLocaleEnumProc,
-    DWORD            dwFlags
-    )
+EnumSystemLocalesA (
+	LOCALE_ENUMPROC	lpLocaleEnumProc,
+	DWORD		dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -782,11 +782,11 @@ EnumSystemLocalesA(
 
 WINBOOL
 STDCALL
-EnumTimeFormatsW(
-    TIMEFMT_ENUMPROC lpTimeFmtEnumProc,
-    LCID              Locale,
-    DWORD             dwFlags
-    )
+EnumTimeFormatsW (
+	TIMEFMT_ENUMPROC	lpTimeFmtEnumProc,
+	LCID			Locale,
+	DWORD			dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -795,11 +795,11 @@ EnumTimeFormatsW(
 
 WINBOOL
 STDCALL
-EnumTimeFormatsA(
-    TIMEFMT_ENUMPROC lpTimeFmtEnumProc,
-    LCID              Locale,
-    DWORD             dwFlags
-    )
+EnumTimeFormatsA (
+	TIMEFMT_ENUMPROC	lpTimeFmtEnumProc,
+	LCID			Locale,
+	DWORD			dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -808,11 +808,11 @@ EnumTimeFormatsA(
 
 DWORD
 STDCALL
-EraseTape(
-	  HANDLE hDevice,
-	  DWORD dwEraseType,
-	  WINBOOL bImmediate
-	  )
+EraseTape (
+	HANDLE	hDevice,
+	DWORD	dwEraseType,
+	WINBOOL	bImmediate
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -821,10 +821,10 @@ EraseTape(
 
 WINBOOL
 STDCALL
-EscapeCommFunction(
-		   HANDLE hFile,
-		   DWORD dwFunc
-		   )
+EscapeCommFunction (
+	HANDLE	hFile,
+	DWORD	dwFunc
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -845,11 +845,11 @@ ExitVDM (
 
 DWORD
 STDCALL
-ExpandEnvironmentStringsW(
-    LPCWSTR lpSrc,
-    LPWSTR lpDst,
-    DWORD nSize
-    )
+ExpandEnvironmentStringsW (
+	LPCWSTR	lpSrc,
+	LPWSTR	lpDst,
+	DWORD	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -858,11 +858,11 @@ ExpandEnvironmentStringsW(
 
 DWORD
 STDCALL
-ExpandEnvironmentStringsA(
-			  LPCSTR lpSrc,
-			  LPSTR lpDst,
-			  DWORD nSize
-			  )
+ExpandEnvironmentStringsA (
+	LPCSTR	lpSrc,
+	LPSTR	lpDst,
+	DWORD	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -905,7 +905,7 @@ ExtendVirtualBuffer (
 
 VOID
 STDCALL
-FatalExit(
+FatalExit (
 	  int ExitCode
 	  )
 {
@@ -915,9 +915,9 @@ FatalExit(
 
 ATOM
 STDCALL
-FindAtomW(
-    LPCWSTR lpString
-    )
+FindAtomW (
+	LPCWSTR lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -926,7 +926,7 @@ FindAtomW(
 
 ATOM
 STDCALL
-FindAtomA(
+FindAtomA (
 	LPCSTR lpString
 	)
 {
@@ -937,8 +937,8 @@ FindAtomA(
 
 WINBOOL
 STDCALL
-FindCloseChangeNotification(
-	HANDLE hChangeHandle
+FindCloseChangeNotification (
+	HANDLE	hChangeHandle
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -949,10 +949,10 @@ FindCloseChangeNotification(
 HANDLE
 STDCALL
 FindFirstChangeNotificationW (
-    LPCWSTR lpPathName,
-    WINBOOL bWatchSubtree,
-    DWORD dwNotifyFilter
-    )
+	LPCWSTR	lpPathName,
+	WINBOOL	bWatchSubtree,
+	DWORD	dwNotifyFilter
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return INVALID_HANDLE_VALUE;
@@ -961,11 +961,11 @@ FindFirstChangeNotificationW (
 
 HANDLE
 STDCALL
-FindFirstChangeNotificationA(
-    LPCSTR lpPathName,
-    WINBOOL bWatchSubtree,
-    DWORD dwNotifyFilter
-    )
+FindFirstChangeNotificationA (
+	LPCSTR	lpPathName,
+	WINBOOL	bWatchSubtree,
+	DWORD	dwNotifyFilter
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return INVALID_HANDLE_VALUE;
@@ -985,7 +985,7 @@ FindNextChangeNotification (
 
 HRSRC
 STDCALL
-FindResourceW(
+FindResourceW (
 	HINSTANCE	hModule,
 	LPCWSTR		lpName,
 	LPCWSTR		lpType
@@ -1011,7 +1011,7 @@ FindResourceA (
 
 HRSRC
 STDCALL
-FindResourceExW(
+FindResourceExW (
 	HINSTANCE	hModule,
 	LPCWSTR		lpType,
 	LPCWSTR		lpName,
@@ -1025,7 +1025,7 @@ FindResourceExW(
 
 HRSRC
 STDCALL
-FindResourceExA(
+FindResourceExA (
 	HINSTANCE	hModule,
 	LPCSTR		lpType,
 	LPCSTR		lpName,
@@ -1119,8 +1119,8 @@ FormatMessageA (
 VOID
 STDCALL
 FreeLibraryAndExitThread (
-	HMODULE hLibModule,
-	DWORD dwExitCode
+	HMODULE	hLibModule,
+	DWORD	dwExitCode
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1151,7 +1151,7 @@ FreeVirtualBuffer (
 
 UINT
 STDCALL
-GetACP (void)
+GetACP (VOID)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1174,7 +1174,7 @@ GetAtomNameW (
 
 UINT
 STDCALL
-GetAtomNameA(
+GetAtomNameA (
 	ATOM	nAtom,
 	LPSTR	lpBuffer,
 	int	nSize
@@ -1187,7 +1187,7 @@ GetAtomNameA(
 
 WINBOOL
 STDCALL
-GetBinaryTypeW(
+GetBinaryTypeW (
 	LPCWSTR	lpApplicationName,
 	LPDWORD	lpBinaryType
 	)
@@ -1211,7 +1211,10 @@ GetBinaryTypeA (
 
 WINBOOL
 STDCALL
-GetCPInfo (UINT a0, LPCPINFO a1)
+GetCPInfo (
+	UINT		a0,
+	LPCPINFO	a1
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1234,8 +1237,8 @@ GetCommConfig (
 WINBOOL
 STDCALL
 GetCommMask (
-	HANDLE hFile,
-	LPDWORD lpEvtMask
+	HANDLE	hFile,
+	LPDWORD	lpEvtMask
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1322,8 +1325,8 @@ GetComputerNameW (
 WINBOOL
 STDCALL
 GetComputerNameA (
-	LPSTR lpBuffer,
-	LPDWORD nSize
+	LPSTR	lpBuffer,
+	LPDWORD	nSize
 	)
 {
 	WCHAR	Name [MAX_COMPUTERNAME_LENGTH + 1];
@@ -1583,42 +1586,13 @@ GetConsoleInputWaitHandle (VOID)
 
 int
 STDCALL
-GetCurrencyFormatW(
-    LCID     Locale,
-    DWORD    dwFlags,
-    LPCWSTR lpValue,
-    CONST CURRENCYFMT *lpFormat,
-    LPWSTR  lpCurrencyStr,
-    int      cchCurrency
-    )
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-int
-STDCALL
-GetCurrencyFormatA(
-    LCID     Locale,
-    DWORD    dwFlags,
-    LPCSTR lpValue,
-    CONST CURRENCYFMT *lpFormat,
-    LPSTR  lpCurrencyStr,
-    int      cchCurrency
-    )
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetCurrentConsoleFont (
-	DWORD Unknown0,
-	DWORD Unknown1,
-	DWORD Unknown2
+GetCurrencyFormatW (
+	LCID			Locale,
+	DWORD			dwFlags,
+	LPCWSTR			lpValue,
+	CONST CURRENCYFMT	* lpFormat,
+	LPWSTR			lpCurrencyStr,
+	int			cchCurrency
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1628,14 +1602,27 @@ GetCurrentConsoleFont (
 
 int
 STDCALL
-GetDateFormatW(
-    LCID     Locale,
-    DWORD    dwFlags,
-    CONST SYSTEMTIME *lpDate,
-    LPCWSTR lpFormat,
-    LPWSTR  lpDateStr,
-    int      cchDate
-    )
+GetCurrencyFormatA (
+	LCID			Locale,
+	DWORD			dwFlags,
+	LPCSTR			lpValue,
+	CONST CURRENCYFMT	* lpFormat,
+	LPSTR			lpCurrencyStr,
+	int			cchCurrency
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetCurrentConsoleFont (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1644,14 +1631,30 @@ GetDateFormatW(
 
 int
 STDCALL
-GetDateFormatA(
-    LCID     Locale,
-    DWORD    dwFlags,
-    CONST SYSTEMTIME *lpDate,
-    LPCSTR lpFormat,
-    LPSTR  lpDateStr,
-    int      cchDate
-    )
+GetDateFormatW (
+	LCID			Locale,
+	DWORD			dwFlags,
+	CONST SYSTEMTIME	* lpDate,
+	LPCWSTR			lpFormat,
+	LPWSTR			lpDateStr,
+	int			cchDate
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+int
+STDCALL
+GetDateFormatA (
+	LCID			Locale,
+	DWORD			dwFlags,
+	CONST SYSTEMTIME	* lpDate,
+	LPCSTR			lpFormat,
+	LPSTR			lpDateStr,
+	int			cchDate
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1660,11 +1663,11 @@ GetDateFormatA(
 
 WINBOOL
 STDCALL
-GetDefaultCommConfigW(
-    LPCWSTR lpszName,
-    LPCOMMCONFIG lpCC,
-    LPDWORD lpdwSize
-    )
+GetDefaultCommConfigW (
+	LPCWSTR		lpszName,
+	LPCOMMCONFIG	lpCC,
+	LPDWORD		lpdwSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -1673,11 +1676,11 @@ GetDefaultCommConfigW(
 
 WINBOOL
 STDCALL
-GetDefaultCommConfigA(
-    LPCSTR lpszName,
-    LPCOMMCONFIG lpCC,
-    LPDWORD lpdwSize
-    )
+GetDefaultCommConfigA (
+	LPCSTR		lpszName,
+	LPCOMMCONFIG	lpCC,
+	LPDWORD		lpdwSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -1686,12 +1689,12 @@ GetDefaultCommConfigA(
 
 int
 STDCALL
-GetLocaleInfoW(
-    LCID     Locale,
-    LCTYPE   LCType,
-    LPWSTR  lpLCData,
-    int      cchData
-    )
+GetLocaleInfoW (
+	LCID	Locale,
+	LCTYPE	LCType,
+	LPWSTR	lpLCData,
+	int	cchData
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1700,12 +1703,12 @@ GetLocaleInfoW(
 
 int
 STDCALL
-GetLocaleInfoA(
-    LCID     Locale,
-    LCTYPE   LCType,
-    LPSTR  lpLCData,
-    int      cchData
-    )
+GetLocaleInfoA (
+	LCID	Locale,
+	LCTYPE	LCType,
+	LPSTR	lpLCData,
+	int	cchData
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1714,13 +1717,13 @@ GetLocaleInfoA(
 
 WINBOOL
 STDCALL
-GetMailslotInfo(
-		HANDLE hMailslot,
-		LPDWORD lpMaxMessageSize,
-		LPDWORD lpNextSize,
-		LPDWORD lpMessageCount,
-		LPDWORD lpReadTimeout
-		)
+GetMailslotInfo (
+	HANDLE	hMailslot,
+	LPDWORD	lpMaxMessageSize,
+	LPDWORD	lpNextSize,
+	LPDWORD	lpMessageCount,
+	LPDWORD	lpReadTimeout
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -1778,14 +1781,14 @@ GetModuleHandleA (
 WINBOOL
 STDCALL
 GetNamedPipeHandleStateW (
-    HANDLE hNamedPipe,
-    LPDWORD lpState,
-    LPDWORD lpCurInstances,
-    LPDWORD lpMaxCollectionCount,
-    LPDWORD lpCollectDataTimeout,
-    LPWSTR lpUserName,
-    DWORD nMaxUserNameSize
-    )
+	HANDLE	hNamedPipe,
+	LPDWORD	lpState,
+	LPDWORD	lpCurInstances,
+	LPDWORD	lpMaxCollectionCount,
+	LPDWORD	lpCollectDataTimeout,
+	LPWSTR	lpUserName,
+	DWORD	nMaxUserNameSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -1795,14 +1798,14 @@ GetNamedPipeHandleStateW (
 WINBOOL
 STDCALL
 GetNamedPipeHandleStateA (
-    HANDLE hNamedPipe,
-    LPDWORD lpState,
-    LPDWORD lpCurInstances,
-    LPDWORD lpMaxCollectionCount,
-    LPDWORD lpCollectDataTimeout,
-    LPSTR lpUserName,
-    DWORD nMaxUserNameSize
-    )
+	HANDLE	hNamedPipe,
+	LPDWORD	lpState,
+	LPDWORD	lpCurInstances,
+	LPDWORD	lpMaxCollectionCount,
+	LPDWORD	lpCollectDataTimeout,
+	LPSTR	lpUserName,
+	DWORD	nMaxUserNameSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -1811,13 +1814,13 @@ GetNamedPipeHandleStateA (
 
 WINBOOL
 STDCALL
-GetNamedPipeInfo(
-		 HANDLE hNamedPipe,
-		 LPDWORD lpFlags,
-		 LPDWORD lpOutBufferSize,
-		 LPDWORD lpInBufferSize,
-		 LPDWORD lpMaxInstances
-		 )
+GetNamedPipeInfo (
+	HANDLE	hNamedPipe,
+	LPDWORD	lpFlags,
+	LPDWORD	lpOutBufferSize,
+	LPDWORD	lpInBufferSize,
+	LPDWORD	lpMaxInstances
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -1837,14 +1840,14 @@ GetNextVDMCommand (
 
 int
 STDCALL
-GetNumberFormatW(
-    LCID     Locale,
-    DWORD    dwFlags,
-    LPCWSTR lpValue,
-    CONST NUMBERFMT *lpFormat,
-    LPWSTR  lpNumberStr,
-    int      cchNumber
-    )
+GetNumberFormatW (
+	LCID		Locale,
+	DWORD		dwFlags,
+	LPCWSTR		lpValue,
+	CONST NUMBERFMT	* lpFormat,
+	LPWSTR		lpNumberStr,
+	int		cchNumber
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1853,14 +1856,14 @@ GetNumberFormatW(
 
 int
 STDCALL
-GetNumberFormatA(
-    LCID     Locale,
-    DWORD    dwFlags,
-    LPCSTR lpValue,
-    CONST NUMBERFMT *lpFormat,
-    LPSTR  lpNumberStr,
-    int      cchNumber
-    )
+GetNumberFormatA (
+	LCID		Locale,
+	DWORD		dwFlags,
+	LPCSTR		lpValue,
+	CONST NUMBERFMT	* lpFormat,
+	LPSTR		lpNumberStr,
+	int		cchNumber
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1899,12 +1902,12 @@ GetPriorityClass (
 
 UINT
 STDCALL
-GetPrivateProfileIntW(
-    LPCWSTR lpAppName,
-    LPCWSTR lpKeyName,
-    INT nDefault,
-    LPCWSTR lpFileName
-    )
+GetPrivateProfileIntW (
+	LPCWSTR	lpAppName,
+	LPCWSTR	lpKeyName,
+	INT	nDefault,
+	LPCWSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1913,12 +1916,12 @@ GetPrivateProfileIntW(
 
 UINT
 STDCALL
-GetPrivateProfileIntA(
-    LPCSTR lpAppName,
-    LPCSTR lpKeyName,
-    INT nDefault,
-    LPCSTR lpFileName
-    )
+GetPrivateProfileIntA (
+	LPCSTR	lpAppName,
+	LPCSTR	lpKeyName,
+	INT	nDefault,
+	LPCSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1927,12 +1930,12 @@ GetPrivateProfileIntA(
 
 DWORD
 STDCALL
-GetPrivateProfileSectionW(
-    LPCWSTR lpAppName,
-    LPWSTR lpReturnedString,
-    DWORD nSize,
-    LPCWSTR lpFileName
-    )
+GetPrivateProfileSectionW (
+	LPCWSTR	lpAppName,
+	LPWSTR	lpReturnedString,
+	DWORD	nSize,
+	LPCWSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1941,12 +1944,12 @@ GetPrivateProfileSectionW(
 
 DWORD
 STDCALL
-GetPrivateProfileSectionA(
-    LPCSTR lpAppName,
-    LPSTR lpReturnedString,
-    DWORD nSize,
-    LPCSTR lpFileName
-    )
+GetPrivateProfileSectionA (
+	LPCSTR	lpAppName,
+	LPSTR	lpReturnedString,
+	DWORD	nSize,
+	LPCSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1981,14 +1984,14 @@ GetPrivateProfileSectionNamesA (
 
 DWORD
 STDCALL
-GetPrivateProfileStringW(
-    LPCWSTR lpAppName,
-    LPCWSTR lpKeyName,
-    LPCWSTR lpDefault,
-    LPWSTR lpReturnedString,
-    DWORD nSize,
-    LPCWSTR lpFileName
-    )
+GetPrivateProfileStringW (
+	LPCWSTR lpAppName,
+	LPCWSTR lpKeyName,
+	LPCWSTR lpDefault,
+	LPWSTR	lpReturnedString,
+	DWORD	nSize,
+	LPCWSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1997,14 +2000,14 @@ GetPrivateProfileStringW(
 
 DWORD
 STDCALL
-GetPrivateProfileStringA(
-    LPCSTR lpAppName,
-    LPCSTR lpKeyName,
-    LPCSTR lpDefault,
-    LPSTR lpReturnedString,
-    DWORD nSize,
-    LPCSTR lpFileName
-    )
+GetPrivateProfileStringA (
+	LPCSTR	lpAppName,
+	LPCSTR	lpKeyName,
+	LPCSTR	lpDefault,
+	LPSTR	lpReturnedString,
+	DWORD	nSize,
+	LPCSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2049,6 +2052,13 @@ GetProcessAffinityMask (
 	LPDWORD lpSystemAffinityMask
 	)
 {
+	if (	(NULL == lpProcessAffinityMask)
+		|| (NULL == lpSystemAffinityMask)
+		)
+	{
+		SetLastError(ERROR_BAD_ARGUMENTS);
+		return FALSE;
+	}
 	/* FIXME: check hProcess is actually a process */
 	/* FIXME: query the kernel process object */
 	*lpProcessAffinityMask = 0x00000001;
@@ -2095,11 +2105,11 @@ GetProcessWorkingSetSize (
 
 UINT
 STDCALL
-GetProfileIntW(
-    LPCWSTR lpAppName,
-    LPCWSTR lpKeyName,
-    INT nDefault
-    )
+GetProfileIntW (
+	LPCWSTR	lpAppName,
+	LPCWSTR	lpKeyName,
+	INT	nDefault
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2108,11 +2118,11 @@ GetProfileIntW(
 
 UINT
 STDCALL
-GetProfileIntA(
-	       LPCSTR lpAppName,
-	       LPCSTR lpKeyName,
-	       INT nDefault
-	       )
+GetProfileIntA (
+	LPCSTR	lpAppName,
+	LPCSTR	lpKeyName,
+	INT	nDefault
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2121,11 +2131,11 @@ GetProfileIntA(
 
 DWORD
 STDCALL
-GetProfileSectionW(
-    LPCWSTR lpAppName,
-    LPWSTR lpReturnedString,
-    DWORD nSize
-    )
+GetProfileSectionW (
+	LPCWSTR	lpAppName,
+	LPWSTR	lpReturnedString,
+	DWORD	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2134,11 +2144,11 @@ GetProfileSectionW(
 
 DWORD
 STDCALL
-GetProfileSectionA(
-    LPCSTR lpAppName,
-    LPSTR lpReturnedString,
-    DWORD nSize
-    )
+GetProfileSectionA (
+	LPCSTR	lpAppName,
+	LPSTR	lpReturnedString,
+	DWORD	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2147,13 +2157,13 @@ GetProfileSectionA(
 
 DWORD
 STDCALL
-GetProfileStringW(
-    LPCWSTR lpAppName,
-    LPCWSTR lpKeyName,
-    LPCWSTR lpDefault,
-    LPWSTR lpReturnedString,
-    DWORD nSize
-    )
+GetProfileStringW (
+	LPCWSTR	lpAppName,
+	LPCWSTR	lpKeyName,
+	LPCWSTR	lpDefault,
+	LPWSTR	lpReturnedString,
+	DWORD	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2162,13 +2172,13 @@ GetProfileStringW(
 
 DWORD
 STDCALL
-GetProfileStringA(
-		  LPCSTR lpAppName,
-		  LPCSTR lpKeyName,
-		  LPCSTR lpDefault,
-		  LPSTR lpReturnedString,
-		  DWORD nSize
-		  )
+GetProfileStringA (
+	LPCSTR	lpAppName,
+	LPCSTR	lpKeyName,
+	LPCSTR	lpDefault,
+	LPSTR	lpReturnedString,
+	DWORD	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2177,13 +2187,13 @@ GetProfileStringA(
 
 WINBOOL
 STDCALL
-GetStringTypeExW(
-    LCID     Locale,
-    DWORD    dwInfoType,
-    LPCWSTR lpSrcStr,
-    int      cchSrc,
-    LPWORD   lpCharType
-    )
+GetStringTypeExW (
+	LCID	Locale,
+	DWORD	dwInfoType,
+	LPCWSTR	lpSrcStr,
+	int	cchSrc,
+	LPWORD	lpCharType
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2192,13 +2202,13 @@ GetStringTypeExW(
 
 WINBOOL
 STDCALL
-GetStringTypeExA(
-    LCID     Locale,
-    DWORD    dwInfoType,
-    LPCSTR lpSrcStr,
-    int      cchSrc,
-    LPWORD   lpCharType
-    )
+GetStringTypeExA (
+	LCID	Locale,
+	DWORD	dwInfoType,
+	LPCSTR	lpSrcStr,
+	int	cchSrc,
+	LPWORD	lpCharType
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2207,12 +2217,12 @@ GetStringTypeExA(
 
 WINBOOL
 STDCALL
-GetStringTypeW(
-    DWORD    dwInfoType,
-    LPCWSTR  lpSrcStr,
-    int      cchSrc,
-    LPWORD   lpCharType
-    )
+GetStringTypeW (
+	DWORD	dwInfoType,
+	LPCWSTR	lpSrcStr,
+	int	cchSrc,
+	LPWORD	lpCharType
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2221,13 +2231,13 @@ GetStringTypeW(
 
 WINBOOL
 STDCALL
-GetStringTypeA(
-    LCID     Locale,
-    DWORD    dwInfoType,
-    LPCSTR   lpSrcStr,
-    int      cchSrc,
-    LPWORD   lpCharType
-    )
+GetStringTypeA (
+	LCID	Locale,
+	DWORD	dwInfoType,
+	LPCSTR	lpSrcStr,
+	int	cchSrc,
+	LPWORD	lpCharType
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2274,7 +2284,7 @@ GetSystemInfo (
 	lpSystemInfo->u.s.wReserved = 
 		0;
 	lpSystemInfo->dwPageSize = 
-		4096;
+		4096; /* FIXME: x86 default; may be 4Mb  */
 	lpSystemInfo->lpMinimumApplicationAddress = 
 		(PVOID) 0x00010000; /* ? */
 	lpSystemInfo->lpMaximumApplicationAddress = 
@@ -2307,12 +2317,12 @@ GetSystemPowerStatus (
 
 DWORD
 STDCALL
-GetTapeParameters(
-		  HANDLE hDevice,
-		  DWORD dwOperation,
-		  LPDWORD lpdwSize,
-		  LPVOID lpTapeInformation
-		  )
+GetTapeParameters (
+	HANDLE	hDevice,
+	DWORD	dwOperation,
+	LPDWORD	lpdwSize,
+	LPVOID	lpTapeInformation
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2428,9 +2438,9 @@ GetVDMCurrentDirectories (
 
 ATOM
 STDCALL
-GlobalAddAtomW(
-    LPCWSTR lpString
-    )
+GlobalAddAtomW (
+	LPCWSTR	lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2439,9 +2449,9 @@ GlobalAddAtomW(
 
 ATOM
 STDCALL
-GlobalAddAtomA(
-	       LPCSTR lpString
-	       )
+GlobalAddAtomA (
+	LPCSTR	lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2450,10 +2460,10 @@ GlobalAddAtomA(
 
 HGLOBAL
 STDCALL
-GlobalAlloc(
-	    UINT uFlags,
-	    DWORD dwBytes
-	    )
+GlobalAlloc (
+	UINT	uFlags,
+	DWORD	dwBytes
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2462,9 +2472,9 @@ GlobalAlloc(
 
 UINT
 STDCALL
-GlobalCompact(
-	      DWORD dwMinFree
-	      )
+GlobalCompact (
+	DWORD	dwMinFree
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2473,9 +2483,9 @@ GlobalCompact(
 
 ATOM
 STDCALL
-GlobalDeleteAtom(
-		 ATOM nAtom
-		 )
+GlobalDeleteAtom (
+	ATOM	nAtom
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2484,9 +2494,9 @@ GlobalDeleteAtom(
 
 ATOM
 STDCALL
-GlobalFindAtomW(
-    LPCWSTR lpString
-    )
+GlobalFindAtomW (
+	LPCWSTR	lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2495,9 +2505,9 @@ GlobalFindAtomW(
 
 ATOM
 STDCALL
-GlobalFindAtomA(
-		LPCSTR lpString
-		)
+GlobalFindAtomA (
+	LPCSTR	lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2506,9 +2516,9 @@ GlobalFindAtomA(
 
 VOID
 STDCALL
-GlobalFix(
-	  HGLOBAL hMem
-	  )
+GlobalFix (
+	HGLOBAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
@@ -2516,9 +2526,9 @@ GlobalFix(
 
 UINT
 STDCALL
-GlobalFlags(
-	    HGLOBAL hMem
-	    )
+GlobalFlags (
+	HGLOBAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2527,9 +2537,9 @@ GlobalFlags(
 
 HGLOBAL
 STDCALL
-GlobalFree(
-	   HGLOBAL hMem
-	   )
+GlobalFree (
+	HGLOBAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return hMem;
@@ -2538,11 +2548,11 @@ GlobalFree(
 
 UINT
 STDCALL
-GlobalGetAtomNameA(
-		   ATOM nAtom,
-		   LPSTR lpBuffer,
-		   int nSize
-		   )
+GlobalGetAtomNameA (
+	ATOM	nAtom,
+	LPSTR	lpBuffer,
+	int	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2551,11 +2561,11 @@ GlobalGetAtomNameA(
 
 UINT
 STDCALL
-GlobalGetAtomNameW(
-    ATOM nAtom,
-    LPWSTR lpBuffer,
-    int nSize
-    )
+GlobalGetAtomNameW (
+	ATOM	nAtom,
+	LPWSTR	lpBuffer,
+	int	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2564,9 +2574,9 @@ GlobalGetAtomNameW(
 
 HGLOBAL
 STDCALL
-GlobalHandle(
-	     LPCVOID pMem
-	     )
+GlobalHandle (
+	LPCVOID	pMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2575,9 +2585,9 @@ GlobalHandle(
 
 LPVOID
 STDCALL
-GlobalLock(
-	   HGLOBAL hMem
-	   )
+GlobalLock (
+	HGLOBAL hMem
+	)
 {
 	/* In Win32 GlobalAlloc returns LPVOID? */
 	return hMem;
@@ -2586,9 +2596,9 @@ GlobalLock(
 
 VOID
 STDCALL
-GlobalMemoryStatus(
-		   LPMEMORYSTATUS lpBuffer
-		   )
+GlobalMemoryStatus (
+	LPMEMORYSTATUS	lpBuffer
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
@@ -2596,11 +2606,11 @@ GlobalMemoryStatus(
 
 HGLOBAL
 STDCALL
-GlobalReAlloc(
-	      HGLOBAL hMem,
-	      DWORD dwBytes,
-	      UINT uFlags
-	      )
+GlobalReAlloc (
+	HGLOBAL	hMem,
+	DWORD	dwBytes,
+	UINT	uFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2609,9 +2619,9 @@ GlobalReAlloc(
 
 DWORD
 STDCALL
-GlobalSize(
-	   HGLOBAL hMem
-	   )
+GlobalSize (
+	HGLOBAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2620,9 +2630,9 @@ GlobalSize(
 
 WINBOOL
 STDCALL
-GlobalUnWire(
-	     HGLOBAL hMem
-	     )
+GlobalUnWire (
+	HGLOBAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2631,9 +2641,9 @@ GlobalUnWire(
 
 VOID
 STDCALL
-GlobalUnfix(
-	    HGLOBAL hMem
-	    )
+GlobalUnfix (
+	HGLOBAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
@@ -2641,9 +2651,9 @@ GlobalUnfix(
 
 WINBOOL
 STDCALL
-GlobalUnlock(
-	     HGLOBAL hMem
-	     )
+GlobalUnlock (
+	HGLOBAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2652,12 +2662,12 @@ GlobalUnlock(
 
 LPVOID
 STDCALL
-GlobalWire(
-	   HGLOBAL hMem
-	   )
+GlobalWire (
+	HGLOBAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0; /* ? */
+	return NULL; /* ? */
 }
 
 
@@ -2757,9 +2767,9 @@ InitAtomTable (
 
 LONG
 STDCALL
-InterlockedDecrement(
-		     LPLONG lpAddend
-		     )
+InterlockedDecrement (
+	LPLONG	lpAddend
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2768,10 +2778,10 @@ InterlockedDecrement(
 
 LONG
 STDCALL
-InterlockedExchange(
-		    LPLONG Target,
-		    LONG Value
-		    )
+InterlockedExchange (
+	LPLONG	Target,
+	LONG	Value
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2780,9 +2790,9 @@ InterlockedExchange(
 
 LONG
 STDCALL
-InterlockedIncrement(
-		     LPLONG lpAddend
-		     )
+InterlockedIncrement (
+	LPLONG	lpAddend
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2803,9 +2813,9 @@ InvalidateConsoleDIBits (
 
 WINBOOL
 STDCALL
-IsBadCodePtr(
-	     FARPROC lpfn
-	     )
+IsBadCodePtr (
+	FARPROC	lpfn
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2814,10 +2824,10 @@ IsBadCodePtr(
 
 WINBOOL
 STDCALL
-IsBadHugeReadPtr(
-		 CONST VOID *lp,
-		 UINT ucb
-		 )
+IsBadHugeReadPtr (
+	CONST VOID	* lp,
+	UINT		ucb
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2826,10 +2836,10 @@ IsBadHugeReadPtr(
 
 WINBOOL
 STDCALL
-IsBadHugeWritePtr(
-		  LPVOID lp,
-		  UINT ucb
-		  )
+IsBadHugeWritePtr (
+	LPVOID	lp,
+	UINT	ucb
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2838,10 +2848,10 @@ IsBadHugeWritePtr(
 
 WINBOOL
 STDCALL
-IsBadReadPtr(
-	     CONST VOID *lp,
-	     UINT ucb
-	     )
+IsBadReadPtr (
+	CONST VOID	* lp,
+	UINT		ucb
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2850,10 +2860,10 @@ IsBadReadPtr(
 
 WINBOOL
 STDCALL
-IsBadStringPtrA(
-    LPCSTR lpsz,
-    UINT ucchMax
-    )
+IsBadStringPtrA (
+	LPCSTR	lpsz,
+	UINT	ucchMax
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2862,10 +2872,10 @@ IsBadStringPtrA(
 
 WINBOOL
 STDCALL
-IsBadStringPtrW(
-    LPCWSTR lpsz,
-    UINT ucchMax
-    )
+IsBadStringPtrW (
+	LPCWSTR	lpsz,
+	UINT	ucchMax
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2874,10 +2884,10 @@ IsBadStringPtrW(
 
 WINBOOL
 STDCALL
-IsBadWritePtr(
-	      LPVOID lp,
-	      UINT ucb
-	      )
+IsBadWritePtr (
+	LPVOID	lp,
+	UINT	ucb
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2886,8 +2896,9 @@ IsBadWritePtr(
 
 WINBOOL
 STDCALL
-IsDBCSLeadByte(
-    BYTE  TestChar)
+IsDBCSLeadByte (
+	BYTE	TestChar
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2896,9 +2907,10 @@ IsDBCSLeadByte(
 
 WINBOOL
 STDCALL
-IsDBCSLeadByteEx(
-    UINT  CodePage,
-    BYTE  TestChar)
+IsDBCSLeadByteEx (
+	UINT	CodePage,
+	BYTE	TestChar
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2910,14 +2922,15 @@ STDCALL
 IsDebuggerPresent (VOID)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	return FALSE; /* FIXME: */
 }
 
 
 WINBOOL
 STDCALL
-IsValidCodePage(
-    UINT  CodePage)
+IsValidCodePage (
+	UINT	CodePage
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2926,9 +2939,10 @@ IsValidCodePage(
 
 WINBOOL
 STDCALL
-IsValidLocale(
-    LCID   Locale,
-    DWORD  dwFlags)
+IsValidLocale (
+	LCID	Locale,
+	DWORD	dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -2937,14 +2951,14 @@ IsValidLocale(
 
 int
 STDCALL
-LCMapStringA(
-    LCID     Locale,
-    DWORD    dwMapFlags,
-    LPCSTR lpSrcStr,
-    int      cchSrc,
-    LPSTR  lpDestStr,
-    int      cchDest
-    )
+LCMapStringA (
+	LCID	Locale,
+	DWORD	dwMapFlags,
+	LPCSTR	lpSrcStr,
+	int	cchSrc,
+	LPSTR	lpDestStr,
+	int	cchDest
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2953,14 +2967,14 @@ LCMapStringA(
 
 int
 STDCALL
-LCMapStringW(
-    LCID     Locale,
-    DWORD    dwMapFlags,
-    LPCWSTR lpSrcStr,
-    int      cchSrc,
-    LPWSTR  lpDestStr,
-    int      cchDest
-    )
+LCMapStringW (
+	LCID	Locale,
+	DWORD	dwMapFlags,
+	LPCWSTR	lpSrcStr,
+	int	cchSrc,
+	LPWSTR	lpDestStr,
+	int	cchDest
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2969,11 +2983,11 @@ LCMapStringW(
 
 HINSTANCE
 STDCALL
-LoadLibraryExA(
-	       LPCSTR lpLibFileName,
-	       HANDLE hFile,
-	       DWORD dwFlags
-	       )
+LoadLibraryExA (
+	LPCSTR	lpLibFileName,
+	HANDLE	hFile,
+	DWORD	dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2982,11 +2996,11 @@ LoadLibraryExA(
 
 HINSTANCE
 STDCALL
-LoadLibraryExW(
-    LPCWSTR lpLibFileName,
-    HANDLE hFile,
-    DWORD dwFlags
-    )
+LoadLibraryExW (
+	LPCWSTR	lpLibFileName,
+	HANDLE	hFile,
+	DWORD	dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -2995,10 +3009,10 @@ LoadLibraryExW(
 
 DWORD
 STDCALL
-LoadModule(
-	   LPCSTR lpModuleName,
-	   LPVOID lpParameterBlock
-	   )
+LoadModule (
+	LPCSTR	lpModuleName,
+	LPVOID	lpParameterBlock
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3007,10 +3021,10 @@ LoadModule(
 
 HGLOBAL
 STDCALL
-LoadResource(
-	     HINSTANCE hModule,
-	     HRSRC hResInfo
-	     )
+LoadResource (
+	HINSTANCE	hModule,
+	HRSRC		hResInfo
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3019,10 +3033,10 @@ LoadResource(
 
 HLOCAL
 STDCALL
-LocalAlloc(
-	   UINT uFlags,
-	   UINT uBytes
-	   )
+LocalAlloc (
+	UINT	uFlags,
+	UINT	uBytes
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3031,9 +3045,9 @@ LocalAlloc(
 
 UINT
 STDCALL
-LocalCompact(
-	     UINT uMinFree
-	     )
+LocalCompact (
+	UINT	uMinFree
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3042,9 +3056,9 @@ LocalCompact(
 
 UINT
 STDCALL
-LocalFlags(
-	   HLOCAL hMem
-	   )
+LocalFlags (
+	HLOCAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3053,9 +3067,9 @@ LocalFlags(
 
 HLOCAL
 STDCALL
-LocalFree(
-	  HLOCAL hMem
-	  )
+LocalFree (
+	HLOCAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return hMem;
@@ -3064,9 +3078,9 @@ LocalFree(
 
 HLOCAL
 STDCALL
-LocalHandle(
-	    LPCVOID pMem
-	    )
+LocalHandle (
+	LPCVOID	pMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3075,9 +3089,9 @@ LocalHandle(
 
 LPVOID
 STDCALL
-LocalLock(
-	  HLOCAL hMem
-	  )
+LocalLock (
+	HLOCAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -3086,11 +3100,11 @@ LocalLock(
 
 HLOCAL
 STDCALL
-LocalReAlloc(
-	     HLOCAL hMem,
-	     UINT uBytes,
-	     UINT uFlags
-	     )
+LocalReAlloc (
+	HLOCAL	hMem,
+	UINT	uBytes,
+	UINT	uFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3099,10 +3113,10 @@ LocalReAlloc(
 
 UINT
 STDCALL
-LocalShrink(
-	    HLOCAL hMem,
-	    UINT cbNewSize
-	    )
+LocalShrink (
+	HLOCAL	hMem,
+	UINT	cbNewSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3111,9 +3125,9 @@ LocalShrink(
 
 UINT
 STDCALL
-LocalSize(
-	  HLOCAL hMem
-	  )
+LocalSize (
+	HLOCAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3122,9 +3136,9 @@ LocalSize(
 
 WINBOOL
 STDCALL
-LocalUnlock(
-	    HLOCAL hMem
-	    )
+LocalUnlock (
+	HLOCAL	hMem
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3133,9 +3147,9 @@ LocalUnlock(
 
 LPVOID
 STDCALL
-LockResource(
-	     HGLOBAL hResData
-	     )
+LockResource (
+	HGLOBAL	hResData
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -3144,13 +3158,13 @@ LockResource(
 
 LPVOID
 STDCALL
-MapViewOfFile(
-	      HANDLE hFileMappingObject,
-	      DWORD dwDesiredAccess,
-	      DWORD dwFileOffsetHigh,
-	      DWORD dwFileOffsetLow,
-	      DWORD dwNumberOfBytesToMap
-	      )
+MapViewOfFile (
+	HANDLE	hFileMappingObject,
+	DWORD	dwDesiredAccess,
+	DWORD	dwFileOffsetHigh,
+	DWORD	dwFileOffsetLow,
+	DWORD	dwNumberOfBytesToMap
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -3159,14 +3173,14 @@ MapViewOfFile(
 
 LPVOID
 STDCALL
-MapViewOfFileEx(
-		HANDLE hFileMappingObject,
-		DWORD dwDesiredAccess,
-		DWORD dwFileOffsetHigh,
-		DWORD dwFileOffsetLow,
-		DWORD dwNumberOfBytesToMap,
-		LPVOID lpBaseAddress
-		)
+MapViewOfFileEx (
+	HANDLE	hFileMappingObject,
+	DWORD	dwDesiredAccess,
+	DWORD	dwFileOffsetHigh,
+	DWORD	dwFileOffsetLow,
+	DWORD	dwNumberOfBytesToMap,
+	LPVOID	lpBaseAddress
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -3175,11 +3189,11 @@ MapViewOfFileEx(
 
 int
 STDCALL
-MulDiv(
-       int nNumber,
-       int nNumerator,
-       int nDenominator
-       )
+MulDiv (
+	int	nNumber,
+	int	nNumerator,
+	int	nDenominator
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3188,13 +3202,14 @@ MulDiv(
 
 int
 STDCALL
-MultiByteToWideChar(
-    UINT     CodePage,
-    DWORD    dwFlags,
-    LPCSTR   lpMultiByteStr,
-    int      cchMultiByte,
-    LPWSTR   lpWideCharStr,
-    int      cchWideChar)
+MultiByteToWideChar (
+	UINT	CodePage,
+	DWORD	dwFlags,
+	LPCSTR	lpMultiByteStr,
+	int	cchMultiByte,
+	LPWSTR	lpWideCharStr,
+	int	cchWideChar
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3217,11 +3232,11 @@ OpenConsoleW (
 
 HANDLE
 STDCALL
-OpenFileMappingA(
-		 DWORD dwDesiredAccess,
-		 WINBOOL bInheritHandle,
-		 LPCSTR lpName
-		 )
+OpenFileMappingA (
+	DWORD	dwDesiredAccess,
+	WINBOOL	bInheritHandle,
+	LPCSTR	lpName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return INVALID_HANDLE_VALUE;
@@ -3230,11 +3245,11 @@ OpenFileMappingA(
 
 HANDLE
 STDCALL
-OpenFileMappingW(
-    DWORD dwDesiredAccess,
-    WINBOOL bInheritHandle,
-    LPCWSTR lpName
-    )
+OpenFileMappingW (
+	DWORD	dwDesiredAccess,
+	WINBOOL	bInheritHandle,
+	LPCWSTR	lpName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return INVALID_HANDLE_VALUE;
@@ -3243,11 +3258,11 @@ OpenFileMappingW(
 
 HANDLE
 STDCALL
-OpenMutexA(
-	   DWORD dwDesiredAccess,
-	   WINBOOL bInheritHandle,
-	   LPCSTR lpName
-	   )
+OpenMutexA (
+	DWORD	dwDesiredAccess,
+	WINBOOL	bInheritHandle,
+	LPCSTR	lpName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return INVALID_HANDLE_VALUE;
@@ -3256,11 +3271,11 @@ OpenMutexA(
 
 HANDLE
 STDCALL
-OpenMutexW(
-    DWORD dwDesiredAccess,
-    WINBOOL bInheritHandle,
-    LPCWSTR lpName
-    )
+OpenMutexW (
+	DWORD	dwDesiredAccess,
+	WINBOOL	bInheritHandle,
+	LPCWSTR	lpName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return INVALID_HANDLE_VALUE;
@@ -3278,11 +3293,11 @@ OpenProfileUserMapping (VOID)
 
 HANDLE
 STDCALL
-OpenSemaphoreA(
-	       DWORD dwDesiredAccess,
-	       WINBOOL bInheritHandle,
-	       LPCSTR lpName
-	       )
+OpenSemaphoreA (
+	DWORD	dwDesiredAccess,
+	WINBOOL	bInheritHandle,
+	LPCSTR	lpName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return INVALID_HANDLE_VALUE;
@@ -3291,11 +3306,11 @@ OpenSemaphoreA(
 
 HANDLE
 STDCALL
-OpenSemaphoreW(
-    DWORD dwDesiredAccess,
-    WINBOOL bInheritHandle,
-    LPCWSTR lpName
-    )
+OpenSemaphoreW (
+	DWORD	dwDesiredAccess,
+	WINBOOL	bInheritHandle,
+	LPCWSTR	lpName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return INVALID_HANDLE_VALUE;
@@ -3304,14 +3319,14 @@ OpenSemaphoreW(
 
 WINBOOL
 STDCALL
-PeekNamedPipe(
-	      HANDLE hNamedPipe,
-	      LPVOID lpBuffer,
-	      DWORD nBufferSize,
-	      LPDWORD lpBytesRead,
-	      LPDWORD lpTotalBytesAvail,
-	      LPDWORD lpBytesLeftThisMessage
-	      )
+PeekNamedPipe (
+	HANDLE	hNamedPipe,
+	LPVOID	lpBuffer,
+	DWORD	nBufferSize,
+	LPDWORD	lpBytesRead,
+	LPDWORD	lpTotalBytesAvail,
+	LPDWORD	lpBytesLeftThisMessage
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3320,11 +3335,11 @@ PeekNamedPipe(
 
 DWORD
 STDCALL
-PrepareTape(
-	    HANDLE hDevice,
-	    DWORD dwOperation,
-	    WINBOOL bImmediate
-	    )
+PrepareTape (
+	HANDLE	hDevice,
+	DWORD	dwOperation,
+	WINBOOL	bImmediate
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3333,10 +3348,10 @@ PrepareTape(
 
 WINBOOL
 STDCALL
-PurgeComm(
-	  HANDLE hFile,
-	  DWORD dwFlags
-	  )
+PurgeComm (
+	HANDLE	hFile,
+	DWORD	dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3345,9 +3360,9 @@ PurgeComm(
 
 WINBOOL
 STDCALL
-QueryPerformanceCounter(
-			LARGE_INTEGER *lpPerformanceCount
-			)
+QueryPerformanceCounter (
+	LARGE_INTEGER	* lpPerformanceCount
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3356,9 +3371,9 @@ QueryPerformanceCounter(
 
 WINBOOL
 STDCALL
-QueryPerformanceFrequency(
-			  LARGE_INTEGER *lpFrequency
-			  )
+QueryPerformanceFrequency (
+	LARGE_INTEGER	* lpFrequency
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3381,12 +3396,12 @@ QueryWin31IniFilesMappedToRegistry (
 
 VOID
 STDCALL
-RaiseException(
-	       DWORD dwExceptionCode,
-	       DWORD dwExceptionFlags,
-	       DWORD nNumberOfArguments,
-	       CONST DWORD *lpArguments
-	       )
+RaiseException (
+	DWORD		dwExceptionCode,
+	DWORD		dwExceptionFlags,
+	DWORD		nNumberOfArguments,
+	CONST DWORD	* lpArguments
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
@@ -3394,13 +3409,13 @@ RaiseException(
 
 WINBOOL
 STDCALL
-ReadProcessMemory(
-		  HANDLE hProcess,
-		  LPCVOID lpBaseAddress,
-		  LPVOID lpBuffer,
-		  DWORD nSize,
-		  LPDWORD lpNumberOfBytesRead
-		  )
+ReadProcessMemory (
+	HANDLE	hProcess,
+	LPCVOID	lpBaseAddress,
+	LPVOID	lpBuffer,
+	DWORD	nSize,
+	LPDWORD	lpNumberOfBytesRead
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3463,9 +3478,9 @@ RegisterWowExec (
 
 WINBOOL
 STDCALL
-ReleaseMutex(
-	     HANDLE hMutex
-	     )
+ReleaseMutex (
+	HANDLE	hMutex
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3474,11 +3489,11 @@ ReleaseMutex(
 
 WINBOOL
 STDCALL
-ReleaseSemaphore(
-		 HANDLE hSemaphore,
-		 LONG lReleaseCount,
-		 LPLONG lpPreviousCount
-		 )
+ReleaseSemaphore (
+	HANDLE	hSemaphore,
+	LONG	lReleaseCount,
+	LPLONG	lpPreviousCount
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3539,9 +3554,9 @@ RtlZeroMemory (
 
 WINBOOL
 STDCALL
-SetCommBreak(
-	     HANDLE hFile
-	     )
+SetCommBreak (
+	HANDLE	hFile
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3550,11 +3565,11 @@ SetCommBreak(
 
 WINBOOL
 STDCALL
-SetCommConfig(
-	      HANDLE hCommDev,
-	      LPCOMMCONFIG lpCC,
-	      DWORD dwSize
-	      )
+SetCommConfig (
+	HANDLE		hCommDev,
+	LPCOMMCONFIG	lpCC,
+	DWORD		dwSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3563,10 +3578,10 @@ SetCommConfig(
 
 WINBOOL
 STDCALL
-SetCommMask(
-	    HANDLE hFile,
-	    DWORD dwEvtMask
-	    )
+SetCommMask (
+	HANDLE	hFile,
+	DWORD	dwEvtMask
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3575,10 +3590,10 @@ SetCommMask(
 
 WINBOOL
 STDCALL
-SetCommState(
-	     HANDLE hFile,
-	     LPDCB lpDCB
-	     )
+SetCommState (
+	HANDLE	hFile,
+	LPDCB	lpDCB
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3587,10 +3602,10 @@ SetCommState(
 
 WINBOOL
 STDCALL
-SetCommTimeouts(
-		HANDLE hFile,
-		LPCOMMTIMEOUTS lpCommTimeouts
-		)
+SetCommTimeouts (
+	HANDLE		hFile,
+	LPCOMMTIMEOUTS	lpCommTimeouts
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3600,8 +3615,8 @@ SetCommTimeouts(
 WINBOOL
 STDCALL
 SetComputerNameA (
-    LPCSTR lpComputerName
-    )
+	LPCSTR	lpComputerName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3756,11 +3771,11 @@ SetConsolePalette (
 
 WINBOOL
 STDCALL
-SetDefaultCommConfigA(
-    LPCSTR lpszName,
-    LPCOMMCONFIG lpCC,
-    DWORD dwSize
-    )
+SetDefaultCommConfigA (
+	LPCSTR		lpszName,
+	LPCOMMCONFIG	lpCC,
+	DWORD		dwSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3769,11 +3784,11 @@ SetDefaultCommConfigA(
 
 WINBOOL
 STDCALL
-SetDefaultCommConfigW(
-    LPCWSTR lpszName,
-    LPCOMMCONFIG lpCC,
-    DWORD dwSize
-    )
+SetDefaultCommConfigW (
+	LPCWSTR		lpszName,
+	LPCOMMCONFIG	lpCC,
+	DWORD		dwSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3791,11 +3806,11 @@ SetLastConsoleEventActive (VOID)
 
 WINBOOL
 STDCALL
-SetLocaleInfoA(
-    LCID     Locale,
-    LCTYPE   LCType,
-    LPCSTR lpLCData
-    )
+SetLocaleInfoA (
+	LCID	Locale,
+	LCTYPE	LCType,
+	LPCSTR	lpLCData
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3804,11 +3819,11 @@ SetLocaleInfoA(
 
 WINBOOL
 STDCALL
-SetLocaleInfoW(
-    LCID     Locale,
-    LCTYPE   LCType,
-    LPCWSTR lpLCData
-    )
+SetLocaleInfoW (
+	LCID	Locale,
+	LCTYPE	LCType,
+	LPCWSTR	lpLCData
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3817,10 +3832,10 @@ SetLocaleInfoW(
 
 WINBOOL
 STDCALL
-SetMailslotInfo(
-		HANDLE hMailslot,
-		DWORD lReadTimeout
-		)
+SetMailslotInfo (
+	HANDLE	hMailslot,
+	DWORD	lReadTimeout
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3829,12 +3844,12 @@ SetMailslotInfo(
 
 WINBOOL
 STDCALL
-SetNamedPipeHandleState(
-			HANDLE hNamedPipe,
-			LPDWORD lpMode,
-			LPDWORD lpMaxCollectionCount,
-			LPDWORD lpCollectDataTimeout
-			)
+SetNamedPipeHandleState (
+	HANDLE	hNamedPipe,
+	LPDWORD	lpMode,
+	LPDWORD	lpMaxCollectionCount,
+	LPDWORD	lpCollectDataTimeout
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3843,10 +3858,10 @@ SetNamedPipeHandleState(
 
 WINBOOL
 STDCALL
-SetPriorityClass(
-		 HANDLE hProcess,
-		 DWORD dwPriorityClass
-		 )
+SetPriorityClass (
+	HANDLE	hProcess,
+	DWORD	dwPriorityClass
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3855,10 +3870,10 @@ SetPriorityClass(
 
 WINBOOL
 STDCALL
-SetProcessShutdownParameters(
-			     DWORD dwLevel,
-			     DWORD dwFlags
-			     )
+SetProcessShutdownParameters (
+	DWORD	dwLevel,
+	DWORD	dwFlags
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3867,11 +3882,11 @@ SetProcessShutdownParameters(
 
 WINBOOL
 STDCALL
-SetProcessWorkingSetSize(
-			 HANDLE hProcess,
-			 DWORD dwMinimumWorkingSetSize,
-			 DWORD dwMaximumWorkingSetSize
-			 )
+SetProcessWorkingSetSize (
+	HANDLE	hProcess,
+	DWORD	dwMinimumWorkingSetSize,
+	DWORD	dwMaximumWorkingSetSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3892,11 +3907,11 @@ SetSystemPowerState (
 
 DWORD
 STDCALL
-SetTapeParameters(
-		  HANDLE hDevice,
-		  DWORD dwOperation,
-		  LPVOID lpTapeInformation
-		  )
+SetTapeParameters (
+	HANDLE	hDevice,
+	DWORD	dwOperation,
+	LPVOID	lpTapeInformation
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3905,14 +3920,14 @@ SetTapeParameters(
 
 DWORD
 STDCALL
-SetTapePosition(
-		HANDLE hDevice,
-		DWORD dwPositionMethod,
-		DWORD dwPartition,
-		DWORD dwOffsetLow,
-		DWORD dwOffsetHigh,
-		WINBOOL bImmediate
-		)
+SetTapePosition (
+	HANDLE	hDevice,
+	DWORD	dwPositionMethod,
+	DWORD	dwPartition,
+	DWORD	dwOffsetLow,
+	DWORD	dwOffsetHigh,
+	WINBOOL	bImmediate
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3921,9 +3936,9 @@ SetTapePosition(
 
 WINBOOL
 STDCALL
-SetThreadLocale(
-    LCID  Locale
-    )
+SetThreadLocale (
+	LCID	Locale
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3944,11 +3959,11 @@ SetVDMCurrentDirectories (
 
 WINBOOL
 STDCALL
-SetupComm(
-	  HANDLE hFile,
-	  DWORD dwInQueue,
-	  DWORD dwOutQueue
-	  )
+SetupComm (
+	HANDLE	hFile,
+	DWORD	dwInQueue,
+	DWORD	dwOutQueue
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3969,10 +3984,10 @@ ShowConsoleCursor (
 
 DWORD
 STDCALL
-SizeofResource(
-	       HINSTANCE hModule,
-	       HRSRC hResInfo
-	       )
+SizeofResource (
+	HINSTANCE	hModule,
+	HRSRC		hResInfo
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3981,10 +3996,10 @@ SizeofResource(
 
 WINBOOL
 STDCALL
-TerminateThread(
-		HANDLE hThread,
-		DWORD dwExitCode
-		)
+TerminateThread (
+	HANDLE	hThread,
+	DWORD	dwExitCode
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -3993,9 +4008,9 @@ TerminateThread(
 
 LPVOID
 STDCALL
-TlsGetValue(
-	    DWORD dwTlsIndex
-	    )
+TlsGetValue (
+	DWORD	dwTlsIndex
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -4004,15 +4019,15 @@ TlsGetValue(
 
 WINBOOL
 STDCALL
-TransactNamedPipe(
-		  HANDLE hNamedPipe,
-		  LPVOID lpInBuffer,
-		  DWORD nInBufferSize,
-		  LPVOID lpOutBuffer,
-		  DWORD nOutBufferSize,
-		  LPDWORD lpBytesRead,
-		  LPOVERLAPPED lpOverlapped
-		  )
+TransactNamedPipe (
+	HANDLE		hNamedPipe,
+	LPVOID		lpInBuffer,
+	DWORD		nInBufferSize,
+	LPVOID		lpOutBuffer,
+	DWORD		nOutBufferSize,
+	LPDWORD		lpBytesRead,
+	LPOVERLAPPED	lpOverlapped
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4021,10 +4036,10 @@ TransactNamedPipe(
 
 WINBOOL
 STDCALL
-TransmitCommChar(
-		 HANDLE hFile,
-		 char cChar
-		 )
+TransmitCommChar (
+	HANDLE	hFile,
+	char	cChar
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4044,9 +4059,9 @@ TrimVirtualBuffer (
 
 WINBOOL
 STDCALL
-UnmapViewOfFile(
-		LPVOID lpBaseAddress
-		)
+UnmapViewOfFile (
+	LPVOID	lpBaseAddress
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4055,14 +4070,14 @@ UnmapViewOfFile(
 
 WINBOOL
 STDCALL
-UpdateResourceA(
-		HANDLE      hUpdate,
-		LPCSTR     lpType,
-		LPCSTR     lpName,
-		WORD        wLanguage,
-		LPVOID      lpData,
-		DWORD       cbData
-		)
+UpdateResourceA (
+	HANDLE	hUpdate,
+	LPCSTR	lpType,
+	LPCSTR	lpName,
+	WORD	wLanguage,
+	LPVOID	lpData,
+	DWORD	cbData
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4071,14 +4086,14 @@ UpdateResourceA(
 
 WINBOOL
 STDCALL
-UpdateResourceW(
-    HANDLE      hUpdate,
-    LPCWSTR     lpType,
-    LPCWSTR     lpName,
-    WORD        wLanguage,
-    LPVOID      lpData,
-    DWORD       cbData
-    )
+UpdateResourceW (
+	HANDLE	hUpdate,
+	LPCWSTR	lpType,
+	LPCWSTR	lpName,
+	WORD	wLanguage,
+	LPVOID	lpData,
+	DWORD	cbData
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4110,11 +4125,11 @@ VDMOperationStarted (
 
 DWORD
 STDCALL
-VerLanguageNameA(
-        DWORD wLang,
-        LPSTR szLang,
-        DWORD nSize
-        )
+VerLanguageNameA (
+	DWORD	wLang,
+	LPSTR	szLang,
+	DWORD	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -4123,11 +4138,11 @@ VerLanguageNameA(
 
 DWORD
 STDCALL
-VerLanguageNameW(
-        DWORD wLang,
-        LPWSTR szLang,
-        DWORD nSize
-        )
+VerLanguageNameW (
+	DWORD	wLang,
+	LPWSTR	szLang,
+	DWORD	nSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -4160,10 +4175,10 @@ VirtualBufferExceptionHandler (
 
 WINBOOL
 STDCALL
-VirtualLock(
-	    LPVOID lpAddress,
-	    DWORD dwSize
-	    )
+VirtualLock (
+	LPVOID	lpAddress,
+	DWORD	dwSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4172,11 +4187,11 @@ VirtualLock(
 
 DWORD
 STDCALL
-VirtualQuery(
-	     LPCVOID lpAddress,
-	     PMEMORY_BASIC_INFORMATION lpBuffer,
-	     DWORD dwLength
-	     )
+VirtualQuery (
+	LPCVOID				lpAddress,
+	PMEMORY_BASIC_INFORMATION	lpBuffer,
+	DWORD				dwLength
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -4185,12 +4200,12 @@ VirtualQuery(
 
 DWORD
 STDCALL
-VirtualQueryEx(
-	       HANDLE hProcess,
-	       LPCVOID lpAddress,
-	       PMEMORY_BASIC_INFORMATION lpBuffer,
-	       DWORD dwLength
-	       )
+VirtualQueryEx (
+	HANDLE				hProcess,
+	LPCVOID				lpAddress,
+	PMEMORY_BASIC_INFORMATION	lpBuffer,
+	DWORD				dwLength
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -4199,10 +4214,10 @@ VirtualQueryEx(
 
 WINBOOL
 STDCALL
-VirtualUnlock(
-	      LPVOID lpAddress,
-	      DWORD dwSize
-	      )
+VirtualUnlock (
+	LPVOID	lpAddress,
+	DWORD	dwSize
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4211,11 +4226,11 @@ VirtualUnlock(
 
 WINBOOL
 STDCALL
-WaitCommEvent(
-	      HANDLE hFile,
-	      LPDWORD lpEvtMask,
-	      LPOVERLAPPED lpOverlapped
-	      )
+WaitCommEvent (
+	HANDLE		hFile,
+	LPDWORD		lpEvtMask,
+	LPOVERLAPPED	lpOverlapped
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4224,10 +4239,10 @@ WaitCommEvent(
 
 WINBOOL
 STDCALL
-WaitForDebugEvent(
-		  LPDEBUG_EVENT lpDebugEvent,
-		  DWORD dwMilliseconds
-		  )
+WaitForDebugEvent (
+	LPDEBUG_EVENT	lpDebugEvent,
+	DWORD		dwMilliseconds
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4236,10 +4251,10 @@ WaitForDebugEvent(
 
 WINBOOL
 STDCALL
-WaitNamedPipeA(
-    LPCSTR lpNamedPipeName,
-    DWORD nTimeOut
-    )
+WaitNamedPipeA (
+	LPCSTR	lpNamedPipeName,
+	DWORD	nTimeOut
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4248,10 +4263,10 @@ WaitNamedPipeA(
 
 WINBOOL
 STDCALL
-WaitNamedPipeW(
-    LPCWSTR lpNamedPipeName,
-    DWORD nTimeOut
-    )
+WaitNamedPipeW (
+	LPCWSTR	lpNamedPipeName,
+	DWORD	nTimeOut
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4260,16 +4275,16 @@ WaitNamedPipeW(
 
 int
 STDCALL
-WideCharToMultiByte(
-    UINT     CodePage,
-    DWORD    dwFlags,
-    LPCWSTR  lpWideCharStr,
-    int      cchWideChar,
-    LPSTR    lpMultiByteStr,
-    int      cchMultiByte,
-    LPCSTR   lpDefaultChar,
-    LPBOOL   lpUsedDefaultChar
-    )
+WideCharToMultiByte (
+	UINT	CodePage,
+	DWORD	dwFlags,
+	LPCWSTR	lpWideCharStr,
+	int	cchWideChar,
+	LPSTR	lpMultiByteStr,
+	int	cchMultiByte,
+	LPCSTR	lpDefaultChar,
+	LPBOOL	lpUsedDefaultChar
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4306,13 +4321,13 @@ WriteConsoleInputVDMW (
 
 WINBOOL
 STDCALL
-WriteFileEx(
-	    HANDLE hFile,
-	    LPCVOID lpBuffer,
-	    DWORD nNumberOfBytesToWrite,
-	    LPOVERLAPPED lpOverlapped,
-	    LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
-	    )
+WriteFileEx (
+	HANDLE				hFile,
+	LPCVOID				lpBuffer,
+	DWORD				nNumberOfBytesToWrite,
+	LPOVERLAPPED			lpOverlapped,
+	LPOVERLAPPED_COMPLETION_ROUTINE	lpCompletionRoutine
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4321,11 +4336,11 @@ WriteFileEx(
 
 WINBOOL
 STDCALL
-WritePrivateProfileSectionA(
-    LPCSTR lpAppName,
-    LPCSTR lpString,
-    LPCSTR lpFileName
-    )
+WritePrivateProfileSectionA (
+	LPCSTR	lpAppName,
+	LPCSTR	lpString,
+	LPCSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4334,11 +4349,11 @@ WritePrivateProfileSectionA(
 
 WINBOOL
 STDCALL
-WritePrivateProfileSectionW(
-    LPCWSTR lpAppName,
-    LPCWSTR lpString,
-    LPCWSTR lpFileName
-    )
+WritePrivateProfileSectionW (
+	LPCWSTR	lpAppName,
+	LPCWSTR	lpString,
+	LPCWSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4347,12 +4362,12 @@ WritePrivateProfileSectionW(
 
 WINBOOL
 STDCALL
-WritePrivateProfileStringA(
-    LPCSTR lpAppName,
-    LPCSTR lpKeyName,
-    LPCSTR lpString,
-    LPCSTR lpFileName
-    )
+WritePrivateProfileStringA (
+	LPCSTR	lpAppName,
+	LPCSTR	lpKeyName,
+	LPCSTR	lpString,
+	LPCSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4361,12 +4376,12 @@ WritePrivateProfileStringA(
 
 WINBOOL
 STDCALL
-WritePrivateProfileStringW(
-    LPCWSTR lpAppName,
-    LPCWSTR lpKeyName,
-    LPCWSTR lpString,
-    LPCWSTR lpFileName
-    )
+WritePrivateProfileStringW (
+	LPCWSTR	lpAppName,
+	LPCWSTR	lpKeyName,
+	LPCWSTR	lpString,
+	LPCWSTR	lpFileName
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4405,13 +4420,13 @@ WritePrivateProfileStructW (
 
 WINBOOL
 STDCALL
-WriteProcessMemory(
-		   HANDLE hProcess,
-		   LPVOID lpBaseAddress,
-		   LPVOID lpBuffer,
-		   DWORD nSize,
-		   LPDWORD lpNumberOfBytesWritten
-		   )
+WriteProcessMemory (
+	HANDLE	hProcess,
+	LPVOID	lpBaseAddress,
+	LPVOID	lpBuffer,
+	DWORD	nSize,
+	LPDWORD	lpNumberOfBytesWritten
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4420,10 +4435,10 @@ WriteProcessMemory(
 
 WINBOOL
 STDCALL
-WriteProfileSectionA(
-    LPCSTR lpAppName,
-    LPCSTR lpString
-    )
+WriteProfileSectionA (
+	LPCSTR	lpAppName,
+	LPCSTR	lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4432,10 +4447,10 @@ WriteProfileSectionA(
 
 WINBOOL
 STDCALL
-WriteProfileSectionW(
-    LPCWSTR lpAppName,
-    LPCWSTR lpString
-    )
+WriteProfileSectionW (
+	LPCWSTR	lpAppName,
+	LPCWSTR	lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4444,11 +4459,11 @@ WriteProfileSectionW(
 
 WINBOOL
 STDCALL
-WriteProfileStringA(
-    LPCSTR lpAppName,
-    LPCSTR lpKeyName,
-    LPCSTR lpString
-    )
+WriteProfileStringA (
+	LPCSTR	lpAppName,
+	LPCSTR	lpKeyName,
+	LPCSTR	lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4457,11 +4472,11 @@ WriteProfileStringA(
 
 WINBOOL
 STDCALL
-WriteProfileStringW(
-    LPCWSTR lpAppName,
-    LPCWSTR lpKeyName,
-    LPCWSTR lpString
-    )
+WriteProfileStringW (
+	LPCWSTR	lpAppName,
+	LPCWSTR	lpKeyName,
+	LPCWSTR	lpString
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -4470,12 +4485,12 @@ WriteProfileStringW(
 
 DWORD
 STDCALL
-WriteTapemark(
-	      HANDLE hDevice,
-	      DWORD dwTapemarkType,
-	      DWORD dwTapemarkCount,
-	      WINBOOL bImmediate
-	      )
+WriteTapemark (
+	HANDLE	hDevice,
+	DWORD	dwTapemarkType,
+	DWORD	dwTapemarkCount,
+	WINBOOL	bImmediate
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -4483,13 +4498,13 @@ WriteTapemark(
 
 DWORD
 STDCALL
-GetTapePosition(
-		HANDLE hDevice,
-		DWORD dwPositionType,
-		LPDWORD lpdwPartition,
-		LPDWORD lpdwOffsetLow,
-		LPDWORD lpdwOffsetHigh
-		)
+GetTapePosition (
+	HANDLE	hDevice,
+	DWORD	dwPositionType,
+	LPDWORD	lpdwPartition,
+	LPDWORD	lpdwOffsetLow,
+	LPDWORD	lpdwOffsetHigh
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;

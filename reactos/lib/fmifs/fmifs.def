@@ -1,4 +1,4 @@
-; $Id: fmifs.def,v 1.2 1999/05/21 05:25:12 ea Exp $
+; $Id: fmifs.def,v 1.3 1999/07/17 23:10:18 ea Exp $
 ;
 ; fmifs.def
 ;
@@ -12,15 +12,12 @@
 ;
 LIBRARY fmifs
 EXPORTS
-	Chkdsk@36
-	Chkdsk			= Chkdsk@36
-	DiskCopy		= DiskCopy@0
-	EnableVolumeCompression@8
-	EnableVolumeCompression	= EnableVolumeCompression@8
-	Extend			= Extend@0
-	Format			= Format@0
-	FormatEx@28
-	FormatEx		= FormatEx@28
-	InitializeFmIfs		= InitializeFmIfs@0
-	QuerySupportedMedia	= QuerySupportedMedia@0
-	SetLabel		= SetLabel@0
+Chkdsk@36
+DiskCopy@0
+EnableVolumeCompression@8
+Extend@0
+Format@0
+FormatEx@28
+InitializeFmIfs@0
+QuerySupportedMedia@0
+SetLabel@0

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.18 1999/07/16 23:37:04 rex Exp $
+# $Id: makefile,v 1.19 1999/07/17 23:10:21 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -60,9 +60,8 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
 		--def def/$(TARGET).def \
-		--output-lib $(TARGET).a \
-		--add-stdcall-alias \
-		--kill-at
+		--kill-at \
+		--output-lib $(TARGET).a
 	$(CC) \
 		-specs=$(TARGET)_specs \
 		-mdll \
@@ -74,9 +73,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def
 		--dllname $(TARGET).dll \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def def/$(TARGET).def \
-		--add-stdcall-alias \
-		--kill-at
+		--def def/$(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
 		-specs=$(TARGET)_specs \

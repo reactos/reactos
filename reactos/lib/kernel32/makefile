@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.22 1999/07/16 23:37:04 rex Exp $
+# $Id: makefile,v 1.23 1999/07/17 23:10:20 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -23,7 +23,7 @@ all: $(DLLTARGET)
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/wait.o
 
 MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o \
-		misc/console.o misc/time.o
+		misc/console.o misc/time.o misc/stubs.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
@@ -99,6 +99,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
 		--def $(TARGET).def \
+		--kill-at \
 		--output-lib $(TARGET).a
 	$(CC) \
 		-specs=k32_specs \
@@ -112,7 +113,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--dllname $(TARGET).dll \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGET).def
+		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
 		-specs=k32_specs \

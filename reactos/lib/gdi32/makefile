@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 1999/07/16 23:37:04 rex Exp $
+# $Id: makefile,v 1.7 1999/07/17 23:10:19 ea Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -34,6 +34,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
 		--def $(TARGET).def \
+		--kill-at \
 		--output-lib $(TARGET).a
 	$(CC) $(TARGET).o \
 		../kernel32/kernel32.a \
@@ -46,7 +47,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--dllname $(TARGET).dll \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGET).def
+		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) $(TARGET).o \
 		../kernel32/kernel32.a \

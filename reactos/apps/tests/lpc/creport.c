@@ -1,4 +1,4 @@
-/* $Id: creport.c,v 1.1 1999/07/04 22:04:31 ea Exp $
+/* $Id: creport.c,v 1.2 1999/07/17 23:10:12 ea Exp $
  *
  * reactos/apps/lpc/creport.c
  *
@@ -106,7 +106,7 @@ TryCreatePort(char *port_name)
 	if (Status == STATUS_SUCCESS)
 	{
 		DumpInfo(
-			port_name_save,
+			Name,
 			Status,
 			"created",
 			Port

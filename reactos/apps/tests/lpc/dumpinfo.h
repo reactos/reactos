@@ -1,8 +1,8 @@
 VOID
 DumpInfo (
-	LPCSTR		Name,
+	LPCWSTR		Name,
 	NTSTATUS	Status,
-	LPCSTR		Comment,
+	LPCWSTR		Comment,
 	HANDLE		Port
 	);
 

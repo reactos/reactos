@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 1999/07/16 23:37:04 rex Exp $
+# $Id: makefile,v 1.6 1999/07/17 23:10:19 ea Exp $
 #
 # Makefile for fmifs.dll
 #
@@ -34,9 +34,8 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
 		--def $(TARGET).def \
-		--output-lib $(TARGET).a \
-		--add-stdcall-alias \
-		--kill-at
+		--kill-at \
+		--output-lib $(TARGET).a
 	$(CC) \
 		-specs=$(TARGET)_specs \
 		-mdll \
@@ -48,9 +47,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--dllname $(TARGET).dll \
 		--base-file base.tmp \
 		--output-exp temp.exp \
-		--def $(TARGET).def \
-		--add-stdcall-alias \
-		--kill-at
+		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
 		-specs=$(TARGET)_specs \
