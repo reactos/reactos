@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.32 2002/11/11 21:53:25 hbirr Exp $
+/* $Id: cmd.c,v 1.33 2003/01/23 00:15:10 gvg Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -915,6 +915,7 @@ static VOID
 Initialize (int argc, char *argv[])
 {
 	TCHAR commandline[CMDLINE_LENGTH];
+	TCHAR ModuleName[_MAX_PATH + 1];
 	INT i;
 
 #ifdef _DEBUG
@@ -1032,9 +1033,6 @@ Initialize (int argc, char *argv[])
 		}
 	}
 
-	ShortVersion ();
-	ShowCommands ();
-
 	/* run cmdstart.bat */
 	if (IsValidFileName (_T("cmdstart.bat")))
 	{
@@ -1074,10 +1072,11 @@ Initialize (int argc, char *argv[])
 #endif
 
 	/* Set COMSPEC environment variable */
-#ifndef __REACTOS__
-	if (argv)
-		SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
-#endif
+	if (0 != GetModuleFileName (NULL, ModuleName, _MAX_PATH + 1))
+	{
+		ModuleName[_MAX_PATH] = _T('\0');
+		SetEnvironmentVariable (_T("COMSPEC"), ModuleName);
+	}
 
 	/* add ctrl break handler */
 	AddBreakHandler ();
@@ -1151,6 +1150,7 @@ int main (int argc, char *argv[])
 
   SetFileApisToOEM();
 
+  AllocConsole();
   if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &Info) == FALSE)
     {
       fprintf(stderr, "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError());
