@@ -28,6 +28,7 @@ typedef ULONG SWAPENTRY;
 #define MEMORY_AREA_SHARED_DATA          (10)
 #define MEMORY_AREA_KERNEL_STACK         (11)
 #define MEMORY_AREA_PAGED_POOL           (12)
+#define MEMORY_AREA_NO_ACCESS            (13)
 
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
                           ((x) / (4*1024*1024))
@@ -150,6 +151,12 @@ typedef struct _MADDRESS_SPACE
   PUSHORT PageTableRefCountTable;
   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
+
+
+/* VARIABLES */
+
+extern PVOID MmSystemRangeStart;
+
 
 /* FUNCTIONS */
 

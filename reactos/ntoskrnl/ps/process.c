@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.100 2003/05/17 15:29:50 ekohl Exp $
+/* $Id: process.c,v 1.101 2003/05/17 19:16:39 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -585,9 +585,66 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    /*
     * Now we have created the process proper
     */
-   
-   /* Create the shared data page */
+
    MmLockAddressSpace(&Process->AddressSpace);
+
+   /* Protect the highest 64KB of the process address space */
+   BaseAddress = MmUserProbeAddress;
+   Status = MmCreateMemoryArea(Process,
+			       &Process->AddressSpace,
+			       MEMORY_AREA_NO_ACCESS,
+			       &BaseAddress,
+			       0x10000,
+			       PAGE_NOACCESS,
+			       &MemoryArea,
+			       FALSE,
+			       FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	MmUnlockAddressSpace(&Process->AddressSpace);
+	DPRINT1("Failed to protect the highest 64KB of the process address space\n");
+	KeBugCheck(0);
+     }
+
+   /* Protect the lowest 64KB of the process address space */
+#if 0
+   BaseAddress = (PVOID)0x00000000;
+   Status = MmCreateMemoryArea(Process,
+			       &Process->AddressSpace,
+			       MEMORY_AREA_NO_ACCESS,
+			       &BaseAddress,
+			       0x10000,
+			       PAGE_NOACCESS,
+			       &MemoryArea,
+			       FALSE,
+			       FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	MmUnlockAddressSpace(&Process->AddressSpace);
+	DPRINT1("Failed to protect the lowest 64KB of the process address space\n");
+	KeBugCheck(0);
+     }
+#endif
+
+   /* Protect the 60KB above the shared user page */
+   BaseAddress = (PVOID)USER_SHARED_DATA + PAGE_SIZE;
+   Status = MmCreateMemoryArea(Process,
+			       &Process->AddressSpace,
+			       MEMORY_AREA_NO_ACCESS,
+			       &BaseAddress,
+			       0x10000 - PAGE_SIZE,
+			       PAGE_NOACCESS,
+			       &MemoryArea,
+			       FALSE,
+			       FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	MmUnlockAddressSpace(&Process->AddressSpace);
+	DPRINT1("Failed to protect the memory above the shared user page\n");
+	KeBugCheck(0);
+     }
+
+   /* Create the shared data page */
    BaseAddress = (PVOID)USER_SHARED_DATA;
    Status = MmCreateMemoryArea(Process,
 			       &Process->AddressSpace,

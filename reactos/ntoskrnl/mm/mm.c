@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.60 2002/09/08 10:23:35 chorns Exp $
+/* $Id: mm.c,v 1.61 2003/05/17 19:16:02 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -41,9 +41,11 @@
 
 /* GLOBALS *****************************************************************/
 
-PVOID EXPORTED MmUserProbeAddress = NULL; 
+PVOID EXPORTED MmUserProbeAddress = NULL;
 PVOID EXPORTED MmHighestUserAddress = NULL;
-MM_STATS MmStats; 
+
+PVOID MmSystemRangeStart = NULL;
+MM_STATS MmStats;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -75,6 +77,9 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 				 NULL,
 				 NULL);
        break;
+
+     case MEMORY_AREA_NO_ACCESS:
+	return(STATUS_SUCCESS);
 
      default:
        KeBugCheck(0);
@@ -210,24 +215,24 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 	break;
 
      case MEMORY_AREA_PAGED_POOL:
-       Status = STATUS_SUCCESS;
-       break;
-	
+	Status = STATUS_SUCCESS;
+	break;
+
       case MEMORY_AREA_SECTION_VIEW:
 	Status = MmAccessFaultSectionView(AddressSpace,
 					  MemoryArea, 
 					  (PVOID)Address,
 					  Locked);
 	break;
-	
+
       case MEMORY_AREA_VIRTUAL_MEMORY:
 	Status = STATUS_UNSUCCESSFUL;
 	break;
-	
+
       case MEMORY_AREA_SHARED_DATA:
 	Status = STATUS_UNSUCCESSFUL;
 	break;
-	
+
       default:
 	Status = STATUS_UNSUCCESSFUL;
 	break;

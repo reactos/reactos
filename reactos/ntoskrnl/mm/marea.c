@@ -218,7 +218,7 @@ PVOID MmFindGapBottomUp(PMADDRESS_SPACE AddressSpace, ULONG Length)
    DPRINT("MmFindGapBottomUp(Length %x)\n",Length);
    
    ListHead = &AddressSpace->MAreaListHead;
-     
+   
    current_entry = ListHead->Flink;
    while (current_entry->Flink!=ListHead)
      {
@@ -273,9 +273,9 @@ PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length)
 
   DPRINT("MmFindGapTopDown(Length %lx)\n",Length);
 
-  if (AddressSpace->LowestAddress < KERNEL_BASE)
+  if (AddressSpace->LowestAddress < KERNEL_BASE) //(ULONG_PTR)MmSystemRangeStart)
     {
-      HighestAddress = (PVOID)0x7FFE0000;  /* Start below the PEB */
+      HighestAddress = MmHighestUserAddress;
     }
   else
     {
@@ -294,12 +294,12 @@ PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length)
 
       if (BottomAddress < HighestAddress)
 	{
-	  Gap = TopAddress - BottomAddress;
+	  Gap = TopAddress - BottomAddress + 1;
 	  DPRINT("Bottom %p  Top %p  Gap %lx\n", BottomAddress, TopAddress, Gap);
 	  if (Gap >= Length)
 	    {
-	      DPRINT1("Found gap at %p\n", TopAddress - Length);
-	      return(TopAddress - Length);
+	      DPRINT("Found gap at %p\n", TopAddress - Length);
+	      return(TopAddress - Length + 1);
 	    }
 	  TopAddress = current->BaseAddress;
 	}
@@ -308,11 +308,11 @@ PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length)
 
   if (current_entry == ListHead)
     {
-      Address = (PVOID)HighestAddress - Length;
+      Address = (PVOID)HighestAddress - Length + 1;
     }
   else
     {
-      Address = TopAddress - Length;
+      Address = TopAddress - Length + 1;
     }
 
   /* Check if enough space for the block */
