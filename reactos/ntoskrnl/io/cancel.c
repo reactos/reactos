@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cancel.c,v 1.8 2002/09/08 10:23:24 chorns Exp $
+/* $Id: cancel.c,v 1.9 2003/01/25 16:15:33 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/cancel.c
@@ -44,6 +44,7 @@ NtCancelIoFile (IN	HANDLE			FileHandle,
 		OUT	PIO_STATUS_BLOCK	IoStatusBlock)
 {
   UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 BOOLEAN STDCALL 
@@ -56,11 +57,12 @@ IoCancelIrp(PIRP Irp)
    IoAcquireCancelSpinLock(&oldlvl);
    Irp->Cancel = TRUE;
    if (Irp->CancelRoutine == NULL)
-     {
-	return(FALSE);
-     }
-   Irp->CancelRoutine(Irp->Stack[0].DeviceObject, Irp);
-   IoReleaseCancelSpinLock(oldlvl);
+   {
+      IoReleaseCancelSpinLock(oldlvl);
+      return(FALSE);
+   }
+   Irp->CancelIrql = oldlvl;
+   Irp->CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
    return(TRUE);
 }
 
