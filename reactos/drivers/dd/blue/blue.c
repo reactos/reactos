@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.36 2003/03/09 21:43:37 hbirr Exp $
+/* $Id: blue.c,v 1.37 2003/03/21 21:09:40 hbirr Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -454,7 +454,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
                 offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
                          (Buf->dwCoord.X * 2) + 1;
 
-                for (dwCount = 0; dwCount < stk->Parameters.Write.Length; dwCount++, pAttr++)
+                for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pAttr++)
                 {
                     (char) *pAttr = vidmem[offset + (dwCount * 2)];
                 }
@@ -478,7 +478,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
                 offset = (pCoord->Y * DeviceExtension->Columns * 2) +
                          (pCoord->X * 2) + 1;
 
-                for (dwCount = 0; dwCount < (stk->Parameters.Write.Length - sizeof( COORD )); dwCount++, pAttr++)
+                for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.InputBufferLength - sizeof( COORD )); dwCount++, pAttr++)
                 {
                     vidmem[offset + (dwCount * 2)] = *pAttr;
                 }
@@ -531,7 +531,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
                 offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
                          (Buf->dwCoord.X * 2);
 
-                for (dwCount = 0; dwCount < stk->Parameters.Write.Length; dwCount++, pChar++)
+                for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pChar++)
                 {
                     *pChar = vidmem[offset + (dwCount * 2)];
                 }
@@ -556,7 +556,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
                 offset = (pCoord->Y * DeviceExtension->Columns * 2) +
                          (pCoord->X * 2);
 
-                for (dwCount = 0; dwCount < (stk->Parameters.Write.Length - sizeof( COORD )); dwCount++, pChar++)
+                for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.InputBufferLength - sizeof( COORD )); dwCount++, pChar++)
                 {
                     vidmem[offset + (dwCount * 2)] = *pChar;
                 }

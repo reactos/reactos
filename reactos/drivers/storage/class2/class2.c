@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.31 2003/01/28 17:33:18 hbirr Exp $
+/* $Id: class2.c,v 1.32 2003/03/21 21:09:41 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1245,12 +1245,12 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
     {
       if (WriteToDevice == TRUE)
 	{
-	  RequestType = IOCTL_SCSI_EXECUTE_OUT;
-	  Srb->SrbFlags = SRB_FLAGS_DATA_OUT;
+	  RequestType = IOCTL_SCSI_EXECUTE_IN;	// needs _in_ to the device
+	  Srb->SrbFlags = SRB_FLAGS_DATA_OUT;	// needs _out_ from the caller
 	}
       else
 	{
-	  RequestType = IOCTL_SCSI_EXECUTE_IN;
+	  RequestType = IOCTL_SCSI_EXECUTE_OUT;
 	  Srb->SrbFlags = SRB_FLAGS_DATA_IN;
 	}
     }

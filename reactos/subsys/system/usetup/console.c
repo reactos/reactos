@@ -346,10 +346,10 @@ WriteConsoleOutputCharacters(LPCSTR lpCharacter,
 				 NULL,
 				 &IoStatusBlock,
 				 IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				 NULL,
-				 0,
 				 Buffer,
-				 nLength + sizeof(COORD));
+				 nLength + sizeof(COORD),
+				 NULL,
+				 0);
   if (Status == STATUS_PENDING)
     {
       NtWaitForSingleObject(StdOutput,
@@ -397,10 +397,10 @@ WriteConsoleOutputCharactersW(LPCWSTR lpCharacter,
 				 NULL,
 				 &IoStatusBlock,
 				 IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				 NULL,
-				 0,
 				 Buffer,
-				 nLength + sizeof(COORD));
+				 nLength + sizeof(COORD),
+				 NULL,
+				 0);
   if (Status == STATUS_PENDING)
     {
       NtWaitForSingleObject(StdOutput,
@@ -444,10 +444,10 @@ WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
 				 NULL,
 				 &IoStatusBlock,
 				 IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
-				 NULL,
-				 0,
 				 Buffer,
-				 nLength * sizeof(USHORT) + sizeof(COORD));
+				 nLength * sizeof(USHORT) + sizeof(COORD),
+				 NULL,
+				 0);
   if (Status == STATUS_PENDING)
     {
       NtWaitForSingleObject(StdOutput,

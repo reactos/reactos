@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.30 2002/09/08 10:23:24 chorns Exp $
+/* $Id: buildirp.c,v 1.31 2003/03/21 21:09:40 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -260,29 +260,27 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
       case METHOD_IN_DIRECT:
 	DPRINT("Using METHOD_IN_DIRECT!\n");
 	
-	/* build input buffer (control buffer) */
-	if (InputBuffer && InputBufferLength)
+	/* build output buffer (control buffer) */
+	if (OutputBuffer && OutputBufferLength)
 	  {
 	     Irp->AssociatedIrp.SystemBuffer = (PVOID)
-               ExAllocatePoolWithTag(NonPagedPool,InputBufferLength, 
+               ExAllocatePoolWithTag(NonPagedPool,OutputBufferLength, 
 				     TAG_SYS_BUF);
+
 	     
 	     if (Irp->AssociatedIrp.SystemBuffer == NULL)
 	       {
 		  IoFreeIrp(Irp);
 		  return(NULL);
 	       }
-
-	     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-			   InputBuffer,
-			   InputBufferLength);
+	     Irp->UserBuffer = OutputBuffer;
 	  }
 	
-         /* build output buffer (data transfer buffer) */
-	if (OutputBuffer && OutputBufferLength)
+         /* build input buffer (data transfer buffer) */
+	if (InputBuffer && InputBufferLength)
 	  {
-	     Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
-					     OutputBufferLength,
+	     Irp->MdlAddress = IoAllocateMdl(InputBuffer,
+					     InputBufferLength,
 					     FALSE,
 					     FALSE,
 					     Irp);

@@ -99,12 +99,21 @@ VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
 	
       case METHOD_IN_DIRECT:
 	DPRINT ("Using METHOD_IN_DIRECT!\n");
+
+	/* copy output buffer back and free it */
+        if (Irp->AssociatedIrp.SystemBuffer)
+	  {
+	     if (IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+	       {
+		  RtlCopyMemory(Irp->UserBuffer,
+				Irp->AssociatedIrp.SystemBuffer,
+				IoStack->Parameters.DeviceIoControl.
+				OutputBufferLength);
+	       }
+	    ExFreePool (Irp->AssociatedIrp.SystemBuffer);
+	  }
 	
-	/* free input buffer (control buffer) */
-	if (Irp->AssociatedIrp.SystemBuffer)
-	  ExFreePool (Irp->AssociatedIrp.SystemBuffer);
-	
-	/* free output buffer (data transfer buffer) */
+	/* free input buffer (data transfer buffer) */
 	if (Irp->MdlAddress)
 	  IoFreeMdl (Irp->MdlAddress);
 	break;

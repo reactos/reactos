@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.45 2003/03/21 20:17:55 hbirr Exp $
+/* $Id: conio.c,v 1.46 2003/03/21 21:09:41 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -984,10 +984,10 @@ VOID Console_Api( DWORD RefreshEvent )
 					      NULL,
 					      &Iosb,
 					      IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-					      0,
-					      0,
 					      Buffer,
-					      sizeof (COORD) + Title.Length);
+					      sizeof (COORD) + Title.Length,
+					      NULL,
+					      0);
 	      if( !NT_SUCCESS( Status ) )
 		{
 		  DPRINT1( "Error writing to console\n" );
@@ -1282,10 +1282,10 @@ CSR_API(CsrWriteConsoleOutputChar)
 				       NULL,
 				       &Iosb,
 				       IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				       0,
-				       0,
 				       &Request->Data.WriteConsoleOutputCharRequest.Coord,
-				       sizeof (COORD) + Request->Data.WriteConsoleOutputCharRequest.Length );
+				       sizeof (COORD) + Request->Data.WriteConsoleOutputCharRequest.Length,
+				       NULL,
+				       0);
        if( !NT_SUCCESS( Status ) )
 	 DPRINT1( "Failed to write output chars: %x\n", Status );
      }
@@ -1476,11 +1476,11 @@ CSR_API(CsrWriteConsoleOutputAttrib)
 					NULL,
 					&Iosb,
 					IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
-					0,
-					0,
 					&Request->Data.WriteConsoleOutputAttribRequest.Coord,
 					Request->Data.WriteConsoleOutputAttribRequest.Length +
-					sizeof (COORD) );
+					sizeof (COORD),
+					NULL,
+					0 );
 	if( !NT_SUCCESS( Status ) )
 	  DPRINT1( "Failed to write output attributes to console\n" );
       }
