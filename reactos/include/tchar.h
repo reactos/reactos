@@ -29,9 +29,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
+ * $Revision: 1.5 $
  * $Author: robd $
- * $Date: 2002/12/08 16:18:29 $
+ * $Date: 2003/01/01 06:19:37 $
  *
  */
 
@@ -61,8 +61,12 @@ typedef	wchar_t	TCHAR;
  * Enclose constant strings and literal characters in the _TEXT and _T macro to make
  * them unicode constant strings when _UNICODE is defined.
  */
+#ifndef _TEXT
 #define	_TEXT(x)	L ## x
+#endif
+#ifndef _T
 #define	_T(x)		L ## x
+#endif
 
 /*
  * Unicode functions

@@ -63,8 +63,8 @@ typedef long LONG;
    
 
 #ifdef UNICODE
-typedef unsigned short *LPTCH;
-typedef unsigned short *LPTSTR;
+typedef wchar_t *LPTCH;
+typedef wchar_t *LPTSTR;
 #else
 typedef char *LPTCH;
 typedef char *LPTSTR;
@@ -154,12 +154,12 @@ typedef CHAR *LPCH;
 typedef COLORREF *LPCOLORREF;
    
 #ifdef UNICODE
-typedef const unsigned short *LPCTSTR;
+typedef const wchar_t *LPCTSTR;
 #else
 typedef const char *LPCTSTR;
 #endif /* UNICODE */
 
-typedef const unsigned short *LPCWCH;
+typedef const wchar_t *LPCWCH;
 typedef DWORD *LPDWORD;
 /* typedef LPFRHOOKPROC; */
 typedef HANDLE *LPHANDLE;
@@ -168,14 +168,14 @@ typedef PINT LPINT;
 typedef PLONG LPLONG;
 
 typedef long LRESULT;
-typedef unsigned short *LPWCH;
+typedef wchar_t *LPWCH;
 typedef unsigned short *LPWORD;
 /* typedef NPSTR; */
-typedef unsigned short *NWPSTR;
+typedef wchar_t *NWPSTR;
 typedef WINBOOL *PWINBOOL;
 typedef const CHAR *PCCH;
 typedef const char *PCSTR;
-typedef const unsigned short *PCWCH;
+typedef const wchar_t *PCWCH;
 /* typedef PHKEY; */
 /* typedef LCID *PLCID; */
 typedef short *PSHORT;
@@ -184,10 +184,10 @@ typedef char *PSTR;
 typedef char *PSZ;
 
 #ifdef UNICODE
-typedef unsigned short *PTBYTE;
-typedef unsigned short *PTCH;
-typedef unsigned short *PTCHAR;
-typedef unsigned short *PTSTR;
+typedef wchar_t *PTBYTE;
+typedef wchar_t *PTCH;
+typedef wchar_t *PTCHAR;
+typedef wchar_t *PTSTR;
 #else
 typedef unsigned char *PTBYTE;
 typedef char *PTCH;
@@ -210,12 +210,12 @@ typedef DWORD SERVICE_STATUS_HANDLE;
 /* typedef SPHANDLE; */
 
 #ifdef UNICODE
-typedef unsigned short TBYTE;
+typedef wchar_t TBYTE;
 #ifndef _TCHAR_DEFINED
 #define _TCHAR_DEFINED
-typedef unsigned short TCHAR;
+typedef wchar_t TCHAR;
 #endif /* _TCHAR_DEFINED */
-typedef unsigned short BCHAR;
+typedef wchar_t BCHAR;
 #else
 typedef unsigned char TBYTE;
 #ifndef _TCHAR_DEFINED
@@ -348,12 +348,21 @@ typedef enum _SID_NAME_USE {
 #define INDEXTOSTATEIMAGEMASK(i) ((i) << 12)  
 
 #ifdef UNICODE
+#ifndef _T
 #define _T(quote)   L##quote 
+#endif
+#ifndef _TEXT
 #define TEXT(quote) L##quote 
+#endif
 #else
+#ifndef _T
 #define _T(quote)   quote 
+#endif
+#ifndef _TEXT
 #define TEXT(quote) quote
 #endif
+#endif
+
 
 #ifndef RC_INVOKED
 
@@ -370,7 +379,7 @@ typedef UINT CALLBACK (*LPPRINTHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef UINT CALLBACK (*LPSETUPHOOKPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef WINBOOL CALLBACK (*DLGPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef int CALLBACK (*PFNPROPSHEETCALLBACK) (HWND, UINT, LPARAM);
-typedef VOID CALLBACK (*LPSERVICE_MAIN_FUNCTION) (DWORD, LPTSTR);
+typedef VOID CALLBACK (*LPSERVICE_MAIN_FUNCTION) (DWORD, LPTSTR*);
 typedef int CALLBACK (*PFNTVCOMPARE) (LPARAM, LPARAM, LPARAM);
 typedef LRESULT CALLBACK (*WNDPROC) (HWND, UINT, WPARAM, LPARAM);
 typedef int CALLBACK (*FARPROC)(void);

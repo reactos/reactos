@@ -58,6 +58,10 @@ extern "C" {
 #define LZERROR_BADOUTHANDLE           (-2)
 #define LZERROR_BADINHANDLE            (-1)
 #define NO_ERROR                         0L
+
+#if 0
+#include "../reactos/errcodes.h"
+#else
 #define ERROR_SUCCESS                    0L
 #define ERROR_INVALID_FUNCTION           1L
 #define ERROR_FILE_NOT_FOUND             2L
@@ -724,6 +728,7 @@ extern "C" {
 #define ERROR_REC_NON_EXISTENT           4005L
 #define ERROR_RPL_NOT_ALLOWED            4006L
 #define ERROR_NO_BROWSER_SERVERS_FOUND   6118L
+#endif
 
 
 /* HRESULT values for OLE, SHELL and other Interface stuff */

@@ -83,22 +83,44 @@ typedef ULONG32 ULONG, *PULONG;
 
 #endif /* _WIN64 */
 
+#ifndef _WCHAR_T_
+#define _WCHAR_T_
+#define _WCHAR_T
+#define _WCHAR_T_DEFINED
+#ifndef __WCHAR_TYPE__
+#define __WCHAR_TYPE__      short unsigned int
+#endif
+
+#ifndef __cplusplus
+typedef __WCHAR_TYPE__      wchar_t;
+#endif  /* C++ */
+
+#endif  /* wchar_t not already defined */
+
+
+//#ifndef __cplusplus
+//#ifndef _WCHAR_T_DEFINED
+//#define _WCHAR_T_DEFINED
+//typedef unsigned short wchar_t;
+//#endif
+//#endif
+
 typedef unsigned char UCHAR;
 typedef unsigned short USHORT;
-typedef unsigned short WCHAR;
+typedef wchar_t WCHAR;
 typedef unsigned short WORD;
 typedef int BOOL;
 typedef unsigned char BOOLEAN;
 typedef BOOLEAN* PBOOLEAN;
-typedef unsigned short *LPWSTR;
-typedef unsigned short *PWSTR;
+typedef wchar_t *LPWSTR;
+typedef wchar_t *PWSTR;
 typedef unsigned char *PUCHAR;
 typedef unsigned short *PUSHORT;
 typedef void *PVOID;
 typedef unsigned char BYTE;
 typedef void *LPVOID;
 typedef float *PFLOAT;
-typedef unsigned short *PWCH;
+typedef wchar_t *PWCH;
 typedef unsigned short *PWORD;
 
 #include <msvcrt/crttypes.h> // for definition of LONGLONG, PLONGLONG etc
@@ -110,17 +132,17 @@ typedef DWORD LCID;
 typedef DWORD *PLCID;
 typedef const char *LPCSTR;
 typedef char *LPSTR;
-typedef const unsigned short *LPCWSTR;
+typedef const wchar_t *LPCWSTR;
 typedef CHAR *PCHAR;
 typedef CHAR *PCH;
 typedef void *HANDLE;
 typedef HANDLE *PHANDLE;
 typedef char CCHAR;
 typedef CCHAR *PCCHAR;
-typedef unsigned short *PWCHAR;
+typedef wchar_t *PWCHAR;
 typedef ULONG WAIT_TYPE;
 typedef USHORT CSHORT;
-typedef const unsigned short *PCWSTR;
+typedef const wchar_t *PCWSTR;
 typedef char* PCSZ;
 
 #ifdef __GNUC__
