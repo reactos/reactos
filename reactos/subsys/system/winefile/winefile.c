@@ -466,7 +466,7 @@ static BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 	return SystemTimeToFileTime(&stime, ftime);
 }
 
-void read_directory_unix(Entry* dir, LPCTSTR path)
+static void read_directory_unix(Entry* dir, LPCTSTR path)
 {
 	Entry* first_entry = NULL;
 	Entry* last = NULL;
