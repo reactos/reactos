@@ -34,7 +34,7 @@ int _filbuf(FILE* f)
     if ((f->_base = malloc(size+1)) == NULL) {
 	// error ENOMEM
       f->_flag |= _IONBF;
-      f->_flag &= ~(_IOFBF|_IOLBF);
+      f->_flag &= ~(_IOFBF|_IO_LBF);
     } else {
       f->_flag |= _IOMYBUF;
       f->_bufsiz = size;
@@ -45,9 +45,9 @@ int _filbuf(FILE* f)
 
   // flush stdout before reading from stdin 
   if (f == stdin) {
-    if (stdout->_flag&_IOLBF)
+    if (stdout->_flag&_IO_LBF)
       fflush(stdout);
-    if (stderr->_flag&_IOLBF)
+    if (stderr->_flag&_IO_LBF)
       fflush(stderr);
   }
 

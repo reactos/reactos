@@ -20,10 +20,14 @@ int setvbuf(FILE *f, char *buf, int type, size_t len)
   }
   if ( f->_base != NULL )
   	fflush(f);
+  /* Cannot use _IOLBF as flag value because _IOLBF is equal to _IOSTRG */
+  if (type == _IOLBF) 
+      type = _IO_LBF;
+    
   switch (type)
   {
   case _IOFBF:
-  case _IOLBF:
+  case _IO_LBF:
     if (len <= 0) {
 	__set_errno (EINVAL);
 	return EOF;
@@ -43,7 +47,7 @@ int setvbuf(FILE *f, char *buf, int type, size_t len)
       free(f->_base);
     f->_cnt = 0;
 
-    f->_flag &= ~(_IONBF|_IOFBF|_IOLBF|_IOUNGETC);
+    f->_flag &= ~(_IONBF|_IOFBF|_IO_LBF|_IOUNGETC);
     f->_flag |= type;
     if (type != _IONBF)
     {

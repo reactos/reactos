@@ -40,19 +40,19 @@ int _flsbuf(int c, FILE* f)
         size = 4096;
         if ((f->_base = base = malloc(size)) == NULL) {
             f->_flag |= _IONBF;
-            f->_flag &= ~(_IOFBF|_IOLBF);
+            f->_flag &= ~(_IOFBF|_IO_LBF);
         } else {
             f->_flag |= _IOMYBUF;
             f->_cnt = f->_bufsiz = size;
             f->_ptr = base;
             rn = 0;
             if (f == stdout && isatty(fileno(stdout))) {
-                f->_flag |= _IOLBF;
+                f->_flag |= _IO_LBF;
             }
         }
     }
 
-    if (f->_flag & _IOLBF) {
+    if (f->_flag & _IO_LBF) {
         /* in line-buffering mode we get here on each character */
         *f->_ptr++ = c;
         rn = f->_ptr - base;
@@ -90,7 +90,7 @@ int _flsbuf(int c, FILE* f)
         rn -= n;
         base += n;
     }
-    if ((f->_flag & (_IOLBF|_IONBF)) == 0) {
+    if ((f->_flag & (_IO_LBF|_IONBF)) == 0) {
         f->_cnt--;
         *f->_ptr++ = c;
     }

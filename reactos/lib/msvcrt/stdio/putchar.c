@@ -21,7 +21,7 @@
 int putchar(int c)
 {
   int r = putc(c, stdout);
-  if (stdout->_flag & _IOLBF)
+  if (stdout->_flag & _IO_LBF)
      fflush(stdout);
   return r;
 }
@@ -32,7 +32,7 @@ int putchar(int c)
 wint_t putwchar(wint_t c)
 {
   wint_t r = putwc(c, stdout);
-  if (stdout->_flag & _IOLBF)
+  if (stdout->_flag & _IO_LBF)
      fflush(stdout);
   return r;
 }

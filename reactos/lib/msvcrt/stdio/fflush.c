@@ -81,7 +81,7 @@ int fflush(FILE *f)
     f->_flag &= ~_IOAHEAD;
 
 
-    f->_cnt = (f->_flag&(_IOLBF|_IONBF)) ? 0 : f->_bufsiz;
+    f->_cnt = (f->_flag&(_IO_LBF|_IONBF)) ? 0 : f->_bufsiz;
 
 // how can write return less than rn without being on error ???
 
