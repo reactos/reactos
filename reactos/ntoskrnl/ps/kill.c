@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.67 2003/11/02 03:09:06 ekohl Exp $
+/* $Id: kill.c,v 1.67.8.1 2003/12/17 01:32:47 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -158,6 +158,22 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    PKTHREAD Thread;
    PLIST_ENTRY current_entry;
    PKMUTANT Mutant;
+   BOOLEAN Last =
+    (InterlockedDecrement(&CurrentThread->ThreadsProcess->ThreadCount) == 0);
+
+   KeLowerIrql(PASSIVE_LEVEL);
+ 
+   /* FIXME? the placement of thread termination notifications was chosen
+      somewhat arbitrarily - not unlike everything else - and may be wrong.
+      Anyway, this really looks like the right place for it */
+   PspRunThreadNotifyRoutines(CurrentThread, FALSE);
+   PsTerminateWin32Thread(CurrentThread);
+ 
+   if(Last)
+   {
+    PspRunProcessNotifyRoutines(CurrentThread->ThreadsProcess, FALSE);
+    PsTerminateWin32Process(CurrentThread->ThreadsProcess);
+   }
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
 
@@ -165,8 +181,10 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    DPRINT("terminating %x\n",CurrentThread);
 
    CurrentThread->ExitStatus = ExitStatus;
-   Thread = KeGetCurrentThread();
+   Thread = &CurrentThread->Tcb;
+
    KeCancelTimer(&Thread->Timer);
+
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
    /* abandon all owned mutants */
