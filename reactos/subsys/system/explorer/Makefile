@@ -58,21 +58,3 @@ include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
 
 include $(TOOLS_PATH)/depend.mk
-
-
-# additional non-standard targets:
-
-docu: doxy-footer.html
-	doxygen Doxyfile
-
-full-docu: docu
-	-cmd /c start /b /low /wait hhc doxy-doc\html\index.hhp
-	cmd /c move /y doxy-doc\html\index.chm ros-explorer.chm
-	doxygen Doxyfile-all
-	-cmd /c start /b /low /wait hhc doxy-doc\html\index.hhp
-	cmd /c move /y doxy-doc\html\index.chm ros-explorer-full.chm
-
-doxy-footer.html: ever
-	updatefooter
-
-ever:
