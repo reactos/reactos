@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.9 2002/09/08 10:22:43 chorns Exp $
+/* $Id: global.c,v 1.10 2002/10/28 15:08:32 robd Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -46,7 +46,10 @@ GlobalAlloc(UINT uFlags,
 
    if ((uFlags & GMEM_MOVEABLE)==0) /* POINTER */
      {
-	return ((HGLOBAL)RtlAllocateHeap(hProcessHeap, 0, dwBytes));
+       if ((uFlags & GMEM_ZEROINIT)==0)
+          return ((HGLOBAL)RtlAllocateHeap(hProcessHeap, 0, dwBytes));
+	   else
+          return ((HGLOBAL)RtlAllocateHeap(hProcessHeap, HEAP_ZERO_MEMORY, dwBytes));
      }
    else  /* HANDLE */
      {
