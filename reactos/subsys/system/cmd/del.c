@@ -110,6 +110,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	LPTSTR *arg = NULL;
 	INT args;
 	INT i;
+	INT res;
 	INT   nEvalArgs = 0; /* nunber of evaluated arguments */
 	DWORD dwFlags = 0;
 	DWORD dwFiles = 0;
@@ -204,17 +205,15 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 		for (i = 0; i < args; i++)
 		{
 			if (!_tcscmp (arg[i], _T("*")) ||
-                            !_tcscmp (arg[i], _T("*.*")))
+			    !_tcscmp (arg[i], _T("*.*")))
 			{
-                                INT res;
-                                if (!((dwFlags & DEL_YES) || (dwFlags & DEL_QUIET) || (dwFlags & DEL_PROMPT)))
-                                {
-                                	res = FilePromptYN (_T("All files in the directory will be deleted!\n"
-                                             "Are you sure (Y/N)?"));
-                                
-                                if ((res == PROMPT_NO) ||
-                                    (res == PROMPT_BREAK))
-					break;
+				if (!((dwFlags & DEL_YES) || (dwFlags & DEL_QUIET) || (dwFlags & DEL_PROMPT)))
+				{
+					res = FilePromptYN (_T("All files in the directory will be deleted!\n"
+					                       "Are you sure (Y/N)?"));
+
+					if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
+						break;
 				}
 			}
 
@@ -251,9 +250,10 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 					do
 					{
-						/* ignore "." and ".." */
+						/* ignore ".", ".." and directories */
 						if (!_tcscmp (f.cFileName, _T(".")) ||
-							!_tcscmp (f.cFileName, _T("..")))
+						    !_tcscmp (f.cFileName, _T("..")) ||
+						    f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 							continue;
 
 						_tcscpy (pFilePart, f.cFileName);
@@ -261,23 +261,20 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 #ifdef _DEBUG
 						ConErrPrintf (_T("Full filename: %s\n"), szFullPath);
 #endif
-						/*ask for deleting */
-						if(dwFlags & DEL_PROMPT) 
+						/* ask for deleting */
+						if (dwFlags & DEL_PROMPT) 
 						{
-							INT res;
 							ConErrPrintf (_T("The file %s will be deleted! "), szFullPath);
-		                                	res = FilePromptYN (_T("Are you sure (Y/N)?"));
-		                                        
-		                                        if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
-		                                        {
-		                                        	continue;  //FIXME: Errorcode?
-		                                        }
-						}	
+							res = FilePromptYN (_T("Are you sure (Y/N)?"));
+
+							if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
+							{
+								continue;  //FIXME: Errorcode?
+							}
+						}
 
 						if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
 							ConErrPrintf (_T("Deleting: %s\n"), szFullPath);
-
-		                                
 
 						/* delete the file */
 						if (!(dwFlags & DEL_NOTHING))
@@ -327,19 +324,17 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					                 szFullPath,
 					                 &pFilePart);
 
-						
 					/*ask for deleting */
 					if((dwFlags & DEL_PROMPT) && (FindFirstFile(szFullPath, &f) != INVALID_HANDLE_VALUE)) //Don't ask if the file doesn't exist, the following code will make the error-msg 
 					{
-						INT res;
 						ConErrPrintf (_T("The file %s will be deleted! "), szFullPath);
-	                                	res = FilePromptYN (_T("Are you sure (Y/N)?"));
-	                                        
-	                                        if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
-	                                        {
-	                                        	break;   //FIXME: Errorcode?
-	                                        }
-					}	
+						res = FilePromptYN (_T("Are you sure (Y/N)?"));
+
+						if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
+						{
+							break;   //FIXME: Errorcode?
+						}
+					}
 
 #ifdef _DEBUG
 					ConErrPrintf (_T("Full path: %s\n"), szFullPath);
