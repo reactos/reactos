@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.126 2004/03/07 21:09:08 navaraf Exp $
+/* $Id: process.c,v 1.127 2004/03/10 09:14:29 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -470,6 +470,7 @@ PsCreatePeb(HANDLE ProcessHandle,
   Peb->OSMinorVersion = 0;
   Peb->OSBuildNumber = 0;
   Peb->OSPlatformId = 2; //VER_PLATFORM_WIN32_NT;
+  Peb->SPMajorVersion = 6;
 
   Peb->AnsiCodePageData     = (char*)TableBase + NlsAnsiTableOffset;
   Peb->OemCodePageData      = (char*)TableBase + NlsOemTableOffset;
