@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.18 2003/07/20 01:48:46 royce Exp $
+/* $Id: volume.c,v 1.19 2003/07/20 18:36:53 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -66,8 +66,7 @@ FsdGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
 			     PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
 			     PULONG BufferLength)
 {
-  ULONG Length = DeviceExt->FatInfo.FatType == FAT32 ? 10 : 6;
-
+  WCHAR* pName; ULONG Length;
   DPRINT("FsdGetFsAttributeInformation()\n");
   DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);
@@ -76,21 +75,28 @@ FsdGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
   if (*BufferLength < sizeof (FILE_FS_ATTRIBUTE_INFORMATION))
     return STATUS_INFO_LENGTH_MISMATCH;
 
+  if (DeviceExt->FatInfo.FatType == FAT32)
+  {
+    Length = 10;
+    pName = L"FAT32";
+  }
+  else
+  {
+    Length = 6;
+    pName = L"FAT";
+  }
+
   if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length))
     return STATUS_BUFFER_OVERFLOW;
 
   FsAttributeInfo->FileSystemAttributes =
     FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK;
+
   FsAttributeInfo->MaximumComponentNameLength = 255;
+
   FsAttributeInfo->FileSystemNameLength = Length;
-  if (DeviceExt->FatInfo.FatType == FAT32)
-  {
-    memcpy(FsAttributeInfo->FileSystemName, L"FAT32\0", 12);
-  }
-  else
-  {
-    memcpy(FsAttributeInfo->FileSystemName, L"FAT\0", 8);
-  }
+
+  memcpy(FsAttributeInfo->FileSystemName, pName, Length );
 
   DPRINT("Finished FsdGetFsAttributeInformation()\n");
 
