@@ -36,9 +36,8 @@ BEGIN
     END
 END
 
-// Close Box
+// Close Menu
 OBM_CLOSE BITMAP "resources/obm_close.bmp"
-OBM_CLOSED BITMAP "resources/obm_closed.bmp"
 
 // Minimize Box
 OBM_REDUCE BITMAP "resources/obm_reduce.bmp"
