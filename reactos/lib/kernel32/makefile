@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.89 2004/10/20 20:51:21 chorns Exp $
+# $Id: makefile,v 1.90 2004/11/29 00:08:59 gdalsnes Exp $
 
 PATH_TO_TOP = ../..
 
@@ -17,7 +17,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_RCFLAGS += -DWINVER=0x0500
 
-TARGET_SDKLIBS = pseh.a rosrtl.a ntdll.a kernel32.a
+TARGET_SDKLIBS = pseh.a rosrtl.a ntdll.a kernel32.a libwine.a
 
 TARGET_GCCLIBS = gcc
 
