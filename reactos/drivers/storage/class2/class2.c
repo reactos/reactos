@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.30 2003/01/25 16:19:06 hbirr Exp $
+/* $Id: class2.c,v 1.31 2003/01/28 17:33:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1637,11 +1637,9 @@ ScsiClassRetryRequest(
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION CurrentIrpStack;
-  PIO_STACK_LOCATION CurrentMasterIrpStack;
   PIO_STACK_LOCATION NextIrpStack;
 
   ULONG TransferLength;
-  ULONG TransferOffset = 0;
 
   DPRINT("ScsiPortRetryRequest() called\n");
 
@@ -1649,28 +1647,23 @@ ScsiClassRetryRequest(
   CurrentIrpStack = IoGetCurrentIrpStackLocation(Irp);
   NextIrpStack = IoGetNextIrpStackLocation(Irp);
 
-  if (CurrentIrpStack->MajorFunction == IRP_MJ_READ ||
-      CurrentIrpStack->MajorFunction == IRP_MJ_WRITE)
+  if (CurrentIrpStack->MajorFunction != IRP_MJ_READ &&
+      CurrentIrpStack->MajorFunction != IRP_MJ_WRITE)
     {
-      TransferLength = CurrentIrpStack->Parameters.Read.Length;
-      if (Associated)
-      {
-        CurrentMasterIrpStack = IoGetCurrentIrpStackLocation(Irp->AssociatedIrp.MasterIrp);
-        TransferOffset = CurrentIrpStack->Parameters.Read.ByteOffset.QuadPart-
-	                   CurrentMasterIrpStack->Parameters.Read.ByteOffset.QuadPart;
-      }
-    }
-  else if (Irp->MdlAddress != NULL)
-    {
-      TransferLength = Irp->MdlAddress->ByteCount;
-    }
-  else
-    {
-      TransferLength = 0;
+      /* We shouldn't setup the buffer pointer and transfer length on read/write requests. */
+      if (Irp->MdlAddress != NULL)
+        {
+          TransferLength = Irp->MdlAddress->ByteCount;
+        }
+      else
+        {
+          TransferLength = 0;
+        }
+
+      Srb->DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+      Srb->DataTransferLength = TransferLength;
     }
 
-  Srb->DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress) + TransferOffset;
-  Srb->DataTransferLength = TransferLength;
   Srb->SrbStatus = 0;
   Srb->ScsiStatus = 0;
 
