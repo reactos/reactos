@@ -1,0 +1,93 @@
+
+#include "resource.h"
+
+
+/* Bitmaps */
+
+IDB_TITLEBITMAP         BITMAP  DISCARDABLE     "res/title.bmp"
+IDB_DEFAULTTOPICBITMAP  BITMAP  DISCARDABLE     "res/default.bmp"
+
+IDB_TOPICBITMAP0        BITMAP  DISCARDABLE     "res/topic0.bmp"
+IDB_TOPICBITMAP1        BITMAP  DISCARDABLE     "res/topic1.bmp"
+IDB_TOPICBITMAP2        BITMAP  DISCARDABLE     "res/topic2.bmp"
+//IDB_TOPICBITMAP3        BITMAP  DISCARDABLE     "res/topic3.bmp"
+//IDB_TOPICBITMAP4        BITMAP  DISCARDABLE     "res/topic4.bmp"
+//IDB_TOPICBITMAP5        BITMAP  DISCARDABLE     "res/topic5.bmp"
+//IDB_TOPICBITMAP6        BITMAP  DISCARDABLE     "res/topic6.bmp"
+//IDB_TOPICBITMAP7        BITMAP  DISCARDABLE     "res/topic7.bmp"
+//IDB_TOPICBITMAP8        BITMAP  DISCARDABLE     "res/topic8.bmp"
+//IDB_TOPICBITMAP9        BITMAP  DISCARDABLE     "res/topic9.bmp"
+
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APPTITLE            "ReactOS 0.0.20 - Welcome"
+    IDS_DEFAULTTOPICTITLE   "ReactOS"
+    IDS_DEFAULTTOPICDESC    "The new Operating System for computer users who do not want to obey to the Monopoly.\n\nClick a topic on the left."
+    IDS_CHECKTEXT           "Show this dialog again"
+    IDS_CLOSETEXT           "Exit"
+END
+
+/* Topic buttons */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICBUTTON0        "Online Registration"
+    IDS_TOPICBUTTON1        "Install ReactOS Components"
+    IDS_TOPICBUTTON2        "Browse this CD"
+//    IDS_TOPICBUTTON4        "E&xit"
+//    IDS_TOPICBUTTON5        "Empty Topic 5"
+//    IDS_TOPICBUTTON6        "Empty Topic 6"
+//    IDS_TOPICBUTTON7        "Empty Topic 7"
+//    IDS_TOPICBUTTON8        "Empty Topic 8"
+//    IDS_TOPICBUTTON9        "Empty Topic 9"
+END
+
+/* Topic titles */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICTITLE0         "Online Registration"
+    IDS_TOPICTITLE1         "Install ReactOS Components"
+    IDS_TOPICTITLE2         "Browse this CD"
+//    IDS_TOPICTITLE3         "Exit"
+//    IDS_TOPICTITLE4         "Empty Topic Title 4"
+//    IDS_TOPICTITLE5         "Empty Topic Title 5"
+//    IDS_TOPICTITLE6         "Empty Topic Title 6"
+//    IDS_TOPICTITLE7         "Empty Topic Title 7"
+//    IDS_TOPICTITLE8         "Empty Topic Title 8"
+//    IDS_TOPICTITLE9         "Empty Topic Title 9"
+END
+
+/* Topic descriptions */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICDESC0          "Register your ReactOS now!\n\nWith registering your ReactOS you get a lot of additional benefits, like unsolicited product information, incompetent hotline services and huge amounts of third-party junk mail."
+    IDS_TOPICDESC1          "Customize your ReactOS by installing optional applications and components."
+    IDS_TOPICDESC2          "Browse the CD to find only a few files, no applications, incomplete documentation and no readme files."
+//    IDS_TOPICDESC3          "Click to exit this application."
+//    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
+//    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."
+//    IDS_TOPICDESC6          "Topic description 6.\n\nDescribe topic 6 here."
+//    IDS_TOPICDESC7          "Topic description 7.\n\nDescribe topic 7 here."
+//    IDS_TOPICDESC8          "Topic description 8.\n\nDescribe topic 8 here."
+//    IDS_TOPICDESC9          "Topic description 9.\n\nDescribe topic 9 here."
+END
+
+/* Topic actions */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICACTION0        "signup.exe"
+    IDS_TOPICACTION1        "sysocmgr.exe"
+    IDS_TOPICACTION2        "explorer.exe"
+//    IDS_TOPICACTION3        "..."
+//    IDS_TOPICACTION4        "..."
+//    IDS_TOPICACTION5        "..."
+//    IDS_TOPICACTION6        "..."
+//    IDS_TOPICACTION7        "..."
+//    IDS_TOPICACTION8        "..."
+//    IDS_TOPICACTION9        "..."
+END
+
+/* EOF */

@@ -36,6 +36,7 @@ APPS = 	calc \
 	regedit \
 	regedt32 \
 	taskmgr \
+	welcome \
 	winfile
 
 all: $(APPS)
