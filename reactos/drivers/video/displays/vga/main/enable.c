@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.3 $
- * $Author: dwelch $
- * $Date: 2004/03/16 21:11:44 $
+ * $Revision: 1.4 $
+ * $Author: chorns $
+ * $Date: 2004/11/27 00:46:24 $
  *
  */
 

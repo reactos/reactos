@@ -1,6 +1,6 @@
-/* $Id: strncpy.c,v 1.2 2003/07/06 23:04:19 hyperion Exp $
+/* $Id: strncpy.c,v 1.3 2004/11/27 00:46:24 chorns Exp $
  */
-#include <string.h>
+#include <string.h>
 #include "tcsncpy.h"
 
 /* EOF */
