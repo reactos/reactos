@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002/06/19 15:45:48 robd Exp $
+# $Id: Makefile,v 1.3 2003/10/15 03:29:33 vizzini Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/nkm/Makefile
@@ -56,11 +56,11 @@ $(TARGET_FOLDER_LIB)/ntoskrnl.a: $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.def
 		-D ntoskrnl.exe\
 		-d $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.def
 
-$(TARGET_FOLDER_LIB)/hal.a: $(PATH_TO_TOP)/ntoskrnl/hal/x86/hal.def
+$(TARGET_FOLDER_LIB)/hal.a: $(PATH_TO_TOP)/hal/hal/hal.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D hal.dll\
-		-d $(PATH_TO_TOP)/ntoskrnl/hal/x86/hal.def
+		-d $(PATH_TO_TOP)/hal/hal/hal.def
 
 # --- DISPLAY ---
 
