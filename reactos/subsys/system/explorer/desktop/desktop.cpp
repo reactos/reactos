@@ -26,13 +26,7 @@
  //
 
 
-#include "../utility/utility.h"
-
-#include "../explorer.h"	// for MainFrame::OpenShellFolders()
-#include "desktop.h"
-
-#include "../globals.h"
-#include "../externals.h"
+#include "precomp.h"
 
 #include "../taskbar/desktopbar.h"
 #include "../taskbar/taskbar.h"	// for PM_GET_LAST_ACTIVE

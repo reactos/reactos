@@ -1,5 +1,5 @@
 #
-#  ReactOS explorer
+#  ReactOS lean explorer
 #
 #  Makefile.PCH
 #
@@ -10,7 +10,7 @@ CC = gcc
 CXX = g++
 LINK = g++
 
-CFLAGS	= -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -fexceptions -Wall -I.
+CFLAGS	= -DWIN32 -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -fexceptions -Wall -I.
 RCFLAGS	= -DWIN32 -D__WINDRES__
 LFLAGS	= -Wl,--subsystem,windows
 
@@ -19,7 +19,7 @@ CFLAGS	+= -D_DEBUG -g
 RCFLAGS	+= -D_DEBUG
 LFLAGS	+= -g
 else
-CFLAGS	+= -DNDEBUG -Os
+CFLAGS	+= -DNDEBUG -Os -D_NO_CONTEXT
 RCFLAGS	+= -DNDEBUG
 LFLAGS	+= -s
 endif
@@ -54,15 +54,8 @@ OBJECTS = \
 	explorer.o \
 	entries.o \
 	winfs.o \
-	unixfs.o \
 	shellfs.o \
-	ntobjfs.o \
-	regfs.o \
-	fatfs.o \
-	webchild.o \
 	mainframe.o \
-	filechild.o \
-	pane.o \
 	shellbrowser.o \
 	desktop.o \
 	desktopbar.o \
@@ -70,43 +63,22 @@ OBJECTS = \
 	startmenu.o \
 	traynotify.o \
 	quicklaunch.o \
-	favorites.o \
-	searchprogram.o \
-	settings.o \
-	i386-stub-win32.o \
-	xmlstorage.o
+	settings.o
 
 LIBS = gdi32 comctl32 ole32 uuid
-DELAYIMPORTS = oleaut32 wsock32
 
 all: precomp.h.gch $(TARGET)
 
 precomp.h.gch:
 	$(CXX) $(CFLAGS) precomp.h
 
-$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll libexpat.dll
-	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
+$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))
 
 explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
 	windres $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
 
-notifyhook.dll: notifyhook/notifyhook.c notifyhook/notifyhook.h
-	$(CC) -D_WIN32_IE=0x0600 -Wall -D_NOTIFYHOOK_IMPL -Os -s notifyhook/notifyhook.c -shared -o $@
-
 clean:
 	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) precomp.h.gch
-
-docu: doxy-footer.html
-	doxygen Doxyfile
-
-full-docu: docu
-	-cmd /c start /b /low /wait hhc doxy-doc\html\index.hhp
-	cmd /c move /y doxy-doc\html\index.chm ros-explorer.chm
-	doxygen Doxyfile-all
-	-cmd /c start /b /low /wait hhc doxy-doc\html\index.hhp
-	cmd /c move /y doxy-doc\html\index.chm ros-explorer-full.chm
-
-doxy-footer.html: ever
-	updatefooter
 
 ever:

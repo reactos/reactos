@@ -28,13 +28,9 @@
  //
 
 
-#include "../utility/utility.h"
+#include "precomp.h"
 
-#include "../explorer.h"
-#include "../globals.h"
-#include "../externals.h"
 #include "../explorer_intres.h"
-#include "../desktop/desktop.h"
 
 #include "settings.h"
 

@@ -26,11 +26,7 @@
  //
 
 
-#include "utility.h"
-#include "shellclasses.h"
-#include "window.h"
-
-#include "../globals.h"
+#include "precomp.h"
 
 
 WindowClass::WindowClass(LPCTSTR classname, UINT style_, WNDPROC wndproc)

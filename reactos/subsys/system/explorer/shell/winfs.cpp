@@ -26,12 +26,7 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
-#include "../globals.h"
-
-#include "entries.h"
-#include "winfs.h"
+#include "precomp.h"
 
 
 void WinDirectory::read_directory(int scan_flags)
