@@ -44,7 +44,6 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
 			 PUNICODE_STRING AbsoluteFileName)
 {
   ULONG Length;
-//  PWSTR rcName;
   PFCB Fcb;
   NTSTATUS Status;
 
@@ -65,42 +64,29 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
            sizeof(WCHAR) +
            RelativeFileName->Length +
            sizeof(WCHAR);
-//  ASSERT(wcslen (Fcb->PathName) + 1 + wcslen (pRelativeFileName) + 1
-//          <= MAX_PATH);
-//  rcName = ExAllocatePool(NonPagedPool, MAX_PATH * sizeof(WCHAR));
-//  if (!rcName)
-//    {
-//      return(STATUS_INSUFFICIENT_RESOURCES);
-//    }
   AbsoluteFileName->Length = 0;
   AbsoluteFileName->MaximumLength = Length;
   AbsoluteFileName->Buffer = ExAllocatePool(NonPagedPool,
 					    Length);
   if (AbsoluteFileName->Buffer == NULL)
     {
-CHECKPOINT1;
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-
-//  wcscpy(rcName, Fcb->PathName);
   Status = RtlAppendUnicodeToString(AbsoluteFileName,
 				    Fcb->PathName);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       RtlFreeUnicodeString(AbsoluteFileName);
       return Status;
     }
 
   if (!CdfsFCBIsRoot(Fcb))
     {
-//    wcscat (rcName, L"\\");
       Status = RtlAppendUnicodeToString(AbsoluteFileName,
 					L"\\");
       if (!NT_SUCCESS(Status))
 	{
-CHECKPOINT1;
 	  RtlFreeUnicodeString(AbsoluteFileName);
 	  return Status;
 	}
@@ -110,13 +96,9 @@ CHECKPOINT1;
 					  RelativeFileName);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       RtlFreeUnicodeString(AbsoluteFileName);
       return Status;
     }
-
-//  wcscat (rcName, pRelativeFileName);
-//  *pAbsoluteFilename = rcName;
 
   return STATUS_SUCCESS;
 }
