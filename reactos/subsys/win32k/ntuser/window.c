@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.57 2003/06/20 16:26:14 ekohl Exp $
+/* $Id: window.c,v 1.58 2003/06/25 22:37:07 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -811,12 +811,11 @@ static void W32kSendDestroyMsg(HWND Wnd)
 #endif
 }
 
-static BOOL W32kWndBelongsToCurrentThread(PWINDOW_OBJECT Window)
+static BOOLEAN W32kWndBelongsToThread(PWINDOW_OBJECT Window, PW32THREAD ThreadData)
 {
-  PW32THREAD ThreadData = PsGetWin32Thread();
   PLIST_ENTRY Current;
   PWINDOW_OBJECT ThreadWindow;
-  BOOL Belongs = FALSE;
+  BOOLEAN Belongs = FALSE;
 
   ExAcquireFastMutexUnsafe(&ThreadData->WindowListLock);
   /* If there's no win32k thread data then this thread hasn't created any windows */
@@ -881,14 +880,17 @@ static BOOL BuildChildWindowArray(PWINDOW_OBJECT Window, HWND **Children, unsign
  *
  * Destroy storage associated to a window. "Internals" p.358
  */
-static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window)
+static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window,
+                                 PW32PROCESS ProcessData,
+                                 PW32THREAD ThreadData,
+                                 BOOLEAN SendMessages)
 {
   HWND *Children;
   unsigned NumChildren;
   unsigned Index;
   PWINDOW_OBJECT Child;
 
-  if (! W32kWndBelongsToCurrentThread(Window))
+  if (! W32kWndBelongsToThread(Window, ThreadData))
     {
       DPRINT1("Window doesn't belong to current thread\n");
       return 0;
@@ -904,9 +906,9 @@ static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window)
       Child = W32kGetWindowObject(Children[Index - 1]);
       if (NULL != Child)
 	{
-	  if (W32kWndBelongsToCurrentThread(Child))
+	  if (W32kWndBelongsToThread(Child, ThreadData))
 	    {
-	      W32kDestroyWindow(Child);
+	      W32kDestroyWindow(Child, ProcessData, ThreadData, SendMessages);
 	    }
 #if 0 /* FIXME */
 	  else
@@ -921,18 +923,21 @@ static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window)
       ExFreePool(Children);
     }
 
-  /*
-   * Clear the update region to make sure no WM_PAINT messages will be
-   * generated for this window while processing the WM_NCDESTROY.
-   */
-  PaintRedrawWindow(Window->Self, NULL, 0,
-                    RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_NOCHILDREN,
-                    0);
+  if (SendMessages)
+    {
+      /*
+       * Clear the update region to make sure no WM_PAINT messages will be
+       * generated for this window while processing the WM_NCDESTROY.
+       */
+      PaintRedrawWindow(Window->Self, NULL, 0,
+                        RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_NOCHILDREN,
+                        0);
 
-  /*
-   * Send the WM_NCDESTROY to the window being destroyed.
-   */
-  NtUserSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
+      /*
+       * Send the WM_NCDESTROY to the window being destroyed.
+       */
+      NtUserSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
+    }
 
   /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
 
@@ -969,7 +974,7 @@ static LRESULT W32kDestroyWindow(PWINDOW_OBJECT Window)
   RemoveEntryList(&Window->DesktopListEntry);
   RemoveEntryList(&Window->ThreadListEntry);
   Window->Class = NULL;
-  ObmCloseHandle(PsGetWin32Process()->WindowStation->HandleTable, Window->Self);
+  ObmCloseHandle(ProcessData->WindowStation->HandleTable, Window->Self);
 
   W32kGraphicsCheck(FALSE);
 
@@ -987,8 +992,6 @@ NtUserDestroyWindow(HWND Wnd)
     {
       return FALSE;
     }
-
-  /* FIXME: check if window belongs to current thread */
 
   /* Check for desktop window (has NULL parent) */
   if (NULL == Window->Parent)
@@ -1112,9 +1115,38 @@ NtUserDestroyWindow(HWND Wnd)
 #endif
 
   /* Destroy the window storage */
-  W32kDestroyWindow(Window);
+  W32kDestroyWindow(Window, PsGetWin32Process(), PsGetWin32Thread(), TRUE);
 
   return TRUE;
+}
+
+VOID FASTCALL
+DestroyThreadWindows(PETHREAD Thread)
+{
+  PLIST_ENTRY LastHead;
+  PW32PROCESS Win32Process;
+  PW32THREAD Win32Thread;
+  PWINDOW_OBJECT Window;
+
+  Win32Thread = Thread->Win32Thread;
+  Win32Process = Thread->ThreadsProcess->Win32Process;
+  ExAcquireFastMutexUnsafe(&Win32Thread->WindowListLock);
+  LastHead = NULL;
+  while (Win32Thread->WindowListHead.Flink != &(Win32Thread->WindowListHead) &&
+         Win32Thread->WindowListHead.Flink != LastHead)
+    {
+      LastHead = Win32Thread->WindowListHead.Flink;
+      Window = CONTAINING_RECORD(Win32Thread->WindowListHead.Flink, WINDOW_OBJECT, ThreadListEntry);
+      ExReleaseFastMutexUnsafe(&Win32Thread->WindowListLock);
+      W32kDestroyWindow(Window, Win32Process, Win32Thread, FALSE);
+      ExAcquireFastMutexUnsafe(&Win32Thread->WindowListLock);
+    }
+  if (Win32Thread->WindowListHead.Flink == LastHead)
+    {
+      /* Window at head of list was not removed, should never happen, infinite loop */
+      KeBugCheck(0);
+    }
+  ExReleaseFastMutexUnsafe(&Win32Thread->WindowListLock);
 }
 
 DWORD STDCALL
