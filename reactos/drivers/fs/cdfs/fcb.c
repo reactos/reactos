@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.9 2002/09/08 10:22:09 chorns Exp $
+/* $Id: fcb.c,v 1.10 2002/09/09 17:26:24 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -155,7 +155,6 @@ CdfsReleaseFCB(PDEVICE_EXTENSION Vcb,
   if (Fcb->RefCount <= 0 && !CdfsFCBIsDirectory(Fcb))
     {
       RemoveEntryList(&Fcb->FcbListEntry);
-      CcRosReleaseFileCache(NULL, Fcb->RFCB.Bcb);
       CdfsDestroyFCB(Fcb);
     }
   KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
@@ -386,7 +385,10 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
   rcFCB->RFCB.FileSize.QuadPart = Size;
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
   rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, BLOCKSIZE);
-  CdfsFCBInitializeCache(Vcb, rcFCB);
+  if (CdfsFCBIsDirectory(rcFCB))
+  {
+     CdfsFCBInitializeCache(Vcb, rcFCB);
+  }
   rcFCB->RefCount++;
   CdfsAddFCBToTable(Vcb, rcFCB);
   *fileFCB = rcFCB;
@@ -421,7 +423,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
   newCCB->PtrFileObject = FileObject;
   Fcb->DevExt = Vcb;
 
-  if (!(Fcb->Flags & FCB_CACHE_INITIALIZED))
+  if (CdfsFCBIsDirectory(Fcb))
     {
       Status = CcRosInitializeFileCache(FileObject,
 					&Fcb->RFCB.Bcb,
