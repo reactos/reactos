@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2001 David Welch <welch@cwcom.net>
+ *  Copyright (C) 2001-2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.28 2004/08/15 16:39:00 chorns Exp $
+/* $Id: kdb.c,v 1.29 2004/08/26 16:04:49 blight Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -741,7 +741,7 @@ DbgDisassemble(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
     }
   for (i = 0; i < 10; i++)
     {
-      if (!KdbPrintAddress((PVOID)Address))
+      if (!KdbSymPrintAddress((PVOID)Address))
 	{
 	  DbgPrint("<%x>", Address);
 	}
@@ -832,7 +832,7 @@ DbgPrintBackTrace(PULONG Frame, ULONG StackBase, ULONG StackLimit)
   while (Frame != NULL && (ULONG)Frame >= StackLimit && 
 	 (ULONG)Frame < StackBase)
     {
-      KdbPrintAddress((PVOID)Frame[1]);
+      KdbSymPrintAddress((PVOID)Frame[1]);
       DbgPrint("\n");
       Frame = (PULONG)Frame[0];
       i++;
@@ -852,7 +852,7 @@ DbgAddrCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME tf)
   if (Argc == 2)
     {
       Addr = (PVOID)strtoul(Argv[1], NULL, 0);
-      KdbPrintAddress(Addr);
+      KdbSymPrintAddress(Addr);
     }
 
   return(1);
@@ -1499,7 +1499,7 @@ KdbMainLoop(PKTRAP_FRAME Tf)
     }
   else
     {
-      if (!KdbPrintAddress((PVOID)Tf->Eip))
+      if (!KdbSymPrintAddress((PVOID)Tf->Eip))
 	{
 	  DbgPrint("<%x>", Tf->Eip);
 	}

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.139 2004/08/15 16:38:59 chorns Exp $
+# $Id: Makefile,v 1.140 2004/08/26 16:04:49 blight Exp $
 #
 # ReactOS Operating System
 #
@@ -33,7 +33,7 @@ endif
 
 ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
-                dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/profile.o \
+                dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/kdb_symbols.o dbg/profile.o \
 		../dk/w32/lib/kjs.a dbg/i386/i386-dis.o
 CFLAGS += -I../lib/kjs/include
 preall: all

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.8 2004/08/15 16:39:00 chorns Exp $
+/* $Id: profile.c,v 1.9 2004/08/26 16:04:49 blight Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/profile.c
@@ -170,7 +170,7 @@ KdbProfilerGetSymbolInfo(PVOID address, OUT PCH NameBuffer)
 	    address < (PVOID)(current->Base + current->Length))
 	  {
             RelativeAddress = (ULONG_PTR) address - current->Base;
-            Status = LdrGetAddressInformation(&current->SymbolInfo,
+            Status = KdbSymGetAddressInformation(&current->SymbolInfo,
               RelativeAddress,
               &LineNumber,
               FileName,

@@ -35,7 +35,7 @@ extern void DbgPrint(const char *format, ...);
 #define sprintf_vma(BUF, VMA) sprintf(BUF, "0x%X", VMA)
 #define _setjmp setjmp
 unsigned int
-KdbPrintAddress(void* address);
+KdbSymPrintAddress(void* address);
 
 struct disassemble_info;
 
@@ -79,7 +79,7 @@ KdbMemoryError(int Status, unsigned int Addr,
 void static
 KdbPrintAddressInCode(unsigned int Addr, struct disassemble_info * Ignored)
 {
-  if (!KdbPrintAddress((void*)Addr))
+  if (!KdbSymPrintAddress((void*)Addr))
     {
       DbgPrint("<0x%X>", Addr);
     }

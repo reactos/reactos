@@ -115,8 +115,7 @@ static NTSTATUS ExceptionToNtStatus[] =
 BOOLEAN STDCALL
 KeRosPrintAddress(PVOID address)
 {
-  KdbPrintAddress(address);
-  return TRUE;
+  return KdbSymPrintAddress(address);
 }
 #else /* KDBG */
 BOOLEAN STDCALL

@@ -108,22 +108,4 @@ LdrUnloadModule(PMODULE_OBJECT ModuleObject);
 PMODULE_OBJECT
 LdrGetModuleObject(PUNICODE_STRING ModuleName);
 
-NTSTATUS
-LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
-  IN ULONG_PTR  RelativeAddress,
-  OUT PULONG LineNumber,
-  OUT PCH FileName  OPTIONAL,
-  OUT PCH FunctionName  OPTIONAL);
-
-
-#ifdef DBG
-
-VOID
-LdrLoadUserModuleSymbols(PLDR_MODULE LdrModule);
-
-VOID
-LdrUnloadModuleSymbols(PIMAGE_SYMBOL_INFO SymbolInfo);
-
-#endif /* DBG */
-
 #endif /* __INCLUDE_INTERNAL_LDR_H */
