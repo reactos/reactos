@@ -12,6 +12,7 @@ int _stat(const char* path, struct stat* buffer)
 {
   HANDLE findHandle;
   WIN32_FIND_DATAA findData;
+  char* ext;
 
   if (!buffer)
   {
@@ -46,7 +47,15 @@ int _stat(const char* path, struct stat* buffer)
   if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) 
     buffer->st_mode |= S_IFDIR;
   else
+  {
     buffer->st_mode |= S_IFREG;
+    ext = strrchr(path, '.');
+    if (ext && (!stricmp(ext, ".exe") || 
+	        !stricmp(ext, ".com") || 
+		!stricmp(ext, ".bat") || 
+		!stricmp(ext, ".cmd")))
+      buffer->st_mode |= S_IEXEC;
+  }
   if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) 
     buffer->st_mode |= S_IWRITE;
 
