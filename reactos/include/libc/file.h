@@ -26,11 +26,7 @@ extern "C" {
 #define _IOUNGETC 010000  /* there is an ungetc'ed character in the buffer */
 #endif
 
-int	_flsbuf(int, FILE*);
-int	_filbuf(FILE *);
-void	_fwalk(void (*)(FILE *));
-
-
+int __set_errno(int err);
 
 char __is_text_file(FILE *p);
 
