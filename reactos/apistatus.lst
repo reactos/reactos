@@ -22,7 +22,7 @@ winmm.dll reactos/lib/winmm
 winspool.dll reactos/lib/winspool
 ws2_32.dll reactos/lib/ws2_32
 wsock32.dll reactos/lib/wsock32
-videoprt.dll reactos/drivers/dd/videoprt
+videoprt.dll reactos/drivers/video/videoprt
 ndis.sys reactos/drivers/net/ndis
 tdi.sys reactos/drivers/net/tdi
 class2.sys reactos/drivers/storage/class2
