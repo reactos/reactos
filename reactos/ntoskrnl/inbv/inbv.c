@@ -59,6 +59,7 @@ InbvCheckBootVid(VOID)
   return(STATUS_SUCCESS);
 }
 
+
 VOID
 STDCALL
 InbvAcquireDisplayOwnership(VOID)
@@ -81,12 +82,14 @@ InbvDisplayString(IN PCHAR String)
   return FALSE;
 }
 
+
 BOOLEAN
 STDCALL
 InbvResetDisplayParameters(ULONG SizeX, ULONG SizeY)
 {
   return(InbvResetDisplay());
 }
+
 
 VOID
 STDCALL INIT_FUNCTION
@@ -147,6 +150,7 @@ InbvEnableBootDriver(IN BOOLEAN Enable)
       BootVidDevice = NULL;
     }
 }
+
 
 BOOLEAN
 STDCALL
@@ -221,13 +225,11 @@ NTSTATUS
 STDCALL
 NtDisplayString(IN PUNICODE_STRING DisplayString)
 {
-   ANSI_STRING AnsiString;
+  OEM_STRING OemString;
 
-   RtlUnicodeStringToAnsiString (&AnsiString, DisplayString, TRUE);
+  RtlUnicodeStringToOemString(&OemString, DisplayString, TRUE);
+  HalDisplayString(OemString.Buffer);
+  RtlFreeOemString(&OemString);
 
-   HalDisplayString (AnsiString.Buffer);
-
-   RtlFreeAnsiString (&AnsiString);
-
-   return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
