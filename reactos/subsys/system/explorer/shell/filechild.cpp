@@ -431,12 +431,15 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT)lparam;
 			Entry* entry = (Entry*) dis->itemData;
 
-			if (dis->CtlID == IDW_TREE_LEFT)
+			if (dis->CtlID == IDW_TREE_LEFT) {
 				_left->draw_item(dis, entry);
-			else if (dis->CtlID == IDW_TREE_RIGHT)
+				return TRUE;
+			} else if (dis->CtlID == IDW_TREE_RIGHT) {
 				_right->draw_item(dis, entry);
+				return TRUE;
+			}
 
-			return TRUE;}
+			goto def;}
 
 		case WM_SIZE:
 			if (wparam != SIZE_MINIMIZED)
