@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.22 2003/10/06 19:22:42 chorns Exp $
+/* $Id: partlist.h,v 1.23 2004/08/21 19:30:12 hbirr Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -106,6 +106,7 @@ typedef struct _PARTLIST
   SHORT Bottom;
 
   SHORT Line;
+  SHORT Offset;
 
   ULONG TopDisk;
   ULONG TopPartition;
