@@ -10,7 +10,6 @@
  *	 Alex 16/07/2004 - Complete Rewrite
  */
 
-#define DBG
 #include <roscfg.h>
 #include <string.h>
 #include <msafd.h>
