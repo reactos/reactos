@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.68 2003/08/04 19:10:52 royce Exp $
+/* $Id: dc.c,v 1.69 2003/08/17 03:32:59 royce Exp $
  *
  * DC.C - Device context functions
  *
@@ -76,34 +76,29 @@ func_type STDCALL  func_name( HDC hdc ) \
  */
 #define DC_GET_VAL_EX( func_name, ret_x, ret_y, type ) \
 BOOL STDCALL  func_name( HDC hdc, LP##type pt ) \
-{                                   \
-  PDC  dc = DC_HandleToPtr( hdc );  \
-  if (!dc)                          \
-  {                                 \
-    return FALSE;                   \
-  }                                 \
-  ((LPPOINT)pt)->x = dc->ret_x;     \
-  ((LPPOINT)pt)->y = dc->ret_y;     \
-  DC_ReleasePtr( hdc );				\
-  return  TRUE;                     \
+{                                  \
+  PDC dc = DC_HandleToPtr ( hdc ); \
+  if (!dc)                         \
+    return FALSE;                  \
+  ((LPPOINT)pt)->x = dc->ret_x;    \
+  ((LPPOINT)pt)->y = dc->ret_y;    \
+  DC_ReleasePtr ( hdc );           \
+  return TRUE;                     \
 }
 
 #define DC_SET_MODE( func_name, dc_field, min_val, max_val ) \
 INT STDCALL  func_name( HDC hdc, INT mode ) \
 {                                           \
   INT  prevMode;                            \
-  PDC  dc = DC_HandleToPtr( hdc );          \
-  if(!dc)                                   \
-  {                                         \
-    return 0;                               \
-  }                                         \
+  PDC  dc;                                  \
   if ((mode < min_val) || (mode > max_val)) \
-  {                                         \
     return 0;                               \
-  }                                         \
+  dc = DC_HandleToPtr ( hdc );              \
+  if ( !dc )                                \
+    return 0;                               \
   prevMode = dc->dc_field;                  \
   dc->dc_field = mode;                      \
-  DC_ReleasePtr( hdc );						\
+  DC_ReleasePtr ( hdc );                    \
   return prevMode;                          \
 }
 
@@ -133,14 +128,15 @@ W32kCreateCompatableDC(HDC  hDC)
   if (OrigDC == NULL)
   {
     hNewDC = DC_AllocDC(L"DISPLAY");
-	if( hNewDC )
-		NewDC = DC_HandleToPtr( hNewDC );
+    if( hNewDC )
+      NewDC = DC_HandleToPtr( hNewDC );
   }
-  else {
+  else
+  {
     /*  Allocate a new DC based on the original DC's device  */
     hNewDC = DC_AllocDC(OrigDC->DriverName);
-	if( hNewDC )
-		NewDC = DC_HandleToPtr( hNewDC );
+    if( hNewDC )
+      NewDC = DC_HandleToPtr( hNewDC );
   }
 
   if (NewDC == NULL)
@@ -152,8 +148,11 @@ W32kCreateCompatableDC(HDC  hDC)
   NewDC->hSelf = NewDC;
 
   /* FIXME: Should this DC request its own PDEV?  */
-  if(OrigDC == NULL) {
-  } else {
+  if(OrigDC == NULL)
+  {
+  }
+  else
+  {
     NewDC->PDev = OrigDC->PDev;
     NewDC->DMW = OrigDC->DMW;
     memcpy(NewDC->FillPatternSurfaces,
@@ -164,9 +163,12 @@ W32kCreateCompatableDC(HDC  hDC)
   }
 
   /* DriverName is copied in the AllocDC routine  */
-  if(OrigDC == NULL) {
+  if(OrigDC == NULL)
+  {
     NewDC->DeviceDriver = DRIVER_FindMPDriver(NewDC->DriverName);
-  } else {
+  }
+  else
+  {
     NewDC->DeviceDriver = OrigDC->DeviceDriver;
     NewDC->wndOrgX = OrigDC->wndOrgX;
     NewDC->wndOrgY = OrigDC->wndOrgY;
