@@ -1,4 +1,5 @@
-/*
+/* $Id: regcmds.c,v 1.4 2003/01/07 18:06:16 robd Exp $
+ *
  *  ReactOS regedit
  *
  *  regcmds.c
@@ -24,17 +25,13 @@
 
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
-#ifndef WIN32_REGDBG
 #include <tchar.h>
-#else
-#ifndef __GNUC__
-#include <tchar.h>
-#endif
-#define _tfopen     _wfopen
-#include <memory.h>
-#endif
 #include <stdio.h>
+
+#ifdef WIN32_REGDBG
+#else
 #include <ctype.h>
+#endif
 
 #include "regproc.h"
 
@@ -58,6 +55,7 @@ static char *usage =
 "Switches:\n"
 "    /E - exports contents of the specified registry key to the specified\n"
 "	file. Exports the whole registry if no key is specified.\n"
+"    /P - same as /E (export) however prints output to console.\n"
 "    /D - deletes specified registry key\n"
 "    /S - silent execution, can be used with any other switch.\n"
 "	The only existing mode, exists for compatibility with Windows regedit.\n"
@@ -76,7 +74,7 @@ static char *usage =
 "command-line interface only.\n";
 
 typedef enum {
-    ACTION_UNDEF, ACTION_ADD, ACTION_EXPORT, ACTION_DELETE
+    ACTION_UNDEF, ACTION_ADD, ACTION_EXPORT, ACTION_DELETE, ACTION_PRINT
 } REGEDIT_ACTION;
 
 /**
@@ -95,6 +93,68 @@ void error_unknown_switch(char chu, char *s)
                "in switch specification\n", *(s - 1));
     }
     //exit(1);
+}
+
+BOOL PerformRegAction(REGEDIT_ACTION action, LPSTR s)
+{
+    TCHAR filename[MAX_PATH];
+    TCHAR reg_key_name[KEY_MAX_LEN];
+
+    switch (action) {
+    case ACTION_ADD:
+        get_file_name(&s, filename, MAX_PATH);
+        if (!filename[0]) {
+            printf("No file name is specified\n%s", usage);
+            return FALSE;
+            //exit(1);
+        }
+        while (filename[0]) {
+            if (!import_registry_file(filename)) {
+                perror("");
+                printf("Can't open file \"%s\"\n", filename);
+                return FALSE;
+                //exit(1);
+            }
+            get_file_name(&s, filename, MAX_PATH);
+        }
+        break;
+    case ACTION_DELETE:
+        get_file_name(&s, reg_key_name, KEY_MAX_LEN);
+        if (!reg_key_name[0]) {
+            printf("No registry key is specified for removal\n%s", usage);
+            return FALSE;
+            //exit(1);
+        }
+        delete_registry_key(reg_key_name);
+        break;
+    case ACTION_EXPORT:
+        filename[0] = '\0';
+        get_file_name(&s, filename, MAX_PATH);
+        if (!filename[0]) {
+            printf("No file name is specified\n%s", usage);
+            return FALSE;
+            //exit(1);
+        }
+        if (s[0]) {
+            get_file_name(&s, reg_key_name, KEY_MAX_LEN);
+            export_registry_key(filename, reg_key_name);
+        } else {
+            export_registry_key(filename, NULL);
+        }
+        break;
+    case ACTION_PRINT:
+        if (s[0]) {
+            get_file_name(&s, reg_key_name, KEY_MAX_LEN);
+            export_registry_key(NULL, reg_key_name);
+        } else {
+            export_registry_key(NULL, NULL);
+        }
+        break;
+    default:
+        printf("Unhandled action!\n");
+        return FALSE;
+    }
+    return TRUE;
 }
 
 BOOL ProcessCmdLine(LPSTR lpCmdLine)
@@ -121,6 +181,9 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
                     break;
                 case 'E':
                     action = ACTION_EXPORT;
+                    break;
+                case 'P':
+                    action = ACTION_PRINT;
                     break;
                 case '?':
                     printf(usage);
@@ -166,66 +229,5 @@ BOOL ProcessCmdLine(LPSTR lpCmdLine)
     if (action == ACTION_UNDEF) {
         action = ACTION_ADD;
     }
-
-    switch (action) {
-    case ACTION_ADD:
-    {
-        TCHAR filename[MAX_PATH];
-        FILE *reg_file;
-        get_file_name(&s, filename, MAX_PATH);
-        if (!filename[0]) {
-            printf("No file name is specified\n%s", usage);
-            return FALSE;
-            //exit(1);
-        }
-        while (filename[0]) {
-            reg_file = _tfopen(filename, _T("r"));
-            if (reg_file) {
-                processRegLines(reg_file, doSetValue);
-            } else {
-                perror("");
-                printf("Can't open file \"%s\"\n", filename);
-                return FALSE;
-                //exit(1);
-            }
-            get_file_name(&s, filename, MAX_PATH);
-        }
-        break;
-    }
-    case ACTION_DELETE:
-    {
-        TCHAR reg_key_name[KEY_MAX_LEN];
-        get_file_name(&s, reg_key_name, KEY_MAX_LEN);
-        if (!reg_key_name[0]) {
-            printf("No registry key is specified for removal\n%s", usage);
-            return FALSE;
-            //exit(1);
-        }
-        delete_registry_key(reg_key_name);
-        break;
-    }
-    case ACTION_EXPORT:
-    {
-        TCHAR filename[MAX_PATH];
-        filename[0] = '\0';
-        get_file_name(&s, filename, MAX_PATH);
-        if (!filename[0]) {
-            printf("No file name is specified\n%s", usage);
-            return FALSE;
-            //exit(1);
-        }
-        if (s[0]) {
-            TCHAR reg_key_name[KEY_MAX_LEN];
-            get_file_name(&s, reg_key_name, KEY_MAX_LEN);
-            export_registry_key(filename, reg_key_name);
-        } else {
-            export_registry_key(filename, NULL);
-        }
-        break;
-    }
-    default:
-        printf("Unhandled action!\n");
-        return FALSE;
-    }
-    return TRUE;
+    return PerformRegAction(action, s);
 }

@@ -24,23 +24,22 @@ PATH_TO_TOP = ..
 
 TARGET = regedit
 
-BASE_CFLAGS = -DGCC -D_WIN32_IE=0x0400
+BASE_CFLAGS = -D_WIN32_IE=0x0400
 
-RCFLAGS = -DGCC -D_WIN32_IE=0x0400
+RCFLAGS = -D_WIN32_IE=0x0400
 
-
-OBJS =	framewnd.o \
+OBJS =	about.o \
         childwnd.o \
-        listview.o \
-        treeview.o \
-        about.o \
-        trace.o \
+        framewnd.o \
         hex_str.o \
+        listview.o \
+        main.o \
 	regcmds.o \
 	regproc.o \
-        main.o
+        treeview.o \
+        trace.o
 
-LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
+LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32 -lcomdlg32
 
 all:	$(TARGET).exe
 

@@ -24,7 +24,6 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
@@ -93,7 +92,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             {
                 unsigned int i;
                 LPTSTR pData = (LPTSTR)ValBuf;
-                LPTSTR strBinary = malloc(dwCount * sizeof(TCHAR) * 3 + 1);
+                LPTSTR strBinary = HeapAlloc(GetProcessHeap(), 0, dwCount * sizeof(TCHAR) * 3 + 1);
                 memset(strBinary, _T(' '), dwCount * sizeof(TCHAR) * 3);
                 strBinary[dwCount * sizeof(TCHAR) * 3] = _T('\0');
                 for (i = 0; i < dwCount; i++) {
@@ -104,7 +103,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
                     *pShort = Byte2Hex(*(pData+i));
                 }
                 ListView_SetItemText(hwndLV, index, 2, strBinary);
-                free(strBinary);
+                HeapFree(GetProcessHeap(), 0, strBinary);
             }
             break;
         default:
@@ -353,9 +352,9 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR keyPath)
 #define BUF_HEAD_SPACE 2 // TODO: check why this is required with ROS ???
 
             if (errCode == ERROR_SUCCESS) {
-                TCHAR* ValName = malloc(++max_val_name_len * sizeof(TCHAR) + BUF_HEAD_SPACE);
+                TCHAR* ValName = HeapAlloc(GetProcessHeap(), 0, ++max_val_name_len * sizeof(TCHAR) + BUF_HEAD_SPACE);
                 DWORD dwValNameLen = max_val_name_len;
-                BYTE* ValBuf = malloc(++max_val_size/* + BUF_HEAD_SPACE*/);
+                BYTE* ValBuf = HeapAlloc(GetProcessHeap(), 0, ++max_val_size/* + BUF_HEAD_SPACE*/);
                 DWORD dwValSize = max_val_size;
                 DWORD dwIndex = 0L;
                 DWORD dwValType;
@@ -371,10 +370,8 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR keyPath)
                     dwValType = 0L;
                     ++dwIndex;
                 }
-
-                free(ValBuf);
-                free(ValName);
-
+                HeapFree(GetProcessHeap(), 0, ValBuf);
+                HeapFree(GetProcessHeap(), 0, ValName);
             }
             //ListView_SortItemsEx(hwndLV, CompareFunc, hwndLV);
 //            SendMessage(hwndLV, LVM_SORTITEMSEX, (WPARAM)CompareFunc, (LPARAM)hwndLV);

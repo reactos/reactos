@@ -2,20 +2,17 @@
 // Microsoft Developer Studio generated include file.
 // Used by regedit.rc
 //
-
 #define ID_REGISTRY_MENU                0
 #define ID_EDIT_MENU                    1
 #define ID_VIEW_MENU                    2
 #define ID_FAVOURITES_MENU              3
 #define ID_HELP_MENU                    4
 #define ID_EDIT_NEW_MENU                5
-
 #define IDS_LIST_COLUMN_FIRST           91
 #define IDS_LIST_COLUMN_NAME            91
 #define IDS_LIST_COLUMN_TYPE            92
 #define IDS_LIST_COLUMN_DATA            93
 #define IDS_LIST_COLUMN_LAST            93
-
 #define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
 #define IDI_REGEDIT                     107
@@ -25,9 +22,10 @@
 #define IDR_REGEDIT_MENU                130
 #define IDD_DIALOG1                     131
 #define IDB_OPEN_FILE                   132
+#define IDD_DIALOG2                     132
 #define IDB_CLOSED_FILE                 133
 #define IDB_ROOT                        134
-
+#define IDC_LICENSE_EDIT                1029
 #define ID_REGISTRY_EXIT                32770
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772
 #define ID_FAVOURITES_REMOVEFAVOURITE   32773
@@ -87,17 +85,14 @@
 #define ID_REGISTRY_PRINTSUBTREE        32832
 #define ID_REGISTRY_PRINTERSETUP        32833
 #define ID_REGISTRY_SAVESUBTREEAS       32834
-
-#define IDC_LICENSE_EDIT                1029
 #define IDS_LICENSE                     32835
-
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        132
+#define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32836
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110

@@ -45,6 +45,9 @@ HINSTANCE hInst;
 HWND hFrameWnd;
 HWND hStatusBar;
 HMENU hMenuFrame;
+UINT nClipboardFormat;
+LPCTSTR strClipboardFormat = _T("TODO: SET CORRECT FORMAT");
+
 
 TCHAR szTitle[MAX_LOADSTRING];
 TCHAR szFrameClass[MAX_LOADSTRING];
@@ -106,6 +109,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     // Initialize the Windows Common Controls DLL
     InitCommonControls();
+
+    nClipboardFormat = RegisterClipboardFormat(strClipboardFormat);
+    if (nClipboardFormat == 0) {
+        DWORD dwError = GetLastError();
+    }
 
     hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
                     WS_OVERLAPPEDWINDOW | WS_EX_CLIENTEDGE,
