@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.28 2004/12/15 12:29:36 ekohl Exp $
+; $Id$
 ;
 ; advapi32.def
 ;
@@ -31,10 +31,10 @@ BackupEventLogA@8
 BackupEventLogW@8
 ;BuildAccessRequestA
 ;BuildAccessRequestW
-;BuildExplicitAccessWithNameA@20
-;BuildExplicitAccessWithNameW@20
-;BuildImpersonateExplicitAccessWithNameA@24
-;BuildImpersonateExplicitAccessWithNameW@24
+BuildExplicitAccessWithNameA@20
+BuildExplicitAccessWithNameW@20
+BuildImpersonateExplicitAccessWithNameA@24
+BuildImpersonateExplicitAccessWithNameW@24
 BuildImpersonateTrusteeA@8
 BuildImpersonateTrusteeW@8
 ;BuildSecurityDescriptorA@36
