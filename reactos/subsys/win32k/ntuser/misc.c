@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.9 2003/08/21 20:29:43 weiden Exp $
+/* $Id: misc.c,v 1.10 2003/08/24 18:52:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -14,6 +14,7 @@
 #include <include/window.h>
 #include <include/painting.h>
 #include <include/dce.h>
+#include <include/winsta.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -103,7 +104,11 @@ NtUserCallTwoParam(
   DWORD Param2,
   DWORD Routine)
 {
+  NTSTATUS Status;
   PWINDOW_OBJECT WindowObject;
+  PWINSTATION_OBJECT WinStaObject;
+  PPOINT Pos;
+  
   switch(Routine)
   {
     case TWOPARAM_ROUTINE_ENABLEWINDOW:
@@ -136,6 +141,39 @@ NtUserCallTwoParam(
       WindowObject->ContextHelpId = Param2;
       
       IntReleaseWindowObject(WindowObject);
+      return (DWORD)TRUE;
+      
+    case TWOPARAM_ROUTINE_CURSORPOSITION:
+      if(!Param1)
+        return (DWORD)FALSE;
+      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                           KernelMode,
+                                           0,
+                                           &WinStaObject);
+      if (!NT_SUCCESS(Status))
+        return (DWORD)FALSE;
+        
+      Pos = (PPOINT)Param1;
+      
+      if(Param2)
+      {
+        /* set cursor position */
+        /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
+        WinStaObject->SystemCursor.x = Pos->x;
+        WinStaObject->SystemCursor.y = Pos->y;
+        
+        /* FIXME move cursor */
+      }
+      else
+      {
+        /* get cursor position */
+        /* FIXME - check if process has WINSTA_READATTRIBUTES */
+        Pos->x = WinStaObject->SystemCursor.x;
+        Pos->y = WinStaObject->SystemCursor.y;
+      }
+      
+      ObDereferenceObject(WinStaObject);
+      
       return (DWORD)TRUE;
 
   }

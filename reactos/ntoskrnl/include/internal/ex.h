@@ -8,6 +8,9 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 
+/* one systemcursor for custom cursors */
+#define SYSCURSORCOUNT (14 + 1)
+
 typedef struct _CURSORCLIP_INFO
 {
   BOOL IsClipped;
@@ -17,13 +20,23 @@ typedef struct _CURSORCLIP_INFO
   UINT Bottom;
 } CURSORCLIP_INFO, *PCURSORCLIP_INFO;
 
+typedef struct _SYSCURSOR
+{
+  HANDLE hCursor;
+  LONG cx, cy;
+  LONG hx, hy;
+  PVOID AndImage;
+  PVOID XorImage;
+} SYSCURSOR, *PSYSCURSOR;
+
 typedef struct _SYSTEM_CURSORINFO
 {
-  BOOL Visible;
-  HANDLE hCursor;
+  BOOL Enabled;
+  UINT CurrentCursor;
   LONG x, y;
-  LONG cx, cy;
+  BOOL SafetySwitch, SafetySwitch2;
   CURSORCLIP_INFO CursorClipInfo;
+  SYSCURSOR SystemCursors[SYSCURSORCOUNT];
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
 typedef struct _WINSTATION_OBJECT

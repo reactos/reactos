@@ -15,6 +15,7 @@
   ((IoGetCurrentProcess()->Win32WindowStation) = (PVOID)(WinSta))
   
 WINSTATION_OBJECT *InputWindowStation;
+//FAST_MUTEX InputWindowStationLock;
 
 
 NTSTATUS FASTCALL

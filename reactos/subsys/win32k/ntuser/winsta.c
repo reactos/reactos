@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.27 2003/08/24 01:12:15 weiden Exp $
+/* $Id: winsta.c,v 1.28 2003/08/24 18:52:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -352,13 +352,19 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
       return((HWINSTA)0);
     }
     
-  WinStaObject->SystemCursor.Visible = TRUE;
-  WinStaObject->SystemCursor.hCursor = (HANDLE)0;
-  WinStaObject->SystemCursor.x = 0;
-  WinStaObject->SystemCursor.y = 0;
-  WinStaObject->SystemCursor.cx = 32;
-  WinStaObject->SystemCursor.cy = 32;
+  WinStaObject->SystemCursor.Enabled = TRUE;
+  WinStaObject->SystemCursor.CurrentCursor = 0;
+  WinStaObject->SystemCursor.x = (LONG)-1;
+  WinStaObject->SystemCursor.y = (LONG)-1;
+  WinStaObject->SystemCursor.SafetySwitch = FALSE;
+  WinStaObject->SystemCursor.SafetySwitch2 = FALSE;
   WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
+  
+  WinStaObject->SystemCursor.SystemCursors[0].hCursor = (HANDLE)1;
+  WinStaObject->SystemCursor.SystemCursors[0].cx = 32;
+  WinStaObject->SystemCursor.SystemCursors[0].cy = 32;
+  
+  /* FIXME setup system cursors */
   
   DPRINT("Window station successfully created (%wZ)\n", &WindowStationName);
   

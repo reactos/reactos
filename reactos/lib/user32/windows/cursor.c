@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.9 2003/08/24 01:12:15 weiden Exp $
+/* $Id: cursor.c,v 1.10 2003/08/24 18:52:18 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -111,13 +111,28 @@ GetCursorInfo(PCURSORINFO pci)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetCursorPos(LPPOINT lpPoint)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  POINT pos;
+  WINBOOL res;
+  /* Windows doesn't check if lpPoint == NULL, we do */
+  if(!lpPoint)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  res = (WINBOOL)NtUserCallTwoParam((DWORD)&pos, (DWORD)FALSE, 
+                                    TWOPARAM_ROUTINE_CURSORPOSITION);
+  if(res)
+  {
+    lpPoint->x = pos.x;
+    lpPoint->y = pos.y;
+  }
+  return res;
 }
 
 
@@ -203,14 +218,17 @@ SetCursor(HCURSOR hCursor)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 SetCursorPos(int X,
 	     int Y)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  POINT pos;
+  pos.x = (LONG)X;
+  pos.y = (LONG)Y;
+  return (WINBOOL)NtUserCallTwoParam((DWORD)&pos, (DWORD)TRUE, 
+                                     TWOPARAM_ROUTINE_CURSORPOSITION);
 }
 
 

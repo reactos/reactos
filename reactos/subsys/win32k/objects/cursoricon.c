@@ -228,6 +228,8 @@ STDCALL
 NtUserClipCursor(
   RECT *lpRect)
 {
+  /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
+  
   PWINSTATION_OBJECT WinStaObject;
 
   NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
@@ -248,6 +250,8 @@ NtUserClipCursor(
     WinStaObject->SystemCursor.CursorClipInfo.Top = lpRect->top;
     WinStaObject->SystemCursor.CursorClipInfo.Right = lpRect->right;
     WinStaObject->SystemCursor.CursorClipInfo.Bottom = lpRect->bottom;
+    
+    /* FIXME - update cursor position in case the cursor is not within the rectangle */
   }
   else
     WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
@@ -297,6 +301,8 @@ STDCALL
 NtUserGetClipCursor(
   RECT *lpRect)
 {
+  /* FIXME - check if process has WINSTA_READATTRIBUTES */
+  
   PWINSTATION_OBJECT WinStaObject;
   
   if(!lpRect)
