@@ -28,19 +28,6 @@
 #ifndef _PCNET_H_
 #define _PCNET_H_
 
-/* FIXME: We should use a general way to do this for all drivers. */
-#ifdef __GNUC__
-#define memcpy(a,b,c) __builtin_memcpy(a,b,c)
-#define memset(a,b,c) __builtin_memset(a,b,c)
-#undef RtlFillMemory
-#define RtlFillMemory(a,b,c) __builtin_memset(a,b,c)
-#undef RtlZeroMemory
-#define RtlZeroMemory(a,b) __builtin_memset(a,0,b)
-#endif
-
-#define NDIS_MAJOR_VERSION 5
-#define NDIS_MINOR_VERSION 0
-
 /* statistics struct */
 typedef struct _ADAPTER_STATS
 {
@@ -52,6 +39,8 @@ typedef struct _ADAPTER_STATS
   ULONG XmtExcessiveDefferals;
   ULONG XmtBufferUnderflows;
   ULONG XmtBufferErrors;
+  ULONG XmtOneRetry;
+  ULONG XmtMoreThanOneRetry;
   ULONG RcvGoodFrames;
   ULONG RcvBufferErrors;
   ULONG RcvCrcErrors;
@@ -62,12 +51,16 @@ typedef struct _ADAPTER_STATS
 /* adapter struct */
 typedef struct _ADAPTER 
 {
+  NDIS_SPIN_LOCK Lock;
+  
   NDIS_HANDLE MiniportAdapterHandle;
   ULONG Flags;
   ULONG InterruptVector;
   ULONG IoBaseAddress;
   PVOID PortOffset;
   NDIS_MINIPORT_INTERRUPT InterruptObject;
+  NDIS_MEDIA_STATE MediaState;
+  NDIS_MINIPORT_TIMER MediaDetectionTimer;
   ULONG CurrentReceiveDescriptorIndex;
   ULONG CurrentPacketFilter;
   ULONG CurrentLookaheadSize;
@@ -125,10 +118,23 @@ MiniportSetInformation(
     OUT PULONG BytesRead,
     OUT PULONG BytesNeeded);
 
+NDIS_STATUS
+STDCALL
+MiSetMulticast(
+    PADAPTER Adapter,
+    UCHAR *Addresses,
+    UINT AddressCount);
+
+NDIS_MEDIA_STATE
+STDCALL
+MiGetMediaState(PADAPTER Adapter);
+
 /* operational constants */
 #define NUMBER_OF_BUFFERS     0x20
 #define LOG_NUMBER_OF_BUFFERS 5         /* log2(NUMBER_OF_BUFFERS) */
 #define BUFFER_SIZE           0x600
+#define MAX_MULTICAST_ADDRESSES 32
+#define MEDIA_DETECTION_INTERVAL 5000
 
 /* flags */
 #define RESET_IN_PROGRESS 0x1
