@@ -1,0 +1,31 @@
+# $Id: Makefile.ros-template,v 1.1 2004/12/20 01:08:18 greatlrd Exp $
+
+TARGET_NAME = dxdiagn
+
+TARGET_BASE = $(TARGET_BASE_LIB_DXDIAGN)
+
+TARGET_OBJECTS = @C_SRCS@
+
+TARGET_CFLAGS = @EXTRADEFS@ -DNONAMLESSUNION -D__REACTOS__ -Wno-error
+
+TARGET_SDKLIBS = wine.a @IMPORTS@ ole32.a wine_uuid.a ntdll.a  dxguid.a strmiids.a
+
+
+TARGET_BASE = $(TARGET_BASE_LIB_DSOUND)
+
+TARGET_RC_SRCS = @RC_SRCS@
+TARGET_RC_BINSRC = @RC_BINSRC@
+TARGET_RC_BINARIES = @RC_BINARIES@
+
+default: all
+
+authors.c:
+ifeq ($(HOST),mingw32-linux)
+	echo 'const char * const SHELL_Authors[] = { "WINE team", "ReactOS team", 0 };' > authors.c
+else
+	echo const char * const SHELL_Authors[] = { "WINE team", "ReactOS team", 0 }; > authors.c
+endif
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk
