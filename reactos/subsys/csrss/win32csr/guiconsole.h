@@ -1,4 +1,4 @@
-/* $Id: guiconsole.h,v 1.2 2004/01/11 17:31:16 gvg Exp $
+/* $Id: guiconsole.h,v 1.3 2004/03/07 21:00:11 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,7 +10,7 @@
 
 extern NTSTATUS FASTCALL GuiInitConsole(PCSRSS_CONSOLE Console);
 extern VOID STDCALL GuiConsoleDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT Region);
-extern VOID STDCALL GuiConsoleCopyRegion(PCSRSS_CONSOLE Console,
+extern VOID STDCALL GuiConsoleCopyRegion(HWND hWnd,
                                          RECT *Source,
                                          RECT *Dest);
 extern VOID STDCALL GuiConsoleChangeTitle(PCSRSS_CONSOLE Console);
