@@ -1,4 +1,4 @@
-/* $Id: button.c,v 1.3 2003/06/23 10:10:51 rcampbell Exp $
+/* $Id: button.c,v 1.4 2003/06/27 17:49:07 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -399,7 +399,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             else style &= ~WS_TABSTOP;
             SetWindowLongA( hWnd, GWL_STYLE, style );
         }
-        if ((state & 3) != wParam)
+        if (((WPARAM) state & 3) != wParam)
         {
             set_button_state( hWnd, (state & ~3) | wParam );
             paint_button( hWnd, btn_type, ODA_SELECT );

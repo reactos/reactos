@@ -1,3 +1,8 @@
+2003-06-27  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* lib/user32/controls/button.c (ButtonWndProc_comm): Fix unsigned/signed
+	warning.
+
 2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* include/ddk/dbgfuncs.h: Move ...
