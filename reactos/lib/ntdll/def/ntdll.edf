@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.117 2004/08/11 09:30:23 ekohl Exp $
+; $Id: ntdll.edf,v 1.118 2004/09/10 23:29:18 sedwards Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -32,10 +32,6 @@ DbgUiIssueRemoteBreakin=DbgUiIssueRemoteBreakin@4
 DbgUiRemoteBreakin=DbgUiRemoteBreakin@0
 DbgUiWaitStateChange=DbgUiWaitStateChange@8
 DbgUserBreakPoint=DbgUserBreakPoint@0
-InterlockedIncrement=InterlockedIncrement@4
-InterlockedDecrement=InterlockedDecrement@4
-InterlockedExchange=InterlockedExchange@8
-InterlockedCompareExchange=InterlockedCompareExchange@12
 KiRaiseUserExceptionDispatcher=KiRaiseUserExceptionDispatcher@0
 KiUserApcDispatcher=KiUserApcDispatcher@20
 KiUserCallbackDispatcher=KiUserCallbackDispatcher@12

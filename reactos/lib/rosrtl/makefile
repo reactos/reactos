@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2004/08/11 08:28:13 weiden Exp $
+# $Id: makefile,v 1.15 2004/09/10 23:29:07 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -25,6 +25,7 @@ REGISTRY_OBJECTS = \
 
 MISC_OBJECTS = \
  misc/devmode.o \
+ misc/intrlck.o \
  misc/logfont.o \
  misc/qsort.o
 
