@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.3 2004/07/29 04:09:06 arty Exp $
+/* $Id: main.c,v 1.4 2004/07/29 04:10:53 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -50,8 +50,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     ULONG EaLength;
     PWCHAR EaInfoValue;
     UINT Disposition, i;
-
-    __asm("int3");
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
