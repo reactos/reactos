@@ -19,6 +19,8 @@
 #include <internal/ctype.h>
 #include <internal/string.h>
 
+#include <ddk/ntddk.h>
+
 unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
 {
 	unsigned long result = 0,value;
@@ -117,13 +119,14 @@ static char * number(char * str, long num, int base, int size, int precision
 			*str++ = ' ';
 	if (sign)
 		*str++ = sign;
-	if (type & SPECIAL)
-		if (base==8)
+	if (type & SPECIAL) {
+		if (base==8) {
 			*str++ = '0';
-		else if (base==16) {
+		} else if (base==16) {
 			*str++ = '0';
 			*str++ = digits[33];
 		}
+        }
 	if (!(type & LEFT))
 		while (size-- > 0)
 			*str++ = c;
@@ -143,7 +146,8 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 	int i, base;
 	char * str;
 	const char *s;
-        const short int* sw;
+        const short int *sw;
+        PUNICODE_STRING pus;
 
 	int flags;		/* flags to number() */
 
@@ -243,6 +247,25 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 //		   CHECKPOINT;
 		   continue;
 		   
+		 case 'W':
+                   pus = va_arg(args, PUNICODE_STRING);
+                   if (pus == NULL || pus->Length > pus->MaximumLength)
+                     {
+                       s = "<NULL>";
+                       while ((*s) != 0)
+                         {
+                           *str++ = *s++;
+                         }
+                     }
+                   else
+                     {
+                       for (i = 0; i < pus->Length; i++)
+                         {
+                           *str++ = (char)(pus->Buffer[i]);
+                         }
+                     }
+		   continue;
+		   
 		case 's':
 			s = va_arg(args, char *);
 			if (!s)
@@ -310,17 +333,19 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 				--fmt;
 			continue;
 		}
-		if (qualifier == 'l')
+		if (qualifier == 'l') {
 			num = va_arg(args, unsigned long);
-		else if (qualifier == 'h')
-			if (flags & SIGN)
+		} else if (qualifier == 'h') {
+			if (flags & SIGN) {
 				num = va_arg(args, short);
-			else
+			} else {
 				num = va_arg(args, unsigned short);
-		else if (flags & SIGN)
+                        }
+		} else if (flags & SIGN) {
 			num = va_arg(args, int);
-		else
+		} else {
 			num = va_arg(args, unsigned int);
+                }
 		str = number(str, num, base, field_width, precision, flags);
 	}
 	*str = '\0';

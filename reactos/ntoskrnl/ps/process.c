@@ -15,7 +15,7 @@
 #include <internal/mm.h>
 #include <internal/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/

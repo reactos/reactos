@@ -390,6 +390,7 @@ rostitle db '',0
 ;
 ;
 loading_msg db 'Loading: ',0
+death_msg: db 'death', 0
 
 filelength_lo dw 0
 filelength_hi dw 0

@@ -162,7 +162,7 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
      }
    
    ObLookupObject(ObjectAttributes->RootDirectory,path,
-		  &hdr->Parent,&Ignored);
+		  &hdr->Parent,&Ignored, 0L);
 
    /*
     * Initialize the object header

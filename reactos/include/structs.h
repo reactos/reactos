@@ -32,10 +32,24 @@
 #ifndef _GNU_H_WINDOWS32_STRUCTURES
 #define _GNU_H_WINDOWS32_STRUCTURES
 
+#ifdef COMPILER_LARGE_INTEGERS
+
+typedef long long int LARGE_INTEGER, *PLARGE_INTEGER;
+typedef unsigned long long int ULARGE_INTEGER, *PULARGE_INTEGER;
+
+#else
+
 typedef struct _LARGE_INTEGER { 
   DWORD LowPart; 
   LONG  HighPart; 
 } LARGE_INTEGER, *PLARGE_INTEGER; 
+
+typedef struct _ULARGE_INTEGER { 
+  DWORD LowPart; 
+  DWORD HighPart; 
+} ULARGE_INTEGER, *PULARGE_INTEGER; 
+
+#endif
 
 typedef struct _LIST_ENTRY { 
   struct _LIST_ENTRY *Flink; 
@@ -128,11 +142,6 @@ typedef struct _CRITICAL_SECTION {
     HANDLE LockSemaphore;
     DWORD Reserved;
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
-
-typedef struct _ULARGE_INTEGER { 
-  DWORD LowPart; 
-  DWORD HighPart; 
-} ULARGE_INTEGER, *PULARGE_INTEGER; 
 
 typedef struct _GENERIC_MAPPING { 
   ACCESS_MASK GenericRead; 

@@ -20,7 +20,7 @@ extern "C"
 
 #include <windows.h>
 
-#define QUAD_PART(LI)  (*(LONGLONG *)(&LI))
+#include <ddk/li.h>
 
 #include <ddk/status.h>
 #include <ddk/ntdef.h>

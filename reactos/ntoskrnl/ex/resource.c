@@ -122,10 +122,14 @@ VOID ExReleaseResourceForThreadLite(PERESOURCE Resource,
 BOOLEAN ExTryToAcquireResourceExclusiveLite(PERESOURCE Resource)
 {
    LARGE_INTEGER timeout;
-   timeout.HighPart = 0;
-   timeout.LowPart = 0;
-   KeWaitForSingleObject(&Resource->ExclusiveWaiters,Executive,KernelMode,
-			 FALSE,&timeout);
+
+  SET_LARGE_INTEGER_HIGH_PART(timeout, 0);
+  SET_LARGE_INTEGER_LOW_PART(timeout, 0);
+  return KeWaitForSingleObject(&Resource->ExclusiveWaiters,
+                               Executive,
+                               KernelMode,
+                               FALSE, 
+                               &timeout) == STATUS_SUCCESS;
 }
 
 

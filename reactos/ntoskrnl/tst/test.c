@@ -18,7 +18,7 @@
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include <in.h>
@@ -531,8 +531,24 @@ TstTimer(void)
 
 }
 
+#if 0
+void TstDriverLoad(void)
+{
+  NTSTATUS Status;
+  UNICODE_STRING DriverName;
+
+  INIT_UNICODE_STRING(DriverName, "C:\\reactos\\system\\keyboard.o");
+  Status = LdrLoadDriver(DriverName);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
+    }
+}
+#endif
+
 void TstBegin()
 {
+//   TstDriverLoad();
    ExExecuteShell();
 //   TstFileRead();
 //   TstGeneralWrite();

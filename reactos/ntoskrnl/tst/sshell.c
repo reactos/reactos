@@ -16,7 +16,7 @@
 #include <internal/string.h>
 #include <internal/ctype.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 int ShellChangeDir(char* args);

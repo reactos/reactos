@@ -8,7 +8,7 @@ typedef DWORD *PDWORD;
 #endif
 
 #define IMAGE_DOS_MAGIC  0x54ad
-#define IMAGE_NT_MAGIC   0x00004550
+#define IMAGE_PE_MAGIC   0x00004550
 
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
     WORD   e_magic;                     // Magic number
@@ -613,11 +613,9 @@ typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
 #define IMAGE_SEPARATE_DEBUG_MISMATCH   0x8000  // when DBG was updated, the
                                                 // old checksum didn't match.
 
-
 //
 // End Image Format
 //
-
 
 #define SIZE_OF_NT_SIGNATURE	sizeof (DWORD)
 #define MAXRESOURCENAME 	13
@@ -646,13 +644,34 @@ typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
 			 sizeof (IMAGE_FILE_HEADER)	     +	\
 			 sizeof (IMAGE_OPTIONAL_HEADER)))
 
+typedef struct _IMAGE_IMPORT_MODULE_DIRECTORY
+{
+  DWORD    dwRVAFunctionNameList;
+  DWORD    dwUseless1;
+  DWORD    dwUseless2;
+  DWORD    dwRVAModuleName;
+  DWORD    dwRVAFunctionAddressList;
+} IMAGE_IMPORT_MODULE_DIRECTORY, *PIMAGE_IMPORT_MODULE_DIRECTORY;
 
-typedef struct tagImportDirectory
-    {
-    DWORD    dwRVAFunctionNameList;
-    DWORD    dwUseless1;
-    DWORD    dwUseless2;
-    DWORD    dwRVAModuleName;
-    DWORD    dwRVAFunctionAddressList;
-    }IMAGE_IMPORT_MODULE_DIRECTORY, * PIMAGE_IMPORT_MODULE_DIRECTORY;
+typedef struct _RELOCATION_DIRECTORY
+{
+    DWORD  VirtualAddress; /* adresse virtuelle du bloc ou se font les relocations */
+    DWORD   SizeOfBlock;    // taille de cette structure + des structures
+			// relocation_entry qui suivent (ces dernieres sont
+			// donc au nombre de (SizeOfBlock-8)/2
+} RELOCATION_DIRECTORY, *PRELOCATION_DIRECTORY;
+
+typedef struct _RELOCATION_ENTRY
+{
+    WORD    TypeOffset;
+	//	(TypeOffset >> 12) est le type
+	//	(TypeOffset&0xfff) est l'offset dans le bloc
+} RELOCATION_ENTRY, *PRELOCATION_ENTRY;
+
+#define	TYPE_RELOC_ABSOLUTE	0
+#define	TYPE_RELOC_HIGH		1
+#define	TYPE_RELOC_LOW		2
+#define	TYPE_RELOC_HIGHLOW	3
+#define	TYPE_RELOC_HIGHADJ	4
+#define	TYPE_RELOC_MIPS_JMPADDR	5
 

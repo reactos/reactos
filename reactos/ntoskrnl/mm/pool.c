@@ -12,7 +12,7 @@
 #include <ddk/ntddk.h>
 #include <internal/pool.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/

@@ -21,7 +21,8 @@
 #define SERIAL_PORT 0x03f8
 #define SERIAL_BAUD_RATE 19200
 #define SERIAL_LINE_CONTROL (SR_LCR_CS8 | SR_LCR_ST1 | SR_LCR_PNO)
-//#define NDEBUG
+
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/

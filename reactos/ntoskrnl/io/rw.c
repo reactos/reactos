@@ -93,13 +93,12 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    StackPtr->Parameters.Read.Length = Length;
    if (ByteOffset!=NULL)
    {
-        StackPtr->Parameters.Read.ByteOffset.LowPart = ByteOffset->LowPart;
-        StackPtr->Parameters.Read.ByteOffset.HighPart = ByteOffset->HighPart;
+        StackPtr->Parameters.Read.ByteOffset = *ByteOffset;
    }
    else
    {
-        StackPtr->Parameters.Read.ByteOffset.LowPart = 0;
-        StackPtr->Parameters.Read.ByteOffset.HighPart = 0;
+        SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Read.ByteOffset, 0);
+        SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 0);
    }
    if (Key!=NULL)
    {

@@ -201,11 +201,14 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
  * FUNCTION: Returns the physical address corresponding to a virtual address
  */
 {
-   PHYSICAL_ADDRESS p;
-        DPRINT("get_page_physical_address(vaddr %x)\n",vaddr);
-   p.HighPart = 0;
-   p.LowPart = PAGE_MASK(*get_page_entry((unsigned int)vaddr));
-   return(p);
+  PHYSICAL_ADDRESS p;
+
+  DPRINT("get_page_physical_address(vaddr %x)\n", vaddr);
+  SET_LARGE_INTEGER_HIGH_PART(p, 0);
+  SET_LARGE_INTEGER_LOW_PART(p, PAGE_MASK(
+    *get_page_entry((unsigned int) vaddr)));
+
+  return p;
 }
 
 BOOL is_page_present(unsigned int vaddr)

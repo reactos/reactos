@@ -117,8 +117,7 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
      }
    else
      {
-	Section->MaximumSize.HighPart = 0;
-	Section->MaximumSize.LowPart = 0xffffffff;
+        LARGE_INTEGER_QUAD_PART(Section->MaximumSize) = 0xffffffff;
      }
    Section->SectionPageProtection = SectionPageProtection;
    Status = ObReferenceObjectByHandle(FileHandle,
@@ -258,9 +257,9 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
 	return(Status);
      }
    
-   if ((*ViewSize) > Section->MaximumSize.LowPart)
+   if ((*ViewSize) > GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize))
      {
-	(*ViewSize) = Section->MaximumSize.LowPart;
+	(*ViewSize) = GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize);
      }
    
    MmCreateMemoryArea(UserMode,
@@ -271,7 +270,7 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
 		      Protect,
 		      &Result);
    Result->Data.SectionData.Section = Section;
-   Result->Data.SectionData.ViewOffset = SectionOffset->LowPart;
+   Result->Data.SectionData.ViewOffset = GET_LARGE_INTEGER_LOW_PART(*SectionOffset);
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
    DPRINT("Result->Data.SectionData.Section->FileObject %x\n",

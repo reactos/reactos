@@ -411,8 +411,9 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
      {
 	for (i=0;i<=(MemoryArea->Length/PAGESIZE);i++)
 	  {
-	     free_page(MmGetPhysicalAddress(MemoryArea->BaseAddress+
-					    (i*PAGESIZE)).LowPart,1);
+	     free_page(GET_LARGE_INTEGER_LOW_PART(
+               MmGetPhysicalAddress(MemoryArea->BaseAddress + (i*PAGESIZE))), 
+                       1);
 	  }
      }
    

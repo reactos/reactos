@@ -39,6 +39,11 @@ typedef struct _UNICODE_STRING
    PWSTR Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
+#define INIT_UNICODE_STRING(us, str)  \
+  ((us).Length = strlen((str)),  \
+   (us).MaximumLength = (us).Length,  \
+   (us).Buffer = (str), (us))
+
 typedef enum _SECTION_INHERIT {
     ViewShare = 1,
     ViewUnmap = 2

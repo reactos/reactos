@@ -89,6 +89,9 @@ objects/tst.o: $(TST_OBJECTS)
 objects/dbg.o: $(DBG_OBJECTS)
 	$(LD) -r $(DBG_OBJECTS) -o objects/dbg.o
 
+objects/ldr.o: $(LDR_OBJECTS)
+	$(LD) -r $(LDR_OBJECTS) -o objects/ldr.o
+
 objects/nt.o: $(NT_OBJECTS)
 	$(LD) -r $(NT_OBJECTS) -o objects/nt.o
 
@@ -98,8 +101,7 @@ objects/cc.o: $(CC_OBJECTS)
 OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
           objects/io.o objects/ob.o objects/ps.o objects/ex.o \
 	  objects/se.o objects/cm.o objects/tst.o objects/dbg.o\
-	  objects/nt.o objects/cc.o
-	 	  
+	  objects/nt.o objects/cc.o objects/ldr.o
 	  
 utils/export/export$(EXE_POSTFIX): utils/export/export.c
 	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)

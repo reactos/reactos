@@ -165,8 +165,8 @@ static NTSTATUS CbReadBlock(PDCCB Dccb, PCCB Ccb)
 	Ccb->Buffer=ExAllocatePool(NonPagedPool,Dccb->SectorSize);
      }
    
-   Offset.HighPart = 0;
-   Offset.LowPart = Ccb->BlockNr * Dccb->SectorSize;
+   SET_LARGE_INTEGER_HIGH_PART(Offset, 0);
+   SET_LARGE_INTEGER_LOW_PART(Offset, Ccb->BlockNr * Dccb->SectorSize);
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				      Dccb->DeviceObject,
@@ -206,8 +206,8 @@ static NTSTATUS CbWriteBlock(PDCCB Dccb, PCCB Ccb)
    NTSTATUS Status;
    KEVENT Event;
 
-   Offset.HighPart = 0;
-   Offset.LowPart = Ccb->BlockNr * Dccb->SectorSize;
+   SET_LARGE_INTEGER_HIGH_PART(Offset, 0);
+   SET_LARGE_INTEGER_LOW_PART(Offset, Ccb->BlockNr * Dccb->SectorSize);
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
 				      Dccb->DeviceObject,
@@ -231,7 +231,7 @@ static NTSTATUS CbWriteBlock(PDCCB Dccb, PCCB Ccb)
 
 PCCB CbFindModifiedCcb(PDCCB Dccb, PCCB Start)
 {
-   
+  UNIMPLEMENTED; 
 }
 
 static VOID CbDeleteAllCcbs(PDCCB Dccb)

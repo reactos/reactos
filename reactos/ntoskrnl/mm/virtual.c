@@ -107,9 +107,9 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
 	    MemoryArea,Address);
    
-   set_page(Address,0x7,get_free_page());
+   set_page((DWORD)Address,0x7,get_free_page());
    
-   Offset.LowPart = (Address - MemoryArea->BaseAddress) + 
+   LARGE_INTEGER_QUAD_PART(Offset) = (Address - MemoryArea->BaseAddress) + 
      MemoryArea->Data.SectionData.ViewOffset;
    
    DPRINT("MemoryArea->Data.SectionData.Section->FileObject %x\n",
@@ -193,7 +193,7 @@ asmlinkage int page_fault_handler(unsigned int cs,
 	break;
 	
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
-        if (MmSectionHandleFault(MemoryArea,cr2)==STATUS_SUCCESS)
+        if (MmSectionHandleFault(MemoryArea, (PVOID)cr2)==STATUS_SUCCESS)
 	  {
 	     stat=1;
 	  }
@@ -656,7 +656,7 @@ NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
    
    for (i=0; i<(NumberOfBytesToRead/PAGESIZE); i++)
      {
-	CurrentEntry = MmGetPageEntry(Process, BaseAddress + (i*PAGESIZE));
+	CurrentEntry = MmGetPageEntry(Process, (DWORD)BaseAddress + (i*PAGESIZE));
 	RtlCopyMemory(Buffer + (i*PAGESIZE),
 		      (PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)),
 		      PAGESIZE);
@@ -735,7 +735,7 @@ NTSTATUS STDCALL ZwWriteVirtualMemory(IN HANDLE ProcessHandle,
    
    for (i=0; i<(NumberOfBytesToWrite/PAGESIZE); i++)
      {
-	CurrentEntry = MmGetPageEntry(Process, BaseAddress + (i*PAGESIZE));
+	CurrentEntry = MmGetPageEntry(Process, (DWORD)BaseAddress + (i*PAGESIZE));
 	RtlCopyMemory((PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)),
 		      Buffer + (i*PAGESIZE),
 		      PAGESIZE);

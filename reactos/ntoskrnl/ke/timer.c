@@ -65,11 +65,11 @@ static unsigned int loops_per_microsecond = 100;
 
 /* FUNCTIONS **************************************************************/
 
-void KeCalibrateTimerLoop()
+VOID KeCalibrateTimerLoop(VOID)
 {
    unsigned int start_tick;
-   unsigned int end_tick;
-   unsigned int nr_ticks;
+//   unsigned int end_tick;
+//   unsigned int nr_ticks;
    unsigned int i;
    unsigned int microseconds;
    
@@ -146,10 +146,16 @@ NTSTATUS STDCALL ZwQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 }
 
 
-NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
+NTSTATUS 
+KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
 {
-   KeInitializeTimer(&(Thread->TimerBlock));
-   KeSetTimer(&(Thread->TimerBlock),*Interval,NULL);
+  assert(Thread != NULL);
+  assert(Interval != NULL);
+
+  KeInitializeTimer(&(Thread->TimerBlock));
+  KeSetTimer(&(Thread->TimerBlock),*Interval,NULL);
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -193,6 +199,7 @@ VOID KeStallExecutionProcessor(ULONG MicroSeconds)
      }
 }
 
+#if 0
 static inline void ULLToLargeInteger(unsigned long long src,
 				     PLARGE_INTEGER dest)
 {
@@ -233,6 +240,8 @@ static inline signed long long LargeIntegerToSLL(PLARGE_INTEGER src)
    return(r);
 }
 
+#endif
+
 
 LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
 /*
@@ -244,10 +253,12 @@ LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
  * NOTE: Returns the system tick count or the time-stamp on the pentium
  */
 {
-   PerformanceFreq->HighPart=0;
-   PerformanceFreq->LowPart=0;
+  if (PerformanceFreq != NULL)
+    {
+      LARGE_INTEGER_QUAD_PART(*PerformanceFreq) = 0;
+    }
 
-   return *PerformanceFreq;
+  return *PerformanceFreq;
 }
 
 ULONG KeQueryTimeIncrement(VOID)
@@ -269,7 +280,7 @@ VOID KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
  * 1st of January, 1601.
  */
 {
-   ULLToLargeInteger(system_time,CurrentTime);
+  LARGE_INTEGER_QUAD_PART(*CurrentTime) = system_time;
 }
 
 NTSTATUS STDCALL NtGetTickCount(PULONG UpTime)
@@ -407,7 +418,7 @@ VOID KeQueryTickCount(PLARGE_INTEGER TickCount)
  *         TickCount (OUT) = Points to storage for the number of ticks
  */
 {
-   ULLToLargeInteger(ticks,TickCount);
+  LARGE_INTEGER_QUAD_PART(*TickCount) = ticks;
 }
 
 static void HandleExpiredTimer(PKTIMER current)
@@ -464,7 +475,7 @@ extern unsigned int nr_used_blocks;
 extern unsigned int EiFreeNonPagedPool;
 extern unsigned int EiUsedNonPagedPool;
 
-VOID KiTimerInterrupt(VOID)
+BOOLEAN KiTimerInterrupt(VOID)
 /*
  * FUNCTION: Handles a timer interrupt
  */
@@ -506,8 +517,8 @@ VOID KiTimerInterrupt(VOID)
 	*vidmem=0x7;
 	vidmem++;
      }
-   
-   return(TRUE);
+
+  return TRUE;
 }
 
 

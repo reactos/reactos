@@ -170,15 +170,12 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 	  }
 	if (StartingOffset!=NULL)
 	  {
-	     StackPtr->Parameters.Write.ByteOffset.LowPart = 
-	       StartingOffset->LowPart;
-	     StackPtr->Parameters.Write.ByteOffset.HighPart = 
-	       StartingOffset->HighPart;
+	     StackPtr->Parameters.Write.ByteOffset = *StartingOffset;
 	  }
 	else
 	  {
-	     StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
-	     StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
+	     SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 0);
+	     SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset, 0);
 	  }	
      }
 	
@@ -282,34 +279,29 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    StackPtr->Parameters.Write.Length = Length;
    if (MajorFunction == IRP_MJ_READ)
      {
-       if (StartingOffset!=NULL)
+       if (StartingOffset != NULL)
          {
-            StackPtr->Parameters.Read.ByteOffset.LowPart = 
-              StartingOffset->LowPart;
-            StackPtr->Parameters.Read.ByteOffset.HighPart = 
-              StartingOffset->HighPart;
+            StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
          }
        else
          {
-            StackPtr->Parameters.Read.ByteOffset.LowPart = 0;
-            StackPtr->Parameters.Read.ByteOffset.HighPart = 0;
+            SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Read.ByteOffset, 0);
+            SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 0);
          }
      }
    else
      {
        if (StartingOffset!=NULL)
          {
-            StackPtr->Parameters.Write.ByteOffset.LowPart = 
-              StartingOffset->LowPart;
-            StackPtr->Parameters.Write.ByteOffset.HighPart = 
-              StartingOffset->HighPart;
+            StackPtr->Parameters.Write.ByteOffset = *StartingOffset;
          }
        else
          {
-            StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
-            StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
+            SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 0);
+            SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset, 0);
          }
      }
 
    return(Irp);
 }
+
