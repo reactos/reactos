@@ -45,6 +45,7 @@
 #define IDI_ARROW                       125
 #define IDI_ARROW_SELECTED              126
 #define IDB_LOGOV                       129
+#define IDB_LOGOV256                    130
 #define IDA_SEARCH_PROGRAM              133
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
