@@ -1,4 +1,4 @@
-/* $Id: cnotify.c,v 1.7 2003/07/10 18:50:51 chorns Exp $
+/* $Id: cnotify.c,v 1.8 2003/07/15 10:49:52 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -106,7 +106,7 @@ FindFirstChangeNotificationW (
                                NULL,
                                NULL);
 
-   Status = NtOpenFile (hDir,
+   Status = NtOpenFile (&hDir,
                         SYNCHRONIZE|FILE_LIST_DIRECTORY,
                         &ObjectAttributes,
                         &IoStatus,
