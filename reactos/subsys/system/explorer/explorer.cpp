@@ -236,14 +236,12 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	 // If there is given the command line option "-desktop", create desktop window anyways
 	if (_tcsstr(lpCmdLine,TEXT("-desktop")))
 		startup_desktop = TRUE;
-
-	if (_tcsstr(lpCmdLine,TEXT("-nodesktop")))
+	else if (_tcsstr(lpCmdLine,TEXT("-nodesktop")))
 		startup_desktop = FALSE;
 
-	if (_tcsstr(lpCmdLine,TEXT("-noexplorer"))) {
+	 // Don't display cabinet window in desktop mode
+	if (startup_desktop && !_tcsstr(lpCmdLine,TEXT("-explorer")))
 		nShowCmd = SW_HIDE;
-		startup_desktop = TRUE;
-	}
 
 	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
