@@ -34,3 +34,4 @@
 30.09.2003	m. fuchs	compatibility to building as Winelib application
 10.09.2003	m. fuchs	compatibility changes for correct desktop windows size on Windows NT
 19.09.2003	m. fuchs	compatibility changes for correct start menu subentries on Windows 9x
+27.09.2003	m. fuchs	moved start menu entries for control panel, etc. into new settings submenu

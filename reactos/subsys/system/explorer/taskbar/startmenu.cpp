@@ -103,19 +103,18 @@ LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 			return 1;
 
 		 // create buttons for registered entries in _entries
-		if (_entries.empty()) {
-			AddButton(ResString(IDS_EMPTY), 0, false, (UINT)-1, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW|WS_DISABLED);
-		} else {
-			for(ShellEntryMap::const_iterator it=_entries.begin(); it!=_entries.end(); ++it) {
-				const StartMenuEntry& sme = it->second;
-				bool hasSubmenu = false;
+		for(ShellEntryMap::const_iterator it=_entries.begin(); it!=_entries.end(); ++it) {
+			const StartMenuEntry& sme = it->second;
+			bool hasSubmenu = false;
 
-				if (sme._entry && (sme._entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-					hasSubmenu = true;
+			if (sme._entry && (sme._entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+				hasSubmenu = true;
 
-				AddButton(sme._title, sme._hIcon, hasSubmenu, it->first);
-			}
+			AddButton(sme._title, sme._hIcon, hasSubmenu, it->first);
 		}
+
+		if (!GetWindow(_hwnd, GW_CHILD))
+			AddButton(ResString(IDS_EMPTY), 0, false, (UINT)-1, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW|WS_DISABLED);
 	} catch(COMException& e) {
 		HandleException(e, pcs->hwndParent);	// destroys the start menu window while switching focus
 	}
@@ -366,29 +365,9 @@ bool StartMenu::CloseOtherSubmenus(int id)
 }
 
 
-void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, CREATORFUNC creator)
 {
-	 // Only open one submenu at a time.
-	if (!CloseOtherSubmenus(id))
-		return;
-
-	HWND btn = GetDlgItem(_hwnd, id);
-	int x, y;
-
-	if (btn) {
-		WindowRect pos(btn);
-
-		x = pos.right-3;	// Submenus should overlap their parent a bit.
-		y = pos.top+STARTMENU_LINE_HEIGHT-3;
-	} else {
-		WindowRect pos(_hwnd);
-
-		x = pos.right-3;
-		y = pos.top;
-	}
-
-	_submenu_id = id;
-	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, creator);
+	CreateSubmenu(id, StartMenuFolders(), creator);
 }
 
 void StartMenu::CreateSubmenu(int id, int folder_id, CREATORFUNC creator)
@@ -425,6 +404,31 @@ void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, CREATORFUN
 
 	if (!new_folders.empty())
 		CreateSubmenu(id, new_folders, creator);
+}
+
+void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator)
+{
+	 // Only open one submenu at a time.
+	if (!CloseOtherSubmenus(id))
+		return;
+
+	HWND btn = GetDlgItem(_hwnd, id);
+	int x, y;
+
+	if (btn) {
+		WindowRect pos(btn);
+
+		x = pos.right-3;	// Submenus should overlap their parent a bit.
+		y = pos.top+STARTMENU_LINE_HEIGHT-3;
+	} else {
+		WindowRect pos(_hwnd);
+
+		x = pos.right-3;
+		y = pos.top;
+	}
+
+	_submenu_id = id;
+	_submenu = StartMenu::Create(x, y, new_folders, _hwnd, creator);
 }
 
 
@@ -641,22 +645,16 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	if (super::Init(pcs))
 		return 1;
 
-	AddButton(ResString(IDS_EXPLORE),	SmallIcon(IDI_EXPLORER), false, IDC_EXPLORE);
-
 	AddSeparator();
 
 	 // insert hard coded start entries
 	AddButton(ResString(IDS_PROGRAMS),		0, true, IDC_PROGRAMS);
-	AddButton(ResString(IDS_FAVORITES),		0, true, IDC_FAVORITES);
 	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
 	AddButton(ResString(IDS_RECENT),		0, true, IDC_RECENT);
+	AddButton(ResString(IDS_FAVORITES),		0, true, IDC_FAVORITES);
 	AddButton(ResString(IDS_SETTINGS),		0, true, IDC_SETTINGS);
-	AddButton(ResString(IDS_PRINTERS),		0, true, IDC_PRINTERS);
-	AddButton(ResString(IDS_SETTINGS_WND),	0, false, IDC_SETTINGS_WND);
-	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
 	AddButton(ResString(IDS_DRIVES),		0, true, IDC_DRIVES);
 	AddButton(ResString(IDS_NETWORK),		0, true, IDC_NETWORK);
-	AddButton(ResString(IDS_CONNECTIONS),	0, true, IDC_CONNECTIONS);
 	AddButton(ResString(IDS_SEARCH),		0, false, IDC_SEARCH);
 	AddButton(ResString(IDS_SEARCH_COMPUTER),0,false, IDC_SEARCH_COMPUTER);
 	AddButton(ResString(IDS_START_HELP),	0, false, IDC_START_HELP);
@@ -668,6 +666,14 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
 
 	return 0;
+}
+
+
+void StartMenuRoot::AddEntries()
+{
+	super::AddEntries();
+
+	AddButton(ResString(IDS_EXPLORE),	SmallIcon(IDI_EXPLORER), false, IDC_EXPLORE);
 }
 
 
@@ -726,38 +732,21 @@ int StartMenuRoot::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_RECENT, STARTMENU_CREATOR(RecentStartMenu));
 		break;
 
-	  case IDC_SETTINGS:
-		CreateSubmenu(id, CSIDL_CONTROLS);
-		break;
-
-	  case IDC_PRINTERS:
-		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD);
-		break;
-
-	  case IDC_SETTINGS_WND:
-		CloseStartMenu(id);
-		MainFrame::Create(_T("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), FALSE);
-		break;
-
 	  case IDC_FAVORITES:
 		CreateSubmenu(id, CSIDL_FAVORITES);
-		break;
-
-	  case IDC_ADMIN:
-		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS);
 		break;
 
 	  case IDC_NETWORK:
 		CreateSubmenu(id, CSIDL_NETWORK);
 		break;
 
-	  case IDC_CONNECTIONS:
-		CreateSubmenu(id, CSIDL_CONNECTIONS);
-		break;
-
 	  case IDC_DRIVES:
 		//TODO: exclude removeable drives
 		CreateSubmenu(id, CSIDL_DRIVES);
+		break;
+
+	  case IDC_SETTINGS:
+		CreateSubmenu(id, STARTMENU_CREATOR(SettingsMenu));
 		break;
 
 	  case IDC_SEARCH:
@@ -844,6 +833,55 @@ void StartMenuRoot::ShowSearchComputer()
 
 	if (SHFindComputer)
 		(*SHFindComputer)(NULL, NULL);
+}
+
+
+SettingsMenu::SettingsMenu(HWND hwnd, const StartMenuFolders& info)
+ :	super(hwnd, info)
+{
+}
+
+void SettingsMenu::AddEntries()
+{
+	super::AddEntries();
+
+	 // insert hard coded start entries
+	AddButton(ResString(IDS_SETTINGS_MENU),	0, true, IDC_SETTINGS_MENU);
+	AddButton(ResString(IDS_PRINTERS),		0, true, IDC_PRINTERS);
+	AddButton(ResString(IDS_CONTROL_PANEL),	0, false, IDC_CONTROL_PANEL);
+	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
+	AddButton(ResString(IDS_CONNECTIONS),	0, true, IDC_CONNECTIONS);
+}
+
+int SettingsMenu::Command(int id, int code)
+{
+	switch(id) {
+	  case IDC_SETTINGS_MENU:
+		CreateSubmenu(id, CSIDL_CONTROLS);
+		break;
+
+	  case IDC_PRINTERS:
+		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD);
+		break;
+
+	  case IDC_CONTROL_PANEL:
+		CloseStartMenu(id);
+		MainFrame::Create(_T("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), FALSE);
+		break;
+
+	  case IDC_ADMIN:
+		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS);
+		break;
+
+	  case IDC_CONNECTIONS:
+		CreateSubmenu(id, CSIDL_CONNECTIONS);
+		break;
+
+	  default:
+		return super::Command(id, code);
+	}
+
+	return 0;
 }
 
 

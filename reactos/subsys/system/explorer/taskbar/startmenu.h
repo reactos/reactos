@@ -169,9 +169,10 @@ protected:
 	void	AddSeparator();
 
 	bool	CloseOtherSubmenus(int id);
-	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator=s_def_creator);
-	void	CreateSubmenu(int id, int folder1, int folder2, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, CREATORFUNC creator=s_def_creator);
 	void	CreateSubmenu(int id, int folder, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, int folder1, int folder2, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator=s_def_creator);
 	void	ActivateEntry(int id, ShellEntry* entry);
 	void	CloseStartMenu(int id=0);
 };
@@ -211,6 +212,8 @@ struct StartMenuRoot : public StartMenu
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	void	AddEntries();
 	int		Command(int id, int code);
 
 	static void	ShowLaunchDialog(HWND hwndDesktopBar);
@@ -220,6 +223,21 @@ protected:
 	static void	ShowSearchComputer();
 
 	SIZE	_logo_size;
+};
+
+
+ // Settings sub-start menu
+struct SettingsMenu : public StartMenu
+{
+	typedef StartMenu super;
+
+	SettingsMenu(HWND hwnd, const StartMenuFolders& info);
+
+	void	TrackStartmenu();
+
+protected:
+	void	AddEntries();
+	int		Command(int id, int code);
 };
 
 

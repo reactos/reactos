@@ -108,8 +108,9 @@ BEGIN
     IDS_CONNECTIONS         "Conecþii"
     IDS_DRIVES              "Discuri"
     IDS_SEARCH_COMPUTER     "Search Computer..."
-    IDS_SETTINGS_WND        "Control Panel"
+    IDS_SETTINGS_MENU       "Settings Menu"
     IDS_PRINTERS            "Printers"
+    IDS_CONTROL_PANEL       "Control Panel"
 END
 
 #endif    // Romanian resources
@@ -142,8 +143,8 @@ IDB_LOGOV               BITMAP  DISCARDABLE     "res/logov.bmp"
 
 IDA_EXPLORER ACCELERATORS DISCARDABLE 
 BEGIN
-    0x58,            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    0x53,            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
+    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
+    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
 END
 
@@ -365,11 +366,12 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_NETWORK             "Netzwerk"
-    IDS_CONNECTIONS         "Verbindungen"
+    IDS_CONNECTIONS         "Netzwerk-Verbindungen"
     IDS_DRIVES              "Verzeichnisse"
     IDS_SEARCH_COMPUTER     "Suche Computer..."
-    IDS_SETTINGS_WND        "Systemsteuerung"
+    IDS_SETTINGS_MENU       "Einstellungen-Menu"
     IDS_PRINTERS            "Drucker"
+    IDS_CONTROL_PANEL       "Systemsteuerung"
 END
 
 #endif    // German (Germany) resources
@@ -577,11 +579,12 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_NETWORK             "Network"
-    IDS_CONNECTIONS         "Connections"
+    IDS_CONNECTIONS         "Network Connections"
     IDS_DRIVES              "Drives"
     IDS_SEARCH_COMPUTER     "Search Computer..."
-    IDS_SETTINGS_WND        "Control Panel"
+    IDS_SETTINGS_MENU       "Settings Menu"
     IDS_PRINTERS            "Printers"
+    IDS_CONTROL_PANEL       "Control Panel"
 END
 
 #endif    // English (U.S.) resources
