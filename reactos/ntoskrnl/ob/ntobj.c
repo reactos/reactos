@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.11 2002/09/08 10:23:39 chorns Exp $
+/* $Id: ntobj.c,v 1.12 2003/06/01 15:09:34 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -18,58 +18,66 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+
 /* FUNCTIONS ************************************************************/
 
-NTSTATUS
-STDCALL
-NtSetInformationObject (
-	IN	HANDLE	ObjectHandle,
-	IN	CINT	ObjectInformationClass,
-	IN	PVOID	ObjectInformation,
-	IN	ULONG	Length
-	)
+/**********************************************************************
+ * NAME							EXPORTED
+ *	NtSetInformationObject
+ *	
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ */
+NTSTATUS STDCALL
+NtSetInformationObject (IN HANDLE ObjectHandle,
+			IN CINT ObjectInformationClass,
+			IN PVOID ObjectInformation,
+			IN ULONG Length)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
 NTSTATUS
-internalNameBuilder
-(
-POBJECT_HEADER	ObjectHeader,
-PUNICODE_STRING string)
+internalNameBuilder(POBJECT_HEADER ObjectHeader,
+		    PUNICODE_STRING String)
 /* So, what's the purpose of this function?
    It will take any OBJECT_HEADER and traverse the Parent structure up to the root
    and form the name, i.e. this will only work on objects where the Parent/Name fields
    have any meaning (not files) */
 {
-	NTSTATUS status;
-	if (ObjectHeader->Parent)
-        {
-        	status = internalNameBuilder(BODY_TO_HEADER(ObjectHeader->Parent),string);
-		if (status != STATUS_SUCCESS)
-		{
-			return status;
-		}
-	}
-	if (ObjectHeader->Name.Buffer)
+  NTSTATUS Status;
+
+  if (ObjectHeader->Parent)
+    {
+      Status = internalNameBuilder(BODY_TO_HEADER(ObjectHeader->Parent),
+				   String);
+      if (Status != STATUS_SUCCESS)
 	{
-		status = RtlAppendUnicodeToString(string, L"\\");
-		if (status != STATUS_SUCCESS) return status;
-		return RtlAppendUnicodeStringToString(string, &ObjectHeader->Name);
+	  return Status;
 	}
-	return STATUS_SUCCESS;
+    }
+
+  if (ObjectHeader->Name.Buffer)
+    {
+      Status = RtlAppendUnicodeToString(String,
+					L"\\");
+      if (Status != STATUS_SUCCESS)
+	return Status;
+
+      return RtlAppendUnicodeStringToString(String,
+					    &ObjectHeader->Name);
+    }
+
+  return STATUS_SUCCESS;
 }
 
-NTSTATUS
-STDCALL
-NtQueryObject (
-	IN	HANDLE	ObjectHandle,
-	IN	CINT	ObjectInformationClass,
-	OUT	PVOID	ObjectInformation,
-	IN	ULONG	Length,
-	OUT	PULONG	ResultLength
-	)
+
 /*Very, very, very new implementation. Test it!
 
   Probably we should add meaning to QueryName in POBJECT_TYPE, no matter if we know
@@ -79,95 +87,181 @@ NtQueryObject (
 
   If we don't do it this way, we should anyway add switches and separate functions to handle
   the different object types*/
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	NtQueryObject
+ *	
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ */
+NTSTATUS STDCALL
+NtQueryObject (IN HANDLE ObjectHandle,
+	       IN CINT ObjectInformationClass,
+	       OUT PVOID ObjectInformation,
+	       IN ULONG Length,
+	       OUT PULONG ReturnLength)
 {
-  POBJECT_NAME_INFORMATION nameinfo;
+  POBJECT_NAME_INFORMATION NameInfo;
   POBJECT_TYPE_INFORMATION typeinfo;
   PFILE_NAME_INFORMATION filenameinfo;
-  PVOID		Object;
-  NTSTATUS	Status;  
-  POBJECT_HEADER	ObjectHeader;
-  PFILE_OBJECT    fileob;
-  
-  Status = ObReferenceObjectByHandle(ObjectHandle,
-				     0,
-				     NULL,
-				     KernelMode,
-				     &Object,
-				     NULL);
-  if (Status != STATUS_SUCCESS)
+  PVOID Object;
+  NTSTATUS Status;
+  POBJECT_HEADER ObjectHeader;
+  PFILE_OBJECT fileob;
+
+  Status = ObReferenceObjectByHandle (ObjectHandle,
+				      0,
+				      NULL,
+				      KeGetPreviousMode(),
+				      &Object,
+				      NULL);
+  if (!NT_SUCCESS (Status))
     {
       return Status;
     }
-  
+
   ObjectHeader = BODY_TO_HEADER(Object);
-  
+
   switch (ObjectInformationClass)
     {
-    case ObjectNameInformation:
-      if (Length!=sizeof(OBJECT_NAME_INFORMATION)) return STATUS_INVALID_BUFFER_SIZE;
-      nameinfo = (POBJECT_NAME_INFORMATION)ObjectInformation;
-      (*ResultLength)=Length;		
-      
-      if (ObjectHeader->Type==InternalFileType)  // FIXME: Temporary QueryName implementation, or at least separate functions
-	{
-	  fileob = (PFILE_OBJECT) Object;
-	  Status = internalNameBuilder(BODY_TO_HEADER(fileob->DeviceObject->Vpb->RealDevice), &nameinfo->Name);
-	  
-	  if (Status != STATUS_SUCCESS)
-	    {
-	      ObDereferenceObject(Object);
-	      return Status;
-	    }
-	  filenameinfo = ExAllocatePool(NonPagedPool,MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
-	  IoQueryFileInformation(fileob,FileNameInformation,MAX_PATH*sizeof(WCHAR)+sizeof(ULONG), filenameinfo,NULL);
-	  
-	  Status = RtlAppendUnicodeToString(&(nameinfo->Name), filenameinfo->FileName);
-	  
-	  ExFreePool( filenameinfo);
-	  ObDereferenceObject(Object);
-	  return Status;
-	}
-      else
-	if (ObjectHeader->Name.Buffer) // If it's got a name there, we can probably just make the full path through Name and Parent
+      case ObjectNameInformation:
+#if 0
+	Status = ObQueryNameString (Object,
+				    (POBJECT_NAME_INFORMATION)ObjectInformation,
+				    Length,
+				    ReturnLength);
+	break;
+#endif
+
+	if (Length < sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR))
+	  return STATUS_INVALID_BUFFER_SIZE;
+
+	NameInfo = (POBJECT_NAME_INFORMATION)ObjectInformation;
+	*ReturnLength = 0;
+
+	NameInfo->Name.MaximumLength = sizeof(WCHAR);
+	NameInfo->Name.Length = 0;
+	NameInfo->Name.Buffer = (PWCHAR)((ULONG_PTR)NameInfo + sizeof(OBJECT_NAME_INFORMATION));
+	NameInfo->Name.Buffer[0] = 0;
+
+	// FIXME: Temporary QueryName implementation, or at least separate functions
+	if (ObjectHeader->Type==InternalFileType)
 	  {
-	    Status = internalNameBuilder(ObjectHeader, &nameinfo->Name);
-	    ObDereferenceObject(Object);
-	    return Status;
+	    NameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
+	    fileob = (PFILE_OBJECT) Object;
+	    Status = internalNameBuilder(BODY_TO_HEADER(fileob->DeviceObject->Vpb->RealDevice),
+					 &NameInfo->Name);
+	    if (Status != STATUS_SUCCESS)
+	      {
+		NameInfo->Name.MaximumLength = 0;
+		break;
+	      }
+
+	    filenameinfo = ExAllocatePool (NonPagedPool,
+					   MAX_PATH * sizeof(WCHAR) + sizeof(ULONG));
+	    if (filenameinfo == NULL)
+	      {
+		NameInfo->Name.MaximumLength = 0;
+		Status = STATUS_INSUFFICIENT_RESOURCES;
+		break;
+	      }
+
+	    Status = IoQueryFileInformation (fileob,
+					     FileNameInformation,
+					     MAX_PATH * sizeof(WCHAR) + sizeof(ULONG),
+					     filenameinfo,
+					     NULL);
+	    if (Status != STATUS_SUCCESS)
+	      {
+		NameInfo->Name.MaximumLength = 0;
+		ExFreePool (filenameinfo);
+		break;
+	      }
+
+	    Status = RtlAppendUnicodeToString (&(NameInfo->Name),
+					       filenameinfo->FileName);
+
+	    ExFreePool (filenameinfo);
+
+	    if (NT_SUCCESS(Status))
+	      {
+	        NameInfo->Name.MaximumLength = NameInfo->Name.Length + sizeof(WCHAR);
+	        *ReturnLength = sizeof(OBJECT_NAME_INFORMATION) + NameInfo->Name.MaximumLength;
+	      }
 	  }
-      ObDereferenceObject(Object);
-      return STATUS_NOT_IMPLEMENTED;
-    case ObjectTypeInformation:
-      typeinfo = (POBJECT_TYPE_INFORMATION)ObjectInformation;
-      if (Length!=sizeof(OBJECT_TYPE_INFORMATION)) return STATUS_INVALID_BUFFER_SIZE;
-      
-      // FIXME: Is this supposed to only be the header's Name field?
-      // Can somebody check/verify this?
-      RtlCopyUnicodeString(&typeinfo->Name,&ObjectHeader->Name);
-      
-      if (Status != STATUS_SUCCESS)
-	{
-	  ObDereferenceObject(Object);
-	  return Status;
-	}
-      
-      RtlCopyUnicodeString(&typeinfo->Type,&ObjectHeader->ObjectType->TypeName);
-      //This should be info from the object header, not the object type, right?			
-      typeinfo->TotalHandles = ObjectHeader-> HandleCount; 
-      typeinfo->ReferenceCount = ObjectHeader -> RefCount;
-      
-      ObDereferenceObject(Object);
-      return Status;
-    default:
-      ObDereferenceObject(Object);
-      return STATUS_NOT_IMPLEMENTED;
+	else if (ObjectHeader->Name.Buffer)
+	  {
+	    // If it's got a name there, we can probably just make the full path through Name and Parent
+	    NameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
+
+	    Status = internalNameBuilder (ObjectHeader,
+					  &NameInfo->Name);
+	    if (NT_SUCCESS(Status))
+	      {
+	        NameInfo->Name.MaximumLength = NameInfo->Name.Length + sizeof(WCHAR);
+	        *ReturnLength = sizeof(OBJECT_NAME_INFORMATION) + NameInfo->Name.MaximumLength;
+	      }
+	  }
+	else
+	  {
+	    Status = STATUS_NOT_IMPLEMENTED;
+	  }
+	break;
+
+      case ObjectTypeInformation:
+	typeinfo = (POBJECT_TYPE_INFORMATION)ObjectInformation;
+	if (Length!=sizeof(OBJECT_TYPE_INFORMATION))
+	  return STATUS_INVALID_BUFFER_SIZE;
+
+	// FIXME: Is this supposed to only be the header's Name field?
+	// Can somebody check/verify this?
+	RtlCopyUnicodeString(&typeinfo->Name,&ObjectHeader->Name);
+
+	if (Status != STATUS_SUCCESS)
+	  {
+	    break;
+	  }
+
+	RtlCopyUnicodeString(&typeinfo->Type,&ObjectHeader->ObjectType->TypeName);
+	//This should be info from the object header, not the object type, right?
+	typeinfo->TotalHandles = ObjectHeader-> HandleCount;
+	typeinfo->ReferenceCount = ObjectHeader -> RefCount;
+	break;
+
+      default:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
     }
+
+  ObDereferenceObject(Object);
+
+  return Status;
 }
 
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	ObMakeTemporaryObject
+ *	
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ */
 VOID STDCALL
-ObMakeTemporaryObject (PVOID	ObjectBody)
+ObMakeTemporaryObject (IN PVOID ObjectBody)
 {
-  POBJECT_HEADER	ObjectHeader;
-  
+  POBJECT_HEADER ObjectHeader;
+
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
   ObjectHeader->Permanent = FALSE;
 }
@@ -187,34 +281,29 @@ ObMakeTemporaryObject (PVOID	ObjectBody)
  */
 NTSTATUS
 STDCALL
-NtMakeTemporaryObject (
-	HANDLE	Handle
-	)
+NtMakeTemporaryObject (IN HANDLE Handle)
 {
-	PVOID		Object;
-	NTSTATUS	Status;  
-	POBJECT_HEADER	ObjectHeader;
-   
-	Status = ObReferenceObjectByHandle(
-			Handle,
-			0,
-			NULL,
-			KernelMode,
-			& Object,
-			NULL
-			);
-	if (Status != STATUS_SUCCESS)
-	{
-		return Status;
-	}
+  POBJECT_HEADER ObjectHeader;
+  PVOID Object;
+  NTSTATUS Status;
 
-	ObjectHeader = BODY_TO_HEADER(Object);
-	ObjectHeader->Permanent = FALSE;
-   
-	ObDereferenceObject(Object);
-   
-	return STATUS_SUCCESS;
+  Status = ObReferenceObjectByHandle(Handle,
+				     0,
+				     NULL,
+				     KernelMode,
+				     & Object,
+				     NULL);
+  if (Status != STATUS_SUCCESS)
+    {
+      return Status;
+    }
+
+  ObjectHeader = BODY_TO_HEADER(Object);
+  ObjectHeader->Permanent = FALSE;
+
+  ObDereferenceObject(Object);
+
+  return STATUS_SUCCESS;
 }
-
 
 /* EOF */
