@@ -15,7 +15,7 @@ TARGET_OBJECTS = $(TARGET_NAME).o
 
 TARGET_GCCLIBS = stdc++
 
-TARGET_CFLAGS = -Wall -Werror -D__USE_W32API -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -fexceptions -Wall -I.
+TARGET_CPPFLAGS = -Wall -Werror -D__USE_W32API -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -fexceptions -Wall -I.
 
 include $(PATH_TO_TOP)/rules.mak
 
