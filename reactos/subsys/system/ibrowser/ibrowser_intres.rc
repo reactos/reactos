@@ -212,7 +212,7 @@ IDI_FAVORITES           ICON    DISCARDABLE     "res/favorites.ico"
 IDI_DOT                 ICON    DISCARDABLE     "res/dot.ico"
 IDI_DOT_TRANS           ICON    DISCARDABLE     "res/dot_trans.ico"
 IDI_DOT_RED             ICON    DISCARDABLE     "res/dot_red.ico"
-IDI_IBROWSER            ICON    DISCARDABLE     "res\\ibrowser.ico"
+IDI_IBROWSER            ICON    DISCARDABLE     "res/ibrowser.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
