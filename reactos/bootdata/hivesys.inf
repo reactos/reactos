@@ -616,7 +616,7 @@ HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000000
 
 ; ----------------------------- KJS Init ----------------------------
 HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","kjsinit",0x00010000,\
-"function init(v) { var rk = '\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Kdb'; eval(System.regread(rk,v)); } for( i = 1; i <= 40; i++ ) { init((new Number(i)).toString()); }"
+"function init(v) { var rk = '\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Kdb'; eval(System.regread(rk,v)); } for( i = 1; i <= 45; i++ ) { init((new Number(i)).toString()); }"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","1",0x00010000,\
 "function write(x) { System.print(x); }"
