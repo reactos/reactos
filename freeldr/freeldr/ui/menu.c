@@ -173,6 +173,12 @@ BOOL DisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuIt
 	{
 		*SelectedMenuItem = MenuInformation.SelectedMenuItem;
 	}
+
+	//
+	// Restore screen and free the memory
+	//
+	RestoreScreen(ScreenBuffer);
+	FreeMemory(ScreenBuffer);
 	
 	return TRUE;
 }
