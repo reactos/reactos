@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.85 2001/08/21 20:13:09 chorns Exp $
+/* $Id: loader.c,v 1.86 2001/08/22 03:53:52 rex Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -917,6 +917,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    /*
     * Mouse drivers
     */
+//   LdrLoadAutoConfigDriver(L"l8042prt.sys");
    LdrLoadAutoConfigDriver(L"psaux.sys");
    LdrLoadAutoConfigDriver(L"mouclass.sys");
 
@@ -995,7 +996,7 @@ NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename,
     }
 
   Status = IopInitializeDriver(ModuleObject->EntryPoint,
-    DeviceNode, BootDriversOnly);
+    DeviceNode, Filename, BootDriversOnly);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(ModuleObject);
@@ -1225,7 +1226,7 @@ LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName, ULONG ModuleLength)
    return(STATUS_UNSUCCESSFUL);
      }
 
-   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, FALSE);
+   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, NULL, FALSE);
    if (!NT_SUCCESS(Status))
      {
 	 IopFreeDeviceNode(DeviceNode);
@@ -1277,7 +1278,7 @@ LdrOpenModule(PUNICODE_STRING  Filename)
   RtlInitUnicodeString (&ModuleName, NameBuffer);
   InitializeObjectAttributes(&ObjectAttributes,
                              &ModuleName, 
-                             0,
+                             OBJ_CASE_INSENSITIVE,
                              NULL,
                              NULL);
 

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.29 2001/06/16 14:07:30 ekohl Exp $
+/* $Id: device.c,v 1.30 2001/08/22 03:53:52 rex Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -29,6 +29,8 @@
 #define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
 #define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')
 #define TAG_DEVICE_EXTENSION   TAG('D', 'E', 'X', 'T')
+
+#define DRIVER_REGISTRY_KEY_BASENAME  L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 
 /* FUNCTIONS ***************************************************************/
 
@@ -325,6 +327,7 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject)
 NTSTATUS 
 IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
                     PDEVICE_NODE DeviceNode,
+                    PUNICODE_STRING Filename,
                     BOOLEAN BootDriversOnly)
 /*
  * FUNCTION: Called to initalize a loaded driver
@@ -338,6 +341,9 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
   NTSTATUS Status;
   KEVENT Event;
   PIRP Irp;
+  WCHAR DriverName [MAX_PATH];
+  WCHAR RegistryKeyBuffer [MAX_PATH];
+  UNICODE_STRING  RegistryKey;
 
   DPRINT("IopInitializeDriver (DriverEntry %08lx, DeviceNode %08lx, "
     "BootDriversOnly %d)\n", DriverEntry, DeviceNode, BootDriversOnly);
@@ -348,8 +354,28 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
   return(Status);
     }
 
+  if (Filename != 0)
+  {
+    if (wcsrchr (Filename->Buffer, '\\') != 0)
+    {
+      wcscpy (DriverName, wcsrchr (Filename->Buffer, '\\'));
+    }
+    else
+    {
+      wcscpy (DriverName, Filename->Buffer);
+    }
+    if (wcsrchr (DriverName, '.') != 0)
+    {
+      *(wcsrchr (DriverName, '.')) = 0;
+    }
+    wcscpy (RegistryKeyBuffer, DRIVER_REGISTRY_KEY_BASENAME);
+    wcscpy (RegistryKeyBuffer, DriverName);
+    RtlInitUnicodeString (&RegistryKey, RegistryKeyBuffer);
+    DPRINT("RegistryKey: %wZ\n", &RegistryKey);
+  }
+
   DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
-  Status = DriverEntry(DriverObject, NULL);
+  Status = DriverEntry(DriverObject, Filename != 0 ? &RegistryKey : 0);
   if (!NT_SUCCESS(Status))
     {
   ExFreePool(DriverObject->DriverExtension);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.10 2001/05/01 23:08:19 chorns Exp $
+/* $Id: io.h,v 1.11 2001/08/22 03:53:52 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -111,6 +111,7 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject);
 NTSTATUS
 IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
                     PDEVICE_NODE ParentDeviceNode,
+                    PUNICODE_STRING Filename,
                     BOOLEAN BootDriversOnly);
 VOID 
 IoInitCancelHandling(VOID);

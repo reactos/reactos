@@ -1,6 +1,8 @@
-# $Id: Makefile,v 1.1 2001/08/21 20:18:26 chorns Exp $
+# $Id: Makefile,v 1.2 2001/08/22 03:53:51 rex Exp $
 
 PATH_TO_TOP = ../..
+
+default: all
 
 #
 # Build configuration

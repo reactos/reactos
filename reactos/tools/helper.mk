@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.1 2001/08/21 20:13:17 chorns Exp $
+# $Id: helper.mk,v 1.2 2001/08/22 03:53:53 rex Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -219,7 +219,8 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_MODE := kernel
   MK_EXETYPE := dll
   MK_DEFEXT := .dll
-  MK_DEFENTRY := _DriverEntry@8
+  MK_DEFENTRY := _DrvEnableDriver@12
+#  MK_DEFENTRY := _DriverEntry@8
   MK_DDKLIBS := ntoskrnl.a hal.a win32k.a
   MK_SDKLIBS :=
   MK_CFLAGS := -D__NTDRIVER__ -I./ -I$(DDK_PATH_INC)
