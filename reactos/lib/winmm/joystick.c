@@ -41,6 +41,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
+#include "winemm.h"
 
 #include "mmddk.h"
 

@@ -108,3 +108,33 @@ diff -u -r1.17 winmm_res.rc
  #include "winmm_Nl.rc"
  #include "winmm_Pt.rc"
  #include "winmm_Ru.rc"
+Index: lib/winmm/joystick.c
+===================================================================
+RCS file: /CVS/ReactOS/reactos/lib/winmm/joystick.c,v
+retrieving revision 1.2
+diff -u -r1.2 joystick.c
+--- lib/winmm/joystick.c	25 Feb 2004 20:00:41 -0000	1.2
++++ lib/winmm/joystick.c	20 Dec 2004 02:00:40 -0000
+@@ -41,6 +41,7 @@
+ #include "wingdi.h"
+ #include "winuser.h"
+ #include "winnls.h"
++#include "winemm.h"
+ 
+ #include "mmddk.h"
+ 
+Index: lib/winmm/winemm.h
+===================================================================
+RCS file: /CVS/ReactOS/reactos/lib/winmm/winemm.h,v
+retrieving revision 1.6
+diff -u -r1.6 winemm.h
+--- lib/winmm/winemm.h	20 Oct 2004 17:42:11 -0000	1.6
++++ lib/winmm/winemm.h	20 Dec 2004 01:59:44 -0000
+@@ -222,6 +222,7 @@
+ typedef	WINMM_MapType	        (*MMDRV_MAPFUNC)(UINT wMsg, LPDWORD lpdwUser, LPDWORD lpParam1, LPDWORD lpParam2);
+ typedef	WINMM_MapType	        (*MMDRV_UNMAPFUNC)(UINT wMsg, LPDWORD lpdwUser, LPDWORD lpParam1, LPDWORD lpParam2, MMRESULT ret);
+ 
++HDRVR WINAPI	OpenDriverA(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lParam2);
+ LPWINE_DRIVER	DRIVER_FindFromHDrvr(HDRVR hDrvr);
+ BOOL		DRIVER_GetLibName(LPCSTR keyName, LPCSTR sectName, LPSTR buf, int sz);
+ LPWINE_DRIVER	DRIVER_TryOpenDriver32(LPCSTR fn, LPARAM lParam2);
