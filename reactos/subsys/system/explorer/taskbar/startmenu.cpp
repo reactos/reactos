@@ -385,18 +385,19 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* 
 	const String& entry_name = folder.get_name(entry->_pidl);
 
 	 // search for an already existing subdirectory entry with the same name
-	for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
-		StartMenuEntry& sme = it->second;
+	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
+			StartMenuEntry& sme = it->second;
 
-		if (sme._title == entry_name)	///@todo speed up by using a map indexed by name
-			for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
-				if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-					 // merge the new shell entry with the existing of the same name
-					sme._entries.insert(entry);
-					return sme;
+			if (sme._title == entry_name)	///@todo speed up by using a map indexed by name
+				for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
+					if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+						 // merge the new shell entry with the existing of the same name
+						sme._entries.insert(entry);
+						return sme;
+					}
 				}
-			}
-	}
+		}
 
 	StartMenuEntry& sme = AddEntry(entry_name, hIcon);
 
