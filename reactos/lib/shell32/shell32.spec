@@ -6,10 +6,10 @@
    2 stdcall SHChangeNotifyRegister(long long long long long ptr)
    4 stdcall SHChangeNotifyDeregister (long)
    5 stdcall SHChangeNotifyUpdateEntryList (long long long long)
-   9 stub PifMgr_OpenProperties@16
-  10 stub PifMgr_GetProperties@20
-  11 stub PifMgr_SetProperties@20
-  13 stub PifMgr_CloseProperties@8
+   9 stub PifMgr_OpenProperties
+  10 stub PifMgr_GetProperties
+  11 stub PifMgr_SetProperties
+  13 stub PifMgr_CloseProperties
   15 stdcall ILGetDisplayName(ptr ptr)
   16 stdcall ILFindLastID(ptr)
   17 stdcall ILRemoveLastID(ptr)
@@ -202,7 +202,7 @@
  212 stub Printers_AddPrinterPropPages
  213 stub Printers_RegisterWindowW
  214 stub Printers_UnregisterWindow
- 215 stub SHStartNetConnectionDialog@12
+ 215 stub SHStartNetConnectionDialog
  243 stdcall @(long long) shell32_243
  244 stdcall SHInitRestricted(ptr ptr)
  247 stdcall SHGetDataFromIDListA (ptr ptr long ptr long)
@@ -219,8 +219,8 @@
  276 stub SheFullPathA
  277 stub SheFullPathW
  278 stub SheGetCurDrive
- 279 stub SheGetDirA@8
- 280 stub SheGetDirExW@12
+ 279 stub SheGetDirA
+ 280 stub SheGetDirExW
  281 stdcall SheGetDirW (long long)
  282 stub SheGetPathOffsetW
  283 stub SheRemoveQuotesA
@@ -272,7 +272,7 @@
  505 stdcall SHRegCloseKey (long)
  506 stdcall SHRegOpenKeyA (long str long)
  507 stdcall SHRegOpenKeyW (long wstr long)
- 508 stub SHRegQueryValueA@16
+ 508 stub SHRegQueryValueA
  509 stdcall SHRegQueryValueExA(long str ptr ptr ptr ptr)
  510 stdcall SHRegQueryValueW (long long long long)
  511 stdcall SHRegQueryValueExW (long wstr ptr ptr ptr ptr)
@@ -282,18 +282,18 @@
  521 stdcall SHLockShared (long long)
  522 stdcall SHUnlockShared (long)
  523 stdcall SHFreeShared (long long)
- 524 stub RealDriveType@8
- 525 stub RealDriveTypeFlags@8
+ 524 stub RealDriveType
+ 525 stub RealDriveTypeFlags
 
  640 stdcall NTSHChangeNotifyRegister (long long long long long long)
  641 stdcall NTSHChangeNotifyDeregister (long)
 
- 643 stub SHChangeNotifyReceive@16
+ 643 stub SHChangeNotifyReceive
  644 stdcall SHChangeNotification_Lock(long long ptr ptr)
  645 stdcall SHChangeNotification_Unlock(long)
- 646 stub SHChangeRegistrationReceive@8
- 647 stub ReceiveAddToRecentDocs@8
- 648 stub SHWaitOp_Operate@8
+ 646 stub SHChangeRegistrationReceive
+ 647 stub ReceiveAddToRecentDocs
+ 648 stub SHWaitOp_Operate
 
  650 stdcall PathIsSameRoot(ptr ptr)PathIsSameRootAW
 
@@ -373,33 +373,33 @@
 @ stdcall SHCreateDirectoryExA(long str ptr)
 @ stdcall SHCreateDirectoryExW(long wstr ptr)
 @ stub ShellHookProc
-@ stub SHEmptyRecycleBinA@12
-@ stub SHEmptyRecycleBinW@12
+@ stub SHEmptyRecycleBinA
+@ stub SHEmptyRecycleBinW
 @ stdcall SHFileOperation(ptr)SHFileOperationAW
 @ stdcall SHFileOperationA(ptr)
 @ stdcall SHFileOperationW(ptr)
-@ stub SHFormatDrive@16
-@ stub SHFreeNameMappings@4
+@ stub SHFormatDrive
+@ stub SHFreeNameMappings
 @ stdcall SHGetDesktopFolder(ptr)
 @ stdcall SHGetFileInfo(ptr long ptr long long)SHGetFileInfoAW
 @ stdcall SHGetFileInfoA(ptr long ptr long long)
 @ stdcall SHGetFileInfoW(ptr long ptr long long)
 @ stdcall SHGetInstanceExplorer(long)
 @ stdcall SHGetMalloc(ptr)
-@ stub SHGetNewLinkInfo@20
+@ stub SHGetNewLinkInfo
 @ stdcall SHGetPathFromIDList(ptr ptr)SHGetPathFromIDListAW
 @ stdcall SHGetPathFromIDListA(ptr ptr)
 @ stdcall SHGetPathFromIDListW(ptr ptr)
 @ stdcall SHGetSettings(ptr long)
 @ stdcall SHGetSpecialFolderLocation(long long ptr)
 @ stdcall SHHelpShortcuts_RunDLL(long long long long)
-@ stub SHHelpShortcuts_RunDLLA@16
-@ stub SHHelpShortcuts_RunDLLW@16
+@ stub SHHelpShortcuts_RunDLLA
+@ stub SHHelpShortcuts_RunDLLW
 @ stdcall SHLoadInProc(long)
-@ stub SHQueryRecycleBinA@8
-@ stub SHQueryRecycleBinW@8
-@ stub SHUpdateRecycleBinIcon@0
-@ stub WOWShellExecute@28
+@ stub SHQueryRecycleBinA
+@ stub SHQueryRecycleBinW
+@ stub SHUpdateRecycleBinIcon
+@ stub WOWShellExecute
 
 #
 # version 4.70 (IE3.0)
