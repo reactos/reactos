@@ -154,16 +154,20 @@ SeCaptureSecurityDescriptor(
         return Status;
       }
     }
+    else if(!CaptureIfKernel)
+    {
+      if(OriginalSecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
+      {
+        return STATUS_UNKNOWN_REVISION;
+      }
+      
+      *CapturedSecurityDescriptor = OriginalSecurityDescriptor;
+      return STATUS_SUCCESS;
+    }
     else
     {
       /* make a copy on the stack */
       DescriptorCopy = *OriginalSecurityDescriptor;
-    }
-    
-    if(CurrentMode == KernelMode && !CaptureIfKernel)
-    {
-      *CapturedSecurityDescriptor = OriginalSecurityDescriptor;
-      return STATUS_SUCCESS;
     }
     
     if(DescriptorCopy.Revision != SECURITY_DESCRIPTOR_REVISION1)
