@@ -126,7 +126,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	rbBand.cyMaxChild = 0;
 	rbBand.cyIntegral = DESKTOPBARBAR_HEIGHT;
 
-	rbBand.lpText = TEXT("Quicklaunchbar");
+	rbBand.lpText = TEXT("Quicklaunch");
 	rbBand.hwndChild = _hwndQuickLaunch;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = HIWORD(SendMessage(_hwndQuickLaunch, TB_GETBUTTONSIZE, 0, 0)) + 2;

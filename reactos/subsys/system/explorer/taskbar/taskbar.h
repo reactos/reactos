@@ -38,6 +38,9 @@
 #define	TASKBAR_LEFT			70
 //#define TASKBAR_AT_TOP
 
+#define	TASKBUTTONWIDTH_MIN		38
+#define	TASKBUTTONWIDTH_MAX		160
+
 
 #define	IDW_TASKTOOLBAR	100
 
@@ -92,4 +95,5 @@ protected:
 	static BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lparam);
 
 	void	Refresh();
+	void	ResizeButtons();
 };

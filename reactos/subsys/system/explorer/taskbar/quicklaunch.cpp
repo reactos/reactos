@@ -65,6 +65,7 @@ QuickLaunchBar::QuickLaunchBar(HWND hwnd)
 
 	SetWindowStyle(hwndToolTip, GetWindowStyle(hwndToolTip)|TTS_ALWAYSTIP);
 
+	 // delay refresh to some time later
 	PostMessage(hwnd, PM_REFRESH, 0, 0);
 }
 
