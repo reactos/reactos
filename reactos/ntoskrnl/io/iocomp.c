@@ -82,7 +82,7 @@ IoSetCompletionRoutineEx(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -95,8 +95,23 @@ IoSetIoCompletion (
 	IN BOOLEAN Quota
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+   PKQUEUE Queue = (PKQUEUE) IoCompletion;
+   PIO_COMPLETION_PACKET   Packet;
+
+   Packet = ExAllocateFromNPagedLookasideList(&IoCompletionPacketLookaside);
+   if (NULL == Packet)
+   {
+     return STATUS_NO_MEMORY;
+   }
+
+   Packet->Key = KeyContext;
+   Packet->Context = ApcContext;
+   Packet->IoStatus.Status = IoStatus;
+   Packet->IoStatus.Information = IoStatusInformation;
+   
+   KeInsertQueue(Queue, &Packet->ListEntry);
+
+   return STATUS_SUCCESS;
 }
 
 VOID
@@ -282,7 +297,7 @@ NtRemoveIoCompletion(
    NTSTATUS Status;
    PIO_COMPLETION_PACKET   Packet;
    PLIST_ENTRY             ListEntry;
-      
+
    Status = ObReferenceObjectByHandle( IoCompletionHandle,
                                        IO_COMPLETION_MODIFY_STATE,
                                        ExIoCompletionType,
@@ -366,16 +381,8 @@ NtSetIoCompletion(
                                        NULL);
    if (NT_SUCCESS(Status))
    {
-      PIO_COMPLETION_PACKET   Packet;
-
-      Packet = ExAllocateFromNPagedLookasideList(&IoCompletionPacketLookaside);
-
-      Packet->Key = CompletionKey;
-      Packet->Context = CompletionContext;
-      Packet->IoStatus.Status = CompletionStatus;
-      Packet->IoStatus.Information = CompletionInformation;
-   
-      KeInsertQueue(Queue, &Packet->ListEntry);
+      Status = IoSetIoCompletion(Queue, CompletionKey, CompletionContext,
+                                 CompletionStatus, CompletionInformation, TRUE);
       ObDereferenceObject(Queue);
    }
 
