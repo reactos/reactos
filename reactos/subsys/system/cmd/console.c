@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.3 2003/08/07 09:38:54 hbirr Exp $
+/* $Id: console.c,v 1.4 2003/08/13 05:18:40 jimtabor Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -55,7 +55,7 @@ VOID ConInDummy (VOID)
 	if (hInput == INVALID_HANDLE_VALUE)
 		DebugPrintf (_T("Invalid input handle!!!\n"));
 #endif /* _DEBUG */
-#ifdef __REACTOSS__
+#ifdef __REACTOS__
 	/* ReadConsoleInputW isn't implwmented within ROS. */
 	ReadConsoleInputA (hInput, &dummy, 1, &dwRead);
 #else
