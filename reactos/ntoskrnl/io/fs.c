@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.14 2000/10/05 19:15:50 ekohl Exp $
+/* $Id: fs.c,v 1.15 2000/12/29 13:43:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -115,7 +115,43 @@ VOID IoInitFileSystemImplementation(VOID)
 
 VOID IoShutdownRegisteredFileSystems(VOID)
 {
+   KIRQL oldlvl;
+   PLIST_ENTRY current_entry;
+   FILE_SYSTEM_OBJECT* current;
+   PIRP Irp;
+   KEVENT Event;
+   IO_STATUS_BLOCK IoStatusBlock;
+   NTSTATUS Status;
+
    DPRINT("IoShutdownRegisteredFileSystems()\n");
+
+   KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
+   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+
+   current_entry = FileSystemListHead.Flink;
+   while (current_entry!=(&FileSystemListHead))
+     {
+	current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
+
+	/* send IRP_MJ_SHUTDOWN */
+	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
+					   current->DeviceObject,
+					   NULL,
+					   0,
+					   0,
+					   &Event,
+					   &IoStatusBlock);
+
+	Status = IoCallDriver(current->DeviceObject,Irp);
+	if (Status==STATUS_PENDING)
+	  {
+	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	  }
+
+	current_entry = current_entry->Flink;
+     }
+
+   KeReleaseSpinLock(&FileSystemListLock,oldlvl);
 }
 
 NTSTATUS IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
