@@ -1,15 +1,26 @@
+/* $Id: blue.c,v 1.13 1999/11/09 18:07:03 ekohl Exp $
+ *
+ * COPYRIGHT:            See COPYING in the top level directory
+ * PROJECT:              ReactOS kernel
+ * FILE:                 services/dd/blue/blue.c
+ * PURPOSE:              Console (blue screen) device driver
+ * PROGRAMMER:           Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ * UPDATE HISTORY:
+ *                       ??? Created
+ */
 
-#include <internal/halio.h>
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
-#include <string.h>
-#include <internal/string.h>
-#include <defines.h>
 #include <ddk/ntddblue.h>
+#include <string.h>
+#include <defines.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 
+/* DEFINITIONS ***************************************************************/
 
 #define IDMAP_BASE         0xd0000000
 #define VIDMEM_BASE        0xb8000
@@ -18,8 +29,8 @@
 #define NR_COLUMNS         80
 #define NR_SCANLINES       8
 
-#define CRTC_COMMAND       0x3d4
-#define CRTC_DATA          0x3d5
+#define CRTC_COMMAND       ((PUCHAR)0x3d4)
+#define CRTC_DATA          ((PUCHAR)0x3d5)
 
 #define CRTC_COLUMNS       0x01
 #define CRTC_ROWS          0x12
@@ -29,10 +40,9 @@
 #define CRTC_CURSORPOSLO   0x0f
 #define CRTC_CURSORPOSHI   0x0e
 
-#define ATTRC_WRITEREG     0x3c0
-#define ATTRC_READREG      0x3c1
-
-
+#define ATTRC_WRITEREG     ((PUCHAR)0x3c0)
+#define ATTRC_READREG      ((PUCHAR)0x3c1)
+#define ATTRC_INPST1       ((PUCHAR)0x3da)
 
 #define TAB_WIDTH          8
 
@@ -58,13 +68,10 @@ typedef struct _DEVICE_EXTENSION
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 
-
-
-
 /* FUNCTIONS **************************************************************/
 
-
-NTSTATUS ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
@@ -82,21 +89,20 @@ NTSTATUS ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     __asm__("cli\n\t");
 
     /* get current output position */
-    outb_p (CRTC_COMMAND, CRTC_CURSORPOSLO);
-    offset = inb_p (CRTC_DATA);
-    outb_p (CRTC_COMMAND, CRTC_CURSORPOSHI);
-    offset += (inb_p (CRTC_DATA) << 8);
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
+    offset = READ_PORT_UCHAR (CRTC_DATA);
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+    offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
 
     /* switch blinking characters off */
-    inb_p (0x3da);
-    value = inb_p (0x3c0);
-    outb_p (0x3c0, 0x10);
-    data  = inb_p (0x3c1);
+    READ_PORT_UCHAR (ATTRC_INPST1 /*0x3da*/);
+    value = READ_PORT_UCHAR (ATTRC_WRITEREG/*0x3c0*/);
+    WRITE_PORT_UCHAR (ATTRC_WRITEREG /*0x3c0*/, 0x10);
+    data  = READ_PORT_UCHAR (ATTRC_READREG /*0x3c1*/);
     data  = data & ~0x08;
-    outb_p (0x3c0, data);
-    outb_p (0x3c0, value);
-    inb_p (0x3da);
-
+    WRITE_PORT_UCHAR (ATTRC_WRITEREG /*0x3c0*/, data);
+    WRITE_PORT_UCHAR (ATTRC_WRITEREG /*0x3c0*/, value);
+    READ_PORT_UCHAR (ATTRC_INPST1 /*0x3da*/);
     __asm__("sti\n\t");
 
     DeviceExtension->ScanLines = NR_SCANLINES; /* FIXME: read it from CRTC */
@@ -114,10 +120,10 @@ NTSTATUS ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* show blinking cursor */
     /* FIXME: calculate cursor size */
     __asm__("cli\n\t");
-    outb_p (CRTC_COMMAND, CRTC_CURSORSTART);
-    outb_p (CRTC_DATA, 0x47);
-    outb_p (CRTC_COMMAND, CRTC_CURSOREND);
-    outb_p (CRTC_DATA, 0x07);
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
+    WRITE_PORT_UCHAR (CRTC_DATA, 0x47);
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
+    WRITE_PORT_UCHAR (CRTC_DATA, 0x07);
     __asm__("sti\n\t");
 
     Status = STATUS_SUCCESS;
@@ -129,7 +135,8 @@ NTSTATUS ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
     PDEVICE_EXTENSION DeviceExtension;
@@ -145,10 +152,10 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     rows = DeviceExtension->Rows;
     columns = DeviceExtension->Columns;
 
-    outb_p(CRTC_COMMAND, CRTC_CURSORPOSHI);
-    offset = inb_p(CRTC_DATA)<<8;
-    outb_p(CRTC_COMMAND, CRTC_CURSORPOSLO);
-    offset += inb_p(CRTC_DATA);
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+    offset = READ_PORT_UCHAR (CRTC_DATA)<<8;
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
+    offset += READ_PORT_UCHAR (CRTC_DATA);
 
     cursory = offset / columns;
     cursorx = offset % columns;
@@ -226,13 +233,12 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     /* Set the cursor position */
     offset = (cursory * columns) + cursorx;
-   
-    outb_p (CRTC_COMMAND, CRTC_CURSORPOSLO);
-    outb_p (CRTC_DATA, offset);
-    outb_p (CRTC_COMMAND, CRTC_CURSORPOSHI);
-    offset >>= 8;
-    outb_p (CRTC_DATA, offset);
 
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
+    WRITE_PORT_UCHAR (CRTC_DATA, offset);
+    WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+    offset >>= 8;
+    WRITE_PORT_UCHAR (CRTC_DATA, offset);
 
     Status = STATUS_SUCCESS;
    
@@ -243,9 +249,8 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-
-
-NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
     PDEVICE_EXTENSION DeviceExtension;
@@ -263,10 +268,10 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 unsigned int offset;
 
                 __asm__("cli\n\t");
-                outb_p (CRTC_COMMAND, CRTC_CURSORPOSLO);
-                offset = inb_p (CRTC_DATA);
-                outb_p (CRTC_COMMAND, CRTC_CURSORPOSHI);
-                offset += (inb_p (CRTC_DATA) << 8);
+                WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
+                offset = READ_PORT_UCHAR (CRTC_DATA);
+                WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+                offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
                 __asm__("sti\n\t");
 
                 pcsbi->dwSize.X = rows;
@@ -301,10 +306,10 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                           pcsbi->dwCursorPosition.X;
 
                 __asm__("cli\n\t");
-                outb_p (CRTC_COMMAND, CRTC_CURSORPOSLO);
-                outb_p (CRTC_DATA, offset);
-                outb_p (CRTC_COMMAND, CRTC_CURSORPOSHI);
-                outb_p (CRTC_DATA, offset>>8);
+                WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
+                WRITE_PORT_UCHAR (CRTC_DATA, offset);
+                WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
+                WRITE_PORT_UCHAR (CRTC_DATA, offset>>8);
                 __asm__("sti\n\t");
 
                 Irp->IoStatus.Information = 0;
@@ -342,10 +347,10 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 data |= (BYTE)(height - size);
 
                 __asm__("cli\n\t");
-                outb_p (CRTC_COMMAND, CRTC_CURSORSTART);
-                outb_p (CRTC_DATA, data);
-                outb_p (CRTC_COMMAND, CRTC_CURSOREND);
-                outb_p (CRTC_DATA, height - 1);
+                WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORSTART);
+                WRITE_PORT_UCHAR (CRTC_DATA, data);
+                WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSOREND);
+                WRITE_PORT_UCHAR (CRTC_DATA, height - 1);
                 __asm__("sti\n\t");
 
                 Irp->IoStatus.Information = 0;
@@ -538,14 +543,8 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-VOID ScrStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-{
-//   PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
-    
-}
-
-
-NTSTATUS ScrDispatch (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS
+ScrDispatch (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;
@@ -572,7 +571,7 @@ NTSTATUS ScrDispatch (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * Module entry point
  */
-STDCALL NTSTATUS
+NTSTATUS STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
@@ -588,7 +587,6 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_READ]   = ScrDispatch;
     DriverObject->MajorFunction[IRP_MJ_WRITE]  = ScrWrite;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = ScrIoControl;
-    DriverObject->DriverStartIo = ScrStartIo;
 
     RtlInitAnsiString (&adevice_name, "\\Device\\BlueScreen");
     RtlAnsiStringToUnicodeString (&device_name, &adevice_name, TRUE);
@@ -604,5 +602,10 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     RtlAnsiStringToUnicodeString (&symlink_name, &asymlink_name, TRUE);
     IoCreateSymbolicLink (&symlink_name, &device_name);
 
+    RtlFreeUnicodeString (&device_name);
+    RtlFreeUnicodeString (&symlink_name);
+
     return (STATUS_SUCCESS);
 }
+
+/* EOF */
