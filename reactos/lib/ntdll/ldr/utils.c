@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.80 2004/01/25 08:32:49 navaraf Exp $
+/* $Id: utils.c,v 1.81 2004/01/25 09:57:14 jfilby Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2566,7 +2566,7 @@ LdrpAttachThread (VOID)
 	     {
                TRACE_LDR("%wZ - Calling entry point at %x for thread attaching\n", 
 		         &Module->BaseDllName, Module->EntryPoint);
-	       LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, NULL);
+	       LdrpCallDllEntry(Module, DLL_THREAD_ATTACH, NULL);
              }
            Entry = Entry->Flink;
          }

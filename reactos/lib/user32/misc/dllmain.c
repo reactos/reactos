@@ -99,14 +99,14 @@ DllMain(
 	PVOID  reserved
 	)
 {
-  D(MAX_TRACE, ("hinstDll (0x%X)  dwReason (0x%X)\n", hinstDll, dwReason));
+  DbgPrint("hinstDll (0x%X)  dwReason (0x%X)\n", hinstDll, dwReason);
 
   switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
       hProcessHeap = RtlGetProcessHeap();
       Init();
-      InitThread();
+/*      InitThread();*/
       break;
     case DLL_THREAD_ATTACH:
       InitThread();
@@ -116,7 +116,7 @@ DllMain(
       break;
     case DLL_PROCESS_DETACH:
       DeleteFrameBrushes();
-      CleanupThread();
+/*      CleanupThread();*/
       Cleanup();
       break;
     }
