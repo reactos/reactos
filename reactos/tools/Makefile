@@ -6,7 +6,7 @@ TOOLS = \
   rcopy$(EXE_POSTFIX) \
   rdel$(EXE_POSTFIX) \
   rmkdir$(EXE_POSTFIX) \
-  rrmdir$(EXE_POSTFIX)  \
+  rrmdir$(EXE_POSTFIX) \
   rsym$(EXE_POSTFIX)
 
 CLEAN_FILES = $(TOOLS)
@@ -31,7 +31,6 @@ endif
 
 rdel$(EXE_POSTFIX): rdel.c
 	$(HOST_CC) $(CFLAGS) rdel.c -o rdel$(EXE_POSTFIX)
-#	$(HOST_CC) $(CFLAGS) -liberty rdel.c -o rdel$(EXE_POSTFIX)
 
 ifeq ($(HOST),mingw32-linux)
 rmkdir$(EXE_POSTFIX): rmkdir.c
@@ -65,15 +64,14 @@ wmc_directory_target:
 
 ifeq ($(HOST),mingw32-linux)
 clean:
-	rm $(TOOLS)
-	rm mkconfig$(EXE_POSTFIX)
 	make -C wmc clean
+	rm mkconfig
+	rm $(TOOLS)
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
-	$(PATH_TO_TOP)/rdel $(TOOLS)
-	$(PATH_TO_TOP)/rdel mkconfig$(EXE_POSTFIX)
 	make -C wmc clean
+	del *$(EXE_POSTFIX)
 endif
 
 .PHONY: all clean
