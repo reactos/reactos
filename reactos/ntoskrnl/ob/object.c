@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.78 2004/07/16 17:19:15 ekohl Exp $
+/* $Id: object.c,v 1.79 2004/07/18 13:03:43 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -347,11 +347,18 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   NTSTATUS Status;
   BOOLEAN ObjectAttached = FALSE;
   PWCHAR NamePtr;
+  PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
 
   assert_irql(APC_LEVEL);
 
   DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n",
 	 Type, ObjectAttributes, Object);
+
+  if (Type == NULL)
+    {
+      DPRINT1("Invalid object type!\n");
+      return STATUS_INVALID_PARAMETER;
+    }
 
   if (ObjectAttributes != NULL &&
       ObjectAttributes->ObjectName != NULL &&
@@ -425,8 +432,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       ObjectAttached = TRUE;
     }
 
-  if ((Header->ObjectType != NULL) &&
-      (Header->ObjectType->Create != NULL))
+  if (Header->ObjectType->Create != NULL)
     {
       DPRINT("Calling %x\n", Header->ObjectType->Create);
       Status = Header->ObjectType->Create(HEADER_TO_BODY(Header),
@@ -449,11 +455,19 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 	  return(Status);
 	}
     }
-  RtlFreeUnicodeString( &RemainingPath );
+  RtlFreeUnicodeString(&RemainingPath);
 
-  if (Header->ObjectType != NULL)
+  /* Build the new security descriptor */
+  Status = SeAssignSecurity((ParentHeader != NULL) ? ParentHeader->SecurityDescriptor : NULL,
+			    (ObjectAttributes != NULL) ? ObjectAttributes->SecurityDescriptor : NULL,
+			    &NewSecurityDescriptor,
+			    (Header->ObjectType == ObDirectoryType),
+			    NULL, //SubjectContext,
+			    Header->ObjectType->Mapping,
+			    PagedPool);
+  if (NT_SUCCESS(Status))
     {
-      /* FIXME: Call SeAssignSecurity() to create a new security descriptor */
+      DPRINT("NewSecurityDescriptor %p\n", NewSecurityDescriptor);
 
       if (Header->ObjectType->Security != NULL)
 	{
@@ -463,16 +477,13 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       else
 	{
 	  /* Assign the security descriptor to the object header */
-	  if (ObjectAttributes != NULL && ObjectAttributes->SecurityDescriptor != NULL)
-	    {
-	      Status = ObpAddSecurityDescriptor(ObjectAttributes->SecurityDescriptor,
-						&Header->SecurityDescriptor);
-	    }
-	  else
-	    {
-	      Status = STATUS_SUCCESS;
-	    }
+	  Status = ObpAddSecurityDescriptor(NewSecurityDescriptor,
+					    &Header->SecurityDescriptor);
+	  DPRINT("Object security descriptor %p\n", Header->SecurityDescriptor);
 	}
+
+      /* Release the new security descriptor */
+      SeDeassignSecurity(&NewSecurityDescriptor);
     }
 
   if (Object != NULL)
@@ -485,14 +496,6 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 
 
 /*
- * @implemented
- */
-NTSTATUS STDCALL
-ObReferenceObjectByPointer(IN PVOID Object,
-			   IN ACCESS_MASK DesiredAccess,
-			   IN POBJECT_TYPE ObjectType,
-			   IN KPROCESSOR_MODE AccessMode)
-/*
  * FUNCTION: Increments the pointer reference count for a given object
  * ARGUMENTS:
  *         ObjectBody = Object's body
@@ -500,7 +503,14 @@ ObReferenceObjectByPointer(IN PVOID Object,
  *         ObjectType = Points to the object type structure
  *         AccessMode = Type of access check to perform
  * RETURNS: Status
+ *
+ * @implemented
  */
+NTSTATUS STDCALL
+ObReferenceObjectByPointer(IN PVOID Object,
+			   IN ACCESS_MASK DesiredAccess,
+			   IN POBJECT_TYPE ObjectType,
+			   IN KPROCESSOR_MODE AccessMode)
 {
    POBJECT_HEADER Header;
 
