@@ -52,6 +52,8 @@ FileChildWndInfo::FileChildWndInfo(LPCTSTR path)
 	_pos.rcNormalPosition.top = CW_USEDEFAULT;
 	_pos.rcNormalPosition.right = CW_USEDEFAULT;
 	_pos.rcNormalPosition.bottom = CW_USEDEFAULT;
+
+	_mode_explore = true;
 }
 
 
@@ -119,7 +121,9 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	_root._entry->_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
 
-	_left_hwnd = *(_left=new Pane(_hwnd, IDW_TREE_LEFT, IDW_HEADER_LEFT, _root._entry, true, 0));
+	if (info._mode_explore)	//TODO: Is not-explore-mode for FileChildWindow completely implemented?
+		_left_hwnd = *(_left=new Pane(_hwnd, IDW_TREE_LEFT, IDW_HEADER_LEFT, _root._entry, true, 0));
+
 	_right_hwnd = *(_right=new Pane(_hwnd, IDW_TREE_RIGHT, IDW_HEADER_RIGHT, NULL, false, COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_INDEX|COL_LINKS));
 
 	_sortOrder = SORT_NAME;
@@ -127,8 +131,10 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 
 	set_curdir(entry, hwnd);
 
-	int idx = ListBox_FindItemData(_left_hwnd, ListBox_GetCurSel(_left_hwnd), _left->_cur);
-	ListBox_SetCurSel(_left_hwnd, idx);
+	if (_left_hwnd) {
+		int idx = ListBox_FindItemData(_left_hwnd, ListBox_GetCurSel(_left_hwnd), _left->_cur);
+		ListBox_SetCurSel(_left_hwnd, idx);
+	}
 
 	 //TODO: scroll to visibility
 
@@ -284,7 +290,8 @@ void FileChildWindow::resize_children(int cx, int cy)
 								rt.left+cx+1, wp.y, wp.cx-cx+2, wp.cy, wp.flags);
 	}
 
-	hdwp = DeferWindowPos(hdwp, _left_hwnd, 0, rt.left, rt.top, _split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	if (_left_hwnd)
+		hdwp = DeferWindowPos(hdwp, _left_hwnd, 0, rt.left, rt.top, _split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
 	hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 

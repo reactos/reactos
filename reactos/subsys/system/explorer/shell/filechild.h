@@ -34,6 +34,7 @@ struct FileChildWndInfo
 	LPCTSTR		_path;
 
 	WINDOWPLACEMENT _pos;
+	bool		_mode_explore;
 };
 
 struct ShellChildWndInfo : public FileChildWndInfo

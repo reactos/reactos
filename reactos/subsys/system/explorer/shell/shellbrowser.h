@@ -128,6 +128,7 @@ protected:
 	void	OnTreeItemRClick(int idCtrl, LPNMHDR pnmh);
 	void	OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv);
 
+	void	UpdateFolderView(IShellFolder* folder);
 	void	Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen);
 	bool	expand_folder(ShellDirectory* entry);
 };

@@ -218,7 +218,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (lparam) {
 			 // take over path from lparam
 			path = (LPCTSTR)lparam;
-			shell_path = path;	// creates as "rooted" window
+			shell_path = path;	// create as "rooted" window
 		} else {
 			//TODO: read paths and window placements from registry
 			GetCurrentDirectory(MAX_PATH, buffer);
@@ -233,6 +233,8 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		create_info._pos.rcNormalPosition.top = 0;
 		create_info._pos.rcNormalPosition.right = 600;
 		create_info._pos.rcNormalPosition.bottom = 280;
+
+		create_info._mode_explore = wparam? true: false;
 
 	//	FileChildWindow::create(_hmdiclient, create_info);
 		ShellBrowserChild::create(_hmdiclient, create_info);

@@ -86,16 +86,18 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 
 
 	 // create explorer treeview
-	_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
-					WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
-					0, rect.top, _split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
-					_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
+	if (_create_info._mode_explore)
+		_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
+						WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
+						0, rect.top, _split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
+						_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
 
 	if (_left_hwnd) {
 		InitializeTree();
 
 		InitDragDrop();
-	}
+	} else
+		UpdateFolderView(_create_info._shell_path.get_folder());
 
 	return 0;
 }
@@ -370,13 +372,18 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 		return;
 	}
 
+	UpdateFolderView(folder);
+}
+
+void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
+{
 	FOLDERSETTINGS fs;
 	IShellView* pLastShellView = _pShellView;
 
 	if (pLastShellView)
 		pLastShellView->GetCurrentInfo(&fs);
 	else {
-		fs.ViewMode = FVM_DETAILS;
+		fs.ViewMode = _left_hwnd? FVM_DETAILS: FVM_ICON;
 		fs.fFlags = FWF_NOCLIENTEDGE;
 	}
 
