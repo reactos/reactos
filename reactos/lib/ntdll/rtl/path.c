@@ -839,6 +839,12 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 	Length = wcslen(fullname + Offset);
 	memcpy (Buffer + tmpLength, fullname + Offset, (Length + 1) * sizeof(WCHAR));
 	Length += tmpLength;
+	if (Type == ABSOLUTE_DRIVE_PATH ||
+	    Type == RELATIVE_DRIVE_PATH)
+	{
+	    /* make the drive letter to uppercase */
+	    Buffer[tmpLength] = towupper(Buffer[tmpLength]);
+	}
 
 	/* set NT filename */
 	ntname->Length        = Length * sizeof(WCHAR);
