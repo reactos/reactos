@@ -46,9 +46,11 @@ W32kArc(HDC  hDC,
     return PATH_Arc(hDC, LeftRect, TopRect, RightRect, BottomRect,
                     XStartArc, YStartArc, XEndArc, YEndArc);
 
-  DC_ReleasePtr( hDC );
 //   EngArc(dc, LeftRect, TopRect, RightRect, BottomRect, UNIMPLEMENTED
 //          XStartArc, YStartArc, XEndArc, YEndArc);
+
+  DC_ReleasePtr( hDC );
+  return TRUE;
 }
 
 BOOL
@@ -180,7 +182,7 @@ W32kMoveToEx(HDC  hDC,
     return PATH_MoveTo(hDC);
   }
   DC_ReleasePtr( hDC );
-  return FALSE;
+  return TRUE;
 }
 
 BOOL
@@ -302,7 +304,7 @@ W32kPolyline(HDC  hDC,
       DC_ReleasePtr( hDC );
       return(FALSE);
     }
- 
+
     //offset the array of point by the dc->w.DCOrg
     for(i=0; i<Count; i++)
     {
