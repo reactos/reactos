@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.36 2004/02/03 14:37:35 ekohl Exp $
+/* $Id: unicode.c,v 1.37 2004/02/15 07:04:45 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -203,7 +203,8 @@ RtlAppendUnicodeStringToString(
 
 	memcpy((PVOID)Destination->Buffer + Destination->Length, Source->Buffer, Source->Length);
         Destination->Length += Source->Length;
-	Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
+	if( Destination->MaximumLength > Destination->Length )
+	    Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
 
 	return STATUS_SUCCESS;
 }
