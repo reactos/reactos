@@ -27,6 +27,13 @@
  *  interrupts are handled the same as KM drivers.
  */
 
+typedef enum _VP_STATUS
+{
+  NO_ERROR,
+  ERROR_DEV_NOT_EXIST,
+  ERROR_INVALID_PARAMETER
+} VP_STATUS, *PVP_STATUS;
+
 #define VIDEO_MEMORY_SPACE_MEMORY    0x00
 #define VIDEO_MEMORY_SPACE_IO        0x01
 #define VIDEO_MEMORY_SPACE_USER_MODE 0x02

@@ -106,7 +106,7 @@ VideoPortGetBusData(IN PVOID  HwDeviceExtension,
 UCHAR 
 VideoPortGetCurrentIrql(VOID)
 {
-  return KeGetCurrentIrql;
+  return KeGetCurrentIrql();
 }
 
 PVOID 
@@ -115,7 +115,15 @@ VideoPortGetDeviceBase(IN PVOID  HwDeviceExtension,
                        IN ULONG  NumberOfUchars,
                        IN UCHAR  InIoSpace)
 {
-  UNIMPLEMENTED;
+  if (InIoSpace)
+    {
+      return  MmMapIoSpace(IoAddress, NumberOfUChars, FALSE);
+    }
+  else
+    {
+      UNIMPLEMENTED;
+      return  NULL;
+    }
 }
 
 VP_STATUS 
@@ -217,7 +225,9 @@ VideoPortInitialize(IN PVOID  Context1,
       /* FIXME: Allocate hardware resources for device  */
 
       /*  Allocate interrupt for device  */
-      if (HwInitializationData->HwInterrupt != NULL)
+      if (HwInitializationData->HwInterrupt != NULL &&
+          !(ConfigInfo.BusInterruptLevel == 0 &&
+            ConfigInfo.BusInterruptVector == 0))
         {
           ExtensionData->IRQL = ConfigInfo.BusInterruptLevel;
           ExtensionData->Interrupt = 
@@ -311,7 +321,18 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
                    IN PULONG  InIoSpace,
                    OUT PVOID  *VirtualAddress)
 {
-  UNIMPLEMENTED;
+  if (*InIoSpace)
+    {
+      *VirtualAddress = MmMapIoSpace(PhyiscalAddress, Length, FALSE);
+      
+      return *VirtualAddress != NULL ? STATUS_SUCCESS : STATUS_INSUFFICFIENT_RESOURCES;
+    }
+  else
+    {
+      UNIMPLEMENTED;
+    }
+  
+  return  STATUS_SUCCESS;  
 }
 
 VOID 
@@ -319,7 +340,7 @@ VideoPortMoveMemory(OUT PVOID  Destination,
                     IN PVOID  Source,
                     IN ULONG  Length)
 {
-  UNIMPLEMENTED;
+  RtlMoveMemory(Destination, Source, Length);
 }
 
 UCHAR 
@@ -423,7 +444,12 @@ VideoPortSetBusData(IN PVOID  HwDeviceExtension,
                     IN ULONG  Offset,
                     IN ULONG  Length)
 {
-  UNIMPLEMENTED;
+  return  HalSetBusDataByOffset(BusDataType,
+                                0,
+                                SlotNumber,
+                                Buffer,
+                                Offset,
+                                Length);
 }
 
 VP_STATUS 
