@@ -102,7 +102,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 	HFONT hfont = GetStockFont(DEFAULT_GUI_FONT);
 
-	_haddressedit = CreateWindow(TEXT("EDIT"), NULL, WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
+	_haddressedit = CreateWindow(TEXT("EDIT"), NULL, WS_CHILD|WS_VISIBLE|WS_BORDER, 0, 0, 0, rect.bottom,
 							hwnd, (HMENU)IDW_ADDRESSBAR, g_hInstance, 0);
 	SetWindowFont(_haddressedit, hfont, FALSE);
 	new EditController(_haddressedit);
