@@ -609,6 +609,7 @@ LRESULT             FASTCALL IntSendMessage(PWINDOW_OBJECT Window, UINT Msg, WPA
 LRESULT             FASTCALL IntSendMessageTimeout(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam, 
                                                    UINT uFlags, UINT uTimeout, ULONG_PTR *uResult);
 BOOL                FASTCALL IntPostThreadMessage(PW32THREAD W32Thread, UINT Msg, WPARAM wParam, LPARAM lParam);
+BOOL                FASTCALL IntPostMessage(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
 BOOL                FASTCALL IntWaitMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax);
 BOOL                FASTCALL IntTranslateKbdMessage(PKMSG lpMsg, HKL dwhkl);
 inline VOID                  MsqSetQueueBits(PUSER_MESSAGE_QUEUE queue, WORD bits);

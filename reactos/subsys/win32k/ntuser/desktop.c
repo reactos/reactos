@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.17.2.2 2004/07/18 23:44:01 weiden Exp $
+ *  $Id: desktop.c,v 1.17.2.3 2004/08/31 14:34:39 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -247,7 +247,7 @@ IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
-
+  DbgPrint("IntShowDesktop 0x%x\n", Desktop->DesktopWindow->Handle);
   Request.Type = CSRSS_SHOW_DESKTOP;
   Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow->Handle;
   Request.Data.ShowDesktopRequest.Width = Width;

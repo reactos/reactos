@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.5 2004/08/31 11:38:56 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.6 2004/08/31 14:34:39 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -143,12 +143,17 @@ error: \
  */
 
 #define ENTER_CRITICAL() \
-  IntUserEnterCritical()
+  DbgPrint("%s:%i ENTER_CRICITAL\n", __FILE__, __LINE__); \
+  IntUserEnterCritical(); \
+  DbgPrint("%s:%i ENTER_CRICITAL done\n", __FILE__, __LINE__)
 
 #define ENTER_CRITICAL_SHARED() \
-  IntUserEnterCriticalShared()
+  DbgPrint("%s:%i ENTER_CRICITAL_SHARED\n", __FILE__, __LINE__); \
+  IntUserEnterCriticalShared(); \
+  DbgPrint("%s:%i ENTER_CRICITAL_SHARED done\n", __FILE__, __LINE__)
 
 #define LEAVE_CRITICAL() \
+  DbgPrint("%s:%i LEAVE_CRITICAL\n", __FILE__, __LINE__); \
   IntUserLeaveCritical()
 
 #define IN_CRITICAL() \
@@ -909,7 +914,7 @@ NtUserGetCursorInfo(
   NTUSER_FAIL_INVALID_PARAMETER(pci, NULL);
   NTUSER_FAIL_INVALID_STRUCT(CURSORINFO, pci, cbSize);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   Result = IntGetCursorInfo(&SafeCI);
   LEAVE_CRITICAL();
   
@@ -924,7 +929,7 @@ NtUserGetDC(HWND hWnd)
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(HDC, NULL);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(hWnd != NULL)
   {
     VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
@@ -952,7 +957,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(HDC, NULL);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   if(hWnd != NULL)
   {
     VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
@@ -1435,14 +1440,35 @@ NtUserPostMessage(HWND Wnd,
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(LRESULT, 0);
 
-  /* don't handle HWND_BROADCAST in kmode, SendMessage() should obtain a list
-     of handles and then call NtUserSendMessage() for each window */
-  NTUSER_FAIL_INVALID_PARAMETER(Wnd, HWND_BROADCAST);
-  NTUSER_FAIL_INVALID_PARAMETER(Wnd, 0);
+  /* As opposed to NtUserSendMessage(), NtUserPostMessage() handles HWND_BROADCAST in kmode! */
 
-  ENTER_CRITICAL_SHARED();
-  VALIDATE_USER_OBJECT(WINDOW, Wnd, Window);
-  LEAVE_CRITICAL();
+  if(Wnd != NULL || Wnd == HWND_BROADCAST)
+  {
+    /* Post a single mesage */
+    
+    ENTER_CRITICAL_SHARED();
+    if(Wnd != HWND_BROADCAST)
+    {
+      VALIDATE_USER_OBJECT(WINDOW, Wnd, Window);
+    }
+    Result = IntPostMessage(Window,
+                            Msg,
+                            wParam,
+                            lParam);
+    LEAVE_CRITICAL();
+  }
+  else
+  {
+    /* According to PSDK it behaves the same way as PostThreadMessage() if no
+       window is specified. */
+
+    ENTER_CRITICAL_SHARED();
+    Result = IntPostThreadMessage(PsGetWin32Thread(),
+                                  Msg,
+                                  wParam,
+                                  lParam);
+    LEAVE_CRITICAL();
+  }
 
   END_NTUSER();
 }
@@ -1470,6 +1496,11 @@ NtUserPostThreadMessage(DWORD idThread,
     ObDereferenceObject(peThread);
     NTUSER_FAIL_ERROR(ERROR_ACCESS_DENIED); /* FIXME - right error code?! */
   }
+  
+  /* FIXME - fail if the thread is exiting */
+  /* FIXME - fail if the thread does not belong to the same desktop or to a process
+             that doesn't have the same local unique identifier (LUID) as the
+             calling process. set the last error code to ERROR_INVALID_THREAD_ID */
   
   ENTER_CRITICAL_SHARED();
   Result = IntPostThreadMessage(peThread->Win32Thread,
@@ -1614,19 +1645,19 @@ NtUserSendMessage(HWND Wnd,
 {
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(LRESULT, 0);
-  
+
   /* don't handle HWND_BROADCAST in kmode, SendMessage() should obtain a list
      of handles and then call NtUserSendMessage() for each window */
   NTUSER_FAIL_INVALID_PARAMETER(Wnd, HWND_BROADCAST);
   NTUSER_FAIL_INVALID_PARAMETER(Wnd, 0);
-  
+
   /* FIXME - probe UnsafeInfo */
   
   UnsafeInfo->HandledByKernel = TRUE;
   
   ENTER_CRITICAL_SHARED();
+
   VALIDATE_USER_OBJECT(WINDOW, Wnd, Window);
-  
   if(Window->MessageQueue->Thread == PsGetCurrentThread())
   {
     /* return to user mode and call the window proc there */
@@ -1651,11 +1682,18 @@ NtUserSendMessage(HWND Wnd,
       UnsafeInfo->Proc = Window->WndProcA;
     }
     LEAVE_CRITICAL();
-    
+
     UnsafeInfo->HandledByKernel = FALSE;
     return TRUE;
   }
+  ObmReferenceObject(Window);
   LEAVE_CRITICAL();
+
+  Result = IntSendMessage(Window,
+                          Msg,
+                          wParam,
+                          lParam);
+  ObmDereferenceObject(Window);
   
   END_NTUSER();
 }

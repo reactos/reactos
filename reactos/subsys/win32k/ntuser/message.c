@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.71.4.3 2004/08/31 11:38:56 weiden Exp $
+/* $Id: message.c,v 1.71.4.4 2004/08/31 14:34:39 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -935,7 +935,10 @@ IntPostThreadMessage(PW32THREAD W32Thread,
 
   MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
   /* FIXME - what if MsgMemoryEntry == NULL? */
-  Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry, NULL);
+  Status = CopyMsgToKernelMem(&KernelModeMsg,
+                              &UserModeMsg,
+                              MsgMemoryEntry,
+                              NULL); /* pass NULL as the message window so it can be set in the KMSG struct */
   if(!NT_SUCCESS(Status))
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -945,6 +948,63 @@ IntPostThreadMessage(PW32THREAD W32Thread,
   ASSERT(W32Thread->MessageQueue); /* FIXME - we should propably check this and fail gracefully */
   
   MsqPostMessage(W32Thread->MessageQueue, &KernelModeMsg,
+                 NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam);
+
+  return TRUE;
+}
+
+BOOL FASTCALL
+IntPostMessage(PWINDOW_OBJECT Window,
+               UINT Msg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+  MSG UserModeMsg;
+  KMSG KernelModeMsg;
+  NTSTATUS Status;
+  PMSGMEMORY MsgMemoryEntry;
+  
+  if(Window == NULL)
+  {
+    /* Broadcast the message to all top level windows */
+
+    PWINDOW_OBJECT Wnd, Desktop;
+    
+    if(!(Desktop = IntGetDesktopWindow()))
+    {
+      DPRINT1("Failed to broadcast message 0x%x! No desktop window found!\n", Msg);
+      return FALSE;
+    }
+    
+    for(Wnd = Desktop->FirstChild; Wnd != NULL; Wnd = Wnd->NextSibling)
+    {
+      IntPostMessage(Wnd,
+                     Msg,
+                     wParam,
+                     lParam);
+    }
+
+    return TRUE; /* FIXME - return also TRUE if no top-level windows are present?! */
+  }
+
+  UserModeMsg.hwnd = (Window != NULL ? Window->Handle : NULL);
+  UserModeMsg.message = Msg;
+  UserModeMsg.wParam = wParam;
+  UserModeMsg.lParam = lParam;
+
+  MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
+  /* FIXME - what if MsgMemoryEntry == NULL? */
+  Status = CopyMsgToKernelMem(&KernelModeMsg,
+                              &UserModeMsg,
+                              MsgMemoryEntry,
+                              Window); /* pass the message window so it can be set in the KMSG struct */
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
                  NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam);
 
   return TRUE;
