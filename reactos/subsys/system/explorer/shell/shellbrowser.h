@@ -57,14 +57,14 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 	}
 
 	//IShellBrowser
-	STDMETHOD(QueryActiveShellView)(struct IShellView ** ppshv)
+	STDMETHOD(QueryActiveShellView)(IShellView** ppshv)
 	{
 		_pShellView->AddRef();
 		*ppshv = _pShellView;
 		return S_OK;
 	}
 
-	STDMETHOD(GetControlWindow)(UINT id, HWND * lphwnd)
+	STDMETHOD(GetControlWindow)(UINT id, HWND* lphwnd)
 	{
 		if (!lphwnd)
 			return E_POINTER;

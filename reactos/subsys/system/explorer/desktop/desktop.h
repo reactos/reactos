@@ -38,9 +38,8 @@ struct DesktopWindow : public Window, public IShellBrowserImpl
 {
 	typedef Window super;
 
-	DesktopWindow::DesktopWindow(HWND hwnd);
-
-	DesktopWindow::~DesktopWindow();
+	DesktopWindow(HWND hwnd);
+	~DesktopWindow();
 
 	STDMETHOD(GetWindow)(HWND* lphwnd)
 	{
@@ -48,14 +47,14 @@ struct DesktopWindow : public Window, public IShellBrowserImpl
 		return S_OK;
 	}
 
-	STDMETHOD(QueryActiveShellView)(struct IShellView ** ppshv)
+	STDMETHOD(QueryActiveShellView)(IShellView** ppshv)
 	{
 		_pShellView->AddRef();
 		*ppshv = _pShellView;
 		return S_OK;
 	}
 
-	STDMETHOD(GetControlWindow)(UINT id, HWND * lphwnd)
+	STDMETHOD(GetControlWindow)(UINT id, HWND* lphwnd)
 	{
 		return E_NOTIMPL;
 	}

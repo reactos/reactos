@@ -32,6 +32,7 @@
 
 
 static BOOL (WINAPI*SetShellWindow)(HWND);
+static BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
 
 
 BOOL IsAnyDesktopRunning()
@@ -39,6 +40,7 @@ BOOL IsAnyDesktopRunning()
 	HINSTANCE shell32 = GetModuleHandle(TEXT("user32"));
 
 	SetShellWindow = (BOOL(WINAPI*)(HWND)) GetProcAddress(shell32, "SetShellWindow");
+	SetShellWindowEx = (BOOL(WINAPI*)(HWND,HWND)) GetProcAddress(shell32, "SetShellWindowEx");
 
 	return GetShellWindow() != 0;
 }
@@ -48,16 +50,10 @@ DesktopWindow::DesktopWindow(HWND hwnd)
  :	super(hwnd)
 {
 	_pShellView = NULL;
-
-	if (SetShellWindow)
-		SetShellWindow(hwnd);
 }
 
 DesktopWindow::~DesktopWindow()
 {
-	if (SetShellWindow)
-		SetShellWindow(0);
-
 	if (_pShellView)
 		_pShellView->Release();
 }
@@ -102,6 +98,40 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		case WM_GETISHELLBROWSER:
 			return (LRESULT)static_cast<IShellBrowser*>(this);
 
+		case WM_CREATE: {
+			HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
+
+			HWND hWndListView = 0;
+
+			if (SUCCEEDED(hr)) {
+				FOLDERSETTINGS fs;
+
+				fs.ViewMode = FWF_DESKTOP|FWF_TRANSPARENT|FWF_NOSUBFOLDERS|FWF_BESTFITWINDOW|FWF_ABBREVIATEDNAMES;
+				fs.fFlags = FVM_ICON;
+
+				RECT rect;
+				GetClientRect(_hwnd, &rect);
+
+				hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndListView);
+
+				if (SUCCEEDED(hr)) {
+					HWND hwndFolderView = ::GetNextWindow(hWndListView, GW_CHILD);
+
+					ShowWindow(hwndFolderView, SW_SHOW);
+				}
+			}
+
+			if (hWndListView && SetShellWindowEx)
+				SetShellWindowEx(_hwnd, hWndListView);
+			else if (SetShellWindow)
+				SetShellWindow(_hwnd);
+			break;}
+
+		case WM_DESTROY:
+			if (SetShellWindow)
+				SetShellWindow(0);
+			break;
+
 		case WM_CLOSE:
 			break;	// Over-ride close. We need to close desktop some other way.
 
@@ -128,39 +158,7 @@ HWND create_desktop_window(HINSTANCE hInstance)
 	int width = GetSystemMetrics(SM_CXSCREEN);
 	int height = GetSystemMetrics(SM_CYSCREEN);
 
-	HWND hwndDesktop = Window::Create(WINDOW_CREATOR(DesktopWindow),
-					0, (LPCTSTR)desktopClass, _T("Progman"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
+	return Window::Create(WINDOW_CREATOR(DesktopWindow),
+					0, (LPCTSTR)(int)desktopClass, _T("Progman"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
 					0, 0, width, height, 0);
-
-	if (!hwndDesktop)
-		return 0;
-
-
-	ShellFolder folder;
-
-	IShellView* pShellView;
-	HRESULT hr = folder->CreateViewObject(hwndDesktop, IID_IShellView, (void**)&pShellView);
-
-	HWND hWndListView = 0;
-
-	if (SUCCEEDED(hr)) {
-		FOLDERSETTINGS fs;
-
-		fs.ViewMode = 0;
-		fs.fFlags = FVM_ICON;
-
-		RECT rect = {0, 0, width, height};
-
-		DesktopWindow* shell_browser = static_cast<DesktopWindow*>(Window::get_window(hwndDesktop));
-
-		hr = pShellView->CreateViewWindow(NULL, &fs, shell_browser, &rect, &hWndListView);
-
-		if (SUCCEEDED(hr)) {
-			HWND hwndFolderView = GetNextWindow(hWndListView, GW_CHILD);
-
-			ShowWindow(hwndFolderView, SW_SHOW);
-		}
-	}
-
-	return hwndDesktop;
 }
