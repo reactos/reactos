@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.7 2002/03/03 19:39:10 ekohl Exp $
+/* $Id: scsiport.c,v 1.8 2002/03/03 23:46:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1021,13 +1021,13 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 		IoStartNextPacket(DeviceObject,
 				  FALSE);
 	    }
-	  if (DeviceExtension->IrpFlags | IRP_FLAG_COMPLETE)
+	  if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
 	    {
 		DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	    }
 
-	  if (DeviceExtension->IrpFlags | IRP_FLAG_NEXT)
+	  if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
 	    {
 		DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
 		IoStartNextPacket(DeviceObject, FALSE);
@@ -1369,16 +1369,16 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 //  DpcIrp->IoStatus.Information = 0;
 //  DpcIrp->IoStatus.Status = STATUS_SUCCESS;
 
-  if (DeviceExtension->IrpFlags | IRP_FLAG_COMPLETE)
+  if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
     {
       DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
       IoCompleteRequest(DpcIrp, IO_NO_INCREMENT);
     }
 
-  if (DeviceExtension->IrpFlags | IRP_FLAG_NEXT)
+  if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
     {
       DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
-//      IoStartNextPacket(DpcDeviceObject, FALSE);
+      IoStartNextPacket(DpcDeviceObject, FALSE);
     }
 
   DPRINT1("ScsiPortDpcForIsr() done\n");

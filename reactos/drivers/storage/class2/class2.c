@@ -1,4 +1,4 @@
-/* $Id: class2.c,v 1.7 2002/03/03 19:38:09 ekohl Exp $
+/* $Id: class2.c,v 1.8 2002/03/03 23:45:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -216,6 +216,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 
   NextIrpStack->MajorFunction = IRP_MJ_SCSI;
   NextIrpStack->Parameters.Scsi.Srb = Srb;
+  NextIrpStack->DeviceObject = DeviceObject;
 
 #if 0
   /* save retry count in current IRP stack */
