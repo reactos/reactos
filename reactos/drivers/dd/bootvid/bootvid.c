@@ -1,4 +1,4 @@
-/* $Id: bootvid.c,v 1.1 2003/08/24 12:11:13 dwelch Exp $
+/* $Id: bootvid.c,v 1.2 2003/08/25 12:27:45 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -17,7 +17,7 @@
 
 #include "../../../ntoskrnl/include/internal/v86m.h"
 
-#define NDEBUG
+/*#define NDEBUG*/
 #include <debug.h>
 
 #define RT_BITMAP   2
@@ -81,16 +81,6 @@ typedef struct {
 #define ATTRIB   0x3c0
 #define STATUS   0x3da
 
-typedef struct _VideoMode {
-  unsigned short VidSeg;
-  unsigned char  Misc;
-  unsigned char  Feature;
-  unsigned short Seq[6];
-  unsigned short Crtc[25];
-  unsigned short Gfx[9];
-  unsigned char  Attrib[21];
-} VideoMode;
-
 typedef struct {
   ULONG r;
   ULONG g;
@@ -112,26 +102,10 @@ long y80[480];
 static HANDLE BitmapThreadHandle;
 static CLIENT_ID BitmapThreadId;
 static BOOLEAN BitmapIsDrawn;
-static BOOLEAN BitmapThreadShouldTerminate;
 static PUCHAR BootimageBitmap;
 static BOOLEAN InGraphicsMode = FALSE;
 
 /* DATA **********************************************************************/
-
-static VideoMode Mode12 = {
-    0xa000, 0xe3, 0x00,
-
-    {0x03, 0x01, 0x0f, 0x00, 0x06 },
-
-    {0x5f, 0x4f, 0x50, 0x82, 0x54, 0x80, 0x0b, 0x3e, 0x00, 0x40, 0x00, 0x00,
-     0x00, 0x00, 0x00, 0x59, 0xea, 0x8c, 0xdf, 0x28, 0x00, 0xe7, 0x04, 0xe3,
-     0xff},
-
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x0f, 0xff},
-
-    {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
-     0x0c, 0x0d, 0x0e, 0x0f, 0x81, 0x00, 0x0f, 0x00, 0x00}
-};
 
 static BOOLEAN VideoAddressSpaceInitialized = FALSE;
 static PVOID NonBiosBaseAddress;
@@ -336,60 +310,13 @@ vgaPreCalc()
   }
 }
 
-static __inline__ VOID
-InbvOutxay(PUSHORT ad, UCHAR x, UCHAR y)
-{
-  USHORT xy = (x << 8) + y;
-  WRITE_PORT_USHORT(ad, xy);
-}
-
-
-static VOID
-InbvSetMode(VideoMode mode)
-{
-  unsigned char x;
-
-  WRITE_PORT_UCHAR((PUCHAR)MISC, mode.Misc);
-  WRITE_PORT_UCHAR((PUCHAR)STATUS, 0);
-  WRITE_PORT_UCHAR((PUCHAR)FEATURE, mode.Feature);
-
-  for(x=0; x<5; x++)
-  {
-    InbvOutxay((PUSHORT)SEQ, mode.Seq[x], x);
-  }
-
-  WRITE_PORT_USHORT((PUSHORT)CRTC, 0x11);
-  WRITE_PORT_USHORT((PUSHORT)CRTC, (mode.Crtc[0x11] & 0x7f));
-
-  for(x=0; x<25; x++)
-  {
-    InbvOutxay((PUSHORT)CRTC, mode.Crtc[x], x);
-  }
-
-  for(x=0; x<9; x++)
-  {
-    InbvOutxay((PUSHORT)GRAPHICS, mode.Gfx[x], x);
-  }
-
-  x=READ_PORT_UCHAR((PUCHAR)FEATURE);
-
-  for(x=0; x<21; x++)
-  {
-    WRITE_PORT_UCHAR((PUCHAR)ATTRIB, x);
-    WRITE_PORT_UCHAR((PUCHAR)ATTRIB, mode.Attrib[x]);
-  }
-
-  x=READ_PORT_UCHAR((PUCHAR)STATUS);
-
-  WRITE_PORT_UCHAR((PUCHAR)ATTRIB, 0x20);
-}
-
 
 static VOID
 InbvInitVGAMode(VOID)
 {
   KV86M_REGISTERS Regs;
   NTSTATUS Status;
+  ULONG i;
 
   vidmem = (char *)(0xd0000000 + 0xa0000);
   memset(&Regs, 0, sizeof(Regs));
@@ -397,8 +324,21 @@ InbvInitVGAMode(VOID)
   Status = Ke386CallBios(0x10, &Regs);
   assert(NT_SUCCESS(Status));
 
-  /* Get VGA registers into the correct state (mainly for setting up the palette registers correctly) */
-  InbvSetMode(Mode12);
+  /* Get VGA registers into the correct state */
+  /* Reset the internal flip-flop. */
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+  /* Write the 16 palette registers. */
+  for (i = 0; i < 16; i++)
+    {
+      WRITE_PORT_UCHAR((PUCHAR)ATTRIB, i);
+      WRITE_PORT_UCHAR((PUCHAR)ATTRIB, i);
+    }
+  /* Write the mode control register - graphics mode; 16 color DAC. */
+  WRITE_PORT_UCHAR((PUCHAR)ATTRIB, 0x10);
+  WRITE_PORT_UCHAR((PUCHAR)ATTRIB, 0x81);
+  /* Write the color select register - select first 16 DAC registers. */
+  WRITE_PORT_UCHAR((PUCHAR)ATTRIB, 0x14);
+  WRITE_PORT_UCHAR((PUCHAR)ATTRIB, 0x00);
 
   /* Get the VGA into the mode we want to work with */
   WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     /* Set */
@@ -408,6 +348,9 @@ InbvInitVGAMode(VOID)
   WRITE_REGISTER_UCHAR(vidmem, 0);          /* Write the pixel */
   WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);
   WRITE_PORT_UCHAR((PUCHAR)0x3cf,0xff);
+
+  /* Set the PEL mask. */
+  WRITE_PORT_UCHAR((PUCHAR)0x3c6, 0xff);
 
   /* Zero out video memory (clear a possibly trashed screen) */
   RtlZeroMemory(vidmem, 64000);
@@ -439,22 +382,28 @@ VidCleanUp(VOID)
      reset to cleanup the hardware state.
   */
   InGraphicsMode = FALSE;
-
-  BitmapThreadShouldTerminate = TRUE;
 }
 
 
 static __inline__ VOID
 InbvSetColor(int cindex, unsigned char red, unsigned char green, unsigned char blue)
 {
-  red = red / (256 / 64);
-  green = green / (256 / 64);
-  blue = blue / (256 / 64);
+  red = (red * 63) / 255;
+  green = (green * 63) / 255;
+  blue = (blue * 63) / 255;
 
   WRITE_PORT_UCHAR((PUCHAR)0x03c8, cindex);
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
   WRITE_PORT_UCHAR((PUCHAR)0x03c9, red);
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
   WRITE_PORT_UCHAR((PUCHAR)0x03c9, green);
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
   WRITE_PORT_UCHAR((PUCHAR)0x03c9, blue);
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
 }
 
 
@@ -463,10 +412,16 @@ InbvSetBlackPalette()
 {
   register ULONG r = 0;
 
+  /* Disable screen and enable palette access. */
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+  WRITE_PORT_UCHAR((PUCHAR)0x3c0, 0x00);
   for (r = 0; r < 16; r++)
     {
       InbvSetColor(r, 0, 0, 0);
     }
+  /* Enable screen and enable palette access. */
+  (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+  WRITE_PORT_UCHAR((PUCHAR)0x3c0, 0x20);
 }
 
 
@@ -686,6 +641,9 @@ InbvFadeUpPalette()
 
   for (i = 0; i < PALETTE_FADE_STEPS; i++)
     {
+      /* Disable screen and enable palette access. */
+      (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+      WRITE_PORT_UCHAR((PUCHAR)0x3c0, 0x00);
       for (c = 0; c < bminfo->bV5ClrUsed; c++)
         {
           /* Add the delta */
@@ -709,6 +667,10 @@ InbvFadeUpPalette()
           /* Update the hardware */
           InbvSetColor(c, r, g, b);
         }
+      /* Enable screen and disable palette access. */
+      (VOID)READ_PORT_UCHAR((PUCHAR)FEATURE);
+      WRITE_PORT_UCHAR((PUCHAR)0x3c0, 0x20);
+      /* Wait for a bit. */
       Interval.QuadPart = -PALETTE_FADE_TIME;
       KeDelayExecutionThread(KernelMode, FALSE, &Interval);
     }
@@ -728,15 +690,6 @@ InbvBitmapThreadMain(PVOID Ignored)
     }
 
   BitmapIsDrawn = TRUE;
-  for(;;)
-    {
-      if (BitmapThreadShouldTerminate)
-        {
-          DPRINT("Terminating\n");
-          return;
-        }
-      ZwYieldExecution();
-    }
 }
 
 
@@ -764,7 +717,6 @@ VidInitialize(VOID)
   InGraphicsMode = TRUE;
 
   BitmapIsDrawn = FALSE;
-  BitmapThreadShouldTerminate = FALSE;
   
   Status = PsCreateSystemThread(&BitmapThreadHandle,
     THREAD_ALL_ACCESS,
@@ -777,6 +729,7 @@ VidInitialize(VOID)
     {
       return FALSE;
     }
+  NtClose(BitmapThreadHandle);
 
   InbvDeinitializeVideoAddressSpace();
   VideoAddressSpaceInitialized = FALSE;
