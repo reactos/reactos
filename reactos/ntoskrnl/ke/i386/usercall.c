@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.26 2004/06/23 22:32:24 ion Exp $
+/* $Id: usercall.c,v 1.27 2004/07/01 01:52:37 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KiSystemCallHook(ULONG Nr, ...)
+VOID
+KiSystemCallHook(ULONG Nr, ...)
 {
 #if 0
    va_list ap;
@@ -46,7 +47,8 @@ VOID KiSystemCallHook(ULONG Nr, ...)
 #endif
 }
 
-ULONG KiAfterSystemCallHook(ULONG NtStatus, PKTRAP_FRAME TrapFrame)
+VOID
+KiAfterSystemCallHook(PKTRAP_FRAME TrapFrame)
 {
   if (KeGetCurrentThread()->Alerted[1] != 0 && TrapFrame->Cs != KERNEL_CS)
     {
@@ -56,11 +58,11 @@ ULONG KiAfterSystemCallHook(ULONG NtStatus, PKTRAP_FRAME TrapFrame)
     {
       KiDeliverUserApc(TrapFrame);
     }
-  return(NtStatus);
 }
 
 
-VOID KiServiceCheck (ULONG Nr)
+VOID
+KiServiceCheck (ULONG Nr)
 {
   PETHREAD Thread;
 

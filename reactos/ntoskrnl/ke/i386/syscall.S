@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.14 2004/04/07 15:35:14 ekohl Exp $
+/* $Id: syscall.S,v 1.15 2004/07/01 01:52:37 royce Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -28,6 +28,7 @@
 #include <ddk/status.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
+#include <internal/i386/ke.h>
 #include <roscfg.h>
 
 #define KernelMode  (0)
@@ -41,250 +42,266 @@
 .globl _interrupt_handler2e
 _interrupt_handler2e:
 
-           /* Construct a trap frame on the stack */
+	/* Construct a trap frame on the stack */
 
-	   /* Error code */
-	   pushl	$0     
-	   pushl	%ebp
-	   pushl	%ebx
-	   pushl	%esi
-	   pushl	%edi
-	   pushl	%fs
-	   /* Load PCR selector into fs */
-	   movl		$PCR_SELECTOR, %ebx 
-	   movl		%ebx, %fs
+	/* Error code */
+	pushl $0
+	pushl %ebp
+	pushl %ebx
+	pushl %esi
+	pushl %edi
+	pushl %fs
+	/* Load PCR selector into fs */
+	movl  $PCR_SELECTOR, %ebx
+	movl  %ebx, %fs
 
-	   /* Save the old exception list */
-	   movl         %fs:KPCR_EXCEPTION_LIST, %ebx
-	   pushl	%ebx
-	   /* Set the exception handler chain terminator */
-	   movl         $0xffffffff, %fs:KPCR_EXCEPTION_LIST
-	   /* Get a pointer to the current thread */
-	   movl         %fs:KPCR_CURRENT_THREAD, %esi
-	   /* Save the old previous mode */
-	   movl         $0, %ebx
-	   movb         %ss:KTHREAD_PREVIOUS_MODE(%esi), %bl
-	   pushl        %ebx
-           /* Set the new previous mode based on the saved CS selector */
-	   movl	        0x24(%esp), %ebx
-	   andl         $0x0000FFFF, %ebx
-	   cmpl         $KERNEL_CS, %ebx
-	   jne          L1
-	   movb         $KernelMode, %ss:KTHREAD_PREVIOUS_MODE(%esi)
-	   jmp          L3
+	/* Save the old exception list */
+	movl  %fs:KPCR_EXCEPTION_LIST, %ebx
+	pushl %ebx
+	/* Set the exception handler chain terminator */
+	movl  $0xffffffff, %fs:KPCR_EXCEPTION_LIST
+	/* Get a pointer to the current thread */
+	movl  %fs:KPCR_CURRENT_THREAD, %esi
+	/* Save the old previous mode */
+	movl  $0, %ebx
+	movb  %ss:KTHREAD_PREVIOUS_MODE(%esi), %bl
+	pushl %ebx
+	/* Set the new previous mode based on the saved CS selector */
+	movl  0x24(%esp), %ebx
+	andl  $0x0000FFFF, %ebx
+	cmpl  $KERNEL_CS, %ebx
+	jne   L1
+	movb  $KernelMode, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+	jmp   L3
 L1:
-	   movb         $UserMode, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+	movb  $UserMode, %ss:KTHREAD_PREVIOUS_MODE(%esi)
 L3:
 
-	   /* Save other registers */	   
-	   pushl %eax
-	   pushl %ecx
-	   pushl %edx
-	   pushl %ds
-	   pushl %es
-	   pushl %gs
-	   pushl $0     /* DR7 */
-	   pushl $0     /* DR6 */
-	   pushl $0     /* DR3 */
-	   pushl $0     /* DR2 */
-	   pushl $0     /* DR1 */
-	   pushl $0     /* DR0 */
-	   pushl $0     /* XXX: TempESP */
-	   pushl $0     /* XXX: TempCS */
-	   pushl $0     /* XXX: DebugPointer */
-	   pushl $0     /* XXX: DebugArgMark */
+	/* Save other registers */
+	pushl %eax
+	pushl %ecx
+	pushl %edx
+	pushl %ds
+	pushl %es
+	pushl %gs
+	pushl $0     /* DR7 */
+	pushl $0     /* DR6 */
+	pushl $0     /* DR3 */
+	pushl $0     /* DR2 */
+	pushl $0     /* DR1 */
+	pushl $0     /* DR0 */
+	pushl $0     /* XXX: TempESP */
+	pushl $0     /* XXX: TempCS */
+	pushl $0     /* XXX: DebugPointer */
+	pushl $0     /* XXX: DebugArgMark */
 #ifdef DBG
-           /* Trick gdb 6 into backtracing over the system call */
-           movl  4(%ebp), %ebx
-	   pushl %ebx   /* DebugEIP */
-           movl  (%ebp), %ebx
-           pushl %ebx   /* DebugEBP */
+	/* Trick gdb 6 into backtracing over the system call */
+	movl  4(%ebp), %ebx
+	pushl %ebx   /* DebugEIP */
+	movl  (%ebp), %ebx
+	pushl %ebx   /* DebugEBP */
 #else
-	   movl	 0x60(%esp), %ebx
-	   pushl %ebx   /* DebugEIP */
-	   pushl %ebp   /* DebugEBP */
+	movl  0x60(%esp), %ebx
+	pushl %ebx   /* DebugEIP */
+	pushl %ebp   /* DebugEBP */
 #endif
 
-           /* Load the segment registers */
-	   movl  $KERNEL_DS, %ebx
-	   movl  %ebx, %ds
-	   movl  %ebx, %es
-	   movl  %ebx, %gs
+	/* Load the segment registers */
+	movl  $KERNEL_DS, %ebx
+	movl  %ebx, %ds
+	movl  %ebx, %es
+	movl  %ebx, %gs
 
-           /* 
-	    * Save the old trap frame pointer over where we would save the EDX
-	    * register.
-	    */
-           movl KTHREAD_TRAP_FRAME(%esi), %ebx
-	   movl %ebx, 0x3C(%esp)
-	
-	   /* Save a pointer to the trap frame in the TCB */
-	   movl	%esp, KTHREAD_TRAP_FRAME(%esi)
-	 
-           /*  Set ES to kernel segment  */
-           movw $KERNEL_DS,%bx
-           movw %bx,%es
+	/*
+	 * Save the old trap frame pointer over where we would save the EDX
+	 * register.
+	 */
+	movl  KTHREAD_TRAP_FRAME(%esi), %ebx
+	movl  %ebx, KTRAP_FRAME_EDX(%esp)
 
-           /*  Allocate new Kernel stack frame  */
-           movl %esp,%ebp
+	/*  Allocate new Kernel stack frame  */
+	movl  %esp,%ebp
 
-           /*  Users's current stack frame pointer is source  */
-           movl %edx,%esi
+	/* Save a pointer to the trap frame in the TCB */
+	movl  %ebp, KTHREAD_TRAP_FRAME(%esi)
 
-           /*  Determine system service table to use  */
-           cmpl  $0x0fff, %eax
-           ja    new_useShadowTable
+	/*  Set ES to kernel segment  */
+	movw  $KERNEL_DS,%bx
+	movw  %bx,%es
 
-           /*  Check to see if EAX is valid/inrange  */
-           cmpl  %es:_KeServiceDescriptorTable + 8, %eax
-           jbe   new_serviceInRange
-           movl  $STATUS_INVALID_SYSTEM_SERVICE, %eax
-           jmp   KeReturnFromSystemCall
+	/*  Users's current stack frame pointer is source  */
+	movl  %edx,%esi
+
+	/*  Determine system service table to use  */
+	cmpl  $0x0fff, %eax
+	ja    new_useShadowTable
+
+	/*  Check to see if EAX is valid/inrange  */
+	cmpl  %es:_KeServiceDescriptorTable + 8, %eax
+	jbe   new_serviceInRange
+	movl  $STATUS_INVALID_SYSTEM_SERVICE, %eax
+	movl  %eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
+	jmp   KeReturnFromSystemCall
 
 new_serviceInRange:
 
 #ifdef DBG
-           /* GDB thinks the function starts here and
-              wants a standard prolog, so let's give it */
-           pushl %ebp
-           movl  %esp,%ebp
-           popl  %ebp
+	/* GDB thinks the function starts here and
+	   wants a standard prolog, so let's give it */
+	pushl %ebp
+	movl  %esp,%ebp
+	popl  %ebp
 #endif
 
-           /*  Allocate room for argument list from kernel stack  */
-           movl  %es:_KeServiceDescriptorTable + 12, %ecx
-           movb  %es:(%ecx, %eax), %cl
-           movzx %cl, %ecx
-           subl  %ecx, %esp
+	/*  Allocate room for argument list from kernel stack  */
+	movl  %es:_KeServiceDescriptorTable + 12, %ecx
+	movb  %es:(%ecx, %eax), %cl
+	movzx %cl, %ecx
+	subl  %ecx, %esp
 
-           /*  Copy the arguments from the user stack to the kernel stack  */
-           movl %esp,%edi
-           cld
-           rep  movsb
+	/*  Copy the arguments from the user stack to the kernel stack  */
+	movl  %esp,%edi
+	cld
+	rep   movsb
 
-           /*  DS is now also kernel segment  */
-           movw %bx, %ds
-	   
-	   /* Call system call hook */
-	   pushl %eax
-	   call _KiSystemCallHook
-	   popl %eax
+	/*  DS is now also kernel segment  */
+	movw  %bx, %ds
 
-           /*  Make the system service call  */
-           movl  %es:_KeServiceDescriptorTable, %ecx
-           movl  %es:(%ecx, %eax, 4), %eax
-           call  *%eax
+	/* Call system call hook */
+	pushl %eax
+	call  _KiSystemCallHook
+	popl  %eax
+
+	/*  Make the system service call  */
+	movl  %es:_KeServiceDescriptorTable, %ecx
+	movl  %es:(%ecx, %eax, 4), %eax
+	call  *%eax
+	movl  %eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
 
 #if CHECKED
-           /*  Bump Service Counter  */
+	/*  Bump Service Counter  */
 #endif
 
-           /*  Deallocate the kernel stack frame  */
-           movl %ebp,%esp
-
-	   /* Call the post system call hook and deliver any pending APCs */
-	   pushl %ebp
-	   pushl %eax
-	   call _KiAfterSystemCallHook
-	   addl $8,%esp
-
-           jmp  KeReturnFromSystemCall
+	jmp   KeDeallocateStackAndReturnFromSystemCallWithHook
 
 new_useShadowTable:
 
-           subl  $0x1000, %eax
+	subl  $0x1000, %eax
 
-           /*  Check to see if EAX is valid/inrange  */
-           cmpl  %es:_KeServiceDescriptorTableShadow + 24, %eax
-           jbe   new_shadowServiceInRange
-           movl  $STATUS_INVALID_SYSTEM_SERVICE, %eax
-           jmp   KeReturnFromSystemCall
+	/*  Check to see if EAX is valid/inrange  */
+	cmpl  %es:_KeServiceDescriptorTableShadow + 24, %eax
+	jbe   new_shadowServiceInRange
+	movl  $STATUS_INVALID_SYSTEM_SERVICE, %eax
+	movl  %eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
+	jmp   KeReturnFromSystemCall
 
 new_shadowServiceInRange:
 
 #ifdef DBG
-           /* GDB thinks the function starts here and
-              wants a standard prolog, so let's give it */
-           pushl %ebp
-           movl  %esp,%ebp
-           popl  %ebp
+	/* GDB thinks the function starts here and
+	   wants a standard prolog, so let's give it */
+	pushl %ebp
+	movl  %esp,%ebp
+	popl  %ebp
 #endif
 
-           /*  Allocate room for argument list from kernel stack  */
-           movl  %es:_KeServiceDescriptorTableShadow + 28, %ecx
-           movb  %es:(%ecx, %eax), %cl
-           movzx %cl, %ecx
-           subl  %ecx, %esp
+	/*  Allocate room for argument list from kernel stack  */
+	movl  %es:_KeServiceDescriptorTableShadow + 28, %ecx
+	movb  %es:(%ecx, %eax), %cl
+	movzx %cl, %ecx
+	subl  %ecx, %esp
 
-           /*  Copy the arguments from the user stack to the kernel stack  */
-           movl %esp,%edi
-           cld
-           rep movsb
+	/*  Copy the arguments from the user stack to the kernel stack  */
+	movl  %esp,%edi
+	cld
+	rep   movsb
 
-           /*  DS is now also kernel segment  */
-           movw %bx,%ds
+	/*  DS is now also kernel segment  */
+	movw  %bx,%ds
 
-	   /* Call system call hook */
-//	   pushl %eax
-//	   call _KiSystemCallHook
-//	   popl %eax
+	/* Call system call hook */
+//	pushl %eax
+//	call  _KiSystemCallHook
+//	popl  %eax
 
-	   /* Call service check routine */
-	   pushl %eax
-	   call _KiServiceCheck
-	   popl %eax
- 
-           /*  Make the system service call  */
-           movl  %es:_KeServiceDescriptorTableShadow + 16, %ecx
-           movl  %es:(%ecx, %eax, 4), %eax
-           call  *%eax
+	/* Call service check routine */
+	pushl %eax
+	call  _KiServiceCheck
+	popl  %eax
+
+	/*  Make the system service call  */
+	movl  %es:_KeServiceDescriptorTableShadow + 16, %ecx
+	movl  %es:(%ecx, %eax, 4), %eax
+	call  *%eax
+	movl  %eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
 
 #if CHECKED
-           /*  Bump Service Counter  */
+	/* Bump Service Counter  */
 #endif
 
-           /*  Deallocate the kernel stack frame  */
-           movl %ebp,%esp
+KeDeallocateStackAndReturnFromSystemCallWithHook:
+	/* Deallocate the kernel stack frame  */
+	movl %ebp,%esp
 
-KeReturnFromSystemCallWithHook:	
-	   /* Call the post system call hook and deliver any pending APCs */
-	   pushl %esp
-	   pushl %eax
-	   call _KiAfterSystemCallHook
-	   addl $8,%esp
+KeReturnFromSystemCallWithHook:
+	/* Call the post system call hook and deliver any pending APCs */
+	pushl %esp
+	call  _KiAfterSystemCallHook
+	addl  $4,%esp
 
 KeReturnFromSystemCall:
-	
-           /* Restore the user context */
-	   /* Get a pointer to the current thread */
-           movl %fs:0x124, %esi
-	
-           /* Restore the old trap frame pointer */
-           movl 0x3c(%esp), %ebx
-	   movl %ebx, KTHREAD_TRAP_FRAME(%esi)
-	
-	   /* Skip debug information and unsaved registers */
-	   addl	$0x30, %esp
-	   popl %gs
-	   popl %es
-	   popl %ds
-	   popl %edx
-	   popl %ecx
-	   addl $0x4, %esp   /* Don't restore eax */
 
-	   /* Restore the old previous mode */
-	   popl %ebx
-	   movb %bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+	/* Restore the user context */
+	/* Get a pointer to the current thread */
+	movl  %fs:0x124, %esi
 
-	   /* Restore the old exception handler list */
-	   popl %ebx
-	   movl %ebx, %fs:KPCR_EXCEPTION_LIST
-	
-	   popl %fs 
-	   popl %edi
-	   popl %esi
-	   popl %ebx
-	   popl %ebp
-	   addl $0x4, %esp  /* Ignore error code */
-		
-           iret
+	/* Restore the old trap frame pointer */
+	movl  KTRAP_FRAME_EDX(%esp), %ebx
+	movl  %ebx, KTHREAD_TRAP_FRAME(%esi)
+
+KiRosTrapReturn:
+	/* Skip debug information and unsaved registers */
+	addl  $0x30, %esp
+	popl  %gs
+	popl  %es
+	popl  %ds
+	popl  %edx
+	popl  %ecx
+	popl  %eax
+
+	/* Restore the old previous mode */
+	popl  %ebx
+	movb  %bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+
+	/* Restore the old exception handler list */
+	popl  %ebx
+	movl  %ebx, %fs:KPCR_EXCEPTION_LIST
+
+	popl  %fs
+	popl  %edi
+	popl  %esi
+	popl  %ebx
+	popl  %ebp
+	addl  $0x4, %esp  /* Ignore error code */
+
+	iret
+
+/* R3: NOTE: This is part of my in-progress attempt at correcting NtContinue
+ *           It is not being called, yet...
+ */
+.globl @KeRosTrapReturn@8
+@KeRosTrapReturn@8:
+	/* Call the post system call hook and deliver any pending APCs */
+	pushl %esp
+	call  _KiAfterSystemCallHook
+	addl  $4,%esp
+
+	/* Restore the user context */
+	/* Get a pointer to the current thread */
+	movl  %fs:0x124, %esi
+	/* Restore the old trap frame pointer */
+	movl  %edx, KTHREAD_TRAP_FRAME(%esi)
+
+	/* point %esp to the trap frame to restore */
+	movl  %ecx, %esp
+	jmp   KiRosTrapReturn;
