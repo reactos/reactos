@@ -13,14 +13,14 @@ static int RunTest(char *Buffer)
   /* Allocate memory with EngAllocMem */
   pmem1 = 0;
   AllocSize1 = 1024;
-  AllocTag1 = "zyxD";
+  AllocTag1 = TAG('D','x','y','z');
   pmem1 = EngAllocMem(FL_ZERO_MEMORY, AllocSize1, AllocTag1);
   FAIL_IF_EQUAL(pmem1, 0, "EngAllocMem() for pmem1 failed");
 
   /* Allocate memory with EngAllocMem */
   pmem2 = 0;
   AllocSize2 = 1024;
-  AllocTag2 = "zyxD";
+  AllocTag2 = TAG('D','x','y','z');
   pmem2 = EngAllocUserMem(AllocSize2, AllocTag2);
   FAIL_IF_EQUAL(pmem1, 0, "EngAllocUserMem() for pmem2 failed");
 

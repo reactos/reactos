@@ -54,7 +54,7 @@ PIPHLP_RES_INFO getResInfo() {
                                     sizeof(PIPHLP_RES_INFO) );
     if( InfoPtr ) {
         InfoPtr->riCount = 0;
-        InfoPtr->riAddressList = (LPSOCKADDR)0;
+        InfoPtr->riAddressList = NULL;
     }
 
     return InfoPtr;

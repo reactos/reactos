@@ -28,6 +28,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
+void _amsg_exit (int errnum);
+
 /********************************************************************/
 
 typedef struct {

@@ -54,7 +54,7 @@ static inline BOOL msvcrt_init_tls(void);
 static inline BOOL msvcrt_free_tls(void);
 //const char* msvcrt_get_reason(DWORD reason) WINE_UNUSED;
 
-typedef void* (*MSVCRT_malloc_func)(MSVCRT_size_t);
+typedef void* (*MSVCRT_malloc_func)(size_t);
 
 char* MSVCRT___unDName(char *,const char*,int,MSVCRT_malloc_func,MSVCRT_free_func,unsigned short int);
 char* MSVCRT___unDNameEx(char *,const char*,int,MSVCRT_malloc_func,MSVCRT_free_func,void *,unsigned short int);
