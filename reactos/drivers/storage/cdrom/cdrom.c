@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.18 2002/12/15 14:34:43 ekohl Exp $
+/* $Id: cdrom.c,v 1.19 2003/05/01 17:50:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,11 +44,13 @@
 #define VERSION "0.0.1"
 
 
+#define SCSI_CDROM_TIMEOUT 10		/* Default timeout: 10 seconds */
+
+
 typedef struct _CDROM_DATA
 {
   ULONG Dummy;
 } CDROM_DATA, *PCDROM_DATA;
-
 
 
 BOOLEAN STDCALL
@@ -460,6 +462,12 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
+
+  /* Get timeout value */
+  DiskDeviceExtension->TimeOutValue =
+    ScsiClassQueryTimeOutRegistryValue(RegistryPath);
+  if (DiskDeviceExtension->TimeOutValue == 0)
+    DiskDeviceExtension->TimeOutValue = SCSI_CDROM_TIMEOUT;
 
   /* Initialize lookaside list for SRBs */
   ScsiClassInitializeSrbLookasideList(DiskDeviceExtension,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.29 2003/04/29 19:49:17 ekohl Exp $
+/* $Id: disk.c,v 1.30 2003/05/01 17:50:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,6 +36,8 @@
 #include <debug.h>
 
 #define VERSION  "0.0.1"
+
+#define SCSI_DISK_TIMEOUT 10		/* Default timeout: 10 seconds */
 
 
 typedef struct _DISK_DATA
@@ -402,7 +404,7 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
 static NTSTATUS
 DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
-			    IN PUNICODE_STRING RegistryPath, /* what's this used for? */
+			    IN PUNICODE_STRING RegistryPath,
 			    IN PDEVICE_OBJECT PortDeviceObject,
 			    IN ULONG PortNumber,
 			    IN ULONG DiskNumber,
@@ -514,6 +516,12 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension->PathId = InquiryData->PathId;
   DiskDeviceExtension->TargetId = InquiryData->TargetId;
   DiskDeviceExtension->Lun = InquiryData->Lun;
+
+  /* Get timeout value */
+  DiskDeviceExtension->TimeOutValue =
+    ScsiClassQueryTimeOutRegistryValue(RegistryPath);
+  if (DiskDeviceExtension->TimeOutValue == 0)
+    DiskDeviceExtension->TimeOutValue = SCSI_DISK_TIMEOUT;
 
   /* Initialize the lookaside list for SRBs */
   ScsiClassInitializeSrbLookasideList(DiskDeviceExtension,
@@ -722,6 +730,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->TargetId = InquiryData->TargetId;
 	      PartitionDeviceExtension->Lun = InquiryData->Lun;
 	      PartitionDeviceExtension->SectorShift = DiskDeviceExtension->SectorShift;
+	      PartitionDeviceExtension->TimeOutValue = SCSI_DISK_TIMEOUT;
 
 	      /* Initialize lookaside list for SRBs */
 	      ScsiClassInitializeSrbLookasideList(PartitionDeviceExtension,
@@ -1061,6 +1070,9 @@ DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
   Srb->PathId = DeviceExtension->PathId;
   Srb->TargetId = DeviceExtension->TargetId;
   Srb->Lun = DeviceExtension->Lun;
+
+  /* Set timeout */
+  Srb->TimeOutValue = DeviceExtension->TimeOutValue * 4;
 
   /* Flush write cache */
   Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
