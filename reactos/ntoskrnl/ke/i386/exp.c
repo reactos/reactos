@@ -38,6 +38,7 @@
 #include <internal/ps.h>
 #include <internal/trap.h>
 #include <ntdll/ldr.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -368,6 +369,9 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   PULONG Frame;
   ULONG cr3;
   ULONG i;
+  ULONG ReturnAddress;
+  ULONG NextFrame;
+  NTSTATUS Status;
 
   /*
    * Get the PDBR
@@ -452,8 +456,25 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   Frame = (PULONG)Tf->Ebp;
   while (Frame != NULL)
     {
-      print_address((PVOID)Frame[1]);
-      Frame = (PULONG)Frame[0];
+      Status = MmCopyToCaller(&ReturnAddress, &Frame[1], sizeof(ULONG));
+      if (!NT_SUCCESS(Status))
+	{
+	  DbgPrint("????????\n");
+	  break;
+	}
+      print_address((PVOID)ReturnAddress);
+      Status = MmCopyToCaller(&NextFrame, &Frame[0], sizeof(ULONG));
+      if (!NT_SUCCESS(Status))
+	{
+	  DbgPrint("Frame is inaccessible.\n");
+	  break;
+	}
+      if ((NextFrame + sizeof(ULONG)) >= KERNEL_BASE)
+	{
+	  DbgPrint("Next frame is in kernel space!\n");
+	  break;
+	}
+      Frame = (PULONG)NextFrame;
       i++;
     }
 

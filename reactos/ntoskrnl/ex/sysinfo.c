@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.13 2001/09/02 17:29:51 dwelch Exp $
+/* $Id: sysinfo.c,v 1.14 2001/11/18 00:31:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1013,57 +1013,79 @@ CallQS [] =
 };
 
 
-NTSTATUS
-STDCALL
-NtQuerySystemInformation (
-	IN	SYSTEM_INFORMATION_CLASS	SystemInformationClass,
-	OUT	PVOID				SystemInformation,
-	IN	ULONG				Length,
-	OUT	PULONG				ResultLength
-	)
+NTSTATUS STDCALL
+NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
+			  OUT PVOID UnsafeSystemInformation,
+			  IN ULONG Length,
+			  OUT PULONG UnsafeResultLength)
 {
-	/*
-	 * If called from user mode, check 
-	 * possible unsafe arguments.
-	 */
-#if 0
-        if (KernelMode != KeGetPreviousMode())
-        {
-		// Check arguments
-		//ProbeForWrite(
-		//	SystemInformation,
-		//	Length
-		//	);
-		//ProbeForWrite(
-		//	ResultLength,
-		//	sizeof (ULONG)
-		//	);
-        }
-#endif
-	/*
-	 * Clear the user buffer.
-	 */
-	RtlZeroMemory (SystemInformation, Length);
-	/*
-	 * Check the request is valid.
-	 */
-	if (	(SystemInformationClass >= SystemInformationClassMin)
-		&& (SystemInformationClass < SystemInformationClassMax)
-		)
+  ULONG ResultLength;
+  PVOID SystemInformation;
+  NTSTATUS Status;
+  NTSTATUS FStatus;
+
+  if (ExGetPreviousMode() == KernelMode)
+    {
+      SystemInformation = UnsafeSystemInformation;
+    }
+  else
+    {
+      SystemInformation = ExAllocatePool(NonPagedPool, Length);
+      if (SystemInformation == NULL)
 	{
-		if (NULL != CallQS [SystemInformationClass].Query)
-		{
-			/*
-			 * Hand the request to a subhandler.
-			 */
-			return CallQS [SystemInformationClass].Query (
-					SystemInformation,
-					Length,
-					ResultLength
-					);
-		}
+	  return(STATUS_NO_MEMORY);
 	}
-	return (STATUS_INVALID_INFO_CLASS);
+    }
+  
+  /* Clear user buffer. */
+  RtlZeroMemory(SystemInformation, Length);
+
+  /*
+   * Check the request is valid.
+   */
+  if ((SystemInformationClass >= SystemInformationClassMin) && 
+      (SystemInformationClass < SystemInformationClassMax))
+    {
+      if (NULL != CallQS [SystemInformationClass].Query)
+	{
+	  /*
+	   * Hand the request to a subhandler.
+	   */
+	  FStatus = CallQS [SystemInformationClass].Query(SystemInformation,
+							  Length,
+							  &ResultLength);
+	  if (ExGetPreviousMode() != KernelMode)
+	    {
+	      Status = MmCopyToCaller(UnsafeSystemInformation, 
+				      SystemInformation,
+				      Length);
+	      ExFreePool(SystemInformation);
+	      if (!NT_SUCCESS(Status))
+		{
+		  return(Status);
+		}
+	    }
+	  if (UnsafeResultLength != NULL)
+	    {
+	      if (ExGetPreviousMode() == KernelMode)
+		{
+		  *UnsafeResultLength = ResultLength;
+		}
+	      else
+		{
+		  Status = MmCopyToCaller(UnsafeResultLength,
+					  &ResultLength,
+					  sizeof(ULONG));
+		  if (!NT_SUCCESS(Status))
+		    {
+		      return(Status);
+		    }
+		}
+	    }
+	  return(FStatus);
+	}
+    }
+  return (STATUS_INVALID_INFO_CLASS);
 }
 
 
