@@ -11,6 +11,7 @@
 #                        export_driver = Kernel mode driver that have exported functions
 #                        driver_library = Import library for a driver
 #                        kmlibrary = Static kernel-mode library
+#                        host_library = Static library for use in the build env
 #                        hal = Hardware Abstraction Layer
 #                        bootpgm = Boot program
 #                        miniport = Kernel mode driver that does not link with ntoskrnl.exe or hal.dll
@@ -223,6 +224,20 @@ ifeq ($(TARGET_TYPE),driver_library)
   MK_RES_BASE :=
 endif
 
+ifeq ($(TARGET_TYPE),host_library)
+  TARGET_NORC := yes
+  MK_MODE := static
+  MK_DEFEXT := .a
+  MK_CFLAGS := 
+  MK_CPPFLAGS := 
+  MK_LIBPATH := .
+  MK_IMPLIB := no
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH :=
+  MK_CC := $(HOST_CC)
+  MK_AR := $(HOST_AR)
+endif
+
 ifeq ($(TARGET_TYPE),driver)
   MK_MODE := kernel
   MK_EXETYPE := dll
@@ -378,8 +393,16 @@ ifeq ($(TARGET_TYPE),test)
   TARGET_OBJECTS := _rtstub.o _regtests.o $(TARGET_OBJECTS)
 endif
 
+ifeq ($(MK_CC),)
+  MK_CC := $(CC)
+endif
+
+ifeq ($(MK_AR),)
+  MK_AR := $(AR)
+endif
+
 # can be overidden with $(CXX) for linkage of c++ executables
-LD_CC = $(CC)
+LD_CC = $(MK_CC)
 
 ifeq ($(RM_AT_FROM_SYMBOLS),no)
   MK_KILLAT :=
@@ -545,7 +568,9 @@ endif
 
 
 ifeq ($(TARGET_LIBPATH),)
-  MK_LIBPATH := $(SDK_PATH_LIB)
+  ifeq ($(MK_LIBPATH),)
+    MK_LIBPATH := $(SDK_PATH_LIB)
+  endif
 else
   MK_LIBPATH := $(TARGET_LIBPATH)
 endif
@@ -755,7 +780,7 @@ endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
 	$(HALFVERBOSEECHO) [AR]      $(MK_BASENAME).a
-	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
+	$(MK_AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
 $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS) $(MK_STUBS_SRC) $(MK_STUBS_OBJ)
 	$(HALFVERBOSEECHO) [LD]      $(MK_NOSTRIPNAME)
@@ -800,7 +825,6 @@ endif
 $(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
 	$(HALFVERBOSEECHO) [RSYM]    $(MK_FULLNAME)
 	$(RSYM) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
-	@echo $(MK_FULLNAME) was successfully built.
 
 endif # KM_MODE
 
@@ -815,7 +839,7 @@ endif
 
 $(MK_BASENAME).a: $(MK_OBJECTS)
 	$(HALFVERBOSEECHO) [AR]      $(MK_BASENAME).a
-	$(AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
+	$(MK_AR) -rc $(MK_BASENAME).a $(MK_OBJECTS)
 
 $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 	$(HALFVERBOSEECHO) [LD]      $(MK_NOSTRIPNAME)
@@ -852,7 +876,6 @@ endif
 $(MK_FULLNAME): $(MK_NOSTRIPNAME)
 	$(HALFVERBOSEECHO) [RSYM]    $(MK_FULLNAME)
 	$(RSYM) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
-	@echo $(MK_FULLNAME) was successfully built.
 
 endif # MK_MODE
 
@@ -861,10 +884,7 @@ ifeq ($(MK_MODE),static)
 
 $(MK_FULLNAME): $(MK_EXTRADEP) $(MK_OBJECTS)
 	$(HALFVERBOSEECHO) [AR]      $(MK_FULLNAME)
-	$(AR) -rc $(MK_FULLNAME) $(MK_OBJECTS)
-ifneq ($(TARGET_TYPE),test)
-	@echo $(MK_FULLNAME) was successfully built.
-endif
+	$(MK_AR) -rc $(MK_FULLNAME) $(MK_OBJECTS)
 
 # Static libraries dont have a nostrip version
 $(MK_NOSTRIPNAME):
@@ -911,7 +931,7 @@ MK_PCHNAME = $(TARGET_PCH).gch
 ifeq ($(TARGET_CPPAPP),yes)
 PCH_CC := $(CXX)
 else # TARGET_CPPAPP
-PCH_CC := $(CC)
+PCH_CC := $(MK_CC)
 endif # TARGET_CPPAPP
 else # ROS_USE_PCH
 MK_PCHNAME =
@@ -1063,7 +1083,7 @@ endif
 
 ifeq ($(TARGET_TYPE),test)
 run: all
-	@$(CC) -nostdlib -o _runtest.exe regtests.a $(TARGET_LIBS) _stubs.o \
+	@$(MK_CC) -nostdlib -o _runtest.exe regtests.a $(TARGET_LIBS) _stubs.o \
 	$(SDK_PATH_LIB)/librtshared.a $(SDK_PATH_LIB)/libregtests.a $(SDK_PATH_LIB)/libpseh.a \
 	_hooks.o -lgcc -lmsvcrt -lntdll
 	@$(CP) $(REGTESTS_PATH)/regtests/regtests.dll regtests.dll
@@ -1074,7 +1094,7 @@ endif
 
 %.o: %.c $(MK_PCHNAME)
 	$(HALFVERBOSEECHO) [CC]      $<
-	$(CC) $(TARGET_CFLAGS) -c $< -o $@
+	$(MK_CC) $(TARGET_CFLAGS) -c $< -o $@
 %.o: %.cc $(MK_PCHNAME)
 	$(HALFVERBOSEECHO) [CXX]     $<
 	$(CXX) $(TARGET_CPPFLAGS) -c $< -o $@
@@ -1096,7 +1116,7 @@ endif
 ifeq ($(TARGET_TYPE),winedll)
 %.coff: %.rc
 	$(HALFVERBOSEECHO) [RC]      $<
-	$(CC) $(MK_PREPROC_FOR_RC_FLAGS) $< > $(<:.rc=.rci)
+	$(MK_CC) $(MK_PREPROC_FOR_RC_FLAGS) $< > $(<:.rc=.rci)
 	$(WRC) $(<:.rc=.rci) $(<:.rc=.res)
 	$(RM) $(<:.rc=.rci)
 	$(RC) $(<:.rc=.res) -o $@
@@ -1117,7 +1137,7 @@ endif
 	$(WINEBUILD) $(DEFS) -o $@ --pedll $<
 %.i: %.c
 	$(HALFVERBOSEECHO) [CPP]     $<
-	$(CC) $(TARGET_CFLAGS) -E $< > $@
+	$(MK_CC) $(TARGET_CFLAGS) -E $< > $@
 %.h.gch: %.h
 	$(HALFVERBOSEECHO) [PCH]     $<
 	$(PCH_CC) $(CFLAGS) $<
