@@ -59,6 +59,7 @@ QuickLaunchBar::QuickLaunchBar(HWND hwnd)
 	_dir = NULL;
 	_next_id = IDC_FIRST_QUICK_ID;
 	_btn_dist = 20;
+	_size = 0;
 
 	HWND hwndToolTip = (HWND) SendMessage(hwnd, TB_GETTOOLTIPS, 0, 0);
 
@@ -165,6 +166,8 @@ void QuickLaunchBar::AddShortcuts()
 	}
 
 	_btn_dist = LOWORD(SendMessage(_hwnd, TB_GETBUTTONSIZE, 0, 0));
+	_size = _entries.size() * _btn_dist;
+
 	SendMessage(GetParent(_hwnd), PM_RESIZE_CHILDREN, 0, 0);
 }
 
@@ -205,8 +208,25 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		AddShortcuts();
 		break;
 
-	  case PM_GET_WIDTH:
-		return _entries.size()*_btn_dist;
+	  case PM_GET_WIDTH: {
+		 // take line wrapping into account 
+		int btns = SendMessage(_hwnd, TB_BUTTONCOUNT, 0, 0);
+		int rows = SendMessage(_hwnd, TB_GETROWS, 0, 0);
+
+		if (rows<2 || rows==btns)
+			return _size;
+
+		RECT rect;
+		int max_cx = 0;
+
+		for(QuickLaunchMap::const_iterator it=_entries.begin(); it!=_entries.end(); ++it) {
+			SendMessage(_hwnd, TB_GETRECT, it->first, (LPARAM)&rect);
+
+			if (rect.right > max_cx)
+				max_cx = rect.right;
+		}
+
+		return max_cx;}
 
 	  case PM_UPDATE_DESKTOP:
 		UpdateDesktopButtons(wparam);

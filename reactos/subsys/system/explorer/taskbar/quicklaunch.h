@@ -77,6 +77,7 @@ protected:
 	int				_next_id;
 	QuickLaunchMap	_entries;
 	int				_btn_dist;
+	int				_size;
 
 	void	AddShortcuts();
 	void	AddButton(int id, HBITMAP hbmp, LPCTSTR name, Entry* entry, int flags=TBSTATE_ENABLED);
