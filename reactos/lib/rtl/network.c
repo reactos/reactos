@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: network.c,v 1.1 2004/08/05 18:17:37 ion Exp $
+/* $Id: network.c,v 1.2 2004/09/13 20:25:26 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -25,23 +25,50 @@
  */
 
 #include <ddk/ntddk.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
 /* FUNCTIONS *****************************************************************/
 
+/* Borrow this from some headers... */
+typedef struct
+{
+  union
+  {
+    struct { UCHAR s_b1,s_b2,s_b3,s_b4; } S_un_b;
+    struct { USHORT s_w1,s_w2; } S_un_w;
+    ULONG S_addr;
+  } S_un;
+} in_addr;
+
+typedef struct
+{
+  union
+  {
+    UCHAR _S6_u8[16];
+    USHORT _S6_u16[8];
+    ULONG _S6_u32[4];
+  } S6_un;
+} in6_addr;
+
+
 /*
-* @unimplemented
+* @implemented
 */
-NTSTATUS
+LPSTR
 STDCALL
 RtlIpv4AddressToStringA(
 	PULONG IP,
 	LPSTR Buffer
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  in_addr addr;
+  addr.S_un.S_addr = *IP;
+  return Buffer + sprintf(Buffer, "%u.%u.%u.%u", addr.S_un.S_un_b.s_b1,
+                                                 addr.S_un.S_un_b.s_b2,
+                                                 addr.S_un.S_un_b.s_b3,
+                                                 addr.S_un.S_un_b.s_b4);
 }
 
 /*
@@ -61,17 +88,21 @@ RtlIpv4AddressToStringExA(
 }
 
 /*
-* @unimplemented
+* @implemented
 */
-NTSTATUS
+LPWSTR
 STDCALL
 RtlIpv4AddressToStringW(
 	PULONG IP,
 	LPWSTR Buffer
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  in_addr addr;
+  addr.S_un.S_addr = *IP;
+  return Buffer + swprintf(Buffer, L"%u.%u.%u.%u", addr.S_un.S_un_b.s_b1,
+                                                   addr.S_un.S_un_b.s_b2,
+                                                   addr.S_un.S_un_b.s_b3,
+                                                   addr.S_un.S_un_b.s_b4);
 }
 
 /*

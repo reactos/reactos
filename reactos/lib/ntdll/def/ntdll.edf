@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.118 2004/09/10 23:29:18 sedwards Exp $
+; $Id: ntdll.edf,v 1.119 2004/09/13 20:25:25 weiden Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -491,6 +491,22 @@ RtlInt64ToUnicodeString=RtlInt64ToUnicodeString@16
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
 RtlInvertRangeList=RtlInvertRangeList@8
+RtlIpv4AddressToStringA=RtlIpv4AddressToStringA@8
+RtlIpv4AddressToStringExA=RtlIpv4AddressToStringExA@16
+RtlIpv4AddressToStringExW=RtlIpv4AddressToStringExW@16
+RtlIpv4AddressToStringW=RtlIpv4AddressToStringW@8
+RtlIpv4StringToAddressA=RtlIpv4StringToAddressA@16
+RtlIpv4StringToAddressExA=RtlIpv4StringToAddressExA@16
+RtlIpv4StringToAddressExW=RtlIpv4StringToAddressExW@16
+RtlIpv4StringToAddressW=RtlIpv4StringToAddressW@16
+RtlIpv6AddressToStringA=RtlIpv6AddressToStringA@8
+RtlIpv6AddressToStringExA=RtlIpv6AddressToStringExA@16
+RtlIpv6AddressToStringExW=RtlIpv6AddressToStringExW@16
+RtlIpv6AddressToStringW=RtlIpv6AddressToStringW@8
+RtlIpv6StringToAddressA=RtlIpv6StringToAddressA@16
+RtlIpv6StringToAddressExA=RtlIpv6StringToAddressExA@16
+RtlIpv6StringToAddressExW=RtlIpv6StringToAddressExW@16
+RtlIpv6StringToAddressW=RtlIpv6StringToAddressW@16
 RtlIsDosDeviceName_U=RtlIsDosDeviceName_U@4
 ;RtlIsGenericTableEmpty
 RtlIsNameLegalDOS8Dot3=RtlIsNameLegalDOS8Dot3@12

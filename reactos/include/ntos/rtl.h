@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.33 2004/08/12 06:04:21 ion Exp $
+/* $Id: rtl.h,v 1.34 2004/09/13 20:25:25 weiden Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -1643,7 +1643,7 @@ NTSTATUS STDCALL
 RtlInvertRangeList (OUT PRTL_RANGE_LIST InvertedRangeList,
 		    IN PRTL_RANGE_LIST RangeList);
 
-NTSTATUS
+LPSTR
 STDCALL
 RtlIpv4AddressToStringA(
 	PULONG IP,
@@ -1659,7 +1659,7 @@ RtlIpv4AddressToStringExA(
 	PULONG MaxSize
 	);
 
-NTSTATUS
+LPWSTR
 STDCALL
 RtlIpv4AddressToStringW(
 	PULONG IP,
