@@ -16,12 +16,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: loader.c,v 1.12 2003/07/29 23:03:01 jimtabor Exp $
+/* $Id: loader.c,v 1.13 2003/11/24 14:19:52 gvg Exp $
  *
  */
 
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /*
  * Blatantly stolen from ldr/utils.c in ntdll.  I can't link ntdll from
@@ -39,7 +42,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
    PULONG AddressPtr;
    ULONG i = 0;
 
-   DbgPrint("LdrGetProcedureAddress (BaseAddress %x Name %Z Ordinal %lu ProcedureAddress %x)\n",
+   DPRINT("LdrGetProcedureAddress (BaseAddress %x Name %Z Ordinal %lu ProcedureAddress %x)\n",
           BaseAddress, Name, Ordinal, ProcedureAddress);
 
    /* Get the pointer to the export directory */
@@ -49,7 +52,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
                                               IMAGE_DIRECTORY_ENTRY_EXPORT,
                                               &i);
 
-   DbgPrint("ExportDir %x i %lu\n", ExportDir, i);
+   DPRINT("ExportDir %x i %lu\n", ExportDir, i);
 
    if (!ExportDir || !i || !ProcedureAddress)
      {
@@ -70,7 +73,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
                   return STATUS_SUCCESS;
                }
           }
-        DbgPrint("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
+        DPRINT1("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
      }
    else
      {
@@ -81,7 +84,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
              *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
              return STATUS_SUCCESS;
           }
-        DbgPrint("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
+        DPRINT1("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
   }
 
    return STATUS_PROCEDURE_NOT_FOUND;
