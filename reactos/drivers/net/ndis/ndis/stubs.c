@@ -275,7 +275,7 @@ NdisOpenFile(
   NDIS_STRING FullFileName;
   OBJECT_ATTRIBUTES ObjectAttributes;
   PNDIS_HANDLE_OBJECT FileHandleObject = NULL;
-  //IO_STATUS_BLOCK IoStatusBlock;
+  IO_STATUS_BLOCK IoStatusBlock;
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
@@ -317,7 +317,7 @@ NdisOpenFile(
     &FileHandleObject->FileHandle,
     FILE_READ_DATA|SYNCHRONIZE,
     &ObjectAttributes,
-    NULL, //&IoStatusBlock, // PIO_STATUS_BLOCK
+    &IoStatusBlock,
     NULL, // PLARGE_INTEGER AllocationSize
     0, // ULONG FileAttributes
     FILE_SHARE_READ, // ULONG ShareAccess

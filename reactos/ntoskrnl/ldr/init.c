@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.41 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: init.c,v 1.42 2003/11/06 16:37:28 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -63,6 +63,7 @@ LdrpMapProcessImage(PHANDLE SectionHandle,
 		    PUNICODE_STRING ImagePath)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
   HANDLE FileHandle;
   NTSTATUS Status;
 
@@ -77,7 +78,7 @@ LdrpMapProcessImage(PHANDLE SectionHandle,
   Status = NtOpenFile(&FileHandle,
 		      FILE_ALL_ACCESS,
 		      &ObjectAttributes,
-		      NULL,
+		      &IoStatusBlock,
 		      0,
 		      0);
   if (!NT_SUCCESS(Status))

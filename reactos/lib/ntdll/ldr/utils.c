@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.72 2003/10/30 15:52:29 arty Exp $
+/* $Id: utils.c,v 1.73 2003/11/06 16:42:16 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -346,6 +346,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
   PIMAGE_NT_HEADERS     NTHeaders;
   PVOID                 ImageBase;
   ULONG                 ImageSize;
+  IO_STATUS_BLOCK       IoStatusBlock;
   NTSTATUS Status;
 
   DPRINT("LdrpMapDllImageFile() called\n");
@@ -390,7 +391,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
   Status = ZwOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
                       &FileObjectAttributes,
-                      NULL,
+                      &IoStatusBlock,
                       0,
                       0);
   if (!NT_SUCCESS(Status))
@@ -406,7 +407,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                       0,
                       0,
                       0,
-                      0,
+                      &IoStatusBlock,
                       BlockBuffer,
                       sizeof(BlockBuffer),
                       0,

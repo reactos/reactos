@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.14 2003/10/12 17:05:44 hbirr Exp $
+/* $Id: arcname.c,v 1.15 2003/11/06 16:36:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -184,9 +184,9 @@ IopCheckCdromDevices(PULONG DeviceNumber)
   HANDLE Handle;
   ULONG i;
   NTSTATUS Status;
+  IO_STATUS_BLOCK IoStatusBlock;
 #if 0
   PFILE_FS_VOLUME_INFORMATION FileFsVolume;
-  IO_STATUS_BLOCK IoStatusBlock;
   USHORT Buffer[FS_VOLUME_BUFFER_SIZE];
 
   FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
@@ -211,7 +211,7 @@ IopCheckCdromDevices(PULONG DeviceNumber)
       Status = NtOpenFile(&Handle,
 			  FILE_ALL_ACCESS,
 			  &ObjectAttributes,
-			  NULL,
+			  &IoStatusBlock,
 			  0,
 			  0);
       DPRINT("NtOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
@@ -252,7 +252,7 @@ IopCheckCdromDevices(PULONG DeviceNumber)
       Status = NtOpenFile(&Handle,
 			  FILE_ALL_ACCESS,
 			  &ObjectAttributes,
-			  NULL,
+			  &IoStatusBlock,
 			  0,
 			  0);
       DPRINT("NtOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
@@ -277,6 +277,7 @@ NTSTATUS INIT_FUNCTION
 IoCreateSystemRootLink(PCHAR ParameterLine)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
   UNICODE_STRING LinkName;
   UNICODE_STRING DeviceName;
   UNICODE_STRING ArcName;
@@ -435,7 +436,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
   Status = NtOpenFile(&Handle,
 		      FILE_ALL_ACCESS,
 		      &ObjectAttributes,
-		      NULL,
+		      &IoStatusBlock,
 		      0,
 		      0);
   if (!NT_SUCCESS(Status))

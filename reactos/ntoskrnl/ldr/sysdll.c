@@ -101,7 +101,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    Status = ZwOpenFile(&FileHandle,
 		       FILE_ALL_ACCESS,
 		       &FileObjectAttributes,
-		       NULL,
+		       &Iosb,
 		       FILE_SHARE_READ,
 		       FILE_SYNCHRONOUS_IO_NONALERT);
    if (!NT_SUCCESS(Status))
