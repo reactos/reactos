@@ -219,11 +219,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             TRACE("Subclassing atom deleted: %p\n", COMCTL32_aSubclass);
             COMCTL32_aSubclass = NULL;
 
-#if 0 /* Can't destroy heap, other DLLs might have DPA items in it */
             /* destroy private heap */
             HeapDestroy (COMCTL32_hHeap);
             TRACE("Heap destroyed: %p\n", COMCTL32_hHeap);
-#endif
             COMCTL32_hHeap = NULL;
             break;
     }

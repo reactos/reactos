@@ -1669,21 +1669,7 @@ DSA_DeleteAllItems (const HDSA hdsa)
 HDPA WINAPI
 DPA_Create (INT nGrow)
 {
-    HDPA hdpa;
-
-    TRACE("(%d)\n", nGrow);
-
-    hdpa = Alloc (sizeof(*hdpa));
-    if (hdpa) {
-	hdpa->nGrow = max(8, nGrow);
-	hdpa->hHeap = COMCTL32_hHeap;
-	hdpa->nMaxCount = hdpa->nGrow * 2;
-	hdpa->ptrs = Alloc (hdpa->nMaxCount * sizeof(LPVOID));
-    }
-
-    TRACE("-- %p\n", hdpa);
-
-    return hdpa;
+    return DPA_CreateEx (nGrow, GetProcessHeap());
 }
 
 
