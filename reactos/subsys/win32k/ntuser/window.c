@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.28 2003/03/12 05:18:21 rcampbell Exp $
+/* $Id: window.c,v 1.29 2003/03/12 05:21:53 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -833,6 +833,7 @@ NtUserMoveWindow(
     }
     ObmDereferenceObject(Window);
     /* if (bRepaint) NtUserUpdateWindow(hWnd); doesn't exist? */
+    return(TRUE);
 }
 
 DWORD STDCALL
