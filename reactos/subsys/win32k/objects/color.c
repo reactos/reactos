@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.45 2004/06/29 20:08:05 navaraf Exp $ */
+/* $Id: color.c,v 1.46 2004/07/02 20:04:48 gvg Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -452,9 +452,19 @@ HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
       PalGDI = PALETTE_LockPalette(hpal);
       if (NULL != PalGDI)
 	{
-	  PALETTE_UnlockPalette(hpal);
-	  oldPal = dc->w.hPalette;
-	  dc->w.hPalette = hpal;
+          /* Is this a valid palette for this depth? */
+          if ((dc->w.bitsPerPixel <= 8 && PAL_INDEXED == PalGDI->Mode)
+              || (8 < dc->w.bitsPerPixel && PAL_INDEXED != PalGDI->Mode))
+            {
+              PALETTE_UnlockPalette(hpal);
+              oldPal = dc->w.hPalette;
+              dc->w.hPalette = hpal;
+            }
+          else
+            {
+              PALETTE_UnlockPalette(hpal);
+              oldPal = NULL;
+            }
 	}
       else
 	{
