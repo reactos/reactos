@@ -1,4 +1,4 @@
-/* $Id: machpc.h,v 1.3 2004/11/10 23:45:37 gvg Exp $
+/* $Id: machpc.h,v 1.4 2004/11/12 17:17:07 gvg Exp $
  *
  *  FreeLoader
  *
@@ -36,6 +36,8 @@ U32 PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
 
 BOOL PcDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
 BOOL PcDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOL PcDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
+U32 PcDiskGetCacheableBlockCount(U32 DriveNumber);
 
 #endif /* __I386_MACHPC_H_ */
 

@@ -54,7 +54,7 @@ BOOL Ext2OpenVolume(U8 DriveNumber, U64 VolumeStartSector)
 	Ext2DriveNumber = DriveNumber;
 	Ext2VolumeStartSector = VolumeStartSector;
 
-	if (!DiskGetDriveGeometry(DriveNumber, &Ext2DiskGeometry))
+	if (!MachDiskGetDriveGeometry(DriveNumber, &Ext2DiskGeometry))
 	{
 		return FALSE;
 	}

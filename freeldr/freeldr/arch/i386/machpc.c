@@ -1,4 +1,4 @@
-/* $Id: machpc.c,v 1.3 2004/11/10 23:45:37 gvg Exp $
+/* $Id: machpc.c,v 1.4 2004/11/12 17:17:07 gvg Exp $
  *
  *  FreeLoader
  *
@@ -36,6 +36,8 @@ PcMachInit(VOID)
   MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
   MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = PcDiskGetPartitionEntry;
+  MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
+  MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
 }
 
 /* EOF */

@@ -521,7 +521,7 @@ SetHarddiskConfigurationData(HKEY DiskKey,
       DiskGeometry->SectorsPerTrack = ExtGeometry.SectorsPerTrack;
       DiskGeometry->NumberOfHeads = ExtGeometry.Heads;
     }
-  else if(DiskGetDriveParameters(DriveNumber, &Geometry))
+  else if(MachDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
       DiskGeometry->BytesPerSector = Geometry.BytesPerSector;
       DiskGeometry->NumberOfCylinders = Geometry.Cylinders;
@@ -681,7 +681,7 @@ DetectBiosDisks(HKEY SystemKey,
   Int13Drives = ((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
   for (i = 0; i < DiskCount; i++)
     {
-      if (DiskGetDriveParameters(0x80 + i, &Geometry))
+      if (MachDiskGetDriveGeometry(0x80 + i, &Geometry))
 	{
 	  Int13Drives[i].DriveSelect = 0x80 + i;
 	  Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;

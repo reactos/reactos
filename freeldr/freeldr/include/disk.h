@@ -109,10 +109,7 @@ typedef struct _MASTER_BOOT_RECORD
 BOOL	DiskResetController(U32 DriveNumber);
 BOOL	DiskInt13ExtensionsSupported(U32 DriveNumber);
 //VOID	DiskStopFloppyMotor(VOID);
-BOOL	DiskGetDriveParameters(U32 DriveNumber, PGEOMETRY Geometry);
 BOOL	DiskGetExtendedDriveParameters(U32 DriveNumber, PVOID Buffer, U16 BufferSize);
-
-//U32	DiskGetCacheableBlockCount(U32 DriveNumber);
 
 #endif // defined __i386__
 
@@ -124,11 +121,9 @@ BOOL	DiskGetExtendedDriveParameters(U32 DriveNumber, PVOID Buffer, U16 BufferSiz
 VOID	DiskReportError (BOOL bError);
 VOID	DiskError(PUCHAR ErrorString, U32 ErrorCode);
 PUCHAR	DiskGetErrorCodeString(U32 ErrorCode);
-BOOL	DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
 BOOL	DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer); // Implemented in i386disk.c
 BOOL	DiskIsDriveRemovable(U32 DriveNumber);
 VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
-U32		DiskGetCacheableBlockCount(U32 DriveNumber);	// Implemented in i386disk.c
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

@@ -1,4 +1,4 @@
-/* $Id: machine.c,v 1.3 2004/11/10 23:45:37 gvg Exp $
+/* $Id: machine.c,v 1.4 2004/11/12 17:17:07 gvg Exp $
  *
  *  FreeLoader
  *
@@ -26,6 +26,8 @@
 #undef MachGetMemoryMap
 #undef MachDiskReadLogicalSectors
 #undef MachDiskGetPartitionEntry
+#undef MachDiskGetDriveGeometry
+#undef MachDiskGetCacheableBlockCount
 
 MACHVTBL MachVtbl;
 
@@ -63,6 +65,18 @@ BOOL
 MachDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
   return MachVtbl.DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+}
+
+BOOL
+MachDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry)
+{
+  return MachVtbl.DiskGetDriveGeometry(DriveNumber, DriveGeometry);
+}
+
+U32
+MachDiskGetCacheableBlockCount(U32 DriveNumber)
+{
+  return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
 }
 
 /* EOF */

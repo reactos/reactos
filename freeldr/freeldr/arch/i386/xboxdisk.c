@@ -1,4 +1,4 @@
-/* $Id: xboxdisk.c,v 1.2 2004/11/10 23:45:37 gvg Exp $
+/* $Id: xboxdisk.c,v 1.3 2004/11/12 17:17:07 gvg Exp $
  *
  *  FreeLoader
  *
@@ -175,6 +175,70 @@ static struct
   (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_ALT_STATUS)))
 #define IDEWriteDriveControl(Address, Data) \
   (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
+
+/* IDE_DRIVE_IDENTIFY */
+
+typedef struct _IDE_DRIVE_IDENTIFY
+{
+  U16   ConfigBits;          /*00*/
+  U16   LogicalCyls;         /*01*/
+  U16   Reserved02;          /*02*/
+  U16   LogicalHeads;        /*03*/
+  U16   BytesPerTrack;       /*04*/
+  U16   BytesPerSector;      /*05*/
+  U16   SectorsPerTrack;     /*06*/
+  U8    InterSectorGap;      /*07*/
+  U8    InterSectorGapSize;
+  U8    Reserved08H;         /*08*/
+  U8    BytesInPLO;
+  U16   VendorUniqueCnt;     /*09*/
+  char  SerialNumber[20];    /*10*/
+  U16   ControllerType;      /*20*/
+  U16   BufferSize;          /*21*/
+  U16   ECCByteCnt;          /*22*/
+  char  FirmwareRev[8];      /*23*/
+  char  ModelNumber[40];     /*27*/
+  U16   RWMultImplemented;   /*47*/
+  U16   DWordIo;	     /*48*/
+  U16   Capabilities;        /*49*/
+#define IDE_DRID_STBY_SUPPORTED   0x2000
+#define IDE_DRID_IORDY_SUPPORTED  0x0800
+#define IDE_DRID_IORDY_DISABLE    0x0400
+#define IDE_DRID_LBA_SUPPORTED    0x0200
+#define IDE_DRID_DMA_SUPPORTED    0x0100
+  U16   Reserved50;          /*50*/
+  U16   MinPIOTransTime;     /*51*/
+  U16   MinDMATransTime;     /*52*/
+  U16   TMFieldsValid;       /*53*/
+  U16   TMCylinders;         /*54*/
+  U16   TMHeads;             /*55*/
+  U16   TMSectorsPerTrk;     /*56*/
+  U16   TMCapacityLo;        /*57*/
+  U16   TMCapacityHi;        /*58*/
+  U16   RWMultCurrent;       /*59*/
+  U16   TMSectorCountLo;     /*60*/
+  U16   TMSectorCountHi;     /*61*/
+  U16   DmaModes;            /*62*/
+  U16   MultiDmaModes;       /*63*/
+  U16   Reserved64[5];       /*64*/
+  U16   Reserved69[2];       /*69*/
+  U16   Reserved71[4];       /*71*/
+  U16   MaxQueueDepth;       /*75*/
+  U16   Reserved76[4];       /*76*/
+  U16   MajorRevision;       /*80*/
+  U16   MinorRevision;       /*81*/
+  U16   SupportedFeatures82; /*82*/
+  U16   SupportedFeatures83; /*83*/
+  U16   SupportedFeatures84; /*84*/
+  U16   EnabledFeatures85;   /*85*/
+  U16   EnabledFeatures86;   /*86*/
+  U16   EnabledFeatures87;   /*87*/
+  U16   UltraDmaModes;       /*88*/
+  U16   Reserved89[11];      /*89*/
+  U16   Max48BitAddress[4];  /*100*/
+  U16   Reserved104[151];    /*104*/
+  U16   Checksum;            /*255*/
+} IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
 
 /*  XboxDiskPolledRead
  *
@@ -439,6 +503,73 @@ XboxDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE
 
   /* No magic Xbox partitions. Maybe there's a MBR */
   return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+}
+
+BOOL
+XboxDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY Geometry)
+{
+  IDE_DRIVE_IDENTIFY DrvParms;
+  U32 i;
+  BOOL Atapi;
+
+  Atapi = FALSE; /* FIXME */
+  /*  Get the Drive Identify block from drive or die  */
+  if (! XboxDiskPolledRead(XBOX_IDE_COMMAND_PORT,
+                           XBOX_IDE_CONTROL_PORT,
+                           0,
+                           1,
+                           0,
+                           0,
+                           0,
+                           (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
+                           (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
+                           (PUCHAR) &DrvParms))
+    {
+      DbgPrint((DPRINT_DISK, "XboxDiskPolledRead() failed\n"));
+      return FALSE;
+    }
+
+  Geometry->Cylinders = DrvParms.LogicalCyls;
+  Geometry->Heads = DrvParms.LogicalHeads;
+  Geometry->Sectors = DrvParms.SectorsPerTrack;
+
+  if (! Atapi && 0 != (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED))
+    {
+      /* LBA ATA drives always have a sector size of 512 */
+      Geometry->BytesPerSector = 512;
+    }
+  else
+    {
+      DbgPrint((DPRINT_DISK, "BytesPerSector %d\n", DrvParms.BytesPerSector));
+      if (DrvParms.BytesPerSector == 0)
+        {
+          Geometry->BytesPerSector = 512;
+        }
+      else
+        {
+          for (i = 15; i >= 0; i--)
+            {
+              if (0 != (DrvParms.BytesPerSector & (1 << i)))
+                {
+                  Geometry->BytesPerSector = 1 << i;
+                  break;
+                }
+            }
+        }
+    }
+  DbgPrint((DPRINT_DISK, "Cylinders %d\n", Geometry->Cylinders));
+  DbgPrint((DPRINT_DISK, "Heads %d\n", Geometry->Heads));
+  DbgPrint((DPRINT_DISK, "Sectors %d\n", Geometry->Sectors));
+  DbgPrint((DPRINT_DISK, "BytesPerSector %d\n", Geometry->BytesPerSector));
+
+  return TRUE;
+}
+
+U32
+XboxDiskGetCacheableBlockCount(U32 DriveNumber)
+{
+  /* 64 seems a nice number, it is used by the machpc code for LBA devices */
+  return 64;
 }
 
 /* EOF */

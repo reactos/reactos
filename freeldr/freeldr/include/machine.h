@@ -1,4 +1,4 @@
-/* $Id: machine.h,v 1.3 2004/11/10 23:45:37 gvg Exp $
+/* $Id: machine.h,v 1.4 2004/11/12 17:17:08 gvg Exp $
  *
  *  FreeLoader
  *
@@ -38,6 +38,8 @@ typedef struct tagMACHVTBL
 
   BOOL (*DiskReadLogicalSectors)(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
   BOOL (*DiskGetPartitionEntry)(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+  BOOL (*DiskGetDriveGeometry)(U32 DriveNumber, PGEOMETRY DriveGeometry);
+  U32 (*DiskGetCacheableBlockCount)(U32 DriveNumber);
 } MACHVTBL, *PMACHVTBL;
 
 VOID MachInit(VOID);
@@ -50,6 +52,8 @@ extern MACHVTBL MachVtbl;
 #define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)	MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
 #define MachDiskGetPartitionEntry(Drive, Part, Entry)	MachVtbl.DiskGetPartitionEntry((Drive), (Part), (Entry))
+#define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
+#define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
 
 #endif /* __MACHINE_H_ */
 

@@ -250,8 +250,7 @@ REACTOS_OBJS=	arcname.o	\
 COMM_OBJS	=	rs232.o
 
 DISK_OBJS	=	disk.o		\
-				geometry.o	\
-				partition.o
+			partition.o
 
 MM_OBJS		=	mm.o		\
 				meminit.o

@@ -22,6 +22,7 @@
 #include "cm.h"
 #include <mm.h>
 #include <disk.h>
+#include <machine.h>
 #include <rtl.h>
 #include <debug.h>
 
@@ -33,13 +34,14 @@
 CACHE_DRIVE		CacheManagerDrive;
 BOOL			CacheManagerInitialized = FALSE;
 BOOL			CacheManagerDataInvalid = FALSE;
-U32				CacheBlockCount = 0;
-U32				CacheSizeLimit = 0;
-U32				CacheSizeCurrent = 0;
+U32			CacheBlockCount = 0;
+U32			CacheSizeLimit = 0;
+U32			CacheSizeCurrent = 0;
 
 BOOL CacheInitializeDrive(U32 DriveNumber)
 {
 	PCACHE_BLOCK	NextCacheBlock;
+	GEOMETRY	DriveGeometry;
 
 	// If we already have a cache for this drive then
 	// by all means lets keep it, unless it is a removable
@@ -82,13 +84,14 @@ BOOL CacheInitializeDrive(U32 DriveNumber)
 	// Initialize the structure
 	RtlZeroMemory(&CacheManagerDrive, sizeof(CACHE_DRIVE));
 	CacheManagerDrive.DriveNumber = DriveNumber;
-	if (!DiskGetDriveGeometry(DriveNumber, &CacheManagerDrive.DriveGeometry))
+	if (!MachDiskGetDriveGeometry(DriveNumber, &DriveGeometry))
 	{
 		return FALSE;
 	}
+	CacheManagerDrive.BytesPerSector = DriveGeometry.BytesPerSector;
 
 	// Get the number of sectors in each cache block
-	CacheManagerDrive.BlockSize = DiskGetCacheableBlockCount(DriveNumber);
+	CacheManagerDrive.BlockSize = MachDiskGetCacheableBlockCount(DriveNumber);
 
 	CacheBlockCount = 0;
 	CacheSizeLimit = GetSystemMemorySize() / 8;
@@ -101,10 +104,7 @@ BOOL CacheInitializeDrive(U32 DriveNumber)
 	CacheManagerInitialized = TRUE;
 
 	DbgPrint((DPRINT_CACHE, "Initializing BIOS drive 0x%x.\n", DriveNumber));
-	DbgPrint((DPRINT_CACHE, "Cylinders: %d.\n", CacheManagerDrive.DriveGeometry.Cylinders));
-	DbgPrint((DPRINT_CACHE, "Heads: %d.\n", CacheManagerDrive.DriveGeometry.Heads));
-	DbgPrint((DPRINT_CACHE, "Sectors: %d.\n", CacheManagerDrive.DriveGeometry.Sectors));
-	DbgPrint((DPRINT_CACHE, "BytesPerSector: %d.\n", CacheManagerDrive.DriveGeometry.BytesPerSector));
+	DbgPrint((DPRINT_CACHE, "BytesPerSector: %d.\n", CacheManagerDrive.BytesPerSector));
 	DbgPrint((DPRINT_CACHE, "BlockSize: %d.\n", CacheManagerDrive.BlockSize));
 	DbgPrint((DPRINT_CACHE, "CacheSizeLimit: %d.\n", CacheSizeLimit));
 
@@ -164,14 +164,14 @@ BOOL CacheReadDiskSectors(U32 DiskNumber, U32 StartSector, U32 SectorCount, PVOI
 		// Copy the portion requested into the buffer
 		//
 		RtlCopyMemory(Buffer,
-			(CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.DriveGeometry.BytesPerSector)),
-			(CopyLengthInStartBlock * CacheManagerDrive.DriveGeometry.BytesPerSector));
-		DbgPrint((DPRINT_CACHE, "1 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, (CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.DriveGeometry.BytesPerSector)), (CopyLengthInStartBlock * CacheManagerDrive.DriveGeometry.BytesPerSector)));
+			(CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)),
+			(CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector));
+		DbgPrint((DPRINT_CACHE, "1 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, (CacheBlock->BlockData + (SectorOffsetInStartBlock * CacheManagerDrive.BytesPerSector)), (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector)));
 
 		//
 		// Update the buffer address
 		//
-		Buffer += (CopyLengthInStartBlock * CacheManagerDrive.DriveGeometry.BytesPerSector);
+		Buffer += (CopyLengthInStartBlock * CacheManagerDrive.BytesPerSector);
 
 		//
 		// Update the block count
@@ -198,13 +198,13 @@ BOOL CacheReadDiskSectors(U32 DiskNumber, U32 StartSector, U32 SectorCount, PVOI
 		//
 		RtlCopyMemory(Buffer,
 			CacheBlock->BlockData,
-			CacheManagerDrive.BlockSize * CacheManagerDrive.DriveGeometry.BytesPerSector);
-		DbgPrint((DPRINT_CACHE, "2 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, CacheBlock->BlockData, CacheManagerDrive.BlockSize * CacheManagerDrive.DriveGeometry.BytesPerSector));
+			CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector);
+		DbgPrint((DPRINT_CACHE, "2 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, CacheBlock->BlockData, CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector));
 
 		//
 		// Update the buffer address
 		//
-		Buffer += CacheManagerDrive.BlockSize * CacheManagerDrive.DriveGeometry.BytesPerSector;
+		Buffer += CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector;
 
 		//
 		// Update the block count
@@ -231,13 +231,13 @@ BOOL CacheReadDiskSectors(U32 DiskNumber, U32 StartSector, U32 SectorCount, PVOI
 		//
 		RtlCopyMemory(Buffer,
 			CacheBlock->BlockData,
-			SectorOffsetInEndBlock * CacheManagerDrive.DriveGeometry.BytesPerSector);
-		DbgPrint((DPRINT_CACHE, "3 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, CacheBlock->BlockData, SectorOffsetInEndBlock * CacheManagerDrive.DriveGeometry.BytesPerSector));
+			SectorOffsetInEndBlock * CacheManagerDrive.BytesPerSector);
+		DbgPrint((DPRINT_CACHE, "3 - RtlCopyMemory(0x%x, 0x%x, %d)\n", Buffer, CacheBlock->BlockData, SectorOffsetInEndBlock * CacheManagerDrive.BytesPerSector));
 
 		//
 		// Update the buffer address
 		//
-		Buffer += SectorOffsetInEndBlock * CacheManagerDrive.DriveGeometry.BytesPerSector;
+		Buffer += SectorOffsetInEndBlock * CacheManagerDrive.BytesPerSector;
 
 		//
 		// Update the block count
@@ -317,7 +317,7 @@ BOOL CacheReleaseMemory(U32 MinimumAmountToRelease)
 		}
 
 		// It succeeded so increment the amount of memory we have freed
-		AmountReleased += CacheManagerDrive.BlockSize * CacheManagerDrive.DriveGeometry.BytesPerSector;
+		AmountReleased += CacheManagerDrive.BlockSize * CacheManagerDrive.BytesPerSector;
 	}
 
 	// Return status

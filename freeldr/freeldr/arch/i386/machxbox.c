@@ -1,4 +1,4 @@
-/* $Id: machxbox.c,v 1.3 2004/11/10 23:45:37 gvg Exp $
+/* $Id: machxbox.c,v 1.4 2004/11/12 17:17:07 gvg Exp $
  *
  *  FreeLoader
  *
@@ -36,5 +36,6 @@ XboxMachInit(VOID)
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
   MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
-
+  MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
+  MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
 }

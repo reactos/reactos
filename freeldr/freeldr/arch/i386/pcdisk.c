@@ -17,12 +17,14 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <freeldr.h>
-#include <disk.h>
-#include <rtl.h>
-#include <arch.h>
-#include <debug.h>
-#include <portio.h>
+#include "freeldr.h"
+#include "disk.h"
+#include "rtl.h"
+#include "arch.h"
+#include "debug.h"
+#include "portio.h"
+#include "machine.h"
+#include "machpc.h"
 
 
 typedef struct
@@ -144,7 +146,7 @@ static BOOL PcDiskReadLogicalSectorsCHS(U32 DriveNumber, U64 SectorNumber, U32 S
 	//
 	// Get the drive geometry
 	//
-	if (!DiskGetDriveGeometry(DriveNumber, &DriveGeometry))
+	if (!MachDiskGetDriveGeometry(DriveNumber, &DriveGeometry))
 	{
 		return FALSE;
 	}
@@ -369,6 +371,80 @@ PcDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_E
 {
   /* Just use the standard routine */
   return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+}
+
+BOOL
+PcDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY Geometry)
+{
+  REGS RegsIn;
+  REGS RegsOut;
+  U32 Cylinders;
+
+  DbgPrint((DPRINT_DISK, "DiskGetDriveGeometry()\n"));
+
+  /* BIOS Int 13h, function 08h - Get drive parameters
+   * AH = 08h
+   * DL = drive (bit 7 set for hard disk)
+   * ES:DI = 0000h:0000h to guard against BIOS bugs
+   * Return:
+   * CF set on error
+   * AH = status (07h)
+   * CF clear if successful
+   * AH = 00h
+   * AL = 00h on at least some BIOSes
+   * BL = drive type (AT/PS2 floppies only)
+   * CH = low eight bits of maximum cylinder number
+   * CL = maximum sector number (bits 5-0)
+   *      high two bits of maximum cylinder number (bits 7-6)
+   * DH = maximum head number
+   * DL = number of drives
+   * ES:DI -> drive parameter table (floppies only)
+   */
+  RegsIn.b.ah = 0x08;
+  RegsIn.b.dl = DriveNumber;
+  RegsIn.w.es = 0x0000;
+  RegsIn.w.di = 0x0000;
+
+  /* Get drive parameters */
+  Int386(0x13, &RegsIn, &RegsOut);
+
+  if (! INT386_SUCCESS(RegsOut))
+    {
+      return FALSE;
+    }
+
+  Cylinders = (RegsOut.b.cl & 0xC0) << 2;
+  Cylinders += RegsOut.b.ch;
+  Cylinders++;
+  Geometry->Cylinders = Cylinders;
+  Geometry->Heads = RegsOut.b.dh + 1;
+  Geometry->Sectors = RegsOut.b.cl & 0x3F;
+  Geometry->BytesPerSector = 512;            /* Just assume 512 bytes per sector */
+
+  return TRUE;
+}
+
+U32
+PcDiskGetCacheableBlockCount(U32 DriveNumber)
+{
+  GEOMETRY	Geometry;
+
+  /* If LBA is supported then the block size will be 64 sectors (32k)
+   * If not then the block size is the size of one track */
+  if (DiskInt13ExtensionsSupported(DriveNumber))
+    {
+      return 64;
+    }
+  /* Get the disk geometry
+   * If this fails then we will just return 1 sector to be safe */
+  else if (! PcDiskGetDriveGeometry(DriveNumber, &Geometry))
+    {
+      return 1;
+    }
+  else
+    {
+      return Geometry.Sectors;
+    }
 }
 
 /* EOF */

@@ -79,7 +79,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 		DbgPrint((DPRINT_FILESYSTEM, "Drive is a floppy diskette drive. Assuming FAT12 file system.\n"));
 
 		FileSystemType = FS_FAT;
-		return FatOpenVolume(DriveNumber, 0);
+		return FatOpenVolume(DriveNumber, 0, 0);
 	}
 
 	// Check for ISO9660 file system type
@@ -138,7 +138,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	case PARTITION_FAT32:
 	case PARTITION_FAT32_XINT13:
 		FileSystemType = FS_FAT;
-		return FatOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
+		return FatOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, PartitionTableEntry.PartitionSectorCount);
 	case PARTITION_EXT2:
 		FileSystemType = FS_EXT2;
 		return Ext2OpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);

@@ -115,7 +115,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, U32 BlockNumb
 	// allocate room for the block data
 	RtlZeroMemory(CacheBlock, sizeof(CACHE_BLOCK));
 	CacheBlock->BlockNumber = BlockNumber;
-	CacheBlock->BlockData = MmAllocateMemory(CacheDrive->BlockSize * CacheDrive->DriveGeometry.BytesPerSector);
+	CacheBlock->BlockData = MmAllocateMemory(CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 	if (CacheBlock->BlockData ==NULL)
 	{
 		MmFreeMemory(CacheBlock);
@@ -129,7 +129,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, U32 BlockNumb
 		MmFreeMemory(CacheBlock);
 		return NULL;
 	}
-	RtlCopyMemory(CacheBlock->BlockData, (PVOID)DISKREADBUFFER, CacheDrive->BlockSize * CacheDrive->DriveGeometry.BytesPerSector);
+	RtlCopyMemory(CacheBlock->BlockData, (PVOID)DISKREADBUFFER, CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 
 	// Add it to our list of blocks managed by the cache
 	if (CacheDrive->CacheBlockHead == NULL)
@@ -143,7 +143,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, U32 BlockNumb
 
 	// Update the cache data
 	CacheBlockCount++;
-	CacheSizeCurrent = CacheBlockCount * (CacheDrive->BlockSize * CacheDrive->DriveGeometry.BytesPerSector);
+	CacheSizeCurrent = CacheBlockCount * (CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 
 	CacheInternalDumpBlockList(CacheDrive);
 
@@ -188,7 +188,7 @@ BOOL CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
 
 	// Update the cache data
 	CacheBlockCount--;
-	CacheSizeCurrent = CacheBlockCount * (CacheDrive->BlockSize * CacheDrive->DriveGeometry.BytesPerSector);
+	CacheSizeCurrent = CacheBlockCount * (CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 
 	return TRUE;
 }
@@ -200,7 +200,7 @@ VOID CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive)
 	DbgPrint((DPRINT_CACHE, "CacheInternalCheckCacheSizeLimits()\n"));
 
 	// Calculate the size of the cache if we added a block
-	NewCacheSize = (CacheBlockCount + 1) * (CacheDrive->BlockSize * CacheDrive->DriveGeometry.BytesPerSector);
+	NewCacheSize = (CacheBlockCount + 1) * (CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 
 	// Check the new size against the cache size limit
 	if (NewCacheSize > CacheSizeLimit)
@@ -215,10 +215,7 @@ VOID CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive)
 	PCACHE_BLOCK	CacheBlock;
 
 	DbgPrint((DPRINT_CACHE, "Dumping block list for BIOS drive 0x%x.\n", CacheDrive->DriveNumber));
-	DbgPrint((DPRINT_CACHE, "Cylinders: %d.\n", CacheDrive->DriveGeometry.Cylinders));
-	DbgPrint((DPRINT_CACHE, "Heads: %d.\n", CacheDrive->DriveGeometry.Heads));
-	DbgPrint((DPRINT_CACHE, "Sectors: %d.\n", CacheDrive->DriveGeometry.Sectors));
-	DbgPrint((DPRINT_CACHE, "BytesPerSector: %d.\n", CacheDrive->DriveGeometry.BytesPerSector));
+	DbgPrint((DPRINT_CACHE, "BytesPerSector: %d.\n", CacheDrive->BytesPerSector));
 	DbgPrint((DPRINT_CACHE, "BlockSize: %d.\n", CacheDrive->BlockSize));
 	DbgPrint((DPRINT_CACHE, "CacheSizeLimit: %d.\n", CacheSizeLimit));
 	DbgPrint((DPRINT_CACHE, "CacheSizeCurrent: %d.\n", CacheSizeCurrent));

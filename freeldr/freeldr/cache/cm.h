@@ -55,10 +55,10 @@ typedef struct
 ///////////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-	U32					DriveNumber;
-	GEOMETRY			DriveGeometry;
+	U32			DriveNumber;
+	U32			BytesPerSector;
 
-	U32					BlockSize;			// Block size (in sectors)
+	U32			BlockSize;			// Block size (in sectors)
 	PCACHE_BLOCK		CacheBlockHead;
 
 } CACHE_DRIVE, *PCACHE_DRIVE;
