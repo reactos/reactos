@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.8 2004/11/12 07:34:56 arty Exp $
+/* $Id: main.c,v 1.9 2004/11/12 09:27:02 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -228,7 +228,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status = STATUS_SUCCESS;
+#ifdef DBG
     PFILE_OBJECT FileObject = IrpSp->FileObject;
+#endif
 
     AFD_DbgPrint(MID_TRACE,("AfdDispatch: %d\n", IrpSp->MajorFunction));
     if( IrpSp->MajorFunction != IRP_MJ_CREATE) {
