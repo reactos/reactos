@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002,2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: attrib.c,v 1.1 2002/07/15 15:37:33 ekohl Exp $
+/* $Id: attrib.c,v 1.2 2003/01/17 18:51:13 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/ntfs/attrib.c
+ * FILE:             drivers/fs/ntfs/attrib.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
  */
@@ -29,13 +29,64 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "ntfs.h"
 
 
 /* FUNCTIONS ****************************************************************/
+
+VOID
+NtfsDumpFileNameAttribute(PATTRIBUTE Attribute)
+{
+  PRESIDENT_ATTRIBUTE ResAttr;
+  PFILENAME_ATTRIBUTE FileNameAttr;
+
+  DbgPrint("  $FILE_NAME ");
+
+  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
+//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
+
+  FileNameAttr = (PFILENAME_ATTRIBUTE)((PVOID)ResAttr + ResAttr->ValueOffset);
+  DbgPrint(" '%.*S' ", FileNameAttr->NameLength, FileNameAttr->Name);
+}
+
+
+VOID
+NtfsDumpVolumeNameAttribute(PATTRIBUTE Attribute)
+{
+  PRESIDENT_ATTRIBUTE ResAttr;
+  PWCHAR VolumeName;
+
+  DbgPrint("  $VOLUME_NAME ");
+
+  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
+//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
+
+  VolumeName = (PWCHAR)((PVOID)ResAttr + ResAttr->ValueOffset);
+  DbgPrint(" '%.*S' ", ResAttr->ValueLength/2, VolumeName);
+}
+
+
+VOID
+NtfsDumpVolumeInformationAttribute(PATTRIBUTE Attribute)
+{
+  PRESIDENT_ATTRIBUTE ResAttr;
+  PVOLINFO_ATTRIBUTE VolInfoAttr;
+
+  DbgPrint("  $VOLUME_INFORMATION ");
+
+  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
+//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
+
+  VolInfoAttr = (PVOLINFO_ATTRIBUTE)((PVOID)ResAttr + ResAttr->ValueOffset);
+  DbgPrint(" NTFS Version %u.%u  Flags 0x%04hx ",
+	   VolInfoAttr->MajorVersion,
+	   VolInfoAttr->MinorVersion,
+	   VolInfoAttr->Flags);
+}
+
 
 VOID
 NtfsDumpAttribute(PATTRIBUTE Attribute)
@@ -59,7 +110,7 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
 	break;
 
       case AttributeFileName:
-	DbgPrint("  $FILE_NAME ");
+	NtfsDumpFileNameAttribute(Attribute);
 	break;
 
       case AttributeObjectId:
@@ -71,11 +122,11 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
 	break;
 
       case AttributeVolumeName:
-	DbgPrint("  $VOLUME_NAME ");
+	NtfsDumpVolumeNameAttribute(Attribute);
 	break;
 
       case AttributeVolumeInformation:
-	DbgPrint("  $VOLUME_INFORMATION ");
+	NtfsDumpVolumeInformationAttribute(Attribute);
 	break;
 
       case AttributeData:
@@ -130,7 +181,7 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
     }
 
   DbgPrint("(%s)\n",
-	   Attribute->Nonresident ? "nonresident" : "resident");
+	   Attribute->Nonresident ? "non-resident" : "resident");
 
   if (Attribute->Nonresident != 0)
     {

@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002,2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.3 2002/09/08 10:22:11 chorns Exp $
+/* $Id: dirctl.c,v 1.4 2003/01/17 18:51:13 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/ntfs/dirctl.c
+ * FILE:             drivers/fs/ntfs/dirctl.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
  */
@@ -664,7 +664,8 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
       Status = STATUS_SUCCESS;
     }
 
-  return(Status);
+//  return(Status);
+  return(STATUS_NO_MORE_FILES);
 }
 
 
