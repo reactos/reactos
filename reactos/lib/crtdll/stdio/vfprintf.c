@@ -42,7 +42,7 @@ vfprintf(FILE *f, const char *fmt, va_list ap)
 int
 vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
 {
-
+	return 0;
 }
 
 
@@ -64,7 +64,6 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
 
 #include <stdarg.h>
 
-//#include <internal/debug.h>
 #include <crtdll/ctype.h>
 #include <crtdll/string.h>
 #include <crtdll/stdio.h>
@@ -73,7 +72,14 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
 #include <crtdll/internal/ieee.h>
 
 
-size_t strnlen( const char *string, size_t count );
+#define ZEROPAD		1	/* pad with zero */
+#define SIGN		2	/* unsigned/signed long */
+#define PLUS		4	/* show plus */
+#define SPACE		8	/* space if plus */
+#define LEFT		16	/* left justified */
+#define SPECIAL		32	/* 0x */
+#define LARGE		64	/* use 'ABCDEF' instead of 'abcdef' */
+#define ZEROTRUNC	128	/* truncate zero 's */
 
 
 static int skip_atoi(const char **s)
@@ -85,26 +91,16 @@ static int skip_atoi(const char **s)
 	return i;
 }
 
-#define ZEROPAD	1		/* pad with zero */
-#define SIGN	2		/* unsigned/signed long */
-#define PLUS	4		/* show plus */
-#define SPACE	8		/* space if plus */
-#define LEFT	16		/* left justified */
-#define SPECIAL	32		/* 0x */
-#define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
-#define ZEROTRUNC 128			/* truncate zero 's */
 
-static int __res;
-
-int do_div(long *n,int base) {
-
-__res = ((unsigned long) *n) % (unsigned) base;
-*n = ((unsigned long) *n) / (unsigned) base; 
-return __res; 
+static int do_div(long long *n,int base)
+{
+	int __res = ((unsigned long long) *n) % (unsigned) base;
+	*n = ((unsigned long long) *n) / (unsigned) base;
+	return __res;
 }
 
-static char * number(FILE * f, long num, int base, int size, int precision
-	,int type)
+
+static void number(FILE * f, long long num, int base, int size, int precision ,int type)
 {
 	char c,sign,tmp[66];
 	const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
@@ -115,7 +111,7 @@ static char * number(FILE * f, long num, int base, int size, int precision
 	if (type & LEFT)
 		type &= ~ZEROPAD;
 	if (base < 2 || base > 36)
-		return 0;
+		return;
 	c = (type & ZEROPAD) ? '0' : ' ';
 	sign = 0;
 	if (type & SIGN) {
@@ -147,36 +143,33 @@ static char * number(FILE * f, long num, int base, int size, int precision
 	size -= precision;
 	if (!(type&(ZEROPAD+LEFT)))
 		while(size-->0)
-			putc( ' ',f);
+			putc(' ',f);
 	if (sign)
-		putc( sign,f);
+		putc(sign,f);
 	if (type & SPECIAL) {
 		if (base==8) {
-			putc( '0',f);
+			putc('0',f);
 		}
 		else if (base==16) {
-			putc( '0', f);
-			putc( digits[33],f);
+			putc('0', f);
+			putc(digits[33],f);
 		}
 	}
 	if (!(type & LEFT))
 		while (size-- > 0)
-			putc( c,f);
+			putc(c,f);
 	while (i < precision--)
-		putc( '0', f);
+		putc('0', f);
 	while (i-- > 0)
-		putc( tmp[i],f);
+		putc(tmp[i],f);
 	while (size-- > 0)
-		putc( ' ', f);
-	__res = 0;
-	return 0;
+		putc(' ', f);
+	return;
 }
-
 
 
 void numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int type)
 {
-
 	double exponent = 0.0;
 	double e;
 	long ie;
@@ -195,27 +188,23 @@ void numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int 
 
 	double_t *n = (double_t *)&__n;
 
-
-	if (  exp_sign == 'g' ||  exp_sign == 'G' || exp_sign == 'e' ||  exp_sign == 'E' ) {
+	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' ) {
 		ie = ((unsigned int)n->exponent - (unsigned int)0x3ff);
 		exponent = ie/3.321928;
 	}
 
-	if (   exp_sign == 'g' ||  exp_sign == 'G' ) {
+	if ( exp_sign == 'g' || exp_sign == 'G' ) {
 		type |= ZEROTRUNC;
-		if ( exponent < -4 || fabs(exponent) >= precision ) 
+		if ( exponent < -4 || fabs(exponent) >= precision )
 			 exp_sign -= 2; // g -> e and G -> E
-
 	}
-	
-	if (  exp_sign == 'e' ||  exp_sign == 'E' ) {
+
+	if ( exp_sign == 'e' ||  exp_sign == 'E' ) {
 		frac = modf(exponent,&e);
 		if ( frac > 0.5 )
 			e++;
 		else if (  frac < -0.5  )
 			e--;
-
-
 
 		numberf(f,__n/pow(10.0L,e),'f',size-4, precision, type);
 		putc( exp_sign,f);
@@ -227,48 +216,38 @@ void numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int 
 
 		number(f,ie, 10,2, 2,type );
 		return;
-	}			
-			
-			
-	if (  exp_sign == 'f' ) {
-		
+	}
+
+	if ( exp_sign == 'f' ) {
 		buf = alloca(4096);
 		if (type & LEFT) {
-                	type &= ~ZEROPAD;
+			type &= ~ZEROPAD;
 		}
-    
-        	c = (type & ZEROPAD) ? '0' : ' ';
-        	sign = 0;
-        	if (type & SIGN) {
-                	if (__n < 0) {
-                        	sign = '-';
-                        	__n = fabs(__n);
-                        	size--;
-                	} else if (type & PLUS) {
-                        	sign = '+';
-                       		size--;
-                	} else if (type & SPACE) {
-                        	sign = ' ';
-                        	size--;
-                	}
-        	}
-	
 
-	
-	
+		c = (type & ZEROPAD) ? '0' : ' ';
+		sign = 0;
+		if (type & SIGN) {
+			if (__n < 0) {
+				sign = '-';
+				__n = fabs(__n);
+				size--;
+			} else if (type & PLUS) {
+				sign = '+';
+				size--;
+			} else if (type & SPACE) {
+				sign = ' ';
+				size--;
+			}
+		}
+
 		frac = modf(__n,&intr);
-	
-		
 
 		// # flags forces a . and prevents trucation of trailing zero's
-		
-		if ( precision > 0 ) {
-		
 
+		if ( precision > 0 ) {
 			//frac = modfl(__n,&intr);
-	
 			i = precision-1;
-			while (  i >= 0  ) {		
+			while (  i >= 0  ) {
 				frac*=10.0L;
 				frac = modf(frac, &p);
 				buf[i] = (int)p + '0';
@@ -288,28 +267,21 @@ void numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int 
 			}
 		}
 
-
-
 		if ( intr == 0.0 ) {
 			buf[i++] = '0';
 			size--;
 		}
 		else {
-		
-		
 			while ( intr > 0.0 ) {
-
 				intr/=10.0L;
 				p = modf(intr, &intr);
-				
+
 				p *=10;
-			
+
 				buf[i++] = (int)p + '0';
 				size--;
 			}
-	
 		}
-
 
 		j = 0;
 		while ( j < i && ro == 1) {
@@ -318,31 +290,31 @@ void numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int 
 				ro = 0;
 			}
 			else if ( buf[j] == '9' ) {
-				buf[j] = '0';					
+				buf[j] = '0';
 			}
 			j++;
 		}
 		if ( ro == 1 )
-			buf[i++] = '1'; 
-			
+			buf[i++] = '1';
+
 		buf[i] = 0;
 
 		size -= precision;
-        if (!(type&(ZEROPAD+LEFT)))
-                while(size-->0)
-                        putc( ' ',f);
-        if (sign)
-                putc( sign,f);
+		if (!(type&(ZEROPAD+LEFT)))
+			while(size-->0)
+				putc(' ',f);
+		if (sign)
+			putc( sign,f);
 
 		if (!(type&(ZEROPAD+LEFT)))
 			while(size-->0)
-				putc( ' ',f);
+				putc(' ',f);
 		if (type & SPECIAL) {
 		}
-    
-        if (!(type & LEFT))
-                while (size-- > 0)
-                        putc( c,f);
+
+		if (!(type & LEFT))
+			while (size-- > 0)
+				putc(c,f);
 
 		tmp = buf;
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) ) {
@@ -351,27 +323,20 @@ void numberf(FILE * f, double __n, char exp_sign,  int size, int precision, int 
 					tmp++;
 					i--;
 			}
-
 		}
-	//	else
-	//		while (i < precision--)
-	//			    putc( '0', f);
-        while (i-- > 0)
-                putc( tmp[i],f);
-        while (size-- > 0)
-                putc( ' ', f);
-	
-
-	
-		
-		
+//		else
+//			while (i < precision--)
+//				putc('0', f);
+		while (i-- > 0)
+			putc(tmp[i],f);
+		while (size-- > 0)
+			putc(' ', f);
 	}
-		
 }
+
 
 void numberfl(FILE * f, long double __n, char exp_sign,  int size, int precision, int type)
 {
-
 	long double exponent = 0.0;
 	long double e;
 	long ie;
@@ -390,27 +355,23 @@ void numberfl(FILE * f, long double __n, char exp_sign,  int size, int precision
 
 	long_double_t *n = (long_double_t *)&__n;
 
-
-	if (  exp_sign == 'g' ||  exp_sign == 'G' || exp_sign == 'e' ||  exp_sign == 'E' ) {
+	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' ) {
 		ie = ((unsigned int)n->exponent - (unsigned int)0x3fff);
 		exponent = ie/3.321928;
 	}
 
-	if (   exp_sign == 'g' ||  exp_sign == 'G' ) {
+	if ( exp_sign == 'g' || exp_sign == 'G' ) {
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision ) 
 			 exp_sign -= 2; // g -> e and G -> E
-
 	}
-	
-	if (  exp_sign == 'e' ||  exp_sign == 'E' ) {
+
+	if ( exp_sign == 'e' || exp_sign == 'E' ) {
 		frac = modfl(exponent,&e);
 		if ( frac > 0.5 )
 			e++;
-		else if (  frac < -0.5  )
+		else if ( frac < -0.5 )
 			e--;
-
-
 
 		numberf(f,__n/powl(10.0L,e),'f',size-4, precision, type);
 		putc( exp_sign,f);
@@ -422,48 +383,39 @@ void numberfl(FILE * f, long double __n, char exp_sign,  int size, int precision
 
 		number(f,ie, 10,2, 2,type );
 		return;
-	}			
-			
-			
-	if (  exp_sign == 'f' ) {
+	}
+
+	if ( exp_sign == 'f' ) {
 		
 		buf = alloca(4096);
 		if (type & LEFT) {
-                	type &= ~ZEROPAD;
+			type &= ~ZEROPAD;
 		}
-    
-        	c = (type & ZEROPAD) ? '0' : ' ';
-        	sign = 0;
-        	if (type & SIGN) {
-                	if (__n < 0) {
-                        	sign = '-';
-                        	__n = fabs(__n);
-                        	size--;
-                	} else if (type & PLUS) {
-                        	sign = '+';
-                       		size--;
-                	} else if (type & SPACE) {
-                        	sign = ' ';
-                        	size--;
-                	}
-        	}
-	
 
-	
-	
+		c = (type & ZEROPAD) ? '0' : ' ';
+		sign = 0;
+		if (type & SIGN) {
+			if (__n < 0) {
+				sign = '-';
+				__n = fabs(__n);
+				size--;
+			} else if (type & PLUS) {
+				sign = '+';
+				size--;
+			} else if (type & SPACE) {
+				sign = ' ';
+				size--;
+			}
+		}
+
 		frac = modfl(__n,&intr);
-	
-		
 
 		// # flags forces a . and prevents trucation of trailing zero's
-		
 		if ( precision > 0 ) {
-		
-
 			//frac = modfl(__n,&intr);
 	
 			i = precision-1;
-			while (  i >= 0  ) {		
+			while ( i >= 0  ) {
 				frac*=10.0L;
 				frac = modfl((long double)frac, &p);
 				buf[i] = (int)p + '0';
@@ -483,28 +435,21 @@ void numberfl(FILE * f, long double __n, char exp_sign,  int size, int precision
 			}
 		}
 
-
-
 		if ( intr == 0.0 ) {
 			buf[i++] = '0';
 			size--;
 		}
 		else {
-		
-		
 			while ( intr > 0.0 ) {
-
 				intr/=10.0L;
 				p = modfl(intr, &intr);
-				
+
 				p *=10;
-			
+
 				buf[i++] = (int)p + '0';
 				size--;
 			}
-	
 		}
-
 
 		j = 0;
 		while ( j < i && ro == 1) {
@@ -513,81 +458,74 @@ void numberfl(FILE * f, long double __n, char exp_sign,  int size, int precision
 				ro = 0;
 			}
 			else if ( buf[j] == '9' ) {
-				buf[j] = '0';					
+				buf[j] = '0';
 			}
 			j++;
 		}
 		if ( ro == 1 )
-			buf[i++] = '1'; 
-			
+			buf[i++] = '1';
+
 		buf[i] = 0;
 
 		size -= precision;
-        if (!(type&(ZEROPAD+LEFT)))
-                while(size-->0)
-                        putc( ' ',f);
-        if (sign)
-                putc( sign,f);
+		if (!(type&(ZEROPAD+LEFT)))
+			while(size-->0)
+				putc(' ',f);
+		if (sign)
+			putc(sign,f);
 
 		if (!(type&(ZEROPAD+LEFT)))
 			while(size-->0)
-				putc( ' ',f);
+				putc(' ',f);
 		if (type & SPECIAL) {
 		}
-    
-        if (!(type & LEFT))
-                while (size-- > 0)
-                        putc( c,f);
+
+		if (!(type & LEFT))
+			while (size-- > 0)
+				putc(c,f);
 
 		tmp = buf;
 		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) ) {
 			j = 0;
 			while ( j < i && ( *tmp == '0' || *tmp == '.' )) {
-					tmp++;
-					i--;
+				tmp++;
+				i--;
 			}
-
 		}
-	//	else
-	//		while (i < precision--)
-	//			    putc( '0', f);
-        while (i-- > 0)
-                putc( tmp[i],f);
-        while (size-- > 0)
-                putc( ' ', f);
-	
-
-	
-		
-		
+//		else
+//			while (i < precision--)
+//				    putc( '0', f);
+		while (i-- > 0)
+			putc(tmp[i],f);
+		while (size-- > 0)
+			putc(' ', f);
 	}
-		
 }
 
-int
-__vfprintf(FILE *f, const char *fmt, va_list args)
+
+int __vfprintf(FILE *f, const char *fmt, va_list args)
 {
 	int len;
-	unsigned long num;
+	unsigned long long num;
 	int i, base;
 	long double _ldouble;
 	double _double;
 	const char *s;
-        const short int* sw;
+	const short int* sw;
 
 	int flags;		/* flags to number() */
 
 	int field_width;	/* width of output field */
 	int precision;		/* min. # of digits for integers; max
 				   number of chars for from string */
-	int qualifier = 0;		/* 'h', 'l', or 'L' for integer fields */
-   
+	int qualifier = 0;	/* 'h', 'l', 'L' or 'I64' for integer fields */
+
 	for (; *fmt ; ++fmt) {
 		if (*fmt != '%') {
 			putc(*fmt,f);
 			continue;
 		}
-			
+
 		/* process flags */
 		flags = 0;
 		repeat:
@@ -599,7 +537,7 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 				case '#': flags |= SPECIAL; goto repeat;
 				case '0': flags |= ZEROPAD; goto repeat;
 				}
-	
+
 		/* get field width */
 		field_width = -1;
 		if (isdigit(*fmt))
@@ -617,7 +555,7 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 		/* get the precision */
 		precision = -1;
 		if (*fmt == '.') {
-			++fmt;	
+			++fmt;
 			if (isdigit(*fmt))
 				precision = skip_atoi(&fmt);
 			else if (*fmt == '*') {
@@ -646,16 +584,18 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 				default:
 					break;
 			}
+		} else if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' ) {
+			qualifier = *fmt;
+			++fmt;
+		} else if (*fmt == 'I' && *(fmt+1) == '6' && *(fmt+2) == '4') {
+			qualifier = *fmt;
+			fmt += 3;
 		}
-                else if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' ) {
-                        qualifier = *fmt;
-                        ++fmt;
-                }
 
 		// go fine with ll instead of L
 		if ( *fmt == 'l' ) {
-				++fmt;
-				qualifier = 'L';
+			++fmt;
+			qualifier = 'L';
 		}
 
 		/* default base */
@@ -668,124 +608,113 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 					putc(' ',f);
 			putc((unsigned char) va_arg(args, int),f);
 			while (--field_width > 0)
-				putc( ' ',f);
+				putc(' ',f);
 			continue;
-		 case 'S':
-		 case 'w':
-		   sw = va_arg(args,short int *);
-//		   DPRINT("L %x\n",sw);
-		   if (sw==NULL)
-		     {
+
+		case 'S':
+		case 'w':
+			sw = va_arg(args,short int *);
+//			DPRINT("L %x\n",sw);
+			if (sw==NULL) {
+//				CHECKPOINT;
+				s = "<NULL>";
+				while ((*s)!=0) {
+					putc(*s++,f);
+				}
+//				CHECKPOINT;
+//				DbgPrint("str %x\n",str);
+			} else {
+				while ((*sw)!=0) {
+					putc((char)(*sw++),f);
+				}
+			}
 //			CHECKPOINT;
-			s = "<NULL>";
-			while ((*s)!=0)
-			  {
-			     putc( *s++,f);
-			  }
-//			CHECKPOINT;
-//			DbgPrint("str %x\n",str);
-		     }
-		   else
-		     {
-			while ((*sw)!=0)
-			  {
-			     putc( (char)(*sw++),f);
-			  }
-		     }
-//		   CHECKPOINT;
-		   continue;
-	   	case 'e':
-	   	case 'E':
+			continue;
+
+		case 'e':
+		case 'E':
 		case 'f':
-    		case 'g':
-    		case 'G':
+		case 'g':
+		case 'G':
+			if (qualifier == 'l' || qualifier == 'L' ) {
+				_ldouble = va_arg(args, long double);
+			
+				if ( _isnanl(_ldouble) ) {
+					s = "Nan";
+					len = 3;
+					while ( len > 0 ) {
+						putc(*s++,f);
+						len --;
+					}
+				}
+				else if ( _isinfl(_ldouble) < 0 ) {
+					s = "-Inf";
+					len = 4;
+					while ( len > 0 ) {
+						putc(*s++,f);
+						len --;
+					}
+				}
+				else if ( _isinfl(_ldouble) > 0 ) {
+					s = "+Inf";
+					len = 4;
+					while ( len > 0 ) {
+						putc(*s++,f);
+						len --;
+					}
+				} else {
+					if ( precision == -1 )
+						precision = 6;
+					numberfl(f,_ldouble,*fmt,field_width,precision,flags);
+				}
+			} else {
+				_double = (double)va_arg(args, double);
 
-      		   if (qualifier == 'l' || qualifier == 'L' )  {
-			_ldouble = va_arg(args, long double);
-			
-		   	if ( _isnanl(_ldouble) ) {
-				s = "Nan";
-				len = 3;
-				while ( len > 0 ) {
-					putc(*s++,f);
-					len --;
+				if ( _isnan(_double) ) {
+					s = "Nan";
+					len = 3;
+					while ( len > 0 ) {
+						putc(*s++,f);
+						len --;
+					}
+				} else if ( _isinf(_double) < 0 ) {
+					s = "-Inf";
+					len = 4;
+					while ( len > 0 ) {
+						putc(*s++,f);
+						len --;
+					}
+				} else if ( _isinf(_double) > 0 ) {
+					s = "+Inf";
+					len = 4;
+					while ( len > 0 ) {
+						putc(*s++,f);
+						len --;
+					}
+				} else {
+					if ( precision == -1 )
+						precision = 6;
+					numberf(f,_double,*fmt,field_width,precision,flags);
 				}
-			
-		   	}
-		   	else if ( _isinfl(_ldouble) < 0 ) {
-				s = "-Inf";
-				len = 4;
-				while ( len > 0 ) {
-					putc(*s++,f);
-					len --;
-				}
-		   	}
-		   	else if ( _isinfl(_ldouble) > 0 ) {
-				s = "+Inf";
-				len = 4;
-				while ( len > 0 ) {
-					putc(*s++,f);
-					len --;
-				}
-		   	}
-		   	else {
-				if ( precision == -1 )
-					precision = 6;
-				numberfl(f,_ldouble,*fmt,field_width,precision,flags);
-	
- 		   	}
-		   }
-      		   else {
-			_double = (double)va_arg(args, double);
-			
-		   	if ( _isnan(_double) ) {
-				s = "Nan";
-				len = 3;
-				while ( len > 0 ) {
-					putc(*s++,f);
-					len --;
-				}
-			
-		   	}
-		   	else if ( _isinf(_double) < 0 ) {
-				s = "-Inf";
-				len = 4;
-				while ( len > 0 ) {
-					putc(*s++,f);
-					len --;
-				}
-		   	}
-		   	else if ( _isinf(_double) > 0 ) {
-				s = "+Inf";
-				len = 4;
-				while ( len > 0 ) {
-					putc(*s++,f);
-					len --;
-				}
-		   	}
-		   	else {
-				if ( precision == -1 )
-					precision = 6;
-				numberf(f,_double,*fmt,field_width,precision,flags);
-	
- 		   	}
-	   	   }
+			}
+			continue;
 
-		   continue;
 		case 's':
 			s = va_arg(args, char *);
 			if (!s)
 				s = "<NULL>";
 
-			len = strnlen(s, precision);
+			len = strlen(s);
+			if ((unsigned int)len > (unsigned int)precision)
+				len = precision;
 
 			if (!(flags & LEFT))
 				while (len < field_width--)
-					putc( ' ', f);
+					putc(' ', f);
 			for (i = 0; i < len; ++i)
-				putc( *s++,f);
+				putc(*s++,f);
 			while (len < field_width--)
-				putc( ' ', f);
+				putc(' ', f);
 			continue;
 
 		case 'p':
@@ -797,7 +726,6 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 				(unsigned long) va_arg(args, void *), 16,
 				field_width, precision, flags);
 			continue;
-
 
 		case 'n':
 			if (qualifier == 'l') {
@@ -813,11 +741,11 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 		case 'o':
 			base = 8;
 			break;
-		   
-		 case 'b':
-		        base = 2;
-		        break;
-		   
+
+		case 'b':
+			base = 2;
+			break;
+
 		case 'X':
 			flags |= LARGE;
 		case 'x':
@@ -832,14 +760,17 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 
 		default:
 			if (*fmt != '%')
-				putc( '%', f);
+				putc('%', f);
 			if (*fmt)
-				putc( *fmt, f);
+				putc(*fmt, f);
 			else
 				--fmt;
 			continue;
 		}
-		if (qualifier == 'l')
+
+		if (qualifier == 'I')
+			num = va_arg(args, unsigned long long);
+		else if (qualifier == 'l')
 			num = va_arg(args, unsigned long);
 		else if (qualifier == 'h') {
 			if (flags & SIGN)
@@ -857,15 +788,4 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 	return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
+/* EOF */
