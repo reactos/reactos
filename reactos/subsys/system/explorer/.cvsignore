@@ -6,8 +6,10 @@
 *.map
 Debug
 Release
+DRelease
 UDebug
 URelease
+_NO_COMUTIL
 *.ncb
 *.opt
 *.aps
