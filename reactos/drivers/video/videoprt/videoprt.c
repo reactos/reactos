@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.4 2004/02/25 05:38:33 jimtabor Exp $
+ * $Id: videoprt.c,v 1.5 2004/03/04 18:51:58 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -73,32 +73,6 @@ VideoPortDebugPrint(IN VIDEO_DEBUG_LEVEL DebugPrintLevel,
 	va_end (ap);
 
 	DbgPrint (Buffer);
-}
-
-
-/*
- * @unimplemented
- */
-VP_STATUS 
-STDCALL
-VideoPortDisableInterrupt(IN PVOID  HwDeviceExtension)
-{
-  DPRINT("VideoPortDisableInterrupt\n");
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-VP_STATUS 
-STDCALL
-VideoPortEnableInterrupt(IN PVOID  HwDeviceExtension)
-{
-  DPRINT("VideoPortEnableInterrupt\n");
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -720,9 +694,9 @@ VideoPortMapBankedMemory(IN PVOID  HwDeviceExtension,
                          IN PBANKED_SECTION_ROUTINE  BankRoutine,
                          IN PVOID  Context)
 {
-  DPRINT("VideoPortMapBankedMemory\n");
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+   DPRINT("VideoPortMapBankedMemory\n");
+   UNIMPLEMENTED;
+   return STATUS_NOT_IMPLEMENTED;
 }
 
 
