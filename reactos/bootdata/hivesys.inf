@@ -357,7 +357,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus Extender"
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ImagePath",0x00020000,"system32\drivers\pci.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
