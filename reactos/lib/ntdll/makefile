@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.95 2003/11/17 20:35:46 sedwards Exp $
+# $Id: makefile,v 1.96 2003/12/07 12:06:45 mf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -109,3 +109,12 @@ include $(TOOLS_PATH)/depend.mk
 
 etags: csr/TAGS dbg/TAGS ldr/TAGS main/TAGS rtl/TAGS stdio/TAGS stdlib/TAGS string/TAGS stubs/TAGS
 	etags -i csr/TAGS -i dbg/TAGS -i ldr/TAGS -i main/TAGS -i rtl/TAGS -i stdio/TAGS -i stdlib/TAGS -i string/TAGS -i stubs/TAGS
+
+
+docu:
+	doxygen Doxyfile
+
+.PHONY: docu
+
+
+# EOF

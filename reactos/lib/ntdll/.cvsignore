@@ -8,3 +8,4 @@ napi.c
 *.dll
 *.o
 *.map
+doxy-doc
