@@ -22,11 +22,7 @@ WINE_INCLUDE = ./
 
 TARGET_SDKLIBS = \
 	kernel32.a \
-	user32.a \
-	crtdll.a
-
-#	msvcrt.a
-
+	user32.a
 
 TARGET_OBJECTS = \
 	applicat.o barchart.o box.o button.o calendar.o checkbox.o clipbord.o \
