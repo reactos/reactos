@@ -38,14 +38,32 @@ REGEDIT4
 "InstallLanguage"="0409"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\ServiceGroupOrder]
-"List"="Primary Disk;Boot File System;Base;Pointer Port;Keyboard Port;Pointer Class;Keyboard Class;Video;File System"
+"List"="SCSI Port;SCSI Miniport;Primary Disk;SCSI Class Helper;SCSI Class;Boot File System;Base;Pointer Port;Keyboard Port;Pointer Class;Keyboard Class;Video;File System"
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services]
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Atapi]
+"ImagePath"="system32\drivers\atapi.sys"
+"Group"="SCSI Miniport"
+"Start"=dword:00000004
+"Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Beep]
 "ImagePath"="system32\drivers\beep.sys"
 "Group"="Base"
 "Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Class2]
+"ImagePath"="system32\drivers\class2.sys"
+"Group"="SCSI Class Helper"
+"Start"=dword:00000004
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Disk]
+"ImagePath"="system32\drivers\disk.sys"
+"Group"="SCSI Class"
+"Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Floppy]
@@ -76,6 +94,12 @@ REGEDIT4
 "ImagePath"="system32\drivers\null.sys"
 "Group"="Base"
 "Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Scsiport]
+"ImagePath"="system32\drivers\scsiport.sys"
+"Group"="SCSI Port"
+"Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Vfatfs]
