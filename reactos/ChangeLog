@@ -1,5 +1,9 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/snmpapi/snmpapi.c: Add @implemented and @unimplemented to APIs.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/secur32/lsa.c: Add @implemented and @unimplemented to APIs.
 
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
