@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.95 2004/12/04 13:59:41 ekohl Exp $
+/* $Id: stubs.c,v 1.96 2004/12/04 19:28:47 weiden Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -419,7 +419,7 @@ STDCALL
 AllocateUserPhysicalPages(
     HANDLE hProcess,
     PULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray
+    PULONG_PTR UserPfnArray
     )
 {
     STUB;
@@ -746,7 +746,7 @@ STDCALL
 MapUserPhysicalPages(
     PVOID VirtualAddress,
     ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray OPTIONAL
+    PULONG_PTR PageArray  OPTIONAL
     )
 {
     STUB;
@@ -761,7 +761,7 @@ STDCALL
 MapUserPhysicalPagesScatter(
     PVOID *VirtualAddresses,
     ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray OPTIONAL
+    PULONG_PTR PageArray  OPTIONAL
     )
 {
     STUB;

@@ -1352,9 +1352,9 @@ NtAccessCheckByTypeResultListAndAuditAlarmByHandle(
 NTSTATUS
 STDCALL
 NtAllocateUserPhysicalPages(
-	IN HANDLE ProcessHandle,
-	IN PULONG NumberOfPages,
-	OUT PULONG PageFrameNumbers
+	IN HANDLE  ProcessHandle,
+	IN OUT PULONG_PTR  NumberOfPages,
+	OUT PULONG_PTR  UserPfnArray
 	);
 
 NTSTATUS
@@ -1396,8 +1396,8 @@ NTSTATUS
 STDCALL
 NtFreeUserPhysicalPages(
 	IN HANDLE ProcessHandle,
-	IN OUT PULONG NumberOfPages,
-	IN PULONG PageFrameNumbers
+	IN OUT PULONG_PTR NumberOfPages,
+	IN PULONG_PTR UserPfnArray
 	);
 
 NTSTATUS
@@ -1434,17 +1434,17 @@ NtMakePermanentObject(
 NTSTATUS
 STDCALL
 NtMapUserPhysicalPages(
-	IN PVOID BaseAddress,
-	IN PULONG NumberOfPages,
-	IN PULONG PageFrameNumbers
+	IN PVOID VirtualAddress,
+	IN ULONG_PTR NumberOfPages,
+	IN PULONG_PTR PageArray  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 NtMapUserPhysicalPagesScatter(
-	IN PVOID *BaseAddresses,
-	IN PULONG NumberOfPages,
-	IN PULONG PageFrameNumbers
+	IN PVOID *VirtualAddresses,
+	IN ULONG_PTR NumberOfPages,
+	IN PULONG_PTR PageArray  OPTIONAL
 	);
 
 NTSTATUS
@@ -1782,9 +1782,9 @@ ZwAccessCheckByTypeResultListAndAuditAlarmByHandle(
 NTSTATUS
 STDCALL
 ZwAllocateUserPhysicalPages(
-	IN HANDLE ProcessHandle,
-	IN PULONG NumberOfPages,
-	OUT PULONG PageFrameNumbers
+	IN HANDLE  ProcessHandle,
+	IN OUT PULONG_PTR  NumberOfPages,
+	OUT PULONG_PTR  UserPfnArray
 	);
 
 NTSTATUS
@@ -1843,8 +1843,8 @@ NTSTATUS
 STDCALL
 ZwFreeUserPhysicalPages(
 	IN HANDLE ProcessHandle,
-	IN OUT PULONG NumberOfPages,
-	IN PULONG PageFrameNumbers
+	IN OUT PULONG_PTR NumberOfPages,
+	IN PULONG_PTR UserPfnArray
 	);
 
 NTSTATUS
@@ -1881,17 +1881,17 @@ ZwMakePermanentObject(
 NTSTATUS
 STDCALL
 ZwMapUserPhysicalPages(
-	IN PVOID BaseAddress,
-	IN PULONG NumberOfPages,
-	IN PULONG PageFrameNumbers
+	IN PVOID VirtualAddress,
+	IN ULONG_PTR NumberOfPages,
+	IN PULONG_PTR PageArray  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwMapUserPhysicalPagesScatter(
-	IN PVOID *BaseAddresses,
-	IN PULONG NumberOfPages,
-	IN PULONG PageFrameNumbers
+	IN PVOID *VirtualAddresses,
+	IN ULONG_PTR NumberOfPages,
+	IN PULONG_PTR PageArray  OPTIONAL
 	);
 
 NTSTATUS
@@ -3004,7 +3004,7 @@ STDCALL
 AllocateUserPhysicalPages(
     HANDLE hProcess,
     PULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray
+    PULONG_PTR UserPfnArray
     );
 
 WINBOOL
@@ -3191,7 +3191,7 @@ STDCALL
 FreeUserPhysicalPages(
     HANDLE hProcess,
     PULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray
+    PULONG_PTR UserPfnArray
     );
 
 WINBOOL
