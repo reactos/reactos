@@ -201,6 +201,7 @@ ExpWinStaObjectParse(PVOID Object,
     NULL,
     UserMode);
 
+  *NextObject = FoundObject;
   *Path = NULL;
 
   return Status;
