@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.9 2003/07/12 10:24:45 chorns Exp $
+/* $Id: videoprt.c,v 1.10 2003/08/24 11:30:02 dwelch Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -1250,28 +1250,20 @@ VideoPortZeroDeviceMemory(OUT PVOID  Destination,
 static BOOLEAN STDCALL
 VideoPortResetDisplayParameters(Columns, Rows)
 {
-  VIDEO_X86_BIOS_ARGUMENTS Int10Arguments;
-
-  if (NULL != ResetDisplayParametersDeviceExtension &&
-      (NULL == ResetDisplayParametersDeviceExtension->HwResetHw ||
-       ! ResetDisplayParametersDeviceExtension->HwResetHw(&ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
-                                                          Columns, Rows)))
+  if (NULL != ResetDisplayParametersDeviceExtension)
     {
-      /* This should really be done by HAL, but we have this nice
-       * VideoPortInt10 available */
-
-      /* Set mode */
-      RtlZeroMemory(&Int10Arguments, sizeof(VIDEO_X86_BIOS_ARGUMENTS));
-      Int10Arguments.Eax = 0x0003;
-      VideoPortInt10(&ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
-                     &Int10Arguments);
-
-      /* Select 8x8 font */
-      Int10Arguments.Eax = 0x1112;
-      Int10Arguments.Ebx = 0;
-      VideoPortInt10(&ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
-                     &Int10Arguments);
+      return(FALSE);
     }
+  if (NULL == ResetDisplayParametersDeviceExtension->HwResetHw)
+    {
+      return(FALSE);
+    }
+  if (!ResetDisplayParametersDeviceExtension->HwResetHw(&ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
+							Columns, Rows))
+    {
+      return(FALSE);
+    }
+
   ResetDisplayParametersDeviceExtension = NULL;
 
   return TRUE;
