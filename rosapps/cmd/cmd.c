@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.20 2000/04/08 14:50:47 ekohl Exp $
+/* $Id: cmd.c,v 1.21 2000/05/26 06:06:05 phreak Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -143,8 +143,8 @@ HANDLE hIn;
 HANDLE hOut;
 
 #ifdef INCLUDE_CMD_COLOR
-WORD wColor = FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN; /* current color */
-WORD wDefColor = FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN; /* default color */
+WORD wColor;              /* current color */
+WORD wDefColor;           /* default color */
 #endif
 
 
@@ -1168,10 +1168,15 @@ static VOID Cleanup (int argc, char *argv[])
 int main (int argc, char *argv[])
 {
 	INT nExitCode;
+	CONSOLE_SCREEN_BUFFER_INFO Info;
 
 	AllocConsole ();
 	SetFileApisToOEM ();
 
+	if( GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &Info ) == FALSE )
+	   printf( "GetConsoleScreenBufferInfo: Error: %d\n", GetLastError() );
+	wColor = Info.wAttributes;
+	wDefColor = wColor;
 	/* check switches on command-line */
 	Initialize (argc, argv);
 
