@@ -1,0 +1,67 @@
+; ReactOS Cabinet Manager Directive File - ReactOS Binary Distribution
+
+;.Set DiskLabel1="ReactOS Setup Disk"           ; Label of 1st disk
+;.Set DiskLabel2="ReactOS Drivers"       	; Label of 2nd disk
+;.Set DiskLabel3="ReactOS Subsystems"           ; Label of 3rd disk
+;.Set DiskLabel4="ReactOS Applications"         ; Label of 4th disk
+.Set DiskLabelTemplate="ReactOS Disk *"         ; Label of all disks
+.Set CabinetNameTemplate="ROS*.CAB"             ; ROS1.CAB, ROS2.CAB, etc.
+.Set MaxDiskSize=500000                         ; 500000 bytes disks
+;.Set MaxDiskSize=720K                          ; 720KB disks
+;.Set MaxDiskSize=1.44M                         ; 1.44MB disks
+;.Set MaxDiskSize=2.88M                         ; 2.88MB disks
+
+
+;.Set Cabinet=on
+;.Set Compress=on
+
+; Contents of disk 1
+boot.bat
+loaders\dos\loadros.com
+ntoskrnl\ntoskrnl.exe				system32
+lib\ntdll\ntdll.dll				system32
+apps\system\services\services.exe		system32
+apps\system\winlogon\winlogon.exe		system32
+
+; Contents of disk 2
+;.New Disk
+;services\dd\beep\beep.sys			system32\drivers
+services\dd\blue\blue.sys			system32\drivers
+services\dd\floppy\floppy.sys			system32\drivers
+services\dd\ide\ide.sys				system32\drivers
+services\dd\null\null.sys			system32\drivers
+services\dd\parallel\parallel.sys		system32\drivers
+services\dd\serial\serial.sys			system32\drivers
+services\dd\vga\display\vgaddi.dll		system32\drivers
+services\dd\vga\miniport\vgamp.sys		system32\drivers
+services\dd\vidport\vidport.sys			system32\drivers
+services\fs\vfat\vfatfs.sys			system32\drivers
+services\input\keyboard\keyboard.sys		system32\drivers
+services\net\afd\afd.sys			system32
+services\net\ndis\ndis.sys			system32
+services\net\tcpip\tcpip.sys			system32
+;services\net\tdi\tdi.sys			system32
+services\net\wshtcpip\wshtcpip.dll		system32
+services\net\dd\ne2000\ne2000.sys		system32\drivers
+
+; Contents of disk 3
+;.New Disk
+lib\advapi32\advapi32.dll			system32
+lib\crtdll\crtdll.dll				system32
+lib\fmifs\fmifs.dll				system32
+lib\gdi32\gdi32.dll				system32
+lib\kernel32\kernel32.dll			system32
+lib\msafd\msafd.dll				system32
+;lib\msvcrt\msvcrt.dll				system32
+lib\secur32\secur32.dll				system32
+;lib\user32\user32.dll				system32
+lib\ws2_32\ws2_32.dll				system32
+subsys\csrss\csrss.exe				system32
+subsys\smss\smss.exe				system32
+subsys\win32k\win32k.sys			system32
+
+; Contents of disk 4
+;.New Disk
+apps\system\shell\shell.exe			system32
+
+; EOF
