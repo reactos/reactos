@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.7 2000/04/17 03:09:04 phreak Exp $
+/* $Id: critical.c,v 1.8 2000/04/20 05:28:31 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -30,17 +30,17 @@ VOID
 STDCALL
 EnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
-	if( InterlockedIncrement(&(lpCriticalSection->LockCount) )  != 0) {
-		if (lpCriticalSection->OwningThread != (HANDLE)GetCurrentThreadId() ) {
-			WaitForSingleObject(lpCriticalSection->LockSemaphore,100000);
-			// WAIT_TIMEOUT should give message if DEBUG
-			lpCriticalSection->OwningThread = (HANDLE)GetCurrentThreadId();
-		}
-	}
-	else
-		lpCriticalSection->OwningThread = (HANDLE)GetCurrentThreadId();
- 
-	lpCriticalSection->RecursionCount++;
+   if( InterlockedIncrement(&(lpCriticalSection->LockCount) )  != 1 ) {
+      if (lpCriticalSection->OwningThread != (HANDLE)GetCurrentThreadId() ) {
+	 WaitForSingleObject(lpCriticalSection->LockSemaphore,100000);
+	 // WAIT_TIMEOUT should give message if DEBUG
+	 lpCriticalSection->OwningThread = (HANDLE)GetCurrentThreadId();
+      }
+   }
+   else
+      lpCriticalSection->OwningThread = (HANDLE)GetCurrentThreadId();
+   
+   lpCriticalSection->RecursionCount++;
 }
 
 
@@ -60,19 +60,16 @@ VOID
 STDCALL
 LeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
- 	lpCriticalSection->RecursionCount--;
-	if ( lpCriticalSection->RecursionCount == 0 ) {
-		lpCriticalSection->OwningThread = (HANDLE)-1;
-		// if LockCount > 0 and RecursionCount == 0 there
-		// is a waiting thread 
-
-
-		// ReleaseSemaphore will fire up a waiting thread
-		if (lpCriticalSection->LockCount > 0 )
-			ReleaseSemaphore( lpCriticalSection->LockSemaphore,1,NULL);
-	}
-
-	InterlockedDecrement( &lpCriticalSection->LockCount );
+   lpCriticalSection->RecursionCount--;
+   if ( lpCriticalSection->RecursionCount == 0 ) {
+      lpCriticalSection->OwningThread = (HANDLE)-1;
+      // if LockCount > 0 and RecursionCount == 0 there
+      // is a waiting thread 
+      // ReleaseSemaphore will fire up a waiting thread
+      if ( InterlockedDecrement( &lpCriticalSection->LockCount ) > 0 )
+	 ReleaseSemaphore( lpCriticalSection->LockSemaphore,1,NULL);
+   }
+   else InterlockedDecrement( &lpCriticalSection->LockCount );
 }
 
 
@@ -80,15 +77,18 @@ WINBOOL
 STDCALL
 TryEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
- 	if( InterlockedIncrement(&(lpCriticalSection->LockCount) )  != 0) {
-		if (lpCriticalSection->OwningThread != (HANDLE)GetCurrentThreadId() )
-			return FALSE;
-	}
-	else
-		lpCriticalSection->OwningThread = (HANDLE)GetCurrentThreadId();
- 
-	lpCriticalSection->RecursionCount++;
-	return TRUE;
+   if( InterlockedCompareExchange( (PVOID *)&lpCriticalSection->LockCount, (PVOID)1, (PVOID)0 ) == 0 )
+      {
+	 lpCriticalSection->OwningThread = (HANDLE)GetCurrentThreadId();
+	 lpCriticalSection->RecursionCount++;
+	 return TRUE;
+      }
+   if( lpCriticalSection->OwningThread == (HANDLE)GetCurrentThreadId() )
+      {
+	 lpCriticalSection->RecursionCount++;
+	 return TRUE;
+      }
+   return FALSE;
 }
 
 
