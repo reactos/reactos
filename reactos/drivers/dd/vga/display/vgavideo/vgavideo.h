@@ -2,6 +2,8 @@
 #define SCREEN_X	640
 #define SCREEN_Y	480
 
+#define SCREEN_STRIDE   80
+
 #define VGA_NORMAL 0
 #define VGA_AND    8
 #define VGA_OR     16

@@ -12,6 +12,7 @@ int bit8[640];
 int startmasks[8];
 int endmasks[8];
 char* vidmem;
+static ULONG UnpackPixel[256];
 
 static unsigned char saved_SEQ_mask;	/* 0x02 */
 static unsigned char saved_GC_eSR;	/* 0x01 */
@@ -158,6 +159,19 @@ VOID vgaPreCalc()
 	(((j >> 5) & 0x1) << 2) |
 	(((j >> 6) & 0x1) << 1) |
 	(((j >> 7) & 0x1) << 0);
+    }
+
+  for (j = 0; j < 256; j++)
+    {
+      UnpackPixel[j] =
+	(((j >> 0) & 0x1) << 4) |
+	(((j >> 1) & 0x1) << 0) |
+	(((j >> 2) & 0x1) << 12) |
+	(((j >> 3) & 0x1) << 8) |
+	(((j >> 4) & 0x1) << 20) |
+	(((j >> 5) & 0x1) << 16) |
+	(((j >> 6) & 0x1) << 28) |
+	(((j >> 7) & 0x1) << 24);
     }
 }
 
@@ -373,7 +387,101 @@ BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 }
 
 void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
+{
+  ULONG plane;
+  ULONG left = x >> 3;
+  ULONG shift = x - (x & ~0x7);  
+  UCHAR pixel, nextpixel;    
+  ULONG rightcount;
+  ULONG i, j;
+  ULONG stride = w >> 3;
+  
+  /* Calculate the number of rightmost bytes not in a dword block. */
+  if (w >= 8)
+    {
+      rightcount = w % 8;
+    }
+  else
+    {
+      stride = 0;
+      rightcount = w;
+    }
 
+  /* Reset the destination. */
+  memset(b, 0, h * Dest_lDelta);
+
+  for (plane = 0; plane < 4; plane++)
+    {
+      PUCHAR dest = b;
+      
+      /* Select the plane we are reading in this iteration. */
+      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x04);
+      WRITE_PORT_UCHAR((PUCHAR)GRA_D, plane);
+      
+      for (j = 0; j < h; j++)
+	{
+	  PULONG destline = (PULONG)dest;
+	  PUCHAR src = vidmem + (y + j) * SCREEN_STRIDE + left;
+	  /* Read the data for one plane for an eight aligned pixel block. */
+	  nextpixel = PreCalcReverseByte[READ_REGISTER_UCHAR(src)];
+	  for (i = 0; i < stride; i++, src++, destline++)
+	    {
+	      /* Form the data for one plane for an aligned block in the destination. */
+	      pixel = nextpixel;
+	      pixel >>= shift;
+	      
+	      nextpixel = PreCalcReverseByte[READ_REGISTER_UCHAR(src + 1)];
+	      pixel |= (nextpixel << (8 - shift));
+
+	      /* Expand the plane data to 'chunky' format and store. */
+	      *destline |= (UnpackPixel[pixel] << plane);
+	    }
+	  /* Handle any pixels not falling into a full block. */
+	  if (rightcount != 0)
+	    {
+	      ULONG row;
+
+	      /* Form the data for a complete block. */
+	      pixel = nextpixel;
+	      pixel >>= shift;
+	      
+	      nextpixel = PreCalcReverseByte[READ_REGISTER_UCHAR(src + 1)];
+	      pixel |= (nextpixel << (8 - shift));
+	      
+	      row = UnpackPixel[pixel] << plane;
+
+	      /* Store the data for each pixel in the destination. */
+	      for (i = 0; i < rightcount; i++)
+		{
+		  ((PUCHAR)destline)[i] |= (row & 0xFF);
+		  row >>= 8;
+		}
+	    }
+	  dest += Dest_lDelta;
+	}
+    }
+
+#ifdef VGA_VERIFY
+  for (j = 0; j < h; j++)
+    {
+      for (i = 0; i < w; i+=2)
+	{
+	  UCHAR c1, c2;
+	  ULONG mask = (i < (w - 1)) ? 0xFF : 0xF0;
+
+	  c1 = (vgaGetPixel(x + i, y + j) << 4) | (vgaGetPixel(x + i + 1, y + j));
+	  c2 = ((PUCHAR)b)[(j * Dest_lDelta) + (i >> 1)];
+	  if ((c1 & mask) != (c2 & mask))
+	    {
+	      __asm__("int $3\n\t" : /* no outputs */ : /* no inputs */);
+	    }
+	}
+    }
+#endif /* VGA_VERIFY */
+}
+
+#if 0
+void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 //  DIB blt from the VGA.
 //  For now we just do slow reads -- pixel by pixel, packing each one into the correct 4BPP format.
 {
@@ -412,6 +520,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
     pb = opb; // new test code
   }
 }
+#endif
 
 void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
 
