@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.71 2004/07/03 17:40:25 navaraf Exp $
+/* $Id: message.c,v 1.72 2004/08/26 12:29:37 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1295,14 +1295,19 @@ IntSendMessageTimeoutSingle(HWND hWnd,
   
   Status = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam, 
                           uTimeout, (uFlags & SMTO_BLOCK), uResult);
-  if(Status == STATUS_TIMEOUT)
-  {
-    IntReleaseWindowObject(Window);
-    SetLastWin32Error(ERROR_TIMEOUT);
-    return FALSE;
-  }
-
   IntReleaseWindowObject(Window);
+  if (STATUS_TIMEOUT == Status)
+    {
+      /* MSDN says GetLastError() should return 0 after timeout */
+      SetLastWin32Error(0);
+      return FALSE;
+    }
+  else if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return FALSE;
+    }
+
   return TRUE;
 }
 
