@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.13 2000/06/13 15:51:13 ekohl Exp $
+/* $Id: symlink.c,v 1.14 2000/06/15 18:38:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -76,19 +76,22 @@ IopCreateSymbolicLink (
  *
  * ARGUMENTS
  *
- * RETURNN VALUE
+ * RETURN VALUE
  *
  * REVISIONS
  */
-PVOID
+NTSTATUS
 IopParseSymbolicLink (
-	PVOID	Object,
-	PWSTR	* RemainingPath
+	PVOID		Object,
+	PVOID		* NextObject,
+	PUNICODE_STRING	FullPath,
+	PWSTR		* RemainingPath
 	)
 {
 	NTSTATUS	Status;
 	PSYMLNK_OBJECT	SymlinkObject = (PSYMLNK_OBJECT) Object;
 	PVOID		ReturnedObject;
+	UNICODE_STRING	TargetPath;
 
 	Status = ObReferenceObjectByName(
 			SymlinkObject->Target.ObjectName,
@@ -102,11 +105,33 @@ IopParseSymbolicLink (
 			);
 	if (NT_SUCCESS(Status))
 	{
-		return ReturnedObject;
+		*NextObject = ReturnedObject;
+		return STATUS_SUCCESS;
 	}
-	return NULL;
-}
 
+	/* build the expanded path */
+	TargetPath.MaximumLength = SymlinkObject->TargetName.Length + sizeof(WCHAR);
+	if (RemainingPath && *RemainingPath)
+		TargetPath.MaximumLength += (wcslen (*RemainingPath) * sizeof(WCHAR));
+	TargetPath.Length = TargetPath.MaximumLength - sizeof(WCHAR);
+	TargetPath.Buffer = ExAllocatePool (NonPagedPool,
+					    TargetPath.MaximumLength);
+	wcscpy (TargetPath.Buffer, SymlinkObject->TargetName.Buffer);
+	if (RemainingPath && *RemainingPath)
+		wcscat (TargetPath.Buffer, *RemainingPath);
+
+	/* transfer target path buffer into FullPath */
+	RtlFreeUnicodeString (FullPath);
+	FullPath->Length = TargetPath.Length;
+	FullPath->MaximumLength = TargetPath.MaximumLength;
+	FullPath->Buffer = TargetPath.Buffer;
+
+	/* reinitialize RemainingPath for reparsing */
+	*RemainingPath = FullPath->Buffer;
+
+	*NextObject = NULL;
+	return STATUS_REPARSE;
+}
 
 /**********************************************************************
  * NAME							INTERNAL

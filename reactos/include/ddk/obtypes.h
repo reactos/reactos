@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.7 2000/05/01 14:15:01 ea Exp $ */
+/* $Id: obtypes.h,v 1.8 2000/06/15 18:37:33 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -79,11 +79,22 @@ typedef struct _OBJECT_TYPE
     *   should be return when a leaf is reached and Path should be
     *   left unchanged as a reault.
     */
-   PVOID (*Parse)(PVOID ParsedObject, PWSTR* Path);
+//   PVOID (*Parse)(PVOID ParsedObject, PWSTR* Path);
+
+   /*
+    * RETURNS
+    *     STATUS_SUCCESS       NextObject was found
+    *     STATUS_UNSUCCESSFUL  NextObject not found
+    *     STATUS_REPARSE       Path changed, restart parsing the path
+    */
+   NTSTATUS (*Parse)(PVOID ParsedObject,
+		     PVOID *NextObject,
+		     PUNICODE_STRING FullPath,
+		     PWSTR *Path);
    
    /*
     */
-   NTSTATUS (*Security)(PVOID Object, 
+   NTSTATUS (*Security)(PVOID Object,
 			ULONG InfoClass,
 			PVOID Info,
 			PULONG InfoLength);

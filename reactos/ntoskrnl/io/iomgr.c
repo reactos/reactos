@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.10 2000/05/09 16:13:49 ekohl Exp $
+/* $Id: iomgr.c,v 1.11 2000/06/15 18:38:19 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -109,15 +109,16 @@ VOID IoInit (VOID)
 	HANDLE			handle;
 	UNICODE_STRING		UnicodeString;
 	ANSI_STRING		AnsiString;
+	UNICODE_STRING		DeviceName;
 
 	/*
 	 * Register iomgr types: DeviceObjectType
 	 */
 	IoDeviceObjectType = ExAllocatePool (
-		   		NonPagedPool,
+				NonPagedPool,
 				sizeof (OBJECT_TYPE)
 				);
-   
+
 	IoDeviceObjectType->TotalObjects = 0;
 	IoDeviceObjectType->TotalHandles = 0;
 	IoDeviceObjectType->MaxObjects = ULONG_MAX;
@@ -126,14 +127,14 @@ VOID IoInit (VOID)
 	IoDeviceObjectType->NonpagedPoolCharge = sizeof (DEVICE_OBJECT);
 	IoDeviceObjectType->Dump = NULL;
 	IoDeviceObjectType->Open = NULL;
-	IoDeviceObjectType->Close = NULL;   
+	IoDeviceObjectType->Close = NULL;
 	IoDeviceObjectType->Delete = NULL;
 	IoDeviceObjectType->Parse = NULL;
 	IoDeviceObjectType->Security = NULL;
 	IoDeviceObjectType->QueryName = NULL;
 	IoDeviceObjectType->OkayToClose = NULL;
 	IoDeviceObjectType->Create = IopCreateDevice;
-   
+
 	RtlInitAnsiString (
 		& AnsiString,
 		"Device"
@@ -151,7 +152,7 @@ VOID IoInit (VOID)
 				NonPagedPool,
 				sizeof (OBJECT_TYPE)
 				);
-   
+
 	IoFileObjectType->TotalObjects = 0;
 	IoFileObjectType->TotalHandles = 0;
 	IoFileObjectType->MaxObjects = ULONG_MAX;
@@ -167,7 +168,7 @@ VOID IoInit (VOID)
 	IoFileObjectType->QueryName = NULL;
 	IoFileObjectType->OkayToClose = NULL;
 	IoFileObjectType->Create = IopCreateFile;
-   
+
 	RtlInitAnsiString (
 		& AnsiString,
 		"File"
@@ -202,6 +203,7 @@ VOID IoInit (VOID)
 		0,
 		& attr
 		);
+
 	/*
 	 * Create the \?? directory
 	 */
@@ -226,13 +228,22 @@ VOID IoInit (VOID)
 		0,
 		& attr
 		);
-   	/*
+	/*
 	 * Initialize remaining subsubsystem
 	 */
 	IoInitCancelHandling ();
 	IoInitSymbolicLinkImplementation ();
 	IoInitFileSystemImplementation ();
-}
 
+	/*
+	 * Create link from \DosDevices to \?? directory
+	 */
+	RtlInitUnicodeString (&UnicodeString,
+	                      L"\\DosDevices");
+	RtlInitUnicodeString (&DeviceName,
+	                      L"\\??");
+	IoCreateSymbolicLink (&UnicodeString,
+	                      &DeviceName);
+}
 
 /* EOF */

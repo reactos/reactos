@@ -104,7 +104,8 @@ VOID ObCreateHandleTable(PEPROCESS Parent,
 			 PEPROCESS Process);
 NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
-		      PWSTR* RemainingPath);
+		      PUNICODE_STRING RemainingPath);
+//		      PWSTR* RemainingPath);
 
 ULONG ObGetReferenceCount(PVOID Object);
 ULONG ObGetHandleCount(PVOID Object);

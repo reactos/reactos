@@ -37,7 +37,8 @@ NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 					 PVOID* ObjectPtr)
 {
    PVOID Object;
-   PWSTR RemainingPath;
+   UNICODE_STRING RemainingPath;
+//   PWSTR RemainingPath;
    OBJECT_ATTRIBUTES ObjectAttributes;
    
    InitializeObjectAttributes(&ObjectAttributes,
@@ -49,13 +50,15 @@ NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 		&Object,
 		&RemainingPath);
    
-   if (RemainingPath != NULL ||
+   if (RemainingPath.Buffer != NULL ||
        Object == NULL)
      {
 	*ObjectPtr = NULL;
+	RtlFreeUnicodeString (&RemainingPath);
 	return(STATUS_UNSUCCESSFUL);
      }
    *ObjectPtr = Object;
+   RtlFreeUnicodeString (&RemainingPath);
    return(STATUS_SUCCESS);
 }
 
@@ -129,17 +132,25 @@ PVOID ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
 
 }
 
-PVOID ObpParseDirectory(PVOID Object, PWSTR* Path)
+NTSTATUS
+ObpParseDirectory (
+	PVOID		Object,
+	PVOID		* NextObject,
+	PUNICODE_STRING	FullPath,
+	PWSTR		* Path
+	)
 {
    PWSTR end;
    PVOID FoundObject;
    
    DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %S)\n",
 	  Object,Path,*Path);
-   
+
+   *NextObject = NULL;
+
    if ((*Path) == NULL)
      {
-	return(NULL);
+	return STATUS_UNSUCCESSFUL;
      }
    
    end = wcschr((*Path)+1, '\\');
@@ -156,7 +167,7 @@ PVOID ObpParseDirectory(PVOID Object, PWSTR* Path)
 	  {
 	     *end = '\\';
 	  }
-	return(NULL);
+	return STATUS_UNSUCCESSFUL;
      }
    
    ObReferenceObjectByPointer(FoundObject,
@@ -173,8 +184,10 @@ PVOID ObpParseDirectory(PVOID Object, PWSTR* Path)
      {
 	*Path = NULL;
      }
-   
-   return(FoundObject);
+
+   *NextObject = FoundObject;
+
+   return STATUS_SUCCESS;
 }
 
 NTSTATUS ObpCreateDirectory(PVOID ObjectBody,

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.46 2000/06/04 19:50:12 ekohl Exp $
+/* $Id: main.c,v 1.47 2000/06/15 18:39:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -49,6 +49,21 @@ PrintString (char* fmt,...)
 	HalDisplayString (buffer);
 }
 
+static void
+CreateSystemRootLink (LPWSTR Device)
+{
+	UNICODE_STRING LinkName;
+	UNICODE_STRING DeviceName;
+
+	RtlInitUnicodeString (&LinkName,
+			      L"\\SystemRoot");
+
+	RtlInitUnicodeString (&DeviceName,
+			      Device);
+
+	IoCreateSymbolicLink (&LinkName,
+			      &DeviceName);
+}
 
 void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
 		    unsigned int len)
@@ -275,6 +290,10 @@ asmlinkage void _main(boot_param* _bp)
         }
       start = start + bp.module_length[i];
     }
+   
+   /* Create the SystemRoot symbolic link */
+   /* Hardcoded to 'C:\reactos' but this will change. */
+   CreateSystemRootLink (L"\\Device\\Harddisk0\\Partition1\\reactos");
    
    /*
     * Load Auto configured drivers

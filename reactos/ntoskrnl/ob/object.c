@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.23 2000/05/09 21:30:06 ekohl Exp $
+/* $Id: object.c,v 1.24 2000/06/15 18:39:25 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -71,25 +71,38 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
  * DESCRIPTION
  *
  * ARGUMENTS
+ *	ObjectAttributes
+ *
+ *	ReturnedObject
+ *
+ *	RemainigPath
+ *		Pointer to a unicode string that will contain the
+ *		remaining path if the function returns successfully.
+ *		The caller must free the buffer after use by calling
+ *		RtlFreeUnicodeString ().
  *
  * RETURN VALUE
  */
 NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
-		      PWSTR* RemainingPath)
+		      PUNICODE_STRING RemainingPath)
 {
    PVOID NextObject;
    PVOID CurrentObject;
+   PVOID RootObject;
    POBJECT_HEADER CurrentHeader;
    NTSTATUS Status;
    PWSTR Path;
    PWSTR current;
+   UNICODE_STRING PathString;
    
    DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
 	  "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
    DPRINT("ObjectAttributes->ObjectName->Buffer %x\n",
 	  ObjectAttributes->ObjectName->Buffer);
-   
+
+   RtlInitUnicodeString (RemainingPath, NULL);
+
    if (ObjectAttributes->RootDirectory == NULL)
      {
 	ObReferenceObjectByPointer(NameSpaceRoot,
@@ -125,7 +138,18 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   current = Path;
+   if (Path)
+     {
+	RtlCreateUnicodeString (&PathString, Path);
+	current = PathString.Buffer;
+     }
+   else
+     {
+	RtlInitUnicodeString (&PathString, NULL);
+	current = NULL;
+     }
+
+   RootObject = CurrentObject;
 
    while (TRUE)
      {
@@ -136,8 +160,17 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	     DPRINT("Current object can't parse\n");
 	     break;
 	  }
-	NextObject = CurrentHeader->ObjectType->Parse(CurrentObject,
-						      &current);
+	Status = CurrentHeader->ObjectType->Parse(CurrentObject,
+						  &NextObject,
+						  &PathString,
+						  &current);
+	if (Status == STATUS_REPARSE)
+	  {
+	     /* reparse the object path */
+	     NextObject = RootObject;
+	     current = PathString.Buffer;
+	  }
+
 	if (NextObject == NULL)
 	  {
 	     break;
@@ -146,7 +179,9 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	CurrentObject = NextObject;
      }
    
-   *RemainingPath = current;
+   if (current)
+      RtlCreateUnicodeString (RemainingPath, current);
+   RtlFreeUnicodeString (&PathString);
    *ReturnedObject = CurrentObject;
    
    return(STATUS_SUCCESS);
@@ -169,7 +204,7 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
 			     POBJECT_TYPE Type)
 {
    PVOID Parent = NULL;
-   PWSTR RemainingPath = NULL;
+   UNICODE_STRING RemainingPath;
    POBJECT_HEADER Header;
    NTSTATUS Status;
    
@@ -190,13 +225,16 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
 		     &Parent,
 		     &RemainingPath);
      }
-   
+   else
+     {
+	RtlInitUnicodeString (&RemainingPath, NULL);
+     }
    Header = (POBJECT_HEADER)ExAllocatePool(NonPagedPool,
 					   OBJECT_ALLOC_SIZE(Type));
-   ObInitializeObject(Header, 
-		      Handle, 
-		      DesiredAccess, 
-		      Type, 
+   ObInitializeObject(Header,
+		      Handle,
+		      DesiredAccess,
+		      Type,
 		      ObjectAttributes);
    if (Header->ObjectType != NULL &&
        Header->ObjectType->Create != NULL)
@@ -205,16 +243,18 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
 	DPRINT("Calling %x\n", Header->ObjectType->Create);
 	Status = Header->ObjectType->Create(HEADER_TO_BODY(Header),
 					    Parent,
-					    RemainingPath,
+					    RemainingPath.Buffer,
 					    ObjectAttributes);
 	if (!NT_SUCCESS(Status))
 	  {
 	    ObDereferenceObject( Parent );
 	    RtlFreeUnicodeString( &Header->Name );
+	    RtlFreeUnicodeString( &RemainingPath );
 	    ExFreePool( Header );
 	    return(NULL);
 	  }
      }
+   RtlFreeUnicodeString( &RemainingPath );
    return(HEADER_TO_BODY(Header));
 }
 

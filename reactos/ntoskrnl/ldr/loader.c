@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.54 2000/05/09 16:14:07 ekohl Exp $
+/* $Id: loader.c,v 1.55 2000/06/15 18:38:37 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -176,8 +176,7 @@ static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
 
    DbgPrint("Loading %S\n",RelativeDriverName);
 
-   LdrGetSystemDirectory(TmpFileName, (MAX_PATH * sizeof(WCHAR)));
-   wcscat(TmpFileName, L"\\drivers\\");
+   wcscpy(TmpFileName, L"\\SystemRoot\\system32\\drivers\\");
    wcscat(TmpFileName, RelativeDriverName);
    RtlInitUnicodeString (&DriverName, TmpFileName);
 
@@ -399,7 +398,8 @@ LdrOpenModule(PUNICODE_STRING  Filename)
   UNICODE_STRING  ModuleName;
   OBJECT_ATTRIBUTES  ObjectAttributes;
   PMODULE_OBJECT  ModuleObject;
-  PWSTR  RemainingPath;
+  UNICODE_STRING RemainingPath;
+//  PWSTR  RemainingPath;
 
   wcscpy(NameBuffer, MODULE_ROOT_NAME);
   if (wcsrchr(Filename->Buffer, '\\') != 0)
@@ -416,16 +416,20 @@ LdrOpenModule(PUNICODE_STRING  Filename)
                              0,
                              NULL,
                              NULL);
+
   Status = ObFindObject(&ObjectAttributes,
                         (PVOID *) &ModuleObject,
                         &RemainingPath);
   CHECKPOINT;
-  if (NT_SUCCESS(Status) && (RemainingPath == NULL || *RemainingPath == 0))
+  if (NT_SUCCESS(Status) && (RemainingPath.Buffer == NULL || *(RemainingPath.Buffer) == 0))
     {
       DPRINT("Module %wZ at %p\n", Filename, ModuleObject);
+      RtlFreeUnicodeString (&RemainingPath);
 
       return  ModuleObject;
     }
+
+  RtlFreeUnicodeString (&RemainingPath);
 
   return  NULL;
 }
