@@ -1,6 +1,8 @@
-# $Id: Makefile.ros-template,v 1.2 2004/12/03 23:37:40 blight Exp $
+# $Id: Makefile.ros-template,v 1.3 2004/12/20 00:57:38 greatlrd Exp $
 
 TARGET_NAME = dinput8
+
+TARGET_BASE = $(TARGET_BASE_LIB_DINPUT8)
 
 TARGET_OBJECTS = @C_SRCS@
 
