@@ -20,6 +20,7 @@
 #include <freeldr.h>
 #include <machine.h>
 #include <rtl.h>
+#include <stdarg.h>
 
 /*
  * print() - prints unformatted text to stdout
@@ -38,11 +39,10 @@ void print(char *str)
  */
 void printf(char *format, ... )
 {
-	int *dataptr = (int *)(void *)&format;
+	va_list ap;
+	va_start(ap,format);
 	char c, *ptr, str[16];
 	int ll;
-
-	dataptr++;
 
 	while ((c = *(format++)))
 	{
@@ -66,11 +66,11 @@ void printf(char *format, ... )
 			case 'd': case 'u': case 'x':
 				if (ll)
 				{
-					*convert_i64_to_ascii(str, c, *((unsigned long long *) dataptr++)) = 0;
+					*convert_i64_to_ascii(str, c, va_arg(ap, unsigned long long)) = 0;
 				}
 				else
 				{
-					*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+					*convert_to_ascii(str, c, va_arg(ap, unsigned long)) = 0;
 				}
 
 				ptr = str;
@@ -81,10 +81,10 @@ void printf(char *format, ... )
 				}
 				break;
 
-			case 'c': MachConsPutChar((*(dataptr++))&0xff); break;
+			case 'c': MachConsPutChar((va_arg(ap,int))&0xff); break;
 
 			case 's':
-				ptr = (char *)(*(dataptr++));
+				ptr = va_arg(ap,char *);
 
 				while ((c = *(ptr++)))
 				{
@@ -100,16 +100,18 @@ void printf(char *format, ... )
 			}
 		}
 	}
+
+	va_end(ap);
 }
 
 void sprintf(char *buffer, char *format, ... )
 {
-	int *dataptr = (int *)(void *)&format;
+	va_list ap;
 	char c, *ptr, str[16];
 	char *p = buffer;
 	int ll;
 
-	dataptr++;
+	va_start(ap,format);
 
 	while ((c = *(format++)))
 	{
@@ -134,11 +136,11 @@ void sprintf(char *buffer, char *format, ... )
 			case 'd': case 'u': case 'x':
 				if (ll)
 				{
-					*convert_i64_to_ascii(str, c, *((unsigned long long*) dataptr++)) = 0;
+					*convert_i64_to_ascii(str, c, va_arg(ap, unsigned long long)) = 0;
 				}
 				else
 				{
-					*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+					*convert_to_ascii(str, c, va_arg(ap, unsigned long)) = 0;
 				}
 					
 				ptr = str;
@@ -151,12 +153,12 @@ void sprintf(char *buffer, char *format, ... )
 				break;
 
 			case 'c':
-				*p = (*(dataptr++))&0xff;
+				*p = va_arg(ap,int)&0xff;
 				p++;
 				break;
 
 			case 's':
-				ptr = (char *)(*(dataptr++));
+				ptr = va_arg(ap,char *);
 
 				while ((c = *(ptr++)))
 				{
@@ -174,5 +176,6 @@ void sprintf(char *buffer, char *format, ... )
 			}
 		}
 	}
+	va_end(ap);
 	*p=0;
 }
