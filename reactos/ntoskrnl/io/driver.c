@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.27 2003/10/16 17:59:48 navaraf Exp $
+/* $Id: driver.c,v 1.28 2003/10/23 19:16:33 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -149,6 +149,7 @@ IopCreateGroupListEntry(PWSTR ValueName,
       if (!RtlCreateUnicodeString(&Group->GroupName,
 				  (PWSTR)ValueData))
 	{
+	  ExFreePool(Group);
 	  return(STATUS_INSUFFICIENT_RESOURCES);
 	}
 
@@ -730,10 +731,10 @@ IopGetDriverNameFromServiceKey(
       {
          ServiceName++;
       }
-
-      ImagePath->Length = sizeof(UNICODE_NULL) +
-         ((33 + wcslen(ServiceName)) * sizeof(WCHAR));
-      ImagePath->Buffer = ExAllocatePool(NonPagedPool, ImagePath->Length);
+      
+      ImagePath->Length = (33 + wcslen(ServiceName)) * sizeof(WCHAR);
+      ImagePath->MaximumLength = ImagePath->Length + sizeof(UNICODE_NULL);
+      ImagePath->Buffer = ExAllocatePool(NonPagedPool, ImagePath->MaximumLength);
       if (ImagePath->Buffer == NULL)
       {
          return STATUS_UNSUCCESSFUL;
@@ -744,9 +745,9 @@ IopGetDriverNameFromServiceKey(
    } else
    if (RegistryImagePath.Buffer[0] != L'\\')
    {
-      ImagePath->Length = sizeof(UNICODE_NULL) +
-         ((12 + wcslen(RegistryImagePath.Buffer)) * sizeof(WCHAR));
-      ImagePath->Buffer = ExAllocatePool(NonPagedPool, ImagePath->Length);
+      ImagePath->Length = (12 + wcslen(RegistryImagePath.Buffer)) * sizeof(WCHAR);
+      ImagePath->MaximumLength = ImagePath->Length + sizeof(UNICODE_NULL);
+      ImagePath->Buffer = ExAllocatePool(NonPagedPool, ImagePath->MaximumLength);
       if (ImagePath->Buffer == NULL)
       {
          RtlFreeUnicodeString(&RegistryImagePath);
@@ -758,6 +759,7 @@ IopGetDriverNameFromServiceKey(
    } else
    {
       ImagePath->Length = RegistryImagePath.Length;
+      ImagePath->MaximumLength = RegistryImagePath.MaximumLength;
       ImagePath->Buffer = RegistryImagePath.Buffer;
    }
 
@@ -918,11 +920,12 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    /*
     * Construct the driver object name
     */
-   ObjectName.Length = wcslen(Start) + 8;
-   ObjectName.Buffer = ExAllocatePool(NonPagedPool,
-      ObjectName.Length * sizeof(WCHAR));
+   ObjectName.Length = (wcslen(Start) + 8) * sizeof(WCHAR);
+   ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
+   ObjectName.Buffer = ExAllocatePool(NonPagedPool, ObjectName.MaximumLength);
    wcscpy(ObjectName.Buffer, L"\\Driver\\");
    memcpy(ObjectName.Buffer + 8, Start, (ObjectName.Length - 8) * sizeof(WCHAR));
+   ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = 0;
 
    /*
     * Find the driver object
