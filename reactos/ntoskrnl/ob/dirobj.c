@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.23 2004/08/15 16:39:09 chorns Exp $
+/* $Id: dirobj.c,v 1.24 2004/08/20 22:38:10 gvg Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -73,6 +73,38 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
    return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+CopyDirectoryString(PUNICODE_STRING UnsafeTarget, PUNICODE_STRING Source, PUCHAR *Buffer)
+{
+    UNICODE_STRING Target;
+    NTSTATUS Status;
+    WCHAR NullWchar;
+
+    Target.Length        = Source->Length;
+    Target.MaximumLength = (Source->Length + sizeof (WCHAR));
+    Target.Buffer        = (PWCHAR) *Buffer;
+    Status = MmCopyToCaller(UnsafeTarget, &Target, sizeof(UNICODE_STRING));
+    if (! NT_SUCCESS(Status))
+      {
+	return Status;
+      }
+    Status = MmCopyToCaller(*Buffer, Source->Buffer, Source->Length);
+    if (! NT_SUCCESS(Status))
+      {
+	return Status;
+      }
+    *Buffer += Source->Length;
+    NullWchar = L'\0';
+    Status = MmCopyToCaller(*Buffer, &NullWchar, sizeof(WCHAR));
+    if (! NT_SUCCESS(Status))
+      {
+	return Status;
+      }
+    *Buffer += sizeof(WCHAR);
+
+    return STATUS_SUCCESS;
+}
+
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -111,13 +143,25 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
  *		written (or NULL).
  *
  * RETURN VALUE
- * 	Status.
+ * 	STATUS_SUCCESS - At least one (possibly more, depending on
+ *                       parameters and buffer size) dir entry is
+ *                       returned.
+ *      STATUS_NO_MORE_ENTRIES - Directory is exhausted
+ *      STATUS_BUFFER_TOO_SMALL - There isn't enough room in the
+ *                                buffer to return even 1 entry.
+ *                                ReturnLength will hold the required
+ *                                buffer size to return all remaining
+ *                                dir entries
+ *      Other - Status code
  *
- * REVISIONS
- * 	2001-05-01 (ea)
- * 		Changed 4th, and 5th parameter names after
- * 		G.Nebbett "WNT/W2k Native API Reference".
- * 		Mostly rewritten.
+ *
+ * NOTES
+ *      Although you can iterate over the directory by calling this
+ *      function multiple times, the directory is unlocked between
+ *      calls. This means that another thread can change the directory
+ *      and so iterating doesn't guarantee a consistent picture of the
+ *      directory. Best thing is to retrieve all directory entries in
+ *      one call.
  */
 NTSTATUS STDCALL
 NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
@@ -125,33 +169,30 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 			IN ULONG BufferLength,
 			IN BOOLEAN ReturnSingleEntry,
 			IN BOOLEAN RestartScan,
-			IN OUT PULONG Context,
-			OUT PULONG ReturnLength OPTIONAL)
+			IN OUT PULONG UnsafeContext,
+			OUT PULONG UnsafeReturnLength OPTIONAL)
 {
     PDIRECTORY_OBJECT   dir = NULL;
     PLIST_ENTRY         current_entry = NULL;
+    PLIST_ENTRY         start_entry;
     POBJECT_HEADER      current = NULL;
-    ULONG               i = 0;
     NTSTATUS            Status = STATUS_SUCCESS;
     ULONG               DirectoryCount = 0;
-    ULONG               DirectorySize = 0;
-    ULONG               SpaceLeft = BufferLength;
-    ULONG               SpaceRequired = 0;
-    ULONG               NameLength = 0;
-    ULONG               TypeNameLength = 0;
+    ULONG               DirectoryIndex = 0;
     PDIRECTORY_BASIC_INFORMATION current_odi = (PDIRECTORY_BASIC_INFORMATION) Buffer;
+    DIRECTORY_BASIC_INFORMATION ZeroOdi;
     PUCHAR              FirstFree = (PUCHAR) Buffer;
-
+    ULONG               Context;
+    ULONG               RequiredSize;
+    ULONG               NewValue;
+    KIRQL               OldLevel;
 
     DPRINT("NtQueryDirectoryObject(DirectoryHandle %x)\n", DirectoryHandle);
 
-    /* FIXME: if previous mode == user, use ProbeForWrite
-     * on user params. */
-
     /* Check Context is not NULL */
-    if (NULL == Context)
+    if (NULL == UnsafeContext)
       {
-        return (STATUS_INVALID_PARAMETER);
+        return STATUS_INVALID_PARAMETER;
       }
 
     /* Reference the DIRECTORY_OBJECT */
@@ -163,147 +204,166 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 				      NULL);
     if (!NT_SUCCESS(Status))
       {
-        return (Status);
+        return Status;
       }
 
-    /*
-     * Compute the number of directory entries
-     * and the size of the array (in bytes).
-     * One more entry marks the end of the array.
-     */
-    if (FALSE == ReturnSingleEntry)
-    {
-        for ( current_entry = dir->head.Flink;
-              (current_entry != & dir->head);
-              current_entry = current_entry->Flink
-              )
-        {
-          ++ DirectoryCount;
-        }
-    }
-    else
-    {
-	DirectoryCount = 1;
-    }
-    // count is DirectoryCount + one null entry
-    DirectorySize = (DirectoryCount + 1) * sizeof (DIRECTORY_BASIC_INFORMATION);
-    if (DirectorySize > SpaceLeft)
-    {
-        ObDereferenceObject(dir);
-	return (STATUS_BUFFER_TOO_SMALL);
-    }
+    KeAcquireSpinLock(&dir->Lock, &OldLevel);
+
     /*
      * Optionally, skip over some entries at the start of the directory
      * (use *ObjectIndex value)
      */
-    current_entry = dir->head.Flink;
-    if (FALSE == RestartScan)
+    start_entry = dir->head.Flink;
+    if (! RestartScan)
       {
-	/* RestartScan == FALSE */
-        register ULONG EntriesToSkip = *Context;
+        register ULONG EntriesToSkip;
+
+	Status = MmCopyFromCaller(&Context, UnsafeContext, sizeof(ULONG));
+	if (! NT_SUCCESS(Status))
+	  {
+	    KeReleaseSpinLock(&dir->Lock, OldLevel);
+            ObDereferenceObject(dir);
+	    return Status;
+	  }
+	EntriesToSkip = Context;
 
 	CHECKPOINT;
 	
-	for (	;
-		((EntriesToSkip --) && (current_entry != & dir->head));
-	        current_entry = current_entry->Flink
-		);
-	if ((EntriesToSkip) && (current_entry == & dir->head))
+	for (; 0 != EntriesToSkip-- && start_entry != &dir->head;
+	     start_entry = start_entry->Flink)
 	  {
+	    ;
+	  }
+	if ((0 != EntriesToSkip) && (start_entry == &dir->head))
+	  {
+	    KeReleaseSpinLock(&dir->Lock, OldLevel);
             ObDereferenceObject(dir);
-            return (STATUS_NO_MORE_ENTRIES);
+            return STATUS_NO_MORE_ENTRIES;
 	  }
       }
+
     /*
-     * Initialize the array of OBJDIR_INFORMATION.
+     * Compute number of entries that we will copy into the buffer and
+     * the total size of all entries (even if larger than the buffer size)
      */
-    RtlZeroMemory (FirstFree, DirectorySize);
+    DirectoryCount = 0;
+    /* For the end sentenil */
+    RequiredSize = sizeof(DIRECTORY_BASIC_INFORMATION);
+    for (current_entry = start_entry;
+         current_entry != &dir->head;
+         current_entry = current_entry->Flink)
+      {
+	current = CONTAINING_RECORD(current_entry, OBJECT_HEADER, Entry);
+
+	RequiredSize += sizeof(DIRECTORY_BASIC_INFORMATION) +
+	                current->Name.Length + sizeof(WCHAR) +
+	                current->ObjectType->TypeName.Length + sizeof(WCHAR);
+	if (RequiredSize <= BufferLength &&
+	    (! ReturnSingleEntry || DirectoryCount < 1))
+	  {
+	    DirectoryCount++;
+	  }
+      }
+
+    /*
+     * If there's no room to even copy a single entry, return error status
+     */
+    if (0 == DirectoryCount)
+      {
+	KeReleaseSpinLock(&dir->Lock, OldLevel);
+	ObDereferenceObject(dir);
+	if (NULL != UnsafeReturnLength)
+	  {
+	    Status = MmCopyToCaller(UnsafeReturnLength, &RequiredSize, sizeof(ULONG));
+	  }
+
+	return NT_SUCCESS(Status) ? STATUS_BUFFER_TOO_SMALL : Status;
+      }
+
     /*
      * Move FirstFree to point to the Unicode strings area
      */
-    FirstFree += DirectorySize;
-    /*
-     * Compute how much space is left after allocating the
-     * array in the user buffer.
-     */
-    SpaceLeft -= DirectorySize;
+    FirstFree += (DirectoryCount + 1) * sizeof(DIRECTORY_BASIC_INFORMATION);
+
     /* Scan the directory */
-    do
-    { 
-        /*
-         * Check if we reached the end of the directory.
-         */
-        if (current_entry == & dir->head)
-          {
-      /* Any data? */
-	    if (i) break; /* DONE */
-	    /* FIXME: better error handling here! */
-            ObDereferenceObject(dir);
-	    return (STATUS_NO_MORE_ENTRIES);
-          }
-  /*
-	 * Compute the current OBJECT_HEADER memory
-	 * object's address.
-	 */
-   current = CONTAINING_RECORD(current_entry, OBJECT_HEADER, Entry);
-  /*
-   * Compute the space required in the user buffer to copy
-   * the data from the current object:
-	 *
-	 * Name (WCHAR) 0 TypeName (WCHAR) 0
-   */
-	NameLength = (wcslen (current->Name.Buffer) * sizeof (WCHAR));
-	TypeNameLength = (wcslen (current->ObjectType->TypeName.Buffer) * sizeof (WCHAR));
-  SpaceRequired = (NameLength + 1) * sizeof (WCHAR)
-    + (TypeNameLength + 1) * sizeof (WCHAR);
+    current_entry = start_entry;
+    for (DirectoryIndex = 0; DirectoryIndex < DirectoryCount; DirectoryIndex++) 
+      {
+	current = CONTAINING_RECORD(current_entry, OBJECT_HEADER, Entry);
+
 	/*
-	 * Check for free space in the user buffer.
-	 */
-	if (SpaceRequired > SpaceLeft)
-	{
-                ObDereferenceObject(dir);
-		return (STATUS_BUFFER_TOO_SMALL);
-	}
-  /*
-   * Copy the current directory entry's data into the buffer
+	 * Copy the current directory entry's data into the buffer
 	 * and update the OBJDIR_INFORMATION entry in the array.
-   */
+	 */
 	/* --- Object's name --- */
-	current_odi->ObjectName.Length        = NameLength;
-	current_odi->ObjectName.MaximumLength = (NameLength + sizeof (WCHAR));
-	current_odi->ObjectName.Buffer        = (PWCHAR) FirstFree;
-	wcscpy ((PWCHAR) FirstFree, current->Name.Buffer);
-	FirstFree += (current_odi->ObjectName.MaximumLength);
+	Status = CopyDirectoryString(&current_odi->ObjectName, &current->Name, &FirstFree);
+	if (! NT_SUCCESS(Status))
+	  {
+	    KeReleaseSpinLock(&dir->Lock, OldLevel);
+	    ObDereferenceObject(dir);
+	    return Status;
+	  }
 	/* --- Object type's name --- */
-	current_odi->ObjectTypeName.Length        = TypeNameLength;
-	current_odi->ObjectTypeName.MaximumLength = (TypeNameLength + sizeof (WCHAR));
-	current_odi->ObjectTypeName.Buffer        = (PWCHAR) FirstFree;
-	wcscpy ((PWCHAR) FirstFree, current->ObjectType->TypeName.Buffer);
-	FirstFree += (current_odi->ObjectTypeName.MaximumLength);
+	Status = CopyDirectoryString(&current_odi->ObjectTypeName, &current->ObjectType->TypeName, &FirstFree);
+	if (! NT_SUCCESS(Status))
+	  {
+	    KeReleaseSpinLock(&dir->Lock, OldLevel);
+	    ObDereferenceObject(dir);
+	    return Status;
+	  }
+
 	/* Next entry in the array */
-	++ current_odi;
-	/* Decrease the space left count */	
-	SpaceLeft -= SpaceRequired;
-	/* Increase the object index number */
-	++ i;
+	current_odi++;
 	/* Next object in the directory */
 	current_entry = current_entry->Flink;
+    }
 
-    } while (FALSE == ReturnSingleEntry);
+    /*
+     * Don't need dir object anymore
+     */
+    KeReleaseSpinLock(&dir->Lock, OldLevel);
+    ObDereferenceObject(dir);
+
+    /* Terminate with all zero entry */
+    memset(&ZeroOdi, '\0', sizeof(DIRECTORY_BASIC_INFORMATION));
+    Status = MmCopyToCaller(current_odi, &ZeroOdi, sizeof(DIRECTORY_BASIC_INFORMATION));
+    if (! NT_SUCCESS(Status))
+      {
+        return Status;
+      }
+
     /*
      * Store current index in Context
      */
-    *Context += DirectoryCount;
+    if (RestartScan)
+      {
+	Context = DirectoryCount;
+      }
+    else
+      {
+	Context += DirectoryCount;
+      }
+    Status = MmCopyToCaller(UnsafeContext, &Context, sizeof(ULONG));
+    if (! NT_SUCCESS(Status))
+      {
+        return Status;
+      }
+
     /*
      * Report to the caller how much bytes
      * we wrote in the user buffer.
      */
-    if (NULL != ReturnLength)
+    if (NULL != UnsafeReturnLength)
       {
-        *ReturnLength = (BufferLength - SpaceLeft);
+	NewValue = FirstFree - (PUCHAR) Buffer;
+	Status = MmCopyToCaller(UnsafeReturnLength, &NewValue, sizeof(ULONG));
+	if (! NT_SUCCESS(Status))
+	  {
+	    return Status;
+	  }
       }
-    ObDereferenceObject(dir);
-    return (STATUS_SUCCESS);
+
+    return Status;
 }
 
 
