@@ -34,11 +34,14 @@ POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
 LONG PiNrThreadsAwaitingReaping = 0;
 
+extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
+
 /*
  * PURPOSE: List of threads associated with each priority level
  */
 static LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static ULONG PriorityListMask = 0;
+static ULONG IdleProcessorMask = 0;
 static BOOLEAN DoneInitYet = FALSE;
 static KEVENT PiReaperThreadEvent;
 static BOOLEAN PiReaperThreadShouldTerminate = FALSE;
@@ -56,7 +59,7 @@ static GENERIC_MAPPING PiThreadMapping = {STANDARD_RIGHTS_READ | THREAD_GET_CONT
  */
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
-#ifdef MP
+#ifdef CONFIG_SMP
    ULONG Flags;
    PKTHREAD Thread;
    Ke386SaveFlags(Flags);
@@ -299,8 +302,10 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
          Thread = CONTAINING_RECORD(AThread, ETHREAD, ThreadListEntry);
 
          nThreads++;
-         DbgPrint("Thread->Tcb.State %d PID.TID %d.%d Name %.8s Stack: \n",
+         DbgPrint("Thread->Tcb.State %d Affinity %08x Priority %d PID.TID %d.%d Name %.8s Stack: \n",
                   Thread->Tcb.State,
+		  Thread->Tcb.Affinity,
+		  Thread->Tcb.Priority,
                   Thread->ThreadsProcess->UniqueProcessId,
                   Thread->Cid.UniqueThread,
                   Thread->ThreadsProcess->ImageFileName);
@@ -425,6 +430,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	if (Candidate != NULL)
 	  {
 	    PETHREAD OldThread;
+	    PKTHREAD IdleThread;
 
 	    DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
 
@@ -432,6 +438,16 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 
 	    OldThread = CurrentThread;
 	    CurrentThread = Candidate;
+	    IdleThread = KeGetCurrentKPCR()->PrcbData.IdleThread;
+
+	    if (&OldThread->Tcb == IdleThread)
+	    {
+	       IdleProcessorMask &= ~Affinity;
+	    }
+	    else if (&CurrentThread->Tcb == IdleThread)
+	    {
+	       IdleProcessorMask |= Affinity;
+	    }
 
 	    MmUpdatePageDir(PsGetCurrentProcess(),(PVOID)CurrentThread->ThreadsProcess, sizeof(EPROCESS));
 
@@ -475,12 +491,41 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
     }
   else
     {
+      ULONG Processor;
+      KAFFINITY Affinity;
       if (WaitStatus != NULL)
 	{
 	  Thread->Tcb.WaitStatus = *WaitStatus;
 	}
       Thread->Tcb.State = THREAD_STATE_READY;
       PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
+      Processor = KeGetCurrentProcessorNumber();
+      Affinity = Thread->Tcb.Affinity;
+      if (!(IdleProcessorMask & (1 << Processor) & Affinity) &&
+          (IdleProcessorMask & ~(1 << Processor) & Affinity))
+        {
+	  ULONG i;
+	  for (i = 0; i < KeNumberProcessors - 1; i++)
+	    {
+	      Processor++;
+	      if (Processor >= KeNumberProcessors)
+	        {
+	          Processor = 0;
+	        }
+	      if (IdleProcessorMask & (1 << Processor) & Affinity)
+	        {
+#if 0	        
+                  /* FIXME:
+                   *   Reschedule the threads on an other processor 
+                   */
+		  KeReleaseDispatcherDatabaseLockFromDpcLevel();
+                  KiRequestReschedule(Processor);
+		  KeAcquireDispatcherDatabaseLockAtDpcLevel();
+#endif
+	          break;
+		}
+	    }
+	} 
     }
 }
 
@@ -634,6 +679,10 @@ PsSetThreadWin32Thread(
 VOID
 PsApplicationProcessorInit(VOID)
 {
+   KIRQL oldIrql;
+   oldIrql = KeAcquireDispatcherDatabaseLock();
+   IdleProcessorMask |= (1 << KeGetCurrentProcessorNumber());
+   KeReleaseDispatcherDatabaseLock(oldIrql);
 }
 
 VOID INIT_FUNCTION
@@ -648,7 +697,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
 		     &IdleThreadHandle,
 		     THREAD_ALL_ACCESS,
 		     NULL,
-		     TRUE);
+		     FALSE);
   IdleThread->Tcb.State = THREAD_STATE_RUNNING;
   IdleThread->Tcb.FreezeCount = 0;
   IdleThread->Tcb.Affinity = 1 << Id;
@@ -657,6 +706,9 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   IdleThread->Tcb.BasePriority = LOW_PRIORITY;
   Pcr->PrcbData.IdleThread = &IdleThread->Tcb;
   Pcr->PrcbData.CurrentThread = &IdleThread->Tcb;
+
+  Ki386InitialStackArray[Id] = (PVOID)IdleThread->Tcb.StackLimit;
+
   NtClose(IdleThreadHandle);
   DPRINT("IdleThread for Processor %d has PID %d\n",
 	   Id, IdleThread->Cid.UniqueThread);

@@ -518,11 +518,7 @@ ExpInitializeExecutive(VOID)
       PsPrepareForApplicationProcessorInit(KeNumberProcessors);
 
       /* Allocate a stack for use when booting the processor */
-      /* FIXME: The nonpaged memory for the stack is not released after use */
-      ProcessorStack = 
-	(char*)ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
-      Ki386InitialStackArray[((int)KeNumberProcessors)] = 
-	(PVOID)((char*)ProcessorStack - MM_STACK_SIZE);
+      ProcessorStack = Ki386InitialStackArray[((int)KeNumberProcessors)] + MM_STACK_SIZE;
 
       HalStartNextProcessor(0, (ULONG)ProcessorStack - 2*sizeof(FX_SAVE_AREA));
       KeNumberProcessors++;
