@@ -1,4 +1,4 @@
-/* $Id: csrterm.c,v 1.2 2002/04/06 16:00:46 ea Exp $
+/* $Id: csrterm.c,v 1.3 2002/04/07 14:06:46 ea Exp $
  *
  * PROJECT    : ReactOS Operating System / POSIX+ Environment Subsystem
  * DESCRIPTION: CSRTERM - A DEC VT-100 terminal emulator for the PSX subsystem
@@ -63,7 +63,7 @@ PRIVATE CSRTERM_SESSION  Session =
     0, //Identifier
     {  //ServerPort
         {0,0,NULL},
-        L"\\"PSX_NS_SUBSYSTEM_DIRECTORY_NAME"\\"PSX_NS_API_PORT_NAME,
+        L"\\"PSX_NS_SUBSYSTEM_DIRECTORY_NAME"\\"PSX_NS_SESSIONAPI_PORT_NAME,
         INVALID_HANDLE_VALUE
     }
 };
