@@ -49,8 +49,8 @@ LOADERS = dos
 DRIVERS_LIB = bzip2 zlib
 
 # Kernel mode device drivers
-# beep blue floppy ide keyboard mouse null parallel ramdrv serial vga vidport
-DEVICE_DRIVERS = beep blue floppy ide null vga vidport
+# beep blue floppy ide keyboard mouse null parallel ramdrv serenum serial vga vidport
+DEVICE_DRIVERS = beep blue floppy ide null serial vga vidport
 
 # Kernel mode input drivers
 # keyboard mouclass psaux sermouse
@@ -785,3 +785,4 @@ etags:
 	find . -name "*.[ch]" -print | etags --language=c -
 
 # EOF
+
