@@ -270,7 +270,7 @@ RegCreateKey(HKEY ParentKey,
 					KeyList);
 	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
 	  DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
-	  if (strncmp(SearchKey->Name, name, subkeyLength) == 0)
+	  if (strnicmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -451,7 +451,7 @@ RegOpenKey(HKEY ParentKey,
 	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
 	  DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
 
-	  if (strncmp(SearchKey->Name, name, subkeyLength) == 0)
+	  if (strnicmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -695,7 +695,7 @@ RegDeleteValue(HKEY Key,
 	  Value = CONTAINING_RECORD(Ptr,
 				    VALUE,
 				    ValueList);
-	  if (strcmp(Value->Name, ValueName) == 0)
+	  if (stricmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;

@@ -1,16 +1,20 @@
-Changes in v1.8.16 (12/10/2003) (ekohl)
+Changes in v1.8.17 (10/19/2003) (ekohl)
+
+- Ignore case of registry key and value names
+
+Changes in v1.8.16 (10/12/2003) (ekohl)
 
 - Renamed a lot of variables and functions in the registry
 - Fixed buggy cell size calculation
 
-Changes in v1.8.15 (29/08/2003) (chorns)
+Changes in v1.8.15 (8/29/2003) (chorns)
 
 - Add top-level makefile
 - Add fdebug/.cvsignore
 - Don't use rdel to remove files in tools/Makefile
 - Remove warning in freeldr/mm/meminit.c
 
-Changes in v1.8.14 (10/08/2003) (chorns)
+Changes in v1.8.14 (8/10/2003) (chorns)
 
 - Clear screen to black when booting ReactOS
 
