@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.33 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: reg.c,v 1.34 2003/12/13 23:59:45 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2197,6 +2197,7 @@ RegQueryValueExA(
   UNICODE_STRING ValueData;
   ANSI_STRING AnsiString;
   LONG ErrorCode;
+  DWORD Type;
 
   if ((lpData) && (!lpcbData))
     {
@@ -2228,13 +2229,14 @@ RegQueryValueExA(
     hKey,
     ValueName.Buffer,
     lpReserved,
-    lpType,
+    &Type,
     (LPBYTE)ValueData.Buffer,
     (LPDWORD)&ValueData.Length);
+  if (lpType) *lpType = Type;
 
   if ((ErrorCode == ERROR_SUCCESS) && (ValueData.Buffer != NULL))
     {
-      if (lpType && ((*lpType == REG_SZ) || (*lpType == REG_MULTI_SZ) || (*lpType == REG_EXPAND_SZ)))
+      if ((Type == REG_SZ) || (Type == REG_MULTI_SZ) || (Type == REG_EXPAND_SZ))
         {
           RtlInitAnsiString(&AnsiString, NULL);
           AnsiString.Buffer = lpData;
