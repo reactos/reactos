@@ -8,7 +8,6 @@
 #ifndef __WSAHELP_H
 #define __WSAHELP_H
 
-#include <stddef.h>
 #include <winsock2.h>
 
 #ifdef __cplusplus

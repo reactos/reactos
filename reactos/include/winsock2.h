@@ -10,7 +10,14 @@
 #ifndef __WINSOCK2_H
 #define __WINSOCK2_H
 
+#ifdef __USE_W32API
+
+#include_next <winsock2.h>
+
+#else /* __USE_W32API */
+
 #include <windows.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -1823,6 +1830,8 @@ WSARecvEx(SOCKET s,LPSTR buf,INT len,LPINT flags);
 #ifdef __cplusplus
 };
 #endif /* __cplusplus */
+
+#endif /* !__USE_W32API */
 
 #endif /* __WINSOCK2_H */
 
