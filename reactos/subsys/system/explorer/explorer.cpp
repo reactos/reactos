@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,6 +43,9 @@
 
 
 extern "C" int initialize_gdb_stub();	// start up GDB stub
+
+
+DynamicLoadLibFct<void(__stdcall*)(BOOL)> g_SHDOCVW_ShellDDEInit(TEXT("SHDOCVW"), 118);
 
 
 ExplorerGlobals g_Globals;
@@ -826,6 +829,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		 // another undocumented event: "Global\\msgina: ReturnToWelcome"
 		if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
 			SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+
+		 // launch the shell DDE server
+		if (g_SHDOCVW_ShellDDEInit)
+			(*g_SHDOCVW_ShellDDEInit)(TRUE);
 	}
 
 
@@ -888,6 +895,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	 // write configuration file
 	g_Globals.write_persistent();
+
+	 // shutdown the shell DDE server
+	if (g_SHDOCVW_ShellDDEInit)
+		(*g_SHDOCVW_ShellDDEInit)(FALSE);
 
 	return ret;
 }
