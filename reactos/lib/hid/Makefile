@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/07/12 15:08:43 weiden Exp $
+# $Id: Makefile,v 1.2 2004/10/24 13:05:53 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = hid
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = $(TARGET_BASE_LIB_ACLEDIT)
+TARGET_BASE = $(TARGET_BASE_LIB_HID)
 
 TARGET_CFLAGS = \
  -D_WIN32_IE=0x0600 \
