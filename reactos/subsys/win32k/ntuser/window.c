@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.242 2004/07/03 17:40:25 navaraf Exp $
+/* $Id: window.c,v 1.243 2004/07/09 20:57:38 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2381,7 +2381,7 @@ NtUserFindWindowEx(HWND hwndParent,
   PWNDCLASS_OBJECT ClassObject = NULL;
   BOOL ClassFound;
   
-  Desktop = IntGetDesktopWindow();
+  Desktop = IntGetCurrentThreadDesktopWindow();
   
   if(hwndParent == NULL)
     hwndParent = Desktop;

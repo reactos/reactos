@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.16 2004/07/03 13:55:36 navaraf Exp $
+ *  $Id: desktop.c,v 1.17 2004/07/09 20:57:38 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -203,6 +203,17 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
       DPRINT("No active desktop\n");
       return NULL;
    }
+  return pdo->DesktopWindow;
+}
+
+HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
+{
+  PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
+  if (NULL == pdo)
+    {
+      DPRINT1("Thread doesn't have a desktop\n");
+      return NULL;
+    }
   return pdo->DesktopWindow;
 }
 

@@ -31,6 +31,9 @@ IntGetScreenDC(VOID);
 HWND FASTCALL
 IntGetDesktopWindow (VOID);
 
+HWND FASTCALL
+IntGetCurrentThreadDesktopWindow(VOID);
+
 PUSER_MESSAGE_QUEUE FASTCALL
 IntGetFocusMessageQueue(VOID);
 
