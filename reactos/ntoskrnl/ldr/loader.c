@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.141 2004/03/27 19:41:32 navaraf Exp $
+/* $Id: loader.c,v 1.142 2004/05/30 11:47:43 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -975,6 +975,11 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
                   NameString.Buffer = NameBuffer;
                   NameString.MaximumLength = 
                   NameString.Length = PathLength + ModuleName.Length;
+
+                  /* NULL-terminate */
+                  NameString.MaximumLength++;
+                  NameBuffer[NameString.Length / sizeof(WCHAR)] = 0;
+
                   Status = LdrLoadModule(&NameString, &LibraryModuleObject);
                 }
               else
@@ -1106,8 +1111,10 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   CreatedModuleObject->Base = DriverBase;
   CreatedModuleObject->Flags = MODULE_FLAG_PE;
   
-  RtlCreateUnicodeString(&CreatedModuleObject->FullName,
-			 FileName->Buffer);
+  CreatedModuleObject->FullName.Length = 0;
+  CreatedModuleObject->FullName.MaximumLength = FileName->Length + sizeof(UNICODE_NULL);
+  CreatedModuleObject->FullName.Buffer = ExAllocatePool(PagedPool, CreatedModuleObject->FullName.MaximumLength);
+  RtlCopyUnicodeString(&CreatedModuleObject->FullName, FileName);
   LdrpBuildModuleBaseName(&CreatedModuleObject->BaseName,
 			  &CreatedModuleObject->FullName);
   
@@ -1144,8 +1151,11 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   ModuleTextSection->Base = (ULONG)DriverBase;
   ModuleTextSection->Length = DriverSize;
   ModuleTextSection->Name = ExAllocatePool(NonPagedPool, 
-	(wcslen(CreatedModuleObject->BaseName.Buffer) + 1) * sizeof(WCHAR));
-  wcscpy(ModuleTextSection->Name, CreatedModuleObject->BaseName.Buffer);
+	(CreatedModuleObject->BaseName.Length + 1) * sizeof(WCHAR));
+  RtlCopyMemory(ModuleTextSection->Name,
+                CreatedModuleObject->BaseName.Buffer,
+                CreatedModuleObject->BaseName.Length);
+  ModuleTextSection->Name[CreatedModuleObject->BaseName.Length / sizeof(WCHAR)] = 0;
   ModuleTextSection->OptionalHeader = 
     CreatedModuleObject->Image.PE.OptionalHeader;
   InsertTailList(&ModuleTextListHead, &ModuleTextSection->ListEntry);
