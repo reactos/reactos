@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.56 2004/04/02 20:51:08 weiden Exp $
+/* $Id: misc.c,v 1.57 2004/04/02 21:03:25 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -386,6 +386,13 @@ NtUserCallTwoParam(
       {
         IntReleaseWindowObject(WindowObject);
         SetLastNtError(Status);
+        return FALSE;
+      }
+      
+      if(wi.cbSize != sizeof(WINDOWINFO))
+      {
+        IntReleaseWindowObject(WindowObject);
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
       }
       
