@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.45 2000/03/17 21:02:56 jfilby Exp $
+; $Id: ntoskrnl.edf,v 1.46 2000/03/18 14:02:01 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -346,6 +346,7 @@ RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
 RtlGetDefaultCodePage=RtlGetDefaultCodePage@8
 RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
 RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
+RtlImageNtHeader=RtlImageNtHeader@4
 RtlInitAnsiString=RtlInitAnsiString@8
 RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8

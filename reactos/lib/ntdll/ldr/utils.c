@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.24 2000/02/13 16:05:16 dwelch Exp $
+/* $Id: utils.c,v 1.25 2000/03/18 13:57:02 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,11 +11,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <reactos/config.h>
-#define WIN32_NO_STATUS
-#define WIN32_NO_PEHDR
-#include <windows.h>
 #include <ddk/ntddk.h>
-#include <pe.h>
+#include <windows.h>
 #include <string.h>
 #include <internal/string.h>
 #include <wchar.h>

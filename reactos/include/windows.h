@@ -58,6 +58,9 @@
 #include <funcs.h>
 #endif
 
+/* WIN32 PE file format */
+#include <pe.h>
+
 #endif /* ! defined (RC_INVOKED) */
 
 /* WIN32 error codes */

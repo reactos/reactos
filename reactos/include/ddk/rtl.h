@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.29 2000/03/08 01:52:52 ekohl Exp $
+/* $Id: rtl.h,v 1.30 2000/03/18 13:53:26 ekohl Exp $
  * 
  */
 
@@ -617,6 +617,38 @@ HANDLE
 STDCALL
 RtlGetProcessHeap (
 	VOID
+	);
+
+PVOID
+STDCALL
+RtlImageDirectoryEntryToData (
+	PVOID	BaseAddress,
+	BOOLEAN	bFlag,
+	ULONG	Directory,
+	PULONG	Size
+	);
+
+PIMAGE_NT_HEADERS
+STDCALL
+RtlImageNtHeader (
+	PVOID	BaseAddress
+	);
+
+PIMAGE_SECTION_HEADER
+STDCALL
+RtlImageRvaToSection (
+	PIMAGE_NT_HEADERS	NtHeader,
+	PVOID			BaseAddress,
+	ULONG			Rva
+	);
+
+ULONG
+STDCALL
+RtlImageRvaToVa (
+	PIMAGE_NT_HEADERS	NtHeader,
+	PVOID			BaseAddress,
+	ULONG			Rva,
+	PIMAGE_SECTION_HEADER	*SectionHeader
 	);
 
 VOID

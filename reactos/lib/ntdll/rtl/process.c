@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.16 2000/02/25 23:58:03 ekohl Exp $
+/* $Id: process.c,v 1.17 2000/03/18 13:56:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,11 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#define WIN32_NO_PEHDR
 #include <ddk/ntddk.h>
-#include <wchar.h>
-#include <string.h>
-#include <pe.h>
 #include <internal/i386/segment.h>
 #include <ntdll/ldr.h>
 #include <internal/teb.h>

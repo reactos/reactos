@@ -4555,37 +4555,7 @@ typedef struct
 } LOCALGROUP_INFO_0, *PLOCALGROUP_INFO_0, *LPLOCALGROUP_INFO_0;
 
 /* PE executable header.  */
-
-#ifndef WIN32_NO_PEHDR
-
-typedef struct
-{
-  WORD e_magic;		/* Magic number, 0x5a4d */
-  WORD e_cblp;		/* Bytes on last page of file, 0x90 */
-  WORD e_cp;		/* Pages in file, 0x3 */
-  WORD e_crlc;		/* Relocations, 0x0 */
-  WORD e_cparhdr;	/* Size of header in paragraphs, 0x4 */
-  WORD e_minalloc;	/* Minimum extra paragraphs needed, 0x0 */
-  WORD e_maxalloc;	/* Maximum extra paragraphs needed, 0xFFFF */
-  WORD e_ss;		/* Initial (relative) SS value, 0x0 */
-  WORD e_sp;		/* Initial SP value, 0xb8 */
-  WORD e_csum;		/* Checksum, 0x0 */
-  WORD e_ip;		/* Initial IP value, 0x0 */
-  WORD e_cs;		/* Initial (relative) CS value, 0x0 */
-  WORD e_lfarlc;	/* File address of relocation table, 0x40 */
-  WORD e_ovno;		/* Overlay number, 0x0 */
-  WORD e_res[4];	/* Reserved words, all 0x0 */
-  WORD e_oemid;		/* OEM identifier (for e_oeminfo), 0x0 */
-  WORD e_oeminfo;	/* OEM information; e_oemid specific, 0x0 */
-  WORD e_res2[10];	/* Reserved words, all 0x0 */
-  LONG e_lfanew;	/* File address of new exe header, 0x80 */
-  /* We leave out the next two fields, since they aren't in the
-     Windows header file.  */
-  /* DWORD dos_message[16]; * text which always follows dos header */
-  /* DWORD nt_signature;    * required NT signature, 0x4550 */ 
-} IMAGE_DOS_HEADER, *PIMAGE_DOS_HEADER;
-
-#endif /* WIN32_NO_PEHDR */
+/* Windows.h now includes pe.h to avoid conflicts! */
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.20 2000/02/27 02:05:53 ekohl Exp $
+/* $Id: startup.c,v 1.21 2000/03/18 13:57:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,13 +11,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <reactos/config.h>
-#define WIN32_NO_STATUS
-#define WIN32_NO_PEHDR
-#include <windows.h>
 #include <ddk/ntddk.h>
-#include <pe.h>
-#include <string.h>
-#include <wchar.h>
+#include <windows.h>
 #include <ntdll/ldr.h>
 #include <ntdll/rtl.h>
 #include <csrss/csrss.h>
@@ -29,6 +24,8 @@
 
 DLL LdrDllListHead;
 extern unsigned int _image_base__;
+
+ULONG NtGlobalFlag = 0;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -61,7 +58,9 @@ VOID LdrStartup(VOID)
 	DPRINT("ImageBase is null\n");
 	for(;;);
      }
-   
+
+   NtGlobalFlag = Peb->NtGlobalFlag;
+
    /*  If MZ header exists  */
    PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
    DPRINT("PEDosHeader %x\n", PEDosHeader);

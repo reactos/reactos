@@ -26,7 +26,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
-PIMAGE_NT_HEADERS RtlImageNtHeader(PVOID BaseAddress)
+PIMAGE_NT_HEADERS
+STDCALL
+RtlImageNtHeader(PVOID BaseAddress)
 {
    PIMAGE_DOS_HEADER DosHeader;
    PIMAGE_NT_HEADERS NTHeaders;

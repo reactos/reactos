@@ -17,7 +17,6 @@ VOID LdrInitModuleManagement(VOID);
 NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
 NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 			  PVOID* LdrStartupAddress);
-PIMAGE_NT_HEADERS RtlImageNtHeader(PVOID BaseAddress);
 PVOID LdrpGetSystemDllEntryPoint(VOID);
 NTSTATUS LdrpMapImage(HANDLE ProcessHandle, 
 		      HANDLE SectionHandle,

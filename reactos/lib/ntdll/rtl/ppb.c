@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.4 2000/02/19 19:34:49 ekohl Exp $
+/* $Id: ppb.c,v 1.5 2000/03/18 13:56:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,12 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#define WIN32_NO_PEHDR
 #include <ddk/ntddk.h>
-#include <wchar.h>
-#include <string.h>
-#include <pe.h>
-#include <internal/i386/segment.h>
 #include <ntdll/ldr.h>
 #include <internal/teb.h>
 #include <ntdll/base.h>

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.35 2000/03/12 01:17:23 ekohl Exp $
+; $Id: ntdll.edf,v 1.36 2000/03/18 13:58:33 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -303,6 +303,10 @@ RtlGetLongestNtPathLength=RtlGetLongestNtPathLength@0
 RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeap=RtlGetProcessHeap@0
 RtlIdentifierAuthoritySid=RtlIdentifierAuthoritySid@4
+RtlImageDirectoryEntryToData=RtlImageDirectoryEntryToData@16
+RtlImageNtHeader=RtlImageNtHeader@4
+RtlImageRvaToSection=RtlImageRvaToSection@12
+RtlImageRvaToVa=RtlImageRvaToVa@16
 RtlInitAnsiString=RtlInitAnsiString@8
 RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8

@@ -17,6 +17,13 @@
 #define IMAGE_DOS_MAGIC  0x5a4d
 #define IMAGE_PE_MAGIC   0x00004550
 
+#define IMAGE_DOS_SIGNATURE     0x5a4d
+#define IMAGE_OS2_SIGNATURE     0x454e
+#define IMAGE_OS2_SIGNATURE_LE  0x454c
+#define IMAGE_VXD_SIGNATURE     0x454c
+#define IMAGE_NT_SIGNATURE      0x00004550
+
+
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
     WORD   e_magic;                     // Magic number
     WORD   e_cblp;                      // Bytes on last page of file
@@ -334,17 +341,17 @@ typedef struct _IMAGE_RESOURCE_DATA_ENTRY {
 // an empty name, zero ID, and zero flags.
 
 typedef struct _IMAGE_MENU_HEADER{
-    WORD   wVersion;	  // Currently zero
-	WORD   cbHeaderSize;  // Also zero
+	WORD   wVersion;	// Currently zero
+	WORD   cbHeaderSize;	// Also zero
 } IMAGE_MENU_HEADER, *PIMAGE_MENU_HEADER;
 
 typedef struct _IMAGE_POPUP_MENU_ITEM{
-    WORD   fItemFlags;	
+	WORD   fItemFlags;
 	WCHAR  szItemText[1];
 } IMAGE_POPUP_MENU_ITEM, *PIMAGE_POPUP_MENU_ITEM;
 
 typedef struct _IMAGE_NORMAL_MENU_ITEM{
-    WORD   fItemFlags;	
+	WORD   fItemFlags;
 	WORD   wMenuID;
 	WCHAR  szItemText[1];
 } IMAGE_NORMAL_MENU_ITEM, *PIMAGE_NORMAL_MENU_ITEM;
@@ -379,7 +386,7 @@ typedef struct _IMAGE_NORMAL_MENU_ITEM{
 // entries will be present.
 
 typedef struct _IMAGE_DIALOG_BOX_HEADER1{
-    DWORD  IStyle;
+	DWORD  IStyle;
 	DWORD  IExtendedStyle;    // New for Windows NT
 	WORD   nControls;         // Number of Controls
 	WORD   x;
@@ -396,16 +403,16 @@ typedef struct _IMAGE_DIALOG_BOX_HEADER1{
 typedef union _NAME_OR_ORDINAL{    // Name or Ordinal ID
 	struct _ORD_ID{
 	    WORD   flgId;
-        WORD   Id;
+	    WORD   Id;
 	} ORD_ID;
-	WCHAR  szName[1];      
+	WCHAR  szName[1];
 } NAME_OR_ORDINAL, *PNAME_OR_ORDINAL;
 
 // The data for each control starts on a DWORD boundary (which may require
 // some padding from the previous control), and its format is as follows:
 
 typedef struct _IMAGE_CONTROL_DATA{
-    DWORD   IStyle;
+	DWORD   IStyle;
 	DWORD   IExtendedStyle;
 	WORD    x;
 	WORD    y;

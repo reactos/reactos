@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.46 2000/03/12 01:17:23 ekohl Exp $
+; $Id: ntdll.def,v 1.47 2000/03/18 13:58:33 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -388,13 +388,13 @@ RtlGetProcessHeap@0
 ;RtlGetUserInfoHeap
 ;RtlGuidToPropertySetName
 RtlIdentifierAuthoritySid@4
-;RtlImageDirectoryEntryToData
-;RtlImageNtHeader
-;RtlImageRvaToSection
-;RtlImageRvaToVa
+RtlImageDirectoryEntryToData@16
+RtlImageNtHeader@4
+RtlImageRvaToSection@12
+RtlImageRvaToVa@16
 ;RtlImpersonateSelf
 RtlInitAnsiString@8
-;RtlInitcodePageTable
+;RtlInitCodePageTable
 ;RtlInitNlsTables
 RtlInitString@8
 RtlInitUnicodeString@8
