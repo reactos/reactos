@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.7 2003/01/07 17:32:59 robd Exp $
+/* $Id: shutdown.c,v 1.8 2003/02/02 17:20:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -43,7 +43,7 @@ AbortSystemShutdownA(LPCSTR lpMachineName)
     NTSTATUS Status;
     BOOL rv;
 
-    RtlInitAnsiString(&MachineNameA, lpMachineName);
+    RtlInitAnsiString(&MachineNameA, (LPSTR)lpMachineName);
     Status = RtlAnsiStringToUnicodeString(&MachineNameW, &MachineNameA, TRUE);
     if (STATUS_SUCCESS != Status) {
             SetLastError(RtlNtStatusToDosError(Status));

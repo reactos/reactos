@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.5 2002/11/14 18:21:04 chorns Exp $
+/* $Id: ac.c,v 1.6 2003/02/02 17:21:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -346,7 +346,7 @@ FindFirstFreeAce (
 	)
 {
 	return RtlFirstFreeAce (pAcl,
-	                        (PACE_HEADER*)pAce);
+	                        (PACE*)pAce);
 }
 
 
@@ -362,7 +362,7 @@ GetAce (
 
 	Status = RtlGetAce (pAcl,
 	                    dwAceIndex,
-	                    (PACE_HEADER*)pAce);
+	                    (PACE*)pAce);
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastError (RtlNtStatusToDosError (Status));
