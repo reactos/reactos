@@ -2531,9 +2531,7 @@ static LRESULT PROPSHEET_HwndToIndex(HWND hwndDlg, HWND hPageDlg)
     for (index = 0; index < psInfo->nPages; index++)
         if (psInfo->proppage[index].hwndPage == hPageDlg)
             return index;
-
     WARN("%p not found\n", hPageDlg);
-
     return -1;
 }
 
@@ -2542,8 +2540,14 @@ static LRESULT PROPSHEET_HwndToIndex(HWND hwndDlg, HWND hPageDlg)
  */
 static LRESULT PROPSHEET_IndexToHwnd(HWND hwndDlg, int iPageIndex)
 {
-    FIXME("(%p, %d): stub\n", hwndDlg, iPageIndex);
-    return 0;
+    PropSheetInfo * psInfo = (PropSheetInfo*) GetPropW(hwndDlg,
+                                                       PropSheetInfoStr);
+    TRACE("(%p, %d)\n", hwndDlg, iPageIndex);
+    if (iPageIndex<0 || iPageIndex>=psInfo->nPages) {
+        WARN("%d out of range.\n", iPageIndex);
+	return 0;
+    }
+    return (LRESULT)psInfo->proppage[iPageIndex].hwndPage;
 }
 
 /******************************************************************************
