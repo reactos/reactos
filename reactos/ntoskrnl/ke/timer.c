@@ -43,8 +43,9 @@ static volatile unsigned long long ticks=0;
  * 
  * = (1/18.2)*10^9 
  * 
+ * RJJ was 54945055
  */
-#define CLOCK_INCREMENT (54945055)
+#define CLOCK_INCREMENT (549450)
 
 /*
  * PURPOSE: List of timers
@@ -57,6 +58,7 @@ static KSPIN_LOCK timer_list_lock = {0,};
 #define MICROSECONDS_PER_TICK (54945)
 #define TICKS_TO_CALIBRATE (1)
 #define CALIBRATE_PERIOD (MICROSECONDS_PER_TICK * TICKS_TO_CALIBRATE)
+#define SYSTEM_TIME_UNITS_PER_MSEC (10000)
 
 static unsigned int loops_per_microsecond = 100;
 
@@ -243,6 +245,8 @@ LARGE_INTEGER KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
 {
    PerformanceFreq->HighPart=0;
    PerformanceFreq->LowPart=0;
+
+   return *PerformanceFreq;
 }
 
 ULONG KeQueryTimeIncrement(VOID)
@@ -315,20 +319,28 @@ BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
    
    Timer->dpc=Dpc;
    Timer->period=Period;
-   Timer->expire_time = LargeIntegerToSLL(&DueTime);
+   Timer->expire_time = (*(long long int *)&DueTime);
    if (Timer->expire_time < 0)
      {
-	Timer->expire_time = system_time - Timer->expire_time;
+	Timer->expire_time = system_time + (-Timer->expire_time);
      }
+   DPRINT("System:%ld:%ld Expire:%d:%d Period:%d\n", 
+          (unsigned long) (system_time & 0xffffffff), 
+          (unsigned long) ((system_time >> 32) & 0xffffffff), 
+          (unsigned long) (Timer->expire_time & 0xffffffff), 
+          (unsigned long) ((Timer->expire_time >> 32) & 0xffffffff), 
+          Timer->period);
    Timer->signaled = FALSE;
    if (Timer->running)
      {
 	KeReleaseSpinLock(&timer_list_lock,oldlvl);
-	return(TRUE);	
+
+	return TRUE;	
      }
    InsertTailList(&timer_list_head,&Timer->entry);
    KeReleaseSpinLock(&timer_list_lock,oldlvl);
-   return(FALSE);
+   
+   return FALSE;
 }
 
 BOOLEAN KeCancelTimer(PKTIMER Timer)
@@ -346,16 +358,17 @@ BOOLEAN KeCancelTimer(PKTIMER Timer)
 		     
    if (!Timer->running)
      {
-	return(FALSE);
+	return FALSE;
      }
    RemoveEntryList(&Timer->entry);
    KeReleaseSpinLock(&timer_list_lock,oldlvl);
-   return(TRUE);
+
+   return TRUE;
 }
 
 BOOLEAN KeReadStateTimer(PKTIMER Timer)
 {
-   return(Timer->signaled);
+   return Timer->signaled;
 }
 
 VOID KeInitializeTimer(PKTIMER Timer)
@@ -406,9 +419,15 @@ static void HandleExpiredTimer(PKTIMER current)
 				      current->dpc->SystemArgument2);
      }
    current->signaled=TRUE;
-   if (current->period !=0)
+   if (current->period != 0)
      {
-	current->expire_time = current->expire_time + current->period;
+        DPRINT("System:%ld:%ld Expire:%d:%d Period:%d\n", 
+               (unsigned long) (system_time & 0xffffffff), 
+               (unsigned long) ((system_time >> 32) & 0xffffffff), 
+               (unsigned long) (current->expire_time & 0xffffffff), 
+               (unsigned long) ((current->expire_time >> 32) & 0xffffffff), 
+               current->period);
+	current->expire_time += current->period * SYSTEM_TIME_UNITS_PER_MSEC;
      }
    else
      {
@@ -427,7 +446,7 @@ void KeExpireTimers(void)
    
    while (current_entry!=(&timer_list_head))
      {
-	if (system_time == current->expire_time)
+	if (system_time >= current->expire_time)
 	  {
 	     HandleExpiredTimer(current);
 	  }
