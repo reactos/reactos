@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.102 2003/06/09 13:44:11 ekohl Exp $
+; $Id: ntdll.def,v 1.103 2003/06/11 15:38:36 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -825,18 +825,18 @@ __isascii
 __iscsym
 __iscsymf
 __toascii
-;_alldiv
-;_allmul
-;_alloca_probe
-;_allrem
-;_allshl
-;_allshr
+_alldiv
+_allmul
+_alloca_probe
+_allrem
+_allshl
+_allshr
 _atoi64
-;_aulldiv
-;_aullrem
-;_aullshr
-;_chkstk
-;_fltused
+_aulldiv
+_aullrem
+_aullshr
+_chkstk
+_fltused
 _ftol
 _i64toa
 _i64tow
