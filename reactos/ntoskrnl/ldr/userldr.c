@@ -23,7 +23,7 @@
 #include <internal/teb.h>
 #include <internal/ldr.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "syspath.h"
