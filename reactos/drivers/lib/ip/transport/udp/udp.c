@@ -12,6 +12,7 @@
 
 
 BOOLEAN UDPInitialized = FALSE;
+PORT_SET UDPPorts;
 
 
 NTSTATUS AddUDPHeaderIPv4(
@@ -50,6 +51,7 @@ NTSTATUS AddUDPHeaderIPv4(
     
     TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n", 
 			    BufferSize, IPPacket->Header));
+    TI_DbgPrint(MAX_TRACE, ("Packet total length %d\n", IPPacket->TotalSize));
     
     /* Build IPv4 header */
     IPHeader = (PIPv4_HEADER)IPPacket->Header;
@@ -82,7 +84,7 @@ NTSTATUS AddUDPHeaderIPv4(
     /* FIXME: Calculate UDP checksum and put it in UDP header */
     UDPHeader->Checksum   = 0;
     /* Length of UDP header and data */
-    UDPHeader->Length     = WH2N(DataLength);
+    UDPHeader->Length     = WH2N(DataLength + sizeof(UDP_HEADER));
 
     IPPacket->Data        = ((PCHAR)UDPHeader) + sizeof(UDP_HEADER);
     
@@ -123,13 +125,12 @@ NTSTATUS BuildUDPPacket(
     if (!Packet)
 	return STATUS_INSUFFICIENT_RESOURCES;
     
-    Packet->TotalSize = 
-	MaxLLHeaderSize + sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
+    Packet->TotalSize = sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
     
     /* Prepare packet */
     Status = AllocatePacketWithBuffer( &Packet->NdisPacket,
 				       NULL,
-				       Packet->TotalSize );
+				       Packet->TotalSize + MaxLLHeaderSize );
     
     TI_DbgPrint(MID_TRACE, ("Allocated packet: %x\n", Packet->NdisPacket));
     TI_DbgPrint(MID_TRACE, ("Local Addr : %s\n", A2S(LocalAddress)));
@@ -235,7 +236,6 @@ NTSTATUS UDPSendDatagram(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS UDPReceiveDatagram(
     PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -243,7 +243,9 @@ NTSTATUS UDPReceiveDatagram(
     ULONG ReceiveLength,
     ULONG ReceiveFlags,
     PTDI_CONNECTION_INFORMATION ReturnInfo,
-    PULONG BytesReceived)
+    PULONG BytesReceived,
+    PDATAGRAM_COMPLETION_ROUTINE Complete,
+    PVOID Context)
 /*
  * FUNCTION: Attempts to receive an UDP datagram from a remote address
  * ARGUMENTS:
@@ -294,10 +296,9 @@ NTSTATUS UDPReceiveDatagram(
             }
 	    ReceiveRequest->ReturnInfo = ReturnInfo;
 	    ReceiveRequest->Buffer = BufferData;
-	    /* If ReceiveLength is 0, the whole buffer is available to us */
 	    ReceiveRequest->BufferSize = ReceiveLength;
-	    ReceiveRequest->Complete = NULL;
-	    ReceiveRequest->Context = NULL;
+	    ReceiveRequest->Complete = Complete;
+	    ReceiveRequest->Context = Context;
 	    
 	    /* Queue receive request */
 	    InsertTailList(&AddrFile->ReceiveQueue, &ReceiveRequest->ListEntry);
@@ -422,6 +423,8 @@ NTSTATUS UDPStartup(
   RtlZeroMemory(&UDPStats, sizeof(UDP_STATISTICS));
 #endif
 
+  PortsStartup( &UDPPorts, UDP_STARTING_PORT, UDP_DYNAMIC_PORTS );
+
   /* Register this protocol with IP layer */
   IPRegisterProtocol(IPPROTO_UDP, UDPReceive);
 
@@ -442,10 +445,23 @@ NTSTATUS UDPShutdown(
   if (!UDPInitialized)
       return STATUS_SUCCESS;
 
+  PortsShutdown( &UDPPorts );
+
   /* Deregister this protocol with IP layer */
   IPRegisterProtocol(IPPROTO_UDP, NULL);
 
   return STATUS_SUCCESS;
+}
+
+UINT UDPAllocatePort( UINT HintPort ) {
+    if( HintPort ) {
+	if( AllocatePort( &UDPPorts, HintPort ) ) return HintPort; 
+	else return (UINT)-1;
+    } else return AllocateAnyPort( &UDPPorts );
+}
+
+VOID UDPFreePort( UINT Port ) {
+    DeallocatePort( &UDPPorts, Port );
 }
 
 /* EOF */
