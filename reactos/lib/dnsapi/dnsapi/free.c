@@ -10,8 +10,10 @@
 
 #include <windows.h>
 #include <WinError.h>
-#include <WinDNS.h>
+#include <windns.h>
 #include <internal/windns.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 VOID WINAPI DnsFree
 ( PVOID Data, DNS_FREE_TYPE FreeType ) {
@@ -21,7 +23,7 @@ VOID WINAPI DnsFree
     break;
 
   case DnsFreeRecordList:
-    DnsIntFreeRecordList( (PDNS_RECORDA)Data );
+    DnsIntFreeRecordList( (PDNS_RECORD)Data );
     break;
 
   case DnsFreeParsedMessageFields:
@@ -31,6 +33,6 @@ VOID WINAPI DnsFree
 }
 
 VOID WINAPI DnsRecordListFree
-( PVOID Data, DNS_FREE_TYPE FreeType ) {
+( PDNS_RECORD Data, DNS_FREE_TYPE FreeType ) {
   DnsFree( Data, FreeType );
 }

@@ -10,7 +10,9 @@
 
 #include <windows.h>
 #include <WinError.h>
-#include <WinDNS.h>
+#include <windns.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <internal/windns.h>
 
 /* DnsAcquireContextHandle *************

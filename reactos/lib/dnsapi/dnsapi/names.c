@@ -1,7 +1,9 @@
 #include <windows.h>
 #include <WinError.h>
-#include <WinDNS.h>
+#include <windns.h>
 #include <internal/windns.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <wchar.h>
 #include <string.h>
 #include <ctype.h>
@@ -192,8 +194,8 @@ BOOL WINAPI DnsNameCompare_UTF8
 }
 
 BOOL WINAPI DnsNameCompare_A
-( LPCSTR Name1,
-  LPCSTR Name2 ) {
+( LPSTR Name1,
+  LPSTR Name2 ) {
   return DnsNameCompare_UTF8( Name1, Name2 );
 }
 
