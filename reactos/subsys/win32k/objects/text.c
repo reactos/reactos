@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.80 2004/03/17 20:57:06 weiden Exp $ */
+/* $Id: text.c,v 1.81 2004/03/18 22:03:40 royce Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -685,8 +685,13 @@ NtGdiExtTextOut(
 
    /* Create the brushes */
    PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
-   Mode = PalDestGDI->Mode;
-   PALETTE_UnlockPalette(dc->w.hPalette);
+   if ( !PalDestGDI )
+	   Mode = PAL_RGB;
+   else
+   {
+	   Mode = PalDestGDI->Mode;
+	   PALETTE_UnlockPalette(dc->w.hPalette);
+   }
    XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
    hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
    BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
