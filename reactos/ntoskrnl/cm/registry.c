@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.49 2000/11/21 11:12:27 jean Exp $
+/* $Id: registry.c,v 1.50 2000/11/21 15:10:15 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -522,7 +522,6 @@ for(;;)
 {
 __asm__ ("hlt\n\t");
 }
-/*
 */
 }
 
