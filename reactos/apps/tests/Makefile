@@ -8,10 +8,9 @@ include $(PATH_TO_TOP)/rules.mak
 
 TEST_APPS = alive apc args atomtest bench bitblt button button2 \
 combo consume copymove count dump_shared_data edit event file \
-gditest hello isotest lineclip lpc messagebox mstest mutex event \
-file gditest hello isotest lpc messagebox mstest mutex nptest pteb \
+gditest hello isotest lineclip lpc messagebox mstest mutex nptest pteb \
 regtest sectest shm thread tokentest vmtest winhello dibtest lock \
-hivetest shaptest wm_paint multiwin icontest
+hivetest shaptest wm_paint multiwin icontest suspend
 
 TEST_MISC = 
 
