@@ -1,4 +1,4 @@
-/* $Id: ping.c,v 1.4 2001/05/01 23:08:17 chorns Exp $
+/* $Id: ping.c,v 1.5 2001/06/15 17:48:43 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility
@@ -14,6 +14,8 @@
 #include <string.h>
 #include <stdio.h>
 #ifndef _MSC_VER
+
+//#define DBG
 
 /* FIXME: Where should this be? */
 #define CopyMemory(Destination, Source, Length) memcpy(Destination, Source, Length);
@@ -98,6 +100,25 @@ LARGE_INTEGER       TicksPerMs; /* Ticks per millisecond */
 LARGE_INTEGER       TicksPerUs; /* Ticks per microsecond */
 BOOL                UsePerformanceCounter;
 
+
+/* Display the contents of a buffer */
+VOID DisplayBuffer(
+    PVOID Buffer,
+    DWORD Size)
+{
+    UINT i;
+    PCHAR p;
+
+    printf("Buffer (0x%X)  Size (0x%X).\n", Buffer, Size);
+
+    p = (PCHAR)Buffer;
+    for (i = 0; i < Size; i++) {
+      if (i % 16 == 0) {
+        printf("\n");
+      }
+      printf("%02X ", (p[i]) & 0xFF);
+    }
+}
 
 /* Display usage information on screen */
 VOID Usage(VOID)
@@ -189,7 +210,7 @@ BOOL ParseCmdline(int argc, char* argv[])
     INT i;
     BOOL ShowUsage;
     BOOL FoundTarget;
-#if 0
+#if 1
     lstrcpy(TargetName, "127.0.0.1");
     PingCount = 1;
     return TRUE;
@@ -388,7 +409,7 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 {
     PIPv4_HEADER      IpHeader;
     PICMP_ECHO_PACKET Icmp;
-	UINT              IphLength;
+  	UINT              IphLength;
     CHAR              Time[100];
     LARGE_INTEGER     RelativeTime;
     LARGE_INTEGER     LargeTime;
@@ -397,16 +418,28 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
     IphLength = IpHeader->IHL * 4;
 
-    if (size  < IphLength + ICMP_MINSIZE)
+    if (size  < IphLength + ICMP_MINSIZE) {
+#ifdef DBG
+        printf("Bad size (0x%X < 0x%X)\n", size, IphLength + ICMP_MINSIZE);
+#endif DBG
         return FALSE;
+    }
 
     Icmp = (PICMP_ECHO_PACKET)(buffer + IphLength);
 
-    if (Icmp->Icmp.Type != ICMPMSG_ECHOREPLY)
+    if (Icmp->Icmp.Type != ICMPMSG_ECHOREPLY) {
+#ifdef DBG
+        printf("Bad ICMP type (0x%X should be 0x%X)\n", Icmp->Icmp.Type, ICMPMSG_ECHOREPLY);
+#endif DBG
         return FALSE;
+    }
 
-    if (Icmp->Icmp.Id != (USHORT)GetCurrentProcessId())
+    if (Icmp->Icmp.Id != (USHORT)GetCurrentProcessId()) {
+#ifdef DBG
+        printf("Bad ICMP id (0x%X should be 0x%X)\n", Icmp->Icmp.Id, (USHORT)GetCurrentProcessId());
+#endif DBG
         return FALSE;
+    }
 
     QueryTime(&LargeTime);
 
@@ -415,14 +448,14 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
     TimeToMsString(Time, RelativeTime);
 
     printf("Reply from %s: bytes=%d time=%s TTL=%d\n", inet_ntoa(from->sin_addr), 
-		size - IphLength - sizeof(ICMP_ECHO_PACKET) , Time, IpHeader->TTL);
+      size - IphLength - sizeof(ICMP_ECHO_PACKET), Time, IpHeader->TTL);
     if (RelativeTime.QuadPart < MinRTT.QuadPart) {
-		MinRTT.QuadPart = RelativeTime.QuadPart;
-        MinRTTSet = TRUE;
+		  MinRTT.QuadPart = RelativeTime.QuadPart;
+      MinRTTSet = TRUE;
     }
-	if (RelativeTime.QuadPart > MaxRTT.QuadPart)
-		MaxRTT.QuadPart = RelativeTime.QuadPart;
-	SumRTT.QuadPart += RelativeTime.QuadPart;
+	  if (RelativeTime.QuadPart > MaxRTT.QuadPart)
+	      MaxRTT.QuadPart = RelativeTime.QuadPart;
+    SumRTT.QuadPart += RelativeTime.QuadPart;
 
 	return TRUE;
 }
@@ -472,10 +505,17 @@ BOOL Ping(VOID)
     Timeval.tv_usec = Timeout % 1000;
     Status = select(0, NULL, &Fds, NULL, &Timeval);
     if ((Status != SOCKET_ERROR) && (Status != 0)) {
+
+#ifdef DBG
+        printf("Sending packet\n");
+        DisplayBuffer(Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize);
+        printf("\n");
+#endif DBG
+
         Status = sendto(IcmpSock, Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize,
             0, (SOCKADDR*)&Target, sizeof(Target));
+        SentCount++;
     }
-    SentCount++;
     if (Status == SOCKET_ERROR) {
         if (WSAGetLastError() == WSAEHOSTUNREACH) {
             printf("Destination host unreachable.\n");
@@ -496,6 +536,12 @@ BOOL Ping(VOID)
     if ((Status != SOCKET_ERROR) && (Status != 0)) {
         Length = sizeof(From);
         Status = recvfrom(IcmpSock, Buffer, Size, 0, &From, &Length);
+
+#ifdef DBG
+        printf("Received packet\n");
+        DisplayBuffer(Buffer, Status);
+        printf("\n");
+#endif DBG
     }
     if (Status == SOCKET_ERROR) {
         if (WSAGetLastError() != WSAETIMEDOUT) {
@@ -515,7 +561,7 @@ BOOL Ping(VOID)
 
     if (!DecodeResponse(Buffer, Status, (PSOCKADDR_IN)&From)) {
         /* FIXME: Wait again as it could be another ICMP message type */
-        printf("Request timed out.\n");
+        printf("Request timed out (incomplete datagram received).\n");
         LostCount++;
     }
 
@@ -563,7 +609,7 @@ int main(int argc, char* argv[])
         }
 
         if (!MinRTTSet)
-            MinRTT.QuadPart = 0;
+            MinRTT = MaxRTT;
 
         TimeToMsString(MinTime, MinRTT);
         TimeToMsString(MaxTime, MaxRTT);

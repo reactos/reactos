@@ -396,6 +396,8 @@ DllMain(HANDLE hInstDll,
     break;
   }
 
+  WS_DbgPrint(MAX_TRACE, ("DllMain of ws2_32.dll. Leaving.\n"));
+
   return TRUE;
 }
 

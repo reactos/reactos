@@ -364,7 +364,7 @@ WSPSelect(
 
   AFD_DbgPrint(MAX_TRACE, ("readfds (0x%X)  writefds (0x%X)  exceptfds (0x%X).\n",
         readfds, writefds, exceptfds));
-
+#if 0
   /* FIXME: For now, all reads are timed out immediately */
   if (readfds != NULL) {
     AFD_DbgPrint(MID_TRACE, ("Timing out read query.\n"));
@@ -378,8 +378,7 @@ WSPSelect(
     *lpErrno = NO_ERROR;
     return 1;
   }
-
-  return 0;
+#endif
 
   ReadSize = 0;
   if ((readfds != NULL) && (readfds->fd_count > 0)) {
@@ -406,26 +405,35 @@ WSPSelect(
   }
 
   /* Put FD SETs after request structure */
-  Current = (Request + sizeof(FILE_REQUEST_SELECT));
-  Request->ReadFDSet = (LPFD_SET)Current;
+  Current = (Request + 1);
 
   if (ReadSize > 0) {
+    Request->ReadFDSet = (LPFD_SET)Current;
+    Current += ReadSize;
     RtlCopyMemory(Request->ReadFDSet, readfds, ReadSize);
+  } else {
+    Request->ReadFDSet = NULL;
   }
-
-  Current += ReadSize;
 
   if (WriteSize > 0) {
+    Request->WriteFDSet = (LPFD_SET)Current;
+    Current += WriteSize;
     RtlCopyMemory(Request->WriteFDSet, writefds, WriteSize);
+  } else {
+    Request->WriteFDSet = NULL;
   }
-
-  Current += WriteSize;
 
   if (ExceptSize > 0) {
+    Request->ExceptFDSet = (LPFD_SET)Current;
     RtlCopyMemory(Request->ExceptFDSet, exceptfds, ExceptSize);
+  } else {
+    Request->ExceptFDSet = NULL;
   }
 
-  Status = NtDeviceIoControlFile(CommandChannel,
+  AFD_DbgPrint(MAX_TRACE, ("R1 (0x%X)  W1 (0x%X).\n", Request->ReadFDSet, Request->WriteFDSet));
+
+  Status = NtDeviceIoControlFile(
+    CommandChannel,
     NULL,
 		NULL,
 		NULL,   
@@ -441,12 +449,7 @@ WSPSelect(
 	if (Status == STATUS_PENDING) {
     AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
     /* FIXME: Wait only for blocking sockets */
-		if (!NT_SUCCESS(NtWaitForSingleObject(CommandChannel, FALSE, NULL))) {
-      AFD_DbgPrint(MIN_TRACE, ("Wait failed.\n"));
-      /* FIXME: What error code should be returned? */
-			*lpErrno = WSAENOBUFS;
-			return SOCKET_ERROR;
-		}
+		Status = NtWaitForSingleObject(CommandChannel, FALSE, NULL);
   }
 
   if (!NT_SUCCESS(Status)) {
@@ -455,11 +458,12 @@ WSPSelect(
     return SOCKET_ERROR;
 	}
 
-  AFD_DbgPrint(MAX_TRACE, ("Select successful.\n"));
+  AFD_DbgPrint(MAX_TRACE, ("Select successful. Status (0x%X)  Count (0x%X).\n",
+    Reply.Status, Reply.SocketCount));
 
-  *lpErrno = NO_ERROR;
+  *lpErrno = Reply.Status;
 
-  return 0;
+  return Reply.SocketCount;
 }
 
 
@@ -721,6 +725,8 @@ DllMain(HANDLE hInstDll,
         DeleteCriticalSection(&InitCriticalSection);
         break;
     }
+
+    AFD_DbgPrint(MAX_TRACE, ("DllMain of msafd.dll (leaving)\n"));
 
     return TRUE;
 }

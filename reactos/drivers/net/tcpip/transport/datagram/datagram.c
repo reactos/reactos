@@ -239,6 +239,7 @@ VOID DGDeliverData(
  *     Address  = Remote address the packet came from
  *     IPPacket = Pointer to IP packet to deliver
  *     DataSize = Number of bytes in data area
+ *                (incl. IP header for raw IP file objects)
  * NOTES:
  *     If there is a receive request, then we copy the data to the
  *     buffer supplied by the user and complete the receive request.
@@ -253,10 +254,18 @@ VOID DGDeliverData(
     PVOID SourceAddress;
     ULONG BytesTaken;
     NTSTATUS Status;
+    PVOID DataBuffer;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+
+    if (AddrFile->Protocol == IPPROTO_UDP) {
+        DataBuffer = IPPacket->Data;
+    } else {
+        /* Give client the IP header too if it is a raw IP file object */
+        DataBuffer = IPPacket->Header;
+    }
 
     if (!IsListEmpty(&AddrFile->ReceiveQueue)) {
         PLIST_ENTRY CurrentEntry;
@@ -296,7 +305,7 @@ VOID DGDeliverData(
             /* Copy the data into buffer provided by the user */
             CopyBufferToBufferChain(Current->Buffer,
                                     0,
-                                    IPPacket->Data,
+                                    DataBuffer,
                                     DataSize);
 
             /* Complete the receive request */
@@ -332,7 +341,7 @@ VOID DGDeliverData(
                                    DataSize,
                                    DataSize,
                                    &BytesTaken,
-                                   IPPacket->Data,
+                                   DataBuffer,
                                    NULL);
     } else {
       TI_DbgPrint(MAX_TRACE, ("Discarding datagram.\n"));

@@ -197,10 +197,14 @@ VOID ICMPReceive(
             return;
 
         /* Copy ICMP header and data into new packet */
-        RtlCopyMemory(NewPacket->Data, IPPacket->Data, DataSize  + sizeof(ICMP_HEADER));
+        RtlCopyMemory(NewPacket->Data, IPPacket->Data, DataSize + sizeof(ICMP_HEADER));
         ((PICMP_HEADER)NewPacket->Data)->Type     = ICMP_TYPE_ECHO_REPLY;
         ((PICMP_HEADER)NewPacket->Data)->Code     = 0;
         ((PICMP_HEADER)NewPacket->Data)->Checksum = 0;
+
+        DisplayIPPacket(IPPacket);
+
+        DisplayIPPacket(NewPacket);
 
         ICMPTransmit(NTE, NewPacket);
 

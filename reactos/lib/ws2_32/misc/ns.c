@@ -404,13 +404,16 @@ inet_ntoa(
     PCHAR p;
 
     p = ((PWINSOCK_THREAD_BLOCK)NtCurrentTeb()->WinSockData)->Intoa;
-    _itoa((in.S_un.S_addr >> 24) & 0xFF, b, 10);
-    strcpy(p, b);
-    _itoa((in.S_un.S_addr >> 16) & 0xFF, b, 10);
-    strcat(p, b);
-    _itoa((in.S_un.S_addr >> 8) & 0xFF, b, 10);
-    strcat(p, b);
     _itoa(in.S_un.S_addr & 0xFF, b, 10);
+    strcpy(p, b);
+    _itoa((in.S_un.S_addr >> 8) & 0xFF, b, 10);
+    strcat(p, ".");
+    strcat(p, b);
+    _itoa((in.S_un.S_addr >> 16) & 0xFF, b, 10);
+    strcat(p, ".");
+    strcat(p, b);
+    _itoa((in.S_un.S_addr >> 24) & 0xFF, b, 10);
+    strcat(p, ".");
     strcat(p, b);
     return (CHAR FAR*)p;
 }

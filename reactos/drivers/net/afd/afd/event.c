@@ -120,6 +120,9 @@ NTSTATUS AfdEventReceiveDatagramHandler(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
+  /* Copy the data to a local buffer */
+  RtlCopyMemory(ReceiveBuffer, Tsdu, BytesAvailable);
+
   Buffer->Buffer.len = BytesAvailable;
   Buffer->Buffer.buf = ReceiveBuffer;
 

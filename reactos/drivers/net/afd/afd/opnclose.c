@@ -45,7 +45,7 @@ PAFDFCB AfdInitializeFCB(
   KeInitializeSpinLock(&NewFCB->ReadRequestQueueLock);
 
 	if (FileObject)
-		FileObject->FsContext = (PVOID)&NewFCB->NTRequiredFCB;
+		FileObject->FsContext = (PVOID)NewFCB;
 
   AFD_DbgPrint(MAX_TRACE, ("FCB created for file object (0x%X) at (0x%X).\n", FileObject, NewFCB));
 

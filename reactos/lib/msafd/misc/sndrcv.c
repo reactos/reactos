@@ -113,12 +113,7 @@ WSPRecvFrom(
 	if (Status == STATUS_PENDING) {
     AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
     /* FIXME: Wait only for blocking sockets */
-		if (!NT_SUCCESS(NtWaitForSingleObject((HANDLE)s, FALSE, NULL))) {
-      AFD_DbgPrint(MIN_TRACE, ("Wait failed.\n"));
-      /* FIXME: What error code should be returned? */
-			*lpErrno = WSAENOBUFS;
-			return SOCKET_ERROR;
-		}
+		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
   }
 
   if (!NT_SUCCESS(Status)) {
@@ -127,7 +122,18 @@ WSPRecvFrom(
     return SOCKET_ERROR;
 	}
 
-  AFD_DbgPrint(MAX_TRACE, ("Receive successful.\n"));
+  AFD_DbgPrint(MAX_TRACE, ("Receive successful (0x%X).\n",
+    Reply.NumberOfBytesRecvd));
+
+  AFD_DbgPrint(MAX_TRACE, ("lpNumberOfBytesRecvd (0x%X).\n",
+    lpNumberOfBytesRecvd));
+
+  *lpNumberOfBytesRecvd = Reply.NumberOfBytesRecvd;
+  //*lpFlags = 0;
+  ((PSOCKADDR_IN)lpFrom)->sin_family = AF_INET;
+  ((PSOCKADDR_IN)lpFrom)->sin_port = 0;
+  ((PSOCKADDR_IN)lpFrom)->sin_addr.S_un.S_addr = 0x0100007F;
+  *lpFromLen = sizeof(SOCKADDR_IN);
 
   return 0;
 }
@@ -223,12 +229,7 @@ WSPSendTo(
 	if (Status == STATUS_PENDING) {
     AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
     /* FIXME: Wait only for blocking sockets */
-		if (!NT_SUCCESS(NtWaitForSingleObject((HANDLE)s, FALSE, NULL))) {
-      AFD_DbgPrint(MAX_TRACE, ("Wait failed.\n"));
-      /* FIXME: What error code should be returned? */
-      *lpErrno = WSAENOBUFS;
-      return SOCKET_ERROR;
-		}
+    Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
   }
 
   if (!NT_SUCCESS(Status)) {

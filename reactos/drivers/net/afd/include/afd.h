@@ -217,6 +217,8 @@ typedef struct IPv4_HEADER {
 
 
 extern NPAGED_LOOKASIDE_LIST BufferLookasideList;
+extern NPAGED_LOOKASIDE_LIST ReadRequestLookasideList;
+
 
 /* Prototypes from dispatch.c */
 

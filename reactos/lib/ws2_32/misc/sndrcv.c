@@ -43,7 +43,9 @@ recvfrom(
     WSABuf.len = len;
     WSABuf.buf = (CHAR FAR*)buf;
 
-    return WSARecvFrom(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, from, fromlen, NULL, NULL);
+    WSARecvFrom(s, &WSABuf, 1, &BytesReceived, (LPDWORD)&flags, from, fromlen, NULL, NULL);
+
+    return BytesReceived;
 }
 
 

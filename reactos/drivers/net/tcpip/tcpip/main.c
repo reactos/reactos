@@ -20,7 +20,7 @@
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
-//DWORD DebugTraceLevel = MAX_TRACE;
+//DWORD DebugTraceLevel = MAX_TRACE | DEBUG_ICMP | DEBUG_BUFFER;
 
 #endif /* DBG */
 
