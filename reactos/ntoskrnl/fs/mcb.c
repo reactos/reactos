@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.6 2003/04/19 17:16:51 ea Exp $
+/* $Id: mcb.c,v 1.7 2003/04/20 09:07:12 ea Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -78,8 +78,7 @@ VOID STDCALL
 FsRtlInitializeMcb (IN PMCB         Mcb,
 		    IN POOL_TYPE    PoolType)
 {
-  UNIMPLEMENTED
-  Mcb->LargeMcb.PoolType = PoolType;
+  FsRtlInitializeLargeMcb(& Mcb->LargeMcb, PoolType);
 }
 
 
@@ -199,7 +198,7 @@ FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 VOID STDCALL
 FsRtlUninitializeMcb (IN PMCB Mcb)
 {
-  UNIMPLEMENTED
+  FsRtlUninitializeLargeMcb(& Mcb->LargeMcb);
 }
 
 
