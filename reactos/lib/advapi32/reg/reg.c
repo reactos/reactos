@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.65 2004/12/18 22:54:37 gvg Exp $
+/* $Id: reg.c,v 1.65.2.1 2004/12/26 23:35:27 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2506,7 +2506,14 @@ RegQueryValueExA (HKEY hKey,
 	}
       else if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
 	{
-	  RtlMoveMemory(lpData, ValueData.Buffer, Length);
+          if (*lpcbData < Length)
+            {
+              ErrorCode = ERROR_MORE_DATA;
+            }
+          else
+            {
+              RtlMoveMemory(lpData, ValueData.Buffer, Length);
+            }
 	}
 
       if (lpcbData != NULL)
