@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.35 2003/06/24 21:32:15 ekohl Exp $
+/* $Id: class2.c,v 1.36 2003/07/10 15:11:58 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -123,6 +123,9 @@ ScsiClassDebugPrint(IN ULONG DebugPrintLevel,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 ScsiClassAsynchronousCompletion(IN PDEVICE_OBJECT DeviceObject,
 				IN PIRP Irp,
@@ -132,6 +135,9 @@ ScsiClassAsynchronousCompletion(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
@@ -251,6 +257,9 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassClaimDevice(PDEVICE_OBJECT PortDeviceObject,
 		     PSCSI_INQUIRY_DATA LunInfo,
@@ -338,6 +347,9 @@ ScsiClassClaimDevice(PDEVICE_OBJECT PortDeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			    IN PCCHAR ObjectNameBuffer,
@@ -407,6 +419,9 @@ ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
 		       PIRP Irp)
@@ -550,6 +565,9 @@ ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @unimplemented
+ */
 PVOID STDCALL
 ScsiClassFindModePage(PCHAR ModeSenseBuffer,
 		      ULONG Length,
@@ -560,6 +578,9 @@ ScsiClassFindModePage(PCHAR ModeSenseBuffer,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ScsiClassFindUnclaimedDevices(PCLASS_INIT_DATA InitializationData,
 			      PSCSI_ADAPTER_BUS_INFO AdapterInformation)
@@ -604,6 +625,9 @@ ScsiClassFindUnclaimedDevices(PCLASS_INIT_DATA InitializationData,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
 			 PIO_SCSI_CAPABILITIES *PortCapabilities)
@@ -649,6 +673,9 @@ ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
 			PSCSI_ADAPTER_BUS_INFO *ConfigInfo)
@@ -715,6 +742,9 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ScsiClassInitialize(PVOID Argument1,
 		    PVOID Argument2,
@@ -808,8 +838,9 @@ ScsiClassInitialize(PVOID Argument1,
  *
  * RETURN VALUE
  *	None.
+ *
+ * @implemented
  */
-
 VOID STDCALL
 ScsiClassInitializeSrbLookasideList(PDEVICE_EXTENSION DeviceExtension,
 				    ULONG NumberElements)
@@ -824,6 +855,9 @@ ScsiClassInitializeSrbLookasideList(PDEVICE_EXTENSION DeviceExtension,
 }
 
 
+/*
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 ScsiClassInternalIoControl(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp)
@@ -832,6 +866,9 @@ ScsiClassInternalIoControl(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 			    PSCSI_REQUEST_BLOCK Srb,
@@ -1036,6 +1073,9 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 		    PIRP Irp,
@@ -1120,6 +1160,9 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 			      PIRP Irp,
@@ -1221,6 +1264,9 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @unimplemented
+ */
 ULONG STDCALL
 ScsiClassModeSense(PDEVICE_OBJECT DeviceObject,
 		   CHAR ModeSenseBuffer,
@@ -1231,6 +1277,9 @@ ScsiClassModeSense(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ScsiClassQueryTimeOutRegistryValue(IN PUNICODE_STRING RegistryPath)
 {
@@ -1302,6 +1351,9 @@ ScsiClassQueryTimeOutRegistryValue(IN PUNICODE_STRING RegistryPath)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
 {
@@ -1404,6 +1456,9 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 ScsiClassReleaseQueue(IN PDEVICE_OBJECT DeviceObject)
 {
@@ -1411,6 +1466,9 @@ ScsiClassReleaseQueue(IN PDEVICE_OBJECT DeviceObject)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassSendSrbAsynchronous(PDEVICE_OBJECT DeviceObject,
 			     PSCSI_REQUEST_BLOCK Srb,
@@ -1495,6 +1553,9 @@ ScsiClassSendSrbAsynchronous(PDEVICE_OBJECT DeviceObject,
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 			    PSCSI_REQUEST_BLOCK Srb,
@@ -1625,6 +1686,9 @@ TryAgain:
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ScsiClassSplitRequest(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp,
