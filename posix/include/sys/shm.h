@@ -1,4 +1,4 @@
-/* $Id: shm.h,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+/* $Id: shm.h,v 1.3 2002/05/17 01:37:15 hyperion Exp $
  */
 /*
  * sys/shm.h
@@ -30,10 +30,31 @@
 /* OBJECTS */
 
 /* TYPES */
+typedef unsigned short shmatt_t;
+
+struct shmid_ds
+{
+ struct ipc_perm shm_perm;  /* operation permission structure */
+ size_t          shm_segsz;  /* size of segment in bytes */
+ pid_t           shm_lpid;   /* process ID of last shared memory operation */
+ pid_t           shm_cpid;   /* process ID of creator */
+ shmatt_t        shm_nattch; /* number of current attaches */
+ time_t          shm_atime;  /* time of last shmat() */
+ time_t          shm_dtime;  /* time of last shmdt() */
+ time_t          shm_ctime;  /* time of last change by shmctl() */
+};
 
 /* CONSTANTS */
+#define SHM_RDONLY (0x00000200) /* Attach read-only (else read-write). */
+#define SHM_RND    (0x00000400) /* Round attach address to SHMLBA. */
+
+#define SHMLBA     (4096) /* Segment low boundary address multiple. */
 
 /* PROTOTYPES */
+void *shmat(int, const void *, int);
+int   shmctl(int, int, struct shmid_ds *);
+int   shmdt(const void *);
+int   shmget(key_t, size_t, int);
 
 /* MACROS */
 

@@ -1,4 +1,4 @@
-/* $Id: time.h,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+/* $Id: time.h,v 1.3 2002/05/17 01:37:15 hyperion Exp $
  */
 /*
  * sys/time.h
@@ -30,6 +30,11 @@
 /* OBJECTS */
 
 /* TYPES */
+struct timeval
+{
+ time_t      tv_sec;  /* seconds */
+ suseconds_t tv_usec; /* microseconds */
+};
 
 /* CONSTANTS */
 

@@ -1,4 +1,4 @@
-/* $Id: sem.h,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+/* $Id: sem.h,v 1.3 2002/05/17 01:37:15 hyperion Exp $
  */
 /*
  * sys/sem.h
@@ -26,14 +26,43 @@
 #define __SYS_SEM_H_INCLUDED__
 
 /* INCLUDES */
+#include <sys/ipc.h>
 
 /* OBJECTS */
 
 /* TYPES */
+struct semid_ds
+{
+ struct ipc_perm    sem_perm;  /* operation permission structure */
+ unsigned short int sem_nsems; /* number of semaphores in set */
+ time_t             sem_otime; /* last semop time */
+ time_t             sem_ctime; /* last time changed by semctl() */
+};
+
+struct sembuf
+{
+ unsigned short int sem_num; /* semaphore number */
+ short int          sem_op;  /* semaphore operation */
+ short int          sem_flg; /* operation flags */
+};
 
 /* CONSTANTS */
+/* Semaphore operation flags */
+#define SEM_UNDO (0x00001000) /* Set up adjust on exit entry */
+
+/* Command definitions for the function semctl() */
+#define GETNCNT (1) /* Get semncnt */
+#define GETPID  (2) /* Get sempid */
+#define GETVAL  (3) /* Get semval */
+#define GETALL  (4) /* Get all cases of semval */
+#define GETZCNT (5) /* Get semzcnt */
+#define SETVAL  (6) /* Set semval */
+#define SETALL  (7) /* Set all cases of semval */
 
 /* PROTOTYPES */
+int   semctl(int, int, int, ...);
+int   semget(key_t, int, int);
+int   semop(int, struct sembuf *, size_t);
 
 /* MACROS */
 

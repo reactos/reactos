@@ -1,4 +1,4 @@
-/* $Id: resource.h,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+/* $Id: resource.h,v 1.3 2002/05/17 01:37:15 hyperion Exp $
  */
 /*
  * sys/resource.h
@@ -26,10 +26,16 @@
 #define __SYS_RESOURCE_H_INCLUDED__
 
 /* INCLUDES */
+#include <sys/time.h>
 
 /* OBJECTS */
 
 /* TYPES */
+struct rusage
+{
+ struct timeval ru_utime; /* user time used */
+ struct timeval ru_stime; /* system time used */
+};
 
 /* CONSTANTS */
 
