@@ -90,19 +90,6 @@ static char* vidmem = (char *)(VIDMEM_BASE + IDMAP_BASE);
  */
 static unsigned int in_hal_console = 1;
 
-/*
- * PURPOSE: Defines the hal console video mode
- */
-static unsigned char mode03[] = {0x67,0x00,0x03,0x00,0x03,0x00,0x02,
-                                 0x5f,0x4f,0x50,0x82,0x55,0x81,0xbf,
-                                 0x1f,0x00,0x4f,0x0e,0x0f,0x00,0x00,
-                                 0x00,0x00,0x9c,0x0e,0x8f,0x28,0x01,
-                                 0x96,0xb9,0xa3,0xff,0x00,0x00,0x00,
-                                 0x00,0x00,0x10,0x0e,0x00,0xff,0x00,
-                                 0x00,0x01,0x02,0x03,0x04,0x05,0x06,
-                                 0x07,0x10,0x11,0x12,0x13,0x14,0x15,
-                                 0x16,0x17,0x0c,0x00,0x0f,0x08,0x00};
-
 /* FUNCTIONS ***************************************************************/
 
 
@@ -168,7 +155,6 @@ void __putchar(char c)
  * NOTE: This function handles newlines as well
  */
 {
-   char* address;
    int offset;
    int i;
    
@@ -293,10 +279,6 @@ asmlinkage void printk(const char* fmt, ...)
 	   : "m" (eflags));
 }
 
-int bad_user_access_length(void)
-{
-        printk("Bad user access length\n");
-}
 
 ULONG DbgPrint(PCH Format, ...)
 {
@@ -334,6 +316,7 @@ ULONG DbgPrint(PCH Format, ...)
    __asm__("push %0\n\tpopf\n\t"
 	   :
 	   : "m" (eflags));
+   return(strlen(buffer));
 }
 
 void HalInitConsole(boot_param* bp)

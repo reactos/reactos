@@ -122,48 +122,39 @@ NTSTATUS IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS InitializeLoadedDriver(PDRIVER_INITIALIZE entry)
+NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
  */
 {
-   NTSTATUS ret;
+   NTSTATUS Status;
    PDRIVER_OBJECT DriverObject;
    ULONG i;
    
-   /*
-    * Allocate memory for a driver object
-    * NOTE: The object only becomes system visible once the associated
-    * device objects are initialized
-    */
-   DriverObject=ExAllocatePool(NonPagedPool,sizeof(DRIVER_OBJECT));
-   if (DriverObject==NULL)
+   DriverObject = ExAllocatePool(NonPagedPool,sizeof(DRIVER_OBJECT));
+   if (DriverObject == NULL)
      {
-	DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	return STATUS_INSUFFICIENT_RESOURCES;
      }
    memset(DriverObject, 0, sizeof(DRIVER_OBJECT));
+   
+   DriverObject->Type = ID_DRIVER_OBJECT;
    
    for (i=0; i<=IRP_MJ_MAXIMUM_FUNCTION; i++)
      {
 	DriverObject->MajorFunction[i] = IopDefaultDispatchFunction;
      }
-   
-   /*
-    * Initalize the driver
-    * FIXME: Registry in general please
-    */
-   DPRINT("Calling driver entrypoint at %08lx\n", entry);
-   if ((ret=entry(DriverObject,NULL)) != STATUS_SUCCESS)
-     {
-        DPRINT("Failed to load driver (status %x)\n",ret);
-	ExFreePool(DriverObject);
-	return ret;
-     }
-   CHECKPOINT;
 
-   return STATUS_SUCCESS;
+   DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
+   Status = DriverEntry(DriverObject, NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	ExFreePool(DriverObject);
+	return(Status);
+     }
+
+   return(Status);
 }
 
 NTSTATUS IoAttachDevice(PDEVICE_OBJECT SourceDevice,
@@ -229,11 +220,11 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
  * NOTES: See the DDK documentation for more information        
  */
 {
-   PDEVICE_OBJECT dev;
-   OBJECT_ATTRIBUTES dev_attr;
-   HANDLE devh;
+   PDEVICE_OBJECT CreatedDeviceObject;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE DeviceHandle;
 
-   if (DeviceName!=NULL)
+   if (DeviceName != NULL)
      {
 	DPRINT("IoCreateDevice(DriverObject %x, DeviceName %w)\n",DriverObject,
 	       DeviceName->Buffer);
@@ -243,61 +234,65 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
 	DPRINT("IoCreateDevice(DriverObject %x)\n",DriverObject);
      }
    
-   if (DeviceName!=NULL)
+   if (DeviceName != NULL)
      {
-	InitializeObjectAttributes(&dev_attr,DeviceName,0,NULL,NULL);
-	dev = ObCreateObject(&devh,0,&dev_attr,IoDeviceType);
+	InitializeObjectAttributes(&ObjectAttributes,DeviceName,0,NULL,NULL);
+	CreatedDeviceObject = ObCreateObject(&DeviceHandle,
+					     0,
+					     &ObjectAttributes,
+					     IoDeviceType);
      }
    else
      {
-	dev = ObCreateObject(&devh,0,NULL,IoDeviceType);
+	CreatedDeviceObject = ObCreateObject(&DeviceHandle,
+					     0,
+					     NULL,
+					     IoDeviceType);
      }
 					      
    *DeviceObject=NULL;
    
-   if (dev==NULL)
+   if (CreatedDeviceObject == NULL)
      {
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
-   
-   if (DriverObject->DeviceObject==NULL)
+  
+   if (DriverObject->DeviceObject == NULL)
      {
-	DriverObject->DeviceObject = dev;
-	dev->NextDevice=NULL;
+	DriverObject->DeviceObject = CreatedDeviceObject;
+	CreatedDeviceObject->NextDevice = NULL;
      }
    else
      {
-	dev->NextDevice=DriverObject->DeviceObject;
-	DriverObject->DeviceObject=dev;
+	CreatedDeviceObject->NextDevice = DriverObject->DeviceObject;
+	DriverObject->DeviceObject = CreatedDeviceObject;
      }
    
-   dev->DriverObject = DriverObject;
-   DPRINT("dev %x\n",dev);
-   DPRINT("dev->DriverObject %x\n",dev->DriverObject);
-		  
-   dev->CurrentIrp=NULL;
-   dev->Flags=0;
+   CreatedDeviceObject->Type = ID_DEVICE_OBJECT;
+   CreatedDeviceObject->DriverObject = DriverObject; 
+   CreatedDeviceObject->CurrentIrp = NULL;
+   CreatedDeviceObject->Flags = 0;
 
-   dev->DeviceExtension=ExAllocatePool(NonPagedPool,DeviceExtensionSize);
-   if (DeviceExtensionSize > 0 && dev->DeviceExtension==NULL)
+   CreatedDeviceObject->DeviceExtension = ExAllocatePool(NonPagedPool,
+							 DeviceExtensionSize);
+   if (DeviceExtensionSize > 0 && CreatedDeviceObject->DeviceExtension == NULL)
      {
-	ExFreePool(dev);
+	ExFreePool(CreatedDeviceObject);
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
    
-   dev->AttachedDevice=NULL;
-   dev->DeviceType=DeviceType;
-   dev->StackSize=1;
-   dev->AlignmentRequirement=1;
-   KeInitializeDeviceQueue(&dev->DeviceQueue);
+   CreatedDeviceObject->AttachedDevice = NULL;
+   CreatedDeviceObject->DeviceType = DeviceType;
+   CreatedDeviceObject->StackSize = 1;
+   CreatedDeviceObject->AlignmentRequirement = 1;
+   KeInitializeDeviceQueue(&CreatedDeviceObject->DeviceQueue);
    
-   if (dev->DeviceType==FILE_DEVICE_DISK)
+   if (CreatedDeviceObject->DeviceType == FILE_DEVICE_DISK)
      {
-	IoAttachVpb(dev);
+	IoAttachVpb(CreatedDeviceObject);
      }
    
-   *DeviceObject=dev;
-   DPRINT("dev->DriverObject %x\n",dev->DriverObject);
+   *DeviceObject = CreatedDeviceObject;
    
    return(STATUS_SUCCESS);
 }

@@ -7435,6 +7435,8 @@ DWORD STDCALL NetLocalGroupEnum (LPWSTR, DWORD, LPBYTE*, DWORD, LPDWORD,
 
 VOID CopyMemory(PVOID Destination, CONST VOID* Source, DWORD Length);
 
+DWORD STDCALL GetCurrentTime(VOID);
+
 void WINAPI
 SHAddToRecentDocs (UINT, LPCVOID);
 

@@ -10,7 +10,7 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <kernel32/proc.h>
 
 WINBOOL   

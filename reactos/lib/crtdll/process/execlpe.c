@@ -10,8 +10,8 @@
 	u.ccp = *++ptr; \
 	ptr = u.ccpp;
 
-int _execlpe(const char *path, const char *argv0, ... /*, const char **envp */)
+int execlpe(const char *path, const char *argv0, ... /*, const char **envp */)
 {
   scan_ptr();
-  return _spawnvpe(P_OVERLAY, path, (const char * const *)&argv0, (const char * const *)ptr);
+  return spawnvpe(P_OVERLAY, path, (char * const *)&argv0, (char * const *)ptr);
 }

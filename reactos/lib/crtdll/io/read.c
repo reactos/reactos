@@ -10,11 +10,15 @@
 #include <io.h>
 #include <windows.h>
 
-
+size_t	read(int _fd, void *_buf, size_t _nbyte)
+{
+	return _read(_fd,_buf,_nbyte);
+}
 size_t	_read(int _fd, void *_buf, size_t _nbyte)
 {
 	size_t _rbyte;
-	if ( !ReadFile(_get_osfhandle(_fd),_buf,_nbyte,&_rbyte,NULL) ) {
+	if ( !ReadFile(filehnd(_fd),_buf,_nbyte,&_rbyte,NULL) ) {
+		printf("%d\n",GetLastError());
 		return -1;
 	}
 

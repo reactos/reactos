@@ -2,6 +2,8 @@
 #include <ddk/ntddk.h>
 #include <stdarg.h>
 
+VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize);
+
 VOID KERNEL32_Init(PWSTR Args)
 {
    InitializePeb(Args);

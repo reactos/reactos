@@ -4,7 +4,7 @@
  *  Copyright (C) 1991, 1992  Linus Torvalds
  */
 
-#include <internal/ctype.h>
+#include <ctype.h>
 
 #if 0
 char _ctmp;
@@ -35,3 +35,36 @@ _L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,       /* 224-239 */
 _L,_L,_L,_L,_L,_L,_L,_P,_L,_L,_L,_L,_L,_L,_L,_L};      /* 240-255 */
 #endif
 
+int toupper(int c)
+{
+   if ('a' <= c && 'z' >= c)
+     {
+	return(c + 'A' - 'a');
+     }
+   return(c);
+}
+
+int tolower(int c)
+{
+   if ('A' <= c && 'Z' >= c)
+     {
+	return(c + 'a' - 'A');
+     }
+   return(c);
+}
+
+int islower(int c)
+{
+   return(('a' <= c && 'z' >= c));
+}
+
+int isdigit(int c)
+{
+   return(('0' <= c && '9' >= c));
+}
+
+int isxdigit(int c)
+{
+   return(('0' <= c && '9' >= c) || ('a' <= 'c' && 'f' >= 'c') ||
+	  ('A' <= c && 'Z' >= c));
+}

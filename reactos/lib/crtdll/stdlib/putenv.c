@@ -3,8 +3,9 @@
 #include <string.h>
 
 
+
 int
-_putenv(const char *val)
+putenv(const char *val)
 {
   
   char buffer[1024];

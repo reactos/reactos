@@ -147,13 +147,7 @@ typedef struct
 } KSEMAPHORE, *PKSEMAPHORE; 
 
 typedef struct _KEVENT
-/*
- * PURPOSE: Describes an event
- */
 {
-   /*
-    * PURPOSE: So we can use the general wait routine
-    */
    DISPATCHER_HEADER Header;
 } KEVENT, *PKEVENT;
 
@@ -222,7 +216,7 @@ typedef struct _WAIT_CONTEXT_BLOCK
 struct _KINTERRUPT;
 
 typedef BOOLEAN (*PKSERVICE_ROUTINE)(struct _KINTERRUPT* Interrupt, 
-			     PVOID ServiceContext);
+				     PVOID ServiceContext);
 
 typedef struct _KINTERRUPT
 {

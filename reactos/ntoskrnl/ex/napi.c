@@ -3,13 +3,12 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/napi.c
  * PURPOSE:         Native API support routines
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <wstring.h>
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/

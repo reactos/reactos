@@ -5,4 +5,4 @@
 #undef _fmode
 int _fmode = O_TEXT;
 
-unsigned  int _fmode_dll = &_fmode;       
+unsigned  int fmode_dll = &_fmode;       

@@ -11,8 +11,8 @@ genntdll$(EXE_POSTFIX): genntdll.c
 sysfuncs.lst: dummy
 
 clean: dummy
-	- $(RM) ../../lib/ntdll/sysfuncs.lst
-	- $(RM) ../../include/ntdll/napi.h
+	$(RM) ../../lib/ntdll/sysfuncs.lst
+	$(RM) ../../include/ntdll/napi.h
 	
 dummy:
 

@@ -37,13 +37,12 @@ void	_fwalk(void (*)(FILE *));
 char __is_text_file(FILE *p);
 
 int _doprnt(const char *fmt, va_list args, FILE *f);
-int _dowprnt(const char *fmt, va_list args, FILE *f);
 int _doscan(FILE *iop, const char *fmt, void **argp);
 
 void *filehnd(int fileno);
 int __fileno_dup2( int handle1, int handle2 );
 int __fileno_setmode(int _fd, int _newmode);
-int __fileno_close(int _fd);
+int	__fileno_close(int _fd);
 
 #undef  fileno
 #define fileno(f)	(f->_file)

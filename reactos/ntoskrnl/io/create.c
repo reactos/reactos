@@ -10,12 +10,12 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <windows.h>
+#include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/io.h>
+#include <internal/id.h>
 #include <internal/string.h>
-#include <wstring.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -110,12 +110,13 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
 	       }
 	     DeviceObject = IoGetAttachedDevice(DeviceObject);
 	  }
-	RtlInitUnicodeString(&(FileObject->FileName),wstrdup(RemainingPath));
+	RtlInitUnicodeString(&(FileObject->FileName),wcsdup(RemainingPath));
      }
    DPRINT("FileObject->FileName.Buffer %w\n",FileObject->FileName.Buffer);
-   FileObject->DeviceObject=DeviceObject;
-   FileObject->Vpb=DeviceObject->Vpb;
-   
+   FileObject->DeviceObject = DeviceObject;
+   FileObject->Vpb = DeviceObject->Vpb;
+   FileObject->Type = ID_FILE_OBJECT;
+     
    return(STATUS_SUCCESS);
 }
 

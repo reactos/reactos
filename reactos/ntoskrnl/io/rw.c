@@ -56,6 +56,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    PFILE_OBJECT FileObject;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
+   PKEVENT ptrEvent = NULL;
    KEVENT Event;
    
    assert(KeGetCurrentIrql()==PASSIVE_LEVEL);
@@ -66,7 +67,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_DATA,
-				      NULL,
+				      IoFileType,
 				      UserMode,
 				      (PVOID *) &FileObject,
 				      NULL);
@@ -81,14 +82,32 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 	ByteOffset = &(FileObject->CurrentByteOffset);
      }
    
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   if (EventHandle != NULL)
+     {
+	Status = ObReferenceObjectByHandle(EventHandle,
+					   SYNCHRONIZE,
+					   ExEventType,
+					   UserMode,
+					   (PVOID *)ptrEvent,
+					   NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(Status);
+	  }
+     }
+   else
+     {
+	KeInitializeEvent(&Event,NotificationEvent,FALSE);
+	ptrEvent = &Event;
+     }
+					   
    DPRINT("FileObject %x\n",FileObject);
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				      FileObject->DeviceObject,
 				      Buffer,
 				      Length,
 				      ByteOffset,
-				      &Event,
+				      ptrEvent,
 				      IoStatusBlock);
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -148,9 +167,12 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
    
+   DPRINT("ZwWriteFile(FileHandle %x, Buffer %x, Length %d)\n",
+	  FileHandle,Buffer,Length);
+   
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_WRITE_DATA,
-				      NULL,
+				      IoFileType,
 				      UserMode,
 				      (PVOID *) &FileObject,
 				      NULL);

@@ -3,9 +3,9 @@
 #include <process.h>
 
 
-extern char **_environ;
+extern char * const *_environ;
 
-int _execlp(const char *path, const char *argv0, ...)
+int execlp(const char *path, const char *argv0, ...)
 {
-  return _spawnvpe(P_OVERLAY, path, (const char * const *)&argv0,(const char *const*) _environ);
+  return spawnvpe(P_OVERLAY, path, (char * const *)&argv0, _environ);
 }

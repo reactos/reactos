@@ -37,7 +37,22 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 */
 
 
-
+#ifndef _TM_DEFINED
+struct tm {
+  int tm_sec;
+  int tm_min;
+  int tm_hour;
+  int tm_mday;
+  int tm_mon;
+  int tm_year;
+  int tm_wday;
+  int tm_yday;
+  int tm_isdst;
+  char *tm_zone;
+  int tm_gmtoff;
+};
+#define _TM_DEFINED
+#endif
 
 //#include <libc/stubs.h>
 #include <fcntl.h>

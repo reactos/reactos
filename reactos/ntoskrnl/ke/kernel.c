@@ -22,7 +22,7 @@ VOID KeInit(VOID)
    KeInitDpc();
    KeInitializeBugCheck();
    KeInitializeDispatcher();
-   InitializeTimer();
+   KeInitializeTimerImpl();
 
    /*
     * Allow interrupts

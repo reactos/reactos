@@ -7,9 +7,10 @@
      19-12-1998 : created
 
 */
-#include <ddk/ntddk.h>
+
+#include <wchar.h>
 #include <internal/string.h>
-#include <wstring.h>
+#include <ddk/ntddk.h>
 #include <ddk/cctypes.h>
 #include <ddk/zwtypes.h>
 
@@ -36,7 +37,7 @@ BOOL fsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime)
  long long int mult;
   Day=wDosDate&0x001f;
   Month= (wDosDate&0x00e0)>>5;//1=January
-  Year= ((wDosDate&0xfe00)>>9)+1980;
+  Year= ((wDosDate&0xff00)>>8)+1980;
   Second=(wDosTime&0x001f)<<1;
   Minute=(wDosTime&0x07e0)>>5;
   Hour=  (wDosTime&0xf100)>>11;
@@ -49,13 +50,13 @@ BOOL fsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime)
   mult *=24;
   *pTime +=(Day-1)*mult;
   if((Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0))
-    *pTime += MonthsDF1[1][Month-1]*mult;
+    *pTime += MonthsDF1[1][Month-1];
   else
-    *pTime += MonthsDF1[0][Month-1]*mult;
-  *pTime +=((Year-1601)*365
+    *pTime += MonthsDF1[0][Month-1];
+  *pTime +=(Year-1601)*mult*365
            +(Year-1601)/4
            -(Year-1601)/100
-           +(Year-1601)/400)*mult;
+           +(Year-1601)/400;
   return TRUE;
 }
 #define DosDateTimeToFileTime fsdDosDateTimeToFileTime
@@ -215,7 +216,7 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
  PVfatCCB pCcb;
  PDEVICE_EXTENSION DeviceExt;
  WCHAR star[5],*pCharPattern;
- unsigned long OldEntry;
+ unsigned long OldEntry,OldSector;
   DeviceExt = DeviceObject->DeviceExtension;
   // Obtain the callers parameters
   BufferLength = Stack->Parameters.QueryDirectory.Length;
@@ -227,7 +228,7 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
   pFcb = pCcb->pFcb;
   if(Stack->Flags & SL_RESTART_SCAN)
   {//FIXME : what is really use of RestartScan ?
-    pCcb->StartEntry=0;
+    pCcb->StartEntry=pCcb->StartSector=0;
   }
   // determine Buffer for result :
   if (Irp->MdlAddress) 
@@ -245,12 +246,12 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
   tmpFcb.ObjectName=tmpFcb.PathName;
   while(RC==STATUS_SUCCESS && BufferLength >0)
   {
+    OldSector=pCcb->StartSector;
     OldEntry=pCcb->StartEntry;
-CHECKPOINT;
-    RC=FindFile(DeviceExt,&tmpFcb,pFcb,pCharPattern,&pCcb->StartEntry);
-DPRINT("Found %w,RC=%x,entry %x\n",tmpFcb.ObjectName,RC
- ,pCcb->StartEntry);
-    pCcb->StartEntry++;
+    if(OldSector)pCcb->StartEntry++;
+    RC=FindFile(DeviceExt,&tmpFcb,pFcb,pCharPattern,&pCcb->StartSector,&pCcb->StartEntry);
+DPRINT("Found %w,RC=%x, sector %x entry %x\n",tmpFcb.ObjectName,RC
+ ,pCcb->StartSector,pCcb->StartEntry);
     if (NT_SUCCESS(RC))
     {
       switch(FileInformationClass)
@@ -283,6 +284,7 @@ DPRINT("Found %w,RC=%x,entry %x\n",tmpFcb.ObjectName,RC
     if(RC==STATUS_BUFFER_OVERFLOW)
     {
       if(Buffer0) Buffer0->NextEntryOffset=0;
+      pCcb->StartSector=OldSector;
       pCcb->StartEntry=OldEntry;
       break;
     }

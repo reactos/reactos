@@ -9,9 +9,8 @@
  */
 
 #include <windows.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <ddk/ntddk.h>
-#include <ddk/li.h>
 
 HANDLE
 STDCALL

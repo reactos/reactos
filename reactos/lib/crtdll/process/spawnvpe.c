@@ -4,10 +4,20 @@
 #include <errno.h>
 
 
-int _spawnvpe(int mode, const char *path,const char *const argv[],const char *const envp[])
+int spawnvpe(int mode, const char *path,const char *const argv[],const char *const envp[])
 {
-// djgpp does something like a searchpath here
- 
-    return _spawnve(mode, path, argv, envp);
+
+  char rpath[300];
+  union {const char * const *cpcp; char **cpp; } u;
+  u.cpcp = envp;
+/*
+  if (!__dosexec_find_on_path(path, u.cpp, rpath))
+  {
+    errno = ENOENT;
+    return -1;
+  }
+  else
+*/
+    return spawnve(mode, rpath, argv, envp);
 
 }

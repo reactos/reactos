@@ -7,10 +7,10 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
-#undef WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <string.h>
-#include <wstring.h>
+#include <wchar.h>
 
 
 int

@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TRUE  1
 #define FALSE 0
@@ -24,7 +25,8 @@ int process(FILE* in, FILE* out, FILE *out2)
    char* name2;
    int value;
    char* nr_args;
-
+   char* stmp;
+   
    unsigned char first1 = TRUE;
    
    fprintf(out,"; Machine generated, don't edit\n");
@@ -55,18 +57,17 @@ int process(FILE* in, FILE* out, FILE *out2)
 //	     value = strtok(NULL," \t");
 	     nr_args = (char *)strtok(NULL," \t");
 	     
+	     if ((stmp=strchr(nr_args,'\n'))!=NULL)
+	       {
+		  *stmp=0;
+	       }
+	     
 //	     printf("name %s value %d\n",name,value);
-#ifdef PARAMETERIZED_LIBS
 	     fprintf(out,"GLOBAL _%s@%s\n",name,nr_args);
 	     fprintf(out,"GLOBAL _%s@%s\n",name2,nr_args);
 	     fprintf(out,"_%s@%s:\n",name,nr_args);
 	     fprintf(out,"_%s@%s:\n",name2,nr_args);
-#else
-	     fprintf(out,"GLOBAL _%s\n",name);
-	     fprintf(out,"GLOBAL _%s\n",name2);
-	     fprintf(out,"_%s:\n",name);
-	     fprintf(out,"_%s:\n",name2);
-#endif
+
 	     fprintf(out,"\tmov\teax,%d\n",value);
 	     fprintf(out,"\tlea\tedx,[esp+4]\n");
 	     fprintf(out,"\tint\t2Eh\n");

@@ -39,11 +39,7 @@ VOID KeInitDpc(VOID);
 VOID KeInitBugCheck(VOID);
 VOID KeInitDispatcher(VOID);
 VOID KeCalibrateTimerLoop(VOID);
-
-
-
-
-
-
+VOID KeInitializeDispatcher(VOID);
+VOID KeInitializeTimerImpl(VOID);
 
 #endif

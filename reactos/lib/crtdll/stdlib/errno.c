@@ -1,18 +1,13 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <windows.h>
 #include <errno.h>
 
-int __crtdll_errno;
+#undef errno
+int errno;
+int _doserrno;
 
-int *_errno(void)
-{
-	__crtdll_errno = GetLastError();
-	return &__crtdll_errno;
-}
 
-int *__dos_errno(void)
+int _errno(void)
 {
-	__crtdll_errno = GetLastError();
-	return &__crtdll_errno;
+	return errno;
 }
 

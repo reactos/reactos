@@ -7,11 +7,10 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
-#undef WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <ddk/rtl.h>
-#include <wstring.h>
+#include <wchar.h>
 
 
 WINBOOL

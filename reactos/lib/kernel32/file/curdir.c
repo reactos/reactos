@@ -30,7 +30,16 @@ static WCHAR WindowsDirectoryW[MAX_PATH];
 WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName);
 
 /* FUNCTIONS *****************************************************************/
- 
+
+DWORD STDCALL GetCurrentDriveW(DWORD nBufferLength, PWSTR lpBuffer)
+{
+   lpBuffer[0] = 'A' + CurrentDrive;
+   lpBuffer[1] = ':';
+   lpBuffer[2] = '\\';
+   lpBuffer[3] = 0;
+   return(4);
+}
+
 DWORD STDCALL GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer)
 {
    UINT uSize,i;
@@ -67,9 +76,10 @@ DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
      {
 	lpBuffer[0] = 'A' + CurrentDrive;
 	lpBuffer[1] = ':';
+	lpBuffer[2] = 0;
 	lstrcpyW(&lpBuffer[2], DriveDirectoryW[CurrentDrive]);
      }
-   DPRINT("GetCurrentDirectoryW() = %w\n",lpBuffer);
+   DPRINT("GetCurrentDirectoryW() = '%w'\n",lpBuffer);
    return uSize;
 }
 
@@ -100,7 +110,7 @@ WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
    HANDLE hDir;
    PWSTR prev, current;
    
-   DPRINT("SetCurrentDirectoryW(lpPathName %w\n",lpPathName);
+   DPRINT("SetCurrentDirectoryW(lpPathName %w)\n",lpPathName);
    
    if (lpPathName == NULL)
      return FALSE;
@@ -127,7 +137,10 @@ WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
      }
    hCurrentDirectory = hDir;
    
-   if (isalpha(lpPathName[0]) && lpPathName[1] == ':' )
+   DPRINT("lpPathName %w %x\n",lpPathName,lpPathName);
+   if (wcslen(lpPathName) > 2 &&
+       isalpha(lpPathName[0]) && 
+       lpPathName[1] == ':' )
      {
 	DPRINT("lpPathName %w\n",lpPathName);
 	

@@ -15,12 +15,14 @@
 
 /* FUNCTIONS **************************************************************/
 
+#if 0
+
 NTSTATUS TestWrite(PIRP Irp, PIO_STACK_LOCATION Stk)
 {
    PVOID Address;
    
    Address = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   printk("Asked to write '%s'\n",(PCH)Address);
+   DbgPrint("Asked to write '%s'\n",(PCH)Address);
    return(STATUS_SUCCESS);
 }
 
@@ -40,7 +42,7 @@ NTSTATUS TestDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    switch (Stack->MajorFunction)
      {
       case IRP_MJ_CREATE:
-        printk("(Test Driver) Creating\n");
+        DbgPrint("(Test Driver) Creating\n");
 	status = STATUS_SUCCESS;
 	break;
 	
@@ -49,7 +51,7 @@ NTSTATUS TestDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	break;
 	
       case IRP_MJ_WRITE:
-        printk("(Test Driver) Writing\n");
+        DbgPrint("(Test Driver) Writing\n");
 	status = TestWrite(Irp,Stack);
 	break;
 	
@@ -65,6 +67,8 @@ NTSTATUS TestDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(status);
 }
 
+#endif
+
 NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
@@ -79,8 +83,9 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    ANSI_STRING astr;
    UNICODE_STRING ustr;
    
-   printk("Test Driver 0.0.1\n");
-          
+   DbgPrint("Test Driver 0.0.1\n");
+   
+   #if 0
    RtlInitAnsiString(&astr,"\\Device\\Test");
    RtlAnsiStringToUnicodeString(&ustr,&astr,TRUE);
    ret = IoCreateDevice(DriverObject,0,&ustr,
@@ -96,7 +101,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    DriverObject->MajorFunction[IRP_MJ_WRITE] = TestDispatch;
    DriverObject->MajorFunction[IRP_MJ_WRITE] = TestDispatch;
    DriverObject->DriverUnload = NULL;
-   
+   #endif
    return(STATUS_SUCCESS);
 }
 

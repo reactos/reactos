@@ -1,22 +1,15 @@
-%.o: %.cc
-	$(CC) $(CFLAGS) -c $< -o $@
-%.o: %.asm
-	$(NASM) $(NFLAGS) $< -o $@
+all: vfatfsd.sys
 
-OBJECTS= blockdev.o iface.o dir.o dirwr.o
+OBJECTS = blockdev.o dir.o dirwr.o iface.o ../../../ntoskrnl/ntoskrnl.a
 
-all: vfatfsd.o
-tests: tstvfat5.bin tstvfat6.bin
-
-vfatfsd.o: $(OBJECTS)
-	$(LD) $(OBJECTS) -r -o vfatfsd.o 
-	$(NM) --numeric-sort vfatfsd.o > vfatfsd.sym
-
-OBJECTS2 = ../../../apps/common/crt0.o
-LIBS= ../../../lib/kernel32/kernel32.a ../../../lib/ntdll/ntdll.a
-
-%.bin: $(OBJECTS) %.o
-	$(LD) -Ttext 0x10000 $(OBJECTS2) $*.o $(LIBS) -o $*.exe
-	$(OBJCOPY) -O binary $*.exe $*.bin
-
-include ../../../rules.mak
+vfatfsd.sys: $(OBJECTS)
+	$(CC) -specs=$(KM_SPECS) -mdll -o junk.tmp -Wl,--defsym,_end=end \
+	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
+	      -Wl,--base-file,base.tmp $(OBJECTS)
+	$(RM) junk.tmp
+	$(DLLTOOL) --dllname vfatfsd.sys --base-file base.tmp \
+	           --output-exp temp.exp
+	$(RM) base.tmp
+	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry \
+	      -specs=$(KM_SPECS) -mdll -o vfatfsd.sys $(OBJECTS) -Wl,temp.exp
+	$(RM) temp.exp

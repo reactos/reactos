@@ -99,4 +99,6 @@ VOID HalInitConsole(boot_param* bp);
 VOID LdrInitModuleManagement(VOID);
 VOID LdrLoadAutoConfigDrivers(VOID);
 
+extern WCHAR wtolower(WCHAR ch);
+
 #endif

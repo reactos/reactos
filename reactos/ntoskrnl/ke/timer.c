@@ -17,7 +17,7 @@
 
 #include <limits.h>
 #include <ddk/ntddk.h>
-#include <string.h>
+#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -172,7 +172,7 @@ NTSTATUS STDCALL NtDelayExecution(IN BOOLEAN Alertable,
 NTSTATUS STDCALL ZwDelayExecution(IN BOOLEAN Alertable,
 				  IN TIME *Interval)
 {
-   UNIMPLEMENTED;
+   KeBugCheck(0);
 }
 
 NTSTATUS KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
@@ -547,7 +547,7 @@ BOOLEAN KiTimerInterrupt(VOID)
 }
 
 
-void InitializeTimer(void)
+VOID KeInitializeTimerImpl(VOID)
 /*
  * FUNCTION: Initializes timer irq handling
  * NOTE: This is only called once from main()

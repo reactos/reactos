@@ -5,7 +5,7 @@
 static char msg[] = "Abort!\r\n";
 
 void
-abort(void)
+abort()
 {
   _write(stderr->_file, msg, sizeof(msg)-1);
   _exit(1);

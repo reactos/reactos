@@ -3,15 +3,15 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/irql.c
  * PURPOSE:         Implements IRQLs
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/bitops.h>
 #include <internal/halio.h>
+#include <internal/ke.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -109,7 +109,7 @@ VOID KeLowerIrql(KIRQL NewIrql)
    if (NewIrql > CurrentIrql)
      {
 	DbgPrint("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
-	KeDumpStackFrames(0);
+	KeDumpStackFrames(0,32);
 	for(;;);
      }
    CurrentIrql = NewIrql;

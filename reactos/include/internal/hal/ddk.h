@@ -113,5 +113,5 @@ BOOLEAN HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
 			       PHYSICAL_ADDRESS BusAddress,
 			       PULONG AddressSpace,
 			       PPHYSICAL_ADDRESS TranslatedAddress);
-VOID HalQueryRealTimeClock(PTIME_FIELDS pTime);
+
 #endif /* __INCLUDE_INTERNAL_HAL_DDK_H */

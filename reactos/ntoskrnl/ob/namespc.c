@@ -10,8 +10,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <windows.h>
-#include <wstring.h>
+#include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/io.h>
@@ -74,7 +73,7 @@ VOID ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
    KIRQL oldlvl;
    POBJECT_HEADER Header = BODY_TO_HEADER(Object);
    
-   RtlInitUnicodeString(&Header->Name, wstrdup(Name));
+   RtlInitUnicodeString(&Header->Name, wcsdup(Name));
    Header->Parent = Parent;
    
    KeAcquireSpinLock(&Parent->Lock, &oldlvl);

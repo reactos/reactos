@@ -11,8 +11,6 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
-#include <internal/string.h>
-#include <wstring.h>
 
 #define NDEBUG
 #include <internal/debug.h>

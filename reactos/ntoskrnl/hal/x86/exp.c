@@ -37,6 +37,7 @@ extern void interrupt_handler2e(void);
 
 #define EXCEPTION_HANDLER_WITH_ERROR(x,y)  \
       void exception_handler##y (void);   \
+      void tmp_exception_handler##y (void) { \
        __asm__("\n\t_exception_handler"##x":\n\t" \
                 "pushl %gs\n\t" \
                 "pushl %fs\n\t" \
@@ -57,10 +58,11 @@ extern void interrupt_handler2e(void);
                 "popl %fs\n\t"      \
                 "popl %gs\n\t"      \
                 "addl $4,%esp\n\t" \
-                "iret\n\t")
+                "iret\n\t"); }
 
 #define EXCEPTION_HANDLER_WITHOUT_ERROR(x,y)           \
         asmlinkage void exception_handler##y (void);        \
+        void tmp_exception_handler##y (void) { \
         __asm__("\n\t_exception_handler"##x":\n\t"           \
                 "pushl $0\n\t"                        \
                 "pushl %gs\n\t" \
@@ -82,9 +84,11 @@ extern void interrupt_handler2e(void);
                 "popl %fs\n\t"  \
                 "popl %gs\n\t"  \
                 "addl $4,%esp\n\t" \
-                "iret\n\t")
+                "iret\n\t"); }
 
-asmlinkage void exception_handler_unknown(void);        
+asmlinkage void exception_handler_unknown(void);
+asmlinkage void tmp_exception_handler_unknown(void)
+{
         __asm__("\n\t_exception_handler_unknown:\n\t"           
                 "pushl $0\n\t"
                 "pushl %gs\n\t" 
@@ -103,7 +107,7 @@ asmlinkage void exception_handler_unknown(void);
                 "popa\n\t"                           
                 "addl $8,%esp\n\t"                 
                 "iret\n\t");
-
+}
 
 EXCEPTION_HANDLER_WITHOUT_ERROR("0",0);
 EXCEPTION_HANDLER_WITHOUT_ERROR("1",1);
@@ -266,10 +270,16 @@ asmlinkage void exception_handler(unsigned int edi,
         stack=(unsigned int *)(esp0);
        
         printk("Stack:\n");
-        for (i=0;i<16;i=i+4)
+        for (i=0; i<16; i++)
         {
-                printk("%.8x %.8x %.8x %.8x\n",stack[i],stack[i+1],stack[i+2],
-                       stack[i+3]);
+	   if (MmIsPagePresent(NULL,&stack[i]))
+	     {
+		DbgPrint("%.8x ",stack[i]);
+		if (((i+1)%4) == 0)
+		  {
+		     DbgPrint("\n");
+		  }
+	     }
         }
      }
    
@@ -309,6 +319,7 @@ static void set_system_call_gate(unsigned int sel, unsigned int func)
 
 static void set_interrupt_gate(unsigned int sel, unsigned int func)
 {
+   DPRINT("set_interrupt_gate(sel %d, func %x)\n",sel,func);
         idt[sel].a = (((int)func)&0xffff) +
                            (KERNEL_CS << 16);
         idt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         

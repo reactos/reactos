@@ -10,8 +10,7 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <wstring.h>
-#include <ddk/rtl.h>
+#include <wchar.h>
 
 
 typedef struct _FILE_COMPLETION_INFORMATION {                    

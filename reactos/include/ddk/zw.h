@@ -15,15 +15,11 @@
 #ifndef __DDK_ZW_H
 #define __DDK_ZW_H
 
+
 #include <windows.h>
 //#ifndef WIN32_LEAN_AND_MEAN
-#define PTOKEN_USER PVOID
 #define PTOKEN_GROUPS PVOID
-#define PTOKEN_OWNER PVOID
 #define PTOKEN_PRIVILEGES PVOID
-#define PTOKEN_PRIMARY_GROUP PVOID
-#define PTOKEN_DEFAULT_DACL PVOID
-#define PTOKEN_SOURCE PVOID
 #define TOKEN_INFORMATION_CLASS CINT
 #define LCID ULONG
 #define SECURITY_INFORMATION ULONG
@@ -1084,63 +1080,6 @@ ZwCreateTimer(
 	IN CINT TimerType
 	);
 
-/*
- * FUNCTION: Creates a token.
- * ARGUMENTS:
- *        TokenHandle (OUT) = Caller supplied storage for the resulting handle
- *        DesiredAccess = Specifies the allowed or desired access to the process can
- *                        be a combinate of STANDARD_RIGHTS_REQUIRED| ..  
- *        ObjectAttribute = Initialized attributes for the object, contains the rootdirectory and the filename
- *        TokenType = 
- *        AuthenticationId = 
- *        ExpirationTime = 
- *        TokenUser = 
- *        TokenGroups =
- *        TokenPrivileges = 
- *        TokenOwner = 
- *        TokenPrimaryGroup = 
- *        TokenDefaultDacl =
- *        TokenSource =
- * REMARKS:
- *        This function does not map to a win32 function
- * RETURNS: Status
- */
-
-NTSTATUS
-STDCALL
-NtCreateToken(
-	OUT PHANDLE TokenHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN TOKEN_TYPE TokenType,
-	IN PLUID AuthenticationId,
-	IN PLARGE_INTEGER ExpirationTime,
-	IN PTOKEN_USER TokenUser,
-	IN PTOKEN_GROUPS TokenGroups,
-	IN PTOKEN_PRIVILEGES TokenPrivileges,
-	IN PTOKEN_OWNER TokenOwner,
-	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-	IN PTOKEN_SOURCE TokenSource
-	);
-
-NTSTATUS
-STDCALL
-ZwCreateToken(
-	OUT PHANDLE TokenHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN TOKEN_TYPE TokenType,
-	IN PLUID AuthenticationId,
-	IN PLARGE_INTEGER ExpirationTime,
-	IN PTOKEN_USER TokenUser,
-	IN PTOKEN_GROUPS TokenGroups,
-	IN PTOKEN_PRIVILEGES TokenPrivileges,
-	IN PTOKEN_OWNER TokenOwner,
-	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
-	IN PTOKEN_SOURCE TokenSource
-	);
 
 /*
  * FUNCTION: Returns the callers thread TEB.
@@ -5137,6 +5076,7 @@ NTSTATUS STDCALL NtCompleteConnectPort(VOID);
 NTSTATUS STDCALL NtConnectPort(VOID);
 
 NTSTATUS STDCALL NtCreatePort(VOID);
+NTSTATUS STDCALL NtCreateToken(VOID);
 
 NTSTATUS STDCALL NtGetPlugPlayEvent(VOID);
 NTSTATUS STDCALL NtImpersonateClientOfPort(VOID);

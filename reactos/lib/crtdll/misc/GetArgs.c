@@ -50,13 +50,13 @@ int __GetMainArgs(int *argc,char ***argv,char **env,int flag)
    cmdline = GetCommandLineA();
    afterlastspace=0;
    
-   //dprintf("cmdline '%s'\n",cmdline);
+   dprintf("cmdline '%s'\n",cmdline);
    
    while (cmdline[i]) 
      {
 	if (cmdline[i]==' ') 
 	  {
-	  //   dprintf("cmdline '%s'\n",cmdline);
+	     dprintf("cmdline '%s'\n",cmdline);
 	     __argc++;
 	     cmdline[i]='\0';
 	     __argv[__argc-1] = strdup( cmdline+afterlastspace);
@@ -90,7 +90,7 @@ int __GetMainArgs(int *argc,char ***argv,char **env,int flag)
    return 0;
 }
 
-int _chkstk(void)
+int _chkstk()
 {
 	return 0;
 }

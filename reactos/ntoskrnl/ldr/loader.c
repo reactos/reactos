@@ -15,6 +15,7 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <windows.h>
 #include <internal/i386/segment.h>
 #include <internal/ntoskrnl.h>
 #include <internal/linkage.h>
@@ -92,7 +93,7 @@ VOID LdrLoadAutoConfigDrivers(VOID)
   ANSI_STRING AnsiDriverName;
   UNICODE_STRING DriverName;
 
-  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\keyboard.o"); 
+  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\keyboard.sys"); 
   RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
   Status = LdrLoadDriver(&DriverName);
   RtlFreeUnicodeString(&DriverName);
@@ -101,7 +102,7 @@ VOID LdrLoadAutoConfigDrivers(VOID)
       DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
       DbgPrintErrorMessage(Status);
     }
-  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\blues.o"); 
+  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\blues.sys");
   RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
   Status = LdrLoadDriver(&DriverName);
   RtlFreeUnicodeString(&DriverName);
@@ -218,7 +219,7 @@ NTSTATUS
 LdrPEProcessDriver(PVOID ModuleLoadBase)
 {
   unsigned int DriverSize, Idx;
-  long int RelocDelta, NumRelocs;
+  ULONG RelocDelta, NumRelocs;
   DWORD CurrentSize;
   PVOID DriverBase, CurrentBase, EntryPoint;
   PULONG PEMagic;
@@ -287,25 +288,10 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
   CHECKPOINT;
 
   /*  Determine the size of the module  */
-  DPRINT("Sections: (section align:%08lx)\n", 
-         PEOptionalHeader->SectionAlignment);
-  DriverSize = PESectionHeaders[0].PointerToRawData;
-  for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
-    {
-      DPRINT("Name:%-8.8s VA:%08lx RawSz:%6d Offs:%08lx CHAR:%08lx OfsA: %08lx\n",
-             PESectionHeaders[Idx].Name,
-             PESectionHeaders[Idx].VirtualAddress,
-             PESectionHeaders[Idx].SizeOfRawData,
-             PESectionHeaders[Idx].PointerToRawData,
-             PESectionHeaders[Idx].Characteristics,
-             DriverSize);
-      DriverSize += ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
-                             PEOptionalHeader->SectionAlignment);
-    }
-  DPRINT("DriverSize computed by using section headers: %d(%08lx)\n",
-         DriverSize,
-         DriverSize);
-       
+     
+   DriverSize = PEOptionalHeader->SizeOfImage;
+   DPRINT("DriverSize %x\n",DriverSize);
+   
   /*  Allocate a virtual section for the module  */  
   DriverBase = MmAllocateSection(DriverSize);
   if (DriverBase == 0)
@@ -324,13 +310,18 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
       if (PESectionHeaders[Idx].Characteristics & 
           (IMAGE_SECTION_CHAR_CODE | IMAGE_SECTION_CHAR_DATA))
         {
-          memcpy(CurrentBase,
+	   DPRINT("PESectionHeaders[Idx].VirtualAddress + DriverBase %x\n",
+		  PESectionHeaders[Idx].VirtualAddress + DriverBase);
+          memcpy(PESectionHeaders[Idx].VirtualAddress + DriverBase,
                  (PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
                  PESectionHeaders[Idx].SizeOfRawData);
         }
       else
         {
-          memset(CurrentBase, '\0', PESectionHeaders[Idx].SizeOfRawData);
+	   DPRINT("PESectionHeaders[Idx].VirtualAddress + DriverBase %x\n",
+		  PESectionHeaders[Idx].VirtualAddress + DriverBase);
+	   memset(PESectionHeaders[Idx].VirtualAddress + DriverBase, 
+		  '\0', PESectionHeaders[Idx].SizeOfRawData);
         }
       CurrentSize += ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
                               PEOptionalHeader->SectionAlignment);
@@ -341,13 +332,26 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 
   /*  Perform relocation fixups  */
   RelocDelta = (DWORD) DriverBase - PEOptionalHeader->ImageBase;
-  RelocDir = (PRELOCATION_DIRECTORY) ((DWORD)ModuleLoadBase +
-    PEOptionalHeader->DataDirectory[
+  RelocDir = (PRELOCATION_DIRECTORY)(PEOptionalHeader->DataDirectory[
     IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress);
   DPRINT("DrvrBase:%08lx ImgBase:%08lx RelocDelta:%08lx\n", 
          DriverBase,
          PEOptionalHeader->ImageBase,
          RelocDelta);
+   DPRINT("RelocDir %x\n",RelocDir);
+  for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
+    {
+       if (PESectionHeaders[Idx].VirtualAddress == RelocDir)
+	 {
+	    DPRINT("Name %.8s PESectionHeader[Idx].PointerToRawData %x\n",
+		   PESectionHeaders[Idx].Name,
+		   PESectionHeaders[Idx].PointerToRawData);
+	    RelocDir = PESectionHeaders[Idx].PointerToRawData +
+	      ModuleLoadBase;
+	    break;
+	 }
+    }
+   DPRINT("RelocDir %x\n",RelocDir);
   while (RelocDir->SizeOfBlock != 0)
     {
       NumRelocs = (RelocDir->SizeOfBlock - sizeof(RELOCATION_DIRECTORY)) / 
@@ -360,31 +364,38 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
         sizeof(RELOCATION_DIRECTORY));
       for (Idx = 0; Idx < NumRelocs; Idx++)
         {
-          DPRINT("  reloc at %08lx %x %s old:%08lx new:%08lx\n", 
-                 DriverBase + RelocDir->VirtualAddress +  
-                   (RelocEntry[Idx].TypeOffset & 0x0fff),
-                 (RelocEntry[Idx].TypeOffset >> 12) & 0xf,
-                 (RelocEntry[Idx].TypeOffset >> 12) & 0xf ? "HIGHLOW" : "ABS",
-                 *(PDWORD)((DWORD) DriverBase + RelocDir->VirtualAddress +  
-                   (RelocEntry[Idx].TypeOffset & 0x0fff)),
-                 (*(PDWORD)((DWORD) DriverBase + RelocDir->VirtualAddress +  
-                   (RelocEntry[Idx].TypeOffset & 0x0fff))) + RelocDelta);
-          if (((RelocEntry[Idx].TypeOffset >> 12) & 0xf) == 3)
+	   ULONG Offset;
+	   ULONG Type;
+	   PDWORD RelocItem;
+	   
+	   Offset = RelocEntry[Idx].TypeOffset & 0xfff;
+	   Type = (RelocEntry[Idx].TypeOffset >> 12) & 0xf;
+	   RelocItem = (PDWORD)(DriverBase + RelocDir->VirtualAddress + 
+				Offset);
+	   
+	   DPRINT("  reloc at %08lx %x %s old:%08lx new:%08lx\n", 
+		  RelocItem,
+		  Type,
+		  Type ? "HIGHLOW" : "ABS",
+		  *RelocItem,
+		  (*RelocItem) + RelocDelta);
+          if (Type == 3)
             {
-              (*(PDWORD)((DWORD) DriverBase + RelocDir->VirtualAddress +  
-                   (RelocEntry[Idx].TypeOffset & 0x0fff))) += RelocDelta;
+              (*RelocItem) += RelocDelta;
             }
-          else if (((RelocEntry[Idx].TypeOffset >> 12) & 0xf) != 0)
+          else if (Type != 0)
             {
-              DPRINT("Unknown relocation type %x\n", 
-                     (RelocEntry[Idx].TypeOffset >> 12) & 0xf);
+              DPRINT("Unknown relocation type %x\n",Type);
               return STATUS_UNSUCCESSFUL;
             }
         }
       RelocDir = (PRELOCATION_DIRECTORY)((DWORD)RelocDir + 
         RelocDir->SizeOfBlock);
     }
-
+   
+   DPRINT("PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT] %x\n",
+	  PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
+	  .VirtualAddress);
   /*  Perform import fixups  */
   if (PEOptionalHeader->DataDirectory[
       IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)
@@ -395,7 +406,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 
       /*  Process each import module  */
       ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
-        ((DWORD)ModuleLoadBase + PEOptionalHeader->
+        ((DWORD)DriverBase + PEOptionalHeader->
           DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
       while (ImportModuleDirectory->dwRVAModuleName)
         {
@@ -403,29 +414,28 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 
           /*  Check to make sure that import lib is kernel  */
           Library = NULL;
-          pName = (PCHAR) ModuleLoadBase + 
+          pName = (PCHAR) DriverBase + 
             ImportModuleDirectory->dwRVAModuleName;
           DPRINT("Import module: %s\n", pName);
-          if (strcmp(pName, "ntoskrnl.exe") && 
-              strcmp(pName, "roskrnl.exe") && 
-              strcmp(pName, "HAL.dll"))
+          if (strcmp(pName, "ntoskrnl.exe")!=0 && 
+              strcmp(pName, "HAL.dll")!=0)
             {
               DPRINT("Kernel mode DLLs are currently unsupported\n");
             }
 
           /*  Get the import address list  */
-          ImportAddressList = (PVOID *) ((DWORD)ModuleLoadBase + 
+          ImportAddressList = (PVOID *) ((DWORD)DriverBase + 
             ImportModuleDirectory->dwRVAFunctionAddressList);
 
           /*  Get the list of functions to import  */
           if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
             {
-              FunctionNameList = (PULONG) ((DWORD)ModuleLoadBase + 
+              FunctionNameList = (PULONG) ((DWORD)DriverBase + 
                 ImportModuleDirectory->dwRVAFunctionNameList);
             }
           else
             {
-              FunctionNameList = (PULONG) ((DWORD)ModuleLoadBase + 
+              FunctionNameList = (PULONG) ((DWORD)DriverBase + 
                 ImportModuleDirectory->dwRVAFunctionAddressList);
             }
 
@@ -443,9 +453,9 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
                 }
               else // hint-name
                 {
-                  pName = (PCHAR)((DWORD)ModuleLoadBase + 
+                  pName = (PCHAR)((DWORD)DriverBase+ 
                                   *FunctionNameList + 2);
-                  pHint = (PWORD)((DWORD)ModuleLoadBase + *FunctionNameList);
+                  pHint = (PWORD)((DWORD)DriverBase + *FunctionNameList);
                   DPRINT("  Hint:%04x  Name:%s\n", pHint, pName);
                   
                   /*  Get address for symbol  */
@@ -471,7 +481,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
   /*  Compute address of entry point  */
   EntryPoint = (PVOID) ((DWORD)DriverBase + PEOptionalHeader->AddressOfEntryPoint);
 
-  return InitializeLoadedDriver(EntryPoint); 
+  return IoInitializeDriver(EntryPoint); 
 }
 
 NTSTATUS 
@@ -620,7 +630,7 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
   /*  Cleanup  */
   ExFreePool(Module);
 
-  return InitializeLoadedDriver(EntryRoutine);
+  return IoInitializeDriver(EntryRoutine);
 }
 
 /*   LdrCOFFDoRelocations
@@ -823,17 +833,31 @@ static unsigned int
 LdrGetKernelSymbolAddr(char *Name)
 {
   int i = 0;
-
+   char* s;
+   
+   if ((s=strchr(Name,'@'))!=NULL)
+     {
+	*s=0;
+	DbgPrint("Name %s ",Name);
+     }
   while (symbol_table[i].name != NULL)
     {
       if (strcmp(symbol_table[i].name, Name) == 0)
         {
+	   if (s!=NULL)
+	     {
+		*s=0;
+		DbgPrint("Matched with %s\n",symbol_table[i].name);
+	     }
           return symbol_table[i].value;
         }
       i++;
     }
-
-  return 0L;
+   if (s!=NULL)
+     {
+	*s=0;
+     }   
+   return 0L;
 }
 
 static unsigned int 
@@ -1026,10 +1050,9 @@ LdrProcessMZImage(HANDLE ProcessHandle,
   return STATUS_NOT_IMPLEMENTED;
 }
 
-static NTSTATUS 
-LdrProcessPEImage(HANDLE ProcessHandle, 
-                  HANDLE ModuleHandle,
-                  HANDLE FileHandle)
+static NTSTATUS LdrProcessPEImage(HANDLE ProcessHandle, 
+				  HANDLE ModuleHandle,
+				  HANDLE FileHandle)
 {
   int i;
   NTSTATUS Status;

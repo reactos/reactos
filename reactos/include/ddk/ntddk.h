@@ -38,9 +38,9 @@ extern "C"
 #include <ddk/pstypes.h>
 #include <ddk/zwtypes.h>
 #include <ddk/ioctrl.h>   
+#include <internal/hal/ddk.h>
    
 #include <ddk/rtl.h>
-#include <internal/hal/ddk.h>
 #include <ddk/zw.h>
 #include <ddk/cmfuncs.h>
 #include <ddk/exfuncs.h>

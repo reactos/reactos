@@ -18,6 +18,7 @@
 #include <internal/string.h>
 #include <internal/symbol.h>
 #include <internal/module.h>
+#include <internal/ldr.h>
 
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>

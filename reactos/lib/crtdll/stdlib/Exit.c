@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <libc/atexit.h>
 
+void 	_exit(int _status);
 
 struct __atexit *__atexit_ptr = 0;
 
@@ -33,7 +34,7 @@ exit(int status)
 
 void _exit(int _status)
 {
-	ExitProcess(_status);
+	//ExitProcess(_status);
 }
 
 void _cexit( void )

@@ -83,7 +83,7 @@ WINBOOL
 STDCALL
 AllocConsole( VOID )
 {
-	StdInput = CreateFile("\\Keyboard",
+	StdInput = CreateFile("\\\\.\\Keyboard",
 			       FILE_GENERIC_READ,
 			       0,
 			       NULL,
@@ -91,7 +91,7 @@ AllocConsole( VOID )
 			       0,
 			       NULL);
    
-	StdOutput = CreateFile("\\BlueScreen",
+	StdOutput = CreateFile("\\\\.\\BlueScreen",
 			       FILE_GENERIC_WRITE|FILE_GENERIC_READ,
 			       0,
 			       NULL,
