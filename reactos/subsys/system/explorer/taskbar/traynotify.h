@@ -35,6 +35,7 @@
 #define	CLOCKWINDOW_WIDTH		32
 
 
+ /// NotifyIconIndex is used for maintaining the order of notification icons.
 struct NotifyIconIndex
 {
 	NotifyIconIndex(NOTIFYICONDATA* pnid);
@@ -50,6 +51,7 @@ protected:
 	NotifyIconIndex();
 };
 
+ /// structure for maintaining informations of one notification icons
 struct NotifyInfo : public NotifyIconIndex
 {
 	NotifyInfo();

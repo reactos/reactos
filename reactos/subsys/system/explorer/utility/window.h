@@ -511,10 +511,9 @@ template<typename BASE> struct CtlColorParent : public BASE
 */
 
 
- // owner draw message routing for ColorButton and PictureButton 
-
 #define	PM_DISPATCH_DRAWITEM	(WM_APP+0x09)
 
+ /// draw message routing for ColorButton and PictureButton 
 template<typename BASE> struct OwnerDrawParent : public BASE
 {
 	typedef BASE super;
@@ -606,6 +605,7 @@ protected:
 };
 
 
+ /// encapsulation of tool tip controls
 struct ToolTip : public WindowHandle
 {
 	typedef WindowHandle super;
@@ -664,6 +664,7 @@ inline int ListView_GetFocusedItem(HWND list_ctrl)
 }
 
 
+ /// sorting of list controls
 struct ListSort : public WindowHandle
 {
 	ListSort(HWND hwndListview, PFNLVCOMPARE compare_fct);

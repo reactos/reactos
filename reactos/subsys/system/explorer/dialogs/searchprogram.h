@@ -33,6 +33,7 @@
 typedef void (*COLLECT_CALLBACK)(ShellFolder& folder, ShellEntry* shell_entry, void* param);
 typedef stack<ShellDirectory*> ShellDirectoryStack;
 
+ /// Thread for collecting start menu entries
 struct CollectProgramsThread : public Thread
 {
 	CollectProgramsThread(COLLECT_CALLBACK callback, HWND hwnd, void* para)
@@ -74,6 +75,7 @@ struct FPDEntry
 typedef list<FPDEntry> FPDCache;
 
 
+ /// Dialog to work with the complete list of start menu entries
 struct FindProgramDlg : public ResizeController<Dialog>
 {
 	typedef ResizeController<Dialog> super;

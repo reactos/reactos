@@ -128,7 +128,7 @@ CFG=make_explorer - Win32 doxy docu
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Cmd_Line "msdevfilt -java doxygen"
+# PROP Cmd_Line "msdevfilt -java make docu"
 # PROP Rebuild_Opt "Doxyfile-all"
 # PROP Target_File "doxy-doc\html\index.html"
 # PROP Bsc_Name ""

@@ -30,6 +30,7 @@
 enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4};
 
 
+ /// Explorer frame window
 struct MainFrame : public PreTranslateWindow
 {
 	typedef PreTranslateWindow super;

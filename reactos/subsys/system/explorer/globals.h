@@ -47,6 +47,7 @@ extern struct ExplorerGlobals
 #define	LOG(x) if (g_Globals._log) _ftprintf(g_Globals._log, TEXT("%s\n"), (LPCTSTR)(x));
 
 
+ /// conventient loading of string resources
 struct ResString : public String
 {
 	ResString(UINT nid);

@@ -26,6 +26,7 @@
  //
 
 
+ /// shell file/directory entry
 struct ShellEntry : public Entry
 {
 	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent), _pidl(shell_path) {}

@@ -54,6 +54,7 @@ using namespace _com_util;
 
 #else
 
+ /// COM Exception class as replacement for _com_error
 struct COMException
 {
 	COMException(HRESULT hr)
@@ -100,7 +101,7 @@ inline void CheckError(HRESULT hr)
 #endif
 
 
- // COM Initialisation
+ /// COM Initialisation
 
 struct ComInit
 {
@@ -123,7 +124,7 @@ struct ComInit
 };
 
 
- // OLE initialisation for drag drop support
+ /// OLE initialisation for drag drop support
 
 struct OleInit
 {
@@ -139,12 +140,12 @@ struct OleInit
 };
 
 
- // Exception Handler for COM exceptions
+ /// Exception Handler for COM exceptions
 
 extern void HandleException(COMException& e, HWND hwnd);
 
 
- // We use a common IMalloc object for all shell memory allocations.
+ /// We use a common IMalloc object for all shell memory allocations.
 
 struct CommonShellMalloc
 {
@@ -350,9 +351,10 @@ protected:
 
 
 
- // caching of desktop ShellFolder object
-
 struct ShellFolder;
+
+
+ /// caching of desktop ShellFolder object
 
 struct CommonDesktop
 {
@@ -365,7 +367,7 @@ struct CommonDesktop
 
 	void init();
 
-	operator struct ShellFolder&()
+	operator ShellFolder&()
 	{
 		return *_desktop;
 	}
@@ -377,6 +379,7 @@ protected:
 
 #ifndef _NO_COMUTIL	// _com_ptr available?
 
+ /// IShellFolder smart pointer
 struct ShellFolder : public IShellFolderPtr	// IShellFolderPtr uses intrinsic extensions of the VC++ compiler.
 {
 	typedef IShellFolderPtr super;
@@ -398,6 +401,7 @@ struct ShellFolder : public IShellFolderPtr	// IShellFolderPtr uses intrinsic ex
 #define	IShellLinkPtr IShellLinkAPtr
 #endif
 
+ /// IShellLink smart pointer
 struct ShellLinkPtr : public IShellLinkPtr
 {
 	typedef IShellLinkPtr super;
@@ -413,6 +417,7 @@ struct ShellLinkPtr : public IShellLinkPtr
 
 #else // _com_ptr not available -> use SIfacePtr
 
+ /// IShellFolder smart pointer
 struct ShellFolder : public SIfacePtr<IShellFolder>
 {
 	typedef SIfacePtr<IShellFolder> super;
@@ -426,6 +431,7 @@ struct ShellFolder : public SIfacePtr<IShellFolder>
 	String	get_name(LPCITEMIDLIST pidl, SHGDNF flags=SHGDN_NORMAL) const;
 };
 
+ /// IShellLink smart pointer
 struct ShellLinkPtr : public SIfacePtr<IShellLink>
 {
 	typedef SIfacePtr<IShellLink> super;
@@ -732,6 +738,7 @@ public:
 };
 
 
+ /// Browse dialog operating on shell namespace
 struct FolderBrowser : public FileSysShellPath
 {
 	FolderBrowser(HWND owner, UINT flags, LPCTSTR title, LPCITEMIDLIST root=0)
@@ -765,6 +772,7 @@ private:
 };
 
 
+ /// Retrieval of special shell folder paths
 struct SpecialFolderPath : public ShellPath
 {
 	SpecialFolderPath(int folder, HWND hwnd)
@@ -774,6 +782,7 @@ struct SpecialFolderPath : public ShellPath
 	}
 };
 
+ /// Shell folder path of the desktop
 struct DesktopFolderPath : public SpecialFolderPath
 {
 	DesktopFolderPath()
@@ -782,6 +791,7 @@ struct DesktopFolderPath : public SpecialFolderPath
 	}
 };
 
+ /// Retrieval of special shell folder
 struct SpecialFolder : public ShellFolder
 {
 	SpecialFolder(int folder, HWND hwnd)
@@ -790,6 +800,7 @@ struct SpecialFolder : public ShellFolder
 	}
 };
 
+ /// Shell folder of the desktop
 struct DesktopFolder : public ShellFolder
 {
 };

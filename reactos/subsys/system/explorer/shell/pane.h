@@ -59,6 +59,7 @@ struct OutputWorker
 };
 
 
+ /// child window pane for displaying file lists
 struct Pane : public SubclassedWindow
 {
 	typedef SubclassedWindow super;

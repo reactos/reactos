@@ -35,38 +35,38 @@ struct IShellBrowserImpl : public IShellBrowser, public ICommDlgBrowser
 	{
 	}
 
-	STDMETHOD(QueryInterface)(REFIID iid, void** ppvObject);
+	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** ppvObject);
 
-	STDMETHOD_(ULONG, AddRef)() {return ++_dwRef;}
-	STDMETHOD_(ULONG, Release)() {return --_dwRef;}  //not heap based
+	virtual ULONG STDMETHODCALLTYPE AddRef() {return ++_dwRef;}
+	virtual ULONG STDMETHODCALLTYPE Release() {return --_dwRef;}  //not heap based
 
     // *** IOleWindow methods ***
-    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) {return E_NOTIMPL;}
+    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode) {return E_NOTIMPL;}
 
 	// *** ICommDlgBrowser methods ***
-    STDMETHOD(OnDefaultCommand)(IShellView* ppshv);
+    virtual HRESULT STDMETHODCALLTYPE OnDefaultCommand(IShellView* ppshv);
 
-    STDMETHOD(OnStateChange)(IShellView* ppshv, ULONG uChange)
+    virtual HRESULT STDMETHODCALLTYPE OnStateChange(IShellView* ppshv, ULONG uChange)
 	{	//handle selection, rename, focus if needed
 		return E_NOTIMPL;
 	}
 
-    STDMETHOD(IncludeObject)(IShellView* ppshv, LPCITEMIDLIST pidl)
+    virtual HRESULT STDMETHODCALLTYPE IncludeObject(IShellView* ppshv, LPCITEMIDLIST pidl)
 	{	//filter files if needed
 		return S_OK;
 	}
 
     // *** IShellBrowser methods *** (same as IOleInPlaceFrame)
-    STDMETHOD(InsertMenusSB)(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths) {return E_NOTIMPL;}
-    STDMETHOD(SetMenuSB)(HMENU hmenuShared, HOLEMENU holemenuReserved, HWND hwndActiveObject) {return E_NOTIMPL;}
-    STDMETHOD(RemoveMenusSB)(HMENU hmenuShared) {return E_NOTIMPL;}
-    STDMETHOD(SetStatusTextSB)(LPCOLESTR lpszStatusText) {return E_NOTIMPL;}
-    STDMETHOD(EnableModelessSB)(BOOL fEnable) {return E_NOTIMPL;}
-	STDMETHOD(BrowseObject)(LPCITEMIDLIST pidl, UINT wFlags) {return E_NOTIMPL;}
-	STDMETHOD(GetViewStateStream)(DWORD grfMode, LPSTREAM* ppStrm) {return E_NOTIMPL;}
-	STDMETHOD(OnViewWindowActive)(IShellView* ppshv) {return E_NOTIMPL;}
-	STDMETHOD(SetToolbarItems)(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags) {return E_NOTIMPL;}
-	STDMETHOD(TranslateAcceleratorSB)(LPMSG lpmsg, WORD wID) {return S_OK;}
+    virtual HRESULT STDMETHODCALLTYPE InsertMenusSB(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths) {return E_NOTIMPL;}
+    virtual HRESULT STDMETHODCALLTYPE SetMenuSB(HMENU hmenuShared, HOLEMENU holemenuReserved, HWND hwndActiveObject) {return E_NOTIMPL;}
+    virtual HRESULT STDMETHODCALLTYPE RemoveMenusSB(HMENU hmenuShared) {return E_NOTIMPL;}
+    virtual HRESULT STDMETHODCALLTYPE SetStatusTextSB(LPCOLESTR lpszStatusText) {return E_NOTIMPL;}
+    virtual HRESULT STDMETHODCALLTYPE EnableModelessSB(BOOL fEnable) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE BrowseObject(LPCITEMIDLIST pidl, UINT wFlags) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE GetViewStateStream(DWORD grfMode, LPSTREAM* ppStrm) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE OnViewWindowActive(IShellView* ppshv) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE SetToolbarItems(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags) {return E_NOTIMPL;}
+	virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorSB(LPMSG lpmsg, WORD wID) {return S_OK;}
 
 protected:
 	DWORD	_dwRef;

@@ -26,6 +26,7 @@
  //
 
 
+ /// information structure for creation of FileChildWindow
 struct FileChildWndInfo
 {
 	FileChildWndInfo(LPCTSTR path);
@@ -46,6 +47,7 @@ struct ShellChildWndInfo : public FileChildWndInfo
 };
 
 
+ /// MDI child window displaying file lists
 struct FileChildWindow : public ChildWindow
 {
 	typedef ChildWindow super;

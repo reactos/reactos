@@ -46,25 +46,25 @@ struct DesktopWindow : public Window, public IShellBrowserImpl
 
 	static HWND Create();
 
-	STDMETHOD(GetWindow)(HWND* lphwnd)
+	virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND* lphwnd)
 	{
 		*lphwnd = _hwnd;
 		return S_OK;
 	}
 
-	STDMETHOD(QueryActiveShellView)(IShellView** ppshv)
+	virtual HRESULT STDMETHODCALLTYPE QueryActiveShellView(IShellView** ppshv)
 	{
 		_pShellView->AddRef();
 		*ppshv = _pShellView;
 		return S_OK;
 	}
 
-	STDMETHOD(GetControlWindow)(UINT id, HWND* lphwnd)
+	virtual HRESULT STDMETHODCALLTYPE GetControlWindow(UINT id, HWND* lphwnd)
 	{
 		return E_NOTIMPL;
 	}
 
-	STDMETHOD(SendControlMsg)(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pret)
+	virtual HRESULT STDMETHODCALLTYPE SendControlMsg(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pret)
 	{
 		return E_NOTIMPL;
 	}

@@ -22,6 +22,7 @@ struct DataStorage {
 typedef vector<DataStorage> StorageArray;
 
 
+ /// implementation of IEnumFORMATETC interface
 class EnumFormatEtcImpl : public IEnumFORMATETC
 {
    private:
@@ -35,18 +36,18 @@ class EnumFormatEtcImpl : public IEnumFORMATETC
 	 virtual ~EnumFormatEtcImpl() {}
 
      //IUnknown members
-     STDMETHOD(QueryInterface)(REFIID, void**);
-     STDMETHOD_(ULONG, AddRef)(void);
-     STDMETHOD_(ULONG, Release)(void);
+     virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);
+     virtual ULONG STDMETHODCALLTYPE AddRef(void);
+     virtual ULONG STDMETHODCALLTYPE Release(void);
 
      //IEnumFORMATETC members
-     STDMETHOD(Next)(ULONG, LPFORMATETC, ULONG*);
-     STDMETHOD(Skip)(ULONG);
-     STDMETHOD(Reset)(void);
-     STDMETHOD(Clone)(IEnumFORMATETC**);
+     virtual HRESULT STDMETHODCALLTYPE Next(ULONG, LPFORMATETC, ULONG*);
+     virtual HRESULT STDMETHODCALLTYPE Skip(ULONG);
+     virtual HRESULT STDMETHODCALLTYPE Reset(void);
+     virtual HRESULT STDMETHODCALLTYPE Clone(IEnumFORMATETC**);
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////
+ /// implementation of IDropSource interface
 class IDropSourceImpl : public IDropSource
 {
 	long m_cRefCount;
@@ -71,7 +72,7 @@ public:
         /* [in] */ DWORD dwEffect);
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////
+ /// implementation of IDataObject interface
 class IDataObjectImpl : public IDataObject//,public IAsyncOperation
 {
 	IDropSourceImpl* m_pDropSource;
@@ -163,7 +164,7 @@ public:
 	//}*/
 };
 
-///////////////////////////////////////////////////////////////////////////////////////////////
+ /// implementation of IDropTarget interface
 class IDropTargetImpl : public IDropTarget
 {
 	DWORD m_cRefCount;
