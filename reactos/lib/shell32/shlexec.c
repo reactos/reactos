@@ -91,7 +91,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
     WCHAR   tmpEnvBuff[MAX_PATH];
     WCHAR*  tmpE = tmpEnvBuff;
     DWORD   envRet;
-    static const WCHAR wszSPerc[] = {'%','s','%','%',0};
+    static const WCHAR wszSPerc[] = {'%','s',0};
     static const WCHAR wszPerc[] = {'%',0};
 
     TRACE("%p, %d, %s, %s, %p, %p\n", out, len, debugstr_w(fmt),
