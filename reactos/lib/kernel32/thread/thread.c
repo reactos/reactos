@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.31 2002/10/25 22:59:55 chorns Exp $
+/* $Id: thread.c,v 1.32 2002/12/02 21:28:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,44 +27,45 @@ static VOID ThreadAttachDlls (VOID);
 
 /* FUNCTIONS *****************************************************************/
 
-static
-EXCEPTION_DISPOSITION
-__cdecl
-_except_handler(
-    struct _EXCEPTION_RECORD *ExceptionRecord,
-    void * EstablisherFrame,
-    struct _CONTEXT *ContextRecord,
-    void * DispatcherContext )
+static EXCEPTION_DISPOSITION __cdecl
+_except_handler(struct _EXCEPTION_RECORD *ExceptionRecord,
+		void * EstablisherFrame,
+		struct _CONTEXT *ContextRecord,
+		void * DispatcherContext)
 {
-	ExitThread(0);
+  ExitThread(0);
 
-	/* We should not get to here */
-	return ExceptionContinueSearch;
+  /* We should not get to here */
+  return(ExceptionContinueSearch);
 }
+
 
 static VOID STDCALL
-ThreadStartup (LPTHREAD_START_ROUTINE lpStartAddress,
-               LPVOID lpParameter)
+ThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
+	      LPVOID lpParameter)
 {
-   UINT uExitCode;
+  UINT uExitCode;
 
-   __try1(_except_handler)
-   {
-		/* FIXME: notify csrss of thread creation ?? */
-		uExitCode = (lpStartAddress)(lpParameter);
-   } __except1
-   {
-   }
+  __try1(_except_handler)
+  {
+    /* FIXME: notify csrss of thread creation ?? */
+    uExitCode = (lpStartAddress)(lpParameter);
+  }
+  __except1
+  {
+  }
 
-   ExitThread(uExitCode);
+  ExitThread(uExitCode);
 }
 
-HANDLE STDCALL CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
-			    DWORD dwStackSize,
-			    LPTHREAD_START_ROUTINE lpStartAddress,
-			    LPVOID lpParameter,
-			    DWORD dwCreationFlags,
-			    LPDWORD lpThreadId)
+
+HANDLE STDCALL
+CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	     DWORD dwStackSize,
+	     LPTHREAD_START_ROUTINE lpStartAddress,
+	     LPVOID lpParameter,
+	     DWORD dwCreationFlags,
+	     LPDWORD lpThreadId)
 {
    return(CreateRemoteThread(NtCurrentProcess(),
 			     lpThreadAttributes,
@@ -75,41 +76,43 @@ HANDLE STDCALL CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
 			     lpThreadId));
 }
 
-HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
-				  LPSECURITY_ATTRIBUTES lpThreadAttributes,
-				  DWORD dwStackSize,
-				  LPTHREAD_START_ROUTINE lpStartAddress,
-				  LPVOID lpParameter,
-				  DWORD dwCreationFlags,
-				  LPDWORD lpThreadId)
+
+HANDLE STDCALL
+CreateRemoteThread(HANDLE hProcess,
+		   LPSECURITY_ATTRIBUTES lpThreadAttributes,
+		   DWORD dwStackSize,
+		   LPTHREAD_START_ROUTINE lpStartAddress,
+		   LPVOID lpParameter,
+		   DWORD dwCreationFlags,
+		   LPDWORD lpThreadId)
 {
-   HANDLE ThreadHandle;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   CLIENT_ID ClientId;
-   CONTEXT ThreadContext;
-   INITIAL_TEB InitialTeb;
-   BOOLEAN CreateSuspended = FALSE;
-   PVOID BaseAddress;
-   ULONG OldPageProtection;
-   NTSTATUS Status;
-   
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = NULL;
-   ObjectAttributes.Attributes = 0;
-   if (lpThreadAttributes != NULL) 
-     {
-	if (lpThreadAttributes->bInheritHandle)
-	  ObjectAttributes.Attributes = OBJ_INHERIT;
-	ObjectAttributes.SecurityDescriptor = 
-	  lpThreadAttributes->lpSecurityDescriptor;
-     }
-   ObjectAttributes.SecurityQualityOfService = NULL;
-   
-   if ((dwCreationFlags & CREATE_SUSPENDED) == CREATE_SUSPENDED)
-     CreateSuspended = TRUE;
-   else
-     CreateSuspended = FALSE;
+  HANDLE ThreadHandle;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  CLIENT_ID ClientId;
+  CONTEXT ThreadContext;
+  INITIAL_TEB InitialTeb;
+  BOOLEAN CreateSuspended = FALSE;
+  PVOID BaseAddress;
+  ULONG OldPageProtection;
+  NTSTATUS Status;
+
+  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+  ObjectAttributes.RootDirectory = NULL;
+  ObjectAttributes.ObjectName = NULL;
+  ObjectAttributes.Attributes = 0;
+  if (lpThreadAttributes != NULL)
+    {
+      if (lpThreadAttributes->bInheritHandle)
+	ObjectAttributes.Attributes = OBJ_INHERIT;
+      ObjectAttributes.SecurityDescriptor = 
+	lpThreadAttributes->lpSecurityDescriptor;
+    }
+  ObjectAttributes.SecurityQualityOfService = NULL;
+
+  if ((dwCreationFlags & CREATE_SUSPENDED) == CREATE_SUSPENDED)
+    CreateSuspended = TRUE;
+  else
+    CreateSuspended = FALSE;
 
   InitialTeb.StackReserve = 0x100000; /* 1MByte */
   /* FIXME: use correct commit size */
@@ -233,25 +236,29 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
   return(ThreadHandle);
 }
 
+
 PTEB
 GetTeb(VOID)
 {
   return(NtCurrentTeb());
 }
 
+
 WINBOOL STDCALL
 SwitchToThread(VOID)
 {
-   NTSTATUS errCode;
-   errCode = NtYieldExecution();
-   return TRUE;
+  NTSTATUS errCode;
+  errCode = NtYieldExecution();
+  return TRUE;
 }
 
+
 DWORD STDCALL
-GetCurrentThreadId()
+GetCurrentThreadId(VOID)
 {
-   return((DWORD)(NtCurrentTeb()->Cid).UniqueThread);
+  return((DWORD)(NtCurrentTeb()->Cid).UniqueThread);
 }
+
 
 VOID STDCALL
 ExitThread(DWORD uExitCode)
@@ -286,11 +293,13 @@ ExitThread(DWORD uExitCode)
      }
 }
 
-WINBOOL STDCALL GetThreadTimes(HANDLE hThread,
-			       LPFILETIME lpCreationTime,
-			       LPFILETIME lpExitTime,
-			       LPFILETIME lpKernelTime,
-			       LPFILETIME lpUserTime)
+
+WINBOOL STDCALL
+GetThreadTimes(HANDLE hThread,
+	       LPFILETIME lpCreationTime,
+	       LPFILETIME lpExitTime,
+	       LPFILETIME lpKernelTime,
+	       LPFILETIME lpUserTime)
 {
    NTSTATUS errCode;
    KERNEL_USER_TIMES KernelUserTimes;
@@ -314,163 +323,214 @@ WINBOOL STDCALL GetThreadTimes(HANDLE hThread,
 }
 
 
-WINBOOL STDCALL GetThreadContext(HANDLE hThread,
-				 LPCONTEXT lpContext)
+WINBOOL STDCALL
+GetThreadContext(HANDLE hThread,
+		 LPCONTEXT lpContext)
 {
-   NTSTATUS errCode;
-   
-   errCode = NtGetContextThread(hThread,
-				lpContext);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-   return TRUE;
-}
+  NTSTATUS Status;
 
-WINBOOL STDCALL SetThreadContext(HANDLE hThread,
-				 CONST CONTEXT *lpContext)
-{
-   NTSTATUS errCode;
-   
-   errCode = NtSetContextThread(hThread,
-				(void *)lpContext);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-   return TRUE;
-}
+  Status = NtGetContextThread(hThread,
+			      lpContext);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
 
-WINBOOL STDCALL GetExitCodeThread(HANDLE hThread,
-				  LPDWORD lpExitCode)
-{
-   NTSTATUS errCode;
-   THREAD_BASIC_INFORMATION ThreadBasic;
-   ULONG DataWritten;
-   
-   errCode = NtQueryInformationThread(hThread,
-				      ThreadBasicInformation,
-				      &ThreadBasic,
-				      sizeof(THREAD_BASIC_INFORMATION),
-				      &DataWritten);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-   memcpy(lpExitCode, &ThreadBasic.ExitStatus, sizeof(DWORD));
-   return TRUE;
-}
-
-DWORD STDCALL ResumeThread(HANDLE hThread)
-{
-   NTSTATUS errCode;
-   ULONG PreviousResumeCount;
-   
-   errCode = NtResumeThread(hThread,
-			    &PreviousResumeCount);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return  -1;
-     }
-   return PreviousResumeCount;
+  return(TRUE);
 }
 
 
 WINBOOL STDCALL
-TerminateThread (HANDLE	hThread,
-		 DWORD	dwExitCode)
+SetThreadContext(HANDLE hThread,
+		 CONST CONTEXT *lpContext)
 {
-    if (0 == hThread)
+  NTSTATUS Status;
+
+  Status = NtSetContextThread(hThread,
+			      (void *)lpContext);
+  if (!NT_SUCCESS(Status))
     {
-        SetLastError (ERROR_INVALID_HANDLE);
+      SetLastErrorByStatus(Status);
+      return(FALSE);
     }
-    else
-    {
-        NTSTATUS Status = NtTerminateThread (hThread, dwExitCode);
-	
-        if (NT_SUCCESS(Status))
-	{
-            return TRUE;
-        }
-        SetLastErrorByStatus (Status);
-    }
-    return FALSE;
+
+  return(TRUE);
 }
 
 
-DWORD STDCALL SuspendThread(HANDLE hThread)
+WINBOOL STDCALL
+GetExitCodeThread(HANDLE hThread,
+		  LPDWORD lpExitCode)
 {
-   NTSTATUS errCode;
-   ULONG PreviousSuspendCount;
-   
-   errCode = NtSuspendThread(hThread,
-			     &PreviousSuspendCount);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return -1;
-     }
-   return PreviousSuspendCount;
-}
+  THREAD_BASIC_INFORMATION ThreadBasic;
+  ULONG DataWritten;
+  NTSTATUS Status;
 
-DWORD STDCALL SetThreadAffinityMask(HANDLE hThread,
-				    DWORD dwThreadAffinityMask)
-{
-   return 0;
-}
-
-WINBOOL STDCALL SetThreadPriority(HANDLE hThread,
-				  int nPriority)
-{
-   NTSTATUS errCode;
-   THREAD_BASIC_INFORMATION ThreadBasic;
-   ULONG DataWritten;
-   
-   errCode = NtQueryInformationThread(hThread,
-				      ThreadBasicInformation,
-				      &ThreadBasic,
-				      sizeof(THREAD_BASIC_INFORMATION),
-				      &DataWritten);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-   ThreadBasic.BasePriority = nPriority;
-   errCode = NtSetInformationThread(hThread,
+  Status = NtQueryInformationThread(hThread,
 				    ThreadBasicInformation,
 				    &ThreadBasic,
-				    sizeof(THREAD_BASIC_INFORMATION));
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-   return TRUE;
+				    sizeof(THREAD_BASIC_INFORMATION),
+				    &DataWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  memcpy(lpExitCode, &ThreadBasic.ExitStatus, sizeof(DWORD));
+
+  return(TRUE);
 }
 
-int STDCALL GetThreadPriority(HANDLE hThread)
+
+DWORD STDCALL
+ResumeThread(HANDLE hThread)
 {
-   NTSTATUS errCode;
-   THREAD_BASIC_INFORMATION ThreadBasic;
-   ULONG DataWritten;
-   
-   errCode = NtQueryInformationThread(hThread,
-				      ThreadBasicInformation,
-				      &ThreadBasic,
-				      sizeof(THREAD_BASIC_INFORMATION),
-				      &DataWritten);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return THREAD_PRIORITY_ERROR_RETURN;
-     }
-   return ThreadBasic.BasePriority;
+  ULONG PreviousResumeCount;
+  NTSTATUS Status;
+
+  Status = NtResumeThread(hThread,
+			  &PreviousResumeCount);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(-1);
+    }
+
+  return(PreviousResumeCount);
+}
+
+
+WINBOOL STDCALL
+TerminateThread(HANDLE hThread,
+		DWORD dwExitCode)
+{
+  NTSTATUS Status;
+
+  if (0 == hThread)
+    {
+      SetLastError(ERROR_INVALID_HANDLE);
+      return(FALSE);
+    }
+
+  Status = NtTerminateThread(hThread,
+			     dwExitCode);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  return(TRUE);
+}
+
+
+DWORD STDCALL
+SuspendThread(HANDLE hThread)
+{
+  ULONG PreviousSuspendCount;
+  NTSTATUS Status;
+
+  Status = NtSuspendThread(hThread,
+			   &PreviousSuspendCount);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(-1);
+    }
+
+  return(PreviousSuspendCount);
+}
+
+
+DWORD STDCALL
+SetThreadAffinityMask(HANDLE hThread,
+		      DWORD dwThreadAffinityMask)
+{
+  THREAD_BASIC_INFORMATION ThreadBasic;
+  KAFFINITY AffinityMask;
+  ULONG DataWritten;
+  NTSTATUS Status;
+
+  AffinityMask = (KAFFINITY)dwThreadAffinityMask;
+
+  Status = NtQueryInformationThread(hThread,
+				    ThreadBasicInformation,
+				    &ThreadBasic,
+				    sizeof(THREAD_BASIC_INFORMATION),
+				    &DataWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(0);
+    }
+
+  Status = NtSetInformationThread(hThread,
+				  ThreadAffinityMask,
+				  &AffinityMask,
+				  sizeof(KAFFINITY));
+  if (!NT_SUCCESS(Status))
+    SetLastErrorByStatus(Status);
+
+  return(ThreadBasic.AffinityMask);
+}
+
+
+WINBOOL STDCALL
+SetThreadPriority(HANDLE hThread,
+		  int nPriority)
+{
+  THREAD_BASIC_INFORMATION ThreadBasic;
+  ULONG DataWritten;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationThread(hThread,
+				    ThreadBasicInformation,
+				    &ThreadBasic,
+				    sizeof(THREAD_BASIC_INFORMATION),
+				    &DataWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  ThreadBasic.BasePriority = nPriority;
+
+  Status = NtSetInformationThread(hThread,
+				  ThreadBasicInformation,
+				  &ThreadBasic,
+				  sizeof(THREAD_BASIC_INFORMATION));
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  return(TRUE);
+}
+
+
+int STDCALL
+GetThreadPriority(HANDLE hThread)
+{
+  THREAD_BASIC_INFORMATION ThreadBasic;
+  ULONG DataWritten;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationThread(hThread,
+				    ThreadBasicInformation,
+				    &ThreadBasic,
+				    sizeof(THREAD_BASIC_INFORMATION),
+				    &DataWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(THREAD_PRIORITY_ERROR_RETURN);
+    }
+
+  return(ThreadBasic.BasePriority);
 }
 
 /* EOF */
