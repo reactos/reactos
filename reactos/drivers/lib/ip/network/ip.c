@@ -152,6 +152,10 @@ VOID IPDispatchProtocol(
 
     /* Call the appropriate protocol handler */
     (*ProtocolTable[Protocol])(Interface, IPPacket);
+    /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
+     * must be handled here. */
+    if( Protocol == IPPROTO_ICMP ) 
+        ICMPReceive( Interface, IPPacket );
 }
 
 
@@ -400,9 +404,6 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
        to the default protocol handler */
     for (i = 0; i < IP_PROTOCOL_TABLE_SIZE; i++)
         IPRegisterProtocol(i, DefaultProtocolHandler);
-
-    /* Register network level protocol receive handlers */
-    IPRegisterProtocol(IPPROTO_ICMP, ICMPReceive);
 
     /* Initialize NTE list and protecting lock */
     InitializeListHead(&NetTableListHead);
