@@ -170,7 +170,7 @@ typedef struct
 #define EDIT_NOTIFY_PARENT(es, wNotifyCode, str) \
 	do \
 	{ /* Notify parent which has created this edit control */ \
-	    DbgPrint("notification " str " sent to hwnd=%p\n", es->hwndParent); \
+	    DbgPrint("[edit]notification " str " sent to hwnd=%p\n", es->hwndParent); \
 	    SendMessageW(es->hwndParent, WM_COMMAND, \
 		     MAKEWPARAM(GetWindowLongW((es->hwndSelf),GWL_ID), wNotifyCode), \
 		     (LPARAM)(es->hwndSelf)); \
@@ -324,8 +324,12 @@ static inline BOOL EDIT_EM_CanUndo(EDITSTATE *es)
  */
 static inline void EDIT_EM_EmptyUndoBuffer(EDITSTATE *es)
 {
+    DbgPrint("[edit] EDIT_EM_EmptyUndoBuffer\n");
 	es->undo_insert_count = 0;
-	*es->undo_text = '\0';
+    if (es->undo_text)
+    {
+	    *(es->undo_text) = '\0';
+    }
 }
 
 
@@ -434,7 +438,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongW( hwnd, 0 );
 	LRESULT result = 0;
 
-        DbgPrint("hwnd=%p msg=%x wparam=%x lparam=%lx\n", hwnd, msg, wParam, lParam);
+        DbgPrint("[edit]hwnd=%p msg=%x wparam=%x lparam=%lx\n", hwnd, msg, wParam, lParam);
 	
 	if (!es && msg != WM_NCCREATE)
 		return DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
@@ -527,7 +531,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 	case 0x00c3:
 	case WM_USER+26:
 	case 0x00ca:
-		DbgPrint("undocumented message 0x%x, please report\n", msg);
+		DbgPrint("[edit]undocumented message 0x%x, please report\n", msg);
 		result = DefWindowProcW(hwnd, msg, wParam, lParam);
 		break;
 		
@@ -880,7 +884,7 @@ static LRESULT CALLBACK EditWndProc_common( HWND hwnd, UINT msg,
 		break;
 
         case WM_MOUSEWHEEL:
-		DbgPrint("Double plus ungood - WM_MOUSEWHELL support broken in ReactOS\n");
+		DbgPrint("[edit]Double plus ungood - WM_MOUSEWHELL support broken in ReactOS\n");
                 //{
                 //    int gcWheelDelta = 0;
                 //    UINT pulScrollLines = 3;
@@ -1229,7 +1233,6 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 	    {
 		EDITWORDBREAKPROCW wbpW = (EDITWORDBREAKPROCW)es->word_break_proc;
 
-		DbgPrint("(UNICODE wordbrk=%p,str=%s,idx=%d,cnt=%d,act=%d)\n");
 		ret = wbpW(es->text + start, index, count, action);
 	    }
 	    else
@@ -1241,7 +1244,7 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 		countA = WideCharToMultiByte(CP_ACP, 0, es->text + start, count, NULL, 0, NULL, NULL);
 		textA = HeapAlloc(GetProcessHeap(), 0, countA);
 		WideCharToMultiByte(CP_ACP, 0, es->text + start, count, textA, countA, NULL, NULL);
-		DbgPrint("(ANSI wordbrk=%p,str=%s,idx=%d,cnt=%d,act=%d)\n",
+		DbgPrint("[edit](ANSI wordbrk=%p,str=%s,idx=%d,cnt=%d,act=%d)\n",
 			es->word_break_proc, textA, countA, index, countA, action);
 		ret = wbpA(textA, index, countA, action);
 		HeapFree(GetProcessHeap(), 0, textA);
@@ -1458,17 +1461,17 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 	    {
 		HLOCAL hloc32W_new;
 		UINT countW_new = MultiByteToWideChar(CP_ACP, 0, textA, countA, NULL, 0);
-		DbgPrint("%d bytes translated to %d WCHARs\n", countA, countW_new);
+		DbgPrint("[edit]%d bytes translated to %d WCHARs\n", countA, countW_new);
 		if(countW_new > es->buffer_size + 1)
 		{
 		    UINT alloc_size = ROUND_TO_GROW(countW_new * sizeof(WCHAR));
-		    DbgPrint("Resizing 32-bit UNICODE buffer from %d+1 to %d WCHARs\n", es->buffer_size, countW_new);
+		    DbgPrint("[edit]Resizing 32-bit UNICODE buffer from %d+1 to %d WCHARs\n", es->buffer_size, countW_new);
 		    hloc32W_new = LocalReAlloc(es->hloc32W, alloc_size, LMEM_MOVEABLE | LMEM_ZEROINIT);
 		    if(hloc32W_new)
 		    {
 			es->hloc32W = hloc32W_new;
 			es->buffer_size = LocalSize(hloc32W_new)/sizeof(WCHAR) - 1;
-			DbgPrint("Real new size %d+1 WCHARs\n", es->buffer_size);
+			DbgPrint("[edit]Real new size %d+1 WCHARs\n", es->buffer_size);
 		    }
 		    else
 			OutputDebugStringA("FAILED! Will synchronize partially\n");
@@ -1620,7 +1623,7 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size, BOOL honor_limit)
 	if (size <= es->buffer_size)
 		return TRUE;
 
-	DbgPrint("trying to ReAlloc to %d+1 characters\n", size);
+	DbgPrint("[edit]trying to ReAlloc to %d+1 characters\n", size);
 
 	/* Force edit to unlock it's buffer. es->text now NULL */
 	EDIT_UnlockBuffer(es, TRUE);
@@ -1628,7 +1631,7 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size, BOOL honor_limit)
 	if (es->hloc32W) {
 	    UINT alloc_size = ROUND_TO_GROW((size + 1) * sizeof(WCHAR));
 	    if ((hNew32W = LocalReAlloc(es->hloc32W, alloc_size, LMEM_MOVEABLE | LMEM_ZEROINIT))) {
-		DbgPrint("Old 32 bit handle %p, new handle %p\n", es->hloc32W, hNew32W);
+		DbgPrint("[edit]Old 32 bit handle %p, new handle %p\n", es->hloc32W, hNew32W);
 		es->hloc32W = hNew32W;
 		es->buffer_size = LocalSize(hNew32W)/sizeof(WCHAR) - 1;
 	    }
@@ -1637,11 +1640,11 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size, BOOL honor_limit)
 	EDIT_LockBuffer(es);
 
 	if (es->buffer_size < size) {
-		DbgPrint("FAILED !  We now have %d+1\n", es->buffer_size);
+		DbgPrint("[edit]FAILED !  We now have %d+1\n", es->buffer_size);
 		EDIT_NOTIFY_PARENT(es, EN_ERRSPACE, "EN_ERRSPACE");
 		return FALSE;
 	} else {
-		DbgPrint("We now have %d+1\n", es->buffer_size);
+		DbgPrint("[edit]We now have %d+1\n", es->buffer_size);
 		return TRUE;
 	}
 }
@@ -1657,11 +1660,11 @@ static BOOL EDIT_MakeFit(EDITSTATE *es, UINT size, BOOL honor_limit)
 static BOOL EDIT_MakeUndoFit(EDITSTATE *es, UINT size)
 {
 	UINT alloc_size;
-
+    DbgPrint("[edit] EDIT_MakeUndoFit\n");
 	if (size <= es->undo_buffer_size)
 		return TRUE;
 
-	DbgPrint("trying to ReAlloc to %d+1\n", size);
+	DbgPrint("[edit]trying to ReAlloc to %d+1\n", size);
 
 	alloc_size = ROUND_TO_GROW((size + 1) * sizeof(WCHAR));
 	if ((es->undo_text = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, es->undo_text, alloc_size))) {
@@ -1670,7 +1673,7 @@ static BOOL EDIT_MakeUndoFit(EDITSTATE *es, UINT size)
 	}
 	else
 	{
-		DbgPrint("FAILED !  We now have %d+1\n", es->undo_buffer_size);
+		DbgPrint("[edit]FAILED !  We now have %d+1\n", es->undo_buffer_size);
 		return FALSE;
 	}
 }
@@ -1957,7 +1960,7 @@ static void EDIT_PaintLine(EDITSTATE *es, HDC dc, INT line, BOOL rev)
 	} else if (line)
 		return;
 
-	DbgPrint("line=%d\n", line);
+	DbgPrint("[edit]line=%d\n", line);
 
 	pos = EDIT_EM_PosFromChar(es, EDIT_EM_LineIndex(es, line), FALSE);
 	x = SLOWORD(pos);
@@ -2098,68 +2101,71 @@ static void EDIT_SetRectNP(EDITSTATE *es, LPRECT rc)
  */
 static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 {
-	//HINSTANCE16 hInstance = GetWindowLongW( es->hwndSelf, GWL_HINSTANCE );
+    //HINSTANCE16 hInstance = GetWindowLongW( es->hwndSelf, GWL_HINSTANCE );
+    DbgPrint("[edit] in EDIT_UnlockBuffer\n");
+    /* Edit window might be already destroyed */
+    if(!IsWindow(es->hwndSelf))
+    {
+        DbgPrint("[edit]edit hwnd %p already destroyed\n", es->hwndSelf);
+        return;
+    }
 
-	/* Edit window might be already destroyed */
-	if(!IsWindow(es->hwndSelf))
-	{
-	    DbgPrint("edit hwnd %p already destroyed\n", es->hwndSelf);
-	    return;
-    	}
+    if (!es->lock_count) {
+        OutputDebugStringA("lock_count == 0 ... please report\n");
+        return;
+    }
+    if (!es->text) {
+        OutputDebugStringA("es->text == 0 ... please report\n");
+        return;
+    }
 
-	if (!es->lock_count) {
-		OutputDebugStringA("lock_count == 0 ... please report\n");
-		return;
-	}
-	if (!es->text) {
-		OutputDebugStringA("es->text == 0 ... please report\n");
-		return;
-	}
+    if (force || (es->lock_count == 1)) 
+    {
+        if (es->hloc32W) {
+            CHAR *textA = NULL;
+            UINT countA = 0;
+            UINT countW = strlenW(es->text) + 1;
 
-	if (force || (es->lock_count == 1)) {
-	    if (es->hloc32W) {
-		CHAR *textA = NULL;
-		UINT countA = 0;
-		UINT countW = strlenW(es->text) + 1;
+            if(es->hloc32A)
+            {
+                UINT countA_new = WideCharToMultiByte(CP_ACP, 0, es->text, countW, NULL, 0, NULL, NULL);
+                OutputDebugStringA("Synchronizing with 32-bit ANSI buffer\n");
 
-		if(es->hloc32A)
-		{
-		    UINT countA_new = WideCharToMultiByte(CP_ACP, 0, es->text, countW, NULL, 0, NULL, NULL);
-		    OutputDebugStringA("Synchronizing with 32-bit ANSI buffer\n");
-		    DbgPrint("%d WCHARs translated to %d bytes\n", countW, countA_new);
-		    countA = LocalSize(es->hloc32A);
-		    if(countA_new > countA)
-		    {
-			HLOCAL hloc32A_new;
-			UINT alloc_size = ROUND_TO_GROW(countA_new);
-			DbgPrint("Resizing 32-bit ANSI buffer from %d to %d bytes\n", countA, alloc_size);
-			hloc32A_new = LocalReAlloc(es->hloc32A, alloc_size, LMEM_MOVEABLE | LMEM_ZEROINIT);
-			if(hloc32A_new)
-			{
-			    es->hloc32A = hloc32A_new;
-			    countA = LocalSize(hloc32A_new);
-			    DbgPrint("Real new size %d bytes\n", countA);
-			}
-			else
-			    OutputDebugStringA("FAILED! Will synchronize partially\n");
-		    }
-		    textA = LocalLock(es->hloc32A);
-		}
-		if(textA)
-		{
-		    WideCharToMultiByte(CP_ACP, 0, es->text, countW, textA, countA, NULL, NULL);
-		    LocalUnlock(es->hloc32A);
-		}
+                DbgPrint("[edit]%d WCHARs translated to %d bytes\n", countW, countA_new);
 
-		LocalUnlock(es->hloc32W);
-		es->text = NULL;
-	    }
-	    else {
-		OutputDebugStringA("no buffer ... please report\n");
-		return;
-	    }
-	}
-	es->lock_count--;
+                countA = LocalSize(es->hloc32A);
+                if(countA_new > countA)
+                {
+                    HLOCAL hloc32A_new;
+                    UINT alloc_size = ROUND_TO_GROW(countA_new);
+                    DbgPrint("[edit]Resizing 32-bit ANSI buffer from %d to %d bytes\n", countA, alloc_size);
+                    hloc32A_new = LocalReAlloc(es->hloc32A, alloc_size, LMEM_MOVEABLE | LMEM_ZEROINIT);
+                    if(hloc32A_new)
+                    {
+                        es->hloc32A = hloc32A_new;
+                        countA = LocalSize(hloc32A_new);
+                        DbgPrint("[edit]Real new size %d bytes\n", countA);
+                    }
+                    else
+                        OutputDebugStringA("FAILED! Will synchronize partially\n");
+                }
+                textA = LocalLock(es->hloc32A);
+            }
+            if(textA)
+            {
+                WideCharToMultiByte(CP_ACP, 0, es->text, countW, textA, countA, NULL, NULL);
+                LocalUnlock(es->hloc32A);
+            }
+            LocalUnlock(es->hloc32W);
+            es->text = NULL;
+        }
+        else 
+        {
+            OutputDebugStringA("no buffer ... please report\n");
+            return;
+        }
+    }
+    es->lock_count--;
 }
 
 
@@ -2170,6 +2176,7 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
  */
 static void EDIT_UpdateScrollInfo(EDITSTATE *es)
 {
+    DbgPrint("[edit] EDIT_UpdateScrollInfo\n");
     if ((es->style & WS_VSCROLL) && !(es->flags & EF_VSCROLL_TRACK))
     {
 	SCROLLINFO si;
@@ -2179,7 +2186,7 @@ static void EDIT_UpdateScrollInfo(EDITSTATE *es)
 	si.nMax		= es->line_count - 1;
 	si.nPage	= (es->format_rect.bottom - es->format_rect.top) / es->line_height;
 	si.nPos		= es->y_offset;
-	DbgPrint("SB_VERT, nMin=%d, nMax=%d, nPage=%d, nPos=%d\n",
+	DbgPrint("[edit]SB_VERT, nMin=%d, nMax=%d, nPage=%d, nPos=%d\n",
 		si.nMin, si.nMax, si.nPage, si.nPos);
 	SetScrollInfo(es->hwndSelf, SB_VERT, &si, TRUE);
     }
@@ -2193,7 +2200,7 @@ static void EDIT_UpdateScrollInfo(EDITSTATE *es)
 	si.nMax		= es->text_width - 1;
 	si.nPage	= es->format_rect.right - es->format_rect.left;
 	si.nPos		= es->x_offset;
-	DbgPrint("SB_HORZ, nMin=%d, nMax=%d, nPage=%d, nPos=%d\n",
+	DbgPrint("[edit]SB_HORZ, nMin=%d, nMax=%d, nPage=%d, nPos=%d\n",
 		si.nMin, si.nMax, si.nPage, si.nPos);
 	SetScrollInfo(es->hwndSelf, SB_HORZ, &si, TRUE);
     }
@@ -2214,7 +2221,7 @@ static INT CALLBACK EDIT_WordBreakProc(LPWSTR s, INT index, INT count, INT actio
 {
 	INT ret = 0;
 
-	DbgPrint("s=%p, index=%d, count=%d, action=%d\n", s, index, count, action);
+	DbgPrint("[edit]s=%p, index=%d, count=%d, action=%d\n", s, index, count, action);
 
 	if(!s) return 0;
 
@@ -2342,12 +2349,12 @@ static HLOCAL EDIT_EM_GetHandle(EDITSTATE *es)
 	    {
 		CHAR *textA;
 		UINT countA, alloc_size;
-		DbgPrint("Allocating 32-bit ANSI alias buffer\n");
+		DbgPrint("[edit]Allocating 32-bit ANSI alias buffer\n");
 		countA = WideCharToMultiByte(CP_ACP, 0, es->text, -1, NULL, 0, NULL, NULL);
 		alloc_size = ROUND_TO_GROW(countA);
 		if(!(es->hloc32A = LocalAlloc(LMEM_MOVEABLE | LMEM_ZEROINIT, alloc_size)))
 		{
-		    DbgPrint("Could not allocate %d bytes for 32-bit ANSI alias buffer\n", alloc_size);
+		    DbgPrint("[edit]Could not allocate %d bytes for 32-bit ANSI alias buffer\n", alloc_size);
 		    return 0;
 		}
 		textA = LocalLock(es->hloc32A);
@@ -2357,7 +2364,7 @@ static HLOCAL EDIT_EM_GetHandle(EDITSTATE *es)
 	    hLocal = es->hloc32A;
 	}
 
-	DbgPrint("Returning %p, LocalSize() = %ld\n", hLocal, LocalSize(hLocal));
+	DbgPrint("[edit]Returning %p, LocalSize() = %ld\n", hLocal, LocalSize(hLocal));
 	return hLocal;
 }
 
@@ -2691,128 +2698,131 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
  */
 static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replace, BOOL send_update, BOOL honor_limit)
 {
-	UINT strl = strlenW(lpsz_replace);
-	UINT tl = strlenW(es->text);
-	UINT utl;
-	UINT s;
-	UINT e;
-	UINT i;
-	LPWSTR p;
-	HRGN hrgn = 0;
+    UINT strl = strlenW(lpsz_replace);
+    UINT tl = strlenW(es->text);
+    UINT utl;
+    UINT s;
+    UINT e;
+    UINT i;
+    LPWSTR p;
+    HRGN hrgn = 0;
 
-	DbgPrint("%s, can_undo %d, send_update %d\n",
-	    can_undo, send_update);
+    DbgPrint("[edit]EDIT_EM_ReplaceSel can_undo %d, send_update %d\n",
+        can_undo, send_update);
 
-	s = es->selection_start;
-	e = es->selection_end;
+    s = es->selection_start;
+    e = es->selection_end;
 
-	if ((s == e) && !strl)
-		return;
+    if ((s == e) && !strl)
+        return;
 
-	ORDER_UINT(s, e);
+    ORDER_UINT(s, e);
 
-	if (!EDIT_MakeFit(es, tl - (e - s) + strl, honor_limit))
-		return;
+    if (!EDIT_MakeFit(es, tl - (e - s) + strl, honor_limit))
+        return;
 
-	if (e != s) {
-		/* there is something to be deleted */
-		OutputDebugStringA("deleting stuff.\n");
-		if (can_undo) {
-			utl = strlenW(es->undo_text);
-			if (!es->undo_insert_count && (*es->undo_text && (s == es->undo_position))) {
-				/* undo-buffer is extended to the right */
-				EDIT_MakeUndoFit(es, utl + e - s);
-				strncpyW(es->undo_text + utl, es->text + s, e - s + 1);
-				(es->undo_text + utl)[e - s] = 0; /* ensure 0 termination */
-			} else if (!es->undo_insert_count && (*es->undo_text && (e == es->undo_position))) {
-				/* undo-buffer is extended to the left */
-				EDIT_MakeUndoFit(es, utl + e - s);
-				for (p = es->undo_text + utl ; p >= es->undo_text ; p--)
-					p[e - s] = p[0];
-				for (i = 0 , p = es->undo_text ; i < e - s ; i++)
-					p[i] = (es->text + s)[i];
-				es->undo_position = s;
-			} else {
-				/* new undo-buffer */
-				EDIT_MakeUndoFit(es, e - s);
-				strncpyW(es->undo_text, es->text + s, e - s + 1);
-				es->undo_text[e - s] = 0; /* ensure 0 termination */
-				es->undo_position = s;
-			}
-			/* any deletion makes the old insertion-undo invalid */
-			es->undo_insert_count = 0;
-		} else
-			EDIT_EM_EmptyUndoBuffer(es);
+    if (e != s) {
+        /* there is something to be deleted */
+        OutputDebugStringA("deleting stuff.\n");
+        if (can_undo) {
+            utl = strlenW(es->undo_text);
+            if (!es->undo_insert_count && (*es->undo_text && (s == es->undo_position))) {
+                /* undo-buffer is extended to the right */
+                EDIT_MakeUndoFit(es, utl + e - s);
+                strncpyW(es->undo_text + utl, es->text + s, e - s + 1);
+                (es->undo_text + utl)[e - s] = 0; /* ensure 0 termination */
+            } else if (!es->undo_insert_count && (*es->undo_text && (e == es->undo_position))) {
+                /* undo-buffer is extended to the left */
+                EDIT_MakeUndoFit(es, utl + e - s);
+                for (p = es->undo_text + utl ; p >= es->undo_text ; p--)
+                    p[e - s] = p[0];
+                for (i = 0 , p = es->undo_text ; i < e - s ; i++)
+                    p[i] = (es->text + s)[i];
+                es->undo_position = s;
+            } else {
+                /* new undo-buffer */
+                EDIT_MakeUndoFit(es, e - s);
+                strncpyW(es->undo_text, es->text + s, e - s + 1);
+                es->undo_text[e - s] = 0; /* ensure 0 termination */
+                es->undo_position = s;
+            }
+            /* any deletion makes the old insertion-undo invalid */
+            es->undo_insert_count = 0;
+        } else
+            EDIT_EM_EmptyUndoBuffer(es);
 
-		/* now delete */
-		strcpyW(es->text + s, es->text + e);
-	}
-	if (strl) {
-		/* there is an insertion */
-		if (can_undo) {
-			if ((s == es->undo_position) ||
-					((es->undo_insert_count) &&
-					(s == es->undo_position + es->undo_insert_count)))
-				/*
-				 * insertion is new and at delete position or
-				 * an extension to either left or right
-				 */
-				es->undo_insert_count += strl;
-			else {
-				/* new insertion undo */
-				es->undo_position = s;
-				es->undo_insert_count = strl;
-				/* new insertion makes old delete-buffer invalid */
-				*es->undo_text = '\0';
-			}
-		} else
-			EDIT_EM_EmptyUndoBuffer(es);
+        /* now delete */
+        strcpyW(es->text + s, es->text + e);
+    }
+    if (strl) {
+        /* there is an insertion */
+        if (can_undo) {
+            if ((s == es->undo_position) ||
+                ((es->undo_insert_count) &&
+                (s == es->undo_position + es->undo_insert_count)))
+            {
+                /*
+                * insertion is new and at delete position or
+                * an extension to either left or right
+                */
+                es->undo_insert_count += strl;
+            }
+            else {
+                /* new insertion undo */
+               
+                es->undo_position = s;
+                es->undo_insert_count = strl;
+                /* new insertion makes old delete-buffer invalid */
+                *es->undo_text = '\0';
+            }
+        } else
+            EDIT_EM_EmptyUndoBuffer(es);
 
-		/* now insert */
-		tl = strlenW(es->text);
-		DbgPrint("inserting stuff (tl %d, strl %d, selstart %d ('%s'), text '%s')\n", tl, strl, s);
-		for (p = es->text + tl ; p >= es->text + s ; p--)
-			p[strl] = p[0];
-		for (i = 0 , p = es->text + s ; i < strl ; i++)
-			p[i] = lpsz_replace[i];
-		if(es->style & ES_UPPERCASE)
-			CharUpperBuffW(p, strl);
-		else if(es->style & ES_LOWERCASE)
-			CharLowerBuffW(p, strl);
-		s += strl;
-	}
-	if (es->style & ES_MULTILINE)
-	{
-		//INT s = min(es->selection_start, es->selection_end);
-		OutputDebugStringA("DoublePlus Ungood - If you are expecting es->style & ES_MULTILINE forget it\n");
-		//hrgn = CreateRectRgn(0, 0, 0, 0);
-		//EDIT_BuildLineDefs_ML(es, s, s + strl,
-		//		strl - abs(es->selection_end - es->selection_start), hrgn);
-	}
-	else
-	    EDIT_CalcLineWidth_SL(es);
+        /* now insert */
+        tl = strlenW(es->text);
+    
+        for (p = es->text + tl ; p >= es->text + s ; p--)
+            p[strl] = p[0];
+        for (i = 0 , p = es->text + s ; i < strl ; i++)
+            p[i] = lpsz_replace[i];
+        if(es->style & ES_UPPERCASE)
+            CharUpperBuffW(p, strl);
+        else if(es->style & ES_LOWERCASE)
+            CharLowerBuffW(p, strl);
+        s += strl;
+    }
+    if (es->style & ES_MULTILINE)
+    {
+        //INT s = min(es->selection_start, es->selection_end);
+        OutputDebugStringA("DoublePlus Ungood - If you are expecting es->style & ES_MULTILINE forget it\n");
+        //hrgn = CreateRectRgn(0, 0, 0, 0);
+        //EDIT_BuildLineDefs_ML(es, s, s + strl,
+        //		strl - abs(es->selection_end - es->selection_start), hrgn);
+    }
+    else
+        EDIT_CalcLineWidth_SL(es);
 
-	EDIT_EM_SetSel(es, s, s, FALSE);
-	es->flags |= EF_MODIFIED;
-	if (send_update) es->flags |= EF_UPDATE;
-	EDIT_EM_ScrollCaret(es);
+    EDIT_EM_SetSel(es, s, s, FALSE);
+    es->flags |= EF_MODIFIED;
+    if (send_update) es->flags |= EF_UPDATE;
+    EDIT_EM_ScrollCaret(es);
 
-	/* force scroll info update */
-	EDIT_UpdateScrollInfo(es);
+    /* force scroll info update */
+    EDIT_UpdateScrollInfo(es);
 
-	if (hrgn)
-	{
-		EDIT_UpdateTextRegion(es, hrgn, TRUE);
-		DeleteObject(hrgn);
-	}
-	else
-	EDIT_UpdateText(es, NULL, TRUE);
+    if (hrgn)
+    {
+        EDIT_UpdateTextRegion(es, hrgn, TRUE);
+        DeleteObject(hrgn);
+    }
+    else
+        EDIT_UpdateText(es, NULL, TRUE);
 
-	if(es->flags & EF_UPDATE)
-	{
-	    es->flags &= ~EF_UPDATE;
-	    EDIT_NOTIFY_PARENT(es, EN_CHANGE, "EN_CHANGE");
-	}
+    if(es->flags & EF_UPDATE)
+    {
+        es->flags &= ~EF_UPDATE;
+        EDIT_NOTIFY_PARENT(es, EN_CHANGE, "EN_CHANGE");
+    }
 }
 
 
@@ -2871,6 +2881,7 @@ static LRESULT EDIT_EM_Scroll(EDITSTATE *es, INT action)
  */
 static void EDIT_EM_ScrollCaret(EDITSTATE *es)
 {
+    DbgPrint("[edit] EDIT_EM_ScrollCaret\n");
 	if (es->style & ES_MULTILINE) {
 		INT l;
 		INT li;
@@ -3088,7 +3099,7 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
 		else
 			es->right_margin = default_right_margin;
 	}
-	DbgPrint("left=%d, right=%d\n", es->left_margin, es->right_margin);
+	DbgPrint("[edit]left=%d, right=%d\n", es->left_margin, es->right_margin);
 }
 
 
@@ -3134,6 +3145,7 @@ static void EDIT_EM_SetSel(EDITSTATE *es, UINT start, UINT end, BOOL after_wrap)
 	UINT old_start = es->selection_start;
 	UINT old_end = es->selection_end;
 	UINT len = strlenW(es->text);
+    DbgPrint("[edit] EDIT_EM_SetSel\n");
 
 	if (start == (UINT)-1) {
 		start = es->selection_end;
@@ -3235,7 +3247,7 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 
 	strcpyW(utext, es->undo_text);
 
-	DbgPrint("before UNDO:insertion length = %d, deletion buffer = %s\n",
+	DbgPrint("[edit]before UNDO:insertion length = %d, deletion buffer = %s\n",
 		     es->undo_insert_count);
 
 	EDIT_EM_SetSel(es, es->undo_position, es->undo_position + es->undo_insert_count, FALSE);
@@ -3247,7 +3259,7 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 	EDIT_EM_ScrollCaret(es);
 	HeapFree(GetProcessHeap(), 0, utext);
 
-	DbgPrint("after UNDO:insertion length = %d, deletion buffer = %s\n",
+	DbgPrint("[edit]after UNDO:insertion length = %d, deletion buffer = %s\n",
 			es->undo_insert_count);
 	return TRUE;
 }
@@ -3426,7 +3438,6 @@ static void EDIT_WM_Copy(EDITSTATE *es)
 	dst = GlobalLock(hdst);
 	strncpyW(dst, es->text + s, e - s);
 	dst[e - s] = 0; /* ensure 0 termination */
-	DbgPrint("%s\n", dst);
 	GlobalUnlock(hdst);
 	OpenClipboard(es->hwndSelf);
 	EmptyClipboard();
@@ -3442,7 +3453,6 @@ static void EDIT_WM_Copy(EDITSTATE *es)
  */
 static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
 {
-	DbgPrint("%s\n", name);
        /*
         *	To initialize some final structure members, we call some helper
         *	functions.  However, since the EDITSTATE is not consistent (i.e.
@@ -3608,7 +3618,7 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 			dx = es->text_width - es->x_offset;
 		break;
 	case SB_THUMBTRACK:
-		DbgPrint("SB_THUMBTRACK %d\n", pos);
+		DbgPrint("[edit]SB_THUMBTRACK %d\n", pos);
 		es->flags |= EF_HSCROLL_TRACK;
 		if(es->style & WS_HSCROLL)
 		    dx = pos - es->x_offset;
@@ -3624,7 +3634,7 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 		}
 		break;
 	case SB_THUMBPOSITION:
-		DbgPrint("SB_THUMBPOSITION %d\n", pos);
+		DbgPrint("[edit]SB_THUMBPOSITION %d\n", pos);
 		es->flags &= ~EF_HSCROLL_TRACK;
 		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
 		    dx = pos - es->x_offset;
@@ -3664,12 +3674,12 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 		    INT fw = es->format_rect.right - es->format_rect.left;
 		    ret = es->text_width ? es->x_offset * 100 / (es->text_width - fw) : 0;
 		}
-		DbgPrint("EM_GETTHUMB: returning %ld\n", ret);
+		DbgPrint("[edit]EM_GETTHUMB: returning %ld\n", ret);
 		return ret;
 	}
 
 	default:
-		DbgPrint("undocumented WM_HSCROLL action %d (0x%04x), please report\n",
+		DbgPrint("[edit]undocumented WM_HSCROLL action %d (0x%04x), please report\n",
                     action, action);
 		return 0;
 	}
@@ -3705,7 +3715,7 @@ static BOOL EDIT_CheckCombo(EDITSTATE *es, UINT msg, INT key)
    bDropped = TRUE;
    nEUI     = 0;
 
-   DbgPrint("[%p]: handling msg %x (%x)\n", es->hwndSelf, msg, key);
+   DbgPrint("[edit][%p]: handling msg %x (%x)\n", es->hwndSelf, msg, key);
 
    if (key == VK_UP || key == VK_DOWN)
    {
@@ -3998,15 +4008,19 @@ static LRESULT EDIT_WM_MouseMove(EDITSTATE *es, INT x, INT y)
  */
 static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 {
-	EDITSTATE *es;
-	UINT alloc_size;
-
-	DbgPrint("Creating %s edit control, style = %08lx\n",
-		unicode ? "Unicode" : "ANSI", lpcs->style);
+    EDITSTATE *es;
+    UINT alloc_size;
+    DWORD buffersz = 0;
+    DbgPrint("[edit]EDIT_WM_NCCreate: Creating %s edit control, style = %08lx\n",
+        unicode ? "Unicode" : "ANSI", lpcs->style);
 
 	if (!(es = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*es))))
-		return FALSE;
-        SetWindowLongW( hwnd, 0, (LONG)es );
+    {
+        DbgPrint("[edit]ERROR: Failed to allocate edit state structure.\n");
+	    return FALSE;
+    }
+    DbgPrint("[edit] Calling SetWindowLong\n");
+    SetWindowLongW( hwnd, 0, (LONG)es );
 
        /*
         *      Note: since the EDITSTATE has not been fully initialized yet,
@@ -4014,78 +4028,116 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
         *            WM_XXX messages before WM_NCCREATE is completed.
         */
 
- 	es->is_unicode = unicode;
- 	es->style = lpcs->style;
+    es->is_unicode = unicode;
+    es->style = lpcs->style;
+    
+    es->bEnableState = !(es->style & WS_DISABLED);
+    
+    es->hwndSelf = hwnd;
+    /* Save parent, which will be notified by EN_* messages */
+    es->hwndParent = lpcs->hwndParent;
 
-        es->bEnableState = !(es->style & WS_DISABLED);
-
-	es->hwndSelf = hwnd;
-	/* Save parent, which will be notified by EN_* messages */
-	es->hwndParent = lpcs->hwndParent;
-
-	if (es->style & ES_COMBO)
-	   es->hwndListBox = GetDlgItem(es->hwndParent, ID_CB_LISTBOX);
+    if (es->style & ES_COMBO)
+        es->hwndListBox = GetDlgItem(es->hwndParent, ID_CB_LISTBOX);
 
         /* Number overrides lowercase overrides uppercase (at least it
          * does in Win95).  However I'll bet that ES_NUMBER would be
          * invalid under Win 3.1.
          */
-        if (es->style & ES_NUMBER) {
-                ; /* do not override the ES_NUMBER */
-        }  else if (es->style & ES_LOWERCASE) {
-                es->style &= ~ES_UPPERCASE;
+    if (es->style & ES_NUMBER) 
+    {
+        ; /* do not override the ES_NUMBER */
+    }  
+    else if (es->style & ES_LOWERCASE) 
+    {
+        es->style &= ~ES_UPPERCASE;
+    }
+    if (es->style & ES_MULTILINE) 
+    {
+        es->buffer_limit = BUFLIMIT_MULTI;
+        
+        if (es->style & WS_VSCROLL)
+            es->style |= ES_AUTOVSCROLL;
+        if (es->style & WS_HSCROLL)
+            es->style |= ES_AUTOHSCROLL;
+        
+        es->style &= ~ES_PASSWORD;
+        if ((es->style & ES_CENTER) || (es->style & ES_RIGHT))
+        {
+            /* Confirmed - RIGHT overrides CENTER */
+            if (es->style & ES_RIGHT)
+                es->style &= ~ES_CENTER;
+            
+            es->style &= ~WS_HSCROLL;
+            es->style &= ~ES_AUTOHSCROLL;
         }
-	if (es->style & ES_MULTILINE) {
-		es->buffer_limit = BUFLIMIT_MULTI;
-		if (es->style & WS_VSCROLL)
-			es->style |= ES_AUTOVSCROLL;
-		if (es->style & WS_HSCROLL)
-			es->style |= ES_AUTOHSCROLL;
-		es->style &= ~ES_PASSWORD;
-		if ((es->style & ES_CENTER) || (es->style & ES_RIGHT)) {
-                        /* Confirmed - RIGHT overrides CENTER */
-			if (es->style & ES_RIGHT)
-				es->style &= ~ES_CENTER;
-			es->style &= ~WS_HSCROLL;
-			es->style &= ~ES_AUTOHSCROLL;
-		}
 
-		/* FIXME: for now, all multi line controls are AUTOVSCROLL */
-		es->style |= ES_AUTOVSCROLL;
-	} else {
-		es->buffer_limit = BUFLIMIT_SINGLE;
+        /* FIXME: for now, all multi line controls are AUTOVSCROLL */
+        es->style |= ES_AUTOVSCROLL;
+    } 
+    else 
+    {
+        es->buffer_limit = BUFLIMIT_SINGLE;
                 //if (WIN31_LOOK == TWEAK_WineLook ||
                     //WIN95_LOOK == TWEAK_WineLook) {
-		        es->style &= ~ES_CENTER;
-		        es->style &= ~ES_RIGHT;
+        es->style &= ~ES_CENTER;
+        es->style &= ~ES_RIGHT;
                 //} else {
 			//if (es->style & ES_RIGHT)
 				//es->style &= ~ES_CENTER;
                 //}
-		es->style &= ~WS_HSCROLL;
-		es->style &= ~WS_VSCROLL;
-		es->style &= ~ES_AUTOVSCROLL;
-		es->style &= ~ES_WANTRETURN;
-		if (es->style & ES_PASSWORD)
-			es->password_char = '*';
+        es->style &= ~WS_HSCROLL;
+        es->style &= ~WS_VSCROLL;
+        es->style &= ~ES_AUTOVSCROLL;
+        es->style &= ~ES_WANTRETURN;
+        if (es->style & ES_PASSWORD)
+            es->password_char = '*';
 
-		/* FIXME: for now, all single line controls are AUTOHSCROLL */
-		es->style |= ES_AUTOHSCROLL;
-	}
+        /* FIXME: for now, all single line controls are AUTOHSCROLL */
+        es->style |= ES_AUTOHSCROLL;
+    }
+    DbgPrint("[edit] Beginning to allocate buffers\n");
+    alloc_size = ROUND_TO_GROW((es->buffer_size + 1) * sizeof(WCHAR));
+    if(!(es->hloc32W = LocalAlloc(LMEM_MOVEABLE | LMEM_ZEROINIT, alloc_size)))
+    {
+        DbgPrint("[edit]ERROR: Failed to allocate memory for the local memory block.\n");
+        HeapFree(GetProcessHeap(), 0, es);
+        return FALSE;
+    }
 
-	alloc_size = ROUND_TO_GROW((es->buffer_size + 1) * sizeof(WCHAR));
-	if(!(es->hloc32W = LocalAlloc(LMEM_MOVEABLE | LMEM_ZEROINIT, alloc_size)))
-	    return FALSE;
-	es->buffer_size = LocalSize(es->hloc32W)/sizeof(WCHAR) - 1;
+    buffersz = LocalSize(es->hloc32W);
+    es->buffer_size = buffersz / sizeof(WCHAR) - 1;
 
-	if (!(es->undo_text = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (es->buffer_size + 1) * sizeof(WCHAR))))
-		return FALSE;
-	es->undo_buffer_size = es->buffer_size;
 
-	if (es->style & ES_MULTILINE)
-		if (!(es->first_line_def = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINEDEF))))
-			return FALSE;
-	es->line_count = 1;
+
+    DbgPrint("[edit]Allocating undo buffer(text size (bytes): %d, text size(wchars): %d).\n", buffersz, es->buffer_size );
+    if (!(es->undo_text = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (es->buffer_size + 1) * sizeof(WCHAR))))
+    {
+        DbgPrint("[edit]ERROR: Failed to allocate edit undo buffer.\n");
+        
+        LocalFree(es->hloc32W);
+        HeapFree(GetProcessHeap(), 0, es);
+        
+        return FALSE;
+    }
+
+    es->undo_buffer_size = es->buffer_size;
+
+    if (es->style & ES_MULTILINE)
+    {
+        DbgPrint("[edit]Allocating Line List.\n");
+        if (!(es->first_line_def = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINEDEF))))
+        {
+            DbgPrint("[edit]ERROR: Failed to allocate the line break list.\n");
+
+            HeapFree(GetProcessHeap(), 0, es->undo_text);
+            LocalFree(es->hloc32W);
+            HeapFree(GetProcessHeap(), 0, es);
+
+            return FALSE;
+        }
+    }
+    es->line_count = 1;
 
 	/*
 	 * In Win95 look and feel, the WS_BORDER style is replaced by the
@@ -4102,11 +4154,14 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 	//}
 	//else
 	//{
-	  if ((es->style & WS_BORDER) && !(es->style & WS_DLGFRAME))
-              SetWindowLongW( hwnd, GWL_STYLE,
-                              GetWindowLongW( hwnd, GWL_STYLE ) & ~WS_BORDER );
+    if ((es->style & WS_BORDER) && !(es->style & WS_DLGFRAME))
+    {
+        DbgPrint("[edit]Setting border style.\n");
+        SetWindowLongW( hwnd, GWL_STYLE, 
+                        GetWindowLongW( hwnd, GWL_STYLE ) & ~WS_BORDER );
+    }
 	//}
-
+    DbgPrint("[edit]Leaving EDIT_WM_NCCreate\n");
 	return TRUE;
 }
 
@@ -4282,7 +4337,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 static void EDIT_WM_SetText(EDITSTATE *es, LPARAM lParam, BOOL unicode)
 {
     LPWSTR text = NULL;
-
+    DbgPrint("[edit]In WM_SetText: lParam: %s, Unicode: %s\n", (LPCSTR)lParam, unicode ? "TRUE" : "FALSE");
     if(unicode)
 	text = (LPWSTR)lParam;
     else if (lParam)
@@ -4295,7 +4350,6 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPARAM lParam, BOOL unicode)
 
 	EDIT_EM_SetSel(es, 0, (UINT)-1, FALSE);
 	if (text) {
-		DbgPrint("%s\n", text);
 		EDIT_EM_ReplaceSel(es, FALSE, text, FALSE, FALSE);
 		if(!unicode)
 		    HeapFree(GetProcessHeap(), 0, text);
@@ -4329,7 +4383,7 @@ static void EDIT_WM_Size(EDITSTATE *es, UINT action, INT width, INT height)
 {
 	if ((action == SIZE_MAXIMIZED) || (action == SIZE_RESTORED)) {
 		RECT rc;
-		DbgPrint("width = %d, height = %d\n", width, height);
+		DbgPrint("[edit] WM_Size width = %d, height = %d\n", width, height);
 		SetRect(&rc, 0, 0, width, height);
 		EDIT_SetRectNP(es, &rc);
 		EDIT_UpdateText(es, NULL, TRUE);
@@ -4388,7 +4442,7 @@ static LRESULT  EDIT_WM_StyleChanged ( EDITSTATE *es, WPARAM which, const STYLES
         } else if ((WPARAM)GWL_EXSTYLE == which) {
                 ; /* FIXME - what is needed here */
         } else {
-                DbgPrint ("Invalid style change %d\n",which);
+                DbgPrint ("[edit]Invalid style change %d\n",which);
         }
 
         return 0;
@@ -4452,7 +4506,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 	case SB_LINEDOWN:
 	case SB_PAGEUP:
 	case SB_PAGEDOWN:
-		DbgPrint("action %d\n", action);
+		DbgPrint("[edit]action %d\n", action);
 		EDIT_EM_Scroll(es, action);
 		return 0;
 	case SB_TOP:
@@ -4464,7 +4518,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 		dy = es->line_count - 1 - es->y_offset;
 		break;
 	case SB_THUMBTRACK:
-		DbgPrint("SB_THUMBTRACK %d\n", pos);
+		DbgPrint("[edit]SB_THUMBTRACK %d\n", pos);
 		es->flags |= EF_VSCROLL_TRACK;
 		if(es->style & WS_VSCROLL)
 		    dy = pos - es->y_offset;
@@ -4477,12 +4531,12 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 		    vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
 		    new_y = pos * (es->line_count - vlc) / 100;
 		    dy = es->line_count ? (new_y - es->y_offset) : 0;
-		    DbgPrint("line_count=%d, y_offset=%d, pos=%d, dy = %d\n",
+		    DbgPrint("[edit]line_count=%d, y_offset=%d, pos=%d, dy = %d\n",
 			    es->line_count, es->y_offset, pos, dy);
 		}
 		break;
 	case SB_THUMBPOSITION:
-		DbgPrint("SB_THUMBPOSITION %d\n", pos);
+		DbgPrint("[edit]SB_THUMBPOSITION %d\n", pos);
 		es->flags &= ~EF_VSCROLL_TRACK;
 		if(es->style & WS_VSCROLL)
 		    dy = pos - es->y_offset;
@@ -4495,7 +4549,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 		    vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
 		    new_y = pos * (es->line_count - vlc) / 100;
 		    dy = es->line_count ? (new_y - es->y_offset) : 0;
-		    DbgPrint("line_count=%d, y_offset=%d, pos=%d, dy = %d\n",
+		    DbgPrint("[edit]line_count=%d, y_offset=%d, pos=%d, dy = %d\n",
 			    es->line_count, es->y_offset, pos, dy);
 		}
 		if (!dy)
@@ -4525,12 +4579,12 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 		    INT vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
 		    ret = es->line_count ? es->y_offset * 100 / (es->line_count - vlc) : 0;
 		}
-		DbgPrint("EM_GETTHUMB: returning %ld\n", ret);
+		DbgPrint("[edit]EM_GETTHUMB: returning %ld\n", ret);
 		return ret;
 	}
 
 	default:
-		DbgPrint("undocumented WM_VSCROLL action %d (0x%04x), please report\n",
+		DbgPrint("[edit]Undocumented WM_VSCROLL action %d (0x%04x), please report\n",
                     action, action);
 		return 0;
 	}
@@ -4546,6 +4600,7 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
  */
 static void EDIT_UpdateTextRegion(EDITSTATE *es, HRGN hrgn, BOOL bErase)
 {
+    DbgPrint("[edit] EDIT_UpdateTextRegion\n");
     if (es->flags & EF_UPDATE) EDIT_NOTIFY_PARENT(es, EN_UPDATE, "EN_UPDATE");
     InvalidateRgn(es->hwndSelf, hrgn, bErase);
 }
@@ -4558,6 +4613,7 @@ static void EDIT_UpdateTextRegion(EDITSTATE *es, HRGN hrgn, BOOL bErase)
  */
 static void EDIT_UpdateText(EDITSTATE *es, LPRECT rc, BOOL bErase)
 {
+    DbgPrint("[edit] EDIT_UpdateText\n");
     if (es->flags & EF_UPDATE) EDIT_NOTIFY_PARENT(es, EN_UPDATE, "EN_UPDATE");
     InvalidateRect(es->hwndSelf, rc, bErase);
 }
