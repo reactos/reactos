@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.256 2004/12/12 23:42:35 weiden Exp $
+/* $Id: window.c,v 1.257 2004/12/13 00:11:59 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -284,17 +284,6 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
      in IntDestroyWindow() */
   RemoveEntryList(&Window->ThreadListEntry);
   IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
-
-  if (Window->UpdateRegion != NULL ||
-      Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
-  {
-     MsqDecPaintCountQueue(Window->MessageQueue);
-  }
-
-  if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
-  {
-     MsqDecPaintCountQueue(Window->MessageQueue);
-  }
   
   BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
   
@@ -302,18 +291,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   {
     /* Send destroy messages */
     IntSendDestroyMsg(Window->Self);
-    if(BelongsToThreadData)
-      IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
   }
-  
-  /* from now on no messages can be sent to this window anymore */
-  IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
-  Window->Status |= WINDOWSTATUS_DESTROYED;
-  /* don't remove the WINDOWSTATUS_DESTROYING bit */
-  IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
-  
-  /* flush the message queue */
-  MsqRemoveWindowMessagesFromQueue(Window);
 
   /* free child windows */
   Children = IntWinListChildren(Window);
@@ -335,6 +313,28 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
         }
       ExFreePool(Children);
     }
+
+  if(SendMessages)
+  {
+    /*
+     * Clear the update region to make sure no WM_PAINT messages will be
+     * generated for this window while processing the WM_NCDESTROY.
+     */
+    IntRedrawWindow(Window, NULL, 0,
+                    RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE |
+                    RDW_NOINTERNALPAINT | RDW_NOCHILDREN);
+    if(BelongsToThreadData)
+      IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
+  }
+  
+  /* flush the message queue */
+  MsqRemoveWindowMessagesFromQueue(Window);
+  
+  /* from now on no messages can be sent to this window anymore */
+  IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
+  Window->Status |= WINDOWSTATUS_DESTROYED;
+  /* don't remove the WINDOWSTATUS_DESTROYING bit */
+  IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
 
   /* reset shell window handles */
   if(ThreadData->Desktop)
