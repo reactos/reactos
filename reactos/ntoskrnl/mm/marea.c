@@ -64,15 +64,15 @@ MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace,
 	assert(current_entry->Blink->Flink == current_entry);
 	if (current_entry->Flink->Blink != current_entry)
 	  {
-	     DPRINT("BaseAddress %x\n", current->BaseAddress);
-	     DPRINT("current_entry->Flink %x ", current_entry->Flink);
-	     DPRINT("&current_entry->Flink %x\n",
+	     DPRINT1("BaseAddress %x\n", current->BaseAddress);
+	     DPRINT1("current_entry->Flink %x ", current_entry->Flink);
+	     DPRINT1("&current_entry->Flink %x\n",
 		     &current_entry->Flink);
-	     DPRINT("current_entry->Flink->Blink %x\n",
+	     DPRINT1("current_entry->Flink->Blink %x\n",
 		     current_entry->Flink->Blink);
-	     DPRINT("&current_entry->Flink->Blink %x\n",
+	     DPRINT1("&current_entry->Flink->Blink %x\n",
 		     &current_entry->Flink->Blink);
-	     DPRINT("&current_entry->Flink %x\n",
+	     DPRINT1("&current_entry->Flink %x\n",
 		     &current_entry->Flink);
 	  }
 	assert(current_entry->Flink->Blink == current_entry);

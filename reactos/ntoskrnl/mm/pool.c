@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.11 2001/03/06 14:41:18 dwelch Exp $
+/* $Id: pool.c,v 1.12 2001/03/07 08:57:09 dwelch Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -51,7 +51,9 @@ EiAllocatePool(POOL_TYPE PoolType,
 	
       case PagedPool:
       case PagedPoolCacheAligned:
-	Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
+	//	Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
+	Block = ExAllocateNonPagedPoolWithTag(PoolType, NumberOfBytes,
+					      Tag, Caller);
 	break;
 	
       default:

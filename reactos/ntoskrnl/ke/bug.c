@@ -1,4 +1,4 @@
-/* $Id: bug.c,v 1.14 2000/08/12 19:33:21 dwelch Exp $
+/* $Id: bug.c,v 1.15 2001/03/07 08:57:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
+#include <internal/ps.h>
 
 #include <internal/debug.h>
 
@@ -78,12 +79,26 @@ KeBugCheckEx (
    DbgPrint("Bug detected (code %x param %x %x %x %x)\n",BugCheckCode,
 	  BugCheckParameter1,BugCheckParameter2,BugCheckParameter3,
 	  BugCheckParameter4);
+   if (PsGetCurrentProcess() != NULL)
+     {
+	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
+	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
+     }
+   if (PsGetCurrentThread() != NULL)
+     {
+	DbgPrint("Thrd: %x Tid: %x\n",
+		 PsGetCurrentThread(),
+		 PsGetCurrentThread()->Cid.UniqueThread);
+     }
 //   PsDumpThreads();
    KeDumpStackFrames(&((&BugCheckCode)[-1]),64);
    
 #if 1
    for(;;)
-	   __asm__("hlt\n\t");	//PJS: use HLT instruction, rather than busy wait
+     {
+       /* PJS: use HLT instruction, rather than busy wait */
+       __asm__("hlt\n\t");	
+     }
 #else
    for(;;);
 #endif   
@@ -107,6 +122,17 @@ KeBugCheck (ULONG	BugCheckCode)
 	for(;;);
      }
    InBugCheck = 1;
+   if (PsGetCurrentProcess() != NULL)
+     {
+	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
+	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
+     }
+   if (PsGetCurrentThread() != NULL)
+     {
+	DbgPrint("Thrd: %x Tid: %x\n",
+		 PsGetCurrentThread(),
+		 PsGetCurrentThread()->Cid.UniqueThread);
+     }
 //   PsDumpThreads();
    KeDumpStackFrames(&((&BugCheckCode)[-1]), 80);
 #if 1

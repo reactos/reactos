@@ -108,6 +108,12 @@ static const BYTE asciiTable4[37]=
    '{', '|', '}', '"'
 };
 
+VOID STDCALL
+KdSystemDebugControl(ULONG Code);
+
+static LONG DoSystemDebug = -1;
+static BOOLEAN InSysRq = FALSE;
+
 /* FUNCTIONS *****************************************************************/
 
 static void KbdWrite(int addr,BYTE data)
@@ -409,6 +415,13 @@ static VOID KbdDpcRoutine(PKDPC Dpc,
    PIRP Irp = (PIRP)SystemArgument2;
    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)SystemArgument1;
    
+   if (SystemArgument1 == NULL && DoSystemDebug != -1)
+     {
+       KdSystemDebugControl(DoSystemDebug);
+       DoSystemDebug = -1;
+       return;
+     }
+
    CHECKPOINT;
    DPRINT("KbdDpcRoutine(DeviceObject %x, Irp %x)\n",
 	    DeviceObject,Irp);
@@ -474,9 +487,20 @@ static BOOLEAN KeyboardHandler(PKINTERRUPT Interrupt, PVOID Context)
 
 //   DbgPrint("Key: %c\n",VirtualToAscii(ScanToVirtual(thisKey),isDown));
 //   DbgPrint("Key: %x\n",ScanToVirtual(thisKey));
-   if (ScanToVirtual(thisKey)==0x2a)
+   if (ScanToVirtual(thisKey) == VK_PRINT && isDown)
      {
-	KeBugCheck(0);
+       InSysRq = TRUE;
+     }
+   else if (ScanToVirtual(thisKey) == VK_PRINT && !isDown)
+     {
+       InSysRq = FALSE;
+     }
+   else if (InSysRq == TRUE && ScanToVirtual(thisKey) >= VK_A &&
+	    ScanToVirtual(thisKey) <= VK_Z && isDown)
+     {
+       DoSystemDebug = ScanToVirtual(thisKey) - VK_A;
+       KeInsertQueueDpc(&KbdDpc, NULL, NULL);
+       return(TRUE);
      }
 
    if (CurrentIrp!=NULL)

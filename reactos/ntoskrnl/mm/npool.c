@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.34 2001/03/06 14:41:18 dwelch Exp $
+/* $Id: npool.c,v 1.35 2001/03/07 08:57:08 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -98,10 +98,13 @@ MiDebugDumpNonPagedPool(VOID)
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
 
    DbgPrint("******* Dumping non paging pool contents ******\n");
-   while (current!=NULL)
+   while (current != NULL)
      {
-       DPRINT("Size 0x%x Tag 0x%x Allocator 0x%x\n",
-	      current->size, current->Tag, current->Caller);
+       DbgPrint("Size 0x%x Tag 0x%x (%c%c%c%c) Allocator 0x%x\n",
+		current->size, current->Tag, 
+		current->Tag >> 24, (current->Tag >> 16) & 0xFF,
+		(current->Tag >> 8) & 0xFF, current->Tag & 0xFF,
+		current->Caller);
 
        current=current->next;
      }

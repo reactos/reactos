@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.19 2001/02/14 02:53:53 dwelch Exp $
+/* $Id: kdebug.c,v 1.20 2001/03/07 08:57:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/kd.h>
-
+#include <internal/mm.h>
 
 /* serial debug connection */
 #define DEFAULT_DEBUG_PORT      2	/* COM2 */
@@ -335,6 +335,19 @@ KeEnterKernelDebugger (VOID)
 #else
    for(;;);
 #endif
+}
+
+VOID STDCALL
+KdSystemDebugControl(ULONG Code)
+{
+  if (Code == 0)
+    {
+      MiDebugDumpNonPagedPool();
+    }
+  if (Code == 1)
+    {
+      KeBugCheck(0);
+    }
 }
 
 /* EOF */

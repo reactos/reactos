@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.86 2001/03/01 15:36:34 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.87 2001/03/07 08:57:08 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -1104,3 +1104,4 @@ WRITE_PORT_BUFFER_USHORT=WRITE_PORT_BUFFER_USHORT@12
 WRITE_PORT_UCHAR=WRITE_PORT_UCHAR@8
 WRITE_PORT_ULONG=WRITE_PORT_ULONG@8
 WRITE_PORT_USHORT=WRITE_PORT_USHORT@8
+KdSystemDebugControl = KdSystemDebugControl@4

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.20 2001/03/06 23:31:44 cnettel Exp $
+/* $Id: create.c,v 1.21 2001/03/07 08:57:09 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -674,7 +674,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	{
 	  Irp->IoStatus.Information = 0;
 	  Irp->IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
-	  return(Status);
+	  return(STATUS_OBJECT_NAME_INVALID);
 	}
       c++;
     }

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.99 2001/03/01 15:36:34 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.100 2001/03/07 08:57:08 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -1105,4 +1105,4 @@ WRITE_PORT_BUFFER_USHORT@12
 WRITE_PORT_UCHAR@8
 WRITE_PORT_ULONG@8
 WRITE_PORT_USHORT@8
-
+KdSystemDebugControl@4
