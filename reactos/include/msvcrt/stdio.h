@@ -325,9 +325,10 @@ void rewind(FILE* fileRewind);
  * because the programmer using fgetpos and fsetpos will be setting aside
  * storage for fpos_t structres. Actually I tested using a byte array and
  * it is fairly evident that the fpos_t type is a long (in CRTDLL.DLL).
- * Perhaps an unsigned long? TODO?
+ * Perhaps an unsigned long? TODO? It's definitely a 64-bit number in
+ * MSVCRT however, and for now `long long' will do.
  */
-typedef long fpos_t;
+typedef long long fpos_t;
 
 int fgetpos(FILE* fileGetPosition, fpos_t* pfpos);
 int fsetpos(FILE* fileSetPosition, const fpos_t* pfpos);
