@@ -303,6 +303,12 @@ LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Paint();
 		break;
 
+	  case WM_LBUTTONDBLCLK:
+		//launch_file(_hwnd, _T("timedate.cpl"), SW_SHOWNORMAL);	// This would be enough, but we want the fastest solution.
+		//launch_file(_hwnd, _T("rundll32.exe /d shell32.dll,Control_RunDLL timedate.cpl"), SW_SHOWNORMAL);
+		RunDLL(_hwnd, _T("shell32"), "Control_RunDLL", _T("timedate.cpl"), SW_SHOWNORMAL);
+		break;
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}

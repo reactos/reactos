@@ -401,6 +401,9 @@ extern BOOL time_to_filetime(const time_t* t, FILETIME* ftime);
  // search for windows of a specific classname
 extern int find_window_class(LPCTSTR classname);
 
+ // create a bitmap from an icon
+extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
+
  // launch a program or document file
 extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow);
 #ifdef UNICODE
@@ -409,8 +412,8 @@ extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow);
 #define	launch_fileA launch_file
 #endif
 
- // create a bitmap from an icon
-extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
+ // call an DLL export like rundll32
+BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
 
 
 #ifdef __cplusplus

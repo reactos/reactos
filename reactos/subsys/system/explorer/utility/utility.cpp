@@ -121,3 +121,33 @@ int find_window_class(LPCTSTR classname)
 
 	return 0;
 }
+
+
+typedef void (WINAPI*RUNDLLPROC)(HWND hwnd, HINSTANCE hinst, LPCTSTR cmdline, DWORD nCmdShow);
+
+BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow)
+{
+	HMODULE hmod = LoadLibrary(dllname);
+	if (!hmod)
+		return FALSE;
+
+/*TODO
+	<Windows NT/2000>
+	It is possible to create a Unicode version of the function.
+	Rundll32 first tries to find a function named EntryPointW.
+	If it cannot find this function, it tries EntryPointA, then EntryPoint.
+	To create a DLL that supports ANSI on Windows 95/98/Me and Unicode otherwise,
+	export two functions: EntryPointW and EntryPoint.
+*/
+	RUNDLLPROC proc = (RUNDLLPROC)GetProcAddress(hmod, procname);
+	if (!proc) {
+		FreeLibrary(hmod);
+		return FALSE;
+	}
+
+	proc(hwnd, hmod, cmdline, nCmdShow);
+
+	FreeLibrary(hmod);
+
+	return TRUE;
+}
