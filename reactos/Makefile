@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.272 2004/12/18 22:28:41 gvg Exp $
+# $Id: Makefile,v 1.273 2004/12/20 06:55:28 greatlrd Exp $
 #
 # Global makefile
 #
@@ -39,7 +39,7 @@ BUS = acpi isapnp pci
 LIB_FSLIB = vfatlib
 
 # Static libraries
-LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid 
+LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid strmiids
 
 # Keyboard layout libraries
 DLLS_KBD = kbdda kbddv kbdfr kbdgr kbdse kbduk kbdus 
@@ -56,8 +56,8 @@ DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 midimap mmdrv mpr msacm msafd \
 	msgina msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg olepro32 opengl32 \
 	packet psapi riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain \
-	unicode user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi dinput \
-	dinput8 dsound $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
+	unicode user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi \
+	dinput dinput8 dxdigan dsound $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
 
