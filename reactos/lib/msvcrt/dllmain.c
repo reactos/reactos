@@ -21,12 +21,13 @@
  */
 
 #include "precomp.h"
-#include <msvcrt/internal/tls.h>
+#include <stdio.h>
+#include <internal/tls.h>
 #include <stdlib.h>
-#include <msvcrt/wine/msvcrt.h>
+#include <internal/wine/msvcrt.h>
 
 #define NDEBUG
-#include <msvcrt/msvcrtdbg.h>
+#include <internal/msvcrtdbg.h>
 
 
 /* EXTERNAL PROTOTYPES ********************************************************/
