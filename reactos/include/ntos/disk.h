@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.5 2001/06/07 21:16:17 ekohl Exp $
+/* $Id: disk.h,v 1.6 2001/06/28 02:42:27 rex Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -84,6 +84,9 @@
     ((P) == PTDosExtended || \
      (P) == PTWin95ExtendedLBA)
 
+#define IsNormalPartition(P)   \
+    ((P) != PTEmpty &&         \
+     !IsExtendedPartition(P))
 
 typedef enum _MEDIA_TYPE {
   Unknown,

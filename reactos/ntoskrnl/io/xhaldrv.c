@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.10 2001/06/08 15:11:04 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.11 2001/06/28 02:42:27 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,7 +41,6 @@
      (P) == PTWin95FAT32    || \
      (P) == PTWin95FAT32LBA || \
      (P) == PTWin95FAT16LBA)
-
 
 typedef struct _PARTITION
 {
@@ -618,7 +617,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 			  NotificationEvent,
 			  FALSE);
 
-	DPRINT("PartitionOffset: %I64u\n", PartitionOffset.QuadPart / SectorSize);
+	DPRINT1("PartitionOffset: %I64u\n", PartitionOffset.QuadPart / SectorSize);
 
 	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 					   DeviceObject,
@@ -641,7 +640,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
 	if (!NT_SUCCESS(Status))
 	  {
-	     DPRINT("xHalIoReadPartitonTable failed (Status = 0x%08lx)\n",
+	     DbgPrint("xHalIoReadPartitonTable failed (Status = 0x%08lx)\n",
 		    Status);
 	     ExFreePool(SectorBuffer);
 	     ExFreePool(LayoutBuffer);
@@ -654,16 +653,16 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	DPRINT("Magic %x\n", PartitionTable->Magic);
 	if (PartitionTable->Magic != PARTITION_MAGIC)
 	  {
-	     DPRINT("Invalid partition table magic\n");
+	     DbgPrint("Invalid partition table magic\n");
 	     ExFreePool(SectorBuffer);
 	     *PartitionBuffer = LayoutBuffer;
 	     return STATUS_SUCCESS;
 	  }
 
-#ifndef NDEBUG
+#if 1 /* ndef NDEBUG */
 	for (i = 0; i < PARTITION_TBL_SIZE; i++)
 	  {
-	     DPRINT("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n", 
+	     DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n", 
 		    i,
 		    PartitionTable->Partition[i].BootFlags,
 		    PartitionTable->Partition[i].PartitionType,
@@ -743,7 +742,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		  LayoutBuffer->PartitionCount++;
 	       }
 
-	     if (IsUsablePartition(PartitionTable->Partition[i].PartitionType))
+	     if (IsNormalPartition(PartitionTable->Partition[i].PartitionType))
 	       {
 		  PartitionOffset.QuadPart = (ULONGLONG)PartitionOffset.QuadPart +
 		     (((ULONGLONG)PartitionTable->Partition[i].StartingBlock +
