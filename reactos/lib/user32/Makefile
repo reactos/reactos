@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2003/02/02 17:36:16 hyperion Exp $
+# $Id: Makefile,v 1.11 2003/02/02 19:24:16 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -15,11 +15,9 @@ TARGET_CFLAGS = \
  -DUNICODE \
  -Wall \
  -Werror \
- -nostdinc \
- -nostdlib \
  -fno-builtin
 
-TARGET_LFLAGS = -nostartfiles
+TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2002/09/08 10:23:13 chorns Exp $
+# $Id: makefile,v 1.10 2003/02/02 19:24:16 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,16 @@ TARGET_NAME = ws2_32
 
 TARGET_BASE = 0x77780000
 
-TARGET_CFLAGS = -I./include -DUNICODE -DLE -DDBG
+TARGET_CFLAGS = \
+ -I./include \
+ -Wall \
+ -Werror \
+ -fno-builtin \
+ -DUNICODE \
+ -DLE \
+ -DDBG
+
+TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 

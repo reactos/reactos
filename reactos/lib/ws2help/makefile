@@ -8,7 +8,14 @@ TARGET_NAME = ws2help
 
 TARGET_BASE = 0x777c0000
 
-TARGET_CFLAGS = -DUNICODE
+TARGET_CFLAGS = \
+ -I./include \
+ -Wall \
+ -Werror \
+ -fno-builtin \
+ -DUNICODE
+
+TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a ws2_32.a
 

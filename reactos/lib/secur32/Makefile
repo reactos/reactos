@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2002/09/08 10:23:08 chorns Exp $
+# $Id: Makefile,v 1.10 2003/02/02 19:24:15 hyperion Exp $
 
 
 PATH_TO_TOP = ../..
@@ -11,7 +11,14 @@ TARGET_BASE = 0x10000000
 
 TARGET_SDKLIBS = ntdll.a
 
-TARGET_CFLAGS = -I./include -D__SECUR32__
+TARGET_CFLAGS = \
+ -I./include \
+ -Wall \
+ -Werror \
+ -fno-builtin \
+ -D__SECUR32__
+
+TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_OBJECTS = lsa.o dllmain.o
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2002/09/08 10:23:13 chorns Exp $
+# $Id: makefile,v 1.11 2003/02/02 19:24:16 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,11 @@ TARGET_NAME = version
 
 TARGET_BASE = 0x77a90000
 
-TARGET_SDKLIBS = kernel32.a
+TARGET_CFLAGS = -fno-builtin
+
+TARGET_LFLAGS = -nostdlib -nostartfiles
+
+TARGET_SDKLIBS = kernel32.a ntdll.a
 
 TARGET_OBJECTS =  misc/libmain.o misc/stubs.o
 

@@ -1,10 +1,17 @@
-# $Id: makefile,v 1.24 2003/01/15 20:05:50 robd Exp $
+# $Id: makefile,v 1.25 2003/02/02 19:24:15 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = dynlink
 
 TARGET_NAME = advapi32
+
+TARGET_CFLAGS = \
+ -Wall \
+ -Werror \
+ -fno-builtin
+
+TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

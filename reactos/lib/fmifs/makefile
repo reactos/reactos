@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2001/08/21 20:13:06 chorns Exp $
+# $Id: makefile,v 1.15 2003/02/02 19:24:15 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -7,6 +7,10 @@ TARGET_TYPE = dynlink
 TARGET_NAME = fmifs
 
 TARGET_BASE = 0x76df0000
+
+TARGET_CFLAGS = -fno-builtin
+
+TARGET_LFLAGS = -nostdlib -nostartfiles
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
