@@ -14,6 +14,10 @@
 const TCHAR DesktopClassName[] = TEXT("DesktopWindow");
 
 
+HWND (WINAPI*GetShellWindow)();
+void (WINAPI*SetShellWindow)(HWND);
+
+
 LRESULT CALLBACK DeskWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg)
@@ -21,7 +25,7 @@ LRESULT CALLBACK DeskWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_CLOSE :
         {
             // Over-ride close. We need to close desktop some other way.
-            return 0;
+            break;
         }
 
         case WM_PAINT :
@@ -58,17 +62,42 @@ LRESULT CALLBACK DeskWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             EndPaint(hwnd, &ps);
 
-			return 0;
+			break;
         }
 
 		case WM_LBUTTONDBLCLK:
 			ShowFileMgr(hwnd, SW_SHOWNORMAL);
-			return 0;
+			break;
+
+		case WM_DESTROY:
+			if (SetShellWindow)
+				SetShellWindow(0);
+			break;
+
+		default:
+		    return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return 0;
 }
 
+
+BOOL IsAnyDesktopRunning()
+{
+	POINT pt;
+	HINSTANCE shell32 = GetModuleHandle(TEXT("user32"));
+
+	GetShellWindow = (HWND(WINAPI*)()) GetProcAddress(shell32, "GetShellWindow");
+	SetShellWindow = (void(WINAPI*)(HWND)) GetProcAddress(shell32, "SetShellWindow");
+
+	if (GetShellWindow)
+		return GetShellWindow() != 0;
+
+	pt.x = 0;
+	pt.y = 0;
+
+	return WindowFromPoint(pt) != GetDesktopWindow();
+}
 
 
 int main(int argc, char *argv[])
@@ -82,8 +111,14 @@ int main(int argc, char *argv[])
 
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 
-	 // create desktop window and task var only, if we are the first explorer instance
-	if (!find_window_class(DesktopClassName))
+	 // create desktop window and task bar only, if there is no other shell and we are
+	 // the first explorer instance (just in case SetShellWindow() is not supported by the OS)
+	BOOL startup_desktop = !IsAnyDesktopRunning() && !find_window_class(DesktopClassName);
+
+	if (argc>1 && !strcmp(argv[1],"-desktop"))
+		startup_desktop = TRUE;
+
+	if (startup_desktop)
 	{
 		HWND hwndExplorerBar;
 
@@ -117,6 +152,9 @@ int main(int argc, char *argv[])
 			fprintf(stderr,"FATAL: Desktop window could not be initialized properly - Exiting.\n");
 			return 1;   // error
 		}
+
+		if (SetShellWindow)
+			SetShellWindow(hwndDesktop);
 
 		 // call winefile startup routine
 		GetStartupInfo(&startupinfo);
