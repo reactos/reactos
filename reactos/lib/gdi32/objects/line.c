@@ -119,7 +119,7 @@ PolyBezier(
 	DWORD		a2
 	)
 {
-	return PolyBezier(a0,(CONST PPOINT)a1,a2);
+	return NtGdiPolyBezier(a0,(CONST PPOINT)a1,a2);
 }
 
 /*
@@ -133,7 +133,7 @@ PolyBezierTo(
 	DWORD		a2
 	)
 {
-	return PolyBezierTo(a0,(CONST PPOINT)a1,a2);
+	return NtGdiPolyBezierTo(a0,(CONST PPOINT)a1,a2);
 }
 
 
@@ -148,7 +148,7 @@ PolylineTo(
 	DWORD		a2
 	)
 {
-	return PolyBezierTo(a0,(CONST PPOINT)a1,a2);
+	return NtGdiPolylineTo(a0,(CONST PPOINT)a1,a2);
 }
 
 /*
