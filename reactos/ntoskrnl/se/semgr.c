@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.37 2004/07/21 23:38:15 ekohl Exp $
+/* $Id: semgr.c,v 1.38 2004/08/03 13:58:56 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -288,7 +288,18 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 
 
 /*
- * @unimplemented
+ * FUNCTION: Creates a security descriptor for a new object.
+ * ARGUMENTS:
+ *         ParentDescriptor = 
+ *         ExplicitDescriptor = 
+ *         NewDescriptor = 
+ *         IsDirectoryObject = 
+ *         SubjectContext = 
+ *         GeneralMapping = 
+ *         PoolType = 
+ * RETURNS: Status
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
@@ -351,7 +362,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
       Control |= SE_OWNER_DEFAULTED;
     }
 
-  OwnerLength = RtlLengthSid(Owner);
+  OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
 
 
   /* Inherit the Group SID */
@@ -380,7 +391,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
       Control |= SE_OWNER_DEFAULTED;
     }
 
-  GroupLength = RtlLengthSid(Group);
+  GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
 
 
   /* Inherit the DACL */
@@ -407,30 +418,29 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 	{
 	  Dacl = (PACL)(((ULONG_PTR)Dacl) + (ULONG_PTR)ParentDescriptor);
 	}
-      Control |= SE_DACL_PRESENT;
+      Control |= (SE_DACL_PRESENT & SE_DACL_DEFAULTED);
     }
   else if (Token != NULL && Token->DefaultDacl != NULL)
     {
       DPRINT("Use token default DACL!\n");
       /* FIXME: Inherit */
       Dacl = Token->DefaultDacl;
-      Control |= SE_DACL_PRESENT;
+      Control |= (SE_DACL_PRESENT & SE_DACL_DEFAULTED);
     }
   else
     {
       DPRINT("Use NULL DACL!\n");
       Dacl = NULL;
-      Control |= SE_DACL_PRESENT;
+      Control |= (SE_DACL_PRESENT & SE_DACL_DEFAULTED);
     }
 
-  DaclLength = (Dacl != NULL) ? Dacl->AclSize : 0;
-
+  DaclLength = (Dacl != NULL) ? ROUND_UP(Dacl->AclSize, 4) : 0;
 
 
   /* Inherit the SACL */
-  /* FIXME */
-#if 0
-  if (ExplicitDescriptor != NULL && (ExplicitDescriptor->Control & SE_SACL_PRESENT))
+  if (ExplicitDescriptor != NULL &&
+      (ExplicitDescriptor->Control & SE_SACL_PRESENT) &&
+      !(ExplicitDescriptor->Control & SE_SACL_DEFAULTED))
     {
       DPRINT("Use explicit SACL!\n");
       Sacl = ExplicitDescriptor->Sacl;
@@ -440,14 +450,21 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 	}
 
       Control |= SE_SACL_PRESENT;
-      SaclLength = Sacl->AclSize;
     }
-  else
+  else if (ParentDescriptor != NULL &&
+	   (ParentDescriptor->Control & SE_SACL_PRESENT))
     {
-      DPRINT("No SACL!\n");
-      SaclLength = 0;
+      DPRINT("Use parent SACL!\n");
+      /* FIXME: Inherit */
+      Sacl = ParentDescriptor->Sacl;
+      if (Sacl != NULL && (ParentDescriptor->Control & SE_SELF_RELATIVE))
+	{
+	  Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)ParentDescriptor);
+	}
+      Control |= (SE_SACL_PRESENT & SE_SACL_DEFAULTED);
     }
-#endif
+
+  SaclLength = (Sacl != NULL) ? ROUND_UP(Sacl->AclSize, 4) : 0;
 
 
   /* Allocate and initialize the new security descriptor */
@@ -759,7 +776,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
   else
     {
-      Status = STATUS_SUCCESS;
+      Status = STATUS_ACCESS_DENIED;
     }
 
   /* FIXME: Unlock subject context */
