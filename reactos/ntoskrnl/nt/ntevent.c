@@ -70,7 +70,7 @@ NtpCreateEvent(PVOID ObjectBody,
 }
 
 
-VOID
+VOID INIT_FUNCTION
 NtInitializeEventImplementation(VOID)
 {
    ExEventObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));

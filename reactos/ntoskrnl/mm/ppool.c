@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.19 2003/08/25 18:51:50 hbirr Exp $
+/* $Id: ppool.c,v 1.20 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -72,7 +72,8 @@ inline static PMM_PPOOL_USED_BLOCK_HEADER address_to_block(PVOID addr)
          ( ((char*)addr) - sizeof(MM_PPOOL_USED_BLOCK_HEADER) - MM_PPOOL_REDZONE_BYTES );
 }
 
-VOID MmInitializePagedPool(VOID)
+VOID INIT_FUNCTION
+MmInitializePagedPool(VOID)
 {
   MmPagedPoolFirstFreeBlock = (PMM_PPOOL_FREE_BLOCK_HEADER)MmPagedPoolBase;
   /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: profile.c,v 1.5 2003/07/24 18:14:59 royce Exp $
+/* $Id: profile.c,v 1.6 2003/10/12 17:05:44 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/profile.c
@@ -120,13 +120,13 @@ KdbAddEntryToProfileDatabase(PPROFILE_DATABASE ProfileDatabase, ULONG_PTR Addres
   block->Entries[block->UsedEntries++].Address = Address;
 }
 
-VOID
+VOID INIT_FUNCTION
 KdbInitProfiling()
 {
   KdbEnableProfiler = TRUE;
 }
 
-VOID
+VOID INIT_FUNCTION
 KdbInitProfiling2()
 {
   if (KdbEnableProfiler)
@@ -415,7 +415,7 @@ KdbProfilerCollectorDpcRoutine(PKDPC Dpc, PVOID DeferredContext,
   KdbAddEntryToProfileDatabase(KdbProfileDatabase, address);
 }
 
-VOID
+VOID INIT_FUNCTION
 KdbEnableProfiling()
 {
   if (KdbProfilingEnabled == FALSE)

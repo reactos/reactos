@@ -1,4 +1,4 @@
-/* $Id: lookas.c,v 1.11 2003/08/14 18:30:28 silverblade Exp $
+/* $Id: lookas.c,v 1.12 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -130,7 +130,7 @@ ExpDefaultFree(PVOID Buffer)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 ExpInitLookasideLists()
 {
   InitializeListHead(&ExpNonPagedLookasideListHead);

@@ -44,7 +44,7 @@ static PHYSICAL_ADDRESS PcrPages[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 KePrepareForApplicationProcessorInit(ULONG Id)
 {
   MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &PcrPages[Id]);
@@ -96,7 +96,7 @@ KeApplicationProcessorInit(VOID)
   __asm__ __volatile__ ("sti\n\t");
 }
 
-VOID 
+VOID INIT_FUNCTION
 KeInit1(VOID)
 {
    PKPCR KPCR;
@@ -132,7 +132,7 @@ KeInit1(VOID)
    Ki386InitializeLdt();
 }
 
-VOID 
+VOID INIT_FUNCTION
 KeInit2(VOID)
 {
    KeInitDpc();

@@ -28,7 +28,7 @@ extern VOID Ki386RetToV86Mode(PKV86M_REGISTERS InRegs,
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 NtEarlyInitVdm(VOID)
 {
   /* GCC 3.4 warns if NULL is passed in parameter 2 to the standard function memcpy */

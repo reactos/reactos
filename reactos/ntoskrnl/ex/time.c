@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.18 2003/07/11 01:23:14 royce Exp $
+/* $Id: time.c,v 1.19 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,7 +30,7 @@ TIME_ZONE_INFORMATION _SystemTimeZoneInfo;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 ExInitTimeZoneInfo (VOID)
 {
   /* Initialize system time zone information */

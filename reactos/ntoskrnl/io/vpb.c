@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.22 2003/08/07 11:47:33 silverblade Exp $
+/* $Id: vpb.c,v 1.23 2003/10/12 17:05:45 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,7 +29,7 @@ static KSPIN_LOCK IoVpbLock;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 IoInitVpbImplementation(VOID)
 {
    KeInitializeSpinLock(&IoVpbLock);

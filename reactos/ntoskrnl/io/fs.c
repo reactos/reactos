@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.36 2003/08/07 11:47:33 silverblade Exp $
+/* $Id: fs.c,v 1.37 2003/10/12 17:05:45 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -160,7 +160,7 @@ NtFsControlFile (
 }
 
 
-VOID
+VOID INIT_FUNCTION
 IoInitFileSystemImplementation(VOID)
 {
   InitializeListHead(&FileSystemListHead);

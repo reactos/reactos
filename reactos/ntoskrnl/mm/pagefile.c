@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.36 2003/08/29 21:22:24 dwelch Exp $
+/* $Id: pagefile.c,v 1.37 2003/10/12 17:05:48 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -262,7 +262,7 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    return(Status);
 }
 
-VOID 
+VOID INIT_FUNCTION
 MmInitPagingFile(VOID)
 {
    ULONG i;

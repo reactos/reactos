@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.8 2003/07/23 19:13:37 dwelch Exp $
+/* $Id: w32call.c,v 1.9 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -56,7 +56,7 @@ static LIST_ENTRY CallbackStackListHead;
 
 /* FUNCTIONS ***************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 PsInitialiseW32Call(VOID)
 {
   InitializeListHead(&CallbackStackListHead);

@@ -259,7 +259,7 @@ ExpDesktopObjectDelete(PVOID DeletedObject)
   RtlFreeUnicodeString(&Desktop->Name);
 }
 
-VOID
+VOID INIT_FUNCTION
 ExpWin32kInit(VOID)
 {
   /* Create window station object type */

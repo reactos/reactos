@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.11 2003/08/14 18:30:28 silverblade Exp $
+/* $Id: filelock.c,v 1.12 2003/10/12 17:05:44 hbirr Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -34,7 +34,7 @@ PAGED_LOOKASIDE_LIST    LockLookaside;
  *
  */
 VOID
-STDCALL
+STDCALL INIT_FUNCTION
 FsRtlpInitFileLockingImplementation(VOID)
 {
    ExInitializeNPagedLookasideList( &LockTocLookaside,

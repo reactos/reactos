@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.8 2003/07/11 01:23:16 royce Exp $
+/* $Id: luid.c,v 1.9 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -25,7 +25,7 @@ static LARGE_INTEGER LuidValue;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 SepInitLuid(VOID)
 {
   KeInitializeSpinLock(&LuidLock);

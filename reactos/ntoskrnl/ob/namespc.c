@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.41 2003/10/07 14:01:15 ekohl Exp $
+/* $Id: namespc.c,v 1.42 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -339,7 +339,7 @@ ObpCreateDirectory(PVOID ObjectBody,
 }
 
 
-VOID
+VOID INIT_FUNCTION
 ObInit(VOID)
 /*
  * FUNCTION: Initialize the object manager namespace

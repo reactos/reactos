@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.20 2003/10/07 14:00:45 ekohl Exp $
+/* $Id: ntsem.c,v 1.21 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -51,7 +51,8 @@ NtpCreateSemaphore(PVOID ObjectBody,
   return(STATUS_SUCCESS);
 }
 
-VOID NtInitializeSemaphoreImplementation(VOID)
+VOID INIT_FUNCTION
+NtInitializeSemaphoreImplementation(VOID)
 {
    ExSemaphoreType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    

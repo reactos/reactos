@@ -192,7 +192,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
 	  : "a" (TSS_SELECTOR));
 }
 
-VOID
+VOID INIT_FUNCTION
 Ki386BootInitializeTSS(VOID)
 {
   ULONG cr3;

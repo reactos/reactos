@@ -586,7 +586,8 @@ NTSTATUS STDCALL NtTestAlert(VOID)
    return(STATUS_SUCCESS);
 }
 
-VOID PiInitApcManagement(VOID)
+VOID INIT_FUNCTION
+PiInitApcManagement(VOID)
 {
    KeInitializeSpinLock(&PiApcLock);
 }

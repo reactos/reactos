@@ -333,6 +333,7 @@ VOID MmInit1(ULONG FirstKernelPhysAddress,
        ULONG MaxMemInMeg);
 VOID MmInit2(VOID);
 VOID MmInit3(VOID);
+VOID MiFreeInitMemory(VOID);
 NTSTATUS MmInitPagerThread(VOID);
 NTSTATUS MmInitZeroPageThread(VOID);
 

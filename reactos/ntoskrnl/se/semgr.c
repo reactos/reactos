@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.26 2003/07/20 22:10:23 ekohl Exp $
+/* $Id: semgr.c,v 1.27 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -32,7 +32,7 @@ static BOOLEAN SepInitExports(VOID);
 /* FUNCTIONS ****************************************************************/
 
 
-BOOLEAN
+BOOLEAN INIT_FUNCTION
 SeInit1(VOID)
 {
   SepInitLuid();
@@ -55,7 +55,7 @@ SeInit1(VOID)
 }
 
 
-BOOLEAN
+BOOLEAN INIT_FUNCTION
 SeInit2(VOID)
 {
   SepInitializeTokenImplementation();
@@ -119,7 +119,7 @@ SeInitSRM(VOID)
 }
 
 
-static BOOLEAN
+static BOOLEAN INIT_FUNCTION
 SepInitExports(VOID)
 {
   SeExports = ExAllocatePoolWithTag(NonPagedPool,

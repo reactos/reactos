@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.53 2003/07/21 21:53:52 royce Exp $
+/* $Id: mdl.c,v 1.54 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -33,7 +33,7 @@ static KSPIN_LOCK MiMdlMappingRegionLock;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 MmInitializeMdlImplementation(VOID)
 {
   MEMORY_AREA* Result;

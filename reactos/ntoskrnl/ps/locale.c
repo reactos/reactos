@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.4 2002/09/08 10:23:40 chorns Exp $
+/* $Id: locale.c,v 1.5 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,7 +31,7 @@ LCID PsDefaultSystemLocaleId = 0;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 PiInitDefaultLocale(VOID)
 /*
  * FUNCTION:

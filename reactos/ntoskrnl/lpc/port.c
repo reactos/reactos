@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.13 2003/07/11 01:23:15 royce Exp $
+/* $Id: port.c,v 1.14 2003/10/12 17:05:48 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,7 +40,8 @@ static GENERIC_MAPPING ExpPortMapping = {
 /* FUNCTIONS *****************************************************************/
 
 
-NTSTATUS NiInitPort (VOID)
+NTSTATUS INIT_FUNCTION
+NiInitPort (VOID)
 {
    ExPortType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.129 2003/10/07 14:00:10 ekohl Exp $
+/* $Id: section.c,v 1.130 2003/10/12 17:05:48 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2090,7 +2090,7 @@ MmpCreateSection(PVOID ObjectBody,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS 
+NTSTATUS INIT_FUNCTION
 MmCreatePhysicalMemorySection(VOID)
 {
   HANDLE PhysSectionH;
@@ -2138,7 +2138,7 @@ MmCreatePhysicalMemorySection(VOID)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS 
+NTSTATUS INIT_FUNCTION
 MmInitSectionImplementation(VOID)
 {
    MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));

@@ -1,4 +1,4 @@
-/* $Id: inbv.c,v 1.2 2003/08/24 12:08:16 dwelch Exp $
+/* $Id: inbv.c,v 1.3 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -91,7 +91,7 @@ InbvResetDisplayParameters(ULONG SizeX, ULONG SizeY)
 }
 
 VOID
-STDCALL
+STDCALL INIT_FUNCTION
 InbvEnableBootDriver(IN BOOLEAN Enable)
 {
   NTSTATUS Status;

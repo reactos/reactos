@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.17 2003/07/21 21:53:53 royce Exp $
+/* $Id: pageop.c,v 1.18 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -232,7 +232,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   return(PageOp);
 }
 
-VOID
+VOID INIT_FUNCTION
 MmInitializePageOp(VOID)
 {
   memset(MmPageOpHashTable, 0, sizeof(MmPageOpHashTable));

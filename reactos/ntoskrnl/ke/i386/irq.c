@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.35 2003/08/25 09:14:09 hbirr Exp $
+/* $Id: irq.c,v 1.36 2003/10/12 17:05:45 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -217,7 +217,8 @@ static KSPIN_LOCK isr_table_lock = {0,};
 #define PRESENT (0x8000)
 #define I486_INTERRUPT_GATE (0xe00)
 
-VOID KeInitInterrupts (VOID)
+VOID INIT_FUNCTION
+KeInitInterrupts (VOID)
 {
    int i;
 

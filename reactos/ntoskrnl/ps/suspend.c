@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: suspend.c,v 1.12 2003/07/21 21:36:01 dwelch Exp $
+/* $Id: suspend.c,v 1.13 2003/10/12 17:05:50 hbirr Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/suspend.c
@@ -213,7 +213,7 @@ NtSuspendThread(IN HANDLE ThreadHandle,
   return(STATUS_SUCCESS);
 }
 
-VOID
+VOID INIT_FUNCTION
 PsInitialiseSuspendImplementation(VOID)
 {
   ExInitializeFastMutex(&SuspendMutex);

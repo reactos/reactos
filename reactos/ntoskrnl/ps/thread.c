@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.119 2003/10/07 14:01:57 ekohl Exp $
+/* $Id: thread.c,v 1.120 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -418,7 +418,7 @@ PsApplicationProcessorInit(VOID)
     (PVOID)IdleThreads[KeGetCurrentProcessorNumber()];
 }
 
-VOID
+VOID INIT_FUNCTION
 PsPrepareForApplicationProcessorInit(ULONG Id)
 {
   PETHREAD IdleThread;
@@ -441,7 +441,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
 	   Id, IdleThread->Cid.UniqueThread);
 }
 
-VOID 
+VOID INIT_FUNCTION
 PsInitThreadManagment(VOID)
 /*
  * FUNCTION: Initialize thread managment

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.13 2003/09/26 19:45:04 ekohl Exp $
+/* $Id: arcname.c,v 1.14 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,7 +42,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
+NTSTATUS INIT_FUNCTION
 IoCreateArcNames(VOID)
 {
   PCONFIGURATION_INFORMATION ConfigInfo;
@@ -273,7 +273,7 @@ IopCheckCdromDevices(PULONG DeviceNumber)
 }
 
 
-NTSTATUS
+NTSTATUS INIT_FUNCTION
 IoCreateSystemRootLink(PCHAR ParameterLine)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;

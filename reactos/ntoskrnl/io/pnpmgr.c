@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.19 2003/10/03 13:37:53 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.20 2003/10/12 17:05:45 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1176,12 +1176,14 @@ IopInvalidateDeviceRelations(
   return STATUS_SUCCESS;
 }
 
-VOID IopLoadBootStartDrivers(VOID)
+VOID INIT_FUNCTION
+IopLoadBootStartDrivers(VOID)
 {
   IopInvalidateDeviceRelations(IopRootDeviceNode, BusRelations);
 }
 
-VOID PnpInit(VOID)
+VOID INIT_FUNCTION
+PnpInit(VOID)
 {
   PDEVICE_OBJECT Pdo;
   NTSTATUS Status;

@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.22 2003/10/07 13:58:53 ekohl Exp $
+/* $Id: driver.c,v 1.23 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -86,7 +86,7 @@ IopCreateDriver(PVOID ObjectBody,
 }
 
 
-VOID
+VOID INIT_FUNCTION
 IopInitDriverImplementation(VOID)
 {
   /*  Register the process object type  */
@@ -464,7 +464,7 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 }
 
 
-NTSTATUS
+NTSTATUS INIT_FUNCTION
 IoCreateDriverList(VOID)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -565,7 +565,7 @@ IoCreateDriverList(VOID)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 LdrLoadAutoConfigDrivers(VOID)
 {
   PLIST_ENTRY GroupEntry;
@@ -651,7 +651,7 @@ LdrLoadAutoConfigDrivers(VOID)
 }
 
 
-NTSTATUS
+NTSTATUS INIT_FUNCTION
 IoDestroyDriverList(VOID)
 {
   PLIST_ENTRY GroupEntry;

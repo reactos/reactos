@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.18 2003/10/07 14:00:45 ekohl Exp $
+/* $Id: evtpair.c,v 1.19 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -65,7 +65,8 @@ NtpCreateEventPair(PVOID ObjectBody,
   return(STATUS_SUCCESS);
 }
 
-VOID NtInitializeEventPairImplementation(VOID)
+VOID INIT_FUNCTION
+NtInitializeEventPairImplementation(VOID)
 {
    ExEventPairObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    

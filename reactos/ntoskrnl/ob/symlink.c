@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.4 2003/09/25 20:07:46 ekohl Exp $
+/* $Id: symlink.c,v 1.5 2003/10/12 17:05:49 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -168,7 +168,8 @@ ObpParseSymbolicLink(PVOID Object,
  *
  * REVISIONS
  */
-VOID ObInitSymbolicLinkImplementation (VOID)
+VOID INIT_FUNCTION
+ObInitSymbolicLinkImplementation (VOID)
 {
   ObSymbolicLinkType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
 

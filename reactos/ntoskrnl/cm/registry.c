@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.110 2003/10/10 21:55:16 ekohl Exp $
+/* $Id: registry.c,v 1.111 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -247,7 +247,7 @@ CmiCheckRegistry(BOOLEAN Verbose)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 CmInitializeRegistry(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -358,7 +358,7 @@ CmInitializeRegistry(VOID)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 CmInit2(PCHAR CommandLine)
 {
   PCHAR p1, p2;

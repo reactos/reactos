@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.39 2003/10/07 13:58:53 ekohl Exp $
+/* $Id: iomgr.c,v 1.40 2003/10/12 17:05:45 hbirr Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -198,7 +198,8 @@ IopQueryNameFile(PVOID ObjectBody,
 }
 
 
-VOID IoInit (VOID)
+VOID INIT_FUNCTION
+IoInit (VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING DirName;
@@ -358,7 +359,8 @@ VOID IoInit (VOID)
   PnpInit();
 }
 
-VOID IoInit2(VOID)
+VOID INIT_FUNCTION
+IoInit2(VOID)
 {
   PDEVICE_NODE DeviceNode;
   NTSTATUS Status;

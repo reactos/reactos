@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.173 2003/10/12 16:39:52 vizzini Exp $
+/* $Id: main.c,v 1.174 2003/10/12 17:05:45 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -86,7 +86,7 @@ extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS ****************************************************************/
 
-static BOOLEAN
+static BOOLEAN INIT_FUNCTION
 RtlpCheckFileNameExtension(PCHAR FileName,
 			   PCHAR Extension)
 {
@@ -111,7 +111,7 @@ RtlpCheckFileNameExtension(PCHAR FileName,
 }
 
 
-static VOID
+static VOID INIT_FUNCTION
 InitSystemSharedUserPage (PCSZ ParameterLine)
 {
    UNICODE_STRING ArcDeviceName;
@@ -289,21 +289,19 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
-VOID STATIC
+VOID STATIC INIT_FUNCTION
 MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
 {
-  PHYSICAL_ADDRESS Page;
   ULONG i;
 
   for (i = 0; i < PAGE_ROUND_UP(Length)/PAGE_SIZE; i++)
   {
-     Page = MmGetPhysicalAddressForProcess(NULL, StartAddress + i * PAGE_SIZE);
-     MmDeleteVirtualMapping(NULL, StartAddress + i * PAGE_SIZE, FALSE, NULL, NULL);
-     MmDereferencePage(Page);
+     MmDeleteVirtualMapping(NULL, StartAddress + i * PAGE_SIZE, TRUE, NULL, NULL);
+
   }
 }
 
-VOID
+VOID INIT_FUNCTION
 ExpInitializeExecutive(VOID)
 {
   LARGE_INTEGER Timeout;
@@ -840,8 +838,6 @@ ExpInitializeExecutive(VOID)
 
   NtClose(ThreadHandle);
   NtClose(ProcessHandle);
-
-  PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
 
@@ -852,8 +848,10 @@ KiSystemStartup(BOOLEAN BootProcessor)
 
   if (BootProcessor)
     {
-      /* Never returns */
       ExpInitializeExecutive();
+      MiFreeInitMemory();
+      /* Never returns */
+      PsTerminateSystemThread(STATUS_SUCCESS);
       KEBUGCHECK(0);
     }
   /* Do application processor initialization */
@@ -865,7 +863,8 @@ KiSystemStartup(BOOLEAN BootProcessor)
   for(;;);
 }
 
-VOID
+
+VOID INIT_FUNCTION
 _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel

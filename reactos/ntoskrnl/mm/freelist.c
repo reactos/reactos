@@ -219,7 +219,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    return((LARGE_INTEGER)((LONGLONG)start * PAGE_SIZE));
 }
 
-VOID 
+VOID INIT_FUNCTION
 MiParseRangeToFreeList(PADDRESS_RANGE Range)
 {
   ULONG i, first, last;
@@ -246,7 +246,7 @@ MiParseRangeToFreeList(PADDRESS_RANGE Range)
     }
 }
 
-VOID
+VOID INIT_FUNCTION
 MiParseRangeToBiosList(PADDRESS_RANGE Range)
 {
   ULONG i, first, last;
@@ -279,7 +279,7 @@ MiParseRangeToBiosList(PADDRESS_RANGE Range)
     }
 }
 
-VOID 
+VOID INIT_FUNCTION
 MiParseBIOSMemoryMap(ULONG MemorySizeInPages,
 		     PADDRESS_RANGE BIOSMemoryMap,
 		     ULONG AddressRangeCount)
@@ -305,7 +305,7 @@ MiParseBIOSMemoryMap(ULONG MemorySizeInPages,
     }
 }
 
-PVOID 
+PVOID INIT_FUNCTION
 MmInitializePageList(PVOID FirstPhysKernelAddress,
 		     PVOID LastPhysKernelAddress,
 		     ULONG MemorySizeInPages,
@@ -992,7 +992,8 @@ MmZeroPageThreadMain(PVOID Ignored)
     }
 }
  
-NTSTATUS MmInitZeroPageThread(VOID)
+NTSTATUS INIT_FUNCTION
+MmInitZeroPageThread(VOID)
 {
   KPRIORITY Priority;
   NTSTATUS Status;

@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.14 2003/07/10 21:05:03 royce Exp $
+/* $Id: aspace.c,v 1.15 2003/10/12 17:05:48 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,7 +52,7 @@ MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
   ExReleaseFastMutex(&AddressSpace->Lock);
 }
 
-VOID 
+VOID INIT_FUNCTION
 MmInitializeKernelAddressSpace(VOID)
 {
    MmInitializeAddressSpace(NULL, &KernelAddressSpace);

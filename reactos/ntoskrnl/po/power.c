@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: power.c,v 1.7 2003/07/11 01:23:15 royce Exp $
+/* $Id: power.c,v 1.8 2003/10/12 17:05:50 hbirr Exp $
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
@@ -213,7 +213,7 @@ PopSetSystemPowerState(
   return STATUS_NOT_IMPLEMENTED;
 }
 
-VOID
+VOID INIT_FUNCTION
 PoInit(VOID)
 {
 }

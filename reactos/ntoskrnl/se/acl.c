@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.12 2003/07/11 01:23:16 royce Exp $
+/* $Id: acl.c,v 1.13 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -32,7 +32,7 @@ PACL SeUnrestrictedDacl = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-BOOLEAN
+BOOLEAN INIT_FUNCTION
 SepInitDACLs(VOID)
 {
   ULONG AclLength2;

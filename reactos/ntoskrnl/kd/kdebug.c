@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.46 2003/08/11 18:50:12 chorns Exp $
+/* $Id: kdebug.c,v 1.47 2003/10/12 17:05:45 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,7 +59,7 @@ PrintString(char* fmt,...)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 KdInitSystem(ULONG Reserved,
 	     PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -243,7 +243,7 @@ KdInitSystem(ULONG Reserved,
 }
 
 
-VOID
+VOID INIT_FUNCTION
 KdInit1(VOID)
 {
   /* Initialize kernel debugger (phase 0) */
@@ -255,7 +255,8 @@ KdInit1(VOID)
 }
 
 
-VOID KdInit2(VOID)
+VOID INIT_FUNCTION
+KdInit2(VOID)
 {
   /* Initialize kernel debugger (phase 1) */
   if ((KdDebuggerEnabled == TRUE) &&
@@ -266,7 +267,7 @@ VOID KdInit2(VOID)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 KdInit3(VOID)
 {
   /* Print some information */

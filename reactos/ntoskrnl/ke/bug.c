@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.39 2003/10/06 16:24:20 gvg Exp $
+/* $Id: bug.c,v 1.40 2003/10/12 17:05:45 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -49,7 +49,7 @@ VOID PsDumpThreads(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 KeInitializeBugCheck(VOID)
 {
   InitializeListHead(&BugcheckCallbackListHead);

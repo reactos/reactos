@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.21 2003/10/11 17:23:52 hbirr Exp $
+/* $Id: nls.c,v 1.22 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,7 +62,7 @@ ULONG NlsUnicodeTableOffset = 0;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 RtlpImportAnsiCodePage(PUSHORT TableBase,
 		       ULONG Size)
 {
@@ -71,7 +71,7 @@ RtlpImportAnsiCodePage(PUSHORT TableBase,
 }
 
 
-VOID
+VOID INIT_FUNCTION
 RtlpImportOemCodePage(PUSHORT TableBase,
 		      ULONG Size)
 {
@@ -80,7 +80,7 @@ RtlpImportOemCodePage(PUSHORT TableBase,
 }
 
 
-VOID
+VOID INIT_FUNCTION
 RtlpImportUnicodeCasemap(PUSHORT TableBase,
 			 ULONG Size)
 {
@@ -89,7 +89,7 @@ RtlpImportUnicodeCasemap(PUSHORT TableBase,
 }
 
 
-VOID
+VOID INIT_FUNCTION
 RtlpCreateInitialNlsTables(VOID)
 {
   NLSTABLEINFO NlsTable;
@@ -110,7 +110,7 @@ RtlpCreateInitialNlsTables(VOID)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 RtlpCreateNlsSection(VOID)
 {
   NLSTABLEINFO NlsTable;

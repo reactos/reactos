@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.17 2003/07/17 16:57:38 silverblade Exp $
+/* $Id: work.c,v 1.18 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -129,7 +129,8 @@ static VOID ExInitializeWorkQueue(PWORK_QUEUE WorkQueue,
      }
 }
 
-VOID ExInitializeWorkerThreads(VOID)
+VOID INIT_FUNCTION
+ExInitializeWorkerThreads(VOID)
 {
    ExInitializeWorkQueue(&EiNormalWorkQueue,
 			 LOW_PRIORITY);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.40 2003/04/27 18:58:00 hbirr Exp $
+/* $Id: init.c,v 1.41 2003/10/12 17:05:45 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -377,7 +377,7 @@ l_Cleanup:
 }
 
 
-NTSTATUS
+NTSTATUS INIT_FUNCTION
 LdrLoadInitialProcess(PHANDLE ProcessHandle,
 		      PHANDLE ThreadHandle)
 {

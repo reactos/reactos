@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.28 2003/08/20 14:53:16 royce Exp $
+/* $Id: kmap.c,v 1.29 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -127,7 +127,7 @@ ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
    return NULL;
 }
 
-VOID 
+VOID INIT_FUNCTION
 MiInitKernelMap(VOID)
 {
    KeInitializeSpinLock(&AllocMapLock);

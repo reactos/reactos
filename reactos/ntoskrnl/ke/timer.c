@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.61 2003/07/21 21:53:51 royce Exp $
+/* $Id: timer.c,v 1.62 2003/10/12 17:05:45 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -507,7 +507,7 @@ KiUpdateSystemTime(KIRQL oldIrql,
 }
 
 
-VOID
+VOID INIT_FUNCTION
 KeInitializeTimerImpl(VOID)
 /*
  * FUNCTION: Initializes timer irq handling

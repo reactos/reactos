@@ -1300,7 +1300,7 @@ GspBreakIn(PKINTERRUPT Interrupt,
 extern ULONG KdpPortIrq;
 
 /* Initialize the GDB stub */
-VOID
+VOID INIT_FUNCTION
 KdGdbStubInit(ULONG Phase)
 {
 #if 0

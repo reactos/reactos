@@ -43,7 +43,8 @@ PsIdleThreadMain(PVOID Context)
      }
 }
 
-VOID PsInitIdleThread(VOID)
+VOID INIT_FUNCTION
+PsInitIdleThread(VOID)
 {
    KPRIORITY Priority;
    ULONG Affinity;

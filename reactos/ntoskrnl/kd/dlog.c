@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.7 2002/09/08 10:23:27 chorns Exp $
+/* $Id: dlog.c,v 1.8 2003/10/12 17:05:45 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,7 +40,7 @@ static KSEMAPHORE DebugLogSem;
 
 #ifdef DBGPRINT_FILE_LOG
 
-VOID
+VOID INIT_FUNCTION
 DebugLogInit(VOID)
 {
   KeInitializeSpinLock(&DebugLogLock);
@@ -111,7 +111,7 @@ DebugLogThreadMain(PVOID Context)
     }
 }
 
-VOID
+VOID INIT_FUNCTION
 DebugLogInit2(VOID)
 {
   NTSTATUS Status;
@@ -203,12 +203,12 @@ DebugLogInit2(VOID)
 
  #else /* not DBGPRINT_FILE_LOG */
 
- VOID
+ VOID INIT_FUNCTION
  DebugLogInit(VOID)
  {
  }
 
-VOID
+VOID INIT_FUNCTION
 DebugLogInit2(VOID)
 {
 }

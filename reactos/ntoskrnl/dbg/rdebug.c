@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rdebug.c,v 1.3 2002/09/08 10:23:18 chorns Exp $
+/* $Id: rdebug.c,v 1.4 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -67,7 +67,7 @@ DbgpFind(PCH Filename)
   return(NULL);
 }
 
-VOID
+VOID INIT_FUNCTION
 DbgRDebugInit(VOID)
 {
   if (RDebugInitialized)

@@ -123,8 +123,6 @@ static NTSTATUS ExceptionToNtStatus[] =
     STATUS_ACCESS_VIOLATION
   };
 
-extern unsigned int _text_start__, _text_end__;
-
 /* FUNCTIONS ****************************************************************/
 
 STATIC BOOLEAN 
@@ -609,7 +607,7 @@ set_task_gate(unsigned int sel, unsigned task_sel)
   KiIdt[sel].b = 0x8500;
 }
 
-VOID 
+VOID INIT_FUNCTION
 KeInitExceptions(VOID)
 /*
  * FUNCTION: Initalize CPU exception handling

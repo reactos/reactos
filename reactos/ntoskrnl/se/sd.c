@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.10 2003/07/11 01:23:16 royce Exp $
+/* $Id: sd.c,v 1.11 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -27,7 +27,7 @@ PSECURITY_DESCRIPTOR SeUnrestrictedSd = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN
+BOOLEAN INIT_FUNCTION
 SepInitSDs(VOID)
 {
   /* Create PublicDefaultSd */

@@ -359,7 +359,7 @@ KiDeleteProfile(PVOID ObjectBody)
   Profile->BufferMdl = NULL;
 }
 
-VOID
+VOID INIT_FUNCTION
 NtInitializeProfileImplementation(VOID)
 {
   ULONG i;

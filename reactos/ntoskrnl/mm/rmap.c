@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.23 2003/07/21 21:53:53 royce Exp $
+/* $Id: rmap.c,v 1.24 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -54,7 +54,7 @@ static NPAGED_LOOKASIDE_LIST RmapLookasideList;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
+VOID INIT_FUNCTION
 MmInitializeRmapList(VOID)
 {
   ExInitializeFastMutex(&RmapListLock);

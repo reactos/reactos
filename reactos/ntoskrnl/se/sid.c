@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.14 2003/07/11 01:23:16 royce Exp $
+/* $Id: sid.c,v 1.15 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -58,7 +58,7 @@ PSID SeAliasBackupOpsSid = NULL;
 /* FUNCTIONS ****************************************************************/
 
 
-BOOLEAN
+BOOLEAN INIT_FUNCTION
 SepInitSecurityIDs(VOID)
 {
   ULONG SidLength0;

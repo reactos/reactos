@@ -347,7 +347,8 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, BOOL TopDown)
 }
 
 
-NTSTATUS MmInitMemoryAreas(VOID)
+NTSTATUS INIT_FUNCTION
+MmInitMemoryAreas(VOID)
 /*
  * FUNCTION: Initialize the memory area list
  */

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.118 2003/10/07 14:01:57 ekohl Exp $
+/* $Id: process.c,v 1.119 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -229,7 +229,7 @@ PiKillMostProcesses(VOID)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 PsInitProcessManagment(VOID)
 {
    PKPROCESS KProcess;

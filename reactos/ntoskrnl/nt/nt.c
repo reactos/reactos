@@ -1,4 +1,4 @@
-/* $Id: nt.c,v 1.10 2002/09/08 10:23:38 chorns Exp $
+/* $Id: nt.c,v 1.11 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID NtInit(VOID)
+VOID INIT_FUNCTION
+NtInit(VOID)
 {
    NtInitializeEventImplementation();
    NtInitializeEventPairImplementation();

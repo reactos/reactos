@@ -36,7 +36,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-VOID 
+VOID INIT_FUNCTION
 ExInit (VOID)
 {
   ExInitTimeZoneInfo();

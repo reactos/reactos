@@ -78,7 +78,7 @@ NtpDeleteMutant(PVOID ObjectBody)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 NtInitializeMutantImplementation(VOID)
 {
   ExMutantObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));

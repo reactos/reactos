@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.28 2003/10/07 14:04:52 ekohl Exp $
+/* $Id: token.c,v 1.29 2003/10/12 17:05:50 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -455,7 +455,7 @@ SepDeleteToken(PVOID ObjectBody)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 SepInitializeTokenImplementation(VOID)
 {
   SepTokenObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));

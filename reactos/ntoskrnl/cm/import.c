@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.22 2003/10/10 21:55:16 ekohl Exp $
+/* $Id: import.c,v 1.23 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -161,7 +161,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
 }
 
 
-BOOLEAN
+BOOLEAN INIT_FUNCTION
 CmImportSystemHive(PCHAR ChunkBase,
 		   ULONG ChunkSize)
 {
@@ -216,7 +216,7 @@ CmImportSystemHive(PCHAR ChunkBase,
 }
 
 
-BOOLEAN
+BOOLEAN INIT_FUNCTION
 CmImportHardwareHive(PCHAR ChunkBase,
 		     ULONG ChunkSize)
 {

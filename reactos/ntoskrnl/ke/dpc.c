@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.27 2003/07/11 01:23:15 royce Exp $
+/* $Id: dpc.c,v 1.28 2003/10/12 17:05:45 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -223,7 +223,7 @@ KeSetTargetProcessorDpc (IN	PKDPC	Dpc,
 	UNIMPLEMENTED;
 }
 
-VOID 
+VOID INIT_FUNCTION
 KeInitDpc(VOID)
 /*
  * FUNCTION: Initialize DPC handling

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.135 2003/09/29 20:43:07 navaraf Exp $
+/* $Id: loader.c,v 1.136 2003/10/12 17:05:45 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -124,7 +124,7 @@ LdrInitDebug(PLOADER_MODULE Module, PWCH Name)
     }
 }
 
-VOID
+VOID INIT_FUNCTION
 LdrInit1(VOID)
 {
   PIMAGE_DOS_HEADER DosHeader;
@@ -171,7 +171,7 @@ LdrInit1(VOID)
 }
 
 
-VOID
+VOID INIT_FUNCTION
 LdrInitModuleManagement(VOID)
 {
   PIMAGE_DOS_HEADER DosHeader;
@@ -451,7 +451,7 @@ LdrUnloadModule(PMODULE_OBJECT ModuleObject)
 }
 
 
-NTSTATUS
+NTSTATUS INIT_FUNCTION
 LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
 			     PCHAR FileName,
 			     ULONG ModuleLength)

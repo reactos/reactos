@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.34 2003/08/14 18:30:28 silverblade Exp $
+/* $Id: buildirp.c,v 1.35 2003/10/12 17:05:44 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -140,8 +140,7 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 	  }
 	else
 	  {
-	     StackPtr->Parameters.Read.ByteOffset.u.LowPart = 0;
-	     StackPtr->Parameters.Read.ByteOffset.u.LowPart = 0;
+	     StackPtr->Parameters.Read.ByteOffset.QuadPart = 0;
 	  }     
      }
    else if (MajorFunction == IRP_MJ_WRITE)

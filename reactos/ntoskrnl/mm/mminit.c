@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.54 2003/07/21 21:53:53 royce Exp $
+/* $Id: mminit.c,v 1.55 2003/10/12 17:05:48 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -36,12 +36,16 @@
 extern unsigned int _text_start__;
 extern unsigned int _text_end__;
 
+extern unsigned int _init_start__;
+extern unsigned int _init_end__;
+
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
 static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
 
 extern unsigned int _bss_end__;
 
 static MEMORY_AREA* kernel_text_desc = NULL;
+static MEMORY_AREA* kernel_init_desc = NULL;
 static MEMORY_AREA* kernel_map_desc = NULL;
 static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
@@ -79,8 +83,9 @@ VOID MiShutdownMemoryManager(VOID)
 {
 }
 
-VOID MmInitVirtualMemory(ULONG LastKernelAddress,
-			 ULONG KernelLength)
+VOID INIT_FUNCTION
+MmInitVirtualMemory(ULONG LastKernelAddress,
+		    ULONG KernelLength)
 /*
  * FUNCTION: Intialize the memory areas list
  * ARGUMENTS:
@@ -145,11 +150,28 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &kernel_text_desc,
 		      FALSE,
 		      FALSE);
-   Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
+
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
+   assert (BaseAddress == (PVOID)&_init_start__);
+   Length = PAGE_ROUND_UP(((ULONG)&_init_end__)) -
             PAGE_ROUND_UP(((ULONG)&_text_end__));
    ParamLength = ParamLength - Length;
+
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      Length,
+		      0,
+		      &kernel_init_desc,
+		      FALSE,
+		      FALSE);
+
+   Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
+            PAGE_ROUND_UP(((ULONG)&_init_end__));
+   ParamLength = ParamLength - Length;
    DPRINT("Length %x\n",Length);
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_init_end__));
    DPRINT("BaseAddress %x\n",BaseAddress);
 
    /*
@@ -247,12 +269,13 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 }
 
-VOID MmInit1(ULONG FirstKrnlPhysAddr,
-	     ULONG LastKrnlPhysAddr,
-	     ULONG LastKernelAddress,
-	     PADDRESS_RANGE BIOSMemoryMap,
-	     ULONG AddressRangeCount,
-	     ULONG MaxMem)
+VOID INIT_FUNCTION
+MmInit1(ULONG FirstKrnlPhysAddr,
+	ULONG LastKrnlPhysAddr,
+	ULONG LastKernelAddress,
+	PADDRESS_RANGE BIOSMemoryMap,
+	ULONG AddressRangeCount,
+	ULONG MaxMem)
 /*
  * FUNCTION: Initalize memory managment
  */
@@ -370,9 +393,9 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     * segment
     */
    CHECKPOINT;
-   DPRINT("_text_start__ %x _text_end__ %x\n",(int)&_text_start__,(int)&_text_end__);
-   for (i=PAGE_ROUND_UP(((int)&_text_start__));
-	i<PAGE_ROUND_DOWN(((int)&_text_end__));i=i+PAGE_SIZE)
+   DPRINT("_text_start__ %x _init_end__ %x\n",(int)&_text_start__,(int)&_init_end__);
+   for (i=PAGE_ROUND_DOWN(((int)&_text_start__));
+	i<PAGE_ROUND_UP(((int)&_init_end__));i=i+PAGE_SIZE)
      {
 	MmSetPageProtect(NULL,
 			 (PVOID)i,
@@ -403,13 +426,15 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
    MmInitializeMdlImplementation();
 }
 
-VOID MmInit2(VOID)
+VOID INIT_FUNCTION
+MmInit2(VOID)
 {
    MmInitSectionImplementation();
    MmInitPagingFile();
 }
 
-VOID MmInit3(VOID)
+VOID INIT_FUNCTION
+MmInit3(VOID)
 {
    /*
     * Unmap low memory
@@ -433,3 +458,26 @@ VOID MmInit3(VOID)
    /* FIXME: Read parameters from memory */
 }
 
+VOID STATIC
+MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
+		     PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, 
+		     BOOLEAN Dirty)
+{
+  assert(SwapEntry == 0);
+  if (PhysAddr.QuadPart  != 0)
+    {
+      MmReleasePageMemoryConsumer(MC_NPPOOL, PhysAddr);
+    }
+}
+
+VOID 
+MiFreeInitMemory(VOID)
+{
+  MmLockAddressSpace(MmGetKernelAddressSpace());
+  MmFreeMemoryArea(MmGetKernelAddressSpace(),
+		   (PVOID)&_init_start__,
+		   PAGE_ROUND_UP((ULONG)&_init_end__) - (ULONG)_init_start__,
+		   MiFreeInitMemoryPage,
+		   NULL);
+  MmUnlockAddressSpace(MmGetKernelAddressSpace());
+}

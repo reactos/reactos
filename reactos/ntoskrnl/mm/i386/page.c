@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.59 2003/08/27 21:28:08 dwelch Exp $
+/* $Id: page.c,v 1.60 2003/10/12 17:05:48 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -1353,7 +1353,7 @@ MmUpdateStackPageDir(PULONG LocalPageDir, PKTHREAD PThread)
     }
 }
 
-VOID 
+VOID INIT_FUNCTION
 MmInitGlobalKernelPageDirectory(VOID)
 {
   ULONG i;

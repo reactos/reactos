@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.9 2003/09/09 14:50:19 gvg Exp $
+/* $Id: fpu.c,v 1.10 2003/10/12 17:05:45 hbirr Exp $
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
@@ -42,7 +42,7 @@ ULONG HardwareMathSupport;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID INIT_FUNCTION
 KiCheckFPU(VOID)
 {
    unsigned short int status;
