@@ -27,15 +27,47 @@
 #include <fs.h>
 #include <multiboot.h>
 #include <mm.h>
+#include <ui.h>
 
 #include "registry.h"
 
 
+//#define USE_UI
+
+
 static BOOL
-LoadKernel(PCHAR szFileName)
+LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
 {
+  CHAR szFullName[256];
+#ifdef USE_UI
+  CHAR szBuffer[80];
+#endif
   PFILE FilePointer;
   PCHAR szShortName;
+
+  if (szSourcePath[0] != '\\')
+    {
+      strcpy(szFullName, "\\");
+      strcat(szFullName, szSourcePath);
+    }
+  else
+    {
+      strcpy(szFullName, szSourcePath);
+    }
+
+  if (szFullName[strlen(szFullName)] != '\\')
+    {
+      strcat(szFullName, "\\");
+    }
+
+  if (szFileName[0] != '\\')
+    {
+      strcat(szFullName, szFileName);
+    }
+  else
+    {
+      strcat(szFullName, szFileName + 1);
+    }
 
   szShortName = strrchr(szFileName, '\\');
   if (szShortName == NULL)
@@ -43,7 +75,7 @@ LoadKernel(PCHAR szFileName)
   else
     szShortName = szShortName + 1;
 
-  FilePointer = FsOpenFile(szFileName);
+  FilePointer = FsOpenFile(szFullName);
   if (FilePointer == NULL)
     {
       printf("Could not find %s\n", szShortName);
@@ -53,7 +85,12 @@ LoadKernel(PCHAR szFileName)
   /*
    * Update the status bar with the current file
    */
+#ifdef USE_UI
+  sprintf(szBuffer, "Reading %s", szShortName);
+  UiDrawStatusText(szBuffer);
+#else
   printf("Reading %s\n", szShortName);
+#endif
 
   /*
    * Load the kernel
@@ -65,10 +102,38 @@ LoadKernel(PCHAR szFileName)
 
 
 static BOOL
-LoadDriver(PCHAR szFileName)
+LoadDriver(PCHAR szSourcePath, PCHAR szFileName)
 {
+  CHAR szFullName[256];
+#ifdef USE_UI
+  CHAR szBuffer[80];
+#endif
   PFILE FilePointer;
   PCHAR szShortName;
+
+  if (szSourcePath[0] != '\\')
+    {
+      strcpy(szFullName, "\\");
+      strcat(szFullName, szSourcePath);
+    }
+  else
+    {
+      strcpy(szFullName, szSourcePath);
+    }
+
+  if (szFullName[strlen(szFullName)] != '\\')
+    {
+      strcat(szFullName, "\\");
+    }
+
+  if (szFileName[0] != '\\')
+    {
+      strcat(szFullName, szFileName);
+    }
+  else
+    {
+      strcat(szFullName, szFileName + 1);
+    }
 
   szShortName = strrchr(szFileName, '\\');
   if (szShortName == NULL)
@@ -77,7 +142,7 @@ LoadDriver(PCHAR szFileName)
     szShortName = szShortName + 1;
 
 
-  FilePointer = FsOpenFile(szFileName);
+  FilePointer = FsOpenFile(szFullName);
   if (FilePointer == NULL)
     {
       printf("Could not find %s\n", szFileName);
@@ -87,10 +152,80 @@ LoadDriver(PCHAR szFileName)
   /*
    * Update the status bar with the current file
    */
+#ifdef USE_UI
+  sprintf(szBuffer, "Reading %s", szShortName);
+  UiDrawStatusText(szBuffer);
+#else
   printf("Reading %s\n", szShortName);
+#endif
 
   /* Load the driver */
   MultiBootLoadModule(FilePointer, szFileName, NULL);
+
+  return(TRUE);
+}
+
+
+static BOOL
+LoadNlsFile(PCHAR szSourcePath, PCHAR szFileName, PCHAR szModuleName)
+{
+  CHAR szFullName[256];
+#ifdef USE_UI
+  CHAR szBuffer[80];
+#endif
+  PFILE FilePointer;
+  PCHAR szShortName;
+
+  if (szSourcePath[0] != '\\')
+    {
+      strcpy(szFullName, "\\");
+      strcat(szFullName, szSourcePath);
+    }
+  else
+    {
+      strcpy(szFullName, szSourcePath);
+    }
+
+  if (szFullName[strlen(szFullName)] != '\\')
+    {
+      strcat(szFullName, "\\");
+    }
+
+  if (szFileName[0] != '\\')
+    {
+      strcat(szFullName, szFileName);
+    }
+  else
+    {
+      strcat(szFullName, szFileName + 1);
+    }
+
+  szShortName = strrchr(szFileName, '\\');
+  if (szShortName == NULL)
+    szShortName = szFileName;
+  else
+    szShortName = szShortName + 1;
+
+
+  FilePointer = FsOpenFile(szFullName);
+  if (FilePointer == NULL)
+    {
+      printf("Could not find %s\n", szFileName);
+      return(FALSE);
+    }
+
+  /*
+   * Update the status bar with the current file
+   */
+#ifdef USE_UI
+  sprintf(szBuffer, "Reading %s", szShortName);
+  UiDrawStatusText(szBuffer);
+#else
+  printf("Reading %s\n", szShortName);
+#endif
+
+  /* Load the driver */
+  MultiBootLoadModule(FilePointer, szModuleName, NULL);
 
   return(TRUE);
 }
@@ -100,6 +235,8 @@ VOID RunLoader(VOID)
 {
   PVOID Base;
   U32 Size;
+  char *SourcePath;
+  char *LoadOptions;
 
   /* Setup multiboot information structure */
   mb_info.flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
@@ -137,37 +274,72 @@ VOID RunLoader(VOID)
   getch();
 #endif
 
+#ifdef USE_UI
+  UiInitialize();
+  UiDrawStatusText("");
+#endif
+
   /* Initialize registry */
   RegInitializeRegistry();
 
   /* Detect hardware */
+#ifdef USE_UI
+  UiDrawStatusText("Detecting hardware...");
+#else
   printf("Detecting hardware...\n\n");
+#endif
   DetectHardware();
+#ifdef USE_UI
+  UiDrawStatusText("");
+#endif
 
   /* set boot drive and partition */
   ((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
   ((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
 
-  /* Copy ARC path into kernel command line */
+
+  /* Set load options */
+//  LoadOptions = "/DEBUGPORT=COM1";
+  LoadOptions = "/DEBUGPORT=SCREEN";
+
+  if (BootDrive < 0x80)
+    {
+      /* Boot from floppy disk */
+      SourcePath = "\\";
+    }
+  else
+    {
+      /* Boot from cdrom */
+      SourcePath = "\\reactos";
+    }
+
+  /* Set kernel command line */
   sprintf(multiboot_kernel_cmdline,
-//	  "multi(0)disk(0)cdrom(%u)\\reactos  /DEBUGPORT=COM1",
-	  "multi(0)disk(0)cdrom(%u)\\reactos  /DEBUGPORT=SCREEN",
-	  (unsigned int)BootDrive);
+	  "multi(0)disk(0)%s(%u)%s  %s",
+	  (BootDrive < 0x80) ? "fdisk" : "cdrom",
+	  (unsigned int)BootDrive,
+	  SourcePath,
+	  LoadOptions);
+
 
   /* Open boot drive */
   if (!FsOpenVolume(BootDrive, BootPartition))
     {
+#ifdef USE_UI
+      UiMessageBox("Failed to open boot drive.");
+#else
       printf("Failed to open boot drive.");
+#endif
       return;
     }
 
   /* Load ntoskrnl.exe */
-  if (!LoadKernel("\\reactos\\ntoskrnl.exe"))
+  if (!LoadKernel(SourcePath, "ntoskrnl.exe"))
     return;
 
 
   /* Load hal.dll */
-  if (!LoadDriver("\\reactos\\hal.dll"))
+  if (!LoadDriver(SourcePath, "hal.dll"))
     return;
 
 
@@ -176,91 +348,154 @@ VOID RunLoader(VOID)
   RegExportBinaryHive ("\\Registry\\Machine\\HARDWARE", Base, &Size);
   MultiBootCloseModule (Base, Size);
 
+#if 0
   printf("Base: %x\n", Base);
   printf("Size: %u\n", Size);
-#if 0
   printf("*** System stopped ***\n");
 for(;;);
 #endif
 
-
-  /* Load NLS files */
-#if 0
-  if (!LoadNlsFiles(szBootPath))
+  /* Insert boot disk 2 */
+  if (BootDrive < 0x80)
     {
-      MessageBox("Failed to load NLS files\n");
-      return;
-    }
+#ifdef USE_UI
+      UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
+#else
+      printf("\n\n Please insert \"ReactOS Boot Disk 2\" and press ENTER\n");
+      getch();
 #endif
 
+      /* Open boot drive */
+      if (!FsOpenVolume(BootDrive, BootPartition))
+	{
+#ifdef USE_UI
+	  UiMessageBox("Failed to open boot drive.");
+#else
+	  printf("Failed to open boot drive.");
+#endif
+	  return;
+	}
 
+      /* FIXME: check volume label or disk marker file */
+    }
+
+
+  /* Load ANSI codepage file */
+  if (!LoadNlsFile(SourcePath, "c_1252.nls", "ansi.nls"))
+    {
+#ifdef USE_UI
+      UiMessageBox("Failed to load the ANSI codepage file.");
+#else
+      printf("Failed to load the ANSI codepage file.");
+#endif
+      return;
+    }
+
+  /* Load OEM codepage file */
+  if (!LoadNlsFile(SourcePath, "c_437.nls", "oem.nls"))
+    {
+#ifdef USE_UI
+      UiMessageBox("Failed to load the OEM codepage file.");
+#else
+      printf("Failed to load the OEM codepage file.");
+#endif
+      return;
+    }
+
+  /* Load Unicode casemap file */
+  if (!LoadNlsFile(SourcePath, "l_intl.nls", "casemap.nls"))
+    {
+#ifdef USE_UI
+      UiMessageBox("Failed to load the Unicode casemap file.");
+#else
+      printf("Failed to load the Unicode casemap file.");
+#endif
+      return;
+    }
+
+
+  /* Load drivers */
+  if (BootDrive < 0x80)
+    {
+      /*
+       * Load floppy.sys
+       */
+      if (!LoadDriver(SourcePath, "floppy.sys"))
+	return;
+
+      /*
+       * Load vfatfs.sys (could be loaded by the setup prog!)
+       */
+      if (!LoadDriver(SourcePath, "vfatfs.sys"))
+	return;
+    }
+  else
+    {
 	/*
 	 * Load scsiport.sys
 	 */
-	if (!LoadDriver("\\reactos\\scsiport.sys"))
+	if (!LoadDriver(SourcePath, "scsiport.sys"))
 		return;
 
 	/*
 	 * Load atapi.sys (depends on hardware detection)
 	 */
-	if (!LoadDriver("\\reactos\\atapi.sys"))
+	if (!LoadDriver(SourcePath, "atapi.sys"))
 		return;
 
 	/*
 	 * Load class2.sys
 	 */
-	if (!LoadDriver("\\reactos\\class2.sys"))
+	if (!LoadDriver(SourcePath, "class2.sys"))
 		return;
 
 	/*
 	 * Load cdrom.sys
 	 */
-	if (!LoadDriver("\\reactos\\cdrom.sys"))
+	if (!LoadDriver(SourcePath, "cdrom.sys"))
 		return;
 
 	/*
 	 * Load cdfs.sys
 	 */
-	if (!LoadDriver("\\reactos\\cdfs.sys"))
+	if (!LoadDriver(SourcePath, "cdfs.sys"))
 		return;
-
-	/*
-	 * Load floppy.sys (only in case of a floppy disk setup!)
-	 */
-//	if (!LoadDriver("\\reactos\\floppy.sys"))
-//		return;
 
 	/*
 	 * Load disk.sys
 	 */
-	if (!LoadDriver("\\reactos\\disk.sys"))
+	if (!LoadDriver(SourcePath, "disk.sys"))
 		return;
 
 	/*
 	 * Load vfatfs.sys (could be loaded by the setup prog!)
 	 */
-	if (!LoadDriver("\\reactos\\vfatfs.sys"))
+	if (!LoadDriver(SourcePath, "vfatfs.sys"))
 		return;
-
-	/*
-	 * Load keyboard driver
-	 */
-	if (!LoadDriver("\\reactos\\keyboard.sys"))
-		return;
-
-	/*
-	 * Load screen driver
-	 */
-	if (!LoadDriver("\\reactos\\blue.sys"))
-		return;
-
-	/*
-	 * Now boot the kernel
-	 */
-	DiskStopFloppyMotor();
-	boot_reactos();
+    }
 
 
-//  printf("*** System stopped ***\n");
-//  for(;;);
+  /*
+   * Load keyboard driver
+   */
+  if (!LoadDriver(SourcePath, "keyboard.sys"))
+    return;
+
+  /*
+   * Load screen driver
+   */
+  if (!LoadDriver(SourcePath, "blue.sys"))
+    return;
+
+#ifdef USE_UI
+  UiUnInitialize("Booting ReactOS...");
+#endif
+
+  /*
+   * Now boot the kernel
+   */
+  DiskStopFloppyMotor();
+  boot_reactos();
 }
+
+/* EOF */

@@ -147,6 +147,7 @@ LoadSymbolFile(PCHAR szSystemRoot,
   return (TRUE);
 }
 
+
 static BOOL
 LoadDriver(PCHAR szFileName, int nPos)
 {
@@ -185,7 +186,6 @@ LoadDriver(PCHAR szFileName, int nPos)
 }
 
 
-#if 0
 static BOOL
 LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
 {
@@ -220,7 +220,6 @@ LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
 
   return(TRUE);
 }
-#endif
 
 
 static VOID
@@ -327,7 +326,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		nPos += 5;
 
 	      LoadDriver(ImagePath, nPos);
-        LoadSymbolFile(szSystemRoot, ImagePath, nPos);
+	      LoadSymbolFile(szSystemRoot, ImagePath, nPos);
 	    }
 	  else
 	    {
@@ -341,7 +340,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
     }
 }
 
-#if 0
+
 static BOOL
 LoadNlsFiles(PCHAR szSystemRoot)
 {
@@ -376,7 +375,8 @@ LoadNlsFiles(PCHAR szSystemRoot)
   strcpy(szFileName, szSystemRoot);
   strcat(szFileName, "system32\\");
   strcat(szFileName, szNameBuffer);
-  if (!LoadNlsFile(szFileName, "ANSI.NLS"))
+  DbgPrint((DPRINT_REACTOS, "ANSI file: %s\n", szFileName));
+  if (!LoadNlsFile(szFileName, "ansi.nls"))
     return(FALSE);
 
 
@@ -395,7 +395,8 @@ LoadNlsFiles(PCHAR szSystemRoot)
   strcpy(szFileName, szSystemRoot);
   strcat(szFileName, "system32\\");
   strcat(szFileName, szNameBuffer);
-  if (!LoadNlsFile(szFileName, "OEM.NLS"))
+  DbgPrint((DPRINT_REACTOS, "Oem file: %s\n", szFileName));
+  if (!LoadNlsFile(szFileName, "oem.nls"))
     return(FALSE);
 
 
@@ -422,12 +423,12 @@ LoadNlsFiles(PCHAR szSystemRoot)
   strcpy(szFileName, szSystemRoot);
   strcat(szFileName, "system32\\");
   strcat(szFileName, szNameBuffer);
-  if (!LoadNlsFile(szFileName, "UNICASE.NLS"))
+  DbgPrint((DPRINT_REACTOS, "Casemap file: %s\n", szFileName));
+  if (!LoadNlsFile(szFileName, "casemap.nls"))
     return(FALSE);
 
   return(TRUE);
 }
-#endif
 
 
 void
@@ -729,32 +730,34 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Load NLS files
 	 */
-#if 0
 	if (!LoadNlsFiles(szBootPath))
 	{
-		UiMessageBox("Failed to load NLS files\n");
+		UiMessageBox("Could not load the NLS files!\n");
 		return;
 	}
-#endif
-
-	LoadSymbolFile(szBootPath, szKernelName, 25);
-	LoadSymbolFile(szBootPath, szHalName, 25);
-
 	UiDrawProgressBarCenter(25, 100, "Loading ReactOS...");
+
+	/*
+	 * Load symbol files
+	 */
+	LoadSymbolFile(szBootPath, szKernelName, 30);
+	LoadSymbolFile(szBootPath, szHalName, 30);
+
+	UiDrawProgressBarCenter(30, 100, "Loading ReactOS...");
 
 	/*
 	 * Load boot drivers
 	 */
-	LoadBootDrivers(szBootPath, 25);
+	LoadBootDrivers(szBootPath, 30);
 
 
+#if 0
 	/*
 	 * Clear the screen and redraw the backdrop and status bar
 	 */
 	UiDrawBackdrop();
 	UiDrawStatusText("Press any key to boot");
 
-#if 0
 	/*
 	 * Wait for user
 	 */
