@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.60 2004/02/17 23:58:54 tamlin Exp $
+/* $Id: mminit.c,v 1.61 2004/03/16 21:13:15 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -24,11 +24,6 @@
 #include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/
-
-/*
- * Size of extended memory (kb) (fixed for now)
- */
-#define EXTENDED_MEMORY_SIZE  (3*1024*1024)
 
 /*
  * Compiler defined symbols
