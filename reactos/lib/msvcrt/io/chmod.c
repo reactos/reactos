@@ -1,12 +1,15 @@
 #include <windows.h>
 #include <msvcrt/io.h>
 
-#define mode_t int
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
 
+#define mode_t int
 
 int _chmod(const char *filename, mode_t mode)
 {
   DWORD FileAttributes = 0;
+  DPRINT("_chmod('%s', %x)\n", filename, mode);
 
   FileAttributes = GetFileAttributesA(filename);
   if ( FileAttributes == -1 )
@@ -31,6 +34,7 @@ int _chmod(const char *filename, mode_t mode)
 int _wchmod(const wchar_t *filename, mode_t mode)
 {
   DWORD FileAttributes = 0;
+  DPRINT("_wchmod('%S', %x)\n", filename, mode);
 
   FileAttributes = GetFileAttributesW(filename);
   if ( FileAttributes == -1 )

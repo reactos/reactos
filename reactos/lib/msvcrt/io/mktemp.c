@@ -17,6 +17,9 @@
 #include <msvcrt/string.h>
 #include <msvcrt/io.h>
 
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
+
 
 char* _mktemp (char *_template)
 {
@@ -24,6 +27,7 @@ char* _mktemp (char *_template)
   char *cp, *dp;
   int i, len, xcount, loopcnt;
 
+  DPRINT("_mktemp('%s')\n", _template);
   len = strlen (_template);
   cp = _template + len;
 
@@ -76,6 +80,7 @@ wchar_t* _wmktemp (wchar_t *_template)
   wchar_t *cp, *dp;
   int i, len, xcount, loopcnt;
 
+  DPRINT("_wmktemp('%S')\n", _template);
   len = wcslen (_template);
   cp = _template + len;
 
