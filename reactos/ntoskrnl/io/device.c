@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.43 2002/06/10 23:03:33 ekohl Exp $
+/* $Id: device.c,v 1.44 2002/06/12 14:05:03 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -529,7 +529,7 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
     {
       DeviceNode->DriverObject = NULL;
       ExFreePool(DriverObject->DriverExtension);
-      ExFreePool(DriverObject);
+      ObDereferenceObject(DriverObject);
       return(Status);
     }
 

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.108 2002/06/11 18:37:23 ekohl Exp $
+/* $Id: loader.c,v 1.109 2002/06/12 14:05:03 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1103,8 +1103,7 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
     Length = wcslen(Start);
 
   wcsncpy(Buffer, Start, Length);
-  RtlInitUnicodeString(&DeviceNode->ServiceName, Buffer);
-
+  RtlCreateUnicodeString(&DeviceNode->ServiceName, Buffer);
 
   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
   if (!NT_SUCCESS(Status))

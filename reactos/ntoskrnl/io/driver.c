@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.2 2002/06/10 23:03:33 ekohl Exp $
+/* $Id: driver.c,v 1.3 2002/06/12 14:05:03 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -142,8 +142,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     Length = wcslen(Start);
 
   wcsncpy(Buffer, Start, Length);
-  RtlInitUnicodeString(&DeviceNode->ServiceName, Buffer);
-
+  RtlCreateUnicodeString(&DeviceNode->ServiceName, Buffer);
 
   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
   if (!NT_SUCCESS(Status))
