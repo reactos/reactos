@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: close.c,v 1.7 2003/09/20 20:31:57 weiden Exp $
+/* $Id: close.c,v 1.8 2004/09/14 21:46:39 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -69,10 +69,7 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
       CdfsReleaseFCB(DeviceExt, FileObject->FsContext);
     }
 
-  if (Ccb->DirectorySearchPattern)
-    {
-      ExFreePool(Ccb->DirectorySearchPattern);
-    }
+  RtlFreeUnicodeString(&Ccb->DirectorySearchPattern);
   ExFreePool(Ccb);
 
   return(STATUS_SUCCESS);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.7 2004/05/23 13:27:26 hbirr Exp $
+/* $Id: misc.c,v 1.8 2004/09/14 21:46:39 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,49 +37,6 @@
 
 
 /* FUNCTIONS ****************************************************************/
-
-
-BOOLEAN
-wstrcmpjoki(PWSTR s1,
-	    PWSTR s2)
-/*
- * FUNCTION: Compare two wide character strings, s2 with jokers (* or ?)
- * return TRUE if s1 like s2
- */
-{
-  while ((*s2=='*')||(*s2=='?')||(towlower(*s1)==towlower(*s2)))
-    {
-      if ((*s1)==0 && (*s2)==0)
-        return(TRUE);
-
-      if(*s2=='*')
-	{
-	  s2++;
-	  while (*s1)
-	    if (wstrcmpjoki(s1,s2))
-	      return(TRUE);
-	    else
-	      s1++;
-	}
-      else
-	{
-	  s1++;
-	  s2++;
-	}
-    }
-
-  if ((*s2)=='.')
-    {
-      for (;((*s2)=='.')||((*s2)=='*')||((*s2)=='?');s2++)
-	;
-    }
-
-  if ((*s1)==0 && (*s2)==0)
-    return(TRUE);
-
-  return(FALSE);
-}
-
 
 VOID
 CdfsSwapString(PWCHAR Out,
