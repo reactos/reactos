@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.135 2004/07/19 06:08:21 ion Exp $
+/* $Id: process.c,v 1.136 2004/07/20 23:58:35 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -527,14 +527,13 @@ PsGetCurrentProcessId(VOID)
 /*
  * @unimplemented
  */
-NTKERNELAPI
 ULONG
+STDCALL
 PsGetCurrentProcessSessionId (
     	VOID
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return PsGetCurrentProcess()->SessionId;
 }
 
 /*
@@ -1602,20 +1601,19 @@ PsGetProcessExitTime(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-ULONG
+LONGLONG
 STDCALL
 PsGetProcessCreateTimeQuadPart(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->CreateTime.QuadPart;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -1623,12 +1621,11 @@ PsGetProcessDebugPort(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->DebugPort;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -1636,12 +1633,11 @@ PsGetProcessExitProcessCalled(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;	
+	return Process->ExitProcessCalled;	
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -1649,12 +1645,11 @@ PsGetProcessExitStatus(
 	PEPROCESS Process
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;	
+	return Process->ExitStatus;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 STDCALL
@@ -1662,25 +1657,23 @@ PsGetProcessId(
    	PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return (HANDLE)Process->UniqueProcessId;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-PWSTR
+LPSTR
 STDCALL
 PsGetProcessImageFileName(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return (LPSTR)Process->ImageFileName;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 STDCALL
@@ -1688,8 +1681,7 @@ PsGetProcessInheritedFromUniqueProcessId(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->InheritedFromUniqueProcessId;
 }
 
 /*
@@ -1706,7 +1698,7 @@ PsGetProcessJob(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PPEB
 STDCALL
@@ -1714,12 +1706,11 @@ PsGetProcessPeb(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->Peb;	
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 STDCALL
@@ -1727,12 +1718,11 @@ PsGetProcessPriorityClass(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->PriorityClass;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -1740,12 +1730,11 @@ PsGetProcessSectionBaseAddress(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->SectionBaseAddress;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -1753,12 +1742,11 @@ PsGetProcessSecurityPort(
 	PEPROCESS Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->SecurityPort;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 STDCALL
@@ -1766,12 +1754,11 @@ PsGetProcessSessionId(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return (HANDLE)Process->SessionId;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -1779,12 +1766,11 @@ PsGetProcessWin32Process(
 	PEPROCESS Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->Win32Process;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -1792,12 +1778,11 @@ PsGetProcessWin32WindowStation(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Process->Win32WindowStation;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -1805,8 +1790,7 @@ PsIsProcessBeingDebugged(
     PEPROCESS	Process
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;	
+	return FALSE/*Process->IsProcessBeingDebugged*/;
 }
 
 
@@ -1954,7 +1938,7 @@ PsSetLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */                       
 VOID
 STDCALL
@@ -1963,11 +1947,11 @@ PsSetProcessPriorityClass(
     ULONG	PriorityClass	
 	)
 {
-	UNIMPLEMENTED;
+	Process->PriorityClass = PriorityClass;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */                       
 VOID
 STDCALL
@@ -1976,11 +1960,11 @@ PsSetProcessSecurityPort(
     PVOID	SecurityPort	
 	)
 {
-	UNIMPLEMENTED;
+	Process->SecurityPort = SecurityPort;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */                       
 VOID
 STDCALL
@@ -1989,11 +1973,11 @@ PsSetProcessWin32Process(
     PVOID	Win32Process
 	)
 {
-	UNIMPLEMENTED;
+	Process->Win32Process = Win32Process;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */                       
 VOID
 STDCALL
@@ -2002,7 +1986,7 @@ PsSetProcessWin32WindowStation(
     PVOID	WindowStation
 	)
 {
-	UNIMPLEMENTED;
+	Process->Win32WindowStation = WindowStation;
 }
 
 /* Pool Quotas */

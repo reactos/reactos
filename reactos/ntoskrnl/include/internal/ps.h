@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.60 2004/06/24 21:03:56 ion Exp $
+/* $Id: ps.h,v 1.61 2004/07/20 23:58:35 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -438,6 +438,10 @@ struct _EPROCESS
     * Added by Philip Susi for list of threads in process
     */
   LIST_ENTRY           ThreadListHead;
+
+  /* Added by Alex Ionescu (alex@relsoft.net)*/
+  ULONG					SessionId;
+  struct _EPORT*		SecurityPort;
 };
 
 #define PROCESS_STATE_TERMINATED (1)

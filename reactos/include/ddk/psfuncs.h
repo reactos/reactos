@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.29 2004/07/19 06:08:21 ion Exp $
+/* $Id: psfuncs.h,v 1.30 2004/07/20 23:58:34 ion Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -131,7 +131,7 @@ STDCALL PsGetJobUIRestrictionsClass(
    	PVOID /*PEJOB*/	Job
 	);
 
-ULONG
+LONGLONG
 STDCALL PsGetProcessCreateTimeQuadPart(
     PEPROCESS	Process
 	);
@@ -157,7 +157,7 @@ STDCALL PsGetProcessId(
    	PEPROCESS	Process
 	);
 
-PWSTR
+LPSTR
 STDCALL PsGetProcessImageFileName(
     PEPROCESS	Process
 	);
