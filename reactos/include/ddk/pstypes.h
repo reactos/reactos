@@ -186,7 +186,7 @@ typedef struct _KTHREAD
    ULONG             WaitMode;
    UCHAR             WaitNext;
    UCHAR             WaitReason;
-   PVOID             WaitBlockList;
+   PKWAIT_BLOCK      WaitBlockList;
    LIST_ENTRY        WaitListEntry;
    ULONG             WaitTime;
    KPRIORITY         BasePriority;
