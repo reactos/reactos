@@ -1,4 +1,9 @@
-; $Id: psapi.def,v 1.2 2002/08/31 15:36:56 hyperion Exp $
+; $Id: psapi.def,v 1.3 2002/08/31 17:11:24 hyperion Exp $
+;
+; THIS SOFTWARE IS NOT COPYRIGHTED
+;
+; This source code is offered for use in the public domain. You may
+; use, modify or distribute it freely.
 ;
 
 LIBRARY PSAPI.DLL

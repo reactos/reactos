@@ -1,7 +1,8 @@
-/* $Id: malloc.c,v 1.2 2002/08/29 23:57:54 hyperion Exp $
+/* $Id: malloc.c,v 1.3 2002/08/31 17:11:24 hyperion Exp $
  */
 /*
- * COPYRIGHT:   See COPYING in the top level directory
+ * COPYRIGHT:   None
+ * LICENSE:     Public domain
  * PROJECT:     ReactOS system libraries
  * FILE:        reactos/lib/psapi/misc/malloc.c
  * PURPOSE:     Memory allocator for PSAPI

@@ -1,7 +1,8 @@
-/* $Id: win32.c,v 1.3 2002/08/31 15:36:56 hyperion Exp $
+/* $Id: win32.c,v 1.4 2002/08/31 17:11:24 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ * LICENSE:     See LGPL.txt in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        reactos/lib/psapi/misc/win32.c
  * PURPOSE:     Win32 interfaces for PSAPI
