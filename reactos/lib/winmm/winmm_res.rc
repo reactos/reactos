@@ -28,6 +28,7 @@
 #include "winnls.h"
 
 /* Add your language specific defines here */
+#include "winmm_Cs.rc"
 #include "winmm_De.rc"
 #include "winmm_En.rc"
 #include "winmm_Es.rc"

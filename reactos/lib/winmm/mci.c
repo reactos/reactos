@@ -1514,7 +1514,8 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSA lpParm
 	    }
 	    if (!s) {
 		if (GetPrivateProfileStringA("mci", 0, "", buf, sizeof(buf), "system.ini")) {
-		    for(p = buf; *p; p += strlen(s) + 1, cnt++) {
+		    for(p = buf; *p; p += strlen(p) + 1, cnt++) {
+                        TRACE("%ld: %s\n", cnt, p);
 			if (cnt == lpParms->dwNumber - 1) {
 			    s = p;
 			    break;

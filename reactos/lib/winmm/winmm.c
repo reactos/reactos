@@ -83,9 +83,7 @@ static	BOOL	WINMM_CreateIData(HINSTANCE hInstDLL)
 	return FALSE;
     WINMM_IData->hWinMM32Instance = hInstDLL;
     InitializeCriticalSection(&WINMM_IData->cs);
-/* FIXME crashes in ReactOS
     WINMM_IData->cs.DebugInfo->Spare[1] = (DWORD)"WINMM_IData";
-*/
     WINMM_IData->psStopEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
     WINMM_IData->psLastEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
     TRACE("Created IData (%p)\n", WINMM_IData);
@@ -3237,7 +3235,7 @@ struct mm_starter
     HANDLE              event;
 };
 
-DWORD WINAPI mmTaskRun(void* pmt)
+static DWORD WINAPI mmTaskRun(void* pmt)
 {
     struct mm_starter mms;
 
@@ -3248,6 +3246,9 @@ DWORD WINAPI mmTaskRun(void* pmt)
     return 0;
 }
 
+/******************************************************************
+ *		mmTaskCreate (WINMM.@)
+ */
 MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
 {
     HANDLE               hThread;
@@ -3255,7 +3256,7 @@ MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
     struct mm_starter   *mms;
 
     mms = HeapAlloc(GetProcessHeap(), 0, sizeof(struct mm_starter));
-    if (mms == NULL) { return TASKERR_OUTOFMEMORY; }
+    if (mms == NULL) return TASKERR_OUTOFMEMORY;
 
     mms->cb = cb;
     mms->client = client;
@@ -3271,4 +3272,39 @@ MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
     if (ph) *ph = hEvent;
     CloseHandle(hThread);
     return 0;
+}
+
+/******************************************************************
+ *		mmTaskBlock (WINMM.@)
+ */
+void     WINAPI mmTaskBlock(HANDLE tid)
+{
+    MSG		msg;
+
+    do
+    {
+	GetMessageA(&msg, 0, 0, 0);
+	if (msg.hwnd) DispatchMessageA(&msg);
+    } while (msg.message != WM_USER);
+}
+
+/******************************************************************
+ *		mmTaskSignal (WINMM.@)
+ */
+BOOL     WINAPI mmTaskSignal(HANDLE tid)
+{
+    return PostThreadMessageW((DWORD)tid, WM_USER, 0, 0);
+}
+
+/******************************************************************
+ *		mmTaskYield (WINMM.@)
+ */
+void     WINAPI mmTaskYield(void) {}
+
+/******************************************************************
+ *		mmGetCurrentTask (WINMM.@)
+ */
+HANDLE   WINAPI mmGetCurrentTask(void)
+{
+    return (HANDLE)GetCurrentThreadId();
 }

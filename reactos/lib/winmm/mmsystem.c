@@ -1839,7 +1839,7 @@ void	mmTaskEntryPoint16(LPSTR cmdLine, WORD di, WORD si)
 /**************************************************************************
  * 				mmTaskBlock		[MMSYSTEM.902]
  */
-void	WINAPI	mmTaskBlock16(HINSTANCE16 WINE_UNUSED hInst)
+void WINAPI mmTaskBlock16(HINSTANCE16 hInst)
 {
     MSG		msg;
 
