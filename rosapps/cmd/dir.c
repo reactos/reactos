@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.12 2002/07/15 22:29:32 sedwards Exp $
+/* $Id: dir.c,v 1.13 2002/08/01 10:29:18 ekohl Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -128,6 +128,9 @@
 #include "cmd.h"
 
 
+typedef BOOL STDCALL
+(*PGETFREEDISKSPACEEX)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
+
 
 /* flag definitions */
 enum
@@ -159,7 +162,7 @@ static ULARGE_INTEGER recurse_bytes;
  */
 static VOID Help (VOID)
 {
-	ConOutPuts (_T("Displays a list of files and subdirectories in a directory.\n"
+  ConOutPuts(_T("Displays a list of files and subdirectories in a directory.\n"
        "\n"
        "DIR [drive:][path][filename] [/A] [/B] [/L] [/N] [/S] [/P] [/W] [/4]\n"
        "\n"
@@ -497,41 +500,79 @@ IncLine (LPINT pLine, DWORD dwFlags)
 static BOOL
 PrintDirectoryHeader (LPTSTR szPath, LPINT pLine, DWORD dwFlags)
 {
-	TCHAR szRootName[] = _T("A:\\");
-	TCHAR szVolName[80];
-	DWORD dwSerialNr;
+  TCHAR szRootName[MAX_PATH];
+  TCHAR szVolName[80];
+  DWORD dwSerialNr;
+  LPTSTR p;
 
-	if (dwFlags & DIR_BARE)
-		return TRUE;
+  if (dwFlags & DIR_BARE)
+    return(TRUE);
 
-	/* get the media ID of the drive */
-	szRootName[0] = szPath[0];
-	if (!GetVolumeInformation (szRootName, szVolName, 80, &dwSerialNr,
-	                           NULL, NULL, NULL, 0))
+  /* build usable root path */
+  if (szPath[1] == _T(':') && szPath[2] == _T('\\'))
+    {
+      /* normal path */
+      szRootName[0] = szPath[0];
+      szRootName[1] = _T(':');
+      szRootName[2] = _T('\\');
+      szRootName[3] = 0;
+    }
+  else if (szPath[0] == _T('\\') && szPath[1] == _T('\\'))
+    {
+      /* UNC path */
+      p = _tcschr(&szPath[2], _T('\\'));
+      if (p == NULL)
 	{
-		error_invalid_drive();
-		return FALSE;
+	  error_invalid_drive();
+	  return(FALSE);
 	}
+      p = _tcschr(p+1, _T('\\'));
+      if (p == NULL)
+	{
+	  _tcscpy(szRootName, szPath);
+	  _tcscat(szRootName, _T("\\"));
+	}
+      else
+	{
+	  *p = 0;
+	  _tcscpy(szRootName, szPath);
+	  _tcscat(szRootName, _T("\\"));
+	  *p = _T('\\');
+	}
+    }
+  else
+    {
+      error_invalid_drive();
+      return(FALSE);
+    }
 
-	/* print drive info */
-	ConOutPrintf (_T(" Volume in drive %c"), szRootName[0]);
+  /* get the media ID of the drive */
+  if (!GetVolumeInformation(szRootName, szVolName, 80, &dwSerialNr,
+			    NULL, NULL, NULL, 0))
+    {
+      error_invalid_drive();
+      return(FALSE);
+    }
 
-	if (szVolName[0] != _T('\0'))
-		ConOutPrintf (_T(" is %s\n"), szVolName);
-	else
-		ConOutPrintf (_T(" has no label\n"));
+  /* print drive info */
+  ConOutPrintf(_T(" Volume in drive %c"), szRootName[0]);
 
-	if (IncLine (pLine, dwFlags))
-		return FALSE;
+  if (szVolName[0] != _T('\0'))
+    ConOutPrintf(_T(" is %s\n"), szVolName);
+  else
+    ConOutPrintf(_T(" has no label\n"));
 
-	/* print the volume serial number if the return was successful */
-	ConOutPrintf (_T(" Volume Serial Number is %04X-%04X\n"),
-	              HIWORD(dwSerialNr),
-	              LOWORD(dwSerialNr));
-	if (IncLine (pLine, dwFlags))
-		return FALSE;
+  if (IncLine(pLine, dwFlags))
+    return(FALSE);
 
-	return TRUE;
+  /* print the volume serial number if the return was successful */
+  ConOutPrintf(_T(" Volume Serial Number is %04X-%04X\n"),
+	       HIWORD(dwSerialNr),
+	       LOWORD(dwSerialNr));
+  if (IncLine(pLine, dwFlags))
+    return(FALSE);
+
+  return(TRUE);
 }
 
 
@@ -646,6 +687,47 @@ PrintFileDateTime (LPSYSTEMTIME dt, DWORD dwFlags)
 }
 
 
+static VOID
+GetUserDiskFreeSpace(LPCTSTR lpRoot,
+		     PULARGE_INTEGER lpFreeSpace)
+{
+  PGETFREEDISKSPACEEX pGetFreeDiskSpaceEx;
+  HINSTANCE hInstance;
+  DWORD dwSecPerCl;
+  DWORD dwBytPerSec;
+  DWORD dwFreeCl;
+  DWORD dwTotCl;
+
+  lpFreeSpace->QuadPart = 0;
+
+  hInstance = LoadLibrary(_T("KERNEL32"));
+  if (hInstance != NULL)
+    {
+#ifndef UNICODE
+      pGetFreeDiskSpaceEx = GetProcAddress(hInstance,
+					   "GetDiskFreeSpaceExA");
+#else
+      pGetFreeDiskSpaceEx = GetProcAddress(hInstance,
+					   "GetDiskFreeSpaceExW");
+#endif
+      if (pGetFreeDiskSpaceEx != NULL)
+	{
+	  if (pGetFreeDiskSpaceEx(lpRoot, lpFreeSpace, NULL, NULL) == TRUE)
+	    return;
+	}
+      FreeLibrary(hInstance);
+    }
+
+  GetDiskFreeSpace(lpRoot,
+		  &dwSecPerCl,
+		  &dwBytPerSec,
+		  &dwFreeCl,
+		  &dwTotCl);
+
+  lpFreeSpace->QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
+}
+
+
 /*
  * print_summary: prints dir summary
  * Added by Rob Lake 06/17/98 to compact code
@@ -653,52 +735,51 @@ PrintFileDateTime (LPSYSTEMTIME dt, DWORD dwFlags)
  *
  */
 static INT
-PrintSummary (LPTSTR szPath, ULONG ulFiles, ULONG ulDirs, ULARGE_INTEGER bytes,
-	      LPINT pLine, DWORD dwFlags)
+PrintSummary(LPTSTR szPath,
+	     ULONG ulFiles,
+	     ULONG ulDirs,
+	     ULARGE_INTEGER bytes,
+	     LPINT pLine,
+	     DWORD dwFlags)
 {
-	TCHAR buffer[64];
+  TCHAR buffer[64];
+  ULARGE_INTEGER uliFree;
+  TCHAR szRoot[] = _T("A:\\");
 
-	if (dwFlags & DIR_BARE)
-		return 0;
+  if (dwFlags & DIR_BARE)
+    return(0);
 
-	/* print number of files and bytes */
-	ConvertULong (ulFiles, buffer, sizeof(buffer));
-	ConOutPrintf (_T("          %6s File%c"),
-	              buffer, ulFiles == 1 ? _T(' ') : _T('s'));
+  /* Print number of files and bytes */
+  ConvertULong (ulFiles, buffer, sizeof(buffer));
+  ConOutPrintf (_T("          %6s File%c"),
+                buffer, ulFiles == 1 ? _T(' ') : _T('s'));
 
-	ConvertULargeInteger (bytes, buffer, sizeof(buffer));
-	ConOutPrintf (_T("  %15s byte%c\n"),
-	              buffer, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
+  ConvertULargeInteger (bytes, buffer, sizeof(buffer));
+  ConOutPrintf (_T("  %15s byte%c\n"),
+                buffer, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
+  ConOutPrintf (_T("  %I64u byte%c\n"),
+                bytes.QuadPart, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
 
-	if (IncLine (pLine, dwFlags))
-		return 1;
+  if (IncLine (pLine, dwFlags))
+    return 1;
 
-	/* print number of dirs and bytes free */
-	ConvertULong (ulDirs, buffer, sizeof(buffer));
-	ConOutPrintf (_T("          %6s Dir%c"),
-	              buffer, ulDirs == 1 ? _T(' ') : _T('s'));
+  /* Print number of dirs and bytes free */
+  ConvertULong (ulDirs, buffer, sizeof(buffer));
+  ConOutPrintf (_T("          %6s Dir%c"),
+                buffer, ulDirs == 1 ? _T(' ') : _T('s'));
 
+  if (!(dwFlags & DIR_RECURSE))
+    {
+      szRoot[0] = szPath[0];
+      GetUserDiskFreeSpace(szRoot, &uliFree);
+      ConvertULargeInteger (uliFree, buffer, sizeof(buffer));
+      ConOutPrintf (_T("   %15s bytes free\n"), buffer);
+    }
 
-	if (!(dwFlags & DIR_RECURSE))
-	{
-		ULARGE_INTEGER uliFree;
-		TCHAR szRoot[] = _T("A:\\");
-		DWORD dwSecPerCl;
-		DWORD dwBytPerSec;
-		DWORD dwFreeCl;
-		DWORD dwTotCl;
+  if (IncLine (pLine, dwFlags))
+    return 1;
 
-		szRoot[0] = szPath[0];
-		GetDiskFreeSpace (szRoot, &dwSecPerCl, &dwBytPerSec, &dwFreeCl, &dwTotCl);
-		                  uliFree.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
-		ConvertULargeInteger (uliFree, buffer, sizeof(buffer));
-		ConOutPrintf (_T("   %15s bytes free\n"), buffer);
-	}
-
-	if (IncLine (pLine, dwFlags))
-		return 1;
-
-	return 0;
+  return 0;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.30 2002/05/07 23:05:33 hbirr Exp $
+/* $Id: cmd.c,v 1.31 2002/08/01 10:29:17 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -1146,27 +1146,29 @@ static VOID Cleanup (int argc, char *argv[])
  */
 int main (int argc, char *argv[])
 {
-	INT nExitCode;
-	CONSOLE_SCREEN_BUFFER_INFO Info;
+  CONSOLE_SCREEN_BUFFER_INFO Info;
+  INT nExitCode;
 
-	AllocConsole ();
-	SetFileApisToOEM ();
+  SetFileApisToOEM();
 
-	if( GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &Info ) == FALSE )
-	   fprintf(stderr, "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError() );
-	wColor = Info.wAttributes;
-	wDefColor = wColor;
-	/* check switches on command-line */
-	Initialize (argc, argv);
+  if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &Info) == FALSE)
+    {
+      fprintf(stderr, "GetConsoleScreenBufferInfo: Error: %ld\n", GetLastError());
+      return(1);
+    }
+  wColor = Info.wAttributes;
+  wDefColor = wColor;
 
-	/* call prompt routine */
-	nExitCode = ProcessInput (FALSE);
+  /* check switches on command-line */
+  Initialize(argc, argv);
 
-	/* do the cleanup */
-	Cleanup (argc, argv);
-	FreeConsole ();
+  /* call prompt routine */
+  nExitCode = ProcessInput(FALSE);
 
-	return nExitCode;
+  /* do the cleanup */
+  Cleanup(argc, argv);
+
+  return(nExitCode);
 }
 
 /* EOF */
