@@ -96,11 +96,11 @@ static adns_status pap_qstring(const parseinfo *pai, int *cbyte_io, int max,
   GET_B(cbyte,l);
   if (cbyte+l > max) return adns_s_invaliddata;
   
-  str= adns__alloc_interim(pai->qu, l+1);
+  str= adns__alloc_interim(pai->qu, (size_t)l+1);
   if (!str) R_NOMEM;
   
   str[l]= 0;
-  memcpy(str,dgram+cbyte,l);
+  memcpy(str,dgram+cbyte,(size_t)l);
 
   *len_r= l;
   *str_r= str;
@@ -349,11 +349,11 @@ static adns_status pap_domain(const parseinfo *pai, int *cbyte_io, int max,
   if (st) return st;
   if (!pai->qu->vb.used) return adns_s_invaliddata;
 
-  dm= adns__alloc_interim(pai->qu, pai->qu->vb.used+1);
+  dm= adns__alloc_interim(pai->qu, (size_t) pai->qu->vb.used+1);
   if (!dm) R_NOMEM;
 
   dm[pai->qu->vb.used]= 0;
-  memcpy(dm,pai->qu->vb.buf,pai->qu->vb.used);
+  memcpy(dm,pai->qu->vb.buf, (size_t) pai->qu->vb.used);
   
   *domain_r= dm;
   return adns_s_ok;
@@ -419,7 +419,7 @@ static adns_status pap_findaddrs(const parseinfo *pai, adns_rr_hostaddr *ha,
     if (naddrs == -1) {
       naddrs= 0;
     }
-    if (!adns__vbuf_ensure(&pai->qu->vb, (naddrs+1)*sizeof(adns_rr_addr))) R_NOMEM;
+    if (!adns__vbuf_ensure(&pai->qu->vb, (int) ((naddrs+1)*sizeof(adns_rr_addr)))) R_NOMEM;
     adns__update_expires(pai->qu,ttl,pai->now);
     st= pa_addr(pai, rdstart,rdstart+rdlen,
 		pai->qu->vb.buf + naddrs*sizeof(adns_rr_addr));
@@ -570,7 +570,7 @@ static adns_status csp_hostaddr(vbuf *vb, const adns_rr_hostaddr *rrp) {
   CSP_ADDSTR(" ");
 
   errstr= adns_strerror(rrp->astatus);
-  st= csp_qstring(vb,errstr,strlen(errstr));  if (st) return st;
+  st= csp_qstring(vb,errstr,(int)strlen(errstr));  if (st) return st;
   
   if (rrp->naddrs >= 0) {
     CSP_ADDSTR(" (");
@@ -702,7 +702,7 @@ static void icb_ptr(adns_query parent, adns_query child) {
   queried= &parent->ctx.info.ptr_parent_addr;
   for (i=0, found=cans->rrs.addr; i<cans->nrrs; i++, found++) {
     if (queried->len == found->len &&
-	!memcmp(&queried->addr,&found->addr,queried->len)) {
+	!memcmp(&queried->addr,&found->addr,(size_t) queried->len)) {
       if (!parent->children.head) {
 	adns__query_done(parent);
 	return;
@@ -744,7 +744,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart, int max, void *data
     for (i=0; i<4; i++) {
       st= adns__findlabel_next(&fls,&lablen,&labstart); assert(!st);
       if (lablen<=0 || lablen>3) return adns_s_querydomainwrong;
-      memcpy(labbuf, pai->qu->query_dgram + labstart, lablen);  labbuf[lablen]= 0;
+      memcpy(labbuf, pai->qu->query_dgram + labstart, (size_t) lablen);  labbuf[lablen]= 0;
       ipv[3-i]= (unsigned char)strtoul(labbuf,&ep,10);  if (*ep) return adns_s_querydomainwrong;
       if (lablen>1 && pai->qu->query_dgram[labstart]=='0')
 	return adns_s_querydomainwrong;
@@ -752,7 +752,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart, int max, void *data
     for (i=0; i<sizeof(expectdomain)/sizeof(*expectdomain); i++) {
       st= adns__findlabel_next(&fls,&lablen,&labstart); assert(!st);
       l= strlen(expectdomain[i]);
-      if (lablen != l || memcmp(pai->qu->query_dgram + labstart, expectdomain[i], l))
+      if (lablen != l || memcmp(pai->qu->query_dgram + labstart, expectdomain[i], (size_t)l))
 	return adns_s_querydomainwrong;
     }
     st= adns__findlabel_next(&fls,&lablen,0); assert(!st);
@@ -762,7 +762,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart, int max, void *data
     memset(&ap->addr,0,sizeof(ap->addr.inet));
     ap->addr.inet.sin_family= AF_INET;
     ap->addr.inet.sin_addr.s_addr=
-      htonl((ipv[0]<<24) | (ipv[1]<<16) | (ipv[2]<<8) | (ipv[3]));
+      htonl((u_long)(ipv[0]<<24) | (ipv[1]<<16) | (ipv[2]<<8) | (ipv[3]));
   }
 
   st= adns__mkquery_frdgram(pai->ads, &pai->qu->vb, &id,
@@ -772,7 +772,7 @@ static adns_status pa_ptr(const parseinfo *pai, int dmstart, int max, void *data
 
   ctx.ext= 0;
   ctx.callback= icb_ptr;
-  memset(&ctx.info,0,sizeof(ctx.info));
+  memset(&ctx.info,0,(size_t) sizeof(ctx.info));
   st= adns__internal_submit(pai->ads, &nqu, adns__findtype(adns_r_addr),
 			    &pai->qu->vb, id,
 			    adns_qf_quoteok_query, pai->now, &ctx);
@@ -877,8 +877,8 @@ static adns_status pap_mailbox822(const parseinfo *pai, int *cbyte_io, int max,
   if (st) return st;
 
  x_ok:
-  str= adns__alloc_interim(pai->qu, vb->used+1); if (!str) R_NOMEM;
-  memcpy(str,vb->buf,vb->used);
+  str= adns__alloc_interim(pai->qu, (size_t) vb->used+1); if (!str) R_NOMEM;
+  memcpy(str,vb->buf,(size_t) vb->used);
   str[vb->used]= 0;
   *mb_r= str;
   return adns_s_ok;
