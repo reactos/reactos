@@ -71,7 +71,7 @@ KeApplicationProcessorInit(VOID)
   KPCR->Irql = HIGH_LEVEL;
 
   /* Mark the end of the exception handler list */
-  KPCR->ExceptionList = (PVOID)-1;
+  KPCR->Tib.ExceptionList = (PVOID)-1;
 
   /*
    * Initialize the GDT
@@ -127,7 +127,7 @@ KeInit1(VOID)
    PcrsAllocated++;
 
    /* Mark the end of the exception handler list */
-   KPCR->ExceptionList = (PVOID)-1;
+   KPCR->Tib.ExceptionList = (PVOID)-1;
 
    Ki386InitializeLdt();
 }

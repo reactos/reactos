@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.158 2003/05/20 14:37:05 ekohl Exp $
+/* $Id: main.c,v 1.159 2003/06/05 11:51:13 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -330,10 +330,12 @@ ExpInitializeExecutive(VOID)
   assert(FIELD_OFFSET(KTRAP_FRAME, Reserved9) == KTRAP_FRAME_RESERVED9);
   assert(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
   assert(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
-  
-  assert(FIELD_OFFSET(KPCR, ExceptionList) == KPCR_EXCEPTION_LIST);
+
+  assert(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
   assert(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
-  assert(FIELD_OFFSET(KPCR, CurrentThread) == KPCR_CURRENT_THREAD);
+  assert(FIELD_OFFSET(IKPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
+  assert(FIELD_OFFSET(IKPCR, Self) == KPCR_SELF);
+  assert(FIELD_OFFSET(IKPCR, CurrentThread) == KPCR_CURRENT_THREAD);
 
   LdrInit1();
 

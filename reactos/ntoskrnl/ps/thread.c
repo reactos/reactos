@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.111 2003/05/01 22:00:31 gvg Exp $
+/* $Id: thread.c,v 1.112 2003/06/05 11:51:13 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -63,7 +63,7 @@ static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
-   return(KeGetCurrentKPCR()->CurrentThread);
+   return(((PIKPCR) KeGetCurrentKPCR())->CurrentThread);
 }
 
 HANDLE STDCALL PsGetCurrentThreadId(VOID)
@@ -192,7 +192,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    KPRIORITY CurrentPriority;
    PETHREAD Candidate;
    ULONG Affinity;
-   PKTHREAD KCurrentThread = KeGetCurrentKPCR()->CurrentThread;
+   PKTHREAD KCurrentThread = ((PIKPCR) KeGetCurrentKPCR())->CurrentThread;
    PETHREAD CurrentThread = CONTAINING_RECORD(KCurrentThread, ETHREAD, Tcb);
 
    DPRINT("PsDispatchThread() %d/%d\n", KeGetCurrentProcessorNumber(),
@@ -259,7 +259,7 @@ PsDispatchThread(ULONG NewThreadStatus)
    /*
     * Save wait IRQL
     */
-   KeGetCurrentKPCR()->CurrentThread->WaitIrql = oldIrql;   
+   ((PIKPCR) KeGetCurrentKPCR())->CurrentThread->WaitIrql = oldIrql;   
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
 }
@@ -291,7 +291,7 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
 	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason)
 {
   KIRQL oldIrql;
-  PKTHREAD KThread = KeGetCurrentKPCR()->CurrentThread;
+  PKTHREAD KThread = ((PIKPCR) KeGetCurrentKPCR())->CurrentThread;
   PETHREAD Thread = CONTAINING_RECORD (KThread, ETHREAD, Tcb);
   PKWAIT_BLOCK WaitBlock;
 
@@ -370,7 +370,7 @@ PsFreezeAllThreads(PEPROCESS Process)
 VOID
 PsApplicationProcessorInit(VOID)
 {
-  KeGetCurrentKPCR()->CurrentThread = 
+  ((PIKPCR) KeGetCurrentKPCR())->CurrentThread = 
     (PVOID)IdleThreads[KeGetCurrentProcessorNumber()];
 }
 
@@ -443,7 +443,7 @@ PsInitThreadManagment(VOID)
 		      THREAD_ALL_ACCESS,NULL, TRUE);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
-   KeGetCurrentKPCR()->CurrentThread = (PVOID)FirstThread;
+   ((PIKPCR) KeGetCurrentKPCR())->CurrentThread = (PVOID)FirstThread;
    NtClose(FirstThreadHandle);
    
    DPRINT("FirstThread %x\n",FirstThread);
