@@ -95,4 +95,5 @@ notifyhook.dll: notifyhook/notifyhook.c notifyhook/notifyhook.h
 	$(CC) -D_WIN32_IE=0x0600 -Wall -D_NOTIFYHOOK_IMPL -Os -s notifyhook/notifyhook.c -shared -o $@
 
 clean:
-	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) precomp.h.gch
+	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) precomp.h.gch \
+	desktop/*.o dialogs/*.o shell/*.o taskbar/*.o utility/*.o
