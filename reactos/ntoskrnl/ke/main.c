@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.122 2002/06/10 08:48:14 ekohl Exp $
+/* $Id: main.c,v 1.123 2002/06/12 14:06:29 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -767,6 +767,7 @@ VOID SEHTest()
 VOID
 ExpInitializeExecutive(VOID)
 {
+  ULONG BootDriverCount;
   ULONG i;
   ULONG start;
   ULONG length;
@@ -970,6 +971,7 @@ ExpInitializeExecutive(VOID)
 #endif /* KDBG */
 
   /*  Pass 3: process boot loaded drivers  */
+  BootDriverCount = 0;
   for (i=1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
@@ -982,6 +984,14 @@ ExpInitializeExecutive(VOID)
 	         name, start, length);
 	  LdrInitializeBootStartDriver((PVOID)start, name, length);
 	}
+	  if (RtlpCheckFileNameExtension(name, ".sys"))
+        BootDriverCount++;
+    }
+
+  if (BootDriverCount == 0)
+    {
+      DbgPrint("No boot drivers available.\n");
+      KeBugCheck(0);
     }
 
   /* Create ARC names for boot devices */
@@ -992,11 +1002,11 @@ ExpInitializeExecutive(VOID)
   IoCreateSystemRootLink((PUCHAR)KeLoaderBlock.CommandLine);
 
 #ifdef DBGPRINT_FILE_LOG
-  /* On the assumption that we can now access disks start up the debug 
+  /* On the assumption that we can now access disks start up the debug
      logger thread */
   DebugLogInit2();
 #endif /* DBGPRINT_FILE_LOG */
-  
+
 
 #if 0
   CreateDefaultRegistry();
