@@ -2449,7 +2449,6 @@ COMMAND_PROTOTYPE(UnassembleAtCurrentEip)
 COMMAND_PROTOTYPE(SwitchTables)
 {
     ULONG i;
-    PDEBUG_MODULE pMod;
 
     DPRINT((0,"SwitchTables()\n"));
 
@@ -2472,16 +2471,17 @@ COMMAND_PROTOTYPE(SwitchTables)
     // 1 argument -> set new current symbols
     else if(pArgs->Count == 1)
     {
-		PDEBUG_MODULE pTempMod;
-		char temp[DEBUG_MODULE_NAME_LEN];
-		CopyWideToAnsi(temp,pMod->name);
-
-		pCurrentSymbols = FindModuleSymbolsByModuleName( temp );
-		DPRINT((2,"TableSwitchSym: pCurrentSymbols: %x, Name: %S\n", pCurrentSymbols, pCurrentSymbols->name));
-
-		pTempMod = IsModuleLoaded(temp);
-		if( pTempMod )
-			pCurrentMod = pTempMod;
+      PDEBUG_MODULE pTempMod;
+      char temp[DEBUG_MODULE_NAME_LEN];
+      
+      pCurrentSymbols = (PICE_SYMBOLFILE_HEADER*)pArgs->Value[0];
+      CopyWideToAnsi( temp, pCurrentSymbols->name );
+      
+      DPRINT((2,"TableSwitchSym: pCurrentSymbols: %x, Name: %s\n", pCurrentSymbols, temp));
+      
+      pTempMod = IsModuleLoaded(temp);
+      if( pTempMod )
+	pCurrentMod = pTempMod;
     }
 
     return TRUE;
