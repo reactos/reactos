@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.19 2003/08/19 15:54:47 ekohl Exp $
+/* $Id: partlist.c,v 1.20 2003/08/20 16:59:46 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -220,6 +220,19 @@ AddPartitionToList (ULONG DiskNumber,
 
   for (i = 0; i < LayoutBuffer->PartitionCount; i += 4)
     {
+      for (j = 0; j < 4; j++)
+	{
+	  if (LayoutBuffer->PartitionEntry[j].PartitionType != PARTITION_ENTRY_UNUSED ||
+	      LayoutBuffer->PartitionEntry[j].PartitionLength.QuadPart != 0ULL)
+	    {
+	      break;
+	    }
+	}
+      if (j >= 4)
+	{
+	  continue;
+	}
+
       PartEntry = (PPARTENTRY)RtlAllocateHeap (ProcessHeap,
 					       0,
 					       sizeof(PARTENTRY));
