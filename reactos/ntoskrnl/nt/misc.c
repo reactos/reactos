@@ -16,6 +16,22 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+STDCALL
+NtDisplayString(IN PUNICODE_STRING DisplayString)
+{
+   ANSI_STRING AnsiString;
+
+   RtlUnicodeStringToAnsiString (&AnsiString, DisplayString, TRUE);
+
+   HalDisplayString (AnsiString.Buffer);
+
+   RtlFreeAnsiString (&AnsiString);
+
+   return(STATUS_SUCCESS);
+}
+
+
 NTSTATUS STDCALL NtVdmControl(VOID)
 {
    UNIMPLEMENTED;

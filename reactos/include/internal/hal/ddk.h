@@ -12,6 +12,8 @@
 #ifndef __INCLUDE_INTERNAL_HAL_DDK_H
 #define __INCLUDE_INTERNAL_HAL_DDK_H
 
+#include <internal/ntoskrnl.h>
+
 /* HalReturnToFirmware */
 #define FIRMWARE_HALT   1
 #define FIRMWARE_REBOOT 3
@@ -59,13 +61,17 @@ typedef struct _DEVICE_DESCRIPTION
    ULONG DmaPort;
 } DEVICE_DESCRIPTION, *PDEVICE_DESCRIPTION;
 
-typedef BOOLEAN STDCALL (*RESET_DISPLAY_ROUTINE)(ULONG SizeX, ULONG SizeY);
+typedef BOOLEAN (*PHAL_RESET_DISPLAY_PARAMETERS)(ULONG Columns, ULONG Rows);
 
-VOID HalAcquireDisplayOwnership(RESET_DISPLAY_ROUTINE ResetRoutine);
+
+VOID HalAcquireDisplayOwnership (
+        PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
+
 PVOID HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
 			      ULONG Length,
 			      PPHYSICAL_ADDRESS LogicalAddress,
 			      BOOLEAN CacheEnabled);
+
 NTSTATUS HalAssignSlotResources(PUNICODE_STRING RegistryPath,
 				PUNICODE_STRING DriverClassName,
 				PDRIVER_OBJECT DriverObject,
@@ -74,57 +80,79 @@ NTSTATUS HalAssignSlotResources(PUNICODE_STRING RegistryPath,
 				ULONG BusNumber,
 				ULONG SlotNumber,
 				PCM_RESOURCE_LIST* AllocatedResources);
+
+VOID HalDisplayString (PCH String);
+
 VOID HalExamineMBR(PDEVICE_OBJECT DeviceObject,
 		   ULONG SectorSize,
 		   ULONG MBRTypeIdentifier,
 		   PVOID Buffer);
+
 VOID HalFreeCommonBuffer(PADAPTER_OBJECT AdapterObject,
 			 ULONG Length,
 			 PHYSICAL_ADDRESS LogicalAddress,
 			 PVOID VirtualAddress,
 			 BOOLEAN CacheEnabled);
+
 PADAPTER_OBJECT HalGetAdapter(PDEVICE_DESCRIPTION DeviceDescription,
 			      PULONG NumberOfMapRegisters);
+
 ULONG HalGetBusData(BUS_DATA_TYPE BusDataType,
 		    ULONG BusNumber,
 		    ULONG SlotNumber,
 		    PVOID Buffer,
 		    ULONG Length);
+
 ULONG HalGetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 			    ULONG BusNumber,
 			    ULONG SlotNumber,
 			    PVOID Buffer,
 			    ULONG Offset,
 			    ULONG Length);
+
 ULONG HalGetDmaAlignmentRequirement(VOID);
+
 ULONG HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 			    ULONG BusNumber,
 			    ULONG BusInterruptLevel,
 			    ULONG BusInterruptVector,
 			    PKIRQL Irql,
 			    PKAFFINITY Affinity);
-BOOLEAN HalMakeBeep(ULONG Frequency);
+
+BOOLEAN HalInitSystem (ULONG Phase,
+                       boot_param *bp);
+
+BOOLEAN HalMakeBeep (ULONG Frequency);
+
 VOID HalQueryDisplayParameters(PULONG DispSizeX,
 			       PULONG DispSizeY,
 			       PULONG CursorPosX,
 			       PULONG CursorPosY);
+
 VOID HalQueryRealTimeClock(PTIME_FIELDS pTime);
+
 VOID HalQuerySystemInformation(VOID);
+
 ULONG HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
+
 VOID HalReturnToFirmware(ULONG Action);
+
 ULONG HalSetBusData(BUS_DATA_TYPE BusDataType,
 		    ULONG BusNumber,
 		    ULONG SlotNumber,
 		    PVOID Buffer,
 		    ULONG Length);
+
 ULONG HalSetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 			    ULONG BusNumber,
 			    ULONG SlotNumber,
 			    PVOID Buffer,
 			    ULONG Offset,
 			    ULONG Length);
+
 VOID HalSetDisplayParameters(ULONG CursorPosX,
-			     ULONG CursorPosY);
+                             ULONG CursorPosY);
+
 BOOLEAN HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
 			       ULONG BusNumber,
 			       PHYSICAL_ADDRESS BusAddress,

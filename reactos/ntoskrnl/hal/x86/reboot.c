@@ -1,4 +1,4 @@
-/* $Id: reboot.c,v 1.1 1999/10/11 20:50:33 ekohl Exp $
+/* $Id: reboot.c,v 1.2 1999/10/15 15:18:39 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -61,7 +61,7 @@ HalReturnToFirmware (ULONG Action)
     }
     else if (Action == FIRMWARE_REBOOT)
     {
-//        HalVideoReboot();
+        HalResetDisplay ();
         HalReboot ();
     }
 }

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.24 1999/10/14 16:53:30 ekohl Exp $
+/* $Id: main.c,v 1.25 1999/10/15 15:21:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -144,11 +144,11 @@ asmlinkage void _main(boot_param* _bp)
    memcpy(&bp,_bp,sizeof(boot_param));
       
    /*
-    * Initalize the console (before printing anything)
+    * Initalize the hal (Phase 0)
     */
-   HalInitConsole(&bp);
+   HalInitSystem (0, &bp);
    
-   DbgPrint("Starting ReactOS "KERNEL_VERSION" (Build "__DATE__", "__TIME__")\n");
+   HalDisplayString("Starting ReactOS "KERNEL_VERSION" (Build "__DATE__", "__TIME__")\n");
 
    start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
    if (start < ((int)&end))
@@ -170,7 +170,7 @@ asmlinkage void _main(boot_param* _bp)
    /*
     * Initalize various critical subsystems
     */
-   HalInit(&bp);
+   HalInitSystem (1, &bp);
    MmInitialize(&bp, last_kernel_address);
    KeInit();
    ExInit();

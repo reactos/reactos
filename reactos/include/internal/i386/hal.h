@@ -6,6 +6,7 @@
 #define __INTERNAL_HAL_HAL_H
 
 #include <internal/service.h>
+#include <internal/ntoskrnl.h>
 
 typedef struct
 {
@@ -77,5 +78,8 @@ NTSTATUS HalRegisterServiceTable(DWORD  Mask,
                                  DWORD  Value, 
                                  PSERVICE_TABLE  Table,
                                  DWORD  Count);
+
+VOID HalInitializeDisplay (boot_param *bp);
+VOID HalResetDisplay (VOID);
 
 #endif /* __INTERNAL_HAL_HAL_H */

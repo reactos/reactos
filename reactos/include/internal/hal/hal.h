@@ -5,6 +5,7 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
+
 typedef struct
 {
    unsigned short previous_task;
@@ -71,7 +72,7 @@ BOOLEAN Hal_bios32_is_service_present(ULONG service);
 /*
  * FUNCTION: Initializes the text mode display (blue screen)
  */
-VOID HalInitializeDisplay (VOID);
-
+VOID HalInitializeDisplay (boot_param *bp);
+VOID HalResetDisplay (VOID)
 
 #endif /* __INTERNAL_HAL_HAL_H */
