@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.50 2003/01/02 16:04:31 hbirr Exp $
+/* $Id: create.c,v 1.51 2003/01/15 19:53:49 chorns Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -529,7 +529,12 @@ VfatSupersedeFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       Fcb->RFCB.AllocationSize.QuadPart = 0;
       Fcb->RFCB.FileSize.QuadPart = 0;
       Fcb->RFCB.ValidDataLength.QuadPart = 0;
-      CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+      /* Notify cache manager about the change in file size if caching is
+         initialized on the file stream */
+      if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
+        {
+          CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+        }
     }
   while (Cluster != 0xffffffff && Cluster > 1)
     {
