@@ -434,7 +434,7 @@ HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int 
 		HMENU hPopup = CreatePopupMenu();
 
 		if (hPopup) {
-			hr = pcm->QueryContextMenu(hPopup, 0, 1, 0x7fff, CMF_NORMAL|CMF_EXPLORE);
+			hr = pcm->QueryContextMenu(hPopup, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL|CMF_EXPLORE);
 
 			if (SUCCEEDED(hr)) {
 				IContextMenu2* pcm2;
@@ -454,7 +454,7 @@ HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int 
 				  cmi.cbSize = sizeof(CMINVOKECOMMANDINFO);
 				  cmi.fMask = 0;
 				  cmi.hwnd = hwndParent;
-				  cmi.lpVerb = (LPCSTR)(INT_PTR)(idCmd - 1);
+				  cmi.lpVerb = (LPCSTR)(INT_PTR)(idCmd - FCIDM_SHVIEWFIRST);
 				  cmi.lpParameters = NULL;
 				  cmi.lpDirectory = NULL;
 				  cmi.nShow = SW_SHOWNORMAL;
