@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.11 2004/09/24 18:35:40 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.12 2004/09/25 01:11:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -86,7 +86,7 @@ error: \
   NTSTATUS NtStatus
 
 #define NTUSER_COPY_BUFFER(Dest, Src, Length) \
-  Status = MmCopyFromCaller(&(Dest), (Src), (Length))
+  NtStatus = MmCopyFromCaller(&(Dest), (Src), (Length))
 
 #define NTUSER_COPY_BUFFER_W32ERROR(Dest, Src, Length, ErrorCode) \
   if(!NT_SUCCESS((NtStatus = MmCopyFromCaller((Dest), (Src), (Length))))) \
@@ -329,6 +329,7 @@ NtUserCallTwoParam(DWORD Param1,
                    DWORD Param2,
                    DWORD Routine)
 {
+  BEGIN_BUFFERS();
   BEGIN_NTUSER(DWORD, 0);
   
   switch(Routine)
@@ -446,7 +447,82 @@ NtUserCallTwoParam(DWORD Param1,
     case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
       Result = (DWORD)IntRegisterLogonProcess(Param1, (BOOL)Param2);
       break;
+
+    case TWOPARAM_ROUTINE_SETSYSCOLORS:
+    {
+      PVOID Buffer;
+      struct
+      {
+        INT *Elements;
+        COLORREF *Colors;
+      } ChangeSysColors;
+      
+      /* FIXME - we should make use of SEH here... */
+      NTUSER_COPY_BUFFER_NTERROR(&ChangeSysColors, (PVOID)Param1, sizeof(ChangeSysColors));
+      
+      Buffer = ExAllocatePool(PagedPool, (Param2 * sizeof(INT)) + (Param2 * sizeof(COLORREF)));
+      if(Buffer != NULL)
+      {
+        INT *Elements = (INT*)Buffer;
+        COLORREF *Colors = (COLORREF*)Buffer + Param2;
+        
+        NTUSER_COPY_BUFFER(Elements, ChangeSysColors.Elements, Param2 * sizeof(INT));
+        if(NT_SUCCESS(NtStatus))
+        {
+          NTUSER_COPY_BUFFER(Colors, ChangeSysColors.Colors, Param2 * sizeof(COLORREF));
+          if(NT_SUCCESS(NtStatus))
+          {
+            Result = (DWORD)IntSetSysColors((UINT)Param2, Elements, Colors);
+          }
+          else
+          {
+            NTUSER_FAIL_NTERROR(NtStatus);
+          }
+        }
+        else
+        {
+          NTUSER_FAIL_NTERROR(NtStatus);
+        }
+      }
+      else
+      {
+        NTUSER_FAIL_ERROR(ERROR_NOT_ENOUGH_MEMORY);
+      }
+      break;
+    }
     
+    case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
+    case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
+    case TWOPARAM_ROUTINE_GETSYSCOLORS:
+    {
+      union
+      {
+        PVOID Pointer;
+        HBRUSH *Brushes;
+        HPEN *Pens;
+        COLORREF *Colors;
+      } Buffer;
+      
+      /* FIXME - we should make use of SEH here... */
+      Buffer.Pointer = ExAllocatePool(PagedPool, Param2 * sizeof(HANDLE));
+      if(Buffer.Pointer != NULL)
+      {
+        switch(Routine)
+        {
+          case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
+            Result = (DWORD)IntGetSysColorBrushes(Buffer.Brushes, (UINT)Param2);
+            break;
+          case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
+            Result = (DWORD)IntGetSysColorPens(Buffer.Pens, (UINT)Param2);
+            break;
+          case TWOPARAM_ROUTINE_GETSYSCOLORS:
+            Result = (DWORD)IntGetSysColors(Buffer.Colors, (UINT)Param2);
+            break;
+        }
+      }
+      break;
+    }
+
     default:
       DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam\n", Routine);
       NTUSER_FAIL_ERROR(ERROR_INVALID_PARAMETER);
