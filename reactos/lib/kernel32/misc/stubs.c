@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.96 2004/12/04 19:28:47 weiden Exp $
+/* $Id: stubs.c,v 1.97 2004/12/04 19:45:56 navaraf Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -781,21 +781,6 @@ QueryActCtxW(
     PVOID pvBuffer,
     SIZE_T cbBuffer OPTIONAL,
     SIZE_T *pcbWrittenOrRequired OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-QueueUserAPC(
-    PAPCFUNC pfnAPC,
-    HANDLE hThread,
-    ULONG_PTR dwData
     )
 {
     STUB;
