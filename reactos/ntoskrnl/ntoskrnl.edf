@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.162 2004/03/06 22:21:20 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.163 2004/03/07 20:31:53 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -673,6 +673,7 @@ PsRevertToSelf=PsRevertToSelf@0
 PsSetCreateProcessNotifyRoutine=PsSetCreateProcessNotifyRoutine@8
 PsSetCreateThreadNotifyRoutine=PsSetCreateThreadNotifyRoutine@4
 ;PsSetLegoNotifyRoutine
+PsSetLoadImageNotifyRoutine=PsSetLoadImageNotifyRoutine@4
 ;PsSetProcessPriorityByClass
 PsTerminateSystemThread=PsTerminateSystemThread@4
 PsThreadType DATA

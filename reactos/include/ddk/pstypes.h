@@ -23,6 +23,22 @@ struct _KTHREAD;
 
 typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 
+typedef struct _IMAGE_INFO {
+   union {
+      ULONG Properties;
+      struct {
+         ULONG ImageAddressingMode : 8;
+         ULONG SystemModeImage : 1;
+         ULONG ImageMappedToAllPids : 1;
+         ULONG Reserved : 22;
+      };
+   };
+   PVOID ImageBase;
+   ULONG ImageSelector;
+   ULONG ImageSize;
+   ULONG ImageSectionNumber;
+} IMAGE_INFO, *PIMAGE_INFO;
+
 typedef VOID STDCALL_FUNC
 (*PKSTART_ROUTINE)(PVOID StartContext);
 
@@ -35,6 +51,11 @@ typedef VOID STDCALL_FUNC
 (*PCREATE_THREAD_NOTIFY_ROUTINE)(HANDLE ProcessId,
 				 HANDLE ThreadId,
 				 BOOLEAN Create);
+
+typedef VOID STDCALL_FUNC
+(*PLOAD_IMAGE_NOTIFY_ROUTINE)(PUNICODE_STRING FullImageName,
+                              HANDLE ProcessId,
+                              PIMAGE_INFO ImageInfo);
 
 typedef NTSTATUS STDCALL_FUNC
 (*PW32_PROCESS_CALLBACK)(struct _EPROCESS *Process,
@@ -58,5 +79,7 @@ struct _KPROCESS;
 #define LOW_REALTIME_PRIORITY (16)
 #define HIGH_PRIORITY (31)
 #define MAXIMUM_PRIORITY (32)
+
+#define IMAGE_ADDRESSING_MODE_32BIT (3)
 
 #endif /* __INCLUDE_DDK_PSTYPES_H */

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.124 2004/01/05 14:28:21 weiden Exp $
+/* $Id: process.c,v 1.125 2004/03/07 20:31:53 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -53,9 +53,15 @@ static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
 					   PROCESS_ALL_ACCESS};
 
 #define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
+#define MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT  8
+
+static KSPIN_LOCK PsNotifyListLock;
 
 static PCREATE_PROCESS_NOTIFY_ROUTINE
 PiProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
+static PLOAD_IMAGE_NOTIFY_ROUTINE
+PiLoadImageNotifyRoutine[MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT];
+
 
 typedef struct
 {
@@ -268,6 +274,10 @@ PsInitProcessManagment(VOID)
 
    InitializeListHead(&PsProcessListHead);
    KeInitializeSpinLock(&PsProcessListLock);
+   KeInitializeSpinLock(&PsNotifyListLock);
+
+   RtlZeroMemory(PiProcessNotifyRoutine, sizeof(PiProcessNotifyRoutine));
+   RtlZeroMemory(PiLoadImageNotifyRoutine, sizeof(PiLoadImageNotifyRoutine));
    
    /*
     * Initialize the system process
@@ -913,6 +923,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 					 &Message);
      }
 #endif
+
+   PspRunCreateProcessNotifyRoutines(Process, TRUE);
    
    ObDereferenceObject(Process);
    ObDereferenceObject(ParentProcess);
@@ -1572,10 +1584,13 @@ PspRunCreateProcessNotifyRoutines
  ULONG i;
  HANDLE ProcessId = (HANDLE)CurrentProcess->UniqueProcessId;
  HANDLE ParentId = CurrentProcess->InheritedFromUniqueProcessId;
+ KIRQL oldIrql;
  
+ KeAcquireSpinLock(&PsNotifyListLock, &oldIrql);
  for(i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++ i)
   if(PiProcessNotifyRoutine[i])
    PiProcessNotifyRoutine[i](ParentId, ProcessId, Create);
+ KeReleaseSpinLock(&PsNotifyListLock, oldIrql);
 }
 
 /*
@@ -1586,7 +1601,9 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
 				IN BOOLEAN Remove)
 {
   ULONG i;
+  KIRQL oldIrql;
 
+  KeAcquireSpinLock(&PsNotifyListLock, &oldIrql);
   if (Remove)
   {
      for(i=0;i<MAX_PROCESS_NOTIFY_ROUTINE_COUNT;i++)
@@ -1598,6 +1615,7 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
         }
      }
 
+     KeReleaseSpinLock(&PsNotifyListLock, oldIrql);
      return(STATUS_SUCCESS);
   }
 
@@ -1611,12 +1629,58 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
      }
   }
 
+  KeReleaseSpinLock(&PsNotifyListLock, oldIrql);
+
   if (i == MAX_PROCESS_NOTIFY_ROUTINE_COUNT)
   {
      return STATUS_INSUFFICIENT_RESOURCES;
   }
 
   return STATUS_SUCCESS;
+}
+
+VOID STDCALL
+PspRunLoadImageNotifyRoutines(
+   PUNICODE_STRING FullImageName,
+   HANDLE ProcessId,
+   PIMAGE_INFO ImageInfo)
+{
+   ULONG i;
+   KIRQL oldIrql;
+ 
+   KeAcquireSpinLock(&PsNotifyListLock, &oldIrql);
+   for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++ i)
+      if (PiLoadImageNotifyRoutine[i])
+         PiLoadImageNotifyRoutine[i](FullImageName, ProcessId, ImageInfo);
+   KeReleaseSpinLock(&PsNotifyListLock, oldIrql);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+PsSetLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
+{
+   ULONG i;
+   KIRQL oldIrql;
+
+   KeAcquireSpinLock(&PsNotifyListLock, &oldIrql);
+   for (i = 0; i < MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT; i++)
+   {
+      if (PiLoadImageNotifyRoutine[i] == NULL)
+      {
+         PiLoadImageNotifyRoutine[i] = NotifyRoutine;
+         break;
+      }
+   }
+   KeReleaseSpinLock(&PsNotifyListLock, oldIrql);
+
+   if (i == MAX_PROCESS_NOTIFY_ROUTINE_COUNT)
+   {
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   return STATUS_SUCCESS;
 }
 
 /* EOF */
