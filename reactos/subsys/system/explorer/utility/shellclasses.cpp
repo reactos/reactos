@@ -315,14 +315,14 @@ void ShellPath::GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd, ShellFolde
 #ifndef __MINGW32__	// ILCombine() is currently missing in MinGW.
 
  // convert an item id list from relative to absolute (=relative to the desktop) format
-LPITEMIDLIST ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
+ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
 {
 	return ILCombine(parent_pidl, _p);
 
 /* seems to work only for NT upwards
 	 // create a new item id list with _p append behind parent_pidl
-	int l1 = _malloc->GetSize((void*)parent_pidl) - sizeof(USHORT/ SHITEMID::cb /);
-	int l2 = _malloc->GetSize(_p);
+	int l1 = ILGetSize(parent_pidl) - sizeof(USHORT/ SHITEMID::cb /);
+	int l2 = ILGetSize(_p);
 
 	LPITEMIDLIST p = (LPITEMIDLIST) _malloc->Alloc(l1+l2);
 
@@ -335,7 +335,7 @@ LPITEMIDLIST ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwn
 
 #else
 
-LPITEMIDLIST ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
+ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
 {
 	static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILCombine(_T("SHELL32"), 25);
 
@@ -343,8 +343,8 @@ LPITEMIDLIST ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwn
 		return (*ILCombine)(parent_pidl, _p);
 
 	 // create a new item id list with _p append behind parent_pidl
-	int l1 = _malloc->GetSize((void*)parent_pidl) - sizeof(USHORT/*SHITEMID::cb*/);
-	int l2 = _malloc->GetSize(_p);
+	int l1 = ILGetSize(parent_pidl) - sizeof(USHORT/*SHITEMID::cb*/);
+	int l2 = ILGetSize(_p);
 
 	LPITEMIDLIST p = (LPITEMIDLIST) _malloc->Alloc(l1+l2);
 
@@ -352,6 +352,21 @@ LPITEMIDLIST ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwn
 	memcpy((LPBYTE)p+l1, _p, l2);
 
 	return p;
+}
+
+UINT ILGetSize(LPCITEMIDLIST pidl)
+{
+	if (!pidl)
+		return 0;
+
+	int l = sizeof(USHORT/*SHITEMID::cb*/);
+
+	while(pidl->mkid.cb) {
+		l += pidl->mkid.cb;
+		pidl = LPCITEMIDLIST((LPBYTE)pidl+pidl->mkid.cb);
+	}
+
+	return l;
 }
 
 #endif

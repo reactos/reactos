@@ -150,7 +150,7 @@ struct CommonShellMalloc
 {
 	CommonShellMalloc()
 	{
-		_p = 0;
+		_p = NULL;
 	}
 
 	void init()
@@ -241,7 +241,7 @@ protected:
 	void Free()
 	{
 		_malloc->Free(_p);
-		_p = 0;
+		_p = NULL;
 	}
 
 	T* _p;
@@ -331,7 +331,7 @@ template<typename T> struct SIfacePtr
 	void Free()
 	{
 		T* h = _p;
-		_p = 0;
+		_p = NULL;
 
 		if (h)
 			h->Release();
@@ -424,6 +424,11 @@ extern HRESULT path_from_pidlW(IShellFolder* folder, LPCITEMIDLIST pidl, LPWSTR 
 extern HRESULT name_from_pidl(IShellFolder* folder, LPCITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags);
 
 
+#ifdef __MINGW32__	// ILGetSize() is currently missing in MinGW.
+extern "C" UINT ILGetSize(LPCITEMIDLIST pidl);
+#endif
+
+
  // wrapper class for item ID lists
 
 struct ShellPath : public SShellPtr<ITEMIDLIST>
@@ -436,14 +441,20 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	ShellPath(IShellFolder* folder, LPCWSTR path)
 	{
-		ULONG l;
-		CheckError(folder->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
+		if (path) {
+			ULONG l;
+			CheckError(folder->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
+		} else
+			_p = NULL;
 	}
 
 	ShellPath(LPCWSTR path)
 	{
-		ULONG l;
-		CheckError(Desktop()->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
+		if (path) {
+			ULONG l;
+			CheckError(Desktop()->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
+		} else
+			_p = NULL;
 	}
 
 	ShellPath(IShellFolder* folder, LPCSTR path)
@@ -451,8 +462,11 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		ULONG l;
 		WCHAR b[MAX_PATH];
 
-		MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-		CheckError(folder->ParseDisplayName(0, 0, b, &l, &_p, 0));
+		if (path) {
+			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
+			CheckError(folder->ParseDisplayName(0, 0, b, &l, &_p, 0));
+		} else
+			_p = NULL;
 	}
 
 	ShellPath(LPCSTR path)
@@ -460,23 +474,35 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		ULONG l;
 		WCHAR b[MAX_PATH];
 
-		MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-		CheckError(Desktop()->ParseDisplayName(0, 0, b, &l, &_p, 0));
+		if (path) {
+			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
+			CheckError(Desktop()->ParseDisplayName(0, 0, b, &l, &_p, 0));
+		} else
+			_p = NULL;
 	}
 
 	ShellPath(const ShellPath& o)
 	 :	super(NULL)
 	{
 		if (o._p) {
-			int l = _malloc->GetSize(o._p);
+			int l = ILGetSize(o._p);
 			_p = (ITEMIDLIST*) _malloc->Alloc(l);
-			memcpy(_p, o._p, l);
+			if (_p) memcpy(_p, o._p, l);
 		}
 	}
 
-	ShellPath(ITEMIDLIST* p)
-	 :	SShellPtr<ITEMIDLIST>(p)
+	explicit ShellPath(LPITEMIDLIST p)
+	 :	super(p)
 	{
+	}
+
+	ShellPath(LPCITEMIDLIST p)
+	{
+		if (p) {
+			int l = ILGetSize(p);
+			_p = (ITEMIDLIST*) _malloc->Alloc(l);
+			if (_p) memcpy(_p, p, l);
+		}
 	}
 
 	void operator=(const ShellPath& o)
@@ -484,13 +510,13 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		ITEMIDLIST* h = _p;
 
 		if (o._p) {
-			int l = _malloc->GetSize(o._p);
+			int l = ILGetSize(o._p);
 
-			_p = (ITEMIDLIST*)_malloc->Alloc(l);
-			memcpy(_p, o._p, l);
+			_p = (ITEMIDLIST*) _malloc->Alloc(l);
+			if (_p) memcpy(_p, o._p, l);
 		}
 		else
-			_p = 0;
+			_p = NULL;
 
 		_malloc->Free(h);
 	}
@@ -500,13 +526,12 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		ITEMIDLIST* h = _p;
 
 		if (p) {
-			int l = _malloc->GetSize(p);
-
-			_p = (ITEMIDLIST*)_malloc->Alloc(l);
-			memcpy(_p, p, l);
+			int l = ILGetSize(p);
+			_p = (ITEMIDLIST*) _malloc->Alloc(l);
+			if (_p) memcpy(_p, p, l);
 		}
 		else
-			_p = 0;
+			_p = NULL;
 
 		_malloc->Free(h);
 	}
@@ -516,7 +541,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		ITEMIDLIST* h = _p;
 
 		LPBYTE p = (LPBYTE)_malloc->Alloc(o.cb+2);
-		*(PWORD)((LPBYTE)memcpy(p, &o, o.cb)+o.cb) = 0;
+		if (p) *(PWORD)((LPBYTE)memcpy(p, &o, o.cb)+o.cb) = 0;
 		_p = (ITEMIDLIST*)p;
 
 		_malloc->Free(h);
@@ -524,38 +549,43 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	void operator+=(const SHITEMID& o)
 	{
-		int l0 = _malloc->GetSize(_p);
+		int l0 = ILGetSize(_p);
 		LPBYTE p = (LPBYTE)_malloc->Alloc(l0+o.cb);
 		int l = l0 - 2;
 
-		memcpy(p, _p, l);
-		*(PWORD)((LPBYTE)memcpy(p+l, &o, o.cb)+o.cb) = 0;
+		if (p) {
+			memcpy(p, _p, l);
+			*(PWORD)((LPBYTE)memcpy(p+l, &o, o.cb)+o.cb) = 0;
+		}
 
 		_malloc->Free(_p);
 		_p = (ITEMIDLIST*)p;
 	}
 
-	void assign(ITEMIDLIST* pidl, size_t size)
+	void assign(LPCITEMIDLIST pidl, size_t size)
 	{
 		ITEMIDLIST* h = _p;
 
 		_p = (ITEMIDLIST*) _malloc->Alloc(size+sizeof(USHORT/*SHITEMID::cb*/));
-		memcpy(_p, pidl, size);
-		((ITEMIDLIST*)((LPBYTE)_p+size))->mkid.cb = 0; // terminator
+
+		if (_p) {
+			memcpy(_p, pidl, size);
+			((ITEMIDLIST*)((LPBYTE)_p+size))->mkid.cb = 0; // terminator
+		}
 
 		_malloc->Free(h);
 	}
 
-	void assign(ITEMIDLIST* pidl)
+	void assign(LPCITEMIDLIST pidl)
 	{
 		ITEMIDLIST* h = _p;
 
 		if (pidl) {
-			int l = _malloc->GetSize(pidl);
-			_p = (ITEMIDLIST*)_malloc->Alloc(l);
-			memcpy(_p, pidl, l);
+			int l = ILGetSize(pidl);
+			_p = (ITEMIDLIST*) _malloc->Alloc(l);
+			if (_p) memcpy(_p, pidl, l);
 		} else
-			_p = 0; 
+			_p = NULL; 
 
 		_malloc->Free(h);
 	}
@@ -575,7 +605,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	}
 
 	 // convert an item id list from relative to absolute (=relative to the desktop) format
-	LPITEMIDLIST create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const;
+	ShellPath create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const;
 };
 
 
@@ -660,7 +690,7 @@ protected:
 public:
 	FileSysShellPath(const ShellPath& o) : ShellPath(o) {_fullpath[0] = '\0';}
 
-	operator LPCTSTR() {SHGetPathFromIDList(_p, _fullpath); return _fullpath;}
+	operator LPCTSTR() {if (!SHGetPathFromIDList(_p, _fullpath)) return NULL; return _fullpath;}
 };
 
 
