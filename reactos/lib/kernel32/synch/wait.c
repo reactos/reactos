@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.19 2003/01/15 21:24:36 chorns Exp $
+/* $Id: wait.c,v 1.20 2003/02/27 15:40:46 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -74,7 +74,7 @@ WaitForMultipleObjects(DWORD nCount,
 {
    return WaitForMultipleObjectsEx(nCount,
 				   lpHandles,
-				   bWaitAll ? WaitAll : WaitAny,
+				   bWaitAll,
 				   dwMilliseconds,
 				   FALSE);
 }
@@ -105,7 +105,7 @@ WaitForMultipleObjectsEx(DWORD nCount,
 
    errCode = NtWaitForMultipleObjects (nCount,
                                        (PHANDLE)lpHandles,
-                                       (CINT)bWaitAll,
+                                       bWaitAll  ? WaitAll : WaitAny,
                                        (BOOLEAN)bAlertable,
                                        TimePtr);
 
