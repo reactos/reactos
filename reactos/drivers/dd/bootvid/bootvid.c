@@ -66,7 +66,6 @@ PUCHAR VideoMemory;
 /* Must be 4 bytes per entry */
 long maskbit[640];
 
-static HANDLE BitmapThreadHandle;
 static CLIENT_ID BitmapThreadId;
 static PUCHAR BootimageBitmap;
 
@@ -556,6 +555,7 @@ STATIC BOOLEAN STDCALL
 VidInitialize(VOID)
 {
    NTSTATUS Status;
+   HANDLE BitmapThreadHandle;
 
    InbvMapVideoMemory();
    InbvInitVGAMode();
@@ -574,7 +574,7 @@ VidInitialize(VOID)
       return FALSE;
    }
 
-   NtClose(BitmapThreadHandle);
+   ZwClose(BitmapThreadHandle);
 
    return TRUE;
 }

@@ -28,6 +28,7 @@
 _InbvPutPixels:
 	pushl	%ebp
 	movl	%esp, %ebp
+	pushl	%ebx
 
   /* Compute mask and put it in EBX
      mask = maskbit[x] */
@@ -66,7 +67,7 @@ _InbvPutPixels:
     (UCHAR) READ_REGISTER_UCHAR(VideoMemory + offset+0); */
   movl	(_VideoMemory), %esi
   addl	%ebx, %esi
-  movb  0x0(%esi), %bl
+   movb  0x0(%esi), %bl
   /* Write color index for first pixel
      *((PUCHAR)(VideoMemory + offset+0)) = (c >> 0*8) & 0xff; */
   movl  0x10(%ebp), %eax
@@ -96,6 +97,7 @@ _InbvPutPixels:
   shrl  $0x8, %eax
   movb  %al, 0x3(%esi)
 
+  popl  %ebx
   popl  %ebp
 	ret
 
