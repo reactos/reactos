@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.47 2003/12/08 11:10:02 fireball Exp $ */
+/* $Id: bitmaps.c,v 1.48 2003/12/08 18:09:08 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -32,7 +32,7 @@
 #include <include/surface.h>
 #include <include/palette.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
