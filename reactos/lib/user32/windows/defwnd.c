@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.10 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: defwnd.c,v 1.11 2002/09/20 21:55:15 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -317,12 +317,24 @@ static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
   
   if (GetWindowTextA( hwnd, buffer, sizeof(buffer) ))
     {
+      NONCLIENTMETRICS nclm;
+      HFONT hFont, hOldFont;
+
+      nclm.cbSize = sizeof(NONCLIENTMETRICS);
+      SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &nclm, 0);
+      if (style & WS_EX_TOOLWINDOW)
+        hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
+      else
+        hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
+      hOldFont = SelectObject(hdc, hFont);
+
       if (active) SetTextColor( hdc, GetSysColor( COLOR_CAPTIONTEXT ) );
       else SetTextColor( hdc, GetSysColor( COLOR_INACTIVECAPTIONTEXT ) );
       SetBkMode( hdc, TRANSPARENT );
       /*DrawTextA( hdc, buffer, -1, &r,
 	DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_NOPREFIX );*/
-      TextOutA(hdc, r.left, r.top, buffer, strlen(buffer));
+      TextOutA(hdc, r.left+5, r.top+2, buffer, strlen(buffer));
+      DeleteObject (SelectObject (hdc, hOldFont));
     }
 }
 

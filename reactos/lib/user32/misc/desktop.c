@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.7 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: desktop.c,v 1.8 2002/09/20 21:55:50 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -33,6 +33,13 @@ SystemParametersInfoW(UINT uiAction,
 		      PVOID pvParam,
 		      UINT fWinIni)
 {
+  NONCLIENTMETRICS *nclm;
+
+  /* FIXME: This should be obtained from the registry */
+  static LOGFONT CaptionFont =
+  { 12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
+    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Timmons" };
+
   switch (uiAction)
     {
     case SPI_GETWORKAREA:
@@ -41,6 +48,13 @@ SystemParametersInfoW(UINT uiAction,
 	((PRECT)pvParam)->top = 0;
 	((PRECT)pvParam)->right = 640;
 	((PRECT)pvParam)->bottom = 480;
+	return(TRUE);
+      }
+    case SPI_GETNONCLIENTMETRICS:
+      {
+        nclm = pvParam;
+        memcpy(&nclm->lfCaptionFont, &CaptionFont, sizeof(LOGFONT));
+        memcpy(&nclm->lfSmCaptionFont, &CaptionFont, sizeof(LOGFONT));
 	return(TRUE);
       }
     }
