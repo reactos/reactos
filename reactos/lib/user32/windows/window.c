@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.25 2003/03/18 07:01:09 rcampbell Exp $
+/* $Id: window.c,v 1.26 2003/03/28 19:25:00 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -18,6 +18,12 @@
 #include <user32/callback.h>
 
 /* FUNCTIONS *****************************************************************/
+ULONG
+   WinHasThickFrameStyle(ULONG Style, ULONG ExStyle)
+{
+  return((Style & WS_THICKFRAME) &&
+	 (!((Style & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)));
+}
 
 NTSTATUS STDCALL
 User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
@@ -161,6 +167,59 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
+static void NC_AdjustRectOuter95 (LPRECT rect, DWORD style, BOOL menu, DWORD exStyle)
+{
+    int adjust;
+    if(style & WS_ICONIC) return;
+
+    if ((exStyle & (WS_EX_STATICEDGE|WS_EX_DLGMODALFRAME)) ==
+        WS_EX_STATICEDGE)
+    {
+        adjust = 1; /* for the outer frame always present */
+    }
+    else
+    {
+        adjust = 0;
+        if ((exStyle & WS_EX_DLGMODALFRAME) ||
+            (style & (WS_THICKFRAME|WS_DLGFRAME))) adjust = 2; /* outer */
+    }
+    if (style & WS_THICKFRAME)
+        adjust +=  ( GetSystemMetrics (SM_CXFRAME)
+                   - GetSystemMetrics (SM_CXDLGFRAME)); /* The resize border */
+    if ((style & (WS_BORDER|WS_DLGFRAME)) ||
+        (exStyle & WS_EX_DLGMODALFRAME))
+        adjust++; /* The other border */
+
+    InflateRect (rect, adjust, adjust);
+
+    if ((style & WS_CAPTION) == WS_CAPTION)
+    {
+        if (exStyle & WS_EX_TOOLWINDOW)
+            rect->top -= GetSystemMetrics(SM_CYSMCAPTION);
+        else
+            rect->top -= GetSystemMetrics(SM_CYCAPTION);
+    }
+    if (menu) rect->top -= GetSystemMetrics(SM_CYMENU);
+}
+
+static void
+NC_AdjustRectInner95 (LPRECT rect, DWORD style, DWORD exStyle)
+{
+    if(style & WS_ICONIC) return;
+
+    if (exStyle & WS_EX_CLIENTEDGE)
+        InflateRect(rect, GetSystemMetrics(SM_CXEDGE), GetSystemMetrics(SM_CYEDGE));
+
+    if (style & WS_VSCROLL)
+    {
+        if((exStyle & WS_EX_LEFTSCROLLBAR) != 0)
+            rect->left  -= GetSystemMetrics(SM_CXVSCROLL);
+        else
+            rect->right += GetSystemMetrics(SM_CXVSCROLL);
+    }
+    if (style & WS_HSCROLL) rect->bottom += GetSystemMetrics(SM_CYHSCROLL);
+}
+
 WINBOOL STDCALL
 AdjustWindowRect(LPRECT lpRect,
 		 DWORD dwStyle,
@@ -175,7 +234,16 @@ AdjustWindowRectEx(LPRECT lpRect,
 		   WINBOOL bMenu, 
 		   DWORD dwExStyle)
 {
-  return(FALSE);
+    dwStyle &= (WS_DLGFRAME | WS_BORDER | WS_THICKFRAME | WS_CHILD);
+    dwExStyle &= (WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE |
+                WS_EX_STATICEDGE | WS_EX_TOOLWINDOW);
+    if (dwExStyle & WS_EX_DLGMODALFRAME) dwStyle &= ~WS_THICKFRAME;
+
+    NC_AdjustRectOuter95( lpRect, dwStyle, bMenu, dwExStyle );
+    NC_AdjustRectInner95( lpRect, dwStyle, dwExStyle );
+    lpRect->right += 2;
+    lpRect->bottom += 2;
+    return TRUE;
 }
 
 WINBOOL STDCALL
