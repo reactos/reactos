@@ -233,7 +233,7 @@ MiParseRangeToFreeList(PADDRESS_RANGE Range)
   
   first = (Range->BaseAddrLow + PAGE_SIZE - 1) / PAGE_SIZE;
   last = first + ((Range->LengthLow + PAGE_SIZE - 1) / PAGE_SIZE);
-  for (i = first; i < last; i++)
+  for (i = first; i < last && i < MmPageArraySize; i++)
     {
       if (MmPageArray[i].Flags.Type == 0)
         {
@@ -260,7 +260,7 @@ MiParseRangeToBiosList(PADDRESS_RANGE Range)
   
   first = (Range->BaseAddrLow + PAGE_SIZE - 1) / PAGE_SIZE;
   last = first + ((Range->LengthLow + PAGE_SIZE - 1) / PAGE_SIZE);
-  for (i = first; i < last; i++)
+  for (i = first; i < last && i < MmPageArraySize; i++)
     {
       /* Remove the page from the free list if it is there */
       if (MmPageArray[i].Flags.Type == MM_PHYSICAL_PAGE_FREE)
@@ -280,28 +280,23 @@ MiParseRangeToBiosList(PADDRESS_RANGE Range)
 }
 
 VOID INIT_FUNCTION
-MiParseBIOSMemoryMap(ULONG MemorySizeInPages,
-		     PADDRESS_RANGE BIOSMemoryMap,
+MiParseBIOSMemoryMap(PADDRESS_RANGE BIOSMemoryMap,
 		     ULONG AddressRangeCount)
 {
   PADDRESS_RANGE p;
   ULONG i;
   
   p = BIOSMemoryMap;
-  for (i = 0; i < AddressRangeCount; i++)
+  for (i = 0; i < AddressRangeCount; i++, p++)
     {
-      if (((p->BaseAddrLow + PAGE_SIZE - 1) / PAGE_SIZE) < MemorySizeInPages)
+      if (p->Type == 1)
         {
-          if (p->Type == 1)
-            {
-              MiParseRangeToFreeList(p);
-            }
-          else
-            {
-              MiParseRangeToBiosList(p);
-            }
+          MiParseRangeToFreeList(p);
         }
-      p += 1;
+      else
+        {
+          MiParseRangeToBiosList(p);
+        }
     }
 }
 
@@ -502,7 +497,6 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
   if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
     {
       MiParseBIOSMemoryMap(
-        MemorySizeInPages,
         BIOSMemoryMap,
         AddressRangeCount);
     }
