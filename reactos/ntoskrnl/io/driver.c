@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.26 2003/10/16 14:49:05 ekohl Exp $
+/* $Id: driver.c,v 1.27 2003/10/16 17:59:48 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -438,6 +438,7 @@ IopInitializeBuiltinDriver(
    NTSTATUS Status;
    CHAR TextBuffer[256];
    PCHAR FileNameWithoutPath;
+   LPWSTR FileExtension;
 
    DPRINT("Initializing driver '%s' at %08lx, length 0x%08lx\n",
       FileName, ModuleLoadBase, ModuleLength);
@@ -466,11 +467,13 @@ IopInitializeBuiltinDriver(
    }
 
    /*
-    * Generate filename without patch (not needed by freeldr)
+    * Generate filename without path (not needed by freeldr)
     */
    FileNameWithoutPath = strrchr(FileName, '\\');
    if (FileNameWithoutPath == NULL)
+   {
       FileNameWithoutPath = FileName;
+   }
 
    /*
     * Load the module
@@ -485,6 +488,16 @@ IopInitializeBuiltinDriver(
          IopFreeDeviceNode(DeviceNode);
       CPRINT("Driver load failed, status (%x)\n", Status);
       return STATUS_UNSUCCESSFUL;
+   }
+
+   /*
+    * Strip the file extension from ServiceName
+    */
+   FileExtension = wcsrchr(DeviceNode->ServiceName.Buffer, '.');
+   if (FileExtension != NULL)
+   {
+      DeviceNode->ServiceName.Length -= wcslen(DeviceNode->ServiceName.Buffer);
+      FileExtension[0] = 0;
    }
 
    /*
