@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.17 1999/12/26 15:50:50 dwelch Exp $
+/* $Id: handle.c,v 1.18 2000/01/22 00:04:56 phreak Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -52,7 +52,7 @@ static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
    HANDLE_BLOCK* blk = NULL;
    unsigned int i;
    
-   DPRINT("ObpGetObjectByHandle(Process %x, h %x)\n",Process,h);
+   DPRINT("ObpGetObjectByHandle(HandleTable %x, h %x)\n",HandleTable,h);
    
    current = HandleTable->ListHead.Flink;
    DPRINT("current %x\n",current);
@@ -200,7 +200,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 		       DPRINT("Deleting handle to %x\n", ObjectBody);
 		    }
 		  
-		  ObReferenceObjectByPointer(ObjectBody,
+          ObReferenceObjectByPointer(ObjectBody,
 					     GENERIC_ALL,
 					     NULL,
 					     UserMode);
@@ -216,7 +216,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 						 Header->HandleCount);
 		    }
 		  
-		  ObDereferenceObject(ObjectBody);
+          ObDereferenceObject(ObjectBody);
 		  KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
 		  current_entry = &HandleTable->ListHead;
 		  break;
