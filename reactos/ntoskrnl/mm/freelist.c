@@ -363,7 +363,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    i = 2;
    if ((ULONG)FirstPhysKernelAddress < 0xa0000)
      {
-	MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGE_SIZE) - 1);
+	MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGE_SIZE) - 2);
 	for (; i<((ULONG)FirstPhysKernelAddress/PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
@@ -377,6 +377,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_USED;
 	     MmPageArray[i].ReferenceCount = 1;
+	     MmPageArray[i].MapCount = 1;
 	     InsertTailList(&UsedPageListHeads[MC_NPPOOL],
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -399,7 +400,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
      }
    else
      {
-	MmStats.NrFreePages += ((0xa0000 / PAGE_SIZE) - 1);	  
+	MmStats.NrFreePages += ((0xa0000 / PAGE_SIZE) - 2);	  
 	for (; i<(0xa0000 / PAGE_SIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
@@ -429,6 +430,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_USED;
 	     MmPageArray[i].ReferenceCount = 1;
+	     MmPageArray[i].MapCount = 1;
 	     InsertTailList(&UsedPageListHeads[MC_NPPOOL],
 			    &MmPageArray[i].ListEntry);
 	  }
