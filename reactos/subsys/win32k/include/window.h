@@ -98,27 +98,59 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000010)
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
 
-NTSTATUS FASTCALL InitWindowImpl (VOID);
-NTSTATUS FASTCALL CleanupWindowImpl (VOID);
-VOID     FASTCALL W32kGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
-PWINDOW_OBJECT FASTCALL W32kGetWindowObject (HWND hWnd);
-VOID     FASTCALL W32kReleaseWindowObject (PWINDOW_OBJECT Window);
-HWND     STDCALL  W32kCreateDesktopWindow (PWINSTATION_OBJECT WindowStation,
+NTSTATUS FASTCALL
+InitWindowImpl (VOID);
+
+NTSTATUS FASTCALL
+CleanupWindowImpl (VOID);
+
+VOID FASTCALL
+W32kGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
+
+PWINDOW_OBJECT FASTCALL
+W32kGetWindowObject (HWND hWnd);
+
+VOID FASTCALL
+W32kReleaseWindowObject (PWINDOW_OBJECT Window);
+
+HWND STDCALL
+W32kCreateDesktopWindow (PWINSTATION_OBJECT WindowStation,
 			PWNDCLASS_OBJECT DesktopClass,
 			ULONG Width, ULONG Height);
-BOOL     FASTCALL W32kIsDesktopWindow (PWINDOW_OBJECT Window);
-HWND     FASTCALL W32kGetActiveWindow (VOID);
-BOOL     FASTCALL W32kIsWindowVisible (HWND Wnd);
-BOOL     FASTCALL W32kIsChildWindow (HWND Parent, HWND Child);
-HWND     FASTCALL W32kGetDesktopWindow (VOID);
-HWND     FASTCALL W32kGetFocusWindow (VOID);
-HWND     FASTCALL W32kSetFocusWindow (HWND hWnd);
+
+BOOL FASTCALL
+W32kIsDesktopWindow (PWINDOW_OBJECT Window);
+
+HWND FASTCALL
+W32kGetActiveWindow (VOID);
+
+BOOL FASTCALL
+W32kIsWindowVisible (HWND Wnd);
+
+BOOL FASTCALL
+W32kIsChildWindow (HWND Parent, HWND Child);
+
+HWND FASTCALL
+W32kGetDesktopWindow (VOID);
+
+HWND FASTCALL
+W32kGetFocusWindow (VOID);
+
+HWND FASTCALL
+W32kSetFocusWindow (HWND hWnd);
+
+BOOL FASTCALL
+W32kSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
+
+PPROPERTY FASTCALL
+W32kGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 
 DWORD FASTCALL
 W32kGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
 
 ULONG
 UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
+
 ULONG
 UserHasThickFrameStyle(ULONG Style, ULONG ExStyle);
 
