@@ -96,12 +96,12 @@ VOID FASTCALL IntRestoreWinLock(WINLOCK_TYPE Type)
 
 inline VOID IntAcquireWinLockShared()
 {
-  ExAcquireResourceExclusiveLite(&WinLock, TRUE /*Wait*/ );
+  ExAcquireResourceSharedLite(&WinLock, TRUE /*Wait*/ );
 }
 
 inline VOID IntAcquireWinLockExclusive()
 {
-  ExAcquireResourceSharedLite(&WinLock, TRUE /*Wait*/  );
+  ExAcquireResourceExclusiveLite(&WinLock, TRUE /*Wait*/  );
 }
 
 inline VOID IntReleaseWinLock()
