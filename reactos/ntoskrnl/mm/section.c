@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.28 2000/04/03 21:54:39 dwelch Exp $
+/* $Id: section.c,v 1.29 2000/04/07 02:24:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -111,13 +111,13 @@ PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section,
 
 VOID MmpDeleteSection(PVOID ObjectBody)
 {
-   DPRINT1("MmpDeleteSection(ObjectBody %x)\n", ObjectBody);
+   DPRINT("MmpDeleteSection(ObjectBody %x)\n", ObjectBody);
 }
 
 VOID MmpCloseSection(PVOID ObjectBody,
 		     ULONG HandleCount)
 {
-   DPRINT1("MmpCloseSection(OB %x, HC %d) RC %d\n",
+   DPRINT("MmpCloseSection(OB %x, HC %d) RC %d\n",
 	   ObjectBody, HandleCount, ObGetReferenceCount(ObjectBody));
 }
 
@@ -493,7 +493,7 @@ NTSTATUS STDCALL MmUnmapViewOfSection(PEPROCESS Process,
    
    Section = MemoryArea->Data.SectionData.Section;
    
-   DPRINT1("MmUnmapViewOfSection(Section %x) SectionRC %d\n",
+   DPRINT("MmUnmapViewOfSection(Section %x) SectionRC %d\n",
 	   Section, ObGetReferenceCount(Section));
    
    KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
@@ -530,7 +530,7 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
    PMADDRESS_SPACE AddressSpace;
    
    DPRINT("NtUnmapViewOfSection(ProcessHandle %x, BaseAddress %x)\n",
-	  ProcessHandle, BaseAddress);
+	   ProcessHandle, BaseAddress);
    
    DPRINT("Referencing process\n");
    Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -548,7 +548,7 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
    AddressSpace = &Process->Pcb.AddressSpace;
    
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
-	  Process, BaseAddress);
+	   Process, BaseAddress);
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  BaseAddress);
@@ -562,6 +562,7 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
    Status = MmUnmapViewOfSection(Process,
 				 MemoryArea);
    
+   DPRINT("MmFreeMemoryArea()\n");
    Status = MmFreeMemoryArea(&Process->Pcb.AddressSpace,
 			     BaseAddress,
 			     0,

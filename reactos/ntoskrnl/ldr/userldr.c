@@ -23,7 +23,7 @@
 #include <internal/teb.h>
 #include <internal/ldr.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "syspath.h"
@@ -71,7 +71,7 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
     * map the dos header into the process
     */
    DPRINT("Mapping view of section\n");
-   InitialViewSize = sizeof(PIMAGE_DOS_HEADER);
+   InitialViewSize = sizeof(IMAGE_DOS_HEADER);
    ImageBase = NULL;
    
    Status = ZwMapViewOfSection(SectionHandle,
@@ -110,6 +110,7 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
      }
    
    DPRINT("Mapping view of section\n");
+   ImageBase = NULL;
    Status = ZwMapViewOfSection(SectionHandle,
 			       ProcessHandle,
 			       (PVOID*)&ImageBase,
@@ -126,6 +127,7 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
 	return(Status);
      }
    
+   DPRINT("ImageBase %x\n", ImageBase);
    
    /*
     * TBD
@@ -133,12 +135,15 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
    DPRINT("Attaching to process\n");
    KeAttachProcess(Process);
    NTHeaders = RtlImageNtHeader(ImageBase);
+   DPRINT("NTHeaders %x\n", NTHeaders);
    InitialViewSize = ((PIMAGE_DOS_HEADER)ImageBase)->e_lfanew +
      sizeof(IMAGE_NT_HEADERS) +
      (sizeof (IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections);
    DPRINT("InitialViewSize %x\n", InitialViewSize);
    FinalBase = (PVOID)NTHeaders->OptionalHeader.ImageBase;
+   DPRINT("FinalBase %x\n", FinalBase);
    NumberOfSections = NTHeaders->FileHeader.NumberOfSections;
+   DPRINT("NrSections %d\n", NumberOfSections);
    KeDetachProcess();
    
    DPRINT("Unmapping view of section\n");

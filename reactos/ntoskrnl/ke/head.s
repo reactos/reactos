@@ -9,7 +9,6 @@
 .globl _init_stack_top
 
 _DllMainCRTStartup@12:
-_stext:
 _mainCRTStartup:
 _start:
 start:
@@ -42,11 +41,11 @@ _gdt_descr:
 
 .text
 
+.align 8
 _init_stack:
         .fill 16384,1,0
 _init_stack_top:
 
-#if 0
 _stext:
-#endif
+
 

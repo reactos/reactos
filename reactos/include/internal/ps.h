@@ -67,5 +67,9 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context);
 NTSTATUS HalReleaseTask(PETHREAD Thread);
 VOID PiDeleteProcess(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
+VOID PsUnfreezeOtherThread(PETHREAD Thread);
+VOID PsFreezeOtherThread(PETHREAD Thread);
+VOID PsFreezeProcessThreads(PEPROCESS Process);
+VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 
 #endif

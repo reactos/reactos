@@ -54,6 +54,10 @@ VOID HalTaskSwitch(PKTHREAD thread)
     * new thread
     */
    KeSetBaseGdtSelector(TEB_SELECTOR, thread->Teb);
+//   DPRINT1("esp0 %x esp %x tid %d\n", 
+//	   thread->Context.esp0,
+//	   thread->Context.esp,
+//	   ((PETHREAD)thread)->Cid.UniqueThread);
    /* Switch to the new thread's context and stack */
    __asm__("pushfl\n\t"
 	   "cli\n\t"
@@ -147,8 +151,13 @@ NTSTATUS HalReleaseTask(PETHREAD Thread)
  * NOTE: The thread had better not be running when this is called
  */
 {
+   extern BYTE init_stack[16384];
+   
    KeFreeGdtSelector(Thread->Tcb.Context.nr / 8);
-   ExFreePool(Thread->Tcb.Context.KernelStackBase);
+   if (Thread->Tcb.Context.KernelStackBase != init_stack)
+     {       
+	ExFreePool(Thread->Tcb.Context.KernelStackBase);
+     }
    if (Thread->Tcb.Context.SavedKernelStackBase != NULL)
      {
 	ExFreePool(Thread->Tcb.Context.SavedKernelStackBase);
@@ -186,7 +195,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    length = sizeof(hal_thread_state) - 1;
    base = (unsigned int)(&(Thread->Tcb.Context));
 //   kernel_stack = ExAllocatePool(NonPagedPool,PAGESIZE);
-   kernel_stack = ExAllocatePool(NonPagedPool, 3*PAGESIZE);
+   kernel_stack = ExAllocatePool(NonPagedPool, 6*PAGESIZE);
    
    /*
     * Setup a TSS descriptor
@@ -200,7 +209,11 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   stack_start = kernel_stack + 3*PAGESIZE - sizeof(CONTEXT);
+   stack_start = kernel_stack + 6*PAGESIZE - sizeof(CONTEXT);
+   
+   DPRINT1("stack_start %x kernel_stack %x\n",
+	  stack_start, kernel_stack);
+   
    Context->SegFs = TEB_SELECTOR;
    memcpy(stack_start, Context, sizeof(CONTEXT));
    
@@ -249,12 +262,20 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
 //   PULONG KernelStack = ExAllocatePool(NonPagedPool,4096);
    PULONG KernelStack;
    ULONG GdtDesc[2];
+   extern BYTE init_stack[16384];
    
    DPRINT("HalInitTask(Thread %x, fn %x, StartContext %x)\n",
           thread,fn,StartContext);
    DPRINT("thread->ThreadsProcess %x\n",thread->ThreadsProcess);
    
-   KernelStack = ExAllocatePool(NonPagedPool, 3*PAGESIZE);
+   if (fn != NULL)
+     {
+	KernelStack = ExAllocatePool(NonPagedPool, 3*PAGESIZE);
+     }
+   else
+     {
+	KernelStack = (PULONG)init_stack;
+     }
    
    /*
     * Make sure
@@ -281,9 +302,12 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
     * Initialize the stack for the thread (including the two arguments to 
     * the general start routine).					   
     */
-   KernelStack[1023] = (unsigned int)StartContext;
-   KernelStack[1022] = (unsigned int)fn;
-   KernelStack[1021] = 0;     
+   if (fn != NULL)
+     {
+	KernelStack[3071] = (unsigned int)StartContext;
+	KernelStack[3070] = (unsigned int)fn;
+	KernelStack[3069] = 0;
+     }
    
    /*
     * Initialize the thread context
@@ -292,9 +316,9 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    thread->Tcb.Context.ldt = KiNullLdtSel;
    thread->Tcb.Context.eflags = (1<<1)+(1<<9);
    thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
-   thread->Tcb.Context.esp0 = (ULONG)&KernelStack[1021];
+   thread->Tcb.Context.esp0 = (ULONG)&KernelStack[3069];
    thread->Tcb.Context.ss0 = KERNEL_DS;
-   thread->Tcb.Context.esp = (ULONG)&KernelStack[1021];
+   thread->Tcb.Context.esp = (ULONG)&KernelStack[3069];
    thread->Tcb.Context.ss = KERNEL_DS;
    thread->Tcb.Context.cs = KERNEL_CS;
    thread->Tcb.Context.eip = (ULONG)PsBeginThread;

@@ -47,7 +47,9 @@ MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace,
    PLIST_ENTRY previous_entry;
 
    DPRINT("MmOpenMemoryAreaByAddress(AddressSpace %x, Address %x)\n",
-	  AddressSpace, Address);
+	   AddressSpace, Address);
+   
+//   MmDumpMemoryAreas(&AddressSpace->MAreaListHead);
    
    previous_entry = &AddressSpace->MAreaListHead;
    current_entry = AddressSpace->MAreaListHead.Flink;
@@ -57,7 +59,7 @@ MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace,
 				    MEMORY_AREA,
 				    Entry);
 	DPRINT("Scanning %x BaseAddress %x Length %x\n",
-	       current, current->BaseAddress, current->Length);
+		current, current->BaseAddress, current->Length);
 	assert(current_entry->Blink->Flink == current_entry);
 	if (current_entry->Flink->Blink != current_entry)
 	  {
@@ -279,7 +281,7 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    LARGE_INTEGER PhysicalAddr;
    
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
-          "FreePages %d)\n",AddressSpace,BaseAddress,Length,FreePages);
+	   "FreePages %d)\n",AddressSpace,BaseAddress,Length,FreePages);
 
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  BaseAddress);
@@ -299,7 +301,17 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
      }
    for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)
      {
-	MmSetPage(NULL,
+	if (AddressSpace->Process != NULL)
+	  {
+	     DPRINT("Freeing %x in %d\n", 
+		     MemoryArea->BaseAddress + (i*PAGESIZE),
+		     AddressSpace->Process->UniqueProcessId);
+	  }
+	else
+	  {
+//	     DPRINT("Freeing %x in kernel address space\n");
+	  }
+	MmSetPage(AddressSpace->Process,
 		  MemoryArea->BaseAddress + (i*PAGESIZE),
 		  0,
 		  0);
@@ -307,6 +319,8 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    
    RemoveEntryList(&(MemoryArea->Entry));
    ExFreePool(MemoryArea);
+   
+   DPRINT("MmFreeMemoryArea() succeeded\n");
    
    return(STATUS_SUCCESS);
 }
@@ -379,8 +393,8 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
  */
 {
    DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %x,"
-	  "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
-          Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
+	   "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
+	   Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
 
    if ((*BaseAddress)==0)
      {
@@ -415,5 +429,7 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
    (*Result)->Process = Process;
    
    MmInsertMemoryArea(AddressSpace, *Result);
+   
+   DPRINT("MmCreateMemoryArea() succeeded\n");
    return(STATUS_SUCCESS);
 }

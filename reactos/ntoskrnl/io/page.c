@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.7 2000/03/29 13:11:53 dwelch Exp $
+/* $Id: page.c,v 1.8 2000/04/07 02:23:59 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,8 +29,8 @@ NTSTATUS STDCALL IoPageRead(PFILE_OBJECT FileObject,
    PIO_STACK_LOCATION StackPtr;
    NTSTATUS Status;
    
-   DPRINT("IoPageRead(FileObject %x, Address %x)\n",
-	  FileObject,Address);
+   DPRINT("IoPageRead(FileObject %x, Mdl %x)\n",
+	  FileObject, Mdl);
    
    ObReferenceObjectByPointer(FileObject,
 			      STANDARD_RIGHTS_REQUIRED,

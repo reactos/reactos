@@ -1073,7 +1073,7 @@ l8:
         ; Enter pmode and clear prefetch queue
         ;
         mov     eax,cr0
-        or      eax,0x80000001
+        or      eax,0x80010001
         mov     cr0,eax
         jmp     next
 next:

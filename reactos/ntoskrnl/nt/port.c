@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.18 2000/04/03 21:54:39 dwelch Exp $
+/* $Id: port.c,v 1.19 2000/04/07 02:24:02 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 #include <string.h>
 #include <internal/string.h>
 #include <internal/port.h>
+#include <internal/dbg.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -646,12 +647,19 @@ NTSTATUS STDCALL LpcSendTerminationPort(PEPORT Port,
    LPC_TERMINATION_MESSAGE Msg;
    
    Msg.CreationTime = CreationTime;
-   Status = EiReplyOrRequestPort(Port,
-				 &Msg.Header,
-				 LPC_DATAGRAM,
-				 NULL);
-   KeSetEvent(&Port->Event, IO_NO_INCREMENT, FALSE);
-   return(STATUS_SUCCESS);
+   Status = LpcRequestPort(Port,
+			   &Msg.Header);
+   return(Status);
+}
+
+NTSTATUS STDCALL LpcSendDebugMessagePort(PEPORT Port,
+					 PLPC_DBG_MESSAGE Message)
+{
+   NTSTATUS Status;
+   
+   Status = LpcRequestPort(Port,
+			   &Message->Header);
+   return(Status);
 }
 
 NTSTATUS STDCALL LpcRequestPort(PEPORT Port,
@@ -661,11 +669,11 @@ NTSTATUS STDCALL LpcRequestPort(PEPORT Port,
    
    DPRINT("LpcRequestPort(PortHandle %x LpcMessage %x)\n", Port, LpcMessage);
    
-   Status = EiReplyOrRequestPort(Port->OtherPort, 
+   Status = EiReplyOrRequestPort(Port, 
 				 LpcMessage, 
 				 LPC_DATAGRAM,
 				 Port);
-   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);
+   KeSetEvent(&Port->Event, IO_NO_INCREMENT, FALSE);
 
    return(Status);
 }
@@ -691,7 +699,8 @@ NTSTATUS STDCALL NtRequestPort (IN HANDLE PortHandle,
 	return(Status);
      }
 
-   Status = LpcRequestPort(Port, LpcMessage);
+   Status = LpcRequestPort(Port->OtherPort, 
+			   LpcMessage);
    
    ObDereferenceObject(Port);
    return(Status);

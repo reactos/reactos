@@ -33,13 +33,9 @@ VOID KeAcquireSpinLock(PKSPIN_LOCK SpinLock, PKIRQL OldIrql);
 VOID KeAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock);
 BOOLEAN KeCancelTimer(PKTIMER Timer);
 VOID KeClearEvent(PKEVENT Event);
-NTSTATUS
-STDCALL
-KeDelayExecutionThread (
-	KPROCESSOR_MODE	WaitMode,
-	BOOLEAN		Alertable,
-	PLARGE_INTEGER	Internal
-	);
+NTSTATUS STDCALL KeDelayExecutionThread (KPROCESSOR_MODE WaitMode,
+					 BOOLEAN Alertable,
+					 PLARGE_INTEGER	Internal);
 BOOLEAN KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD
 				     CallbackRecord);
 VOID KeEnterCriticalRegion(VOID);

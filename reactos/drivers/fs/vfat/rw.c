@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.4 2000/03/12 23:28:59 ekohl Exp $
+/* $Id: rw.c,v 1.5 2000/04/07 02:24:03 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,18 +82,20 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
      }
    CHECKPOINT;
    if ((ReadOffset % DeviceExt->BytesPerCluster)!=0)
-   {
-    if (FirstCluster==1)
-    {
-      VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
-           ,DeviceExt->Boot->SectorsPerCluster,Temp);
-      CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
-    }
-    else
-    {
-      VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
-      CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
-    }
+     {
+	if (FirstCluster == 1)
+	  {
+	     VFATReadSectors(DeviceExt->StorageDevice,
+			     CurrentCluster,
+			     DeviceExt->Boot->SectorsPerCluster,
+			     Temp);
+	     CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
+	  }
+	else
+	  {
+	     VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
+	     CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+	  }
 	TempLength = min(Length,DeviceExt->BytesPerCluster -
 			 (ReadOffset % DeviceExt->BytesPerCluster));
 	
@@ -106,23 +108,25 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
      }
    CHECKPOINT;
    while (Length >= DeviceExt->BytesPerCluster)
-   {
-    if (FirstCluster==1)
-    {
-      VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
-           ,DeviceExt->Boot->SectorsPerCluster,Buffer);
-      CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
-    }
-    else
-    {
-      VFATLoadCluster(DeviceExt,Buffer,CurrentCluster);
-      CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
-    }
-      if (CurrentCluster == 0xffffffff)
-	{
-	   ExFreePool(Temp);
-	   return(STATUS_SUCCESS);
-	}
+     {
+	if (FirstCluster == 1)
+	  {
+	     VFATReadSectors(DeviceExt->StorageDevice,
+			     CurrentCluster,
+			     DeviceExt->Boot->SectorsPerCluster,
+			     Buffer);
+	     CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
+	  }
+	else
+	  {
+	     VFATLoadCluster(DeviceExt,Buffer,CurrentCluster);
+	     CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+	  }
+	if (CurrentCluster == 0xffffffff)
+	  {
+	     ExFreePool(Temp);
+	     return(STATUS_SUCCESS);
+	  }
 	
 	(*LengthRead) = (*LengthRead) + DeviceExt->BytesPerCluster;
 	Buffer = Buffer + DeviceExt->BytesPerCluster;
@@ -132,10 +136,12 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    if (Length > 0)
      {
 	(*LengthRead) = (*LengthRead) + Length;
-	if (FirstCluster==1)
+	if (FirstCluster == 1)
 	  {
-	     VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
-			     ,DeviceExt->Boot->SectorsPerCluster,Temp);
+	     VFATReadSectors(DeviceExt->StorageDevice,
+			     CurrentCluster,
+			     DeviceExt->Boot->SectorsPerCluster,
+			     Temp);
 	     CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
 	  }
 	else

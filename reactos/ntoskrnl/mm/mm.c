@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.27 2000/04/02 13:32:41 ea Exp $
+/* $Id: mm.c,v 1.28 2000/04/07 02:24:00 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -159,16 +159,20 @@ NTSTATUS MmSectionHandleFault(PMADDRESS_SPACE AddressSpace,
    PMDL Mdl;
    PVOID Page;
    NTSTATUS Status;
+   ULONG PAddress;
    
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
-	  MemoryArea,Address);
+	   MemoryArea,Address);
    
    if (MmIsPagePresent(NULL, Address))
      {
 	return(STATUS_SUCCESS);
      }
    
-   Offset.QuadPart = (Address - MemoryArea->BaseAddress) + 
+   DPRINT("Page isn't present\n");
+   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
+   DPRINT("PAddress %x\n", PAddress);
+   Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
      MemoryArea->Data.SectionData.ViewOffset;
    
    DPRINT("MemoryArea->Data.SectionData.Section->FileObject %x\n",
@@ -198,30 +202,36 @@ NTSTATUS MmSectionHandleFault(PMADDRESS_SPACE AddressSpace,
 	return(STATUS_SUCCESS);
      }
    
+   DPRINT("Creating mdl\n");
    Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+   DPRINT("Building mdl\n");
    MmBuildMdlFromPages(Mdl);
-     
+   DPRINT("Getting page address\n");
    Page = MmGetMdlPageAddress(Mdl, 0);
-   
+   DPRINT("Unlocking address space\n");
    MmUnlockAddressSpace(AddressSpace);
-   
+   DPRINT("Reading page\n");
    Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
 		       Mdl,
 		       &Offset,
 		       &IoStatus);
-   
+   DPRINT("Read page\n");
    if (!NT_SUCCESS(Status))
      {
+	DPRINT("Failed to read page\n");
 	return(Status);
      }
-      
+     
+   DPRINT("Locking address space\n");
    MmLockAddressSpace(AddressSpace);
    
+   DPRINT("Testing if page is present\n");
    if (MmIsPagePresent(NULL, Address))
      {
 	return(STATUS_SUCCESS);
      }
    
+   DPRINT("Setting page\n");
    MmSetPage(NULL,
 	     Address,
 	     MemoryArea->Attributes,
@@ -232,65 +242,45 @@ NTSTATUS MmSectionHandleFault(PMADDRESS_SPACE AddressSpace,
    return(STATUS_SUCCESS);
 }
 
-ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
-/*
- * FUNCTION: Handle a page fault
- */
+NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
+		       ULONG Address)
+{
+   return(STATUS_UNSUCCESSFUL);
+}
+
+NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
+			   ULONG Address)
 {
    PMADDRESS_SPACE AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
-   unsigned int cr2;
-//   unsigned int cr3;
    
-   /*
-    * Get the address for the page fault
-    */
-   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
-//   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
-//   DPRINT1("Page fault address %x eip %x process %x code %x cr3 %x\n",cr2,eip,
-//	  PsGetCurrentProcess(), error_code, cr3);
-
-//   MmSetPageProtect(PsGetCurrentProcess(),
-//		    (PVOID)PAGE_ROUND_DOWN(PsGetCurrentProcess()),
-//		    0x7);
-   
-   cr2 = PAGE_ROUND_DOWN(cr2);
-   
-   if (error_code & 0x1)
-     {
-	DbgPrint("Page protection fault at %x with eip %x\n", cr2, eip);
-	return(0);
-     }
-   
-//   DbgPrint("(%%");
+   DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
    
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {
 	DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
-	return(0);
-//	KeBugCheck(0);
+	return(STATUS_UNSUCCESSFUL);
      }
    if (PsGetCurrentProcess() == NULL)
      {
 	DbgPrint("No current process\n");
-	return(0);
+	return(STATUS_UNSUCCESSFUL);
      }
    
    /*
     * Find the memory area for the faulting address
     */
-   if (cr2 >= KERNEL_BASE)
+   if (Address >= KERNEL_BASE)
      {
 	/*
 	 * Check permissions
 	 */
-	if (cs != KERNEL_CS)
+	if (Mode != KernelMode)
 	  {
 	     DbgPrint("%s:%d\n",__FILE__,__LINE__);
-	     return(0);
+	     return(STATUS_UNSUCCESSFUL);
 	  }
-	AddressSpace = &PsGetCurrentProcess()->Pcb.AddressSpace;
 	AddressSpace = MmGetKernelAddressSpace();
      }
    else
@@ -299,12 +289,12 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
      }
    
    MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)cr2);
+   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
    if (MemoryArea == NULL)
      {
 	DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	MmUnlockAddressSpace(AddressSpace);
-	return(0);
+	return(STATUS_UNSUCCESSFUL);
      }
    
    switch (MemoryArea->Type)
@@ -316,13 +306,13 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
 	Status = MmSectionHandleFault(AddressSpace,
 				      MemoryArea, 
-				      (PVOID)cr2);
+				      (PVOID)Address);
 	break;
 	
       case MEMORY_AREA_COMMIT:
 	Status = MmCommitedSectionHandleFault(AddressSpace,
 					      MemoryArea,
-					      (PVOID)cr2);
+					      (PVOID)Address);
 	break;
 	
       default:
@@ -331,7 +321,7 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
      }
    DPRINT("Completed page fault handling\n");
    MmUnlockAddressSpace(AddressSpace);
-   return(NT_SUCCESS(Status));
+   return(Status);
 }
 
 BOOLEAN STDCALL MmIsThisAnNtAsSystem(VOID)

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.26 2000/04/02 13:32:42 ea Exp $
+/* $Id: virtual.c,v 1.27 2000/04/07 02:24:01 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -341,8 +341,8 @@ NTSTATUS STDCALL NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);
      }
-   ObDereferenceObject(Process);
    MmUnlockAddressSpace(AddressSpace);
+   ObDereferenceObject(Process);
    return(STATUS_NOT_IMPLEMENTED);
 }
 

@@ -12,6 +12,8 @@
 #define MAX_PATH 	(260)
 #endif
 
+struct _EPORT;
+
 typedef NTSTATUS (*PKSTART_ROUTINE)(PVOID StartContext);
 
 typedef struct _STACK_INFORMATION
@@ -262,8 +264,8 @@ typedef struct _EPROCESS
    LARGE_INTEGER VirtualSize;
    PVOID Vm;                // Actually 48 bytes
    PVOID LastProtoPteFault;
-   PVOID DebugPort;
-   PVOID ExceptionPort;
+   struct _EPORT* DebugPort;
+   struct _EPORT* ExceptionPort;
    PVOID ObjectTable;
    PVOID Token;
    KMUTEX WorkingSetLock;

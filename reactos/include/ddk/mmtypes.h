@@ -1,13 +1,15 @@
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
-/* $Id: mmtypes.h,v 1.4 2000/04/02 13:32:38 ea Exp $ */
+/* $Id: mmtypes.h,v 1.5 2000/04/07 02:23:57 dwelch Exp $ */
 
+struct _EPROCESS;
 
 typedef struct _MADDRESS_SPACE
 {
    LIST_ENTRY MAreaListHead;
    KMUTEX Lock;
    ULONG LowestAddress;
+   struct _EPROCESS* Process;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
 #define   MDL_MAPPED_TO_SYSTEM_VA      (0x1)

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.44 1999/12/18 17:48:23 dwelch Exp $
+/* $Id: thread.c,v 1.45 2000/04/07 02:24:02 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -55,6 +55,56 @@ ULONG PiNrRunnableThreads = 0;
 static PETHREAD CurrentThread = NULL;
 
 /* FUNCTIONS ***************************************************************/
+
+VOID PsFreezeProcessThreads(PEPROCESS Process)
+{
+   KIRQL oldIrql;
+   PLIST_ENTRY current_entry;
+   PETHREAD current;
+   
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   current_entry = PiThreadListHead.Flink;
+   
+   while (current_entry != &PiThreadListHead)
+     {
+	current = CONTAINING_RECORD(current_entry, ETHREAD, 
+				    Tcb.ThreadListEntry);
+	
+	current_entry = current_entry->Flink;
+	
+	if (current->ThreadsProcess == Process &&
+	    current != PsGetCurrentThread())
+	  {
+	     PsFreezeOtherThread(current);
+	  }
+     }
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+}
+
+VOID PsUnfreezeProcessThreads(PEPROCESS Process)
+{
+   KIRQL oldIrql;
+   PLIST_ENTRY current_entry;
+   PETHREAD current;
+   
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   current_entry = PiThreadListHead.Flink;
+   
+   while (current_entry != &PiThreadListHead)
+     {
+	current = CONTAINING_RECORD(current_entry, ETHREAD, 
+				    Tcb.ThreadListEntry);
+	
+	current_entry = current_entry->Flink;
+	
+	if (current->ThreadsProcess == Process &&
+	    current != PsGetCurrentThread())
+	  {
+	     PsUnfreezeOtherThread(current);
+	  }
+     }
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+}
 
 PKTHREAD KeGetCurrentThread(VOID)
 {
@@ -226,7 +276,42 @@ ULONG PsUnfreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus)
    return(r);
 }
 
-ULONG PsFreezeThread(PETHREAD Thread, PNTSTATUS Status, UCHAR Alertable,
+VOID PsUnfreezeOtherThread(PETHREAD Thread)
+{
+   ULONG r;
+   
+   Thread->Tcb.FreezeCount--;
+   r = Thread->Tcb.FreezeCount;
+   
+   if (r <= 0)
+     {
+	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
+	PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
+     }
+}
+
+VOID PsFreezeOtherThread(PETHREAD Thread)
+{
+   ULONG r;
+   
+   Thread->Tcb.FreezeCount++;
+   r = Thread->Tcb.FreezeCount;
+   
+   if (r == 0)
+     {
+	return;
+     }
+   
+   if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
+     {
+	RemoveEntryList(&Thread->Tcb.QueueListEntry);
+     }
+   Thread->Tcb.State = THREAD_STATE_FROZEN;   
+}
+
+ULONG PsFreezeThread(PETHREAD Thread, 
+		     PNTSTATUS Status, 
+		     UCHAR Alertable,
 		     ULONG WaitMode)
 {
    KIRQL oldIrql;

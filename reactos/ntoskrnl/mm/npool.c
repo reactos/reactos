@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.26 2000/03/01 22:52:28 ea Exp $
+/* $Id: npool.c,v 1.27 2000/04/07 02:24:00 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -601,9 +601,7 @@ asmlinkage VOID ExFreePool(PVOID block)
             ((PULONG)&block)[-1]);
    
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
-   
-   memset(block, 0xcc, blk->size);
-   
+      
    VALIDATE_POOL;
    
    if (blk->magic != BLOCK_HDR_MAGIC)
@@ -612,6 +610,8 @@ asmlinkage VOID ExFreePool(PVOID block)
 	KeBugCheck(0);
 	return;
      }
+   
+   memset(block, 0xcc, blk->size);
    
    /*
     * Please don't change the order

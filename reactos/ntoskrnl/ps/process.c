@@ -20,6 +20,9 @@
 #include <internal/id.h>
 #include <internal/teb.h>
 #include <internal/ldr.h>
+#include <internal/port.h>
+#include <napi/dbg.h>
+#include <internal/dbg.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -162,7 +165,8 @@ VOID PsInitProcessManagment(VOID)
 				FALSE);
    KProcess = &SystemProcess->Pcb;  
    
-   MmInitializeAddressSpace(&SystemProcess->Pcb.AddressSpace);
+   MmInitializeAddressSpace(SystemProcess, 
+			    &SystemProcess->Pcb.AddressSpace);
    ObCreateHandleTable(NULL,FALSE,SystemProcess);
    KProcess->PageTableDirectory = get_page_directory();
    SystemProcess->UniqueProcessId = 
@@ -271,8 +275,8 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
 				  IN HANDLE ParentProcessHandle,
 				  IN BOOLEAN InheritObjectTable,
 				  IN HANDLE SectionHandle OPTIONAL,
-				  IN HANDLE DebugPort OPTIONAL,
-				  IN HANDLE ExceptionPort OPTIONAL)
+				  IN HANDLE DebugPortHandle OPTIONAL,
+				  IN HANDLE ExceptionPortHandle OPTIONAL)
 /*
  * FUNCTION: Creates a process.
  * ARGUMENTS:
@@ -303,6 +307,8 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    PVOID LdrStartupAddr;
    PVOID ImageBase;
    PVOID Peb;
+   PEPORT DebugPort;
+   PEPORT ExceptionPort;
    
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -330,7 +336,8 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    KProcess = &Process->Pcb;
    
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
-   MmInitializeAddressSpace(&KProcess->AddressSpace);
+   MmInitializeAddressSpace(Process,
+			    &KProcess->AddressSpace);
    Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
    Process->InheritedFromUniqueProcessId = ParentProcess->UniqueProcessId;
    ObCreateHandleTable(ParentProcess,
@@ -344,6 +351,50 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
    Process->Pcb.ProcessState = PROCESS_STATE_ACTIVE;
+   
+   /*
+    * Add the debug port
+    */
+   if (DebugPortHandle != NULL)
+     {
+	Status = ObReferenceObjectByHandle(DebugPortHandle,
+					   PORT_ALL_ACCESS,
+					   ExPortType,
+					   UserMode,
+					   (PVOID*)&DebugPort,
+					   NULL);   
+	if (!NT_SUCCESS(Status))
+	  {
+	     ObDereferenceObject(Process);
+	     ObDereferenceObject(ParentProcess);
+	     ZwClose(*ProcessHandle);
+	     *ProcessHandle = NULL;
+	     return(Status);
+	  }
+	Process->DebugPort = DebugPort;
+     }
+	
+   /*
+    * Add the exception port
+    */
+   if (ExceptionPortHandle != NULL)
+     {
+	Status = ObReferenceObjectByHandle(ExceptionPortHandle,
+					   PORT_ALL_ACCESS,
+					   ExPortType,
+					   UserMode,
+					   (PVOID*)&ExceptionPort,
+					   NULL);   
+	if (!NT_SUCCESS(Status))
+	  {
+	     ObDereferenceObject(Process);
+	     ObDereferenceObject(ParentProcess);
+	     ZwClose(*ProcessHandle);
+	     *ProcessHandle = NULL;
+	     return(Status);
+	  }
+	Process->ExceptionPort = ExceptionPort;
+     }
    
    /*
     * Now we have created the process proper
@@ -394,9 +445,39 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
      {
         DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);
+	ObDereferenceObject(Process);
+	ObDereferenceObject(ParentProcess);
+	ZwClose(*ProcessHandle);
+	*ProcessHandle = NULL;       
 	return(Status);
      }
    Process->Peb = Peb;
+   
+   /*
+    * Maybe send a message to the creator process's debugger
+    */
+   if (ParentProcess->DebugPort != NULL)
+     {
+	LPC_DBG_MESSAGE Message;
+	HANDLE FileHandle;
+	
+	ObCreateHandle(NULL, // Debugger Process
+		       NULL, // SectionHandle
+		       FILE_ALL_ACCESS,
+		       FALSE,
+		       &FileHandle);
+	
+	Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
+	Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) -
+	  sizeof(LPC_MESSAGE_HEADER);
+	Message.Type = DBG_EVENT_CREATE_PROCESS;
+	Message.Data.CreateProcess.FileHandle = FileHandle;
+	Message.Data.CreateProcess.Base = ImageBase;
+	Message.Data.CreateProcess.EntryPoint = NULL; //
+	
+	Status = LpcSendDebugMessagePort(ParentProcess->DebugPort,
+					 &Message);
+     }
    
    ObDereferenceObject(Process);
    ObDereferenceObject(ParentProcess);

@@ -2,6 +2,8 @@ mkdir -p $1/reactos
 mkdir -p $1/reactos/system32
 mkdir -p $1/reactos/system32/drivers
 mkdir -p $1/reactos/bin
+cp fdisk.exe $1
+cp format.exe $1
 cp loaders/dos/loadros.com $1
 cp ntoskrnl/ntoskrnl.exe $1
 cp services/fs/vfat/vfatfs.sys $1

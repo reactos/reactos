@@ -84,7 +84,8 @@ VOID MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace);
 VOID MmInitializeKernelAddressSpace(VOID);
 PMADDRESS_SPACE MmGetCurrentAddressSpace(VOID);
 PMADDRESS_SPACE MmGetKernelAddressSpace(VOID);
-NTSTATUS MmInitializeAddressSpace(PMADDRESS_SPACE AddressSpace);
+NTSTATUS MmInitializeAddressSpace(PEPROCESS Process,
+				  PMADDRESS_SPACE AddressSpace);
 NTSTATUS MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace);
 PVOID STDCALL MmAllocateSection (IN ULONG Length);
 NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
@@ -144,7 +145,6 @@ PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section, ULONG Offset);
 NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 VOID MmInitPagingFile(VOID);
-ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code);
 
 /* FIXME: it should be in ddk/mmfuncs.h */
 NTSTATUS
@@ -159,5 +159,16 @@ MmCreateSection (
 	IN	HANDLE			FileHandle		OPTIONAL,
 	IN	PFILE_OBJECT		File			OPTIONAL
 	);
+
+NTSTATUS MmPageFault(ULONG Cs,
+		     PULONG Eip,
+		     PULONG Eax,
+		     ULONG Cr2,
+		     ULONG ErrorCode);
+
+NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
+		       ULONG Address);
+NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
+			   ULONG Address);
 
 #endif

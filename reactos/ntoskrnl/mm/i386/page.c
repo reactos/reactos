@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.7 2000/04/02 13:32:43 ea Exp $
+/* $Id: page.c,v 1.8 2000/04/07 02:24:01 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -59,7 +59,7 @@ static ULONG ProtectToPTE(ULONG flProtect)
 
 #define ADDR_TO_PDE(v) (PULONG)(PAGEDIRECTORY_MAP + \
                                 (((ULONG)v / (1024 * 1024))&(~0x3)))
-#define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((ULONG)v / 1024))
+#define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((((ULONG)v / 1024))&(~0x3)))
 
 NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {

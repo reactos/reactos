@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.13 2000/04/03 21:54:40 dwelch Exp $
+/* $Id: create.c,v 1.14 2000/04/07 02:24:02 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -546,6 +546,30 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE			ThreadHandle,
      {
 	*Client=Thread->Cid;
      }  
+   
+   /*
+    * Maybe send a message to the process's debugger
+    */
+#if 0
+   if (ParentProcess->DebugPort != NULL)
+     {
+	LPC_DBG_MESSAGE Message;
+	PEPROCESS Process;
+	
+	
+	Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
+	Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) -
+	  sizeof(LPC_MESSAGE_HEADER);
+	Message.EventCode = DBG_EVENT_CREATE_THREAD;
+	Message.Data.CreateThread.StartAddress =
+	  ;
+	Message.Data.CreateProcess.Base = ImageBase;
+	Message.Data.CreateProcess.EntryPoint = NULL; //
+	
+	Status = LpcSendDebugMessagePort(ParentProcess->DebugPort,
+					 &Message);
+     }
+#endif
    
    if (!CreateSuspended)
      {

@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.1 2000/03/29 13:11:54 dwelch Exp $
+/* $Id: aspace.c,v 1.2 2000/04/07 02:24:00 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,7 +38,7 @@ VOID MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 
 VOID MmInitializeKernelAddressSpace(VOID)
 {
-   MmInitializeAddressSpace(&KernelAddressSpace);
+   MmInitializeAddressSpace(NULL, &KernelAddressSpace);
    KernelAddressSpace.LowestAddress = KERNEL_BASE;
 }
 
@@ -52,11 +52,13 @@ PMADDRESS_SPACE MmGetKernelAddressSpace(VOID)
    return(&KernelAddressSpace);
 }
 
-NTSTATUS MmInitializeAddressSpace(PMADDRESS_SPACE AddressSpace)
+NTSTATUS MmInitializeAddressSpace(PEPROCESS Process,
+				  PMADDRESS_SPACE AddressSpace)
 {
    InitializeListHead(&AddressSpace->MAreaListHead);
    KeInitializeMutex(&AddressSpace->Lock, 1);
    AddressSpace->LowestAddress = MM_LOWEST_USER_ADDRESS;
+   AddressSpace->Process = Process;
    return(STATUS_SUCCESS);
 }
 

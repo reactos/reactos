@@ -160,14 +160,14 @@ asmlinkage void exception_handler(unsigned int edi,
                                   unsigned int esi, unsigned int ebp,
                                   unsigned int esp, unsigned int ebx,
                                   unsigned int edx, unsigned int ecx,
-                                  unsigned int eax,
+                                  ULONG eax,
                                   unsigned int type,
 				  unsigned int ds,
 				  unsigned int es,
                                   unsigned int fs,
 				  unsigned int gs,
                                   unsigned int error_code,
-                                  unsigned int eip,
+                                  ULONG eip,
                                   unsigned int cs, unsigned int eflags,
                                   unsigned int esp0, unsigned int ss0)
 /*
@@ -181,6 +181,7 @@ asmlinkage void exception_handler(unsigned int edi,
    unsigned int i;
 //   unsigned int j, sym;
    PULONG stack;
+   NTSTATUS Status;
    static char *TypeStrings[] = 
      {
        "Divide Error",
@@ -203,11 +204,25 @@ asmlinkage void exception_handler(unsigned int edi,
        "Machine Check"
      };
    
-   __asm__("cli\n\t");
+   __asm__("movl %%cr2,%0\n\t"
+	   : "=d" (cr2));
    
-   if (type==14)
+   if (PsGetCurrentThread() != NULL &&
+       esp < (ULONG)PsGetCurrentThread()->Tcb.Context.KernelStackBase)
      {
-	if (MmPageFault(cs&0xffff, eip, error_code))
+	DbgPrint("Stack underflow\n");
+	type = 12;
+     }
+   
+   if (type == 14)
+     {
+	__asm__("sti\n\t");
+	Status = MmPageFault(cs&0xffff,
+			     &eip,
+			     &eax,
+			     cr2,
+			     error_code);
+	if (NT_SUCCESS(Status))
 	  {
 	     return;
 	  }
@@ -238,28 +253,26 @@ asmlinkage void exception_handler(unsigned int edi,
      {
 	DbgPrint("Exception: %d(%x)\n",type,error_code&0xffff);
      }
-   DbgPrint("CS:EIP %x:%x\n",cs&0xffff,eip);
-   DbgPrint("CS:EIP %x:", cs&0xffff);
+   DbgPrint("CS:EIP %x:%x ",cs&0xffff,eip);
    print_address((PVOID)eip);
    DbgPrint("\n");
-   __asm__("movl %%cr2,%0\n\t"
-	   : "=d" (cr2));
    __asm__("movl %%cr3,%0\n\t"
 	   : "=d" (cr3));
-   DbgPrint("cr2 %x cr3 %x\n",cr2,cr3);
+   DbgPrint("cr2 %x cr3 %x ",cr2,cr3);
 //   for(;;);
-   DbgPrint("Process: %x\n",PsGetCurrentProcess());
+   DbgPrint("Proc: %x ",PsGetCurrentProcess());
    if (PsGetCurrentProcess() != NULL)
      {
-	DbgPrint("Process id: %x <", PsGetCurrentProcess()->UniqueProcessId);
-	DbgPrint("%.8s>", PsGetCurrentProcess()->ImageFileName);
+	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
+	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
      }
    if (PsGetCurrentThread() != NULL)
      {
-	DbgPrint("Thread: %x Thread id: %x\n",
+	DbgPrint("Thrd: %x Tid: %x",
 		 PsGetCurrentThread(),
 		 PsGetCurrentThread()->Cid.UniqueThread);
      }
+   DbgPrint("\n");
    DbgPrint("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
 	    gs&0xfff);
    DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n",eax,ebx,ecx);
@@ -283,7 +296,7 @@ asmlinkage void exception_handler(unsigned int edi,
     {
        DbgPrint("ESP %x\n",esp);
        stack = (PULONG) (esp + 24);
-//       stack = (PULONG)(((ULONG)stack) & (~0x3));
+       stack = (PULONG)(((ULONG)stack) & (~0x3));
        
        DbgPrint("stack<%p>: ", stack);
 	 
