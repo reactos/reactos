@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.57 2003/07/27 11:54:41 dwelch Exp $
+/* $Id: defwnd.c,v 1.58 2003/08/03 01:48:53 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -319,75 +319,7 @@ VOID UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
 /* FIXME:  Cache bitmaps, then just bitblt instead of calling DFC() (and
            wasting precious CPU cycles) every time */
 
-static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL bDown )
-{
-    RECT rect;
-
-    BOOL bToolWindow = GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW;
-    INT iBmpWidth =  (bToolWindow ? GetSystemMetrics(SM_CXSMSIZE) :
-                      GetSystemMetrics(SM_CXSIZE)) - 2;
-    INT iBmpHeight = (bToolWindow ? GetSystemMetrics(SM_CYSMSIZE) :
-                      GetSystemMetrics(SM_CYSIZE) - 4);
-    INT OffsetX = UIGetFrameSizeY( hWnd );
-    INT OffsetY = UIGetFrameSizeY( hWnd );
-    
-    
-    if(!(GetWindowLong( hWnd, GWL_STYLE ) & WS_SYSMENU))
-    {
-        return;
-    }
-    GetWindowRect( hWnd, &rect );
-    
-    rect.right = rect.right - rect.left;
-    rect.bottom = rect.bottom - rect.top;
-    rect.left = rect.top = 0;
-    SetRect(&rect,
-            rect.right - OffsetX - iBmpWidth - 3,
-            OffsetY + 2,
-            rect.right - OffsetX - 3,
-            rect.top + iBmpHeight + OffsetY + 2 );      
-            
-    DrawFrameControl( hDC, &rect, DFC_CAPTION,
-                      (DFCS_CAPTIONCLOSE |
-                       (bDown ? DFCS_PUSHED : 0) |
-                       (IsCloseBoxActive(hWnd) ? 0 : DFCS_INACTIVE)) );
-}
-           
-static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
-{
-
-    RECT rect;
-    INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
-    INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
-
-    INT OffsetX = UIGetFrameSizeY( hWnd );
-    INT OffsetY = UIGetFrameSizeY( hWnd );
-    
-    GetWindowRect( hWnd, &rect );
-
-    if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
-        return;    
-    if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
-        return;   /* ToolWindows don't have min/max buttons */
-        
-    rect.right = rect.right - rect.left;
-    rect.bottom = rect.bottom - rect.top;
-    rect.left = rect.top = 0;
-    SetRect(&rect,
-            rect.right - OffsetX - (iBmpWidth*2) - 5,
-            OffsetY + 2,
-            rect.right - iBmpWidth - OffsetX - 5,
-            rect.top + iBmpHeight + OffsetY + 2 );
-    
-    DrawFrameControl( hDC, &rect, DFC_CAPTION,
-                     (IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX) |
-                     (bDown ? DFCS_PUSHED : 0) |
-                     (IsMaxBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
-    
-}
-
-
-static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
+static void UserDrawCaptionButton( HWND hWnd, HDC hDC, BOOL bDown, ULONG Type )
 {
 
     RECT rect;
@@ -396,25 +328,65 @@ static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
     
     INT OffsetX = UIGetFrameSizeX( hWnd );
     INT OffsetY = UIGetFrameSizeY( hWnd );
-    
+
+	if(!(GetWindowLong( hWnd, GWL_STYLE ) & WS_SYSMENU))
+    {
+        return;
+    }
+
     GetWindowRect( hWnd, &rect );
-    
-    if (!IsMinBoxActive(hWnd) && !IsMaxBoxActive(hWnd))
-        return;    
-    if ((GetWindowLongA( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
-        return;   /* ToolWindows don't have min/max buttons */
-        
+       
     rect.right = rect.right - rect.left;
     rect.bottom = rect.bottom - rect.top;
     rect.left = rect.top = 0;
-    SetRect(&rect,
-            rect.right - OffsetX - (iBmpWidth*3) - 5,
-            OffsetY + 2,
-            rect.right - (iBmpWidth * 2) - OffsetX - 5,
-            rect.top + iBmpHeight + OffsetY + 2 );  
-    DrawFrameControl( hDC, &rect, DFC_CAPTION,
-                     DFCS_CAPTIONMIN | (bDown ? DFCS_PUSHED : 0) |
-                     (IsMinBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
+
+	switch(Type)
+	{
+	case DFCS_CAPTIONMIN:
+		{
+			if ((GetWindowLong( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
+				return;   /* ToolWindows don't have min/max buttons */
+
+			SetRect(&rect,
+					rect.right - OffsetX - (iBmpWidth*3) - 5,
+					OffsetY + 2,
+					rect.right - (iBmpWidth * 2) - OffsetX - 5,
+					rect.top + iBmpHeight + OffsetY + 2 );  
+					DrawFrameControl( hDC, &rect, DFC_CAPTION,
+									  DFCS_CAPTIONMIN | (bDown ? DFCS_PUSHED : 0) |
+									  (IsMinBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
+			break;
+		}
+	case DFCS_CAPTIONMAX:
+		{
+			if ((GetWindowLong( hWnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW) == TRUE)
+				return;   /* ToolWindows don't have min/max buttons */
+			SetRect(&rect,
+					rect.right - OffsetX - (iBmpWidth*2) - 5,
+					OffsetY + 2,
+					rect.right - iBmpWidth - OffsetX - 5,
+					rect.top + iBmpHeight + OffsetY + 2 );
+    
+			DrawFrameControl( hDC, &rect, DFC_CAPTION,
+                              (IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX) |
+                              (bDown ? DFCS_PUSHED : 0) |
+                              (IsMaxBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
+			break;
+		}
+	case DFCS_CAPTIONCLOSE:
+		{
+		    SetRect(&rect,
+					rect.right - OffsetX - iBmpWidth - 3,
+					OffsetY + 2,
+					rect.right - OffsetX - 3,
+					rect.top + iBmpHeight + OffsetY + 2 );      
+            
+					DrawFrameControl( hDC, &rect, DFC_CAPTION,
+									  (DFCS_CAPTIONCLOSE |
+									  (bDown ? DFCS_PUSHED : 0) |
+									  (IsCloseBoxActive(hWnd) ? 0 : DFCS_INACTIVE)) );
+		}
+	}
 }
 
 static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
@@ -433,10 +405,10 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
     {
         UserDrawSysMenuButton( hWnd, hDC, FALSE);
         r.left += GetSystemMetrics(SM_CXSIZE) + 1;
-        UserDrawCloseButton( hWnd, hDC, FALSE);
+        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONCLOSE);
         r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
-        UserDrawMinButton(hWnd, hDC, FALSE);
-        UserDrawMaxButton(hWnd, hDC, FALSE);
+        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMIN);
+        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMAX);
     }
     if (GetWindowTextA( hWnd, buffer, sizeof(buffer) ))
     {
@@ -771,17 +743,17 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTMINBUTTON:
         {
-            UserDrawMinButton(hWnd, GetWindowDC(hWnd), IsMinBoxActive(hWnd) );
+            UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), IsMinBoxActive(hWnd), DFCS_CAPTIONMIN);
             break;
         }
         case HTMAXBUTTON:
         {
-            UserDrawMaxButton(hWnd,GetWindowDC(hWnd), IsMaxBoxActive(hWnd) );
+            UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), IsMaxBoxActive(hWnd), DFCS_CAPTIONMAX);
             break;
         }
         case HTCLOSE:
         {
-            UserDrawCloseButton(hWnd,GetWindowDC(hWnd),TRUE);
+            UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), TRUE, DFCS_CAPTIONCLOSE);
             break;
         }
         case HTLEFT:
@@ -812,9 +784,9 @@ DefWndHandleLButtonDblClkNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT
 DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    UserDrawMinButton(hWnd,GetWindowDC(hWnd),FALSE);
-    UserDrawMaxButton(hWnd,GetWindowDC(hWnd),FALSE);
-    UserDrawCloseButton(hWnd,GetWindowDC(hWnd),FALSE);
+    UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), FALSE, DFCS_CAPTIONMIN);
+    UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), FALSE, DFCS_CAPTIONMAX);
+    UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), FALSE, DFCS_CAPTIONCLOSE);
     switch (wParam)
     {
         case HTMINBUTTON:
