@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.17 2003/08/25 14:54:06 weiden Exp $
+/* $Id: msgqueue.c,v 1.18 2003/08/25 23:55:46 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -125,27 +125,47 @@ MsqInitializeImpl(VOID)
 }
 
 ULONG FASTCALL
-MsgFindSystemMessage(UINT message)
+MsgFindSystemMouseMoveMessage()
 {
-  MSG Msg;
-  ULONG QueuePos, Result = (ULONG)-1;
+  LPMSG Msg, Msg2;
+  ULONG QueuePos;
   
   if(SystemMessageQueueCount > 0)
   {
     QueuePos = SystemMessageQueueTail;
     while(QueuePos >= SystemMessageQueueHead)
     {
-      Msg = SystemMessageQueue[QueuePos];
-      if(Msg.message == message)
+      Msg = &SystemMessageQueue[QueuePos];
+      if(Msg->message == WM_MOUSEMOVE)
       {
-        Result = QueuePos;
-        break;
+        if(SystemMessageQueueHead == QueuePos)
+          return QueuePos;
+          
+        /* if there is one of the following messages after a 
+           WM_MOUSEMOVE message then skip it */
+        Msg2 = &SystemMessageQueue[QueuePos - 1];
+        switch(Msg2->message)
+        {
+          case WM_LBUTTONDOWN:
+          case WM_LBUTTONUP:
+          case WM_RBUTTONDOWN:
+          case WM_RBUTTONUP:
+          case WM_MBUTTONDOWN:
+          case WM_MBUTTONUP:
+          #if 0
+          case WM_XBUTTONDOWN:
+          case WM_XBUTTONUP:
+          #endif
+            break;
+          default:
+            return QueuePos;
+        }
       }
       QueuePos--;
     }
   }
-  
-  return Result;
+
+  return (ULONG)-1;
 }
 
 VOID FASTCALL
@@ -158,15 +178,14 @@ MsqInsertSystemMessage(MSG* Msg)
   
   /* only insert WM_MOUSEMOVE messages if not already in system message queue */
   if(Msg->message == WM_MOUSEMOVE)
-    mmov = MsgFindSystemMessage(WM_MOUSEMOVE);
+    mmov = MsgFindSystemMouseMoveMessage();
     
   if(mmov != (ULONG)-1)
   {
-    /* remove old WM_MOUSEMOVE message, move previous messages and insert
-       new WM_MOUSEMOVE message at the queue head */
+    /* insert message at the queue head */
     while(mmov > SystemMessageQueueHead)
     {
-      SystemMessageQueue[mmov - 1] = SystemMessageQueue[mmov];
+      SystemMessageQueue[mmov] = SystemMessageQueue[mmov - 1];
       mmov--;
     }
     SystemMessageQueue[SystemMessageQueueHead] = *Msg;

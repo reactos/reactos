@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.33 2003/08/25 00:28:22 weiden Exp $
+/* $Id: mouse.c,v 1.34 2003/08/25 23:55:45 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -306,7 +306,7 @@ MouseMoveCursor(LONG X, LONG Y)
       /* move cursor */
       CurInfo->x = X;
       CurInfo->y = Y;
-      if(!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 && CurInfo->Enabled)
+      if(CurInfo->Enabled)
       {
         ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
         SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
@@ -332,6 +332,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   PSYSTEM_CURSORINFO CurInfo;
   PSYSCURSOR SysCursor;
   BOOL MouseEnabled = FALSE;
+  BOOL MouseMoveAdded = FALSE;
   LONG mouse_ox, mouse_oy;
   LONG mouse_cx = 0, mouse_cy = 0;
   HDC hDC;
@@ -360,9 +361,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   else
     return;
 
-  KeQueryTickCount(&LargeTickCount);
-  TickCount = LargeTickCount.u.LowPart;
-
   dc = DC_LockDc(hDC);
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
@@ -373,23 +371,38 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   {
     mouse_cx += Data[i].LastX;
     mouse_cy += Data[i].LastY;
+    
+    CurInfo->x += Data[i].LastX;
+    CurInfo->y += Data[i].LastY;
+    
+    CurInfo->x = max(CurInfo->x, 0);
+    CurInfo->y = max(CurInfo->y, 0);
+    CurInfo->x = min(CurInfo->x, SurfObj->sizlBitmap.cx - 20);
+    CurInfo->y = min(CurInfo->y, SurfObj->sizlBitmap.cy - 20);
+    
+    CheckClipCursor(&CurInfo->x, &CurInfo->y, CurInfo);
+    
+    KeQueryTickCount(&LargeTickCount);
+    TickCount = LargeTickCount.u.LowPart;
 
     Msg.wParam = ButtonsDown;
-    Msg.lParam = MAKELPARAM(CurInfo->x + mouse_cx, CurInfo->y + mouse_cy);
+    Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
     Msg.message = WM_MOUSEMOVE;
     Msg.time = TickCount;
-    Msg.pt.x = CurInfo->x + mouse_cx;
-    Msg.pt.y = CurInfo->y + mouse_cy;
+    Msg.pt.x = CurInfo->x;
+    Msg.pt.y = CurInfo->y;
     
-    CheckClipCursor(&Msg.pt.x, &Msg.pt.y, CurInfo);
+    MouseMoveAdded = FALSE;
     
-    if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
-    {
-      MsqInsertSystemMessage(&Msg);
-    }
-
     if (Data[i].ButtonFlags != 0)
     {
+    
+      if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
+      {
+        MsqInsertSystemMessage(&Msg);
+        MouseMoveAdded = TRUE;
+      }
+      
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) > 0)
       {
       	Msg.wParam  = MK_LBUTTON;
@@ -429,15 +442,19 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   /* If the mouse moved then move the pointer. */
   if ((mouse_cx != 0 || mouse_cy != 0) && MouseEnabled)
   {
-    CurInfo->x += mouse_cx;
-    CurInfo->y += mouse_cy;
 
-    CurInfo->x = max(CurInfo->x, 0);
-    CurInfo->y = max(CurInfo->y, 0);
-    CurInfo->x = min(CurInfo->x, SurfObj->sizlBitmap.cx - 20);
-    CurInfo->y = min(CurInfo->y, SurfObj->sizlBitmap.cy - 20);
-    
-    CheckClipCursor(&CurInfo->x, &CurInfo->y, CurInfo);
+    if(!MouseMoveAdded)
+    {
+     KeQueryTickCount(&LargeTickCount);
+     TickCount = LargeTickCount.u.LowPart;
+      Msg.wParam = ButtonsDown;
+      Msg.message = WM_MOUSEMOVE;
+      Msg.pt.x = CurInfo->x;
+      Msg.pt.y = CurInfo->y;
+      Msg.time = TickCount;
+      Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
+      MsqInsertSystemMessage(&Msg);
+    }
     
     if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
         ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
