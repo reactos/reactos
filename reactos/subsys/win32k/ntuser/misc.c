@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.41 2003/12/26 00:58:33 weiden Exp $
+/* $Id: misc.c,v 1.42 2003/12/28 14:14:03 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -386,10 +386,8 @@ NtUserSystemParametersInfo(
   static BOOL GradientCaptions = TRUE;
   /* FIXME: This should be obtained from the registry */
   static LOGFONTW CaptionFont =
-  { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-    0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"" };
-/*  { 12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
-    0, 0, DEFAULT_QUALITY, FF_MODERN, L"Bitstream Vera Sans Bold" };*/
+     { 12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+       0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"" };
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
   

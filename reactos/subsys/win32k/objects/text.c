@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.68 2003/12/26 10:43:08 gvg Exp $ */
+/* $Id: text.c,v 1.69 2003/12/28 14:14:04 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1019,7 +1019,8 @@ NtGdiGetTextCharsetInfo(HDC  hDC,
 
 static BOOL
 FASTCALL
-TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
+TextIntGetTextExtentPoint(HDC hDC,
+                          PTEXTOBJ TextObj,
                           LPCWSTR String,
                           int Count,
                           int MaxExtent,
@@ -1137,6 +1138,7 @@ TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
 
   Size->cx = TotalWidth;
   Size->cy = (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight : TextObj->logfont.lfHeight);
+  Size->cy = EngMulDiv(Size->cy, NtGdiGetDeviceCaps(hDC, LOGPIXELSY), 72);
 
   return TRUE;
 }
@@ -1225,7 +1227,7 @@ NtGdiGetTextExtentExPoint(HDC hDC,
     }
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
   DC_UnlockDc(hDC);
-  Result = TextIntGetTextExtentPoint(TextObj, String, Count, MaxExtent,
+  Result = TextIntGetTextExtentPoint(hDC, TextObj, String, Count, MaxExtent,
                                      NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
   TEXTOBJ_UnlockText(dc->w.hFont);
 
@@ -1348,7 +1350,7 @@ NtGdiGetTextExtentPoint32(HDC hDC,
   TextObj = TEXTOBJ_LockText(dc->w.hFont);
   DC_UnlockDc(hDC);
   Result = TextIntGetTextExtentPoint (
-	  TextObj, String, Count, 0, NULL, NULL, &Size);
+	  hDC, TextObj, String, Count, 0, NULL, NULL, &Size);
   dc = DC_LockDc(hDC);
   ASSERT(dc); // it succeeded earlier, it should now, too
   TEXTOBJ_UnlockText(dc->w.hFont);
