@@ -157,7 +157,9 @@ BOOLEAN FloppyIsrReadWrite( PCONTROLLER_OBJECT Controller )
 
 // actual ISR, passes controll to handler for current state in state machine
 
-BOOLEAN FloppyIsr(PKINTERRUPT Interrupt, PVOID ServiceContext)
+BOOLEAN STDCALL
+FloppyIsr(PKINTERRUPT Interrupt,
+	  PVOID ServiceContext)
 {
    PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)ServiceContext;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;

@@ -180,54 +180,64 @@ typedef struct _FLOPPY_CONTROLLER_PARAMETERS
 
 #define  FLOPPY_MAX_CONTROLLERS  1
 
-VOID FloppyDpcDetectMedia( PKDPC Dpc,
-			   PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp,
-			   PVOID Context );
-VOID FloppyDpcFailIrp( PKDPC Dpc,
-		       PDEVICE_OBJECT DeviceObject,
+VOID STDCALL
+FloppyDpcDetectMedia(PKDPC Dpc,
+		     PDEVICE_OBJECT DeviceObject,
+		     PIRP Irp,
+		     PVOID Context);
+VOID STDCALL
+FloppyDpcFailIrp(PKDPC Dpc,
+		 PDEVICE_OBJECT DeviceObject,
+		 PIRP Irp,
+		 PVOID Context);
+
+IO_ALLOCATION_ACTION STDCALL
+FloppyExecuteReadWrite(PDEVICE_OBJECT DeviceObject,
 		       PIRP Irp,
-		       PVOID Context );
+		       PVOID MapRegisterbase,
+		       PVOID Context);
 
-IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
-					     PIRP Irp,
-					     PVOID MapRegisterbase,
-					     PVOID Context );
-
-IO_ALLOCATION_ACTION FloppyExecuteSpindown( PDEVICE_OBJECT DeviceObject,
-					    PIRP Irp,
-					    PVOID MapRegisterbase,
-					    PVOID Context );
-
-VOID FloppyMotorSpinupDpc( PKDPC Dpc,
-			   PVOID Context,
-			   PVOID Arg1,
-			   PVOID Arg2 );
-
-VOID FloppySeekDpc( PKDPC Dpc,
-		    PDEVICE_OBJECT DeviceObject,
-		    PIRP Irp,
-		    PVOID Context );
-
-VOID FloppyMotorSpindownDpc( PKDPC Dpc,
-			     PVOID Context,
-			     PVOID Arg1,
-			     PVOID Arg2 );
-
-VOID FloppyDpcDetect( PKDPC Dpc,
-		      PDEVICE_OBJECT DeviceObject,
+IO_ALLOCATION_ACTION STDCALL
+FloppyExecuteSpindown(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp,
-		      PVOID Context );
+		      PVOID MapRegisterbase,
+		      PVOID Context);
 
-VOID FloppyDpcReadWrite( PKDPC Dpc,
-			 PDEVICE_OBJECT DeviceObject,
-			 PIRP Irp,
-			 PVOID Context );
+VOID STDCALL
+FloppyMotorSpinupDpc(PKDPC Dpc,
+		     PVOID Context,
+		     PVOID Arg1,
+		     PVOID Arg2);
 
-VOID FloppyDpc( PKDPC Dpc,
+VOID STDCALL
+FloppySeekDpc(PKDPC Dpc,
+	      PDEVICE_OBJECT DeviceObject,
+	      PIRP Irp,
+	      PVOID Context);
+
+VOID STDCALL
+FloppyMotorSpindownDpc(PKDPC Dpc,
+		       PVOID Context,
+		       PVOID Arg1,
+		       PVOID Arg2);
+
+VOID STDCALL
+FloppyDpcDetect(PKDPC Dpc,
 		PDEVICE_OBJECT DeviceObject,
 		PIRP Irp,
 		PVOID Context );
+
+VOID STDCALL
+FloppyDpcReadWrite(PKDPC Dpc,
+		   PDEVICE_OBJECT DeviceObject,
+		   PIRP Irp,
+		   PVOID Context);
+
+VOID STDCALL
+FloppyDpc(PKDPC Dpc,
+	  PDEVICE_OBJECT DeviceObject,
+	  PIRP Irp,
+	  PVOID Context);
 
 BOOLEAN FloppyIsrDetect( PCONTROLLER_OBJECT Controller );
 
@@ -239,9 +249,12 @@ BOOLEAN FloppyIsrDetectMedia( PCONTROLLER_OBJECT Controller );
 
 BOOLEAN FloppyIsrRecal( PCONTROLLER_OBJECT Controller );
 
-BOOLEAN FloppyIsr(PKINTERRUPT Interrupt, PVOID ServiceContext);
+BOOLEAN STDCALL
+FloppyIsr(PKINTERRUPT Interrupt,
+	  PVOID ServiceContext);
 
-IO_ALLOCATION_ACTION FloppyAdapterControl( PDEVICE_OBJECT DeviceObject,
-					   PIRP Irp,
-					   PVOID MapRegisterBase,
-					   PVOID Context );
+IO_ALLOCATION_ACTION STDCALL
+FloppyAdapterControl(PDEVICE_OBJECT DeviceObject,
+		     PIRP Irp,
+		     PVOID MapRegisterBase,
+		     PVOID Context);

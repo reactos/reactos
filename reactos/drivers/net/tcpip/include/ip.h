@@ -240,7 +240,7 @@ PADDRESS_ENTRY IPLocateADE(
 PADDRESS_ENTRY IPGetDefaultADE(
     UINT AddressType);
 
-VOID IPTimeout(
+VOID STDCALL IPTimeout(
     PKDPC Dpc,
     PVOID DeferredContext,
     PVOID SystemArgument1,

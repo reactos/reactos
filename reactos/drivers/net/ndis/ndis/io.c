@@ -11,7 +11,7 @@
 #include <miniport.h>
 
 
-VOID HandleDeferredProcessing(
+VOID STDCALL HandleDeferredProcessing(
     IN  PKDPC   Dpc,
     IN  PVOID   DeferredContext,
     IN  PVOID   SystemArgument1,
@@ -51,7 +51,7 @@ VOID HandleDeferredProcessing(
 }
 
 
-BOOLEAN ServiceRoutine(
+BOOLEAN STDCALL ServiceRoutine(
     IN  PKINTERRUPT Interrupt,
     IN  PVOID       ServiceContext)
 /*

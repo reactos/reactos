@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.24 2001/07/06 21:31:30 ekohl Exp $
+/* $Id: ntddk.h,v 1.25 2001/08/27 01:18:57 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -22,6 +22,7 @@ extern "C"
 #define FASTCALL  __attribute__((fastcall))
 
 #define STATIC static
+
 
 #include <ntos/types.h>
 #include <ntos/time.h>
@@ -51,9 +52,7 @@ extern "C"
 #include <ddk/zwtypes.h>
 #include <ddk/ioctrl.h>
 #include <ddk/rtl.h>
-#if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__)
-#include <ddk/halddk.h>
-#endif /*__NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ */
+#include <ddk/haltypes.h>
 
 #include <ddk/zw.h>
 #include <ddk/dbgfuncs.h>
@@ -61,6 +60,7 @@ extern "C"
 #include <ddk/cmfuncs.h>
 #if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__)
 #include <ddk/exfuncs.h>
+#include <ddk/halfuncs.h>
 #include <ddk/mmfuncs.h>
 #include <ddk/kdfuncs.h>
 #include <ddk/kefuncs.h>

@@ -37,20 +37,8 @@
 
 /* EXTERN ********************************************************************/
 
-extern VOID 
-PiTimeoutThread(struct _KDPC Dpc, PVOID Context, PVOID Arg1, PVOID Arg2);
-VOID
-PiSuspendThreadRundownRoutine(PKAPC Apc);
-VOID
-PiSuspendThreadKernelRoutine(PKAPC Apc,
-			     PKNORMAL_ROUTINE* NormalRoutine,
-			     PVOID* NormalContext,
-			     PVOID* SystemArgument1,
-			     PVOID* SystemArguemnt2);
-VOID
-PiSuspendThreadNormalRoutine(PVOID NormalContext,
-			     PVOID SystemArgument1,
-			     PVOID SystemArgument2);
+//extern VOID 
+//PiTimeoutThread(struct _KDPC Dpc, PVOID Context, PVOID Arg1, PVOID Arg2);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -119,7 +107,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 				   0,
 				   &StackArea,
 				   FALSE);
-	   MmUnlockAddressSpace(MmGetKernelAddressSpace());	   
+	   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
        if (!NT_SUCCESS(Status))
 	 {
@@ -234,14 +222,15 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
     * Initialize ReactOS specific members
     */
    Thread->ProcessThreadListEntry.Flink = NULL;
-   Thread->ProcessThreadListEntry.Blink = NULL;   
-   KeInitializeDpc(&Thread->TimerDpc, (PKDEFERRED_ROUTINE)PiTimeoutThread, 
+   Thread->ProcessThreadListEntry.Blink = NULL;
+   KeInitializeDpc(&Thread->TimerDpc,
+		   (PKDEFERRED_ROUTINE)PiTimeoutThread,
 		   Thread);
    Thread->LastEip = 0;
    
    /*
     * Do x86 specific part
     */
-         
+   
 }
 

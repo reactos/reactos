@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.46 2001/07/28 07:57:24 ea Exp $
+/* $Id: kill.c,v 1.47 2001/08/27 01:22:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,8 +36,9 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
-PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
+VOID
+PiTerminateProcessThreads(PEPROCESS Process,
+			  NTSTATUS ExitStatus)
 {
    KIRQL oldlvl;
    PLIST_ENTRY current_entry;
@@ -73,7 +74,7 @@ PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
    DPRINT("Finished PiTerminateProcessThreads()\n");
 }
 
-VOID 
+VOID
 PsReapThreads(VOID)
 {
    PLIST_ENTRY current_entry;
@@ -120,7 +121,8 @@ PsReapThreads(VOID)
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
-VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
+VOID
+PsTerminateCurrentThread(NTSTATUS ExitStatus)
 /*
  * FUNCTION: Terminates the current thread
  */
@@ -144,13 +146,13 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeBugCheck(0);
 }
 
-VOID
+VOID STDCALL
 PiTerminateThreadRundownRoutine(PKAPC Apc)
 {
   ExFreePool(Apc);
 }
 
-VOID
+VOID STDCALL
 PiTerminateThreadKernelRoutine(PKAPC Apc,
 			       PKNORMAL_ROUTINE* NormalRoutine,
 			       PVOID* NormalContext,
@@ -160,7 +162,7 @@ PiTerminateThreadKernelRoutine(PKAPC Apc,
   ExFreePool(Apc);
 }
 
-VOID
+VOID STDCALL
 PiTerminateThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2)
@@ -168,8 +170,9 @@ PiTerminateThreadNormalRoutine(PVOID NormalContext,
   PsTerminateCurrentThread(PsGetCurrentThread()->ExitStatus);
 }
 
-VOID 
-PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
+VOID
+PsTerminateOtherThread(PETHREAD Thread,
+		       NTSTATUS ExitStatus)
 /*
  * FUNCTION: Terminate a thread when calling from another thread's context
  * NOTES: This function must be called with PiThreadListLock held
@@ -197,8 +200,9 @@ PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
 		   KernelMode);
 }
 
-NTSTATUS STDCALL 
-PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus)
+NTSTATUS STDCALL
+PiTerminateProcess(PEPROCESS Process,
+		   NTSTATUS ExitStatus)
 {
    DPRINT("PiTerminateProcess(Process %x, ExitStatus %x) RC %d HC %d\n",
 	   Process, ExitStatus, ObGetReferenceCount(Process),
@@ -220,8 +224,9 @@ PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
-				    IN	NTSTATUS	ExitStatus)
+NTSTATUS STDCALL
+NtTerminateProcess(IN	HANDLE		ProcessHandle,
+		   IN	NTSTATUS	ExitStatus)
 {
    NTSTATUS Status;
    PEPROCESS Process;
@@ -251,8 +256,9 @@ NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtTerminateThread(IN	HANDLE		ThreadHandle,
-				   IN	NTSTATUS	ExitStatus)
+NTSTATUS STDCALL
+NtTerminateThread(IN	HANDLE		ThreadHandle,
+		  IN	NTSTATUS	ExitStatus)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -282,7 +288,8 @@ NTSTATUS STDCALL NtTerminateThread(IN	HANDLE		ThreadHandle,
 }
 
 
-NTSTATUS STDCALL PsTerminateSystemThread(NTSTATUS ExitStatus)
+NTSTATUS STDCALL
+PsTerminateSystemThread(NTSTATUS ExitStatus)
 /*
  * FUNCTION: Terminates the current thread
  * ARGUMENTS:
@@ -294,7 +301,7 @@ NTSTATUS STDCALL PsTerminateSystemThread(NTSTATUS ExitStatus)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtCallTerminatePorts(PETHREAD Thread)
 {
    KIRQL oldIrql;
@@ -317,7 +324,7 @@ NtCallTerminatePorts(PETHREAD Thread)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtRegisterThreadTerminatePort(HANDLE TerminationPortHandle)
 {
    NTSTATUS Status;

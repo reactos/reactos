@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.46 2001/07/30 03:05:29 rex Exp $
+/* $Id: timer.c,v 1.47 2001/08/27 01:21:50 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -382,7 +382,7 @@ HandleExpiredTimer(PKTIMER current)
      }
 }
 
-VOID 
+VOID STDCALL
 KeExpireTimers(PKDPC Dpc,
 	       PVOID Context1,
 	       PVOID Arg1,

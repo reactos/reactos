@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.30 2001/07/30 11:49:38 ea Exp $
+/* $Id: blue.c,v 1.31 2001/08/27 01:25:37 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -67,8 +67,9 @@ typedef struct _DEVICE_EXTENSION
 
 /* FUNCTIONS **************************************************************/
 
-NTSTATUS
-STDCALL ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+ScrCreate(PDEVICE_OBJECT DeviceObject,
+	  PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExtension;
     PHYSICAL_ADDRESS BaseAddress;
@@ -156,8 +157,9 @@ STDCALL ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS
-STDCALL ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+ScrWrite(PDEVICE_OBJECT DeviceObject,
+	 PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
@@ -281,8 +283,9 @@ STDCALL ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS
-STDCALL ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+ScrIoControl(PDEVICE_OBJECT DeviceObject,
+	     PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
     PDEVICE_EXTENSION DeviceExtension;
@@ -571,8 +574,9 @@ STDCALL ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS
-STDCALL ScrDispatch (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+ScrDispatch(PDEVICE_OBJECT DeviceObject,
+	    PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;
@@ -599,8 +603,7 @@ STDCALL ScrDispatch (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * Module entry point
  */
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;

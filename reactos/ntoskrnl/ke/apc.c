@@ -109,7 +109,7 @@ KiDeliverNormalApc(VOID)
 			    &NormalRoutine,
 			    &NormalContext,
 			    &SystemArgument1,
-			    &SystemArgument2);	 
+			    &SystemArgument2);
 	 NormalRoutine(NormalContext, SystemArgument1, SystemArgument2);
 
 	 KeAcquireSpinLock(&PiApcLock, &oldlvl);
@@ -267,7 +267,7 @@ KiDeliverApc(ULONG Unknown1,
 			      &Apc->NormalRoutine,
 			      &Apc->NormalContext,
 			      &Apc->SystemArgument1,
-			      &Apc->SystemArgument2);	 
+			      &Apc->SystemArgument2);
 	   
 	   KeAcquireSpinLock(&PiApcLock, &oldlvl);
 	   Thread->Tcb.ApcState.KernelApcInProgress--;
@@ -432,14 +432,14 @@ KeRemoveQueueApc (PKAPC Apc)
 
 
 VOID STDCALL
-KeInitializeApc (PKAPC			Apc,
-		 PKTHREAD		Thread,
-		 UCHAR			StateIndex,
-		 PKKERNEL_ROUTINE	KernelRoutine,
-		 PKRUNDOWN_ROUTINE	RundownRoutine,
-		 PKNORMAL_ROUTINE	NormalRoutine,
-		 UCHAR			Mode,
-		 PVOID			Context)
+KeInitializeApc(PKAPC			Apc,
+		PKTHREAD		Thread,
+		UCHAR			StateIndex,
+		PKKERNEL_ROUTINE	KernelRoutine,
+		PKRUNDOWN_ROUTINE	RundownRoutine,
+		PKNORMAL_ROUTINE	NormalRoutine,
+		UCHAR			Mode,
+		PVOID			Context)
 /*
  * FUNCTION: Initialize an APC object
  * ARGUMENTS:
@@ -453,7 +453,7 @@ KeInitializeApc (PKAPC			Apc,
  *       Mode = APC mode
  *       Context = Parameter to be passed to the APC routine
  */
-{   
+{
    DPRINT("KeInitializeApc(Apc %x, Thread %x, StateIndex %d, "
 	  "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
 	  "Context %x)\n",Apc,Thread,StateIndex,KernelRoutine,RundownRoutine,
@@ -479,25 +479,28 @@ KeInitializeApc (PKAPC			Apc,
      }
 }
 
-VOID NtQueueApcRundownRoutine(PKAPC Apc)
+VOID STDCALL
+NtQueueApcRundownRoutine(PKAPC Apc)
 {
    ExFreePool(Apc);
 }
 
-VOID NtQueueApcKernelRoutine(PKAPC Apc,
-			     PKNORMAL_ROUTINE* NormalRoutine,
-			     PVOID* NormalContext,
-			     PVOID* SystemArgument1,
-			     PVOID* SystemArgument2)
+VOID STDCALL
+NtQueueApcKernelRoutine(PKAPC Apc,
+			PKNORMAL_ROUTINE* NormalRoutine,
+			PVOID* NormalContext,
+			PVOID* SystemArgument1,
+			PVOID* SystemArgument2)
 {
    ExFreePool(Apc);
 }
 
-NTSTATUS STDCALL NtQueueApcThread(HANDLE			ThreadHandle,
-				  PKNORMAL_ROUTINE	ApcRoutine,
-				  PVOID			NormalContext,
-				  PVOID			SystemArgument1,
-				  PVOID			SystemArgument2)
+NTSTATUS STDCALL
+NtQueueApcThread(HANDLE			ThreadHandle,
+		 PKNORMAL_ROUTINE	ApcRoutine,
+		 PVOID			NormalContext,
+		 PVOID			SystemArgument1,
+		 PVOID			SystemArgument2)
 {
    PKAPC Apc;
    PETHREAD Thread;

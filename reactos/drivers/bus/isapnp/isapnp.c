@@ -1,4 +1,4 @@
-/* $Id: isapnp.c,v 1.1 2001/05/01 23:00:05 chorns Exp $
+/* $Id: isapnp.c,v 1.2 2001/08/27 01:24:56 ekohl Exp $
  *
  * PROJECT:         ReactOS ISA PnP Bus driver
  * FILE:            isapnp.c
@@ -1656,6 +1656,7 @@ ISAPNPControl(
 
 
 NTSTATUS
+STDCALL
 ISAPNPAddDevice(
   IN PDRIVER_OBJECT DriverObject,
   IN PDEVICE_OBJECT PhysicalDeviceObject)

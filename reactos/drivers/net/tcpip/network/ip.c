@@ -699,7 +699,7 @@ PADDRESS_ENTRY IPGetDefaultADE(
 }
 
 
-VOID IPTimeout(
+VOID STDCALL IPTimeout(
     PKDPC Dpc,
     PVOID DeferredContext,
     PVOID SystemArgument1,

@@ -613,7 +613,7 @@ MiniDoRequest(
 }
 
 
-VOID MiniportDpc(
+VOID STDCALL MiniportDpc(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,

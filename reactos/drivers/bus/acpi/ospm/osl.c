@@ -37,7 +37,7 @@ static PVOID IVTVirtualAddress = NULL;
 static PVOID BDAVirtualAddress = NULL;
 
 
-VOID
+VOID STDCALL
 OslDpcStub(
   IN PKDPC Dpc,
   IN PVOID DeferredContext,
@@ -193,7 +193,7 @@ acpi_os_get_physical_address(void *virt, ACPI_PHYSICAL_ADDRESS *phys)
   return AE_OK;
 }
 
-BOOLEAN
+BOOLEAN STDCALL
 OslIsrStub(
   PKINTERRUPT Interrupt,
   PVOID ServiceContext)
@@ -228,7 +228,7 @@ acpi_os_install_interrupt_handler(u32 irq, OSD_HANDLER handler, void *context)
 
   Status = IoConnectInterrupt(
     &AcpiInterrupt,
-	  OslIsrStub,
+    OslIsrStub,
     NULL,
     NULL,
     Vector,

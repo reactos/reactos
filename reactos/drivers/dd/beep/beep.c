@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.9 2001/08/05 21:48:25 ekohl Exp $
+/* $Id: beep.c,v 1.10 2001/08/27 01:25:17 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -33,7 +33,7 @@ typedef struct _BEEP_DEVICE_EXTENSION
 /* FUNCTIONS ***************************************************************/
 
 
-static VOID
+static VOID STDCALL
 BeepDPC(PKDPC Dpc,
 	PVOID DeferredContext,
 	PVOID SystemArgument1,

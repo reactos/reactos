@@ -10,10 +10,11 @@
 #include "floppy.h"
 
 
-VOID FloppyDpc( PKDPC Dpc,
-		PDEVICE_OBJECT DeviceObject,
-		PIRP Irp,
-		PVOID Context )
+VOID STDCALL
+FloppyDpc(PKDPC Dpc,
+	  PDEVICE_OBJECT DeviceObject,
+	  PIRP Irp,
+	  PVOID Context)
 {
    PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
@@ -24,30 +25,33 @@ VOID FloppyDpc( PKDPC Dpc,
 }
 
 
-VOID FloppyDpcDetect( PKDPC Dpc,
-		      PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp,
-		      PVOID Context )
+VOID STDCALL
+FloppyDpcDetect(PKDPC Dpc,
+		PDEVICE_OBJECT DeviceObject,
+		PIRP Irp,
+		PVOID Context)
 {
    PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
    KeSetEvent( &ControllerExtension->Event, 0, FALSE );
 }
 
-VOID FloppyDpcFailIrp( PKDPC Dpc,
-		       PDEVICE_OBJECT DeviceObject,
-		       PIRP Irp,
-		       PVOID Context )
+VOID STDCALL
+FloppyDpcFailIrp(PKDPC Dpc,
+		 PDEVICE_OBJECT DeviceObject,
+		 PIRP Irp,
+		 PVOID Context)
 {
    Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
    CHECKPOINT;
    IoCompleteRequest( Irp, 0 );
 }
 
-VOID FloppyMotorSpindownDpc( PKDPC Dpc,
-			     PVOID Context,
-			     PVOID Arg1,
-			     PVOID Arg2 )
+VOID STDCALL
+FloppyMotorSpindownDpc(PKDPC Dpc,
+		       PVOID Context,
+		       PVOID Arg1,
+		       PVOID Arg2 )
 {
    PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
@@ -60,10 +64,11 @@ VOID FloppyMotorSpindownDpc( PKDPC Dpc,
 			 ControllerExtension );
 }
 
-VOID FloppyMotorSpinupDpc( PKDPC Dpc,
-			   PVOID Context,
-			   PVOID Arg1,
-			   PVOID Arg2 )
+VOID STDCALL
+FloppyMotorSpinupDpc(PKDPC Dpc,
+		     PVOID Context,
+		     PVOID Arg1,
+		     PVOID Arg2)
 {
    PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
@@ -85,10 +90,11 @@ VOID FloppyMotorSpinupDpc( PKDPC Dpc,
 			 ControllerExtension->Irp );
 }
 
-VOID FloppySeekDpc( PKDPC Dpc,
-		    PDEVICE_OBJECT DeviceObject,
-		    PIRP Irp,
-		    PVOID Context )
+VOID STDCALL
+FloppySeekDpc(PKDPC Dpc,
+	      PDEVICE_OBJECT DeviceObject,
+	      PIRP Irp,
+	      PVOID Context)
 {
   PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
@@ -117,10 +123,11 @@ VOID FloppySeekDpc( PKDPC Dpc,
     IoFreeController( DeviceExtension->Controller );
 }
 
-VOID FloppyDpcReadWrite( PKDPC Dpc,
-			 PDEVICE_OBJECT DeviceObject,
-			 PIRP Irp,
-			 PVOID Context )
+VOID STDCALL
+FloppyDpcReadWrite(PKDPC Dpc,
+		   PDEVICE_OBJECT DeviceObject,
+		   PIRP Irp,
+		   PVOID Context)
 {
   PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
@@ -178,10 +185,12 @@ VOID FloppyDpcReadWrite( PKDPC Dpc,
     IoCompleteRequest( Irp, 0 );
   }
 }
-VOID FloppyDpcDetectMedia( PKDPC Dpc,
-			   PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp,
-			   PVOID Context )
+
+VOID STDCALL
+FloppyDpcDetectMedia(PKDPC Dpc,
+		     PDEVICE_OBJECT DeviceObject,
+		     PIRP Irp,
+		     PVOID Context)
 {
   PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;

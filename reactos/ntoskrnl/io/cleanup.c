@@ -21,11 +21,12 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID IopCompleteRequest1(struct _KAPC* Apc,
-			 PKNORMAL_ROUTINE* NormalRoutine,
-			 PVOID* NormalContext,
-			 PVOID* SystemArgument1,
-			 PVOID* SystemArgument2)
+VOID STDCALL
+IopCompleteRequest1(struct _KAPC* Apc,
+		    PKNORMAL_ROUTINE* NormalRoutine,
+		    PVOID* NormalContext,
+		    PVOID* SystemArgument1,
+		    PVOID* SystemArgument2)
 {
    PIRP Irp;
    CCHAR PriorityBoost;

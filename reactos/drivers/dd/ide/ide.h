@@ -130,7 +130,7 @@ typedef struct _IDE_DEVICE_EXTENSION
 {
   PDEVICE_OBJECT         DeviceObject;
   PCONTROLLER_OBJECT     ControllerObject;
-  struct _IDE_DEVICE_EXTESION  *DiskExtension;
+  PVOID                  DiskDeviceExtension;
   int                    UnitNumber;
   BOOLEAN                LBASupported;
   BOOLEAN                DMASupported;

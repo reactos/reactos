@@ -64,21 +64,29 @@ struct _KMUTANT;
 
 typedef LONG KPRIORITY;
 
-typedef VOID (*PKBUGCHECK_CALLBACK_ROUTINE)(PVOID Buffer, ULONG Length);
-typedef BOOLEAN (*PKSYNCHRONIZE_ROUTINE)(PVOID SynchronizeContext);
+typedef VOID STDCALL
+(*PKBUGCHECK_CALLBACK_ROUTINE)(PVOID Buffer,
+			       ULONG Length);
+
+typedef BOOLEAN STDCALL
+(*PKSYNCHRONIZE_ROUTINE)(PVOID SynchronizeContext);
 
 struct _KAPC;
 
-typedef VOID (*PKNORMAL_ROUTINE)(PVOID NormalContext,
-				 PVOID SystemArgument1,
-				 PVOID SystemArgument2);
-typedef VOID (*PKKERNEL_ROUTINE)(struct _KAPC* Apc,
-				 PKNORMAL_ROUTINE* NormalRoutine,
-				 PVOID* NormalContext,
-				 PVOID* SystemArgument1,
-				 PVOID* SystemArgument2);
+typedef VOID STDCALL
+(*PKNORMAL_ROUTINE)(PVOID NormalContext,
+		    PVOID SystemArgument1,
+		    PVOID SystemArgument2);
 
-typedef VOID (*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);
+typedef VOID STDCALL
+(*PKKERNEL_ROUTINE)(struct _KAPC* Apc,
+		    PKNORMAL_ROUTINE* NormalRoutine,
+		    PVOID* NormalContext,
+		    PVOID* SystemArgument1,
+		    PVOID* SystemArgument2);
+
+typedef VOID STDCALL
+(*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);
 
 struct _DISPATCHER_HEADER;
 
@@ -209,8 +217,11 @@ struct _KDPC;
  *      SystemArgument[1-2] = Undocumented. 
  * 
  */
-typedef VOID (*PKDEFERRED_ROUTINE)(struct _KDPC* Dpc, PVOID DeferredContext, 
-			   PVOID SystemArgument1, PVOID SystemArgument2);
+typedef VOID STDCALL
+(*PKDEFERRED_ROUTINE)(struct _KDPC* Dpc,
+		      PVOID DeferredContext,
+		      PVOID SystemArgument1,
+		      PVOID SystemArgument2);
 
 /*
  * PURPOSE: Defines a delayed procedure call object
@@ -243,8 +254,9 @@ typedef struct _WAIT_CONTEXT_BLOCK
 
 struct _KINTERRUPT;
 
-typedef BOOLEAN (*PKSERVICE_ROUTINE)(struct _KINTERRUPT* Interrupt, 
-				     PVOID ServiceContext);
+typedef BOOLEAN STDCALL
+(*PKSERVICE_ROUTINE)(struct _KINTERRUPT* Interrupt,
+		     PVOID ServiceContext);
 
 typedef struct _KINTERRUPT
 {

@@ -141,10 +141,10 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
 #if 0
 VOID KiInterruptDispatch(ULONG irq);
 #endif
-VOID KeExpireTimers( PKDPC Apc,
-		     PVOID Arg1,
-		     PVOID Arg2,
-		     PVOID Arg3 );
+VOID STDCALL KeExpireTimers(PKDPC Apc,
+			    PVOID Arg1,
+			     PVOID Arg2,
+			     PVOID Arg3);
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 

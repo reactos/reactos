@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.3 2001/03/16 18:11:24 dwelch Exp $
+/* $Id: debug.c,v 1.4 2001/08/27 01:22:21 ekohl Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
@@ -50,8 +50,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID KeContextToTrapFrame(PCONTEXT Context,
-			  PKTRAP_FRAME TrapFrame)
+VOID
+KeContextToTrapFrame(PCONTEXT Context,
+		     PKTRAP_FRAME TrapFrame)
 {
    if (Context->ContextFlags & CONTEXT_CONTROL)
      {
@@ -96,8 +97,9 @@ VOID KeContextToTrapFrame(PCONTEXT Context,
      }
 }
 
-VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
-			  PCONTEXT Context)
+VOID
+KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
+		     PCONTEXT Context)
 {
    if (Context->ContextFlags & CONTEXT_CONTROL)
      {
@@ -144,7 +146,7 @@ VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
 	 * FIXME: Implement this case
 	 */
      }
-#if 0   
+#if 0
    if (Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS)
      {
 	/*
@@ -154,7 +156,8 @@ VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
 #endif
 }
 
-VOID KeGetContextRundownRoutine(PKAPC Apc)
+VOID STDCALL
+KeGetContextRundownRoutine(PKAPC Apc)
 {
    PKEVENT Event;
    PNTSTATUS Status;
@@ -165,11 +168,12 @@ VOID KeGetContextRundownRoutine(PKAPC Apc)
    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
 }
 
-VOID KeGetContextKernelRoutine(PKAPC Apc,
-			       PKNORMAL_ROUTINE* NormalRoutine,
-			       PVOID* NormalContext,
-			       PVOID* SystemArgument1,
-			       PVOID* SystemArgument2)
+VOID STDCALL
+KeGetContextKernelRoutine(PKAPC Apc,
+			  PKNORMAL_ROUTINE* NormalRoutine,
+			  PVOID* NormalContext,
+			  PVOID* SystemArgument1,
+			  PVOID* SystemArgument2)
 /*
  * FUNCTION: This routine is called by an APC sent by NtGetContextThread to
  * copy the context of a thread into a buffer.
@@ -189,8 +193,9 @@ VOID KeGetContextKernelRoutine(PKAPC Apc,
    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
 }
 
-NTSTATUS STDCALL NtGetContextThread (IN	HANDLE ThreadHandle, 
-				     OUT PCONTEXT Context)
+NTSTATUS STDCALL
+NtGetContextThread(IN HANDLE ThreadHandle,
+		   OUT PCONTEXT Context)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -260,8 +265,9 @@ NTSTATUS STDCALL NtGetContextThread (IN	HANDLE ThreadHandle,
      }
 }
 
-NTSTATUS STDCALL NtSetContextThread (IN	HANDLE		ThreadHandle,
-				     IN	PCONTEXT	Context)
+NTSTATUS STDCALL
+NtSetContextThread(IN HANDLE ThreadHandle,
+		   IN PCONTEXT Context)
 {
    UNIMPLEMENTED;
 }

@@ -1,4 +1,4 @@
-/* $Id: acpisys.c,v 1.3 2001/08/23 17:32:04 chorns Exp $
+/* $Id: acpisys.c,v 1.4 2001/08/27 01:24:36 ekohl Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpisys.c
@@ -114,6 +114,7 @@ ACPIPowerControl(
 
 
 NTSTATUS
+STDCALL
 ACPIAddDevice(
   IN PDRIVER_OBJECT DriverObject,
   IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -151,7 +152,7 @@ ACPIAddDevice(
 NTSTATUS
 STDCALL
 DriverEntry(
-  IN PDRIVER_OBJECT DriverObject, 
+  IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath)
 {
   DbgPrint("Advanced Configuration and Power Interface Bus Driver\n");

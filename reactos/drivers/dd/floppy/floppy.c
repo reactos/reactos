@@ -247,7 +247,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    return TRUE;
 
  devicecleanup:
-   IoDeleteDevice( DeviceObject );   
+   IoDeleteDevice( DeviceObject );
  interruptcleanup:
    IoDisconnectInterrupt(ControllerExtension->Interrupt);
  controllercleanup:
@@ -258,10 +258,11 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    return FALSE;
 }
 
-IO_ALLOCATION_ACTION FloppyExecuteSpindown( PDEVICE_OBJECT DeviceObject,
-					    PIRP Irp,
-					    PVOID MapRegisterbase,
-					    PVOID Context )
+IO_ALLOCATION_ACTION STDCALL
+FloppyExecuteSpindown(PDEVICE_OBJECT DeviceObject,
+		      PIRP Irp,
+		      PVOID MapRegisterbase,
+		      PVOID Context)
 {
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension= (PFLOPPY_CONTROLLER_EXTENSION)Context;
 
@@ -273,10 +274,11 @@ IO_ALLOCATION_ACTION FloppyExecuteSpindown( PDEVICE_OBJECT DeviceObject,
    return DeallocateObject;
 }
 
-IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
-					     PIRP Irp,
-					     PVOID MapRegisterbase,
-					     PVOID Context )
+IO_ALLOCATION_ACTION STDCALL
+FloppyExecuteReadWrite(PDEVICE_OBJECT DeviceObject,
+		       PIRP Irp,
+		       PVOID MapRegisterbase,
+		       PVOID Context)
 {
    PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
@@ -405,17 +407,19 @@ IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
    CHECKPOINT;
    // eventually, the FDC will interrupt and we will read results then
    return KeepObject;
-}	
+}
 
-NTSTATUS STDCALL FloppyDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
-					 PIRP Irp)
+NTSTATUS STDCALL
+FloppyDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
+			PIRP Irp)
 {
    DPRINT("FloppyDispatchOpenClose\n");
    return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
-					 PIRP Irp)
+NTSTATUS STDCALL
+FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
+		        PIRP Irp)
 {
   PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
@@ -449,10 +453,11 @@ NTSTATUS STDCALL FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
   return STATUS_PENDING;
 }
 
-IO_ALLOCATION_ACTION FloppyAdapterControl( PDEVICE_OBJECT DeviceObject,
-					   PIRP Irp,
-					   PVOID MapRegisterBase,
-					   PVOID Context )
+IO_ALLOCATION_ACTION STDCALL
+FloppyAdapterControl(PDEVICE_OBJECT DeviceObject,
+		     PIRP Irp,
+		     PVOID MapRegisterBase,
+		     PVOID Context)
 {
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Context;
 
@@ -463,8 +468,9 @@ IO_ALLOCATION_ACTION FloppyAdapterControl( PDEVICE_OBJECT DeviceObject,
   return KeepObject;
 }
 
-NTSTATUS STDCALL FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
-					     PIRP Irp)
+NTSTATUS STDCALL
+FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
+			    PIRP Irp)
 {
    DPRINT("FloppyDispatchDeviceControl\n");
    return(STATUS_UNSUCCESSFUL);
@@ -489,8 +495,9 @@ NTSTATUS STDCALL FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
  *  RETURNS:
  *    NTSTATUS  
  */
-NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
-			     IN PUNICODE_STRING RegistryPath)
+NTSTATUS STDCALL
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+	    IN PUNICODE_STRING RegistryPath)
 {
    DbgPrint("Floppy driver\n");
    

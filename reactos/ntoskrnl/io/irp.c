@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.37 2001/05/01 23:08:19 chorns Exp $
+/* $Id: irp.c,v 1.38 2001/08/27 01:20:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -185,11 +185,12 @@ IoAllocateIrp (CCHAR StackSize, BOOLEAN ChargeQuota)
 }
 
 
-VOID IopCompleteRequest(struct _KAPC* Apc,
-			PKNORMAL_ROUTINE* NormalRoutine,
-			PVOID* NormalContext,
-			PVOID* SystemArgument1,
-			PVOID* SystemArgument2)
+VOID STDCALL
+IopCompleteRequest(struct _KAPC* Apc,
+		   PKNORMAL_ROUTINE* NormalRoutine,
+		   PVOID* NormalContext,
+		   PVOID* SystemArgument1,
+		   PVOID* SystemArgument2)
 {
    DPRINT("IopCompleteRequest(Apc %x, SystemArgument1 %x, "
 	  "(*SystemArgument1) %x\n", Apc, SystemArgument1,
@@ -199,9 +200,9 @@ VOID IopCompleteRequest(struct _KAPC* Apc,
 }
 
 
-VOID
-FASTCALL
-IofCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
+VOID FASTCALL
+IofCompleteRequest(PIRP Irp,
+		   CCHAR PriorityBoost)
 /*
  * FUNCTION: Indicates the caller has finished all processing for a given
  * I/O request and is returning the given IRP to the I/O manager

@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.30 2001/06/11 19:45:29 ekohl Exp $
+/* $Id: iotypes.h,v 1.31 2001/08/27 01:18:57 ekohl Exp $
  * 
  */
 
@@ -61,29 +61,33 @@ typedef struct _SHARE_ACCESS
 
 /* FUNCTION TYPES ************************************************************/
 
-typedef VOID (*PDRIVER_REINITIALIZE)(struct _DRIVER_OBJECT* DriverObject,
-				     PVOID Context,
-				     ULONG Count);
+typedef VOID STDCALL
+(*PDRIVER_REINITIALIZE)(struct _DRIVER_OBJECT* DriverObject,
+			PVOID Context,
+			ULONG Count);
 
-typedef NTSTATUS (*PIO_QUERY_DEVICE_ROUTINE)(PVOID Context,
-					     PUNICODE_STRING Pathname,
-					     INTERFACE_TYPE BusType,
-					     ULONG BusNumber,
-					     PKEY_VALUE_FULL_INFORMATION* BI,
-					     CONFIGURATION_TYPE ControllerType,
-					     ULONG ControllerNumber,
-					     PKEY_VALUE_FULL_INFORMATION* CI,
-					     CONFIGURATION_TYPE PeripheralType,
-					     ULONG PeripheralNumber,
-					     PKEY_VALUE_FULL_INFORMATION* PI);
+typedef NTSTATUS STDCALL
+(*PIO_QUERY_DEVICE_ROUTINE)(PVOID Context,
+			    PUNICODE_STRING Pathname,
+			    INTERFACE_TYPE BusType,
+			    ULONG BusNumber,
+			    PKEY_VALUE_FULL_INFORMATION* BI,
+			    CONFIGURATION_TYPE ControllerType,
+			    ULONG ControllerNumber,
+			    PKEY_VALUE_FULL_INFORMATION* CI,
+			    CONFIGURATION_TYPE PeripheralType,
+			    ULONG PeripheralNumber,
+			    PKEY_VALUE_FULL_INFORMATION* PI);
 
-typedef NTSTATUS (*PIO_COMPLETION_ROUTINE)(struct _DEVICE_OBJECT* DeviceObject,
-					   struct _IRP* Irp,
-					   PVOID Context);
+typedef NTSTATUS STDCALL
+(*PIO_COMPLETION_ROUTINE)(struct _DEVICE_OBJECT* DeviceObject,
+			  struct _IRP* Irp,
+			  PVOID Context);
 
-typedef VOID (*PIO_APC_ROUTINE) (PVOID ApcContext,
-				 struct _IO_STATUS_BLOCK* IoStatusBlock,
-				 ULONG Reserved);
+typedef VOID STDCALL
+(*PIO_APC_ROUTINE)(PVOID ApcContext,
+		   struct _IO_STATUS_BLOCK* IoStatusBlock,
+		   ULONG Reserved);
 
 
 /* STRUCTURE TYPES ***********************************************************/
@@ -118,7 +122,7 @@ typedef struct _IO_RESOURCE_DESCRIPTOR
    /*
     * Reserved for system use
     */
-   UCHAR Spare1;             
+   UCHAR Spare1;
    
    USHORT Flags;
    
@@ -186,7 +190,7 @@ typedef struct _IO_RESOURCE_REQUIREMENTS_LIST
    ULONG SlotNumber;
    ULONG Reserved[3];
    ULONG AlternativeLists;
-   IO_RESOURCE_LIST List[1];   
+   IO_RESOURCE_LIST List[1];
 } IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
 typedef struct
@@ -440,14 +444,16 @@ typedef struct _IO_MAILSLOT_CREATE_BUFFER
 /*
  * Driver entry point declaration
  */
-typedef NTSTATUS (*PDRIVER_INITIALIZE)(struct _DRIVER_OBJECT* DriverObject,
-				       PUNICODE_STRING RegistryPath);
+typedef NTSTATUS STDCALL
+(*PDRIVER_INITIALIZE)(struct _DRIVER_OBJECT* DriverObject,
+		      PUNICODE_STRING RegistryPath);
 
 /*
  * Driver cancel declaration
  */
-typedef NTSTATUS (*PDRIVER_CANCEL)(struct _DEVICE_OBJECT* DeviceObject,
-				   struct _IRP* RegistryPath);
+typedef NTSTATUS STDCALL
+(*PDRIVER_CANCEL)(struct _DEVICE_OBJECT* DeviceObject,
+		  struct _IRP* RegistryPath);
 
 
 typedef struct _SECTION_OBJECT_POINTERS
@@ -487,7 +493,7 @@ typedef struct _IO_COMPLETION_CONTEXT
 /*
  * ReactOS specific flags
  */
-#define FO_DIRECT_CACHE_READ            0x72000001 
+#define FO_DIRECT_CACHE_READ            0x72000001
 #define FO_DIRECT_CACHE_WRITE           0x72000002
 #define FO_DIRECT_CACHE_PAGING_READ     0x72000004
 #define FO_DIRECT_CACHE_PAGING_WRITE    0x72000008
@@ -498,7 +504,7 @@ typedef struct _FILE_OBJECT
    CSHORT Type;
    CSHORT Size;
    struct _DEVICE_OBJECT* DeviceObject;
-   struct _VPB* Vpb;   
+   struct _VPB* Vpb;
    PVOID FsContext;
    PVOID FsContext2;
    PSECTION_OBJECT_POINTERS SectionObjectPointers;
@@ -573,7 +579,7 @@ typedef struct _IRP
 	     LIST_ENTRY ListEntry;
 	     struct _IO_STACK_LOCATION* CurrentStackLocation;
 	     PFILE_OBJECT OriginalFileObject;
-	  } Overlay;	  
+	  } Overlay;
 	KAPC Apc;
 	ULONG CompletionKey;
      } Tail;
@@ -618,7 +624,7 @@ typedef struct _DEVICE_OBJECT
    union
      {
 	LIST_ENTRY ListHead;
-	WAIT_CONTEXT_BLOCK Wcb;	
+	WAIT_CONTEXT_BLOCK Wcb;
      } Queue;
    ULONG AlignmentRequirement;
    KDEVICE_QUEUE DeviceQueue;
@@ -635,7 +641,9 @@ typedef struct _DEVICE_OBJECT
 /*
  * Dispatch routine type declaration
  */
-typedef NTSTATUS STDCALL (*PDRIVER_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
+typedef NTSTATUS STDCALL
+(*PDRIVER_DISPATCH)(struct _DEVICE_OBJECT*,
+		    IRP*);
 
 
 /*
@@ -643,16 +651,15 @@ typedef NTSTATUS STDCALL (*PDRIVER_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
  */
 //typedef NTSTATUS (*PFAST_IO_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
 //FIXME : this type is ok for read and write, but not for all routines
-typedef BOOLEAN STDCALL (*PFAST_IO_ROUTINE) (
-   IN struct _FILE_OBJECT *FileObject,
-   IN PLARGE_INTEGER FileOffset,
-   IN ULONG Length,
-   IN BOOLEAN Wait,
-   IN ULONG LockKey,
-   OUT PVOID Buffer,
-   OUT PIO_STATUS_BLOCK IoStatus,
-   IN struct _DEVICE_OBJECT *DeviceObject
- );
+typedef BOOLEAN STDCALL
+(*PFAST_IO_ROUTINE)(IN struct _FILE_OBJECT *FileObject,
+		    IN PLARGE_INTEGER FileOffset,
+		    IN ULONG Length,
+		    IN BOOLEAN Wait,
+		    IN ULONG LockKey,
+		    OUT PVOID Buffer,
+		    OUT PIO_STATUS_BLOCK IoStatus,
+		    IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef struct _FAST_IO_DISPATCH {
    ULONG SizeOfFastIoDispatch;
@@ -688,18 +695,19 @@ typedef struct _FAST_IO_DISPATCH {
 /*
  * Dispatch routine type declaration
  */
-typedef VOID STDCALL (*PDRIVER_STARTIO)(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+typedef VOID STDCALL
+(*PDRIVER_STARTIO)(IN PDEVICE_OBJECT DeviceObject,
+		   IN PIRP Irp);
 
 /*
  * Dispatch routine type declaration
  */
-typedef NTSTATUS (*PDRIVER_UNLOAD)(struct _DRIVER_OBJECT*);
+typedef NTSTATUS STDCALL
+(*PDRIVER_UNLOAD)(struct _DRIVER_OBJECT*);
 
-typedef
-NTSTATUS
-(*PDRIVER_ADD_DEVICE)(
-  IN struct _DRIVER_OBJECT *DriverObject,
-  IN struct _DEVICE_OBJECT *PhysicalDeviceObject);
+typedef NTSTATUS STDCALL
+(*PDRIVER_ADD_DEVICE)(IN struct _DRIVER_OBJECT *DriverObject,
+		      IN struct _DEVICE_OBJECT *PhysicalDeviceObject);
 
 
 typedef struct _DRIVER_EXTENSION
@@ -757,13 +765,15 @@ typedef struct _CONFIGURATION_INFORMATION
    BOOLEAN AtDiskSecondaryAddressClaimed;
 } CONFIGURATION_INFORMATION, *PCONFIGURATION_INFORMATION;
 
-typedef VOID (*PIO_DPC_ROUTINE)(PKDPC Dpc,
-				PDEVICE_OBJECT DeviceObject,
-				PIRP Irp,
-				PVOID Context);
+typedef VOID STDCALL
+(*PIO_DPC_ROUTINE)(PKDPC Dpc,
+		   PDEVICE_OBJECT DeviceObject,
+		   PIRP Irp,
+		   PVOID Context);
 
-typedef VOID (*PIO_TIMER_ROUTINE)(PDEVICE_OBJECT DeviceObject,
-				  PVOID Context);
+typedef VOID STDCALL
+(*PIO_TIMER_ROUTINE)(PDEVICE_OBJECT DeviceObject,
+		     PVOID Context);
 
 #if WINDOWS_STRUCTS_DOESNT_ALREADY_DEFINE_THIS
 typedef struct _PARTITION_INFORMATION
@@ -787,21 +797,15 @@ typedef struct _DRIVER_LAYOUT_INFORMATION
 } DRIVER_LAYOUT_INFORMATION, *PDRIVER_LAYOUT_INFORMATION;
 
 
-typedef
-IO_ALLOCATION_ACTION
-(*PDRIVER_CONTROL) (
-	PDEVICE_OBJECT	DeviceObject,
-	PIRP		irp,
-	PVOID		MapRegisterBase,
-	PVOID		Context
-	);
+typedef IO_ALLOCATION_ACTION STDCALL
+(*PDRIVER_CONTROL)(PDEVICE_OBJECT DeviceObject,
+		   PIRP Irp,
+		   PVOID MapRegisterBase,
+		   PVOID Context);
 #if (_WIN32_WINNT >= 0x0400)
-typedef
-VOID
-(*PFSDNOTIFICATIONPROC) (
-	IN	PDEVICE_OBJECT	PtrTargetFileSystemDeviceObject,
-	IN	BOOLEAN		DriverActive
-	);
+typedef VOID STDCALL
+(*PFSDNOTIFICATIONPROC)(IN PDEVICE_OBJECT PtrTargetFileSystemDeviceObject,
+			IN BOOLEAN DriverActive);
 #endif // (_WIN32_WINNT >= 0x0400)
 
 #endif /* __INCLUDE_DDK_IOTYPES_H */

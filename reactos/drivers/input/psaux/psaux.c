@@ -16,7 +16,8 @@
 #include "mouse.h"
 #include "psaux.h"
 
-BOOLEAN MouseSynchronizeRoutine(PVOID Context)
+BOOLEAN STDCALL
+MouseSynchronizeRoutine(PVOID Context)
 {
    PIRP Irp = (PIRP)Context;
    PMOUSE_INPUT_DATA rec  = (PMOUSE_INPUT_DATA)Irp->AssociatedIrp.SystemBuffer;

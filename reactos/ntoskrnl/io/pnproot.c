@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.3 2001/08/14 21:14:05 hbirr Exp $
+/* $Id: pnproot.c,v 1.4 2001/08/27 01:20:50 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -229,6 +229,7 @@ PnpRootPowerControl(
 }
 
 NTSTATUS
+STDCALL
 PnpRootAddDevice(
   IN PDRIVER_OBJECT DriverObject,
   IN PDEVICE_OBJECT PhysicalDeviceObject)

@@ -407,10 +407,11 @@ static WORD ScanToVirtual(BYTE scanCode)
  * Keyboard IRQ handler
  */
 
-static VOID KbdDpcRoutine(PKDPC Dpc,
-			  PVOID DeferredContext,
-			  PVOID SystemArgument1,
-			  PVOID SystemArgument2)
+static VOID STDCALL
+KbdDpcRoutine(PKDPC Dpc,
+	      PVOID DeferredContext,
+	      PVOID SystemArgument1,
+	      PVOID SystemArgument2)
 {
    PIRP Irp = (PIRP)SystemArgument2;
    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)SystemArgument1;
@@ -431,7 +432,9 @@ static VOID KbdDpcRoutine(PKDPC Dpc,
    IoStartNextPacket(DeviceObject,FALSE);
 }
 
-static BOOLEAN KeyboardHandler(PKINTERRUPT Interrupt, PVOID Context)
+static BOOLEAN STDCALL
+KeyboardHandler(PKINTERRUPT Interrupt,
+		PVOID Context)
 {
    BYTE thisKey;
    BOOL isDown;
@@ -634,7 +637,8 @@ static int InitializeKeyboard(void)
 /*
  * Read data from keyboard buffer
  */
-BOOLEAN KbdSynchronizeRoutine(PVOID Context)
+BOOLEAN STDCALL
+KbdSynchronizeRoutine(PVOID Context)
 {
    PIRP Irp = (PIRP)Context;
    KEY_EVENT_RECORD* rec = (KEY_EVENT_RECORD *)Irp->AssociatedIrp.SystemBuffer;

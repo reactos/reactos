@@ -575,6 +575,25 @@ PsPrepareForApplicationProcessorInit(ULONG Id);
 NTSTATUS STDCALL
 PsIdleThreadMain(PVOID Context);
 
+VOID STDCALL
+PiSuspendThreadRundownRoutine(PKAPC Apc);
+VOID STDCALL
+PiSuspendThreadKernelRoutine(PKAPC Apc,
+			     PKNORMAL_ROUTINE* NormalRoutine,
+			     PVOID* NormalContext,
+			     PVOID* SystemArgument1,
+			     PVOID* SystemArguemnt2);
+VOID STDCALL
+PiSuspendThreadNormalRoutine(PVOID NormalContext,
+			     PVOID SystemArgument1,
+			     PVOID SystemArgument2);
+
+VOID STDCALL
+PiTimeoutThread(struct _KDPC *dpc,
+		PVOID Context,
+		PVOID arg1,
+		PVOID arg2);
+
 #endif /* ASSEMBLER */
 
 #endif /* __INCLUDE_INTERNAL_PS_H */

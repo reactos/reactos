@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: suspend.c,v 1.5 2001/03/18 19:35:14 dwelch Exp $
+/* $Id: suspend.c,v 1.6 2001/08/27 01:22:22 ekohl Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/suspend.c
@@ -41,12 +41,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+VOID STDCALL
 PiSuspendThreadRundownRoutine(PKAPC Apc)
 {
 }
 
-VOID
+VOID STDCALL
 PiSuspendThreadKernelRoutine(PKAPC Apc,
 			     PKNORMAL_ROUTINE* NormalRoutine,
 			     PVOID* NormalContext,
@@ -55,7 +55,7 @@ PiSuspendThreadKernelRoutine(PKAPC Apc,
 {
 }
 
-VOID
+VOID STDCALL
 PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2)

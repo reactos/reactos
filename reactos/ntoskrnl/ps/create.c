@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.39 2001/08/26 17:30:21 ekohl Exp $
+/* $Id: create.c,v 1.40 2001/08/27 01:22:21 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -256,10 +256,10 @@ PsReferenceImpersonationToken(PETHREAD Thread,
    return(Thread->ImpersonationInfo->Token);
 }
 
-VOID 
-PiTimeoutThread(struct _KDPC *dpc, 
-		PVOID Context, 
-		PVOID arg1, 
+VOID STDCALL
+PiTimeoutThread(struct _KDPC *dpc,
+		PVOID Context,
+		PVOID arg1,
 		PVOID arg2)
 {
    // wake up the thread, and tell it it timed out
@@ -270,7 +270,7 @@ PiTimeoutThread(struct _KDPC *dpc,
    KeRemoveAllWaitsThread((PETHREAD)Context, Status);
 }
 
-VOID 
+VOID
 PiBeforeBeginThread(CONTEXT c)
 {
    DPRINT("PiBeforeBeginThread(Eip %x)\n", c.Eip);

@@ -5,66 +5,60 @@
 #ifndef __INTERNAL_HAL_BUS_H
 #define __INTERNAL_HAL_BUS_H
 
-struct _BUS_HANDLER;
 
-typedef NTSTATUS (STDCALL *pAdjustResourceList) (
-	IN struct _BUS_HANDLER *BusHandler,
-	IN ULONG BusNumber,
-	IN OUT PCM_RESOURCE_LIST Resources
-	);
+typedef NTSTATUS STDCALL
+(*pAdjustResourceList)(IN PBUS_HANDLER BusHandler,
+		       IN ULONG BusNumber,
+		       IN OUT PCM_RESOURCE_LIST Resources);
 
-typedef NTSTATUS (STDCALL *pAssignSlotResources) (
-	IN struct _BUS_HANDLER *BusHandler,
-	IN ULONG BusNumber,
-	IN PUNICODE_STRING RegistryPath,
-	IN PUNICODE_STRING DriverClassName,
-	IN PDRIVER_OBJECT DriverObject,
-	IN PDEVICE_OBJECT DeviceObject,
-	IN ULONG SlotNumber,
-	IN OUT PCM_RESOURCE_LIST *AllocatedResources
-	);
+typedef NTSTATUS STDCALL
+(*pAssignSlotResources)(IN PBUS_HANDLER BusHandler,
+			IN ULONG BusNumber,
+			IN PUNICODE_STRING RegistryPath,
+			IN PUNICODE_STRING DriverClassName,
+			IN PDRIVER_OBJECT DriverObject,
+			IN PDEVICE_OBJECT DeviceObject,
+			IN ULONG SlotNumber,
+			IN OUT PCM_RESOURCE_LIST *AllocatedResources);
 
-typedef ULONG (STDCALL *pGetSetBusData) (
-	IN struct _BUS_HANDLER *BusHandler,
-	IN ULONG BusNumber,
-	IN ULONG SlotNumber,
-	OUT PVOID Buffer,
-	IN ULONG Offset,
-	IN ULONG Length
-	);
+typedef ULONG STDCALL
+(*pGetSetBusData)(IN PBUS_HANDLER BusHandler,
+		  IN ULONG BusNumber,
+		  IN ULONG SlotNumber,
+		  OUT PVOID Buffer,
+		  IN ULONG Offset,
+		  IN ULONG Length);
 
-typedef ULONG (STDCALL *pGetInterruptVector) (
-	IN struct _BUS_HANDLER *BusHandler,
-	IN ULONG BusNumber,
-	IN ULONG BusInterruptLevel,
-	IN ULONG BusInterruptVector,
-	OUT PKIRQL Irql,
-	OUT PKAFFINITY Affinity
-	);
+typedef ULONG STDCALL
+(*pGetInterruptVector)(IN PBUS_HANDLER BusHandler,
+		       IN ULONG BusNumber,
+		       IN ULONG BusInterruptLevel,
+		       IN ULONG BusInterruptVector,
+		       OUT PKIRQL Irql,
+		       OUT PKAFFINITY Affinity);
 
-typedef ULONG (STDCALL *pTranslateBusAddress) (
-	IN struct _BUS_HANDLER *BusHandler,
-	IN ULONG BusNumber,
-	IN PHYSICAL_ADDRESS BusAddress,
-	IN OUT PULONG AddressSpace,
-	OUT PPHYSICAL_ADDRESS TranslatedAddress
-	);
+typedef ULONG STDCALL
+(*pTranslateBusAddress)(IN PBUS_HANDLER BusHandler,
+			IN ULONG BusNumber,
+			IN PHYSICAL_ADDRESS BusAddress,
+			IN OUT PULONG AddressSpace,
+			OUT PPHYSICAL_ADDRESS TranslatedAddress);
 
 typedef struct _BUS_HANDLER
 {
-   LIST_ENTRY Entry;
-   INTERFACE_TYPE InterfaceType;
-   BUS_DATA_TYPE BusDataType;
-   ULONG BusNumber;
-   ULONG RefCount;
+  LIST_ENTRY Entry;
+  INTERFACE_TYPE InterfaceType;
+  BUS_DATA_TYPE BusDataType;
+  ULONG BusNumber;
+  ULONG RefCount;
 
-   pGetSetBusData	GetBusData;
-   pGetSetBusData	SetBusData;
-   pAdjustResourceList	AdjustResourceList;
-   pAssignSlotResources	AssignSlotResources;
-   pGetInterruptVector	GetInterruptVector;
-   pTranslateBusAddress	TranslateBusAddress;
-} BUS_HANDLER, *PBUS_HANDLER;
+  pGetSetBusData	GetBusData;
+  pGetSetBusData	SetBusData;
+  pAdjustResourceList	AdjustResourceList;
+  pAssignSlotResources	AssignSlotResources;
+  pGetInterruptVector	GetInterruptVector;
+  pTranslateBusAddress	TranslateBusAddress;
+} BUS_HANDLER;
 
 
 /* FUNCTIONS *****************************************************************/

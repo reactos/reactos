@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.1 2001/08/21 20:18:27 chorns Exp $
+/* $Id: kdbg.c,v 1.2 2001/08/27 01:23:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,9 +57,7 @@
 
 /* GLOBAL VARIABLES *********************************************************/
 
-ULONG
-__declspec(dllexport)
-KdComPortInUse = 0; /* EXPORTED */
+ULONG EXPORTED KdComPortInUse = 0;
 
 
 /* STATIC VARIABLES *********************************************************/

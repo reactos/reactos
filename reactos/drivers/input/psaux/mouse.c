@@ -16,7 +16,8 @@ int mouse_replies_expected = 0;
 
 // Handle a mouse event
 
-BOOLEAN ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
+BOOLEAN STDCALL
+ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
   //  char tmpstr[100];
   PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ServiceContext;
