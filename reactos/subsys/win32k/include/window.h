@@ -81,6 +81,8 @@ typedef struct _WINDOW_OBJECT
   PSCROLLBARINFO pHScroll;
   PSCROLLBARINFO pVScroll;
   PSCROLLBARINFO wExtra;
+  LONG UserData;
+  WNDPROC WndProc;
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
 /* Window flags. */

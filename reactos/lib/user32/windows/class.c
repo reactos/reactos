@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.17 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: class.c,v 1.18 2003/05/17 09:20:23 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -117,14 +117,13 @@ GetClassWord(
 LONG STDCALL
 GetWindowLongA(HWND hWnd, int nIndex)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserGetWindowLong(hWnd, nIndex);
 }
 
 LONG STDCALL
 GetWindowLongW(HWND hWnd, int nIndex)
 {
-  return(NtUserGetWindowLong(hWnd, nIndex));
+  return NtUserGetWindowLong(hWnd, nIndex);
 }
 
 UINT
@@ -279,8 +278,7 @@ SetWindowLongA(
   int nIndex,
   LONG dwNewLong)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, TRUE);
 }
 
 LONG
@@ -290,8 +288,7 @@ SetWindowLongW(
   int nIndex,
   LONG dwNewLong)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserSetWindowLong(hWnd, nIndex, dwNewLong, FALSE);
 }
 
 WINBOOL

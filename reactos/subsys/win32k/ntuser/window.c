@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.42 2003/05/12 18:52:14 gvg Exp $
+/* $Id: window.c,v 1.43 2003/05/17 09:20:23 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -302,7 +302,7 @@ W32kGetWindowProc(HWND Wnd)
   if( !WindowObject )
 	return NULL;
 
-  WndProc = WindowObject->Class->Class.lpfnWndProc;
+  WndProc = WindowObject->WndProc;
   W32kReleaseWindowObject(Wnd);
   return(WndProc);
 }
@@ -386,6 +386,8 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->WindowRect.right = Width;
   WindowObject->WindowRect.bottom = Height;
   WindowObject->ClientRect = WindowObject->WindowRect;
+  WindowObject->UserData = 0;
+  WindowObject->WndProc = DesktopClass->Class.lpfnWndProc;
   InitializeListHead(&WindowObject->ChildrenListHead);
 
   WindowName = ExAllocatePool(NonPagedPool, sizeof(L"DESKTOP"));
@@ -498,6 +500,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Self = Handle;
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
   WindowObject->Parent = ParentWindow;
+  WindowObject->UserData = 0;
+  WindowObject->WndProc = ClassObject->Class.lpfnWndProc;
   InsertHeadList(&ParentWindow->ChildrenListHead,
 		 &WindowObject->SiblingListEntry);
   InitializeListHead(&WindowObject->ChildrenListHead);
@@ -511,7 +515,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       WindowObject->ExtraData =
 	ExAllocatePool(PagedPool,
-		       ClassObject->Class.cbWndExtra * sizeof(DWORD));
+		       ClassObject->Class.cbWndExtra);
       WindowObject->ExtraDataSize = ClassObject->Class.cbWndExtra;
     }
   else
@@ -1106,12 +1110,87 @@ NtUserSetWindowFNID(DWORD Unknown0,
   return 0;
 }
 
-DWORD STDCALL
+LONG STDCALL
 NtUserGetWindowLong(HWND hWnd, DWORD Index)
 {
   PWINDOW_OBJECT WindowObject;
   NTSTATUS Status;
-  DWORD Result;
+  LONG Result;
+
+  W32kGuiCheck();
+
+  Status = 
+    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+			       hWnd,
+			       otWindow,
+			       (PVOID*)&WindowObject);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+
+  if (0 <= (int) Index)
+    {
+      if (WindowObject->ExtraDataSize - sizeof(LONG) < Index ||
+          0 != Index % sizeof(LONG))
+	{
+	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
+	  return 0;
+	}
+      Result = WindowObject->ExtraData[Index / sizeof(LONG)];
+    }
+  else
+    {
+      switch (Index)
+	{
+	case GWL_EXSTYLE:
+	  Result = WindowObject->ExStyle;
+	  break;
+
+	case GWL_STYLE:
+	  Result = WindowObject->Style;
+	  break;
+
+	case GWL_WNDPROC:
+	  Result = (LONG) WindowObject->WndProc;	
+	  break;
+
+	case GWL_HINSTANCE:
+	  Result = (LONG) WindowObject->Instance;
+	  break;
+
+	case GWL_HWNDPARENT:
+	  Result = (LONG) WindowObject->ParentHandle;
+	  break;
+
+	case GWL_ID:
+	  Result = (LONG) WindowObject->IDMenu;
+	  break;
+
+	case GWL_USERDATA:
+	  Result = WindowObject->UserData;
+	  break;
+    
+	default:
+	  DPRINT1("NtUserGetWindowLong(): Unsupported index %d\n", Index);
+	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
+	  Result = 0;
+	  break;
+	}
+    }
+
+  ObmDereferenceObject(WindowObject);
+
+  return Result;
+}
+
+LONG STDCALL
+NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
+{
+  PWINDOW_OBJECT WindowObject;
+  NTSTATUS Status;
+  LONG OldValue;
 
   W32kGuiCheck();
 
@@ -1126,49 +1205,69 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
       return(0);
     }
 
-  switch (Index)
+  if (0 <= (int) Index)
     {
-    case GWL_EXSTYLE:
-      {
-	Result = (DWORD)WindowObject->ExStyle;
-	break;
-      }
+      if (WindowObject->ExtraDataSize - sizeof(LONG) < Index ||
+          0 != Index % sizeof(LONG))
+	{
+	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
+	  return 0;
+	}
+      OldValue = WindowObject->ExtraData[Index / sizeof(LONG)];
+      WindowObject->ExtraData[Index / sizeof(LONG)] = NewValue;
+    }
+  else
+    {
+      switch (Index)
+	{
+	case GWL_EXSTYLE:
+	  OldValue = (LONG) WindowObject->ExStyle;
+	  WindowObject->ExStyle = (DWORD) NewValue;
+	  break;
 
-    case GWL_STYLE:
-      {
-	Result = (DWORD)WindowObject->Style;
-	break;
-      }
+	case GWL_STYLE:
+	  OldValue = (LONG) WindowObject->Style;
+	  WindowObject->Style = (DWORD) NewValue;
+	  break;
 
-    case GWL_WNDPROC:
-      {
-	Result = (DWORD)WindowObject->Class->Class.lpfnWndProc;	
-	break;
-      }
-    case GWL_ID:
-    break;
+	case GWL_WNDPROC:
+	  /* FIXME: should check if window belongs to current process */
+	  OldValue = (LONG) WindowObject->WndProc;
+	  WindowObject->WndProc = (WNDPROC) NewValue;
+	  break;
+
+	case GWL_HINSTANCE:
+	  OldValue = (LONG) WindowObject->Instance;
+	  WindowObject->Instance = (HINSTANCE) NewValue;
+	  break;
+
+	case GWL_HWNDPARENT:
+	  OldValue = (LONG) WindowObject->ParentHandle;
+	  WindowObject->ParentHandle = (HWND) NewValue;
+	  /* FIXME: Need to update window lists of old and new parent */
+	  UNIMPLEMENTED;
+	  break;
+
+	case GWL_ID:
+	  OldValue = (LONG) WindowObject->IDMenu;
+	  WindowObject->IDMenu = (UINT) NewValue;
+	  break;
+
+	case GWL_USERDATA:
+	  OldValue = WindowObject->UserData;
+	  WindowObject->UserData = NewValue;
+	  break;
     
-    default:
-      {
-	DPRINT1("NtUserGetWindowLong(): Unsupported index %d\n", Index);
-	Result = 0;
-	break;
-      }
+	default:
+	  DPRINT1("NtUserSetWindowLong(): Unsupported index %d\n", Index);
+	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
+	  OldValue = 0;
+	  break;
+	}
     }
 
   ObmDereferenceObject(WindowObject);
-  return(Result);
-}
-
-DWORD STDCALL
-NtUserSetWindowLong(DWORD Unknown0,
-		    DWORD Unknown1,
-		    DWORD Unknown2,
-		    DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
+  return(OldValue);
 }
 
 DWORD STDCALL

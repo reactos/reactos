@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.29 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: window.c,v 1.30 2003/05/17 09:20:23 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -341,7 +341,6 @@ CreateWindowExA(DWORD dwExStyle,
   HWND Handle;
   INT sw;
 
-OutputDebugStringA("CreateWindowEx\n");
   if (IS_ATOM(lpClassName))
     {
       RtlInitUnicodeString(&ClassName, NULL);
