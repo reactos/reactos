@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.10 2003/05/21 16:11:02 ekohl Exp $
+/* $Id: nls.c,v 1.11 2003/07/09 10:40:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,21 +20,18 @@
 
 /* GLOBALS *******************************************************************/
 
-BYTE NlsLeadByteInfo = 0; /* ? */
-
-USHORT NlsOemLeadByteInfo = 0;
-
-
 USHORT NlsAnsiCodePage = 0; /* exported */
 BOOLEAN NlsMbCodePageTag = FALSE; /* exported */
 PWCHAR NlsAnsiToUnicodeTable = NULL;
 PCHAR NlsUnicodeToAnsiTable = NULL;
+PUSHORT NlsLeadByteInfo = NULL;
 
 
 USHORT NlsOemCodePage = 0;
 BOOLEAN NlsMbOemCodePageTag = FALSE; /* exported */
 PWCHAR NlsOemToUnicodeTable = NULL;
 PCHAR NlsUnicodeToOemTable = NULL;
+PUSHORT NlsOemLeadByteInfo = NULL;
 
 
 PUSHORT NlsUnicodeUpcaseTable = NULL;
@@ -322,6 +319,7 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
   NlsAnsiToUnicodeTable = NlsTable->AnsiTableInfo.MultiByteTable;
   NlsUnicodeToAnsiTable = NlsTable->AnsiTableInfo.WideCharTable;
   NlsMbCodePageTag = (NlsTable->AnsiTableInfo.DBCSCodePage != 0);
+  NlsLeadByteInfo = NlsTable->AnsiTableInfo.DBCSOffsets;
   NlsAnsiCodePage = NlsTable->AnsiTableInfo.CodePage;
   DPRINT("Ansi codepage %hu\n", NlsAnsiCodePage);
 
@@ -329,6 +327,7 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
   NlsOemToUnicodeTable = NlsTable->OemTableInfo.MultiByteTable;
   NlsUnicodeToOemTable = NlsTable->OemTableInfo.WideCharTable;
   NlsMbOemCodePageTag = (NlsTable->OemTableInfo.DBCSCodePage != 0);
+  NlsOemLeadByteInfo = NlsTable->OemTableInfo.DBCSOffsets;
   NlsOemCodePage = NlsTable->OemTableInfo.CodePage;
   DPRINT("Oem codepage %hu\n", NlsOemCodePage);
 
