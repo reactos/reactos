@@ -29,15 +29,14 @@ ntfs.sys      = 3
 ntoskrnl.exe  = 2
 scsiport.sys  = 3
 vfatfs.sys    = 3
-ext2.sys      = 3
 
 [Cabinets]
 Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
-;OsLoadOptions = "/NOGUIBOOT /NODEBUG"
-OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
+OsLoadOptions = "/NOGUIBOOT /NODEBUG"
+;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=SCREEN"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 
