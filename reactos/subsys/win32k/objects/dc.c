@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.112 2003/12/13 19:27:10 weiden Exp $
+/* $Id: dc.c,v 1.113 2003/12/13 23:26:04 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -143,17 +143,13 @@ NtGdiCreateCompatableDC(HDC hDC)
   DisplayDC = NULL;
   if (hDC == NULL)
     {
-      hDC = IntGetScreenDC();
-      if (NULL == hDC)
+      RtlInitUnicodeString(&DriverName, L"DISPLAY");
+      DisplayDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
+      if (NULL == DisplayDC)
         {
-          RtlInitUnicodeString(&DriverName, L"DISPLAY");
-          DisplayDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
-          if (NULL == DisplayDC)
-            {
-              return NULL;
-            }
-          hDC = DisplayDC;
+          return NULL;
         }
+      hDC = DisplayDC;
     }
 
   /*  Allocate a new DC based on the original DC's device  */
@@ -170,6 +166,7 @@ NtGdiCreateCompatableDC(HDC hDC)
 
   if (NULL == hNewDC)
     {
+      DC_UnlockDc(hDC);
       if (NULL != DisplayDC)
         {
           NtGdiDeleteDC(DisplayDC);
