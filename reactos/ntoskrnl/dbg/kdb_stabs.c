@@ -207,7 +207,7 @@ KdbPrintAddress(PVOID address)
 	  }
 	current_entry = current_entry->Flink;
      }
-   return(FALSE);
+   return KdbPrintUserAddress(address);
 }
 
 VOID
