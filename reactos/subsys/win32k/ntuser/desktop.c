@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.26 2004/12/06 02:23:05 navaraf Exp $
+ *  $Id: desktop.c,v 1.27 2004/12/10 16:52:04 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -406,6 +406,42 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
       return NULL;
     }
   return pdo->DesktopWindow;
+}
+
+BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
+{
+   if (bEnable)
+   {
+      RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+      NTSTATUS Status;
+
+      RtlZeroMemory(QueryTable, sizeof(QueryTable));
+
+      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+      QueryTable[0].Name = L"PaintDesktopVersion";
+      QueryTable[0].EntryContext = &g_PaintDesktopVersion;
+
+      /* Query the "PaintDesktopVersion" flag in the "Control Panel\Desktop" key */
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_USER, 
+                                      L"Control Panel\\Desktop",
+                                      QueryTable, NULL, NULL);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT1("RtlQueryRegistryValues failed for PaintDesktopVersion (%x)\n",
+                 Status);
+         g_PaintDesktopVersion = FALSE;
+         return FALSE;
+      }
+    
+      DPRINT("PaintDesktopVersion = %d\n", g_PaintDesktopVersion);
+
+      return TRUE;
+   }
+   else
+   {
+      g_PaintDesktopVersion = FALSE;
+      return TRUE;
+   }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

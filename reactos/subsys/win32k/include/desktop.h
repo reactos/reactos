@@ -66,6 +66,9 @@ IntParseDesktopPath(PEPROCESS Process,
                     HWINSTA *hWinSta,
                     HDESK *hDesktop);
 
+BOOL FASTCALL
+IntDesktopUpdatePerUserSettings(BOOL bEnable);
+
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
 
