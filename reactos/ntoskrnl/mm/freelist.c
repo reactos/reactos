@@ -33,6 +33,7 @@ typedef struct _PHYSICAL_PAGE
    ULONG Flags;
    LIST_ENTRY ListEntry;
    ULONG ReferenceCount;
+   KEVENT Event;
 } PHYSICAL_PAGE, *PPHYSICAL_PAGE;
 
 /* GLOBALS ****************************************************************/
@@ -95,6 +96,9 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
+	     KeInitializeEvent(&MmPageArray[i].Event,
+			       NotificationEvent,
+			       FALSE);
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -104,6 +108,9 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_INUSE;
 	     MmPageArray[i].ReferenceCount = 1;
+	     KeInitializeEvent(&MmPageArray[i].Event,
+			       NotificationEvent,
+			       FALSE);
 	     InsertTailList(&UsedPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -111,6 +118,9 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_BIOS;
 	     MmPageArray[i].ReferenceCount = 1;
+	     KeInitializeEvent(&MmPageArray[i].Event,
+			       NotificationEvent,
+			       FALSE);
 	     InsertTailList(&BiosPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -122,6 +132,9 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
+	     KeInitializeEvent(&MmPageArray[i].Event,
+			       NotificationEvent,
+			       FALSE);
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -129,6 +142,9 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_BIOS;
 	     MmPageArray[i].ReferenceCount = 1;
+	     KeInitializeEvent(&MmPageArray[i].Event,
+			       NotificationEvent,
+			       FALSE);
 	     InsertTailList(&BiosPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -138,6 +154,9 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
+	     KeInitializeEvent(&MmPageArray[i].Event,
+			       NotificationEvent,
+			       FALSE);
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -147,6 +166,9 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_INUSE;
 	     MmPageArray[i].ReferenceCount = 1;
+	     KeInitializeEvent(&MmPageArray[i].Event,
+			       NotificationEvent,
+			       FALSE);
 	     InsertTailList(&UsedPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -157,6 +179,9 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
      {
 	MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
 	MmPageArray[i].ReferenceCount = 0;
+	KeInitializeEvent(&MmPageArray[i].Event,
+			  NotificationEvent,
+			  FALSE);
 	InsertTailList(&FreePageListHead,
 		       &MmPageArray[i].ListEntry);
      }  
@@ -246,4 +271,17 @@ PVOID MmAllocPage(VOID)
    
    DPRINT("MmAllocPage() = %x\n",offset);
    return((PVOID)offset);
+}
+
+NTSTATUS MmWaitForPage(PVOID Page)
+{
+   return(STATUS_SUCCESS);
+}
+
+VOID MmClearWaitPage(PVOID Page)
+{
+}
+
+VOID MmSetWaitPage(PVOID Page)
+{
 }

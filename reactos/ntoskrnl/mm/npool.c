@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.28 2000/06/07 13:04:53 ekohl Exp $
+/* $Id: npool.c,v 1.29 2000/06/25 03:59:15 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -510,7 +510,7 @@ static block_hdr* grow_kernel_pool(unsigned int size)
      {
 	used_blk = (struct _block_hdr *)start;
 	used_blk->magic = BLOCK_HDR_MAGIC;
-	used_blk->size = nr_pages * PAGESIZE;
+	used_blk->size = (nr_pages * PAGESIZE) - sizeof(block_hdr);
 	add_to_used_list(used_blk);
 	
 	EiUsedNonPagedPool = EiUsedNonPagedPool + used_blk->size;
@@ -585,12 +585,7 @@ static void* take_block(block_hdr* current, unsigned int size)
    return(block_to_address(current));
 }
 
-//asmlinkage VOID ExFreePool(PVOID block)
-VOID
-STDCALL
-ExFreePool (
-	PVOID	block
-	)
+VOID STDCALL ExFreePool (PVOID block)
 /*
  * FUNCTION: Releases previously allocated memory
  * ARGUMENTS:
@@ -633,9 +628,9 @@ ExFreePool (
 }
 
 PVOID STDCALL ExAllocateNonPagedPoolWithTag(ULONG type, 
-				    ULONG size, 
-				    ULONG Tag,
-				    PVOID Caller)
+					    ULONG size, 
+					    ULONG Tag,
+					    PVOID Caller)
 {
    block_hdr* current = NULL;
    PVOID block;

@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.8 2000/04/07 02:24:01 dwelch Exp $
+/* $Id: page.c,v 1.9 2000/06/25 03:59:16 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -29,8 +29,10 @@ extern ULONG MiNrFreePages;
 #define PA_BIT_PRESENT   (0)
 #define PA_BIT_READWRITE (1)
 #define PA_BIT_USER      (2)
+#define PA_BIT_DIRTY     (6)
 
 #define PA_PRESENT  (1<<PA_BIT_PRESENT)
+#define PA_DIRTY    (1<<PA_BIT_DIRTY)
 
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
@@ -192,7 +194,14 @@ VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
      }
 }
 
-
+BOOLEAN MmIsPageTablePresent(PVOID PAddress)
+{
+   PULONG page_dir;
+   ULONG Address = (ULONG)PAddress;
+   
+   page_dir = ADDR_TO_PDE(Address);
+   return((*page_dir) == 0);
+}
 
 PULONG MmGetPageEntry(PVOID PAddress)
 /*
@@ -216,6 +225,11 @@ PULONG MmGetPageEntry(PVOID PAddress)
    page_tlb = ADDR_TO_PTE(Address);
    DPRINT("page_tlb %x\n",page_tlb);
    return(page_tlb);
+}
+
+BOOLEAN MmIsPageDirty(PEPROCESS Process, PVOID Address)
+{
+   return((MmGetPageEntryForProcess(Process, Address)) & PA_DIRTY);
 }
 
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)

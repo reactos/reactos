@@ -27,9 +27,23 @@
 ;
 ; $Logfile:   C:/dos-c/src/boot/boot.asv  $
 ;
-; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/bootbk.asm,v 1.3 1998/08/25 04:40:47 rex Exp $
+; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/bootbk.asm,v 1.4 2000/06/25 03:59:14 dwelch Exp $
 ;
 ; $Log: bootbk.asm,v $
+; Revision 1.4  2000/06/25 03:59:14  dwelch
+; Removed from redundant files from the mm directory
+; Added some preliminary work on the pager
+; Fixed ntoskrnl/mm/npool.c (This may have been the cause of the
+; problems reported with loading win32k.sys)
+; Fixed problems with reporting space used to store physical page
+; information
+; Added code to support MmSafeCopy{To/From}User interface work
+; (untested)
+; Added Event member of the PHYSICAL_PAGE structure to implement Philip
+; Susi's suggestion
+; Reworked section page-in code (not really tested)
+; Replaced inline string functions with gcc builtins to make debugging easier
+;
 ; Revision 1.3  1998/08/25 04:40:47  rex
 ; Release cleanup
 ;

@@ -68,7 +68,7 @@ CFLAGS = $(BASE_CFLAGS) \
 	-pipe \
 	-O2 \
 	-Iinclude \
-	-fno-builtin $(LEAN_AND_MEAN_DEFINE)  \
+	$(LEAN_AND_MEAN_DEFINE)  \
 	$(DEFINES) -Wall \
 	-Wstrict-prototypes $(DEBUGGING_CFLAGS) \
 	$(EXTRA_CFLAGS)

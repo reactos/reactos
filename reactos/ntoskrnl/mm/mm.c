@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.30 2000/05/24 22:29:36 dwelch Exp $
+/* $Id: mm.c,v 1.31 2000/06/25 03:59:15 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -62,7 +62,7 @@ VOID MiShutdownMemoryManager(VOID)
 {
 }
 
-VOID MmInitVirtualMemory(boot_param* bp)
+VOID MmInitVirtualMemory(boot_param* bp, ULONG LastKernelAddress)
 /*
  * FUNCTION: Intialize the memory areas list
  * ARGUMENTS:
@@ -77,8 +77,11 @@ VOID MmInitVirtualMemory(boot_param* bp)
    
    DPRINT("MmInitVirtualMemory(%x)\n",bp);
    
+   LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
+   
    MmInitMemoryAreas();
-   ExInitNonPagedPool(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
+//   ExInitNonPagedPool(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
+   ExInitNonPagedPool(LastKernelAddress + PAGESIZE);
    
    
    /*
@@ -110,7 +113,8 @@ VOID MmInitVirtualMemory(boot_param* bp)
 		      &kernel_data_desc);
    
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&end));
-   Length = ParamLength;
+//   Length = ParamLength;
+   Length = LastKernelAddress - (ULONG)BaseAddress;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),		      
 		      MEMORY_AREA_SYSTEM,
@@ -119,7 +123,7 @@ VOID MmInitVirtualMemory(boot_param* bp)
 		      0,
 		      &kernel_param_desc);
 
-   BaseAddress = (PVOID)(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
+   BaseAddress = (PVOID)(LastKernelAddress + PAGESIZE);
    Length = NONPAGED_POOL_SIZE;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
@@ -291,7 +295,7 @@ void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
    /*
     * Intialize memory areas
     */
-   MmInitVirtualMemory(bp);
+   MmInitVirtualMemory(bp, LastKernelAddress);
 }
 
 VOID MmInitSystem (ULONG Phase, boot_param* bp, ULONG LastKernelAddress)

@@ -1,6 +1,10 @@
 #ifndef _I386_STRING_H_
 #define _I386_STRING_H_
 
+wchar_t* wcsdup(wchar_t* src);
+
+#if 0
+
 #ifndef _LINUX_TYPES_H
 #include <internal/types.h>
 #endif
@@ -479,5 +483,7 @@ extern inline void * memscan(void * addr, int c, size_t size)
 		: "0" (addr), "1" (size), "a" (c));
 	return addr;
 }
+
+#endif 
 
 #endif

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.73 2000/06/18 17:39:07 ekohl Exp $
+# $Id: makefile_rex,v 1.74 2000/06/25 03:59:14 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -62,7 +62,7 @@ OBJECTS_RTL = \
 	rtl/wstring.o
 
 # Kernel (Ke)
-# Note: head.o MUST be the fist file!!!
+# Note: head.o MUST be the first file!!!
 OBJECTS_KE = \
 	ke/head.o \
 	ke/apc.o \
@@ -109,7 +109,9 @@ OBJECTS_MM = \
 	mm/ppool.o \
 	mm/section.o \
 	mm/virtual.o \
-	mm/zone.o
+	mm/zone.o \
+	mm/pager.o \
+#	mm/kmap.o
 
 OBJECTS_MM_I386 = \
 	mm/i386/memsafe.o \

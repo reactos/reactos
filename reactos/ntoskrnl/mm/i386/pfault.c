@@ -16,6 +16,13 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* EXTERNS *******************************************************************/
+
+extern VOID MmSafeCopyFromUserUnsafeStart(VOID);
+extern VOID MmSafeCopyFromUserRestart(VOID);
+extern VOID MmSafeCopyToUserUnsafeStart(VOID);
+extern VOID MmSafeCopyToUserRestart(VOID);
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS MmPageFault(ULONG Cs,
@@ -25,6 +32,7 @@ NTSTATUS MmPageFault(ULONG Cs,
 		     ULONG ErrorCode)
 {
    KPROCESSOR_MODE Mode;
+   NTSTATUS Status;
    
    DPRINT("MmPageFault(Eip %x, Cr2 %x, ErrorCode %x)\n",
 	  Eip, Cr2, ErrorCode);
@@ -40,10 +48,28 @@ NTSTATUS MmPageFault(ULONG Cs,
    
    if (ErrorCode & 0x1)
      {
-	return(MmAccessFault(Mode, Cr2));
+	Status = MmAccessFault(Mode, Cr2);
      }
    else
      {
-	return(MmNotPresentFault(Mode, Cr2));
+	Status = MmNotPresentFault(Mode, Cr2);
      }
+
+   if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
+       ((*Eip) >= (ULONG)MmSafeCopyFromUserUnsafeStart) &&
+       ((*Eip) <= (ULONG)MmSafeCopyFromUserRestart))
+     {
+	(*Eip) = (ULONG)MmSafeCopyFromUserRestart;
+	(*Eax) = STATUS_ACCESS_VIOLATION;
+	return(STATUS_SUCCESS);
+     }
+   if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
+       ((*Eip) >= (ULONG)MmSafeCopyToUserUnsafeStart) &&
+       ((*Eip) <= (ULONG)MmSafeCopyToUserRestart))
+     {
+	(*Eip) = (ULONG)MmSafeCopyToUserRestart;
+	(*Eax) = STATUS_ACCESS_VIOLATION;
+	return(STATUS_SUCCESS);
+     }
+   return(Status);
 }

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.44 2000/06/04 17:27:39 ea Exp $
+/* $Id: process.c,v 1.45 2000/06/25 03:59:17 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -40,6 +40,37 @@ static KSPIN_LOCK PsProcessListLock;
 static ULONG PiNextProcessUniqueId = 0;
 
 /* FUNCTIONS *****************************************************************/
+
+
+PEPROCESS PsGetNextProcess(PEPROCESS OldProcess)
+{
+   KIRQL oldIrql;
+   PEPROCESS NextProcess;
+   NTSTATUS Status;
+   
+   if (OldProcess == NULL)
+     {
+	return(PsInitialSystemProcess);
+     }
+   
+   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   NextProcess = CONTAINING_RECORD(OldProcess->Pcb.ProcessListEntry.Flink, 
+				   EPROCESS,
+				   Pcb.ProcessListEntry);
+   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   Status = ObReferenceObjectByPointer(NextProcess,
+				       PROCESS_ALL_ACCESS,
+				       PsProcessType,
+				       KernelMode);   
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("PsGetNextProcess(): ObReferenceObjectByPointer failed\n");
+	KeBugCheck(0);
+     }
+   ObDereferenceObject(OldProcess);
+   
+   return(NextProcess);
+}
 
 NTSTATUS STDCALL NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 				    IN	ACCESS_MASK	DesiredAccess,  
@@ -120,7 +151,7 @@ VOID PiKillMostProcesses(VOID)
 
 VOID PsInitProcessManagment(VOID)
 {
-   ANSI_STRING AnsiString;
+
    PKPROCESS KProcess;
    KIRQL oldIrql;
    
@@ -146,8 +177,7 @@ VOID PsInitProcessManagment(VOID)
    PsProcessType->OkayToClose = NULL;
    PsProcessType->Create = NULL;
    
-   RtlInitAnsiString(&AnsiString,"Process");
-   RtlAnsiStringToUnicodeString(&PsProcessType->TypeName,&AnsiString,TRUE);
+   RtlInitUnicodeString(&PsProcessType->TypeName, L"Process");
    
    InitializeListHead(&PsProcessListHead);
    KeInitializeSpinLock(&PsProcessListLock);

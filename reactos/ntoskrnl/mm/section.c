@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.31 2000/05/24 22:29:38 dwelch Exp $
+/* $Id: section.c,v 1.32 2000/06/25 03:59:15 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,7 +43,7 @@ VOID MmUnlockSection(PSECTION_OBJECT Section)
 
 VOID MmSetPageEntrySection(PSECTION_OBJECT Section,
 			   ULONG Offset,
-			   PVOID Entry)
+			   ULONG Entry)
 {
    PSECTION_PAGE_TABLE Table;
    ULONG DirectoryOffset;
@@ -63,11 +63,11 @@ VOID MmSetPageEntrySection(PSECTION_OBJECT Section,
    Table->Pages[TableOffset] = Entry;
 }
 
-PVOID MmGetPageEntrySection(PSECTION_OBJECT Section,
+ULONG MmGetPageEntrySection(PSECTION_OBJECT Section,
 			    ULONG Offset)
 {
    PSECTION_PAGE_TABLE Table;
-   PVOID Entry;
+   ULONG Entry;
    ULONG DirectoryOffset;
    ULONG TableOffset;
    
@@ -78,16 +78,16 @@ PVOID MmGetPageEntrySection(PSECTION_OBJECT Section,
    DPRINT("Table %x\n", Table);
    if (Table == NULL)
      {
-	return(NULL);
+	return(0);
      }
    TableOffset = PAGE_TO_SECTION_PAGE_TABLE_OFFSET(Offset);
    Entry = Table->Pages[TableOffset];
    return(Entry);
 }
 
-NTSTATUS MmOldLoadPageForSection(PMADDRESS_SPACE AddressSpace,
-				 MEMORY_AREA* MemoryArea,
-				 PVOID Address)
+NTSTATUS MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
+				       MEMORY_AREA* MemoryArea,
+				       PVOID Address)
 {
    LARGE_INTEGER Offset;
    IO_STATUS_BLOCK IoStatus;
@@ -149,9 +149,9 @@ NTSTATUS MmOldLoadPageForSection(PMADDRESS_SPACE AddressSpace,
 
 }
 
-NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
-				      MEMORY_AREA* MemoryArea, 
-				      PVOID Address)
+NTSTATUS MmOldNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
+					 MEMORY_AREA* MemoryArea, 
+					 PVOID Address)
 {
    LARGE_INTEGER Offset;
    IO_STATUS_BLOCK IoStatus;
@@ -160,7 +160,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    NTSTATUS Status;
    ULONG PAddress;
    PSECTION_OBJECT Section;
-   PVOID Entry;
+   ULONG Entry;
    
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
 	   MemoryArea,Address);
@@ -177,7 +177,9 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    
    if ((MemoryArea->Data.SectionData.ViewOffset % PAGESIZE) != 0)
      {
-	return(MmOldLoadPageForSection(AddressSpace, MemoryArea, Address));
+	return(MmUnalignedLoadPageForSection(AddressSpace, 
+					     MemoryArea, 
+					     Address));
      }
    
    DPRINT("MemoryArea->BaseAddress %x\n", MemoryArea->BaseAddress);
@@ -195,7 +197,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    
    DPRINT("Entry %x\n", Entry);
    
-   if (Entry == NULL)
+   if (Entry == 0)
      {   
 	Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
 	MmBuildMdlFromPages(Mdl);
@@ -217,22 +219,22 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	
 	Entry = MmGetPageEntrySection(Section, Offset.QuadPart);
 	
-	if (Entry == NULL)
+	if (Entry == 0)
 	  {
 	     MmSetPageEntrySection(Section,
 				   Offset.QuadPart,
-				   Page);
+				   (ULONG)Page);
 	  }
 	else
 	  {
 	     MmDereferencePage(Page);
-	     Page = Entry;
+	     Page = (PVOID)Entry;
 	     MmReferencePage(Page);
 	  }	
      }
    else
      {
-	Page = Entry;
+	Page = (PVOID)Entry;
 	MmReferencePage(Page);	
      }
    
@@ -243,6 +245,151 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    MmUnlockSection(Section);
    
    return(STATUS_SUCCESS);
+}
+
+NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
+				      MEMORY_AREA* MemoryArea, 
+				      PVOID Address)
+{
+   LARGE_INTEGER Offset;
+   IO_STATUS_BLOCK IoStatus;
+   PMDL Mdl;
+   PVOID Page;
+   NTSTATUS Status;
+   ULONG PAddress;
+   PSECTION_OBJECT Section;
+   ULONG Entry;
+   ULONG Entry1;
+   
+   DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
+	   MemoryArea,Address);
+   
+   if (MmIsPagePresent(NULL, Address))
+     {
+	DbgPrint("Page is already present\n");
+	KeBugCheck(0);
+     }
+   
+   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
+   Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
+     MemoryArea->Data.SectionData.ViewOffset;
+   
+   if ((MemoryArea->Data.SectionData.ViewOffset % PAGESIZE) != 0)
+     {
+	return(MmUnalignedLoadPageForSection(AddressSpace, 
+					     MemoryArea, 
+					     Address));
+     }
+   
+   DPRINT("MemoryArea->BaseAddress %x\n", MemoryArea->BaseAddress);
+   DPRINT("MemoryArea->Data.SectionData.ViewOffset %x\n",
+	   MemoryArea->Data.SectionData.ViewOffset);
+   DPRINT("Got offset %x\n", Offset.QuadPart);
+   
+   Section = MemoryArea->Data.SectionData.Section;
+   
+   DPRINT("Section %x\n", Section);
+   
+   MmLockSection(Section);
+   
+   Entry = MmGetPageEntrySection(Section, Offset.u.LowPart);
+   
+   DPRINT("Entry %x\n", Entry);
+   
+   if (Entry == 0)
+     {   
+	Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+	MmBuildMdlFromPages(Mdl);
+	Page = MmGetMdlPageAddress(Mdl, 0);
+	
+	MmClearWaitPage(Page);	
+	
+	Entry = ((ULONG)Page) | SPE_PENDING;
+	MmSetPageEntrySection(Section, 
+			      Offset.u.LowPart,
+			      Entry);
+	
+	MmUnlockSection(Section);
+	MmUnlockAddressSpace(AddressSpace);
+	DPRINT("Reading file offset %x\n", Offset.QuadPart);
+	Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
+			    Mdl,
+			    &Offset,
+			    &IoStatus);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(Status);
+	  }
+     
+	MmLockAddressSpace(AddressSpace);
+	MmLockSection(Section);
+	
+	Entry1 = MmGetPageEntrySection(Section, Offset.QuadPart);
+	if (Entry != Entry1)
+	  {
+	     DbgPrint("Someone changed ppte entry while we slept\n");
+	     KeBugCheck(0);
+	  }
+	
+	Entry = (ULONG)Page;
+	MmSetPageEntrySection(Section,
+			      Offset.QuadPart,
+			      Entry);
+	MmSetWaitPage(Page);
+     }
+   else if (Entry & SPE_PENDING)
+     {
+	do
+	  {
+	     MmUnlockSection(Section);
+	     MmUnlockAddressSpace(AddressSpace);
+	     Status = MmWaitForPage((PVOID)(Entry & (~SPE_PENDING)));
+	     if (!NT_SUCCESS(Status))
+	       {
+		  DbgPrint("Failed to wait for page\n");
+		  KeBugCheck(0);
+	       }
+	     MmLockAddressSpace(AddressSpace);
+	     MmLockSection(Section);
+	     Entry = MmGetPageEntrySection(Section,
+					   Offset.u.LowPart);					   
+	  } while (Entry & SPE_PENDING);
+	
+	if (Entry == 0)
+	  {
+	     DbgPrint("Entry set to null while we slept\n");
+	     KeBugCheck(0);
+	  }
+	
+	if (MmIsPagePresent(NULL, Address))
+	  {
+	     MmUnlockSection(Section);
+	     return(STATUS_SUCCESS);
+	  }
+	
+	Page = (PVOID)Entry;
+	MmReferencePage(Page);
+     }
+   else
+     {
+	Page = (PVOID)Entry;
+	MmReferencePage(Page);	
+     }
+   
+   MmSetPage(NULL,
+	     Address,
+	     MemoryArea->Attributes,
+	     (ULONG)Page);
+   MmUnlockSection(Section);
+   
+   return(STATUS_SUCCESS);
+}
+
+ULONG MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
+			   MEMORY_AREA* MemoryArea, 
+			   PVOID Address)
+{
+   return(0);
 }
 
 VOID MmpDeleteSection(PVOID ObjectBody)

@@ -34,9 +34,11 @@ enum
 #define NR_SECTION_PAGE_TABLES           (1024)
 #define NR_SECTION_PAGE_ENTRIES          (1024)
 
+#define SPE_PENDING                      (0x1)
+
 typedef struct
 {
-   PVOID Pages[NR_SECTION_PAGE_ENTRIES];
+   ULONG Pages[NR_SECTION_PAGE_ENTRIES];
 } SECTION_PAGE_TABLE, *PSECTION_PAGE_TABLE;
 
 typedef struct
@@ -178,6 +180,21 @@ NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 				      MEMORY_AREA* MemoryArea, 
 				      PVOID Address);
+NTSTATUS MmWaitForPage(PVOID Page);
+VOID MmClearWaitPage(PVOID Page);
+VOID MmSetWaitPage(PVOID Page);
+BOOLEAN MmIsPageDirty(PEPROCESS Process, PVOID Address);
+BOOLEAN MmIsPageTablePresent(PVOID PAddress);
+ULONG MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
+			   MEMORY_AREA* MemoryArea, 
+			   PVOID Address);
+ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
+			     PMEMORY_AREA MemoryArea,
+			     PVOID Address);
+MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
+				      PVOID Address,
+				      ULONG Length);
+
 
 
 #endif

@@ -1,6 +1,8 @@
 #ifndef _I386_STRING_H_
 #define _I386_STRING_H_
 
+#if 0
+
 /*
  * On a 486 or Pentium, we are better off not using the
  * byte string operations. But on a 386 or a PPro the
@@ -482,6 +484,8 @@ extern inline void * memscan(void * addr, int c, size_t size)
 		: "0" (addr), "1" (size), "a" (c));
 	return addr;
 }
+
+#endif
 
 #endif
 #endif

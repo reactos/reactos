@@ -98,7 +98,6 @@ MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace,
 				      PVOID Address,
 				      ULONG Length)
 {
-   MEMORY_AREA* Result;
    PLIST_ENTRY current_entry;
    MEMORY_AREA* current;
    ULONG Extent;
@@ -145,8 +144,6 @@ MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace,
      }
    DPRINT("Finished MmOpenMemoryAreaByRegion() = NULL\n",0);
    return(NULL);
-   
-   return(Result);
 }
 
 static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,

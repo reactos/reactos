@@ -68,5 +68,6 @@ VOID PsUnfreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
 VOID PsUnfreezeProcessThreads(PEPROCESS Process);
+PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.28 2000/05/13 13:51:06 dwelch Exp $
+/* $Id: virtual.c,v 1.29 2000/06/25 03:59:16 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -26,6 +26,28 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
+
+ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
+			     PMEMORY_AREA MemoryArea,
+			     PVOID Address)
+{
+   PHYSICAL_ADDRESS PhysicalAddress;
+   
+   if ((MemoryArea->Attributes & PAGE_READONLY) ||
+       (MemoryArea->Attributes & PAGE_EXECUTE_READ) ||
+       !MmIsPageDirty(PsGetCurrentProcess(), Address))
+     {
+	PhysicalAddress = MmGetPhysicalAddress(Address);
+	
+	MmDereferencePage((PVOID)PhysicalAddress.u.LowPart);
+	MmSetPage(PsGetCurrentProcess(),
+		  Address,
+		  0,
+		  0);
+	return(1);
+     }
+   return(0);     
+}
 
 NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 					MEMORY_AREA* MemoryArea, 
@@ -214,7 +236,7 @@ NTSTATUS STDCALL NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 		 MemoryArea->Length == *RegionSize)
 	       {
 		  MemoryArea->Type = Type;
-		  MemoryArea->Attributes =Protect;
+		  MemoryArea->Attributes = Protect;
 		  DPRINT("*BaseAddress %x\n",*BaseAddress);
 		  MmUnlockAddressSpace(AddressSpace);
 		  ObDereferenceObject(Process);
