@@ -1,4 +1,4 @@
-/* $Id: lfile.c,v 1.4 1999/08/29 06:59:01 ea Exp $
+/* $Id: lfile.c,v 1.5 2000/03/14 23:09:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,14 +15,12 @@
 #include <wchar.h>
 
 
-
-
 long
 STDCALL
 _hread(
-	HFILE	hFile,	
-	LPVOID	lpBuffer,	
-	long	lBytes 	
+	HFILE	hFile,
+	LPVOID	lpBuffer,
+	long	lBytes
 	)
 {
 	DWORD	NumberOfBytesRead;
@@ -63,9 +61,9 @@ _lread (
 long
 STDCALL
 _hwrite (
-	HFILE	hFile,	
-	LPCSTR	lpBuffer,	
-	long	lBytes 	
+	HFILE	hFile,
+	LPCSTR	lpBuffer,
+	long	lBytes
 	)
 {
 	DWORD	NumberOfBytesWritten;
@@ -130,13 +128,11 @@ _lopen (
 	else if ((iReadWrite & OF_SHARE_DENY_NONE) == OF_SHARE_DENY_NONE)
 		dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
 	else if ((iReadWrite & OF_SHARE_DENY_READ) == OF_SHARE_DENY_READ)
-		dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_DELETE;	
+		dwShareMode = FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 	else if ((iReadWrite & OF_SHARE_DENY_WRITE) == OF_SHARE_DENY_WRITE )
-		dwShareMode = FILE_SHARE_READ | FILE_SHARE_DELETE;		
+		dwShareMode = FILE_SHARE_READ | FILE_SHARE_DELETE;
 	else if ((iReadWrite & OF_SHARE_EXCLUSIVE) == OF_SHARE_EXCLUSIVE)
-		dwShareMode = 0;	
-
-	
+		dwShareMode = 0;
 
 	SetLastError(0);
 	return (HFILE) CreateFileA(
@@ -146,9 +142,7 @@ _lopen (
 			NULL,
 			OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL,
-			NULL
-			);	
-
+			NULL);
 }
 
 
@@ -178,22 +172,21 @@ _lcreat (
 			NULL,
 			CREATE_ALWAYS,
 			iAttribute,
-			NULL
-			);	
+			NULL);
 }
 
 
 int
 STDCALL
 _lclose (
-	HFILE  hFile 	
+	HFILE	hFile
 	)
 {
-	if ( CloseHandle((HANDLE)hFile) )
+	if (CloseHandle ((HANDLE)hFile))
 	{
 		return 0;
 	}
-	return -1; 
+	return -1;
 }
 
 
@@ -201,17 +194,15 @@ LONG
 STDCALL
 _llseek(
 	HFILE	hFile,
-	LONG	lOffset, 
-	int	iOrigin 
+	LONG	lOffset,
+	int	iOrigin
 	)
 {
-	return  SetFilePointer(
+	return SetFilePointer (
 			(HANDLE) hFile,
 			lOffset,
 			NULL,
-			(DWORD) iOrigin
-			);
+			(DWORD) iOrigin);
 }
-
 
 /* EOF */

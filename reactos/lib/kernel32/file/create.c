@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.18 2000/01/21 23:27:47 phreak Exp $
+/* $Id: create.c,v 1.19 2000/03/14 23:09:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,9 +14,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
-#include <wchar.h>
-#include <string.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
@@ -24,163 +23,140 @@
 
 /* FUNCTIONS ****************************************************************/
 
-HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
-			   DWORD dwDesiredAccess,
-			   DWORD dwShareMode,
-			   LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-			   DWORD dwCreationDisposition,
-			   DWORD dwFlagsAndAttributes,
-			   HANDLE hTemplateFile)
+HANDLE
+STDCALL
+CreateFileA (
+	LPCSTR			lpFileName,
+	DWORD			dwDesiredAccess,
+	DWORD			dwShareMode,
+	LPSECURITY_ATTRIBUTES	lpSecurityAttributes,
+	DWORD			dwCreationDisposition,
+	DWORD			dwFlagsAndAttributes,
+	HANDLE			hTemplateFile
+	)
 {
-   WCHAR FileNameW[MAX_PATH];
-   ULONG i = 0;
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
+	HANDLE FileHandle;
 
-   DPRINT("CreateFileA(lpFileName %s)\n",lpFileName);
+	DPRINT("CreateFileA(lpFileName %s)\n",lpFileName);
 
-   while ((*lpFileName)!=0 && i < MAX_PATH)
-     {
-	FileNameW[i] = *lpFileName;
-	lpFileName++;
-	i++;
-     }
-   FileNameW[i] = 0;
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
 
-   return CreateFileW(FileNameW,dwDesiredAccess,
-		      dwShareMode,
-		      lpSecurityAttributes,
-		      dwCreationDisposition,
-		      dwFlagsAndAttributes, 
-		      hTemplateFile);
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
+	else
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
+
+	FileHandle = CreateFileW (FileNameU.Buffer,
+	                          dwDesiredAccess,
+	                          dwShareMode,
+	                          lpSecurityAttributes,
+	                          dwCreationDisposition,
+	                          dwFlagsAndAttributes,
+	                          hTemplateFile);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             FileNameU.Buffer);
+
+	return FileHandle;
 }
 
 
-HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
-			   DWORD dwDesiredAccess,
-			   DWORD dwShareMode,
-			   LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-			   DWORD dwCreationDisposition,
-			   DWORD dwFlagsAndAttributes,
-			   HANDLE hTemplateFile)
+HANDLE
+STDCALL
+CreateFileW (
+	LPCWSTR			lpFileName,
+	DWORD			dwDesiredAccess,
+	DWORD			dwShareMode,
+	LPSECURITY_ATTRIBUTES	lpSecurityAttributes,
+	DWORD			dwCreationDisposition,
+	DWORD			dwFlagsAndAttributes,
+	HANDLE			hTemplateFile
+	)
 {
-   HANDLE FileHandle;
-   NTSTATUS Status;  
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   IO_STATUS_BLOCK IoStatusBlock;
-   UNICODE_STRING FileNameString;
-   ULONG Flags = 0;
-   WCHAR PathNameW[MAX_PATH];
-   WCHAR FileNameW[MAX_PATH];
-   UINT Len = 0;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK IoStatusBlock;
+	UNICODE_STRING NtPathU;
+	HANDLE FileHandle;
+	NTSTATUS Status;
+	ULONG Flags = 0;
 
-   switch (dwCreationDisposition)
-     {
-      case CREATE_NEW:
-	dwCreationDisposition = FILE_CREATE;
-	break;
+	switch (dwCreationDisposition)
+	{
+		case CREATE_NEW:
+			dwCreationDisposition = FILE_CREATE;
+			break;
 
-      case CREATE_ALWAYS:
-	dwCreationDisposition = FILE_OVERWRITE_IF;
-	break;
+		case CREATE_ALWAYS:
+			dwCreationDisposition = FILE_OVERWRITE_IF;
+			break;
 
-      case OPEN_EXISTING:
-	dwCreationDisposition = FILE_OPEN;
-	break;
+		case OPEN_EXISTING:
+			dwCreationDisposition = FILE_OPEN;
+			break;
 
-      case OPEN_ALWAYS:
-	dwCreationDisposition = OPEN_ALWAYS;
-	break;
+		case OPEN_ALWAYS:
+			dwCreationDisposition = OPEN_ALWAYS;
+			break;
 
-      case TRUNCATE_EXISTING:
-	dwCreationDisposition = FILE_OVERWRITE;
-     }
-
-   DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
-
-   if (dwDesiredAccess & GENERIC_READ)
-        dwDesiredAccess |= FILE_GENERIC_READ;
-
-   if (dwDesiredAccess & GENERIC_WRITE)
-        dwDesiredAccess |= FILE_GENERIC_WRITE;
-
-   if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
-     {
-	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
-     }
-
-   if (lpFileName[1] == (WCHAR)':')
-     {
-	wcscpy(PathNameW, lpFileName);
-     }
-   else if (wcslen(lpFileName) > 4 &&
-	    lpFileName[0] == (WCHAR)'\\' &&
-	    lpFileName[1] == (WCHAR)'\\' &&
-	    lpFileName[2] == (WCHAR)'.' &&
-	    lpFileName[3] == (WCHAR)'\\')
-     {
-	wcscpy(PathNameW, lpFileName+4);
-     }
-   else if (lpFileName[0] == (WCHAR)'\\')
-     {
-	GetCurrentDirectoryW(MAX_PATH,PathNameW);
-	PathNameW[3] = 0;
-	wcscat(PathNameW, lpFileName);
-     }
-   else
-     {
-	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
-	if ( Len == 0 )
-	  return NULL;
-	if ( PathNameW[Len-1] != L'\\' ) {
-	   PathNameW[Len] = L'\\';
-	   PathNameW[Len+1] = 0;
+		case TRUNCATE_EXISTING:
+			dwCreationDisposition = FILE_OVERWRITE;
 	}
-	wcscat(PathNameW,lpFileName); 
-     }
 
-   FileNameW[0] = '\\';
-   FileNameW[1] = '?';
-   FileNameW[2] = '?';
-   FileNameW[3] = '\\';
-   FileNameW[4] = 0;
-   wcscat(FileNameW,PathNameW);
+	DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
 
-   FileNameString.Length = wcslen( FileNameW)*sizeof(WCHAR);
+	if (dwDesiredAccess & GENERIC_READ)
+		dwDesiredAccess |= FILE_GENERIC_READ;
 
-   if ( FileNameString.Length == 0 )
-	return NULL;
+	if (dwDesiredAccess & GENERIC_WRITE)
+		dwDesiredAccess |= FILE_GENERIC_WRITE;
 
-   if ( FileNameString.Length > MAX_PATH*sizeof(WCHAR) )
-	return NULL;
+	if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
+	{
+		Flags |= FILE_SYNCHRONOUS_IO_ALERT;
+	}
 
-   FileNameString.Buffer = (WCHAR *)FileNameW;
-   FileNameString.MaximumLength = FileNameString.Length + sizeof(WCHAR);
+	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+	                                   &NtPathU,
+	                                   NULL,
+	                                   NULL))
+		return FALSE;
 
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = &FileNameString;
-   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
+	DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
 
-   DPRINT("File Name %S\n",FileNameW);
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = &NtPathU;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
 
-   Status = ZwCreateFile(&FileHandle,
-			 dwDesiredAccess,
-			 &ObjectAttributes,
-			 &IoStatusBlock,
-			 NULL,
-			 dwFlagsAndAttributes,
-			 dwShareMode,
-			 dwCreationDisposition,
-			 Flags,
-			 NULL,
-			 0);
-   if (!NT_SUCCESS(Status))
-   {
-	SetLastError(RtlNtStatusToDosError(Status));
-	return INVALID_HANDLE_VALUE;
-   }
-   return(FileHandle);
+	Status = NtCreateFile (&FileHandle,
+	                       dwDesiredAccess,
+	                       &ObjectAttributes,
+	                       &IoStatusBlock,
+	                       NULL,
+	                       dwFlagsAndAttributes,
+	                       dwShareMode,
+	                       dwCreationDisposition,
+	                       Flags,
+	                       NULL,
+	                       0);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return INVALID_HANDLE_VALUE;
+	}
+
+	return FileHandle;
 }
 
 /* EOF */

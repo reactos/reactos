@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.20 2000/02/18 00:49:39 ekohl Exp $
+/* $Id: curdir.c,v 1.21 2000/03/14 23:09:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,8 +21,9 @@
 
 /* GLOBAL VARIABLES **********************************************************/
 
-static WCHAR SystemDirectoryW[MAX_PATH];
-static WCHAR WindowsDirectoryW[MAX_PATH];
+/* FIXME initialize them on startup !! */
+UNICODE_STRING SystemDirectory;
+UNICODE_STRING WindowsDirectory;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -150,107 +151,206 @@ SetCurrentDirectoryW (
 }
 
 
-DWORD STDCALL GetTempPathA (DWORD nBufferLength, LPSTR lpBuffer)
+DWORD
+STDCALL
+GetTempPathA (
+	DWORD	nBufferLength,
+	LPSTR	lpBuffer
+	)
 {
-	WCHAR BufferW[MAX_PATH];
-	DWORD retCode;
-	UINT i;
-	retCode = GetTempPathW(nBufferLength,BufferW);
-	i = 0;
-	while ((BufferW[i])!=0 && i < MAX_PATH)
+	UNICODE_STRING UnicodeString;
+	ANSI_STRING AnsiString;
+
+	AnsiString.Length = 0;
+	AnsiString.MaximumLength = nBufferLength;
+	AnsiString.Buffer = lpBuffer;
+
+	/* initialize allocate unicode string */
+	UnicodeString.Length = 0;
+	UnicodeString.MaximumLength = nBufferLength * sizeof(WCHAR);
+	UnicodeString.Buffer = RtlAllocateHeap (RtlGetProcessHeap(),
+	                                        0,
+	                                        UnicodeString.MaximumLength);
+
+	UnicodeString.Length = GetTempPathW (nBufferLength,
+	                                     UnicodeString.Buffer) * sizeof(WCHAR);
+
+	/* convert unicode string to ansi (or oem) */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&AnsiString,
+		                              &UnicodeString,
+		                              FALSE);
+	else
+		RtlUnicodeStringToOemString (&AnsiString,
+		                             &UnicodeString,
+		                             FALSE);
+
+	/* free unicode string buffer */
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             UnicodeString.Buffer);
+
+	return AnsiString.Length;
+}
+
+
+DWORD
+STDCALL
+GetTempPathW (
+	DWORD	nBufferLength,
+	LPWSTR	lpBuffer
+	)
+{
+	UNICODE_STRING Name;
+	UNICODE_STRING Value;
+	NTSTATUS Status;
+
+	Value.Length = 0;
+	Value.MaximumLength = nBufferLength * sizeof(WCHAR);
+	Value.Buffer = lpBuffer;
+
+	RtlInitUnicodeString (&Name,
+	                      L"TMP");
+
+	Status = RtlQueryEnvironmentVariable_U (NULL,
+	                                        &Name,
+	                                        &Value);
+	if (!NT_SUCCESS(Status))
 	{
-		lpBuffer[i] = (unsigned char)BufferW[i];
-		i++;
+		RtlInitUnicodeString (&Name,
+		                      L"TEMP");
+
+		Status = RtlQueryEnvironmentVariable_U (NULL,
+		                                        &Name,
+		                                        &Value);
+		if (!NT_SUCCESS(Status))
+		{
+			Value.Length = RtlGetCurrentDirectory_U (Value.MaximumLength,
+			                                         Value.Buffer);
+		}
 	}
-	lpBuffer[i] = 0;
-	return retCode;
+
+	return Value.Length / sizeof(WCHAR);
 }
 
-DWORD STDCALL GetTempPathW(DWORD nBufferLength, LPWSTR lpBuffer)
-{
-	WCHAR EnvironmentBufferW[MAX_PATH];
-	UINT i;
-
-	EnvironmentBufferW[0] = 0;
-	i = GetEnvironmentVariableW(L"TMP",EnvironmentBufferW,MAX_PATH);
-	if ( i==0 )
-		i = GetEnvironmentVariableW(L"TEMP",EnvironmentBufferW,MAX_PATH);
-		if ( i==0 )
-			i = GetCurrentDirectoryW(MAX_PATH,EnvironmentBufferW);
-
-	return i;
-}
-
-UINT STDCALL GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize)
-{
-   UINT uPathSize,i;
-
-   if ( lpBuffer == NULL )
-	return 0;
-   uPathSize = lstrlenW(SystemDirectoryW);
-   if ( uSize > uPathSize ) {
-   	i = 0;
-   	while ((SystemDirectoryW[i])!=0 && i < uSize)
-     	{
-		lpBuffer[i] = (unsigned char)SystemDirectoryW[i];
-		i++;
-     	}
-   	lpBuffer[i] = 0;
-   }
-   
-   return uPathSize;
-}
-
-UINT STDCALL GetWindowsDirectoryA(LPSTR lpBuffer, UINT uSize)
-{
-   UINT uPathSize,i;
-   if ( lpBuffer == NULL )
-	return 0;
-   uPathSize = lstrlenW(WindowsDirectoryW);
-   if ( uSize > uPathSize ) {
-   	i = 0;
-   	while ((WindowsDirectoryW[i])!=0 && i < uSize)
-     	{
-		lpBuffer[i] = (unsigned char)WindowsDirectoryW[i];
-		i++;
-     	}
-   	lpBuffer[i] = 0;
-   }
-   return uPathSize;
-}
 
 UINT
 STDCALL
-GetSystemDirectoryW(
-    LPWSTR lpBuffer,
-    UINT uSize
-    )
+GetSystemDirectoryA (
+	LPSTR	lpBuffer,
+	UINT	uSize
+	)
 {
-   UINT uPathSize;
-   if ( lpBuffer == NULL )
-	return 0;
-   uPathSize = lstrlenW(SystemDirectoryW);
-   if ( uSize > uPathSize )
-   	lstrcpynW(lpBuffer,SystemDirectoryW,uPathSize);
+	ANSI_STRING String;
+	ULONG Length;
 
-   return uPathSize;
+	if (lpBuffer == NULL)
+		return 0;
+
+	Length = RtlUnicodeStringToAnsiSize (&SystemDirectory);
+	if (uSize > Length)
+	{
+		String.Length = 0;
+		String.MaximumLength = uSize;
+		String.Buffer = lpBuffer;
+
+		/* convert unicode string to ansi (or oem) */
+		if (bIsFileApiAnsi)
+			RtlUnicodeStringToAnsiString (&String,
+			                              &SystemDirectory,
+			                              FALSE);
+		else
+			RtlUnicodeStringToOemString (&String,
+			                             &SystemDirectory,
+			                             FALSE);
+	}
+
+	return Length;
 }
+
 
 UINT
 STDCALL
-GetWindowsDirectoryW(
-    LPWSTR lpBuffer,
-    UINT uSize
-    )
+GetSystemDirectoryW (
+	LPWSTR	lpBuffer,
+	UINT	uSize
+	)
 {
-   UINT uPathSize;
-   if ( lpBuffer == NULL )
-	return 0;
-   uPathSize = lstrlenW(WindowsDirectoryW);
-   if ( uSize > uPathSize );
-   	lstrcpynW(lpBuffer,WindowsDirectoryW,uPathSize);
+	ULONG Length;
 
-   return uPathSize;
+	if (lpBuffer == NULL)
+		return 0;
+
+	Length = SystemDirectory.Length / sizeof (WCHAR);
+	if (uSize > Length)
+	{
+		memmove (lpBuffer,
+		         SystemDirectory.Buffer,
+		         Length);
+		lpBuffer[Length] = 0;
+	}
+
+	return Length;
+}
+
+
+UINT
+STDCALL
+GetWindowsDirectoryA (
+	LPSTR	lpBuffer,
+	UINT	uSize
+	)
+{
+	ANSI_STRING String;
+	ULONG Length;
+
+	if (lpBuffer == NULL)
+		return 0;
+
+	Length = RtlUnicodeStringToAnsiSize (&SystemDirectory);
+	if (uSize > Length)
+	{
+		String.Length = 0;
+		String.MaximumLength = uSize;
+		String.Buffer = lpBuffer;
+
+		/* convert unicode string to ansi (or oem) */
+		if (bIsFileApiAnsi)
+			RtlUnicodeStringToAnsiString (&String,
+			                              &WindowsDirectory,
+			                              FALSE);
+		else
+			RtlUnicodeStringToOemString (&String,
+			                             &WindowsDirectory,
+			                             FALSE);
+	}
+
+	return Length;
+}
+
+
+UINT
+STDCALL
+GetWindowsDirectoryW (
+	LPWSTR	lpBuffer,
+	UINT	uSize
+	)
+{
+	ULONG Length;
+
+	if (lpBuffer == NULL)
+		return 0;
+
+	Length = SystemDirectory.Length / sizeof (WCHAR);
+	if (uSize > Length)
+	{
+		memmove (lpBuffer,
+		         SystemDirectory.Buffer,
+		         Length);
+		lpBuffer[Length] = 0;
+	}
+
+	return Length;
 }
 
 /* EOF */
