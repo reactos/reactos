@@ -83,9 +83,9 @@ void CreateKeyTest(void)
 
 void DeleteKeyTest(void)
 {
-  HKEY hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
+  HKEY hKey;
   NTSTATUS Status;
 
   dprintf("Delete key '\\Registry\\Machine\\Software\\testkey':\n");
@@ -246,23 +246,122 @@ void SetValueTest2(void)
 		       NULL,
 		       REG_OPTION_NON_VOLATILE,
 		       NULL);
-  dprintf("Status = %lx\n",Status);
+  dprintf("  Status = %lx\n",Status);
   if (!NT_SUCCESS(Status))
     return;
 
   RtlInitUnicodeStringFromLiteral(&ValueName,
 				  L"TestValue");
-  dprintf("NtSetValueKey: ");
+  dprintf("NtSetValueKey:\n");
   Status = NtSetValueKey(hKey,
 			 &ValueName,
 			 0,
 			 REG_DWORD,
 			 (PVOID)"reac",
 			 4);
-  dprintf("Status = %lx\n",Status);
+  dprintf("  Status = %lx\n",Status);
 
   NtClose(hKey);
 }
+
+
+void DeleteValueTest(void)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  UNICODE_STRING ValueName;
+  HKEY KeyHandle;
+  NTSTATUS Status;
+
+  dprintf("Open key: '\\Registry\\Machine\\Software\\testkey':\n");
+  RtlInitUnicodeStringFromLiteral(&KeyName,
+				  L"\\Registry\\Machine\\Software\\testkey");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status=NtOpenKey(&KeyHandle,
+		   MAXIMUM_ALLOWED,
+		   &ObjectAttributes);
+  dprintf("  Status = %lx\n", Status);
+  if (!NT_SUCCESS(Status))
+    return;
+
+  dprintf("Delete value:\n");
+  RtlInitUnicodeStringFromLiteral(&ValueName,
+				  L"TestValue");
+  Status = NtDeleteValueKey(KeyHandle,
+			    &ValueName);
+  dprintf("  Status = %lx\n", Status);
+
+  dprintf("Close key:\n");
+  Status = NtClose(KeyHandle);
+  dprintf("  Status = %lx\n", Status);
+}
+
+
+void EnumerateValueTest(void)
+{
+  KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
+  KEY_BASIC_INFORMATION KeyInformation[5];
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  ULONG Index,Length,i;
+  HKEY hKey = NULL;
+  NTSTATUS Status;
+
+  dprintf("Open key: '\\Registry\\Machine\\Software\\testkey':\n");
+  RtlInitUnicodeStringFromLiteral(&KeyName,
+				  L"\\Registry\\Machine\\Software\\testkey");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status=NtOpenKey(&hKey,
+		   MAXIMUM_ALLOWED,
+		   &ObjectAttributes);
+  dprintf("  Status = %lx\n", Status);
+  if (!NT_SUCCESS(Status))
+    return;
+
+  dprintf("Enumerate values: \n");
+  Index = 0;
+  while (Status == STATUS_SUCCESS)
+    {
+      Status = NtEnumerateValueKey(hKey,
+				   Index++,
+				   KeyValueFullInformation,
+				   &KeyValueInformation[0],
+				   sizeof(KeyValueInformation),
+				   &Length);
+      if (Status == STATUS_SUCCESS)
+	{
+	  dprintf("    Value:DO=%d, DL=%d, NL=%d, Name = ",
+		  KeyValueInformation[0].DataOffset,
+		  KeyValueInformation[0].DataLength,
+		  KeyValueInformation[0].NameLength);
+	  for (i = 0; i < KeyValueInformation[0].NameLength / 2; i++)
+	    dprintf("%C", KeyValueInformation[0].Name[i]);
+	  dprintf(", Type = %d\n", KeyValueInformation[0].Type);
+
+	  if (KeyValueInformation[0].Type == REG_SZ)
+	    dprintf("    Value = %S\n",
+		    ((char*)&KeyValueInformation[0]+KeyValueInformation[0].DataOffset));
+
+	  if (KeyValueInformation[0].Type == REG_DWORD)
+	    dprintf("    Value = %X\n",
+		    *((DWORD*)((char*)&KeyValueInformation[0]+KeyValueInformation[0].DataOffset)));
+	}
+    }
+
+  dprintf("NtClose:\n");
+  Status = NtClose(hKey);
+  dprintf("  Status = %lx\n", Status);
+}
+
+
 
 
 void test1(void)
@@ -962,6 +1061,7 @@ void test9(void)
 		        dprintf("%C",KeyInformation[0].Name[i]);
             dprintf("\n");
 		}
+
         dprintf("NtEnumerateKey : \n");
         Index = 0;
         while (Status == STATUS_SUCCESS) {
@@ -1049,12 +1149,12 @@ void test9(void)
 
 int main(int argc, char* argv[])
 {
- char Buffer[10];
- DWORD Result;
+  char Buffer[10];
+  DWORD Result;
 
   AllocConsole();
   InputHandle = GetStdHandle(STD_INPUT_HANDLE);
-  OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
+  OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
   while(1)
   {
     dprintf("choose test :\n");
@@ -1064,10 +1164,8 @@ int main(int argc, char* argv[])
     dprintf("  3 = Enumerate key\n");
     dprintf("  4 = Set value (REG_SZ)\n");
     dprintf("  5 = Set value (REG_DWORD)\n");
-//    dprintf("  6 = Enumerate value\n");
-//    dprintf("  7=Registry link delete test\n");
-//    dprintf("  8=Not available\n");
-//    dprintf("  9=Ntxx read tcp/ip key test\n");
+    dprintf("  6 = Delete value\n");
+    dprintf("  7 = Enumerate value\n");
     ReadConsoleA(InputHandle, Buffer, 3, &Result, NULL) ;
     switch (Buffer[0])
     {
@@ -1093,27 +1191,15 @@ int main(int argc, char* argv[])
      case '5':
       SetValueTest2();
       break;
-#if 0
+
      case '6':
-      test6();
+      DeleteValueTest();
       break;
-#endif
-#if 0
+
      case '7':
-      test7();
+      EnumerateValueTest();
       break;
-#endif
-#if 0
-     case '8':
-      test8();
-      break;
-#endif
-#if 0
-     case '9':
-      test9();
-      break;
-#endif
     }
   }
-  return 0;
+  return(0);
 }
