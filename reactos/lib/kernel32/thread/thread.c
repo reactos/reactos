@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.36 2003/02/17 16:30:17 ekohl Exp $
+/* $Id: thread.c,v 1.37 2003/04/26 23:13:28 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,10 +17,25 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
-
 //static VOID ThreadAttachDlls (VOID);
 
 /* FUNCTIONS *****************************************************************/
+
+/* FIXME: please put this in some header */
+extern NTSTATUS CDECL RtlCreateUserThreadVa
+(
+ HANDLE ProcessHandle,
+ POBJECT_ATTRIBUTES ObjectAttributes,
+ BOOLEAN CreateSuspended,
+ LONG StackZeroBits,
+ PULONG StackReserve,
+ PULONG StackCommit,
+ PTHREAD_START_ROUTINE StartAddress,
+ PHANDLE ThreadHandle,
+ PCLIENT_ID ClientId,
+ ULONG ParameterCount,
+ ...
+);
 
 static EXCEPTION_DISPOSITION __cdecl
 _except_handler(EXCEPTION_RECORD *ExceptionRecord,
@@ -54,183 +69,128 @@ ThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
 }
 
 
-HANDLE STDCALL
-CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
-	     DWORD dwStackSize,
-	     LPTHREAD_START_ROUTINE lpStartAddress,
-	     LPVOID lpParameter,
-	     DWORD dwCreationFlags,
-	     LPDWORD lpThreadId)
+HANDLE STDCALL CreateThread
+(
+ LPSECURITY_ATTRIBUTES lpThreadAttributes,
+ DWORD dwStackSize,
+ LPTHREAD_START_ROUTINE lpStartAddress,
+ LPVOID lpParameter,
+ DWORD dwCreationFlags,
+ LPDWORD lpThreadId
+)
 {
-  return(CreateRemoteThread(NtCurrentProcess(),
-			    lpThreadAttributes,
-			    dwStackSize,
-			    lpStartAddress,
-			    lpParameter,
-			    dwCreationFlags,
-			    lpThreadId));
+ return CreateRemoteThread
+ (
+  NtCurrentProcess(),
+  lpThreadAttributes,
+  dwStackSize,
+  lpStartAddress,
+  lpParameter,
+  dwCreationFlags,
+  lpThreadId
+ );
 }
 
 
-HANDLE STDCALL
-CreateRemoteThread(HANDLE hProcess,
-		   LPSECURITY_ATTRIBUTES lpThreadAttributes,
-		   DWORD dwStackSize,
-		   LPTHREAD_START_ROUTINE lpStartAddress,
-		   LPVOID lpParameter,
-		   DWORD dwCreationFlags,
-		   LPDWORD lpThreadId)
+HANDLE STDCALL CreateRemoteThread
+(
+ HANDLE hProcess,
+ LPSECURITY_ATTRIBUTES lpThreadAttributes,
+ DWORD dwStackSize,
+ LPTHREAD_START_ROUTINE lpStartAddress,
+ LPVOID lpParameter,
+ DWORD dwCreationFlags,
+ LPDWORD lpThreadId
+)
 {
-  HANDLE ThreadHandle;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  CLIENT_ID ClientId;
-  CONTEXT ThreadContext;
-  INITIAL_TEB InitialTeb;
-  BOOLEAN CreateSuspended = FALSE;
-  PVOID BaseAddress;
-  ULONG OldPageProtection;
-  NTSTATUS Status;
+ PSECURITY_DESCRIPTOR pSD = NULL;
+ HANDLE hThread;
+ CLIENT_ID cidClientId;
+ NTSTATUS nErrCode;
+ ULONG_PTR nStackReserve;
+ ULONG_PTR nStackCommit;
+ OBJECT_ATTRIBUTES oaThreadAttribs;
+ PIMAGE_NT_HEADERS pinhHeader =
+  RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
 
-  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-  ObjectAttributes.RootDirectory = NULL;
-  ObjectAttributes.ObjectName = NULL;
-  ObjectAttributes.Attributes = 0;
-  if (lpThreadAttributes != NULL)
-    {
-      if (lpThreadAttributes->bInheritHandle)
-	ObjectAttributes.Attributes = OBJ_INHERIT;
-      ObjectAttributes.SecurityDescriptor = 
-	lpThreadAttributes->lpSecurityDescriptor;
-    }
-  ObjectAttributes.SecurityQualityOfService = NULL;
+ /* FIXME: do more checks - e.g. the image may not have an optional header */
+ if(pinhHeader == NULL)
+ {
+  nStackReserve = 0x100000;
+  nStackCommit = PAGE_SIZE;
+ }
+ else
+ {
+  nStackReserve = pinhHeader->OptionalHeader.SizeOfStackReserve;
+  nStackCommit = pinhHeader->OptionalHeader.SizeOfStackCommit;
+ }
 
-  if ((dwCreationFlags & CREATE_SUSPENDED) == CREATE_SUSPENDED)
-    CreateSuspended = TRUE;
-  else
-    CreateSuspended = FALSE;
-
-  InitialTeb.StackReserve = 0x100000; /* 1MByte */
-  /* FIXME: use correct commit size */
-#if 0
-  InitialTeb.StackCommit = (dwStackSize == 0) ? PAGE_SIZE : dwStackSize;
+ /* FIXME: this should be defined in winbase.h */
+#ifndef STACK_SIZE_PARAM_IS_A_RESERVATION
+#define STACK_SIZE_PARAM_IS_A_RESERVATION 0x00010000
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
 
-  /* size of guard page */
-  InitialTeb.StackCommit += PAGE_SIZE;
+ /* use defaults */
+ if(dwStackSize == 0);
+ /* dwStackSize specifies the size to reserve */
+ else if(dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION)
+  nStackReserve = dwStackSize;
+ /* dwStackSize specifies the size to commit */
+ else
+  nStackCommit = dwStackSize;
 
-  /* Reserve stack */
-  InitialTeb.StackAllocate = NULL;
-  Status = NtAllocateVirtualMemory(hProcess,
-				   &InitialTeb.StackAllocate,
-				   0,
-				   &InitialTeb.StackReserve,
-				   MEM_RESERVE,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Error reserving stack space!\n");
-      SetLastErrorByStatus(Status);
-      return(NULL);
-    }
+ /* fix the stack reserve size */
+ if(nStackCommit > nStackReserve)
+  nStackReserve = ROUNDUP(nStackCommit, 0x100000);
 
-  DPRINT("StackDeallocation: %p ReserveSize: 0x%lX\n",
-	 InitialTeb.StackDeallocation, InitialTeb.StackReserve);
+ /* initialize the attributes for the thread object */
+ InitializeObjectAttributes
+ (
+  &oaThreadAttribs,
+  NULL,
+  0,
+  NULL,
+  NULL
+ );
+ 
+ if(lpThreadAttributes)
+ {
+  /* make the handle inheritable */
+  if(lpThreadAttributes->bInheritHandle)
+   oaThreadAttribs.Attributes |= OBJ_INHERIT;
 
-  InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
-  InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
+  /* user-defined security descriptor */
+  oaThreadAttribs.SecurityDescriptor = lpThreadAttributes->lpSecurityDescriptor;
+ }
 
-  DPRINT("StackBase: %p\nStackCommit: 0x%lX\n",
-	 InitialTeb.StackBase,
-	 InitialTeb.StackCommit);
+ /* create the thread */
+ nErrCode = RtlCreateUserThreadVa
+ (
+  hProcess,
+  &oaThreadAttribs,
+  dwCreationFlags & CREATE_SUSPENDED,
+  0,
+  &nStackReserve,
+  &nStackCommit,
+  (PTHREAD_START_ROUTINE)ThreadStartup,
+  &hThread,
+  &cidClientId,
+  2,
+  lpStartAddress,
+  lpParameter
+ );
 
-  /* Commit stack pages */
-  Status = NtAllocateVirtualMemory(hProcess,
-				   &InitialTeb.StackLimit,
-				   0,
-				   &InitialTeb.StackCommit,
-				   MEM_COMMIT,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      /* release the stack space */
-      NtFreeVirtualMemory(hProcess,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
-			  MEM_RELEASE);
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  SetLastErrorByStatus(nErrCode);
+  return NULL;
+ }
 
-      DPRINT("Error comitting stack page(s)!\n");
-      SetLastErrorByStatus(Status);
-      return(NULL);
-    }
-
-  DPRINT("StackLimit: %p\n",
-	 InitialTeb.StackLimit);
-
-  /* Protect guard page */
-  Status = NtProtectVirtualMemory(hProcess,
-				  InitialTeb.StackLimit,
-				  PAGE_SIZE,
-				  PAGE_GUARD | PAGE_READWRITE,
-				  &OldPageProtection);
-  if (!NT_SUCCESS(Status))
-    {
-      /* release the stack space */
-      NtFreeVirtualMemory(hProcess,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
-			  MEM_RELEASE);
-
-      DPRINT("Error comitting guard page!\n");
-      SetLastErrorByStatus(Status);
-      return(NULL);
-    }
-
-  memset(&ThreadContext,0,sizeof(CONTEXT));
-  ThreadContext.Eip = (LONG)ThreadStartup;
-  ThreadContext.SegGs = USER_DS;
-  ThreadContext.SegFs = TEB_SELECTOR;
-  ThreadContext.SegEs = USER_DS;
-  ThreadContext.SegDs = USER_DS;
-  ThreadContext.SegCs = USER_CS;
-  ThreadContext.SegSs = USER_DS;
-  ThreadContext.Esp = (ULONG)InitialTeb.StackBase - 12;
-  ThreadContext.EFlags = (1<<1) + (1<<9);
-
-  /* initialize call stack */
-  *((PULONG)((ULONG)InitialTeb.StackBase - 4)) = (ULONG)lpParameter;
-  *((PULONG)((ULONG)InitialTeb.StackBase - 8)) = (ULONG)lpStartAddress;
-  *((PULONG)((ULONG)InitialTeb.StackBase - 12)) = 0xdeadbeef;
-
-  DPRINT("Esp: %p\n", ThreadContext.Esp);
-  DPRINT("Eip: %p\n", ThreadContext.Eip);
-
-  Status = NtCreateThread(&ThreadHandle,
-			  THREAD_ALL_ACCESS,
-			  &ObjectAttributes,
-			  hProcess,
-			  &ClientId,
-			  &ThreadContext,
-			  &InitialTeb,
-			  CreateSuspended);
-  if (!NT_SUCCESS(Status))
-    {
-      NtFreeVirtualMemory(hProcess,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
-			  MEM_RELEASE);
-
-      DPRINT("NtCreateThread() failed!\n");
-      SetLastErrorByStatus(Status);
-      return(NULL);
-    }
-
-  if (lpThreadId != NULL)
-    memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
-
-  return(ThreadHandle);
+ /* success */
+ if(lpThreadId) *lpThreadId = (DWORD)cidClientId.UniqueThread;
+ return hThread;
 }
-
 
 PTEB
 GetTeb(VOID)

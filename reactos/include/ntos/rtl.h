@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.6 2003/03/26 15:10:29 ekohl Exp $
+/* $Id: rtl.h,v 1.7 2003/04/26 23:13:27 hyperion Exp $
  * 
  */
 
@@ -1237,7 +1237,7 @@ RtlInitializeContext (
 	IN	PCONTEXT		Context,
 	IN	PVOID			Parameter,
 	IN	PTHREAD_START_ROUTINE	StartAddress,
-	IN OUT	PINITIAL_TEB		InitialTeb
+	IN OUT	PUSER_STACK		UserStack
 	);
 
 VOID

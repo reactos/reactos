@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.107 2003/04/06 12:48:33 gvg Exp $
+/* $Id: section.c,v 1.108 2003/04/26 23:13:32 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1838,12 +1838,12 @@ MmpDeleteSection(PVOID ObjectBody)
       
       for (i = 0; i < Section->NrSegments; i++)
 	{
-	  InterlockedDecrement(&Section->Segments[i].ReferenceCount);
+	  InterlockedDecrement((LONG *)&Section->Segments[i].ReferenceCount);
 	}
     }
   else
     {
-      InterlockedDecrement(&Section->Segments->ReferenceCount);
+      InterlockedDecrement((LONG *)&Section->Segments->ReferenceCount);
     }
   if (Section->FileObject != NULL)
     {
@@ -2684,7 +2684,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
        */
       for (i = 0; i < NrSegments; i++)
 	{
-	  InterlockedIncrement(&SectionSegments[i].ReferenceCount);
+	  InterlockedIncrement((LONG *)&SectionSegments[i].ReferenceCount);
 	}
 
     }

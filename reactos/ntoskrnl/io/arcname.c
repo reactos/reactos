@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.10 2002/11/14 18:21:07 chorns Exp $
+/* $Id: arcname.c,v 1.11 2003/04/26 23:13:30 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -296,7 +296,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 	  return(Status);
 	}
 
-      sprintf(p, "cdrom(%u)", DeviceNumber);
+      sprintf(p, "cdrom(%lu)", DeviceNumber);
 
       DPRINT("New ARC name: %s\n", ParamBuffer);
 
@@ -313,7 +313,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 
 	      q++;
 	      strcpy(temp, q);
-	      sprintf(p, "cdrom(%u)", DeviceNumber);
+	      sprintf(p, "cdrom(%lu)", DeviceNumber);
 	      strcat(p, temp);
 	    }
 	}

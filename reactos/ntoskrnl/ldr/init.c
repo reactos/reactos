@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.38 2002/11/15 22:04:51 ekohl Exp $
+/* $Id: init.c,v 1.39 2003/04/26 23:13:31 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -224,79 +224,156 @@ LdrpCreateProcessEnvironment(HANDLE ProcessHandle,
   return(STATUS_SUCCESS);
 }
 
-
-static NTSTATUS
-LdrpCreateStack(HANDLE ProcessHandle,
-		PINITIAL_TEB InitialTeb)
+/*
+ FIXME: this sucks. Sucks sucks sucks. This code was duplicated, if you can
+ believe it, in four different places - excluding this, and twice in the two
+ DLLs that contained it (kernel32.dll and ntdll.dll). As much as I'd like to
+ rip the whole RTL out of ntdll.dll and ntoskrnl.exe and into its own static
+ library, ntoskrnl.exe is built separatedly from the rest of ReactOS, coming
+ with its own linker scripts and specifications, and, save for changes and fixes
+ to make it at least compile, I'm not going to touch any of it. If you feel
+ brave enough, you're welcome [KJK::Hyperion]
+*/
+static NTSTATUS LdrpCreateStack
+(
+ HANDLE ProcessHandle,
+ PUSER_STACK UserStack,
+ PULONG_PTR StackReserve,
+ PULONG_PTR StackCommit
+)
 {
-  ULONG OldPageProtection;
-  NTSTATUS Status;
+ PVOID pStackLowest = NULL;
+ ULONG_PTR nSize = 0;
+ NTSTATUS nErrCode;
 
-  InitialTeb->StackAllocate = NULL;
+ if(StackReserve == NULL || StackCommit == NULL)
+  return STATUS_INVALID_PARAMETER;
 
-  /* Allocate the reserved stack space */
-  Status = NtAllocateVirtualMemory(ProcessHandle,
-				   &InitialTeb->StackAllocate,
-				   0,
-				   &InitialTeb->StackReserve,
-				   MEM_RESERVE,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Stack allocation failed (Status %x)", Status);
-      return(Status);
-    }
+ /* FIXME: no SEH, no guard pages */
+ *StackCommit = *StackReserve;
 
-  DPRINT("StackAllocate: %p ReserveSize: 0x%lX\n",
-	 InitialTeb->StackAllocate, InitialTeb->StackReserve);
+ UserStack->FixedStackBase = NULL;
+ UserStack->FixedStackLimit =  NULL;
+ UserStack->ExpandableStackBase = NULL;
+ UserStack->ExpandableStackLimit = NULL; 
+ UserStack->ExpandableStackBottom = NULL;
 
-  InitialTeb->StackBase = (PVOID)((ULONG)InitialTeb->StackAllocate + InitialTeb->StackReserve);
-  InitialTeb->StackLimit = (PVOID)((ULONG)InitialTeb->StackBase - InitialTeb->StackCommit);
+ /* FIXME: this code assumes a stack growing downwards */
+ /* fixed stack */
+ if(*StackCommit == *StackReserve)
+ {
+  DPRINT("Fixed stack\n");
 
-  DPRINT("StackBase: %p  StackCommit: 0x%lX\n",
-	 InitialTeb->StackBase, InitialTeb->StackCommit);
+  UserStack->FixedStackLimit = NULL;
 
-  /* Commit stack */
-  Status = NtAllocateVirtualMemory(ProcessHandle,
-				   &InitialTeb->StackLimit,
-				   0,
-				   &InitialTeb->StackCommit,
-				   MEM_COMMIT,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Error comitting stack page!\n");
-      /* release the stack space */
-      NtFreeVirtualMemory(ProcessHandle,
-			  InitialTeb->StackAllocate,
-			  &InitialTeb->StackReserve,
-			  MEM_RELEASE);
-      return(Status);
-    }
+  /* allocate the stack */
+  nErrCode = NtAllocateVirtualMemory
+  (
+   ProcessHandle,
+   &(UserStack->FixedStackLimit),
+   0,
+   StackReserve,
+   MEM_RESERVE | MEM_COMMIT,
+   PAGE_READWRITE
+  );
 
-  DPRINT("StackLimit: %p\nStackCommit: 0x%lX\n",
-	 InitialTeb->StackLimit,
-	 InitialTeb->StackCommit);
+  /* failure */
+  if(!NT_SUCCESS(nErrCode)) return nErrCode;
 
-  /* Protect guard page */
-  Status = NtProtectVirtualMemory(ProcessHandle,
-				  InitialTeb->StackLimit,
-				  PAGE_SIZE,
-				  PAGE_GUARD | PAGE_READWRITE,
-				  &OldPageProtection);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Error protecting guard page!\n");
+  /* store the highest (first) address of the stack */
+  UserStack->FixedStackBase =
+   (PUCHAR)(UserStack->FixedStackLimit) + *StackReserve;
+ }
+ /* expandable stack */
+ else
+ {
+  ULONG_PTR nGuardSize = PAGE_SIZE;
+  PVOID pGuardBase;
 
-      /* release the stack space */
-      NtFreeVirtualMemory(ProcessHandle,
-			  InitialTeb->StackAllocate,
-			  &InitialTeb->StackReserve,
-			  MEM_RELEASE);
-      return(Status);
-    }
+  DPRINT("Expandable stack\n");
 
-  return(STATUS_SUCCESS);
+  UserStack->FixedStackLimit = NULL;
+  UserStack->FixedStackBase = NULL;
+  UserStack->ExpandableStackBottom = NULL;
+
+  /* reserve the stack */
+  nErrCode = NtAllocateVirtualMemory
+  (
+   ProcessHandle,
+   &(UserStack->ExpandableStackBottom),
+   0,
+   StackReserve,
+   MEM_RESERVE,
+   PAGE_READWRITE
+  );
+
+  /* failure */
+  if(!NT_SUCCESS(nErrCode)) return nErrCode;
+
+  DPRINT("Reserved %08X bytes\n", *StackReserve);
+
+  /* expandable stack base - the highest address of the stack */
+  UserStack->ExpandableStackBase =
+   (PUCHAR)(UserStack->ExpandableStackBottom) + *StackReserve;
+
+  /* expandable stack limit - the lowest committed address of the stack */
+  UserStack->ExpandableStackLimit =
+   (PUCHAR)(UserStack->ExpandableStackBase) - *StackCommit;
+
+  DPRINT("Stack base %p\n", UserStack->ExpandableStackBase);
+  DPRINT("Stack limit %p\n", UserStack->ExpandableStackLimit);
+
+  /* commit as much stack as requested */
+  nErrCode = NtAllocateVirtualMemory
+  (
+   ProcessHandle,
+   &(UserStack->ExpandableStackLimit),
+   0,
+   StackCommit,
+   MEM_COMMIT,
+   PAGE_READWRITE
+  );
+
+  /* failure */
+  if(!NT_SUCCESS(nErrCode)) goto l_Cleanup;
+
+  DPRINT("Stack limit %p\n", UserStack->ExpandableStackLimit);
+
+  pGuardBase = (PUCHAR)(UserStack->ExpandableStackLimit) - PAGE_SIZE;
+
+  DPRINT("Guard base %p\n", UserStack->ExpandableStackBase);
+
+  /* set up the guard page */
+  nErrCode = NtAllocateVirtualMemory
+  (
+   ProcessHandle,
+   &pGuardBase,
+   0,
+   &nGuardSize,
+   MEM_COMMIT,
+   PAGE_READWRITE | PAGE_GUARD
+  );
+
+  /* failure */
+  if(!NT_SUCCESS(nErrCode)) goto l_Cleanup;
+
+  DPRINT("Guard base %p\n", UserStack->ExpandableStackBase);
+ }
+
+ return STATUS_SUCCESS;
+
+ /* cleanup in case of failure */
+l_Cleanup:
+  if(UserStack->FixedStackLimit)
+  pStackLowest = UserStack->FixedStackLimit;
+ else if(UserStack->ExpandableStackBottom)
+  pStackLowest = UserStack->ExpandableStackBottom;
+
+ /* free the stack, if it was allocated */
+ if(pStackLowest != NULL)
+  NtFreeVirtualMemory(ProcessHandle, &pStackLowest, &nSize, MEM_RELEASE);
+
+ return nErrCode;
 }
 
 
@@ -308,7 +385,11 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
   UNICODE_STRING ImagePath;
   HANDLE SectionHandle;
   CONTEXT Context;
-  INITIAL_TEB InitialTeb;
+  USER_STACK UserStack;
+  ULONG_PTR nStackReserve = 0;
+  ULONG_PTR nStackCommit = 0;
+  PVOID pStackLowest;
+  PVOID pStackBase;
   ULONG ResultLength;
   PVOID ImageBaseAddress;
   ULONG InitialStack[5];
@@ -373,28 +454,32 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 
   /* Calculate initial stack sizes */
   if (Sii.StackReserve > 0x100000)
-    InitialTeb.StackReserve = Sii.StackReserve;
+    nStackReserve = Sii.StackReserve;
   else
-    InitialTeb.StackReserve = 0x100000; /* 1MByte */
+    nStackReserve = 0x100000; /* 1MByte */
 
   /* FIXME */
 #if 0
   if (Sii.StackCommit > PAGE_SIZE)
-    InitialTeb.StackCommit =  Sii.StackCommit;
+    nStackCommit =  Sii.StackCommit;
   else
-    InitialTeb.StackCommit = PAGE_SIZE;
+    nStackCommit = PAGE_SIZE;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
+  nStackCommit = nStackReserve - PAGE_SIZE;
 
-  /* add guard page size */
-  InitialTeb.StackCommit += PAGE_SIZE;
   DPRINT("StackReserve 0x%lX  StackCommit 0x%lX\n",
-	 InitialTeb.StackReserve, InitialTeb.StackCommit);
+	 nStackReserve, nStackCommit);
 
 
   /* Create the process stack */
-  Status = LdrpCreateStack(*ProcessHandle,
-			   &InitialTeb);
+  Status = LdrpCreateStack
+  (
+   *ProcessHandle,
+   &UserStack,
+   &nStackReserve,
+   &nStackCommit
+  );
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Failed to write initial stack.\n");
@@ -402,12 +487,27 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
       return(Status);
     }
 
+  if(UserStack.FixedStackBase && UserStack.FixedStackLimit)
+  {
+   pStackBase = UserStack.FixedStackBase;
+   pStackLowest = UserStack.FixedStackLimit;
+  }
+  else
+  {
+   pStackBase = UserStack.ExpandableStackBase;
+   pStackLowest = UserStack.ExpandableStackBottom;
+  }
+
+  DPRINT("pStackBase = %p\n", pStackBase);
+  DPRINT("pStackLowest = %p\n", pStackLowest);
 
   /*
    * Initialize context to point to LdrStartup
    */
+#if defined(_M_IX86)
   memset(&Context,0,sizeof(CONTEXT));
-  Context.Eip = (ULONG)(ImageBaseAddress + (ULONG)Sii.EntryPoint);
+  Context.ContextFlags = CONTEXT_FULL;
+  Context.Eip = (ULONG_PTR)(ImageBaseAddress + (ULONG_PTR)Sii.EntryPoint);
   Context.SegCs = USER_CS;
   Context.SegDs = USER_DS;
   Context.SegEs = USER_DS;
@@ -415,7 +515,10 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
   Context.SegGs = USER_DS;
   Context.SegSs = USER_DS;
   Context.EFlags = 0x202;
-  Context.Esp = (ULONG)InitialTeb.StackBase - 20;
+  Context.Esp = (ULONG_PTR)pStackBase - 20;
+#else
+#error Unsupported architecture
+#endif
 
   /*
    * Write in the initial stack.
@@ -429,11 +532,13 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 				&ResultLength);
   if (!NT_SUCCESS(Status))
     {
+      ULONG_PTR nSize = 0;
+
       DPRINT("Failed to write initial stack.\n");
 
       NtFreeVirtualMemory(*ProcessHandle,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
+			  pStackLowest,
+			  &nSize,
 			  MEM_RELEASE);
       NtClose(*ProcessHandle);
       return(Status);
@@ -447,15 +552,17 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 			  *ProcessHandle,
 			  NULL,
 			  &Context,
-			  &InitialTeb,
+			  &UserStack,
 			  FALSE);
   if (!NT_SUCCESS(Status))
     {
+      ULONG_PTR nSize = 0;
+
       DPRINT("NtCreateThread() failed (Status %lx)\n", Status);
 
       NtFreeVirtualMemory(*ProcessHandle,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
+			  pStackLowest,
+			  &nSize,
 			  MEM_RELEASE);
 
       NtClose(*ProcessHandle);

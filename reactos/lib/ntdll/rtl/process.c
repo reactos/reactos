@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.32 2002/10/20 11:56:00 chorns Exp $
+/* $Id: process.c,v 1.33 2003/04/26 23:13:29 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,160 +22,29 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
-RtlpCreateFirstThread(HANDLE ProcessHandle,
-		      ULONG StackReserve,
-		      ULONG StackCommit,
-		      LPTHREAD_START_ROUTINE lpStartAddress,
-		      PCLIENT_ID ClientId,
-		      PHANDLE ThreadHandle)
+static NTSTATUS RtlpCreateFirstThread
+(
+ HANDLE ProcessHandle,
+ ULONG StackReserve,
+ ULONG StackCommit,
+ LPTHREAD_START_ROUTINE lpStartAddress,
+ PCLIENT_ID ClientId,
+ PHANDLE ThreadHandle
+)
 {
-  NTSTATUS Status;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  CONTEXT ThreadContext;
-  INITIAL_TEB InitialTeb;
-  ULONG OldPageProtection;
-  CLIENT_ID Cid;
-  ULONG InitialStack[5];
-  ULONG ResultLength;
-  
-  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-  ObjectAttributes.RootDirectory = NULL;
-  ObjectAttributes.ObjectName = NULL;
-  ObjectAttributes.Attributes = 0;
-  ObjectAttributes.SecurityQualityOfService = NULL;
-
-  if (StackReserve > 0x100000)
-    InitialTeb.StackReserve = StackReserve;
-  else
-    InitialTeb.StackReserve = 0x100000; /* 1MByte */
-
-  /* FIXME */
-#if 0
-  if (StackCommit > PAGE_SIZE)
-    InitialTeb.StackCommit = StackCommit;
-  else
-    InitialTeb.StackCommit = PAGE_SIZE;
-#endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
-
-  /* add guard page size */
-  InitialTeb.StackCommit += PAGE_SIZE;
-
-  /* Reserve stack */
-  InitialTeb.StackAllocate = NULL;
-  Status = NtAllocateVirtualMemory(ProcessHandle,
-				   &InitialTeb.StackAllocate,
-				   0,
-				   &InitialTeb.StackReserve,
-				   MEM_RESERVE,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Error reserving stack space!\n");
-      return(Status);
-    }
-
-  DPRINT("StackAllocate: %p ReserveSize: 0x%lX\n",
-	 InitialTeb.StackAllocate, InitialTeb.StackReserve);
-
-  InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
-  InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
-
-  DPRINT("StackBase: %p StackCommit: 0x%lX\n",
-	 InitialTeb.StackBase, InitialTeb.StackCommit);
-
-  /* Commit stack */
-  Status = NtAllocateVirtualMemory(ProcessHandle,
-				   &InitialTeb.StackLimit,
-				   0,
-				   &InitialTeb.StackCommit,
-				   MEM_COMMIT,
-				   PAGE_READWRITE);
-  if (!NT_SUCCESS(Status))
-    {
-      /* release the stack space */
-      NtFreeVirtualMemory(ProcessHandle,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
-			  MEM_RELEASE);
-
-      DPRINT("Error comitting stack page(s)!\n");
-      return(Status);
-    }
-
-  DPRINT("StackLimit: %p\n", InitialTeb.StackLimit);
-
-  /* Protect guard page */
-  Status = NtProtectVirtualMemory(ProcessHandle,
-				  InitialTeb.StackLimit,
-				  PAGE_SIZE,
-				  PAGE_GUARD | PAGE_READWRITE,
-				  &OldPageProtection);
-  if (!NT_SUCCESS(Status))
-    {
-      /* release the stack space */
-      NtFreeVirtualMemory(ProcessHandle,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
-			  MEM_RELEASE);
-
-      DPRINT("Error comitting guard page!\n");
-      return(Status);
-    }
-
-  memset(&ThreadContext,0,sizeof(CONTEXT));
-  ThreadContext.Eip = (ULONG)lpStartAddress;
-  ThreadContext.SegGs = USER_DS;
-  ThreadContext.SegFs = TEB_SELECTOR;
-  ThreadContext.SegEs = USER_DS;
-  ThreadContext.SegDs = USER_DS;
-  ThreadContext.SegCs = USER_CS;
-  ThreadContext.SegSs = USER_DS;
-  ThreadContext.Esp = (ULONG)InitialTeb.StackBase - 20;
-  ThreadContext.EFlags = (1<<1) + (1<<9);
-
-  DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
-
-  /*
-   * Write in the initial stack.
-   */
-  InitialStack[0] = 0;
-  InitialStack[1] = PEB_BASE;
-  Status = ZwWriteVirtualMemory(ProcessHandle,
-				(PVOID)ThreadContext.Esp,
-				InitialStack,
-				sizeof(InitialStack),
-				&ResultLength);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("Failed to write initial stack.\n");
-      return(Status);
-    }
-
-  Status = NtCreateThread(ThreadHandle,
-			  THREAD_ALL_ACCESS,
-			  &ObjectAttributes,
-			  ProcessHandle,
-			  &Cid,
-			  &ThreadContext,
-			  &InitialTeb,
-			  FALSE);
-  if (!NT_SUCCESS(Status))
-    {
-      NtFreeVirtualMemory(ProcessHandle,
-			  InitialTeb.StackAllocate,
-			  &InitialTeb.StackReserve,
-			  MEM_RELEASE);
-      return(Status);
-    }
-
-  if (ClientId != NULL)
-    {
-      memcpy(&ClientId->UniqueThread, &Cid.UniqueThread, sizeof(ULONG));
-    }
-
-  return(STATUS_SUCCESS);
+ return RtlCreateUserThread
+ (
+  ProcessHandle,
+  NULL,
+  FALSE,
+  0,
+  &StackReserve,
+  &StackCommit,
+  lpStartAddress,
+  (PVOID)PEB_BASE,
+  ThreadHandle,
+  ClientId
+ );
 }
 
 static NTSTATUS
@@ -335,7 +204,7 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 	return(Status);
      }
 
-   DPRINT("Ppb->MaximumLength %x\n", Ppb->MaximumLength);
+   DPRINT("Ppb->MaximumLength %x\n", Ppb->AllocationSize);
 
    /* write process parameters block*/
    RtlDeNormalizeProcessParams (Ppb);

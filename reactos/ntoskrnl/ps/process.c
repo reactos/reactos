@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.96 2003/04/10 23:14:47 hyperion Exp $
+/* $Id: process.c,v 1.97 2003/04/26 23:13:33 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -257,7 +257,7 @@ PsInitProcessManagment(VOID)
    KProcess->DirectoryTableBase = 
      (LARGE_INTEGER)(LONGLONG)(ULONG)MmGetPageDirectory();
    PsInitialSystemProcess->UniqueProcessId = 
-     InterlockedIncrement(&PiNextProcessUniqueId);
+     InterlockedIncrement((LONG *)&PiNextProcessUniqueId);
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    PsInitialSystemProcess->Win32Desktop = (HANDLE)0;
    
@@ -477,7 +477,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
    MmInitializeAddressSpace(Process,
 			    &Process->AddressSpace);
-   Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
+   Process->UniqueProcessId = InterlockedIncrement((LONG *)&PiNextProcessUniqueId);
    Process->InheritedFromUniqueProcessId = 
      (HANDLE)ParentProcess->UniqueProcessId;
    ObCreateHandleTable(ParentProcess,

@@ -801,6 +801,9 @@ InterlockedIncrement (
 	PLONG	Addend
 	);
 
+#define InterlockedExchangePointer(__T__, __V__) \
+ (PVOID)InterlockedExchange((PLONG)(__T__), (LONG)(__V__))
+
 /*---*/
 
 typedef

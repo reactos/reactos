@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.4 2003/03/16 14:16:54 chorns Exp $
+/* $Id: rtltypes.h,v 1.5 2003/04/26 23:13:27 hyperion Exp $
  * 
  */
 
@@ -129,14 +129,14 @@ typedef struct _RTL_SPLAY_LINKS
 
 #endif /* __USE_W32API */
 
-typedef struct _INITIAL_TEB
+typedef struct _USER_STACK
 {
-  ULONG StackCommit;
-  ULONG StackReserve;
-  PVOID StackBase;
-  PVOID StackLimit;
-  PVOID StackAllocate;
-} INITIAL_TEB, *PINITIAL_TEB;
+ PVOID FixedStackBase;
+ PVOID FixedStackLimit;
+ PVOID ExpandableStackBase;
+ PVOID ExpandableStackLimit;
+ PVOID ExpandableStackBottom;
+} USER_STACK, *PUSER_STACK;
 
 typedef struct _RTL_HEAP_DEFINITION
 {

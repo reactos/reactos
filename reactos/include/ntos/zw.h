@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.10 2003/03/22 11:25:33 ekohl Exp $
+/* $Id: zw.h,v 1.11 2003/04/26 23:13:27 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4514,7 +4514,7 @@ NtCreateThread(
 	IN	HANDLE			ProcessHandle,
 	OUT	PCLIENT_ID		ClientId,
 	IN	PCONTEXT		ThreadContext,
-	IN	PINITIAL_TEB		InitialTeb,
+	IN	PUSER_STACK		UserStack,
 	IN	BOOLEAN			CreateSuspended
 	);
 
@@ -4527,7 +4527,7 @@ ZwCreateThread(
 	IN HANDLE ProcessHandle,
 	OUT PCLIENT_ID ClientId,
 	IN PCONTEXT ThreadContext,
-	IN PINITIAL_TEB InitialTeb,
+	IN PUSER_STACK UserStack,
 	IN BOOLEAN CreateSuspended
 	);
 

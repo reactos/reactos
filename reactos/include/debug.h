@@ -51,5 +51,15 @@
 #define ASSERT_IRQL(x) assert(KeGetCurrentIrql()<=(x))
 #define assert_irql(x) assert(KeGetCurrentIrql()<=(x))
 
+/* Macros expanding to the appropriate inline assembly to raise a breakpoint */
+#if defined(_M_IX86)
+#define ASM_BREAKPOINT "\nint $3\n"
+#elif defined(_M_ALPHA)
+#define ASM_BREAKPOINT "\ncall_pal bpt\n"
+#elif defined(_M_MIPS)
+#define ASM_BREAKPOINT "\nbreak\n"
+#else
+#error Unsupported architecture.
+#endif
 
 #endif /* __INTERNAL_DEBUG */

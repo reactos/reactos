@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.56 2002/10/26 00:32:19 chorns Exp $
+/* $Id: create.c,v 1.57 2003/04/26 23:13:33 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -269,7 +269,6 @@ PsReferenceImpersonationToken(PETHREAD Thread,
 VOID
 PiBeforeBeginThread(CONTEXT c)
 {
-   DPRINT("PiBeforeBeginThread(Eip %x)\n", c.Eip);
    KeLowerIrql(PASSIVE_LEVEL);
 }
 
@@ -370,7 +369,7 @@ PsInitializeThread(HANDLE ProcessHandle,
    KeInitializeSpinLock(&Thread->ActiveTimerListLock);
    InitializeListHead(&Thread->IrpList);
    Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
-					      &PiNextThreadUniqueId);
+					      (LONG *)&PiNextThreadUniqueId);
    Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
    Thread->DeadThread = 0;
    Thread->Win32Thread = 0;
@@ -400,7 +399,7 @@ static NTSTATUS
 PsCreateTeb(HANDLE ProcessHandle,
 	    PTEB *TebPtr,
 	    PETHREAD Thread,
-	    PINITIAL_TEB InitialTeb)
+	    PUSER_STACK UserStack)
 {
    MEMORY_BASIC_INFORMATION Info;
    NTSTATUS Status;
@@ -456,13 +455,24 @@ PsCreateTeb(HANDLE ProcessHandle,
      }
    DPRINT("Teb.Peb %x\n", Teb.Peb);
    
-   /* store stack information from InitialTeb */
-   if (InitialTeb != NULL)
-     {
-        Teb.Tib.StackBase = InitialTeb->StackBase;
-        Teb.Tib.StackLimit = InitialTeb->StackLimit;
-        Teb.DeallocationStack = InitialTeb->StackAllocate;
-     }
+   /* store stack information from UserStack */
+   if(UserStack != NULL)
+   {
+    /* fixed-size stack */
+    if(UserStack->FixedStackBase && UserStack->FixedStackLimit)
+    {
+     Teb.Tib.StackBase = UserStack->FixedStackBase;
+     Teb.Tib.StackLimit = UserStack->FixedStackLimit;
+     Teb.DeallocationStack = UserStack->FixedStackLimit;
+    }
+    /* expandable stack */
+    else
+    {
+     Teb.Tib.StackBase = UserStack->ExpandableStackBase;
+     Teb.Tib.StackLimit = UserStack->ExpandableStackLimit;
+     Teb.DeallocationStack = UserStack->ExpandableStackBottom;
+    }
+   }
 
    /* more initialization */
    Teb.Cid.UniqueThread = Thread->Cid.UniqueThread;
@@ -528,7 +538,7 @@ NtCreateThread(PHANDLE ThreadHandle,
 	       HANDLE ProcessHandle,
 	       PCLIENT_ID Client,
 	       PCONTEXT ThreadContext,
-	       PINITIAL_TEB InitialTeb,
+	       PUSER_STACK UserStack,
 	       BOOLEAN CreateSuspended)
 {
   PETHREAD Thread;
@@ -559,7 +569,7 @@ NtCreateThread(PHANDLE ThreadHandle,
   Status = PsCreateTeb(ProcessHandle,
 		       &TebBase,
 		       Thread,
-		       InitialTeb);
+		       UserStack);
   if (!NT_SUCCESS(Status))
     {
       return(Status);

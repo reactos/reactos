@@ -1204,10 +1204,10 @@ GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
 
             case 'Y':
               {
-                ULONG Number;
-                ULONG Length;
-                ULONG Type;
-                ULONG Address;
+                LONG Number;
+                LONG Length;
+                LONG Type;
+                LONG Address;
 
                 ptr = &GspOutBuffer[1];
                 GspHex2Long (&ptr, &Number);
@@ -1231,7 +1231,7 @@ GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
             /* Remove hardware breakpoint */
             case 'y':
               {
-                ULONG Number;
+                LONG Number;
 
                 ptr = &GspOutBuffer[1];
                 GspHex2Long(&ptr, &Number);

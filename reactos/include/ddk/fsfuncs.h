@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.18 2003/04/19 17:17:10 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.19 2003/04/26 23:13:26 hyperion Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 VOID
@@ -202,7 +202,7 @@ FsRtlFastUnlockAllByKey (
 	IN	PFILE_LOCK	FileLock,
 	IN	PFILE_OBJECT	FileObject,
 	IN	PEPROCESS	Process,
-	IN	DWORD		Key,
+	IN	ULONG		Key,
 	IN	PVOID		Context OPTIONAL
 	);
 NTSTATUS

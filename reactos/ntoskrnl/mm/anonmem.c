@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.10 2003/01/11 15:45:55 hbirr Exp $
+/* $Id: anonmem.c,v 1.11 2003/04/26 23:13:32 hyperion Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -201,7 +201,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Write the page to the pagefile
     */
    Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-   MmBuildMdlFromPages(Mdl, &PhysicalAddress.u.LowPart);
+   MmBuildMdlFromPages(Mdl, (ULONG *)&PhysicalAddress.u.LowPart);
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
      {

@@ -60,7 +60,7 @@ KeApplicationProcessorInit(VOID)
   /*
    * Create a PCR for this processor
    */
-  Offset = InterlockedIncrement(&PcrsAllocated) - 1;
+  Offset = InterlockedIncrement((LONG *)&PcrsAllocated) - 1;
   KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGE_SIZE));
   MmCreateVirtualMappingForKernel((PVOID)KPCR,
 				  PAGE_READWRITE,

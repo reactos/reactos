@@ -61,27 +61,11 @@ typedef short SHORT;
 
 #endif /*i386*/
 
-#ifdef _WIN64
-
-/* 64-bit architecture */
-
-typedef INT64 INT, *PINT;
-typedef LONG64 LONG, *PLONG;
-typedef DWORD64 DWORD, *PDWORD;
-typedef UINT64 UINT, *PUINT;
-typedef ULONG64 ULONG, *PULONG;
-
-#else /* _WIN64 */
-
-/* 32-bit architecture */
-
 typedef INT32 INT, *PINT;
 typedef LONG32 LONG, *PLONG;
-typedef DWORD32 DWORD, *PDWORD;
+typedef ULONG32 DWORD, *PDWORD;
 typedef UINT32 UINT, *PUINT;
 typedef ULONG32 ULONG, *PULONG;
-
-#endif /* _WIN64 */
 
 #ifndef _WCHAR_T_
 #define _WCHAR_T_

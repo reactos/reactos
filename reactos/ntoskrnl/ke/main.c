@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.151 2003/04/17 11:07:47 ekohl Exp $
+/* $Id: main.c,v 1.152 2003/04/26 23:13:30 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -401,14 +401,14 @@ ExpInitializeExecutive(VOID)
   if (KeNumberProcessors > 1)
     {
       sprintf(str,
-	      "Found %d system processors. [%u MB Memory]\n",
+	      "Found %d system processors. [%lu MB Memory]\n",
 	      KeNumberProcessors,
 	      (KeLoaderBlock.MemHigher + 1088)/ 1024);
     }
   else
     {
       sprintf(str,
-	      "Found 1 system processor. [%u MB Memory]\n",
+	      "Found 1 system processor. [%lu MB Memory]\n",
 	      (KeLoaderBlock.MemHigher + 1088)/ 1024);
     }
   HalDisplayString(str);
@@ -627,7 +627,6 @@ ExpInitializeExecutive(VOID)
     {
       KeBugCheckEx(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
-
   /*
    * Crash the system if the initial process terminates within 5 seconds.
    */
@@ -735,7 +734,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	    }
 	}
       sprintf(KeLoaderCommandLine, 
-	      "multi(0)disk(0)rdisk(%d)partition(%d)%s %s",
+	      "multi(0)disk(0)rdisk(%lu)partition(%lu)%s %s",
 	      DiskNumber, PartNumber + 1, Temp, options);
 
       p = KeLoaderCommandLine;

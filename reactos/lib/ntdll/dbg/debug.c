@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.8 2003/03/31 22:32:18 hyperion Exp $
+/* $Id: debug.c,v 1.9 2003/04/26 23:13:28 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -183,6 +183,7 @@ NTSTATUS STDCALL DbgUiIssueRemoteBreakin(HANDLE Process)
  HANDLE hThread;
  CLIENT_ID cidClientId;
  NTSTATUS nErrCode;
+ ULONG nStackSize = PAGE_SIZE;
 
  nErrCode = RtlCreateUserThread
  (
@@ -190,8 +191,8 @@ NTSTATUS STDCALL DbgUiIssueRemoteBreakin(HANDLE Process)
   NULL,
   FALSE,
   0,
-  NULL,
-  NULL,
+  &nStackSize,
+  &nStackSize,
   (PTHREAD_START_ROUTINE)DbgUiRemoteBreakin,
   NULL,
   &hThread,

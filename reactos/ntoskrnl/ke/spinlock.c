@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.13 2002/09/08 10:23:29 chorns Exp $
+/* $Id: spinlock.c,v 1.14 2003/04/26 23:13:31 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -84,7 +84,7 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 	KeBugCheck(0);
      }
    
-   while ((i = InterlockedExchange(&SpinLock->Lock, 1)) == 1)
+   while ((i = InterlockedExchange((LONG *)&SpinLock->Lock, 1)) == 1)
      {
 #ifndef MP
        DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
@@ -109,7 +109,7 @@ KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
 	DbgPrint("Releasing unacquired spinlock %x\n", SpinLock);
 	KeBugCheck(0);
      }
-   (void)InterlockedExchange(&SpinLock->Lock, 0);
+   (void)InterlockedExchange((LONG *)&SpinLock->Lock, 0);
 }
 
 /* EOF */

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.36 2003/01/25 16:01:49 hbirr Exp $ */
+/* $Id: iofuncs.h,v 1.37 2003/04/26 23:13:26 hyperion Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -936,8 +936,8 @@ IoReportResourceUsage (
 	(KeInsertQueueDpc(&(DeviceObject)->Dpc,(Irp),(Context)))
 
 #define IoSetCancelRoutine(Irp,NewCancelRoutine) \
-	((PDRIVER_CANCEL)InterlockedExchange((PULONG)&(Irp)->CancelRoutine, \
-					     (ULONG)(NewCancelRoutine)))
+	((PDRIVER_CANCEL)InterlockedExchangePointer(&(Irp)->CancelRoutine, \
+					     NewCancelRoutine))
 
 #define IoSetCompletionRoutine(Irp,Routine,Context,Success,Error,Cancel) \
 	{ \

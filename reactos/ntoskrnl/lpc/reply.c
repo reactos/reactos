@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.12 2002/11/03 20:01:06 chorns Exp $
+/* $Id: reply.c,v 1.13 2003/04/26 23:13:32 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -65,7 +65,7 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
    MessageReply->Message.Cid.UniqueProcess = PsGetCurrentProcessId();
    MessageReply->Message.Cid.UniqueThread = PsGetCurrentThreadId();
    MessageReply->Message.MessageType = MessageType;
-   MessageReply->Message.MessageId = InterlockedIncrement(&EiNextLpcMessageId);
+   MessageReply->Message.MessageId = InterlockedIncrement((LONG *)&EiNextLpcMessageId);
    
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
    EiEnqueueMessagePort(Port, MessageReply);

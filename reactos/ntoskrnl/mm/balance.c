@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.14 2002/11/10 18:17:42 chorns Exp $
+/* $Id: balance.c,v 1.15 2003/04/26 23:13:32 hyperion Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -117,9 +117,9 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
   KeAcquireSpinLock(&AllocationListLock, &oldIrql);
   if (MmGetReferenceCountPage(Page) == 1)
     {
-      InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
-      InterlockedIncrement(&MiNrAvailablePages);
-      InterlockedDecrement(&MiPagesRequired);
+      InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
+      InterlockedIncrement((LONG *)&MiNrAvailablePages);
+      InterlockedDecrement((LONG *)&MiPagesRequired);
       if (IsListEmpty(&AllocationListHead))
 	{
 	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
@@ -203,13 +203,13 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
   /*
    * Make sure we don't exceed our individual target.
    */
-  OldUsed = InterlockedIncrement(&MiMemoryConsumers[Consumer].PagesUsed);
+  OldUsed = InterlockedIncrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
   if (OldUsed >= (MiMemoryConsumers[Consumer].PagesTarget - 1) &&
       WorkerThreadId != PsGetCurrentThreadId())
     {
       if (!CanWait)
 	{
-	  InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
+	  InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
 	  return(STATUS_NO_MEMORY);
 	}
       MiTrimMemoryConsumer(Consumer);
@@ -218,22 +218,22 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
   /*
    * Make sure we don't exceed global targets.
    */
-  OldAvailable = InterlockedDecrement(&MiNrAvailablePages);
+  OldAvailable = InterlockedDecrement((LONG *)&MiNrAvailablePages);
   if (OldAvailable < MiMinimumAvailablePages)
     {
       MM_ALLOCATION_REQUEST Request;
 
       if (!CanWait)
 	{
-	  InterlockedIncrement(&MiNrAvailablePages);
-	  InterlockedDecrement(&MiMemoryConsumers[Consumer].PagesUsed);
+	  InterlockedIncrement((LONG *)&MiNrAvailablePages);
+	  InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
 	  return(STATUS_NO_MEMORY);
 	}
 
       /* Insert an allocation request. */
       Request.Page.QuadPart = 0LL;
       KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
-      InterlockedIncrement(&MiPagesRequired);
+      InterlockedIncrement((LONG *)&MiPagesRequired);
 
       KeAcquireSpinLock(&AllocationListLock, &oldIrql);     
       if (NrWorkingThreads == 0)

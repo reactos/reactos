@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.129 2003/04/03 00:06:24 hyperion Exp $
+/* $Id: loader.c,v 1.130 2003/04/26 23:13:31 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1394,7 +1394,7 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
         {
 	  ULONG Offset;
 	  ULONG Type;
-	  PDWORD RelocItem;
+	  PULONG RelocItem;
 
 	  Offset = RelocEntry[Idx].TypeOffset & 0xfff;
 	  Type = (RelocEntry[Idx].TypeOffset >> 12) & 0xf;

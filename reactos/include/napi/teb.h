@@ -228,15 +228,19 @@ typedef struct _TEB
    PVOID WineDebugInfo;                // Needed for WINE DLL's
 } TEB, *PTEB;
 
+/* FIXME: at least NtCurrentTeb should be defined in winnt.h */
+
+#ifndef NtCurrentTeb
+
 #if defined(_M_IX86)
 /* on the x86, the TEB is contained in the FS segment */
 /* 
  FIXME: GCC should allow defining a variable that directly maps to a register.
  It could make for even faster code
 */
-static inline PTEB NtCurrentTeb(void)
+static inline struct _TEB * NtCurrentTeb(void)
 {
- PTEB pTeb;
+ struct _TEB * pTeb;
 
  /* FIXME: instead of hardcoded offsets, use offsetof() - if possible */
  __asm__ __volatile__
@@ -248,34 +252,40 @@ static inline PTEB NtCurrentTeb(void)
 
  return pTeb;
 }
+#define NtCurrentTeb NtCurrentTeb
 
 #elif defined(_M_ALPHA)
-/* on the Alpha AXP, we call the rdteb PAL to retrieve the address of the TEB */
-/*
- FIXME? I have no first-hand experience with Alpha development, but I think this
- is a good guess
-*/
-
-#define NtCurrentTeb() ((PTEB)__rdteb())
 
 void * __rdteb(void);
 #pragma intrinsic(__rdteb)
 
-#elif defined(_M_MIPS)
-/* on the MIPS R4000, the TEB is loaded at a fixed address (?) */
-/* FIXME: not terribly sure about this */
-#define NtCurrentTeb() ((PTEB)0x7FFFF4A8)
+/* on the Alpha AXP, we call the rdteb PAL to retrieve the address of the TEB */
+#define NtCurrentTeb() ((struct _TEB *)__rdteb())
 
-/* #elif defined(_M_PPC) */
-/* FIXME: sorry, I couldn't disassemble the PPC ntdll.dll */
+#elif defined(_M_MIPS)
+
+/* on the MIPS R4000, the TEB is loaded at a fixed address */
+#define NtCurrentTeb() ((struct _TEB *)0x7FFFF4A8)
+
+#elif defined(_M_PPC)
+
+unsigned __gregister_get(unsigned const regnum);
+#pragma intrinsic(__gregister_get)
+
+/* on the PowerPC, the TEB is pointed to by GPR 13 */
+#define NtCurrentTeb() ((struct _TEB *)__gregister_get(13))
+
 #else
 #error Unsupported architecture or no architecture specified.
 #endif
 
+#endif
+
 #ifdef _M_IX86
-static inline PPEB NtCurrentPeb(void)
+
+static inline struct _PEB * NtCurrentPeb(void)
 {
- PPEB pPeb;
+ struct _PEB * pPeb;
 
  __asm__ __volatile__
  (
@@ -286,9 +296,10 @@ static inline PPEB NtCurrentPeb(void)
 
  return pPeb;
 }
+
 #else
 /* generic NtCurrentPeb() */
-static inline PPEB NtCurrentPeb(void) { return NtCurrentTeb()->Peb; }
+#define NtCurrentPeb() (NtCurrentTeb()->Peb)
 #endif
 
 #endif /* __INCLUDE_INTERNAL_TEB */
