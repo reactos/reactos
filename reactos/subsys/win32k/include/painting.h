@@ -10,7 +10,7 @@
 BOOL FASTCALL
 IntRedrawWindow(PWINDOW_OBJECT Wnd, const RECT* UpdateRect, HRGN UpdateRgn, ULONG Flags);
 BOOL FASTCALL
-IntGetPaintMessage(PWINDOW_OBJECT Window, PW32THREAD Thread, MSG *Message);
+IntGetPaintMessage(PWINDOW_OBJECT Window, PW32THREAD Thread, MSG *Message, BOOL Remove);
 BOOL STDCALL
 NtUserValidateRgn(HWND hWnd, HRGN hRgn);
 

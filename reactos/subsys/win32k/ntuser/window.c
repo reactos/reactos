@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.140 2003/11/20 21:21:29 navaraf Exp $
+/* $Id: window.c,v 1.141 2003/11/21 17:01:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1809,7 +1809,7 @@ NtUserDestroyWindow(HWND Wnd)
     }
 
   /* Recursively destroy owned windows */
-#if 1 /* FIXME */
+#if 0 /* FIXME */
   if (! isChild)
     {
       for (;;)

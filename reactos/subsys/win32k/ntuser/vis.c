@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.10 2003/11/20 09:18:49 navaraf Exp $
+ * $Id: vis.c,v 1.11 2003/11/21 17:01:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -301,7 +301,9 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 	  RgnType = NtGdiCombineRgn(DirtyRgn, DirtyRgn, ExposedWindow, RGN_AND);
 	  if (NULLREGION != RgnType && ERROR != RgnType)
 	    {
-              NtGdiOffsetRgn(DirtyRgn, -Sibling->ClientRect.left, -Sibling->ClientRect.top);
+              NtGdiOffsetRgn(DirtyRgn,
+                Sibling->WindowRect.left - Sibling->ClientRect.left,
+                Sibling->WindowRect.top - Sibling->ClientRect.top);
 	      IntRedrawWindow(Sibling, NULL, DirtyRgn,
 	                      RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
 	                      RDW_ALLCHILDREN);
@@ -328,8 +330,9 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
       RgnType = NtGdiCombineRgn(DirtyRgn, DirtyRgn, ExposedWindow, RGN_AND);
       if (NULLREGION != RgnType && ERROR != RgnType)
 	{
-          NtGdiOffsetRgn(DirtyRgn, -Parent->ClientRect.left,
-            -Parent->ClientRect.top);
+          NtGdiOffsetRgn(DirtyRgn,
+            Parent->WindowRect.left - Parent->ClientRect.left,
+            Parent->WindowRect.top - Parent->ClientRect.top);
 	  IntRedrawWindow(Parent, NULL, DirtyRgn,
 	                  RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
 	                  RDW_NOCHILDREN);

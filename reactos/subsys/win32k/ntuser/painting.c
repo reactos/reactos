@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.36 2003/11/20 21:21:29 navaraf Exp $
+ *  $Id: painting.c,v 1.37 2003/11/21 17:01:16 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -60,6 +60,40 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+VOID FASTCALL
+IntValidateParent(PWINDOW_OBJECT Child)
+{
+   HWND Parent;
+   PWINDOW_OBJECT ParentWindow;
+
+   Parent = NtUserGetAncestor(Child->Self, GA_PARENT);
+   while (Parent && Parent != IntGetDesktopWindow())
+   {
+      ParentWindow = IntGetWindowObject(Parent);
+      if (ParentWindow && !(ParentWindow->Style & WS_CLIPCHILDREN))
+      {
+         if (ParentWindow->UpdateRegion != 0)
+         {
+            INT OffsetX, OffsetY;
+
+            /*
+             * We must offset the child region by the offset of the
+             * child rect in the parent.
+             */
+            OffsetX = Child->WindowRect.left - ParentWindow->WindowRect.left;
+            OffsetY = Child->WindowRect.top - ParentWindow->WindowRect.top;
+            NtGdiOffsetRgn(Child->UpdateRegion, OffsetX, OffsetY );
+            NtGdiCombineRgn(ParentWindow->UpdateRegion, ParentWindow->UpdateRegion,
+               Child->UpdateRegion, RGN_DIFF);
+            /* FIXME: If the resulting region is empty, remove fake posted paint message */
+            NtGdiOffsetRgn(Child->UpdateRegion, -OffsetX, -OffsetY);
+         }
+      }
+      IntReleaseWindowObject(ParentWindow);
+      Parent = NtUserGetAncestor(Parent, GA_PARENT);
+   }
+}
+
 /*
  * IntGetNCUpdateRegion
  *
@@ -72,17 +106,16 @@
  * Remarks
  *    This function also marks the nonclient update region of window
  *    as valid, clears the WINDOWOBJECT_NEED_NCPAINT flag and removes
- *    the fake paint message from message queue.
+ *    the fake paint message from message queue if the Remove is set
+ *    to TRUE.
  */
 
 HRGN FASTCALL
-IntGetNCUpdateRegion(PWINDOW_OBJECT Window)
+IntGetNCUpdateRegion(PWINDOW_OBJECT Window, BOOL Remove)
 {
    HRGN WindowRgn;
    HRGN NonclientRgn;
 
-   Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
-   MsqDecPaintCountQueue(Window->MessageQueue);
    WindowRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
    NtGdiOffsetRgn(WindowRgn, 
       -Window->WindowRect.left,
@@ -94,11 +127,16 @@ IntGetNCUpdateRegion(PWINDOW_OBJECT Window)
       NtGdiDeleteObject(NonclientRgn);
       NonclientRgn = NULL;
    }
-   if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
-       WindowRgn, RGN_AND) == NULLREGION)
+   if (Remove)
    {
-      NtGdiDeleteObject(Window->UpdateRegion);
-      Window->UpdateRegion = NULL;
+      if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
+          WindowRgn, RGN_AND) == NULLREGION)
+      {
+         NtGdiDeleteObject(Window->UpdateRegion);
+         Window->UpdateRegion = NULL;
+      }
+      Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+      MsqDecPaintCountQueue(Window->MessageQueue);
    }
 
    return NonclientRgn;
@@ -165,7 +203,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 
          if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
          {
-            NtUserSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window), 0);
+            NtUserSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window, TRUE), 0);
          }
 
          if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
@@ -244,12 +282,9 @@ VOID FASTCALL
 IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 {
    INT RgnType;
+   BOOL HadPaintMessage, HadNCPaintMessage;
+   BOOL HasPaintMessage, HasNCPaintMessage;
 
-   if (!(Window->Style & WS_VISIBLE))
-   {
-      return;
-   }
-   
    /*
     * Clip the given region with window rectangle (or region)
     */
@@ -264,6 +299,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
          -Window->WindowRect.left,
          -Window->WindowRect.top);
       RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnWindow, RGN_AND);        
+      NtGdiDeleteObject(hRgnWindow);
    }
 #ifdef TODO
    else
@@ -272,38 +308,19 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    }
 #endif
 
-   if (RgnType == NULLREGION)
-   {
-      return;
-   }
-
    /*
-    * Remove fake posted paint messages from window message queue
+    * Save current state of pending updates
     */
 
-#ifndef DESKTOP_IN_CSRSS
-   if (!IntIsDesktopWindow(Window))
-   {
-#endif
-      if (Window->UpdateRegion != NULL ||
-          Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
-      {
-         MsqDecPaintCountQueue(Window->MessageQueue);
-      }
-
-      if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
-      {
-         MsqDecPaintCountQueue(Window->MessageQueue);
-      }
-#ifndef DESKTOP_IN_CSRSS
-   }
-#endif
+   HadPaintMessage = Window->UpdateRegion != NULL ||
+      Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
+   HadNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
 
    /*
     * Update the region and flags
     */
 
-   if (Flags & RDW_INVALIDATE)
+   if (Flags & RDW_INVALIDATE && RgnType != NULLREGION)
    {
       if (Window->UpdateRegion == NULL)
       {
@@ -325,7 +342,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       Flags |= RDW_FRAME;
    }
 
-   if (Flags & RDW_VALIDATE)
+   if (Flags & RDW_VALIDATE && RgnType != NULLREGION)
    {
       if (Window->UpdateRegion != NULL)
       {
@@ -337,6 +354,8 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
          }
       }
 
+      if (Window->UpdateRegion == NULL)
+         Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
       if (Flags & RDW_NOFRAME)
          Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
       if (Flags & RDW_NOERASE)
@@ -354,22 +373,31 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    }
 
    /*
-    * Fake post paint messages to window message queue
+    * Fake post paint messages to window message queue if needed
     */
 
 #ifndef DESKTOP_IN_CSRSS
-   if (!IntIsDesktopWindow(Window))
-   {
+   if (Window->MessageQueue)
 #endif
-      if (Window->UpdateRegion != NULL ||
-          Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+   {
+      HasPaintMessage = Window->UpdateRegion != NULL ||
+         Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
+      HasNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
+
+      if (HasPaintMessage != HadPaintMessage)
       {
-         MsqIncPaintCountQueue(Window->MessageQueue);
+         if (HadPaintMessage)
+            MsqDecPaintCountQueue(Window->MessageQueue);
+         else
+            MsqIncPaintCountQueue(Window->MessageQueue);
       }
 
-      if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+      if (HasNCPaintMessage != HadNCPaintMessage)
       {
-         MsqIncPaintCountQueue(Window->MessageQueue);
+         if (HadNCPaintMessage)
+            MsqDecPaintCountQueue(Window->MessageQueue);
+         else
+            MsqIncPaintCountQueue(Window->MessageQueue);
       }
 #ifndef DESKTOP_IN_CSRSS
    }
@@ -389,14 +417,18 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       {
          for (phWnd = List; *phWnd; ++phWnd)
          {
-            HRGN hRgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
             Child = IntGetWindowObject(*phWnd);
-            NtGdiCombineRgn(hRgnTemp, hRgn, 0, RGN_COPY);
-            NtGdiOffsetRgn(hRgnTemp,
-               Window->WindowRect.left - Child->WindowRect.left,
-               Window->WindowRect.top - Child->WindowRect.top);
-            IntInvalidateWindows(Child, hRgnTemp, Flags);
-            NtGdiDeleteObject(hRgnTemp);
+            if ((Child->Style & (WS_VISIBLE | WS_MINIMIZE)) == WS_VISIBLE)
+            {
+               HRGN hRgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
+               Child = IntGetWindowObject(*phWnd);
+               NtGdiCombineRgn(hRgnTemp, hRgn, 0, RGN_COPY);
+               NtGdiOffsetRgn(hRgnTemp,
+                  Window->WindowRect.left - Child->WindowRect.left,
+                  Window->WindowRect.top - Child->WindowRect.top);
+               IntInvalidateWindows(Child, hRgnTemp, Flags);
+               NtGdiDeleteObject(hRgnTemp);
+            }
             IntReleaseWindowObject(Child);
          }
          ExFreePool(List);
@@ -404,37 +436,24 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    }
 }
 
-VOID FASTCALL
-IntValidateParent(PWINDOW_OBJECT Child)
+/*
+ * IntIsWindowDrawable
+ *
+ * Remarks
+ *    Window is drawable when it is visible, all parents are not
+ *    minimized, and it is itself not minimized.
+ */
+
+BOOL FASTCALL
+IntIsWindowDrawable(PWINDOW_OBJECT Window)
 {
-   HWND Parent;
-   PWINDOW_OBJECT ParentWindow;
-
-   Parent = NtUserGetAncestor(Child->Self, GA_PARENT);
-   while (Parent && Parent != IntGetDesktopWindow())
+   for (; Window; Window = Window->Parent)
    {
-      ParentWindow = IntGetWindowObject(Parent);
-      if (ParentWindow && !(ParentWindow->Style & WS_CLIPCHILDREN))
-      {
-         if (ParentWindow->UpdateRegion != 0)
-         {
-            INT OffsetX, OffsetY;
-
-            /*
-             * We must offset the child region by the offset of the
-             * child rect in the parent.
-             */
-            OffsetX = Child->WindowRect.left - ParentWindow->WindowRect.left;
-            OffsetY = Child->WindowRect.top - ParentWindow->WindowRect.top;
-            NtGdiOffsetRgn(Child->UpdateRegion, OffsetX, OffsetY );
-            NtGdiCombineRgn(ParentWindow->UpdateRegion, ParentWindow->UpdateRegion,
-               Child->UpdateRegion, RGN_DIFF);
-            NtGdiOffsetRgn(Child->UpdateRegion, -OffsetX, -OffsetY);
-         }
-      }
-      IntReleaseWindowObject(ParentWindow);
-      Parent = NtUserGetAncestor(Parent, GA_PARENT);
+      if ((Window->Style & (WS_VISIBLE | WS_MINIMIZE)) != WS_VISIBLE)
+         return FALSE;
    }
+
+   return TRUE;
 }
 
 /*
@@ -455,7 +474,9 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
     * Validation of passed parameters.
     */
 
-   if ((Flags & (RDW_VALIDATE | RDW_INVALIDATE)) == (RDW_VALIDATE | RDW_INVALIDATE))
+   if (!IntIsWindowDrawable(Window) ||
+       (Flags & (RDW_VALIDATE | RDW_INVALIDATE)) ==
+       (RDW_VALIDATE | RDW_INVALIDATE))
    {
       return FALSE;
    }
@@ -514,7 +535,7 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
     * Validate parent covered by region.
     */
 
-   if (Window->UpdateRegion != NULL && Flags & RDW_UPDATENOW)
+   if (Window->UpdateRegion != NULL && Flags & (RDW_ERASENOW | RDW_VALIDATE))
    {
       IntValidateParent(Window);
    }
@@ -557,6 +578,10 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
            CurrentEntry = CurrentEntry->Flink)
       {
          Window = CONTAINING_RECORD(CurrentEntry, WINDOW_OBJECT, ThreadListEntry);
+         if (Window->Parent != NULL && !IntIsDesktopWindow(Window->Parent))
+         {
+            continue;
+         }
          if (Window->Style & WS_VISIBLE)
          {
             hFoundWnd = IntFindWindowToRepaint(Window->Self, Thread);
@@ -586,7 +611,6 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
 
       ExAcquireFastMutex(&Window->ChildrenListLock);
 
-#if 0
       for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
       {
          if (Child->Style & WS_VISIBLE &&
@@ -601,7 +625,6 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
 
       if (hFoundWnd == NULL)
       {
-#endif
          for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
          {
             if (Child->Style & WS_VISIBLE)
@@ -611,9 +634,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
                   break;
             }
          }
-#if 0
       }
-#endif
 
       ExReleaseFastMutex(&Window->ChildrenListLock);
       IntReleaseWindowObject(Window);
@@ -623,9 +644,14 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
 }
 
 BOOL FASTCALL
-IntGetPaintMessage(PWINDOW_OBJECT Wnd, PW32THREAD Thread, MSG *Message)
+IntGetPaintMessage(PWINDOW_OBJECT Wnd, PW32THREAD Thread, MSG *Message,
+   BOOL Remove)
 {
    PWINDOW_OBJECT Window;
+   PUSER_MESSAGE_QUEUE MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
+
+   if (!MessageQueue->PaintPosted)
+      return FALSE;
 
    if (Wnd)
       Message->hwnd = IntFindWindowToRepaint(Wnd->Self, PsGetWin32Thread());
@@ -634,15 +660,7 @@ IntGetPaintMessage(PWINDOW_OBJECT Wnd, PW32THREAD Thread, MSG *Message)
 
    if (Message->hwnd == NULL)
    {
-      PUSER_MESSAGE_QUEUE MessageQueue;
-
       DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
-      MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
-      ExAcquireFastMutex(&MessageQueue->Lock);
-      DPRINT1("Current paint count: %d\n", MessageQueue->PaintCount);
-      MessageQueue->PaintCount = 0;
-      MessageQueue->PaintPosted = FALSE;
-      ExReleaseFastMutex(&MessageQueue->Lock);
       return FALSE;
    }
 
@@ -652,13 +670,13 @@ IntGetPaintMessage(PWINDOW_OBJECT Wnd, PW32THREAD Thread, MSG *Message)
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
       {
          Message->message = WM_NCPAINT;
-         Message->wParam = (WPARAM)IntGetNCUpdateRegion(Window);
+         Message->wParam = (WPARAM)IntGetNCUpdateRegion(Window, Remove);
          Message->lParam = 0;
       } else
       {
          Message->message = WM_PAINT;
          Message->wParam = Message->lParam = 0;
-         if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+         if (Remove && Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
          {
             Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
             if (Window->UpdateRegion == NULL)
@@ -715,9 +733,11 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
       return NULL;
    }
 
+/*   IntRedrawWindow(Window, NULL, 0, RDW_NOINTERNALPAINT | RDW_VALIDATE | RDW_NOCHILDREN);*/
    if (Window->UpdateRegion != NULL)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
+      IntValidateParent(Window);
       NtGdiDeleteObject(Window->UpdateRegion);
       Window->UpdateRegion = NULL;
    }
@@ -892,7 +912,7 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
    NTSTATUS Status;
    PWINDOW_OBJECT Wnd;
 
-   if (!(Wnd = IntGetWindowObject(hWnd)))
+   if (!(Wnd = IntGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;

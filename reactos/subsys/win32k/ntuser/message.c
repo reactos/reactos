@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.33 2003/11/19 13:19:40 weiden Exp $
+/* $Id: message.c,v 1.34 2003/11/21 17:01:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -203,12 +203,9 @@ IntPeekMessage(LPMSG Msg,
     ;
 
   /* Check for paint messages. */
-  if (ThreadQueue->PaintPosted)
+  if (IntGetPaintMessage(Wnd, PsGetWin32Thread(), Msg, RemoveMessages))
     {
-      if (IntGetPaintMessage(Wnd, PsGetWin32Thread(), Msg))
-        {
-          return TRUE;
-        }
+      return TRUE;
     }
 
   return FALSE;

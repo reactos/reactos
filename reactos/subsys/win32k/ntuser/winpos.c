@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.44 2003/11/20 21:21:29 navaraf Exp $
+/* $Id: winpos.c,v 1.45 2003/11/21 17:01:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -745,14 +745,6 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       return FALSE;
    }
 
-   if (Window->Flags & WINDOWOBJECT_MAPPING)
-   {
-      /* FIXME: SetLastWin32Error */
-      return FALSE;
-   }
-
-   Window->Flags |= WINDOWOBJECT_MAPPING;
-   
    WinPos.hwnd = Wnd;
    WinPos.hwndInsertAfter = WndInsertAfter;
    WinPos.x = x;
@@ -869,7 +861,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
                       RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ALLCHILDREN);
       Window->Style &= ~WS_VISIBLE;
    }
-   else
+   else if (WinPos.flags & SWP_SHOWWINDOW)
    {
       Window->Style |= WS_VISIBLE;
    }
@@ -987,7 +979,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       }
       else
       {
-         IntRedrawWindow(Window, NULL, NULL,
+         IntRedrawWindow(Window, NULL, 0,
             RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
       }
    }
@@ -1025,14 +1017,11 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
    if (!(WinPos.flags & SWP_NOREDRAW))
    {
-      /* FIXME: Call IntRedrawWindow to erase *all* touched windows. */
       IntRedrawWindow(Window, NULL, 0, RDW_ALLCHILDREN | RDW_ERASENOW);
    }
 
    /* FIXME: Check some conditions before doing this. */
    IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
-
-   Window->Flags &= ~WINDOWOBJECT_MAPPING;
 
    IntReleaseWindowObject(Window);
 
@@ -1055,7 +1044,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
   UINT Swp = 0;
   RECT NewPos;
   BOOLEAN ShowFlag;
-  HRGN VisibleRgn;
+//  HRGN VisibleRgn;
 
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
@@ -1153,6 +1142,44 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
        */
     }
 
+#if 1
+  /* We can't activate a child window */
+  if ((Window->Style & WS_CHILD) &&
+      !(Window->ExStyle & WS_EX_MDICHILD))
+    {
+      Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
+    }
+
+  WinPosSetWindowPos(Window->Self, HWND_TOP, NewPos.left, NewPos.top,
+    NewPos.right, NewPos.bottom, LOWORD(Swp));
+
+  if (Cmd == SW_HIDE)
+    {
+      /* FIXME: This will cause the window to be activated irrespective
+       * of whether it is owned by the same thread. Has to be done
+       * asynchronously.
+       */
+
+      if (Window->Self == IntGetActiveWindow())
+        {
+          WinPosActivateOtherWindow(Window);
+        }
+
+      /* Revert focus to parent */
+      if (Wnd == IntGetFocusWindow() ||
+          IntIsChildWindow(Wnd, IntGetFocusWindow()))
+        {
+          IntSetFocusWindow(Window->Parent->Self);
+        }
+    }
+
+  /* FIXME: Check for window destruction. */
+  /* Show title for minimized windows. */
+  if (Window->Style & WS_MINIMIZE)
+    {
+      WinPosShowIconTitle(Window, TRUE);
+    }
+#else
   if (Window->Style & WS_CHILD &&
       !IntIsWindowVisible(Window->Parent->Self) &&
       (Swp & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
@@ -1203,6 +1230,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 	  WinPosShowIconTitle(Window, TRUE);
 	}
     }
+#endif
 
   if (Window->Flags & WINDOWOBJECT_NEED_SIZE)
     {

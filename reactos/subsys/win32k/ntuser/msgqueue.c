@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.32 2003/11/21 16:36:26 weiden Exp $
+/* $Id: msgqueue.c,v 1.33 2003/11/21 17:01:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -819,6 +819,8 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   KeInitializeEvent(&MessageQueue->NewMessages, SynchronizationEvent, FALSE);
   MessageQueue->QueueStatus = 0;
   MessageQueue->FocusWindow = NULL;
+  MessageQueue->PaintPosted = FALSE;
+  MessageQueue->PaintCount = 0;
 }
 
 VOID FASTCALL
