@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.10 2002/09/15 22:25:05 hbirr Exp $
+/* $Id: fsctl.c,v 1.11 2002/09/17 20:42:59 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -185,27 +185,32 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
   ULONG Sector;
   PVD_HEADER VdHeader;
-  PCDROM_TOC Toc;
   ULONG Size;
   ULONG Offset;
   ULONG i;
-  PTRACK_DATA TrackData;
+  struct
+  {
+    UCHAR  Length[2];
+    UCHAR  FirstSession;
+    UCHAR  LastSession;
+    TRACK_DATA  TrackData;
+  }
+  Toc;
 
   DPRINT("CdfsGetVolumeData\n");
   
   Buffer = ExAllocatePool(NonPagedPool,
-			  max (CDFS_BASIC_SECTOR, CDROM_TOC_SIZE));
+			  CDFS_BASIC_SECTOR);
 
   if (Buffer == NULL)
     return(STATUS_INSUFFICIENT_RESOURCES);
   
-  Toc = (PCDROM_TOC)Buffer;
-  Size = sizeof(CDROM_TOC);
+  Size = sizeof(Toc);
   Status = CdfsDeviceIoControl(DeviceObject,
-			       IOCTL_CDROM_READ_TOC,
+			       IOCTL_CDROM_GET_LAST_SESSION,
 			       NULL,
 			       0,
-			       Toc,
+			       &Toc,
 			       &Size);
   if (!NT_SUCCESS(Status))
   {
@@ -213,34 +218,17 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
      return Status;
   }
 
-  CHECKPOINT;
-  if (Toc->FirstTrack == 0xaa)
-  {
-     ExFreePool(Buffer);
-     return STATUS_UNSUCCESSFUL;
-  }
+  DPRINT("FirstSession %d, LastSession %d, FirstTrack %d\n", 
+         Toc.FirstSession, Toc.LastSession, Toc.TrackData.TrackNumber);
 
-  for (i = Toc->LastTrack; i >= Toc->FirstTrack; i--)
+  Offset = 0;
+  for (i = 0; i < 4; i++)
   {
-     TrackData = &Toc->TrackData[i - 1];
-     if (TrackData->Control & 0x4)
-     {
-	 /* we have found the last data session */
-         CHECKPOINT;
-	 break;
-     }
+     Offset = (Offset << 8) + Toc.TrackData.Address[i];
   }
+  CdInfo->VolumeOffset = Offset;
 
-  if (i < Toc->FirstTrack)
-  {
-     /* there is no data session on the cd */
-     CHECKPOINT;
-     ExFreePool(Buffer);
-     return STATUS_UNSUCCESSFUL;
-  }
-
-  Offset = msf_to_lba(TrackData->Address[1], TrackData->Address[2], TrackData->Address[3]);
-  CdInfo->VolumeOffset = Offset * BLOCKSIZE;
+  DPRINT("Offset of first track in last session %d\n", Offset);
   
   CdInfo->JolietLevel = 0;
   VdHeader = (PVD_HEADER)Buffer;
