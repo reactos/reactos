@@ -359,6 +359,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Tag",0x00010001,0x00000090
 
+; ACPI driver
+HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","ImagePath",0x00020000,"system32\drivers\acpi.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Type",0x00010001,0x00000001
+
 ; Beep device driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Group",0x00000000,"Base"
