@@ -1,0 +1,130 @@
+# $Id: syscall.db,v 1.1 2002/04/06 16:07:34 ea Exp $
+#
+# ReactOS - Operating System
+# Symbolic system calls table for the POSIX+ server.
+#
+# NOTE: the PSXSS server implements only the system calls
+# that can NOT be implemented in full/correctly in the
+# PSXDLL library.
+#
+# ENTRY SYNTAX
+#	status interface_name argc
+#
+# status = + | -
+#
+# LEGENDA
+# + means the system call is implemented in the server;
+# - means "{errno=ENOSYS;return -1;}".
+#
++ null             0
+- fork             0
+- authenticateuser 0
+- waitpid          3
++ _exit            1
+- kill             2
+- sigaction        3
+- sigprocmask      3
+- sigpending       1
+- sigsuspend       1
+- alarm            1
+- getpsids         0
+- syscall12        0
+- syscall13        0
+- getgroups        2
+- syscall15        0
+- syscall16        0
+- setsid           0
+- setpgid          2
+- syscall19        0
+- syscall20        0
+- times            1
+- ttyname          3
+- isatty           1
+- sysconf          1
+- open             2
+- umask            1
+- link             2
+- mkdir            2
+- mkfifo           2
+- rmdir            1
+- rename           2
+- stat             2
+- fstat            2
+- access           2
+- chmod            2
+- chown            3
+- utime            2
+- pathconf         2
+- fpathconf        2
+- pipe             1
+- syscall41        0
+- dup2             2
+- close            1
+- read             3
+- write            3
+- fcntl            3
+- lseek            3
+- tcgetattr        2
+- tcsetattr        3
+- tcsendbreak      2
+- tcdrain          1
+- tcflush          2
+- tcflow           2
+- tcgetpgrp        1
+- tcsetpgrp        2
+- getpwuid         1
+- getpwnam         1
+- getgrgid         1
+- getgrnam         1
+- unlink           1
+- readdir          1
+- ftruncate        2
+- syscall63        0
+- semctl           4
+- semget           3
+- semop            3
+- shmat            3
+- shmctl           3
+- shmdt            1
+- shmget           3
+- msgctl           3
+- msgget           2
+- msgrcv           5
+- msgsnd           4
+- socket           3
+- accept           3
+- bind             3
+- connect          3
+- getpeername      3
+- getsockname      3
+- getsockopt       5
+- listen           2
+- recv             4
+- recvfrom         6
+- send             4
+- sendto           6
+- setsockopt       5
+- shutdown         2
+- gethostbyname    1
+- gethostbyaddr    3
+- getprotobyname   1
+- getprotobynumber 1
+- getservbyname    2
+- getservbyport    2
+- select           5
+- statvfs          2
+- fstatvfs         2
+- ptsname          1
+- _fdptcheck       0
+- ioctl            2
+- mmap             6
+- syscall102       0
+- uidtontsid       1
+- gettzenv         0
+- pututxline       1
+- renamewtmpx      0
+- fsync            1
+- setgetitimer     0
+- setuser          0
+- ipcs             0
+# EOF
