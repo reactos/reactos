@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.265 2004/12/01 05:49:23 rcampbell Exp $
+# $Id: Makefile,v 1.266 2004/12/01 16:07:57 greatlrd Exp $
 #
 # Global makefile
 #
@@ -38,10 +38,10 @@ BUS = acpi isapnp pci
 LIB_FSLIB = vfatlib
 
 # Static libraries
-LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns
+LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid 
 
 # Keyboard layout libraries
-DLLS_KBD = kbdda kbddv kbdfr kbdgr kbdse kbduk kbdus
+DLLS_KBD = kbdda kbddv kbdfr kbdgr kbdse kbduk kbdus 
 
 # Control Panels
 DLLS_CPL = cpl
@@ -56,7 +56,7 @@ DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d
 	msgina msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg opengl32 packet psapi \
 	riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
 	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
-	dnsapi \
+	dnsapi dinput dinput8\
 	$(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
