@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.17 2004/04/12 17:14:55 navaraf Exp $
+/* $Id: services.c,v 1.18 2004/04/12 17:20:47 navaraf Exp $
  *
  * service control manager
  * 
@@ -33,11 +33,8 @@
 #include <ntos.h>
 #include <stdio.h>
 #include <windows.h>
-#undef CreateService
-#undef OpenService
 
 #include "services.h"
-#include <services/scmprot.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -46,7 +43,8 @@
 
 /* GLOBALS ******************************************************************/
 
-#define PIPE_TIMEOUT 10000
+#define PIPE_BUFSIZE 1024
+#define PIPE_TIMEOUT 1000
 
 
 /* FUNCTIONS *****************************************************************/
@@ -93,461 +91,17 @@ ScmCreateStartEvent(PHANDLE StartEvent)
 }
 
 
-typedef struct _SERVICE_THREAD_DATA
-{
-    HANDLE hPipe;
-    PSERVICE pService;
-} SERVICE_THREAD_DATA, *PSERVICE_THREAD_DATA;
-
-
-VOID FASTCALL
-ScmHandleDeleteServiceRequest(
-    PSERVICE_THREAD_DATA pServiceThreadData,
-    PSCM_SERVICE_REQUEST Request,
-    DWORD RequestSize,
-    PSCM_SERVICE_REPLY Reply,
-    LPDWORD ReplySize)
-{
-    Reply->ReplyStatus = RtlNtStatusToDosError(
-        ScmStartService(pServiceThreadData->pService, NULL));
-    *ReplySize = sizeof(DWORD);
-}
-
-
-VOID FASTCALL
-ScmHandleStartServiceRequest(
-    PSERVICE_THREAD_DATA pServiceThreadData,
-    PSCM_SERVICE_REQUEST Request,
-    DWORD RequestSize,
-    PSCM_SERVICE_REPLY Reply,
-    LPDWORD ReplySize)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS Status;
-    HANDLE KeyHandle;
-
-    InitializeObjectAttributes(
-       &ObjectAttributes,
-       &pServiceThreadData->pService->RegistryPath,
-       OBJ_CASE_INSENSITIVE,
-       NULL,
-       NULL);
-        						  
-    Status = ZwOpenKey(
-       &KeyHandle,
-       KEY_READ,
-       &ObjectAttributes);
-
-    if (NT_SUCCESS(Status))
-    {
-       Status = ZwDeleteKey(KeyHandle);
-       if (NT_SUCCESS(Status))
-       {
-          ZwClose(KeyHandle);
-          CHECKPOINT;
-          RemoveEntryList(&pServiceThreadData->pService->ServiceListEntry);
-       }
-    }
-    Reply->ReplyStatus = RtlNtStatusToDosError(Status);
-    *ReplySize = sizeof(DWORD);
-}
-
-
-DWORD
-WINAPI
-ScmNamedPipeServiceThread(LPVOID Context)
-{
-    SCM_SERVICE_REQUEST Request;
-    SCM_SERVICE_REPLY Reply;
-    DWORD cbBytesRead;
-    DWORD cbWritten, cbReplyBytes;
-    BOOL fSuccess;
-    PSERVICE_THREAD_DATA pServiceThreadData = Context;
-
-    ConnectNamedPipe(pServiceThreadData->hPipe, NULL);
-
-    for (;;)
-    {
-        fSuccess = ReadFile(
-            pServiceThreadData->hPipe,
-            &Request,
-            sizeof(Request),
-            &cbBytesRead,
-            NULL);
-
-        if (!fSuccess || cbBytesRead == 0)
-        {
-            break;
-        }
-
-        switch (Request.RequestCode)
-        {
-            case SCM_DELETESERVICE:
-                ScmHandleDeleteServiceRequest(
-                    pServiceThreadData,
-                    &Request,
-                    cbBytesRead,
-                    &Reply,
-                    &cbReplyBytes);
-                break;
-
-            case SCM_STARTSERVICE:
-                ScmHandleStartServiceRequest(
-                    pServiceThreadData,
-                    &Request,
-                    cbBytesRead,
-                    &Reply,
-                    &cbReplyBytes);
-                break;
-        }
-
-        fSuccess = WriteFile(
-            pServiceThreadData->hPipe,
-            &Reply,
-            cbReplyBytes,
-            &cbWritten,
-            NULL);
-
-        if (!fSuccess || cbReplyBytes != cbWritten)
-        {
-            break;
-        }
-    }
-
-    FlushFileBuffers(pServiceThreadData->hPipe);
-    DisconnectNamedPipe(pServiceThreadData->hPipe);
-    CloseHandle(pServiceThreadData->hPipe);
-
-    return NO_ERROR;
-}
-
-
-VOID FASTCALL
-ScmCreateServiceThread(
-    HANDLE hSCMPipe,
-    PSCM_OPENSERVICE_REPLY Reply,
-    LPDWORD ReplySize,
-    PSERVICE Service)
-{
-    HANDLE hPipe, hThread;
-    DWORD dwThreadId;
-    PSERVICE_THREAD_DATA ServiceThreadData;
-
-    ServiceThreadData = HeapAlloc(
-        GetProcessHeap(),
-        0,
-        sizeof(SERVICE_THREAD_DATA));
-
-    if (ServiceThreadData == NULL)
-    {
-        Reply->ReplyStatus = ERROR_NO_SYSTEM_RESOURCES;
-        CHECKPOINT;
-        return;
-    }
-
-    swprintf(Reply->PipeName, L"\\\\.\\pipe\\SCM.%08X.%08X", hSCMPipe, Service);
-
-    hPipe = CreateNamedPipeW(
-        Reply->PipeName,
-        PIPE_ACCESS_DUPLEX,
-        PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-        PIPE_UNLIMITED_INSTANCES,
-        sizeof(SCM_SERVICE_REQUEST),
-        sizeof(SCM_SERVICE_REPLY),
-        PIPE_TIMEOUT,
-        NULL);
-
-    if (hPipe == INVALID_HANDLE_VALUE)
-    {
-        Reply->ReplyStatus = ERROR_NO_SYSTEM_RESOURCES;
-        CHECKPOINT;
-        return;
-    }
-
-    ServiceThreadData->hPipe = hPipe;
-    ServiceThreadData->pService = Service;
-
-    hThread = CreateThread(
-        NULL,
-        0,
-        ScmNamedPipeServiceThread,
-        ServiceThreadData,
-        0,
-        &dwThreadId);
-
-    if (!hThread)
-    {
-        Reply->ReplyStatus = ERROR_NO_SYSTEM_RESOURCES;
-        CHECKPOINT;
-        CloseHandle(hPipe);
-        return;
-    }
-
-    Reply->ReplyStatus = NO_ERROR;
-    *ReplySize = sizeof(SCM_OPENSERVICE_REPLY);
-}
-
-
-VOID FASTCALL
-ScmHandleOpenServiceRequest(
-    HANDLE hPipe,
-    PSCM_REQUEST Request,
-    DWORD RequestSize,
-    PSCM_REPLY Reply,
-    LPDWORD ReplySize)
-{
-    PSERVICE Service;
-    UNICODE_STRING ServiceName;
-
-    DPRINT("OpenService\n");
-
-    if (RequestSize != sizeof(SCM_OPENSERVICE_REQUEST))
-    {
-        Reply->ReplyStatus = ERROR_INVALID_PARAMETER;
-        return;
-    }
-
-    ServiceName.Length = Request->OpenService.ServiceName.Length;
-    ServiceName.Buffer = Request->OpenService.ServiceName.Buffer;
-    Service = ScmFindService(&ServiceName);
-    if (Service == NULL)
-    {
-        DPRINT("OpenService - Service not found\n");
-        Reply->ReplyStatus = ERROR_SERVICE_DOES_NOT_EXIST;
-        return;
-    }
-
-    DPRINT("OpenService - Service found\n");
-    ScmCreateServiceThread(
-        hPipe,
-        &Reply->OpenService,
-        ReplySize,
-        Service);
-}
-
-
-VOID FASTCALL
-ScmHandleCreateServiceRequest(
-    HANDLE hPipe,
-    PSCM_REQUEST Request,
-    DWORD RequestSize,
-    PSCM_REPLY Reply,
-    LPDWORD ReplySize)
-{
-    PSERVICE Service;
-    NTSTATUS Status;
-    UNICODE_STRING ServiceName;
-
-    DPRINT("CreateService - %S\n", Request->CreateService.ServiceName.Buffer);
-
-    if (RequestSize != sizeof(SCM_CREATESERVICE_REQUEST))
-    {
-        Reply->ReplyStatus = ERROR_INVALID_PARAMETER;
-        return;
-    }
-
-    Status = RtlCheckRegistryKey(
-        RTL_REGISTRY_SERVICES,
-        Request->CreateService.ServiceName.Buffer);
-
-    if (NT_SUCCESS(Status))
-    {
-        DPRINT("CreateService - Already exists\n");
-        Reply->ReplyStatus = ERROR_SERVICE_EXISTS;
-        return;
-    }
-
-    Status = RtlCreateRegistryKey(
-        RTL_REGISTRY_SERVICES,
-        Request->CreateService.ServiceName.Buffer);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("CreateService - Can't create key (%x)\n", Status);
-        Reply->ReplyStatus = Status;
-        return;
-    }
-
-    Status = RtlWriteRegistryValue(
-        RTL_REGISTRY_SERVICES,
-        Request->CreateService.ServiceName.Buffer,
-        L"Type",
-        REG_DWORD,
-        &Request->CreateService.dwServiceType,
-        sizeof(DWORD));
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("CreateService - Error writing value\n");
-        Reply->ReplyStatus = RtlNtStatusToDosError(Status);
-        return;
-    }
-
-    Status = RtlWriteRegistryValue(
-        RTL_REGISTRY_SERVICES,
-        Request->CreateService.ServiceName.Buffer,
-        L"Start",
-        REG_DWORD,
-        &Request->CreateService.dwStartType,
-        sizeof(DWORD));
-
-    if (!NT_SUCCESS(Status))
-    {
-        Reply->ReplyStatus = RtlNtStatusToDosError(Status);
-        return;
-    }
-
-    Status = RtlWriteRegistryValue(
-        RTL_REGISTRY_SERVICES,
-        Request->CreateService.ServiceName.Buffer,
-        L"ErrorControl",
-        REG_DWORD,
-        &Request->CreateService.dwErrorControl,
-        sizeof(DWORD));
-
-    if (!NT_SUCCESS(Status))
-    {
-        Reply->ReplyStatus = RtlNtStatusToDosError(Status);
-        return;
-    }
-
-    if (Request->CreateService.BinaryPathName.Length)
-    {
-        Status = RtlWriteRegistryValue(
-            RTL_REGISTRY_SERVICES,
-            Request->CreateService.ServiceName.Buffer,
-            L"ImagePath",
-            REG_SZ,
-            Request->CreateService.BinaryPathName.Buffer,
-            Request->CreateService.BinaryPathName.Length + sizeof(UNICODE_NULL));
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("CreateService - Error writing value\n");
-            Reply->ReplyStatus = RtlNtStatusToDosError(Status);
-            return;
-        }
-    }
-
-    if (Request->CreateService.LoadOrderGroup.Length)
-    {
-        Status = RtlWriteRegistryValue(
-            RTL_REGISTRY_SERVICES,
-            Request->CreateService.ServiceName.Buffer,
-            L"Group",
-            REG_SZ,
-            Request->CreateService.LoadOrderGroup.Buffer,
-            Request->CreateService.LoadOrderGroup.Length + sizeof(UNICODE_NULL));
-
-        if (!NT_SUCCESS(Status))
-        {
-            Reply->ReplyStatus = RtlNtStatusToDosError(Status);
-            return;
-        }
-    }
-
-    if (Request->CreateService.Dependencies.Length)
-    {
-        Status = RtlWriteRegistryValue(
-            RTL_REGISTRY_SERVICES,
-            Request->CreateService.ServiceName.Buffer,
-            L"Dependencies",
-            REG_SZ,
-            Request->CreateService.Dependencies.Buffer,
-            Request->CreateService.Dependencies.Length + sizeof(UNICODE_NULL));
-
-        if (!NT_SUCCESS(Status))
-        {
-            Reply->ReplyStatus = RtlNtStatusToDosError(Status);
-            return;
-        }
-    }
-
-    if (Request->CreateService.DisplayName.Length)
-    {
-        Status = RtlWriteRegistryValue(
-            RTL_REGISTRY_SERVICES,
-            Request->CreateService.ServiceName.Buffer,
-            L"DisplayName",
-            REG_SZ,
-            Request->CreateService.DisplayName.Buffer,
-            Request->CreateService.DisplayName.Length + sizeof(UNICODE_NULL));
-
-        if (!NT_SUCCESS(Status))
-        {
-            Reply->ReplyStatus = RtlNtStatusToDosError(Status);
-            return;
-        }
-    }
-
-    if (Request->CreateService.ServiceStartName.Length ||
-        Request->CreateService.Password.Length)
-    {
-        DPRINT1("Unimplemented case\n");
-    }
-
-    ServiceName.Length = Request->OpenService.ServiceName.Length;
-    ServiceName.Buffer = Request->OpenService.ServiceName.Buffer;
-    Service = ScmCreateServiceListEntry(&ServiceName);
-    if (Service == NULL)
-    {
-        DPRINT("CreateService - Error creating service list entry\n");
-        Reply->ReplyStatus = ERROR_NOT_ENOUGH_MEMORY;
-        return;
-    }
-
-    DPRINT("CreateService - Success\n");
-    ScmCreateServiceThread(
-        hPipe,
-        &Reply->OpenService,
-        ReplySize,
-        Service);
-}
-
-
 BOOL
 ScmNamedPipeHandleRequest(
-    HANDLE hPipe,
-    PSCM_REQUEST Request,
+    PVOID Request,
     DWORD RequestSize,
-    PSCM_REPLY Reply,
+    PVOID Reply,
     LPDWORD ReplySize)
 {
-    *ReplySize = sizeof(DWORD);
+    DbgPrint("SCM READ: %s\n", Request);
 
-    if (RequestSize < sizeof(DWORD))
-    {
-        Reply->ReplyStatus = ERROR_INVALID_PARAMETER;
-        return TRUE;
-    }
-
-    DPRINT("RequestCode: %x\n", Request->RequestCode);
-
-    switch (Request->RequestCode)
-    {
-        case SCM_OPENSERVICE:
-            ScmHandleOpenServiceRequest(
-                hPipe,
-                Request,
-                RequestSize,
-                Reply,
-                ReplySize);
-            break;
-
-        case SCM_CREATESERVICE:
-            ScmHandleCreateServiceRequest(
-                hPipe,
-                Request,
-                RequestSize,
-                Reply,
-                ReplySize);
-            break;
-
-        default:
-            Reply->ReplyStatus = ERROR_INVALID_PARAMETER;
-    }
-
-    return TRUE;
+    *ReplySize = 0;
+    return FALSE;
 }
 
 
@@ -555,8 +109,8 @@ DWORD
 WINAPI
 ScmNamedPipeThread(LPVOID Context)
 {
-    SCM_REQUEST Request;
-    SCM_REPLY Reply;
+    CHAR chRequest[PIPE_BUFSIZE];
+    CHAR chReply[PIPE_BUFSIZE];
     DWORD cbReplyBytes;
     DWORD cbBytesRead;
     DWORD cbWritten;
@@ -569,16 +123,16 @@ ScmNamedPipeThread(LPVOID Context)
     
     for (;;) {
         fSuccess = ReadFile(hPipe,
-                            &Request,
-                            sizeof(Request),
+                            &chRequest,
+                            PIPE_BUFSIZE,
                             &cbBytesRead,
                             NULL);
         if (!fSuccess || cbBytesRead == 0) {
             break;
         }
-        if (ScmNamedPipeHandleRequest(hPipe, &Request, cbBytesRead, &Reply, &cbReplyBytes)) {
+        if (ScmNamedPipeHandleRequest(&chRequest, cbBytesRead, &chReply, &cbReplyBytes)) {
             fSuccess = WriteFile(hPipe,
-                                 &Reply,
+                                 &chReply,
                                  cbReplyBytes,
                                  &cbWritten,
                                  NULL);
@@ -608,8 +162,8 @@ BOOL ScmCreateNamedPipe(VOID)
               PIPE_ACCESS_DUPLEX,
               PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
               PIPE_UNLIMITED_INSTANCES,
-              sizeof(SCM_REQUEST),
-              sizeof(SCM_REPLY),
+              PIPE_BUFSIZE,
+              PIPE_BUFSIZE,
               PIPE_TIMEOUT,
               NULL);
     if (hPipe == INVALID_HANDLE_VALUE) {
@@ -689,6 +243,25 @@ BOOL StartScmNamedPipeThreadListener(void)
     return TRUE;
 }
 
+VOID FASTCALL
+AcquireLoadDriverPrivilege(VOID)
+{
+    HANDLE hToken; 
+    TOKEN_PRIVILEGES tkp; 
+
+    /* Get a token for this process.  */
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+        /* Get the LUID for the debug privilege.  */
+        LookupPrivilegeValue(NULL, SE_LOAD_DRIVER_NAME, &tkp.Privileges[0].Luid); 
+
+        tkp.PrivilegeCount = 1;  /* one privilege to set */
+        tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
+
+        /* Get the debug privilege for this process. */
+        AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0); 
+    }
+}
+
 int STDCALL
 WinMain(HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
@@ -700,6 +273,9 @@ WinMain(HINSTANCE hInstance,
   NTSTATUS Status;
 
   DPRINT("SERVICES: Service Control Manager\n");
+
+  /* Acquire privileges to load drivers */
+  AcquireLoadDriverPrivilege();
 
   /* Create start event */
   if (!ScmCreateStartEvent(&hScmStartEvent))

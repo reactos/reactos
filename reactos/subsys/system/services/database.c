@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.15 2004/04/12 17:14:54 navaraf Exp $
+/* $Id: database.c,v 1.16 2004/04/12 17:20:47 navaraf Exp $
  *
  * service control manager
  * 
@@ -36,6 +36,39 @@
 
 #define NDEBUG
 #include <debug.h>
+
+
+/* TYPES *********************************************************************/
+
+typedef struct _SERVICE_GROUP
+{
+  LIST_ENTRY GroupListEntry;
+  UNICODE_STRING GroupName;
+
+  BOOLEAN ServicesRunning;
+
+} SERVICE_GROUP, *PSERVICE_GROUP;
+
+
+typedef struct _SERVICE
+{
+  LIST_ENTRY ServiceListEntry;
+  UNICODE_STRING ServiceName;
+  UNICODE_STRING RegistryPath;
+  UNICODE_STRING ServiceGroup;
+
+  ULONG Start;
+  ULONG Type;
+  ULONG ErrorControl;
+  ULONG Tag;
+
+  BOOLEAN ServiceRunning;
+  BOOLEAN ServiceVisited;
+
+  HANDLE ControlPipeHandle;
+  ULONG ProcessId;
+  ULONG ThreadId;
+} SERVICE, *PSERVICE;
 
 
 /* GLOBALS *******************************************************************/
@@ -83,8 +116,8 @@ CreateGroupListRoutine(PWSTR ValueName,
 }
 
 
-PSERVICE FASTCALL
-ScmCreateServiceListEntry(PUNICODE_STRING ServiceName)
+static NTSTATUS STDCALL
+CreateServiceListEntry(PUNICODE_STRING ServiceName)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[6];
   PSERVICE Service = NULL;
@@ -97,7 +130,7 @@ ScmCreateServiceListEntry(PUNICODE_STRING ServiceName)
 		      sizeof(SERVICE));
   if (Service == NULL)
     {
-      return NULL;
+      return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
   /* Copy service name */
@@ -108,7 +141,7 @@ ScmCreateServiceListEntry(PUNICODE_STRING ServiceName)
   if (Service->ServiceName.Buffer == NULL)
     {
       HeapFree(GetProcessHeap(), 0, Service);
-      return NULL;
+      return(STATUS_INSUFFICIENT_RESOURCES);
     }
   RtlCopyMemory(Service->ServiceName.Buffer,
 		ServiceName->Buffer,
@@ -123,7 +156,7 @@ ScmCreateServiceListEntry(PUNICODE_STRING ServiceName)
     {
       HeapFree(GetProcessHeap(), 0, Service->ServiceName.Buffer);
       HeapFree(GetProcessHeap(), 0, Service);
-      return NULL;
+      return(STATUS_INSUFFICIENT_RESOURCES);
     }
   wcscpy(Service->RegistryPath.Buffer,
 	 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
@@ -162,7 +195,7 @@ ScmCreateServiceListEntry(PUNICODE_STRING ServiceName)
       RtlFreeUnicodeString(&Service->RegistryPath);
       RtlFreeUnicodeString(&Service->ServiceName);
       HeapFree(GetProcessHeap(), 0, Service);
-      return NULL;
+      return(Status);
     }
 
   DPRINT("ServiceName: '%wZ'\n", &Service->ServiceName);
@@ -175,7 +208,7 @@ ScmCreateServiceListEntry(PUNICODE_STRING ServiceName)
   InsertTailList(&ServiceListHead,
 		 &Service->ServiceListEntry);
 
-  return Service;
+  return(STATUS_SUCCESS);
 }
 
 
@@ -260,10 +293,7 @@ ScmCreateServiceDataBase(VOID)
 	      SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = 0;
 
 	      DPRINT("KeyName: '%wZ'\n", &SubKeyName);
-	      if (ScmCreateServiceListEntry(&SubKeyName) == NULL)
-	        {
-	          return STATUS_INSUFFICIENT_RESOURCES;
-	        }
+	      Status = CreateServiceListEntry(&SubKeyName);
 	    }
 	}
 
@@ -416,7 +446,7 @@ ScmGetBootAndSystemDriverState(VOID)
 }
 
 
-NTSTATUS FASTCALL
+static NTSTATUS
 ScmStartService(PSERVICE Service,
 		PSERVICE_GROUP Group)
 {
@@ -595,7 +625,7 @@ Done:
     }
 #endif
 
-  return Status; //(STATUS_SUCCESS);
+  return(STATUS_SUCCESS);
 }
 
 
@@ -688,29 +718,6 @@ ScmAutoStartServices(VOID)
       CurrentService->ServiceVisited = FALSE;
       ServiceEntry = ServiceEntry->Flink;
     }
-}
-
-/*
- * FIXME: Doesn't work!!!
- */
-PSERVICE FASTCALL
-ScmFindService(PUNICODE_STRING ServiceName)
-{
-  PSERVICE CurrentService;
-  PLIST_ENTRY ServiceEntry;
-
-  ServiceEntry = ServiceListHead.Flink;
-  while (ServiceEntry != &ServiceListHead)
-    {
-      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
-      if (!RtlCompareUnicodeString(ServiceName, &CurrentService->ServiceName, TRUE))
-        {
-          return CurrentService;
-        }
-      ServiceEntry = ServiceEntry->Flink;
-    }
-
-  return NULL;
 }
 
 /* EOF */
