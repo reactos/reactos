@@ -25,7 +25,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
-
+#include <string.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -44,7 +44,11 @@ static SETPIXELFMT       glSetPixelFormat      = NULL;
 static SWAPBUFFERS       glSwapBuffers         = NULL;
 static DESCRIBEPIXELFMT  glDescribePixelFormat = NULL;
 static GETPIXELFMT       glGetPixelFormat      = NULL;
-static HINSTANCE         hOpenGL               = NULL;
+
+/*
+		OpenGL Handle.
+*/
+HINSTANCE                hOpenGL               = NULL;
 
 static BOOL OpenGLEnable(void)
 {
@@ -173,6 +177,38 @@ SwapBuffers(HDC  hDC)
 
 
   return(glSwapBuffers(hDC));
+}
+
+
+/*
+	Do this here for now.
+*/
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetEnhMetaFilePixelFormat(
+	HENHMETAFILE			hEmh,
+	DWORD				cbBufz,
+	CONST PIXELFORMATDESCRIPTOR	*ppfd
+	)
+{
+ENHMETAHEADER pemh;
+
+	if(GetEnhMetaFileHeader(hEmh, sizeof(ENHMETAHEADER), &pemh))
+	{
+	if(pemh.bOpenGL)
+	{
+		if(pemh.cbPixelFormat)
+		{
+		memcpy((void*)ppfd, (const void *)pemh.offPixelFormat, cbBufz );
+		return(pemh.cbPixelFormat);
+		}
+	}
+	}
+	return(0);
 }
 
 /* EOF */

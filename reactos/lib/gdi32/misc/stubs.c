@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.33 2003/09/06 16:50:11 jimtabor Exp $
+/* $Id: stubs.c,v 1.34 2003/09/06 19:44:00 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -958,22 +958,6 @@ GetEnhMetaFilePaletteEntries(
 	HENHMETAFILE	a0,
 	UINT		a1,
 	LPPALETTEENTRY	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetEnhMetaFilePixelFormat(
-	HENHMETAFILE			a0,
-	DWORD				a1,
-	CONST PIXELFORMATDESCRIPTOR	*a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
