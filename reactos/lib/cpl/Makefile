@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-CONTROL_PANELS = sysdm appwiz control
+CONTROL_PANELS = access appwiz control sysdm
 
 all: $(CONTROL_PANELS)
 
