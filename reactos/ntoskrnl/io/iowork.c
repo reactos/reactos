@@ -1,4 +1,4 @@
-/* $Id: iowork.c,v 1.2 2002/10/05 10:53:37 dwelch Exp $
+/* $Id: iowork.c,v 1.3 2003/03/23 10:50:13 hbirr Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -38,8 +38,9 @@ VOID STDCALL STATIC
 IoWorkItemCallback(PVOID Parameter)
 {
   PIO_WORKITEM IoWorkItem = (PIO_WORKITEM)Parameter;
+  PDEVICE_OBJECT DeviceObject = IoWorkItem->DeviceObject;
   IoWorkItem->WorkerRoutine(IoWorkItem->DeviceObject, IoWorkItem->Context);
-  ObDereferenceObject(IoWorkItem->DeviceObject);
+  ObDereferenceObject(DeviceObject);
 }
 
 VOID STDCALL
