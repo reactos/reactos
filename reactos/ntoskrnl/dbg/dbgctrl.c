@@ -38,45 +38,18 @@
 /*
  * @unimplemented
  */
-ULONG
-__cdecl
-DbgPrintReturnControlC(
-    PCH Format,
-    ...
+NTSTATUS
+STDCALL
+DbgLoadImageSymbols(
+    IN PUNICODE_STRING Name,
+    IN ULONG Base, 
+    IN ULONG Unknown3
     )
 {
-	UNIMPLEMENTED;
-	return 0;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
-STDCALL
-NTSTATUS
-DbgQueryDebugFilterState(
-    IN ULONG ComponentId,
-    IN ULONG Level
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-STDCALL
-NTSTATUS
-DbgSetDebugFilterState(
-    IN ULONG ComponentId,
-    IN ULONG Level,
-    IN BOOLEAN State
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
 
 NTSTATUS STDCALL 
 NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.17 2003/07/10 06:27:13 royce Exp $
+/* $Id: print.c,v 1.18 2004/08/13 05:00:35 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,7 +33,7 @@
 #include <ddk/ntddk.h>
 #include <internal/kd.h>
 
-
+#include <internal/debug.h>
 /* FUNCTIONS ****************************************************************/
 
 #if 0
@@ -76,6 +76,35 @@ DbgPrint(PCH Format, ...)
    return (ULONG)DebugString.Length;
 }
 
+/*
+ * @unimplemented
+ */
+ULONG
+__cdecl
+DbgPrintEx(
+    IN ULONG ComponentId,
+    IN ULONG Level,
+    IN PCH Format,
+    ...
+    )
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+ULONG
+__cdecl
+DbgPrintReturnControlC(
+    PCH Format,
+    ...
+    )
+{
+    UNIMPLEMENTED;
+    return 0;
+}
 
 /*
  * @unimplemented
@@ -99,6 +128,35 @@ DbgPrompt (PCH OutputString,
    /* FIXME: Not implemented yet! */
    //	KdpPromptString (&Output,
    //	                 &Input);
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+DbgQueryDebugFilterState(
+    IN ULONG ComponentId,
+    IN ULONG Level
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+DbgSetDebugFilterState(
+    IN ULONG ComponentId,
+    IN ULONG Level,
+    IN BOOLEAN State
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */
