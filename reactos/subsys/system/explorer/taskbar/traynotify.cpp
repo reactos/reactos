@@ -185,17 +185,21 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 				 // Notify the message if the owner is still alive
 				if (IsWindow(entry._hWnd)) {
-					 // allow SetForegroundWindow() in Client Process
-					DWORD processId;
-					GetWindowThreadProcessId(entry._hWnd, &processId);
+					if (nmsg == WM_MOUSEMOVE)	// avoid to call blocking SendMessage() for merely moving the mouse over icons
+						PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
+					else {
+						 // allow SetForegroundWindow() in client process
+						DWORD processId;
+						GetWindowThreadProcessId(entry._hWnd, &processId);
 
-					 // bind dynamically to AllowSetForegroundWindow() to be compatible to WIN98
-					static DynamicFct<BOOL(WINAPI*)(DWORD dwProcessId)> AllowSetForegroundWindow(TEXT("USER32"), "AllowSetForegroundWindow");
+						 // bind dynamically to AllowSetForegroundWindow() to be compatible to WIN98
+						static DynamicFct<BOOL(WINAPI*)(DWORD dwProcessId)> AllowSetForegroundWindow(TEXT("USER32"), "AllowSetForegroundWindow");
 
-					if (AllowSetForegroundWindow)
-						(*AllowSetForegroundWindow)(processId);
+						if (AllowSetForegroundWindow)
+							(*AllowSetForegroundWindow)(processId);
 
-					PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
+						SendMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
+					}
 				}
 				else if (_icon_map.erase(entry))	// delete icons without valid owner window
 					Refresh();
