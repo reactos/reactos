@@ -16,13 +16,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.12 2004/02/08 16:16:24 navaraf Exp $ */
+/* $Id: print.c,v 1.13 2004/02/18 02:37:18 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/print.h>
 #include <win32k/dc.h>
+#include <include/error.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -59,32 +61,123 @@ NtGdiEscape(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT STDCALL
-NtGdiExtEscape(
-   HDC hDC,
-   INT Escape,
-   INT InSize,
-   LPCSTR InData,
-   INT OutSize,
-   LPSTR OutData)
+INT
+STDCALL
+IntEngExtEscape(
+   HSURF  Surface,
+   INT    Escape,
+   INT    InSize,
+   LPVOID InData,
+   INT    OutSize,
+   LPVOID OutData)
 {
-   PDC pDC = DC_LockDc(hDC);
-   INT Result;
+   UNIMPLEMENTED;
+   return -1;
+}
 
-   if (pDC == NULL)
+INT
+STDCALL
+IntGdiExtEscape(
+   PDC    dc,
+   INT    Escape,
+   INT    InSize,
+   LPCSTR InData,
+   INT    OutSize,
+   LPSTR  OutData)
+{
+   if ( NULL == dc->DriverFunctions.Escape )
    {
+      return IntEngExtEscape(
+         dc->Surface,
+         Escape,
+         InSize,
+         (PVOID)InData,
+         OutSize,
+         (PVOID)OutData);
+   }
+   else
+   {
+      return dc->DriverFunctions.Escape(
+         dc->Surface,
+         Escape,
+         InSize,
+         (PVOID)InData,
+         OutSize,
+         (PVOID)OutData );
+   }
+}
+
+INT
+STDCALL
+NtGdiExtEscape(
+   HDC    hDC,
+   INT    Escape,
+   INT    InSize,
+   LPCSTR UnsafeInData,
+   INT    OutSize,
+   LPSTR  UnsafeOutData)
+{
+   PDC      pDC = DC_LockDc(hDC);
+   LPVOID   SafeInData = NULL;
+   LPVOID   SafeOutData = NULL;
+   NTSTATUS Status;
+   INT      Result;
+
+   if ( pDC == NULL )
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return -1;
    }
 
-   Result = pDC->DriverFunctions.Escape(
-      pDC->Surface,
-      Escape,
-      InSize,
-      (PVOID)InData,
-      OutSize,
-      (PVOID)OutData);
+   if ( InSize && UnsafeInData )
+   {
+      SafeInData = ExAllocatePool ( NonPagedPool, InSize );
+      if ( !SafeInData )
+      {
+         DC_UnlockDc(hDC);
+         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         return -1;
+      }
+      Status = MmCopyFromCaller ( SafeInData, UnsafeInData, InSize );
+      if ( !NT_SUCCESS(Status) )
+      {
+         ExFreePool ( SafeInData );
+         DC_UnlockDc(hDC);
+         SetLastNtError(Status);
+         return -1;
+      }
+   }
+
+   if ( OutSize && UnsafeOutData )
+   {
+      SafeOutData = ExAllocatePool ( NonPagedPool, OutSize );
+      if ( !SafeOutData )
+      {
+         if ( SafeInData )
+            ExFreePool ( SafeInData );
+         DC_UnlockDc(hDC);
+         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         return -1;
+      }
+   }
+
+   Result = IntGdiExtEscape ( pDC, Escape, InSize, SafeInData, OutSize, SafeOutData );
 
    DC_UnlockDc(hDC);
+
+   if ( SafeInData )
+      ExFreePool ( SafeInData );
+
+   if ( SafeOutData )
+   {
+      Status = MmCopyToCaller ( UnsafeOutData, SafeOutData, OutSize );
+      ExFreePool ( SafeOutData );
+      if ( !NT_SUCCESS(Status) )
+      {
+         SetLastNtError(Status);
+         return -1;
+      }
+   }
 
    return Result;
 }
