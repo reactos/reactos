@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.16 2002/10/20 23:56:05 mdill Exp $
+/* $Id: env.c,v 1.17 2002/10/21 00:53:33 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -365,13 +365,6 @@ FreeEnvironmentStringsW (
 	LPWSTR	EnvironmentStrings
 	)
 {
-	if(EnvironmentStrings == NULL)
-	   return FALSE;
-	
-	RtlFreeHeap(RtlGetProcessHeap(),
-	            0,
-	            EnvironmentStrings);
-	            
 	return TRUE;
 }
 
