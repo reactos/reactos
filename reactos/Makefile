@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.236 2004/07/19 01:33:48 kuehng Exp $
+# $Id: Makefile,v 1.237 2004/07/20 19:24:39 sedwards Exp $
 #
 # Global makefile
 #
@@ -41,14 +41,13 @@ DLLS_KBD = kbddv kbdfr kbdgr kbdse kbduk kbdus
 DLLS_CPL = cpl
 
 # User mode libraries
-# advapi32 cards crtdll comdlg32 fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll
-# epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
-# imagehlp imm32
-DLLS = acledit advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype gdi32 \
-	imm32 iphlpapi kernel32 lzexpand mpr msafd msgina msimg32 msvcrt msvcrt20 msvideo mswsock \
-	netapi32 ntdll ole32 oleaut32 oledlg packet psapi richedit rpcrt4 samlib secur32 \
-	setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 userenv version wininet \
-	winmm winspool ws2help ws2_32 wsock32 wshirda imagehlp $(DLLS_KBD) $(DLLS_CPL)
+# libpcap packet epsapi
+DLLS = acledit advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
+	gdi32 imagehlp imm32 iphlpapi kernel32 lzexpand mpr msacm msafd msgina msimg32 msvcrt \
+	msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg packet psapi richedit \
+	rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
+	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
+	$(DLLS_KBD) $(DLLS_CPL)
 
 SUBSYS = smss win32k csrss ntvdm
 
