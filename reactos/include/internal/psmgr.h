@@ -28,7 +28,7 @@ enum
    /*
     * PURPOSE: Doesn't want to run
     */
-   THREAD_STATE_SLEEPING,
+   THREAD_STATE_SUSPENDED,
      
    /*
     * Waiting to be freed
@@ -36,15 +36,13 @@ enum
    THREAD_STATE_TERMINATED,
 };
 
-NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus);
-
 /*
  * Functions the HAL must provide
  */
 
-void HalInitFirstTask(PTHREAD_OBJECT thread);
-void HalInitTask(PTHREAD_OBJECT thread, PKSTART_ROUTINE fn, 
+void HalInitFirstTask(PKTHREAD thread);
+BOOLEAN HalInitTask(PKTHREAD thread, PKSTART_ROUTINE fn, 
 		 PVOID StartContext);
-void HalTaskSwitch(PTHREAD_OBJECT thread);
+void HalTaskSwitch(PKTHREAD thread);
 
 #endif

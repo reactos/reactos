@@ -1,6 +1,9 @@
 #ifndef _LINUX_CTYPE_H
 #define _LINUX_CTYPE_H
 
+
+#ifdef USE_OLD_CTYPE_IMPLEMENTATION
+
 #define _U	0x01	/* upper */
 #define _L	0x02	/* lower */
 #define _D	0x04	/* digit */
@@ -30,5 +33,39 @@ extern char _ctmp;
 
 #define tolower(c) (_ctmp=c,isupper(_ctmp)?_ctmp-('A'-'a'):_ctmp)
 #define toupper(c) (_ctmp=c,islower(_ctmp)?_ctmp-('a'-'A'):_ctmp)
+
+#else
+
+#define upalpha ('A' - 'a')
+
+extern inline char toupper(char c)
+{
+   if ((c>='a') && (c<='z')) return (c+upalpha);
+   return(c);
+}
+
+extern inline int islower(char c)
+{
+   if ((c>='a') && (c<='z')) return 1;
+   return 0;
+}
+
+extern inline int isdigit(char c)
+{
+   if ((c>='0') && (c<='9')) return 1;
+   return 0;
+}
+
+extern inline int isxdigit(char c)
+{
+   if (((c>='0') && (c<='9')) || ((toupper(c)>='A') && (toupper(c)<='Z')))
+     {
+	return 1;
+     }
+   return 0;
+}
+
+
+#endif
 
 #endif

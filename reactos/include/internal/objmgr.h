@@ -43,11 +43,12 @@ enum
    OBJTYP_MAX,
 };
 
-BOOL ObjAddObjectToNameSpace(const char* path, POBJECT_HEADER Object);
+BOOL ObAddObjectToNameSpace(PUNICODE_STRING path, POBJECT_HEADER Object);
 
 VOID ObRegisterType(CSHORT id, OBJECT_TYPE* type);
 
-VOID ObInitializeObjectHeader(CSHORT id, LPCSTR name, POBJECT_HEADER obj);
+VOID ObInitializeObjectHeader(CSHORT id, PUNICODE_STRING name, 
+			      POBJECT_HEADER obj);
 
 /*
  * FUNCTION: Get the size of an object
@@ -59,7 +60,7 @@ ULONG ObSizeOf(CSHORT Type);
 HANDLE ObAddHandle(PVOID obj);
 
 PVOID ObGetObjectByHandle(HANDLE h);
-PVOID ObLookupObject(PDIRECTORY_OBJECT root, const char* _string);
+PVOID ObLookupObject(PDIRECTORY_OBJECT root, PUNICODE_STRING _string);
 PVOID ObGenericCreateObject(PHANDLE Handle,
 			    ACCESS_MASK DesiredAccess,
 			    POBJECT_ATTRIBUTES ObjectAttributes,

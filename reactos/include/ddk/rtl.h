@@ -5,6 +5,52 @@
 #ifndef __DDK_RTL_H
 #define __DDK_RTL_H
 
+typedef struct _CONTROLLER_OBJECT
+{
+   CSHORT Type;
+   CSHORT Size;   
+   PVOID ControllerExtension;
+   KDEVICE_QUEUE DeviceWaitQueue;
+   ULONG Spare1;
+   LARGE_INTEGER Spare2;
+} CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
+   
+typedef struct _STRING
+{
+   /*
+    * Length in bytes of the string stored in buffer
+    */
+   USHORT Length;
+   
+   /*
+    * Maximum length of the string 
+    */
+   USHORT MaximumLength;
+   
+   /*
+    * String
+    */
+   PCHAR Buffer;
+} STRING, *PSTRING;
+
+typedef struct _ANSI_STRING
+{
+   /*
+    * Length in bytes of the string stored in buffer
+    */
+   USHORT Length;
+   
+   /*
+    * Maximum length of the string 
+    */
+   USHORT MaximumLength;
+   
+   /*
+    * String
+    */
+   PCHAR Buffer;
+} ANSI_STRING, *PANSI_STRING;
+
 typedef struct _TIME_FIELDS
 {
    CSHORT Year;
@@ -179,6 +225,43 @@ VOID RtlStoreLong(PULONG Address, ULONG Value);
 VOID RtlStoreUshort(PUSHORT Address, USHORT Value);
 BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS TimeFields, PLARGE_INTEGER Time);
 VOID RtlTimeToTimeFields(PLARGE_INTEGER Time, PTIME_FIELDS TimeFields);
+PWSTR RtlStrtok(PUNICODE_STRING _string, PWSTR _sep, PWSTR* temp);
+
+
+typedef struct {
+	ULONG    	Length;
+	ULONG    	Unknown[11];
+} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
+
+// Heap creation routine
+
+HANDLE 
+STDCALL
+RtlCreateHeap(
+	ULONG Flags, 
+	PVOID BaseAddress, 
+	ULONG SizeToReserve, 
+	ULONG SizeToCommit, 
+	PVOID Unknown,
+	PRTL_HEAP_DEFINITION Definition
+	);
+
+PVOID 
+STDCALL 
+RtlAllocateHeap(
+	HANDLE Heap, 
+	ULONG Flags, 
+	ULONG Size 
+	);
+
+
+BOOLEAN 
+STDCALL 
+RtlFreeHeap(
+	HANDLE Heap, 
+	ULONG Flags, 
+	PVOID Address 
+	);
 
 
 #endif /* __DDK_RTL_H */

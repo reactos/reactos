@@ -48,6 +48,11 @@ extern inline unsigned int physical_to_linear(unsigned int x)
         return(x+IDMAP_BASE);
 }
 
+extern inline unsigned int linear_to_physical(unsigned int x)
+{
+        return(x-IDMAP_BASE);
+}
+
 #define FLUSH_TLB    __asm__("movl %cr3,%eax\n\tmovl %eax,%cr3\n\t")
 
 extern inline unsigned int* get_page_directory(void)

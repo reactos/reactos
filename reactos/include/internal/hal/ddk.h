@@ -114,33 +114,4 @@ BOOLEAN HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
 			       PULONG AddressSpace,
 			       PPHYSICAL_ADDRESS TranslatedAddress);
 
-struct __xchg_dummy { unsigned long a[100]; };
-#define __xg(x) ((struct __xchg_dummy *)(x))
-
-extern inline LONG InterlockedDecrement(PLONG Addend)
-/*
- * FUNCTION: Decrements a variable as an atomic operations
- * ARGUMENTS:
- *        Addend = Value to be decremented
- * RETURNS: The decremented value
- */
-{
-}
-
-extern inline LONG InterlockedExchange(PLONG Target, LONG Value)
-/*
- * FUNCTION: Sets a variable as an atomic operation
- * ARGUMENTS:
- *        Target = Variable to be set
- *        Value = Caller specified value to set
- * RETURNS: The previous value of the target
- */
-{
-   __asm__("xchgl %0,%1"
-	   :"=r" (Value)
-	   :"m" (*__xg(Target)), "0" (Value)
-	   :"memory");
-   return(Value);
-}
-
 #endif /* __INCLUDE_INTERNAL_HAL_DDK_H */

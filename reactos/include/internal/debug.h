@@ -16,6 +16,7 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
+#define UNIMPLEMENTED do {printk("%s at %s:%d is umimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
 
 #ifndef NDEBUG
 #define DPRINT(fmt,args...) do { printk("(%s:%d) ",__FILE__,__LINE__); printk(fmt,args); } while(0);
@@ -34,6 +35,7 @@
  *        x = Maximum irql
  */
 #define ASSERT_IRQL(x) assert(KeGetCurrentIrql()<=(x))
+#define assert_irql(x) assert(KeGetCurrentIrql()<=(x))
 
 #define HBP_EXECUTE     (0)
 #define HBP_WRITE       (1)

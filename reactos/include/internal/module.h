@@ -28,7 +28,7 @@ typedef struct
         unsigned int raw_data_off;
 } module;
 
-int process_boot_module(unsigned int start);
+BOOLEAN process_boot_module(unsigned int start);
 
 #endif
 

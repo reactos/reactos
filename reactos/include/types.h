@@ -55,7 +55,7 @@ typedef unsigned long long u64;
 
 typedef unsigned int size_t;
 typedef size_t __kernel_size_t;
-typedef unsigned short wchar_t;
+//typedef unsigned short wchar_t;
 
 
 #endif /* _LINUX_TYPES_H */

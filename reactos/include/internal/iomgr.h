@@ -8,15 +8,10 @@
  *               28/05/97: Created
  */
 
-#ifndef __INTERNAL_IOMGR_H
-#define __INTERNAL_IOMGR_H
+#ifndef __INCLUDE_INTERNAL_IOMGR_H
+#define __INCLUDE_INTERNAL_IOMGR_H
 
 #include <ddk/ntddk.h>
-
-/*
- * FUNCTION:
- */
-NTSTATUS IoBeginIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*
  * FUNCTION: Called to initalize a loaded driver
@@ -25,5 +20,8 @@ NTSTATUS IoBeginIrp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
  * RETURNS: Success or failure
  */
 NTSTATUS InitalizeLoadedDriver(PDRIVER_INITIALIZE entry);
+
+VOID IoInitCancelHandling(VOID);
+
 
 #endif

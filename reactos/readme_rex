@@ -2,10 +2,10 @@ DIRECTORIES
 
 system           : compiled versions of the various system components and
                    libraries
-mkernel          : microkernel source
-mkernel/hal      : hardware abstraction layer source
-mkernel/mm       : memory managment subsystem source
-mkernel/iomgr    : IO manager subsystem source
+ntoskrnl          : microkernel source
+ntoskrnl/hal      : hardware abstraction layer source
+ntoskrnl/mm       : memory managment subsystem source
+ntoskrnl/io      : IO manager subsystem source
 include          : win32 headers
 include/internal : kernel private header files
 include/ntdll    : system library private header files
@@ -18,3 +18,4 @@ lib/kernel32     : kernel32 source
 doc              : documentation
 loaders/dos      : DOS based loader
 loaders/boot     : boot loader
+services         : various services (device drivers, filesystems etc)

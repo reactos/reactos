@@ -3,7 +3,7 @@
  * PROJECT:               ReactOS version of ntdll
  * FILE:                  lib/ntdll/genntdll.c
  * PURPOSE:               Generates the system call stubs in ntdll
- * PROGRAMMER:            David Welch (welch@welch)
+ * PROGRAMMER:            David Welch (welch@mcmail.com)
  */
 
 /* INCLUDE ******************************************************************/
@@ -19,12 +19,11 @@ int process(FILE* in, FILE* out)
    char* s;
    char* name;
    char* value;
+   char* nr_args;
    
-   fprintf(out,"/*\n");
-   fprintf(out," * Machine generated, don't edit\n");
-   fprintf(out," */\n\n");
-   fprintf(out,"#include <ntdll/napi.h>\n\n");
-     
+   fprintf(out,"; Machine generated, don't edit\n");
+   fprintf(out,"\n\n");
+   
    while (!feof(in) && fgets(line,255,in)!=NULL)
      {
 	fgets(line,255,in);
@@ -37,12 +36,15 @@ int process(FILE* in, FILE* out)
 	  {
 	     name = strtok(s," \t");
 	     value = strtok(NULL," \t");
-	     printf("name %s value %s\n",name,value);
+	     nr_args = strtok(NULL," \t");
 	     
-	     fprintf(out,"NTSTATUS %s(UCHAR first_arg)\n",name);
-	     fprintf(out,"{\n");
-	     fprintf(out,"\tMAKE_NTAPI_CALL(%s,first_arg);\n",value);
-	     fprintf(out,"}\n");
+//	     printf("name %s value %s\n",name,value);
+	     
+	     fprintf(out,"%s:\n",name);
+	     fprintf(out,"\tmov\teax,%s\n",value);
+	     fprintf(out,"\tlea\tedx,[esp+4]\n");
+	     fprintf(out,"\tint\t2Eh\n");
+	     fprintf(out,"\tret\t%s\n\n",nr_args);
 	  }
      }
 }

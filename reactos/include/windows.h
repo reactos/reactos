@@ -41,7 +41,9 @@
 #include <base.h>
 
 /* WIN32 messages */
+#ifndef _WIN32_LEAN_AND_MEAN
 #include <messages.h>
+#endif
 
 /* WIN32 definitions */
 #include <defines.h>
@@ -52,7 +54,9 @@
 #include <structs.h>
 
 /* WIN32 functions */
+#ifndef _WIN32_LEAN_AND_MEAN
 #include <funcs.h>
+#endif
 
 #endif /* ! defined (RC_INVOKED) */
 
@@ -63,7 +67,9 @@
 
 /* Windows sockets specification version 1.1 */
 #ifdef Win32_Winsock
+#ifndef _WIN32_LEAN_AND_MEAN
 #include <sockets.h>
+#endif
 #endif
 
 /* There is a conflict with BOOL between Objective-C and Win32,

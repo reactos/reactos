@@ -2,7 +2,8 @@
 
 #include <internal/hal/irq.h>
 
-
+#include <ddk/kedef.h> 
+#include <ddk/iodef.h>
 
 /*
  * PURPOSE: Number of a thread priority levels
@@ -30,134 +31,6 @@ enum
    NonPagedPoolCacheAlignedMustS,
    PagedPool,
    PagedPoolCacheAligned,
-};
-
-/*
- * PURPOSE: Irp flags
- */
-enum
-{
-   /*
-    * Read any data from the actual backing media
-    */
-   IRP_NOCACHE,
-     
-   /*
-    * The I/O operation is performing paging
-    */
-   IRP_PAGING_IO,
-     
-   /*
-    * The IRP is for a mount operation
-    */
-   IRP_MOUNT_COMPLETION,
-     
-   /*
-    * The API expects synchronous behaviour
-    */
-   IRP_SYNCHRONOUS_API,
-     
-   /*
-    * The IRP is associated with a larger operation
-    */
-   IRP_ASSOCIATED_IRP,
-     
-   /*
-    * The AssociatedIrp.SystemBuffer field is valid
-    */
-   IRP_BUFFERED_IO,
-     
-   /*
-    * The system buffer was allocated from pool and should be deallocated 
-    * by the I/O manager
-    */
-   IRP_DEALLOCATE_BUFFER,
-     
-   /*
-    * The IRP is for an input operation
-    */
-   IRP_INPUT_OPERATION,
-     
-   /*
-    * The paging operation should complete synchronously 
-    */
-   IRP_SYNCHRONOUS_PAGING_IO,
-     
-   /*
-    * The IRP represents a filesystem create operation
-    */
-   IRP_CREATE_OPERATION,
-     
-   /*
-    * The IRP represents a filesystem read operation
-    */
-   IRP_READ_OPERATION,
-     
-   /*
-    * The IRP represents a filesystem write operation
-    */
-   IRP_WRITE_OPERATION,
-          
-   /*
-    * The IRP represents a filesystem close operation
-    */
-   IRP_CLOSE_OPERATION,
-     
-   /*
-    * Asynchronous behavior is advised but not required
-    */
-   IRP_DEFER_IO_COMPLETION,
-};
-
-/*
- * I/O operation flags
- */
-enum
-{
-   /*
-    * Force an access check even if opened in kernel mode
-    */
-   SL_FORCE_ACCESS_CHECK,
-     
-   /*
-    * The file being opened is a paging file
-    */
-   SL_OPEN_PAGING_FILE,
-     
-   SL_OPEN_TARGET_DIRECTORY,
-     
-   SL_CASE_SENSITIVE,
-     
-   SL_KEY_SPECIFIED,
-     
-   SL_OVERRIDE_VERIFY_VOLUME,
-     
-   SL_WRITE_THROUGH,
-     
-   SL_FT_SEQUENTIAL_WRITE,
-     
-   SL_FAIL_IMMEDIATELY,
-     
-   SL_EXCLUSIVE_LOCK,
-     
-   SL_RESTART_SCAN,
-     
-   SL_RETURN_SINGLE_ENTRY,
-     
-   SL_INDEX_SPECIFIED,
-     
-   SL_WATCH_TREE,
-     
-   SL_ALLOW_RAW_MOUNT,   
-};
-
-/*
- * Possible flags for the device object flags
- */
-enum
-{
-   DO_BUFFERED_IO = 0x1,
-   DO_DIRECT_IO   = 0x2,
 };
 
 /*
@@ -299,76 +172,117 @@ enum
    STATUS_SEMAPHORE_LIMIT_EXCEEDED,
    STATUS_DISK_FULL,
    STATUS_LOCK_NOT_GRANTED,
-};
-
-/*
- * Possible device types
- */
-enum
-{
-   /*
-    * Standard define types
-    */
-   FILE_DEVICE_BEEP,
-   FILE_DEVICE_CDROM,
-   FILE_DEVICE_CONTROLLER,
-   FILE_DEVICE_DISK,
-   FILE_DEVICE_INPORT_PORT,
-   FILE_DEVICE_KEYBOARD,
-   FILE_DEVICE_MIDI_IN,
-   FILE_DEVICE_MIDI_OUT,
-   FILE_DEVICE_MOUSE,
-   FILE_DEVICE_NULL,
-   FILE_DEVICE_PARALLEL_PORT,
-   FILE_DEVICE_PRINTER,
-   FILE_DEVICE_SCANNER,
-   FILE_DEVICE_SERIAL_MOUSE_PORT,
-   FILE_DEVICE_SERIAL_PORT,
-   FILE_DEVICE_SCREEN,
-   FILE_DEVICE_TAPE,
-   FILE_DEVICE_UNKNOWN,
-   FILE_DEVICE_VIDEO,
-   FILE_DEVICE_VIRTUAL_DISK,
-   FILE_DEVICE_WAVE_IN,
-   FILE_DEVICE_WAVE_OUT,
-   FILE_DEVICE_8042_PORT,
      
-   /*
-    * Values beyond this are reserved for ISVs
-    */
-   FILE_DEVICE_FIRST_FREE = 32768
-};
-
-
-
-/*
- * Possible device characteristics
- */
-enum
-{
-   FILE_REMOVABLE_MEDIA  = 0x1,
-   FILE_READ_ONLY_DEVICE = 0x2,
-   FILE_FLOPPY_DISKETTE  = 0x4,
-   FILE_WRITE_ONCE_MEDIA = 0x8,
-   FILE_REMOTE_DEVICE    = 0x10,
-};
-
-/*
- * PURPOSE: Bus types
- */
-enum
-{
-   Internal,
-   Isa,
-   MicroChannel,
-   TurboChannel,
-   PCIBus,
-   MaximumInterfaceType,
+   STATUS_DEVICE_NOT_READY,
+   STATUS_IO_TIMEOUT,
+   STATUS_MEDIA_WRITE_PROTECTED,
+   STATUS_NO_MEDIA_IN_DRIVE,
+   STATUS_VERIFY_REQUIRED,
+   STATUS_UNRECOGNIZED_MEDIA,
+//   STATUS_WRONG_VOLUME,
 };
    
 /*
  * This is a list of bug check types (not MS's)
  */
+enum
+{
+   APC_INDEX_MISMATCH = 1,
+   DEVICE_QUEUE_NOT_BUSY,
+   INVALID_AFFINITY_SET,
+   INVALID_DATA_ACCESS_TRAP,
+   INVALID_PROCESS_ATTACH_ATTEMPT,
+   INVALID_PROCESS_DEATTACH_ATTEMPT,
+   INVALID_SOFTWARE_INTERRUPT,
+   IRQL_NOT_DISPATCH_LEVEL,
+   IRQL_NOT_GREATER_OR_EQUAL,
+   NO_EXCEPTION_HANDLING_SUPPORT,
+   MAXIMUM_WAIT_OBJECTS_EXCEEDED,
+   MUTEX_LEVEL_NUMBER_VIOLATION,
+   NO_USER_MODE_CONTEXT,
+   SPIN_LOCK_ALREADY_OWNED,
+   SPIN_LOCK_NOT_OWNED,
+   THREAD_NOT_MUTEX_OWNER,
+   TRAP_CAUSE_UNKNOWN,
+   EMPTY_THREAD_REAPER_LIST,
+   CREATE_DELETE_LOCK_NOT_LOCKED,
+   LAST_CHANCE_CALLED_FROM_KMODE,
+   CID_HANDLE_CREATION,
+   CID_HANDLE_DELETION,
+   REFERENCE_BY_POINTER,
+   BAD_POOL_HEADER,
+   MEMORY_MANAGMENT,
+   PFN_SHARE_COUNT,
+   PFN_REFERENCE_COUNT,
+   NO_SPIN_LOCK_AVAILABLE,
+   KMODE_EXCEPTION_NOT_HANDLED,
+   SHARED_RESOURCE_CONV_ERROR,
+   KERNEL_APC_PENDING_DURING_EXIT,
+   QUOTA_UNDERFLOW,
+   FILE_SYSTEM,
+   FAT_FILE_SYSTEM,
+   NTFS_FILE_SYSTEM,
+   NPFS_FILE_SYSTEM,
+   CDFS_FILE_SYSTEM,
+   RDR_FILE_SYSTEM,
+   CORRUPT_ACCESS_TOKEN,
+   SECURITY_SYSTEM,
+   INCONSISTENT_IRP,
+   PANIC_STACK_SWITCH,
+   PORT_DRIVER_INTERNAL,
+   SCSI_DISK_DRIVER_INTERNAL,
+   INSTRUCTION_BUS_ERROR,
+   SET_OF_INVALID_CONTEXT,
+   PHASE0_INITIALIZATION_FAILED,
+   PHASE1_INITIALIZATION_FAILED,
+   UNEXPECTED_INITIALIZATION_CALL,
+   CACHE_MANAGER,
+   NO_MORE_IRP_STACK_LOCATIONS,
+   DEVICE_REFERENCE_COUNT_NOT_ZERO,
+   FLOPPY_INTERNAL_ERROR,
+   SERIAL_DRIVER_INTERNAL,
+   SYSTEM_EXIT_OWNED_MUTEX,
+   SYSTEM_UNWIND_PREVIOUS_USER,
+   SYSTEN_SERVICE_EXCEPTION,
+   INTERRUPT_UNWIND_ATTEMPTED,
+   INTERRUPT_EXCEPTION_NOT_HANDLED,
+   MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED,
+   NO_MORE_SYSTEM_PTES,
+   TARGET_MDL_TOO_SMALL,
+   MUST_SUCCEED_POOL_EMPTY,
+   ATDISK_DRIVER_INTERNAL,
+   NO_SUCH_PARTITION,
+   MULTIPLE_IRP_COMPLETE_REQUESTS,
+   INSUFFICENT_SYSTEM_MAP_PAGES,
+   DEREF_UNKNOWN_LOGON_SERVICE,
+   REF_UNKNOWN_LOGON_SERVICE,
+   CANCEL_STATE_IN_COMPLETED_IRP,
+   PAGE_FAULT_WITH_INTERRUPTS_OFF,
+   IRQL_GT_ZERO_AT_SYSTEM_SERVICE,
+   STREAMS_INTERNAL_ERROR,
+   FATAL_UNHANDLED_HARD_ERROR,
+   NO_PAGES_AVAILABLE,
+   PFN_LIST_CORRUPT,
+   NDIS_INTERNAL_ERROR,
+   PAGE_FAULT_IN_NONPAGED_AREA,
+   REGISTRY_ERROR,
+   MAILSLOT_FILE_SYSTEM,
+   NO_BOOT_DEVICE,
+   LM_SERVER_INTERNAL_ERROR,
+   DATA_COHERENCY_EXCEPTION,
+   INSTRUCTION_COHERENCY_EXCEPTION,
+   XNS_INTERNAL_ERROR,
+   FTDISK_INTERNAL_ERROR,
+   PINBALL_FILE_SYSTEM,
+   CRITICAL_SERVICE_FAILED,
+   SET_ENV_VAR_FAILED,
+   HAL_INITIALIZED_FAILED,
+   UNSUPPORTED_PROCESSOR,
+   OBJECT_INITIALIZATION_FAILED,
+   SECURITY_INITIALIZATION_FAILED,
+   PROCESS_INITIALIZATION_FAILED,
+   HAL1_INITIALIZATION_FAILED,   
+};
 enum
 {
    KBUG_NONE,
@@ -380,14 +294,14 @@ enum
    /*
     * These are well known but the actual value is unknown
     */
-   NO_PAGES_AVAILABLE,
+//   NO_PAGES_AVAILABLE,
      
    /*
     * These are well known (MS) bug types
     * (Reference: NT Insider 1997 - http://www.osr.com)
     */
    IRQL_NOT_LESS_OR_EQUAL = 0xa,
-   KMODE_EXCEPTION_NOT_HANDLED = 0x1e,
+//   KMODE_EXCEPTION_NOT_HANDLED = 0x1e,
    UNEXPECTED_KERNEL_MODE_TRAP = 0x7f,
    PAGE_FAULT_IN_NON_PAGED_AREA = 0x50,
 };
@@ -440,42 +354,6 @@ enum
    IRP_MN_WAIT_WAKE,
    IRP_MN_QUERY_CAPABILITIES,
    IRP_MN_POWER_SEQUENCE,
-};
-
-/*
- * FIXME: These are not in the correct order
- */
-enum
-{  
-     IRP_MJ_CREATE,
-     IRP_MJ_CREATE_NAMED_PIPE,
-     IRP_MJ_CLOSE,
-     IRP_MJ_READ,
-     IRP_MJ_WRITE,
-     IRP_MJ_QUERY_INFORMATION,
-     IRP_MJ_SET_INFORMATION,
-     IRP_MJ_QUERY_EA,
-     IRP_MJ_SET_EA,
-     IRP_MJ_FLUSH_BUFFERS,
-     IRP_MJ_QUERY_VOLUME_INFORMATION,
-     IRP_MJ_SET_VOLUME_INFORMATION,
-     IRP_MJ_DIRECTORY_CONTROL,
-     IRP_MJ_FILE_SYSTEM_CONTROL,     
-     IRP_MJ_DEVICE_CONTROL,
-     IRP_MJ_INTERNAL_DEVICE_CONTROL,
-     IRP_MJ_SHUTDOWN,
-     IRP_MJ_LOCK_CONTROL,
-     IRP_MJ_CLEANUP,
-     IRP_MJ_CREATE_MAILSLOT,
-     IRP_MJ_QUERY_SECURITY,
-     IRP_MJ_SET_SECURITY,
-     IRP_MJ_QUERY_POWER,
-     IRP_MJ_SET_POWER,
-     IRP_MJ_DEVICE_CHANGE,
-     IRP_MJ_QUERY_QUOTA,
-     IRP_MJ_SET_QUOTA,
-     IRP_MJ_PNP_POWER,
-     IRP_MJ_MAXIMUM_FUNCTION,
 };
 
 /*
