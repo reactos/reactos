@@ -185,6 +185,16 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    // point we should get the bios disk parameters passed in to the kernel at boot
    // and stored in the HARDWARE registry key for us to pick up here.
 
+   // Issue SPECIFY command
+   FloppyWriteDATA (ControllerExtension->PortBase, FLOPPY_CMD_SPEC_CHARS);
+   KeStallExecutionProcessor (100);
+   FloppyWriteDATA (ControllerExtension->PortBase, 0xD1);
+   KeStallExecutionProcessor (100);
+   FloppyWriteDATA (ControllerExtension->PortBase, 0x02);
+   KeStallExecutionProcessor (10000);
+   FloppyWriteMSTAT (ControllerExtension->PortBase, 0x00);
+
+
    // turn on motor, wait for spinup time, and recalibrate the drive
    FloppyWriteDOR( ControllerExtension->PortBase, FLOPPY_DRIVE0_ON );
    Timeout.QuadPart = FLOPPY_MOTOR_SPINUP_TIME;
@@ -292,15 +302,16 @@ FloppyExecuteReadWrite(PDEVICE_OBJECT DeviceObject,
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
    LARGE_INTEGER Timeout;
    BOOLEAN WriteToDevice;
-   DWORD Cyl, Sector, Head;
+   ULONG Cyl, Sector, Head;
    PIO_STACK_LOCATION Stk;
-   DWORD Length;
+   ULONG Length;
+
+   DPRINT( "FloppyExecuteReadWrite()\n" );
 
    ControllerExtension->Irp = Irp = (PIRP)Context;
    Stk = IoGetCurrentIrpStackLocation( Irp );
    ControllerExtension->Device = DeviceObject;
    Timeout.QuadPart = FLOPPY_MOTOR_SPINUP_TIME;
-   DPRINT( "FloppyExecuteReadWrite()\n" );
    CHECKPOINT;
    WriteToDevice = Stk->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
    // verify drive is spun up and selected
@@ -319,14 +330,15 @@ FloppyExecuteReadWrite(PDEVICE_OBJECT DeviceObject,
 		       &ControllerExtension->MotorSpinupDpc );
 	 return KeepObject;
       }
-   else {
-     Timeout.QuadPart = FLOPPY_MOTOR_SPINDOWN_TIME;
-     // motor is already spinning, so reset the spindown timer
-     KeCancelTimer( &ControllerExtension->SpinupTimer );
-     KeSetTimer( &ControllerExtension->SpinupTimer,
-		 Timeout,
-		 &ControllerExtension->MotorSpindownDpc );
-   }
+   else
+      {
+	 Timeout.QuadPart = FLOPPY_MOTOR_SPINDOWN_TIME;
+	 // motor is already spinning, so reset the spindown timer
+	 KeCancelTimer( &ControllerExtension->SpinupTimer );
+	 KeSetTimer( &ControllerExtension->SpinupTimer,
+		     Timeout,
+		     &ControllerExtension->MotorSpindownDpc );
+      }
 #if 0
    /* Handle disk change, doesn't work correctly */
    if( FloppyReadDIR( ControllerExtension->PortBase ) & FLOPPY_DI_DSKCHNG )

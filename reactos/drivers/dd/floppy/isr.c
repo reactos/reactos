@@ -49,6 +49,9 @@ BOOLEAN FloppyIsrDetectMedia( PCONTROLLER_OBJECT Controller )
 {
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
   BYTE SectorSize;
+
+  DPRINT("FloppyIsrDetectMedia() called\n");
+
   // media detect in progress, read ID command already issued
   // first, read result registers
   KeStallExecutionProcessor( 1000 );
@@ -74,47 +77,50 @@ BOOLEAN FloppyIsrDetectMedia( PCONTROLLER_OBJECT Controller )
 		ControllerExtension->Irp,
 		Controller );
   return TRUE;
-} 
-    
+}
+
 BOOLEAN FloppyIsrRecal( PCONTROLLER_OBJECT Controller )
 {
-   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
-   // issue sense interrupt status, and read St0 and cyl
+  PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
+  // issue sense interrupt status, and read St0 and cyl
 
-   FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_SNS_INTR );
-   KeStallExecutionProcessor( 1000 );
-   ControllerExtension->St0 = FloppyReadDATA( ControllerExtension->PortBase );
-   KeStallExecutionProcessor( 1000 );
-   FloppyReadDATA( ControllerExtension->PortBase );  // ignore cyl number
-   if (FLOPPY_MS_DATARDYR ==
-       (FloppyReadMSTAT( ControllerExtension->PortBase ) & FLOPPY_MS_RDYMASK))
-      {
-	 /* There's something still to be read (what is it???? only happens on some
-	    controllers). Ignore it. */
-	 (void) FloppyReadDATA( ControllerExtension->PortBase );
-      }
-   DPRINT( "Recal St0: %2x\n", ControllerExtension->St0 );
+  DPRINT("FloppyIsrRecal() called\n");
 
-   // If recalibrate worked, issue read ID for each media type untill one works
-   if( ControllerExtension->St0 != FLOPPY_ST0_SEEKGD )
-      {
+  FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_SNS_INTR );
+  KeStallExecutionProcessor( 1000 );
+  ControllerExtension->St0 = FloppyReadDATA( ControllerExtension->PortBase );
+  KeStallExecutionProcessor( 1000 );
+  FloppyReadDATA( ControllerExtension->PortBase );  // ignore cyl number
+  if (FLOPPY_MS_DATARDYR ==
+      (FloppyReadMSTAT( ControllerExtension->PortBase ) & FLOPPY_MS_RDYMASK))
+    {
+      /* There's something still to be read (what is it???? only happens on some
+         controllers). Ignore it. */
+      (void) FloppyReadDATA( ControllerExtension->PortBase );
+    }
+  DPRINT( "Recal St0: %2x\n", ControllerExtension->St0 );
+
+  // If recalibrate worked, issue read ID for each media type untill one works
+  if ( ControllerExtension->St0 != FLOPPY_ST0_SEEKGD )
+    {
 	 DPRINT( "Recalibrate failed, ST0 = %2x\n", ControllerExtension->St0 );
 	 // queue DPC to fail IRP
 	 ControllerExtension->DpcState = FloppyDpcFailIrp;
 	 IoRequestDpc( ControllerExtension->Device,
 		       ControllerExtension->Irp,
 		       Controller );
-      }
-   else {
-     // issue first read id, FloppyIsrDetectMedia will handle
-     DPRINT( "Recalibrate worked, issuing read ID mark command\n" );
-     ControllerExtension->IsrState = FloppyIsrDetectMedia;
-     KeStallExecutionProcessor( 1000 );
-     FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_RD_ID | FLOPPY_C0M_MFM );
-     KeStallExecutionProcessor( 1000 );
-     FloppyWriteDATA( ControllerExtension->PortBase, ((PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension)->DriveSelect );
-   }
-   
+    }
+  else
+    {
+      // issue first read id, FloppyIsrDetectMedia will handle
+      DPRINT( "Recalibrate worked, issuing read ID mark command\n" );
+      ControllerExtension->IsrState = FloppyIsrDetectMedia;
+      KeStallExecutionProcessor( 1000 );
+      FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_RD_ID | FLOPPY_C0M_MFM );
+      KeStallExecutionProcessor( 1000 );
+      FloppyWriteDATA( ControllerExtension->PortBase, ((PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension)->DriveSelect );
+    }
+
    return TRUE;
 }
 
