@@ -1,4 +1,4 @@
-/* $Id: cnotify.c,v 1.4 2003/01/15 21:24:33 chorns Exp $
+/* $Id: cnotify.c,v 1.5 2003/03/23 19:51:11 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,11 +11,14 @@
 
 #include <k32.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
 
 WINBOOL STDCALL
 FindCloseChangeNotification (HANDLE hChangeHandle)
 {
-  return FALSE;
+   NtClose(hChangeHandle);
+   return TRUE;
 }
 
 
@@ -27,34 +30,34 @@ FindFirstChangeNotificationA (
 	DWORD	dwNotifyFilter
 	)
 {
-#if 0
 	UNICODE_STRING PathNameU;
 	ANSI_STRING PathName;
-	HANDLE Result;
+	HANDLE hNotify;
 
 	RtlInitAnsiString (&PathName,
 	                   (LPSTR)lpPathName);
 
 	/* convert ansi (or oem) string to unicode */
 	if (bIsFileApiAnsi)
+   {
 		RtlAnsiStringToUnicodeString (&PathNameU,
 		                              &PathName,
 		                              TRUE);
+   }
 	else
+   {
 		RtlOemStringToUnicodeString (&PathNameU,
 		                             &PathName,
 		                             TRUE);
+   }
 
-	Result = FindFirstChangeNotificationW (PathNameU.Buffer,
-	                                       bWatchSubtree,
-	                                       dwNotifyFilter);
+   hNotify = FindFirstChangeNotificationW (PathNameU.Buffer,
+	                                        bWatchSubtree,
+	                                        dwNotifyFilter);
 
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             RootPathNameU.Buffer);
+   RtlFreeUnicodeString(&PathNameU);
 
-	return Result;
-#endif
+   return hNotify;
 }
 
 
@@ -66,7 +69,63 @@ FindFirstChangeNotificationW (
 	DWORD	dwNotifyFilter
 	)
 {
-	return NULL;
+   NTSTATUS Status;
+   UNICODE_STRING NtPathU;
+   IO_STATUS_BLOCK IoStatus;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE hDir;
+
+   /*
+   RtlDosPathNameToNtPathName takes a fully qualified file name "C:\Projects\LoadLibrary\Debug\TestDll.dll" 
+   and returns something like "\??\C:\Projects\LoadLibrary\Debug\TestDll.dll."
+   If the file name cannot be interpreted, then the routine returns STATUS_OBJECT_PATH_SYNTAX_BAD and 
+   ends execution.
+   */
+
+   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpPathName,
+                                          &NtPathU,
+                                          NULL,
+                                          NULL))
+   {
+      SetLastErrorByStatus(STATUS_PATH_SYNTAX_BAD);
+      return INVALID_HANDLE_VALUE;
+   }
+
+   InitializeObjectAttributes (&ObjectAttributes,
+                               &NtPathU,
+                               0,
+                               NULL,
+                               NULL);
+
+   Status = NtOpenFile (hDir,
+                        SYNCHRONIZE|FILE_LIST_DIRECTORY,
+                        &ObjectAttributes,
+                        &IoStatus,
+                        FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+                        FILE_DIRECTORY_FILE);
+
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastErrorByStatus(Status);
+      return INVALID_HANDLE_VALUE;
+   }
+
+   Status = NtNotifyChangeDirectoryFile(hDir,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        &IoStatus,
+                                        NULL,//Buffer,
+                                        0,//BufferLength,
+                                        dwNotifyFilter,
+                                        bWatchSubtree);
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastErrorByStatus(Status);
+      return INVALID_HANDLE_VALUE;
+   }
+
+   return hDir;
 }
 
 
@@ -76,7 +135,26 @@ FindNextChangeNotification (
 	HANDLE	hChangeHandle
 	)
 {
-	return FALSE;
+   IO_STATUS_BLOCK IoStatus;
+   NTSTATUS Status;
+
+   Status = NtNotifyChangeDirectoryFile(hChangeHandle,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        &IoStatus,
+                                        NULL,//Buffer,
+                                        0,//BufferLength,
+                                        FILE_NOTIFY_CHANGE_SECURITY,//meaningless for subsequent calls, but must contain a valid flag(s)
+                                        0//meaningless for subsequent calls 
+                                        );
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastErrorByStatus(Status);
+      return FALSE;
+   }
+
+   return TRUE;
 }
 
 /* EOF */
