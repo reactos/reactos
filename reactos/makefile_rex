@@ -15,128 +15,103 @@ include rules.mak
 #
 # Required to run the system
 #
-COMPONENTS = iface_native ntoskrnl kernel32 ntdll crtdll mingw32
+LIBRARIES = kernel32 ntdll crtdll mingw32
+COMPONENTS = iface_native ntoskrnl $(LIBRARIES) 
+.PHONY: $(COMPONENTS) $(COMPONENTS:%=%_clean)
 
 #
 # Select the server(s) you want to build
 #
 SERVERS = win32 posix linux os2
+.PHONY: $(SERVERS) $(SERVERS:%=%_clean)
 
 #
 # Select the loader(s) you want to build
 #
 LOADERS = dos
+.PHONY: $(LOADERS) $(LOADERS:%=%_clean)
 
 #
 # Select the device drivers and filesystems you want
 #
-KERNEL_SERVICES = parallel keyboard blues null mouse serial sound ide test sdisk \
-                  minix vfat ext2
+DD_SERVICES = blue ide keyboard mouse null parallel sdisk serial sound test
+FS_SERVICES = minix vfat ext2
+KERNEL_SERVICES = $(DD_SERVICES) $(FS_SERVICES)
+.PHONY: $(KERNEL_SERVICES) $(KERNEL_SERVICES:%=%_clean)
 		  
-APPS = hello shell args
+APPS = hello shell # args
+.PHONY: $(APPS:%=%) $(APPS:%=%_clean)
 
 all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
+.PHONY: all
 
-clean: dummy
-	make -C iface/native clean
+clean: $(COMPONENTS:%=%_clean) $(LOADERS:%=%_clean) \
+       $(KERNEL_SERVICES:%=%_clean) $(APPS:%=%_clean)
+.PHONY: clean
 
 #
 # Applications
 #
-hello: dummy
-	make -C apps/hello
+$(APPS): %:
+	make -C apps/$*
 
-args: dummy
-	make -C apps/args
-
-cmd: dummy
-	make -C apps/cmd
-
-shell: dummy
-	make -C apps/shell
+$(APPS:%=%_clean): %_clean:
+	make -C apps/$* clean
 
 #
 # Interfaces
 #
-iface_native: dummy
+
+iface_native: 
 	make -C iface/native
+
+iface_native_clean: 
+	make -C iface/native clean
 
 #
 # Device driver rules
 #
-vfat: dummy
-	make -C services/fs/vfat
-	
-sdisk: dummy
-	make -C services/dd/sdisk
-	
-minix: dummy
-	make -C services/fs/minix
-	
-template: dummy
-	make -C services/fs/template
 
+$(DD_SERVICES): %:
+	make -C services/dd/$*
 
-ide-test: dummy
-	make -C services/dd/ide-test
+$(DD_SERVICES:%=%_clean): %_clean:
+	make -C services/dd/$* clean
 
-ide: dummy
-	make -C services/dd/ide	
+$(FS_SERVICES): %:
+	make -C services/fs/$*
 
-test: dummy
-	make -C services/dd/test
-
-test1: dummy
-	make -C services/dd/test1
-
-null: dummy
-	make -C services/dd/null
-
-parallel: dummy
-	make -C services/dd/parallel
-
-keyboard: dummy
-	make -C services/dd/keyboard
-
-blues: dummy
-	make -C services/dd/blue
-
-mouse: dummy
-	make -C services/dd/mouse
-	
-serial: dummy
-	make -C services/dd/serial
-
-sound: dummy
-	make -C services/dd/sound
-
-ext2: dummy
-	make -C services/fs/ext2
+$(FS_SERVICES:%=%_clean): %_clean:
+	make -C services/fs/$* clean
 
 #
 # Kernel loaders
 #
 
-dos: dummy
-	make -C loaders/dos
+$(LOADERS): %:
+	make -C loaders/$*
+
+$(LOADERS:%=%_clean): %_clean:
+	make -C loaders/$* clean
+
+#
+# Libraries
+#
+
+$(LIBRARIES): %:
+	make -C lib/$*
+
+$(LIBRARIES:%=%_clean): %_clean:
+	make -C lib/$* clean
 
 #
 # Required system components
 #
 
-ntoskrnl: dummy
+ntoskrnl: 
 	make -C ntoskrnl
 
-kernel32: dummy
-	make -C lib/kernel32
+ntoskrnl_clean: 
+	make -C ntoskrnl clean
 
-ntdll: dummy
-	make -C lib/ntdll
 
-crtdll: dummy
-	make -C lib/crtdll
-
-mingw32: dummy
-	make -C lib/mingw32
-
-dummy:

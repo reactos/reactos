@@ -41,7 +41,8 @@ NASM_FORMAT = coff
 PREFIX = 
 KERNEL_BFD_TARGET = --oformat=coff-go32
 EXE_POSTFIX = .exe
-CP = copy
+CP = COPY
+RM = DELETE
 LIBGCC = libgcc.a
 NASM_CMD = nasm
 endif
