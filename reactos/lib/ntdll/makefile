@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.69 2002/01/01 03:29:15 dwelch Exp $
+# $Id: makefile,v 1.70 2002/02/25 21:51:43 phreak Exp $
 
 PATH_TO_TOP = ../..
 
@@ -71,4 +71,4 @@ include $(TOOLS_PATH)/helper.mk
 	etags -o $(@D)/TAGS $(@D)/\*.c
 
 etags: csr/TAGS dbg/TAGS ldr/TAGS main/TAGS rtl/TAGS stdio/TAGS stdlib/TAGS string/TAGS stubs/TAGS
-	etags -i csr/TAGS -i dbg/TAGS -i ldr/TAGS -i main/TAGS -i rtl/TAGS -i stdio/TAGS -i stdlib/TAGS -i string/TAGS -i stubs/TAGS>>>>>>> 1.64
+	etags -i csr/TAGS -i dbg/TAGS -i ldr/TAGS -i main/TAGS -i rtl/TAGS -i stdio/TAGS -i stdlib/TAGS -i string/TAGS -i stubs/TAGS
