@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.41 2003/07/11 14:10:41 ekohl Exp $
+/* $Id: atapi.c,v 1.42 2003/07/12 19:18:31 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -248,6 +248,9 @@ AtapiTestUnitReady(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 static UCHAR
 AtapiErrorToScsi(PVOID DeviceExtension,
 		 PSCSI_REQUEST_BLOCK Srb);
+
+static VOID
+AtapiScsiSrbToAtapi (PSCSI_REQUEST_BLOCK Srb);
 
 //  ----------------------------------------------------------------  Inlines
 
@@ -1793,6 +1796,16 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
       ScsiPortStallExecution(10);
     }
 
+  /* Convert special SCSI SRBs to ATAPI format */
+  switch (Srb->Cdb[0])
+    {
+      case SCSIOP_FORMAT_UNIT:
+      case SCSIOP_MODE_SELECT:
+      case SCSIOP_MODE_SENSE:
+	AtapiScsiSrbToAtapi (Srb);
+	break;
+    }
+
   CdbSize = (DeviceExtension->DeviceParams[Srb->TargetId].ConfigBits & 0x3 == 1) ? 16 : 12;
   DPRINT("CdbSize: %lu\n", CdbSize);
 
@@ -2487,6 +2500,58 @@ AtapiErrorToScsi(PVOID DeviceExtension,
   DPRINT("AtapiErrorToScsi() done\n");
 
   return(SrbStatus);
+}
+
+
+static VOID
+AtapiScsiSrbToAtapi (PSCSI_REQUEST_BLOCK Srb)
+{
+  DPRINT("AtapiConvertScsiToAtapi() called\n");
+
+  Srb->CdbLength = 12;
+
+  switch (Srb->Cdb[0])
+    {
+      case SCSIOP_FORMAT_UNIT:
+	Srb->Cdb[0] = ATAPI_FORMAT_UNIT;
+	break;
+
+      case SCSIOP_MODE_SELECT:
+	  {
+	    PATAPI_MODE_SELECT12 AtapiModeSelect;
+	    UCHAR Length;
+
+	    AtapiModeSelect = (PATAPI_MODE_SELECT12)Srb->Cdb;
+	    Length = ((PCDB)Srb->Cdb)->MODE_SELECT.ParameterListLength;
+
+	    RtlZeroMemory (Srb->Cdb,
+			   MAXIMUM_CDB_SIZE);
+	    AtapiModeSelect->OperationCode = ATAPI_MODE_SELECT;
+	    AtapiModeSelect->PFBit = 1;
+	    AtapiModeSelect->ParameterListLengthMsb = 0;
+	    AtapiModeSelect->ParameterListLengthLsb = Length;
+	  }
+	break;
+
+      case SCSIOP_MODE_SENSE:
+	  {
+	    PATAPI_MODE_SENSE12 AtapiModeSense;
+	    UCHAR PageCode;
+	    UCHAR Length;
+
+	    AtapiModeSense = (PATAPI_MODE_SENSE12)Srb->Cdb;
+	    PageCode = ((PCDB)Srb->Cdb)->MODE_SENSE.PageCode;
+	    Length = ((PCDB)Srb->Cdb)->MODE_SENSE.AllocationLength;
+
+	    RtlZeroMemory (Srb->Cdb,
+			   MAXIMUM_CDB_SIZE);
+	    AtapiModeSense->OperationCode = ATAPI_MODE_SENSE;
+	    AtapiModeSense->PageCode = PageCode;
+	    AtapiModeSense->ParameterListLengthMsb = 0;
+	    AtapiModeSense->ParameterListLengthLsb = Length;
+	  }
+	break;
+    }
 }
 
 /* EOF */

@@ -186,7 +186,7 @@ typedef struct _IDE_DRIVE_IDENTIFY
   WORD  Reserved69[2];       /*69*/
   WORD  Reserved71[4];       /*71*/
   WORD  MaxQueueDepth;       /*75*/
-  WORD  Reserved76[4];       /*79*/
+  WORD  Reserved76[4];       /*76*/
   WORD  MajorRevision;       /*80*/
   WORD  MinorRevision;       /*81*/
   WORD  SupportedFeatures82; /*82*/
@@ -201,6 +201,43 @@ typedef struct _IDE_DRIVE_IDENTIFY
   WORD  Reserved104[151];    /*104*/
   WORD  Checksum;            /*255*/
 } IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
+
+
+/* Special ATAPI commands */
+
+#define ATAPI_FORMAT_UNIT	0x24
+#define ATAPI_MODE_SELECT	0x55
+#define ATAPI_MODE_SENSE	0x5A
+
+
+/* Special ATAPI_MODE_SELECT (12 bytes) command block */
+
+typedef struct _ATAPI_MODE_SELECT12
+{
+  UCHAR OperationCode;
+  UCHAR Reserved1:4;
+  UCHAR PFBit:1;
+  UCHAR Reserved2:3;
+  UCHAR Reserved3[5];
+  UCHAR ParameterListLengthMsb;
+  UCHAR ParameterListLengthLsb;
+  UCHAR Reserved4[3];
+} ATAPI_MODE_SELECT12, *PATAPI_MODE_SELECT12;
+
+
+/* Special ATAPI_MODE_SENSE (12 bytes) command block */
+
+typedef struct _ATAPI_MODE_SENSE12
+{
+  UCHAR OperationCode;
+  UCHAR Reserved1;
+  UCHAR PageCode:6;
+  UCHAR Pc:2;
+  UCHAR Reserved2[4];
+  UCHAR ParameterListLengthMsb;
+  UCHAR ParameterListLengthLsb;
+  UCHAR Reserved3[3];
+} ATAPI_MODE_SENSE12, *PATAPI_MODE_SENSE12;
 
 #ifdef __cplusplus
 }
