@@ -1,11 +1,11 @@
- $Id: advapi32.def,v 1.6 2003/02/02 19:24:43 hyperion Exp $
-
- advapi32.def
-
- ReactOS Operating System
-
- Some stack sizes are taken from Ander Norlander's .DEFs.
-
+; $Id: advapi32.def,v 1.7 2003/03/24 13:45:27 ekohl Exp $
+;
+; advapi32.def
+;
+; ReactOS Operating System
+;
+; Some stack sizes are taken from Ander Norlander's .DEFs.
+;
 LIBRARY advapi32.dll
 EXPORTS
 AbortSystemShutdownA@4
@@ -409,3 +409,4 @@ UnlockServiceDatabase@4
 WinLoadTrustProvider@4
 WinSubmitCertificate@4
 WinVerifyTrust@12
+; EOF
