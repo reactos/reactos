@@ -322,7 +322,6 @@ NTSTATUS STDCALL TdiDefaultSendPossibleHandler(
 #define TdiBuildBaseIrp(                                                    \
     Irp, DevObj, FileObj, CompRoutine, Contxt, IrpSp, Minor)                \
 {                                                                           \
-    IrpSp                = IoGetNextIrpStackLocation(Irp);                  \
     IrpSp->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;                  \
     IrpSp->MinorFunction = (Minor);                                         \
     IrpSp->DeviceObject  = (DevObj);                                        \
