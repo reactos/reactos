@@ -131,8 +131,6 @@ all: bootstrap $(BOOT_LOADERS) $(COMPONENTS) $(REGTESTS) $(HALS) $(BUS) $(LIB_FS
 
 bootstrap: dk implib iface_native iface_additional
 
-#config: $(TOOLS:%=%_config)
-
 depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) msvcrt_depends $(DLLS:%=%_depends) \
          $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
@@ -244,8 +242,8 @@ livecd_directory_layout:
 	$(RMKDIR) $(LIVECD_DIR)/Profiles/Default\ User/My\ Documents
 	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/isoboot.bin to ${LIVECD_DIR}/../isoboot.bin
 	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${LIVECD_DIR}/../isoboot.bin
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys to ${LIVECD_DIR}/loader/setupldr.sys
-	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys ${LIVECD_DIR}/loader/setupldr.sys
+	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/freeldr/freeldr.sys to ${LIVECD_DIR}/loader/setupldr.sys
+	$(CP) ${FREELDR_DIR}/freeldr/freeldr.sys ${LIVECD_DIR}/loader/setupldr.sys
 	$(HALFVERBOSEECHO) [RLINE]   bootdata/livecd.ini to $(LIVECD_DIR)/freeldr.ini
 	$(RLINE) bootdata/livecd.ini $(LIVECD_DIR)/freeldr.ini
 
