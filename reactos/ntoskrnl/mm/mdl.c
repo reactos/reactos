@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.31 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: mdl.c,v 1.32 2001/03/21 23:06:08 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -301,7 +301,7 @@ VOID STDCALL MmBuildMdlForNonPagedPool (PMDL	Mdl)
         ((PULONG)(Mdl + 1))[va] =
             (MmGetPhysicalAddress(Mdl->StartVa + (va * PAGESIZE))).u.LowPart;
      }
-   Mdl->MappedSystemVa = Mdl->StartVa;
+   Mdl->MappedSystemVa = Mdl->StartVa + Mdl->ByteOffset;
 }
 
 
