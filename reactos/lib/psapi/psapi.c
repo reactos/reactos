@@ -17,6 +17,22 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOLEAN
+WINAPI
+DllMain(HINSTANCE hDllHandle,
+        DWORD nReason,
+        LPVOID Reserved)
+{
+  switch(nReason)
+  {
+    case DLL_PROCESS_ATTACH:
+      DisableThreadLibraryCalls(hDllHandle);
+      break;
+  }
+
+  return TRUE;
+}
+
 /* INTERNAL *******************************************************************/
 
 typedef struct _ENUM_DEVICE_DRIVERS_CONTEXT
@@ -935,7 +951,7 @@ InitializeProcessForWsWatch(HANDLE hProcess)
                                    0);
   if(!NT_SUCCESS(Status))
   {
-    SetLastError(RtlNtStatusToDosError(Status));
+    SetLastErrorByStatus(Status);
     return FALSE;
   }
 
@@ -961,7 +977,7 @@ GetWsChanges(HANDLE hProcess,
                                      NULL);
   if(!NT_SUCCESS(Status))
   {
-    SetLastError(RtlNtStatusToDosError(Status));
+    SetLastErrorByStatus(Status);
     return FALSE;
   }
 

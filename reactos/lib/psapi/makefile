@@ -19,7 +19,7 @@ TARGET_BASE = $(TARGET_BASE_LIB_PSAPI)
 
 TARGET_PCH = precomp.h
 
-TARGET_OBJECTS = misc/dllmain.o malloc.o win32.o
+TARGET_OBJECTS = malloc.o psapi.o
 	
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
