@@ -36,7 +36,7 @@ wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 		*wlasttoken = NULL;
 		return (NULL);
 	}
-	tok = s - 2;
+	tok = s - 1;
 
 	/*
 	 * Scan token (scan for ctiters: s += strcspn(s, ct), sort of).
@@ -44,7 +44,7 @@ wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 	 */
 	for (;;) {
 		c = *s;
-		s+=2;
+		s++;
 		spanp = ct;
 		do {
 			if ((sc = *spanp) == c) {
@@ -55,7 +55,7 @@ wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 				*wlasttoken = s;
 				return (tok);
 			}
-			spanp+=2;
+			spanp++;
 		} while (sc != 0);
 	}
 	/* NOTREACHED */
