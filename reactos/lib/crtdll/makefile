@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.41 2000/11/20 19:59:08 ekohl Exp $
+# $Id: makefile,v 1.42 2000/12/22 23:15:18 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -103,7 +103,7 @@ STDLIB_OBJECTS = stdlib/abort.o stdlib/abs.o stdlib/atexit.o stdlib/atof.o stdli
 		 stdlib/rand.o stdlib/senv.o stdlib/splitp.o stdlib/strtod.o stdlib/strtol.o \
 		 stdlib/strtoul.o stdlib/swab.o stdlib/atol.o stdlib/rot.o stdlib/wcstomb.o\
 		 stdlib/ecvt.o stdlib/ecvtbuf.o stdlib/gcvt.o  stdlib/fcvt.o stdlib/fcvtbuf.o\
-		 stdlib/mbstowcs.o 
+		 stdlib/mbstowcs.o stdlib/itow.o
 
 SIGNAL_OBJECTS = signal/signal.o signal/xcptfil.o signal/xcptinfo.o
 

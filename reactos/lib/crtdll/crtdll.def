@@ -3,9 +3,11 @@
 ;
 ; Exports from crtdll.dll from Windows 95 SYSTEM directory. Hopefully this
 ; should also work with the crtdll provided with Windows NT.
+; Exports from crtdll.dll from Windows NT Server 4.0.
 ;
 ; Contributors:
 ;  Created by Colin Peters <colin@bird.fu.is.saga-u.ac.jp>
+;  Modified by Adhi P. Yoedo <adhi@primatama.co.id>
 ;
 ;  THIS SOFTWARE IS NOT COPYRIGHTED
 ;
@@ -17,9 +19,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.13 $
+; $Revision: 1.14 $
 ; $Author: ea $
-; $Date: 2000/05/01 14:15:01 $
+; $Date: 2000/12/22 23:20:15 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -202,6 +204,7 @@ _ismbslead
 _ismbstrail
 _isnan
 _itoa
+_itow
 _j0
 _j1
 _jn
@@ -216,6 +219,7 @@ _lrotr
 _lsearch
 _lseek
 _ltoa
+_ltow
 _makepath
 _matherr
 _mbbtombc
@@ -346,6 +350,7 @@ _toupper
 _tzname
 _tzset
 _ultoa
+_ultow
 _umask
 _ungetch
 _unlink
