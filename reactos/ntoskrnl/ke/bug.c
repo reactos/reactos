@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.35 2003/08/11 18:50:12 chorns Exp $
+/* $Id: bug.c,v 1.36 2003/08/22 14:49:54 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -106,7 +106,10 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 
   /* Make sure we're switching back to the blue screen and print messages on it */
   HalReleaseDisplayOwnership();  
-  KdDebugState |= KD_DEBUG_SCREEN;
+  if (0 == (KdDebugState & KD_DEBUG_GDB))
+    {
+      KdDebugState |= KD_DEBUG_SCREEN;
+    }
 
   __asm__("cli\n\t");
   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
