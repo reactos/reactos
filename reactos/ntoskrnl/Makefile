@@ -533,6 +533,8 @@ TARGET_LFLAGS = \
 TAGS: $(TAG_OBJECTS)
 	etags $(addprefix -i , $(TAG_OBJECTS))
 
+GENERATED_HEADER_FILES := $(PATH_TO_TOP)/include/reactos/bugcodes.h
+
 $(PATH_TO_TOP)/include/reactos/bugcodes.h bugcodes.rc: ntoskrnl.mc
 	$(MC) \
 		-H $(PATH_TO_TOP)/include/reactos/bugcodes.h \
