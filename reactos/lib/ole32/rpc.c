@@ -1,7 +1,8 @@
 /*
  *	(Local) RPC Stuff
  *
- *  Copyright 2002  Marcus Meissner
+ * Copyright 2002  Marcus Meissner
+ * Copyright 2005  Mike Hearn, Rob Shearman for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -52,26 +53,22 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 #define OLESTUBMGR PIPEPREF"WINE_OLE_StubMgr"
 
 #define REQTYPE_REQUEST		0
-typedef struct _wine_rpc_request_header {
+#define REQTYPE_RESPONSE	1
+
+struct request_header
+{
     DWORD		reqid;
-    wine_marshal_id	mid;
+    IPID		ipid;
     DWORD		iMethod;
     DWORD		cbBuffer;
-} wine_rpc_request_header;
+};
 
-#define REQTYPE_RESPONSE	1
-typedef struct _wine_rpc_response_header {
+struct response_header
+{
     DWORD		reqid;
     DWORD		cbBuffer;
     DWORD		retval;
-} wine_rpc_response_header;
-
-/* used when shutting down a pipe, e.g. at the end of a process */
-#define REQTYPE_DISCONNECT	2
-typedef struct _wine_rpc_disconnect_header {
-  DWORD reqid;
-  wine_marshal_id mid; /* mid of stub to delete */
-} wine_rpc_disconnect_header;
+};
 
 
 #define REQSTATE_START			0
@@ -83,22 +80,25 @@ typedef struct _wine_rpc_disconnect_header {
 #define REQSTATE_RESP_GOT		6
 #define REQSTATE_DONE			6
 
-typedef struct _wine_rpc_request {
+struct rpc
+{
     int				state;
     HANDLE			hPipe;	/* temp copy of handle */
-    wine_rpc_request_header	reqh;
-    wine_rpc_response_header	resph;
+    struct request_header	reqh;
+    struct response_header	resph;
     LPBYTE			Buffer;
-} wine_rpc_request;
+};
 
-static wine_rpc_request **reqs = NULL;
+/* fixme: this should have a lock */
+static struct rpc **reqs = NULL;
 static int nrofreqs = 0;
 
 /* This pipe is _thread_ based, each thread which talks to a remote
- * apartment (mid) has its own pipe. The same structure is used both
+ * apartment (oxid) has its own pipe. The same structure is used both
  * for outgoing and incoming RPCs.
  */
-typedef struct _wine_pipe {
+struct pipe
+{
     wine_marshal_id	mid;	/* target mid */
     DWORD		tid;	/* thread which owns this pipe */
     HANDLE		hPipe;
@@ -108,58 +108,41 @@ typedef struct _wine_pipe {
     CRITICAL_SECTION	crit;
 
     APARTMENT          *apt;    /* apartment of the marshalling thread for the stub dispatch case */
-} wine_pipe;
-
-#define MAX_WINE_PIPES 256
-
-static wine_pipe pipes[MAX_WINE_PIPES];
-static int nrofpipes = 0;
+};
 
 typedef struct _PipeBuf {
-    IRpcChannelBufferVtbl	*lpVtbl;
-    DWORD				ref;
+    IRpcChannelBufferVtbl *lpVtbl;
+    DWORD                  ref;
 
-    wine_marshal_id			mid;
+    wine_marshal_id        mid;
+    HANDLE                 pipe;
 } PipeBuf;
 
-static HRESULT WINAPI
-read_pipe(HANDLE hf, LPVOID ptr, DWORD size) {
+
+
+/* some helper functions */
+
+static HRESULT WINAPI read_pipe(HANDLE hf, LPVOID ptr, DWORD size)
+{
     DWORD res;
-    if (!ReadFile(hf,ptr,size,&res,NULL)) {
-	FIXME("Failed to read from %p, le is %ld\n",hf,GetLastError());
-	return E_FAIL;
+    
+    if (!ReadFile(hf,ptr,size,&res,NULL))
+    {
+        ERR("Failed to read from %p, le is %ld\n",hf,GetLastError());
+        return E_FAIL;
     }
-    if (res!=size) {
-	FIXME("Read only %ld of %ld bytes from %p.\n",res,size,hf);
-	return E_FAIL;
+    
+    if (res != size)
+    {
+        if (!res)
+        {
+           WARN("%p disconnected\n", hf);
+           return RPC_E_DISCONNECTED;
+        }
+        ERR("Read only %ld of %ld bytes from %p.\n",res,size,hf);
+        return E_FAIL;
     }
     return S_OK;
-}
-
-static void
-drs(LPCSTR where) {
-#if 0
-    static int nrofreaders = 0;
-
-    int i, states[10];
-
-    memset(states,0,sizeof(states));
-    for (i=nrofreqs;i--;)
-	states[reqs[i]->state]++;
-    FIXME("%lx/%s/%d: rq %d, w %d, rg %d, rsq %d, rsg %d, d %d\n",
-	    GetCurrentProcessId(),
-	    where,
-	    nrofreaders,
-	    states[REQSTATE_REQ_QUEUED],
-	    states[REQSTATE_REQ_WAITING_FOR_REPLY],
-	    states[REQSTATE_REQ_GOT],
-	    states[REQSTATE_RESP_QUEUED],
-	    states[REQSTATE_RESP_GOT],
-	    states[REQSTATE_DONE]
-    );
-#endif
-
-    return ;
 }
 
 static HRESULT WINAPI
@@ -176,104 +159,75 @@ write_pipe(HANDLE hf, LPVOID ptr, DWORD size) {
     return S_OK;
 }
 
-static DWORD WINAPI stub_dispatch_thread(LPVOID);
-
-static HRESULT
-PIPE_RegisterPipe(wine_marshal_id *mid, HANDLE hPipe, BOOL startreader) {
-  int	i;
-  char	pipefn[100];
-
-  for (i=0;i<nrofpipes;i++)
-    if (pipes[i].mid.oxid==mid->oxid)
-      return S_OK;
-  if (nrofpipes + 1 >= MAX_WINE_PIPES)
-  {
-    FIXME("Out of pipes, please increase MAX_WINE_PIPES\n");
-    return E_OUTOFMEMORY;
-  }
-  sprintf(pipefn,OLESTUBMGR"_%08lx%08lx",(DWORD)(mid->oxid >> 32),(DWORD)mid->oxid);
-  memcpy(&(pipes[nrofpipes].mid),mid,sizeof(*mid));
-  pipes[nrofpipes].hPipe	= hPipe;
-  pipes[nrofpipes].apt          = COM_CurrentApt();
-  assert( pipes[nrofpipes].apt );
-  InitializeCriticalSection(&(pipes[nrofpipes].crit));
-  nrofpipes++;
-  if (startreader) {
-      pipes[nrofpipes-1].hThread = CreateThread(NULL,0,stub_dispatch_thread,(LPVOID)(pipes+(nrofpipes-1)),0,&(pipes[nrofpipes-1].tid));
-  } else {
-      pipes[nrofpipes-1].tid	 = GetCurrentThreadId();
-  }
-  return S_OK;
+static HANDLE dupe_handle(HANDLE h)
+{
+    HANDLE h2;
+    
+    if (!DuplicateHandle(GetCurrentProcess(), h, GetCurrentProcess(),
+                         &h2, 0, FALSE, DUPLICATE_SAME_ACCESS))
+    {
+        ERR("could not duplicate handle: %ld\n", GetLastError());
+        return INVALID_HANDLE_VALUE;
+    }
+    
+    return h2;
 }
 
-static HANDLE
-PIPE_FindByMID(wine_marshal_id *mid) {
-  int i;
-  for (i=0;i<nrofpipes;i++)
-    if ((pipes[i].mid.oxid==mid->oxid) &&
-	(GetCurrentThreadId()==pipes[i].tid)
-    )
-      return pipes[i].hPipe;
-  return INVALID_HANDLE_VALUE;
-}
 
-static wine_pipe*
-PIPE_GetFromMID(wine_marshal_id *mid) {
-  int i;
-  for (i=0;i<nrofpipes;i++) {
-    if ((pipes[i].mid.oxid==mid->oxid) &&
-	(GetCurrentThreadId()==pipes[i].tid)
-    )
-      return pipes+i;
-  }
-  return NULL;
-}
 
-static HRESULT
-RPC_GetRequest(wine_rpc_request **req) {
-    static int reqid = 0xdeadbeef;
+
+static DWORD WINAPI client_dispatch_thread(LPVOID);
+
+/* FIXME: this all needs to be made thread safe */
+static HRESULT RPC_GetRequest(struct rpc **req)
+{
+    static int reqid = 0;
     int i;
 
-    for (i=0;i<nrofreqs;i++) { /* try to reuse */
-	if (reqs[i]->state == REQSTATE_DONE) {
-	    reqs[i]->reqh.reqid = reqid++;
-	    reqs[i]->resph.reqid = reqs[i]->reqh.reqid;
-	    reqs[i]->hPipe = INVALID_HANDLE_VALUE;
-	    *req = reqs[i];
-	    reqs[i]->state = REQSTATE_START;
-	    return S_OK;
-	}
+    /* try to reuse */
+    for (i = 0; i < nrofreqs; i++)
+    {
+        if (reqs[i]->state == REQSTATE_DONE)
+        {
+            TRACE("reusing reqs[%d]\n", i);
+            
+            reqs[i]->reqh.reqid  = reqid++;
+            reqs[i]->resph.reqid = reqs[i]->reqh.reqid;
+            reqs[i]->hPipe = INVALID_HANDLE_VALUE;
+            reqs[i]->state = REQSTATE_START;
+            *req = reqs[i];
+            return S_OK;
+        }
     }
-    /* create new */
+    
+    TRACE("creating new struct rpc (request)\n");
+    
     if (reqs)
-	reqs = (wine_rpc_request**)HeapReAlloc(
+	reqs = (struct rpc**)HeapReAlloc(
 			GetProcessHeap(),
 			HEAP_ZERO_MEMORY,
 			reqs,
-			sizeof(wine_rpc_request*)*(nrofreqs+1)
+			sizeof(struct rpc*)*(nrofreqs+1)
 		);
     else
-	reqs = (wine_rpc_request**)HeapAlloc(
+	reqs = (struct rpc**)HeapAlloc(
 			GetProcessHeap(),
 			HEAP_ZERO_MEMORY,
-			sizeof(wine_rpc_request*)
+			sizeof(struct rpc*)
 		);
-    if (!reqs)
-	return E_OUTOFMEMORY;
-    reqs[nrofreqs] = (wine_rpc_request*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(wine_rpc_request));
+    
+    if (!reqs) return E_OUTOFMEMORY;
+    
+    reqs[nrofreqs] = (struct rpc*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(struct rpc));
     reqs[nrofreqs]->reqh.reqid = reqid++;
     reqs[nrofreqs]->resph.reqid = reqs[nrofreqs]->reqh.reqid;
     reqs[nrofreqs]->hPipe = INVALID_HANDLE_VALUE;
-    *req = reqs[nrofreqs];
     reqs[nrofreqs]->state = REQSTATE_START;
+    *req = reqs[nrofreqs];
+    
     nrofreqs++;
+    
     return S_OK;
-}
-
-static void
-RPC_FreeRequest(wine_rpc_request *req) {
-    req->state = REQSTATE_DONE; /* Just reuse slot. */
-    return;
 }
 
 static HRESULT WINAPI
@@ -299,33 +253,19 @@ static ULONG WINAPI
 PipeBuf_Release(LPRPCCHANNELBUFFER iface) {
     PipeBuf *This = (PipeBuf *)iface;
     ULONG ref;
-    wine_rpc_disconnect_header header;
-    HANDLE pipe;
-    DWORD reqtype = REQTYPE_DISCONNECT;
 
     ref = InterlockedDecrement(&This->ref);
     if (ref)
 	return ref;
 
-    memcpy(&header.mid, &This->mid, sizeof(wine_marshal_id));
-
-    pipe = PIPE_FindByMID(&This->mid);
-
-    write_pipe(pipe, &reqtype, sizeof(reqtype));
-    write_pipe(pipe, &header, sizeof(wine_rpc_disconnect_header));
-
-    TRACE("written disconnect packet\n");
-
+    CloseHandle(This->pipe);
     HeapFree(GetProcessHeap(),0,This);
     return 0;
 }
 
 static HRESULT WINAPI
-PipeBuf_GetBuffer(
-    LPRPCCHANNELBUFFER iface,RPCOLEMESSAGE* msg,REFIID riid
-) {
-    /*PipeBuf *This = (PipeBuf *)iface;*/
-
+PipeBuf_GetBuffer(LPRPCCHANNELBUFFER iface,RPCOLEMESSAGE* msg,REFIID riid)
+{
     TRACE("(%p,%s)\n",msg,debugstr_guid(riid));
     /* probably reuses IID in real. */
     if (msg->cbBuffer && (msg->Buffer == NULL))
@@ -334,17 +274,15 @@ PipeBuf_GetBuffer(
 }
 
 static HRESULT
-COM_InvokeAndRpcSend(wine_rpc_request *req) {
+COM_InvokeAndRpcSend(struct rpc *req) {
     IRpcStubBuffer     *stub;
     RPCOLEMESSAGE	msg;
     HRESULT		hres;
     DWORD		reqtype;
 
-    if (!(stub = mid_to_stubbuffer(&(req->reqh.mid))))
-    {
-	ERR("Stub not found?\n");
-	return E_FAIL;
-    }
+    if (!(stub = ipid_to_stubbuffer(&(req->reqh.ipid))))
+        /* ipid_to_stubbuffer will already have logged the error */
+        return RPC_E_DISCONNECTED;
 
     IUnknown_AddRef(stub);
     msg.Buffer		= req->Buffer;
@@ -364,25 +302,19 @@ COM_InvokeAndRpcSend(wine_rpc_request *req) {
     hres = write_pipe(req->hPipe,req->Buffer,req->resph.cbBuffer);
     if (hres) return hres;
     req->state = REQSTATE_DONE;
-    drs("invoke");
     return S_OK;
 }
 
-static HRESULT COM_RpcReceive(wine_pipe *xpipe);
+static HRESULT process_incoming_rpc(HANDLE pipe);
 
-static HRESULT
-RPC_QueueRequestAndWait(wine_rpc_request *req) {
-    int			i;
-    wine_rpc_request	*xreq;
-    HRESULT		hres;
-    DWORD		reqtype;
-    wine_pipe		*xpipe = PIPE_GetFromMID(&(req->reqh.mid));
+static HRESULT RPC_QueueRequestAndWait(struct rpc *req, HANDLE pipe)
+{
+    int                 i;
+    struct rpc         *xreq;
+    HRESULT             hres;
+    DWORD               reqtype;
 
-    if (!xpipe) {
-	FIXME("no pipe found.\n");
-	return E_POINTER;
-    }
-    req->hPipe = xpipe->hPipe;
+    req->hPipe = pipe;
     req->state = REQSTATE_REQ_WAITING_FOR_REPLY;
     reqtype = REQTYPE_REQUEST;
     hres = write_pipe(req->hPipe,&reqtype,sizeof(reqtype));
@@ -395,7 +327,7 @@ RPC_QueueRequestAndWait(wine_rpc_request *req) {
     /* This loop is about allowing re-entrancy. While waiting for the
      * response to one RPC we may receive a request starting another. */
     while (!hres) {
-	hres = COM_RpcReceive(xpipe);
+	hres = process_incoming_rpc(pipe);
 	if (hres) break;
 
 	for (i=0;i<nrofreqs;i++) {
@@ -414,14 +346,11 @@ RPC_QueueRequestAndWait(wine_rpc_request *req) {
 }
 
 static HRESULT WINAPI
-PipeBuf_SendReceive(
-    LPRPCCHANNELBUFFER iface,RPCOLEMESSAGE* msg,ULONG *status
-) {
-    PipeBuf *This = (PipeBuf *)iface;
-    wine_rpc_request	*req;
-    HRESULT		hres;
-
-    TRACE("()\n");
+PipeBuf_SendReceive(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE *msg, ULONG *status)
+{
+    PipeBuf     *This = (PipeBuf *)iface;
+    struct rpc	*req;
+    HRESULT      hres;
 
     if (This->mid.oxid == COM_CurrentApt()->oxid) {
 	ERR("Need to call directly!\n");
@@ -432,37 +361,44 @@ PipeBuf_SendReceive(
     if (hres) return hres;
     req->reqh.iMethod	= msg->iMethod;
     req->reqh.cbBuffer	= msg->cbBuffer;
-    memcpy(&(req->reqh.mid),&(This->mid),sizeof(This->mid));
+    req->reqh.ipid = This->mid.ipid;
     req->Buffer = msg->Buffer;
-    hres = RPC_QueueRequestAndWait(req);
-    if (hres) {
-	RPC_FreeRequest(req);
+    TRACE(" ->    rpc   ->\n");
+    hres = RPC_QueueRequestAndWait(req, This->pipe);
+    TRACE(" <- response <-\n");
+    if (hres)
+    {
+        req->state = REQSTATE_DONE;
 	return hres;
     }
-    msg->cbBuffer	= req->resph.cbBuffer;
-    msg->Buffer		= req->Buffer;
-    *status 		= req->resph.retval;
-    RPC_FreeRequest(req);
+    
+    msg->cbBuffer = req->resph.cbBuffer;
+    msg->Buffer	  = req->Buffer;
+    *status       = req->resph.retval;
+    req->state    = REQSTATE_DONE;
+    
     return S_OK;
 }
 
 
 static HRESULT WINAPI
-PipeBuf_FreeBuffer(LPRPCCHANNELBUFFER iface,RPCOLEMESSAGE* msg) {
-    FIXME("(%p), stub!\n",msg);
-    return E_FAIL;
+PipeBuf_FreeBuffer(LPRPCCHANNELBUFFER iface,RPCOLEMESSAGE* msg)
+{
+    TRACE("(%p)\n",msg);
+    HeapFree(GetProcessHeap(), 0, msg->Buffer);
+    return S_OK;
 }
 
 static HRESULT WINAPI
-PipeBuf_GetDestCtx(
-    LPRPCCHANNELBUFFER iface,DWORD* pdwDestContext,void** ppvDestContext
-) {
+PipeBuf_GetDestCtx(LPRPCCHANNELBUFFER iface,DWORD* pdwDestContext,void** ppvDestContext)
+{
     FIXME("(%p,%p), stub!\n",pdwDestContext,ppvDestContext);
     return E_FAIL;
 }
 
 static HRESULT WINAPI
-PipeBuf_IsConnected(LPRPCCHANNELBUFFER iface) {
+PipeBuf_IsConnected(LPRPCCHANNELBUFFER iface)
+{
     FIXME("(), stub!\n");
     return S_OK;
 }
@@ -478,96 +414,108 @@ static IRpcChannelBufferVtbl pipebufvt = {
     PipeBuf_IsConnected
 };
 
-HRESULT
-PIPE_GetNewPipeBuf(wine_marshal_id *mid, IRpcChannelBuffer **pipebuf) {
-  wine_marshal_id	ourid;
-  DWORD			res;
-  HANDLE		hPipe;
-  HRESULT		hres;
-  PipeBuf		*pbuf;
+/* returns a pipebuf for proxies */
+HRESULT PIPE_GetNewPipeBuf(wine_marshal_id *mid, IRpcChannelBuffer **pipebuf)
+{
+    wine_marshal_id  ourid;
+    HANDLE           handle;
+    PipeBuf         *pbuf;
+    char             pipefn[200];
 
-  hPipe = PIPE_FindByMID(mid);
-  if (hPipe == INVALID_HANDLE_VALUE) {
-      char			pipefn[200];
-      sprintf(pipefn,OLESTUBMGR"_%08lx%08lx",(DWORD)(mid->oxid >> 32),(DWORD)mid->oxid);
-      hPipe = CreateFileA(
-	      pipefn,
-	      GENERIC_READ|GENERIC_WRITE,
-	      0,
-	      NULL,
-	      OPEN_EXISTING,
-	      0,
-	      0
-      );
-      if (hPipe == INVALID_HANDLE_VALUE) {
-	  FIXME("Could not open named pipe %s, le is %lx\n",pipefn,GetLastError());
-	  return E_FAIL;
-      }
-      hres = PIPE_RegisterPipe(mid, hPipe, FALSE);
-      if (hres) return hres;
-      memset(&ourid,0,sizeof(ourid));
-      ourid.oxid = COM_CurrentApt()->oxid;
-      if (!WriteFile(hPipe,&ourid,sizeof(ourid),&res,NULL)||(res!=sizeof(ourid))) {
-	  ERR("Failed writing startup mid!\n");
-	  return E_FAIL;
-      }
-  }
-  pbuf = (PipeBuf*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(PipeBuf));
-  pbuf->lpVtbl	= &pipebufvt;
-  pbuf->ref 	= 1;
-  memcpy(&(pbuf->mid),mid,sizeof(*mid));
-  *pipebuf = (IRpcChannelBuffer*)pbuf;
-  return S_OK;
+    /* connect to the apartment listener thread */
+    sprintf(pipefn,OLESTUBMGR"_%08lx%08lx",(DWORD)(mid->oxid >> 32),(DWORD)mid->oxid);
+
+    TRACE("proxy pipe: connecting to apartment listener thread: %s\n", pipefn);
+
+    while (TRUE)
+    {
+        BOOL ret = WaitNamedPipeA(pipefn, NMPWAIT_USE_DEFAULT_WAIT);
+        if (!ret)
+        {
+            ERR("Could not open named pipe %s, error %ld\n", pipefn, GetLastError());
+            return RPC_E_SERVER_DIED;
+        }
+
+        handle = CreateFileA(pipefn, GENERIC_READ | GENERIC_WRITE,
+                             0, NULL, OPEN_EXISTING, 0, 0);
+
+        if (handle == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() == ERROR_PIPE_BUSY) continue;
+            
+            ERR("Could not open named pipe %s, error %ld\n", pipefn, GetLastError());
+            return RPC_E_SERVER_DIED;
+        }
+
+        break;
+    }
+    
+    memset(&ourid,0,sizeof(ourid));
+    ourid.oxid = COM_CurrentApt()->oxid;
+    
+    TRACE("constructing new pipebuf for proxy\n");
+    
+    pbuf = (PipeBuf*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(PipeBuf));
+    pbuf->lpVtbl = &pipebufvt;
+    pbuf->ref 	 = 1;
+    memcpy(&(pbuf->mid),mid,sizeof(*mid));
+    pbuf->pipe  = dupe_handle(handle);
+    
+    *pipebuf = (IRpcChannelBuffer*)pbuf;
+    
+    return S_OK;
 }
 
 static HRESULT
-create_server(REFCLSID rclsid) {
-  static const WCHAR embedding[] = { ' ', '-','E','m','b','e','d','d','i','n','g',0 };
-  HKEY		key;
-  char 		buf[200];
-  HRESULT	hres = E_UNEXPECTED;
-  char		xclsid[80];
-  WCHAR        exe[MAX_PATH+1];
-  DWORD        exelen = sizeof(exe);
-  WCHAR         command[MAX_PATH+sizeof(embedding)/sizeof(WCHAR)];
-  STARTUPINFOW	sinfo;
-  PROCESS_INFORMATION	pinfo;
+create_server(REFCLSID rclsid)
+{
+    static const WCHAR  embedding[] = { ' ', '-','E','m','b','e','d','d','i','n','g',0 };
+    HKEY                key;
+    char                buf[200];
+    HRESULT             hres = E_UNEXPECTED;
+    char                xclsid[80];
+    WCHAR               exe[MAX_PATH+1];
+    DWORD               exelen = sizeof(exe);
+    WCHAR               command[MAX_PATH+sizeof(embedding)/sizeof(WCHAR)];
+    STARTUPINFOW        sinfo;
+    PROCESS_INFORMATION pinfo;
 
-  WINE_StringFromCLSID((LPCLSID)rclsid,xclsid);
+    WINE_StringFromCLSID((LPCLSID)rclsid,xclsid);
 
-  sprintf(buf,"CLSID\\%s\\LocalServer32",xclsid);
-  hres = RegOpenKeyExA(HKEY_CLASSES_ROOT, buf, 0, KEY_READ, &key);
+    sprintf(buf,"CLSID\\%s\\LocalServer32",xclsid);
+    hres = RegOpenKeyExA(HKEY_CLASSES_ROOT, buf, 0, KEY_READ, &key);
 
-  if (hres != ERROR_SUCCESS) {
-      WARN("CLSID %s not registered as LocalServer32\n", xclsid);
-      return REGDB_E_READREGDB; /* Probably */
-  }
+    if (hres != ERROR_SUCCESS) {
+        WARN("CLSID %s not registered as LocalServer32\n", xclsid);
+        return REGDB_E_READREGDB; /* Probably */
+    }
 
-  memset(exe,0,sizeof(exe));
-  hres= RegQueryValueExW(key, NULL, NULL, NULL, (LPBYTE)exe, &exelen);
-  RegCloseKey(key);
-  if (hres) {
-      WARN("No default value for LocalServer32 key\n");
-      return REGDB_E_CLASSNOTREG; /* FIXME: check retval */
-  }
+    memset(exe,0,sizeof(exe));
+    hres= RegQueryValueExW(key, NULL, NULL, NULL, (LPBYTE)exe, &exelen);
+    RegCloseKey(key);
+    if (hres) {
+        WARN("No default value for LocalServer32 key\n");
+        return REGDB_E_CLASSNOTREG; /* FIXME: check retval */
+    }
 
-  memset(&sinfo,0,sizeof(sinfo));
-  sinfo.cb = sizeof(sinfo);
+    memset(&sinfo,0,sizeof(sinfo));
+    sinfo.cb = sizeof(sinfo);
 
-  /* EXE servers are started with the -Embedding switch. MSDN also claims /Embedding is used,
-     9x does -Embedding, perhaps an 9x/NT difference?  */
+    /* EXE servers are started with the -Embedding switch. MSDN also claims /Embedding is used,
+     * 9x does -Embedding, perhaps an 9x/NT difference?
+     */
 
-  strcpyW(command, exe);
-  strcatW(command, embedding);
+    strcpyW(command, exe);
+    strcatW(command, embedding);
 
-  TRACE("activating local server '%s' for %s\n", debugstr_w(command), xclsid);
+    TRACE("activating local server '%s' for %s\n", debugstr_w(command), xclsid);
 
-  if (!CreateProcessW(exe, command, NULL, NULL, FALSE, 0, NULL, NULL, &sinfo, &pinfo)) {
-      WARN("failed to run local server %s\n", debugstr_w(exe));
-      return E_FAIL;
-  }
+    if (!CreateProcessW(exe, command, NULL, NULL, FALSE, 0, NULL, NULL, &sinfo, &pinfo)) {
+        WARN("failed to run local server %s\n", debugstr_w(exe));
+        return E_FAIL;
+    }
 
-  return S_OK;
+    return S_OK;
 }
 
 /*
@@ -577,7 +525,7 @@ static DWORD
 start_local_service(LPCWSTR name, DWORD num, LPWSTR *params)
 {
     SC_HANDLE handle, hsvc;
-    DWORD r = ERROR_FUNCTION_FAILED;
+    DWORD     r = ERROR_FUNCTION_FAILED;
 
     TRACE("Starting service %s %ld params\n", debugstr_w(name), num);
 
@@ -591,7 +539,7 @@ start_local_service(LPCWSTR name, DWORD num, LPWSTR *params)
             r = ERROR_SUCCESS;
         else
             r = GetLastError();
-        if (r==ERROR_SERVICE_ALREADY_RUNNING)
+        if (r == ERROR_SERVICE_ALREADY_RUNNING)
             r = ERROR_SUCCESS;
         CloseServiceHandle(hsvc);
     }
@@ -619,10 +567,8 @@ create_local_service(REFCLSID rclsid)
     static const WCHAR szClsId[] = { 'C','L','S','I','D','\\',0 };
     static const WCHAR szAppId[] = { 'A','p','p','I','d',0 };
     static const WCHAR szAppIdKey[] = { 'A','p','p','I','d','\\',0 };
-    static const WCHAR szLocalService[] = { 
-                 'L','o','c','a','l','S','e','r','v','i','c','e',0 };
-    static const WCHAR szServiceParams[] = {
-                 'S','e','r','v','i','c','e','P','a','r','a','m','s',0};
+    static const WCHAR szLocalService[] = { 'L','o','c','a','l','S','e','r','v','i','c','e',0 };
+    static const WCHAR szServiceParams[] = {'S','e','r','v','i','c','e','P','a','r','a','m','s',0};
     HKEY hkey;
     LONG r;
     DWORD type, sz;
@@ -680,145 +626,124 @@ create_local_service(REFCLSID rclsid)
 }
 
 /* http://msdn.microsoft.com/library/en-us/dnmsj99/html/com0199.asp, Figure 4 */
-HRESULT create_marshalled_proxy(REFCLSID rclsid, REFIID iid, LPVOID *ppv) {
-  HRESULT	hres;
-  HANDLE	hPipe;
-  char		pipefn[200];
-  DWORD		res,bufferlen;
-  char		marshalbuffer[200];
-  IStream	*pStm;
-  LARGE_INTEGER	seekto;
-  ULARGE_INTEGER newpos;
-  int		tries = 0;
-#define MAXTRIES 10000
+HRESULT create_marshalled_proxy(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
+{
+    HRESULT        hres;
+    HANDLE         hPipe;
+    char           pipefn[200];
+    DWORD          res, bufferlen;
+    char           marshalbuffer[200];
+    IStream       *pStm;
+    LARGE_INTEGER  seekto;
+    ULARGE_INTEGER newpos;
+    int            tries = 0;
+    
+    static const int MAXTRIES = 10000;
 
-  TRACE("rclsid=%s, iid=%s\n", debugstr_guid(rclsid), debugstr_guid(iid));
+    TRACE("rclsid=%s, iid=%s\n", debugstr_guid(rclsid), debugstr_guid(iid));
 
-  strcpy(pipefn,PIPEPREF);
-  WINE_StringFromCLSID(rclsid,pipefn+strlen(PIPEPREF));
+    strcpy(pipefn,PIPEPREF);
+    WINE_StringFromCLSID(rclsid,pipefn+strlen(PIPEPREF));
 
-  while (tries++<MAXTRIES) {
-      TRACE("waiting for %s\n", pipefn);
+    while (tries++ < MAXTRIES) {
+        TRACE("waiting for %s\n", pipefn);
       
-      WaitNamedPipeA( pipefn, NMPWAIT_WAIT_FOREVER );
-      hPipe	= CreateFileA(
-	      pipefn,
-	      GENERIC_READ|GENERIC_WRITE,
-	      0,
-	      NULL,
-	      OPEN_EXISTING,
-	      0,
-	      0
-      );
-      if (hPipe == INVALID_HANDLE_VALUE) {
-	  if (tries == 1) {
-	      if ( (hres = create_server(rclsid)) &&
-                   (hres = create_local_service(rclsid)) )
-		  return hres;
-	      Sleep(1000);
-	  } else {
-	      WARN("Could not open named pipe to broker %s, le is %lx\n",pipefn,GetLastError());
-	      Sleep(1000);
-	  }
-	  continue;
-      }
-      bufferlen = 0;
-      if (!ReadFile(hPipe,marshalbuffer,sizeof(marshalbuffer),&bufferlen,NULL)) {
-	  FIXME("Failed to read marshal id from classfactory of %s.\n",debugstr_guid(rclsid));
-	  Sleep(1000);
-	  continue;
-      }
-      TRACE("read marshal id from pipe\n");
-      CloseHandle(hPipe);
-      break;
-  }
-  if (tries>=MAXTRIES)
-      return E_NOINTERFACE;
-  hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
-  if (hres) return hres;
-  hres = IStream_Write(pStm,marshalbuffer,bufferlen,&res);
-  if (hres) goto out;
-  seekto.u.LowPart = 0;seekto.u.HighPart = 0;
-  hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
-  TRACE("unmarshalling classfactory\n");
-  hres = CoUnmarshalInterface(pStm,&IID_IClassFactory,ppv);
-out:
-  IStream_Release(pStm);
-  return hres;
-}
-
-
-static void WINAPI
-PIPE_StartRequestThread(HANDLE xhPipe) {
-    wine_marshal_id	remoteid;
-    HRESULT		hres;
-
-    hres = read_pipe(xhPipe,&remoteid,sizeof(remoteid));
-    if (hres) {
-	ERR("Failed to read remote mid!\n");
-	return;
+        WaitNamedPipeA( pipefn, NMPWAIT_WAIT_FOREVER );
+        hPipe = CreateFileA(pipefn, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+        if (hPipe == INVALID_HANDLE_VALUE) {
+            if (tries == 1) {
+                if ( (hres = create_server(rclsid)) &&
+                     (hres = create_local_service(rclsid)) )
+                    return hres;
+                Sleep(1000);
+            } else {
+                WARN("Connecting to %s, no response yet, retrying: le is %lx\n",pipefn,GetLastError());
+                Sleep(1000);
+            }
+            continue;
+        }
+        bufferlen = 0;
+        if (!ReadFile(hPipe,marshalbuffer,sizeof(marshalbuffer),&bufferlen,NULL)) {
+            FIXME("Failed to read marshal id from classfactory of %s.\n",debugstr_guid(rclsid));
+            Sleep(1000);
+            continue;
+        }
+        TRACE("read marshal id from pipe\n");
+        CloseHandle(hPipe);
+        break;
     }
-    PIPE_RegisterPipe(&remoteid,xhPipe, TRUE);
+    
+    if (tries >= MAXTRIES)
+        return E_NOINTERFACE;
+    
+    hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
+    if (hres) return hres;
+    hres = IStream_Write(pStm,marshalbuffer,bufferlen,&res);
+    if (hres) goto out;
+    seekto.u.LowPart = 0;seekto.u.HighPart = 0;
+    hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
+    
+    TRACE("unmarshalling classfactory\n");
+    hres = CoUnmarshalInterface(pStm,&IID_IClassFactory,ppv);
+out:
+    IStream_Release(pStm);
+    return hres;
 }
 
-static HRESULT
-COM_RpcReceive(wine_pipe *xpipe) {
-    DWORD	reqtype;
-    HRESULT	hres = S_OK;
-    HANDLE	xhPipe = xpipe->hPipe;
 
-    /*FIXME("%lx %d reading reqtype\n",GetCurrentProcessId(),xhPipe);*/
-    hres = read_pipe(xhPipe,&reqtype,sizeof(reqtype));
-    if (hres) goto end;
-    EnterCriticalSection(&(xpipe->crit));
-    /*FIXME("%lx got reqtype %ld\n",GetCurrentProcessId(),reqtype);*/
+/* this reads an RPC from the given pipe and places it in the global reqs array  */
+static HRESULT process_incoming_rpc(HANDLE pipe)
+{
+    DWORD       reqtype;
+    HRESULT     hres = S_OK;
 
-    if (reqtype == REQTYPE_DISCONNECT) { /* only received by servers */
-        wine_rpc_disconnect_header header;
-        struct stub_manager *stubmgr;
+    hres = read_pipe(pipe,&reqtype,sizeof(reqtype));
+    if (hres) return hres;
 
-        hres = read_pipe(xhPipe, &header, sizeof(header));
-        if (hres) {
-            ERR("could not read disconnect header\n");
-            goto end;
-        }
+    /* only received by servers */
+    if (reqtype == REQTYPE_REQUEST)
+    {
+	struct rpc *xreq;
 
-        TRACE("read disconnect header\n");
-
-        if (!(stubmgr = get_stub_manager(header.mid.oxid, header.mid.oid)))
-        {
-            ERR("could not locate stub to disconnect, mid.oid=%s\n", wine_dbgstr_longlong(header.mid.oid));
-            goto end;
-        }
-
-        stub_manager_ext_release(stubmgr, 1);
-
-        stub_manager_int_release(stubmgr);
-
-        goto end;
-    } else if (reqtype == REQTYPE_REQUEST) {
-	wine_rpc_request	*xreq;
 	RPC_GetRequest(&xreq);
-	xreq->hPipe = xhPipe;
-	hres = read_pipe(xhPipe,&(xreq->reqh),sizeof(xreq->reqh));
-	if (hres) goto end;
+        
+	xreq->hPipe = pipe;
+	hres = read_pipe(pipe,&(xreq->reqh),sizeof(xreq->reqh));
+	if (hres)
+        {
+            xreq->state = REQSTATE_DONE;
+            return hres;
+        }
+        
 	xreq->resph.reqid = xreq->reqh.reqid;
 	xreq->Buffer = HeapAlloc(GetProcessHeap(),0, xreq->reqh.cbBuffer);
-	hres = read_pipe(xhPipe,xreq->Buffer,xreq->reqh.cbBuffer);
+	hres = read_pipe(pipe,xreq->Buffer,xreq->reqh.cbBuffer);
 	if (hres) goto end;
+
+        TRACE("received RPC for IPID %s\n", debugstr_guid(&xreq->reqh.ipid));
+        
 	xreq->state = REQSTATE_REQ_GOT;
 	goto end;
-    } else if (reqtype == REQTYPE_RESPONSE) {
-	wine_rpc_response_header	resph;
+    }
+    else if (reqtype == REQTYPE_RESPONSE)
+    {
+	struct response_header	resph;
 	int i;
 
-	hres = read_pipe(xhPipe,&resph,sizeof(resph));
+	hres = read_pipe(pipe,&resph,sizeof(resph));
 	if (hres) goto end;
-	for (i=nrofreqs;i--;) {
-	    wine_rpc_request *xreq = reqs[i];
+
+        TRACE("read RPC response\n");
+        
+	for (i = nrofreqs; i--;)
+        {
+	    struct rpc *xreq = reqs[i];
+            
 	    if (xreq->state != REQSTATE_REQ_WAITING_FOR_REPLY)
 		continue;
-	    if (xreq->reqh.reqid == resph.reqid) {
+            
+	    if (xreq->reqh.reqid == resph.reqid)
+            {
 		memcpy(&(xreq->resph),&resph,sizeof(resph));
 
 		if (xreq->Buffer)
@@ -826,54 +751,86 @@ COM_RpcReceive(wine_pipe *xpipe) {
 		else
 		    xreq->Buffer = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,xreq->resph.cbBuffer);
 
-		hres = read_pipe(xhPipe,xreq->Buffer,xreq->resph.cbBuffer);
+		hres = read_pipe(pipe,xreq->Buffer,xreq->resph.cbBuffer);
 		if (hres) goto end;
+
+                TRACE("received response for reqid 0x%lx\n", xreq->reqh.reqid);
+                
 		xreq->state = REQSTATE_RESP_GOT;
-		/*PulseEvent(hRpcChanged);*/
 		goto end;
 	    }
 	}
-	ERR("Did not find request for id %lx\n",resph.reqid);
-	hres = S_OK;
+        
+	ERR("protocol error: did not find request for id %lx\n",resph.reqid);
+	hres = E_FAIL;
 	goto end;
     }
-    ERR("Unknown reqtype %ld\n",reqtype);
+    
+    ERR("protocol error: unknown reqtype %ld\n",reqtype);
     hres = E_FAIL;
 end:
-    LeaveCriticalSection(&(xpipe->crit));
     return hres;
 }
 
-/* This thread listens on the given pipe for requests to a particular stub manager */
-static DWORD WINAPI stub_dispatch_thread(LPVOID param)
+struct stub_dispatch_params
 {
-    wine_pipe		*xpipe = (wine_pipe*)param;
-    HANDLE		xhPipe = xpipe->hPipe;
-    HRESULT		hres = S_OK;
+    struct apartment *apt;
+    HANDLE            pipe;
+};
 
-    TRACE("starting for apartment OXID %08lx%08lx\n", (DWORD)(xpipe->mid.oxid >> 32), (DWORD)(xpipe->mid.oxid));
-
-    /* join marshalling apartment. fixme: this stuff is all very wrong, threading needs to work like native */
-    NtCurrentTeb()->ReservedForOle = xpipe->apt;
+/* This thread listens on the given pipe for requests to any stub manager */
+static DWORD WINAPI client_dispatch_thread(LPVOID param)
+{
+    HANDLE              pipe = ((struct stub_dispatch_params *)param)->pipe;
+    struct apartment   *apt  = ((struct stub_dispatch_params *)param)->apt;
+    HRESULT             hres = S_OK;
+    HANDLE              shutdown_event = dupe_handle(apt->shutdown_event);
     
-    while (!hres) {
-	int i;
-        
-	hres = COM_RpcReceive(xpipe);
-	if (hres) break;
+    HeapFree(GetProcessHeap(), 0, param);
+    
+    /* join marshalling apartment. fixme: this stuff is all very wrong, threading needs to work like native */
+    COM_CurrentInfo()->apt = apt;
 
-	for (i=nrofreqs;i--;) {
-	    wine_rpc_request *xreq = reqs[i];
-	    if ((xreq->state == REQSTATE_REQ_GOT) && (xreq->hPipe == xhPipe)) {
-		hres = COM_InvokeAndRpcSend(xreq);
-		if (!hres) break;
-	    }
-	}
+    while (TRUE)
+    {
+        int i;
+
+        TRACE("waiting for RPC on OXID: %08lx%08lx\n", (DWORD)(apt->oxid >> 32), (DWORD)(apt->oxid));
+        
+        /* read a new request into the global array, block if no requests have been sent */
+        hres = process_incoming_rpc(pipe);
+        if (hres) break;
+
+        /* do you expect me to talk? */
+        if (WaitForSingleObject(shutdown_event, 0) == WAIT_OBJECT_0)
+        {
+            /* no mr bond, i expect you to die! bwahaha */
+            CloseHandle(shutdown_event);
+            break;
+        }
+        
+        TRACE("received RPC on OXID: %08lx%08lx\n", (DWORD)(apt->oxid >> 32), (DWORD)(apt->oxid));        
+
+        /* now scan the array looking for the RPC just loaded */
+        for (i=nrofreqs;i--;)
+        {
+            struct rpc *req = reqs[i];
+            
+            if ((req->state == REQSTATE_REQ_GOT) && (req->hPipe == pipe))
+            {
+                hres = COM_InvokeAndRpcSend(req);
+                if (!hres) break;
+            }
+        }
     }
 
-    /* fixme: this thread never quits naturally */
-    WARN("exiting with hres %lx\n",hres);
-    CloseHandle(xhPipe);
+    TRACE("exiting with hres %lx\n",hres);
+
+    /* leave marshalling apartment. fixme: this stuff is all very wrong, threading needs to work like native */
+    COM_CurrentInfo()->apt = NULL;
+
+    DisconnectNamedPipe(pipe);
+    CloseHandle(pipe);
     return 0;
 }
 
@@ -892,29 +849,40 @@ struct apartment_listener_params
  */
 static DWORD WINAPI apartment_listener_thread(LPVOID p)
 {
-    char		pipefn[200];
-    HANDLE		listenPipe;
+    char pipefn[200];
+    HANDLE listenPipe, thread_handle;
+    OVERLAPPED overlapped;
+    HANDLE wait[2];
+    
     struct apartment_listener_params * params = (struct apartment_listener_params *)p;
-    APARTMENT *apt = params->apt;
+    struct apartment *apt = params->apt;
     HANDLE event = params->event;
+    HANDLE apt_shutdown_event = dupe_handle(apt->shutdown_event);
+    OXID   this_oxid = apt->oxid; /* copy here so we can print it when we shut down */
 
     HeapFree(GetProcessHeap(), 0, params);
 
+    overlapped.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+    
     /* we must join the marshalling threads apartment. we already have a ref here */
-    NtCurrentTeb()->ReservedForOle = apt;
+    COM_CurrentInfo()->apt = apt;
 
     sprintf(pipefn,OLESTUBMGR"_%08lx%08lx", (DWORD)(apt->oxid >> 32), (DWORD)(apt->oxid));
     TRACE("Apartment listener thread starting on (%s)\n",pipefn);
 
-    while (1) {
+    while (TRUE)
+    {
+        struct stub_dispatch_params *params;
+        DWORD res;
+
 	listenPipe = CreateNamedPipeA(
 	    pipefn,
-	    PIPE_ACCESS_DUPLEX,
+	    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
 	    PIPE_TYPE_BYTE|PIPE_WAIT,
 	    PIPE_UNLIMITED_INSTANCES,
 	    4096,
 	    4096,
-	    NMPWAIT_USE_DEFAULT_WAIT,
+	    500 /* 0.5 seconds */,
 	    NULL
 	);
 
@@ -927,19 +895,56 @@ static DWORD WINAPI apartment_listener_thread(LPVOID p)
 
 	if (listenPipe == INVALID_HANDLE_VALUE) {
 	    FIXME("pipe creation failed for %s, error %ld\n",pipefn,GetLastError());
-	    return 1; /* permanent failure, so quit stubmgr thread */
+	    break; /* permanent failure, so quit stubmgr thread */
 	}
 
+        TRACE("waiting for a client ...\n");
+        
 	/* an already connected pipe is not an error */
-	if (!ConnectNamedPipe(listenPipe,NULL) &&
-	    (GetLastError() != ERROR_PIPE_CONNECTED)) {
-	    ERR("Failure during ConnectNamedPipe %ld!\n",GetLastError());
-	    CloseHandle(listenPipe);
-	    continue;
+	if (!ConnectNamedPipe(listenPipe, &overlapped))
+        {
+            DWORD le = GetLastError();
+            
+            if ((le != ERROR_IO_PENDING) && (le != ERROR_PIPE_CONNECTED))
+            {
+                ERR("Failure during ConnectNamedPipe %ld!\n",GetLastError());
+                CloseHandle(listenPipe);
+                continue;
+            }
 	}
 
-	PIPE_StartRequestThread(listenPipe);
+        /* wait for action */
+        wait[0] = apt_shutdown_event;
+        wait[1] = overlapped.hEvent;
+        res = WaitForMultipleObjectsEx(2, wait, FALSE, INFINITE, FALSE);
+        if (res == WAIT_OBJECT_0) break;
+
+        ResetEvent(overlapped.hEvent);
+        
+        /* start the stub dispatch thread for this connection */
+        TRACE("starting stub dispatch thread for OXID %08lx%08lx\n", (DWORD)(apt->oxid >> 32), (DWORD)(apt->oxid));
+        params = HeapAlloc(GetProcessHeap(), 0, sizeof(struct stub_dispatch_params));
+        if (!params)
+        {
+            ERR("out of memory, dropping this client\n");
+            CloseHandle(listenPipe);
+            continue;
+        }
+        params->apt = apt;
+        params->pipe = listenPipe;
+        thread_handle = CreateThread(NULL, 0, &client_dispatch_thread, params, 0, NULL);
+        CloseHandle(thread_handle);
     }
+
+    TRACE("shutting down: %s\n", wine_dbgstr_longlong(this_oxid));
+
+    /* we must leave the marshalling threads apartment. we don't have a ref here */
+    COM_CurrentInfo()->apt = NULL;
+
+    DisconnectNamedPipe(listenPipe);
+    CloseHandle(listenPipe);
+    CloseHandle(overlapped.hEvent);
+    CloseHandle(apt_shutdown_event);
     return 0;
 }
 
@@ -1004,12 +1009,15 @@ static DWORD WINAPI local_server_thread(LPVOID param)
     HeapFree(GetProcessHeap(), 0, lsp);
 
     hPipe = CreateNamedPipeA( pipefn, PIPE_ACCESS_DUPLEX,
-               PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
-               4096, 4096, NMPWAIT_USE_DEFAULT_WAIT, NULL );
-    if (hPipe == INVALID_HANDLE_VALUE) {
+                              PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
+                              4096, 4096, 500 /* 0.5 second timeout */, NULL );
+    
+    if (hPipe == INVALID_HANDLE_VALUE)
+    {
         FIXME("pipe creation failed for %s, le is %ld\n",pipefn,GetLastError());
         return 1;
     }
+    
     while (1) {
         if (!ConnectNamedPipe(hPipe,NULL)) {
             ERR("Failure during ConnectNamedPipe %ld, ABORT!\n",GetLastError());
@@ -1037,8 +1045,6 @@ static DWORD WINAPI local_server_thread(LPVOID param)
             return hres;
         }
         
-        IStream_Release(pStm);
-
         WriteFile(hPipe,buffer,buflen,&res,NULL);
         FlushFileBuffers(hPipe);
         DisconnectNamedPipe(hPipe);
@@ -1046,6 +1052,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
         TRACE("done marshalling IClassFactory\n");
     }
     CloseHandle(hPipe);
+    IStream_Release(pStm);
     return 0;
 }
 

@@ -143,6 +143,18 @@ inline static void list_init( struct list *list )
 #define LIST_FOR_EACH(cursor,list) \
     for ((cursor) = (list)->next; (cursor) != (list); (cursor) = (cursor)->next)
 
+/* iterate through the list, with safety against removal */
+#define LIST_FOR_EACH_SAFE(cursor, cursor2, list) \
+    for ((cursor) = (list)->next, (cursor2) = (cursor)->next; \
+         (cursor) != (list); \
+         (cursor) = (cursor2), (cursor2) = (cursor)->next)
+
+/* iterate through the list using a list entry */
+#define LIST_FOR_EACH_ENTRY(elem, list, type, field) \
+    for ((elem) = LIST_ENTRY((list)->next, type, field); \
+         &(elem)->field != (list); \
+         (elem) = LIST_ENTRY((elem)->field.next, type, field))
+
 /* macros for statically initialized lists */
 #define LIST_INIT(list)  { &(list), &(list) }
 

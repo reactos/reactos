@@ -48,6 +48,7 @@
 #include "wine/wingdi16.h"
 #include "wine/winuser16.h"
 #include "ole32_main.h"
+#include "compobj_private.h"
 
 #include "wine/debug.h"
 
@@ -244,18 +245,6 @@ HRESULT WINAPI OleInitialize(LPVOID reserved)
 }
 
 /******************************************************************************
- *		CoGetCurrentProcess	[COMPOBJ.34]
- *		CoGetCurrentProcess	[OLE32.@]
- *
- * NOTES
- *   Is DWORD really the correct return type for this function?
- */
-DWORD WINAPI CoGetCurrentProcess(void)
-{
-	return GetCurrentProcessId();
-}
-
-/******************************************************************************
  *		OleUninitialize	[OLE2.3]
  *		OleUninitialize	[OLE32.@]
  */
@@ -298,20 +287,6 @@ void WINAPI OleUninitialize(void)
    * Then, uninitialize the COM libraries.
    */
   CoUninitialize();
-}
-
-/******************************************************************************
- *		CoRegisterMessageFilter	[OLE32.@]
- */
-HRESULT WINAPI CoRegisterMessageFilter(
-    LPMESSAGEFILTER lpMessageFilter,	/* [in] Pointer to interface */
-    LPMESSAGEFILTER *lplpMessageFilter	/* [out] Indirect pointer to prior instance if non-NULL */
-) {
-    FIXME("stub\n");
-    if (lplpMessageFilter) {
-	*lplpMessageFilter = NULL;
-    }
-    return S_OK;
 }
 
 /******************************************************************************
@@ -2311,6 +2286,44 @@ HRESULT WINAPI OleCreate(
 
     TRACE("-- %p \n", pUnk);
     return hres;
+}
+
+/******************************************************************************
+ *              OleSetAutoConvert        [OLE32.@]
+ */
+/* FIXME: convert to Unicode */
+HRESULT WINAPI OleSetAutoConvert(REFCLSID clsidOld, REFCLSID clsidNew)
+{
+    HKEY hkey = 0;
+    char buf[200], szClsidNew[200];
+    HRESULT res = S_OK;
+
+    TRACE("(%s,%s)\n", debugstr_guid(clsidOld), debugstr_guid(clsidNew));
+    sprintf(buf,"CLSID\\");WINE_StringFromCLSID(clsidOld,&buf[6]);
+    WINE_StringFromCLSID(clsidNew, szClsidNew);
+    if (RegOpenKeyA(HKEY_CLASSES_ROOT,buf,&hkey))
+    {
+        res = REGDB_E_CLASSNOTREG;
+	goto done;
+    }
+    if (RegSetValueA(hkey, "AutoConvertTo", REG_SZ, szClsidNew, strlen(szClsidNew)+1))
+    {
+        res = REGDB_E_WRITEREGDB;
+	goto done;
+    }
+
+done:
+    if (hkey) RegCloseKey(hkey);
+    return res;
+}
+
+/******************************************************************************
+ *              OleDoAutoConvert        [OLE32.@]
+ */
+HRESULT WINAPI OleDoAutoConvert(IStorage *pStg, LPCLSID pClsidNew)
+{
+    FIXME("(%p,%p) : stub\n",pStg,pClsidNew);
+    return E_NOTIMPL;
 }
 
 /***********************************************************************

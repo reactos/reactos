@@ -139,15 +139,6 @@ HRESULT     WINAPI OleRegEnumFormatEtc (
 }
 
 /***********************************************************************
- *           CoIsOle1Class                              [OLE32.@]
- */
-BOOL WINAPI CoIsOle1Class(REFCLSID clsid)
-{
-  FIXME("%s\n", debugstr_guid(clsid));
-  return FALSE;
-}
-
-/***********************************************************************
  *           DllGetClassObject                          [OLE2.4]
  */
 HRESULT WINAPI DllGetClassObject16(REFCLSID rclsid, REFIID iid, LPVOID *ppv)

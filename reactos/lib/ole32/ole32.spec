@@ -7,7 +7,7 @@
 @ stdcall CLSIDFromString(wstr ptr)
 @ stdcall CoAddRefServerProcess()
 @ stdcall CoBuildVersion()
-@ stub CoCopyProxy                #@ stdcall (ptr ptr) return 0,ERR_NOTIMPLEMENTED
+@ stdcall CoCopyProxy(ptr ptr)
 @ stdcall CoCreateFreeThreadedMarshaler(ptr ptr)
 @ stdcall CoCreateGuid(ptr)
 @ stdcall CoCreateInstance(ptr ptr long ptr ptr)
@@ -49,7 +49,7 @@
 @ stdcall CoMarshalInterface(ptr ptr ptr long ptr long)
 @ stub CoQueryAuthenticationServices
 @ stub CoQueryClientBlanket
-@ stub CoQueryProxyBlanket
+@ stdcall CoQueryProxyBlanket(ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stub CoQueryReleaseObject
 @ stub CoRegisterChannelHook
 @ stdcall CoRegisterClassObject(ptr ptr long long ptr)
@@ -63,7 +63,7 @@
 @ stub CoRevertToSelf             #@ stdcall () return 0,ERR_NOTIMPLEMENTED
 @ stdcall CoRevokeClassObject(long)
 @ stdcall CoRevokeMallocSpy()
-@ stub CoSetProxyBlanket          #@ stdcall (ptr long long wstr long long ptr long) return 0,ERR_NOTIMPLEMENTED
+@ stdcall CoSetProxyBlanket(ptr long long wstr long long ptr long)
 @ stdcall CoSetState(ptr)
 @ stub CoSwitchCallContext
 @ stdcall CoSuspendClassObjects()
@@ -92,8 +92,8 @@
 @ stdcall DllDebugObjectRPCHook(long ptr)
 @ stdcall -private DllGetClassObject (ptr ptr ptr) OLE32_DllGetClassObject
 @ stub DllGetClassObjectWOW
-@ stdcall -private DllRegisterServer() OLE32_DllRegisterServer
-@ stdcall -private DllUnregisterServer() OLE32_DllUnregisterServer
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 @ stdcall DoDragDrop(ptr ptr long ptr)
 @ stub EnableHookObject
 @ stdcall FreePropVariantArray(long ptr)
