@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.204 2004/03/30 22:49:38 gvg Exp $
+/* $Id: window.c,v 1.205 2004/03/31 18:37:12 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -53,6 +53,7 @@
 #include <include/hook.h>
 #include <include/useratom.h>
 #include <include/tags.h>
+#include <include/timer.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -292,6 +293,8 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   BOOL BelongsToThreadData;
   
   ASSERT(Window);
+
+  RemoveTimersWindow(Window->Self);
   
   IntLockThreadWindows(Window->OwnerThread->Win32Thread);
   if(Window->Status & WINDOWSTATUS_DESTROYING)

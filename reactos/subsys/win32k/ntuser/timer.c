@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.28 2004/03/29 17:02:22 navaraf Exp $
+/* $Id: timer.c,v 1.29 2004/03/31 18:37:12 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,10 +61,10 @@ static HANDLE        MsgTimerThreadHandle;
 static CLIENT_ID     MsgTimerThreadId;
 
 
-#define IntLockTimerList \
+#define IntLockTimerList() \
   ExAcquireFastMutex(&Mutex)
 
-#define IntUnLockTimerList \
+#define IntUnLockTimerList() \
   ExReleaseFastMutex(&Mutex)
 
 /* FUNCTIONS *****************************************************************/
@@ -123,7 +123,7 @@ RemoveTimersThread(HANDLE ThreadID)
   PMSG_TIMER_ENTRY MsgTimer;
   PLIST_ENTRY EnumEntry;
   
-  IntLockTimerList;
+  IntLockTimerList();
   
   EnumEntry = TimerListHead.Flink;
   while (EnumEntry != &TimerListHead)
@@ -143,7 +143,35 @@ RemoveTimersThread(HANDLE ThreadID)
     }
   }
   
-  IntUnLockTimerList;
+  IntUnLockTimerList();
+}
+
+
+/* 
+ * NOTE: It doesn't kill the timer. It just removes them from the list.
+ */
+VOID FASTCALL
+RemoveTimersWindow(HWND Wnd)
+{
+  PMSG_TIMER_ENTRY MsgTimer;
+  PLIST_ENTRY EnumEntry;
+
+  IntLockTimerList();
+  
+  EnumEntry = TimerListHead.Flink;
+  while (EnumEntry != &TimerListHead)
+  {
+    MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+    EnumEntry = EnumEntry->Flink;
+    
+    if (MsgTimer->Msg.hwnd == Wnd)
+    {
+      RemoveEntryList(&MsgTimer->ListEntry);
+      ExFreePool(MsgTimer);
+    }
+  }
+  
+  IntUnLockTimerList();
 }
 
 
@@ -157,10 +185,10 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
   PWINDOW_OBJECT WindowObject;
   HANDLE ThreadID;
   UINT_PTR Ret = 0;
-  
+ 
   ThreadID = PsGetCurrentThreadId();
   KeQuerySystemTime(&CurrentTime);
-  IntLockTimerList;
+  IntLockTimerList();
   
   if((hWnd == NULL) && !SystemTimer)
   {
@@ -169,7 +197,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     
     if(Index == (ULONG) -1)
     {
-      IntUnLockTimerList;
+      IntUnLockTimerList();
       return 0;
     }
     
@@ -180,14 +208,14 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     WindowObject = IntGetWindowObject(hWnd);
     if(!WindowObject)
     {
-      IntUnLockTimerList;
+      IntUnLockTimerList();
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
     }
     
     if(WindowObject->OwnerThread != PsGetCurrentThread())
     {
-      IntUnLockTimerList;
+      IntUnLockTimerList();
       IntReleaseWindowObject(WindowObject);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return 0;
@@ -231,7 +259,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     NewTimer = ExAllocatePoolWithTag(PagedPool, sizeof(MSG_TIMER_ENTRY), TAG_TIMER);
     if(!NewTimer)
     {
-      IntUnLockTimerList;
+      IntUnLockTimerList();
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return 0;
     }
@@ -253,7 +281,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
      KeSetTimer(&Timer, NewTimer->Timeout, NULL);
   }
 
-  IntUnLockTimerList;
+  IntUnLockTimerList();
 
   return Ret;
 }
@@ -265,14 +293,14 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
   PMSG_TIMER_ENTRY MsgTimer;
   PWINDOW_OBJECT WindowObject;
   
-  IntLockTimerList;
+  IntLockTimerList();
   
   /* window-less timer? */
   if((hWnd == NULL) && !SystemTimer)
   {
     if(!RtlAreBitsSet(&WindowLessTimersBitMap, uIDEvent - 1, 1))
     {
-      IntUnLockTimerList;
+      IntUnLockTimerList();
       /* bit was not set */
       /* FIXME: set the last error */
       return FALSE;
@@ -285,13 +313,13 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
     WindowObject = IntGetWindowObject(hWnd);
     if(!WindowObject)
     {
-      IntUnLockTimerList; 
+      IntUnLockTimerList(); 
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
     }
     if(WindowObject->OwnerThread != PsGetCurrentThread())
     {
-      IntUnLockTimerList;
+      IntUnLockTimerList();
       IntReleaseWindowObject(WindowObject);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -301,7 +329,7 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
   
   MsgTimer = IntRemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId(), SystemTimer);
   
-  IntUnLockTimerList;
+  IntUnLockTimerList();
   
   if(MsgTimer == NULL)
   {
@@ -316,7 +344,6 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
   return TRUE;
 }
 
-extern VOID STDCALL ValidateNonPagedPool(VOID);
 static VOID STDCALL
 TimerThreadMain(PVOID StartContext)
 {
@@ -343,7 +370,7 @@ TimerThreadMain(PVOID StartContext)
     
     ThreadsToDereferenceCount = ThreadsToDereferencePos = 0;
     
-    IntLockTimerList;
+    IntLockTimerList();
     
     KeQuerySystemTime(&CurrentTime);
 
@@ -412,7 +439,7 @@ TimerThreadMain(PVOID StartContext)
       KeSetTimer(&Timer, MsgTimer->Timeout, NULL);
     }
     
-    IntUnLockTimerList;
+    IntUnLockTimerList();
 
     for (i = 0; i < ThreadsToDereferencePos; i++)
        ObDereferenceObject(ThreadsToDereference[i]);
