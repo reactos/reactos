@@ -7,7 +7,7 @@ TARGET_NORC = yes
 TARGET_NAME = opengl32
 
 # -fno-builtin
-TARGET_CFLAGS = -D__USE_W32API -DUNICODE -D_M_IX86 -Os -g3
+TARGET_CFLAGS = -D__USE_W32API -DUNICODE -Os -g3
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
