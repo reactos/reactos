@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.179 2004/01/27 09:36:14 weiden Exp $
+/* $Id: window.c,v 1.180 2004/02/04 01:10:25 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,6 +62,8 @@
 static WndProcHandle *WndProcHandlesArray = 0;
 static WORD WndProcHandlesArraySize = 0;
 #define WPH_SIZE 0x40 /* the size to add to the WndProcHandle array each time */
+
+#define POINT_IN_RECT(p, r) (((r.bottom >= p.y) && (r.top <= p.y))&&((r.left <= p.x )&&( r.right >= p.x )))
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -992,17 +994,68 @@ NtUserBuildHwndList(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD STDCALL
-NtUserChildWindowFromPointEx(HWND Parent,
+HWND STDCALL
+NtUserChildWindowFromPointEx(HWND hwndParent,
 			     LONG x,
 			     LONG y,
-			     UINT Flags)
+			     UINT uiFlags)
 {
-  UNIMPLEMENTED
+    PWINDOW_OBJECT pParent, pCurrent, pLast;
+    POINT p = {x,y};
+    RECT rc;
+    BOOL bFirstRun = TRUE; 
+     
+    if(hwndParent)
+    {
+        pParent = IntGetWindowObject(hwndParent);
+        if(pParent)
+        {
+            ExAcquireFastMutexUnsafe (&pParent->ChildrenListLock);
+            
+            pLast = IntGetWindowObject(pParent->LastChild->Self);
+            pCurrent = IntGetWindowObject(pParent->FirstChild->Self);
+            
+            do
+            {
+                if (!bFirstRun)
+                {
+                    pCurrent = IntGetWindowObject(pCurrent->NextSibling->Self);
+                    
+                }
+                else
+                    bFirstRun = FALSE;
+                if(!pCurrent)
+                    return (HWND)NULL;
+                
+                rc.left = pCurrent->WindowRect.left - pCurrent->Parent->ClientRect.left;
+                rc.top = pCurrent->WindowRect.top - pCurrent->Parent->ClientRect.top;
+                rc.right = rc.left + (pCurrent->WindowRect.right - pCurrent->WindowRect.left);
+                rc.bottom = rc.top + (pCurrent->WindowRect.bottom - pCurrent->WindowRect.top);
+                DbgPrint("Rect:  %i,%i,%i,%i\n",rc.left, rc.top, rc.right, rc.bottom);
+                if (POINT_IN_RECT(p,rc)) /* Found a match */
+                {
+                    if ( (uiFlags & CWP_SKIPDISABLED) && (pCurrent->Style & WS_DISABLED) )
+                        continue;
+                    if( (uiFlags & CWP_SKIPTRANSPARENT) && (pCurrent->ExStyle & WS_EX_TRANSPARENT) )
+                        continue;
+                    if( (uiFlags & CWP_SKIPINVISIBLE) && !(pCurrent->Style & WS_VISIBLE) )
+                        continue;
 
-  return(0);
+                    ExReleaseFastMutexUnsafe(&pParent->ChildrenListLock);                  
+                    return pCurrent->Self;
+                }
+            }
+            while(pCurrent != pLast);
+            
+            ExReleaseFastMutexUnsafe(&pParent->ChildrenListLock);
+            return (HWND)NULL;
+        }
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    }
+
+    return (HWND)NULL;
 }
 
 
@@ -3185,8 +3238,6 @@ NtUserValidateRect(HWND hWnd, const RECT* Rect)
   return (VOID)NtUserRedrawWindow(hWnd, Rect, 0, RDW_VALIDATE | RDW_NOCHILDREN);
 }
 
-
-#define POINT_IN_RECT(p, r) (((r.bottom >= p.y) && (r.top <= p.y))&&((r.left <= p.x )&&( r.right >= p.x )))
 static BOOL IsStaticClass(PWINDOW_OBJECT Window)
 {
     BOOL rc = FALSE;
