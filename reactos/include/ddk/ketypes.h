@@ -98,14 +98,14 @@ typedef BOOLEAN (*PKSYNCHRONIZE_ROUTINE)(PVOID SynchronizeContext);
 
 struct _KAPC;
 
-typedef VOID STDCALL (*PKNORMAL_ROUTINE)(PVOID NormalContext,
-					 PVOID SystemArgument1,
-					 PVOID SystemArgument2);
+typedef VOID (*PKNORMAL_ROUTINE)(PVOID NormalContext,
+				 PVOID SystemArgument1,
+				 PVOID SystemArgument2);
 typedef VOID (*PKKERNEL_ROUTINE)(struct _KAPC* Apc,
-				PKNORMAL_ROUTINE* NormalRoutine,
-				PVOID* NormalContext,
-				PVOID* SystemArgument1,
-				PVOID* SystemArgument2);
+				 PKNORMAL_ROUTINE* NormalRoutine,
+				 PVOID* NormalContext,
+				 PVOID* SystemArgument1,
+				 PVOID* SystemArgument2);
 
 typedef VOID (*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);
 
