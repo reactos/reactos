@@ -777,7 +777,8 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
    
    if (wcslen(FileToFind)==0)
      {
-	TempStr[0] = (WCHAR)'.';
+CHECKPOINT;
+        TempStr[0] = (WCHAR)'.';
 	TempStr[1] = 0;
 	FileToFind=&TempStr;
      }
@@ -785,24 +786,30 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
      {
 	DPRINT("Parent->entry.FirstCluster %d\n",Parent->entry.FirstCluster);
      }
-   
+
+DPRINT("FindFile '%w'\n", FileToFind);
    if (Parent == NULL||Parent->entry.FirstCluster==1)
    {
+CHECKPOINT;
      Size = DeviceExt->rootDirectorySectors;//FIXME : in fat32, no limit
      StartingSector = DeviceExt->rootStart;
      NextCluster=0;
      if(FileToFind[0]==0 ||(FileToFind[0]=='\\' && FileToFind[1]==0) ||
 	(FileToFind[0]=='.' && FileToFind[1]==0))
      {// it's root : complete essentials fields then return ok
+CHECKPOINT;
        memset(Fcb,0,sizeof(VfatFCB));
        memset(Fcb->entry.Filename,' ',11);
        Fcb->entry.FileSize=DeviceExt->rootDirectorySectors*BLOCKSIZE;
        Fcb->entry.Attrib=FILE_ATTRIBUTE_DIRECTORY;
        if (DeviceExt->FatType == FAT32)
          Fcb->entry.FirstCluster=2;
-       else Fcb->entry.FirstCluster=1;//FIXME : is 1 the good value for mark root?
-       if(StartSector) *StartSector=StartingSector;
-       if(Entry) *Entry=0;
+       else
+         Fcb->entry.FirstCluster=1;//FIXME : is 1 the good value for mark root?
+       if(StartSector)
+         *StartSector=StartingSector;
+       if(Entry)
+         *Entry=0;
        return(STATUS_SUCCESS);
      }
    }
@@ -822,7 +829,9 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
        StartingSector=DeviceExt->rootStart;
      }
    }
+CHECKPOINT;
    block = ExAllocatePool(NonPagedPool,BLOCKSIZE);
+CHECKPOINT;
    if (StartSector && (*StartSector)) StartingSector=*StartSector;
    i=(Entry)?(*Entry):0;
    DPRINT("FindFile : start at sector %lx, entry %ld\n",StartingSector,i);
@@ -1024,19 +1033,24 @@ DbgPrint("try related for %w\n",FileName);
 	     ExFreePool(Fcb);
 	   if (ParentFcb != NULL)
 	     ExFreePool(ParentFcb);
-	   if(AbsFileName)ExFreePool(AbsFileName);
-		return(Status);
+	   if(AbsFileName)
+             ExFreePool(AbsFileName);
+           return(Status);
 	}
       Temp = Fcb;
+CHECKPOINT;
       if (ParentFcb == NULL)
 	{
 	   Fcb = ExAllocatePool(NonPagedPool,sizeof(VfatFCB));
 	   memset(Fcb,0,sizeof(VfatFCB));
 	   Fcb->ObjectName=Fcb->PathName;
 	}
-      else Fcb = ParentFcb;
+      else
+        Fcb = ParentFcb;
+CHECKPOINT;
       ParentFcb = Temp;
    }
+CHECKPOINT;
  FileObject->FsContext =(PVOID) &ParentFcb->NTRequiredFCB;
  newCCB = ExAllocatePool(NonPagedPool,sizeof(VfatCCB));
  memset(newCCB,0,sizeof(VfatCCB));
@@ -1478,6 +1492,7 @@ NTSTATUS FsdClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
+
 NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Create or open a file
@@ -1510,6 +1525,7 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    assert(DeviceExt);
    ExAcquireResourceExclusiveLite(&(DeviceExt->Resource),TRUE);
    Status = FsdOpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
+CHECKPOINT;
    Irp->IoStatus.Information = 0;
    if(!NT_SUCCESS(Status))
    {
@@ -1517,6 +1533,7 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
          ||RequestedDisposition==FILE_OPEN_IF
          ||RequestedDisposition==FILE_OVERWRITE_IF)
       {
+CHECKPOINT;
          Status=addEntry(DeviceExt,FileObject,RequestedOptions
              ,(Stack->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_VALID_FLAGS));
          if(NT_SUCCESS(Status))
@@ -1554,7 +1571,7 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      else Irp->IoStatus.Information = FILE_OPENED;
      // FIXME : make supersed or overwrite if requested
    }
-   
+CHECKPOINT;   
    Irp->IoStatus.Status = Status;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -1746,7 +1763,7 @@ NTSTATUS FsdSetPositionInformation(PFILE_OBJECT FileObject,
     DPRINT("FsdSetPositionInformation()\n");
     
     DPRINT("PositionInfo %x\n", PositionInfo);
-    DPRINT("Setting position %d\n", PositionInfo->CurrentByteOffset.LowPart);
+    DPRINT("Setting position %d\n", PositionInfo->CurrentByteOffset.u.LowPart);
     memcpy(&FileObject->CurrentByteOffset,&PositionInfo->CurrentByteOffset,
 	   sizeof(LARGE_INTEGER));
     
@@ -1762,7 +1779,7 @@ NTSTATUS FsdGetPositionInformation(PFILE_OBJECT FileObject,
     
     memcpy(&PositionInfo->CurrentByteOffset, &FileObject->CurrentByteOffset,
 	   sizeof(LARGE_INTEGER));
-    DPRINT("Getting position %x\n", PositionInfo->CurrentByteOffset.LowPart);
+    DPRINT("Getting position %x\n", PositionInfo->CurrentByteOffset.u.LowPart);
     return(STATUS_SUCCESS);
  }
 
@@ -1786,6 +1803,19 @@ NTSTATUS FsdGetBasicInformation(PFILE_OBJECT FileObject,
 
     DPRINT("Getting attributes %x\n", BasicInfo->FileAttributes);
 
+    return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS FsdSetDispositionInformation(PFILE_OBJECT FileObject,
+                                      PVfatFCB FCB,
+                                      PDEVICE_OBJECT DeviceObject,
+                                      PFILE_DISPOSITION_INFORMATION DispositionInfo)
+{
+    DPRINT("FsdSetDispositionInformation()\n");
+
+    FileObject->DeletePending = DispositionInfo->DeleteFile;
+   
     return(STATUS_SUCCESS);
 }
 
@@ -1895,6 +1925,12 @@ NTSTATUS FsdSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				       DeviceObject, 
 				       SystemBuffer);
 	break;
+      case FileDispositionInformation:
+        RC = FsdSetDispositionInformation(FileObject,
+                                          FCB, 
+                                          DeviceObject, 
+                                          SystemBuffer);
+        break;
       default:
 	RC = STATUS_NOT_IMPLEMENTED;
      }
