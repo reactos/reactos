@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/comctl32/Makefile.in,v
 retrieving revision 1.32
 diff -u -r1.32 Makefile.in
 --- Makefile.in	11 Oct 2003 01:09:20 -0000	1.32
-+++ Makefile.in	2 Jan 2004 19:07:52 -0000
++++ Makefile.in	22 Jan 2004 18:56:34 -0000
 @@ -41,9 +41,14 @@
  RC_BINARIES = \
  	idb_hist_large.bmp \
@@ -21,13 +21,43 @@ diff -u -r1.32 Makefile.in
  
  SUBDIRS = tests
  
+Index: comctl32undoc.c
+===================================================================
+RCS file: /home/wine/wine/dlls/comctl32/comctl32undoc.c,v
+retrieving revision 1.86
+diff -u -r1.86 comctl32undoc.c
+--- comctl32undoc.c	20 Nov 2003 04:19:41 -0000	1.86
++++ comctl32undoc.c	22 Jan 2004 18:56:35 -0000
+@@ -1669,21 +1669,7 @@
+ HDPA WINAPI
+ DPA_Create (INT nGrow)
+ {
+-    HDPA hdpa;
+-
+-    TRACE("(%d)\n", nGrow);
+-
+-    hdpa = Alloc (sizeof(*hdpa));
+-    if (hdpa) {
+-	hdpa->nGrow = max(8, nGrow);
+-	hdpa->hHeap = COMCTL32_hHeap;
+-	hdpa->nMaxCount = hdpa->nGrow * 2;
+-	hdpa->ptrs = Alloc (hdpa->nMaxCount * sizeof(LPVOID));
+-    }
+-
+-    TRACE("-- %p\n", hdpa);
+-
+-    return hdpa;
++    return DPA_CreateEx (nGrow, GetProcessHeap());
+ }
+ 
+ 
 Index: rsrc.rc
 ===================================================================
 RCS file: /home/wine/wine/dlls/comctl32/rsrc.rc,v
 retrieving revision 1.36
 diff -u -r1.36 rsrc.rc
 --- rsrc.rc	12 Dec 2003 05:57:22 -0000	1.36
-+++ rsrc.rc	2 Jan 2004 19:07:53 -0000
++++ rsrc.rc	22 Jan 2004 18:56:36 -0000
 @@ -29,8 +29,9 @@
  
  #include "wine/wine_common_ver.rc"
@@ -117,3 +147,26 @@ diff -u -r1.36 rsrc.rc
  
  
  /*
+Index: toolbar.c
+===================================================================
+RCS file: /home/wine/wine/dlls/comctl32/toolbar.c,v
+retrieving revision 1.147
+diff -u -r1.147 toolbar.c
+--- toolbar.c	26 Nov 2003 22:05:02 -0000	1.147
++++ toolbar.c	22 Jan 2004 18:56:39 -0000
+@@ -5042,6 +5042,7 @@
+     if((infoPtr->nHotItem >= 0) && (nHit != -1))
+         infoPtr->buttons[infoPtr->nHotItem].bHot = TRUE;
+ 
++    if (0 <= infoPtr->nButtonDown) {
+ 	btnPtr = &infoPtr->buttons[infoPtr->nButtonDown];
+ 	btnPtr->fsState &= ~TBSTATE_PRESSED;
+ 
+@@ -5111,6 +5112,7 @@
+ 	    nmmouse.dwItemData = btnPtr->dwData;
+ 	    TOOLBAR_SendNotify ((NMHDR *) &nmmouse, infoPtr, NM_CLICK);
+ 	}
++    }
+     return 0;
+ }
+ 
