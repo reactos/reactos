@@ -9,12 +9,6 @@
 #include <internal/ntoskrnl.h>
 
 /*
- * FUNCTION: Probes for a PCI bus
- * RETURNS: True if found
- */
-BOOL HalPciProbe(void);
-
-/*
  * FUNCTION: Probes for a BIOS32 extension
  */
 VOID Hal_bios32_probe(VOID);
@@ -34,5 +28,8 @@ VOID HalpInitPICs(VOID);
 
 /* udelay.c */
 VOID HalpCalibrateStallExecution(VOID);
+
+/* pci.c */
+VOID HalpInitPciBus (VOID);
 
 #endif /* __INTERNAL_HAL_HAL_H */

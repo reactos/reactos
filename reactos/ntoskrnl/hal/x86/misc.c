@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.5 2000/08/12 19:33:20 dwelch Exp $
+/* $Id: misc.c,v 1.6 2000/08/17 17:42:53 ekohl Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
+#include <internal/hal.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -74,20 +74,23 @@ HalReportResourceUsage (
 	 */
 
 	/*
-	 * Initialize PCI, IsaPnP and other busses.
+	 * Initialize PCI bus.
+	 */
+	HalpInitPciBus ();
+#if 0
+	/*
+	 * Initialize IsaPnP bus.
+	 */
+	HalpInitIsaPnpBus ();
+
+	/*
+	 * Initialize other busses???
 	 */
 
-#if 0
       /*
        * Probe for a BIOS32 extension
        */
       Hal_bios32_probe();
-   
-      /*
-       * Probe for buses attached to the computer
-       */
-
-      HalPciProbe();
 #endif
 
 	return;
