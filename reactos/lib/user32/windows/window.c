@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.114 2004/05/01 18:06:59 weiden Exp $
+/* $Id: window.c,v 1.115 2004/05/02 17:25:21 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1653,6 +1653,16 @@ STDCALL
 AnyPopup(VOID)
 {
   return NtUserAnyPopup();
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+IsWindowInDestroy(HWND hWnd)
+{
+  return NtUserIsWindowInDestroy(hWnd);
 }
 
 /* EOF */

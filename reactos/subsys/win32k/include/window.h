@@ -213,6 +213,9 @@ IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy);
 BOOL FASTCALL
 IntAnyPopup(VOID);
 
+BOOL FASTCALL
+IntIsWindowInDestroy(PWINDOW_OBJECT Window);
+
 DWORD IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
 DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);

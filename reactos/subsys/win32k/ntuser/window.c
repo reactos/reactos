@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.222 2004/05/01 18:06:59 weiden Exp $
+/* $Id: window.c,v 1.223 2004/05/02 17:25:21 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1098,6 +1098,12 @@ IntAnyPopup(VOID)
   IntUnLockRelatives(Window);
   IntReleaseWindowObject(Window);
   return FALSE;
+}
+
+BOOL FASTCALL
+IntIsWindowInDestroy(PWINDOW_OBJECT Window)
+{
+  return ((Window->Status & WINDOWSTATUS_DESTROYING) == WINDOWSTATUS_DESTROYING);
 }
 
 /* FUNCTIONS *****************************************************************/

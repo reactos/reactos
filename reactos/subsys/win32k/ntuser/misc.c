@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.68 2004/05/01 18:06:59 weiden Exp $
+/* $Id: misc.c,v 1.69 2004/05/02 17:25:21 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -154,18 +154,17 @@ NtUserCallOneParam(
   DWORD Param,
   DWORD Routine)
 {
-  NTSTATUS Status;
-  DWORD Result = 0;
-  PWINSTATION_OBJECT WinStaObject;
-  PWINDOW_OBJECT WindowObject;
-  
   switch(Routine)
   {
     case ONEPARAM_ROUTINE_GETMENU:
+    {
+      PWINDOW_OBJECT WindowObject;
+      DWORD Result;
+      
       WindowObject = IntGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
         return FALSE;
       }
       
@@ -173,26 +172,36 @@ NtUserCallOneParam(
       
       IntReleaseWindowObject(WindowObject);
       return Result;
+    }
       
     case ONEPARAM_ROUTINE_ISWINDOWUNICODE:
+    {
+      PWINDOW_OBJECT WindowObject;
+      DWORD Result;
+      
       WindowObject = IntGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
         return FALSE;
       }
       Result = WindowObject->Unicode;
       IntReleaseWindowObject(WindowObject);
       return Result;
+    }
       
     case ONEPARAM_ROUTINE_WINDOWFROMDC:
       return (DWORD)IntWindowFromDC((HDC)Param);
       
     case ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID:
+    {
+      PWINDOW_OBJECT WindowObject;
+      DWORD Result;
+      
       WindowObject = IntGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
         return FALSE;
       }
       
@@ -200,8 +209,14 @@ NtUserCallOneParam(
       
       IntReleaseWindowObject(WindowObject);
       return Result;
+    }
     
     case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
+    {
+      PWINSTATION_OBJECT WinStaObject;
+      NTSTATUS Status;
+      DWORD Result;
+      
       Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
                                               KernelMode,
                                               0,
@@ -213,6 +228,7 @@ NtUserCallOneParam(
 
       ObDereferenceObject(WinStaObject);
       return Result;
+    }
     
     case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
       return (DWORD)IntSwitchCaretShowing((PVOID)Param);
@@ -224,6 +240,10 @@ NtUserCallOneParam(
       return (DWORD)IntEnumClipboardFormats((UINT)Param);
     
     case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
+    {
+      PWINDOW_OBJECT WindowObject;
+      DWORD Result;
+      
       if(!(WindowObject = IntGetWindowObject((HWND)Param)))
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -233,12 +253,15 @@ NtUserCallOneParam(
       Result = (DWORD)WindowObject->Instance;
       IntReleaseWindowObject(WindowObject);
       return Result;
+    }
     
     case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
       return (DWORD)MsqSetMessageExtraInfo((LPARAM)Param);
     
     case ONEPARAM_ROUTINE_GETCURSORPOSITION:
     {
+      PWINSTATION_OBJECT WinStaObject;
+      NTSTATUS Status;
       POINT Pos;
       
       if(!Param)
@@ -265,6 +288,24 @@ NtUserCallOneParam(
       ObDereferenceObject(WinStaObject);
       
       return (DWORD)TRUE;
+    }
+    
+    case ONEPARAM_ROUTINE_ISWINDOWINDESTROY:
+    {
+      PWINDOW_OBJECT WindowObject;
+      DWORD Result;
+      
+      WindowObject = IntGetWindowObject((HWND)Param);
+      if(!WindowObject)
+      {
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+        return FALSE;
+      }
+      
+      Result = (DWORD)IntIsWindowInDestroy(WindowObject);
+      
+      IntReleaseWindowObject(WindowObject);
+      return Result;
     }
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n", 

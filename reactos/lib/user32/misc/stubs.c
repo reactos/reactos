@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.61 2004/05/01 18:06:59 weiden Exp $
+/* $Id: stubs.c,v 1.62 2004/05/02 17:25:20 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -988,15 +988,6 @@ BOOL STDCALL RegisterUserApiHook(HINSTANCE instance,THEME_HOOK_FUNC proc)
  * @unimplemented
  */
 BOOL STDCALL UnregisterUserApiHook(VOID)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL IsWindowInDestroy(HWND wnd)
 {
   UNIMPLEMENTED;
   return FALSE;
