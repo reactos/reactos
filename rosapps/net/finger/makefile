@@ -9,6 +9,8 @@ TARGET_NAME = finger
 
 TARGET_SDKLIBS = ws2_32.a
 
+TARGET_CFLAGS = -D__USE_W32_SOCKETS
+
 TARGET_OBJECTS = $(TARGET_NAME).o \
 err.o \
 getopt.o \

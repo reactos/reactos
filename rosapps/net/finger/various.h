@@ -4,26 +4,12 @@
 #ifndef VARIOUS_H
 #define VARIOUS_H
 
-/* types.h */
-typedef unsigned char u_char;
-typedef unsigned int u_int;
+
 typedef float f4byte_t;
 typedef double f8byte_t;
-//typedef __int16 s2byte_t;
-//typedef __int32 s4byte_t;
-//typedef __int64 s8byte_t;
-//typedef unsigned __int16 u2byte_t;
-//typedef unsigned __int32 u4byte_t;
-//typedef unsigned __int64 u8byte_t;
-//typedef __int32 quad_t;
-//typedef unsigned __int32 u_quad_t;
-//typedef unsigned __int16 u_int16_t;
-//typedef unsigned __int32 u_int32_t;
-
 typedef long uid_t;  // SunOS 5.5
 
 #define __P(x) x
-#define __STDC__ 1
 
 /* utmp.h */
 #define UT_LINESIZE 8
@@ -44,12 +30,5 @@ typedef long uid_t;  // SunOS 5.5
 
 #define index(s, c)  strchr(s, c)
 #define rindex(s, c)  strrchr(s, c)
-
-//#ifndef _WINSOCKAPI_
-//struct timeval {
-//        long    tv_sec;         /* seconds */
-//        long    tv_usec;        /* and microseconds */
-//};
-//#endif
 
 #endif
