@@ -227,8 +227,12 @@ extern struct ExplorerGlobals
 	ExplorerGlobals();
 
 	void	init(HINSTANCE hInstance);
+
 	bool	read_cfg();
 	void	write_cfg();
+
+	XMLPos	get_cfg();
+	XMLPos	get_cfg(const String& name);
 
 	HINSTANCE	_hInstance;
 	ATOM		_hframeClass;

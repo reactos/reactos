@@ -81,6 +81,7 @@ void ExplorerGlobals::init(HINSTANCE hInstance)
 	_icon_cache.init();
 }
 
+
 bool ExplorerGlobals::read_cfg()
 {
 	 // read configuration file
@@ -102,6 +103,26 @@ void ExplorerGlobals::write_cfg()
 	RecursiveCreateDirectory(_cfg_dir);
 
 	_cfg.write(_cfg_path);
+}
+
+
+XMLPos ExplorerGlobals::get_cfg()
+{
+	XMLPos pos(&_cfg);
+
+	pos.create("explorer-cfg");
+
+	return pos;
+}
+
+XMLPos ExplorerGlobals::get_cfg(const String& name)
+{
+	XMLPos pos(&_cfg);
+
+	pos.create("explorer-cfg");
+	pos.create(name);
+
+	return pos;
 }
 
 

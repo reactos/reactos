@@ -177,8 +177,7 @@ NotifyArea::NotifyArea(HWND hwnd)
 	_clock_width = 0;
 	_last_icon_count = 0;
 	_show_hidden = false;
-
-	read_config();
+	_hide_inactive = true;
 }
 
 NotifyArea::~NotifyArea()
@@ -188,39 +187,67 @@ NotifyArea::~NotifyArea()
 	write_config();
 }
 
+static bool get_hide_clock_from_registry()
+{
+	HKEY hkeyStuckRects = 0;
+	DWORD buffer[10];
+	DWORD len = sizeof(buffer);
+
+	bool hide_clock = false;
+
+	 // check if the clock should be hidden
+	if (!RegOpenKey(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects2"), &hkeyStuckRects) &&
+		!RegQueryValueEx(hkeyStuckRects, TEXT("Settings"), 0, NULL, (LPBYTE)buffer, &len) &&
+		len==sizeof(buffer) && buffer[0]==sizeof(buffer))
+		hide_clock = buffer[2] & 0x08? true: false;
+
+	if (hkeyStuckRects)
+		RegCloseKey(hkeyStuckRects);
+
+	return hide_clock;
+}
+
 void NotifyArea::read_config()
 {
 	 // read notification icon settings from XML configuration
-	XMLPos pos(&g_Globals._cfg);
+	XMLPos pos = g_Globals.get_cfg();
 
-	if (pos.go_down("explorer-cfg")) {
-		if (pos.go_down("notify-icons")) {
-			_show_hidden = XMLBool(pos, "option", "show-hidden");
-
-			XMLChildrenFilter icons(pos, "icon");
-
-			for(XMLChildrenFilter::iterator it=icons.begin(); it!=icons.end(); ++it) {
-				const XMLNode& node = **it;
-
-				NotifyIconConfig cfg;
-
-				cfg._name = node["name"];
-				cfg._tipText = node["text"];
-				cfg._windowTitle = node["window"];
-				cfg._modulePath = node["module"];
-				const string& mode = node["show"];
-
-				if (mode == "show")
-					cfg._mode = NIM_SHOW;
-				else if (mode == "hide")
-					cfg._mode = NIM_HIDE;
-				else //if (mode == "auto")
-					cfg._mode = NIM_HIDE;
-
-				_cfg.push_back(cfg);
-			}
-
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_HIDECLOCK))
+#endif
+	{
+		if (pos.go_down("desktopbar")) {
+			bool show = XMLBoolRef(pos, "options", "show-clock", !get_hide_clock_from_registry());
+			show_clock(show);
 			pos.back();
+		}
+	}
+
+	if (pos.go_down("notify-icons")) {
+		_hide_inactive = XMLBool(pos, "options", "hide-inactive", true);	///@todo read default setting from registry
+		_show_hidden = XMLBool(pos, "options", "show-hidden", false);	///@todo read default setting from registry
+
+		XMLChildrenFilter icons(pos, "icon");
+
+		for(XMLChildrenFilter::iterator it=icons.begin(); it!=icons.end(); ++it) {
+			const XMLNode& node = **it;
+
+			NotifyIconConfig cfg;
+
+			cfg._name = node["name"];
+			cfg._tipText = node["text"];
+			cfg._windowTitle = node["window"];
+			cfg._modulePath = node["module"];
+			const string& mode = node["show"];
+
+			if (mode == "show")
+				cfg._mode = NIM_SHOW;
+			else if (mode == "hide")
+				cfg._mode = NIM_HIDE;
+			else //if (mode == "auto")
+				cfg._mode = NIM_HIDE;
+
+			_cfg.push_back(cfg);
 		}
 
 		pos.back();
@@ -230,12 +257,16 @@ void NotifyArea::read_config()
 void NotifyArea::write_config()
 {
 	 // write notification icon settings to XML configuration file
-	XMLPos pos(&g_Globals._cfg);
+	XMLPos pos = g_Globals.get_cfg();
 
-	pos.create("explorer-cfg");
+	pos.create("desktopbar");
+	XMLBoolRef(pos, "options", "show-clock") = _hwndClock!=0;
+	pos.back();
+
 	pos.create("notify-icons");
 
-	XMLBoolRef(pos, "option", "show-hidden") = _show_hidden;
+	XMLBoolRef(pos, "options", "hide-inactive") = _hide_inactive;
+	XMLBoolRef(pos, "options", "show-hidden") = _show_hidden;
 
 	for(NotifyIconCfgList::iterator it=_cfg.begin(); it!=_cfg.end(); ++it) {
 		NotifyIconConfig& cfg = *it;
@@ -243,7 +274,7 @@ void NotifyArea::write_config()
 		 // search for the corresponding node using the original name
 		pos.create("icon", "name", cfg._name);
 
-		 // refresh name
+		 // refresh unique name
 		cfg.create_name();
 
 		pos["name"] = cfg._name;
@@ -254,33 +285,14 @@ void NotifyArea::write_config()
 
 		pos.back();
 	}
-
-	pos.back();
-	pos.back();
 }
 
-LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
+void NotifyArea::show_clock(bool flag)
 {
-	if (super::Init(pcs))
-		return 1;
+	bool vis = _hwndClock!=0;
 
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_HIDECLOCK))
-#endif
-	{
-		HKEY hkeyStuckRects = 0;
-		DWORD buffer[10];
-		DWORD len = sizeof(buffer);
-
-		bool hide_clock = false;
-
-		 // check if the clock should be hidden
-		if (!RegOpenKey(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects2"), &hkeyStuckRects) &&
-			!RegQueryValueEx(hkeyStuckRects, TEXT("Settings"), 0, NULL, (LPBYTE)buffer, &len) &&
-			len==sizeof(buffer) && buffer[0]==sizeof(buffer))
-			hide_clock = buffer[2] & 0x08? true: false;
-
-		if (!hide_clock) {
+	if (vis != flag) {
+		if (flag) {
 			 // create clock window
 			_hwndClock = ClockWindow::Create(_hwnd);
 
@@ -288,11 +300,22 @@ LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
 				ClientRect clock_size(_hwndClock);
 				_clock_width = clock_size.right;
 			}
+		} else {
+			DestroyWindow(_hwndClock);
+			_hwndClock = 0;
+			_clock_width = 0;
 		}
 
-		if (hkeyStuckRects)
-			RegCloseKey(hkeyStuckRects);
+		SendMessage(GetParent(_hwnd), PM_RESIZE_CHILDREN, 0, 0);
 	}
+}
+
+LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
+{
+	if (super::Init(pcs))
+		return 1;
+
+	read_config();
 
 	SetTimer(_hwnd, 0, 1000, NULL);
 
@@ -343,6 +366,10 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case PM_GET_WIDTH:
 		return _sorted_icons.size()*NOTIFYICON_DIST + NOTIFYAREA_SPACE + _clock_width;
+
+	  case PM_REFRESH_CONFIG:
+		read_config();
+		break;
 
 	  case WM_CONTEXTMENU: {
 		Point pt(lparam);
@@ -629,11 +656,12 @@ void NotifyArea::Refresh(bool update)
 
 		  case NIM_AUTO:
 			 // automatically hide icons after long periods of inactivity
-			if (!(entry._dwState & NIS_HIDDEN))
-				if (now-entry._lastChange > ICON_AUTOHIDE_SECONDS*1000) {
-					entry._dwState |= NIS_HIDDEN;
-					++update;
-				}
+			if (_hide_inactive)
+				if (!(entry._dwState & NIS_HIDDEN))
+					if (now-entry._lastChange > ICON_AUTOHIDE_SECONDS*1000) {
+						entry._dwState |= NIS_HIDDEN;
+						++update;
+					}
 			break;
 		}
 	}
@@ -746,6 +774,7 @@ TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
 			_icon_states_org[it->first] = IconStatePair(it->second._mode, it->second._dwState);
 
 		_cfg_org = _pNotifyArea->_cfg;
+		_show_hidden_org = _pNotifyArea->_show_hidden;
 	}
 
 	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);
@@ -777,6 +806,7 @@ TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
 	_resize_mgr.Add(IDC_NOTIFY_AUTOHIDE,MOVE_Y);
 
 	_resize_mgr.Add(IDC_PICTURE,		MOVE);
+	_resize_mgr.Add(ID_SHOW_HIDDEN_ICONS,MOVE_Y);
 
 	_resize_mgr.Add(IDOK,				MOVE);
 	_resize_mgr.Add(IDCANCEL,			MOVE);
@@ -871,7 +901,7 @@ void TrayNotifyDlg::Refresh()
 				DestroyIcon(hicon);
 		}
 
-		 // insert new configuration entry
+		CheckDlgButton(_hwnd, ID_SHOW_HIDDEN_ICONS, _pNotifyArea->_show_hidden? BST_CHECKED: BST_UNCHECKED);
 	}
 
 	TreeView_Expand(_tree_ctrl, _hitemCurrent_visible, TVE_EXPAND);
@@ -956,6 +986,11 @@ int TrayNotifyDlg::Command(int id, int code)
 			SetIconMode(NIM_AUTO);
 			break;
 
+		  case ID_SHOW_HIDDEN_ICONS:
+			if (_pNotifyArea)
+				SendMessage(*_pNotifyArea, WM_COMMAND, MAKEWPARAM(id,code), 0);
+			break;
+
 		  case IDOK:
 			EndDialog(_hwnd, id);
 			break;
@@ -965,6 +1000,7 @@ int TrayNotifyDlg::Command(int id, int code)
 			if (_pNotifyArea) {
 				 // restore original icon states and configuration data
 				_pNotifyArea->_cfg = _cfg_org;
+				_pNotifyArea->_show_hidden = _show_hidden_org;
 
 				for(IconStateMap::const_iterator it=_icon_states_org.begin(); it!=_icon_states_org.end(); ++it) {
 					NotifyInfo& info = _pNotifyArea->_icon_map[it->first];

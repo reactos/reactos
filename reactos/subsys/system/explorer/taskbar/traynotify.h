@@ -143,6 +143,7 @@ protected:
 	NotifyHook _hook;
 
 	bool	_show_hidden;
+	bool	_hide_inactive;
 
 	LRESULT Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -160,7 +161,8 @@ protected:
 	void	read_config();
 	void	write_config();
 
-public:	// for TrayNotifyDlg
+	friend struct TrayNotifyDlg;
+
 	NotifyIconCfgList _cfg;
 
 	map<HWND, String> _window_modules;
@@ -169,6 +171,8 @@ public:	// for TrayNotifyDlg
 	NotifyIconSet _sorted_icons;
 	int		_next_idx;
 	size_t	_last_icon_count;
+
+	void	show_clock(bool flag);
 };
 
 
@@ -191,6 +195,7 @@ protected:
 
 	NotifyIconCfgList _cfg_org;
 	IconStateMap _icon_states_org;
+	bool	_show_hidden_org;
 
 	HTREEITEM _hitemCurrent;
 	HTREEITEM _hitemCurrent_visible;

@@ -242,6 +242,10 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return SendMessage(_hwndTaskBar, nmsg, wparam, lparam);
 		break;
 
+	  case PM_REFRESH_CONFIG:	///@todo read desktop bar settings
+		SendMessage(_hwndNotify, PM_REFRESH_CONFIG, 0, 0);
+		break;
+
 	  case WM_TIMER:
 		if (wparam == ID_TRAY_VOLUME) {
 			KillTimer(_hwnd, wparam);

@@ -10,6 +10,7 @@
   </desktop>
 
   <desktopbar>
+    <options show-clock="TRUE"/>
     <positions>
 	  <bar name="quicklaunch" left="10" top="2" width="250" height="22"/>
 	  <bar name="taskbar" left="300" top="2" width="400" height="22"/>
@@ -20,7 +21,7 @@
   </taskbar>
 
   <notify-icons>
-    <option show-hidden="FALSE"/>
+    <options hide-inactive="TRUE" show-hidden="FALSE"/>
     <icon name="Volume Control" text="Volume" show="show"/>
   </notify-icons>
 

@@ -67,6 +67,9 @@ struct TaskbarSettingsDlg : public PropSheetPageDlg
 	TaskbarSettingsDlg(HWND hwnd);
 
 	virtual int	Command(int id, int code);
+
+protected:
+	XMLDoc	_cfg_org;
 };
 
 

@@ -145,8 +145,11 @@ int	DesktopSettingsDlg::Command(int id, int code)
 
 
 TaskbarSettingsDlg::TaskbarSettingsDlg(HWND hwnd)
- :	super(hwnd)
+ :	super(hwnd),
+	_cfg_org(g_Globals._cfg)
 {
+	CheckDlgButton(hwnd, ID_SHOW_CLOCK, XMLBool(g_Globals.get_cfg("desktopbar"), "options", "show-clock", true)? BST_CHECKED: BST_UNCHECKED);
+	CheckDlgButton(hwnd, ID_HIDE_INACTIVE_ICONS, XMLBool(g_Globals.get_cfg("notify-icons"), "options", "hide-inactive", true)? BST_CHECKED: BST_UNCHECKED);
 }
 
 int	TaskbarSettingsDlg::Command(int id, int code)
@@ -154,10 +157,30 @@ int	TaskbarSettingsDlg::Command(int id, int code)
 	switch(id) {
 	  case ID_CONFIG_NOTIFYAREA:
 		Dialog::DoModal(IDD_NOTIFYAREA, WINDOW_CREATOR(TrayNotifyDlg), _hwnd);
-		return 0;
+		break;
+
+	  case ID_SHOW_CLOCK:
+		XMLBoolRef(g_Globals.get_cfg("desktopbar"), "options", "show-clock", true).toggle();
+		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
+		PropSheet_Changed(GetParent(_hwnd), _hwnd);
+		break;
+
+	  case ID_HIDE_INACTIVE_ICONS:
+		XMLBoolRef(g_Globals.get_cfg("notify-icons"), "options", "hide-inactive", true).toggle();
+		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
+		PropSheet_Changed(GetParent(_hwnd), _hwnd);
+		break;
+
+	  case PSN_RESET:
+		g_Globals._cfg = _cfg_org;
+		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
+		break;
+
+	  default:
+		return 1;
 	}
 
-	return 1;
+	return 0;
 }
 
 

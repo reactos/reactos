@@ -806,6 +806,11 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Taskbar Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
+    CONTROL         "show &clock",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,113,52,10
+    CONTROL         "&hide inactive notification icons",
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,135,111,10
     PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,133,50,14
 END
 
@@ -821,13 +826,13 @@ STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Configure Notification Icons"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,193,31
     LTEXT           "&Tooltip Text:",IDC_LABEL1,7,44,40,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,55,42,145,14,ES_AUTOHSCROLL
-    LTEXT           "&Window Title:",IDC_LABEL2,7,63,44,8
+    LTEXT           "W&indow Title:",IDC_LABEL2,7,63,44,8
     EDITTEXT        IDC_NOTIFY_TITLE,55,60,145,14,ES_AUTOHSCROLL
     LTEXT           "&Module Path:",IDC_LABEL3,7,81,43,8
     EDITTEXT        IDC_NOTIFY_MODULE,55,78,145,14,ES_AUTOHSCROLL
@@ -838,9 +843,11 @@ BEGIN
                     107,29,10
     CONTROL         "a&utohide",IDC_NOTIFY_AUTOHIDE,"Button",
                     BS_AUTORADIOBUTTON,112,107,43,10
+    ICON            "",IDC_PICTURE,173,100,20,20
+    CONTROL         "sho&w hidden",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,131,56,10
     DEFPUSHBUTTON   "&OK",IDOK,91,129,50,14,WS_GROUP
     PUSHBUTTON      "&Cancel",IDCANCEL,150,129,50,14
-    ICON            "",IDC_PICTURE,173,100,20,20
 END
 
 

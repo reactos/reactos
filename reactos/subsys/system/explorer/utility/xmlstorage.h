@@ -241,6 +241,15 @@ struct XMLNode : public String
 	{
 	}
 
+	XMLNode(const XMLNode& other)
+	 :	_content(other._content),
+		_trailing(other._trailing),
+		_attributes(other._attributes)
+	{
+		for(Children::const_iterator it=other._children.begin(); it!=other._children.end(); ++it)
+			_children.push_back(new XMLNode(**it));
+	}
+
 	~XMLNode()
 	{
 		while(!_children.empty()) {
@@ -270,6 +279,30 @@ struct XMLNode : public String
 			return found->second;
 		else
 			return "";
+	}
+
+	 /// convenient value access in children node
+	String value(const String& name, const String& attr_name) const
+	{
+		XMLNode* node = find_first(name);
+
+		if (node)
+			return (*node)[attr_name];
+		else
+			return "";
+	}
+
+	 /// convenient storage of distinct values in children node
+	String& value(const String& name, const String& attr_name)
+	{
+		XMLNode* node = find_first(name);
+
+		if (!node) {
+			node = new XMLNode(name);
+			add_child(node);
+		}
+
+		return (*node)[attr_name];
 	}
 
 	const Children& get_children() const
@@ -472,6 +505,12 @@ struct XMLPos
 	{
 	}
 
+	XMLPos(const XMLPos& other)
+	 :	_root(other._root),
+		_cur(other._cur)
+	{	// don't copy _stack
+	}
+
 	 /// access to current node
 	operator XMLNode*() {return _cur;}
 	operator const XMLNode*() const {return _cur;}
@@ -556,28 +595,6 @@ struct XMLPos
 		}
 	}
 
-	String& value(const String& name, const String& attr_name)
-	{
-		XMLNode* node = _cur->find_first(name);
-
-		if (!node) {
-			node = new XMLNode(name);
-			_cur->add_child(node);
-		}
-
-		return (*node)[attr_name];
-	}
-
-	String value(const String& name, const String& attr_name) const
-	{
-		XMLNode* node = _cur->find_first(name);
-
-		if (node)
-			return (*node)[attr_name];
-		else
-			return "";
-	}
-
 protected:
 	XMLNode* _root;
 	XMLNode* _cur;
@@ -599,14 +616,22 @@ struct XMLBool
 	{
 	}
 
-	XMLBool(LPCTSTR value)
+	XMLBool(LPCTSTR value, bool def=false)
 	{
-		_value = !_tcsicmp(value, TEXT("TRUE"));
+		if (value && *value)
+			_value = !_tcsicmp(value, TEXT("TRUE"));
+		else
+			_value = def;
 	}
 
-	XMLBool(XMLPos& pos, const String& name, const String& attr_name)
+	XMLBool(XMLNode* node, const String& name, const String& attr_name, bool def=false)
 	{
-		_value = !_tcsicmp(pos.value(name, attr_name), TEXT("TRUE"));
+		const String& value = node->value(name, attr_name);
+
+		if (!value.empty())
+			_value = !_tcsicmp(value, TEXT("TRUE"));
+		else
+			_value = def;
 	}
 
 	operator bool() const
@@ -628,16 +653,33 @@ private:
 
 struct XMLBoolRef
 {
-	XMLBoolRef(XMLPos& pos, const String& name, const String& attr_name)
-	 :	_ref(pos.value(name, attr_name))
+	XMLBoolRef(XMLNode* node, const String& name, const String& attr_name, bool def=false)
+	 :	_ref(node->value(name, attr_name))
 	{
+		if (_ref.empty())
+			assign(def);
+	}
+
+	operator bool() const
+	{
+		return !_tcsicmp(_ref, TEXT("TRUE"));
 	}
 
 	XMLBoolRef& operator=(bool value)
 	{
-		_ref.assign(value? TEXT("TRUE"): TEXT("FALSE"));
+		assign(value);
 
 		return *this;
+	}
+
+	void assign(bool value)
+	{
+		_ref.assign(value? TEXT("TRUE"): TEXT("FALSE"));
+	}
+
+	void toggle()
+	{
+		assign(!operator bool());
 	}
 
 protected:
@@ -652,14 +694,22 @@ struct XMLNumber
 	{
 	}
 
-	XMLNumber(LPCTSTR value)
+	XMLNumber(LPCTSTR value, int def=0)
 	{
-		_value = _ttoi(value);
+		if (value && *value)
+			_value = _ttoi(value);
+		else
+			_value = def;
 	}
 
-	XMLNumber(XMLPos& pos, const String& name, const String& attr_name)
+	XMLNumber(XMLNode* node, const String& name, const String& attr_name, int def=0)
 	{
-		_value = _ttoi(pos.value(name, attr_name));
+		const String& value = node->value(name, attr_name);
+
+		if (!value.empty())
+			_value = _ttoi(node->value(name, attr_name));
+		else
+			_value = def;
 	}
 
 	operator int() const
@@ -683,19 +733,31 @@ private:
 
 struct XMLNumberRef
 {
-	XMLNumberRef(XMLPos& pos, const String& name, const String& attr_name)
-	 :	_ref(pos.value(name, attr_name))
+	XMLNumberRef(XMLNode* node, const String& name, const String& attr_name, int def=0)
+	 :	_ref(node->value(name, attr_name))
 	{
+		if (_ref.empty())
+			assign(def);
 	}
 
 	XMLNumberRef& operator=(int value)
+	{
+		assign(value);
+
+		return *this;
+	}
+
+	operator int() const
+	{
+		return _ttoi(_ref);
+	}
+
+	void assign(int value)
 	{
 		TCHAR buffer[32];
 
 		_stprintf(buffer, TEXT("%d"), value);
 		_ref.assign(buffer);
-
-		return *this;
 	}
 
 protected:
