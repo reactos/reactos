@@ -824,16 +824,18 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 
 	case WM_GETDLGCODE:
 		result = DLGC_HASSETSEL | DLGC_WANTCHARS | DLGC_WANTARROWS;
+		
+		if (es->style & ES_MULTILINE)
+		{
+		   result |= DLGC_WANTALLKEYS;
+		   break;
+		}
 
 		if (lParam && (((LPMSG)lParam)->message == WM_KEYDOWN))
 		{
 		   int vk = (int)((LPMSG)lParam)->wParam;
 
-		   if (vk == VK_RETURN && (GetWindowLongW( hwnd, GWL_STYLE ) & ES_WANTRETURN))
-		   {
-		      result |= DLGC_WANTMESSAGE;
-		   }
-		   else if (es->hwndListBox && (vk == VK_RETURN || vk == VK_ESCAPE))
+		   if (es->hwndListBox && (vk == VK_RETURN || vk == VK_ESCAPE))
 		   {
 		      if (SendMessageW(GetParent(hwnd), CB_GETDROPPEDSTATE, 0, 0))
 		         result |= DLGC_WANTMESSAGE;
@@ -2907,6 +2909,8 @@ static BOOL EDIT_EM_LineScroll_internal(EDITSTATE *es, INT dx, INT dy)
 {
 	INT nyoff;
 	INT x_offset_in_pixels;
+	INT lines_per_page = (es->format_rect.bottom - es->format_rect.top) /
+			      es->line_height;
 
 	if (es->style & ES_MULTILINE)
 	{
@@ -2923,8 +2927,8 @@ static BOOL EDIT_EM_LineScroll_internal(EDITSTATE *es, INT dx, INT dy)
 	if (dx > es->text_width - x_offset_in_pixels)
 		dx = es->text_width - x_offset_in_pixels;
 	nyoff = max(0, es->y_offset + dy);
-	if (nyoff >= es->line_count)
-		nyoff = es->line_count - 1;
+	if (nyoff >= es->line_count - lines_per_page)
+		nyoff = es->line_count - lines_per_page;
 	dy = (es->y_offset - nyoff) * es->line_height;
 	if (dx || dy) {
 		RECT rc1;
@@ -3742,10 +3746,6 @@ static void EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 {
         BOOL control;
 
-	/* Protect read-only edit control from modification */
-	if(es->style & ES_READONLY)
-	    return;
-
 	control = GetKeyState(VK_CONTROL) & 0x8000;
 
 	switch (c) {
@@ -3787,10 +3787,12 @@ static void EDIT_WM_Char(EDITSTATE *es, WCHAR c)
 		SendMessageW(es->hwndSelf, WM_COPY, 0, 0);
 		break;
 	case 0x16: /* ^V */
-		SendMessageW(es->hwndSelf, WM_PASTE, 0, 0);
+	        if (!(es->style & ES_READONLY))
+		    SendMessageW(es->hwndSelf, WM_PASTE, 0, 0);
 		break;
 	case 0x18: /* ^X */
-		SendMessageW(es->hwndSelf, WM_CUT, 0, 0);
+	        if (!(es->style & ES_READONLY))
+		    SendMessageW(es->hwndSelf, WM_CUT, 0, 0);
 		break;
 
 	default:
@@ -4553,7 +4555,6 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 			if (es->style & ES_RIGHT)
 				es->style &= ~ES_CENTER;
 			es->style &= ~WS_HSCROLL;
-			es->style &= ~ES_AUTOHSCROLL;
 		}
 
 		/* FIXME: for now, all multi line controls are AUTOVSCROLL */
@@ -4564,8 +4565,6 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 		es->style &= ~ES_RIGHT;
 		es->style &= ~WS_HSCROLL;
 		es->style &= ~WS_VSCROLL;
-		es->style &= ~ES_AUTOVSCROLL;
-		es->style &= ~ES_WANTRETURN;
 		if (es->style & ES_PASSWORD)
 			es->password_char = '*';
 
@@ -4590,13 +4589,18 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 	/*
 	 * In Win95 look and feel, the WS_BORDER style is replaced by the
 	 * WS_EX_CLIENTEDGE style for the edit control. This gives the edit
-	 * control a non client area.  Not always.  This coordinates in some
-         * way with the window creation code in dialog.c  When making
-         * modifications please ensure that the code still works for edit
-         * controls created directly with style 0x50800000, exStyle 0 (
-         * which should have a single pixel border)
+	 * control a nonclient area so we don't need to draw the border.
+         * If WS_BORDER without WS_EX_CLIENTEDGE is specified we shouldn't have
+         * a nonclient area and we should handle painting the border ourselves.
+         *
+         * When making modifications please ensure that the code still works 
+         * for edit controls created directly with style 0x50800000, exStyle 0
+         * (which should have a single pixel border)
 	 */
-	es->style      &= ~WS_BORDER;
+	if (lpcs->dwExStyle & WS_EX_CLIENTEDGE)
+		es->style &= ~WS_BORDER;
+        else if (es->style & WS_BORDER)
+		SetWindowLongW(hwnd, GWL_STYLE, es->style & ~WS_BORDER);
 
 	return TRUE;
 }
