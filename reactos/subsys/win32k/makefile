@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.56 2003/02/25 23:08:52 gvg Exp $
+# $Id: makefile,v 1.57 2003/03/02 12:03:59 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -41,7 +41,7 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/objconv.o objects/dib.o \
 	          objects/palette.o objects/rect.o
-DIB_OBJECTS = dib/dib1bpp.o dib/dib4bpp.o dib/dib16bpp.o dib/dib24bpp.o
+DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib16bpp.o dib/dib24bpp.o
 FREETYPE_OBJECTS = freetype/ctype.o freetype/grfont.o \
 		freetype/src/base/ftsystem.o freetype/src/base/ftdebug.o \
 		freetype/src/base/ftinit.o freetype/src/base/ftbase.o \

@@ -106,6 +106,7 @@ EngLineTo(SURFOBJ *DestObj,
     xchange = -1;
     deltax = - deltax;
     hx = x2;
+    x--;
     }
   else
     {
@@ -118,6 +119,7 @@ EngLineTo(SURFOBJ *DestObj,
     ychange = -1;
     deltay = - deltay;
     vy = y2;
+    y--;
     }
   else
     {
@@ -129,7 +131,7 @@ EngLineTo(SURFOBJ *DestObj,
     {
     DIB_HLine(OutputObj, hx, hx + deltax, y1, Pixel);
     }
-  else if(x1==x2)
+  else if (x1 == x2)
     {
     DIB_VLine(OutputObj, x1, vy, vy + deltay, Pixel);
     }
@@ -145,7 +147,7 @@ EngLineTo(SURFOBJ *DestObj,
         y = y + ychange;
         error = error + deltax;
 
-        if (deltay < error)
+        if (deltay <= error)
           {
           x = x + xchange;
           error = error - deltay;
@@ -159,7 +161,7 @@ EngLineTo(SURFOBJ *DestObj,
         DIB_PutPixel(OutputObj, x, y, Pixel);
         x = x + xchange;
         error = error + deltay;
-        if (error > deltax)
+        if (deltax <= error)
           {
           y = y + ychange;
           error = error - deltax;

@@ -8,24 +8,22 @@
 #include "../eng/objects.h"
 #include "dib.h"
 
-PFN_DIB_PutPixel DIB_4BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+VOID DIB_4BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
-  unsigned char *vp;
-  unsigned char mask;
   PBYTE addr = SurfObj->pvBits;
 
   addr += (x>>1) + y * SurfObj->lDelta;
   *addr = (*addr & notmask[x&1]) | (c << ((1-(x&1))<<2));
 }
 
-PFN_DIB_GetPixel DIB_4BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+ULONG DIB_4BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
   PBYTE addr = SurfObj->pvBits;
 
-  return (PFN_DIB_GetPixel)((addr[(x>>1) + y * SurfObj->lDelta] >> ((1-(x&1))<<2) ) & 0x0f);
+  return (addr[(x>>1) + y * SurfObj->lDelta] >> ((1-(x&1))<<2) ) & 0x0f;
 }
 
-PFN_DIB_HLine DIB_4BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+VOID DIB_4BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE  addr = SurfObj->pvBits + (x1>>1) + y * SurfObj->lDelta;
   LONG  cx = x1;
@@ -38,7 +36,7 @@ PFN_DIB_HLine DIB_4BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c
   }
 }
 
-PFN_DIB_VLine DIB_4BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+VOID DIB_4BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE  addr = SurfObj->pvBits;
   int  lDelta = SurfObj->lDelta;
@@ -57,9 +55,7 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 {
   LONG     i, j, sx, sy, f1, f2, xColor;
   PBYTE    SourceBits_24BPP, SourceLine_24BPP;
-  PBYTE    DestBits, DestLine, SourceBits_4BPP, SourceBits_8BPP, SourceLine_4BPP, SourceLine_8BPP;
-  PWORD    SourceBits_16BPP, SourceLine_16BPP;
-  PDWORD    SourceBits_32BPP, SourceLine_32BPP;
+  PBYTE    DestBits, DestLine, SourceBits_8BPP, SourceLine_8BPP;
 
   DestBits = DestSurf->pvBits + (DestRect->left>>1) + DestRect->top * DestSurf->lDelta;
 

@@ -270,7 +270,7 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
 
     // Calculate the left mask pixels, middle bytes and right mask pixel
     ileftpix = 8-mod(x, 8);
-    irightpix = mod(x+len, 8);
+    irightpix = mod(x+len-1, 8);
     imidpix = (len-ileftpix-irightpix) / 8;
 
     pre1=xconv[x-(8-ileftpix)]+y80[y];
@@ -323,8 +323,6 @@ BOOL vgaVLine(INT x, INT y, INT len, UCHAR c)
 
   WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);       // set the mask
   WRITE_PORT_UCHAR((PUCHAR)0x3cf,maskbit[x]);
-
-  len++;
 
   for(i=y; i<y+len; i++)
   {

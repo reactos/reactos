@@ -8,7 +8,7 @@
 #include "../eng/objects.h"
 #include "dib.h"
 
-PFN_DIB_PutPixel DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+VOID DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
@@ -16,35 +16,35 @@ PFN_DIB_PutPixel DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
   *(PULONG)(addr) = c;
 }
 
-PFN_DIB_GetPixel DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+ULONG DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
 
-  return (PFN_DIB_GetPixel)(*(PULONG)(addr));
+  return *(PULONG)(addr) & 0x00ffffff;
 }
 
-PFN_DIB_HLine DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+VOID DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x1;
   LONG cx = x1;
 
-  while(cx <= x2) {
+  while(cx < x2) {
     *(PULONG)(addr) = c;
     ++addr;
     ++cx;
   }
 }
 
-PFN_DIB_VLine DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+VOID DIB_24BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   PBYTE byteaddr = SurfObj->pvBits + y1 * SurfObj->lDelta;
   PRGBTRIPLE addr = (PRGBTRIPLE)byteaddr + x;
   LONG lDelta = SurfObj->lDelta;
 
   byteaddr = (PBYTE)addr;
-  while(y1++ <= y2) {
+  while(y1++ < y2) {
     *(PULONG)(addr) = c;
 
     byteaddr += lDelta;
@@ -89,11 +89,9 @@ BOOLEAN DIB_To_24BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         LONG    Delta,     XLATEOBJ *ColorTranslation)
 {
   LONG     i, j, sx, sy, xColor, f1;
-  PBYTE    DestBits, SourceBits_24BPP, DestLine, SourceLine_24BPP;
-  PRGBTRIPLE  SPDestBits, SPSourceBits_24BPP, SPDestLine, SPSourceLine_24BPP; // specially for 24-to-24 blit
-  PBYTE    SourceBits_4BPP, SourceBits_8BPP, SourceLine_4BPP, SourceLine_8BPP;
+  PBYTE    DestBits, DestLine;
+  PBYTE    SourceBits_4BPP, SourceLine_4BPP;
   PWORD    SourceBits_16BPP, SourceLine_16BPP;
-  PDWORD    SourceBits_32BPP, SourceLine_32BPP;
 
   DestBits = DestSurf->pvBits + (DestRect->top * DestSurf->lDelta) + DestRect->left * 3;
 

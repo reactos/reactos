@@ -30,7 +30,7 @@ VOID DIB_16BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   PWORD addr = (PWORD)byteaddr + x1;
   LONG cx = x1;
 
-  while(cx <= x2) {
+  while(cx < x2) {
     *addr = (WORD)c;
     ++addr;
     ++cx;
@@ -44,7 +44,7 @@ VOID DIB_16BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   LONG lDelta = SurfObj->lDelta;
 
   byteaddr = (PBYTE)addr;
-  while(y1++ <= y2) {
+  while(y1++ < y2) {
     *addr = (WORD)c;
 
     byteaddr += lDelta;
