@@ -1,4 +1,4 @@
-/* $Id: lib.c,v 1.4 1999/10/07 23:45:25 ekohl Exp $
+/* $Id: lib.c,v 1.5 1999/10/18 21:50:11 ariadne Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -36,26 +36,7 @@ LoadLibraryW (
 }
 
 
-HINSTANCE
-STDCALL
-LoadLibraryA (
-	LPCSTR	lpLibFileName
-	)
-{
-   UNIMPLEMENTED;
-   return(NULL);
-}
 
-
-BOOL
-STDCALL
-FreeLibrary (
-	HMODULE	hLibModule
-	)
-{
-   UNIMPLEMENTED;
-   return(FALSE);
-}
 
 
 /* EOF */

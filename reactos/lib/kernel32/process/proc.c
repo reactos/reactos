@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.22 1999/10/13 22:35:55 ekohl Exp $
+/* $Id: proc.c,v 1.23 1999/10/18 21:50:11 ariadne Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -68,16 +68,7 @@ GetProcessId (
 	);
 
 
-FARPROC
-STDCALL
-GetProcAddress (
-	HMODULE	hModule,
-	LPCSTR	lpProcName
-	)
-{
-	UNIMPLEMENTED;
-	return NULL;
-}
+
 
 
 WINBOOL

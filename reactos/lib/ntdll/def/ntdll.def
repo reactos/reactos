@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.16 1999/10/12 21:17:04 ea Exp $
+; $Id: ntdll.def,v 1.17 1999/10/18 21:55:30 ariadne Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -546,3 +546,7 @@ wcsrchr
 wcsspn
 wcsstr
 LdrMapNTDllForProcess
+LdrLoadDll
+LdrUnloadDll
+LdrGetExportByName
+LdrGetExportByOrdinal

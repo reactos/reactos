@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.8 1999/10/17 18:18:44 ariadne Exp $
+/* $Id: stubs.c,v 1.9 1999/10/18 21:50:45 ariadne Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1702,15 +1702,7 @@ GetModuleHandleW (
 }
 
 
-HMODULE
-STDCALL
-GetModuleHandleA (
-	LPCSTR	lpModuleName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
+
 
 
 WINBOOL
