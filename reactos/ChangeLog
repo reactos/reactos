@@ -1,5 +1,13 @@
 2003-12-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* apps/tests/accelerator: New directory.
+	* apps/tests/accelerator/accelerator.c: New file.
+	* apps/tests/accelerator/.cvsignore: Ditto.
+	* apps/tests/accelerator/Makefile: Ditto.
+	* apps/tests/Makefile (TEST_APPS): Add accelerator.
+
+2003-12-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* regtests/Makefile: Generate regression test registrations.
 	* regtests/kmregtests/.cvsignore: Ignore Makefile.tests.
 	* regtests/win32base/.cvsignore: Ditto.

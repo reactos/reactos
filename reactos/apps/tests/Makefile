@@ -7,7 +7,7 @@ PATH_TO_TOP = ../..
 include $(PATH_TO_TOP)/rules.mak
 
 # test_old tests
-TEST_APPS = SampleWindow alive apc args atomtest bench bitblt button \
+TEST_APPS = accelerator SampleWindow alive apc args atomtest bench bitblt button \
 button2 capclock carets cliarea combo consume copymove count dibtest \
 dump_shared_data edit enumwnd event file global_mem hello \
 hivetest hotkey icontest isotest lineclip linetest lock lpc messagebox \
