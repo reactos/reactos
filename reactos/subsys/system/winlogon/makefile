@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2000/12/05 02:38:08 ekohl Exp $
+# $Id: makefile,v 1.2 2001/02/06 03:58:34 phreak Exp $
 #
 # Logon/login Application
 #
@@ -26,9 +26,6 @@ clean:
 	- $(RM) $(TARGET).coff
 
 .phony: clean
-
-$(TARGET).coff: $(TARGET).rc
-	$(RC) $(TARGET).rc $(TARGET).coff
 
 $(TARGET).exe: $(OBJECTS)
 	$(CC) \
