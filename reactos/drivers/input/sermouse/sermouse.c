@@ -1,170 +1,283 @@
 /*
- ** Mouse driver 0.0.5
- ** Written by Jason Filby (jasonfilby@yahoo.com)
- ** For ReactOS (www.reactos.com)
-
- ** Note: The serial.o driver must be loaded before loading this driver
-
- ** Known Limitations:
- ** Only supports mice on COM port 1
-*/
+ * Mouse driver 0.0.6
+ * Written by Jason Filby (jasonfilby@yahoo.com)
+ * For ReactOS (www.reactos.com)
+ *
+ * Note: The serial.o driver must be loaded before loading this driver
+ *
+ * Known Limitations:
+ * Only supports Microsoft mice on COM port 1
+ *
+ * Following information obtained from Tomi Engdahl (then@delta.hut.fi),
+ * http://www.hut.fi/~then/mytexts/mouse.html
+ *
+ * Microsoft serial mouse
+ *
+ *   Serial data parameters:
+ *     1200bps, 7 databits, 1 stop-bit
+ *
+ *   Data packet format:
+ *     Data packet is 3 byte packet. It is send to the computer every time mouse
+ *     state changes (mouse moves or keys are pressed/released). 
+ *         D7      D6      D5      D4      D3      D2      D1      D0
+ *     1.  X       1       LB      RB      Y7      Y6      X7      X6
+ *     2.  X       0       X5      X4      X3      X2      X1      X0      
+ *     3.  X       0       Y5      Y4      Y3      Y2      Y1      Y0
+ *
+ *     Note: The bit marked with X is 0 if the mouse received with 7 databits
+ *     and 2 stop bits format. It is also possible to use 8 databits and 1 stop
+ *     bit format for receiving. In this case X gets value 1. The safest thing
+ *     to get everything working is to use 7 databits and 1 stopbit when
+ *     receiving mouse information (and if you are making mouse then send out
+ *     7 databits and 2 stop bits). 
+ *     The byte marked with 1. is send first, then the others. The bit D6 in
+ *     the first byte is used for syncronizing the software to mouse packets
+ *     if it goes out of sync. 
+ *
+ *      LB is the state of the left button (1 means pressed down)
+ *      RB is the state of the right button (1 means pressed down)
+ *      X7-X0 movement in X direction since last packet (signed byte)
+ *      Y7-Y0 movement in Y direction since last packet (signed byte)
+ *
+ *    Mouse identification
+ *      When DTR line is toggled, mouse should send one data byte containing
+ *      letter 'M' (ascii 77).
+ *
+ *
+ * Logitech serial mouse
+ *
+ *   Logitech uses the Microsoft serial mouse protocol in their mouses (for
+ *   example Logitech Pilot mouse and others). The origianal protocol supports
+ *   only two buttons, but logitech as added third button to some of their
+ *   mouse models. To make this possible logitech has made one extension to
+ *   the protocol. 
+ *   I have not seen any documentation about the exact documents, but here is
+ *   what I have found out: The information of the third button state is sent
+ *   using one extra byte which is send after the normal packet when needed.
+ *   Value 32 (dec) is sent every time when the center button is pressed down.
+ *   It is also sent every time with the data packet when center button is kept
+ *   down and the mouse data packet is sent for other reasons. When center
+ *   button is released, the mouse sends the normal data packet followed by
+ *   data bythe which has value 0 (dec). As you can see the extra data byte
+ *   is sent only when you mess with the center button.
+ *
+ *
+ * Mouse systems mouse
+ *
+ *   Serial data parameters:
+ *     1200bps, 8 databits, 1 stop-bit
+ *
+ *   Data packet format:
+ *          D7      D6      D5      D4      D3      D2      D1      D0
+ *     1.   1       0       0       0       0       LB      CB      RB
+ *     2.   X7      X6      X5      X4      X3      X2      X1      X0
+ *     3.   Y7      Y6      Y5      Y4      Y3      Y4      Y1      Y0
+ *     4.   X7'     X6'     X5'     X4'     X3'     X2'     X1'     X0'
+ *     5.   Y7'     Y6'     Y5'     Y4'     Y3'     Y4'     Y1'     Y0'
+ *
+ *     LB is left button state (0 = pressed, 1 = released)
+ *     CB is center button state (0 = pressed, 1 = released)
+ *     RB is right button state (0 = pressed, 1 = released)
+ *     X7-X0 movement in X direction since last packet in signed byte 
+ *           format (-128..+127), positive direction right
+ *     Y7-Y0 movement in Y direction since last packet in signed byte 
+ *           format (-128..+127), positive direction up
+ *     X7'-X0' movement in X direction since sending of X7-X0 packet in
+ *             signed byte format (-128..+127), positive direction right
+ *     Y7'-Y0' movement in Y direction since sending of Y7-Y0 packet in
+ *             signed byte format (-128..+127), positive direction up
+ *
+ *     The last two bytes in the packet (bytes 4 and 5) contains information
+ *     about movement data changes which have occured after data bytes 2 and 3
+ *     have been sent.
+ *
+ */
 
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
-#include "sermouse.h"
-#include "mouse.h"
 
 #define MOUSE_IRQ_COM1  4
 #define MOUSE_IRQ_COM2  3
 
-#define COM1_PORT       0x3f8
-#define COM2_PORT       0x2f8
+#define MOUSE_PORT_COM1 0x3f8
+#define MOUSE_PORT_COM2 0x2f8
 
-#define max_screen_x    79
-#define max_screen_y    24
+typedef struct _DEVICE_EXTENSION {
+  PDEVICE_OBJECT DeviceObject;
+  ULONG ActiveQueue;
+  ULONG InputDataCount[2];
+  MOUSE_INPUT_DATA MouseInputData[2][MOUSE_BUFFER_SIZE];
+  CLASS_INFORMATION ClassInformation;
 
-//static unsigned int MOUSE_IRQ=MOUSE_IRQ_COM1;
-static unsigned int MOUSE_COM=COM1_PORT;
+  PKINTERRUPT MouseInterrupt;
+  KDPC IsrDpc;
+} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+
+static unsigned int MOUSE_IRQ = MOUSE_IRQ_COM1;
+static unsigned int MOUSE_COM = MOUSE_PORT_COM1;
 
 static unsigned int     bytepos=0, coordinate;
 static unsigned char    mpacket[3];
-static signed int       mouse_x=40, mouse_y=12;
 static unsigned char    mouse_button1, mouse_button2;
-static signed int       horiz_sensitivity, vert_sensitivity;
 
 // Previous button state
 static ULONG PreviousButtons = 0;
 
-BOOLEAN microsoft_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
+BOOLEAN STDCALL
+microsoft_mouse_handler(IN PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
   PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ServiceContext;
   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
   PMOUSE_INPUT_DATA Input;
   ULONG Queue, ButtonsDiff;
-  unsigned int mbyte=READ_PORT_UCHAR((PUCHAR)MOUSE_COM);
+  unsigned int mbyte;
+  int change_x;
+  int change_y;
+  UCHAR InterruptId = READ_PORT_UCHAR((PUCHAR)MOUSE_COM + 2);
 
-  // Synchronize
-  if((mbyte&64)==64)
-    bytepos=0;
+  /* Is the interrupt for us? */
+  if (0 != (InterruptId & 0x01))
+  {
+    return FALSE;
+  }
 
-  mpacket[bytepos]=mbyte;
-  bytepos++;
-
-  // Process packet
-  if(bytepos==3) {
-    // Set local variables for DeviceObject and DeviceExtension
-    DeviceObject = (PDEVICE_OBJECT)ServiceContext;
-    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    Queue = DeviceExtension->ActiveQueue % 2;
-
-    // Prevent buffer overflow
-    if (DeviceExtension->InputDataCount[Queue] == MOUSE_BUFFER_SIZE)
-    {
-      return TRUE;
-    }
-
-    Input = &DeviceExtension->MouseInputData[Queue]
-            [DeviceExtension->InputDataCount[Queue]];
-
-    // Retrieve change in x and y from packet
-    int change_x=((mpacket[0] & 3) << 6) + mpacket[1];
-    int change_y=((mpacket[0] & 12) << 4) + mpacket[2];
-
-    // Some mice need this
-    if(coordinate==1) {
-      change_x-=128;
-      change_y-=128;
-    }
-
-    // Change to signed
-    if(change_x>=128) { change_x=change_x-256; }
-    if(change_y>=128) { change_y=change_y-256; }
-
-    // Adjust mouse position according to sensitivity
-    mouse_x+=change_x/horiz_sensitivity;
-    mouse_y+=change_y/vert_sensitivity;
-
-    // Check that mouse is still in screen
-    if(mouse_x<0) { mouse_x=0; }
-    if(mouse_x>max_screen_x) { mouse_x=max_screen_x; }
-    if(mouse_y<0) { mouse_y=0; }
-    if(mouse_y>max_screen_y) { mouse_y=max_screen_y; }
-
-    Input->LastX = mouse_x;
-    Input->LastY = mouse_y;
-
-    // Retrieve mouse button status from packet
-    mouse_button1=mpacket[0] & 32;
-    mouse_button2=mpacket[0] & 16;
-    
-    // Determine the current state of the buttons
-    Input->RawButtons = mouse_button1 + mouse_button2;
-    
-    /* Determine ButtonFlags */
-    Input->ButtonFlags = 0;
-    ButtonsDiff = PreviousButtons ^ Input->RawButtons;
-
-    if (ButtonsDiff & 32)
-    {
-      if (Input->RawButtons & 32)
-      {
-        Input->ButtonFlags |= MOUSE_BUTTON_1_DOWN;
-      } else {
-        Input->ButtonFlags |= MOUSE_BUTTON_1_UP;
-      }
-    }
-
-    if (ButtonsDiff & 16)
-    {
-      if (Input->RawButtons & 16)
-      {
-        Input->ButtonFlags |= MOUSE_BUTTON_2_DOWN;
-      } else {
-        Input->ButtonFlags |= MOUSE_BUTTON_2_UP;
-      }
-    }
-
-    bytepos=0;
-    
-    /* Send the Input data to the Mouse Class driver */
-    DeviceExtension->InputDataCount[Queue]++;
-    KeInsertQueueDpc(&DeviceExtension->IsrDpc, DeviceObject->CurrentIrp, NULL);
-
-    /* Copy RawButtons to Previous Buttons for Input */
-    PreviousButtons = Input->RawButtons;
-
+  /* Not a Receive Data Available interrupt? */
+  if (0 == (InterruptId & 0x04))
+  {
     return TRUE;
   }
 
+  /* Read all available data and process */
+  while (0 != (READ_PORT_UCHAR((PUCHAR)MOUSE_COM + 5) & 0x01))
+    {
+    mbyte = READ_PORT_UCHAR((PUCHAR)MOUSE_COM);
+
+    /* Synchronize */
+    if (0x40 == (mbyte & 0x40))
+      bytepos=0;
+
+    mpacket[bytepos] = (mbyte & 0x7f);
+    bytepos++;
+
+    /* Process packet if complete */
+    if (3 == bytepos)
+    {
+      /* Set local variables for DeviceObject and DeviceExtension */
+      DeviceObject = (PDEVICE_OBJECT)ServiceContext;
+      DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+      Queue = DeviceExtension->ActiveQueue % 2;
+
+      /* Prevent buffer overflow */
+      if (DeviceExtension->InputDataCount[Queue] == MOUSE_BUFFER_SIZE)
+      {
+	continue;
+      }
+
+      Input = &DeviceExtension->MouseInputData[Queue]
+              [DeviceExtension->InputDataCount[Queue]];
+
+      /* Retrieve change in x and y from packet */
+      change_x = (int)(signed char)((mpacket[0] & 0x03) << 6) + mpacket[1];
+      change_y = (int)(signed char)((mpacket[0] & 0x0c) << 4) + mpacket[2];
+
+      /* Some mice need this */
+      if (1 == coordinate)
+      {
+        change_x-=128;
+        change_y-=128;
+      }
+
+#if 0
+      /* Change to signed */
+      if (128 <= change_x)
+      {
+	change_x = change_x - 256;
+      }
+      if (128 <= change_y)
+      {
+	change_y = change_y - 256;
+      }
+#endif
+
+      Input->LastX = 2 * change_x;
+      Input->LastY = - 3 * change_y;
+
+      /* Retrieve mouse button status from packet */
+      mouse_button1 = mpacket[0] & 0x20;
+      mouse_button2 = mpacket[0] & 0x10;
+    
+      /* Determine the current state of the buttons */
+      Input->RawButtons = mouse_button1 + mouse_button2;
+    
+      /* Determine ButtonFlags */
+      Input->ButtonFlags = 0;
+      ButtonsDiff = PreviousButtons ^ Input->RawButtons;
+
+      if (0 != (ButtonsDiff & 0x20))
+      {
+	if (0 != (Input->RawButtons & 0x20))
+	{
+	  Input->ButtonFlags |= MOUSE_BUTTON_1_DOWN;
+	}
+	else
+	{
+	  Input->ButtonFlags |= MOUSE_BUTTON_1_UP;
+	}
+      }
+
+      if (0 != (ButtonsDiff & 0x10))
+      {
+	if (0 != (Input->RawButtons & 0x10))
+	{
+	  Input->ButtonFlags |= MOUSE_BUTTON_2_DOWN;
+	}
+        else
+	{
+	  Input->ButtonFlags |= MOUSE_BUTTON_2_UP;
+	}
+      }
+
+      bytepos=0;
+    
+      /* Send the Input data to the Mouse Class driver */
+      DeviceExtension->InputDataCount[Queue]++;
+      KeInsertQueueDpc(&DeviceExtension->IsrDpc, DeviceObject->CurrentIrp, NULL);
+
+      /* Copy RawButtons to Previous Buttons for Input */
+      PreviousButtons = Input->RawButtons;
+    }
+  }
+
+  return TRUE;
 }
 
 void InitializeMouseHardware(unsigned int mtype)
 {
-  char clear_error_bits;
+  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM + 3, 0x80);  /* set DLAB on   */
+  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM,     0x60);  /* speed LO byte */
+  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM + 1, 0);     /* speed HI byte */
+  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM + 3, mtype); /* 2=MS Mouse; 3=Mouse systems mouse */
+  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM + 1, 0);     /* set comm and DLAB to 0 */
+  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM + 4, 0x09);  /* DR int enable */
 
-  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+3, 0x80); // set DLAB on
-  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM, 0x60); // speed LO byte
-  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+1, 0); // speed HI byte
-  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+3, mtype); // 2=MS Mouse; 3=Mouse systems mouse
-  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+1, 0); // set comm and DLAB to 0
-  WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+4, 1); // DR int enable
-
-  clear_error_bits=READ_PORT_UCHAR((PUCHAR)MOUSE_COM+5); // clear error bits
+  (void) READ_PORT_UCHAR((PUCHAR)MOUSE_COM+5);    /* clear error bits */
 }
 
 int DetMicrosoft(void)
 {
   char tmp, ind;
   int buttons=0, i, timeout=250;
+  LARGE_INTEGER Timeout;
 
   WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+4, 0x0b);
   tmp=READ_PORT_UCHAR((PUCHAR)MOUSE_COM);
 
-  // Check the first four bytes for signs that this is an MS mouse
+  /* Check the first four bytes for signs that this is an MS mouse */
   for(i=0; i<4; i++) {
     while(((READ_PORT_UCHAR((PUCHAR)MOUSE_COM+5) & 1)==0) && (timeout>0))
     {
-      KeDelayExecutionThread (KernelMode, FALSE, 1);
+      Timeout.QuadPart = 1;
+      KeDelayExecutionThread (KernelMode, FALSE, &Timeout);
       timeout--;
     }
     ind=READ_PORT_UCHAR((PUCHAR)MOUSE_COM);
@@ -192,9 +305,9 @@ int CheckMouseType(unsigned int mtype)
 
 void ClearMouse(void)
 {
-  // Waits until the mouse calms down but also quits out after a while
-  // in case some destructive user wants to keep moving the mouse
-  // before we're done
+  /* Waits until the mouse calms down but also quits out after a while
+   * in case some destructive user wants to keep moving the mouse
+   * before we're done */
 
   unsigned int restarts=0, i;
   for (i=0; i<60000; i++)
@@ -220,10 +333,7 @@ BOOLEAN InitializeMouse(PDEVICE_OBJECT DeviceObject)
   KIRQL Dirql;
   KAFFINITY Affinity;
 
-  horiz_sensitivity=2;
-  vert_sensitivity=3;
-
-  // Check for Microsoft mouse (2 buttons)
+  /* Check for Microsoft mouse (2 buttons) */
   if(CheckMouseType(2)!=0)
   {
     gotmouse=1;
@@ -232,12 +342,12 @@ BOOLEAN InitializeMouse(PDEVICE_OBJECT DeviceObject)
     coordinate=0;
   }
 
-  // Check for Microsoft Systems mouse (3 buttons)
+  /* Check for Microsoft Systems mouse (3 buttons) */
   if(gotmouse==0) {
     if(CheckMouseType(3)!=0)
     {
     gotmouse=1;
-    DbgPrint("Microsoft Mouse Detected\n");
+    DbgPrint("Mouse Systems Mouse Detected\n");
     ClearMouse();
     coordinate=1;
     }
@@ -259,7 +369,8 @@ VOID SerialMouseInitializeDataQueue(PVOID Context)
 {
 }
 
-BOOLEAN MouseSynchronizeRoutine(PVOID Context)
+BOOLEAN STDCALL
+MouseSynchronizeRoutine(PVOID Context)
 {
    PIRP Irp = (PIRP)Context;
    PMOUSE_INPUT_DATA rec  = (PMOUSE_INPUT_DATA)Irp->AssociatedIrp.SystemBuffer;
@@ -272,14 +383,11 @@ BOOLEAN MouseSynchronizeRoutine(PVOID Context)
       return(TRUE);
    }
 
-   MouseDataRequired=stk->Parameters.Read.Length/sizeof(MOUSE_INPUT_DATA);
-   MouseDataRead=NrToRead;
-   CurrentIrp=Irp;
-
    return(FALSE);
 }
 
-VOID SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+VOID STDCALL
+SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
@@ -292,7 +400,8 @@ VOID SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      }
 }
 
-NTSTATUS SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS STDCALL
+SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -305,7 +414,7 @@ NTSTATUS SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIR
          DeviceExtension->ClassInformation =
             *((PCLASS_INFORMATION)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
 
-         // Reinitialize the port input data queue synchronously
+         /* Reinitialize the port input data queue synchronously */
          KeSynchronizeExecution(DeviceExtension->MouseInterrupt,
             (PKSYNCHRONIZE_ROUTINE)SerialMouseInitializeDataQueue, DeviceExtension);
 
@@ -328,10 +437,12 @@ NTSTATUS SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIR
    return status;
 }
 
-NTSTATUS SerialMouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+SerialMouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS Status;
+   static BOOLEAN AlreadyOpened = FALSE;
 
    switch (stk->MajorFunction)
      {
@@ -373,14 +484,17 @@ NTSTATUS SerialMouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+   ULONG Queue;
 
+   Queue = DeviceExtension->ActiveQueue % 2;
+   InterlockedIncrement(&DeviceExtension->ActiveQueue);
    (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.CallBack)(
 			DeviceExtension->ClassInformation.DeviceObject,
-			DeviceExtension->MouseInputData,
+			DeviceExtension->MouseInputData[Queue],
 			NULL,
-			&DeviceExtension->InputDataCount);
+			&DeviceExtension->InputDataCount[Queue]);
 
-   DeviceExtension->ActiveQueue = 0;
+   DeviceExtension->InputDataCount[Queue] = 0;
 }
 
 NTSTATUS STDCALL
@@ -391,21 +505,13 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   UNICODE_STRING SymlinkName;
   PDEVICE_EXTENSION DeviceExtension;
 
-  if(InitializeMouse(DeviceObject) == TRUE)
-  {
-    DbgPrint("Serial Mouse Driver 0.0.5\n");
-  } else {
-    DbgPrint("Serial mouse not found.\n");
-    return STATUS_UNSUCCESSFUL;
-  }
-
   DriverObject->MajorFunction[IRP_MJ_CREATE] = SerialMouseDispatch;
   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = SerialMouseDispatch;
   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = SerialMouseInternalDeviceControl;
   DriverObject->DriverStartIo                = SerialMouseStartIo;
 
   RtlInitUnicodeStringFromLiteral(&DeviceName,
-                                  L"\\Device\\Mouse"); // FIXME: find correct device name
+                                  L"\\Device\\Mouse"); /* FIXME: find correct device name */
   IoCreateDevice(DriverObject,
 	  sizeof(DEVICE_EXTENSION),
 	  &DeviceName,
@@ -415,8 +521,17 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	  &DeviceObject);
   DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
 
+  if(InitializeMouse(DeviceObject) == TRUE)
+  {
+    DbgPrint("Serial Mouse Driver 0.0.5\n");
+  } else {
+    IoDeleteDevice(DeviceObject);
+    DbgPrint("Serial mouse not found.\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
   RtlInitUnicodeStringFromLiteral(&SymlinkName,
-                                  L"\\??\\Mouse"); // FIXME: find correct device name
+                                  L"\\??\\Mouse"); /* FIXME: find correct device name */
   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
 
   DeviceExtension = DeviceObject->DeviceExtension;
@@ -424,4 +539,3 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
   return(STATUS_SUCCESS);
 }
-
