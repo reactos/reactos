@@ -20,6 +20,7 @@
 #include <internal/symbol.h>
 #include <internal/module.h>
 #include <internal/ldr.h>
+#include <internal/ex.h>
 
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
@@ -158,6 +159,7 @@ asmlinkage void _main(boot_param* _bp)
    HalInit(&bp);
    MmInitialize(&bp, last_kernel_address);
    KeInit();
+   ExInit();
    ObInit();
    PsInit();
    IoInit();

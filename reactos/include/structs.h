@@ -363,6 +363,27 @@ typedef struct _DISK_GEOMETRY {
   DWORD  BytesPerSector; 
 } DISK_GEOMETRY ; 
 
+typedef struct _SYSTEMTIME {  
+  WORD wYear; 
+  WORD wMonth; 
+  WORD wDayOfWeek; 
+  WORD wDay; 
+  WORD wHour; 
+  WORD wMinute; 
+  WORD wSecond; 
+  WORD wMilliseconds; 
+} SYSTEMTIME, *LPSYSTEMTIME; 
+
+typedef struct _TIME_ZONE_INFORMATION { 
+  LONG       Bias; 
+  WCHAR      StandardName[ 32 ]; 
+  SYSTEMTIME StandardDate; 
+  LONG       StandardBias; 
+  WCHAR      DaylightName[ 32 ]; 
+  SYSTEMTIME DaylightDate; 
+  LONG       DaylightBias; 
+} TIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION; 
+
 
 #ifndef WIN32_LEAN_AND_MEAN
 
@@ -2503,17 +2524,6 @@ typedef struct _INPUT_RECORD {
   } Event; 
 } INPUT_RECORD, *PINPUT_RECORD; 
  
-typedef struct _SYSTEMTIME {  
-  WORD wYear; 
-  WORD wMonth; 
-  WORD wDayOfWeek; 
-  WORD wDay; 
-  WORD wHour; 
-  WORD wMinute; 
-  WORD wSecond; 
-  WORD wMilliseconds; 
-} SYSTEMTIME, *LPSYSTEMTIME; 
- 
 typedef struct _JOB_INFO_1 {  
   DWORD  JobId; 
   LPTSTR pPrinterName; 
@@ -4171,16 +4181,6 @@ typedef struct _textrange {
   CHARRANGE chrg; 
   LPSTR lpstrText; 
 } TEXTRANGE; 
- 
-typedef struct _TIME_ZONE_INFORMATION { 
-  LONG       Bias; 
-  WCHAR      StandardName[ 32 ]; 
-  SYSTEMTIME StandardDate; 
-  LONG       StandardBias; 
-  WCHAR      DaylightName[ 32 ]; 
-  SYSTEMTIME DaylightDate; 
-  LONG       DaylightBias; 
-} TIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION; 
  
 typedef struct tagTOGGLEKEYS {   
   DWORD cbSize; 

@@ -112,7 +112,7 @@ struct _LPC_MESSAGE
 #define ObjectNameInformation			1
 #define ObjectTypeInformation			2
 #define ObjectAllInformation			3
-#define	ObjectDataInformation			4
+#define ObjectDataInformation			4
 
 // semaphore information
 
@@ -125,8 +125,11 @@ struct _LPC_MESSAGE
 // system information
 
 #define SystemPerformanceInformation		 5
+#define SystemDriverInformation			11
 #define SystemCacheInformation			21
 #define SystemTimeAdjustmentInformation		28
+
+#define SystemTimeZoneInformation		44
 
 // shutdown action
 
@@ -286,9 +289,26 @@ typedef struct _OBJECT_TYPE_INFORMATION
 
 // system information
 
+typedef struct _SYSTEM_DRIVER_INFO
+{
+	PVOID BaseAddress;
+	DWORD Unknown1;
+	DWORD Unknown2;
+	DWORD EntryIndex;
+	DWORD Unknown4;
+	CHAR DriverName[MAX_PATH+1];
+} SYSTEM_DRIVER_INFO, *PSYSTEM_DRIVER_INFO;
+
+typedef struct _SYSTEM_DRIVERS_INFO
+{
+	DWORD DriverCount;
+	SYSTEM_DRIVER_INFO DriverInfo[1];
+} SYSTEM_DRIVERS_INFO, *PSYSTEM_DRIVERS_INFO;
+
+
 typedef struct _SYSTEM_TIME_ADJUSTMENT
 {
-	ULONG TimeAdjustment;	
+	ULONG TimeAdjustment;
 	BOOL  TimeAdjustmentDisabled;
 } SYSTEM_TIME_ADJUSTMENT, *PSYSTEM_TIME_ADJUSTMENT;
 	
@@ -320,6 +340,8 @@ typedef struct _SYSTEM_CACHE_INFORMATION {
 	ULONG    	MaximumWorkingSet;
 	ULONG    	Unused[4];
 } SYSTEM_CACHE_INFORMATION;
+
+// file information
 
 typedef struct _FILE_BASIC_INFORMATION 
 {                    

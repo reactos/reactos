@@ -11,6 +11,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ex.h>
+#include <string.h>
 
 #include <internal/debug.h>
 
@@ -19,9 +21,20 @@
 
 /* GLOBALS ******************************************************************/
 
-static LONG lTimeZoneBias = 0;  /* bias[minutes] = UTC - local time */
+/* Note: Bias[minutes] = UTC - local time */
+TIME_ZONE_INFORMATION SystemTimeZoneInfo;
 
 /* FUNCTIONS ****************************************************************/
+
+VOID
+ExInitTimeZoneInfo (VOID)
+{
+  /* Initialize system time zone information */
+  memset (&SystemTimeZoneInfo, 0, sizeof(TIME_ZONE_INFORMATION));
+
+  /* FIXME: Read time zone information from the registry */
+
+}
 
 NTSTATUS
 STDCALL
@@ -46,22 +59,26 @@ NtQuerySystemTime (
 
 
 VOID
+STDCALL
 ExLocalTimeToSystemTime (
 	PLARGE_INTEGER	LocalTime, 
 	PLARGE_INTEGER	SystemTime
 	)
 {
    SystemTime->QuadPart = LocalTime->QuadPart +
-                          lTimeZoneBias * TICKSPERMINUTE;
+                          SystemTimeZoneInfo.Bias * TICKSPERMINUTE;
 }
 
 
 VOID
+STDCALL
 ExSystemTimeToLocalTime (
 	PLARGE_INTEGER	SystemTime,
 	PLARGE_INTEGER	LocalTime
 	)
 {
    LocalTime->QuadPart = SystemTime->QuadPart -
-                         lTimeZoneBias * TICKSPERMINUTE;
+                         SystemTimeZoneInfo.Bias * TICKSPERMINUTE;
 }
+
+/* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.29 1999/07/29 21:25:04 ekohl Exp $
+# $Id: makefile_rex,v 1.30 1999/08/11 23:23:48 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -47,7 +47,7 @@ PS_OBJECTS = ps/psmgr.o ps/thread.o ps/process.o ps/idle.o ps/kill.o \
 
 EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o \
              ex/callback.o ex/napi.o ex/power.o ex/sysinfo.o ex/locale.o \
-	     ex/stamp.o
+             ex/stamp.o ex/init.o
 
 SE_OBJECTS = se/semgr.o
 
