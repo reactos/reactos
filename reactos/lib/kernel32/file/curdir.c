@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.32 2002/10/20 03:33:34 robd Exp $
+/* $Id: curdir.c,v 1.33 2002/11/07 02:52:37 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -324,11 +324,7 @@ GetWindowsDirectoryA (
 
 	Length = RtlUnicodeStringToAnsiSize (&WindowsDirectory); //len of ansi str incl. nullchar
 	
-	printf("windirlen incl term %i\n", Length);
-
 	if (uSize >= Length){
-
-		printf("ok: enoug space\n");
 
 		String.Length = 0;
 		String.MaximumLength = uSize;
@@ -347,12 +343,9 @@ GetWindowsDirectoryA (
 		if (!NT_SUCCESS(Status))
 			return 0;
 
-		printf("good: ret chars %i\n",Length-1);
-		printf("dir: %s\n",lpBuffer);
 		return Length-1;	//good: ret chars excl. nullchar
 	}
 
-	printf("bad: ret chars needed %i\n",Length);
 	return Length;	//bad: ret space needed incl. nullchar
 }
 

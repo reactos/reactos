@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.37 2002/10/20 11:55:59 chorns Exp $
+/* $Id: file.c,v 1.38 2002/11/07 02:52:37 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -260,14 +260,17 @@ GetFileType(HANDLE hFile)
      {
 	case STD_INPUT_HANDLE:
 	  hFile = NtCurrentPeb()->ProcessParameters->hStdInput;
+
 	  break;
 
 	case STD_OUTPUT_HANDLE:
 	  hFile = NtCurrentPeb()->ProcessParameters->hStdOutput;
+
 	  break;
 
 	case STD_ERROR_HANDLE:
 	  hFile = NtCurrentPeb()->ProcessParameters->hStdError;
+
 	  break;
      }
 
@@ -800,12 +803,73 @@ SetFileTime(HANDLE hFile,
 }
 
 
+/*
+The caller must have opened the file with the DesiredAccess FILE_WRITE_DATA flag set.
+*/
 WINBOOL STDCALL
 SetEndOfFile(HANDLE hFile)
 {
-   int x = -1;
-   DWORD Num;
-   return WriteFile(hFile,&x,1,&Num,NULL);
+	IO_STATUS_BLOCK  IoStatusBlock;
+	FILE_END_OF_FILE_INFORMATION	EndOfFileInfo;
+	FILE_ALLOCATION_INFORMATION		FileAllocationInfo;
+	FILE_POSITION_INFORMATION		 FilePosInfo;
+	NTSTATUS Status;
+
+	//get current position
+	Status = NtQueryInformationFile(
+					hFile,
+					&IoStatusBlock,
+					&FilePosInfo,
+					sizeof(FILE_POSITION_INFORMATION),
+					FilePositionInformation
+					);
+
+	if (!NT_SUCCESS(Status)){
+		SetLastErrorByStatus(Status);
+		return FALSE;
+	}
+
+	EndOfFileInfo.EndOfFile.QuadPart = FilePosInfo.CurrentByteOffset.QuadPart;
+
+	/*
+	NOTE: 
+	This call is not supposed to free up any space after the eof marker
+	if the file gets truncated. We have to deallocate the space explicitly afterwards.
+	But...most file systems dispatch both FileEndOfFileInformation 
+	and FileAllocationInformation as they were the same	command.
+
+	*/
+	Status = NtSetInformationFile(
+						hFile,
+						&IoStatusBlock,	 //out
+						&EndOfFileInfo,
+						sizeof(FILE_END_OF_FILE_INFORMATION),
+						FileEndOfFileInformation
+						);
+
+	if (!NT_SUCCESS(Status)){
+		SetLastErrorByStatus(Status);
+		return FALSE;
+	}
+
+	FileAllocationInfo.AllocationSize.QuadPart = FilePosInfo.CurrentByteOffset.QuadPart;
+
+
+	Status = NtSetInformationFile(
+						hFile,
+						&IoStatusBlock,	 //out
+						&FileAllocationInfo,
+						sizeof(FILE_ALLOCATION_INFORMATION),
+						FileAllocationInformation
+						);
+
+	if (!NT_SUCCESS(Status)){
+		SetLastErrorByStatus(Status);
+		return FALSE;
+	}
+	
+	return TRUE;
+
 }
 
 /* EOF */

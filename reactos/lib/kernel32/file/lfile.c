@@ -1,4 +1,4 @@
-/* $Id: lfile.c,v 1.6 2000/06/03 14:47:32 ea Exp $
+/* $Id: lfile.c,v 1.7 2002/11/07 02:52:37 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -156,11 +156,11 @@ _lcreat (
 
 	DWORD FileAttributes = 0;
 	
-	if (  iAttribute == 1 )
+	if (  iAttribute == 0 )
 		FileAttributes |= FILE_ATTRIBUTE_NORMAL;
-	else if (  iAttribute == 2 )
+	else if (  iAttribute == 1 )
 		FileAttributes |= FILE_ATTRIBUTE_READONLY;
-	else if (  iAttribute == 3 )
+	else if (  iAttribute == 2 )
 		FileAttributes |= FILE_ATTRIBUTE_HIDDEN;
 	else if (  iAttribute == 4 )
 		FileAttributes |= FILE_ATTRIBUTE_SYSTEM;
