@@ -1,8 +1,8 @@
 #!/bin/sh
-echo "Installing to floppy."
-mount -t vfat /bochs/1.44a /mnt/floppy -o loop,rw
-./install-system.sh /mnt/floppy
-umount /mnt/floppy
+#echo "Installing to floppy."
+#mount -t vfat /bochs/1.44a /mnt/floppy -o loop,rw
+#./install-system.sh /mnt/floppy
+#umount /mnt/floppy
 echo "Installing to disk."
 mount -t vfat /bochs/10M.vga.dos /mnt/floppy -o loop,offset=8704,rw
 ./install.sh /mnt/floppy

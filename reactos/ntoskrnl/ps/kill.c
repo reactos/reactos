@@ -149,8 +149,15 @@ PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
    DPRINT("PsTerminateOtherThread(Thread %x, ExitStatus %x)\n",
 	  Thread, ExitStatus);
    
+   /*
+    * We must synchronize the termination of a thread with its execution
+    * so all this routine does is to mark the thread as terminated and
+    * wake it if possible. The thread will then kill itself when it
+    * next exits kernel mode.
+    */
    Thread->DeadThread = 1;
    Thread->ExitStatus = ExitStatus;
+   Thread->Tcb.ApcState.UserApcPending++;
    if (Thread->Tcb.State == THREAD_STATE_FROZEN && 
        (Thread->Tcb.Alertable || Thread->Tcb.WaitMode == UserMode))
      {
@@ -254,7 +261,8 @@ NTSTATUS STDCALL PsTerminateSystemThread(NTSTATUS ExitStatus)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtCallTerminatePorts(PETHREAD Thread)
+NTSTATUS STDCALL 
+NtCallTerminatePorts(PETHREAD Thread)
 {
    KIRQL oldIrql;
    PLIST_ENTRY current_entry;
@@ -276,7 +284,8 @@ NTSTATUS STDCALL NtCallTerminatePorts(PETHREAD Thread)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtRegisterThreadTerminatePort(HANDLE TerminationPortHandle)
+NTSTATUS STDCALL 
+NtRegisterThreadTerminatePort(HANDLE TerminationPortHandle)
 {
    NTSTATUS Status;
    PEPORT_TERMINATION_REQUEST Request;

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.12 2000/12/28 03:38:07 dwelch Exp $
+/* $Id: mminit.c,v 1.13 2001/01/17 15:38:03 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -217,19 +217,23 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
    /*
     * Free physical memory not used by the kernel
     */
-   MmStats.NrTotalPages = KeLoaderBlock.MemLower/4;
-   if ( !MmStats.NrTotalPages )
-   {
-      DbgPrint("Memory not detected, default to 8 MB\n");
+   MmStats.NrTotalPages = KeLoaderBlock.MemHigher/4;
+   if (!MmStats.NrTotalPages)
+     {
+       DbgPrint("Memory not detected, default to 8 MB\n");
        MmStats.NrTotalPages = 2048;
-   }
+     }
    else
-       MmStats.NrTotalPages += 256;// add 1MB for standard memory (not extended)
+     {
+       /* add 1MB for standard memory (not extended) */
+       MmStats.NrTotalPages += 256;
+     }
+   DbgPrint("Used memory %d\n", MmStats.NrTotalPages * PAGESIZE);
+   
    LastKernelAddress = (ULONG)MmInitializePageList(
 					   (PVOID)FirstKrnlPhysAddr,
 					   (PVOID)LastKrnlPhysAddr,
-//					   1024,
-			MmStats.NrTotalPages ,
+					   MmStats.NrTotalPages,
 					   PAGE_ROUND_UP(LastKernelAddress));
    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
    

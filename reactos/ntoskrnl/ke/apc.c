@@ -89,11 +89,28 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
    PCONTEXT Context;
    KIRQL oldlvl;
    PKTHREAD Thread;
-   
+   PETHREAD EThread;
+
    DPRINT("KiDeliverUserApc(TrapFrame %x/%x)\n", TrapFrame,
 	  KeGetCurrentThread()->TrapFrame);
    Thread = KeGetCurrentThread();
    KeAcquireSpinLock(&PiApcLock, &oldlvl);
+
+   /*
+    * Check for thread termination
+    */
+   KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
+   EThread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+   if (EThread->DeadThread)
+     {
+       KeReleaseSpinLock(&PiThreadListLock, oldlvl);
+       PsTerminateCurrentThread(EThread->ExitStatus);
+     }
+   else
+     {
+	KeReleaseSpinLock(&PiThreadListLock, oldlvl);
+     }
+
    current_entry = Thread->ApcState.ApcListHead[1].Flink;
    
    /*
@@ -174,20 +191,6 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 		      (PVOID*)&Esp[3],
 		      (PVOID*)&Esp[4]);
 
-#if 0   
-   KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
-   EThread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
-   if (EThread->DeadThread)
-     {
-       KeReleaseSpinLock(&PiThreadListLock, oldlvl);
-       PsTerminateCurrentThread(EThread->ExitStatus);
-     }
-   else
-     {
-	KeReleaseSpinLock(&PiThreadListLock, oldlvl);
-     }
-   return ret;
-#endif
    return(TRUE);
 }
 
@@ -231,10 +234,11 @@ VOID STDCALL KiDeliverApc(ULONG Unknown1,
 //   Thread->Tcb.WaitStatus = STATUS_KERNEL_APC;
 }
 
-VOID STDCALL KeInsertQueueApc (PKAPC	Apc,
-			       PVOID	SystemArgument1,
-			       PVOID	SystemArgument2,
-			       UCHAR	Mode)
+VOID STDCALL 
+KeInsertQueueApc (PKAPC	Apc,
+		  PVOID	SystemArgument1,
+		  PVOID	SystemArgument2,
+		  UCHAR	Mode)
 /*
  * FUNCTION: Queues an APC for execution
  * ARGUMENTS:

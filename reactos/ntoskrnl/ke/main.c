@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.73 2001/01/14 15:30:47 ekohl Exp $
+/* $Id: main.c,v 1.74 2001/01/17 15:38:02 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -84,13 +84,13 @@ CreateSystemRootLink (PCSZ ParameterLine)
 		RtlCreateUnicodeStringFromAsciiz (&BootPath, "\\");
 	}
 	DPRINT("Arc name: %s\n", ParamBuffer);
-
+	
 	/* Only arc name left - build full arc name */
 	ArcNameBuffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
 	swprintf (ArcNameBuffer,
 	          L"\\ArcName\\%S", ParamBuffer);
 	RtlInitUnicodeString (&ArcName, ArcNameBuffer);
-	DPRINT("Arc name: %wZ\n", &ArcName);
+	DPRINT1("Arc name: %wZ\n", &ArcName);
 
 	/* free ParamBuffer */
 	ExFreePool (ParamBuffer);
@@ -435,25 +435,31 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    ULONG last_kernel_address;
    ULONG start;
    PCHAR name;
-   
+   extern ULONG _bss_end__;
+
    /*
     * Copy the parameters to a local buffer because lowmem will go away
     */
    memcpy (&KeLoaderBlock, _LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
-   memcpy (&KeLoaderModules, (PVOID)KeLoaderBlock.ModsAddr,
+   memcpy (&KeLoaderModules[1], (PVOID)KeLoaderBlock.ModsAddr,
 	   sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
+   KeLoaderBlock.ModsCount++;
    KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
-
+   
    /*
     * FIXME: Preliminary hack!!!! Add boot device to beginning of command line.
     * This should be done by the boot loader.
     */
    strcpy (KeLoaderCommandLine,
 	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos ");
-   strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
+   strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);   
 
    KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
-   for (i = 0; i < KeLoaderBlock.ModsCount; i++)
+   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
+   KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
+   KeLoaderModules[0].ModStart = 0xC0000000;
+   KeLoaderModules[0].ModEnd = PAGE_ROUND_UP((ULONG)&_bss_end__);
+   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
      {
 	strcpy(KeLoaderModuleStrings[i], (PUCHAR)KeLoaderModules[i].String);
 	KeLoaderModules[i].ModStart -= 0x200000;
@@ -469,11 +475,12 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
    KeInit1();
    KeLowerIrql(DISPATCH_LEVEL);
-
+   
    {
      char tmpbuf[80];
-     sprintf(tmpbuf,"system with %d MB extended memory\n",
-	     (unsigned int)(KeLoaderBlock.MemLower)/1024);
+     sprintf(tmpbuf,"system with %d/%d MB memory\n",
+	     (unsigned int)(KeLoaderBlock.MemLower)/1024,
+	     (unsigned int)(KeLoaderBlock.MemHigher)/1024);
      HalDisplayString(tmpbuf);
    }
 
@@ -564,6 +571,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
      }
    
    /* Create the SystemRoot symbolic link */
+   DbgPrint("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
    CreateSystemRootLink ((PUCHAR)KeLoaderBlock.CommandLine);
    
    CmInitializeRegistry2();

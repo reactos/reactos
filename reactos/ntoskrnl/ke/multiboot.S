@@ -103,6 +103,7 @@ l2:
 	movl	$0, %eax
 	movl	$__bss_end__, %ecx
 	subl	$__bss_start__, %ecx
+	shr	$2, %ecx
 	movl	$__bss_start__, %edi
 	rep
 	stosl
