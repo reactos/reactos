@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.73 2003/12/30 18:52:05 fireball Exp $
+/* $Id: object.c,v 1.74 2004/01/31 16:52:47 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -174,7 +174,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	if (Status == STATUS_REPARSE)
 	  {
 	     /* reparse the object path */
-	     NextObject = RootObject;
+	     NextObject = NameSpaceRoot;
 	     current = PathString.Buffer;
 	     
 	     ObReferenceObjectByPointer(NextObject,
