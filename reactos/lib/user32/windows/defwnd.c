@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.28 2003/03/06 23:57:00 gvg Exp $
+/* $Id: defwnd.c,v 1.29 2003/03/07 04:50:42 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -764,10 +764,14 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
       break;
 
     case HTMINBUTTON:
+        UserDrawMinButton(hWnd, GetWindowDC(hWnd),TRUE);
+        break;
     case HTMAXBUTTON:
-      DefWndTrackMinMaxBox(hWnd, wParam);
-      break;
-
+        UserDrawMaxButton(hWnd,GetWindowDC(hWnd),TRUE);
+        break;
+    case HTCLOSE:
+        UserDrawCloseButton(hWnd,GetWindowDC(hWnd),TRUE);
+        break;
     case HTLEFT:
     case HTRIGHT:
     case HTTOP:
@@ -793,8 +797,15 @@ DefWndHandleLButtonDblClkNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT
 DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+  UserDrawMinButton(hWnd,GetWindowDC(hWnd),FALSE);
+  UserDrawMaxButton(hWnd,GetWindowDC(hWnd),FALSE);
+  UserDrawCloseButton(hWnd,GetWindowDC(hWnd),FALSE);
   switch (wParam)
     {
+    case HTMINBUTTON:
+        break;
+    case HTMAXBUTTON:
+        break;
     case HTCLOSE:
       SendMessageA(hWnd, WM_CLOSE, 0, 0);
       break;
