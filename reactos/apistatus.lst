@@ -8,6 +8,7 @@ crtdll.dll reactos/lib/crtdll
 gdi32.dll reactos/lib/gdi32
 iphlpapi.dll reactos/lib/iphlpapi
 kernel32.dll reactos/lib/kernel32
+lz32.dll reactos/lib/lzexpand
 msvcrt.dll reactos/lib/msvcrt
 ole32.dll reactos/lib/ole32
 oleaut32.dll reactos/lib/oleaut32
