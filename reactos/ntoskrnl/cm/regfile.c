@@ -1432,6 +1432,13 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
       NtQuerySystemTime((PTIME)&ParentKey->KeyCell->LastWriteTime);
       CmiMarkBlockDirty(RegistryHive,
 			ParentKey->BlockOffset);
+
+      /* Remove the parent key's hash table */
+      if (ParentKey->KeyCell->NumberOfSubKeys == 0)
+	{
+	  DPRINT1("FIXME: Remove parent key hash table\n")
+
+	}
     }
 
   /* Destroy key cell */
@@ -1440,6 +1447,8 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 		  SubKey->BlockOffset);
   SubKey->BlockOffset = -1;
   SubKey->KeyCell = NULL;
+
+  /* FIXME: Merge free blocks within the Bin */
 
   return(STATUS_SUCCESS);
 }
@@ -1617,6 +1626,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 NTSTATUS
 CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 		      IN PKEY_CELL KeyCell,
+		      IN BLOCK_OFFSET KeyCellOffset,
 		      IN PUNICODE_STRING ValueName)
 {
   PVALUE_LIST_CELL ValueListCell;
@@ -1661,6 +1671,21 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
     }
 
   CmiReleaseBlock(RegistryHive, ValueListCell);
+
+  if (KeyCell->NumberOfValues == 0)
+    {
+      CmiDestroyBlock(RegistryHive,
+		      ValueListCell,
+		      KeyCell->ValuesOffset);
+    }
+  else
+    {
+      CmiMarkBlockDirty(RegistryHive,
+			KeyCell->ValuesOffset);
+    }
+
+  CmiMarkBlockDirty(RegistryHive,
+		    KeyCellOffset);
 
   return STATUS_SUCCESS;
 }
@@ -1808,7 +1833,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
 	  NewValueCell->Flags |= REG_VALUE_NAME_PACKED;
 	}
       else
-        {
+	{
 	  /* Copy the value name */
 	  RtlCopyMemory(NewValueCell->Name,
 			ValueName->Buffer,
@@ -1836,8 +1861,8 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 
   VERIFY_VALUE_CELL(ValueCell);
 
-  /* First, release datas: */
-  if (ValueCell->DataSize > 0)
+  /* First, release data: */
+  if (ValueCell->DataSize > 4)
     {
       pBlock = CmiGetBlock(RegistryHive, ValueCell->DataOffset, &pBin);
       Status = CmiDestroyBlock(RegistryHive, pBlock, ValueCell->DataOffset);
@@ -2261,7 +2286,8 @@ CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
 
   Index = (ULONG)BlockOffset / 4096;
 
-  DPRINT1("CmiMarkBlockDirty(Offset 0x%lx)  Index %lu\n", (ULONG)BlockOffset, Index);
+  DPRINT1("CmiMarkBlockDirty(Offset 0x%lx)  Index %lu\n",
+	  (ULONG)BlockOffset, Index);
 
   RegistryHive->HiveDirty = TRUE;
   RtlSetBits(&RegistryHive->DirtyBitMap,

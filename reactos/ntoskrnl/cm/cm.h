@@ -464,8 +464,9 @@ CmiAddValueToKey(IN PREGISTRY_HIVE  RegistryHive,
 
 NTSTATUS
 CmiDeleteValueFromKey(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell,
-  IN PUNICODE_STRING ValueName);
+		      IN PKEY_CELL  KeyCell,
+		      IN BLOCK_OFFSET KeyCellOffset,
+		      IN PUNICODE_STRING ValueName);
 
 NTSTATUS
 CmiAllocateHashTableBlock(IN PREGISTRY_HIVE  RegistryHive,

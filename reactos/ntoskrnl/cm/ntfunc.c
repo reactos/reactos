@@ -162,7 +162,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     {
       KeyObject->KeyCell->ParentKeyOffset = -1;
       KeyObject->KeyCell->SecurityKeyOffset = -1;
-      /* This key must rest in memory unless it is deleted
+      /* This key must remain in memory unless it is deleted
 	 or file is unloaded */
       ObReferenceObjectByPointer(KeyObject,
 				 STANDARD_RIGHTS_REQUIRED,
@@ -1394,7 +1394,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  /* Acquire hive lock */
+  /* Acquire hive lock exclucively */
   ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -1424,6 +1424,10 @@ NtSetValueKey(IN HANDLE KeyHandle,
 				ValueName,
 				&ValueCell,
 				&VBOffset);
+      if (NT_SUCCESS(Status))
+	{
+	  CmiMarkBlockDirty(RegistryHive, VBOffset);
+	}
     }
 
   if (!NT_SUCCESS(Status))
@@ -1453,6 +1457,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       ValueCell->DataSize = DataSize | 0x80000000;
       ValueCell->DataType = Type;
       RtlMoveMemory(&ValueCell->DataOffset, Data, DataSize);
+      CmiMarkBlockDirty(RegistryHive, VBOffset);
     }
   else if (DataSize <= (ULONG) (ValueCell->DataSize & 0x7fffffff))
     {
@@ -1469,6 +1474,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	{
 	  ZwQuerySystemTime((PTIME) &pBin->DateModified);
 	}
+      CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
     }
   else
     {
@@ -1508,6 +1514,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       ValueCell->DataType = Type;
       CmiReleaseBlock(RegistryHive, NewDataCell);
       ValueCell->DataOffset = NewOffset;
+      CmiMarkBlockDirty(RegistryHive, ValueCell->DataOffset);
     }
 
   /* Mark link key */
@@ -1515,6 +1522,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       (Type == REG_LINK))
     {
       KeyCell->Type = REG_LINK_KEY_CELL_TYPE;
+      CmiMarkBlockDirty(RegistryHive, KeyObject->BlockOffset);
     }
 
   /* Update time of heap */
@@ -1560,6 +1568,7 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
 
   Status = CmiDeleteValueFromKey(KeyObject->RegistryHive,
 				 KeyObject->KeyCell,
+				 KeyObject->BlockOffset,
 				 ValueName);
 
   /* Release hive lock */
