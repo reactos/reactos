@@ -108,8 +108,6 @@ NTSTATUS FillWSABuffers(
   if (IsListEmpty(&FCB->ReceiveQueue))
     return STATUS_SUCCESS;
 
-  AFD_DbgPrint(MID_TRACE,("pt 1\n"));
-
   Entry = RemoveHeadList(&FCB->ReceiveQueue);
   
   SrcBuffer = CONTAINING_RECORD(Entry, AFD_BUFFER, ListEntry);
@@ -119,11 +117,8 @@ NTSTATUS FillWSABuffers(
   DstData = Buffers->buf;
   DstSize = Buffers->len;
 
-  AFD_DbgPrint(MID_TRACE,("pt 2\n"));
-
   /* Copy the data */
   for (Total = 0;;) {
-      AFD_DbgPrint(MID_TRACE,("pt 2a\n"));
     /* Find out how many bytes we can copy at one time */
     if (DstSize < SrcSize)
       Count = DstSize;
@@ -139,8 +134,6 @@ NTSTATUS FillWSABuffers(
     SrcBuffer->ConsumedThisBuffer += Count;
     SrcSize -= Count;
 
-      AFD_DbgPrint(MID_TRACE,("pt 2b\n"));
-
     if (SrcSize == 0) {
       ExFreePool(SrcBuffer->Buffer.buf);
       ExFreePool(SrcBuffer);
@@ -151,23 +144,17 @@ NTSTATUS FillWSABuffers(
         SrcBuffer = NULL;
         SrcData = 0;
         SrcSize = 0;
-      AFD_DbgPrint(MID_TRACE,("pt 2c\n"));
         break;
       }
 
-      AFD_DbgPrint(MID_TRACE,("pt 2d\n"));
       Entry = RemoveHeadList(&FCB->ReceiveQueue);
       SrcBuffer = CONTAINING_RECORD(Entry, AFD_BUFFER, ListEntry);
       SrcData = SrcBuffer->Buffer.buf + SrcBuffer->ConsumedThisBuffer;
       SrcSize = SrcBuffer->Buffer.len - SrcBuffer->ConsumedThisBuffer;
-      AFD_DbgPrint(MID_TRACE,("pt 2e\n"));
     }
-
-      AFD_DbgPrint(MID_TRACE,("pt 2f\n"));
 
     DstSize -= Count;
     if (DstSize == 0) {
-      AFD_DbgPrint(MID_TRACE,("pt 2g\n"));
       /* No more bytes in destination buffer. Proceed to
          the next buffer in the destination buffer chain */
       BufferCount--;
@@ -176,11 +163,8 @@ NTSTATUS FillWSABuffers(
       Buffers++;
       DstData = Buffers->buf;
       DstSize = Buffers->len;
-      AFD_DbgPrint(MID_TRACE,("pt 2h\n"));
     }
   }
-
-  AFD_DbgPrint(MID_TRACE,("pt 2i\n"));
 
   if (SrcSize > 0) {
       AFD_DbgPrint(MAX_TRACE,("%d bytes left in this buffer (%d taken)\n",
@@ -190,18 +174,12 @@ NTSTATUS FillWSABuffers(
       SrcBuffer = NULL;
   }
   
-  AFD_DbgPrint(MID_TRACE,("pt 2j\n"));
-
   if (SrcBuffer != NULL) {
     ExFreePool(SrcBuffer->Buffer.buf);
     ExFreePool(SrcBuffer);
   }
 
-  AFD_DbgPrint(MID_TRACE,("pt 2k (TotalBytes = %d)\n", Total));
-
   *BytesCopied = Total;
-
-  AFD_DbgPrint(MID_TRACE,("pt 2h\n"));
 
   return STATUS_SUCCESS;
 }
@@ -225,9 +203,9 @@ ULONG ChecksumCompute(
   register ULONG Sum = Seed;
 
   while (Count > 1) {
-    Sum             += *(PUSHORT)Data;
-    Count           -= 2;
-    (ULONG_PTR)Data += 2;
+    Sum   += *(PUSHORT)Data;
+    Count -= 2;
+    Data   = (PVOID) ((ULONG_PTR) Data + 2);
   }
 
   /* Add left-over byte, if any */
@@ -325,4 +303,11 @@ short AfdpGetAvailablePort ( PUNICODE_STRING DeviceName )
     return rc;
 }
 
+VOID AfdpKickFCB( PAFDFCB FCB, UINT BitToSet, UINT BitErrorCode ) {
+    if (FCB->EventObject != NULL) {
+	FCB->NetworkEvents.lNetworkEvents |= (1 << BitToSet);
+	FCB->NetworkEvents.iErrorCode[BitToSet] = NO_ERROR;
+	KeSetEvent(FCB->EventObject, EVENT_INCREMENT, FALSE);
+    }
+}
 /* EOF */

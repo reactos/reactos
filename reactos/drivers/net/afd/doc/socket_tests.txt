@@ -20,3 +20,6 @@ Listen test program results:
 multiple listen:      0
 listen after connect: -1,10056
 
+Accept test program results:
+
+close during accept:  -1,10004

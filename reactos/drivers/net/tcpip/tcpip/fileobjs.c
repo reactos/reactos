@@ -176,7 +176,7 @@ VOID DeleteConnectionEndpoint(
 }
 
 
-VOID RequestWorker(
+VOID STDCALL RequestWorker(
   PVOID Context)
 /*
  * FUNCTION: Worker routine for processing address file object requests
@@ -513,43 +513,9 @@ NTSTATUS FileCloseConnection(
 
   Connection = Request->Handle.ConnectionContext;
 
-#if 0
-  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
-  if ((!AF_IS_BUSY(Connection)) && (Connection->RefCount == 1)) {
-    /* Set connection endpoint file object exclusive to us */
-    AF_SET_BUSY(Connection);
-    AF_CLR_VALID(Connection);
+  TCPClose(Request);
+  DeleteConnectionEndpoint(Connection);
 
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-#endif
-    DeleteConnectionEndpoint(Connection);
-#if 0
-  } else {
-    if (!AF_IS_PENDING(Connection, AFF_DELETE)) {
-      Connection->Complete = Request->RequestNotifyObject;
-      Connection->Context  = Request->RequestContext;
-
-      /* Shedule connection endpoint for deletion */
-      AF_SET_PENDING(Connection, AFF_DELETE);
-      AF_CLR_VALID(Connection);
-
-      if (!AF_IS_BUSY(Connection)) {
-        /* Worker function is not running, so shedule it to run */
-        AF_SET_BUSY(Connection);
-        KeReleaseSpinLock(&Connection->Lock, OldIrql);
-        ExQueueWorkItem(&Connection->WorkItem, CriticalWorkQueue);
-      } else
-        KeReleaseSpinLock(&Connection->Lock, OldIrql);
-
-      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
-
-      return STATUS_PENDING;
-    } else
-      Status = STATUS_ADDRESS_CLOSED;
-
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-  }
-#endif
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return Status;

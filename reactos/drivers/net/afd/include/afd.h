@@ -28,6 +28,9 @@ typedef struct _DEVICE_EXTENSION {
     LIST_ENTRY FCBListHead;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+#define AFD_FLAG_WORK 1
+#define AFD_FLAG_NONBLOCKING 2
+
 /* Context Control Block structure */
 typedef struct _AFDCCB {
     struct _AFDFCB *FCB;
@@ -46,6 +49,54 @@ typedef struct _FsdNTRequiredFCB {
     ERESOURCE               MainResource;
     ERESOURCE               PagingIoResource;
 } FsdNTRequiredFCB, *PFsdNTRequiredFCB;
+
+
+typedef struct _AFD_BUFFER {
+  LIST_ENTRY ListEntry;
+  UINT ConsumedThisBuffer;
+  WSABUF Buffer;
+} AFD_BUFFER, *PAFD_BUFFER;
+
+typedef struct _AFD_READ_REQUEST {
+  union {
+    struct {
+      PFILE_REQUEST_RECVFROM Request;
+      PFILE_REPLY_RECVFROM Reply;
+    } RecvFrom, Recv;
+  };
+} AFD_READ_REQUEST, *PAFD_READ_REQUEST;
+
+typedef struct _AFD_ACCEPT_REQUEST {
+    PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
+    IO_STATUS_BLOCK Iosb;
+    PDEVICE_OBJECT DeviceObject;
+    DWORD Result;
+    BOOL Valid;
+} AFD_ACCEPT_REQUEST, *PAFD_ACCEPT_REQUEST;
+
+typedef AFD_ACCEPT_REQUEST AFD_LISTEN_REQUEST, *PAFD_LISTEN_REQUEST;
+typedef AFD_ACCEPT_REQUEST AFD_CONNECT_REQUEST, *PAFD_CONNECT_REQUEST;
+
+typedef struct _AFD_ACCEPT_COMPLETE {
+    PVOID NewSocketContext;
+} AFD_ACCEPT_COMPLETE, *PAFD_ACCEPT_COMPLETE;
+
+typedef struct _AFD_DATA_AVAILABLE {
+    PVOID SocketContext;
+} AFD_DATA_AVAILABLE, *PAFD_DATA_AVAILABLE;
+
+typedef struct _AFD_SOCKET_CLOSED {
+    PVOID SocketContext;
+} AFD_SOCKET_CLOSED, *PAFD_SOCKET_CLOSED;
+
+typedef struct _AFD_WORK_REQUEST {
+    LIST_ENTRY ListEntry;
+    UINT Opcode;
+    PIRP Irp;
+    PIO_STACK_LOCATION IrpSp;
+    UINT PayloadSize;
+    PCHAR Payload[1];
+} AFD_WORK_REQUEST, *PAFD_WORK_REQUEST;
 
 typedef struct _AFDFCB {
     FsdNTRequiredFCB    NTRequiredFCB;
@@ -68,60 +119,34 @@ typedef struct _AFDFCB {
     DWORD               NotificationEvents;
     UNICODE_STRING      TdiDeviceName;
     DWORD               State;
-    PVOID               SendBuffer;
+    LIST_ENTRY          WorkQueue;
+    KSPIN_LOCK          WorkQueueLock;
+    AFD_LISTEN_REQUEST  ListenRequest;
+
+    /* Data waiting to be matched with recv requests */
     LIST_ENTRY          ReceiveQueue;
     KSPIN_LOCK          ReceiveQueueLock;
-    LIST_ENTRY          ReadRequestQueue;
-    KSPIN_LOCK          ReadRequestQueueLock;
-    LIST_ENTRY          ListenRequestQueue;
-    LIST_ENTRY          ConnectRequestQueue;
-    KSPIN_LOCK          ConnectRequestQueueLock;
+
     /* For WSAEventSelect() */
     WSANETWORKEVENTS    NetworkEvents;
     PKEVENT             EventObject;
+    ULONG               Flags;
+    LIST_ENTRY          WorkList;
 } AFDFCB, *PAFDFCB;
 
 /* Socket states */
-#define SOCKET_STATE_CREATED    0
-#define SOCKET_STATE_BOUND      1
-#define SOCKET_STATE_LISTENING  2
-#define SOCKET_STATE_CONNECTED  3
+#define SOCKET_STATE_CREATED         0
+#define SOCKET_STATE_BOUND           1
+#define SOCKET_STATE_LISTENING       2
+#define SOCKET_STATE_CONNECTED       3
+#define SOCKET_STATE_SHUTDOWN_REMOTE 4
+#define SOCKET_STATE_SHUTDOWN_LOCAL  5
+#define SOCKET_STATE_SHUTDOWN        6
 
-typedef struct _AFD_BUFFER {
-  LIST_ENTRY ListEntry;
-  UINT ConsumedThisBuffer;
-  WSABUF Buffer;
-} AFD_BUFFER, *PAFD_BUFFER;
-
-typedef struct _AFD_READ_REQUEST {
-  LIST_ENTRY ListEntry;
-  PIRP Irp;
-  union {
-    struct {
-      PFILE_REQUEST_RECVFROM Request;
-      PFILE_REPLY_RECVFROM Reply;
-    } RecvFrom;
-    struct {
-      PFILE_REQUEST_RECV Request;
-      PFILE_REPLY_RECV Reply;
-   } Recv;
-  };
-} AFD_READ_REQUEST, *PAFD_READ_REQUEST;
-
-typedef struct _AFD_LISTEN_REQUEST {
-  LIST_ENTRY ListEntry;
-  PAFDFCB Fcb;
-  PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
-  IO_STATUS_BLOCK Iosb;
-} AFD_LISTEN_REQUEST, *PAFD_LISTEN_REQUEST;
-
-typedef struct _AFD_CONNECT_REQUEST {
-  LIST_ENTRY ListEntry;
-  PAFDFCB Fcb;
-  PIRP Irp;
-  PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
-  IO_STATUS_BLOCK Iosb;
-} AFD_CONNECT_REQUEST, *PAFD_CONNECT_REQUEST;
+#define AFD_OP_ACCEPT_REQUEST  0
+#define AFD_OP_SEND_REQUEST    1
+#define AFD_OP_RECV_REQUEST    2
+#define AFD_OP_CONNECT_REQUEST 3
 
 typedef struct IPSNMP_INFO {
 	ULONG Forwarding;
@@ -235,12 +260,15 @@ typedef struct IPv4_HEADER {
 
 extern NPAGED_LOOKASIDE_LIST BufferLookasideList;
 extern NPAGED_LOOKASIDE_LIST ReadRequestLookasideList;
-extern NPAGED_LOOKASIDE_LIST ListenRequestLookasideList;
 extern NPAGED_LOOKASIDE_LIST ConnectRequestLookasideList;
 
 /* Prototypes from dispatch.c */
 
 NTSTATUS AfdDispBind(
+    PIRP Irp,
+    PIO_STACK_LOCATION IrpSp);
+
+NTSTATUS AfdDispAccept(
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp);
 
@@ -292,7 +320,10 @@ NTSTATUS AfdRegisterEventHandlers(
 NTSTATUS AfdDeregisterEventHandlers(
     PAFDFCB FCB);
 
-NTSTATUS AfdpTryToSatisfyRecvRequest( PAFDFCB FCB, PULONG Count );
+NTSTATUS STDCALL AfdDispCompleteListen( 
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PVOID Context);
 
 /* Prototypes from opnclose.c */
 
@@ -358,6 +389,8 @@ VOID BuildIPv4Header(
 
 short AfdpGetAvailablePort( PUNICODE_STRING DeviceName );
 
+VOID AfdpKickFCB( PAFDFCB FCB, UINT BitToSet, UINT ErrorCode );
+
 /* Prototypes from tdi.c */
 
 NTSTATUS TdiCloseDevice(
@@ -390,7 +423,12 @@ NTSTATUS TdiAssociateAddressFile(
   PFILE_OBJECT ConnectionObject);
 
 NTSTATUS TdiListen(
-  PAFD_LISTEN_REQUEST Request,
+    PAFD_LISTEN_REQUEST Request,
+    PIO_COMPLETION_ROUTINE CompletionRoution,
+    PVOID CompletionContext);
+
+NTSTATUS TdiAccept(
+  PAFD_ACCEPT_REQUEST Request,
   PIO_COMPLETION_ROUTINE  CompletionRoutine,
   PVOID CompletionContext);
 
@@ -438,6 +476,19 @@ NTSTATUS TdiSendDatagram(
   LPSOCKADDR Address,
   PMDL Mdl,
   ULONG BufferSize);
+
+/* work.c */
+
+NTSTATUS InitWorker();
+VOID ShutdownWorker();
+VOID RegisterFCBForWork( PAFDFCB FCB );
+VOID AfdpWorkOnFcb( PAFDFCB FCB );
+NTSTATUS AfdpMakeWork( UINT Opcode, 
+		       PIRP Irp,
+		       PIO_STACK_LOCATION IrpSp,
+		       PCHAR Payload,
+		       UINT PayloadSize );
+VOID CancelWork( PAFDFCB FCB );
 
 #endif /*__AFD_H */
 

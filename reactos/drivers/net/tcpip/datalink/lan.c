@@ -85,7 +85,7 @@ VOID FreeAdapter(
 }
 
 
-VOID ProtocolOpenAdapterComplete(
+VOID STDCALL ProtocolOpenAdapterComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status,
     NDIS_STATUS OpenErrorStatus)
@@ -105,7 +105,7 @@ VOID ProtocolOpenAdapterComplete(
 }
 
 
-VOID ProtocolCloseAdapterComplete(
+VOID STDCALL ProtocolCloseAdapterComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status)
 /*
@@ -125,7 +125,7 @@ VOID ProtocolCloseAdapterComplete(
 }
 
 
-VOID ProtocolResetComplete(
+VOID STDCALL ProtocolResetComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status)
 /*
@@ -139,7 +139,7 @@ VOID ProtocolResetComplete(
 }
 
 
-VOID ProtocolRequestComplete(
+VOID STDCALL ProtocolRequestComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_REQUEST NdisRequest,
     NDIS_STATUS Status)
@@ -162,7 +162,7 @@ VOID ProtocolRequestComplete(
 }
 
 
-VOID ProtocolSendComplete(
+VOID STDCALL ProtocolSendComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
     NDIS_STATUS Status)
@@ -183,7 +183,7 @@ VOID ProtocolSendComplete(
 }
 
 
-VOID ProtocolTransferDataComplete(
+VOID STDCALL ProtocolTransferDataComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
@@ -244,13 +244,12 @@ VOID ProtocolTransferDataComplete(
                 break;
         }
     }
-    
-    /* Release the packet descriptor */
-    FreeNdisPacket(Packet);
+
+    FreeNdisPacket( Packet );
 }
 
 
-NDIS_STATUS ProtocolReceive(
+NDIS_STATUS STDCALL ProtocolReceive(
     NDIS_HANDLE BindingContext,
     NDIS_HANDLE MacReceiveContext,
     PVOID HeaderBuffer,
@@ -316,32 +315,10 @@ NDIS_STATUS ProtocolReceive(
     /* Get a transfer data packet */
 
     KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
-    BufferData = exAllocatePool(NonPagedPool, Adapter->MTU);
-    if (!BufferData) {
-	TI_DbgPrint(DEBUG_DATALINK, ("No memory left\n"));
-	KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
-	return NDIS_STATUS_SUCCESS;
-    }
-    NdisAllocatePacket(&NdisStatus,&NdisPacket,GlobalPacketPool);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(DEBUG_DATALINK, ("No available packet descriptors.\n"));
-        /* We don't have a free packet descriptor. Drop the packet */
-	exFreePool(BufferData);
-        KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
-        return NDIS_STATUS_SUCCESS;
-    }
-    NdisAllocateBuffer(&NdisStatus,&NdisBuffer,GlobalBufferPool,
-		       BufferData,Adapter->MTU);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(DEBUG_DATALINK, ("No available buffer descriptors.\n"));
-        /* We don't have a free packet descriptor. Drop the packet */
-	exFreePool(BufferData);
-	FreeNdisPacket(NdisPacket);
-        KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
-        return NDIS_STATUS_SUCCESS;
-    }
+    NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Adapter->MTU );
+    if( NdisStatus != NDIS_STATUS_SUCCESS ) return NDIS_STATUS_NOT_ACCEPTED;
+    GetDataPtr( NdisPacket, 0, &BufferData, &PacketSize );
 
-    NdisChainBufferAtFront(NdisPacket, NdisBuffer);
     IPPacket.NdisPacket = NdisPacket;
 	
     if (LookaheadBufferSize < PacketSize) {
@@ -376,7 +353,7 @@ NDIS_STATUS ProtocolReceive(
 }
 
 
-VOID ProtocolReceiveComplete(
+VOID STDCALL ProtocolReceiveComplete(
     NDIS_HANDLE BindingContext)
 /*
  * FUNCTION: Called by NDIS when we're done receiving data
@@ -388,7 +365,7 @@ VOID ProtocolReceiveComplete(
 }
 
 
-VOID ProtocolStatus(
+VOID STDCALL ProtocolStatus(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS GenerelStatus,
     PVOID StatusBuffer,
@@ -406,7 +383,7 @@ VOID ProtocolStatus(
 }
 
 
-VOID ProtocolStatusComplete(
+VOID STDCALL ProtocolStatusComplete(
     NDIS_HANDLE NdisBindingContext)
 /*
  * FUNCTION: Called by NDIS when a status-change has occurred
@@ -417,7 +394,7 @@ VOID ProtocolStatusComplete(
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 }
 
-VOID ProtocolBindAdapter(
+VOID STDCALL ProtocolBindAdapter(
     OUT PNDIS_STATUS   Status,
     IN  NDIS_HANDLE    BindContext,
     IN  PNDIS_STRING   DeviceName,

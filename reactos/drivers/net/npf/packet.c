@@ -804,7 +804,7 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		//return
 		Open->Bhead = 0;
 		Open->Btail = 0;
-		(INT)Open->BLastByte = -1;
+		Open->BLastByte = (UINT) -1;
 		Open->Received = 0;		
 		Open->Dropped = 0;
 		Open->Accepted = 0;
@@ -951,7 +951,7 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 		Open->Buffer = tpointer;
 		Open->Bhead = 0;
 		Open->Btail = 0;
-		(INT)Open->BLastByte = -1;
+		Open->BLastByte = (UINT) -1;
 		
 		Open->BufSize = (UINT)dim;
 		EXIT_SUCCESS(dim);
@@ -1101,7 +1101,7 @@ NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 
 //-------------------------------------------------------------------
 
-VOID
+VOID STDCALL
 NPF_RequestComplete(
     IN NDIS_HANDLE   ProtocolBindingContext,
     IN PNDIS_REQUEST NdisRequest,
@@ -1185,7 +1185,7 @@ NPF_RequestComplete(
 
 //-------------------------------------------------------------------
 
-VOID
+VOID STDCALL
 NPF_Status(
     IN NDIS_HANDLE   ProtocolBindingContext,
     IN NDIS_STATUS   Status,
@@ -1203,7 +1203,7 @@ NPF_Status(
 
 //-------------------------------------------------------------------
 
-VOID
+VOID STDCALL
 NPF_StatusComplete(
     IN NDIS_HANDLE  ProtocolBindingContext
     )

@@ -10,7 +10,7 @@
 #include <ne2000.h>
 
 /* Null-terminated array of ports to probe. This is "semi-risky" (Don Becker).  */
-ULONG ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };
+ULONG ProbeAddressList[] = { 0x300, 0x280, 0x320, 0x340, 0x360, 0x380, 0 };
 
 BOOLEAN ProbeAddressForNIC(
     ULONG address)
@@ -669,6 +669,8 @@ VOID NICReadDataAlign(
     /* Select page 0, read and start the NIC */
     NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STA | CR_RD0 | CR_PAGE0);
     
+    NDIS_DbgPrint(MID_TRACE,("Target Address: %x\n", Target));
+
     if (Adapter->WordMode)
         NdisRawReadPortBufferUshort(Adapter->IOBase + NIC_DATA, Target, Count >> 1);
     else
@@ -801,6 +803,9 @@ VOID NICReadData(
 {
     USHORT Tmp;
 
+    NDIS_DbgPrint(MID_TRACE,("Reading data from ne2000 to target %x (5d)\n",
+			     Target, Length));
+
     /* Avoid transfers to odd addresses */
     if (Source & 0x01) {
         /* Transfer one word and use the MSB */
@@ -815,8 +820,8 @@ VOID NICReadData(
         /* Transfer as many words as we can without exceeding the buffer length */
         Tmp = Length & 0xFFFE;
         NICReadDataAlign(Adapter, (PUSHORT)Target, Source, Tmp);
-        Source            += Tmp;
-        (ULONG_PTR)Target += Tmp;
+        Source += Tmp;
+        Target  = (PUCHAR)((ULONG_PTR) Target + Tmp);
 
         /* Read one word and keep the LSB */
         NICReadDataAlign(Adapter, &Tmp, Source, 0x02);
@@ -855,7 +860,7 @@ VOID NICWriteData(
         NICWriteDataAlign(Adapter, Target - 1, &Tmp, 0x02);
 
         /* Update pointers */
-        (ULONG_PTR)Source += 1;
+        Source = (PUCHAR) ((ULONG_PTR) Source + 1);
         (ULONG_PTR)Target += 1;
         Length--;
     }
@@ -963,7 +968,7 @@ VOID NICReadPacket(
     NDIS_DbgPrint(MAX_TRACE, ("HEADER: (NextPacket)   (0x%X)\n", Adapter->PacketHeader.NextPacket));
     NDIS_DbgPrint(MAX_TRACE, ("HEADER: (PacketLength) (0x%X)\n", Adapter->PacketHeader.PacketLength));
 
-    if (Adapter->PacketHeader.PacketLength < 64  ||
+    if (Adapter->PacketHeader.PacketLength < 14 /*64 -- why?*/  ||
         Adapter->PacketHeader.PacketLength > 1518) {	/* XXX I don't think the CRC will show up... should be 1514 */
         NDIS_DbgPrint(MAX_TRACE, ("Bogus packet size (%d).\n",
             Adapter->PacketHeader.PacketLength));
@@ -1030,7 +1035,7 @@ VOID NICWritePacket(
 
         NICWriteData(Adapter, DstData, SrcData, BytesToCopy);
 
-        (ULONG_PTR)SrcData += BytesToCopy;
+        SrcData = (PUCHAR)((ULONG_PTR) SrcData + BytesToCopy);
         SrcSize            -= BytesToCopy;
         DstData            += BytesToCopy;
         DstSize            -= BytesToCopy;
@@ -1291,7 +1296,7 @@ VOID HandleTransmit(
 }
 
 
-VOID MiniportHandleInterrupt(
+VOID STDCALL MiniportHandleInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Handler for deferred processing of interrupts

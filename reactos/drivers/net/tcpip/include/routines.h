@@ -36,7 +36,9 @@ UINT CopyPacketToBufferChain(
     UINT Length);
 
 VOID FreeNdisPacketX(
-    PNDIS_PACKET Packet);
+    PNDIS_PACKET Packet,
+    PCHAR File,
+    UINT Line);
 
 PVOID AdjustPacket(
     PNDIS_PACKET Packet,

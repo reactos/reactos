@@ -16,8 +16,7 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-//DWORD DebugTraceLevel = MIN_TRACE;
-DWORD DebugTraceLevel = DEBUG_ULTRA;
+DWORD DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
 

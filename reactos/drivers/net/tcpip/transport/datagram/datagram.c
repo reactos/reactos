@@ -24,7 +24,7 @@ KSPIN_LOCK DGPendingListLock;
 WORK_QUEUE_ITEM DGWorkItem;
 
 
-VOID DatagramWorker(
+VOID STDCALL DatagramWorker(
   PVOID Context)
 /*
  * FUNCTION: Handles pending send requests

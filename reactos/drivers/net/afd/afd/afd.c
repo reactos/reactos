@@ -24,7 +24,6 @@ NPAGED_LOOKASIDE_LIST ReadRequestLookasideList;
 NPAGED_LOOKASIDE_LIST ListenRequestLookasideList;
 NPAGED_LOOKASIDE_LIST ConnectRequestLookasideList;
 
-
 NTSTATUS
 STDCALL
 AfdFileSystemControl(
@@ -74,16 +73,24 @@ AfdDispatch(
         Status = AfdDispListen(Irp, IrpSp);
         break;
 
+    case IOCTL_AFD_ACCEPT:
+	Status = AfdDispAccept(Irp, IrpSp);
+	Complete = FALSE;
+	break;
+
     case IOCTL_AFD_SENDTO:
         Status = AfdDispSendTo(Irp, IrpSp);
+	Complete = FALSE;
         break;
 
     case IOCTL_AFD_RECVFROM:
         Status = AfdDispRecvFrom(Irp, IrpSp);
+	Complete = FALSE;
         break;
 
     case IOCTL_AFD_SELECT:
         Status = AfdDispSelect(Irp, IrpSp);
+	Complete = FALSE;
         break;
 
     case IOCTL_AFD_EVENTSELECT:
@@ -101,6 +108,7 @@ AfdDispatch(
 
     case IOCTL_AFD_SEND:
         Status = AfdDispSend(Irp, IrpSp);
+	Complete = FALSE;
         break;
 
     case IOCTL_AFD_CONNECT:
@@ -142,6 +150,7 @@ VOID STDCALL AfdUnload(
  *     DriverObject = Pointer to driver object created by the system
  */
 {
+    ShutdownWorker();
 }
 
 
@@ -164,6 +173,7 @@ DriverEntry(
     UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Afd");
     NTSTATUS Status;
 
+    InitWorker();
     Status = IoCreateDevice(DriverObject,
                             sizeof(DEVICE_EXTENSION),
                             &DeviceName,
@@ -191,7 +201,6 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = AfdClose;
 
     DriverObject->DriverUnload = AfdUnload;
-
 /*    ExInitializeNPagedLookasideList(
       &BufferLookasideList,
       NULL,

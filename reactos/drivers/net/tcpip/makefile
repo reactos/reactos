@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16.2.6 2004/05/02 07:15:00 arty Exp $
+# $Id: makefile,v 1.16.2.7 2004/05/29 00:50:23 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -31,7 +31,7 @@ TARGET_CLEAN = \
 TCPIP_OBJECTS    = tcpip/main.o tcpip/address.o tcpip/checksum.o \
                    tcpip/dispatch.o tcpip/fileobjs.o \
                    tcpip/pool.o tcpip/routines.o tcpip/interface.o \
-		   tcpip/memtrack.o
+		   tcpip/memtrack.o tcpip/irp.o
 INFO_OBJECTS     = tcpip/info.o tcpip/ninfo.o tcpip/tinfo.o tcpip/iinfo.o
 DATALINK_OBJECTS = datalink/arp.o datalink/lan.o datalink/loopback.o
 NETWORK_OBJECTS  = network/icmp.o network/ip.o network/neighbor.o \

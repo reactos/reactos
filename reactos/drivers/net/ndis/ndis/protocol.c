@@ -107,7 +107,7 @@ ProIndicatePacket(
 }
 
 
-NDIS_STATUS
+NDIS_STATUS STDCALL
 ProRequest(
     IN  NDIS_HANDLE     MacBindingHandle,
     IN  PNDIS_REQUEST   NdisRequest)
@@ -179,7 +179,7 @@ ProRequest(
 }
 
 
-NDIS_STATUS
+NDIS_STATUS STDCALL
 ProReset(
     IN  NDIS_HANDLE MacBindingHandle)
 {
@@ -189,7 +189,7 @@ ProReset(
 }
 
 
-NDIS_STATUS
+NDIS_STATUS STDCALL
 ProSend(
     IN  NDIS_HANDLE     MacBindingHandle,
     IN  PNDIS_PACKET    Packet)
@@ -383,7 +383,7 @@ ProSendPackets(
 }
 
 
-NDIS_STATUS
+NDIS_STATUS STDCALL
 ProTransferData(
     IN  NDIS_HANDLE         MacBindingHandle,
     IN  NDIS_HANDLE         MacReceiveContext,

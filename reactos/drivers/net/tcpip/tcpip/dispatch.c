@@ -54,13 +54,9 @@ NTSTATUS DispPrepareIrpForCancel(
     Irp->IoStatus.Status      = STATUS_CANCELLED;
     Irp->IoStatus.Information = 0;
 
-    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
-
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-
     TI_DbgPrint(DEBUG_IRP, ("Leaving (IRP was already cancelled).\n"));
 
-    return STATUS_CANCELLED;
+    return IRPFinish(Irp, STATUS_CANCELLED);
 }
 
 
@@ -224,7 +220,7 @@ VOID DispDataRequestComplete(
 
     TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    IRPFinish(Irp, STATUS_SUCCESS);
 }
 
 
@@ -240,7 +236,7 @@ NTSTATUS DispTdiAccept(
 {
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
-	return STATUS_NOT_IMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -384,8 +380,6 @@ NTSTATUS DispTdiConnect(
     &Request,
     Parameters->RequestConnectionInformation,
     Parameters->ReturnConnectionInformation);
-
-  Irp->UserIosb->Status = Status; /* XXX arty: Do I need this? */
 
   TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
 
@@ -561,36 +555,7 @@ NTSTATUS DispTdiListen(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  /* Initialize a listen request */
-  Request = (PTDI_REQUEST) ExAllocatePool(NonPagedPool, sizeof(TDI_REQUEST));
-  if (Request == NULL)
-    {
-      return STATUS_NO_MEMORY;
-    }
-
-  Status = DispPrepareIrpForCancel(TranContext, Irp, NULL);
-  if (NT_SUCCESS(Status))
-    {
-      Request->Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
-      Request->RequestNotifyObject      = DispDataRequestComplete;
-      Request->RequestContext           = Irp;
-
-      Status = TCPListen(
-        Request,
-        Parameters->RequestConnectionInformation,
-        Parameters->ReturnConnectionInformation);
-      if (Status != STATUS_PENDING)
-        {
-          IoAcquireCancelSpinLock(&OldIrql);
-          IoSetCancelRoutine(Irp, NULL);
-          IoReleaseCancelSpinLock(OldIrql);
-        }
-    }
-
-  if (Status != STATUS_PENDING)
-    {
-      ExFreePool(Request);
-    }
+  Status = TCPListen( Request, 1024 /* BACKLOG */ );
 
   return Status;
 }
@@ -731,9 +696,9 @@ NTSTATUS DispTdiReceive(
         ReceiveInfo->ReceiveFlags,
         &BytesReceived);
       if (Status != STATUS_PENDING)
-        {
+      {
           DispDataRequestComplete(Irp, Status, BytesReceived);
-        }
+      }
     }
 
   if (Status != STATUS_PENDING)
@@ -1314,9 +1279,7 @@ NTSTATUS DispTdiSetInformationEx(
 
         TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-
-        return STATUS_INVALID_PARAMETER;
+        return IRPFinish(Irp, STATUS_INVALID_PARAMETER);
     }
 
     Status = DispPrepareIrpForCancel(TranContext, Irp, NULL);

@@ -59,7 +59,7 @@ __inline INT SkipToOffset(
         NdisQueryBuffer(Buffer, (PVOID)Data, Size);
 
         if (Offset < *Size) {
-            ((ULONG_PTR)*Data) += Offset;
+            *Data = (PUCHAR)((ULONG_PTR) *Data + Offset);
             *Size              -= Offset;
             break;
         }
@@ -107,8 +107,8 @@ UINT CopyBufferToBufferChain(
         BytesToCopy = MIN(DstSize, Length);
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
-        BytesCopied        += BytesToCopy;
-        (ULONG_PTR)SrcData += BytesToCopy;
+        BytesCopied += BytesToCopy;
+        SrcData      = (PUCHAR)((ULONG_PTR)SrcData + BytesToCopy);
 
         Length -= BytesToCopy;
         if (Length == 0)
@@ -166,8 +166,8 @@ UINT CopyBufferChainToBuffer(
         TI_DbgPrint(DEBUG_BUFFER, ("Copying (%d) bytes from 0x%X to 0x%X\n", BytesToCopy, SrcData, DstData));
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
-        BytesCopied        += BytesToCopy;
-        (ULONG_PTR)DstData += BytesToCopy;
+        BytesCopied += BytesToCopy;
+        DstData      = (PUCHAR)((ULONG_PTR)DstData + BytesToCopy);
 
         Length -= BytesToCopy;
         if (Length == 0)
@@ -307,41 +307,6 @@ UINT CopyPacketToBufferChain(
 }
 
 
-VOID FreeNdisPacketX(
-    PNDIS_PACKET Packet)
-/*
- * FUNCTION: Frees an NDIS packet
- * ARGUMENTS:
- *     Packet = Pointer to NDIS packet to be freed
- */
-{
-    PNDIS_BUFFER Buffer, NextBuffer;
-
-    TI_DbgPrint(DEBUG_BUFFER, ("Packet (0x%X)\n", Packet));
-
-    MTMARK();
-
-    /* Free all the buffers in the packet first */
-    NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
-    for (; Buffer != NULL; Buffer = NextBuffer) {
-        PVOID Data;
-        UINT Length;
-
-	MTMARK();
-
-        NdisGetNextBuffer(Buffer, &NextBuffer);
-        NdisQueryBuffer(Buffer, &Data, &Length);
-        NdisFreeBuffer(Buffer);
-        exFreePool(Data);
-
-	MTMARK();
-    }
-
-    /* Finally free the NDIS packet discriptor */
-    NdisFreePacket(Packet);
-}
-
-
 PVOID AdjustPacket(
     PNDIS_PACKET Packet,
     UINT Available,
@@ -368,9 +333,9 @@ PVOID AdjustPacket(
     /* If Adjust is zero there is no need to adjust this packet as
        there is no additional space at start the of first buffer */
     if (Adjust != 0) {
-        (ULONG_PTR)(NdisBuffer->MappedSystemVa) += Adjust;
-        NdisBuffer->ByteOffset                  += Adjust;
-        NdisBuffer->ByteCount                   -= Adjust;
+        NdisBuffer->MappedSystemVa  = (PVOID) ((ULONG_PTR)(NdisBuffer->MappedSystemVa) + Adjust);
+        NdisBuffer->ByteOffset     += Adjust;
+        NdisBuffer->ByteCount      -= Adjust;
     }
 
     return NdisBuffer->MappedSystemVa;
@@ -557,35 +522,90 @@ VOID DisplayTCPPacket(
     }
 }
 
-NDIS_STATUS AllocatePacketWithBuffer( PNDIS_PACKET *NdisPacket,
-				      PCHAR Data, UINT Len ) {
+void GetDataPtr( PNDIS_PACKET Packet,
+		 UINT Offset, 
+		 PUCHAR *DataOut,
+		 PUINT Size ) {
+    PNDIS_BUFFER Buffer;
+
+    NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
+    if( !Buffer ) return NULL;
+    SkipToOffset( Buffer, Offset, DataOut, Size );
+}
+
+
+#undef NdisAllocatePacket
+#undef NdisAllocateBuffer
+#undef NdisFreeBuffer
+#undef NdisFreePacket
+
+NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
+				       PCHAR Data, UINT Len,
+				       PCHAR File, UINT Line ) {
     PNDIS_PACKET Packet;
     PNDIS_BUFFER Buffer;
     NDIS_STATUS Status;
     PCHAR NewData;
 
-    NewData = exAllocatePool( NonPagedPool, Len );
+    NewData = ExAllocatePool( NonPagedPool, Len );
     if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX 
+    TrackWithTag(EXALLOC_TAG, NewData, File, Line);
 
     if( Data ) 
 	RtlCopyMemory(NewData, Data, Len);
 
     NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );
     if( Status != NDIS_STATUS_SUCCESS ) {
-	exFreePool( NewData );
+	ExFreePool( NewData );
 	return Status;
     }
+    TrackWithTag(NDIS_PACKET_TAG, Packet, File, Line);
 
     NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewData, Len );
     if( Status != NDIS_STATUS_SUCCESS ) {
-	exFreePool( NewData );
+	ExFreePool( NewData );
 	FreeNdisPacket( Packet );
     }
+    TrackWithTag(NDIS_BUFFER_TAG, Buffer, File, Line);
 
-    *NdisPacket = Packet;
     NdisChainBufferAtFront( Packet, Buffer );
+    *NdisPacket = Packet;
 
     return NDIS_STATUS_SUCCESS;
+}
+
+
+VOID FreeNdisPacketX
+( PNDIS_PACKET Packet,
+  PCHAR File,
+  UINT Line )
+/*
+ * FUNCTION: Frees an NDIS packet
+ * ARGUMENTS:
+ *     Packet = Pointer to NDIS packet to be freed
+ */
+{
+    PNDIS_BUFFER Buffer, NextBuffer;
+
+    TI_DbgPrint(DEBUG_BUFFER, ("Packet (0x%X)\n", Packet));
+
+    /* Free all the buffers in the packet first */
+    NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
+    for (; Buffer != NULL; Buffer = NextBuffer) {
+        PVOID Data;
+        UINT Length;
+
+        NdisGetNextBuffer(Buffer, &NextBuffer);
+        NdisQueryBuffer(Buffer, &Data, &Length);
+        NdisFreeBuffer(Buffer);
+	UntrackFL(File,Line,Buffer);
+        ExFreePool(Data);
+	UntrackFL(File,Line,Data);
+    }
+
+    /* Finally free the NDIS packet discriptor */
+    NdisFreePacket(Packet);
+    UntrackFL(File,Line,Packet);
 }
 
 #endif /* DBG */

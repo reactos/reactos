@@ -602,7 +602,7 @@ uint32 bpf_filter_init(register struct bpf_insn *pc, MEM_TYPE *mem_ex, TME_CORE 
 			continue;
 
 		case BPF_ALU|BPF_NEG:
-			(int32)A = -((int32)A);
+			A = (uint32)(-((int32)A));
 			continue;
 /* ARITHMETIC INSTRUCTIONS */
 

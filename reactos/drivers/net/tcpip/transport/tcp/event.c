@@ -23,70 +23,133 @@
 
 extern ULONG TCP_IPIdentification;
 
-int TCPBindEvent( void *ClientData,
-		  void *WhichSocket, 
-		  void *WhichConnection,
-		  LPSOCKADDR address, OSK_UINT addrlen,
-		  OSK_UINT reuseport ) {
+void TCPRecvNotify( PCONNECTION_ENDPOINT Connection, UINT Flags ) {
+    int error = 0;
+    NTSTATUS Status = 0;
+    CHAR DataBuffer[1024];
+    UINT BytesRead = 0, BytesTaken = 0;
+    PTDI_IND_RECEIVE ReceiveHandler;
+    PTDI_IND_DISCONNECT DisconnectHandler;
+    PVOID HandlerContext;
+    SOCKADDR Addr;
+    
+    do { 
+	error = OskitTCPRecv( Connection->SocketContext,
+			      &Addr,
+			      DataBuffer,
+			      1024,
+			      &BytesRead,
+			      Flags | OSK_MSG_DONTWAIT | OSK_MSG_PEEK );
+
+	switch( error ) {
+	case 0:
+	    ReceiveHandler = Connection->AddressFile->ReceiveHandler;
+	    HandlerContext = Connection->AddressFile->ReceiveHandlerContext;
+	    
+	    TI_DbgPrint(MID_TRACE,("Received %d bytes\n", BytesRead));
+	    
+	    if( Connection->AddressFile->RegisteredReceiveHandler ) 
+		Status = ReceiveHandler( HandlerContext,
+					 NULL,
+					 TDI_RECEIVE_NORMAL,
+					 BytesRead,
+					 BytesRead,
+					 &BytesTaken,
+					 DataBuffer,
+					 NULL );
+	    else
+		Status = STATUS_UNSUCCESSFUL;
+	    
+	    if( Status == STATUS_SUCCESS ) {
+		OskitTCPRecv( Connection->SocketContext,
+			      &Addr,
+			      DataBuffer,
+			      BytesTaken,
+			      &BytesRead,
+			      Flags | OSK_MSG_DONTWAIT );
+	    }
+	    break;
+
+	case OSK_ESHUTDOWN:
+	case OSK_ECONNRESET:
+	    DisconnectHandler = Connection->AddressFile->DisconnectHandler;
+	    HandlerContext = Connection->AddressFile->DisconnectHandlerContext;
+	    
+	    if( Connection->AddressFile->RegisteredDisconnectHandler )
+		Status = DisconnectHandler( HandlerContext,
+					    NULL,
+					    0,
+					    NULL,
+					    0,
+					    NULL,
+					    (error == OSK_ESHUTDOWN) ? 
+					    TDI_DISCONNECT_RELEASE :
+					    TDI_DISCONNECT_ABORT );
+	    else
+		Status = STATUS_UNSUCCESSFUL;
+	    break;
+	    
+	default:
+	    assert( 0 );
+	    break;
+	}
+    } while( error == 0 && BytesRead > 0 && BytesTaken > 0 );
+}
+
+void TCPCloseNotify( PCONNECTION_ENDPOINT Connection ) {
+    TCPRecvNotify( Connection, 0 );
+}
+
+char *FlagNames[] = { "SEL_CONNECT",
+		      "SEL_FIN",
+		      "SEL_ACCEPT",
+		      "SEL_OOB",
+		      "SEL_READ",
+		      "SEL_WRITE",
+		       0 };
+int FlagValues[]   = { SEL_CONNECT,
+		       SEL_FIN,
+		       SEL_ACCEPT,
+		       SEL_OOB,
+		       SEL_READ,
+		       SEL_WRITE,
+		       0 };
+
+void TCPSocketState( void *ClientData,
+		     void *WhichSocket,
+		     void *WhichConnection,
+		     OSK_UINT Flags,
+		     OSK_UINT SocketState ) {
+    int i;
     PCONNECTION_ENDPOINT Connection = 
 	(PCONNECTION_ENDPOINT)WhichConnection;
-    /* Select best interface */
-    LPSOCKADDR_IN addr_in = (struct sockaddr_in *)address;
-    KIRQL OldIrql;
-    PNEIGHBOR_CACHE_ENTRY NCE = 0;
-    IP_ADDRESS RemoteAddress, LocalAddress;
-    USHORT RemotePort, LocalPort;
-    
-    KeAcquireSpinLock( &Connection->Lock, &OldIrql );
 
-    addr_in->sin_family = htons(addr_in->sin_family);
+    TI_DbgPrint(MID_TRACE,("TCPSocketState: (socket %x) %x %x\n",
+			   WhichSocket, Flags, SocketState));
 
-    TI_DbgPrint(MID_TRACE,("Binding %08x (sin_family = %d)\n", address,
-			   addr_in->sin_family));
+    for( i = 0; FlagValues[i]; i++ ) {
+	if( Flags & FlagValues[i] ) 
+	    TI_DbgPrint(MID_TRACE,("Flag %s\n", FlagNames[i]));
+    }
 
-    if( addr_in->sin_family != AF_INET ) return OSK_EPROTONOSUPPORT;
-
-    RemoteAddress.Type = LocalAddress.Type = IP_ADDRESS_V4;
-    CP;
-    OskitTCPGetAddress( Connection->SocketContext,
-			&LocalAddress.Address.IPv4Address,
-			&LocalPort,
-			&RemoteAddress.Address.IPv4Address,
-			&RemotePort );
-    CP;
-
-    NCE = RouterGetRoute(&RemoteAddress, NULL);
-
-    if( !NCE ) return OSK_EADDRNOTAVAIL;
-
-    GetInterfaceIPv4Address(NCE->Interface, 
-			    ADE_UNICAST, 
-			    &LocalAddress.Address.IPv4Address );
-
-    /* XXX arty IPv4 */
-    if( addr_in ) 
-	memcpy( &addr_in->sin_addr, 
-		&LocalAddress.Address.IPv4Address, 
-		sizeof( addr_in->sin_addr ) );
-
-    addr_in->sin_port = htons(LocalPort);
-
-    CP;
-    OskitTCPSetAddress( Connection->SocketContext,
-			&LocalAddress.Address.IPv4Address,
-			LocalPort,
-			&RemoteAddress.Address.IPv4Address,
-			RemotePort );
-    CP;
-
-    KeReleaseSpinLock( &Connection->Lock, OldIrql );
-
-    return 0;
+    if( Flags & SEL_CONNECT ) 
+	/* TCPConnectNotify( Connection ); */ ;
+    if( Flags & SEL_FIN )
+	TCPCloseNotify( Connection );
+    if( Flags & SEL_ACCEPT )
+	/* TCPAcceptNotify( Connection ); */ ;
+    if( Flags & SEL_OOB ) 
+	TCPRecvNotify( Connection, MSG_OOB );
+    if( Flags & SEL_WRITE )
+	/* TCPSendNotify( Connection ); */ ;
+    if( Flags & SEL_READ )
+	TCPRecvNotify( Connection, 0 );
 }
 
 void TCPPacketSendComplete( PVOID Context,
 			    NDIS_STATUS NdisStatus,
 			    DWORD BytesSent ) {
+    TI_DbgPrint(MID_TRACE,("called\n"));
     PDATAGRAM_SEND_REQUEST Send = (PDATAGRAM_SEND_REQUEST)Context;
     if( Send->Packet.NdisPacket )
 	FreeNdisPacket( Send->Packet.NdisPacket );
@@ -201,13 +264,12 @@ int TCPPacketSend(void *ClientData,
     /* if( !SendRequest || !Connection ) return OSK_EINVAL; */
 
     RemoteAddress.Type = LocalAddress.Type = IP_ADDRESS_V4;
-    CP;
+
     OskitTCPGetAddress( WhichSocket,
 			&LocalAddress.Address.IPv4Address,
 			&LocalPort,
 			&RemoteAddress.Address.IPv4Address,
 			&RemotePort );
-    CP;
 
     NCE = RouterGetRoute( &RemoteAddress, NULL );
 

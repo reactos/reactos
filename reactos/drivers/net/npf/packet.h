@@ -470,7 +470,7 @@ NPF_Open(
   Callback function associated with the NdisOpenAdapter() NDIS function. It is invoked by NDIS when the NIC 
   driver has finished an open operation that was previously started by NPF_Open().
 */
-VOID
+VOID STDCALL
 NPF_OpenAdapterComplete(
     IN NDIS_HANDLE  ProtocolBindingContext,
     IN NDIS_STATUS  Status,
@@ -501,7 +501,7 @@ NPF_Close(
   Callback function associated with the NdisCloseAdapter() NDIS function. It is invoked by NDIS when the NIC 
   driver has finished a close operation that was previously started by NPF_Close().
 */
-VOID
+VOID STDCALL
 NPF_CloseAdapterComplete(
     IN NDIS_HANDLE  ProtocolBindingContext,
     IN NDIS_STATUS  Status
@@ -529,7 +529,7 @@ NPF_CloseAdapterComplete(
   along with the filtering ones, that is executed for every incoming packet, therefore it is carefully 
   optimized.
 */
-NDIS_STATUS
+NDIS_STATUS STDCALL
 NPF_tap(
     IN NDIS_HANDLE ProtocolBindingContext,
     IN NDIS_HANDLE MacReceiveContext,
@@ -550,7 +550,7 @@ NPF_tap(
   Callback function associated with the NdisTransferData() NDIS function. It is invoked by NDIS when the NIC 
   driver has finished the transfer of a packet from the NIC driver memory to the NPF circular buffer.
 */
-VOID
+VOID STDCALL
 NPF_TransferDataComplete(
     IN NDIS_HANDLE ProtocolBindingContext,
     IN PNDIS_PACKET Packet,
@@ -564,7 +564,7 @@ NPF_TransferDataComplete(
 
   does nothing in NPF
 */
-VOID
+VOID STDCALL
 NPF_ReceiveComplete(IN NDIS_HANDLE  ProtocolBindingContext);
 
 /*!
@@ -606,7 +606,7 @@ NPF_IoControl(
   Callback function associated with the NdisRequest() NDIS function. It is invoked by NDIS when the NIC 
   driver has finished an OID request operation that was previously started by NPF_IoControl().
 */
-VOID
+VOID STDCALL
 NPF_RequestComplete(
     IN NDIS_HANDLE   ProtocolBindingContext,
     IN PNDIS_REQUEST pRequest,
@@ -664,7 +664,7 @@ INT NPF_BufferedWrite(IN PIRP Irp,
   Callback function associated with the NdisSend() NDIS function. It is invoked by NDIS when the NIC 
   driver has finished an OID request operation that was previously started by NPF_Write().
 */
-VOID
+VOID STDCALL
 NPF_SendComplete(
     IN NDIS_HANDLE   ProtocolBindingContext,
     IN PNDIS_PACKET  pPacket,
@@ -680,7 +680,7 @@ NPF_SendComplete(
   driver has finished an OID request operation that was previously started by NPF_IoControl(), in an IOCTL_PROTOCOL_RESET 
   command.
 */
-VOID
+VOID STDCALL
 NPF_ResetComplete(
     IN NDIS_HANDLE  ProtocolBindingContext,
     IN NDIS_STATUS  Status
@@ -689,7 +689,7 @@ NPF_ResetComplete(
 /*!
   \brief Callback for NDIS StatusHandler. Not used by NPF
 */
-VOID
+VOID STDCALL
 NPF_Status(
     IN NDIS_HANDLE   ProtocolBindingContext,
     IN NDIS_STATUS   Status,
@@ -701,7 +701,7 @@ NPF_Status(
 /*!
   \brief Callback for NDIS StatusCompleteHandler. Not used by NPF
 */
-VOID
+VOID STDCALL
 NPF_StatusComplete(IN NDIS_HANDLE  ProtocolBindingContext);
 
 /*!

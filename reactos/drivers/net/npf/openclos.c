@@ -208,7 +208,7 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	Open->Buffer = NULL;
 	Open->Bhead = 0;
 	Open->Btail = 0;
-	(INT)Open->BLastByte = -1;
+	Open->BLastByte = (UINT) -1;
 	Open->Dropped = 0;		//reset the dropped packets counter
 	Open->Received = 0;		//reset the received packets counter
 	Open->Accepted = 0;		//reset the accepted packets counter
@@ -277,7 +277,7 @@ NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 //-------------------------------------------------------------------
 
-VOID NPF_OpenAdapterComplete(
+VOID STDCALL NPF_OpenAdapterComplete(
 	IN NDIS_HANDLE  ProtocolBindingContext,
     IN NDIS_STATUS  Status,
     IN NDIS_STATUS  OpenErrorStatus)
@@ -487,7 +487,7 @@ NPF_Close(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 
 //-------------------------------------------------------------------
 
-VOID
+VOID STDCALL
 NPF_CloseAdapterComplete(IN NDIS_HANDLE  ProtocolBindingContext,IN NDIS_STATUS  Status)
 {
     POPEN_INSTANCE    Open;
@@ -640,7 +640,7 @@ NPF_UnbindAdapter(
 
 //-------------------------------------------------------------------
 
-VOID
+VOID STDCALL
 NPF_ResetComplete(IN NDIS_HANDLE  ProtocolBindingContext,IN NDIS_STATUS  Status)
 
 {

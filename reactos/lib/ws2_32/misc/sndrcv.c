@@ -31,6 +31,11 @@ recv(
   WS_DbgPrint(MAX_TRACE, ("s (0x%X)  buf (0x%X)  len (0x%X) flags (0x%X).\n",
       s, buf, len, flags));
 
+  if( IsBadWritePtr( buf, len ) ) {
+      WSASetLastError(WSAEINVAL); /* Maybe */
+      return -1;
+  }
+
   WSABuf.len = len;
   WSABuf.buf = (CHAR FAR*)buf;
 

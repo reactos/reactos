@@ -47,17 +47,16 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 				 IPPacket->TotalSize, 
 				 IPPacket->HeaderSize );
 
-	/*exFreePool( BufferData );*/
+	exFreePool( BufferData );
     }
 }
 
 /* event.c */
-int TCPBindEvent( void *ClientData,
-		  void *WhichSocket, 
-		  void *WhichConnection,
-		  LPSOCKADDR address, 
-		  OSK_UINT addrlen,
-		  OSK_UINT reuseport );
+void TCPSocketState( void *ClientData,
+		     void *WhichSocket,
+		     void *WhichConnection,
+		     OSK_UINT SelFlags,
+		     OSK_UINT SocketState );
 
 int TCPPacketSend( void *ClientData,
 		   void *WhichSocket,
@@ -67,13 +66,8 @@ int TCPPacketSend( void *ClientData,
 
 OSKITTCP_EVENT_HANDLERS EventHandlers = {
     NULL, /* Client Data */
-    NULL, /* SocketDataAvailable */
-    NULL, /* SocketConnectIndication */
-    NULL, /* SocketCloseIndication */
-    NULL, /* SocketPendingConnectIndication */
-    NULL, /* SocketResetIndication */
+    TCPSocketState, /* SocketState */
     TCPPacketSend, /* PacketSend */
-    TCPBindEvent /* Bind */
 };
 
 NTSTATUS TCPStartup(VOID)
@@ -126,6 +120,22 @@ NTSTATUS TCPShutdown(VOID)
     return STATUS_SUCCESS;
 }
 
+NTSTATUS TCPTranslateError( int OskitError ) {
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+    switch( OskitError ) {
+    case 0: Status = STATUS_SUCCESS; break;
+	/*case OAK_EADDRNOTAVAIL: */
+    case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
+    case OSK_ECONNREFUSED:
+    case OSK_ECONNRESET: Status = STATUS_REMOTE_NOT_LISTENING; break;
+    default: Status = STATUS_INVALID_CONNECTION; break;
+    }
+
+    TI_DbgPrint(MID_TRACE,("Error %d -> %x\n", OskitError, Status));
+    return Status;
+}
+
 NTSTATUS TCPConnect
 ( PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -139,13 +149,6 @@ NTSTATUS TCPConnect
 
     KeAcquireSpinLock(&Connection->Lock, &OldIrql);
     
-    TI_DbgPrint(MID_TRACE, ("AF: %08x\n", 
-			    Connection->AddressFile));
-    TI_DbgPrint(MID_TRACE, ("ADE: %08x\n", 
-			    Connection->AddressFile->ADE));
-    TI_DbgPrint(MID_TRACE, ("ADEA: %08x\n", 
-			    Connection->AddressFile->ADE->Address));
-
     PIP_ADDRESS RemoteAddress;
     USHORT RemotePort;
 
@@ -169,18 +172,35 @@ NTSTATUS TCPConnect
     AddressToConnect.sin_port = RemotePort;
     KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
-    Status = OskitTCPConnect(Connection->SocketContext,
-			     Connection,
-			     &AddressToConnect, 
-			     sizeof(AddressToConnect));
+    return TCPTranslateError( OskitTCPConnect(Connection->SocketContext,
+					      Connection,
+					      &AddressToConnect, 
+					      sizeof(AddressToConnect)) );
+}
 
-    if( Status == 0 ) return STATUS_PENDING; else return Status;
+NTSTATUS TCPClose
+( PTDI_REQUEST Request ) {
+    PCONNECTION_ENDPOINT Connection;
+
+    Connection = Request->Handle.ConnectionContext;
+    
+    return TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
 }
 
 NTSTATUS TCPListen
 ( PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PTDI_CONNECTION_INFORMATION ReturnInfo ) {
+  UINT Backlog ) {
+    PCONNECTION_ENDPOINT Connection;
+
+    Connection = Request->Handle.ConnectionContext;
+
+    return TCPTranslateError( OskitTCPListen( Connection->SocketContext,
+					      Backlog ) );
+}
+
+NTSTATUS TCPAccept
+( PTDI_REQUEST Request,
+  VOID **NewSocketContext ) {
 }
 
 NTSTATUS TCPReceiveData
@@ -189,6 +209,21 @@ NTSTATUS TCPReceiveData
   ULONG ReceiveLength,
   ULONG ReceiveFlags,
   PULONG BytesReceived ) {
+    PCONNECTION_ENDPOINT Connection;
+    PCHAR DataBuffer;
+    UINT DataLen, Received = 0;
+
+    Connection = Request->Handle.ConnectionContext;
+
+    NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
+
+    return TCPTranslateError
+	( OskitTCPRecv
+	  ( Connection->SocketContext,
+	    DataBuffer,
+	    DataLen,
+	    &Received,
+	    ReceiveFlags ) );    
 }
 
 NTSTATUS TCPSendData
@@ -204,15 +239,13 @@ NTSTATUS TCPSendData
     NdisQueryBuffer( Buffer, &BufferData, &PacketSize );
     
     Connection = Request->Handle.ConnectionContext;
-    /* XXX flags */
-    error = OskitTCPSend( Connection->SocketContext, 
+    return  OskitTCPSend( Connection->SocketContext, 
 			  BufferData, PacketSize, 0 );
-    if( error ) return STATUS_UNSUCCESSFUL;
-    else return STATUS_SUCCESS;
 }
 
 NTSTATUS TCPTimeout(VOID) { 
-    TimerOskitTCP();
+    static int Times = 0;
+    if( (Times++ % 100) == 0 ) TimerOskitTCP();
 }
 
 /* EOF */

@@ -73,7 +73,6 @@ typedef struct TCPv4_PSEUDO_HEADER {
 #define SRF_SYN   TCP_SYN
 #define SRF_FIN   TCP_FIN
 
-
 PTCP_SEGMENT TCPCreateSegment(
   PIP_PACKET IPPacket,
   PTCPv4_HEADER TCPHeader,
@@ -94,8 +93,7 @@ NTSTATUS TCPConnect(
 
 NTSTATUS TCPListen(
   PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PTDI_CONNECTION_INFORMATION ReturnInfo);
+  UINT Backlog );
 
 NTSTATUS TCPReceiveData(
   PTDI_REQUEST Request,

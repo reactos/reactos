@@ -15,8 +15,8 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MIN_TRACE;
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
+//DWORD DebugTraceLevel = MIN_TRACE;
+DWORD DebugTraceLevel = DEBUG_ULTRA;
 
 #endif /* DBG */
 
@@ -566,27 +566,29 @@ WSPAccept(
   Request.lpfnCondition = lpfnCondition;
   Request.dwCallbackData = dwCallbackData;
 
+  
+
   Status = NtDeviceIoControlFile(
-    (HANDLE)s,
-    NULL,
-		NULL,
-		NULL,
-		&Iosb,
-		IOCTL_AFD_ACCEPT,
-		&Request,
-		sizeof(FILE_REQUEST_ACCEPT),
-		&Reply,
-		sizeof(FILE_REPLY_ACCEPT));
+      (HANDLE)s,
+      NULL,
+      NULL,
+      NULL,
+      &Iosb,
+      IOCTL_AFD_ACCEPT,
+      &Request,
+      sizeof(FILE_REQUEST_ACCEPT),
+      &Reply,
+      sizeof(FILE_REPLY_ACCEPT));
   if (Status == STATUS_PENDING) {
-    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
-    /* FIXME: Wait only for blocking sockets */
-		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
+      AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+      /* FIXME: Wait only for blocking sockets */
+      Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
   }
 
   if (!NT_SUCCESS(Status)) {
 	  *lpErrno = Reply.Status;
-    return INVALID_SOCKET;
-	}
+	  return INVALID_SOCKET;
+  }
 
   *addrlen = Reply.addrlen;
 

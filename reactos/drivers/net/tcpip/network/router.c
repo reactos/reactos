@@ -150,8 +150,8 @@ UINT CommonPrefixLength(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address1 (0x%X)  Address2 (0x%X).\n", Address1, Address2));
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Target  (%s) \n", A2S(Address1)));
-    TI_DbgPrint(DEBUG_ROUTER, ("Adapter (%s).\n", A2S(Address2)));
+    /*TI_DbgPrint(DEBUG_ROUTER, ("Target  (%s) \n", A2S(Address1)));*/
+    /*TI_DbgPrint(DEBUG_ROUTER, ("Adapter (%s).\n", A2S(Address2)));*/
 
     if (Address1->Type == IP_ADDRESS_V4)
         Size = sizeof(IPv4_RAW_ADDRESS);
@@ -162,26 +162,13 @@ UINT CommonPrefixLength(
     Addr2 = (PUCHAR)&Address2->Address.IPv4Address;
 
     /* Find first non-matching byte */
-    for (i = 0; i < Size; i++) {
-	TI_DbgPrint(DEBUG_ROUTER, ("Comparing octet %d to %d\n", 
-				   Addr1[i], Addr2[i]));
-        if (Addr1[i] != Addr2[i])
-            break;
-    }
-
+    for (i = 0; i < Size && Addr1[i] == Addr2[i]; i++);
     if( i == Size ) return 8 * i;
 
     /* Find first non-matching bit */
     Bitmask = 0x80;
-    for (j = 0; ; j++) {
-	TI_DbgPrint(DEBUG_ROUTER, ("(%d) Mask: %x, v1: %x, v2: %x\n",
-				   i, Bitmask, Addr1[i], Addr2[i]));
-        if ((Addr1[i] & Bitmask) != (Addr2[i] & Bitmask))
-            break;
+    for (j = 0; (Addr1[i] & Bitmask) != (Addr2[i] & Bitmask); j++)
         Bitmask >>= 1;
-    }
-
-    TI_DbgPrint(DEBUG_ROUTER, ("They share %d bits\n", 8 * i + j));
 
     return 8 * i + j;
 }
@@ -208,8 +195,10 @@ BOOLEAN HasPrefix(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)  Prefix (0x%X)  Length (%d).\n", Address, Prefix, Length));
 
+#if 0
     TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)  Prefix (%s).\n",
         A2S(Address), A2S(Prefix)));
+#endif
 
     /* Check that initial integral bytes match */
     while (Length > 8) {

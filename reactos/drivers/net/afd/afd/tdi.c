@@ -434,10 +434,12 @@ NTSTATUS TdiListen(
   PDEVICE_OBJECT DeviceObject;
   NTSTATUS Status;
   PIRP Irp;
+  PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  PAFDFCB FCB = IrpSp->FileObject->FsContext;
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  ConnectionObject = ListenRequest->Fcb->TdiConnectionObject;
+  ConnectionObject = FCB->TdiConnectionObject;
   assert(ConnectionObject);
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
@@ -465,10 +467,14 @@ NTSTATUS TdiListen(
                  CompletionRoutine,      /* Completion routine */
                  CompletionContext,      /* Completion routine context */
                  0,                      /* Flags */
-                 ListenRequest->RequestConnectionInfo,  /* Request connection information */
-                 NULL /* ReturnConnectionInfo */);  /* Return connection information */
+                 ListenRequest->RequestConnectionInfo,  
+		 /* Request connection information */
+                 NULL /* ReturnConnectionInfo */);  
+  /* Return connection information */
 
-  Status = TdiCall(Irp, DeviceObject, NULL /* Don't wait for completion */, &ListenRequest->Iosb);
+  Status = TdiCall(Irp, DeviceObject, NULL 
+		   /* Don't wait for completion */, 
+		   &ListenRequest->Iosb);
 
   return Status;
 }

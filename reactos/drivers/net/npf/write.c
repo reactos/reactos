@@ -253,7 +253,7 @@ NPF_BufferedWrite(
 		}
 		
 		// Step to the next packet in the buffer
-		(PCHAR)winpcap_hdr += winpcap_hdr->caplen + sizeof(struct sf_pkthdr);
+		winpcap_hdr = (struct sf_pkthdr *)((PCHAR)winpcap_hdr + winpcap_hdr->caplen + sizeof(struct sf_pkthdr));
 		
 		// Check if the end of the user buffer has been reached
 		if( (PCHAR)winpcap_hdr >= EndOfUserBuff )
@@ -296,7 +296,7 @@ NPF_BufferedWrite(
 
 //-------------------------------------------------------------------
 
-VOID
+VOID STDCALL
 NPF_SendComplete(
 				   IN NDIS_HANDLE   ProtocolBindingContext,
 				   IN PNDIS_PACKET  pPacket,

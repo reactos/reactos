@@ -284,7 +284,7 @@ VOID UDPReceive(
   DataSize = i - sizeof(UDP_HEADER);
 
   /* Go to UDP data area */
-  (ULONG_PTR)IPPacket->Data += sizeof(UDP_HEADER);
+  IPPacket->Data = (PVOID)((ULONG_PTR)IPPacket->Data + sizeof(UDP_HEADER));
 
   /* Locate a receive request on destination address file object
      and deliver the packet if one is found. If there is no receive

@@ -39,8 +39,8 @@ __inline ULONG SkipToOffset(
         NdisQueryBuffer(Buffer, (PVOID)Data, Size);
 
         if (Offset < *Size) {
-            ((ULONG_PTR)*Data) += Offset;
-            *Size              -= Offset;
+            *Data  = (PUCHAR) ((ULONG_PTR) *Data + Offset);
+            *Size -= Offset;
             break;
         }
 
@@ -86,8 +86,8 @@ UINT CopyBufferToBufferChain(
         BytesToCopy = MIN(DstSize, Length);
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
-        BytesCopied        += BytesToCopy;
-        (ULONG_PTR)SrcData += BytesToCopy;
+        BytesCopied += BytesToCopy;
+        SrcData      = (PUCHAR) ((ULONG_PTR) SrcData + BytesToCopy);
 
         Length -= BytesToCopy;
         if (Length == 0)
@@ -145,8 +145,8 @@ UINT CopyBufferChainToBuffer(
         NDIS_DbgPrint(MAX_TRACE, ("Copying (%d) bytes from 0x%X to 0x%X\n", BytesToCopy, SrcData, DstData));
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
-        BytesCopied        += BytesToCopy;
-        (ULONG_PTR)DstData += BytesToCopy;
+        BytesCopied += BytesToCopy;
+        DstData      = (PUCHAR)((ULONG_PTR) DstData + BytesToCopy);
 
         Length -= BytesToCopy;
         if (Length == 0)
@@ -354,6 +354,7 @@ NdisAllocateBuffer(
         "VirtualAddress (0x%X)  Length (%d)\n",
         Status, Buffer, PoolHandle, VirtualAddress, Length));
 
+#if 0
     Temp = Pool->FreeList;
     while( Temp ) {
 	NDIS_DbgPrint(MID_TRACE,("Free buffer -> %x\n", Temp));
@@ -361,6 +362,7 @@ NdisAllocateBuffer(
     }
     
     NDIS_DbgPrint(MID_TRACE,("|:. <- End free buffers"));
+#endif
 
     if(!VirtualAddress && !Length) return;
 
@@ -440,10 +442,12 @@ NdisAllocateBufferPool(
 
         if (NumberOfDescriptors > 0) {
             Buffer             = &Pool->Buffers[0];
+	    DbgPrint("NDIS BUFFER ADDRESS << %x >>\n", Buffer);
             Pool->FreeList     = Buffer;
             for (i = 1; i < NumberOfDescriptors; i++) {
                 Buffer->Next = &Pool->Buffers[i];
                 Buffer       = Buffer->Next;
+		DbgPrint("NDIS BUFFER ADDRESS << %x >>\n", Buffer);
             }
             Buffer->Next = NULL;
         } else

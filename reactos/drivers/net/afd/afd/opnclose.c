@@ -23,17 +23,18 @@ PAFDFCB AfdInitializeFCB(
     return NULL;
 
   RtlZeroMemory(NewFCB, sizeof(AFDFCB));
-
-	ExInitializeResourceLite(&NewFCB->NTRequiredFCB.MainResource);
-	ExInitializeResourceLite(&NewFCB->NTRequiredFCB.PagingIoResource);
-
-	NewFCB->DeviceExt       = DeviceExt;
-	NewFCB->ReferenceCount  = 1;
-	NewFCB->OpenHandleCount = 1;
-
+  
+  ExInitializeResourceLite(&NewFCB->NTRequiredFCB.MainResource);
+  ExInitializeResourceLite(&NewFCB->NTRequiredFCB.PagingIoResource);
+  
+  NewFCB->DeviceExt       = DeviceExt;
+  NewFCB->ReferenceCount  = 1;
+  NewFCB->OpenHandleCount = 1;
+  
   NewFCB->TdiAddressObjectHandle    = INVALID_HANDLE_VALUE;
   NewFCB->TdiConnectionObjectHandle = INVALID_HANDLE_VALUE;
 
+  InitializeListHead(&NewFCB->WorkQueue);
   InitializeListHead(&NewFCB->CCBListHead);
 
   InsertTailList(&DeviceExt->FCBListHead, &NewFCB->ListEntry);
@@ -41,17 +42,9 @@ PAFDFCB AfdInitializeFCB(
   InitializeListHead(&NewFCB->ReceiveQueue);
   KeInitializeSpinLock(&NewFCB->ReceiveQueueLock);
 
-  InitializeListHead(&NewFCB->ReadRequestQueue);
-  KeInitializeSpinLock(&NewFCB->ReadRequestQueueLock);
-
-  InitializeListHead(&NewFCB->ListenRequestQueue);
-
-  InitializeListHead(&NewFCB->ConnectRequestQueue);
-  KeInitializeSpinLock(&NewFCB->ConnectRequestQueueLock);
-
-	if (FileObject)
-		FileObject->FsContext = (PVOID)NewFCB;
-
+  if (FileObject)
+      FileObject->FsContext = (PVOID)NewFCB;
+  
   AFD_DbgPrint(MAX_TRACE, ("FCB created for file object (0x%X) at (0x%X).\n", FileObject, NewFCB));
 
   return NewFCB;
@@ -200,18 +193,6 @@ AfdCreate(
     return Status;
 }
 
-
-VOID
-AfdKillListenRequests(PAFDFCB FCB)
-{
-  /* FIXME: Implement */
-  AFD_DbgPrint(MIN_TRACE, ("Unimplemented.\n"));
-
-  /*ExFreeToNPagedLookasideList(&ListenRequestLookasideList,
-		(PVOID)ListenRequest);*/
-}
-
-
 NTSTATUS
 STDCALL
 AfdClose(
@@ -238,8 +219,7 @@ AfdClose(
         FCB->ReferenceCount--;
         if (FCB->ReferenceCount < 1) {
             if (!FCB->CommandChannel) {
-                /* Kill outstanding listen requests */
-                AfdKillListenRequests(FCB);
+		CancelWork(FCB);
 
                 /* Close TDI connection file object */
                 if (FCB->TdiConnectionObjectHandle != INVALID_HANDLE_VALUE) {

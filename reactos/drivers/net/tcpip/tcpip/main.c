@@ -20,9 +20,13 @@
 #include <info.h>
 #include <memtrack.h>
 
-#ifdef DBG
+#define NDEBUG
+
+#ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
-#endif /* DBG */
+#else
+DWORD DebugTraceLevel = MIN_TRACE;
+#endif /* NDEBUG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
 PDEVICE_OBJECT UDPDeviceObject   = NULL;
@@ -454,18 +458,9 @@ TiDispatchOpenClose(
     Status = STATUS_INVALID_DEVICE_REQUEST;
   }
 
-  if (Status != STATUS_PENDING) {
-    IrpSp->Control &= ~SL_PENDING_RETURNED;
-    Irp->IoStatus.Status = Status;
-
-    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
-
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-  }
-
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
-  return Status;
+  return IRPFinish( Irp, Status );
 }
 
 
@@ -485,7 +480,7 @@ TiDispatchInternal(
  *     Status of the operation
  */
 {
-	NTSTATUS Status;
+  NTSTATUS Status;
   PIO_STACK_LOCATION IrpSp;
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -558,17 +553,9 @@ TiDispatchInternal(
     Status = STATUS_INVALID_DEVICE_REQUEST;
   }
 
-  if (Status != STATUS_PENDING) {
-    Irp->IoStatus.Status = Status;
-
-    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
-
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-  }
-
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
-	return Status;
+  return IRPFinish( Irp, Status );
 }
 
 
@@ -625,17 +612,9 @@ TiDispatch(
     }
   }
 
-  if (Status != STATUS_PENDING) {
-    Irp->IoStatus.Status = Status;
-
-    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
-
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-  }
-
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
-  return Status;
+  return IRPFinish( Irp, Status );
 }
 
 
@@ -806,7 +785,7 @@ DriverEntry(
   }
 
   /* Allocate NDIS buffer descriptors */
-  NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 25);
+  NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 100);
   if (NdisStatus != NDIS_STATUS_SUCCESS) {
     TiUnload(DriverObject);
     return STATUS_INSUFFICIENT_RESOURCES;
