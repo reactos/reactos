@@ -127,38 +127,27 @@ NtIsProcessInJob(IN HANDLE ProcessHandle,
     
     if(ProcessJob != NULL)
     {
-      /* reference the object without caring about access rights as it does not necessarily
-         have to be accessible from the calling process */
-      Status = ObReferenceObjectByPointer(ProcessJob,
-                                          0,
-                                          PsJobType,
-                                          KernelMode);
-      if(NT_SUCCESS(Status))
+      if(JobHandle == NULL)
       {
-        if(JobHandle == NULL)
-        {
-          /* simply test whether the process is assigned to a job */
-          Status = ((ProcessJob != NULL) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
-        }
-        else /* JobHandle != NULL */
-        {
-          PEJOB JobObject;
+        /* the process is assigned to a job */
+        Status = STATUS_PROCESS_IN_JOB;
+      }
+      else /* JobHandle != NULL */
+      {
+        PEJOB JobObject;
 
-          /* get the job object and compare the object pointer with the one assigned to the process */
-          Status = ObReferenceObjectByHandle(JobHandle,
-                                             JOB_OBJECT_QUERY,
-                                             PsJobType,
-                                             PreviousMode,
-                                             (PVOID*)&JobObject,
-                                             NULL);
-          if(NT_SUCCESS(Status))
-          {
-            Status = ((ProcessJob == JobObject) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
-            ObDereferenceObject(JobObject);
-          }
+        /* get the job object and compare the object pointer with the one assigned to the process */
+        Status = ObReferenceObjectByHandle(JobHandle,
+                                           JOB_OBJECT_QUERY,
+                                           PsJobType,
+                                           PreviousMode,
+                                           (PVOID*)&JobObject,
+                                           NULL);
+        if(NT_SUCCESS(Status))
+        {
+          Status = ((ProcessJob == JobObject) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
+          ObDereferenceObject(JobObject);
         }
-
-        ObDereferenceObject(ProcessJob);
       }
     }
     else
