@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.99 2003/10/17 20:31:56 weiden Exp $
+/* $Id: defwnd.c,v 1.100 2003/10/19 19:51:48 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -709,6 +709,9 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
       rect.top += MenuDrawMenuBar(hDC, &r, hWnd, FALSE);
       DbgPrint("3. rect.top == %d\n", rect.top);
     }
+
+  if (ExStyle & WS_EX_CLIENTEDGE)
+    DrawEdge(hDC, &rect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
 
   /*  Draw scrollbars */
   if((Style & WS_VSCROLL) && (clientrect.right < rect.right - (2 * FrameSize.cx)))
@@ -1968,21 +1971,15 @@ User32DefWindowProc(HWND hWnd,
                 if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
                     (hIcon = (HICON)GetClassLongW(hWnd, GCL_HICON)) != NULL)
                 {
-                    RECT WindowRect;
+                    RECT ClientRect;
                     INT x, y;
-                    GetWindowRect(hWnd, &WindowRect);
-                    x = (WindowRect.right - WindowRect.left -
+                    GetClientRect(hWnd, &ClientRect);
+                    x = (ClientRect.right - ClientRect.left -
                          GetSystemMetrics(SM_CXICON)) / 2;
-                    y = (WindowRect.bottom - WindowRect.top -
+                    y = (ClientRect.bottom - ClientRect.top -
                          GetSystemMetrics(SM_CYICON)) / 2;
                     DrawIcon(hDC, x, y, hIcon);
                 } 
-                if (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_CLIENTEDGE)
-                {
-                    RECT WindowRect;
-                    GetClientRect(hWnd, &WindowRect);
-                    DrawEdge(hDC, &WindowRect, EDGE_SUNKEN, BF_RECT);
-                }
                 EndPaint(hWnd, &Ps);
             }
             return (0);
@@ -2076,11 +2073,16 @@ User32DefWindowProc(HWND hWnd,
             {
                 return 0;
             }
-            if (0 == (((DWORD) hBrush) & 0xffff0000))
+            if (GetClassLongW(hWnd, GCL_STYLE) & CS_PARENTDC)
             {
-                hBrush = GetSysColorBrush((DWORD) hBrush - 1);
+                /* can't use GetClipBox with a parent DC or we fill the whole parent */
+                GetClientRect(hWnd, &Rect);
+                DPtoLP((HDC)wParam, (LPPOINT)&Rect, 2);
             }
-            GetClipBox((HDC)wParam, &Rect);
+            else
+            {
+                GetClipBox((HDC)wParam, &Rect);
+            }
             FillRect((HDC)wParam, &Rect, hBrush);
             return (1);
         }

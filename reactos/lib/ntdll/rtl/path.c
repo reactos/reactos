@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.23 2003/10/19 16:17:50 navaraf Exp $
+/* $Id: path.c,v 1.24 2003/10/19 19:51:48 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -711,6 +711,7 @@ CHECKPOINT;
 		/* find file part */
 		if (FilePart)
 		{
+#if 0
 			*FilePart = wcsrchr(buf, L'\\');
 			if (*FilePart)
 			{
@@ -720,6 +721,13 @@ CHECKPOINT;
 			{
 			    *FilePart = buf;
 			}
+#else
+			*FilePart = buf + len;
+			while (*FilePart != buf && **FilePart != L'\\')
+                            --(*FilePart);
+                        if (**FilePart == L'\\')
+                            ++(*FilePart);
+#endif
 		}
         }
 

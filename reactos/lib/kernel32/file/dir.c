@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.38 2003/10/19 16:17:50 navaraf Exp $
+/* $Id: dir.c,v 1.39 2003/10/19 19:51:48 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -339,6 +339,7 @@ GetFullPathNameA (
 	UNICODE_STRING nameW;
 	WCHAR bufferW[MAX_PATH];
 	DWORD ret, retW;
+	LPWSTR FilePart = NULL;
 
 	DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
 	       "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
@@ -355,7 +356,12 @@ GetFullPathNameA (
 		return 0;
 	}
 
-	retW = GetFullPathNameW(nameW.Buffer, MAX_PATH, bufferW, NULL);
+	if (lpFilePart)
+	{
+		*lpFilePart = NULL;
+	}
+
+	retW = GetFullPathNameW(nameW.Buffer, MAX_PATH, bufferW, &FilePart);
 
 	if (!retW)
 	{
@@ -368,25 +374,22 @@ GetFullPathNameA (
 	}
 	else
 	{
-		ret = WideCharToMultiByte(CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL);
-		if (ret <= nBufferLength)
+	        ANSI_STRING AnsiBuffer;
+	        UNICODE_STRING UnicodeBuffer;
+
+		UnicodeBuffer.Length = wcslen(bufferW) * sizeof(WCHAR);
+		ret = nameW.Length;
+		if (nameW.Length <= nBufferLength)
 		{
-			WideCharToMultiByte(CP_ACP, 0, bufferW, -1, lpBuffer, nBufferLength, NULL, NULL);
-			ret--; /* length without 0 */
+			UnicodeBuffer.Buffer = bufferW;
+			AnsiBuffer.MaximumLength = nBufferLength;
+			AnsiBuffer.Length = 0;
+			AnsiBuffer.Buffer = lpBuffer;
+			RtlUnicodeStringToAnsiString(&AnsiBuffer, &UnicodeBuffer, FALSE);
 
-			if (lpFilePart)
+			if (lpFilePart && FilePart != NULL)
 			{
-				LPSTR p = lpBuffer + strlen(lpBuffer);
-
-				if (*p != '\\')
-				{
-					while ((p > lpBuffer + 2) && (*p != '\\')) p--;
-					*lpFilePart = p + 1;
-				}
-				else
-				{
-					*lpFilePart = NULL;
-				}
+				*lpFilePart = (FilePart - bufferW) + lpBuffer;
 			}
 		}
 	}
@@ -394,7 +397,7 @@ GetFullPathNameA (
 	RtlFreeUnicodeString(&nameW);
 
 	DPRINT("lpBuffer %s lpFilePart %s Length %ld\n",
-	       lpBuffer, lpFilePart, nameW.Length);
+	       lpBuffer, (lpFilePart == NULL) ? "NULL" : *lpFilePart, nameW.Length);
 
 	return ret;
 }
@@ -423,7 +426,7 @@ GetFullPathNameW (
 	                               lpFilePart);
 
 	DPRINT("lpBuffer %S lpFilePart %S Length %ld\n",
-	       lpBuffer, lpFilePart, Length / sizeof(WCHAR));
+	       lpBuffer, (lpFilePart == NULL) ? L"NULL" : *lpFilePart, Length / sizeof(WCHAR));
 
 	return (Length / sizeof(WCHAR));
 }

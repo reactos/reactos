@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.38 2003/10/12 09:46:51 gvg Exp $
+/* $Id: winsta.c,v 1.39 2003/10/19 19:51:48 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,6 +47,7 @@
 #include <include/error.h>
 #include <include/mouse.h>
 #include <include/callback.h>
+#include <include/color.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -898,9 +899,28 @@ NtUserOpenInputDesktop(
 BOOL STDCALL
 NtUserPaintDesktop(HDC hDC)
 {
-  UNIMPLEMENTED
+   HWND hwnd = IntGetDesktopWindow();
 
-  return FALSE;
+   /*
+    * Check for an owning thread, otherwise don't paint anything
+    * (non-desktop mode)
+    */
+   if (NtUserGetWindowThreadProcessId(hwnd, NULL))
+   {
+      RECT Rect;
+      HBRUSH PreviousBrush;
+
+      NtUserGetClientRect(hwnd, &Rect);
+
+      /*
+       * Paint desktop background
+       */
+      PreviousBrush = NtGdiSelectObject(hDC, NtGdiGetSysColorBrush(COLOR_BACKGROUND));
+      NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+      NtGdiSelectObject(hDC, PreviousBrush);
+   }
+
+   return TRUE;
 }
 
 DWORD STDCALL

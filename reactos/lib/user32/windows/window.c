@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.73 2003/09/20 19:52:23 gvg Exp $
+/* $Id: window.c,v 1.74 2003/10/19 19:51:48 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -392,8 +392,12 @@ ArrangeIconicWindows(HWND hWnd)
 HDWP STDCALL
 BeginDeferWindowPos(int nNumWindows)
 {
+#if 0
   UNIMPLEMENTED;
   return (HDWP)0;
+#else
+  return (HDWP)1;
+#endif
 }
 
 
@@ -737,7 +741,12 @@ DeferWindowPos(HDWP hWinPosInfo,
 	       int cy,
 	       UINT uFlags)
 {
+#if 0
   return NtUserDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+#else
+  SetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+  return hWinPosInfo;
+#endif
 }
 
 
@@ -757,8 +766,12 @@ DestroyWindow(HWND hWnd)
 WINBOOL STDCALL
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
+#if 0
   UNIMPLEMENTED;
   return FALSE;
+#else
+  return TRUE;
+#endif
 }
 
 
