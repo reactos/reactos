@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.38 2004/12/23 18:02:12 gvg Exp $
+/* $Id: process.c,v 1.39 2004/12/25 22:58:59 gvg Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -260,8 +260,6 @@ CSR_API(CsrCreateProcess)
 
 CSR_API(CsrTerminateProcess)
 {
-   NTSTATUS Status;
-
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
 
@@ -271,7 +269,7 @@ CSR_API(CsrTerminateProcess)
    }
 
    Reply->Status = STATUS_SUCCESS;
-   return Status;
+   return STATUS_SUCCESS;
 }
 
 CSR_API(CsrConnectProcess)
