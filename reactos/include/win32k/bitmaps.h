@@ -3,7 +3,43 @@
 #define __WIN32K_BITMAPS_H
 
 #include <win32k/dc.h>
+#include <win32k/gdiobj.h>
 
+typedef struct _DDBITMAP
+{
+  const PDRIVER_FUNCTIONS  pDriverFunctions;
+//  DHPDEV  PDev;
+//  HSURF  Surface;
+} DDBITMAP;
+
+/* GDI logical bitmap object */
+typedef struct _BITMAPOBJ
+{
+  GDIOBJHDR   header;
+  BITMAP      bitmap;
+  SIZE        size;   /* For SetBitmapDimension() */
+  
+  DDBITMAP   *DDBitmap;
+
+  /* For device-independent bitmaps: */
+  DIBSECTION *dib;
+} BITMAPOBJ, *PBITMAPOBJ;
+
+/*  Internal interface  */
+
+#define  BITMAPOBJ_AllocBitmap()  \
+  ((PBITMAPOBJ) GDIOBJ_AllocObject(sizeof(BITMAPOBJ), GO_BITMAP_MAGIC))
+#define  BITMAPOBJ_FreeBitmap(hBMObj)  GDIOBJ_FreeObject((HGDIOBJ)hBMObj)
+#define  BITMAPOBJ_HandleToPtr(hBMObj)  \
+  ((PBITMAPOBJ) GDIOBJ_HandleToPtr((HGDIOBJ)hBMObj, GO_BITMAP_MAGIC))
+#define  BITMAPOBJ_PtrToHandle(hBMObj)  \
+  ((HBITMAP) GDIOBJ_HandleToPtr((PGDIOBJ)hBMObj, GO_BITMAP_MAGIC))
+#define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObject((HGDIOBJ)hBMObj)
+#define  BITMAPOBJ_UnlockBitmap(hBMObj) GDIOBJ_UnlockObject((HGDIOBJ)hBMObj)
+
+INT  BITMAP_GetWidthBytes (INT bmWidth, INT bpp);
+
+/*  User Entry Points  */
 BOOL  W32kBitBlt(HDC  hDCDest,
                  INT  XDest,
                  INT  YDest,

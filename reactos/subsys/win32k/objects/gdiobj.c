@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.2 1999/09/10 21:17:07 rex Exp $
+ * $Id: gdiobj.c,v 1.3 1999/10/29 01:58:20 rex Exp $
  *
  */
 
@@ -27,5 +27,38 @@ PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic)
 #endif
   
   return  NewObj;
+}
+
+HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic)
+{
+  if (((PGDIOBJHDR)Obj)->wMagic != Magic)
+    {
+      return  0;
+    }
+  
+  return  (HGDIOBJ) Obj;
+}
+
+PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ Obj, WORD Magic)
+{
+  /*  FIXME: Lock object for duration  */
+  if (((PGDIOBJHDR)Obj)->wMagic != Magic)
+    {
+      return  0;
+    }
+
+  return  (PGDIOBJ) Obj;
+}
+
+BOOL  GDIOBJ_LockObject (HGDIOBJ Obj)
+{
+  /* FIXME: write this  */
+  return  TRUE;
+}
+
+BOOL  GDIOBJ_UnlockObject (HGDIOBJ Obj)
+{
+  /* FIXME: write this  */
+  return  TRUE;
 }
 

@@ -841,36 +841,6 @@ void  DC_FreeDC(PDC  DCToFree)
   ExFreePool(DCToFree);
 }
 
-HDC  DC_PtrToHandle(PDC  pDC)
-{
-  /* FIXME: this should actually return a handle obtained from the pointer  */
-  return (HDC) pDC;
-}
-
-
-PDC  DC_HandleToPtr(HDC  hDC)
-{
-  /* FIXME: this should actually return a pointer obtained from the handle  */
-  if (((PDC)hDC)->header.wMagic != GO_DC_MAGIC)
-    {
-      return  0;
-    }
-  
-  return (PDC) hDC;
-}
-
-BOOL DC_LockDC(HDC  hDC)
-{
-  /* FIXME */
-  return  TRUE;
-}
-
-BOOL DC_UnlockDC(HDC  hDC)
-{
-  /* FIXME */
-  return  TRUE;
-}
-
 void 
 DC_UpdateXforms(PDC  dc)
 {
