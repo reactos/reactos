@@ -400,7 +400,7 @@ PsInitProcessManagment(VOID)
 				FALSE);
    PsIdleProcess->Pcb.DirectoryTableBase =
      (LARGE_INTEGER)(LONGLONG)(ULONG)MmGetPageDirectory();
-   strcpy(PsInitialSystemProcess->ImageFileName, "Idle");
+   strcpy(PsIdleProcess->ImageFileName, "Idle");
 
    /*
     * Initialize the system process
