@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.59.4.1 2004/07/07 18:03:01 weiden Exp $
+/* $Id: class.c,v 1.59.4.2 2004/07/12 19:54:46 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,10 +48,9 @@ CleanupClassImpl(VOID)
 }
 
 BOOL FASTCALL
-ClassReferenceClassByAtom(
-   PCLASS_OBJECT* Class,
-   RTL_ATOM Atom,
-   HINSTANCE hInstance)
+IntReferenceClassByAtom(PCLASS_OBJECT* Class,
+                        RTL_ATOM Atom,
+                        HINSTANCE hInstance)
 {
    PCLASS_OBJECT Current, BestMatch = NULL;
    PLIST_ENTRY CurrentEntry;
@@ -65,7 +64,7 @@ ClassReferenceClassByAtom(
       if (Current->Atom == Atom && (hInstance == NULL || Current->hInstance == hInstance))
       {
          *Class = Current;
-         ObmReferenceObject(Current);
+         ClassReferenceObject(Current);
          return TRUE;
       }
 
@@ -78,7 +77,7 @@ ClassReferenceClassByAtom(
    if (BestMatch != NULL)
    {
       *Class = BestMatch;
-      ObmReferenceObject(BestMatch);
+      ClassReferenceObject(BestMatch);
       return TRUE;
    }
   
@@ -86,101 +85,92 @@ ClassReferenceClassByAtom(
 }
 
 BOOL FASTCALL
-ClassReferenceClassByName(
-   PCLASS_OBJECT *Class,
-   LPCWSTR ClassName,
-   HINSTANCE hInstance)
+IntReferenceClassByName(PCLASS_OBJECT *Class,
+                        PUNICODE_STRING ClassName,
+                        HINSTANCE hInstance)
 {
-   PWINSTATION_OBJECT WinStaObject;
-   NTSTATUS Status;
-   BOOL Found;
    RTL_ATOM ClassAtom;
+   NTSTATUS Status;
+   PWINSTATION_OBJECT WinStaObject = PsGetWin32Process()->WindowStation;
 
-   if (!ClassName)
+   if (!ClassName || !WinStaObject)
       return FALSE;
-
-   Status = IntValidateWindowStationHandle(
-      PROCESS_WINDOW_STATION(),
-      KernelMode,
-      0,
-      &WinStaObject);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
-	     PROCESS_WINDOW_STATION());
-      return FALSE;
-   }
 
    Status = RtlLookupAtomInAtomTable(
       WinStaObject->AtomTable,
-      (LPWSTR)ClassName,
+      (LPWSTR)ClassName->Buffer,
       &ClassAtom);
 
    if (!NT_SUCCESS(Status))
    {
-      ObDereferenceObject(WinStaObject);  
       return FALSE;
    }
 
-   Found = ClassReferenceClassByAtom(Class, ClassAtom, hInstance);
-   ObDereferenceObject(WinStaObject);  
-
-   return Found;
+   return IntReferenceClassByAtom(Class, ClassAtom, hInstance);
 }
 
 BOOL FASTCALL
-ClassReferenceClassByNameOrAtom(PCLASS_OBJECT *Class, LPCWSTR ClassNameOrAtom, HINSTANCE hInstance)
+IntReferenceClassByNameOrAtom(PCLASS_OBJECT *Class,
+                              PUNICODE_STRING ClassNameOrAtom,
+			      HINSTANCE hInstance)
 {
-   BOOL Found;
-
-   if (IS_ATOM(ClassNameOrAtom))
-      Found = ClassReferenceClassByAtom(Class, (RTL_ATOM)((ULONG_PTR)ClassNameOrAtom), hInstance);
-   else
-      Found = ClassReferenceClassByName(Class, ClassNameOrAtom, hInstance);
-
-   return Found;
+   if (IS_ATOM(ClassNameOrAtom->Buffer))
+      return IntReferenceClassByAtom(Class, (RTL_ATOM)((ULONG_PTR)ClassNameOrAtom->Buffer), hInstance);
+   
+   return IntReferenceClassByName(Class, ClassNameOrAtom, hInstance);
 }
 
-ULONG FASTCALL
-IntGetClassName(PWINDOW_OBJECT WindowObject, LPWSTR lpClassName, ULONG nMaxCount)
+BOOL FASTCALL
+IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STRING ClassName, ULONG nMaxCount)
 {
-   ULONG Length;
-   LPWSTR Name;
-   PWINSTATION_OBJECT WinStaObject;
-   NTSTATUS Status;
+  ULONG Length;
+  NTSTATUS Status;
+  PWINSTATION_OBJECT WinStaObject = PsGetWin32Process()->WindowStation;
 
-   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-      KernelMode, 0, &WinStaObject);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
-         PROCESS_WINDOW_STATION());
-      return 0;
-   }
-   Length = 0;
-   Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
-      WindowObject->Class->Atom, NULL, NULL, NULL, &Length);
-   Name = ExAllocatePoolWithTag(PagedPool, Length + sizeof(UNICODE_NULL), TAG_STRING);
-   Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
-      WindowObject->Class->Atom, NULL, NULL, Name, &Length);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IntGetClassName: RtlQueryAtomInAtomTable failed\n");
-      return 0;
-   }
-   Length /= sizeof(WCHAR);
-   if (Length > nMaxCount)
-   {
-      Length = nMaxCount;
-   }
-   wcsncpy(lpClassName, Name, Length);
-   /* FIXME: Check buffer size before doing this! */
-   *(lpClassName + Length) = 0;
-   ExFreePool(Name);
-   ObDereferenceObject(WinStaObject);
-
-   return Length;
+  if (!WinStaObject)
+  {
+    return 0;
+  }
+  
+  ClassName->Length = 0;
+  Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
+                                   WindowObject->Class->Atom,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Length);
+  if(!NT_SUCCESS(Status))
+  {
+    return FALSE;
+  }
+  
+  ClassName->Length = (USHORT)Length;
+  ClassName->MaximumLength = ClassName->Length + sizeof(WCHAR);
+  ClassName->Buffer = ExAllocatePoolWithTag(PagedPool, ClassName->MaximumLength, TAG_STRING);
+  
+  if(!ClassName->Buffer)
+  {
+    DPRINT1("IntGetClassName: Not enough memory to allocate memory for the class name!\n");
+    return FALSE;
+  }
+  
+  Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
+                                   WindowObject->Class->Atom,
+                                   NULL,
+                                   NULL,
+                                   ClassName->Buffer,
+                                   &Length);
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("IntGetClassName: RtlQueryAtomInAtomTable failed\n");
+    RtlFreeUnicodeString(ClassName);
+    return FALSE;
+  }
+  
+  ClassName->Length = (USHORT)Length;
+  ClassName->Buffer[Length / sizeof(WCHAR)] = L'\0';
+  
+  return TRUE;
 }
 
 PCLASS_OBJECT FASTCALL
@@ -200,7 +190,7 @@ IntCreateClass(
 	/* Check for double registration of the class. */
 	if (PsGetWin32Process() != NULL)
 	{
-		if (ClassReferenceClassByAtom(&ClassObject, Atom, lpwcx->hInstance))
+		if (IntReferenceClassByAtom(&ClassObject, Atom, lpwcx->hInstance))
 		{
 			/*
 			 * NOTE: We may also get a global class from
@@ -301,9 +291,18 @@ IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_S
   WinStaObject = PsGetWin32Process()->WindowStation;
   if(WinStaObject == NULL)
   {
-    DPRINT1("Unable to register class process %d, window station is inaccessible\n", PsGetCurrentProcessId());
+    if(IS_ATOM(ClassName->Buffer))
+    {
+      DbgPrint("XUnable to register class 0x%x (process %d), window station is inaccessible\n", ClassName->Buffer, PsGetCurrentProcessId());
+    }
+    else
+    {
+      DbgPrint("XUnable to register class %wZ (process %d), window station is inaccessible\n", ClassName, PsGetCurrentProcessId());
+    }
     return NULL;
   }
+  
+  /* FIXME - check the rights of the thread's desktop if we're allowed to register a class? */
   
   if(ClassName->Length)
   {
@@ -315,7 +314,7 @@ IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_S
     {
       DPRINT("Failed adding class name (%wZ) to atom table\n", ClassName);
       SetLastNtError(Status);      
-      return((RTL_ATOM)0);
+      return NULL;
     }
   }
   else
@@ -333,6 +332,7 @@ IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRING ClassName, PUNICODE_S
     return NULL;
   }
   
+  /* FIXME - reference the window station? */
   InsertTailList(&PsGetWin32Process()->ClassListHead, &Ret->ListEntry);
   
   return Ret;

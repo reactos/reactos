@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.242.2.1 2004/07/07 18:03:01 weiden Exp $
+/* $Id: window.c,v 1.242.2.2 2004/07/12 19:54:47 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -732,12 +732,10 @@ IntCreateWindow(DWORD dwExStyle,
   #if 0
   BOOL MenuChanged;
   #endif
-  BOOL ClassFound;
-  PWSTR ClassNameString;
   
   ParentWindow = IntGetDesktopWindow();
   OwnerWindow = NULL;
-
+  
   /* Check the window station. */
   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 					  KernelMode,
@@ -745,12 +743,11 @@ IntCreateWindow(DWORD dwExStyle,
 					  &WinStaObject);
   if (!NT_SUCCESS(Status))
   {
-    ClassDereferenceObject(ClassObject);
     DPRINT("Validation of window station handle (0x%X) failed\n",
 	   PROCESS_WINDOW_STATION());
     return NULL;
   }
-
+  
   if (Parent)
   {
     if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
@@ -766,48 +763,31 @@ IntCreateWindow(DWORD dwExStyle,
   {
     return NULL;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
   }
-
-  /* Check the class. */
-  if (IS_ATOM(ClassName->Buffer))
-  {
-    ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, ClassName->Buffer, hInstance);
-  }
-  else
-  {
-    Status = IntUnicodeStringToNULLTerminated(&ClassNameString, ClassName);
-    if (! NT_SUCCESS(Status))
-    {
-      return NULL;
-    }
-    ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, ClassNameString, hInstance);
-    IntFreeNULLTerminatedFromUnicodeString(ClassNameString, ClassName);
-  }
   
-  if (!ClassFound)
+  /* Lookup and reference the class object */
+  if(!IntReferenceClassByNameOrAtom(&ClassObject, ClassName, hInstance))
   {
-    if (IS_ATOM(ClassName->Buffer))
-    {
-      DPRINT1("Class 0x%x not found\n", (DWORD_PTR) ClassName->Buffer);
-    }
-    else
-    {
-      DPRINT1("Class %wZ not found\n", ClassName);
-    }
-    
+    ObDereferenceObject(WinStaObject);
     return NULL;
   }
-
+  
   /* Create the window object. */
-  WindowObject = (PWINDOW_OBJECT)ObmCreateObject(PsGetWin32Process()->WindowStation->HandleTable, &Handle,
-                                                 otWINDOW, sizeof(WINDOW_OBJECT) + ClassObject->cbWndExtra);
+  WindowObject = (PWINDOW_OBJECT)ObmCreateObject(WinStaObject->HandleTable,
+                                                 &Handle,
+                                                 otWINDOW,
+                                                 sizeof(WINDOW_OBJECT) + ClassObject->cbWndExtra);
+  DbgPrint("ObmCreateObject returned 0x%x\n", WindowObject);
   if(WindowObject == NULL)
   {
+    DbgPrint("fail:1\n");
     ClassDereferenceObject(ClassObject);
+    DbgPrint("fail:2\n");
     ObDereferenceObject(WinStaObject);
+    DbgPrint("fail:3\n");
     SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
     return NULL;
   }
-  DPRINT("Created object with handle %X\n", Handle);
+  DPRINT1("Created object with handle %X on Desktop 0x%x\n", Handle, PsGetWin32Thread()->Desktop);
   
   /* If there is no desktop window yet, we must be creating it */
   InterlockedCompareExchange((LONG*)&PsGetWin32Thread()->Desktop->DesktopWindow, 0, (LONG)WindowObject);

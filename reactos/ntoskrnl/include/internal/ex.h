@@ -59,7 +59,7 @@ typedef struct _DESKTOP_OBJECT
   PVOID ActiveMessageQueue;
   /* Rectangle of the work area */
   LONG WorkArea[4];
-  /* Handle of the desktop window. */
+  /* Pointer to the desktop window. */
   PVOID DesktopWindow;
   PVOID PrevActiveWindow;
 #endif

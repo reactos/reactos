@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.6 2004/05/07 11:18:53 ekohl Exp $
+/* $Id: desktop.c,v 1.6.8.1 2004/07/12 19:54:46 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -150,6 +150,7 @@ AddDesktopItemW (BOOL bCommonDesktop,
 		 WORD wHotKey,
 		 INT iShowCmd)
 {
+  DYN_FUNCS Ole32;
   WCHAR szLinkPath[MAX_PATH];
   WCHAR szArguments[MAX_PATH];
   WCHAR szCommand[MAX_PATH];
@@ -216,16 +217,24 @@ AddDesktopItemW (BOOL bCommonDesktop,
   DPRINT ("szCommand: '%S'\n", szCommand);
   DPRINT ("szArguments: '%S'\n", szArguments);
 
-  CoInitialize(NULL);
+  /* dynamically load ole32.dll */
+  if(!LoadDynamicImports(&DynOle32, &Ole32))
+  {
+    DPRINT1("USERENV: Unable to load OLE32.DLL\n");
+    return FALSE;
+  }
 
-  hr = CoCreateInstance(&CLSID_ShellLink,
-                        NULL,
-                        CLSCTX_INPROC_SERVER,
-                        &IID_IShellLinkW,
-                       (LPVOID*)&psl);
+  Ole32.fn.CoInitialize(NULL);
+
+  hr = Ole32.fn.CoCreateInstance(&CLSID_ShellLink,
+                                 NULL,
+                                 CLSCTX_INPROC_SERVER,
+                                 &IID_IShellLinkW,
+                                 (LPVOID*)&psl);
   if (!SUCCEEDED(hr))
     {
-      CoUninitialize();
+      Ole32.fn.CoUninitialize();
+      UnloadDynamicImports(&Ole32);
       return FALSE;
     }
 
@@ -275,7 +284,9 @@ AddDesktopItemW (BOOL bCommonDesktop,
 
   psl->lpVtbl->Release(psl);
 
-  CoUninitialize();
+  Ole32.fn.CoUninitialize();
+  
+  UnloadDynamicImports(&Ole32);
 
   DPRINT ("AddDesktopItemW() done\n");
 
@@ -428,6 +439,7 @@ AddItemW (LPCWSTR lpGroupName,
 	  WORD wHotKey,
 	  INT iShowCmd)
 {
+  DYN_FUNCS Ole32;
   WCHAR szLinkPath[MAX_PATH];
   WCHAR szArguments[MAX_PATH];
   WCHAR szCommand[MAX_PATH];
@@ -499,16 +511,24 @@ AddItemW (LPCWSTR lpGroupName,
   DPRINT ("szCommand: '%S'\n", szCommand);
   DPRINT ("szArguments: '%S'\n", szArguments);
 
-  CoInitialize(NULL);
+  /* dynamically load ole32.dll */
+  if(!LoadDynamicImports(&DynOle32, &Ole32))
+  {
+    DPRINT1("USERENV: Unable to load OLE32.DLL\n");
+    return FALSE;
+  }
 
-  hr = CoCreateInstance(&CLSID_ShellLink,
-                        NULL,
-                        CLSCTX_INPROC_SERVER,
-                        &IID_IShellLinkW,
-                       (LPVOID*)&psl);
+  Ole32.fn.CoInitialize(NULL);
+
+  hr = Ole32.fn.CoCreateInstance(&CLSID_ShellLink,
+                                 NULL,
+                                 CLSCTX_INPROC_SERVER,
+                                 &IID_IShellLinkW,
+                                 (LPVOID*)&psl);
   if (!SUCCEEDED(hr))
     {
-      CoUninitialize();
+      Ole32.fn.CoUninitialize();
+      UnloadDynamicImports(&Ole32);
       return FALSE;
     }
 
@@ -558,7 +578,8 @@ AddItemW (LPCWSTR lpGroupName,
 
   psl->lpVtbl->Release(psl);
 
-  CoUninitialize();
+  Ole32.fn.CoUninitialize();
+  UnloadDynamicImports(&Ole32);
 
   DPRINT ("AddItemW() done\n");
 

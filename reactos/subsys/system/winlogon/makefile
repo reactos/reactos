@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2004/03/28 12:21:41 weiden Exp $
+# $Id: makefile,v 1.10.10.1 2004/07/12 19:54:46 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_NAME = winlogon
 
 TARGET_INSTALLDIR = system32
 
-TARGET_SDKLIBS = ntdll.a kernel32.a user32.a advapi32.a userenv.a secur32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a user32.a advapi32.a secur32.a userenv.a
 
 TARGET_OBJECTS = setup.o winlogon.o wlx.o sas.o
 

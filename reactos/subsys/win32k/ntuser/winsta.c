@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.64.4.1 2004/07/07 18:03:01 weiden Exp $
+ *  $Id: winsta.c,v 1.64.4.2 2004/07/12 19:54:48 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -378,7 +378,7 @@ NtUserCreateWindowStation(
    WindowStationObject->HandleTable = ObmCreateHandleTable();
    if (!WindowStationObject->HandleTable)
    {
-      DPRINT("Failed creating handle table\n");
+      DPRINT1("Failed creating handle table\n");
       ExFreePool(CurInfo);
       ExFreePool(WindowStationName.Buffer);
       /* FIXME - Delete window station object */
@@ -809,7 +809,7 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 
    if (!NT_SUCCESS(Status)) 
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n", 
+      DPRINT1("Validation of window station handle (0x%X) failed\n", 
          hWindowStation);
       return FALSE;
    }
@@ -824,6 +824,7 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
       if (Win32Process->WindowStation != NULL)
          ObDereferenceObject(Win32Process->WindowStation);
       Win32Process->WindowStation = Object;
+      DbgPrint("Window Station is set!\n");
    }
 
    SET_PROCESS_WINDOW_STATION(hWindowStation);

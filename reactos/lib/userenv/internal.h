@@ -1,4 +1,4 @@
-/* $Id: internal.h,v 1.6 2004/05/07 11:18:53 ekohl Exp $ 
+/* $Id: internal.h,v 1.6.8.1 2004/07/12 19:54:46 weiden Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -37,6 +37,35 @@ BOOL
 RemoveDirectoryPath (LPCWSTR lpPathName);
 
 /* misc.c */
+typedef struct _DYN_FUNCS
+{
+  HMODULE hModule;
+  union
+  {
+    PVOID foo;
+    struct
+    {
+      HRESULT (STDCALL *CoInitialize)(LPVOID pvReserved);
+      HRESULT (STDCALL *CoCreateInstance)(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv);
+      HRESULT (STDCALL *CoUninitialize)(VOID);
+    };
+  } fn;
+} DYN_FUNCS, *PDYN_FUNCS;
+
+typedef struct _DYN_MODULE
+{
+  LPWSTR Library;    /* dll file name */
+  LPSTR Functions[]; /* function names */
+} DYN_MODULE, *PDYN_MODULE;
+
+extern DYN_MODULE DynOle32;
+
+BOOL
+LoadDynamicImports(PDYN_MODULE Module, PDYN_FUNCS DynFuncs);
+
+VOID
+UnloadDynamicImports(PDYN_FUNCS DynFuncs);
+
 LPWSTR
 AppendBackslash (LPWSTR String);
 

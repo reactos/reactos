@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.8.2 2004/07/11 11:10:01 weiden Exp $
+/* $Id: stubs.c,v 1.45.8.3 2004/07/12 19:54:47 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1381,18 +1381,6 @@ DWORD
 STDCALL
 NtUserCallOneParam(
   DWORD Param,
-  DWORD Routine)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
-
-
-DWORD
-STDCALL
-NtUserCallTwoParam(
-  DWORD Param1,
-  DWORD Param2,
   DWORD Routine)
 {
    UNIMPLEMENTED;

@@ -145,10 +145,10 @@ PCLASS_OBJECT FASTCALL IntRegisterClass(CONST WNDCLASSEXW *lpwcx, PUNICODE_STRIN
                                         PUNICODE_STRING MenuName, WNDPROC wpExtra, DWORD Flags);
 ULONG         FASTCALL IntGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, BOOL Ansi);
 ULONG         FASTCALL IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi);
-ULONG         FASTCALL IntGetClassName(PWINDOW_OBJECT WindowObject, LPWSTR lpClassName, ULONG nMaxCount);
-BOOL          FASTCALL ClassReferenceClassByNameOrAtom(PCLASS_OBJECT *Class, LPCWSTR ClassNameOrAtom, HINSTANCE hInstance);
-BOOL          FASTCALL ClassReferenceClassByName(PCLASS_OBJECT *Class, LPCWSTR ClassName, HINSTANCE hInstance);
-BOOL          FASTCALL ClassReferenceClassByAtom(PCLASS_OBJECT* Class, RTL_ATOM Atom, HINSTANCE hInstance);
+BOOL          FASTCALL IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STRING ClassName, ULONG nMaxCount);
+BOOL          FASTCALL IntReferenceClassByNameOrAtom(PCLASS_OBJECT *Class, PUNICODE_STRING ClassNameOrAtom, HINSTANCE hInstance);
+BOOL          FASTCALL IntReferenceClassByName(PCLASS_OBJECT *Class, PUNICODE_STRING ClassName, HINSTANCE hInstance);
+BOOL          FASTCALL IntReferenceClassByAtom(PCLASS_OBJECT* Class, RTL_ATOM Atom, HINSTANCE hInstance);
 
 /* CURSORS AND ICONS **********************************************************/
 

@@ -1,4 +1,4 @@
-/* $Id: wlx.c,v 1.4 2004/03/28 12:21:41 weiden Exp $
+/* $Id: wlx.c,v 1.4.10.1 2004/07/12 19:54:46 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -631,21 +631,19 @@ LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion, HMODULE *GinaInstance)
 }
 
 PWLSESSION
-MsGinaInit(void)
+MsgGinaInitSession(void)
 {
-  PWLSESSION WLSession;
+  return (PWLSESSION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLSESSION));
+}
+
+BOOL
+MsGinaInit(PWLSESSION WLSession)
+{
   DWORD GinaDllVersion;
-  
-  WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLSESSION));
-  if(!WLSession)
-  {
-    return NULL;
-  }
   
   if(!LoadGina(&WLSession->MsGina.Functions, &GinaDllVersion, &WLSession->MsGina.hDllInstance))
   {
-    HeapFree(GetProcessHeap(), 0, WLSession);
-    return NULL;
+    return FALSE;
   }
   
   WLSession->MsGina.Context = NULL;
@@ -658,10 +656,9 @@ MsGinaInit(void)
                                                (PVOID)&FunctionTable,
                                                &WLSession->MsGina.Context))
   {
-    HeapFree(GetProcessHeap(), 0, WLSession);
-    return NULL;
+    return FALSE;
   }
-  return WLSession;
+  return TRUE;
 }
 
 BOOL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.12.4.1 2004/07/07 18:03:00 weiden Exp $
+/* $Id: object.c,v 1.12.4.2 2004/07/12 19:54:46 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -94,6 +94,7 @@ ObmEnumHandles(PUSER_HANDLE_TABLE HandleTable,
   ASSERT(EnumProc);
   
   /* enumerate all handles */
+  Slot = HandleTable->Handles;
   for(LastSlot = HandleTable->Handles + N_USER_HANDLES; Slot < LastSlot; Slot++)
   {
     if((ObjectHeader = *Slot) && (ObjectType == ObjectHeader->Type || ObjectType == otUNKNOWN))
@@ -129,7 +130,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
   }
   
   ObjectHeader = (PUSER_OBJECT_HEADER)ExAllocatePool(PagedPool, 
-				     ObjectSize + sizeof(USER_OBJECT_HEADER));
+                                                     sizeof(USER_OBJECT_HEADER) + ObjectSize);
   if (!ObjectHeader)
   {
     DPRINT1("Not enough memory to create a user object\n");
@@ -143,15 +144,16 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
   RtlZeroMemory(ObjectBody, ObjectSize);
   
   /* search for a free handle slot */
+  Slot = HandleTable->Handles;
   for(LastSlot = HandleTable->Handles + N_USER_HANDLES; Slot < LastSlot; Slot++)
   {
     if(InterlockedCompareExchange((LONG*)Slot, (LONG)ObjectHeader, 0) == 0)
     {
       /* found and assigned a free handle */
-      InterlockedIncrement((LONG*)HandleTable->HandleCount);
+      InterlockedIncrement((LONG*)&HandleTable->HandleCount);
       
       ObjectHeader->Slot = Slot; 
-      *Handle = (HANDLE)((++Slot - HandleTable->Handles) >> 2);
+      *Handle = (HANDLE)(((Slot - HandleTable->Handles) >> 2) + 1);
       return ObjectBody;
     }
   }
@@ -202,7 +204,7 @@ ObmDeleteObject(PUSER_HANDLE_TABLE HandleTable,
   
   /* remove the object from the handle table */
   InterlockedCompareExchange((LONG*)ObjectHeader->Slot, 0, (LONG)ObjectHeader);
-  InterlockedDecrement((LONG*)HandleTable->HandleCount);
+  InterlockedDecrement((LONG*)&HandleTable->HandleCount);
   ObjectHeader->Slot = NULL;
   
   ObmDereferenceObject(ObjectBody);
@@ -236,6 +238,7 @@ ObmInitializeHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   PUSER_OBJECT_HEADER *Slot, *LastSlot;
   
+  HandleTable->HandleCount = 0;
   /* Clear the handle table */
   Slot = HandleTable->Handles;
   for(LastSlot = HandleTable->Handles + N_USER_HANDLES; Slot < LastSlot; Slot++)

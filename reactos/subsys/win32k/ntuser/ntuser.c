@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.2.2 2004/07/11 11:10:01 weiden Exp $
+/* $Id: ntuser.c,v 1.1.2.3 2004/07/12 19:54:47 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -255,6 +255,138 @@ NtUserCallNoParam(DWORD Routine)
   END_NTUSER();
 }
 
+DWORD STDCALL
+NtUserCallTwoParam(DWORD Param1,
+                   DWORD Param2,
+                   DWORD Routine)
+{
+  BEGIN_NTUSER(DWORD, 0);
+  
+  switch(Routine)
+  {
+    case TWOPARAM_ROUTINE_SETDCPENCOLOR:
+      /* FIXME */
+      Result = (DWORD)IntSetDCColor((HDC)Param1, OBJ_PEN, (COLORREF)Param2);
+      break;
+    
+    case TWOPARAM_ROUTINE_SETDCBRUSHCOLOR:
+      /* FIXME */
+      Result = (DWORD)IntSetDCColor((HDC)Param1, OBJ_BRUSH, (COLORREF)Param2);
+      break;
+    
+    case TWOPARAM_ROUTINE_GETDCCOLOR:
+      /* FIXME */
+      Result = (DWORD)IntGetDCColor((HDC)Param1, (ULONG)Param2);
+      break;
+    
+    case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
+    {
+      RECT SafeRect;
+      NTUSER_USER_OBJECT(WINDOW, Window);
+      BEGIN_BUFFERS();
+      
+      ENTER_CRITICAL_SHARED();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param1, Window);
+      Result = (DWORD)IntGetWindowRgnBox(Window, &SafeRect);
+      LEAVE_CRITICAL();
+      
+      ErrorResult = ERROR; /* return ERROR in case we fail */
+      NTUSER_COPY_BUFFER_BACK_NTERROR((PVOID)Param2, &SafeRect, sizeof(RECT));
+      break;
+    }
+    
+    case TWOPARAM_ROUTINE_GETWINDOWRGN:
+    {
+      NTUSER_USER_OBJECT(WINDOW, Window);
+      
+      ENTER_CRITICAL_SHARED();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param1, Window);
+      Result = (DWORD)IntGetWindowRgn(Window, (HRGN)Param2);
+      LEAVE_CRITICAL();
+      break;
+    }
+    
+    case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
+      DPRINT1("TWOPARAM_ROUTINE_SETMENUBARHEIGHT is unimplemented!\n");
+      break;
+    
+    case TWOPARAM_ROUTINE_SETMENUITEMRECT:
+      DPRINT1("TWOPARAM_ROUTINE_SETMENUITEMRECT is unimplemented!\n");
+      break;
+    
+    case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
+    {
+      PUSER_MESSAGE_QUEUE MsgQueue;
+      NTUSER_USER_OBJECT(WINDOW, Window);
+      
+      ENTER_CRITICAL();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param2, Window);
+      MsgQueue = PsGetCurrentThread()->Win32Thread->MessageQueue;
+      if(Window->MessageQueue != MsgQueue)
+      {
+        NTUSER_FAIL_ERROR(ERROR_ACCESS_DENIED);
+      }
+      Result = (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, Window);
+      LEAVE_CRITICAL();
+      
+      break;
+    }
+    
+    case TWOPARAM_ROUTINE_VALIDATERGN:
+    {
+      /* FIXME !!!!! REMOVE THIS ROUTINE AND EXPORT NtUserValidateRgn() INSTEAD! */
+      Result = NtUserValidateRgn((HWND)Param1, (HRGN)Param2);
+      break;
+    }
+    
+    case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
+    {
+      NTUSER_USER_OBJECT(WINDOW, Window);
+      
+      ENTER_CRITICAL();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param1, Window);
+      Window->ContextHelpId = Param2;
+      LEAVE_CRITICAL();
+      
+      Result = (DWORD)TRUE;
+      break;
+    }
+    
+    case TWOPARAM_ROUTINE_SETCARETPOS:
+      DPRINT1("TWOPARAM_ROUTINE_SETCARETPOS is unimplemented!\n");
+      break;
+    
+    case TWOPARAM_ROUTINE_GETWINDOWINFO:
+    {
+      WINDOWINFO SafeWi;
+      NTUSER_USER_OBJECT(WINDOW, Window);
+      BEGIN_BUFFERS();
+      
+      ENTER_CRITICAL_SHARED();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param1, Window);
+      Result = (DWORD)IntGetWindowInfo(Window, &SafeWi);
+      LEAVE_CRITICAL();
+      
+      if(Result)
+      {
+        NTUSER_COPY_BUFFER_BACK_NTERROR((PVOID)Param2, &SafeWi, sizeof(WINDOWINFO));
+      }
+      break;
+    }
+    
+    case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
+      Result = (DWORD)IntRegisterLogonProcess(Param1, (BOOL)Param2);
+      break;
+    
+    default:
+      DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam\n", Routine);
+      NTUSER_FAIL_ERROR(ERROR_INVALID_PARAMETER);
+      break;
+  }
+  
+  END_NTUSER();
+}
+
 HANDLE STDCALL
 NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
 {
@@ -338,7 +470,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   NTSTATUS Status;
   BEGIN_BUFFERS();
   BEGIN_NTUSER(HWND, NULL);
-  DbgPrint("Called NtUserCreateWindowEx\n");
+  
   if(UnsafeWindowName != NULL)
   {
     Status = IntSafeCopyUnicodeString(&SafeWindowName, UnsafeWindowName);

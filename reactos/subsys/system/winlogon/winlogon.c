@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.31.2.1 2004/07/08 22:58:11 weiden Exp $
+/* $Id: winlogon.c,v 1.31.2.2 2004/07/12 19:54:46 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,8 +33,10 @@
 
 BOOL
 LoadGina(PMSGINAFUNCTIONS Functions, DWORD *DllVersion);
+BOOL
+MsGinaInit(PWLSESSION WLSession);
 PWLSESSION
-MsGinaInit(void);
+MsgGinaInitSession(void);
 void
 SessionLoop(PWLSESSION Session);
 BOOL
@@ -546,6 +548,28 @@ WinMain(HINSTANCE hInstance,
   
   hAppInstance = hInstance;
   
+  if(!(WLSession = MsgGinaInitSession()))
+  {
+    DPRINT1("WL: Unable to create logon session object!\n");
+    ExitProcess(0);
+    return 0;
+  }
+  DbgPrint("WL: Stage 1 (process id %d)\n",GetCurrentProcessId());
+  if(!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
+  {
+    DbgPrint("WL: Could not register logon process\n");
+    NtShutdownSystem(ShutdownNoReboot);
+    ExitProcess(0);
+    return 0;
+  }
+  DbgPrint("WL: Stage 2 (create window stations and desktops...\n");
+  if(!WlxCreateWindowStationAndDesktops(WLSession))
+  {
+    NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+    ExitProcess(1);
+    return 1;
+  }
+  DbgPrint("WL: Stage 3\n");
 #if START_LSASS
    if (StartProcess(L"StartLsass"))
      {
@@ -556,30 +580,7 @@ WinMain(HINSTANCE hInstance,
      }
 #endif
   
-  if(!(WLSession = MsGinaInit()))
-  {
-    DbgPrint("WL: Failed to initialize msgina.dll\n");
-    NtShutdownSystem(ShutdownNoReboot);
-    ExitProcess(0);
-    return 0;
-  }
-  
   WLSession->LogonStatus = LOGON_INITIALIZING;
-
-  if(!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
-  {
-    DbgPrint("WL: Could not register logon process\n");
-    NtShutdownSystem(ShutdownNoReboot);
-    ExitProcess(0);
-    return 0;
-  }
-  
-  if(!WlxCreateWindowStationAndDesktops(WLSession))
-  {
-    NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
-    ExitProcess(1);
-    return 1;
-  }
   
   /*
    * Switch to winlogon desktop
@@ -598,7 +599,15 @@ WinMain(HINSTANCE hInstance,
   {
     DbgPrint("WL: Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
   }
-  
+  DbgPrint("WL: Stage 4\n");
+  if(!MsGinaInit(WLSession))
+  {
+    DbgPrint("WL: Failed to initialize msgina.dll\n");
+    NtShutdownSystem(ShutdownNoReboot);
+    ExitProcess(0);
+    return 0;
+  }
+  DbgPrint("WL: Stage 5\n");
   /* Check for pending setup */
   if (GetSetupType () != 0)
   {
@@ -611,7 +620,7 @@ WinMain(HINSTANCE hInstance,
     ExitProcess(0);
     return 0;
   }
-  
+  DbgPrint("WL: Stage 6\n");
 #if SUPPORT_CONSOLESTART
  StartConsole = !StartIntoGUI();
  if(!StartConsole)

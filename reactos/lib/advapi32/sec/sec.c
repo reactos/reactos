@@ -1,4 +1,4 @@
-/* $Id: sec.c,v 1.20 2004/03/25 11:30:07 ekohl Exp $
+/* $Id: sec.c,v 1.20.10.1 2004/07/12 19:54:45 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -358,7 +358,7 @@ SetSecurityDescriptorOwner (
 {
 	NTSTATUS Status;
 
-	Status = RtlSetGroupSecurityDescriptor (pSecurityDescriptor,
+	Status = RtlSetOwnerSecurityDescriptor (pSecurityDescriptor,
 	                                        pOwner,
 	                                        bOwnerDefaulted);
 	if (!NT_SUCCESS(Status))

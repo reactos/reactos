@@ -908,6 +908,11 @@ NtUserInvalidateRgn(
   HRGN hRgn,
   BOOL bErase);
 
+BOOL
+STDCALL
+NtUserValidateRgn(
+  HWND hWnd,
+  HRGN hRgn);
 
 BOOL
 STDCALL
