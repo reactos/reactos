@@ -41,9 +41,11 @@
 #include "bootsup.h"
 #include "registry.h"
 #include "format.h"
+#include "fslist.h"
 
 #define NDEBUG
 #include <debug.h>
+
 
 typedef enum _PAGE_NUMBER
 {
@@ -717,10 +719,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
       if (PartitionList->CurrentPartition == NULL ||
 	  PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	{
-#if 0
 	  SetStatusText ("   ENTER = Install   C = Create Partition   F3 = Quit");
-#endif
-	  SetStatusText ("   C = Create Partition   F3 = Quit");
 	}
       else
 	{
@@ -755,14 +754,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	  if (PartitionList->CurrentPartition == NULL ||
 	      PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	    {
-	      PopupError ("You can not install ReactOS on\n"
-			  "unpartitioned disk space!\n"
-			  "\n"
-			  "  * Press any key to select an other partition.",
-			  NULL);
-	      ConInKey (Ir);
+	      CreateNewPartition (PartitionList,
+				  0ULL,
+				  TRUE);
 
-	      return SELECT_PARTITION_PAGE;
+	      /* FIXME: Update drive letters and partition numbers */
+
+	      return SELECT_FILE_SYSTEM_PAGE;
 	    }
 	  else
 	    {
@@ -805,16 +803,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	      DPRINT ("DestinationRootPath: %wZ\n", &DestinationRootPath);
 	      DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
 
-#if 0
-	      PopupError ("You chose to install ReactOS on\n"
-			  "a valid Partition.\n"
-			  "\n"
-			  "  * Press any key to continue.",
-			  NULL);
-	      ConInKey (Ir);
-
-	      return SELECT_PARTITION_PAGE;
-#endif
 	      return SELECT_FILE_SYSTEM_PAGE;
 	    }
 	}
@@ -1181,7 +1169,8 @@ CreatePartitionPage (PINPUT_RECORD Ir)
 	  DPRINT ("Partition size: %I64u bytes\n", PartSize);
 
 	  CreateNewPartition (PartitionList,
-			      PartSize);
+			      PartSize,
+			      FALSE);
 
 	  return SELECT_PARTITION_PAGE;
 	}
@@ -1355,126 +1344,12 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 }
 
 
-static PFILE_SYSTEM_LIST
-CreateFileSystemList(SHORT Left,
-  SHORT Top,
-  BOOLEAN ForceFormat,
-  FILE_SYSTEM ForceFileSystem)
-{
-  PFILE_SYSTEM_LIST List;
-
-  List = (PFILE_SYSTEM_LIST)RtlAllocateHeap(ProcessHeap, 0, sizeof(FILE_SYSTEM_LIST));
-  if (List == NULL)
-    return(NULL);
-
-  List->Left = Left;
-  List->Top = Top;
-
-  List->ForceFormat = ForceFormat;
-  List->FileSystemCount = 1;
-  if (ForceFormat)
-    {
-      List->CurrentFileSystem = ForceFileSystem;
-    }
-  else
-    {
-      List->FileSystemCount++;
-      List->CurrentFileSystem = FsKeep;
-    }
-  return(List);
-}
-
-
-static VOID
-DestroyFileSystemList(PFILE_SYSTEM_LIST List)
-{
-  RtlFreeHeap(ProcessHeap, 0, List);
-}
-
-
-static VOID
-DrawFileSystemList(PFILE_SYSTEM_LIST List)
-{
-  COORD coPos;
-  ULONG Written;
-  ULONG index;
-
-  index = 0;
-
-  coPos.X = List->Left;
-  coPos.Y = List->Top + index;
-  FillConsoleOutputAttribute(0x17,
-			     50,
-			     coPos,
-			     &Written);
-  FillConsoleOutputCharacter(' ',
-			     50,
-			     coPos,
-			     &Written);
-
-  if (List->CurrentFileSystem == FsFat)
-    {
-      SetInvertedTextXY(List->Left, List->Top + index, " Format partition as FAT file system ");
-    }
-  else
-    {
-      SetTextXY(List->Left, List->Top + index, " Format partition as FAT file system ");
-    }
-  index++;
-
-  if (!List->ForceFormat)
-    {
-      coPos.X = List->Left;
-      coPos.Y = List->Top + index;
-      FillConsoleOutputAttribute(0x17,
-    			     50,
-    			     coPos,
-    			     &Written);
-      FillConsoleOutputCharacter(' ',
-    			     50,
-    			     coPos,
-    			     &Written);
-    
-      if (List->CurrentFileSystem == FsKeep)
-        {
-          SetInvertedTextXY(List->Left, List->Top + index, " Keep current file system (no changes) ");
-        }
-      else
-        {
-          SetTextXY(List->Left, List->Top + index, " Keep current file system (no changes) ");
-        }
-    }
-}
-
-
-static VOID
-ScrollDownFileSystemList(PFILE_SYSTEM_LIST List)
-{
-  if ((ULONG) List->CurrentFileSystem < List->FileSystemCount - 1)
-    {
-      (ULONG) List->CurrentFileSystem++;
-      DrawFileSystemList(List);
-    }
-}
-
-
-static VOID
-ScrollUpFileSystemList(PFILE_SYSTEM_LIST List)
-{
-  if ((ULONG) List->CurrentFileSystem > 0)
-    {
-      (ULONG) List->CurrentFileSystem--;
-      DrawFileSystemList(List);
-    }
-}
-
-
 static PAGE_NUMBER
 SelectFileSystemPage (PINPUT_RECORD Ir)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
-  BOOLEAN ForceFormat;
+//  BOOLEAN ForceFormat;
   ULONGLONG DiskSize;
   ULONGLONG PartSize;
   PCHAR DiskUnit;
@@ -1542,15 +1417,19 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
       PartType = "Unknown";
     }
 
-  SetTextXY(6, 8, "Setup will install ReactOS on");
+  if (PartEntry->AutoCreate == TRUE)
+    {
+      SetTextXY(6, 8, "Setup created a new partition on");
 
+#if 0
   PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s of",
 	      PartEntry->PartInfo[0].PartitionNumber,
 	      PartSize,
 	      PartUnit,
 	      PartType);
+#endif
 
-  PrintTextXY(8, 12, "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
+  PrintTextXY(8, 10, "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
 	      DiskEntry->DiskNumber,
 	      DiskSize,
 	      DiskUnit,
@@ -1559,28 +1438,73 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 	      DiskEntry->Id,
 	      &DiskEntry->DriverName);
 
+      SetTextXY(6, 12, "This Partition will be formatted next.");
 
-  SetTextXY(6, 17, "Select a file system for the partition from the list below.");
+
+      PartEntry->AutoCreate = FALSE;
+    }
+  else if (PartEntry->New == TRUE)
+    {
+      SetTextXY(6, 8, "You chose to install ReactOS on a new or unformatted Partition.");
+      SetTextXY(6, 10, "This Partition will be formatted next.");
+    }
+  else
+    {
+      SetTextXY(6, 8, "Setup install ReactOS onto Partition");
+
+      if (PartType == NULL)
+	{
+	  PrintTextXY (8, 10,
+		       "%c%c  Type %lu    %I64u %s",
+		       (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+		       (PartEntry->DriveLetter == 0) ? '-' : ':',
+		       PartEntry->PartInfo[0].PartitionType,
+		       PartSize,
+		       PartUnit);
+	}
+      else
+	{
+	  PrintTextXY (8, 10,
+		       "%c%c  %s    %I64u %s",
+		       (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+		       (PartEntry->DriveLetter == 0) ? '-' : ':',
+		       PartType,
+		       PartSize,
+		       PartUnit);
+	}
+
+      PrintTextXY(6, 12, "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
+		  DiskEntry->DiskNumber,
+		  DiskSize,
+		  DiskUnit,
+		  DiskEntry->Port,
+		  DiskEntry->Bus,
+		  DiskEntry->Id,
+		  &DiskEntry->DriverName);
+    }
+
+
+  SetTextXY(6, 17, "Select a file system from the list below.");
 
   SetTextXY(8, 19, "\x07  Press UP or DOWN to select a file system.");
   SetTextXY(8, 21, "\x07  Press ENTER to format the partition.");
   SetTextXY(8, 23, "\x07  Press ESC to select another partition.");
 
-  ForceFormat = (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED);
+//  ForceFormat = (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED);
 
   if (FileSystemList == NULL)
     {
-      FileSystemList = CreateFileSystemList (6, 26, ForceFormat, FsFat);
+//      FileSystemList = CreateFileSystemList (6, 26, ForceFormat, FsFat);
+      FileSystemList = CreateFileSystemList (6, 26, PartEntry->New, FsFat);
       if (FileSystemList == NULL)
 	{
 	  /* FIXME: show an error dialog */
 	  return QUIT_PAGE;
 	}
+
+      /* FIXME: Add file systems to list */
     }
-  else
-    {
-      DrawFileSystemList (FileSystemList);
-    }
+  DrawFileSystemList (FileSystemList);
 
   SetStatusText ("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
@@ -1591,7 +1515,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
-	  if (ConfirmQuit(Ir) == TRUE)
+	  if (ConfirmQuit (Ir) == TRUE)
 	    {
 	      return QUIT_PAGE;
 	    }
@@ -1600,7 +1524,6 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
-	  DestroyFileSystemList (FileSystemList);
 	  return SELECT_PARTITION_PAGE;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -1615,6 +1538,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
+#if 0
 	  if (FileSystemList->CurrentFileSystem == FsKeep)
 	    {
 	      return CHECK_FILE_SYSTEM_PAGE;
@@ -1623,6 +1547,8 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 	    {
 	      return FORMAT_PARTITION_PAGE;
 	    }
+#endif
+	  return FORMAT_PARTITION_PAGE;
 	}
     }
 
@@ -1631,17 +1557,36 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 
 
 static ULONG
-FormatPartitionPage(PINPUT_RECORD Ir)
+FormatPartitionPage (PINPUT_RECORD Ir)
 {
-  NTSTATUS Status;
-  ULONG PartType;
-  BOOLEAN Valid;
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+  PLIST_ENTRY Entry;
+//  NTSTATUS Status;
+//  BOOLEAN Valid;
+
+
+  ULONG Line;
+  ULONG i;
+
 
   SetTextXY(6, 8, "Format partition");
 
   SetTextXY(6, 10, "Setup will now format the partition. Press ENTER to continue.");
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
+
+
+  if (PartitionList == NULL ||
+      PartitionList->CurrentDisk == NULL ||
+      PartitionList->CurrentPartition == NULL)
+    {
+      /* FIXME: show an error dialog */
+      return QUIT_PAGE;
+    }
+
+  DiskEntry = PartitionList->CurrentDisk;
+  PartEntry = PartitionList->CurrentPartition;
 
   while(TRUE)
     {
@@ -1650,20 +1595,34 @@ FormatPartitionPage(PINPUT_RECORD Ir)
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
-	  if (ConfirmQuit(Ir) == TRUE)
+	  if (ConfirmQuit (Ir) == TRUE)
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  break;
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
-	  SetStatusText("   Please wait ...");
+	  SetStatusText ("   Please wait ...");
 
 	  switch (FileSystemList->CurrentFileSystem)
 	    {
 	      case FsFat:
-		PartType = PARTITION_FAT32_XINT13;
+		if (DiskEntry->UseLba == FALSE)
+		  {
+		    /* FAT16 CHS partition (disk is smaller than 8.4GB) */
+		    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
+		  }
+		else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (2ULL * 1024ULL * 1024ULL * 1024ULL))
+		  {
+		    /* FAT16 LBA partition (partition is smaller than 2GB) */
+		    PartEntry->PartInfo[0].PartitionType = PARTITION_XINT13;
+		  }
+		else
+		  {
+		    /* FAT32 LBA partition (partition is at least 2GB) */
+		    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
+		  }
 		break;
 
 	      case FsKeep:
@@ -1672,6 +1631,45 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 	      default:
 		return QUIT_PAGE;
 	    }
+
+//#if 0
+	  PrintTextXY (6, 12,
+		       "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
+		       DiskEntry->DiskSize,
+		       DiskEntry->CylinderSize,
+		       DiskEntry->TrackSize);
+
+	  Line = 13;
+	  DiskEntry = PartitionList->CurrentDisk;
+	  Entry = DiskEntry->PartListHead.Flink;
+	  while (Entry != &DiskEntry->PartListHead)
+	    {
+	      PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+	      if (PartEntry->Unpartitioned == FALSE)
+		{
+
+		  for (i = 0; i < 4; i++)
+		    {
+		      PrintTextXY (6, Line,
+				   "%u:  %u  %12I64u  %12I64u  %u",
+				   i,
+				   PartEntry->PartInfo[i].PartitionNumber,
+				   PartEntry->PartInfo[i].StartingOffset.QuadPart,
+				   PartEntry->PartInfo[i].PartitionLength.QuadPart,
+				   PartEntry->PartInfo[i].PartitionType);
+
+
+		      Line++;
+		    }
+
+		  Line++;
+		}
+
+	      Entry = Entry->Flink;
+	    }
+//#endif
+
 
 #if 0
     if (PartData.CreatePartition)
@@ -1686,6 +1684,10 @@ FormatPartitionPage(PINPUT_RECORD Ir)
       }
 #endif
 
+	  SetStatusText ("   Press any key ...");
+	  ConInKey(Ir);
+
+#if 0
 	  switch (FileSystemList->CurrentFileSystem)
 	    {
 	      case FsFat:
@@ -1706,10 +1708,13 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 	    }
 
 	  return INSTALL_DIRECTORY_PAGE;
+#endif
+
+	  return SELECT_PARTITION_PAGE;
 	}
     }
 
-  return INSTALL_DIRECTORY_PAGE;
+  return FORMAT_PARTITION_PAGE;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.15 2003/08/06 16:37:46 ekohl Exp $
+/* $Id: partlist.c,v 1.16 2003/08/09 16:32:25 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -79,6 +79,142 @@ GetDriverName(PDISKENTRY DiskEntry)
 
 
 static VOID
+AssignDriverLetters (PPARTLIST List)
+{
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+  PLIST_ENTRY Entry1;
+  PLIST_ENTRY Entry2;
+  CHAR Letter;
+
+  Letter = 'C';
+
+  /* Assign drive letters to primary partitions */
+  Entry1 = List->DiskListHead.Flink;
+  while (Entry1 != &List->DiskListHead)
+    {
+      DiskEntry = CONTAINING_RECORD (Entry1, DISKENTRY, ListEntry);
+
+      if (!IsListEmpty (&DiskEntry->PartListHead))
+	{
+	  PartEntry = CONTAINING_RECORD (DiskEntry->PartListHead.Flink,
+					 PARTENTRY,
+					 ListEntry);
+
+	  PartEntry->DriveLetter = 0;
+
+	  if (PartEntry->Unpartitioned == FALSE &&
+	      !IsContainerPartition(PartEntry->PartInfo[0].PartitionType))
+	    {
+	      if (IsRecognizedPartition(PartEntry->PartInfo[0].PartitionType) ||
+		  (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED &&
+		   PartEntry->PartInfo[0].PartitionLength.QuadPart != 0LL))
+		{
+		  if (Letter <= 'Z')
+		    {
+		      PartEntry->DriveLetter = Letter;
+		      Letter++;
+		    }
+		}
+	    }
+	}
+
+      Entry1 = Entry1->Flink;
+    }
+
+
+  /* Assign drive letters to logical drives */
+  Entry1 = List->DiskListHead.Flink;
+  while (Entry1 != &List->DiskListHead)
+    {
+      DiskEntry = CONTAINING_RECORD (Entry1, DISKENTRY, ListEntry);
+
+      Entry2 = DiskEntry->PartListHead.Flink;
+      if (Entry2 != &DiskEntry->PartListHead)
+	{
+	  Entry2 = Entry2->Flink;
+	  while (Entry2 != &DiskEntry->PartListHead)
+	    {
+	      PartEntry = CONTAINING_RECORD (Entry2,
+					     PARTENTRY,
+					     ListEntry);
+
+	      PartEntry->DriveLetter = 0;
+
+	      if (PartEntry->Unpartitioned == FALSE &&
+		  !IsContainerPartition(PartEntry->PartInfo[0].PartitionType))
+		{
+		  if (IsRecognizedPartition(PartEntry->PartInfo[0].PartitionType) ||
+		      (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED &&
+		       PartEntry->PartInfo[0].PartitionLength.QuadPart != 0LL))
+		    {
+		      if (Letter <= 'Z')
+			{
+			  PartEntry->DriveLetter = Letter;
+			  Letter++;
+			}
+		    }
+		}
+
+	      Entry2 = Entry2->Flink;
+	    }
+	}
+
+      Entry1 = Entry1->Flink;
+    }
+}
+
+
+static VOID
+UpdatePartitionNumbers (PDISKENTRY DiskEntry)
+{
+  PPARTENTRY PartEntry;
+  PLIST_ENTRY Entry;
+  ULONG PartNumber;
+  ULONG i;
+
+  PartNumber = 1;
+  Entry = DiskEntry->PartListHead.Flink;
+  while (Entry != &DiskEntry->PartListHead)
+    {
+      PartEntry = CONTAINING_RECORD (Entry,
+				     PARTENTRY,
+				     ListEntry);
+
+      if (PartEntry->Unpartitioned == TRUE)
+	{
+	  for (i = 0; i < 4; i++)
+	    {
+	      PartEntry->PartInfo[i].PartitionNumber = 0;
+	    }
+	}
+      else
+	{
+	  for (i = 0; i < 4; i++)
+	    {
+	      if (IsContainerPartition(PartEntry->PartInfo[i].PartitionType))
+		{
+		  PartEntry->PartInfo[i].PartitionNumber = 0;
+		}
+	      else if (PartEntry->PartInfo[i].PartitionType == PARTITION_ENTRY_UNUSED &&
+		       PartEntry->PartInfo[i].PartitionLength.QuadPart == 0ULL)
+		{
+		  PartEntry->PartInfo[i].PartitionNumber = 0;
+		}
+	      else
+		{
+		  PartEntry->PartInfo[i].PartitionNumber = PartNumber;
+		  PartNumber++;
+		}
+	    }
+	}
+
+      Entry = Entry->Flink;
+    }
+}
+
+
+static VOID
 AddPartitionToList (ULONG DiskNumber,
 		    PDISKENTRY DiskEntry,
 		    DRIVE_LAYOUT_INFORMATION *LayoutBuffer)
@@ -99,9 +235,6 @@ AddPartitionToList (ULONG DiskNumber,
 
       RtlZeroMemory (PartEntry,
 		     sizeof(PARTENTRY));
-
-      PartEntry->DriveLetter = GetDriveLetter(DiskNumber,
-					      LayoutBuffer->PartitionEntry[i].PartitionNumber);
 
       PartEntry->Unpartitioned = FALSE;
 
@@ -208,12 +341,7 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
       /* Check for trailing unpartitioned disk space */
       if (DiskEntry->DiskSize > (LastStartingOffset + LastPartitionLength))
 	{
-#if 0
-	  LastUnusedPartitionLength =
-	    DiskEntry->DiskSize - (LastStartingOffset + LastPartitionLength);
-#endif
-
-	  /* FIXME: Round-down to cylinder size */
+	  /* Round-down to cylinder size */
 	  LastUnusedPartitionLength =
 	    ROUND_DOWN (DiskEntry->DiskSize - (LastStartingOffset + LastPartitionLength),
 			DiskEntry->CylinderSize);
@@ -329,6 +457,8 @@ AddDiskToList (HANDLE FileHandle,
   DiskEntry->Bus = ScsiAddress.PathId;
   DiskEntry->Id = ScsiAddress.TargetId;
 
+  DiskEntry->UseLba = (DiskEntry->DiskSize > (1024ULL * 255ULL * 63ULL * 512ULL));
+
   GetDriverName (DiskEntry);
 
   InsertTailList (&List->DiskListHead,
@@ -442,6 +572,8 @@ InitializePartitionList(VOID)
 	  NtClose(FileHandle);
 	}
     }
+
+  AssignDriverLetters (List);
 
   List->TopDisk = 0;
   List->TopPartition = 0;
@@ -1094,7 +1226,8 @@ GetActiveBootPartition(PPARTLIST List,
 
 VOID
 CreateNewPartition (PPARTLIST List,
-		    ULONGLONG PartitionSize)
+		    ULONGLONG PartitionSize,
+		    BOOLEAN AutoCreate)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
@@ -1113,7 +1246,8 @@ CreateNewPartition (PPARTLIST List,
   DiskEntry = List->CurrentDisk;
   PartEntry = List->CurrentPartition;
 
-  if (PartitionSize == PartEntry->UnpartitionedLength)
+  if (AutoCreate == TRUE ||
+      PartitionSize == PartEntry->UnpartitionedLength)
     {
       /* Convert current entry to 'new (unformatted)' */
       PartEntry->PartInfo[0].StartingOffset.QuadPart =
@@ -1137,6 +1271,7 @@ CreateNewPartition (PPARTLIST List,
 
 	}
 
+      PartEntry->AutoCreate = AutoCreate;
       PartEntry->New = TRUE;
       PartEntry->Unpartitioned = FALSE;
       PartEntry->UnpartitionedOffset = 0ULL;
@@ -1177,8 +1312,9 @@ CreateNewPartition (PPARTLIST List,
 
   DiskEntry->Modified = TRUE;
 
-  /* FIXME: Update partition numbers and drive letters */
+  UpdatePartitionNumbers (DiskEntry);
 
+  AssignDriverLetters (List);
 }
 
 
@@ -1305,8 +1441,9 @@ DeleteCurrentPartition (PPARTLIST List)
 
   DiskEntry->Modified = TRUE;
 
-  /* FIXME: Update partition numbers and drive letters */
+  UpdatePartitionNumbers (DiskEntry);
 
+  AssignDriverLetters (List);
 }
 
 /* EOF */

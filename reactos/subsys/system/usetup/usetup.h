@@ -43,21 +43,6 @@
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 
-typedef enum
-{
-  FsFat = 0,
-  FsKeep = 1
-} FILE_SYSTEM;
-
-typedef struct _FILE_SYSTEM_LIST
-{
-  SHORT Left;
-  SHORT Top;
-  BOOLEAN ForceFormat;
-  FILE_SYSTEM CurrentFileSystem;
-  ULONG FileSystemCount;
-} FILE_SYSTEM_LIST, *PFILE_SYSTEM_LIST;
-
 extern HANDLE ProcessHeap;
 
 extern UNICODE_STRING SourceRootPath;

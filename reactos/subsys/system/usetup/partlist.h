@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.15 2003/08/06 16:37:46 ekohl Exp $
+/* $Id: partlist.h,v 1.16 2003/08/09 16:32:25 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -41,6 +41,9 @@ typedef struct _PARTENTRY
 
   /* Partition is new. Table does not exist on disk yet */
   BOOLEAN New;
+
+  /* Partition was created automatically. */
+  BOOLEAN AutoCreate;
 
   /*
    * Raw offset and length of the unpartitioned disk space.
@@ -71,6 +74,9 @@ typedef struct _DISKENTRY
   USHORT Port;
   USHORT Bus;
   USHORT Id;
+
+  /* Use LBA or CHS? */
+  BOOLEAN UseLba;
 
   /* Has the partition list been modified? */
   BOOLEAN Modified;
@@ -134,7 +140,8 @@ GetActiveBootPartition(PPARTLIST List,
 
 VOID
 CreateNewPartition (PPARTLIST List,
-		    ULONGLONG PartitionSize);
+		    ULONGLONG PartitionSize,
+		    BOOLEAN AutoCreate);
 
 VOID
 DeleteCurrentPartition (PPARTLIST List);

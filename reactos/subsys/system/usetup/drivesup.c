@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: drivesup.c,v 1.2 2002/11/02 23:17:06 ekohl Exp $
+/* $Id: drivesup.c,v 1.3 2003/08/09 16:32:25 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/drivesup.c
@@ -93,75 +93,5 @@ GetSourcePaths(PUNICODE_STRING SourcePath,
   return(STATUS_SUCCESS);
 }
 
-
-CHAR
-GetDriveLetter(ULONG DriveNumber,
-	       ULONG PartitionNumber)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING LinkName;
-  WCHAR LinkBuffer[8];
-  CHAR Letter;
-  HANDLE LinkHandle;
-  UNICODE_STRING TargetName;
-  PWCHAR TargetBuffer;
-  PWCHAR DeviceBuffer;
-  ULONG Length;
-  NTSTATUS Status;
-
-  wcscpy(LinkBuffer, L"\\??\\A:");
-
-  RtlInitUnicodeString(&LinkName,
-		       LinkBuffer);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &LinkName,
-			     OBJ_OPENLINK,
-			     NULL,
-			     NULL);
-
-  TargetBuffer = RtlAllocateHeap(ProcessHeap, 0, MAX_PATH * sizeof(WCHAR));
-  DeviceBuffer = RtlAllocateHeap(ProcessHeap, 0, MAX_PATH * sizeof(WCHAR));
-
-  TargetName.Length = 0;
-  TargetName.MaximumLength = MAX_PATH * sizeof(WCHAR);
-  TargetName.Buffer = TargetBuffer;
-
-  swprintf(DeviceBuffer,
-	   L"\\Device\\Harddisk%lu\\Partition%lu",
-	   DriveNumber,
-	   PartitionNumber);
-
-  for (Letter = 'C'; Letter <= 'Z'; Letter++)
-    {
-      LinkBuffer[4] = (WCHAR)Letter;
-      TargetName.Length = 0;
-
-      Status = NtOpenSymbolicLinkObject(&LinkHandle,
-					SYMBOLIC_LINK_ALL_ACCESS,
-					&ObjectAttributes);
-      if (NT_SUCCESS(Status))
-	{
-	  Status = NtQuerySymbolicLinkObject(LinkHandle,
-					     &TargetName,
-					     &Length);
-	  NtClose(LinkHandle);
-	  if (NT_SUCCESS(Status))
-	    {
-	      if (_wcsicmp(DeviceBuffer, TargetBuffer) == 0)
-		{
-		  RtlFreeHeap(ProcessHeap, 0, DeviceBuffer);
-		  RtlFreeHeap(ProcessHeap, 0, TargetBuffer);
-		  return(Letter);
-		}
-	    }
-	}
-    }
-
-  RtlFreeHeap(ProcessHeap, 0, DeviceBuffer);
-  RtlFreeHeap(ProcessHeap, 0, TargetBuffer);
-
-  return((CHAR)0);
-}
 
 /* EOF */
