@@ -512,6 +512,7 @@ HRESULT create_marshalled_proxy(REFCLSID rclsid, REFIID iid, LPVOID *ppv) {
   WINE_StringFromCLSID(rclsid,pipefn+strlen(PIPEPREF));
 
   while (tries++<MAXTRIES) {
+      WaitNamedPipeA( pipefn, NMPWAIT_WAIT_FOREVER );
       hPipe	= CreateFileA(
 	      pipefn,
 	      GENERIC_READ|GENERIC_WRITE,

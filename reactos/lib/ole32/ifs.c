@@ -45,7 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(olemalloc);
  *
  *****************************************************************************/
 /* set the vtable later */
-extern ICOM_VTABLE(IMalloc) VT_IMalloc32;
+static ICOM_VTABLE(IMalloc) VT_IMalloc32;
 
 typedef struct {
         ICOM_VFIELD(IMalloc);
@@ -361,7 +361,7 @@ static ICOM_VTABLE(IMalloc) VT_IMalloc32 =
  *****************************************************************************/
 
 /* set the vtable later */
-extern ICOM_VTABLE(IMallocSpy) VT_IMallocSpy;
+static ICOM_VTABLE(IMallocSpy) VT_IMallocSpy;
 
 typedef struct {
         ICOM_VFIELD(IMallocSpy);

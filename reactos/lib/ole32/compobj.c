@@ -4,8 +4,9 @@
  *	Copyright 1995	Martin von Loewis
  *	Copyright 1998	Justin Bradford
  *      Copyright 1999  Francis Beaudet
- *  Copyright 1999  Sylvain St-Germain
- *  Copyright 2002  Marcus Meissner
+ *      Copyright 1999  Sylvain St-Germain
+ *      Copyright 2002  Marcus Meissner
+ *      Copyright 2004  Mike Hearn
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -118,10 +119,10 @@ static CRITICAL_SECTION csRegisteredClassList = { &class_cs_debug, -1, 0, 0, 0, 
  * This section contains OpenDllList definitions
  *
  * The OpenDllList contains only handles of dll loaded by CoGetClassObject or
- * other functions what do LoadLibrary _without_ giving back a HMODULE.
- * Without this list these handles would be freed never.
+ * other functions that do LoadLibrary _without_ giving back a HMODULE.
+ * Without this list these handles would never be freed.
  *
- * FIXME: a DLL what says OK whenn asked for unloading is unloaded in the
+ * FIXME: a DLL that says OK when asked for unloading is unloaded in the
  * next unload-call but not before 600 sec.
  */
 
@@ -147,14 +148,17 @@ static LRESULT CALLBACK COM_AptWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 static void COMPOBJ_DLLList_Add(HANDLE hLibrary);
 static void COMPOBJ_DllList_FreeUnused(int Timeout);
 
-
-/******************************************************************************
- * Initialize/Unitialize threading stuff.
- */
 void COMPOBJ_InitProcess( void )
 {
     WNDCLASSA wclass;
 
+    /* Inter-thread RPCs are done through window messages rather than pipes. When
+       an interface is marshalled into another apartment in the same process,
+       a window of the following class is created. The *caller* of CoMarshalInterface
+       (ie the application) is responsible for pumping the message loop in that thread,
+       the WM_USER messages which point to the RPCs are then dispatched to COM_AptWndProc
+       by the users code.
+     */
     memset(&wclass, 0, sizeof(wclass));
     wclass.lpfnWndProc = &COM_AptWndProc;
     wclass.hInstance = OLE32_hInstance;
@@ -170,10 +174,22 @@ void COMPOBJ_UninitProcess( void )
 /******************************************************************************
  * Manage apartments.
  */
+
+
+/* The multi-threaded apartment (MTA) contains zero or more threads interacting
+   with free threaded (ie thread safe) COM objects. There is only ever one MTA
+   in a process - you can enter it by calling CoInitializeEx(COINIT_MULTITHREADED)
+ */
 static void COM_InitMTA(void)
 {
-    /* FIXME: how does windoze create OXIDs?
-     * this method will only work for local RPC */
+    /* OXIDs are object exporter IDs. Each apartment has an OXID, which is unique
+       within a network. That is, two different MTAs on different machines will have
+       different OXIDs.
+
+       This method of generating an OXID is therefore wrong as it doesn't work across
+       a network, but for local RPC only it's OK. We can distinguish between MTAs and
+       STAs because STAs use the thread ID as well, and no thread can have an ID of zero.
+     */
     MTA.oxid = ((OXID)GetCurrentProcessId() << 32);
     InitializeCriticalSection(&MTA.cs);
 }
@@ -204,6 +220,7 @@ APARTMENT* COM_CreateApartment(DWORD model)
     }
     else
         apt = NtCurrentTeb()->ReservedForOle;
+
     apt->model = model;
     if (model & COINIT_APARTMENTTHREADED) {
       /* FIXME: how does windoze create OXIDs? */
@@ -245,6 +262,8 @@ static void COM_DestroyApartment(APARTMENT *apt)
     HeapFree(GetProcessHeap(), 0, apt);
 }
 
+/* The given OXID must be local to this process: you cannot use apartment
+   windows to send RPCs to other processes */
 HWND COM_GetApartmentWin(OXID oxid)
 {
     APARTMENT *apt;
@@ -258,6 +277,7 @@ HWND COM_GetApartmentWin(OXID oxid)
     return win;
 }
 
+/* Currently inter-thread marshalling is not fully implemented, so this does nothing */
 static LRESULT CALLBACK COM_AptWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   return DefWindowProcA(hWnd, msg, wParam, lParam);
@@ -378,8 +398,8 @@ HRESULT WINAPI CoInitialize(
  * RETURNS
  *  S_OK               if successful,
  *  S_FALSE            if this function was called already.
- *  RPC_E_CHANGED_MODE if a previous call to CoInitialize specified another
- *                      threading model.
+ *  RPC_E_CHANGED_MODE if a previous call to CoInitializeEx specified another
+ *                     threading model.
  */
 HRESULT WINAPI CoInitializeEx(
 	LPVOID lpReserved,	/* [in] pointer to win32 malloc interface
@@ -402,7 +422,9 @@ HRESULT WINAPI CoInitializeEx(
   {
     if (dwCoInit != apt->model)
     {
-      WARN("Apartment threading model already initialized with another model\n");
+      /* Changing the threading model after it's been set is illegal. If this warning is triggered by Wine
+         code then we are probably using the wrong threading model to implement that API. */
+      WARN("Attempt to change threading model of this apartment from 0x%lx to 0x%lx\n", apt->model, dwCoInit);
       return RPC_E_CHANGED_MODE;
     }
     hr = S_FALSE;
@@ -436,6 +458,25 @@ HRESULT WINAPI CoInitializeEx(
   return hr;
 }
 
+/* On COM finalization for a STA thread, the message queue is flushed to ensure no
+   pending RPCs are ignored. Non-COM messages are discarded at this point.
+ */
+void COM_FlushMessageQueue(void)
+{
+    MSG message;
+    APARTMENT *apt = NtCurrentTeb()->ReservedForOle;
+
+    if (!apt || !apt->win) return;
+
+    TRACE("Flushing STA message queue\n");
+
+    while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
+        if (message.hwnd != apt->win) continue;
+        TranslateMessage(&message);
+        DispatchMessageA(&message);
+    }
+}
+
 /***********************************************************************
  *           CoUninitialize   [OLE32.@]
  *
@@ -466,26 +507,21 @@ void WINAPI CoUninitialize(void)
   lCOMRefCnt = InterlockedExchangeAdd(&s_COMLockCount,-1);
   if (lCOMRefCnt==1)
   {
-    /*
-     * Release the various COM libraries and data structures.
-     */
     TRACE("() - Releasing the COM libraries\n");
 
     RunningObjectTableImpl_UnInitialize();
-    /*
-     * Release the references to the registered class objects.
-     */
+
+    /* Release the references to the registered class objects */
     COM_RevokeAllClasses();
 
-    /*
-     * This will free the loaded COM Dlls.
-     */
+    /* This will free the loaded COM Dlls  */
     CoFreeAllLibraries();
 
-    /*
-     * This will free list of external references to COM objects.
-     */
+    /* This will free list of external references to COM objects */
     COM_ExternalLockFreeList();
+
+    /* This ensures we deal with any pending RPCs */
+    COM_FlushMessageQueue();
 
     COM_UninitMTA();
   }
@@ -498,10 +534,17 @@ void WINAPI CoUninitialize(void)
 /******************************************************************************
  *		CoDisconnectObject	[COMPOBJ.15]
  *		CoDisconnectObject	[OLE32.@]
+ *
+ * Disconnects all connections to this object from remote processes. Dispatches
+ * pending RPCs while blocking new RPCs from occurring, and then calls
+ * IMarshal::DisconnectObject on the given object.
+ *
+ * Typically called when the object server is forced to shut down, for instance by
+ * the user.
  */
 HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
 {
-    TRACE("(%p, %lx)\n",lpUnk,reserved);
+    FIXME("(%p, %lx): stub - probably harmless\n",lpUnk,reserved);
     return S_OK;
 }
 
@@ -821,10 +864,14 @@ HRESULT WINAPI CLSIDFromProgID(
 /*****************************************************************************
  *             CoGetPSClsid [OLE32.@]
  *
- * This function returns the CLSID of the DLL that implements the proxy and stub
+ * This function returns the CLSID of the proxy/stub factory that implements IPSFactoryBuffer
  * for the specified interface.
  *
- * It determines this by searching the
+ * The standard marshaller activates the object with the CLSID returned and uses the
+ * CreateProxy and CreateStub methods on its IPSFactoryBuffer interface to construct
+ * the proxies and stubs for a given object.
+ *
+ * CoGetPSClsid determines this CLSID by searching the
  * HKEY_CLASSES_ROOT\Interface\{string form of riid}\ProxyStubClsid32 in the registry
  * and any interface id registered by CoRegisterPSClsid within the current process.
  *
@@ -1047,36 +1094,41 @@ _LocalServerThread(LPVOID param) {
     }
     IStream_Release(pStm);
 
-    while (1) {
-	hPipe = CreateNamedPipeA(
-	    pipefn,
-	    PIPE_ACCESS_DUPLEX,
-	    PIPE_TYPE_BYTE|PIPE_WAIT,
-	    PIPE_UNLIMITED_INSTANCES,
-	    4096,
-	    4096,
-	    NMPWAIT_USE_DEFAULT_WAIT,
-	    NULL
-	);
-	if (hPipe == INVALID_HANDLE_VALUE) {
-	    FIXME("pipe creation failed for %s, le is %lx\n",pipefn,GetLastError());
-	    return 1;
-	}
-	if (!ConnectNamedPipe(hPipe,NULL)) {
-	    ERR("Failure during ConnectNamedPipe %lx, ABORT!\n",GetLastError());
-	    CloseHandle(hPipe);
-	    continue;
-	}
-	WriteFile(hPipe,buffer,buflen,&res,NULL);
-	CloseHandle(hPipe);
+    hPipe = CreateNamedPipeA( pipefn, PIPE_ACCESS_DUPLEX,
+               PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
+               4096, 4096, NMPWAIT_USE_DEFAULT_WAIT, NULL );
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        FIXME("pipe creation failed for %s, le is %lx\n",pipefn,GetLastError());
+        return 1;
     }
+    while (1) {
+        if (!ConnectNamedPipe(hPipe,NULL)) {
+            ERR("Failure during ConnectNamedPipe %lx, ABORT!\n",GetLastError());
+            break;
+        }
+        WriteFile(hPipe,buffer,buflen,&res,NULL);
+        FlushFileBuffers(hPipe);
+        DisconnectNamedPipe(hPipe);
+    }
+    CloseHandle(hPipe);
     return 0;
 }
 
 /******************************************************************************
  *		CoRegisterClassObject	[OLE32.@]
  *
- * This method will register the class object for a given class ID.
+ * This method will register the class object for a given class ID. Servers housed
+ * in EXE files use this method instead of exporting DllGetClassObject to allow other
+ * code to connect to their objects.
+ *
+ * When a class object (an object which implements IClassFactory) is registered in
+ * this way, a new thread is started which listens for connections on a named pipe
+ * specific to the registered CLSID. When something else connects to it, it writes
+ * out the marshalled IClassFactory interface to the pipe. The code on the other end
+ * uses this buffer to unmarshal the class factory, and can then call methods on it.
+ *
+ * In Windows, such objects are registered with the RPC endpoint mapper, not with
+ * a unique named pipe.
  *
  * See the Windows documentation for more details.
  */
@@ -1103,6 +1155,9 @@ HRESULT WINAPI CoRegisterClassObject(
   /*
    * First, check if the class is already registered.
    * If it is, this should cause an error.
+   *
+   * MSDN claims that multiple interface registrations are legal, but we can't do that with
+   * our current implementation.
    */
   hr = COM_GetRegisteredClassObject(rclsid, dwClsContext, &foundObject);
   if (hr == S_OK) {
@@ -1323,7 +1378,7 @@ HRESULT WINAPI CoGetClassObject(
         return create_marshalled_proxy(rclsid,iid,ppv);
     }
 
-    /* Finally try remote */
+    /* Finally try remote: this requires networked DCOM (a lot of work) */
     if (CLSCTX_REMOTE_SERVER & dwClsContext)
     {
         FIXME ("CLSCTX_REMOTE_SERVER not supported\n");
@@ -1339,7 +1394,7 @@ HRESULT WINAPI CoGetClassObject(
  */
 HRESULT WINAPI CoResumeClassObjects(void)
 {
-	FIXME("\n");
+       FIXME("stub\n");
 	return S_OK;
 }
 
@@ -1396,7 +1451,7 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
         }
      */
 
-    /* if the obove strategies fail then search for the extension key in the registry */
+    /* if the above strategies fail then search for the extension key in the registry */
 
     /* get the last element (absolute file) in the path name */
     nbElm=FileMonikerImpl_DecomposePath(filePathName,&pathDec);
