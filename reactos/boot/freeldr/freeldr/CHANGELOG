@@ -1,3 +1,9 @@
+Changes in v2.0.0 (02/07/2005) (alex ionesco)
+
+- PE loading of ntoskrnl.exe
+- Work on 3GB support
+- w32api conversion
+
 Changes in v1.8.26 (10/30/2004) (chorns)
 
 - Print stack frames on crashes.
