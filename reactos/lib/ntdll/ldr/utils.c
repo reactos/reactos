@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.64 2003/04/30 22:04:12 gvg Exp $
+/* $Id: utils.c,v 1.65 2003/05/12 19:47:53 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,6 +31,12 @@
 #endif
 #include <ntdll/ntdll.h>
 
+/* GLOBALS *******************************************************************/
+
+static HANDLE LdrpKnownDllsDirHandle = NULL;
+static UNICODE_STRING LdrpKnownDllPath = {0, 0, NULL};
+
+
 /* PROTOTYPES ****************************************************************/
 
 static NTSTATUS LdrFindEntryForName(PUNICODE_STRING Name, PLDR_MODULE *Module);
@@ -56,6 +62,87 @@ LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule)
 }
 
 #endif /* DBG */
+
+
+VOID
+LdrpInitLoader(VOID)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING LinkTarget;
+  UNICODE_STRING Name;
+  HANDLE LinkHandle;
+  ULONG Length;
+  NTSTATUS Status;
+
+  DPRINT("LdrpInitLoader() called\n");
+
+  /* Get handle to the 'KnownDlls' directory */
+  RtlInitUnicodeString(&Name,
+		       L"\\KnownDlls");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = NtOpenDirectoryObject(&LdrpKnownDllsDirHandle,
+				 DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
+				 &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtOpenDirectoryObject() failed (Status %lx)\n", Status);
+      LdrpKnownDllsDirHandle = NULL;
+      return;
+    }
+
+  /* Allocate target name string */
+  LinkTarget.Length = 0;
+  LinkTarget.MaximumLength = MAX_PATH * sizeof(WCHAR);
+  LinkTarget.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+				      0,
+				      MAX_PATH * sizeof(WCHAR));
+  if (LinkTarget.Buffer == NULL)
+    {
+      NtClose(LdrpKnownDllsDirHandle);
+      LdrpKnownDllsDirHandle = NULL;
+      return;
+    }
+
+  RtlInitUnicodeString(&Name,
+		       L"KnownDllPath");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENLINK,
+			     LdrpKnownDllsDirHandle,
+			     NULL);
+  Status = NtOpenSymbolicLinkObject(&LinkHandle,
+				    SYMBOLIC_LINK_ALL_ACCESS,
+				    &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&LinkTarget);
+      NtClose(LdrpKnownDllsDirHandle);
+      LdrpKnownDllsDirHandle = NULL;
+      return;
+    }
+
+  Status = NtQuerySymbolicLinkObject(LinkHandle,
+				     &LinkTarget,
+				     &Length);
+  NtClose(LinkHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&LinkTarget);
+      NtClose(LdrpKnownDllsDirHandle);
+      LdrpKnownDllsDirHandle = NULL;
+    }
+
+  RtlCreateUnicodeString(&LdrpKnownDllPath,
+			 LinkTarget.Buffer);
+
+  RtlFreeUnicodeString(&LinkTarget);
+
+  DPRINT("LdrpInitLoader() done\n");
+}
 
 
 /***************************************************************************
@@ -140,8 +227,9 @@ LdrAdjustDllName (PUNICODE_STRING FullDllName,
 }
 
 PLDR_MODULE
-LdrAddModuleEntry(PVOID ImageBase, PIMAGE_NT_HEADERS NTHeaders,
-                  PWSTR FullDosName)
+LdrAddModuleEntry(PVOID ImageBase,
+		  PIMAGE_NT_HEADERS NTHeaders,
+		  PWSTR FullDosName)
 {
   PLDR_MODULE           Module;
   Module = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof (LDR_MODULE));
@@ -183,75 +271,83 @@ LdrAddModuleEntry(PVOID ImageBase, PIMAGE_NT_HEADERS NTHeaders,
   return(Module);
 }
 
-/***************************************************************************
- * NAME                                                         EXPORTED
- *      LdrLoadDll
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- *
- * NOTE
- *
- */
 
-NTSTATUS STDCALL
-LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
-            IN ULONG LoadFlags,
-            IN PUNICODE_STRING Name,
-            OUT PVOID *BaseAddress OPTIONAL)
+static NTSTATUS
+LdrpMapKnownDll(IN PUNICODE_STRING DllName,
+		OUT PUNICODE_STRING FullDosName,
+		OUT PHANDLE SectionHandle)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING ObjectDirName;
+  NTSTATUS Status;
+
+  DPRINT("LdrpMapKnownDll() called\n");
+
+  if (LdrpKnownDllsDirHandle == NULL)
+    {
+      DPRINT("Invalid 'KnownDlls' directory\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  DPRINT("LdrpKnownDllPath '%wZ'\n", &LdrpKnownDllPath);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     DllName,
+			     OBJ_CASE_INSENSITIVE,
+			     LdrpKnownDllsDirHandle,
+			     NULL);
+  Status = NtOpenSection(SectionHandle,
+			 SECTION_MAP_READ | SECTION_MAP_WRITE | SECTION_MAP_EXECUTE,
+			 &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtOpenSection() failed for '%wZ' (Status %lx)\n", DllName, Status);
+      return Status;
+    }
+
+  FullDosName->Length = LdrpKnownDllPath.Length + DllName->Length + sizeof(WCHAR);
+  FullDosName->MaximumLength = FullDosName->Length + sizeof(WCHAR);
+  FullDosName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+					0,
+					FullDosName->MaximumLength);
+  if (FullDosName->Buffer == NULL)
+    {
+      FullDosName->Length = 0;
+      FullDosName->MaximumLength = 0;
+      return STATUS_SUCCESS;
+    }
+
+  wcscpy(FullDosName->Buffer, LdrpKnownDllPath.Buffer);
+  wcscat(FullDosName->Buffer, L"\\");
+  wcscat(FullDosName->Buffer, DllName->Buffer);
+
+  DPRINT("FullDosName '%wZ'\n", FullDosName);
+
+  DPRINT("LdrpMapKnownDll() done\n");
+
+  return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
+		    IN PUNICODE_STRING DllName,
+		    OUT PUNICODE_STRING FullDosName,
+		    OUT PHANDLE SectionHandle)
 {
   WCHAR                 SearchPathBuffer[MAX_PATH];
-  WCHAR                 FullDosName[MAX_PATH];
-  UNICODE_STRING        AdjustedName;
+  WCHAR                 DosName[MAX_PATH];
   UNICODE_STRING        FullNtFileName;
   OBJECT_ATTRIBUTES     FileObjectAttributes;
+  HANDLE                FileHandle;
   char                  BlockBuffer [1024];
   PIMAGE_DOS_HEADER     DosHeader;
-  NTSTATUS              Status;
   PIMAGE_NT_HEADERS     NTHeaders;
-  ULONG                 ImageSize;
-  ULONG                 InitialViewSize;
   PVOID                 ImageBase;
-  HANDLE                FileHandle;
-  HANDLE                SectionHandle;
-  PDLLMAIN_FUNC         Entrypoint = NULL;
-  PLDR_MODULE           Module;
-  
-  if (Name == NULL)
-    {
-      *BaseAddress = NtCurrentPeb()->ImageBaseAddress;
-      return STATUS_SUCCESS;
-    }
+  ULONG                 ImageSize;
+  NTSTATUS Status;
 
-
-  *BaseAddress = NULL;
-  
-  DPRINT("LdrLoadDll(Name \"%wZ\" BaseAddress %x)\n",
-         Name, BaseAddress);
-  
-  /* adjust the full dll name */
-  LdrAdjustDllName (&AdjustedName,
-                    Name,
-                    FALSE);
-  DPRINT("AdjustedName: %wZ\n", &AdjustedName);
-  
-  /*
-   * Test if dll is already loaded.
-   */
-  if (LdrFindEntryForName(&AdjustedName, &Module) == STATUS_SUCCESS)
-    {
-      DPRINT("DLL %wZ already loaded.\n", &AdjustedName);
-      if (Module->LoadCount != -1)
-        Module->LoadCount++;
-      *BaseAddress = Module->BaseAddress;
-      return STATUS_SUCCESS;
-    }
-  DPRINT("Loading \"%wZ\"\n", Name);
+  DPRINT("LdrpMapDllImageFile() called\n");
 
   if (SearchPath == NULL)
     {
@@ -263,38 +359,36 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
     }
 
   DPRINT("SearchPath %S\n", SearchPath);
-  
+
   if (RtlDosSearchPath_U (SearchPath,
-                          AdjustedName.Buffer,
+                          DllName->Buffer,
                           NULL,
                           MAX_PATH,
-                          FullDosName,
+                          DosName,
                           NULL) == 0)
     return STATUS_DLL_NOT_FOUND;
-  
-  DPRINT("FullDosName %S\n", FullDosName);
-  
-  RtlFreeUnicodeString (&AdjustedName);
-  
-  if (!RtlDosPathNameToNtPathName_U (FullDosName,
+
+  DPRINT("DosName %S\n", DosName);
+
+  if (!RtlDosPathNameToNtPathName_U (DosName,
                                      &FullNtFileName,
                                      NULL,
                                      NULL))
     return STATUS_DLL_NOT_FOUND;
-  
+
   DPRINT("FullNtFileName %wZ\n", &FullNtFileName);
-  
+
   InitializeObjectAttributes(&FileObjectAttributes,
                              &FullNtFileName,
                              0,
                              NULL,
                              NULL);
-  
+
   DPRINT("Opening dll \"%wZ\"\n", &FullNtFileName);
-  
+
   Status = ZwOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
-                      &FileObjectAttributes, 
+                      &FileObjectAttributes,
                       NULL,
                       0,
                       0);
@@ -306,7 +400,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
       return Status;
     }
   RtlFreeUnicodeString (&FullNtFileName);
-  
+
   Status = ZwReadFile(FileHandle,
                       0,
                       0,
@@ -345,46 +439,147 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
   
   DPRINT("ImageBase 0x%08x\n", ImageBase);
-        
+  
   /*
    * Create a section for dll.
    */
-  Status = ZwCreateSection(&SectionHandle,
+  Status = ZwCreateSection(SectionHandle,
                            SECTION_ALL_ACCESS,
                            NULL,
                            NULL,
                            PAGE_READWRITE,
                            SEC_COMMIT | SEC_IMAGE,
                            FileHandle);
+  ZwClose(FileHandle);
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NTDLL create section failed: Status = 0x%08x\n", Status);
-      ZwClose(FileHandle);
       return Status;
     }
-  
+
+  RtlCreateUnicodeString(FullDosName,
+			 DosName);
+
+  return Status;
+}
+
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      LdrLoadDll
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ * NOTE
+ *
+ */
+
+NTSTATUS STDCALL
+LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
+            IN ULONG LoadFlags,
+            IN PUNICODE_STRING Name,
+            OUT PVOID *BaseAddress OPTIONAL)
+{
+  UNICODE_STRING        FullDosName;
+  UNICODE_STRING        AdjustedName;
+  NTSTATUS              Status;
+  PIMAGE_NT_HEADERS     NTHeaders;
+  ULONG                 ViewSize;
+  PVOID                 ImageBase;
+  HANDLE                SectionHandle;
+  PDLLMAIN_FUNC         Entrypoint = NULL;
+  PLDR_MODULE           Module;
+
+
+  if (Name == NULL)
+    {
+      *BaseAddress = NtCurrentPeb()->ImageBaseAddress;
+      return STATUS_SUCCESS;
+    }
+
+  *BaseAddress = NULL;
+
+  DPRINT("LdrLoadDll(Name \"%wZ\" BaseAddress %x)\n",
+         Name, BaseAddress);
+
+  /* adjust the full dll name */
+  LdrAdjustDllName (&AdjustedName,
+                    Name,
+                    FALSE);
+  DPRINT("AdjustedName: %wZ\n", &AdjustedName);
+
+  /*
+   * Test if dll is already loaded.
+   */
+  if (LdrFindEntryForName(&AdjustedName, &Module) == STATUS_SUCCESS)
+    {
+      DPRINT("DLL %wZ already loaded.\n", &AdjustedName);
+      if (Module->LoadCount != -1)
+        Module->LoadCount++;
+      *BaseAddress = Module->BaseAddress;
+      return STATUS_SUCCESS;
+    }
+  DPRINT("Loading \"%wZ\"\n", Name);
+
+  /* Open or create dll image section */
+  Status = LdrpMapKnownDll(&AdjustedName,
+			   &FullDosName,
+			   &SectionHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      Status = LdrpMapDllImageFile(SearchPath,
+				   &AdjustedName,
+				   &FullDosName,
+				   &SectionHandle);
+    }
+
+  RtlFreeUnicodeString(&AdjustedName);
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to create or open dll section (Status %lx)\n", Status);
+      return Status;
+    }
+
   /*
    * Map the dll into the process.
    */
-  InitialViewSize = 0;
+  ViewSize = 0;
   ImageBase = 0;
-  Status = ZwMapViewOfSection(SectionHandle,
+  Status = NtMapViewOfSection(SectionHandle,
                               NtCurrentProcess(),
                               &ImageBase,
                               0,
-                              InitialViewSize,
+                              0,
                               NULL,
-                              &InitialViewSize,
+                              &ViewSize,
                               0,
                               MEM_COMMIT,
                               PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("NTDLL.LDR: map view of section failed (Status %x)\n", Status);
-      ZwClose(FileHandle);
+      RtlFreeUnicodeString(&FullDosName);
+      NtClose(SectionHandle);
       return(Status);
     }
-  ZwClose(FileHandle);
+
+  /* Get and check the NT headers */
+  NTHeaders = RtlImageNtHeader(ImageBase);
+  if (NTHeaders == NULL)
+    {
+      DPRINT1("RtlImageNtHeaders() failed\n");
+      RtlFreeUnicodeString(&FullDosName);
+      return STATUS_UNSUCCESSFUL;
+    }
 
   /* relocate dll and fixup import table */
   if ((NTHeaders->FileHeader.Characteristics & IMAGE_FILE_DLL) ==
@@ -392,13 +587,16 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
     {
       Entrypoint =
         (PDLLMAIN_FUNC) LdrPEStartup(ImageBase, SectionHandle, &Module,
-                                     FullDosName);
+                                     FullDosName.Buffer);
       if (Entrypoint == NULL)
         {
+          RtlFreeUnicodeString(&FullDosName);
           return(STATUS_UNSUCCESSFUL);
         }
     }
-  
+
+  RtlFreeUnicodeString(&FullDosName);
+
 #ifdef DBG
 
   LdrpLoadUserModuleSymbols(Module);
@@ -1355,174 +1553,6 @@ LdrUnloadDll (IN PVOID BaseAddress)
    return STATUS_UNSUCCESSFUL;
 }
 
-#if 0 /*MOVED_TO_FILE_RES_C*/
-
-NTSTATUS STDCALL
-LdrFindResource_U(PVOID BaseAddress,
-                  PLDR_RESOURCE_INFO ResourceInfo,
-                  ULONG Level,
-                  PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry)
-{
-   PIMAGE_RESOURCE_DIRECTORY ResDir;
-   PIMAGE_RESOURCE_DIRECTORY ResBase;
-   PIMAGE_RESOURCE_DIRECTORY_ENTRY ResEntry;
-   NTSTATUS Status = STATUS_SUCCESS;
-   ULONG EntryCount;
-   PWCHAR ws;
-   ULONG i;
-   ULONG Id;
-
-   DPRINT ("LdrFindResource_U()\n");
-
-   /* Get the pointer to the resource directory */
-   ResDir = (PIMAGE_RESOURCE_DIRECTORY)
-        RtlImageDirectoryEntryToData (BaseAddress,
-                                      TRUE,
-                                      IMAGE_DIRECTORY_ENTRY_RESOURCE,
-                                      &i);
-   if (ResDir == NULL)
-     {
-        return STATUS_RESOURCE_DATA_NOT_FOUND;
-     }
-
-   DPRINT("ResourceDirectory: %x\n", (ULONG)ResDir);
-
-   ResBase = ResDir;
-
-   /* Let's go into resource tree */
-   for (i = 0; i < Level; i++)
-     {
-        DPRINT("ResDir: %x\n", (ULONG)ResDir);
-        Id = ((PULONG)ResourceInfo)[i];
-        EntryCount = ResDir->NumberOfNamedEntries;
-        ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1);
-        DPRINT("ResEntry %x\n", (ULONG)ResEntry);
-        if (Id & 0xFFFF0000)
-          {
-             /* Resource name is a unicode string */
-             for (; EntryCount--; ResEntry++)
-               {
-                  /* Scan entries for equal name */
-                  if (ResEntry->Name & 0x80000000)
-                    {
-                       ws = (PWCHAR)((ULONG)ResDir + (ResEntry->Name & 0x7FFFFFFF));
-                       if (!wcsncmp((PWCHAR)Id, ws + 1, *ws ) &&
-                           wcslen((PWCHAR)Id) == (int)*ws )
-                         {
-                            goto found;
-                         }
-                    }
-               }
-          }
-        else
-          {
-             /* We use ID number instead of string */
-             ResEntry += EntryCount;
-             EntryCount = ResDir->NumberOfIdEntries;
-             for (; EntryCount--; ResEntry++)
-               {
-                  /* Scan entries for equal name */
-                  if (ResEntry->Name == Id)
-                    {
-                     DPRINT("ID entry found %x\n", Id);
-                     goto found;
-                    }
-               }
-          }
-        DPRINT("Error %lu\n", i);
-
-          switch (i)
-          {
-             case 0:
-                return STATUS_RESOURCE_TYPE_NOT_FOUND;
-
-             case 1:
-                return STATUS_RESOURCE_NAME_NOT_FOUND;
-
-             case 2:
-                if (ResDir->NumberOfNamedEntries || ResDir->NumberOfIdEntries)
-                  {
-                     /* Use the first available language */
-                     ResEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)(ResDir + 1);
-                     break;
-                  }
-                return STATUS_RESOURCE_LANG_NOT_FOUND;
-
-             case 3:
-                return STATUS_RESOURCE_DATA_NOT_FOUND;
-
-             default:
-                return STATUS_INVALID_PARAMETER;
-          }
-found:;
-        ResDir = (PIMAGE_RESOURCE_DIRECTORY)((ULONG)ResBase +
-                (ResEntry->OffsetToData & 0x7FFFFFFF));
-     }
-   DPRINT("ResourceDataEntry: %x\n", (ULONG)ResDir);
-
-   if (ResourceDataEntry)
-     {
-        *ResourceDataEntry = (PVOID)ResDir;
-     }
-
-  return Status;
-}
-
-
-NTSTATUS STDCALL
-LdrAccessResource(IN  PVOID BaseAddress,
-                  IN  PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
-                  OUT PVOID *Resource OPTIONAL,
-                  OUT PULONG Size OPTIONAL)
-{
-   PIMAGE_SECTION_HEADER Section;
-   PIMAGE_NT_HEADERS NtHeader;
-   ULONG SectionRva;
-   ULONG SectionVa;
-   ULONG DataSize;
-   ULONG Offset = 0;
-   ULONG Data;
-
-   Data = (ULONG)RtlImageDirectoryEntryToData (BaseAddress,
-                                               TRUE,
-                                               IMAGE_DIRECTORY_ENTRY_RESOURCE,
-                                               &DataSize);
-   if (Data == 0)
-        return STATUS_RESOURCE_DATA_NOT_FOUND;
-
-   if ((ULONG)BaseAddress & 1)
-     {
-        /* loaded as ordinary file */
-        NtHeader = RtlImageNtHeader((PVOID)((ULONG)BaseAddress & ~1UL));
-        Offset = (ULONG)BaseAddress - Data + NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
-        Section = RtlImageRvaToSection (NtHeader, BaseAddress, NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress);
-        if (Section == NULL)
-          {
-             return STATUS_RESOURCE_DATA_NOT_FOUND;
-          }
-
-        if (Section->Misc.VirtualSize < ResourceDataEntry->OffsetToData)
-          {
-             SectionRva = RtlImageRvaToSection (NtHeader, BaseAddress, ResourceDataEntry->OffsetToData)->VirtualAddress;
-             SectionVa = RtlImageRvaToVa(NtHeader, BaseAddress, SectionRva, NULL);
-             Offset = SectionRva - SectionVa + Data - Section->VirtualAddress;
-          }
-     }
-
-   if (Resource)
-     {
-        *Resource = (PVOID)(ResourceDataEntry->OffsetToData - Offset + (ULONG)BaseAddress);
-     }
-
-   if (Size)
-     {
-        *Size = ResourceDataEntry->Size;
-     }
-
-   return STATUS_SUCCESS;
-}
-
-#endif /*MOVED_TO_FILE_RES_C*/
 
 NTSTATUS STDCALL
 LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
@@ -1554,106 +1584,8 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
     return Status;
 }
 
-#if 0 /*MOVED_TO_FILE_RES_C*/
 
 NTSTATUS STDCALL
-LdrFindResourceDirectory_U (IN PVOID BaseAddress,
-                            WCHAR **name,
-                            DWORD level,
-                            OUT PVOID *addr)
-{
-   PIMAGE_RESOURCE_DIRECTORY ResDir;
-   PIMAGE_RESOURCE_DIRECTORY_ENTRY ResEntry;
-   ULONG EntryCount;
-   ULONG i;
-   NTSTATUS Status = STATUS_SUCCESS;
-   WCHAR *ws;
-
-   /* Get the pointer to the resource directory */
-   ResDir = (PIMAGE_RESOURCE_DIRECTORY)
-        RtlImageDirectoryEntryToData (BaseAddress,
-                                      TRUE,
-                                      IMAGE_DIRECTORY_ENTRY_RESOURCE,
-                                      &i);
-   if (ResDir == NULL)
-     {
-        return STATUS_RESOURCE_DATA_NOT_FOUND;
-     }
-
-   /* Let's go into resource tree */
-   for (i = 0; i < level; i++, name++)
-     {
-        EntryCount = ResDir->NumberOfNamedEntries;
-        ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1);
-        if ((ULONG)(*name) & 0xFFFF0000)
-          {
-             /* Resource name is a unicode string */
-             for (; EntryCount--; ResEntry++)
-               {
-                  /* Scan entries for equal name */
-                  if (ResEntry->Name & 0x80000000)
-                    {
-                       ws = (WCHAR*)((ULONG)ResDir + (ResEntry->Name & 0x7FFFFFFF));
-                       if (!wcsncmp( *name, ws + 1, *ws ) && wcslen( *name ) == (int)*ws )
-                         {
-                            goto found;
-                         }
-                    }
-               }
-          }
-        else
-          {
-             /* We use ID number instead of string */
-             ResEntry += EntryCount;
-             EntryCount = ResDir->NumberOfIdEntries;
-             for (; EntryCount--; ResEntry++)
-               {
-                  /* Scan entries for equal name */
-                  if (ResEntry->Name == (ULONG)(*name))
-                     goto found;
-               }
-          }
-
-          switch (i)
-          {
-             case 0:
-                return STATUS_RESOURCE_TYPE_NOT_FOUND;
-
-             case 1:
-                return STATUS_RESOURCE_NAME_NOT_FOUND;
-
-             case 2:
-                Status = STATUS_RESOURCE_LANG_NOT_FOUND;
-                /* Just use first language entry */
-                if (ResDir->NumberOfNamedEntries || ResDir->NumberOfIdEntries)
-                  {
-                     ResEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)(ResDir + 1);
-                     break;
-                  }
-                return Status;
-
-             case 3:
-                return STATUS_RESOURCE_DATA_NOT_FOUND;
-
-             default:
-                return STATUS_INVALID_PARAMETER;
-          }
-found:;
-        ResDir = (PIMAGE_RESOURCE_DIRECTORY)((ULONG)ResDir + ResEntry->OffsetToData);
-     }
-
-   if (addr)
-     {
-        *addr = (PVOID)ResDir;
-     }
-
-  return Status;
-}
-
-#endif /*MOVED_TO_FILE_RES_C*/
-
-NTSTATUS
-STDCALL
 LdrGetDllHandle(IN ULONG Unknown1,
                 IN ULONG Unknown2,
                 IN PUNICODE_STRING DllName,
@@ -1867,7 +1799,6 @@ NTSTATUS STDCALL
 LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
                                  IN ULONG Size OPTIONAL,
                                  OUT PULONG ReturnedSize)
-
 {
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;

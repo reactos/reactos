@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.50 2003/04/27 14:45:52 chorns Exp $
+/* $Id: startup.c,v 1.51 2003/05/12 19:47:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,6 +24,8 @@
 
 
 VOID RtlInitializeHeapManager (VOID);
+VOID LdrpInitLoader(VOID);
+
 
 /* GLOBALS *******************************************************************/
 
@@ -258,6 +260,8 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 
    InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,
                   &ExeModule->InLoadOrderModuleList);
+
+  LdrpInitLoader();
 
 #ifdef DBG
 

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.45 2003/02/25 23:08:52 gvg Exp $
+/* $Id: init.c,v 1.46 2003/05/12 19:46:17 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -357,20 +357,227 @@ SmProcessFileRenameList(VOID)
 }
 
 
-static NTSTATUS
-SmPreloadDlls(VOID)
+static NTSTATUS STDCALL
+SmKnownDllsQueryRoutine(PWSTR ValueName,
+			ULONG ValueType,
+			PVOID ValueData,
+			ULONG ValueLength,
+			PVOID Context,
+			PVOID EntryContext)
 {
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  UNICODE_STRING ImageName;
+  HANDLE FileHandle;
+  HANDLE SectionHandle;
+  NTSTATUS Status;
+
 #ifndef NDEBUG
-  PrintString("SmPreloadDlls() called\n");
+  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  PrintString("ValueData '%S'  Context %p  EntryContext %p\n", (PWSTR)ValueData, Context, EntryContext);
 #endif
 
-  /* FIXME: implement it! */
+  /* Ignore the 'DllDirectory' value */
+  if (!_wcsicmp(ValueName, L"DllDirectory"))
+    return STATUS_SUCCESS;
+
+  /* Open the DLL image file */
+  RtlInitUnicodeString(&ImageName,
+		       ValueData);
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &ImageName,
+			     OBJ_CASE_INSENSITIVE,
+			     (HANDLE)Context,
+			     NULL);
+  Status = NtOpenFile(&FileHandle,
+		      SYNCHRONIZE | FILE_EXECUTE,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      FILE_SHARE_READ,
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+  if (!NT_SUCCESS(Status))
+    {
+#ifndef NDEBUG
+      PrintString("NtOpenFile() failed (Status %lx)\n", Status);
+#endif
+      return STATUS_SUCCESS;
+    }
 
 #ifndef NDEBUG
-  PrintString("SmPreloadDlls() done\n");
+  PrintString("Opened file %wZ successfully\n", &ImageName);
 #endif
 
-  return(STATUS_SUCCESS);
+
+  /* FIXME: Check dll image file */
+
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &ImageName,
+			     OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+			     (HANDLE)EntryContext,
+			     NULL);
+  Status = NtCreateSection(&SectionHandle,
+			   SECTION_ALL_ACCESS,
+			   &ObjectAttributes,
+			   NULL,
+			   PAGE_EXECUTE,
+			   SEC_IMAGE,
+			   FileHandle);
+  if (NT_SUCCESS(Status))
+    {
+#ifndef NDEBUG
+      PrintString("Created section successfully\n");
+#endif
+      NtClose(SectionHandle);
+    }
+
+  NtClose(FileHandle);
+
+  return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+SmLoadKnownDlls(VOID)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK IoStatusBlock;
+  UNICODE_STRING DllDosPath;
+  UNICODE_STRING DllNtPath;
+  UNICODE_STRING Name;
+  HANDLE ObjectDirHandle;
+  HANDLE FileDirHandle;
+  HANDLE SymlinkHandle;
+  NTSTATUS Status;
+
+#ifndef NDEBUG
+  PrintString("SmLoadKnownDlls() called\n");
+#endif
+
+  /* Create 'KnownDlls' object directory */
+  RtlInitUnicodeString(&Name,
+		       L"\\KnownDlls");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_PERMANENT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     NULL,
+			     NULL);
+  Status = NtCreateDirectoryObject(&ObjectDirHandle,
+				   DIRECTORY_ALL_ACCESS,
+				   &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+#ifndef NDEBUG
+      PrintString("NtCreateDirectoryObject() failed (Status %lx)\n", Status);
+#endif
+      return Status;
+    }
+
+  RtlInitUnicodeString(&DllDosPath, NULL);
+
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"DllDirectory";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].EntryContext = &DllDosPath;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				  L"\\Session Manager\\KnownDlls",
+				  QueryTable,
+				  NULL,
+				  SmSystemEnvironment);
+  if (!NT_SUCCESS(Status))
+    {
+#ifndef NDEBUG
+      PrintString("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+#endif
+      return Status;
+    }
+
+#ifndef NDEBUG
+  PrintString("DllDosPath: '%wZ'\n", &DllDosPath);
+#endif
+
+  if (!RtlDosPathNameToNtPathName_U(DllDosPath.Buffer,
+				    &DllNtPath,
+				    NULL,
+				    NULL))
+    {
+#ifndef NDEBUG
+      PrintString("RtlDosPathNameToNtPathName_U() failed\n");
+#endif
+      return STATUS_OBJECT_NAME_INVALID;
+    }
+
+  PrintString("DllNtPath: '%wZ'\n", &DllNtPath);
+
+  /* Open the dll path directory */
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &DllNtPath,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = NtOpenFile(&FileDirHandle,
+		      SYNCHRONIZE | FILE_READ_DATA,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      FILE_SHARE_READ | FILE_SHARE_WRITE,
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+  if (!NT_SUCCESS(Status))
+    {
+#ifndef NDEBUG
+      PrintString("NtOpenFile() failed (Status %lx)\n", Status);
+#endif
+      return Status;
+    }
+
+  /* Link 'KnownDllPath' the dll path directory */
+  RtlInitUnicodeString(&Name,
+		       L"KnownDllPath");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_PERMANENT | OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     ObjectDirHandle,
+			     NULL);
+  Status = NtCreateSymbolicLinkObject(&SymlinkHandle,
+				      SYMBOLIC_LINK_ALL_ACCESS,
+				      &ObjectAttributes,
+				      &DllDosPath);
+  if (!NT_SUCCESS(Status))
+    {
+#ifndef NDEBUG
+      PrintString("NtCreateSymbolicLink() failed (Status %lx)\n", Status);
+#endif
+      return Status;
+    }
+
+  NtClose(SymlinkHandle);
+
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].QueryRoutine = SmKnownDllsQueryRoutine;
+  QueryTable[0].EntryContext = ObjectDirHandle;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+				  L"\\Session Manager\\KnownDlls",
+				  QueryTable,
+				  (PVOID)FileDirHandle,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+#ifndef NDEBUG
+      PrintString("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+#endif
+    }
+
+#ifndef NDEBUG
+  PrintString("SmLoadKnownDlls() done\n");
+#endif
+
+  return Status;
 }
 
 
@@ -418,15 +625,15 @@ SmPagingFilesQueryRoutine(PWSTR ValueName,
       MaximumSize.QuadPart = 80 * 4096;
     }
 
-  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)ValueData, 
+  if (!RtlDosPathNameToNtPathName_U ((LPWSTR)ValueData,
 				     &FileName,
 				     NULL,
 				     NULL))
     {
       return (STATUS_SUCCESS);
-    }  
+    }
 
-  DbgPrint("SMSS: Created paging file %wZ with size %dKB\n", 
+  DbgPrint("SMSS: Created paging file %wZ with size %dKB\n",
 	   &FileName, InitialSize.QuadPart / 1024);
   Status = NtCreatePagingFile(&FileName,
 			      &InitialSize,
@@ -516,7 +723,7 @@ SmSetEnvironmentVariables(VOID)
   wcscpy(ValueBuffer,
 	 SharedUserData->NtSystemRoot);
 
-  /* Cet SystemRoot = "C:\reactos" */
+  /* Set SystemRoot = "C:\reactos" */
   RtlInitUnicodeStringFromLiteral(&EnvVariable,
 		       L"SystemRoot");
   RtlInitUnicodeString(&EnvValue,
@@ -618,6 +825,14 @@ InitSessionManager(HANDLE Children[])
       return(Status);
     }
 
+  /* Set environment variables */
+  Status = SmSetEnvironmentVariables();
+  if (!NT_SUCCESS(Status))
+    {
+      PrintString("SM: Failed to set system environment variables (Status %lx)\n", Status);
+      return(Status);
+    }
+
   /* Define symbolic links to kernel devices (MS-DOS names) */
   Status = SmInitDosDevices();
   if (!NT_SUCCESS(Status))
@@ -643,7 +858,7 @@ InitSessionManager(HANDLE Children[])
     }
 
   /* Load the well known DLLs */
-  Status = SmPreloadDlls();
+  Status = SmLoadKnownDlls();
   if (!NT_SUCCESS(Status))
     {
       PrintString("SM: Failed to preload system DLLs (Status %lx)\n", Status);
@@ -662,12 +877,14 @@ InitSessionManager(HANDLE Children[])
   NtInitializeRegistry(FALSE);
 
   /* Set environment variables from registry */
-  Status = SmSetEnvironmentVariables();
+#if 0
+  Status = SmUpdateEnvironment();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to set system environment variables (Status %lx)\n", Status);
+      PrintString("SM: Failed to update environment variables (Status %lx)\n", Status);
       return(Status);
     }
+#endif
 
   /* Load the subsystems */
   Status = SmLoadSubsystems();
@@ -679,7 +896,7 @@ InitSessionManager(HANDLE Children[])
 
   /* Run csrss.exe */
   RtlInitUnicodeStringFromLiteral(&UnicodeString,
-		       L"\\CsrssInitDone");
+				  L"\\CsrssInitDone");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
 			     EVENT_ALL_ACCESS,
