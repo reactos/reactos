@@ -1337,6 +1337,10 @@ RtlGetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      PACL* Sacl,
 			      PBOOLEAN SaclDefaulted);
 
+BOOLEAN STDCALL
+RtlGetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
+				  PUCHAR RMControl);
+
 NTSTATUS
 STDCALL
 RtlGetSetBootStatusData(
@@ -2320,6 +2324,10 @@ RtlSetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
 			      BOOLEAN SaclPresent,
 			      PACL Sacl,
 			      BOOLEAN SaclDefaulted);
+
+VOID STDCALL
+RtlSetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
+				  PUCHAR RMControl);
 
 NTSTATUS STDCALL
 RtlSetInformationAcl (PACL Acl,

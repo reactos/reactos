@@ -369,8 +369,6 @@ RtlDecompressFragment@32
 RtlDeleteAce@8
 RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection@4
-RtlDuplicateUnicodeString@12
-RtlSetCriticalSectionSpinCount@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteOwnersRanges@8
@@ -394,6 +392,7 @@ RtlDosSearchPath_U@24
 RtlDowncaseUnicodeChar@4
 RtlDowncaseUnicodeString@12
 RtlDumpResource@4
+RtlDuplicateUnicodeString@12
 RtlEmptyAtomTable@8
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
@@ -462,6 +461,7 @@ RtlGetNtVersionNumbers@12
 RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeaps@8
 RtlGetSaclSecurityDescriptor@16
+RtlGetSecurityDescriptorRMControl@8
 ;RtlGetUserInfoHeap
 RtlGetVersion@4
 RtlIdentifierAuthoritySid@4
@@ -586,6 +586,7 @@ RtlSetAllBits@4
 ;RtlSetAttributesSecurityDescriptor
 RtlSetBits@12
 RtlSetControlSecurityDescriptor@12
+RtlSetCriticalSectionSpinCount@8
 RtlSetCurrentDirectory_U@4
 RtlSetCurrentEnvironment@8
 RtlSetDaclSecurityDescriptor@16
@@ -594,6 +595,7 @@ RtlSetGroupSecurityDescriptor@12
 RtlSetInformationAcl@16
 RtlSetOwnerSecurityDescriptor@12
 RtlSetSaclSecurityDescriptor@16
+RtlSetSecurityDescriptorRMControl@8
 ;RtlSetSecurityObject
 RtlSetTimeZoneInformation@4
 ;RtlSetUnicodeCallouts

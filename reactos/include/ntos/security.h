@@ -36,13 +36,14 @@
 /* Security descriptor control. */
 #define SECURITY_DESCRIPTOR_REVISION	(1)
 #define SECURITY_DESCRIPTOR_MIN_LENGTH	(20)
-#define SE_OWNER_DEFAULTED	(1)
-#define SE_GROUP_DEFAULTED	(2)
-#define SE_DACL_PRESENT	(4)
-#define SE_DACL_DEFAULTED	(8)
-#define SE_SACL_PRESENT	(16)
-#define SE_SACL_DEFAULTED	(32)
-#define SE_SELF_RELATIVE	(32768)
+#define SE_OWNER_DEFAULTED	(0x0001)
+#define SE_GROUP_DEFAULTED	(0x0002)
+#define SE_DACL_PRESENT		(0x0004)
+#define SE_DACL_DEFAULTED	(0x0008)
+#define SE_SACL_PRESENT		(0x0010)
+#define SE_SACL_DEFAULTED	(0x0020)
+#define SE_RM_CONTROL_VALID	(0x4000)
+#define SE_SELF_RELATIVE	(0x8000)
 #endif
 
 /* This is defined in the Win 32 API headers as something else: */

@@ -789,8 +789,8 @@ RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR RelSD,
 
 
 /*
-* @unimplemented
-*/
+ * @unimplemented
+ */
 NTSTATUS STDCALL
 RtlSelfRelativeToAbsoluteSD2(PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
                              PULONG BufferSize)
@@ -868,6 +868,45 @@ RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptorInp
    }
 
    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOLEAN STDCALL
+RtlGetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                  PUCHAR RMControl)
+{
+  if (!(SecurityDescriptor->Control & SE_RM_CONTROL_VALID))
+  {
+    *RMControl = 0;
+    return FALSE;
+  }
+
+  *RMControl = SecurityDescriptor->Sbz1;
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlSetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                  PUCHAR RMControl)
+{
+  if (RMControl == NULL)
+  {
+    SecurityDescriptor->Control &= ~SE_RM_CONTROL_VALID;
+    SecurityDescriptor->Sbz1 = 0;
+  }
+  else
+  {
+    SecurityDescriptor->Control |= SE_RM_CONTROL_VALID;
+    SecurityDescriptor->Sbz1 = *RMControl;
+  }
 }
 
 /* EOF */
