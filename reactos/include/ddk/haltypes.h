@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.6 2002/10/02 19:30:46 ekohl Exp $
+/* $Id: haltypes.h,v 1.7 2002/11/18 22:39:02 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -164,7 +164,7 @@ typedef struct _PCI_COMMON_CONFIG
 #define PCI_INVALID_VENDORID                0xFFFF
 
 
-/* Bit encodings for  PCI_COMMON_CONFIG.HeaderType */
+/* Bit encodings for PCI_COMMON_CONFIG.HeaderType */
 
 #define PCI_MULTIFUNCTION                   0x80
 #define PCI_DEVICE_TYPE                     0x00
@@ -197,11 +197,42 @@ typedef struct _PCI_COMMON_CONFIG
 #define PCI_STATUS_DETECTED_PARITY_ERROR    0x8000
 
 
+/* PCI device classes */
+
+#define PCI_CLASS_PRE_20                    0x00
+#define PCI_CLASS_MASS_STORAGE_CTLR         0x01
+#define PCI_CLASS_NETWORK_CTLR              0x02
+#define PCI_CLASS_DISPLAY_CTLR              0x03
+#define PCI_CLASS_MULTIMEDIA_DEV            0x04
+#define PCI_CLASS_MEMORY_CTLR               0x05
+#define PCI_CLASS_BRIDGE_DEV                0x06
+#define PCI_CLASS_SIMPLE_COMMS_CTLR         0x07
+#define PCI_CLASS_BASE_SYSTEM_DEV           0x08
+#define PCI_CLASS_INPUT_DEV                 0x09
+#define PCI_CLASS_DOCKING_STATION           0x0a
+#define PCI_CLASS_PROCESSOR                 0x0b
+#define PCI_CLASS_SERIAL_BUS_CTLR           0x0c
+
+
+/* PCI device subclasses for class 1 (mass storage controllers)*/
+
+#define PCI_SUBCLASS_MSC_SCSI_BUS_CTLR      0x00
+#define PCI_SUBCLASS_MSC_IDE_CTLR           0x01
+#define PCI_SUBCLASS_MSC_FLOPPY_CTLR        0x02
+#define PCI_SUBCLASS_MSC_IPI_CTLR           0x03
+#define PCI_SUBCLASS_MSC_RAID_CTLR          0x04
+#define PCI_SUBCLASS_MSC_OTHER              0x80
+
+
 /* Bit encodes for PCI_COMMON_CONFIG.u.type0.BaseAddresses */
 
 #define PCI_ADDRESS_IO_SPACE                0x00000001
 #define PCI_ADDRESS_MEMORY_TYPE_MASK        0x00000006
 #define PCI_ADDRESS_MEMORY_PREFETCHABLE     0x00000008
+
+#define PCI_ADDRESS_IO_ADDRESS_MASK         0xfffffffc
+#define PCI_ADDRESS_MEMORY_ADDRESS_MASK     0xfffffff0
+#define PCI_ADDRESS_ROM_ADDRESS_MASK        0xfffff800
 
 #define PCI_TYPE_32BIT      0
 #define PCI_TYPE_20BIT      2
@@ -211,6 +242,7 @@ typedef struct _PCI_COMMON_CONFIG
 /* Bit encodes for PCI_COMMON_CONFIG.u.type0.ROMBaseAddresses */
 
 #define PCI_ROMADDRESS_ENABLED              0x00000001
+
 
 
 typedef struct _PCI_SLOT_NUMBER
