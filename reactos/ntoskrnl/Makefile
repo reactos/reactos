@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.94 2003/05/13 21:28:26 chorns Exp $
+# $Id: Makefile,v 1.95 2003/05/21 15:06:33 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -320,9 +320,6 @@ OBJECTS_LPC = \
 	lpc/reply.o \
 	lpc/send.o
 
-# Nation Language Support Library (Nls)
-OBJECTS_NLS = nls/nls.o
-
 # Power Management (Po)
 OBJECTS_PO = po/power.o
 
@@ -455,12 +452,6 @@ $(OBJECTS_PATH)/lpc.o: $(OBJECTS_LPC)
 		-o $(OBJECTS_PATH)/lpc.o \
 		$(OBJECTS_LPC)
 
-$(OBJECTS_PATH)/nls.o: $(OBJECTS_NLS)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/nls.o \
-		$(OBJECTS_NLS)
-
 $(OBJECTS_PATH)/nt.o: $(OBJECTS_NT)
 	$(LD) \
 		-r \
@@ -499,7 +490,6 @@ OBJECTS := \
 	$(OBJECTS_PATH)/kd.o \
 	$(OBJECTS_PATH)/ldr.o \
 	$(OBJECTS_PATH)/mm.o \
-	$(OBJECTS_PATH)/nls.o \
 	$(OBJECTS_PATH)/nt.o \
 	$(OBJECTS_PATH)/ob.o \
 	$(OBJECTS_PATH)/po.o \
@@ -662,7 +652,7 @@ implib: $(DDK_PATH_LIB)/$(TARGETNAME).a
 clean:
 	- $(RM) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
               ex/i386/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
-              rtl/*.o rtl/i386/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
+              rtl/*.o rtl/i386/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o \
               lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
 	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
