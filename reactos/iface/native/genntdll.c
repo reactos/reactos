@@ -1,4 +1,4 @@
-/* $Id: genntdll.c,v 1.15 2004/04/07 15:02:31 weiden Exp $
+/* $Id: genntdll.c,v 1.16 2004/04/07 15:32:41 ekohl Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -135,7 +135,7 @@ char    *stmp;
 			 * Now write the current system call's name
 			 * in the service table.
 			 */
-			fprintf(out,"\t\t{ (ULONG)%s }",name);
+			fprintf(out,"\t\t(PVOID (NTAPI *)(VOID))%s",name);
 		}
 	}
 	/* Close the service table (C syntax) */
@@ -194,7 +194,7 @@ char    *stmp;
 			 * Now write the current system call's ID
 			 * in the service table along with its Parameters Size.
 			 */
-			fprintf(out,"\t\t{ %s }",nr_args);
+			fprintf(out,"\t\t%s",nr_args);
 		}
 	}
 	/*
@@ -368,4 +368,3 @@ int main(int argc, char* argv[])
 
 	return(ret);
 }
-

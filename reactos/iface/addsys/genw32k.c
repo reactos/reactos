@@ -1,4 +1,4 @@
-/* $Id: genw32k.c,v 1.8 2004/04/07 15:02:31 weiden Exp $
+/* $Id: genw32k.c,v 1.9 2004/04/07 15:32:24 ekohl Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -88,7 +88,7 @@ char    *stmp;
 			 * Now write the current system call's name
 			 * in the service table.
 			 */
-			fprintf(out,"\t\t{ (ULONG)%s }",name);
+			fprintf(out,"\t\t(PVOID (NTAPI *)(VOID))%s",name);
 
 			/* Next system call index */
 			sys_call_idx++;
@@ -143,7 +143,7 @@ char    *stmp;
 			 * Now write the current system call's ID
 			 * in the service table along with its Parameters Size.
 			 */
-			fprintf(out,"\t\t{ %d }",atoi(nr_args) * sizeof(void*));
+			fprintf(out,"\t\t%d",atoi(nr_args) * sizeof(void*));
 
 			/* Next system call index */
 			sys_call_idx++;
@@ -346,4 +346,3 @@ int main(int argc, char* argv[])
 
 	return(ret);
 }
-
