@@ -163,7 +163,7 @@ UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDo
    {
       case DFCS_CAPTIONMIN:
       {
-         if ((ExStyle & WS_EX_TOOLWINDOW) == TRUE)
+         if (ExStyle & WS_EX_TOOLWINDOW)
             return; /* ToolWindows don't have min/max buttons */
 
          if (Style & WS_SYSMENU)
@@ -182,7 +182,7 @@ UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDo
       }
       case DFCS_CAPTIONMAX:
       {
-         if ((ExStyle & WS_EX_TOOLWINDOW) == TRUE)
+         if (ExStyle & WS_EX_TOOLWINDOW)
              return; /* ToolWindows don't have min/max buttons */
 
          if (Style & WS_SYSMENU)
@@ -202,8 +202,16 @@ UserDrawCaptionButton(LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hDC, BOOL bDo
       {
          /* FIXME: A tool window has a smaller Close button */
 
-         TempRect.left = TempRect.right - GetSystemMetrics(SM_CXSIZE);
-         TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYSIZE) - 2;
+         if (ExStyle & WS_EX_TOOLWINDOW)
+         {
+            TempRect.left = TempRect.right - GetSystemMetrics(SM_CXSMSIZE);
+            TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYSMSIZE) - 2;                  
+         }
+         else
+         {
+            TempRect.left = TempRect.right - GetSystemMetrics(SM_CXSIZE);
+            TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYSIZE) - 2;
+         }
          TempRect.top += 2;
          TempRect.right -= 2;
 
@@ -669,10 +677,17 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
          WindowRect.top += GetSystemMetrics(SM_CYCAPTION);
       if (!PtInRect(&WindowRect, Point))
       {
-         if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW))
+         if (Style & WS_SYSMENU)
          {
-            WindowRect.left += GetSystemMetrics(SM_CXSIZE);
-            WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
+            if (ExStyle & WS_EX_TOOLWINDOW)
+            {
+               WindowRect.right -= GetSystemMetrics(SM_CXSMSIZE);
+            }
+            else
+            {
+               WindowRect.left += GetSystemMetrics(SM_CXSIZE);
+               WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
+            }
          }
          if (Point.x <= WindowRect.left)
             return HTSYSMENU;
@@ -1058,7 +1073,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     r.top = Padding;
     r.bottom = r.top + (Height / 2);
 
-    if ((uFlags & DC_ICON) && (Style & WS_SYSMENU))
+    if ((uFlags & DC_ICON) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
     {
         // For some reason the icon isn't centered correctly...
         r.top --;
@@ -1071,13 +1086,14 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 
   if ((uFlags & DC_TEXT) && (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
   {
-    // Duplicate odd behaviour from Windows:
-    if ((! uFlags & DC_SMALLCAP) || (uFlags & DC_ICON) || (uFlags & DC_INBUTTON) ||
-        (! uFlags & DC_ACTIVE))
+    if (!(uFlags & DC_SMALLCAP) && ((uFlags & DC_ICON) || (uFlags & DC_INBUTTON)))
         r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
 
     r.right = (lprc->right - lprc->left);
-    ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
+    if (uFlags & DC_SMALLCAP)
+      ButtonWidth = GetSystemMetrics(SM_CXSMSIZE) - 2;
+    else
+      ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
 
     if (Style & WS_SYSMENU)
     {
