@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.6 2000/10/05 19:17:25 ekohl Exp $
+/* $Id: beep.c,v 1.7 2001/06/07 20:38:53 ea Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,7 +16,7 @@
 #include <ddk/ntddbeep.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 
 /* TYEPEDEFS ***************************************************************/
