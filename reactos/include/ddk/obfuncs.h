@@ -1,17 +1,16 @@
 /* OBJECT MANAGER ************************************************************/
 
-NTSTATUS STDCALL ObCreateObject(PHANDLE Handle,
-				ACCESS_MASK DesiredAccess,
-				POBJECT_ATTRIBUTES ObjectAttributes,
-				POBJECT_TYPE Type,
-				PVOID *Object);
+NTSTATUS STDCALL
+ObCreateObject(PHANDLE Handle,
+	       ACCESS_MASK DesiredAccess,
+	       POBJECT_ATTRIBUTES ObjectAttributes,
+	       POBJECT_TYPE Type,
+	       PVOID *Object);
 
-VOID
-FASTCALL
+VOID FASTCALL
 ObfDereferenceObject(IN PVOID Object);
 
-VOID
-FASTCALL
+VOID FASTCALL
 ObfReferenceObject(IN PVOID Object);
 
 #define ObDereferenceObject(Object) \
@@ -20,25 +19,34 @@ ObfReferenceObject(IN PVOID Object);
 #define ObReferenceObject(Object) \
   ObfReferenceObject(Object)
 
-VOID
-STDCALL
-ObMakeTemporaryObject(PVOID ObjectBody);
+NTSTATUS STDCALL
+ObInsertObject(PVOID Object,
+	       PACCESS_STATE PassedAccessState,
+	       ACCESS_MASK DesiredAccess,
+	       ULONG AdditionalReferences,
+	       PVOID* ReferencedObject,
+	       PHANDLE Handle);
 
-NTSTATUS STDCALL ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
-				    IN POBJECT_TYPE ObjectType,
-				    IN PVOID ParseContext,
-				    IN KPROCESSOR_MODE AccessMode,
-				    IN ACCESS_MASK DesiredAccess,
-				    IN PACCESS_STATE PassedAccessState,
-				    OUT PHANDLE Handle);
+VOID STDCALL
+ObMakeTemporaryObject(IN PVOID ObjectBody);
 
-NTSTATUS STDCALL ObOpenObjectByPointer(IN PVOID Object,
-				       IN ULONG HandleAttributes,
-				       IN PACCESS_STATE PassedAccessState,
-				       IN ACCESS_MASK DesiredAccess,
-				       IN POBJECT_TYPE ObjectType,
-				       IN KPROCESSOR_MODE AccessMode,
-				       OUT PHANDLE Handle);
+NTSTATUS STDCALL
+ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
+		   IN POBJECT_TYPE ObjectType,
+		   IN PVOID ParseContext,
+		   IN KPROCESSOR_MODE AccessMode,
+		   IN ACCESS_MASK DesiredAccess,
+		   IN PACCESS_STATE PassedAccessState,
+		   OUT PHANDLE Handle);
+
+NTSTATUS STDCALL
+ObOpenObjectByPointer(IN PVOID Object,
+		      IN ULONG HandleAttributes,
+		      IN PACCESS_STATE PassedAccessState,
+		      IN ACCESS_MASK DesiredAccess,
+		      IN POBJECT_TYPE ObjectType,
+		      IN KPROCESSOR_MODE AccessMode,
+		      OUT PHANDLE Handle);
 
 /*
  * FUNCTION: Performs access validation on an object handle and if access
@@ -54,12 +62,13 @@ NTSTATUS STDCALL ObOpenObjectByPointer(IN PVOID Object,
  *                                   information about the handle
  * RETURNS: Status
  */
-NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
-					   ACCESS_MASK DesiredAccess,
-					   POBJECT_TYPE ObjectType,
-					   KPROCESSOR_MODE AccessMode,
-					   PVOID* Object,
-					   POBJECT_HANDLE_INFORMATION HandleInfo);
+NTSTATUS STDCALL
+ObReferenceObjectByHandle(HANDLE Handle,
+			  ACCESS_MASK DesiredAccess,
+			  POBJECT_TYPE ObjectType,
+			  KPROCESSOR_MODE AccessMode,
+			  PVOID* Object,
+			  POBJECT_HANDLE_INFORMATION HandleInfo);
 
 /*
  * FUNCTION: Increments the reference count for a given object
@@ -70,17 +79,19 @@ NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
  *      AccessMode = Access mode to use for the security check
  * RETURNS: Status
  */
-NTSTATUS STDCALL ObReferenceObjectByPointer(PVOID Object,
-				    ACCESS_MASK DesiredAccess,
-				    POBJECT_TYPE ObjectType,
-				    KPROCESSOR_MODE AccessMode);
+NTSTATUS STDCALL
+ObReferenceObjectByPointer(PVOID Object,
+			   ACCESS_MASK DesiredAccess,
+			   POBJECT_TYPE ObjectType,
+			   KPROCESSOR_MODE AccessMode);
 
-NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
-					 ULONG Attributes,
-					 PACCESS_STATE PassedAccessState,
-					 ACCESS_MASK DesiredAccess,
-					 POBJECT_TYPE ObjectType,
-					 KPROCESSOR_MODE AccessMode,
-					 PVOID ParseContext,
-					 PVOID* ObjectPtr);
+NTSTATUS STDCALL
+ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
+			ULONG Attributes,
+			PACCESS_STATE PassedAccessState,
+			ACCESS_MASK DesiredAccess,
+			POBJECT_TYPE ObjectType,
+			KPROCESSOR_MODE AccessMode,
+			PVOID ParseContext,
+			PVOID* ObjectPtr);
 

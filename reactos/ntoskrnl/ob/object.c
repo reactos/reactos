@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.41 2002/02/08 02:57:07 chorns Exp $
+/* $Id: object.c,v 1.42 2002/02/19 00:09:25 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -233,74 +233,94 @@ ObCreateObject(PHANDLE Handle,
 	       POBJECT_TYPE Type,
 	       PVOID *Object)
 {
-   PVOID Parent = NULL;
-   UNICODE_STRING RemainingPath;
-   POBJECT_HEADER Header;
-   NTSTATUS Status;
-   
-   assert_irql(APC_LEVEL);
-   
-   DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n");
-   if (ObjectAttributes != NULL &&
-       ObjectAttributes->ObjectName != NULL)
-     {
-	DPRINT("ObjectAttributes->ObjectName->Buffer %S\n",
-	       ObjectAttributes->ObjectName->Buffer);
-     }
-   
-   if (ObjectAttributes != NULL &&
-       ObjectAttributes->ObjectName != NULL)
-     {
-	Status = ObFindObject(ObjectAttributes,
-			      &Parent,
-			      &RemainingPath,
-			      NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DPRINT("ObFindObject() failed! (Status 0x%x)\n", Status);
-	     return(Status);
-	  }
-     }
-   else
-     {
-	RtlInitUnicodeString (&RemainingPath, NULL);
-     }
+  PVOID Parent = NULL;
+  UNICODE_STRING RemainingPath;
+  POBJECT_HEADER Header;
+  POBJECT_HEADER ParentHeader = NULL;
+  NTSTATUS Status;
 
-   RtlMapGenericMask(&DesiredAccess,
-		     Type->Mapping);
+  assert_irql(APC_LEVEL);
 
-   Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
-						  OBJECT_ALLOC_SIZE(Type),
-						  Type->Tag);
-   ObInitializeObject(Header,
-		      Handle,
-		      DesiredAccess,
-		      Type,
-		      ObjectAttributes);
-   if ((Header->ObjectType != NULL) &&
-       (Header->ObjectType->Create != NULL))
-     {
-	DPRINT("Calling %x\n", Header->ObjectType->Create);
-	Status = Header->ObjectType->Create(HEADER_TO_BODY(Header),
-					    Parent,
-					    RemainingPath.Buffer,
-					    ObjectAttributes);
-	if (!NT_SUCCESS(Status))
-	  {
-	     if (Parent)
-	       {
-		  ObDereferenceObject( Parent );
-	       }
-	    RtlFreeUnicodeString( &Header->Name );
-	    RtlFreeUnicodeString( &RemainingPath );
-	    ExFreePool( Header );
-	    return(Status);
-	  }
-     }
-   RtlFreeUnicodeString( &RemainingPath );
-   *Object = HEADER_TO_BODY(Header);
-   return(STATUS_SUCCESS);
+  DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
+	 Handle, ObjectAttributes, Type);
+  if (ObjectAttributes != NULL &&
+      ObjectAttributes->ObjectName != NULL)
+    {
+      DPRINT("ObjectAttributes->ObjectName->Buffer %S\n",
+	     ObjectAttributes->ObjectName->Buffer);
+    }
+
+  if (ObjectAttributes != NULL &&
+      ObjectAttributes->ObjectName != NULL)
+    {
+      Status = ObFindObject(ObjectAttributes,
+			    &Parent,
+			    &RemainingPath,
+			    NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT("ObFindObject() failed! (Status 0x%x)\n", Status);
+	  return(Status);
+	}
+    }
+  else
+    {
+      RtlInitUnicodeString(&RemainingPath, NULL);
+    }
+
+  RtlMapGenericMask(&DesiredAccess,
+		    Type->Mapping);
+
+  Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
+						 OBJECT_ALLOC_SIZE(Type),
+						 Type->Tag);
+  ObInitializeObject(Header,
+		     Handle,
+		     DesiredAccess,
+		     Type,
+		     ObjectAttributes);
+
+  if (Parent != NULL)
+    {
+      ParentHeader = BODY_TO_HEADER(Parent);
+    }
+
+  if (ParentHeader != NULL &&
+      ParentHeader->ObjectType == ObDirectoryType &&
+      RemainingPath.Buffer != NULL)
+    {
+      ObpAddEntryDirectory(Parent,
+			   Header,
+			   RemainingPath.Buffer+1);
+    }
+
+  if ((Header->ObjectType != NULL) &&
+      (Header->ObjectType->Create != NULL))
+    {
+      DPRINT("Calling %x\n", Header->ObjectType->Create);
+      Status = Header->ObjectType->Create(HEADER_TO_BODY(Header),
+					  Parent,
+					  RemainingPath.Buffer,
+					  ObjectAttributes);
+      if (!NT_SUCCESS(Status))
+	{
+	  if (Parent)
+	    {
+	      ObDereferenceObject(Parent);
+	    }
+	  RtlFreeUnicodeString(&Header->Name);
+	  RtlFreeUnicodeString(&RemainingPath);
+	  ExFreePool(Header);
+	  return(Status);
+	}
+    }
+  RtlFreeUnicodeString( &RemainingPath );
+
+  *Object = HEADER_TO_BODY(Header);
+
+  return(STATUS_SUCCESS);
 }
+
 
 NTSTATUS STDCALL
 ObReferenceObjectByPointer(PVOID ObjectBody,
@@ -415,7 +435,7 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
 	  }
 	if (Header->Name.Buffer != NULL)
 	  {
-	     ObRemoveEntry(Header);
+	     ObpRemoveEntryDirectory(Header);
 	     RtlFreeUnicodeString( &Header->Name );
 	  }
 	DPRINT("ObPerformRetentionChecks() = Freeing object\n");

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.34 2001/09/16 13:19:32 chorns Exp $
+/* $Id: device.c,v 1.35 2002/02/19 00:09:22 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <internal/io.h>
 #include <internal/po.h>
-#include <internal/ob.h>
 #include <internal/ldr.h>
 #include <internal/id.h>
 #include <internal/ps.h>
@@ -592,10 +591,6 @@ IopCreateDevice(PVOID ObjectBody,
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   if (Parent != NULL && RemainingPath != NULL)
-     {
-	ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
-     }
    return(STATUS_SUCCESS);
 }
 

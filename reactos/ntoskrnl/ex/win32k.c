@@ -27,7 +27,6 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
-#include <internal/ob.h>
 #include <wchar.h>
 
 #define NDEBUG
@@ -97,24 +96,6 @@ ExpWinStaObjectCreate(PVOID ObjectBody,
     RtlFreeUnicodeString(&WinSta->Name);
     return Status;
   }
-
-	Status = ObReferenceObjectByPointer(
-	  Parent,
-		STANDARD_RIGHTS_REQUIRED,
-		ObDirectoryType,
-		UserMode);
-	if (!NT_SUCCESS(Status))
-	{
-    RtlDestroyAtomTable(WinSta->AtomTable);
-    RtlFreeUnicodeString(&WinSta->Name);
-		return Status;
-	}
-
-	ObAddEntryDirectory(
-    Parent,
-		ObjectBody,
-		(RemainingPath + 1));
-  ObDereferenceObject(Parent);
 
   DPRINT("Window station successfully created. Name (%wZ)\n", &WinSta->Name);
 

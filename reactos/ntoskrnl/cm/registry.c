@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.67 2002/01/03 11:09:35 hbirr Exp $
+/* $Id: registry.c,v 1.68 2002/02/19 00:09:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,6 @@
 
 #include <ddk/ntddk.h>
 #include <roscfg.h>
-#include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
 #include <internal/pool.h>
@@ -83,10 +82,9 @@ DPRINT("Creating root\n");
                           CmiKeyType,
                           (PVOID*)&NewKey);
   CmiRootKey = NewKey;
-  ObAddEntryDirectory(NameSpaceRoot, CmiRootKey, L"Registry");
   Status = ObReferenceObjectByHandle(RootKeyHandle,
                  STANDARD_RIGHTS_REQUIRED,
-		 ObDirectoryType,
+		 CmiKeyType,
 		 UserMode,
                  (PVOID*)&CmiRootKey,
                  NULL);
@@ -106,12 +104,10 @@ DPRINT("Creating root\n");
 
   /*  Create initial predefined symbolic links  */
   /* HKEY_LOCAL_MACHINE  */
-  RtlInitUnicodeString(&RootKeyName, REG_MACHINE_KEY_NAME);
 DPRINT("Creating HKLM\n");
-  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   Status=ObCreateObject(&KeyHandle,
                         STANDARD_RIGHTS_REQUIRED,
-                        &ObjectAttributes,
+                        NULL,
                         CmiKeyType,
                         (PVOID*)&NewKey);
   Status = CmiAddSubKey(CmiVolatileFile,
@@ -134,12 +130,10 @@ DPRINT("Creating HKLM\n");
     CmiMachineKey=NewKey;
 
   /* HKEY_USERS  */
-  RtlInitUnicodeString(&RootKeyName, REG_USERS_KEY_NAME);
 DPRINT("Creating HKU\n");
-  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
    Status=ObCreateObject(&KeyHandle,
                          STANDARD_RIGHTS_REQUIRED,
-                         &ObjectAttributes,
+                         NULL,
                          CmiKeyType,
                          (PVOID*)&NewKey);
   Status = CmiAddSubKey(CmiVolatileFile,
@@ -162,11 +156,9 @@ DPRINT("Creating HKU\n");
    CmiUserKey=NewKey;
 
   /* Create '\\Registry\\Machine\\HARDWARE' key. */
-  RtlInitUnicodeString(&RootKeyName, REG_HARDWARE_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   Status=ObCreateObject(&KeyHandle,
                         STANDARD_RIGHTS_REQUIRED,
-                        &ObjectAttributes,
+                        NULL,
                         CmiKeyType,
                         (PVOID*)&NewKey);
   Status = CmiAddSubKey(CmiVolatileFile,
@@ -189,11 +181,9 @@ DPRINT("Creating HKU\n");
   CmiHardwareKey=NewKey;
 
   /* Create '\\Registry\\Machine\\HARDWARE\\DESCRIPTION' key. */
-  RtlInitUnicodeString(&RootKeyName, REG_DESCRIPTION_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   Status=ObCreateObject(&KeyHandle,
                         STANDARD_RIGHTS_REQUIRED,
-                        &ObjectAttributes,
+                        NULL,
                         CmiKeyType,
                         (PVOID*)&NewKey);
   Status = CmiAddSubKey(CmiVolatileFile,
@@ -215,11 +205,9 @@ DPRINT("Creating HKU\n");
   CmiAddKeyToList(CmiHardwareKey,NewKey);
 
   /* Create '\\Registry\\Machine\\HARDWARE\\DEVICEMAP' key. */
-  RtlInitUnicodeString(&RootKeyName, REG_DEVICEMAP_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   Status=ObCreateObject(&KeyHandle,
                         STANDARD_RIGHTS_REQUIRED,
-                        &ObjectAttributes,
+                        NULL,
                         CmiKeyType,
                         (PVOID*)&NewKey);
   Status = CmiAddSubKey(CmiVolatileFile,
@@ -241,11 +229,9 @@ DPRINT("Creating HKU\n");
   CmiAddKeyToList(CmiHardwareKey,NewKey);
 
   /* Create '\\Registry\\Machine\\HARDWARE\\RESOURCEMAP' key. */
-  RtlInitUnicodeString(&RootKeyName, REG_RESOURCEMAP_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   Status=ObCreateObject(&KeyHandle,
                         STANDARD_RIGHTS_REQUIRED,
-                        &ObjectAttributes,
+                        NULL, //&ObjectAttributes,
                         CmiKeyType,
                         (PVOID*)&NewKey);
   Status = CmiAddSubKey(CmiVolatileFile,

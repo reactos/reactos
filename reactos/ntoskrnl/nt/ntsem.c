@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.14 2001/12/05 01:40:25 dwelch Exp $
+/* $Id: ntsem.c,v 1.15 2002/02/19 00:09:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,6 @@
 
 #include <limits.h>
 #include <ddk/ntddk.h>
-#include <internal/ob.h>
 #include <ntos/synch.h>
 #include <internal/pool.h>
 #include <internal/ps.h>
@@ -39,20 +38,15 @@ NtpCreateSemaphore(PVOID ObjectBody,
 		   PWSTR RemainingPath,
 		   POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   
-   DPRINT("NtpCreateSemaphore(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-	  ObjectBody, Parent, RemainingPath);
-   
-   if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   if (Parent != NULL && RemainingPath != NULL)
-     {
-	ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
-     }
-   return(STATUS_SUCCESS);
+  DPRINT("NtpCreateSemaphore(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+	 ObjectBody, Parent, RemainingPath);
+
+  if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  return(STATUS_SUCCESS);
 }
 
 VOID NtInitializeSemaphoreImplementation(VOID)

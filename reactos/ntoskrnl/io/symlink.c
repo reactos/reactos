@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.23 2001/12/05 01:40:24 dwelch Exp $
+/* $Id: symlink.c,v 1.24 2002/02/19 00:09:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,7 @@
 
 #include <limits.h>
 #include <ddk/ntddk.h>
-#include <internal/ob.h>
+//#include <internal/ob.h>
 #include <internal/pool.h>
 
 #define NDEBUG
@@ -62,14 +62,7 @@ IopCreateSymbolicLink(PVOID Object,
 		      PWSTR RemainingPath,
 		      POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   if ((Parent != NULL)
-       && (RemainingPath != NULL))
-     {
-	ObAddEntryDirectory(Parent,
-			    Object,
-			    RemainingPath + 1);
-     }
-   return(STATUS_SUCCESS);
+  return(STATUS_SUCCESS);
 }
 
 
@@ -214,12 +207,22 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
 			 IN ACCESS_MASK DesiredAccess,
 			 IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
+#if 0
 	NTSTATUS	Status;
 	PVOID		Object;
+#endif
 
-	DPRINT("NtOpenSymbolicLinkObject (Name %wZ)\n",
-	       ObjectAttributes->ObjectName);
+  DPRINT("NtOpenSymbolicLinkObject (Name %wZ)\n",
+	 ObjectAttributes->ObjectName);
 
+  return(ObOpenObjectByName(ObjectAttributes,
+			    IoSymbolicLinkType,
+			    NULL,
+			    UserMode,
+			    DesiredAccess,
+			    NULL,
+			    LinkHandle));
+#if 0
 	Status = ObReferenceObjectByName(
 			ObjectAttributes->ObjectName,
 			ObjectAttributes->Attributes,
@@ -248,6 +251,7 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
 	}
 
 	return STATUS_SUCCESS;
+#endif
 }
 
 

@@ -13,7 +13,7 @@
 
 struct _EPROCESS;
 
-typedef struct 
+typedef struct
 {
    CSHORT Type;
    CSHORT Size;
@@ -51,43 +51,24 @@ enum
    OBJTYP_MAX,
 };
 
-BOOL ObAddObjectToNameSpace(PUNICODE_STRING path, POBJECT_HEADER Object);
 
-VOID ObRegisterType(CSHORT id, OBJECT_TYPE* type);
-NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
-			 PWSTR* UnparsedSection, ULONG Attributes);
-VOID ObRemoveEntry(POBJECT_HEADER Header);
-NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header);
+#define OBJECT_ALLOC_SIZE(type) (type->NonpagedPoolCharge+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
 
-/*
- * FUNCTION: Creates an entry within a directory
- * ARGUMENTS:
- *        parent = Parent directory
- *        object = Header of the object to add
- */
-VOID ObCreateEntry(PDIRECTORY_OBJECT parent, POBJECT_HEADER object);
+
+extern PDIRECTORY_OBJECT NameSpaceRoot;
+
 
 POBJECT_HEADER BODY_TO_HEADER(PVOID body);
 PVOID HEADER_TO_BODY(POBJECT_HEADER obj);
 
-#define OBJECT_ALLOC_SIZE(type) (type->NonpagedPoolCharge+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
+VOID ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
+			  POBJECT_HEADER Header,
+			  PWSTR Name);
+VOID ObpRemoveEntryDirectory(POBJECT_HEADER Header);
 
-/*
- * PURPOSE: Defines a handle
- */
-typedef struct
-{
-   PVOID ObjectBody;
-   ACCESS_MASK GrantedAccess;
-   BOOLEAN Inherit;
-} HANDLE_REP, *PHANDLE_REP;
+NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header);
 
-PHANDLE_REP ObTranslateHandle(struct _EPROCESS* Process, HANDLE h);
-extern PDIRECTORY_OBJECT NameSpaceRoot;
 
-VOID STDCALL ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
-				 POBJECT Object,
-				 PWSTR Name);
 NTSTATUS ObCreateHandle(struct _EPROCESS* Process,
 			PVOID ObjectBody,
 			ACCESS_MASK GrantedAccess,
@@ -104,14 +85,7 @@ ULONG ObGetReferenceCount(PVOID Object);
 ULONG ObGetHandleCount(PVOID Object);
 VOID ObCloseAllHandles(struct _EPROCESS* Process);
 VOID ObDeleteHandleTable(struct _EPROCESS* Process);
-PVOID ObDeleteHandle(struct _EPROCESS* Process, 
+PVOID ObDeleteHandle(struct _EPROCESS* Process,
 		     HANDLE Handle);
-NTSTATUS STDCALL 
-ObInsertObject(PVOID Object,
-	       PACCESS_STATE PassedAccessState,
-	       ACCESS_MASK DesiredAccess,
-	       ULONG AdditionalReferences,
-	       PVOID* ReferencedObject,
-	       PHANDLE Handle);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.13 2001/12/05 01:40:25 dwelch Exp $
+/* $Id: nttimer.c,v 1.14 2002/02/19 00:09:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,6 @@
 
 #include <ddk/ntddk.h>
 #include <ntos/synch.h>
-#include <internal/ob.h>
 #include <internal/ke.h>
 #include <limits.h>
 #include <internal/pool.h>
@@ -52,19 +51,15 @@ NtpCreateTimer(PVOID ObjectBody,
 	       PWSTR RemainingPath,
 	       POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   DPRINT("NtpCreateTimer(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-	  ObjectBody, Parent, RemainingPath);
-   
-   if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   if (Parent != NULL && RemainingPath != NULL)
-     {
-	ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
-     }
-   return(STATUS_SUCCESS);
+  DPRINT("NtpCreateTimer(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+	 ObjectBody, Parent, RemainingPath);
+
+  if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  return(STATUS_SUCCESS);
 }
 
 

@@ -29,7 +29,6 @@
 
 #include <limits.h>
 #include <ddk/ntddk.h>
-#include <internal/ob.h>
 #include <internal/id.h>
 #include <ntos/synch.h>
 #include <internal/pool.h>
@@ -57,19 +56,15 @@ NtpCreateEvent(PVOID ObjectBody,
 	       PWSTR RemainingPath,
 	       POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   DPRINT("NtpCreateEvent(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-	  ObjectBody, Parent, RemainingPath);
-   
-   if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   if (Parent != NULL && RemainingPath != NULL)
-     {
-	ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
-     }
-   return(STATUS_SUCCESS);
+  DPRINT("NtpCreateEvent(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+	 ObjectBody, Parent, RemainingPath);
+
+  if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  return(STATUS_SUCCESS);
 }
 
 

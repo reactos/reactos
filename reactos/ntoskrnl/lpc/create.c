@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.6 2001/12/02 23:34:42 dwelch Exp $
+/* $Id: create.c,v 1.7 2002/02/19 00:09:23 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/ob.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
 
@@ -61,8 +60,6 @@ NiCreatePort (PVOID			ObjectBody,
 	      PWSTR			RemainingPath,
 	      POBJECT_ATTRIBUTES	ObjectAttributes)
 {
-  NTSTATUS	Status;
-  
   if (RemainingPath == NULL)
     {
       return (STATUS_SUCCESS);
@@ -73,20 +70,6 @@ NiCreatePort (PVOID			ObjectBody,
       return (STATUS_UNSUCCESSFUL);
     }
   
-  Status = ObReferenceObjectByPointer (Parent,
-				       STANDARD_RIGHTS_REQUIRED,
-				       ObDirectoryType,
-				       UserMode);
-  if (!NT_SUCCESS(Status))
-    {
-      return (Status);
-    }
-  
-  ObAddEntryDirectory (Parent,
-		       ObjectBody,
-		       (RemainingPath + 1));
-  ObDereferenceObject (Parent);
-   
   return (STATUS_SUCCESS);
 }
 

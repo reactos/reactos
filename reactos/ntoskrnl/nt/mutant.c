@@ -31,7 +31,6 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <ntos/synch.h>
-#include <internal/ob.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -61,10 +60,6 @@ NtpCreateMutant(PVOID ObjectBody,
       return(STATUS_UNSUCCESSFUL);
     }
 
-  if (Parent != NULL && RemainingPath != NULL)
-    {
-      ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
-    }
   return(STATUS_SUCCESS);
 }
 

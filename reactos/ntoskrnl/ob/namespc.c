@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.27 2001/12/05 01:40:25 dwelch Exp $
+/* $Id: namespc.c,v 1.28 2002/02/19 00:09:24 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -149,27 +149,43 @@ ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
 }
 
 
-VOID STDCALL
-ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
-		    POBJECT Object,
-		    PWSTR Name)
+VOID
+ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
+		     POBJECT_HEADER Header,
+		     PWSTR Name)
 /*
  * FUNCTION: Add an entry to a namespace directory
  * ARGUMENTS:
- *         parent = directory to add in
- *         name = Name to give the entry
- *         Object = Header of the object to add the entry for
+ *         Parent = directory to add in
+ *         Header = Header of the object to add the entry for
+ *         Name = Name to give the entry
  */
 {
-   KIRQL oldlvl;
-   POBJECT_HEADER Header = BODY_TO_HEADER(Object);
+  KIRQL oldlvl;
 
-   RtlCreateUnicodeString(&Header->Name, Name);
-   Header->Parent = Parent;
+  RtlCreateUnicodeString(&Header->Name, Name);
+  Header->Parent = Parent;
 
-   KeAcquireSpinLock(&Parent->Lock, &oldlvl);
-   InsertTailList(&Parent->head, &Header->Entry);
-   KeReleaseSpinLock(&Parent->Lock, oldlvl);
+  KeAcquireSpinLock(&Parent->Lock, &oldlvl);
+  InsertTailList(&Parent->head, &Header->Entry);
+  KeReleaseSpinLock(&Parent->Lock, oldlvl);
+}
+
+VOID
+ObpRemoveEntryDirectory(POBJECT_HEADER Header)
+/*
+ * FUNCTION: Remove an entry from a namespace directory
+ * ARGUMENTS:
+ *         Header = Header of the object to remove
+ */
+{
+  KIRQL oldlvl;
+
+  DPRINT("ObpRemoveEntryDirectory(Header %x)\n",Header);
+
+  KeAcquireSpinLock(&(Header->Parent->Lock),&oldlvl);
+  RemoveEntryList(&(Header->Entry));
+  KeReleaseSpinLock(&(Header->Parent->Lock),oldlvl);
 }
 
 PVOID
@@ -284,23 +300,20 @@ ObpCreateDirectory(PVOID ObjectBody,
 		   PWSTR RemainingPath,
 		   POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   PDIRECTORY_OBJECT DirectoryObject = (PDIRECTORY_OBJECT)ObjectBody;
-   
-   DPRINT("ObpCreateDirectory(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-	  ObjectBody, Parent, RemainingPath);
-   
-   if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   if (Parent != NULL && RemainingPath != NULL)
-     {
-	ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
-     }
-   InitializeListHead(&DirectoryObject->head);
-   KeInitializeSpinLock(&DirectoryObject->Lock);
-   return(STATUS_SUCCESS);
+  PDIRECTORY_OBJECT DirectoryObject = (PDIRECTORY_OBJECT)ObjectBody;
+
+  DPRINT("ObpCreateDirectory(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+	 ObjectBody, Parent, RemainingPath);
+
+  if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  InitializeListHead(&DirectoryObject->head);
+  KeInitializeSpinLock(&DirectoryObject->Lock);
+
+  return(STATUS_SUCCESS);
 }
 
 VOID ObInit(VOID)
@@ -339,14 +352,4 @@ VOID ObInit(VOID)
 		  (PVOID*)&NameSpaceRoot);
 }
 
-VOID ObRemoveEntry(POBJECT_HEADER Header)
-{
-   KIRQL oldlvl;
-   
-   DPRINT("ObRemoveEntry(Header %x)\n",Header);
-   
-   KeAcquireSpinLock(&(Header->Parent->Lock),&oldlvl);
-   RemoveEntryList(&(Header->Entry));
-   KeReleaseSpinLock(&(Header->Parent->Lock),oldlvl);
-}
-
+/* EOF */

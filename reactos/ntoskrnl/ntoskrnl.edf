@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.112 2002/01/27 01:11:23 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.113 2002/02/19 00:09:21 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -575,7 +575,6 @@ ObReferenceObjectByName=ObReferenceObjectByName@32
 ObReferenceObjectByPointer=ObReferenceObjectByPointer@16
 ;ObReleaseObjectSecurity=ObReleaseObjectSecurity@8
 ;ObSetSecurityDescriptorInfo=ObSetSecurityDescriptorInfo@24
-ObAddEntryDirectory=ObAddEntryDirectory@12
 ;PfxFindPrefix
 ;PfxInitialize
 ;PfxInsertPrefix

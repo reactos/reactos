@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.34 2001/12/31 19:06:48 dwelch Exp $
+/* $Id: handle.c,v 1.35 2002/02/19 00:09:24 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -40,7 +40,18 @@
 
 /* TYPES *******************************************************************/
 
+/*
+ * PURPOSE: Defines a handle
+ */
+typedef struct
+{
+   PVOID ObjectBody;
+   ACCESS_MASK GrantedAccess;
+   BOOLEAN Inherit;
+} HANDLE_REP, *PHANDLE_REP;
+
 #define HANDLE_BLOCK_ENTRIES ((PAGESIZE-sizeof(LIST_ENTRY))/sizeof(HANDLE_REP))
+
 
 /*
  * PURPOSE: Defines a page's worth of handles
@@ -50,6 +61,7 @@ typedef struct
    LIST_ENTRY entry;
    HANDLE_REP handles[HANDLE_BLOCK_ENTRIES];
 } HANDLE_BLOCK, *PHANDLE_BLOCK;
+
 
 /* GLOBALS *******************************************************************/
 
@@ -657,7 +669,7 @@ NTSTATUS STDCALL NtClose(HANDLE Handle)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 ObInsertObject(PVOID Object,
 	       PACCESS_STATE PassedAccessState,
 	       ACCESS_MASK DesiredAccess,
@@ -671,6 +683,5 @@ ObInsertObject(PVOID Object,
 			FALSE,
 			Handle));
 }
-	       
 
 /* EOF */

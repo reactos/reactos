@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.99 2002/02/12 12:30:46 jfilby Exp $
+/* $Id: loader.c,v 1.100 2002/02/19 00:09:23 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,7 +31,6 @@
 #include <internal/kd.h>
 #include <internal/io.h>
 #include <internal/mm.h>
-#include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/ldr.h>
 #include <internal/pool.h>
@@ -1016,10 +1015,6 @@ LdrCreateModule(PVOID ObjectBody,
   if (RemainingPath != NULL && wcschr(RemainingPath + 1, '\\') != NULL)
     {
       return  STATUS_UNSUCCESSFUL;
-    }
-  if (Parent != NULL && RemainingPath != NULL)
-    {
-      ObAddEntryDirectory(Parent, ObjectBody, RemainingPath + 1);
     }
 
   return  STATUS_SUCCESS;

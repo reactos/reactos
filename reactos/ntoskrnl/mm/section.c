@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.76 2002/01/09 03:00:21 dwelch Exp $
+/* $Id: section.c,v 1.77 2002/02/19 00:09:23 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -31,7 +31,6 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
-#include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
@@ -1529,8 +1528,6 @@ MmpCreateSection(PVOID ObjectBody,
 		 PWSTR RemainingPath,
 		 POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   NTSTATUS Status;
-   
    DPRINT("MmpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
@@ -1543,18 +1540,6 @@ MmpCreateSection(PVOID ObjectBody,
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   
-   Status = ObReferenceObjectByPointer(Parent,
-				       STANDARD_RIGHTS_REQUIRED,
-				       ObDirectoryType,
-				       UserMode);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
-   ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
-   ObDereferenceObject(Parent);
    
    return(STATUS_SUCCESS);
 }
