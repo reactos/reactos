@@ -299,6 +299,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				path = fsp;
 
 				if (path) {
+					LOG(FmtString(TEXT("PM_OPEN_WINDOW: path=%s"), path));
 					lstrcpy(buffer, path);
 					path = buffer;
 				}
