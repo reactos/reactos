@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.8 2000/04/06 02:29:43 ekohl Exp $
+; $Id: advapi32.edf,v 1.9 2000/09/06 19:57:58 ekohl Exp $
 ;
 ; advapi32.def
 ;
@@ -297,7 +297,7 @@ RegCreateKeyW=RegCreateKeyW@12
 RegDeleteKeyA=RegDeleteKeyA@8
 RegDeleteKeyW=RegDeleteKeyW@8
 RegDeleteValueA=RegDeleteValueA@8
-;RegDeleteValueW=RegDeleteValueW@8
+RegDeleteValueW=RegDeleteValueW@8
 RegEnumKeyA=RegEnumKeyA@16
 RegEnumKeyExA=RegEnumKeyExA@32
 ;RegEnumKeyExW=RegEnumKeyExW@32
@@ -330,8 +330,8 @@ RegSaveKeyA=RegSaveKeyA@12
 ;RegSetKeySecurity=RegSetKeySecurity@12
 RegSetValueA=RegSetValueA@20
 RegSetValueExA=RegSetValueExA@24
-;RegSetValueExW=RegSetValueExW@24
-;RegSetValueW=RegSetValueW@20
+RegSetValueExW=RegSetValueExW@24
+RegSetValueW=RegSetValueW@20
 RegUnLoadKeyA=RegUnLoadKeyA@8
 ;RegUnLoadKeyW=RegUnLoadKeyW@8
 ;RegisterEventSourceA=RegisterEventSourceA@8

@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.8 2000/09/05 23:00:27 ekohl Exp $
+/* $Id: reg.c,v 1.9 2000/09/06 19:58:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,7 +28,7 @@ static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 /* PROTOTYPES ****************************************************************/
 
 static NTSTATUS MapDefaultKey (PHKEY ParentKey, HKEY Key);
-static VOID CloseDefaultHandles(VOID);
+static VOID CloseDefaultKeys(VOID);
 
 static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
 
@@ -60,7 +60,7 @@ RegCleanup(VOID)
 {
    DPRINT1("RegCleanup()\n");
 
-   CloseDefaultHandles();
+   CloseDefaultKeys();
    RtlDeleteCriticalSection(&HandleTableCS);
    return TRUE;
 }
@@ -120,7 +120,7 @@ DPRINT1("Status %x\n", Status);
 }
 
 
-static VOID CloseDefaultHandles(VOID)
+static VOID CloseDefaultKeys (VOID)
 {
    ULONG i;
 
@@ -130,7 +130,7 @@ static VOID CloseDefaultHandles(VOID)
      {
         if (DefaultHandleTable[i] != NULL)
           {
-//            NtClose (DefaultHandleTable[i]);
+             NtClose (DefaultHandleTable[i]);
              DefaultHandleTable[i] = NULL;
           }
      }
@@ -156,7 +156,9 @@ OpenLocalMachineKey (PHANDLE KeyHandle)
                               NULL,
                               NULL);
 
-   return (NtOpenKey (KeyHandle, 0x200000, &Attributes));
+   return (NtOpenKey (KeyHandle,
+                      KEY_ALL_ACCESS,
+                      &Attributes));
 }
 
 
@@ -169,11 +171,22 @@ RegCloseKey(
 	HKEY	hKey
 	)
 {
-	if (!hKey)
+	NTSTATUS Status;
+
+	/* don't close null handle or a pseudo handle */
+	if ((!hKey) || (((ULONG)hKey & 0xF0000000) == 0x80000000))
 		return ERROR_INVALID_HANDLE;
 
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+	Status = NtClose (hKey);
+	if (!NT_SUCCESS(Status))
+	{
+		LONG ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
+	}
+
+	return ERROR_SUCCESS;
 }
 
 
@@ -290,8 +303,10 @@ RegCreateKeyExW(
 	Status = MapDefaultKey (&ParentKey, hKey);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError(Status));
-		return (RtlNtStatusToDosError(Status));
+		LONG ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
 	}
 
 	DPRINT1("ParentKey %x\n", (ULONG)ParentKey);
@@ -315,8 +330,10 @@ RegCreateKeyExW(
 	DPRINT1("Status %x\n", Status);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError(Status));
-		return (RtlNtStatusToDosError(Status));
+		LONG ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
 	}
 	DPRINT1("Returned handle %x\n", (ULONG)*phkResult);
 
@@ -362,6 +379,21 @@ STDCALL
 RegDeleteValueA(
 	HKEY	hKey,
 	LPCSTR	lpValueName
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *	RegDeleteValueW
+ */
+LONG
+STDCALL
+RegDeleteValueW(
+	HKEY	hKey,
+	LPCWSTR	lpValueName
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -824,6 +856,62 @@ RegSetValueExA(
 	DWORD		dwType,
 	CONST BYTE	*lpData,
 	DWORD		cbData
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *	RegSetValueExW
+ */
+LONG
+STDCALL
+RegSetValueExW(
+	HKEY		hKey,
+	LPCWSTR		lpValueName,
+	DWORD		Reserved,
+	DWORD		dwType,
+	CONST BYTE	*lpData,
+	DWORD		cbData
+	)
+{
+	UNICODE_STRING ValueName;
+	NTSTATUS Status;
+
+	RtlInitUnicodeString (&ValueName,
+			      lpValueName);
+
+	Status = NtSetValueKey (hKey,
+				&ValueName,
+				0,
+				dwType,
+				(PVOID)lpData,
+				(ULONG)cbData);
+	if (!NT_SUCCESS(Status))
+	{
+		LONG ErrorCode = RtlNtStatusToDosError(Status);
+
+		SetLastError (ErrorCode);
+		return ErrorCode;
+	}
+
+	return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
+ *	RegSetValueW
+ */
+LONG
+STDCALL
+RegSetValueW(
+	HKEY	hKey,
+	LPCWSTR	lpSubKey,
+	DWORD	dwType,
+	LPCWSTR	lpData,
+	DWORD	cbData
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

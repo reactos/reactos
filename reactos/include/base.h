@@ -211,7 +211,7 @@ typedef char *PTSTR;
 /*
  typedef PWSTR;
  */
-typedef PVOID REGSAM;
+typedef DWORD REGSAM;
 
 
 typedef short RETCODE;
