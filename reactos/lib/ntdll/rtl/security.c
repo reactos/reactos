@@ -1,4 +1,4 @@
-/* $Id: security.c,v 1.8 2003/05/31 11:08:50 ekohl Exp $
+/* $Id: security.c,v 1.9 2003/06/17 10:52:56 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -80,7 +80,7 @@ RtlAdjustPrivilege(IN ULONG Privilege,
   HANDLE TokenHandle;
   NTSTATUS Status;
 
-  DPRINT1("RtlAdjustPrivilege() called\n");
+  DPRINT ("RtlAdjustPrivilege() called\n");
 
   if (CurrentThread)
     {
@@ -98,9 +98,11 @@ RtlAdjustPrivilege(IN ULONG Privilege,
 
   if (!NT_SUCCESS (Status))
     {
-      DPRINT1("Retrieving token handle failed (Status %lx)\n", Status);
+      DPRINT1 ("Retrieving token handle failed (Status %lx)\n", Status);
       return Status;
     }
+
+  OldState.PrivilegeCount = 1;
 
   NewState.PrivilegeCount = 1;
   NewState.Privileges[0].Luid.LowPart = Privilege;
@@ -116,12 +118,12 @@ RtlAdjustPrivilege(IN ULONG Privilege,
   NtClose (TokenHandle);
   if (Status == STATUS_NOT_ALL_ASSIGNED)
     {
-      DPRINT1("Failed to assign all privileges\n");
+      DPRINT1 ("Failed to assign all privileges\n");
       return STATUS_PRIVILEGE_NOT_HELD;
     }
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtAdjustPrivilegesToken() failed (Status %lx)\n", Status);
+      DPRINT1 ("NtAdjustPrivilegesToken() failed (Status %lx)\n", Status);
       return Status;
     }
 
@@ -134,7 +136,7 @@ RtlAdjustPrivilege(IN ULONG Privilege,
       *Enabled = (OldState.Privileges[0].Attributes & SE_PRIVILEGE_ENABLED);
     }
 
-  DPRINT1("RtlAdjustPrivilege() done\n");
+  DPRINT ("RtlAdjustPrivilege() done\n");
 
   return STATUS_SUCCESS;
 }
