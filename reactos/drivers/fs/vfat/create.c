@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.54 2003/02/13 22:24:16 hbirr Exp $
+/* $Id: create.c,v 1.55 2003/03/23 10:45:56 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -238,12 +238,14 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
        CHECKPOINT;
        Fcb->PathName[0]='\\';
        Fcb->ObjectName = &Fcb->PathName[1];
-       Fcb->entry.FileSize = DeviceExt->FatInfo.rootDirectorySectors * DeviceExt->FatInfo.BytesPerSector;
        Fcb->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
+       Fcb->entry.CreationDate = 0x0021;    /* 1.1.1980 */
+       Fcb->entry.AccessDate = 0x0021;
+       Fcb->entry.UpdateDate = 0x0021;
        if (DeviceExt->FatInfo.FatType == FAT32)
        {
-          Fcb->entry.FirstCluster = ((PUSHORT)FirstCluster)[0];
-          Fcb->entry.FirstClusterHigh = ((PUSHORT)FirstCluster)[1];
+          Fcb->entry.FirstCluster = ((PUSHORT)&FirstCluster)[0];
+          Fcb->entry.FirstClusterHigh = ((PUSHORT)&FirstCluster)[1];
        }
        else
 	  Fcb->entry.FirstCluster = 1;
