@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.60 2003/06/02 10:03:52 ekohl Exp $
+/* $Id: object.c,v 1.61 2003/06/02 13:03:15 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -317,17 +317,19 @@ ObQueryNameString (IN PVOID Object,
     }
   else
     {
-      DPRINT1 ("Object is unnamed\n");
+      DPRINT("Object is unnamed\n");
 
-      /* FIXME */
+      ObjectNameInfo->Name.MaximumLength = 0;
+      ObjectNameInfo->Name.Length = 0;
+      ObjectNameInfo->Name.Buffer = NULL;
 
-      Status = STATUS_UNSUCCESSFUL;
+      Status = STATUS_SUCCESS;
     }
 
   if (NT_SUCCESS (Status))
     {
       ObjectNameInfo->Name.MaximumLength =
-	ObjectNameInfo->Name.Length + sizeof(WCHAR);
+	(ObjectNameInfo->Name.Length) ? ObjectNameInfo->Name.Length + sizeof(WCHAR) : 0;
       *ReturnLength =
 	sizeof(OBJECT_NAME_INFORMATION) + ObjectNameInfo->Name.MaximumLength;
       DPRINT ("Returned object path: %wZ\n", &ObjectNameInfo->Name);
