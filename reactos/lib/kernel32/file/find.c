@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <wchar.h>
 #include <ddk/ntddk.h>
+#include <string.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
