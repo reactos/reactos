@@ -559,7 +559,7 @@ SetClipboardViewer=SetClipboardViewer@4
 SetCursor=SetCursor@4
 ;SetCursorContents
 SetCursorPos=SetCursorPos@8
-;SetDebugErrorLevel
+SetDebugErrorLevel=SetDebugErrorLevel@4
 ;SetDeskWallpaper
 SetDlgItemInt=SetDlgItemInt@16
 SetDlgItemTextA=SetDlgItemTextA@12

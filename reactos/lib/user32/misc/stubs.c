@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.21 2003/05/19 18:36:42 gvg Exp $
+/* $Id: stubs.c,v 1.22 2003/07/01 23:09:09 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -522,6 +522,20 @@ mouse_event(
 	    DWORD dy,
 	    DWORD cButtons,
 	    DWORD dwExtraInfo)
+{
+  UNIMPLEMENTED
+}
+
+/******************************************************************************
+ * SetDebugErrorLevel [USER32.@]
+ * Sets the minimum error level for generating debugging events
+ *
+ * PARAMS
+ *    dwLevel [I] Debugging error level
+ */
+VOID
+STDCALL
+SetDebugErrorLevel( DWORD dwLevel )
 {
   UNIMPLEMENTED
 }
