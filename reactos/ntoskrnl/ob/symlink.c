@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.2 2003/06/07 12:23:14 chorns Exp $
+/* $Id: symlink.c,v 1.3 2003/09/03 15:12:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -323,18 +323,28 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
 				     NULL);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return Status;
     }
 
-  RtlCopyUnicodeString(LinkTarget,
-		       SymlinkObject->Target.ObjectName);
   if (ReturnedLength != NULL)
     {
-      *ReturnedLength = SymlinkObject->Target.Length;
+      *ReturnedLength = (ULONG)SymlinkObject->TargetName.Length + sizeof(WCHAR);
     }
+
+  if (LinkTarget->MaximumLength >= SymlinkObject->TargetName.Length + sizeof(WCHAR))
+    {
+      RtlCopyUnicodeString(LinkTarget,
+			   &SymlinkObject->TargetName);
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      Status = STATUS_BUFFER_TOO_SMALL;
+    }
+
   ObDereferenceObject(SymlinkObject);
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 /* EOF */
