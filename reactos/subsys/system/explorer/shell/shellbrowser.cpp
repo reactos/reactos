@@ -421,7 +421,7 @@ HRESULT ShellBrowser::OnDefaultCommand(LPIDA pida)
 				}
 			}
 		} else { // no tree control
-			if (MDIMainFrame::OpenShellFolders(pida, _hWndFrame))
+			if (MainFrameBase::OpenShellFolders(pida, _hWndFrame))
 				return S_OK;
 
 /* create new Frame Window
