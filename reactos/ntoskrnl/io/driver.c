@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.46 2004/06/02 20:30:56 hbirr Exp $
+/* $Id: driver.c,v 1.47 2004/06/20 00:44:55 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -82,8 +82,6 @@ POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
 #define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
 #define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')
-
-#define DRIVER_REGISTRY_KEY_BASENAME  L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 
 /* DECLARATIONS ***************************************************************/
 
@@ -524,6 +522,7 @@ IopInitializeDriverModule(
    UNICODE_STRING RegistryKey;
    PDRIVER_INITIALIZE DriverEntry = ModuleObject->EntryPoint;
    NTSTATUS Status;
+   WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
 
    Status = IopCreateDriverObject(
       DriverObject,
@@ -541,10 +540,10 @@ IopInitializeDriverModule(
    if (DeviceNode->ServiceName.Buffer)
    {
       RegistryKey.Length = DeviceNode->ServiceName.Length +
-         sizeof(DRIVER_REGISTRY_KEY_BASENAME);
+         sizeof(ServicesKeyName);
       RegistryKey.MaximumLength = RegistryKey.Length + sizeof(UNICODE_NULL);
       RegistryKey.Buffer = ExAllocatePool(PagedPool, RegistryKey.MaximumLength);
-      wcscpy(RegistryKey.Buffer, DRIVER_REGISTRY_KEY_BASENAME);
+      wcscpy(RegistryKey.Buffer, ServicesKeyName);
       wcscat(RegistryKey.Buffer, DeviceNode->ServiceName.Buffer);
    }
    else
@@ -1086,7 +1085,7 @@ IopInitializeBuiltinDriver(
    FileExtension = wcsrchr(DeviceNode->ServiceName.Buffer, '.');
    if (FileExtension != NULL)
    {
-      DeviceNode->ServiceName.Length -= wcslen(DeviceNode->ServiceName.Buffer);
+      DeviceNode->ServiceName.Length -= wcslen(FileExtension) * sizeof(WCHAR);
       FileExtension[0] = 0;
    }
 
