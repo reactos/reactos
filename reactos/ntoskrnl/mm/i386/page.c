@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.65 2004/04/28 20:46:03 hbirr Exp $
+/* $Id: page.c,v 1.66 2004/05/20 08:37:21 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -1003,9 +1003,9 @@ BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 }
 
 NTSTATUS
-MmCreateVirtualMappingDump(PVOID Address,
-                           ULONG flProtect,
-                           PHYSICAL_ADDRESS PhysicalAddress)
+MmCreateVirtualMappingForKernel(PVOID Address,
+                                ULONG flProtect,
+                                PHYSICAL_ADDRESS PhysicalAddress)
 {
    ULONG Attributes;
    PULONG Pte;
@@ -1013,7 +1013,7 @@ MmCreateVirtualMappingDump(PVOID Address,
 
    if (Address < (PVOID)KERNEL_BASE)
    {
-      DPRINT1("No process\n");
+      DPRINT1("MmCreateVirtualMappingForKernel is called for user space\n");
       KEBUGCHECK(0);
    }
 
@@ -1031,87 +1031,15 @@ MmCreateVirtualMappingDump(PVOID Address,
    {
       return(Status);
    }
-   if (PAGE_MASK((*Pte)) != 0 && !((*Pte) & PA_PRESENT))
-   {
-      KEBUGCHECK(0);
-   }
-   *Pte = (ULONG)(PhysicalAddress.QuadPart | Attributes);
-   FLUSH_TLB;
-   return(STATUS_SUCCESS);
-}
 
-
-NTSTATUS
-MmCreateVirtualMappingForKernel(PVOID Address,
-                                ULONG flProtect,
-                                PHYSICAL_ADDRESS PhysicalAddress)
-{
-   PEPROCESS CurrentProcess;
-   ULONG Attributes;
-   PULONG Pte;
-   NTSTATUS Status;
-   PEPROCESS Process = NULL;
-
-   if (Process != NULL)
-   {
-      CurrentProcess = PsGetCurrentProcess();
-   }
-   else
-   {
-      CurrentProcess = NULL;
-   }
-
-   if (Process == NULL && Address < (PVOID)KERNEL_BASE)
-   {
-      DPRINT1("No process\n");
-      KEBUGCHECK(0);
-   }
-   if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
-   {
-      DPRINT1("Setting kernel address with process context\n");
-      KEBUGCHECK(0);
-   }
-   Attributes = ProtectToPTE(flProtect);
-
-   if (Process != NULL && Process != CurrentProcess)
-   {
-      KeAttachProcess(Process);
-   }
-
-   Status = MmGetPageEntry2(Address, &Pte, FALSE);
-   if (!NT_SUCCESS(Status))
-   {
-      if (Process != NULL && Process != CurrentProcess)
-      {
-         KeDetachProcess();
-      }
-      return(Status);
-   }
-   if (PAGE_MASK((*Pte)) != 0 && !((*Pte) & PA_PRESENT))
-   {
-      KEBUGCHECK(0);
-   }
    if (PAGE_MASK((*Pte)) != 0)
    {
-      MmMarkPageUnmapped(PTE_TO_PAGE((*Pte)));
+      KEBUGCHECK(0);
    }
+   
    *Pte = (ULONG)(PhysicalAddress.QuadPart | Attributes);
-   if (Process != NULL &&
-         Process->AddressSpace.PageTableRefCountTable != NULL &&
-         Address < (PVOID)KERNEL_BASE &&
-         Attributes & PA_PRESENT)
-   {
-      PUSHORT Ptrc;
-
-      Ptrc = Process->AddressSpace.PageTableRefCountTable;
-
-      Ptrc[ADDR_TO_PAGE_TABLE(Address)]++;
-   }
    FLUSH_TLB;
-   if (Process != NULL && Process != CurrentProcess)
-   {
-      KeDetachProcess();
-   }
+
    return(STATUS_SUCCESS);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.44 2004/04/22 01:57:49 jimtabor Exp $
+/* $Id: pagefile.c,v 1.45 2004/05/20 08:37:20 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -587,9 +587,9 @@ MmDumpToPagingFile(ULONG BugCode,
          LARGE_INTEGER PhysicalAddress;
          PhysicalAddress.QuadPart = i * PAGE_SIZE;
          MdlMap[0] = i * PAGE_SIZE;
-         MmCreateVirtualMappingDump(MmCoreDumpPageFrame,
-                                    PAGE_READWRITE,
-                                    PhysicalAddress);
+         MmCreateVirtualMappingForKernel(MmCoreDumpPageFrame, 
+	                                 PAGE_READWRITE,
+                                         PhysicalAddress);
 #if defined(__GNUC__)
 
          DiskOffset = MmGetOffsetPageFile(RetrievalPointers,
@@ -604,6 +604,7 @@ MmDumpToPagingFile(ULONG BugCode,
 #endif
          DiskOffset.QuadPart += MmCoreDumpLcnMapping.LcnDiskOffset.QuadPart;
          Status = MmCoreDumpFunctions->DumpWrite(DiskOffset, Mdl);
+	 MmRawDeleteVirtualMapping(MmCoreDumpPageFrame);
          if (!NT_SUCCESS(Status))
          {
             DPRINT1("MM: Failed to write page to core dump.\n");

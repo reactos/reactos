@@ -395,28 +395,35 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
       PHYSICAL_ADDRESS PhysAddr = { 0 };
 #endif
 
-      BOOL Dirty = FALSE;
-      SWAPENTRY SwapEntry = 0;
-
-      if (MmIsPageSwapEntry(AddressSpace->Process,
-                            (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE)))
+      if (MemoryArea->Type == MEMORY_AREA_IO_MAPPING)
       {
-         MmDeletePageFileMapping(AddressSpace->Process,
-                                 (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE),
-                                 &SwapEntry);
+         MmRawDeleteVirtualMapping((char*)MemoryArea->BaseAddress + (i * PAGE_SIZE));
       }
       else
       {
-         MmDeleteVirtualMapping(AddressSpace->Process,
-                                (char*)MemoryArea->BaseAddress + (i*PAGE_SIZE),
-                                FALSE, &Dirty, &PhysAddr);
+	 BOOL Dirty = FALSE;
+         SWAPENTRY SwapEntry = 0;
 
-      }
-      if (FreePage != NULL)
-      {
-         FreePage(FreePageContext, MemoryArea,
-                  (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE), PhysAddr,
-                  SwapEntry, (BOOLEAN)Dirty);
+         if (MmIsPageSwapEntry(AddressSpace->Process,
+                               (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE)))
+         {
+            MmDeletePageFileMapping(AddressSpace->Process,
+                                    (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE),
+                                    &SwapEntry);
+         }
+         else
+         {
+            MmDeleteVirtualMapping(AddressSpace->Process,
+                                   (char*)MemoryArea->BaseAddress + (i*PAGE_SIZE),
+                                   FALSE, &Dirty, &PhysAddr);
+
+         }
+         if (FreePage != NULL)
+         {
+            FreePage(FreePageContext, MemoryArea,
+                     (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE), PhysAddr,
+                     SwapEntry, (BOOLEAN)Dirty);
+         }
       }
    }
    if (AddressSpace->Process != NULL &&
