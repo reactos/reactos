@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -468,7 +468,56 @@ SpecialFolderFSPath::SpecialFolderFSPath(int folder, HWND hwnd)
 }
 
 
-HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl, LPCITEMIDLIST* apidl, int x, int y)
+void CtxMenuInterfaces::reset()
+{
+	_pctxmenu2 = NULL;
+
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+	_pctxmenu3 = NULL;
+#endif
+}
+
+bool CtxMenuInterfaces::HandleMenuMsg(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+	if (_pctxmenu3) {
+		if (SUCCEEDED(_pctxmenu3->HandleMenuMsg(nmsg, wparam, lparam)))
+			return true;
+	}
+#endif
+
+	if (_pctxmenu2)
+		if (SUCCEEDED(_pctxmenu2->HandleMenuMsg(nmsg, wparam, lparam)))
+			return true;
+
+	return false;
+}
+
+IContextMenu* CtxMenuInterfaces::query_interfaces(IContextMenu* pcm1)
+{
+	IContextMenu* pcm = NULL;
+
+	reset();
+
+	 // Get the higher version context menu interfaces.
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+	if (pcm1->QueryInterface(IID_IContextMenu3, (void**)&pcm) == NOERROR)
+		_pctxmenu3 = (LPCONTEXTMENU3)pcm;
+	else
+#endif
+	if (pcm1->QueryInterface (IID_IContextMenu2, (void**)&pcm) == NOERROR)
+		_pctxmenu2 = (LPCONTEXTMENU2)pcm;
+
+	if (pcm) {
+		pcm1->Release();
+		return pcm;
+	} else
+		return pcm1;
+}
+
+
+HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl,
+								LPCITEMIDLIST* apidl, int x, int y, CtxMenuInterfaces& cm_ifs)
 {
 	IContextMenu* pcm;
 
@@ -476,6 +525,8 @@ HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int 
 //	HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
 
 	if (SUCCEEDED(hr)) {
+		pcm = cm_ifs.query_interfaces(pcm);
+
 		HMENU hmenu = CreatePopupMenu();
 
 		if (hmenu) {
@@ -483,6 +534,8 @@ HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int 
 
 			if (SUCCEEDED(hr)) {
 				UINT idCmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON, x, y, 0, hwndParent, NULL);
+
+				cm_ifs.reset();
 
 				if (idCmd) {
 				  CMINVOKECOMMANDINFO cmi;

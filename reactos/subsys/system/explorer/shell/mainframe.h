@@ -31,9 +31,9 @@ enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4};
 
 
  /// Explorer frame window
-struct MainFrame : public PreTranslateWindow
+struct MainFrame : public ExtContextMenuHandlerT<PreTranslateWindow>
 {
-	typedef PreTranslateWindow super;
+	typedef ExtContextMenuHandlerT<PreTranslateWindow> super;
 
 	MainFrame(HWND hwnd);
 	~MainFrame();

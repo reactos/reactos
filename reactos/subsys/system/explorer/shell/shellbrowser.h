@@ -44,7 +44,8 @@ struct ShellPathInfo
  /// Implementation of IShellBrowserImpl interface in explorer child windows
 struct ShellBrowserChild : public IShellBrowserImpl
 {
-	ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info);
+	ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd,
+						ShellPathInfo& create_info, CtxMenuInterfaces& cm_ifs);
 	virtual ~ShellBrowserChild();
 
 	//IOleWindow
@@ -152,4 +153,5 @@ public:
 
 protected:
 	ShellDirectory*	_cur_dir;
+	CtxMenuInterfaces& _cm_ifs;
 };

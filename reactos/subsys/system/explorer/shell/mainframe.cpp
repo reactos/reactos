@@ -103,7 +103,7 @@ void MainFrame::update_explorer_view()
 		}
 	}
 
-	_shellBrowser = auto_ptr<ShellBrowserChild>(new ShellBrowserChild(_hwnd, _left_hwnd, _right_hwnd, _create_info));
+	_shellBrowser = auto_ptr<ShellBrowserChild>(new ShellBrowserChild(_hwnd, _left_hwnd, _right_hwnd, _create_info, _cm_ifs));
 
 	 // update _shellBrowser->_clnt_rect
 	ClientRect rect(_hwnd);

@@ -45,11 +45,13 @@ static LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)
 }
 
 
-ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info)
+ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd,
+					ShellPathInfo& create_info, CtxMenuInterfaces& cm_ifs)
  :	_hwnd(hwnd),
 	_left_hwnd(left_hwnd),
 	_right_hwnd(right_hwnd),
-	_create_info(create_info)
+	_create_info(create_info),
+	_cm_ifs(_cm_ifs)
 {
 	_pShellView = NULL;
 	_pDropTarget = NULL;
@@ -212,13 +214,13 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 			ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
 			LPCITEMIDLIST pidl = static_cast<ShellEntry*>(entry)->_pidl;
 
-			CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y));
+			CHECKERROR(ShellFolderContextMenu(folder, ::GetParent(hwndTreeView), 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
 		} else {
 			ShellPath shell_path = entry->create_absolute_pidl();
 			LPCITEMIDLIST pidl = shell_path;
 
 			///@todo use parent folder instead of desktop
-			CHECKERROR(ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidl, pptScreen->x, pptScreen->y));
+			CHECKERROR(ShellFolderContextMenu(GetDesktopFolder(), _hwnd, 1, &pidl, pptScreen->x, pptScreen->y, _cm_ifs));
 		}
 	}
 }
@@ -229,6 +231,8 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 
 	LPNMTVDISPINFO lpdi = (LPNMTVDISPINFO)pnmh;
 	ShellEntry* entry = (ShellEntry*)lpdi->item.lParam;
+	if (!entry)
+		return;
 
 	if (lpdi->item.mask & TVIF_TEXT)
 		lpdi->item.pszText = entry->_display_name;
