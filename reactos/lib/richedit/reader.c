@@ -80,8 +80,6 @@
 
 #include <stdlib.h>
 
-#include "charlist.h"
-
 #include "windef.h"
 #include "winbase.h"
 #include "wine/debug.h"
@@ -118,28 +116,23 @@ static void	ReadCharSetMaps (RTF_Info *);
 
 int _RTFGetChar(RTF_Info *info)
 {
-    char myChar;
+    int ch;
 
     TRACE("\n");
 
-    if(CHARLIST_GetNbItems(&info->inputCharList) == 0)
+    if( info->dwInputSize <= info->dwInputUsed )
     {
-        char buff[4096];
-        long pcb;
-        info->editstream.pfnCallback(info->editstream.dwCookie, buff, sizeof(buff), &pcb);
-        if(pcb == 0)
-           return EOF;
-        else
-        {
-           int i;
-           for (i = 0; i < pcb; i++)
-           {
-               CHARLIST_Enqueue(&info->inputCharList, buff[i]);
-           }
-        }
+        long count = 0;
+        info->editstream.pfnCallback(info->editstream.dwCookie, 
+                   info->InputBuffer, sizeof(info->InputBuffer), &count);
+        if(count == 0)
+            return EOF;
+        info->dwInputSize = count;
+        info->dwInputUsed = 0;
     }
-    myChar = CHARLIST_Dequeue(&info->inputCharList);
-    return (int) myChar;
+    ch = info->InputBuffer[info->dwInputUsed++];
+    if( !ch ) return EOF;
+    return ch;
 }
 
 void RTFSetEditStream(RTF_Info *info, EDITSTREAM *es)
@@ -547,10 +540,20 @@ RTFFont	*fp;
 			info->csStack[info->csTop++] = info->curCharSet;
 			break;
 		case rtfEndGroup:
+			/*
+			 * If stack top is 1 at this point, we are ending the
+			 * group started by the initial {, which ends the
+			 * RTF stream
+			 */
 			if (info->csTop <= 0)
 				RTFPanic (info,"_RTFGetToken: stack underflow");
-			info->curCharSet = info->csStack[--info->csTop];
-			RTFSetCharSet (info, info->curCharSet);
+			else if (info->csTop == 1)
+				info->rtfClass = rtfEOF;
+			else
+			{
+				info->curCharSet = info->csStack[--info->csTop];
+				RTFSetCharSet (info, info->curCharSet);
+			}
 			break;
 		}
 	}

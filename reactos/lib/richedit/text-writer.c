@@ -40,7 +40,6 @@
 
 #include "rtf.h"
 #include "rtf2text.h"
-#include "charlist.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
@@ -52,42 +51,6 @@ static void	SpecialChar (RTF_Info *info);
 static void	PutStdChar (RTF_Info *info, int stdCode);
 static void	PutLitChar (RTF_Info *info, int c);
 static void	PutLitStr (RTF_Info *info, char	*s);
-
-#if 0
-static char	*outMap[rtfSC_MaxChar];
-
-static CHARLIST charlist = {0, NULL, NULL};
-#endif
-
-/*int RTFToBuffer(char* pBuffer, int nBufferSize); */
-int RTFToBuffer(RTF_Info *info, char* pBuffer, int nBufferSize)
-{
-
-   /* check if the buffer is big enough to hold all characters  */
-   /* we require one more for the '\0'                          */
-
-   TRACE("\n");
-
-   if(nBufferSize < info->charlist.nCount + 1) {
-        return info->charlist.nCount + CHARLIST_CountChar(&info->charlist, '\n') + 1;
-   }
-
-   while(info->charlist.nCount)
-   {
-       *pBuffer = CHARLIST_Dequeue(&info->charlist);
-       if(*pBuffer=='\n')
-       {
-         *pBuffer = '\r';
-         pBuffer++;
-         *pBuffer = '\n';
-       }
-       pBuffer++;
-   }
-   *pBuffer = '\0';
-
-   return 0;
-}
-
 
 /*
  * Initialize the writer.
@@ -277,19 +240,30 @@ void PutStdChar (RTF_Info *info, int stdCode)
 	PutLitStr (info, oStr);
 }
 
-
 void PutLitChar (RTF_Info *info, int c)
 {
-	CHARLIST_Enqueue(&info->charlist, (char) c);
-        /* fputc (c, ostream); */
+    if( info->dwOutputCount >= ( sizeof info->OutputBuffer - 1 ) )
+        RTFFlushOutputBuffer( info );
+    info->OutputBuffer[info->dwOutputCount++] = c;
 }
 
-
-static void PutLitStr (RTF_Info *info, char	*s)
+void RTFFlushOutputBuffer( RTF_Info *info )
 {
-	for(;*s;s++)
-	{
-	  CHARLIST_Enqueue(&info->charlist, *s);
-	}
-	/* fputs (s, ostream); */
+    info->OutputBuffer[info->dwOutputCount] = 0;
+    SendMessageA( info->hwndEdit, EM_REPLACESEL, FALSE, (LPARAM) info->OutputBuffer );
+    info->dwOutputCount = 0;
+}
+
+static void PutLitStr (RTF_Info *info, char *str )
+{
+    int len = strlen( str );
+    if( ( len + info->dwOutputCount + 1 ) > sizeof info->OutputBuffer )
+        RTFFlushOutputBuffer( info );
+    if( ( len + 1 ) >= sizeof info->OutputBuffer )
+    {
+        SendMessageA( info->hwndEdit, EM_REPLACESEL, FALSE, (LPARAM) str );
+        return;
+    }
+    strcpy( &info->OutputBuffer[info->dwOutputCount], str );
+    info->dwOutputCount += len;
 }

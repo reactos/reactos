@@ -1374,8 +1374,6 @@ struct RTFStyleElt
 };
 
 
-#include "charlist.h"
-
 /*
  * Return pointer to new element of type t, or NULL
  * if no memory available.
@@ -1444,7 +1442,12 @@ struct _RTF_Info {
     char *outputName;
 
     EDITSTREAM editstream;
-    CHARLIST inputCharList ;
+    char InputBuffer[0x1000];
+    DWORD dwInputSize;
+    DWORD dwInputUsed;
+
+    /* edit window to output to */
+    HWND hwndEdit;
 
     /*
      * These arrays are used to map RTF input character values onto the standard
@@ -1493,8 +1496,8 @@ struct _RTF_Info {
 
     char     *outMap[rtfSC_MaxChar];
 
-    CHARLIST charlist;
-
+    DWORD    dwOutputCount;
+    char     OutputBuffer[0x1000];
 };
 
 
@@ -1559,6 +1562,7 @@ void		RTFSetCharSet( RTF_Info *, int);
 void	RTFSetOpenLibFileProc ( RTF_Info *, FILE *(*)());
 FILE	*RTFOpenLibFile ( RTF_Info *, char *, char *);
 
+void RTFFlushOutputBuffer( RTF_Info *info );
 void RTFSetEditStream(RTF_Info *, EDITSTREAM *es);
 
 #endif

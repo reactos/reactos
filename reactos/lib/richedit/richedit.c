@@ -31,7 +31,6 @@
 #include "winerror.h"
 #include "riched32.h"
 #include "richedit.h"
-#include "charlist.h"
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
 
@@ -115,11 +114,9 @@ typedef struct _RTFControl_info
 static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                                    LPARAM lParam)
 {
-    int RTFToBuffer(RTF_Info *parser, char* pBuffer, int nBufferSize);
     LONG newstyle = 0;
     LONG style = 0;
     RTFControl_Info *info;
-    int rtfBufferSize;
     CHARRANGE *cr;
 
     info = (RTFControl_Info *) GetWindowLongW( hwnd, RTFInfoOffset );
@@ -187,23 +184,17 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 	    /* setup the RTF parser */
 	    RTFSetEditStream(info->parser,( EDITSTREAM*)lParam);
 	    info->parser->rtfFormat = wParam&(SF_TEXT|SF_RTF);
+	    info->parser->hwndEdit = hwnd;
 	    WriterInit(info->parser);
 	    RTFInit (info->parser);
 	    BeginFile(info->parser);
 
 	    /* do the parsing */
 	    RTFRead (info->parser);
+            RTFFlushOutputBuffer( info->parser );
 
-	    rtfBufferSize = RTFToBuffer(info->parser,NULL, 0);
-	    info->rtfBuffer = HeapAlloc(RICHED32_hHeap, 0,rtfBufferSize*sizeof(char));
-	    if(info->rtfBuffer)
-	    {
-	    	RTFToBuffer(info->parser,info->rtfBuffer, rtfBufferSize);
-                CallWindowProcA(lpfnEditWndProc, hwnd, WM_SETTEXT, 0, (LPARAM)info->rtfBuffer);
-	    	HeapFree(RICHED32_hHeap, 0,info->rtfBuffer);
-	    }
-	    else
-		WARN("Not enough memory for a allocating rtfBuffer\n");
+            /* put the cursor at the top */
+            SendMessageA( hwnd, EM_SETSEL, 0, 0 );
 
             return 0;
 
