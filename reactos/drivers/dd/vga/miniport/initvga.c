@@ -1,6 +1,7 @@
+#include <ntddk.h>
+#include <debug.h>
+#include "vgaVideo.h"
 #include "../../../../ntoskrnl/include/internal/i386/io.h"
-
-#include "vgavideo.h"
 
 void outxay(USHORT ad, UCHAR x, UCHAR y)
 {
@@ -79,13 +80,26 @@ VideoMode Mode13 = {
      0x0c, 0x0d, 0x0e, 0x0f, 0x41, 0x00, 0x0f, 0x00, 0x00}
 };
 
+VideoMode Mode3 = {
+  0xb800, 0x67, 0x00,
+  { 0x03, 0x00, 0x3, 0x00, 0x2 },
+  
+  { 0x5f, 0x4f, 0x50, 0x82, 0x55, 0x81, 0xbf, 0x1f, 0x00, 0x4f, 0x0e, 0x0f,
+    0x00, 0x00, 0x00, 0x00, 0x9c, 0x0e, 0x8f, 0x28, 0x1f, 0x96, 0xb9, 0xa3,
+    0xff },
+  
+  { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0e, 0x00, 0xff },
+  
+  { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+    0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x00, 0x0f, 0x08, 0x00 }
+};
+
 void InitVGAMode()
 {
    int i;
 
    // FIXME: Use Vidport to map the memory properly
    vidmem = (char *)(0xd0000000 + 0xa0000);
-
    setMode(Mode12);
 
    WRITE_PORT_USHORT((PUSHORT)0x3C4, 0x0f02); // index=MASK MAP, write to all bitplanes
@@ -95,3 +109,29 @@ void InitVGAMode()
 
    vgaPreCalc();
 }
+
+
+VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
+{
+  char *vidmem;
+  HANDLE Event;
+  OBJECT_ATTRIBUTES Attr;
+  UNICODE_STRING Name;
+  NTSTATUS Status;
+  
+  CHECKPOINT;
+  Event = 0;
+  setMode( Mode3 );
+  RtlInitUnicodeString( &Name, L"\\TextConsoleRefreshEvent" );
+  InitializeObjectAttributes( &Attr, &Name, 0, 0, 0 );
+  Status = NtOpenEvent( &Event, STANDARD_RIGHTS_ALL, &Attr );
+  if( !NT_SUCCESS( Status ) )
+    DbgPrint( "VGA: Failed to open refresh event\n" );
+  else {
+    NtSetEvent( Event, 1 );
+    NtClose( Event );
+  }
+}
+
+
+
