@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.51 2004/01/17 15:18:25 navaraf Exp $
+/* $Id: windc.c,v 1.52 2004/02/02 22:09:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -227,6 +227,63 @@ DceReleaseDC(DCE* dce)
   return 1;
 }
 
+STATIC VOID FASTCALL
+DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
+{
+  HANDLE hRgnVisible = NULL;
+  ULONG DcxFlags;
+
+  if (Flags & DCX_PARENTCLIP)
+    {
+      PWINDOW_OBJECT Parent;
+
+      Parent = Window->Parent;
+
+      if (Window->Style & WS_VISIBLE /*&&
+          !(Parent->Style & WS_MINIMIZE)*/)
+        {
+          if (Parent->Style & WS_CLIPSIBLINGS)
+            {
+              DcxFlags = DCX_CLIPSIBLINGS | 
+                         (Flags & ~(DCX_CLIPCHILDREN | DCX_WINDOW));
+            }
+          else
+            {
+              DcxFlags = Flags & 
+                         ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
+            }
+          hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, 
+                                     Window->Self, Flags);
+        }
+      else
+        {
+          hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
+        }
+    }
+  else
+    {
+      hRgnVisible = DceGetVisRgn(NULL != Window ? Window->Self : NULL, Flags, 0, 0);
+    }
+
+  if (0 != (Flags & DCX_INTERSECTRGN))
+    {
+      NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
+    }
+
+  if (0 != (Flags & DCX_EXCLUDERGN))
+    {
+      NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
+    }
+
+  Dce->DCXFlags &= ~DCX_DCEDIRTY;
+  NtGdiSelectVisRgn(Dce->hDC, hRgnVisible);
+
+  if (hRgnVisible != NULL)
+    {
+      NtGdiDeleteObject(hRgnVisible);
+    }
+}
+
 HDC STDCALL
 NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 {
@@ -235,7 +292,6 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   DCE* Dce;
   BOOL UpdateVisRgn = TRUE;
   BOOL UpdateClipOrigin = FALSE;
-  HANDLE hRgnVisible = NULL;
 
   if (NULL == hWnd)
     {
@@ -435,56 +491,9 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
   if (UpdateVisRgn)
     {
-      if (Flags & DCX_PARENTCLIP)
-	{
-	  PWINDOW_OBJECT Parent;
-
-	  Parent = Window->Parent;
-
-	  if (Window->Style & WS_VISIBLE /*&&
-	      !(Parent->Style & WS_MINIMIZE)*/)
-	    {
-	      if (Parent->Style & WS_CLIPSIBLINGS)
-		{
-		  DcxFlags = DCX_CLIPSIBLINGS | 
-		    (Flags & ~(DCX_CLIPCHILDREN | DCX_WINDOW));
-		}
-	      else
-		{
-		  DcxFlags = Flags & 
-		    ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
-		}
-	      hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, 
-					 Window->Self, Flags);
-	    }
-	  else
-	    {
-	      hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
-	    }
-	}
-      else
-	{
-          hRgnVisible = DceGetVisRgn(hWnd, Flags, 0, 0);
-	}
-
-      if (0 != (Flags & DCX_INTERSECTRGN))
-	{
-	  NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
-	}
-
-      if (0 != (Flags & DCX_EXCLUDERGN))
-	{
-	  NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_DIFF);
-	}
-
-      Dce->DCXFlags &= ~DCX_DCEDIRTY;
-      NtGdiSelectVisRgn(Dce->hDC, hRgnVisible);
+      DceUpdateVisRgn(Dce, Window, Flags);
     }
 
-  if (hRgnVisible != NULL)
-    {
-      NtGdiDeleteObject(hRgnVisible);
-    }
   if (NULL != Window)
     {
       IntReleaseWindowObject(Window);
@@ -660,6 +669,50 @@ DceEmptyCache()
     {
       DceFreeDCE(FirstDce);
     }
+}
+
+VOID FASTCALL DceMoveDCE(HWND hwnd, int X, int Y)
+{
+  DCE *pDCE;
+  PWINDOW_OBJECT Window = IntGetWindowObject(hwnd);
+  PDC dc;
+
+  if (NULL == Window)
+    {
+      return;
+    }
+
+  pDCE = FirstDce;
+  while (pDCE)
+    {
+      if (pDCE->DCXFlags & DCX_DCEEMPTY)
+        {
+          pDCE = pDCE->next;
+          continue;
+        }
+      if (pDCE->hwndCurrent == hwnd)
+        {
+          dc = DC_LockDc(pDCE->hDC);
+          if (dc == NULL)
+            {
+              pDCE = pDCE->next;
+              continue;
+            }
+          dc->w.DCOrgX += X;
+          dc->w.DCOrgY += Y;
+          NtGdiOffsetRgn(dc->w.hClipRgn, X, Y);
+          DC_UnlockDc(pDCE->hDC);
+          NtGdiOffsetRgn(pDCE->hClipRgn, X, Y);
+
+          DceUpdateVisRgn(pDCE, Window, pDCE->DCXFlags);
+          IntReleaseWindowObject(Window);
+
+          pDCE->DCXFlags |= DCX_DCEDIRTY;
+        }
+      pDCE = pDCE->next;
+    }
+
+  IntReleaseWindowObject(Window);
 }
 
 /* EOF */

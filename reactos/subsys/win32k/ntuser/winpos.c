@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.84 2004/01/31 19:56:14 weiden Exp $
+/* $Id: winpos.c,v 1.85 2004/02/02 22:09:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -598,6 +598,8 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
   Window->ClientRect.right += MoveX;
   Window->ClientRect.top += MoveY;
   Window->ClientRect.bottom += MoveY;
+
+  DceMoveDCE(Window->Self, MoveX, MoveY);
 
   ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
   Child = Window->FirstChild;
