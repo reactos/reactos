@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.30 2003/08/18 23:52:03 weiden Exp $
+/* $Id: class.c,v 1.31 2003/08/19 00:36:40 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -31,7 +31,10 @@ GetClassInfoExA(
   WNDCLASSEXW w;
   BOOL retval;
   NTSTATUS Status;
-  Status = HEAP_strdupAtoW (&str, lpszClass, NULL);
+  if(IS_ATOM(lpszClass))
+    str = (LPWSTR)lpszClass;
+  else
+    Status = HEAP_strdupAtoW (&str, lpszClass, NULL);
   if ( !NT_SUCCESS (Status) )
   {
     SetLastError (RtlNtStatusToDosError(Status));
@@ -47,10 +50,11 @@ GetClassInfoExA(
     SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
     return 0;
   }
-  
+
   w.lpszMenuName = (LPCWSTR)&str2;  
   retval = (BOOL)NtUserGetClassInfo(hinst, str, &w, TRUE, 0);
-  HEAP_free(str);
+  if(!IS_ATOM(str))
+    HEAP_free(str);
   RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
 
   if (!IS_INTRESOURCE(w.lpszMenuName))
@@ -76,8 +80,11 @@ GetClassInfoExW(
   UNICODE_STRING str2;
   WNDCLASSEXW w;
   WINBOOL retval;
-  str = HEAP_strdupW (lpszClass, wcslen(lpszClass) );
-  
+  if(IS_ATOM(lpszClass))
+    str = (LPWSTR)lpszClass;
+  else
+    str = HEAP_strdupW (lpszClass, wcslen(lpszClass) );
+
   str2.Length = 0;
   str2.MaximumLength = 255;
   str2.Buffer = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(), 0, 
@@ -90,13 +97,15 @@ GetClassInfoExW(
 
   w.lpszMenuName = (LPCWSTR)&str2;  
   retval = (BOOL)NtUserGetClassInfo(hinst, str, &w, TRUE, 0);
-  HEAP_free(str);
+  if(!IS_ATOM(str))
+    HEAP_free(str);
   RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
 
   if (!IS_INTRESOURCE(w.lpszMenuName) )
   {
     lpwcx->lpszMenuName = heap_string_poolW (str2.Buffer, str2.Length);
   }
+
   RtlFreeHeap(RtlGetProcessHeap(), 0, str2.Buffer);
   return retval;
 }

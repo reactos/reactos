@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.66 2003/08/18 23:52:03 weiden Exp $
+/* $Id: window.c,v 1.67 2003/08/19 00:36:40 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -722,7 +722,7 @@ CreateWindowExW(DWORD dwExStyle,
 	    }
 	}
     }
-    
+
   if(!hMenu)
   {
     wce.cbSize = sizeof(WNDCLASSEXW);
