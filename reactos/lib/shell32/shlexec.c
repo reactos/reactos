@@ -440,11 +440,9 @@ end:
     return found;
 }
 
-static UINT SHELL_FindExecutableByOperation(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation, LPWSTR key, LPWSTR filetype, LPWSTR command)
+static UINT SHELL_FindExecutableByOperation(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation, LPWSTR key, LPWSTR filetype, LPWSTR command, LONG commandlen)
 {
     static const WCHAR wCommand[] = {'\\','c','o','m','m','a','n','d',0};
-
-    LONG commandlen = 256*sizeof(WCHAR);  /* This is the most DOS can handle :) */
 
     /* Looking for ...buffer\shell\<verb>\command */
     strcatW(filetype, wszShell);
@@ -621,6 +619,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 	{
 	    filetypelen /= sizeof(WCHAR);
 	    filetype[filetypelen] = '\0';
+	    TRACE("File type: %s\n", debugstr_w(filetype));
 	}
     }
 
@@ -630,14 +629,14 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 	{
 	    /* pass the operation string to SHELL_FindExecutableByOperation() */
 	    filetype[filetypelen] = '\0';
-	    retval = SHELL_FindExecutableByOperation(lpPath, lpFile, lpOperation, key, filetype, command);
+	    retval = SHELL_FindExecutableByOperation(lpPath, lpFile, lpOperation, key, filetype, command, sizeof(command));
 	}
 	else
 	{
 	    WCHAR operation[MAX_PATH];
 	    HKEY hkey;
 
-	    /* Looking for ...buffer\shell\lpOperation\command */
+	    /* Looking for ...buffer\shell\<operation>\command */
 	    strcatW(filetype, wszShell);
 
 	    /* enumerate the operation subkeys in the registry and search for one with an associated command */
@@ -650,7 +649,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 			break;
 
 		    filetype[filetypelen] = '\0';
-		    retval = SHELL_FindExecutableByOperation(lpPath, lpFile, operation, key, filetype, command);
+		    retval = SHELL_FindExecutableByOperation(lpPath, lpFile, operation, key, filetype, command, sizeof(command));
 
 		    if (retval > 32)
 			break;
@@ -1236,7 +1235,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
         strncpyW(wszProtocol, lpFile, iSize);
         wszProtocol[iSize] = '\0';
         strcatW(wszProtocol, wszShell);
-        strcatW(wszProtocol, sei_tmp.lpVerb? sei_tmp.lpVerb: wszOpen);    /*FIXME: enumerate registry subkeys - compare with the loop into SHELL_FindExecutable() */
+        strcatW(wszProtocol, sei_tmp.lpVerb? sei_tmp.lpVerb: wszOpen);
         strcatW(wszProtocol, wCommand);
 
         /* Remove File Protocol from lpFile */
