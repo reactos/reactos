@@ -280,7 +280,7 @@ char *FDI_read_string(HFDI hfdi, INT_PTR hf, long cabsize)
          base = FDI_getoffset(hfdi, hf),
          maxlen = cabsize - base;
   BOOL ok = FALSE;
-  int i;
+  unsigned int i;
   cab_UBYTE *buf = NULL;
 
   TRACE("(hfdi == ^%p, hf == %d)\n", hfdi, hf);
@@ -650,7 +650,8 @@ void QTMfdi_initmodel(struct QTMmodel *m, struct QTMmodelsym *sym, int n, int s)
  * QTMfdi_init (internal)
  */
 int QTMfdi_init(int window, int level, fdi_decomp_state *decomp_state) {
-  int wndsize = 1 << window, msz = window * 2, i;
+  unsigned int wndsize = 1 << window;
+  int msz = window * 2, i;
   cab_ULONG j;
 
   /* QTM supports window sizes of 2^10 (1Kb) through 2^21 (2Mb) */
@@ -2279,8 +2280,8 @@ BOOL __cdecl FDICopy(
 { 
   FDICABINETINFO    fdici;
   FDINOTIFICATION   fdin;
-  int               cabhf, filehf;
-  int               i, idx;
+  int               cabhf, filehf, idx;
+  unsigned int      i;
   char              fullpath[MAX_PATH];
   size_t            pathlen, filenamelen;
   char              emptystring = '\0';

@@ -95,7 +95,7 @@ HRESULT WINAPI Extract(EXTRACTdest *dest, LPCSTR what)
 
   LPSTR dir;
   unsigned char *ptr = (unsigned char*) dest;
-  int i;
+  unsigned int i;
 
   TRACE("(dest == %0lx, what == %s)\n", (long) dest, debugstr_a(what));
 
