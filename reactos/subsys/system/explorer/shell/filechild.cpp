@@ -267,6 +267,8 @@ void FileChildWindow::set_curdir(Entry* entry)
 	_right->_cur = entry;
 
 	if (entry) {
+		WaitCursor wait;
+
 		if (!entry->_scanned)
 			scan_entry(entry);
 		else {
@@ -467,6 +469,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				break;}
 
 			  case ID_REFRESH: {CONTEXT("ID_REFRESH");
+				WaitCursor wait;
 				bool expanded = _left->_cur->_expanded;
 
 				scan_entry(_left->_cur);
@@ -560,12 +563,14 @@ int FileChildWindow::Command(int id, int code)
 }
 
 
-void FileChildWindow::activate_entry(Pane* pane)
+void FileChildWindow::activate_entry(Pane* pane)	///@todo enable using <RETURN> key accelerator
 {
 	Entry* entry = pane->_cur;
 
 	if (!entry)
 		return;
+
+	WaitCursor wait;
 
 	if ((entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||	// a directory?
 		entry->_down)	// a file with NTFS sub-streams?
@@ -611,7 +616,6 @@ void FileChildWindow::scan_entry(Entry* entry)
 	CONTEXT("FileChildWindow::scan_entry()");
 
 	int idx = ListBox_GetCurSel(_left_hwnd);
-	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
 	 // delete sub entries in left pane
 	for(;;) {
@@ -642,8 +646,6 @@ void FileChildWindow::scan_entry(Entry* entry)
 	_right->set_header();
 
 	_header_wdths_ok = false;
-
-	SetCursor(old_cursor);
 }
 
 
