@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.11 2003/07/26 18:38:52 rcampbell Exp $
+/* $Id: dialog.c,v 1.12 2003/07/26 23:12:08 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -278,10 +278,11 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
                                      HINSTANCE hInst, BOOL unicode )
 {
     DIALOGINFO * dlgInfo;
-    if (!(dlgInfo = GETDLGINFO(hwnd))) return -1;
     DLG_CONTROL_INFO info;
     HWND hwndCtrl, hwndDefButton = 0;
     INT items = dlgTemplate->nbItems;
+
+    if (!(dlgInfo = GETDLGINFO(hwnd))) return -1;
 
     while (items--)
     {
