@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.1 2000/12/05 02:38:08 ekohl Exp $
+/* $Id: winlogon.c,v 1.2 2000/12/05 18:11:51 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,8 +41,8 @@ BOOLEAN StartServices(VOID)
 	return(FALSE);
      }
    
-   /* Start the Win32 subsystem (csrss.exe) */
-   DbgPrint("WL: Executing services.exe\n");
+   /* Start the service control manager (services.exe) */
+   DbgPrint("WL: Running services.exe\n");
    
    StartupInfo.cb = sizeof(StartupInfo);
    StartupInfo.lpReserved = NULL;
@@ -93,8 +93,8 @@ BOOLEAN StartLsass(VOID)
 	return(FALSE);
      }
    
-   /* Start the Win32 subsystem (csrss.exe) */
-   DbgPrint("WL: Executing lsass.exe\n");
+   /* Start the local security authority subsystem (lsass.exe) */
+   DbgPrint("WL: Running lsass.exe\n");
    
    StartupInfo.cb = sizeof(StartupInfo);
    StartupInfo.lpReserved = NULL;
@@ -148,7 +148,7 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
 			  FALSE,
 			  DETACHED_PROCESS,
 			  NULL,
-			  NULL,
+			  "C:\\reactos",
 			  &StartupInfo,
 			  &ProcessInformation);
    if (!Result)
@@ -207,8 +207,7 @@ WinMain(HINSTANCE hInstance,
 	/* Display login prompt */
 	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
 		     LoginPrompt,
-//		     wcslen(LoginPrompt),
-		     strlen(LoginPrompt),
+		     strlen(LoginPrompt),  // wcslen(LoginPrompt),
 		     &Result,
 		     NULL);
 	i = 0;
@@ -226,8 +225,7 @@ WinMain(HINSTANCE hInstance,
 	/* Display password prompt */
 	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
 		     PasswordPrompt,
-//		     wcslen(PasswordPrompt),
-		     strlen(PasswordPrompt),
+		     strlen(PasswordPrompt),  // wcslen(PasswordPrompt),
 		     &Result,
 		     NULL);
 	i = 0;
