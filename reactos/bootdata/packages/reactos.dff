@@ -96,6 +96,7 @@ lib\mesa32\mesa32.dll                   1
 lib\midimap\midimap.dll                 1
 lib\mmdrv\mmdrv.dll                     1
 lib\mpr\mpr.dll                         1
+lib\msacm\msacm32.dll                   1
 lib\msafd\msafd.dll                     1
 lib\msgina\msgina.dll                   1
 lib\msimg32\msimg32.dll                 1
