@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.36 2003/02/25 16:49:08 ekohl Exp $
+/* $Id: namespc.c,v 1.37 2003/05/12 13:59:09 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,10 +11,6 @@
 
 /* INCLUDES ***************************************************************/
 
-#ifdef WIN32_REGDBG
-#include "cm_win32.h"
-#else
-
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
@@ -24,7 +20,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#endif
 
 /* GLOBALS ****************************************************************/
 
@@ -46,7 +41,7 @@ static GENERIC_MAPPING ObpTypeMapping = {
 	0x000F0001};
 
 /* FUNCTIONS **************************************************************/
-#ifndef WIN32_REGDBG
+
 NTSTATUS STDCALL
 ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 			ULONG Attributes,
@@ -90,7 +85,7 @@ DPRINT("Object %p\n", Object);
    RtlFreeUnicodeString (&RemainingPath);
    return(STATUS_SUCCESS);
 }
-#endif // WIN32_REGDBG
+
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -139,6 +134,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 			 ObjectType);
    if (!NT_SUCCESS(Status))
      {
+	DPRINT("ObFindObject() failed (Status %lx)\n", Status);
 	return Status;
      }
 
@@ -184,6 +180,7 @@ ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
   KeReleaseSpinLock(&Parent->Lock, oldlvl);
 }
 
+
 VOID
 ObpRemoveEntryDirectory(POBJECT_HEADER Header)
 /*
@@ -200,6 +197,7 @@ ObpRemoveEntryDirectory(POBJECT_HEADER Header)
   RemoveEntryList(&(Header->Entry));
   KeReleaseSpinLock(&(Header->Parent->Lock),oldlvl);
 }
+
 
 PVOID
 ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
@@ -249,6 +247,7 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
    return(NULL);
 }
 
+
 NTSTATUS STDCALL
 ObpParseDirectory(PVOID Object,
 		  PVOID * NextObject,
@@ -256,55 +255,60 @@ ObpParseDirectory(PVOID Object,
 		  PWSTR * Path,
 		  ULONG Attributes)
 {
-   PWSTR end;
-   PVOID FoundObject;
-   
-   DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %S)\n",
-	  Object,Path,*Path);
-   
-   *NextObject = NULL;
-   
-   if ((*Path) == NULL)
-     {
-	return STATUS_UNSUCCESSFUL;
-     }
-   
-   end = wcschr((*Path)+1, '\\');
-   if (end != NULL)
-     {
-	*end = 0;
-     }
-   
-   FoundObject = ObpFindEntryDirectory(Object, (*Path)+1, Attributes);
-   
-   if (FoundObject == NULL)
-     {
-	if (end != NULL)
-	  {
-	     *end = '\\';
-	  }
-	return STATUS_UNSUCCESSFUL;
-     }
-   
-   ObReferenceObjectByPointer(FoundObject,
-			      STANDARD_RIGHTS_REQUIRED,
-			      NULL,
-			      UserMode);
-   
-   if (end != NULL)
-     {
-	*end = '\\';
-	*Path = end;
-     }
-   else
-     {
-	*Path = NULL;
-     }
-   
-   *NextObject = FoundObject;
-   
-   return STATUS_SUCCESS;
+  PWSTR Start;
+  PWSTR End;
+  PVOID FoundObject;
+
+  DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %S)\n",
+	 Object,Path,*Path);
+
+  *NextObject = NULL;
+
+  if ((*Path) == NULL)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  Start = *Path;
+  if (*Start == L'\\')
+    Start++;
+
+  End = wcschr(Start, L'\\');
+  if (End != NULL)
+    {
+      *End = 0;
+    }
+
+  FoundObject = ObpFindEntryDirectory(Object, Start, Attributes);
+  if (FoundObject == NULL)
+    {
+      if (End != NULL)
+	{
+	  *End = L'\\';
+	}
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  ObReferenceObjectByPointer(FoundObject,
+			     STANDARD_RIGHTS_REQUIRED,
+			     NULL,
+			     UserMode);
+
+  if (End != NULL)
+    {
+      *End = L'\\';
+      *Path = End;
+    }
+  else
+    {
+      *Path = NULL;
+    }
+
+  *NextObject = FoundObject;
+
+  return STATUS_SUCCESS;
 }
+
 
 NTSTATUS STDCALL
 ObpCreateDirectory(PVOID ObjectBody,
@@ -449,6 +453,5 @@ ObpCreateTypeObject(POBJECT_TYPE ObjectType)
 
   return(STATUS_SUCCESS);
 }
-
 
 /* EOF */
