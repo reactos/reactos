@@ -24,4 +24,6 @@ include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
+$(TARGET_NAME).o: resource.h
+
 # EOF
