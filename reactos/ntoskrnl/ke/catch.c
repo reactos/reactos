@@ -4,7 +4,8 @@
  * FILE:            ntoskrnl/ke/catch.c
  * PURPOSE:         Exception handling
  * 
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     Anich Gregor
+ *                  David Welch (welch@mcmail.com)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -18,7 +19,7 @@
 
 ULONG
 RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
-	IN PCONTEXT  Context);
+                      IN PCONTEXT  Context);
 
 /*
  * @unimplemented
@@ -56,13 +57,15 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
 
-    if (!Context) {
+    if (!Context)    
+    {
         
         /* Assume Full context */
         TContext.ContextFlags = CONTEXT_FULL;
         
         /* Check the mode */
-        if (PreviousMode == UserMode) {
+        if (PreviousMode == UserMode) 
+        {
             
             /* Add Debugger Registers if this is User Mode */
             TContext.ContextFlags = TContext.ContextFlags | CONTEXT_DEBUGGER;
@@ -76,13 +79,15 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     }
 
 #if 0 /* FIXME: Isn't this right? With a break after? */
-    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) {
+    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) 
+    {
         Context->Eip--;
     }
 #endif
 
     /* Check if a Debugger is enabled */
-    if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_GDB) {
+    if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_GDB) 
+    {
     
         /* Break into it */
         Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
@@ -92,13 +97,16 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     if (Action == kdContinue) return;
     
     /* If the Debugger couldn't handle it... */
-    if (Action != kdDoNotHandleException) {
+    if (Action != kdDoNotHandleException) 
+    {
         
         /* See what kind of Exception this is */
-        if (PreviousMode == UserMode) {
+        if (PreviousMode == UserMode) 
+        {
             
             /* User mode exception, search the frames if we have to */
-            if (SearchFrames) {
+            if (SearchFrames) 
+            {
 
                 PULONG Stack;
                 ULONG CDest;
@@ -140,12 +148,15 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                                               (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
                 
                 /* Check for success */
-                if (NT_SUCCESS(StatusOfCopy)) {
+                if (NT_SUCCESS(StatusOfCopy)) 
+                {
                     
                     /* Set new Stack Pointer */
                     Tf->Esp = (ULONG)pNewUserStack;
                     
-                } else {
+                } 
+                else 
+                {
                     
                     /*
                      * Now it really hit the ventilation device. Sorry,
@@ -180,7 +191,9 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             DPRINT1("Unhandled UserMode exception, terminating thread\n");
             ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
         
-        } else {
+        } 
+        else 
+        {
 
             /* This is Kernel Mode */            
 #ifdef KDBG
@@ -201,7 +214,8 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
         
             /* If RtlpDispatchException() did not handle the exception then bugcheck */
             if (Value != ExceptionContinueExecution ||
-                0 != (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)) {
+                0 != (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE))    
+            {
             
                 DPRINT("ExceptionRecord->ExceptionAddress = 0x%x\n", ExceptionRecord->ExceptionAddress);
 #ifdef KDBG
