@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.54 2003/12/21 20:06:45 weiden Exp $
+/* $Id: msgqueue.c,v 1.55 2003/12/21 21:20:31 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -181,10 +181,68 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
 }
 
 BOOL STATIC FASTCALL
-MsqIsDblClk(BOOL Remove, PUSER_MESSAGE Message)
+MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
 {
-  /* FIXME */
-  return FALSE;
+  PWINSTATION_OBJECT WinStaObject;
+  PSYSTEM_CURSORINFO CurInfo;
+  NTSTATUS Status;
+  LONG dX, dY;
+  BOOL Res;
+  
+  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                          KernelMode,
+                                          0,
+                                          &WinStaObject);
+  if (!NT_SUCCESS(Status))
+  {
+    return FALSE;
+  }
+  CurInfo = &WinStaObject->SystemCursor;
+  Res = (Window->Self == (HWND)CurInfo->LastClkWnd) && 
+        ((Message->Msg.time - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
+  if(Res)
+  {
+    
+    dX = CurInfo->LastBtnDownX - Message->Msg.pt.x;
+    dY = CurInfo->LastBtnDownY - Message->Msg.pt.y;
+    if(dX < 0) dX = -dX;
+    if(dY < 0) dY = -dY;
+    
+    Res = (dX <= CurInfo->DblClickWidth) &&
+          (dY <= CurInfo->DblClickHeight);
+
+    if(Remove)
+    {
+      if(Res)
+      {
+        CurInfo->LastBtnDown = 0;
+        CurInfo->LastBtnDownX = Message->Msg.pt.x;
+        CurInfo->LastBtnDownY = Message->Msg.pt.y;
+        CurInfo->LastClkWnd = NULL;
+      }
+      else
+      {
+        CurInfo->LastBtnDownX = Message->Msg.pt.x;
+        CurInfo->LastBtnDownY = Message->Msg.pt.y;
+        CurInfo->LastClkWnd = (HANDLE)Message->Msg.hwnd;
+        CurInfo->LastBtnDown = Message->Msg.time;
+      }
+    }
+  }
+  else
+  {
+    if(Remove)
+    {
+      DbgPrint("NO !!! DblClick in %d ms (Msg: %d, last: %d, Max: %d)\n", Message->Msg.time - CurInfo->LastBtnDown, Message->Msg.time, CurInfo->LastBtnDown, CurInfo->DblClickSpeed);
+      CurInfo->LastBtnDownX = Message->Msg.pt.x;
+      CurInfo->LastBtnDownY = Message->Msg.pt.y;
+      CurInfo->LastClkWnd = (HANDLE)Message->Msg.hwnd;
+      CurInfo->LastBtnDown = Message->Msg.time;
+    }
+  }
+  
+  ObDereferenceObject(WinStaObject);
+  return Res;
 }
 
 BOOL STATIC STDCALL
@@ -197,7 +255,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   PWINDOW_OBJECT CaptureWin, Window = NULL;
   HWND Wnd;
   POINT Point;
-
   LPARAM SpareLParam;
   LRESULT Result;
 
@@ -317,7 +374,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     {
       if ((((*HitTest) != HTCLIENT) || 
           (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS)) &&
-          MsqIsDblClk(Remove, Message))
+          MsqIsDblClk(Window, Message, Remove))
       {
         Msg += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
       }
