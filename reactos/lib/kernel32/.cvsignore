@@ -1,5 +1,6 @@
 errcodes.rc
 temp.exp
+*.d
 *.a
 *.o
 *.bin
@@ -8,4 +9,5 @@ temp.exp
 *.coff
 *.sym
 *.tmp
+*.gch
 *.map
