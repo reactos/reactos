@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.20 2004/03/14 18:28:58 dwelch Exp $
+/* $Id: kdb.c,v 1.21 2004/03/15 17:32:47 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -28,7 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ctype.h>
+#include <internal/ctype.h>
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
