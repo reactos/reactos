@@ -1,0 +1,163 @@
+/*
+ * Winefile
+ * German Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+#pragma code_page(1252)
+
+
+/* Menu */
+
+IDM_WINEFILE MENU FIXED IMPURE
+{
+	POPUP "&Datei"  {
+		MENUITEM "Ö&ffnen\tEingabetaste" ,			101
+		MENUITEM "&Verschieben...\tF7" , 			106
+		MENUITEM "&Kopieren...\tF8" ,			107
+		MENUITEM "&In Zwischenablage...\tF9" ,		118
+		MENUITEM "&Löschen\tEntf" ,			108
+		MENUITEM "&Umbenennen..." ,			109
+		MENUITEM "&Eigenschaften...\tAlt+Eingabetaste" , ID_EDIT_PROPERTIES
+		MENUITEM SEPARATOR
+		MENUITEM "K&omprimieren..." ,		119
+		MENUITEM "Deko&mprimieren..." ,		120
+		MENUITEM SEPARATOR
+		MENUITEM "&Ausführen..." ,			ID_EXECUTE
+		MENUITEM "&Drucken..." , 			102
+		MENUITEM "Zuord&nen..." ,		103
+		MENUITEM SEPARATOR
+		MENUITEM "Ver&zeichnis erstellen..." ,			111
+		MENUITEM "&Suchen..." ,			104
+		MENUITEM "Dateien aus&wählen..." ,			116
+		MENUITEM SEPARATOR
+		MENUITEM "&Beenden\tAlt+X" , 			ID_FILE_EXIT
+	}
+
+	POPUP "Da&tenträger"  {
+		MENUITEM "Datenträger &kopieren..." ,			201
+		MENUITEM "Datenträger &benennen..." ,			202
+		MENUITEM SEPARATOR
+		MENUITEM "Datenträger &formatieren..." ,			203
+#ifdef _WIN95
+		MENUITEM "...",			-1	//TODO
+#endif
+		MENUITEM SEPARATOR
+		MENUITEM "Netzwerklaufwerk &verbinden..." ,			252
+		MENUITEM "Netzwerklaufwerk &trennen..." ,		253
+		MENUITEM SEPARATOR
+		MENUITEM "F&reigeben als..." ,			254
+		MENUITEM "Freigabe been&den..." ,			255
+		MENUITEM SEPARATOR
+		MENUITEM "Laufwerk aus&wählen..." ,			251
+	}
+
+
+	POPUP "&Verzeichnisse"  {
+		MENUITEM "&Nächste Ebene einblenden\t+" ,			301
+		MENUITEM "&Zweig einblenden\t*" ,		302
+		MENUITEM "Alle &Ebenen einblenden\tStrg+*" ,		303
+		MENUITEM "Zweig &ausblenden\t-" ,			304
+		MENUITEM SEPARATOR
+		MENUITEM "&Verzweigungen kennzeichnen" ,				505
+	}
+
+	POPUP "&Ansicht"  {
+		MENUITEM "Struktur &und Verzeichnis" ,			413
+		MENUITEM "Nur St&ruktur" ,			411
+		MENUITEM "Nur &Verzeichnis" ,			412
+		MENUITEM SEPARATOR
+		MENUITEM "&Teilen" ,			414
+		MENUITEM SEPARATOR
+		MENUITEM "&Name" ,			ID_VIEW_NAME
+		MENUITEM "A&lle Dateiangaben" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
+		MENUITEM "&Bestimmte Dateiangaben..." ,			ID_VIEW_SELECTED_ATTRIBUTES
+		MENUITEM SEPARATOR
+		MENUITEM "Nach N&ame" ,		404
+		MENUITEM "Nach T&yp" ,		405
+		MENUITEM "Nach &Größe" , 		406
+		MENUITEM "Nach &Datum" , 		407
+		MENUITEM SEPARATOR
+		MENUITEM "Angaben ausw&ählen..." ,			409
+	}
+
+	POPUP "&Optionen"  {
+		MENUITEM "&Bestätigen..." ,		-1
+		MENUITEM "Schrift&art..." ,			-1
+		MENUITEM "Symbolleiste &definieren..." , -1
+		MENUITEM SEPARATOR
+		MENUITEM "Sy&mbolleiste" ,		ID_VIEW_TOOL_BAR, CHECKED
+		MENUITEM "Lauf&werkleiste" ,		ID_VIEW_DRIVE_BAR, CHECKED
+		MENUITEM "&Statusleiste" ,	ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+		MENUITEM "Vollb&ild\tStrg+Umschalt+S" , 	ID_VIEW_FULLSCREEN
+#endif
+		MENUITEM SEPARATOR
+		MENUITEM "&Symbol nach Programmstart" ,		-1
+		MENUITEM "&Einstellungen beim Beenden speichern" ,			511
+	}
+
+	POPUP "&Sicherheit"  {
+		MENUITEM "&Berechtigungen..." ,		605
+		MENUITEM "Über&wachen..." ,			606
+		MENUITEM "Besi&tzer..." ,		607
+	}
+
+	POPUP "&Fenster"  {
+		MENUITEM "Neues &Fenster" ,			ID_WINDOW_NEW
+		MENUITEM "Über&lappend\tUmschalt+F5" ,		ID_WINDOW_CASCADE
+		MENUITEM "&Untereinander" ,		ID_WINDOW_TILE_HORZ
+		MENUITEM "&Nebeneinander\tUmschalt+F4" ,		ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+		MENUITEM "au&tomatisch anordnen" ,		ID_WINDOW_AUTOSORT
+#endif
+		MENUITEM "&Symbole anordnen" ,		ID_WINDOW_ARRANGE
+		MENUITEM "&Aktualisieren\tF5" ,		ID_REFRESH
+	}
+
+	POPUP "&?"  {
+		MENUITEM "&Hilfethemen\tF1" ,			ID_HELP
+		MENUITEM "&Suchen...\tF1" ,			ID_HELP
+		MENUITEM "Hilfe &verwenden\tF1" ,			ID_HELP_USING
+		MENUITEM SEPARATOR
+		MENUITEM "Info about &Winefile..." ,		ID_ABOUT
+/*		POPUP "Inf&o..."  {
+		  MENUITEM "Info über &Wine..." ,			ID_ABOUT_WINE
+//		  MENUITEM "&Lizenz"		ID_LICENSE
+//		  MENUITEM "&KEINE GARANTIE"		ID_NO_WARRANTY
+		}*/
+	}
+}
+
+
+IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ausführen"
+FONT 8, "MS Shell Dlg"
+{
+	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+	CONTROL 		"Befehls&zeile:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
+	CONTROL 		"Als &Symbol" , 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
+	DEFPUSHBUTTON	"OK" , 1, 158, 6, 47, 14
+	PUSHBUTTON		"Abbrechen" , 2, 158, 23, 47, 14
+	PUSHBUTTON		"&Hilfe" , 254, 158, 43, 47, 14
+}

@@ -1,5 +1,6 @@
 #include <defines.h>
 #include <reactos/resource.h>
+#include "winefile.rc"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 

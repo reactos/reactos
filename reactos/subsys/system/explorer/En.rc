@@ -1,0 +1,167 @@
+/*
+ * WineFile
+ * English Language Support
+ *
+ * Copyright 2000 Martin Fuchs
+ * Copyright 2002 Steven Edwards
+ * Copyright 2002 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(850)
+
+
+/* Menu */
+
+IDM_WINEFILE MENU FIXED IMPURE
+{
+	POPUP "&File"  {
+		MENUITEM "&Open\tEnter" ,			101
+		MENUITEM "&Move...\tF7" , 			106
+		MENUITEM "&Copy...\tF8" ,			107
+		MENUITEM "&In Clipboard...\tF9" ,		118
+		MENUITEM "&Delete\tDel" ,			108
+		MENUITEM "Re&name..." ,			109
+		MENUITEM "Propert&ies...\tAlt+Enter" , ID_EDIT_PROPERTIES
+		MENUITEM SEPARATOR
+		MENUITEM "C&ompress..." ,		119
+		MENUITEM "Dec&ompress..." ,		120
+		MENUITEM SEPARATOR
+		MENUITEM "&Run..." ,			ID_EXECUTE
+		MENUITEM "&Print..." , 			102
+		MENUITEM "Associate..." ,		103
+		MENUITEM SEPARATOR
+		MENUITEM "Cr&eate Directory..." ,			111
+		MENUITEM "Searc&h..." ,			104
+		MENUITEM "&Select Files..." ,			116
+		MENUITEM SEPARATOR
+#ifndef _NO_EXTENSIONS
+		MENUITEM "E&xit\tAlt+X" , 			ID_FILE_EXIT
+#else
+		MENUITEM "E&xit", 				ID_FILE_EXIT
+#endif
+	}
+
+	POPUP "&Disk"  {
+		MENUITEM "&Copy Disk..." ,			201
+		MENUITEM "&Label Disk..." ,			202
+		MENUITEM SEPARATOR
+		MENUITEM "&Format Disk..." ,			203
+#ifdef _WIN95
+		MENUITEM "&Make System Disk...", -1	//TODO
+#endif
+		MENUITEM SEPARATOR
+		MENUITEM "Connect &Network Drive" ,			252
+		MENUITEM "&Disconnect Network Drive" ,		253
+		MENUITEM SEPARATOR
+		MENUITEM "Share as..." ,			254
+		MENUITEM "&Remove Share..." ,			255
+		MENUITEM SEPARATOR
+		MENUITEM "&Select Drive..." ,			251
+	}
+
+	POPUP "&Directories"  {
+		MENUITEM "&Next Level\t+" ,			301
+		MENUITEM "Expand &Tree\t*" ,		302
+		MENUITEM "Expand &all\tStrg+*" ,		303
+		MENUITEM "Collapse &Tree\t-" ,			304
+		MENUITEM SEPARATOR
+		MENUITEM "&Mark Childs" ,				505
+	}
+
+	POPUP "&View"  {
+		MENUITEM "T&ree and Directory" ,			413
+		MENUITEM "Tr&ee Only" ,			411
+		MENUITEM "Directory &Only" ,			412
+		MENUITEM SEPARATOR
+		MENUITEM "Sp&lit" ,			414
+		MENUITEM SEPARATOR
+		MENUITEM "&Name" ,			ID_VIEW_NAME
+		MENUITEM "&All File Details" ,				ID_VIEW_ALL_ATTRIBUTES, CHECKED
+		MENUITEM "&Partial Details..." ,			ID_VIEW_SELECTED_ATTRIBUTES
+		MENUITEM SEPARATOR
+		MENUITEM "&Sort by Name" ,		404
+		MENUITEM "Sort &by Type" ,		405
+		MENUITEM "Sort by Si&ze" , 		406
+		MENUITEM "Sort by &Date" , 		407
+		MENUITEM SEPARATOR
+		MENUITEM "Sort by &..." ,			409
+	}
+
+	POPUP "&Options"  {
+		MENUITEM "&Confirmation..." ,		-1
+		MENUITEM "&Font..." ,			-1
+		MENUITEM "Customize Tool&bar..." , -1
+		MENUITEM SEPARATOR
+		MENUITEM "&Toolbar" ,		ID_VIEW_TOOL_BAR, CHECKED
+		MENUITEM "&Drivebar" ,		ID_VIEW_DRIVE_BAR, CHECKED
+		MENUITEM "&Status Bar" ,	ID_VIEW_STATUSBAR, CHECKED
+#ifndef _NO_EXTENSIONS
+		MENUITEM "F&ull Screen\tCtrl+Shift+S" , 	ID_VIEW_FULLSCREEN
+#endif
+		MENUITEM SEPARATOR
+		MENUITEM "&Symbol nach Programmstart" ,		-1
+		MENUITEM "&Einstellungen beim Beenden speichern" ,			511
+	}
+
+
+	POPUP "&Security"  {
+		MENUITEM "&Access..." ,		605
+		MENUITEM "&Logging..." ,			606
+		MENUITEM "&Owner..." ,		607
+	}
+
+	POPUP "&Window"  {
+		MENUITEM "New &Window" ,			ID_WINDOW_NEW
+		MENUITEM "Cascading\tCtrl+F5" ,		ID_WINDOW_CASCADE
+		MENUITEM "Tile &Horizontally" ,		ID_WINDOW_TILE_HORZ
+		MENUITEM "Tile &Vertically\tCtrl+F4" ,		ID_WINDOW_TILE_VERT
+#ifndef _NO_EXTENSIONS
+		MENUITEM "Arrange Automatically" ,		ID_WINDOW_AUTOSORT
+#endif
+		MENUITEM "Arrange &Symbols" ,		ID_WINDOW_ARRANGE
+		MENUITEM "&Refresh\tF5" ,		ID_REFRESH
+	}
+
+	POPUP "&?"  {
+		MENUITEM "&Help Topics\tF1" ,			ID_HELP
+		MENUITEM "Help &Search...\tF1" ,			ID_HELP
+		MENUITEM "&Using Help\tF1" ,			ID_HELP_USING
+		MENUITEM SEPARATOR
+		MENUITEM "Info about &Winefile..." ,		ID_ABOUT
+/*		POPUP "Info..."  {
+		  MENUITEM "Info about &Wine..." ,			ID_ABOUT_WINE
+//		  MENUITEM "&License..."		ID_LICENSE
+//		  MENUITEM "&NO WARRANTY"		ID_NO_WARRANTY
+		} */
+	}
+}
+
+
+IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Execute"
+FONT 8, "MS Shell Dlg"
+{
+	CONTROL 		"", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+	CONTROL 		"&Command:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
+	CONTROL 		"As &Symbol" , 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
+	DEFPUSHBUTTON	"OK" , 1, 158, 6, 47, 14
+	PUSHBUTTON		"Cancel" , 2, 158, 23, 47, 14
+	PUSHBUTTON		"&Help" , 254, 158, 43, 47, 14
+}

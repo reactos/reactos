@@ -1,0 +1,11 @@
+14.10.2002	m. fuchs	Korrektur der Anpassungen durch Übernahme in wine: Anzeige der Verzeichnisnamen in Tree Pane
+			m. fuchs	Wieder-Anpassung an natives Übersetzen unter WIN32 mit VC++
+
+15.10.2002	m. fuchs	Entfernung der Warnungsmeldung durch SetWindowText(0, ...)
+			m. fuchs	korrekte Anzeige der Header Control-Texte (nicht Unicode -> dlls/comctl32/header.c)
+
+15.10.2002	m. fuchs	sofortige Anzeige der Dateiliste beim Starten und Öffnen neuer Fenster
+15.10.2002	m. fuchs	Programmaufruf über Doppelklick in der Dateiliste
+
+07.06.2003	m. fuchs	integration with ROS desktop window
+

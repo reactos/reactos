@@ -1,17 +1,43 @@
+#
+#  ReactOS winfile
+#
+#  Makefile
+#
+
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = program
 
 TARGET_APPTYPE = windows
 
-TARGET_SDKLIBS = gdi32.a
-
 TARGET_NAME = explorer
+
+TARGET_CFLAGS = -fexceptions -O2 -DNDEBUG -DWIN32 -DUNICODE -D_ROS_ -W
+
+TARGET_RCFLAGS = -DNDEBUG -DWIN32 -DUNICODE -D_ROS_
+
+WINE_MODE = yes
+
+WINE_RC = $(TARGET_NAME)
+
+WINE_INCLUDE = ./
+
+TARGET_GCCLIBS = comctl32
+
+TARGET_SDKLIBS = \
+	kernel32.a \
+	user32.a \
+	gdi32.a \
+	advapi32.a \
+	version.a \
 
 TARGET_OBJECTS = \
 	desktop.o \
 	ex_bar.o \
-	startup.o
+	license.o \
+	splitpath.o \
+	startup.o \
+	winefile.o
 
 include $(PATH_TO_TOP)/rules.mak
 

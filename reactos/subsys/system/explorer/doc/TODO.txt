@@ -1,0 +1,211 @@
+1. Fix the Explorer Bar/Start Menu. Currently it is almost nothing like Windows.
+
+2. Implement support for ICONs on the desktop.
+
+3. Fix Mingw build. Currently Explorer requires the WINE headers to build. 
+When build with Mingw headers you will get a error like this:
+
+G:\src\rosapps\explorer>make1
+windres -DNDEBUG -DWIN32 -DUNICODE -D_ROS_ --include-dir ../../reactos/include -
+-include-dir ../../reactos/include explorer.rc -o explorer.coff
+gcc -fexceptions -O2 -DNDEBUG -DWIN32 -DUNICODE -D_ROS_ -W -I./ -I../../reactos/
+include -pipe -march=i386 -D_M_IX86 -c desktop.c -o desktop.o
+gcc -fexceptions -O2 -DNDEBUG -DWIN32 -DUNICODE -D_ROS_ -W -I./ -I../../reactos/
+include -pipe -march=i386 -D_M_IX86 -c ex_bar.c -o ex_bar.o
+gcc -fexceptions -O2 -DNDEBUG -DWIN32 -DUNICODE -D_ROS_ -W -I./ -I../../reactos/
+include -pipe -march=i386 -D_M_IX86 -c license.c -o license.o
+gcc -fexceptions -O2 -DNDEBUG -DWIN32 -DUNICODE -D_ROS_ -W -I./ -I../../reactos/
+include -pipe -march=i386 -D_M_IX86 -c splitpath.c -o splitpath.o
+In file included from C:/mingw/include/commctrl.h:7,
+                 from winefile.h:38,
+                 from splitpath.c:19:
+C:/mingw/include/prsht.h:123: parse error before "LPCDLGTEMPLATE"
+C:/mingw/include/prsht.h:138: parse error before '}' token
+C:/mingw/include/prsht.h:139: parse error before '*' token
+C:/mingw/include/prsht.h:146: parse error before "LPCDLGTEMPLATE"
+C:/mingw/include/prsht.h:152: conflicting types for `pszTitle'
+C:/mingw/include/prsht.h:129: previous declaration of `pszTitle'
+C:/mingw/include/prsht.h:155: conflicting types for `pfnCallback'
+C:/mingw/include/prsht.h:132: previous declaration of `pfnCallback'
+C:/mingw/include/prsht.h:161: parse error before '}' token
+C:/mingw/include/prsht.h:162: parse error before '*' token
+C:/mingw/include/prsht.h:163: parse error before "LPPROPSHEETPAGEA"
+C:/mingw/include/prsht.h:164: parse error before "LPPROPSHEETPAGEW"
+C:/mingw/include/prsht.h:183: parse error before "LPCPROPSHEETPAGEA"
+C:/mingw/include/prsht.h:185: parse error before '}' token
+C:/mingw/include/prsht.h:186: conflicting types for `pfnCallback'
+C:/mingw/include/prsht.h:155: previous declaration of `pfnCallback'
+C:/mingw/include/prsht.h:198: parse error before '}' token
+C:/mingw/include/prsht.h:199: parse error before '*' token
+C:/mingw/include/prsht.h:216: parse error before "LPCPROPSHEETPAGEW"
+C:/mingw/include/prsht.h:218: parse error before '}' token
+C:/mingw/include/prsht.h:231: parse error before '}' token
+C:/mingw/include/prsht.h:232: parse error before '*' token
+C:/mingw/include/prsht.h:236: parse error before "NMHDR"
+C:/mingw/include/prsht.h:238: parse error before '}' token
+In file included from winefile.h:38,
+                 from splitpath.c:19:
+C:/mingw/include/commctrl.h:1473: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1478: parse error before '}' token
+C:/mingw/include/commctrl.h:1480: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1483: conflicting types for `szText'
+C:/mingw/include/commctrl.h:1476: previous declaration of `szText'
+C:/mingw/include/commctrl.h:1485: parse error before '}' token
+C:/mingw/include/commctrl.h:1493: parse error before "POINT"
+C:/mingw/include/commctrl.h:1548: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1553: parse error before '}' token
+C:/mingw/include/commctrl.h:1564: parse error before "RECT"
+C:/mingw/include/commctrl.h:1606: parse error before "RECT"
+C:/mingw/include/commctrl.h:1608: parse error before '}' token
+C:/mingw/include/commctrl.h:1611: parse error before "POINT"
+C:/mingw/include/commctrl.h:1614: parse error before '}' token
+C:/mingw/include/commctrl.h:1616: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1620: parse error before '}' token
+C:/mingw/include/commctrl.h:1622: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1625: conflicting types for `pitem'
+C:/mingw/include/commctrl.h:1619: previous declaration of `pitem'
+C:/mingw/include/commctrl.h:1626: parse error before '}' token
+C:/mingw/include/commctrl.h:1631: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1634: conflicting types for `pitem'
+C:/mingw/include/commctrl.h:1625: previous declaration of `pitem'
+C:/mingw/include/commctrl.h:1635: parse error before '}' token
+C:/mingw/include/commctrl.h:1638: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1641: conflicting types for `pitem'
+C:/mingw/include/commctrl.h:1634: previous declaration of `pitem'
+C:/mingw/include/commctrl.h:1642: parse error before '}' token
+C:/mingw/include/commctrl.h:1652: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1655: conflicting types for `pszText'
+C:/mingw/include/commctrl.h:1552: previous declaration of `pszText'
+C:/mingw/include/commctrl.h:1659: parse error before '}' token
+C:/mingw/include/commctrl.h:1661: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1664: conflicting types for `pszText'
+C:/mingw/include/commctrl.h:1655: previous declaration of `pszText'
+C:/mingw/include/commctrl.h:1668: parse error before '}' token
+C:/mingw/include/commctrl.h:1670: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1673: parse error before "rc"
+C:/mingw/include/commctrl.h:1677: parse error before '}' token
+C:/mingw/include/commctrl.h:1679: parse error before "NMCUSTOMDRAW"
+C:/mingw/include/commctrl.h:1685: parse error before '}' token
+C:/mingw/include/commctrl.h:1687: parse error before "NMCUSTOMDRAW"
+C:/mingw/include/commctrl.h:1693: parse error before '}' token
+C:/mingw/include/commctrl.h:1729: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1733: conflicting types for `pszText'
+C:/mingw/include/commctrl.h:1664: previous declaration of `pszText'
+C:/mingw/include/commctrl.h:1737: parse error before '}' token
+C:/mingw/include/commctrl.h:1741: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1745: conflicting types for `pszText'
+C:/mingw/include/commctrl.h:1733: previous declaration of `pszText'
+C:/mingw/include/commctrl.h:1749: parse error before '}' token
+C:/mingw/include/commctrl.h:1757: parse error before "RECT"
+C:/mingw/include/commctrl.h:1763: parse error before '}' token
+C:/mingw/include/commctrl.h:1769: parse error before "RECT"
+C:/mingw/include/commctrl.h:1771: conflicting types for `lpszText'
+C:/mingw/include/commctrl.h:1759: previous declaration of `lpszText'
+C:/mingw/include/commctrl.h:1775: parse error before '}' token
+C:/mingw/include/commctrl.h:1778: parse error before "POINT"
+C:/mingw/include/commctrl.h:1783: parse error before "POINT"
+C:/mingw/include/commctrl.h:1787: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1788: conflicting types for `lpszText'
+C:/mingw/include/commctrl.h:1771: previous declaration of `lpszText'
+C:/mingw/include/commctrl.h:1789: conflicting types for `szText'
+C:/mingw/include/commctrl.h:1483: previous declaration of `szText'
+C:/mingw/include/commctrl.h:1795: parse error before '}' token
+C:/mingw/include/commctrl.h:1799: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1800: conflicting types for `lpszText'
+C:/mingw/include/commctrl.h:1788: previous declaration of `lpszText'
+C:/mingw/include/commctrl.h:1801: conflicting types for `szText'
+C:/mingw/include/commctrl.h:1789: previous declaration of `szText'
+C:/mingw/include/commctrl.h:1807: parse error before '}' token
+C:/mingw/include/commctrl.h:1815: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1818: parse error before '}' token
+C:/mingw/include/commctrl.h:1835: parse error before '*' token
+C:/mingw/include/commctrl.h:1851: conflicting types for `FAR'
+C:/mingw/include/commctrl.h:1835: previous declaration of `FAR'
+C:/mingw/include/commctrl.h:1851: parse error before '*' token
+C:/mingw/include/commctrl.h:1858: parse error before "POINT"
+C:/mingw/include/commctrl.h:1860: parse error before '}' token
+C:/mingw/include/commctrl.h:1860: parse error before "FAR"
+C:/mingw/include/commctrl.h:1867: parse error before "POINT"
+C:/mingw/include/commctrl.h:1869: parse error before '}' token
+C:/mingw/include/commctrl.h:1869: parse error before "FAR"
+C:/mingw/include/commctrl.h:1873: parse error before "POINT"
+C:/mingw/include/commctrl.h:1879: parse error before '}' token
+C:/mingw/include/commctrl.h:1893: conflicting types for `FAR'
+C:/mingw/include/commctrl.h:1851: previous declaration of `FAR'
+C:/mingw/include/commctrl.h:1893: parse error before '*' token
+C:/mingw/include/commctrl.h:1907: conflicting types for `FAR'
+C:/mingw/include/commctrl.h:1893: previous declaration of `FAR'
+C:/mingw/include/commctrl.h:1907: parse error before '*' token
+C:/mingw/include/commctrl.h:1912: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1918: parse error before "ptAction"
+C:/mingw/include/commctrl.h:1920: parse error before '}' token
+C:/mingw/include/commctrl.h:1926: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1928: parse error before '}' token
+C:/mingw/include/commctrl.h:1928: parse error before "FAR"
+C:/mingw/include/commctrl.h:1932: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1933: conflicting types for `item'
+C:/mingw/include/commctrl.h:1927: previous declaration of `item'
+C:/mingw/include/commctrl.h:1934: parse error before '}' token
+C:/mingw/include/commctrl.h:1934: parse error before "FAR"
+C:/mingw/include/commctrl.h:1938: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1941: parse error before '}' token
+C:/mingw/include/commctrl.h:1943: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:1946: parse error before '}' token
+C:/mingw/include/commctrl.h:2038: parse error before "POINT"
+C:/mingw/include/commctrl.h:2041: parse error before '}' token
+C:/mingw/include/commctrl.h:2055: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:2059: parse error before "ptDrag"
+C:/mingw/include/commctrl.h:2065: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:2067: conflicting types for `itemOld'
+C:/mingw/include/commctrl.h:2057: previous declaration of `itemOld'
+C:/mingw/include/commctrl.h:2068: conflicting types for `itemNew'
+C:/mingw/include/commctrl.h:2058: previous declaration of `itemNew'
+C:/mingw/include/commctrl.h:2069: parse error before "ptDrag"
+C:/mingw/include/commctrl.h:2075: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:2076: conflicting types for `item'
+C:/mingw/include/commctrl.h:1933: previous declaration of `item'
+C:/mingw/include/commctrl.h:2077: parse error before '}' token
+C:/mingw/include/commctrl.h:2079: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:2080: conflicting types for `item'
+C:/mingw/include/commctrl.h:2076: previous declaration of `item'
+C:/mingw/include/commctrl.h:2081: parse error before '}' token
+C:/mingw/include/commctrl.h:2083: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:2086: parse error before '}' token
+C:/mingw/include/commctrl.h:2122: parse error before "POINT"
+C:/mingw/include/commctrl.h:2124: parse error before '}' token
+C:/mingw/include/commctrl.h:2126: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:2129: parse error before '}' token
+C:/mingw/include/commctrl.h:2165: parse error before "POINT"
+C:/mingw/include/commctrl.h:2168: parse error before '}' token
+C:/mingw/include/commctrl.h:2172: parse error before "NMHDR"
+C:/mingw/include/commctrl.h:2176: parse error before '}' token
+C:/mingw/include/commctrl.h:2329: parse error before "LPRECT"
+C:/mingw/include/commctrl.h:2330: parse error before "LPRECT"
+C:/mingw/include/commctrl.h:2331: parse error before "LPRECT"
+C:/mingw/include/commctrl.h:2361: parse error before "IMAGEINFO"
+C:/mingw/include/commctrl.h:2382: parse error before "POINT"
+C:/mingw/include/commctrl.h:2585: parse error before "TOOLINFO"
+C:/mingw/include/commctrl.h:2586: parse error before "TTHITTESTINFO"
+C:/mingw/include/commctrl.h:2587: parse error before "TOOLTIPTEXT"
+C:/mingw/include/commctrl.h:2588: parse error before "NMTTDISPINFO"
+C:/mingw/include/commctrl.h:2596: parse error before "NM_TREEVIEW"
+C:/mingw/include/commctrl.h:2597: parse error before "NMTREEVIEW"
+C:/mingw/include/commctrl.h:2598: parse error before "NMHDDISPINFO"
+In file included from winefile.h:39,
+                 from splitpath.c:19:
+C:/mingw/include/shellapi.h:101: parse error before "RECT"
+C:/mingw/include/shellapi.h:103: parse error before '}' token
+In file included from winefile.h:39,
+                 from splitpath.c:19:
+C:/mingw/include/shellapi.h:199: parse error before "LPPOINT"
+C:/mingw/include/shellapi.h:208: parse error before "PAPPBARDATA"
+In file included from splitpath.c:19:
+winefile.h:131: parse error before "SIZE"
+winefile.h:131: warning: no semicolon at end of struct or union
+winefile.h:138: parse error before '}' token
+winefile.h:138: warning: data definition has no type or storage class
+winefile.h:140: parse error before "Globals"
+winefile.h:140: warning: data definition has no type or storage class
+make1: *** [splitpath.o] Error 1
+
+G:\src\rosapps\explorer>

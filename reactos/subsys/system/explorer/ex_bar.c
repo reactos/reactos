@@ -8,6 +8,8 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include "include/explorer.h"
+
 HFONT tf;
 HINSTANCE PlugInsHI[2];                      // PlugIns table
 int PlugNumber;				  // Number of loaded plugins
@@ -51,7 +53,7 @@ HWND InitializeExplorerBar(HINSTANCE hInstance, int nCmdShow)
   HWND ExplorerBar;
   WNDCLASS ExplorerBarClass;
 
-  ExplorerBarClass.lpszClassName = "ExplorerBar";                   //  ExplorerBar classname
+  ExplorerBarClass.lpszClassName = TEXT("ExplorerBar");             //  ExplorerBar classname
   ExplorerBarClass.lpfnWndProc = ExplorerBarProc;                   //  Default Explorer Callback Procedure
   ExplorerBarClass.style = CS_VREDRAW | CS_HREDRAW;                 // Styles
   ExplorerBarClass.hInstance = hInstance;                           // Instance
@@ -68,8 +70,8 @@ HWND InitializeExplorerBar(HINSTANCE hInstance, int nCmdShow)
       return NULL;
     }
 
-  ExplorerBar = CreateWindowEx(LoadProperty(1),"ExplorerBar",
-		      "ReactOS Explorer Bar",LoadProperty(2),LoadProperty(3),LoadProperty(4),
+  ExplorerBar = CreateWindowEx(LoadProperty(1),TEXT("ExplorerBar"),
+		      TEXT("ReactOS Explorer Bar"),LoadProperty(2),LoadProperty(3),LoadProperty(4),
                         LoadProperty(5),LoadProperty(6),NULL,NULL,hInstance,NULL);
   if (ExplorerBar == NULL)
     {
@@ -128,7 +130,7 @@ HINSTANCE InitializeExplorerPlugIn(HWND ExplorerHandle)
    printf("1.%s   2.%s\n",ttl,line);
    strcpy(epl_line[i],line);
 
-   epl_AppButtons[i] = CreateWindow(
+   epl_AppButtons[i] = CreateWindowA(
     "BUTTON",ttl,WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
       (i*102)+2, 2, 100, 20, ExplorerHandle, NULL, (HINSTANCE) GetWindowLong(ExplorerHandle, GWL_HINSTANCE),NULL);
   }
@@ -197,7 +199,7 @@ int ExplorerPlugInMessageProc(HWND PlgnHandle, UINT Msg, WPARAM wParam, LPARAM l
         if ((HWND)lParam==epl_AppButtons[i])
           {
             printf("Pressed Button Line : %s\n",epl_line[i]);
-            system(epl_line[i]);
+			launch_fileA(PlgnHandle, epl_line[i], SW_SHOWNORMAL);
           }
       }
     break;
@@ -233,6 +235,7 @@ int ExplorerLoadPlugins(HWND ExplWnd)
  return 1;
 }
 
+/*
 int WINAPI Ex_BarMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -267,6 +270,7 @@ int WINAPI Ex_BarMain(HINSTANCE hInstance,
 
   return 0;
 }
+*/
 
 LRESULT CALLBACK ExplorerBarProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {

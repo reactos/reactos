@@ -58,7 +58,7 @@
 
 static BOOL GetLine( HANDLE hFile, char *buf, size_t buflen )
 {
-    int i=0;
+    size_t i=0;
     buf[0]='\0';
 
     do
@@ -327,9 +327,9 @@ static BOOL ProcessRunKeys( HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     WCHAR *szValue=NULL;
 
     if (hkRoot==HKEY_LOCAL_MACHINE)
-        printf("processing %s entries under HKLM\n"); //,wine_dbgstr_w(szKeyName) );
+        wprintf(L"processing %s entries under HKLM\n", szKeyName);
     else
-        printf("processing %s entries under HKCU\n"); //,wine_dbgstr_w(szKeyName) );
+        wprintf(L"processing %s entries under HKCU\n", szKeyName);
 
     if( (res=RegOpenKeyExW( hkRoot, WINKEY_NAME, 0, KEY_READ, &hkWin ))!=ERROR_SUCCESS )
     {
@@ -517,5 +517,5 @@ int startup( int argc, char *argv[] )
 
     printf("Operation done\n");
 
-    //return res?0:101;
+    return res?0:101;
 }
