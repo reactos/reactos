@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.177 2004/01/18 08:29:31 navaraf Exp $
+/* $Id: window.c,v 1.178 2004/01/27 08:29:28 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1796,7 +1796,6 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
 
    if (hWnd == IntGetDesktopWindow())
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
       return NULL;
    }
 
