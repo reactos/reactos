@@ -39,17 +39,6 @@ typedef struct _UNICODE_STRING {
     PWSTR	Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
-typedef struct _IO_COUNTERS {
-    ULONGLONG	ReadOperationCount;
-    ULONGLONG	WriteOperationCount;
-    ULONGLONG	OtherOperationCount;
-    ULONGLONG	ReadTransferCount;
-    ULONGLONG	WriteTransferCount;
-    ULONGLONG	OtherTransferCount;
-} IO_COUNTERS;
-
-typedef IO_COUNTERS *PIO_COUNTERS;
-
 typedef struct _PERFDATA
 {
 	WCHAR				ImageName[MAX_PATH];
