@@ -329,11 +329,11 @@ HWND ClockWindow::Create(HWND hwndParent)
 
 	RECT rect = {0, 0, 0, 0};
 	DrawText(canvas, TEXT("00:00"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
-	int clockwindowWidth = rect.right-rect.left + 4;
+	int clockwindowWidth = rect.right-rect.left + 32;
 
 	return Window::Create(WINDOW_CREATOR(ClockWindow), 0,
 							BtnWindowClass(CLASSNAME_CLOCKWINDOW,CS_DBLCLKS), NULL, WS_CHILD|WS_VISIBLE,
-							clnt.right-(clockwindowWidth+1), 1, clockwindowWidth, clnt.bottom-2, hwndParent);
+							clnt.right-(clockwindowWidth), 1, clockwindowWidth, clnt.bottom-2, hwndParent);
 }
 
 LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -383,11 +383,13 @@ bool ClockWindow::FormatTime()
 {
 	SYSTEMTIME systime;
 	TCHAR buffer[16];
-
+	TCHAR TimeFormat[] = TEXT("hh':'mm tt");
 	GetLocalTime(&systime);
 
+	GetTimeFormat(LOCALE_USER_DEFAULT,0,NULL,TimeFormat,buffer,sizeof(buffer));
+
 	//_stprintf(buffer, TEXT("%02d:%02d:%02d"), systime.wHour, systime.wMinute, systime.wSecond);
-	_stprintf(buffer, TEXT("%02d:%02d"), systime.wHour, systime.wMinute);
+	//_stprintf(buffer, TEXT("%02d:%02d"), systime.wHour, systime.wMinute);
 
 	if (_tcscmp(buffer, _time)) {
 		_tcscpy(_time, buffer);
