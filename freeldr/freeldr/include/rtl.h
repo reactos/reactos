@@ -31,6 +31,7 @@ int		strlen(char *str);
 char *	strcpy(char *dest, char *src);
 char *	strncpy(char *dest, char *src, size_t count);
 char *	strcat(char *dest, char *src);
+char *	strncat(char *dst, const char *src, size_t n);
 char *	strchr(const char *s, int c);
 char *	strrchr(const char *s, int c);
 int		strcmp(const char *string1, const char *string2);

@@ -1,5 +1,6 @@
 Changes in v1.4 (6/27/2002)
 
+- If symbols are available then pass them to the OS as multiboot modules
 - Added separate configuration for a SETUPLDR version
 
 Changes in v1.3.1 (6/8/2002)

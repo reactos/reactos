@@ -112,7 +112,7 @@ else
 #############################################
 # COMPILER COMMAND LINE OPTIONS
 #
-COMPILER_OPTIONS = -Wall -nostdlib -nostdinc -fno-builtin -O1 -MD
+COMPILER_OPTIONS = -Wall -nostdlib -fno-builtin -O1 -MD
 
 #############################################
 # COMPILER DEFINES

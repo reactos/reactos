@@ -75,6 +75,69 @@ LoadKernel(PCHAR szFileName, int nPos)
   return(TRUE);
 }
 
+static BOOL
+LoadSymbolFile(PCHAR szSystemRoot,
+  PCHAR ModuleName,
+  int nPos)
+{
+  CHAR SymbolFileName[1024];
+  PFILE FilePointer;
+  DWORD Length;
+  PCHAR Start;
+  PCHAR Ext;
+  char value[256];
+  char *p;
+
+  /* Get the path to the symbol store */
+  strcpy(SymbolFileName, szSystemRoot);
+  strcat(SymbolFileName, "symbols\\");
+
+  /* Get the symbol filename from the module name */
+  Start = strrchr(ModuleName, '\\');
+  if (Start == NULL)
+    Start = ModuleName;
+  else
+    Start++;
+
+  Ext = strrchr(ModuleName, '.');
+  if (Ext != NULL)
+    Length = Ext - Start;
+  else
+    Length = strlen(Start);
+
+  strncat(SymbolFileName, Start, Length);
+  strcat(SymbolFileName, ".sym");
+
+  FilePointer = OpenFile((PCHAR)&SymbolFileName[0]);
+  if (FilePointer == NULL)
+    {
+      DbgPrint((DPRINT_REACTOS, "Symbol file %s not loaded.\n", SymbolFileName));
+      /* This is not critical */
+      return FALSE;
+    }
+
+  DbgPrint((DPRINT_REACTOS, "Symbol file %s is loaded.\n", SymbolFileName));
+
+  /*
+   * Update the status bar with the current file
+   */
+  strcpy(value, "Reading ");
+  p = strrchr(SymbolFileName, '\\');
+  if (p == NULL)
+    strcat(value, SymbolFileName);
+  else
+    strcat(value, p + 1);
+  UiDrawStatusText(value);
+
+  /*
+   * Load the symbol file
+   */
+  MultiBootLoadModule(FilePointer, SymbolFileName, NULL);
+
+  UiDrawProgressBarCenter(nPos, 100);
+
+  return (TRUE);
+}
 
 static BOOL
 LoadDriver(PCHAR szFileName, int nPos)
@@ -256,6 +319,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		nPos += 5;
 
 	      LoadDriver(ImagePath, nPos);
+        LoadSymbolFile(szSystemRoot, ImagePath, nPos);
 	    }
 	  else
 	    {
@@ -364,6 +428,8 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	PFILE FilePointer;
 	char  name[1024];
 	char  value[1024];
+	char  szKernelName[1024];
+	char  szHalName[1024];
 	char  szFileName[1024];
 	char  szBootPath[256];
 //	int		i;
@@ -454,7 +520,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	    szBootPath[strlen(szBootPath)] != '\\')
 		strcat(szBootPath, "\\");
 
-	DebugPrint(DPRINT_REACTOS,"SystemRoot: '%s'", szBootPath);
+	DebugPrint(DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath);
 
 	UiDrawBackdrop();
 	UiDrawStatusText("Loading...");
@@ -480,24 +546,24 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		 */
 		if (value[0] == '\\')
 		{
-			strcpy(szFileName, value);
+			strcpy(szKernelName, value);
 		}
 		else
 		{
-			strcpy(szFileName, szBootPath);
-			strcat(szFileName, "SYSTEM32\\");
-			strcat(szFileName, value);
+			strcpy(szKernelName, szBootPath);
+			strcat(szKernelName, "SYSTEM32\\");
+			strcat(szKernelName, value);
 		}
 	}
 	else
 	{
 		strcpy(value, "NTOSKRNL.EXE");
-		strcpy(szFileName, szBootPath);
-		strcat(szFileName, "SYSTEM32\\");
-		strcat(szFileName, value);
+		strcpy(szKernelName, szBootPath);
+		strcat(szKernelName, "SYSTEM32\\");
+		strcat(szKernelName, value);
 	}
 
-	if (!LoadKernel(szFileName, 5))
+	if (!LoadKernel(szKernelName, 5))
 		return;
 
 	/*
@@ -511,24 +577,24 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		 */
 		if (value[0] == '\\')
 		{
-			strcpy(szFileName, value);
+			strcpy(szHalName, value);
 		}
 		else
 		{
-			strcpy(szFileName, szBootPath);
-			strcat(szFileName, "SYSTEM32\\");
-			strcat(szFileName, value);
+			strcpy(szHalName, szBootPath);
+			strcat(szHalName, "SYSTEM32\\");
+			strcat(szHalName, value);
 		}
 	}
 	else
 	{
 		strcpy(value, "HAL.DLL");
-		strcpy(szFileName, szBootPath);
-		strcat(szFileName, "SYSTEM32\\");
-		strcat(szFileName, value);
+		strcpy(szHalName, szBootPath);
+		strcat(szHalName, "SYSTEM32\\");
+		strcat(szHalName, value);
 	}
 
-	if (!LoadDriver(szFileName, 10))
+	if (!LoadDriver(szHalName, 10))
 		return;
 
 	/*
@@ -614,6 +680,9 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		return;
 	}
 #endif
+
+  LoadSymbolFile(szBootPath, szKernelName, 25);
+  LoadSymbolFile(szBootPath, szHalName, 25);
 
 	UiDrawProgressBarCenter(25, 100);
 
