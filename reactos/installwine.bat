@@ -49,6 +49,13 @@ copy ..\wine\programs\wcmd\wcmd.exe			%ROS_INSTALL%\bin
 copy ..\wine\programs\winefile\winefile.exe		%ROS_INSTALL%\bin
 copy ..\wine\programs\winemine\winmine.exe		%ROS_INSTALL%\bin
 copy ..\wine\programs\winver\winver.exe			%ROS_INSTALL%\bin
+REM
+echo Installing Regression tests to %ROS_INSTALL%\bin
+copy ..\wine\dlls\advapi32\tests\advapi32_test.exe	%WINE_INSTALL%
+copy ..\wine\dlls\kernel\tests\kernel32_test.exe	%WINE_INSTALL%
+copy ..\wine\dlls\ntdll\tests\ntdll_test.exe		%WINE_INSTALL%
+copy ..\wine\dlls\user32\tests\user32_test.exe		%WINE_INSTALL%
+REM
 
 
 
