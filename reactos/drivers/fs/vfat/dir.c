@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.21 2001/11/02 22:44:34 hbirr Exp $
+ * $Id: dir.c,v 1.22 2002/02/02 14:04:55 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -100,14 +100,13 @@ VfatGetFileNameInformation (PVFATFCB pFcb,
 			   PFILE_NAMES_INFORMATION pInfo, ULONG BufferLength)
 {
   ULONG Length;
-  Length = vfat_wstrlen (pFcb->ObjectName);
-  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR)) > BufferLength)
+  Length = vfat_wstrlen (pFcb->ObjectName) * sizeof(WCHAR);
+  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR));
-  memcpy (pInfo->FileName, pFcb->ObjectName,
-	  sizeof (WCHAR) * (pInfo->FileNameLength));
+    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length);
+  memcpy (pInfo->FileName, pFcb->ObjectName, Length);
   return STATUS_SUCCESS;
 }
 
@@ -119,14 +118,13 @@ VfatGetFileDirectoryInformation (PVFATFCB pFcb,
 {
   unsigned long long AllocSize;
   ULONG Length;
-  Length = vfat_wstrlen (pFcb->ObjectName);
-  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR)) > BufferLength)
+  Length = vfat_wstrlen (pFcb->ObjectName) * sizeof(WCHAR);
+  if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR));
-  memcpy (pInfo->FileName, pFcb->ObjectName,
-	  sizeof (WCHAR) * (pInfo->FileNameLength));
+    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + Length);
+  memcpy (pInfo->FileName, pFcb->ObjectName, Length);
 //      pInfo->FileIndex=;
   FsdDosDateTimeToFileTime (pFcb->entry.CreationDate,
 			    pFcb->entry.CreationTime, &pInfo->CreationTime);
@@ -154,14 +152,13 @@ VfatGetFileFullDirectoryInformation (PVFATFCB pFcb,
 {
   unsigned long long AllocSize;
   ULONG Length;
-  Length = vfat_wstrlen (pFcb->ObjectName);
-  if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR)) > BufferLength)
+  Length = vfat_wstrlen (pFcb->ObjectName) * sizeof(WCHAR);
+  if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR));
-  memcpy (pInfo->FileName, pFcb->ObjectName,
-	  sizeof (WCHAR) * (pInfo->FileNameLength));
+    DWORD_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + Length);
+  memcpy (pInfo->FileName, pFcb->ObjectName, Length);
 //      pInfo->FileIndex=;
   FsdDosDateTimeToFileTime (pFcb->entry.CreationDate,
 			    pFcb->entry.CreationTime, &pInfo->CreationTime);
@@ -190,14 +187,13 @@ VfatGetFileBothInformation (PVFATFCB pFcb,
   short i;
   unsigned long long AllocSize;
   ULONG Length;
-  Length = vfat_wstrlen (pFcb->ObjectName);
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR)) > BufferLength)
+  Length = vfat_wstrlen (pFcb->ObjectName) * sizeof(WCHAR);
+  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length * sizeof(WCHAR));
-  memcpy (pInfo->FileName, pFcb->ObjectName,
-	  sizeof (WCHAR) * (pInfo->FileNameLength));
+    DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + Length);
+  memcpy (pInfo->FileName, pFcb->ObjectName, Length);
 //      pInfo->FileIndex=;
   FsdDosDateTimeToFileTime (pFcb->entry.CreationDate,
 			    pFcb->entry.CreationTime, &pInfo->CreationTime);
@@ -222,6 +218,7 @@ VfatGetFileBothInformation (PVFATFCB pFcb,
     pInfo->ShortName[i + 1 + pInfo->ShortNameLength] = pFcb->entry.Ext[i];
   if (i)
     pInfo->ShortNameLength += (i + 1);
+  pInfo->ShortNameLength *= sizeof(WCHAR);
   return STATUS_SUCCESS;
 }
 
@@ -237,7 +234,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   PVFATFCB pFcb;
   VFATFCB tmpFcb;
   PVFATCCB pCcb;
-  WCHAR star[5], *pCharPattern;
+  WCHAR pCharPattern[MAX_PATH];
   unsigned long OldEntry, OldSector;
 
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
@@ -266,12 +263,14 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   DPRINT ("Buffer=%x tofind=%S\n", Buffer, pSearchPattern->Buffer);
   if (pSearchPattern == NULL)
     {
-      star[0] = '*';
-      star[1] = 0;
-      pCharPattern = star;
+      pCharPattern[0] = L'*';
+      pCharPattern[1] = 0;
     }
   else
-    pCharPattern = pSearchPattern->Buffer;
+    {
+      memcpy (pCharPattern, pSearchPattern->Buffer, pSearchPattern->Length);
+      pCharPattern[pSearchPattern->Length / sizeof(WCHAR)] = 0;
+    }
   tmpFcb.ObjectName = tmpFcb.PathName;
   while (RC == STATUS_SUCCESS && BufferLength > 0)
     {
@@ -320,6 +319,10 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 	{
 	  if (Buffer0)
 	    Buffer0->NextEntryOffset = 0;
+          if (OldSector)
+            RC = STATUS_NO_MORE_FILES;
+          else
+            RC = STATUS_NO_SUCH_FILE;
 	  break;
 	}
       if (RC == STATUS_BUFFER_OVERFLOW)

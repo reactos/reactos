@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.29 2001/08/06 18:37:23 hbirr Exp $
+/* $Id: find.c,v 1.30 2002/02/02 14:04:54 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -215,7 +215,7 @@ FindFirstFileA (
 	lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
 	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
 
-	FileNameU.Length = IData->FileInfo.FileNameLength * sizeof(WCHAR);
+	FileNameU.Length = IData->FileInfo.FileNameLength;
 	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
 	FileNameU.Buffer = IData->FileInfo.FileName;
 
@@ -236,7 +236,7 @@ FindFirstFileA (
 	DPRINT("IData->FileInfo.ShortNameLength %d\n",
 	       IData->FileInfo.ShortNameLength);
 
-	FileNameU.Length = IData->FileInfo.ShortNameLength * sizeof(WCHAR);
+	FileNameU.Length = IData->FileInfo.ShortNameLength;
 	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
 	FileNameU.Buffer = IData->FileInfo.ShortName;
 
@@ -297,7 +297,7 @@ FindNextFileA (
 	lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
 	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
 
-	FileNameU.Length = IData->FileInfo.FileNameLength * sizeof(WCHAR);
+	FileNameU.Length = IData->FileInfo.FileNameLength;
 	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
 	FileNameU.Buffer = IData->FileInfo.FileName;
 
@@ -318,7 +318,7 @@ FindNextFileA (
 	DPRINT("IData->FileInfo.ShortNameLength %d\n",
 	       IData->FileInfo.ShortNameLength);
 
-	FileNameU.Length = IData->FileInfo.ShortNameLength * sizeof(WCHAR);
+	FileNameU.Length = IData->FileInfo.ShortNameLength;
 	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
 	FileNameU.Buffer = IData->FileInfo.ShortName;
 
@@ -398,11 +398,11 @@ FindFirstFileW (
 	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
 	memcpy (lpFindFileData->cFileName,
 	        IData->FileInfo.FileName,
-	        IData->FileInfo.FileNameLength * sizeof(WCHAR));
+	        IData->FileInfo.FileNameLength);
   lpFindFileData->cFileName[IData->FileInfo.FileNameLength] = 0;
 	memcpy (lpFindFileData->cAlternateFileName,
 	        IData->FileInfo.ShortName,
-	        IData->FileInfo.ShortNameLength * sizeof(WCHAR));
+	        IData->FileInfo.ShortNameLength);
   lpFindFileData->cAlternateFileName[IData->FileInfo.ShortNameLength] = 0;
 	return IData;
 }
@@ -439,11 +439,11 @@ FindNextFileW (
 	lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
 	memcpy (lpFindFileData->cFileName,
 	        IData->FileInfo.FileName,
-	        IData->FileInfo.FileNameLength * sizeof(WCHAR));
+	        IData->FileInfo.FileNameLength);
   lpFindFileData->cFileName[IData->FileInfo.FileNameLength] = 0;
 	memcpy (lpFindFileData->cAlternateFileName,
 	        IData->FileInfo.ShortName,
-	        IData->FileInfo.ShortNameLength * sizeof(WCHAR));
+	        IData->FileInfo.ShortNameLength);
   lpFindFileData->cAlternateFileName[IData->FileInfo.ShortNameLength] = 0;
 	return TRUE;
 }
