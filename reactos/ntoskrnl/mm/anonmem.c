@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.8 2002/11/05 20:31:34 hbirr Exp $
+/* $Id: anonmem.c,v 1.9 2002/11/05 21:13:14 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -134,7 +134,6 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
    PMDL Mdl;
-   ULONG flProtect;
 
    DPRINT("MmPageOutVirtualMemory(Address 0x%.8X) PID %d\n",
 	   Address, MemoryArea->Process->UniqueProcessId);
@@ -153,14 +152,8 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Disable the virtual mapping.
     */
-#if 0
    MmDisableVirtualMapping(MemoryArea->Process, Address,
 			   &WasDirty, &PhysicalAddress);
-#else
-   flProtect = MmGetPageProtect(MemoryArea->Process, Address);
-   MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE,
-		          &WasDirty, &PhysicalAddress);
-#endif
 
    if (PhysicalAddress.QuadPart == 0)
      {
@@ -172,9 +165,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if (!WasDirty)
      {
-#if 0
        MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
-#endif
        MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
        if ((SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress)) != 0)
 	 {
@@ -198,12 +189,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        if (SwapEntry == 0)
 	 {
 	   MmShowOutOfSpaceMessagePagingFile();
-#if 0
 	   MmEnableVirtualMapping(MemoryArea->Process, Address);
-#else
-           MmCreateVirtualMapping(MemoryArea->Process, Address, 
-		                  flProtect, PhysicalAddress, TRUE);
-#endif
 	   PageOp->Status = STATUS_UNSUCCESSFUL;
 	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	   MmReleasePageOp(PageOp);
@@ -221,12 +207,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
      {
        DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", 
 	       Status);
-#if 0
        MmEnableVirtualMapping(MemoryArea->Process, Address);
-#else
-       MmCreateVirtualMapping(MemoryArea->Process, Address, 
-		              flProtect, PhysicalAddress, TRUE);
-#endif
        PageOp->Status = STATUS_UNSUCCESSFUL;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
@@ -237,9 +218,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Otherwise we have succeeded, free the page
     */
    DPRINT("MM: Swapped out virtual memory page 0x%.8X!\n", PhysicalAddress);
-#if 0
    MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
-#endif
    MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
    MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
    MmSetSavedSwapEntryPage(PhysicalAddress, 0);

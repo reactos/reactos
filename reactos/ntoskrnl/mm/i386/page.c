@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.46 2002/11/05 20:39:03 hbirr Exp $
+/* $Id: page.c,v 1.47 2002/11/05 21:13:15 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -378,7 +378,7 @@ MmGetPhysicalAddressForProcess(PEPROCESS Process,
      }
    return(PTE_TO_PAGE(PageEntry));
 }
-#if 0
+
 VOID
 MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSICAL_ADDRESS* PhysicalAddr)
 /*
@@ -448,7 +448,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSIC
        PhysicalAddr->u.LowPart = PAGE_MASK(Pte);
      }
 }
-#endif
+
 VOID
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 		       BOOL* WasDirty, PHYSICAL_ADDRESS* PhysicalAddr)
@@ -862,7 +862,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 	KeDetachProcess();
      }
 }
-#if 0
+
 VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
@@ -880,7 +880,7 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 	KeDetachProcess();
      }
 }
-#endif
+
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
    return((MmGetPageEntryForProcess1(Process, Address)) & PA_PRESENT);
