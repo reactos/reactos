@@ -38,6 +38,7 @@ exe explorer :
 	utility/shellclasses.cpp
 	utility/utility.cpp
 	utility/window.cpp
+	utility/xmlstorage.cpp
 	dialogs/searchprogram.cpp
 	dialogs/settings.cpp
 	i386-stub-win32.c
@@ -50,5 +51,7 @@ exe explorer :
 	<find-shared-library>uuid
 	<find-shared-library>wsock32
 	<find-shared-library>oleaut32
+	<linkflags>notifyhook.dll
+	<linkflags>libexpat.dll
  ;
 

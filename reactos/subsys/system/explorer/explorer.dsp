@@ -331,6 +331,14 @@ SOURCE=.\utility\window.cpp
 
 SOURCE=.\utility\window.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\utility\xmlstorage.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\utility\xmlstorage.h
+# End Source File
 # End Group
 # Begin Group "resources"
 

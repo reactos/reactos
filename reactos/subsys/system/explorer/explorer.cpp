@@ -24,7 +24,7 @@
  //
  // Martin Fuchs, 23.07.2003
  //
- // Credits: Thanks to Leon Finker for his explorer window example
+ // Credits: Thanks to Leon Finker for his explorer cabinet window example
  //
 
 
@@ -746,6 +746,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	 // init common controls library
 	CommonControlInit usingCmnCtrl;
 
+	 // read configuration file
+	String cfg_dir = FmtString(TEXT("%s\\ReactOS"), (LPCTSTR)SpecialFolderFSPath(CSIDL_APPDATA,0));
+	String cfg_path = FmtString(TEXT("%s\\ros-explorer.xml"), cfg_dir.c_str());
+
+	if (!g_Globals._cfg.read(cfg_path))
+		g_Globals._cfg.read("explorer-cfg-template.xml");
+
 	if (startup_desktop) {
 		g_Globals._desktops.init();
 
@@ -770,6 +777,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		g_Globals._desktop_mode = true;
 
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
+
+	 // write configuration file
+	RecursiveCreateDirectory(cfg_dir);
+	g_Globals._cfg.write(cfg_path);
 
 	return ret;
 }

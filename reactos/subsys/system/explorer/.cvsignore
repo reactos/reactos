@@ -12,6 +12,9 @@ UDebug
 URelease
 _NO_COMUTIL
 doxy-doc
+Win32
+WineDll
+WineRelease
 *.ncb
 *.opt
 *.aps

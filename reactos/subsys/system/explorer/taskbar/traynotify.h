@@ -62,11 +62,14 @@ enum NOTIFYICONMODE {
 	NIM_SHOW, NIM_HIDE, NIM_AUTO
 };
 
+extern String string_from_mode(NOTIFYICONMODE mode);
+
  /// configuration for the display mode of a notification icon
 struct NotifyIconConfig
 {
 	NotifyIconConfig() : _mode(NIM_AUTO) {}
 
+	void	create_name();
 	bool	match(const NotifyIconConfig& props) const;
 
 	 // properties used to identify a notification icon
@@ -75,6 +78,8 @@ struct NotifyIconConfig
 	String	_modulePath;	// to identify notification icons is an extension above XP's behaviour.
 							// (XP seems to store icon image data in the registry instead.)
 	NOTIFYICONMODE _mode;
+
+	String	_name;			/// unique name used to identify the entry in the configuration file
 };
 
  /// list of NotifyIconConfig structures
@@ -151,6 +156,9 @@ protected:
 
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
 	bool	DetermineHideState(NotifyInfo& entry);
+
+	void	read_config();
+	void	write_config();
 
 public:	// for TrayNotifyDlg
 	NotifyIconCfgList _cfg;

@@ -87,11 +87,11 @@ void HandleException(COMException& e, HWND hwnd)
 	if (hwnd && !IsWindowVisible(hwnd))
 		hwnd = 0;
 
-	MessageBox(hwnd, msg, TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
+	MessageBox(hwnd, msg, TEXT("ShellClasses Exception"), MB_ICONHAND|MB_OK);
 
 	 // If displaying the error message box _with_ parent was not successfull, display it now without a parent window.
 	if (GetLastError() == ERROR_INVALID_WINDOW_HANDLE)
-		MessageBox(0, msg, TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
+		MessageBox(0, msg, TEXT("ShellClasses Exception"), MB_ICONHAND|MB_OK);
 }
 
 

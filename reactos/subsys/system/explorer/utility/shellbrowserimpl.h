@@ -24,7 +24,7 @@
  //
  // Martin Fuchs, 23.07.2003
  //
- // Credits: Thanks to Leon Finker for his explorer window example
+ // Credits: Thanks to Leon Finker for his explorer cabinet window example
  //
 
 

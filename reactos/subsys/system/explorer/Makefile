@@ -101,7 +101,8 @@ OBJECTS = \
 	quicklaunch.o \
 	searchprogram.o \
 	settings.o \
-	i386-stub-win32.o
+	i386-stub-win32.o \
+	xmlstorage.o
 
 LIBS = gdi32 comctl32 ole32 uuid
 DELAYIMPORTS = oleaut32 wsock32
@@ -128,7 +129,7 @@ ever:
 buildno.h: ../../../include/reactos/buildno.h
 	$(CD_PREFIX)updatebuildno
 
-$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll
+$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll libexpat.dll
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
 
 explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico

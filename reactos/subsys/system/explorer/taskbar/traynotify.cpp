@@ -160,6 +160,8 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 	if (GetWindowText(_hWnd, title, MAX_PATH))
 		_windowTitle = title;
 
+	create_name();
+
 	///@todo test for real changes
 	_lastChange = GetTickCount();
 
@@ -176,41 +178,83 @@ NotifyArea::NotifyArea(HWND hwnd)
 	_last_icon_count = 0;
 	_show_hidden = false;
 
-/*@todo read/write from/to config file/registry
-	NotifyIconConfig cfg;
+	read_config();
+}
 
-	cfg._tipText = TEXT("FRITZ!fon");
-	cfg._mode = NIM_HIDE;
-	_cfg.push_back(cfg);
+NotifyArea::~NotifyArea()
+{
+	KillTimer(_hwnd, 0);
 
-	cfg._tipText = TEXT("FRITZ!fax");
-	cfg._mode = NIM_HIDE;
-	_cfg.push_back(cfg);
+	write_config();
+}
 
-	cfg._tipText = TEXT("Volume");
-	cfg._mode = NIM_SHOW;
-	_cfg.push_back(cfg);
+void NotifyArea::read_config()
+{
+	 // read notification icon settings from XML configuration
+	XMLPos pos(&g_Globals._cfg);
 
-	cfg._tipText.erase();
+	if (pos.go_down("explorer-cfg")) {
+		if (pos.go_down("notify-icons")) {
+			const XMLNode::Children& children = pos->get_children();
 
-	cfg._windowTitle = TEXT("Task Manager");
-	cfg._mode = NIM_SHOW;
-	_cfg.push_back(cfg);
+			for(XMLNode::Children::const_iterator it=children.begin(); it!=children.end(); ++it) {
+				const XMLNode& node = **it;
+				assert(node=="icon");
 
-	cfg._windowTitle = TEXT("AntiVir");
-	cfg._mode = NIM_HIDE;
-	_cfg.push_back(cfg);
+				NotifyIconConfig cfg;
 
-	cfg._windowTitle = TEXT("Apache");
-	cfg._mode = NIM_HIDE;
-	_cfg.push_back(cfg);
+				cfg._name = node["name"];
+				cfg._tipText = node["text"];
+				cfg._windowTitle = node["window"];
+				cfg._modulePath = node["module"];
+				const string& mode = node["show"];
 
-	cfg._windowTitle = TEXT("FRITZ!web");
-	cfg._mode = NIM_HIDE;
-	_cfg.push_back(cfg);
+				if (mode == "show")
+					cfg._mode = NIM_SHOW;
+				else if (mode == "hide")
+					cfg._mode = NIM_HIDE;
+				else //if (mode == "auto")
+					cfg._mode = NIM_HIDE;
 
-	cfg._windowTitle.erase();
-*/
+				_cfg.push_back(cfg);
+			}
+
+			pos.back();
+		}
+
+		pos.back();
+	}
+}
+
+void NotifyArea::write_config()
+{
+	 // write notification icon settings to XML configuration
+	XMLPos pos(&g_Globals._cfg);
+
+	///@todo pos.create("\\explorer-cfg\\startmenu");
+	pos.create("explorer-cfg");
+	pos.create("notify-icons");
+
+	for(NotifyIconCfgList::iterator it=_cfg.begin(); it!=_cfg.end(); ++it) {
+		NotifyIconConfig& cfg = *it;
+
+		 // search for the corresponding node using the original name
+		pos.create("icon", "name", cfg._name);
+
+		 // refresh name
+		cfg.create_name();
+
+		pos["name"] = cfg._name;
+		pos["text"] = cfg._tipText;
+		pos["window"] = cfg._windowTitle;
+		pos["module"] = cfg._modulePath;
+		pos["show"] = string_from_mode(cfg._mode);
+
+		pos.back();
+	}
+
+	pos.back();
+	pos.back();
 }
 
 LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
@@ -251,11 +295,6 @@ LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
 	SetTimer(_hwnd, 0, 1000, NULL);
 
 	return 0;
-}
-
-NotifyArea::~NotifyArea()
-{
-	KillTimer(_hwnd, 0);
 }
 
 HWND NotifyArea::Create(HWND hwndParent)
@@ -626,6 +665,12 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 }
 
 
+void NotifyIconConfig::create_name()
+{
+	_name = FmtString(TEXT("'%s' - '%s' - '%s'"), _tipText.c_str(), _windowTitle.c_str(), _modulePath.c_str());
+}
+
+
 #if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
 
 bool NotifyIconConfig::match(const NotifyIconConfig& props) const
@@ -670,6 +715,21 @@ bool NotifyArea::DetermineHideState(NotifyInfo& entry)
 }
 
 #endif
+
+
+String string_from_mode(NOTIFYICONMODE mode)
+{
+	switch(mode) {
+	  case NIM_SHOW:
+		return ResString(IDS_NOTIFY_SHOW);
+
+	  case NIM_HIDE:
+		return ResString(IDS_NOTIFY_HIDE);
+
+	  default:	//case NIM_AUTO
+		return ResString(IDS_NOTIFY_AUTOHIDE);
+	}
+}
 
 
 TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
@@ -820,7 +880,7 @@ void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyI
 void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconConfig& entry,
 								HDC hdc, HICON hicon, NOTIFYICONMODE mode)
 {
-	String mode_str;
+	String mode_str = string_from_mode(mode);
 
 	switch(mode) {
 	  case NIM_SHOW:	mode_str = ResString(IDS_NOTIFY_SHOW);		break;

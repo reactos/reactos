@@ -26,6 +26,9 @@
  //
 
 
+#include "utility/xmlstorage.h"
+
+
  /// management of file types
 struct FileTypeInfo {
 	String	_classname;
@@ -244,6 +247,8 @@ extern struct ExplorerGlobals
 	HWND		_hwndDesktop;
 
 	Desktops	_desktops;
+
+	XMLDoc		_cfg;
 } g_Globals;
 
 

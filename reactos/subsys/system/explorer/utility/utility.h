@@ -42,8 +42,8 @@
 
 #ifndef _MSC_VER
 #include <objbase.h>
-#include <oleauto.h>	// for VARIANT
 #endif
+#include <oleauto.h>	// for VARIANT
 
 #include <malloc.h>		// for alloca()
 #include <assert.h>
@@ -70,7 +70,7 @@ extern "C" {
 #define	COUNTOF(x)	(sizeof(x)/sizeof(x[0]))
 
 
-#define	BUFFER_LEN				1024
+#define	BUFFER_LEN				2048
 
 
 extern void _log_(LPCTSTR txt);
@@ -765,6 +765,12 @@ struct String
 	void assign(LPCTSTR s, int l) {super::assign(s, l);}
 
 	operator LPCTSTR() const {return c_str();}
+
+#ifdef UNICODE
+	operator string() const {char b[BUFFER_LEN]; return string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN, 0, 0));}
+#else
+	operator wstring() const {WCHAR b[BUFFER_LEN]; return wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN));}
+#endif
 
 	String& printf(LPCTSTR fmt, ...)
 	{

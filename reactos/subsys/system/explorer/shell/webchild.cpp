@@ -33,6 +33,22 @@
 
 #include "webchild.h"
 
+
+#ifdef _MSC_VER
+
+#if _MSC_VER>=1300	// vtMissing for VS.Net
+#include <comutil.h>
+#pragma comment(lib, "comsupp")
+#endif
+
+#else
+
+#ifdef __MINGW32__	// MinGW is lacking vtMissing (as of 07.02.2004)
+static Variant vtMissing;
+#endif
+
+#endif
+
 //#include <mshtml.h>
 
 
@@ -207,9 +223,6 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 
 		_connector = auto_ptr<EventConnector>(new EventConnector(_control, DIID_DWebBrowserEvents2, this));
 
-#ifdef __MINGW32__	// MinGW is lacking vtMissing (as of 07.02.2004)
-		Variant vtMissing;
-#endif
 		_control->Navigate(BStr(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 		//browser->Navigate2(&Variant(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 	}
