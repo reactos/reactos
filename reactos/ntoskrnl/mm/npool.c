@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.73 2003/07/29 19:43:13 royce Exp $
+/* $Id: npool.c,v 1.74 2003/08/19 23:52:36 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -35,7 +35,7 @@
  * end of the range so any accesses beyond the end of block are to invalid
  * memory locations. 
  */
-//#define WHOLE_PAGE_ALLOCATIONS
+/*#define WHOLE_PAGE_ALLOCATIONS*/
 
 #ifdef ENABLE_VALIDATE_POOL
 #define VALIDATE_POOL validate_kernel_pool()
@@ -146,6 +146,12 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free);
 #define TAG_HASH_TABLE_SIZE       (1024)
 static LIST_ENTRY tag_hash_table[TAG_HASH_TABLE_SIZE];
 #endif /* TAG_STATISTICS_TRACKING */
+
+#ifdef WHOLE_PAGE_ALLOCATIONS
+static UCHAR NonPagedPoolAllocMapBuffer[ROUND_UP(MM_NONPAGED_POOL_SIZE / PAGE_SIZE, 32) / 8];
+static RTL_BITMAP NonPagedPoolAllocMap;
+static ULONG NonPagedPoolAllocMapHint;
+#endif /* WHOLE_PAGE_ALLOCATIONS */
 
 /* avl helper functions ****************************************************/
 
@@ -753,9 +759,14 @@ MiInitializeNonPagedPool(VOID)
    InitializeListHead(&UsedBlockListHead);
    InitializeListHead(&AddressListHead);
    FreeBlockListRoot = NULL;
+#ifdef WHOLE_PAGE_ALLOCATIONS
+   RtlInitializeBitMap(&NonPagedPoolAllocMap, (PVOID)&NonPagedPoolAllocMapBuffer, MM_NONPAGED_POOL_SIZE / PAGE_SIZE);
+   RtlClearAllBits(&NonPagedPoolAllocMap);  
+   NonPagedPoolAllocMapHint = 0;
+#endif
 }
 
-#ifdef TAG_STATISTICS_TRACKING
+#if defined(TAG_STATISTICS_TRACKING) && !defined(WHOLE_PAGE_ALLOCATIONS)
 VOID STATIC
 MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
 {
@@ -779,12 +790,12 @@ MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
 	       CurrentSize / CurrentNrBlocks);
     }
 }
-#endif /* TAG_STATISTICS_TRACKING */
+#endif /* defined(TAG_STATISTICS_TRACKING) && !defined(WHOLE_PAGE_ALLOCATIONS); */
 
 VOID
 MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
 {
-#ifdef TAG_STATISTICS_TRACKING
+#if defined(TAG_STATISTICS_TRACKING) && !defined(WHOLE_PAGE_ALLOCATIONS)
   ULONG i;
   BLOCK_HDR* current;
   ULONG CurrentTag;
@@ -857,7 +868,7 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
   DbgPrint("Freeblocks %d TotalFreeSize %d AverageFreeSize %d\n", 
 	  EiNrFreeBlocks, EiFreeNonPagedPool, EiNrFreeBlocks ? EiFreeNonPagedPool / EiNrFreeBlocks : 0);
   DbgPrint("***************** Dump Complete ***************\n");
-#endif /* TAG_STATISTICS_TRACKING */
+#endif /* defined(TAG_STATISTICS_TRACKING) && !defined(WHOLE_PAGE_ALLOCATIONS) */
 }
 
 VOID
@@ -1622,18 +1633,22 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 #ifdef WHOLE_PAGE_ALLOCATIONS
 
 PVOID STDCALL 
-ExAllocateWholePageBlock(ULONG UserSize)
+ExAllocateWholePageBlock(ULONG Size)
 {
   PVOID Address;
   PHYSICAL_ADDRESS Page;
   ULONG i;
-  ULONG Size;
   ULONG NrPages;
+  ULONG Base;
 
-  Size = sizeof(ULONG) + UserSize;
   NrPages = ROUND_UP(Size, PAGE_SIZE) / PAGE_SIZE;
 
-  Address = MiAllocNonPagedPoolRegion(NrPages + 1);
+  Base = RtlFindClearBitsAndSet(&NonPagedPoolAllocMap, NrPages + 1, NonPagedPoolAllocMapHint);
+  if (NonPagedPoolAllocMapHint == Base)
+    {
+      NonPagedPoolAllocMapHint += (NrPages + 1);
+    }
+  Address = MiNonPagedPoolStart + Base * PAGE_SIZE;
 
   for (i = 0; i < NrPages; i++)
     {
@@ -1649,14 +1664,14 @@ ExAllocateWholePageBlock(ULONG UserSize)
 			     TRUE);
     }
 
-  *((PULONG)((ULONG)Address + (NrPages * PAGE_SIZE) - Size)) = NrPages;
-  return((PVOID)((ULONG)Address + (NrPages * PAGE_SIZE) - UserSize));
+  MiCurrentNonPagedPoolLength = max(MiCurrentNonPagedPoolLength, (Base + NrPages) * PAGE_SIZE);
+  return((PVOID)((PUCHAR)Address + (NrPages * PAGE_SIZE) - Size));
 }
 
 VOID STDCALL
 ExFreeWholePageBlock(PVOID Addr)
 {
-  ULONG NrPages;
+  ULONG Base;
   
   if (Addr < MiNonPagedPoolStart ||
       Addr >= (MiNonPagedPoolStart + MiCurrentNonPagedPoolLength))
@@ -1664,8 +1679,19 @@ ExFreeWholePageBlock(PVOID Addr)
       DbgPrint("Block %x found outside pool area\n", Addr);
       KEBUGCHECK(0);
     }
-  NrPages = *(PULONG)((ULONG)Addr - sizeof(ULONG));
-  MiFreeNonPagedPoolRegion((PVOID)PAGE_ROUND_DOWN((ULONG)Addr), NrPages, TRUE);
+  Base = (Addr - MiNonPagedPoolStart) / PAGE_SIZE;
+  NonPagedPoolAllocMapHint = min(NonPagedPoolAllocMapHint, Base);
+  while (MmIsPagePresent(NULL, Addr))
+    {
+      MmDeleteVirtualMapping(NULL,
+			     Addr,
+			     TRUE,
+			     NULL,
+			     NULL);
+      RtlClearBits(&NonPagedPoolAllocMap, Base, 1);
+      Base++;
+      Addr += PAGE_SIZE;
+    }  
 }
 
 #endif /* WHOLE_PAGE_ALLOCATIONS */

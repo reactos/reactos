@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.26 2003/07/21 21:53:52 royce Exp $
+/* $Id: kmap.c,v 1.27 2003/08/19 23:52:36 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -134,7 +134,7 @@ MiInitKernelMap(VOID)
    RtlInitializeBitMap(&AllocMap, (PVOID)&AllocMapBuffer, ALLOC_MAP_SIZE);
    RtlClearAllBits(&AllocMap);
 }
-#if 0
+
 VOID
 MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 {
@@ -180,5 +180,5 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
    DPRINT("returning %x\n",NonPagedPoolBase + Base * PAGE_SIZE);
    return MiKernelMapStart + Base * PAGE_SIZE;
 }
-#endif
+
 
