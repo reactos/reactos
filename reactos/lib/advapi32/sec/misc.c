@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.33 2004/12/14 21:26:53 weiden Exp $
+/* $Id: misc.c,v 1.34 2004/12/14 22:11:16 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -485,36 +485,38 @@ RevertToSelf(VOID)
 BOOL WINAPI
 GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
 {
-  WCHAR* lpszNameW = NULL;
-  DWORD len = 0;
+  UNICODE_STRING NameW;
+  ANSI_STRING NameA;
+  BOOL Ret;
+  
+  /* apparently Win doesn't check whether lpSize is valid at all! */
 
-  if ( !lpSize )
+  NameW.Length = 0;
+  NameW.MaximumLength = (*lpSize) * sizeof(WCHAR);
+  NameW.Buffer = LocalAlloc(LMEM_FIXED, NameW.MaximumLength);
+  if(NameW.Buffer == NULL)
   {
-    SetLastError(ERROR_INVALID_PARAMETER);
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-
-  len = *lpSize;
-  lpszNameW = LocalAlloc ( LMEM_FIXED, len * sizeof(WCHAR) );
-
-  if ( !GetUserNameW ( lpszNameW, &len ) )
+  
+  NameA.Length = 0;
+  NameA.MaximumLength = ((*lpSize) < 0xFFFF ? (USHORT)(*lpSize) : 0xFFFF);
+  NameA.Buffer = lpszName;
+  
+  Ret = GetUserNameW(NameW.Buffer,
+                     lpSize);
+  if(Ret)
   {
-    LocalFree ( lpszNameW );
-    return FALSE;
+    RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
+    NameA.Buffer[NameA.Length] = '\0';
+    
+    *lpSize = NameA.Length + 1;
   }
-
-  len = wcstombs ( lpszName, lpszNameW, len );
-
-  LocalFree ( lpszNameW );
-
-  if ( len > *lpSize )
-  {
-    SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    return FALSE;
-  }
-
-  *lpSize = len;
-  return TRUE;
+  
+  LocalFree(NameW.Buffer);
+  
+  return Ret;
 }
 
 /******************************************************************************
@@ -642,12 +644,11 @@ LookupAccountSidA (LPCSTR lpSystemName,
 		   PSID_NAME_USE peUse)
 {
   UNICODE_STRING NameW, ReferencedDomainNameW, SystemNameW;
-  LPWSTR lpSystemNameW, lpNameW, lpReferencedDomainNameW;
   DWORD szName, szReferencedDomainName;
   BOOL Ret;
   
   /*
-   * save the buffer size the caller passed to us, as they may get modified and
+   * save the buffer sizes the caller passed to us, as they may get modified and
    * we require the original values when converting back to ansi
    */
   szName = *cchName;
@@ -667,11 +668,9 @@ LookupAccountSidA (LPCSTR lpSystemName,
       SetLastError(ERROR_OUTOFMEMORY);
       return FALSE;
     }
-
-    lpNameW = NameW.Buffer;
   }
   else
-    lpNameW = NULL;
+    NameW.Buffer = NULL;
   
   if(szReferencedDomainName > 0)
   {
@@ -680,18 +679,16 @@ LookupAccountSidA (LPCSTR lpSystemName,
     ReferencedDomainNameW.Buffer = (PWSTR)LocalAlloc(LMEM_FIXED, ReferencedDomainNameW.MaximumLength);
     if(ReferencedDomainNameW.Buffer == NULL)
     {
-      if((*cchName) > 0)
+      if(szName > 0)
       {
         LocalFree(NameW.Buffer);
       }
       SetLastError(ERROR_OUTOFMEMORY);
       return FALSE;
     }
-    
-    lpReferencedDomainNameW = ReferencedDomainNameW.Buffer;
   }
   else
-    lpReferencedDomainNameW = NULL;
+    ReferencedDomainNameW.Buffer = NULL;
   
   /*
    * convert the system name to unicode - if present
@@ -703,21 +700,19 @@ LookupAccountSidA (LPCSTR lpSystemName,
 
     RtlInitAnsiString(&SystemNameA, lpSystemName);
     RtlAnsiStringToUnicodeString(&SystemNameW, &SystemNameA, TRUE);
-    
-    lpSystemNameW = SystemNameW.Buffer;
   }
   else
-    lpSystemNameW = NULL;
+    SystemNameW.Buffer = NULL;
   
   /*
    * it's time to call the unicode version
    */
   
-  Ret = LookupAccountSidW(lpSystemNameW,
+  Ret = LookupAccountSidW(SystemNameW.Buffer,
                           lpSid,
-                          lpNameW,
+                          NameW.Buffer,
                           cchName,
-                          lpReferencedDomainNameW,
+                          ReferencedDomainNameW.Buffer,
                           cchReferencedDomainName,
                           peUse);
   if(Ret)
@@ -757,15 +752,15 @@ LookupAccountSidA (LPCSTR lpSystemName,
    * free previously allocated buffers
    */
 
-  if(lpSystemName != NULL)
+  if(SystemNameW.Buffer != NULL)
   {
     RtlFreeUnicodeString(&SystemNameW);
   }
-  if(lpNameW != NULL)
+  if(NameW.Buffer != NULL)
   {
     LocalFree(NameW.Buffer);
   }
-  if(lpReferencedDomainNameW != NULL)
+  if(ReferencedDomainNameW.Buffer != NULL)
   {
     LocalFree(ReferencedDomainNameW.Buffer);
   }
