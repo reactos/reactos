@@ -5121,42 +5121,26 @@ ZwYieldExecution(
 
 
 /*
+ * --- Local Procedure Call Facility
  * These prototypes are unknown as yet
+ * (stack sizes by Peter-Michael Hager)
  */
+#ifndef PROTO_LPC
 NTSTATUS STDCALL NtAcceptConnectPort(VOID);
-
-
 NTSTATUS STDCALL NtCompleteConnectPort(VOID);
 //NTSTATUS STDCALL NtConnectPort(VOID);
 NTSTATUS STDCALL NtConnectPort(PHANDLE Handle,
 			       POBJECT_ATTRIBUTES ObjectAttributes);
-
 //NTSTATUS STDCALL NtCreatePort(VOID);
 NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
 			      ACCESS_MASK DesiredAccess,
 			      POBJECT_ATTRIBUTES ObjectAttributes);
-
-NTSTATUS STDCALL NtGetPlugPlayEvent(VOID);
 NTSTATUS STDCALL NtImpersonateClientOfPort(VOID);
-
 //NTSTATUS STDCALL NtListenPort(VOID);
 NTSTATUS STDCALL NtListenPort(HANDLE PortHandle,
 			      PLARGE_INTEGER Timeout,
 			      PPORT_MSG_DATA Msg);
-
-NTSTATUS STDCALL NtLoadKey2(VOID);
-
-
-NTSTATUS STDCALL NtPlugPlayControl(VOID);
-
-NTSTATUS STDCALL NtQueryDefaultLocale(VOID);
-
 NTSTATUS STDCALL NtQueryInformationPort(VOID);
-
-NTSTATUS STDCALL NtQueryOleDirectoryFile(VOID);
-
-NTSTATUS STDCALL NtRaiseHardError(VOID);
-NTSTATUS STDCALL NtReadRequestData(VOID);
 NTSTATUS STDCALL NtReplyPort(VOID);
 NTSTATUS STDCALL NtReplyWaitReceivePort(VOID);
 NTSTATUS STDCALL NtReplyWaitReplyPort(VOID);
@@ -5166,6 +5150,136 @@ NTSTATUS STDCALL NtRequestPort(HANDLE PortHandle,
 			       PVOID Data,
 			       ULONG Options,
 			       PHANDLE ReplyPortHandle);
+NTSTATUS STDCALL NtRequestWaitReplyPort(VOID); 
+NTSTATUS STDCALL NtReadRequestData(VOID);
+NTSTATUS STDCALL NtWriteRequestData(VOID);
+#else
+NTSTATUS
+STDCALL
+NtAcceptConnectPort ( /* @24 */
+	IN	HANDLE	PortHandle,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3,
+	DWORD	a4,
+	DWORD	a5
+	);
+NTSTATUS
+STDCALL
+NtCompleteConnectPort ( /* @4 */
+	HANDLE	PortHandle
+	);
+NTSTATUS
+STDCALL
+NtConnectPort ( /* @32 */
+	IN	HANDLE	PortHandle,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3,
+	DWORD	a4,
+	DWORD	a5,
+	DWORD	a6,
+	DWORD	a7,
+	DWORD	a8
+	);
+NTSTATUS
+STDCALL
+NtCreatePort ( /* @20 */
+	OUT	PHANDLE			PortHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,  
+	IN	DWORD			a3,
+	IN	DWORD			a4
+	);
+NTSTATUS
+STDCALL
+NtImpersonateClientOfPort ( /* @8 */
+	IN	HANDLE		PortHandle,
+	IN	PCLIENT_ID	ClientId
+	);
+NTSTATUS
+STDCALL
+NtListenPort ( /* @8 */
+	IN	HANDLE	PortHAndle,
+	IN	DWORD	QueueSize	/* guess */
+	);
+NTSTATUS
+STDCALL
+NtQueryInformationPort ( /* @20 */
+	IN	HANDLE	PortHandle,
+	IN	CINT	PortInformationClass,	/* guess */
+	OUT	PVOID	PortInformation,	/* guess */
+	IN	ULONG	PortInformationLength,	/* guess */
+	OUT	PULONG	ReturnLength		/* guess */
+	);
+NTSTATUS
+STDCALL
+NtReplyPort ( /* @8 */
+	IN	HANDLE		PortHandle,
+	IN	PLPC_REPLY	LpcReply	/* guess */
+	);
+NTSTATUS
+STDCALL
+NtReplyWaitReceivePort ( /* @16 */
+	IN	HANDLE		PortHandle,
+	IN	PLPC_REPLY	LpcReply,	/* guess */
+	OUT	PLPC_MESSAGE	LpcMessage,	/* guess */
+	OUT	PULONG		MessageLength	/* guess */
+	);
+NTSTATUS
+STDCALL
+NtReplyWaitReplyPort ( /* @8 */
+	IN	HANDLE		PortHandle,
+	IN OUT	PLPC_REPLY	LpcReply	/* guess */
+	);
+NTSTATUS
+STDCALL
+NtRequestPort ( /* @8 */
+	IN	HANDLE		PortHandle,
+	IN 	PLPC_MESSAGE	LpcMessage	/* guess */
+	);
+NTSTATUS
+STDCALL
+NtRequestWaitReplyPort ( /* @12 */
+	IN	HANDLE		PortHandle,
+	IN OUT	PLPC_REPLY	LpcReply,	/* guess */
+	IN	TIME		* TimeToWait 	/* guess */
+	); 
+NTSTATUS
+STDCALL
+NtReadRequestData ( /* @24 */
+	DWORD	a0,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3,
+	DWORD	a4,
+	DWORD	a5
+	);
+NTSTATUS
+STDCALL
+NtWriteRequestData ( /* @24 */
+	DWORD	a0,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3,
+	DWORD	a4,
+	DWORD	a5
+	);
+#endif /* ndef PROTO_LPC */
+
+NTSTATUS STDCALL NtGetPlugPlayEvent(VOID);
+
+NTSTATUS STDCALL NtLoadKey2(VOID);
+
+
+NTSTATUS STDCALL NtPlugPlayControl(VOID);
+
+NTSTATUS STDCALL NtQueryDefaultLocale(VOID);
+
+
+NTSTATUS STDCALL NtQueryOleDirectoryFile(VOID);
+
+NTSTATUS STDCALL NtRaiseHardError(VOID);
 
 NTSTATUS STDCALL NtSetDefaultLocale(VOID);
 
@@ -5179,7 +5293,6 @@ NTSTATUS STDCALL NtSetSystemPowerState(VOID);
 NTSTATUS STDCALL NtSystemDebugControl(VOID);
 NTSTATUS STDCALL NtVdmControl(VOID);
 
-NTSTATUS STDCALL NtWriteRequestData(VOID);
 NTSTATUS STDCALL NtW32Call(VOID);
 NTSTATUS STDCALL NtCreateChannel(VOID);
 NTSTATUS STDCALL NtListenChannel(VOID);
@@ -5187,6 +5300,5 @@ NTSTATUS STDCALL NtOpenChannel(VOID);
 NTSTATUS STDCALL NtReplyWaitSendChannel(VOID);
 NTSTATUS STDCALL NtSendWaitReplyChannel(VOID);
 NTSTATUS STDCALL NtSetContextChannel(VOID);
-NTSTATUS STDCALL NtRequestWaitReplyPort(VOID); 
  
 #endif /* __DDK_ZW_H */
