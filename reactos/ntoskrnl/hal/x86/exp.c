@@ -263,6 +263,14 @@ asmlinkage void exception_handler(unsigned int edi,
    else
      {
 	printk("SS:ESP %x:%x\n",ss0,esp0);
+        stack=(unsigned int *)(esp0);
+       
+        printk("Stack:\n");
+        for (i=0;i<16;i=i+4)
+        {
+                printk("%.8x %.8x %.8x %.8x\n",stack[i],stack[i+1],stack[i+2],
+                       stack[i+3]);
+        }
      }
    
    for(;;);

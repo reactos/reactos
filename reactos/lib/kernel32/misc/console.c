@@ -47,67 +47,36 @@ WriteConsoleA(
 }
 
 
-WINBOOL
-STDCALL
-ReadConsoleA(
-    HANDLE hConsoleInput,
-    LPVOID lpBuffer,
-    DWORD nNumberOfCharsToRead,
-    LPDWORD lpNumberOfCharsRead,
-    LPVOID lpReserved
-    )
+WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
+			     LPVOID lpBuffer,
+			     DWORD nNumberOfCharsToRead,
+			     LPDWORD lpNumberOfCharsRead,
+			     LPVOID lpReserved)
 {
-	KEY_EVENT_RECORD *k;
-	OVERLAPPED Overlapped;
-	OVERLAPPED * lpOverlapped;
-	int kSize;
-	int i,j;
-
-	if ( lpReserved == NULL ) {
-		Overlapped.Internal = 0;
-		Overlapped.InternalHigh = 0;
-		Overlapped.Offset = 0;
-		Overlapped.OffsetHigh = 0;
-	//      Overlapped.hEvent = CreateEvent(NULL,FALSE,TRUE,NULL);
-		lpOverlapped = &Overlapped;
-	}
-	else
-		lpOverlapped = lpReserved;
-
-
-	kSize = nNumberOfCharsToRead*sizeof(kSize);
-	k = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,kSize);
-	if ( k == NULL || kSize == 0 )
-		return FALSE;
-		
-	k[0].AsciiChar = 0;
-	while(k[0].AsciiChar == 0 )
-	{
-		ReadFile(hConsoleInput,k,kSize,lpNumberOfCharsRead,lpOverlapped);
-
-	}
-	j = 0;
-	i = 0;
-	//if ( k[i].bKeyDown ) 
-	{
-		((char *)lpBuffer)[j] = k[i].AsciiChar;
-		j++;
-	}
-	i++;
-	while(j < nNumberOfCharsToRead && i < *lpNumberOfCharsRead ) {
-		//if ( k[i].bKeyDown ) 
-		{
-			((char *)lpBuffer)[j] = k[i].AsciiChar;
-			j++;
-		}
-		i++;
-	}
-
-	HeapFree(GetProcessHeap(),0,k);
-	//if ( lpReserved == NULL ) {
-	//      CloseHandle(Overlapped.hEvent);
-	//}
-	
+   KEY_EVENT_RECORD KeyEventRecord;
+   int i,j;
+   BOOL stat;
+   PCHAR Buffer = (PCHAR)lpBuffer;
+   DWORD Result;
+   
+   for (i=0; (stat && i<nNumberOfCharsToRead);)     
+     {
+	stat = ReadFile(hConsoleInput,
+			&KeyEventRecord,
+			sizeof(KeyEventRecord),
+			&Result,
+			NULL);
+	if (stat && KeyEventRecord.bKeyDown && KeyEventRecord.AsciiChar != 0)
+	  {
+	     Buffer[i] = KeyEventRecord.AsciiChar;
+	     i++;
+	  }
+     }
+   if (lpNumberOfCharsRead != NULL)
+     {
+	*lpNumberOfCharsRead = i;
+     }
+   return(stat);
 }
 
 WINBOOL
@@ -119,9 +88,9 @@ AllocConsole( VOID )
 			       0,
 			       NULL,
 			       OPEN_EXISTING,
-			       FILE_FLAG_OVERLAPPED,
+			       0,
 			       NULL);
-
+   
 	StdOutput = CreateFile("\\BlueScreen",
 			       FILE_GENERIC_WRITE|FILE_GENERIC_READ,
 			       0,

@@ -39,8 +39,8 @@ WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId);
 VOID InitializePeb(PWSTR CommandLine)
 {
    DPRINT("InitializePeb(CommandLine %x)\n",CommandLine);
-   DPRINT("ProcessInfo.CommandLine %x\n",ProcessInfo.CommandLine);
-   wcscpy(ProcessInfo.CommandLine, CommandLine);
+//   DPRINT("ProcessInfo.CommandLine %x\n",ProcessInfo.CommandLine);
+//   wcscpy(ProcessInfo.CommandLine, CommandLine);
    CurrentPeb.StartupInfo = &ProcessInfo;
 }
 

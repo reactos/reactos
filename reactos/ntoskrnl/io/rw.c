@@ -72,6 +72,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
+	DPRINT("ZwReadFile() = %x\n",Status);
 	return(Status);
      }
    

@@ -11,55 +11,46 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
-#include <kernel32/kernel32.h>
 
+//#define NDEBUG
+#include <kernel32/kernel32.h>
 
 /* GLOBALS *******************************************************************/
 
 #define MAX_DOS_DRIVES 26
 
-WCHAR CurrentDirectoryW[MAX_PATH] = {0,};
-HANDLE hCurrentDirectory = NULL;
-int drive= 2;
+static HANDLE hCurrentDirectory = NULL;
+static ULONG CurrentDrive = 0;
 
-char DriveDirectoryW[MAX_DOS_DRIVES][MAX_PATH] = { {"A:\\"},{"B:\\"},{"C:\\"},{"D:\\"},
-					{"E:\\"},{"F:\\"},{"G:\\"},{"H:\\"},
-					{"I:\\"},{"J:\\"},{"K:\\"},{"L:\\"},
-					{"M:\\"},{"N:\\"},{"O:\\"},{"P:\\"},
-					{"Q:\\"},{"R:\\"},{"S:\\"},{"T:\\"},
-					{"U:\\"},{"V:\\"},{"W:\\"},{"X:\\"},
-					{"Y:\\"},{"Z:\\"} };
+static WCHAR DriveDirectoryW[MAX_DOS_DRIVES][MAX_PATH] = {{0}};
 
-WCHAR SystemDirectoryW[MAX_PATH];
+static WCHAR SystemDirectoryW[MAX_PATH];
+static WCHAR WindowsDirectoryW[MAX_PATH];
 
-WCHAR WindowsDirectoryW[MAX_PATH];
-
-
-WINBOOL
-STDCALL
-SetCurrentDirectoryW(
-    LPCWSTR lpPathName
-    );
+WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName);
 
 /* FUNCTIONS *****************************************************************/
  
 DWORD STDCALL GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer)
 {
    UINT uSize,i;
+   WCHAR TempDir[MAX_PATH];
+   
    if ( lpBuffer == NULL ) 
 	return 0;
  
-
-   uSize = lstrlenW(CurrentDirectoryW); 
-   if ( nBufferLength > uSize ) {
+   GetCurrentDirectoryW(MAX_PATH, TempDir);
+   uSize = lstrlenW(TempDir); 
+   if (nBufferLength > uSize) 
+     {
 	i = 0;
-   	while ((CurrentDirectoryW[i])!=0 && i < MAX_PATH)
+   	while (TempDir[i] != 0)
      	{
-		lpBuffer[i] = (unsigned char)CurrentDirectoryW[i];
-		i++;
+	   lpBuffer[i] = (unsigned char)TempDir[i];
+	   i++;
      	}
    	lpBuffer[i] = 0;
-   }
+     }
    return uSize;
 }
 
@@ -67,16 +58,18 @@ DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
    UINT uSize;
    
-   DPRINT("CurrentDirectoryW %w\n",CurrentDirectoryW);
+   DPRINT("GetCurrentDirectoryW()\n");
    
    if ( lpBuffer == NULL ) 
 	return 0;
-   uSize = lstrlenW(CurrentDirectoryW); 
-   if ( nBufferLength > uSize )
-   	lstrcpynW(lpBuffer,CurrentDirectoryW,uSize);
-   
+   uSize = lstrlenW(DriveDirectoryW[CurrentDrive]) + 2;
+   if (nBufferLength > uSize)
+     {
+	lpBuffer[0] = 'A' + CurrentDrive;
+	lpBuffer[1] = ':';
+	lstrcpyW(&lpBuffer[2], DriveDirectoryW[CurrentDrive]);
+     }
    DPRINT("GetCurrentDirectoryW() = %w\n",lpBuffer);
-   
    return uSize;
 }
 
@@ -85,11 +78,10 @@ WINBOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
    UINT i;
    WCHAR PathNameW[MAX_PATH];
  
-   
    if ( lpPathName == NULL )
-		return FALSE;
-   if ( strlen(lpPathName) > MAX_PATH )
-		return FALSE;
+     return FALSE;
+   if ( lstrlen(lpPathName) > MAX_PATH )
+     return FALSE;
    i = 0;
    while ((lpPathName[i])!=0 && i < MAX_PATH)
    {
@@ -101,89 +93,106 @@ WINBOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
    return SetCurrentDirectoryW(PathNameW);
 }
 
-
-WINBOOL
-STDCALL
-SetCurrentDirectoryW(
-    LPCWSTR lpPathName
-    )
+WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
 {
-   int len;
-   int i,j;
-   HANDLE hDirOld = hCurrentDirectory;
+   ULONG len;
    WCHAR PathName[MAX_PATH];
-
-   if ( lpPathName == NULL )
-		return FALSE;
-   len = lstrlenW(lpPathName);
-   if ( len > MAX_PATH )
-		return FALSE;
-  
-   if ( len == 2 && isalpha(lpPathName[0]) && lpPathName[1] == ':'  ) {
-	    len = lstrlenW(CurrentDirectoryW);
-	   	for(i=0;i<len+1;i++)
-			DriveDirectoryW[drive][i] = CurrentDirectoryW[i];
-		drive = toupper((char)lpPathName[0]) - 'A';
-		len = lstrlenW(DriveDirectoryW[drive]);
-		for(i=0;i<len+1;i++)
-			CurrentDirectoryW[i] = DriveDirectoryW[drive][i];	
-		if ( hDirOld  != NULL )
-			CloseHandle(hDirOld);
-		return TRUE;
-   }
-   if ( lpPathName[0] == '.' && lpPathName[1] == '\\') {
-		lstrcpyW(PathName,CurrentDirectoryW);
-		lstrcatW(PathName,&lpPathName[2]);
-   }
-   else if ( lpPathName[0] == '.' && lpPathName[1] == '.' ) {
-		lstrcpyW(PathName,CurrentDirectoryW);
-		lstrcatW(PathName,lpPathName);
-   }
-   else if ( lpPathName[0] != '.' && lpPathName[1] != ':' ) {
-		lstrcpyW(PathName,CurrentDirectoryW);
-		lstrcatW(PathName,lpPathName);
-		
-	}
-   else
-		lstrcpyW(PathName,CurrentDirectoryW);
-
-  len = lstrlenW(PathName);
-  for(i=0;i<len+1;i++) {
-	  if ( PathName[i] == '.' && PathName[i+1] == '.' )
-		  if ( i + 2 < len && PathName[i+2] != '\\' &&  PathName[i+2] != 0 )
-				PathName[i+2] = 0;
-  }
-
-
-   if ( len > 0 && PathName[len-1] == L'\\' ) {
-		PathName[len-1] = 0;
-   }
-   len = lstrlenW(PathName);
-   for(i=3;i<len-2 && PathName[i] != 0;i++) {
-		if ( PathName[i] == L'\\' && PathName[i+1] == L'.' && PathName[i+2] == L'.'  ) {
-			for(j = i-1;j>=2 && PathName[j] != '\\';j-- ) {}
-			PathName[j+1] = 0;
-			if ( i+4 < len ) {
-				PathName[i+3] = 0;
-				lstrcatW(PathName,&PathName[i+4]);
-			}
-			len = lstrlenW(PathName);
-		}
-   }
-			
-   hCurrentDirectory = CreateFileW(PathName,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS|FILE_ATTRIBUTE_DIRECTORY,NULL);
-   if ( hCurrentDirectory == - 1 ) {
-		hCurrentDirectory = hDirOld;
-		DPRINT("%d\n",GetLastError());
-		return FALSE; 
-   }
-   else
-		CloseHandle(hDirOld);
-
+   HANDLE hDir;
+   PWSTR prev, current;
    
-   lstrcpyW(CurrentDirectoryW,PathName);
-   lstrcatW(CurrentDirectoryW,L"\\");
-
+   DPRINT("SetCurrentDirectoryW(lpPathName %w\n",lpPathName);
+   
+   if (lpPathName == NULL)
+     return FALSE;
+   
+   len = lstrlenW(lpPathName);
+   if (len > MAX_PATH)
+     return FALSE;
+  
+   hDir = CreateFileW(lpPathName,
+		      GENERIC_READ,
+		      FILE_SHARE_READ,
+		      NULL,
+		      OPEN_EXISTING,
+		      FILE_ATTRIBUTE_DIRECTORY,
+		      NULL);
+   if (hDir == NULL)
+     {
+	DPRINT("Failed to open directory\n");
+	return(FALSE);
+     }
+   if (hCurrentDirectory != NULL)
+     {
+	CloseHandle(hCurrentDirectory);
+     }
+   hCurrentDirectory = hDir;
+   
+   if (isalpha(lpPathName[0]) && lpPathName[1] == ':' )
+     {
+	DPRINT("lpPathName %w\n",lpPathName);
+	
+	CurrentDrive = toupper((UCHAR)lpPathName[0]) - 'A';
+	if (!(lpPathName[2] == '\\' && lpPathName[3] == 0 &&
+	      DriveDirectoryW[CurrentDrive][0] != 0))
+	  {
+	     wcscpy(DriveDirectoryW[CurrentDrive],&lpPathName[2]);
+	     len = lstrlenW(DriveDirectoryW[CurrentDrive]);
+	     if (DriveDirectoryW[CurrentDrive][len-1] != '\\')
+	       {
+		  DriveDirectoryW[CurrentDrive][len] = '\\';
+		  DriveDirectoryW[CurrentDrive][len+1] = 0;
+	       }
+	  }	
+	return(TRUE);
+     }
+   if (lpPathName[0] == '\\')
+     {
+	wcscpy(DriveDirectoryW[CurrentDrive],lpPathName);
+	return(TRUE);
+     }
+   
+   GetCurrentDirectoryW(MAX_PATH, PathName);
+   lstrcatW(PathName, lpPathName);
+   len = lstrlenW(PathName);
+   if (PathName[len-1] != '\\')
+     {
+	PathName[len] = '\\';
+	PathName[len+1] = 0;
+     }
+   
+   DPRINT("PathName %w\n",PathName);
+   
+   prev = NULL;
+   current = &PathName[2];
+   
+   while (current != NULL)
+     {
+	if (current[1] == '.' && current[2] == '\\')
+	  {
+	     wcscpy(current, current+2);
+	  }
+	else if (current[1] == '.' && current[2] == '.' &&
+		 current[3] == '\\' && prev != NULL)
+	  {
+	     wcscpy(prev, current+3);
+	     current = prev;
+	     while (prev > PathName && (*prev) != '\\')
+	       {
+		  prev--;
+	       }
+	     if (prev == PathName)
+	       {
+		  prev = NULL;
+	       }
+	  }
+	else
+	  {  
+	     prev = current;
+	     current = wcschr(current+1, (WCHAR)'\\');
+	  }
+     }
+   
+   lstrcpyW(DriveDirectoryW[CurrentDrive], &PathName[2]);   
    return TRUE;
 }
 

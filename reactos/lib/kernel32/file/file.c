@@ -4,7 +4,7 @@
  * FILE:            lib/kernel32/file/file.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
-		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
+ *		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -18,6 +18,9 @@
 #include <string.h>
 #include <ddk/li.h>
 #include <ddk/rtl.h>
+
+#define NDEBUG
+#include <kernel32/kernel32.h>
 
 #define LPPROGRESS_ROUTINE void*
 
@@ -80,11 +83,11 @@ AreFileApisANSI(VOID)
 
 
 
-WINBOOL STDCALL WriteFile(HANDLE  hFile,	
-		       LPCVOID lpBuffer,	
-		       DWORD nNumberOfBytesToWrite,
-		       LPDWORD lpNumberOfBytesWritten,	
-		       LPOVERLAPPED lpOverLapped)
+WINBOOL STDCALL WriteFile(HANDLE hFile,
+			  LPCVOID lpBuffer,	
+			  DWORD nNumberOfBytesToWrite,
+			  LPDWORD lpNumberOfBytesWritten,	
+			  LPOVERLAPPED lpOverLapped)
 {
 
    LARGE_INTEGER Offset;
@@ -92,9 +95,9 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
    NTSTATUS errCode;
    PIO_STATUS_BLOCK IoStatusBlock;
    IO_STATUS_BLOCK IIosb;
-
- 
-	
+   
+   DPRINT("WriteFile(hFile %x\n",WriteFile);
+   
    if (lpOverLapped != NULL ) 
      {
 	SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
@@ -108,7 +111,10 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
 	IoStatusBlock = &IIosb;
 	Offset = NULL;
      }
-   errCode = NtWriteFile(hFile,hEvent,NULL,NULL,
+   errCode = NtWriteFile(hFile,
+			 hEvent,
+			 NULL,
+			 NULL,
 			 IoStatusBlock,
 			 (PVOID)lpBuffer, 
 			 nNumberOfBytesToWrite,
@@ -119,8 +125,10 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
-   if ( !lpNumberOfBytesWritten )
-   		*lpNumberOfBytesWritten = IoStatusBlock->Information;
+   if (lpNumberOfBytesWritten != NULL )
+     {
+	*lpNumberOfBytesWritten = IoStatusBlock->Information;
+     }
    return(TRUE);
 }
 
@@ -137,9 +145,8 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    NTSTATUS errCode;
    PIO_STATUS_BLOCK IoStatusBlock;
    IO_STATUS_BLOCK IIosb;
-
   
-   if ( lpOverLapped != NULL )
+   if (lpOverLapped != NULL)
      {
 	SET_LARGE_INTEGER_LOW_PART(ByteOffset, lpOverLapped->Offset);
 	SET_LARGE_INTEGER_HIGH_PART(ByteOffset, lpOverLapped->OffsetHigh);
@@ -162,15 +169,18 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
 			lpBuffer,
 			nNumberOfBytesToRead,
 			Offset,			
-			NULL);   
+			NULL);
+   
    if ( !NT_SUCCESS(errCode) )  
      {      
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
 
-   if ( !lpNumberOfBytesRead )
+   if (lpNumberOfBytesRead != NULL )
+     {
    	*lpNumberOfBytesRead = IoStatusBlock->Information;
+     }
  
    return TRUE;  
 }

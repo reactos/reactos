@@ -10,11 +10,6 @@
  *                  Removed use of SearchPath (not used by Windows)
  */
 
-/*
- * NOTES: Please don't alter without debugging
- * 
- */
-
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
@@ -24,7 +19,7 @@
 #include <ddk/li.h>
 #include <ddk/rtl.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -130,8 +125,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    FileNameW[3] = '\\';
    FileNameW[4] = 0;
    wcscat(FileNameW,PathNameW);
-   
-   
+      
    FileNameString.Length = wcslen( FileNameW)*sizeof(WCHAR);
    
    if ( FileNameString.Length == 0 )
@@ -163,8 +157,6 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 			 Flags,
 			 NULL,
 			 0);
-   
-   DPRINT("After create file\n");
    if (!NT_SUCCESS(Status))
    {
 	SetLastError(RtlNtStatusToDosError(Status));
@@ -173,82 +165,3 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    return(FileHandle);			 
 }
 
-#if 0
-HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
-			   DWORD dwDesiredAccess,
-			   DWORD dwShareMode,
-			   LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-			   DWORD dwCreationDisposition,
-			   DWORD dwFlagsAndAttributes,
-			   HANDLE hTemplateFile)
-{
-   HANDLE FileHandle;
-   NTSTATUS Status;
-  
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   IO_STATUS_BLOCK IoStatusBlock;
-   UNICODE_STRING FileNameString;
-   ULONG Flags = 0;
-   WCHAR PathNameW[MAX_PATH];
-   WCHAR *FilePart;
-   UINT Len = 0;
-   WCHAR CurrentDir[MAX_PATH];
-   
-   OutputDebugStringA("CreateFileW\n");
-   
-   if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
-     {
-	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
-     }
-   
-//   lstrcpyW(PathNameW,L"\\??\\");
-   PathNameW[0] = '\\';
-   PathNameW[1] = '?';
-   PathNameW[2] = '?';
-   PathNameW[3] = '\\';
-   PathNameW[4] = 0;
-   
-   dprintf("Name %w\n",PathNameW);
-   if (lpFileName[0] != L'\\' && lpFileName[1] != L':')     
-     {
-	Len =  GetCurrentDirectoryW(MAX_PATH,CurrentDir);
-	dprintf("CurrentDir %w\n",CurrentDir);
-	lstrcatW(PathNameW,CurrentDir);
-	dprintf("Name %w\n",PathNameW);
-     }
-   lstrcatW(PathNameW,lpFileName);
-   dprintf("Name %w\n",PathNameW);
-     
-   FileNameString.Length = lstrlenW( PathNameW)*sizeof(WCHAR);
-	 
-   if ( FileNameString.Length == 0 )
-	return NULL;
-
-   if ( FileNameString.Length > MAX_PATH )
-	return NULL;
-   
-   FileNameString.Buffer = (WCHAR *)PathNameW;
-   FileNameString.MaximumLength = FileNameString.Length+sizeof(WCHAR);
-     
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = &FileNameString;
-   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
-   
-   Status = NtCreateFile(&FileHandle,
-			 dwDesiredAccess,
-			 &ObjectAttributes,
-			 &IoStatusBlock,
-			 NULL,
-			 dwFlagsAndAttributes,
-			 dwShareMode,
-			 dwCreationDisposition,
-			 Flags,
-			 NULL,
-			 0);
-   return(FileHandle);			 
-}
-
-#endif

@@ -985,13 +985,13 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
                pnextfrag=(PHEAP_FRAGMENT)((LPVOID)pfrag+add);
                if(pfrag->Magic!=HEAP_FRAG_MAGIC)
                {
-                  dprintf("HeapValidate: fragment %d magic invalid, region 0x%lX,"
+                  DPRINT("HeapValidate: fragment %d magic invalid, region 0x%lX,"
                           " previous region 0x%lX\n", i, (ULONG)pcheck, (ULONG)pprev);
                   return FALSE;
                }
                if(pfrag->Number!=i)
                {
-                  dprintf("HeapValidate: fragment %d number invalid, region 0x%lX,"
+                  DPRINT("HeapValidate: fragment %d number invalid, region 0x%lX,"
                           " previous region 0x%lX\n", i, (ULONG)pcheck, (ULONG)pprev);
                   return FALSE;
                }
@@ -999,7 +999,7 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
                   number++;
                if(pfrag->Sub!=psub)
                {
-                  dprintf("HeapValidate: fragment %d suballoc invalid, region 0x%lX,"
+                  DPRINT("HeapValidate: fragment %d suballoc invalid, region 0x%lX,"
                           " previous region 0x%lX\n", i, (ULONG)pcheck, (ULONG)pprev);
                   return FALSE;
                }
@@ -1008,11 +1008,11 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
             }
             if(number!=psub->NumberFree)
             {
-               dprintf("HeapValidate: invalid number of free fragments, region 0x%lX,"
+	       DPRINT("HeapValidate: invalid number of free fragments, region 0x%lX,"
                        " previous region 0x%lX\n", (ULONG)pcheck, (ULONG)pprev);
                return FALSE;
             }
-            dprintf("HeapValidate: [0x%08lX-0x%08lX] suballocated,"
+            DPRINT("HeapValidate: [0x%08lX-0x%08lX] suballocated,"
                     " bucket size=%d, bitmap=0x%08lX\n",
                     (ULONG) pcheck, (ULONG) pnext, pbucket->Size, psub->Bitmap);
          }
@@ -1020,22 +1020,22 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
          {
             if(HEAP_RSIZE(pcheck)!=HEAP_SIZE(pcheck))
             {
-               dprintf("HeapValidate: invalid size of free region 0x%lX,"
+               DPRINT("HeapValidate: invalid size of free region 0x%lX,"
                        " previous region 0x%lX\n",
                        (ULONG) pcheck, (ULONG) pprev);
                return FALSE;
             }
-            dprintf("HeapValidate: [0x%08lX-0x%08lX] free\n",
+	    DPRINT("HeapValidate: [0x%08lX-0x%08lX] free\n",
                     (ULONG) pcheck, (ULONG) pnext );
          }
          else if(HEAP_ISNORMAL(pcheck))
          {
-            dprintf("HeapValidate: [0x%08lX-0x%08lX] allocated\n",
+	    DPRINT("HeapValidate: [0x%08lX-0x%08lX] allocated\n",
                     (ULONG) pcheck, (ULONG) pnext );
          }
          else
          {
-            dprintf("HeapValidate: invalid tag %x, region 0x%lX,"
+            DPRINT("HeapValidate: invalid tag %x, region 0x%lX,"
                     " previous region 0x%lX\n", pcheck->Size>>28,
                      (ULONG)pcheck, (ULONG)pprev);
             return FALSE;

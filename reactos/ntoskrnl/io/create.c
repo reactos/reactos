@@ -218,6 +218,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 	(*FileHandle) = 0;
      }
    
+   DPRINT("(*FileHandle) %x\n",(*FileHandle));
    DPRINT("Finished ZwCreateFile()\n");
    return(Status);
 }

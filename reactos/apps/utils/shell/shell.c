@@ -171,6 +171,7 @@ void ReadLine(char* line)
    KEY_EVENT_RECORD KeyEvent;
    DWORD Result;
    UCHAR CurrentDir[255];
+   char ch;
    
    GetCurrentDirectoryA(255,CurrentDir);
    debug_printf(CurrentDir);
@@ -178,26 +179,18 @@ void ReadLine(char* line)
    do
      {
 	if (!ReadConsoleA(InputHandle,
-                     &KeyEvent,
-                     sizeof(KEY_EVENT_RECORD),
-                     &Result,
-                     NULL))
+			  &ch,                     
+			  1,
+			  &Result,
+			  NULL))
 	  {
 	     debug_printf("Failed to read from console\n");
 	     for(;;);
 	  }
-	if (KeyEvent.bKeyDown && KeyEvent.AsciiChar != 0)
-	  {
-	     debug_printf("%c", KeyEvent.AsciiChar);
-	     *line = KeyEvent.AsciiChar;
-	     line++;
-	  }
-     } while (!(KeyEvent.bKeyDown && KeyEvent.AsciiChar == '\n'));
-   ReadFile(InputHandle,
-	    &KeyEvent,
-	    sizeof(KEY_EVENT_RECORD),
-	    &Result,
-	    NULL);
+	debug_printf("%c", ch);
+	*line = ch;	
+	line++;
+     } while (ch != '\n');
    line--;
    *line = 0;
 }
