@@ -757,15 +757,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    }
 
    PreviousMode = ExGetPreviousMode();
-   Status = RtlCaptureUnicodeString(&CapturedFileName,
-                                    PreviousMode,
-                                    PagedPool,
-                                    FALSE,
-                                    FileName);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
+
    if (PreviousMode == UserMode)
    {
       _SEH_TRY
@@ -794,6 +786,16 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    {
       SafeInitialSize = *InitialSize;
       SafeMaximumSize = *MaximumSize;
+   }
+   
+   Status = RtlCaptureUnicodeString(&CapturedFileName,
+                                    PreviousMode,
+                                    PagedPool,
+                                    FALSE,
+                                    FileName);
+   if (!NT_SUCCESS(Status))
+   {
+      return(Status);
    }
 
    InitializeObjectAttributes(&ObjectAttributes,
