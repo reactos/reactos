@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.36 2004/10/23 23:43:23 ion Exp $
+/* $Id: rtl.h,v 1.37 2004/10/24 20:37:25 weiden Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -1535,10 +1535,10 @@ NTSTATUS
 STDCALL
 RtlInitializeContext (
 	IN	HANDLE			ProcessHandle,
-	IN	PCONTEXT		Context,
-	IN	PVOID			Parameter,
-	IN	PTHREAD_START_ROUTINE	StartAddress,
-	IN OUT	PUSER_STACK		UserStack
+	OUT	PCONTEXT		ThreadContext,
+	IN	PVOID			ThreadStartParam  OPTIONAL,
+	IN	PTHREAD_START_ROUTINE	ThreadStartAddress,
+	IN	PINITIAL_TEB		InitialTeb
 	);
 
 VOID

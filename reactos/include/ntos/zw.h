@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.33 2004/10/24 17:14:26 weiden Exp $
+/* $Id: zw.h,v 1.34 2004/10/24 20:37:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -997,19 +997,19 @@ ZwCreateSemaphore(
 NTSTATUS
 STDCALL
 NtCreateSymbolicLinkObject(
-	OUT PHANDLE SymbolicLinkHandle,
+	OUT PHANDLE LinkHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN PUNICODE_STRING Name
+	IN PUNICODE_STRING LinkTarget
 	);
 
 NTSTATUS
 STDCALL
 ZwCreateSymbolicLinkObject(
-	OUT PHANDLE SymbolicLinkHandle,
+	OUT PHANDLE LinkHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN PUNICODE_STRING Name
+	IN PUNICODE_STRING LinkTarget
 	);
 
 /*
@@ -1532,7 +1532,7 @@ ZwFsControlFile(
  * FUNCTION: Retrieves the processor context of a thread
  * ARGUMENTS:
  *        ThreadHandle = Handle to a thread
- *        Context (OUT) = Caller allocated storage for the processor context
+ *        ThreadContext (OUT) = Caller allocated storage for the processor context
  * RETURNS: Status 
  */
 
@@ -1540,14 +1540,14 @@ NTSTATUS
 STDCALL 
 NtGetContextThread(
 	IN HANDLE ThreadHandle,
-	OUT PCONTEXT Context
+	OUT PCONTEXT ThreadContext
 	);
 
 NTSTATUS
 STDCALL 
 ZwGetContextThread(
 	IN HANDLE ThreadHandle,
-	OUT PCONTEXT Context
+	OUT PCONTEXT ThreadContext
 	);
 
 
@@ -1587,19 +1587,19 @@ ZwImpersonateThread(
 NTSTATUS
 STDCALL
 NtInitiatePowerAction (
-	POWER_ACTION SystemAction,
-	SYSTEM_POWER_STATE MinSystemState,
- 	ULONG Flags,
-	BOOLEAN Asynchronous
+	IN POWER_ACTION SystemAction,
+	IN SYSTEM_POWER_STATE MinSystemState,
+ 	IN ULONG Flags,
+	IN BOOLEAN Asynchronous
 );
 
 NTSTATUS
 STDCALL
 ZwInitiatePowerAction (
-	POWER_ACTION SystemAction,
-	SYSTEM_POWER_STATE MinSystemState,
- 	ULONG Flags,
-	BOOLEAN Asynchronous
+	IN POWER_ACTION SystemAction,
+	IN SYSTEM_POWER_STATE MinSystemState,
+ 	IN ULONG Flags,
+	IN BOOLEAN Asynchronous
 );
 /*
  * FUNCTION: Initializes the registry.
@@ -1722,25 +1722,25 @@ ZwLockFile(
 NTSTATUS
 STDCALL
 NtMakePermanentObject(
-	IN HANDLE Object
+	IN HANDLE ObjectHandle
 	);
 
 NTSTATUS
 STDCALL
 ZwMakePermanentObject(
-	IN HANDLE Object
+	IN HANDLE ObjectHandle
 	);
 
 NTSTATUS
 STDCALL
 NtMakeTemporaryObject(
-	IN HANDLE Handle 
+	IN HANDLE ObjectHandle
 	);
 
 NTSTATUS
 STDCALL
 ZwMakeTemporaryObject(
-	IN HANDLE Handle 
+	IN HANDLE ObjectHandle
 	);
 /*
  * FUNCTION: Maps a view of a section into the virtual address space of a 
@@ -2228,14 +2228,14 @@ ZwOpenSemaphore(
 NTSTATUS
 STDCALL
 NtOpenSymbolicLinkObject(
-	OUT PHANDLE SymbolicLinkHandle,
+	OUT PHANDLE LinkHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
 NTSTATUS
 STDCALL
 ZwOpenSymbolicLinkObject(
-	OUT PHANDLE SymbolicLinkHandle,
+	OUT PHANDLE LinkHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
@@ -2342,21 +2342,21 @@ ZwOpenTimer(
 NTSTATUS 
 STDCALL 
 NtPowerInformation(
-	POWER_INFORMATION_LEVEL PowerInformationLevel,
-    PVOID InputBuffer, 
-	ULONG InputBufferLength,
-    PVOID OutputBuffer,
-	ULONG OutputBufferLength
+	IN POWER_INFORMATION_LEVEL PowerInformationLevel,
+	IN PVOID InputBuffer  OPTIONAL,
+	IN ULONG InputBufferLength,
+	OUT PVOID OutputBuffer  OPTIONAL,
+	IN ULONG OutputBufferLength
 	);
 
 NTSTATUS 
 STDCALL 
 ZwPowerInformation(
-	POWER_INFORMATION_LEVEL PowerInformationLevel,
-    PVOID InputBuffer, 
-	ULONG InputBufferLength,
-    PVOID OutputBuffer,
-	ULONG OutputBufferLength
+	IN POWER_INFORMATION_LEVEL PowerInformationLevel,
+	IN PVOID InputBuffer  OPTIONAL,
+	IN ULONG InputBufferLength,
+	OUT PVOID OutputBuffer  OPTIONAL,
+	IN ULONG OutputBufferLength
 	);
 
 NTSTATUS
@@ -2834,17 +2834,17 @@ NtQueryInformationThread(
 	IN THREADINFOCLASS ThreadInformationClass,
 	OUT PVOID ThreadInformation,
 	IN ULONG ThreadInformationLength,
-	OUT PULONG ReturnLength 
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 NTSTATUS 
 STDCALL 
 ZwQueryInformationThread(
 	IN HANDLE ThreadHandle,
-    IN THREADINFOCLASS ThreadInformationClass,
+	IN THREADINFOCLASS ThreadInformationClass,
 	OUT PVOID ThreadInformation,
-    IN ULONG ThreadInformationLength, 
-	OUT PULONG ReturnLength
+	IN ULONG ThreadInformationLength,
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 
@@ -3081,17 +3081,17 @@ ZwQuerySemaphore(
 NTSTATUS
 STDCALL
 NtQuerySymbolicLinkObject(
-	IN HANDLE               SymLinkObjHandle,
+	IN HANDLE               LinkHandle,
 	OUT PUNICODE_STRING     LinkTarget,
-	OUT PULONG              DataWritten OPTIONAL
+	OUT PULONG              ResultLength  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwQuerySymbolicLinkObject(
-	IN HANDLE               SymLinkObjHandle,
-	OUT PUNICODE_STRING     LinkName,
-	OUT PULONG              DataWritten OPTIONAL
+	IN HANDLE               LinkHandle,
+	OUT PUNICODE_STRING     LinkTarget,
+	OUT PULONG              ResultLength  OPTIONAL
 	); 
 
 
@@ -3500,12 +3500,12 @@ ZwReadVirtualMemory(
 NTSTATUS
 STDCALL	
 NtRegisterThreadTerminatePort(
-	HANDLE TerminationPort
+	HANDLE PortHandle
 	);
 NTSTATUS
 STDCALL	
 ZwRegisterThreadTerminatePort(
-	HANDLE TerminationPort
+	HANDLE PortHandle
 	);
 
 /*
@@ -3706,13 +3706,13 @@ NTSTATUS
 STDCALL
 NtResumeThread(
 	IN HANDLE ThreadHandle,
-	OUT PULONG SuspendCount
+	OUT PULONG SuspendCount  OPTIONAL
 	);
 NTSTATUS
 STDCALL
 ZwResumeThread(
 	IN HANDLE ThreadHandle,
-	OUT PULONG SuspendCount
+	OUT PULONG SuspendCount  OPTIONAL
 	);
 /*
  * FUNCTION: Writes the content of a registry key to ascii file
@@ -3786,7 +3786,7 @@ ZwSetBootOptions(
  * FUNCTION: Sets the context of a specified thread.
  * ARGUMENTS: 
  *        ThreadHandle = Handle to the thread
- *        Context =  The processor context.
+ *        ThreadContext =  The processor context.
  * RETURNS: Status
  */
 
@@ -3794,13 +3794,13 @@ NTSTATUS
 STDCALL
 NtSetContextThread(
 	IN HANDLE ThreadHandle,
-	IN PCONTEXT Context
+	IN PCONTEXT ThreadContext
 	);
 NTSTATUS
 STDCALL
 ZwSetContextThread(
 	IN HANDLE ThreadHandle,
-	IN PCONTEXT Context
+	IN PCONTEXT ThreadContext
 	);
 
 /*
@@ -4501,13 +4501,13 @@ ZwStopProfile(
 NTSTATUS 
 STDCALL 
 NtTerminateProcess(
-	IN HANDLE ProcessHandle,
+	IN HANDLE ProcessHandle  OPTIONAL,
 	IN NTSTATUS ExitStatus
 	);
 NTSTATUS 
 STDCALL 
 ZwTerminateProcess(
-	IN HANDLE ProcessHandle,
+	IN HANDLE ProcessHandle  OPTIONAL,
 	IN NTSTATUS ExitStatus
 	);
 
@@ -4870,14 +4870,14 @@ NTSTATUS
 STDCALL 
 NtSuspendThread(
 	IN HANDLE ThreadHandle,
-	IN PULONG PreviousSuspendCount 
+	OUT PULONG PreviousSuspendCount  OPTIONAL
 	);
 
 NTSTATUS 
 STDCALL 
 ZwSuspendThread(
 	IN HANDLE ThreadHandle,
-	IN PULONG PreviousSuspendCount 
+	OUT PULONG PreviousSuspendCount  OPTIONAL
 	);
 
 /*
@@ -5226,7 +5226,7 @@ NtCreateThread(
 	IN	HANDLE			ProcessHandle,
 	OUT	PCLIENT_ID		ClientId,
 	IN	PCONTEXT		ThreadContext,
-	IN	PUSER_STACK		UserStack,
+	IN	PINITIAL_TEB		InitialTeb,
 	IN	BOOLEAN			CreateSuspended
 	);
 
@@ -5827,7 +5827,7 @@ ZwCreateThread(
 	IN HANDLE ProcessHandle,
 	OUT PCLIENT_ID ClientId,
 	IN PCONTEXT ThreadContext,
-	IN PUSER_STACK UserStack,
+	IN PINITIAL_TEB InitialTeb,
 	IN BOOLEAN CreateSuspended
 	);
 
@@ -6098,20 +6098,20 @@ NTSTATUS
 STDCALL
 NtQueryInformationProcess(
 	IN HANDLE ProcessHandle,
-	IN CINT ProcessInformationClass,
+	IN PROCESSINFOCLASS ProcessInformationClass,
 	OUT PVOID ProcessInformation,
 	IN ULONG ProcessInformationLength,
-	OUT PULONG ReturnLength 
+	OUT PULONG  ReturnLength  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwQueryInformationProcess(
 	IN HANDLE ProcessHandle,
-	IN CINT ProcessInformationClass,
+	IN PROCESSINFOCLASS ProcessInformationClass,
 	OUT PVOID ProcessInformation,
 	IN ULONG ProcessInformationLength,
-	OUT PULONG ReturnLength 
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 /*
@@ -6152,7 +6152,7 @@ ZwQueryObject(
 	IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 	OUT PVOID ObjectInformation,
 	IN ULONG Length,
-	OUT PULONG ResultLength OPTIONAL
+	OUT PULONG ResultLength  OPTIONAL
 	);
 
 NTSTATUS
@@ -6295,7 +6295,7 @@ NTSTATUS
 STDCALL
 NtSetInformationProcess(
 	IN HANDLE ProcessHandle,
-	IN CINT ProcessInformationClass,
+	IN PROCESSINFOCLASS ProcessInformationClass,
 	IN PVOID ProcessInformation,
 	IN ULONG ProcessInformationLength
 	);
@@ -6304,7 +6304,7 @@ NTSTATUS
 STDCALL
 ZwSetInformationProcess(
 	IN HANDLE ProcessHandle,
-	IN CINT ProcessInformationClass,
+	IN PROCESSINFOCLASS ProcessInformationClass,
 	IN PVOID ProcessInformation,
 	IN ULONG ProcessInformationLength
 	);
@@ -6553,7 +6553,7 @@ NtQueryObject(
 	IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 	OUT PVOID ObjectInformation,
 	IN ULONG Length,
-	OUT PULONG ResultLength OPTIONAL
+	OUT PULONG ResultLength  OPTIONAL
 	);
 
 /* BEGIN REACTOS ONLY */

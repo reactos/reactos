@@ -1428,7 +1428,7 @@ NtIsProcessInJob(
 NTSTATUS
 STDCALL
 NtMakePermanentObject(
-	IN HANDLE Object
+	IN HANDLE ObjectHandle
 	);
 
 NTSTATUS

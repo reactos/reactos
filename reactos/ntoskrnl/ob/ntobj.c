@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.23 2004/08/15 16:39:10 chorns Exp $
+/* $Id: ntobj.c,v 1.24 2004/10/24 20:37:26 weiden Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -82,7 +82,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	       IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 	       OUT PVOID ObjectInformation,
 	       IN ULONG Length,
-	       OUT PULONG ReturnLength OPTIONAL)
+	       OUT PULONG ResultLength  OPTIONAL)
 {
   OBJECT_HANDLE_INFORMATION HandleInfo;
   POBJECT_HEADER ObjectHeader;
@@ -199,8 +199,8 @@ NtQueryObject (IN HANDLE ObjectHandle,
 
   ObDereferenceObject (Object);
 
-  if (ReturnLength != NULL)
-    *ReturnLength = InfoLength;
+  if (ResultLength != NULL)
+    *ResultLength = InfoLength;
 
   return Status;
 }
@@ -243,13 +243,13 @@ ObMakeTemporaryObject(IN PVOID ObjectBody)
  * REVISIONS
  */
 NTSTATUS STDCALL
-NtMakeTemporaryObject(IN HANDLE Handle)
+NtMakeTemporaryObject(IN HANDLE ObjectHandle)
 {
   POBJECT_HEADER ObjectHeader;
   PVOID Object;
   NTSTATUS Status;
 
-  Status = ObReferenceObjectByHandle(Handle,
+  Status = ObReferenceObjectByHandle(ObjectHandle,
 				     0,
 				     NULL,
 				     (KPROCESSOR_MODE)KeGetPreviousMode(),
@@ -284,13 +284,13 @@ NtMakeTemporaryObject(IN HANDLE Handle)
  * @implemented
  */
 NTSTATUS STDCALL
-NtMakePermanentObject(IN HANDLE Handle)
+NtMakePermanentObject(IN HANDLE ObjectHandle)
 {
   POBJECT_HEADER ObjectHeader;
   PVOID Object;
   NTSTATUS Status;
 
-  Status = ObReferenceObjectByHandle(Handle,
+  Status = ObReferenceObjectByHandle(ObjectHandle,
 				     0,
 				     NULL,
 				     (KPROCESSOR_MODE)KeGetPreviousMode(),

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.145 2004/10/22 20:45:46 ekohl Exp $
+/* $Id: process.c,v 1.146 2004/10/24 20:37:27 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -114,14 +114,18 @@ PsGetNextProcess(PEPROCESS OldProcess)
 }
 
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL 
-_NtOpenProcessToken(IN	HANDLE		ProcessHandle,
+NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 		   IN	ACCESS_MASK	DesiredAccess,
 		   OUT	PHANDLE		TokenHandle)
 {
    PACCESS_TOKEN Token;
+   HANDLE hToken;
    NTSTATUS Status;
-  
+
    Status = PsOpenTokenOfProcess(ProcessHandle,
 				 &Token);
    if (!NT_SUCCESS(Status))
@@ -132,22 +136,16 @@ _NtOpenProcessToken(IN	HANDLE		ProcessHandle,
 			   Token,
 			   DesiredAccess,
 			   FALSE,
-			   TokenHandle);
+			   &hToken);
    ObDereferenceObject(Token);
+   
+   if(NT_SUCCESS(Status))
+     {
+        Status = MmCopyToCaller(TokenHandle, &hToken, sizeof(HANDLE));
+     }
    return(Status);
 }
 
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL 
-NtOpenProcessToken(IN	HANDLE		ProcessHandle,
-		   IN	ACCESS_MASK	DesiredAccess,
-		   OUT	PHANDLE		TokenHandle)
-{
-  return _NtOpenProcessToken(ProcessHandle, DesiredAccess, TokenHandle);
-}
 
 /*
  * @unimplemented
@@ -164,7 +162,6 @@ NtOpenProcessTokenEx(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-
 
 
 /*
@@ -577,12 +574,12 @@ PsCreateSystemProcess(PHANDLE ProcessHandle,
 NTSTATUS STDCALL
 NtCreateProcess(OUT PHANDLE ProcessHandle,
 		IN ACCESS_MASK DesiredAccess,
-		IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-		IN HANDLE ParentProcessHandle,
+		IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+		IN HANDLE ParentProcess,
 		IN BOOLEAN InheritObjectTable,
-		IN HANDLE SectionHandle OPTIONAL,
-		IN HANDLE DebugPortHandle OPTIONAL,
-		IN HANDLE ExceptionPortHandle OPTIONAL)
+		IN HANDLE SectionHandle  OPTIONAL,
+		IN HANDLE DebugPort  OPTIONAL,
+		IN HANDLE ExceptionPort  OPTIONAL)
 /*
  * FUNCTION: Creates a process.
  * ARGUMENTS:
@@ -606,14 +603,14 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
  */
 {
    PEPROCESS Process;
-   PEPROCESS ParentProcess;
+   PEPROCESS pParentProcess;
    PKPROCESS KProcess;
    NTSTATUS Status;
    KIRQL oldIrql;
    PVOID LdrStartupAddr;
    PVOID ImageBase;
-   PEPORT DebugPort;
-   PEPORT ExceptionPort;
+   PEPORT pDebugPort;
+   PEPORT pExceptionPort;
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
@@ -622,11 +619,11 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 
    BoundaryAddressMultiple.QuadPart = 0;
    
-   Status = ObReferenceObjectByHandle(ParentProcessHandle,
+   Status = ObReferenceObjectByHandle(ParentProcess,
 				      PROCESS_CREATE_PROCESS,
 				      PsProcessType,
 				      ExGetPreviousMode(),
-				      (PVOID*)&ParentProcess,
+				      (PVOID*)&pParentProcess,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
@@ -645,7 +642,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			   (PVOID*)&Process);
    if (!NT_SUCCESS(Status))
      {
-	ObDereferenceObject(ParentProcess);
+	ObDereferenceObject(pParentProcess);
 	DPRINT("ObCreateObject() = %x\n",Status);
 	return(Status);
      }
@@ -659,7 +656,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject (Process);
-      ObDereferenceObject (ParentProcess);
+      ObDereferenceObject (pParentProcess);
       DPRINT("ObInsertObject() = %x\n",Status);
       return Status;
     }
@@ -670,7 +667,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 				FALSE);
    KProcess = &Process->Pcb;
    /* Inherit parent process's affinity. */
-   KProcess->Affinity = ParentProcess->Pcb.Affinity;
+   KProcess->Affinity = pParentProcess->Pcb.Affinity;
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
    KProcess->IopmOffset = 0xffff;
    KProcess->LdtDescriptor[0] = 0;
@@ -680,18 +677,18 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			    &Process->AddressSpace);
    Process->UniqueProcessId = InterlockedIncrement((LONG *)&PiNextProcessUniqueId); /* TODO */
    Process->InheritedFromUniqueProcessId = 
-     (HANDLE)ParentProcess->UniqueProcessId;
-   ObCreateHandleTable(ParentProcess,
+     (HANDLE)pParentProcess->UniqueProcessId;
+   ObCreateHandleTable(pParentProcess,
 		       InheritObjectTable,
 		       Process);
-   MmCopyMmInfo(ParentProcess, Process);
-   if (ParentProcess->Win32WindowStation != (HANDLE)0)
+   MmCopyMmInfo(pParentProcess, Process);
+   if (pParentProcess->Win32WindowStation != (HANDLE)0)
      {
        /* Always duplicate the process window station. */
        Process->Win32WindowStation = 0;
-       Status = ObDuplicateObject(ParentProcess,
+       Status = ObDuplicateObject(pParentProcess,
 				  Process,
-				  ParentProcess->Win32WindowStation,
+				  pParentProcess->Win32WindowStation,
 				  &Process->Win32WindowStation,
 				  0,
 				  FALSE,
@@ -705,13 +702,13 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
        Process->Win32WindowStation = (HANDLE)0;
      }
-   if (ParentProcess->Win32Desktop != (HANDLE)0)
+   if (pParentProcess->Win32Desktop != (HANDLE)0)
      {
        /* Always duplicate the process window station. */
        Process->Win32Desktop = 0;
-       Status = ObDuplicateObject(ParentProcess,
+       Status = ObDuplicateObject(pParentProcess,
 				  Process,
-				  ParentProcess->Win32Desktop,
+				  pParentProcess->Win32Desktop,
 				  &Process->Win32Desktop,
 				  0,
 				  FALSE,
@@ -737,45 +734,45 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    /*
     * Add the debug port
     */
-   if (DebugPortHandle != NULL)
+   if (DebugPort != NULL)
      {
-	Status = ObReferenceObjectByHandle(DebugPortHandle,
+	Status = ObReferenceObjectByHandle(DebugPort,
 					   PORT_ALL_ACCESS,
 					   ExPortType,
 					   UserMode,
-					   (PVOID*)&DebugPort,
+					   (PVOID*)&pDebugPort,
 					   NULL);   
 	if (!NT_SUCCESS(Status))
 	  {
 	     ObDereferenceObject(Process);
-	     ObDereferenceObject(ParentProcess);
+	     ObDereferenceObject(pParentProcess);
 	     ZwClose(*ProcessHandle);
 	     *ProcessHandle = NULL;
 	     return(Status);
 	  }
-	Process->DebugPort = DebugPort;
+	Process->DebugPort = pDebugPort;
      }
 	
    /*
     * Add the exception port
     */
-   if (ExceptionPortHandle != NULL)
+   if (ExceptionPort != NULL)
      {
-	Status = ObReferenceObjectByHandle(ExceptionPortHandle,
+	Status = ObReferenceObjectByHandle(ExceptionPort,
 					   PORT_ALL_ACCESS,
 					   ExPortType,
 					   UserMode,
-					   (PVOID*)&ExceptionPort,
+					   (PVOID*)&pExceptionPort,
 					   NULL);   
 	if (!NT_SUCCESS(Status))
 	  {
 	     ObDereferenceObject(Process);
-	     ObDereferenceObject(ParentProcess);
+	     ObDereferenceObject(pParentProcess);
 	     ZwClose(*ProcessHandle);
 	     *ProcessHandle = NULL;
 	     return(Status);
 	  }
-	Process->ExceptionPort = ExceptionPort;
+	Process->ExceptionPort = pExceptionPort;
      }
    
    /*
@@ -871,7 +868,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
 	DbgPrint("LdrpMapSystemDll failed (Status %x)\n", Status);
 	ObDereferenceObject(Process);
-	ObDereferenceObject(ParentProcess);
+	ObDereferenceObject(pParentProcess);
 	return(Status);
      }
    
@@ -888,7 +885,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	  {
 	     DbgPrint("LdrpMapImage failed (Status %x)\n", Status);
 	     ObDereferenceObject(Process);
-	     ObDereferenceObject(ParentProcess);
+	     ObDereferenceObject(pParentProcess);
 	     return(Status);
 	  }
      }
@@ -900,12 +897,12 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
   /*
    * Duplicate the token
    */
-  Status = SepInitializeNewProcess(Process, ParentProcess);
+  Status = SepInitializeNewProcess(Process, pParentProcess);
   if (!NT_SUCCESS(Status))
     {
        DbgPrint("SepInitializeNewProcess failed (Status %x)\n", Status);
        ObDereferenceObject(Process);
-       ObDereferenceObject(ParentProcess);
+       ObDereferenceObject(pParentProcess);
        return(Status);
     }
 
@@ -920,7 +917,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
         DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);
 	ObDereferenceObject(Process);
-	ObDereferenceObject(ParentProcess);
+	ObDereferenceObject(pParentProcess);
 	ZwClose(*ProcessHandle);
 	*ProcessHandle = NULL;
 	return(Status);
@@ -930,7 +927,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
     * Maybe send a message to the creator process's debugger
     */
 #if 0
-   if (ParentProcess->DebugPort != NULL)
+   if (pParentProcess->DebugPort != NULL)
      {
 	LPC_DBG_MESSAGE Message;
 	HANDLE FileHandle;
@@ -949,7 +946,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	Message.Data.CreateProcess.Base = ImageBase;
 	Message.Data.CreateProcess.EntryPoint = NULL; //
 	
-	Status = LpcSendDebugMessagePort(ParentProcess->DebugPort,
+	Status = LpcSendDebugMessagePort(pParentProcess->DebugPort,
 					 &Message);
      }
 #endif
@@ -957,7 +954,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    PspRunCreateProcessNotifyRoutines(Process, TRUE);
    
    ObDereferenceObject(Process);
-   ObDereferenceObject(ParentProcess);
+   ObDereferenceObject(pParentProcess);
    return(STATUS_SUCCESS);
 }
 
@@ -1063,10 +1060,10 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
  */
 NTSTATUS STDCALL
 NtQueryInformationProcess(IN  HANDLE ProcessHandle,
-			  IN  CINT ProcessInformationClass,
+			  IN  PROCESSINFOCLASS ProcessInformationClass,
 			  OUT PVOID ProcessInformation,
 			  IN  ULONG ProcessInformationLength,
-			  OUT PULONG ReturnLength OPTIONAL)
+			  OUT PULONG ReturnLength  OPTIONAL)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -1311,7 +1308,7 @@ PspAssignPrimaryToken(PEPROCESS Process,
  */
 NTSTATUS STDCALL
 NtSetInformationProcess(IN HANDLE ProcessHandle,
-			IN CINT ProcessInformationClass,
+			IN PROCESSINFOCLASS ProcessInformationClass,
 			IN PVOID ProcessInformation,
 			IN ULONG ProcessInformationLength)
 {

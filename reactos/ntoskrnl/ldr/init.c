@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.47 2004/09/25 06:41:16 arty Exp $
+/* $Id: init.c,v 1.48 2004/10/24 20:37:26 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -230,7 +230,7 @@ LdrpCreateProcessEnvironment(HANDLE ProcessHandle,
 static NTSTATUS LdrpCreateStack
 (
  HANDLE ProcessHandle,
- PUSER_STACK UserStack,
+ PINITIAL_TEB InitialTeb,
  PULONG_PTR StackReserve,
  PULONG_PTR StackCommit
 )
@@ -245,11 +245,11 @@ static NTSTATUS LdrpCreateStack
  /* FIXME: no SEH, no guard pages */
  *StackCommit = *StackReserve;
 
- UserStack->FixedStackBase = NULL;
- UserStack->FixedStackLimit =  NULL;
- UserStack->ExpandableStackBase = NULL;
- UserStack->ExpandableStackLimit = NULL; 
- UserStack->ExpandableStackBottom = NULL;
+ InitialTeb->StackBase = NULL;
+ InitialTeb->StackLimit =  NULL;
+ InitialTeb->StackCommit = NULL;
+ InitialTeb->StackCommitMax = NULL;
+ InitialTeb->StackReserved = NULL;
 
  /* FIXME: this code assumes a stack growing downwards */
  /* fixed stack */
@@ -257,13 +257,13 @@ static NTSTATUS LdrpCreateStack
  {
   DPRINT("Fixed stack\n");
 
-  UserStack->FixedStackLimit = NULL;
+  InitialTeb->StackLimit = NULL;
 
   /* allocate the stack */
   nErrCode = NtAllocateVirtualMemory
   (
    ProcessHandle,
-   &(UserStack->FixedStackLimit),
+   &(InitialTeb->StackLimit),
    0,
    StackReserve,
    MEM_RESERVE | MEM_COMMIT,
@@ -274,8 +274,8 @@ static NTSTATUS LdrpCreateStack
   if(!NT_SUCCESS(nErrCode)) return nErrCode;
 
   /* store the highest (first) address of the stack */
-  UserStack->FixedStackBase =
-   (PUCHAR)(UserStack->FixedStackLimit) + *StackReserve;
+  InitialTeb->StackBase =
+   (PUCHAR)(InitialTeb->StackLimit) + *StackReserve;
  }
  /* expandable stack */
  else
@@ -285,15 +285,15 @@ static NTSTATUS LdrpCreateStack
 
   DPRINT("Expandable stack\n");
 
-  UserStack->FixedStackLimit = NULL;
-  UserStack->FixedStackBase = NULL;
-  UserStack->ExpandableStackBottom = NULL;
+  InitialTeb->StackLimit = NULL;
+  InitialTeb->StackBase = NULL;
+  InitialTeb->StackReserved = NULL;
 
   /* reserve the stack */
   nErrCode = NtAllocateVirtualMemory
   (
    ProcessHandle,
-   &(UserStack->ExpandableStackBottom),
+   &(InitialTeb->StackReserved),
    0,
    StackReserve,
    MEM_RESERVE,
@@ -306,21 +306,21 @@ static NTSTATUS LdrpCreateStack
   DPRINT("Reserved %08X bytes\n", *StackReserve);
 
   /* expandable stack base - the highest address of the stack */
-  UserStack->ExpandableStackBase =
-   (PUCHAR)(UserStack->ExpandableStackBottom) + *StackReserve;
+  InitialTeb->StackCommit =
+   (PUCHAR)(InitialTeb->StackReserved) + *StackReserve;
 
   /* expandable stack limit - the lowest committed address of the stack */
-  UserStack->ExpandableStackLimit =
-   (PUCHAR)(UserStack->ExpandableStackBase) - *StackCommit;
+  InitialTeb->StackCommitMax =
+   (PUCHAR)(InitialTeb->StackCommit) - *StackCommit;
 
-  DPRINT("Stack base %p\n", UserStack->ExpandableStackBase);
-  DPRINT("Stack limit %p\n", UserStack->ExpandableStackLimit);
+  DPRINT("Stack commit     %p\n", InitialTeb->StackCommit);
+  DPRINT("Stack commit max %p\n", InitialTeb->StackCommitMax);
 
   /* commit as much stack as requested */
   nErrCode = NtAllocateVirtualMemory
   (
    ProcessHandle,
-   &(UserStack->ExpandableStackLimit),
+   &(InitialTeb->StackCommitMax),
    0,
    StackCommit,
    MEM_COMMIT,
@@ -330,11 +330,11 @@ static NTSTATUS LdrpCreateStack
   /* failure */
   if(!NT_SUCCESS(nErrCode)) goto l_Cleanup;
 
-  DPRINT("Stack limit %p\n", UserStack->ExpandableStackLimit);
+  DPRINT("Stack commit max %p\n", InitialTeb->StackCommitMax);
 
-  pGuardBase = (PUCHAR)(UserStack->ExpandableStackLimit) - PAGE_SIZE;
+  pGuardBase = (PUCHAR)(InitialTeb->StackCommitMax) - PAGE_SIZE;
 
-  DPRINT("Guard base %p\n", UserStack->ExpandableStackBase);
+  DPRINT("Guard base %p\n", InitialTeb->StackCommit);
 
   /* set up the guard page */
   nErrCode = NtAllocateVirtualMemory
@@ -350,17 +350,17 @@ static NTSTATUS LdrpCreateStack
   /* failure */
   if(!NT_SUCCESS(nErrCode)) goto l_Cleanup;
 
-  DPRINT("Guard base %p\n", UserStack->ExpandableStackBase);
+  DPRINT("Guard base %p\n", InitialTeb->StackCommit);
  }
 
  return STATUS_SUCCESS;
 
  /* cleanup in case of failure */
 l_Cleanup:
-  if(UserStack->FixedStackLimit)
-  pStackLowest = UserStack->FixedStackLimit;
- else if(UserStack->ExpandableStackBottom)
-  pStackLowest = UserStack->ExpandableStackBottom;
+  if(InitialTeb->StackLimit)
+  pStackLowest = InitialTeb->StackLimit;
+ else if(InitialTeb->StackReserved)
+  pStackLowest = InitialTeb->StackReserved;
 
  /* free the stack, if it was allocated */
  if(pStackLowest != NULL)
@@ -378,7 +378,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
   UNICODE_STRING ImagePath;
   HANDLE SectionHandle;
   CONTEXT Context;
-  USER_STACK UserStack;
+  INITIAL_TEB InitialTeb;
   ULONG_PTR nStackReserve = 0;
   ULONG_PTR nStackCommit = 0;
   PVOID pStackLowest;
@@ -468,7 +468,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
   Status = LdrpCreateStack
   (
    *ProcessHandle,
-   &UserStack,
+   &InitialTeb,
    &nStackReserve,
    &nStackCommit
   );
@@ -480,15 +480,15 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
       return(Status);
     }
 
-  if(UserStack.FixedStackBase && UserStack.FixedStackLimit)
+  if(InitialTeb.StackBase && InitialTeb.StackLimit)
   {
-   pStackBase = UserStack.FixedStackBase;
-   pStackLowest = UserStack.FixedStackLimit;
+   pStackBase = InitialTeb.StackBase;
+   pStackLowest = InitialTeb.StackLimit;
   }
   else
   {
-   pStackBase = UserStack.ExpandableStackBase;
-   pStackLowest = UserStack.ExpandableStackBottom;
+   pStackBase = InitialTeb.StackCommit;
+   pStackLowest = InitialTeb.StackReserved;
   }
 
   DPRINT("pStackBase = %p\n", pStackBase);
@@ -549,7 +549,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 			  *ProcessHandle,
 			  NULL,
 			  &Context,
-			  &UserStack,
+			  &InitialTeb,
 			  FALSE);
   if (!NT_SUCCESS(Status))
     {

@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.15 2004/08/05 18:17:36 ion Exp $
+/* $Id: rtltypes.h,v 1.16 2004/10/24 20:37:26 weiden Exp $
  * 
  */
 
@@ -189,14 +189,14 @@ typedef struct _RANGE_LIST_ITERATOR
 } RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
 
-typedef struct _USER_STACK
+typedef struct _INITIAL_TEB
 {
-  PVOID FixedStackBase;
-  PVOID FixedStackLimit;
-  PVOID ExpandableStackBase;
-  PVOID ExpandableStackLimit;
-  PVOID ExpandableStackBottom;
-} USER_STACK, *PUSER_STACK;
+  PVOID StackBase;
+  PVOID StackLimit;
+  PVOID StackCommit;
+  PVOID StackCommitMax;
+  PVOID StackReserved;
+} INITIAL_TEB, *PINITIAL_TEB;
 
 #else /* __USE_W32API */
 

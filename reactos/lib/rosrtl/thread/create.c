@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.6 2004/03/02 17:16:04 navaraf Exp $
+/* $Id: create.c,v 1.7 2004/10/24 20:37:26 weiden Exp $
 */
 /*
 */
@@ -28,7 +28,7 @@ RtlRosCreateUserThread
  IN ULONG_PTR * Parameters
 )
 {
- USER_STACK usUserStack;
+ INITIAL_TEB usUserInitialTeb;
  CONTEXT ctxInitialContext;
  NTSTATUS nErrCode;
  HANDLE hThread;
@@ -41,7 +41,7 @@ RtlRosCreateUserThread
  nErrCode = RtlRosCreateStack
  (
   ProcessHandle,
-  &usUserStack,
+  &usUserInitialTeb,
   StackZeroBits,
   StackReserve,
   StackCommit
@@ -56,7 +56,7 @@ RtlRosCreateUserThread
   ProcessHandle,
   &ctxInitialContext,
   StartAddress,
-  &usUserStack,
+  &usUserInitialTeb,
   ParameterCount,
   Parameters
  );
@@ -73,7 +73,7 @@ RtlRosCreateUserThread
   ProcessHandle,
   ClientId,
   &ctxInitialContext,
-  &usUserStack,
+  &usUserInitialTeb,
   CreateSuspended
  );
 
@@ -88,7 +88,7 @@ l_Fail:
  ASSERT(!NT_SUCCESS(nErrCode));
 
  /* deallocate the stack */
- RtlRosDeleteStack(ProcessHandle, &usUserStack);
+ RtlRosDeleteStack(ProcessHandle, &usUserInitialTeb);
  
  return nErrCode;
 }

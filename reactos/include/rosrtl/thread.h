@@ -1,4 +1,4 @@
-/* $Id: thread.h,v 1.4 2003/12/30 05:10:31 hyperion Exp $
+/* $Id: thread.h,v 1.5 2004/10/24 20:37:26 weiden Exp $
  */
 
 #ifdef __cplusplus
@@ -44,17 +44,17 @@ __declspec(noreturn) VOID NTAPI RtlRosExitUserThread
 NTSTATUS NTAPI RtlRosInitializeContext
 (
  IN HANDLE ProcessHandle,
- OUT PCONTEXT Context,
- IN PVOID StartAddress,
- IN PUSER_STACK UserStack,
+ OUT PCONTEXT ThreadContext,
+ IN PVOID ThreadStartAddress,
+ IN PINITIAL_TEB InitialTeb,
  IN ULONG ParameterCount,
- IN ULONG_PTR * Parameters
+ IN ULONG_PTR *Parameters
 );
 
 NTSTATUS NTAPI RtlRosCreateStack
 (
  IN HANDLE ProcessHandle,
- OUT PUSER_STACK UserStack,
+ OUT PINITIAL_TEB InitialTeb,
  IN LONG StackZeroBits,
  IN OUT PULONG StackReserve OPTIONAL,
  IN OUT PULONG StackCommit OPTIONAL
@@ -63,7 +63,7 @@ NTSTATUS NTAPI RtlRosCreateStack
 NTSTATUS NTAPI RtlRosDeleteStack
 (
  IN HANDLE ProcessHandle,
- IN PUSER_STACK UserStack
+ IN PINITIAL_TEB InitialTeb
 );
 
 NTSTATUS NTAPI RtlRosFreeUserThreadStack
@@ -83,7 +83,7 @@ NTSTATUS NTAPI RtlRosSwitchStackForExit
 /* Private functions - for ROSRTL internal use only */
 NTSTATUS NTAPI RtlpRosGetStackLimits
 (
- IN PUSER_STACK UserStack,
+ IN PINITIAL_TEB InitialTeb,
  OUT PVOID * StackBase,
  OUT PVOID * StackLimit
 );

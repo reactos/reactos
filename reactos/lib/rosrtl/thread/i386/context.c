@@ -1,4 +1,4 @@
-/* $Id: context.c,v 1.2 2003/08/07 03:35:06 royce Exp $
+/* $Id: context.c,v 1.3 2004/10/24 20:37:26 weiden Exp $
 */
 /*
 */
@@ -19,7 +19,7 @@ RtlRosInitializeContext
  IN HANDLE ProcessHandle,
  OUT PCONTEXT Context,
  IN PVOID StartAddress,
- IN PUSER_STACK UserStack,
+ IN PINITIAL_TEB InitialTeb,
  IN ULONG ParameterCount,
  IN ULONG_PTR * Parameters
 )
@@ -34,7 +34,7 @@ RtlRosInitializeContext
 
  /* Intel x86: linear top-down stack, all parameters passed on the stack */
  /* get the stack base and limit */
- nErrCode = RtlpRosGetStackLimits(UserStack, &pStackBase, &pStackLimit);
+ nErrCode = RtlpRosGetStackLimits(InitialTeb, &pStackBase, &pStackLimit);
 
  /* failure */
  if(!NT_SUCCESS(nErrCode)) return nErrCode;

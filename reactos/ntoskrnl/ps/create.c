@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.83 2004/10/22 20:45:46 ekohl Exp $
+/* $Id: create.c,v 1.84 2004/10/24 20:37:27 weiden Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -502,7 +502,7 @@ static NTSTATUS
 PsCreateTeb(HANDLE ProcessHandle,
 	    PTEB *TebPtr,
 	    PETHREAD Thread,
-	    PUSER_STACK UserStack)
+	    PINITIAL_TEB InitialTeb)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -584,22 +584,22 @@ PsCreateTeb(HANDLE ProcessHandle,
      }
    DPRINT("Teb.Peb %x\n", Teb.Peb);
    
-   /* store stack information from UserStack */
-   if(UserStack != NULL)
+   /* store stack information from InitialTeb */
+   if(InitialTeb != NULL)
    {
     /* fixed-size stack */
-    if(UserStack->FixedStackBase && UserStack->FixedStackLimit)
+    if(InitialTeb->StackBase && InitialTeb->StackLimit)
     {
-     Teb.Tib.StackBase = UserStack->FixedStackBase;
-     Teb.Tib.StackLimit = UserStack->FixedStackLimit;
-     Teb.DeallocationStack = UserStack->FixedStackLimit;
+     Teb.Tib.StackBase = InitialTeb->StackBase;
+     Teb.Tib.StackLimit = InitialTeb->StackLimit;
+     Teb.DeallocationStack = InitialTeb->StackLimit;
     }
     /* expandable stack */
     else
     {
-     Teb.Tib.StackBase = UserStack->ExpandableStackBase;
-     Teb.Tib.StackLimit = UserStack->ExpandableStackLimit;
-     Teb.DeallocationStack = UserStack->ExpandableStackBottom;
+     Teb.Tib.StackBase = InitialTeb->StackCommit;
+     Teb.Tib.StackLimit = InitialTeb->StackCommitMax;
+     Teb.DeallocationStack = InitialTeb->StackReserved;
     }
    }
 
@@ -664,14 +664,14 @@ LdrInitApcKernelRoutine(PKAPC Apc,
 
 
 NTSTATUS STDCALL
-NtCreateThread(PHANDLE ThreadHandle,
-	       ACCESS_MASK DesiredAccess,
-	       POBJECT_ATTRIBUTES ObjectAttributes,
-	       HANDLE ProcessHandle,
-	       PCLIENT_ID Client,
-	       PCONTEXT ThreadContext,
-	       PUSER_STACK UserStack,
-	       BOOLEAN CreateSuspended)
+NtCreateThread(OUT PHANDLE ThreadHandle,
+	       IN ACCESS_MASK DesiredAccess,
+	       IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+	       IN HANDLE ProcessHandle,
+	       OUT PCLIENT_ID Client,
+	       IN PCONTEXT ThreadContext,
+	       IN PINITIAL_TEB InitialTeb,
+	       IN BOOLEAN CreateSuspended)
 {
   PEPROCESS Process;
   PETHREAD Thread;
@@ -716,7 +716,7 @@ NtCreateThread(PHANDLE ThreadHandle,
   Status = PsCreateTeb(ProcessHandle,
 		       &TebBase,
 		       Thread,
-		       UserStack);
+		       InitialTeb);
   if (!NT_SUCCESS(Status))
     {
       return(Status);

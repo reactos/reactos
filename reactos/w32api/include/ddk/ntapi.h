@@ -1163,26 +1163,27 @@ ZwAreMappedFilesTheSame(
 
 /* Threads */
 
-typedef struct _USER_STACK {
-	PVOID  FixedStackBase;
-	PVOID  FixedStackLimit;
-	PVOID  ExpandableStackBase;
-	PVOID  ExpandableStackLimit;
-	PVOID  ExpandableStackBottom;
-} USER_STACK, *PUSER_STACK;
+typedef struct _INITIAL_TEB
+{
+	PVOID StackBase;
+	PVOID StackLimit;
+	PVOID StackCommit;
+	PVOID StackCommitMax;
+	PVOID StackReserved;
+} INITIAL_TEB, *PINITIAL_TEB;
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwCreateThread(
-	OUT PHANDLE  ThreadHandle,
-	IN ACCESS_MASK  DesiredAccess,
-	IN POBJECT_ATTRIBUTES  ObjectAttributes,
-	IN HANDLE  ProcessHandle,
-	OUT PCLIENT_ID  ClientId,
-	IN PCONTEXT  ThreadContext,
-	IN PUSER_STACK  UserStack,
-	IN BOOLEAN  CreateSuspended);
+  OUT PHANDLE ThreadHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN HANDLE ProcessHandle,
+  OUT PCLIENT_ID ClientId,
+  IN PCONTEXT ThreadContext,
+  IN PINITIAL_TEB InitialTeb,
+  IN BOOLEAN CreateSuspended);
 
 NTOSAPI
 NTSTATUS

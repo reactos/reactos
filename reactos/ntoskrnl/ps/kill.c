@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.79 2004/10/03 21:03:03 gvg Exp $
+/* $Id: kill.c,v 1.80 2004/10/24 20:37:27 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -305,7 +305,7 @@ PiTerminateProcess(PEPROCESS Process,
 }
 
 NTSTATUS STDCALL
-NtTerminateProcess(IN	HANDLE		ProcessHandle,
+NtTerminateProcess(IN	HANDLE		ProcessHandle  OPTIONAL,
 		   IN	NTSTATUS	ExitStatus)
 {
    NTSTATUS Status;
@@ -417,7 +417,7 @@ NtCallTerminatePorts(PETHREAD Thread)
 }
 
 NTSTATUS STDCALL
-NtRegisterThreadTerminatePort(HANDLE TerminationPortHandle)
+NtRegisterThreadTerminatePort(HANDLE PortHandle)
 {
    NTSTATUS Status;
    PEPORT_TERMINATION_REQUEST Request;
@@ -425,7 +425,7 @@ NtRegisterThreadTerminatePort(HANDLE TerminationPortHandle)
    KIRQL oldIrql;
    PETHREAD Thread;
    
-   Status = ObReferenceObjectByHandle(TerminationPortHandle,
+   Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
 				      ExPortType,
 				      KeGetCurrentThread()->PreviousMode,

@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.11 2004/09/16 11:45:06 ekohl Exp $
+/* $Id: locale.c,v 1.12 2004/10/24 20:37:27 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -198,22 +198,22 @@ PiInitThreadLocale(VOID)
  * FUNCTION:
  *    Returns the default locale.
  * ARGUMENTS:
- *    ThreadOrSystem = If TRUE then the locale for this thread is returned,
- *                     otherwise the locale for the system is returned.
+ *    UserProfile = If TRUE then the locale for this thread is returned,
+ *                  otherwise the locale for the system is returned.
  *    DefaultLocaleId = Points to a variable that receives the locale id.
  * Returns:
  *    Status.
  */
 NTSTATUS STDCALL
-NtQueryDefaultLocale(IN BOOLEAN ThreadOrSystem,
+NtQueryDefaultLocale(IN BOOLEAN UserProfile,
 		     OUT PLCID DefaultLocaleId)
 {
   if (DefaultLocaleId == NULL)
     return STATUS_UNSUCCESSFUL;
 
-  if (ThreadOrSystem == TRUE)
+  if (UserProfile)
     {
-      if (PsDefaultThreadLocaleInitialized == FALSE)
+      if (!PsDefaultThreadLocaleInitialized)
 	{
 	  PiInitThreadLocale();
 	}
@@ -242,7 +242,7 @@ NtQueryDefaultLocale(IN BOOLEAN ThreadOrSystem,
  *    Status.
  */
 NTSTATUS STDCALL
-NtSetDefaultLocale(IN BOOLEAN ThreadOrSystem,
+NtSetDefaultLocale(IN BOOLEAN UserProfile,
 		   IN LCID DefaultLocaleId)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -254,7 +254,7 @@ NtSetDefaultLocale(IN BOOLEAN ThreadOrSystem,
    HANDLE UserKey = NULL;
    NTSTATUS Status;
 
-   if (ThreadOrSystem == TRUE)
+   if (UserProfile)
      {
 	/* thread locale */
 	Status = RtlOpenCurrentUser(KEY_WRITE,
@@ -315,7 +315,7 @@ NtSetDefaultLocale(IN BOOLEAN ThreadOrSystem,
 	return(Status);
      }
 
-   if (ThreadOrSystem == TRUE)
+   if (UserProfile)
      {
 	/* set thread locale */
 	DPRINT("Thread locale: %08lu\n", DefaultLocaleId);

@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.10 2004/10/22 20:43:58 ekohl Exp $
+/* $Id: symlink.c,v 1.11 2004/10/24 20:37:26 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -202,10 +202,10 @@ ObInitSymbolicLinkImplementation (VOID)
  *
  */
 NTSTATUS STDCALL
-NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
+NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
 			   IN ACCESS_MASK DesiredAccess,
 			   IN POBJECT_ATTRIBUTES ObjectAttributes,
-			   IN PUNICODE_STRING DeviceName)
+			   IN PUNICODE_STRING LinkTarget)
 {
   PSYMLINK_OBJECT SymbolicLink;
   NTSTATUS Status;
@@ -237,7 +237,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 			   DesiredAccess,
 			   0,
 			   NULL,
-			   SymbolicLinkHandle);
+			   LinkHandle);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject (SymbolicLink);
@@ -246,13 +246,13 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 
   SymbolicLink->TargetName.Length = 0;
   SymbolicLink->TargetName.MaximumLength = 
-    ((wcslen(DeviceName->Buffer) + 1) * sizeof(WCHAR));
+    ((wcslen(LinkTarget->Buffer) + 1) * sizeof(WCHAR));
   SymbolicLink->TargetName.Buffer = 
     ExAllocatePoolWithTag(NonPagedPool,
 			  SymbolicLink->TargetName.MaximumLength,
 			  TAG_SYMLINK_TARGET);
   RtlCopyUnicodeString(&SymbolicLink->TargetName,
-		       DeviceName);
+		       LinkTarget);
 
   DPRINT("DeviceName %S\n", SymbolicLink->TargetName.Buffer);
 
@@ -311,8 +311,8 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
  */
 NTSTATUS STDCALL
 NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
-			  IN OUT PUNICODE_STRING LinkTarget,
-			  OUT PULONG ReturnedLength OPTIONAL)
+			  OUT PUNICODE_STRING LinkTarget,
+			  OUT PULONG ResultLength  OPTIONAL)
 {
   PSYMLINK_OBJECT SymlinkObject;
   NTSTATUS Status;
@@ -328,9 +328,9 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
       return Status;
     }
 
-  if (ReturnedLength != NULL)
+  if (ResultLength != NULL)
     {
-      *ReturnedLength = (ULONG)SymlinkObject->TargetName.Length + sizeof(WCHAR);
+      *ResultLength = (ULONG)SymlinkObject->TargetName.Length + sizeof(WCHAR);
     }
 
   if (LinkTarget->MaximumLength >= SymlinkObject->TargetName.Length + sizeof(WCHAR))

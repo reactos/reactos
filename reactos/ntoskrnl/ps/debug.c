@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.13 2004/08/15 16:39:10 chorns Exp $
+/* $Id: debug.c,v 1.14 2004/10/24 20:37:27 weiden Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
@@ -185,7 +185,7 @@ KeGetContextKernelRoutine(PKAPC Apc,
 
 NTSTATUS STDCALL
 NtGetContextThread(IN HANDLE ThreadHandle,
-		   OUT PCONTEXT UnsafeContext)
+		   OUT PCONTEXT ThreadContext)
 {
   PETHREAD Thread;
   NTSTATUS Status;
@@ -194,7 +194,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
   KEVENT Event;
   NTSTATUS AStatus;
 
-  Status = MmCopyFromCaller(&Context, UnsafeContext, sizeof(CONTEXT));
+  Status = MmCopyFromCaller(&Context, ThreadContext, sizeof(CONTEXT));
   if (! NT_SUCCESS(Status))
     {
       return Status;
@@ -256,7 +256,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
     }
   if (NT_SUCCESS(Status))
     {
-      Status = MmCopyToCaller(UnsafeContext, &Context, sizeof(Context));
+      Status = MmCopyToCaller(ThreadContext, &Context, sizeof(Context));
     }
 
   ObDereferenceObject(Thread);
@@ -290,7 +290,7 @@ KeSetContextKernelRoutine(PKAPC Apc,
 
 NTSTATUS STDCALL
 NtSetContextThread(IN HANDLE ThreadHandle,
-		   IN PCONTEXT UnsafeContext)
+		   IN PCONTEXT ThreadContext)
 {
   PETHREAD Thread;
   NTSTATUS Status;
@@ -299,7 +299,7 @@ NtSetContextThread(IN HANDLE ThreadHandle,
   NTSTATUS AStatus;
   CONTEXT Context;
 
-  Status = MmCopyFromCaller(&Context, UnsafeContext, sizeof(CONTEXT));
+  Status = MmCopyFromCaller(&Context, ThreadContext, sizeof(CONTEXT));
   if (! NT_SUCCESS(Status))
     {
       return Status;

@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.29 2004/09/28 15:02:29 weiden Exp $
+/* $Id: tinfo.c,v 1.30 2004/10/24 20:37:27 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -222,7 +222,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 			  IN	THREADINFOCLASS	ThreadInformationClass,
 			  OUT	PVOID		ThreadInformation,
 			  IN	ULONG		ThreadInformationLength,
-			  OUT	PULONG		ReturnLength)
+			  OUT	PULONG		ReturnLength  OPTIONAL)
 {
    PETHREAD Thread;
    NTSTATUS Status;
