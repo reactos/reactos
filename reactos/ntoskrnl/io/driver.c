@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.40 2004/03/28 09:48:13 navaraf Exp $
+/* $Id: driver.c,v 1.41 2004/03/28 12:03:25 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -370,6 +370,8 @@ IopLoadServiceModule(
    UNICODE_STRING ServiceImagePath;
    NTSTATUS Status;
 
+   DPRINT("IopLoadServiceModule(%wZ, %x)\n", ServiceName, ModuleObject);
+
    /*
     * Get information about the service.
     */
@@ -417,6 +419,8 @@ IopLoadServiceModule(
 
    if (*ModuleObject == NULL)
    {
+      Status = STATUS_UNSUCCESSFUL;
+
       /*
        * Special case for boot modules that were loaded by boot loader.
        */
@@ -428,8 +432,6 @@ IopLoadServiceModule(
          PCHAR ModuleName;
          PLOADER_MODULE KeLoaderModules =
             (PLOADER_MODULE)KeLoaderBlock.ModsAddr;
-
-         Status = STATUS_UNSUCCESSFUL;
 
          /*
           * FIXME:
@@ -444,6 +446,8 @@ IopLoadServiceModule(
             ModuleName = (PCHAR)KeLoaderModules[i].String;
             if (!strcmp(ModuleName, SearchName))
             {
+               DPRINT("Initializing boot module\n");
+
                /* Tell, that the module is already loaded */
                KeLoaderModules[i].Reserved = 1;
 
