@@ -160,7 +160,7 @@ static HRESULT WINAPI IStream_fnSeek(IStream *iface, LARGE_INTEGER dlibMove,
   ICOM_THIS(ISHFileStream, iface);
   DWORD dwPos;
 
-  TRACE("(%p,%ld,%ld,%p)\n", This, dlibMove.s.LowPart, dwOrigin, pNewPos);
+  TRACE("(%p,%ld,%ld,%p)\n", This, dlibMove.u.LowPart, dwOrigin, pNewPos);
 
   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
   dwPos = SetFilePointer(This->hFile, dlibMove.u.LowPart, NULL, dwOrigin);
@@ -180,7 +180,7 @@ static HRESULT WINAPI IStream_fnSetSize(IStream *iface, ULARGE_INTEGER libNewSiz
 {
   ICOM_THIS(ISHFileStream, iface);
 
-  TRACE("(%p,%ld)\n", This, libNewSize.s.LowPart);
+  TRACE("(%p,%ld)\n", This, libNewSize.u.LowPart);
   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
   return E_NOTIMPL;
 }
@@ -196,7 +196,7 @@ static HRESULT WINAPI IStream_fnCopyTo(IStream *iface, IStream* pstm, ULARGE_INT
   ULONGLONG ulSize;
   HRESULT hRet = S_OK;
 
-  TRACE("(%p,%p,%ld,%p,%p)\n", This, pstm, cb.s.LowPart, pcbRead, pcbWritten);
+  TRACE("(%p,%p,%ld,%p,%p)\n", This, pstm, cb.u.LowPart, pcbRead, pcbWritten);
 
   if (pcbRead)
     pcbRead->QuadPart = 0;
@@ -265,7 +265,7 @@ static HRESULT WINAPI IStream_fnLockUnlockRegion(IStream *iface, ULARGE_INTEGER 
                                                  ULARGE_INTEGER cb, DWORD dwLockType)
 {
   ICOM_THIS(ISHFileStream, iface);
-  TRACE("(%p,%ld,%ld,%ld)\n", This, libOffset.s.LowPart, cb.s.LowPart, dwLockType);
+  TRACE("(%p,%ld,%ld,%ld)\n", This, libOffset.u.LowPart, cb.u.LowPart, dwLockType);
   return E_NOTIMPL;
 }
 

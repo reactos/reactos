@@ -15,6 +15,9 @@
    SHQueryInfoKeyA/W
    SHEnumKeyExA/W
    SHEnumValueA/W
+   Following functions are most likely documented wrong in MSDN (and in w32api), they
+   pop only 12 bytes from the stack on return:
+   MLLoadLibraryA/W
  */
 
 #if __GNUC__ >=3
@@ -428,8 +431,8 @@ WINSHLWAPI int __cdecl wnsprintfW(LPWSTR,int,LPCWSTR,...);
 WINSHLWAPI int WINAPI wvnsprintfA(LPSTR,int,LPCSTR,va_list);
 WINSHLWAPI int WINAPI wvnsprintfW(LPWSTR,int,LPCWSTR,va_list);
 
-HINSTANCE WINAPI MLLoadLibraryA(LPCSTR,HANDLE,DWORD,LPCSTR,BOOL);
-HINSTANCE WINAPI MLLoadLibraryW(LPCWSTR,HANDLE,DWORD,LPCWSTR,BOOL);
+HINSTANCE WINAPI MLLoadLibraryA(LPCSTR,HMODULE,DWORD);
+HINSTANCE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
 
 HRESULT WINAPI DllInstall(BOOL,LPCWSTR);
 

@@ -1057,7 +1057,7 @@ BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen)
 {
   WCHAR buff[2084];
 
-  TRACE("(%p,%ld)", lpszDest, dwDestLen);
+  TRACE("(%p,%ld)\n", lpszDest, dwDestLen);
 
   if (lpszDest && SHAboutInfoW(buff, dwDestLen))
   {
@@ -1103,7 +1103,7 @@ BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen)
   HKEY hReg;
   DWORD dwType, dwLen;
 
-  TRACE("(%p,%ld)", lpszDest, dwDestLen);
+  TRACE("(%p,%ld)\n", lpszDest, dwDestLen);
 
   if (!lpszDest)
     return FALSE;
@@ -3414,7 +3414,7 @@ LANGID WINAPI MLGetUILanguage()
  *  Success: A handle to the loaded module
  *  Failure: A NULL handle.
  */
-HMODULE WINAPI MLLoadLibraryA(LPCSTR new_mod, HANDLE inst_hwnd, DWORD dwFlags, LPCSTR component, BOOL cross_code_page)
+HMODULE WINAPI MLLoadLibraryA(LPCSTR new_mod, HMODULE inst_hwnd, DWORD dwFlags)
 {
   /* FIXME: Native appears to do DPA_Create and a DPA_InsertPtr for
    *        each call here.
@@ -3453,7 +3453,7 @@ HMODULE WINAPI MLLoadLibraryA(LPCSTR new_mod, HANDLE inst_hwnd, DWORD dwFlags, L
  *
  * Unicode version of MLLoadLibraryA.
  */
-HMODULE WINAPI MLLoadLibraryW(LPCWSTR new_mod, HANDLE inst_hwnd, DWORD dwFlags, LPCWSTR component, BOOL cross_code_page)
+HMODULE WINAPI MLLoadLibraryW(LPCWSTR new_mod, HMODULE inst_hwnd, DWORD dwFlags)
 {
     WCHAR mod_path[2*MAX_PATH];
     LPWSTR ptr;

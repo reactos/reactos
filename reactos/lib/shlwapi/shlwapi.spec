@@ -374,8 +374,8 @@
 374 stub -noname SHCheckDiskForMediaA
 375 stub -noname SHCheckDiskForMediaW
 376 stdcall -noname MLGetUILanguage()  # kernel32.GetUserDefaultUILanguage
-377 stdcall MLLoadLibraryA(str long long long long)
-378 stdcall MLLoadLibraryW(wstr long long long long)
+377 stdcall MLLoadLibraryA(str long long)
+378 stdcall MLLoadLibraryW(wstr long long)
 379 stub -noname Shell_GetCachedImageIndexWrapW
 380 stub -noname Shell_GetCachedImageIndexWrapA
 381 stub -noname AssocCopyVerbs

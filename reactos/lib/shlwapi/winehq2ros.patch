@@ -1,69 +1,10 @@
-Index: istream.c
-===================================================================
-RCS file: /home/wine/wine/dlls/shlwapi/istream.c,v
-retrieving revision 1.9
-diff -u -r1.9 istream.c
---- istream.c	24 Sep 2003 05:14:39 -0000	1.9
-+++ istream.c	22 Jan 2004 23:34:22 -0000
-@@ -163,12 +163,12 @@
-   TRACE("(%p,%ld,%ld,%p)\n", This, dlibMove.s.LowPart, dwOrigin, pNewPos);
- 
-   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
--  dwPos = SetFilePointer(This->hFile, dlibMove.s.LowPart, NULL, dwOrigin);
-+  dwPos = SetFilePointer(This->hFile, dlibMove.u.LowPart, NULL, dwOrigin);
- 
-   if (pNewPos)
-   {
--    pNewPos->s.HighPart = 0;
--    pNewPos->s.LowPart = dwPos;
-+    pNewPos->u.HighPart = 0;
-+    pNewPos->u.LowPart = dwPos;
-   }
-   return S_OK;
- }
-@@ -293,8 +293,8 @@
-     else
-       lpStat->pwcsName = StrDupW(This->lpszPath);
-     lpStat->type = This->type;
--    lpStat->cbSize.s.LowPart = fi.nFileSizeLow;
--    lpStat->cbSize.s.HighPart = fi.nFileSizeHigh;
-+    lpStat->cbSize.u.LowPart = fi.nFileSizeLow;
-+    lpStat->cbSize.u.HighPart = fi.nFileSizeHigh;
-     lpStat->mtime = fi.ftLastWriteTime;
-     lpStat->ctime = fi.ftCreationTime;
-     lpStat->atime = fi.ftLastAccessTime;
-Index: ordinal.c
-===================================================================
-RCS file: /home/wine/wine/dlls/shlwapi/ordinal.c,v
-retrieving revision 1.75
-diff -u -r1.75 ordinal.c
---- ordinal.c	1 Oct 2003 03:10:42 -0000	1.75
-+++ ordinal.c	22 Jan 2004 23:34:24 -0000
-@@ -3414,7 +3414,7 @@
-  *  Success: A handle to the loaded module
-  *  Failure: A NULL handle.
-  */
--HMODULE WINAPI MLLoadLibraryA(LPCSTR new_mod, HMODULE inst_hwnd, DWORD dwFlags)
-+HMODULE WINAPI MLLoadLibraryA(LPCSTR new_mod, HANDLE inst_hwnd, DWORD dwFlags, LPCSTR component, BOOL cross_code_page)
- {
-   /* FIXME: Native appears to do DPA_Create and a DPA_InsertPtr for
-    *        each call here.
-@@ -3453,7 +3453,7 @@
-  *
-  * Unicode version of MLLoadLibraryA.
-  */
--HMODULE WINAPI MLLoadLibraryW(LPCWSTR new_mod, HMODULE inst_hwnd, DWORD dwFlags)
-+HMODULE WINAPI MLLoadLibraryW(LPCWSTR new_mod, HANDLE inst_hwnd, DWORD dwFlags, LPCWSTR component, BOOL cross_code_page)
- {
-     WCHAR mod_path[2*MAX_PATH];
-     LPWSTR ptr;
 Index: path.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/path.c,v
-retrieving revision 1.40
-diff -u -r1.40 path.c
---- path.c	19 Jan 2004 21:46:14 -0000	1.40
-+++ path.c	22 Jan 2004 23:34:26 -0000
+retrieving revision 1.41
+diff -u -r1.41 path.c
+--- path.c	23 Jan 2004 22:45:25 -0000	1.41
++++ path.c	28 Jan 2004 22:02:59 -0000
 @@ -32,6 +32,7 @@
  #include "wingdi.h"
  #include "winuser.h"
@@ -72,90 +13,13 @@ diff -u -r1.40 path.c
  #define NO_SHLWAPI_STREAM
  #include "shlwapi.h"
  #include "wine/debug.h"
-@@ -3268,7 +3269,7 @@
-   if (lpszUrl[1] != ':' && lpszUrl[1] != '|' && isalphaW(*lpszUrl))
-     return E_INVALIDARG;
- 
--  hr = UrlUnescapeW(lpszUrl, lpszPath, pcchPath, dwFlags);
-+  hr = UrlUnescapeW((LPWSTR) lpszUrl, lpszPath, pcchPath, dwFlags);
-   if (lpszPath[1] == '|')
-     lpszPath[1] = ':';
- 
-@@ -3745,7 +3746,7 @@
-  *  The match is made against the end of the suffix string, so for example:
-  *  lpszSuffix="fooBAR" matches "BAR", but lpszSuffix="fooBARfoo" does not.
-  */
--int WINAPI PathFindSuffixArrayA(LPCSTR lpszSuffix, LPCSTR *lppszArray, int dwCount)
-+LPCSTR WINAPI PathFindSuffixArrayA(LPCSTR lpszSuffix, LPCSTR *lppszArray, int dwCount)
- {
-   size_t dwLen;
-   int dwRet = 0;
-@@ -3762,13 +3763,13 @@
-       if (dwCompareLen < dwLen)
-       {
-         if (!strcmp(lpszSuffix + dwLen - dwCompareLen, *lppszArray))
--          return dwRet; /* Found */
-+          return *lppszArray; /* Found */
-       }
-       dwRet++;
-       lppszArray++;
-     }
-   }
--  return 0;
-+  return NULL;
- }
- 
- /*************************************************************************
-@@ -3776,7 +3777,7 @@
-  *
-  * See PathFindSuffixArrayA.
-  */
--int WINAPI PathFindSuffixArrayW(LPCWSTR lpszSuffix, LPCWSTR *lppszArray, int dwCount)
-+LPCWSTR WINAPI PathFindSuffixArrayW(LPCWSTR lpszSuffix, LPCWSTR *lppszArray, int dwCount)
- {
-   size_t dwLen;
-   int dwRet = 0;
-@@ -3793,13 +3794,13 @@
-       if (dwCompareLen < dwLen)
-       {
-         if (!strcmpW(lpszSuffix + dwLen - dwCompareLen, *lppszArray))
--          return dwRet; /* Found */
-+          return *lppszArray; /* Found */
-       }
-       dwRet++;
-       lppszArray++;
-     }
-   }
--  return 0;
-+  return NULL;
- }
- 
- /*************************************************************************
-Index: shlwapi.spec
-===================================================================
-RCS file: /home/wine/wine/dlls/shlwapi/shlwapi.spec,v
-retrieving revision 1.83
-diff -u -r1.83 shlwapi.spec
---- shlwapi.spec	19 Jan 2004 21:46:14 -0000	1.83
-+++ shlwapi.spec	22 Jan 2004 23:34:28 -0000
-@@ -374,8 +374,8 @@
- 374 stub -noname SHCheckDiskForMediaA
- 375 stub -noname SHCheckDiskForMediaW
- 376 stdcall -noname MLGetUILanguage()  # kernel32.GetUserDefaultUILanguage
--377 stdcall MLLoadLibraryA(str long long)
--378 stdcall MLLoadLibraryW(wstr long long)
-+377 stdcall MLLoadLibraryA(str long long long long)
-+378 stdcall MLLoadLibraryW(wstr long long long long)
- 379 stub -noname Shell_GetCachedImageIndexWrapW
- 380 stub -noname Shell_GetCachedImageIndexWrapA
- 381 stub -noname AssocCopyVerbs
 Index: string.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/string.c,v
-retrieving revision 1.39
-diff -u -r1.39 string.c
---- string.c	22 Nov 2003 00:00:53 -0000	1.39
-+++ string.c	22 Jan 2004 23:34:30 -0000
+retrieving revision 1.40
+diff -u -r1.40 string.c
+--- string.c	23 Jan 2004 22:45:25 -0000	1.40
++++ string.c	28 Jan 2004 22:03:00 -0000
 @@ -556,7 +556,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
@@ -174,143 +38,21 @@ diff -u -r1.39 string.c
  }
  
  /*************************************************************************
-@@ -1343,7 +1343,7 @@
-  *           CoTaskMemFree() and its type set to STRRET_CSTRA.
-  *  Failure: E_FAIL, if any parameters are invalid.
-  */
--HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, DWORD len)
-+HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, UINT len)
- {
- 	/* NOTE:
- 	 *  This routine is identical to that in dlls/shell32/shellstring.c.
-@@ -1392,7 +1392,7 @@
-  *
-  * See StrRetToBufA.
-  */
--HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, DWORD len)
-+HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, UINT len)
- {
- 	TRACE("dest=%p len=0x%lx strret=%p pidl=%p stub\n",dest,len,src,pidl);
- 
 Index: url.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/url.c,v
-retrieving revision 1.26
-diff -u -r1.26 url.c
---- url.c	1 Oct 2003 03:10:42 -0000	1.26
-+++ url.c	22 Jan 2004 23:34:31 -0000
-@@ -34,9 +34,9 @@
- #include "shlwapi.h"
- #include "wine/debug.h"
- 
--HMODULE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
--BOOL    WINAPI MLFreeLibrary(HMODULE);
--HRESULT WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
-+HINSTANCE WINAPI MLLoadLibraryW(LPCWSTR,HANDLE,DWORD,LPCWSTR,BOOL);
-+BOOL      WINAPI MLFreeLibrary(HMODULE);
-+HRESULT   WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
- 
- WINE_DEFAULT_DEBUG_CHANNEL(shell);
- 
-@@ -1130,7 +1130,7 @@
-  *  the first occurrence of either a '?' or '#' character.
-  */
- HRESULT WINAPI UrlUnescapeA(
--	LPCSTR pszUrl,
-+	LPSTR pszUrl,
- 	LPSTR pszUnescaped,
- 	LPDWORD pcchUnescaped,
- 	DWORD dwFlags)
-@@ -1194,7 +1194,7 @@
-  * See UrlUnescapeA.
-  */
- HRESULT WINAPI UrlUnescapeW(
--	LPCWSTR pszUrl,
-+	LPWSTR pszUrl,
- 	LPWSTR pszUnescaped,
- 	LPDWORD pcchUnescaped,
- 	DWORD dwFlags)
-@@ -1396,14 +1396,14 @@
+retrieving revision 1.27
+diff -u -r1.27 url.c
+--- url.c	23 Jan 2004 22:45:25 -0000	1.27
++++ url.c	28 Jan 2004 22:03:02 -0000
+@@ -1396,8 +1396,8 @@
   *  Success: TRUE. lpDest is filled with the computed hash value.
   *  Failure: FALSE, if any argument is invalid.
   */
--BOOL WINAPI HashData(const unsigned char *lpSrc, INT nSrcLen,
--                     unsigned char *lpDest, INT nDestLen)
+-HRESULT WINAPI HashData(const unsigned char *lpSrc, DWORD nSrcLen,
+-                     unsigned char *lpDest, DWORD nDestLen)
 +HRESULT WINAPI HashData(LPBYTE lpSrc, DWORD nSrcLen,
 +                     LPBYTE lpDest, DWORD nDestLen)
  {
    INT srcCount = nSrcLen - 1, destCount = nDestLen - 1;
  
-   if (IsBadReadPtr(lpSrc, nSrcLen) ||
-       IsBadWritePtr(lpDest, nDestLen))
--    return FALSE;
-+    return E_INVALIDARG;
- 
-   while (destCount >= 0)
-   {
-@@ -1421,7 +1421,7 @@
-     }
-     srcCount--;
-   }
--  return TRUE;
-+  return S_OK;
- }
- 
- /*************************************************************************
-@@ -1438,7 +1438,7 @@
-  *  Success: S_OK. lpDest is filled with the computed hash value.
-  *  Failure: E_INVALIDARG, if any argument is invalid.
-  */
--HRESULT WINAPI UrlHashA(LPCSTR pszUrl, unsigned char *lpDest, INT nDestLen)
-+HRESULT WINAPI UrlHashA(LPCSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
- {
-   if (IsBadStringPtrA(pszUrl, -1) || IsBadWritePtr(lpDest, nDestLen))
-     return E_INVALIDARG;
-@@ -1452,7 +1452,7 @@
-  *
-  * See UrlHashA.
-  */
--HRESULT WINAPI UrlHashW(LPCWSTR pszUrl, unsigned char *lpDest, INT nDestLen)
-+HRESULT WINAPI UrlHashW(LPCWSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
- {
-   char szUrl[MAX_PATH];
- 
-@@ -1900,9 +1900,9 @@
-     memset(pl, 0, sizeof(WINE_PARSE_URL));
-     pl->pScheme = pszUrl;
-     work = URL_ScanID(pl->pScheme, &pl->szScheme, SCHEME);
--    if (!*work || (*work != L':')) goto ERROR;
-+    if (!*work || (*work != L':')) goto ErrorExit;
-     work++;
--    if ((*work != L'/') || (*(work+1) != L'/')) goto ERROR;
-+    if ((*work != L'/') || (*(work+1) != L'/')) goto ErrorExit;
-     pl->pUserName = work + 2;
-     work = URL_ScanID(pl->pUserName, &pl->szUserName, USERPASS);
-     if (*work == L':' ) {
-@@ -1926,7 +1926,7 @@
- 	pl->szUserName = pl->szPassword = 0;
- 	work = pl->pUserName - 1;
- 	pl->pUserName = pl->pPassword = 0;
--    } else goto ERROR;
-+    } else goto ErrorExit;
- 
-     /* now start parsing hostname or hostnumber */
-     work++;
-@@ -1951,7 +1951,7 @@
- 	  pl->pPort, pl->szPort,
- 	  pl->pQuery, pl->szQuery);
-     return S_OK;
--  ERROR:
-+  ErrorExit:
-     FIXME("failed to parse %s\n", debugstr_w(pszUrl));
-     return E_INVALIDARG;
- }
-@@ -2433,7 +2433,7 @@
-     dwDestLen -= (szResLen + 1);
-     memcpy(lpszDest, szRes, sizeof(szRes));
- 
--    hMod = MLLoadLibraryW(lpszLibName, hMod, dwFlags);
-+    hMod = MLLoadLibraryW(lpszLibName, hMod, dwFlags, NULL, FALSE);
- 
-     if (hMod)
-     {

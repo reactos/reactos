@@ -1350,7 +1350,7 @@ HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, U
 	 *  It was duplicated because not every version of Shlwapi.dll exports
 	 *  StrRetToBufA. If you change one routine, change them both.
 	 */
-	TRACE("dest=%p len=0x%lx strret=%p pidl=%p stub\n",dest,len,src,pidl);
+	TRACE("dest=%p len=0x%x strret=%p pidl=%p stub\n",dest,len,src,pidl);
 
 	if (!src)
 	{
@@ -1394,7 +1394,7 @@ HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, U
  */
 HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, UINT len)
 {
-	TRACE("dest=%p len=0x%lx strret=%p pidl=%p stub\n",dest,len,src,pidl);
+	TRACE("dest=%p len=0x%x strret=%p pidl=%p stub\n",dest,len,src,pidl);
 
 	if (!src)
 	{

@@ -213,7 +213,7 @@ static DWORD WINAPI SHLWAPI_ThreadWrapper(PVOID pTi)
   HRESULT hCom = E_FAIL;
   DWORD dwRet;
 
-  TRACE("(%p)", pTi);
+  TRACE("(%p)\n", pTi);
 
   /* We are now executing in the context of the newly created thread.
    * So we copy the data passed to us (it is on the stack of the function

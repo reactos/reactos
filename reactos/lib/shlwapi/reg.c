@@ -2113,7 +2113,7 @@ DWORD WINAPI SHCopyKeyW(HKEY hKeyDst, LPCWSTR lpszSubKey, HKEY hKeySrc, DWORD dw
  */
 int WINAPI SHRegGetIntW(HKEY hKey, LPCWSTR lpszValue, int iDefault)
 {
-  TRACE("(%p,%s,%d)", hKey, debugstr_w(lpszValue), iDefault);
+  TRACE("(%p,%s,%d)\n", hKey, debugstr_w(lpszValue), iDefault);
 
   if (hKey)
   {

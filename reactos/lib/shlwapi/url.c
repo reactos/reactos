@@ -34,9 +34,9 @@
 #include "shlwapi.h"
 #include "wine/debug.h"
 
-HINSTANCE WINAPI MLLoadLibraryW(LPCWSTR,HANDLE,DWORD,LPCWSTR,BOOL);
-BOOL      WINAPI MLFreeLibrary(HMODULE);
-HRESULT   WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
+HMODULE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
+BOOL    WINAPI MLFreeLibrary(HMODULE);
+HRESULT WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1145,7 +1145,7 @@ HRESULT WINAPI UrlUnescapeA(
 	  pcchUnescaped, dwFlags);
 
     if(dwFlags & URL_UNESCAPE_INPLACE)
-        dst = (char*)pszUrl;
+        dst = pszUrl;
     else
         dst = pszUnescaped;
 
@@ -1209,7 +1209,7 @@ HRESULT WINAPI UrlUnescapeW(
 	  pcchUnescaped, dwFlags);
 
     if(dwFlags & URL_UNESCAPE_INPLACE)
-        dst = (WCHAR*)pszUrl;
+        dst = pszUrl;
     else
         dst = pszUnescaped;
 
@@ -1456,7 +1456,7 @@ HRESULT WINAPI UrlHashW(LPCWSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
 {
   char szUrl[MAX_PATH];
 
-  TRACE("(%s,%p,%d)\n",debugstr_w(pszUrl), lpDest, nDestLen);
+  TRACE("(%s,%p,%ld)\n",debugstr_w(pszUrl), lpDest, nDestLen);
 
   if (IsBadStringPtrW(pszUrl, -1) || IsBadWritePtr(lpDest, nDestLen))
     return E_INVALIDARG;
@@ -2433,7 +2433,7 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
     dwDestLen -= (szResLen + 1);
     memcpy(lpszDest, szRes, sizeof(szRes));
 
-    hMod = MLLoadLibraryW(lpszLibName, hMod, dwFlags, NULL, FALSE);
+    hMod = MLLoadLibraryW(lpszLibName, hMod, dwFlags);
 
     if (hMod)
     {
