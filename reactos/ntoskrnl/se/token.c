@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.30 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: token.c,v 1.31 2003/12/23 05:06:47 arty Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -497,13 +497,13 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 			OUT PULONG ReturnLength)
 {
   NTSTATUS Status;
-  PACCESS_TOKEN Token;
   PVOID UnusedInfo;
   PVOID EndMem;
+  PACCESS_TOKEN Token;
+  ULONG uLength;
   PTOKEN_GROUPS PtrTokenGroups;
   PTOKEN_DEFAULT_DACL PtrDefaultDacl;
   PTOKEN_STATISTICS PtrTokenStatistics;
-  ULONG uLength;
 
   Status = ObReferenceObjectByHandle(TokenHandle,
 				     (TokenInformationClass == TokenSource) ? TOKEN_QUERY_SOURCE : TOKEN_QUERY,
@@ -741,6 +741,11 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
   return(Status);
 }
 
+/*
+ * NtSetTokenInformation: Partly implemented.
+ * Unimplemented:
+ *  TokenOrigin, TokenDefaultDacl, TokenSessionId
+ */
 
 NTSTATUS STDCALL
 NtSetInformationToken(IN HANDLE TokenHandle,
@@ -748,8 +753,66 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 		      OUT PVOID TokenInformation,
 		      IN ULONG TokenInformationLength)
 {
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
+  NTSTATUS Status;
+  PACCESS_TOKEN Token;
+  TOKEN_OWNER TokenOwnerSet = { 0 };
+  TOKEN_PRIMARY_GROUP TokenPrimaryGroupSet = { 0 };
+  DWORD NeededAccess = 0;
+
+  switch (TokenInformationClass) 
+    {
+    case TokenOwner:
+    case TokenPrimaryGroup:
+      NeededAccess = TOKEN_ADJUST_DEFAULT;
+      break;
+
+    default:
+      return STATUS_NOT_IMPLEMENTED;
+    }
+
+  Status = ObReferenceObjectByHandle(TokenHandle,
+				     NeededAccess,
+				     SepTokenObjectType,
+				     UserMode,
+				     (PVOID*)&Token,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  switch (TokenInformationClass)
+    {
+    case TokenOwner:
+      MmCopyFromCaller( &TokenOwnerSet, TokenInformation,
+			min(sizeof(TokenOwnerSet),TokenInformationLength) );
+      RtlCopySid(TokenInformationLength - sizeof(TOKEN_OWNER),
+		 Token->UserAndGroups[Token->DefaultOwnerIndex].Sid,
+		 TokenOwnerSet.Owner);
+      Status = STATUS_SUCCESS;
+      DPRINT("NtSetInformationToken(TokenOwner)\n");
+      break;
+      
+    case TokenPrimaryGroup:
+      MmCopyFromCaller( &TokenPrimaryGroupSet, TokenInformation, 
+			min(sizeof(TokenPrimaryGroupSet),
+			    TokenInformationLength) );
+      RtlCopySid(TokenInformationLength - sizeof(TOKEN_PRIMARY_GROUP),
+		 Token->PrimaryGroup,
+		 TokenPrimaryGroupSet.PrimaryGroup);
+      Status = STATUS_SUCCESS;
+      DPRINT("NtSetInformationToken(TokenPrimaryGroup),"
+	     "Token->PrimaryGroup = 0x%08x\n", Token->PrimaryGroup);
+      break;
+
+    default:
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
+    }
+
+  ObDereferenceObject(Token);
+
+  return(Status);
 }
 
 
