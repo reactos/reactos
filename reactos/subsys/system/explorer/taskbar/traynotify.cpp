@@ -57,6 +57,7 @@ NotifyInfo::NotifyInfo()
 	_hIcon = 0;
 	_dwState = 0;
 	_uCallbackMessage = 0;
+	_version = 0;
 }
 
 
@@ -77,22 +78,37 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 		_hIcon = (HICON) CopyImage(pnid->hIcon, IMAGE_ICON, 16, 16, 0);
 	}
 
-#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
+#ifdef NIF_STATE	// as of 21.08.2003 missing in MinGW headers
 	if (pnid->uFlags & NIF_STATE)
 		_dwState = (_dwState&~pnid->dwStateMask) | (pnid->dwState&pnid->dwStateMask);
 #endif
 
-	///@todo store and display tool tip texts
+	 // store tool tip text
+	if (pnid->uFlags & NIF_TIP)
+		 // UNICODE version of NOTIFYICONDATA structure
+		if (pnid->cbSize == sizeof(NOTIFYICONDATAW) ||				// _WIN32_IE = 0x600
+			pnid->cbSize == sizeof(NOTIFYICONDATAW)-sizeof(GUID) ||	// _WIN32_IE = 0x500
+			pnid->cbSize == sizeof(NOTIFYICONDATAW)-sizeof(GUID)-(128-64)*sizeof(WCHAR))// _WIN32_IE < 0x500
+			_tipText = (LPCWSTR)pnid->szTip;
+		 // ANSI version of NOTIFYICONDATA structure
+		else if (pnid->cbSize == sizeof(NOTIFYICONDATAA) ||			// _WIN32_IE = 0x600
+			pnid->cbSize == sizeof(NOTIFYICONDATAA)-sizeof(GUID) ||	// _WIN32_IE = 0x500
+			pnid->cbSize == sizeof(NOTIFYICONDATAA)-sizeof(GUID)-(128-64)*sizeof(CHAR))	// _WIN32_IE < 0x400
+			_tipText = (LPCSTR)pnid->szTip;
 
 	return *this;
 }
 
 
 NotifyArea::NotifyArea(HWND hwnd)
- :	super(hwnd)
+ :	super(hwnd),
+	_tooltip(hwnd)
 {
 	_next_idx = 0;
 	_clock_width = 0;
+	_show_hidden = false;
+
+	_tooltip.add(_hwnd, _hwnd);
 }
 
 LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
@@ -212,14 +228,15 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 						PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
 					else {
 						 // allow SetForegroundWindow() in client process
-						DWORD processId;
-						GetWindowThreadProcessId(entry._hWnd, &processId);
+						DWORD pid;
 
-						 // bind dynamically to AllowSetForegroundWindow() to be compatible to WIN98
-						static DynamicFct<BOOL(WINAPI*)(DWORD dwProcessId)> AllowSetForegroundWindow(TEXT("USER32"), "AllowSetForegroundWindow");
+						if (GetWindowThreadProcessId(entry._hWnd, &pid)) {
+							 // bind dynamically to AllowSetForegroundWindow() to be compatible to WIN98
+							static DynamicFct<BOOL(WINAPI*)(DWORD)> AllowSetForegroundWindow(TEXT("USER32"), "AllowSetForegroundWindow");
 
-						if (AllowSetForegroundWindow)
-							(*AllowSetForegroundWindow)(processId);
+							if (AllowSetForegroundWindow)
+								(*AllowSetForegroundWindow)(pid);
+						}
 
 						SendMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
 					}
@@ -230,6 +247,27 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 
 		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+int NotifyArea::Notify(int id, NMHDR* pnmh)
+{
+	if (pnmh->code == TTN_GETDISPINFO) {
+		LPNMTTDISPINFO pdi = (LPNMTTDISPINFO)pnmh;
+
+		Point pt(GetMessagePos());
+		ScreenToClient(_hwnd, &pt);
+
+		NotifyIconSet::iterator found = IconHitTest(pt);
+
+		if (found != _sorted_icons.end()) {
+			NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
+
+			if (!entry._tipText.empty())
+				_tcscpy(pdi->szText, entry._tipText);
+		}
 	}
 
 	return 0;
@@ -248,12 +286,17 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 	switch(notify_code) {
 	  case NIM_ADD:
 	  case NIM_MODIFY:
-		if ((int)pnid->uID >= 0) {	///@todo fix for windows task manager
+		if ((int)pnid->uID >= 0) {	///@todo This is a fix for Windows Task Manager.
 			NotifyInfo& entry = _icon_map[pnid] = pnid;
 
 			 // a new entry?
 			if (entry._idx == -1)
 				entry._idx = ++_next_idx;
+
+#if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
+			if (DetermineHideState(entry))
+				entry._dwState |= NIS_HIDDEN;
+#endif
 
 			Refresh();	///@todo call only if really changes occurred
 
@@ -273,12 +316,19 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 		}
 		break;}
 
-#if NOTIFYICON_VERSION>=3	// currently (as of 21.08.2003) missing in MinGW headers
+#if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
 	  case NIM_SETFOCUS:
+		SetForegroundWindow(_hwnd);
 		return TRUE;
 
 	  case NIM_SETVERSION:
-		return FALSE;	///@todo
+		NotifyIconMap::iterator found = _icon_map.find(pnid);
+
+		if (found != _icon_map.end()) {
+			found->second._version = pnid->UNION_MEMBER(uVersion);
+			return TRUE;
+		} else
+			return FALSE;
 #endif
 	}
 
@@ -293,8 +343,8 @@ void NotifyArea::Refresh()
 	for(NotifyIconMap::const_iterator it=_icon_map.begin(); it!=_icon_map.end(); ++it) {
 		const NotifyInfo& entry = it->second;
 
-#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
-		if (!(entry._dwState & NIS_HIDDEN))
+#ifdef NIF_STATE	// as of 21.08.2003 missing in MinGW headers
+		if (_show_hidden || !(entry._dwState & NIS_HIDDEN))
 #endif
 			_sorted_icons.insert(entry);
 	}
@@ -366,6 +416,38 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 
 	return it;
 }
+
+#if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
+bool NotifyArea::DetermineHideState(NotifyInfo& entry)
+{
+/*
+	DWORD pid;
+
+	if (GetWindowThreadProcessId(entry._hWnd, &pid)) {
+
+		//@@ look for executable path
+
+	}
+*/
+	TCHAR title[MAX_PATH];
+
+	if (GetWindowText(entry._hWnd, title, MAX_PATH)) {
+		if (_tcsstr(title, TEXT("Task Manager")))
+			return false;
+
+		if (_tcsstr(title, TEXT("AntiVir")))
+			return true;
+
+		if (_tcsstr(title, TEXT("Apache")))
+			return true;
+
+		if (_tcsstr(title, TEXT("FRITZ!web")))
+			return true;
+	}
+
+	return false;
+}
+#endif
 
 
 ClockWindow::ClockWindow(HWND hwnd)

@@ -1,5 +1,4 @@
 - read "DESCRIPT.ION" files to display file descriptions
-- tool tip texts for notification icons
 - hiding of notification icons
 - context menus for quick launch bar
 - detect display mode changes and adjust desktop bar size

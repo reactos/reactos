@@ -67,6 +67,8 @@ struct NotifyInfo : public NotifyIconIndex
 	HICON	_hIcon;
 	DWORD	_dwState;
 	UINT	_uCallbackMessage;
+	UINT	_version;
+	String	_tipText;
 };
 
 typedef map<NotifyIconIndex, NotifyInfo> NotifyIconMap;
@@ -86,15 +88,20 @@ struct NotifyArea : public Window
 	LRESULT	ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid);
 
 protected:
+	WindowHandle _hwndClock;
+	int		_clock_width;
+
 	NotifyIconMap _icon_map;
 	NotifyIconSet _sorted_icons;
 	int		_next_idx;
 
-	WindowHandle _hwndClock;
-	int		_clock_width;
+	ToolTip	_tooltip;
+
+	bool	_show_hidden;
 
 	LRESULT Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Notify(int id, NMHDR* pnmh);
 
 	void	Refresh();
 	void	Paint();
@@ -102,6 +109,7 @@ protected:
 	void	CancelModes();
 
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
+	bool	DetermineHideState(NotifyInfo& entry);
 };
 
 

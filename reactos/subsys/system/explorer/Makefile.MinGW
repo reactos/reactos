@@ -8,7 +8,7 @@ CC = gcc
 CXX = g++
 LINK = g++
 
-CFLAGS	= -DWIN32 -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -fexceptions -Wall
+CFLAGS	= -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -fexceptions -Wall
 RCFLAGS	= -DWIN32 -D__WINDRES__
 LFLAGS	= -Wl,--subsystem,windows
 
