@@ -19,44 +19,30 @@
 #define TS_OK             0
 #define TS_FAILED         1
 
-static int _Result;
-static char *_Buffer;
+extern int _Result;
+extern char *_Buffer;
 
 /* Macros to simplify tests */
 #define DISPATCHER(FunctionName, TestName) \
-int \
-FunctionName(int Command, \
-  char *Buffer) \
+void \
+FunctionName(int Command) \
 { \
   switch (Command) \
     { \
-    case TESTCMD_RUN: \
-      _Result = TS_OK; \
-      _Buffer = Buffer; \
-      RunTest(); \
-      return _Result; \
-    case TESTCMD_TESTNAME: \
-      strcpy(Buffer, TestName); \
-      return TS_OK; \
-    default: \
-      break; \
+      case TESTCMD_RUN: \
+        RunTest(); \
+        break; \
+      case TESTCMD_TESTNAME: \
+        strcpy(_Buffer, TestName); \
+        break; \
+      default: \
+        _Result = TS_FAILED; \
+        break; \
     } \
-  return TS_FAILED; \
 }
 
-#define FAIL(ErrorMessage) \
-  sprintf(Buffer, "%s\n", ErrorMessage); \
-  return TS_FAILED;
-
-#define FAIL_IF_NULL(GivenValue, ErrorMessage)                     if (GivenValue == NULL) { FAIL(ErrorMessage); }
-#define FAIL_IF_TRUE(GivenValue, ErrorMessage)                     if (GivenValue == TRUE) { FAIL(ErrorMessage); }
-#define FAIL_IF_FALSE(GivenValue, ErrorMessage)                    if (GivenValue == FALSE) { FAIL(ErrorMessage); }
-#define FAIL_IF_EQUAL(GivenValue, FailValue, ErrorMessage)         if (GivenValue == FailValue) { FAIL(ErrorMessage); }
-#define FAIL_IF_NOT_EQUAL(GivenValue, FailValue, ErrorMessage)     if (GivenValue != FailValue) { FAIL(ErrorMessage); }
-#define FAIL_IF_LESS_EQUAL(GivenValue, FailValue, ErrorMessage)    if (GivenValue <= FailValue) { FAIL(ErrorMessage); }
-#define FAIL_IF_GREATER_EQUAL(GivenValue, FailValue, ErrorMessage) if (GivenValue >= FailValue) { FAIL(ErrorMessage); }
-
-static inline void AppendAssertion(char *message)
+static inline void
+AppendAssertion(char *message)
 {
   if (strlen(_Buffer) != 0)
     strcat(_Buffer, "\n");
@@ -101,9 +87,8 @@ static inline void AppendAssertion(char *message)
 /*
  * Test routine prototype
  * Command - The command to process
- * Buffer - Pointer to buffer in which to return context information
  */
-typedef int (*TestRoutine)(int Command, char *Buffer);
+typedef void (*TestRoutine)(int Command);
 
 /*
  * Test output routine prototype
@@ -254,7 +239,7 @@ _UnsetHooks(PHOOK hookTable)
 }
 
 static inline VOID
-_ResetAllHooks()
+_UnsetAllHooks()
 {
   PAPI_DESCRIPTION api;
   ULONG index;

@@ -1,14 +1,16 @@
-# $Id: Makefile,v 1.2 2004/10/18 19:11:07 chorns Exp $
+# $Id: Makefile,v 1.3 2004/10/20 20:51:21 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
-TARGET_TYPE = library
+TARGET_TYPE = test
 
 TARGET_NAME = regtests
 
 TARGET_LIBPATH = .
 
 TARGET_CFLAGS = -I$(REGTESTS_PATH_INC)
+
+TARGET_LIBS = ../kernel32.a
 
 -include Makefile.tests
 
@@ -22,10 +24,3 @@ TARGET_OBJECTS = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-LIBS = ../kernel32.a
-
-run: all
-	@$(CC) -o _runtest.exe _rtstub.o regtests.a $(SDK_PATH_LIB)/rtshared.a $(LIBS) -lntdll
-	@_runtest.exe
-	@$(RM) _runtest.exe

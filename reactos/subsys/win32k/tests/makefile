@@ -1,6 +1,6 @@
 PATH_TO_TOP = ../../..
 
-TARGET_TYPE = library
+TARGET_TYPE = test
 
 TARGET_NAME = regtests
 
@@ -9,6 +9,8 @@ TARGET_LIBPATH = .
 TARGET_CFLAGS = -I$(REGTESTS_PATH_INC) \
                 -D__USE_W32API \
                 -D_WIN32K_
+
+TARGET_LIBS = ../win32k.a
 
 -include Makefile.tests
 
@@ -22,10 +24,3 @@ TARGET_OBJECTS = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-LIBS = ../win32k.a
-
-run: all
-	@$(CC) -o _runtest.exe _rtstub.o regtests.a $(SDK_PATH_LIB)/rtshared.a $(LIBS) -lntdll
-	@_runtest.exe
-	@$(RM) _runtest.exe

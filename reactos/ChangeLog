@@ -1,3 +1,16 @@
+2004-10-20  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* lib/gdiplus/makefile (TARGET_BUILDENV_TEST): Remove.
+	(TARGET_TYPE): Set to test.
+	* lib/kernel32/makefile: Ditto.
+	* subsys/win32k/makefile: Ditto.
+	* tools/helper.mk (TARGET_BUILDENV_TEST): Remove.
+	(TARGET_TYPE): New value test.
+	* regtests/shared/regtests.c (_Result, _Buffer): Add.
+	* regtests/shared/regtests.h (_Result, _Buffer): Declare extern.
+	(TestRoutine): Make void return type and remove Buffer parameter.
+	(FAIL*): Remove.
+
 2004-10-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/kernel32/makefile (TARGET_BUILDENV_TEST): Set to yes.

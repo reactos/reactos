@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.88 2004/10/20 20:31:35 gvg Exp $
+# $Id: helper.mk,v 1.89 2004/10/20 20:51:21 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -19,6 +19,7 @@
 #                        kmdll = Kernel mode DLL
 #                        winedll = DLL imported from wine
 #                        kernel = ReactOS kernel
+#                        test = ReactOS test
 #   $TARGET_APPTYPE    = Application type (windows,native,console).
 #                        Required only for TARGET_TYPEs program and proglib
 #   $TARGET_NAME       = Base name of output file and .rc, .def, and .edf files
@@ -50,7 +51,6 @@
 #   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_REGTESTS   = This module has regression tests (no,yes) (optional)
-#   $TARGET_BUILDENV_TEST = Build this test to be run in the build environment (no,yes) (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
 
 include $(PATH_TO_TOP)/config
@@ -353,6 +353,26 @@ ifeq ($(TARGET_TYPE),kernel)
   MK_RES_BASE := $(TARGET_NAME)
 endif
 
+ifeq ($(TARGET_TYPE),test)
+  TARGET_NORC := yes
+  MK_MODE := static
+  MK_EXETYPE :=
+  MK_DEFEXT := .a
+  MK_DEFENTRY :=
+  MK_DDKLIBS :=
+  MK_SDKLIBS :=
+  MK_CFLAGS := -I.
+  MK_CPPFLAGS := -I.
+  MK_IMPLIB := no
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH :=
+  MK_IMPLIB_EXT :=
+  MK_INSTALLDIR := # none
+  MK_BOOTCDDIR := system32
+  MK_DISTDIR := # none
+  MK_RES_BASE :=
+endif
+
 
 # can be overidden with $(CXX) for linkage of c++ executables
 LD_CC = $(CC)
@@ -653,18 +673,8 @@ else
 endif
 
 ifeq ($(TARGET_REGTESTS),yes)
-ifeq ($(TARGET_BUILDENV_TEST),yes)
   REGTEST_TARGETS := tests/_hooks.c tests/_regtests.c tests/_stubs.S tests/Makefile.tests tests/_rtstub.c
   MK_REGTESTS_CLEAN := clean_regtests
-else
-  REGTEST_TARGETS := tests/_regtests.c tests/Makefile.tests tests/_rtstub.c 
-ifeq ($(MK_MODE),user)
-  MK_LIBS := $(SDK_PATH_LIB)/rtshared.a $(MK_LIBS)
-endif
-  MK_REGTESTS_CLEAN := clean_regtests
-  MK_OBJECTS += tests/_rtstub.o tests/regtests.a
-  TARGET_CFLAGS += -I$(REGTESTS_PATH_INC)
-endif
 else
   REGTEST_TARGETS :=
   MK_REGTESTS_CLEAN :=
@@ -1008,29 +1018,12 @@ endif
 REGTEST_TESTS = $(wildcard tests/tests/*.c)
 
 $(REGTEST_TARGETS): $(REGTEST_TESTS)
-ifeq ($(TARGET_BUILDENV_TEST),yes)
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -e ./tests/_rtstub.c
 	$(REGTESTS) -s ./tests/stubs.tst ./tests/_stubs.S ./tests/_hooks.c
-else
-ifeq ($(MK_MODE),user)
-	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
-	$(MAKE) -C tests TARGET_REGTESTS=no all
-else
-ifeq ($(MK_MODE),kernel)
-	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -k ./tests/_rtstub.c
-	$(MAKE) -C tests TARGET_REGTESTS=no all
-endif
-endif
-endif
 
 clean_regtests:
-ifeq ($(TARGET_BUILDENV_TEST),yes)
 	- $(MAKE) -C tests TARGET_REGTESTS=no clean
 	- $(RM) ./tests/_rtstub.c ./tests/_hooks.c ./tests/_regtests.c ./tests/_stubs.S ./tests/Makefile.tests
-else
-	$(MAKE) -C tests TARGET_REGTESTS=no clean
-	$(RM) ./tests/_rtstub.c ./tests/_regtests.c ./tests/_hooks.c ./tests/_stubs.S ./tests/Makefile.tests
-endif
 
 .PHONY: all depends implib clean install dist bootcd depends gen_regtests clean_regtests
 
@@ -1062,16 +1055,18 @@ $(SUBDIRS:%=%_bootcd): %_bootcd:
 endif
 
 ifeq ($(TARGET_REGTESTS),yes)
-ifeq ($(TARGET_BUILDENV_TEST),yes)
 test: all
 	$(MAKE) -C tests run
 else
 test:
 	-
 endif
-else
-test:
-	-
+
+ifeq ($(TARGET_TYPE),test)
+run: all
+	@$(CC) -o _runtest.exe _rtstub.o regtests.a $(SDK_PATH_LIB)/rtshared.a $(TARGET_LIBS) -lntdll
+	@_runtest.exe
+	@$(RM) _runtest.exe
 endif
 
 

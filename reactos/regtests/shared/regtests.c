@@ -18,7 +18,10 @@
 #define NDEBUG
 #include <debug.h>
 
-LIST_ENTRY AllTests;
+int _Result;
+char *_Buffer;
+
+static LIST_ENTRY AllTests;
 
 int
 DriverTest()
@@ -48,12 +51,14 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
   char OutputBuffer[5000];
   char Buffer[5000];
   char Name[200];
-  int Result;
 
-  memset(Name, 0, sizeof(Name));
   memset(Buffer, 0, sizeof(Buffer));
+  memset(Name, 0, sizeof(Name));
 
-  if (!((Test->Routine)(TESTCMD_TESTNAME, Name) == 0))
+  _Result = TS_OK;
+  _Buffer = Name;
+  (Test->Routine)(TESTCMD_TESTNAME);
+  if (_Result != TS_OK)
     {
       if (TestName != NULL)
         {
@@ -73,7 +78,9 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
 #ifdef SEH
   __try {
 #endif
-    Result = (Test->Routine)(TESTCMD_RUN, Buffer);
+    _Result = TS_OK;
+    _Buffer = Buffer;
+    (Test->Routine)(TESTCMD_RUN);
 #ifdef SEH
   } __except(EXCEPTION_EXECUTE_HANDLER) {
     Result = TS_FAILED;
@@ -81,7 +88,7 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
   }
 #endif
 
-  if (Result != TS_OK)
+  if (_Result != TS_OK)
     {
       sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Failed (%s)\n", Name, Buffer);
     }

@@ -115,7 +115,7 @@ static void TestFile()
       _AssertEqualValue(NO_ERROR, GetLastError());
       _AssertEqualValue(TestHandle, FileHandle);
     }
-  _ResetAllHooks();
+  _UnsetAllHooks();
 }
 
 static void RunTest()

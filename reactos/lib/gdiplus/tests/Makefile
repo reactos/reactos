@@ -1,6 +1,6 @@
 PATH_TO_TOP = ../../..
 
-TARGET_TYPE = library
+TARGET_TYPE = test
 
 TARGET_NAME = regtests
 
@@ -17,6 +17,8 @@ TARGET_CFLAGS = \
  -D_WIN32_WINNT=0x0501 \
  -I$(REGTESTS_PATH_INC)
 
+TARGET_LIBS = ../gdiplus.a
+
 -include Makefile.tests
 
 TARGET_OBJECTS = \
@@ -29,10 +31,3 @@ TARGET_OBJECTS = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-LIBS = ../gdiplus.a
-
-run: all
-	@$(CC) -o _runtest.exe _rtstub.o regtests.a $(SDK_PATH_LIB)/rtshared.a $(LIBS) -lntdll
-	@_runtest.exe
-	@$(RM) _runtest.exe
