@@ -53,7 +53,8 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
        "What are you doing, Dave...?\n",
        "I feel a great disturbance in the Force\n",
        "Gone fishing\n",
-     };
+       "Do you want me to sit in the corner and rust, or just fall apart where I'm standing?\n",
+   };
    LARGE_INTEGER Now;
 
    if (Action > ShutdownPowerOff)
