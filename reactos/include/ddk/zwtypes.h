@@ -43,6 +43,20 @@ extern ULONG IMPORTED NtBuildNumber;
 #define FILE_OVERWRITE_IF               0x0005
 #define FILE_MAXIMUM_DISPOSITION        0x0005
 
+// job query / set information class
+
+typedef enum _JOBOBJECTINFOCLASS {               // Q S
+    JobObjectBasicAccountingInformation = 1,     // Y N
+    JobObjectBasicLimitInformation,              // Y Y
+    JobObjectBasicProcessIdList,                 // Y N
+    JobObjectBasicUIRestrictions,                // Y Y
+    JobObjectSecurityLimitInformation,           // Y Y
+    JobObjectEndOfJobTimeInformation,            // N Y
+    JobObjectAssociateCompletionPortInformation, // N Y
+    JobObjectBasicAndIoAccountingInformation,    // Y N
+    JobObjectExtendedLimitInformation,           // Y Y
+} JOBOBJECTINFOCLASS;
+
 //process query / set information class
 
 #define ProcessBasicInformation			0
@@ -67,8 +81,13 @@ extern ULONG IMPORTED NtBuildNumber;
 #define ProcessWx86Information			19
 #define ProcessHandleCount			20
 #define ProcessAffinityMask			21
-#define ProcessImageFileName			22
-#define MaxProcessInfoClass			23
+#define ProcessImageFileName			22	// ???
+#define ProcessPriorityBoost			22
+#define ProcessDeviceMap			23
+#define ProcessSessionInformation		24
+#define ProcessForegroundInformation		25
+#define ProcessWow64Information			26
+#define MaxProcessInfoClass			26
 
 /*
  * thread query / set information class
@@ -912,7 +931,7 @@ struct _SYSTEM_SET_TIME_SLIP_EVENT
 } SYSTEM_SET_TIME_SLIP_EVENT, * PSYSTEM_SET_TIME_SLIP_EVENT;
 
 // SystemCreateSession (47)
-// (available only on TSE)
+// (available only on TSE/NT5+)
 typedef
 struct _SYSTEM_CREATE_SESSION
 {
@@ -921,7 +940,7 @@ struct _SYSTEM_CREATE_SESSION
 } SYSTEM_CREATE_SESSION, * PSYSTEM_CREATE_SESSION;
 
 // SystemDeleteSession (48)
-// (available only on TSE)
+// (available only on TSE/NT5+)
 typedef
 struct _SYSTEM_DELETE_SESSION
 {
@@ -947,7 +966,7 @@ struct _SYSTEM_RANGE_START_INFORMATION
 // UNKNOWN
 
 // SystemSessionProcessesInformation (53)
-// (available only on TSE)
+// (available only on TSE/NT5+)
 typedef
 struct _SYSTEM_SESSION_PROCESSES_INFORMATION
 {
@@ -1003,12 +1022,7 @@ typedef enum SHUTDOWN_ACTION_TAG {
 #define SYMBOLIC_LINK_QUERY			0x0001
 #define SYMBOLIC_LINK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
 
-typedef struct _PROCESS_WS_WATCH_INFORMATION
-{
-	PVOID FaultingPc;
-	PVOID FaultingVa;
-} PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
-
+// Information class 0
 typedef struct _PROCESS_BASIC_INFORMATION
 {
 	NTSTATUS ExitStatus;
@@ -1019,6 +1033,7 @@ typedef struct _PROCESS_BASIC_INFORMATION
 	ULONG InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
+// Information class 1
 typedef struct _QUOTA_LIMITS
 {
 	ULONG PagedPoolLimit;
@@ -1029,6 +1044,7 @@ typedef struct _QUOTA_LIMITS
 	TIME TimeLimit;
 } QUOTA_LIMITS, *PQUOTA_LIMITS;
 
+// Information class 2
 typedef struct _IO_COUNTERS
 {
 	ULONG ReadOperationCount;
@@ -1039,7 +1055,7 @@ typedef struct _IO_COUNTERS
 	LARGE_INTEGER OtherTransferCount;
 } IO_COUNTERS, *PIO_COUNTERS;
 
-
+// Information class 3
 typedef struct _VM_COUNTERS_
 {
 	ULONG PeakVirtualSize;
@@ -1055,7 +1071,23 @@ typedef struct _VM_COUNTERS_
 	ULONG PeakPagefileUsage;
 } VM_COUNTERS, *PVM_COUNTERS;
 
+// Information class 4
+typedef struct _KERNEL_USER_TIMES
+{
+	TIME CreateTime;
+	TIME ExitTime;
+	TIME KernelTime;
+	TIME UserTime;
+} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
 
+// Information class 9
+typedef struct _PROCESS_ACCESS_TOKEN
+{
+	HANDLE Token;
+	HANDLE Thread;
+} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+
+// Information class 14 
 typedef struct _POOLED_USAGE_AND_LIMITS_
 {
 	ULONG PeakPagedPoolUsage;
@@ -1069,21 +1101,39 @@ typedef struct _POOLED_USAGE_AND_LIMITS_
 	ULONG PagefileLimit;
 } POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
 
-
-typedef struct _PROCESS_ACCESS_TOKEN
+// Information class 15
+typedef struct _PROCESS_WS_WATCH_INFORMATION
 {
-	HANDLE Token;
-	HANDLE Thread;
-} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+	PVOID FaultingPc;
+	PVOID FaultingVa;
+} PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
 
-typedef struct _KERNEL_USER_TIMES
+// Information class 18
+typedef struct _PROCESS_PRIORITY_CLASS
 {
-	TIME CreateTime;
-	TIME ExitTime;
-	TIME KernelTime;
-	TIME UserTime;
-} KERNEL_USER_TIMES;
-typedef KERNEL_USER_TIMES *PKERNEL_USER_TIMES;
+	BOOLEAN Foreground;
+	UCHAR   PriorityClass;
+} PROCESS_PRIORITY_CLASS, *PPROCESS_PRIORITY_CLASS;
+
+// Information class 23
+typedef struct _PROCESS_DEVICEMAP_INFORMATION
+{
+	union {
+		struct {
+			HANDLE DirectoryHandle;
+		} Set;
+		struct {
+			ULONG DriveMap;
+			UCHAR DriveType[32];
+		} Query;
+	};
+} PROCESS_DEVICEMAP_INFORMATION, *pPROCESS_DEVICEMAP_INFORMATION;
+
+// Information class 24
+typedef struct _PROCESS_SESSION_INFORMATION
+{
+	ULONG SessionId;
+} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
 
 // thread information
 
@@ -1091,8 +1141,8 @@ typedef KERNEL_USER_TIMES *PKERNEL_USER_TIMES;
 
 typedef struct _THREAD_BASIC_INFORMATION
 {
-  NTSTATUS ExitStatus;
-  PVOID TebBaseAddress;
+  NTSTATUS  ExitStatus;
+  PVOID     TebBaseAddress;	// PNT_TIB (GN)
   CLIENT_ID ClientId;
   KAFFINITY AffinityMask;
   KPRIORITY Priority;
