@@ -3,3 +3,4 @@
 *.dll
 *.o
 *.map
+*.gch

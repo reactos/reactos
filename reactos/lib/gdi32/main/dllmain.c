@@ -1,13 +1,13 @@
 /*
  * dllmain.c
  *
- * $Revision: 1.9 $
- * $Author: navaraf $
- * $Date: 2004/04/09 20:03:11 $
+ * $Revision: 1.10 $
+ * $Author: chorns $
+ * $Date: 2004/08/15 18:40:07 $
  *
  */
 
-#include <windows.h>
+#include "precomp.h"
 #include <win32k/win32k.h>
 #include <internal/heap.h>
 

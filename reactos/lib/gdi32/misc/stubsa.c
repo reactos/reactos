@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.32 2004/07/09 20:28:20 navaraf Exp $
+/* $Id: stubsa.c,v 1.33 2004/08/15 18:40:07 chorns Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -8,6 +8,8 @@
  * remove its stub from this file.
  *
  */
+
+/* Can't use precomp.h because of this */
 #ifdef UNICODE
 #undef UNICODE
 #endif

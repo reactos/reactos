@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.7 2004/04/25 16:40:39 weiden Exp $
+/* $Id: clip.c,v 1.8 2004/08/15 18:40:07 chorns Exp $
  *
  * PROJECT:         ReactOS gdi32.dll
  * FILE:            lib/gdi32/objects/clip.c
@@ -26,7 +26,7 @@
  *      2003/06/26  GvG  Created
  */
 
-#include <windows.h>
+#include "precomp.h"
 #include <win32k/kapi.h>
 
 /*

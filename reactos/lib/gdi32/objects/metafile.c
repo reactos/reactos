@@ -1,13 +1,5 @@
-#ifdef UNICODE
-#undef UNICODE
-#endif
-
-#undef WIN32_LEAN_AND_MEAN
+#include "precomp.h"
 #include <string.h>
-#include <windows.h>
-#include <ddk/ntddk.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <internal/heap.h>
 #include <win32k/kapi.h>
 #include <win32k/metafile.h>

@@ -27,8 +27,7 @@
  * NOTES:            Adapted from Wine
  */
 
-#include <windows.h>
-#include <ddk/ntddk.h>
+#include "precomp.h"
 #include <win32k/kapi.h>
 #include <debug.h>
 

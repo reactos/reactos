@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.7 2004/07/23 20:41:09 jfilby Exp $
+/* $Id: font.c,v 1.8 2004/08/15 18:40:07 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,15 +8,8 @@
  *
  */
 
-#ifdef UNICODE
-#undef UNICODE
-#endif
-
-#include <windows.h>
+#include "precomp.h"
 #include <rosrtl/logfont.h>
-#include <ddk/ntddk.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <win32k/font.h>
 #include <win32k/text.h>
 #include <internal/font.h>

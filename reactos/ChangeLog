@@ -1,5 +1,12 @@
 2004-08-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/gdi32/.cvsignore: Ignore *.gch.
+	* lib/gdi32/include/precomp.h: New file.
+	* lib/gdi32/Makefile (TARGET_PCH): Set to include/precomp.h.
+	* lib/gdi32/*/*.c: Use pre-compiled header.
+
+2004-08-15  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/msvcrt/.cvsignore: Ignore *.gch.
 	* lib/msvcrt/precomp.h: New file.
 	* lib/msvcrt/Makefile (TARGET_PCH): Set to precomp.h.

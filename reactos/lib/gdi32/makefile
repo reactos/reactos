@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.38 2004/05/29 21:24:43 hbirr Exp $
+# $Id: makefile,v 1.39 2004/08/15 18:40:07 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -7,6 +7,8 @@ TARGET_TYPE = dynlink
 TARGET_NAME = gdi32
 
 TARGET_BASE = $(TARGET_BASE_LIB_GDI32)
+
+TARGET_PCH = include/precomp.h
 
 TARGET_SDKLIBS = rosrtl.a ntdll.a advapi32.a kernel32.a
 

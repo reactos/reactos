@@ -1,4 +1,4 @@
-/* $Id: bitblt.c,v 1.22 2004/04/25 14:46:54 weiden Exp $
+/* $Id: bitblt.c,v 1.23 2004/08/15 18:40:07 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,13 +7,7 @@
  * PROGRAMMER:
  */
 
-#ifdef UNICODE
-#undef UNICODE
-#endif
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
+#include "precomp.h"
 #include <win32k/kapi.h>
 #include <debug.h>
 

@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.30 2004/07/23 20:41:08 jfilby Exp $
+/* $Id: stubsw.c,v 1.31 2004/08/15 18:40:07 chorns Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -8,10 +8,8 @@
  * remove its stub from this file.
  *
  */
-#ifndef UNICODE
-#define UNICODE
-#endif//UNICODE
-#include <windows.h>
+
+#include "precomp.h"
 #include <win32k/kapi.h>
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);

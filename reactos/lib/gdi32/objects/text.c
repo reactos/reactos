@@ -1,11 +1,5 @@
-#ifdef UNICODE
-#undef UNICODE
-#endif
-
-#undef WIN32_LEAN_AND_MEAN
+#include "precomp.h"
 #include <string.h>
-#include <windows.h>
-#include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 #include <internal/font.h>
 #include <rosrtl/logfont.h>
