@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.22 1999/12/04 07:40:53 phreak Exp $
+/* $Id: timer.c,v 1.23 1999/12/11 17:25:26 phreak Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -120,7 +120,7 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
    DPRINT("KeAddThreadTimeout(Thread %x, Interval %x)\n",Thread,Interval);
    
    KeInitializeTimer(&(Thread->Timer));
-   KeSetTimer(&(Thread->Timer),*Interval,NULL);
+   KeSetTimer( &(Thread->Timer), *Interval, &Thread->TimerDpc );
 
    DPRINT("Thread->Timer.entry.Flink %x\n",
 	    Thread->Timer.TimerListEntry.Flink);
@@ -428,6 +428,7 @@ VOID KiTimerInterrupt(VOID)
 //   extern ULONG EiNrUsedBlocks;
    extern unsigned int EiFreeNonPagedPool;
    extern unsigned int EiUsedNonPagedPool;
+   extern ULONG PiNrThreads;
    extern ULONG MiNrFreePages;
    
    if (TimerInitDone == FALSE)
@@ -461,7 +462,7 @@ VOID KiTimerInterrupt(VOID)
 //   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
 //	   (unsigned int)EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
-   sprintf(str,"%.8u %.8u",(unsigned int)PiNrRunnableThreads,(unsigned int)KiTimerTicks);
+   sprintf(str,"%.8u %.8u",(unsigned int)PiNrRunnableThreads,(unsigned int)PiNrThreads);
 //   sprintf(str,"%.8u %.8u", (unsigned int)PiNrRunnableThreads,
 //	   (unsigned int)MiNrFreePages);
    for (i=0;i<17;i++)

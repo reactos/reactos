@@ -6,6 +6,7 @@
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
+ *                  12/11/99:  Phillip Susi: Reworked the APC code
  */
 
 /* INCLUDES *****************************************************************/
@@ -20,7 +21,7 @@
 #include <internal/debug.h>
 
 extern VOID KeApcProlog(VOID);
-extern KSPIN_LOCK PiThreadListLock;
+static KSPIN_LOCK PiApcLock;
 
 /* PROTOTYPES ****************************************************************/
 
@@ -41,13 +42,15 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    PLIST_ENTRY current_entry;
    PKAPC Apc;
    PULONG Esp = (PULONG)UserContext->Esp;
+   KIRQL oldlvl;
    
    DPRINT("KiTestAlert(Thread %x, UserContext %x)\n");
-   
+   KeAcquireSpinLock( &PiApcLock, &oldlvl );
    current_entry = Thread->ApcState.ApcListHead[1].Flink;
    
    if (current_entry == &Thread->ApcState.ApcListHead[1])
      {
+	KeReleaseSpinLock( &PiApcLock, oldlvl );
 	return(FALSE);
      }
    
@@ -81,17 +84,26 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    return(TRUE);
 }
 
-VOID KeApcProlog2(PKAPC Apc)
+VOID KeApcProlog2()
 {
-   PKTHREAD Thread;
-   
-   Thread = Apc->Thread;
-   KeLowerIrql(PASSIVE_LEVEL);
-   KeApcProlog3(Apc);
-   PsSuspendThread(CONTAINING_RECORD(Thread,ETHREAD,Tcb),
-		   NULL,
-		   Thread->Alertable,
-		   Thread->WaitMode);
+   PETHREAD Thread = PsGetCurrentThread();
+   PLIST_ENTRY current;
+   PKAPC Apc;
+   KIRQL oldlvl;
+
+   KeLowerIrql( APC_LEVEL );
+   KeAcquireSpinLock( &PiApcLock, &oldlvl );
+   while( !IsListEmpty( current ) )
+   {
+	   current = RemoveTailList( &(Thread->Tcb.ApcState.ApcListHead[0]) );
+	   KeReleaseSpinLock( &PiApcLock, oldlvl );
+	   Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
+	   KeApcProlog3(Apc);
+	   KeAcquireSpinLock( &PiApcLock, &oldlvl );
+   }
+   KeReleaseSpinLock( &PiApcLock, oldlvl );
+   Thread->Tcb.WaitStatus = STATUS_ALERTED;
+   KeLowerIrql( PASSIVE_LEVEL );
 }
 
 VOID KeApcProlog3(PKAPC Apc)
@@ -99,72 +111,43 @@ VOID KeApcProlog3(PKAPC Apc)
  * FUNCTION: This is called from the prolog proper (in assembly) to deliver
  * a kernel APC
  */
-{
-   PKTHREAD Thread;
-   
+{  
+   PKTHREAD Thread = KeGetCurrentThread();
    DPRINT("KeApcProlog2(Apc %x)\n",Apc);
-   KeEnterCriticalRegion();
-   Apc->Thread->ApcState.KernelApcInProgress++;
-   Apc->Thread->ApcState.KernelApcPending--;
-   RemoveEntryList(&Apc->ApcListEntry);
-   Thread = Apc->Thread;
+   InterlockedIncrement( &(Thread->ApcState.KernelApcInProgress) );
+   InterlockedDecrement( &(Thread->ApcState.KernelApcPending) );
+   
    Apc->KernelRoutine(Apc,
 		      &Apc->NormalRoutine,
 		      &Apc->NormalContext,
 		      &Apc->SystemArgument1,
 		      &Apc->SystemArgument2);
-   Thread->ApcState.KernelApcInProgress--;
-   KeLeaveCriticalRegion();   
+   InterlockedDecrement( &(Thread->ApcState.KernelApcInProgress) );
 }
 
-VOID KeDeliverKernelApc(PKAPC Apc)
+VOID KeDeliverKernelApc( PKTHREAD TargetThread )
 /*
  * FUNCTION: Simulates an interrupt on the target thread which will transfer
  * control to a kernel mode routine
+ * Must be called while holding the PiApcLock
  */
 {
-   PKTHREAD TargetThread;
    PULONG Stack;
    
    DPRINT("KeDeliverKernelApc(Apc %x)\n", Apc);
-   
-   TargetThread = Apc->Thread;
-   
    if (TargetThread == KeGetCurrentThread())
      {	
-	KeApcProlog3(Apc);
+	KeApcProlog2();
 	return;
      }
    
-   if (TargetThread->Context.cs == KERNEL_CS)
-     {
-	TargetThread->Context.esp = TargetThread->Context.esp - 16;
+   	TargetThread->Context.esp = TargetThread->Context.esp - 12;
 	Stack = (PULONG)TargetThread->Context.esp;
-	Stack[0] = TargetThread->Context.eax;
-	Stack[1] = TargetThread->Context.eip;
-	Stack[2] = TargetThread->Context.cs;
-	Stack[3] = TargetThread->Context.eflags;
+	Stack[0] = TargetThread->Context.eip;
+	Stack[1] = TargetThread->Context.cs;
+	Stack[2] = TargetThread->Context.eflags;
 	TargetThread->Context.eip = (ULONG)KeApcProlog;
-	TargetThread->Context.eax = (ULONG)Apc;
-     }
-   else
-     {
-	TargetThread->Context.esp = TargetThread->Context.esp - 40;
-	Stack = (PULONG)TargetThread->Context.esp;
-	Stack[9] = TargetThread->Context.gs;
-	Stack[8] = TargetThread->Context.fs;
-	Stack[7] = TargetThread->Context.ds;
-	Stack[6] = TargetThread->Context.es;
-	Stack[5] = TargetThread->Context.ss;
-	Stack[4] = TargetThread->Context.esp;
-	Stack[3] = TargetThread->Context.eflags;
-	Stack[2] = TargetThread->Context.cs;
-	Stack[1] = TargetThread->Context.eip;
-	Stack[0] = TargetThread->Context.eax;
-	TargetThread->Context.eip = (ULONG)KeApcProlog;
-	TargetThread->Context.eax = (ULONG)Apc;
-     }
-
+   
    PsResumeThread(CONTAINING_RECORD(TargetThread,ETHREAD,Tcb),
 		  NULL);   
 }
@@ -188,7 +171,7 @@ VOID KeInsertQueueApc(PKAPC Apc,
 	  "SystemArgument2 %x, Mode %d)\n",Apc,SystemArgument1,
 	  SystemArgument2,Mode);
    
-   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
+   KeAcquireSpinLock( &PiApcLock, &oldlvl );
    
    Apc->SystemArgument1 = SystemArgument1;
    Apc->SystemArgument2 = SystemArgument2;
@@ -218,10 +201,16 @@ VOID KeInsertQueueApc(PKAPC Apc,
    DPRINT("TargetThread->KernelApcDisable %d\n", 
 	  TargetThread->KernelApcDisable);
    DPRINT("Apc->KernelRoutine %x\n", Apc->KernelRoutine);
-   if (Apc->ApcMode == KernelMode && TargetThread->KernelApcDisable >= 1)
-     {
-	KeDeliverKernelApc(Apc);
+   if (Apc->ApcMode == KernelMode && TargetThread->KernelApcDisable >= 1 )
+     if( TargetThread != PsGetCurrentThread() )
+	 {
+	   PsSuspendThread( CONTAINING_RECORD( TargetThread, ETHREAD, Tcb ), NULL, TRUE, KernelMode );
+	   KeReleaseSpinLock( &PiApcLock, oldlvl );
+	   if( TargetThread->Alertable && TargetThread->WaitIrql < APC_LEVEL )
+		  KeDeliverKernelApc( TargetThread );
      }
+	 else if( TargetThread->Alertable && TargetThread->WaitIrql < APC_LEVEL )
+		  KeDeliverKernelApc( TargetThread );
    else
      {
 	DPRINT("Queuing APC for later delivery\n");
@@ -237,7 +226,6 @@ VOID KeInsertQueueApc(PKAPC Apc,
 	PsResumeThread((PETHREAD)TargetThread,
 		       &Status);
      }
-   KeLowerIrql(oldlvl);
 }
 
 VOID KeInitializeApc(PKAPC Apc,
@@ -338,3 +326,9 @@ NTSTATUS STDCALL NtTestAlert(VOID)
    KiTestAlert(KeGetCurrentThread(),NULL);
    return(STATUS_SUCCESS);
 }
+
+VOID PiInitApcManagement()
+{
+	KeInitializeSpinLock( &PiApcLock );
+}
+

@@ -391,18 +391,8 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 		   WaitMode);
    
    if (Timeout != NULL)
-     {
 	KeCancelTimer(&KeGetCurrentThread()->Timer);
-        if (KeReadStateTimer(&KeGetCurrentThread()->Timer))
-            return(STATUS_TIMEOUT);
-     }
-   
-   if (Alertable &&
-       !IsListEmpty(&CurrentThread->ApcState.ApcListHead[1]))
-     {
-	DPRINT("Current thread is alertable and APCs are pending\n");
-	return(STATUS_USER_APC);
-     }
+
    DPRINT("Returning from KeWaitForSingleObject()\n");
    return Status;
 }
@@ -521,12 +511,7 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 		    WaitMode);
    
     if (Timeout != NULL)
-    {
-	KeCancelTimer(&KeGetCurrentThread()->Timer);
-        if (KeReadStateTimer(&KeGetCurrentThread()->Timer))
-            return(STATUS_TIMEOUT);
-    }
-
+		KeCancelTimer(&KeGetCurrentThread()->Timer);
     DPRINT("Returning from KeWaitForMultipleObjects()\n");
     return(Status);
 }
