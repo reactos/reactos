@@ -43,9 +43,9 @@ struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KEXCEPTION_FRAME;
 
-#define IPI_REQUEST_FUNCTIONCALL    1
-#define IPI_REQUEST_APC		    2
-#define IPI_REQUEST_DPC		    4
+#define IPI_REQUEST_FUNCTIONCALL    0
+#define IPI_REQUEST_APC		    1
+#define IPI_REQUEST_DPC		    2
 
 /* ipi.c ********************************************************************/
 
