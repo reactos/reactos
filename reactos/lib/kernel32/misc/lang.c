@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.20 2004/06/26 20:10:50 gdalsnes Exp $
+/* $Id: lang.c,v 1.21 2004/08/24 17:21:11 navaraf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -904,20 +904,6 @@ GetUserGeoID(
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-IsValidCodePage (
-    UINT    CodePage
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
 }
 
 

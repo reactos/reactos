@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.77 2004/08/22 20:52:28 navaraf Exp $
+/* $Id: console.c,v 1.78 2004/08/24 17:21:11 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1073,10 +1073,10 @@ WriteConsoleA(HANDLE hConsoleOutput,
   USHORT Size;
   ULONG MessageSize;
 
-  Request = RtlAllocateHeap(GetProcessHeap(),
-			    HEAP_ZERO_MEMORY,
-			    sizeof(CSRSS_API_REQUEST) + 
-			    CSRSS_MAX_WRITE_CONSOLE_REQUEST);
+  Request = RtlAllocateHeap(GetProcessHeap(), 0,
+			    sizeof(CSRSS_API_REQUEST) +
+			    min(nNumberOfCharsToWrite,
+			    CSRSS_MAX_WRITE_CONSOLE_REQUEST));
   if (Request == NULL)
     {
       SetLastError(ERROR_OUTOFMEMORY);
@@ -1140,9 +1140,8 @@ BOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    NTSTATUS Status;
    ULONG CharsRead = 0;
    
-   Reply = RtlAllocateHeap(GetProcessHeap(),
-		     HEAP_ZERO_MEMORY,
-		     sizeof(CSRSS_API_REPLY) + nNumberOfCharsToRead);
+   Reply = RtlAllocateHeap(GetProcessHeap(), 0,
+                           sizeof(CSRSS_API_REPLY) + nNumberOfCharsToRead);
    if (Reply == NULL)
      {
 	SetLastError(ERROR_OUTOFMEMORY);
@@ -1946,9 +1945,9 @@ ReadConsoleOutputCharacterA(
   NTSTATUS Status;
   DWORD Size;
 
-  Reply = RtlAllocateHeap(GetProcessHeap(),
-			  HEAP_ZERO_MEMORY,
-			  sizeof(CSRSS_API_REPLY) + CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR);
+  Reply = RtlAllocateHeap(GetProcessHeap(), 0,
+			  sizeof(CSRSS_API_REPLY) +
+			  min(nLength, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR));
   if (Reply == NULL)
     {
       SetLastError(ERROR_OUTOFMEMORY);
@@ -2035,9 +2034,9 @@ ReadConsoleOutputAttribute(
   NTSTATUS Status;
   DWORD Size, i;
   
-  Reply = RtlAllocateHeap(GetProcessHeap(),
-			  HEAP_ZERO_MEMORY,
-			  sizeof(CSRSS_API_REPLY) + CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB);
+  Reply = RtlAllocateHeap(GetProcessHeap(), 0,
+			  sizeof(CSRSS_API_REPLY) +
+			  min(nLength, CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB));
   if (Reply == NULL)
     {
       SetLastError(ERROR_OUTOFMEMORY);
@@ -2101,10 +2100,10 @@ WriteConsoleOutputCharacterA(HANDLE		hConsoleOutput,
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   WORD Size;
-  
-  Request = RtlAllocateHeap(GetProcessHeap(),
-			    HEAP_ZERO_MEMORY,
-			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR);
+
+  Request = RtlAllocateHeap(GetProcessHeap(), 0,
+			    sizeof(CSRSS_API_REQUEST) +
+			    min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR));
   if( !Request )
     {
       SetLastError( ERROR_OUTOFMEMORY );
@@ -2156,9 +2155,9 @@ WriteConsoleOutputCharacterW(HANDLE		hConsoleOutput,
   NTSTATUS Status;
   WORD Size;
   
-  Request = RtlAllocateHeap(GetProcessHeap(),
-			    HEAP_ZERO_MEMORY,
-			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR);
+  Request = RtlAllocateHeap(GetProcessHeap(), 0,
+			    sizeof(CSRSS_API_REQUEST) +
+			    min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR));
   if( !Request )
     {
       SetLastError( ERROR_OUTOFMEMORY );
@@ -2223,9 +2222,9 @@ WriteConsoleOutputAttribute(
    WORD Size;
    int c;
 
-   Request = RtlAllocateHeap(GetProcessHeap(),
-		       HEAP_ZERO_MEMORY,
-		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB);
+   Request = RtlAllocateHeap(GetProcessHeap(), 0,
+		             sizeof(CSRSS_API_REQUEST) +
+		             min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB));
    if( !Request )
      {
        SetLastError( ERROR_OUTOFMEMORY );
@@ -3136,7 +3135,7 @@ GetConsoleCP( VOID )
 /*--------------------------------------------------------------
  *	SetConsoleCP
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI

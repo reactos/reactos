@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.32 2004/05/13 20:42:28 navaraf Exp $
+; $Id: kernel32.edf,v 1.33 2004/08/24 17:21:10 navaraf Exp $
 ;
 ; kernel32.edf
 ;
@@ -284,7 +284,7 @@ GetAtomNameW=GetAtomNameW@12
 GetBinaryType=GetBinaryTypeA@8
 GetBinaryTypeA=GetBinaryTypeA@8
 GetBinaryTypeW=GetBinaryTypeW@8
-;GetCPFileNameFromRegistry
+GetCPFileNameFromRegistry=GetCPFileNameFromRegistry@12
 GetCPInfo=GetCPInfo@8
 GetCPInfoExA=GetCPInfoExA@12
 GetCPInfoExW=GetCPInfoExW@12
@@ -414,7 +414,7 @@ GetNamedPipeHandleStateW=GetNamedPipeHandleStateW@28
 GetNamedPipeInfo=GetNamedPipeInfo@20
 GetNativeSystemInfo=GetNativeSystemInfo@4
 GetNextVDMCommand=GetNextVDMCommand@4
-;GetNlsSectionName
+GetNlsSectionName=GetNlsSectionName@24
 GetNumaHighestNodeNumber=GetNumaHighestNodeNumber@4
 GetNumaNodeProcessorMask=GetNumaNodeProcessorMask@8
 ;GetNumaProcessorMap

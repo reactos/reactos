@@ -280,7 +280,7 @@ GetAtomNameW@12
 GetBinaryType@8
 GetBinaryTypeA@8
 GetBinaryTypeW@8
-;GetCPFileNameFromRegistry
+GetCPFileNameFromRegistry@12
 GetCPInfo@8
 GetCPInfoExA@12
 GetCPInfoExW@12
@@ -409,7 +409,7 @@ GetNamedPipeHandleStateW@28
 GetNamedPipeInfo@20
 GetNativeSystemInfo@4
 GetNextVDMCommand@4
-;GetNlsSectionName
+GetNlsSectionName@24
 GetNumaHighestNodeNumber@4
 GetNumaNodeProcessorMask@8
 ;GetNumaProcessorMap

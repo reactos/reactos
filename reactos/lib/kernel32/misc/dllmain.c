@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.35 2004/06/26 20:07:40 gdalsnes Exp $
+/* $Id: dllmain.c,v 1.36 2004/08/24 17:21:11 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -39,6 +39,9 @@ CRITICAL_SECTION ConsoleLock;
 
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern BOOL FASTCALL PROFILE_Init();
+
+extern BOOL FASTCALL NlsInit();
+extern VOID FASTCALL NlsUninit();
 
 /* FUNCTIONS *****************************************************************/
 
@@ -153,6 +156,12 @@ DllMain(HANDLE hDll,
             return FALSE;
           }
 
+	/* Initialize the National Language Support routines */
+        if (! NlsInit())
+          {
+            return FALSE;
+          }
+
 	/* Initialize console ctrl handler */
 	RtlInitializeCriticalSection(&ConsoleLock);
 	SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
@@ -167,6 +176,8 @@ DllMain(HANDLE hDll,
 	if (DllInitialized == TRUE)
 	  {
 	    /* Insert more dll detach stuff here! */
+
+            NlsUninit();
 
 	    /* Delete DLL critical section */
 	    RtlDeleteCriticalSection (&ConsoleLock);
