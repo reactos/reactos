@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.10 2001/07/29 16:42:35 ekohl Exp $
+/* $Id: dllmain.c,v 1.11 2002/04/01 21:55:09 hbirr Exp $
  * 
  * ReactOS MSVCRT.DLL Compatibility Library
  */
@@ -6,6 +6,9 @@
 
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/stdlib.h>
+
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
 
 static int nAttachCount = 0;
 
@@ -27,36 +30,48 @@ int __app_type = 0; //_UNKNOWN_APP;	/* application type */
 
 int __mb_cur_max = 1;
 
-static int envAlloced = 0;
+HANDLE hHeap = NULL;		/* handle for heap */
 
 
 /* FUNCTIONS **************************************************************/
 
 int BlockEnvToEnviron()
 {
-  char * ptr;
-  int i;
+  char * ptr, * ptr2;
+  int i, len;
 
-  if (!envAlloced)
+  DPRINT("BlockEnvToEnviron()\n");
+
+  if (_environ)
   {
-    envAlloced = 50;
-    _environ = malloc (envAlloced * sizeof (char **));
-    if (_environ == NULL)
-      return -1;
-    _environ[0] = NULL;
+     FreeEnvironmentStringsA(_environ[0]);
+     free(_environ);
+     _environ = NULL;
   }
-  ptr = (char *)GetEnvironmentStringsA();
-  if (!ptr)
-    return -1;
-
-  for (i = 0 ; *ptr && (i < envAlloced) ; i++)
+  ptr2 = ptr = (char*)GetEnvironmentStringsA();
+  if (ptr == NULL)
   {
-    _environ[i] = ptr;
-    while(*ptr) ptr++;
-    ptr++;
+     DPRINT("GetEnvironmentStringsA() returnd NULL\n");
+     return -1;
   }
-  _environ[i] = 0;
-
+  len = 0;
+  while (*ptr2)
+  {
+     len++;
+     while (*ptr2++);
+  }
+  _environ = malloc((len + 1) * sizeof(char*));
+  if (_environ == NULL)
+  {
+     FreeEnvironmentStringsA(ptr);
+     return -1;
+  }
+  for (i = 0; i < len && *ptr; i++)
+  {
+     _environ[i] = ptr;
+     while (*ptr++);
+  }
+  _environ[i] = NULL;
   return 0;
 }
 
@@ -69,11 +84,21 @@ DllMain(PVOID hinstDll,
 	{
 		case DLL_PROCESS_ATTACH://1
 			/* initialize version info */
+			DPRINT("Attach %d\n", nAttachCount);
 			_osver = GetVersion();
 			_winmajor = (_osver >> 8) & 0xFF;
 			_winminor = _osver & 0xFF;
 			_winver = (_winmajor << 8) + _winminor;
 			_osver = (_osver >> 16) & 0xFFFF;
+
+			if (hHeap == NULL || hHeap == INVALID_HANDLE_VALUE)
+			{
+				hHeap = HeapCreate(0, 0, 0);
+				if (hHeap == NULL || hHeap == INVALID_HANDLE_VALUE)
+				{
+					return FALSE;
+				}
+			}
 
 			/* create tls stuff */
 			if (!CreateThreadData())
@@ -98,6 +123,7 @@ DllMain(PVOID hinstDll,
 			break;
 
 		case DLL_PROCESS_DETACH://0
+			DPRINT("Detach %d\n", nAttachCount);
 			if (nAttachCount > 0)
 			{
 				nAttachCount--;
@@ -106,6 +132,22 @@ DllMain(PVOID hinstDll,
 
 				/* destroy tls stuff */
 				DestroyThreadData();
+
+				/* destroy heap */
+				if (nAttachCount == 0)
+				{
+
+					if (_environ)
+					{
+						FreeEnvironmentStringsA(_environ[0]);
+						free(_environ);
+						_environ = NULL;
+					}
+#if 1
+					HeapDestroy(hHeap);
+					hHeap = NULL;
+#endif
+				}
 			}
 			break;
 	}
