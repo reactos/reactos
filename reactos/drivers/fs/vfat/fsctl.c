@@ -372,6 +372,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    PDEVICE_OBJECT DeviceToMount;
    UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\$$Fat$$");
    UNICODE_STRING VolumeNameU = RTL_CONSTANT_STRING(L"\\$$Volume$$");
+   ULONG HashTableSize;
+   FATINFO FatInfo;
 
    DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
 
@@ -385,7 +387,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    DeviceToMount = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
 
-   Status = VfatHasFileSystem (DeviceToMount, &RecognizedFS, NULL);
+   Status = VfatHasFileSystem (DeviceToMount, &RecognizedFS, &FatInfo);
    if (!NT_SUCCESS(Status))
    {
       goto ByeBye;
@@ -398,9 +400,24 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
+   /* Use prime numbers for the table size */
+   if (FatInfo.FatType == FAT12)
+   {
+      HashTableSize = 4099; // 4096 = 4 * 1024
+   }
+   else if (FatInfo.FatType == FAT16 ||
+            FatInfo.FatType == FATX16)
+   {
+      HashTableSize = 16411; // 16384 = 16 * 1024
+   }
+   else
+   {
+      HashTableSize = 65537; // 65536 = 64 * 1024;
+   }
+   HashTableSize = FCB_HASH_TABLE_SIZE;
    DPRINT("VFAT: Recognized volume\n");
    Status = IoCreateDevice(VfatGlobalData->DriverObject,
-			   sizeof (DEVICE_EXTENSION),
+			   ROUND_UP(sizeof (DEVICE_EXTENSION), sizeof(DWORD)) + sizeof(HASHENTRY*) * HashTableSize,
 			   NULL,
 			   FILE_DEVICE_FILE_SYSTEM,
 			   0,
@@ -413,7 +430,9 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
    DeviceExt = (PVOID) DeviceObject->DeviceExtension;
-   RtlZeroMemory(DeviceExt, sizeof(DEVICE_EXTENSION));
+   RtlZeroMemory(DeviceExt, ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(DWORD)) + sizeof(HASHENTRY*) * HashTableSize);
+   DeviceExt->FcbHashTable = (HASHENTRY**)((ULONG_PTR)DeviceExt + ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(DWORD)));
+   DeviceExt->HashTableSize = HashTableSize;
 
    /* use same vpb as device disk */
    DeviceObject->Vpb = DeviceToMount->Vpb;
@@ -557,7 +576,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    /* read volume label */
    ReadVolumeLabel(DeviceExt,  DeviceObject->Vpb);
-   
+
    Status = STATUS_SUCCESS;
 ByeBye:
 
