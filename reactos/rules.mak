@@ -40,7 +40,7 @@ ifeq ($(HOST),)
 ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
 HOST=mingw32-windows
 else
-HOST=mingw32-linux
+export HOST=mingw32-linux
 endif
 endif
 
@@ -74,7 +74,7 @@ endif
 #
 ifeq ($(HOST),mingw32-linux)
 export NASM_FORMAT = win32
-export PREFIX = mingw32-
+export PREFIX = i386-mingw32-
 export EXE_POSTFIX :=
 export EXE_PREFIX := ./
 export DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
