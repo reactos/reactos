@@ -186,6 +186,7 @@ MainFrame::MainFrame(HWND hwnd)
 	}
 
 
+#ifdef _DEBUG
 	 // address & command bar
 	WindowCanvas canvas(hwnd);
 	RECT rect = {0, 0, 0, 0};
@@ -199,6 +200,7 @@ MainFrame::MainFrame(HWND hwnd)
 	_hcommandedit = CreateWindow(TEXT("EDIT"), TEXT("> Command"), WS_CHILD|WS_VISIBLE, 0, 0, 0, rect.bottom,
 							hwnd, (HMENU)IDW_ADDRESSBAR, g_Globals._hInstance, 0);
 	SetWindowFont(_hcommandedit, hfont, FALSE);
+#endif
 
 	/* CreateStatusWindow does not accept WS_BORDER
 		_hstatusbar = CreateWindowEx(WS_EX_NOPARENTNOTIFY, STATUSCLASSNAME, 0,
