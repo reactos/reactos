@@ -39,6 +39,8 @@ CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
 {
   PREGISTRY_CALLBACK Callback;
   
+  PAGED_CODE();
+  
   ASSERT(Function && Cookie);
   
   Callback = ExAllocatePoolWithTag(PagedPool,
@@ -76,6 +78,8 @@ NTSTATUS STDCALL
 CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
 {
   PLIST_ENTRY CurrentEntry;
+  
+  PAGED_CODE();
 
   ExAcquireFastMutex(&CmiCallbackLock);
 
@@ -128,6 +132,8 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
                            IN PVOID Argument2)
 {
   PLIST_ENTRY CurrentEntry;
+  
+  PAGED_CODE();
   
   ExAcquireFastMutex(&CmiCallbackLock);
 
@@ -184,6 +190,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   PVOID Object;
   PWSTR Start;
   unsigned i;
+  
+  PAGED_CODE();
 
   DPRINT("NtCreateKey (Name %wZ  KeyHandle %x  Root %x)\n",
 	 ObjectAttributes->ObjectName,
@@ -365,6 +373,8 @@ NtDeleteKey(IN HANDLE KeyHandle)
   KPROCESSOR_MODE PreviousMode;
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT1("NtDeleteKey(KeyHandle %x) called\n", KeyHandle);
   
@@ -445,6 +455,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   PDATA_CELL ClassCell;
   ULONG NameSize, ClassSize;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT("KH %x  I %d  KIC %x KI %x  L %d  RL %x\n",
 	 KeyHandle,
@@ -792,6 +804,8 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
+  
+  PAGED_CODE();
 
   DPRINT("KH %x  I %d  KVIC %x  KVI %x  L %d  RL %x\n",
 	 KeyHandle,
@@ -1028,6 +1042,8 @@ NtFlushKey(IN HANDLE KeyHandle)
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
   KPROCESSOR_MODE  PreviousMode;
+  
+  PAGED_CODE();
 
   DPRINT("NtFlushKey (KeyHandle %lx) called\n", KeyHandle);
   
@@ -1082,6 +1098,8 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   PVOID Object;
   HANDLE hKey;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
 
   DPRINT("NtOpenKey(KH %x  DA %x  OA %x  OA->ON '%wZ'\n",
 	 KeyHandle,
@@ -1183,6 +1201,8 @@ NtQueryKey(IN HANDLE KeyHandle,
   PKEY_CELL KeyCell;
   ULONG NameSize, ClassSize;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT("NtQueryKey(KH %x  KIC %x  KI %x  L %d  RL %x)\n",
 	 KeyHandle,
@@ -1384,6 +1404,8 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
+  
+  PAGED_CODE();
 
   DPRINT("NtQueryValueKey(KeyHandle %x  ValueName %S  Length %x)\n",
     KeyHandle, ValueName->Buffer, Length);
@@ -1624,6 +1646,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
   PDATA_CELL NewDataCell;
   PHBIN pBin;
   ULONG DesiredAccess;
+  
+  PAGED_CODE();
 
   DPRINT("NtSetValueKey(KeyHandle %x  ValueName '%wZ'  Type %d)\n",
 	 KeyHandle, ValueName, Type);
@@ -1779,6 +1803,8 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 {
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
@@ -1850,6 +1876,8 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   ULONG BufferSize;
   ULONG Length;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT ("NtLoadKey2() called\n");
 
@@ -1988,6 +2016,8 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   NTSTATUS Status;
   PUCHAR DataPtr;
   ULONG i;
+  
+  PAGED_CODE();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
@@ -2116,6 +2146,8 @@ NtSaveKey (IN HANDLE KeyHandle,
   PREGISTRY_HIVE TempHive;
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT ("NtSaveKey() called\n");
 
@@ -2218,6 +2250,8 @@ NtSetInformationKey (IN HANDLE KeyHandle,
 {
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   if (KeyInformationClass != KeyWriteTimeInformation)
     return STATUS_INVALID_INFO_CLASS;
@@ -2274,6 +2308,8 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 {
   PREGISTRY_HIVE RegistryHive;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   DPRINT ("NtUnloadKey() called\n");
 
@@ -2320,6 +2356,8 @@ NTSTATUS STDCALL
 NtInitializeRegistry (IN BOOLEAN SetUpBoot)
 {
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   if (CmiRegistryInitialized == TRUE)
     return STATUS_ACCESS_DENIED;
