@@ -29,7 +29,7 @@
 
 #else
 
-#include <autohint/ahglobal.h>
+#include <freetype/src/autohint/ahglobal.h>
 
 #endif
 

@@ -30,7 +30,7 @@
 
 #else
 
-#include <truetype/ttgload.h>
+#include <freetype/src/truetype/ttgload.h>
 
 #endif
 

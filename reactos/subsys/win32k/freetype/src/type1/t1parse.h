@@ -39,7 +39,7 @@
 
 #else
 
-#include <type1/t1tokens.h>
+#include <freetype/src/type1/t1tokens.h>
 
 #endif
 

@@ -23,8 +23,8 @@
 
 #else
 
-#include <cid/cidload.h>
-#include <cid/cidgload.h>
+#include <freetype/src/cid/cidload.h>
+#include <freetype/src/cid/cidgload.h>
 
 #endif
 

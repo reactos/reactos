@@ -27,8 +27,8 @@
 
 #else
 
-#include <psnames/psmodule.h>
-#include <psnames/pstables.h>
+#include <freetype/src/psnames/psmodule.h>
+#include <freetype/src/psnames/pstables.h>
 
 #endif
 

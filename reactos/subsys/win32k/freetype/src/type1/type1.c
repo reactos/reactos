@@ -38,19 +38,19 @@
 
 #else /* FT_FLAT_COMPILE */
 
-#include <type1/t1driver.c>
-#include <type1/t1objs.c>
-#include <type1/t1load.c>
-#include <type1/t1gload.c>
-#include <type1/t1tokens.c>
-#include <type1/t1parse.c>
+#include <freetype/src/type1/t1driver.c>
+#include <freetype/src/type1/t1objs.c>
+#include <freetype/src/type1/t1load.c>
+#include <freetype/src/type1/t1gload.c>
+#include <freetype/src/type1/t1tokens.c>
+#include <freetype/src/type1/t1parse.c>
 
 #ifndef T1_CONFIG_OPTION_DISABLE_HINTER
-#include <type1/t1hinter.c>
+#include <freetype/src/type1/t1hinter.c>
 #endif
 
 #ifndef T1_CONFIG_OPTION_NO_AFM
-#include <type1/t1afm.c>
+#include <freetype/src/type1/t1afm.c>
 #endif
 
 #endif /* FT_FLAT_COMPILE */

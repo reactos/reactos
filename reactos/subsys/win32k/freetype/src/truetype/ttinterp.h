@@ -26,7 +26,7 @@
 
 #else
 
-#include <truetype/ttobjs.h>
+#include <freetype/src/truetype/ttobjs.h>
 
 #endif
 

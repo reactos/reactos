@@ -27,8 +27,8 @@
 
 #else
 
-#include <cid/cidgload.h>
-#include <cid/cidload.h>
+#include <freetype/src/cid/cidgload.h>
+#include <freetype/src/cid/cidload.h>
 
 #endif
 

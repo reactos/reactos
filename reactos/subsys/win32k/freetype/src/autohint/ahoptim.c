@@ -40,7 +40,7 @@
 
 #else
 
-#include <autohint/ahoptim.h>
+#include <freetype/src/autohint/ahoptim.h>
 
 #endif
 

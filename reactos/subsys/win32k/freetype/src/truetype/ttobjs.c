@@ -37,11 +37,11 @@
 
 #else /* FT_FLAT_COMPILE */
 
-#include <truetype/ttgload.h>
-#include <truetype/ttpload.h>
+#include <freetype/src/truetype/ttgload.h>
+#include <freetype/src/truetype/ttpload.h>
 
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-#include <truetype/ttinterp.h>
+#include <freetype/src/truetype/ttinterp.h>
 #endif
 
 #endif /* FT_FLAT_COMPILE */

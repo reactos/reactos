@@ -31,11 +31,11 @@
 
 #else
 
-#include <autohint/ahangles.c>
-#include <autohint/ahglyph.c>
-#include <autohint/ahglobal.c>
-#include <autohint/ahhint.c>
-#include <autohint/ahmodule.c>
+#include <freetype/src/autohint/ahangles.c>
+#include <freetype/src/autohint/ahglyph.c>
+#include <freetype/src/autohint/ahglobal.c>
+#include <freetype/src/autohint/ahhint.c>
+#include <freetype/src/autohint/ahmodule.c>
 
 #endif
 

@@ -28,7 +28,7 @@
 
 #else
 
-#include <cff/t2objs.h>
+#include <freetype/src/cff/t2objs.h>
 
 #endif
 

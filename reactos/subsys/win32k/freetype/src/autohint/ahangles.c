@@ -26,7 +26,7 @@
 
 #else
 
-#include <autohint/ahangles.h>
+#include <freetype/src/autohint/ahangles.h>
 
 #endif
 

@@ -32,8 +32,8 @@
 
 #else
 
-#include <cff/t2driver.h>
-#include <cff/t2gload.h>
+#include <freetype/src/cff/t2driver.h>
+#include <freetype/src/cff/t2gload.h>
 
 #endif
 

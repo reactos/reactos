@@ -26,7 +26,7 @@
 
 #else
 
-#include <cid/cidobjs.h>
+#include <freetype/src/cid/cidobjs.h>
 
 #endif
 

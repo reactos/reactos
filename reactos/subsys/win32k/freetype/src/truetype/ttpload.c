@@ -24,7 +24,7 @@
 #ifdef FT_FLAT_COMPILE
 #include "ttpload.h"
 #else
-#include <truetype/ttpload.h>
+#include <freetype/src/truetype/ttpload.h>
 #endif
 
 #include <freetype/internal/tterrors.h>

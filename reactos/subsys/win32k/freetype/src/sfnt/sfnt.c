@@ -37,19 +37,19 @@
 
 #else /* FT_FLAT_COMPILE */
 
-#include <sfnt/ttload.c>
-#include <sfnt/ttcmap.c>
-#include <sfnt/sfobjs.c>
+#include <freetype/src/sfnt/ttload.c>
+#include <freetype/src/sfnt/ttcmap.c>
+#include <freetype/src/sfnt/sfobjs.c>
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-#include <sfnt/ttsbit.c>
+#include <freetype/src/sfnt/ttsbit.c>
 #endif
 
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-#include <sfnt/ttpost.c>
+#include <freetype/src/sfnt/ttpost.c>
 #endif
 
-#include <sfnt/sfdriver.c>
+#include <freetype/src/sfnt/sfdriver.c>
 
 #endif   /* FT_FLAT_COMPILE */
 

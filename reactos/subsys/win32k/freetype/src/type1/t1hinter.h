@@ -27,8 +27,8 @@
 
 #else
 
-#include <type1/t1objs.h>
-#include <type1/t1gload.h>
+#include <freetype/src/type1/t1objs.h>
+#include <freetype/src/type1/t1gload.h>
 
 #endif
 

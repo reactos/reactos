@@ -27,7 +27,7 @@
 
 #else
 
-#include <sfnt/ttsbit.h>
+#include <freetype/src/sfnt/ttsbit.h>
 
 #endif
 

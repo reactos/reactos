@@ -33,14 +33,14 @@
 
 #else /* FT_FLAT_COMPILE */
 
-#include <type1z/z1parse.c>
-#include <type1z/z1load.c>
-#include <type1z/z1objs.c>
-#include <type1z/z1driver.c>
-#include <type1z/z1gload.c>
+#include <freetype/src/type1z/z1parse.c>
+#include <freetype/src/type1z/z1load.c>
+#include <freetype/src/type1z/z1objs.c>
+#include <freetype/src/type1z/z1driver.c>
+#include <freetype/src/type1z/z1gload.c>
 
 #ifndef Z1_CONFIG_OPTION_NO_AFM
-#include <type1z/z1afm.c>
+#include <freetype/src/type1z/z1afm.c>
 #endif
 
 #endif /* FT_FLAT_COMPILE */

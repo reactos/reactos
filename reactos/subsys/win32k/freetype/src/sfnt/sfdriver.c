@@ -31,12 +31,12 @@
 
 #else
 
-#include <sfnt/sfdriver.h>
-#include <sfnt/ttload.h>
-#include <sfnt/ttsbit.h>
-#include <sfnt/ttpost.h>
-#include <sfnt/ttcmap.h>
-#include <sfnt/sfobjs.h>
+#include <freetype/src/sfnt/sfdriver.h>
+#include <freetype/src/sfnt/ttload.h>
+#include <freetype/src/sfnt/ttsbit.h>
+#include <freetype/src/sfnt/ttpost.h>
+#include <freetype/src/sfnt/ttcmap.h>
+#include <freetype/src/sfnt/sfobjs.h>
 
 #endif
 

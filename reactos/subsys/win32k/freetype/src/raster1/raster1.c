@@ -26,8 +26,8 @@
 
 #else
 
-#include <raster1/ftraster.c>
-#include <raster1/ftrend1.c>
+#include <freetype/src/raster1/ftraster.c>
+#include <freetype/src/raster1/ftrend1.c>
 
 #endif
 

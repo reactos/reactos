@@ -23,8 +23,8 @@
 
 #else
 
-#include <cid/cidriver.h>
-#include <cid/cidgload.h>
+#include <freetype/src/cid/cidriver.h>
+#include <freetype/src/cid/cidgload.h>
 
 #endif
 

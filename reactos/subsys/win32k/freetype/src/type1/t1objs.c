@@ -32,12 +32,12 @@
 
 #else /* FT_FLAT_COMPILE */
 
-#include <type1/t1gload.h>
-#include <type1/t1load.h>
-#include <type1/t1afm.h>
+#include <freetype/src/type1/t1gload.h>
+#include <freetype/src/type1/t1load.h>
+#include <freetype/src/type1/t1afm.h>
 
 #ifndef T1_CONFIG_OPTION_DISABLE_HINTER
-#include <type1/t1hinter.h>
+#include <freetype/src/type1/t1hinter.h>
 #endif
 
 #endif /* FT_FLAT_COMPILE */

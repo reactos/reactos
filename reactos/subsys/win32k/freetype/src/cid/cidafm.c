@@ -22,7 +22,7 @@
 
 #else
 
-#include <cid/cidafm.h>
+#include <freetype/src/cid/cidafm.h>
 
 #endif
 

@@ -29,8 +29,8 @@
 
 #else
 
-#include <truetype/ttdriver.h>
-#include <truetype/ttgload.h>
+#include <freetype/src/truetype/ttdriver.h>
+#include <freetype/src/truetype/ttgload.h>
 
 #endif
 

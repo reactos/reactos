@@ -32,8 +32,8 @@
 
 #else
 
-#include <cff/t2load.h>
-#include <cff/t2parse.h>
+#include <freetype/src/cff/t2load.h>
+#include <freetype/src/cff/t2parse.h>
 
 #endif
 

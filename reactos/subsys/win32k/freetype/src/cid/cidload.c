@@ -30,7 +30,7 @@
 
 #else
 
-#include <cid/cidload.h>
+#include <freetype/src/cid/cidload.h>
 
 #endif
 
@@ -256,7 +256,7 @@
 
 #else
 
-#include <cid/cidtokens.h>
+#include <freetype/src/cid/cidtokens.h>
 
 #endif
 

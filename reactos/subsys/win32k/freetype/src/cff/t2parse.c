@@ -22,7 +22,7 @@
 
 #else
 
-#include <cff/t2parse.h>
+#include <freetype/src/cff/t2parse.h>
 
 #endif
 
@@ -434,7 +434,7 @@
 
 #else
 
-#include <cff/t2tokens.h>
+#include <freetype/src/cff/t2tokens.h>
 
 #endif
 

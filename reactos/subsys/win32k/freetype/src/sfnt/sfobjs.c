@@ -22,7 +22,7 @@
 
 #else
 
-#include <sfnt/sfobjs.h>
+#include <freetype/src/sfnt/sfobjs.h>
 
 #endif
 

@@ -22,7 +22,7 @@
 
 #else
 
-#include <winfonts/winfnt.h>
+#include <freetype/src/winfonts/winfnt.h>
 
 #endif
 

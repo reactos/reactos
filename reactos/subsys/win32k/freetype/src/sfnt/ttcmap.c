@@ -27,8 +27,8 @@
 
 #else
 
-#include <sfnt/ttload.h>
-#include <sfnt/ttcmap.h>
+#include <freetype/src/sfnt/ttload.h>
+#include <freetype/src/sfnt/ttcmap.h>
 
 #endif
 

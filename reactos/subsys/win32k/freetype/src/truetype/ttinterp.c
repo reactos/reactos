@@ -27,7 +27,7 @@
 
 #else
 
-#include <truetype/ttinterp.h>
+#include <freetype/src/truetype/ttinterp.h>
 
 #endif
 

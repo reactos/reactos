@@ -26,8 +26,8 @@
 
 #else
 
-#include <smooth/ftgrays.c>
-#include <smooth/ftsmooth.c>
+#include <freetype/src/smooth/ftgrays.c>
+#include <freetype/src/smooth/ftsmooth.c>
 
 #endif
 

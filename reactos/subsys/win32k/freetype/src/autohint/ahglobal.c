@@ -26,8 +26,8 @@
 
 #else
 
-#include <autohint/ahglobal.h>
-#include <autohint/ahglyph.h>
+#include <freetype/src/autohint/ahglobal.h>
+#include <freetype/src/autohint/ahglyph.h>
 
 #endif
 

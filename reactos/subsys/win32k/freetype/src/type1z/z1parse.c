@@ -46,7 +46,7 @@
 
 #else
 
-#include <type1z/z1parse.h>
+#include <freetype/src/type1z/z1parse.h>
 
 #endif
 

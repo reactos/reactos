@@ -129,7 +129,7 @@
 
 #else
 
-#include <smooth/ftgrays.h>
+#include <freetype/src/smooth/ftgrays.h>
 
 #endif
 

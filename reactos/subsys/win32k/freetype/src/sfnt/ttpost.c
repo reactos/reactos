@@ -37,8 +37,8 @@
 
 #else
 
-#include <sfnt/ttpost.h>
-#include <sfnt/ttload.h>
+#include <freetype/src/sfnt/ttpost.h>
+#include <freetype/src/sfnt/ttload.h>
 
 #endif
 

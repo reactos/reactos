@@ -34,8 +34,8 @@
 
 #else
 
-#include <cff/t2objs.h>
-#include <cff/t2load.h>
+#include <freetype/src/cff/t2objs.h>
+#include <freetype/src/cff/t2load.h>
 
 #endif
 

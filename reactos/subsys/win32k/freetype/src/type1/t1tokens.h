@@ -26,7 +26,7 @@
 
 #else
 
-#include <type1/t1objs.h>
+#include <freetype/src/type1/t1objs.h>
 
 #endif
 

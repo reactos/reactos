@@ -33,7 +33,7 @@
 
 #else
 
-#include <autohint/ahloader.h>
+#include <freetype/src/autohint/ahloader.h>
 
 #endif
 

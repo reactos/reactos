@@ -29,7 +29,7 @@
 
 #else
 
-#include <autohint/ahtypes.h>
+#include <freetype/src/autohint/ahtypes.h>
 
 #endif
 

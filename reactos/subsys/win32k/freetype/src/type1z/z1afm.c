@@ -22,7 +22,7 @@
 
 #else
 
-#include <type1z/z1afm.h>
+#include <freetype/src/type1z/z1afm.h>
 
 #endif
 

@@ -26,7 +26,7 @@
 
 #else
 
-#include <type1/t1parse.h>
+#include <freetype/src/type1/t1parse.h>
 
 #endif
 

@@ -28,11 +28,11 @@
 
 #else
 
-#include <cid/cidparse.c>
-#include <cid/cidload.c>
-#include <cid/cidobjs.c>
-#include <cid/cidriver.c>
-#include <cid/cidgload.c>
+#include <freetype/src/cid/cidparse.c>
+#include <freetype/src/cid/cidload.c>
+#include <freetype/src/cid/cidobjs.c>
+#include <freetype/src/cid/cidriver.c>
+#include <freetype/src/cid/cidgload.c>
 
 #endif
 

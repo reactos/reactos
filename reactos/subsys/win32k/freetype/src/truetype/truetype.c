@@ -32,13 +32,13 @@
 
 #else /* FT_FLAT_COMPILE */
 
-#include <truetype/ttdriver.c>    /* driver interface     */
-#include <truetype/ttpload.c>     /* tables loader        */
-#include <truetype/ttgload.c>     /* glyph loader         */
-#include <truetype/ttobjs.c>      /* object manager       */
+#include <freetype/src/truetype/ttdriver.c>    /* driver interface     */
+#include <freetype/src/truetype/ttpload.c>     /* tables loader        */
+#include <freetype/src/truetype/ttgload.c>     /* glyph loader         */
+#include <freetype/src/truetype/ttobjs.c>      /* object manager       */
 
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-#include <truetype/ttinterp.c>    /* bytecode interpreter */
+#include <freetype/src/truetype/ttinterp.c>    /* bytecode interpreter */
 #endif
 
 #endif /* FT_FLAT_COMPILE */

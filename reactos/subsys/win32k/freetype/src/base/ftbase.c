@@ -28,13 +28,13 @@
 
 #else /* FT_FLAT_COMPILE */
 
-#include <base/ftcalc.c>
-#include <base/ftobjs.c>
-#include <base/ftstream.c>
-#include <base/ftlist.c>
-#include <base/ftoutln.c>
-#include <base/ftextend.c>
-#include <base/ftnames.c>
+#include <freetype/src/base/ftcalc.c>
+#include <freetype/src/base/ftobjs.c>
+#include <freetype/src/base/ftstream.c>
+#include <freetype/src/base/ftlist.c>
+#include <freetype/src/base/ftoutln.c>
+#include <freetype/src/base/ftextend.c>
+#include <freetype/src/base/ftnames.c>
 
 #endif /* FT_FLAT_COMPILE */
 

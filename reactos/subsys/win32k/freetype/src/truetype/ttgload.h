@@ -30,10 +30,10 @@
 
 #else /* FT_FLAT_COMPILE */
 
-#include <truetype/ttobjs.h>
+#include <freetype/src/truetype/ttobjs.h>
 
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-#include <truetype/ttinterp.h>
+#include <freetype/src/truetype/ttinterp.h>
 #endif
 
 #endif /* FT_FLAT_COMPILE */

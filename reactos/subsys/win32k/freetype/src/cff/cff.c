@@ -28,11 +28,11 @@
 
 #else
 
-#include <cff/t2driver.c>    /* driver interface     */
-#include <cff/t2parse.c>     /* token parser         */
-#include <cff/t2load.c>      /* tables loader        */
-#include <cff/t2objs.c>      /* object management    */
-#include <cff/t2gload.c>     /* glyph loader         */
+#include <freetype/src/cff/t2driver.c>    /* driver interface     */
+#include <freetype/src/cff/t2parse.c>     /* token parser         */
+#include <freetype/src/cff/t2load.c>      /* tables loader        */
+#include <freetype/src/cff/t2objs.c>      /* object management    */
+#include <freetype/src/cff/t2gload.c>     /* glyph loader         */
 
 #endif
 

@@ -26,7 +26,7 @@
 
 #else
 
-#include <sfnt/ttload.h>
+#include <freetype/src/sfnt/ttload.h>
 
 #endif
 

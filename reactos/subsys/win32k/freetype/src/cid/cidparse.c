@@ -29,7 +29,7 @@
 
 #else
 
-#include <cid/cidparse.h>
+#include <freetype/src/cid/cidparse.h>
 
 #endif
 

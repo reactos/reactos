@@ -28,7 +28,7 @@
 
 #else
 
-#include <autohint/ahhint.h>
+#include <freetype/src/autohint/ahhint.h>
 
 #endif
 

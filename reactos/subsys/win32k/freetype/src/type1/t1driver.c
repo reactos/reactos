@@ -24,9 +24,9 @@
 
 #else
 
-#include <type1/t1driver.h>
-#include <type1/t1gload.h>
-#include <type1/t1afm.h>
+#include <freetype/src/type1/t1driver.h>
+#include <freetype/src/type1/t1gload.h>
+#include <freetype/src/type1/t1afm.h>
 
 #endif
 
