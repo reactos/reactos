@@ -70,8 +70,9 @@ endif
 
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
-CFLAGS = -O2 -I../../../include -I../../include -I../include -fno-builtin \
-         $(LEAN_AND_MEAN_DEFINE) $(DEFINES) -Wall -Wstrict-prototypes $(DEBUGGING_CFLAGS)
+CFLAGS = -O2 -I../../../include -I../../include  \
+         -I../include -fno-builtin $(LEAN_AND_MEAN_DEFINE)  \
+         $(DEFINES) -Wall -Wstrict-prototypes $(DEBUGGING_CFLAGS)
 CXXFLAGS = $(CFLAGS)
 NASM_CMD = nasmw
 NFLAGS = -i../../include/ -i../include/ -pinternal/asm.inc -f$(NASM_FORMAT) -d$(NASM_FORMAT)

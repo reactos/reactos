@@ -25,9 +25,6 @@
 #define FILE_OVERWRITE_IF               0x0005
 #define FILE_MAXIMUM_DISPOSITION        0x0005
 
-
-
-
 //process query / set information class
 
 #define	ProcessBasicInformation 		0
@@ -72,14 +69,11 @@
 #define ThreadPriorityBoost			14
 #define MaxThreadInfoClass			15
 
-
-
 // key query information class
 
 #define KeyBasicInformation			0
 #define KeyNodeInformation			1
 #define KeyFullInformation			2
-
 
 // key set information class
 
@@ -107,15 +101,11 @@
 
 #define EventBasicInformation			0
 
-
 // system information
 
 #define SystemPerformanceInformation		 5
 #define SystemCacheInformation			21
 #define SystemTimeAdjustmentInformation		28
-
-
-
 
 // shutdown action
 
@@ -125,25 +115,20 @@ typedef enum SHUTDOWN_ACTION_TAG {
 	ShutdownPowerOff
 } SHUTDOWN_ACTION;
 
-
-
 // wait type
 
 #define WaitAll					0
 #define WaitAny					1
- 
  
 // key restore flags
 
 #define REG_WHOLE_HIVE_VOLATILE     		1   
 #define REG_REFRESH_HIVE            		2   
 
-
 // object type  access rights
 
 #define OBJECT_TYPE_CREATE		0x0001 
 #define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
-
 
 // directory access rights
 
@@ -314,10 +299,6 @@ typedef struct _SYSTEM_CACHE_INFORMATION {
 	ULONG    	MaximumWorkingSet;
 	ULONG    	Unused[4];
 } SYSTEM_CACHE_INFORMATION;
-
-
-
-// file information
 
 typedef struct _FILE_BASIC_INFORMATION 
 {                    

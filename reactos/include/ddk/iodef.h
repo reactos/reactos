@@ -263,52 +263,6 @@ enum
 #define FILE_VALID_MAILSLOT_OPTION_FLAGS        0x00000032
 #define FILE_VALID_SET_FLAGS                    0x00001036
 
-/*
- * file information
- */
-#define FileDirectoryInformation 		1
-#define FileFullDirectoryInformation		2
-#define FileBothDirectoryInformation		3
-#define FileBasicInformation			4
-#define FileStandardInformation			5
-#define FileInternalInformation			6
-#define FileEaInformation			7
-#define FileAccessInformation			8
-#define FileNameInformation			9
-#define FileRenameInformation			10
-#define FileLinkInformation			11
-#define FileNamesInformation			12
-#define FileDispositionInformation		13
-#define FilePositionInformation			14
-#define FileFullEaInformation			15
-#define FileModeInformation			16
-#define FileAlignmentInformation		17
-#define FileAllInformation			18
-#define FileAllocationInformation		19
-#define FileEndOfFileInformation		20
-#define FileAlternateNameInformation		21
-#define FileStreamInformation			22
-#define FilePipeInformation			23
-#define FilePipeLocalInformation		24
-#define FilePipeRemoteInformation		25
-#define FileMailslotQueryInformation		26
-#define FileMailslotSetInformation		27
-#define FileCompressionInformation		28
-#define FileCopyOnWriteInformation		29
-#define FileCompletionInformation		30
-#define FileMoveClusterInformation		31
-#define FileOleClassIdInformation		32
-#define FileOleStateBitsInformation		33
-#define FileNetworkOpenInformation		34
-#define FileObjectIdInformation			35
-#define FileOleAllInformation			36
-#define FileOleDirectoryInformation		37
-#define FileContentIndexInformation		38
-#define FileInheritContentIndexInformation	39
-#define FileOleInformation			40
-#define FileMaximumInformation			41
-
-
 
 typedef ULONG FS_INFORMATION_CLASS;
 
