@@ -921,4 +921,61 @@ NTSTATUS AfdDispConnect(
   return Status;
 }
 
+
+NTSTATUS AfdDispGetName(
+  PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+/*
+ * FUNCTION: Get socket name
+ * ARGUMENTS:
+ *     Irp   = Pointer to I/O request packet
+ *     IrpSp = Pointer to current stack location of Irp
+ * RETURNS:
+ *     Status of operation
+ */
+{
+  NTSTATUS Status;
+  UINT InputBufferLength;
+  UINT OutputBufferLength;
+  PFILE_REQUEST_GETNAME Request;
+  PFILE_REPLY_GETNAME Reply;
+  PAFDFCB FCB;
+  PFILE_OBJECT FileObject;
+
+  AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+  InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+  OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+  /* Validate parameters */
+  Status = STATUS_INVALID_PARAMETER;
+  if ((InputBufferLength >= sizeof(FILE_REQUEST_GETNAME)) &&
+    (OutputBufferLength >= sizeof(FILE_REPLY_GETNAME))) {
+    FCB = IrpSp->FileObject->FsContext;
+
+    Request = (PFILE_REQUEST_GETNAME)Irp->AssociatedIrp.SystemBuffer;
+    Reply   = (PFILE_REPLY_GETNAME)Irp->AssociatedIrp.SystemBuffer;
+
+    AFD_DbgPrint(MIN_TRACE, ("\n"));
+
+    if (Request->Peer) {
+      if (FCB->State != SOCKET_STATE_CONNECTED) {
+        Reply->Status = WSAENOTCONN;
+        return STATUS_UNSUCCESSFUL;
+      }
+      FileObject = FCB->TdiConnectionObject;
+    } else {
+      FileObject = FCB->TdiAddressObject;
+    }
+
+    /* FIXME: Implement */
+    /* Make a TDI_QUERY_INFORMATION call to underlying TDI transport driver */
+    Status = STATUS_UNSUCCESSFUL;
+  }
+
+  AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+
+  return Status;
+}
+
 /* EOF */

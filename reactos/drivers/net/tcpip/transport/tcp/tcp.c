@@ -408,11 +408,9 @@ NTSTATUS TCPConnect(
     return Status;
   }
 
-  /* Free the NDIS buffer */
-  NdisFreeBuffer(NdisBuffer);
-  ExFreePool(DataBuffer);
-
   KeReleaseSpinLock(&Connection->Lock, OldIrql);
+
+  Status = STATUS_PENDING;
 
   TI_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X)\n", Status));
 

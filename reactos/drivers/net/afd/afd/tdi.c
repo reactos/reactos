@@ -322,8 +322,7 @@ NTSTATUS TdiConnect(
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
 
-  Status = TdiBuildConnectionInfo
-      (&RequestConnectionInfo, RemoteAddress);
+  Status = TdiBuildConnectionInfo(&RequestConnectionInfo, RemoteAddress);
   if (!NT_SUCCESS(Status))
     return Status;
 

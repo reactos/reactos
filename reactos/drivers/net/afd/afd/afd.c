@@ -60,7 +60,7 @@ AfdDispatch(
     AFD_DbgPrint(MAX_TRACE, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X), IrpSp->FileObject (0x%X).\n",
         DeviceObject, Irp, IrpSp->FileObject));
 
-    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Information = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
 
     switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
     case IOCTL_AFD_BIND:
@@ -103,7 +103,12 @@ AfdDispatch(
         Status = AfdDispConnect(Irp, IrpSp);
         break;
 
+    case IOCTL_AFD_GETNAME:
+        Status = AfdDispGetName(Irp, IrpSp);
+        break;
+
     default:
+        Irp->IoStatus.Information = 0;
         AFD_DbgPrint(MIN_TRACE, ("Unknown IOCTL (0x%X).\n",
             IrpSp->Parameters.DeviceIoControl.IoControlCode));
         Status = STATUS_NOT_IMPLEMENTED;
@@ -121,7 +126,7 @@ AfdDispatch(
 }
 
 
-VOID AfdUnload(
+VOID STDCALL AfdUnload(
     PDRIVER_OBJECT DriverObject)
 /*
  * FUNCTION: Unloads the driver
@@ -169,15 +174,15 @@ DriverEntry(
     KeInitializeSpinLock(&DeviceExt->FCBListLock);
     InitializeListHead(&DeviceExt->FCBListHead);
 
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)AfdCreate;
-    DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)AfdClose;
-    DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)AfdRead;
-    DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)AfdWrite;
-    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = (PDRIVER_DISPATCH)AfdFileSystemControl;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)AfdDispatch;
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)AfdClose;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = AfdCreate;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = AfdClose;
+    DriverObject->MajorFunction[IRP_MJ_READ] = AfdRead;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = AfdWrite;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = AfdFileSystemControl;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = AfdClose;
 
-    DriverObject->DriverUnload = (PDRIVER_UNLOAD)AfdUnload;
+    DriverObject->DriverUnload = AfdUnload;
 
 /*    ExInitializeNPagedLookasideList(
       &BufferLookasideList,

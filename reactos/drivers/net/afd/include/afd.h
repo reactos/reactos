@@ -258,6 +258,10 @@ NTSTATUS AfdDispConnect(
   PIRP Irp,
   PIO_STACK_LOCATION IrpSp);
 
+NTSTATUS AfdDispGetName(
+  PIRP Irp,
+  PIO_STACK_LOCATION IrpSp);
+
 /* Prototypes from event.c */
 
 NTSTATUS AfdRegisterEventHandlers(

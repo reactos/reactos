@@ -632,6 +632,102 @@ WSPConnect(
 }
 
 
+INT
+WSPAPI
+WSPGetSockName(
+    IN      SOCKET s,
+    OUT     LPSOCKADDR name,
+    IN OUT  LPINT namelen,
+    OUT     LPINT lpErrno)
+{
+  FILE_REQUEST_GETNAME Request;
+  FILE_REPLY_GETNAME Reply;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+
+  AFD_DbgPrint(MAX_TRACE, ("s (0x%X).\n", s));
+
+  Request.Peer = FALSE;
+
+  Status = NtDeviceIoControlFile(
+    (HANDLE)s,
+    NULL,
+		NULL,
+		NULL,
+		&Iosb,
+		IOCTL_AFD_GETNAME,
+		&Request,
+		sizeof(FILE_REQUEST_GETNAME),
+		&Reply,
+		sizeof(FILE_REPLY_GETNAME));
+  if (Status == STATUS_PENDING) {
+    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+    /* FIXME: Wait only for blocking sockets */
+		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
+  }
+
+  if (!NT_SUCCESS(Status)) {
+	  *lpErrno = Reply.Status;
+    return INVALID_SOCKET;
+	}
+	else
+	{
+    *namelen = min(*namelen, Reply.NameSize);
+    RtlCopyMemory(name, &Reply.Name, *namelen);
+	}
+
+  return 0;
+}
+
+
+INT
+WSPAPI
+WSPGetPeerName(
+    IN      SOCKET s, 
+    OUT     LPSOCKADDR name, 
+    IN OUT  LPINT namelen, 
+    OUT     LPINT lpErrno)
+{
+  FILE_REQUEST_GETNAME Request;
+  FILE_REPLY_GETNAME Reply;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+
+  AFD_DbgPrint(MAX_TRACE, ("s (0x%X).\n", s));
+
+  Request.Peer = TRUE;
+
+  Status = NtDeviceIoControlFile(
+    (HANDLE)s,
+    NULL,
+		NULL,
+		NULL,
+		&Iosb,
+		IOCTL_AFD_GETNAME,
+		&Request,
+		sizeof(FILE_REQUEST_GETNAME),
+		&Reply,
+		sizeof(FILE_REPLY_GETNAME));
+  if (Status == STATUS_PENDING) {
+    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+    /* FIXME: Wait only for blocking sockets */
+		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
+  }
+
+  if (!NT_SUCCESS(Status)) {
+	  *lpErrno = Reply.Status;
+    return INVALID_SOCKET;
+	}
+	else
+	{
+    *namelen = min(*namelen, Reply.NameSize);
+    RtlCopyMemory(name, &Reply.Name, *namelen);
+	}
+
+  return 0;
+}
+
+
 NTSTATUS OpenCommandChannel(
   VOID)
 /*

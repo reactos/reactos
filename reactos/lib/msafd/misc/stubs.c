@@ -67,20 +67,6 @@ WSPGetOverlappedResult(
 }
 
 
-INT
-WSPAPI
-WSPGetPeerName(
-    IN      SOCKET s, 
-    OUT     LPSOCKADDR name, 
-    IN OUT  LPINT namelen, 
-    OUT     LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
 BOOL
 WSPAPI
 WSPGetQOSByName(
@@ -92,20 +78,6 @@ WSPGetQOSByName(
     UNIMPLEMENTED
 
     return FALSE;
-}
-
-
-INT
-WSPAPI
-WSPGetSockName(
-    IN      SOCKET s,
-    OUT     LPSOCKADDR name,
-    IN OUT  LPINT namelen,
-    OUT     LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
 }
 
 
