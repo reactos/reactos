@@ -86,7 +86,9 @@ static BOOL test_file_truncate(TCHAR* file_name)
     TCHAR* file_data = _T("this file should have been truncated to zero bytes...");
     FILE *file = _tfopen(file_name, _T("wb"));
 
-    _tprintf(_T("test_file_truncate(\"%s\")\n"), file_name);
+    if (verbose_flagged) {
+        _tprintf(_T("test_file_truncate(\"%s\")\n"), file_name);
+    }
 
     if (file != NULL) {
         if (_fputts(file_data, file) != _TEOF) {
@@ -115,7 +117,9 @@ static BOOL test_file_truncate(TCHAR* file_name)
     if (file != NULL) {
         count = 0;
         while ((ch = _fgettc(file)) != _TEOF) {
-            _tprintf(_THEX_FORMAT, ch);
+            if (verbose_flagged) {
+                _tprintf(_THEX_FORMAT, ch);
+            }
             ++count;
         }
         error_code = ferror(file);
@@ -380,6 +384,7 @@ static int test_files(int test_num, char* type)
 
 
     if (test_file_truncate(_T("zerosize.foo"))) {
+        printf("System unable to truncate files yet, unlinking:\n");
         test_unlink_files();
     }
 
