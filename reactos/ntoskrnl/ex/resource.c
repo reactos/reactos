@@ -37,6 +37,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
+#include <string.h>
 #include <internal/string.h>
 
 #define NDEBUG
