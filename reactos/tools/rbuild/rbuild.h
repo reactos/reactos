@@ -6,12 +6,14 @@
 #ifdef WIN32
 #include <direct.h>
 #include <io.h>
-#else
-#define _MAX_PATH 255
 #endif
 #include <sys/stat.h>
 #include <time.h>
+#ifdef _MSC_VER
+#include <sys/utime.h>
+#else
 #include <utime.h>
+#endif
 
 #include "ssprintf.h"
 #include "exception.h"

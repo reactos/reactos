@@ -14,6 +14,10 @@
 
 #include <stdarg.h>
 
+#ifdef _MSC_VER
+#define MAX_PATH _MAX_PATH
+#endif
+
 #ifndef WIN32
 #include <wctype.h>
 #include <math.h>

@@ -2,12 +2,16 @@
 
 #include "pch.h"
 
+#ifdef _MSC_VER
+#define MAX_PATH _MAX_PATH
+#endif
+
 #ifdef WIN32
-#include <direct.h>
-#include <io.h>
+#	include <direct.h>
+#	include <io.h>
 #else
-#include <sys/stat.h>
-#define _MAX_PATH 255
+#	include <sys/stat.h>
+#	define MAX_PATH PATH_MAX
 #endif
 #include <assert.h>
 
@@ -180,16 +184,10 @@ Path::RelativeFromWorkingDirectory ( const string& path )
 		vout.push_back ( vpath[i++] );
 
 	// now merge vout into a string again
-	string out;
+	string out = ".";
 	for ( i = 0; i < vout.size(); i++ )
 	{
-		// this squirreliness is b/c win32 has drive letters and *nix doesn't...
-#ifdef WIN32
-		if ( i ) out += "/";
-#else
-		out += out.size() ? "/" : "./";
-#endif
-		out += vout[i];
+		out += "/" + vout[i];
 	}
 	return out;
 }
