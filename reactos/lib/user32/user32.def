@@ -324,7 +324,7 @@ GetScrollBarInfo@12
 GetScrollInfo@12
 GetScrollPos@8
 GetScrollRange@16
-;GetShellWindow
+GetShellWindow@0
 GetSubMenu@8
 GetSysColor@4
 GetSysColorBrush@4
