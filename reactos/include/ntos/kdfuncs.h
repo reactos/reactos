@@ -1,8 +1,9 @@
 #ifndef __INCLUDE_DDK_KDFUNCS_H
 #define __INCLUDE_DDK_KDFUNCS_H
-/* $Id: kdfuncs.h,v 1.8 2002/09/08 10:47:44 chorns Exp $ */
+/* $Id: kdfuncs.h,v 1.1 2003/06/07 10:14:39 chorns Exp $ */
 
-/* --- NTOSKRNL.EXE --- */
+#ifndef __USE_W32API
+
 #if defined(__NTOSKRNL__)
 extern BOOLEAN KdDebuggerEnabled __declspec(dllexport);
 extern BOOLEAN KdDebuggerNotPresent __declspec(dllexport);
@@ -10,6 +11,8 @@ extern BOOLEAN KdDebuggerNotPresent __declspec(dllexport);
 extern BOOLEAN KdDebuggerEnabled __declspec(dllimport);
 extern BOOLEAN KdDebuggerNotPresent __declspec(dllimport);
 #endif
+
+#endif /* __USE_W32API */
 
 BYTE
 STDCALL

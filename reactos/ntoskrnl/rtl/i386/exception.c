@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.5 2003/04/05 22:20:49 guido Exp $
+/* $Id: exception.c,v 1.6 2003/06/07 10:14:40 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -81,7 +81,10 @@ RtlpCaptureContext(PCONTEXT pContext);
 	KeTrapFrameToContext(KeGetCurrentThread()->TrapFrame, (Context)); \
 }
 
-/*** Code below this line is shared with lib/ntdll/arch/ia32/exception.c - please keep in sync ***/
+#define SehpContinue(Context, TestAlert) \
+	ZwContinue(Context, TestAlert)
+
+/*** Code below this line is shared with lib/ntdll/rtl/i386/exception.c - please keep in sync ***/
 
 VOID STDCALL
 AsmDebug(ULONG Value)
@@ -245,7 +248,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
       else
       {
         /* Copy the (possibly changed) context back to the trap frame and return */
-        NtContinue(Context, FALSE);
+        SehpContinue(Context, FALSE);
         return ExceptionContinueExecution;
       }
     }
@@ -373,7 +376,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
     if (ERHead == RegistrationFrame)
     {
       DPRINT("Continueing execution\n");
-      NtContinue(&Context, FALSE);
+      SehpContinue(&Context, FALSE);
       return;
     }
     else
@@ -468,7 +471,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
     RegistrationFrame);
 
   if ((ULONG_PTR)RegistrationFrame == (ULONG_PTR)-1)
-    NtContinue(&Context, FALSE);
+    SehpContinue(&Context, FALSE);
   else
     NtRaiseException(pExceptRec, &Context, 0);
 }

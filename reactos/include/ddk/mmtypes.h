@@ -1,14 +1,10 @@
-/* $Id: mmtypes.h,v 1.15 2003/05/28 18:09:09 chorns Exp $ */
+/* $Id: mmtypes.h,v 1.16 2003/06/07 10:14:39 chorns Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
 
 #include <ddk/i386/pagesize.h>
 #include <ntos/mm.h>
-
-
-#define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGE_SIZE) ? ((((ULONG)x)&(~0xfff))+0x1000) : ((ULONG)x) )
-#define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~0xfff))
 
 
 /*

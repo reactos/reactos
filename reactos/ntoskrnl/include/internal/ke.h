@@ -23,8 +23,7 @@
 /* INCLUDES *****************************************************************/
 
 #ifndef __ASM__
-#include <ddk/ntddk.h>
-
+#include <ddk/ntifs.h>
 #include <stdarg.h>
 #endif /* not __ASM__ */
 

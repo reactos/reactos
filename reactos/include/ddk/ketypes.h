@@ -44,12 +44,6 @@ typedef VOID STDCALL_FUNC
 typedef VOID STDCALL_FUNC
 (*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);
 
-typedef enum _KAPC_ENVIRONMENT {
-    OriginalApcEnvironment,
-    AttachedApcEnvironment,
-    CurrentApcEnvironment
-} KAPC_ENVIRONMENT;
-
 struct _DISPATCHER_HEADER;
 
 typedef struct _KWAIT_BLOCK
@@ -105,9 +99,11 @@ typedef struct _KSPIN_LOCK
 
 typedef struct _KDEVICE_QUEUE
 {
-   LIST_ENTRY ListHead;
-   BOOLEAN Busy;
-   KSPIN_LOCK Lock;
+  CSHORT Type;
+  CSHORT Size;
+  LIST_ENTRY DeviceListHead;
+  KSPIN_LOCK Lock;
+  BOOLEAN Busy;
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE;
 
 
@@ -205,8 +201,8 @@ typedef struct _KDPC
 
 typedef struct _KDEVICE_QUEUE_ENTRY
 {
-   LIST_ENTRY Entry;
-   ULONG Key;
+   LIST_ENTRY DeviceListEntry;
+   ULONG SortKey;
    BOOLEAN Inserted;
 } KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY;
 
@@ -220,19 +216,6 @@ struct _KINTERRUPT;
 typedef BOOLEAN STDCALL_FUNC
 (*PKSERVICE_ROUTINE)(struct _KINTERRUPT* Interrupt,
 		     PVOID ServiceContext);
-
-typedef struct _KINTERRUPT
-{
-   ULONG Vector;
-   KAFFINITY ProcessorEnableMask;
-   PKSPIN_LOCK IrqLock;
-   BOOLEAN Shareable;
-   BOOLEAN FloatingSave;
-   PKSERVICE_ROUTINE ServiceRoutine;
-   PVOID ServiceContext;
-   LIST_ENTRY Entry;
-   KIRQL SynchLevel;
-} KINTERRUPT, *PKINTERRUPT;
 
 typedef struct _KSYSTEM_TIME
 {

@@ -144,8 +144,9 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
     }
   
 
-  Er.ExceptionFlags = (STATUS_SINGLE_STEP == (NTSTATUS) Er.ExceptionCode || STATUS_BREAKPOINT == (NTSTATUS) Er.ExceptionCode ?
-                       0 : EXCEPTION_NONCONTINUABLE);
+  Er.ExceptionFlags = ((NTSTATUS) STATUS_SINGLE_STEP == (NTSTATUS) Er.ExceptionCode ||
+    (NTSTATUS) STATUS_BREAKPOINT == (NTSTATUS) Er.ExceptionCode ?
+    0 : EXCEPTION_NONCONTINUABLE);
 
   KiDispatchException(&Er, 0, Tf, UserMode, TRUE);
   return(0);

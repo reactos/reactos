@@ -83,4 +83,16 @@
 
 #endif /* !__USE_W32API */
 
+#ifdef __NTOSKRNL__
+extern struct _EPROCESS* EXPORTED PsInitialSystemProcess;
+extern POBJECT_TYPE EXPORTED PsProcessType;
+extern POBJECT_TYPE EXPORTED PsThreadType;
+#else
+#ifdef __GNU__ // robd
+extern struct _EPROCESS* IMPORTED PsInitialSystemProcess;
+extern POBJECT_TYPE IMPORTED PsProcessType;
+extern POBJECT_TYPE IMPORTED PsThreadType;
+#endif
+#endif
+
 #endif /* __INCLUDE_PS_H */

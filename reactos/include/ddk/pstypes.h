@@ -21,6 +21,8 @@ struct _KPROCESS;
 struct _ETHREAD;
 struct _KTHREAD;
 
+typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
+
 typedef NTSTATUS STDCALL_FUNC (*PKSTART_ROUTINE)(PVOID StartContext);
 
 typedef VOID STDCALL_FUNC (*PCREATE_PROCESS_NOTIFY_ROUTINE)(HANDLE ParentId,
@@ -45,18 +47,5 @@ struct _KPROCESS;
 #define LOW_REALTIME_PRIORITY (16)
 #define HIGH_PRIORITY (31)
 #define MAXIMUM_PRIORITY (32)
-
-
-#ifdef __NTOSKRNL__
-extern struct _EPROCESS* EXPORTED PsInitialSystemProcess;
-extern POBJECT_TYPE EXPORTED PsProcessType;
-extern POBJECT_TYPE EXPORTED PsThreadType;
-#else
-#ifdef __GNU__ // robd
-extern struct _EPROCESS* IMPORTED PsInitialSystemProcess;
-extern POBJECT_TYPE IMPORTED PsProcessType;
-extern POBJECT_TYPE IMPORTED PsThreadType;
-#endif
-#endif
 
 #endif /* __INCLUDE_DDK_PSTYPES_H */

@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.3 2002/10/26 09:53:15 dwelch Exp $
+/* $Id: exception.c,v 1.4 2003/06/07 10:14:39 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -42,6 +42,9 @@ RtlpCaptureContext(PCONTEXT pContext);
 { \
 	RtlpCaptureContext(Context); \
 }
+
+#define SehpContinue(Context, TestAlert) \
+	NtContinue(Context, TestAlert)
 
 /*** Code below this line is shared with ntoskrnl/rtl/i386/exception.c - please keep in sync ***/
 
@@ -203,7 +206,7 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
       else
       {
         /* Copy the (possibly changed) context back to the trap frame and return */
-        NtContinue(Context, FALSE);
+        SehpContinue(Context, FALSE);
         return ExceptionContinueExecution;
       }
     }
@@ -330,7 +333,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
     if (ERHead == RegistrationFrame)
     {
       DPRINT("Continueing execution\n");
-      NtContinue(&Context, FALSE);
+      SehpContinue(&Context, FALSE);
       return;
     }
     else
@@ -425,7 +428,7 @@ RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
     RegistrationFrame);
 
   if ((ULONG_PTR)RegistrationFrame == -1)
-    NtContinue(&Context, FALSE);
+    SehpContinue(&Context, FALSE);
   else
     NtRaiseException(pExceptRec, &Context, 0);
 }

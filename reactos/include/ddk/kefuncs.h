@@ -85,14 +85,15 @@ ULONG KeGetDcacheFillSize(VOID);
 
 ULONG STDCALL KeGetPreviousMode (VOID);
 
-VOID STDCALL KeInitializeApc (PKAPC			Apc,
-			      struct _KTHREAD*		Thread,
-               KAPC_ENVIRONMENT Environment,
-			      PKKERNEL_ROUTINE	KernelRoutine,
-			      PKRUNDOWN_ROUTINE	RundownRoutine,
-			      PKNORMAL_ROUTINE	NormalRoutine,
-               KPROCESSOR_MODE         Mode,
-			      PVOID			Context);
+VOID STDCALL KeInitializeApc (IN PKAPC  Apc,
+	IN PKTHREAD  Thread,
+	IN UCHAR  StateIndex,
+	IN PKKERNEL_ROUTINE  KernelRoutine,
+	IN PKRUNDOWN_ROUTINE  RundownRoutine,
+	IN PKNORMAL_ROUTINE  NormalRoutine,
+	IN UCHAR  Mode,
+	IN PVOID  Context);
+
 
 /*
  * VOID
@@ -220,12 +221,6 @@ KeRaiseIrql (
 KIRQL
 STDCALL
 KeRaiseIrqlToDpcLevel (
-	VOID
-	);
-
-KIRQL
-STDCALL
-KeRaiseIrqlToSynchLevel (
 	VOID
 	);
 

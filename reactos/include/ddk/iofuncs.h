@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.37 2003/04/26 23:13:26 hyperion Exp $ */
+/* $Id: iofuncs.h,v 1.38 2003/06/07 10:14:39 chorns Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -1138,15 +1138,6 @@ IofCompleteRequest (
 	);
 
 /* --- EXPORTED BY HAL --- */
-
-VOID
-STDCALL
-IoAssignDriveLetters (
-	IN	PLOADER_PARAMETER_BLOCK	LoaderBlock,
-	IN	PSTRING			NtDeviceName,
-	OUT	PUCHAR			NtSystemPath,
-	OUT	PSTRING			NtSystemPathString
-	);
 
 BOOLEAN
 STDCALL

@@ -517,4 +517,11 @@ typedef struct _LOADER_PARAMETER_BLOCK
    ULONG BootLoaderName;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 
+typedef enum _KAPC_ENVIRONMENT
+{
+  OriginalApcEnvironment,
+  AttachedApcEnvironment,
+  CurrentApcEnvironment
+} KAPC_ENVIRONMENT;
+
 #endif /* __INCLUDE_TYPES_H */

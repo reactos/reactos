@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_HALFUNCS_H
 #define __INCLUDE_DDK_HALFUNCS_H
-/* $Id: halfuncs.h,v 1.5 2003/05/28 18:09:09 chorns Exp $ */
+/* $Id: halfuncs.h,v 1.6 2003/06/07 10:14:39 chorns Exp $ */
 
 #include <ntos/haltypes.h>
 
@@ -27,9 +27,6 @@ PVOID STDCALL
 HalAllocateCrashDumpRegisters(IN PADAPTER_OBJECT AdapterObject,
 			      IN OUT PULONG NumberOfMapRegisters);
 
-BOOLEAN STDCALL
-HalAllProcessorsStarted(VOID);
-
 NTSTATUS STDCALL
 HalAssignSlotResources(
 	PUNICODE_STRING		RegistryPath,
@@ -42,11 +39,6 @@ HalAssignSlotResources(
 	PCM_RESOURCE_LIST	*AllocatedResources
 	);
 
-BOOLEAN STDCALL
-HalBeginSystemInterrupt(ULONG Vector,
-			KIRQL Irql,
-			PKIRQL OldIrql);
-
 VOID STDCALL
 HalCalibratePerformanceCounter(ULONG Count);
 
@@ -55,22 +47,8 @@ FASTCALL
 HalClearSoftwareInterrupt
 */
 
-BOOLEAN STDCALL
-HalDisableSystemInterrupt(ULONG Vector,
-			  ULONG Unknown2);
-
 VOID STDCALL
 HalDisplayString(IN PCH String);
-
-BOOLEAN STDCALL
-HalEnableSystemInterrupt(ULONG Vector,
-			 ULONG Unknown2,
-			 ULONG Unknown3);
-
-VOID STDCALL
-HalEndSystemInterrupt(KIRQL Irql,
-		      ULONG Unknown2);
-
 
 /*
  * HalExamineMBR() is not exported explicitly.
@@ -136,14 +114,6 @@ HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 		      PKIRQL Irql,
 		      PKAFFINITY Affinity);
 
-VOID STDCALL
-HalInitializeProcessor(ULONG ProcessorNumber,
-		       PVOID ProcessorStack);
-
-BOOLEAN STDCALL
-HalInitSystem(ULONG BootPhase,
-	      PLOADER_PARAMETER_BLOCK LoaderBlock);
-
 BOOLEAN STDCALL
 HalMakeBeep(ULONG Frequency);
 
@@ -166,9 +136,6 @@ HalQueryRealTimeClock(PTIME_FIELDS Time);
 
 ULONG STDCALL
 HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
-
-VOID STDCALL
-HalReportResourceUsage(VOID);
 
 VOID STDCALL
 HalRequestIpi(ULONG Unknown);

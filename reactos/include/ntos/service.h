@@ -1,11 +1,13 @@
 
-#ifndef __INTERNAL_SERVICE_H
-#define __INTERNAL_SERVICE_H
+#ifndef __NTOS_SERVICE_H
+#define __NTOS_SERVICE_H
 
 
 /* number of entries in the service descriptor tables */
 #define SSDT_MAX_ENTRIES 4
 
+
+#ifndef __USE_W32API
 
 #pragma pack(1)
 
@@ -25,26 +27,30 @@ typedef struct t_KeServiceDescriptorTableEntry {
                 unsigned int        NumberOfServices;
                 PSSPT               SSPT;
 
-} KE_SERVICE_DESCRIPTOR_TABLE_ENTRY, *PKE_SERVICE_DESCRIPTOR_TABLE_ENTRY;
+} SSDT_ENTRY, *PSSDT_ENTRY;
 
 #pragma pack()
+
+#endif /* __USE_W32API */
 
 
 /* --- NTOSKRNL.EXE --- */
 #if defined(__NTOSKRNL__)
 extern
-KE_SERVICE_DESCRIPTOR_TABLE_ENTRY
+SSDT_ENTRY
 KeServiceDescriptorTable[SSDT_MAX_ENTRIES] __declspec(dllexport);
 #else
 extern
-KE_SERVICE_DESCRIPTOR_TABLE_ENTRY
+SSDT_ENTRY
 KeServiceDescriptorTable[SSDT_MAX_ENTRIES] __declspec(dllimport);
 #endif
 
 extern
-KE_SERVICE_DESCRIPTOR_TABLE_ENTRY
+SSDT_ENTRY
 KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
 
+
+#ifndef __USE_W32API
 
 BOOLEAN
 STDCALL
@@ -56,5 +62,7 @@ KeAddSystemServiceTable (
 	ULONG	TableIndex
 	);
 
-#endif
+#endif /* __USE_W32API */
+
+#endif /* __NTOS_SERVICE_H */
 

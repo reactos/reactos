@@ -115,4 +115,12 @@
 
 #endif /* !__USE_W32API */
 
+typedef struct _FILE_LOCK_TOC {
+	KSPIN_LOCK			SpinLock;
+	LIST_ENTRY			GrantedListHead;
+	LIST_ENTRY			PendingListHead;
+	LIST_ENTRY			CompletedListHead;
+	LIST_ENTRY			UnlockedListHead;
+} FILE_LOCK_TOC, *PFILE_LOCK_TOC;
+
 #endif /* __INCLUDE_FILE_H */

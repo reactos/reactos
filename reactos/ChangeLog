@@ -1,5 +1,48 @@
 2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	Changes for compiling with w32api
+
+	* include/ddk/service.h: Move ...
+	* include/ntos/service.h: ... here.
+	* include/ddk/kdfuncs.h: Move ...
+	* include/ntos/kdfuncs.h: ... here.
+	* include/ntos/halfuncs.h: New file.
+	* ntoskrnl/include/internal/hal/hal.h,
+	ntoskrnl/include/internal/hal/bus.h,
+	ntoskrnl/include/internal/hal/mps.h: Remove.
+	* hal/halx86/include/hal.h: Remove disabled code.
+	* include/ntos.h: Include ntos/service.h, ntos/halfuncs.h, and
+	ntos/kdfuncs.h.
+	* include/ddk/fstypes.h (FILE_LOCK_TOC): Move ...
+	* include/ntos/file.h: ... here.
+	* include/ddk/halfuncs.h (HalAllProcessorsStarted,
+	HalBeginSystemInterrupt, HalDisableSystemInterrupt,
+	HalEnableSystemInterrupt, HalEndSystemInterrupt,
+	HalInitializeProcessor, HalInitSystem, HalReportResourceUsage): Move to
+	include/ntos/halfuncs.h.
+	* include/ddk/iofuncs.h (IoAssignDriveLetters): Ditto.
+	* include/ddk/kefuncs.h (KeInitializeApc): Match w32api prototype.
+	(KeRaiseIrqlToSynchLevel): Move to include/ntos/halfuncs.h.
+	* include/ddk/ketypes.h (KAPC_ENVIRONMENT): Move to include/ntos/types.h.
+	(KDEVICE_QUEUE, KDEVICE_QUEUE_ENTRY): Match w32api prototype.
+	(KINTERRUPT): Move to include/ntos/zwtypes.h.
+	* include/ddk/mmtypes.h (PAGE_ROUND_UP, PAGE_ROUND_DOWN): Move ...
+	* include/ntos/mm.h: ... here.
+	* include/ddk/ntddk.h: Don't include ddk/kdfuncs.h.
+	* include/ddk/pstypes.h (PKTHREAD, PRKTHREAD): Add.
+	(PsInitialSystemProcess, PsProcessType, PsThreadType): Move ...
+	include/ntos/ps.h: ... here.
+	* lib/ntdll/rtl/i386/exception.c (SehpContinue): New.
+	* ntoskrnl/rtl/i386/exception.c (SehpContinue): Ditto.
+	* ntoskrnl/include/internal/ke.h: Include <ddk/ntifs.h>.
+	* ntoskrnl/include/internal/ntoskrnl.h: Include internal/ke.h.
+	* ntoskrnl/ex/napi.c: Use new structure SSDT_ENTRY.
+	* ntoskrnl/ke/apc.c (KeInitializeApc): Match w32api prototype.
+	* ntoskrnl/ke/kqueue.c: Use fields of new structures KDEVICE_QUEUE
+	and KDEVICE_QUEUE_ENTRY.
+
+2003-06-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* ntoskrnl/cm/regfile.c (CmiCopyKey): Fix unsigned/signed warning.
 
 2003-06-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>

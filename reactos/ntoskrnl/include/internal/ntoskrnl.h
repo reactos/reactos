@@ -7,10 +7,11 @@
 
 #ifndef __ASM__
 
+#include <stdarg.h>
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 
-#include <stdarg.h>
+#include "internal/ke.h"
 
 /*
  * Use these to place a function in a specific section of the executable

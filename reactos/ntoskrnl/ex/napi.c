@@ -8,17 +8,15 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <internal/debug.h>
 
-/* GLOBALS ******************************************************************/
-
-#include <ddk/service.h>
 #include <ntdll/napi.h>
 
-/* GLOBALS *****************************************************************/
+/* GLOBALS ******************************************************************/
 
-KE_SERVICE_DESCRIPTOR_TABLE_ENTRY
+SSDT_ENTRY
 __declspec(dllexport)
 KeServiceDescriptorTable[SSDT_MAX_ENTRIES] =
 {
@@ -28,7 +26,7 @@ KeServiceDescriptorTable[SSDT_MAX_ENTRIES] =
 	{ NULL,    NULL,   0,   NULL   }
 };
 
-KE_SERVICE_DESCRIPTOR_TABLE_ENTRY 
+SSDT_ENTRY 
 KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES] =
 {
 	{ MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },

@@ -1647,4 +1647,23 @@ struct _LPC_PORT_BASIC_INFORMATION
 
 } LPC_PORT_BASIC_INFORMATION, * PLPC_PORT_BASIC_INFORMATION;
 
+typedef struct _KINTERRUPT
+{
+   ULONG Vector;
+   KAFFINITY ProcessorEnableMask;
+   PKSPIN_LOCK IrqLock;
+   BOOLEAN Shareable;
+   BOOLEAN FloatingSave;
+   PKSERVICE_ROUTINE ServiceRoutine;
+   PVOID ServiceContext;
+   LIST_ENTRY Entry;
+   KIRQL SynchLevel;
+} KINTERRUPT;
+
+#ifndef __USE_W32API
+
+typedef struct _KINTERRUPT *PKINTERRUPT;
+
+#endif /* __USE_W32API */
+
 #endif

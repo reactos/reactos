@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.45 2003/05/28 18:09:10 chorns Exp $
+/* $Id: ps.h,v 1.46 2003/06/07 10:14:39 chorns Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -147,7 +147,7 @@ typedef struct _KTHREAD
    
    /* Added by Phillip Susi for list of threads in a process */
    LIST_ENTRY        ProcessThreadListEntry;         /* 1B0 */
-} __attribute__((packed)) KTHREAD, *PKTHREAD;
+} __attribute__((packed)) KTHREAD;
 
 /* Top level irp definitions. */
 #define 	FSRTL_FSP_TOP_LEVEL_IRP			(0x01)
@@ -221,7 +221,13 @@ typedef struct _ETHREAD
 
   struct _W32THREAD* Win32Thread;
   
-} __attribute__((packed)) ETHREAD, *PETHREAD;
+} __attribute__((packed)) ETHREAD;
+
+#ifndef __USE_W32API
+
+typedef struct _ETHREAD *PETHREAD;
+
+#endif /* __USE_W32API */
 
 
 typedef struct _KPROCESS 
@@ -286,7 +292,13 @@ typedef struct _KPROCESS
   UCHAR		        ThreadSeed;                   /* 066 */
   /* Disable priority boosts? */
   UCHAR		        DisableBoost;                 /* 067 */
-} KPROCESS, *PKPROCESS;
+} KPROCESS;
+
+#ifndef __USE_W32API
+
+typedef struct _KPROCESS *PKPROCESS;
+
+#endif /* __USE_W32API */
 
 struct _EPROCESS
 {

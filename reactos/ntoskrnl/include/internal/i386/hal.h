@@ -5,9 +5,6 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
-#include <ddk/service.h>
-#include <internal/ntoskrnl.h>
-
 /*
  * FUNCTION: Probes for a BIOS32 extension
  */

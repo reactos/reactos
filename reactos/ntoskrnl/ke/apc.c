@@ -441,20 +441,21 @@ KeRemoveQueueApc (PKAPC Apc)
 
 
 VOID STDCALL
-KeInitializeApc(PKAPC			Apc,
-		PKTHREAD		Thread,
-      KAPC_ENVIRONMENT Environment,
-		PKKERNEL_ROUTINE	KernelRoutine,
-		PKRUNDOWN_ROUTINE	RundownRoutine,
-		PKNORMAL_ROUTINE	NormalRoutine,
-      KPROCESSOR_MODE   Mode,
-		PVOID			Context)
+KeInitializeApc(
+  IN PKAPC  Apc,
+	IN PKTHREAD  Thread,
+	IN UCHAR  StateIndex,
+	IN PKKERNEL_ROUTINE  KernelRoutine,
+	IN PKRUNDOWN_ROUTINE  RundownRoutine,
+	IN PKNORMAL_ROUTINE  NormalRoutine,
+	IN UCHAR  Mode,
+	IN PVOID  Context)
 /*
  * FUNCTION: Initialize an APC object
  * ARGUMENTS:
  *       Apc = Pointer to the APC object to initialized
  *       Thread = Thread the APC is to be delivered to
- *       StateIndex = TBD
+ *       StateIndex = KAPC_ENVIRONMENT
  *       KernelRoutine = Routine to be called for a kernel-mode APC
  *       RundownRoutine = Routine to be called if the thread has exited with
  *                        the APC being executed
@@ -463,6 +464,8 @@ KeInitializeApc(PKAPC			Apc,
  *       Context = Parameter to be passed to the APC routine
  */
 {
+   KAPC_ENVIRONMENT Environment = (KAPC_ENVIRONMENT) StateIndex;
+
    DPRINT("KeInitializeApc(Apc %x, Thread %x, Environment %d, "
 	  "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
 	  "Context %x)\n",Apc,Thread,Environment,KernelRoutine,RundownRoutine,
@@ -489,7 +492,7 @@ KeInitializeApc(PKAPC			Apc,
 
    if (Apc->NormalRoutine != NULL)
      {
-	Apc->ApcMode = Mode;
+	Apc->ApcMode = (KPROCESSOR_MODE) Mode;
      }
    else
      {

@@ -34,7 +34,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: svctabm.c,v 1.4 2003/05/18 17:16:17 ea Exp $
+/* $Id: svctabm.c,v 1.5 2003/06/07 10:14:40 chorns Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -42,7 +42,8 @@
 #undef WIN32_LEAN_AND_MEAN
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ddk/service.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <win32k/win32k.h>
 
 /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.37 2003/06/06 10:18:32 gvg Exp $
+/* $Id: dllmain.c,v 1.38 2003/06/07 10:14:40 chorns Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -24,11 +24,10 @@
 #undef WIN32_LEAN_AND_MEAN
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <ddk/winddi.h>
-#include <ddk/service.h>
 
-#include <napi/win32.h>
 #include <win32k/win32k.h>
 
 #include <include/winsta.h>

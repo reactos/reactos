@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.35 2003/05/28 18:09:09 chorns Exp $
+/* $Id: ntddk.h,v 1.36 2003/06/07 10:14:39 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -76,7 +76,6 @@ extern "C"
 #include <ddk/exfuncs.h>
 #include <ddk/halfuncs.h>
 #include <ddk/mmfuncs.h>
-#include <ddk/kdfuncs.h>
 #include <ddk/kefuncs.h>
 #include <ddk/pofuncs.h>
 #include <ddk/pnpfuncs.h>

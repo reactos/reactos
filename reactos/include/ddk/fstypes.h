@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.10 2003/04/19 17:17:10 ea Exp $ */
+/* $Id: fstypes.h,v 1.11 2003/06/07 10:14:39 chorns Exp $ */
 
 #define FSRTL_TAG 	TAG('F','S','r','t')
 
@@ -19,14 +19,6 @@ typedef struct _FILE_LOCK_INFO {
     PEPROCESS       Process;
     LARGE_INTEGER   EndingByte;
 } FILE_LOCK_INFO, *PFILE_LOCK_INFO;
-
-typedef struct _FILE_LOCK_TOC {
-	KSPIN_LOCK			SpinLock;
-	LIST_ENTRY			GrantedListHead;
-	LIST_ENTRY			PendingListHead;
-	LIST_ENTRY			CompletedListHead;
-	LIST_ENTRY			UnlockedListHead;
-} FILE_LOCK_TOC, *PFILE_LOCK_TOC;
 
 typedef struct _FILE_LOCK_GRANTED {
 	LIST_ENTRY			ListEntry;
