@@ -321,7 +321,7 @@ NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
 				InternalProcessType,
 				sizeof(EPROCESS),
 				FALSE);
-   KProcess = &(Process->Pcb);
+   KProcess = &Process->Pcb;
    
    KProcess->BasePriority = PROCESS_PRIO_NORMAL;
    InitializeListHead(&(KProcess->MemoryAreaList));

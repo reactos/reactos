@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.3 2000/03/13 17:54:23 ekohl Exp $
+/* $Id: path.c,v 1.4 2000/03/16 18:44:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,7 +19,6 @@
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
-
 /* DEFINITONS and MACROS ******************************************************/
 
 #define MAX_PFX_SIZE       16
@@ -30,95 +29,87 @@
 /* FUNCTIONS *****************************************************************/
 
 
-static
-ULONG
-RtlpGetDotSequence (PWSTR p)
+static ULONG RtlpGetDotSequence (PWSTR p)
 {
-	ULONG Count = 0;
-
-	for (;;)
-	{
-		if (*p == '.')
-			Count++;
-		else if ((*p == '\\' || *p == '\0') && Count)
-			return Count;
-		else
-			return 0;
-		p++;
-	}
-	return 0;
+   ULONG Count = 0;
+   
+   for (;;)
+     {
+	if (*p == '.')
+	  Count++;
+	else if ((*p == '\\' || *p == '\0') && Count)
+	  return Count;
+	else
+	  return 0;
+	p++;
+     }
+   return 0;
 }
 
 
-static
-VOID
-RtlpEatPath (
-	PWSTR Path
-	)
+static VOID RtlpEatPath (PWSTR Path)
 {
-	PWSTR p, prev;
-
-	p = Path + 2;
-	prev = p;
-
-	while ((*p) != 0 || ((*p) == L'\\' && (*(p+1)) == 0))
-	{
-		ULONG DotLen;
-
-		DotLen = RtlpGetDotSequence (p+1);
-		DPRINT("DotSequenceLength %u\n", DotLen);
-		DPRINT("prev %S p %S\n",prev,p);
-
-		if (DotLen == 0)
-		{
-			prev = p;
-			do
-			{
-				p++;
-			}
-			while ((*p) != 0 && (*p) != L'\\');
-		}
-		else if (DotLen == 1)
-		{
-			wcscpy (p, p+2);
-		}
-		else
-		{
-			if (DotLen > 2)
-			{
-				int n = DotLen - 2;
-
-				while (n > 0 && prev > (Path + 2))
-				{
-					prev--;
-					if ((*prev) == L'\\')
-						n--;
-				}
-			}
-
-			if (*(p + DotLen + 1) == 0)
-				*(prev + 1) = 0;
+   PWSTR p, prev;
+   
+   p = Path + 2;
+   prev = p;
+   
+   while ((*p) != 0 || ((*p) == L'\\' && (*(p+1)) == 0))
+     {
+	ULONG DotLen;
+	
+	DotLen = RtlpGetDotSequence (p+1);
+	DPRINT("DotSequenceLength %u\n", DotLen);
+	DPRINT("prev %S p %S\n",prev,p);
+	
+	if (DotLen == 0)
+	  {
+	     prev = p;
+	     do
+	       {
+		  p++;
+	       }
+	     while ((*p) != 0 && (*p) != L'\\');
+	  }
+	else if (DotLen == 1)
+	  {
+	     wcscpy (p, p+2);
+	  }
+	else
+	  {
+	     if (DotLen > 2)
+	       {
+		  int n = DotLen - 2;
+		  
+		  while (n > 0 && prev > (Path + 2))
+		    {
+		       prev--;
+		       if ((*prev) == L'\\')
+			 n--;
+		    }
+	       }
+	     
+	     if (*(p + DotLen + 1) == 0)
+	       *(prev + 1) = 0;
 			else
-				wcscpy (prev, p + DotLen + 1);
-			p = prev;
-			if (prev > (Path + 2))
-			{
-				prev--;
-				while ((*prev) != L'\\')
-				{
-					prev--;
-				}
-			}
-		}
-	}
+	       wcscpy (prev, p + DotLen + 1);
+	     p = prev;
+	     if (prev > (Path + 2))
+	       {
+		  prev--;
+		  while ((*prev) != L'\\')
+		    {
+		       prev--;
+		    }
+	       }
+	  }
+     }
 }
 
 
-ULONG
-STDCALL
-RtlGetLongestNtPathLength (VOID)
+ULONG STDCALL RtlGetLongestNtPathLength (VOID)
 {
-	return (MAX_PATH + 9);
+   return (MAX_PATH + 9);
 }
 
 
@@ -282,112 +273,108 @@ RtlGetCurrentDirectory_U (
 }
 
 
-NTSTATUS
-STDCALL
-RtlSetCurrentDirectory_U (
-	PUNICODE_STRING name
-	)
+NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
 {
-	UNICODE_STRING full;
-	OBJECT_ATTRIBUTES Attr;
-	IO_STATUS_BLOCK iosb;
-	PCURDIR cd;
-	NTSTATUS Status;
-	ULONG size;
-	HANDLE handle = NULL;
-	PWSTR wcs;
-	PWSTR buf = 0;
+   UNICODE_STRING full;
+   OBJECT_ATTRIBUTES Attr;
+   IO_STATUS_BLOCK iosb;
+   PCURDIR cd;
+   NTSTATUS Status;
+   ULONG size;
+   HANDLE handle = NULL;
+   PWSTR wcs;
+   PWSTR buf = 0;
+   
+   DPRINT ("RtlSetCurrentDirectory %wZ\n", name);
 
-	DPRINT ("RtlSetCurrentDirectory %wZ\n", name);
-
-	RtlAcquirePebLock ();
-	cd = &(NtCurrentPeb ()->ProcessParameters->CurrentDirectory);
-	size = cd->DosPath.MaximumLength;
-
-	buf = RtlAllocateHeap (RtlGetProcessHeap(),
-	                       0,
-	                       size);
-	if (buf == NULL)
-	{
-		RtlReleasePebLock ();
-		return STATUS_NO_MEMORY;
-	}
-
-	size = RtlGetFullPathName_U (name->Buffer, size, buf, 0);
-	if (!size)
-	{
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             buf);
-		RtlReleasePebLock ();
-		return STATUS_OBJECT_NAME_INVALID;
-	}
-
-	if (!RtlDosPathNameToNtPathName_U (buf, &full, 0, 0))
-	{
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             buf);
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             full.Buffer);
-		RtlReleasePebLock ();
-		return STATUS_OBJECT_NAME_INVALID;
-	}
-
-	InitializeObjectAttributes (&Attr,
-	                            &full,
-	                            OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
-	                            NULL,
-	                            NULL);
-
-	Status = NtOpenFile (&handle,
-	                     SYNCHRONIZE | FILE_TRAVERSE,
-	                     &Attr,
-	                     &iosb,
-	                     FILE_SHARE_READ | FILE_SHARE_WRITE,
-	                     FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
-	if (!NT_SUCCESS(Status))
-	{
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             buf);
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             full.Buffer);
-		RtlReleasePebLock ();
-		return Status;
-	}
-
-	/* append backslash if missing */
-	wcs = buf + size / sizeof(WCHAR) - 1;
-	if (*wcs != L'\\')
-	{
-		*(++wcs) = L'\\';
-		*(++wcs) = 0;
-		size += sizeof(WCHAR);
-	}
-
-	memmove (cd->DosPath.Buffer,
-	         buf,
-	         size + sizeof(WCHAR));
-	cd->DosPath.Length = size;
-
-	if (cd->Handle)
-		NtClose (cd->Handle);
-	cd->Handle = handle;
-
+   RtlAcquirePebLock ();
+   cd = &NtCurrentPeb ()->ProcessParameters->CurrentDirectory;
+   size = cd->DosPath.MaximumLength;
+   
+   buf = RtlAllocateHeap (RtlGetProcessHeap(),
+			  0,
+			  size);
+   if (buf == NULL)
+     {
+	RtlReleasePebLock ();
+	return STATUS_NO_MEMORY;
+     }
+   
+   size = RtlGetFullPathName_U (name->Buffer, size, buf, 0);
+   if (!size)
+     {
 	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             buf);
-
+		     0,
+		     buf);
+	RtlReleasePebLock ();
+	return STATUS_OBJECT_NAME_INVALID;
+     }
+   
+   if (!RtlDosPathNameToNtPathName_U (buf, &full, 0, 0))
+     {
 	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             full.Buffer);
-
-	RtlReleasePebLock();
-
-	return STATUS_SUCCESS;
+		     0,
+		     buf);
+	RtlFreeHeap (RtlGetProcessHeap (),
+		     0,
+		     full.Buffer);
+	RtlReleasePebLock ();
+	return STATUS_OBJECT_NAME_INVALID;
+     }
+   
+   InitializeObjectAttributes (&Attr,
+			       &full,
+			       OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
+			       NULL,
+			       NULL);
+   
+   Status = NtOpenFile (&handle,
+			SYNCHRONIZE | FILE_TRAVERSE,
+			&Attr,
+			&iosb,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+   if (!NT_SUCCESS(Status))
+     {
+	RtlFreeHeap (RtlGetProcessHeap (),
+		     0,
+		     buf);
+	RtlFreeHeap (RtlGetProcessHeap (),
+		     0,
+		     full.Buffer);
+	RtlReleasePebLock ();
+	return Status;
+     }
+   
+   /* append backslash if missing */
+   wcs = buf + size / sizeof(WCHAR) - 1;
+   if (*wcs != L'\\')
+     {
+	*(++wcs) = L'\\';
+	*(++wcs) = 0;
+	size += sizeof(WCHAR);
+     }
+   
+   memmove (cd->DosPath.Buffer,
+	    buf,
+	    size + sizeof(WCHAR));
+   cd->DosPath.Length = size;
+   
+   if (cd->Handle)
+     NtClose (cd->Handle);
+   cd->Handle = handle;
+   
+   RtlFreeHeap (RtlGetProcessHeap (),
+		0,
+		buf);
+   
+   RtlFreeHeap (RtlGetProcessHeap (),
+		0,
+		full.Buffer);
+   
+   RtlReleasePebLock();
+   
+   return STATUS_SUCCESS;
 }
 
 

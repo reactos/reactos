@@ -1,0 +1,7 @@
+#!/bin/sh
+mount -t vfat /bochs/1.44a /mnt/floppy -o loop,rw
+./install-system.sh /mnt/floppy
+umount /mnt/floppy
+mount -t vfat /bochs/10M.vga /mnt/floppy -o loop,rw
+./install.sh /mnt/floppy
+umount /mnt/floppy

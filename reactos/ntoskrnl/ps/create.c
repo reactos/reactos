@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.10 2000/02/14 14:13:33 dwelch Exp $
+/* $Id: create.c,v 1.11 2000/03/16 18:44:57 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -369,8 +369,8 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    Thread->Tcb.WaitBlockList = NULL;
    InsertTailList(&Thread->ThreadsProcess->Pcb.ThreadListHead, 
 		  &Thread->Tcb.ProcessThreadListEntry );
-   DPRINT1("Inserting %x into process %x list\n",
-	   Thread, Thread->ThreadsProcess);
+//   DPRINT1("Inserting %x into process %x list\n",
+//	   Thread, Thread->ThreadsProcess);
    KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
                                 InternalThreadType,
                                 sizeof(ETHREAD),
@@ -422,7 +422,7 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
                                          PAGE_READWRITE);
         if (NT_SUCCESS(Status))
           {
-             DPRINT ("TEB allocated at %x\n", TebBase);
+             DPRINT1 ("TEB allocated at %x\n", TebBase);
              break;
           }
         else
@@ -477,7 +477,7 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
      {
         /* free TEB */
-        DPRINT ("Writing TEB failed!\n");
+        DPRINT1 ("Writing TEB failed!\n");
 
         RegionSize = 0;
         NtFreeVirtualMemory(ProcessHandle,
@@ -492,10 +492,10 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
 
    if (TebPtr != NULL)
      {
-//        *TebPtr = (PNT_TEB)TebBase;
+        *TebPtr = (PNT_TEB)TebBase;
      }
 
-   DPRINT ("TEB allocated at %p\n", TebBase);
+   DPRINT1 ("TEB allocated at %p\n", TebBase);
 
    return Status;
 }
@@ -540,7 +540,7 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE			ThreadHandle,
      }
 
    /* Attention: TebBase is in user memory space */
-//   Thread->Tcb.Teb = TebBase;
+   Thread->Tcb.Teb = TebBase;
 
    Thread->StartAddress=NULL;
 

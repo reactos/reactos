@@ -243,13 +243,15 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    unsigned int cr2;
+//   unsigned int cr3;
    
    /*
     * Get the address for the page fault
     */
-   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));                
-   DPRINT("Page fault address %x eip %x process %x code %x\n",cr2,eip,
-	  PsGetCurrentProcess(), error_code);
+   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
+//   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
+//   DPRINT1("Page fault address %x eip %x process %x code %x cr3 %x\n",cr2,eip,
+//	  PsGetCurrentProcess(), error_code, cr3);
 
    MmSetPageProtect(PsGetCurrentProcess(),
 		    (PVOID)PAGE_ROUND_DOWN(PsGetCurrentProcess()),

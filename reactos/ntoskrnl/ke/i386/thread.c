@@ -34,6 +34,8 @@ static char KiNullLdt[8] = {0,};
 static unsigned int KiNullLdtSel = 0;
 static PETHREAD FirstThread = NULL;
 
+extern ULONG KeSetBaseGdtSelector(ULONG Entry, PVOID Base);
+
 /* FUNCTIONS **************************************************************/
 
 VOID HalTaskSwitch(PKTHREAD thread)
@@ -45,15 +47,14 @@ VOID HalTaskSwitch(PKTHREAD thread)
  * again (possibly never)
  */
 {
-#if 0
-   PETHREAD Thread;
-   Thread = CONTAINING_RECORD(thread, ETHREAD, Tcb);
-   if (Thread->Cid.UniqueThread != (HANDLE)1)
-     {
-	DPRINT1("Scheduling thread %x (id %d)\n",Thread, 
-		Thread->Cid.UniqueThread);
-     }
-#endif
+//   PETHREAD Thread;
+//   PVOID Teb;
+   
+   /* Set the base of the TEB selector to the base of the TEB for the
+    * new thread
+    */
+   KeSetBaseGdtSelector(TEB_SELECTOR, thread->Teb);
+   /* Switch to the new thread's context and stack */
    __asm__("pushfl\n\t"
 	   "cli\n\t"
 	   "ljmp %0\n\t"
@@ -61,6 +62,31 @@ VOID HalTaskSwitch(PKTHREAD thread)
 	   : /* No outputs */
 	   : "m" (*(((unsigned char *)(&(thread->Context.nr)))-4) )
 	   : "ax","dx");
+   /* Reload the TEB selector */
+   __asm__("movw %0, %%ax\n\t"
+	   "movw %%ax, %%fs\n\t"
+	   : /* No outputs */
+	   : "i" (TEB_SELECTOR)
+	   : "ax");
+
+#if 0
+   Thread = PsGetCurrentThread();
+   if (Thread->Cid.UniqueThread != (HANDLE)1)
+     {
+//	DbgPrint("Scheduling thread %x (id %d) teb %x\n",Thread, 
+//		 Thread->Cid.UniqueThread, Thread->Tcb.Teb);
+     }
+   
+   if (Thread->Tcb.Teb != NULL)
+     {
+//	DbgPrint("cr3 %x\n", Thread->ThreadsProcess->Pcb.PageTableDirectory);
+	__asm__("movl %%fs:0x18, %0\n\t"
+		: "=g" (Teb)
+		: /* No inputs */
+		);
+//	DbgPrint("Teb %x\n", Teb);
+     }
+#endif
 }
 
 #define FLAG_NT (1<<14)
@@ -175,6 +201,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
      }
    
    stack_start = kernel_stack + 3*PAGESIZE - sizeof(CONTEXT);
+   Context->SegFs = TEB_SELECTOR;
    memcpy(stack_start, Context, sizeof(CONTEXT));
    
    /*

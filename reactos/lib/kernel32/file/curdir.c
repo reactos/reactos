@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.21 2000/03/14 23:09:23 ekohl Exp $
+/* $Id: curdir.c,v 1.22 2000/03/16 18:44:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,59 +28,51 @@ UNICODE_STRING WindowsDirectory;
 
 /* FUNCTIONS *****************************************************************/
 
-DWORD
-STDCALL
-GetCurrentDirectoryA (
-	DWORD	nBufferLength,
-	LPSTR	lpBuffer
-	)
+DWORD STDCALL GetCurrentDirectoryA (DWORD	nBufferLength,
+				    LPSTR	lpBuffer)
 {
-	ANSI_STRING AnsiString;
-	UNICODE_STRING UnicodeString;
+   ANSI_STRING AnsiString;
+   UNICODE_STRING UnicodeString;
 
-	/* initialize ansi string */
-	AnsiString.Length = 0;
-	AnsiString.MaximumLength = nBufferLength;
-	AnsiString.Buffer = lpBuffer;
+   /* initialize ansi string */
+   AnsiString.Length = 0;
+   AnsiString.MaximumLength = nBufferLength;
+   AnsiString.Buffer = lpBuffer;
+   
+   /* allocate buffer for unicode string */
+   UnicodeString.Length = 0;
+   UnicodeString.MaximumLength = nBufferLength * sizeof(WCHAR);
+   UnicodeString.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+					   0,
+					   UnicodeString.MaximumLength);
 
-	/* allocate buffer for unicode string */
-	UnicodeString.Length = 0;
-	UnicodeString.MaximumLength = nBufferLength * sizeof(WCHAR);
-	UnicodeString.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-	                                        0,
-	                                        UnicodeString.MaximumLength);
+   /* get current directory */
+   UnicodeString.Length = RtlGetCurrentDirectory_U (UnicodeString.MaximumLength,
+						    UnicodeString.Buffer);
+   DPRINT("UnicodeString.Buffer %S\n", UnicodeString.Buffer);
+   
+   /* convert unicode string to ansi (or oem) */
+   if (bIsFileApiAnsi)
+     RtlUnicodeStringToAnsiString (&AnsiString,
+				   &UnicodeString,
+				   FALSE);
+   else
+     RtlUnicodeStringToOemString (&AnsiString,
+				  &UnicodeString,
+				  FALSE);
+   DPRINT("AnsiString.Buffer %s\n", AnsiString.Buffer);
 
-	/* get current directory */
-	UnicodeString.Length = RtlGetCurrentDirectory_U (UnicodeString.MaximumLength,
-	                                                 UnicodeString.Buffer);
-	DPRINT("UnicodeString.Buffer %S\n", UnicodeString.Buffer);
-
-	/* convert unicode string to ansi (or oem) */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&AnsiString,
-		                              &UnicodeString,
-		                              FALSE);
-	else
-		RtlUnicodeStringToOemString (&AnsiString,
-		                             &UnicodeString,
-		                             FALSE);
-	DPRINT("AnsiString.Buffer %s\n", AnsiString.Buffer);
-
-	/* free unicode string */
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             UnicodeString.Buffer);
-
-	return AnsiString.Length;
+   /* free unicode string */
+   RtlFreeHeap (RtlGetProcessHeap (),
+		0,
+		UnicodeString.Buffer);
+   
+   return AnsiString.Length;
 }
 
 
-DWORD
-STDCALL
-GetCurrentDirectoryW (
-	DWORD	nBufferLength,
-	LPWSTR	lpBuffer
-	)
+DWORD STDCALL GetCurrentDirectoryW (DWORD	nBufferLength,
+				    LPWSTR	lpBuffer)
 {
 	ULONG Length;
 
@@ -126,7 +118,6 @@ SetCurrentDirectoryA (
 
 	return TRUE;
 }
-
 
 WINBOOL
 STDCALL
@@ -233,13 +224,7 @@ GetTempPathW (
 	return Value.Length / sizeof(WCHAR);
 }
 
-
-UINT
-STDCALL
-GetSystemDirectoryA (
-	LPSTR	lpBuffer,
-	UINT	uSize
-	)
+WINBOOL STDCALL SetCurrentDirectoryW (LPCWSTR	lpPathName)
 {
 	ANSI_STRING String;
 	ULONG Length;
@@ -267,6 +252,7 @@ GetSystemDirectoryA (
 
 	return Length;
 }
+
 
 
 UINT

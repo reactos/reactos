@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.33 2000/03/12 23:24:51 ekohl Exp $
+/* $Id: shell.c,v 1.34 2000/03/16 18:44:55 dwelch Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -178,11 +178,11 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
      {
 	if (ret)
 	  {
-	     	debug_printf("ProcessInformation.hThread %x\n",
-			     ProcessInformation.hThread);
+//	     	debug_printf("ProcessInformation.hThread %x\n",
+//			     ProcessInformation.hThread);
 	     WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
 	     CloseHandle(ProcessInformation.hProcess);
-	     debug_printf("Thandle %x\n", ProcessInformation.hThread);
+//	     debug_printf("Thandle %x\n", ProcessInformation.hThread);
 	     CloseHandle(ProcessInformation.hThread);
 	  }
      }

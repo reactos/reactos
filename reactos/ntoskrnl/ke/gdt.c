@@ -26,7 +26,7 @@ USHORT KiGdt[(8 + NR_TASKS) * 4] = {0x0, 0x0, 0x0, 0x0,
                                    0x0, 0x0, 0xf200, 0xcc,
                                    0x0, 0x0, 0x0, 0x0,
                                    0x0, 0x0, 0x0, 0x0,
-                                   0x0, 0x0, 0x0, 0x0};
+                                   0x1000, 0x0, 0xf200, 0x0};
 static KSPIN_LOCK GdtLock;
 
 /* FUNCTIONS *****************************************************************/
@@ -36,17 +36,28 @@ VOID KeSetBaseGdtSelector(ULONG Entry,
 {
    KIRQL oldIrql;
    
+   DPRINT("KeSetBaseGdtSelector(Entry %x, Base %x)\n",
+	   Entry, Base);
+   
    KeAcquireSpinLock(&GdtLock, &oldIrql);
    
-   KiGdt[Entry*4 + 1] = ((ULONG)Base) & 0xffff;
+   Entry = (Entry & (~0x3)) / 2;
    
-   KiGdt[Entry*4 + 2] = KiGdt[Entry*4 + 2] & ~(0xff);
-   KiGdt[Entry*4 + 2] = KiGdt[Entry*4 + 2] |
+   KiGdt[Entry + 1] = ((ULONG)Base) & 0xffff;
+   
+   KiGdt[Entry + 2] = KiGdt[Entry + 2] & ~(0xff);
+   KiGdt[Entry + 2] = KiGdt[Entry + 2] |
      ((((ULONG)Base) & 0xff0000) >> 16);
    
-   KiGdt[Entry*4 + 3] = KiGdt[Entry*4 + 3] & ~(0xff00);
-   KiGdt[Entry*4 + 3] = KiGdt[Entry*4 + 3] |
+   KiGdt[Entry + 3] = KiGdt[Entry + 3] & ~(0xff00);
+   KiGdt[Entry + 3] = KiGdt[Entry + 3] |
      ((((ULONG)Base) & 0xff000000) >> 16);
+   
+   DPRINT("%x %x %x %x\n", 
+	   KiGdt[Entry + 0],
+	   KiGdt[Entry + 1],
+	   KiGdt[Entry + 2],
+	   KiGdt[Entry + 3]);
    
    KeReleaseSpinLock(&GdtLock, oldIrql);
 }
