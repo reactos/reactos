@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.12 2003/12/12 14:22:37 gvg Exp $
+/* $Id: hook.c,v 1.13 2003/12/15 19:32:31 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -297,8 +297,11 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
                               ((PCHAR) Common + Common->lParam);
           Csw = CbtCreatewndExtra->Cs;
-          Csw.lpszName = (LPCWSTR)((PCHAR) CbtCreatewndExtra
-                                   + (ULONG) CbtCreatewndExtra->Cs.lpszName);
+          if (NULL != CbtCreatewndExtra->Cs.lpszName)
+            {
+              Csw.lpszName = (LPCWSTR)((PCHAR) CbtCreatewndExtra
+                                       + (ULONG) CbtCreatewndExtra->Cs.lpszName);
+            }
           if (0 != HIWORD(CbtCreatewndExtra->Cs.lpszClass))
             {
               Csw.lpszClass = (LPCWSTR)((PCHAR) CbtCreatewndExtra
@@ -308,9 +311,12 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           if (Common->Ansi)
             {
               memcpy(&Csa, &Csw, sizeof(CREATESTRUCTW));
-              RtlInitUnicodeString(&UString, Csw.lpszName);
-              RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
-              Csa.lpszName = AString.Buffer;
+              if (NULL != Csw.lpszName)
+                {
+                  RtlInitUnicodeString(&UString, Csw.lpszName);
+                  RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
+                  Csa.lpszName = AString.Buffer;
+                }
               if (0 != HIWORD(Csw.lpszClass))
                 {
                   RtlInitUnicodeString(&UString, Csw.lpszClass);
@@ -343,7 +349,10 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
                 {
                   RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR) Csa.lpszClass);
                 }
-              RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR) Csa.lpszName);
+              if (NULL != Csa.lpszName)
+                {
+                  RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR) Csa.lpszName);
+                }
             }
           break;
         }

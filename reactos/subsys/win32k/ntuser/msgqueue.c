@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.48 2003/12/15 15:08:33 weiden Exp $
+/* $Id: msgqueue.c,v 1.49 2003/12/15 19:32:32 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -667,11 +667,11 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   ExReleaseFastMutex(&MessageQueue->Lock);
 
   /* Call the window procedure. */
-  Result = IntCallWindowProc(NULL,
-			      Message->Msg.hwnd,
-			      Message->Msg.message,
-			      Message->Msg.wParam,
-			      Message->Msg.lParam);
+  Result = IntSendMessage(Message->Msg.hwnd,
+                          Message->Msg.message,
+                          Message->Msg.wParam,
+                          Message->Msg.lParam,
+                          TRUE);
 
   /* Let the sender know the result. */
   if (Message->Result != NULL)

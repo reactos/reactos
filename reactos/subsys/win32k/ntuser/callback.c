@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.19 2003/12/12 14:22:37 gvg Exp $
+/* $Id: callback.c,v 1.20 2003/12/15 19:32:32 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -448,9 +448,12 @@ IntCallHookProc(INT HookId,
         {
         case HCBT_CREATEWND:
           CbtCreateWnd = (CBT_CREATEWNDW *) lParam;
-          ArgumentLength += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
-                            + (wcslen(CbtCreateWnd->lpcs->lpszName)
-                               + 1) * sizeof(WCHAR);
+          ArgumentLength += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS);
+          if (NULL != CbtCreateWnd->lpcs->lpszName)
+            {
+              ArgumentLength += (wcslen(CbtCreateWnd->lpcs->lpszName)
+                                 + 1) * sizeof(WCHAR);
+            }
           if (0 != HIWORD(CbtCreateWnd->lpcs->lpszClass))
             {
               ArgumentLength += (wcslen(CbtCreateWnd->lpcs->lpszClass)
@@ -495,10 +498,13 @@ IntCallHookProc(INT HookId,
           CbtCreatewndExtra->Cs = *(CbtCreateWnd->lpcs);
           CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
           Extra = (PCHAR) (CbtCreatewndExtra + 1);
-          memcpy(Extra, CbtCreateWnd->lpcs->lpszName,
-                 (wcslen(CbtCreateWnd->lpcs->lpszName) + 1) * sizeof(WCHAR));
-          CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
-          Extra += (wcslen(CbtCreateWnd->lpcs->lpszName) + 1) * sizeof(WCHAR);
+          if (NULL != CbtCreateWnd->lpcs->lpszName)
+            {
+              memcpy(Extra, CbtCreateWnd->lpcs->lpszName,
+                     (wcslen(CbtCreateWnd->lpcs->lpszName) + 1) * sizeof(WCHAR));
+              CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
+              Extra += (wcslen(CbtCreateWnd->lpcs->lpszName) + 1) * sizeof(WCHAR);
+            }
           if (0 != HIWORD(CbtCreateWnd->lpcs->lpszClass))
             {
               memcpy(Extra, CbtCreateWnd->lpcs->lpszClass,
