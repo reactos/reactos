@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.45 2003/07/21 21:53:51 royce Exp $
+/* $Id: kdebug.c,v 1.46 2003/08/11 18:50:12 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -225,32 +225,6 @@ KdInitSystem(ULONG Reserved,
       p1 = p2;
     }
 
-  /* Print some information */
-  if (KdDebuggerEnabled == TRUE)
-    {
-      if (KdDebugState & KD_DEBUG_GDB)
-	    PrintString("\n   GDB debugging enabled. COM%ld %ld Baud\n\n",
-			GdbPortInfo.ComPort, GdbPortInfo.BaudRate);
-	  
-      if (KdDebugState & KD_DEBUG_PICE)
-	    PrintString("\n   Private ICE debugger enabled\n\n");
-
-      if (KdDebugState & KD_DEBUG_SCREEN)
-	    PrintString("\n   Screen debugging enabled\n\n");
-
-      if (KdDebugState & KD_DEBUG_BOCHS)
-	    PrintString("\n   Bochs debugging enabled\n\n");
-
-      if (KdDebugState & KD_DEBUG_SERIAL)
-	    PrintString("\n   Serial debugging enabled. COM%ld %ld Baud\n\n",
-			LogPortInfo.ComPort, LogPortInfo.BaudRate);
-
-      if (KdDebugState & KD_DEBUG_FILELOG)
-	    PrintString("\n   File log debugging enabled\n\n");
-      if (KdDebugState & KD_DEBUG_MDA)
-	    PrintString("\n   MDA debugging enabled\n\n");
-    }
-
   /* Perform any initialization nescessary */
   if (KdDebuggerEnabled == TRUE)
     {
@@ -290,6 +264,38 @@ VOID KdInit2(VOID)
       KdGdbStubInit(1);
     }
 }
+
+
+VOID
+KdInit3(VOID)
+{
+  /* Print some information */
+  if (KdDebuggerEnabled == TRUE)
+    {
+      if (KdDebugState & KD_DEBUG_GDB)
+	    PrintString("\n   GDB debugging enabled. COM%ld %ld Baud\n\n",
+			GdbPortInfo.ComPort, GdbPortInfo.BaudRate);
+	  
+      if (KdDebugState & KD_DEBUG_PICE)
+	    PrintString("\n   Private ICE debugger enabled\n\n");
+
+      if (KdDebugState & KD_DEBUG_SCREEN)
+	    PrintString("\n   Screen debugging enabled\n\n");
+
+      if (KdDebugState & KD_DEBUG_BOCHS)
+	    PrintString("\n   Bochs debugging enabled\n\n");
+
+      if (KdDebugState & KD_DEBUG_SERIAL)
+	    PrintString("\n   Serial debugging enabled. COM%ld %ld Baud\n\n",
+			LogPortInfo.ComPort, LogPortInfo.BaudRate);
+
+      if (KdDebugState & KD_DEBUG_FILELOG)
+	    PrintString("\n   File log debugging enabled\n\n");
+      if (KdDebugState & KD_DEBUG_MDA)
+	    PrintString("\n   MDA debugging enabled\n\n");
+    }
+}
+
 
 VOID
 KdSerialDebugPrint (LPSTR Message)

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.49 2003/07/24 18:14:59 royce Exp $
+/* $Id: init.c,v 1.50 2003/08/11 18:50:12 chorns Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -37,7 +37,7 @@
 #include "smss.h"
 
 #define NDEBUG
-
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -63,8 +63,8 @@ SmObjectDirectoryQueryRoutine(PWSTR ValueName,
   NTSTATUS Status = STATUS_SUCCESS;
 
 #ifndef NDEBUG
-  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
+  DbgPrint("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  DbgPrint("ValueData '%S'\n", (PWSTR)ValueData);
 #endif
   if (ValueType != REG_SZ)
     {
@@ -125,10 +125,8 @@ SmDosDevicesQueryRoutine(PWSTR ValueName,
   WCHAR LinkBuffer[80];
   NTSTATUS Status;
 
-#ifndef NDEBUG
-  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
-#endif
+  DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
 
   if (ValueType != REG_SZ)
     {
@@ -143,11 +141,9 @@ SmDosDevicesQueryRoutine(PWSTR ValueName,
   RtlInitUnicodeString(&DeviceName,
 		       (PWSTR)ValueData);
 
-#ifndef NDEBUG
-  PrintString("SM: Linking %wZ --> %wZ\n",
+  DPRINT("SM: Linking %wZ --> %wZ\n",
 	      &LinkName,
 	      &DeviceName);
-#endif
 
   /* create symbolic link */
   InitializeObjectAttributes(&ObjectAttributes,
@@ -161,7 +157,7 @@ SmDosDevicesQueryRoutine(PWSTR ValueName,
 				      &DeviceName);
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SmDosDevicesQueryRoutine: NtCreateSymbolicLink( %wZ --> %wZ ) failed!\n",
+      DPRINT1("SmDosDevicesQueryRoutine: NtCreateSymbolicLink( %wZ --> %wZ ) failed!\n",
 		  &LinkName,
 		  &DeviceName);
     }
@@ -211,10 +207,8 @@ SmRunBootAppsQueryRoutine(PWSTR ValueName,
   ULONG len;
   NTSTATUS Status;
 
-#ifndef NDEBUG
-  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
-#endif
+  DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
 
   if (ValueType != REG_SZ)
     {
@@ -248,11 +242,9 @@ SmRunBootAppsQueryRoutine(PWSTR ValueName,
       wcscpy(CommandLine, p2);
     }
 
-  PrintString("Running %S...\n", Description);
-#ifndef NDEBUG
-  PrintString("ImageName: '%S'\n", ImageName);
-  PrintString("CommandLine: '%S'\n", CommandLine);
-#endif
+  DPRINT("Running %S...\n", Description);
+  DPRINT("ImageName: '%S'\n", ImageName);
+  DPRINT("CommandLine: '%S'\n", CommandLine);
 
   /* initialize executable path */
   wcscpy(ImagePath, L"\\SystemRoot\\system32\\");
@@ -288,7 +280,7 @@ SmRunBootAppsQueryRoutine(PWSTR ValueName,
 				&ProcessInfo);
   if (!NT_SUCCESS(Status))
     {
-      PrintString("Running %s failed (Status %lx)\n", Description, Status);
+      DPRINT1("Running %s failed (Status %lx)\n", Description, Status);
       return(STATUS_SUCCESS);
     }
 
@@ -334,7 +326,7 @@ SmRunBootApps(VOID)
 				  NULL);
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SmRunBootApps: RtlQueryRegistryValues() failed! (Status %lx)\n", Status);
+      DPRINT1("SmRunBootApps: RtlQueryRegistryValues() failed! (Status %lx)\n", Status);
     }
 
   return(Status);
@@ -344,15 +336,11 @@ SmRunBootApps(VOID)
 static NTSTATUS
 SmProcessFileRenameList(VOID)
 {
-#ifndef NDEBUG
-  PrintString("SmProcessFileRenameList() called\n");
-#endif
+  DPRINT("SmProcessFileRenameList() called\n");
 
   /* FIXME: implement it! */
 
-#ifndef NDEBUG
-  PrintString("SmProcessFileRenameList() done\n");
-#endif
+  DPRINT("SmProcessFileRenameList() done\n");
 
   return(STATUS_SUCCESS);
 }
@@ -373,10 +361,8 @@ SmKnownDllsQueryRoutine(PWSTR ValueName,
   HANDLE SectionHandle;
   NTSTATUS Status;
 
-#ifndef NDEBUG
-  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-  PrintString("ValueData '%S'  Context %p  EntryContext %p\n", (PWSTR)ValueData, Context, EntryContext);
-#endif
+  DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  DPRINT("ValueData '%S'  Context %p  EntryContext %p\n", (PWSTR)ValueData, Context, EntryContext);
 
   /* Ignore the 'DllDirectory' value */
   if (!_wcsicmp(ValueName, L"DllDirectory"))
@@ -398,15 +384,11 @@ SmKnownDllsQueryRoutine(PWSTR ValueName,
 		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
   if (!NT_SUCCESS(Status))
     {
-#ifndef NDEBUG
-      PrintString("NtOpenFile() failed (Status %lx)\n", Status);
-#endif
+      DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
       return STATUS_SUCCESS;
     }
 
-#ifndef NDEBUG
-  PrintString("Opened file %wZ successfully\n", &ImageName);
-#endif
+  DPRINT("Opened file %wZ successfully\n", &ImageName);
 
   /* Check for valid image checksum */
   Status = LdrVerifyImageMatchesChecksum (FileHandle,
@@ -425,9 +407,8 @@ SmKnownDllsQueryRoutine(PWSTR ValueName,
     }
   else if (!NT_SUCCESS(Status))
     {
-#ifndef NDEBUG
-      PrintString("Failed to check the image checksum\n");
-#endif
+      DPRINT1("Failed to check the image checksum\n");
+
       NtClose(SectionHandle);
       NtClose(FileHandle);
 
@@ -448,9 +429,7 @@ SmKnownDllsQueryRoutine(PWSTR ValueName,
 			   FileHandle);
   if (NT_SUCCESS(Status))
     {
-#ifndef NDEBUG
-      PrintString("Created section successfully\n");
-#endif
+      DPRINT("Created section successfully\n");
       NtClose(SectionHandle);
     }
 
@@ -474,9 +453,7 @@ SmLoadKnownDlls(VOID)
   HANDLE SymlinkHandle;
   NTSTATUS Status;
 
-#ifndef NDEBUG
-  PrintString("SmLoadKnownDlls() called\n");
-#endif
+  DPRINT("SmLoadKnownDlls() called\n");
 
   /* Create 'KnownDlls' object directory */
   RtlInitUnicodeString(&Name,
@@ -491,9 +468,7 @@ SmLoadKnownDlls(VOID)
 				   &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-#ifndef NDEBUG
-      PrintString("NtCreateDirectoryObject() failed (Status %lx)\n", Status);
-#endif
+      DPRINT1("NtCreateDirectoryObject() failed (Status %lx)\n", Status);
       return Status;
     }
 
@@ -513,28 +488,22 @@ SmLoadKnownDlls(VOID)
 				  SmSystemEnvironment);
   if (!NT_SUCCESS(Status))
     {
-#ifndef NDEBUG
-      PrintString("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-#endif
+      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
       return Status;
     }
 
-#ifndef NDEBUG
-  PrintString("DllDosPath: '%wZ'\n", &DllDosPath);
-#endif
+  DPRINT("DllDosPath: '%wZ'\n", &DllDosPath);
 
   if (!RtlDosPathNameToNtPathName_U(DllDosPath.Buffer,
 				    &DllNtPath,
 				    NULL,
 				    NULL))
     {
-#ifndef NDEBUG
-      PrintString("RtlDosPathNameToNtPathName_U() failed\n");
-#endif
+      DPRINT1("RtlDosPathNameToNtPathName_U() failed\n");
       return STATUS_OBJECT_NAME_INVALID;
     }
 
-  PrintString("DllNtPath: '%wZ'\n", &DllNtPath);
+  DPRINT("DllNtPath: '%wZ'\n", &DllNtPath);
 
   /* Open the dll path directory */
   InitializeObjectAttributes(&ObjectAttributes,
@@ -550,9 +519,7 @@ SmLoadKnownDlls(VOID)
 		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
   if (!NT_SUCCESS(Status))
     {
-#ifndef NDEBUG
-      PrintString("NtOpenFile() failed (Status %lx)\n", Status);
-#endif
+      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
       return Status;
     }
 
@@ -570,9 +537,7 @@ SmLoadKnownDlls(VOID)
 				      &DllDosPath);
   if (!NT_SUCCESS(Status))
     {
-#ifndef NDEBUG
-      PrintString("NtCreateSymbolicLink() failed (Status %lx)\n", Status);
-#endif
+      DPRINT1("NtCreateSymbolicLink() failed (Status %lx)\n", Status);
       return Status;
     }
 
@@ -591,14 +556,10 @@ SmLoadKnownDlls(VOID)
 				  NULL);
   if (!NT_SUCCESS(Status))
     {
-#ifndef NDEBUG
-      PrintString("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-#endif
+      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
     }
 
-#ifndef NDEBUG
-  PrintString("SmLoadKnownDlls() done\n");
-#endif
+  DPRINT("SmLoadKnownDlls() done\n");
 
   return Status;
 }
@@ -618,10 +579,8 @@ SmPagingFilesQueryRoutine(PWSTR ValueName,
   NTSTATUS Status;
   LPWSTR p;
 
-#ifndef NDEBUG
-  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
-#endif
+  DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
 
   if (ValueType != REG_SZ)
     {
@@ -702,10 +661,8 @@ SmEnvironmentQueryRoutine(PWSTR ValueName,
   UNICODE_STRING EnvVariable;
   UNICODE_STRING EnvValue;
 
-#ifndef NDEBUG
-  PrintString("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-  PrintString("ValueData '%S'\n", (PWSTR)ValueData);
-#endif
+  DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+  DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
 
   if (ValueType != REG_SZ)
     {
@@ -797,7 +754,7 @@ SmLoadSubsystems(VOID)
 				  &ImageInfo,
 				  sizeof(SYSTEM_LOAD_AND_CALL_IMAGE));
 
-  PrintString("SMSS: Loaded win32k.sys (Status %lx)\n", Status);
+  DPRINT("SMSS: Loaded win32k.sys (Status %lx)\n", Status);
 #if 0
   if (!NT_SUCCESS(Status))
     {
@@ -808,6 +765,43 @@ SmLoadSubsystems(VOID)
   /* FIXME: load more subsystems (csrss!) */
 
   return(Status);
+}
+
+
+static VOID
+SignalInitEvent()
+{
+  NTSTATUS Status;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING UnicodeString;
+  HANDLE ReactOSInitEvent;
+
+  RtlInitUnicodeStringFromLiteral(&UnicodeString, L"\\ReactOSInitDone");
+  InitializeObjectAttributes(&ObjectAttributes,
+    &UnicodeString,
+    EVENT_ALL_ACCESS,
+    0,
+    NULL);
+  Status = NtOpenEvent(&ReactOSInitEvent,
+    EVENT_ALL_ACCESS,
+    &ObjectAttributes);
+  if (NT_SUCCESS(Status))
+    {
+      LARGE_INTEGER Timeout;
+      /* This will cause the boot screen image to go away (if displayed) */
+      NtPulseEvent(ReactOSInitEvent, NULL);
+
+      /* Wait for the display mode to be changed (if in graphics mode) */
+      Timeout.QuadPart = -50000000LL;  /* 5 second timeout */
+      NtWaitForSingleObject(ReactOSInitEvent, FALSE, &Timeout);
+
+      NtClose(ReactOSInitEvent);
+    }
+  else
+    {
+      /* We don't really care if this fails */
+      DPRINT1("SM: Failed to open ReactOS init notification event\n");
+    }
 }
 
 
@@ -827,7 +821,7 @@ InitSessionManager(HANDLE Children[])
   Status = SmCreateObjectDirectories();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to create object directories (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to create object directories (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -835,7 +829,7 @@ InitSessionManager(HANDLE Children[])
   Status = SmCreateApiPort();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to create SmApiPort (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to create SmApiPort (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -844,7 +838,7 @@ InitSessionManager(HANDLE Children[])
 				&SmSystemEnvironment);
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to create the system environment (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to create the system environment (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -852,7 +846,7 @@ InitSessionManager(HANDLE Children[])
   Status = SmSetEnvironmentVariables();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to set system environment variables (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to set system environment variables (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -860,7 +854,7 @@ InitSessionManager(HANDLE Children[])
   Status = SmInitDosDevices();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to create dos device links (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to create dos device links (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -868,7 +862,7 @@ InitSessionManager(HANDLE Children[])
   Status = SmRunBootApps();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to run boot applications (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to run boot applications (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -876,31 +870,31 @@ InitSessionManager(HANDLE Children[])
   Status = SmProcessFileRenameList();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to process the file rename list (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to process the file rename list (Status %lx)\n", Status);
       return(Status);
     }
 
-  PrintString("SM: loading well-known DLLs\n");
+  DPRINT("SM: loading well-known DLLs\n");
 
   /* Load the well known DLLs */
   Status = SmLoadKnownDlls();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to preload system DLLs (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to preload system DLLs (Status %lx)\n", Status);
       /* Don't crash ReactOS if DLLs cannot be loaded */
     }
 
-  PrintString("SM: creating system paging files\n");
+  DPRINT("SM: creating system paging files\n");
 
   /* Create paging files */
   Status = SmCreatePagingFiles();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to create paging files (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to create paging files (Status %lx)\n", Status);
       return(Status);
     }
 
-  PrintString("SM: initializing registry\n");
+  DPRINT("SM: initializing registry\n");
 
   /* Load remaining registry hives */
   NtInitializeRegistry(FALSE);
@@ -910,22 +904,26 @@ InitSessionManager(HANDLE Children[])
   Status = SmUpdateEnvironment();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to update environment variables (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to update environment variables (Status %lx)\n", Status);
       return(Status);
     }
 #endif
 
-  PrintString("SM: loading subsystems\n");
+  DPRINT("SM: loading subsystems\n");
 
   /* Load the subsystems */
   Status = SmLoadSubsystems();
   if (!NT_SUCCESS(Status))
     {
-      PrintString("SM: Failed to load subsystems (Status %lx)\n", Status);
+      DPRINT1("SM: Failed to load subsystems (Status %lx)\n", Status);
       return(Status);
     }
 
-  PrintString("SM: initializing csrss\n");
+
+  SignalInitEvent();
+
+
+  DPRINT("SM: initializing csrss\n");
 
   /* Run csrss.exe */
   RtlInitUnicodeStringFromLiteral(&UnicodeString,
@@ -996,7 +994,7 @@ InitSessionManager(HANDLE Children[])
    * Start the logon process (winlogon.exe)
    */
 
-  PrintString("SM: starting winlogon\n");
+  DPRINT("SM: starting winlogon\n");
 
   /* initialize executable path */
   wcscpy(UnicodeBuffer, L"\\??\\");

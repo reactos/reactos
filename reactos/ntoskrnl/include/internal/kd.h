@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.18 2003/02/14 17:52:30 ekohl Exp $
+/* $Id: kd.h,v 1.19 2003/08/11 18:50:12 chorns Exp $
  *
  * kernel debugger prototypes
  */
@@ -46,6 +46,9 @@ KdInit1(VOID);
 
 VOID
 KdInit2(VOID);
+
+VOID
+KdInit3(VOID);
 
 VOID
 KdPutChar(UCHAR Value);

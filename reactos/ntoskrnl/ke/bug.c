@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.34 2003/07/15 16:26:18 silverblade Exp $
+/* $Id: bug.c,v 1.35 2003/08/11 18:50:12 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -31,6 +31,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <roskrnl.h>
+#include <ntos/bootvid.h>
 #include <internal/kd.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
@@ -93,6 +94,15 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 {
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
+
+  /*
+   * The bug check may have happened while the bootscreen image was displayed.
+   * If this happened, switch back to text mode.
+   */
+  if (InbvIsBootDriverInstalled())
+    {
+      InbvEnableBootDriver(FALSE);
+    }
 
   /* Make sure we're switching back to the blue screen and print messages on it */
   HalReleaseDisplayOwnership();  
@@ -170,6 +180,15 @@ KeBugCheckEx(ULONG BugCheckCode,
 {
   PRTL_MESSAGE_RESOURCE_ENTRY Message;
   NTSTATUS Status;
+
+  /*
+   * The bug check may have happened while the bootscreen image was displayed.
+   * If this happened, switch back to text mode.
+   */
+  if (InbvIsBootDriverInstalled())
+    {
+      InbvEnableBootDriver(FALSE);
+    }
   
   /* Make sure we're switching back to the blue screen and print messages on it */
   HalReleaseDisplayOwnership();  

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.5 2003/06/21 14:25:30 gvg Exp $
+/* $Id: display.c,v 1.6 2003/08/11 18:50:12 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -110,7 +110,8 @@
 #define CRTC_CURLO         0x0f
 
 
-#define CHAR_ATTRIBUTE     0x17  /* grey on blue */
+#define CHAR_ATTRIBUTE_BLACK  0x00  /* black on black */
+#define CHAR_ATTRIBUTE        0x17  /* grey on blue */
 
 
 /* VARIABLES ****************************************************************/
@@ -130,14 +131,14 @@ static PHAL_RESET_DISPLAY_PARAMETERS HalResetDisplayParameters = NULL;
 
 /* STATIC FUNCTIONS *********************************************************/
 
-static VOID
-HalClearDisplay (VOID)
+VOID
+HalClearDisplay (UCHAR CharAttribute)
 {
    WORD *ptr = (WORD*)VideoBuffer;
    ULONG i;
 
   for (i = 0; i < SizeX * SizeY; i++, ptr++)
-    *ptr = ((CHAR_ATTRIBUTE << 8) + ' ');
+    *ptr = ((CharAttribute << 8) + ' ');
 
   CursorX = 0;
   CursorY = 0;
@@ -214,7 +215,7 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
 #ifdef BOCHS_30ROWS
       SizeY=30;
 #endif
-      HalClearDisplay();
+      HalClearDisplay(CHAR_ATTRIBUTE_BLACK);
 
       DisplayInitialized = TRUE;
     }
@@ -238,7 +239,7 @@ HalReleaseDisplayOwnership()
   if (HalResetDisplayParameters(SizeX, SizeY) == TRUE)
     {
       HalOwnsDisplay = TRUE;
-      HalClearDisplay();
+      HalClearDisplay(CHAR_ATTRIBUTE);
     }
 }
 

@@ -36,4 +36,6 @@ BEGIN
     END
 END
 
+IDB_BOOTIMAGE   BITMAP  DISCARDABLE   "res/bootimage.bmp"
+
 #include "bugcodes.rc"

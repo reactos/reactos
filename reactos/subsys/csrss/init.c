@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.19 2003/06/17 13:55:16 gvg Exp $
+/* $Id: init.c,v 1.20 2003/08/11 18:50:12 chorns Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -16,6 +16,9 @@
 #include <win32k/win32k.h>
 
 #include "api.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -136,7 +139,7 @@ CsrServerInitialization (
    Status = CsrParseCommandLine (ArgumentCount, ArgumentArray);
    if (!NT_SUCCESS(Status))
      {
-	PrintString("CSR: Unable to parse the command line (Status: %x)\n", Status);
+	DPRINT1("CSR: Unable to parse the command line (Status: %x)\n", Status);
 	return(FALSE);
      }
 
@@ -157,7 +160,7 @@ CsrServerInitialization (
 			 0);
    if (!NT_SUCCESS(Status))
      {
-	PrintString("CSR: Unable to create \\ApiPort (Status %x)\n", Status);
+	DPRINT1("CSR: Unable to create \\ApiPort (Status %x)\n", Status);
 	return(FALSE);
      }
    CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
@@ -168,7 +171,7 @@ CsrServerInitialization (
 				NULL);
    if (CsrssApiHeap == NULL)
      {
-	PrintString("CSR: Failed to create private heap, aborting\n");
+	DPRINT1("CSR: Failed to create private heap, aborting\n");
 	return FALSE;
      }
 
@@ -185,7 +188,7 @@ CsrServerInitialization (
 				NULL);
    if (!NT_SUCCESS(Status))
      {
-	PrintString("CSR: Unable to create server thread\n");
+	DPRINT1("CSR: Unable to create server thread\n");
 	NtClose(ApiPortHandle);
 	return FALSE;
      }
@@ -194,13 +197,13 @@ CsrServerInitialization (
    Status = NtCreateEvent( &RefreshEventHandle, STANDARD_RIGHTS_ALL, &RefreshEventAttr, FALSE, FALSE );
    if( !NT_SUCCESS( Status ) )
      {
-       PrintString( "CSR: Unable to create refresh event!\n" );
+       DPRINT1( "CSR: Unable to create refresh event!\n" );
        return FALSE;
      }
    Status = RtlCreateUserThread( NtCurrentProcess(), NULL, FALSE, 0, NULL, NULL, (PTHREAD_START_ROUTINE)Console_Api, (PVOID) RefreshEventHandle, NULL, NULL );
    if( !NT_SUCCESS( Status ) )
      {
-       PrintString( "CSR: Unable to create console thread\n" );
+       DPRINT1( "CSR: Unable to create console thread\n" );
        return FALSE;
      }
 

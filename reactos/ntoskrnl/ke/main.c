@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.166 2003/07/21 21:53:51 royce Exp $
+/* $Id: main.c,v 1.167 2003/08/11 18:50:12 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -50,6 +50,7 @@
 #include <internal/registry.h>
 #include <internal/nls.h>
 #include <reactos/bugcodes.h>
+#include <ntos/bootvid.h>
 
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
@@ -316,6 +317,10 @@ ExpInitializeExecutive(VOID)
   BOOLEAN SetupBoot;
   PCHAR p1, p2;
   ULONG MaxMem;
+  BOOLEAN NoBootScreen = FALSE;
+  UNICODE_STRING Name;
+  HANDLE InitDoneEventHandle;
+  OBJECT_ATTRIBUTES ObjectAttributes;
 
   /*
    * Fail at runtime if someone has changed various structures without
@@ -372,6 +377,11 @@ ExpInitializeExecutive(VOID)
 	   }
 	}
      }
+    else if (!_strnicmp(p2, "NOBOOTSCREEN", 12))
+      {
+        p2 += 12;
+        NoBootScreen = TRUE;
+      }
      p1 = p2;
   }
 
@@ -478,19 +488,6 @@ ExpInitializeExecutive(VOID)
       DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
     }
 
-  /*
-   * Display version number and copyright/warranty message
-   */
-  HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
-		   KERNEL_VERSION_BUILD_STR")\n");
-  HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
-  HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
-		   "Public License, and you\n");
-  HalDisplayString("are welcome to change it and/or distribute copies of it "
-		   "under certain\n"); 
-  HalDisplayString("conditions. There is absolutely no warranty for "
-		   "ReactOS.\n\n");
-
   /* Initialize all processors */
   KeNumberProcessors = 0;
 
@@ -513,21 +510,6 @@ ExpInitializeExecutive(VOID)
       KeNumberProcessors++;
     }
 
-  if (KeNumberProcessors > 1)
-    {
-      sprintf(str,
-	      "Found %d system processors. [%lu MB Memory]\n",
-	      KeNumberProcessors,
-	      (KeLoaderBlock.MemHigher + 1088)/ 1024);
-    }
-  else
-    {
-      sprintf(str,
-	      "Found 1 system processor. [%lu MB Memory]\n",
-	      (KeLoaderBlock.MemHigher + 1088)/ 1024);
-    }
-  HalDisplayString(str);
-
   /*
    * Initialize various critical subsystems
    */
@@ -546,6 +528,48 @@ ExpInitializeExecutive(VOID)
 
   /* Report all resources used by hal */
   HalReportResourceUsage();
+
+  /* Display the boot screen image if not disabled */
+  if (!NoBootScreen)
+    {
+      InbvEnableBootDriver(TRUE);
+    }
+
+  /*
+   * Clear the screen to blue
+   */
+  HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
+  /*
+   * Display version number and copyright/warranty message
+   */
+  HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
+		   KERNEL_VERSION_BUILD_STR")\n");
+  HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
+  HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
+		   "Public License, and you\n");
+  HalDisplayString("are welcome to change it and/or distribute copies of it "
+		   "under certain\n"); 
+  HalDisplayString("conditions. There is absolutely no warranty for "
+		   "ReactOS.\n\n");
+
+  if (KeNumberProcessors > 1)
+    {
+      sprintf(str,
+	      "Found %d system processors. [%lu MB Memory]\n",
+	      KeNumberProcessors,
+	      (KeLoaderBlock.MemHigher + 1088)/ 1024);
+    }
+  else
+    {
+      sprintf(str,
+	      "Found 1 system processor. [%lu MB Memory]\n",
+	      (KeLoaderBlock.MemHigher + 1088)/ 1024);
+    }
+  HalDisplayString(str);
+
+  KdInit3();
+
 
   /* Create the NLS section */
   RtlpCreateNlsSection();
@@ -682,10 +706,6 @@ ExpInitializeExecutive(VOID)
 
   PiInitDefaultLocale();
 
-  /*
-   * Start the motherboard enumerator (the HAL)
-   */
-  HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 #if 0
   /*
    * Load boot start drivers
@@ -714,6 +734,24 @@ ExpInitializeExecutive(VOID)
    */
   InitSystemSharedUserPage ((PUCHAR)KeLoaderBlock.CommandLine);
 
+  /* Create 'ReactOSInitDone' event */
+  RtlInitUnicodeString(&Name, L"\\ReactOSInitDone");
+  InitializeObjectAttributes(&ObjectAttributes,
+    &Name,
+    0,
+    NULL,
+    NULL);
+  Status = NtCreateEvent(&InitDoneEventHandle,
+    EVENT_ALL_ACCESS,
+    &ObjectAttributes,
+    FALSE,              /* Synchronization event */
+    FALSE);             /* Not signalled */
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to create 'ReactOSInitDone' event (Status 0x%x)\n", Status);
+      InitDoneEventHandle = INVALID_HANDLE_VALUE;
+    }
+
   /*
    *  Launch initial process
    */
@@ -724,16 +762,64 @@ ExpInitializeExecutive(VOID)
       KEBUGCHECKEX(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
-  /*
-   * Crash the system if the initial process terminates within 5 seconds.
-   */
-  Timeout.QuadPart = -50000000LL;
-  Status = NtWaitForSingleObject(ProcessHandle,
-				 FALSE,
-				 &Timeout);
-  if (Status != STATUS_TIMEOUT)
+  if (InitDoneEventHandle != INVALID_HANDLE_VALUE)
     {
-      KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
+      HANDLE Handles[2]; /* Init event, Initial process */
+
+      Handles[0] = InitDoneEventHandle;
+      Handles[1] = ProcessHandle;
+
+      /* Wait for the system to be initialized */
+      Timeout.QuadPart = -1200000000LL;  /* 120 second timeout */
+      Status = NtWaitForMultipleObjects(((LONG) sizeof(Handles) / sizeof(HANDLE)),
+        Handles,
+        WaitAny,
+        FALSE,    /* Non-alertable */
+        &Timeout);
+      if (!NT_SUCCESS(Status))
+        {
+          DPRINT1("NtWaitForMultipleObjects failed with status 0x%x!\n", Status);
+        }
+      else if (Status == STATUS_TIMEOUT)
+        {
+          DPRINT1("WARNING: System not initialized after 120 seconds.\n");
+        }
+      else if (Status == STATUS_WAIT_0 + 1)
+        {
+          /*
+           * Crash the system if the initial process was terminated.
+           */
+          KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        }
+
+      if (!NoBootScreen)
+        {
+          InbvEnableBootDriver(FALSE);
+        }
+
+      NtSetEvent(InitDoneEventHandle, NULL);
+
+      NtClose(InitDoneEventHandle);
+    }
+  else
+    {
+      /* On failure to create 'ReactOSInitDone' event, go to text mode ASAP */
+      if (!NoBootScreen)
+        {
+          InbvEnableBootDriver(FALSE);
+        }
+
+      /*
+       * Crash the system if the initial process terminates within 5 seconds.
+       */
+      Timeout.QuadPart = -50000000LL;
+      Status = NtWaitForSingleObject(ProcessHandle,
+    				 FALSE,
+    				 &Timeout);
+      if (Status != STATUS_TIMEOUT)
+        {
+          KEBUGCHECKEX(SESSION5_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        }
     }
 
   NtClose(ThreadHandle);

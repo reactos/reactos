@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.4 2003/02/26 14:14:03 ekohl Exp $
+/* $Id: halinit.c,v 1.5 2003/08/11 18:50:12 chorns Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -24,6 +24,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
+extern VOID
+HalClearDisplay (UCHAR CharAttribute);
+
 NTSTATUS
 STDCALL
 DriverEntry(
@@ -39,6 +42,7 @@ HalInitSystem (ULONG BootPhase,
 {
   if (BootPhase == 0)
     {
+      /* Initialize display and make the screen black */
       HalInitializeDisplay (LoaderBlock);
       
 #ifdef MP
@@ -63,6 +67,11 @@ HalInitSystem (ULONG BootPhase,
       /* Enumerate the devices on the motherboard */
       HalpStartEnumerator();
    }
+  else if (BootPhase == 2)
+    {
+      /* Go to blue screen */
+      HalClearDisplay (0x17); /* grey on blue */
+    }
 
   return TRUE;
 }

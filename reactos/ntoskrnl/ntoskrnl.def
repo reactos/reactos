@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.159 2003/07/25 23:51:23 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.160 2003/08/11 18:50:12 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -212,6 +212,18 @@ FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
 HalDispatchTable DATA
 HalPrivateDispatchTable DATA
+InbvAcquireDisplayOwnership@0
+InbvCheckDisplayOwnership@0
+InbvDisplayString@4
+InbvEnableBootDriver@4
+InbvEnableDisplayString@4
+InbvInstallDisplayStringFilter@4
+InbvIsBootDriverInstalled@0
+InbvNotifyDisplayOwnershipLost@4
+InbvResetDisplay@0
+InbvSetScrollRegion@16
+InbvSetTextColor@4
+InbvSolidColorFill@20
 @InterlockedCompareExchange@12
 @InterlockedDecrement@4
 @InterlockedExchange@8

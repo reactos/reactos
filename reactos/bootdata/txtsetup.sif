@@ -120,10 +120,10 @@ winemine.exe = 2
 
 [SetupData]
 DefaultPath = \ReactOS
-OsLoadOptions = "/NODEBUG"
-;OsLoadOptions = "/DEBUGPORT=COM1"
-;OsLoadOptions = "/DEBUGPORT=SCREEN"
-;OsLoadOptions = "/DEBUGPORT=BOCHS"
+OsLoadOptions = "/NOBOOTSCREEN /NODEBUG"
+;OsLoadOptions = "/NOBOOTSCREEN /DEBUGPORT=COM1"
+;OsLoadOptions = "/NOBOOTSCREEN /DEBUGPORT=SCREEN"
+;OsLoadOptions = "/NOBOOTSCREEN /DEBUGPORT=BOCHS"
 
 [NLS]
 AnsiCodepage     = c_1252.nls

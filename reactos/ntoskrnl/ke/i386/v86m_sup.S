@@ -144,11 +144,13 @@ _KiV86Complete:
 	popl	KV86M_REGISTERS_ECX(%ebx)
 	popl	KV86M_REGISTERS_EAX(%ebx)
 
-	/* Ignore the previous mode */
-	addl	$4, %esp
+	/* Restore the old previous mode */
+	popl	%eax
+	movb	%al, %ss:KTHREAD_PREVIOUS_MODE(%esi)
 
-	/* Ignore old exception handler list */
-	addl	$4, %esp
+	/* Restore the old exception handler list */
+	popl	%eax
+	movl	%eax, %fs:KPCR_EXCEPTION_LIST
 	
 	/* Ignore the 32-bit fs register */
 	addl	$4, %esp

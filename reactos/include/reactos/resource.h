@@ -32,5 +32,8 @@
 /* ReactOS default Application Registry Root Path */
 #define RES_STR_ROSAPP_REGISTRY_ROOT	"Software\\ReactWare"
 
+/* Bitmaps */
+#define IDB_BOOTIMAGE       100
+
 #endif /* ndef _INC_REACTOS_RESOURCE_H */
 

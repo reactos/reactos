@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.103 2003/08/07 04:03:24 royce Exp $
+# $Id: Makefile,v 1.104 2003/08/11 18:50:12 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -340,6 +340,11 @@ OBJECTS_KD = \
     kd/gdbstub.o \
     kd/mda.o
 
+# Boot video (Inbv)
+OBJECTS_INBV = \
+	inbv/inbv.o \
+	inbv/bootvid.o
+
 DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
 	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
@@ -477,6 +482,12 @@ $(OBJECTS_PATH)/kd.o: $(OBJECTS_KD)
 		-o $(OBJECTS_PATH)/kd.o \
 		$(OBJECTS_KD)
 
+$(OBJECTS_PATH)/inbv.o: $(OBJECTS_INBV)
+	$(LD) \
+		-r \
+		-o $(OBJECTS_PATH)/inbv.o \
+		$(OBJECTS_INBV)
+
 # Note: arch.o MUST be the first file!!!
 OBJECTS := \
 	$(OBJECTS_PATH)/arch.o \
@@ -497,6 +508,7 @@ OBJECTS := \
 	$(OBJECTS_PATH)/ps.o \
 	$(OBJECTS_PATH)/rtl.o \
 	$(OBJECTS_PATH)/se.o \
+	$(OBJECTS_PATH)/inbv.o \
 	$(OBJECTS_RESOURCE)
 
 
@@ -664,7 +676,7 @@ implib: $(DDK_PATH_LIB)/$(TARGETNAME).a
 
 clean:
 	- $(RM) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
-              ex/i386/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
+              ex/i386/*.o inbv/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
               rtl/*.o rtl/i386/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o \
               lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
