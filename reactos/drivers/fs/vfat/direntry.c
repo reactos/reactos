@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.15 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: direntry.c,v 1.16 2003/10/19 17:07:58 hbirr Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -169,7 +169,7 @@ NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
 	      }
           }
 
-        if (!ENTRY_END(fatDirEntry) && 
+        if (Back && !ENTRY_END(fatDirEntry) && 
 	    (ENTRY_DELETED(fatDirEntry) || !ENTRY_LONG(fatDirEntry)))
           {
             DirContext->DirIndex++;
