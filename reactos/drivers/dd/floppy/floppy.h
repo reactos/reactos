@@ -24,6 +24,7 @@
 #define  FLOPPY_REG_DIR        0x0007  /* READ ONLY */
 #define    FLOPPY_DI_DSKCHNG     0x80
 #define  FLOPPY_REG_CCNTL      0x0007  /* WRITE ONLY */
+#define    FLOPPY_CCNTL_1MBIT    0x03
 
 #define  FLOPPY_CMD_RD_TRK       0x02
 #define  FLOPPY_CMD_SPEC_CHARS   0x03
@@ -163,6 +164,7 @@ typedef struct _FLOPPY_CONTROLLER_EXTENSION
   KDPC MotorSpindownDpc;          // DPC for motor spin down
   PADAPTER_OBJECT AdapterObject;  // Adapter object for dma
   PVOID MapRegisterBase;
+  DWORD TransferLength;           // Length of the transfer
 } FLOPPY_CONTROLLER_EXTENSION, *PFLOPPY_CONTROLLER_EXTENSION;
 
 typedef struct _FLOPPY_CONTROLLER_PARAMETERS

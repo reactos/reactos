@@ -107,7 +107,7 @@ VOID FloppySeekDpc( PKDPC Dpc,
       IoFreeController( DeviceExtension->Controller );
       return;
     }
-  KeStallExecutionProcessor( 10000000 );
+  KeStallExecutionProcessor( 10000 );
   DPRINT( "Seek completed, now on cyl %2x\n", DeviceExtension->Cyl );
   // now that we are on the right cyl, restart the read
   if( FloppyExecuteReadWrite( DeviceObject,
@@ -149,17 +149,17 @@ VOID FloppyDpcReadWrite( PKDPC Dpc,
 			 ControllerExtension->Irp->MdlAddress,
 			 ControllerExtension->MapRegisterBase,
 			 ControllerExtension->Irp->Tail.Overlay.DriverContext[0],
-			 MediaTypes[DeviceExtension->MediaType].BytesPerSector,
+			 ControllerExtension->TransferLength,
 			 WriteToDevice );
   DPRINT( "St0 = %2x, St1  %2x, St2 = %2x\n",
 	  ControllerExtension->St0,
 	  ControllerExtension->St1,
 	  ControllerExtension->St2 );
   // update buffer info
-  Stk->Parameters.Read.ByteOffset.u.LowPart += SectorSize;
-  Stk->Parameters.Read.Length -= SectorSize;
+  Stk->Parameters.Read.ByteOffset.u.LowPart += ControllerExtension->TransferLength;
+  Stk->Parameters.Read.Length -= ControllerExtension->TransferLength;
   // drivercontext used for current va
-  (DWORD)ControllerExtension->Irp->Tail.Overlay.DriverContext[0] += SectorSize;
+  (DWORD)ControllerExtension->Irp->Tail.Overlay.DriverContext[0] += ControllerExtension->TransferLength;
 			 
   DPRINT( "First dword: %x\n", *((DWORD *)ControllerExtension->MapRegisterBase) )
 
@@ -188,7 +188,7 @@ VOID FloppyDpcDetectMedia( PKDPC Dpc,
   // If the read ID failed, fail the irp
   if( ControllerExtension->St1 != 0 )
     {
-      DPRINT( "Read ID failed: ST1 = %2x\n", ControllerExtension->St1 );
+      DPRINT1( "Read ID failed: ST1 = %2x\n", ControllerExtension->St1 );
       Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
       IoCompleteRequest( Irp, 0 );
       return;

@@ -170,6 +170,9 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
 	 DPRINT1( "Error: KeWaitForSingleObject returned: %x\n", Status );
 	 goto devicecleanup;
       }
+   // set for high speed mode
+   //   FloppyWriteCCNTL( ControllerExtension->PortBase, FLOPPY_CCNTL_1MBIT );
+   
    // ok, so we have an FDC, now check for drives
    // aparently the sense drive status command does not work on any FDC I can find
    // so instead we will just have to assume a 1.44 meg 3.5 inch floppy.  At some
@@ -281,11 +284,13 @@ IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
    BOOLEAN WriteToDevice;
    DWORD Cyl, Sector, Head;
    PIO_STACK_LOCATION Stk;
+   DWORD Length;
 
    ControllerExtension->Irp = Irp = (PIRP)Context;
    Stk = IoGetCurrentIrpStackLocation( Irp );
    ControllerExtension->Device = DeviceObject;
    Timeout.QuadPart = FLOPPY_MOTOR_SPINUP_TIME;
+   DPRINT( "FloppyExecuteReadWrite()\n" );
    CHECKPOINT;
    WriteToDevice = Stk->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
    // verify drive is spun up and selected
@@ -340,7 +345,7 @@ IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
    Sector = Stk->Parameters.Read.ByteOffset.u.LowPart / MediaTypes[DeviceExtension->MediaType].BytesPerSector;
    // absolute sector right now
    Cyl = Sector / MediaTypes[DeviceExtension->MediaType].SectorsPerTrack;
-   DPRINT( "Sector = %x, Offset = %x, Cyl = %x, Heads = %x MediaType = %x\n", Sector, Irp->Parameters.Read.ByteOffset.u.LowPart, (DWORD)Cyl, (DWORD)MediaTypes[DeviceExtension->MediaType].Heads, (DWORD)DeviceExtension->MediaType );
+   DPRINT( "Sector = %x, Offset = %x, Cyl = %x, Heads = %x MediaType = %x\n", Sector, Stk->Parameters.Read.ByteOffset.u.LowPart, (DWORD)Cyl, (DWORD)MediaTypes[DeviceExtension->MediaType].Heads, (DWORD)DeviceExtension->MediaType );
    Head = Cyl % MediaTypes[DeviceExtension->MediaType].Heads;
    DPRINT( "Head = %2x\n", Head );
    // convert absolute cyl to relative
@@ -357,38 +362,45 @@ IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
        ControllerExtension->IsrState = FloppyIsrDetect;
        ControllerExtension->DpcState = FloppySeekDpc;
        FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_SEEK );
-       KeStallExecutionProcessor( 1000 );
+       KeStallExecutionProcessor( 100 );
        FloppyWriteDATA( ControllerExtension->PortBase, DeviceExtension->DriveSelect );
-       KeStallExecutionProcessor( 1000 );
+       KeStallExecutionProcessor( 100 );
        FloppyWriteDATA( ControllerExtension->PortBase, Cyl );
        return KeepObject;
      }
    //set up DMA and issue read command
+   Length = MediaTypes[DeviceExtension->MediaType].SectorsPerTrack - Sector + 1;
+   // number of sectors untill end of track
+   Length *= 512;   // convert to bytes
+   if( Length > Stk->Parameters.Read.Length )
+     Length = Stk->Parameters.Read.Length;
+   DPRINT( "Sector: %d, Length: %d\n", Sector, Length );
+   ControllerExtension->TransferLength = Length;
    IoMapTransfer( ControllerExtension->AdapterObject,
 		  Irp->MdlAddress,
 		  ControllerExtension->MapRegisterBase,
 		  Irp->Tail.Overlay.DriverContext[0], // current va
-		  &MediaTypes[DeviceExtension->MediaType].BytesPerSector,
+		  &Length,
 		  WriteToDevice );
    ControllerExtension->IsrState = FloppyIsrReadWrite;
    ControllerExtension->DpcState = FloppyDpcReadWrite;
    CHECKPOINT;
-   FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_READ );
-   KeStallExecutionProcessor( 1000 );
+   FloppyWriteDATA( ControllerExtension->PortBase, WriteToDevice ? FLOPPY_CMD_WRITE : FLOPPY_CMD_READ );
+   KeStallExecutionProcessor( 100 );
    FloppyWriteDATA( ControllerExtension->PortBase, ( Head << 2 ) | DeviceExtension->DriveSelect );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    FloppyWriteDATA( ControllerExtension->PortBase, Cyl );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    FloppyWriteDATA( ControllerExtension->PortBase, Head );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    FloppyWriteDATA( ControllerExtension->PortBase, Sector );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    FloppyWriteDATA( ControllerExtension->PortBase, MediaTypes[DeviceExtension->MediaType].SectorSizeCode );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    FloppyWriteDATA( ControllerExtension->PortBase, MediaTypes[DeviceExtension->MediaType].SectorsPerTrack );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    FloppyWriteDATA( ControllerExtension->PortBase, 0 );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    FloppyWriteDATA( ControllerExtension->PortBase, 0xFF );
    CHECKPOINT;
    // eventually, the FDC will interrupt and we will read results then
@@ -420,9 +432,9 @@ NTSTATUS STDCALL FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
   // store currentva in drivercontext
   Irp->Tail.Overlay.DriverContext[0] = MmGetMdlVirtualAddress( Irp->MdlAddress );
   DPRINT( "FloppyDispatchReadWrite: offset = %x, length = %x, va = %x\n",
-	  ControllerExtension->CurrentOffset,
-	  ControllerExtension->CurrentLength,
-	  ControllerExtension->CurrentVa );
+	  Stk->Parameters.Read.ByteOffset.u.LowPart,
+	  Stk->Parameters.Read.Length,
+	  Irp->Tail.Overlay.DriverContext[0] );
   // Queue IRP
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = Stk->Parameters.Read.Length;

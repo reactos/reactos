@@ -19,9 +19,9 @@ BOOLEAN FloppyIsrDetect( PCONTROLLER_OBJECT Controller )
    PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension;
    // Issue read interrupt status, and store the results
    FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_SNS_INTR );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    ControllerExtension->St0 = FloppyReadDATA( ControllerExtension->PortBase );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    DeviceExtension->Cyl = FloppyReadDATA( ControllerExtension->PortBase );
    // now queue DPC to set the event
    IoRequestDpc( ControllerExtension->Device,
@@ -107,23 +107,51 @@ BOOLEAN FloppyIsrReadWrite( PCONTROLLER_OBJECT Controller )
 {
   // read result registers from read or write command, and queue dpc to start next operation
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
+  BYTE Cyl, Head, Sector;
+  PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension;
+  PIO_STACK_LOCATION Stk = IoGetCurrentIrpStackLocation( ControllerExtension->Irp );
+  BOOLEAN WriteToDevice = Stk->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
+
 
   ControllerExtension->St0 = FloppyReadDATA( ControllerExtension->PortBase );
-  KeStallExecutionProcessor( 1000 );
+  KeStallExecutionProcessor( 100 );
   ControllerExtension->St1 = FloppyReadDATA( ControllerExtension->PortBase );
-  KeStallExecutionProcessor( 1000 );
+  KeStallExecutionProcessor( 100 );
   ControllerExtension->St2 = FloppyReadDATA( ControllerExtension->PortBase );
-  KeStallExecutionProcessor( 1000 );
-  FloppyReadDATA( ControllerExtension->PortBase );    // cyl
-  KeStallExecutionProcessor( 1000 );
-  FloppyReadDATA( ControllerExtension->PortBase );    // head
-  KeStallExecutionProcessor( 1000 );
-  FloppyReadDATA( ControllerExtension->PortBase );    // sector
-  KeStallExecutionProcessor( 1000 );
+  KeStallExecutionProcessor( 100 );
+  Cyl = FloppyReadDATA( ControllerExtension->PortBase );    // cyl
+  KeStallExecutionProcessor( 100 );
+  Head = FloppyReadDATA( ControllerExtension->PortBase );    // head
+  KeStallExecutionProcessor( 100 );
+  Sector = FloppyReadDATA( ControllerExtension->PortBase );    // sector
+  KeStallExecutionProcessor( 100 );
   ControllerExtension->SectorSizeCode = FloppyReadDATA( ControllerExtension->PortBase );
-  IoRequestDpc( ControllerExtension->Device,
-		ControllerExtension->Irp,
-		Controller );
+  // reprogam for next sector if we are not done reading track
+  /*  if( ( ControllerExtension->TransferLength -= ( 128 << ControllerExtension->SectorSizeCode ) ) )
+    {
+      DPRINT1( "ISR reprogramming for next sector: %d\n", Sector );
+      Sector++;
+      FloppyWriteDATA( ControllerExtension->PortBase, WriteToDevice ? FLOPPY_CMD_WRITE : FLOPPY_CMD_READ );
+      KeStallExecutionProcessor( 100 );
+      FloppyWriteDATA( ControllerExtension->PortBase, ( Head << 2 ) | DeviceExtension->DriveSelect );
+      KeStallExecutionProcessor( 100 );
+      FloppyWriteDATA( ControllerExtension->PortBase, Cyl );
+      KeStallExecutionProcessor( 100 );
+      FloppyWriteDATA( ControllerExtension->PortBase, Head );
+      KeStallExecutionProcessor( 100 );
+      FloppyWriteDATA( ControllerExtension->PortBase, Sector );
+      KeStallExecutionProcessor( 100 );
+      FloppyWriteDATA( ControllerExtension->PortBase, ControllerExtension->SectorSizeCode );
+      KeStallExecutionProcessor( 100 );
+      FloppyWriteDATA( ControllerExtension->PortBase, MediaTypes[DeviceExtension->MediaType].SectorsPerTrack );
+      KeStallExecutionProcessor( 100 );
+      FloppyWriteDATA( ControllerExtension->PortBase, 0 );
+      KeStallExecutionProcessor( 100 );
+      FloppyWriteDATA( ControllerExtension->PortBase, 0xFF );
+    }
+    else */IoRequestDpc( ControllerExtension->Device,
+		     ControllerExtension->Irp,
+		     Controller );
   return TRUE;
 }
 
@@ -138,9 +166,9 @@ BOOLEAN FloppyIsr(PKINTERRUPT Interrupt, PVOID ServiceContext)
    // need to make sure interrupt is for us, and add some delay for the damn FDC
    // without the delay, even though the thing has interrupted, it's still not ready
    // for us to read the data register.
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    Byte = FloppyReadMSTAT( ControllerExtension->PortBase );
-   KeStallExecutionProcessor( 1000 );
+   KeStallExecutionProcessor( 100 );
    if( Byte == 0 )
      {
        DPRINT( "Ignoring interrupt, MSTAT = 0\n" );
