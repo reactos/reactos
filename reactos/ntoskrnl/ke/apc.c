@@ -91,14 +91,13 @@ KiDeliverNormalApc(VOID)
    KeAcquireSpinLock(&PiApcLock, &oldlvl);
    while(!IsListEmpty(&(Thread->Tcb.ApcState.ApcListHead[0])))
      {
-       current = Thread->Tcb.ApcState.ApcListHead[0].Blink;
+       current = RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
        Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
        if (Apc->NormalRoutine == NULL)
 	 {
 	   DbgPrint("Exiting kernel with kernel APCs pending.\n");
 	   KeBugCheck(0);
 	 }
-       (VOID)RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
        Apc->Inserted = FALSE;
        Thread->Tcb.ApcState.KernelApcInProgress++;
        Thread->Tcb.ApcState.KernelApcPending--;
@@ -263,7 +262,6 @@ KiDeliverApc(ULONG Unknown1,
        Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
        if (Apc->NormalRoutine == NULL)
 	 {
-	   current_entry = current_entry->Flink;
 	   Apc->Inserted = FALSE;
 	   RemoveEntryList(&Apc->ApcListEntry);
 	   Thread->Tcb.ApcState.KernelApcInProgress++;
@@ -279,6 +277,7 @@ KiDeliverApc(ULONG Unknown1,
 	   
 	   KeAcquireSpinLock(&PiApcLock, &oldlvl);
 	   Thread->Tcb.ApcState.KernelApcInProgress--;
+	   current_entry = Thread->Tcb.ApcState.ApcListHead[0].Flink;
 	 }
        else
 	 {
@@ -415,9 +414,9 @@ KeRemoveQueueApc (PKAPC Apc)
 {
    KIRQL oldIrql;
    PKTHREAD TargetThread;
-   
-   KeAcquireSpinLockAtDpcLevel(&PiApcLock);
+
    KeRaiseIrql(HIGH_LEVEL, &oldIrql);
+   KeAcquireSpinLockAtDpcLevel(&PiApcLock);
    if (Apc->Inserted == FALSE)
      {
 	KeReleaseSpinLock(&PiApcLock, oldIrql);
