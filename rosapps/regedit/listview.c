@@ -130,7 +130,7 @@ static void CreateListColumns(HWND hWndListView)
  
 static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 {
-    static TCHAR buffer[200];
+//    static TCHAR buffer[200];
 
 //    FILETIME LastWriteTime;
 //    TCHAR Class[MAX_NAME_LEN];
@@ -295,7 +295,7 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 }
 
 
-HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, Root* pRoot/*Entry* pEntry*/)
+HWND CreateListView(HWND hwndParent, int id)
 { 
     RECT rcClient;  // dimensions of client area 
     HWND hwndLV;    // handle to list view control 
@@ -308,6 +308,7 @@ HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, Root* pRoot/*Entry*
         WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT, 
         0, 0, rcClient.right, rcClient.bottom, 
         hwndParent, (HMENU)id, hInst, NULL); 
+    ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
  
     // Initialize the image list, and add items to the control. 
 /*
@@ -317,10 +318,9 @@ HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, Root* pRoot/*Entry*
         return FALSE; 
     } 
  */
-    ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
     CreateListColumns(hwndLV);
 
-	SetWindowLong(hwndLV, GWL_USERDATA, (LPARAM)pRoot);
+//	SetWindowLong(hwndLV, GWL_USERDATA, (LPARAM)pRoot);
 	g_orgListWndProc = SubclassWindow(hwndLV, ListWndProc);
 	//SendMessage(hwndLV, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
 
@@ -332,14 +332,14 @@ HWND CreateListView(HWND hwndParent/*, Pane* pane*/, int id, Root* pRoot/*Entry*
     return hwndLV;
 } 
 
-void RefreshList(HWND hWnd, Entry* entry)
+void RefreshList(HWND hWnd/*, Entry* entry*/)
 {
     if (hWnd != NULL) {
         ListView_DeleteAllItems(hWnd);
-        if (entry != NULL) {
-            TRACE("RefreshList(...) entry name: %p\n", entry);
-    	    InsertListEntries(hWnd, entry, -1);
-        }
+//        if (entry != NULL) {
+//            TRACE("RefreshList(...) entry name: %p\n", entry);
+//    	    InsertListEntries(hWnd, entry, -1);
+//        }
     }
 }
 

@@ -34,7 +34,7 @@ extern "C" {
 
 LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
 
-void SetupStatusBar(BOOL bResize);
+void SetupStatusBar(HWND hWnd, BOOL bResize);
 void UpdateStatusBar(void);
 
 

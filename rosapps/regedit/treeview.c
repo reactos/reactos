@@ -34,18 +34,13 @@
 #include <stdio.h>
 #endif
     
-#include <windowsx.h>
-#include <assert.h>
-#define ASSERT assert
+//#include <windowsx.h>
 #include "main.h"
 #include "treeview.h"
 
-#include "trace.h"
-
 
 // Global variables and constants 
-// Image_Open, Image_Closed, and Image_Root - integer variables for 
-// indexes of the images. 
+// Image_Open, Image_Closed, and Image_Root - integer variables for indexes of the images. 
 // CX_BITMAP and CY_BITMAP - width and height of an icon. 
 // NUM_BITMAPS - number of bitmaps to add to the image list. 
 int Image_Open; 
@@ -57,109 +52,92 @@ int Image_Root;
 #define NUM_BITMAPS  3
 
 
-static HTREEITEM AddEntryToTree(HWND hwndTV, Entry* entry, LPTSTR label)
+static HKEY FindRegRoot(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* pPathLen, int max)
+{
+    HKEY hKey = NULL;
+    TVITEM item;
+    item.mask = TVIF_PARAM;
+    item.hItem = TreeView_GetParent(hwndTV, hItem);
+
+    if (TreeView_GetItem(hwndTV, &item)) {
+        if (item.lParam == 0) {
+            // recurse
+            hKey = FindRegRoot(hwndTV, item.hItem, keyPath, pPathLen, max);
+            keyPath[*pPathLen] = _T('\\');
+            ++(*pPathLen);
+            item.mask = TVIF_TEXT;
+            item.hItem = hItem;
+            item.pszText = &keyPath[*pPathLen];
+            item.cchTextMax = max - *pPathLen;
+            if (TreeView_GetItem(hwndTV, &item)) {
+                *pPathLen += _tcslen(item.pszText);
+            }
+        } else {
+            // found root key with valid key value
+            hKey = (HKEY)item.lParam;
+            item.mask = TVIF_TEXT;
+            item.hItem = hItem;
+//            item.pszText = &keyPath[*pPathLen];
+            item.pszText = keyPath;
+            item.cchTextMax = max;
+            if (TreeView_GetItem(hwndTV, &item)) {
+                *pPathLen += _tcslen(item.pszText);
+            }
+        }
+    }
+    return hKey;
+}
+
+static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HKEY hKey, DWORD dwChildren)
 { 
     HTREEITEM hItem = 0;
     TVITEM tvi; 
     TVINSERTSTRUCT tvins; 
-    static HTREEITEM hPrev = (HTREEITEM)TVI_FIRST; 
-    static HTREEITEM hPrevRootItem = NULL; 
-    static HTREEITEM hPrevLev2Item = NULL; 
 
-    //TRACE("AddEntryToTree(level:%u - %s)\n", entry->level, entry->data.cFileName); 
-    
     tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN | TVIF_PARAM; 
-/*
-    // Set the text of the item. 
-    tvi.pszText = entry->data.cFileName; 
-    tvi.cchTextMax = lstrlen(entry->data.cFileName); 
-    // Assume the item is not a parent item, so give it an image. 
-    tvi.iImage = Image_Root; 
-    tvi.iSelectedImage = Image_Root; 
-    tvi.cChildren = 1; 
-    // Save the heading level in the item's application-defined data area. 
-    //tvi.lParam = (LPARAM)entry->level; 
- */
-    if (label != NULL) {
-        tvi.pszText = label;
-        tvi.cchTextMax = _tcslen(label);
-    } else {
-        tvi.pszText = LPSTR_TEXTCALLBACK;
-        tvi.cchTextMax = 0;
-    }
-    tvi.iImage = I_IMAGECALLBACK;
-    tvi.iSelectedImage = I_IMAGECALLBACK;
-    tvi.cChildren = I_CHILDRENCALLBACK;
-    // Save the entry pointer in the item's application-defined data area. 
-    tvi.lParam = (LPARAM)entry; 
- 
+    tvi.pszText = label; 
+    tvi.cchTextMax = lstrlen(tvi.pszText); 
+    tvi.iImage = Image_Closed; 
+    tvi.iSelectedImage = Image_Open; 
+    tvi.cChildren = dwChildren; 
+    tvi.lParam = (LPARAM)hKey;
     tvins.item = tvi; 
-    tvins.hInsertAfter = hPrev; 
- 
-    // Set the parent item based on the specified level. 
-    if (entry->level == 0) {
-        tvins.hParent = TVI_ROOT; 
-    } else if (entry->level == 1) {
-        tvins.hParent = hPrevRootItem; 
-    } else {
-        tvins.hParent = hPrevLev2Item; 
-        if (hPrevLev2Item) {
-            tvins.hParent = entry->up->hTreeItem; 
-        }
-    }
- 
-    // Add the item to the tree view control. 
-    hPrev = (HTREEITEM)SendMessage(hwndTV, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT)&tvins); 
- 
-    // Save the handle to the item. 
-    if (entry->level == 0) 
-        hPrevRootItem = hPrev; 
-    else if (entry->level == 1) 
-        hPrevLev2Item = hPrev; 
-    hItem = hPrev; 
+    if (hKey) tvins.hInsertAfter = (HTREEITEM)TVI_LAST; 
+    else      tvins.hInsertAfter = (HTREEITEM)TVI_SORT; 
+    tvins.hParent = hParent; 
+    hItem = (HTREEITEM)SendMessage(hwndTV, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT)&tvins);
     return hItem;
 }
 
-static Entry* CreateEntry(Entry* pParentEntry, HKEY hKey, LPCTSTR szKeyName)
-{
-    Entry* pEntry = NULL;
 
-    pEntry = malloc(sizeof(Entry));
-    memset(pEntry, 0, sizeof(Entry));
-    //pEntry->up = pParentEntry;
-    pEntry->level = 1;
-    pEntry->hKey = hKey;
-    _tcsncpy(pEntry->szName, szKeyName, MAX_NAME_LEN);
-//    pEntry->hTreeItem = AddEntryToTree(hwndTV, pEntry, szKeyName); 
-    return pEntry;
-}
-
-static BOOL InitTreeViewItems(HWND hwndTV, Root* pRoot/*LPCTSTR pHostName*/) 
+static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName) 
 { 
-//    HKEY hKey;
-//    LONG errCode;
-    Entry* pEntry = &pRoot->entry;
-    HTREEITEM hRootItem;
+    TVITEM tvi; 
+    TVINSERTSTRUCT tvins; 
+    HTREEITEM hRoot; 
 
-//    TCHAR* pHostName = _T("My Computer");
-//    HTREEITEM hRootItem = AddItemToTree(hwndTV, pHostName, 1); 
-//    pEntry = malloc(sizeof(Entry));
-//    memset(pEntry, 0, sizeof(Entry));
+    tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN | TVIF_PARAM; 
+    // Set the text of the item. 
+    tvi.pszText = pHostName; 
+    tvi.cchTextMax = lstrlen(tvi.pszText); 
+    // Assume the item is not a parent item, so give it an image. 
+    tvi.iImage = Image_Root; 
+    tvi.iSelectedImage = Image_Root; 
+    tvi.cChildren = 5; 
+    // Save the heading level in the item's application-defined data area. 
+    tvi.lParam = (LPARAM)NULL;
+    tvins.item = tvi; 
+    tvins.hInsertAfter = (HTREEITEM)TVI_FIRST; 
+    tvins.hParent = TVI_ROOT; 
+    // Add the item to the tree view control. 
+    hRoot = (HTREEITEM)SendMessage(hwndTV, TVM_INSERTITEM, 0, (LPARAM)(LPTVINSERTSTRUCT)&tvins); 
 
-    pEntry->level = 0;
-    pEntry->hTreeItem = AddEntryToTree(hwndTV, pEntry, pRoot->path); 
-    hRootItem = pEntry->hTreeItem;
+    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CLASSES_ROOT"), HKEY_CLASSES_ROOT, 1);
+    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_USER"), HKEY_CURRENT_USER, 1);
+    AddEntryToTree(hwndTV, hRoot, _T("HKEY_LOCAL_MACHINE"), HKEY_LOCAL_MACHINE, 1);
+    AddEntryToTree(hwndTV, hRoot, _T("HKEY_USERS"), HKEY_USERS, 1);
+    AddEntryToTree(hwndTV, hRoot, _T("HKEY_CURRENT_CONFIG"), HKEY_CURRENT_CONFIG, 1);
 
-    pEntry = CreateEntry(&pRoot->entry, HKEY_CLASSES_ROOT, _T("HKEY_CLASSES_ROOT")); 
-    pEntry->hTreeItem = AddEntryToTree(hwndTV, pEntry, NULL); 
-    pEntry = CreateEntry(&pRoot->entry, HKEY_CURRENT_USER, _T("HKEY_CURRENT_USER")); 
-    pEntry->hTreeItem = AddEntryToTree(hwndTV, pEntry, NULL); 
-    pEntry = CreateEntry(&pRoot->entry, HKEY_LOCAL_MACHINE, _T("HKEY_LOCAL_MACHINE")); 
-    pEntry->hTreeItem = AddEntryToTree(hwndTV, pEntry, NULL); 
-    pEntry = CreateEntry(&pRoot->entry, HKEY_USERS, _T("HKEY_USERS")); 
-    pEntry->hTreeItem = AddEntryToTree(hwndTV, pEntry, NULL); 
-    pEntry = CreateEntry(&pRoot->entry, HKEY_CURRENT_CONFIG, _T("HKEY_CURRENT_CONFIG")); 
-    pEntry->hTreeItem = AddEntryToTree(hwndTV, pEntry, NULL); 
     return TRUE; 
 } 
 
@@ -201,165 +179,73 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
     return TRUE; 
 } 
 
-#ifndef _MSC_VER
-#define NMTVDISPINFO TV_DISPINFO
-#define NMTVDISPINFO TV_DISPINFO
-#endif
-
-static void OnGetDispInfo(NMTVDISPINFO* ptvdi)
-{
-    Entry* pEntry = (Entry*)ptvdi->item.lParam;
-    ASSERT(pEntry);
-
-    if (ptvdi->item.mask & TVIF_CHILDREN ) {
-        ptvdi->item.cChildren = 5;
-    }
-    if (ptvdi->item.mask & TVIF_IMAGE) {
-        ptvdi->item.iImage = Image_Root; 
-    }
-    if (ptvdi->item.mask & TVIF_SELECTEDIMAGE) {
-        ptvdi->item.iSelectedImage = Image_Closed; 
-    }
-    if (ptvdi->item.mask & TVIF_TEXT) {
-/*
-        ptvdi->item.pszText = _T("Unknown"); 
-        ptvdi->item.cchTextMax = _tcslen(ptvdi->item.pszText); 
-        if (pEntry->bKey == TRUE) {
-            DWORD nSubKeys;
-            DWORD MaxSubKeyLen;
-            DWORD MaxClassLen;
-            DWORD ValueCount;
-            DWORD MaxValueNameLen;
-            DWORD MaxValueLen;
-            DWORD SecurityDescriptorLen;
-
-            HKEY hKey = pEntry->hKey;
-            LONG result = RegQueryInfoKey(pEntry->hKey, Class, &cClass, 0, 
-                &nSubKeys, &MaxSubKeyLen, &MaxClassLen, &ValueCount, 
-                &MaxValueNameLen, &MaxValueLen, &SecurityDescriptorLen, 
-                &LastWriteTime);
-            if (result == ERROR_SUCCESS) {
-                ptvdi->item.pszText = Class; 
-                ptvdi->item.cchTextMax = cClass; 
-            }
-        }
- */
-        ptvdi->item.pszText = pEntry->szName; 
-        ptvdi->item.cchTextMax = lstrlen(pEntry->szName); 
-    }
-}
-
-static BOOL OnExpand(int flag, HTREEITEM* pti)
+BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
 { 
-    TRACE(_T("TreeWndProc(...) OnExpand()\n"));
-    //TRACE("OnExpand(...) entry name: %s\n", entry->data.cFileName);
-    /*
-TVE_COLLAPSE Collapses the list.  
-TVE_COLLAPSERESET Collapses the list and removes the child items. The TVIS_EXPANDEDONCE state flag is reset. This flag must be used with the TVE_COLLAPSE flag. 
-TVE_EXPAND Expands the list. 
-TVE_EXPANDPARTIAL Version 4.70. Partially expands the list. In this state, the child items are visible and the parent item's plus symbol is displayed. This flag must be used in combination with the TVE_EXPAND flag. 
-TVE_TOGGLE Collapses the list if it is expanded or expands it if it is collapsed. 
-     */
-    return TRUE;
-} 
-
-static BOOL OnExpanding(HWND hWnd, NMTREEVIEW* pnmtv)
-{ 
-    static int expanding;
     HKEY hKey;
-    LONG errCode;
+    TCHAR keyPath[1000];
+    int keyPathLen = 0;
 
-    Entry* entry = (Entry*)pnmtv->itemNew.lParam;
-    TRACE(_T("TreeWndProc(...) OnExpanding() entry: %p\n"), entry);
+    static int expanding;
     if (expanding) return FALSE;
+    if (pnmtv->itemNew.state & TVIS_EXPANDEDONCE ) {
+        return TRUE;
+    }
     expanding = TRUE;
-    if (entry) {
-        errCode = RegOpenKeyEx(entry->hKey, NULL, 0, KEY_READ, &hKey);
+
+    // check if this is either the root or a subkey item...
+    if ((HKEY)pnmtv->itemNew.lParam == NULL) {
+        keyPath[0] = _T('\0');
+        hKey = FindRegRoot(hwndTV, pnmtv->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
+    } else {
+        hKey = (HKEY)pnmtv->itemNew.lParam;
+        keyPath[0] = _T('\0');
+    }
+
+    if (hKey != NULL) {
+        HKEY hNewKey;
+        LONG errCode = RegOpenKeyEx(hKey, keyPath, 0, KEY_READ, &hNewKey);
         if (errCode == ERROR_SUCCESS) {
             TCHAR Name[MAX_NAME_LEN];
             DWORD cName = MAX_NAME_LEN;
             FILETIME LastWriteTime;
             DWORD dwIndex = 0L;
-            while (RegEnumKeyEx(hKey, dwIndex, Name, &cName, NULL, NULL, NULL, &LastWriteTime) == ERROR_SUCCESS) {
-                Entry* pEntry = CreateEntry(entry, hKey, Name); 
-                pEntry->up = entry;
-                pEntry->hKey = hKey;
-                pEntry->bKey = TRUE;
-                pEntry->level = 2;
-                pEntry->hTreeItem = AddEntryToTree(hWnd, pEntry, NULL); 
+            ShowWindow(hwndTV, SW_HIDE);
+            while (RegEnumKeyEx(hNewKey, dwIndex, Name, &cName, NULL, NULL, NULL, &LastWriteTime) == ERROR_SUCCESS) {
+                DWORD dwCount = 0L;
+                errCode = RegOpenKeyEx(hNewKey, Name, 0, KEY_READ, &hKey);
+                if (errCode == ERROR_SUCCESS) {
+                    TCHAR SubName[MAX_NAME_LEN];
+                    DWORD cSubName = MAX_NAME_LEN;
+//                    if (RegEnumKeyEx(hKey, 0, SubName, &cSubName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+                    while (RegEnumKeyEx(hKey, dwCount, SubName, &cSubName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+                        ++dwCount;
+                    }
+                }
+                RegCloseKey(hKey);
+                AddEntryToTree(hwndTV, pnmtv->itemNew.hItem, Name, NULL, dwCount);
                 cName = MAX_NAME_LEN;
                 ++dwIndex;
             }
-            RegCloseKey(hKey);
+	        ShowWindow(hwndTV, SW_SHOW);
+            //UpdateStatus(hwndTV, pnmtv->itemNew.hItem);
+            RegCloseKey(hNewKey);
         }
+    } else {
     }
     expanding = FALSE;
     return TRUE;
 } 
 
-/*
-static BOOL OnSelChanged(NMTREEVIEW* pnmtv)
-{ 
-    LPARAM parm = pnmtv->itemNew.lParam;
-    ChildWnd* child = (ChildWnd*)pnmtv->itemNew.lParam;
-    return TRUE;
-} 
- */
-
 ////////////////////////////////////////////////////////////////////////////////
-static WNDPROC g_orgTreeWndProc;
-
-static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-//	ChildWnd* child = (ChildWnd*)GetWindowLong(GetParent(hWnd), GWL_USERDATA);
-//	ASSERT(child);
-
-	switch (message) {
-    case WM_NOTIFY:
-        switch (((LPNMHDR)lParam)->code) { 
-        case TVM_EXPAND: 
-            //return OnExpand((int)wParam, (HTREEITEM*)lParam);
-            OnExpand((int)wParam, (HTREEITEM*)lParam);
-            break;
-        case TVN_GETDISPINFO: 
-            OnGetDispInfo((NMTVDISPINFO*)lParam); 
-            break; 
-        case TVN_ITEMEXPANDING: 
-            return OnExpanding(hWnd, (NMTREEVIEW*)lParam);
-            break;
-//        case TVN_SELCHANGED:
-//            return OnSelChanged((NMTREEVIEW*)lParam);
-//           break;
-#if 0
-        case TVN_SINGLEEXPAND:
-            TRACE("TreeWndProc(...) TVN_SINGLEEXPAND\n");
-            //lpnmtv = (LPNMTREEVIEW)lParam;
-            //return TVNRET_DEFAULT;
-//            return TVNRET_SKIPOLD; // Skip default processing of the item being unselected. 
-//            return TVNRET_SKIPNEW; // Skip default processing of the item being selected. 
-            break;
-#endif
-        }
-//        return 0;
-		break;
-	case WM_KEYDOWN:
-		if (wParam == VK_TAB) {
-			//SetFocus(child->nFocusPanel ? child->left.hWnd: child->right.hWnd);
-		}
-        break;
-	}
-	return CallWindowProc(g_orgTreeWndProc, hWnd, message, wParam, lParam);
-}
 
 // CreateTreeView - creates a tree view control. 
 // Returns the handle to the new control if successful, or NULL otherwise. 
 // hwndParent - handle to the control's parent window. 
 
-HWND CreateTreeView(HWND hwndParent, int id, Root* pRoot) 
+HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id) 
 { 
     RECT rcClient;
     HWND hwndTV;
-//	Entry* entry = ;
  
     // Get the dimensions of the parent window's client area, and create the tree view control. 
     GetClientRect(hwndParent, &rcClient); 
@@ -368,13 +254,10 @@ HWND CreateTreeView(HWND hwndParent, int id, Root* pRoot)
         0, 0, rcClient.right, rcClient.bottom, 
         hwndParent, (HMENU)id, hInst, NULL); 
     // Initialize the image list, and add items to the control. 
-    if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV, pRoot)) { 
+    if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV, pHostName)) { 
         DestroyWindow(hwndTV); 
         return NULL; 
     } 
-	SetWindowLong(hwndTV, GWL_USERDATA, (LPARAM)0);
-	g_orgTreeWndProc = SubclassWindow(hwndTV, TreeWndProc);
-	//SendMessage(hwndTV, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
     return hwndTV;
 } 
 

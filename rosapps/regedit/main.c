@@ -101,7 +101,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
 
     };
-    ATOM hChildWndClass = RegisterClassEx(&wcChild); // register child windows class
+//    ATOM hChildWndClass = RegisterClassEx(&wcChild); // register child windows class
+    RegisterClassEx(&wcChild); // register child windows class
 
 /*
     WNDCLASSEX wcex;
@@ -143,11 +144,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
                                     _T(""), hFrameWnd, STATUS_WINDOW);
     if (hStatusBar) {
         // Create the status bar panes
-        int nParts[3];
-        nParts[0] = 100;
-        nParts[1] = 210;
-        nParts[2] = 400;
-        SendMessage(hStatusBar, SB_SETPARTS, 3, (long)nParts);
+        SetupStatusBar(hFrameWnd, FALSE);
         CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
     }
     ShowWindow(hFrameWnd, nCmdShow);

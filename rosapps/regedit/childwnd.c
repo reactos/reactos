@@ -46,6 +46,28 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void MakeFullRegPath(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* pPathLen, int max)
+{
+    TVITEM item;
+    item.mask = TVIF_PARAM;
+    item.hItem = hItem;
+    if (TreeView_GetItem(hwndTV, &item)) {
+        if (item.hItem != TreeView_GetRoot(hwndTV)) {
+            // recurse
+            MakeFullRegPath(hwndTV, TreeView_GetParent(hwndTV, hItem), keyPath, pPathLen, max);
+            keyPath[*pPathLen] = _T('\\');
+            ++(*pPathLen);
+        }
+        item.mask = TVIF_TEXT;
+        item.hItem = hItem;
+        item.pszText = &keyPath[*pPathLen];
+        item.cchTextMax = max - *pPathLen;
+        if (TreeView_GetItem(hwndTV, &item)) {
+            *pPathLen += _tcslen(item.pszText);
+        }
+    }
+}
+
 static void draw_splitbar(HWND hWnd, int x)
 {
 	RECT rt;
@@ -57,8 +79,6 @@ static void draw_splitbar(HWND hWnd, int x)
 	InvertRect(hdc, &rt);
 	ReleaseDC(hWnd, hdc);
 }
-
-#define _NO_EXTENSIONS
 
 static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
 {
@@ -137,8 +157,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         pChildWnd = (ChildWnd*)((LPCREATESTRUCT)lParam)->lpCreateParams;
         ASSERT(pChildWnd);
         pChildWnd->nSplitPos = 250;
-        pChildWnd->hTreeWnd = CreateTreeView(hWnd, TREE_WINDOW, &pChildWnd->root);
-        pChildWnd->hListWnd = CreateListView(hWnd, LIST_WINDOW, &pChildWnd->root);
+        pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->root.path, TREE_WINDOW);
+        pChildWnd->hListWnd = CreateListView(hWnd, LIST_WINDOW/*, &pChildWnd->root*/);
         break;
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
@@ -170,16 +190,13 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		GetClientRect(hWnd, &rt);
 		if (x>=pChildWnd->nSplitPos-SPLIT_WIDTH/2 && x<pChildWnd->nSplitPos+SPLIT_WIDTH/2+1) {
 			last_split = pChildWnd->nSplitPos;
-#ifdef _NO_EXTENSIONS
 			draw_splitbar(hWnd, last_split);
-#endif
 			SetCapture(hWnd);
 		}
 		break;}
 
 	case WM_LBUTTONUP:
 		if (GetCapture() == hWnd) {
-#ifdef _NO_EXTENSIONS
 			RECT rt;
 			int x = LOWORD(lParam);
 			draw_splitbar(hWnd, last_split);
@@ -187,26 +204,20 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			GetClientRect(hWnd, &rt);
 			pChildWnd->nSplitPos = x;
 			ResizeWnd(pChildWnd, rt.right, rt.bottom);
-#endif
 			ReleaseCapture();
 		}
 		break;
 
-#ifdef _NO_EXTENSIONS
 	case WM_CAPTURECHANGED:
 		if (GetCapture()==hWnd && last_split>=0)
 			draw_splitbar(hWnd, last_split);
 		break;
-#endif
-	case WM_KEYDOWN:
+
+    case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE)
 			if (GetCapture() == hWnd) {
 				RECT rt;
-#ifdef _NO_EXTENSIONS
 				draw_splitbar(hWnd, last_split);
-#else
-				pChildWnd->nSplitPos = last_split;
-#endif
 				GetClientRect(hWnd, &rt);
                 ResizeWnd(pChildWnd, rt.right, rt.bottom);
 				last_split = -1;
@@ -219,7 +230,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		if (GetCapture() == hWnd) {
 			RECT rt;
 			int x = LOWORD(lParam);
-#ifdef _NO_EXTENSIONS
 			HDC hdc = GetDC(hWnd);
 			GetClientRect(hWnd, &rt);
 			rt.left = last_split-SPLIT_WIDTH/2;
@@ -230,33 +240,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			rt.right = x+SPLIT_WIDTH/2+1;
 			InvertRect(hdc, &rt);
 			ReleaseDC(hWnd, hdc);
-#else
-			GetClientRect(hWnd, &rt);
-			if (x>=0 && x<rt.right) {
-				pChildWnd->nSplitPos = x;
-				//resize_tree(pChildWnd, rt.right, rt.bottom);
-				rt.left = x-SPLIT_WIDTH/2;
-				rt.right = x+SPLIT_WIDTH/2+1;
-				InvalidateRect(hWnd, &rt, FALSE);
-				UpdateWindow(hTreeWnd);
-				UpdateWindow(hWnd);
-				UpdateWindow(hListWnd);
-			}
-#endif
 		}
 		break;
 
-#ifndef _NO_EXTENSIONS
-	case WM_GETMINMAXINFO:
-		DefWindowProc(hWnd, message, wParam, lParam);
-		{LPMINMAXINFO lpmmi = (LPMINMAXINFO)lParam;
-		lpmmi->ptMaxTrackSize.x <<= 1;//2*GetSystemMetrics(SM_CXSCREEN) / SM_CXVIRTUALSCREEN
-		lpmmi->ptMaxTrackSize.y <<= 1;//2*GetSystemMetrics(SM_CYSCREEN) / SM_CYVIRTUALSCREEN
-		break;}
-#endif
-
 	case WM_SETFOCUS:
-//		SetCurrentDirectory(szPath);
         if (pChildWnd != NULL) {
 		    SetFocus(pChildWnd->nFocusPanel? pChildWnd->hListWnd: pChildWnd->hTreeWnd);
         }
@@ -267,22 +254,23 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 	case WM_NOTIFY:
         if ((int)wParam == TREE_WINDOW) {
-            if ((((LPNMHDR)lParam)->code) == TVN_SELCHANGED) {
-                Entry* entry = (Entry*)((NMTREEVIEW*)lParam)->itemNew.lParam;
-                if (entry != NULL) {
-                    if (!entry->scanned) {
-                        //scan_entry(pChildWnd, entry);
-                    } else {
-                        //RefreshList(pChildWnd->hListWnd, entry);
-                    }
-                    //RefreshList(pChildWnd->hListWnd, entry->down);
-                    RefreshList(pChildWnd->hListWnd, entry);
+            switch (((LPNMHDR)lParam)->code) { 
+            case TVN_ITEMEXPANDING: 
+                return !OnTreeExpanding(pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
+            case TVN_SELCHANGED:
+                {
+                    TCHAR keyPath[1000];
+                    int keyPathLen = 0;
+                    keyPath[0] = _T('\0');
+                    MakeFullRegPath(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
+                    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)keyPath);
                 }
-            }
-            if (!SendMessage(pChildWnd->hTreeWnd, message, wParam, lParam)) {
+//                RefreshList(pChildWnd->hListWnd, entry);
+                break;
+            default:
                 goto def;
             }
-        }
+        } else
         if ((int)wParam == LIST_WINDOW) {
             if (!SendMessage(pChildWnd->hListWnd, message, wParam, lParam)) {
                 goto def;

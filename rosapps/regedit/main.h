@@ -32,7 +32,7 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 #include "resource.h"
-#include "regproc.h"
+//#include "regproc.h"
 
 
 #define STATUS_WINDOW   2001
@@ -45,6 +45,8 @@ extern "C" {
 #define MAX_NAME_LEN    500
 
 
+//#include "entries.h"
+//#if 0
 typedef struct _Entry {
 	struct _Entry*	next;
 	struct _Entry*	down;
@@ -75,7 +77,7 @@ typedef struct {
 	int		nSplitPos;
 	Root	root;
 } ChildWnd;
-
+//#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:

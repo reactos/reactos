@@ -39,9 +39,9 @@ IDI_SMALL               ICON    DISCARDABLE     "res/small.ico"
 // Bitmap
 //
 
-IDB_OPEN_FILE           BITMAP  DISCARDABLE     "res/folder1.bmp"
-IDB_CLOSED_FILE         BITMAP  DISCARDABLE     "res/folder2.bmp"
-IDB_ROOT                BITMAP  DISCARDABLE     "res/folder3.bmp"
+IDB_OPEN_FILE           BITMAP  DISCARDABLE     "res/folder3.bmp"
+IDB_CLOSED_FILE         BITMAP  DISCARDABLE     "res/folder1.bmp"
+IDB_ROOT                BITMAP  DISCARDABLE     "res/folder2.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -165,6 +165,49 @@ BEGIN
 END
 
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "0c0904b0"
+        BEGIN
+            VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
+            VALUE "CompanyName", "ReactWare\0"
+            VALUE "FileDescription", "ReactOS Registry Editor by Robert Dickenson\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "regedit\0"
+            VALUE "LegalCopyright", "Copyright © 2002 Robert Dickenson\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "regedit.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "ReactOS Registry Editor\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc09, 1200
+    END
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -32,7 +32,8 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 
-HWND CreateTreeView(HWND hwndParent, int id, Root* pRoot);
+HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id);
+BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
 
 
 #ifdef __cplusplus

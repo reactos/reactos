@@ -66,20 +66,20 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
 	}
  */
 	if (IsWindowVisible(hStatusBar)) {
-		SetupStatusBar(TRUE);
+		SetupStatusBar(hWnd, TRUE);
 		GetClientRect(hStatusBar, &rt);
 		prect->bottom -= rt.bottom;
 	}
 	MoveWindow(hChildWnd, prect->left-1,prect->top-1,prect->right+2,prect->bottom+1, TRUE);
 }
-
+/*
 static void resize_frame(HWND hWnd, int cx, int cy)
 {
 	RECT rect = {0, 0, cx, cy};
 
 	resize_frame_rect(hWnd, &rect);
 }
-
+ */
 void resize_frame_client(HWND hWnd)
 {
 	RECT rect;
@@ -102,19 +102,9 @@ static void OnEnterMenuLoop(HWND hWnd)
 
 static void OnExitMenuLoop(HWND hWnd)
 {
-    RECT  rc;
-    int   nParts[3];
-//    TCHAR text[260];
-
     bInMenuLoop = FALSE;
     // Update the status bar pane sizes
-    GetClientRect(hWnd, &rc);
-    nParts[0] = 100;
-    nParts[1] = 210;
-    nParts[2] = rc.right;
-    SendMessage(hStatusBar, SB_SETPARTS, 3, (long)nParts);
-    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)_T(""));
-	SetupStatusBar(TRUE);
+	SetupStatusBar(hWnd, TRUE);
 	UpdateStatusBar();
 }
 
@@ -139,21 +129,16 @@ static void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
     SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)str);
 }
 
-void SetupStatusBar(BOOL bResize)
+void SetupStatusBar(HWND hWnd, BOOL bResize)
 {
-    int nParts[4];
-//		int parts[] = {300, 500};
-//		SendMessage(Globals.hStatusBar, WM_SIZE, 0, 0);
-//		SendMessage(Globals.hStatusBar, SB_SETPARTS, 2, (LPARAM)&parts);
-
-    // Create the status bar panes
-    nParts[0] = 150;
-    nParts[1] = 220;
-    nParts[2] = 100;
-    nParts[3] = 100;
+    RECT  rc;
+    int nParts;
+    GetClientRect(hWnd, &rc);
+    nParts = rc.right;
+//    nParts = -1;
 	if (bResize)
 		SendMessage(hStatusBar, WM_SIZE, 0, 0);
-    SendMessage(hStatusBar, SB_SETPARTS, 4, (long)nParts);
+	SendMessage(hStatusBar, SB_SETPARTS, 1, (LPARAM)&nParts);
 }
 
 void UpdateStatusBar(void)
@@ -163,10 +148,11 @@ void UpdateStatusBar(void)
 
 //	size = sizeof(text)/sizeof(TCHAR);
 //	GetUserName(text, &size);
-//  SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM)text);
+//  SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)text);
+//    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)_T(""));
 	size = sizeof(text)/sizeof(TCHAR);
 	GetComputerName(text, &size);
-    SendMessage(hStatusBar, SB_SETTEXT, 3, (LPARAM)text);
+    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)text);
 }
 
 static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
