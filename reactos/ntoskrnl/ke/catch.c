@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.50 2004/11/08 00:36:41 blight Exp $
+/* $Id: catch.c,v 1.51 2004/11/11 12:27:40 ekohl Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -37,7 +37,7 @@ ULONG
 RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 	IN PCONTEXT  Context);
 
-VOID 
+VOID
 KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 		    PCONTEXT Context,
 		    PKTRAP_FRAME Tf,
@@ -117,8 +117,8 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
 
 	      StatusOfCopy = MmCopyToCaller(pNewUserStack,
- 	                                    temp_space,
- 	                                    (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
+	                                    temp_space,
+	                                    (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
 	      if (NT_SUCCESS(StatusOfCopy))
 	        {
 	          Tf->Esp = (ULONG)pNewUserStack;
@@ -161,7 +161,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	    {
 	      DPRINT("ExceptionRecord->ExceptionAddress = 0x%x\n",
 		     ExceptionRecord->ExceptionAddress );
-              KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);	      
+              KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);
 	    }
 	}
     }
@@ -226,9 +226,9 @@ ExRaiseException (
  */
 BOOLEAN
 STDCALL
-ExSystemExceptionFilter()
+ExSystemExceptionFilter(VOID)
 {
- 	return KeGetPreviousMode() != KernelMode ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH;
+  return KeGetPreviousMode() != KernelMode ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH;
 }
 
 /*
