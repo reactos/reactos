@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.1 2001/07/05 01:51:52 rex Exp $
+/* $Id: direntry.c,v 1.2 2001/07/13 10:31:14 ekohl Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -20,8 +20,12 @@
 
 #include "vfat.h"
 
-#define  ENTRIES_PER_PAGE(pDeviceExt) (ENTRIES_PER_SECTOR * \
-           (PAGESIZE / ((pDeviceExt)->BytesPerSector)))
+#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->BytesPerCluster > PAGESIZE ? \
+		   (pDeviceExt)->BytesPerCluster : PAGESIZE)
+
+#define  ENTRIES_PER_CACHEPAGE(pDeviceExt)  (ENTRIES_PER_SECTOR * \
+		   (CACHEPAGESIZE(pDeviceExt) / ((pDeviceExt)->BytesPerSector)))
+
 
 ULONG 
 vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
@@ -74,8 +78,8 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
                      PFAT_DIR_ENTRY pDirEntry)
 {
   NTSTATUS  status;
-  ULONG  indexInPage = *pDirectoryIndex % ENTRIES_PER_PAGE(pDeviceExt);
-  ULONG  pageNumber = *pDirectoryIndex / ENTRIES_PER_PAGE(pDeviceExt);
+  ULONG  indexInPage = *pDirectoryIndex % ENTRIES_PER_CACHEPAGE(pDeviceExt);
+  ULONG  pageNumber = *pDirectoryIndex / ENTRIES_PER_CACHEPAGE(pDeviceExt);
   PVOID  currentPage = NULL;
   PCACHE_SEGMENT  cacheSegment = NULL; 
   FATDirEntry * fatDirEntry;
@@ -94,7 +98,7 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
   DPRINT ("Validating current directory page\n");
   status = vfatRequestAndValidateRegion (pDeviceExt, 
                                          pDirectoryFCB, 
-                                         pageNumber * PAGESIZE,
+                                         pageNumber * CACHEPAGESIZE(pDeviceExt),
                                          (PVOID *) &currentPage,
                                          &cacheSegment,
                                          FALSE);
@@ -139,7 +143,7 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
       {
         (*pDirectoryIndex)++;
         indexInPage++;
-        if (indexInPage == ENTRIES_PER_PAGE(pDeviceExt))
+        if (indexInPage == ENTRIES_PER_CACHEPAGE(pDeviceExt))
         {
           indexInPage = 0;
           pageNumber++;
@@ -153,7 +157,7 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
           }
           status = vfatRequestAndValidateRegion (pDeviceExt, 
                                                  pDirectoryFCB, 
-                                                 pageNumber * PAGESIZE,
+                                                 pageNumber * CACHEPAGESIZE(pDeviceExt),
                                                  (PVOID *) &currentPage,
                                                  &cacheSegment,
                                                  FALSE);
@@ -181,7 +185,7 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
       }
       (*pDirectoryIndex)++;
       indexInPage++;
-      if (indexInPage == ENTRIES_PER_PAGE(pDeviceExt))
+      if (indexInPage == ENTRIES_PER_CACHEPAGE(pDeviceExt))
       {
         indexInPage = 0;
         pageNumber++;
@@ -195,7 +199,7 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
         }
         status = vfatRequestAndValidateRegion (pDeviceExt, 
                                                pDirectoryFCB, 
-                                               pageNumber * PAGESIZE,
+                                               pageNumber * CACHEPAGESIZE(pDeviceExt),
                                                (PVOID *) &currentPage,
                                                &cacheSegment,
                                                FALSE);

@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.27 2001/06/15 11:14:53 ekohl Exp $
+ * $Id: fat.c,v 1.28 2001/07/13 10:31:14 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,6 +19,13 @@
 #include <debug.h>
 
 #include "vfat.h"
+
+/* GLOBALS ******************************************************************/
+
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
+
+#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->BytesPerCluster > PAGESIZE ? \
+		   (pDeviceExt)->BytesPerCluster : PAGESIZE)
 
 /* FUNCTIONS ****************************************************************/
 
@@ -83,11 +90,14 @@ Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   PCACHE_SEGMENT CacheSeg;
   NTSTATUS Status;
   ULONG FATOffset;
+  ULONG ChunkSize;
+  
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   
   FATOffset = (DeviceExt->FATStart * BLOCKSIZE) + (CurrentCluster * 2);
   
   Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
-				 PAGE_ROUND_DOWN(FATOffset),
+				 ROUND_DOWN(FATOffset, ChunkSize),
 				 &BaseAddress,
 				 &Valid,
 				 &CacheSeg);
@@ -98,8 +108,8 @@ Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt,
   if (!Valid)
     {
       Status = VfatReadSectors(DeviceExt->StorageDevice,
-			      PAGE_ROUND_DOWN(FATOffset) / BLOCKSIZE,
-			      PAGESIZE / BLOCKSIZE,
+			      ROUND_DOWN(FATOffset, ChunkSize) / BLOCKSIZE,
+			      ChunkSize / BLOCKSIZE,
 			      BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
@@ -108,7 +118,7 @@ Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 	}
     }
   
-  CurrentCluster = *((PUSHORT)(BaseAddress + (FATOffset % PAGESIZE)));
+  CurrentCluster = *((PUSHORT)(BaseAddress + (FATOffset % ChunkSize)));
   if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
     CurrentCluster = 0xffffffff;
   CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
@@ -189,8 +199,11 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
   NTSTATUS Status;
   PVOID BaseAddress;
   PCACHE_SEGMENT CacheSeg;
-  BOOLEAN Valid;  
+  BOOLEAN Valid;
   ULONG FatStart;
+  ULONG ChunkSize;
+  
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   
   FatStart = DeviceExt->FATStart * BLOCKSIZE;
   FatLength = DeviceExt->Boot->FATSectors * BLOCKSIZE;
@@ -199,14 +212,14 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
 
   for (i = 2; i < FatLength; i+=2)
     {            
-      if (((FatStart + i) % PAGESIZE) == 0 || CacheSeg == NULL)
+      if (((FatStart + i) % ChunkSize) == 0 || CacheSeg == NULL)
 	{
 	  if (CacheSeg != NULL)
 	    {
 	      CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
 	    }
 	  Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
-					 PAGE_ROUND_DOWN(FatStart + i),
+					 ROUND_DOWN(FatStart + i, ChunkSize),
 					 &BaseAddress,
 					 &Valid,
 					 &CacheSeg);
@@ -217,9 +230,9 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
 	  if (!Valid)
 	    {
 	      Status = VfatReadSectors(DeviceExt->StorageDevice,
-				       PAGE_ROUND_DOWN(FatStart + i) 
+				       ROUND_DOWN(FatStart + i, ChunkSize) 
 				       / BLOCKSIZE,
-				       PAGESIZE / BLOCKSIZE,
+				       ChunkSize / BLOCKSIZE,
 				       BaseAddress);
 	      if (!NT_SUCCESS(Status))
 		{
@@ -229,7 +242,7 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
 		}
 	    }
 	}
-      if (*((PUSHORT)(BaseAddress + ((FatStart + i) % PAGESIZE))) == 0)
+      if (*((PUSHORT)(BaseAddress + ((FatStart + i) % ChunkSize))) == 0)
 	{
 	  DPRINT("Found available cluster 0x%x\n", i);
 	  *Cluster = i / 2;
@@ -609,15 +622,18 @@ FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG FATOffset;
   ULONG Start;
   ULONG i;
+  ULONG ChunkSize;
+  
+  ChunkSize = CACHEPAGESIZE(DeviceExt);
   
   Start = DeviceExt->FATStart;
-
+  
   FATOffset = (Start * BLOCKSIZE) + (ClusterToWrite * 2);
-
+  
   for (i = 0; i < DeviceExt->Boot->FATCount; i++)
-    {  
+    {
       Status = CcRosRequestCacheSegment(DeviceExt->StorageBcb,
-				     PAGE_ROUND_DOWN(FATOffset),
+				     ROUND_DOWN(FATOffset, ChunkSize),
 				     &BaseAddress,
 				     &Valid,
 				     &CacheSeg);
@@ -628,8 +644,8 @@ FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
       if (!Valid)
 	{
 	  Status = VfatReadSectors(DeviceExt->StorageDevice,
-				   PAGE_ROUND_DOWN(FATOffset) / BLOCKSIZE,
-				   PAGESIZE / BLOCKSIZE,
+				   ROUND_DOWN(FATOffset, ChunkSize) / BLOCKSIZE,
+				   ChunkSize / BLOCKSIZE,
 				   BaseAddress);
 	  if (!NT_SUCCESS(Status))
 	    {
@@ -640,10 +656,10 @@ FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt,
       
       DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
 	     ClusterToWrite);
-      *((PUSHORT)(BaseAddress + (FATOffset % PAGESIZE))) = NewValue;
+      *((PUSHORT)(BaseAddress + (FATOffset % ChunkSize))) = NewValue;
       Status = VfatWriteSectors(DeviceExt->StorageDevice,
-				PAGE_ROUND_DOWN(FATOffset) / BLOCKSIZE,
-				PAGESIZE / BLOCKSIZE,
+				ROUND_DOWN(FATOffset,ChunkSize) / BLOCKSIZE,
+				ChunkSize / BLOCKSIZE,
 				BaseAddress);
       CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
       
@@ -922,7 +938,7 @@ GetNextCluster (PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-GetNextSector (PDEVICE_EXTENSION DeviceExt, 
+GetNextSector (PDEVICE_EXTENSION DeviceExt,
 		ULONG CurrentSector,
 		PULONG NextSector,
 		BOOLEAN Extend)
@@ -957,3 +973,5 @@ GetNextSector (PDEVICE_EXTENSION DeviceExt,
        return (STATUS_SUCCESS);
   }
 }
+
+/* EOF */

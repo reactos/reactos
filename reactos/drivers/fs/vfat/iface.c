@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.54 2001/07/05 01:51:52 rex Exp $
+/* $Id: iface.c,v 1.55 2001/07/13 10:31:14 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -34,6 +34,9 @@
 #include "vfat.h"
 
 /* GLOBALS *****************************************************************/
+
+#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->BytesPerCluster > PAGESIZE ? \
+		   (pDeviceExt)->BytesPerCluster : PAGESIZE)
 
 static PDRIVER_OBJECT VfatDriverObject;
 
@@ -203,7 +206,7 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
 							     DeviceExt->StorageDevice);
    Status = CcRosInitializeFileCache(DeviceExt->StreamStorageDevice,
 				  &DeviceExt->StorageBcb,
-				  PAGESIZE);
+				  CACHEPAGESIZE(DeviceExt));
    if (!NT_SUCCESS(Status))
      {
 	/* FIXME: delete device object */
