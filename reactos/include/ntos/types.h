@@ -16,6 +16,15 @@
 
 #include <basetsd.h>
 
+#ifdef __GNUC__
+//#define STDCALL_FUNCPTR(a) STDCALL (* a)
+//#define STDCALL_FUNC(a) (STDCALL a )
+#define STDCALL_FUNC STDCALL
+#else
+//#define STDCALL_FUNCPTR(a) (STDCALL * a )
+#define STDCALL_FUNC(a) (__stdcall a )
+#endif /*__GNUC__*/
+
 /* Fixed precision types */
 typedef signed char         INT8, *PINT8;
 typedef signed short        INT16, *PINT16;
@@ -40,11 +49,20 @@ typedef short SHORT;
 #define CALLBACK    WINAPI
 #define PASCAL      WINAPI
 #else
+
+#ifdef __GNUC__
 #define STDCALL
 #define CDECL
 #define CALLBACK
 #define PASCAL
-#endif
+#else
+#define STDCALL __stdcall
+#define CDECL __cdecl
+#define CALLBACK
+#define PASCAL
+#endif /*__GNUC__*/
+
+#endif /*i386*/
 
 #ifdef _WIN64
 
@@ -85,10 +103,31 @@ typedef void *LPVOID;
 typedef float *PFLOAT;
 typedef unsigned short *PWCH;
 typedef unsigned short *PWORD;
-typedef long long LONGLONG;
-typedef unsigned long long ULONGLONG;
-typedef long long *PLONGLONG;
-typedef unsigned long long *PULONGLONG;
+
+#ifdef __GNUC__
+//typedef long long LONGLONG;
+//typedef unsigned long long ULONGLONG;
+//typedef long long *PLONGLONG;
+//typedef unsigned long long *PULONGLONG;
+#define LONGLONG long long
+#define ULONGLONG unsigned long long
+#define PLONGLONG long long *
+#define PULONGLONG unsigned long long *
+#else
+//typedef double LONGLONG;
+//typedef double ULONGLONG;
+//typedef double *PLONGLONG;
+//typedef double *PULONGLONG;
+#include <msvcrt\crttypes.h>
+#define inline __inline
+#define __asm__
+#define __volatile__(a)
+#define __attribute__(a)
+struct _KTHREAD { int foobar; };
+struct _ETHREAD { int foobar; };
+struct _EPROCESS { int foobar; };
+#endif
+
 typedef const void *LPCVOID;
 typedef BYTE *LPBYTE, *PBYTE;
 typedef BOOL *PBOOL;
@@ -109,7 +148,11 @@ typedef USHORT CSHORT;
 typedef const unsigned short *PCWSTR;
 typedef char* PCSZ;
 
+#ifdef __GNUC__
 typedef DWORD STDCALL (*PTHREAD_START_ROUTINE) (LPVOID);
+#else
+typedef DWORD (STDCALL *PTHREAD_START_ROUTINE) (LPVOID);
+#endif /*__GNUC__*/
 
 typedef union _LARGE_INTEGER
 {
@@ -410,12 +453,21 @@ typedef struct _SMALL_RECT
 } SMALL_RECT, *PSMALL_RECT;
 
 
+#ifdef __GNUC__
 typedef VOID STDCALL
 (*PTIMERAPCROUTINE)(
 	LPVOID lpArgToCompletionRoutine,
 	DWORD dwTimerLowValue,
 	DWORD dwTimerHighValue
 	);
+#else
+typedef VOID
+(STDCALL *PTIMERAPCROUTINE)(
+	LPVOID lpArgToCompletionRoutine,
+	DWORD dwTimerLowValue,
+	DWORD dwTimerHighValue
+	);
+#endif /*__GNUC__*/
 
 #include "except.h"
 

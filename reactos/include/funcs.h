@@ -932,7 +932,11 @@ LockResource(
 	     );
 
 int
+#ifdef __GNUC__
 STDCALL
+#else
+__stdcall
+#endif
 WinMain(
 	HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,

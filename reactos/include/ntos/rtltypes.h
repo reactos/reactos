@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.1 2002/11/15 21:56:37 chorns Exp $
+/* $Id: rtltypes.h,v 1.2 2002/11/24 18:24:51 robd Exp $
  * 
  */
 
@@ -67,7 +67,7 @@ typedef struct _RTL_BITMAP
   PULONG Buffer;
 } RTL_BITMAP, *PRTL_BITMAP;
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PRTL_QUERY_REGISTRY_ROUTINE)(PWSTR ValueName,
 			       ULONG ValueType,
 			       PVOID ValueData,

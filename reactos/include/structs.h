@@ -2434,6 +2434,8 @@ typedef struct tagMETAFILEPICT {
   LONG      xExt;
   LONG      yExt;
   HMETAFILE hMF;
+#else
+  LONG      mm; // robd
 #endif
 } METAFILEPICT, *PMETAFILEPICT, *LPMETAFILEPICT;
 

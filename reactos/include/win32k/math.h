@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: jfilby $
- * $Date: 2000/06/16 20:58:56 $
+ * $Revision: 1.2 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:24:52 $
  *
  */
 // added modfl 
@@ -42,7 +42,7 @@ extern "C" {
  *
  * NOTE: The CRTDLL version uses _HUGE_dll instead.
  */
-#if __MSVCRT__
+#ifdef __MSVCRT__
 extern double*	__imp__HUGE;
 #define	HUGE_VAL	(*__imp__HUGE)
 #else

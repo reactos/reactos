@@ -135,9 +135,11 @@ typedef struct _NPFS_WAIT_PIPE
    LARGE_INTEGER Timeout;
 } NPFS_WAIT_PIPE, *PNPFS_WAIT_PIPE;
 
+#ifdef __GNUC__ // robd
 typedef struct _NPFS_LISTEN
 {
 } NPFS_LISTEN, *PNPFS_LISTEN;
+#endif
 
 typedef struct _NPFS_SET_STATE
 {

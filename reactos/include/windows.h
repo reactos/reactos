@@ -119,6 +119,9 @@
 #endif
 #endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
 #endif /* NONAMELESSUNION */
+#else
+#define _ANONYMOUS_UNION
+#define _ANONYMOUS_STRUCT
 #endif /* __GNUC__ */
 
 #ifndef _ANONYMOUS_UNION

@@ -1,8 +1,25 @@
 #ifndef __INCLUDE_PE_H
 #define __INCLUDE_PE_H
 
+//#define _ANONYMOUS_UNION __extension__
+//#define _ANONYMOUS_STRUCT __extension__
+
+#ifdef __GNUC__
+#ifndef NONAMELESSUNION
+#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 #define _ANONYMOUS_UNION __extension__
 #define _ANONYMOUS_STRUCT __extension__
+#else
+#if defined(__cplusplus)
+#define _ANONYMOUS_UNION __extension__
+#endif
+#endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
+#endif /* NONAMELESSUNION */
+#else
+#define _ANONYMOUS_UNION
+#define _ANONYMOUS_STRUCT
+#endif /* __GNUC__ */
+
 
 #ifndef NTAPI
 #define NTAPI STDCALL

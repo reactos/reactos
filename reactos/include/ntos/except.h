@@ -25,11 +25,19 @@ struct _EXCEPTION_REGISTRATION;
  * The type of function that is expected as an exception handler to be
  * installed with _try1.
  */
-typedef EXCEPTION_DISPOSITION CDECL (*PEXCEPTION_HANDLER)(
+#ifdef __GNUC__
+typedef EXCEPTION_DISPOSITION (CDECL *PEXCEPTION_HANDLER)(
   struct _EXCEPTION_RECORD* ExceptionRecord,
   struct _EXCEPTION_REGISTRATION* ExceptionRegistration,
   PCONTEXT Context,
   PVOID DispatcherContext);
+#else
+typedef EXCEPTION_DISPOSITION (CDECL *PEXCEPTION_HANDLER)(
+  struct _EXCEPTION_RECORD* ExceptionRecord,
+  struct _EXCEPTION_REGISTRATION* ExceptionRegistration,
+  PCONTEXT Context,
+  PVOID DispatcherContext);
+#endif /*__GNUC__*/
 
 #ifndef __USE_W32API
 
@@ -108,8 +116,13 @@ typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
 #endif /* _GNU_H_WINDOWS32_DEFINES */
 
 // Functions of the following prototype return one of the above constants
+#ifdef __GNUC__
 typedef DWORD CDECL (*PSCOPE_EXCEPTION_FILTER)(VOID);
 typedef VOID CDECL (*PSCOPE_EXCEPTION_HANDLER)(VOID);
+#else
+typedef DWORD (CDECL *PSCOPE_EXCEPTION_FILTER)(VOID);
+typedef VOID (CDECL *PSCOPE_EXCEPTION_HANDLER)(VOID);
+#endif /*__GNUC__*/
 
 typedef struct _SCOPETABLE_ENTRY
 {

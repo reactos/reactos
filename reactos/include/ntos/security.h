@@ -62,9 +62,11 @@ typedef struct
 } ACE, *PACE;
 #endif
 
+#ifdef __GNU__
 typedef struct _SECURITY_DESCRIPTOR_CONTEXT
 {
 } SECURITY_DESCRIPTOR_CONTEXT, *PSECURITY_DESCRIPTOR_CONTEXT;
+#endif
 
 
 #ifndef __USE_W32API

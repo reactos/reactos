@@ -97,7 +97,7 @@ typedef struct _PEB_LDR_DATA
    LIST_ENTRY InInitializationOrderModuleList;
 } PEB_LDR_DATA, *PPEB_LDR_DATA;
 
-typedef VOID STDCALL (*PPEBLOCKROUTINE)(PVOID);
+typedef VOID STDCALL_FUNC (*PPEBLOCKROUTINE)(PVOID);
 
 typedef struct _PEB
 {
