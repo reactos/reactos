@@ -62,7 +62,7 @@ typedef struct RECTL
 inline void DPRINT(...){}
 
 #define SCREENX 25
-#define SCREENY 25
+#define SCREENY 15
 char screen[SCREENY][SCREENX];
 
 #define EDGE_CHAR '*'
@@ -440,7 +440,7 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
   if ( 0 == pEdge->dy )
     return;
 
-  ASSERT ( pEdge->FromY <= Scanline && pEdge->ToY >= Scanline );
+  ASSERT ( pEdge->FromY <= Scanline && pEdge->ToY > Scanline );
 
   if ( pEdge->xmajor )
   {
@@ -512,7 +512,7 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
   {
     FILL_EDGE* pEdge = list->Edges[i];
     ASSERT(pEdge);
-    if ( pEdge->FromY <= Scanline && pEdge->ToY >= Scanline )
+    if ( pEdge->FromY <= Scanline && pEdge->ToY > Scanline )
     {
       POLYGONFILL_UpdateScanline ( pEdge, Scanline );
       POLYGONFILL_ActiveListInsert ( ActiveHead, pEdge );
@@ -828,7 +828,11 @@ void main()
     { 0, 0 },
     { 12, 4 },
     { 4, 8 },
-#elif 1
+#elif 0
+	{ 3, 0 },
+	{ 0, 3 },
+	{ 3, 6 },
+#elif 0
     { 1, 1 },
     { 3, 1 },
     { 3, 3 },
@@ -843,11 +847,11 @@ void main()
     { 4, 4 },
     { 0, 4 },
 #else
-    { 4, 16 },
-    { 12, 4 },
-    { 18, 16 },
-    { 4, 8 },
-    { 20, 8 }
+    {  4, 12 },
+    { 12,  0 },
+    { 18, 12 },
+    {  4,  4 },
+    { 20,  4 }
 #endif
   };
   const int pts_count = sizeof(pts)/sizeof(pts[0]);

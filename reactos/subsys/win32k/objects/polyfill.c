@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.11 2003/08/17 17:32:58 royce Exp $
+/* $Id: polyfill.c,v 1.12 2003/08/19 21:29:20 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -317,7 +317,7 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
   if ( 0 == pEdge->dy )
     return;
 
-  ASSERT ( pEdge->FromY <= Scanline && pEdge->ToY >= Scanline );
+  ASSERT ( pEdge->FromY <= Scanline && pEdge->ToY > Scanline );
 
   if ( pEdge->xmajor )
   {
@@ -389,7 +389,7 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
   {
     FILL_EDGE* pEdge = list->Edges[i];
     ASSERT(pEdge);
-    if ( pEdge->FromY <= Scanline && pEdge->ToY >= Scanline )
+    if ( pEdge->FromY <= Scanline && pEdge->ToY > Scanline )
     {
       POLYGONFILL_UpdateScanline ( pEdge, Scanline );
       POLYGONFILL_ActiveListInsert ( ActiveHead, pEdge );
