@@ -360,7 +360,7 @@ static char *make_string(WCHAR *uc, int len, int codepage)
 				cptr += n;
 				b += n;
 			}
-			if(i < len-1 && b >= 72)
+			if(i < len-1 && b >= 72 && cptr[-1] != '\\')
 			{
 				*cptr++ = '"';
 				*cptr++ = ',';
@@ -424,7 +424,7 @@ static char *make_string(WCHAR *uc, int len, int codepage)
 					b += n;
 				}
 			}
-			if(i < len-1 && b >= 72)
+			if(i < len-1 && b >= 72 && cptr[-1] != '\\')
 			{
 				*cptr++ = '"';
 				*cptr++ = ',';
@@ -577,7 +577,7 @@ void write_bin_files(void)
 
   for (lbp = lanblockhead; lbp; lbp = lbp->next)
     {
-      unsigned offs = 4 * (lbp->nblk * 3 + 1); 
+      unsigned offs = 4 * (lbp->nblk * 3 + 1);
 
       char *cptr = NULL;
       for(i = 0; i < ntab; i++)
