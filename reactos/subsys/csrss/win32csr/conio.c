@@ -238,9 +238,6 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
 CSR_API(CsrAllocConsole)
 {
   PCSRSS_CONSOLE Console;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  CLIENT_ID ClientId;
-  HANDLE Process;
   NTSTATUS Status;
 
   DPRINT("CsrAllocConsole\n");
@@ -293,35 +290,10 @@ CSR_API(CsrAllocConsole)
       return Reply->Status = Status;
     }
 
-  ClientId.UniqueThread = NULL;
-  ClientId.UniqueProcess = ProcessData->ProcessId;
-  InitializeObjectAttributes(&ObjectAttributes,
-                             NULL,
-                             0,
-                             NULL,
-                             NULL);
-
-  /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
-  Status = NtOpenProcess(&Process,
-                         PROCESS_DUP_HANDLE,
-                         &ObjectAttributes,
-                         &ClientId);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtOpenProcess() failed for handle duplication, Status: 0x%x\n", Status);
-      Console->Header.ReferenceCount--;
-      ProcessData->Console = 0;
-      Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.OutputHandle);
-      Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.InputHandle);
-      Reply->Status = Status;
-      return Status;
-    }
-
   if (! DuplicateHandle(GetCurrentProcess(), ProcessData->Console->ActiveEvent,
-                        Process, &ProcessData->ConsoleEvent, EVENT_ALL_ACCESS, FALSE, 0))
+                        ProcessData->Process, &ProcessData->ConsoleEvent, EVENT_ALL_ACCESS, FALSE, 0))
     {
       DPRINT1("DuplicateHandle() failed: %d\n", GetLastError);
-      CloseHandle(Process);
       Console->Header.ReferenceCount--;
       Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.OutputHandle);
       Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.InputHandle);
@@ -329,7 +301,6 @@ CSR_API(CsrAllocConsole)
       Reply->Status = Status;
       return Status;
     }
-  CloseHandle(Process);
   ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
   DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);      
   InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
