@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.2 1999/07/22 21:36:14 ekohl Exp $
+/* $Id: scm.c,v 1.3 1999/07/26 20:46:40 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -192,14 +192,24 @@ EnumDependentServicesW(
 /**********************************************************************
  *	EnumServiceGroupW
  *
- * Return value unknown.
+ * (unknown)
  */
-DWORD
+BOOL
 STDCALL
-EnumServiceGroupW(VOID)
+EnumServiceGroupW (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7,
+	DWORD	Unknown8
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 1;
+	return FALSE;
 }
 
 
@@ -208,7 +218,7 @@ EnumServiceGroupW(VOID)
  */
 BOOL
 STDCALL
-EnumServicesStatusA(
+EnumServicesStatusA (
 	SC_HANDLE               hSCManager,
 	DWORD                   dwServiceType,
 	DWORD                   dwServiceState,

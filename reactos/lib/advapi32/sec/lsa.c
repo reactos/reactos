@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.1 1999/05/19 16:43:30 ea Exp $
+/* $Id: lsa.c,v 1.2 1999/07/26 20:46:39 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -66,7 +66,12 @@ LsaClose (VOID)
  */
 INT
 STDCALL
-LsaCreateAccount (VOID)
+LsaCreateAccount (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3	
+	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;

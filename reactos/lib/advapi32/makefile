@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 1999/07/22 21:33:48 ekohl Exp $
+# $Id: makefile,v 1.6 1999/07/26 20:46:39 ea Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -15,7 +15,7 @@ endif
 
 
 MISC_OBJECTS = misc/dllmain.o misc/shutdown.o \
-		misc/sysfunc.o
+		misc/sysfunc.o misc/stubs.o
 
 REGISTRY_OBJECTS = reg/reg.o
 

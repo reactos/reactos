@@ -13,8 +13,11 @@
 DWORD
 STDCALL
 GetSecurityDescriptorLength (
-			     PSECURITY_DESCRIPTOR pSecurityDescriptor
-			      )
+	PSECURITY_DESCRIPTOR	pSecurityDescriptor
+	)
 {
         return RtlLengthSecurityDescriptor(pSecurityDescriptor);
 }
+
+
+/* EOF */

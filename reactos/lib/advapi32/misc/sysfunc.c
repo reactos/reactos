@@ -1,4 +1,5 @@
-/*
+/* $Id: sysfunc.c,v 1.3 1999/07/26 20:46:39 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/misc/sysfun.c
