@@ -151,12 +151,6 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
 	MmUnlockPages(Irp->MdlAddress);
 	ExFreePool(Irp->MdlAddress);
      }
-   if (FileObject != NULL)
-     {
-        FileObject->CurrentByteOffset.u.LowPart =
-          FileObject->CurrentByteOffset.u.LowPart +
-          Irp->IoStatus.Information;
-     }
 }
 
 VOID IoVolumeInformationCompletion(PDEVICE_OBJECT DeviceObject,
