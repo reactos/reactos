@@ -15,7 +15,10 @@ void aprintf(char* fmt, ...);
 
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))
-#define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld)) 
+
+#ifndef FIELD_OFFSET
+#define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
+#endif
 
 BOOL __ErrorReturnFalse(ULONG ErrorCode);
 PVOID __ErrorReturnNull(ULONG ErrorCode);

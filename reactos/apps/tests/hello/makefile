@@ -1,8 +1,9 @@
 all: hello.exe
 
-OBJECTS = hello.o
+OBJECTS = ../common/crt0.o hello.o
+LIBS = ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
 
 hello.exe: $(OBJECTS) $(LIBS)
-	$(CC) $(OBJECTS) -o hello.exe
+	$(LD) $(OBJECTS) $(LIBS) -o hello.exe
 
 include ../../rules.mak

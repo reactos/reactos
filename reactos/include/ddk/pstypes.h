@@ -1,8 +1,6 @@
 #ifndef __INCLUDE_DDK_PSTYPES_H
 #define __INCLUDE_DDK_PSTYPES_H
 
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h> // might be redundant
 #include <kernel32/heap.h>
 #include <kernel32/atom.h>
 #include <internal/hal.h>
@@ -259,8 +257,8 @@ typedef struct _KPROCESS
    /*
     * Added by David Welch (welch@mcmail.com)
     */
-   LIST_ENTRY MemoryAreaList;
-   HANDLE_TABLE HandleTable;
+   LIST_ENTRY           MemoryAreaList;
+   HANDLE_TABLE         HandleTable;
 } KPROCESS, *PKPROCESS;
 
 typedef struct _EPROCESS

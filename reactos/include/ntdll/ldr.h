@@ -14,3 +14,9 @@ typedef struct _DLL
 extern DLL LdrDllListHead;
 
 PEPFUNC LdrPEStartup(PVOID ImageBase, HANDLE SectionHandle);
+NTSTATUS LdrMapSections(HANDLE ProcessHandle,
+			PVOID ImageBase,
+			HANDLE SectionHandle,
+			PIMAGE_NT_HEADERS NTHeaders);
+NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
+			       PHANDLE NTDllSectionHandle);

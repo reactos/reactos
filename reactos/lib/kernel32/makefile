@@ -26,7 +26,7 @@ NLS_OBJECTS = # nls/mbtowc.o nls/wctomb.o
 
 THREAD_OBJECTS = thread/thread.o
 
-PROCESS_OBJECTS = process/proc.o process/cmdline.o
+PROCESS_OBJECTS = process/proc.o process/cmdline.o process/create.o
 
 STRING_OBJECTS = string/lstring.o
 
