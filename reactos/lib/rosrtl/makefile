@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2004/08/10 10:57:54 weiden Exp $
+# $Id: makefile,v 1.14 2004/08/11 08:28:13 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,7 +13,8 @@ TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 THREAD_OBJECTS = \
  thread/create.o \
  thread/exit.o \
- thread/stack.o
+ thread/stack.o \
+ thread/priv.o
 
 STRING_OBJECTS = \
  string/append.o \
