@@ -103,7 +103,8 @@ OBJECTS = \
 	settings.o \
 	i386-stub-win32.o
 
-LIBS = gdi32 comctl32 ole32 uuid wsock32 oleaut32
+LIBS = gdi32 comctl32 ole32 uuid
+DELAYIMPORTS = oleaut32 wsock32
 
 .PHONY: all depends implib clean install dist bootcd depends
 
@@ -128,7 +129,7 @@ buildno.h: ../../../include/reactos/buildno.h
 	$(CD_PREFIX)updatebuildno
 
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
-	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))
+	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
 
 explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
 	$(RC) $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc

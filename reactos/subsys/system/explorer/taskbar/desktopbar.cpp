@@ -89,7 +89,15 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 		return 1;
 
 	 // create start button
-	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, DESKTOPBARBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
+	ResString start_str(IDS_START);
+	WindowCanvas canvas(_hwnd);
+	RECT rect = {0, 0};
+	DrawText(canvas, start_str, -1, &rect, DT_SINGLELINE|DT_CALCRECT);
+	int start_btn_width = rect.right+16+8;
+
+	_taskbar_pos = start_btn_width + 6;
+
+	new PictureButton(Button(_hwnd, start_str, 2, 2, start_btn_width, DESKTOPBARBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
 						SmallIcon(IDI_STARTMENU)/*, GetStockBrush(WHITE_BRUSH)*/);
 
 	 // create task bar
@@ -137,7 +145,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	rbBand.hwndChild = _hwndTaskBar;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = ClientRect(_hwndTaskBar).bottom + 2;
-	rbBand.cx = 200;	//pcs->cx-TASKBAR_LEFT-quicklaunch_width-(notifyarea_width+1);
+	rbBand.cx = 200;	//pcs->cx-_taskbar_pos-quicklaunch_width-(notifyarea_width+1);
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 #endif
 
@@ -248,13 +256,13 @@ void DesktopBar::Resize(int cx, int cy)
 	HDWP hdwp = BeginDeferWindowPos(3);
 
 	if (_hwndrebar)
-		DeferWindowPos(hdwp, _hwndrebar, 0, TASKBAR_LEFT, 0, cx-TASKBAR_LEFT-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
+		DeferWindowPos(hdwp, _hwndrebar, 0, _taskbar_pos, 0, cx-_taskbar_pos-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
 	else {
 		if (_hwndQuickLaunch)
-			DeferWindowPos(hdwp, _hwndQuickLaunch, 0, TASKBAR_LEFT, 1, quicklaunch_width, cy-2, SWP_NOZORDER|SWP_NOACTIVATE);
+			DeferWindowPos(hdwp, _hwndQuickLaunch, 0, _taskbar_pos, 1, quicklaunch_width, cy-2, SWP_NOZORDER|SWP_NOACTIVATE);
 
 		if (_hwndTaskBar)
-			DeferWindowPos(hdwp, _hwndTaskBar, 0, TASKBAR_LEFT+quicklaunch_width, 0, cx-TASKBAR_LEFT-quicklaunch_width-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
+			DeferWindowPos(hdwp, _hwndTaskBar, 0, _taskbar_pos+quicklaunch_width, 0, cx-_taskbar_pos-quicklaunch_width-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
 	}
 
 	if (_hwndNotify)

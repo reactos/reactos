@@ -78,6 +78,7 @@ protected:
 
 	int		WM_TASKBARCREATED;
 	RECT	_work_area_org;
+	int		_taskbar_pos;
 
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

@@ -71,10 +71,12 @@ HWND TaskBar::Create(HWND hwndParent)
 {
 	ClientRect clnt(hwndParent);
 
+	int taskbar_pos = 80;	// This start position will be adjusted in DesktopBar::Resize().
+
 	return Window::Create(WINDOW_CREATOR(TaskBar), 0,
 							BtnWindowClass(CLASSNAME_TASKBAR), TITLE_TASKBAR,
 							WS_CHILD|WS_VISIBLE | CCS_TOP|CCS_NODIVIDER|CCS_NORESIZE,
-							TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-(NOTIFYAREA_WIDTH_DEF+1), clnt.bottom, hwndParent);
+							taskbar_pos, 0, clnt.right-taskbar_pos-(NOTIFYAREA_WIDTH_DEF+1), clnt.bottom, hwndParent);
 }
 
 LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
