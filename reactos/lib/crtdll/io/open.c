@@ -13,6 +13,7 @@
 // possibly store extra information at the handle
 
 #include <windows.h>
+#include <stdarg.h>
 #include <crtdll/io.h>
 #include <crtdll/fcntl.h>
 #include <crtdll/sys/stat.h>
@@ -50,15 +51,17 @@ int _open(const char *_path, int _oflag,...)
 {
    HANDLE hFile;
    DWORD dwDesiredAccess = 0;
-   DWORD dwShareMode = 0;
+   DWORD dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
    DWORD dwCreationDistribution = 0;
    DWORD dwFlagsAndAttributes = 0;
+  int mode;
+  va_list arg;
 	
-   if (( _oflag & S_IREAD ) == S_IREAD)
-     dwShareMode = FILE_SHARE_READ;
-   else if ( ( _oflag & S_IWRITE) == S_IWRITE ) {
-      dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-   }
+  va_start (arg, _oflag);
+  mode = va_arg(arg,int);
+  va_end (arg);
+  if ( (mode == S_IWRITE) || (mode == 0) )
+    dwFlagsAndAttributes = FILE_ATTRIBUTE_READONLY;
 
    /*
     *
@@ -68,16 +71,10 @@ int _open(const char *_path, int _oflag,...)
     */
    if (( _oflag & _O_RDWR ) == _O_RDWR ) 
      dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ ;
-   else if (( _oflag & O_RDONLY ) == O_RDONLY ) 
-     dwDesiredAccess |= GENERIC_READ ;
    else if (( _oflag & _O_WRONLY ) == _O_WRONLY )
      dwDesiredAccess |= GENERIC_WRITE ;
-
-   if (( _oflag & S_IREAD ) == S_IREAD )
-     dwShareMode |= FILE_SHARE_READ;
-   
-   if (( _oflag & S_IWRITE ) == S_IWRITE )
-     dwShareMode |= FILE_SHARE_WRITE;	
+   else 
+     dwDesiredAccess |= GENERIC_READ ;
 
    if (( _oflag & (_O_CREAT | _O_EXCL ) ) == (_O_CREAT | _O_EXCL) )
      dwCreationDistribution |= CREATE_NEW;
@@ -151,10 +148,12 @@ __fileno_alloc(HANDLE hFile, int mode)
     fileno_modes_type *old_fileno_modes = fileno_modes;
 	maxfno  += 255;
     fileno_modes = (fileno_modes_type *)malloc(maxfno * sizeof(fileno_modes_type));
-	if ( old_fileno_modes != NULL )
-		memcpy(fileno_modes, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
+    if ( old_fileno_modes != NULL )
+    {
+	memcpy(fileno_modes, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
+        free ( old_fileno_modes );
+    }
     memset(fileno_modes + oldcount, 0, (maxfno-oldcount)*sizeof(fileno_modes));
-    free ( old_fileno_modes );
    
   }
 
