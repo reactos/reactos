@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.39 2003/11/08 22:54:26 navaraf Exp $
+/* $Id: stubs.c,v 1.40 2003/11/16 22:44:39 sedwards Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -512,26 +512,6 @@ InvertRgn(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-LineDDA(
-	int		a0,
-	int		a1,
-	int		a2,
-	int		a3,
-	LINEDDAPROC	a4,
-	LPARAM		a5
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 /*
  * @unimplemented
