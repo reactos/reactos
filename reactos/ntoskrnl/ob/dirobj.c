@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.25 2004/08/24 17:07:27 navaraf Exp $
+/* $Id: dirobj.c,v 1.26 2004/09/05 22:26:17 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -405,28 +405,35 @@ NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
 	 DirectoryHandle, DesiredAccess, ObjectAttributes,
 	 ObjectAttributes->ObjectName);
 
-  Status = ObCreateObject (ExGetPreviousMode(),
-			   ObDirectoryType,
-			   ObjectAttributes,
-			   ExGetPreviousMode(),
-			   NULL,
-			   sizeof(DIRECTORY_OBJECT),
-			   0,
-			   0,
-			   (PVOID*)&DirectoryObject);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
+  Status = NtOpenDirectoryObject (DirectoryHandle,
+		                  DesiredAccess,
+		                  ObjectAttributes);
 
-  Status = ObInsertObject ((PVOID)DirectoryObject,
-			   NULL,
-			   DesiredAccess,
-			   0,
-			   NULL,
-			   DirectoryHandle);
+  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+  {
+     Status = ObCreateObject (ExGetPreviousMode(),
+			      ObDirectoryType,
+			      ObjectAttributes,
+			      ExGetPreviousMode(),
+			      NULL,
+			      sizeof(DIRECTORY_OBJECT),
+			      0,
+			      0,
+			      (PVOID*)&DirectoryObject);
+     if (!NT_SUCCESS(Status))
+     {
+        return Status;
+     }
 
-  ObDereferenceObject(DirectoryObject);
+     Status = ObInsertObject ((PVOID)DirectoryObject,
+			      NULL,
+			      DesiredAccess,
+			      0,
+			      NULL,
+			      DirectoryHandle);
+
+     ObDereferenceObject(DirectoryObject);
+  }
 
   return Status;
 }
