@@ -7,11 +7,11 @@ TARGET_TYPE = program
 
 TARGET_APPTYPE = windows
 
-TARGET_NAME = buttontst
+TARGET_NAME = btntest
 
 TARGET_SDKLIBS = kernel32.a gdi32.a
 
-TARGET_OBJECTS = $(TARGET_NAME).o
+TARGET_OBJECTS = buttontst.o
 
 include $(PATH_TO_TOP)/rules.mak
 

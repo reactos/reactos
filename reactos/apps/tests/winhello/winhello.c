@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 
-HFONT tf;
+//HFONT tf;
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI 
@@ -49,9 +49,9 @@ WinMain(HINSTANCE hInstance,
       return(1);
     }
 
-	tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
-		ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-		DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
+	//tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
+	//	ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+	//	DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
 
   ShowWindow(hWnd, nCmdShow);
 
@@ -61,7 +61,7 @@ WinMain(HINSTANCE hInstance,
     DispatchMessage(&msg);
   }
 
-  DeleteObject(tf);
+  //DeleteObject(tf);
 
   return msg.wParam;
 }
@@ -93,7 +93,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT:
 	  hDC = BeginPaint(hWnd, &ps);
-	  SelectObject(hDC, tf);
+	  EndPaint(hWnd, &ps);
+	  //SelectObject(hDC, tf);
+	  hDC = GetDC(hWnd);
 	  TextOut(hDC, 10, 10, "Hello World from ReactOS!", strlen("Hello World from ReactOS!"));
           GetClientRect(hWnd, &clr);
           GetWindowRect(hWnd, &wir);
@@ -101,7 +103,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           sprintf(sir, "%d,%d,%d,%d              ", wir.left, wir.top, wir.right, wir.bottom);
           TextOut(hDC, 10, 30, spr, 20);
           TextOut(hDC, 10, 50, sir, 20);
-	  EndPaint(hWnd, &ps);
+	  ReleaseDC ( hWnd, hDC );
 	  break;
 
 	case WM_DESTROY:

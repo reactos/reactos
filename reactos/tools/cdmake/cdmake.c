@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.5 2003/07/29 20:30:11 royce Exp $ */
+/* $Id: cdmake.c,v 1.6 2003/07/30 14:08:16 royce Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -44,7 +44,6 @@
 #define DIR_SEPARATOR_STRING "\\"
 #endif
 
-
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
 typedef unsigned long DWORD;
@@ -56,9 +55,9 @@ const BOOL FALSE = 0;
 // file system parameters
 
 #define MAX_LEVEL		8
-#define MAX_NAME_LENGTH		256
+#define MAX_NAME_LENGTH		8
 #define MAX_CDNAME_LENGTH	8
-#define MAX_EXTENSION_LENGTH	256
+#define MAX_EXTENSION_LENGTH	8
 #define MAX_CDEXTENSION_LENGTH	3
 #define SECTOR_SIZE		2048
 #define BUFFER_SIZE		(8 * SECTOR_SIZE)
@@ -447,16 +446,20 @@ static int check_for_punctuation(int c, const char *name)
 #define strcasecmp stricmp
 #endif//WIN32
 
+/*-----------------------------------------------------------------------------
+This function checks to see if there's a cdname conflict.
+-----------------------------------------------------------------------------*/
+
 int cdname_exists ( PDIR_RECORD d )
 {
-  PDIR_RECORD p = &root;
+  PDIR_RECORD p = d->parent->first_record;
   while ( p )
   {
     if ( p != d
       && !strcasecmp ( p->name_on_cd, d->name_on_cd )
       && !strcasecmp ( p->extension_on_cd, d->extension_on_cd ) )
       return 1;
-    p = p->next_in_memory;
+    p = p->next_in_path_table;
   }
   return 0;
 }
@@ -477,36 +480,30 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d )
 
     if ( (t-d->name_on_cd) < sizeof(d->name_on_cd)-1 )
       *t++ = check_for_punctuation(*s, filename);
+    else
+      error_exit ( "'%s' is not ISO-9660, aborting...", filename );
     if ( (n-d->name) < sizeof(d->name)-1 )
       *n++ = *s;
+    else
+      error_exit ( "'%s' is not ISO-9660, aborting...", filename );
     s++;
   }
   *t = 0;
   strcpy(d->extension, s);
   t = d->extension_on_cd;
-  while ( *s != 0 && (t-d->extension_on_cd) < (sizeof(d->extension_on_cd)-1) )
-    *t++ = check_for_punctuation(*s++, filename);
+  while ( *s != 0 )
+  {
+    if ( (t-d->extension_on_cd) < (sizeof(d->extension_on_cd)-1) )
+      *t++ = check_for_punctuation(*s, filename);
+    else
+      error_exit ( "'%s' is not ISO-9660, aborting...", filename );
+    s++;
+  }
   *t = 0;
   *n = 0;
 
-  /* now see if this cd name already exists...*/
-  while ( cdname_exists ( d ) )
-  {
-    /* hmm... that name already exists, munge our name until we
-       no longer collide */
-    char* p = &d->name_on_cd[strlen(d->name_on_cd)-1];
-    while ( *p == '9' )
-    {
-      *p = '0';
-      if ( --p == d->name_on_cd )
-	error_exit ( "there's no way this can happen, is there?\n" );
-    }
-    if ( isdigit(*p) )
-      *p++;
-    else
-      *p = '0';
-    printf ( "'%s.%s' name collision, trying '%s.%s'\n", d->name, d->extension, d->name_on_cd, d->extension_on_cd );
-  }
+  if ( cdname_exists ( d ) )
+    error_exit ( "'%s' is a duplicate file name, aborting...", filename );
 }
 
 /*-----------------------------------------------------------------------------
@@ -527,9 +524,13 @@ new_directory_record (struct _finddata_t *f,
   d = malloc(sizeof(DIR_RECORD));
   if (d == NULL)
     error_exit("Insufficient memory");
+  memset ( d, 0, sizeof(DIR_RECORD) );
   d->next_in_memory = root.next_in_memory;
   root.next_in_memory = d;
 
+  /* I need the parent set before calling parse_filename_into_dirrecord(),
+  because that functions checks for duplicate file names*/
+  d->parent = parent;
   parse_filename_into_dirrecord ( f->name, d );
 
   convert_date_and_time(&d->date_and_time, &f->time_create);
@@ -544,7 +545,6 @@ new_directory_record (struct _finddata_t *f,
   d->size = f->size;
   d->next_in_directory = parent->first_record;
   parent->first_record = d;
-  d->parent = parent;
   return d;
 }
 
@@ -564,9 +564,13 @@ new_directory_record (struct dirent *entry,
   d = malloc(sizeof(DIR_RECORD));
   if (d == NULL)
     error_exit("Insufficient memory");
+  memset ( d, 0, sizeof(DIR_RECORD) );
   d->next_in_memory = root.next_in_memory;
   root.next_in_memory = d;
 
+  /* I need the parent set before calling parse_filename_into_dirrecord(),
+  because that functions checks for duplicate file names*/
+  d->parent = parent;
   parse_filename_into_dirrecord ( entry->d_name, d );
 
   convert_date_and_time(&d->date_and_time, &stbuf->st_mtime);
@@ -585,7 +589,6 @@ new_directory_record (struct dirent *entry,
   d->size = stbuf->st_size;
   d->next_in_directory = parent->first_record;
   parent->first_record = d;
-  d->parent = parent;
   return d;
 }
 
