@@ -4929,21 +4929,6 @@ ZwYieldExecution(
 	VOID
 	);
 
-/* --- PLUG AND PLAY --- */
-
-NTSTATUS
-STDCALL
-NtPlugPlayControl(IN ULONG ControlCode,
-                  IN OUT PVOID Buffer,
-                  IN ULONG BufferLength);
-
-NTSTATUS
-STDCALL
-NtGetPlugPlayEvent(IN ULONG Reserved1,
-                   IN ULONG Reserved2,
-                   OUT PVOID Buffer,
-                   IN ULONG BufferLength);
-
 /* --- POWER MANAGEMENT --- */
 
 #ifndef __USE_W32API

@@ -20,6 +20,7 @@
 #include <ntos/synch.h>
 #include <ntos/keyboard.h>
 #include <ntos/ntdef.h>
+#include <ntos/ntpnp.h>
 #include <rosrtl/minmax.h>
 #include <rosrtl/string.h>
 #include <ddk/halfuncs.h>

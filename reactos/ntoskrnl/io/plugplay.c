@@ -15,12 +15,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
 /* GLOBALS *******************************************************************/
 
 static LIST_ENTRY IopPnpEventListHead;
 static KEVENT IopPnpNotifyEvent;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -67,7 +65,7 @@ IopDequeuePlugPlayEvent(VOID)
 NTSTATUS STDCALL
 NtGetPlugPlayEvent(IN ULONG Reserved1,
                    IN ULONG Reserved2,
-                   OUT PVOID Buffer,
+                   OUT PPLUGPLAY_EVENT_BLOCK Buffer,
                    IN ULONG BufferLength)
 {
   NTSTATUS Status;
