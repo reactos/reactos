@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.121 2004/01/12 20:38:59 gvg Exp $
+/* $Id: defwnd.c,v 1.122 2004/01/14 21:28:24 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -16,8 +16,9 @@
 #include <window.h>
 #include <user32/wininternal.h>
 #include <string.h>
-#include <menu.h>
 #include <cursor.h>
+#include <menu.h>
+#include <scroll.h>
 #include <winpos.h>
 
 #define NDEBUG
@@ -29,7 +30,6 @@ LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
 LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
 LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
-VOID DefWndTrackScrollBar(HWND hWnd, WPARAM wParam, POINT Point);
 
 /* GLOBALS *******************************************************************/
 
@@ -748,6 +748,36 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 }
 
 
+/***********************************************************************
+ *           DefWndTrackScrollBar
+ *
+ * Track a mouse button press on the horizontal or vertical scroll-bar.
+ */
+STATIC VOID
+DefWndTrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt)
+{
+  INT ScrollBar;
+
+  if (SC_HSCROLL == (wParam & 0xfff0))
+    {
+      if (HTHSCROLL != (wParam & 0x0f))
+        {
+          return;
+        }
+      ScrollBar = SB_HORZ;
+    }
+  else  /* SC_VSCROLL */
+    {
+      if (HTVSCROLL != (wParam & 0x0f))
+        {
+          return;
+        }
+      ScrollBar = SB_VERT;
+    }
+  ScrollTrackScrollBar(Wnd, ScrollBar, Pt );
+}
+
+
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 {
@@ -791,6 +821,10 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 	break;
       case SC_KEYMENU:
         MenuTrackKbdMenuBar(hWnd, wParam, Pt.x);
+	break;
+      case SC_VSCROLL:
+      case SC_HSCROLL:
+        DefWndTrackScrollBar(hWnd, wParam, Pt);
 	break;
 
       default:
@@ -867,6 +901,7 @@ DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
 HBRUSH
 DefWndControlColor(HDC hDC, UINT ctlType)
 {
+#if 0 /* FIXME: Re-enable when pattern brushes are implemented */
   if (CTLCOLOR_SCROLLBAR == ctlType)
     {
       HBRUSH hb = GetSysColorBrush(COLOR_SCROLLBAR);
@@ -897,6 +932,7 @@ DefWndControlColor(HDC hDC, UINT ctlType)
       UnrealizeObject(hb);
       return hb;
     }
+#endif
 
   SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
 

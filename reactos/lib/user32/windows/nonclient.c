@@ -715,7 +715,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
            TempRect2.left += GetSystemMetrics(SM_CXVSCROLL);
         else
            TempRect2.right -= GetSystemMetrics(SM_CXVSCROLL);
-        if (PtInRect(&TempRect, Point))
+        if (PtInRect(&TempRect2, Point))
            return HTHSCROLL;
 
         TempRect.top = TempRect2.top;
@@ -753,19 +753,6 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
    }
   
    return HTNOWHERE;
-}
-
-VOID
-DefWndDoScrollBarDown(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  POINT Point;
-  DWORD hit;
-  Point.x = GET_X_LPARAM(lParam);
-  Point.y = GET_Y_LPARAM(lParam);
-  
-  hit = IntScrollHitTest(hWnd, (wParam == HTHSCROLL) ? SB_HORZ : SB_VERT, Point, FALSE);
-  
-  SendMessageW(hWnd, WM_SYSCOMMAND, Msg + (UINT)wParam, lParam);
 }
 
 VOID
@@ -879,14 +866,12 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTHSCROLL:
         {
-            DefWndDoScrollBarDown(hWnd, SC_HSCROLL, HTHSCROLL, lParam);
-            //SendMessageW(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
+            SendMessageW(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
             break;
         }
         case HTVSCROLL:
         {
-            DefWndDoScrollBarDown(hWnd, SC_VSCROLL, HTVSCROLL, lParam);
-            //SendMessageW(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
+            SendMessageW(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
             break;
         }
         case HTMINBUTTON:
