@@ -30,6 +30,7 @@ static exception_hook* exception_hooks[256]={NULL,};
 #define STR(x) _STR(x)
 
 extern void interrupt_handler2e(void);
+extern void interrupt_handler2d(void);
 
 extern ULONG init_stack;
 extern ULONG init_stack_top;
@@ -428,5 +429,6 @@ asmlinkage void KeInitExceptions(void)
 	   set_interrupt_gate(i,(int)exception_handler_unknown);
         }
    
+   set_system_call_gate(0x2d,(int)interrupt_handler2d);
    set_system_call_gate(0x2e,(int)interrupt_handler2e);
 }
