@@ -395,6 +395,75 @@ RtlAddAuditAccessAce(PACL Acl,
 }
 
 
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlAddAuditAccessAceEx(PACL Acl,
+                       ULONG Revision,
+                       ULONG Flags,
+                       ACCESS_MASK AccessMask,
+                       PSID Sid,
+                       BOOLEAN Success,
+                       BOOLEAN Failure)
+{
+  PACE Ace;
+
+  if (Success != FALSE)
+  {
+    Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
+  }
+
+  if (Failure != FALSE)
+  {
+    Flags |= FAILED_ACCESS_ACE_FLAG;
+  }
+
+  if (!RtlValidSid(Sid))
+  {
+    return STATUS_INVALID_SID;
+  }
+
+  if (Acl->AclRevision > MAX_ACL_REVISION ||
+      Revision > MAX_ACL_REVISION)
+  {
+    return STATUS_REVISION_MISMATCH;
+  }
+
+  if (Revision < Acl->AclRevision)
+  {
+    Revision = Acl->AclRevision;
+  }
+
+  if (!RtlFirstFreeAce(Acl, &Ace))
+  {
+    return STATUS_INVALID_ACL;
+  }
+
+  if (Ace == NULL)
+  {
+    return STATUS_ALLOTTED_SPACE_EXCEEDED;
+  }
+
+  if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= ((PVOID)Acl + Acl->AclSize))
+  {
+    return STATUS_ALLOTTED_SPACE_EXCEEDED;
+  }
+
+  Ace->Header.AceFlags = Flags;
+  Ace->Header.AceType = SYSTEM_AUDIT_ACE_TYPE;
+  Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
+  Ace->AccessMask = AccessMask;
+  RtlCopySid(RtlLengthSid(Sid),
+             (PSID)(Ace + 1),
+             Sid);
+  Acl->AceCount++;
+  Acl->AclRevision = Revision;
+
+  return STATUS_SUCCESS;
+}
+
+
 static VOID
 RtlpDeleteData(PVOID Ace,
                ULONG AceSize,

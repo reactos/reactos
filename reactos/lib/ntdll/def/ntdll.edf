@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.114 2004/07/08 00:40:30 weiden Exp $
+; $Id: ntdll.edf,v 1.115 2004/07/15 08:15:21 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -294,6 +294,7 @@ RtlAddAce=RtlAddAce@20
 RtlAddAtomToAtomTable=RtlAddAtomToAtomTable@12
 ;RtlAddAttributeActionToRXact
 RtlAddAuditAccessAce=RtlAddAuditAccessAce@24
+RtlAddAuditAccessAceEx=RtlAddAuditAccessAceEx@28
 ;RtlAddCompoundAce
 RtlAddRange=RtlAddRange@36
 RtlAdjustPrivilege=RtlAdjustPrivilege@16

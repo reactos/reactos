@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.45 2004/07/08 22:05:48 gvg Exp $
+/* $Id: rtl.h,v 1.46 2004/07/15 08:15:49 ekohl Exp $
  *
  */
 
@@ -130,6 +130,15 @@ RtlAddAccessDeniedAceEx (IN OUT PACL Acl,
 			 IN ULONG Flags,
 			 IN ACCESS_MASK AccessMask,
 			 IN PSID Sid);
+
+NTSTATUS STDCALL
+RtlAddAuditAccessAceEx(IN OUT PACL Acl,
+		       IN ULONG Revision,
+                       IN ULONG Flags,
+                       IN ACCESS_MASK AccessMask,
+                       IN PSID Sid,
+                       IN BOOLEAN Success,
+                       IN BOOLEAN Failure);
 
 VOID STDCALL
 RtlDeleteCriticalSection (PCRITICAL_SECTION CriticalSection);
