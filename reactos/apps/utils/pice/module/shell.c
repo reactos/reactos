@@ -323,9 +323,9 @@ void DebuggerShell(void)
 	CheckRingBuffer();
 
     // kill the speakers annoying beep
-	speaker = inb_p(0x61);
+	speaker = inb_p((PCHAR)0x61);
 	speaker &= 0xFC;
-	outb_p(speaker,0x61);
+	outb_p(speaker,(PCHAR)0x61);
 
     ProcessBootParams();
 
@@ -1038,16 +1038,19 @@ void RealIsr(ULONG dwReasonForBreak)
 
     bIrqStateAtBreak = ((CurrentEFL&(1<<9))!=0);
 
+	DPRINT((2,"\nbInDebuggerShell %x, dwReasonForBreak: %x, bIrqStateAtBreak: %d\n", bInDebuggerShell, dwReasonForBreak, bIrqStateAtBreak));
+	DPRINT((2,"CurrentEIP: %x, CurrentESP: %x\n", CurrentEIP, CurrentESP));
+
     // came in because TF flag was set
 	if(dwReasonForBreak == REASON_SINGLESTEP)
 	{
 		ULONG ulAddress,ulAddressCurrent;
 
-        DPRINT((0,"REASON_SINGLESTEP\n"));
+        DPRINT((2,"REASON_SINGLESTEP\n"));
 
         if(!bSingleStep)
         {
-            DPRINT((0,"no single step requested!\n"));
+            DPRINT((2,"no single step requested!\n"));
             dwCallOldInt1Handler = 1;
             goto common_return_point;
         }
@@ -1060,7 +1063,7 @@ void RealIsr(ULONG dwReasonForBreak)
 		// simply restart the system.
         if(NeedToReInstallSWBreakpoints(ulAddress,TRUE) )
         {
-            DPRINT((0,"reinstalling INT3 @ %.4X:%.8X\n",OldCS,OldEIP));
+            DPRINT((2,"reinstalling INT3 @ %.4X:%.8X\n",OldCS,OldEIP));
 
             ReInstallSWBreakpoint(ulAddress);
 
@@ -1079,7 +1082,7 @@ void RealIsr(ULONG dwReasonForBreak)
                 }
 
             	LEAVE_FUNC();
-				DPRINT((0,"-----------------------------------------------------------------\n"));
+				DPRINT((2,"-----------------------------------------------------------------\n"));
                 return;
             }
             bPreviousCommandWasGo = FALSE;
@@ -1094,7 +1097,7 @@ void RealIsr(ULONG dwReasonForBreak)
             ULONG ulLineNumber;
             LPSTR pSrc,pFileName;
 
-            DPRINT((0,"RealIsr(): stepping through source!\n"));
+            DPRINT((2,"RealIsr(): stepping through source!\n"));
 
             // look up the corresponding source line
             // if there isn't any or the source line number has changed
@@ -1103,12 +1106,12 @@ void RealIsr(ULONG dwReasonForBreak)
 				pSrc = FindSourceLineForAddress(ulAddressCurrent,&ulLineNumber,NULL,NULL,&pFileName);
 			else pSrc = NULL;
 
-            DPRINT((0,"RealIsr(): line #%u pSrc=%x (old line #%u)\n",ulLineNumber,(ULONG)pSrc,g_ulLineNumberStart));
+            DPRINT((2,"RealIsr(): line #%u pSrc=%x (old line #%u)\n",ulLineNumber,(ULONG)pSrc,g_ulLineNumberStart));
 
             // if we have found a source line there
             if(pSrc && ulLineNumber==g_ulLineNumberStart)
             {
-                DPRINT((0,"RealIsr(): stepping through line #%u in file = %s!\n",ulLineNumber,pFileName));
+                DPRINT((2,"RealIsr(): stepping through line #%u in file = %s!\n",ulLineNumber,pFileName));
 
                 if(bStepInto)
                     StepInto(NULL);
@@ -1117,7 +1120,7 @@ void RealIsr(ULONG dwReasonForBreak)
 
 			    bInDebuggerShell = FALSE;
             	LEAVE_FUNC();
-				DPRINT((0,"-----------------------------------------------------------------\n"));
+				DPRINT((2,"-----------------------------------------------------------------\n"));
                 return;
             }
             bStepThroughSource = FALSE;
@@ -1130,7 +1133,7 @@ void RealIsr(ULONG dwReasonForBreak)
 	{
         ULONG ulReason;
 
-        DPRINT((0,"REASON_HARDWARE_BP\n"));
+        DPRINT((2,"REASON_HARDWARE_BP\n"));
 
         // disable HW breakpoints
 		__asm__("
@@ -1144,7 +1147,7 @@ void RealIsr(ULONG dwReasonForBreak)
             :"eax"
 			);
 
-        DPRINT((0,"REASON_HARDWARE_BP: %x\n",(ulReason&0xF)));
+        DPRINT((2,"REASON_HARDWARE_BP: %x\n",(ulReason&0xF)));
 
         // HW breakpoint DR1 (skip: only used in init_module detection)
         if(ulReason&0x2)
@@ -1178,12 +1181,12 @@ void RealIsr(ULONG dwReasonForBreak)
 				else
 					pSrc = NULL;
 
-                DPRINT((0,"RealIsr(): line #%u pSrc=%x (old line #%u) [2]\n",ulLineNumber,(ULONG)pSrc,g_ulLineNumberStart));
+                DPRINT((2,"RealIsr(): line #%u pSrc=%x (old line #%u) [2]\n",ulLineNumber,(ULONG)pSrc,g_ulLineNumberStart));
 
                 // if we have found a source line there
                 if(pSrc && ulLineNumber==g_ulLineNumberStart)
                 {
-                    DPRINT((0,"RealIsr(): stepping through line #%u in file = %s! [2]\n",ulLineNumber,pFileName));
+                    DPRINT((2,"RealIsr(): stepping through line #%u in file = %s! [2]\n",ulLineNumber,pFileName));
 
                     if(bStepInto)
                         StepInto(NULL);
@@ -1205,7 +1208,7 @@ void RealIsr(ULONG dwReasonForBreak)
 	{
 		ULONG ulAddress;
 
-        DPRINT((0,"REASON_INT3\n"));
+        DPRINT((2,"REASON_INT3\n"));
 
 		// must subtract one cause INT3s are generated after instructions execution
         CurrentEIP--;
@@ -1213,26 +1216,26 @@ void RealIsr(ULONG dwReasonForBreak)
         // make a flat address
 		ulAddress = GetLinearAddress(CurrentCS,CurrentEIP);
 
-        DPRINT((0,"INT3 @ %.8X\n",ulAddress));
+        DPRINT((2,"INT3 @ %.8X\n",ulAddress));
 
         // if there's a breakpoint installed at current EIP remove it
         if(DeInstallSWBreakpoint(ulAddress) )
         {
             PSW_BP p;
 
-			DPRINT((0,"INT3 @ %.8X removed\n",ulAddress));
+			DPRINT((2,"INT3 @ %.8X removed\n",ulAddress));
 
             // if it's permanent (must be Printk() ) skip the DebuggerShell() and
             // do a callback
             if( (p = IsPermanentSWBreakpoint(ulAddress)) )
             {
-    			DPRINT((0,"permanent breakpoint\n"));
+    			DPRINT((2,"permanent breakpoint\n"));
 
                 OldCS = CurrentCS;
                 OldEIP = CurrentEIP;
 
                 bSkipMainLoop = TRUE;
-
+				DPRINT((2,"callback at %x\n",p->Callback));
                 if(p->Callback)
                     p->Callback();
             }
@@ -1255,6 +1258,9 @@ void RealIsr(ULONG dwReasonForBreak)
         {
             LPSTR pFind;
 			PEPROCESS my_current = IoGetCurrentProcess();
+
+			DPRINT((2,"can't deinstall, somebody else's breakpoint\n"));
+
 
             // if no other debugger is running on this process and the address is
             // above TASK_SIZE we assume this to be a hard embedded INT3
@@ -1316,7 +1322,7 @@ void RealIsr(ULONG dwReasonForBreak)
 	{
         LPSTR pSymbolName;
 
-        DPRINT((0,"REASON_PAGEFAULT\n"));
+        DPRINT((2,"REASON_PAGEFAULT\n"));
 
         if( ScanExportsByAddress(&pSymbolName,GetLinearAddress(CurrentCS,CurrentEIP)) )
         {
@@ -1335,7 +1341,7 @@ void RealIsr(ULONG dwReasonForBreak)
 	{
         LPSTR pSymbolName;
 
-        DPRINT((0,"REASON_GPFAULT\n"));
+        DPRINT((2,"REASON_GPFAULT\n"));
 
         if( ScanExportsByAddress(&pSymbolName,GetLinearAddress(CurrentCS,CurrentEIP)) )
         {
@@ -1350,19 +1356,19 @@ void RealIsr(ULONG dwReasonForBreak)
 	}
 	else if(dwReasonForBreak == REASON_CTRLF)
 	{
-        DPRINT((0,"REASON_CTRLF\n"));
+        DPRINT((2,"REASON_CTRLF\n"));
         // nothing to do
     }
     else if(dwReasonForBreak == REASON_DOUBLE_FAULT)
     {
-        DPRINT((0,"REASON_DOUBLE_FAULT\n"));
+        DPRINT((2,"REASON_DOUBLE_FAULT\n"));
 
         PICE_sprintf(tempShell,"pICE: Breakpoint due to double fault at %.4X:%.8X\n",CurrentCS,CurrentEIP);
 		Print(OUTPUT_WINDOW,tempShell);
     }
     else if(dwReasonForBreak == REASON_INTERNAL_ERROR)
     {
-        DPRINT((0,"REASON_INTERNAL_ERROR\n"));
+        DPRINT((2,"REASON_INTERNAL_ERROR\n"));
 
         Print(OUTPUT_WINDOW,"pICE: Please report this error to klauspg@diamondmm.com!\n");
 //        Print(OUTPUT_WINDOW,"pICE: !!! SYSTEM HALTED !!!\n");
@@ -1370,7 +1376,7 @@ void RealIsr(ULONG dwReasonForBreak)
     }
     else
     {
-        DPRINT((0,"REASON_UNKNOWN\n"));
+        DPRINT((2,"REASON_UNKNOWN\n"));
 
         PICE_sprintf(tempShell,"pICE: Breakpoint due to unknown reason at %.4X:%.8X (code %x)\n",CurrentCS,CurrentEIP,dwReasonForBreak);
 		Print(OUTPUT_WINDOW,tempShell);
@@ -1380,13 +1386,13 @@ void RealIsr(ULONG dwReasonForBreak)
     }
 
     // we don't single-step yet
-    DPRINT((0,"RealIsr(): not stepping yet\n"));
+    DPRINT((2,"RealIsr(): not stepping yet\n"));
 	bSingleStep=FALSE;
 
     // process commands
     if(bSkipMainLoop == FALSE)
 	{
-        DPRINT((0,"RealIsr(): saving registers\n"));
+        DPRINT((2,"RealIsr(): saving registers\n"));
 	    // save the extended regs
 	    __asm__ __volatile__
 	    ("
@@ -1418,17 +1424,17 @@ void RealIsr(ULONG dwReasonForBreak)
             popl %eax"
 	    );
 
-        DPRINT((0,"RealIsr(): adding colon to output()\n"));
+        DPRINT((2,"RealIsr(): adding colon to output()\n"));
         Print(OUTPUT_WINDOW,":");
 
-        DPRINT((0,"RealIsr(): calling DebuggerShell()\n"));
+        DPRINT((2,"RealIsr(): calling DebuggerShell()\n"));
         DebuggerShell();
 	}
 
 	// if there was a SW breakpoint at CS:EIP
     if(NeedToReInstallSWBreakpoints(GetLinearAddress(CurrentCS,CurrentEIP),TRUE))
     {
-        DPRINT((0,"need to reinstall INT3\n"));
+        DPRINT((2,"need to reinstall INT3\n"));
 		// remember how we restarted last time
         bPreviousCommandWasGo = !bSingleStep;
         // do a single step to reinstall breakpoint
@@ -1449,7 +1455,7 @@ common_return_point:
     bInDebuggerShell = FALSE;
 
     LEAVE_FUNC();
-	DPRINT((0,"-----------------------------------------------------------------\n"));
+	DPRINT((2,"common return-----------------------------------------------------------------\n"));
 }
 
 __asm__(".global NewInt31Handler
@@ -1560,7 +1566,7 @@ afterswitch:
     // restore EAX
 	popl %eax
 
-    // do we need to call old INT1 handler
+	// do we need to call old INT1 handler
     .byte 0x2e
     cmp $0,_dwCallOldInt1Handler
     je do_iret2
@@ -1604,6 +1610,8 @@ do_iret3:
     jmp *_OldGPFaultHandler
 
 do_iret:
+	//ei
+	//int3
 	iretl ");
 
 //

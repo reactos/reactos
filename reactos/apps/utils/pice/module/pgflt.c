@@ -151,11 +151,15 @@ ULONG HandlePageFault(FRAME* ptr)
     PLIST_ENTRY current_entry;
 	MEMORY_AREA* current;
 
+	//for some reason stack is corrupted. disable for now.
+	return 0;
+
     // get linear address of page fault
 	__asm__("movl %%cr2,%0":"=r" (address));
 
     // current process
     tsk = IoGetCurrentProcess();
+	DPRINT((2,"\nPageFault: Name: %s, bInDebShell: %d, error: %d, addr: %x\n", tsk->ImageFileName, bInDebuggerShell, ptr->error_code, address));
 
     // there's something terribly wrong if we get a fault in our command handler
     if(bInDebuggerShell)
@@ -182,35 +186,67 @@ ULONG HandlePageFault(FRAME* ptr)
 		current = CONTAINING_RECORD(current_entry,
 						MEMORY_AREA,
 						Entry);
+		DPRINT((2,"address: %x    %x - %x Attrib: %x, Type: %x\n", address, current->BaseAddress, current->BaseAddress + current->Length, current->Attributes, current->Type));
+		return 0;
 		if( (address >= current->BaseAddress) && (address <= current->BaseAddress + current->Length ))
 		{
-	        if(error_code & 2)
-	        {
-	            // area was not writable
-	            if(!(current->Attributes & PAGE_READONLY))
-	            {
-	                Print(OUTPUT_WINDOW,"pICE: virtual memory arena is not writeable!\n");
-	                return 1;
-	            }
-	        }
-	        // READ ACCESS
-	        else
-	        {
-	            // test EXT bit in error code
-			    if (error_code & 1)
-	            {
-	                Print(OUTPUT_WINDOW,"pICE: page-level protection fault!\n");
-	                return 1;
-	            }
-	            //
-			    if (!(current->Attributes & PAGE_EXECUTE_READ))
-	            {
-	                Print(OUTPUT_WINDOW,"pICE: VMA is not readable!\n");
-	                return 1;
-	            }
-	        }
-	        // let the system handle it
-	        return 0;
+			//page not present
+			if( !(error_code & 1) ){
+				//check it is in pageable area
+				if( current->Type == MEMORY_AREA_SECTION_VIEW_COMMIT ||
+					current->Type == MEMORY_AREA_SECTION_VIEW_RESERVE ||
+					current->Type == MEMORY_AREA_VIRTUAL_MEMORY ||
+					current->Type == MEMORY_AREA_PAGED_POOL
+						){
+	                Print(OUTPUT_WINDOW,"pICE: VMA Pageable Section.\n");
+					return 0; //let the system handle this
+				}
+				Print(OUTPUT_WINDOW,"pICE: VMA Page not present in non-pageable Section!\n");
+				return 1;
+			}
+			else{ //access violation
+
+				if( error_code & 4 )
+				{   //user mode
+					if( (ULONG)address >= KERNEL_BASE )
+					{
+						Print(OUTPUT_WINDOW,"pICE: User mode program trying to access kernel memory!\n");
+						return 1;
+					}
+					return 0;
+				}
+				/*
+				if(error_code & 2)
+		        {
+					//on write
+		            if(!(current->Attributes & PAGE_READONLY))
+		            {
+		                Print(OUTPUT_WINDOW,"pICE: virtual memory arena is not writeable!\n");
+		                return 1;
+		            }
+		        }
+		        // READ ACCESS
+		        else
+		        {
+		            // test EXT bit in error code
+				    if (error_code & 1)
+		            {
+		                Print(OUTPUT_WINDOW,"pICE: page-level protection fault!\n");
+		                return 1;
+		            }
+		            //
+				*/
+					/*
+					if (!(current->Attributes & PAGE_EXECUTE_READ))
+		            {
+		                Print(OUTPUT_WINDOW,"pICE: VMA is not readable!\n");
+		                return 1;
+		            }
+					*/
+
+		        // let the system handle it
+		        return 0;
+			}
 		}
 		current_entry = current_entry->Flink;
 	}
@@ -301,7 +337,7 @@ void InstallIntEHook(void)
 		OldIntEHandler=SetGlobalInt(0x0E,(ULONG)LocalIntEHandler);
 	}
 	UnmaskIrqs();
-
+	DPRINT((2,"OldIntE @ %x\n", OldIntEHandler));
     LEAVE_FUNC();
 }
 

@@ -88,18 +88,27 @@ BOOLEAN PiceKbdIsr (
 
 	if(isDown)
 	{
-		DbgPrint("bControl: %x, ucKey: %x, breakkey: %x\n", bControl, ucKey, AsciiToScan(ucBreakKey));
+		DPRINT((2,"bControl: %x, ucKey: %x, breakkey: %x\n", bControl, ucKey, AsciiToScan(ucBreakKey)));
 		// CTRL pressed
 		if(ucKey==0x1d)
 		{
 			bControl=TRUE;
 		}
-		if(bControl==TRUE && ucKey==AsciiToScan(ucBreakKey)) // CTRL-D
+		else if(bControl==TRUE && ucKey==AsciiToScan(ucBreakKey)) // CTRL-D
 		{
             // fake a CTRL-D release call
 			bForward=FALSE;
             bEnterNow=TRUE;
 			bControl=FALSE;
+        // simulate an initial break
+        __asm__("
+            pushfl
+            pushl %cs
+            pushl $returnpoint
+            pushl $" STR(REASON_CTRLF) "
+            jmp NewInt31Handler
+			returnpoint:");
+
 		}
         else if((ucKey == 66|| ucKey == 68) && bStepping)
         {

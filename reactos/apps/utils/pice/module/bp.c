@@ -210,9 +210,15 @@ BOOLEAN ReInstallSWBreakpoint(ULONG ulAddress)
         {
             if(IsAddressValid(p->ulAddress))
             {
-                *(PUCHAR)(p->ulAddress) = 0xCC;
-                p->bInstalled = TRUE;
-                bResult = TRUE;
+				BOOLEAN isWriteable;
+
+				if( !( isWriteable = IsAddressWriteable(p->ulAddress) ) )
+					SetAddressWriteable(p->ulAddress,TRUE);
+				*(PUCHAR)(p->ulAddress) = 0xCC;
+				if( !isWriteable )
+					SetAddressWriteable(p->ulAddress,FALSE);
+				p->bInstalled = TRUE;
+	            bResult = TRUE;
             }
         }
     }
@@ -239,17 +245,26 @@ BOOLEAN InstallSWBreakpoint(ULONG ulAddress,BOOLEAN bPermanent,void (*SWBreakpoi
     // TODO: must also check if it's a writable page
     if(IsAddressValid(ulAddress) )
     {
-        DPRINT((0,"InstallSWBreakpoint(): %.8X is valid, writable? %d\n",ulAddress,IsAddressWriteable(ulAddress)));
+        DPRINT((2,"InstallSWBreakpoint(): %.8X is valid, writable? %d\n",ulAddress,IsAddressWriteable(ulAddress)));
+		DPRINT((2,"pde: %x, pte: %x\n", *(ADDR_TO_PDE(ulAddress)), *(ADDR_TO_PTE(ulAddress))));
         if((p = FindSwBp(ulAddress))==NULL)
         {
-            DPRINT((0,"InstallSWBreakpoint(): %.8X is free\n",ulAddress));
+            DPRINT((2,"InstallSWBreakpoint(): %.8X is free\n",ulAddress));
             if( (p=FindEmptySwBpSlot()) )
             {
-                DPRINT((0,"InstallSWBreakpoint(): found empty slot\n"));
-				DPRINT((0,"InstallSWBreakpoint(): %x value: %x", ulAddress, *(PUCHAR)ulAddress));
+				BOOLEAN isWriteable;
+                DPRINT((2,"InstallSWBreakpoint(): found empty slot\n"));
+				DPRINT((2,"InstallSWBreakpoint(): %x value: %x", ulAddress, *(PUCHAR)ulAddress));
                 p->ucOriginalOpcode = *(PUCHAR)ulAddress;
-                *(PUCHAR)ulAddress = 0xCC;
-                p->bUsed = TRUE;
+				//allow writing to page
+				if( !( isWriteable = IsAddressWriteable(ulAddress) ) )
+					SetAddressWriteable(ulAddress,TRUE);
+			    DPRINT((2,"writing breakpoint\n"));
+				*(PUCHAR)ulAddress = 0xCC;
+				DPRINT((2,"restoring page access\n"));
+				if( !isWriteable )
+					SetAddressWriteable(ulAddress,FALSE);
+				p->bUsed = TRUE;
                 p->bInstalled = TRUE;
                 // find next address
                 p->ulAddress = ulAddress;
@@ -337,9 +352,15 @@ void TryToInstallVirtualSWBreakpoints(void)
 
                         if(IsAddressValid(ulAddressWithOffset))
                         {
-                            DPRINT((0,"TryToInstallVirtualSWBreakpoints(): installing...\n"));
+							BOOLEAN isWriteable;
+							DPRINT((0,"TryToInstallVirtualSWBreakpoints(): installing...\n"));
                             p->ucOriginalOpcode = *(PUCHAR)ulAddressWithOffset;
+							//allow writing to page
+							if( !( isWriteable = IsAddressWriteable(ulAddressWithOffset) ) )
+								SetAddressWriteable(ulAddressWithOffset,TRUE);
                             *(PUCHAR)ulAddressWithOffset = 0xCC;
+							if( !isWriteable )
+								SetAddressWriteable(ulAddressWithOffset,FALSE);
                             p->bUsed = TRUE;
                             p->bInstalled = TRUE;
                             p->bVirtual = FALSE;
@@ -380,8 +401,13 @@ BOOLEAN RemoveSWBreakpoint(ULONG ulAddress)
     {
         if(IsAddressValid(ulAddress) && p->bInstalled == TRUE && p->bVirtual==FALSE)
         {
-            // restore original opcode
+			BOOLEAN isWriteable;
+			if( !( isWriteable = IsAddressWriteable(ulAddress) ) )
+				SetAddressWriteable(ulAddress,TRUE);
+		    // restore original opcode
             *(PUCHAR)(p->ulAddress) = p->ucOriginalOpcode;
+			if( !isWriteable )
+				SetAddressWriteable(ulAddress,FALSE);
         }
 
         PICE_memset(p,0,sizeof(*p));
@@ -411,8 +437,13 @@ BOOLEAN DeInstallSWBreakpoint(ULONG ulAddress)
     {
         if(IsAddressValid(ulAddress) && p->bInstalled == TRUE && p->bVirtual==FALSE)
         {
+			BOOLEAN isWriteable;
+			if( !( isWriteable = IsAddressWriteable(ulAddress) ) )
+				SetAddressWriteable(ulAddress,TRUE);
             // restore original opcode
             *(PUCHAR)(p->ulAddress) = p->ucOriginalOpcode;
+			if( !isWriteable )
+				SetAddressWriteable(ulAddress,FALSE);
         }
 
         p->bInstalled = FALSE;
@@ -447,7 +478,12 @@ BOOLEAN RemoveAllSWBreakpoints(BOOLEAN bEvenPermanents)
             {
                 if(IsAddressValid(p->ulAddress) && p->bVirtual==FALSE)
                 {
+					BOOLEAN isWriteable;
+					if( !( isWriteable = IsAddressWriteable(p->ulAddress) ) )
+						SetAddressWriteable(p->ulAddress,TRUE);
                     *(PUCHAR)(p->ulAddress) = p->ucOriginalOpcode;
+					if( !isWriteable )
+						SetAddressWriteable(p->ulAddress,FALSE);
                     bResult = TRUE;
                 }
                 PICE_memset(p,0,sizeof(*p));
@@ -458,7 +494,12 @@ BOOLEAN RemoveAllSWBreakpoints(BOOLEAN bEvenPermanents)
                 {
                     if(IsAddressValid(p->ulAddress) && p->bVirtual==FALSE)
                     {
+						BOOLEAN isWriteable;
+						if( !( isWriteable = IsAddressWriteable(p->ulAddress) ) )
+							SetAddressWriteable(p->ulAddress,TRUE);
                         *(PUCHAR)(p->ulAddress) = p->ucOriginalOpcode;
+						if( !isWriteable )
+							SetAddressWriteable(p->ulAddress,FALSE);
                         bResult = TRUE;
                     }
                     PICE_memset(p,0,sizeof(*p));
@@ -583,8 +624,13 @@ void RevirtualizeBreakpointsForModule(PDEBUG_MODULE pMod)
                         p->bVirtual = TRUE;
 						if(IsAddressValid(p->ulAddress) )
 						{
+							BOOLEAN isWriteable;
+							if( !( isWriteable = IsAddressWriteable(p->ulAddress) ) )
+								SetAddressWriteable(p->ulAddress,TRUE);
 						    DPRINT((0,"RevirtualizeBreakpointsForModule(): restoring original opcode @ %x\n",p->ulAddress));
 							*(PUCHAR)(p->ulAddress) = p->ucOriginalOpcode;
+							if( !isWriteable )
+								SetAddressWriteable(p->ulAddress,FALSE);
 						}
 						else
 						{

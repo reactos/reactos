@@ -44,7 +44,7 @@ char tempFlowChanges[256];
 
 //PMADDRESS_SPACE my_init_mm=NULL;
 
-ULONG TwoPagesForPhysMem[2*PAGE_SIZE];
+ULONG TwoPagesForPhysMem[2*_PAGE_SIZE];
 
 // scancode to ASCII conversion
 typedef struct tagSCANTOASCII
@@ -301,13 +301,13 @@ ULONG result=1;
 }
 
 //*************************************************************************
-// PICE_strcmpi()
+// PICE_strcmp()
 //
 // my version of strcmp()
 //*************************************************************************
 ULONG PICE_strcmp(char* s1,char* s2)
 {
-ULONG result=1;
+    ULONG result=1;
 
     while(IsAddressValid((ULONG)s1) && *s1 && // not end of string
           IsAddressValid((ULONG)s2) && *s2 && // not end of string
@@ -321,6 +321,37 @@ ULONG result=1;
         result=0;
 
     return result;
+}
+
+//*************************************************************************
+// PICE_fncmp()
+//
+// compare function names ignoring decorations:
+// leading '_' or '@" and trailing "@xx"
+//*************************************************************************
+ULONG PICE_fncmp(char* s1,char* s2)
+{
+ 	ULONG result=1;
+
+	if( IsAddressValid((ULONG)s1) && (*s1 == '_' || *s1 == '@'))
+			s1++;
+
+	if( IsAddressValid((ULONG)s2) && (*s2 == '_' || *s2 == '@'))
+			s2++;
+
+	while(IsAddressValid((ULONG)s1) && *s1 && // not end of string
+          IsAddressValid((ULONG)s2) && *s2 )
+    {
+		if( (*s1 != *s2) || *s1=='@' || *s2=='@' )
+				break;
+        s1++;
+        s2++;
+    }
+	// strings same length
+	if((*s1==0 || *s1=='@') && (*s2==0 || *s2 =='@')){
+        result=0;
+	}
+	return result;
 }
 
 ULONG PICE_wcsicmp(WCHAR* s1, WCHAR* s2)
@@ -366,11 +397,11 @@ char c;
 //
 // does a page validity check on every character in th string
 //*************************************************************************
-USHORT PICE_strlen(char* s)
+USHORT PICE_strlen(const char* s)
 {
 	USHORT i;
 
-	for(i=0;IsAddressValid((ULONG)&s[i]) && s[i]!=0 && i<PAGE_SIZE;i++);
+	for(i=0;IsAddressValid((ULONG)&s[i]) && s[i]!=0 && i<_PAGE_SIZE;i++);
 
     if(IsAddressValid((ULONG)&s[i]) && s[i]==0)
         return i;
@@ -437,7 +468,7 @@ BOOLEAN IsAddressValid(ULONG address)
 	BOOLEAN bResult = FALSE;
 	PEPROCESS my_current = IoGetCurrentProcess();
 
-	address &= (~(PAGE_SIZE-1));
+	address &= (~(_PAGE_SIZE-1));
 
 	if(my_current)
 	{
@@ -477,10 +508,9 @@ BOOLEAN IsAddressWriteable(ULONG address)
 {
 	PULONG pPGD;
 	PULONG pPTE;
-	BOOLEAN bResult = FALSE;
 	PEPROCESS my_current = IoGetCurrentProcess();
 
-	address &= (~(PAGE_SIZE-1));
+	//address &= (~(_PAGE_SIZE-1));
 
 	if(my_current)
 	{
@@ -490,24 +520,26 @@ BOOLEAN IsAddressWriteable(ULONG address)
             // not large page
             if(!((*pPGD)&_PAGE_4M))
 			{
-		        bResult |= (*pPGD) & _PAGE_RW;
+		        if(!((*pPGD) & _PAGE_RW))
+						return FALSE;
 
 				pPTE = ADDR_TO_PTE(address);
 				if(pPTE)
 				{
-					if( (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE) )
-						bResult |= (*pPTE) & _PAGE_RW;
+					if( ((*pPTE)&(_PAGE_PRESENT | _PAGE_PSE)) &&
+								 ((*pPTE) & _PAGE_RW))
+					 	return TRUE;
+					else
+					 	return FALSE;
 				}
 			}
 			// large page
 			else
-			{
-				bResult |= (*pPGD) & _PAGE_RW;
-			}
+				return ((*pPGD) & _PAGE_RW);
 		}
 	}
 
-	return bResult;
+	return FALSE;
 }
 
 
@@ -519,11 +551,9 @@ BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet)
 {
 	PULONG pPGD;
 	PULONG pPTE;
-	BOOLEAN bResult = FALSE;
 	PEPROCESS my_current = IoGetCurrentProcess();
 
-	address &= (~(PAGE_SIZE-1));
-
+	//address &= (~(_PAGE_SIZE-1));
 	if(my_current)
 	{
 		pPGD = ADDR_TO_PDE(address);
@@ -537,11 +567,14 @@ BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet)
 				{
 					if( (*pPTE)&(_PAGE_PRESENT | _PAGE_PSE) )
 					{
-                        if( bSet )
+                        if( bSet ){
 							*pPTE |= _PAGE_RW;
-                        else
+						}
+                        else{
 							*pPTE &= ~_PAGE_RW;
-                        bResult = TRUE;
+						}
+						FLUSH_TLB;
+						return TRUE;
                     }
 				}
 			}
@@ -552,12 +585,12 @@ BOOLEAN SetAddressWriteable(ULONG address,BOOLEAN bSet)
                     *pPGD |= _PAGE_RW;
                 else
                     *pPGD &= ~_PAGE_RW;
-                bResult = TRUE;
+				FLUSH_TLB;
+                return TRUE;
 			}
 		}
 	}
-
-	return bResult;
+	return FALSE;
 }
 //*************************************************************************
 // IsRangeValid()
@@ -570,7 +603,7 @@ ULONG i,NumPages,PageNum;
 
 	// need to only touch one byte per page
 	// calculate PICE_number of pages to touch
-	NumPages=(Length+(PAGE_SIZE-1))>>12;
+	NumPages=(Length+(_PAGE_SIZE-1))>>12;
 
 	// calculate PICE_number of page
 	PageNum=Addr>>PAGE_SHIFT;
@@ -579,7 +612,7 @@ ULONG i,NumPages,PageNum;
 	for(i=0;i<NumPages;i++)
 	{
 		// if any one page is invalid range is invalid
-		if(!IsAddressValid((ULONG)((PageNum+i)*PAGE_SIZE)) )
+		if(!IsAddressValid((ULONG)((PageNum+i)*_PAGE_SIZE)) )
 			return FALSE;
 	}
 
@@ -1411,7 +1444,7 @@ PULONG FindPteForLinearAddress(ULONG address)
 
     ENTER_FUNC();
 
-	address &= (~(PAGE_SIZE-1));
+	address &= (~(_PAGE_SIZE-1));
 
 	if(my_current)
 	{
@@ -1464,7 +1497,7 @@ void InvalidateLB(void)
 //*************************************************************************
 ULONG ReadPhysMem(ULONG Address,ULONG ulSize)
 {
-    ULONG Page = ((ULONG)TwoPagesForPhysMem+PAGE_SIZE)&~(PAGE_SIZE-1);
+    ULONG Page = ((ULONG)TwoPagesForPhysMem+_PAGE_SIZE)&~(_PAGE_SIZE-1);
     PULONG pPTE;
 	ULONG temp = 0;
 	ULONG oldPTE;
@@ -1478,7 +1511,7 @@ ULONG ReadPhysMem(ULONG Address,ULONG ulSize)
 	{
 		oldPTE = *pPTE;
         DPRINT((0,"ReadPhysMem(): oldPTE = %.8X\n",oldPTE));
-		temp = (Address & ~(PAGE_SIZE-1));
+		temp = (Address & ~(_PAGE_SIZE-1));
         DPRINT((0,"ReadPhysMem(): page-aligned Address = %.8X\n",temp));
 		*pPTE = temp|0x1;
         DPRINT((0,"ReadPhysMem(): new PTE = %.8X\n",*pPTE));
@@ -1486,15 +1519,15 @@ ULONG ReadPhysMem(ULONG Address,ULONG ulSize)
 		switch(ulSize)
 		{
 			case sizeof(UCHAR): // BYTE
-				temp = *(PUCHAR)(Page + (Address & (PAGE_SIZE-1)));
+				temp = *(PUCHAR)(Page + (Address & (_PAGE_SIZE-1)));
 				temp = (UCHAR)temp;
 				break;
 			case sizeof(USHORT): // WORD
-				temp = *(PUSHORT)(Page + (Address & (PAGE_SIZE-1)));
+				temp = *(PUSHORT)(Page + (Address & (_PAGE_SIZE-1)));
 				temp = (USHORT)temp;
 				break;
 			case sizeof(ULONG): // DWORD
-				temp = *(PULONG)(Page + (Address & (PAGE_SIZE-1)));
+				temp = *(PULONG)(Page + (Address & (_PAGE_SIZE-1)));
 				break;
 		}
 		*pPTE = oldPTE;
@@ -1511,7 +1544,7 @@ ULONG ReadPhysMem(ULONG Address,ULONG ulSize)
 //*************************************************************************
 void WritePhysMem(ULONG Address,ULONG Datum,ULONG ulSize)
 {
-    ULONG Page = ((ULONG)TwoPagesForPhysMem+PAGE_SIZE)&~(PAGE_SIZE-1);
+    ULONG Page = ((ULONG)TwoPagesForPhysMem+_PAGE_SIZE)&~(_PAGE_SIZE-1);
     PULONG pPTE;
 	ULONG temp;
 	ULONG oldPTE;
@@ -1520,19 +1553,19 @@ void WritePhysMem(ULONG Address,ULONG Datum,ULONG ulSize)
 	if(pPTE)
 	{
 		oldPTE = *pPTE;
-		temp = (Address & ~(PAGE_SIZE-1));
+		temp = (Address & ~(_PAGE_SIZE-1));
 		*pPTE = temp | 0x3; // present and writable
         InvalidateLB();
 		switch(ulSize)
 		{
 			case sizeof(UCHAR): // BYTE
-				*(PUCHAR)(Page + (Address & (PAGE_SIZE-1))) = (UCHAR)Datum;
+				*(PUCHAR)(Page + (Address & (_PAGE_SIZE-1))) = (UCHAR)Datum;
 				break;
 			case sizeof(USHORT): // WORD
-				*(PUSHORT)(Page + (Address & (PAGE_SIZE-1))) = (USHORT)Datum;
+				*(PUSHORT)(Page + (Address & (_PAGE_SIZE-1))) = (USHORT)Datum;
 				break;
 			case sizeof(ULONG): // DWORD
-				*(PULONG)(Page + (Address & (PAGE_SIZE-1))) = Datum;
+				*(PULONG)(Page + (Address & (_PAGE_SIZE-1))) = Datum;
 				break;
 		}
 		*pPTE = oldPTE;
@@ -2038,39 +2071,6 @@ ULONG  inl(PULONG port)
 	return READ_PORT_ULONG(port);
 }
 
-#if 0
-//*************************************************************************
-// GetInitMm()
-//
-//*************************************************************************
-struct mm_struct *GetInitMm(void)
-{
-
-#if REAL_LINUX_VERSION_CODE >= 0x02020B
-    ENTER_FUNC();
-    /* symbol export of init_mm was added in 2.2.11 */
-    LEAVE_FUNC();
-    return &init_mm;
-#else
-    // see also Rubini, Linux Device Drivers, page 288
-	struct task_struct *pt;
-
-    ENTER_FUNC();
-
-	for (pt = current->next_task; pt != current; pt = pt->next_task) {
-		if (pt->pid == 0) {
-            LEAVE_FUNC();
-			return pt->mm;
-		}
-	}
-
-    DPRINT((0,"GetInitMm(): failure\n"));
-    LEAVE_FUNC();
-	return NULL;
-#endif
-}
-#endif
-
 //*************************************************************************
 // EnablePassThrough()
 //
@@ -2186,7 +2186,7 @@ int PICE_close (HANDLE	hFile)
 	{
 		return 0;
 	}
-	DbgPrint("ZwClose failed:\n");
+	DPRINT((2,"ZwClose failed:\n"));
 	return -1;
 }
 
@@ -2200,7 +2200,7 @@ size_t PICE_len( HANDLE hFile )
 	if( !NT_SUCCESS( status ) ){
 		DPRINT((0,"PICE_len: ZwQueryInformationFile error: %x\n", status));
 	}
-	ASSERT(fs.EndOfFile.u.HighPart == 0);
+	//ASSERT(fs.EndOfFile.u.HighPart == 0);
 	return (size_t)fs.EndOfFile.u.LowPart;
 }
 

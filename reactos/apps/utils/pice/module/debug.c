@@ -51,6 +51,7 @@ ULONG ulDebugFlags;
 char tempDebug[2048];
 USHORT usDebugPortBase;
 
+extern BOOLEAN bIsPrintkPatched;
 ////////////////////////////////////////////////////
 // FUNCTIONS
 ////
@@ -74,6 +75,7 @@ VOID Pice_dprintf(ULONG DebugLevel, PCHAR DebugMessage, ...)
 		PICE_vsprintf(tempDebug, DebugMessage, ap);
         //ei DebugSendString(tempDebug);
 		Print(OUTPUT_WINDOW, tempDebug);
+		DbgPrint("%s", tempDebug);
         restore_flags(ulDebugFlags);
 	}
 	va_end(ap);
@@ -179,10 +181,11 @@ void DebugSetOthers(ULONG Parity, ULONG Bits, ULONG StopBit)
 void DebugSetupSerial(ULONG port,ULONG baudrate)
 {
 	USHORT ports[]={COM1BASE,COM2BASE};
-
+#if 0 //ei temporary
     usDebugPortBase = ports[port-1];
 	DebugSetOthers(NO_PARITY,8,1);
 	DebugSetSpeed(baudrate);
+#endif
 }
 #endif // DEBUG
 

@@ -48,6 +48,7 @@ PMADDRESS_SPACE mm_init_mm;
 
 ULONG KeyboardIRQL;
 
+extern void NewInt31Handler(void);
 //*************************************************************************
 // InitPICE()
 //
@@ -100,7 +101,7 @@ BOOLEAN InitPICE(void)
     DPRINT((0,"InitPICE(): trace step 4\n"));
     // print the initial screen template
     PrintTemplate();
-
+/*
     DPRINT((0,"InitPICE(): trace step 5\n"));
 	// ask the user if he wants to abort the debugger load
     if(!CheckLoadAbort())
@@ -111,7 +112,7 @@ BOOLEAN InitPICE(void)
         LEAVE_FUNC();
 		return FALSE;
 	}
-
+*/
     DPRINT((0,"InitPICE(): trace step 6\n"));
     // load the file /boot/System.map.
     // !!! It must be consistent with the current kernel at all cost!!!
@@ -128,7 +129,7 @@ BOOLEAN InitPICE(void)
 
     DPRINT((0,"InitPICE(): trace step 7\n"));
 	ScanExports("_KernelAddressSpace", &ulAddr);
-	my_init_mm = ulAddr;
+	my_init_mm = (PEPROCESS) ulAddr;
 	DPRINT((0,"init_mm %x @ %x\n",&my_init_mm,my_init_mm));
 	if(!my_init_mm)
 	{
@@ -146,7 +147,7 @@ BOOLEAN InitPICE(void)
     DPRINT((0,"InitPICE(): trace step 7.1\n"));
 
 	ScanExports("_PsProcessListHead",&ulAddr);
-	pPsProcessListHead = ulAddr;
+	pPsProcessListHead = (LIST_ENTRY*)ulAddr;
     DPRINT((0,"pPsProcessListHead @ %X\n",pPsProcessListHead));
 	if(!pPsProcessListHead)
 	{
@@ -180,7 +181,7 @@ BOOLEAN InitPICE(void)
 
 	// the loaded module list
 	ScanExports("_NameSpaceRoot", &ulAddr);
-	pNameSpaceRoot = ulAddr;
+	pNameSpaceRoot = (PDIRECTORY_OBJECT *)ulAddr;
 	DPRINT((0,"pNameSpaceRoot @ %X\n",pNameSpaceRoot));
     if(!pNameSpaceRoot)
 	{
@@ -278,10 +279,11 @@ BOOLEAN InitPICE(void)
     InstallGlobalKeyboardHook();
     InstallSyscallHook();
     InstallInt3Hook();
-    InstallPrintkHook();
     InstallDblFltHook();
     InstallGPFaultHook();
     InstallIntEHook();
+	//__asm__("int3");
+    InstallPrintkHook();
 
     DPRINT((0,"InitPICE(): trace step 16\n"));
     if(ulDoInitialBreak)

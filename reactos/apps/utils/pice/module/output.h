@@ -15,7 +15,7 @@ Environment:
     LINUX 2.2.X
     Kernel mode only
 
-Author: 
+Author:
 
     Klaus P. Gerlicher
 
@@ -30,7 +30,11 @@ Copyright notice:
 --*/
 void InstallPrintkHook(void);
 void DeInstallPrintkHook(void);
-extern ULONG ulPrintk;
+
+//extern ULONG ulPrintk;
+
+extern ULONG (*ulPrintk) (PANSI_STRING String);
+
 extern BOOLEAN bInPrintk;
 extern BOOLEAN bIsDebugPrint;
 

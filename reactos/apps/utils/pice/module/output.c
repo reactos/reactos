@@ -47,9 +47,13 @@ Copyright notice:
 
 char tempOutput[1024],tempOutput2[1024];
 
-ULONG ulPrintk=0;
+//ULONG ulPrintk=0;
+
+ULONG (*ulPrintk) (PANSI_STRING String);
+
 BOOLEAN bInPrintk = FALSE;
 BOOLEAN bIsDebugPrint = FALSE;
+BOOLEAN bIsPrintkPatched = FALSE;
 
 ULONG ulCountTimerEvents = 0;
 
@@ -126,10 +130,20 @@ ULONG CountArgs(LPSTR fmt)
 	return count;
 }
 
+//***********************************************************************************
+//	Our replacement of kernel function.
+//	Must not make any calls to KdpPrintString (e.g. by calling DbgPrint).
+//***********************************************************************************
+ULONG PICE_KdpPrintString(PANSI_STRING String)
+{
+	//dummy function
+	DPRINT((0,"PICE_KdpPrintString\n\n\n"));
+}
 //*************************************************************************
 // PrintkCallback()
 //
 // called from RealIsr() when processing INT3 placed
+// Must not make any calls to KdpPrintString (e.g. by calling DbgPrint).
 //*************************************************************************
 void PrintkCallback(void)
 {
@@ -138,55 +152,26 @@ void PrintkCallback(void)
 	ULONG countArgs,i,len;
 	PANSI_STRING temp;
 
+	DPRINT((2,"In PrintkCallback:1\n"));
+
 	bInPrintk = TRUE;
+	DPRINT((2,"In PrintkCallback:2\n"));
 
 	// get the linear address of stack where string resides
 	ulAddress = GetLinearAddress(CurrentSS,CurrentESP);
 	if(ulAddress)
 	{
+		DPRINT((2,"In PrintkCallback: ulAddress: %x\n", ulAddress));
 		if(IsAddressValid(ulAddress+sizeof(char *)) )
 		{
 			//KdpPrintString has PANSI_STRING as a parameter
 			temp = (PANSI_STRING)*(PULONG)(ulAddress+sizeof(char *));
+			DPRINT((2,"temp: %x\n", temp));
 			fmt = temp->Buffer;
 
-			// validate format string
-			if((len = PICE_strlen(fmt)) )
-			{
-				// skip debug prefix if present
-				if(len>=3 && *fmt=='<' && *(fmt+2)=='>')
-					fmt += 3;
-
-				if((countArgs = CountArgs(fmt))>0)
-				{
-
-					args = (LPSTR)(ulAddress+2*sizeof(char *));
-					if(IsAddressValid((ULONG)args))
-					{
-						// validate passed in args
-						for(i=0;i<countArgs;i++)
-						{
-							if(!IsRangeValid((ULONG)(args+i*sizeof(ULONG)),sizeof(ULONG)) )
-							{
-								PICE_sprintf(tempOutput,"printk(%s): argument #%u is not valid!\n",(LPSTR)fmt,i);
-								Print(OUTPUT_WINDOW,tempOutput);
-								bInPrintk = FALSE;
-								return;
-							}
-						}
-						PICE_vsprintf(tempOutput2, fmt, args);
-					}
-					else
-					{
-						Print(OUTPUT_WINDOW,"printk(): ARGS are passed in but not valid!\n");
-					}
-				}
-				else
-				{
-					PICE_strcpy(tempOutput2, fmt);
-				}
-				Print(OUTPUT_WINDOW,tempOutput2);
-			}
+			Print(OUTPUT_WINDOW,fmt);
+			DPRINT((2,"%s\n", fmt));
+			CurrentEIP = (ULONG)PICE_KdpPrintString;
 		}
 	}
 	bInPrintk = FALSE;
@@ -260,21 +245,23 @@ void RemovePiceRunningTimer(void)
 //*************************************************************************
 void InstallPrintkHook(void)
 {
-    ENTER_FUNC();
+
+	ENTER_FUNC();
+	return;
+	if( bIsPrintkPatched )
+			return;
+
     DPRINT((0,"installing PrintString hook\n"));
-	DPRINT((0,"installing PrintString hook. DISABLED for now!!!!!!!!!!!\n"));
-/* ei fix later
-    ScanExports("_KdpPrintString",(PULONG)&ulPrintk);
+	ScanExports("_KdpPrintString",(PULONG)&ulPrintk);
 
+	DPRINT((0,"_KdpPrintString @ %x\n", ulPrintk));
 	ASSERT( ulPrintk );                 // temporary
-
     if(ulPrintk)
     {
-        InstallSWBreakpoint(ulPrintk,TRUE,PrintkCallback);
+        bIsPrintkPatched = InstallSWBreakpoint(ulPrintk,TRUE,PrintkCallback);
+		DPRINT((0,"KdpPrintStringTest breakpoint installed? %d\n", bIsPrintkPatched));
     }
-*/
-
-    LEAVE_FUNC();
+	LEAVE_FUNC();
 }
 
 //*************************************************************************
@@ -285,13 +272,11 @@ void DeInstallPrintkHook(void)
 {
     ENTER_FUNC();
     DPRINT((0,"enter DeInstallPrintkHook()\n"));
-
-    if(ulPrintk)
+    if(bIsPrintkPatched && ulPrintk)
     {
 		// will be done on exit debugger
-        DeInstallSWBreakpoint(ulPrintk);
+        if( DeInstallSWBreakpoint(ulPrintk) )
+				bIsPrintkPatched = FALSE;
     }
-
-
     LEAVE_FUNC();
 }

@@ -50,10 +50,10 @@ PUCHAR pScreenBufferSerial;
 
 USHORT usSerialPortBase;
 
-UCHAR packet[PAGE_SIZE];
-UCHAR assemble_packet[PAGE_SIZE];
+UCHAR packet[_PAGE_SIZE];
+UCHAR assemble_packet[_PAGE_SIZE];
 
-UCHAR flush_buffer[PAGE_SIZE],g_x,g_y;
+UCHAR flush_buffer[_PAGE_SIZE],g_x,g_y;
 ULONG ulFlushBufferPos = 0;
 
 UCHAR ucLastKeyRead;

@@ -979,7 +979,7 @@ COMMAND_PROTOTYPE(ShowPageDirs)
 
                         PICE_sprintf(tempCmd,"%.8X  %.8X     %s %s %s (PTE @ %.8X)\n",
 						            pArgs->Value[0],
-						            (pPage->PTBase<<12)|(pArgs->Value[0]&(PAGE_SIZE-1)),
+						            (pPage->PTBase<<12)|(pArgs->Value[0]&(_PAGE_SIZE-1)),
 						            (pPage->P==1)?"P ":"NP",
 						            pPage->RW?"RW":"R ",
 						            pPage->US?"U":"S",
@@ -1313,7 +1313,7 @@ void DisplaySourceFile(LPSTR pSrcLine,LPSTR pSrcEnd,ULONG ulLineNumber,ULONG ulL
     LPSTR pTemp;
     ULONG j = ulLineNumber-1;
 
-    DPRINT((2,"DisplaySourceFile(%.8X,%u,%u)\n",pSrcLine,ulLineNumber,ulLineNumberToInvert));
+    DPRINT((0,"DisplaySourceFile(%.8X,%u,%u)\n",pSrcLine,ulLineNumber,ulLineNumberToInvert));
 
     // go to line
     while(j--)
@@ -1411,16 +1411,16 @@ void UnassembleOneLineDown(void)
 {
     ULONG addr,addrorg;
 
-    DPRINT((2,"UnassembleOneLineDown()\n"));
+    DPRINT((0,"UnassembleOneLineDown()\n"));
 
     addrorg = addr = GetLinearAddress(usOldDisasmSegment,ulOldDisasmOffset);
 
-    DPRINT((2,"UnassembleOneLineDown(): addr = %.8X\n",addr));
+    DPRINT((0,"UnassembleOneLineDown(): addr = %.8X\n",addr));
 
     tempCmd[0]=0;
 	Disasm(&addr,tempCmd);
 
-    DPRINT((2,"UnassembleOneLineDown(): addr after = %.8X\n",addr));
+    DPRINT((0,"UnassembleOneLineDown(): addr after = %.8X\n",addr));
 
     ulOldDisasmOffset += (addr - addrorg);
     RepaintSource();
@@ -1434,17 +1434,17 @@ void UnassembleOnePageDown(ULONG page)
 {
     ULONG addr,addrorg,i;
 
-    DPRINT((2,"UnassembleOnePageDown()\n"));
+    DPRINT((0,"UnassembleOnePageDown()\n"));
 
     addrorg = addr = GetLinearAddress(usOldDisasmSegment,ulOldDisasmOffset);
 
-    DPRINT((2,"UnassembleOnePageDown(): addr = %.8X\n",addr));
+    DPRINT((0,"UnassembleOnePageDown(): addr = %.8X\n",addr));
 
     tempCmd[0]=0;
     for(i=0;i<page;i++)
 	    Disasm(&addr,tempCmd);
 
-    DPRINT((2,"UnassembleOnePageDown(): addr after = %.8X\n",addr));
+    DPRINT((0,"UnassembleOnePageDown(): addr after = %.8X\n",addr));
 
     ulOldDisasmOffset += (addr - addrorg);
     RepaintSource();
@@ -1460,18 +1460,18 @@ void UnassembleOneLineUp(void)
     LONG offset;
     LPSTR pSymbol;
 
-    DPRINT((2,"UnassembleOneLineUp()\n"));
+    DPRINT((0,"UnassembleOneLineUp()\n"));
 
     addrorg = addr = GetLinearAddress(usOldDisasmSegment,ulOldDisasmOffset);
 
-    DPRINT((2,"UnassembleOneLineUp(): addrorg = %.8X\n",addr));
+    DPRINT((0,"UnassembleOneLineUp(): addrorg = %.8X\n",addr));
 
     offset = 1;
 
     if((pSymbol = FindFunctionByAddress(addrorg-offset,&start,&end)) )
     {
         offset = addrorg - start;
-        DPRINT((2,"UnassembleOneLineUp(): %s @ offset = %u\n",pSymbol,offset));
+        DPRINT((0,"UnassembleOneLineUp(): %s @ offset = %u\n",pSymbol,offset));
     }
     else
     {
@@ -1485,12 +1485,12 @@ void UnassembleOneLineUp(void)
     addr = addrorg - offset;
     do
     {
-        DPRINT((2,"UnassembleOneLineUp(): offset = %u addrorg %x addr %x\n",offset,addrorg,addr));
+        DPRINT((0,"UnassembleOneLineUp(): offset = %u addrorg %x addr %x\n",offset,addrorg,addr));
         // disassemble while not reaching current instruction
         addrbefore = addr;
         tempCmd[0]=0;
 	    Disasm(&addr,tempCmd);
-        DPRINT((2,"%.8X: %s\n",addrbefore,tempCmd));
+        DPRINT((0,"%.8X: %s\n",addrbefore,tempCmd));
     }while((addr != addrorg) && (addrbefore < addrorg));
 
     if((addrorg - addrstart)<=0)
@@ -1498,7 +1498,7 @@ void UnassembleOneLineUp(void)
     else
         ulOldDisasmOffset -= (addrorg - addrbefore);
 
-    DPRINT((2,"UnassembleOneLineUp(): new addr = %.4X:%.8X\n",usOldDisasmSegment,ulOldDisasmOffset));
+    DPRINT((0,"UnassembleOneLineUp(): new addr = %.4X:%.8X\n",usOldDisasmSegment,ulOldDisasmOffset));
 
     RepaintSource();
 }
@@ -1513,20 +1513,20 @@ void UnassembleOnePageUp(ULONG page)
     LONG offset;
     LPSTR pSymbol;
 
-    DPRINT((2,"UnassembleOnePageUp()\n"));
+    DPRINT((0,"UnassembleOnePageUp()\n"));
 
     for(i=0;i<page;i++)
     {
         addrorg = addr = GetLinearAddress(usOldDisasmSegment,ulOldDisasmOffset);
 
-        DPRINT((2,"UnassembleOnePageUp(): addrorg = %.8X\n",addr));
+        DPRINT((0,"UnassembleOnePageUp(): addrorg = %.8X\n",addr));
 
         offset = 1;
 
         if((pSymbol = FindFunctionByAddress(addrorg-offset,&start,&end)) )
         {
             offset = addrorg - start;
-            DPRINT((2,"UnassembleOnePageUp(): %s @ offset = %u\n",pSymbol,offset));
+            DPRINT((0,"UnassembleOnePageUp(): %s @ offset = %u\n",pSymbol,offset));
         }
         else
         {
@@ -1539,12 +1539,12 @@ void UnassembleOnePageUp(ULONG page)
         addrstart = addrorg;
         do
         {
-            DPRINT((2,"UnassembleOnePageUp(): offset = %u addrorg %x addr %x\n",offset,addrorg,addr));
+            DPRINT((0,"UnassembleOnePageUp(): offset = %u addrorg %x addr %x\n",offset,addrorg,addr));
             addrbefore = addr;
             // disassemble while not reaching current instruction
             tempCmd[0]=0;
 	        Disasm(&addr,tempCmd);
-            DPRINT((2,"%.8X: %s\n",addrbefore,tempCmd));
+            DPRINT((0,"%.8X: %s\n",addrbefore,tempCmd));
         }while((addr != addrorg) && (addrbefore < addrorg));
 
         if((addrorg - addrstart)<=0)
@@ -1554,7 +1554,7 @@ void UnassembleOnePageUp(ULONG page)
 
     }
 
-    DPRINT((2,"UnassembleOnePageUp(): new addr = %.4X:%.8X\n",usOldDisasmSegment,ulOldDisasmOffset));
+    DPRINT((0,"UnassembleOnePageUp(): new addr = %.4X:%.8X\n",usOldDisasmSegment,ulOldDisasmOffset));
 
     RepaintSource();
 }
@@ -1614,7 +1614,7 @@ COMMAND_PROTOTYPE(Unassemble)
         return TRUE;
 
 
-	DPRINT((2,"Unassemble(%0.4X:%0.8X)\n",segment,addr));
+	DPRINT((0,"Unassemble(%0.4X:%0.8X)\n",segment,addr));
 
     //
 	// unassemble
@@ -1652,19 +1652,19 @@ COMMAND_PROTOTYPE(Unassemble)
     if(pCurrentMod)
     {
         ULONG mod_addr;
-	    DPRINT((2,"Unassemble(): pCurrentMod->name = %S\n",pCurrentMod->name));
+	    DPRINT((0,"Unassemble(): pCurrentMod->name = %S\n",pCurrentMod->name));
         mod_addr = (ULONG)pCurrentMod->BaseAddress;
 
         pCurrentSymbols = FindModuleSymbols(mod_addr);
-   	    DPRINT((2,"Unassemble(): pCurrentSymbols = %x\n",(ULONG)pCurrentSymbols));
+   	    DPRINT((0,"Unassemble(): pCurrentSymbols = %x\n",(ULONG)pCurrentSymbols));
     }
-	DPRINT((2,"Unassemble(): pCurrentMod = %x, showsrc: %d\n",pCurrentMod, bShowSrc));
+	DPRINT((0,"Unassemble(): pCurrentMod = %x, showsrc: %d\n",pCurrentMod, bShowSrc));
 
     ulCurrentlyDisplayedLineNumber = 0;
 
     if(bShowSrc && bForceDisassembly == FALSE && (pSrc = FindSourceLineForAddress(addr,&ulLineNumber,&pSrcStart,&pSrcEnd,&pFilename)) )
     {
-		DPRINT((2,"\n\n\nFoundSourceLineForAddress: file: %s line: %d\n", pFilename, ulLineNumber));
+		DPRINT((0,"FoundSourceLineForAddress: file: %s line: %d\n", pFilename, ulLineNumber));
         PICE_strcpy(szCurrentFile,pFilename);
 
         ulCurrentlyDisplayedLineNumber = ulLineNumber;
@@ -1711,7 +1711,7 @@ COMMAND_PROTOTYPE(Unassemble)
     else
     {
         *szCurrentFile = 0;
-		DPRINT((2,"Couldn't find source for file\n"));
+		DPRINT((0,"Couldn't find source for file\n"));
         Home(SOURCE_WINDOW);
         // for each line in the disassembly window
 	    for(i=0;i<wWindow[SOURCE_WINDOW].cy;i++)
@@ -2476,6 +2476,7 @@ COMMAND_PROTOTYPE(SwitchTables)
 		CopyWideToAnsi(temp,pMod->name);
 
 		pCurrentSymbols = (PICE_SYMBOLFILE_HEADER*)pArgs->Value[0];
+		DPRINT((2,"TableSwitchSym: pCurrentSymbols: %x, Name: %S\n", pCurrentSymbols, pCurrentSymbols->name));
 		pTempMod = IsModuleLoaded(temp);
 		if( pTempMod )
 			pCurrentMod = pTempMod;
@@ -2611,8 +2612,10 @@ COMMAND_PROTOTYPE(ShowLocals)
 	if(pArgs->Count==0)
 	{
 		p = FindLocalsByAddress(GetLinearAddress(CurrentCS,CurrentEIP));
+		DPRINT((0,"ShowLocals: %x", p));
 		if(p)
 		{
+			DPRINT((0,"ShowLocals: name %s, type_name %s\n", p->name, p->type_name));
 			while(PICE_strlen(p->name))
 			{
                 if(!p->bRegister)

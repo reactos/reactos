@@ -175,7 +175,7 @@ char *PICE_strrev(char *);
 ULONG PICE_strcmp(char* s1,char* s2);
 ULONG PICE_strcmpi(char* s1,char* s2);
 ULONG PICE_strncmpi(char* s1,char* s2,ULONG len);
-USHORT PICE_strlen(char* s);
+USHORT PICE_strlen(const char* s);
 char* PICE_strcat(char* s1,char* s2);
 BOOLEAN PICE_isprint(char c);
 char* PICE_strcpy(char* s1,char* s2);
@@ -240,7 +240,9 @@ void KeyboardFlushKeyboardQueue(void);
 #define _PAGE_ACCESSED  0x020
 #define _PAGE_DIRTY     0x040
 #define _PAGE_PSE       0x080
-#define _PAGE_4M _PAGE_PSE
+#define _PAGE_4M        _PAGE_PSE
+#define _PAGE_SIZE		0x1000
+
 
 UCHAR AsciiFromScan(UCHAR s);
 UCHAR AsciiToScan(UCHAR s);
