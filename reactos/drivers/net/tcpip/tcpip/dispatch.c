@@ -924,12 +924,15 @@ NTSTATUS DispTdiSendDatagram(
 		    ("About to call send routine %x\n", 
 		     (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)));
 	
-        Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
-            Request.Handle.AddressHandle, 
-	    DgramInfo->SendDatagramInformation,
-	    DataBuffer,
-	    BufferSize,
-	    &Irp->IoStatus.Information);
+        if( (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send) ) 
+            Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
+                Request.Handle.AddressHandle, 
+                DgramInfo->SendDatagramInformation,
+                DataBuffer,
+                BufferSize,
+                &Irp->IoStatus.Information);
+        else
+            Status = STATUS_UNSUCCESSFUL;
 
         if (Status != STATUS_PENDING) {
             DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);

@@ -74,10 +74,6 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	/* This will be the from address for subsequent recvfrom calls */
 	TdiBuildConnectionInfo( &FCB->AddressFrom,
 				FCB->LocalAddress );
-	/* Allocate our backup buffer */
-	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
-	FCB->PollState |= AFD_EVENT_SEND; 
-	/* A datagram socket is always sendable */
 
 	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
 	

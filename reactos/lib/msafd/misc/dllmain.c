@@ -16,8 +16,8 @@
 #include <rosrtl/string.h>
 
 #ifdef DBG
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
-DWORD DebugTraceLevel = 0;
+DWORD DebugTraceLevel = DEBUG_ULTRA;
+//DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
 HANDLE GlobalHeap;
@@ -123,8 +123,11 @@ WSPSocket(
 	Socket->SanData = NULL;
 
 	/* Ask alex about this */
-	if( Socket->SharedData.SocketType == SOCK_DGRAM )
+	if( Socket->SharedData.SocketType == SOCK_DGRAM ||
+            Socket->SharedData.SocketType == SOCK_RAW ) {
+            AFD_DbgPrint(MID_TRACE,("Connectionless socket\n"));
 	    Socket->SharedData.ServiceFlags1 |= XP1_CONNECTIONLESS;
+        }
 
 	/* Packet Size */
 	SizeOfPacket = TransportName.Length + sizeof(AFD_CREATE_PACKET) + sizeof(WCHAR);

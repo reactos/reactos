@@ -165,6 +165,9 @@ NTSTATUS DDKAPI PacketSocketSendComplete
     /* It's ok if the FCB already died */
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_SUCCESS;
 
+    FCB->PollState |= AFD_EVENT_SEND;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
     FCB->SendIrp.InFlightRequest = NULL; 
     /* Request is not in flight any longer */
 
@@ -361,6 +364,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
     FCB->EventsFired &= ~AFD_EVENT_SEND;
+    FCB->PollState &= ~AFD_EVENT_SEND;
 
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND ) 

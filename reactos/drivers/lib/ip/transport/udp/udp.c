@@ -33,51 +33,19 @@ NTSTATUS AddUDPHeaderIPv4(
  *     Status of operation
  */
 {
-    PIPv4_HEADER IPHeader;
     PUDP_HEADER UDPHeader;
-    ULONG BufferSize;
     
     TI_DbgPrint(MID_TRACE, ("Packet: %x NdisPacket %x\n", 
 			    IPPacket, IPPacket->NdisPacket));
-    
-    BufferSize = MaxLLHeaderSize + sizeof(IPv4_HEADER) + sizeof(UDP_HEADER);
-    
-    GetDataPtr( IPPacket->NdisPacket, 
-		MaxLLHeaderSize, 
-		(PCHAR *)&IPPacket->Header, 
-		&IPPacket->ContigSize );
-    
-    IPPacket->HeaderSize = 20;
-    
-    TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n", 
-			    BufferSize, IPPacket->Header));
-    TI_DbgPrint(MAX_TRACE, ("Packet total length %d\n", IPPacket->TotalSize));
-    
-    /* Build IPv4 header */
-    IPHeader = (PIPv4_HEADER)IPPacket->Header;
-    /* Version = 4, Length = 5 DWORDs */
-    IPHeader->VerIHL = 0x45;
-    /* Normal Type-of-Service */
-    IPHeader->Tos = 0;
-    /* Length of header and data */
-    IPHeader->TotalLength = WH2N((USHORT)IPPacket->TotalSize);
-    /* Identification */
-    IPHeader->Id = 0;
-    /* One fragment at offset 0 */
-    IPHeader->FlagsFragOfs = 0;
-    /* Time-to-Live is 128 */
-    IPHeader->Ttl = 128;
-    /* User Datagram Protocol */
-    IPHeader->Protocol = IPPROTO_UDP;
-    /* Checksum is 0 (for later calculation of this) */
-    IPHeader->Checksum = 0;
-    /* Source address */
-    IPHeader->SrcAddr = LocalAddress->Address.IPv4Address;
-    /* Destination address. FIXME: IPv4 only */
-    IPHeader->DstAddr = RemoteAddress->Address.IPv4Address;
+
+    AddGenericHeaderIPv4
+        ( RemoteAddress, RemotePort,
+          LocalAddress, LocalPort,
+          IPPacket, DataLength, IPPROTO_UDP, 
+          sizeof(UDP_HEADER), (PVOID *)&UDPHeader );
     
     /* Build UDP header */
-    UDPHeader = (PUDP_HEADER)(((PCHAR)IPHeader) + sizeof(IPv4_HEADER));
+    UDPHeader = (PUDP_HEADER)(IPPacket->Data - sizeof(UDP_HEADER));
     /* Port values are already big-endian values */
     UDPHeader->SourcePort = LocalPort;
     UDPHeader->DestPort   = RemotePort;
@@ -89,7 +57,7 @@ NTSTATUS AddUDPHeaderIPv4(
     IPPacket->Data        = ((PCHAR)UDPHeader) + sizeof(UDP_HEADER);
     
     TI_DbgPrint(MID_TRACE, ("Packet: %d ip %d udp %d payload\n",
-			    (PCHAR)UDPHeader - (PCHAR)IPHeader,
+			    (PCHAR)UDPHeader - (PCHAR)IPPacket->Header,
 			    (PCHAR)IPPacket->Data - (PCHAR)UDPHeader,
 			    DataLength));
 

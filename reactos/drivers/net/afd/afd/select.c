@@ -43,13 +43,23 @@ VOID RemoveSelect( PAFD_ACTIVE_POLL Poll ) {
 
 VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq, 
 		   NTSTATUS Status ) {
+    int i;
     PIRP Irp = Poll->Irp;
     AFD_DbgPrint(MID_TRACE,("Called (Status %x)\n", Status));
+    KeCancelTimer( &Poll->Timer );
     Poll->Irp->IoStatus.Status = Status;
     Poll->Irp->IoStatus.Information =
         FIELD_OFFSET(AFD_POLL_INFO, Handles) + sizeof(AFD_HANDLE) * PollReq->HandleCount;
     CopyBackStatus( PollReq->Handles,
 		    PollReq->HandleCount );
+    for( i = 0; i < PollReq->HandleCount; i++ ) {
+        AFD_DbgPrint
+            (MAX_TRACE,
+             ("Handle(%x): Got %x,%x\n",
+              PollReq->Handles[i].Handle,
+              PollReq->Handles[i].Events,
+              PollReq->Handles[i].Status));
+    }
     UnlockHandles( AFD_HANDLES(PollReq), PollReq->HandleCount );
     AFD_DbgPrint(MID_TRACE,("Completing\n"));
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
@@ -81,6 +91,41 @@ VOID SelectTimeout( PKDPC Dpc,
     KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
     AFD_DbgPrint(MID_TRACE,("Timeout\n"));
+}
+
+VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt, 
+                        PFILE_OBJECT FileObject ) {
+    KIRQL OldIrql;
+    PLIST_ENTRY ListEntry;
+    PAFD_ACTIVE_POLL Poll;
+    PIRP Irp;
+    PAFD_POLL_INFO PollReq;
+    int i;
+
+    AFD_DbgPrint(MID_TRACE,("Killing selects that refer to %x\n", FileObject));
+
+    KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
+
+    ListEntry = DeviceExt->Polls.Flink;
+    while ( ListEntry != &DeviceExt->Polls ) {
+	Poll = CONTAINING_RECORD(ListEntry, AFD_ACTIVE_POLL, ListEntry);
+	ListEntry = ListEntry->Flink;
+        Irp = Poll->Irp;
+        PollReq = Irp->AssociatedIrp.SystemBuffer; 
+        
+        for( i = 0; i < PollReq->HandleCount; i++ ) {
+            AFD_DbgPrint(MAX_TRACE,("Req: %x, This %x\n",
+                                    PollReq->Handles[i].Handle, FileObject));
+            if( (PVOID)PollReq->Handles[i].Handle == FileObject ) {
+                ZeroEvents( PollReq->Handles, PollReq->HandleCount );
+                SignalSocket( Poll, PollReq, STATUS_SUCCESS );
+            }
+	}
+    }
+
+    KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
+
+    AFD_DbgPrint(MID_TRACE,("Done\n"));
 }
 
 VOID KillExclusiveSelects( PAFD_DEVICE_EXTENSION DeviceExt ) {

@@ -262,6 +262,8 @@ NTSTATUS STDCALL
 AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 	       PIO_STACK_LOCATION IrpSp );
 VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceObject, PFILE_OBJECT FileObject );
+VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
+                        PFILE_OBJECT FileObject );
 
 /* tdi.c */
 
