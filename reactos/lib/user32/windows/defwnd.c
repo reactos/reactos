@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.67 2003/08/15 17:06:11 gvg Exp $
+/* $Id: defwnd.c,v 1.68 2003/08/15 21:56:48 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1680,10 +1680,12 @@ User32DefWindowProc(HWND hWnd,
 	  {
 	    return 0;
 	  }
+#if 0
 	if (((DWORD) hBrush) <= 25)
 	  {
 	    hBrush = GetSysColorBrush((DWORD) hBrush - 1);
 	  }
+#endif
 	GetClipBox((HDC)wParam, &Rect);
 	FillRect((HDC)wParam, &Rect, hBrush);
 	return(1);
