@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.24 2002/09/08 10:23:28 chorns Exp $
+/* $Id: dpc.c,v 1.25 2003/06/16 19:18:14 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -95,33 +95,22 @@ KiDispatchInterrupt(VOID)
    
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
-   current_entry = RemoveHeadList(&DpcQueueHead);
-   if (current_entry != &DpcQueueHead)
-     {
-       DpcQueueSize--;
-     }
-   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
-   current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
-   current->Lock=FALSE;
-   KeLowerIrql(oldlvl);
-   while (current_entry!=(&DpcQueueHead))
-     {
-	current->DeferredRoutine(current,current->DeferredContext,
-				 current->SystemArgument1,
-				 current->SystemArgument2);
 
-	KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-	KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
-	current_entry = RemoveHeadList(&DpcQueueHead);
-	if (current_entry != &DpcQueueHead)
-	  {
-	    DpcQueueSize--;
-	  }
-	KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
-	current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
-	current->Lock=FALSE;
-	KeLowerIrql(oldlvl);
-     }
+   while (!IsListEmpty(&DpcQueueHead))
+   {
+      current_entry = RemoveHeadList(&DpcQueueHead);
+      DpcQueueSize--;
+      current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
+      current->Lock=FALSE;
+      KeReleaseSpinLock(&DpcQueueLock, oldlvl);
+      current->DeferredRoutine(current,current->DeferredContext,
+			       current->SystemArgument1,
+			       current->SystemArgument2);
+
+      KeRaiseIrql(HIGH_LEVEL, &oldlvl);
+      KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+   }
+   KeReleaseSpinLock(&DpcQueueLock, oldlvl);
 }
 
 BOOLEAN STDCALL 
@@ -136,8 +125,8 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 {
    KIRQL oldIrql;
    
-   KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    KeRaiseIrql(HIGH_LEVEL, &oldIrql);
+   KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    if (!Dpc->Lock)
      {
 	KeReleaseSpinLock(&DpcQueueLock, oldIrql);
