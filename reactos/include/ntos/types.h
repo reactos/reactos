@@ -112,6 +112,7 @@ typedef CHAR *PCHAR;
 typedef CHAR *PCH;
 typedef void *HANDLE;
 typedef char CCHAR;
+typedef CCHAR *PCCHAR;
 
 
 #define FALSE 0
