@@ -21,6 +21,7 @@ APPS = 	calc \
 	mc \
 	notevil \
 	sysutils \
+	sysutils$(SEP)ctm \
 	sysutils$(SEP)tlist \
 	net$(SEP)finger \
 	net$(SEP)ncftp \
