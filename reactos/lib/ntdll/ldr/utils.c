@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.30 2000/08/27 22:36:45 ekohl Exp $
+/* $Id: utils.c,v 1.31 2000/08/28 21:47:34 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,8 +57,6 @@ LdrFindDll (PDLL* Dll,PUNICODE_STRING Name);
  *
  */
 
-//	    IN PCHAR Name,
-
 NTSTATUS STDCALL
 LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 	    IN ULONG LoadFlags,
@@ -66,7 +64,6 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 	    OUT PVOID *BaseAddress OPTIONAL)
 {
 	WCHAR			fqname [255] = L"\\SystemRoot\\system32\\";
-//	ANSI_STRING		AnsiString;
 	UNICODE_STRING		UnicodeString;
 	OBJECT_ATTRIBUTES	FileObjectAttributes;
 	char			BlockBuffer [1024];
@@ -114,17 +111,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 		*BaseAddress = Dll->BaseAddress;
 		return STATUS_SUCCESS;
 	}
-/*
-	RtlInitAnsiString(
-		& AnsiString,
-		fqname
-		);
-	RtlAnsiStringToUnicodeString(
-		& UnicodeString,
-		& AnsiString,
-		TRUE
-		);
-*/
+
 	RtlInitUnicodeString(&UnicodeString,
 			     fqname);
 
@@ -305,7 +292,6 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
  * NOTE
  *
  */
-//static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
 static NTSTATUS LdrFindDll(PDLL* Dll, PUNICODE_STRING Name)
 {
    PIMAGE_EXPORT_DIRECTORY	ExportDir;
@@ -727,8 +713,6 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	Status = LdrLoadDll(NULL,
 			    0,
 			    &DllName,
-//			    (PCHAR)(ImageBase
-//				    +ImportModuleDirectory->dwRVAModuleName),
 			    &BaseAddress);
 	RtlFreeUnicodeString (&DllName);
 	if (!NT_SUCCESS(Status))
@@ -954,110 +938,115 @@ LdrUnloadDll (IN PVOID BaseAddress)
 }
 
 
-static PIMAGE_RESOURCE_DIRECTORY_ENTRY
-LdrGetNextEntry(IMAGE_RESOURCE_DIRECTORY *ResourceDir, LPCWSTR ResourceName, ULONG Offset)
+NTSTATUS STDCALL
+LdrFindResource_U(PVOID BaseAddress,
+                  PLDR_RESOURCE_INFO ResourceInfo,
+                  ULONG Level,
+                  PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry)
 {
-	WORD    NumberOfNamedEntries;
-	WORD    NumberOfIdEntries;
-	WORD    Entries;
-	ULONG   Length;
+   PIMAGE_RESOURCE_DIRECTORY ResDir;
+   PIMAGE_RESOURCE_DIRECTORY ResBase;
+   PIMAGE_RESOURCE_DIRECTORY_ENTRY ResEntry;
+   NTSTATUS Status = STATUS_SUCCESS;
+   ULONG EntryCount;
+   PWCHAR ws;
+   ULONG i;
+   ULONG Id;
 
-	if ( (((ULONG)ResourceDir) & 0xF0000000) != 0 ) {
-		return (IMAGE_RESOURCE_DIRECTORY_ENTRY *)NULL;
-	}
+   DPRINT ("LdrFindResource_U()\n");
 
-	NumberOfIdEntries = ResourceDir->NumberOfIdEntries;
-	NumberOfNamedEntries = ResourceDir->NumberOfNamedEntries;
-	if ( (	NumberOfIdEntries + NumberOfNamedEntries) == 0) {
-		return &ResourceDir->DirectoryEntries[0];
-	}
+   /* Get the pointer to the resource directory */
+   ResDir = (PIMAGE_RESOURCE_DIRECTORY)
+	RtlImageDirectoryEntryToData (BaseAddress,
+				      TRUE,
+				      IMAGE_DIRECTORY_ENTRY_RESOURCE,
+				      &i);
+   if (ResDir == NULL)
+     {
+	return STATUS_RESOURCE_DATA_NOT_FOUND;
+     }
 
-	if ( HIWORD(ResourceName) != 0 ) {
-		Length = wcslen(ResourceName);
-		Entries = ResourceDir->NumberOfNamedEntries;
-		do {
-		        IMAGE_RESOURCE_DIR_STRING_U *DirString;
+   DPRINT("ResourceDirectory: %x\n", (ULONG)ResDir);
 
-			Entries--;
-			DirString =  (IMAGE_RESOURCE_DIR_STRING_U *)(((ULONG)ResourceDir->DirectoryEntries[Entries].Name &  (~0xF0000000)) + Offset);
-			
-			if ( DirString->Length == Length && wcscmp(DirString->NameString, ResourceName ) == 0 ) {
-				return  &ResourceDir->DirectoryEntries[Entries];
-			}
-		} while (Entries > 0);
-	}
-	else {
-			Entries = ResourceDir->NumberOfIdEntries + ResourceDir->NumberOfNamedEntries;
-			do {
-				Entries--;
+   ResBase = ResDir;
 
-				if ( (LPWSTR)ResourceDir->DirectoryEntries[Entries].Name == ResourceName ) {
-					return &ResourceDir->DirectoryEntries[Entries];
-				}
-			} while (Entries > ResourceDir->NumberOfNamedEntries);
-		
-	}
+   /* Let's go into resource tree */
+   for (i = 0; i < Level; i++)
+     {
+	DPRINT("ResDir: %x\n", (ULONG)ResDir);
+	Id = ((PULONG)ResourceInfo)[i];
+	EntryCount = ResDir->NumberOfNamedEntries;
+	ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1);
+	DPRINT("ResEntry %x\n", (ULONG)ResEntry);
+	if (Id & 0xFFFF0000)
+	  {
+	     /* Resource name is a unicode string */
+	     for (; EntryCount--; ResEntry++)
+	       {
+		  /* Scan entries for equal name */
+		  if (ResEntry->Name & 0x80000000)
+		    {
+		       ws = (PWCHAR)((ULONG)ResDir + (ResEntry->Name & 0x7FFFFFFF));
+		       if (!wcsncmp((PWCHAR)Id, ws + 1, *ws ) &&
+			   wcslen((PWCHAR)Id) == (int)*ws )
+			 {
+			    goto found;
+			 }
+		    }
+	       }
+	  }
+	else
+	  {
+	     /* We use ID number instead of string */
+	     ResEntry += EntryCount;
+	     EntryCount = ResDir->NumberOfIdEntries;
+	     for (; EntryCount--; ResEntry++)
+	       {
+		  /* Scan entries for equal name */
+		  if (ResEntry->Name == Id)
+		    {
+		     DPRINT("ID entry found %x\n", Id);
+		     goto found;
+		    }
+	       }
+	  }
+	DPRINT("Error %lu\n", i);
 
-	return NULL;
-}
+	  switch (i)
+	  {
+	     case 0:
+		return STATUS_RESOURCE_TYPE_NOT_FOUND;
 
+	     case 1:
+		return STATUS_RESOURCE_NAME_NOT_FOUND;
 
+	     case 2:
+		if (ResDir->NumberOfNamedEntries || ResDir->NumberOfIdEntries)
+		  {
+		     /* Use the first available language */
+		     ResEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)(ResDir + 1);
+		     break;
+		  }
+		return STATUS_RESOURCE_LANG_NOT_FOUND;
 
-NTSTATUS LdrFindResource_U(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY **ResourceDataEntry,LPCWSTR ResourceName, ULONG ResourceType,ULONG Language)
-{
-	IMAGE_RESOURCE_DIRECTORY *ResourceTypeDir;
-	IMAGE_RESOURCE_DIRECTORY *ResourceNameDir;
-	IMAGE_RESOURCE_DIRECTORY *ResourceLangDir;
+	     case 3:
+		return STATUS_RESOURCE_DATA_NOT_FOUND;
 
-	IMAGE_RESOURCE_DIRECTORY_ENTRY *ResourceTypeDirEntry;
-	IMAGE_RESOURCE_DIRECTORY_ENTRY *ResourceNameDirEntry;
-	IMAGE_RESOURCE_DIRECTORY_ENTRY *ResourceLangDirEntry;
+	     default:
+		return STATUS_INVALID_PARAMETER;
+	  }
+found:;
+	ResDir = (PIMAGE_RESOURCE_DIRECTORY)((ULONG)ResBase +
+		(ResEntry->OffsetToData & 0x7FFFFFFF));
+     }
+   DPRINT("ResourceDataEntry: %x\n", (ULONG)ResDir);
 
-	PIMAGE_OPTIONAL_HEADER	OptionalHeader;
+   if (ResourceDataEntry)
+     {
+	*ResourceDataEntry = (PVOID)ResDir;
+     }
 
-
-
-	ULONG Offset;
-		
-	OptionalHeader = & Dll->Headers->OptionalHeader;
-	ResourceTypeDir = (PIMAGE_RESOURCE_DIRECTORY)
-		OptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
-	ResourceTypeDir = (PIMAGE_RESOURCE_DIRECTORY)
-		((ULONG)ResourceTypeDir + (ULONG)Dll->BaseAddress);
-
-
-	Offset = (ULONG)ResourceTypeDir;
-
-	ResourceTypeDirEntry = LdrGetNextEntry(ResourceTypeDir, (LPWSTR)ResourceType, Offset);
-	
-	if ( ResourceTypeDirEntry != NULL ) {
-		ResourceNameDir = (IMAGE_RESOURCE_DIRECTORY*)((ResourceTypeDirEntry->OffsetToData & (~0xF0000000)) + Offset);
-
-		ResourceNameDirEntry = LdrGetNextEntry(ResourceNameDir, ResourceName, Offset);
-
-		if ( ResourceNameDirEntry != NULL ) {
-		
-			ResourceLangDir = (IMAGE_RESOURCE_DIRECTORY*)((ResourceNameDirEntry->OffsetToData & (~0xF0000000)) + Offset);
-
-			ResourceLangDirEntry = LdrGetNextEntry(ResourceLangDir, (LPWSTR)Language, Offset);
-			if ( ResourceLangDirEntry != NULL ) {
-
-				*ResourceDataEntry = (IMAGE_RESOURCE_DATA_ENTRY *)(ResourceLangDirEntry->OffsetToData +
-									(ULONG)ResourceTypeDir);
-				return STATUS_SUCCESS;
-			}
-			else {
-				return -1;
-			}
-		}	
-		else {
-				return -1;	
-		}
-			
-	}
-
-	return -1;
-
+  return Status;
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.84 2000/08/18 22:27:02 dwelch Exp $
+# $Id: makefile_rex,v 1.85 2000/08/28 21:48:31 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -234,6 +234,7 @@ OBJECTS_DBG = \
 OBJECTS_LDR = \
 	ldr/init.o \
 	ldr/loader.o \
+	ldr/resource.o \
 	ldr/rtl.o \
 	ldr/sysdll.o \
 	ldr/userldr.o

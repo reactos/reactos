@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.9 2000/08/05 18:01:53 dwelch Exp $
+/* $Id: rtl.c,v 1.10 2000/08/28 21:49:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,6 +89,66 @@ RtlImageDirectoryEntryToData (
 	}
 
 	return NULL;
+}
+
+
+PIMAGE_SECTION_HEADER
+STDCALL
+RtlImageRvaToSection (
+	PIMAGE_NT_HEADERS	NtHeader,
+	PVOID			BaseAddress,
+	ULONG			Rva
+	)
+{
+	PIMAGE_SECTION_HEADER Section;
+	ULONG Va;
+	ULONG Count;
+
+	Count = NtHeader->FileHeader.NumberOfSections;
+	Section = (PIMAGE_SECTION_HEADER)((ULONG)&NtHeader->OptionalHeader +
+	                                  NtHeader->FileHeader.SizeOfOptionalHeader);
+	while (Count)
+	{
+		Va = Section->VirtualAddress;
+		if ((Va <= Rva) &&
+		    (Rva < Va + Section->SizeOfRawData))
+			return Section;
+		Section++;
+	}
+	return NULL;
+}
+
+
+ULONG
+STDCALL
+RtlImageRvaToVa (
+	PIMAGE_NT_HEADERS	NtHeader,
+	PVOID			BaseAddress,
+	ULONG			Rva,
+	PIMAGE_SECTION_HEADER	*SectionHeader
+	)
+{
+	PIMAGE_SECTION_HEADER Section = NULL;
+
+	if (SectionHeader)
+		Section = *SectionHeader;
+
+	if (Section == NULL ||
+	    Rva < Section->VirtualAddress ||
+	    Rva >= Section->VirtualAddress + Section->SizeOfRawData)
+	{
+		Section = RtlImageRvaToSection (NtHeader, BaseAddress, Rva);
+		if (Section == NULL)
+			return 0;
+
+		if (SectionHeader)
+			*SectionHeader = Section;
+	}
+
+	return (ULONG)(BaseAddress +
+	               Rva +
+	               Section->PointerToRawData -
+	               Section->VirtualAddress);
 }
 
 

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.62 2000/08/27 22:36:24 ekohl Exp $
+; $Id: ntdll.def,v 1.63 2000/08/28 21:46:55 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -37,7 +37,7 @@ LdrDisableThreadCalloutsForDll@8
 ;LdrEnumResources
 ;LdrFindEntryForAddress
 ;LdrFindResourceDirectory_U
-LdrFindResource_U
+LdrFindResource_U@16
 LdrGetDllHandle@16
 LdrGetProcedureAddress@16
 LdrInitializeThunk@16

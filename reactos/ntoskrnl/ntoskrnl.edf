@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.73 2000/08/26 16:18:58 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.74 2000/08/28 21:48:32 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -431,10 +431,10 @@ KiDispatchInterrupt=KiDispatchInterrupt@0
 ;KiReleaseSpinLock@4
 ;KiUnexpectedInterrupt
 ;Kii386SpinOnSpinLock
-;LdrAccessResource@16
+LdrAccessResource=LdrAccessResource@16
 ;LdrEnumResources@20
 ;LdrFindResourceDirectory_U@16
-;LdrFindResource_U@16
+LdrFindResource_U=LdrFindResource_U@16
 ;LpcRequestPort@8
 ;LsaCallAuthenticationPackage
 ;LsaDeregisterLogonProcess

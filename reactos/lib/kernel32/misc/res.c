@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.6 2000/08/27 22:37:45 ekohl Exp $
+/* $Id: res.c,v 1.7 2000/08/28 21:45:43 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -101,7 +101,8 @@ FindResourceExW (
 	WORD		wLanguage
 	)
 {
-	IMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry;
+	PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry = NULL;
+	LDR_RESOURCE_INFO ResourceInfo;
 	NTSTATUS Status;
 	int i,l;
 	ULONG nType = 0, nName = 0;
@@ -112,13 +113,17 @@ FindResourceExW (
 	if ( HIWORD(lpName) != 0 )  {
 		if ( lpName[0] == L'#' ) {
 			l = lstrlenW(lpName) -1;
-		
+
 			for(i=0;i<l;i++) {
 				nName = lpName[i+1] - L'0';
 				if ( i < l - 1 )
 					nName*= 10;
 			}
-
+		}
+		else
+		{
+			SetLastErrorByStatus (STATUS_INVALID_PARAMETER);
+			return NULL;
 		}
 
 		lpName = (LPWSTR)nName;
@@ -135,16 +140,28 @@ FindResourceExW (
 			}
 		}
 		else
+		{
+			SetLastErrorByStatus (STATUS_INVALID_PARAMETER);
 			return NULL;
-	}
-	else
-		nType = (ULONG)lpType;
+		}
 
-	Status = LdrFindResource_U(hModule,&ResourceDataEntry,lpName, nType,wLanguage);
-	if ( !NT_SUCCESS(Status ) ) {
+		lpType = (LPWSTR)nType;
+	}
+
+	ResourceInfo.Type = (ULONG)lpType;
+	ResourceInfo.Name = (ULONG)lpName;
+	ResourceInfo.Language = (ULONG)wLanguage;
+
+	Status = LdrFindResource_U (hModule,
+				    &ResourceInfo,
+				    RESOURCE_DATA_LEVEL,
+				    &ResourceDataEntry);
+	if (!NT_SUCCESS(Status))
+	{
 		SetLastErrorByStatus (Status);
 		return NULL;
 	}
+
 	return ResourceDataEntry;
 }
 
