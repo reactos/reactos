@@ -34,7 +34,8 @@ VGATimer(PVOID DeviceExtension);
 */
 
 /*  Mandatory IoControl routines  */
-VOID  VGAMapVideoMemory(IN PVIDEO_MEMORY  RequestedAddress,
+VOID  VGAMapVideoMemory(IN PVOID DeviceExtension,
+			IN PVIDEO_MEMORY  RequestedAddress,
                         OUT PVIDEO_MEMORY_INFORMATION  MapInformation,
                         OUT PSTATUS_BLOCK  StatusBlock);
 VOID  VGAQueryAvailModes(OUT PVIDEO_MODE_INFORMATION  ReturnedModes,
@@ -53,7 +54,8 @@ VOID  VGASetCurrentMode(IN PVIDEO_MODE  RequestedMode,
 VOID  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
                           OUT PVIDEO_MEMORY_INFORMATION  ReturnedMemory,
                           OUT PSTATUS_BLOCK  StatusBlock);
-VOID  VGAUnmapVideoMemory(IN PVIDEO_MEMORY  MemoryToUnmap,
+VOID  VGAUnmapVideoMemory(IN PVOID DeviceExtension,
+			  IN PVIDEO_MEMORY  MemoryToUnmap,
                           OUT PSTATUS_BLOCK  StatusBlock);
 VOID  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
                             OUT PSTATUS_BLOCK  StatusBlock);
@@ -219,7 +221,8 @@ VGAStartIO(PVOID DeviceExtension,
   switch (RequestPacket->IoControlCode)
     {
     case  IOCTL_VIDEO_MAP_VIDEO_MEMORY:
-      VGAMapVideoMemory((PVIDEO_MEMORY) RequestPacket->InputBuffer,
+      VGAMapVideoMemory(DeviceExtension,
+			(PVIDEO_MEMORY) RequestPacket->InputBuffer,
                         (PVIDEO_MEMORY_INFORMATION) 
                           RequestPacket->OutputBuffer,
                         RequestPacket->StatusBlock);
@@ -261,7 +264,8 @@ VGAStartIO(PVOID DeviceExtension,
       break;
       
     case  IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
-      VGAUnmapVideoMemory((PVIDEO_MEMORY) RequestPacket->InputBuffer,
+      VGAUnmapVideoMemory(DeviceExtension,
+			  (PVIDEO_MEMORY) RequestPacket->InputBuffer,
                           RequestPacket->StatusBlock);
       break;
       
@@ -389,11 +393,34 @@ VGATimer(PVOID DeviceExtension)
 
 #endif
 
-VOID  VGAMapVideoMemory(IN PVIDEO_MEMORY  RequestedAddress,
+VOID  VGAMapVideoMemory(IN PVOID DeviceExtension,
+			IN PVIDEO_MEMORY  RequestedAddress,
                         OUT PVIDEO_MEMORY_INFORMATION  MapInformation,
                         OUT PSTATUS_BLOCK  StatusBlock)
 {
-  UNIMPLEMENTED;
+  ULONG ReturnedLength;
+  PVOID ReturnedAddress;
+  ULONG IoSpace;
+  PHYSICAL_ADDRESS FrameBufferBase;
+  ReturnedAddress = RequestedAddress->RequestedVirtualAddress;
+  ReturnedLength = 256 * 1024;
+  FrameBufferBase.QuadPart = 0xA0000;
+  IoSpace = VIDEO_MEMORY_SPACE_MEMORY;
+  StatusBlock->Status = VideoPortMapMemory(DeviceExtension,
+					   FrameBufferBase,
+					   &ReturnedLength,
+					   &IoSpace,
+					   &ReturnedAddress);
+  if (StatusBlock->Status != 0)
+    {
+      StatusBlock->Information = 0;
+      return;
+    }
+  MapInformation->VideoRamBase = MapInformation->FrameBufferBase =
+    ReturnedAddress;
+  MapInformation->VideoRamLength = MapInformation->FrameBufferLength =
+    ReturnedLength;
+  StatusBlock->Information = sizeof(VIDEO_MEMORY_INFORMATION);
 }
 
 VOID  VGAQueryAvailModes(OUT PVIDEO_MODE_INFORMATION  ReturnedModes,
@@ -474,10 +501,13 @@ VOID  VGAShareVideoMemory(IN PVIDEO_SHARE_MEMORY  RequestedMemory,
   UNIMPLEMENTED;
 }
 
-VOID  VGAUnmapVideoMemory(IN PVIDEO_MEMORY  MemoryToUnmap,
+VOID  VGAUnmapVideoMemory(IN PVOID DeviceExtension,
+			  IN PVIDEO_MEMORY  MemoryToUnmap,
                           OUT PSTATUS_BLOCK  StatusBlock)
 {
-  UNIMPLEMENTED;
+  VideoPortUnmapMemory(DeviceExtension,
+		       MemoryToUnmap->RequestedVirtualAddress,
+		       0);
 }
 
 VOID  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
