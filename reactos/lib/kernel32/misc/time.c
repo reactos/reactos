@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.28 2004/07/22 06:07:02 jimtabor Exp $
+/* $Id: time.c,v 1.29 2004/07/22 06:28:52 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -97,7 +97,7 @@ DosDateTimeToFileTime(
 		return FALSE;
 
    SystemTime.wMilliseconds = 0;
-   SystemTime.wSecond = pdtime->Second;
+   SystemTime.wSecond = pdtime->Second * 2;
    SystemTime.wMinute = pdtime->Minute;
    SystemTime.wHour = pdtime->Hour;
 
