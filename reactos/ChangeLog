@@ -1,5 +1,13 @@
 2003-04-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* Makefile (DLLS): Add epsapi, psapi and wsock32.
+	* lib/ntdll/ldr/utils.c (LdrPerformRelocations): Handle the case where a
+	relocation crosses a page boundary.
+	(LdrFixupImports): Use image load address in calculatation of import
+	address list.
+
+2003-04-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/fslib/vfatlib/vfatlib.h: New file.
 	* subsys/system/usetup/format.c: Ditto.
 	* subsys/system/usetup/format.h: Ditto.

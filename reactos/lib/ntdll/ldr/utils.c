@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.62 2003/04/26 10:05:38 gvg Exp $
+/* $Id: utils.c,v 1.63 2003/04/28 21:32:10 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -712,7 +712,7 @@ LdrGetExportByName(PVOID BaseAddress,
    ULONG ExportDirSize;
    
    DPRINT("LdrGetExportByName %x %s %hu\n", BaseAddress, SymbolName, Hint);
-   
+
    ExportDir = (PIMAGE_EXPORT_DIRECTORY)
      RtlImageDirectoryEntryToData(BaseAddress,
                                   TRUE,
@@ -861,6 +861,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   int                   i;
   PIMAGE_DATA_DIRECTORY RelocationDDir;
   ULONG OldProtect;
+  ULONG OldProtect2;
   NTSTATUS Status;
   PIMAGE_SECTION_HEADER Sections;
   ULONG MaxExtend;
@@ -918,6 +919,27 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
               DPRINT1("Failed to unprotect relocation target.\n");
               return(Status);
             }
+
+          if (RelocationDir->VirtualAddress + PAGE_SIZE < MaxExtend)
+            {
+          	  Status = NtProtectVirtualMemory(NtCurrentProcess(),
+          					  ImageBase + 
+          					  RelocationDir->VirtualAddress + PAGE_SIZE,
+          					  PAGE_SIZE,
+          					  PAGE_READWRITE,
+          					  &OldProtect2);
+          	  if (!NT_SUCCESS(Status))
+          	    {
+          	      DPRINT1("Failed to unprotect relocation target (2).\n");
+                  NtProtectVirtualMemory(NtCurrentProcess(),
+                                        ImageBase + 
+                                        RelocationDir->VirtualAddress,
+                                        PAGE_SIZE,
+                                        OldProtect,
+                                        &OldProtect);
+          	      return(Status);
+          	    }
+              }
                 
           for (i = 0; i < NumberOfEntries; i++)
             {
@@ -969,6 +991,21 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
             {
               DPRINT1("Failed to protect relocation target.\n");
               return(Status);
+            }
+
+          if (RelocationDir->VirtualAddress + PAGE_SIZE < MaxExtend)
+            {
+          	  Status = NtProtectVirtualMemory(NtCurrentProcess(),
+          					  ImageBase + 
+          					  RelocationDir->VirtualAddress + PAGE_SIZE,
+          					  PAGE_SIZE,
+          					  OldProtect2,
+          					  &OldProtect2);
+          	  if (!NT_SUCCESS(Status))
+          	    {
+          	      DPRINT1("Failed to protect relocation target2.\n");
+          	      return(Status);
+          	    }
             }
 
           RelocationRVA += RelocationDir->SizeOfBlock;
@@ -1055,7 +1092,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS       NTHeaders,
         /*
          * Get the import address list.
          */
-        ImportAddressList = (PVOID *)(NTHeaders->OptionalHeader.ImageBase
+        ImportAddressList = (PVOID *)(ImageBase
                         + ImportModuleDirectory->dwRVAFunctionAddressList);
         
         /*
