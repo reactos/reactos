@@ -225,7 +225,7 @@ void ShellDirectory::read_directory(int scan_flags)
 	TCHAR buffer[MAX_PATH];
 
 	if ((scan_flags&SCAN_FILESYSTEM) && get_path(buffer)) {
-		Entry* entry;
+		Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
 
 		LPTSTR p = buffer + _tcslen(buffer);
 
@@ -373,7 +373,7 @@ void ShellDirectory::read_directory(int scan_flags)
 												 (scan_flags&SCAN_DO_ACCESS) && !removeable);
 
 				try {
-					Entry* entry;
+					Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
 
 					if (w32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 						entry = new ShellDirectory(this, pidls[n], _hwnd);
