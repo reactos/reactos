@@ -14,7 +14,6 @@ include rules.mak
 #net$(SEP)telnet
 #net$(SEP)whois
 APPS = 	calc \
-	cmd \
 	cmdutils \
 	cmdutils$(SEP)mode \
 	dflat32 \
