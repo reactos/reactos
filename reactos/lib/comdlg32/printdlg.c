@@ -1204,6 +1204,10 @@ static LRESULT PRINTDLG_WMInitDialog(HWND hDlg, WPARAM wParam,
     PrintStructures->hLandscapeIcon =
       LoadIconA(COMDLG32_hInstance, "PD32_LANDSCAPE");
 
+    /* display the collate/no_collate icon */
+    SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                        (LPARAM)PrintStructures->hNoCollateIcon);
+
     if(PrintStructures->hCollateIcon == 0 ||
        PrintStructures->hNoCollateIcon == 0 ||
        PrintStructures->hPortraitIcon == 0 ||
@@ -1307,6 +1311,10 @@ static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg, WPARAM wParam,
       LoadIconA(COMDLG32_hInstance, "PD32_PORTRAIT");
     PrintStructures->hLandscapeIcon =
       LoadIconA(COMDLG32_hInstance, "PD32_LANDSCAPE");
+
+    /* display the collate/no_collate icon */
+    SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                        (LPARAM)PrintStructures->hNoCollateIcon);
 
     if(PrintStructures->hCollateIcon == 0 ||
        PrintStructures->hNoCollateIcon == 0 ||
@@ -1622,20 +1630,9 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
         if(HIWORD(wParam) == EN_CHANGE) {
 	    INT copies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
 	    if(copies <= 1)
-            {
-                CheckDlgButton(hDlg, chx2, BST_UNCHECKED);
-                SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, 
-				    (WPARAM) IMAGE_ICON, 0);
 	        EnableWindow(GetDlgItem(hDlg, chx2), FALSE);
-            }
 	    else
-            {
                 EnableWindow(GetDlgItem(hDlg, chx2), TRUE);
-                
-                SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, 
-                                    (WPARAM) IMAGE_ICON,
-                                    (LPARAM)PrintStructures->hNoCollateIcon);
-             }
         }
         break;
 

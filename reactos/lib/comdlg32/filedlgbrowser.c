@@ -45,9 +45,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 typedef struct
 {
 
-    ICOM_VTABLE(IShellBrowser)   * lpVtbl;
-    ICOM_VTABLE(ICommDlgBrowser) * lpVtblCommDlgBrowser;
-    ICOM_VTABLE(IServiceProvider)* lpVtblServiceProvider;
+    IShellBrowserVtbl   * lpVtbl;
+    ICommDlgBrowserVtbl * lpVtblCommDlgBrowser;
+    IServiceProviderVtbl* lpVtblServiceProvider;
     DWORD ref;                                  /* Reference counter */
     HWND hwndOwner;                             /* Owner dialog of the interface */
 
@@ -56,9 +56,9 @@ typedef struct
 /**************************************************************************
 *   vtable
 */
-static ICOM_VTABLE(IShellBrowser) IShellBrowserImpl_Vtbl;
-static ICOM_VTABLE(ICommDlgBrowser) IShellBrowserImpl_ICommDlgBrowser_Vtbl;
-static ICOM_VTABLE(IServiceProvider) IShellBrowserImpl_IServiceProvider_Vtbl;
+static IShellBrowserVtbl IShellBrowserImpl_Vtbl;
+static ICommDlgBrowserVtbl IShellBrowserImpl_ICommDlgBrowser_Vtbl;
+static IServiceProviderVtbl IShellBrowserImpl_IServiceProvider_Vtbl;
 
 /**************************************************************************
 *   Local Prototypes
@@ -630,7 +630,7 @@ HRESULT WINAPI IShellBrowserImpl_TranslateAcceleratorSB(IShellBrowser *iface,
     return E_NOTIMPL;
 }
 
-static ICOM_VTABLE(IShellBrowser) IShellBrowserImpl_Vtbl =
+static IShellBrowserVtbl IShellBrowserImpl_Vtbl =
 {
         ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
         /* IUnknown */
@@ -855,7 +855,7 @@ HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *iface, IS
     return S_OK;
 }
 
-static ICOM_VTABLE(ICommDlgBrowser) IShellBrowserImpl_ICommDlgBrowser_Vtbl =
+static ICommDlgBrowserVtbl IShellBrowserImpl_ICommDlgBrowser_Vtbl =
 {
         ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
         /* IUnknown */
@@ -945,7 +945,7 @@ HRESULT WINAPI IShellBrowserImpl_IServiceProvider_QueryService(
 
 }
 
-static ICOM_VTABLE(IServiceProvider) IShellBrowserImpl_IServiceProvider_Vtbl =
+static IServiceProviderVtbl IShellBrowserImpl_IServiceProvider_Vtbl =
 {
         ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
         /* IUnknown */

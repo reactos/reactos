@@ -163,6 +163,59 @@ void _dump_cf_flags(DWORD cflags)
 }
 
 /***********************************************************************
+ *           ChooseFontW   (COMDLG32.@)
+ */
+BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
+{
+    LPCVOID template;
+    HRSRC hResInfo;
+    HINSTANCE hDlginst;
+    HGLOBAL hDlgTmpl;
+    
+    static const WCHAR chooseFontW[] = {'C','H','O','O','S','E','_',
+                                        'F','O','N','T',0};
+
+    if ( (lpChFont->Flags&CF_ENABLETEMPLATEHANDLE)!=0 )
+    {
+        template=(LPCVOID)lpChFont->hInstance;
+    } else
+    {
+        if ( (lpChFont->Flags&CF_ENABLETEMPLATE)!=0 )
+        {
+            hDlginst=lpChFont->hInstance;
+            if( !(hResInfo = FindResourceW(hDlginst, lpChFont->lpTemplateName,
+                            (LPWSTR)RT_DIALOG)))
+            {
+                COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
+                return FALSE;
+            }
+        } else
+        {
+            hDlginst=COMDLG32_hInstance;
+            if (!(hResInfo = FindResourceW(hDlginst, chooseFontW, (LPWSTR)RT_DIALOG)))
+            {
+                COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
+                return FALSE;
+            }
+        }
+        if (!(hDlgTmpl = LoadResource(hDlginst, hResInfo )) ||
+                !(template = LockResource( hDlgTmpl )))
+        {
+            COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
+            return FALSE;
+        }
+    }
+    if (TRACE_ON(commdlg))
+        _dump_cf_flags(lpChFont->Flags);
+
+    if (lpChFont->Flags & (CF_SELECTSCRIPT | CF_NOVERTFONTS ))
+        FIXME(": unimplemented flag (ignored)\n");
+
+    return DialogBoxIndirectParamW(COMDLG32_hInstance, template,
+            lpChFont->hwndOwner, FormatCharDlgProcW, (LPARAM)lpChFont );
+}
+
+/***********************************************************************
  *           ChooseFontA   (COMDLG32.@)
  */
 BOOL WINAPI ChooseFontA(LPCHOOSEFONTA lpChFont)
@@ -212,165 +265,6 @@ BOOL WINAPI ChooseFontA(LPCHOOSEFONTA lpChFont)
             lpChFont->hwndOwner, FormatCharDlgProcA, (LPARAM)lpChFont );
 }
 
-/***********************************************************************
- *           ChooseFontW   (COMDLG32.@)
- *
- *  NOTES:
- *
- *      The LOGFONT conversion functions will break if the structure ever
- *      grows beyond the lfFaceName element.
- *
- *      The CHOOSEFONT conversion functions assume that both versions of
- *      lpLogFont and lpszStyle (if used) point to pre-allocated objects.
- *
- *      The ASCII version of lpTemplateName is created by ChooseFontAtoW
- *      and freed by ChooseFontWtoA.
- */
-inline static VOID LogFontWtoA(const LOGFONTW *lfw, LOGFONTA *lfa)
-{
-    memcpy(lfa, lfw, sizeof(LOGFONTA));
-    WideCharToMultiByte(CP_ACP, 0, lfw->lfFaceName, -1, lfa->lfFaceName,
-                        LF_FACESIZE, NULL, NULL);
-    lfa->lfFaceName[LF_FACESIZE - 1] = '\0';
-}
-
-inline static VOID LogFontAtoW(const LOGFONTA *lfa, LOGFONTW *lfw)
-{
-    memcpy(lfw, lfa, sizeof(LOGFONTA));
-    MultiByteToWideChar(CP_ACP, 0, lfa->lfFaceName, -1, lfw->lfFaceName,
-                        LF_FACESIZE);
-    lfw->lfFaceName[LF_FACESIZE - 1] = 0;
-}
-
-static BOOL ChooseFontWtoA(const CHOOSEFONTW *cfw, CHOOSEFONTA *cfa)
-{
-    LOGFONTA    *lpLogFont = cfa->lpLogFont;
-    LPSTR       lpszStyle = cfa->lpszStyle;
-
-    memcpy(cfa, cfw, sizeof(CHOOSEFONTA));
-    cfa->lpLogFont = lpLogFont;
-    cfa->lpszStyle = lpszStyle;
-
-    LogFontWtoA(cfw->lpLogFont, lpLogFont);
-
-    if ((cfw->Flags&CF_ENABLETEMPLATE)!=0 && HIWORD(cfw->lpTemplateName)!=0)
-    {
-        cfa->lpTemplateName = HEAP_strdupWtoA(GetProcessHeap(), 0,
-                cfw->lpTemplateName);
-        if (cfa->lpTemplateName == NULL)
-            return FALSE;
-    }
-
-    if ((cfw->Flags & CF_USESTYLE) != 0 && cfw->lpszStyle != NULL)
-    {
-        WideCharToMultiByte(CP_ACP, 0, cfw->lpszStyle, -1, cfa->lpszStyle,
-                LF_FACESIZE, NULL, NULL);
-        cfa->lpszStyle[LF_FACESIZE - 1] = '\0';
-    }
-
-    return TRUE;
-}
-
-static VOID ChooseFontAtoW(const CHOOSEFONTA *cfa, CHOOSEFONTW *cfw)
-{
-    LOGFONTW    *lpLogFont = cfw->lpLogFont;
-    LPWSTR      lpszStyle = cfw->lpszStyle;
-    LPCWSTR     lpTemplateName = cfw->lpTemplateName;
-
-    memcpy(cfw, cfa, sizeof(CHOOSEFONTA));
-    cfw->lpLogFont = lpLogFont;
-    cfw->lpszStyle = lpszStyle;
-    cfw->lpTemplateName = lpTemplateName;
-
-    LogFontAtoW(cfa->lpLogFont, lpLogFont);
-
-    if ((cfa->Flags&CF_ENABLETEMPLATE)!=0 && HIWORD(cfa->lpTemplateName) != 0)
-        HeapFree(GetProcessHeap(), 0, (LPSTR)(cfa->lpTemplateName));
-
-    if ((cfa->Flags & CF_USESTYLE) != 0 && cfa->lpszStyle != NULL)
-    {
-        MultiByteToWideChar(CP_ACP, 0, cfa->lpszStyle, -1, cfw->lpszStyle,
-                LF_FACESIZE);
-        cfw->lpszStyle[LF_FACESIZE - 1] = 0;
-    }
-}
-
-BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
-{
-    CHOOSEFONTA     cf_a;
-    LOGFONTA        lf_a;
-    CHAR            style_a[LF_FACESIZE];
-
-    cf_a.lpLogFont = &lf_a;
-    cf_a.lpszStyle = style_a;
-
-    if (ChooseFontWtoA(lpChFont, &cf_a) == FALSE)
-    {
-        COMDLG32_SetCommDlgExtendedError(CDERR_MEMALLOCFAILURE);
-        return FALSE;
-    }
-
-    if (ChooseFontA(&cf_a) == FALSE)
-    {
-        if (cf_a.lpTemplateName != NULL)
-            HeapFree(GetProcessHeap(), 0, (LPSTR)(cf_a.lpTemplateName));
-        return FALSE;
-    }
-
-    ChooseFontAtoW(&cf_a, lpChFont);
-
-    return TRUE;
-}
-
-#if 0
-/***********************************************************************
- *           ChooseFontW   (COMDLG32.@)
- */
-BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
-{
-    BOOL bRet=FALSE;
-    CHOOSEFONTA cf32a;
-    LOGFONTA lf32a;
-    LPCVOID template;
-    HANDLE hResInfo, hDlgTmpl;
-
-    if (TRACE_ON(commdlg))
-        _dump_cf_flags(lpChFont->Flags);
-
-    if (!(hResInfo = FindResourceA(COMDLG32_hInstance, "CHOOSE_FONT", (LPSTR)RT_DIALOG)))
-    {
-        COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
-        return FALSE;
-    }
-    if (!(hDlgTmpl = LoadResource(COMDLG32_hInstance, hResInfo )) ||
-            !(template = LockResource( hDlgTmpl )))
-    {
-        COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
-        return FALSE;
-    }
-
-    if (lpChFont->Flags & (CF_SELECTSCRIPT | CF_NOVERTFONTS | CF_ENABLETEMPLATE |
-                CF_ENABLETEMPLATEHANDLE)) FIXME(": unimplemented flag (ignored)\n");
-    memcpy(&cf32a, lpChFont, sizeof(cf32a));
-    memcpy(&lf32a, lpChFont->lpLogFont, sizeof(LOGFONTA));
-
-    WideCharToMultiByte( CP_ACP, 0, lpChFont->lpLogFont->lfFaceName, -1,
-            lf32a.lfFaceName, LF_FACESIZE, NULL, NULL );
-    lf32a.lfFaceName[LF_FACESIZE-1] = 0;
-    cf32a.lpLogFont=&lf32a;
-    cf32a.lpszStyle=HEAP_strdupWtoA(GetProcessHeap(), 0, lpChFont->lpszStyle);
-    lpChFont->lpTemplateName=(LPWSTR)&cf32a;
-    bRet = DialogBoxIndirectParamW(COMDLG32_hInstance, template,
-            lpChFont->hwndOwner, FormatCharDlgProcW, (LPARAM)lpChFont );
-    HeapFree(GetProcessHeap(), 0, cf32a.lpszStyle);
-    lpChFont->lpTemplateName=(LPWSTR)cf32a.lpTemplateName;
-    memcpy(lpChFont->lpLogFont, &lf32a, sizeof(CHOOSEFONTA));
-    MultiByteToWideChar( CP_ACP, 0, lf32a.lfFaceName, -1,
-            lpChFont->lpLogFont->lfFaceName, LF_FACESIZE );
-    lpChFont->lpLogFont->lfFaceName[LF_FACESIZE-1] = 0;
-    return bRet;
-}
-#endif
 
 #define TEXT_EXTRAS 4
 #define TEXT_COLORS 16
@@ -1235,7 +1129,6 @@ INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
         LPARAM lParam)
 {
     LPCHOOSEFONTW lpcf32w;
-    LPCHOOSEFONTA lpcf32a;
     INT_PTR res = FALSE;
     if (uMsg!=WM_INITDIALOG)
     {
@@ -1250,8 +1143,7 @@ INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
     else
     {
         lpcf32w=(LPCHOOSEFONTW)lParam;
-        lpcf32a=(LPCHOOSEFONTA)lpcf32w->lpTemplateName;
-        if (!CFn_WMInitDialog(hDlg, wParam, lParam, lpcf32a))
+        if (!CFn_WMInitDialog(hDlg, wParam, lParam, (LPCHOOSEFONTA)lpcf32w))
         {
             TRACE("CFn_WMInitDialog returned FALSE\n");
             return FALSE;
@@ -1259,7 +1151,6 @@ INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
         if (CFn_HookCallChk32((LPCHOOSEFONTA)lpcf32w))
             return CallWindowProcW((WNDPROC)lpcf32w->lpfnHook,hDlg,WM_INITDIALOG,wParam,lParam);
     }
-    lpcf32a=(LPCHOOSEFONTA)lpcf32w->lpTemplateName;
     switch (uMsg)
     {
     case WM_MEASUREITEM:
@@ -1267,7 +1158,7 @@ INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
     case WM_DRAWITEM:
         return CFn_WMDrawItem(hDlg, wParam, lParam);
     case WM_COMMAND:
-        return CFn_WMCommand(hDlg, wParam, lParam, lpcf32a);
+        return CFn_WMCommand(hDlg, wParam, lParam, (LPCHOOSEFONTW)lpcf32w);
     case WM_DESTROY:
         return CFn_WMDestroy(hDlg, wParam, lParam);
     case WM_CHOOSEFONT_GETLOGFONT:

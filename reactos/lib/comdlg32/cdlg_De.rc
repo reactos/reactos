@@ -1,5 +1,6 @@
 /*
  * Copyright 1994 Martin von Loewis
+ * Copyright 2004 Henning Gerhardt
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -282,7 +283,7 @@ FONT 8, "Helv"
     PUSHBUTTON      "&Hilfe",         pshHelp,  50, 161, 48,14, WS_GROUP
 
     GROUPBOX        "Drucker",        grp4,   8,  4, 272,84, WS_GROUP
-    CONTROL         "In Fi&le drucken", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
+    CONTROL         "In Da&tei drucken", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
     PUSHBUTTON      "&Eigenschaften", psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Name:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
@@ -355,7 +356,7 @@ STRINGTABLE DISCARDABLE
     IDS_PATH                "System Ordner"
     IDS_DESKTOP             "Desktop"
     IDS_FONTS               "Schriftarten"
-    IDS_MYCOMPUTER          "Mein Computer"
+    IDS_MYCOMPUTER          "Arbeitsplatz"
 }
 
 STRINGTABLE DISCARDABLE
@@ -432,4 +433,24 @@ Bitte geben sie einen Wert zwischen %d und %d an."
     PD32_PRINTER_STATUS_DOOR_OPEN         "Druckergehäuse ist offen; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Druckserver unbekannt; "
     PD32_PRINTER_STATUS_POWER_SAVE        "Stromsparmodus; "
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+   IDS_COLOR_BLACK	"Schwarz"
+   IDS_COLOR_MAROON	"Kastanienbraun"
+   IDS_COLOR_GREEN	"Grün"
+   IDS_COLOR_OLIVE	"Olivgrün"
+   IDS_COLOR_NAVY	"Dunkelblau"
+   IDS_COLOR_PURPLE	"Violett"
+   IDS_COLOR_TEAL	"Teal"
+   IDS_COLOR_GRAY	"Grau"
+   IDS_COLOR_SILVER	"Silber"
+   IDS_COLOR_RED	"Rot"
+   IDS_COLOR_LIME	"Hellgrün"
+   IDS_COLOR_YELLOW	"Gelb"
+   IDS_COLOR_BLUE	"Blau"
+   IDS_COLOR_FUCHSIA	"Lila"
+   IDS_COLOR_AQUA	"Aqua"
+   IDS_COLOR_WHITE	"Weiß"
 }

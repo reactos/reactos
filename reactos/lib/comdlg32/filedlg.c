@@ -781,27 +781,37 @@ HRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode)
 
     if(!fodInfos) return 0;
 
-    if(fodInfos->unicode)
-      FIXME("sending OPENFILENAMEA structure. Hook is expecting OPENFILENAMEW!\n");
-
     if(fodInfos->DlgInfos.hwndCustomDlg)
     {
-        OFNOTIFYA ofnNotify;
 	HRESULT ret;
-        ofnNotify.hdr.hwndFrom=hwndParentDlg;
-        ofnNotify.hdr.idFrom=0;
-        ofnNotify.hdr.code = uCode;
-        ofnNotify.lpOFN = fodInfos->ofnInfos;
-        ofnNotify.pszFile = NULL;
 	TRACE("CALL NOTIFY for %x\n", uCode);
-	ret = SendMessageA(fodInfos->DlgInfos.hwndCustomDlg,WM_NOTIFY,0,(LPARAM)&ofnNotify);
+        if(fodInfos->unicode)
+        {
+            OFNOTIFYW ofnNotify;
+            ofnNotify.hdr.hwndFrom=hwndParentDlg;
+            ofnNotify.hdr.idFrom=0;
+            ofnNotify.hdr.code = uCode;
+            ofnNotify.lpOFN = (LPOPENFILENAMEW) fodInfos->ofnInfos;
+            ofnNotify.pszFile = NULL;
+	    ret = SendMessageW(fodInfos->DlgInfos.hwndCustomDlg,WM_NOTIFY,0,(LPARAM)&ofnNotify);
+        }
+        else
+        {
+            OFNOTIFYA ofnNotify;
+            ofnNotify.hdr.hwndFrom=hwndParentDlg;
+            ofnNotify.hdr.idFrom=0;
+            ofnNotify.hdr.code = uCode;
+            ofnNotify.lpOFN = fodInfos->ofnInfos;
+            ofnNotify.pszFile = NULL;
+	    ret = SendMessageA(fodInfos->DlgInfos.hwndCustomDlg,WM_NOTIFY,0,(LPARAM)&ofnNotify);
+        }
 	TRACE("RET NOTIFY\n");
 	return ret;
     }
     return TRUE;
 }
 
-HRESULT FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPSTR buffer)
+HRESULT FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID buffer)
 {
     UINT sizeUsed = 0, n, total;
     LPWSTR lpstrFileList = NULL;
@@ -820,38 +830,71 @@ HRESULT FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPSTR buffer)
     TRACE("path >%s< filespec >%s< %d files\n",
          debugstr_w(lpstrCurrentDir),debugstr_w(lpstrFileList),n);
 
-    total = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1, 
-                                NULL, 0, NULL, NULL);
-    total += WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, 
-                                NULL, 0, NULL, NULL);
-
-    /* Prepend the current path */
-    n = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1, 
-                            buffer, size, NULL, NULL);
-
-    if(n<size)
+    if( fodInfos->unicode )
     {
-        /* 'n' includes trailing \0 */
-        buffer[n-1] = '\\';
-        WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, 
-                            &buffer[n], size-n, NULL, NULL);
+        LPWSTR bufW = buffer;
+        total = strlenW(lpstrCurrentDir) + 1 + sizeUsed;
+
+        /* Prepend the current path */
+        n = strlenW(lpstrCurrentDir) + 1;
+        strncpyW( bufW, lpstrCurrentDir, size );
+        if(n<size)
+        {
+            /* 'n' includes trailing \0 */
+            bufW[n-1] = '\\';
+            memcpy( &bufW[n], lpstrFileList, (size-n)*sizeof(WCHAR) );
+        }
+        TRACE("returned -> %s\n",debugstr_wn(bufW, total));
+    }
+    else
+    {
+        LPSTR bufA = buffer;
+        total = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1, 
+                                    NULL, 0, NULL, NULL);
+        total += WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, 
+                                    NULL, 0, NULL, NULL);
+
+        /* Prepend the current path */
+        n = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1, 
+                                bufA, size, NULL, NULL);
+
+        if(n<size)
+        {
+            /* 'n' includes trailing \0 */
+            bufA[n-1] = '\\';
+            WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, 
+                                &bufA[n], size-n, NULL, NULL);
+        }
+
+        TRACE("returned -> %s\n",debugstr_an(bufA, total));
     }
     MemFree(lpstrFileList);
-
-    TRACE("returned -> %s\n",debugstr_a(buffer));
 
     return total;
 }
 
-HRESULT FILEDLG95_Handle_GetFileSpec(HWND hwnd, DWORD size, LPSTR buffer)
+HRESULT FILEDLG95_Handle_GetFileSpec(HWND hwnd, DWORD size, LPVOID buffer)
 {
     UINT sizeUsed = 0;
     LPWSTR lpstrFileList = NULL;
+    FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
 
     TRACE("CDM_GETSPEC:\n");
 
     FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed);
-    WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, buffer, size, NULL, NULL);
+    if( fodInfos->unicode )
+    {
+        LPWSTR bufW = buffer;
+        memcpy( bufW, lpstrFileList, sizeof(WCHAR)*sizeUsed );
+    }
+    else
+    {
+        LPSTR bufA = buffer;
+        sizeUsed = WideCharToMultiByte( CP_ACP, 0, lpstrFileList, sizeUsed,
+                                        NULL, 0, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed,
+                            bufA, size, NULL, NULL);
+    }
     MemFree(lpstrFileList);
 
     return sizeUsed;
@@ -864,29 +907,45 @@ HRESULT FILEDLG95_Handle_GetFileSpec(HWND hwnd, DWORD size, LPSTR buffer)
 */
 HRESULT FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    char lpstrPath[MAX_PATH];
     FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
     if(!fodInfos) return -1;
 
     switch(uMsg)
     {
         case CDM_GETFILEPATH:
-            return FILEDLG95_Handle_GetFilePath(hwnd, (UINT)wParam, (LPSTR)lParam);
+            return FILEDLG95_Handle_GetFilePath(hwnd, (UINT)wParam, (LPVOID)lParam);
 
         case CDM_GETFOLDERPATH:
             TRACE("CDM_GETFOLDERPATH:\n");
-	    SHGetPathFromIDListA(fodInfos->ShellInfos.pidlAbsCurrent,lpstrPath);
-            if ((LPSTR)lParam!=NULL)
-                lstrcpynA((LPSTR)lParam,lpstrPath,(int)wParam);
-            return strlen(lpstrPath);
+            if( fodInfos->unicode )
+            {
+                WCHAR lpstrPath[MAX_PATH], *bufW = (LPWSTR)lParam;
+	        SHGetPathFromIDListW(fodInfos->ShellInfos.pidlAbsCurrent,lpstrPath);
+                if (bufW)
+                    lstrcpynW(bufW,lpstrPath,(int)wParam);
+                return strlenW(lpstrPath);
+            }
+            else
+            {
+                char lpstrPath[MAX_PATH], *bufA = (LPSTR)lParam;
+	        SHGetPathFromIDListA(fodInfos->ShellInfos.pidlAbsCurrent,lpstrPath);
+                if (bufA)
+                    lstrcpynA(bufA,lpstrPath,(int)wParam);
+                return strlen(lpstrPath);
+            }
 
         case CDM_GETSPEC:
             return FILEDLG95_Handle_GetFileSpec(hwnd, (UINT)wParam, (LPSTR)lParam);
 
         case CDM_SETCONTROLTEXT:
             TRACE("CDM_SETCONTROLTEXT:\n");
-	    if ( 0 != lParam )
-	        SetDlgItemTextA( hwnd, (UINT) wParam, (LPSTR) lParam );
+	    if ( lParam )
+            {
+                if( fodInfos->unicode )
+	            SetDlgItemTextW( hwnd, (UINT) wParam, (LPWSTR) lParam );
+                else
+	            SetDlgItemTextA( hwnd, (UINT) wParam, (LPSTR) lParam );
+            }
 	    return TRUE;
 
         case CDM_HIDECONTROL:
