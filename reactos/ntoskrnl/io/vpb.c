@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.16 2002/04/20 03:46:40 phreak Exp $
+/* $Id: vpb.c,v 1.17 2002/04/27 19:23:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -110,7 +110,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_ATTRIBUTES,
-				      NULL,
+				      IoFileObjectType,
 				      UserMode,
 				      (PVOID*)&FileObject,
 				      NULL);
@@ -181,7 +181,6 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
        *IoStatusBlock = IoSB;
      }
    ExFreePool(SystemBuffer);
-   ObDereferenceObject(FileObject);
    
    return(Status);
 }
@@ -257,7 +256,6 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
      {
 	*ReturnedLength = IoStatusBlock.Information;
      }
-   ObDereferenceObject(FileObject);
    
    return(Status);
 }
