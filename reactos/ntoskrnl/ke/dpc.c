@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.47 2004/11/21 10:48:33 hbirr Exp $
+/* $Id: dpc.c,v 1.48 2004/11/21 18:13:47 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -203,6 +203,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
 		Pcr = KeGetCurrentKPCR();
 		Dpc->Number = KeGetCurrentProcessorNumber();
 	}
+	KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 #else
 	Pcr = (PKPCR)KPCR_BASE;
 #endif
@@ -210,6 +211,9 @@ KeInsertQueueDpc (PKDPC	Dpc,
 	/* Get the DPC Data */
 	if (InterlockedCompareExchange((LONG*)&Dpc->DpcData, (LONG)&Pcr->PrcbData.DpcData[0].DpcLock, 0)) {
 		DPRINT("DPC Already Inserted");
+#ifdef MP
+		KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+#endif
 		KeLowerIrql(OldIrql);
 		return(FALSE);
 	}
@@ -245,9 +249,13 @@ KeInsertQueueDpc (PKDPC	Dpc,
 			if ((Dpc->Importance == HighImportance) ||
 			    (Pcr->PrcbData.DpcData[0].DpcQueueDepth >= Pcr->PrcbData.MaximumDpcQueueDepth)) {
                 	
+#if 0
+				KiIpiSendRequest(1 << Dpc->Number, IPI_REQUEST_DPC);
+#else
 				/* FIXME: USE IPI */
 				Pcr->PrcbData.DpcInterruptRequested = TRUE;
 				HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+#endif				
 			}
 		} else {
 			/* Request an Interrupt only if the DPC isn't low priority */
@@ -274,6 +282,9 @@ KeInsertQueueDpc (PKDPC	Dpc,
 		}
 #endif
 	}
+#ifdef MP
+	KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+#endif
 	/* Lower IRQL */	
 	KeLowerIrql(OldIrql);
 	return(TRUE);
@@ -299,7 +310,10 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 	
 	/* Raise IRQL */
 	DPRINT("Removing DPC: %x\n", Dpc);
-	KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+	KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+#ifdef MP
+	KiAcquireSpinLock(&((PKDPC_DATA)Dpc->DpcData)->DpcLock);
+#endif
 	
 	/* First make sure the DPC lock isn't being held */
 	WasInQueue = Dpc->DpcData ? TRUE : FALSE;
@@ -310,6 +324,9 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 		RemoveEntryList(&Dpc->DpcListEntry);
 
 	}
+#ifdef MP
+        KiReleaseSpinLock(&((PKDPC_DATA)Dpc->DpcData)->DpcLock);
+#endif
 
 	/* Return if the DPC was in the queue or not */
 	KeLowerIrql(OldIrql);
@@ -475,7 +492,6 @@ KiDispatchInterrupt(VOID)
 
 	/* Set DPC Deliver to Active */
 	Pcr = KeGetCurrentKPCR();
-	Pcr->PrcbData.DpcRoutineActive = TRUE;
 
 	if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0) {
 		/* Raise IRQL */
@@ -483,6 +499,7 @@ KiDispatchInterrupt(VOID)
 #ifdef MP		
 		KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 #endif
+	        Pcr->PrcbData.DpcRoutineActive = TRUE;
 
 		DPRINT("&Pcr->PrcbData.DpcData[0].DpcListHead: %x\n", &Pcr->PrcbData.DpcData[0].DpcListHead);
 		/* Loop while we have entries */
@@ -507,29 +524,29 @@ KiDispatchInterrupt(VOID)
 					     Dpc->SystemArgument1,
 					     Dpc->SystemArgument2);
 			KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-#ifdef MP
-			KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-#endif
 			
 #ifdef MP
+			KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 			/* 
-			* If the dpc routine drops the irql below DISPATCH_LEVEL,
-			* a thread switch can occur and after the next thread switch 
-			* the execution may start on an other processor.
-			*/
+			 * If the dpc routine drops the irql below DISPATCH_LEVEL,
+			 * a thread switch can occur and after the next thread switch 
+			 * the execution may start on an other processor.
+			 */
 			if (Pcr != KeGetCurrentKPCR()) {
+		                Pcr->PrcbData.DpcRoutineActive = FALSE;
 				KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 				Pcr = KeGetCurrentKPCR();
 				KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+				Pcr->PrcbData.DpcRoutineActive = TRUE;
 			}
 #endif
 		}
-#ifdef MP
-			KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-#endif
 		/* Clear DPC Flags */
 		Pcr->PrcbData.DpcRoutineActive = FALSE;
 		Pcr->PrcbData.DpcInterruptRequested = FALSE;
+#ifdef MP
+		KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+#endif
 		
 		/* DPC Dispatching Ended, re-enable interrupts */
 		KeLowerIrql(OldIrql);
