@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2001/12/15 11:04:26 ea Exp $
+# $Id: Makefile,v 1.2 2002/04/07 14:21:13 ea Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -31,17 +31,17 @@ all: $(MODULES)
 
 # --- CORE ---
 
-$(TARGET_FOLDER_LIB)/psxdll.a: $(PATH_TO_TOP)/subsys/psx/lib/psxdll/misc/psxdll.def
+$(TARGET_FOLDER_LIB)/psxdll.a: $(PATH_TO_TOP)/subsys/psx/lib/psxdll/psxdll.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D psxdll.dll\
-		-d $(PATH_TO_TOP)/subsys/psx/lib/psxdll/misc/psxdll.def
+		-d $<
 	
 $(TARGET_FOLDER_LIB)/psxx.a: $(PATH_TO_TOP)/subsys/psx/lib/psxx/misc/psxx.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D psxx.dll\
-		-d $(PATH_TO_TOP)/subsys/psx/lib/psxx/misc/psxx.def
+		-d $<
 
 # --- Service rules ---
 
