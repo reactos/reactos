@@ -18,6 +18,8 @@ TARGET_SDKLIBS = \
 	user32.a \
 	gdi32.a
 
+TARGET_GCCLIBS = comctl32
+
 TARGET_OBJECTS = \
 	txtscale.o \
 	mk_font.o
