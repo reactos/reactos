@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.12 2003/10/18 21:29:26 mf Exp $
+/* $Id: keyboard.c,v 1.13 2003/10/18 21:48:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -590,19 +590,16 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
       RtlFreeUnicodeString(&FullLayoutPath);
     }
 
-    if( !kbModule ) {
-      DbgPrint("Trying to load GER Keyboard Layout\n");
-      kbModule = EngLoadImage(L"\\SystemRoot\\system32\\kbdgr.dll");
-
-      if( !kbModule ) {
-        DbgPrint("Trying to load US Keyboard Layout\n");
-	kbModule = EngLoadImage(L"\\SystemRoot\\system32\\kbdus.dll");
-
-        if (!kbModule) {
-	  DbgPrint("Failed to load any Keyboard Layout\n");
-	  return;
-	}
-      }
+    if( !kbModule )
+    {
+      DbgPrint("Trying to load US Keyboard Layout\n");
+      kbModule = EngLoadImage(L"\\SystemRoot\\system32\\kbdus.dll");
+      
+      if (!kbModule)
+      {
+        DbgPrint("Failed to load any Keyboard Layout\n");
+        return;
+	    }
     }
 
     RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
