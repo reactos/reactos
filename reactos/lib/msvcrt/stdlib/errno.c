@@ -1,4 +1,4 @@
-/* $Id: errno.c,v 1.12 2003/12/24 23:20:08 sedwards Exp $
+/* $Id: errno.c,v 1.13 2004/01/11 10:58:45 hbirr Exp $
  *
  */
 #ifdef __USE_W32API
@@ -69,7 +69,7 @@ void _dosmaperr(unsigned long oserror)
 		if (doserrmap[pos].winerr == oserror) {
 			__set_errno(doserrmap[pos].en);
 			return;
-		} else if (doserrmap[pos].winerr > oserror) {
+		} else if (doserrmap[pos].winerr < oserror) {
 			base = pos + 1;
 			--lim;
 		}
