@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.127 2002/06/20 21:31:01 ekohl Exp $
+/* $Id: main.c,v 1.128 2002/06/27 17:47:55 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -477,6 +477,7 @@ ExpInitializeExecutive(VOID)
   ULONG length;
   PCHAR name;
   CHAR str[50];
+  NTSTATUS Status;
 
   /*
    * Fail at runtime if someone has changed various structures without
@@ -712,7 +713,9 @@ ExpInitializeExecutive(VOID)
 
   /* Create the SystemRoot symbolic link */
   CPRINT("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
-  IoCreateSystemRootLink((PUCHAR)KeLoaderBlock.CommandLine);
+  Status = IoCreateSystemRootLink((PUCHAR)KeLoaderBlock.CommandLine);
+  if (!NT_SUCCESS(Status))
+    KeBugCheck(INACCESSIBLE_BOOT_DEVICE);
 
 #ifdef DBGPRINT_FILE_LOG
   /* On the assumption that we can now access disks start up the debug
