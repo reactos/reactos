@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 ntoskrnl/ke/x86/thread.c
- * PURPOSE:              HAL multitasking functions
+ * FILE:                 ntoskrnl/ke/i386/thread.c
+ * PURPOSE:              Architecture multitasking functions
  * PROGRAMMER:           David Welch (welch@cwcom.net)
  * REVISION HISTORY:
  *             27/06/98: Created
@@ -24,9 +24,6 @@
 /* GLOBALS ***************************************************************/
 
 static char KiNullLdt[8] = {0,};
-static PETHREAD FirstThread = NULL;
-
-extern ULONG KeSetBaseGdtSelector(ULONG Entry, PVOID Base);
 
 KTSS KiTss;
 
@@ -88,8 +85,6 @@ KeValidateUserContext(PCONTEXT Context)
    return(STATUS_SUCCESS);
 }
 
-
-
 NTSTATUS
 Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
 {
@@ -107,8 +102,8 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   KernelStack[2] = 0;      /* EBX */
   KernelStack[3] = 0;      /* EBP */
   KernelStack[4] = (ULONG)PsBeginThreadWithContextInternal;   /* EIP */
-  memcpy((VOID*)&KernelStack[5], (VOID*)Context, sizeof(CONTEXT));
-  Thread->KernelStack = (VOID*)KernelStack;
+  memcpy((PVOID)&KernelStack[5], (PVOID)Context, sizeof(CONTEXT));
+  Thread->KernelStack = (PVOID)KernelStack;
 
   return(STATUS_SUCCESS);
 }
@@ -194,7 +189,6 @@ HalInitFirstTask(PETHREAD thread)
    __asm__("ltr %%ax" 
 	   : /* no output */
            : "a" (TSS_SELECTOR));
-   FirstThread = thread;
 }
 
 

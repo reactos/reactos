@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.1 2000/12/10 23:42:01 dwelch Exp $
+/* $Id: debug.c,v 1.2 2001/03/14 16:30:08 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -119,7 +119,9 @@ VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
 	 * NOTE: In the trap frame which is built on entry to a system
 	 * call TrapFrame->Edx will actually hold the address of the
 	 * previous TrapFrame. I don't believe leaking this information
-	 * has security implications
+	 * has security implications. Also EDX holds the address of the
+	 * arguments to the system call in progress so it isn't of much
+	 * interest to the debugger.
 	 */
 	Context->Edx = TrapFrame->Edx;
 	Context->Esi = TrapFrame->Esi;
@@ -255,6 +257,7 @@ NTSTATUS STDCALL NtGetContextThread (IN	HANDLE ThreadHandle,
 	     return(AStatus);
 	  }
 	memcpy(Context, &KContext, sizeof(CONTEXT));
+	ObDereferenceObject(Thread);
 	return(STATUS_SUCCESS);
      }
 }

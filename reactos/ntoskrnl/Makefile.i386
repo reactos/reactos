@@ -16,7 +16,8 @@ OBJECTS_KE_I386 := \
         ke/i386/i386-mcount.o \
 	ke/i386/gdt.o \
 	ke/i386/idt.o \
-	ke/i386/ldt.o 
+	ke/i386/ldt.o \
+	ke/i386/brkpoint.o
 
 OBJECTS_MM_I386 := \
 	mm/i386/memsafe.o \

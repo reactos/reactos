@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2001/03/14 00:21:21 dwelch Exp $
+# $Id: Makefile,v 1.19 2001/03/14 16:30:08 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -123,11 +123,6 @@ OBJECTS_MM = \
 	mm/mpw.o \
 	mm/pageop.o
 
-OBJECTS_MM_I386 = \
-	mm/i386/memsafe.o \
-	mm/i386/page.o \
-	mm/i386/pfault.o
-
 # I/O Subsystem (Io)
 OBJECTS_IO = \
 	io/adapter.o \
@@ -235,7 +230,7 @@ OBJECTS_CM = \
 
 # Debugger Support (Dbg)
 OBJECTS_DBG = \
-	dbg/brkpoint.o \
+	dbg/dbgctrl.o \
 	dbg/errinfo.o \
 	dbg/print.o
 

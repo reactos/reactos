@@ -50,7 +50,7 @@ DOSCLI = yes
 FLOPPY_DIR = A:
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
-DOT := \\.
+DOT := \.
 endif
 
 CC = $(PREFIX)gcc
