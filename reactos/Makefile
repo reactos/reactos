@@ -56,7 +56,7 @@ NET_DEVICE_DRIVERS = ne2000
 SYS_APPS = shell winlogon services
 
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
-       pteb consume dump_shared_data vmtest regtest alive uitest
+       pteb consume dump_shared_data vmtest regtest alive
 
 #       objdir
 
