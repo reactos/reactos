@@ -103,7 +103,7 @@ static void query_submit(adns_state ads, adns_query qu,
   
   qu->id= id;
   qu->query_dglen= qu->vb.used;
-  memcpy(qu->query_dgram,qu->vb.buf,qu->vb.used);
+  memcpy(qu->query_dgram,qu->vb.buf,(size_t) qu->vb.used);
   
   adns__query_send(qu,now);
 }
@@ -118,7 +118,7 @@ adns_status adns__internal_submit(adns_state ads, adns_query *query_r,
   if (!qu) { adns__vbuf_free(qumsg_vb); return adns_s_nomemory; }
   *query_r= qu;
 
-  memcpy(&qu->ctx,ctx,sizeof(qu->ctx));
+  memcpy(&qu->ctx,ctx,(size_t) sizeof(qu->ctx));
   query_submit(ads,qu, typei,qumsg_vb,id,flags,now);
   
   return adns_s_ok;
@@ -196,7 +196,7 @@ static int save_owner(adns_query qu, const char *owner, int ol) {
 
   ans->owner= adns__alloc_preserved(qu,ol+1);  if (!ans->owner) return 0;
 
-  memcpy(ans->owner,owner,ol);
+  memcpy(ans->owner,owner, (size_t) ol);
   ans->owner[ol]= 0;
   return 1;
 }
@@ -558,7 +558,7 @@ void adns__makefinal_str(adns_query qu, char **strp) {
   if (!before) return;
   l= strlen(before)+1;
   after= adns__alloc_final(qu,l);
-  memcpy(after,before,l);
+  memcpy(after,before,(size_t) l);
   *strp= after;  
 }
 
@@ -568,6 +568,6 @@ void adns__makefinal_block(adns_query qu, void **blpp, size_t sz) {
   before= *blpp;
   if (!before) return;
   after= adns__alloc_final(qu,sz);
-  memcpy(after,before,sz);
+  memcpy(after,before, (size_t) sz);
   *blpp= after;
 }

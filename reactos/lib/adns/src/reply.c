@@ -211,9 +211,9 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
 	if (!qu->answer->cname) { adns__query_fail(qu,adns_s_nomemory); return; }
 
 	qu->cname_dgram= adns__alloc_mine(qu,dglen);
-	memcpy(qu->cname_dgram,dgram,dglen);
+	memcpy(qu->cname_dgram,dgram,(size_t) dglen);
 
-	memcpy(qu->answer->cname,qu->vb.buf,l);
+	memcpy(qu->answer->cname,qu->vb.buf, (size_t) l);
 	cname_here= 1;
 	adns__update_expires(qu,ttl,now);
 	/* If we find the answer section truncated after this point we restart
@@ -364,7 +364,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
     
     qu->query_dgram= newquery;
     qu->query_dglen= qu->vb.used;
-    memcpy(newquery,qu->vb.buf,qu->vb.used);
+    memcpy(newquery,qu->vb.buf, (size_t) qu->vb.used);
   }
   
   if (qu->state == query_tcpw) qu->state= query_tosend;

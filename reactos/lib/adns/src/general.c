@@ -124,7 +124,7 @@ int adns__vbuf_ensure(vbuf *vb, int want) {
 }
   
 void adns__vbuf_appendq(vbuf *vb, const byte *data, int len) {
-  memcpy(vb->buf+vb->used,data,len);
+  memcpy(vb->buf+vb->used,data, (size_t) len);
   vb->used+= len;
 }
 
@@ -327,9 +327,9 @@ void adns__isort(void *array, int nobjs, int sz, void *tempbuf,
 	 place>0 && needswap(context, data + (place-1)*sz, data + i*sz);
 	 place--);
     if (place != i) {
-      memcpy(tempbuf, data + i*sz, sz);
+      memcpy(tempbuf, data + i*sz, (size_t) sz);
       memmove(data + (place+1)*sz, data + place*sz, (i-place)*sz);
-      memcpy(data + place*sz, tempbuf, sz);
+      memcpy(data + place*sz, tempbuf, (size_t) sz);
     }
   }
 }
