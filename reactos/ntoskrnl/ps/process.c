@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.112 2003/08/10 20:33:05 ekohl Exp $
+/* $Id: process.c,v 1.113 2003/08/18 10:20:57 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -56,6 +56,13 @@ static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
 static PCREATE_PROCESS_NOTIFY_ROUTINE
 PiProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
 
+typedef struct
+{
+    WORK_QUEUE_ITEM WorkQueueItem;
+    KEVENT Event;
+    PEPROCESS Process;
+    BOOLEAN IsWorkerQueue;
+} DEL_CONTEXT, *PDEL_CONTEXT;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -84,11 +91,11 @@ PsGetNextProcess(PEPROCESS OldProcess)
 					EPROCESS,
 					ProcessListEntry);
      }
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    Status = ObReferenceObjectByPointer(NextProcess,
 				       PROCESS_ALL_ACCESS,
 				       PsProcessType,
 				       KernelMode);   
+   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    if (!NT_SUCCESS(Status))
      {
 	CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed\n");
@@ -287,17 +294,26 @@ PsInitProcessManagment(VOID)
 }
 
 VOID STDCALL
-PiDeleteProcess(PVOID ObjectBody)
+PiDeleteProcessWorker(PVOID pContext)
 {
   KIRQL oldIrql;
-  PEPROCESS Process;
   ULONG i;
   PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
   ULONG NotifyRoutineCount;
+  PDEL_CONTEXT Context;
+  PEPROCESS CurrentProcess;
+  PEPROCESS Process;
 
-  DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
+  Context = (PDEL_CONTEXT)pContext;
+  Process = Context->Process;
+  CurrentProcess = PsGetCurrentProcess();
 
-  Process = (PEPROCESS)ObjectBody;
+  DPRINT("PiDeleteProcess(ObjectBody %x)\n",Process);
+
+  if (CurrentProcess != Process)
+    {
+      KeAttachProcess(Process);
+    }
 
   /* Terminate Win32 Process */
   PsTerminateWin32Process (Process);
@@ -328,9 +344,42 @@ PiDeleteProcess(PVOID ObjectBody)
   ObDereferenceObject(Process->Token);
   ObDeleteHandleTable(Process);
 
-  (VOID)MmReleaseMmInfo(Process);
+  if (CurrentProcess != Process)
+    {
+      KeDetachProcess();
+    }
+
+  MmReleaseMmInfo(Process);
+  if (Context->IsWorkerQueue)
+    {
+      KeSetEvent(&Context->Event, IO_NO_INCREMENT, FALSE);
+    }
 }
 
+VOID STDCALL 
+PiDeleteProcess(PVOID ObjectBody)
+{
+  DEL_CONTEXT Context;
+
+  Context.Process = (PEPROCESS)ObjectBody;
+
+  if (PsGetCurrentProcess() == Context.Process || PsGetCurrentThread()->OldProcess == NULL)
+    {
+      Context.IsWorkerQueue = FALSE;
+      PiDeleteProcessWorker(&Context);
+    }
+  else
+    {
+      Context.IsWorkerQueue = TRUE;
+      KeInitializeEvent(&Context.Event, NotificationEvent, FALSE);
+      ExInitializeWorkItem (&Context.WorkQueueItem, PiDeleteProcessWorker, &Context);
+      ExQueueWorkItem(&Context.WorkQueueItem, HyperCriticalWorkQueue);
+      if (KeReadStateEvent(&Context.Event) == 0)
+        {
+          KeWaitForSingleObject(&Context.Event, Executive, KernelMode, FALSE, NULL);
+	}
+    }
+}
 
 static NTSTATUS
 PsCreatePeb(HANDLE ProcessHandle,
