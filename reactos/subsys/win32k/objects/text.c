@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.72 2004/01/29 22:24:51 rcampbell Exp $ */
+/* $Id: text.c,v 1.73 2004/02/11 21:52:28 sedwards Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -857,7 +857,8 @@ NtGdiGetCharABCWidths(HDC  hDC,
                            UINT  LastChar,
                            LPABC  abc)
 {
-  UNIMPLEMENTED;
+  DPRINT1("NtGdiGetCharABCWidths Is unimplemented, keep going anyway\n");
+  return 1;
 }
 
 BOOL
@@ -889,7 +890,8 @@ NtGdiGetCharWidth(HDC  hDC,
                        UINT  LastChar,
                        LPINT  Buffer)
 {
-  UNIMPLEMENTED;
+    DPRINT1("NtGdiGetCharWidth isnt really unimplemented - keep going anyway\n");
+    return 1;
 }
 
 BOOL
