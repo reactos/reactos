@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.6 2003/07/30 14:08:16 royce Exp $ */
+/* $Id: cdmake.c,v 1.7 2003/11/16 13:45:42 ekohl Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -147,6 +147,8 @@ char bootimage[512];
 BOOL eltorito;
 DWORD boot_catalog_sector;
 DWORD boot_image_sector;
+WORD boot_image_size;  // counted in 512 byte sectors
+
 
 /*-----------------------------------------------------------------------------
 This function edits a 32-bit unsigned number into a comma-delimited form, such
@@ -1064,8 +1066,8 @@ static void pass(void)
       write_big_endian_word(0);  // load segment = default (0x07c0)
       write_byte(0);  // partition type
       write_byte(0);  // unused
-      write_little_endian_word(4);  // sector count
-      write_little_endian_dword(boot_image_sector);  // sector count
+      write_little_endian_word(boot_image_size);  // sector count
+      write_little_endian_dword(boot_image_sector);  // sector
 
       fill_sector();
     }
@@ -1081,6 +1083,9 @@ static void pass(void)
       fseek(file, 0, SEEK_END);
       size = ftell(file);
       fseek(file, 0, SEEK_SET);
+      if (size == 0 || (size % 2048))
+        error_exit("Invalid boot image size (%lu bytes)\n", size);
+      boot_image_size = size / 512;
       while (size > 0)
       {
         n = BUFFER_SIZE - cd.count;
