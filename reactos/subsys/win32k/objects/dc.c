@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.94 2003/10/30 18:27:33 gvg Exp $
+/* $Id: dc.c,v 1.95 2003/11/05 22:46:05 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -192,7 +192,7 @@ NtGdiCreateCompatableDC(HDC  hDC)
   /* DriverName is copied in the AllocDC routine  */
   if(OrigDC == NULL)
   {
-    NewDC->DeviceDriver = DRIVER_FindMPDriver(NewDC->DriverName);
+    NewDC->DeviceDriver = PrimarySurface.DisplayDevice;
   }
   else
   {
@@ -272,7 +272,7 @@ GetRegistryPath(PUNICODE_STRING RegistryPath)
       return FALSE;
     }
 
-  DPRINT("RegistryPath %S\n", RegistryPath.Buffer);
+  DPRINT("RegistryPath %S\n", RegistryPath->Buffer);
 
   return TRUE;
 }
@@ -501,6 +501,9 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   PWSTR CurrentName;
   BOOL GotDriver;
   BOOL DoDefault;
+  NTSTATUS Status;
+  PFILE_OBJECT FileObject;
+  PEPROCESS CurrentProcess;
   extern void FASTCALL IntInitDesktopWindow(ULONG Width, ULONG Height);
 
   /*  Open the miniport driver  */
@@ -582,6 +585,31 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
     return(FALSE);
   }
 
+  CurrentProcess = PsGetCurrentProcess();
+  if (CurrentProcess != Win32kDeviceProcess)
+    {  
+      /* Switch to process context in which device handle is valid */
+      KeAttachProcess(Win32kDeviceProcess);
+    }
+
+  Status = ObReferenceObjectByHandle(PrimarySurface.DisplayDevice,
+				     FILE_READ_DATA | FILE_WRITE_DATA,
+				     IoFileObjectType,
+				     KernelMode,
+				     (PVOID *)&FileObject,
+				     NULL);
+  if (CurrentProcess != Win32kDeviceProcess)
+    {
+      KeDetachProcess();
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      CloseMiniport();
+      DPRINT1("Referencing miniport device failed with status 0x%08x\n", Status);
+      return FALSE;
+    }
+
   /*  Allocate a phyical device handle from the driver  */
   if (SetupDevMode(&PrimarySurface.DMW))
     {
@@ -596,7 +624,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
                                                   &PrimarySurface.DevInfo,
                                                   NULL,
                                                   L"",
-                                                  PrimarySurface.DisplayDevice);
+                                                  (HANDLE) (FileObject->DeviceObject));
       DoDefault = (NULL == PrimarySurface.PDev);
       if (DoDefault)
         {
@@ -622,10 +650,11 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
                                                   &PrimarySurface.DevInfo,
                                                   NULL,
                                                   L"",
-                                                  PrimarySurface.DisplayDevice);
+                                                  (HANDLE) (FileObject->DeviceObject));
 
       if (NULL == PrimarySurface.PDev)
         {
+          ObDereferenceObject(FileObject);
           CloseMiniport();
           DPRINT1("DrvEnablePDEV with default parameters failed\n");
           DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
@@ -662,6 +691,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
     PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
   if (NULL == PrimarySurface.Handle)
     {
+      ObDereferenceObject(FileObject);
       CloseMiniport();
       DPRINT1("DrvEnableSurface failed\n");
       return FALSE;

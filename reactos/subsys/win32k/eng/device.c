@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: device.c,v 1.11 2003/08/19 11:48:49 weiden Exp $
+/* $Id: device.c,v 1.12 2003/11/05 22:46:05 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -49,52 +49,29 @@ EngDeviceIoControl(HANDLE  hDevice,
   NTSTATUS Status;
   KEVENT Event;
   IO_STATUS_BLOCK Iosb;
-  PFILE_OBJECT FileObject;
-  PEPROCESS CurrentProcess;
+  PDEVICE_OBJECT DeviceObject;
 
   DPRINT("EngDeviceIoControl() called\n");
 
   KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
-  CurrentProcess = PsGetCurrentProcess();
-  if (CurrentProcess != Win32kDeviceProcess)
-    {  
-      /* Switch to process context in which hDevice is valid */
-      KeAttachProcess(Win32kDeviceProcess);
-    }
-
-  Status = ObReferenceObjectByHandle(hDevice,
-				     FILE_READ_DATA | FILE_WRITE_DATA,
-				     IoFileObjectType,
-				     KernelMode,
-				     (PVOID *)&FileObject,
-				     NULL);
-  if (CurrentProcess != Win32kDeviceProcess)
-    {
-      KeDetachProcess();
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
+  DeviceObject = (PDEVICE_OBJECT) hDevice;
 
   Irp = IoBuildDeviceIoControlRequest(dwIoControlCode,
-				      FileObject->DeviceObject,
+				      DeviceObject,
 				      lpInBuffer,
 				      nInBufferSize,
 				      lpOutBuffer,
 				      nOutBufferSize, FALSE, &Event, &Iosb);
 
-  Status = IoCallDriver(FileObject->DeviceObject, Irp);
+  Status = IoCallDriver(DeviceObject, Irp);
 
   if (Status == STATUS_PENDING)
-  {
-    (void) KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
-  }
-
-  ObDereferenceObject(FileObject);
+    {
+      (void) KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+    }
 
   return (Status);
 }
+
 /* EOF */
