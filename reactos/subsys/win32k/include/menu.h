@@ -34,6 +34,58 @@ typedef struct _MENU_OBJECT
   BOOL RtoL;
 } MENU_OBJECT, *PMENU_OBJECT;
 
+PMENU_OBJECT FASTCALL
+W32kGetMenuObject(HMENU hMenu);
+
+VOID FASTCALL
+W32kReleaseMenuObject(PMENU_OBJECT MenuObject);
+
+BOOL FASTCALL
+W32kFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
+    BOOL RemoveFromList, BOOL bRecurse);
+    
+UINT FASTCALL
+W32kDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
+
+BOOL FASTCALL
+W32kDestroyMenuObject(PMENU_OBJECT MenuObject);
+
+PMENU_OBJECT FASTCALL
+W32kCreateMenu(PHANDLE Handle);
+
+BOOL FASTCALL
+W32kSetMenuFlagRtoL(PMENU_OBJECT MenuObject);
+
+BOOL FASTCALL
+W32kSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId);
+
+BOOL FASTCALL
+W32kGetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
+
+BOOL FASTCALL
+W32kSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
+
+int FASTCALL
+W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, PMENU_ITEM *MenuItem);
+
+BOOL FASTCALL
+W32kSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii);
+
+BOOL FASTCALL
+W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
+                   LPCMENUITEMINFOW lpmii);
+                   
+UINT FASTCALL
+W32kEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable);
+
+DWORD FASTCALL
+W32kCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck);
+
+BOOL FASTCALL
+W32kSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos);
+
+
+
 NTSTATUS FASTCALL
 InitMenuImpl(VOID);
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.23 2003/08/06 11:32:17 weiden Exp $
+/* $Id: stubs.c,v 1.24 2003/08/06 13:17:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -83,17 +83,6 @@ NtUserBuildNameList(
 DWORD
 STDCALL
 NtUserCallHwnd(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCallHwndLock(
   DWORD Unknown0,
   DWORD Unknown1)
 {
@@ -712,17 +701,6 @@ NtUserGetPriorityClipboardFormat(
 
 DWORD
 STDCALL
-NtUserGetSystemMenu(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetThreadState(
   DWORD Unknown0)
 {
@@ -1055,19 +1033,6 @@ NtUserSetImeHotKey(
   return 0;
 }
 
-
-DWORD
-STDCALL
-NtUserSetMenu(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
 DWORD
 STDCALL
 NtUserSetParent(
@@ -1097,17 +1062,6 @@ NtUserSetSysColors(
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetSystemMenu(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.60 2003/08/06 11:32:17 weiden Exp $
+/* $Id: defwnd.c,v 1.61 2003/08/06 13:17:43 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -490,7 +490,6 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
     {
       RECT r = rect;
       r.bottom = rect.top + GetSystemMetrics(SM_CYMENU);
-DbgPrint("Calling MenuDrawMenuBar()\n");
       rect.top += MenuDrawMenuBar(hDC, &r, hWnd, FALSE);
     }
 
@@ -1389,7 +1388,6 @@ DefWndNCCalcSize(HWND hWnd, RECT* Rect)
       Rect->bottom -= TmpRect.bottom;
       if (UserHasMenu(hWnd, GetWindowLong(hWnd, GWL_EXSTYLE)))
 	{
-	  DbgPrint("Calling MenuGetMenuBarHeight()\n");
 	  Rect->top += MenuGetMenuBarHeight(hWnd, 
 					    Rect->right - Rect->left,
 					    -TmpRect.left,

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.2 2003/08/06 11:32:17 weiden Exp $
+/* $Id: misc.c,v 1.3 2003/08/06 13:17:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,9 +55,9 @@ NtUserCallOneParam(
         return FALSE;
       }
       Result = WindowObject->Menu;
-      DbgPrint("ONEPARAM_ROUTINE_GETMENU = 0x%x\n", Result);
       W32kReleaseWindowObject(WindowObject);
       return Result;
+      
     case ONEPARAM_ROUTINE_ISWINDOWUNICODE:
       WindowObject = W32kGetWindowObject((HWND)Param);
       if(!WindowObject)

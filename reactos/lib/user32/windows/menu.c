@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.18 2003/08/06 11:32:17 weiden Exp $
+/* $Id: menu.c,v 1.19 2003/08/06 13:17:43 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -118,6 +118,9 @@ STATIC HEAP_strdupA2W ( HANDLE hHeap, LPWSTR* ppszW, LPCSTR lpszA, UINT* NewLen 
 #ifndef GET_DWORD
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
 #endif
+
+HFONT hMenuFont = NULL;
+HFONT hMenuFontBold = NULL;
 
 /**********************************************************************
  *         MENUEX_ParseResource
@@ -241,39 +244,34 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
 BOOL
 MenuInit(VOID)
 {
-  return TRUE;
-/*  NONCLIENTMETRICSW ncm;
-  BITMAP bm;
-
-  hStdMnArrow = LoadBitmapA(0, MAKEINTRESOURCEA(OBM_MNARROW));
-  if (hStdMnArrow == NULL)
-    {
-      return(FALSE);
-    }
-  GetObjectA(hStdMnArrow, sizeof(bm), &bm);
-  ArrowBitmapWidth = bm.bmWidth;
-  ArrowBitmapHeight = bm.bmHeight;
-
-  if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
-    {
-      return(FALSE);
-    }
-
-  hMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
-  if (hMenuFont == NULL)
-    {
-      return(FALSE);
-    }
-
-  ncm.lfMenuFont.lfWeight = max(ncm.lfMenuFont.lfWeight + 300, 1000);
+  NONCLIENTMETRICSW ncm;
   
-  hMenuFontBold = CreateFontIndirect(&ncm.lfMenuFont);
-  if (hMenuFontBold == NULL)
+  /* get the menu font */
+  if(!hMenuFont || !hMenuFontBold)
+  {
+    if(!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
     {
-      return(FALSE);
+      DbgPrint("MenuInit(): SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) failed!\n");
+      return FALSE;
     }
+    
+    hMenuFont = CreateFontIndirect(&ncm.lfMenuFont);
+    if(hMenuFont == NULL)
+    {
+      DbgPrint("MenuInit(): CreateFontIndirect(hMenuFont) failed!\n");
+      return FALSE;
+    }
+    
+    ncm.lfMenuFont.lfWeight = max(ncm.lfMenuFont.lfWeight + 300, 1000);
+    hMenuFontBold = CreateFontIndirect(&ncm.lfMenuFont);
+    if(hMenuFontBold == NULL)
+    {
+      DbgPrint("MenuInit(): CreateFontIndirect(hMenuFontBold) failed!\n");
+      return FALSE;
+    }
+  }
 
-  return(TRUE);*/
+  return TRUE;
 }
 
 
@@ -304,6 +302,9 @@ MenuGetMenuBarHeight(HWND hWnd, ULONG MenuBarWidth, LONG OrgX, LONG OrgY)
 UINT
 MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
 {
+  HFONT hFontOld = SelectObject(hDC, hMenuFont);
+  //DrawTextA(hDC, "This is the menu bar", 19, Rect, DT_SINGLELINE);
+  SelectObject(hDC, hFontOld);
   return(GetSystemMetrics(SM_CYMENU));
   /*
   ULONG MenuID;
@@ -482,6 +483,7 @@ WINBOOL STDCALL
 DrawMenuBar(HWND hWnd)
 {
   UNIMPLEMENTED
+  /* FIXME - return NtUserCallHwndLock(hWnd, 0x55); */
   return FALSE;
 }
 
@@ -504,12 +506,13 @@ WINBOOL STDCALL
 EndMenu(VOID)
 {
   UNIMPLEMENTED;
+  /* FIXME - return NtUserEndMenu(); */
   return FALSE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HMENU STDCALL
 GetMenu(HWND hWnd)
@@ -1051,21 +1054,13 @@ RemoveMenu(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 SetMenu(HWND hWnd,
 	HMENU hMenu)
 {
-  UNIMPLEMENTED;
-  /* from wine
-  if (IsWindowVisible(hWnd))
-    {
-      SetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-		   SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
-    }
-  */
-  return FALSE;
+  return NtUserSetMenu(hWnd, hMenu, TRUE);
 }
 
 

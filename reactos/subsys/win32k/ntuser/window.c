@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.77 2003/08/05 15:41:03 weiden Exp $
+/* $Id: window.c,v 1.78 2003/08/06 13:17:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,6 +46,7 @@
 #include <include/painting.h>
 #include <include/scroll.h>
 #include <include/vis.h>
+#include <include/menu.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -2284,6 +2285,105 @@ NtUserGetLastActivePopup(HWND hWnd)
   W32kReleaseWinStaLock();
 
   return hWndLastPopup;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+NtUserSetMenu(
+  HWND hWnd,
+  HMENU hMenu,
+  BOOL bRepaint)
+{
+  PWINDOW_OBJECT WindowObject;
+  PMENU_OBJECT MenuObject;
+  WindowObject = W32kGetWindowObject((HWND)hWnd);
+  if(!WindowObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if(hMenu)
+  {
+    /* assign new menu handle */
+    MenuObject = W32kGetMenuObject((HWND)hMenu);
+    if(!MenuObject)
+    {
+      W32kReleaseWindowObject(WindowObject);
+      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+      return FALSE;
+    }
+    
+    WindowObject->Menu = hMenu;
+  }
+  else
+  {
+    /* remove the menu handle */
+    WindowObject->Menu = 0;
+  }
+  
+  W32kReleaseMenuObject(MenuObject);
+  W32kReleaseWindowObject(WindowObject);
+  
+  /* FIXME (from wine)
+  if(bRepaint)
+  {
+    if (IsWindowVisible(hWnd))
+        SetWindowPos( hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+                      SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
+  }
+  */
+  
+  return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+HMENU
+STDCALL
+NtUserGetSystemMenu(
+  HWND hWnd,
+  BOOL bRevert)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtUserSetSystemMenu(
+  HWND hWnd,
+  HMENU hMenu)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtUserCallHwndLock(
+  HWND hWnd,
+  DWORD Unknown1)
+{
+  UNIMPLEMENTED
+  /* DrawMenuBar() calls it with Unknown1==0x55 */
+  return 0;
 }
 
 

@@ -115,10 +115,10 @@ NtUserCallHwnd(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserCallHwndLock(
-  DWORD Unknown0,
+  HWND hWnd,
   DWORD Unknown1);
 
 DWORD
@@ -814,11 +814,11 @@ DWORD
 STDCALL
 NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi);
 
-DWORD
+HMENU
 STDCALL
 NtUserGetSystemMenu(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWnd,
+  BOOL bRevert);
 
 HDESK
 STDCALL
@@ -1372,12 +1372,12 @@ STDCALL
 NtUserSetLogonNotifyWindow(
   DWORD Unknown0);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetMenu(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  HMENU hMenu,
+  BOOL bRepaint);
 
 BOOL
 STDCALL
@@ -1453,11 +1453,11 @@ NtUserSetSystemCursor(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetSystemMenu(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWnd,
+  HMENU hMenu);
 
 DWORD
 STDCALL

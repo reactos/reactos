@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.10 2003/08/06 11:32:17 weiden Exp $
+/* $Id: menu.c,v 1.11 2003/08/06 13:17:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -884,7 +884,7 @@ BOOL STDCALL
 NtUserEndMenu(VOID)
 {
   UNIMPLEMENTED
-
+  
   return 0;
 }
 
