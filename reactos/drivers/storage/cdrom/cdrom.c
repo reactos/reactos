@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.22 2003/07/17 16:57:38 silverblade Exp $
+/* $Id: cdrom.c,v 1.22.6.1 2003/11/07 13:00:39 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -585,6 +585,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   /* Use 6 byte xa commands by default */
   CdromData->XaFlags |= XA_USE_6_BYTE;
 
+#if 0
   /* Read 'error recovery page' to get additional drive capabilities */
   Length = sizeof(MODE_READ_RECOVERY_PAGE) +
 	   MODE_BLOCK_DESC_LENGTH +
@@ -672,6 +673,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       CdromData->RecoveryData.Data6.Header.ModeDataLength = 0;
     }
   ExFreePool (Buffer);
+#endif
 
   /* Initialize device timer */
   IoInitializeTimer(DiskDeviceObject,
