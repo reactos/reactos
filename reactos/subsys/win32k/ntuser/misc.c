@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.23 2003/11/11 20:28:21 gvg Exp $
+/* $Id: misc.c,v 1.24 2003/11/18 23:33:31 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -425,5 +425,91 @@ NtUserGetDoubleClickTime(VOID)
       
   ObDereferenceObject(WinStaObject);
   return Result;
+}
+
+BOOL
+STDCALL
+NtUserGetGUIThreadInfo(
+  DWORD idThread,
+  LPGUITHREADINFO lpgui)
+{
+  NTSTATUS Status;
+  PTHRDCARETINFO CaretInfo;
+  GUITHREADINFO SafeGui;
+  PDESKTOP_OBJECT Desktop;
+  PUSER_MESSAGE_QUEUE MsgQueue;
+  PETHREAD Thread = NULL;
+  
+  Status = MmCopyFromCaller(&SafeGui, lpgui, sizeof(DWORD));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  
+  if(SafeGui.cbSize != sizeof(GUITHREADINFO))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  if(idThread)
+  {
+    Status = PsLookupThreadByThreadId((PVOID)idThread, &Thread);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      return FALSE;
+    }
+    Desktop = Thread->Win32Thread->Desktop;
+  }
+  else
+  {
+    /* get the foreground thread */
+    PW32THREAD W32Thread = PsGetCurrentThread()->Win32Thread;
+    Desktop = W32Thread->Desktop;
+    if(Desktop)
+    {
+      MsgQueue = Desktop->ActiveMessageQueue;
+      if(MsgQueue)
+      {
+        Thread = MsgQueue->Thread;
+      }
+    }
+  }
+  
+  if(!Thread || !Desktop)
+  {
+    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    return FALSE;
+  }
+  
+  CaretInfo = ThrdCaretInfo(Thread->Win32Thread);
+  MsgQueue = (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue;
+  
+  SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
+  /* FIXME add flags GUI_16BITTASK, GUI_INMENUMODE, GUI_INMOVESIZE,
+                     GUI_POPUPMENUMODE, GUI_SYSTEMMENUMODE */
+  
+  SafeGui.hwndActive = MsgQueue->ActiveWindow;
+  SafeGui.hwndFocus = MsgQueue->FocusWindow;
+  SafeGui.hwndCapture = MsgQueue->CaptureWindow;
+  SafeGui.hwndMenuOwner = 0; /* FIXME */
+  SafeGui.hwndMoveSize = 0;  /* FIXME */
+  SafeGui.hwndCaret = CaretInfo->hWnd;
+  
+  SafeGui.rcCaret.left = CaretInfo->Pos.x;
+  SafeGui.rcCaret.top = CaretInfo->Pos.y;
+  SafeGui.rcCaret.right = SafeGui.rcCaret.left + CaretInfo->Size.cx;
+  SafeGui.rcCaret.bottom = SafeGui.rcCaret.top + CaretInfo->Size.cy;
+  
+  Status = MmCopyToCaller(lpgui, &SafeGui, sizeof(GUITHREADINFO));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 

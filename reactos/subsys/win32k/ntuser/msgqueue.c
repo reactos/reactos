@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.30 2003/11/03 18:52:21 ekohl Exp $
+/* $Id: msgqueue.c,v 1.31 2003/11/18 23:33:31 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -798,8 +798,9 @@ MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 }
 
 VOID FASTCALL
-MsqInitializeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
+MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue)
 {
+  MessageQueue->Thread = Thread;
   InitializeListHead(&MessageQueue->PostedMessagesListHead);
   InitializeListHead(&MessageQueue->SentMessagesListHead);
   InitializeListHead(&MessageQueue->HardwareMessagesListHead);
@@ -828,7 +829,7 @@ MsqFreeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
-MsqCreateMessageQueue(VOID)
+MsqCreateMessageQueue(struct _ETHREAD *Thread)
 {
   PUSER_MESSAGE_QUEUE MessageQueue;
 
@@ -839,7 +840,7 @@ MsqCreateMessageQueue(VOID)
       return NULL;
     }
 
-  MsqInitializeMessageQueue(MessageQueue);
+  MsqInitializeMessageQueue(Thread, MessageQueue);
 
   return MessageQueue;
 }

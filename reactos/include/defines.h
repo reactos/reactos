@@ -1569,6 +1569,14 @@ extern "C" {
 #define GM_COMPATIBLE	(1)
 #define GM_ADVANCED	(2)
 
+/* GetGUIThreadInfo */
+#define GUI_CARETBLINKING   (1)
+#define GUI_INMOVESIZE   (2)
+#define GUI_INMENUMODE   (4)
+#define GUI_SYSTEMMENUMODE   (8)
+#define GUI_POPUPMENUMODE   (16)
+#define GUI_16BITTASK   (32)
+
 /* GetHandleInformation */
 #define HANDLE_FLAG_INHERIT	(1)
 #define HANDLE_FLAG_PROTECT_FROM_CLOSE	(2)

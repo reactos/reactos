@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.81 2003/11/11 20:28:21 gvg Exp $
+/* $Id: window.c,v 1.82 2003/11/18 23:33:31 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -966,14 +966,13 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetGUIThreadInfo(DWORD idThread,
 		 LPGUITHREADINFO lpgui)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserGetGUIThreadInfo(idThread, lpgui);
 }
 
 

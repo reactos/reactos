@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.35 2003/11/18 20:49:39 navaraf Exp $
+/* $Id: stubs.c,v 1.36 2003/11/18 23:33:31 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -528,17 +528,6 @@ NtUserGetCPD(
 DWORD
 STDCALL
 NtUserGetGuiResources(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetGUIThreadInfo(
   DWORD Unknown0,
   DWORD Unknown1)
 {

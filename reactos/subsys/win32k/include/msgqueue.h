@@ -1,6 +1,7 @@
 #ifndef _WIN32K_MSGQUEUE_H
 #define _WIN32K_MSGQUEUE_H
 
+#include <internal/ex.h>
 #include <windows.h>
 
 typedef struct _USER_MESSAGE
@@ -34,6 +35,8 @@ typedef struct _USER_SENT_MESSAGE_NOTIFY
 
 typedef struct _USER_MESSAGE_QUEUE
 {
+  /* Owner of the message queue */
+  struct _ETHREAD *Thread;
   /* Queue of messages sent to the queue. */
   LIST_ENTRY SentMessagesListHead;
   /* Queue of messages posted to the queue. */
@@ -95,11 +98,11 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN UINT MsgFilterHigh,
 	       OUT PUSER_MESSAGE* Message);
 VOID FASTCALL
-MsqInitializeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
+MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL
 MsqFreeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL
-MsqCreateMessageQueue(VOID);
+MsqCreateMessageQueue(struct _ETHREAD *Thread);
 VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL

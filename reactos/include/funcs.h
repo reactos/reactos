@@ -9326,6 +9326,13 @@ GetWindowThreadProcessId(
 			 HWND hWnd,
 			 LPDWORD lpdwProcessId);
 
+
+WINBOOL
+STDCALL
+GetGUIThreadInfo(
+		   DWORD idThread,
+		   LPGUITHREADINFO lpgui);
+
  
 HWND
 STDCALL

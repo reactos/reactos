@@ -697,11 +697,11 @@ NtUserGetGuiResources(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetGUIThreadInfo(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  DWORD idThread,
+  LPGUITHREADINFO lpgui);
 
 BOOL
 STDCALL
