@@ -36,6 +36,7 @@
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "cmd.h"
 
@@ -92,6 +93,7 @@ static BOOL ConfirmDeleteAll (VOID)
 }
 
 
+#if 0
 static INT Prompt (LPTSTR str)
 {
 	TCHAR inp[10];
@@ -118,7 +120,7 @@ static INT Prompt (LPTSTR str)
 
 	return PROMPT_NO;
 }
-
+#endif
 
 static BOOL
 RemoveFile (LPTSTR lpFileName, DWORD dwFlags)

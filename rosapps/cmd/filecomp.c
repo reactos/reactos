@@ -20,6 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdio.h>
 
 #include "cmd.h"
 
@@ -222,7 +223,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 				continue;
 
 			if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				wsprintf (fname,"[%s]", file.cFileName);
+                                _stprintf (fname, _T("[%s]"), file.cFileName);
 			else
 				_tcscpy (fname, file.cFileName);
 

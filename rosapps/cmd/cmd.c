@@ -112,6 +112,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdio.h>
 
 #include "cmd.h"
 #include "batch.h"
@@ -199,7 +200,7 @@ Execute (LPTSTR first, LPTSTR rest)
 		TCHAR szFullCmdLine [1024];
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
-		DWORD dwError = 0;
+//                DWORD dwError = 0;
 
 #ifdef _DEBUG
 		DebugPrintf ("[EXEC: %s %s]\n", szFullName, rest);
@@ -697,7 +698,7 @@ ProcessInput (BOOL bFlag)
 						break;
 
 					case _T('?'):
-						cp += wsprintf (cp, _T("%u"), nErrorLevel);
+                                                cp += _stprintf (cp, _T("%u"), nErrorLevel);
 						ip++;
 						break;
 
@@ -815,7 +816,7 @@ ShowCommands (VOID)
 #ifdef FEATURE_REDIRECTION
 	ConOutPuts ("  [redirections and piping]");
 #endif
-	ConOutChar ('\n');
+        ConOutChar ('\n');
 }
 
 
@@ -931,8 +932,10 @@ static VOID Initialize (int argc, char *argv[])
 	ShowCommands ();
 
 	/* Set COMSPEC environment variable */
-    if (argv)
-        SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
+#ifndef __REACTOS__
+        if (argv)
+                SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
+#endif
 
 	/* add ctrl handler */
 #if 0
@@ -969,18 +972,23 @@ int main (int argc, char *argv[])
 
 	AllocConsole ();
 #ifndef __REACTOS__
-    SetFileApisToOEM ();
+        SetFileApisToOEM ();
+#endif
+
+#ifdef __REACTOS__
+        SetCurrentDirectory (_T("C:\\"));
 #endif
 
 	/* check switches on command-line */
 	Initialize (argc, argv);
 
 	/* call prompt routine */
-	nExitCode = ProcessInput (FALSE);
+        nExitCode = ProcessInput (FALSE);
 
 	/* do the cleanup */
-	Cleanup ();
-	FreeConsole ();
+        Cleanup ();
+        FreeConsole ();
 
-	return nExitCode;
+        return nExitCode;
+//        return 0;
 }

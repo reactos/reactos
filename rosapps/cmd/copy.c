@@ -205,7 +205,7 @@ AddFiles (LPFILES f, char *arg, int *source, int *dest,
 static BOOL
 GetDestination (LPFILES f, LPFILES dest)
 {
-	LPFILES p;
+        LPFILES p = NULL;
 	LPFILES start = f;
 
 	while (f->next != NULL)

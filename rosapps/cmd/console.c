@@ -37,7 +37,8 @@ VOID DebugPrintf (LPTSTR szFormat, ...)
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-	OutputDebugString (szOut);
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szOut, _tcslen(szOut), &dwWritten, NULL);
+//        OutputDebugString (szOut);
 }
 #endif /* _DEBUG */
 
@@ -124,7 +125,8 @@ VOID ConOutPuts (LPTSTR szText)
 	DWORD dwWritten;
 
 	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
+//        WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
+        WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
 }
 
 
@@ -155,7 +157,8 @@ VOID ConErrPuts (LPTSTR szText)
 	DWORD dwWritten;
 
 	WriteFile (GetStdHandle (STD_ERROR_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
+//        WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
+        WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\n", 1, &dwWritten, NULL);
 }
 
 
@@ -236,5 +239,5 @@ VOID SetCursorType (BOOL bInsert, BOOL bVisible)
 	cci.dwSize = bInsert ? 10 : 100;
 	cci.bVisible = bVisible;
 
-	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
+//        SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
 }

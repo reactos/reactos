@@ -20,7 +20,7 @@
 
 
 /* JPP 20 Jul 1998 - define DEBUG to add debugging code */
-/*#define DEBUG */
+#define DEBUG
 
 
 /* Define to enable the alias command, and aliases.*/

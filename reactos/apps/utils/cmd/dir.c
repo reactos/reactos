@@ -118,6 +118,7 @@
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <ctype.h>
 
 #include "cmd.h"
@@ -786,17 +787,17 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 			if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
 				if (file.cAlternateFileName[0] == _T('\0'))
-					wsprintf (buffer, _T("[%s]"), file.cFileName);
+					_stprintf (buffer, _T("[%s]"), file.cFileName);
 				else
-					wsprintf (buffer, _T("[%s]"), file.cAlternateFileName);
+					_stprintf (buffer, _T("[%s]"), file.cAlternateFileName);
 				dircount++;
 			}
 			else
 			{
 				if (file.cAlternateFileName[0] == _T('\0'))
-					wsprintf (buffer, _T("%s"), file.cFileName);
+					_stprintf (buffer, _T("%s"), file.cFileName);
 				else
-					wsprintf (buffer, _T("%s"), file.cAlternateFileName);
+					_stprintf (buffer, _T("%s"), file.cAlternateFileName);
 				filecount++;
 			}
 
