@@ -53,10 +53,12 @@ static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCF
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
 //
+extern unsigned char AsciiTable[256][3];
 
 static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount)
 { 
     LVITEM item;
+    int index;
 
     item.mask = LVIF_TEXT | LVIF_PARAM; 
     item.iItem = 0;//idx; 
@@ -65,6 +67,8 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
     item.stateMask = 0; 
     item.pszText = Name; 
     item.cchTextMax = _tcslen(item.pszText); 
+    if (item.cchTextMax == 0)
+        item.pszText = LPSTR_TEXTCALLBACK; 
     item.cchTextMax = 0; 
     item.iImage = 0; 
     item.lParam = (LPARAM)dwValType;
@@ -72,7 +76,48 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
 #if (_WIN32_IE >= 0x0300)
     item.iIndent = 0;
 #endif
-    ListView_InsertItem(hwndLV, &item);
+
+    index = ListView_InsertItem(hwndLV, &item);
+    if (index != -1) {
+//        LPTSTR pszText = NULL;
+        LPTSTR pszText = _T("value");
+        switch (dwValType) {
+        case REG_SZ:
+        case REG_EXPAND_SZ:
+            ListView_SetItemText(hwndLV, index, 2, ValBuf);
+            break;
+        case REG_DWORD:
+            {
+                TCHAR buf[64];
+                wsprintf(buf, "0x%08X (%d)", *(DWORD*)ValBuf, *(DWORD*)ValBuf);
+                ListView_SetItemText(hwndLV, index, 2, buf);
+            }
+//            lpsRes = convertHexToDWORDStr(lpbData, dwLen);
+            break;
+        case REG_BINARY:
+            {
+                int i;
+                LPTSTR pData = (LPTSTR)ValBuf;
+                LPTSTR strBinary = malloc(dwCount * sizeof(TCHAR) * 3 + 1);
+                memset(strBinary, _T(' '), dwCount * sizeof(TCHAR) * 3);
+                strBinary[dwCount * sizeof(TCHAR) * 3] = _T('\0');
+                for (i = 0; i < dwCount; i++) {
+                    unsigned short* pShort;
+                    pShort = &(strBinary[i*3]);
+//                    strBinary[i*3] = Byte2Hex((LPTSTR)ValBuf+i);
+//                    *pShort++ = Byte2Hex(*(pData+i));
+                    *pShort = Byte2Hex(*(pData+i));
+                }
+                ListView_SetItemText(hwndLV, index, 2, strBinary);
+                free(strBinary);
+            }
+            break;
+        default:
+//            lpsRes = convertHexToHexCSV(lpbData, dwLen);
+            ListView_SetItemText(hwndLV, index, 2, pszText);
+            break;
+        }
+    }
 }
 
 static void CreateListColumns(HWND hWndListView)
@@ -291,41 +336,13 @@ HWND CreateListView(HWND hwndParent, int id)
 
 BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR keyPath)
 { 
-        if (hwndLV != NULL) {
-            ListView_DeleteAllItems(hwndLV);
-        }
+    if (hwndLV != NULL) {
+        ListView_DeleteAllItems(hwndLV);
+    }
 
     if (hKey != NULL) {
-        LONG errCode;
         HKEY hNewKey;
-
-
-            DWORD max_sub_key_len;
-            DWORD max_val_name_len;
-            DWORD max_val_size;
-            DWORD val_count;
-            errCode = RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL,
-                        &max_sub_key_len, NULL, &val_count, &max_val_name_len, &max_val_size, NULL, NULL);
-            if (errCode == ERROR_SUCCESS) {
-                TCHAR* ValName = malloc(++max_val_name_len * sizeof(TCHAR));
-                DWORD dwValNameLen = max_val_name_len;
-                BYTE* ValBuf = malloc(++max_val_size);
-                DWORD dwValSize = max_val_size;
-                DWORD dwIndex = 0L;
-                DWORD dwValType;
-                while (RegEnumValue(hKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
-                    AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwIndex);
-                    dwValNameLen = max_val_name_len;
-                    dwValSize = max_val_size;
-                    dwValType = 0L;
-                    ++dwIndex;
-                }
-                free(ValBuf);
-                free(ValName);
-            }
-
-
-        errCode = RegOpenKeyEx(hKey, keyPath, 0, KEY_READ, &hNewKey);
+        LONG errCode = RegOpenKeyEx(hKey, keyPath, 0, KEY_READ, &hNewKey);
         if (errCode == ERROR_SUCCESS) {
             DWORD max_sub_key_len;
             DWORD max_val_name_len;
@@ -342,9 +359,13 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR keyPath)
                 DWORD dwValSize = max_val_size;
                 DWORD dwIndex = 0L;
                 DWORD dwValType;
+//                if (RegQueryValueEx(hNewKey, NULL, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
+//                    AddEntryToList(hwndLV, _T("(Default)"), dwValType, ValBuf, dwValSize);
+//                }
+//                dwValSize = max_val_size;
                 while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
-                //while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, NULL, NULL) == ERROR_SUCCESS) {
-                    AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwIndex);
+                    ValBuf[dwValSize] = NULL;
+                    AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwValSize);
                     dwValNameLen = max_val_name_len;
                     dwValSize = max_val_size;
                     dwValType = 0L;

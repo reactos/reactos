@@ -35,6 +35,7 @@ OBJS =	framewnd.o \
         treeview.o \
         about.o \
         trace.o \
+        hex_str.o \
         main.o
 
 LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
