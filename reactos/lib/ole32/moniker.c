@@ -505,7 +505,7 @@ HRESULT WINAPI OleRun(LPUNKNOWN pUnknown)
   ICOM_THIS(IRunnableObject,pUnknown);
   LRESULT		ret;
 
-  ret = IRunnableObject_QueryInterface(This,&IID_IRunnableObject,(LPVOID*)&runable);
+  ret = IRunnableObject_QueryInterface(This,&IID_IRunnableObject,(LPVOID*)(char*)&runable);
   if (ret)
 	return 0; /* Appears to return no error. */
   ret  = IRunnableObject_Run(runable,NULL);

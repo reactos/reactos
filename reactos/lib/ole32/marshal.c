@@ -256,7 +256,7 @@ StdMarshalImpl_MarshalInterface(
   IPSFactoryBuffer	*psfacbuf;
 
   TRACE("(...,%s,...)\n",debugstr_guid(riid));
-  IUnknown_QueryInterface((LPUNKNOWN)pv,&IID_IUnknown,(LPVOID*)&pUnk);
+  IUnknown_QueryInterface((LPUNKNOWN)pv,&IID_IUnknown,(LPVOID*)(char*)&pUnk);
   mid.processid = GetCurrentProcessId();
   mid.objectid = (DWORD)pUnk; /* FIXME */
   IUnknown_Release(pUnk);
@@ -280,7 +280,7 @@ StdMarshalImpl_MarshalInterface(
     FIXME("Failed to create a stub for %s\n",debugstr_guid(riid));
     return hres;
   }
-  IUnknown_QueryInterface((LPUNKNOWN)pv,riid,(LPVOID*)&pUnk);
+  IUnknown_QueryInterface((LPUNKNOWN)pv,riid,(LPVOID*)(char*)&pUnk);
   MARSHAL_Register_Stub(&mid,pUnk,stub);
   IUnknown_Release(pUnk);
   return S_OK;
@@ -379,7 +379,8 @@ CoGetStandardMarshal(
   TRACE("(%s,%p,%lx,%p,%lx,%p)\n",
     debugstr_guid(riid),pUnk,dwDestContext,pvDestContext,mshlflags,pMarshal
   );
-  dm = (StdMarshalImpl*) *pMarshal = HeapAlloc(GetProcessHeap(),0,sizeof(StdMarshalImpl));
+  *pMarshal = HeapAlloc(GetProcessHeap(),0,sizeof(StdMarshalImpl));
+  dm = (StdMarshalImpl*) *pMarshal;
   if (!dm) return E_FAIL;
   dm->lpvtbl		= &stdmvtbl;
   dm->ref		= 1;
@@ -447,7 +448,7 @@ CoMarshalInterface( IStream *pStm, REFIID riid, IUnknown *pUnk,
   );
   STUBMGR_Start(); /* Just to be sure we have one running. */
   mid.processid = GetCurrentProcessId();
-  IUnknown_QueryInterface(pUnk,&IID_IUnknown,(LPVOID*)&pUnknown);
+  IUnknown_QueryInterface(pUnk,&IID_IUnknown,(LPVOID*)(char*)&pUnknown);
   mid.objectid = (DWORD)pUnknown;
   IUnknown_Release(pUnknown);
   memcpy(&mid.iid,riid,sizeof(mid.iid));
@@ -522,7 +523,7 @@ CoUnmarshalInterface(IStream *pStm, REFIID riid, LPVOID *ppv) {
       FIXME("Stream read 3 failed, %lx, (%ld of %d)\n",hres,res,sizeof(xclsid));
       return hres;
   }
-  hres=CoCreateInstance(&xclsid,NULL,CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER,&IID_IMarshal,(void**)&pUnk);
+  hres=CoCreateInstance(&xclsid,NULL,CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER,&IID_IMarshal,(void**)(char*)&pUnk);
   if (hres) {
       FIXME("Failed to create instance of unmarshaller %s.\n",debugstr_guid(&xclsid));
       return hres;
@@ -541,6 +542,56 @@ release_marshal:
   IMarshal_Release(pMarshal);
   return hres;
 }
+
+/***********************************************************************
+ *		CoReleaseMarshalData	[OLE32.@]
+ */
+HRESULT WINAPI
+CoReleaseMarshalData(IStream *pStm) {
+  HRESULT 		hres;
+  wine_marshal_id	mid;
+  wine_marshal_data	md;
+  ULONG			res;
+  LPMARSHAL		pMarshal;
+  LPUNKNOWN		pUnk;
+  CLSID			xclsid;
+
+  TRACE("(%p)\n",pStm);
+
+  hres = IStream_Read(pStm,&mid,sizeof(mid),&res);
+  if (hres) {
+      FIXME("Stream read 1 failed, %lx, (%ld of %d)\n",hres,res,sizeof(mid));
+      return hres;
+  }
+  hres = IStream_Read(pStm,&md,sizeof(md),&res);
+  if (hres) {
+      FIXME("Stream read 2 failed, %lx, (%ld of %d)\n",hres,res,sizeof(md));
+      return hres;
+  }
+  hres = IStream_Read(pStm,&xclsid,sizeof(xclsid),&res);
+  if (hres) {
+      FIXME("Stream read 3 failed, %lx, (%ld of %d)\n",hres,res,sizeof(xclsid));
+      return hres;
+  }
+  hres=CoCreateInstance(&xclsid,NULL,CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER,&IID_IMarshal,(void**)(char*)&pUnk);
+  if (hres) {
+      FIXME("Failed to create instance of unmarshaller %s.\n",debugstr_guid(&xclsid));
+      return hres;
+  }
+  hres = IUnknown_QueryInterface(pUnk,&IID_IMarshal,(LPVOID*)(char*)&pMarshal);
+  if (hres) {
+      FIXME("Failed to get IMarshal iface, %lx?\n",hres);
+      return hres;
+  }
+  hres = IMarshal_ReleaseMarshalData(pMarshal,pStm);
+  if (hres) {
+    FIXME("Failed to releasemarshaldata the interface, %lx?\n",hres);
+  }
+  IMarshal_Release(pMarshal);
+  IUnknown_Release(pUnk);
+  return hres;
+}
+
 
 /***********************************************************************
  *		CoMarshalInterThreadInterfaceInStream	[OLE32.@]

@@ -1061,6 +1061,7 @@ HRESULT WINAPI IStream16_fnRead(
 	BYTE	block[BIGSIZE];
 	ULONG	*bytesread=pcbRead,xxread;
 	int	blocknr;
+	LPBYTE	pbv = pv;
 
 	TRACE_(relay)("(%p)->(%p,%ld,%p)\n",This,pv,cb,pcbRead);
 	if (!pcbRead) bytesread=&xxread;
@@ -1081,9 +1082,9 @@ HRESULT WINAPI IStream16_fnRead(
 			cc = cb;
 			if (cc>SMALLSIZE-(This->offset.u.LowPart&(SMALLSIZE-1)))
 				cc=SMALLSIZE-(This->offset.u.LowPart&(SMALLSIZE-1));
-			memcpy((LPBYTE)pv,block+(This->offset.u.LowPart&(SMALLSIZE-1)),cc);
+			memcpy(pbv,block+(This->offset.u.LowPart&(SMALLSIZE-1)),cc);
 			This->offset.u.LowPart+=cc;
-			(LPBYTE)pv+=cc;
+			pbv+=cc;
 			*bytesread+=cc;
 			cb-=cc;
 			blocknr = STORAGE_get_next_small_blocknr(This->hf,blocknr);
@@ -1101,9 +1102,9 @@ HRESULT WINAPI IStream16_fnRead(
 			cc = cb;
 			if (cc>BIGSIZE-(This->offset.u.LowPart&(BIGSIZE-1)))
 				cc=BIGSIZE-(This->offset.u.LowPart&(BIGSIZE-1));
-			memcpy((LPBYTE)pv,block+(This->offset.u.LowPart&(BIGSIZE-1)),cc);
+			memcpy(pbv,block+(This->offset.u.LowPart&(BIGSIZE-1)),cc);
 			This->offset.u.LowPart+=cc;
-			(LPBYTE)pv+=cc;
+			pbv+=cc;
 			*bytesread+=cc;
 			cb-=cc;
 			blocknr=STORAGE_get_next_big_blocknr(This->hf,blocknr);
@@ -1123,6 +1124,7 @@ HRESULT WINAPI IStream16_fnWrite(
 	ULONG	*byteswritten=pcbWrite,xxwritten;
 	int	oldsize,newsize,i,curoffset=0,lastblocknr,blocknr,cc;
 	HANDLE	hf = This->hf;
+	LPBYTE	pbv = (LPBYTE)pv;
 
 	if (!pcbWrite) byteswritten=&xxwritten;
 	*byteswritten = 0;
@@ -1340,14 +1342,14 @@ HRESULT WINAPI IStream16_fnWrite(
 			if (cc>cb)
 				cc=cb;
 			memcpy(	((LPBYTE)block)+(This->offset.u.LowPart&(SMALLSIZE-1)),
-				(LPBYTE)((char *) pv+curoffset),
+				pbv+curoffset,
 				cc
 			);
 			if (!STORAGE_put_small_block(hf,blocknr,block))
 				return E_FAIL;
 			cb			-= cc;
 			curoffset		+= cc;
-			(LPBYTE)pv		+= cc;
+			pbv			+= cc;
 			This->offset.u.LowPart	+= cc;
 			*byteswritten		+= cc;
 			blocknr = STORAGE_get_next_small_blocknr(hf,blocknr);
@@ -1368,14 +1370,14 @@ HRESULT WINAPI IStream16_fnWrite(
 			if (cc>cb)
 				cc=cb;
 			memcpy(	((LPBYTE)block)+(This->offset.u.LowPart&(BIGSIZE-1)),
-				(LPBYTE)((char *) pv+curoffset),
+				pbv+curoffset,
 				cc
 			);
 			if (!STORAGE_put_big_block(hf,blocknr,block))
 				return E_FAIL;
 			cb			-= cc;
 			curoffset		+= cc;
-			(LPBYTE)pv		+= cc;
+			pbv			+= cc;
 			This->offset.u.LowPart	+= cc;
 			*byteswritten		+= cc;
 			blocknr = STORAGE_get_next_big_blocknr(hf,blocknr);

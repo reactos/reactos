@@ -1015,7 +1015,7 @@ _LocalServerThread(LPVOID param) {
     strcpy(pipefn,PIPEPREF);
     WINE_StringFromCLSID(&newClass->classIdentifier,pipefn+strlen(PIPEPREF));
 
-    hres = IUnknown_QueryInterface(newClass->classObject,&IID_IClassFactory,(LPVOID*)&classfac);
+    hres = IUnknown_QueryInterface(newClass->classObject,&IID_IClassFactory,(LPVOID*)(char*)&classfac);
     if (hres) return hres;
 
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
@@ -1543,7 +1543,7 @@ HRESULT WINAPI CoCreateInstanceEx(
 			pUnkOuter,
 			dwClsContext,
 			&IID_IUnknown,
-			(VOID**)&pUnk);
+			(VOID**)(char*)&pUnk);
 
   if (hr)
     return hr;

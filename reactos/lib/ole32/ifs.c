@@ -144,7 +144,7 @@ static HRESULT WINAPI IMalloc_fnQueryInterface(LPMALLOC iface,REFIID refiid,LPVO
 	TRACE("(%s,%p)\n",debugstr_guid(refiid),obj);
 
 	if (IsEqualIID(&IID_IUnknown,refiid) || IsEqualIID(&IID_IMalloc,refiid)) {
-		*obj = (LPMALLOC)&Malloc32;
+		*obj = (LPMALLOC)(char*)&Malloc32;
 		return S_OK;
 	}
 	return E_NOINTERFACE;
@@ -380,7 +380,7 @@ static HRESULT WINAPI IMallocSpy_fnQueryInterface(LPMALLOCSPY iface,REFIID refii
 	TRACE("(%s,%p)\n",debugstr_guid(refiid),obj);
 
 	if (IsEqualIID(&IID_IUnknown,refiid) || IsEqualIID(&IID_IMallocSpy,refiid)) {
-		*obj = (LPMALLOC)&MallocSpy;
+		*obj = (LPMALLOC)(char*)&MallocSpy;
 		return S_OK;
 	}
 	return E_NOINTERFACE;
@@ -530,7 +530,7 @@ static ICOM_VTABLE(IMallocSpy) VT_IMallocSpy =
  */
 HRESULT WINAPI CoGetMalloc(DWORD dwMemContext, LPMALLOC *lpMalloc)
 {
-        *lpMalloc = (LPMALLOC)&Malloc32;
+        *lpMalloc = (LPMALLOC)(char*)&Malloc32;
         return S_OK;
 }
 
@@ -541,14 +541,14 @@ HRESULT WINAPI CoGetMalloc(DWORD dwMemContext, LPMALLOC *lpMalloc)
  */
 LPVOID WINAPI CoTaskMemAlloc(ULONG size)
 {
-        return IMalloc_Alloc((LPMALLOC)&Malloc32,size);
+        return IMalloc_Alloc((LPMALLOC)(char*)&Malloc32,size);
 }
 /***********************************************************************
  *           CoTaskMemFree      [OLE32.@]
  */
 VOID WINAPI CoTaskMemFree(LPVOID ptr)
 {
-        IMalloc_Free((LPMALLOC)&Malloc32, ptr);
+        IMalloc_Free((LPMALLOC)(char*)&Malloc32, ptr);
 }
 
 /***********************************************************************
@@ -558,7 +558,7 @@ VOID WINAPI CoTaskMemFree(LPVOID ptr)
  */
 LPVOID WINAPI CoTaskMemRealloc(LPVOID pvOld, ULONG size)
 {
-        return IMalloc_Realloc((LPMALLOC)&Malloc32, pvOld, size);
+        return IMalloc_Realloc((LPMALLOC)(char*)&Malloc32, pvOld, size);
 }
 
 /***********************************************************************
@@ -576,13 +576,13 @@ HRESULT WINAPI CoRegisterMallocSpy(LPMALLOCSPY pMallocSpy)
 	TRACE("\n");
 
 	/* HACK TO ACTIVATE OUT SPY */
-	if (pMallocSpy == (LPVOID)-1) pMallocSpy =(IMallocSpy*)&MallocSpy;
+	if (pMallocSpy == (LPVOID)-1) pMallocSpy =(IMallocSpy*)(char*)&MallocSpy;
 
 	if(Malloc32.pSpy) return CO_E_OBJISREG;
 
         EnterCriticalSection(&IMalloc32_SpyCS);
 
-	if (SUCCEEDED(IUnknown_QueryInterface(pMallocSpy, &IID_IMallocSpy, (LPVOID*)&pSpy))) {
+	if (SUCCEEDED(IUnknown_QueryInterface(pMallocSpy, &IID_IMallocSpy, (LPVOID*)(char*)&pSpy))) {
 	    Malloc32.pSpy = pSpy;
 	    hres = S_OK;
 	}
@@ -607,7 +607,7 @@ HRESULT WINAPI CoRevokeMallocSpy(void)
         EnterCriticalSection(&IMalloc32_SpyCS);
 
 	/* if it's our spy it's time to dump the leaks */
-	if (Malloc32.pSpy == (IMallocSpy*)&MallocSpy) {
+	if (Malloc32.pSpy == (IMallocSpy*)(char*)&MallocSpy) {
 	    MallocSpyDumpLeaks();
 	}
 

@@ -5445,7 +5445,7 @@ HRESULT WINAPI StgCreateDocfile(
   if (pwcsName == 0)
   {
     WCHAR tempPath[MAX_PATH];
-    WCHAR prefix[] = { 'S', 'T', 'O', 0 };
+    static const WCHAR prefix[] = { 'S', 'T', 'O', 0 };
 
     if (!(grfMode & STGM_SHARE_EXCLUSIVE))
       return STG_E_INVALIDFLAG;
@@ -5534,6 +5534,13 @@ HRESULT WINAPI StgCreateDocfile(
          (void**)ppstgOpen);
 
   return hr;
+}
+
+HRESULT WINAPI StgCreateStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgfmt, DWORD grfAttrs, STGOPTIONS* pStgOptions, void* reserved, REFIID riid, void** ppObjectOpen)
+{
+    TRACE("(%s, %lx, %lx, %lx, %p, %p, %p, %p)\n", debugstr_w(pwcsName),
+          grfMode, stgfmt, grfAttrs, pStgOptions, reserved, riid, ppObjectOpen);
+    return STG_E_UNIMPLEMENTEDFUNCTION;
 }
 
 /******************************************************************************
@@ -5891,7 +5898,7 @@ HRESULT  WINAPI OleLoadFromStream(IStream *pStm,REFIID iidInterface,void** ppvOb
     res=CoCreateInstance(&clsid,NULL,CLSCTX_INPROC_SERVER,iidInterface,ppvObj);
     if (!SUCCEEDED(res))
 	return res;
-    res=IUnknown_QueryInterface((IUnknown*)*ppvObj,&IID_IPersistStream,(LPVOID*)&xstm);
+    res=IUnknown_QueryInterface((IUnknown*)*ppvObj,&IID_IPersistStream,(LPVOID*)(char*)&xstm);
     if (!SUCCEEDED(res)) {
 	IUnknown_Release((IUnknown*)*ppvObj);
 	return res;
@@ -6424,7 +6431,7 @@ void OLECONVERT_GetOLE20FromOLE10(LPSTORAGE pDestStorage, BYTE *pBuffer, DWORD n
     IStorage *pTempStorage;
     DWORD dwNumOfBytesWritten;
     WCHAR wstrTempDir[MAX_PATH], wstrTempFile[MAX_PATH];
-    WCHAR wstrPrefix[] = {'s', 'i', 's', 0};
+    static const WCHAR wstrPrefix[] = {'s', 'i', 's', 0};
 
     /* Create a temp File */
     GetTempPathW(MAX_PATH, wstrTempDir);
@@ -6474,7 +6481,7 @@ DWORD OLECONVERT_WriteOLE20ToBuffer(LPSTORAGE pStorage, BYTE **pData)
     DWORD nDataLength = 0;
     IStorage *pTempStorage;
     WCHAR wstrTempDir[MAX_PATH], wstrTempFile[MAX_PATH];
-    WCHAR wstrPrefix[] = {'s', 'i', 's', 0};
+    static const WCHAR wstrPrefix[] = {'s', 'i', 's', 0};
 
     *pData = NULL;
 
@@ -6527,7 +6534,7 @@ void OLECONVERT_CreateOleStream(LPSTORAGE pStorage)
 {
     HRESULT hRes;
     IStream *pStream;
-    WCHAR wstrStreamName[] = {1,'O', 'l', 'e', 0};
+    static const WCHAR wstrStreamName[] = {1,'O', 'l', 'e', 0};
     BYTE pOleStreamHeader [] =
     {
         0x01, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00,
@@ -6616,7 +6623,7 @@ static HRESULT STORAGE_WriteCompObj( LPSTORAGE pstg, CLSID *clsid,
 {
     IStream *pstm;
     HRESULT r = S_OK;
-    WCHAR szwStreamName[] = {1, 'C', 'o', 'm', 'p', 'O', 'b', 'j', 0};
+    static const WCHAR szwStreamName[] = {1, 'C', 'o', 'm', 'p', 'O', 'b', 'j', 0};
 
     static const BYTE unknown1[12] =
        { 0x01, 0x00, 0xFE, 0xFF, 0x03, 0x0A, 0x00, 0x00,
@@ -6663,7 +6670,7 @@ static HRESULT CLSIDFromUserType(LPCWSTR lpszUserType, CLSID *clsid)
     HKEY hkey, hkeyclsid;
     LPWSTR buffer = NULL;
     BOOL found = FALSE;
-    const WCHAR szclsid[] = { 'C','L','S','I','D',0 };
+    static const WCHAR szclsid[] = { 'C','L','S','I','D',0 };
 
     TRACE("Finding CLSID for %s\n", debugstr_w(lpszUserType));
 
@@ -6770,7 +6777,7 @@ HRESULT WINAPI ReadFmtUserTypeStg (LPSTORAGE pstg, CLIPFORMAT* pcf, LPOLESTR* lp
 {
     HRESULT r;
     IStream *stm = 0;
-    const WCHAR szCompObj[] = { 1, 'C','o','m','p','O','b','j', 0 };
+    static const WCHAR szCompObj[] = { 1, 'C','o','m','p','O','b','j', 0 };
     unsigned char unknown1[12];
     unsigned char unknown2[16];
     DWORD count;
@@ -6855,7 +6862,7 @@ HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName
     IStream *pStream;
     HRESULT hStorageRes, hRes = S_OK;
     OLECONVERT_ISTORAGE_COMPOBJ IStorageCompObj;
-    WCHAR wstrStreamName[] = {1,'C', 'o', 'm', 'p', 'O', 'b', 'j', 0};
+    static const WCHAR wstrStreamName[] = {1,'C', 'o', 'm', 'p', 'O', 'b', 'j', 0};
     WCHAR bufferW[OLESTREAM_MAX_STR_LEN];
 
     BYTE pCompObjUnknown1[] = {0x01, 0x00, 0xFE, 0xFF, 0x03, 0x0A, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -6956,7 +6963,7 @@ void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, DWORD d
 {
     HRESULT hRes;
     IStream *pStream;
-    WCHAR wstrStreamName[] = {2, 'O', 'l', 'e', 'P', 'r', 'e', 's', '0', '0', '0', 0};
+    static const WCHAR wstrStreamName[] = {2, 'O', 'l', 'e', 'P', 'r', 'e', 's', '0', '0', '0', 0};
     BYTE pOlePresStreamHeader [] =
     {
         0xFF, 0xFF, 0xFF, 0xFF, 0x03, 0x00, 0x00, 0x00,
@@ -7040,7 +7047,7 @@ void OLECONVERT_CreateOle10NativeStream(LPSTORAGE pStorage, BYTE *pData, DWORD d
 {
     HRESULT hRes;
     IStream *pStream;
-    WCHAR wstrStreamName[] = {1, 'O', 'l', 'e', '1', '0', 'N', 'a', 't', 'i', 'v', 'e', 0};
+    static const WCHAR wstrStreamName[] = {1, 'O', 'l', 'e', '1', '0', 'N', 'a', 't', 'i', 'v', 'e', 0};
 
     /* Create the Ole10Native Stream */
     hRes = IStorage_CreateStream(pStorage, wstrStreamName,
@@ -7081,7 +7088,7 @@ HRESULT OLECONVERT_GetOLE10ProgID(LPSTORAGE pStorage, char *strProgID, DWORD *dw
     IStream *pStream;
     LARGE_INTEGER iSeekPos;
     OLECONVERT_ISTORAGE_COMPOBJ CompObj;
-    WCHAR wstrStreamName[] = {1,'C', 'o', 'm', 'p', 'O', 'b', 'j', 0};
+    static const WCHAR wstrStreamName[] = {1,'C', 'o', 'm', 'p', 'O', 'b', 'j', 0};
 
     /* Open the CompObj Stream */
     hRes = IStorage_OpenStream(pStorage, wstrStreamName, NULL,
@@ -7150,7 +7157,7 @@ void OLECONVERT_GetOle10PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
 
     HRESULT hRes;
     IStream *pStream;
-    WCHAR wstrStreamName[] = {1, 'O', 'l', 'e', '1', '0', 'N', 'a', 't', 'i', 'v', 'e', 0};
+    static const WCHAR wstrStreamName[] = {1, 'O', 'l', 'e', '1', '0', 'N', 'a', 't', 'i', 'v', 'e', 0};
 
     /* Initialize Default data for OLESTREAM */
     pOleStreamData[0].dwOleID = OLESTREAM_ID;
@@ -7203,7 +7210,7 @@ void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
     HRESULT hRes;
     IStream *pStream;
     OLECONVERT_ISTORAGE_OLEPRES olePress;
-    WCHAR wstrStreamName[] = {2, 'O', 'l', 'e', 'P', 'r', 'e', 's', '0', '0', '0', 0};
+    static const WCHAR wstrStreamName[] = {2, 'O', 'l', 'e', 'P', 'r', 'e', 's', '0', '0', '0', 0};
 
     /* Initialize Default data for OLESTREAM */
     pOleStreamData[0].dwOleID = OLESTREAM_ID;
@@ -7228,7 +7235,7 @@ void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
     {
         LARGE_INTEGER iSeekPos;
         METAFILEPICT16 MetaFilePict;
-        char strMetafilePictName[] = "METAFILEPICT";
+        static const char strMetafilePictName[] = "METAFILEPICT";
 
         /* Set the TypeID for a Metafile */
         pOleStreamData[1].dwTypeID = 5;
@@ -7384,7 +7391,7 @@ HRESULT WINAPI OleConvertIStorageToOLESTREAM (
     HRESULT hRes = S_OK;
     IStream *pStream;
     OLECONVERT_OLESTREAM_DATA pOleStreamData[2];
-    WCHAR wstrStreamName[] = {1, 'O', 'l', 'e', '1', '0', 'N', 'a', 't', 'i', 'v', 'e', 0};
+    static const WCHAR wstrStreamName[] = {1, 'O', 'l', 'e', '1', '0', 'N', 'a', 't', 'i', 'v', 'e', 0};
 
 
     memset(pOleStreamData, 0, sizeof(pOleStreamData));

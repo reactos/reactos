@@ -84,6 +84,14 @@ typedef enum tagSTDMSHLFLAGS {
     SMEXF_HANDLER = 0x02
 } STDMSHLFLAGS;
 
+typedef struct tagSTGOPTIONS
+{
+    USHORT usVersion;
+    USHORT reserved;
+    ULONG ulSectorSize;
+    const WCHAR* pwcsTemplateFile;
+} STGOPTIONS;
+
 WINOLEAPI_(DWORD) CoBuildVersion(void);
 WINOLEAPI CoInitialize(PVOID);
 WINOLEAPI CoInitializeEx(LPVOID,DWORD);
@@ -147,6 +155,7 @@ WINOLEAPI CreateDataAdviseHolder(LPDATAADVISEHOLDER*);
 WINOLEAPI CreateDataCache(LPUNKNOWN,REFCLSID,REFIID,PVOID*);
 WINOLEAPI StgCreateDocfile(const OLECHAR*,DWORD,DWORD,IStorage**);
 WINOLEAPI StgCreateDocfileOnILockBytes(ILockBytes*,DWORD,DWORD,IStorage**);
+WINOLEAPI StgCreateStorageEx(const WCHAR*,DWORD,DWORD,DWORD,STGOPTIONS*,void*,REFIID,void**);
 WINOLEAPI StgOpenStorage(const OLECHAR*,IStorage*,DWORD,SNB,DWORD,IStorage**);
 WINOLEAPI StgOpenStorageOnILockBytes(ILockBytes*,IStorage*,DWORD,SNB,DWORD,IStorage**);
 WINOLEAPI StgIsStorageFile(const OLECHAR*);

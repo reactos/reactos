@@ -539,7 +539,7 @@ HRESULT WINAPI AntiMonikerImpl_GetDisplayName(IMoniker* iface,
                                               IMoniker* pmkToLeft,
                                               LPOLESTR *ppszDisplayName)
 {
-    WCHAR back[]={'\\','.','.',0};
+    static const WCHAR back[]={'\\','.','.',0};
 
     TRACE("(%p,%p,%p,%p)\n",iface,pbc,pmkToLeft,ppszDisplayName);
 

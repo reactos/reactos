@@ -156,12 +156,12 @@ CFStub_Invoke(
 	}
 	memcpy(&iid,msg->Buffer,sizeof(iid));
 	TRACE("->CreateInstance(%s)\n",debugstr_guid(&iid));
-	hres = IUnknown_QueryInterface(This->pUnkServer,&IID_IClassFactory,(LPVOID*)&classfac);
+	hres = IUnknown_QueryInterface(This->pUnkServer,&IID_IClassFactory,(LPVOID*)(char*)&classfac);
 	if (hres) {
 	    FIXME("Ole server does not provide a IClassFactory?\n");
 	    return hres;
 	}
-	hres = IClassFactory_CreateInstance(classfac,NULL,&iid,(LPVOID*)&ppv);
+	hres = IClassFactory_CreateInstance(classfac,NULL,&iid,(LPVOID*)(char*)&ppv);
 	IClassFactory_Release(classfac);
 	if (hres) {
 	    msg->cbBuffer = 0;
