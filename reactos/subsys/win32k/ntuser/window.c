@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.234 2004/05/19 19:09:20 weiden Exp $
+/* $Id: window.c,v 1.235 2004/05/19 19:16:47 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3575,6 +3575,12 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
   UNICODE_STRING SafeMessageName;
   NTSTATUS Status;
   UINT Ret;
+  
+  if(MessageNameUnsafe == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
   
   Status = IntSafeCopyUnicodeStringTerminateNULL(&SafeMessageName, MessageNameUnsafe);
   if(!NT_SUCCESS(Status))
