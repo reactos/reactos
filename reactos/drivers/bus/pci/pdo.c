@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.11 2004/10/24 09:14:03 navaraf Exp $
+/* $Id: pdo.c,v 1.12 2004/11/17 20:39:27 navaraf Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -351,7 +351,8 @@ PdoQueryResourceRequirements(
 			     &Flags))
 	break;
 
-      ResCount += 2;
+      if (Length != 0)
+        ResCount += 2;
     }
 
     /* FIXME: Check ROM address */
@@ -370,7 +371,8 @@ PdoQueryResourceRequirements(
 			     &Flags))
 	break;
 
-      ResCount += 2;
+      if (Length != 0)
+        ResCount += 2;
     }
   }
   else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_CARDBUS_BRIDGE_TYPE)
@@ -642,7 +644,8 @@ PdoQueryResources(
 			     &Flags))
         break;
 
-      ResCount++;
+      if (Length)
+        ResCount++;
     }
 
     if ((PciConfig.u.type0.InterruptPin != 0) &&
@@ -660,7 +663,8 @@ PdoQueryResources(
 			     &Flags))
         break;
 
-      ResCount++;
+      if (Length != 0)
+        ResCount++;
     }
   }
   else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 2)
