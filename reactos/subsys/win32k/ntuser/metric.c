@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.7 2003/05/18 17:16:17 ea Exp $
+/* $Id: metric.c,v 1.8 2003/07/17 19:31:49 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -36,6 +36,7 @@
 #include <include/error.h>
 #include <include/winsta.h>
 #include <include/msgqueue.h>
+#include <include/window.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -46,6 +47,9 @@
 ULONG STDCALL
 NtUserGetSystemMetrics(ULONG Index)
 {
+  PWINDOW_OBJECT DesktopWindow;
+  ULONG Width, Height;
+
   switch (Index)
     {
     case SM_ARRANGE:
@@ -76,9 +80,10 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CYFRAME:
       return(4);
     case SM_CXFULLSCREEN:
-      return(640);
+      /* FIXME: shouldn't we take borders etc into account??? */
+      return NtUserGetSystemMetrics(SM_CXSCREEN);
     case SM_CYFULLSCREEN:
-      return(480);
+      return NtUserGetSystemMetrics(SM_CYSCREEN);
     case SM_CXHSCROLL:
     case SM_CYHSCROLL:
       return(16);
@@ -126,9 +131,20 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CYMINTRACK:
       return(27);
     case SM_CXSCREEN:
-      return(640);
     case SM_CYSCREEN:
-      return(480);
+      DesktopWindow = W32kGetWindowObject(W32kGetDesktopWindow());
+      if (NULL != DesktopWindow)
+	{
+	  Width = DesktopWindow->WindowRect.right;
+	  Height = DesktopWindow->WindowRect.bottom;
+	}
+      else
+	{
+	  Width = 640;
+	  Height = 480;
+	}
+      W32kReleaseWindowObject(DesktopWindow);
+      return SM_CXSCREEN == Index ? Width : Height;
     case SM_CXSIZE:
     case SM_CYSIZE:
       return(18);
