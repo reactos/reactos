@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.77 2004/08/15 16:39:07 chorns Exp $
+/* $Id: mm.c,v 1.78 2004/08/21 19:04:47 tamlin Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -498,8 +498,8 @@ MmSetAddressRangeModified (
 /*
  * @unimplemented
  */
-NTKERNELAPI
 PVOID
+NTKERNELAPI
 MmGetSystemRoutineAddress (
     IN PUNICODE_STRING SystemRoutineName
     )
