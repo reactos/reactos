@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.86 2004/08/01 07:24:58 hbirr Exp $
+/* $Id: npool.c,v 1.87 2004/08/08 20:33:17 ion Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -150,6 +150,9 @@ ULONG EiFreeNonPagedPool = 0;
  * Total memory used for nonpaged pool blocks
  */
 ULONG EiUsedNonPagedPool = 0;
+
+/* Total quota for Non Paged Pool */
+ULONG MmTotalNonPagedPoolQuota = 0;
 
 /*
  * Allocate a range of memory in the nonpaged pool
@@ -1830,6 +1833,19 @@ MiInitializeNonPagedPool(VOID)
    blk->previous = (BLOCK_HDR*)MiNonPagedPoolStart;
    add_to_free_list(blk);
 #endif
+}
+
+PVOID
+STDCALL
+MiAllocateSpecialPool  (IN POOL_TYPE PoolType,
+                        IN SIZE_T NumberOfBytes,
+                        IN ULONG Tag,
+                        IN ULONG Underrun
+                        )
+{
+    /* FIXME: Special Pools not Supported */
+    DbgPrint("Special Pools not supported\n");
+    return 0;
 }
 
 /* EOF */

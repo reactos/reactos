@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.28 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: ppool.c,v 1.29 2004/08/08 20:33:17 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,6 +52,7 @@ MM_PPOOL_USED_BLOCK_HEADER, *PMM_PPOOL_USED_BLOCK_HEADER;
 
 PVOID MmPagedPoolBase;
 ULONG MmPagedPoolSize;
+ULONG MmTotalPagedPoolQuota = 0;
 static FAST_MUTEX MmPagedPoolLock;
 static PMM_PPOOL_FREE_BLOCK_HEADER MmPagedPoolFirstFreeBlock;
 #if MM_PPOOL_REDZONE_BYTES

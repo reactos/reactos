@@ -15,6 +15,14 @@ VOID STDCALL
 ExFreePagedPool(IN PVOID Block);
 VOID MmInitializePagedPool(VOID);
 
+PVOID
+STDCALL
+MiAllocateSpecialPool  (IN POOL_TYPE PoolType,
+                        IN SIZE_T NumberOfBytes,
+                        IN ULONG Tag,
+                        IN ULONG Underrun
+                        );
+
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
 

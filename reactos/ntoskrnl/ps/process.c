@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.137 2004/07/22 17:22:38 jimtabor Exp $
+/* $Id: process.c,v 1.138 2004/08/08 20:33:17 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1991,7 +1991,7 @@ PsSetProcessWin32WindowStation(
 
 /* Pool Quotas */
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -2001,39 +2001,47 @@ PsChargePoolQuota(
     IN ULONG_PTR Amount
     )
 {
-	UNIMPLEMENTED;
+    NTSTATUS Status;
+
+    /* Charge the usage */
+    Status = PsChargeProcessPoolQuota(Process, PoolType, Amount);
+
+    /* Raise Exception */
+    if (!NT_SUCCESS(Status)) {
+        ExRaiseStatus(Status);
+    }
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
 PsChargeProcessNonPagedPoolQuota (
-    	IN PEPROCESS Process,
-    	IN ULONG_PTR Amount
-	)
+    IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+    )
 {
-	UNIMPLEMENTED;	
-	return STATUS_NOT_IMPLEMENTED;
+    /* Call the general function */
+    return PsChargeProcessPoolQuota(Process, NonPagedPool, Amount);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
 PsChargeProcessPagedPoolQuota (
-    	IN PEPROCESS Process,
-    	IN ULONG_PTR Amount
-	)
+    IN PEPROCESS Process,
+    IN ULONG_PTR Amount
+    )
 {
-	UNIMPLEMENTED;	
-	return STATUS_NOT_IMPLEMENTED;
+    /* Call the general function */
+    return PsChargeProcessPoolQuota(Process, PagedPool, Amount);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
@@ -2043,8 +2051,53 @@ PsChargeProcessPoolQuota(
     IN ULONG_PTR Amount
     )
 {
-	UNIMPLEMENTED;	
-	return STATUS_NOT_IMPLEMENTED;
+    PEPROCESS_QUOTA_BLOCK QuotaBlock;
+    KIRQL OldValue;
+    ULONG NewUsageSize;
+    ULONG NewMaxQuota;
+
+    /* Get current Quota Block */
+    QuotaBlock = Process->QuotaBlock;
+
+    /* Quota Operations are not to be done on the SYSTEM Process */
+    if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
+
+    /* Acquire Spinlock */
+    KeAcquireSpinLock(&QuotaBlock->QuotaLock, &OldValue);
+
+    /* New Size in use */
+    NewUsageSize = QuotaBlock->QuotaPoolUsage[PoolType] + Amount;
+
+    /* Does this size respect the quota? */
+    if (NewUsageSize > QuotaBlock->QuotaPoolLimit[PoolType]) {
+
+        /* It doesn't, so keep raising the Quota */
+        while (MiRaisePoolQuota(PoolType, QuotaBlock->QuotaPoolLimit[PoolType], &NewMaxQuota)) {
+            /* Save new Maximum Quota */
+            QuotaBlock->QuotaPoolLimit[PoolType] = NewMaxQuota;
+
+            /* See if the new Maximum Quota fulfills our need */
+            if (NewUsageSize <= NewMaxQuota) goto QuotaChanged;
+        }
+
+        KeReleaseSpinLock(&QuotaBlock->QuotaLock, OldValue);
+        return STATUS_QUOTA_EXCEEDED;
+    }
+
+QuotaChanged:
+    /* Save new Usage */
+    QuotaBlock->QuotaPoolUsage[PoolType] = NewUsageSize;
+
+    /* Is this a new peak? */
+    if (NewUsageSize > QuotaBlock->QuotaPeakPoolUsage[PoolType]) {
+        QuotaBlock->QuotaPeakPoolUsage[PoolType] = NewUsageSize;
+    }
+
+    /* Release spinlock */
+    KeReleaseSpinLock(&QuotaBlock->QuotaLock, OldValue);
+
+    /* All went well */
+    return STATUS_SUCCESS;
 }
 
 /*

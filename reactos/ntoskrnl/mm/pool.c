@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.30 2004/07/17 03:03:52 ion Exp $
+/* $Id: pool.c,v 1.31 2004/08/08 20:33:17 ion Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -13,9 +13,16 @@
 #include <reactos/bugcodes.h>
 #include <internal/ntoskrnl.h>
 #include <internal/pool.h>
+#include <internal/mm.h>
+#include <pseh.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+extern ULONG MiNonPagedPoolLength;
+extern ULONG MmTotalPagedPoolQuota;
+extern ULONG MmTotalNonPagedPoolQuota;
+extern MM_STATS MmStats;
 
 /* GLOBALS *****************************************************************/
 
@@ -147,7 +154,7 @@ ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -158,28 +165,60 @@ ExAllocatePoolWithTagPriority(
     IN EX_POOL_PRIORITY Priority
     )
 {
-	UNIMPLEMENTED;
+    /* Check if this is one of the "Special" Flags, used by the Verifier */
+    if (Priority & 8) {
+        /* Check if this is a xxSpecialUnderrun */
+        if (Priority & 1) {
+            return MiAllocateSpecialPool(PoolType, NumberOfBytes, Tag, 1);
+        } else { /* xxSpecialOverrun */
+            return MiAllocateSpecialPool(PoolType, NumberOfBytes, Tag, 0);
+        }
+    }
+
+    /* FIXME: Do Ressource Checking Based on Priority and fail if resources too low*/
+
+    /* Do the allocation */
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
+
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID STDCALL
 ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
                             IN ULONG  NumberOfBytes,
                             IN ULONG  Tag)
 {
-#if 0
-   PVOID Block;
-   Block = EiAllocatePool(PoolType,
-                          NumberOfBytes,
-                          Tag,
-                          (PVOID)__builtin_return_address(0));
-   return(Block);
-#else
+    PVOID Block;
+    PEPROCESS Process;
 
-   UNIMPLEMENTED;
-   return(NULL);
-#endif
+    /* Allocate the Pool First */
+    Block = EiAllocatePool(PoolType,
+                            NumberOfBytes,
+                            Tag,
+                            &ExAllocatePoolWithQuotaTag);
+
+    /* "Quota is not charged to the thread for allocations >= PAGE_SIZE" - OSR Docs */
+    if (!(NumberOfBytes >= PAGE_SIZE)) {
+
+        /* Get the Current Process */
+        Process = PsGetCurrentProcess();
+
+        /* PsChargePoolQuota returns an exception, so this needs SEH */
+        _SEH_FILTER(FreeAndGoOn) {
+            /* Couldn't charge, so free the pool and let the caller SEH manage */
+            ExFreePool(Block);
+            return EXCEPTION_CONTINUE_SEARCH;
+        } _SEH_TRY_FILTER(FreeAndGoOn) {
+            //* FIXME: Is there a way to get the actual Pool size allocated from the pool header? */
+            PsChargePoolQuota(Process, PoolType, NumberOfBytes);
+        } _SEH_HANDLE {
+            /* Quota Exceeded and the caller had no SEH! */
+            KeBugCheck(STATUS_QUOTA_EXCEEDED);
+        } _SEH_END;
+    }
+
+    return Block;
 }
 
 /*
@@ -250,8 +289,42 @@ MmFreeMappingAddress (
 	UNIMPLEMENTED;
 }
 
+BOOLEAN
+STDCALL
+MiRaisePoolQuota(
+    IN POOL_TYPE PoolType,
+    IN ULONG CurrentMaxQuota,
+    OUT PULONG NewMaxQuota
+    )
+{
+    /* Different quota raises depending on the type (64K vs 512K) */
+    if (PoolType == PagedPool) {
+
+        /* Make sure that 4MB is still left */
+        if ((MM_PAGED_POOL_SIZE >> 12) < ((MmPagedPoolSize + 4194304) >> 12)) {
+            return FALSE;
+        }
+
+        /* Increase Paged Pool Quota by 512K */
+        MmTotalPagedPoolQuota += 524288;
+        *NewMaxQuota = CurrentMaxQuota + 524288;
+        return TRUE;
+
+    } else { /* Nonpaged Pool */
+
+        /* Check if we still have 200 pages free*/
+        if (MmStats.NrFreePages < 200) return FALSE;
+
+        /* Check that 4MB is still left */
+        if ((MM_NONPAGED_POOL_SIZE >> 12) < ((MiNonPagedPoolLength + 4194304) >> 12)) {
+            return FALSE;
+        }
+
+        /* Increase Non Paged Pool Quota by 64K */
+        MmTotalNonPagedPoolQuota += 65536;
+        *NewMaxQuota = CurrentMaxQuota + 65536;
+        return TRUE;
+    }
+}
+
 /* EOF */
-
-
-
-

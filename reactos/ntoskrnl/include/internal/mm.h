@@ -13,6 +13,8 @@
 extern ULONG MiFreeSwapPages;
 extern ULONG MiUsedSwapPages;
 extern ULONG MmPagedPoolSize;
+extern ULONG MmTotalPagedPoolQuota;
+extern ULONG MmTotalNonPagedPoolQuota;
 
 struct _EPROCESS;
 
@@ -135,6 +137,17 @@ typedef struct _SECTION_OBJECT
 #ifndef __USE_W32API
 
 typedef struct _SECTION_OBJECT *PSECTION_OBJECT;
+
+typedef struct _EPROCESS_QUOTA_BLOCK {
+KSPIN_LOCK      QuotaLock;
+ULONG           ReferenceCount;
+ULONG           QuotaPeakPoolUsage[2];
+ULONG           QuotaPoolUsage[2];
+ULONG           QuotaPoolLimit[2];
+ULONG           PeakPagefileUsage;
+ULONG           PagefileUsage;
+ULONG           PagefileLimit;
+} EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
 
 #endif /* __USE_W32API */
 
@@ -348,6 +361,16 @@ VOID MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly);
 VOID MiInitializeNonPagedPool(VOID);
 
 PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);
+
+/* pool.c *******************************************************************/
+
+BOOLEAN
+STDCALL
+MiRaisePoolQuota(
+    IN POOL_TYPE PoolType,
+    IN ULONG CurrentMaxQuota,
+    OUT PULONG NewMaxQuota
+    );
 
 /* mdl.c *********************************************************************/
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.62 2004/07/23 07:44:26 jimtabor Exp $
+/* $Id: ps.h,v 1.63 2004/08/08 20:33:17 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -406,7 +406,7 @@ struct _EPROCESS
   HANDLE                SectionHandle;
   PPEB                  Peb;
   PVOID                 SectionBaseAddress;
-  PVOID                 QuotaBlock;
+  PEPROCESS_QUOTA_BLOCK QuotaBlock;
   NTSTATUS              LastThreadExitStatus;
   PVOID                 WorkingSetWatch;
   HANDLE                InheritedFromUniqueProcessId;
