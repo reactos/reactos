@@ -39,4 +39,18 @@
 /* Menu flags */
 #define MENU_SEPERATOR			0x00000001
 
+/* Message box flags */
+#define WGF_MB_YESNO			0x00000001
+#define WGF_MB_OK			0x00000010
+#define WGF_MB_CANCEL			0x00000100
+#define WGF_MB_ICON_INFO		0x00100000
+#define WGF_MB_ICON_ASK			0x01000000
+#define WGF_MB_ICON_STOP		0x10000000
+
+/* Message box return values */
+#define ID_OK				1
+#define ID_YES				2
+#define ID_NO				3
+#define ID_CANCEL			4
+
 #endif /* __RSK_DEFINES_H */

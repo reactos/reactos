@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: libskygi.c,v 1.9 2004/08/14 01:03:38 weiden Exp $
+/* $Id: libskygi.c,v 1.10 2004/08/14 07:15:05 navaraf Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -1126,10 +1126,10 @@ GI_add_menu_sub(widget_menu *Menu,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int __cdecl
-GI_messagebox(s_window *win,
+GI_messagebox(s_window *Window,
               unsigned int Flags,
               char *Title,
               char *Fmt,
@@ -1137,19 +1137,38 @@ GI_messagebox(s_window *win,
 {
    CHAR Buffer[4096];
    va_list ArgList;
+   ULONG MbFlags, MbResult;
 
    DBG("GI_messagebox(0x%x, 0x%x, 0x%x, 0x%x, ...)\n",
-       win, Flags, Title, Fmt);
+       Window, Flags, Title, Fmt);
 
    va_start(ArgList, Fmt);
    _vsnprintf(Buffer, sizeof(Buffer) / sizeof(Buffer[0]), Fmt, ArgList);
    va_end(ArgList);
 
-   /** @todo Convert flags and fix return value! */
-   MessageBoxA(win ? ((PSKY_WINDOW)win)->hWnd : NULL,
-               Buffer, Title, MB_OK);
+   if ((Flags & (WGF_MB_CANCEL | WGF_MB_YESNO)) ==
+       (WGF_MB_CANCEL | WGF_MB_YESNO))
+      MbFlags = MB_YESNOCANCEL;
+   else if (Flags & WGF_MB_YESNO)
+      MbFlags = MB_YESNO;
+   else if (Flags & WGF_MB_OK)
+      MbFlags = MB_OK;
+   MbFlags |= (Flags & WGF_MB_ICON_INFO) ? MB_ICONASTERISK : 0;
+   MbFlags |= (Flags & WGF_MB_ICON_ASK) ? MB_ICONQUESTION : 0;
+   MbFlags |= (Flags & WGF_MB_ICON_STOP) ? MB_ICONERROR : 0;
 
-   return 1;
+   MbResult = MessageBoxA(Window ? ((PSKY_WINDOW)Window)->hWnd : NULL, 
+                          Buffer, Title, MbFlags);
+
+   switch (MbResult)
+   {
+      case IDOK: return ID_OK;
+      case IDYES: return ID_YES;
+      case IDNO: return ID_NO;
+      case IDCANCEL: return ID_CANCEL;
+   }
+
+   return 0;
 }
 
 /* EOF */
