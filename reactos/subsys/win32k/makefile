@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.46 2002/07/04 19:56:36 dwelch Exp $
+# $Id: makefile,v 1.47 2002/08/24 01:45:37 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -57,7 +57,7 @@ TARGET_OBJECTS = \
   $(NTUSER_OBJECTS) $(OBJECTS_OBJECTS) $(STUBS_OBJECTS) \
   $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(FREETYPE_OBJECTS) $(DIB_OBJECTS)
 
-TARGET_CLEAN = $(TARGET_OBJECTS:.o=.d) \
+TARGET_CLEAN = $(DEP_FILES) \
   dib/*.o \
   eng/*.o \
   freetype/*.o \
