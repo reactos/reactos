@@ -46,21 +46,45 @@
  * This stubs calls into KUSER_SHARED_DATA where either a 
  * sysenter or interrupt is performed, depending on CPU support.
  */    
+#if defined(__GNUC__)
 #define UserModeStub_x86    "    movl $0x%x, %%eax\n" \
                             "    movl $KUSER_SHARED_SYSCALL, %%ecx\n" \
                             "    call *%%ecx\n" \
                             "    ret $0x%x\n\n"
+#elif defined(_MSC_VER)
+#define UserModeStub_x86    "    asm { \n" \
+                            "        mov eax, %xh\n" \
+                            "        mov ecx, KUSER_SHARED_SYSCALL\n" \
+                            "        call [ecx]\n" \
+                            "        ret %xh\n" \
+                            "    }\n"
+#else
+#error Unknown compiler for inline assembler
+#endif
 
 /*
  * This stub calls KiSystemService directly with a fake INT2E stack.
  * Because EIP is pushed during the call, the handler will return here. 
  */
+#if defined(__GNUC__)
 #define KernelModeStub_x86  "    movl $0x%x, %%eax\n" \
                             "    leal 4(%%esp), %%edx\n" \
                             "    pushfl\n" \
                             "    pushl $KERNEL_CS\n" \
                             "    call _KiSystemService\n" \
                             "    ret $0x%x\n\n"
+#elif defined(_MSC_VER)
+#define KernelModeStub_x86  "    asm { \n" \
+                            "        mov eax, %xh\n" \
+                            "        lea edx, [esp+4]\n" \
+                            "        pushf\n" \
+                            "        push KERNEL_CS\n" \
+                            "        call _KiSystemService\n" \
+                            "        ret %xh\n" \
+                            "    }\n"
+#else
+#error Unknown compiler for inline assembler
+#endif
 
 /***** Arch Dependent Stuff ******/
 //#ifdef _M_IX86

@@ -105,10 +105,10 @@ _KiSystemService:
 #endif
 
     /* Load the segment registers */
+    sti
     movw $KERNEL_DS, %bx
     movw %bx, %ds
     movw %bx, %es
-    movw %bx, %gs
 
     /* Save the old trap frame pointer where EDX would be saved */
     movl KTHREAD_TRAP_FRAME(%esi), %ebx
@@ -192,6 +192,7 @@ KeReturnFromSystemCall:
 _KiServiceExit:
 
     /* Get the Current Thread */
+    cli
     movl %fs:KPCR_CURRENT_THREAD, %esi
     
     /* Deliver APCs only if we were called from user mode */
@@ -213,10 +214,12 @@ _KiServiceExit:
     pushl %eax
     
     /* Deliver APCs */
+    sti
     pushl %ebx
     pushl $0
     pushl $UserMode
     call _KiDeliverApc@12
+    cli
     
     /* Return to old IRQL */
     popl %ecx
