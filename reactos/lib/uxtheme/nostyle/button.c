@@ -21,7 +21,7 @@ STDAPI_(BOOL) Button_IsPartDefined
 
 const UXTHEME_VTABLE Button_Vt =
 {
- Button_DrawBackground
+ (void *)Button_DrawBackground /* why (void *)? because GCC is stupid */
 };
 
 /* BP_PUSHBUTTON */
