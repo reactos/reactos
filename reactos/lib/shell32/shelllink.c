@@ -845,22 +845,14 @@ static HRESULT ShellLink_UpdatePath(LPWSTR sPathRel, LPCWSTR path, LPCWSTR sWork
 
     if (!*psPath && sPathRel) {
 	WCHAR buffer[2*MAX_PATH], abs_path[2*MAX_PATH];
+	LPWSTR final = NULL;
 
 	/* first try if [directory of link file] + [relative path] finds an existing file */
-	LPCWSTR src = path;
-	LPWSTR last_slash = NULL;
-	LPWSTR dest = buffer;
-	LPWSTR final;
 
-	/* copy path without file name to buffer */
-	while(*src) {
-	    if (*src=='/' || *src=='\\')
-		last_slash = dest;
-
-	    *dest++ = *src++;
-	}
-
-	lstrcpyW(last_slash? last_slash+1: buffer, sPathRel);
+        GetFullPathNameW( path, MAX_PATH*2, buffer, &final );
+        if( !final )
+            final = buffer;
+	lstrcpyW(final, sPathRel);
 
 	*abs_path = '\0';
 
@@ -917,14 +909,13 @@ HRESULT WINAPI IShellLink_ConstructFromFile (
 	if (SUCCEEDED(hr)) {
 	    WCHAR path[MAX_PATH];
 
-	    hr = SHELL_GetPathFromIDListW(pidl, path, MAX_PATH);
-
-	    if (SUCCEEDED(hr)) {
+	    if (SHGetPathFromIDListW(pidl, path)) 
 		hr = IPersistFile_Load(ppf, path, 0);
+            else
+                hr = E_FAIL;
 
-		if (SUCCEEDED(hr))
-		    *ppv = (IUnknown*) psl;
-	    }
+	    if (SUCCEEDED(hr))
+		*ppv = (IUnknown*) psl;
 
 	    IPersistFile_Release(ppf);
 	}
