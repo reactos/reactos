@@ -197,13 +197,15 @@ DPRINT("Checkpoint\n");
 
 /* Begin of test code */
 
-   HANDLE LocalThreadHandle;
-   CLIENT_ID LocalClientId;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   INITIAL_TEB InitialTeb;
-   CONTEXT ThreadContext;
-   PVOID BaseAddress;
-   NTSTATUS Status;
+    HANDLE LocalThreadHandle;
+    CLIENT_ID LocalClientId;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    INITIAL_TEB InitialTeb;
+    CONTEXT ThreadContext;
+    PVOID BaseAddress;
+    ULONG LocalStackCommit;
+    ULONG LocalStackReserve;
+    NTSTATUS Status;
 
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
@@ -214,14 +216,16 @@ DPRINT("Checkpoint\n");
    ObjectAttributes.SecurityQualityOfService = NULL;
 
 
-   if (*StackCommit < 4096)
-      *StackCommit = 4096;
+   if ((StackCommit != NULL) && (*StackCommit > 4096))
+      LocalStackCommit = *StackCommit;
+   else
+      LocalStackCommit = 4096;
 
    BaseAddress = 0;
    ZwAllocateVirtualMemory(ProcessHandle,
 			   &BaseAddress,
 			   0,
-                           StackCommit,
+                           &LocalStackCommit,
 			   MEM_COMMIT,
 			   PAGE_READWRITE);
 
@@ -234,7 +238,7 @@ DPRINT("Checkpoint\n");
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
    ThreadContext.SegSs = USER_DS;        
-   ThreadContext.Esp = (ULONG)(BaseAddress + *StackCommit);
+   ThreadContext.Esp = (ULONG)(BaseAddress + LocalStackCommit);
    ThreadContext.EFlags = (1<<1) + (1<<9);
 
 
@@ -247,12 +251,14 @@ DPRINT("Checkpoint\n");
                            &InitialTeb,
                            CreateSuspended);
 
-//   if ( lpThreadId != NULL )
-//     memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
-
 /* End of test code */
 
     DPRINT("Checkpoint\n");
+
+
+    if (StackCommit)
+        *StackCommit = LocalStackCommit;
+
 
     /* return thread handle */
     if (ThreadHandle)
