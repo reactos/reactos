@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.25 2004/01/14 23:21:31 gvg Exp $
+/* $Id: winlogon.c,v 1.26 2004/01/20 23:40:19 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -493,8 +493,8 @@ WinMain(HINSTANCE hInstance,
       /* Run setup and reboot when done */
       RunSetup ();
 
-//      NtShutdownSystem (ShutdownReboot);
-      NtShutdownSystem (ShutdownNoReboot);
+      NtShutdownSystem (ShutdownReboot);
+//      NtShutdownSystem (ShutdownNoReboot);
       ExitProcess (0);
       return 0;
     }
