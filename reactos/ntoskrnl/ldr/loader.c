@@ -22,6 +22,7 @@
 #include <internal/linkage.h>
 #include <internal/module.h>
 #include <internal/ntoskrnl.h>
+#include <internal/mmhal.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
 #include <string.h>
@@ -38,6 +39,8 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 
 /* MACROS ********************************************************************/
 
+#define  MODULE_ROOT_NAME  L"\\Modules\\"
+
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE ObModuleType = NULL;
@@ -47,12 +50,25 @@ POBJECT_TYPE ObModuleType = NULL;
 NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename);
 NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
 
+PMODULE_OBJECT  LdrLoadModule(PUNICODE_STRING Filename);
+PMODULE_OBJECT  LdrProcessModule(PVOID ModuleLoadBase);
+PVOID  LdrGetExportAddress(PMODULE_OBJECT ModuleObject, char *Name, unsigned short Hint);
+static PIMAGE_SECTION_HEADER LdrPEGetEnclosingSectionHeader(DWORD  RVA,
+                                                            PMODULE_OBJECT  ModuleObject);
+static NTSTATUS LdrCreateModule(PVOID ObjectBody,
+                                PVOID Parent,
+                                PWSTR RemainingPath,
+                                POBJECT_ATTRIBUTES ObjectAttributes);
+
 /*  PE Driver load support  */
-static NTSTATUS LdrPEProcessDriver(PVOID ModuleLoadBase);
+static PMODULE_OBJECT  LdrPEProcessModule(PVOID ModuleLoadBase);
+static PVOID  LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject, 
+                                    char *Name, 
+                                    unsigned short Hint);
 static unsigned int LdrGetKernelSymbolAddr(char *Name);
 
 /*  COFF Driver load support  */
-static NTSTATUS LdrCOFFProcessDriver(PVOID ModuleLoadBase);
+static PMODULE_OBJECT  LdrCOFFProcessModule(PVOID ModuleLoadBase);
 static BOOLEAN LdrCOFFDoRelocations(module *Module, unsigned int SectionIndex);
 static BOOLEAN LdrCOFFDoAddr32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
 static BOOLEAN LdrCOFFDoReloc32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
@@ -64,7 +80,14 @@ static unsigned int LdrCOFFGetSymbolValueByName(module *Module, char *SymbolName
 
 VOID LdrInitModuleManagement(VOID)
 {
+  HANDLE DirHandle, ModuleHandle;
+  NTSTATUS Status;
+  WCHAR NameBuffer[60];
   ANSI_STRING AnsiString;
+  UNICODE_STRING ModuleName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PIMAGE_DOS_HEADER DosHeader;
+  PMODULE_OBJECT ModuleObject;
 
   /*  Register the process object type  */   
   ObModuleType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -82,8 +105,85 @@ VOID LdrInitModuleManagement(VOID)
   ObModuleType->Security = NULL;
   ObModuleType->QueryName = NULL;
   ObModuleType->OkayToClose = NULL;
+  ObModuleType->Create = LdrCreateModule;
   RtlInitAnsiString(&AnsiString, "Module");
   RtlAnsiStringToUnicodeString(&ObModuleType->TypeName, &AnsiString, TRUE);
+
+  /*  Create Modules object directory  */
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  *(wcsrchr(NameBuffer, L'\\')) = 0;
+  ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+  ModuleName.Buffer = NameBuffer;
+  InitializeObjectAttributes(&ObjectAttributes, 
+                             &ModuleName, 
+                             0, 
+                             NULL, 
+                             NULL);
+  DPRINT("Create dir: %W\n", &ModuleName);
+  Status = ZwCreateDirectoryObject(&DirHandle, 0, &ObjectAttributes);
+  assert(NT_SUCCESS(Status));
+
+  /*  Add module entry for NTOSKRNL  */
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  wcscat(NameBuffer, L"ntoskrnl.exe");
+  ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+  ModuleName.Buffer = NameBuffer;
+  DPRINT("Kernel's Module name is: %W\n", &ModuleName);
+  
+  /*  Initialize ObjectAttributes for ModuleObject  */
+  InitializeObjectAttributes(&ObjectAttributes, 
+                             &ModuleName, 
+                             0, 
+                             NULL, 
+                             NULL);
+
+  /*  Create module object  */
+  ModuleHandle = 0;
+  ModuleObject = ObCreateObject(&ModuleHandle,
+                                STANDARD_RIGHTS_REQUIRED,
+                                &ObjectAttributes,
+                                ObModuleType);
+  assert(ModuleObject != NULL);
+
+  /*  Initialize ModuleObject data  */
+  ModuleObject->Base = (PVOID) KERNEL_BASE;
+  ModuleObject->Flags = MODULE_FLAG_PE;
+  DosHeader = (PIMAGE_DOS_HEADER) KERNEL_BASE;
+  ModuleObject->Image.PE.FileHeader = 
+    (PIMAGE_FILE_HEADER) ((DWORD) ModuleObject->Base + 
+    DosHeader->e_lfanew + sizeof(ULONG));
+  ModuleObject->Image.PE.OptionalHeader = (PIMAGE_OPTIONAL_HEADER) 
+    ((DWORD)ModuleObject->Image.PE.FileHeader + sizeof(IMAGE_FILE_HEADER));
+  ModuleObject->Image.PE.SectionList = (PIMAGE_SECTION_HEADER) 
+    ((DWORD)ModuleObject->Image.PE.OptionalHeader + sizeof(IMAGE_OPTIONAL_HEADER));
+  ModuleObject->EntryPoint = (PVOID) ((DWORD) ModuleObject->Base + 
+    ModuleObject->Image.PE.OptionalHeader->AddressOfEntryPoint);
+  DPRINT("ModuleObject:%08x  entrypoint at %x\n", ModuleObject, ModuleObject->EntryPoint);
+
+  /* FIXME: Add fake module entry for HAL */
+
+}
+
+static NTSTATUS 
+LdrCreateModule(PVOID ObjectBody,
+                PVOID Parent,
+                PWSTR RemainingPath,
+                POBJECT_ATTRIBUTES ObjectAttributes)
+{
+  DPRINT("LdrCreateModule(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+         ObjectBody, 
+         Parent, 
+         RemainingPath);
+  if (RemainingPath != NULL && wcschr(RemainingPath + 1, '\\') != NULL)
+    {
+      return  STATUS_UNSUCCESSFUL;
+    }
+  if (Parent != NULL && RemainingPath != NULL)
+    {
+      ObAddEntryDirectory(Parent, ObjectBody, RemainingPath + 1);
+    }
+
+  return  STATUS_SUCCESS;
 }
 
 /*
@@ -126,16 +226,67 @@ VOID LdrLoadAutoConfigDrivers(VOID)
 NTSTATUS 
 LdrLoadDriver(PUNICODE_STRING Filename)
 {
+  PMODULE_OBJECT  ModuleObject;
+
+  ModuleObject = LdrLoadModule(Filename);
+  if (ModuleObject == 0)
+    {
+      return  STATUS_UNSUCCESSFUL;
+    }
+
+  /* FIXME: should we dereference the ModuleObject here?  */
+
+  return IoInitializeDriver(ModuleObject->EntryPoint); 
+}
+  
+PMODULE_OBJECT 
+LdrLoadModule(PUNICODE_STRING Filename)
+{
   PVOID ModuleLoadBase;
   NTSTATUS Status;
   HANDLE FileHandle;
-  OBJECT_ATTRIBUTES FileObjectAttributes;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PMODULE_OBJECT  ModuleObject;
   FILE_STANDARD_INFORMATION FileStdInfo;
+  WCHAR  NameBuffer[60];
+  PWSTR  RemainingPath;
+  UNICODE_STRING  ModuleName;
 
-  DbgPrint("Loading Driver %W...\n", Filename);
+  DPRINT("Loading Module %W...\n", Filename);
 
-  /*  Open the Driver  */
-  InitializeObjectAttributes(&FileObjectAttributes,
+  /*  Check for module already loaded  */
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  if (wcsrchr(Filename->Buffer, '\\') != 0)
+    {
+      wcscat(NameBuffer, wcsrchr(Filename->Buffer, '\\') + 1);
+    }
+  else
+    {
+      wcscat(NameBuffer, Filename->Buffer);
+    }  
+  ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+  ModuleName.Buffer = NameBuffer;
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &ModuleName, 
+                             0,
+                             NULL,
+                             NULL);
+  Status = ObFindObject(&ObjectAttributes,
+                        (PVOID *) &ModuleObject,
+                        &RemainingPath);
+  CHECKPOINT;
+  if (NT_SUCCESS(Status) && *RemainingPath == 0)
+    {
+      return ModuleObject;
+    }
+  CHECKPOINT;
+  if (!wcsncmp(Filename->Buffer, MODULE_ROOT_NAME, wcslen(MODULE_ROOT_NAME)))
+    {
+      return  0;
+    }
+
+  /*  Open the Module  */
+  InitializeObjectAttributes(&ObjectAttributes,
                              Filename, 
                              0,
                              NULL,
@@ -143,12 +294,13 @@ LdrLoadDriver(PUNICODE_STRING Filename)
   CHECKPOINT;
   Status = ZwOpenFile(&FileHandle, 
                       FILE_ALL_ACCESS, 
-                      &FileObjectAttributes, 
+                      &ObjectAttributes, 
                       NULL, 0, 0);
   CHECKPOINT;
   if (!NT_SUCCESS(Status))
     {
-      return Status;
+      DbgPrint("Could not open module file: %W\n", Filename);
+      return  0;
     }
   CHECKPOINT;
 
@@ -160,7 +312,8 @@ LdrLoadDriver(PUNICODE_STRING Filename)
                                   FileStandardInformation);
   if (!NT_SUCCESS(Status))
     {
-      return Status;
+      DbgPrint("Could not get file size\n");
+      return  0;
     }
   CHECKPOINT;
 
@@ -169,7 +322,8 @@ LdrLoadDriver(PUNICODE_STRING Filename)
                                   FileStdInfo.EndOfFile.u.LowPart);
   if (ModuleLoadBase == NULL)
     {
-      return STATUS_INSUFFICIENT_RESOURCES;
+      DbgPrint("could not allocate memory for module");
+      return  0;
     }
   CHECKPOINT;
 
@@ -181,23 +335,41 @@ LdrLoadDriver(PUNICODE_STRING Filename)
                       0, 0);
   if (!NT_SUCCESS(Status))
     {
+      DbgPrint("could not read module file into memory");
       ExFreePool(ModuleLoadBase);
-      return Status;
+
+      return  0;
     }
   CHECKPOINT;
 
   ZwClose(FileHandle);
 
-  Status = LdrProcessDriver(ModuleLoadBase);
+  ModuleObject = LdrProcessModule(ModuleLoadBase);
 
   /*  Cleanup  */
   ExFreePool(ModuleLoadBase);
 
-  return STATUS_SUCCESS;
+  return  ModuleObject;
 }
 
 NTSTATUS
 LdrProcessDriver(PVOID ModuleLoadBase)
+{
+  PMODULE_OBJECT ModuleObject;
+
+  ModuleObject = LdrProcessModule(ModuleLoadBase);
+  if (ModuleObject == 0)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  /* FIXME: should we dereference the ModuleObject here?  */
+
+  return IoInitializeDriver(ModuleObject->EntryPoint); 
+}
+
+PMODULE_OBJECT
+LdrProcessModule(PVOID ModuleLoadBase)
 {
   PIMAGE_DOS_HEADER PEDosHeader;
 
@@ -205,42 +377,66 @@ LdrProcessDriver(PVOID ModuleLoadBase)
   PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
   if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC && PEDosHeader->e_lfanew != 0L)
     {
-      return LdrPEProcessDriver(ModuleLoadBase);
+      return LdrPEProcessModule(ModuleLoadBase);
     }
+#if 0
   if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC)
     {
-      return STATUS_NOT_IMPLEMENTED;
+      return 0;
     }
   else  /*  Assume COFF format and load  */
     {
-      return LdrCOFFProcessDriver(ModuleLoadBase);
+      return LdrCOFFProcessModule(ModuleLoadBase);
+    }
+#endif
+
+  return 0;
+}
+
+PVOID  
+LdrGetExportAddress(PMODULE_OBJECT ModuleObject, 
+                    char *Name, 
+                    unsigned short Hint)
+{
+  if (ModuleObject->Flags & MODULE_FLAG_PE)
+    {
+      return LdrPEGetExportAddress(ModuleObject, Name, Hint);
+    }
+  else
+    {
+      return 0;
     }
 }
 
-NTSTATUS 
-LdrPEProcessDriver(PVOID ModuleLoadBase)
+/*  ----------------------------------------------  PE Module support */
+
+PMODULE_OBJECT
+LdrPEProcessModule(PVOID ModuleLoadBase)
 {
-  unsigned int DriverSize, Idx;
+  unsigned int DriverSize, Idx, Idx2;
   ULONG RelocDelta, NumRelocs;
   DWORD CurrentSize, TotalRelocs;
-  PVOID DriverBase, CurrentBase, EntryPoint;
+  PVOID DriverBase, CurrentBase;
   PULONG PEMagic;
   PIMAGE_DOS_HEADER PEDosHeader;
   PIMAGE_FILE_HEADER PEFileHeader;
   PIMAGE_OPTIONAL_HEADER PEOptionalHeader;
   PIMAGE_SECTION_HEADER PESectionHeaders;
+  PIMAGE_EXPORT_DIRECTORY  ExportDirectory;
   PRELOCATION_DIRECTORY RelocDir;
   PRELOCATION_ENTRY RelocEntry;
-  PMODULE Library;
+  PMODULE_OBJECT  LibraryModuleObject;
+  HANDLE  ModuleHandle;
+  PMODULE_OBJECT  ModuleObject;
   PVOID *ImportAddressList;
   PULONG FunctionNameList;
   PCHAR pName, SymbolNameBuf;
-  PWORD pHint;
+  WORD Hint;
+  OBJECT_ATTRIBUTES  ObjectAttributes;
+  UNICODE_STRING  ModuleName;
+  WCHAR  NameBuffer[60];
   
-  /* FIXME: this could be used to load kernel DLLs also, however */
-  /*        the image headers should be preserved in such a case */
-
-  DPRINT("Processing PE Driver at module base:%08lx\n", ModuleLoadBase);
+  DPRINT("Processing PE Module at module base:%08lx\n", ModuleLoadBase);
 
   /*  Get header pointers  */
   PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
@@ -258,23 +454,23 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
   /*  Check file magic numbers  */
   if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC)
     {
-      DPRINT("Incorrect MZ magic: %04x\n", PEDosHeader->e_magic);
-      return STATUS_UNSUCCESSFUL;
+      DbgPrint("Incorrect MZ magic: %04x\n", PEDosHeader->e_magic);
+      return 0;
     }
   if (PEDosHeader->e_lfanew == 0)
     {
-      DPRINT("Invalid lfanew offset: %08x\n", PEDosHeader->e_lfanew);
-      return STATUS_UNSUCCESSFUL;
+      DbgPrint("Invalid lfanew offset: %08x\n", PEDosHeader->e_lfanew);
+      return 0;
     }
   if (*PEMagic != IMAGE_PE_MAGIC)
     {
-      DPRINT("Incorrect PE magic: %08x\n", *PEMagic);
-      return STATUS_UNSUCCESSFUL;
+      DbgPrint("Incorrect PE magic: %08x\n", *PEMagic);
+      return 0;
     }
   if (PEFileHeader->Machine != IMAGE_FILE_MACHINE_I386)
     {
-      DPRINT("Incorrect Architechture: %04x\n", PEFileHeader->Machine);
-      return STATUS_UNSUCCESSFUL;
+      DbgPrint("Incorrect Architechture: %04x\n", PEFileHeader->Machine);
+      return 0;
     }
   CHECKPOINT;
 
@@ -299,10 +495,10 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
   if (DriverBase == 0)
     {
       DbgPrint("Failed to allocate a virtual section for driver\n");
-      return STATUS_INSUFFICIENT_RESOURCES;
+      return 0;
     }
   CHECKPOINT;
-   DbgPrint("Module is at base %x\n",DriverBase);
+   DPRINT("Module is at base %x\n",DriverBase);
    
   /*  Copy image sections into virtual section  */
   memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);
@@ -390,8 +586,8 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
             }
           else if (Type != 0)
             {
-              DPRINT("Unknown relocation type %x\n",Type);
-              return STATUS_UNSUCCESSFUL;
+              DbgPrint("Unknown relocation type %x\n",Type);
+              return 0;
             }
         }
       TotalRelocs += RelocDir->SizeOfBlock;
@@ -415,21 +611,36 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
       ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
         ((DWORD)DriverBase + PEOptionalHeader->
           DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+      DPRINT("Processeing import directory at %p\n", ImportModuleDirectory);
       while (ImportModuleDirectory->dwRVAModuleName)
         {
-          /* FIXME: handle kernel mode DLLs  */
-
           /*  Check to make sure that import lib is kernel  */
-          Library = NULL;
           pName = (PCHAR) DriverBase + 
             ImportModuleDirectory->dwRVAModuleName;
-//          DPRINT("Import module: %s\n", pName);
-          if (strcmp(pName, "ntoskrnl.exe")!=0 && 
-              strcmp(pName, "HAL.dll")!=0)
+          if (!strcmp(pName, "ntoskrnl.exe") || !strcmp(pName, "HAL.dll"))
             {
-              DPRINT("Kernel mode DLLs are currently unsupported\n");
+              LibraryModuleObject = NULL;
+              DPRINT("Kernel imports\n");
             }
-
+          else
+            {
+              wcscpy(NameBuffer, MODULE_ROOT_NAME);
+              for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
+                ;
+              for (Idx2 = 0; pName[Idx2] != '\0'; Idx2++)
+                {
+                  NameBuffer[Idx + Idx2] = (WCHAR) pName[Idx2];
+                }
+              NameBuffer[Idx + Idx2] = 0;
+              ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+              ModuleName.Buffer = NameBuffer;
+              DPRINT("Import module: %W\n", &ModuleName);
+              LibraryModuleObject = LdrLoadModule(&ModuleName);
+              if (LibraryModuleObject == 0)
+                {
+                  DbgPrint("Unknown import module: %W\n", &ModuleName);
+                }
+            }
           /*  Get the import address list  */
           ImportAddressList = (PVOID *) ((DWORD)DriverBase + 
             ImportModuleDirectory->dwRVAFunctionAddressList);
@@ -445,35 +656,38 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
               FunctionNameList = (PULONG) ((DWORD)DriverBase + 
                 ImportModuleDirectory->dwRVAFunctionAddressList);
             }
-
           /*  Walk through function list and fixup addresses  */
-          while(*FunctionNameList != 0L)
+          while (*FunctionNameList != 0L)
             {
               if ((*FunctionNameList) & 0x80000000) // hint
                 {
-//                  DPRINT("  Hint: %08lx\n", *FunctionNameList);
-                  if (Library == NULL)
-                    {
-                      DPRINT("Hints for kernel symbols are not handled.\n");
-                      *ImportAddressList = 0;
-                    }
+                  pName = NULL;
+                  Hint = (*FunctionNameList) & 0xffff;
                 }
               else // hint-name
                 {
-                  pName = (PCHAR)((DWORD)DriverBase+ 
+                  pName = (PCHAR)((DWORD)DriverBase + 
                                   *FunctionNameList + 2);
-                  pHint = (PWORD)((DWORD)DriverBase + *FunctionNameList);
- //                 DPRINT("  Hint:%04x  Name:%s\n", pHint, pName);
-                  
+                  Hint = *(PWORD)((DWORD)DriverBase + *FunctionNameList);
+                }
+              DPRINT("  Hint:%04x  Name:%s\n", Hint, pName);
+
+              /*  Fixup the current import symbol  */
+              if (LibraryModuleObject != NULL)
+                {
+                  *ImportAddressList = LdrGetExportAddress(LibraryModuleObject, 
+                                                           pName, 
+                                                           Hint);
+                }
+              else
+                {
                   /*  Get address for symbol  */
-                  if (Library == NULL)
+                  *SymbolNameBuf = '_';
+                  strcpy(SymbolNameBuf + 1, pName);
+                  *ImportAddressList = (PVOID) LdrGetKernelSymbolAddr(SymbolNameBuf);
+                  if (*ImportAddressList == 0L)
                     {
-                      *SymbolNameBuf = '_';
-                      strcpy(SymbolNameBuf + 1, pName);
-                      *ImportAddressList = (PVOID) LdrGetKernelSymbolAddr(SymbolNameBuf);                      if (*ImportAddressList == 0L)
-                        {
-                          DPRINT("Unresolved kernel symbol: %s\n", pName);
-                        }
+                      DbgPrint("Unresolved kernel symbol: %s\n", pName);
                     }
                 }
               ImportAddressList++;
@@ -485,15 +699,165 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
       ExFreePool(SymbolNameBuf);
     }
 
-  /*  Compute address of entry point  */
-  EntryPoint = (PVOID) ((DWORD)DriverBase + PEOptionalHeader->AddressOfEntryPoint);
-   DbgPrint("Calling entrypoint at %x\n",EntryPoint);
+  /*  Create ModuleName string  */
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  if (PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+        .VirtualAddress != 0)
+    {
+      ExportDirectory = (PIMAGE_EXPORT_DIRECTORY) (DriverBase +
+        PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+          .VirtualAddress);
+      wcscat(NameBuffer, DriverBase + ExportDirectory->Name);
+    }
+  else
+    {
+      char buf[12];
 
-  return IoInitializeDriver(EntryPoint); 
+      sprintf(buf, "%08X", (DWORD) DriverBase);
+      for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
+        ;
+      Idx2 = 0;
+      while ((NameBuffer[Idx + Idx2] = (WCHAR) buf[Idx2]) != 0)
+        Idx2++;
+    }
+  ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+  ModuleName.Buffer = NameBuffer;
+  DPRINT("Module name is: %W\n", &ModuleName);
+  
+  /*  Initialize ObjectAttributes for ModuleObject  */
+  InitializeObjectAttributes(&ObjectAttributes, 
+                             &ModuleName, 
+                             0, 
+                             NULL, 
+                             NULL);
+
+  /*  Create module object  */
+  ModuleHandle = 0;
+  ModuleObject = ObCreateObject(&ModuleHandle,
+                                STANDARD_RIGHTS_REQUIRED,
+                                &ObjectAttributes,
+                                ObModuleType);
+
+  /*  Initialize ModuleObject data  */
+  ModuleObject->Base = DriverBase;
+  ModuleObject->Flags = MODULE_FLAG_PE;
+  ModuleObject->EntryPoint = (PVOID) ((DWORD)DriverBase + 
+    PEOptionalHeader->AddressOfEntryPoint);
+  DPRINT("entrypoint at %x\n", ModuleObject->EntryPoint);
+  ModuleObject->Image.PE.FileHeader = 
+    (PIMAGE_FILE_HEADER) ((unsigned int) DriverBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG));
+  DPRINT("FileHeader at %x\n", ModuleObject->Image.PE.FileHeader);
+  ModuleObject->Image.PE.OptionalHeader = 
+    (PIMAGE_OPTIONAL_HEADER) ((unsigned int) DriverBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER));
+  DPRINT("OptionalHeader at %x\n", ModuleObject->Image.PE.OptionalHeader);
+  ModuleObject->Image.PE.SectionList = 
+    (PIMAGE_SECTION_HEADER) ((unsigned int) DriverBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER) +
+    sizeof(IMAGE_OPTIONAL_HEADER));
+  DPRINT("SectionList at %x\n", ModuleObject->Image.PE.SectionList);
+
+  return  ModuleObject;
 }
 
-NTSTATUS 
-LdrCOFFProcessDriver(PVOID ModuleLoadBase)
+static PVOID  
+LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject, 
+                      char *Name, 
+                      unsigned short Hint)
+{
+  WORD  Idx;
+  DWORD  ExportsStartRVA, ExportsEndRVA, Delta;
+  PVOID  ExportAddress;
+  PWORD  OrdinalList;
+  PDWORD  FunctionList, NameList;
+  PIMAGE_SECTION_HEADER  SectionHeader;
+  PIMAGE_EXPORT_DIRECTORY  ExportDirectory;
+
+  ExportsStartRVA = ModuleObject->Image.PE.OptionalHeader->DataDirectory
+    [IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+  ExportsEndRVA = ExportsStartRVA + 
+    ModuleObject->Image.PE.OptionalHeader->DataDirectory
+      [IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
+  /*  Get the IMAGE_SECTION_HEADER that contains the exports.  This is
+      usually the .edata section, but doesn't have to be.  */
+  SectionHeader = LdrPEGetEnclosingSectionHeader(ExportsStartRVA, ModuleObject);
+  if (!SectionHeader)
+    {
+      return 0;
+    }
+  Delta = (DWORD)(SectionHeader->VirtualAddress - 
+    SectionHeader->PointerToRawData);
+  ExportDirectory = MakePtr(PIMAGE_EXPORT_DIRECTORY, 
+                            ModuleObject->Base,
+                            ExportsStartRVA - Delta);
+
+  FunctionList = (PDWORD)((DWORD)ExportDirectory->AddressOfFunctions - 
+    Delta + ModuleObject->Base);
+  NameList = (PDWORD)((DWORD)ExportDirectory->AddressOfNames - 
+    Delta + ModuleObject->Base);
+  OrdinalList = (PWORD)((DWORD)ExportDirectory->AddressOfNameOrdinals - 
+    Delta + ModuleObject->Base);
+  DPRINT("Delta:%08x\n", Delta);
+  DPRINT("Func:%08x  RVA:%08x  Name:%08x  RVA:%08x  Ord:%08x  RVA:%08x\n", FunctionList,
+         ExportDirectory->AddressOfFunctions, NameList,
+         ExportDirectory->AddressOfNames, OrdinalList,
+         ExportDirectory->AddressOfNameOrdinals);
+  DPRINT("NumNames:%d NumFuncs:%d\n", ExportDirectory->NumberOfNames, 
+         ExportDirectory->NumberOfFunctions);
+for(;;);
+  ExportAddress = 0;
+  if (Name != NULL)
+    {
+      for (Idx = 0; Idx < ExportDirectory->NumberOfNames; Idx++)
+        {
+          DPRINT("  Name:%s  NameList[%d]:%s\n", Name, Idx, NameList[Idx]);
+          if (!strcmp(Name, (PCHAR) ((DWORD)ModuleObject->Base + NameList[Idx])))
+            {
+              ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
+                FunctionList[OrdinalList[Idx]]);
+              break;
+            }
+        }
+    }
+  else  /*  use hint  */
+    {
+      ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
+        FunctionList[Hint - ExportDirectory->Base]);
+    }
+  if (ExportAddress == 0)
+    {
+      DbgPrint("Export not found for %d:%s\n", Hint, Name != NULL ? Name : "(Ordinal)");
+    }
+
+  return  ExportAddress;
+}
+
+static PIMAGE_SECTION_HEADER 
+LdrPEGetEnclosingSectionHeader(DWORD  RVA,
+                               PMODULE_OBJECT  ModuleObject)
+{
+  PIMAGE_SECTION_HEADER  SectionHeader = SECHDROFFSET(ModuleObject->Base);
+  unsigned  i;
+    
+  for (i = 0; i < ModuleObject->Image.PE.FileHeader->NumberOfSections; 
+       i++, SectionHeader++)
+    {
+      /*  Is the RVA within this section?  */
+      if ((RVA >= SectionHeader->VirtualAddress) && 
+          (RVA < (SectionHeader->VirtualAddress + SectionHeader->Misc.VirtualSize)))
+        {
+          return SectionHeader;
+        }
+    }
+    
+  return 0;
+}
+
+/*  -------------------------------------------  COFF Module support */
+
+PMODULE_OBJECT 
+LdrCOFFProcessModule(PVOID ModuleLoadBase)
 {
   BOOLEAN FoundEntry;
   char SymbolName[255];
@@ -502,7 +866,12 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
   FILHDR *FileHeader;
   AOUTHDR *AOUTHeader;
   module *Module;
-  PDRIVER_INITIALIZE EntryRoutine;
+  PVOID  EntryRoutine;
+  HANDLE  ModuleHandle;
+  PMODULE_OBJECT  ModuleObject;
+  OBJECT_ATTRIBUTES  ObjectAttributes;
+  UNICODE_STRING  ModuleName;
+  WCHAR  NameBuffer[60];
 
   /*  Get header pointers  */
   FileHeader = ModuleLoadBase;
@@ -514,7 +883,7 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
     {
       DbgPrint("Module has bad magic value (%x)\n", 
                FileHeader->f_magic);
-      return STATUS_UNSUCCESSFUL;
+      return 0;
     }
   CHECKPOINT;
    
@@ -522,7 +891,7 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
   Module = (module *) ExAllocatePool(NonPagedPool, sizeof(module));
   if (Module == NULL)
     {
-      return STATUS_INSUFFICIENT_RESOURCES;
+      return 0;
     }
   Module->sym_list = (SYMENT *)(ModuleLoadBase + FileHeader->f_symptr);
   Module->str_tab = (char *)(ModuleLoadBase + FileHeader->f_symptr +
@@ -569,7 +938,7 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
     {
       DbgPrint("Failed to alloc section for module\n");
       ExFreePool(Module);
-      return STATUS_INSUFFICIENT_RESOURCES;
+      return 0;
     }
   CHECKPOINT;
 
@@ -589,14 +958,14 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
                  Module->scn_list[i].s_size);
           if (!LdrCOFFDoRelocations(Module, i))
             {
-              DPRINT("Relocation failed for section %s\n",
+              DbgPrint("Relocation failed for section %s\n",
                      Module->scn_list[i].s_name);
 
               /* FIXME: unallocate all sections here  */
 
               ExFreePool(Module);
 
-              return STATUS_UNSUCCESSFUL;
+              return 0;
             }
         }
       if (Module->scn_list[i].s_flags & STYP_BSS)
@@ -607,7 +976,7 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
         }
     }
    
-  DbgPrint("Module base: %x\n", Module->base);
+  DPRINT("Module base: %x\n", Module->base);
    
   /*  Find the entry point  */
   EntryOffset = 0L;
@@ -629,16 +998,46 @@ LdrCOFFProcessDriver(PVOID ModuleLoadBase)
 
       /* FIXME: unallocate all sections here  */
 
-      return STATUS_UNSUCCESSFUL;
+      return 0;
     }
    
   /*  Get the address of the module initalization routine  */
-  EntryRoutine = (PDRIVER_INITIALIZE)(Module->base + EntryOffset);
+  EntryRoutine = (PVOID)(Module->base + EntryOffset);
+
+  /*  Create ModuleName string  */
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  /* FIXME: someone who is interested needs to fix this.  */
+  wcscat(NameBuffer, L"BOGUS.o");
+  ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+  ModuleName.Buffer = NameBuffer;
+  DPRINT("Module name is: %w", NameBuffer);
+  
+  /*  Initialize ObjectAttributes for ModuleObject  */
+  InitializeObjectAttributes(&ObjectAttributes, 
+                             &ModuleName, 
+                             0, 
+                             NULL, 
+                             NULL);
+
+  /*  Create module object  */
+  ModuleHandle = 0;
+  ModuleObject = ObCreateObject(&ModuleHandle,
+                                OBJECT_TYPE_ALL_ACCESS,
+                                &ObjectAttributes,
+                                ObModuleType);
+
+  /*  Initialize ModuleObject data  */
+  ModuleObject->Base = (PVOID) Module->base;
+  ModuleObject->Flags = MODULE_FLAG_COFF;
+  ModuleObject->EntryPoint = (PVOID) (Module->base + EntryOffset);
+  DPRINT("entrypoint at %x\n", ModuleObject->EntryPoint);
+  /* FIXME: the COFF headers need to be copied into the module 
+     space, and the ModuleObject needs to be set to point to them  */
 
   /*  Cleanup  */
   ExFreePool(Module);
 
-  return IoInitializeDriver(EntryRoutine);
+  return  ModuleObject;
 }
 
 /*   LdrCOFFDoRelocations
@@ -684,7 +1083,7 @@ LdrCOFFDoRelocations(module *Module, unsigned int SectionIndex)
             break;
 
           default:
-            DPRINT("%.8s: Unknown relocation type %x at %d in module\n",
+            DbgPrint("%.8s: Unknown relocation type %x at %d in module\n",
                    Module->scn_list[SectionIndex].s_name,
                    Relocation->r_type,
                    j);
@@ -846,7 +1245,7 @@ LdrGetKernelSymbolAddr(char *Name)
    if ((s=strchr(Name,'@'))!=NULL)
      {
 	*s=0;
-	DbgPrint("Name %s ",Name);
+	DPRINT("Name %s ",Name);
      }
   while (symbol_table[i].name != NULL)
     {
@@ -855,7 +1254,7 @@ LdrGetKernelSymbolAddr(char *Name)
 	   if (s!=NULL)
 	     {
 		*s=0;
-		DbgPrint("Matched with %s\n",symbol_table[i].name);
+		DPRINT("Matched with %s\n",symbol_table[i].name);
 	     }
           return symbol_table[i].value;
         }

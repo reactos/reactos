@@ -133,17 +133,19 @@ else
 endif
 	$(CC) $(CFLAGS) -c ke/exports.c -o ke/exports.o
 
-ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
-	$(LD) -r $(OBJECTS) -o ntoskrnl.o
-	$(DLLTOOL) --dllname ntoskrnl.exe --def ntoskrnl.def \
-	           --output-lib ntoskrnl.a
+all: ntoskrnl.a ntoskrnl.exe ntoskrnl.sym
+
+.PHONY: all
+
+ntoskrnl.exe: ntoskrnl.o ntoskrnl.def
 	$(CC) -specs=../specs -mdll -o junk.tmp \
 	      -Wl,--image-base,0xc0000000 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
 	      -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ \
-	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp ntoskrnl.o
+	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp \
+              ntoskrnl.o
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname ntoskrnl.exe --base-file base.tmp \
 	           --output-exp temp.exp --def ntoskrnl.def
@@ -157,6 +159,13 @@ ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
 	      -Wl,--defsym,_etext=etext -Wl,temp.exp
 	- $(RM) temp.exp
 	$(NM) --numeric-sort ntoskrnl.exe > ntoskrnl.sym
+
+ntoskrnl.o: $(OBJECTS)
+	$(LD) -r $(OBJECTS) -o ntoskrnl.o
+
+ntoskrnl.a: ntoskrnl.def
+	$(DLLTOOL) --dllname ntoskrnl.exe --def ntoskrnl.def \
+	           --output-lib ntoskrnl.a
 
 clean: $(CLEAN_FILES:%=%_clean)
 

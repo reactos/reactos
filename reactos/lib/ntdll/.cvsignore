@@ -1,7 +1,8 @@
+base.tmp
+junk.tmp
 napi.asm
 napi.c
 ntdll.lib
-base.tmp
-junk.tmp
+ntdll.coff
 ntdll.dll
 temp.exp

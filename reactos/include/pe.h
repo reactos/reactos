@@ -554,6 +554,8 @@ typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
 			 sizeof (IMAGE_FILE_HEADER)	     +	\
 			 sizeof (IMAGE_OPTIONAL_HEADER)))
 
+#define MakePtr( cast, ptr, addValue ) (cast)( (DWORD)(ptr) + (DWORD)(addValue))
+
 typedef struct _IMAGE_IMPORT_MODULE_DIRECTORY
 {
   DWORD    dwRVAFunctionNameList;

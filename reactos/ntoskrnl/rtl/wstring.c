@@ -137,7 +137,12 @@ wcsncat(wchar_t *dest, const wchar_t *src, size_t count)
 int 
 wcsncmp(const wchar_t *cs, const wchar_t *ct, size_t count)
 {
-UNIMPLEMENTED;
+  while (*cs != '\0' && *ct != '\0' && *cs == *ct && --count)
+    {
+      cs++;
+      ct++;
+    }
+  return *cs - *ct;
 }
 
 

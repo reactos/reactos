@@ -17,6 +17,7 @@ include rules.mak
 COMPONENTS = iface_native ntoskrnl
 DLLS = ntdll kernel32 crtdll user32 fmifs gdi32
 #DLLS = crtdll mingw32
+SUBSYS = win32k
 
 #
 # Select the server(s) you want to build
@@ -41,7 +42,7 @@ KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
 APPS = args hello shell test cat bench
 # APPS = cmd
 
-all: $(COMPONENTS) $(DLLS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
+all: $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
 .PHONY: all
 
 clean: $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
@@ -124,5 +125,16 @@ $(DLLS:%=%_clean): %_clean:
 	make -C lib/$* clean
 
 .PHONY: $(DLLS) $(DLLS:%=%_clean)
+
+#
+# Kernel Subsystems
+#
+$(SUBSYS): %:
+	make -C subsys/$*
+
+$(SUBSYS:%=%_clean): %_clean:
+	make -C lib/$* clean
+
+.PHONY: $(SUBSYS) $(SUBSYS:%=%_clean)
 
 

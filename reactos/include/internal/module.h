@@ -2,6 +2,7 @@
 #ifndef __MODULE_H
 #define __MODULE_H
 
+#include <ddk/ntddk.h>
 #include <coff.h>
 #include <pe.h>
 
@@ -30,11 +31,13 @@ typedef struct _module
 
 typedef SCNHDR COFF_SECTION_HEADER, *PCOFF_SECTION_HEADER;
 
-typedef struct _MODULE
+typedef struct _MODULE_OBJECT
 {
-  PVOID Base;
-  unsigned int Size;
-  unsigned int Flags;
+  CSHORT  ObjectType;
+  CSHORT  ObjectSize;
+  PVOID  Base;
+  unsigned int  Flags;
+  PVOID  EntryPoint;
   union
     { 
       struct
@@ -51,10 +54,12 @@ typedef struct _MODULE
         {
           PIMAGE_FILE_HEADER FileHeader;
           PIMAGE_OPTIONAL_HEADER OptionalHeader;
-          PCOFF_SECTION_HEADER SectionList;
+          PIMAGE_SECTION_HEADER SectionList;
         } PE;
     } Image;
-} MODULE, *PMODULE;
+} MODULE_OBJECT, *PMODULE_OBJECT;
+
+typedef MODULE_OBJECT MODULE, *PMODULE;
 
 #define MODULE_FLAG_BIN  0x0001
 #define MODULE_FLAG_MZ   0x0002
@@ -64,7 +69,7 @@ typedef struct _MODULE
 
 typedef struct _INSTANCE
 {
- HANDLE ModuleHandle;
+  HANDLE ModuleHandle;
 } INSTANCE, *PINSTANCE;
 
 BOOLEAN process_boot_module(unsigned int start);
