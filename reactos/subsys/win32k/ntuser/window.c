@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.22 2003/03/03 18:57:26 rcampbell Exp $
+/* $Id: window.c,v 1.23 2003/03/04 00:39:56 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -734,11 +734,9 @@ NtUserGetOpenClipboardWindow(VOID)
 }
 
 DWORD STDCALL
-NtUserGetWindowDC(DWORD Unknown0)
+NtUserGetWindowDC(HWND hWnd)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  return NtUserGetDCEx( hWnd, 0, DCX_USESTYLE | DCX_WINDOW );
 }
 
 DWORD STDCALL

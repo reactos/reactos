@@ -814,7 +814,7 @@ NtUserGetUpdateRgn(
 DWORD
 STDCALL
 NtUserGetWindowDC(
-  DWORD Unknown0);
+  HWND hWnd);
 
 DWORD
 STDCALL

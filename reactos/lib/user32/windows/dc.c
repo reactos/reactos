@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.9 2002/09/08 10:23:12 chorns Exp $
+/* $Id: dc.c,v 1.10 2003/03/04 00:40:37 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -56,7 +56,7 @@ STDCALL
 GetWindowDC(
   HWND hWnd)
 {
-  return (HDC)0;
+  return (HDC)NtUserGetWindowDC(hWnd);
 }
 int
 STDCALL
