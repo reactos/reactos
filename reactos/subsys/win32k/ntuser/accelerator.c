@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.12 2004/11/13 01:57:45 rcampbell Exp $
+/* $Id: accelerator.c,v 1.13 2004/11/13 02:02:07 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -453,14 +453,12 @@ NtUserTranslateAccelerator(
   if (Message == NULL)
     {
 	  SetLastNtError(STATUS_INVALID_PARAMETER);
-	  DPRINT1("E0a\n");
       return 0;
     }
 
   if (Table == NULL)
     {
       SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
-	  DPRINT1("E0b\n");
       return 0;
     }
 
