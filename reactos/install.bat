@@ -18,7 +18,6 @@ md %ROS_INSTALL%\media
 md %ROS_INSTALL%\media\fonts
 copy boot.bat %ROS_INSTALL%
 copy aboot.bat %ROS_INSTALL%
-copy boot.hiv %ROS_INSTALL%
 copy system.hiv %ROS_INSTALL%\system32\config
 copy loaders\dos\loadros.com %ROS_INSTALL%
 copy ntoskrnl\ntoskrnl.exe %ROS_INSTALL%\system32
@@ -45,6 +44,8 @@ copy services\net\tcpip\tcpip.sys %ROS_INSTALL%\system32\drivers
 copy services\net\wshtcpip\wshtcpip.dll %ROS_INSTALL%\system32
 copy services\storage\atapi\atapi.sys %ROS_INSTALL%\system32\drivers
 copy services\storage\scsiport\scsiport.sys %ROS_INSTALL%\system32\drivers
+copy services\storage\disk\disk.sys %ROS_INSTALL%\system32\drivers
+copy services\storage\class2\class2.sys %ROS_INSTALL%\system32\drivers
 copy apps\system\shell\shell.exe %ROS_INSTALL%\system32
 copy apps\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy apps\system\services\services.exe %ROS_INSTALL%\system32
@@ -87,3 +88,4 @@ copy apps\objdir\objdir.exe %ROS_INSTALL%\bin
 copy apps\mutex\mutex.exe %ROS_INSTALL%\bin
 copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
+copy media\nls\*.nls %ROS_INSTALL%\system32
