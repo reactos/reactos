@@ -842,14 +842,42 @@ struct ToolTip : public WindowHandle
 		SendMessage(_hwnd, TTM_ACTIVATE, active, 0);
 	}
 
-	void add(HWND hparent, HWND htool, LPCTSTR txt=LPSTR_TEXTCALLBACK)
+	void add(HWND hparent, HWND htool, LPCTSTR txt=LPSTR_TEXTCALLBACK, LPARAM lparam=0)
 	{
 		TOOLINFO ti = {
-			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND/*|TTF_TRANSPARENT*/, hparent, (UINT)htool, {0,0,0,0}, 0, 0, 0
+			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND/*|TTF_TRANSPARENT*/, hparent, (UINT)htool,
+			{0,0,0,0}, 0, (LPTSTR)txt, lparam
 		};
-		ti.lpszText = (LPTSTR) txt;
 
 		SendMessage(_hwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+	}
+
+	void add(HWND hparent, UINT id, const RECT& rect, LPCTSTR txt=LPSTR_TEXTCALLBACK, LPARAM lparam=0)
+	{
+		TOOLINFO ti = {
+			sizeof(TOOLINFO), TTF_SUBCLASS/*|TTF_TRANSPARENT*/, hparent, id,
+			{rect.left,rect.top,rect.right,rect.bottom}, 0, (LPTSTR)txt, lparam
+		};
+
+		SendMessage(_hwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+	}
+
+	void remove(HWND hparent, HWND htool)
+	{
+		TOOLINFO ti = {
+			sizeof(TOOLINFO), TTF_IDISHWND, hparent, (UINT)htool, {0,0,0,0}, 0, 0, 0
+		};
+
+		SendMessage(_hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
+	}
+
+	void remove(HWND hparent, UINT id)
+	{
+		TOOLINFO ti = {
+			sizeof(TOOLINFO), 0, hparent, id, {0,0,0,0}, 0, 0, 0
+		};
+
+		SendMessage(_hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
 	}
 };
 

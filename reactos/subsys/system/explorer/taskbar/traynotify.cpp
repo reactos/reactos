@@ -61,6 +61,16 @@ NotifyInfo::NotifyInfo()
 }
 
 
+ // WCHAR versions von NOTIFYICONDATA
+#define	NID_SIZE_W6	 sizeof(NOTIFYICONDATAW)										// _WIN32_IE = 0x600
+#define	NID_SIZE_W5	(sizeof(NOTIFYICONDATAW)-sizeof(GUID))							// _WIN32_IE = 0x500
+#define	NID_SIZE_W3	(sizeof(NOTIFYICONDATAW)-sizeof(GUID)-(128-64)*sizeof(WCHAR))	// _WIN32_IE < 0x500
+
+ // CHAR versions von NOTIFYICONDATA
+#define	NID_SIZE_A6	 sizeof(NOTIFYICONDATAA)
+#define	NID_SIZE_A5	(sizeof(NOTIFYICONDATAA)-sizeof(GUID))
+#define	NID_SIZE_A3	(sizeof(NOTIFYICONDATAA)-sizeof(GUID)-(128-64)*sizeof(CHAR))
+
 NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 {
 	_hWnd = pnid->hWnd;
@@ -85,16 +95,33 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 
 	 // store tool tip text
 	if (pnid->uFlags & NIF_TIP)
-		 // UNICODE version of NOTIFYICONDATA structure
-		if (pnid->cbSize == sizeof(NOTIFYICONDATAW) ||				// _WIN32_IE = 0x600
-			pnid->cbSize == sizeof(NOTIFYICONDATAW)-sizeof(GUID) ||	// _WIN32_IE = 0x500
-			pnid->cbSize == sizeof(NOTIFYICONDATAW)-sizeof(GUID)-(128-64)*sizeof(WCHAR))// _WIN32_IE < 0x500
-			_tipText = (LPCWSTR)pnid->szTip;
-		 // ANSI version of NOTIFYICONDATA structure
-		else if (pnid->cbSize == sizeof(NOTIFYICONDATAA) ||			// _WIN32_IE = 0x600
-			pnid->cbSize == sizeof(NOTIFYICONDATAA)-sizeof(GUID) ||	// _WIN32_IE = 0x500
-			pnid->cbSize == sizeof(NOTIFYICONDATAA)-sizeof(GUID)-(128-64)*sizeof(CHAR))	// _WIN32_IE < 0x400
-			_tipText = (LPCSTR)pnid->szTip;
+		if (pnid->cbSize==NID_SIZE_W6 || pnid->cbSize==NID_SIZE_W5 || pnid->cbSize==NID_SIZE_W3)
+		{ // UNICODE version of NOTIFYICONDATA structure
+			LPCWSTR txt = (LPCWSTR)pnid->szTip;
+
+			 // get string length
+			int max_len = pnid->cbSize==NID_SIZE_W3? 64: 128;
+
+			int l = 0;
+			for(; l<max_len; ++l)
+				if (!txt[l])
+					break;
+
+			_tipText.assign(txt, l);
+		} else if (pnid->cbSize==NID_SIZE_A6 || pnid->cbSize==NID_SIZE_A5 || pnid->cbSize==NID_SIZE_A3)
+		{ // ANSI version of NOTIFYICONDATA structure
+			LPCSTR txt = (LPCSTR)pnid->szTip;
+
+			 // get string length
+			int max_len = pnid->cbSize==NID_SIZE_A3? 64: 128;
+
+			int l = 0;
+			for(int l=0; l<max_len; ++l)
+				if (!txt[l])
+					break;
+
+			_tipText.assign(txt, l);
+		}
 
 	return *this;
 }
@@ -106,9 +133,8 @@ NotifyArea::NotifyArea(HWND hwnd)
 {
 	_next_idx = 0;
 	_clock_width = 0;
+	_last_icon_count = 0;
 	_show_hidden = false;
-
-	_tooltip.add(_hwnd, _hwnd);	///@todo use one area for each icon
 }
 
 LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
@@ -347,6 +373,24 @@ void NotifyArea::Refresh()
 		if (_show_hidden || !(entry._dwState & NIS_HIDDEN))
 #endif
 			_sorted_icons.insert(entry);
+	}
+
+	 // sync tooltip areas to current icon number
+	if (_sorted_icons.size() != _last_icon_count) {
+		RECT rect = {2, 3, 2+16, 3+16};
+		size_t tt_idx = 0;
+
+		for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
+			_tooltip.add(_hwnd, tt_idx++, rect);
+
+			rect.left += NOTIFYICON_DIST;
+			rect.right += NOTIFYICON_DIST;
+		}
+
+		while(tt_idx < _last_icon_count)
+			_tooltip.remove(_hwnd, tt_idx++);
+
+		_last_icon_count = _sorted_icons.size();
 	}
 
 	SendMessage(GetParent(_hwnd), PM_RESIZE_CHILDREN, 0, 0);

@@ -94,6 +94,7 @@ protected:
 	NotifyIconMap _icon_map;
 	NotifyIconSet _sorted_icons;
 	int		_next_idx;
+	size_t	_last_icon_count;
 
 	ToolTip	_tooltip;
 
