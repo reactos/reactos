@@ -106,9 +106,8 @@ VOID ObCreateHandleTable(struct _EPROCESS* Parent,
 			 struct _EPROCESS* Process);
 NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
-		      PUNICODE_STRING RemainingPath);
-//		      PWSTR* RemainingPath);
-
+		      PUNICODE_STRING RemainingPath,
+		      POBJECT_TYPE ObjectType);
 ULONG ObGetReferenceCount(PVOID Object);
 ULONG ObGetHandleCount(PVOID Object);
 VOID ObCloseAllHandles(struct _EPROCESS* Process);

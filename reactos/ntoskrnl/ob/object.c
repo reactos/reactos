@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.25 2000/07/30 18:22:35 dwelch Exp $
+/* $Id: object.c,v 1.26 2000/08/24 19:12:16 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -66,7 +66,7 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
 
 /**********************************************************************
  * NAME							PRIVATE
- * 	ObFindObject@12
+ * 	ObFindObject@16
  *
  * DESCRIPTION
  *
@@ -81,11 +81,16 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
  *		The caller must free the buffer after use by calling
  *		RtlFreeUnicodeString ().
  *
+ *	ObjectType
+ *		Optional pointer to an object type. This is used to
+ *		descide if a symbolic link object will be parsed or not.
+ *
  * RETURN VALUE
  */
 NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
-		      PUNICODE_STRING RemainingPath)
+		      PUNICODE_STRING RemainingPath,
+		      POBJECT_TYPE ObjectType)
 {
    PVOID NextObject;
    PVOID CurrentObject;
@@ -163,7 +168,8 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	Status = CurrentHeader->ObjectType->Parse(CurrentObject,
 						  &NextObject,
 						  &PathString,
-						  &current);
+						  &current,
+						  ObjectType);
 	if (Status == STATUS_REPARSE)
 	  {
 	     /* reparse the object path */
@@ -228,7 +234,8 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
      {
 	ObFindObject(ObjectAttributes,
 		     &Parent,
-		     &RemainingPath);
+		     &RemainingPath,
+		     NULL);
      }
    else
      {

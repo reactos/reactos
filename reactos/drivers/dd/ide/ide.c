@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.32 2000/08/22 21:09:25 ekohl Exp $
+/* $Id: ide.c,v 1.33 2000/08/24 19:15:20 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -64,12 +64,9 @@
  * FIXME: add support for ATAPI tape drives
  */
 
-#include <ddk/ntddk.h>
-
 //  -------------------------------------------------------------------------
 
-#include "../../../ntoskrnl/include/internal/i386/io.h"
-#include <string.h>
+#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -153,10 +150,12 @@ static BOOLEAN IDEGetPartitionTable(IN int CommandPort,
                                     IN PIDE_DRIVE_IDENTIFY DrvParms,
                                     PARTITION *PartitionTable);
 static NTSTATUS IDECreateDevice(IN PDRIVER_OBJECT DriverObject, 
-                                IN PCHAR DeviceName, 
+//                                IN PCHAR DeviceName, 
                                 OUT PDEVICE_OBJECT *DeviceObject, 
                                 IN PCONTROLLER_OBJECT ControllerObject, 
                                 IN int UnitNumber,
+                                IN ULONG DiskNumber,
+                                IN ULONG PartitionNumber,
                                 IN PIDE_DRIVE_IDENTIFY DrvParms, 
                                 IN DWORD Offset, 
                                 IN DWORD Size);
@@ -186,7 +185,7 @@ static VOID IDEDpcForIsr(IN PKDPC Dpc,
                          IN PVOID DpcContext);
 static VOID IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension);
 static VOID IDEIoTimer(PDEVICE_OBJECT DeviceObject, PVOID Context);
- 
+
 //  ----------------------------------------------------------------  Inlines
 
 extern inline void 
@@ -468,8 +467,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                  IN int HarddiskIdx)
 {
   BOOLEAN                CreatedDevices;
-  char                   RawDeviceName[IDE_MAX_NAME_LENGTH];
-  char                   PrimaryDeviceName[IDE_MAX_NAME_LENGTH];
+  WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
   int                    CommandPort, PartitionIdx, PartitionNum;
   NTSTATUS               RC;
   IDE_DRIVE_IDENTIFY     DrvParms;
@@ -477,8 +475,6 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   PDEVICE_OBJECT         PrimaryDeviceObject;
   PIDE_DEVICE_EXTENSION  RawDeviceExtension;
   PARTITION              PartitionTable[4], *p;
-  char                   DeviceDirName[IDE_MAX_NAME_LENGTH + 1];
-  ANSI_STRING            AnsiDeviceDirName;
   UNICODE_STRING         UnicodeDeviceDirName;
   OBJECT_ATTRIBUTES      DeviceDirAttributes;
   HANDLE                 Handle;
@@ -506,23 +502,15 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   CreatedDevices = FALSE;
 
     //  Create the harddisk device directory
-  strcpy(DeviceDirName, IDE_NT_ROOTDIR_NAME);
-  strcat(DeviceDirName, IDE_NT_DEVICE_NAME);
-  DeviceDirName[strlen(DeviceDirName) + 1] = '\0';
-  DeviceDirName[strlen(DeviceDirName)] = '0' + HarddiskIdx;
-  RtlInitAnsiString(&AnsiDeviceDirName, DeviceDirName);
-  RC = RtlAnsiStringToUnicodeString(&UnicodeDeviceDirName,
-                                    &AnsiDeviceDirName,
-                                    TRUE);
-  if (!NT_SUCCESS(RC))
-    {
-      DPRINT("Could not convert ansi to unicode for device dir\n", 0);
-      return  FALSE;
-    }
-  InitializeObjectAttributes(&DeviceDirAttributes, 
-                             &UnicodeDeviceDirName, 
-                             0, 
-                             NULL, 
+  swprintf (NameBuffer,
+            L"\\Device\\Harddisk%d",
+            HarddiskIdx);
+  RtlInitUnicodeString(&UnicodeDeviceDirName,
+                       NameBuffer);
+  InitializeObjectAttributes(&DeviceDirAttributes,
+                             &UnicodeDeviceDirName,
+                             0,
+                             NULL,
                              NULL);
   RC = ZwCreateDirectoryObject(&Handle, 0, &DeviceDirAttributes);
   if (!NT_SUCCESS(RC))
@@ -530,17 +518,8 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
       DPRINT("Could not create device dir object\n", 0);
       return FALSE;
     }
-  RtlFreeUnicodeString(&UnicodeDeviceDirName);
 
     //  Create the raw device
-  strcpy(RawDeviceName, IDE_NT_ROOTDIR_NAME);
-  strcat(RawDeviceName, IDE_NT_DEVICE_NAME);
-  RawDeviceName[strlen(RawDeviceName) + 1] = '\0';
-  RawDeviceName[strlen(RawDeviceName)] = '0' + HarddiskIdx;
-  strcat(RawDeviceName, IDE_NT_PARTITION_NAME);
-  RawDeviceName[strlen(RawDeviceName) + 1] = '\0';
-  RawDeviceName[strlen(RawDeviceName)] = '0';
-
   if (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED)
     {
       SectorCount =
@@ -553,10 +532,11 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
     }
 
   RC = IDECreateDevice(DriverObject,
-                       RawDeviceName,
                        &RawDeviceObject,
                        ControllerObject,
                        DriveIdx,
+                       HarddiskIdx,
+                       0,
                        &DrvParms,
                        0,
                        SectorCount);
@@ -620,19 +600,13 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                          p->SectorCount);
 
                   //  Create Device for partition
-                  strcpy(PrimaryDeviceName, IDE_NT_ROOTDIR_NAME);
-                  strcat(PrimaryDeviceName, IDE_NT_DEVICE_NAME);
-                  PrimaryDeviceName[strlen(PrimaryDeviceName) + 1] = '\0';
-                  PrimaryDeviceName[strlen(PrimaryDeviceName)] = '0' + HarddiskIdx;
-                  strcat(PrimaryDeviceName, IDE_NT_PARTITION_NAME);
-                  PrimaryDeviceName[strlen(PrimaryDeviceName) + 1] = '\0';
-                  PrimaryDeviceName[strlen(PrimaryDeviceName)] = '0' + PartitionNum++;
                   TotalPartitions++;
                   RC = IDECreateDevice(DriverObject,
-                                       PrimaryDeviceName,
                                        &PrimaryDeviceObject,
                                        ControllerObject,
                                        DriveIdx,
+                                       HarddiskIdx,
+                                       PartitionNum,
                                        &DrvParms,
                                        p->StartingBlock + PartitionOffset,
                                        p->SectorCount);
@@ -642,6 +616,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                       break;
                     }
                   PartitionOffset += (p->StartingBlock + p->SectorCount);
+                  PartitionNum++;
                 }
               else if (IsExtendedPartition(p->PartitionType))
                 {
@@ -852,7 +827,6 @@ IDEGetPartitionTable(IN int CommandPort,
 //
 //  ARGUMENTS:
 //    IN   PDRIVER_OBJECT      DriverObject      The system supplied driver object
-//    IN   PCHAR               DeviceName        The name of the device
 //    OUT  PDEVICE_OBJECT     *DeviceObject      The created device object
 //    IN   PCONTROLLER_OBJECT  ControllerObject  The Controller for the device
 //    IN   BOOLEAN             LBASupported      Does the drive support LBA addressing?
@@ -866,32 +840,36 @@ IDEGetPartitionTable(IN int CommandPort,
 //    NTSTATUS
 //
 
-NTSTATUS  
-IDECreateDevice(IN PDRIVER_OBJECT DriverObject, 
-                IN PCHAR DeviceName, 
-                OUT PDEVICE_OBJECT *DeviceObject, 
-                IN PCONTROLLER_OBJECT ControllerObject, 
+NTSTATUS
+IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
+                OUT PDEVICE_OBJECT *DeviceObject,
+                IN PCONTROLLER_OBJECT ControllerObject,
                 IN int UnitNumber,
+                IN ULONG DiskNumber,
+                IN ULONG PartitionNumber,
                 IN PIDE_DRIVE_IDENTIFY DrvParms,
-                IN DWORD Offset, 
-                IN DWORD Size) 
+                IN DWORD Offset,
+                IN DWORD Size)
 {
-  WCHAR                  UnicodeBuffer[IDE_MAX_NAME_LENGTH];
+  WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
+  WCHAR                  ArcNameBuffer[IDE_MAX_NAME_LENGTH + 15];
+  UNICODE_STRING         DeviceName;
+  UNICODE_STRING         ArcName;
   NTSTATUS               RC;
-  ANSI_STRING            AnsiName;
-  UNICODE_STRING         UnicodeName;
   PIDE_DEVICE_EXTENSION  DeviceExtension;
 
     // Create a unicode device name
-  RtlInitAnsiString(&AnsiName, DeviceName);
-  UnicodeName.MaximumLength = IDE_MAX_NAME_LENGTH * sizeof(WCHAR);
-  UnicodeName.Buffer = UnicodeBuffer;
-  RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, FALSE);
+  swprintf(NameBuffer,
+           L"\\Device\\Harddisk%d\\Partition%d",
+           DiskNumber,
+           PartitionNumber);
+  RtlInitUnicodeString(&DeviceName,
+                       NameBuffer);
 
     // Create the device
-  RC = IoCreateDevice(DriverObject, sizeof(IDE_DEVICE_EXTENSION), 
-      &UnicodeName, FILE_DEVICE_DISK, 0, TRUE, DeviceObject);
-  if (!NT_SUCCESS(RC)) 
+  RC = IoCreateDevice(DriverObject, sizeof(IDE_DEVICE_EXTENSION),
+      &DeviceName, FILE_DEVICE_DISK, 0, TRUE, DeviceObject);
+  if (!NT_SUCCESS(RC))
     {
       DPRINT("IoCreateDevice call failed\n",0);
       return RC;
@@ -912,21 +890,50 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
     (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0;
     // FIXME: deal with bizarre sector sizes
   DeviceExtension->BytesPerSector = 512 /* DrvParms->BytesPerSector */;
-  DeviceExtension->SectorsPerLogCyl = DrvParms->LogicalHeads * 
+  DeviceExtension->SectorsPerLogCyl = DrvParms->LogicalHeads *
       DrvParms->SectorsPerTrack;
   DeviceExtension->SectorsPerLogTrk = DrvParms->SectorsPerTrack;
   DeviceExtension->LogicalHeads = DrvParms->LogicalHeads;
   DeviceExtension->Offset = Offset;
   DeviceExtension->Size = Size;
-  DPRINT("%s: offset %d size %d \n", 
-         DeviceName, 
+  DPRINT("%wZ: offset %d size %d \n",
+         &DeviceName,
          DeviceExtension->Offset,
          DeviceExtension->Size);
 
     //  Initialize the DPC object here
   IoInitializeDpcRequest(*DeviceObject, IDEDpcForIsr);
 
-  DbgPrint("%s %dMB\n", DeviceName, Size / 2048);
+  if (PartitionNumber != 0)
+    {
+      DbgPrint("%wZ %dMB\n", &DeviceName, Size / 2048);
+    }
+
+  /* assign arc name */
+  if (PartitionNumber == 0)
+    {
+      swprintf(ArcNameBuffer,
+               L"\\ArcName\\multi(0)disk(0)rdisk(%d)",
+               DiskNumber);
+    }
+  else
+    {
+      swprintf(ArcNameBuffer,
+               L"\\ArcName\\multi(0)disk(0)rdisk(%d)partition(%d)",
+               DiskNumber,
+               PartitionNumber);
+    }
+  RtlInitUnicodeString (&ArcName,
+                        ArcNameBuffer);
+  DPRINT1("%wZ ==> %wZ\n", &ArcName, &DeviceName);
+  RC = IoAssignArcName (&ArcName,
+                        &DeviceName);
+  if (!NT_SUCCESS(RC))
+    {
+      DPRINT1("IoAssignArcName (%wZ) failed (Status %x)\n",
+              &ArcName, RC);
+    }
+
 
   return  RC;
 }

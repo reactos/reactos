@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.15 2000/06/29 23:35:38 dwelch Exp $
+/* $Id: symlink.c,v 1.16 2000/08/24 19:09:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -86,13 +86,27 @@ IopParseSymbolicLink (
 	PVOID		Object,
 	PVOID		* NextObject,
 	PUNICODE_STRING	FullPath,
-	PWSTR		* RemainingPath
+	PWSTR		* RemainingPath,
+	POBJECT_TYPE	ObjectType
 	)
 {
 	NTSTATUS	Status;
 	PSYMLNK_OBJECT	SymlinkObject = (PSYMLNK_OBJECT) Object;
 	PVOID		ReturnedObject;
 	UNICODE_STRING	TargetPath;
+
+	DPRINT("IopParseSymbolicLink (RemainingPath %S)\n", *RemainingPath);
+	/*
+	 * Stop parsing if the entire path has been parsed and
+	 * the desired object is a symbolic link object.
+	 */
+	if (((*RemainingPath == NULL) || (**RemainingPath == 0)) &&
+	    (ObjectType == IoSymbolicLinkType))
+	{
+		DPRINT("Parsing stopped!\n");
+		*NextObject = NULL;
+		return STATUS_SUCCESS;
+	}
 
 	Status = ObReferenceObjectByName(
 			SymlinkObject->Target.ObjectName,
@@ -197,12 +211,15 @@ NtOpenSymbolicLinkObject (
 	NTSTATUS	Status;
 	PVOID		Object;
 
+	DPRINT("NtOpenSymbolicLinkObject (Name %wZ)\n",
+	       ObjectAttributes->ObjectName);
+
 	Status = ObReferenceObjectByName(
 			ObjectAttributes->ObjectName,
 			ObjectAttributes->Attributes,
 			NULL,
 			DesiredAccess,
-			NULL,
+			IoSymbolicLinkType,
 			UserMode,
 			NULL,
 			& Object
@@ -354,7 +371,6 @@ IoCreateSymbolicLink (
 	{
 		return STATUS_UNSUCCESSFUL;
 	}
-	
 	SymbolicLink->TargetName.Length = 0;
 	SymbolicLink->TargetName.MaximumLength = 
 		((wcslen(DeviceName->Buffer) + 1) * sizeof(WCHAR));

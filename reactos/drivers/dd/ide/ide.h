@@ -12,11 +12,6 @@ extern "C" {
 #define  IDE_MAXIMUM_DEVICES    8
 
 #define IDE_MAX_NAME_LENGTH     50
-#define IDE_NT_ROOTDIR_NAME     "\\Device"
-#define IDE_NT_DEVICE_NAME      "\\Harddisk"
-#define IDE_NT_PARTITION_NAME   "\\Partition"
-#define IDE_WIN32_DEVICE_NAME   "\\DosDevices\\IDE"
-#define IDE_DRIVER_NAME         "IDEDRIVER"
 
 #define  IDE_SECTOR_BUF_SZ         512
 #define  IDE_MAX_SECTORS_PER_XFER  256
@@ -77,34 +72,50 @@ extern "C" {
 //  Access macros for command registers
 //  Each macro takes an address of the command port block, and data
 //
-#define IDEReadError(Address)                (inb_p((Address) + IDE_REG_ERROR))
-#define IDEWritePrecomp(Address, Data)       (outb_p((Address) + IDE_REG_PRECOMP, (Data)))
-#define IDEReadSectorCount(Address)          (inb_p((Address) + IDE_REG_SECTOR_CNT))
-#define IDEWriteSectorCount(Address, Data)   (outb_p((Address) + IDE_REG_SECTOR_CNT, (Data)))
-#define IDEReadSectorNum(Address)            (inb_p((Address) + IDE_REG_SECTOR_NUM))
-#define IDEWriteSectorNum(Address, Data)     (outb_p((Address) + IDE_REG_SECTOR_NUM, (Data)))
-#define IDEReadCylinderLow(Address)          (inb_p((Address) + IDE_REG_CYL_LOW))
-#define IDEWriteCylinderLow(Address, Data)   (outb_p((Address) + IDE_REG_CYL_LOW, (Data)))
-#define IDEReadCylinderHigh(Address)         (inb_p((Address) + IDE_REG_CYL_HIGH))
-#define IDEWriteCylinderHigh(Address, Data)  (outb_p((Address) + IDE_REG_CYL_HIGH, (Data)))
-#define IDEReadDriveHead(Address)            (inb_p((Address) + IDE_REG_DRV_HEAD))
-#define IDEWriteDriveHead(Address, Data)     (outb_p((Address) + IDE_REG_DRV_HEAD, (Data)))
-#define IDEReadStatus(Address)               (inb_p((Address) + IDE_REG_STATUS))
-#define IDEWriteCommand(Address, Data)       (outb_p((Address) + IDE_REG_COMMAND, (Data)))
+#define IDEReadError(Address) \
+  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_ERROR)))
+#define IDEWritePrecomp(Address, Data) \
+  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_PRECOMP), (Data)))
+#define IDEReadSectorCount(Address) \
+  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_CNT)))
+#define IDEWriteSectorCount(Address, Data) \
+  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_CNT), (Data)))
+#define IDEReadSectorNum(Address) \
+  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_NUM)))
+#define IDEWriteSectorNum(Address, Data) \
+  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_NUM), (Data)))
+#define IDEReadCylinderLow(Address) \
+  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_LOW)))
+#define IDEWriteCylinderLow(Address, Data) \
+  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_LOW), (Data)))
+#define IDEReadCylinderHigh(Address) \
+  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_HIGH)))
+#define IDEWriteCylinderHigh(Address, Data) \
+  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_HIGH), (Data)))
+#define IDEReadDriveHead(Address) \
+  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DRV_HEAD)))
+#define IDEWriteDriveHead(Address, Data) \
+  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DRV_HEAD), (Data)))
+#define IDEReadStatus(Address) \
+  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_STATUS)))
+#define IDEWriteCommand(Address, Data) \
+  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_COMMAND), (Data)))
+
 
 //
 //  Data block read and write commands
 //
 #define IDEReadBlock(Address, Buffer, Count) \
-  (insw((Address) + IDE_REG_DATA_PORT, (Buffer), (Count) / 2))
+  (READ_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 #define IDEWriteBlock(Address, Buffer, Count) \
-  (outsw((Address) + IDE_REG_DATA_PORT, (Buffer), (Count) / 2))
+  (WRITE_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 
 //
 //  Access macros for control registers
 //  Each macro takes an address of the control port blank and data
 //
-#define IDEWriteDriveControl(Address, Data)  (outb_p((Address) + IDE_REG_DEV_CNTRL, (Data)))
+#define IDEWriteDriveControl(Address, Data) \
+  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
 
 //    IDE_DEVICE_EXTENSION
 //

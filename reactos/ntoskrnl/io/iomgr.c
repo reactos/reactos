@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.13 2000/07/07 02:10:18 ekohl Exp $
+/* $Id: iomgr.c,v 1.14 2000/08/24 19:09:12 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -109,7 +109,6 @@ VOID IoInit (VOID)
 	OBJECT_ATTRIBUTES	attr;
 	HANDLE			handle;
 	UNICODE_STRING		UnicodeString;
-	ANSI_STRING		AnsiString;
 	UNICODE_STRING		DeviceName;
 
 	/*
@@ -136,15 +135,11 @@ VOID IoInit (VOID)
 	IoDeviceObjectType->OkayToClose = NULL;
 	IoDeviceObjectType->Create = IopCreateDevice;
 
-	RtlInitAnsiString (
-		& AnsiString,
-		"Device"
-		);
-	RtlAnsiStringToUnicodeString (
+	RtlInitUnicodeString (
 		& IoDeviceObjectType->TypeName,
-		& AnsiString,
-		TRUE
+		L"Device"
 		);
+
 	/*
 	 * Register iomgr types: FileObjectType
 	 * (alias DriverObjectType)
@@ -170,27 +165,17 @@ VOID IoInit (VOID)
 	IoFileObjectType->OkayToClose = NULL;
 	IoFileObjectType->Create = IopCreateFile;
 
-	RtlInitAnsiString (
-		& AnsiString,
-		"File"
-		);
-	RtlAnsiStringToUnicodeString (
+	RtlInitUnicodeString (
 		& IoFileObjectType->TypeName,
-		& AnsiString,
-		TRUE
+		L"File"
 		);
 
 	/*
-	 * Create the device directory
+	 * Create the '\Device' directory
 	 */
-	RtlInitAnsiString (
-		& AnsiString,
-		"\\Device"
-		);
-	RtlAnsiStringToUnicodeString (
+	RtlInitUnicodeString (
 		& UnicodeString,
-		& AnsiString,
-		TRUE
+		L"\\Device"
 		);
 	InitializeObjectAttributes (
 		& attr,
@@ -206,16 +191,11 @@ VOID IoInit (VOID)
 		);
 
 	/*
-	 * Create the \?? directory
+	 * Create the '\??' directory
 	 */
-	RtlInitAnsiString (
-		& AnsiString,
-		"\\??"
-		);
-	RtlAnsiStringToUnicodeString (
+	RtlInitUnicodeString (
 		& UnicodeString,
-		& AnsiString,
-		TRUE
+		L"\\??"
 		);
 	InitializeObjectAttributes (
 		& attr,
@@ -229,6 +209,26 @@ VOID IoInit (VOID)
 		0,
 		& attr
 		);
+
+	/*
+	 * Create the '\ArcName' directory
+	 */
+	RtlInitUnicodeString (
+		& UnicodeString,
+		L"\\ArcName");
+	InitializeObjectAttributes (
+		& attr,
+		& UnicodeString,
+		0,
+		NULL,
+		NULL
+		);
+	ZwCreateDirectoryObject (
+		& handle,
+		0,
+		& attr
+		);
+
 	/*
 	 * Initialize remaining subsubsystem
 	 */
@@ -238,7 +238,7 @@ VOID IoInit (VOID)
 	IoInitVpbImplementation ();
 
 	/*
-	 * Create link from \DosDevices to \?? directory
+	 * Create link from '\DosDevices' to '\??' directory
 	 */
 	RtlInitUnicodeString (&UnicodeString,
 	                      L"\\DosDevices");

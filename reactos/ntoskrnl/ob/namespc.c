@@ -37,20 +37,25 @@ NTSTATUS STDCALL ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 					 PVOID ParseContext,
 					 PVOID* ObjectPtr)
 {
-   PVOID Object;
+   PVOID Object = NULL;
    UNICODE_STRING RemainingPath;
-//   PWSTR RemainingPath;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   
+   NTSTATUS Status;
+
    InitializeObjectAttributes(&ObjectAttributes,
 			      ObjectPath,
 			      0,
 			      NULL,
 			      NULL);
-   ObFindObject(&ObjectAttributes,
-		&Object,
-		&RemainingPath);
-   
+   Status = ObFindObject(&ObjectAttributes,
+			 &Object,
+			 &RemainingPath,
+			 ObjectType);
+   if (!NT_SUCCESS(Status))
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+
    if (RemainingPath.Buffer != NULL ||
        Object == NULL)
      {
@@ -138,7 +143,8 @@ ObpParseDirectory (
 	PVOID		Object,
 	PVOID		* NextObject,
 	PUNICODE_STRING	FullPath,
-	PWSTR		* Path
+	PWSTR		* Path,
+	POBJECT_TYPE	ObjectType
 	)
 {
    PWSTR end;

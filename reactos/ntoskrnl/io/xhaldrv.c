@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.5 2000/08/22 21:10:28 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.6 2000/08/24 19:09:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,18 +33,6 @@
 #define  PART_MAGIC_OFFSET  0x01fe
 #define  PARTITION_OFFSET   0x01be
 #define  PARTITION_TBL_SIZE 4
-
-/*
-#define  PTCHSToLBA(c, h, s, scnt, hcnt) ((s) & 0x3f) + \
-    (scnt) * ( (h) + (hcnt) * ((c) | (((s) & 0xc0) << 2)))
-#define  PTLBAToCHS(lba, c, h, s, scnt, hcnt) ( \
-    (s) = (lba) % (scnt) + 1,  \
-    (lba) /= (scnt), \
-    (h) = (lba) % (hcnt), \
-    (lba) /= (heads), \
-    (c) = (lba) & 0xff, \
-    (s) |= ((lba) >> 2) & 0xc0)
-*/
 
 #define IsUsablePartition(P)  \
     ((P) != PTEmpty && \
@@ -286,9 +274,9 @@ HalpAssignDrive (
 	RtlInitUnicodeString (&DriveName,
 	                      DriveNameBuffer);
 
-	DPRINT1("  %wZ ==> %wZ\n",
-	        &DriveName,
-	        PartitionName);
+	DPRINT("  %wZ ==> %wZ\n",
+	       &DriveName,
+	       PartitionName);
 
 	/* create symbolic link */
 	IoCreateSymbolicLink (&DriveName,
@@ -360,9 +348,9 @@ xHalIoAssignDriveLetters (
 			RtlInitUnicodeString (&UnicodeString2,
 			                      Buffer2);
 
-			DPRINT1("Creating link: %S ==> %S\n",
-			        Buffer2,
-			        Buffer1);
+			DPRINT("Creating link: %S ==> %S\n",
+			       Buffer2,
+			       Buffer1);
 
 			IoCreateSymbolicLink (&UnicodeString2,
 			                      &UnicodeString1);
@@ -385,8 +373,8 @@ xHalIoAssignDriveLetters (
 		                                &LayoutInfo);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT1("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
-			        Status);
+			DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
+			         Status);
 			continue;
 		}
 
@@ -439,8 +427,8 @@ xHalIoAssignDriveLetters (
 		                                &LayoutInfo);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT1("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
-			        Status);
+			DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
+			         Status);
 			continue;
 		}
 
@@ -491,8 +479,8 @@ xHalIoAssignDriveLetters (
 		                                &LayoutInfo);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT1("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
-			        Status);
+			DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
+			         Status);
 			continue;
 		}
 

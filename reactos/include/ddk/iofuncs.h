@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.19 2000/07/30 18:22:32 dwelch Exp $ */
+/* $Id: iofuncs.h,v 1.20 2000/08/24 19:06:29 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -213,8 +213,8 @@ IoAllocateMdl (
  *		PUNICODE_STRING	DeviceName
  *		);
  */
-#define IoAssignArcName (ArcName, DeviceName) \
-	(IoCreateSymbolicLink ((ArcName), (DeviceName)))
+#define IoAssignArcName(ArcName,DeviceName) \
+	(IoCreateSymbolicLink((ArcName),(DeviceName)))
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -695,7 +695,7 @@ IoGetTopLevelIrp (
 	VOID
 	);
 
-#define IoInitializeDpcRequest(DeviceObject, DpcRoutine) \
+#define IoInitializeDpcRequest(DeviceObject,DpcRoutine) \
 	(KeInitializeDpc(&(DeviceObject)->Dpc, \
 			 (PKDEFERRED_ROUTINE)(DpcRoutine), \
 			 (DeviceObject)))
@@ -894,10 +894,10 @@ IoReportResourceUsage (
 	PBOOLEAN		ConflictDetected
 	);
 
-#define IoRequestDpc(DeviceObject, Irp, Context) \
+#define IoRequestDpc(DeviceObject,Irp,Context) \
 	(KeInsertQueueDpc(&(DeviceObject)->Dpc,(Irp),(Context)))
 
-#define IoSetCancelRoutine(Irp, NewCancelRoutine) \
+#define IoSetCancelRoutine(Irp,NewCancelRoutine) \
 	((PDRIVER_CANCEL)InterlockedExchange((PULONG)&(Irp)->CancelRoutine, \
 					     (ULONG)(NewCancelRoutine)));
 

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.60 2000/08/12 19:33:21 dwelch Exp $
+/* $Id: loader.c,v 1.61 2000/08/24 19:11:06 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -421,7 +421,8 @@ LdrOpenModule(PUNICODE_STRING  Filename)
 
   Status = ObFindObject(&ObjectAttributes,
                         (PVOID *) &ModuleObject,
-                        &RemainingPath);
+                        &RemainingPath,
+                        NULL);
   CHECKPOINT;
   if (NT_SUCCESS(Status) && (RemainingPath.Buffer == NULL || *(RemainingPath.Buffer) == 0))
     {

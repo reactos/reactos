@@ -1,4 +1,4 @@
-/* $Id: io.h,v 1.3 2000/07/07 10:30:55 dwelch Exp $
+/* $Id: io.h,v 1.4 2000/08/24 19:07:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 
-extern POBJECT_TYPE		IoSymbolicLinkObjectType;
+extern POBJECT_TYPE		IoSymbolicLinkType;
 
 /*
  * FUNCTION: Called to initalize a loaded driver

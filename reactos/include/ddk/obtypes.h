@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.8 2000/06/15 18:37:33 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.9 2000/08/24 19:06:29 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -90,7 +90,8 @@ typedef struct _OBJECT_TYPE
    NTSTATUS (*Parse)(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
-		     PWSTR *Path);
+		     PWSTR *Path,
+		     struct _OBJECT_TYPE* ObjectType);
    
    /*
     */
