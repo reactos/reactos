@@ -132,7 +132,7 @@ NTSTATUS STDCALL NtQueueApcThread(HANDLE ThreadHandle,
 				  PVOID SystemArgument1,
 				  PVOID SystemArgument2)
 {
-   return(NtQueueApcThread(ThreadHandle,
+   return(ZwQueueApcThread(ThreadHandle,
 			   ApcRoutine,
 			   NormalContext,
 			   SystemArgument1,
