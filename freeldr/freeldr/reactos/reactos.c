@@ -515,47 +515,62 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	}
 
 	/*
-	 * Verify system path
+	 * Special case for Live CD.
 	 */
-	if (!DissectArcPath(value, szBootPath, &BootDrive, &BootPartition))
+	if (!stricmp(value, "LiveCD"))
 	{
-		sprintf(MsgBuffer,"Invalid system path: '%s'", value);
-		UiMessageBox(MsgBuffer);
-		return;
-	}
+		strcpy(szBootPath, "\\reactos");
 
-	/* set boot drive and partition */
+		/* Set kernel command line */
+		sprintf(multiboot_kernel_cmdline,
+		        "multi(0)disk(0)cdrom(%u)\\reactos",
+		        (unsigned int)BootDrive);
+	}
+	else
+	{
+		/*
+		 * Verify system path
+		 */
+		if (!DissectArcPath(value, szBootPath, &BootDrive, &BootPartition))
+		{
+			sprintf(MsgBuffer,"Invalid system path: '%s'", value);
+			UiMessageBox(MsgBuffer);
+			return;
+		}
+	        
+		/* recalculate the boot partition for freeldr */
+		i = 0;
+		rosPartition = 0;
+		while (1)
+		{
+		   if (!DiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
+		   {
+		      BootPartition = 0;
+		      break;
+		   }
+		   if (IsRecognizedPartition(PartitionTableEntry.SystemIndicator))
+		   {
+		      if (++rosPartition == BootPartition)
+		      {
+		         BootPartition = i;
+			 break;
+		      }
+		   }
+		}
+		if (BootPartition == 0)
+		{
+			sprintf(MsgBuffer,"Invalid system path: '%s'", value);
+			UiMessageBox(MsgBuffer);
+			return;
+		}
+	        
+		/* copy ARC path into kernel command line */
+		strcpy(multiboot_kernel_cmdline, value);
+	}
+	        
+	/* Set boot drive and partition */
 	((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
 	((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
-
-	/* recalculate the boot partition for freeldr */
-	i = 0;
-	rosPartition = 0;
-	while (1)
-	{
-	   if (!DiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
-	   {
-	      BootPartition = 0;
-	      break;
-	   }
-	   if (IsRecognizedPartition(PartitionTableEntry.SystemIndicator))
-	   {
-	      if (++rosPartition == BootPartition)
-	      {
-	         BootPartition = i;
-		 break;
-	      }
-	   }
-	}
-	if (BootPartition == 0)
-	{
-		sprintf(MsgBuffer,"Invalid system path: '%s'", value);
-		UiMessageBox(MsgBuffer);
-		return;
-	}
-
-	/* copy ARC path into kernel command line */
-	strcpy(multiboot_kernel_cmdline, value);
 
 	/*
 	 * Read the optional kernel parameters (if any)

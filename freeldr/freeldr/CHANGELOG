@@ -1,3 +1,9 @@
+Changes in v1.8.20 (21/05/2004) (navaraf)
+
+- Added support for special value "LiveCD" of SystemPath option
+  for loading ReactOS. It uses the known boot drive information
+  as the boot path.
+
 Changes in v1.8.19 (12/20/2003) (ekohl)
 
 - Detect PS/2 Port and Pointer Device (Mouse).
