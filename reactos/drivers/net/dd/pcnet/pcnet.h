@@ -28,6 +28,37 @@
 #ifndef _PCNET_H_
 #define _PCNET_H_
 
+/* FIXME: We should use a general way to do this for all drivers. */
+#ifdef __GNUC__
+#define memcpy(a,b,c) __builtin_memcpy(a,b,c)
+#define memset(a,b,c) __builtin_memset(a,b,c)
+#undef RtlFillMemory
+#define RtlFillMemory(a,b,c) __builtin_memset(a,b,c)
+#undef RtlZeroMemory
+#define RtlZeroMemory(a,b) __builtin_memset(a,0,b)
+#endif
+
+#define NDIS_MAJOR_VERSION 5
+#define NDIS_MINOR_VERSION 0
+
+/* statistics struct */
+typedef struct _ADAPTER_STATS
+{
+  ULONG XmtGoodFrames;
+  ULONG XmtRetryErrors;
+  ULONG XmtLossesOfCarrier;
+  ULONG XmtCollisions;
+  ULONG XmtLateCollisions;
+  ULONG XmtExcessiveDefferals;
+  ULONG XmtBufferUnderflows;
+  ULONG XmtBufferErrors;
+  ULONG RcvGoodFrames;
+  ULONG RcvBufferErrors;
+  ULONG RcvCrcErrors;
+  ULONG RcvOverflowErrors;
+  ULONG RcvFramingErrors;
+} ADAPTER_STATS, *PADAPTER_STATS;
+
 /* adapter struct */
 typedef struct _ADAPTER 
 {
@@ -69,6 +100,8 @@ typedef struct _ADAPTER
   ULONG ReceiveBufferLength;
   PCHAR ReceiveBufferPtrVirt;
   PCHAR ReceiveBufferPtrPhys;
+
+  ADAPTER_STATS Statistics;
 } ADAPTER, *PADAPTER;
 
 /* forward declarations */

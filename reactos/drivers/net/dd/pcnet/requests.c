@@ -56,11 +56,19 @@ static ULONG MiniportOIDList[] =
   OID_GEN_MAC_OPTIONS,
   OID_GEN_MEDIA_CONNECT_STATUS,
   OID_GEN_MAXIMUM_SEND_PACKETS,
+  OID_GEN_XMIT_OK,
+  OID_GEN_RCV_OK,
+  OID_GEN_XMIT_ERROR,
+  OID_GEN_RCV_ERROR,
+  OID_GEN_RCV_NO_BUFFER,
   OID_802_3_PERMANENT_ADDRESS,
   OID_802_3_CURRENT_ADDRESS,
   OID_802_3_MULTICAST_LIST,
   OID_802_3_MAXIMUM_LIST_SIZE,
-  OID_802_3_MAC_OPTIONS
+  OID_802_3_MAC_OPTIONS,
+  OID_802_3_RCV_ERROR_ALIGNMENT,
+  OID_802_3_XMIT_ONE_COLLISION,
+  OID_802_3_XMIT_MORE_COLLISIONS
 };
 
 
@@ -140,8 +148,12 @@ MiniportQueryInformation(
 
     case OID_GEN_MAXIMUM_FRAME_SIZE:
         {
-          /* XXX I'm not sure this is correct */
-          GenericULONG = 1514;
+          /*
+           * The value returned by this OID must be equal to
+           * OID_GEN_MAXIMUM_TOTAL_SIZE - sizeof(ETHERNET_HEADER)
+           * where sizeof(ETHERNET_HEADER) is 14.
+           */
+          GenericULONG = 1500;
           break;
         }
 
@@ -206,12 +218,17 @@ MiniportQueryInformation(
 
     case OID_GEN_DRIVER_VERSION:
         {
-          GenericULONG = 1;
+          /* NDIS version used by the driver. */
+          static const USHORT DriverVersion =
+            (NDIS_MAJOR_VERSION << 8) + NDIS_MINOR_VERSION;
+          CopyFrom = (PVOID)&DriverVersion;
+          CopySize = sizeof(DriverVersion);
           break;
         }
 
     case OID_GEN_MAXIMUM_TOTAL_SIZE:
         {
+          /* See comment in OID_GEN_MAXIMUM_FRAME_SIZE. */
           GenericULONG = 1514;
           break;
         }
@@ -275,6 +292,51 @@ MiniportQueryInformation(
           break;
         }
       
+    case OID_GEN_XMIT_OK:
+        GenericULONG = Adapter->Statistics.XmtGoodFrames;
+        break;
+
+    case OID_GEN_RCV_OK:
+        GenericULONG = Adapter->Statistics.RcvGoodFrames;
+        break;
+
+    case OID_GEN_XMIT_ERROR:
+        GenericULONG = Adapter->Statistics.XmtRetryErrors +
+                       Adapter->Statistics.XmtLossesOfCarrier +
+                       Adapter->Statistics.XmtCollisions +
+                       Adapter->Statistics.XmtLateCollisions +
+                       Adapter->Statistics.XmtExcessiveDefferals +
+                       Adapter->Statistics.XmtBufferUnderflows +
+                       Adapter->Statistics.XmtBufferErrors;
+        break;
+
+    case OID_GEN_RCV_ERROR:
+        GenericULONG = Adapter->Statistics.RcvBufferErrors +
+                       Adapter->Statistics.RcvCrcErrors +
+                       Adapter->Statistics.RcvOverflowErrors +
+                       Adapter->Statistics.RcvFramingErrors;
+        break;
+
+    case OID_GEN_RCV_NO_BUFFER:
+        /* FIXME: Is this correct? */
+        GenericULONG = Adapter->Statistics.RcvBufferErrors;
+        break;
+
+    case OID_802_3_RCV_ERROR_ALIGNMENT:
+        /* XXX Implement me */
+        GenericULONG = 0;
+        break;
+
+    case OID_802_3_XMIT_ONE_COLLISION:
+        /* FIXME: Is this correct? */
+        GenericULONG = Adapter->Statistics.XmtCollisions;
+        break;
+
+    case OID_802_3_XMIT_MORE_COLLISIONS:
+        /* FIXME: Is this correct? */
+        GenericULONG = Adapter->Statistics.XmtLateCollisions;
+        break;
+
     default:
         {
           PCNET_DbgPrint(("Unknown OID\n"));
@@ -295,7 +357,7 @@ MiniportQueryInformation(
         {
           NdisMoveMemory(InformationBuffer, CopyFrom, CopySize);
           *BytesWritten = CopySize;
-          *BytesNeeded  = 0;
+          *BytesNeeded  = CopySize;
          }
     }
 

@@ -83,7 +83,9 @@ MiniportHandleInterrupt(
           ErrorHandled = TRUE;
 #endif
 
-          PCNET_DbgPrint(("error: %x\n", Data & (CSR0_MERR|CSR0_BABL|CSR0_CERR|CSR0_MISS)));
+          PCNET_DbgPrint(("error: %x\n", Data & (CSR0_MERR|CSR0_BABL|CSR0_CERR|CSR0_MISS)))
+          if (Data & CSR0_CERR)
+            Adapter->Statistics.XmtCollisions++;
         }
       else if(Data & CSR0_IDON)
         {
@@ -128,6 +130,14 @@ MiniportHandleInterrupt(
               if(Descriptor->FLAGS & RD_ERR)
                 {
                   PCNET_DbgPrint(("receive descriptor error: 0x%x\n", Descriptor->FLAGS));
+                  if (Descriptor->FLAGS & RD_BUFF)
+                    Adapter->Statistics.RcvBufferErrors++;
+                  if (Descriptor->FLAGS & RD_CRC)
+                    Adapter->Statistics.RcvCrcErrors++;
+                  if (Descriptor->FLAGS & RD_OFLO)
+                    Adapter->Statistics.RcvOverflowErrors++;
+                  if (Descriptor->FLAGS & RD_FRAM)
+                    Adapter->Statistics.RcvFramingErrors++;
                   break;
                 }
 
@@ -153,6 +163,8 @@ MiniportHandleInterrupt(
 
               Adapter->CurrentReceiveDescriptorIndex++;
               Adapter->CurrentReceiveDescriptorIndex %= NUMBER_OF_BUFFERS;
+
+              Adapter->Statistics.RcvGoodFrames++;
             }
         }
       else if(Data & CSR0_TINT)
@@ -189,11 +201,25 @@ MiniportHandleInterrupt(
               if (Descriptor->FLAGS & TD1_ERR)
                 {
                   PCNET_DbgPrint(("major error: %x\n", Descriptor->FLAGS2));
+                  if (Descriptor->FLAGS2 & TD2_RTRY)
+                    Adapter->Statistics.XmtRetryErrors++;
+                  if (Descriptor->FLAGS2 & TD2_LCAR)
+                    Adapter->Statistics.XmtLossesOfCarrier++;
+                  if (Descriptor->FLAGS2 & TD2_LCOL)
+                    Adapter->Statistics.XmtLateCollisions++;
+                  if (Descriptor->FLAGS2 & TD2_EXDEF)
+                    Adapter->Statistics.XmtExcessiveDefferals++;
+                  if (Descriptor->FLAGS2 & TD2_UFLO)
+                    Adapter->Statistics.XmtBufferUnderflows++;
+                  if (Descriptor->FLAGS2 & TD2_BUFF)
+                    Adapter->Statistics.XmtBufferErrors++;
                   break;
                 }
 
               Adapter->CurrentTransmitStartIndex++;
               Adapter->CurrentTransmitStartIndex %= NUMBER_OF_BUFFERS;
+
+              Adapter->Statistics.XmtGoodFrames++;
             }
           NdisMSendResourcesAvailable(Adapter->MiniportAdapterHandle);
         }
@@ -1040,8 +1066,8 @@ DriverEntry(
   NDIS_STATUS Status;
 
   RtlZeroMemory(&Characteristics, sizeof(Characteristics));
-  Characteristics.MajorNdisVersion = 5;
-  Characteristics.MinorNdisVersion = 0;
+  Characteristics.MajorNdisVersion = NDIS_MAJOR_VERSION;
+  Characteristics.MinorNdisVersion = NDIS_MINOR_VERSION;
   Characteristics.HaltHandler = MiniportHalt;
   Characteristics.HandleInterruptHandler = MiniportHandleInterrupt;
   Characteristics.InitializeHandler = MiniportInitialize;
