@@ -7,6 +7,10 @@
 using std::string;
 using std::vector;
 
+Project::Project()
+{
+}
+
 Project::Project(string filename)
 {
 	if ( !xmlfile.open ( filename ) )

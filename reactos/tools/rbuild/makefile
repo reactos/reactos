@@ -4,7 +4,15 @@ TARGET = rbuild$(EXE_POSTFIX)
 
 all: $(TARGET)
 
+BACKEND_MINGW_BASE_OBJECTS = \
+	backend/mingw/mingw.cpp
+
+BACKEND_BASE_OBJECTS = \
+	$(BACKEND_MINGW_BASE_OBJECTS) \
+	backend/backend.cpp
+
 BASE_OBJECTS = \
+	$(BACKEND_BASE_OBJECTS) \
 	exception.o \
 	module.o \
 	project.o \
@@ -19,7 +27,7 @@ TESTS = \
 
 TEST_OBJECTS = $(BASE_OBJECTS) $(TESTS) tests/alltests.o
 
-HOST_CFLAGS = -g -I. -Werror -Wall
+HOST_CXXFLAGS = -g -I. -Werror -Wall
 
 HOST_LFLAGS = -g
 
@@ -45,7 +53,7 @@ endif
 
 %.o: %.cpp
 	$(HALFVERBOSEECHO) [CXX]     $<
-	$(HOST_CXX) $(HOST_CFLAGS) -c $< -o $@
+	$(HOST_CXX) $(HOST_CXXFLAGS) -c $< -o $@
 
 test: rbuild_tests$(EXE_POSTFIX)
 	$(EXE_PREFIX)rbuild_tests$(EXE_POSTFIX)
