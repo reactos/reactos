@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2002/06/08 16:28:03 ea Exp $
+# $Id: Makefile,v 1.4 2002/08/23 12:40:56 ea Exp $
 #
 # Tu run it in Win32 console mode, undefine __SUBSYSTEM_WINDOWS__
 # and pass "console" in the ld's --subsystem option.
@@ -33,7 +33,14 @@ $(TARGET_NAME).coff: $(TARGET_NAME).rc
 		--include-dir $(PATH_TO_TOP)/include \
 		--output-format coff \
 		$< $@ 
-		
+
+clean:
+	- $(RM) *.o
+	- $(RM) *.exe
+	- $(RM) *.coff
+	- $(RM) *.sym
+
+
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002/06/08 16:28:02 ea Exp $
+# $Id: Makefile,v 1.3 2002/08/23 12:40:56 ea Exp $
 #
 # ReactOS POSIX+ Personality
 #
@@ -22,7 +22,7 @@ clean:
 	make -C lib/psxdll clean
 	make -C lib/psxx clean
 	make -C apps/baresh clean
-	make -C apps/csrterm clean
+	make -C apps/posixw32 clean
 	- $(RM) lib/crt0w32.o
 
 include $(PATH_TO_TOP)/rules.mak
