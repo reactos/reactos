@@ -99,13 +99,17 @@ static BOOL argify(char* out, int len, const char* fmt, const char* lpFile, LPIT
 		{
 		    if (*fmt == '*')
 		    {
+			*res++ = '"';
 			while(*args)
 			    *res++ = *args++;
+			*res++ = '"';
 		    }
 		    else
 		    {
+			*res++ = '"';
 			while(*args && !isspace(*args))
 			    *res++ = *args++;
+			*res++ = '"';
 
 			while(isspace(*args))
 			    ++args;
@@ -118,13 +122,10 @@ static BOOL argify(char* out, int len, const char* fmt, const char* lpFile, LPIT
 		    {
 			/*FIXME Is SearchPath() really needed? We already have separated out the parameter string in args. */
 			if (SearchPathA(NULL, lpFile, ".exe", sizeof(xlpFile), xlpFile, NULL))
-			{
 			    cmd = xlpFile;
-			}
 			else
-			{
 			    cmd = lpFile;
-			}
+
 			/* Add double quotation marks unless we already have them (e.g.: "%1" %* for exefile) */
 			if (res != out && *(res - 1) == '"')
 			{
@@ -507,7 +508,7 @@ UINT SHELL_FindExecutable(LPCSTR lpPath, LPCSTR lpFile, LPCSTR lpOperation,
 	{
 	    UINT i;
 
-	    for (i = 0;i<strlen(buffer); i++) buffer[i] = tolower(buffer[i]);
+	    for (i=0; i<strlen(buffer); i++) buffer[i] = tolower(buffer[i]);
 
 	    tok = strtok(buffer, " \t"); /* ? */
 	    while (tok!= NULL)
@@ -572,6 +573,7 @@ UINT SHELL_FindExecutable(LPCSTR lpPath, LPCSTR lpFile, LPCSTR lpOperation,
 	if (retval > 32)
         {
             argify(lpResult, sizeof(lpResult), command, xlpFile, pidl, args);
+
             /* Remove double quotation marks */
             if (*lpResult == '"')
             {
@@ -596,16 +598,16 @@ UINT SHELL_FindExecutable(LPCSTR lpPath, LPCSTR lpFile, LPCSTR lpOperation,
             {
                 strcpy(lpResult, command);
                 tok = strstr(lpResult, "^"); /* should be ^.extension? */
+
                 if (tok != NULL)
                 {
                     tok[0] = '\0';
                     strcat(lpResult, xlpFile); /* what if no dir in xlpFile? */
                     tok = strstr(command, "^"); /* see above */
                     if ((tok != NULL) && (strlen(tok)>5))
-                    {
                         strcat(lpResult, &tok[5]);
-                    }
                 }
+
                 retval = 33; /* FIXME - see above */
             }
         }
@@ -642,7 +644,7 @@ static unsigned dde_connect(char* key, char* start, char* ddeexec,
 			    LPCSTR szCommandline, LPITEMIDLIST pidl)
 {
     char*       endkey = key + strlen(key);
-    char        app[256], topic[256], ifexec[256], res[256];
+    char        app[256], topic[256], ifexec[256];
     LONG        applen, topiclen, ifexeclen;
     char*       exec;
     DWORD       ddeInst = 0;
@@ -700,10 +702,12 @@ static unsigned dde_connect(char* key, char* start, char* ddeexec,
         }
     }
 
+#if 0 /* argify has already been called. */
     argify(res, sizeof(res), exec, lpFile, pidl, szCommandline);
     TRACE("%s %s => %s\n", exec, lpFile, res);
+#endif
 
-    ret = (DdeClientTransaction(res, strlen(res) + 1, hConv, 0L, 0,
+    ret = (DdeClientTransaction((LPBYTE)szCommandline, strlen(szCommandline) + 1, hConv, 0L, 0,
                                 XTYP_EXECUTE, 10000, &tid) != DMLERR_NO_ERROR) ? 31 : 33;
     DdeDisconnect(hConv);
  error:
@@ -742,9 +746,13 @@ static UINT execute_from_key(LPSTR key, LPCSTR lpFile, LPCSTR lpDir, void *env,
         }
         else
         {
+#if 0 /* argify() has already been called. */
             /* Is there a replace() function anywhere? */
             cmd[cmdlen] = '\0';
             argify(param, sizeof(param), cmd, lpFile, pidl, szCommandline);
+#else
+	    strcpy(param, szCommandline);
+#endif
             retval = execfunc(param, env, lpDir, sei, FALSE);
         }
     }
@@ -966,25 +974,36 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
        "rundll32.exe shell32.dll,Control_RunDLL %1,%*" with a command line
        parameter received from ISF_ControlPanel_fnGetDisplayNameOf(). */
     if (!*szCommandline) {
+	/* If the executable path is quoted, handle the rest of the command line as parameters. */
 	if (*szApplicationName == '"') {
-	    LPCSTR src = szApplicationName + 1;
+	    LPSTR src = szApplicationName + 1;
 	    LPSTR dst = fileName;
+	    LPSTR end;
 
+	    /* copy the unquoted executabe path to 'fileName' */
 	    while(*src && *src!='"')
 		*dst++ = *src++;
 
 	    *dst = '\0';
 
-	    if (*src == '"')
-		for(++src; isspace(*src); )
-		    ++src;
+	    if (*src == '"') {
+		end = ++src;
 
+		while(isspace(*src))
+		    ++src;
+	    } else
+		end = src;
+
+	    /* copy the paremeter string to 'szCommandline' */
 	    strcpy(szCommandline, src);
+
+	    /* terminate 'szApplicationName' after the quote character */
+	    *end = '\0';
 	}
 	else
 	{
-	    /* We have to use this search loop here, that in CreateProcess()
-	       is not sufficent because it does not handle shell links. */
+	    /* If the executrable name is not quoted, we have to use this search loop here,
+	       that in CreateProcess() is not sufficient because it does not handle shell links. */
 	    LPSTR space, s;
 	    char buffer[MAX_PATH], xlpFile[MAX_PATH];
 
@@ -1038,6 +1057,7 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
     retval = SHELL_FindExecutable(*dir? dir: NULL, lpFile, sei->lpVerb, cmd, lpstrProtocol, &env, pidl, szCommandline);
     if (retval > 32)  /* Found */
     {
+#if 0	/* SHELL_FindExecutable() already quoted by calling argify() */
         CHAR szQuotedCmd[MAX_PATH+2];
         /* Must quote to handle case where cmd contains spaces, 
          * else security hole if malicious user creates executable file "C:\\Program"
@@ -1055,6 +1075,12 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
             retval = execute_from_key(lpstrProtocol, lpFile, env, dir, sei, execfunc, szCommandline, pidl);
         else
             retval = execfunc(szQuotedCmd, env, dir, sei, FALSE);
+#else
+        if (*lpstrProtocol)
+            retval = execute_from_key(lpstrProtocol, lpFile, env, dir, sei, execfunc, cmd, pidl);
+        else
+            retval = execfunc(cmd, env, dir, sei, FALSE);
+#endif
         if (env) HeapFree( GetProcessHeap(), 0, env );
     }
     else if (PathIsURLA((LPSTR)lpFile))    /* File not found, check for URL */
