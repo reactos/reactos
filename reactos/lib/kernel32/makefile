@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.27 1999/10/17 18:18:43 ariadne Exp $
+# $Id: makefile,v 1.28 1999/11/17 21:33:44 ariadne Exp $
 #
 # ReactOS Operating System
 #
@@ -25,7 +25,7 @@ all: $(DLLTARGET)
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/wait.o synch/intrlck.o synch/timer.o
 
 MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o \
-		misc/console.o misc/time.o misc/stubs.o misc/rtl.o misc/ldr.o
+		misc/console.o misc/time.o misc/stubs.o misc/rtl.o misc/ldr.o misc/res.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
