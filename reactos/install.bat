@@ -120,6 +120,11 @@ copy apps\tests\event\event.exe %ROS_INSTALL%\bin
 copy apps\tests\file\file.exe %ROS_INSTALL%\bin
 copy apps\tests\pteb\pteb.exe %ROS_INSTALL%\bin
 copy apps\tests\consume\consume.exe %ROS_INSTALL%\bin
+copy apps\tests\button\buttontst.exe %ROS_INSTALL_TESTS%
+copy apps\tests\button2\buttontst2.exe %ROS_INSTALL_TESTS%
+copy apps\tests\combo\combotst.exe %ROS_INSTALL_TESTS%
+copy apps\tests\lineclip\lineclip.exe %ROS_INSTALL_TESTS%
+copy apps\tests\edit\edittest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\vmtest\vmtest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\gditest\gditest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\shaptest\shaptest.exe %ROS_INSTALL_TESTS%
