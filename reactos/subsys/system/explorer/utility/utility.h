@@ -191,13 +191,22 @@ struct Thread
 
 	void Stop()
 	{
-		_alive = false;
+		if (_alive) {
+			{
+			Lock lock(_crit_sect);
+			_alive = false;
+			}
 
-		 // wait for finishing
-		WaitForSingleObject(_hThread, INFINITE);
+			 // wait for finishing
+			WaitForSingleObject(_hThread, INFINITE);
+		}
 	}
 
 	virtual int Run() = 0;
+
+	bool	is_alive() const {return _alive;}
+
+	CritSect _crit_sect;
 
 protected:
 	static DWORD WINAPI ThreadProc(void* para);

@@ -561,6 +561,10 @@ SOURCE=.\dialogs\searchprogram.h
 # End Group
 # Begin Source File
 
+SOURCE=.\res\appicon.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\buildno.h
 # End Source File
 # Begin Source File

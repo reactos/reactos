@@ -8,7 +8,6 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include <windows.h>
-#include <winuser.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -146,8 +145,8 @@ IDB_LOGOV256            BITMAP  DISCARDABLE     "res/logov256.bmp"
 
 IDA_EXPLORER ACCELERATORS DISCARDABLE 
 BEGIN
-    88,            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    83,            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
+    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
+    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
 END
 
@@ -345,6 +344,7 @@ IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
 IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
 IDI_ARROW               ICON    DISCARDABLE     "res/arrow.ico"
 IDI_ARROW_SELECTED      ICON    DISCARDABLE     "res/arrowsel.ico"
+IDI_APPICON             ICON    DISCARDABLE     "res/appicon.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -565,7 +565,7 @@ STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Search Program in Startmenu"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_TOPIC,7,7,130,14,ES_AUTOHSCROLL
     CONTROL         "List1",IDC_MAILS_FOUND,"SysListView32",LVS_REPORT | 

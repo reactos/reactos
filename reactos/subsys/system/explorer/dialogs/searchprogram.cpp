@@ -73,6 +73,8 @@ void CollectProgramsThread::collect_programs(const ShellPath& path)
 			if (_alive)
 				_callback(dir._folder, shell_entry, _para);
 	}
+
+	dir.free_subentries();
 }
 
 
@@ -94,6 +96,7 @@ FindProgramTopicDlg::FindProgramTopicDlg(HWND hwnd)
 	_haccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_SEARCH_PROGRAM));
 
 	ListView_SetImageList(_list_ctrl, _himl, LVSIL_SMALL);
+	_idxNoIcon = ImageList_AddIcon(_himl, SmallIcon(IDI_APPICON));
 
 	LV_COLUMN column = {LVCF_FMT|LVCF_WIDTH|LVCF_TEXT, LVCFMT_LEFT, 250};
 
@@ -119,6 +122,12 @@ void FindProgramTopicDlg::Refresh()
 {
 	WaitCursor wait;
 
+	_thread.Stop();
+
+	TCHAR buffer[1024];
+	GetWindowText(GetDlgItem(_hwnd, IDC_TOPIC), buffer, 1024);
+	_filter = buffer;
+
 	ListView_DeleteAllItems(_list_ctrl);
 
 	_thread.Start();
@@ -140,31 +149,48 @@ void FindProgramTopicDlg::collect_programs_callback(ShellFolder& folder, const S
 			hr = pShellLink->GetPath(path, MAX_PATH-1, (WIN32_FIND_DATA*)&wfd, SLGP_UNCPRIORITY);
 
 			if (SUCCEEDED(hr)) {
+				FindProgramTopicDlg* pThis = (FindProgramTopicDlg*) param;
+
 				String lwr_path = path;
 				String lwr_name = entry->_display_name;
+				String filter = pThis->_filter;
 
 #ifndef __WINE__ //TODO
 				_tcslwr((LPTSTR)lwr_path.c_str());
 				_tcslwr((LPTSTR)lwr_name.c_str());
+				_tcslwr((LPTSTR)filter.c_str());
 #endif
 
-				if (_tcsstr(lwr_path, _T(".exe")) &&	//@@ filter on ".exe" suffix
-					!_tcsstr(lwr_name, _T("uninstal")) && !_tcsstr(lwr_name, _T("deinstal"))) {	//@@ filter out deinstallation links
-					FindProgramTopicDlg* pThis = (FindProgramTopicDlg*) param;
-
+				//if (_tcsstr(lwr_path, _T(".exe")))	//@@ filter on ".exe" suffix
+				//if (!_tcsstr(lwr_name, _T("uninstal")) && !_tcsstr(lwr_name, _T("deinstal")))	//@@ filter out deinstallation links
+				if (_tcsstr(lwr_path, filter) || _tcsstr(lwr_name, filter)) {
 					LV_ITEM item = {LVIF_TEXT|LVIF_IMAGE|LVIF_PARAM, INT_MAX};
 
 					item.pszText = entry->_display_name;
-					item.iImage = ImageList_AddIcon(pThis->_himl, entry->_hIcon);
+
+					if (entry->_hIcon != (HICON)-1)
+						item.iImage = ImageList_AddIcon(pThis->_himl, entry->_hIcon);
+					else
+						item.iImage = pThis->_idxNoIcon;
+
 					item.lParam = 0;	//@@
 
 					//TODO: store info in ShellPathWithFolder
+
+					Lock lock(pThis->_thread._crit_sect);
+
+					 // resolve deadlocks while executing Thread::Stop()
+					if (!pThis->_thread.is_alive())
+						return;
 
 					item.iItem = ListView_InsertItem(pThis->_list_ctrl, &item);
 
 					item.mask = LVIF_TEXT;
 					item.iSubItem = 1;
 					item.pszText = path;
+
+					if (!pThis->_thread.is_alive())
+						return;
 
 					ListView_SetItem(pThis->_list_ctrl, &item);
 				}
@@ -187,14 +213,20 @@ LRESULT FindProgramTopicDlg::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 
 int FindProgramTopicDlg::Command(int id, int code)
 {
-	switch(id) {
-	  case ID_REFRESH:
-		Refresh();
-		break;
+	if (code == BN_CLICKED)
+		switch(id) {
+		  case ID_REFRESH:
+			Refresh();
+			break;
 
-	  default:
-		return super::Command(id, code);
-	}
+		  default:
+			return super::Command(id, code);
+		}
+	else if (code == EN_CHANGE)
+		switch(id) {
+		  case IDC_TOPIC:
+			Refresh();
+		}
 
 	return TRUE;
 }

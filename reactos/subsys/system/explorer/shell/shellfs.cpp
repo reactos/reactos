@@ -196,6 +196,27 @@ static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 					DestroyIcon(hIconLarge);
 			}
 
+			if (!hIcon) {
+				SHFILEINFO sfi;
+
+				if (SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_SMALLICON))
+					hIcon = sfi.hIcon;
+			}
+/*
+			if (!hIcon) {
+				LPBYTE b = (LPBYTE) alloca(0x10000);
+				SHFILEINFO sfi;
+
+				FILE* file = fopen(path, "rb");
+				if (file) {
+					int l = fread(b, 1, 0x10000, file);
+					fclose(file);
+
+					if (l)
+						hIcon = CreateIconFromResourceEx(b, l, TRUE, 0x00030000, 16, 16, LR_DEFAULTCOLOR);
+				}
+			}
+*/
 			return hIcon;
 		}
 	}
@@ -294,10 +315,22 @@ void ShellDirectory::read_directory()
 			 // get display icons for files and virtual objects
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
 				!(attribs & SFGAO_FILESYSTEM)) {
-				entry->_hIcon = extract_icon(_folder, pidls[n]);
+				entry->_hIcon = extract_icon(_folder, pidls[n]/*, (ShellEntry*)entry*/);
 
-				if (!entry->_hIcon)
-					entry->_hIcon = (HICON)-1;	// don't try again later
+				if (!entry->_hIcon) {
+					if (!entry->_hIcon) {
+						ShellPath pidl_abs = static_cast<ShellEntry*>(entry)->create_absolute_pidl();
+						LPCITEMIDLIST pidl = pidl_abs;
+
+						SHFILEINFO sfi;
+
+						if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_ICON|SHGFI_SMALLICON))
+							entry->_hIcon = sfi.hIcon;
+					} 
+
+					if (!entry->_hIcon)
+						entry->_hIcon = (HICON)-1;	// don't try again later
+				}
 			}
 
 			entry->_down = NULL;

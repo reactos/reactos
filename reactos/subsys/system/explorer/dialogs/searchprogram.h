@@ -72,6 +72,8 @@ protected:
 	HWND	_list_ctrl;
 	HACCEL	_haccel;
 	HIMAGELIST _himl;
+	int		_idxNoIcon;	// Ersatzicon für Links ohne Symbole
+	String	_filter;
 
 	CollectProgramsThread _thread;
 
