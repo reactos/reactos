@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <WinError.h>
 #include <WinDNS.h>
-#include <winsock2.h>
 #include <assert.h>
 
 int main( int argc, char **argv ) {
