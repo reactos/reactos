@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.45 2003/12/13 15:49:32 weiden Exp $
+/* $Id: windc.c,v 1.46 2003/12/14 19:39:50 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -137,6 +137,8 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
   RtlInitUnicodeString(&DriverName, L"DISPLAY");
   
   Dce = DCEOBJ_LockDCE(DceHandle);
+  /* No real locking, just get the pointer */
+  DCEOBJ_UnlockDCE(DceHandle);
   Dce->Self = DceHandle;
   Dce->hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
   if (NULL == defaultDCstate)
@@ -644,7 +646,6 @@ DceFreeDCE(PDCE dce)
     }
 
   hDce = dce->Self;
-  DCEOBJ_UnlockDCE(hDce);
   DCEOBJ_FreeDCE(hDce);
 
   return ret;

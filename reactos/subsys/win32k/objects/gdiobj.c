@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.53 2003/12/12 15:47:37 weiden Exp $
+ * $Id: gdiobj.c,v 1.54 2003/12/14 19:39:50 gvg Exp $
  *
  */
 
@@ -206,19 +206,13 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
 {
   WORD tableIndex;
 
-  /* prevent APC delivery for the *FastMutexUnsafe calls */
-  const KIRQL PrevIrql = KfRaiseIrql(APC_LEVEL);
-  ExAcquireFastMutexUnsafe (&HandleTableMutex);
   for (tableIndex = 1; tableIndex < HandleTable->wTableSize; tableIndex++)
     {
       if (NULL == HandleTable->Handles[tableIndex])
 	{
-	  HandleTable->Handles[tableIndex] = (PGDIOBJHDR) -1;
 	  break;
 	}
     }
-  ExReleaseFastMutexUnsafe (&HandleTableMutex);
-  KfLowerIrql(PrevIrql);
 
   return (tableIndex < HandleTable->wTableSize) ? tableIndex : 0;
 }
@@ -242,6 +236,7 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   PGDIOBJHDR  newObject;
   WORD Index;
   
+  ExAcquireFastMutex(&HandleTableMutex);
   Index = GDIOBJ_iGetNextOpenHandleIndex ();
   if (0 == Index)
     {
@@ -266,7 +261,9 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   newObject->Magic = GDI_TYPE_TO_MAGIC(ObjectType);
   newObject->lockfile = NULL;
   newObject->lockline = 0;
+  ExInitializeFastMutex(&newObject->Lock);
   HandleTable->Handles[Index] = newObject;
+  ExReleaseFastMutexUnsafe (&HandleTableMutex);
   
   W32Process = PsGetCurrentProcess()->Win32Process;
   if(W32Process)
@@ -274,7 +271,6 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
     W32Process->GDIObjects++;
   }
 
-//if (0x4001b == (DWORD) GDI_HANDLE_CREATE(Index, ObjectType)) __asm__("int $3\n");
   return GDI_HANDLE_CREATE(Index, ObjectType);
 }
 
@@ -583,9 +579,9 @@ CleanupForProcess (struct _EPROCESS *Process, INT Pid)
 PGDIOBJ FASTCALL
 GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 {
-  PGDIOBJ rc;
   PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
 
+  DPRINT("(%s:%i) GDIOBJ_LockObjDbg(0x%08x,0x%08x)\n", file, line, hObj, ObjectType);
   if (! GDI_VALID_OBJECT(hObj, ObjHdr, ObjectType, GDIOBJFLAG_DEFAULT))
     {
       int reason = 0;
@@ -611,21 +607,30 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       DPRINT1("\tcalled from: %s:%i\n", file, line );
       return NULL;
     }
-  if (NULL != ObjHdr->lockfile)
+
+  if (! ExTryToAcquireFastMutex(&ObjHdr->Lock))
     {
-      DPRINT1("Caution! GDIOBJ_LockObj trying to lock object (0x%x) second time\n", hObj );
-      DPRINT1("\tcalled from: %s:%i\n", file, line );
-      DPRINT1("\tpreviously locked from: %s:%i\n", ObjHdr->lockfile, ObjHdr->lockline );
+      DPRINT1("Caution! GDIOBJ_LockObj trying to lock object 0x%x second time\n", hObj);
+      DPRINT1("  called from: %s:%i\n", file, line);
+      if (NULL != ObjHdr->lockfile)
+        {
+          DPRINT1("  previously locked from: %s:%i\n", ObjHdr->lockfile, ObjHdr->lockline);
+        }
+      ExAcquireFastMutex(&ObjHdr->Lock);
+      DPRINT1("  Disregard previous message about object 0x%x, it's ok\n", hObj);
     }
-  DPRINT("(%s:%i) GDIOBJ_LockObj(0x%08x,0x%08x)\n", file, line, hObj, ObjectType);
-  rc = GDIOBJ_LockObj(hObj, ObjectType);
-  if (rc && NULL == ObjHdr->lockfile)
+
+  ExAcquireFastMutex(&RefCountHandling);
+  ObjHdr->dwCount++;
+  ExReleaseFastMutex(&RefCountHandling);
+
+  if (NULL == ObjHdr->lockfile)
     {
       ObjHdr->lockfile = file;
       ObjHdr->lockline = line;
     }
 
-  return rc;
+  return (PGDIOBJ)((PCHAR)ObjHdr + sizeof(GDIOBJHDR));
 }
 #endif//GDIOBJ_LockObj
 
@@ -675,11 +680,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ObjectType)
       return NULL;
     }
 
-  if(0 < ObjHdr->dwCount)
-    {
-      DPRINT1("Caution! GDIOBJ_LockObj trying to lock object (0x%x) second time\n", hObj);
-      DPRINT1("\t called from: %x\n", __builtin_return_address(0));
-    }
+  ExAcquireFastMutex(&ObjHdr->Lock);
 
   ExAcquireFastMutex(&RefCountHandling);
   ObjHdr->dwCount++;
@@ -711,6 +712,8 @@ GDIOBJ_UnlockObj(HGDIOBJ hObj, DWORD ObjectType)
     DPRINT1( "GDIOBJ_UnLockObj: failed\n");
     return FALSE;
   }
+
+  ExReleaseFastMutex(&ObjHdr->Lock);
 
   ExAcquireFastMutex(&RefCountHandling);
   if (0 == (ObjHdr->dwCount & ~0x80000000))
