@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.74 2003/12/26 22:52:12 gvg Exp $
+/* $Id: winpos.c,v 1.75 2003/12/27 15:09:51 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -238,6 +238,8 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 	      {
 		WindowObject->Flags &= ~WINDOWOBJECT_RESTOREMAX;
 	      }
+	    IntRedrawWindow(WindowObject, NULL, 0, RDW_VALIDATE | RDW_NOERASE |
+	       RDW_NOINTERNALPAINT);
 	    WindowObject->Style |= WS_MINIMIZE;
 	    WinPosFindIconPos(WindowObject, &InternalPos->IconPos);
 	    NtGdiSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
@@ -381,33 +383,6 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   return 0; //FIXME: what does it return?
 }
 
-#if 0
-BOOL STATIC FASTCALL
-WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
-{
-  PWINDOW_OBJECT WindowObject;
-
-  WindowObject = IntGetWindowObject(hWnd);
-  if (WindowObject == NULL)
-    {
-      return FALSE;
-    }
-
-#if 0
-  IntSendMessage(hWnd,
-      WM_ACTIVATE,
-      MAKELONG(MouseMsg ? WA_CLICKACTIVE : WA_CLICKACTIVE,
-      (WindowObject->Style & WS_MINIMIZE) ? 1 : 0),
-      (LPARAM)IntGetDesktopWindow());  /* FIXME: Previous active window */
-#endif
-  IntSetForegroundWindow(WindowObject);
-
-  IntReleaseWindowObject(WindowObject);
-
-  return TRUE;
-}
-#endif
-
 LONG STATIC FASTCALL
 WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 		   RECT* WindowRect, RECT* ClientRect)
@@ -532,10 +507,6 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 HWND FASTCALL
 WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 {
-#if 0
-   /* FIXME */
-   return hWndInsertAfter;
-#endif
    HWND *List = NULL;
    HWND Owner = NtUserGetWindow(hWnd, GW_OWNER);
    LONG Style = NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE);
@@ -939,6 +910,10 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       if (Window->UpdateRegion != NULL)
       {
          NtGdiCombineRgn(CopyRgn, CopyRgn, Window->UpdateRegion, RGN_DIFF);
+      }
+      if (Window->NCUpdateRegion != NULL)
+      {
+         NtGdiCombineRgn(CopyRgn, CopyRgn, Window->NCUpdateRegion, RGN_DIFF);
       }
 		  
       /*

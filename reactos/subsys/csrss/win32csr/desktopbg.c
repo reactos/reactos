@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.3 2003/12/22 15:30:21 navaraf Exp $
+/* $Id: desktopbg.c,v 1.4 2003/12/27 15:09:51 navaraf Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -50,7 +50,7 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         {
           PAINTSTRUCT PS;
           BeginPaint(Wnd, &PS);
-          PaintDesktop((HDC)PS.hdc);
+          /* No need to paint, already done in WM_ERASEBKGND. */
           EndPaint(Wnd, &PS);
           Result = 0;
         }

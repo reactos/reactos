@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.47 2003/12/23 08:48:59 navaraf Exp $
+/* $Id: windc.c,v 1.48 2003/12/27 15:09:51 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -433,21 +433,12 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       if (Dce->hClipRgn && Window->UpdateRegion)
         {
           NtGdiCombineRgn(Dce->hClipRgn, Window->UpdateRegion, NULL, RGN_COPY);
-          NtGdiOffsetRgn(Dce->hClipRgn,
-            Window->WindowRect.left - Window->ClientRect.left,
-            Window->WindowRect.top - Window->ClientRect.top);
-
-/*
           if (!(Flags & DCX_WINDOW))
             {
-              HRGN ClientRgn = NtGdiCreateRectRgnIndirect(&Window->ClientRect);
-              NtGdiOffsetRgn(ClientRgn,
-                -Window->ClientRect.left,
-                -Window->ClientRect.top);
-              NtGdiCombineRgn(Dce->hClipRgn, Dce->hClipRgn, ClientRgn, RGN_AND);
-              NtGdiDeleteObject(ClientRgn);
+              NtGdiOffsetRgn(Dce->hClipRgn,
+                Window->WindowRect.left - Window->ClientRect.left,
+                Window->WindowRect.top - Window->ClientRect.top);
             }
-*/
         }
       Flags |= DCX_INTERSECTRGN;
     }
@@ -457,13 +448,15 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       if (!(Flags & DCX_WINDOW))
         {
           Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+          NtGdiOffsetRgn(Dce->hClipRgn, -Window->ClientRect.left,
+             -Window->ClientRect.top);
         }
       else
         {
           Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+          NtGdiOffsetRgn(Dce->hClipRgn, -Window->WindowRect.left,
+             -Window->WindowRect.top);
         }
-      NtGdiOffsetRgn(Dce->hClipRgn, -Window->WindowRect.left,
-         -Window->WindowRect.top);
     }
   else if (NULL != ClipRegion)
     {
@@ -485,8 +478,8 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
 	  Parent = Window->Parent;
 
-	  if (Window->Style & WS_VISIBLE &&
-	      !(Parent->Style & WS_MINIMIZE))
+	  if (Window->Style & WS_VISIBLE /*&&
+	      !(Parent->Style & WS_MINIMIZE)*/)
 	    {
 	      if (Parent->Style & WS_CLIPSIBLINGS)
 		{

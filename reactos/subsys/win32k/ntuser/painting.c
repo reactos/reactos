@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.53 2003/12/26 22:52:11 gvg Exp $
+ *  $Id: painting.c,v 1.54 2003/12/27 15:09:51 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -53,6 +53,8 @@
 
 #define NDEBUG
 #include <debug.h>
+
+/* #define FIN_DEBUG */
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -101,16 +103,18 @@ IntValidateParent(PWINDOW_OBJECT Child)
  *
  * Remarks
  *    This function also marks the nonclient update region of window
- *    as valid, clears the WINDOWOBJECT_NEED_NCPAINT flag and removes
- *    the fake paint message from message queue if the Remove is set
- *    to TRUE.
+ *    as valid, clears the WINDOWOBJECT_NEED_NCPAINT flag.
  */
 
 HRGN FASTCALL
-IntGetNCUpdateRegion(PWINDOW_OBJECT Window, BOOL Remove)
+IntGetNCUpdateRegion(PWINDOW_OBJECT Window)
 {
    HRGN WindowRgn;
    HRGN NonclientRgn;
+
+   /*
+    * Generate the update region.
+    */
 
    WindowRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
    NtGdiOffsetRgn(WindowRgn, 
@@ -123,16 +127,16 @@ IntGetNCUpdateRegion(PWINDOW_OBJECT Window, BOOL Remove)
       NtGdiDeleteObject(NonclientRgn);
       NonclientRgn = NULL;
    }
-   if (Remove)
+
+   /*
+    * Remove the nonclient region from the standard update region.
+    */
+
+   if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
+       WindowRgn, RGN_AND) == NULLREGION)
    {
-      if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
-          WindowRgn, RGN_AND) == NULLREGION)
-      {
-         NtGdiDeleteObject(Window->UpdateRegion);
-         Window->UpdateRegion = NULL;
-      }
-      Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
-      MsqDecPaintCountQueue(Window->MessageQueue);
+      NtGdiDeleteObject(Window->UpdateRegion);
+      Window->UpdateRegion = NULL;
    }
 
    return NonclientRgn;
@@ -159,13 +163,24 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
     {
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
         {
-          IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window, TRUE), 0);
+          IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)Window->NCUpdateRegion, 0);
+          Window->NCUpdateRegion = NULL;
+          Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+          MsqDecPaintCountQueue(Window->MessageQueue);
         }
 
       if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
         {
           if (Window->UpdateRegion)
             {
+#ifdef FIN_DEBUG
+              {
+                 RECT TempRect;
+                 UnsafeIntGetRgnBox(Window->UpdateRegion, &TempRect);
+                 DPRINT1("Sending WM_ERASEBKGND[1]: %d,%d-%d,%d\n",
+                    TempRect.left, TempRect.top, TempRect.right, TempRect.bottom);
+              }
+#endif
               hDC = NtUserGetDCEx(hWnd, 0, DCX_CACHE | DCX_USESTYLE |
                                            DCX_INTERSECTUPDATE);
               if (hDC != NULL)
@@ -184,6 +199,14 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
           if (Window->UpdateRegion != NULL ||
               Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
             {
+#ifdef FIN_DEBUG
+              {
+                 RECT TempRect;
+                 UnsafeIntGetRgnBox(Window->UpdateRegion, &TempRect);
+                 DPRINT1("Sending WM_PAINT[1]: %d,%d-%d,%d\n",
+                    TempRect.left, TempRect.top, TempRect.right, TempRect.bottom);
+              }
+#endif
               IntSendMessage(hWnd, WM_PAINT, 0, 0);
               if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
                 {
@@ -342,6 +365,22 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
    }
 
    /*
+    * Split the nonclient update region.
+    */
+
+   if (Window->NCUpdateRegion == NULL)
+   {
+      Window->NCUpdateRegion = IntGetNCUpdateRegion(Window);
+   }
+   else
+   {
+      HRGN hRgnNonClient = IntGetNCUpdateRegion(Window);
+      NtGdiCombineRgn(Window->NCUpdateRegion, Window->NCUpdateRegion,
+         hRgnNonClient, RGN_OR);
+      NtGdiDeleteObject(hRgnNonClient);
+   }
+
+   /*
     * Process children if needed
     */
 
@@ -360,8 +399,10 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
             {
               continue;
             }
-            if ((Child->Style & (WS_VISIBLE | WS_MINIMIZE)) == WS_VISIBLE)
+            if (Child->Style & WS_VISIBLE)
             {
+               RECT TempRect;
+
                /*
                 * Recursive call to update children UpdateRegion
                 */
@@ -375,20 +416,22 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
                /*
                 * Update our UpdateRegion depending on children
                 */
-               NtGdiCombineRgn(hRgnTemp, Child->UpdateRegion, 0, RGN_COPY);
-               NtGdiOffsetRgn(hRgnTemp,
-                  Child->WindowRect.left - Window->WindowRect.left,
-                  Child->WindowRect.top - Window->WindowRect.top);
-               hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
-               NtGdiOffsetRgn(hRgnWindow,
-                  -Window->WindowRect.left,
-                  -Window->WindowRect.top);
-               NtGdiCombineRgn(hRgnTemp, hRgnTemp, hRgnWindow, RGN_AND);
-               if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
-                   hRgnTemp, RGN_DIFF) == NULLREGION)
+
+               if (Window->UpdateRegion != NULL)
                {
-                  NtGdiDeleteObject(Window->UpdateRegion);
-                  Window->UpdateRegion = NULL;
+                  UnsafeIntGetRgnBox(Window->UpdateRegion, &TempRect);
+                  NtGdiCombineRgn(hRgnTemp, Child->UpdateRegion, 0, RGN_COPY);
+                  NtGdiCombineRgn(hRgnTemp, hRgnTemp, Child->NCUpdateRegion, RGN_OR);
+                  NtGdiOffsetRgn(hRgnTemp,
+                     Child->WindowRect.left - Window->WindowRect.left,
+                     Child->WindowRect.top - Window->WindowRect.top);
+                  UnsafeIntGetRgnBox(hRgnTemp, &TempRect);
+                  if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
+                      hRgnTemp, RGN_DIFF) == NULLREGION)
+                  {
+                     NtGdiDeleteObject(Window->UpdateRegion);
+                     Window->UpdateRegion = NULL;
+                  }
                }
                NtGdiDeleteObject(hRgnTemp);
             }
@@ -435,7 +478,7 @@ IntIsWindowDrawable(PWINDOW_OBJECT Window)
 {
    for (; Window; Window = Window->Parent)
    {
-      if ((Window->Style & (WS_VISIBLE | WS_MINIMIZE)) != WS_VISIBLE)
+      if (!(Window->Style & WS_VISIBLE))
          return FALSE;
    }
 
@@ -661,10 +704,24 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
       {
          Message->message = WM_NCPAINT;
-         Message->wParam = (WPARAM)IntGetNCUpdateRegion(Window, Remove);
+         Message->wParam = (WPARAM)Window->NCUpdateRegion;
          Message->lParam = 0;
+         if (Remove)
+         {
+            Window->NCUpdateRegion = NULL;
+            Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
+            MsqDecPaintCountQueue(Window->MessageQueue);
+         }
       } else
       {
+#ifdef FIN_DEBUG
+         {
+            RECT TempRect;
+            UnsafeIntGetRgnBox(Window->UpdateRegion, &TempRect);
+            DPRINT1("Sending WM_PAINT[2]: %d,%d-%d,%d\n",
+               TempRect.left, TempRect.top, TempRect.right, TempRect.bottom);
+         }
+#endif
          Message->message = WM_PAINT;
          Message->wParam = Message->lParam = 0;
          if (Remove && Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
@@ -757,6 +814,16 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    }
 
 /*   IntRedrawWindow(Window, NULL, 0, RDW_NOINTERNALPAINT | RDW_VALIDATE | RDW_NOCHILDREN);*/
+#ifdef FIN_DEBUG
+   if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
+   {
+      RECT TempRect;
+      UnsafeIntGetRgnBox(Window->UpdateRegion, &TempRect);
+      DPRINT1("Sending WM_ERASEBKGND[2]: %d,%d-%d,%d\n",
+         TempRect.left, TempRect.top, TempRect.right, TempRect.bottom);
+   }
+#endif
+   
    if (Window->UpdateRegion != NULL)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);

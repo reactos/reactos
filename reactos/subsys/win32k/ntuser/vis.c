@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.14 2003/12/12 18:59:24 weiden Exp $
+ * $Id: vis.c,v 1.15 2003/12/27 15:09:51 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -210,137 +210,24 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
   return VisRgn;
 }
 
-static VOID FASTCALL
-GetUncoveredArea(HRGN Uncovered, PWINDOW_OBJECT Parent, PWINDOW_OBJECT TargetChild,
-                 BOOL IncludeTarget)
-{
-  PWINDOW_OBJECT Child;
-  BOOL Passed;
-  HRGN Covered;
-
-  Passed = FALSE;
-  ExAcquireFastMutexUnsafe(&Parent->ChildrenListLock);
-  Child = Parent->FirstChild;
-  while (! Passed && Child)
-    {
-      if (0 != (Child->Style & WS_VISIBLE) && (Child != TargetChild || IncludeTarget))
-	{
-	  Covered = UnsafeIntCreateRectRgnIndirect(&Child->WindowRect);
-	  NtGdiCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
-	  NtGdiDeleteObject(Covered);
-	}
-      if (Child == TargetChild)
-	{
-	  Passed = TRUE;
-	}
-      Child = Child->NextSibling;
-    }
-  ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
-}
-
 VOID FASTCALL
 VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
                         HRGN NewlyExposed)
 {
-  PWINDOW_OBJECT DesktopWindow;
-  PWINDOW_OBJECT Parent;
-  PWINDOW_OBJECT Sibling;
-  PWINDOW_OBJECT TopLevel;
-  HRGN Uncovered;
-  HRGN Repaint;
-  HRGN DirtyRgn;
-  HRGN ExposedWindow;
-  HRGN Covered;
-  INT RgnType;
-  POINT Offset;
-
-  DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
-  Uncovered = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->WindowRect);
-
-  if (Window->Style & WS_CHILD)
-    {
-      /* Determine our toplevel window */
-      TopLevel = Window;
-      while (TopLevel->Style & WS_CHILD)
-	{
-	  TopLevel = TopLevel->Parent;
-	}
-
-      GetUncoveredArea(Uncovered, DesktopWindow, TopLevel, FALSE);
-      Parent = Window->Parent;
-    }
-  else
-    {
-      Parent = DesktopWindow;
-    }
-  GetUncoveredArea(Uncovered, Parent, Window, TRUE);
-
-  ExAcquireFastMutexUnsafe(&Parent->ChildrenListLock);
-  Sibling = Window->NextSibling;
-  while (Sibling)
-    {
-      if (0 != (Sibling->Style & WS_VISIBLE))
-	{
-	  Offset.x = - Sibling->WindowRect.left;
-	  Offset.y = - Sibling->WindowRect.top;
-	  DirtyRgn = REGION_CropRgn(NULL, Uncovered, &Sibling->WindowRect, &Offset);
-	  Offset.x = Window->WindowRect.left - Sibling->WindowRect.left;
-	  Offset.y = Window->WindowRect.top - Sibling->WindowRect.top;
-	  ExposedWindow = REGION_CropRgn(NULL, NewlyExposed, NULL, &Offset);
-	  RgnType = NtGdiCombineRgn(DirtyRgn, DirtyRgn, ExposedWindow, RGN_AND);
-	  if (NULLREGION != RgnType && ERROR != RgnType)
-	    {
-              NtGdiOffsetRgn(DirtyRgn,
-                Sibling->WindowRect.left - Sibling->ClientRect.left,
-                Sibling->WindowRect.top - Sibling->ClientRect.top);
-	      IntRedrawWindow(Sibling, NULL, DirtyRgn,
-	                      RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
-	                      RDW_ALLCHILDREN);
-	    }
-	  Covered = UnsafeIntCreateRectRgnIndirect(&Sibling->WindowRect);
-	  NtGdiCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
-	  NtGdiDeleteObject(Covered);
-	  NtGdiDeleteObject(ExposedWindow);
-	  NtGdiDeleteObject(DirtyRgn);
-	}
-
-      Sibling = Sibling->NextSibling;
-    }
-  ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
-
-  if (Window->Style & WS_CHILD)
-    {
-      Offset.x = - Parent->WindowRect.left;
-      Offset.y = - Parent->WindowRect.top;
-      DirtyRgn = REGION_CropRgn(NULL, Uncovered, &Parent->WindowRect, &Offset);
-      Offset.x = Window->WindowRect.left - Parent->WindowRect.left;
-      Offset.y = Window->WindowRect.top - Parent->WindowRect.top;
-      ExposedWindow = REGION_CropRgn(NULL, NewlyExposed, NULL, &Offset);
-      RgnType = NtGdiCombineRgn(DirtyRgn, DirtyRgn, ExposedWindow, RGN_AND);
-      if (NULLREGION != RgnType && ERROR != RgnType)
-	{
-          NtGdiOffsetRgn(DirtyRgn,
-            Parent->WindowRect.left - Parent->ClientRect.left,
-            Parent->WindowRect.top - Parent->ClientRect.top);
-	  IntRedrawWindow(Parent, NULL, DirtyRgn,
-	                  RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
-	                  RDW_NOCHILDREN);
-	}
-      NtGdiDeleteObject(ExposedWindow);
-      NtGdiDeleteObject(DirtyRgn);
-    }
-  else
-    {
-      Repaint = NtGdiCreateRectRgn(0, 0, 0, 0);
-      NtGdiCombineRgn(Repaint, NewlyExposed, NULL, RGN_COPY);
-      NtGdiOffsetRgn(Repaint, Window->WindowRect.left, Window->WindowRect.top);
-      NtGdiCombineRgn(Repaint, Repaint, Uncovered, RGN_AND);
-      NtUserRedrawWindow(DesktopWindow->Self, NULL, Repaint,
-                         RDW_UPDATENOW | RDW_INVALIDATE | RDW_NOCHILDREN);
-      NtGdiDeleteObject(Repaint);
-    }
-
-  NtGdiDeleteObject(Uncovered);
+   HRGN Temp;
+   
+   Temp = NtGdiCreateRectRgn(0, 0, 0, 0);
+   NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
+   if (Window->Parent != NULL)
+   {
+      NtGdiOffsetRgn(Temp,
+                     Window->WindowRect.left - Window->Parent->ClientRect.left,
+                     Window->WindowRect.top - Window->Parent->ClientRect.top);
+   }
+   IntRedrawWindow(Window->Parent, NULL, Temp,
+                   RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | 
+                   RDW_ALLCHILDREN);
+   NtGdiDeleteObject(Temp);
 }
 
 /* EOF */
