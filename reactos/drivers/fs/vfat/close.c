@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.13 2002/08/14 20:58:31 dwelch Exp $
+/* $Id: close.c,v 1.14 2002/09/30 20:48:43 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -72,6 +72,8 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   else
     FileObject->FsContext2 = NULL;
 
+  if (pCcb->DirectorySearchPattern)
+    ExFreePool(pCcb->DirectorySearchPattern);
   ExFreePool (pCcb);
 
   return  Status;
