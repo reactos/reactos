@@ -56,7 +56,6 @@ InbvSolidColorFill(IN ULONG Left,
   IN ULONG Height,
   IN ULONG Color);
 
-
 VOID
 STDCALL
 VidCleanUp(VOID);
