@@ -266,8 +266,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
     if (tv)
     {
         GetSystemTimeAsFileTime(&ft);
-        li.LowPart  = ft.dwLowDateTime;
-        li.HighPart = ft.dwHighDateTime;
+        //li.LowPart  = ft.dwLowDateTime;
+        //li.HighPart = ft.dwHighDateTime;
         t  = li.QuadPart;       /* In 100-nanosecond intervals */
         t -= EPOCHFILETIME;     /* Offset to the Epoch time */
         t /= 10;                /* In microseconds */
