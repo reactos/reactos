@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.75 2002/01/08 00:49:00 dwelch Exp $
+/* $Id: section.c,v 1.76 2002/01/09 03:00:21 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1226,7 +1226,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   Context.Segment = Segment;
   Context.Offset = Offset;
   Context.WasDirty = FALSE;
-  if (IS_SWAP_FROM_SSE(Entry) || 
+  if (Segment->Characteristics & IMAGE_SECTION_CHAR_BSS ||
+      IS_SWAP_FROM_SSE(Entry) || 
       (PVOID)(PAGE_FROM_SSE(Entry)) != PhysicalAddress)
     {
       Context.Private = Private = TRUE;
@@ -1319,7 +1320,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 	}
       if (Private)
 	{
-	  if (SwapEntry == 0)
+	  if (!(Segment->Characteristics & IMAGE_SECTION_CHAR_BSS) &&
+	      SwapEntry == 0)
 	    {
 	      DPRINT1("Private page, non-dirty but not swapped out "
 		      "process %d address 0x%.8X\n",
@@ -1396,6 +1398,9 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 					      (ULONG)PhysicalAddress,
 					      FALSE);
 	      MmSetDirtyPage(MemoryArea->Process, Address);
+	      MmInsertRmap(PhysicalAddress, 
+			   MemoryArea->Process,
+			   Address);
 	      MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, 
 					   (ULONG)PhysicalAddress);
 	      MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
@@ -1441,6 +1446,9 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 					  (ULONG)PhysicalAddress,
 					  FALSE);
 	  MmSetDirtyPage(MemoryArea->Process, Address);
+	  MmInsertRmap(PhysicalAddress, 
+			   MemoryArea->Process,
+			   Address);
 	  MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, 
 				       (ULONG)PhysicalAddress);
 	  MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
@@ -2579,11 +2587,15 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG P
 
       Entry = MmGetPageEntrySectionSegment(MArea->Data.SectionData.Segment,
 					   Offset);
-      /*
-       * Just dereference private pages
-       */
-      if (PhysAddr != (Entry & 0xFFFFF000))
-	{	 
+      if (IS_SWAP_FROM_SSE(Entry))
+	{
+	  KeBugCheck(0);
+	}      
+      else if (PhysAddr != (PAGE_FROM_SSE(Entry)))
+	{
+	  /*
+	   * Just dereference private pages
+	   */
 	  MmDeleteRmap((PVOID)PhysAddr, MArea->Process, Address);
 	  MmDereferencePage((PVOID)PhysAddr);
 	}

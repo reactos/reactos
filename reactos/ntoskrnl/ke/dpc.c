@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.21 2001/04/03 17:25:49 dwelch Exp $
+/* $Id: dpc.c,v 1.22 2002/01/09 03:00:20 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -136,8 +136,8 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 {
    KIRQL oldIrql;
    
-   KeAcquireSpinLockAtDpcLevel( &DpcQueueLock );
-   KeRaiseIrql( HIGH_LEVEL, &oldIrql );
+   KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+   KeRaiseIrql(HIGH_LEVEL, &oldIrql);
    if (!Dpc->Lock)
      {
 	KeReleaseSpinLock(&DpcQueueLock, oldIrql);
@@ -178,7 +178,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
      {
 	return(FALSE);
      }
-   KeRaiseIrql( HIGH_LEVEL, &oldlvl );
+   KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    InsertHeadList(&DpcQueueHead,&Dpc->DpcListEntry);
    DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);

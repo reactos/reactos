@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.5 2001/04/04 22:21:31 dwelch Exp $
+/* $Id: pageop.c,v 1.6 2002/01/09 03:00:21 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -23,7 +23,7 @@
 #define PAGEOP_HASH_TABLE_SIZE       (32)
 
 KSPIN_LOCK MmPageOpHashTableLock;
-PMM_PAGEOP MmPageOpHashTable[PAGEOP_HASH_TABLE_SIZE];
+PMM_PAGEOP MmPageOpHashTable[PAGEOP_HASH_TABLE_SIZE] = {NULL, } ;
 
 #define TAG_MM_PAGEOP   TAG('M', 'P', 'O', 'P')
 
@@ -38,13 +38,13 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
   KIRQL oldIrql;
   PMM_PAGEOP PrevPageOp;
 
+  KeAcquireSpinLock(&MmPageOpHashTableLock, &oldIrql);
   PageOp->ReferenceCount--;
   if (PageOp->ReferenceCount > 0)
     {
+      KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
       return;
     }
-
-  KeAcquireSpinLock(&MmPageOpHashTableLock, &oldIrql);
   PrevPageOp = MmPageOpHashTable[PageOp->Hash];
   if (PrevPageOp == PageOp)
     {

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.54 2002/01/08 00:49:01 dwelch Exp $
+/* $Id: virtual.c,v 1.55 2002/01/09 03:00:21 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -119,6 +119,11 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE,
 			      NULL, (PULONG)&PhysicalAddress);
        MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
+       if (MmGetSavedSwapEntryPage(PhysicalAddress) != 0)
+	 {
+	   DPRINT1("Read-only page was swapped out.\n");
+	   KeBugCheck(0);
+	 }
        MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
        
        PageOp->Status = STATUS_SUCCESS;
@@ -140,6 +145,11 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
      {
        MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
        MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
+       if ((SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress)) != 0)
+	 {
+	   MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
+	   MmSetSavedSwapEntryPage(PhysicalAddress, 0);
+	 }
        MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
        PageOp->Status = STATUS_SUCCESS;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
