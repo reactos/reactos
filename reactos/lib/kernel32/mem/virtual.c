@@ -101,3 +101,80 @@ WINBOOL STDCALL VirtualProtectEx(HANDLE hProcess,
      }
    return(TRUE);
 }
+
+
+WINBOOL
+STDCALL
+VirtualLock (
+	LPVOID	lpAddress,
+	DWORD	dwSize
+	)
+{
+	ULONG BytesLocked;
+	NTSTATUS Status;
+	Status = NtLockVirtualMemory(NtCurrentProcess(),lpAddress,dwSize, &BytesLocked);
+	if (!NT_SUCCESS(Status))
+        {
+		SetLastError(RtlNtStatusToDosError(Status));
+		return FALSE;
+     	}
+	return TRUE;
+}
+
+
+DWORD
+STDCALL
+VirtualQuery (
+	LPCVOID				lpAddress,
+	PMEMORY_BASIC_INFORMATION	lpBuffer,
+	DWORD				dwLength
+	)
+{
+	return VirtualQueryEx (NtCurrentProcess(),lpAddress, lpBuffer, dwLength );
+}
+
+#define MemoryBasicInformation 0
+DWORD
+STDCALL
+VirtualQueryEx (
+	HANDLE				hProcess,
+	LPCVOID				lpAddress,
+	PMEMORY_BASIC_INFORMATION	lpBuffer,
+	DWORD				dwLength
+	)
+{
+	NTSTATUS Status;
+	ULONG ResultLength;
+	
+	Status = NtQueryVirtualMemory(
+		hProcess,(LPVOID)lpAddress,
+		MemoryBasicInformation, lpBuffer,
+		sizeof(MEMORY_BASIC_INFORMATION),
+		&ResultLength );
+	
+	if (!NT_SUCCESS(Status))
+        {
+		SetLastError(RtlNtStatusToDosError(Status));
+		return ResultLength;
+     	}
+	return ResultLength;
+}
+
+
+WINBOOL
+STDCALL
+VirtualUnlock (
+	LPVOID	lpAddress,
+	DWORD	dwSize
+	)
+{
+	ULONG BytesLocked;
+	NTSTATUS Status;
+	Status = NtUnlockVirtualMemory(NtCurrentProcess(),lpAddress,dwSize, &BytesLocked);
+	if (!NT_SUCCESS(Status))
+        {
+		SetLastError(RtlNtStatusToDosError(Status));
+		return FALSE;
+     	}
+	return TRUE;
+}

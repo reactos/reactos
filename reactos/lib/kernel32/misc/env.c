@@ -346,3 +346,153 @@ FreeEnvironmentStringsW(
 	return TRUE;
 }
 
+
+int ExpandVariableA(
+	LPCSTR  lpSrc,	LPSTR  lpDst,	DWORD  nSize , DWORD *nWritten)
+{
+	int nVar = 0;
+	LPSTR  lpVar;
+	LPSTR  lpEnd;
+
+	if ( nWritten == NULL )
+		return -1;
+
+	if ( *lpSrc != '%' ) {
+		return -1;
+	}
+
+
+	lpVar = (LPSTR)lpSrc;
+	lpVar++;
+
+
+	lpEnd = strchr( lpVar, '%' );
+	if ( lpEnd == NULL ) {
+		return -1;
+	}
+	else
+		*lpEnd = 0;
+
+	nWritten = GetEnvironmentVariableA(lpVar,lpDst,nSize);
+	*lpEnd = '%';
+
+	if ( nWritten == 0 )
+		return -1;
+
+	if ( nWritten > nSize )
+		return -1;
+
+	return (lpEnd - lpVar) -1;
+}
+
+
+DWORD STDCALL ExpandEnvironmentStringsA(
+	LPCSTR  lpSrc,	LPSTR  lpDst,	DWORD  nSize 	
+)
+{
+	DWORD v;
+	DWORD bw;
+
+	while(*lpSrc != 0 && nSize > 0 )
+	{
+		if ( *lpSrc == '%' ) {
+			v = ExpandVariableA(lpSrc,lpDst,nSize , &bw);
+			if ( v == -1 ) {
+				*lpDst = *lpSrc;
+				lpDst++;
+				lpSrc++;
+				nSize--;
+			}
+			else {
+				lpSrc+=v;
+				lpDst+=bw;
+				nSize-=bw;
+			}
+		}
+		else {
+
+			*lpDst = *lpSrc;
+			lpDst++;
+			lpSrc++;
+			nSize--;
+
+		}
+		
+	}
+	
+}
+
+int ExpandVariableW(
+	LPCWSTR  lpSrc,	LPWSTR  lpDst,	DWORD  nSize , DWORD *nWritten)
+{
+	LPWSTR  lpVar;
+	LPWSTR  lpEnd;
+
+	if ( nWritten == NULL )
+		return -1;
+
+	if ( *lpSrc != L'%' ) {
+		return -1;
+	}
+
+
+	lpVar = (LPWSTR)lpSrc;
+	lpVar++;
+
+
+	lpEnd = wcschr( lpVar, L'%' );
+	if ( lpEnd == NULL ) {
+		return -1;
+	}
+	else
+		*lpEnd = 0;
+
+	nWritten = GetEnvironmentVariableW(lpVar,lpDst,nSize);
+	*lpEnd = L'%';
+
+	if ( nWritten == 0 )
+		return -1;
+
+	if ( nWritten > nSize )
+		return -1;
+
+	return ((lpEnd - lpVar)/2) -1;
+}
+
+
+DWORD STDCALL ExpandEnvironmentStringsW(
+	LPCWSTR  lpSrc,	LPWSTR  lpDst,	DWORD  nSize 	
+)
+{
+	DWORD v;
+	DWORD bw;
+
+	while(*lpSrc != 0 && nSize > 0 )
+	{
+		if ( *lpSrc == L'%' ) {
+			v = ExpandVariableW(lpSrc,lpDst,nSize , &bw);
+			if ( v == -1 ) {
+				*lpDst = *lpSrc;
+				lpDst++;
+				lpSrc++;
+				nSize--;
+			}
+			else {
+				lpSrc+=v;
+				lpDst+=bw;
+				nSize-=bw;
+			}
+		}
+		else {
+
+			*lpDst = *lpSrc;
+			lpDst++;
+			lpSrc++;
+			nSize--;
+
+		}
+		
+	}
+	
+}
+

@@ -269,6 +269,27 @@ DWORD STDCALL ResumeThread(HANDLE hThread)
    return PreviousResumeCount;
 }
 
+
+WINBOOL
+STDCALL
+TerminateThread (
+	HANDLE	hThread,
+	DWORD	dwExitCode
+	)
+{
+   NTSTATUS errCode;
+   
+   errCode = NtTerminateThread(hThread,
+			    dwExitCode);
+   if (!NT_SUCCESS(errCode)) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return  FALSE;
+     }
+   return TRUE;
+}
+
+
 DWORD STDCALL SuspendThread(HANDLE hThread)
 {
    NTSTATUS errCode;

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.4 1999/09/27 20:58:44 ariadne Exp $
+/* $Id: stubs.c,v 1.5 1999/10/02 20:20:44 ariadne Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -815,30 +815,6 @@ ExitVDM (
 }
 
 
-DWORD
-STDCALL
-ExpandEnvironmentStringsW (
-	LPCWSTR	lpSrc,
-	LPWSTR	lpDst,
-	DWORD	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-ExpandEnvironmentStringsA (
-	LPCSTR	lpSrc,
-	LPSTR	lpDst,
-	DWORD	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 DWORD
@@ -2751,87 +2727,6 @@ InvalidateConsoleDIBits (
 }
 
 
-WINBOOL
-STDCALL
-IsBadCodePtr (
-	FARPROC	lpfn
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-IsBadHugeReadPtr (
-	CONST VOID	* lp,
-	UINT		ucb
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-IsBadHugeWritePtr (
-	LPVOID	lp,
-	UINT	ucb
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-IsBadReadPtr (
-	CONST VOID	* lp,
-	UINT		ucb
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-IsBadStringPtrA (
-	LPCSTR	lpsz,
-	UINT	ucchMax
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-IsBadStringPtrW (
-	LPCWSTR	lpsz,
-	UINT	ucchMax
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-IsBadWritePtr (
-	LPVOID	lp,
-	UINT	ucb
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -3893,16 +3788,6 @@ SizeofResource (
 }
 
 
-WINBOOL
-STDCALL
-TerminateThread (
-	HANDLE	hThread,
-	DWORD	dwExitCode
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 LPVOID
@@ -4063,55 +3948,7 @@ VirtualBufferExceptionHandler (
 }
 
 
-WINBOOL
-STDCALL
-VirtualLock (
-	LPVOID	lpAddress,
-	DWORD	dwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
-
-DWORD
-STDCALL
-VirtualQuery (
-	LPCVOID				lpAddress,
-	PMEMORY_BASIC_INFORMATION	lpBuffer,
-	DWORD				dwLength
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-VirtualQueryEx (
-	HANDLE				hProcess,
-	LPCVOID				lpAddress,
-	PMEMORY_BASIC_INFORMATION	lpBuffer,
-	DWORD				dwLength
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-WINBOOL
-STDCALL
-VirtualUnlock (
-	LPVOID	lpAddress,
-	DWORD	dwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -4209,19 +4046,7 @@ WriteConsoleInputVDMW (
 }
 
 
-WINBOOL
-STDCALL
-WriteFileEx (
-	HANDLE				hFile,
-	LPCVOID				lpBuffer,
-	DWORD				nNumberOfBytesToWrite,
-	LPOVERLAPPED			lpOverlapped,
-	LPOVERLAPPED_COMPLETION_ROUTINE	lpCompletionRoutine
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+
 
 
 WINBOOL

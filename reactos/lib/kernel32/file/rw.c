@@ -20,6 +20,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+
+
+
 WINBOOL STDCALL WriteFile(HANDLE hFile,
 			  LPCVOID lpBuffer,	
 			  DWORD nNumberOfBytesToWrite,
@@ -74,13 +77,13 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
    return(TRUE);
 }
 
-WINBOOL STDCALL KERNEL32_ReadFile(HANDLE hFile,
-				  LPVOID lpBuffer,
-				  DWORD nNumberOfBytesToRead,
-				  LPDWORD lpNumberOfBytesRead,
-				  LPOVERLAPPED lpOverLapped,
-				  LPOVERLAPPED_COMPLETION_ROUTINE 
-				   lpCompletionRoutine)
+
+
+WINBOOL STDCALL ReadFile(HANDLE hFile,
+			 LPVOID lpBuffer,
+			 DWORD nNumberOfBytesToRead,
+			 LPDWORD lpNumberOfBytesRead,
+			 LPOVERLAPPED lpOverLapped)
 {
    HANDLE hEvent = NULL;
    LARGE_INTEGER Offset;
@@ -106,7 +109,7 @@ WINBOOL STDCALL KERNEL32_ReadFile(HANDLE hFile,
    
    errCode = NtReadFile(hFile,
 			hEvent,
-			(PIO_APC_ROUTINE)lpCompletionRoutine,
+			NULL,
 			NULL,
 			IoStatusBlock,
 			lpBuffer,
@@ -127,18 +130,61 @@ WINBOOL STDCALL KERNEL32_ReadFile(HANDLE hFile,
    return(TRUE);
 }
 
-WINBOOL STDCALL ReadFile(HANDLE hFile,
-			 LPVOID lpBuffer,
-			 DWORD nNumberOfBytesToRead,
-			 LPDWORD lpNumberOfBytesRead,
-			 LPOVERLAPPED lpOverLapped)
+VOID ApcRoutine(PVOID ApcContext, struct _IO_STATUS_BLOCK* IoStatusBlock, ULONG NumberOfBytesTransfered)
 {
-   return(KERNEL32_ReadFile(hFile,
-			    lpBuffer,
-			    nNumberOfBytesToRead,
-			    lpNumberOfBytesRead,
-			    lpOverLapped,
-			    NULL));
+	DWORD dwErrorCode;
+	LPOVERLAPPED_COMPLETION_ROUTINE  lpCompletionRoutine = (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
+
+	dwErrorCode = RtlNtStatusToDosError( IoStatusBlock->Status);
+	lpCompletionRoutine(  dwErrorCode, NumberOfBytesTransfered, (LPOVERLAPPED)IoStatusBlock );
+}
+
+
+WINBOOL WriteFileEx(
+	HANDLE  hFile, 	
+	LPCVOID  lpBuffer, 
+	DWORD  nNumberOfBytesToWrite, 	
+	LPOVERLAPPED  lpOverLapped, 	
+	LPOVERLAPPED_COMPLETION_ROUTINE  lpCompletionRoutine 
+   )
+{
+
+   LARGE_INTEGER Offset;
+   NTSTATUS errCode;
+   PIO_STATUS_BLOCK IoStatusBlock;
+   PLARGE_INTEGER ptrOffset;
+   
+   DPRINT("WriteFileEx(hFile %x)\n",hFile);
+   
+   if (lpOverLapped == NULL) 
+	return FALSE;
+
+   Offset.u.LowPart = lpOverLapped->Offset;
+   Offset.u.HighPart = lpOverLapped->OffsetHigh;
+   lpOverLapped->Internal = STATUS_PENDING;
+   IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
+   ptrOffset = &Offset;
+
+  
+
+   errCode = NtWriteFile(hFile,
+			 NULL,
+			 ApcRoutine,
+			 lpCompletionRoutine,
+			 IoStatusBlock,
+			 (PVOID)lpBuffer, 
+			 nNumberOfBytesToWrite,
+			 ptrOffset,
+			 NULL);
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	DPRINT("WriteFileEx() failed\n");
+	return FALSE;
+     }
+  
+   DPRINT("WriteFileEx() succeeded\n");
+   return(TRUE);
 }
 
 WINBOOL STDCALL ReadFileEx(HANDLE hFile,
@@ -147,10 +193,36 @@ WINBOOL STDCALL ReadFileEx(HANDLE hFile,
 			   LPOVERLAPPED lpOverLapped,
 			   LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-   return(KERNEL32_ReadFile(hFile,
-			    lpBuffer,
-			    nNumberOfBytesToRead,
-			    NULL,
-			    lpOverLapped,
-			    lpCompletionRoutine));
+   LARGE_INTEGER Offset;
+   NTSTATUS errCode;
+   PIO_STATUS_BLOCK IoStatusBlock;
+   PLARGE_INTEGER ptrOffset;
+   
+   if (lpOverLapped == NULL) 
+	return FALSE;
+
+   Offset.u.LowPart = lpOverLapped->Offset;
+   Offset.u.HighPart = lpOverLapped->OffsetHigh;
+   lpOverLapped->Internal = STATUS_PENDING;
+   IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
+   ptrOffset = &Offset;
+ 
+   
+   errCode = NtReadFile(hFile,
+			NULL,
+			ApcRoutine,
+			lpCompletionRoutine,
+			IoStatusBlock,
+			lpBuffer,
+			nNumberOfBytesToRead,
+			ptrOffset,
+			NULL);
+   
+   
+   if (!NT_SUCCESS(errCode))  
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return(FALSE);
+     }
+   return(TRUE);
 }
