@@ -8,31 +8,38 @@ static int py = -1;
 /* ------------ CREATE_WINDOW Message ------------- */
 static int CreateWindowMsg(DFWINDOW wnd)
 {
-    int rtn, adj;
-    ClearAttribute(wnd, HASTITLEBAR     |
-                        VSCROLLBAR     |
-                        MOVEABLE     |
-                        SIZEABLE     |
-                        HSCROLLBAR);
+	int rtn, adj;
+
+	ClearAttribute (wnd,
+	                HASTITLEBAR |
+	                VSCROLLBAR  |
+	                MOVEABLE    |
+	                SIZEABLE    |
+	                HSCROLLBAR);
+
 	/* ------ adjust to keep popdown on screen ----- */
-	adj = SCREENHEIGHT-1-wnd->rc.bt;
-	if (adj < 0)	{
+	adj = DfGetScreenHeight()-1-wnd->rc.bt;
+	if (adj < 0)
+	{
 		wnd->rc.tp += adj;
 		wnd->rc.bt += adj;
 	}
-	adj = SCREENWIDTH-1-wnd->rc.rt;
-	if (adj < 0)	{
+	adj = DfGetScreenWidth()-1-wnd->rc.rt;
+	if (adj < 0)
+	{
 		wnd->rc.lf += adj;
 		wnd->rc.rt += adj;
 	}
-    rtn = BaseWndProc(POPDOWNMENU, wnd, CREATE_WINDOW, 0, 0);
-    DfSendMessage(wnd, CAPTURE_MOUSE, 0, 0);
-    DfSendMessage(wnd, CAPTURE_KEYBOARD, 0, 0);
-    DfSendMessage(NULL, SAVE_CURSOR, 0, 0);
-    DfSendMessage(NULL, HIDE_CURSOR, 0, 0);
+
+	rtn = BaseWndProc(POPDOWNMENU, wnd, CREATE_WINDOW, 0, 0);
+	DfSendMessage(wnd, CAPTURE_MOUSE, 0, 0);
+	DfSendMessage(wnd, CAPTURE_KEYBOARD, 0, 0);
+	DfSendMessage(NULL, SAVE_CURSOR, 0, 0);
+	DfSendMessage(NULL, HIDE_CURSOR, 0, 0);
 	wnd->oldFocus = inFocus;
 	inFocus = wnd;
-    return rtn;
+
+	return rtn;
 }
 
 /* --------- LEFT_BUTTON Message --------- */

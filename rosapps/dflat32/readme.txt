@@ -18,7 +18,7 @@ Things that have to be fixed (incomplete list):
     collisions (e.g. CreateWindow() --> DfCreateWindow())
   - fix short dos filename buffers
   - add code to register external window classes
-  - implement recognition of current console screen size
+  - implement recognition of current console screen size (done)
   - fix remaining bugs
   - update documentation
 

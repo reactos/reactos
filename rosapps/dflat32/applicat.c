@@ -2,7 +2,6 @@
 
 #include "dflat.h"
 
-static int ScreenHeight;
 static BOOL DisplayModified = FALSE;
 DFWINDOW ApplicationWindow;
 
@@ -50,9 +49,9 @@ static char Menus[9][26] =
 /* --------------- CREATE_WINDOW Message -------------- */
 static int CreateWindowMsg(DFWINDOW wnd)
 {
-    int rtn;
+	int rtn;
+
 	ApplicationWindow = wnd;
-    ScreenHeight = SCREENHEIGHT;
 #ifdef INCLUDE_WINDOWOPTIONS
     if (cfg.Border)
         SetCheckBox(&Display, ID_BORDER);
@@ -386,7 +385,8 @@ static void CreateStatusBar(DFWINDOW wnd)
 /* -------- return the name of a document window ------- */
 static char *WindowName(DFWINDOW wnd)
 {
-    if (GetTitle(wnd) == NULL)    {
+    if (GetTitle(wnd) == NULL)
+    {
         if (GetClass(wnd) == DIALOG)
             return ((DBOX *)(wnd->extension))->HelpName;
         else 
@@ -518,7 +518,8 @@ static void MoreWindows(DFWINDOW wnd)
 static void ChooseWindow(DFWINDOW wnd, int WindowNo)
 {
     DFWINDOW cwnd = FirstWindow(wnd);
-	while (cwnd != NULL)	{
+	while (cwnd != NULL)
+	{
         if (GetClass(cwnd) != MENUBAR &&
                 GetClass(cwnd) != STATUSBAR)
             if (WindowNo-- == 0)

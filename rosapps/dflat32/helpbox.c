@@ -14,7 +14,7 @@ char *ClassNames[] = {
     NULL
 };
 
-#define MAXHEIGHT (SCREENHEIGHT-10)
+#define MAXHEIGHT (DfGetScreenHeight()-10)
 
 /* --------- linked list of help text collections -------- */
 struct helps {
@@ -691,18 +691,18 @@ static void BestFit(DFWINDOW wnd, DIALOGWINDOW *dwnd)
     /* --- compute above overlap ---- */
     above = OverLap(dwnd->h, GetTop(wnd));
     /* --- compute below overlap ---- */
-    below = OverLap(GetBottom(wnd), SCREENHEIGHT-dwnd->h);
+    below = OverLap(GetBottom(wnd), DfGetScreenHeight()-dwnd->h);
     /* --- compute right overlap ---- */
-    right = OverLap(GetRight(wnd), SCREENWIDTH-dwnd->w);
+    right = OverLap(GetRight(wnd), DfGetScreenWidth()-dwnd->w);
     /* --- compute left  overlap ---- */
     left = OverLap(dwnd->w, GetLeft(wnd));
 
     if (above < below)
         dwnd->y = max(0, GetTop(wnd)-dwnd->h-2);
     else
-        dwnd->y = min(SCREENHEIGHT-dwnd->h, GetBottom(wnd)+2);
+        dwnd->y = min(DfGetScreenHeight()-dwnd->h, GetBottom(wnd)+2);
     if (right < left)
-        dwnd->x = min(GetRight(wnd)+2, SCREENWIDTH-dwnd->w);
+        dwnd->x = min(GetRight(wnd)+2, DfGetScreenWidth()-dwnd->w);
     else
         dwnd->x = max(0, GetLeft(wnd)-dwnd->w-2);
 

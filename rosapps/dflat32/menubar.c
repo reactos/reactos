@@ -405,22 +405,26 @@ int MenuBarProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
 /* ------------- reset the MENUBAR -------------- */
 static void reset_menubar(DFWINDOW wnd)
 {
-    GetText(wnd) = DFrealloc(GetText(wnd), SCREENWIDTH+5);
-    memset(GetText(wnd), ' ', SCREENWIDTH);
+    GetText(wnd) = DFrealloc(GetText(wnd), DfGetScreenWidth()+5);
+    memset(GetText(wnd), ' ', DfGetScreenWidth());
     *(GetText(wnd)+WindowWidth(wnd)) = '\0';
 }
 
 static DFWINDOW GetDocFocus(void)
 {
 	DFWINDOW wnd = ApplicationWindow;
-	if (wnd != NULL)	{
+	if (wnd != NULL)
+	{
 		wnd = LastWindow(wnd);
-		while (wnd != NULL && (GetClass(wnd) == MENUBAR ||
-							GetClass(wnd) == STATUSBAR))
+		while (wnd != NULL &&
+		       (GetClass(wnd) == MENUBAR ||
+		        GetClass(wnd) == STATUSBAR))
 			wnd = PrevWindow(wnd);
 		if (wnd != NULL)
+		{
 			while (wnd->childfocus != NULL)
 				wnd = wnd->childfocus;
+		}
 	}
 	return wnd ? wnd : ApplicationWindow;
 }

@@ -1,8 +1,6 @@
 /* ------------- calendar.c ------------- */
 #include "dflat.h"
 
-#ifndef TURBOC
-
 #define CALHEIGHT 17
 #define CALWIDTH 33
 
@@ -13,9 +11,31 @@ static DFWINDOW Cwnd;
 
 static void FixDate(void)
 {
-    /* ---- adjust Feb for leap year ---- */
-    DyMo[1] = (ttm.tm_year % 4) ? 28 : 29;
-    ttm.tm_mday = min(ttm.tm_mday, DyMo[ttm.tm_mon]);
+	/* ---- adjust Feb for leap year ---- */
+	if (ttm.tm_year % 4 == 0)
+	{
+		if (ttm.tm_year % 100 == 0)
+		{
+			if (ttm.tm_year % 400 == 0)
+			{
+				DyMo[1] = 29;
+			}
+			else
+			{
+				DyMo[1] = 28;
+			}
+		}
+		else
+		{
+			DyMo[1] = 29;
+		}
+	}
+	else
+	{
+		DyMo[1] = 28;
+	}
+
+	ttm.tm_mday = min(ttm.tm_mday, DyMo[ttm.tm_mon]);
 }
 
 /* ---- build calendar dates array ---- */
@@ -162,4 +182,4 @@ void Calendar(DFWINDOW pwnd)
     DfSendMessage(Cwnd, SETFOCUS, TRUE, 0);
 }
 
-#endif
+/* EOF */

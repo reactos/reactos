@@ -1,6 +1,7 @@
 /* --------- message.c ---------- */
 
 #include "dflat.h"
+#include "system.h"
 
 static int handshaking = 0;
 
@@ -56,9 +57,21 @@ static void StopMsg(void)
 	unhidecursor();
 }
 
-/* ------------ initialize the message system --------- */
-BOOL init_messages (VOID)
+SHORT DfGetScreenHeight (void)
 {
+	return sScreenHeight;
+}
+
+SHORT DfGetScreenWidth (void)
+{
+	return sScreenWidth;
+}
+
+/* ------------ initialize the message system --------- */
+BOOL DfInitialize (VOID)
+{
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+
 	AllocTesting = TRUE;
 	if (setjmp(AllocError) != 0)
 	{
@@ -66,9 +79,17 @@ BOOL init_messages (VOID)
 		return FALSE;
 	}
 
+	/* get input and output handles */
+	hInput = GetStdHandle (STD_INPUT_HANDLE);
+	hOutput = GetStdHandle (STD_OUTPUT_HANDLE);
+
+	/* get screen size */
+	GetConsoleScreenBufferInfo (hOutput, &csbi);
+	sScreenHeight = (csbi.srWindow.Bottom - csbi.srWindow.Top) + 1;
+	sScreenWidth = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
+
 	/* enable mouse events */
-	SetConsoleMode (GetStdHandle (STD_INPUT_HANDLE),
-	                ENABLE_MOUSE_INPUT);
+	SetConsoleMode (hInput, ENABLE_MOUSE_INPUT);
 
 	savecursor();
 	hidecursor();
@@ -86,6 +107,12 @@ BOOL init_messages (VOID)
 	DfPostMessage (NULL, DFM_START, 0, 0);
 
 	return TRUE;
+}
+
+
+void DfTerminate (void)
+{
+
 }
 
 /* ----- post an event and parameters to event queue ---- */
@@ -163,19 +190,23 @@ static void collect_events(void)
 		{
 			sk |= CTRLKEY;
 		}
+		if (ir.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED)
+		{
+			sk |= LEFTSHIFT + RIGHTSHIFT;
+		}
 
-#if 0
 		if (sk != OldShiftKeys)
 		{
 			OldShiftKeys = sk;
 			/* the shift status changed */
 			PostEvent(SHIFT_CHANGED, sk, 0);
+#if 0
 			if (sk & ALTKEY)
 				AltDown = TRUE;
 			else
 				AltDown = FALSE;
-		}
 #endif
+		}
 
 		if (ir.Event.KeyEvent.uChar.AsciiChar == 0)
 		{
@@ -213,6 +244,14 @@ static void collect_events(void)
 					c = FWD;
 					break;
 
+				case VK_INSERT:
+					c = INS;
+					break;
+
+				case VK_DELETE:
+					c = DEL;
+					break;
+
 				case VK_HOME:
 					c = HOME;
 					break;
@@ -234,7 +273,14 @@ static void collect_events(void)
 			}
 		}
 		else
-			c = ir.Event.KeyEvent.uChar.AsciiChar;
+		{
+			/* special handling of SHIFT+TAB */
+			if (ir.Event.KeyEvent.uChar.AsciiChar == VK_TAB &&
+			    (ir.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED))
+				c = SHIFT_HT;
+			else
+				c = ir.Event.KeyEvent.uChar.AsciiChar;
+		}
 
 		PostEvent (KEYBOARD, c, sk);
 	}
@@ -282,65 +328,8 @@ static void collect_events(void)
 			}
 		}
 	}
-
-
-#if 0
-	/* --------- keyboard events ---------- */
-	if ((sk = getshift()) != ShiftKeys)
-	{
-		ShiftKeys = sk;
-		/* ---- the shift status changed ---- */
-		PostEvent(SHIFT_CHANGED, sk, 0);
-		if (sk & ALTKEY)
-			AltDown = TRUE;
-	}
-
-    /* ---- build keyboard events for key combinations that
-        BIOS doesn't report --------- */
-    if (sk & ALTKEY)	{
-        if (keyportvalue == 14)    {
-			AltDown = FALSE;
-            PostEvent(KEYBOARD, ALT_BS, sk);
-        }
-        if (keyportvalue == 83)    {
-			AltDown = FALSE;
-            PostEvent(KEYBOARD, ALT_DEL, sk);
-        }
-	}
-
-	if (sk & CTRLKEY)
-	{
-		AltDown = FALSE;
-        if (keyportvalue == 82)    {
-            PostEvent(KEYBOARD, CTRL_INS, sk);
-        }
-	}
-    /* ----------- test for keystroke ------- */
-    if (keyhit())    {
-        static int cvt[] = {SHIFT_INS,END,DN,PGDN,BS,'5',
-                        FWD,HOME,UP,PGUP};
-		INPUT_RECORD ir;
-		int c;
-
-		GetKey(&ir);
-		c = ir.Event.KeyEvent.uChar.AsciiChar;
-
-		AltDown = FALSE;
-		/* -------- convert numeric pad keys ------- */
-		if (sk & (LEFTSHIFT | RIGHTSHIFT))
-		{
-            if (c >= '0' && c <= '9')
-                c = cvt[c-'0'];
-            else if (c == '.' || c == DEL)
-                c = SHIFT_DEL;
-            else if (c == INS)
-                c = SHIFT_INS;
-		}
-		/* ------ post the keyboard event ------ */
-		PostEvent(KEYBOARD, c, sk);
-	}
-#endif
 }
+
 
 /* ----- post a message and parameters to msg queue ---- */
 void DfPostMessage(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
@@ -476,9 +465,9 @@ int DfSendMessage(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
                 break;
             case SHOW_CURSOR:
                 if (p1)
-                    set_cursor_type(0x0106);
+                    set_cursor_size(100);
                 else
-                    set_cursor_type(0x0607);
+                    set_cursor_size(5);
                 unhidecursor();
                 break;
 

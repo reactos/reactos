@@ -81,7 +81,7 @@ void PutVideoChar(int x, int y, int ch)
 	COORD pos;
 	DWORD dwWritten;
 
-	if (x < SCREENWIDTH && y < SCREENHEIGHT)
+	if (x < sScreenWidth && y < sScreenHeight)
 	{
 		pos.X = x;
 		pos.Y = y;
@@ -141,7 +141,7 @@ BOOL CharInView(DFWINDOW wnd, int x, int y)
 		}
 		nwnd = NextWindow(nwnd);
 	}
-	return (x1 < SCREENWIDTH && y1 < SCREENHEIGHT);
+	return (x1 < sScreenWidth && y1 < sScreenHeight);
 }
 
 /* -------- write a character to a window ------- */
@@ -180,7 +180,7 @@ void wputs(DFWINDOW wnd, void *s, int x, int y)
 	int x2 = x1;
 	int y1 = GetTop(wnd)+y;
 
-	if (x1 < SCREENWIDTH && y1 < SCREENHEIGHT && isVisible(wnd))
+	if (x1 < sScreenWidth && y1 < sScreenHeight && isVisible(wnd))
 	{
 		char ln[200];
 		WORD attr[200];
@@ -223,8 +223,8 @@ void wputs(DFWINDOW wnd, void *s, int x, int y)
 		foreground = fg;
 		background = bg;
 		len = (int)(cp-ln);
-		if (x1+len > SCREENWIDTH)
-			len = SCREENWIDTH-x1;
+		if (x1+len > sScreenWidth)
+			len = sScreenWidth-x1;
 
 		if (!ClipString && !TestAttribute(wnd, NOCLIP))
 		{

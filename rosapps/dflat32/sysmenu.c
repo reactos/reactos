@@ -53,10 +53,10 @@ void BuildSystemMenu(DFWINDOW wnd)
     ht = MenuHeight(SystemMenu.PullDown[0].Selections);
     wd = MenuWidth(SystemMenu.PullDown[0].Selections);
 
-    if (lf+wd > SCREENWIDTH-1)
-        lf = (SCREENWIDTH-1) - wd;
-    if (tp+ht > SCREENHEIGHT-2)
-        tp = (SCREENHEIGHT-2) - ht;
+    if (lf+wd > DfGetScreenWidth()-1)
+        lf = (DfGetScreenWidth()-1) - wd;
+    if (tp+ht > DfGetScreenHeight()-2)
+        tp = (DfGetScreenHeight()-2) - ht;
 
     SystemMenuWnd = DfCreateWindow(POPDOWNMENU, NULL,
                 lf,tp,ht,wd,NULL,wnd,SystemMenuProc, 0);

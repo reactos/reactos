@@ -16,8 +16,15 @@
 #define ZEROFLAG 0x40
 #define MAXSAVES 50
 
-#define SCREENWIDTH  (80)
-#define SCREENHEIGHT (25)
+//#define SCREENWIDTH  (80)
+//#define SCREENHEIGHT (25)
+
+HANDLE hInput;
+HANDLE hOutput;
+
+SHORT sScreenHeight;
+SHORT sScreenWidth;
+
 
 /* ---------- keyboard prototypes -------- */
 int AltConvert(int);
@@ -34,7 +41,7 @@ void unhidecursor(void);
 void savecursor(void);
 void restorecursor(void);
 void normalcursor(void);
-void set_cursor_type(unsigned t);
+void set_cursor_size(unsigned t);
 void videomode(void);
 void SwapCursorStack(void);
 

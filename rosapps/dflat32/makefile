@@ -49,7 +49,7 @@ else
 endif
 
 
-WITH_DEBUGGING=yes
+#WITH_DEBUGGING=yes
 
 include ../rules.mak
 

@@ -66,8 +66,8 @@ DFRECT ClientRect(void *wnd)
 	{
 		RectLeft(rc) = 1; // GetClientLeft((DFWINDOW)wnd);
 		RectTop(rc) = 2; // GetClientTop((DFWINDOW)wnd);
-		RectRight(rc) = SCREENWIDTH - 2; // GetClientRight((DFWINDOW)wnd);
-		RectBottom(rc) = SCREENHEIGHT - 2; // GetClientBottom((DFWINDOW)wnd);
+		RectRight(rc) = DfGetScreenWidth () - 2; // GetClientRight((DFWINDOW)wnd);
+		RectBottom(rc) = DfGetScreenHeight () - 2; // GetClientBottom((DFWINDOW)wnd);
 		return rc;
 	}
 
@@ -95,8 +95,8 @@ DFRECT ClipRectangle(void *wnd, DFRECT rc)
 {
     DFRECT sr;
     RectLeft(sr) = RectTop(sr) = 0;
-    RectRight(sr) = SCREENWIDTH-1;
-    RectBottom(sr) = SCREENHEIGHT-1;
+    RectRight(sr) = DfGetScreenWidth()-1;
+    RectBottom(sr) = DfGetScreenHeight()-1;
     if (!TestAttribute((DFWINDOW)wnd, NOCLIP))
         while ((wnd = GetParent((DFWINDOW)wnd)) != NULL)
             rc = subRectangle(rc, ClientRect(wnd));

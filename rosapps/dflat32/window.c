@@ -24,16 +24,16 @@ DFWINDOW DfCreateWindow(
         int base;
         /* ----- height, width = -1: fill the screen ------- */
         if (height == -1)
-            height = SCREENHEIGHT;
+            height = sScreenHeight;
         if (width == -1)
-            width = SCREENWIDTH;
+            width = sScreenWidth;
         /* ----- coordinates -1, -1 = center the window ---- */
         if (left == -1)
-            wnd->rc.lf = (SCREENWIDTH-width)/2;
+            wnd->rc.lf = (sScreenWidth-width)/2;
         else
             wnd->rc.lf = left;
         if (top == -1)
-            wnd->rc.tp = (SCREENHEIGHT-height)/2;
+            wnd->rc.tp = (sScreenHeight-height)/2;
         else
             wnd->rc.tp = top;
         wnd->attrib = attrib;
@@ -498,7 +498,9 @@ void PutWindowChar(DFWINDOW wnd, char c, int x, int y)
 
 void PutWindowLine(DFWINDOW wnd, void *s, int x, int y)
 {
-	int saved = FALSE, sv;
+	int saved = FALSE;
+	int sv = 0;
+
 	if (x < ClientWidth(wnd) && y < ClientHeight(wnd))
 	{
 		char *en = (char *)s+ClientWidth(wnd)-x;

@@ -269,10 +269,10 @@ extern BOOL ClipString;
 #define DOWNSCROLLBOX  (unsigned char) '\x1f'
 #define LEFTSCROLLBOX  (unsigned char) '\x11'
 #define RIGHTSCROLLBOX (unsigned char) '\x10'
-#define SCROLLBARCHAR  (unsigned char) 176 
+#define SCROLLBARCHAR  (unsigned char) 176
 #define SCROLLBOXCHAR  (unsigned char) 178
 /* ------------------ menu characters --------------------- */
-#define CHECKMARK      (unsigned char) (SCREENHEIGHT==25?251:4)
+#define CHECKMARK      (unsigned char) '\x04' //(SCREENHEIGHT==25?251:4)
 #define CASCADEPOINTER (unsigned char) '\x10'
 /* ----------------- title bar characters ----------------- */
 #define CONTROLBOXCHAR (unsigned char) '\xf0'
@@ -285,12 +285,16 @@ extern BOOL ClipString;
 #define CHANGECOLOR  (unsigned char) 174 /* prefix to change colors  */
 #define RESETCOLOR   (unsigned char) 175 /* reset colors to default  */
 #define LISTSELECTOR   4    /* selected list box entry      */
+
 /* --------- message prototypes ----------- */
-BOOL init_messages(void);
+BOOL DfInitialize (void);
+void DfTerminate (void);
 void DfPostMessage (DFWINDOW, DFMESSAGE, PARAM, PARAM);
 int DfSendMessage (DFWINDOW, DFMESSAGE, PARAM, PARAM);
 BOOL DfDispatchMessage (void);
 void handshake(void);
+SHORT DfGetScreenHeight (void);
+SHORT DfGetScreenWidth (void);
 
 /* ---- standard window message processing prototypes ----- */
 int ApplicationProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
@@ -317,6 +321,7 @@ int ErrorBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
 int YesNoBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
 int StatusBarProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
 int WatchIconProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
+
 /* ------------- normal box prototypes ------------- */
 void SetStandardColor(DFWINDOW);
 void SetReverseColor(DFWINDOW);

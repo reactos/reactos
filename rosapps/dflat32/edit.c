@@ -36,8 +36,10 @@ int main (int argc, char *argv[])
 {
 	DFWINDOW wnd;
 	FILE *fp;
-	if (!init_messages())
+
+	if (DfInitialize () == FALSE)
 		return 1;
+
 	Argv = argv;
 	LoadConfig ();
 //	if (!LoadConfig())
@@ -74,6 +76,8 @@ int main (int argc, char *argv[])
 
 	while (DfDispatchMessage ())
 		;
+
+	DfTerminate ();
 
 	return 0;
 }

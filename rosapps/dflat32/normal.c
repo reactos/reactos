@@ -99,11 +99,11 @@ static BOOL KeyboardMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
                     --y;
                 break;
             case DN:
-                if (y < SCREENHEIGHT-1)
+                if (y < DfGetScreenHeight()-1)
                     y++;
                 break;
             case FWD:
-                if (x < SCREENWIDTH-1)
+                if (x < DfGetScreenWidth()-1)
                     x++;
                 break;
             case BS:
@@ -389,8 +389,8 @@ static BOOL MouseMovedMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
 {
     if (WindowMoving)    {
         int leftmost = 0, topmost = 0,
-            bottommost = SCREENHEIGHT-2,
-            rightmost = SCREENWIDTH-2;
+            bottommost = DfGetScreenHeight()-2,
+            rightmost = DfGetScreenWidth()-2;
         int x = (int) p1 - diff;
         int y = (int) p2;
         if (GetParent(wnd) != NULL &&
@@ -430,8 +430,8 @@ static void MaximizeMsg(DFWINDOW wnd)
     DFRECT rc = {0, 0, 0, 0};
     DFRECT holdrc;
     holdrc = wnd->RestoredRC;
-    rc.rt = SCREENWIDTH-1;
-    rc.bt = SCREENHEIGHT-1;
+    rc.rt = DfGetScreenWidth()-1;
+    rc.bt = DfGetScreenHeight()-1;
     if (GetParent(wnd))
         rc = ClientRect(GetParent(wnd));
     wnd->oldcondition = wnd->condition;
@@ -721,10 +721,10 @@ static DFRECT PositionIcon(DFWINDOW wnd)
 {
 	DFWINDOW pwnd = GetParent(wnd);
     DFRECT rc;
-    RectLeft(rc) = SCREENWIDTH-ICONWIDTH;
-    RectTop(rc) = SCREENHEIGHT-ICONHEIGHT;
-    RectRight(rc) = SCREENWIDTH-1;
-    RectBottom(rc) = SCREENHEIGHT-1;
+    RectLeft(rc) = DfGetScreenWidth()-ICONWIDTH;
+    RectTop(rc) = DfGetScreenHeight()-ICONHEIGHT;
+    RectRight(rc) = DfGetScreenWidth()-1;
+    RectBottom(rc) = DfGetScreenHeight()-1;
     if (pwnd != NULL)    {
         DFRECT prc = WindowRect(pwnd);
 		DFWINDOW cwnd = FirstWindow(pwnd);
@@ -789,8 +789,8 @@ static void sizeborder(DFWINDOW wnd, int rt, int bt)
 {
     int leftmost = GetLeft(wnd)+10;
     int topmost = GetTop(wnd)+3;
-    int bottommost = SCREENHEIGHT-1;
-    int rightmost  = SCREENWIDTH-1;
+    int bottommost = DfGetScreenHeight()-1;
+    int rightmost  = DfGetScreenWidth()-1;
     if (GetParent(wnd))    {
         bottommost = min(bottommost,
             GetClientBottom(GetParent(wnd)));
@@ -824,9 +824,9 @@ static DFRECT adjShadow(DFWINDOW wnd)
     DFRECT rc;
     rc = wnd->rc;
     if (TestAttribute(wnd, SHADOW))    {
-        if (RectRight(rc) < SCREENWIDTH-1)
-            RectRight(rc)++;           
-        if (RectBottom(rc) < SCREENHEIGHT-1)
+        if (RectRight(rc) < DfGetScreenWidth()-1)
+            RectRight(rc)++;
+        if (RectBottom(rc) < DfGetScreenHeight()-1)
             RectBottom(rc)++;
     }
     return rc;

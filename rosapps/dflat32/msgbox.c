@@ -188,23 +188,29 @@ DFWINDOW MomentaryMessage(char *msg)
 
 int MsgHeight(char *msg)
 {
-    int h = 1;
-    while ((msg = strchr(msg, '\n')) != NULL)    {
-        h++;
-        msg++;
-    }
-    return min(h, SCREENHEIGHT-10);
+	int h = 1;
+
+	while ((msg = strchr(msg, '\n')) != NULL)
+	{
+		h++;
+		msg++;
+	}
+
+	return min(h, DfGetScreenHeight ()-10);
 }
 
 int MsgWidth(char *msg)
 {
-    int w = 0;
-    char *cp = msg;
-    while ((cp = strchr(msg, '\n')) != NULL)    {
-        w = max(w, (int) (cp-msg));
-        msg = cp+1;
-    }
-    return min(max((int)strlen(msg), (int)w), SCREENWIDTH-10);
+	int w = 0;
+	char *cp = msg;
+
+	while ((cp = strchr(msg, '\n')) != NULL)
+	{
+		w = max(w, (int) (cp-msg));
+		msg = cp+1;
+	}
+
+	return min(max((int)strlen(msg), (int)w), DfGetScreenWidth()-10);
 }
 
 /* EOF */

@@ -18,16 +18,31 @@ static int altconvert[] = {
 };
 #endif
 
-static int cursorpos[MAXSAVES];
-static int cursorshape[MAXSAVES];
-static int cs;
+static COORD cursorpos[MAXSAVES];
+static CONSOLE_CURSOR_INFO cursorinfo[MAXSAVES];
+static int cs = 0;
 
 
 void SwapCursorStack(void)
 {
-	if (cs > 1)	{
-		swap(cursorpos[cs-2], cursorpos[cs-1]);
-		swap(cursorshape[cs-2], cursorshape[cs-1]);
+	if (cs > 1)
+	{
+		COORD coord;
+		CONSOLE_CURSOR_INFO csi;
+
+		coord = cursorpos[cs-2];
+		cursorpos[cs-2] = cursorpos[cs-1];
+		cursorpos[cs-1] = coord;
+
+		memcpy (&csi,
+		        &cursorinfo[cs-2],
+		        sizeof(CONSOLE_CURSOR_INFO));
+		memcpy (&cursorinfo[cs-2],
+		        &cursorinfo[cs-1],
+		        sizeof(CONSOLE_CURSOR_INFO));
+		memcpy (&cursorinfo[cs-1],
+		        &csi,
+		        sizeof(CONSOLE_CURSOR_INFO));
 	}
 }
 
@@ -53,6 +68,7 @@ void GetKey (PINPUT_RECORD lpBuffer)
 
 
 /* ---------- read the keyboard shift status --------- */
+
 int getshift(void)
 {
 //    regs.h.ah = 2;
@@ -82,20 +98,8 @@ void cursor(int x, int y)
 	SetConsoleCursorPosition (GetStdHandle (STD_OUTPUT_HANDLE), coPos);
 }
 
-/* ------ get cursor shape and position ------ */
-static void getcursor(void)
-{
-/*
-    videomode();
-    regs.h.ah = READCURSOR;
-    regs.x.bx = video_page;
-    int86(VIDEO, &regs, &regs);
-*/
-	/* FIXME */
-}
 
 /* ------- get the current cursor position ------- */
-
 void curr_cursor(int *x, int *y)
 //VOID GetCursorXY (PSHORT x, PSHORT y)
 {
@@ -111,70 +115,85 @@ void curr_cursor(int *x, int *y)
 /* ------ save the current cursor configuration ------ */
 void savecursor(void)
 {
-/*
-    if (cs < MAXSAVES)    {
-        getcursor();
-        cursorshape[cs] = regs.x.cx;
-        cursorpos[cs] = regs.x.dx;
-        cs++;
-    }
-*/
+	if (cs < MAXSAVES)
+	{
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+		GetConsoleScreenBufferInfo (GetStdHandle (STD_OUTPUT_HANDLE), &csbi);
+		cursorpos[cs].X = csbi.dwCursorPosition.X;
+		cursorpos[cs].Y = csbi.dwCursorPosition.Y;
+
+		GetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+		                      &(cursorinfo[cs]));
+
+		cs++;
+	}
 }
 
 /* ---- restore the saved cursor configuration ---- */
 void restorecursor(void)
 {
-/*
-    if (cs)    {
-        --cs;
-        videomode();
-        regs.x.dx = cursorpos[cs];
-        regs.h.ah = SETCURSOR;
-        regs.x.bx = video_page;
-        int86(VIDEO, &regs, &regs);
-        set_cursor_type(cursorshape[cs]);
-    }
-*/
+	if (cs)
+	{
+		--cs;
+		SetConsoleCursorPosition (GetStdHandle (STD_OUTPUT_HANDLE),
+		                          cursorpos[cs]);
+		SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+		                      &(cursorinfo[cs]));
+	}
 }
 
 /* ------ make a normal cursor ------ */
 void normalcursor(void)
 {
-//    set_cursor_type(0x0607);
+	CONSOLE_CURSOR_INFO csi;
+
+	csi.bVisible = TRUE;
+	csi.dwSize = 5;
+	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+	                      &csi);
 }
 
 /* ------ hide the cursor ------ */
 void hidecursor(void)
 {
-/*
-    getcursor();
-    regs.h.ch |= HIDECURSOR;
-    regs.h.ah = SETCURSORTYPE;
-    int86(VIDEO, &regs, &regs);
-*/
+	CONSOLE_CURSOR_INFO csi;
+
+	GetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+	                      &csi);
+	csi.bVisible = FALSE;
+	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+	                      &csi);
 }
 
 /* ------ unhide the cursor ------ */
 void unhidecursor(void)
 {
-/*
-    getcursor();
-    regs.h.ch &= ~HIDECURSOR;
-    regs.h.ah = SETCURSORTYPE;
-    int86(VIDEO, &regs, &regs);
-*/
+	CONSOLE_CURSOR_INFO csi;
+
+	GetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+	                      &csi);
+	csi.bVisible = TRUE;
+	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+	                      &csi);
 }
 
-/* ---- use BIOS to set the cursor type ---- */
-void set_cursor_type(unsigned t)
+/* set the cursor size (in percent) */
+void set_cursor_size (unsigned t)
 {
-/*
-    videomode();
-    regs.h.ah = SETCURSORTYPE;
-    regs.x.bx = video_page;
-    regs.x.cx = t;
-    int86(VIDEO, &regs, &regs);
-*/
+	CONSOLE_CURSOR_INFO csi;
+
+	GetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+	                      &csi);
+
+	if (t < 2)
+		csi.dwSize = 2;
+	else if (t > 90)
+		csi.dwSize = 90;
+	else
+		csi.dwSize = t;
+	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE),
+	                      &csi);
 }
 
 

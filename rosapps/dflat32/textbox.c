@@ -381,7 +381,7 @@ static void PaintMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
 		ClipString++;
 
     /* ----- blank line for padding ----- */
-    memset(blankline, ' ', SCREENWIDTH);
+    memset(blankline, ' ', DfGetScreenWidth());
     blankline[RectRight(rcc)+1] = '\0';
 
     /* ------- each line within rectangle ------ */

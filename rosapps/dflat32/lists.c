@@ -82,19 +82,22 @@ void ReFocus(DFWINDOW wnd)
 /* ---- remove a window from the linked list ---- */
 void RemoveWindow(DFWINDOW wnd)
 {
-    if (wnd != NULL)    {
+	if (wnd != NULL)
+	{
 		DFWINDOW pwnd = GetParent(wnd);
-        if (PrevWindow(wnd) != NULL)
-            NextWindow(PrevWindow(wnd)) = NextWindow(wnd);
-        if (NextWindow(wnd) != NULL)
-            PrevWindow(NextWindow(wnd)) = PrevWindow(wnd);
-		if (pwnd != NULL)	{
-        	if (wnd == FirstWindow(pwnd))
-            	FirstWindow(pwnd) = NextWindow(wnd);
-        	if (wnd == LastWindow(pwnd))
-            	LastWindow(pwnd) = PrevWindow(wnd);
+
+		if (PrevWindow(wnd) != NULL)
+			NextWindow(PrevWindow(wnd)) = NextWindow(wnd);
+		if (NextWindow(wnd) != NULL)
+			PrevWindow(NextWindow(wnd)) = PrevWindow(wnd);
+		if (pwnd != NULL)
+		{
+			if (wnd == FirstWindow(pwnd))
+				FirstWindow(pwnd) = NextWindow(wnd);
+			if (wnd == LastWindow(pwnd))
+				LastWindow(pwnd) = PrevWindow(wnd);
 		}
-    }
+	}
 }
 
 /* ---- append a window to the linked list ---- */
@@ -105,14 +108,6 @@ void AppendWindow(DFWINDOW wnd)
 		DFWINDOW pwnd = GetParent(wnd);
 		if (pwnd != NULL)
 		{
-/*
-			if (FirstWindow(pwnd) == NULL)
-				FirstWindow(pwnd) = wnd;
-			if (LastWindow(pwnd) != NULL)
-				NextWindow(LastWindow(pwnd)) = wnd;
-			PrevWindow(wnd) = LastWindow(pwnd);
-			LastWindow(pwnd) = wnd;
-*/
 			if (FirstWindow(pwnd) == NULL)
 			{
 				FirstWindow(pwnd) = wnd;
@@ -130,8 +125,10 @@ void AppendWindow(DFWINDOW wnd)
 	}
 }
 
-/* ----- if document windows and statusbar or menubar get the focus,
-              pass it on ------- */
+/*
+ * if document windows and statusbar or menubar get the focus,
+ * pass it on
+ */
 void SkipApplicationControls(void)
 {
 	BOOL EmptyAppl = FALSE;
