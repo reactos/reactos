@@ -81,6 +81,18 @@ IntGdiArc(DC  *dc,
 INT FASTCALL
 IntGdiGetArcDirection(DC *dc);
 
+/* Shape functions */
+
+BOOL FASTCALL
+IntGdiPolygon(PDC    dc,
+              PPOINT UnsafePoints,
+              int    Count);
+
+BOOL FASTCALL
+IntGdiPolyPolygon(DC      *dc,
+                  LPPOINT Points,
+                  LPINT   PolyCounts,
+                  int     Count);
 
 #endif /* _WIN32K_INTGDI_H */
 

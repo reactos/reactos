@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.25 2003/12/13 10:18:01 weiden Exp $ */
+/* $Id: line.c,v 1.26 2003/12/13 10:57:29 weiden Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -764,10 +764,21 @@ NtGdiPolyPolyline(HDC            hDC,
       return FALSE;
     }
     
-    Status = MmCopyFromCaller(Safept, pt, (sizeof(POINT) + sizeof(DWORD)) * Count);
+    SafePolyPoints = (LPDWORD)&Safept[Count];
+    
+    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(hDC);
+      ExFreePool(Safept);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    Status = MmCopyFromCaller(SafePolyPoints, PolyPoints, sizeof(DWORD) * Count);
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(hDC);
+      ExFreePool(Safept);
       SetLastNtError(Status);
       return FALSE;
     }
@@ -778,8 +789,6 @@ NtGdiPolyPolyline(HDC            hDC,
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  
-  SafePolyPoints = (LPDWORD)&Safept[Count];
   
   Ret = IntGdiPolyPolyline(dc, Safept, SafePolyPoints, Count);
   
