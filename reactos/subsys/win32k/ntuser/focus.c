@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.20 2004/04/13 13:50:31 weiden Exp $
+ * $Id: focus.c,v 1.21 2004/04/15 23:36:03 weiden Exp $
  */
 
 #include <win32k/win32k.h>
@@ -401,16 +401,23 @@ NtUserSetCapture(HWND hWnd)
    DPRINT("NtUserSetCapture(%x)\n", hWnd);
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-   Window = IntGetWindowObject(hWnd);
-   if (Window != 0)
+   if((Window = IntGetWindowObject(hWnd)))
    {
-      if (Window->MessageQueue != ThreadQueue)
+      if(Window->MessageQueue != ThreadQueue)
       {
          IntReleaseWindowObject(Window);
-         return 0;
+         return NULL;
       }
    }
-   hWndPrev = ThreadQueue->CaptureWindow;
+   hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
+   
+   /* also remove other windows if not capturing anymore */
+   if(hWnd == NULL)
+   {
+     MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
+     MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
+   }
+   
    IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
    IntLockMessageQueue(ThreadQueue);
    ThreadQueue->CaptureWindow = hWnd;

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.111 2004/04/14 23:17:55 weiden Exp $
+/* $Id: window.c,v 1.112 2004/04/15 23:36:02 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -25,6 +25,8 @@
 #include <debug.h>
 
 BOOL ControlsInitialized = FALSE;
+
+LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -975,6 +977,38 @@ GetWindowRect(HWND hWnd,
 int STDCALL
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
+  DWORD ProcessId;
+  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  {
+    return 0;
+  }
+  
+  if(ProcessId != GetCurrentProcessId())
+  {
+    /* do not send WM_GETTEXT messages to other processes */
+    LPWSTR Buffer;
+    INT Length;
+    
+    if (nMaxCount > 1)
+    {
+      *((PWSTR)lpString) = '\0';
+    }
+    Buffer = HeapAlloc(GetProcessHeap(), 0, nMaxCount * sizeof(WCHAR));
+    if (!Buffer)
+      return FALSE;
+    Length = NtUserInternalGetWindowText(hWnd, Buffer, nMaxCount);
+    if (Length > 0 && nMaxCount > 0 &&
+        !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
+        lpString, nMaxCount, NULL, NULL))
+    {
+      lpString[0] = '\0';
+    }
+    
+    HeapFree(GetProcessHeap(), 0, Buffer);
+    
+    return (LRESULT)Length;
+  }
+  
   return(SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
 }
 
@@ -985,7 +1019,19 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 int STDCALL
 GetWindowTextLengthA(HWND hWnd)
 {
-  return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
+  DWORD ProcessId;
+  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  {
+    return 0;
+  }
+  
+  if(ProcessId == GetCurrentProcessId())
+  {
+    return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
+  }
+  
+  /* do not send WM_GETTEXT messages to other processes */
+  return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
 }
 
 
@@ -995,7 +1041,19 @@ GetWindowTextLengthA(HWND hWnd)
 int STDCALL
 GetWindowTextLengthW(HWND hWnd)
 {
-  return(SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0));
+  DWORD ProcessId;
+  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  {
+    return 0;
+  }
+  
+  if(ProcessId == GetCurrentProcessId())
+  {
+    return(SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0));
+  }
+  
+  /* do not send WM_GETTEXT messages to other processes */
+  return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
 }
 
 
@@ -1008,7 +1066,24 @@ GetWindowTextW(
 	LPWSTR lpString,
 	int nMaxCount)
 {
-  return(SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
+  DWORD ProcessId;
+  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  {
+    return 0;
+  }
+  
+  if(ProcessId == GetCurrentProcessId())
+  {
+    return(SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
+  }
+  
+  /* do not send WM_GETTEXT messages to other processes */
+  if (nMaxCount > 1)
+  {
+    *((PWSTR)lpString) = L'\0';
+  }
+  
+  return (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lpString, nMaxCount);
 }
 
 DWORD STDCALL
@@ -1279,6 +1354,35 @@ BOOL STDCALL
 SetWindowTextA(HWND hWnd,
 	       LPCSTR lpString)
 {
+  DWORD ProcessId;
+  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  {
+    return FALSE;
+  }
+  
+  if(ProcessId != GetCurrentProcessId())
+  {
+    /* do not send WM_GETTEXT messages to other processes */
+    ANSI_STRING AnsiString;
+    UNICODE_STRING UnicodeString;
+    
+    if(lpString)
+    {
+      RtlInitAnsiString(&AnsiString, (LPSTR)lpString);
+      RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
+      NtUserDefSetText(hWnd, &UnicodeString);
+      RtlFreeUnicodeString(&UnicodeString);
+    }
+    else
+      NtUserDefSetText(hWnd, NULL);
+    
+    if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
+    {
+      DefWndNCPaint(hWnd, (HRGN)1);
+    }
+    return TRUE;
+  }
+  
   return SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
 }
 
@@ -1290,6 +1394,29 @@ BOOL STDCALL
 SetWindowTextW(HWND hWnd,
 	       LPCWSTR lpString)
 {
+  DWORD ProcessId;
+  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  {
+    return FALSE;
+  }
+  
+  if(ProcessId != GetCurrentProcessId())
+  {
+    /* do not send WM_GETTEXT messages to other processes */
+    UNICODE_STRING UnicodeString;
+    
+    if(lpString)
+      RtlInitUnicodeString(&UnicodeString, (LPWSTR)lpString);
+    
+    NtUserDefSetText(hWnd, (lpString ? &UnicodeString : NULL));
+    
+    if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
+    {
+      DefWndNCPaint(hWnd, (HRGN)1);
+    }
+    return TRUE;
+  }
+  
   return SendMessageW(hWnd, WM_SETTEXT, 0, (LPARAM)lpString);
 }
 

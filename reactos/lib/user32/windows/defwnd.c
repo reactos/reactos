@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.133 2004/04/13 16:48:44 weiden Exp $
+/* $Id: defwnd.c,v 1.134 2004/04/15 23:36:02 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -602,8 +602,9 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     {      
       MapWindowPoints( hWndParent, 0, (LPPOINT)&mouseRect, 2 );
     }
-  SendMessageA( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
   
+  SendMessageA( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
+  NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
   if (GetCapture() != hwnd) SetCapture( hwnd );    
   
   if (Style & WS_CHILD)
@@ -746,7 +747,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DeleteObject(DesktopRgn);
     }
   }
-  
+  NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
   SendMessageA( hwnd, WM_EXITSIZEMOVE, 0, 0 );
   SendMessageA( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
   
@@ -1572,7 +1573,7 @@ DefWindowProcW(HWND hWnd,
         {
             if (wParam > 1)
             {
-                *((PWSTR)lParam) = '\0';
+                *((PWSTR)lParam) = L'\0';
             }
             return (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lParam, wParam);
         }

@@ -173,6 +173,10 @@ VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg);
+BOOL FASTCALL
+MsqIsDblClk(LPMSG Msg, BOOL Remove);
+HWND FASTCALL
+MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);
 
 inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
@@ -202,6 +206,12 @@ LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
 /* check the queue status */
 #define MsqIsSignaled(MsgQueue) \
   ((MsgQueue->WakeBits & MsgQueue->WakeMask) || (MsgQueue->ChangedBits & MsgQueue->ChangedMask))
+
+#define IS_BTN_MESSAGE(message,code) \
+  ((message) == WM_LBUTTON##code || \
+   (message) == WM_MBUTTON##code || \
+   (message) == WM_RBUTTON##code || \
+   (message) == WM_XBUTTON##code )
 
 #endif /* _WIN32K_MSGQUEUE_H */
 

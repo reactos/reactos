@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.58 2004/04/14 20:18:12 weiden Exp $
+/* $Id: message.c,v 1.59 2004/04/15 23:36:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,6 +33,8 @@
 #include <win32k/win32k.h>
 #include <include/msgqueue.h>
 #include <include/window.h>
+#include <include/winpos.h>
+#include <include/focus.h>
 #include <include/class.h>
 #include <include/error.h>
 #include <include/object.h>
@@ -175,7 +177,7 @@ NtUserTranslateMessage(LPMSG lpMsg,
 
 
 VOID FASTCALL
-IntSendSpecialMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
+IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
 {
   if(!Msg->hwnd || ThreadQueue->CaptureWindow)
   {
@@ -232,10 +234,108 @@ IntSendSpecialMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
   }
 }
 
+BOOL FASTCALL
+IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJECT MsgWindow, 
+                       USHORT *HitTest)
+{
+  ULONG Result;
+  
+  if(*HitTest == (USHORT)HTTRANSPARENT)
+  {
+    /* eat the message, search again! */
+    return TRUE;
+  }
+  
+  Result = IntSendMessage(MsgWindow->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(MsgWindow->Self), (LPARAM)MAKELONG(*HitTest, Msg->message));
+  switch (Result)
+  {
+    case MA_NOACTIVATEANDEAT:
+      return TRUE;
+    case MA_NOACTIVATE:
+      break;
+    case MA_ACTIVATEANDEAT:
+      IntMouseActivateWindow(MsgWindow);
+      return TRUE;
+    default:
+      /* MA_ACTIVATE */
+      IntMouseActivateWindow(MsgWindow);
+      break;
+  }
+  
+  return FALSE;
+}
+
+BOOL FASTCALL
+IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *HitTest, BOOL Remove)
+{
+  PWINDOW_OBJECT Window;
+  
+  if(!(Window = IntGetWindowObject(Msg->hwnd)))
+  {
+    /* FIXME - change the mouse cursor to an arrow, maybe do this a better way */
+    IntLoadDefaultCursors(TRUE);
+    /* let's just eat the message?! */
+    return TRUE;
+  }
+  
+  if(ThreadQueue == Window->MessageQueue &&
+     ThreadQueue->CaptureWindow != Window->Self)
+  {
+    /* only send WM_NCHITTEST messages if we're not capturing the window! */
+    *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
+                              MAKELONG(Msg->pt.x, Msg->pt.y));
+  }
+  else
+  {
+    *HitTest = HTCLIENT;
+  }
+  
+  if(IS_BTN_MESSAGE(Msg->message, DOWN))
+  {
+    /* generate double click messages, if necessary */
+    if ((((*HitTest) != HTCLIENT) || 
+        (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS)) &&
+        MsqIsDblClk(Msg, Remove))
+    {
+      Msg->message += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
+    }
+  }
+  
+  if(Msg->message != WM_MOUSEWHEEL)
+  {
+    
+    if ((*HitTest) != HTCLIENT)
+    {
+      Msg->message += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
+      if((Msg->message == WM_NCRBUTTONUP) && 
+         (((*HitTest) == HTCAPTION) || ((*HitTest) == HTSYSMENU)))
+      {
+        Msg->message = WM_CONTEXTMENU;
+        Msg->wParam = (WPARAM)Window->Self;
+      }
+      else
+      {
+        Msg->wParam = *HitTest;
+      }
+    }
+    else if(ThreadQueue->MoveSize == NULL &&
+            ThreadQueue->MenuOwner == NULL)
+    {
+      Msg->pt.x -= Window->ClientRect.left;
+      Msg->pt.y -= Window->ClientRect.top;
+      Msg->lParam = MAKELONG(Msg->pt.x, Msg->pt.y);
+    }
+  }
+  
+  IntReleaseWindowObject(Window);
+  return FALSE;
+}
+
+
 /*
  * Internal version of PeekMessage() doing all the work
  */
-BOOL STDCALL
+BOOL FASTCALL
 IntPeekMessage(LPMSG Msg,
                 HWND Wnd,
                 UINT MsgFilterMin,
@@ -244,25 +344,27 @@ IntPeekMessage(LPMSG Msg,
 {
   LARGE_INTEGER LargeTickCount;
   PUSER_MESSAGE_QUEUE ThreadQueue;
-  BOOLEAN Present;
   PUSER_MESSAGE Message;
-  BOOLEAN RemoveMessages;
+  BOOL Present, RemoveMessages;
 
   /* The queues and order in which they are checked are documented in the MSDN
      article on GetMessage() */
 
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-  
-  KeQueryTickCount(&LargeTickCount);
-  ThreadQueue->LastMsgRead = LargeTickCount.u.LowPart;
 
   /* Inspect RemoveMsg flags */
   /* FIXME: The only flag we process is PM_REMOVE - processing of others must still be implemented */
   RemoveMessages = RemoveMsg & PM_REMOVE;
+  
+  CheckMessages:
+  
+  Present = FALSE;
+  
+  KeQueryTickCount(&LargeTickCount);
+  ThreadQueue->LastMsgRead = LargeTickCount.u.LowPart;
 
   /* Dispatch sent messages here. */
-  while (MsqDispatchOneSentMessage(ThreadQueue))
-    ;
+  while (MsqDispatchOneSentMessage(ThreadQueue));
       
   /* Now look for a quit message. */
   
@@ -275,9 +377,9 @@ IntPeekMessage(LPMSG Msg,
     Msg->wParam = ThreadQueue->QuitExitCode;
     Msg->lParam = 0;
     if (RemoveMessages)
-      {
-        ThreadQueue->QuitPosted = FALSE;
-      }
+    {
+      ThreadQueue->QuitPosted = FALSE;
+    }
     return TRUE;
   }
 
@@ -290,16 +392,15 @@ IntPeekMessage(LPMSG Msg,
                            MsgFilterMax,
                            &Message);
   if (Present)
+  {
+    RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
+    if (RemoveMessages)
     {
-      RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
-      if (RemoveMessages)
-	{
-	  MsqDestroyMessage(Message);
-	  IntSendSpecialMessages(ThreadQueue, Msg);
-	}
-      return TRUE;
+      MsqDestroyMessage(Message);
     }
-
+    goto MessageFound;
+  }
+  
   /* Check for hardware events. */
   Present = MsqFindMessage(ThreadQueue,
                            TRUE,
@@ -309,27 +410,87 @@ IntPeekMessage(LPMSG Msg,
                            MsgFilterMax,
                            &Message);
   if (Present)
+  {
+    RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
+    if (RemoveMessages)
     {
-      RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
-      if (RemoveMessages)
-	{
-	  MsqDestroyMessage(Message);
-	  IntSendSpecialMessages(ThreadQueue, Msg);
-	}
-      return TRUE;
+      MsqDestroyMessage(Message);
     }
-
+    goto MessageFound;
+  }
+  
   /* Check for sent messages again. */
-  while (MsqDispatchOneSentMessage(ThreadQueue))
-    ;
+  while (MsqDispatchOneSentMessage(ThreadQueue));
 
   /* Check for paint messages. */
   if (IntGetPaintMessage(Wnd, PsGetWin32Thread(), Msg, RemoveMessages))
+  {
+    return TRUE;
+  }
+  
+  /* FIXME - get WM_(SYS)TIMER messages */
+  
+  if(Present)
+  {
+    MessageFound:
+    
+    if(RemoveMessages)
     {
+      PWINDOW_OBJECT MsgWindow = NULL;;
+      
+      if(Msg->hwnd && (MsgWindow = IntGetWindowObject(Msg->hwnd)) &&
+         Msg->message >= WM_MOUSEFIRST && Msg->message <= WM_MOUSELAST)
+      {
+        USHORT HitTest;
+        
+        if(IntTranslateMouseMessage(ThreadQueue, Msg, &HitTest, TRUE))
+          /* FIXME - check message filter again, if the message doesn't match anymore,
+                     search again */
+        {
+          IntReleaseWindowObject(MsgWindow);
+          /* eat the message, search again */
+          goto CheckMessages;
+        }
+        if(ThreadQueue->CaptureWindow == NULL)
+        {
+          IntSendHitTestMessages(ThreadQueue, Msg);
+          if((Msg->message != WM_MOUSEMOVE && Msg->message != WM_NCMOUSEMOVE) &&
+             IS_BTN_MESSAGE(Msg->message, DOWN) &&
+             IntActivateWindowMouse(ThreadQueue, Msg, MsgWindow, &HitTest))
+          {
+            IntReleaseWindowObject(MsgWindow);
+            /* eat the message, search again */
+            goto CheckMessages;
+          }
+        }
+      }
+      else
+      {
+        IntSendHitTestMessages(ThreadQueue, Msg);
+      }
+      
+      if(MsgWindow)
+      {
+        IntReleaseWindowObject(MsgWindow);
+      }
+      
       return TRUE;
     }
+    
+    USHORT HitTest;
+    if((Msg->hwnd && Msg->message >= WM_MOUSEFIRST && Msg->message <= WM_MOUSELAST) &&
+       IntTranslateMouseMessage(ThreadQueue, Msg, &HitTest, FALSE))
+      /* FIXME - check message filter again, if the message doesn't match anymore,
+                 search again */
+    {
+      /* eat the message, search again */
+      goto CheckMessages;
+    }
+    
+    return TRUE;
+  }
 
-  return FALSE;
+  return Present;
 }
 
 BOOL STDCALL

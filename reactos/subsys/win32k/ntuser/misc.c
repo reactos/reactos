@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.61 2004/04/14 23:40:43 weiden Exp $
+/* $Id: misc.c,v 1.62 2004/04/15 23:36:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -264,33 +264,10 @@ NtUserCallTwoParam(
     
     case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
     {
-      HWND *hwnd;
       PUSER_MESSAGE_QUEUE MsgQueue = PsGetCurrentThread()->Win32Thread->MessageQueue;
-
-      switch(Param1)
-      {
-        case TPR_SGTH_ACTIVE:
-          hwnd = &MsgQueue->ActiveWindow;
-          break;
-        case TPR_SGTH_FOCUS:
-          hwnd = &MsgQueue->FocusWindow;
-          break;
-        case TPR_SGTH_CAPTURE:
-          hwnd = &MsgQueue->CaptureWindow;
-          break;
-        case TPR_SGTH_MENUOWNER:
-          hwnd = &MsgQueue->MenuOwner;
-          break;
-        case TPR_SGTH_MOVESIZE:
-          hwnd = &MsgQueue->MoveSize;
-          break;
-        case TPR_SGTH_CARET:
-          hwnd = &MsgQueue->CaretInfo->hWnd;
-          break;
-        default:
-          return 0;
-      }
-      return (DWORD)(*hwnd = (HWND)Param2);
+      
+      ASSERT(MsgQueue);
+      return (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2);
     }
     
     case TWOPARAM_ROUTINE_ENABLEWINDOW:

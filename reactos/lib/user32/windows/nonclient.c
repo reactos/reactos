@@ -865,7 +865,6 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
     GetMessageW(&Msg, 0, 0, 0);
     switch(Msg.message)
     {
-      case WM_NCLBUTTONUP:
       case WM_LBUTTONUP:
         if(InBtn)
           goto done;
@@ -876,10 +875,10 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
             ReleaseDC(hWnd, WindowDC);
           return;
         }
-      case WM_NCMOUSEMOVE:
       case WM_MOUSEMOVE:
         if(HasBtn)
         {
+          ClientToScreen(hWnd, &Msg.pt);
           CurBtn = DefWndNCHitTest(hWnd, Msg.pt);
           if(InBtn != (CurBtn == OrigBtn))
           {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.87 2004/04/14 19:07:14 weiden Exp $
+/* $Id: msgqueue.c,v 1.88 2004/04/15 23:36:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -184,8 +184,8 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
   KeSetEvent(&HardwareMessageEvent, IO_NO_INCREMENT, FALSE);
 }
 
-BOOL STATIC FASTCALL
-MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
+BOOL FASTCALL
+MsqIsDblClk(LPMSG Msg, BOOL Remove)
 {
   PWINSTATION_OBJECT WinStaObject;
   PSYSTEM_CURSORINFO CurInfo;
@@ -202,13 +202,13 @@ MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
     return FALSE;
   }
   CurInfo = &WinStaObject->SystemCursor;
-  Res = (Message->Msg.hwnd == (HWND)CurInfo->LastClkWnd) && 
-        ((Message->Msg.time - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
+  Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) && 
+        ((Msg->time - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
   if(Res)
   {
     
-    dX = CurInfo->LastBtnDownX - Message->Msg.pt.x;
-    dY = CurInfo->LastBtnDownY - Message->Msg.pt.y;
+    dX = CurInfo->LastBtnDownX - Msg->pt.x;
+    dY = CurInfo->LastBtnDownY - Msg->pt.y;
     if(dX < 0) dX = -dX;
     if(dY < 0) dY = -dY;
     
@@ -221,16 +221,16 @@ MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
     if (Res)
     {
       CurInfo->LastBtnDown = 0;
-      CurInfo->LastBtnDownX = Message->Msg.pt.x;
-      CurInfo->LastBtnDownY = Message->Msg.pt.y;
+      CurInfo->LastBtnDownX = Msg->pt.x;
+      CurInfo->LastBtnDownY = Msg->pt.y;
       CurInfo->LastClkWnd = NULL;
     }
     else
     {
-      CurInfo->LastBtnDownX = Message->Msg.pt.x;
-      CurInfo->LastBtnDownY = Message->Msg.pt.y;
-      CurInfo->LastClkWnd = (HANDLE)Message->Msg.hwnd;
-      CurInfo->LastBtnDown = Message->Msg.time;
+      CurInfo->LastBtnDownX = Msg->pt.x;
+      CurInfo->LastBtnDownY = Msg->pt.y;
+      CurInfo->LastClkWnd = (HANDLE)Msg->hwnd;
+      CurInfo->LastBtnDown = Msg->time;
     }
   }
   
@@ -239,120 +239,31 @@ MsqIsDblClk(PWINDOW_OBJECT Window, PUSER_MESSAGE Message, BOOL Remove)
 }
 
 BOOL STATIC STDCALL
-MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
+MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed, BOOL RemoveWhenFreed,
-			 PWINDOW_OBJECT ScopeWin, PUSHORT HitTest,
-			 PPOINT ScreenPoint, BOOL FromGlobalQueue)
+			 PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue)
 {
-  PUSER_MESSAGE_QUEUE ThreadQueue;
   USHORT Msg = Message->Msg.message;
   PWINDOW_OBJECT Window = NULL;
   HWND CaptureWin;
-  POINT Point;
-  
-  ThreadQueue = PsGetWin32Thread()->MessageQueue;
-  
-  if (Msg == WM_LBUTTONDOWN || 
-      Msg == WM_MBUTTONDOWN ||
-      Msg == WM_RBUTTONDOWN ||
-      Msg == WM_XBUTTONDOWN)
-  {
-    *HitTest = WinPosWindowFromPoint(ScopeWin, ThreadQueue, &Message->Msg.pt, &Window);
-    /*
-    **Make sure that we have a window that is not already in focus
-    */
-    if (Window && (Window->Self != IntGetFocusWindow()))
-    {
-      if(ThreadQueue == Window->MessageQueue)
-      {
-        /* only get a more detailed hit-test if the window is in the same thread! */
-        *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
-                                  MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y));
-      }
-      if(*HitTest != (USHORT)HTTRANSPARENT)
-      {
-        LRESULT Result;
-        
-        /* Sending a message to another thread might lock up our own when it's 
-           hung, so just send messages to our own thread */
-        if(Window->MessageQueue == ThreadQueue)
-          Result = IntSendMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)MAKELONG(*HitTest, Msg));
-        else
-        {
-          /* just post WM_MOUSEACTIVATE to the other thread */
-          NtUserPostMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)MAKELONG(*HitTest, Msg));
-          /* and assume that windows of other threads should always be activated. */
-          Result = MA_ACTIVATE;
-        }
-        
-        switch (Result)
-        {
-          case MA_NOACTIVATEANDEAT:
-            *Freed = FALSE;
-            IntReleaseWindowObject(Window);
-            return TRUE;
-          case MA_NOACTIVATE:
-            break;
-          case MA_ACTIVATEANDEAT:
-            IntMouseActivateWindow(Window);
-            IntReleaseWindowObject(Window);
-            *Freed = FALSE;
-            return TRUE;
-          default:
-            /* MA_ACTIVATE */
-            IntMouseActivateWindow(Window);
-            break;
-        }
-      }
-      else
-      {
-        IntReleaseWindowObject(Window);
-        if(RemoveWhenFreed)
-        {
-          RemoveEntryList(&Message->ListEntry);
-        }
-        ExFreePool(Message);
-        *Freed = TRUE;
-        return(FALSE);
-      }
-    }
-  }
   
   CaptureWin = IntGetCaptureWindow();
-
   if (CaptureWin == NULL)
   {
     if(Msg == WM_MOUSEWHEEL)
     {
-      *HitTest = HTCLIENT;
-      if(Window)
-        IntReleaseWindowObject(Window);
       Window = IntGetWindowObject(IntGetFocusWindow());
     }
     else
     {
-      if(!Window)
-      {
-        *HitTest = WinPosWindowFromPoint(ScopeWin, ThreadQueue, &Message->Msg.pt, &Window);
-        if(Window && (ThreadQueue == Window->MessageQueue))
-        {
-          *HitTest = IntSendMessage(Window->Self, WM_NCHITTEST, 0, 
-                                    MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y));
-        }
-        if(!Window)
-        {
-          /* change the cursor on desktop background */
-          IntLoadDefaultCursors(TRUE);
-        }
-      }
+      WinPosWindowFromPoint(ScopeWin, NULL, &Message->Msg.pt, &Window);
     }
   }
   else
   {
-    if(Window)
-      IntReleaseWindowObject(Window);
+    /* FIXME - window messages should go to the right window if no buttons are
+               pressed */
     Window = IntGetWindowObject(CaptureWin);
-    *HitTest = HTCLIENT;
   }
 
   if (Window == NULL)
@@ -366,7 +277,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     return(FALSE);
   }
   
-  if (Window->MessageQueue != ThreadQueue)
+  if (Window->MessageQueue != MessageQueue)
   {
     if (! FromGlobalQueue)
     {
@@ -381,9 +292,9 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       
       /* remove the pointer for the current WM_MOUSEMOVE message in case we
          just removed it */
-      if(ThreadQueue->MouseMoveMsg == Message)
+      if(MessageQueue->MouseMoveMsg == Message)
       {
-        ThreadQueue->MouseMoveMsg = NULL;
+        MessageQueue->MouseMoveMsg = NULL;
       }
     }
     
@@ -414,48 +325,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   
   /* From here on, we're in the same message queue as the caller! */
   
-  switch (Msg)
-  {
-    case WM_LBUTTONDOWN:
-    case WM_MBUTTONDOWN:
-    case WM_RBUTTONDOWN:
-    case WM_XBUTTONDOWN:
-    {
-      if ((((*HitTest) != HTCLIENT) || 
-          (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS)) &&
-          MsqIsDblClk(Window, Message, Remove))
-      {
-        Msg += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
-      }
-      break;
-    }
-  }
-  
   *ScreenPoint = Message->Msg.pt;
-  Point = Message->Msg.pt;
-
-  if ((*HitTest) != HTCLIENT)
-  {
-    Msg += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
-    if((Msg == WM_NCRBUTTONUP) && 
-       (((*HitTest) == HTCAPTION) || ((*HitTest) == HTSYSMENU)))
-    {
-      Msg = WM_CONTEXTMENU;
-      Message->Msg.wParam = (WPARAM)Window->Self;
-    }
-    else
-    {
-      Message->Msg.wParam = *HitTest;
-    }
-  }
-  else
-  {
-    if(Msg != WM_MOUSEWHEEL)
-    {
-      Point.x -= Window->ClientRect.left;
-      Point.y -= Window->ClientRect.top;
-    }
-  }
   
   if((hWnd != NULL && Window->Self != hWnd) ||
      ((FilterLow != 0 || FilterLow != 0) && (Msg < FilterLow || Msg > FilterHigh)))
@@ -496,13 +366,11 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     *Freed = FALSE;
     return(FALSE);
   }
-
-  if (Remove)
-    {
-      Message->Msg.hwnd = Window->Self;
-      Message->Msg.message = Msg;
-      Message->Msg.lParam = MAKELONG(Point.x, Point.y);
-    }
+  
+  /* FIXME - only assign if removing? */
+  Message->Msg.hwnd = Window->Self;
+  Message->Msg.message = Msg;
+  Message->Msg.lParam = MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y);
   
   /* remove the reference to the current WM_(NC)MOUSEMOVE message, if this message
      is it */
@@ -544,7 +412,6 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 		       PUSER_MESSAGE* Message)
 {
   KIRQL OldIrql;
-  USHORT HitTest;
   POINT ScreenPoint;
   BOOL Accept, Freed;
   PLIST_ENTRY CurrentEntry;
@@ -584,10 +451,9 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       if (Current->Msg.message >= WM_MOUSEFIRST &&
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
-	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
+	  Accept = MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed, TRUE,
-					    DesktopWindow, &HitTest,
-					    &ScreenPoint, FALSE);
+					    DesktopWindow, &ScreenPoint, FALSE);
 	  if (Accept)
 	    {
 	      if (Remove)
@@ -653,10 +519,9 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	{
 	  const ULONG ActiveStamp = HardwareMessageQueueStamp;
 	  /* Translate the message. */
-	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
+	  Accept = MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed, FALSE,
-					    DesktopWindow, &HitTest,
-					    &ScreenPoint, TRUE);
+					    DesktopWindow, &ScreenPoint, TRUE);
 	  if (Accept)
 	    {
 	      /* Check for no more messages in the system queue. */
@@ -1215,6 +1080,43 @@ MsqGetMessageExtraInfo(VOID)
   }
   
   return MessageQueue->ExtraInfo;
+}
+
+HWND FASTCALL
+MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
+{
+  HWND Prev;
+  
+  switch(Type)
+  {
+    case MSQ_STATE_CAPTURE:
+      Prev = MessageQueue->CaptureWindow;
+      MessageQueue->CaptureWindow = hWnd;
+      return Prev;
+    case MSQ_STATE_ACTIVE:
+      Prev = MessageQueue->ActiveWindow;
+      MessageQueue->ActiveWindow = hWnd;
+      return Prev;
+    case MSQ_STATE_FOCUS:
+      Prev = MessageQueue->FocusWindow;
+      MessageQueue->FocusWindow = hWnd;
+      return Prev;
+    case MSQ_STATE_MENUOWNER:
+      Prev = MessageQueue->MenuOwner;
+      MessageQueue->MenuOwner = hWnd;
+      return Prev;
+    case MSQ_STATE_MOVESIZE:
+      Prev = MessageQueue->MoveSize;
+      MessageQueue->MoveSize = hWnd;
+      return Prev;
+    case MSQ_STATE_CARET:
+      ASSERT(MessageQueue->CaretInfo);
+      Prev = MessageQueue->CaretInfo->hWnd;
+      MessageQueue->CaretInfo->hWnd = hWnd;
+      return Prev;
+  }
+  
+  return NULL;
 }
 
 /* EOF */

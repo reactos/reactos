@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.63 2004/04/09 21:01:02 navaraf Exp $
+/* $Id: menu.c,v 1.64 2004/04/15 23:36:02 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -2736,6 +2736,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
         {
           Mt->OwnerWnd = NewWnd;
           SetCapture(Mt->OwnerWnd);
+          NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd);
         }
 
       Mt->TopMenu = Mt->CurrentMenu = NewMenu; /* all subpopups are hidden */
@@ -3098,6 +3099,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
     }
 
   SetCapture(Mt.OwnerWnd);
+  NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt.OwnerWnd);
 
   while (! fEndMenu)
     {
@@ -3382,7 +3384,8 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
           Mt.TrackFlags &= ~TF_SKIPREMOVE;
         }
     }
-
+  
+  NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
   SetCapture(NULL);  /* release the capture */
 
   /* If dropdown is still painted and the close box is clicked on
