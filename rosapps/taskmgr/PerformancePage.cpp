@@ -76,20 +76,6 @@ HWND		hPerformancePagePhysicalMemorySystemCacheEdit;	// Physical Memory System C
 HWND		hPerformancePageTotalsHandleCountEdit;			// Total Handles Edit Control
 HWND		hPerformancePageTotalsProcessCountEdit;			// Total Processes Edit Control
 HWND		hPerformancePageTotalsThreadCountEdit;			// Total Threads Edit Control
-#if 0
-HWND		hPerformancePageCommitChargeTotalLabel;
-HWND		hPerformancePageCommitChargeLimitLabel;
-HWND		hPerformancePageCommitChargePeakLabel;
-HWND		hPerformancePageKernelMemoryTotalLabel;
-HWND		hPerformancePageKernelMemoryPagedLabel;
-HWND		hPerformancePageKernelMemoryNonPagedLabel;
-HWND		hPerformancePagePhysicalMemoryTotalLabel;
-HWND		hPerformancePagePhysicalMemoryAvailableLabel;
-HWND		hPerformancePagePhysicalMemorySystemCacheLabel;
-HWND		hPerformancePageTotalsHandleCountLabel;
-HWND		hPerformancePageTotalsProcessCountLabel;
-HWND		hPerformancePageTotalsThreadCountLabel;
-#endif
 
 
 static int	nPerformancePageWidth;
@@ -150,7 +136,10 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 	int		nXDifference;
 	int		nYDifference;
 
-	switch (message)
+    HDC hdc;
+    PAINTSTRUCT ps;
+
+    switch (message)
 	{
 	case WM_INITDIALOG:
 		
@@ -187,21 +176,8 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		hPerformancePageTotalsHandleCountEdit = GetDlgItem(hDlg, IDC_TOTALS_HANDLE_COUNT);
 		hPerformancePageTotalsProcessCountEdit = GetDlgItem(hDlg, IDC_TOTALS_PROCESS_COUNT);
 		hPerformancePageTotalsThreadCountEdit = GetDlgItem(hDlg, IDC_TOTALS_THREAD_COUNT);
-#if 0
-		hPerformancePageCommitChargeTotalLabel = GetDlgItem(hDlg, IDS_COMMIT_CHARGE_TOTAL);
-		hPerformancePageCommitChargeLimitLabel = GetDlgItem(hDlg, IDS_COMMIT_CHARGE_LIMIT);
-		hPerformancePageCommitChargePeakLabel = GetDlgItem(hDlg, IDS_COMMIT_CHARGE_PEAK);
-		hPerformancePageKernelMemoryTotalLabel = GetDlgItem(hDlg, IDS_KERNEL_MEMORY_TOTAL);
-		hPerformancePageKernelMemoryPagedLabel = GetDlgItem(hDlg, IDS_KERNEL_MEMORY_PAGED);
-		hPerformancePageKernelMemoryNonPagedLabel = GetDlgItem(hDlg, IDS_KERNEL_MEMORY_NONPAGED);
-		hPerformancePagePhysicalMemoryTotalLabel = GetDlgItem(hDlg, IDS_PHYSICAL_MEMORY_TOTAL);
-		hPerformancePagePhysicalMemoryAvailableLabel = GetDlgItem(hDlg, IDS_PHYSICAL_MEMORY_AVAILABLE);
-		hPerformancePagePhysicalMemorySystemCacheLabel = GetDlgItem(hDlg, IDS_PHYSICAL_MEMORY_SYSTEM_CACHE);
-		hPerformancePageTotalsHandleCountLabel = GetDlgItem(hDlg, IDS_TOTALS_HANDLE_COUNT);
-		hPerformancePageTotalsProcessCountLabel = GetDlgItem(hDlg, IDS_TOTALS_PROCESS_COUNT);
-		hPerformancePageTotalsThreadCountLabel = GetDlgItem(hDlg, IDS_TOTALS_THREAD_COUNT);
-#endif
-		hPerformancePageCpuUsageGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_GRAPH);
+
+        hPerformancePageCpuUsageGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_GRAPH);
 		hPerformancePageMemUsageGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_GRAPH);
 		hPerformancePageMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
         hPerformancePageCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
@@ -244,11 +220,27 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 //		SetWindowLong(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
 		OldGraphCtrlWndProc = SetWindowLong(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
 		SetWindowLong(hPerformancePageCpuUsageHistoryGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
+
 		return TRUE;
 
 	case WM_COMMAND:
 		break;
+#if 0
+    case WM_NCPAINT:
+        hdc = GetDC(hDlg);
+        //GetClientRect(hDlg, &rc);
+        //Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
+        ReleaseDC(hDlg, hdc);
+        break;
 
+    case WM_PAINT:
+        hdc = BeginPaint(hDlg, &ps);
+        
+        //GetClientRect(hDlg, &rc);
+        //Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
+        EndPaint(hDlg, &ps);
+        break;
+#endif
 	case WM_SIZE:
 		int		cx, cy;
 
@@ -269,20 +261,6 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         AdjustFrameSize(hPerformancePageCommitChargeFrame, hDlg, 0, nYDifference, 0);
         AdjustFrameSize(hPerformancePageKernelMemoryFrame, hDlg, 0, nYDifference, 0);
         AdjustFrameSize(hPerformancePagePhysicalMemoryFrame, hDlg, 0, nYDifference, 0);
-#if 0
-        AdjustControlPostion(hPerformancePageCommitChargeTotalLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageCommitChargeLimitLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageCommitChargePeakLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryTotalLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryPagedLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryNonPagedLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemoryTotalLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemoryAvailableLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemorySystemCacheLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsHandleCountLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsProcessCountLabel, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsThreadCountLabel, hDlg, 0, nYDifference);
-#else
         AdjustCntrlPos(IDS_COMMIT_CHARGE_TOTAL, hDlg, 0, nYDifference);
         AdjustCntrlPos(IDS_COMMIT_CHARGE_LIMIT, hDlg, 0, nYDifference);
         AdjustCntrlPos(IDS_COMMIT_CHARGE_PEAK, hDlg, 0, nYDifference);
@@ -295,7 +273,6 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         AdjustCntrlPos(IDS_TOTALS_HANDLE_COUNT, hDlg, 0, nYDifference);
         AdjustCntrlPos(IDS_TOTALS_PROCESS_COUNT, hDlg, 0, nYDifference);
         AdjustCntrlPos(IDS_TOTALS_THREAD_COUNT, hDlg, 0, nYDifference);
-#endif
 
         AdjustControlPostion(hPerformancePageCommitChargeTotalEdit, hDlg, 0, nYDifference);
         AdjustControlPostion(hPerformancePageCommitChargeLimitEdit, hDlg, 0, nYDifference);

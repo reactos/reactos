@@ -594,7 +594,6 @@ LRESULT CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
     //TGraphCtrl* pGraphCtrl;
 	
 	switch (message) {
-/*
 	case WM_ERASEBKGND:
 		return TRUE;
 	//
@@ -650,7 +649,6 @@ LRESULT CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
 		return 0;
- */
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 //        pGraphCtrl = TGraphCtrl::LookupGraphCtrl(hWnd);
@@ -690,7 +688,6 @@ LRESULT CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         }
 		return 0;
 	}
-
 	
 	//
 	// We pass on all non-handled messages

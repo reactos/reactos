@@ -481,12 +481,22 @@ BOOL OnCreate(HWND hWnd)
     //nOldStartX = rc.left;
     //nOldStartY = rc.top;
 
+#define PAGE_OFFSET_LEFT    17
+#define PAGE_OFFSET_TOP     72
+#define PAGE_OFFSET_WIDTH   (PAGE_OFFSET_LEFT*2)
+#define PAGE_OFFSET_HEIGHT  (PAGE_OFFSET_TOP+32)
+
     if ((TaskManagerSettings.Left != 0) ||
         (TaskManagerSettings.Top != 0) ||
         (TaskManagerSettings.Right != 0) ||
         (TaskManagerSettings.Bottom != 0))
     {
         MoveWindow(hWnd, TaskManagerSettings.Left, TaskManagerSettings.Top, TaskManagerSettings.Right - TaskManagerSettings.Left, TaskManagerSettings.Bottom - TaskManagerSettings.Top, TRUE);
+#ifdef GCC
+        MoveWindow(hApplicationPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
+        MoveWindow(hProcessPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
+        MoveWindow(hPerformancePage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
+#endif
     }
     if (TaskManagerSettings.Maximized)
         ShowWindow(hWnd, SW_MAXIMIZE);
@@ -603,20 +613,10 @@ BOOL OnCreate(HWND hWnd)
 // It moves every child window that needs moving
 void OnMove( UINT nType, int cx, int cy )
 {
-#if 0
-    RECT    rc;
-
-    nOldStartX = cx;
-    nOldStartY = cy;
-
-    GetWindowRect(hTabWnd, &rc);
-    rc.left += 2;//nOldStartX;
-    rc.top += 2;//nOldStartY;
-    rc.right -= 4;
-    rc.bottom -= 4;
-    SetWindowPos(hApplicationPage, NULL, rc.left, rc.top, rc.right, rc.bottom, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
-    SetWindowPos(hProcessPage, NULL, rc.left, rc.top, rc.right, rc.bottom, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
-    SetWindowPos(hPerformancePage, NULL, rc.left, rc.top, rc.right, rc.bottom, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
+#ifdef GCC
+    MoveWindow(hApplicationPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
+    MoveWindow(hProcessPage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
+    MoveWindow(hPerformancePage, TaskManagerSettings.Left + PAGE_OFFSET_LEFT, TaskManagerSettings.Top + PAGE_OFFSET_TOP, TaskManagerSettings.Right - TaskManagerSettings.Left - PAGE_OFFSET_WIDTH, TaskManagerSettings.Bottom - TaskManagerSettings.Top - PAGE_OFFSET_HEIGHT, FALSE);
 #endif
 }
 
