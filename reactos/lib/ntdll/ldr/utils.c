@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.34 2000/09/05 11:01:03 ekohl Exp $
+/* $Id: utils.c,v 1.35 2000/12/07 17:00:12 jean Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -865,6 +865,10 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	     RtlFreeUnicodeString (&DllName);
 	     if (!NT_SUCCESS(Status))
 	       {
+		  DbgPrint("LdrFixupImports:failed to load %s\n"
+			,(PCHAR)(ImageBase 
+				+ ImportModuleDirectory->dwRVAModuleName));
+
 		  return Status;
 	       }
 	  }
