@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.45 2001/05/27 11:09:35 ekohl Exp $
+/* $Id: zw.h,v 1.46 2001/06/11 19:45:29 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3532,11 +3532,12 @@ ZwQueryVirtualMemory(
 /*
  * FUNCTION: Queries the volume information
  * ARGUMENTS: 
- *        FileHandle  = Handle to a file object on the target volume
-	  ReturnLength = DataWritten
-	  FsInformation = Caller should supply storage for the information structure.
-	  Length = Size of the information structure
-	  FsInformationClass = Index to a information structure
+ *	  FileHandle  = Handle to a file object on the target volume
+ *	  IoStatusBlock = Caller should supply storage for additional status information
+ *	  ReturnLength = DataWritten
+ *	  FsInformation = Caller should supply storage for the information structure.
+ *	  Length = Size of the information structure
+ *	  FsInformationClass = Index to a information structure
 
 		FileFsVolumeInformation		FILE_FS_VOLUME_INFORMATION
 		FileFsLabelInformation		FILE_FS_LABEL_INFORMATION	
@@ -4625,30 +4626,33 @@ ZwSetValueKey(
 	);
 
 /*
- * FUNCTION: Sets the volume information of a file.
+ * FUNCTION: Sets the volume information.
  * ARGUMENTS:
- *      FileHandle = Handle to the file
- *	VolumeInformationClass = specifies the particular volume information to set
+ *	FileHandle = Handle to the file
+ *	IoStatusBlock = Caller should supply storage for additional status information
  *	VolumeInformation = pointer to a structure containing the new volume information
  *	Length = size of the structure.
+ *	VolumeInformationClass = specifies the particular volume information to set
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtSetVolumeInformationFile(
 	IN HANDLE FileHandle,
-	IN CINT VolumeInformationClass,
-	PVOID VolumeInformation,
-	ULONG Length
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PVOID FsInformation,
+	IN ULONG Length,
+	IN FS_INFORMATION_CLASS FsInformationClass
 	);
 
 NTSTATUS
 STDCALL
 ZwSetVolumeInformationFile(
 	IN HANDLE FileHandle,
-	IN CINT VolumeInformationClass,
-	PVOID VolumeInformation,
-	ULONG Length
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PVOID FsInformation,
+	IN ULONG Length,
+	IN FS_INFORMATION_CLASS FsInformationClass
 	);
 
 /*

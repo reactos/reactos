@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.29 2001/05/10 04:02:21 rex Exp $ */
+/* $Id: vfat.h,v 1.30 2001/06/11 19:52:22 ekohl Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -162,6 +162,8 @@ NTSTATUS STDCALL
 VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL
 VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL
+VfatSetVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 
 NTSTATUS

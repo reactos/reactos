@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.52 2001/05/04 01:21:45 rex Exp $
+/* $Id: iface.c,v 1.53 2001/06/11 19:52:22 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -283,7 +283,8 @@ VfatFileSystemControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 
 NTSTATUS STDCALL
-DriverEntry (PDRIVER_OBJECT _DriverObject, PUNICODE_STRING RegistryPath)
+DriverEntry(PDRIVER_OBJECT _DriverObject,
+	    PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
@@ -329,6 +330,8 @@ DriverEntry (PDRIVER_OBJECT _DriverObject, PUNICODE_STRING RegistryPath)
      VfatDirectoryControl;
    VfatDriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
      VfatQueryVolumeInformation;
+   VfatDriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
+     VfatSetVolumeInformation;
    VfatDriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
    VfatDriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatCleanup;
 

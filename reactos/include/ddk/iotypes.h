@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.29 2001/05/24 22:18:16 ekohl Exp $
+/* $Id: iotypes.h,v 1.30 2001/06/11 19:45:29 ekohl Exp $
  * 
  */
 
@@ -308,12 +308,12 @@ typedef struct _IO_STACK_LOCATION
 	struct
 	  {
 	     ULONG Length;
-	     FS_INFORMATION_CLASS FileInformationClass;
+	     FS_INFORMATION_CLASS FsInformationClass;
 	  } QueryVolume;
 	struct
 	  {
 	     ULONG Length;
-	     FS_INFORMATION_CLASS FileInformationClass;
+	     FS_INFORMATION_CLASS FsInformationClass;
 	  } SetVolume;
 	struct
 	  {
@@ -338,21 +338,6 @@ typedef struct _IO_STACK_LOCATION
 	     FILE_INFORMATION_CLASS FileInformationClass;
 	     ULONG FileIndex;
 	  } QueryDirectory;
-/*
-	struct
-	  {
-	     ULONG CreateDisposition;
-	     ULONG CreateOptions;
-	     ULONG ShareAccess;
-	     BOOLEAN WriteModeMessage;
-	     BOOLEAN ReadModeMessage;
-	     BOOLEAN NonBlocking;
-	     ULONG MaxInstances;
-	     ULONG InBufferSize;
-	     ULONG OutBufferSize;
-	     LARGE_INTEGER TimeOut;
-	  } CreateNamedPipe;
-*/
 
     // Parameters for IRP_MN_QUERY_DEVICE_RELATIONS
     struct {

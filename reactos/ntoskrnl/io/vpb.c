@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.11 2001/03/07 16:48:42 dwelch Exp $
+/* $Id: vpb.c,v 1.12 2001/06/11 19:48:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,9 @@
 
 #include <ddk/ntddk.h>
 #include <internal/io.h>
+#include <internal/mm.h>
 #include <internal/pool.h>
+
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -23,23 +25,25 @@
 static KSPIN_LOCK IoVpbLock;
 
 #define TAG_VPB    TAG('V', 'P', 'B', ' ')
+#define TAG_SYSB   TAG('S', 'Y', 'S', 'B')
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
-IoInitVpbImplementation (
-	VOID
-	)
+IoInitVpbImplementation(VOID)
 {
-	KeInitializeSpinLock(&IoVpbLock);
+   KeInitializeSpinLock(&IoVpbLock);
 }
 
-NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject)
+NTSTATUS
+IoAttachVpb(PDEVICE_OBJECT DeviceObject)
 {
    PVPB Vpb;
    
-   Vpb = ExAllocatePoolWithTag(NonPagedPool, sizeof(VPB), TAG_VPB);
-   if (Vpb==NULL)
+   Vpb = ExAllocatePoolWithTag(NonPagedPool,
+			       sizeof(VPB),
+			       TAG_VPB);
+   if (Vpb == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -48,86 +52,33 @@ NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject)
    Vpb->Size = sizeof(VPB) / sizeof(DWORD);
    Vpb->Flags = 0;
    Vpb->VolumeLabelLength = 0;
-   Vpb->DeviceObject = NULL; 
+   Vpb->DeviceObject = NULL;
    Vpb->RealDevice = DeviceObject;
    Vpb->SerialNumber = 0;
    Vpb->ReferenceCount = 0;
-   RtlZeroMemory(Vpb->VolumeLabel,sizeof(WCHAR)*MAXIMUM_VOLUME_LABEL_LENGTH);
+   RtlZeroMemory(Vpb->VolumeLabel,
+		 sizeof(WCHAR) * MAXIMUM_VOLUME_LABEL_LENGTH);
    
    DeviceObject->Vpb = Vpb;
    
    return(STATUS_SUCCESS);
 }
 
-PIRP IoBuildVolumeInformationIrp(ULONG MajorFunction,
-				 PFILE_OBJECT FileObject,
-				 PVOID FSInformation,
-				 ULONG Length,
-				 CINT FSInformationClass,
-				 PIO_STATUS_BLOCK IoStatusBlock,
-				 PKEVENT Event)
-{
-   PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
-   PDEVICE_OBJECT DeviceObject;
-   
-   DeviceObject = FileObject->DeviceObject;
-   
-   Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
-   if (Irp==NULL)
-     {
-	return(NULL);
-     }
-   
-//   Irp->AssociatedIrp.SystemBuffer = FSInformation;
-   Irp->UserBuffer = FSInformation;
-   
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->MajorFunction = MajorFunction;
-   StackPtr->MinorFunction = 0;
-   StackPtr->Flags = 0;
-   StackPtr->Control = 0;
-   StackPtr->DeviceObject = DeviceObject;
-   StackPtr->FileObject = FileObject;
-   Irp->UserEvent = Event;
-   Irp->UserIosb = IoStatusBlock;
-   
-   switch (MajorFunction)
-   {
-      case IRP_MJ_SET_VOLUME_INFORMATION:
-         StackPtr->Parameters.SetVolume.Length = Length;
-         StackPtr->Parameters.SetVolume.FileInformationClass =
-                     FSInformationClass;
-         break;
 
-      case IRP_MJ_QUERY_VOLUME_INFORMATION:
-         StackPtr->Parameters.QueryVolume.Length = Length;
-         StackPtr->Parameters.QueryVolume.FileInformationClass =
-                     FSInformationClass;
-         break;
-   }
-   return(Irp);
-}
-
-
-NTSTATUS
-STDCALL
-NtQueryVolumeInformationFile (
-
-	IN	HANDLE			FileHandle,
-	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
-	OUT	PVOID			FSInformation,
-	IN	ULONG			Length,
-	IN	FS_INFORMATION_CLASS	FSInformationClass
-	)
+NTSTATUS STDCALL
+NtQueryVolumeInformationFile(IN HANDLE FileHandle,
+			     OUT PIO_STATUS_BLOCK IoStatusBlock,
+			     OUT PVOID FSInformation,
+			     IN ULONG Length,
+			     IN FS_INFORMATION_CLASS FSInformationClass)
 
 /*
  * FUNCTION: Queries the volume information
  * ARGUMENTS: 
- *        FileHandle  = Handle to a file object on the target volume
+ *	  FileHandle  = Handle to a file object on the target volume
  *	  ReturnLength = DataWritten
  *	  FSInformation = Caller should supply storage for the information 
- *                        structure.
+ *	                  structure.
  *	  Length = Size of the information structure
  *	  FSInformationClass = Index to a information structure
  *
@@ -149,6 +100,8 @@ NtQueryVolumeInformationFile (
    PIRP Irp;
    KEVENT Event;
    NTSTATUS Status;
+   PIO_STACK_LOCATION StackPtr;
+   PVOID SystemBuffer;
 
    DPRINT("FSInformation %p\n", FSInformation);
 
@@ -157,125 +110,190 @@ NtQueryVolumeInformationFile (
 				      NULL,
 				      UserMode,
 				      (PVOID*)&FileObject,
-				      NULL);   
-   if (Status != STATUS_SUCCESS)
+				      NULL);
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    
    DeviceObject = FileObject->DeviceObject;
    
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   KeInitializeEvent(&Event,
+		     NotificationEvent,
+		     FALSE);
    
-   Irp = IoBuildVolumeInformationIrp(IRP_MJ_QUERY_VOLUME_INFORMATION,
-				     FileObject,
-				     FSInformation,
-				     Length,
-				     FSInformationClass,
-				     IoStatusBlock,
-				     &Event);
-   Status = IoCallDriver(DeviceObject,Irp);
+   Irp = IoAllocateIrp(DeviceObject->StackSize,
+		       TRUE);
+   if (Irp == NULL)
+     {
+	ObDereferenceObject(FileObject);
+	return(STATUS_INSUFFICIENT_RESOURCES);
+     }
+   
+   SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
+					Length,
+					TAG_SYSB);
+   if (SystemBuffer == NULL)
+     {
+	IoFreeIrp(Irp);
+	ObDereferenceObject(FileObject);
+	return(STATUS_INSUFFICIENT_RESOURCES);
+     }
+   
+   Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
+   Irp->UserEvent = &Event;
+   Irp->UserIosb = IoStatusBlock;
+   
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = FileObject;
+   StackPtr->Parameters.QueryVolume.Length = Length;
+   StackPtr->Parameters.QueryVolume.FsInformationClass =
+	FSInformationClass;
+   
+   Status = IoCallDriver(DeviceObject,
+			 Irp);
    if (Status == STATUS_PENDING)
      {
-	KeWaitForSingleObject(&Event,UserRequest,KernelMode,FALSE,NULL);
+	KeWaitForSingleObject(&Event,
+			      UserRequest,
+			      KernelMode,
+			      FALSE,
+			      NULL);
 	Status = IoStatusBlock->Status;
      }
+   
+   MmSafeCopyToUser(FSInformation,
+		    SystemBuffer,
+		    Length);
+   ExFreePool(SystemBuffer);
+   
    return(Status);
 }
 
 
-NTSTATUS
-STDCALL
-IoQueryVolumeInformation (
-	IN	PFILE_OBJECT		FileObject,
-	IN	FS_INFORMATION_CLASS	FsInformationClass,
-	IN	ULONG			Length,
-	OUT	PVOID			FsInformation,
-	OUT	PULONG			ReturnedLength
-	)
+NTSTATUS STDCALL
+IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
+			 IN FS_INFORMATION_CLASS FsInformationClass,
+			 IN ULONG Length,
+			 OUT PVOID FsInformation,
+			 OUT PULONG ReturnedLength)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+   UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 
-NTSTATUS
-STDCALL
-NtSetVolumeInformationFile (
-	IN	HANDLE	FileHandle,
-	IN	CINT	VolumeInformationClass,
-		PVOID	VolumeInformation,
-		ULONG	Length
-	)
+NTSTATUS STDCALL
+NtSetVolumeInformationFile(IN HANDLE FileHandle,
+			   OUT PIO_STATUS_BLOCK IoStatusBlock,
+			   IN PVOID FsInformation,
+			   IN ULONG Length,
+			   IN FS_INFORMATION_CLASS FsInformationClass)
 {
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
    KEVENT Event;
    NTSTATUS Status;
-
+   PIO_STACK_LOCATION StackPtr;
+   PVOID SystemBuffer;
+   
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_WRITE_ATTRIBUTES,
 				      NULL,
 				      UserMode,
 				      (PVOID*)&FileObject,
-				      NULL);   
+				      NULL);
    if (Status != STATUS_SUCCESS)
      {
 	return(Status);
      }
-
+   
    DeviceObject = FileObject->DeviceObject;
    
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
-
-   Irp = IoBuildVolumeInformationIrp(IRP_MJ_SET_VOLUME_INFORMATION,
-				     FileObject,
-				     VolumeInformation,
-				     Length,
-				     VolumeInformationClass,
-				     NULL,
-				     &Event);
+   KeInitializeEvent(&Event,
+		     NotificationEvent,
+		     FALSE);
+   
+   Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
+   if (Irp == NULL)
+     {
+	ObDereferenceObject(FileObject);
+	return(STATUS_INSUFFICIENT_RESOURCES);
+     }
+   
+   SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
+					Length,
+					TAG_SYSB);
+   if (SystemBuffer == NULL)
+     {
+	IoFreeIrp(Irp);
+	ObDereferenceObject(FileObject);
+	return(STATUS_INSUFFICIENT_RESOURCES);
+     }
+   
+   MmSafeCopyFromUser(SystemBuffer,
+		      FsInformation,
+		      Length);
+   
+   Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
+   Irp->UserEvent = &Event;
+   Irp->UserIosb = IoStatusBlock;
+   
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->MajorFunction = IRP_MJ_SET_VOLUME_INFORMATION;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = FileObject;
+   StackPtr->Parameters.SetVolume.Length = Length;
+   StackPtr->Parameters.SetVolume.FsInformationClass =
+	FsInformationClass;
+   
    Status = IoCallDriver(DeviceObject,Irp);
    if (Status == STATUS_PENDING)
      {
-	KeWaitForSingleObject(&Event,UserRequest,KernelMode,FALSE,NULL);
+	KeWaitForSingleObject(&Event,
+			      UserRequest,
+			      KernelMode,
+			      FALSE,
+			      NULL);
      }
+   
+   ExFreePool(SystemBuffer);
+   
    return(Status);
 }
 
 
-VOID
-STDCALL
-IoAcquireVpbSpinLock (
-	OUT	PKIRQL	Irql
-	)
+VOID STDCALL
+IoAcquireVpbSpinLock(OUT PKIRQL Irql)
 {
-	KeAcquireSpinLock (&IoVpbLock,
-	                   Irql);
+   KeAcquireSpinLock(&IoVpbLock,
+		     Irql);
 }
 
 
-VOID
-STDCALL
-IoReleaseVpbSpinLock (
-	IN	KIRQL	Irql
-	)
+VOID STDCALL
+IoReleaseVpbSpinLock(IN KIRQL Irql)
 {
-	KeReleaseSpinLock (&IoVpbLock,
-	                   Irql);
+   KeReleaseSpinLock(&IoVpbLock,
+		     Irql);
 }
 
 
-NTSTATUS
-STDCALL
-IoVerifyVolume (
-	IN	PDEVICE_OBJECT	DeviceObject,
-	IN	BOOLEAN		AllowRawMount
-	)
+NTSTATUS STDCALL
+IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
+	       IN BOOLEAN AllowRawMount)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+   UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 
