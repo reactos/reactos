@@ -5,6 +5,7 @@
 
 #include <msvcrt/crttypes.h>
 #include <msvcrt/stddef.h>
+#include <windows.h>
 
 typedef struct _ThreadData
 {
@@ -23,6 +24,8 @@ typedef struct _ThreadData
   int qsz;                      /* size of each record */
   int thresh;                   /* THRESHold in chars */
   int mthresh;                  /* MTHRESHold in chars */
+
+  EXCEPTION_RECORD *exc_record; /* Head of exception record list */
 
 } THREADDATA, *PTHREADDATA;
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.33 2003/04/23 22:58:02 gvg Exp $
+# $Id: Makefile,v 1.34 2003/04/30 22:07:29 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -251,6 +251,7 @@ MISC_OBJECTS = \
 	misc/amsg.o \
 	misc/assert.o \
 	misc/crtmain.o \
+	misc/cpp.o \
 	misc/dllmain.o \
 	misc/environ.o \
 	misc/getargs.o \

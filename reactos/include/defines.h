@@ -1437,9 +1437,10 @@ extern "C" {
 #define EXCEPTION_INVALID_HANDLE	(0xc0000008L)
 #define EXCEPTION_PRIV_INSTRUCTION	(0xc0000096L)
 #define EXCEPTION_NONCONTINUABLE_EXCEPTION	(0xc0000025L)
-#define EXCEPTION_NONCONTINUABLE	(0x1)
 #define EXCEPTION_STACK_OVERFLOW	(0xc00000fdL)
 #define EXCEPTION_INVALID_DISPOSITION	(0xc0000026L)
+#define EXCEPTION_CONTINUABLE		(0x0)
+#define EXCEPTION_NONCONTINUABLE	(0x1)
 
 /* GetFileType */
 #define FILE_TYPE_UNKNOWN	(0)
@@ -4774,6 +4775,17 @@ typedef enum _SystemState {
   STATE_SYSTEM_ALERT_HIGH         = 0x10000000,  // This information is of high priority
   STATE_SYSTEM_VALID              = 0x1FFFFFFF
 } SystemState;
+
+/*
+ * From OS/2 2.0 exception handling
+ * Win32 seems to use the same flags as ExceptionFlags in an EXCEPTION_RECORD
+ */
+
+#define EH_NONCONTINUABLE   0x01
+#define EH_UNWINDING        0x02
+#define EH_EXIT_UNWIND      0x04
+#define EH_STACK_INVALID    0x08
+#define EH_NESTED_CALL      0x10
 
 #ifdef __cplusplus
 }

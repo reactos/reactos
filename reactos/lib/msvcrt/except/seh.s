@@ -1,4 +1,4 @@
-/* $Id: seh.s,v 1.3 2002/10/26 09:53:15 dwelch Exp $
+/* $Id: seh.s,v 1.4 2003/04/30 22:07:30 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS MSVCRT Runtime Library
@@ -56,6 +56,7 @@
 
 .globl __local_unwind2
 .globl __except_handler3
+.globl __EH_prolog
 
 // EAX = value to print
 _do_debug:
@@ -363,4 +364,16 @@ _except_finish:
     call    *%eax
 
     // We should never get here
+    ret
+
+// Copied from Wine.
+__EH_prolog:
+    pushl    $-1
+    pushl    %eax
+    pushl    %fs:0
+    movl     %esp, %fs:0
+    movl     12(%esp), %eax
+    movl     %ebp, 12(%esp)
+    leal     12(%esp), %ebp
+    pushl    %eax
     ret

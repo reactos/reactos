@@ -5,6 +5,7 @@ extern HANDLE hHeap;
 
 typedef void (*MSVCRT_new_handler_func)(unsigned long size);
 static MSVCRT_new_handler_func MSVCRT_new_handler;
+static int MSVCRT_new_mode;
 
 /* ??2@YAPAXI@Z (MSVCRT.@) */
 void* MSVCRT_operator_new(unsigned long size)
@@ -25,6 +26,17 @@ void MSVCRT_operator_delete(void *mem)
   HeapFree(GetProcessHeap(), 0, mem);
 }
 
+/* ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z (MSVCRT.@) */
+MSVCRT_new_handler_func MSVCRT__set_new_handler(MSVCRT_new_handler_func func)
+{
+  MSVCRT_new_handler_func old_handler;
+/*  FIXME:  LOCK_HEAP; */
+  old_handler = MSVCRT_new_handler;
+  MSVCRT_new_handler = func;
+/*  FIXME:  UNLOCK_HEAP; */
+  return old_handler;
+}
+
 void* malloc(size_t _size)
 {
    return HeapAlloc(hHeap, HEAP_ZERO_MEMORY, _size);
@@ -43,4 +55,15 @@ void* calloc(size_t _nmemb, size_t _size)
 void* realloc(void* _ptr, size_t _size)
 {
    return HeapReAlloc(hHeap, 0, _ptr, _size);
+}
+
+/* ?_set_new_mode@@YAHH@Z (MSVCRT.@) */
+int MSVCRT__set_new_mode(int mode)
+{
+  int old_mode;
+/*  FIXME:  LOCK_HEAP; */
+  old_mode = MSVCRT_new_mode;
+  MSVCRT_new_mode = mode;
+/*  FIXME:  UNLOCK_HEAP; */
+  return old_mode;
 }

@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.20 2003/04/23 22:58:02 gvg Exp $
+; $Id: msvcrt.def,v 1.21 2003/04/30 22:07:29 gvg Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -21,7 +21,7 @@ EXPORTS
 ; ??1bad_cast@@UAE@XZ
 ; ??1bad_typeid@@UAE@XZ
 ; ??1exception@@UAE@XZ
-; ??1type_info@@UAE@XZ
+??1type_info@@UAE@XZ=MSVCRT_type_info_dtor
 ??2@YAPAXI@Z=MSVCRT_operator_new
 ??_U@YAPAXI@Z=MSVCRT_operator_new
 ??3@YAXPAX@Z=MSVCRT_operator_delete
@@ -46,8 +46,8 @@ EXPORTS
 ; ??_Gexception@@UAEPAXI@Z
 ; ?_query_new_handler@@YAP6AHI@ZXZ
 ; ?_query_new_mode@@YAHXZ
-; ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z
-; ?_set_new_mode@@YAHH@Z
+?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z=MSVCRT__set_new_handler
+?_set_new_mode@@YAHH@Z=MSVCRT__set_new_mode
 ; ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z
 ; ?before@type_info@@QBEHABV1@@Z
 ; ?name@type_info@@QBEPBDXZ
@@ -77,15 +77,15 @@ _CIsinh
 _CIsqrt
 _CItan
 _CItanh
-; _CxxThrowException
-; _EH_prolog
+_CxxThrowException
+_EH_prolog
 ; _Getdays
 ; _Getmonths
 ; _Gettnames
 _HUGE DATA
 ; _Strftime
 _XcptFilter
-; __CxxFrameHandler
+__CxxFrameHandler
 ; __CxxLongjmpUnwind
 ; __RTCastToVoid
 ; __RTDynamicCast
