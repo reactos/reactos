@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.47 2004/02/29 22:01:21 hbirr Exp $
+/* $Id: atapi.c,v 1.48 2004/03/07 19:48:45 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -44,7 +44,7 @@
 #define ENABLE_PCI
 #define ENABLE_NATIVE_PCI
 #define ENABLE_ISA
-//#define ENABLE_DMA
+#define ENABLE_DMA
 
 //  -------------------------------------------------------------------------
 
@@ -222,6 +222,9 @@ static BOOLEAN FASTCALL
 AtapiReadInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
 
 #ifdef ENABLE_DMA
+static BOOLEAN FASTCALL
+AtapiDmaPacketInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
+
 static BOOLEAN FASTCALL
 AtapiDmaInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
 #endif
@@ -493,10 +496,13 @@ AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
 //      ConfigInfo->DmaChannel = SP_UNINITIALIZED_VALUE;
 //      ConfigInfo->DmaPort = SP_UNINITIALIZED_VALUE;
       ConfigInfo->DmaWidth = Width32Bits;
-      ConfigInfo->DmaSpeed = Compatible;
-//      ConfigInfo->ScatterGather = TRUE;
+//      ConfigInfo->DmaSpeed = Compatible;
+      ConfigInfo->ScatterGather = TRUE;
       ConfigInfo->Master = TRUE;
-//      ConfigInfo->NumberOfPhysicalBreaks = 
+      ConfigInfo->NumberOfPhysicalBreaks = 0x10000 / PAGE_SIZE + 1;
+      ConfigInfo->Dma32BitAddresses = TRUE;
+      ConfigInfo->NeedPhysicalAddresses = TRUE;
+      ConfigInfo->MapBuffers = TRUE;
 
       DevExt->PRDMaxCount = PAGE_SIZE / sizeof(PRD);  
       DevExt->PRDTable = ScsiPortGetUncachedExtension(DevExt, ConfigInfo, sizeof(PRD) * DevExt->PRDMaxCount);
@@ -1002,6 +1008,55 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
 //  ----------------------------------------------------  Discardable statics
 
+#ifdef ENABLE_DMA
+static BOOLEAN
+AtapiConfigDma(PATAPI_MINIPORT_EXTENSION DeviceExtension, ULONG UnitNumber)
+{
+  BOOLEAN Result = FALSE;
+  BYTE Status;
+
+  if (UnitNumber < 2)
+    {
+      if (DeviceExtension->PRDTable)
+        {
+          if (DeviceExtension->DeviceParams[UnitNumber].Capabilities & IDE_DRID_DMA_SUPPORTED)
+            {
+              if ((DeviceExtension->DeviceParams[UnitNumber].TMFieldsValid & 0x0004) &&
+                  (DeviceExtension->DeviceParams[UnitNumber].UltraDmaModes & 0x7F00))
+                {
+                  Result = TRUE;
+                }
+              else if (DeviceExtension->DeviceParams[UnitNumber].TMFieldsValid & 0x0002)
+	        {
+	          if ((DeviceExtension->DeviceParams[UnitNumber].MultiDmaModes & 0x0404) == 0x0404)
+	            {
+                      Result = TRUE;	  
+                    }
+#if 0
+                  /* FIXME:
+	           *   should we support single mode dma ?
+	           */
+	          else if ((DeviceExtension->DeviceParams[UnitNumber].DmaModes & 0x0404) == 0x0404)
+	            {
+                      Result = TRUE;		  
+	            }
+#endif
+                }
+              Status = IDEReadDMAStatus(DeviceExtension->BusMasterRegisterBase);
+              if (Result)
+                {
+                  IDEWriteDMAStatus(DeviceExtension->BusMasterRegisterBase, Status | (UnitNumber ? 0x40 : 0x20));
+	        }
+              else
+                {
+                  IDEWriteDMAStatus(DeviceExtension->BusMasterRegisterBase, Status & (UnitNumber ? ~0x40 : ~0x20));
+                }
+	    }
+	}
+    }
+  return Result;
+}
+#endif
 
 /**********************************************************************
  * NAME							INTERNAL
@@ -1111,6 +1166,12 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_ATAPI;
 	      DeviceExtension->TransferSize[UnitNumber] =
 		DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
+#ifdef ENABLE_DMA
+              if (AtapiConfigDma(DeviceExtension, UnitNumber))
+	        {
+		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;		  
+		}
+#endif
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1147,11 +1208,9 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DWORD_IO;
 		}
 #ifdef ENABLE_DMA
-	      if ((DeviceExtension->DeviceParams[UnitNumber].TMFieldsValid & 0x0004) &&
-		  ((DeviceExtension->DeviceParams[UnitNumber].MultiDmaModes & 0x0700) ||
-		   (DeviceExtension->DeviceParams[UnitNumber].UltraDmaModes & 0xFF00)))
+	      if (AtapiConfigDma(DeviceExtension, UnitNumber))
 	        {
-                  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;		  
+		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;		  
 		}
 #endif
 	      DeviceFound = TRUE;
@@ -1636,6 +1695,18 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
 #endif
 
+#ifdef ENABLE_DMA
+  if ((DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_DMA_CMD) &&
+      (Srb->Cdb[0] == SCSIOP_READ || Srb->Cdb[0] == SCSIOP_WRITE))
+    {
+      DeviceExtension->UseDma = AtapiInitDma(DeviceExtension, Srb, Srb->SrbFlags & SRB_FLAGS_DATA_IN ? 1 << 3 : 0);
+    }
+  else
+    {
+      DeviceExtension->UseDma = FALSE;
+    }
+#endif
+
   if (DeviceExtension->DataTransferLength < 0x10000)
     {
       ByteCountLow = (UCHAR)(DeviceExtension->DataTransferLength & 0xFF);
@@ -1648,14 +1719,27 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
 
   /* Set feature register */
+#ifdef ENABLE_DMA
+  IDEWritePrecomp(DeviceExtension->CommandPortBase, DeviceExtension->UseDma ? 1 : 0);
+#else
   IDEWritePrecomp(DeviceExtension->CommandPortBase, 0);
+#endif
 
   /* Set command packet length */
   IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, ByteCountHigh);
   IDEWriteCylinderLow(DeviceExtension->CommandPortBase, ByteCountLow);
 
   /* Issue command to drive */
-  AtapiExecuteCommand(DeviceExtension, IDE_CMD_PACKET, AtapiPacketInterrupt);
+#ifdef ENABLE_DMA
+  if (DeviceExtension->UseDma)
+    {
+      AtapiExecuteCommand(DeviceExtension, IDE_CMD_PACKET, AtapiDmaPacketInterrupt);
+    }
+  else
+#endif
+    {
+      AtapiExecuteCommand(DeviceExtension, IDE_CMD_PACKET, AtapiPacketInterrupt);
+    }
 
   /* Wait for DRQ to assert */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
@@ -1685,6 +1769,15 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		(PUSHORT)Srb->Cdb,
 		CdbSize);
 
+#ifdef ENABLE_DMA
+  if (DeviceExtension->UseDma)
+    {
+      BYTE DmaCommand;
+      /* start DMA */
+      DmaCommand = IDEReadDMACommand(DeviceExtension->BusMasterRegisterBase);
+      IDEWriteDMACommand(DeviceExtension->BusMasterRegisterBase, DmaCommand|0x01);
+    }
+#endif
   DPRINT("AtapiSendAtapiCommand() done\n");
 
   return(SRB_STATUS_PENDING);
@@ -1837,6 +1930,8 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	((PUCHAR)DeviceParams->FirmwareRev)[i+1];
     }
 
+  InquiryData->AdditionalLength = 31;
+  
   DPRINT("VendorId: '%.20s'\n", InquiryData->VendorId);
 
   Srb->SrbStatus = SRB_STATUS_SUCCESS;
@@ -2453,6 +2548,60 @@ AtapiCompleteRequest(PATAPI_MINIPORT_EXTENSION DevExt,
   ScsiPortNotification(NextRequest, (PVOID)DevExt, NULL);
 }
 
+#ifdef ENABLE_DMA
+static BOOLEAN FASTCALL
+AtapiDmaPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
+{
+  BYTE SrbStatus;
+  BYTE DmaCommand;
+  BYTE DmaStatus;
+  BYTE Status;
+  BYTE Error;
+  BYTE SensKey;
+
+  DPRINT("AtapiPacketDmaInterrupt\n");
+
+  DevExt->UseDma = FALSE;
+
+  /* stop DMA */
+  DmaCommand = IDEReadDMACommand(DevExt->BusMasterRegisterBase);
+  IDEWriteDMACommand(DevExt->BusMasterRegisterBase, DmaCommand & 0xfe);
+  /* get DMA status */
+  DmaStatus = IDEReadDMAStatus(DevExt->BusMasterRegisterBase);
+  /* clear the INTR & ERROR bits */
+  IDEWriteDMAStatus(DevExt->BusMasterRegisterBase, DmaStatus | 0x06);
+
+  Status = IDEReadStatus(DevExt->CommandPortBase);
+  DPRINT("DriveStatus: %x\n", Status);
+
+  if (Status & (IDE_SR_BUSY|IDE_SR_ERR))
+    {
+      if (Status & IDE_SR_ERR)
+        {
+	  Error = IDEReadError(DevExt->CommandPortBase);
+	  SensKey = Error >> 4;
+	  DPRINT("DriveError: %x, SenseKey: %x\n", Error, SensKey);
+	}
+      SrbStatus = SRB_STATUS_ERROR;
+    }
+  else
+    {
+      if ((DmaStatus & 0x07) != 0x04)
+        {
+          DPRINT("DmaStatus: %02x\n", DmaStatus);
+          SrbStatus = SRB_STATUS_ERROR;
+	}
+      else
+        {
+	  SrbStatus = STATUS_SUCCESS;
+	}
+    }
+  AtapiCompleteRequest(DevExt, SrbStatus);
+  DPRINT("AtapiDmaPacketInterrupt() done\n");
+  return TRUE;
+}
+#endif
+
 static BOOLEAN FASTCALL 
 AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 {
@@ -2460,7 +2609,7 @@ AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
   BYTE Status;
   BYTE IntReason;
   ULONG TransferSize;
-  ULONG JunkSize;
+  ULONG JunkSize = 0;
   BOOL IsLastBlock;
   PBYTE TargetAddress;
   ULONG Retries;
@@ -2874,9 +3023,6 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
   /* set the end marker in the last PRD */
   PRDEntry--;
   PRDEntry->Length |= 0x80000000;
-  /* enable the busmaster transfers for the drive */
-  Status = IDEReadDMAStatus(DevExt->BusMasterRegisterBase);
-  IDEWriteDMAStatus(DevExt->BusMasterRegisterBase, (Status & ~0x06) | (Srb->TargetId ? 0x40 : 0x20));
   /* set the PDR table */
   IDEWritePRDTable(DevExt->BusMasterRegisterBase, DevExt->PRDTablePhysicalAddress.u.LowPart);
   /* write the DMA command */
