@@ -1356,7 +1356,7 @@ BOOL STDCALL AllocConsole(VOID)
 	return FALSE;	 
    }
 
-   Request.Data.AllocConsoleRequest.CtrlDispatcher = (PCONTROLDISPATCHER) &ConsoleControlDispatcher;
+   Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
 
    Request.Type = CSRSS_ALLOC_CONSOLE;
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
