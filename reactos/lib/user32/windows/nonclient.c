@@ -299,7 +299,7 @@ DefWndRedrawIconTitle(HWND hWnd)
    {
       if (lpPos->IconTitle != NULL)
       {
-         SendMessageA(lpPos->IconTitle, WM_SHOWWINDOW, TRUE, 0);
+         SendMessageW(lpPos->IconTitle, WM_SHOWWINDOW, TRUE, 0);
          InvalidateRect(lpPos->IconTitle, NULL, TRUE);
          return TRUE;
       }
@@ -795,7 +795,7 @@ DefWndDoScrollBarDown(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   if(hit)
     DPRINT("SCROLL_HitTest() == 0x%x\n", hit);
   
-  SendMessageA(hWnd, WM_SYSCOMMAND, Msg + (UINT)wParam, lParam);
+  SendMessageW(hWnd, WM_SYSCOMMAND, Msg + (UINT)wParam, lParam);
 }
 
 VOID
@@ -874,7 +874,7 @@ done:
   UserDrawCaptionButtonWnd( hWnd, WindowDC, FALSE , Btn);
   ReleaseDC(hWnd, WindowDC);
   ReleaseCapture();
-  SendMessageA(hWnd, WM_SYSCOMMAND, SCMsg, 0);
+  SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, 0);
   return;
 }
 
@@ -889,7 +889,7 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	        HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
 	        if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
 	        {
-	            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
+	            SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
 	        }
 	        break;
         }
@@ -903,26 +903,26 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
 //		  UserDrawSysMenuButton(hWnd, hDC, TRUE);
 		  ReleaseDC(hWnd, hDC);
 		}
-	      SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
+	      SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
 			   lParam);
 	    }
 	  break;
         }
         case HTMENU:
         {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTMENU, lParam);
+            SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTMENU, lParam);
             break;
         }
         case HTHSCROLL:
         {
             DefWndDoScrollBarDown(hWnd, SC_HSCROLL, HTHSCROLL, lParam);
-            //SendMessageA(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
+            //SendMessageW(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
             break;
         }
         case HTVSCROLL:
         {
             DefWndDoScrollBarDown(hWnd, SC_VSCROLL, HTVSCROLL, lParam);
-            //SendMessageA(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
+            //SendMessageW(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
             break;
         }
         case HTMINBUTTON:
@@ -941,7 +941,7 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case HTBOTTOMLEFT:
         case HTBOTTOMRIGHT:
         {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
+            SendMessageW(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
             break;
         }
     }
@@ -952,8 +952,19 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
 LRESULT
 DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-   UNIMPLEMENTED;
-   return(0);
+  ULONG Style;
+  
+  Style = GetWindowLongW(hWnd, GWL_STYLE);
+  switch(wParam)
+  {
+    case HTCAPTION:
+    {
+      /* Maximize/Restore the window */
+      SendMessageW(hWnd, WM_SYSCOMMAND, ((Style & (WS_MINIMIZE | WS_MAXIMIZE)) ? SC_RESTORE : SC_MAXIMIZE), 0);
+      break;
+    }
+  }
+  return(0);
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
