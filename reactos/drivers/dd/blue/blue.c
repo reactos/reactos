@@ -1,8 +1,8 @@
 
-#undef WIN32_LEAN_AND_MEAN
 #include <internal/mmhal.h>
 #include <internal/halio.h>
 #include <ddk/ntddk.h>
+#include <string.h>
 #include <internal/string.h>
 #include <defines.h>
 

@@ -72,6 +72,7 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 //  -------------------------------------------------------------------------
 
 #include <internal/i386/io.h>
+#include <string.h>
 #include <internal/string.h>
 
 #define NDEBUG
