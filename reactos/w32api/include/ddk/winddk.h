@@ -7114,14 +7114,11 @@ KeAcquireSpinLock(
   OUT PKIRQL  OldIrql);
 
 /* System Service Dispatch Table */
-typedef struct _SSDT {
-  ULONG  SysCallPtr;
-} SSDT, *PSSDT;
+typedef PVOID (NTAPI * SSDT)(VOID);
+typedef SSDT * PSSDT;
 
 /* System Service Parameters Table */
-typedef struct _SSPT {
-  ULONG  ParamBytes;
-} SSPT, *PSSPT;
+typedef UCHAR SSPT, * PSSPT;
 
 typedef struct _SSDT_ENTRY {
 	PSSDT  SSDT;

@@ -9,27 +9,20 @@
 
 #ifndef __USE_W32API
 
-#pragma pack(1)
-
 /* System Service Dispatch Table */
-typedef struct t_SSDT {
-                ULONG           SysCallPtr;
-} SSDT, *PSSDT;
+typedef PVOID (NTAPI * SSDT)(VOID);
+typedef SSDT * PSSDT;
 
 /* System Service Parameters Table */
-typedef struct t_SSPT   {
-                unsigned int    ParamBytes;
-} SSPT, *PSSPT;
+typedef UCHAR SSPT, *PSSPT;
 
 typedef struct t_KeServiceDescriptorTableEntry {
                 PSSDT               SSDT;
                 PULONG              ServiceCounterTable;
-                unsigned int        NumberOfServices;
+                ULONG               NumberOfServices;
                 PSSPT               SSPT;
 
 } SSDT_ENTRY, *PSSDT_ENTRY;
-
-#pragma pack()
 
 #endif /* __USE_W32API */
 
