@@ -1,5 +1,5 @@
-
-/*
+/* $Id: namespc.c,v 1.22 2001/05/04 21:44:21 ea Exp $
+ *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/ob/namespc.c

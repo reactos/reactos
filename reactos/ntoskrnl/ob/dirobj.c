@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.10 2001/05/01 21:43:45 ea Exp $
+/* $Id: dirobj.c,v 1.11 2001/05/04 21:44:21 ea Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -171,12 +171,19 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
      * and the size of the array (in bytes).
      * One more entry marks the end of the array.
      */
-    for (	current_entry = dir->head.Flink;
-		(current_entry != & dir->head);
-		current_entry = current_entry->Flink
-		)
+    if (FALSE == ReturnSingleEntry)
     {
-	    ++ DirectoryCount;
+        for ( current_entry = dir->head.Flink;
+              (current_entry != & dir->head);
+              current_entry = current_entry->Flink
+              )
+        {
+          ++ DirectoryCount;
+        }
+    }
+    else
+    {
+	DirectorySize = 1;
     }
     DirectorySize = (DirectoryCount + 1) * sizeof (OBJDIR_INFORMATION);
     if (DirectorySize >= SpaceLeft)
@@ -196,7 +203,7 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
 	CHECKPOINT;
 	
 	for (	;
-		((EntriesToSkip ++) && (current_entry != & dir->head));
+		((EntriesToSkip --) && (current_entry != & dir->head));
 	        current_entry = current_entry->Flink
 		);
 	if ((EntriesToSkip) && (current_entry == & dir->head))
@@ -281,7 +288,7 @@ NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
     /*
      * Store current index in ObjectIndex
      */
-    *ObjectIndex = i;
+    *ObjectIndex += DirectoryCount;
     /*
      * Report to the caller how much bytes
      * we wrote in the user buffer.
