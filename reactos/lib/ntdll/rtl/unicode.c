@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.28 2003/05/28 18:09:10 chorns Exp $
+/* $Id: unicode.c,v 1.29 2003/07/09 20:13:56 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -184,24 +184,13 @@ RtlAppendUnicodeStringToString(
 	IN OUT	PUNICODE_STRING	Destination,
 	IN	PUNICODE_STRING	Source)
 {
-	PWCHAR Src;
-	PWCHAR Dest;
-	ULONG  i;
 
 	if ((Source->Length + Destination->Length) >= Destination->MaximumLength)
 		return STATUS_BUFFER_TOO_SMALL;
 
-	Src  = Source->Buffer;
-	Dest = Destination->Buffer + (Destination->Length / sizeof (WCHAR));
-	for (i = 0; i < (Source->Length / sizeof(WCHAR)); i++)
-	{
-		*Dest = *Src;
-		Dest++;
-		Src++;
-	}
-	*Dest = 0;
-
-	Destination->Length += Source->Length;
+	memcpy((PVOID)Destination->Buffer + Destination->Length, Source->Buffer, Source->Length);
+        Destination->Length += Source->Length;
+	Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
 
 	return STATUS_SUCCESS;
 }
@@ -211,9 +200,6 @@ NTSTATUS STDCALL
 RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
 			 IN PWSTR Source)
 {
-  PWCHAR Src;
-  PWCHAR Dest;
-  ULONG i;
   ULONG slen;
 
   slen = wcslen(Source) * sizeof(WCHAR);
@@ -221,18 +207,9 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
   if (Destination->Length + slen >= Destination->MaximumLength)
     return(STATUS_BUFFER_TOO_SMALL);
 
-  Src = Source;
-  Dest = Destination->Buffer + (Destination->Length / sizeof(WCHAR));
-
-  for (i = 0; i < (slen / sizeof(WCHAR)); i++)
-    {
-      *Dest = *Src;
-      Dest++;
-      Src++;
-    }
-  *Dest = 0;
-
+  memcpy((PVOID)Destination->Buffer + Destination->Length, Source, slen);
   Destination->Length += slen;
+  Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
 
   return(STATUS_SUCCESS);
 }
@@ -379,8 +356,7 @@ RtlCopyString(
 	IN OUT	PSTRING	DestinationString,
 	IN	PSTRING	SourceString)
 {
-	ULONG copylen, i;
-	PCHAR Src, Dest;
+	ULONG copylen;
 
 	if (SourceString == NULL)
 	{
@@ -390,18 +366,9 @@ RtlCopyString(
 
 	copylen = min (DestinationString->MaximumLength - sizeof(CHAR),
 	               SourceString->Length);
-	Src = SourceString->Buffer;
-	Dest = DestinationString->Buffer;
-
-	for (i = 0; i < copylen; i++)
-	{
-		*Dest = *Src;
-		Dest++;
-		Src++;
-	}
-	*Dest = 0;
-
+	memcpy(DestinationString->Buffer, SourceString->Buffer, copylen);
 	DestinationString->Length = copylen;
+	DestinationString->Buffer[copylen] = 0;
 }
 
 
@@ -411,8 +378,7 @@ RtlCopyUnicodeString(
 	IN OUT	PUNICODE_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString)
 {
-	ULONG copylen, i;
-	PWCHAR Src, Dest;
+	ULONG copylen;
 
 	if (SourceString == NULL)
 	{
@@ -422,17 +388,8 @@ RtlCopyUnicodeString(
 
 	copylen = min (DestinationString->MaximumLength - sizeof(WCHAR),
 	               SourceString->Length);
-	Src = SourceString->Buffer;
-	Dest = DestinationString->Buffer;
-
-	for (i = 0; i < (copylen / sizeof (WCHAR)); i++)
-	{
-		*Dest = *Src;
-		Dest++;
-		Src++;
-	}
-	*Dest = 0;
-
+	memcpy(DestinationString->Buffer, SourceString->Buffer, copylen);
+	DestinationString->Buffer[copylen / sizeof(WCHAR)] = 0;
 	DestinationString->Length = copylen;
 }
 
