@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.50 2003/12/21 10:27:10 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.51 2003/12/23 19:22:17 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -832,6 +832,11 @@ BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
   BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
   BOOL UsesPattern = ((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);  
 
+  if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
   DCDest = DC_LockDc(hDCDest);
   if (NULL == DCDest)
     {
