@@ -109,7 +109,7 @@ rpcrt4 # needed to make rcprt4 implib
 # winmm ddraw dinput dplay serialui tapi32 urlmon wintrust 
 # msinfo lzexpand (missing imports)
 
-WINE_PROGS = control expand osversioncheck regedit regsrv32 winver uninstaller
+WINE_PROGS = control expand osversioncheck regedit regsvr32 winver uninstaller
 # (waiting on wrc fix for the rest of these)
 # clock cmdlgtst  notepad  progman wcmd  
 # winefile winemine winetest uninstaller
