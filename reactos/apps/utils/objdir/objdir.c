@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.13 2003/11/11 17:00:41 ekohl Exp $
+/* $Id: objdir.c,v 1.14 2004/08/05 12:11:49 ea Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -79,6 +79,8 @@ StatusToName (NTSTATUS Status)
 			return "STATUS_PATH_SYNTAX_BAD";
 		case STATUS_NO_MORE_ENTRIES:
 			return "STATUS_NO_MORE_ENTRIES";
+		case STATUS_ACCESS_DENIED:
+			return "STATUS_ACCESS_DENIED";
 		case STATUS_UNSUCCESSFUL:
 			return "STATUS_UNSUCCESSFUL";
 	}
