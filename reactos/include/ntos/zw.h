@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.3 2002/11/15 21:56:37 chorns Exp $
+/* $Id: zw.h,v 1.4 2002/11/15 23:26:15 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
