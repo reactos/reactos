@@ -142,7 +142,7 @@ crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def
 	           --output-exp temp.exp --def crtdll.def
 	- $(RM) base.tmp
 	$(CC) -specs=crt_specs -mdll -o crtdll.dll crtdll.o  \
-	       ../kernel32/kernel32.a 
+	       ../kernel32/kernel32.a \
 	      -Wl,--image-base,0x20000000 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
