@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.75 2004/02/29 11:34:42 navaraf Exp $
+ *  $Id: painting.c,v 1.76 2004/03/13 17:33:53 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -113,6 +113,10 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
               IntValidateParent(Window, Window->NCUpdateRegion);
             }
           TempRegion = Window->NCUpdateRegion;
+          if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
+            {
+              GDIOBJ_SetOwnership(TempRegion, PsGetCurrentProcess());
+            }
           Window->NCUpdateRegion = NULL;
           Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
           MsqDecPaintCountQueue(Window->MessageQueue);
@@ -246,11 +250,13 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       if (Window->UpdateRegion == NULL)
       {
          Window->UpdateRegion = NtGdiCreateRectRgn(0, 0, 0, 0);
+         GDIOBJ_SetOwnership(Window->UpdateRegion, NULL);
       }
 
       if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
           hRgn, RGN_OR) == NULLREGION)
       {
+         GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
          NtGdiDeleteObject(Window->UpdateRegion);
          Window->UpdateRegion = NULL;
       }
@@ -270,6 +276,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
          if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
              hRgn, RGN_DIFF) == NULLREGION)
          {
+            GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
             NtGdiDeleteObject(Window->UpdateRegion);
             Window->UpdateRegion = NULL;
          }
@@ -306,9 +313,11 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
          -Window->WindowRect.top);
 
       hRgnNonClient = NtGdiCreateRectRgn(0, 0, 0, 0);
+      GDIOBJ_SetOwnership(hRgnNonClient, NULL);
       if (NtGdiCombineRgn(hRgnNonClient, Window->UpdateRegion,
           hRgnWindow, RGN_DIFF) == NULLREGION)
       {
+         GDIOBJ_SetOwnership(hRgnNonClient, PsGetCurrentProcess());
          NtGdiDeleteObject(hRgnNonClient);
          hRgnNonClient = NULL;
       }
@@ -320,6 +329,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
           hRgnWindow, RGN_AND) == NULLREGION)
       {
+         GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
          NtGdiDeleteObject(Window->UpdateRegion);
          Window->UpdateRegion = NULL;
       }
@@ -332,7 +342,11 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       {
          NtGdiCombineRgn(Window->NCUpdateRegion, Window->NCUpdateRegion,
             hRgnNonClient, RGN_OR);
-         NtGdiDeleteObject(hRgnNonClient);
+         if (NULL != hRgnNonClient)
+         {
+            GDIOBJ_SetOwnership(hRgnNonClient, PsGetCurrentProcess());
+            NtGdiDeleteObject(hRgnNonClient);
+         }
       }
 
       NtGdiDeleteObject(hRgnWindow);
@@ -736,6 +750,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
       NtGdiOffsetRect(&lPs->rcPaint,
          Window->WindowRect.left - Window->ClientRect.left,
          Window->WindowRect.top - Window->ClientRect.top);
+      GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
       NtGdiDeleteObject(Window->UpdateRegion);
       Window->UpdateRegion = NULL;
    }
