@@ -816,8 +816,10 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
   PSYMBOLFILE_HEADER SymbolFileHeader;
   PIMAGE_SYMBOL_INFO_CACHE CachedSymbolFile;
 
+#ifdef KDBG
   /* Allow KDB to break on module load */
   KdbModuleLoaded(FileName);
+#endif
 
   /*  Get the path to the symbol store  */
   wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
