@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.41 2000/03/08 01:55:34 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.42 2000/03/08 21:23:13 jfilby Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -388,6 +388,7 @@ RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize=RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize=RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize=RtlxUnicodeStringToOemSize@4
+LdrLoadModule=LdrLoadModule
 WRITE_REGISTER_UCHAR
 WRITE_REGISTER_ULONG
 WRITE_REGISTER_USHORT

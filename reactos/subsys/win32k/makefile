@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 1999/11/12 00:16:51 rex Exp $
+# $Id: makefile,v 1.16 2000/03/08 21:23:13 jfilby Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -10,6 +10,7 @@ BASE_CFLAGS = -I../../include
 ENG_OBJECTS= eng/debug.o eng/mem.o
 MAIN_OBJECTS = main/dllmain.o
 MISC_OBJECTS = misc/driver.o
+LDR_OBJECTS = ldr/loader.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \
                   objects/fillshap.o objects/gdiobj.o objects/icm.o  \
@@ -19,7 +20,7 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
 RESOURCE_OBJECT = $(TARGET).coff
 STUBS_OBJECTS = stubs/stubs.o
 
-OBJECTS = $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)  \
+OBJECTS = $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) $(OBJECTS_OBJECTS)  \
           $(RESOURCE_OBJECT) $(STUBS_OBJECTS) 
 
 all: $(TARGET).sys
@@ -27,11 +28,11 @@ all: $(TARGET).sys
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = eng\*.o main\*.o misc\*.o stubs\*.o objects\*.o  \
+CLEAN_FILES = eng\*.o main\*.o misc\*.o ldr\*.o stubs\*.o objects\*.o  \
               $(TARGET).coff $(TARGET).o $(TARGET).a  \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 else
-CLEAN_FILES = eng/*.o main/*.o misc/*.o stubs/*.o objects/*.o  \
+CLEAN_FILES = eng/*.o main/*.o ldr\*.o misc/*.o stubs/*.o objects/*.o  \
               $(TARGET).coff $(TARGET).o $(TARGET).a  \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 endif

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.54 2000/03/08 01:55:34 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.55 2000/03/08 21:23:13 jfilby Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -462,6 +462,7 @@ RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize@4
+LdrLoadModule
 WRITE_REGISTER_UCHAR
 WRITE_REGISTER_ULONG
 WRITE_REGISTER_USHORT

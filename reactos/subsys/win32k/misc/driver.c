@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.7 2000/03/01 03:23:42 ekohl Exp $
+/* $Id: driver.c,v 1.8 2000/03/08 21:23:14 jfilby Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -6,10 +6,14 @@
  */
 
 #undef WIN32_LEAN_AND_MEAN
+#define WIN32_NO_PEHDR
+
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <win32k/driver.h>
 #include <wchar.h>
+#include <internal/module.h>
+#include <ddk/winddi.h>
 
 //#define NDEBUG
 #include <internal/debug.h>
@@ -58,8 +62,12 @@ BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 
 PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
 {
+  UNICODE_STRING DriverNameW;
+  NTSTATUS Status;
+  PMODULE_OBJECT ModuleObject;
   GRAPHICS_DRIVER *Driver = DriverList;
-  
+
+  /* First see if the driver hasn't already been loaded */
   while (Driver && Name)
     {
       if (!_wcsicmp( Driver->Name, Name)) 
@@ -68,8 +76,11 @@ PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
         }
       Driver = Driver->Next;
     }
-  
-  return  GenericDriver ? GenericDriver->EnableDriver : NULL;
+
+  /* If not, then load it */
+  RtlInitUnicodeString (&DriverNameW, Name);
+  ModuleObject = EngLoadImage(&DriverNameW);
+  return (PGD_ENABLEDRIVER)ModuleObject->EntryPoint;
 }
 
 BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 

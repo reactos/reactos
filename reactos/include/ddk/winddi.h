@@ -924,6 +924,8 @@ VOID  APIENTRY  EngDebugPrint(PCHAR  StandardPrefix,
                               PCHAR  DebugMessage,
                               va_list  ArgList);
 
+HANDLE EngLoadImage(LPWSTR DriverName);
+
 /*
 EngDeleteClip
 EngDeleteDriverObj
