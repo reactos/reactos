@@ -11,6 +11,8 @@ extern POBJECT_TYPE	PsThreadType;
 extern POBJECT_TYPE	PsProcessType;
 extern PETHREAD		CurrentThread;
 
+VOID PiInitProcessManager(VOID);
+VOID PiShutdownProcessManager(VOID);
 VOID PsInitThreadManagment(VOID);
 VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
@@ -20,6 +22,8 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
 VOID PsReleaseThread(PETHREAD Thread);
 VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
 VOID PsBeginThreadWithContextInternal(VOID);
+VOID PiKillMostProcesses(VOID);
+NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus);
 
 #define THREAD_STATE_INVALID    (0)
 #define THREAD_STATE_RUNNABLE   (1)

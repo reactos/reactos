@@ -65,7 +65,7 @@ typedef struct _KTIMER
     LIST_ENTRY TimerListEntry;
     struct _KDPC* Dpc;
     LONG Period;
- } KTIMER, *PKTIMER;
+} KTIMER, *PKTIMER;
 
 /*
 typedef struct _KTIMER
@@ -124,7 +124,7 @@ typedef struct
    UCHAR State;
 } KBUGCHECK_CALLBACK_RECORD, *PKBUGCHECK_CALLBACK_RECORD;
    
-typedef struct
+typedef struct _KMUTEX
 {
    DISPATCHER_HEADER Header;
    LIST_ENTRY MutantListEntry;

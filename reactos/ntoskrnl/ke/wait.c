@@ -179,7 +179,8 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 	
 	KiSideEffectsBeforeWake(hdr);
 	
-	PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
+	PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb),
+		       NULL);
      };
    return(TRUE);
 }
@@ -244,7 +245,8 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
    
    KiSideEffectsBeforeWake(hdr);
    
-   PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
+   PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb),
+		  NULL);
    return(TRUE);
 }
 
@@ -325,12 +327,19 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
    DISPATCHER_HEADER* hdr = (DISPATCHER_HEADER *)Object;
    KWAIT_BLOCK blk;
    PKTHREAD CurrentThread;
-
+   NTSTATUS Status;
+   
    DPRINT("Entering KeWaitForSingleObject(Object %x) "
 	  "PsGetCurrentThread() %x\n",Object,PsGetCurrentThread());
 
    CurrentThread = KeGetCurrentThread();
-
+   
+   if (Alertable && !IsListEmpty(&CurrentThread->ApcState.ApcListHead[1]))
+     {
+	DPRINT("Thread is alertable and user APCs are pending\n");
+	return(STATUS_USER_APC);
+     }
+   
    KeAcquireDispatcherDatabaseLock(FALSE);
 
    DPRINT("hdr->SignalState %d\n", hdr->SignalState);
@@ -360,7 +369,10 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
    KeReleaseDispatcherDatabaseLock(FALSE);
    DPRINT("Waiting at %s:%d with irql %d\n", __FILE__, __LINE__, 
 	  KeGetCurrentIrql());
-   PsSuspendThread(PsGetCurrentThread());
+   PsSuspendThread(PsGetCurrentThread(),
+		   &Status,
+		   (UCHAR)Alertable,
+		   WaitMode);
    
    if (Timeout != NULL)
      {
@@ -368,8 +380,16 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
         if (KeReadStateTimer(&KeGetCurrentThread()->Timer))
             return(STATUS_TIMEOUT);
      }
+   
+   if (Alertable &&
+       !IsListEmpty(&CurrentThread->ApcState.ApcListHead[1]))
+     {
+	DPRINT("Current thread is alertable and APCs are pending\n");
+	return(STATUS_USER_APC);
+     }
+   
    DPRINT("Returning from KeWaitForSingleObject()\n");
-   return(STATUS_WAIT_0);
+   return(Status);
 }
 
 
@@ -382,12 +402,13 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 				  PLARGE_INTEGER Timeout,
 				  PKWAIT_BLOCK WaitBlockArray)
 {
-    DISPATCHER_HEADER* hdr;
-    PKWAIT_BLOCK blk;
-    PKTHREAD CurrentThread;
-    ULONG CountSignaled;
-    ULONG i;
-
+   DISPATCHER_HEADER* hdr;
+   PKWAIT_BLOCK blk;
+   PKTHREAD CurrentThread;
+   ULONG CountSignaled;
+   ULONG i;
+   NTSTATUS Status;
+   
     DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
     "PsGetCurrentThread() %x\n",Count,Object,PsGetCurrentThread());
 
@@ -479,7 +500,10 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 
     DPRINT("Waiting at %s:%d with irql %d\n", __FILE__, __LINE__, 
            KeGetCurrentIrql());
-    PsSuspendThread(PsGetCurrentThread());
+    PsSuspendThread(PsGetCurrentThread(),
+		    &Status,
+		    Alertable,
+		    WaitMode);
    
     if (Timeout != NULL)
     {
@@ -499,7 +523,7 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
         }
     }
 
-    return(STATUS_WAIT_0);
+    return(Status);
 }
 
 VOID KeInitializeDispatcher(VOID)
@@ -592,6 +616,8 @@ NTSTATUS STDCALL NtWaitForSingleObject (IN	HANDLE		Object,
 				  Time);
    
    ObDereferenceObject(ObjectPtr);
+   
+   va_end(ap);
    
    return(Status);
 }

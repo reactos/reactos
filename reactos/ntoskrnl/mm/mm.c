@@ -59,6 +59,10 @@ static KSPIN_LOCK MiPageFaultLock;
 
 /* FUNCTIONS ****************************************************************/
 
+VOID MiShutdownMemoryManager(VOID)
+{
+}
+
 VOID MmInitVirtualMemory(boot_param* bp)
 /*
  * FUNCTION: Intialize the memory areas list
@@ -137,22 +141,40 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
    
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
 	  MemoryArea,Address);
-   
-   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-   MmBuildMdlFromPages(Mdl);
-     
-   Page = MmGetMdlPageAddress(Mdl, 0);
-   
+      
    Offset.QuadPart = (Address - MemoryArea->BaseAddress) + 
      MemoryArea->Data.SectionData.ViewOffset;
    
    DPRINT("MemoryArea->Data.SectionData.Section->FileObject %x\n",
 	    MemoryArea->Data.SectionData.Section->FileObject);
+   DPRINT("MemoryArea->Data.SectionData.ViewOffset %x\n",
+	  MemoryArea->Data.SectionData.ViewOffset);
+   DPRINT("Offset.QuadPart %x\n", (ULONG)Offset.QuadPart);
+   DPRINT("MemoryArea->BaseAddress %x\n", MemoryArea->BaseAddress);
    
    if (MemoryArea->Data.SectionData.Section->FileObject == NULL)
      {
-	return(STATUS_UNSUCCESSFUL);
+	ULONG Page;
+	
+	Page = MiTryToSharePageInSection(MemoryArea->Data.SectionData.Section,
+					 (ULONG)Offset.QuadPart);
+	
+	if (Page == 0)
+	  {
+	     Page = (ULONG)MmAllocPage();
+	  }
+	
+	MmSetPage(PsGetCurrentProcess(),
+		  Address,
+		  MemoryArea->Attributes,
+		  Page);
+	return(STATUS_SUCCESS);
      }
+   
+   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+   MmBuildMdlFromPages(Mdl);
+     
+   Page = MmGetMdlPageAddress(Mdl, 0);
    
    IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
 	      Mdl,

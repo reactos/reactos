@@ -18,15 +18,23 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static unsigned int MinixGetBlock(PMINIX_DEVICE_EXTENSION DeviceExt,
+static unsigned int MinixGetBlock(PDEVICE_OBJECT DeviceObject,
+				  PMINIX_DEVICE_EXTENSION DeviceExt,
 				  struct minix_inode* inode, 
-				  int blk)
+				  ULONG FileOffset)
 {
    int block;
-   PCCB Ccb;
+   PVOID BaseAddress;
+   PCACHE_SEGMENT CacheSeg;
+   ULONG blk;
    
    DPRINT("MinixGetBlock(inode %x, blk %d)\n",inode,blk);
    
+   blk = FileOffset / BLOCKSIZE;
+   
+   /*
+    * The first few blocks are available in the inode
+    */
    if (blk < 7)
      {
 	block = inode->i_zone[blk];
@@ -34,43 +42,76 @@ static unsigned int MinixGetBlock(PMINIX_DEVICE_EXTENSION DeviceExt,
      }
    blk = blk - 7;
    
+   /*
+    * Retrieve a single-indirect block
+    */
    if (blk < 512)
      {
 	block = inode->i_zone[7];
-	Ccb = CbAcquireForRead(&DeviceExt->Dccb,block);
-	block = ((PUSHORT)Ccb->Buffer)[blk];
-	CbReleaseFromRead(&DeviceExt->Dccb,Ccb);
+	
+	MinixRequestCacheBlock(DeviceObject,
+			       DeviceExt->Bcb,
+			       block * BLOCKSIZE,
+			       &BaseAddress,
+			       &CacheSeg);
+			       
+	block = ((PUSHORT)BaseAddress)[blk];
+
+	CcReleaseCachePage(DeviceExt->Bcb,
+			   CacheSeg,
+			   TRUE);
+	
 	return(block);
      }
+   
+   /*
+    * Get a double indirect block
+    */
    blk = blk - 512;
    block = inode->i_zone[8];
+
+   MinixRequestCacheBlock(DeviceObject,
+			  DeviceExt->Bcb,
+			  block * BLOCKSIZE,
+			  &BaseAddress,
+			  &CacheSeg);
    
-   Ccb = CbAcquireForRead(&DeviceExt->Dccb,block);
-   block = ((PUSHORT)Ccb->Buffer)[(blk>>9)&511];
-   CbReleaseFromRead(&DeviceExt->Dccb,Ccb);
+   block = ((PUSHORT)BaseAddress)[(blk>>9)&511];
+
+   CcReleaseCachePage(DeviceExt->Bcb,
+		      CacheSeg,
+		      TRUE);
    
-   Ccb = CbAcquireForRead(&DeviceExt->Dccb,block);
-   block = ((PUSHORT)Ccb->Buffer)[blk&512];
-   CbReleaseFromRead(&DeviceExt->Dccb,Ccb);
+   MinixRequestCacheBlock(DeviceObject,
+			  DeviceExt->Bcb,
+			  block * BLOCKSIZE,
+			  &BaseAddress,
+			  &CacheSeg);
+   
+   block = ((PUSHORT)BaseAddress)[blk&512];
+
+   CcReleaseCachePage(DeviceExt->Bcb,
+		      CacheSeg,
+		      TRUE);
+
    
    return(block);
 }
 
-NTSTATUS MinixReadBlock(PMINIX_DEVICE_EXTENSION DeviceExt,
+NTSTATUS MinixReadBlock(PDEVICE_OBJECT DeviceObject,
+			PMINIX_DEVICE_EXTENSION DeviceExt,
 			struct minix_inode* inode, 
-			int blk,
-			PCCB* Ccb)
+			ULONG FileOffset,
+			PULONG DiskOffset)
 {
    unsigned int block;
+   NTSTATUS Status;
    
-   DPRINT("DeviceExt %x\n",DeviceExt);
-   DPRINT("inode %x\n",inode);
-   DPRINT("blk %d\n",blk);
-   DPRINT("Ccb %x\n",Ccb);
-   DPRINT("MinixReadBlock(DeviceExt %x, inode %x, blk %d, Ccb %x)\n",
-	  DeviceExt,inode,blk,Ccb);
+   DPRINT("MinixReadBlock()\n");
    
-   block = MinixGetBlock(DeviceExt,inode,blk);
-   (*Ccb) = CbAcquireForRead(&DeviceExt->Dccb,block);
+   block = MinixGetBlock(DeviceObject, DeviceExt,inode, FileOffset);
+   
+   (*DiskOffset) = block * BLOCKSIZE;
+
    return(STATUS_SUCCESS);
 }

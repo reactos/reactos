@@ -1,8 +1,8 @@
 BASE_CFLAGS = -I../../../include
 
-all: minix.sys
+all: minixfs.sys
 
-OBJECTS = block.o rw.o inode.o dir.o mount.o blockdev.o \
+OBJECTS = block.o rw.o inode.o dir.o mount.o blockdev.o cache.o \
           ../../../ntoskrnl/ntoskrnl.a 
 
 .phony: all
@@ -18,23 +18,23 @@ clean:
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
-	- $(RM) minix.sys
+	- $(RM) minixfs.sys
 
 .phony: clean
 
 minix.o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o minix.o
 
-minix.sys: $(OBJECTS)
+minixfs.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
 	      -Wl,--base-file,base.tmp $(OBJECTS)
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname minix.sys --base-file base.tmp \
+	$(DLLTOOL) --dllname minixfs.sys --base-file base.tmp \
 	           --output-exp temp.exp
 	- $(RM) base.tmp
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
-	      -specs=../../svc_specs -mdll -o minix.sys $(OBJECTS) -Wl,temp.exp
+	      -specs=../../svc_specs -mdll -o minixfs.sys $(OBJECTS) -Wl,temp.exp
 	- $(RM) temp.exp
 
 WIN32_LEAN_AND_MEAN = yes

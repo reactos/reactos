@@ -130,6 +130,7 @@ VOID HalQueryDisplayParameters(PULONG DispSizeX,
 			       PULONG CursorPosY);
 
 VOID HalQueryRealTimeClock(PTIME_FIELDS pTime);
+VOID HalSetRealTimeClock(PTIME_FIELDS Time);
 
 VOID HalQuerySystemInformation(VOID);
 

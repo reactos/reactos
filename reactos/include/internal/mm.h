@@ -34,6 +34,8 @@ typedef struct
    ULONG SectionPageProtection;
    ULONG AllocateAttributes;
    PFILE_OBJECT FileObject;
+   LIST_ENTRY ViewListHead;
+   KSPIN_LOCK ViewListLock;
 } SECTION_OBJECT, *PSECTION_OBJECT;
 
 typedef struct
@@ -44,12 +46,14 @@ typedef struct
    ULONG Attributes;
    LIST_ENTRY Entry;
    ULONG LockCount;
+   PEPROCESS Process;
    union
      {
 	struct
 	  {	     
 	     SECTION_OBJECT* Section;
 	     ULONG ViewOffset;
+	     LIST_ENTRY ViewListEntry;
 	  } SectionData;
      } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
@@ -102,5 +106,11 @@ NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
 		    PIO_STATUS_BLOCK StatusBlock);
 VOID MmBuildMdlFromPages(PMDL Mdl);
 PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);
+VOID MiShutdownMemoryManager(VOID);
+ULONG MmGetPhysicalAddressForProcess(PEPROCESS Process,
+				     PVOID Address);
+NTSTATUS MmUnmapViewOfSection(PEPROCESS Process,
+			      PMEMORY_AREA MemoryArea);
+PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section, ULONG Offset);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.19 1999/10/16 12:38:25 ekohl Exp $
+/* $Id: zw.h,v 1.20 1999/11/24 11:51:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5150,38 +5150,6 @@ ZwYieldExecution(
  * These prototypes are unknown as yet
  * (stack sizes by Peter-Michael Hager)
  */
-#ifndef PROTO_LPC
-NTSTATUS STDCALL NtAcceptConnectPort(VOID);
-NTSTATUS STDCALL NtCompleteConnectPort(VOID);
-//NTSTATUS STDCALL NtConnectPort(VOID);
-NTSTATUS STDCALL NtConnectPort(PHANDLE Handle,
-			       POBJECT_ATTRIBUTES ObjectAttributes);
-
-NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
-			      ACCESS_MASK DesiredAccess,
-			      POBJECT_ATTRIBUTES ObjectAttributes,
-			      DWORD a3,
-			      DWORD a4);
-
-NTSTATUS STDCALL NtImpersonateClientOfPort(VOID);
-//NTSTATUS STDCALL NtListenPort(VOID);
-NTSTATUS STDCALL NtListenPort(HANDLE PortHandle,
-			      PLARGE_INTEGER Timeout,
-			      PPORT_MSG_DATA Msg);
-NTSTATUS STDCALL NtQueryInformationPort(VOID);
-NTSTATUS STDCALL NtReplyPort(VOID);
-NTSTATUS STDCALL NtReplyWaitReceivePort(VOID);
-NTSTATUS STDCALL NtReplyWaitReplyPort(VOID);
-//NTSTATUS STDCALL NtRequestPort(VOID);
-NTSTATUS STDCALL NtRequestPort(HANDLE PortHandle,
-			       ULONG DataLength,
-			       PVOID Data,
-			       ULONG Options,
-			       PHANDLE ReplyPortHandle);
-NTSTATUS STDCALL NtRequestWaitReplyPort(VOID); 
-NTSTATUS STDCALL NtReadRequestData(VOID);
-NTSTATUS STDCALL NtWriteRequestData(VOID);
-#else
 NTSTATUS
 STDCALL
 NtAcceptConnectPort ( /* @24 */
@@ -5199,25 +5167,30 @@ NtCompleteConnectPort ( /* @4 */
 	);
 NTSTATUS
 STDCALL
-NtConnectPort ( /* @32 */
+NtConnectPort ( 
 	OUT	PHANDLE		PortHandle,
 	IN	PUNICODE_STRING	PortName,
-	IN	PVOID		Unknown2,
+	IN	POBJECT_ATTRIBUTES PortAttributes,
 	IN	DWORD		Unknown3,
 	IN	DWORD		Unknown4,
 	IN	DWORD		Unknown5,
 	IN	DWORD		Unknown6,
-	IN	UINT		Flags	/* ??? */	
+	IN	ULONG		Flags	
 	);
-NTSTATUS
+/*NTSTATUS
 STDCALL
-NtCreatePort ( /* @20 */
+NtCreatePort ( 
 	IN	POBJECT_ATTRIBUTES	PortAttributes	OPTIONAL,  
 	OUT	PHANDLE			PortHandle,
 	IN	ACCESS_MASK		GrantedAccess,
 	IN	DWORD			Unknown3,
 	IN	ULONG			Flags
-	);
+	);*/
+NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
+			      ACCESS_MASK DesiredAccess,
+			      POBJECT_ATTRIBUTES ObjectAttributes,
+			      DWORD a3,
+			      DWORD a4);
 NTSTATUS
 STDCALL
 NtImpersonateClientOfPort ( /* @8 */
@@ -5292,7 +5265,7 @@ NtWriteRequestData ( /* @24 */
 	DWORD	a4,
 	DWORD	a5
 	);
-#endif /* ndef PROTO_LPC */
+
 
 /* --- REGISTRY --- */
 

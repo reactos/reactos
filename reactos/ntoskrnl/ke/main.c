@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.30 1999/11/12 12:01:15 dwelch Exp $
+/* $Id: main.c,v 1.31 1999/11/24 11:51:50 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -107,6 +107,7 @@ void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
 extern int edata;
 extern int end;
 
+#if 0
 static char * INIData =
   "[HKEY_LOCAL_MACHINE\\HARDWARE]\r\n"
   "\r\n"
@@ -121,6 +122,7 @@ static char * INIData =
   "\r\n"
   "\r\n"
   "";
+#endif
 
 unsigned int old_idt[256][2];
 //extern unsigned int idt[];
@@ -128,7 +130,7 @@ unsigned int old_idt_valid = 1;
 
 ERESOURCE TestResource;
 
-VOID thread_main(PVOID param)
+NTSTATUS thread_main(PVOID param)
 {
    ULONG Id;
    
@@ -141,6 +143,8 @@ VOID thread_main(PVOID param)
    ExAcquireResourceExclusiveLite(&TestResource, TRUE);
    
    DbgPrint("THREAD(%d) Acquired resource for shared access\n", Id);
+   
+   return(STATUS_SUCCESS);
 }
 
 VOID resource_test(VOID)
@@ -253,13 +257,14 @@ asmlinkage void _main(boot_param* _bp)
    DPRINT("ObInit()\n");
    ObInit();
    DPRINT("PsInit()\n");
-   PsInit();
+   PiInitProcessManager();
    DPRINT("IoInit()\n");
    IoInit();
    DPRINT("LdrInitModuleManagement()\n");
    LdrInitModuleManagement();
    CmInitializeRegistry();
-      
+   NtInit();
+   
    memcpy(old_idt, KiIdt, sizeof(old_idt));
    old_idt_valid = 0;
    

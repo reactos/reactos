@@ -123,7 +123,7 @@ VOID MmBuildMdlFromPages(PMDL Mdl)
    
    for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
      {
-        mdl_pages[i] = MmAllocPage();
+        mdl_pages[i] = (ULONG)MmAllocPage();
 	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
      }
    

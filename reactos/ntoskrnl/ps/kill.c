@@ -80,13 +80,28 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
+NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,
+				    NTSTATUS ExitStatus)
+{
+   KIRQL oldlvl;
+   
+   DPRINT("PsTerminateProcess(Process %x, ExitStatus %x)\n",
+          Process, ExitStatus);
+   
+   PiTerminateProcessThreads(Process, ExitStatus);
+   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
+   Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
+   Process->Pcb.DispatcherHeader.SignalState = TRUE;
+   KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
+   KeLowerIrql(oldlvl);
+   return(STATUS_SUCCESS);
+}
 
 NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
 				    IN	NTSTATUS	ExitStatus)
 {
    NTSTATUS Status;
    PEPROCESS Process;
-   KIRQL oldlvl;
    
    DPRINT("NtTerminateProcess(ProcessHandle %x, ExitStatus %x)\n",
           ProcessHandle, ExitStatus);
@@ -102,18 +117,12 @@ NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
         return(Status);
    }
    
-   PiTerminateProcessThreads(Process, ExitStatus);
-   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
-   Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
-   Process->Pcb.DispatcherHeader.SignalState = TRUE;
-   KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
+   PiTerminateProcess(Process, ExitStatus);
    if (PsGetCurrentThread()->ThreadsProcess == Process)
    {
-      KeLowerIrql(oldlvl);
       ObDereferenceObject(Process);
       PsTerminateCurrentThread(ExitStatus);
    }
-   KeLowerIrql(oldlvl);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }

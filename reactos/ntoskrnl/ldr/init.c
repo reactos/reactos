@@ -57,7 +57,6 @@
 
 static NTSTATUS LdrCreatePeb(HANDLE ProcessHandle)
 {
-   NTSTATUS	Status;
    PVOID		PebBase;
    ULONG		PebSize;
    NT_PEB		Peb;

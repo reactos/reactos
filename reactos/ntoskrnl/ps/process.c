@@ -36,6 +36,31 @@ static ULONG PiNextProcessUniqueId = 0;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID PiKillMostProcesses(VOID)
+{
+   KIRQL oldIrql;
+   PLIST_ENTRY current_entry;
+   PEPROCESS current;
+   
+   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   
+   current_entry = PsProcessListHead.Flink;
+   while (current_entry != &PsProcessListHead)
+     {
+	current = CONTAINING_RECORD(current_entry, EPROCESS, 
+				    Pcb.ProcessListEntry);
+	current_entry = current_entry->Flink;
+	
+	if (current->UniqueProcessId != SystemProcess->UniqueProcessId &&
+	    current->UniqueProcessId != (ULONG)PsGetCurrentProcessId())
+	  {
+	     PiTerminateProcess(current, STATUS_SUCCESS);
+	  }
+     }
+   
+   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+}
+
 VOID PsInitProcessManagment(VOID)
 {
    ANSI_STRING AnsiString;
@@ -111,8 +136,7 @@ VOID PiDeleteProcess(PVOID ObjectBody)
 }
 
 
-static NTSTATUS
-PsCreatePeb(HANDLE ProcessHandle)
+static NTSTATUS PsCreatePeb(HANDLE ProcessHandle)
 {
    NTSTATUS Status;
    PVOID PebBase;
@@ -141,8 +165,7 @@ PsCreatePeb(HANDLE ProcessHandle)
 			sizeof(Peb),
 			&BytesWritten);
 
-   DbgPrint ("PsCreatePeb: Peb created at %x\n", PebBase);
-//   DPRINT("PsCreatePeb: Peb created at %x\n", PebBase);
+   DPRINT("PsCreatePeb: Peb created at %x\n", PebBase);
 
    return(STATUS_SUCCESS);
 }
@@ -154,6 +177,11 @@ PKPROCESS KeGetCurrentProcess(VOID)
  */
 {
    return(&(PsGetCurrentProcess()->Pcb));
+}
+
+HANDLE PsGetCurrentProcessId(VOID)
+{
+   return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
 }
 
 struct _EPROCESS* PsGetCurrentProcess(VOID)
@@ -244,7 +272,6 @@ NtCreateProcess (
 		       InheritObjectTable,
 		       Process);
    MmCopyMmInfo(ParentProcess, Process);
-   Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);

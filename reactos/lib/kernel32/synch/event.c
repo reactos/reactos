@@ -13,81 +13,82 @@
 #include <wchar.h>
 
 
-WINBOOL
-STDCALL
-SetEvent(
-	 HANDLE hEvent
-	 )
+WINBOOL STDCALL SetEvent(HANDLE hEvent)
 {
-	NTSTATUS errCode;
-	ULONG Count;
-	errCode = NtSetEvent(hEvent,&Count);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+   NTSTATUS errCode;
+   ULONG Count;
+   
+   errCode = NtSetEvent(hEvent,&Count);
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   return TRUE;
 }
 
-WINBOOL
-STDCALL
-ResetEvent(
-	   HANDLE hEvent
-	   )
+WINBOOL STDCALL ResetEvent(HANDLE hEvent)
 {
-	NTSTATUS errCode;
-	ULONG Count;
-	errCode = NtResetEvent(hEvent, &Count);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+   NTSTATUS errCode;
+   ULONG Count;
+   
+   errCode = NtResetEvent(hEvent, &Count);
+   if (!NT_SUCCESS(errCode)) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   return TRUE;
 }
 
 
 
-HANDLE
-STDCALL
-CreateEventW(
-    LPSECURITY_ATTRIBUTES lpEventAttributes,
-    WINBOOL bManualReset,
-    WINBOOL bInitialState,
-    LPCWSTR lpName
-    )
+HANDLE STDCALL CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
+			    WINBOOL bManualReset,
+			    WINBOOL bInitialState,
+			    LPCWSTR lpName)
 {	
-	NTSTATUS errCode;
-	HANDLE hEvent;
-	UNICODE_STRING EventNameString;
-	OBJECT_ATTRIBUTES ObjectAttributes;
+   NTSTATUS errCode;
+   HANDLE hEvent;
+   UNICODE_STRING EventNameString;
+   POBJECT_ATTRIBUTES PtrObjectAttributes;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   
+   if (lpName != NULL)
+     {    
+	PtrObjectAttributes = &ObjectAttributes;
 	ObjectAttributes.Attributes = 0;
-	if ( lpEventAttributes != NULL ) {
-		ObjectAttributes.SecurityDescriptor = lpEventAttributes->lpSecurityDescriptor;
-		if ( lpEventAttributes->bInheritHandle == TRUE )
-			ObjectAttributes.Attributes |= OBJ_INHERIT;
-		
-	}
-	
+	if (lpEventAttributes != NULL) 
+	  {
+	     ObjectAttributes.SecurityDescriptor = 
+	       lpEventAttributes->lpSecurityDescriptor;
+	     if ( lpEventAttributes->bInheritHandle == TRUE )
+	       ObjectAttributes.Attributes |= OBJ_INHERIT;	
+	  }
 
-    	if(lpName != NULL) {
-        	EventNameString.Buffer = (WCHAR *)lpName;
-		EventNameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
-		EventNameString.MaximumLength = EventNameString.Length;
-		ObjectAttributes.ObjectName = &EventNameString;
-    	}
-	else
-		ObjectAttributes.ObjectName = NULL;
- 
+	EventNameString.Buffer = (WCHAR *)lpName;
+	EventNameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
+	EventNameString.MaximumLength = EventNameString.Length;
+	ObjectAttributes.ObjectName = &EventNameString;
+     }
+   else
+     {
+	PtrObjectAttributes = NULL;
+     }	
     
    
-	errCode = NtCreateEvent(&hEvent,STANDARD_RIGHTS_ALL|EVENT_READ_ACCESS|EVENT_WRITE_ACCESS,&ObjectAttributes,bManualReset,bInitialState);
-	if(!NT_SUCCESS(errCode)) {
-        	SetLastError(RtlNtStatusToDosError(errCode));
-        	return NULL;
-    	}
-
-    
-	return hEvent;
+   errCode = NtCreateEvent(&hEvent,
+			   STANDARD_RIGHTS_ALL|EVENT_READ_ACCESS|EVENT_WRITE_ACCESS,
+			   PtrObjectAttributes,
+			   bManualReset,
+			   bInitialState);
+   if (!NT_SUCCESS(errCode)) 
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return INVALID_HANDLE_VALUE;
+     }
+ 
+   return hEvent;
 }
 
 

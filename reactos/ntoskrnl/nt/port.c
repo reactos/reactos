@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.8 1999/10/16 12:38:53 ekohl Exp $
+/* $Id: port.c,v 1.9 1999/11/24 11:51:53 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,23 +29,28 @@
 
 /* TYPES ********************************************************************/
 
-struct _EPORT;
+#define EPORT_WAIT_FOR_CONNECT       (1)
+#define EPORT_WAIT_FOR_ACCEPT        (2)
+#define EPORT_WAIT_FOR_COMPLETE      (3)
+#define EPORT_CONNECTED              (4)
 
-typedef struct _PORT_MSG
+typedef struct _QUEUED_MESSAGE
 {
-   ULONG DataLength;
-   PVOID Data;
-   LIST_ENTRY ListEntry;
-   struct _EPORT* ReplyPort;
-   PMDL Mdl;
-} EPORT_MSG, *PEPORT_MSG;
+   LPC_MESSAGE_TYPE Type;
+   ULONG Length;
+   PVOID Buffer;
+   DWORD Flags;
+   PEPROCESS Sender;
+   PMDL BufferMdl;
+} QUEUED_MESSAGE, *PQUEUED_MESSAGE;
 
 typedef struct _EPORT
 {
-   PEPROCESS Owner;
-   LIST_ENTRY MsgQueueHead;
-   KEVENT MsgNotify;
-   KSPIN_LOCK PortLock;
+   KSPIN_LOCK Lock;
+   ULONG State;
+   KEVENT Event;
+   struct _EPORT* ForeignPort;
+   QUEUED_MESSAGE Msg;
 } EPORT, *PEPORT;
 
 /* GLOBALS *******************************************************************/
@@ -53,7 +58,8 @@ typedef struct _EPORT
 POBJECT_TYPE ExPortType = NULL;
 
 /* FUNCTIONS *****************************************************************/
-#ifndef PROTO_LPC
+
+
 NTSTATUS NiInitPort(VOID)
 {
    ExPortType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
@@ -78,9 +84,6 @@ NTSTATUS NiInitPort(VOID)
    return(STATUS_SUCCESS);
 }
 
-//NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
-//			      ACCESS_MASK DesiredAccess,
-//			      POBJECT_ATTRIBUTES ObjectAttributes)
 NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
 			      ACCESS_MASK DesiredAccess,
 			      POBJECT_ATTRIBUTES ObjectAttributes,
@@ -97,141 +100,152 @@ NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   InitializeListHead(&Port->MsgQueueHead);
-   KeInitializeEvent(&Port->MsgNotify, NotificationEvent, FALSE);
-   KeInitializeSpinLock(&Port->PortLock);
-   Port->Owner = PsGetCurrentProcess();
+   
+   KeInitializeSpinLock(&Port->Lock);
+   KeInitializeEvent(&Port->Event, NotificationEvent, FALSE);
+   Port->State = EPORT_WAIT_FOR_CONNECT;
+   Port->ForeignPort = NULL;
+     
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtAcceptConnectPort(VOID)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtCompleteConnectPort(VOID)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtConnectPort(PHANDLE PortHandle,
-			       POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL NtAcceptConnectPort (IN	HANDLE	PortHandle,
+				      OUT	PHANDLE	ConnectedPort,
+				      DWORD	a2,
+				      DWORD	a3,
+				      DWORD	a4,
+				      DWORD	a5)
 {
    NTSTATUS Status;
-   PEPORT Port;   
+   PEPORT Port;
+   
+   Status = ObReferenceObjectByHandle(PortHandle,
+				      0,   /* AccessRequired */
+				      ExPortType,
+				      UserMode,
+				      (PVOID*)&Port,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   if (Port->State != EPORT_WAIT_FOR_ACCEPT)
+     {
+	return(STATUS_INVALID_PARAMETER);
+     }
+   
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Port->ForeignPort,
+			   0,   /* DesiredAccess */
+			   FALSE,
+			   ConnectedPort);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   KeSetEvent(&Port->ForeignPort->Event, IO_NO_INCREMENT, FALSE);
+   
+   Port->ForeignPort->State = EPORT_WAIT_FOR_COMPLETE;
+   
+   return(STATUS_SUCCESS);
+}
 
-   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
-				    ObjectAttributes->Attributes,
+
+NTSTATUS STDCALL NtCompleteConnectPort (HANDLE PortHandle)
+{
+   NTSTATUS Status;
+   PEPORT Port;
+   
+   Status = ObReferenceObjectByHandle(PortHandle,
+				      0,   /* AccessRequired */
+				      ExPortType,
+				      UserMode,
+				      (PVOID*)&Port,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   Port->ForeignPort->State = EPORT_CONNECTED;
+   Port->State = EPORT_CONNECTED;
+   
+   KeSetEvent(&Port->ForeignPort->Event, IO_NO_INCREMENT, FALSE);
+   
+   return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS STDCALL NtConnectPort (OUT	PHANDLE			ConnectedPort,
+				IN	PUNICODE_STRING		PortName,
+				IN	POBJECT_ATTRIBUTES	PortAttributes,
+				IN	DWORD			a3,
+				IN	DWORD			a4,
+				IN	DWORD			a5,
+				IN	DWORD			a6,
+				IN	ULONG			Flags)
+{
+   NTSTATUS Status;
+   PEPORT ForeignPort;
+   PEPORT Port;
+   
+   Status = ObReferenceObjectByName(PortName,
+				    0,
 				    NULL,
-				    STANDARD_RIGHTS_REQUIRED,
+				    0,  /* DesiredAccess */
 				    ExPortType,
 				    UserMode,
 				    NULL,
-				    (PVOID*)&Port);
-   if (Status != STATUS_SUCCESS)
-     {
-	return(Status);
-     }
-   
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   Port,
-			   STANDARD_RIGHTS_REQUIRED,
-			   FALSE,
-			   PortHandle);
-   ObDereferenceObject(Port);
-   
-   return(STATUS_SUCCESS);
-
-}
-
-NTSTATUS STDCALL NtListenPort(HANDLE PortHandle,
-			      PLARGE_INTEGER Timeout,
-			      PPORT_MSG_DATA Msg)
-{
-   NTSTATUS Status;
-   PEPORT Port;
-   KIRQL oldIrql;
-   PEPORT_MSG KMsg;
-   PVOID Data;
-   
-   Status = ObReferenceObjectByHandle(PortHandle,
-				      STANDARD_RIGHTS_REQUIRED,
-				      ExPortType,
-				      UserMode,
-				      (PVOID*)&Port,
-				      NULL);
+				    (PVOID*)&ForeignPort);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    
-   Status = KeWaitForSingleObject(&Port->MsgNotify, 0,
-				  KernelMode, FALSE, Timeout);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
-   KeAcquireSpinLock(&Port->PortLock, &oldIrql);
-   KMsg = CONTAINING_RECORD(RemoveHeadList(&Port->MsgQueueHead),
-			    EPORT_MSG,
-			    ListEntry);
-   KeReleaseSpinLock(&Port->PortLock, oldIrql);
-   
-   if (KMsg->DataLength > Msg->DataLength)
+   if (ForeignPort->State != EPORT_WAIT_FOR_CONNECT)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   Msg->DataLength = KMsg->DataLength;
-   Data = MmGetSystemAddressForMdl(KMsg->Mdl);
-   memcpy(Msg->Data, Data, KMsg->DataLength);
-   MmUnmapLockedPages(Data, KMsg->Mdl);
-   Status = ObCreateHandle(PsGetCurrentProcess(),
-			   KMsg->ReplyPort,
-			   STANDARD_RIGHTS_REQUIRED,
-			   FALSE,
-			   &Msg->ReplyPort);
-   ObDereferenceObject(PortHandle);
-   return(Status);
+   
+   Port = ObCreateObject(ConnectedPort,
+			 0,   /* DesiredAccess */
+			 PortAttributes, 
+			 ExPortType);
+   if (Port == NULL)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   KeInitializeSpinLock(&Port->Lock);
+   KeInitializeEvent(&Port->Event, NotificationEvent, FALSE);
+   Port->State = EPORT_WAIT_FOR_ACCEPT;
+   Port->ForeignPort = ForeignPort;
+   
+   ForeignPort->State = EPORT_WAIT_FOR_ACCEPT;
+   
+   KeSetEvent(&ForeignPort->Event, IO_NO_INCREMENT, FALSE);
+   
+   return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtReplyPort(VOID)
+
+NTSTATUS STDCALL NtImpersonateClientOfPort (IN	HANDLE		PortHandle,
+					    IN	PCLIENT_ID	ClientId)
 {
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtReplyWaitReceivePort(VOID)
-{
-   UNIMPLEMENTED;
-}
 
-NTSTATUS STDCALL NtReplyWaitReplyPort(VOID)
+NTSTATUS STDCALL NtListenPort (IN HANDLE PortHandle,
+			       IN DWORD	QueueSize	/* guess */)
 {
-   UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtRequestPort(HANDLE PortHandle,
-			       ULONG DataLength,
-			       PVOID Data,
-			       ULONG Options,
-			       PHANDLE ReplyPortHandle)
-/*
- * FUNCTION: Send a request to a port
- * ARGUMENTS:
- *         PortHandle = Handle to the destination port
- *         DataLength = Length of the data to send
- *         Data = Data to send
- *         Option = Send options
- *         ReplyPortHandle = Optional port for reply
- */
-{
-   PEPORT Port;
    NTSTATUS Status;
-   KIRQL oldIrql;
-   PEPORT_MSG Msg;
+   PEPORT Port;
    
    Status = ObReferenceObjectByHandle(PortHandle,
-				      STANDARD_RIGHTS_REQUIRED,
+				      0,   /* AccessRequired */
 				      ExPortType,
 				      UserMode,
 				      (PVOID*)&Port,
@@ -241,214 +255,87 @@ NTSTATUS STDCALL NtRequestPort(HANDLE PortHandle,
 	return(Status);
      }
    
-   Msg = ExAllocatePool(NonPagedPool, sizeof(EPORT_MSG));
-   Msg->DataLength = DataLength;
-   Msg->Mdl = MmCreateMdl(NULL,
-			  Data,
-			  Msg->DataLength);
-   MmProbeAndLockPages(Msg->Mdl,
-		       UserMode,
-		       IoReadAccess);
+   Status = KeWaitForSingleObject(&Port->Event,
+				  UserRequest,
+				  UserMode,
+				  FALSE,
+				  NULL);
    
-   if (ReplyPortHandle != NULL)
+   return(Status);
+}
+
+
+NTSTATUS STDCALL NtQueryInformationPort (IN HANDLE PortHandle,
+					 IN CINT PortInformationClass,	/* guess */
+					 OUT PVOID PortInformation,	/* guess */
+					 IN ULONG PortInformationLength,	/* guess */
+					 OUT PULONG ReturnLength		/* guess */)
+{
+   UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL NtReplyPort (IN HANDLE PortHandle,
+			      IN PLPC_REPLY LpcReply	/* guess */)
+{
+	UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL NtReplyWaitReceivePort ( IN	HANDLE		PortHandle,
+					 IN	PLPC_REPLY	LpcReply,	/* guess */
+					 OUT	PLPC_MESSAGE	LpcMessage,	/* guess */
+					 OUT	PULONG		MessageLength	/* guess */)
+{
+   UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL NtReplyWaitReplyPort (IN	HANDLE		PortHandle,
+				       IN OUT	PLPC_REPLY	LpcReply	/* guess */)
+{
+   UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL NtRequestPort (IN HANDLE PortHandle,
+				IN PLPC_MESSAGE	LpcMessage	/* guess */)
+{
+      NTSTATUS Status;
+   PEPORT Port;
+   
+   Status = ObReferenceObjectByHandle(PortHandle,
+				      0,   /* AccessRequired */
+				      ExPortType,
+				      UserMode,
+				      (PVOID*)&Port,
+				      NULL);
+   if (!NT_SUCCESS(Status))
      {
-	NtCreatePort(ReplyPortHandle,
-		     STANDARD_RIGHTS_REQUIRED,
-		     NULL,
-		     0,
-		     0);
-	Status = ObReferenceObjectByHandle(*ReplyPortHandle,
-					   STANDARD_RIGHTS_REQUIRED,
-					   ExPortType,
-					   UserMode,
-					   (PVOID*)&Msg->ReplyPort,
-					   NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     ExFreePool(Msg);
-	     return(Status);
-	  }
+	return(Status);
      }
    
-   KeAcquireSpinLock(&Port->PortLock, &oldIrql);
-   InsertHeadList(&Port->MsgQueueHead, &Msg->ListEntry);
-   KeReleaseSpinLock(&Port->PortLock, oldIrql);
-   KeSetEvent(&Port->MsgNotify, 0, FALSE);
+   Port->Msg.Type = LpcMessage->Type;
+   Port->Msg.Length = LpcMessage->Length;
+   Port->Msg.Buffer = LpcMessage->Buffer;
+   Port->Msg.Flags = LpcMessage->Flags;
+   Port->Msg.Sender = PsGetCurrentProcess();
+   Port->Msg.BufferMdl = MmCreateMdl(NULL, 
+				     LpcMessage->Buffer,
+				     LpcMessage->Length);
+   MmProbeAndLockPages(Port->Msg.BufferMdl,
+		       UserMode,
+		       IoReadAccess);
    
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtRequestWaitReplyPort(VOID)
+
+NTSTATUS STDCALL NtRequestWaitReplyPort(IN HANDLE PortHandle,
+					IN OUT PLPC_REPLY LpcReply,	/* guess */
+					IN TIME* TimeToWait 	/* guess */)
 {
    UNIMPLEMENTED;
-}
-
-NTSTATUS STDCALL NtQueryInformationPort(VOID)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS
-STDCALL
-NtReadRequestData(VOID)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS
-STDCALL
-NtWriteRequestData(VOID)
-{
-   UNIMPLEMENTED;
-}
-#else
-NTSTATUS
-STDCALL
-NtAcceptConnectPort ( /* @24 */
-	IN	HANDLE	PortHandle,
-	OUT	PHANDLE	ConnectedPort,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtCompleteConnectPort ( /* @4 */
-	HANDLE	PortHandle
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtConnectPort ( /* @32 */
-	OUT	PHANDLE			ConnectedPort,
-	IN	PUNICODE_STRING		PortName,
-	IN	POBJECT_ATTRIBUTES	PortAttributes,
-	IN	DWORD			a3,
-	IN	DWORD			a4,
-	IN	DWORD			a5,
-	IN	DWORD			a6,
-	IN	ULONG			Flags
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtCreatePort ( /* @20 */
-	OUT	PHANDLE			PortHandle,
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
-	IN	DWORD			a3,	/* unknown */
-	IN	DWORD			a4	/* unknown */
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtImpersonateClientOfPort ( /* @8 */
-	IN	HANDLE		PortHandle,
-	IN	PCLIENT_ID	ClientId
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtListenPort ( /* @8 */
-	IN	HANDLE	PortHAndle,
-	IN	DWORD	QueueSize	/* guess */
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtQueryInformationPort ( /* @20 */
-	IN	HANDLE	PortHandle,
-	IN	CINT	PortInformationClass,	/* guess */
-	OUT	PVOID	PortInformation,	/* guess */
-	IN	ULONG	PortInformationLength,	/* guess */
-	OUT	PULONG	ReturnLength		/* guess */
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtReplyPort ( /* @8 */
-	IN	HANDLE		PortHandle,
-	IN	PLPC_REPLY	LpcReply	/* guess */
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtReplyWaitReceivePort ( /* @16 */
-	IN	HANDLE		PortHandle,
-	IN	PLPC_REPLY	LpcReply,	/* guess */
-	OUT	PLPC_MESSAGE	LpcMessage,	/* guess */
-	OUT	PULONG		MessageLength	/* guess */
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtReplyWaitReplyPort ( /* @8 */
-	IN	HANDLE		PortHandle,
-	IN OUT	PLPC_REPLY	LpcReply	/* guess */
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtRequestPort ( /* @8 */
-	IN	HANDLE		PortHandle,
-	IN 	PLPC_MESSAGE	LpcMessage	/* guess */
-	)
-{
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtRequestWaitReplyPort ( /* @12 */
-	IN	HANDLE		PortHandle,
-	IN OUT	PLPC_REPLY	LpcReply,	/* guess */
-	IN	TIME		* TimeToWait 	/* guess */
-	)
-{
-	UNIMPLEMENTED;
 }
 
  
@@ -470,16 +357,12 @@ NtRequestWaitReplyPort ( /* @12 */
  * REVISIONS
  * 
  */
-NTSTATUS
-STDCALL
-NtReadRequestData ( /* @24 */
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5
-	)
+NTSTATUS STDCALL NtReadRequestData (DWORD	a0,
+				    DWORD	a1,
+				    DWORD	a2,
+				    DWORD	a3,
+				    DWORD	a4,
+				    DWORD	a5)
 {
 	UNIMPLEMENTED;
 }
@@ -503,19 +386,12 @@ NtReadRequestData ( /* @24 */
  * REVISIONS
  * 
  */
-NTSTATUS
-STDCALL
-NtWriteRequestData ( /* @24 */
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5
-	)
+NTSTATUS STDCALL NtWriteRequestData (DWORD	a0,
+				     DWORD	a1,
+				     DWORD	a2,
+				     DWORD	a3,
+				     DWORD	a4,
+				     DWORD	a5)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
-#endif /* ndef PROTO_LPC */
-
-/* EOF */

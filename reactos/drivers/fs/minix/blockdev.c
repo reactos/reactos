@@ -20,6 +20,26 @@
 
 /* FUNCTIONS ***************************************************************/
 
+BOLEAN MinixReadPage(PDEVICE_OBJECT DeviceObject,
+		     ULONG Offset,
+		     PVOID Buffer)
+{
+   ULONG i;
+   BOOLEAN Result;
+   
+   for (i=0; i<4; i++)
+     {
+	Result = MinixReadSector(DeviceObject,
+				 (Offset + (i * PAGESIZE)) / BLOCKSIZE,
+				 (Buffer + (i * PAGESIZE)));
+	if (!Result)
+	  {
+	     return(Result);
+	  }
+     }
+   return(True);
+}
+
 BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,
 			IN UCHAR*	Buffer)

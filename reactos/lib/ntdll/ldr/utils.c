@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.15 1999/11/17 21:32:57 ariadne Exp $
+/* $Id: utils.c,v 1.16 1999/11/24 11:51:45 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -145,7 +145,8 @@ LdrLoadDll (
 			);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Dll open failed: Status = 0x%08x\n", Status);
+		dprintf("Dll open of %s failed: Status = 0x%08x\n", 
+		       fqname, Status);
 		return Status;
 	}
 	Status = ZwReadFile(
@@ -356,7 +357,7 @@ LdrFindDll (
 		
 	} while (current != & LdrDllListHead);
    
-	dprintf("Failed to find dll %s\n",Name);
+	DPRINT("Failed to find dll %s\n",Name);
    
 	return -1;
 }
@@ -905,7 +906,7 @@ LdrPEStartup (
 		ImageBase
 		+ NTHeaders->OptionalHeader.AddressOfEntryPoint
 		);
-	dprintf("LdrPEStartup() = %x\n",EntryPoint);
+	DPRINT("LdrPEStartup() = %x\n",EntryPoint);
 	return EntryPoint;
 }
 

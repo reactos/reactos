@@ -3,26 +3,12 @@
 
 /* EXECUTIVE ROUTINES ******************************************************/
 
-VOID
-ExAcquireFastMutex (
-	PFAST_MUTEX	FastMutex
-	);
-VOID
-ExAcquireFastMutexUnsafe (
-	PFAST_MUTEX	FastMutex
-	);
-BOOLEAN
-ExAcquireResourceExclusive (
-	PERESOURCE	Resource,
-	BOOLEAN		Wait
-	);
-BOOLEAN
-ExAcquireResourceExclusiveLite (
-	PERESOURCE	Resource,
-	BOOLEAN		Wait
-	);
-BOOLEAN
-ExAcquireResourceSharedLite (
+VOID ExReleaseResourceLite(PERESOURCE Resource);
+VOID ExAcquireFastMutex (PFAST_MUTEX	FastMutex);
+VOID ExAcquireFastMutexUnsafe (PFAST_MUTEX	FastMutex);
+BOOLEAN ExAcquireResourceExclusive (PERESOURCE Resource, BOOLEAN Wait);
+BOOLEAN ExAcquireResourceExclusiveLite (PERESOURCE Resource, BOOLEAN	Wait);
+BOOLEAN ExAcquireResourceSharedLite (
 	PERESOURCE	Resource,
 	BOOLEAN		Wait
 	);

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.10 1999/09/29 23:12:49 ekohl Exp $
+/* $Id: startup.c,v 1.11 1999/11/24 11:51:45 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,6 +21,7 @@
 #include <ntdll/ldr.h>
 #include <ntdll/rtl.h>
 
+#undef DBG_NTDLL_LDR_STARTUP
 #ifndef DBG_NTDLL_LDR_STARTUP
 #define NDEBUG
 #endif
@@ -110,7 +111,7 @@ VOID LdrStartup(HANDLE SectionHandle,
       PEDosHeader->e_lfanew == 0L ||
       *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
      {
-	DPRINT("Image has bad header\n");
+	dprintf("Image has bad header\n");
 	ZwTerminateProcess(NULL,STATUS_UNSUCCESSFUL);
      }
 
@@ -129,7 +130,7 @@ VOID LdrStartup(HANDLE SectionHandle,
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
    
-   dprintf("Transferring control to image at %x\n",EntryPoint);
+//   dprintf("Transferring control to image at %x\n",EntryPoint);
    Status = EntryPoint();
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }

@@ -98,8 +98,8 @@ ULONG MinixDirLookup(PMINIX_DEVICE_EXTENSION DeviceExt,
 
 NTSTATUS MinixOpen(PDEVICE_OBJECT DeviceObject,
 		   MINIX_DEVICE_EXTENSION* DeviceExt,
-		   PWSTR DeviceName,
-		   struct minix_inode* result,
+		   PFILE_OBJECT FileObject;
+		   PMINIX_FSCONTEXT result,
 		   PULONG Information)
 {
    PWSTR current;
@@ -107,10 +107,14 @@ NTSTATUS MinixOpen(PDEVICE_OBJECT DeviceObject,
    PWSTR string = DeviceName;
    struct minix_inode current_dir;
    unsigned int current_ino;
+   PWSTR DeviceName;
+   
+   DeviceName = FileObject->FileName.Buffer;
    
    DbgPrint("MinixOpen(DeviceObject %x, DeviceName %w, result %x)\n",
 	  DeviceObject,DeviceName,result);
    DPRINT("DeviceName %x\n",DeviceName);
+   
    
    next = &string[0];
    current = next+1;
@@ -142,7 +146,12 @@ NTSTATUS MinixOpen(PDEVICE_OBJECT DeviceObject,
 	(*Information) = FILE_DOES_NOT_EXIST;
 	return(STATUS_UNSUCCESSFUL);
      }
-   memcpy(result,&current_dir,sizeof(struct minix_inode));
+   
+   result = ExAllocatePool(NonPagedPool, sizeof(MINIX_FSCONTEXT));
+   memcpy(&result->inode,&current_dir,sizeof(struct minix_inode));
+   CcInitializeFileCache(FileObject, 
+			 &result->Bcb);
+   
    DPRINT("MinxOpen() = STATUS_SUCCESS\n",0);
    return(STATUS_SUCCESS);
 }
@@ -198,11 +207,13 @@ NTSTATUS MinixCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    DeviceExt = (MINIX_DEVICE_EXTENSION *)DeviceObject->DeviceExtension;
    result = ExAllocatePool(NonPagedPool,sizeof(struct minix_inode));
    DPRINT("result %x\n",result);
-   Status = MinixOpen(DeviceExt->AttachedDevice,DeviceExt,
-		      FileObject->FileName.Buffer,result,
+   Status = MinixOpen(DeviceExt->AttachedDevice,
+		      DeviceExt,
+		      FileObject,
+		      result,
 		      &Irp->IoStatus.Information);
    
-   if (Status==STATUS_SUCCESS)
+   if (NT_SUCCESS(Status))
      {
 	FileObject->FsContext=result;
      }

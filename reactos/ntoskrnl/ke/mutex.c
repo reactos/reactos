@@ -35,6 +35,7 @@ LONG KeReleaseMutex(PKMUTEX Mutex, BOOLEAN Wait)
    KeAcquireDispatcherDatabaseLock(Wait);
    KeDispatcherObjectWake(&Mutex->Header);
    KeReleaseDispatcherDatabaseLock(Wait);
+   return(0);
 }
 
 NTSTATUS KeWaitForMutexObject(PKMUTEX Mutex,

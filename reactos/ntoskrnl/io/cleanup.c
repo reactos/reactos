@@ -21,6 +21,15 @@
 
 /* FUNCTIONS ***************************************************************/
 
+VOID IopCompleteRequest1(struct _KAPC* Apc,
+			 PKNORMAL_ROUTINE* NormalRoutine,
+			 PVOID* NormalContext,
+			 PVOID* SystemArgument1,
+			 PVOID* SystemArgument2)
+{
+   DPRINT("IopCompleteRequest1()\n");
+   IoFreeIrp((PIRP)(*SystemArgument1));
+}
 
 VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
 			       PIRP Irp,
@@ -135,6 +144,9 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;
    
+   DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d)\n",
+	  Irp, PriorityBoost);
+   
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    
    DeviceObject = IoStack->DeviceObject;
@@ -163,7 +175,30 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
 	
       default:
      }
-
+   
+   if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)
+     {
+	PKTHREAD Thread;
+	
+   	DPRINT("Dispatching APC\n");
+	Thread = &Irp->Tail.Overlay.Thread->Tcb;
+	KeInitializeApc(&Irp->Tail.Apc,
+			Thread,
+			0,
+			IopCompleteRequest1,
+			NULL,
+			(PKNORMAL_ROUTINE)
+			Irp->Overlay.AsynchronousParameters.UserApcRoutine,
+			UserMode,
+			(PVOID)
+			   Irp->Overlay.AsynchronousParameters.UserApcContext);
+	KeInsertQueueApc(&Irp->Tail.Apc,
+			 Irp,
+			 NULL,
+			 KernelMode);
+	return;
+     }
+   
    if (Irp->UserIosb!=NULL)
      {
 	*Irp->UserIosb=Irp->IoStatus;

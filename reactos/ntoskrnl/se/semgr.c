@@ -170,23 +170,12 @@ NtDuplicateToken (
 }
 
 
-NTSTATUS
-STDCALL
-NtImpersonateClientOfPort(VOID)
+NTSTATUS STDCALL NtImpersonateThread (IN HANDLE ThreadHandle,
+				     IN	HANDLE ThreadToImpersonate,
+				     IN	PSECURITY_QUALITY_OF_SERVICE	
+				          SecurityQualityOfService)
 {
-	UNIMPLEMENTED;
-}
-
-
-NTSTATUS
-STDCALL
-NtImpersonateThread (
-	IN	HANDLE				ThreadHandle,
-	IN	HANDLE				ThreadToImpersonate,
-	IN	PSECURITY_QUALITY_OF_SERVICE	SecurityQualityOfService
-	)
-{
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.12 1999/11/12 12:01:13 dwelch Exp $
+/* $Id: device.c,v 1.13 1999/11/24 11:51:50 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -15,6 +15,7 @@
 
 #include <internal/io.h>
 #include <internal/ob.h>
+#include <internal/ldr.h>
 #include <string.h>
 #include <internal/string.h>
 

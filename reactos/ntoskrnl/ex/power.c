@@ -13,6 +13,9 @@
 
 #include <ddk/ntddk.h>
 #include <internal/hal/io.h>
+#include <internal/ps.h>
+#include <internal/io.h>
+#include <internal/mm.h>
 
 #include <internal/debug.h>
 
@@ -24,40 +27,32 @@ NTSTATUS STDCALL NtSetSystemPowerState(VOID)
 }
 
 
-NTSTATUS
-STDCALL
-NtShutdownSystem (
-        IN   SHUTDOWN_ACTION Action
-	)
+NTSTATUS STDCALL NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
-    if (Action > ShutdownPowerOff)
-        return STATUS_INVALID_PARAMETER;
-
-    /* FIXME: notify all registered drivers (MJ_SHUTDOWN) */
-
-    /* FIXME: notify configuration manager (Registry) */
-
-    /* FIXME: notify memory manager */
-
-    /* FIXME: notify all file system drivers (MJ_SHUTDOWN) */
-
-    if (Action == ShutdownNoReboot)
-    {
+   if (Action > ShutdownPowerOff)
+     return STATUS_INVALID_PARAMETER;
+   
+   PiShutdownProcessManager();
+   MiShutdownMemoryManager();
+   IoShutdownIoManager();
+   
+   if (Action == ShutdownNoReboot)
+     {
 #if 0
         /* Switch off */
         HalReturnToFirmware (FIRMWARE_OFF);      
 #endif
-    }
-    else if (Action == ShutdownReboot)
-    {
+     }
+   else if (Action == ShutdownReboot)
+     {
         HalReturnToFirmware (FIRMWARE_REBOOT);
-    }
-    else
-    {
+     }
+   else
+     {
         HalReturnToFirmware (FIRMWARE_HALT);
-    }
-
-    return STATUS_SUCCESS;
+     }
+   
+   return STATUS_SUCCESS;
 }
 
 /* EOF */

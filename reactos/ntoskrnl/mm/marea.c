@@ -487,6 +487,7 @@ PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
    Result->Length=Length;
    Result->Attributes=NewAttributes;
    Result->LockCount=0;
+   Result->Process = Process;
    
    MmLockMemoryAreaList(OriginalMemoryArea->BaseAddress,&oldlvl);
    
@@ -596,6 +597,7 @@ NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
    (*Result)->Length=Length;
    (*Result)->Attributes=Attributes;
    (*Result)->LockCount=0;
+   (*Result)->Process = Process;
    
    MmInsertMemoryAreaWithoutLock(Process,*Result);
    MmUnlockMemoryAreaList(*BaseAddress,&oldlvl);

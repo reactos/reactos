@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.20 1999/11/12 12:01:15 dwelch Exp $
+/* $Id: timer.c,v 1.21 1999/11/24 11:51:50 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -80,8 +80,6 @@ extern ULONG PiNrRunnableThreads;
 #define TICKS_TO_CALIBRATE (1)
 #define CALIBRATE_PERIOD (MICROSECONDS_PER_TICK * TICKS_TO_CALIBRATE)
 #define SYSTEM_TIME_UNITS_PER_MSEC (10000)
-
-static unsigned int loops_per_microsecond = 100;
 
 static BOOLEAN TimerInitDone = FALSE;
 
@@ -426,7 +424,7 @@ VOID KiTimerInterrupt(VOID)
    char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 36);
    int i;
    int x,y;
-   extern ULONG EiNrUsedBlocks;
+//   extern ULONG EiNrUsedBlocks;
    extern unsigned int EiFreeNonPagedPool;
    extern unsigned int EiUsedNonPagedPool;
    extern ULONG MiNrFreePages;
@@ -459,7 +457,8 @@ VOID KiTimerInterrupt(VOID)
 //	   (unsigned int)EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
 //   sprintf(str,"%.8u %.8u",PiNrRunnableThreads,KiTimerTicks);
-   sprintf(str,"%.8u %.8u",PiNrRunnableThreads,MiNrFreePages);
+   sprintf(str,"%.8u %.8u", (unsigned int)PiNrRunnableThreads,
+	   (unsigned int)MiNrFreePages);
    for (i=0;i<17;i++)
      {
 	*vidmem=str[i];
@@ -467,8 +466,6 @@ VOID KiTimerInterrupt(VOID)
 	*vidmem=0x7;
 	vidmem++;
      }
-
-  return TRUE;
 }
 
 

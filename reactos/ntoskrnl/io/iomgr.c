@@ -31,6 +31,8 @@ VOID IopCloseFile(PVOID ObjectBody, ULONG HandleCount)
    PIO_STACK_LOCATION StackPtr;
    NTSTATUS Status;
    
+   DPRINT("IopCloseFile()\n");
+   
    if (HandleCount > 0)
      {
 	return;
@@ -61,6 +63,8 @@ VOID IopDeleteFile(PVOID ObjectBody)
    PIO_STACK_LOCATION StackPtr;
    NTSTATUS Status;
    
+   DPRINT("IopDeleteFile()\n");
+   
    ObReferenceObjectByPointer(ObjectBody,
 			      STANDARD_RIGHTS_REQUIRED,
 			      IoFileType,
@@ -82,6 +86,10 @@ VOID IopDeleteFile(PVOID ObjectBody)
      {
 	ExFreePool(FileObject->FileName.Buffer);
      }
+}
+
+VOID IoShutdownIoManager(VOID)
+{
 }
 
 VOID IoInit(VOID)

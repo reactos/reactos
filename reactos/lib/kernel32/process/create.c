@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.12 1999/10/13 22:35:55 ekohl Exp $
+/* $Id: create.c,v 1.13 1999/11/24 11:51:45 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -24,7 +24,7 @@
 #include <internal/teb.h>
 #include <ntdll/base.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/

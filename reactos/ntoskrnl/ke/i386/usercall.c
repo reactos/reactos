@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.1 1999/11/12 12:01:16 dwelch Exp $
+/* $Id: usercall.c,v 1.2 1999/11/24 11:51:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -106,6 +106,16 @@ VOID KiSystemCallHook(ULONG Nr)
    assert_irql(PASSIVE_LEVEL);
 }
 
+ULONG KiAfterSystemCallHook(ULONG NtStatus, PCONTEXT Context)
+{
+   if (NtStatus != STATUS_USER_APC)
+     {
+	return(NtStatus);
+     }
+   KiTestAlert(KeGetCurrentThread(), Context);
+   return(NtStatus);
+}
+
 void interrupt_handler2e(void);
    __asm__("\n\t.global _interrupt_handler2e\n\t"
            "_interrupt_handler2e:\n\t"
@@ -175,9 +185,11 @@ void interrupt_handler2e(void);
            /*  Deallocate the kernel stack frame  */
            "movl %ebp,%esp\n\t"
            
-	   /* Remove pointer to user context from stack */
-	   "addl $4,%esp\n\t"
-	   
+	   /* Call the post system call hook and deliver any pending APCs */
+	   "pushl %eax\n\t"
+	   "call _KiAfterSystemCallHook\n\t"
+	   "addl $8,%esp\n\t"
+	   	   
            /*  Restore the user context  */
 	   "addl $4,%esp\n\t"    /* UserContext */
 	   "addl $24,%esp\n\t"   /* Dr[0-3,6-7] */

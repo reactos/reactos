@@ -43,8 +43,9 @@ VOID MinixMount(PDEVICE_OBJECT DeviceToMount)
    
    DeviceExt->AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject,
 							   DeviceToMount);
-   CbInitDccb(&DeviceExt->Dccb,DeviceExt->AttachedDevice,
-	      BLOCKSIZE,2880,10);
+   DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
+   CcInitializeFileCache(DeviceExt->FileObject,
+			 &DeviceExt->Bcb);
 }
 
 NTSTATUS MinixFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -100,14 +101,12 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,
    PDEVICE_OBJECT DeviceObject;
    NTSTATUS ret;
    UNICODE_STRING ustr;
-   ANSI_STRING astr;
 
    DbgPrint("Minix FSD 0.0.1\n");
           
    DriverObject = _DriverObject;
    
-   RtlInitAnsiString(&astr,"\\Device\\Minix");
-   RtlAnsiStringToUnicodeString(&ustr,&astr,TRUE);
+   RtlInitUnicodeString(&ustr, L"\\Device\\Minux");
    ret = IoCreateDevice(DriverObject,0,&ustr,
                         FILE_DEVICE_PARALLEL_PORT,0,FALSE,&DeviceObject);
    if (ret!=STATUS_SUCCESS)

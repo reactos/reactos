@@ -81,8 +81,8 @@ VOID IoMarkIrpPending(PIRP Irp)
  *      Irp = Irp to mark
  */
 {
-   DPRINT("IoGetCurrentIrpStackLocation(Irp) %x\n",
-	  IoGetCurrentIrpStackLocation(Irp));
+//   DPRINT("IoGetCurrentIrpStackLocation(Irp) %x\n",
+//	  IoGetCurrentIrpStackLocation(Irp));
    IoGetCurrentIrpStackLocation(Irp)->Control |= SL_PENDING_RETURNED;
 }
 
@@ -123,10 +123,10 @@ PIO_STACK_LOCATION IoGetCurrentIrpStackLocation(PIRP Irp)
  * RETURNS: A pointer to the stack location
  */
 {
-   DPRINT("IoGetCurrentIrpStackLocation: Irp %08lx CurLoc %d StkCnt %d\n", 
-          Irp,
-          Irp->CurrentLocation,
-          Irp->StackCount);
+//   DPRINT("IoGetCurrentIrpStackLocation: Irp %08lx CurLoc %d StkCnt %d\n", 
+//          Irp,
+//          Irp->CurrentLocation,
+//          Irp->StackCount);
 
    return(&Irp->Stack[(ULONG)Irp->CurrentLocation]);
 }
@@ -146,10 +146,10 @@ PIO_STACK_LOCATION IoGetNextIrpStackLocation(PIRP Irp)
  * RETURNS: A pointer to the stack location 
  */
 {
-   DPRINT("IoGetNextIrpStackLocation(Irp %x)\n",Irp);
+//   DPRINT("IoGetNextIrpStackLocation(Irp %x)\n",Irp);
 
    assert(Irp!=NULL);
-   DPRINT("Irp %x Irp->StackPtr %x\n",Irp,Irp->CurrentLocation);
+//   DPRINT("Irp %x Irp->StackPtr %x\n",Irp,Irp->CurrentLocation);
    return(&Irp->Stack[Irp->CurrentLocation-1]);
 }
 
@@ -162,7 +162,7 @@ NTSTATUS IoCallDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDRIVER_OBJECT DriverObject;
    PIO_STACK_LOCATION Param;
    
-   DPRINT("IoCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+//   DPRINT("IoCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
    
    DriverObject = DeviceObject->DriverObject;
    Param = IoGetNextIrpStackLocation(Irp);
@@ -170,9 +170,9 @@ NTSTATUS IoCallDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    Irp->Tail.Overlay.CurrentStackLocation--;
    Irp->CurrentLocation--;
    
-   DPRINT("MajorFunction %d\n",param->MajorFunction);
-   DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
-	    DriverObject->MajorFunction[Param->MajorFunction]);
+//   DPRINT("MajorFunction %d\n", Param->MajorFunction);
+//   DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
+//	    DriverObject->MajorFunction[Param->MajorFunction]);
    Status = DriverObject->MajorFunction[Param->MajorFunction](DeviceObject,
 							      Irp);
    return Status;
@@ -213,7 +213,7 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
    
    IoInitializeIrp(Irp, IoSizeOfIrp(StackSize), StackSize);
 
-   DPRINT("Irp %x Irp->StackPtr %d\n", Irp, Irp->CurrentLocation);
+//   DPRINT("Irp %x Irp->StackPtr %d\n", Irp, Irp->CurrentLocation);
 
    return Irp;
 }
@@ -249,7 +249,10 @@ VOID IopCompleteRequest(struct _KAPC* Apc,
 			PVOID* SystemArgument1,
 			PVOID* SystemArgument2)
 {
-   IoSecondStageCompletion((PIRP)(*NormalContext),
+   DPRINT("IopCompleteRequest(Apc %x, SystemArgument1 %x, "
+	  "(*SystemArgument1) %x\n", Apc, SystemArgument1,
+	  *SystemArgument1);
+   IoSecondStageCompletion((PIRP)(*SystemArgument1),
                            IO_NO_INCREMENT);
 }
 
@@ -291,6 +294,7 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 
    if (Irp->PendingReturned)
      {
+	DPRINT("Dispatching APC\n");
 	Thread = &Irp->Tail.Overlay.Thread->Tcb;
 	KeInitializeApc(&Irp->Tail.Apc,
 			Thread,
@@ -299,15 +303,17 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 			NULL,
 			(PKNORMAL_ROUTINE)
 			Irp->Overlay.AsynchronousParameters.UserApcRoutine,
-			KernelMode,
-			(PVOID)Irp);
+			UserMode,
+			(PVOID)
+			   Irp->Overlay.AsynchronousParameters.UserApcContext);
 	KeInsertQueueApc(&Irp->Tail.Apc,
-			 Irp->Overlay.AsynchronousParameters.UserApcContext,
+			 Irp,
 			 NULL,
 			 KernelMode);
      }
    else
      {
+	DPRINT("Calling completion routine directly\n");
 	IoSecondStageCompletion(Irp,PriorityBoost);
      }
 }

@@ -31,6 +31,7 @@ VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
+BOOLEAN KiTestAlert(PKTHREAD Thread, PCONTEXT UserContext);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

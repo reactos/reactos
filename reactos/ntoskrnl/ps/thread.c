@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.30 1999/11/12 12:01:17 dwelch Exp $
+/* $Id: thread.c,v 1.31 1999/11/24 11:51:53 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -72,7 +72,6 @@ VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
    KIRQL oldlvl;
    PLIST_ENTRY current_entry;
    PETHREAD current;
-   ULONG i;
 
    KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
 
@@ -233,7 +232,6 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
 {
    PETHREAD Thread;
    NTSTATUS Status;
-   KIRQL oldIrql;
    
    PiNrThreads++;
    
@@ -299,7 +297,8 @@ NTSTATUS PsInitializeThread(HANDLE			ProcessHandle,
 }
 
 
-ULONG PsResumeThread(PETHREAD Thread)
+ULONG PsResumeThread(PETHREAD Thread,
+		     PNTSTATUS WaitStatus)
 {
    ULONG r;
    KIRQL oldIrql;
@@ -314,6 +313,10 @@ ULONG PsResumeThread(PETHREAD Thread)
      {
 //	DPRINT("Marking thread %x as runnable\n",Thread);
 	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
+	if (WaitStatus != NULL)
+	  {
+	     Thread->Tcb.WaitStatus = *WaitStatus;
+	  }
 	PsInsertIntoThreadList(Thread->Tcb.BasePriority, Thread);
 	PiNrRunnableThreads++;	
      }
@@ -324,7 +327,10 @@ ULONG PsResumeThread(PETHREAD Thread)
 }
 
 
-ULONG PsSuspendThread(PETHREAD Thread)
+ULONG PsSuspendThread(PETHREAD Thread,
+		      PNTSTATUS WaitStatus,
+		      UCHAR Alertable,
+		      ULONG WaitMode)
 {
    ULONG r;
    KIRQL oldIrql;
@@ -338,21 +344,29 @@ ULONG PsSuspendThread(PETHREAD Thread)
    
    if (r > 0)
      {
-	if (Thread != CurrentThread)
+	if (Thread != PsGetCurrentThread())
 	  {
 	     if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
 	       {
 		  RemoveEntryList(&Thread->Tcb.QueueListEntry);
 	       }
 	     Thread->Tcb.State = THREAD_STATE_SUSPENDED;
+	     Thread->Tcb.Alertable = Alertable;
+	     Thread->Tcb.WaitMode = WaitMode;
 	     PiNrRunnableThreads--;
 	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	  }
 	else
 	  {
 	     DPRINT("Suspending current thread\n");
+	     Thread->Tcb.Alertable = Alertable;
+	     Thread->Tcb.WaitMode = WaitMode;	     
 	     PiNrRunnableThreads--;
 	     PsDispatchThreadNoLock(THREAD_STATE_SUSPENDED);
+	     if (WaitStatus != NULL)
+	       {
+		  *WaitStatus = PsGetCurrentThread()->Tcb.WaitStatus;
+	       }
 	     KeLowerIrql(oldIrql);
 	  }
      }
@@ -582,7 +596,7 @@ NtCreateThread (
    if (!CreateSuspended)
      {
         DPRINT("Not creating suspended\n");
-	PsResumeThread(Thread);
+	PsResumeThread(Thread, NULL);
      }
    DPRINT("Finished PsCreateThread()\n");
    return(STATUS_SUCCESS);
@@ -638,7 +652,7 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
 	*ClientId=Thread->Cid;
      }  
 
-   PsResumeThread(Thread);
+   PsResumeThread(Thread, NULL);
    
    return(STATUS_SUCCESS);
 }
@@ -667,16 +681,35 @@ KPRIORITY KeSetPriorityThread(PKTHREAD Thread, KPRIORITY Priority)
 }
 
 
-NTSTATUS STDCALL NtAlertResumeThread(IN	HANDLE	ThreadHandle,
-				     OUT	PULONG	SuspendCount)
+NTSTATUS STDCALL NtAlertResumeThread(IN	HANDLE ThreadHandle,
+				     OUT PULONG	SuspendCount)
 {
    UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtAlertThread (IN	HANDLE	ThreadHandle)
+NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
 {
-	UNIMPLEMENTED;
+   PETHREAD Thread;
+   NTSTATUS Status;
+   NTSTATUS ThreadStatus;
+   
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_SUSPEND_RESUME,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
+     {
+	return(Status);
+     }
+   
+   ThreadStatus = STATUS_ALERTED;
+   (VOID)PsResumeThread(Thread, &ThreadStatus);
+   
+   ObDereferenceObject(Thread);
+   return(STATUS_SUCCESS);   
 }
 
 
@@ -723,7 +756,7 @@ NTSTATUS STDCALL NtResumeThread (IN	HANDLE	ThreadHandle,
 	return(Status);
      }
    
-   (*SuspendCount) = PsResumeThread(Thread);
+   (*SuspendCount) = PsResumeThread(Thread, NULL);
    
    ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
@@ -767,7 +800,10 @@ NTSTATUS STDCALL NtSuspendThread (IN HANDLE ThreadHandle,
 	return(Status);
      }
    
-   (*PreviousSuspendCount) = PsSuspendThread(Thread);
+   (*PreviousSuspendCount) = PsSuspendThread(Thread, 
+					     NULL,
+					     FALSE,
+					     UserMode);
    
    ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);

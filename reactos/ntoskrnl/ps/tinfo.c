@@ -124,6 +124,10 @@ NtQueryInformationThread (
 	UNIMPLEMENTED
 }
 
+VOID KeSetPreviousMode(ULONG Mode)
+{
+   PsGetCurrentThread()->Tcb.PreviousMode = Mode;
+}
 
 ULONG KeGetPreviousMode(VOID)
 {

@@ -22,6 +22,10 @@
 extern VOID KeApcProlog(VOID);
 extern KSPIN_LOCK PiThreadListLock;
 
+/* PROTOTYPES ****************************************************************/
+
+VOID KeApcProlog3(PKAPC Apc);
+
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN KiTestAlert(PKTHREAD Thread,
@@ -38,30 +42,62 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    PKAPC Apc;
    PULONG Esp = (PULONG)UserContext->Esp;
    
+   DPRINT("KiTestAlert(Thread %x, UserContext %x)\n");
+   
    current_entry = Thread->ApcState.ApcListHead[1].Flink;
+   
+   if (current_entry == &Thread->ApcState.ApcListHead[1])
+     {
+	return(FALSE);
+     }
+   
    while (current_entry != &Thread->ApcState.ApcListHead[1])
      {
 	Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
 	
+	DPRINT("Esp %x\n", Esp);
+	DPRINT("Apc->NormalContext %x\n", Apc->NormalContext);
+	DPRINT("Apc->SystemArgument1 %x\n", Apc->SystemArgument1);
+	DPRINT("Apc->SystemArgument2 %x\n", Apc->SystemArgument2);
+	DPRINT("UserContext->Eip %x\n", UserContext->Eip);
+	
 	Esp = Esp - 16;
-	Esp[0] = (ULONG)Apc->SystemArgument2;
-	Esp[1] = (ULONG)Apc->SystemArgument1;
-	Esp[2] = (ULONG)Apc->NormalContext;
-	Esp[3] = UserContext->Eip;
+	Esp[3] = (ULONG)Apc->SystemArgument2;
+	Esp[2] = (ULONG)Apc->SystemArgument1;
+	Esp[1] = (ULONG)Apc->NormalContext;
+	Esp[0] = UserContext->Eip;
 	UserContext->Eip = (ULONG)Apc->NormalRoutine;
 	
 	current_entry = current_entry->Flink;
+	
+	/*
+	 * Now call for the kernel routine for the APC, which will free
+	 * the APC data structure
+	 */
+	KeApcProlog3(Apc);
      }
    UserContext->Esp = (ULONG)Esp;
+   InitializeListHead(&Thread->ApcState.ApcListHead[1]);
    return(TRUE);
 }
 
 VOID KeApcProlog2(PKAPC Apc)
+{
+   KeApcProlog3(Apc);
+   PsSuspendThread(CONTAINING_RECORD(Apc->Thread,ETHREAD,Tcb),
+		   NULL,
+		   Apc->Thread->Alertable,
+		   Apc->Thread->WaitMode);
+}
+
+VOID KeApcProlog3(PKAPC Apc)
 /*
  * FUNCTION: This is called from the prolog proper (in assembly) to deliver
  * a kernel APC
  */
 {
+   
+   
    DPRINT("KeApcProlog2(Apc %x)\n",Apc);
    KeEnterCriticalRegion();
    Apc->Thread->ApcState.KernelApcInProgress++;
@@ -70,11 +106,10 @@ VOID KeApcProlog2(PKAPC Apc)
    Apc->KernelRoutine(Apc,
 		      &Apc->NormalRoutine,
 		      &Apc->NormalContext,
-		      &Apc->SystemArgument2,
+		      &Apc->SystemArgument1,
 		      &Apc->SystemArgument2);
    Apc->Thread->ApcState.KernelApcInProgress--;
-   KeLeaveCriticalRegion();
-   PsSuspendThread(CONTAINING_RECORD(Apc->Thread,ETHREAD,Tcb));
+   KeLeaveCriticalRegion();   
 }
 
 VOID KeDeliverKernelApc(PKAPC Apc)
@@ -92,11 +127,7 @@ VOID KeDeliverKernelApc(PKAPC Apc)
    
    if (TargetThread == KeGetCurrentThread())
      {	
-	Apc->KernelRoutine(Apc,
-			   &Apc->NormalRoutine,
-			   &Apc->NormalContext,
-			   &Apc->SystemArgument2,
-			   &Apc->SystemArgument2);
+	KeApcProlog3(Apc);
 	return;
      }
    
@@ -129,7 +160,8 @@ VOID KeDeliverKernelApc(PKAPC Apc)
 	TargetThread->Context.eax = (ULONG)Apc;
      }
 
-   PsResumeThread(CONTAINING_RECORD(TargetThread,ETHREAD,Tcb));   
+   PsResumeThread(CONTAINING_RECORD(TargetThread,ETHREAD,Tcb),
+		  NULL);   
 }
 
 VOID KeInsertQueueApc(PKAPC Apc, 
@@ -153,6 +185,9 @@ VOID KeInsertQueueApc(PKAPC Apc,
    
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
    
+   Apc->SystemArgument1 = SystemArgument1;
+   Apc->SystemArgument2 = SystemArgument2;
+   
    if (Apc->Inserted)
      {
 	DbgPrint("KeInsertQueueApc(): multiple APC insertations\n");
@@ -170,6 +205,7 @@ VOID KeInsertQueueApc(PKAPC Apc,
      {
 	InsertTailList(&TargetThread->ApcState.ApcListHead[1],
 		       &Apc->ApcListEntry);
+	TargetThread->ApcState.KernelApcPending++;
 	TargetThread->ApcState.UserApcPending++;
      }
    Apc->Inserted = TRUE;
@@ -184,6 +220,17 @@ VOID KeInsertQueueApc(PKAPC Apc,
    else
      {
 	DPRINT("Queuing APC for later delivery\n");
+     }
+   if (Apc->ApcMode == UserMode && TargetThread->Alertable == TRUE &&
+       TargetThread->WaitMode == UserMode)
+     {
+	NTSTATUS Status;
+	
+	DPRINT("Resuming thread for user APC\n");
+	
+	Status = STATUS_USER_APC;
+	PsResumeThread((PETHREAD)TargetThread,
+		       &Status);
      }
    KeLowerIrql(oldlvl);
 }
@@ -209,7 +256,7 @@ VOID KeInitializeApc(PKAPC Apc,
  *       Mode = APC mode
  *       Context = Parameter to be passed to the APC routine
  */
-{
+{   
    DPRINT("KeInitializeApc(Apc %x, Thread %x, StateIndex %d, "
 	  "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
 	  "Context %x)\n",Apc,Thread,StateIndex,KernelRoutine,RundownRoutine,
@@ -224,19 +271,22 @@ VOID KeInitializeApc(PKAPC Apc,
    Apc->NormalContext = Context;
    Apc->Inserted = FALSE;
    Apc->ApcStateIndex = StateIndex;
-   Apc->ApcMode = Mode;
+   if (Apc->NormalRoutine != NULL)
+     {
+	Apc->ApcMode = Mode;
+     }
+   else
+     {
+	Apc->ApcMode = KernelMode;
+     }
 }
 
 
-NTSTATUS
-STDCALL
-NtQueueApcThread (
-	HANDLE			ThreadHandle,
-	PKNORMAL_ROUTINE	ApcRoutine,
-	PVOID			NormalContext,
-	PVOID			SystemArgument1,
-	PVOID			SystemArgument2
-	)
+NTSTATUS STDCALL NtQueueApcThread(HANDLE			ThreadHandle,
+				  PKNORMAL_ROUTINE	ApcRoutine,
+				  PVOID			NormalContext,
+				  PVOID			SystemArgument1,
+				  PVOID			SystemArgument2)
 {
    PKAPC Apc;
    PETHREAD Thread;
@@ -278,13 +328,8 @@ NtQueueApcThread (
 }
 
 
-NTSTATUS
-STDCALL
-NtTestAlert(VOID)
+NTSTATUS STDCALL NtTestAlert(VOID)
 {
-	KiTestAlert(
-		KeGetCurrentThread(),
-		NULL /* ?? */
-		);
-	return(STATUS_SUCCESS);
+   KiTestAlert(KeGetCurrentThread(),NULL);
+   return(STATUS_SUCCESS);
 }

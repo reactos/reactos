@@ -82,4 +82,5 @@ NTSTATUS HalRegisterServiceTable(DWORD  Mask,
 VOID HalInitializeDisplay (boot_param *bp);
 VOID HalResetDisplay (VOID);
 
+
 #endif /* __INTERNAL_HAL_HAL_H */

@@ -93,8 +93,15 @@ typedef struct
    struct minix_inode root_inode;
    char superblock_buf[BLOCKSIZE];
    struct minix_super_block* sb;
-   DCCB Dccb;
+   PFILE_OBJECT FileObject;
+   PBCB Bcb;
 } MINIX_DEVICE_EXTENSION, *PMINIX_DEVICE_EXTENSION;
+
+typedef struct
+{
+   PBCB Bcb;
+   struct minix_inode inode;
+} MINIX_FSCONTEXT, *PMINIX_FSCONTEXT;
 
 NTSTATUS MinixCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS MinixClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
@@ -116,7 +123,15 @@ NTSTATUS MinixDeleteInode(PDEVICE_OBJECT Volume,
 			  MINIX_DEVICE_EXTENSION* DeviceExt,
 			  ULONG ino);
 
-NTSTATUS MinixReadBlock(PMINIX_DEVICE_EXTENSION DeviceExt,
+NTSTATUS MinixReadBlock(PDEVICE_OBJECT DeviceObject,
+			PMINIX_DEVICE_EXTENSION DeviceExt,
 			struct minix_inode* inode, 
-			int blk,
-			PCCB* Ccb);
+			ULONG FileOffset,
+			PULONG DiskOffset);
+
+
+NTSTATUS MinixRequestCacheBlock(PDEVICE_OBJECT DeviceObject,
+				PBCB Bcb,
+				ULONG FileOffset,
+				PVOID* BaseAddress,
+				PCACHE_SEGMENT* CacheSeg);

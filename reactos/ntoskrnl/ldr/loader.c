@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.37 1999/11/02 08:55:41 dwelch Exp $
+/* $Id: loader.c,v 1.38 1999/11/24 11:51:51 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,6 +44,7 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 
 /* GLOBALS *******************************************************************/
 
+LIST_ENTRY ModuleListHead;
 POBJECT_TYPE ObModuleType = NULL;
 
 /* FORWARD DECLARATIONS ******************************************************/
@@ -140,9 +141,13 @@ VOID LdrInitModuleManagement(VOID)
                                 ObModuleType);
   assert(ModuleObject != NULL);
 
-  /*  Initialize ModuleObject data  */
+   InitializeListHead(&ModuleListHead);
+   
+   /*  Initialize ModuleObject data  */
   ModuleObject->Base = (PVOID) KERNEL_BASE;
   ModuleObject->Flags = MODULE_FLAG_PE;
+   InsertTailList(&ModuleListHead, &ModuleObject->ListEntry);
+   ModuleObject->Name = wcsdup(L"ntoskrnl.exe");   
   DosHeader = (PIMAGE_DOS_HEADER) KERNEL_BASE;
   ModuleObject->Image.PE.FileHeader = 
     (PIMAGE_FILE_HEADER) ((DWORD) ModuleObject->Base + 
@@ -154,7 +159,8 @@ VOID LdrInitModuleManagement(VOID)
   ModuleObject->EntryPoint = (PVOID) ((DWORD) ModuleObject->Base + 
     ModuleObject->Image.PE.OptionalHeader->AddressOfEntryPoint);
   DPRINT("ModuleObject:%08x  entrypoint at %x\n", ModuleObject, ModuleObject->EntryPoint);
-
+   ModuleObject->Length = ModuleObject->Image.PE.OptionalHeader->SizeOfImage;
+   
   /* FIXME: Add fake module entry for HAL */
 
 }
@@ -546,8 +552,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
    DPRINT1("Module is at base %x\n",DriverBase);
    
   /*  Copy image sections into virtual section  */
-  memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);
-  CurrentBase = (PVOID) ((DWORD)DriverBase + PESectionHeaders[0].PointerToRawData);
+//  memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);
+//  CurrentBase = (PVOID) ((DWORD)DriverBase + PESectionHeaders[0].PointerToRawData);
    CurrentSize = 0;
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
@@ -570,9 +576,9 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
         }
       CurrentSize += ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
                               PEOptionalHeader->SectionAlignment);
-      CurrentBase = (PVOID)((DWORD)CurrentBase + 
-        ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
-                 PEOptionalHeader->SectionAlignment));
+//      CurrentBase = (PVOID)((DWORD)CurrentBase + 
+  //      ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
+    //             PEOptionalHeader->SectionAlignment));
     }
 
   /*  Perform relocation fixups  */
@@ -778,8 +784,11 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
   /*  Initialize ModuleObject data  */
   ModuleObject->Base = DriverBase;
   ModuleObject->Flags = MODULE_FLAG_PE;
+  InsertTailList(&ModuleListHead, &ModuleObject->ListEntry);
+   ModuleObject->Name = wcsdup(NameBuffer);
   ModuleObject->EntryPoint = (PVOID) ((DWORD)DriverBase + 
     PEOptionalHeader->AddressOfEntryPoint);
+   ModuleObject->Length = DriverSize;
   DPRINT("entrypoint at %x\n", ModuleObject->EntryPoint);
   ModuleObject->Image.PE.FileHeader = 
     (PIMAGE_FILE_HEADER) ((unsigned int) DriverBase + 

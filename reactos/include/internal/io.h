@@ -59,5 +59,6 @@ PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 					 PLARGE_INTEGER StartingOffset,
 					 PKEVENT Event,
 					 PIO_STATUS_BLOCK IoStatusBlock);
+VOID IoShutdownIoManager(VOID);
 
 #endif

@@ -135,6 +135,20 @@ ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
    return(Entry);
 }
 
+ULONG MmGetPhysicalAddressForProcess(PEPROCESS Process,
+				     PVOID Address)
+{
+   ULONG PageEntry;
+   
+   PageEntry = MmGetPageEntryForProcess(Process, Address);
+   
+   if (!(PageEntry & PA_PRESENT))
+     {
+	return(0);
+     }
+   return(PAGE_MASK(PageEntry));
+}
+
 VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
 {
    PULONG page_tlb;
@@ -165,6 +179,7 @@ VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	KeDetachProcess();
      }
 }
+
 
 
 PULONG MmGetPageEntry(PVOID PAddress)

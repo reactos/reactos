@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.20 1999/10/26 04:52:38 rex Exp $
+/* $Id: registry.c,v 1.21 1999/11/24 11:51:46 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,7 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-/* #define  PROTO_REG  1  /* Comment out to disable */
+// #define  PROTO_REG  1  /* Comment out to disable */
 
 /*  -----------------------------------------------------  Typedefs  */
 

@@ -16,6 +16,7 @@
 #include <internal/symbol.h>
 #include <internal/i386/segment.h>
 #include <internal/mmhal.h>
+#include <internal/module.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -131,6 +132,31 @@ EXCEPTION_HANDLER_WITHOUT_ERROR("16",16);
 
 extern unsigned int stext, etext;
 
+static void print_address(PVOID address)
+{
+   PLIST_ENTRY current_entry;
+   PMODULE_OBJECT current;
+   extern LIST_ENTRY ModuleListHead;
+   
+   current_entry = ModuleListHead.Flink;
+   
+   while (current_entry != &ModuleListHead)
+     {
+	current = CONTAINING_RECORD(current_entry, MODULE_OBJECT, ListEntry);
+	
+	if (address >= current->Base &&
+	    address < (current->Base + current->Length))
+	  {
+	     DbgPrint("<%w: %x>\n", current->Name, 
+		      address - current->Base);
+	     return;
+	  }
+
+	current_entry = current_entry->Flink;
+     }
+   DbgPrint("<%x>\n", address);
+}
+
 asmlinkage void exception_handler(unsigned int edi,
                                   unsigned int esi, unsigned int ebp,
                                   unsigned int esp, unsigned int ebx,
@@ -153,7 +179,8 @@ asmlinkage void exception_handler(unsigned int edi,
  */
 {
    unsigned int cr2, cr3;
-   unsigned int i, j, sym;
+   unsigned int i;
+//   unsigned int j, sym;
    unsigned int* stack;
    static char *TypeStrings[] = 
      {
@@ -213,6 +240,8 @@ asmlinkage void exception_handler(unsigned int edi,
 	DbgPrint("Exception: %d(%x)\n",type,error_code&0xffff);
      }
    DbgPrint("CS:EIP %x:%x\n",cs&0xffff,eip);
+   DbgPrint("CS:EIP %x");
+   print_address(eip);
    __asm__("movl %%cr2,%0\n\t"
 	   : "=d" (cr2));
    __asm__("movl %%cr3,%0\n\t"
@@ -249,7 +278,6 @@ asmlinkage void exception_handler(unsigned int edi,
      {
 	DbgPrint("kernel ESP %.8x\n",esp);
      }
-   for(;;);
   if ((cs & 0xffff) == KERNEL_CS)
     {
       DbgPrint("ESP %x\n",esp);
@@ -271,8 +299,8 @@ asmlinkage void exception_handler(unsigned int edi,
 	      !(stack[i] >= ((ULONG)&init_stack) &&
 		stack[i] <= ((ULONG)&init_stack_top)))
             {
-              DbgPrint("  %.8x", 
-                       stack[i]);
+//              DbgPrint("  %.8x", stack[i]);
+	       print_address(stack[i]);
             }
         }
      }

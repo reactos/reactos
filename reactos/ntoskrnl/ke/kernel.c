@@ -13,7 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -28,9 +28,7 @@ VOID KeInit(VOID)
    /*
     * Allow interrupts
     */
-   CHECKPOINT;
    KeLowerIrql(PASSIVE_LEVEL);
    
-   CHECKPOINT;
    KeCalibrateTimerLoop();
 }

@@ -1,5 +1,6 @@
 
 
+HANDLE PsGetCurrentProcessId(VOID);
 
 /*
  * FUNCTION: Creates a thread which executes in kernel mode
@@ -25,7 +26,11 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
 			      PKSTART_ROUTINE StartRoutine,
                               PVOID StartContext);
 NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus);
-ULONG PsSuspendThread(PETHREAD Thread);
-ULONG PsResumeThread(PETHREAD Thread);
+ULONG PsSuspendThread(PETHREAD Thread,
+		      PNTSTATUS WaitStatus,
+		      UCHAR Alertable,
+		      ULONG WaitMode);
+ULONG PsResumeThread(PETHREAD Thread,
+		     PNTSTATUS WaitStatus);
 PETHREAD PsGetCurrentThread(VOID);
 struct _EPROCESS* PsGetCurrentProcess(VOID);

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.13 1999/11/20 21:44:34 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.14 1999/11/24 11:51:46 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -129,8 +129,8 @@ NtAllocateUuids=NtAllocateUuids@12
 NtAllocateVirtualMemory=NtAllocateVirtualMemory@24
 ;NtBuildNumber <--- variable
 NtClose=NtClose@4
-;NtConnectPort@32
-NtConnectPort=NtConnectPort@8
+NtConnectPort=NtConnectPort@32
+;NtConnectPort=NtConnectPort@8
 NtCreateEvent=NtCreateEvent@20
 NtCreateFile=NtCreateFile@44
 NtCreateSection=NtCreateSection@28
@@ -160,10 +160,10 @@ NtQuerySecurityObject=NtQuerySecurityObject@20
 NtQuerySystemTime=NtQuerySystemTime@4
 NtQueryVolumeInformationFile=NtQueryVolumeInformationFile@20
 NtReadFile=NtReadFile@36
-;NtRequestPort@8
-NtRequestPort=NtRequestPort@20
-;NtRequestWaitReplyPort@8
-NtRequestWaitReplyPort=NtRequestWaitReplyPort@0
+NtRequestPort=NtRequestPort@8
+;NtRequestPort=NtRequestPort@20
+NtRequestWaitReplyPort@12
+;NtRequestWaitReplyPort=NtRequestWaitReplyPort@0
 NtSetEvent=NtSetEvent@8
 NtSetInformationFile=NtSetInformationFile@20
 NtSetInformationProcess=NtSetInformationProcess@16

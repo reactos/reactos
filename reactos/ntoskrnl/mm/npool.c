@@ -137,7 +137,7 @@ VOID ExInitNonPagedPool(ULONG BaseAddress)
    KeInitializeSpinLock(&AllocMapLock);
 }
 
-#if 1
+#if 0
 static void validate_free_list(void)
 /*
  * FUNCTION: Validate the integrity of the list of free blocks

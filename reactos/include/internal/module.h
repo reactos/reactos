@@ -36,8 +36,11 @@ typedef struct _MODULE_OBJECT
   CSHORT  ObjectType;
   CSHORT  ObjectSize;
   PVOID  Base;
+   ULONG Length;
   unsigned int  Flags;
   PVOID  EntryPoint;
+  LIST_ENTRY ListEntry;
+  PWSTR Name;
   union
     { 
       struct

@@ -15,40 +15,35 @@
 
 
 
-HANDLE CreateWaitableTimerW(
-  LPSECURITY_ATTRIBUTES lpTimerAttributes,
-  WINBOOL bManualReset,  
-  LPWSTR lpTimerName 
-)
+HANDLE CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
+			    WINBOOL bManualReset,  
+			    LPWSTR lpTimerName)
 {
+   NTSTATUS errCode;
+   HANDLE TimerHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING UnicodeName;
 
-	NTSTATUS errCode;
-	HANDLE TimerHandle;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING UnicodeName;
+   ULONG TimerType;
+   
+   if (bManualReset)
+     TimerType = 1;
+   else
+     TimerType = 2;
 
-	ULONG TimerType;
-
-	if ( bManualReset )
-		TimerType = 1;
-	else
-		TimerType = 2;
-
-   	RtlInitUnicodeString(&UnicodeName, lpTimerName);
-   	InitializeObjectAttributes(&ObjectAttributes,
+   RtlInitUnicodeString(&UnicodeName, lpTimerName);
+   InitializeObjectAttributes(&ObjectAttributes,
 			      &UnicodeName,
 			      0,
 			      NULL,
 			      NULL);
-	//TIMER_ALL_ACCESS
-	errCode = NtCreateTimer(
-		&TimerHandle,
-		0,
-		&ObjectAttributes,
-		TimerType
-	);
+   //TIMER_ALL_ACCESS
+   errCode = NtCreateTimer(&TimerHandle,
+			   0,
+			   &ObjectAttributes,
+			   TimerType);
 
-	return TimerHandle;
+   return TimerHandle;
 }
 
 

@@ -1,17 +1,6 @@
 #ifndef __INCLUDE_DDK_ZWTYPES_H
 #define __INCLUDE_DDK_ZWTYPES_H
 
-#ifndef PROTO_LPC
-/* Added by David Welch at 09/04/99 */
-typedef struct _PORT_MSG_DATA
-{
-   ULONG DataLength;
-   PVOID Data;
-   HANDLE ReplyPort;
-} PORT_MSG_DATA, *PPORT_MSG_DATA;
-
-#else
-/* Added by EA on 199906160051 */
 typedef
 enum {
 	LpcMessageTypeUnknown,	/* invalid */
@@ -38,7 +27,7 @@ struct _LPC_MESSAGE
 	DWORD			Flags; /* To be defined */
 		
 } LPC_MESSAGE, * PLPC_MESSAGE;
-#endif /* ndef PROTO_LPC */
+
 
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )

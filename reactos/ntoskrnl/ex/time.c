@@ -45,7 +45,7 @@ NtSetSystemTime (
 	IN	PLARGE_INTEGER	NewSystemTime	OPTIONAL
 	)
 {
-        HalSetRealTimeClock ((PTIME)SystemTime);
+//        HalSetRealTimeClock ((PTIME)SystemTime);
 //        UNIMPLEMENTED;
         return STATUS_SUCCESS;
 }

@@ -46,9 +46,7 @@ VOID NtInitializeEventImplementation(VOID)
    ExEventType->OkayToClose = NULL;
 }
 
-NTSTATUS
-STDCALL
-NtClearEvent (IN HANDLE EventHandle)
+NTSTATUS STDCALL NtClearEvent (IN HANDLE EventHandle)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -69,15 +67,11 @@ NtClearEvent (IN HANDLE EventHandle)
 }
 
 
-NTSTATUS
-STDCALL
-NtCreateEvent (
-	OUT	PHANDLE			EventHandle,
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
-	IN	BOOLEAN			ManualReset,
-	IN	BOOLEAN			InitialState
-	)
+NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE			EventHandle,
+				IN ACCESS_MASK		DesiredAccess,
+				IN POBJECT_ATTRIBUTES	ObjectAttributes,
+				IN BOOLEAN			ManualReset,
+				IN BOOLEAN	InitialState)
 {
    PKEVENT Event;
    
@@ -97,13 +91,9 @@ NtCreateEvent (
 }
 
 
-NTSTATUS
-STDCALL
-NtOpenEvent (
-	OUT	PHANDLE			EventHandle,
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes
-	)
+NTSTATUS STDCALL NtOpenEvent (OUT PHANDLE			EventHandle,
+			      IN ACCESS_MASK		DesiredAccess,
+			      IN POBJECT_ATTRIBUTES	ObjectAttributes)
 {
    NTSTATUS Status;
    PKEVENT Event;   

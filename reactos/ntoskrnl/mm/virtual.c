@@ -34,6 +34,13 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
    
    DPRINT("Releasing %x between %x %x\n",
 	  Marea, Marea->BaseAddress, Marea->BaseAddress + Marea->Length);
+   
+   if (Marea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT ||
+       Marea->Type == MEMORY_AREA_SECTION_VIEW_RESERVE)
+     {
+	MmUnmapViewOfSection(Process, Marea);
+     }
+   
    for (i = Marea->BaseAddress; 
 	i < (Marea->BaseAddress + Marea->Length);
 	i = i+PAGESIZE)

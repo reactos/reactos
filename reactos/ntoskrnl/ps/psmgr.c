@@ -11,9 +11,18 @@
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 
+#include <internal/debug.h>
+
 /* FUNCTIONS ***************************************************************/
 
-VOID PsInit(VOID)
+VOID PiShutdownProcessManager(VOID)
+{
+   DPRINT("PiShutdownMemoryManager()\n");
+   
+   PiKillMostProcesses();
+}
+
+VOID PiInitProcessManager(VOID)
 {
    PsInitProcessManagment();
    PsInitThreadManagment();

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.6 1999/11/17 21:20:15 ariadne Exp $
+/* $Id: section.c,v 1.7 1999/11/24 11:51:44 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -119,16 +119,12 @@ CreateFileMappingW (
 }
 
 
-LPVOID
-STDCALL
-MapViewOfFileEx (
-	HANDLE	hFileMappingObject,
-	DWORD	dwDesiredAccess,
-	DWORD	dwFileOffsetHigh,
-	DWORD	dwFileOffsetLow,
-	DWORD	dwNumberOfBytesToMap,
-	LPVOID	lpBaseAddress
-	)
+LPVOID STDCALL MapViewOfFileEx(HANDLE	hFileMappingObject,
+			       DWORD	dwDesiredAccess,
+			       DWORD	dwFileOffsetHigh,
+			       DWORD	dwFileOffsetLow,
+			       DWORD	dwNumberOfBytesToMap,
+			       LPVOID	lpBaseAddress)
 {
    NTSTATUS Status;
    LARGE_INTEGER SectionOffset;
@@ -139,17 +135,26 @@ MapViewOfFileEx (
    SectionOffset.u.LowPart = dwFileOffsetLow;
    SectionOffset.u.HighPart = dwFileOffsetHigh;
 
-   if ( ( dwDesiredAccess & FILE_MAP_WRITE ) == FILE_MAP_WRITE )
+   if ( ( dwDesiredAccess & FILE_MAP_WRITE) == FILE_MAP_WRITE)
 	Protect  = PAGE_READWRITE;
-   else if ( ( dwDesiredAccess & FILE_MAP_READ ) == FILE_MAP_READ )
+   else if ((dwDesiredAccess & FILE_MAP_READ) == FILE_MAP_READ)
 	Protect = PAGE_READONLY;
-   else if ( ( dwDesiredAccess & FILE_MAP_ALL_ACCESS ) == FILE_MAP_ALL_ACCESS )
+   else if ((dwDesiredAccess & FILE_MAP_ALL_ACCESS) == FILE_MAP_ALL_ACCESS)
 	Protect  = PAGE_READWRITE;
-   else if ( ( dwDesiredAccess & FILE_MAP_COPY ) == FILE_MAP_COPY )
+   else if ((dwDesiredAccess & FILE_MAP_COPY) == FILE_MAP_COPY)
 	Protect = PAGE_WRITECOPY;
    else
-	Protect  = PAGE_READWRITE;
-
+	Protect = PAGE_READWRITE;
+   
+   if (lpBaseAddress == NULL)
+     {
+	BaseAddress = NULL;
+     }
+   else
+     {
+	BaseAddress = lpBaseAddress;
+     }
+   
    Status = ZwMapViewOfSection(hFileMappingObject,
 			NtCurrentProcess(),
 			&BaseAddress,

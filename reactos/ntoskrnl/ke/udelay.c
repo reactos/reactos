@@ -1,4 +1,4 @@
-/* $Id: udelay.c,v 1.1 1999/11/12 12:01:15 dwelch Exp $
+/* $Id: udelay.c,v 1.2 1999/11/24 11:51:50 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -36,11 +36,11 @@ extern ULONGLONG KiTimerTicks;
 
 VOID KeCalibrateTimerLoop(VOID)
 {
-   unsigned int start_tick;
+//   unsigned int start_tick;
 //   unsigned int end_tick;
 //   unsigned int nr_ticks;
-   unsigned int i;
-   unsigned int microseconds;
+//   unsigned int i;
+//   unsigned int microseconds;
    
    #if 0
    for (i=0;i<20;i++)
