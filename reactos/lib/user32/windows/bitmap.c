@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.8 2002/12/26 17:21:27 robd Exp $
+/* $Id: bitmap.c,v 1.9 2003/05/22 21:41:20 sedwards Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -133,6 +133,10 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 	{
 	  return(NULL);
 	}
+	/* offset BitmapInfo by 14 bytes to acount for the size of BITMAPFILEHEADER
+	   unfortunatly sizeof(BITMAPFILEHEADER) = 16, but the acutal size should be 14!
+	*/
+	BitmapInfo = (BITMAPINFO*)(((PBYTE)BitmapInfo) + 14);
     }
 
   if (BitmapInfo->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
