@@ -3,6 +3,8 @@
 
 PATH_TO_TOP = ../../../..
 
+TEST_ROOT = $(PATH_TO_TOP)/apps/testsets/test
+
 TARGET_NORC = yes
 
 TARGET_TYPE = program
@@ -11,8 +13,8 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = fileio
 
-#TARGET_CFLAGS = -DDBG -DUNICODE -D_UNICODE
-TARGET_CFLAGS = -DDBG
+#TARGET_CFLAGS = -I$(TEST_ROOT) -DDBG -DUNICODE -D_UNICODE
+TARGET_CFLAGS = -I$(TEST_ROOT) -DDBG
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

@@ -49,7 +49,6 @@
 
 extern BOOL verbose_flagged;
 extern BOOL status_flagged;
-//extern TCHAR test_buffer[TEST_BUFFER_SIZE];
 
 static TCHAR test_buffer[TEST_BUFFER_SIZE];
 
@@ -76,22 +75,17 @@ static TCHAR nix_data[] = _T("line1: this is a bunch of readable text.\n")\
 #endif /*UNICODE*/
 
 
-
-
-
 static BOOL create_output_file(TCHAR* file_name, TCHAR* file_mode, TCHAR* file_data)
 {
     BOOL result = FALSE;
     FILE *file = _tfopen(file_name, file_mode);
     if (file != NULL) {
-#ifndef _NO_NEW_DEPENDS_
         if (_fputts(file_data, file) != _TEOF) {
             result = TRUE;
         } else {
             _tprintf(_T("ERROR: failed to write data to file \"%s\"\n"), file_name);
             _tprintf(_T("ERROR: ferror returned %d\n"), ferror(file));
         }
-#endif
         fclose(file);
     } else {
         _tprintf(_T("ERROR: failed to open/create file \"%s\" for output\n"), file_name);
@@ -115,7 +109,6 @@ static BOOL verify_output_file(TCHAR* file_name, TCHAR* file_mode, TCHAR* file_d
     } else if (status_flagged) {
         _tprintf(_T("STATUS: (%s) opened file for reading\n"), file_name);
     }
-#ifndef _NO_NEW_DEPENDS_
     while (_fgetts(test_buffer, TEST_BUFFER_SIZE, file)) {
         int length = _tcslen(test_buffer);
         int req_len = _tcschr(file_data+offset, _T('\n')) - (file_data+offset) + 1;
@@ -123,6 +116,11 @@ static BOOL verify_output_file(TCHAR* file_name, TCHAR* file_mode, TCHAR* file_d
         ++line_num;
         if (length > req_len) {
             _tprintf(_T("ERROR: read excess bytes from line %d, length %d, but expected %d\n"), line_num, length, req_len);
+            error_flagged = TRUE;
+            break;
+        }
+        if (length < req_len) {
+            _tprintf(_T("ERROR: read to few bytes from line %d, length %d, but expected %d\n"), line_num, length, req_len);
             error_flagged = TRUE;
             break;
         }
@@ -159,7 +157,6 @@ static BOOL verify_output_file(TCHAR* file_name, TCHAR* file_mode, TCHAR* file_d
         _tprintf(_T("ERROR: (%s) failed to verify file\n"), file_name);
         result = FALSE;
     }
-#endif
     fclose(file);
     return result;
 }
@@ -232,12 +229,10 @@ static int check_file_size(TCHAR* file_name, TCHAR* file_mode, int expected)
 
 static int test_console_io(void)
 {
-#ifndef _NO_NEW_DEPENDS_
     TCHAR buffer[81];
     TCHAR ch;
     int i, j;
 
-    //printf("Enter a line for echoing:\n");
     _tprintf(_T("Enter a line for echoing:\n"));
 
     //for (i = 0; (i < 80) && ((ch = _gettchar()) != _TEOF) && (ch != _T('\n')); i++) {
@@ -250,17 +245,14 @@ static int test_console_io(void)
     }
     _puttc(_T('\n'), stdout);
     _tprintf(_T("%s\n"), buffer);
-#endif
     return 0;
 }
 
 static int test_console_getchar(void)
 {
     int result = 0;
-#ifndef _NO_NEW_DEPENDS_
     TCHAR ch;
 
-    //printf("Enter lines for dumping or <ctrl-z><nl> to finish:\n");
     _tprintf(_T("Enter lines for dumping or <ctrl-z><nl> to finish:\n"));
 
     //while ((ch = _gettchar()) != _TEOF) {
@@ -268,14 +260,12 @@ static int test_console_getchar(void)
         _tprintf(_THEX_FORMAT, ch);
         //printf("0x%04x ", ch);
     }
-#endif
     return result;
 }
 
 static int test_console_putch(void)
 {
     int result = 0;
-    //TCHAR ch;
 
     _putch('1');
     _putch('@');
@@ -287,8 +277,6 @@ static int test_console_putch(void)
     _putch('c');
     _putch(':');
     _putch('\n');
-
-
     return result;
 }
 
@@ -363,62 +351,3 @@ static int test_files(int test_num, char* type)
     }
     return result;
 }
-
-#if 1
-
-#else
-
-static int test_files(int test_num, char* type)
-{
-    int result = 0;
-
-    printf("performing test: %d (%s)\n", test_num, type);
-
-    switch (test_num) {
-    case 1:
-        result = create_test_file(_T("text.dos"), _T("w"), _T("r"), dos_data);
-        break;
-    case 2:
-        result = create_test_file(_T("binary.dos"), _T("wb"), _T("rb"), dos_data);
-        break;
-    case 3:
-        result = create_test_file(_T("text.nix"), _T("w"), _T("r"), nix_data);
-        break;
-    case 4:
-        result = create_test_file(_T("binary.nix"), _T("wb"), _T("rb"), nix_data);
-        break;
-
-    case 5:
-        result = check_file_size(_T("text.dos"), _T("r"), 166);
-        result = check_file_size(_T("text.dos"), _T("rb"), TEST_B1_FILE_SIZE);
-        break;
-    case 6:
-        result = check_file_size(_T("binary.dos"), _T("r"), TEST_B2_FILE_SIZE);
-        result = check_file_size(_T("binary.dos"), _T("rb"), 166);
-        break;
-    case 7:
-        result = check_file_size(_T("text.nix"), _T("r"), 162);
-        result = check_file_size(_T("text.nix"), _T("rb"), TEST_B3_FILE_SIZE);
-        break;
-    case 8:
-        result = check_file_size(_T("binary.nix"), _T("r"), TEST_B4_FILE_SIZE);
-        result = check_file_size(_T("binary.nix"), _T("rb"), 162);
-        break;
-
-    case 9:
-        result = test_console_io();
-        break;
-    case 0:
-        result = test_console_getchar();
-        break;
-    case -1:
-        result = test_unlink_files();
-        break;
-    default:
-        _tprintf(_T("no test number selected\n"));
-        break;
-    }
-    return result;
-}
-
-#endif

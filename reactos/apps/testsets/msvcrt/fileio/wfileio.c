@@ -25,7 +25,7 @@
 #include "_tfileio.c"
 
 
-int test_unicode_files(int test_num)
+int run_unicode_tests(int test_num)
 {
     return test_files(test_num, "UNICODE");
 }

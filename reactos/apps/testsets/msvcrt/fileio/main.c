@@ -89,7 +89,6 @@ int __cdecl main(int argc, char* argv[])
             //if (test_num < 0
         }
     }
-#if 1
     for (i = test_num; i <= test_num; i++) {
         if (!test_num) {
             test_num = 4;
@@ -97,84 +96,28 @@ int __cdecl main(int argc, char* argv[])
         }
         switch (version) {
         case 1:
-            result = test_ansi_files(i);
+            result = run_ansi_tests(i);
             break;
         case 2:
-            result = test_unicode_files(i);
+            result = run_unicode_tests(i);
             break;
         default:
-            result = test_ansi_files(i);
-            result = test_unicode_files(i);
+            result = run_ansi_tests(i);
+            result = run_unicode_tests(i);
             break;
         }
     }
-#else
-    if (test_num == 0) {
-        for (i = 1; i <= 4; i++) {
-            result = test_ansi_files(i);
-            result = test_unicode_files(i);
-        }
-    } else {
-    switch (version) {
-    case 1:
-        //result = test_ansi_files(test_num);
-        while (i <= test_num) {
-            result = test_ansi_files(i);
-        }
-        break;
-    case 2:
-        //result = test_unicode_files(test_num);
-        while (i <= test_num) {
-            result = test_unicode_files(i);
-        }
-        break;
-    default:
-        while (i <= test_num) {
-            result = test_ansi_files(i);
-            result = test_unicode_files(i);
-            ++i;
-        }
-        break;
-    }
-    }
-#endif
     printf("finished\n");
     return result;
 }
-/*
-ANSI:
-  all tests passing
 
-UNICODE:
-  writing binary files short one byte. ie. odd number file lengths.
-  reading text files returns one extra byte.
-
- */
 #ifndef __GNUC__
 
 char* args[] = { "fileio.exe", "0", "unicode", "verbose"};
 
-char* args1[] = { "fileio.exe", "1", "unicode" };
-char* args2[] = { "fileio.exe", "2", "unicode" };
-char* args3[] = { "fileio.exe", "3", "unicode" };
-char* args4[] = { "fileio.exe", "4", "unicode" };
-
 int __cdecl mainCRTStartup(void)
 {
     main(2, args);
-#if 0
-//#if 1
-    main(2, args1);
-    main(2, args2);
-    main(2, args3);
-    main(2, args4);
-//#else
-    main(3, args1);
-    main(3, args2);
-    main(3, args3);
-    main(3, args4);
-//#endif
-#endif
     return 0;
 }
 
