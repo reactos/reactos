@@ -347,6 +347,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define CreateFile  CreateFileW
 #define SetFileAttributes  SetFileAttributesW
 #define GetFileAttributes  GetFileAttributesW
+#define GetFileAttributesEx  GetFileAttributesExW
 #define GetCompressedFileSize  GetCompressedFileSizeW
 #define DeleteFile  DeleteFileW
 #define FindFirstFileEx  FindFirstFileExW
@@ -753,6 +754,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define CreateFile  CreateFileA
 #define SetFileAttributes  SetFileAttributesA
 #define GetFileAttributes  GetFileAttributesA
+#define GetFileAttributesEx GetFileAttributesExA
 #define GetCompressedFileSize  GetCompressedFileSizeA
 #define DeleteFile  DeleteFileA
 #define FindFirstFileEx  FindFirstFileExA

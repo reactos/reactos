@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.43 2003/03/23 04:01:16 ekohl Exp $
+/* $Id: file.c,v 1.44 2003/06/09 19:58:21 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -491,46 +491,27 @@ GetFileInformationByHandle(HANDLE hFile,
    return TRUE;
 }
 
-
-DWORD STDCALL
-GetFileAttributesA(LPCSTR lpFileName)
+BOOL STDCALL
+GetFileAttributesExW(LPCWSTR lpFileName, 
+		     GET_FILEEX_INFO_LEVELS fInfoLevelId, 
+		     LPVOID lpFileInformation)
 {
-	UNICODE_STRING FileNameU;
-	ANSI_STRING FileName;
-	WINBOOL Result;
-
-	RtlInitAnsiString (&FileName,
-	                   (LPSTR)lpFileName);
-
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&FileNameU,
-		                              &FileName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&FileNameU,
-		                             &FileName,
-		                             TRUE);
-
-	Result = GetFileAttributesW (FileNameU.Buffer);
-
-	RtlFreeUnicodeString (&FileNameU);
-
-	return Result;
-}
-
-
-DWORD STDCALL
-GetFileAttributesW(LPCWSTR lpFileName)
-{
-  FILE_BASIC_INFORMATION FileInformation;
+  FILE_NETWORK_OPEN_INFORMATION FileInformation;
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
   UNICODE_STRING FileName;
   HANDLE FileHandle;
   NTSTATUS Status;
+  WIN32_FILE_ATTRIBUTE_DATA* FileAttributeData;
 
-  DPRINT ("GetFileAttributeW(%S) called\n", lpFileName);
+  DPRINT ("GetFileAttributesExW(%S) called\n", lpFileName);
+
+
+  if (fInfoLevelId != GetFileExInfoStandard || lpFileInformation == NULL)
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
 
   /* Validate and translate the filename */
   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
@@ -540,9 +521,8 @@ GetFileAttributesW(LPCWSTR lpFileName)
     {
       DPRINT ("Invalid path\n");
       SetLastError (ERROR_BAD_PATHNAME);
-      return 0xFFFFFFFF;
+      return FALSE;
     }
-  DPRINT ("FileName: \'%wZ\'\n", &FileName);
 
   /* build the object attributes */
   InitializeObjectAttributes (&ObjectAttributes,
@@ -563,26 +543,106 @@ GetFileAttributesW(LPCWSTR lpFileName)
     {
       DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
       SetLastErrorByStatus (Status);
-      return 0xFFFFFFFF;
+      return FALSE;
     }
 
   /* Get file attributes */
   Status = NtQueryInformationFile (FileHandle,
 				   &IoStatusBlock,
 				   &FileInformation,
-				   sizeof(FILE_BASIC_INFORMATION),
-				   FileBasicInformation);
+				   sizeof(FILE_NETWORK_OPEN_INFORMATION),
+				   FileNetworkOpenInformation);
   NtClose (FileHandle);
+
   if (!NT_SUCCESS (Status))
     {
       DPRINT ("NtQueryInformationFile() failed (Status %lx)\n", Status);
       SetLastErrorByStatus (Status);
-      return 0xFFFFFFFF;
+      return FALSE;
     }
 
-  return (DWORD)FileInformation.FileAttributes;
+  FileAttributeData = (WIN32_FILE_ATTRIBUTE_DATA*)lpFileInformation;
+  FileAttributeData->dwFileAttributes = FileInformation.FileAttributes;
+  FileAttributeData->ftCreationTime.dwLowDateTime = FileInformation.CreationTime.u.LowPart;
+  FileAttributeData->ftCreationTime.dwHighDateTime = FileInformation.CreationTime.u.HighPart;
+  FileAttributeData->ftLastAccessTime.dwLowDateTime = FileInformation.LastAccessTime.u.LowPart;
+  FileAttributeData->ftLastAccessTime.dwHighDateTime = FileInformation.LastAccessTime.u.HighPart;
+  FileAttributeData->ftLastWriteTime.dwLowDateTime = FileInformation.LastWriteTime.u.LowPart;
+  FileAttributeData->ftLastWriteTime.dwHighDateTime = FileInformation.LastWriteTime.u.HighPart;
+  FileAttributeData->nFileSizeLow = FileInformation.EndOfFile.u.LowPart;
+  FileAttributeData->nFileSizeHigh = FileInformation.EndOfFile.u.HighPart;
+
+  return TRUE;
 }
 
+BOOL STDCALL
+GetFileAttributesExA(LPCSTR lpFileName,
+		     GET_FILEEX_INFO_LEVELS fInfoLevelId, 
+		     LPVOID lpFileInformation)
+{
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
+	BOOL Result;
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
+	else
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
+
+        Result = GetFileAttributesExW(FileNameU.Buffer, fInfoLevelId, lpFileInformation);
+
+	RtlFreeUnicodeString (&FileNameU);
+
+	return Result;
+}
+
+DWORD STDCALL
+GetFileAttributesA(LPCSTR lpFileName)
+{
+        WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
+	BOOL Result;
+
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
+	else
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
+
+        Result = GetFileAttributesExW(FileNameU.Buffer, GetFileExInfoStandard, &FileAttributeData);
+
+	RtlFreeUnicodeString (&FileNameU);
+
+	return Result ? FileAttributeData.dwFileAttributes : 0xffffffff;
+}
+
+DWORD STDCALL
+GetFileAttributesW(LPCWSTR lpFileName)
+{
+  WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
+  BOOL Result;
+
+  DPRINT ("GetFileAttributeW(%S) called\n", lpFileName);
+
+  Result = GetFileAttributesExW(lpFileName, GetFileExInfoStandard, &FileAttributeData);
+
+  return Result ? FileAttributeData.dwFileAttributes : 0xffffffff;
+}
 
 WINBOOL STDCALL
 SetFileAttributesA(LPCSTR lpFileName,

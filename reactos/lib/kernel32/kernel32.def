@@ -265,8 +265,8 @@ GetExitCodeProcess@8
 GetExitCodeThread@8
 GetFileAttributesA@4
 GetFileAttributesW@4
-GetFileAttributesExA
-GetFileAttributesExW
+GetFileAttributesExA@12
+GetFileAttributesExW@12
 GetFileInformationByHandle@8
 GetFileSize@8
 GetFileTime@16

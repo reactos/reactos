@@ -606,6 +606,14 @@ GetFileAttributesA(
     LPCSTR lpFileName
     );
 
+BOOL 
+STDCALL
+GetFileAttributesExA(
+    LPCSTR lpFileName,
+    GET_FILEEX_INFO_LEVELS fInfoLevelId, 
+    LPVOID lpFileInformation
+    );    
+
 DWORD
 STDCALL
 GetCompressedFileSizeA(
