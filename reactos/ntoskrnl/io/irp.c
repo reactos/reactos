@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.54 2003/11/19 20:54:31 gdalsnes Exp $
+/* $Id: irp.c,v 1.55 2003/11/30 20:01:05 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -229,10 +229,12 @@ IofCompleteRequest(PIRP Irp,
    NTSTATUS          Status;
    PDEVICE_OBJECT    DeviceObject;
    PFILE_OBJECT      OriginalFileObject;
+   KIRQL             oldIrql;
 
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
       Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
 
+   assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
    assert(Irp->CancelRoutine == NULL);
    assert(Irp->IoStatus.Status != STATUS_PENDING);
 
@@ -285,10 +287,10 @@ IofCompleteRequest(PIRP Irp,
    //Windows NT File System Internals, page 154
    OriginalFileObject = Irp->Tail.Overlay.OriginalFileObject;
 
-   if (Irp->PendingReturned)
+   if (Irp->PendingReturned || KeGetCurrentIrql() == DISPATCH_LEVEL)
    {
       BOOLEAN bStatus;
-
+      
       DPRINT("Dispatching APC\n");
       KeInitializeApc(  &Irp->Tail.Apc,
                         &Irp->Tail.Overlay.Thread->Tcb,
@@ -314,7 +316,9 @@ IofCompleteRequest(PIRP Irp,
    else
    {
       DPRINT("Calling IoSecondStageCompletion routine directly\n");
+      KeRaiseIrql(APC_LEVEL, &oldIrql);
       IoSecondStageCompletion(NULL,NULL,(PVOID)&OriginalFileObject,(PVOID) &Irp,(PVOID) &PriorityBoost);
+      KeLowerIrql(oldIrql);
       DPRINT("Finished completition routine\n");
    }
 
