@@ -1112,30 +1112,6 @@ NtUserInitTask(
 
 DWORD
 STDCALL
-NtUserInvalidateRect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserInvalidateRgn(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserIsClipboardFormatAvailable(
   DWORD Unknown0)
 {

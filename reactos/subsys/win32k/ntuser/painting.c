@@ -1,4 +1,4 @@
-/* $Id: painting.c,v 1.11 2003/03/20 10:10:12 gvg Exp $
+/* $Id: painting.c,v 1.12 2003/03/27 02:25:14 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -832,3 +832,52 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   ObmDereferenceObject(Window);
   return(lPs->hdc);
 }
+
+DWORD
+STDCALL
+NtUserInvalidateRect(
+  HWND hWnd,
+  CONST RECT *lpRect,
+  WINBOOL bErase)
+{
+   HRGN hRGN;
+   hRGN = W32kCreateRectRgnIndirect(lpRect);
+   return NtUserInvalidateRgn(hWnd, hRGN, bErase);
+}
+
+DWORD
+STDCALL
+NtUserInvalidateRgn(
+  HWND hWnd,
+  HRGN hRgn,
+  WINBOOL bErase)
+{
+  PWINDOW_OBJECT WindowObject;
+
+  WindowObject = W32kGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+    {
+      return(FALSE);
+    }
+    
+  if( WindowObject->UpdateRegion == NULL )
+    {
+      WindowObject->UpdateRegion = W32kCreateRectRgn (0, 0, 1, 1);
+      if (!W32kCombineRgn(WindowObject->UpdateRegion, hRgn, hRgn, RGN_COPY ))
+      {
+         W32kReleaseWindowObject(WindowObject);
+         return(FALSE);
+      }
+    }
+
+  if (!W32kCombineRgn(WindowObject->UpdateRegion, WindowObject->UpdateRegion, hRgn, RGN_OR ))
+    {
+      W32kReleaseWindowObject(WindowObject);
+      return(FALSE);
+    }
+
+  W32kReleaseWindowObject(WindowObject);
+  W32kSendMessage(hWnd, WM_PAINT, 0, 0, FALSE);
+  return(TRUE);   
+}
+

@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.52 2003/03/24 22:49:54 gvg Exp $
+/* $Id: dc.c,v 1.53 2003/03/27 02:25:14 rcampbell Exp $
  *
  * DC.C - Device context functions
  *
@@ -1324,6 +1324,7 @@ HDC  DC_FindOpenDC(LPCWSTR  Driver)
 void  DC_InitDC(HDC  DCHandle)
 {
 //  W32kRealizeDefaultPalette(DCHandle);
+//W32kSelectObject(DCHandle, W32kGetStockObject( BLACK_PEN ));
 
   W32kSelectObject(DCHandle, W32kGetStockObject( WHITE_BRUSH ));
   //W32kSelectObject(DCHandle, hPen);
