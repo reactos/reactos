@@ -2,8 +2,8 @@
    See the file COPYING for copying permission.
 */
 
-#ifndef XmlParse_INCLUDED
-#define XmlParse_INCLUDED 1
+#ifndef Expat_INCLUDED
+#define Expat_INCLUDED 1
 
 #ifdef __VMS
 /*      0        1         2         3      0        1         2         3
@@ -15,97 +15,14 @@
 #endif
 
 #include <stdlib.h>
-
-#if defined(_MSC_EXTENSIONS) && !defined(__BEOS__) && !defined(__CYGWIN__)
-#define XML_USE_MSC_EXTENSIONS 1
-#endif
-
-/* Expat tries very hard to make the API boundary very specifically
-   defined.  There are two macros defined to control this boundary;
-   each of these can be defined before including this header to
-   achieve some different behavior, but doing so it not recommended or
-   tested frequently.
-
-   XMLCALL    - The calling convention to use for all calls across the
-                "library boundary."  This will default to cdecl, and
-                try really hard to tell the compiler that's what we
-                want.
-
-   XMLIMPORT  - Whatever magic is needed to note that a function is
-                to be imported from a dynamically loaded library
-                (.dll, .so, or .sl, depending on your platform).
-
-   The XMLCALL macro was added in Expat 1.95.7.  The only one which is
-   expected to be directly useful in client code is XMLCALL.
-
-   Note that on at least some Unix versions, the Expat library must be
-   compiled with the cdecl calling convention as the default since
-   system headers may assume the cdecl convention.
-*/
-#ifndef XMLCALL
-#if defined(XML_USE_MSC_EXTENSIONS)
-#define XMLCALL __cdecl
-#elif defined(__GNUC__) && defined(__i386)
-//MF#define XMLCALL __attribute__((cdecl))
-#define XMLCALL//MF
-#else
-/* For any platform which uses this definition and supports more than
-   one calling convention, we need to extend this definition to
-   declare the convention used on that platform, if it's possible to
-   do so.
-
-   If this is the case for your platform, please file a bug report
-   with information on how to identify your platform via the C
-   pre-processor and how to specify the same calling convention as the
-   platform's malloc() implementation.
-*/
-#define XMLCALL
-#endif
-#endif  /* not defined XMLCALL */
-
-
-#if !defined(XML_STATIC) && !defined(XMLIMPORT)
-#ifndef XML_BUILDING_EXPAT
-/* using Expat from an application */
-
-#ifdef XML_USE_MSC_EXTENSIONS
-#define XMLIMPORT __declspec(dllimport)
-#endif
-
-#endif
-#endif  /* not defined XML_STATIC */
-
-/* If we didn't define it above, define it away: */
-#ifndef XMLIMPORT
-#define XMLIMPORT
-#endif
-
-
-#define XMLPARSEAPI(type) XMLIMPORT type XMLCALL
+#include "expat_external.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef XML_UNICODE_WCHAR_T
-#define XML_UNICODE
-#endif
-
 struct XML_ParserStruct;
 typedef struct XML_ParserStruct *XML_Parser;
-
-#ifdef XML_UNICODE     /* Information is UTF-16 encoded. */
-#ifdef XML_UNICODE_WCHAR_T
-typedef wchar_t XML_Char;
-typedef wchar_t XML_LChar;
-#else
-typedef unsigned short XML_Char;
-typedef char XML_LChar;
-#endif /* XML_UNICODE_WCHAR_T */
-#else                  /* Information is UTF-8 encoded. */
-typedef char XML_Char;
-typedef char XML_LChar;
-#endif /* XML_UNICODE */
 
 /* Should this be defined using stdbool.h when C99 is available? */
 typedef unsigned char XML_Bool;
@@ -130,7 +47,7 @@ enum XML_Status {
 #define XML_STATUS_ERROR XML_STATUS_ERROR
   XML_STATUS_OK = 1,
 #define XML_STATUS_OK XML_STATUS_OK
-  XML_STATUS_SUSPENDED = 2,
+  XML_STATUS_SUSPENDED = 2
 #define XML_STATUS_SUSPENDED XML_STATUS_SUSPENDED
 };
 
@@ -162,12 +79,23 @@ enum XML_Error {
   XML_ERROR_ENTITY_DECLARED_IN_PE,
   XML_ERROR_FEATURE_REQUIRES_XML_DTD,
   XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING,
+  /* Added in 1.95.7. */
   XML_ERROR_UNBOUND_PREFIX,
+  /* Added in 1.95.8. */
+  XML_ERROR_UNDECLARING_PREFIX,
+  XML_ERROR_INCOMPLETE_PE,
+  XML_ERROR_XML_DECL,
+  XML_ERROR_TEXT_DECL,
+  XML_ERROR_PUBLICID,
   XML_ERROR_SUSPENDED,
   XML_ERROR_NOT_SUSPENDED,
   XML_ERROR_ABORTED,
   XML_ERROR_FINISHED,
-  XML_ERROR_SUSPEND_PE
+  XML_ERROR_SUSPEND_PE,
+  /* Added in 2.0. */
+  XML_ERROR_RESERVED_PREFIX_XML,
+  XML_ERROR_RESERVED_PREFIX_XMLNS,
+  XML_ERROR_RESERVED_NAMESPACE_URI
 };
 
 enum XML_Content_Type {
@@ -266,9 +194,9 @@ XML_SetXmlDeclHandler(XML_Parser parser,
 
 
 typedef struct {
-  void *(XMLCALL *malloc_fcn)(size_t size);
-  void *(XMLCALL *realloc_fcn)(void *ptr, size_t size);
-  void (XMLCALL *free_fcn)(void *ptr);
+  void *(*malloc_fcn)(size_t size);
+  void *(*realloc_fcn)(void *ptr, size_t size);
+  void (*free_fcn)(void *ptr);
 } XML_Memory_Handling_Suite;
 
 /* Constructs a new parser; encoding is the encoding specified by the
@@ -285,8 +213,8 @@ XML_ParserCreate(const XML_Char *encoding);
    URI, the namespace separator character, and the local part of the
    name.  If the namespace separator is '\0' then the namespace URI
    and the local part will be concatenated without any separator.
-   When a namespace is not declared, the name and prefix will be
-   passed through without expansion.
+   It is a programming error to use the separator '\0' with namespace
+   triplets (see XML_SetReturnNSTriplet).
 */
 XMLPARSEAPI(XML_Parser)
 XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
@@ -766,6 +694,9 @@ XML_UseParserAsHandlerArg(XML_Parser parser);
    specified in the document. In such a case the parser will call the
    externalEntityRefHandler with a value of NULL for the systemId
    argument (the publicId and context arguments will be NULL as well).
+   Note: For the purpose of checking WFC: Entity Declared, passing
+     useDTD == XML_TRUE will make the parser behave as if the document
+     had a DTD with an external subset.
    Note: If this function is called, then this must be done before
      the first call to XML_Parse or XML_ParseBuffer, since it will
      have no effect after that.  Returns
@@ -1051,7 +982,8 @@ enum XML_FeatureEnum {
   XML_FEATURE_CONTEXT_BYTES,
   XML_FEATURE_MIN_SIZE,
   XML_FEATURE_SIZEOF_XML_CHAR,
-  XML_FEATURE_SIZEOF_XML_LCHAR
+  XML_FEATURE_SIZEOF_XML_LCHAR,
+  XML_FEATURE_NS
   /* Additional features must be added to the end of this enum. */
 };
 
@@ -1078,4 +1010,4 @@ XML_GetFeatureList(void);
 }
 #endif
 
-#endif /* not XmlParse_INCLUDED */
+#endif /* not Expat_INCLUDED */

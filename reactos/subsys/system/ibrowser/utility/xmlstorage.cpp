@@ -4,7 +4,7 @@
  //
  // xmlstorage.cpp
  //
- // Copyright (c) 2004, Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
 
@@ -426,11 +426,22 @@ std::string XMLReaderBase::get_error_string() const
 	  case XML_ERROR_UNBOUND_PREFIX:					return "XML_ERROR_UNBOUND_PREFIX";
  // EXPAT version >= 1.95.8
 #if XML_MAJOR_VERSION>1 || (XML_MAJOR_VERSION==1 && XML_MINOR_VERSION>95) || (XML_MAJOR_VERSION==1 && XML_MINOR_VERSION==95 && XML_MICRO_VERSION>7)
+	  case XML_ERROR_UNDECLARING_PREFIX:				return "XML_ERROR_UNDECLARING_PREFIX";
+	  case XML_ERROR_INCOMPLETE_PE:						return "XML_ERROR_INCOMPLETE_PE";
+	  case XML_ERROR_XML_DECL:							return "XML_ERROR_XML_DECL";
+	  case XML_ERROR_TEXT_DECL:							return "XML_ERROR_TEXT_DECL";
+	  case XML_ERROR_PUBLICID:							return "XML_ERROR_PUBLICID";
 	  case XML_ERROR_SUSPENDED:							return "XML_ERROR_SUSPENDED";
 	  case XML_ERROR_NOT_SUSPENDED:						return "XML_ERROR_NOT_SUSPENDED";
 	  case XML_ERROR_ABORTED:							return "XML_ERROR_ABORTED";
 	  case XML_ERROR_FINISHED:							return "XML_ERROR_FINISHED";
 	  case XML_ERROR_SUSPEND_PE:						return "XML_ERROR_SUSPEND_PE";
+//#endif
+//#if XML_MAJOR_VERSION>=2
+		/* Added in 2.0. */
+	  case XML_ERROR_RESERVED_PREFIX_XML:				return "XML_ERROR_RESERVED_PREFIX_XML";
+	  case XML_ERROR_RESERVED_PREFIX_XMLNS:				return "XML_ERROR_RESERVED_PREFIX_XMLNS";
+	  case XML_ERROR_RESERVED_NAMESPACE_URI:			return "XML_ERROR_RESERVED_NAMESPACE_URI";
 #endif
 	}
 
