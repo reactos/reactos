@@ -286,7 +286,6 @@ NTSTATUS TdiConnect(
   PDEVICE_OBJECT DeviceObject;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
-  KEVENT Event;
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
@@ -294,12 +293,10 @@ NTSTATUS TdiConnect(
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
 
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
   *Irp = TdiBuildInternalDeviceControlIrp(TDI_CONNECT,             /* Sub function */
 					  DeviceObject,            /* Device object */
 					  ConnectionObject,        /* File object */
-					  &Event,                  /* Event */
+					  NULL,                    /* Event */
 					  &Iosb);                  /* Status */
   if (!*Irp) {
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -314,7 +311,7 @@ NTSTATUS TdiConnect(
                   RemoteAddress,          /* Request connection information */
                   RemoteAddress);         /* Return connection information */
 
-  Status = TdiCall(*Irp, DeviceObject, &Event, &Iosb);
+  Status = TdiCall(*Irp, DeviceObject, NULL, &Iosb);
 
   return Status;
 }

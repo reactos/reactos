@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.5 2004/11/21 20:54:52 arty Exp $
+/* $Id: connect.c,v 1.6 2004/11/30 04:49:50 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -53,10 +53,9 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
     AFD_DbgPrint(MID_TRACE,("Called: FCB %x, FO %x\n", 
 			    Context, FCB->FileObject));
 
-    /* Check the result of the connect operation */
-    /* Since the previous does not return until we come through here, we do
-     * not need to relock. */
-    /* if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp ); */
+    /* I was wrong about this before as we can have pending writes to a not
+     * yet connected socket */
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
     AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n", 
 			    Irp->IoStatus.Status));
@@ -118,7 +117,7 @@ NTSTATUS DDKAPI StreamSocketConnectComplete
 	    Status = STATUS_SUCCESS;
     }
 
-    /* SocketStateUnlock( FCB ); */
+    SocketStateUnlock( FCB );
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
     
@@ -202,6 +201,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				 FCB );
 
 	    ExFreePool( TargetAddress );
+
+	    AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
+
+	    return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 	} else Status = STATUS_NO_MEMORY;
 	break;
 

@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.12 2004/11/21 20:54:52 arty Exp $
+/* $Id: read.c,v 1.13 2004/11/30 04:49:50 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -78,7 +78,9 @@ NTSTATUS DDKAPI ReceiveComplete
     UINT TotalBytesCopied = 0;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
-    
+
+    ASSERT_IRQL(APC_LEVEL);
+
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->ReceiveIrp.InFlightRequest = NULL;

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13 2004/11/21 20:54:52 arty Exp $
+/* $Id: main.c,v 1.14 2004/11/30 04:49:50 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -47,9 +47,9 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
     PFILE_FULL_EA_INFORMATION EaInfo;
-    PAFD_CREATE_PACKET ConnectInfo;
+    PAFD_CREATE_PACKET ConnectInfo = NULL;
     ULONG EaLength;
-    PWCHAR EaInfoValue;
+    PWCHAR EaInfoValue = NULL;
     UINT Disposition, i;
 
     AFD_DbgPrint(MID_TRACE,
@@ -62,22 +62,18 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     Irp->IoStatus.Information = 0;
     
     EaInfo = Irp->AssociatedIrp.SystemBuffer;
-    ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
-    EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
-
-    if(!EaInfo) {
-	AFD_DbgPrint(MIN_TRACE, ("No EA Info in IRP.\n"));
-	Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-	IoCompleteRequest( Irp, IO_NO_INCREMENT );
-	return STATUS_INVALID_PARAMETER;
+    
+    if( EaInfo ) {
+	ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
+	EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
+	
+	EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
+	    EaInfo->EaNameLength +
+	    EaInfo->EaValueLength;
+	
+	AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n", 
+				EaInfo, EaInfoValue));
     }
-
-    EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
-	EaInfo->EaNameLength +
-	EaInfo->EaValueLength;
-
-    AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n", 
-			    EaInfo, EaInfoValue));
 
     AFD_DbgPrint(MID_TRACE,("About to allocate the new FCB\n"));
 
@@ -88,11 +84,11 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return STATUS_NO_MEMORY;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x Flags %x)\n", FCB, FileObject, ConnectInfo->EndpointFlags));
+    AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x Flags %x)\n", FCB, FileObject, ConnectInfo ? ConnectInfo->EndpointFlags : 0));
 
     RtlZeroMemory( FCB, sizeof( *FCB ) );
 
-    FCB->Flags = ConnectInfo->EndpointFlags;
+    FCB->Flags = ConnectInfo ? ConnectInfo->EndpointFlags : 0;
     FCB->State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
@@ -111,24 +107,29 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("%x: Checking command channel\n", FCB));
 
-    FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
-    FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
-    FCB->TdiDeviceName.Buffer = 
-      ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
-    RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		   ConnectInfo->TransportName,
-		   FCB->TdiDeviceName.Length );
+    if( ConnectInfo ) {
+	FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
+	FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
+	FCB->TdiDeviceName.Buffer = 
+	    ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
+	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
+		       ConnectInfo->TransportName,
+		       FCB->TdiDeviceName.Length );
 
-    if( !FCB->TdiDeviceName.Buffer ) {
-      ExFreePool(FCB);
-      AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
-      Irp->IoStatus.Status = STATUS_NO_MEMORY;
-      IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-      return STATUS_NO_MEMORY;
+	if( !FCB->TdiDeviceName.Buffer ) {
+	    ExFreePool(FCB);
+	    AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
+	    Irp->IoStatus.Status = STATUS_NO_MEMORY;
+	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+	    return STATUS_NO_MEMORY;
+	}
+
+	AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n", 
+				EaInfo->EaName, &FCB->TdiDeviceName));
+    } else {
+	AFD_DbgPrint(MID_TRACE,("Success: Control connection\n"));
     }
 
-    AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n", 
-			    EaInfo->EaName, &FCB->TdiDeviceName));
     FileObject->FsContext = FCB;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
