@@ -1,4 +1,9 @@
-/* $Id */
+/* $Id: thread.c,v 1.5 2000/01/30 20:55:51 hochoa Exp $
+ *
+ *
+ *
+ *
+ */
 
 #include <stdio.h>
 #include <windows.h>
