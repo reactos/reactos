@@ -176,3 +176,38 @@ IntEngLineTo(SURFOBJ *DestSurf,
 
   return ret;
 }
+
+BOOL STDCALL
+IntEngPolyline(SURFOBJ *DestSurf,
+	       CLIPOBJ *Clip,
+	       BRUSHOBJ *Brush,
+	       CONST LPPOINT  pt,
+               LONG dCount,
+	       MIX mix)
+{
+  LONG i;
+  RECTL rect;
+  BOOL ret = FALSE;
+
+  //Draw the Polyline with a call to IntEngLineTo for each segment.
+  for (i=1; i<dCount; i++)
+  {
+    rect.left = MIN(pt[i-1].x, pt[i].x);
+    rect.top = MIN(pt[i-1].y, pt[i].y);
+    rect.right = MAX(pt[i-1].x, pt[i].x);
+    rect.bottom = MAX(pt[i-1].y, pt[i].y);
+    ret = IntEngLineTo(DestSurf,
+	               Clip,
+	               Brush,
+	               pt[i-1].x,
+	               pt[i-1].y,
+	               pt[i].x,
+	               pt[i].y,
+	               &rect,
+	               mix);
+    if (!ret)
+      break;
+  }
+
+  return ret;
+}

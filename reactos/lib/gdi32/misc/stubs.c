@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.15 2003/03/20 03:04:02 mtempel Exp $
+/* $Id: stubs.c,v 1.16 2003/03/27 03:24:03 rcampbell Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -2058,21 +2058,6 @@ DPtoLP(
 	HDC	a0,
 	LPPOINT	a1,
 	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-
-BOOL
-STDCALL
-Polyline(
-	HDC		a0,
-	CONST POINT	*a1,
-	int		a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -259,7 +259,72 @@ W32kPolyline(HDC  hDC,
                    CONST LPPOINT  pt,
                    int  Count)
 {
-   UNIMPLEMENTED;
+  DC		*dc = DC_HandleToPtr(hDC);
+  SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
+  BOOL ret;
+  LONG i;
+  PPENOBJ   pen;
+  PROSRGNDATA  reg;
+  POINT *pts;
+
+  if (!dc) 
+    return(FALSE);
+
+  if(PATH_IsPathOpen(dc->w.path))
+  {
+    ret = PATH_Polyline(hDC, pt, Count);
+  }
+  else
+  {
+    pen = (PPENOBJ) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
+    reg = (PROSRGNDATA)GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+
+    ASSERT( pen );
+
+    //FIXME: Do somthing with reg...
+
+    //Allocate "Count" bytes of memory to hold a safe copy of pt
+    if (!(pts=ExAllocatePool(NonPagedPool, sizeof(POINT) * Count))) 
+    {
+      GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+      GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+      DC_ReleasePtr( hDC );
+      return(FALSE);
+    }
+ 
+    //safly copy pt to local version
+    if (STATUS_SUCCESS!=MmCopyFromCaller(pts, pt, sizeof(POINT) * Count))
+    {
+      ExFreePool(pts);
+      GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+      GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+      DC_ReleasePtr( hDC );
+      return(FALSE);
+    }
+ 
+    //offset the array of point by the dc->w.DCOrg
+    for(i=0; i<Count; i++)
+    {
+      pts[i].x += dc->w.DCOrgX;
+      pts[i].y += dc->w.DCOrgY;
+    }
+  
+    //get IntEngPolyline to do the drawing.
+    ret = IntEngPolyline(SurfObj,
+	                 NULL,
+	                 PenToBrushObj(dc, pen),
+	                 pts,
+                         Count,
+	                 dc->w.ROPmode);
+
+    //Clean up
+    ExFreePool(pts);
+    GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+    GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+  }
+
+  DC_ReleasePtr( hDC );
+  return(ret);
 }
 
 BOOL

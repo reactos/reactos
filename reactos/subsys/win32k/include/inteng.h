@@ -28,5 +28,11 @@ XLATEOBJ *IntEngCreateXlate(USHORT DestPalType,
                             USHORT SourcePalType,
                             HPALETTE PaletteDest,
                             HPALETTE PaletteSource);
-
+			
+extern BOOL STDCALL IntEngPolyline(SURFOBJ *DestSurf,
+	                           CLIPOBJ *Clip,
+	                           BRUSHOBJ *Brush,
+	                           CONST LPPOINT  pt,
+				   LONG dCount,
+	                           MIX mix);
 #endif

@@ -21,4 +21,9 @@ MoveToEx(HDC hDC, int X, int Y, LPPOINT Point)
    return W32kMoveToEx(hDC, X, Y, Point);
 }
 
-
+BOOL
+STDCALL
+Polyline( HDC hdc, CONST POINT *lppt, int cPoints )
+{
+   return W32kPolyline(hdc, (CONST LPPOINT) lppt, cPoints);
+}
