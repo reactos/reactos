@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.14 2003/11/18 19:59:51 weiden Exp $
+/* $Id: icon.c,v 1.15 2003/12/09 19:45:37 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -451,11 +451,11 @@ LookupIconIdFromDirectory(
 }
 
 /* Ported from WINE20030408 */
-CURSORICONDIRENTRY*
-CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors)
+GRPCURSORICONDIRENTRY*
+CURSORICON_FindBestCursor( GRPCURSORICONDIR *dir, int width, int height, int colors)
 {
     int i;
-    CURSORICONDIRENTRY *entry, *bestEntry = NULL;
+    GRPCURSORICONDIRENTRY *entry, *bestEntry = NULL;
     UINT iTotalDiff, iXDiff=0, iYDiff=0, iColorDiff;
     UINT iTempXDiff, iTempYDiff, iTempColorDiff;
 
@@ -472,8 +472,8 @@ CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors
     iColorDiff = 0xFFFFFFFF;
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
     {
-		iTempXDiff = abs(width - entry->bWidth);
-		iTempYDiff = abs(height - entry->bHeight);
+		iTempXDiff = abs(width - entry->ResInfo.icon.bWidth);
+		iTempYDiff = abs(height - entry->ResInfo.icon.bHeight);
 
         if(iTotalDiff > (iTempXDiff + iTempYDiff))
         {
@@ -486,10 +486,10 @@ CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors
     /* Find Best Colors for Best Fit */
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
     {
-        if(abs(width - entry->bWidth) == (int) iXDiff &&
-            abs(height - entry->bHeight) == (int) iYDiff)
+        if(abs(width - entry->ResInfo.icon.bWidth) == (int) iXDiff &&
+            abs(height - entry->ResInfo.icon.bHeight) == (int) iYDiff)
         {
-            iTempColorDiff = abs(colors - entry->bColorCount);
+            iTempColorDiff = abs(colors - entry->ResInfo.icon.bColorCount);
 
             if(iColorDiff > iTempColorDiff)
         	{
@@ -503,11 +503,11 @@ CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors
 }
 
 /* Ported from WINE20030408 */
-CURSORICONDIRENTRY*
-CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors)
+GRPCURSORICONDIRENTRY*
+CURSORICON_FindBestIcon( GRPCURSORICONDIR *dir, int width, int height, int colors)
 {
     int i;
-    CURSORICONDIRENTRY *entry, *bestEntry = NULL;
+    GRPCURSORICONDIRENTRY *entry, *bestEntry = NULL;
     UINT iTotalDiff, iXDiff=0, iYDiff=0, iColorDiff;
     UINT iTempXDiff, iTempYDiff, iTempColorDiff;
 
@@ -524,9 +524,9 @@ CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors)
     iColorDiff = 0xFFFFFFFF;
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
       {
-	iTempXDiff = abs(width - entry->bWidth);
+	iTempXDiff = abs(width - entry->ResInfo.icon.bWidth);
 
-	iTempYDiff = abs(height - entry->bHeight);
+	iTempYDiff = abs(height - entry->ResInfo.icon.bHeight);
 
         if(iTotalDiff > (iTempXDiff + iTempYDiff))
         {
@@ -539,10 +539,10 @@ CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors)
     /* Find Best Colors for Best Fit */
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
       {
-        if(abs(width - entry->bWidth) == (int) iXDiff &&
-           abs(height - entry->bHeight) == (int) iYDiff)
+        if(abs(width - entry->ResInfo.icon.bWidth) == (int) iXDiff &&
+           abs(height - entry->ResInfo.icon.bHeight) == (int) iYDiff)
         {
-            iTempColorDiff = abs(colors - entry->bColorCount);
+            iTempColorDiff = abs(colors - entry->ResInfo.icon.bColorCount);
             if(iColorDiff > iTempColorDiff)
             {
                 bestEntry = entry;
@@ -587,7 +587,7 @@ LookupIconIdFromDirectoryEx(
 
 	ReleaseDC(0, hdc);
 
-	entry = (GRPCURSORICONDIRENTRY*)CURSORICON_FindBestIcon( (CURSORICONDIR*)dir,
+	entry = (GRPCURSORICONDIRENTRY*)CURSORICON_FindBestIcon( dir,
 	                                                   cxDesired,
 	                                                   cyDesired,
 	                                                   colors );
