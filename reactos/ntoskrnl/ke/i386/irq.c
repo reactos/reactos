@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.17 2002/02/15 14:47:04 ekohl Exp $
+/* $Id: irq.c,v 1.18 2002/04/20 03:21:35 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -344,11 +344,13 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
     * If the processor level will drop below dispatch level on return then
     * issue a DPC queue drain interrupt
     */
+
+   __asm__("sti\n\t");
+
    if (old_level < DISPATCH_LEVEL)
      {
 
   HalEndSystemInterrupt (DISPATCH_LEVEL, 0);
-	__asm__("sti\n\t");
 
  	if (KeGetCurrentThread() != NULL)
 	  {
@@ -439,10 +441,11 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * If the processor level will drop below dispatch level on return then
     * issue a DPC queue drain interrupt
     */
+   __asm__("sti\n\t");
+
    if (old_level < DISPATCH_LEVEL)
      {
 	HalEndSystemInterrupt (DISPATCH_LEVEL, 0);
-	__asm__("sti\n\t");
 
 	if (KeGetCurrentThread() != NULL)
 	  {
