@@ -1125,6 +1125,7 @@ static BOOL
 SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 {
   HANDLE hToken;
+  DWORD PrevSize;
   TOKEN_PRIVILEGES priv, previouspriv;
   BOOL Ret = FALSE;
   
@@ -1148,7 +1149,7 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
                                &priv,
                                sizeof(previouspriv),
                                &previouspriv,
-                               0) &&
+                               &PrevSize) &&
          GetLastError() == ERROR_SUCCESS)
       {
         /*
@@ -1164,7 +1165,7 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
           AdjustTokenPrivileges(hToken,
                                 FALSE,
                                 &previouspriv,
-                                0,
+                                PrevSize,
                                 NULL,
                                 0);
         }
