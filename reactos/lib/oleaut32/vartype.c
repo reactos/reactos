@@ -85,7 +85,6 @@ HRESULT VARIANT_NumberFromBstr(OLECHAR* pStrIn, LCID lcid, ULONG ulFlags,
 {
   VARIANTARG dstVar;
   HRESULT hRet;
-#ifndef __REACTOS__ /*FIXME: missing NUMPARSE in MinGW */
   NUMPARSE np;
   BYTE rgb[1024];
 
@@ -102,7 +101,6 @@ HRESULT VARIANT_NumberFromBstr(OLECHAR* pStrIn, LCID lcid, ULONG ulFlags,
     if (SUCCEEDED(hRet))
       VARIANT_CopyData(&dstVar, vt, pOut);
   }
-#endif
   return hRet;
 }
 

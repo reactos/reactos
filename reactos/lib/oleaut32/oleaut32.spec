@@ -10,8 +10,8 @@
 10 stdcall VariantCopy(ptr ptr)
 11 stdcall VariantCopyInd(ptr ptr)
 12 stdcall VariantChangeType(ptr ptr long long)
-#13 stdcall VariantTimeToDosDateTime(double ptr ptr)
-#14 stdcall DosDateTimeToVariantTime(long long ptr)
+13 stdcall VariantTimeToDosDateTime(double ptr ptr)
+14 stdcall DosDateTimeToVariantTime(long long ptr)
 #15 stdcall SafeArrayCreate(long long ptr)
 #16 stdcall SafeArrayDestroy(ptr)
 #17 stdcall SafeArrayGetDim(ptr)
@@ -310,7 +310,7 @@
 315 stdcall VarR8Pow(double double ptr)
 316 stdcall VarR4CmpR8(long double)
 317 stdcall VarR8Round(double long ptr)
-#318 stdcall VarCat(ptr ptr ptr)
+318 stdcall VarCat(ptr ptr ptr)
 319 stub VarDateFromUdateEx # stdcall (ptr long long ptr)
 #320 stdcall -private DllRegisterServer() OLEAUT32_DllRegisterServer
 #321 stdcall -private DllUnregisterServer() OLEAUT32_DllUnregisterServer
@@ -320,8 +320,8 @@
 326 stub GetVarConversionLocaleSetting
 327 stdcall SetOaNoCache()
 329 stdcall VarCyMulI8(long long long long ptr)
-#330 stdcall VarDateFromUdate(ptr long ptr)
-#331 stdcall VarUdateFromDate(double long ptr)
+330 stdcall VarDateFromUdate(ptr long ptr)
+331 stdcall VarUdateFromDate(double long ptr)
 332 stub GetAltMonthNames
 333 stdcall VarI8FromUI1(long long)
 334 stdcall VarI8FromI2(long long)

@@ -1126,8 +1126,6 @@ static inline double VARIANT_JulianFromDMY(USHORT year, USHORT month, USHORT day
 #define DOS_DATE(d,m,y) (d | (m << 5) | ((y-1980) << 9))
 #define DOS_TIME(h,m,s) ((s >> 1) | (m << 5) | (h << 11))
 
-#ifndef __REACTOS__	/*FIXME: disabled for now */
-
 /* Roll a date forwards or backwards to correct it */
 static HRESULT VARIANT_RollUdate(UDATE *lpUd)
 {
@@ -2091,6 +2089,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
           V_I8(pVarDst) = -ul64;
           return S_OK;
         }
+#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO64 */
         else if ((dwVtBits & REAL_VTBITS) == VTBIT_DECIMAL)
         {
           /* Decimal is only output choice left - fast path */
@@ -2100,6 +2099,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
           DEC_LO64(&V_DECIMAL(pVarDst)) = -ul64;
           return S_OK;
         }
+#endif
       }
     }
     else if (!bOverflow)
@@ -2153,6 +2153,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         V_UI8(pVarDst) = ul64;
         return S_OK;
       }
+#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO64 */
       else if ((dwVtBits & REAL_VTBITS) == VTBIT_DECIMAL)
       {
         /* Decimal is only output choice left - fast path */
@@ -2162,6 +2163,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         DEC_LO64(&V_DECIMAL(pVarDst)) = ul64;
         return S_OK;
       }
+#endif
     }
   }
 
@@ -2256,6 +2258,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     }
   }
 
+#ifndef __REACTOS__	/*FIXME: problems with MinGW and DEC_LO64 */
   if (dwVtBits & VTBIT_DECIMAL)
   {
     int i;
@@ -2313,6 +2316,7 @@ VarNumFromParseNum_DecOverflow:
     V_VT(pVarDst) = VT_DECIMAL;
     return S_OK;
   }
+#endif
   return DISP_E_OVERFLOW; /* No more output choices */
 }
 
@@ -3740,5 +3744,3 @@ HRESULT WINAPI VarPow(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     V_R8(result) = pow(V_R8(&dl),V_R8(&dr));
     return S_OK;
 }
-
-#endif	/*FIXME*/
