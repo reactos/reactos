@@ -39,8 +39,6 @@
 #include "startmenu.h"
 
 
-BtnWindowClass StartMenu::s_wcStartMenu(CLASSNAME_STARTMENU);
-
 StartMenu::StartMenu(HWND hwnd)
  :	super(hwnd)
 {
@@ -67,10 +65,19 @@ StartMenu::~StartMenu()
 }
 
 
+ // We need this wrapper function for s_wcStartMenu, it calls to the WIN32 API
+ // through static C++ initializers are not allowed for Winelib applications.
+BtnWindowClass& StartMenu::GetWndClasss()
+{
+	static BtnWindowClass s_wcStartMenu(CLASSNAME_STARTMENU);
+
+	return s_wcStartMenu;
+}
+
 /*
 HWND StartMenu::Create(int x, int y, HWND hwndParent)
 {
-	return Window::Create(WINDOW_CREATOR(StartMenu), NULL, s_wcStartMenu, TITLE_STARTMENU,
+	return Window::Create(WINDOW_CREATOR(StartMenu), NULL, GetWndClasss(), TITLE_STARTMENU,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH_MIN, 4, hwndParent);
 }
 */
@@ -80,7 +87,7 @@ Window::CREATORFUNC StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, CREATORFUNC creator)
 {
 	//TODO: check, if coordinates x/y are visible on the screen
-	return Window::Create(creator, &folders, 0, s_wcStartMenu, NULL,
+	return Window::Create(creator, &folders, 0, GetWndClasss(), NULL,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, x, y, STARTMENU_WIDTH_MIN, 4/*start height*/, hwndParent);
 }
 
@@ -554,7 +561,7 @@ HWND StartMenuRoot::Create(HWND hwndDesktopBar)
 {
 	WindowRect pos(hwndDesktopBar);
 
-	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, s_wcStartMenu, TITLE_STARTMENU,
+	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, GetWndClasss(), TITLE_STARTMENU,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, pos.left, pos.top-4, STARTMENU_WIDTH_MIN, 4, hwndDesktopBar);
 }
 

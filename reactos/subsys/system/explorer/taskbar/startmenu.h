@@ -143,7 +143,7 @@ protected:
 	int		Command(int id, int code);
 
 	 // window class
-	static BtnWindowClass s_wcStartMenu;
+	static BtnWindowClass& GetWndClasss();
 
 	 // data members
 	int		_next_id;

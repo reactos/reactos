@@ -106,11 +106,18 @@ protected:
 
 
 	static WindowMap	s_wnd_map;
-	static CritSect		s_map_crit_sect;
 
 	static const void*	s_new_info;
 	static CREATORFUNC	s_window_creator;
-	static CritSect		s_create_crit_sect;
+
+
+	struct StaticWindowData {
+		CritSect	_map_crit_sect;
+		CritSect	_create_crit_sect;
+	};
+
+	static StaticWindowData& GetStaticWindowData();
+
 
 	 // MDI child creation
 	static HHOOK s_hcbtHook;

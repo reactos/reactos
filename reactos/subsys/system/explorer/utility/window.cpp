@@ -57,27 +57,33 @@ IconWindowClass::IconWindowClass(LPCTSTR classname, UINT nid, UINT style, WNDPRO
 }
 
 
-HHOOK				Window::s_hcbtHook = 0;
+Window::WindowMap	Window::s_wnd_map;
 
 Window::CREATORFUNC	Window::s_window_creator = NULL;
 const void*			Window::s_new_info = NULL;
-CritSect			Window::s_create_crit_sect;
 
-Window::WindowMap	Window::s_wnd_map;
-CritSect			Window::s_map_crit_sect;
+HHOOK				Window::s_hcbtHook = 0;
+
+
+Window::StaticWindowData& Window::GetStaticWindowData()
+{
+	static StaticWindowData s_initialized_data;
+
+	return s_initialized_data;
+}
 
 
 Window::Window(HWND hwnd)
  :	WindowHandle(hwnd)
 {
-	Lock lock(s_map_crit_sect);	// protect access to s_wnd_map
+	Lock lock(GetStaticWindowData()._map_crit_sect);	// protect access to s_wnd_map
 
 	s_wnd_map[_hwnd] = this;
 }
 
 Window::~Window()
 {
-	Lock lock(s_map_crit_sect);	// protect access to s_wnd_map
+	Lock lock(GetStaticWindowData()._map_crit_sect);	// protect access to s_wnd_map
 
 	s_wnd_map.erase(_hwnd);
 }
@@ -88,7 +94,7 @@ HWND Window::Create(CREATORFUNC creator, DWORD dwExStyle,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
 {
-	Lock lock(s_create_crit_sect);	// protect access to s_window_creator and s_new_info
+	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
 	s_window_creator = creator;
 	s_new_info = NULL;
@@ -103,7 +109,7 @@ HWND Window::Create(CREATORFUNC creator, const void* info, DWORD dwExStyle,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
 {
-	Lock lock(s_create_crit_sect);	// protect access to s_window_creator and s_new_info
+	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
 	s_window_creator = creator;
 	s_new_info = info;
@@ -118,7 +124,7 @@ static Window* s_new_child_wnd = NULL;
 
 Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC creator, const void* info)
 {
-	Lock lock(s_create_crit_sect);	// protect access to s_window_creator and s_new_info
+	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
 	s_window_creator = creator;
 	s_new_info = info;
@@ -160,7 +166,7 @@ LRESULT CALLBACK Window::CBTHookProc(int code, WPARAM wparam, LPARAM lparam)
 Window* Window::get_window(HWND hwnd)
 {
 	{
-		Lock lock(s_map_crit_sect);	// protect access to s_wnd_map
+		Lock lock(GetStaticWindowData()._map_crit_sect);	// protect access to s_wnd_map
 
 		WindowMap::const_iterator found = s_wnd_map.find(hwnd);
 
@@ -169,7 +175,7 @@ Window* Window::get_window(HWND hwnd)
 	}
 
 	if (s_window_creator) {	// protect for recursion
-		Lock lock(s_create_crit_sect);	// protect access to s_window_creator and s_new_info
+		Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
 		const void* info = s_new_info;
 		s_new_info = NULL;
