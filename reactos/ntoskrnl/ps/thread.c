@@ -134,6 +134,7 @@ VOID PsDispatchThread(VOID)
 	     CurrentThread->Tcb.LastTick = TickCount.LowPart;
 	     CurrentThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     KeReleaseSpinLock(&ThreadListLock,irql);
+	     KeLowerIrql(PASSIVE_LEVEL);
 	     return;
 	  }
 	if (Candidate != NULL)
