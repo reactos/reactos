@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.5 2002/12/26 17:21:27 robd Exp $
+/* $Id: text.c,v 1.6 2003/01/15 20:12:27 robd Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,178 +28,283 @@
 
 /* INCLUDES ******************************************************************/
 
+#define __NTAPP__
+
 #include <windows.h>
 #include <user32.h>
+
+//#include <kernel32/winnls.h>
+#include <ntos/rtl.h>
+
 #include <debug.h>
+
+
+const unsigned short wctype_table[] =
+{
+};
+
+/* the character type contains the C1_* flags in the low 12 bits */
+/* and the C2_* type in the high 4 bits */
+static inline unsigned short get_char_typeW(WCHAR ch)
+{
+    extern const unsigned short wctype_table[];
+    return wctype_table[wctype_table[ch >> 8] + (ch & 0xff)];
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
+//LPSTR STDCALL CharLowerA(LPSTR lpsz)
 LPSTR
-STDCALL
-CharLowerA(
-  LPSTR lpsz)
+WINAPI
+CharLowerA(LPSTR x)
 {
-  return (LPSTR)NULL;
+    if (!HIWORD(x)) return (LPSTR)tolower((char)(int)x);
+/*
+    __TRY
+    {
+        LPSTR s = x;
+        while (*s)
+        {
+            *s=tolower(*s);
+            s++;
+        }
+    }
+    __EXCEPT(page_fault)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return NULL;
+    }
+    __ENDTRY
+ */
+    return x;
 }
 
+//DWORD STDCALL CharLowerBuffA(LPSTR lpsz, DWORD cchLength)
 DWORD
-STDCALL
-CharLowerBuffA(
-  LPSTR lpsz,
-  DWORD cchLength)
+WINAPI
+CharLowerBuffA(LPSTR str, DWORD len)
 {
-  return 0;
+    DWORD lenW;
+    WCHAR *strW;
+    if (!str) return 0; /* YES */
+
+    lenW = MultiByteToWideChar(CP_ACP, 0, str, len, NULL, 0);
+    strW = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
+    if (strW) {
+        MultiByteToWideChar(CP_ACP, 0, str, len, strW, lenW);
+        CharLowerBuffW(strW, lenW);
+        len = WideCharToMultiByte(CP_ACP, 0, strW, lenW, str, len, NULL, NULL);
+        HeapFree(GetProcessHeap(), 0, strW);
+        return len;
+    }
+    return 0;
 }
 
+//DWORD STDCALL CharLowerBuffW(LPWSTR lpsz, DWORD cchLength)
 DWORD
-STDCALL
-CharLowerBuffW(
-  LPWSTR lpsz,
-  DWORD cchLength)
+WINAPI
+CharLowerBuffW(LPWSTR str, DWORD len)
 {
-  return 0;
+    DWORD ret = len;
+    if (!str) return 0; /* YES */
+    for (; len; len--, str++) *str = towlower(*str);
+    return ret;
 }
 
+//LPWSTR STDCALL CharLowerW(LPWSTR lpsz)
 LPWSTR
-STDCALL
-CharLowerW(
-  LPWSTR lpsz)
+WINAPI
+CharLowerW(LPWSTR x)
 {
-  return (LPWSTR)NULL;
+    if (HIWORD(x)) {
+        return _wcslwr(x);
+    } else {
+        return (LPWSTR)(INT)towlower((WORD)(((DWORD)(x)) & 0xFFFF));
+    }
 }
 
-LPSTR
-STDCALL
-CharNextA(
-  LPCSTR lpsz)
-{
-  return (LPSTR)NULL;
-}
-
-LPSTR
-STDCALL
-CharNextExA(
-  WORD CodePage,
-  LPCSTR lpCurrentChar,
-  DWORD dwFlags)
-{
-  return (LPSTR)NULL;
-}
-
+//LPWSTR STDCALL CharPrevW(LPCWSTR lpszStart, LPCWSTR lpszCurrent)
 LPWSTR
-STDCALL
-CharNextW(
-  LPCWSTR lpsz)
+WINAPI
+CharPrevW(LPCWSTR start, LPCWSTR x)
 {
-  return (LPWSTR)NULL;
+    if (x > start) return (LPWSTR)(x-1);
+    else return (LPWSTR)x;
 }
 
+//LPSTR STDCALL CharNextA(LPCSTR lpsz)
 LPSTR
-STDCALL
-CharPrevA(
-  LPCSTR lpszStart,
-  LPCSTR lpszCurrent)
+WINAPI
+CharNextA(LPCSTR ptr)
 {
-  return (LPSTR)NULL;
+    if (!*ptr) return (LPSTR)ptr;
+    if (IsDBCSLeadByte(ptr[0]) && ptr[1]) return (LPSTR)(ptr + 2);
+    return (LPSTR)(ptr + 1);
 }
 
+//LPSTR STDCALL CharNextExA(WORD CodePage, LPCSTR lpCurrentChar, DWORD dwFlags)
+LPSTR
+WINAPI
+CharNextExA(WORD codepage, LPCSTR ptr, DWORD flags)
+{
+    if (!*ptr) return (LPSTR)ptr;
+    if (IsDBCSLeadByteEx(codepage, ptr[0]) && ptr[1]) return (LPSTR)(ptr + 2);
+    return (LPSTR)(ptr + 1);
+}
+
+//LPWSTR STDCALL CharNextW(LPCWSTR lpsz)
 LPWSTR
-STDCALL
-CharPrevW(
-  LPCWSTR lpszStart,
-  LPCWSTR lpszCurrent)
+WINAPI
+CharNextW(LPCWSTR x)
 {
-  return (LPWSTR)NULL;
+    if (*x) x++;
+    return (LPWSTR)x;
 }
 
+//LPSTR STDCALL CharPrevA(LPCSTR lpszStart, LPCSTR lpszCurrent)
 LPSTR
-STDCALL
-CharPrevExA(
-  WORD CodePage,
-  LPCSTR lpStart,
-  LPCSTR lpCurrentChar,
-  DWORD dwFlags)
+WINAPI
+CharPrevA(LPCSTR start, LPCSTR ptr)
 {
+    while (*start && (start < ptr)) {
+        LPCSTR next = CharNextA(start);
+        if (next >= ptr) break;
+        start = next;
+    }
+    return (LPSTR)start;
+}
+
+//LPSTR STDCALL CharPrevExA(WORD CodePage, LPCSTR lpStart, LPCSTR lpCurrentChar, DWORD dwFlags)
+LPSTR WINAPI CharPrevExA( WORD codepage, LPCSTR start, LPCSTR ptr, DWORD flags )
+{
+    while (*start && (start < ptr))
+    {
+        LPCSTR next = CharNextExA( codepage, start, flags );
+        if (next > ptr) break;
+        start = next;
+    }
+    return (LPSTR)start;
+}
+
+//WINBOOL STDCALL CharToOemA(LPCSTR lpszSrc, LPSTR lpszDst)
+BOOL
+WINAPI
+CharToOemA(LPCSTR s, LPSTR d)
+{
+    if (!s || !d) return TRUE;
+    return CharToOemBuffA(s, d, strlen(s) + 1);
+}
+
+//WINBOOL STDCALL CharToOemBuffA(LPCSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
+BOOL
+WINAPI
+CharToOemBuffA(LPCSTR s, LPSTR d, DWORD len)
+{
+    WCHAR* bufW;
+
+    bufW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (bufW) {
+	    MultiByteToWideChar(CP_ACP, 0, s, len, bufW, len);
+        WideCharToMultiByte(CP_OEMCP, 0, bufW, len, d, len, NULL, NULL);
+	    HeapFree(GetProcessHeap(), 0, bufW);
+    }
+    return TRUE;
+}
+
+//WINBOOL STDCALL CharToOemBuffW(LPCWSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
+BOOL
+WINAPI
+CharToOemBuffW(LPCWSTR s, LPSTR d, DWORD len)
+{
+    if (!s || !d)
+        return TRUE;
+    WideCharToMultiByte(CP_OEMCP, 0, s, len, d, len, NULL, NULL);
+    return TRUE;
+}
+
+//WINBOOL STDCALL CharToOemW(LPCWSTR lpszSrc, LPSTR lpszDst)
+BOOL
+WINAPI
+CharToOemW(LPCWSTR s, LPSTR d)
+{
+    return CharToOemBuffW(s, d, wcslen(s) + 1);
+}
+
+//LPSTR STDCALL CharUpperA(LPSTR lpsz)
+LPSTR WINAPI CharUpperA(LPSTR x)
+{
+    if (!HIWORD(x)) return (LPSTR)toupper((char)(int)x);
+/*
+    __TRY
+    {
+        LPSTR s = x;
+        while (*s)
+        {
+            *s=toupper(*s);
+            s++;
+        }
+    }
+    __EXCEPT(page_fault)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return NULL;
+    }
+    __ENDTRY
+    return x;
+ */
   return (LPSTR)NULL;
 }
 
-WINBOOL
-STDCALL
-CharToOemA(
-  LPCSTR lpszSrc,
-  LPSTR lpszDst)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-CharToOemBuffA(
-  LPCSTR lpszSrc,
-  LPSTR lpszDst,
-  DWORD cchDstLength)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-CharToOemBuffW(
-  LPCWSTR lpszSrc,
-  LPSTR lpszDst,
-  DWORD cchDstLength)
-{
-  return FALSE;
-}
-
-WINBOOL
-STDCALL
-CharToOemW(
-  LPCWSTR lpszSrc,
-  LPSTR lpszDst)
-{
-  return FALSE;
-}
-
-LPSTR
-STDCALL
-CharUpperA(
-  LPSTR lpsz)
-{
-  return (LPSTR)NULL;
-}
-
+//DWORD STDCALL CharUpperBuffA(LPSTR lpsz, DWORD cchLength)
 DWORD
-STDCALL
-CharUpperBuffA(
-  LPSTR lpsz,
-  DWORD cchLength)
+WINAPI
+CharUpperBuffA(LPSTR str, DWORD len)
 {
-  return 0;
+    DWORD lenW;
+    WCHAR* strW;
+    if (!str) return 0; /* YES */
+
+    lenW = MultiByteToWideChar(CP_ACP, 0, str, len, NULL, 0);
+    strW = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
+    if (strW) {
+        MultiByteToWideChar(CP_ACP, 0, str, len, strW, lenW);
+        CharUpperBuffW(strW, lenW);
+        len = WideCharToMultiByte(CP_ACP, 0, strW, lenW, str, len, NULL, NULL);
+        HeapFree(GetProcessHeap(), 0, strW);
+        return len;
+    }
+    return 0;
 }
 
+//DWORD STDCALL CharUpperBuffW(LPWSTR lpsz, DWORD cchLength)
 DWORD
-STDCALL
-CharUpperBuffW(
-  LPWSTR lpsz,
-  DWORD cchLength)
+WINAPI
+CharUpperBuffW(LPWSTR str, DWORD len)
 {
-  return 0;
+    DWORD ret = len;
+    if (!str) return 0; /* YES */
+    for (; len; len--, str++) *str = towupper(*str);
+    return ret;
 }
 
+//LPWSTR STDCALL CharUpperW(LPWSTR lpsz)
 LPWSTR
-STDCALL
-CharUpperW(
-  LPWSTR lpsz)
+WINAPI
+CharUpperW(LPWSTR x)
 {
-  return (LPWSTR)NULL;
+    if (HIWORD(x)) return _wcsupr(x);
+    else return (LPWSTR)(UINT)towlower((WORD)(((DWORD)(x)) & 0xFFFF));
 }
-WINBOOL
-STDCALL
-IsCharAlphaA(
-  CHAR ch)
+
+//WINBOOL STDCALL IsCharAlphaA(CHAR ch)
+BOOL
+WINAPI
+IsCharAlphaA(CHAR x)
 {
-  return FALSE;
+    WCHAR wch;
+    MultiByteToWideChar(CP_ACP, 0, &x, 1, &wch, 1);
+    return IsCharAlphaW(wch);
 }
 
 const char IsCharAlphaNumericA_lookup_table[] = { 
@@ -225,84 +330,87 @@ WINBOOL
 STDCALL
 IsCharAlphaNumericW(WCHAR ch)
 {
-    //return (get_char_typeW(ch) & (C1_ALPHA|C1_DIGIT)) != 0;
-  return FALSE;
+    return (get_char_typeW(ch) & (C1_ALPHA|C1_DIGIT)) != 0;
+//  return FALSE;
 }
 
-WINBOOL
-STDCALL
-IsCharAlphaW(
-  WCHAR ch)
+//WINBOOL STDCALL IsCharAlphaW(WCHAR ch)
+BOOL
+WINAPI
+IsCharAlphaW(WCHAR x)
 {
-  return FALSE;
+    return (get_char_typeW(x) & C1_ALPHA) != 0;
 }
 
-WINBOOL
-STDCALL
-IsCharLowerA(
-  CHAR ch)
+//WINBOOL STDCALL IsCharLowerA(CHAR ch)
+BOOL
+WINAPI
+IsCharLowerA(CHAR x)
 {
-  return FALSE;
+    WCHAR wch;
+    MultiByteToWideChar(CP_ACP, 0, &x, 1, &wch, 1);
+    return IsCharLowerW(wch);
 }
 
-WINBOOL
-STDCALL
-IsCharLowerW(
-  WCHAR ch)
+//WINBOOL STDCALL IsCharLowerW(WCHAR ch)
+BOOL
+WINAPI
+IsCharLowerW(WCHAR x)
 {
-  return FALSE;
+    return (get_char_typeW(x) & C1_LOWER) != 0;
 }
 
-WINBOOL
-STDCALL
-IsCharUpperA(
-  CHAR ch)
+//WINBOOL STDCALL IsCharUpperA(CHAR ch)
+BOOL
+WINAPI
+IsCharUpperA(CHAR x)
 {
-  return FALSE;
+    WCHAR wch;
+    MultiByteToWideChar(CP_ACP, 0, &x, 1, &wch, 1);
+    return IsCharUpperW(wch);
 }
 
-WINBOOL
-STDCALL
-IsCharUpperW(
-  WCHAR ch)
+//WINBOOL STDCALL IsCharUpperW(WCHAR ch)
+BOOL
+WINAPI
+IsCharUpperW(WCHAR x)
 {
-  return FALSE;
+    return (get_char_typeW(x) & C1_UPPER) != 0;
 }
 
-WINBOOL
-STDCALL
-OemToCharA(
-  LPCSTR lpszSrc,
-  LPSTR lpszDst)
+//WINBOOL STDCALL OemToCharA(LPCSTR lpszSrc, LPSTR lpszDst)
+BOOL
+WINAPI
+OemToCharA(LPCSTR s, LPSTR d)
 {
-  return FALSE;
+    return OemToCharBuffA(s, d, strlen(s) + 1);
 }
 
-WINBOOL
-STDCALL
-OemToCharBuffA(
-  LPCSTR lpszSrc,
-  LPSTR lpszDst,
-  DWORD cchDstLength)
+//WINBOOL STDCALL OemToCharBuffA(LPCSTR lpszSrc, LPSTR lpszDst, DWORD cchDstLength)
+BOOL WINAPI OemToCharBuffA(LPCSTR s, LPSTR d, DWORD len)
 {
-  return FALSE;
+    WCHAR* bufW;
+
+    bufW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (bufW) {
+        MultiByteToWideChar(CP_OEMCP, 0, s, len, bufW, len);
+	    WideCharToMultiByte(CP_ACP, 0, bufW, len, d, len, NULL, NULL);
+	    HeapFree(GetProcessHeap(), 0, bufW);
+    }
+    return TRUE;
 }
 
-WINBOOL
-STDCALL
-OemToCharBuffW(
-  LPCSTR lpszSrc,
-  LPWSTR lpszDst,
-  DWORD cchDstLength)
+//WINBOOL STDCALL OemToCharBuffW(LPCSTR lpszSrc, LPWSTR lpszDst, DWORD cchDstLength)
+BOOL
+WINAPI
+OemToCharBuffW(LPCSTR s, LPWSTR d, DWORD len)
 {
-  return FALSE;
+    MultiByteToWideChar(CP_OEMCP, 0, s, len, d, len);
+    return TRUE;
 }
 
-WINBOOL
-STDCALL
-OemToCharW(
-  LPCSTR lpszSrc,
-  LPWSTR lpszDst)
+//WINBOOL STDCALL OemToCharW(LPCSTR lpszSrc, LPWSTR lpszDst)
+BOOL WINAPI OemToCharW(LPCSTR s, LPWSTR d)
 {
-  return FALSE;
+    return OemToCharBuffW(s, d, strlen(s) + 1);
 }
