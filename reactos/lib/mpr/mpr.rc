@@ -21,6 +21,8 @@
 #include "winbase.h"
 #include "mprres.h"
 
+#include "version.rc"
+
 #include "mpr_Cs.rc"
 #include "mpr_De.rc"
 #include "mpr_En.rc"

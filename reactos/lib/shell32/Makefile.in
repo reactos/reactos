@@ -51,7 +51,7 @@ C_SRCS = \
 	shv_item_cmenu.c \
 	ros-systray.c
 
-RC_SRCS = shres.rc version.rc
+RC_SRCS = shres.rc
 RC_BINSRC = shres.rc
 RC_BINARIES = \
 	desktop.ico \

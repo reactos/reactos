@@ -23,6 +23,8 @@
 #include "winuser.h"
 #include "winnls.h"
 
+#include "version.rc"
+
 /*
  * Everything that does not depend on language,
  * like textless bitmaps etc, go into the

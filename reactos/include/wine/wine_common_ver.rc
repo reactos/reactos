@@ -16,71 +16,48 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "winver.h"
+/* Convert Wine #defines to ReactOS #defines */
+#ifdef WINE_FILEVERSION
+#define REACTOS_FILEVERSION WINE_FILEVERSION
+#endif /* WINE_FILEVERSION */
 
-/*
-Assign WINE_FILEVERSION and WINE_FILEVERSION_STR high enough number
-to make sure that programs, relying on the version numbers, will
-never complain.
-*/
+#ifdef WINE_FILEVERSION_STR
+#define REACTOS_STR_FILE_VERSION WINE_FILEVERSION_STR
+#endif /* WINE_FILEVERSION_STR */
 
-#ifndef WINE_FILEVERSION
-#define WINE_FILEVERSION 10,0,0,0
-#endif
+#ifdef WINE_FILEDESCRIPTION_STR
+#define REACTOS_STR_FILE_DESCRIPTION WINE_FILEDESCRIPTION_STR
+#else
+#define REACTOS_STR_FILE_DESCRIPTION "ReactOS/Wine core dll\0"
+#endif /* WINE_FILEDESCRIPTION_STR */
 
-#ifndef WINE_FILEVERSION_STR
-#define WINE_FILEVERSION_STR "10.0"
-#endif
+#ifdef WINE_FILENAME_STR
+#define REACTOS_STR_INTERNAL_NAME WINE_FILENAME_STR
+#define REACTOS_STR_ORIGINAL_FILENAME WINE_FILENAME_STR
+#endif /* WINE_FILENAME_STR */
 
-#ifndef WINE_FILEDESCRIPTION_STR
-#define WINE_FILEDESCRIPTION_STR "Wine core dll"
-#endif
+#ifdef WINE_PRODUCTVERSION
+#define REACTOS_PRODUCT_VERSION WINE_PRODUCTVERSION
+#endif /* WINE_PRODUCTVERSION */
 
-#ifndef WINE_FILENAME_STR
-#define WINE_FILENAME_STR ""
-#endif
+#ifdef WINE_PRODUCTVERSION_STR
+#define REACTOS_STR_PRODUCT_VERSION WINE_PRODUCTVERSION_STR
+#endif /* WINE_PRODUCTVERSION_STR */
 
-#ifndef WINE_PRODUCTVERSION
-#define WINE_PRODUCTVERSION 1,0,0,0
-#endif
+#ifdef WINE_PRODUCTNAME_STR
+#define REACTOS_STR_PRODUCT_NAME WINE_PRODUCTNAME_STR
+#endif /* WINE_PRODUCTNAME_STR */
 
-#ifndef WINE_PRODUCTVERSION_STR
-#define WINE_PRODUCTVERSION_STR "1.0"
-#endif
-
-#ifndef WINE_PRODUCTNAME_STR
-#define WINE_PRODUCTNAME_STR "Wine"
-#endif
-
-VS_VERSION_INFO VERSIONINFO
-FILEVERSION    WINE_FILEVERSION
-PRODUCTVERSION WINE_PRODUCTVERSION
-FILEFLAGSMASK  0
-FILEFLAGS      0
-FILEOS         VOS_UNKNOWN
-FILETYPE       VFT_DLL
-FILESUBTYPE    VFT2_UNKNOWN
-{
-    BLOCK "StringFileInfo"
-    {
-	BLOCK "040904E4" /* LANG_ENGLISH/SUBLANG_DEFAULT, CP 1252 */
-	{
-	    VALUE "CompanyName", "Wine Team"
-	    VALUE "FileDescription", WINE_FILEDESCRIPTION_STR
-	    VALUE "FileVersion", WINE_FILEVERSION_STR
-	    VALUE "InternalName", WINE_FILENAME_STR
-	    VALUE "LegalCopyright", "Copyright (c) 1993-2001 the Wine project authors " \
-				    "(see the file AUTHORS for a complete list)"
-	    VALUE "OriginalFilename", WINE_FILENAME_STR
-	    VALUE "ProductName", WINE_PRODUCTNAME_STR
-	    VALUE "ProductVersion", WINE_PRODUCTVERSION_STR
 #ifdef WINE_OLESELFREGISTER
-	    VALUE "OLESelfRegister", ""
-#endif
-	}
-    }
-    BLOCK "VarFileInfo"
-    {
-	VALUE "Translation", 0x0409, 0x04E4 /* LANG_ENGLISH/SUBLANG_DEFAULT, CP 1252 */
-    }
-}
+#define REACTOS_OLESELFREGISTER
+#endif /* WINE_OLESELFREGISTER */
+
+/* Credit the Wine team */
+#define REACTOS_STR_COMPANY_NAME "ReactOS Development Team/Wine Team\0"
+#define REACTOS_STR_LEGAL_COPYRIGHT "Copyright 1998-2004 ReactOS Team, 1993-2004 the Wine project authors\0"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT "Copyright (c) 1993-2001 the Wine project authors " \
+                                       "(see the file AUTHORS for a complete list)"
+
+#define REACTOS_VERSION_DLL
+
+#include <reactos/version.rc>

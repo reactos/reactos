@@ -45,6 +45,7 @@ move lib\freetype\Makefile lib\freetype\Makefile.freetype
 mkdir lib\freetype\i386
 copy lib\freetype.old\rosglue.c lib\freetype
 copy lib\freetype.old\i386\setjmplongjmp.s lib\freetype\i386
+copy lib\freetype.old\freetype.rc lib\freetype
 copy lib\freetype.old\Makefile lib\freetype
 copy lib\freetype.old\README.ROS lib\freetype
 copy lib\freetype.old\Doxyfile lib\freetype
@@ -66,4 +67,4 @@ file, so it is obvious to everyone which FreeType version we're using.
 After testing, you can commit the new/changed files to CVS. ALthough files
 config.mk and freetype.def are generated, they should be included in CVS.
 
-$Id: README.ROS,v 1.6 2004/08/18 20:25:04 gvg Exp $
+$Id: README.ROS,v 1.7 2004/10/16 20:27:33 gvg Exp $

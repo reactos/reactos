@@ -1,10 +1,26 @@
+Index: Makefile.in
+===================================================================
+RCS file: /home/wine/wine/dlls/ole32/Makefile.in,v
+retrieving revision 1.37
+diff -u -r1.37 Makefile.in
+--- Makefile.in	22 Aug 2004 22:33:57 -0000	1.37
++++ Makefile.in	16 Oct 2004 17:16:49 -0000
+@@ -53,7 +53,7 @@
+ 	ole2thk.spec \
+ 	storage.spec
+ 
+-RC_SRCS = ole32res.rc version.rc
++RC_SRCS = ole32res.rc
+ RC_BINSRC = ole32res.rc
+ RC_BINARIES = \
+ 	drag_copy.cur \
 Index: ifs.h
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/ifs.h,v
 retrieving revision 1.12
 diff -u -r1.12 ifs.h
 --- ifs.h	12 Aug 2004 03:33:30 -0000	1.12
-+++ ifs.h	14 Aug 2004 20:12:56 -0000
++++ ifs.h	16 Oct 2004 17:16:49 -0000
 @@ -33,8 +33,7 @@
   * IMalloc16 interface
   */
@@ -50,13 +66,29 @@ diff -u -r1.12 ifs.h
  
  #define INTERFACE IStorage16
  #define IStorage16_METHODS \
+Index: ole32res.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/ole32/ole32res.rc,v
+retrieving revision 1.5
+diff -u -r1.5 ole32res.rc
+--- ole32res.rc	3 Oct 2003 05:01:34 -0000	1.5
++++ ole32res.rc	16 Oct 2004 17:16:49 -0000
+@@ -23,6 +23,8 @@
+ #include "winuser.h"
+ #include "winnls.h"
+ 
++#include "version.rc"
++
+ /*
+  * Everything that does not depend on language,
+  * like textless bitmaps etc, go into the
 Index: oleproxy.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/ole32/oleproxy.c,v
-retrieving revision 1.19
-diff -u -r1.19 oleproxy.c
---- oleproxy.c	12 Aug 2004 23:00:55 -0000	1.19
-+++ oleproxy.c	14 Aug 2004 20:13:00 -0000
+retrieving revision 1.21
+diff -u -r1.21 oleproxy.c
+--- oleproxy.c	9 Sep 2004 21:03:58 -0000	1.21
++++ oleproxy.c	16 Oct 2004 17:16:50 -0000
 @@ -38,6 +38,7 @@
  
  #include <stdlib.h>

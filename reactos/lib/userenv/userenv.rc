@@ -1,4 +1,5 @@
-/*
+/* $Id: userenv.rc,v 1.3 2004/10/16 20:27:39 gvg Exp $
+ *
  * Copyright (C) 2004 Eric Kohl
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,46 +18,17 @@
  */
 
 #include <windows.h>
-#include <reactos/resource.h>
-
 #include "resources.h"
 
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"User Environment DLL\0"
+#define REACTOS_STR_INTERNAL_NAME	"userenv\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"userenv.dll\0"
+#define REACTOS_FILEVERSION		5,1,2600,0
+#define REACTOS_STR_FILE_VERSION	"5.1.2600\0"
+#include <reactos/version.rc>
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-VS_VERSION_INFO VERSIONINFO
-	FILEVERSION    5,1,2600,0
-	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
-	FILEFLAGSMASK	0x3fL
-#ifdef _DEBUG
-	FILEFLAGS	0x1L
-#else
-	FILEFLAGS	0x0L
-#endif
-	FILEOS		0x40004L
-	FILETYPE	0x2L
-	FILESUBTYPE	0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"User Environment DLL\0"
-            VALUE "FileVersion",	"5.1.2600\0"
-            VALUE "InternalName",	"userenv\0"
-            VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename",	"userenv.dll\0"
-            VALUE "ProductName",	RES_STR_PRODUCT_NAME
-            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-
 
 /*
  * Everything specific to any language goes in one of the specific

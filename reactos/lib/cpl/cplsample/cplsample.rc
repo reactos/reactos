@@ -1,41 +1,15 @@
-#include <reactos/resource.h>
+/* $Id: cplsample.rc,v 1.3 2004/10/16 20:27:30 gvg Exp $ */
+
 #include <defines.h>
 #include "resource.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Sample Control Panel\0"
+#define REACTOS_STR_INTERNAL_NAME	"cplsample\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"cplsample.cpl\0"
+#include <reactos/version.rc>
 
-VS_VERSION_INFO VERSIONINFO
-	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
-	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD	
-	FILEFLAGSMASK	0x3fL
-#ifdef _DEBUG
-	FILEFLAGS	0x1L
-#else
-	FILEFLAGS	0x0L
-#endif
-	FILEOS		0x40004L
-	FILETYPE	0x2L
-	FILESUBTYPE	0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"ReactOS Sample Control Panel\0"
-            VALUE "FileVersion",	RES_STR_FILE_VERSION
-            VALUE "InternalName",	"cplsample\0"
-            VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename",	"cplsample.cpl\0"
-            VALUE "ProductName",	RES_STR_PRODUCT_NAME
-            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 IDC_CPLICON_1 ICON "resources/cpl_icon1.ico"
 

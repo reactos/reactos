@@ -53,7 +53,7 @@ SPEC_SRCS16 = \
 	ole2thk.spec \
 	storage.spec
 
-RC_SRCS = ole32res.rc version.rc
+RC_SRCS = ole32res.rc
 RC_BINSRC = ole32res.rc
 RC_BINARIES = \
 	drag_copy.cur \
