@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.32 2002/05/07 22:21:47 hbirr Exp $
+/* $Id: file.c,v 1.33 2002/05/27 18:23:49 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -487,8 +487,8 @@ GetFileInformationByHandle(HANDLE hFile,
      }
 
    lpFileInformation->nNumberOfLinks = FileStandard.NumberOfLinks;
-   lpFileInformation->nFileSizeHigh = FileStandard.AllocationSize.u.HighPart;
-   lpFileInformation->nFileSizeLow = FileStandard.AllocationSize.u.LowPart;
+   lpFileInformation->nFileSizeHigh = FileStandard.EndOfFile.u.HighPart;
+   lpFileInformation->nFileSizeLow = FileStandard.EndOfFile.u.LowPart;
 
    return TRUE;
 }
