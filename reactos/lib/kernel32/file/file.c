@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.25 2001/03/02 15:45:31 cnettel Exp $
+/* $Id: file.c,v 1.26 2001/07/19 18:42:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -31,43 +31,31 @@ WINBOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
-STDCALL
-SetFileApisToOEM (
-	VOID
-	)
+VOID STDCALL
+SetFileApisToOEM(VOID)
 {
-	bIsFileApiAnsi = FALSE;
+   bIsFileApiAnsi = FALSE;
 }
 
 
-VOID
-STDCALL
-SetFileApisToANSI (
-	VOID
-	)
+VOID STDCALL
+SetFileApisToANSI(VOID)
 {
-	bIsFileApiAnsi = TRUE;
+   bIsFileApiAnsi = TRUE;
 }
 
 
-WINBOOL
-STDCALL
-AreFileApisANSI (
-	VOID
-	)
+WINBOOL STDCALL
+AreFileApisANSI(VOID)
 {
-	return bIsFileApiAnsi;
+   return bIsFileApiAnsi;
 }
 
 
-HFILE
-STDCALL
-OpenFile (
-	LPCSTR		lpFileName,
-	LPOFSTRUCT	lpReOpenBuff,
-	UINT		uStyle
-	)
+HFILE STDCALL
+OpenFile(LPCSTR lpFileName,
+	 LPOFSTRUCT lpReOpenBuff,
+	 UINT uStyle)
 {
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	IO_STATUS_BLOCK IoStatusBlock;
@@ -151,7 +139,8 @@ OpenFile (
 }
 
 
-WINBOOL STDCALL FlushFileBuffers(HANDLE hFile)
+WINBOOL STDCALL
+FlushFileBuffers(HANDLE hFile)
 {
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
@@ -167,10 +156,11 @@ WINBOOL STDCALL FlushFileBuffers(HANDLE hFile)
 }
 
 
-DWORD STDCALL SetFilePointer(HANDLE hFile,
-			     LONG lDistanceToMove,
-			     PLONG lpDistanceToMoveHigh,
-			     DWORD dwMoveMethod)
+DWORD STDCALL
+SetFilePointer(HANDLE hFile,
+	       LONG lDistanceToMove,
+	       PLONG lpDistanceToMoveHigh,
+	       DWORD dwMoveMethod)
 {
    FILE_POSITION_INFORMATION FilePosition;
    FILE_END_OF_FILE_INFORMATION FileEndOfFile;
@@ -191,7 +181,7 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
 			       &FilePosition,
 			       sizeof(FILE_POSITION_INFORMATION),
 			       FilePositionInformation);
-        FilePosition.CurrentByteOffset.QuadPart += Distance.QuadPart;
+	FilePosition.CurrentByteOffset.QuadPart += Distance.QuadPart;
      }
    else if (dwMoveMethod == FILE_END)
      {
@@ -227,7 +217,8 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
 }
 
 
-DWORD STDCALL GetFileType(HANDLE hFile)
+DWORD STDCALL
+GetFileType(HANDLE hFile)
 {
    FILE_FS_DEVICE_INFORMATION DeviceInfo;
    IO_STATUS_BLOCK StatusBlock;
@@ -298,8 +289,9 @@ DWORD STDCALL GetFileType(HANDLE hFile)
 }
 
 
-DWORD STDCALL GetFileSize(HANDLE hFile,
-			  LPDWORD lpFileSizeHigh)
+DWORD STDCALL
+GetFileSize(HANDLE hFile,
+	    LPDWORD lpFileSizeHigh)
 {
    NTSTATUS errCode;
    FILE_STANDARD_INFORMATION FileStandard;
@@ -329,8 +321,9 @@ DWORD STDCALL GetFileSize(HANDLE hFile,
 }
 
 
-DWORD STDCALL GetCompressedFileSizeA(LPCSTR lpFileName,
-				     LPDWORD lpFileSizeHigh)
+DWORD STDCALL
+GetCompressedFileSizeA(LPCSTR lpFileName,
+		       LPDWORD lpFileSizeHigh)
 {
    UNICODE_STRING FileNameU;
    ANSI_STRING FileName;
@@ -358,8 +351,9 @@ DWORD STDCALL GetCompressedFileSizeA(LPCSTR lpFileName,
 }
 
 
-DWORD STDCALL GetCompressedFileSizeW(LPCWSTR lpFileName,
-				     LPDWORD lpFileSizeHigh)
+DWORD STDCALL
+GetCompressedFileSizeW(LPCWSTR lpFileName,
+		       LPDWORD lpFileSizeHigh)
 {
    FILE_COMPRESSION_INFORMATION FileCompression;
    NTSTATUS errCode;
@@ -390,8 +384,9 @@ DWORD STDCALL GetCompressedFileSizeW(LPCWSTR lpFileName,
 }
 
 
-WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
-			       LPBY_HANDLE_FILE_INFORMATION lpFileInformation)
+WINBOOL STDCALL
+GetFileInformationByHandle(HANDLE hFile,
+			   LPBY_HANDLE_FILE_INFORMATION lpFileInformation)
 {
    FILE_DIRECTORY_INFORMATION FileDirectory;
    FILE_INTERNAL_INFORMATION FileInternal;
@@ -462,11 +457,8 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
 }
 
 
-DWORD
-STDCALL
-GetFileAttributesA (
-	LPCSTR	lpFileName
-	)
+DWORD STDCALL
+GetFileAttributesA(LPCSTR lpFileName)
 {
 	UNICODE_STRING FileNameU;
 	ANSI_STRING FileName;
@@ -493,7 +485,8 @@ GetFileAttributesA (
 }
 
 
-DWORD STDCALL GetFileAttributesW(LPCWSTR lpFileName)
+DWORD STDCALL
+GetFileAttributesW(LPCWSTR lpFileName)
 {
    IO_STATUS_BLOCK IoStatusBlock;
    FILE_BASIC_INFORMATION FileBasic;
@@ -528,41 +521,39 @@ DWORD STDCALL GetFileAttributesW(LPCWSTR lpFileName)
 }
 
 
-WINBOOL
-STDCALL
-SetFileAttributesA (
-	LPCSTR	lpFileName,
-	DWORD	dwFileAttributes
-	)
+WINBOOL STDCALL
+SetFileAttributesA(LPCSTR lpFileName,
+		   DWORD dwFileAttributes)
 {
-	UNICODE_STRING FileNameU;
-	ANSI_STRING FileName;
-	WINBOOL Result;
+   UNICODE_STRING FileNameU;
+   ANSI_STRING FileName;
+   WINBOOL Result;
 
-	RtlInitAnsiString (&FileName,
-	                   (LPSTR)lpFileName);
+   RtlInitAnsiString(&FileName,
+		     (LPSTR)lpFileName);
 
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&FileNameU,
-		                              &FileName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&FileNameU,
-		                             &FileName,
-		                             TRUE);
+   /* convert ansi (or oem) string to unicode */
+   if (bIsFileApiAnsi)
+     RtlAnsiStringToUnicodeString(&FileNameU,
+				  &FileName,
+				  TRUE);
+   else
+     RtlOemStringToUnicodeString(&FileNameU,
+				 &FileName,
+				 TRUE);
 
-	Result = SetFileAttributesW (FileNameU.Buffer,
-	                             dwFileAttributes);
+   Result = SetFileAttributesW(FileNameU.Buffer,
+			       dwFileAttributes);
 
-	RtlFreeUnicodeString (&FileNameU);
+   RtlFreeUnicodeString(&FileNameU);
 
-	return Result;
+   return Result;
 }
 
 
-WINBOOL STDCALL SetFileAttributesW(LPCWSTR lpFileName,
-				   DWORD dwFileAttributes)
+WINBOOL STDCALL
+SetFileAttributesW(LPCWSTR lpFileName,
+		   DWORD dwFileAttributes)
 {
    IO_STATUS_BLOCK IoStatusBlock;
    FILE_BASIC_INFORMATION FileBasic;
@@ -605,10 +596,11 @@ WINBOOL STDCALL SetFileAttributesW(LPCWSTR lpFileName,
 }
 
 
-UINT STDCALL GetTempFileNameA(LPCSTR lpPathName,
-			      LPCSTR lpPrefixString,
-			      UINT uUnique,
-			      LPSTR lpTempFileName)
+UINT STDCALL
+GetTempFileNameA(LPCSTR lpPathName,
+		 LPCSTR lpPrefixString,
+		 UINT uUnique,
+		 LPSTR lpTempFileName)
 {
    HANDLE hFile;
    UINT unique = uUnique;
@@ -638,10 +630,11 @@ UINT STDCALL GetTempFileNameA(LPCSTR lpPathName,
 }
 
 
-UINT STDCALL GetTempFileNameW(LPCWSTR lpPathName,
-			      LPCWSTR lpPrefixString,
-			      UINT uUnique,
-			      LPWSTR lpTempFileName)
+UINT STDCALL
+GetTempFileNameW(LPCWSTR lpPathName,
+		 LPCWSTR lpPrefixString,
+		 UINT uUnique,
+		 LPWSTR lpTempFileName)
 {
    HANDLE hFile;
    UINT unique = uUnique;
@@ -671,57 +664,76 @@ UINT STDCALL GetTempFileNameW(LPCWSTR lpPathName,
 }
 
 
-WINBOOL STDCALL GetFileTime(HANDLE hFile,
-			    LPFILETIME lpCreationTime,
-			    LPFILETIME lpLastAccessTime,
-			    LPFILETIME lpLastWriteTime)
+WINBOOL STDCALL
+GetFileTime(HANDLE hFile,
+	    LPFILETIME lpCreationTime,
+	    LPFILETIME lpLastAccessTime,
+	    LPFILETIME lpLastWriteTime)
 {
    IO_STATUS_BLOCK IoStatusBlock;
    FILE_BASIC_INFORMATION FileBasic;
-   NTSTATUS errCode;
+   NTSTATUS Status;
 
-   errCode = NtQueryInformationFile(hFile,
-				    &IoStatusBlock,
-				    &FileBasic,
-				    sizeof(FILE_BASIC_INFORMATION),
-				    FileBasicInformation);
-   if (!NT_SUCCESS(errCode))
+   Status = NtQueryInformationFile(hFile,
+				   &IoStatusBlock,
+				   &FileBasic,
+				   sizeof(FILE_BASIC_INFORMATION),
+				   FileBasicInformation);
+   if (!NT_SUCCESS(Status))
      {
-	SetLastErrorByStatus(errCode);
+	SetLastErrorByStatus(Status);
 	return FALSE;
      }
 
-   if (lpCreationTime) memcpy(lpCreationTime,&FileBasic.CreationTime,sizeof(FILETIME));
-   if (lpLastAccessTime) memcpy(lpLastAccessTime,&FileBasic.LastAccessTime,sizeof(FILETIME));
-   if (lpLastWriteTime) memcpy(lpLastWriteTime,&FileBasic.LastWriteTime,sizeof(FILETIME));
+   if (lpCreationTime)
+     memcpy(lpCreationTime, &FileBasic.CreationTime, sizeof(FILETIME));
+   if (lpLastAccessTime)
+     memcpy(lpLastAccessTime, &FileBasic.LastAccessTime, sizeof(FILETIME));
+   if (lpLastWriteTime)
+     memcpy(lpLastWriteTime, &FileBasic.LastWriteTime, sizeof(FILETIME));
 
    return TRUE;
 }
 
 
-WINBOOL STDCALL SetFileTime(HANDLE hFile,
-			    CONST FILETIME *lpCreationTime,
-			    CONST FILETIME *lpLastAccessTime,
-			    CONST FILETIME *lpLastWriteTime)
+WINBOOL STDCALL
+SetFileTime(HANDLE hFile,
+	    CONST FILETIME *lpCreationTime,
+	    CONST FILETIME *lpLastAccessTime,
+	    CONST FILETIME *lpLastWriteTime)
 {
    FILE_BASIC_INFORMATION FileBasic;
    IO_STATUS_BLOCK IoStatusBlock;
-   NTSTATUS errCode;
-   
-   memcpy(&FileBasic.CreationTime,lpCreationTime,sizeof(FILETIME));
-   memcpy(&FileBasic.LastAccessTime,lpLastAccessTime,sizeof(FILETIME));
-   memcpy(&FileBasic.LastWriteTime,lpLastWriteTime,sizeof(FILETIME));
-   
-   // shoud i initialize changetime ???
-   
-   errCode = NtSetInformationFile(hFile,
-				  &IoStatusBlock,
-				  &FileBasic,
-				  sizeof(FILE_BASIC_INFORMATION),
-				  FileBasicInformation);
-   if (!NT_SUCCESS(errCode))
+   NTSTATUS Status;
+
+   Status = NtQueryInformationFile(hFile,
+				   &IoStatusBlock,
+				   &FileBasic,
+				   sizeof(FILE_BASIC_INFORMATION),
+				   FileBasicInformation);
+   if (!NT_SUCCESS(Status))
      {
-	SetLastErrorByStatus(errCode);
+	SetLastErrorByStatus(Status);
+	return FALSE;
+     }
+
+   if (lpCreationTime)
+     memcpy(&FileBasic.CreationTime, lpCreationTime, sizeof(FILETIME));
+   if (lpLastAccessTime)
+     memcpy(&FileBasic.LastAccessTime, lpLastAccessTime, sizeof(FILETIME));
+   if (lpLastWriteTime)
+     memcpy(&FileBasic.LastWriteTime, lpLastWriteTime, sizeof(FILETIME));
+
+   // should i initialize changetime ???
+
+   Status = NtSetInformationFile(hFile,
+				 &IoStatusBlock,
+				 &FileBasic,
+				 sizeof(FILE_BASIC_INFORMATION),
+				 FileBasicInformation);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus(Status);
 	return FALSE;
      }
    
@@ -729,7 +741,8 @@ WINBOOL STDCALL SetFileTime(HANDLE hFile,
 }
 
 
-WINBOOL STDCALL SetEndOfFile(HANDLE hFile)
+WINBOOL STDCALL
+SetEndOfFile(HANDLE hFile)
 {
    int x = -1;
    DWORD Num;
