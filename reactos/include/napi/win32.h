@@ -34,8 +34,6 @@ typedef struct _W32PROCESS
   ULONG Flags;
   WORD GDIObjects;
   WORD UserObjects;
-  BOOLEAN CreatedWindowOrDC;
-  BOOLEAN ManualGuiCheck;
 } W32PROCESS, *PW32PROCESS;
 
 PW32THREAD STDCALL
