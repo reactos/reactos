@@ -47,5 +47,6 @@ HRGN STDCALL  DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
 INT  FASTCALL DCE_ExcludeRgn(HDC, HWND, HRGN);
 BOOL FASTCALL DCE_InvalidateDCE(HWND, const PRECTL);
 BOOL FASTCALL DCE_InternalDelete(PDCE dce);
+HWND FASTCALL W32kWindowFromDC(HDC hDc);
 
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.19 2003/08/11 19:05:26 gdalsnes Exp $
+/* $Id: windc.c,v 1.20 2003/08/17 09:17:04 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -466,6 +466,20 @@ DCE_InternalDelete(PDCE Dce)
     }
 
   return NULL != PrevInList;
+}
+
+HWND FASTCALL
+W32kWindowFromDC(HDC hDc)
+{
+  DCE *Dce;
+  for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
+  {
+    if(Dce->hDC == hDc)
+    {
+      return Dce->hwndCurrent;
+    }
+  }
+  return 0;
 }
   
 

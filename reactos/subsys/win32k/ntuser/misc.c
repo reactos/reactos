@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.4 2003/08/11 21:10:49 royce Exp $
+/* $Id: misc.c,v 1.5 2003/08/17 09:17:04 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,6 +13,7 @@
 #include <include/error.h>
 #include <include/window.h>
 #include <include/painting.h>
+#include <include/dce.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -68,6 +69,9 @@ NtUserCallOneParam(
       Result = WindowObject->Unicode;
       W32kReleaseWindowObject(WindowObject);
       return Result;
+      
+    case ONEPARAM_ROUTINE_WINDOWFROMDC:
+      return (DWORD)W32kWindowFromDC((HDC)Param);
 
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param=0x%x\n", 
