@@ -1,0 +1,80 @@
+#
+#  ReactOS explorer
+#
+#  Makefile
+#
+
+CC = gcc
+CXX = g++
+LINK = g++
+
+CFLAGS	= -DWIN32 -D_ROS_ -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -fexceptions -Wall
+RCFLAGS	= -DWIN32 -D_ROS_
+LFLAGS	= -Wl,--subsystem,windows
+
+ifdef DEBUG
+CFLAGS	+= -D_DEBUG -g
+RCFLAGS	+= -D_DEBUG
+LFLAGS	+= -g
+else
+CFLAGS	+= -DNDEBUG -Os
+RCFLAGS	+= -DNDEBUG
+LFLAGS	+= -s
+endif
+
+ifdef UNICODE
+CFLAGS	+= -DUNICODE
+# LFLAGS+= -Wl,--entry,_wWinMain@16
+endif
+
+CXXFLAGS = $(CFLAGS)
+
+EXEC_SUFFIX = .exe
+RES_SUFFIX = .coff
+
+VPATH = shell utility taskbar desktop dialogs
+
+PROGRAM = explorer
+
+TARGET = $(PROGRAM)$(EXEC_SUFFIX)
+
+OBJECTS = \
+	startup.o \
+	shellclasses.o \
+	utility.o \
+	window.o \
+	dragdropimpl.o \
+	shellbrowserimpl.o \
+	explorer.o \
+	entries.o \
+	winfs.o \
+	unixfs.o \
+	shellfs.o \
+	mainframe.o \
+	filechild.o \
+	pane.o \
+	shellbrowser.o \
+	desktop.o \
+	desktopbar.o \
+	taskbar.o \
+	startmenu.o \
+	traynotify.o \
+	quicklaunch.o \
+	searchprogram.o
+
+LIBS = gdi32 comctl32 ole32 uuid
+
+all: buildno.h $(TARGET)
+
+buildno.h: ../../../include/reactos/buildno.h
+	updatebuildno
+
+$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))
+
+explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc
+	windres $(RCFLAGS) -o $@ $^
+
+clean:
+	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+
