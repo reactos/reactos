@@ -200,5 +200,18 @@ NTSTATUS STDCALL NtWriteRequestData (HANDLE PortHandle,
 				     ULONG BufferLength,
 				     PULONG ReturnLength);
 
+NTSTATUS STDCALL ZwConnectPort(PHANDLE PortHandle,
+			       PUNICODE_STRING PortName,
+			       PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+			       PLPC_SECTION_WRITE SectionInfo,
+			       PLPC_SECTION_READ MapInfo,
+			       PULONG MaxMessageSize,
+			       PVOID ConnectInfo,
+			       PULONG ConnectInfoLength);
+
+NTSTATUS STDCALL ZwRequestWaitReplyPort(HANDLE PortHandle,
+					PLPC_MESSAGE LpcReply,      
+					PLPC_MESSAGE LpcRequest);
+
 
 #endif /* __INCLUDE_NAPI_LPC_H */

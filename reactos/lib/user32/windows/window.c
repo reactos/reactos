@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.84 2003/12/07 18:54:15 navaraf Exp $
+/* $Id: window.c,v 1.85 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -21,7 +21,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static BOOL ControlsInitCalled = FALSE;
+static BOOL ControlsInitialized = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -399,13 +399,6 @@ CreateWindowExA(DWORD dwExStyle,
   DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
 #endif
 
-  /* Register built-in controls if not already done */
-  if (! ControlsInitCalled)
-    {
-      ControlsInit();
-      ControlsInitCalled = TRUE;
-    }
-
   if (IS_ATOM(lpClassName))
     {
       RtlInitUnicodeString(&ClassName, NULL);
@@ -418,6 +411,12 @@ CreateWindowExA(DWORD dwExStyle,
 	  SetLastError(ERROR_OUTOFMEMORY);
 	  return (HWND)0;
 	}
+    }
+
+  /* Register built-in controls if not already done */
+  if (! ControlsInitialized)
+    {
+      ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
   if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName))
@@ -543,10 +542,9 @@ CreateWindowExW(DWORD dwExStyle,
   UINT sw;
 
   /* Register built-in controls if not already done */
-  if (! ControlsInitCalled)
+  if (! ControlsInitialized)
     {
-      ControlsInit();
-      ControlsInitCalled = TRUE;
+      ControlsInitialized = ControlsInit(lpClassName);
     }
 
   if (IS_ATOM(lpClassName)) 

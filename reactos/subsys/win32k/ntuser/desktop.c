@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.1 2003/12/07 19:29:33 weiden Exp $
+ *  $Id: desktop.c,v 1.2 2003/12/07 23:02:57 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -33,6 +33,7 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <ddk/ntddmou.h>
+#include <csrss/csrss.h>
 #include <win32k/win32k.h>
 #include <include/winsta.h>
 #include <include/desktop.h>
@@ -54,7 +55,6 @@
 /* Currently active desktop */
 PDESKTOP_OBJECT InputDesktop = NULL;
 HDESK InputDesktopHandle = NULL; 
-PWNDCLASS_OBJECT DesktopWindowClass;
 HDC ScreenDeviceContext = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
@@ -62,52 +62,16 @@ HDC ScreenDeviceContext = NULL;
 NTSTATUS FASTCALL
 InitDesktopImpl(VOID)
 {
-   WNDCLASSEXW wcx;
-   
-   /* 
-    * Create the desktop window class
-    */
-   wcx.style = 0;
-   wcx.lpfnWndProc = IntDesktopWindowProc;
-   wcx.cbClsExtra = wcx.cbWndExtra = 0;
-   wcx.hInstance = wcx.hIcon = wcx.hCursor = NULL;
-   wcx.hbrBackground = NULL;
-   wcx.lpszMenuName = NULL;
-   wcx.lpszClassName = L"DesktopWindowClass";
-   DesktopWindowClass = IntCreateClass(&wcx, TRUE, IntDesktopWindowProc,
-      (RTL_ATOM)32880);
-  
-   return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID)
 {
-   /* FIXME: Unregister the desktop window class */
-
-   return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-LRESULT CALLBACK
-IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-   switch (msg)
-   {
-      case WM_CREATE:
-         return 0;
-
-      case WM_NCCREATE:
-         return 1;
-
-      case WM_ERASEBKGND:
-         return NtUserPaintDesktop((HDC)wParam);
-
-      default:
-         return 0;
-   }
-}
 
 /*
  * IntValidateDesktopHandle
@@ -174,7 +138,88 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+
+static NTSTATUS FASTCALL
+NotifyCsrss(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
+{
+  NTSTATUS Status;
+  UNICODE_STRING PortName;
+  ULONG ConnectInfoLength;
+  static HANDLE WindowsApiPort = NULL;
+
+  RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
+  ConnectInfoLength = 0;
+  Status = ZwConnectPort(&WindowsApiPort,
+                         &PortName,
+                         NULL,
+                         NULL,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &ConnectInfoLength);
+  if (! NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+   Request->Header.DataSize = sizeof(CSRSS_API_REQUEST) - sizeof(LPC_MESSAGE);
+   Request->Header.MessageSize = sizeof(CSRSS_API_REQUEST);
+   
+   Status = ZwRequestWaitReplyPort(WindowsApiPort,
+				   &Request->Header,
+				   &Reply->Header);
+   if (! NT_SUCCESS(Status) || ! NT_SUCCESS(Status = Reply->Status))
+     {
+       ZwClose(WindowsApiPort);
+       return Status;
+     }
+
+//  ZwClose(WindowsApiPort);
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS FASTCALL
+IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
+{
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+
+  Request.Type = CSRSS_SHOW_DESKTOP;
+  Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
+  Request.Data.ShowDesktopRequest.Width = Width;
+  Request.Data.ShowDesktopRequest.Height = Height;
+
+  return NotifyCsrss(&Request, &Reply);
+}
+
+NTSTATUS FASTCALL
+IntHideDesktop(PDESKTOP_OBJECT Desktop)
+{
+#if 0
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+
+  Request.Type = CSRSS_HIDE_DESKTOP;
+  Request.Data.HideDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
+
+  return NotifyCsrss(&Request, &Reply);
+#else
+  PWINDOW_OBJECT DesktopWindow;
+
+  DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
+  if (! DesktopWindow)
+    {
+      return ERROR_INVALID_WINDOW_HANDLE;
+    }
+  DesktopWindow->Style &= ~WS_VISIBLE;
+
+  return STATUS_SUCCESS;
+#endif
+}
+
 /*
+<<<<<<< winsta.c
  * NtUserCreateDesktop
  *
  * Creates a new desktop.
@@ -214,125 +259,134 @@ NtUserCreateDesktop(
    LPSECURITY_ATTRIBUTES lpSecurity,
    HWINSTA hWindowStation)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   PWINSTATION_OBJECT WinStaObject;
-   PDESKTOP_OBJECT DesktopObject;
-   UNICODE_STRING DesktopName;
-   NTSTATUS Status;
-   HDESK Desktop;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PWINSTATION_OBJECT WinStaObject;
+  PDESKTOP_OBJECT DesktopObject;
+  UNICODE_STRING DesktopName;
+  NTSTATUS Status;
+  HDESK Desktop;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
 
-   Status = IntValidateWindowStationHandle(
-      hWindowStation,
-      KernelMode,
-      0,
-      &WinStaObject);
+  Status = IntValidateWindowStationHandle(
+    hWindowStation,
+    KernelMode,
+    0,
+    &WinStaObject);
 
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Failed validation of window station handle (0x%X)\n", 
-         hWindowStation);
+  if (! NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed validation of window station handle (0x%X)\n", 
+        hWindowStation);
       SetLastNtError(Status);
-      return 0;
-   }
+      return NULL;
+    }
   
-   if (!IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
-       lpszDesktopName))
-   {
+  if (! IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
+          lpszDesktopName))
+    {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WinStaObject);
-      return 0;
-   }
+      return NULL;
+    }
 
-   ObDereferenceObject(WinStaObject);
+  ObDereferenceObject(WinStaObject);
 
-   /*
-    * Try to open already existing desktop
-    */
+  /*
+   * Try to open already existing desktop
+   */
 
-   DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
+  DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
 
-   /* Initialize ObjectAttributes for the desktop object */
-   InitializeObjectAttributes(
-      &ObjectAttributes,
-      &DesktopName,
-      0,
-      NULL,
-      NULL);
+  /* Initialize ObjectAttributes for the desktop object */
+  InitializeObjectAttributes(
+    &ObjectAttributes,
+    &DesktopName,
+    0,
+    NULL,
+    NULL);
 
-   Status = ObOpenObjectByName(
-      &ObjectAttributes,
-      ExDesktopObjectType,
-      NULL,
-      UserMode,
-      dwDesiredAccess,
-      NULL,
-      &Desktop);
+  Status = ObOpenObjectByName(
+    &ObjectAttributes,
+    ExDesktopObjectType,
+    NULL,
+    UserMode,
+    dwDesiredAccess,
+    NULL,
+    &Desktop);
 
-   if (NT_SUCCESS(Status))
-   {
+  if (NT_SUCCESS(Status))
+    {
       DPRINT("Successfully opened desktop (%wZ)\n", &DesktopName);
       ExFreePool(DesktopName.Buffer);
       return Desktop;
-   }
+    }
 
-   /*
-    * No existing desktop found, try to create new one
-    */
+  /*
+   * No existing desktop found, try to create new one
+   */
 
-   Status = ObCreateObject(
-      ExGetPreviousMode(),
-      ExDesktopObjectType,
-      &ObjectAttributes,
-      ExGetPreviousMode(),
-      NULL,
-      sizeof(DESKTOP_OBJECT),
-      0,
-      0,
-      (PVOID*)&DesktopObject);
+  Status = ObCreateObject(
+    ExGetPreviousMode(),
+    ExDesktopObjectType,
+    &ObjectAttributes,
+    ExGetPreviousMode(),
+    NULL,
+    sizeof(DESKTOP_OBJECT),
+    0,
+    0,
+    (PVOID*)&DesktopObject);
 
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Failed creating desktop (%wZ)\n", &DesktopName);
+  if (! NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed creating desktop (%wZ)\n", &DesktopName);
       ExFreePool(DesktopName.Buffer);
       SetLastNtError(STATUS_UNSUCCESSFUL);
-      return((HDESK)0);
-   }
+      return NULL;
+    }
   
-   /* FIXME: Set correct dimensions. */
-   DesktopObject->WorkArea.left = 0;
-   DesktopObject->WorkArea.top = 0;
-   DesktopObject->WorkArea.right = 640;
-   DesktopObject->WorkArea.bottom = 480;
+  /* FIXME: Set correct dimensions. */
+  DesktopObject->WorkArea.left = 0;
+  DesktopObject->WorkArea.top = 0;
+  DesktopObject->WorkArea.right = 640;
+  DesktopObject->WorkArea.bottom = 480;
 
-   /* Initialize some local (to win32k) desktop state. */
-   DesktopObject->ActiveMessageQueue = NULL;  
-   DesktopObject->DesktopWindow = IntCreateDesktopWindow(
-      DesktopObject->WindowStation,
-      DesktopWindowClass,
-      DesktopObject->WorkArea.right,
-      DesktopObject->WorkArea.bottom);
+  /* Initialize some local (to win32k) desktop state. */
+  DesktopObject->ActiveMessageQueue = NULL;
 
-   DPRINT("Created Desktop Window: %08x\n", DesktopObject->DesktopWindow);
+  Status = ObInsertObject(
+    (PVOID)DesktopObject,
+    NULL,
+    STANDARD_RIGHTS_REQUIRED,
+    0,
+    NULL,
+    &Desktop);
 
-   Status = ObInsertObject(
-      (PVOID)DesktopObject,
-      NULL,
-      STANDARD_RIGHTS_REQUIRED,
-      0,
-      NULL,
-      &Desktop);
+  ObDereferenceObject(DesktopObject);
+  ExFreePool(DesktopName.Buffer);
 
-   ObDereferenceObject(DesktopObject);
-   ExFreePool(DesktopName.Buffer);
+  if (! NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to create desktop handle\n");
+      SetLastNtError(Status);
+      return NULL;
+    }
 
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Failed to create desktop handle\n");
-      SetLastNtError(STATUS_UNSUCCESSFUL);
-      return 0;
-   }
+  Request.Type = CSRSS_CREATE_DESKTOP;
+  memcpy(Request.Data.CreateDesktopRequest.DesktopName, lpszDesktopName->Buffer,
+         lpszDesktopName->Length);
+  Request.Data.CreateDesktopRequest.DesktopName[lpszDesktopName->Length / sizeof(WCHAR)] = L'\0';
 
-   return Desktop;
+  Status = NotifyCsrss(&Request, &Reply);
+  if (! NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to notify CSRSS about new desktop\n");
+      ZwClose(Desktop);
+      SetLastNtError(Status);
+      return NULL;
+    }
+
+  return Desktop;
 }
 
 /*

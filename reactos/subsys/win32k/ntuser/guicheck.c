@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.16 2003/12/03 21:50:50 gvg Exp $
+/* $Id: guicheck.c,v 1.17 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -51,6 +51,37 @@ static ULONG NrGuiApplicationsRunning = 0;
 
 /* FUNCTIONS *****************************************************************/
 
+static BOOL FASTCALL
+AddGuiApp(PW32PROCESS W32Data)
+{
+  W32Data->CreatedWindowOrDC = TRUE;
+  if (0 == NrGuiApplicationsRunning++)
+    {
+      if (! IntInitializeDesktopGraphics())
+        {
+          W32Data->CreatedWindowOrDC = FALSE;
+          NrGuiApplicationsRunning--;
+          return FALSE;
+        }
+    }
+
+  return TRUE;
+}
+
+static void FASTCALL
+RemoveGuiApp(PW32PROCESS W32Data)
+{
+  W32Data->CreatedWindowOrDC = FALSE;
+  if (0 < NrGuiApplicationsRunning)
+    {
+      NrGuiApplicationsRunning--;
+    }
+  if (0 == NrGuiApplicationsRunning)
+    {
+      IntEndDesktopGraphics();
+    }
+}
+
 BOOL FASTCALL
 IntGraphicsCheck(BOOL Create)
 {
@@ -59,33 +90,16 @@ IntGraphicsCheck(BOOL Create)
   W32Data = PsGetWin32Process();
   if (Create)
     {
-      if (! W32Data->CreatedWindowOrDC)
+      if (! W32Data->CreatedWindowOrDC && ! W32Data->ManualGuiCheck)
         {
-          W32Data->CreatedWindowOrDC = TRUE;
-          if (0 == NrGuiApplicationsRunning++)
-            {
-              if (! IntInitializeDesktopGraphics())
-                {
-                  W32Data->CreatedWindowOrDC = FALSE;
-                  NrGuiApplicationsRunning--;
-                  return FALSE;
-                }
-            }
+          return AddGuiApp(W32Data);
         }
     }
   else
     {
-      if (W32Data->CreatedWindowOrDC)
+      if (W32Data->CreatedWindowOrDC && ! W32Data->ManualGuiCheck)
         {
-          W32Data->CreatedWindowOrDC = FALSE;
-          if (0 < NrGuiApplicationsRunning)
-	    {
-              NrGuiApplicationsRunning--;
-            }
-          if (0 == NrGuiApplicationsRunning)
-            {
-              IntEndDesktopGraphics();
-            }
+          RemoveGuiApp(W32Data);
         }
     }
 
@@ -93,9 +107,29 @@ IntGraphicsCheck(BOOL Create)
 }
 
 VOID STDCALL
-NtUserGraphicsDone()
+NtUserManualGuiCheck(LONG Check)
 {
-  IntGraphicsCheck(FALSE);
+  PW32PROCESS W32Data;
+
+  W32Data = PsGetWin32Process();
+  if (0 == Check)
+    {
+      W32Data->ManualGuiCheck = TRUE;
+    }
+  else if (0 < Check)
+    {
+      if (! W32Data->CreatedWindowOrDC)
+        {
+          AddGuiApp(W32Data);
+        }
+    }
+  else
+    {
+      if (W32Data->CreatedWindowOrDC)
+        {
+          RemoveGuiApp(W32Data);
+        }
+    }
 }
 
 /* EOF */

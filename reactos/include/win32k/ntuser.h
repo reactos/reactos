@@ -1844,6 +1844,9 @@ typedef struct _WndProcHandle
                                     
 DWORD STDCALL
 NtUserDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
+
+VOID STDCALL
+NtUserManualGuiCheck(LONG Check);
 #endif /* __WIN32K_NTUSER_H */
 
 /* EOF */

@@ -22,6 +22,7 @@ typedef struct _W32PROCESS
   WORD GDIObjects;
   WORD UserObjects;
   BOOL CreatedWindowOrDC;
+  BOOL ManualGuiCheck;
 } W32PROCESS, *PW32PROCESS;
 
 PW32THREAD STDCALL

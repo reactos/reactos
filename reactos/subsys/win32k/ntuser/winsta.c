@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.50 2003/12/07 19:29:33 weiden Exp $
+ *  $Id: winsta.c,v 1.51 2003/12/07 23:02:57 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -59,9 +59,6 @@
 
 /* Currently active window station */
 PWINSTATION_OBJECT InputWindowStation = NULL;
-
-LRESULT CALLBACK
-IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
@@ -227,6 +224,7 @@ IntEndDesktopGraphics(VOID)
       NtGdiDeleteDC(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
     }
+  IntHideDesktop(IntGetActiveDesktop());
   IntDestroyPrimarySurface();
 }
 
@@ -288,7 +286,7 @@ NtUserCreateWindowStation(
    HWINSTA WindowStation;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
-  
+
    /*
     * Generate full window station name
     */

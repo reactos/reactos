@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.51 2003/12/07 19:29:33 weiden Exp $
+/* $Id: winpos.c,v 1.52 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -680,16 +680,19 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
    /* FIXME: Get current active window from active queue. */
 
-   /* Check if the window is for a desktop. */
-   if (Wnd == IntGetDesktopWindow())
-   {
-      return FALSE;
-   }
-
    Window = IntGetWindowObject(Wnd);
    if (!Window)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+   }
+
+   /*
+    * Only allow CSRSS to mess with the desktop window
+    */
+   if (Wnd == IntGetDesktopWindow()
+       && Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+   {
       return FALSE;
    }
 

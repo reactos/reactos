@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.87 2003/12/07 19:29:33 weiden Exp $
+# $Id: makefile,v 1.88 2003/12/07 23:02:57 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -30,6 +30,7 @@ TARGET_CFLAGS =\
  -Wall -Werror
 
 # require os code to explicitly request A/W version of structs/functions
+#TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS =\

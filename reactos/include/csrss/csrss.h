@@ -496,6 +496,35 @@ typedef struct
   HWND   WindowHandle;
 } CSRSS_CONSOLE_WINDOW, *PCSRSS_CONSOLE_WINDOW;
 
+typedef struct
+{
+  WCHAR DesktopName[1];
+} CSRSS_CREATE_DESKTOP_REQUEST, *PCSRSS_CREATE_DESKTOP_REQUEST;
+
+typedef struct
+{
+} CSRSS_CREATE_DESKTOP_REPLY, *PCSRSS_CREATE_DESKTOP_REPLY;
+
+typedef struct
+{
+  HWND DesktopWindow;
+  ULONG Width;
+  ULONG Height;
+} CSRSS_SHOW_DESKTOP_REQUEST, *PCSRSS_SHOW_DESKTOP_REQUEST;
+
+typedef struct
+{
+} CSRSS_SHOW_DESKTOP_REPLY, *PCSRSS_SHOW_DESKTOP_REPLY;
+
+typedef struct
+{
+  HWND DesktopWindow;
+} CSRSS_HIDE_DESKTOP_REQUEST, *PCSRSS_HIDE_DESKTOP_REQUEST;
+
+typedef struct
+{
+} CSRSS_HIDE_DESKTOP_REPLY, *PCSRSS_HIDE_DESKTOP_REPLY;
+
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
@@ -557,6 +586,9 @@ typedef struct
 #define CSRSS_DUPLICATE_HANDLE		    (0x28)
 #define CSRSS_SETGET_CONSOLE_HW_STATE       (0x29)
 #define CSRSS_GET_CONSOLE_WINDOW            (0x2A)
+#define CSRSS_CREATE_DESKTOP                (0x2B)
+#define CSRSS_SHOW_DESKTOP                  (0x2C)
+#define CSRSS_HIDE_DESKTOP                  (0x2D)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE) + sizeof(ULONG))
@@ -607,6 +639,9 @@ typedef struct
     CSRSS_DUPLICATE_HANDLE_REQUEST DuplicateHandleRequest;
     CSRSS_SETGET_CONSOLE_HW_STATE_REQUEST ConsoleHardwareStateRequest;
     CSRSS_CONSOLE_WINDOW ConsoleWindowRequest;
+    CSRSS_CREATE_DESKTOP_REQUEST CreateDesktopRequest;
+    CSRSS_SHOW_DESKTOP_REQUEST ShowDesktopRequest;
+    CSRSS_HIDE_DESKTOP_REQUEST HideDesktopRequest;
   } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -643,6 +678,9 @@ typedef struct
     CSRSS_DUPLICATE_HANDLE_REPLY DuplicateHandleReply;
     CSRSS_SETGET_CONSOLE_HW_STATE_REPLY ConsoleHardwareStateReply;
     CSRSS_CONSOLE_WINDOW ConsoleWindowReply;
+    CSRSS_CREATE_DESKTOP_REPLY CreateDesktopReply;
+    CSRSS_SHOW_DESKTOP_REPLY ShowDesktopReply;
+    CSRSS_HIDE_DESKTOP_REPLY HideDesktopReply;
   } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.107 2003/12/07 19:29:33 weiden Exp $
+/* $Id: dc.c,v 1.108 2003/12/07 23:02:57 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -470,7 +470,6 @@ IntCreatePrimarySurface()
   PWSTR CurrentName;
   BOOL GotDriver;
   BOOL DoDefault;
-  extern void FASTCALL IntInitDesktopWindow(ULONG Width, ULONG Height);
 
   /*  Open the miniport driver  */
   if ((PrimarySurface.VideoDeviceObject = DRIVER_FindMPDriver(L"DISPLAY")) == NULL)
@@ -638,7 +637,9 @@ IntCreatePrimarySurface()
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
   SurfObj->dhpdev = PrimarySurface.PDev;
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
-  IntInitDesktopWindow(SurfGDI->SurfObj.sizlBitmap.cx, SurfGDI->SurfObj.sizlBitmap.cy);
+  IntShowDesktop(IntGetActiveDesktop(),
+                 SurfGDI->SurfObj.sizlBitmap.cx,
+                 SurfGDI->SurfObj.sizlBitmap.cy);
 
   return TRUE;
 }

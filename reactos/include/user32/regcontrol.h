@@ -1,4 +1,4 @@
-/* $Id: regcontrol.h,v 1.6 2003/11/08 15:39:13 mf Exp $
+/* $Id: regcontrol.h,v 1.7 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -29,7 +29,7 @@ struct builtin_class_descr
     HBRUSH  brush;   /* brush or system color */
 };
 
-extern void ControlsInit(void);
+extern BOOL FASTCALL ControlsInit(LPCWSTR ClassName);
 
 extern const struct builtin_class_descr BUTTON_builtin_class;
 extern const struct builtin_class_descr COMBO_builtin_class;

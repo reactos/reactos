@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.42 2003/12/07 13:14:22 weiden Exp $
+ *  $Id: painting.c,v 1.43 2003/12/07 23:02:57 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -49,14 +49,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS ********************************************************************/
-
-/*
- * Define this after the desktop will be moved to CSRSS and will
- * get proper message queue.
- */
-/* #define DESKTOP_IN_CSRSS */
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -151,129 +143,88 @@ IntGetNCUpdateRegion(PWINDOW_OBJECT Window, BOOL Remove)
 VOID FASTCALL
 IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 {
-   HDC hDC;
-   HWND hWnd = Window->Self;
+  HDC hDC;
+  HWND hWnd = Window->Self;
 
-   if (!(Window->Style & WS_VISIBLE))
-   {
+  if (! (Window->Style & WS_VISIBLE))
+    {
       return;
-   }
+    }
 
-   if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
-   {
-      if (IntIsDesktopWindow(Window))
-      {
-         /*
-          * Repainting of desktop window
-          */
+  if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
+    {
+      if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+        {
+          NtUserSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window, TRUE), 0);
+        }
 
-#ifndef DESKTOP_IN_CSRSS
-         VIS_RepaintDesktop(hWnd, Window->UpdateRegion);
-         Window->Flags &= ~(WINDOWOBJECT_NEED_NCPAINT |
-            WINDOWOBJECT_NEED_INTERNALPAINT | WINDOWOBJECT_NEED_ERASEBKGND);
-         NtGdiDeleteObject(Window->UpdateRegion);
-         Window->UpdateRegion = NULL;
-#else
-         if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
-         {
-            MsqDecPaintCountQueue(Window->MessageQueue);
-            Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
-         }
-         if (Window->UpdateRegion ||
-             Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
-         {
-            MsqDecPaintCountQueue(Window->MessageQueue);
-            Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
-         }
-         if (Window->UpdateRegion)
-         {
-            hDC = NtUserGetDCEx(hWnd, 0, DCX_CACHE | DCX_USESTYLE |
-               DCX_INTERSECTUPDATE);
-            if (hDC != NULL)
+      if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
+        {
+          if (Window->UpdateRegion)
             {
-               NtUserSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0);
-               NtUserReleaseDC(hWnd, hDC);
-               NtGdiDeleteObject(Window->UpdateRegion);
-               Window->UpdateRegion = NULL;
-            }
-         }
-#endif
-      }
-      else
-      {
-         /*
-          * Repainting of non-desktop window
-          */
-
-         if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
-         {
-            NtUserSendMessage(hWnd, WM_NCPAINT, (WPARAM)IntGetNCUpdateRegion(Window, TRUE), 0);
-         }
-
-         if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
-         {
-            if (Window->UpdateRegion)
-            {
-               hDC = NtUserGetDCEx(hWnd, 0, DCX_CACHE | DCX_USESTYLE |
-                  DCX_INTERSECTUPDATE);
-               if (hDC != NULL)
-               {
+              hDC = NtUserGetDCEx(hWnd, 0, DCX_CACHE | DCX_USESTYLE |
+                                           DCX_INTERSECTUPDATE);
+              if (hDC != NULL)
+                {
                   if (NtUserSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
-                     Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
+                    {
+                      Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
+                    }
                   NtUserReleaseDC(hWnd, hDC);
-               }
+                }
             }
-         }
+        }
 
-         if (Flags & RDW_UPDATENOW)
-         {
-            if (Window->UpdateRegion != NULL ||
-                Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+      if (Flags & RDW_UPDATENOW)
+        {
+          if (Window->UpdateRegion != NULL ||
+              Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
             {
-               NtUserSendMessage(hWnd, WM_PAINT, 0, 0);
-               if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
-               {
+              NtUserSendMessage(hWnd, WM_PAINT, 0, 0);
+              if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
+                {
                   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
                   if (Window->UpdateRegion == NULL)
-                  {
-                     MsqDecPaintCountQueue(Window->MessageQueue);
-                  }
-               }
+                    {
+                      MsqDecPaintCountQueue(Window->MessageQueue);
+                    }
+                }
             }
-         }
-      }
-   }
+        }
+    }
 
-   /*
-    * Check that the window is still valid at this point
-    */
+  /*
+   * Check that the window is still valid at this point
+   */
 
-   if (!IntIsWindow(hWnd))
+  if (! IntIsWindow(hWnd))
+    {
       return;
+    }
 
-   /*
-    * Paint child windows.
-    */
-
-   if (!(Flags & RDW_NOCHILDREN) && !(Window->Style & WS_MINIMIZE) &&
-       ((Flags & RDW_ALLCHILDREN) || !(Window->Style & WS_CLIPCHILDREN)))
-   {
+  /*
+   * Paint child windows.
+   */
+  if (!(Flags & RDW_NOCHILDREN) && !(Window->Style & WS_MINIMIZE) &&
+      ((Flags & RDW_ALLCHILDREN) || !(Window->Style & WS_CLIPCHILDREN)) &&
+      ! IntIsDesktopWindow(Window))
+    {
       HWND *List, *phWnd;
 
       if ((List = IntWinListChildren(Window)))
-      {
-         for (phWnd = List; *phWnd; ++phWnd)
-         {
-            Window = IntGetWindowObject(*phWnd);
-            if (Window)
+        {
+          for (phWnd = List; *phWnd; ++phWnd)
             {
-               IntPaintWindows(Window, Flags);
-               IntReleaseWindowObject(Window);
+              Window = IntGetWindowObject(*phWnd);
+              if (Window)
+                {
+                  IntPaintWindows(Window, Flags);
+                  IntReleaseWindowObject(Window);
+                }
             }
-         }
-         ExFreePool(List);
-      }
-   }
+          ExFreePool(List);
+        }
+    }
 }
 
 /*
@@ -442,33 +393,25 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
    /*
     * Fake post paint messages to window message queue if needed
     */
-
-#ifndef DESKTOP_IN_CSRSS
-   if (Window->MessageQueue)
-#endif
-   {
-      HasPaintMessage = Window->UpdateRegion != NULL ||
+   HasPaintMessage = Window->UpdateRegion != NULL ||
          Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
-      HasNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
+   HasNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
 
-      if (HasPaintMessage != HadPaintMessage)
-      {
-         if (HadPaintMessage)
-            MsqDecPaintCountQueue(Window->MessageQueue);
-         else
-            MsqIncPaintCountQueue(Window->MessageQueue);
-      }
-
-      if (HasNCPaintMessage != HadNCPaintMessage)
-      {
-         if (HadNCPaintMessage)
-            MsqDecPaintCountQueue(Window->MessageQueue);
-         else
-            MsqIncPaintCountQueue(Window->MessageQueue);
-      }
-#ifndef DESKTOP_IN_CSRSS
+   if (HasPaintMessage != HadPaintMessage)
+   {
+      if (HadPaintMessage)
+         MsqDecPaintCountQueue(Window->MessageQueue);
+      else
+         MsqIncPaintCountQueue(Window->MessageQueue);
    }
-#endif
+
+   if (HasNCPaintMessage != HadNCPaintMessage)
+   {
+      if (HadNCPaintMessage)
+         MsqDecPaintCountQueue(Window->MessageQueue);
+      else
+         MsqIncPaintCountQueue(Window->MessageQueue);
+   }
 }
 
 /*

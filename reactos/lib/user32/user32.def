@@ -522,7 +522,7 @@ PostThreadMessageW@16
 PrintWindow@12
 PrivateCsrssAcquireOrReleaseInputOwnership@4
 PrivateCsrssRegisterPrimitive@0
-PrivateCsrssGraphicsDone@0
+PrivateCsrssManualGuiCheck@4
 PrivateExtractIconExA@20
 PrivateExtractIconExW@20
 PrivateExtractIconsA@32

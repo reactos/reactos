@@ -118,11 +118,6 @@ IntGetWindowObject (HWND hWnd);
 VOID FASTCALL
 IntReleaseWindowObject (PWINDOW_OBJECT Window);
 
-HWND STDCALL
-IntCreateDesktopWindow (PWINSTATION_OBJECT WindowStation,
-			PWNDCLASS_OBJECT DesktopClass,
-			ULONG Width, ULONG Height);
-
 HWND FASTCALL
 IntGetActiveWindow (VOID);
 

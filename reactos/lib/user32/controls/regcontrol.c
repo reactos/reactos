@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.16 2003/11/26 22:02:38 navaraf Exp $
+/* $Id: regcontrol.c,v 1.17 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -9,7 +9,8 @@
  * NOTES:            Adapted from Wine
  */
 
-#include "windows.h"
+#include <windows.h>
+#include <wchar.h>
 #include "user32/regcontrol.h"
 #include "win32k/ntuser.h"
 
@@ -49,27 +50,65 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
  *
  * Register the classes for the builtin controls
  */
-void ControlsInit(void)
+BOOL FASTCALL
+ControlsInit(LPCWSTR ClassName)
 {
+  static const struct builtin_class_descr *ClassDescriptions[] =
+    {
+      &DIALOG_builtin_class,
+      &POPUPMENU_builtin_class,
+      &COMBO_builtin_class,
+      &COMBOLBOX_builtin_class,
 #if 0
-  DbgPrint("ControlsInit()\n");
+      &DESKTOP_builtin_class,
 #endif
+      &MDICLIENT_builtin_class,
+#if 0
+      &MENU_builtin_class,
+      &SCROLL_builtin_class,
+#endif
+      &BUTTON_builtin_class,
+      &LISTBOX_builtin_class,
+      &EDIT_builtin_class,
+      &ICONTITLE_builtin_class,
+      &STATIC_builtin_class
+    };
+  unsigned i;
+  BOOL Register;
 
-  RegisterBuiltinClass(&DIALOG_builtin_class);
-  RegisterBuiltinClass(&POPUPMENU_builtin_class);
-  RegisterBuiltinClass(&COMBO_builtin_class);
-  RegisterBuiltinClass(&COMBOLBOX_builtin_class);
-#if 0
-  RegisterBuiltinClass(&DESKTOP_builtin_class);
-#endif
-  RegisterBuiltinClass(&MDICLIENT_builtin_class);
-#if 0
-  RegisterBuiltinClass(&MENU_builtin_class);
-  RegisterBuiltinClass(&SCROLL_builtin_class);
-#endif
-  RegisterBuiltinClass(&BUTTON_builtin_class);
-  RegisterBuiltinClass(&LISTBOX_builtin_class);
-  RegisterBuiltinClass(&EDIT_builtin_class);
-  RegisterBuiltinClass(&ICONTITLE_builtin_class);
-  RegisterBuiltinClass(&STATIC_builtin_class);
+  Register = FALSE;
+  if (IS_ATOM(ClassName))
+    {
+      for (i = 0;
+           ! Register && i < sizeof(ClassDescriptions) / sizeof(ClassDescriptions[0]);
+           i++)
+        {
+          if (IS_ATOM(ClassDescriptions[i]->name))
+            {
+              Register = (ClassName == ClassDescriptions[i]->name);
+            }
+        }
+    }
+  else
+    {
+      for (i = 0;
+           ! Register && i < sizeof(ClassDescriptions) / sizeof(ClassDescriptions[0]);
+           i++)
+        {
+          if (! IS_ATOM(ClassDescriptions[i]->name))
+            {
+              Register = (0 == _wcsicmp(ClassName, ClassDescriptions[i]->name));
+            }
+        }
+    }
+
+  if (Register)
+    {
+      for (i = 0; i < sizeof(ClassDescriptions) / sizeof(ClassDescriptions[0]); i++)
+        {
+          RegisterBuiltinClass(ClassDescriptions[i]);
+        }
+    }
+
+  return Register;
 }

@@ -34,6 +34,12 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
 PDESKTOP_OBJECT FASTCALL
 IntGetActiveDesktop(VOID);
 
+NTSTATUS FASTCALL
+IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
+
+NTSTATUS FASTCALL
+IntHideDesktop(PDESKTOP_OBJECT Desktop);
+
 #endif /* _WIN32K_DESKTOP_H */
 
 /* EOF */

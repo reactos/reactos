@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.2 2003/12/03 21:50:49 gvg Exp $
+/* $Id: misc.c,v 1.3 2003/12/07 23:02:57 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -52,7 +52,7 @@ GetGuiResources(
  */
 VOID
 STDCALL
-PrivateCsrssGraphicsDone(VOID)
+PrivateCsrssManualGuiCheck(LONG Check)
 {
-  NtUserGraphicsDone();
+  NtUserManualGuiCheck(Check);
 }

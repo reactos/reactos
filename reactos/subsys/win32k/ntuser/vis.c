@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.12 2003/11/21 21:12:08 navaraf Exp $
+ * $Id: vis.c,v 1.13 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -214,14 +214,7 @@ VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 VOID FASTCALL
 VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn)
 {
-  HDC dc = NtUserGetDC(Desktop);
-  if (dc)
-    {
-      HBRUSH DesktopBrush = NtGdiCreateSolidBrush(RGB(58, 110, 165));
-      NtGdiFillRgn(dc, RepaintRgn, DesktopBrush);
-      NtGdiDeleteObject(DesktopBrush);
-    }
-  NtUserReleaseDC(Desktop, dc);
+  NtUserRedrawWindow(Desktop, NULL, RepaintRgn, RDW_UPDATENOW | RDW_INVALIDATE | RDW_NOCHILDREN);
 }
 
 static VOID FASTCALL
@@ -349,7 +342,8 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
       NtGdiCombineRgn(Repaint, NewlyExposed, NULL, RGN_COPY);
       NtGdiOffsetRgn(Repaint, Window->WindowRect.left, Window->WindowRect.top);
       NtGdiCombineRgn(Repaint, Repaint, Uncovered, RGN_AND);
-      VIS_RepaintDesktop(DesktopWindow->Self, Repaint);
+      NtUserRedrawWindow(DesktopWindow->Self, NULL, Repaint,
+                         RDW_UPDATENOW | RDW_INVALIDATE | RDW_NOCHILDREN);
       NtGdiDeleteObject(Repaint);
     }
 

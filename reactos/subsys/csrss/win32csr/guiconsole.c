@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.2 2003/12/03 21:50:49 gvg Exp $
+/* $Id: guiconsole.c,v 1.3 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,7 +14,7 @@
 #include "win32csr.h"
 
 /* Not defined in any header file */
-extern VOID STDCALL PrivateCsrssGraphicsDone(VOID);
+extern VOID STDCALL PrivateCsrssManualGuiCheck(LONG Check);
 
 /* GLOBALS *******************************************************************/
 
@@ -498,7 +498,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           {
             NotifyWnd = NULL;
             DestroyWindow(hWnd);
-            PrivateCsrssGraphicsDone();
+            PrivateCsrssManualGuiCheck(-1);
           }
         return 0;
       default:
@@ -513,6 +513,8 @@ GuiConsoleGuiThread(PVOID Data)
   MSG msg;
   PHANDLE GraphicsStartupEvent = (PHANDLE) Data;
 
+  PrivateCsrssManualGuiCheck(+1);
+
   wc.lpszClassName = L"Win32CsrCreateNotify";
   wc.lpfnWndProc = GuiConsoleNotifyWndProc;
   wc.style = 0;
@@ -525,6 +527,7 @@ GuiConsoleGuiThread(PVOID Data)
   wc.cbWndExtra = 0;
   if (RegisterClassW(&wc) == 0)
     {
+      PrivateCsrssManualGuiCheck(-1);
       NtSetEvent(*GraphicsStartupEvent, 0);
       return 1;
     }
@@ -541,6 +544,7 @@ GuiConsoleGuiThread(PVOID Data)
   wc.cbWndExtra = 0;
   if (RegisterClassW(&wc) == 0)
     {
+      PrivateCsrssManualGuiCheck(-1);
       NtSetEvent(*GraphicsStartupEvent, 0);
       return 1;
     }
@@ -558,6 +562,7 @@ GuiConsoleGuiThread(PVOID Data)
                             NULL);
   if (NULL == NotifyWnd)
     {
+      PrivateCsrssManualGuiCheck(-1);
       NtSetEvent(*GraphicsStartupEvent, 0);
       return 1;
     }
@@ -579,21 +584,9 @@ GuiConsoleInitConsoleSupport(VOID)
   NTSTATUS Status;
   OBJECT_ATTRIBUTES ObjectAttributes;
   HANDLE GraphicsStartupEvent;
-  HWINSTA WindowStation;
   HDESK Desktop;
   HANDLE ThreadHandle;
 
-  WindowStation = OpenWindowStationW(L"WinSta0", FALSE, GENERIC_ALL);
-  if (NULL == WindowStation)
-    {
-      DbgPrint("Win32Csr: failed to open window station\n");
-      return;
-    }
-  if (! SetProcessWindowStation(WindowStation))
-    {
-      DbgPrint("Win32Csr: failed to set process window station\n");
-      return;
-    }
   Desktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
   if (NULL == Desktop)
     {

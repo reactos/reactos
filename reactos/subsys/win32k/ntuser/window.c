@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.153 2003/12/07 22:25:34 weiden Exp $
+/* $Id: window.c,v 1.154 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -550,71 +550,6 @@ IntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid)
    return (DWORD) Wnd->OwnerThread->Cid.UniqueThread;
 }
 
-
-HWND STDCALL
-IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
-			PWNDCLASS_OBJECT DesktopClass,
-			ULONG Width, ULONG Height)
-{
-  PWSTR WindowName;
-  HWND Handle;
-  PWINDOW_OBJECT WindowObject;
-  
-  if(!DesktopClass)
-  {
-    return (HWND)0;
-  }
-  
-  /* Create the window object. */
-  WindowObject = (PWINDOW_OBJECT)ObmCreateObject(WindowStation->HandleTable, 
-						 &Handle, 
-						 otWindow,
-						 sizeof(WINDOW_OBJECT));
-  if (!WindowObject) 
-    {
-      return((HWND)0);
-    }
-
-  /*
-   * Fill out the structure describing it.
-   */
-  ObmReferenceObject(DesktopClass);
-  WindowObject->Class = DesktopClass;
-  WindowObject->ExStyle = 0;
-  WindowObject->Style = WS_VISIBLE;
-  WindowObject->Flags = 0;
-  WindowObject->Parent = NULL;
-  WindowObject->Owner = NULL;
-  WindowObject->IDMenu = 0;
-  WindowObject->Instance = NULL;
-  WindowObject->Self = Handle;
-  WindowObject->MessageQueue = NULL;
-  WindowObject->ExtraData = NULL;
-  WindowObject->ExtraDataSize = 0;
-  WindowObject->WindowRect.left = 0;
-  WindowObject->WindowRect.top = 0;
-  WindowObject->WindowRect.right = Width;
-  WindowObject->WindowRect.bottom = Height;
-  WindowObject->ClientRect = WindowObject->WindowRect;
-  WindowObject->UserData = 0;
-  /*FIXME: figure out what the correct strange value is and what to do with it (and how to set the wndproc values correctly) */
-  WindowObject->WndProcA = DesktopClass->lpfnWndProcA;
-  WindowObject->WndProcW = DesktopClass->lpfnWndProcW;
-  WindowObject->OwnerThread = PsGetCurrentThread();
-  WindowObject->FirstChild = NULL;
-  WindowObject->LastChild = NULL;
-  WindowObject->PrevSibling = NULL;
-  WindowObject->NextSibling = NULL;
-
-  ExInitializeFastMutex(&WindowObject->ChildrenListLock);
-
-  WindowName = ExAllocatePool(NonPagedPool, sizeof(L"DESKTOP"));
-  wcscpy(WindowName, L"DESKTOP");
-  RtlInitUnicodeString(&WindowObject->WindowName, WindowName);
-
-  return(Handle);
-}
-
 VOID FASTCALL
 IntInitDesktopWindow(ULONG Width, ULONG Height)
 {
@@ -1104,16 +1039,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
 
-  /* Initialize gui state if necessary. */
-  if (! IntGraphicsCheck(TRUE))
-    {
-      DPRINT1("Unable to initialize graphics, returning NULL window\n");
-      return NULL;
-    }
-
-  if (!RtlCreateUnicodeString(&WindowName,
-                              NULL == lpWindowName->Buffer ?
-                              L"" : lpWindowName->Buffer))
+  if (! RtlCreateUnicodeString(&WindowName,
+                               NULL == lpWindowName->Buffer ?
+                               L"" : lpWindowName->Buffer))
     {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return((HWND)0);
@@ -1139,10 +1067,18 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
   else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
     {
+      RtlFreeUnicodeString(&WindowName);
       return (HWND)0;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
 
-  ParentWindow = IntGetWindowObject(ParentWindowHandle);
+  if (NULL != ParentWindowHandle)
+    {
+      ParentWindow = IntGetWindowObject(ParentWindowHandle);
+    }
+  else
+    {
+      ParentWindow = NULL;
+    }
     
   /* FIXME: parent must belong to the current process */
 
@@ -1151,7 +1087,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!NT_SUCCESS(Status))
     {
       RtlFreeUnicodeString(&WindowName);
-      IntReleaseWindowObject(ParentWindow);
+      if (NULL != ParentWindow)
+        {
+          IntReleaseWindowObject(ParentWindow);
+        }
       return((HWND)0);
     }
 
@@ -1164,9 +1103,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 					  &WinStaObject);
   if (!NT_SUCCESS(Status))
     {
-      RtlFreeUnicodeString(&WindowName);
       ObmDereferenceObject(ClassObject);
-      IntReleaseWindowObject(ParentWindow);
+      RtlFreeUnicodeString(&WindowName);
+      if (NULL != ParentWindow)
+        {
+          IntReleaseWindowObject(ParentWindow);
+        }
       DPRINT("Validation of window station handle (0x%X) failed\n",
 	     PROCESS_WINDOW_STATION());
       return (HWND)0;
@@ -1184,11 +1126,20 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       ObDereferenceObject(WinStaObject);
       ObmDereferenceObject(ClassObject);
       RtlFreeUnicodeString(&WindowName);
-      IntReleaseWindowObject(ParentWindow);
+      if (NULL != ParentWindow)
+        {
+          IntReleaseWindowObject(ParentWindow);
+        }
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return (HWND)0;
     }
   ObDereferenceObject(WinStaObject);
+
+  if (NULL == PsGetWin32Thread()->Desktop->DesktopWindow)
+    {
+      /* If there is no desktop window yet, we must be creating it */
+      PsGetWin32Thread()->Desktop->DesktopWindow = Handle;
+    }
 
   /*
    * Fill out the structure describing it.
@@ -1215,12 +1166,15 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Parent = ParentWindow;
   WindowObject->Owner = IntGetWindowObject(OwnerWindowHandle);
   WindowObject->UserData = 0;
-  if ((((DWORD)ClassObject->lpfnWndProcA & 0xFFFF0000) != 0xFFFF0000) && (((DWORD)ClassObject->lpfnWndProcW & 0xFFFF0000) != 0xFFFF0000)) 
-  {
-  WindowObject->Unicode = ClassObject->Unicode;
-  } else {
-	WindowObject->Unicode = bUnicodeWindow;
-  }
+  if ((((DWORD)ClassObject->lpfnWndProcA & 0xFFFF0000) != 0xFFFF0000)
+      && (((DWORD)ClassObject->lpfnWndProcW & 0xFFFF0000) != 0xFFFF0000)) 
+    {
+      WindowObject->Unicode = ClassObject->Unicode;
+    }
+  else
+    {
+      WindowObject->Unicode = bUnicodeWindow;
+    }
   WindowObject->WndProcA = ClassObject->lpfnWndProcA;
   WindowObject->WndProcW = ClassObject->lpfnWndProcW;
   WindowObject->OwnerThread = PsGetCurrentThread();
@@ -1247,12 +1201,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   ExInitializeFastMutex(&WindowObject->ChildrenListLock);
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
-/*
-  This is incorrect!!! -- Filip
-
-  RtlFreeUnicodeString(&WindowName);
-*/
-
 
   /* Correct the window style. */
   if (!(dwStyle & WS_CHILD))
@@ -1262,8 +1210,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       if (!(dwStyle & WS_POPUP))
 	{
 	  WindowObject->Style |= WS_CAPTION;
-      WindowObject->Flags |= WINDOWOBJECT_NEED_SIZE;
-      DPRINT("4: Style is now %d\n", WindowObject->Style);
+          WindowObject->Flags |= WINDOWOBJECT_NEED_SIZE;
+          DPRINT("4: Style is now %d\n", WindowObject->Style);
 	  /* FIXME: Note the window needs a size. */ 
 	}
     }
@@ -1275,7 +1223,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   ExReleaseFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
 
   /* Allocate a DCE for this window. */
-  if (dwStyle & CS_OWNDC) WindowObject->Dce = DceAllocDCE(WindowObject->Self,DCE_WINDOW_DC);
+  if (dwStyle & CS_OWNDC)
+    {
+      WindowObject->Dce = DceAllocDCE(WindowObject->Self, DCE_WINDOW_DC);
+    }
   /* FIXME:  Handle "CS_CLASSDC" */
 
   /* Initialize the window dimensions. */
@@ -1353,7 +1304,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!Result)
     {
       /* FIXME: Cleanup. */
-      IntReleaseWindowObject(ParentWindow);
+      if (NULL != ParentWindow)
+        {
+          IntReleaseWindowObject(ParentWindow);
+        }
       DPRINT("NtUserCreateWindowEx(): NCCREATE message failed.\n");
       return((HWND)0);
     }
@@ -1371,19 +1325,22 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		 MaxPos.y - WindowObject->WindowRect.top);
 
 
-  /* link the window into the parent's child list */
-  ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-  if ((dwStyle & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
-  {
-    /* link window as bottom sibling */
-    IntLinkWindow(WindowObject, ParentWindow, ParentWindow->LastChild /*prev sibling*/);
-  }
-  else
-  {
-    /* link window as top sibling */
-    IntLinkWindow(WindowObject, ParentWindow, NULL /*prev sibling*/);
-  }
-  ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+  if (NULL != ParentWindow)
+    {
+      /* link the window into the parent's child list */
+      ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+      if ((dwStyle & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
+        {
+          /* link window as bottom sibling */
+          IntLinkWindow(WindowObject, ParentWindow, ParentWindow->LastChild /*prev sibling*/);
+        }
+      else
+        {
+          /* link window as top sibling */
+          IntLinkWindow(WindowObject, ParentWindow, NULL /*prev sibling*/);
+        }
+      ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+    }
 
   /* Send the WM_CREATE message. */
   DPRINT("NtUserCreateWindowEx(): about to send CREATE message.\n");
@@ -1391,7 +1348,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (Result == (LRESULT)-1)
     {
       /* FIXME: Cleanup. */
-      IntReleaseWindowObject(ParentWindow);
+      if (NULL != ParentWindow)
+        {
+          IntReleaseWindowObject(ParentWindow);
+        }
       DPRINT("NtUserCreateWindowEx(): send CREATE message failed.\n");
       return((HWND)0);
     } 
@@ -1448,7 +1408,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
 
   /* Notify the parent window of a new child. */
-  if ((WindowObject->Style & WS_CHILD) ||
+  if ((WindowObject->Style & WS_CHILD) &&
       (!(WindowObject->ExStyle & WS_EX_NOPARENTNOTIFY)))
     {
       DPRINT("NtUserCreateWindow(): About to notify parent\n");
@@ -2362,19 +2322,20 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 
    DPRINT("NtUserGetWindowLong(%x,%d,%d)\n", hWnd, (INT)Index, Ansi);
 
-   /*
-    * Don't allow GetWindowLong with desktop window handle.
-    */
-   if (hWnd == IntGetDesktopWindow())
-   {
-      SetLastWin32Error(STATUS_ACCESS_DENIED);
-      return 0;
-   }
-
    WindowObject = IntGetWindowObject(hWnd);
    if (WindowObject == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return 0;
+   }
+
+   /*
+    * Only allow CSRSS to mess with the desktop window
+    */
+   if (hWnd == IntGetDesktopWindow()
+       && WindowObject->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+   {
+      SetLastWin32Error(STATUS_ACCESS_DENIED);
       return 0;
    }
 

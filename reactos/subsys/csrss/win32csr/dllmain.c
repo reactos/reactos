@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.1 2003/12/02 11:38:46 gvg Exp $
+/* $Id: dllmain.c,v 1.2 2003/12/07 23:02:57 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,10 +11,14 @@
 #include <windows.h>
 #include "csrplugin.h"
 #include "conio.h"
+#include "desktopbg.h"
 #include "guiconsole.h"
 
 #define NDEBUG
 #include <debug.h>
+
+/* Not defined in any header file */
+extern VOID STDCALL PrivateCsrssManualGuiCheck(LONG Check);
 
 /* GLOBALS *******************************************************************/
 
@@ -53,6 +57,9 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(CSRSS_READ_CONSOLE_OUTPUT,          CsrReadConsoleOutput),
     CSRSS_DEFINE_API(CSRSS_WRITE_CONSOLE_INPUT,          CsrWriteConsoleInput),
     CSRSS_DEFINE_API(CSRSS_SETGET_CONSOLE_HW_STATE,      CsrHardwareStateProperty),
+    CSRSS_DEFINE_API(CSRSS_CREATE_DESKTOP,               CsrCreateDesktop),
+    CSRSS_DEFINE_API(CSRSS_SHOW_DESKTOP,                 CsrShowDesktop),
+    CSRSS_DEFINE_API(CSRSS_HIDE_DESKTOP,                 CsrHideDesktop),
     { 0, 0, 0, NULL }
   };
 
@@ -108,6 +115,7 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
   CsrExports = *Exports;
   Win32CsrApiHeap = CsrssApiHeap;
 
+  PrivateCsrssManualGuiCheck(0);
   CsrInitConsoleSupport();
   ThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) Console_Api, NULL, 0, NULL);
   if (NULL == ThreadHandle)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.58 2003/12/07 19:29:33 weiden Exp $
+/* $Id: dllmain.c,v 1.59 2003/12/07 23:02:57 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -92,6 +92,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 	}
 
       Win32Process->CreatedWindowOrDC = FALSE;
+      Win32Process->ManualGuiCheck = FALSE;
     }
   else
     {
