@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.35 2002/10/05 10:53:36 dwelch Exp $ */
+/* $Id: iofuncs.h,v 1.36 2003/01/25 16:01:49 hbirr Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -613,6 +613,9 @@ IoGetConfigurationInformation (
 #define IoGetCurrentIrpStackLocation(Irp) \
 	((Irp)->Tail.Overlay.CurrentStackLocation)
 
+#define IoGetPreviousIrpStackLocation(Irp) \
+	((Irp)->Tail.Overlay.CurrentStackLocation+1)
+
 #define IoSetNextIrpStackLocation(Irp) { \
   (Irp)->CurrentLocation--; \
   (Irp)->Tail.Overlay.CurrentStackLocation--; }
@@ -629,6 +632,12 @@ IoGetConfigurationInformation (
 #define IoSkipCurrentIrpStackLocation(Irp) \
   (Irp)->CurrentLocation++; \
   (Irp)->Tail.Overlay.CurrentStackLocation++;
+
+#define IoSetPreviousIrpStackLocation(Irp) \
+  IoSkipCurrentIrpStackLocation(Irp)
+
+#define IoRetardCurrentIrpStackLocation(Irp) \
+  IoSkipCurrentIrpStackLocation(Irp)
 
 struct _EPROCESS*
 STDCALL
@@ -928,7 +937,7 @@ IoReportResourceUsage (
 
 #define IoSetCancelRoutine(Irp,NewCancelRoutine) \
 	((PDRIVER_CANCEL)InterlockedExchange((PULONG)&(Irp)->CancelRoutine, \
-					     (ULONG)(NewCancelRoutine)));
+					     (ULONG)(NewCancelRoutine)))
 
 #define IoSetCompletionRoutine(Irp,Routine,Context,Success,Error,Cancel) \
 	{ \
