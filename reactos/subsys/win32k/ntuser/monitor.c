@@ -878,6 +878,23 @@ NtUserMonitorFromWindow(
 	IN HWND hWnd,
 	IN DWORD dwFlags)
 {
-	UNIMPLEMENTED;
-	return (HMONITOR)NULL;
+	PWINDOW_OBJECT Window;
+	HMONITOR hMonitor = NULL;
+	RECT Rect;
+  
+        Window = IntGetWindowObject(hWnd);
+	if (Window == NULL)
+	{
+		SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+		return (HMONITOR)NULL;
+	}
+
+	Rect.left = Rect.right = Window->WindowRect.left;
+	Rect.top = Rect.bottom = Window->WindowRect.bottom;
+
+	IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
+
+	IntReleaseWindowObject(Window);
+
+	return hMonitor;
 }
