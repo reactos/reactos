@@ -288,8 +288,8 @@ KiDoubleFaultHandler(VOID)
 	    OldTss->Fs, OldTss->Gs);
    DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", OldTss->Eax, OldTss->Ebx, 
 	    OldTss->Ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", OldTss->Edx, OldTss->Ebp, 
-	    OldTss->Esi);
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n   ESP: %.8x", OldTss->Edx, 
+	    OldTss->Ebp, OldTss->Esi, Esp0);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x ", OldTss->Edi, OldTss->Eflags);
    if (OldTss->Cs == KERNEL_CS)
      {
@@ -307,7 +307,6 @@ KiDoubleFaultHandler(VOID)
      }
   if ((OldTss->Cs & 0xffff) == KERNEL_CS)
     {
-      DbgPrint("ESP %x\n", Esp0);
       if (PsGetCurrentThread() != NULL)
 	{
 	  StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
@@ -468,7 +467,8 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
    DbgPrint("DS %x ES %x FS %x GS %x\n", Tf->Ds&0xffff, Tf->Es&0xffff,
 	    Tf->Fs&0xffff, Tf->Gs&0xfff);
    DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", Tf->Eax, Tf->Ebx, Tf->Ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", Tf->Edx, Tf->Ebp, Tf->Esi);
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", Tf->Edx, 
+	    Tf->Ebp, Tf->Esi, Esp0);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x ", Tf->Edi, Tf->Eflags);
    if ((Tf->Cs&0xffff) == KERNEL_CS)
      {
@@ -480,8 +480,6 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 		      	     
 	  }
      }
-
-   DbgPrint("ESP %x\n", Esp0);
 
    if (PsGetCurrentThread() != NULL)
      {
@@ -592,6 +590,18 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	  {
 	     return(0);
 	  }
+     }
+
+   /*
+    * Check for a breakpoint that was only for the attention of the debugger.
+    */
+   if (ExceptionNr == 3 && Tf->Eip == ((ULONG)DbgBreakPointNoBugCheck) + 1)
+     {
+       /* 
+	  EIP is already adjusted by the processor to point to the instruction
+	  after the breakpoint.
+       */
+       return(0);
      }
 
    /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.41 2003/12/30 18:52:04 fireball Exp $
+/* $Id: bug.c,v 1.42 2004/03/06 22:24:13 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -163,11 +163,11 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     {
 #if defined(__GNUC__)
       __asm__("sti\n\t");
-      DbgBreakPoint();
+      DbgBreakPointNoBugCheck();
       __asm__("cli\n\t");
 #elif defined(_MSC_VER)
       __asm sti
-      DbgBreakPoint();
+      DbgBreakPointNoBugCheck();
       __asm cli
 #else
 #error Unknown compiler for inline assembler
@@ -293,11 +293,11 @@ KeBugCheckEx(ULONG BugCheckCode,
     {
 #if defined(__GNUC__)
       __asm__("sti\n\t");
-      DbgBreakPoint();
+      DbgBreakPointNoBugCheck();
       __asm__("cli\n\t");
 #elif defined(_MSC_VER)
       __asm sti
-      DbgBreakPoint();
+      DbgBreakPointNoBugCheck();
       __asm cli
 #else
 #error Unknown compiler for inline assembler

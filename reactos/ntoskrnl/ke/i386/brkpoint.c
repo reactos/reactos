@@ -49,6 +49,16 @@ DbgBreakPoint(VOID)
 /*
  * @implemented
  */
+#if defined(__GNUC__)
+__asm__(".globl _DbgBreakPointNoBugCheck@0\n\t"
+	"_DbgBreakPointNoBugCheck@0:\n\t"
+	"int $3\n\t"
+	"ret\n\t");
+#endif
+
+/*
+ * @implemented
+ */
 VOID STDCALL 
 DbgBreakPointWithStatus(ULONG Status)
 {
