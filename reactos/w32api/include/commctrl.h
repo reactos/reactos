@@ -74,6 +74,9 @@ extern "C" {
 #define WC_COMBOBOXW	L"ComboBox"
 #define WC_SCROLLBARA	"ScrollBar"
 #define WC_SCROLLBARW	L"ScrollBar"
+#if (_WIN32_WINNT >= 0x0501)
+#define WC_LINK		L"SysLink"
+#endif
 
 #ifdef UNICODE
 #define HOTKEY_CLASS HOTKEY_CLASSW
@@ -244,6 +247,24 @@ extern "C" {
 #define ILD_PRESERVEALPHA 0x1000
 #define ILD_SCALE 0x2000
 #define ILD_DPISCALE 0x4000
+#if (_WIN32_WINNT >= 0x0501)
+#define LWS_TRANSPARENT 1
+#define LWS_IGNORERETURN 2
+#define LIF_ITEMINDEX 1
+#define LIF_STATE 2
+#define LIF_ITEMID 4
+#define LIF_URL 8
+#define LIS_FOCUSED 1
+#define LIS_ENABLED 2
+#define LIS_VISITED 4
+#define LM_HITTEST (WM_USER+768)
+#define LM_GETIDEALHEIGHT (WM_USER+769)
+#define LM_SETITEM (WM_USER+770)
+#define LM_GETITEM (WM_USER+771)
+#define INVALID_LINK_INDEX (-1)
+#define MAX_LINKID_TEXT 48
+#define L_MAX_URL_LENGTH 2083
+#endif
 #define HDS_HORZ	0
 #define HDS_BUTTONS	2
 #define HDS_HIDDEN	8
@@ -2334,6 +2355,27 @@ typedef struct _NM_UPDOWN {
 	int iPos;
 	int iDelta;
 } NMUPDOWN,*LPNMUPDOWN;
+#if (_WIN32_WINNT >= 0x0501)
+typedef struct tagLITEM
+{
+    UINT mask;
+    int iLink;
+    UINT state;
+    UINT stateMask;
+    WCHAR szID[MAX_LINKID_TEXT];
+    WCHAR szUrl[L_MAX_URL_LENGTH];
+} LITEM, *PLITEM;
+typedef struct tagLHITTESTINFO
+{
+	POINT pt;
+	LITEM item;
+} LHITTESTINFO, *PLHITTESTINFO ;
+typedef struct tagNMLINK
+{
+	NMHDR hdr;
+	LITEM item;
+} NMLINK, *PNMLINK;
+#endif
 /* for backward compatability */
 #define NM_UPDOWN NMUPDOWN 
 #define LPNM_UPDOWN LPNMUPDOWN 
