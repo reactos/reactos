@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2004/04/26 20:19:21 gdalsnes Exp $
+# $Id: Makefile,v 1.9 2004/05/28 18:18:43 sedwards Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -59,7 +59,6 @@ MODULES_MISC=\
 	$(TARGET_FOLDER_LIB)/winmm.a
 
 MODULES_WINE=\
-	$(TARGET_FOLDER_LIB)/libwine.a\
 	$(TARGET_FOLDER_LIB)/rpcrt4.a\
 	$(TARGET_FOLDER_LIB)/shlwapi.a\
 	$(TARGET_FOLDER_LIB)/ole32.a\
@@ -67,6 +66,9 @@ MODULES_WINE=\
 	$(TARGET_FOLDER_LIB)/lz32.a\
 	$(TARGET_FOLDER_LIB)/wininet.a\
 	$(TARGET_FOLDER_LIB)/wine_unicode.a
+
+#	$(TARGET_FOLDER_LIB)/libwine.a
+
 
 MODULES_CONTRIB=\
 	$(TARGET_FOLDER_LIB)/perl58.a
@@ -130,41 +132,41 @@ $(TARGET_FOLDER_LIB)/imagehlp.a: $(PATH_TO_TOP)/lib/imagehlp/imagehlp.def
 		-d $(PATH_TO_TOP)/lib/imagehlp/imagehlp.def
 # --- SHELL ---
 
-$(TARGET_FOLDER_LIB)/shell32.a: $(PATH_TO_TOP)/lib/shell32/shell32.def
+$(TARGET_FOLDER_LIB)/shell32.a: $(PATH_TO_TOP)/lib/shell32/shell32.spec.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D shell32.dll\
-		-d $(PATH_TO_TOP)/lib/shell32/shell32.def
+		-d $(PATH_TO_TOP)/lib/shell32/shell32.spec.def
 
-$(TARGET_FOLDER_LIB)/comctl32.a: $(PATH_TO_TOP)/lib/comctl32/comctl32.def
+$(TARGET_FOLDER_LIB)/comctl32.a: $(PATH_TO_TOP)/lib/comctl32/comctl32.spec.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D comctl32.dll\
-		-d $(PATH_TO_TOP)/lib/comctl32/comctl32.def
+		-d $(PATH_TO_TOP)/lib/comctl32/comctl32.spec.def
 
 
-$(TARGET_FOLDER_LIB)/$(SHELL32_ALIAS).a: $(PATH_TO_TOP)/lib/shell32/shell32.def
+$(TARGET_FOLDER_LIB)/$(SHELL32_ALIAS).a: $(PATH_TO_TOP)/lib/shell32/shell32.spec.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D $(SHELL32_ALIAS).dll\
-		-d $(PATH_TO_TOP)/lib/shell32/shell32.def
+		-d $(PATH_TO_TOP)/lib/shell32/shell32.spec.def
 
-$(TARGET_FOLDER_LIB)/$(COMCTL32_ALIAS).a: $(PATH_TO_TOP)/../wine/dlls/comctl32/comctl32.def
+$(TARGET_FOLDER_LIB)/$(COMCTL32_ALIAS).a: $(PATH_TO_TOP)/lib/comctl32/comctl32.spec.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D $(COMCTL32_ALIAS).dll\
-		-d $(PATH_TO_TOP)/../wine/dlls/comctl32/comctl32.def
+		-d $(PATH_TO_TOP)/lib/comctl32/comctl32.spec.def
 
 #$(TARGET_FOLDER_LIB)/$(COMCTL32_ALIAS).a: $(PATH_TO_TOP)/lib/comctl32/comctl32.def
 #		-d $(PATH_TO_TOP)/lib/comctl32/comctl32.def
 
 # --- NET ---
 
-$(TARGET_FOLDER_LIB)/iphlpapi.a: $(PATH_TO_TOP)/lib/iphlpapi/iphlpapi.def
+$(TARGET_FOLDER_LIB)/iphlpapi.a: $(PATH_TO_TOP)/lib/iphlpapi/iphlpapi.spec.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D iphlpapi.dll\
-		-d $(PATH_TO_TOP)/lib/iphlpapi/iphlpapi.def
+		-d $(PATH_TO_TOP)/lib/iphlpapi/iphlpapi.spec.def
 
 $(TARGET_FOLDER_LIB)/msafd.a: $(PATH_TO_TOP)/lib/msafd/msafd.def
 	$(DLLTOOL) \
@@ -198,23 +200,23 @@ $(TARGET_FOLDER_LIB)/wsock32.a: $(PATH_TO_TOP)/lib/wsock32/wsock32.def
 
 # --- COM ---
 
-#$(TARGET_FOLDER_LIB)/ole32.a: $(PATH_TO_TOP)/lib/ole32/ole32.def
-#	$(DLLTOOL) \
-#		$(DTFLAGS)\
-#		-D ole32.dll\
-#		-d $(PATH_TO_TOP)/lib/ole32/ole32.def
+$(TARGET_FOLDER_LIB)/ole32.a: $(PATH_TO_TOP)/lib/ole32/ole32.spec.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D ole32.dll\
+		-d $(PATH_TO_TOP)/lib/ole32/ole32.spec.def
 
-#$(TARGET_FOLDER_LIB)/oleaut32.a: $(PATH_TO_TOP)/lib/oleaut32/oleaut32.def
-#	$(DLLTOOL) \
-#		$(DTFLAGS)\
-#		-D oleaut32.dll\
-#		-d $(PATH_TO_TOP)/lib/oleaut32/oleaut32.def
+$(TARGET_FOLDER_LIB)/oleaut32.a: $(PATH_TO_TOP)/lib/oleaut32/oleaut32.spec.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D oleaut32.dll\
+		-d $(PATH_TO_TOP)/lib/oleaut32/oleaut32.spec.def
 
-#$(TARGET_FOLDER_LIB)/rpcrt4.a: $(PATH_TO_TOP)/lib/rpcrt4/rpcrt4.def
-#	$(DLLTOOL) \
-#		$(DTFLAGS)\
-#		-D rpcrt4.dll\
-#		-d $(PATH_TO_TOP)/lib/rpcrt4/rpcrt4.def
+$(TARGET_FOLDER_LIB)/rpcrt4.a: $(PATH_TO_TOP)/lib/rpcrt4/rpcrt4.spec.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D rpcrt4.dll\
+		-d $(PATH_TO_TOP)/lib/rpcrt4/rpcrt4.spec.def
 
 # --- CRT ---
 
@@ -238,62 +240,62 @@ $(TARGET_FOLDER_LIB)/version.a: $(PATH_TO_TOP)/lib/version/version.def
 		-D version.dll\
 		-d $(PATH_TO_TOP)/lib/version/version.def
 
-$(TARGET_FOLDER_LIB)/winmm.a: $(PATH_TO_TOP)/lib/winmm/winmm.def
+$(TARGET_FOLDER_LIB)/winmm.a: $(PATH_TO_TOP)/lib/winmm/winmm.spec.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D winmm.dll\
-		-d $(PATH_TO_TOP)/lib/winmm/winmm.def
+		-d $(PATH_TO_TOP)/lib/winmm/winmm.spec.def
 
 # --- WINE ---
 
-$(TARGET_FOLDER_LIB)/ole32.a: $(PATH_TO_TOP)/../wine/dlls/ole32/ole32.def
-	$(DLLTOOL) \
-		$(DTFLAGS)\
-		-D ole32.dll\
-		-d $(PATH_TO_TOP)/../wine/dlls/ole32/ole32.def
+#$(TARGET_FOLDER_LIB)/ole32.a: $(PATH_TO_TOP)/../wine/dlls/ole32/ole32.spec.def
+#	$(DLLTOOL) \
+#		$(DTFLAGS)\
+#		-D ole32.dll\
+#		-d $(PATH_TO_TOP)/../wine/dlls/ole32/ole32.spec.def
 
-$(TARGET_FOLDER_LIB)/oleaut32.a: $(PATH_TO_TOP)/../wine/dlls/oleaut32/oleaut32.def
-	$(DLLTOOL) \
-		$(DTFLAGS)\
-		-D oleaut32.dll\
-		-d $(PATH_TO_TOP)/../wine/dlls/oleaut32/oleaut32.def
+#$(TARGET_FOLDER_LIB)/oleaut32.a: $(PATH_TO_TOP)/../wine/dlls/oleaut32/oleaut32.spec.def
+#	$(DLLTOOL) \
+#		$(DTFLAGS)\
+#		-D oleaut32.dll\
+#		-d $(PATH_TO_TOP)/../wine/dlls/oleaut32/oleaut32.spec.def
 
-$(TARGET_FOLDER_LIB)/rpcrt4.a: $(PATH_TO_TOP)/../wine/dlls/rpcrt4/rpcrt4.def
-	$(DLLTOOL) \
-		$(DTFLAGS)\
-		-D rpcrt4.dll\
-		-d $(PATH_TO_TOP)/../wine/dlls/rpcrt4/rpcrt4.def
+#$(TARGET_FOLDER_LIB)/rpcrt4.a: $(PATH_TO_TOP)/../wine/dlls/rpcrt4/rpcrt4.def
+#	$(DLLTOOL) \
+#		$(DTFLAGS)\
+#		-D rpcrt4.dll\
+#		-d $(PATH_TO_TOP)/../wine/dlls/rpcrt4/rpcrt4.def
 
-$(TARGET_FOLDER_LIB)/shlwapi.a: $(PATH_TO_TOP)/../wine/dlls/shlwapi/shlwapi.def
+$(TARGET_FOLDER_LIB)/shlwapi.a: $(PATH_TO_TOP)/lib/shlwapi/shlwapi.spec.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D shlwapi.dll\
-		-d $(PATH_TO_TOP)/../wine/dlls/shlwapi/shlwapi.def
+		-d $(PATH_TO_TOP)/lib/shlwapi/shlwapi.spec.def
 
 
-$(TARGET_FOLDER_LIB)/wininet.a: $(PATH_TO_TOP)/../wine/dlls/wininet/wininet.def
+$(TARGET_FOLDER_LIB)/wininet.a: $(PATH_TO_TOP)/lib/wininet/wininet.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D wininet.dll\
-		-d $(PATH_TO_TOP)/../wine/dlls/wininet/wininet.def
+		-d $(PATH_TO_TOP)/lib/wininet/wininet.def
 
-$(TARGET_FOLDER_LIB)/lz32.a: $(PATH_TO_TOP)/../wine/dlls/lzexpand/lz32.def
+$(TARGET_FOLDER_LIB)/lz32.a: $(PATH_TO_TOP)/lib/lzexpand/lz32.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D lz32.dll\
-		-d $(PATH_TO_TOP)/../wine/dlls/lzexpand/lz32.def
+		-d $(PATH_TO_TOP)/lib/lzexpand/lz32.def
 
-$(TARGET_FOLDER_LIB)/libwine.a: $(PATH_TO_TOP)/../wine/library/libwine.def
-	$(DLLTOOL) \
-		$(DTFLAGS)\
-		-D libwine.dll\
-		-d $(PATH_TO_TOP)/../wine/library/libwine.def
+#$(TARGET_FOLDER_LIB)/libwine.a: $(PATH_TO_TOP)/../wine/libs/wine/wine.def
+#	$(DLLTOOL) \
+#		$(DTFLAGS)\
+#		-D libwine.dll\
+#		-d $(PATH_TO_TOP)/../wine/libs/wine/wine.def
 
-$(TARGET_FOLDER_LIB)/wine_unicode.a: $(PATH_TO_TOP)/../wine/unicode/wine_unicode.def
+$(TARGET_FOLDER_LIB)/wine_unicode.a: $(PATH_TO_TOP)/lib/unicode/wine_unicode.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D wine_unicode.dll\
-		-d $(PATH_TO_TOP)/../wine/unicode/wine_unicode.def
+		-d $(PATH_TO_TOP)/lib/unicode/wine_unicode.def
 
 # --- CONTRIB ---
 
