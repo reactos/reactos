@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.46 2004/09/25 08:49:06 gvg Exp $
+/* $Id: semgr.c,v 1.47 2004/10/01 01:28:56 arty Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -502,6 +502,8 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 
   Descriptor = ExAllocatePool(NonPagedPool,
 			      Length);
+  RtlZeroMemory( Descriptor, Length );
+
   if (Descriptor == NULL)
     {
       DPRINT1("ExAlloctePool() failed\n");
