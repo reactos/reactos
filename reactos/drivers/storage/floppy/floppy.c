@@ -1138,6 +1138,11 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
   KeInitializeSemaphore(&QueueSemaphore, 0, 0x7fffffff);
 
   /*
+   * Event to terminate that thread
+   */
+  KeInitializeEvent(&QueueThreadTerminate, NotificationEvent, FALSE);
+
+  /*
    * Create the queue processing thread.  Save its handle in the global variable
    * ThreadHandle so we can wait on its termination during Unload.
    */
@@ -1159,11 +1164,6 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
    * need it, as handles are process-specific.
    */
   ZwClose(ThreadHandle);
-
-  /*
-   * Event to terminate that thread
-   */
-  KeInitializeEvent(&QueueThreadTerminate, NotificationEvent, FALSE);
 
   /*
    * Start the device discovery proces.  Returns STATUS_SUCCESS if
