@@ -240,7 +240,6 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 
   /* Specials */
   /* Ctrl-_ generates US */
-  { VK_OEM_PLUS    ,NOCAPS, '=', '+' },
   //{ VK_OEM_1       ,NOCAPS, '$', '£' },
   { VK_OEM_5       ,NOCAPS, '*',L'µ'},
   { VK_OEM_3       ,NOCAPS, L'ù', '%' },
@@ -271,16 +270,19 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
-  { '2' , 1  ,  L'é', '2', WCH_NONE , WCH_DEAD },
-  { VK_EMPTY , 0  ,  WCH_NONE, WCH_NONE, WCH_NONE , L'~' },
-  { '3' , 1  ,  '"', '3', WCH_NONE , '#' },
-  { '4' , 1  ,  '\'', '4', WCH_NONE , '{' },
-  { '7' , 1  ,  L'è', '7', WCH_NONE , WCH_DEAD },
-  { VK_EMPTY , 0  ,  WCH_NONE, WCH_NONE, WCH_NONE , L'`' },
-  { '0' , 1  ,  L'à', '0', WCH_NONE , '@' },
-  { 'E' , 1  ,  'e', 'E', WCH_NONE , L'€' /* euro */ },
-  { VK_OEM_1 ,1, '$', L'£' ,WCH_NONE, L'¤' },
-  { VK_OEM_4, NOCAPS, ')', '°', ']'  },
+  /* Normal, shifted, control, Alt+Gr */
+  { '2' ,       1, L'é',   '2',      WCH_NONE, WCH_DEAD },
+  { VK_EMPTY,   0, WCH_NONE,  WCH_NONE, WCH_NONE, L'~' },
+  { '3' ,       0, '"',       '3',      WCH_NONE, '#' },
+  { '4' ,       0, '\'',      '4',      WCH_NONE, '{' },
+  { '7' ,       1, L'è',   '7',      WCH_NONE, WCH_DEAD },
+  { VK_EMPTY,   0, WCH_NONE,  WCH_NONE, WCH_NONE, L'`' },
+  { '9' ,       1, L'ç',   '9',      WCH_NONE, L'^' },
+  { '0' ,       1, L'à',   '0',      WCH_NONE, '@' },
+  { VK_OEM_PLUS,0, '=',       '+',      WCH_NONE, '}' },
+  { 'E' ,       1, 'e',       'E',      WCH_NONE, L'€' /* euro */ },
+  { VK_OEM_1,   0, '$',       L'£',  WCH_NONE, L'¤' },
+  { VK_OEM_4,   0, ')',       '°',   WCH_NONE, ']'  },
   { 0, 0 }
 };
 
@@ -294,8 +296,6 @@ ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   { '5' , 1  ,  '(', '5', WCH_NONE , '[' , 0x1b  },
   { '6' , 1  ,  '-', '6', WCH_NONE , '|' , 0x1f  },
   { '8' , 1  ,  '_', '8', WCH_NONE , '\\' , 0x1c  },
-  { '9' , 1  ,  L'ç', '9', WCH_NONE , WCH_DEAD , 0x1e},
-  { VK_EMPTY , 0  ,  WCH_NONE, WCH_NONE, WCH_NONE , L'^' ,WCH_NONE },
   { 0, 0 }
 };
 
