@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.9 2004/01/30 21:48:09 gvg Exp $
+/* $Id: profile.c,v 1.10 2004/01/30 22:12:47 gvg Exp $
  *
  * Imported from Wine
  * Copyright 1993 Miguel de Icaza
@@ -15,7 +15,7 @@
 
 #include <k32.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 static CRITICAL_SECTION ProfileLock;
