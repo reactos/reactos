@@ -72,7 +72,7 @@ RtlMapGenericMask (
 	if (*AccessMask & GENERIC_ALL)
 		*AccessMask |= GenericMapping->GenericAll;
 
-	*AccessMask &= 0x0FFFFFFF;
+	*AccessMask &= ~(GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE | GENERIC_ALL);
 }
 
 /*

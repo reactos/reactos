@@ -280,12 +280,15 @@ NTSTATUS STDCALL
 IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
 		     IN ACCESS_MASK GrantedAccess)
 {
+  PAGED_CODE();
+  
   RtlMapGenericMask(DesiredAccess,
 		    IoFileObjectType->Mapping);
-  if ((*DesiredAccess & GrantedAccess) != GrantedAccess)
-    return(STATUS_ACCESS_DENIED);
 
-  return(STATUS_SUCCESS);
+  if ((~(*DesiredAccess) & GrantedAccess) != 0)
+    return STATUS_ACCESS_DENIED;
+  else
+    return STATUS_SUCCESS;
 }
 
 
