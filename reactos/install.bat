@@ -30,6 +30,8 @@ copy drivers\fs\cdfs\cdfs.sys %ROS_INSTALL%\system32\drivers
 copy drivers\fs\fs_rec\fs_rec.sys %ROS_INSTALL%\system32\drivers
 copy drivers\fs\ms\msfs.sys %ROS_INSTALL%\system32\drivers
 copy drivers\fs\np\npfs.sys %ROS_INSTALL%\system32\drivers
+copy drivers\fs\ntfs\ntfs.sys %ROS_INSTALL%\system32\drivers
+copy drivers\fs\mup\mup.sys %ROS_INSTALL%\system32\drivers
 copy drivers\bus\acpi\acpi.sys %ROS_INSTALL%\system32\drivers
 copy drivers\bus\isapnp\isapnp.sys %ROS_INSTALL%\system32\drivers
 copy drivers\bus\pci\pci.sys %ROS_INSTALL%\system32\drivers
@@ -57,6 +59,8 @@ copy subsys\system\autochk\autochk.exe %ROS_INSTALL%\system32
 copy subsys\system\shell\shell.exe %ROS_INSTALL%\system32
 copy subsys\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy subsys\system\services\services.exe %ROS_INSTALL%\system32
+copy subsys\system\eventlog\eventlog.exe %ROS_INSTALL%\system32
+copy subsys\system\rpcss\rpcss.exe %ROS_INSTALL%\system32
 copy lib\advapi32\advapi32.dll %ROS_INSTALL%\system32
 copy lib\crtdll\crtdll.dll %ROS_INSTALL%\system32
 copy lib\fmifs\fmifs.dll %ROS_INSTALL%\system32
@@ -100,6 +104,7 @@ copy apps\tests\mutex\mutex.exe %ROS_INSTALL%\bin
 copy apps\tests\winhello\winhello.exe %ROS_INSTALL%\bin
 copy apps\tests\sectest\sectest.exe %ROS_INSTALL%\bin
 copy apps\tests\isotest\isotest.exe %ROS_INSTALL%\bin
+copy apps\tests\regtest\regtest.exe %ROS_INSTALL%\bin
 copy apps\tests\tokentest\tokentest.exe %ROS_INSTALL%\bin
 copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts

@@ -58,7 +58,7 @@ INPUT_DRIVERS = keyboard mouclass psaux
 
 # Kernel mode file system drivers
 # cdfs ext2 fs_rec ms np vfat
-FS_DRIVERS = cdfs fs_rec ms np vfat
+FS_DRIVERS = cdfs fs_rec ms np vfat mup ntfs
 
 # Kernel mode networking drivers
 # afd ndis packet tcpip tdi wshtcpip
