@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.24 2003/12/31 05:33:04 jfilby Exp $
+/* $Id: iospace.c,v 1.25 2004/01/09 22:52:30 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -32,7 +32,7 @@
 #include <internal/mm.h>
 #include <internal/ps.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
