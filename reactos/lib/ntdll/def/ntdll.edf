@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.115 2004/07/15 08:15:21 ekohl Exp $
+; $Id: ntdll.edf,v 1.116 2004/08/09 18:17:22 jimtabor Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -351,7 +351,7 @@ RtlCreateEnvironment=RtlCreateEnvironment@8
 RtlCreateHeap=RtlCreateHeap@24
 RtlCreateProcessParameters=RtlCreateProcessParameters@40
 ;RtlCreatePropertySet
-;RtlCreateQueryDebugBuffer
+RtlCreateQueryDebugBuffer=RtlCreateQueryDebugBuffer@8
 RtlCreateRegistryKey=RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 ;RtlCreateTagHeap
@@ -388,7 +388,7 @@ RtlDestroyEnvironment=RtlDestroyEnvironment@4
 RtlDestroyHandleTable=RtlDestroyHandleTable@4
 RtlDestroyHeap=RtlDestroyHeap@4
 RtlDestroyProcessParameters=RtlDestroyProcessParameters@4
-;RtlDestroyQueryDebugBuffer
+RtlDestroyQueryDebugBuffer=RtlDestroyQueryDebugBuffer@4
 RtlDetermineDosPathNameType_U=RtlDetermineDosPathNameType_U@4
 RtlDoesFileExists_U=RtlDoesFileExists_U@4
 RtlDosPathNameToNtPathName_U=RtlDosPathNameToNtPathName_U@16
@@ -548,7 +548,7 @@ RtlQueryAtomInAtomTable=RtlQueryAtomInAtomTable@24
 RtlQueryEnvironmentVariable_U=RtlQueryEnvironmentVariable_U@12
 RtlQueryInformationAcl=RtlQueryInformationAcl@16
 ;RtlQueryProcessBackTraceInformation
-;RtlQueryProcessDebugInformation
+RtlQueryProcessDebugInformation=RtlQueryProcessDebugInformation@12
 ;RtlQueryProcessHeapInformation
 ;RtlQueryProcessLockInformation
 ;RtlQueryProperties

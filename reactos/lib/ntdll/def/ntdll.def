@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.125 2004/07/15 08:15:20 ekohl Exp $
+; $Id: ntdll.def,v 1.126 2004/08/09 18:17:22 jimtabor Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -351,7 +351,7 @@ RtlCreateEnvironment@8
 RtlCreateHeap@24
 RtlCreateProcessParameters@40
 ;RtlCreatePropertySet
-;RtlCreateQueryDebugBuffer
+RtlCreateQueryDebugBuffer@8
 RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
 ;RtlCreateTagHeap
@@ -388,7 +388,7 @@ RtlDestroyEnvironment@4
 RtlDestroyHandleTable@4
 RtlDestroyHeap@4
 RtlDestroyProcessParameters@4
-;RtlDestroyQueryDebugBuffer
+RtlDestroyQueryDebugBuffer@4
 RtlDetermineDosPathNameType_U@4
 RtlDoesFileExists_U@4
 RtlDosPathNameToNtPathName_U@16
@@ -547,7 +547,7 @@ RtlQueryAtomInAtomTable@24
 RtlQueryEnvironmentVariable_U@12
 RtlQueryInformationAcl@16
 ;RtlQueryProcessBackTraceInformation
-;RtlQueryProcessDebugInformation
+RtlQueryProcessDebugInformation@12
 ;RtlQueryProcessHeapInformation
 ;RtlQueryProcessLockInformation
 ;RtlQueryProperties

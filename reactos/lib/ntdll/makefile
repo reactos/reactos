@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.106 2004/07/08 00:40:31 weiden Exp $
+# $Id: makefile,v 1.107 2004/08/09 18:17:22 jimtabor Exp $
 
 PATH_TO_TOP = ../..
 
@@ -64,6 +64,7 @@ RTL_OBJECTS = \
 	rtl/access.o \
 	rtl/apc.o \
 	rtl/atom.o \
+	rtl/dbgbuffer.o \
 	rtl/bitmap.o \
 	rtl/callback.o \
 	rtl/crc32.o \
