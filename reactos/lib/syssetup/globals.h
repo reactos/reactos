@@ -16,6 +16,29 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+
+typedef struct _TZ_INFO
+{
+  LONG Bias;
+  LONG StandardBias;
+  LONG DaylightBias;
+  SYSTEMTIME StandardDate;
+  SYSTEMTIME DaylightDate;
+} TZ_INFO, *PTZ_INFO;
+
+typedef struct _TIMEZONE_ENTRY
+{
+  struct _TIMEZONE_ENTRY *Prev;
+  struct _TIMEZONE_ENTRY *Next;
+  WCHAR Description[64];   /* 'Display' */
+  WCHAR StandardName[32];  /* 'Std' */
+  WCHAR DaylightName[32];  /* 'Dlt' */
+  TZ_INFO TimezoneInfo;    /* 'TZI' */
+  ULONG Index;
+} TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
+
+
+
 typedef struct _SETUPDATA
 {
   HFONT hTitleFont;
@@ -25,6 +48,9 @@ typedef struct _SETUPDATA
   TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];	/* max. 63 characters */
   TCHAR AdminPassword[15];				/* max. 14 characters */
 
+  SYSTEMTIME SystemTime;
+  PTIMEZONE_ENTRY TimeZoneListHead;
+  PTIMEZONE_ENTRY TimeZoneListTail;
 } SETUPDATA, *PSETUPDATA;
 
 

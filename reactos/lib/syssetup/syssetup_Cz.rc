@@ -100,8 +100,8 @@ BEGIN
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 29, 54, 14
     LTEXT "Timezone", IDC_STATIC, 53, 80, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 96, 201, 42,
-             CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    AUTOCHECKBOX "Daylight savings",
+             CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
                  IDC_DAYLIGHTSAVINGS, 53, 124, 201, 10
 END
 
