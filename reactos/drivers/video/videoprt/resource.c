@@ -25,6 +25,57 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+NTSTATUS STDCALL
+IntVideoPortMapPhysicalMemory(
+   IN HANDLE Process,
+   IN PHYSICAL_ADDRESS PhysicalAddress,
+   IN ULONG SizeInBytes,
+   IN ULONG Protect,
+   IN OUT PVOID *VirtualAddress  OPTIONAL)
+{
+   OBJECT_ATTRIBUTES ObjAttribs;
+   UNICODE_STRING UnicodeString;
+   HANDLE hMemObj;
+   NTSTATUS Status;
+   SIZE_T Size;
+
+   /* Initialize object attribs */
+   RtlInitUnicodeString(&UnicodeString, L"\\Device\\PhysicalMemory");
+   InitializeObjectAttributes(&ObjAttribs,
+                              &UnicodeString,
+                              OBJ_CASE_INSENSITIVE/* | OBJ_KERNEL_HANDLE*/,
+                              NULL, NULL);
+
+   /* Open physical memory section */
+   Status = ZwOpenSection(&hMemObj, SECTION_ALL_ACCESS, &ObjAttribs);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwOpenSection() failed! (0x%x)\n", Status);
+      return Status;
+   }
+
+   /* Map view of section */
+   Size = SizeInBytes;
+   Status = ZwMapViewOfSection(hMemObj,
+                               Process,
+                               VirtualAddress,
+                               0,
+                               Size,
+                               (PLARGE_INTEGER)(&PhysicalAddress),
+                               &Size,
+                               ViewUnmap,
+                               0,
+                               Protect);
+   ZwClose(hMemObj);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwMapViewOfSection() failed! (0x%x)\n", Status);
+   }
+
+   return Status;
+}
+
+
 PVOID STDCALL
 IntVideoPortMapMemory(
    IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
@@ -34,7 +85,7 @@ IntVideoPortMapMemory(
    OUT VP_STATUS *Status)
 {
    PHYSICAL_ADDRESS TranslatedAddress;
-   PVIDEO_PORT_ADDRESS_MAPPING AddressMapping = NULL;
+   PVIDEO_PORT_ADDRESS_MAPPING AddressMapping;
    ULONG AddressSpace;
    PVOID MappedAddress;
    PLIST_ENTRY Entry;
@@ -50,7 +101,8 @@ IntVideoPortMapMemory(
       InIoSpace &= ~VIDEO_MEMORY_SPACE_P6CACHE;
    }
 
-   if (!IsListEmpty(&DeviceExtension->AddressMappingListHead))
+   if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) == 0 &&
+       !IsListEmpty(&DeviceExtension->AddressMappingListHead))
    {
       Entry = DeviceExtension->AddressMappingListHead.Flink;
       while (Entry != &DeviceExtension->AddressMappingListHead)
@@ -62,28 +114,15 @@ IntVideoPortMapMemory(
          if (IoAddress.QuadPart == AddressMapping->IoAddress.QuadPart &&
              NumberOfUchars <= AddressMapping->NumberOfUchars)
          {
-            if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) != 0 &&
-                AddressMapping->MappedUserAddress != NULL)
-            {
-               AddressMapping->UserMappingCount++;
-               if (Status)
-                  *Status = NO_ERROR;
-               return AddressMapping->MappedUserAddress;
-            }
-            else if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) == 0 &&
-                     AddressMapping->MappedUserAddress != NULL)
             {
                AddressMapping->MappingCount++;
                if (Status)
                   *Status = NO_ERROR;
                return AddressMapping->MappedAddress;
             }
-            break;
          }
          Entry = Entry->Flink;
       }
-      if (Entry == &DeviceExtension->AddressMappingListHead)
-         AddressMapping = NULL;
    }
 
    AddressSpace = (ULONG)InIoSpace;
@@ -114,46 +153,20 @@ IntVideoPortMapMemory(
    /* user space */
    if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) != 0)
    {
-      OBJECT_ATTRIBUTES ObjAttribs;
-      UNICODE_STRING UnicodeString;
-      HANDLE hMemObj;
       NTSTATUS NtStatus;
-      SIZE_T Size;
-
-      RtlInitUnicodeString(&UnicodeString, L"\\Device\\PhysicalMemory");
-      InitializeObjectAttributes(&ObjAttribs,
-                                 &UnicodeString,
-                                 OBJ_CASE_INSENSITIVE/* | OBJ_KERNEL_HANDLE*/,
-                                 NULL, NULL);
-      NtStatus = ZwOpenSection(&hMemObj, SECTION_ALL_ACCESS, &ObjAttribs);
-      if (!NT_SUCCESS(NtStatus))
-      {
-         DPRINT("ZwOpenSection() failed! (0x%x)\n", NtStatus);
-         if (Status)
-            *Status = NO_ERROR;
-         return NULL;
-      }
-      Size = NumberOfUchars;
       MappedAddress = NULL;
-      NtStatus = ZwMapViewOfSection(hMemObj,
-                                    NtCurrentProcess(),
-                                    &MappedAddress,
-                                    0,
-                                    NumberOfUchars,
-                                    (PLARGE_INTEGER)(&TranslatedAddress),
-                                    &Size,
-                                    ViewUnmap,
-                                    0,
-                                    PAGE_READWRITE/* | PAGE_WRITECOMBINE*/);
+      NtStatus = IntVideoPortMapPhysicalMemory(NtCurrentProcess(),
+                                               TranslatedAddress,
+                                               NumberOfUchars,
+                                               PAGE_READWRITE/* | PAGE_WRITECOMBINE*/,
+                                               &MappedAddress);
       if (!NT_SUCCESS(NtStatus))
       {
-         DPRINT("ZwMapViewOfSection() failed! (0x%x)\n", NtStatus);
-         ZwClose(hMemObj);
+         DPRINT("IntVideoPortMapPhysicalMemory() failed! (0x%x)\n", NtStatus);
          if (Status)
             *Status = NO_ERROR;
          return NULL;
       }
-      ZwClose(hMemObj);
       DPRINT("Mapped user address = 0x%08x\n", MappedAddress);
    }
    else /* kernel space */
@@ -166,13 +179,11 @@ IntVideoPortMapMemory(
 
    if (MappedAddress != NULL)
    {
-      BOOL InsertIntoList = FALSE;
-
       if (Status)
       {
          *Status = NO_ERROR;
       }
-      if (AddressMapping == NULL)
+      if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) == 0)
       {
          AddressMapping = ExAllocatePoolWithTag(
             PagedPool,
@@ -182,26 +193,12 @@ IntVideoPortMapMemory(
          if (AddressMapping == NULL)
             return MappedAddress;
 
-         InsertIntoList = TRUE;
          RtlZeroMemory(AddressMapping, sizeof(VIDEO_PORT_ADDRESS_MAPPING));
          AddressMapping->NumberOfUchars = NumberOfUchars;
          AddressMapping->IoAddress = IoAddress;
          AddressMapping->SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
-      }
-
-      if ((InIoSpace & VIDEO_MEMORY_SPACE_USER_MODE) != 0)
-      {
-         AddressMapping->MappedUserAddress = MappedAddress;
-         AddressMapping->UserMappingCount = 1;
-      }
-      else
-      {
          AddressMapping->MappedAddress = MappedAddress;
          AddressMapping->MappingCount = 1;
-      }
-
-      if (InsertIntoList)
-      {
          InsertHeadList(
             &DeviceExtension->AddressMappingListHead,
             &AddressMapping->List);
@@ -223,6 +220,7 @@ IntVideoPortUnmapMemory(
 {
    PVIDEO_PORT_ADDRESS_MAPPING AddressMapping;
    PLIST_ENTRY Entry;
+   NTSTATUS Status;
 
    Entry = DeviceExtension->AddressMappingListHead.Flink;
    while (Entry != &DeviceExtension->AddressMappingListHead)
@@ -231,24 +229,7 @@ IntVideoPortUnmapMemory(
          Entry,
          VIDEO_PORT_ADDRESS_MAPPING,
          List);
-      if (AddressMapping->MappedUserAddress == MappedAddress)
-      {
-         ASSERT(AddressMapping->UserMappingCount > 0);
-         AddressMapping->UserMappingCount--;
-         if (AddressMapping->UserMappingCount == 0)
-         {
-            ZwUnmapViewOfSection(NtCurrentProcess(),
-                                 AddressMapping->MappedUserAddress);
-            AddressMapping->MappedUserAddress = NULL;
-            if (AddressMapping->MappingCount == 0)
-            {
-               RemoveEntryList(Entry);
-               ExFreePool(AddressMapping);
-            }
-         }
-         return;
-      }
-      else if (AddressMapping->MappedAddress == MappedAddress)
+      if (AddressMapping->MappedAddress == MappedAddress)
       {
          ASSERT(AddressMapping->MappingCount > 0);
          AddressMapping->MappingCount--;
@@ -257,17 +238,22 @@ IntVideoPortUnmapMemory(
             MmUnmapIoSpace(
                AddressMapping->MappedAddress,
                AddressMapping->NumberOfUchars);
-            AddressMapping->MappedAddress = NULL;
-            if (AddressMapping->UserMappingCount == 0)
-            {
-               RemoveEntryList(Entry);
-               ExFreePool(AddressMapping);
-            }
+            RemoveEntryList(Entry);
+            ExFreePool(AddressMapping);
          }
          return;
       }
 
       Entry = Entry->Flink;
+   }
+
+   /* If there was no kernelmode mapping for the given address found we assume
+    * that the given address is a usermode mapping and try to unmap it.
+    */
+   Status = ZwUnmapViewOfSection(NtCurrentProcess(), MappedAddress);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Warning: Mapping for address 0x%x not found!\n", (ULONG)MappedAddress);
    }
 }
 
@@ -410,86 +396,93 @@ VideoPortGetAccessRanges(
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   if (NumRequestedResources == 0 && 
-       DeviceExtension->AdapterInterfaceType == PCIBus)
+   if (NumRequestedResources == 0)
    {
-      if (DeviceExtension->PhysicalDeviceObject != NULL)
+      AllocatedResources = DeviceExtension->AllocatedResources;
+      if (AllocatedResources == NULL &&
+          DeviceExtension->AdapterInterfaceType == PCIBus)
       {
-         PciSlotNumber.u.AsULONG = DeviceExtension->SystemIoSlotNumber;
-
-         ReturnedLength = HalGetBusData(
-            PCIConfiguration, 
-            DeviceExtension->SystemIoBusNumber,
-            PciSlotNumber.u.AsULONG,
-            &Config,
-            sizeof(PCI_COMMON_CONFIG));
-
-         if (ReturnedLength != sizeof(PCI_COMMON_CONFIG))
+         if (DeviceExtension->PhysicalDeviceObject != NULL)
          {
-            return ERROR_NO_SYSTEM_RESOURCES;
-         }
-      }
-      else
-      {
-         VendorIdToFind = VendorId != NULL ? *(PUSHORT)VendorId : 0;
-         DeviceIdToFind = DeviceId != NULL ? *(PUSHORT)DeviceId : 0;
-         SlotIdToFind = Slot != NULL ? *Slot : 0;
-         PciSlotNumber.u.AsULONG = SlotIdToFind;
+            PciSlotNumber.u.AsULONG = DeviceExtension->SystemIoSlotNumber;
 
-         DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x\n", 
-                VendorIdToFind, DeviceIdToFind);
-
-         /*
-          * Search for the device id and vendor id on this bus.
-          */
-
-         for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
-         {
-            DPRINT("- Function number: %d\n", FunctionNumber);
-            PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
             ReturnedLength = HalGetBusData(
-               PCIConfiguration, 
+               PCIConfiguration,
                DeviceExtension->SystemIoBusNumber,
                PciSlotNumber.u.AsULONG,
                &Config,
                sizeof(PCI_COMMON_CONFIG));
-            DPRINT("- Length of data: %x\n", ReturnedLength);
-            if (ReturnedLength == sizeof(PCI_COMMON_CONFIG))
-            {
-               DPRINT("- Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
-                      "DeviceId 0x%04x\n",
-                      PciSlotNumber.u.AsULONG, 
-                      PciSlotNumber.u.bits.DeviceNumber,
-                      PciSlotNumber.u.bits.FunctionNumber,
-                      Config.VendorID,
-                      Config.DeviceID);
 
-               if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
-                   (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
+            if (ReturnedLength != sizeof(PCI_COMMON_CONFIG))
+            {
+               return ERROR_NO_SYSTEM_RESOURCES;
+            }
+         }
+         else
+         {
+            VendorIdToFind = VendorId != NULL ? *(PUSHORT)VendorId : 0;
+            DeviceIdToFind = DeviceId != NULL ? *(PUSHORT)DeviceId : 0;
+            SlotIdToFind = Slot != NULL ? *Slot : 0;
+            PciSlotNumber.u.AsULONG = SlotIdToFind;
+
+            DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x\n",
+                   VendorIdToFind, DeviceIdToFind);
+
+            /*
+             * Search for the device id and vendor id on this bus.
+             */
+
+            for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
+            {
+               DPRINT("- Function number: %d\n", FunctionNumber);
+               PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
+               ReturnedLength = HalGetBusData(
+                  PCIConfiguration,
+                  DeviceExtension->SystemIoBusNumber,
+                  PciSlotNumber.u.AsULONG,
+                  &Config,
+                  sizeof(PCI_COMMON_CONFIG));
+               DPRINT("- Length of data: %x\n", ReturnedLength);
+               if (ReturnedLength == sizeof(PCI_COMMON_CONFIG))
                {
-                  break;
+                  DPRINT("- Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
+                         "DeviceId 0x%04x\n",
+                         PciSlotNumber.u.AsULONG,
+                         PciSlotNumber.u.bits.DeviceNumber,
+                         PciSlotNumber.u.bits.FunctionNumber,
+                         Config.VendorID,
+                         Config.DeviceID);
+
+                  if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
+                      (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
+                  {
+                     break;
+                  }
                }
+            }
+
+            if (FunctionNumber == 8)
+            {
+               DPRINT("Didn't find device.\n");
+               return ERROR_DEV_NOT_EXIST;
             }
          }
 
-         if (FunctionNumber == 8)
+         Status = HalAssignSlotResources(
+            NULL, NULL, NULL, NULL,
+            DeviceExtension->AdapterInterfaceType,
+            DeviceExtension->SystemIoBusNumber,
+            PciSlotNumber.u.AsULONG,
+            &AllocatedResources);
+
+         if (!NT_SUCCESS(Status))
          {
-            DPRINT("Didn't find device.\n");
-            return ERROR_DEV_NOT_EXIST;
+            return Status;
          }
+         DeviceExtension->AllocatedResources = AllocatedResources;
       }
-
-      Status = HalAssignSlotResources(
-         NULL, NULL, NULL, NULL,
-         DeviceExtension->AdapterInterfaceType,
-         DeviceExtension->SystemIoBusNumber,
-         PciSlotNumber.u.AsULONG, 
-         &AllocatedResources);
-
-      if (!NT_SUCCESS(Status))
-      {
-         return Status;
-      }
+      if (AllocatedResources == NULL)
+         return ERROR_NO_SYSTEM_RESOURCES;
 
       AssignedCount = 0;
       for (FullList = AllocatedResources->List;
@@ -509,7 +502,6 @@ VideoPortGetAccessRanges(
                 AssignedCount >= NumAccessRanges)
             {
                DPRINT1("Too many access ranges found\n");
-               ExFreePool(AllocatedResources);
                return ERROR_NO_SYSTEM_RESOURCES;
             }
             if (Descriptor->Type == CmResourceTypeMemory)
@@ -517,7 +509,6 @@ VideoPortGetAccessRanges(
                if (NumAccessRanges <= AssignedCount)
                {
                   DPRINT1("Too many access ranges found\n");
-                  ExFreePool(AllocatedResources);
                   return ERROR_NO_SYSTEM_RESOURCES;
                }
                DPRINT("Memory range starting at 0x%08x length 0x%08x\n",
@@ -548,7 +539,6 @@ VideoPortGetAccessRanges(
             }
          }
       }
-      ExFreePool(AllocatedResources);
    }
    else
    {

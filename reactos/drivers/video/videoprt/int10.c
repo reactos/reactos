@@ -212,6 +212,11 @@ VideoPortInt10(
 
    DPRINT("VideoPortInt10\n");
 
+   if (!CsrssInitialized)
+   {
+      return ERROR_INVALID_PARAMETER;
+   }
+   
    IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    memset(&Regs, 0, sizeof(Regs));
