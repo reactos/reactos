@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.201 2004/11/21 16:34:57 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.202 2004/11/27 13:04:06 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -429,7 +429,7 @@ IoRaiseHardError@12
 IoRaiseInformationalHardError@12
 IoReadDiskSignature@12
 IoReadOperationCount DATA
-IoReadPartitionTable@16
+@IoReadPartitionTable@16
 IoReadPartitionTableEx@8
 IoReadTransferCount DATA
 IoRegisterBootDriverReinitialization@12
@@ -461,7 +461,7 @@ IoSetFileOrigin@8
 IoSetHardErrorOrVerifyDevice@8
 IoSetInformation@16
 IoSetIoCompletion@24
-IoSetPartitionInformation@16
+@IoSetPartitionInformation@16
 IoSetPartitionInformationEx@12
 IoSetStartIoAttributes@12
 IoSetShareAccess@16
@@ -502,7 +502,7 @@ IoWMISuggestInstanceName@16
 IoWMIWriteEvent@4
 IoWriteErrorLogEntry@4
 IoWriteOperationCount DATA
-IoWritePartitionTable@20
+@IoWritePartitionTable@20
 IoWritePartitionTableEx@8
 IoWriteTransferCount DATA
 @IofCallDriver@8
