@@ -222,3 +222,8 @@ const char *wine_dbg_sprintf( const char *format, ... )
 
     return buffer;
 }
+
+const char *wine_dbgstr_w( const WCHAR *s )
+{
+    return wine_dbgstr_wn( s, -1 );
+}
