@@ -23,6 +23,8 @@
  * all happen at DISPATCH_LEVEL all of the time, so thread switching on a single
  * processor can create races too.
  */
+/* $Id: csq.c,v 1.4 2004/07/04 08:30:28 hbirr Exp $ */
+
 #define __NTDRIVER__
 #include <ddk/ntddk.h>
 #include <ddk/csq.h>
@@ -321,7 +323,7 @@ PIRP NTAPI IoCsqRemoveIrp(PIO_CSQ Csq,
 			/* This IRP is valid and is ours.  Dequeue it, fix it up, and return */
 			Csq->CsqRemoveIrp(Csq, Irp);
 
-			Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchange(Irp->Tail.Overlay.DriverContext[3], 0);
+			Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchangePointer(&Irp->Tail.Overlay.DriverContext[3], NULL);
 
 			if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
 				Context->Irp = NULL;
@@ -371,7 +373,7 @@ PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
 			Csq->CsqRemoveIrp(Csq, Irp);
 
 			/* Unset the context stuff and return */
-			Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchange(Irp->Tail.Overlay.DriverContext[3], 0);
+			Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchangePointer(&Irp->Tail.Overlay.DriverContext[3], NULL);
 
 			if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
 				Context->Irp = NULL;
