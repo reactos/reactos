@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.28 2001/07/18 12:04:52 ekohl Exp $
+/* $Id: create.c,v 1.29 2001/07/25 08:58:21 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -227,11 +227,18 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
   NextCluster = 0;
 
   block = ExAllocatePool (NonPagedPool, BLOCKSIZE);
-  DPRINT ("FindFile : start at sector %lx, entry %ld\n", StartingSector, i);
+  DPRINT ("ReadVolumeLabel : start at sector %lx, entry %ld\n", StartingSector, i);
   for (j = 0; j < Size; j++)
     {
       /* FIXME: Check status */
-      VfatReadSectors (DeviceExt->StorageDevice, StartingSector, 1, block);
+      Status = VfatReadSectors (DeviceExt->StorageDevice, StartingSector, 1, block);
+      if (!NT_SUCCESS(Status))
+	{
+	  *(Vpb->VolumeLabel) = 0;
+	  Vpb->VolumeLabelLength = 0;
+	  ExFreePool(block);
+	  return(Status);
+	}
 
       for (i = 0; i < ENTRIES_PER_SECTOR; i++)
 	{
@@ -240,7 +247,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
 	      FATDirEntry *test = (FATDirEntry *) block;
 
 	      /* copy volume label */
-              vfat8Dot3ToVolumeLabel (test[i].Filename, test[i].Ext, Vpb->VolumeLabel);
+	      vfat8Dot3ToVolumeLabel (test[i].Filename, test[i].Ext, Vpb->VolumeLabel);
 	      Vpb->VolumeLabelLength = wcslen (Vpb->VolumeLabel);
 
 	      ExFreePool (block);
