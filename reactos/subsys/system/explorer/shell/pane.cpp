@@ -406,14 +406,23 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 					do {
 						x -= IMAGE_WIDTH+_out_wrkr._spaceSize.cx;
 
-						if (up->_next
+						if (up->_next) {
 #ifndef _LEFT_FILES
-							&& ((up->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)	// a directory?
-								|| up->_next->_down)	// a file with NTFS sub-streams?
+							bool following_child = (up->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)!=0;	// a directory?
+
+							if (!following_child)
+								for(Entry*n=up->_next; n; n=n->_next)
+									if (n->_down) {	// any file with NTFS sub-streams?
+										following_child = true;
+										break;
+									}
+
+							if (following_child)
 #endif
-							) {
-							MoveToEx(dis->hDC, x, dis->rcItem.top, 0);
-							LineTo(dis->hDC, x, dis->rcItem.bottom);
+							{
+								MoveToEx(dis->hDC, x, dis->rcItem.top, 0);
+								LineTo(dis->hDC, x, dis->rcItem.bottom);
+							}
 						}
 					} while((up=up->_up) != NULL);
 				}
@@ -423,13 +432,21 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 				MoveToEx(dis->hDC, x, dis->rcItem.top, 0);
 				LineTo(dis->hDC, x, y);
 
-				if (entry->_next
+				if (entry->_next) {
 #ifndef _LEFT_FILES
-					&& ((entry->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)	// a directory?
-						|| entry->_next->_down)	// a file with NTFS sub-streams?
+					bool following_child = (entry->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)!=0;	// a directory?
+
+					if (!following_child)
+						for(Entry*n=entry->_next; n; n=n->_next)
+							if (n->_down) {	// any file with NTFS sub-streams?
+								following_child = true;
+								break;
+							}
+
+					if (following_child)
 #endif
-					)
-					LineTo(dis->hDC, x, dis->rcItem.bottom);
+						LineTo(dis->hDC, x, dis->rcItem.bottom);
+				}
 
 				if (entry->_down && entry->_expanded) {
 					x += IMAGE_WIDTH + _out_wrkr._spaceSize.cx;
