@@ -17,7 +17,6 @@ using std::vector;
 int
 main ( int argc, char** argv )
 {
-	Backend::InitFactories();
 	if ( argc != 2 )
 	{
 		printf ( "syntax: rbuild {buildtarget}\n" );
@@ -29,7 +28,7 @@ main ( int argc, char** argv )
 	{
 		string projectFilename ( "ReactOS.xml" );
 		Project project ( projectFilename );
-		Backend* backend = Backend::Create ( buildtarget, project );
+		Backend* backend = Backend::Factory::Create ( buildtarget, project );
 		backend->Process ();
 		delete backend;
 		

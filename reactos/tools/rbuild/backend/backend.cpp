@@ -9,25 +9,29 @@
 using std::string;
 using std::vector;
 
-vector<Backend::Factory*> Backend::factories;
+vector<Backend::Factory*>* Backend::Factory::factories = NULL;
 
-/*static*/ void
-Backend::InitFactories()
+Backend::Factory::Factory ( const std::string& name_ )
+	: name(name_)
 {
-	factories.push_back ( new Factory ( "mingw", MingwBackend::Factory ) );
+	if ( !factories )
+		factories = new vector<Factory*>;
+	factories->push_back ( this );
 }
 
 /*static*/ Backend*
-Backend::Create ( const std::string& name, Project& project )
+Backend::Factory::Create ( const std::string& name, Project& project )
 {
 	string sname ( name );
 	strlwr ( &sname[0] );
-	if ( !factories.size() )
+	if ( !factories || !factories->size() )
 		throw Exception ( "internal tool error: no registered factories" );
-	for ( size_t i = 0; i < factories.size(); i++ )
+	vector<Backend::Factory*>& fact = *factories;
+	for ( size_t i = 0; i < fact.size(); i++ )
 	{
-		if ( sname == factories[i]->name )
-			return (factories[i]->factory) ( project );
+		//char* p = *fact[i];
+		if ( sname == fact[i]->name )
+			return (*fact[i]) ( project );
 	}
 	throw UnknownBackendException ( sname );
 	return NULL;

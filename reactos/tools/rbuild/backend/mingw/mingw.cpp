@@ -6,11 +6,15 @@
 using std::string;
 using std::vector;
 
-Backend*
-MingwBackend::Factory ( Project& project )
+static class MingwFactory : public Backend::Factory
 {
-	return new MingwBackend ( project );
-}
+public:
+	MingwFactory() : Factory ( "mingw" ) {}
+	Backend* operator() ( Project& project )
+	{
+		return new MingwBackend ( project );
+	}
+} factory;
 
 #ifdef WIN32
 #define EXEPOSTFIX ".exe"

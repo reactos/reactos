@@ -9,23 +9,23 @@ typedef Backend* BackendFactory ( Project& project );
 
 class Backend
 {
+public:
 	class Factory
 	{
-	public:
+		static std::vector<Factory*>* factories;
 		std::string name;
-		BackendFactory* factory;
 
-		Factory ( const std::string& name_, BackendFactory* factory_ )
-			: name(name_), factory(factory_)
-		{
-		}
+	protected:
+
+		Factory ( const std::string& name_ );
+
+		virtual Backend* operator() ( Project& ) = 0;
+
+	public:
+		static Backend* Create ( const std::string& name, Project& project );
+
+	private:
 	};
-
-	static std::vector<Factory*> factories;
-
-public:
-	static void InitFactories();
-	static Backend* Create ( const std::string& name, Project& project );
 
 protected:
 	Backend ( Project& project );
