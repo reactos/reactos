@@ -77,7 +77,7 @@ PIRP NTAPI CsqPeekNextIrp(PIO_CSQ UnusedCsq,
                           PIRP Irp, 
                           PVOID PeekContext)
 /*
- * FUNCTION: Remove the next IRP from the queue
+ * FUNCTION: Find the next matching IRP in the queue
  * ARGUMENTS:
  *     UnusedCsq: Pointer to CSQ context structure
  *     Irp: Pointer to a starting IRP in the queue (i.e. start search here)
