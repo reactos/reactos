@@ -72,7 +72,7 @@ PCATALOG_ENTRY CreateCatalogEntry(
   Provider->ReferenceCount = 1;
 
 	InitializeCriticalSection(&Provider->Lock);
-  Provider->hModule = (HMODULE)INVALID_HANDLE_VALUE;
+  Provider->hModule = NULL;
 
   Provider->Mapping = NULL;
 
@@ -99,7 +99,7 @@ INT DestroyCatalogEntry(
 
   HeapFree(GlobalHeap, 0, Provider->Mapping);
 
-  if (Provider->hModule) {
+  if (NULL != Provider->hModule) {
     Status = UnloadProvider(Provider);
   } else {
     Status = NO_ERROR;
@@ -191,7 +191,7 @@ INT LoadProvider(
   WS_DbgPrint(MAX_TRACE, ("Loading provider at (0x%X)  Name (%wZ).\n",
     Provider, &Provider->LibraryName));
 
-  if (Provider->hModule == INVALID_HANDLE_VALUE)
+  if (NULL == Provider->hModule)
   {
     /* DLL is not loaded so load it now
      * UNICODE_STRING objects are not null-terminated, but LoadLibraryW
@@ -199,7 +199,7 @@ INT LoadProvider(
      */
     Provider->LibraryName.Buffer[Provider->LibraryName.Length] = L'\0';
     Provider->hModule = LoadLibraryW(Provider->LibraryName.Buffer);
-    if (Provider->hModule != INVALID_HANDLE_VALUE) {
+    if (NULL != Provider->hModule) {
       Provider->WSPStartup = (LPWSPSTARTUP)GetProcAddress(
         Provider->hModule,
         "WSPStartup");
@@ -234,7 +234,7 @@ INT UnloadProvider(
 
   WS_DbgPrint(MAX_TRACE, ("Unloading provider at (0x%X)\n", Provider));
 
-  if (Provider->hModule) {
+  if (NULL != Provider->hModule) {
     WS_DbgPrint(MAX_TRACE, ("Calling WSPCleanup at (0x%X).\n",
       Provider->ProcTable.lpWSPCleanup));
       Provider->ProcTable.lpWSPCleanup(&Status);
@@ -245,7 +245,7 @@ INT UnloadProvider(
       Status = GetLastError();
     }
 
-    Provider->hModule = (HMODULE)INVALID_HANDLE_VALUE;
+    Provider->hModule = NULL;
   }
 
   WS_DbgPrint(MAX_TRACE, ("Status (%d).\n", Status));
