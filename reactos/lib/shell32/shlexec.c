@@ -798,6 +798,9 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
 
 /*************************************************************************
  *	ShellExecuteExA32 [Internal]
+ *
+ *  FIXME:  use PathResolveA() to search for the fully qualified executable path
+ *	    use PathProcessCommandA() to processes the command line string
  */
 BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execfunc)
 {
@@ -967,6 +970,7 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
 	}
 	else
 	{
+	    /*FIXME This search loop should be moved into CreateProcess() ? */
 	    LPSTR space, s;
 	    char buffer[MAX_PATH], xlpFile[MAX_PATH];
 
