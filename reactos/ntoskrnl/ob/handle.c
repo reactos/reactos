@@ -779,6 +779,9 @@ ObReferenceObjectByHandle(HANDLE Handle,
                                  HandleEntry);
 
         KeLeaveCriticalRegion();
+        
+        DPRINT1("GrantedAccess: 0x%x, ~GrantedAccess: 0x%x, DesiredAccess: 0x%x, denied: 0x%x\n", GrantedAccess, ~GrantedAccess, DesiredAccess, ~GrantedAccess & DesiredAccess);
+        KEBUGCHECK(0);
 
         return(STATUS_ACCESS_DENIED);
      }
