@@ -144,8 +144,8 @@ static void updatePropertyChain(
   StgProperty newProperty);
 
 static LONG propertyNameCmp(
-  OLECHAR *newProperty,
-  OLECHAR *currentProperty);
+    const OLECHAR *newProperty,
+    const OLECHAR *currentProperty);
 
 
 /***********************************************************************
@@ -1158,7 +1158,7 @@ HRESULT WINAPI StorageImpl_CreateStorage(
    */
   hr = IStorage_OpenStorage(
          iface,
-         (OLECHAR*)pwcsName,
+         (const OLECHAR*)pwcsName,
          0,
          grfMode,
          0,
@@ -1284,8 +1284,8 @@ static ULONG getFreeProperty(
  *          0 when newPrpoerty == currentProperty
  */
 static LONG propertyNameCmp(
-  OLECHAR *newProperty,
-  OLECHAR *currentProperty)
+    const OLECHAR *newProperty,
+    const OLECHAR *currentProperty)
 {
   LONG diff      = lstrlenW(newProperty) - lstrlenW(currentProperty);
 
@@ -3962,8 +3962,8 @@ ULONG IEnumSTATSTGImpl_FindProperty(
       currentProperty);
 
     if ( propertyNameCmp(
-          (OLECHAR*)currentProperty->name,
-          (OLECHAR*)lpszPropName) == 0)
+          (const OLECHAR*)currentProperty->name,
+          (const OLECHAR*)lpszPropName) == 0)
       return currentSearchNode;
 
     /*
@@ -4348,7 +4348,7 @@ BOOL BlockChainStream_WriteAt(BlockChainStream* This,
   ULONG offsetInBlock     = offset.u.LowPart % This->parentStorage->bigBlockSize;
   ULONG bytesToWrite;
   ULONG blockIndex;
-  BYTE* bufferWalker;
+  const BYTE* bufferWalker;
   BYTE* bigBlockBuffer;
 
   /*
@@ -4385,7 +4385,7 @@ BOOL BlockChainStream_WriteAt(BlockChainStream* This,
    * This is OK since we don't intend to modify that buffer.
    */
   *bytesWritten   = 0;
-  bufferWalker = (BYTE*)buffer;
+  bufferWalker = (const BYTE*)buffer;
 
   while ( (size > 0) && (blockIndex != BLOCK_END_OF_CHAIN) )
   {
@@ -5095,7 +5095,7 @@ BOOL SmallBlockChainStream_WriteAt(
   ULONG bytesToWriteInBuffer;
   ULONG blockIndex;
   ULONG bytesWrittenFromBigBlockFile;
-  BYTE* bufferWalker;
+  const BYTE* bufferWalker;
 
   /*
    * This should never happen on a small block file.
@@ -5121,7 +5121,7 @@ BOOL SmallBlockChainStream_WriteAt(
    * This is OK since we don't intend to modify that buffer.
    */
   *bytesWritten   = 0;
-  bufferWalker = (BYTE*)buffer;
+  bufferWalker = (const BYTE*)buffer;
   while ( (size > 0) && (blockIndex != BLOCK_END_OF_CHAIN) )
   {
     /*

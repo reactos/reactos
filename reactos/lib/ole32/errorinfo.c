@@ -358,7 +358,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetSource(
 	LPOLESTR szSource)
 {
 	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
-	TRACE("(%p)\n",This);
+	TRACE("(%p): %s\n",This, debugstr_w(szSource));
 	if (This->bstrSource != NULL)
 	    ERRORINFO_SysFreeString(This->bstrSource);
 	This->bstrSource = ERRORINFO_SysAllocString(szSource);
@@ -371,7 +371,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetDescription(
 	LPOLESTR szDescription)
 {
 	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
-	TRACE("(%p)\n",This);
+	TRACE("(%p): %s\n",This, debugstr_w(szDescription));
 	if (This->bstrDescription != NULL)
 	    ERRORINFO_SysFreeString(This->bstrDescription);
 	This->bstrDescription = ERRORINFO_SysAllocString(szDescription);

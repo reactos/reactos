@@ -195,3 +195,110 @@ HRESULT WINAPI OleCreateFromData(LPDATAOBJECT pSrcDataObject, REFIID riid,
 
   return DV_E_FORMATETC;
 }
+
+
+/******************************************************************************
+ *              OleDuplicateData        [OLE32.@]
+ *
+ * Duplicates clipboard data.
+ *
+ * PARAMS
+ *  hSrc     [I] Handle of the source clipboard data.
+ *  cfFormat [I] The clipboard format of hSrc.
+ *  uiFlags  [I] Flags to pass to GlobalAlloc.
+ *
+ * RETURNS
+ *  Success: handle to the duplicated data.
+ *  Failure: NULL.
+ */
+HANDLE WINAPI OleDuplicateData(HANDLE hSrc, CLIPFORMAT cfFormat,
+	                          UINT uiFlags)
+{
+    HANDLE hDst = NULL;
+
+    TRACE("(%p,%x,%x)\n", hSrc, cfFormat, uiFlags);
+
+    if (!uiFlags) uiFlags = GMEM_MOVEABLE;
+
+    switch (cfFormat)
+    {
+    case CF_ENHMETAFILE:
+        hDst = CopyEnhMetaFileW(hSrc, NULL);
+        break;
+    case CF_METAFILEPICT:
+        hDst = CopyMetaFileW(hSrc, NULL);
+        break;
+    case CF_PALETTE:
+        {
+            LOGPALETTE * logpalette;
+            UINT nEntries = GetPaletteEntries(hSrc, 0, 0, NULL);
+            if (!nEntries) return NULL;
+            logpalette = HeapAlloc(GetProcessHeap(), 0,
+                FIELD_OFFSET(LOGPALETTE, palPalEntry[nEntries]));
+            if (!logpalette) return NULL;
+            if (!GetPaletteEntries(hSrc, 0, nEntries, logpalette->palPalEntry))
+            {
+                HeapFree(GetProcessHeap(), 0, logpalette);
+                return NULL;
+            }
+            logpalette->palVersion = 0x300;
+            logpalette->palNumEntries = (WORD)nEntries;
+
+            hDst = CreatePalette(logpalette);
+
+            HeapFree(GetProcessHeap(), 0, logpalette);
+            break;
+        }
+    case CF_BITMAP:
+        {
+            LONG size;
+            BITMAP bm;
+            if (!GetObjectW(hSrc, sizeof(bm), &bm))
+                return NULL;
+            size = GetBitmapBits(hSrc, 0, NULL);
+            if (!size) return NULL;
+            bm.bmBits = HeapAlloc(GetProcessHeap(), 0, size);
+            if (!bm.bmBits) return NULL;
+            if (!GetBitmapBits(hSrc, size, bm.bmBits))
+                return NULL;
+            hDst = CreateBitmapIndirect(&bm);
+            HeapFree(GetProcessHeap(), 0, bm.bmBits);
+            break;
+        }
+    default:
+        {
+            SIZE_T size = GlobalSize(hSrc);
+            LPVOID pvSrc = NULL;
+            LPVOID pvDst = NULL;
+
+            /* allocate space for object */
+            if (!size) return NULL;
+            hDst = GlobalAlloc(uiFlags, size);
+            if (!hDst) return NULL;
+
+            /* lock pointers */
+            pvSrc = GlobalLock(hSrc);
+            if (!pvSrc)
+            {
+                GlobalFree(hDst);
+                return NULL;
+            }
+            pvDst = GlobalLock(hDst);
+            if (!pvDst)
+            {
+                GlobalUnlock(hSrc);
+                GlobalFree(hDst);
+                return NULL;
+            }
+            /* copy data */
+            memcpy(pvDst, pvSrc, size);
+
+            /* cleanup */
+            GlobalUnlock(hDst);
+            GlobalUnlock(hSrc);
+        }
+    }
+
+    TRACE("returning %p\n", hDst);
+    return hDst;
+}
