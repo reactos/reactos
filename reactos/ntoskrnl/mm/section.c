@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.151 2004/06/06 08:36:31 hbirr Exp $
+/* $Id: section.c,v 1.152 2004/06/20 10:21:48 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2966,7 +2966,14 @@ MmCreateImageSection(PHANDLE SectionHandle,
          }
 
          SectionSegments[i].RawLength = ImageSections[i-1].SizeOfRawData;
-         SectionSegments[i].Length = ImageSections[i-1].Misc.VirtualSize;
+         if (ImageSections[i-1].Misc.VirtualSize != 0)
+         {
+            SectionSegments[i].Length = ImageSections[i-1].Misc.VirtualSize;
+         }
+         else
+         {
+            SectionSegments[i].Length = ImageSections[i-1].SizeOfRawData;
+         }
          SectionSegments[i].Flags = 0;
          SectionSegments[i].ReferenceCount = 1;
          SectionSegments[i].VirtualAddress = (PVOID)ImageSections[i-1].VirtualAddress;
