@@ -20,8 +20,7 @@ WINE_INCLUDE = ./
 
 TARGET_SDKLIBS = \
 	kernel32.a \
-	user32.a \
-	msvcrt.a
+	user32.a
 
 TARGET_OBJECTS = \
           cmd.o attrib.o alias.o batch.o beep.o call.o chcp.o choice.o \
