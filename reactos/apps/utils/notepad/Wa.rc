@@ -1,0 +1,104 @@
+/*
+ *  Notepad (Walloon resources)
+ *
+ * Si vos voloz aider avou li ratoûrnaedje des libes programes è walon,
+ * vos poloz scrîre a l' adresse emile <linux-wa@chanae.alphanet.ch>
+ */
+
+#define LANGUAGE_ID                     Wa
+#define LANGUAGE_NUMBER                 90
+#define LANGUAGE_MENU_ITEM              "&Walon"
+
+
+/* Menu */
+
+#define MENU_FILE                       "&Fitchî"
+#define MENU_FILE_NEW                   "&Novea..."
+#define MENU_FILE_OPEN                  "&Drovî"
+#define MENU_FILE_SAVE                  "&Schaper"
+#define MENU_FILE_SAVEAS                "Schaper èt r&lomer..."
+#define MENU_FILE_PRINT                 "&Rexhe"
+#define MENU_FILE_PAGESETUP             "Arrandjmint del &Pådje..."
+#define MENU_FILE_PRINTSETUP            "&Apontiaedje del scrirece..."
+#define MENU_FILE_EXIT                  "Moussî &Foû"
+
+#define MENU_EDIT                       "&Candjî"
+#define MENU_EDIT_UNDO                  "&Disfé\tCtrl+Z"
+#define MENU_EDIT_CUT                   "Cô&per\tCtrl+X"
+#define MENU_EDIT_COPY                  "&Copyî\tCtrl+C"
+#define MENU_EDIT_PASTE                 "C&laper\tCtrl+V"
+#define MENU_EDIT_DELETE                "&Rafacer\tDel"
+#define MENU_EDIT_SELECTALL             "&Tchwezi totafwait"
+#define MENU_EDIT_TIMEDATE              "&Eure/Date\tF5"
+#define MENU_EDIT_WRAP                  "Côper les ro&yes"
+
+#define MENU_SEARCH                     "C&werî"
+#define MENU_SEARCH_SEARCH              "Cwerî..."
+#define MENU_SEARCH_NEXT                "&Shûvant\tF3"
+
+#define MENU_LANGUAGE                   "&Lingaedje"
+
+#define MENU_HELP                       "&Aide"
+#define MENU_HELP_CONTENTS              "Å&dvins"
+#define MENU_HELP_SEARCH                "C&werî..."
+#define MENU_HELP_HELP_ON_HELP          "&Aide so l' Aide"
+
+#define MENU_INFO                       "&Informåcion..."
+#define MENU_INFO_LICENSE               "&Licinse"
+#define MENU_INFO_NO_WARRANTY           "&NOLE WARANTEYE"
+#define MENU_INFO_ABOUT_WINE            "Å &dfait di Wine"
+
+
+/* Dialogs */
+
+#define DIALOG_OK                       "I Va"
+#define DIALOG_CANCEL                   "Rinoncî"
+#define DIALOG_BROWSE                   "&Foyer..."
+#define DIALOG_HELP                     "&Aide"
+
+#define DIALOG_PAGESETUP_CAPTION        "Arindjmint del Pådje"
+/* "Tite" ni va nén vraiymint, i fåt ene sacwe d' meyeu [header] */
+#define DIALOG_PAGESETUP_HEAD           "&Tite:"
+#define DIALOG_PAGESETUP_TAIL           "&Pînote:"
+/* "mardjes" ? [marges] */
+#define DIALOG_PAGESETUP_MARGIN         "&Mardjes:"
+#define DIALOG_PAGESETUP_LEFT           "&Hintche:"
+#define DIALOG_PAGESETUP_RIGHT          "&Droete:"
+#define DIALOG_PAGESETUP_TOP            "&Copete:"
+#define DIALOG_PAGESETUP_BOTTOM         "&Bas:"
+
+
+/* Strings */
+
+#define STRING_PAGESETUP_HEADERVALUE    "&n"        /* FIXME */
+#define STRING_PAGESETUP_FOOTERVALUE    "Pådje &s"   /* FIXME */
+#define STRING_PAGESETUP_LEFTVALUE      "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_RIGHTVALUE     "20 mm"     /* FIXME */
+#define STRING_PAGESETUP_TOPVALUE       "25 mm"     /* FIXME */
+#define STRING_PAGESETUP_BOTTOMVALUE    "25 mm"     /* FIXME */
+
+#define STRING_NOTEPAD                  "Notepad"
+#define STRING_ERROR                    "AROKE"
+#define STRING_WARNING                  "ADVERTIXHMINT"
+#define STRING_INFO                     "Informåcion"
+
+#define STRING_UNTITLED                 "(sin tite)"
+
+#define STRING_ALL_FILES                "Tos les fitchîs (*.*)"
+#define STRING_TEXT_FILES_TXT           "Fitchîs tekse (*.txt)"
+
+#define STRING_TOOLARGE         "Li fitchî '%s' est trop gros pol notepad.\n \
+Eployoz on ôte aspougneu di tekse."
+
+#define STRING_NOTEXT           "Vos n' avoz rén sicrît. \
+\nTapez ene sacwe èt rasayez"
+
+#define STRING_NOTSAVED         "Li fitchî '%s'\na candjî\n\n \
+El voloz schaper ?"
+
+#define STRING_NOTFOUND         "'%s' pout nén esse trové."
+
+#define STRING_OUT_OF_MEMORY    "Li memwere est plinne. \n\
+Cloyoz on programe ou pus po monter li memwere libe."
+
+#include "notepad.rc"

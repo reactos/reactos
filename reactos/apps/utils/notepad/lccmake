@@ -1,0 +1,89 @@
+#
+#  Makefile for LCC-WIN32
+#
+#  Copyright 1999 Marcel Baur (mbaur@g26.ethz.ch)
+#  To be distributed under the Wine License
+#
+#  Use  lccmake -f lccmake  to use this makefile
+#  
+#  See http://www.cs.virgina.edu/~lcc-win32 for 
+#  information about LCC-WIN32
+#
+
+#
+# LCC home directory
+#
+LCCHOME=C:\LCC
+
+#
+# individual flags for LCC, LCCLNK, LRC
+#
+CFLAGS=-O -DLCC -g2
+LNKFLAGS=-O winepad.exe -subsystem windows
+LRCFLAGS=/r /v /m
+
+#
+# available languages
+#
+LANGUAGES=Da De En Es Fi Fr Sw
+
+#
+# default language
+#
+LANGUAGE=En
+
+#
+# required include libraries
+#
+LIBS=SHELL32.LIB
+
+#
+# object files
+#
+OBJS=main.obj dialog.obj license.obj license_En.obj language.obj
+
+#
+# ---[   it is save not to change anything behind this line   ]--- #
+#
+
+winepad.exe:    $(OBJS) resources
+                $(LCCHOME)\bin\lcclnk $(LNKFLAGS) $(OBJS) notepad.res $(LIBS)
+                @echo *** "winepad.exe" successfully created
+
+resources:      $(RESOURCES)
+                FOR %%i IN ($(LANGUAGES)) DO $(LCCHOME)\bin\lrc $(LRCFLAGS) %%i.rc
+                copy /b $(LANGUAGE).res notepad.res
+
+clean:
+                if exist winepad.exe    erase winepad.exe
+                if exist main.obj       erase main.obj
+                if exist dialog.obj     erase dialog.obj
+                if exist license.obj    erase license.obj
+                if exist license_En.obj erase license_En.obj
+                if exist language.obj   erase language.obj
+                if exist notepad.res    erase notepad.res
+                FOR %%i IN ($(LANGUAGES)) DO IF EXIST %%i.res erase %%i.res
+                FOR %%i IN ($(LANGUAGES)) DO IF EXIST %%i.map erase %%i.map
+
+help:
+                @echo lccmake help      - display this help
+                @echo lccmake           - to compile winepad.exe
+                @echo lccmake resources - to compile .res files
+                @echo lccmake clean     - to clean up
+
+
+#
+# some more targets (for novice users and compatibility reasons only)
+#
+
+distclean:      clean
+                @echo *** next time please use "lccmake clean"
+
+all:            winepad.exe
+                @echo *** next time please use "lccmake" (without parameters)
+
+
+#
+# please make sure that at least one empty line follows this statement
+#
+

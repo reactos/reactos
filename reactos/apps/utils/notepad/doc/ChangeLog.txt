@@ -1,0 +1,79 @@
+Tue Oct 12 20:31:00 1999  Gustavo Junior Alves <alves@correionet.com.br>
+	* [Pt.rc] [Makefile.in]
+	Added Portuguese language support.
+
+Fri Mar  5 22:14:13 1999  Marcel Baur <mbaur@g26.ethz.ch>
+        * NEW [search.c]        - Added Boyer-Moore text search
+
+Sat Feb  6 20:25:25 1999  Marcel Baur <mbaur@g26.ethz.ch>
+        - Added new IDS_NOTSAVED ressource (needs translation in *.rc)
+        - Improved printing support (not yet complete)
+        - Improved file drag and drop (should now work)        - General code cleanup
+
+Thu Jan 28 18:17:08 1999  Jukka Iivonen  <iivonen@iki.fi>
+        * [Fi.rc] [main.c] [Makefile.in]
+        - Added Finnish language support.
+        
+Sun Oct 18 14:11:42 1998  Marcel Baur <mbaur@g26.ethz.ch>
+
+        * [??.rc], [TODO], [dialog.c], [dialog.h], [language.c],
+        [language.h], [license.c], [license.h], [main.c], [main.h],
+        [notepad.rc]:
+
+        - Fixed GetOpenFileName and GetSaveFileName dialogs.
+        - Fixed Print dialog and introduced PrinterSetup dialog.
+        - Fixed PageSetup dialog: values are now correctly initialized
+          (had to change all *.rc files)
+        - Preliminary file drag and drop support.
+
+Fri Jun 12 23:29:44 1998  Marcel Baur  <mbaur@g26.ethz.ch>
+        - Fixed GetDateFormat()->GetTimeFormat() for locale time.
+
+Mon May 25 14:30:00 1998  Henrik Olsen <henrik@iaeste.dk>
+        * [Da.rc]
+        - Added Danish language support.
+
+Fri May 15 23:59:22 1998  Marcel Baur <mbaur@g26.ethz.ch>
+        - Date/Time now uses locale-specific formats
+        - Language-specific window caption, displays file being edited.
+        - Started with parsing of command line settings
+        - Started with DoOpenFile, DoCloseFile, DoSaveFile logics
+        - Prompt user to save settings when closing a file
+          -> Introduced a new message box (not yet finished)
+        - Fixed minor features (missing IDS in main.h, ...)
+
+Sun Mar 29 20:29:41 1998  Laurent Buffler <laurent@bluewin.ch>
+        * [Fr.rc]
+        - Added French language support.
+
+Fri Feb 27 21:03:37 1998  Karl Backström <karl_b@geocities.com>
+        - Fixed some minor features.
+
+Sat Feb 14 17:42:29 1998  Karl Backström <karl_b@geocities.com>
+        * NEW [language.c] [language.h]
+        - Takes care of all language related stuff.
+        - A new [programs] in .winerc is in use.
+
+Tue Feb 10 23:34:08 1998  Marcel Baur <mbaur@g26.ethz.ch>
+        - Fixed broken language menus
+
+Fri Feb 06 23.54.35 1998  Karl Backström <karl_b@geocities.com>
+        * [main.c] [main.h] [notepad.rc]
+        - Fixed language support for menus.     
+        * NEW [dialog.c] [dialog.h]
+        - Moved all menu and dialog related stuff here.
+
+Sun Jan 18 23:05:04 1998  Karl Backström <karl_b@geocities.com>
+        * [Sw.rc]
+        - Added/updated Swedish language support.
+
+Tue Dec 23 23:35:04 1997  Marcel Baur <mbaur@g26.ethz.ch>
+        - Fixed lots of bugs w/ resources in *.rc
+        - moved [notepad.c] into [main.c]
+        - moved [notepad.h] into [main.h]
+       
+Fri Dec 05 20:51:55 1997  Marcel Baur <mbaur@g26.ethz.ch>
+        * [notepad.c] [notepad.h] [notepad.rc] [En.rc] [De.rc]
+          [license.c] [license.h] [License_En.c]
+          [README] [TODO] [ChangeLog]
+        - Originals by Marcel Baur
