@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.33 2001/10/11 15:39:51 hbirr Exp $
+/* $Id: rw.c,v 1.34 2001/11/02 22:47:36 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -419,7 +419,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   // Is this a write to the FAT ?
   if (Fcb->Flags & FCB_IS_FAT)
   {
-    if (!NoCache)
+    if (!NoCache && !PageIo)
     {
       DbgPrint ("Cached FAT write outside from VFATFS.SYS\n");
       KeBugCheck (0);
@@ -604,119 +604,6 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   return Status;
 }
 
-NTSTATUS STDCALL
-VfatWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
-/*
- * FUNCTION: Write to a file
- */
-{
-  ULONG Length;
-  PVOID Buffer;
-  ULONG Offset;
-  PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation (Irp);
-  PFILE_OBJECT FileObject = Stack->FileObject;
-  PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-  NTSTATUS Status;
-  ULONG NoCache;
-
-  DPRINT ("VfatWrite(DeviceObject %x Irp %x)\n", DeviceObject, Irp);
-
-  Length = Stack->Parameters.Write.Length;
-  Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
-  Offset = Stack->Parameters.Write.ByteOffset.u.LowPart;
-
-  if (Irp->Flags & IRP_PAGING_IO ||
-      FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
-  {
-    NoCache = TRUE;
-  }
-  else
-  {
-    NoCache = FALSE;
-  }
-
-  Status = VfatWriteFile (DeviceExt, FileObject, Buffer, Length, Offset,
-			  NoCache, Irp->Flags & IRP_PAGING_IO ? TRUE : FALSE);
-
-  if (!(Irp->Flags & IRP_PAGING_IO) && NT_SUCCESS(Status))
-  {
-    FileObject->CurrentByteOffset.QuadPart = Offset + Length;
-  }
-
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = Length;
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
-
-  return (Status);
-}
-
-NTSTATUS STDCALL
-VfatRead (PDEVICE_OBJECT DeviceObject, PIRP Irp)
-/*
- * FUNCTION: Read from a file
- */
-{
-  ULONG Length;
-  PVOID Buffer;
-  ULONG Offset;
-  PIO_STACK_LOCATION Stack;
-  PFILE_OBJECT FileObject;
-  PDEVICE_EXTENSION DeviceExt;
-  NTSTATUS Status;
-  ULONG LengthRead;
-  PVFATFCB Fcb;
-  ULONG NoCache;
-
-  DPRINT ("VfatRead(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
-
-  /* Precondition / Initialization */
-  assert (Irp != NULL);
-  Stack = IoGetCurrentIrpStackLocation (Irp);
-  assert (Stack != NULL);
-  FileObject = Stack->FileObject;
-  assert (FileObject != NULL);
-  DeviceExt = DeviceObject->DeviceExtension;
-  assert (DeviceExt != NULL);
-
-  Length = Stack->Parameters.Read.Length;
-  Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
-  Offset = Stack->Parameters.Read.ByteOffset.u.LowPart;
-
-  if (Irp->Flags & IRP_PAGING_IO ||
-      FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
-  {
-    NoCache = TRUE;
-  }
-  else
-  {
-    NoCache = FALSE;
-  }
-
-  Fcb = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
-  /* fail if file is a directory and no paged read */
-  if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY && !(Irp->Flags & IRP_PAGING_IO))
-  {
-    Status = STATUS_FILE_IS_A_DIRECTORY;
-  }
-  else
-  {
-    Status = VfatReadFile (DeviceExt, FileObject, Buffer, Length,
-               Offset, &LengthRead, NoCache);
-  }
-
-  if (!(Irp->Flags & IRP_PAGING_IO))
-  {
-    // update the file pointer
-    FileObject->CurrentByteOffset.QuadPart = Offset + LengthRead;
-  }
-
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = LengthRead;
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
-
-  return (Status);
-}
-
 NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject, ULONG NewSize)
 {
   ULONG FirstCluster;
@@ -833,3 +720,159 @@ NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject
   }
   return STATUS_SUCCESS;
 }
+
+NTSTATUS VfatRead(PVFAT_IRP_CONTEXT IrpContext)
+{
+   PVFATFCB Fcb;
+   PVFATCCB Ccb;
+   NTSTATUS Status = STATUS_SUCCESS;
+   ULONG ReadLength;
+   ULONG ReturnedReadLength = 0;
+   LARGE_INTEGER ReadOffset;
+   PVOID Buffer;
+
+   DPRINT ("VfatRead(IrpContext %x)\n", IrpContext);
+   assert (IrpContext);
+   Ccb = (PVFATCCB) IrpContext->FileObject->FsContext2;
+   assert (Ccb);
+   Fcb = Ccb->pFcb;
+   assert (Fcb);
+
+   if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+   {
+      if (!ExAcquireResourceSharedLite(&Fcb->PagingIoResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+      {
+         return VfatQueueRequest (IrpContext);
+      }
+   }
+   else
+   {
+      if (!ExAcquireResourceSharedLite(&Fcb->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+      {
+         return VfatQueueRequest (IrpContext);
+      }
+   }
+
+   ReadLength = IrpContext->Stack->Parameters.Read.Length;
+   ReadOffset = IrpContext->Stack->Parameters.Read.ByteOffset;
+   Buffer = MmGetSystemAddressForMdl (IrpContext->Irp->MdlAddress);
+
+   /* fail if file is a directory and no paged read */
+   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+   {
+      Status = STATUS_FILE_IS_A_DIRECTORY;
+   }
+   else
+   {
+      Status = VfatReadFile (IrpContext->DeviceExt, IrpContext->FileObject,
+	          Buffer, ReadLength, ReadOffset.u.LowPart, &ReturnedReadLength,
+	          IrpContext->FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING
+                  || IrpContext->Irp->Flags & IRP_PAGING_IO);
+   }
+
+   if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+   {
+      ExReleaseResourceLite(&Fcb->PagingIoResource);
+   }
+   else
+   {
+      ExReleaseResourceLite(&Fcb->MainResource);
+   }
+
+   if (NT_SUCCESS(Status))
+   {
+      if (IrpContext->FileObject->Flags & FO_SYNCHRONOUS_IO && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+      {
+         IrpContext->FileObject->CurrentByteOffset.QuadPart = ReadOffset.QuadPart + ReturnedReadLength;
+      }
+      IrpContext->Irp->IoStatus.Information = ReturnedReadLength;
+   }
+   else
+   {
+      IrpContext->Irp->IoStatus.Information = 0;
+   }
+
+   IrpContext->Irp->IoStatus.Status = Status;
+   IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
+   VfatFreeIrpContext (IrpContext);
+
+   return Status;
+}
+
+NTSTATUS VfatWrite(PVFAT_IRP_CONTEXT IrpContext)
+{
+   PVFATFCB Fcb;
+   PVFATCCB Ccb;
+   NTSTATUS Status = STATUS_SUCCESS;
+   ULONG WriteLength;
+   LARGE_INTEGER WriteOffset;
+   PVOID Buffer;
+
+   DPRINT ("VfatWrite(), %S\n", ((PVFATCCB) IrpContext->FileObject->FsContext2)->pFcb->FileName);
+   assert (IrpContext);
+   Ccb = (PVFATCCB) IrpContext->FileObject->FsContext2;
+   assert (Ccb);
+   Fcb = Ccb->pFcb;
+   assert (Fcb);
+
+   if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+   {
+      if (!ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+      {
+         return VfatQueueRequest (IrpContext);
+      }
+   }
+   else
+   {
+      if (!ExAcquireResourceExclusiveLite(&Fcb->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+      {
+         return VfatQueueRequest (IrpContext);
+      }
+   }
+
+   WriteLength = IrpContext->Stack->Parameters.Write.Length;
+   WriteOffset = IrpContext->Stack->Parameters.Write.ByteOffset;
+   Buffer = MmGetSystemAddressForMdl (IrpContext->Irp->MdlAddress);
+
+   /* fail if file is a directory and no paged read */
+   if (Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+   {
+      Status = STATUS_FILE_IS_A_DIRECTORY;
+   }
+   else
+   {
+      Status = VfatWriteFile (IrpContext->DeviceExt, IrpContext->FileObject,
+	          Buffer, WriteLength, WriteOffset.u.LowPart,
+	          IrpContext->FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING,
+                  IrpContext->Irp->Flags & IRP_PAGING_IO);
+   }
+
+   if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+   {
+      ExReleaseResourceLite(&Fcb->PagingIoResource);
+   }
+   else
+   {
+      ExReleaseResourceLite(&Fcb->MainResource);
+   }
+
+   if (NT_SUCCESS(Status))
+   {
+      if (IrpContext->FileObject->Flags & FO_SYNCHRONOUS_IO && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+      {
+         IrpContext->FileObject->CurrentByteOffset.QuadPart = WriteOffset.QuadPart + WriteLength;
+      }
+      IrpContext->Irp->IoStatus.Information = WriteLength;
+   }
+   else
+   {
+      IrpContext->Irp->IoStatus.Information = 0;
+   }
+
+   IrpContext->Irp->IoStatus.Status = Status;
+   IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
+   VfatFreeIrpContext (IrpContext);
+   return Status;
+}
+
+

@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.10 2001/11/01 10:44:11 hbirr Exp $
+/* $Id: finfo.c,v 1.11 2001/11/02 22:47:36 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -224,8 +224,8 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
 
 static NTSTATUS
 VfatGetInternalInformation(PVFATFCB Fcb,
-                           PFILE_INTERNAL_INFORMATION InternalInfo,
-                           PULONG BufferLength)
+			   PFILE_INTERNAL_INFORMATION InternalInfo,
+			   PULONG BufferLength)
 {
   assert (InternalInfo);
   assert (Fcb);
@@ -238,71 +238,72 @@ VfatGetInternalInformation(PVFATFCB Fcb,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
-VfatQueryInformation(PDEVICE_OBJECT DeviceObject,
-		     PIRP Irp)
+
+
+NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Retrieve the specified file information
  */
 {
-  PIO_STACK_LOCATION Stack;
   FILE_INFORMATION_CLASS FileInformationClass;
-  PFILE_OBJECT FileObject = NULL;
   PVFATFCB FCB = NULL;
-//   PVFATCCB CCB = NULL;
 
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
   ULONG BufferLength;
 
   /* PRECONDITION */
-  assert (DeviceObject != NULL);
-  assert (Irp != NULL);
+  assert (IrpContext);
 
   /* INITIALIZATION */
-  Stack = IoGetCurrentIrpStackLocation (Irp);
-  FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
-  FileObject = Stack->FileObject;
-//   CCB = (PVFATCCB)(FileObject->FsContext2);
-//   FCB = CCB->Buffer; // Should be CCB->FCB???
-  FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
+  FileInformationClass = IrpContext->Stack->Parameters.QueryFile.FileInformationClass;
+  FCB = ((PVFATCCB) IrpContext->FileObject->FsContext2)->pFcb;
 
-  SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
-  BufferLength = Stack->Parameters.QueryFile.Length;
+  SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
+  BufferLength = IrpContext->Stack->Parameters.QueryFile.Length;
+
+  if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+  {
+     if (!ExAcquireResourceSharedLite(&FCB->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+     {
+        return VfatQueueRequest (IrpContext);
+     }
+  }
+
 
   switch (FileInformationClass)
     {
     case FileStandardInformation:
       RC = VfatGetStandardInformation(FCB,
-				      DeviceObject,
+				      IrpContext->DeviceObject,
 				      SystemBuffer,
 				      &BufferLength);
       break;
     case FilePositionInformation:
-      RC = VfatGetPositionInformation(FileObject,
+      RC = VfatGetPositionInformation(IrpContext->FileObject,
 				      FCB,
-				      DeviceObject,
+				      IrpContext->DeviceObject,
 				      SystemBuffer,
 				      &BufferLength);
       break;
     case FileBasicInformation:
-      RC = VfatGetBasicInformation(FileObject,
+      RC = VfatGetBasicInformation(IrpContext->FileObject,
 				   FCB,
-				   DeviceObject,
+				   IrpContext->DeviceObject,
 				   SystemBuffer,
 				   &BufferLength);
       break;
     case FileNameInformation:
-      RC = VfatGetNameInformation(FileObject,
+      RC = VfatGetNameInformation(IrpContext->FileObject,
 				  FCB,
-				  DeviceObject,
+				  IrpContext->DeviceObject,
 				  SystemBuffer,
 				  &BufferLength);
       break;
     case FileInternalInformation:
       RC = VfatGetInternalInformation(FCB,
-                                      SystemBuffer,
-                                      &BufferLength);
+				      SystemBuffer,
+				      &BufferLength);
       break;
     case FileAlternateNameInformation:
     case FileAllInformation:
@@ -312,61 +313,72 @@ VfatQueryInformation(PDEVICE_OBJECT DeviceObject,
       RC = STATUS_NOT_SUPPORTED;
     }
 
-  Irp->IoStatus.Status = RC;
+  if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+  {
+     ExReleaseResourceLite(&FCB->MainResource);
+  }
+  IrpContext->Irp->IoStatus.Status = RC;
   if (NT_SUCCESS(RC))
-    Irp->IoStatus.Information =
-      Stack->Parameters.QueryFile.Length - BufferLength;
+    IrpContext->Irp->IoStatus.Information =
+      IrpContext->Stack->Parameters.QueryFile.Length - BufferLength;
   else
-    Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
+    IrpContext->Irp->IoStatus.Information = 0;
+  IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
+  VfatFreeIrpContext(IrpContext);
 
   return RC;
 }
 
-NTSTATUS STDCALL
-VfatSetInformation(PDEVICE_OBJECT DeviceObject,
-		   PIRP Irp)
+NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Retrieve the specified file information
  */
 {
-  PIO_STACK_LOCATION Stack;
   FILE_INFORMATION_CLASS FileInformationClass;
-  PFILE_OBJECT FileObject = NULL;
   PVFATFCB FCB = NULL;
-//   PVFATCCB CCB = NULL;
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
 
   /* PRECONDITION */
-  assert(DeviceObject != NULL);
-  assert(Irp != NULL);
+  assert(IrpContext);
 
-  DPRINT("VfatSetInformation(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+  DPRINT("VfatSetInformation(IrpContext %x)\n", IrpContext);
 
   /* INITIALIZATION */
-  Stack = IoGetCurrentIrpStackLocation (Irp);
-  FileInformationClass = Stack->Parameters.SetFile.FileInformationClass;
-  FileObject = Stack->FileObject;
-  FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
-  SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+  FileInformationClass = IrpContext->Stack->Parameters.SetFile.FileInformationClass;
+  FCB = ((PVFATCCB) IrpContext->FileObject->FsContext2)->pFcb;
+  SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
 
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %x\n", SystemBuffer);
 
+  if (FCB->Flags & FCB_IS_PAGE_FILE)
+  {
+     if (!ExAcquireResourceExclusiveLite(&FCB->PagingIoResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+     {
+        return VfatQueueRequest (IrpContext);
+     }
+  }
+  else
+  {
+     if (!ExAcquireResourceExclusiveLite(&FCB->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+     {
+        return VfatQueueRequest (IrpContext);
+     }
+  }
+
   switch (FileInformationClass)
     {
     case FilePositionInformation:
-      RC = VfatSetPositionInformation(FileObject,
+      RC = VfatSetPositionInformation(IrpContext->FileObject,
 				      FCB,
-				      DeviceObject,
+				      IrpContext->DeviceObject,
 				      SystemBuffer);
       break;
     case FileDispositionInformation:
-      RC = VfatSetDispositionInformation(FileObject,
+      RC = VfatSetDispositionInformation(IrpContext->FileObject,
 					 FCB,
-					 DeviceObject,
+					 IrpContext->DeviceObject,
 					 SystemBuffer);
       break;
     case FileBasicInformation:
@@ -379,10 +391,19 @@ VfatSetInformation(PDEVICE_OBJECT DeviceObject,
       RC = STATUS_NOT_SUPPORTED;
     }
 
-  Irp->IoStatus.Status = RC;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
+  if (FCB->Flags & FCB_IS_PAGE_FILE)
+  {
+     ExReleaseResourceLite(&FCB->PagingIoResource);
+  }
+  else
+  {
+     ExReleaseResourceLite(&FCB->MainResource);
+  }
+
+  IrpContext->Irp->IoStatus.Status = RC;
+  IrpContext->Irp->IoStatus.Information = 0;
+  IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
+  VfatFreeIrpContext(IrpContext);
 
   return RC;
 }

@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.2 2001/03/08 22:06:02 dwelch Exp $
+/* $Id: cleanup.c,v 1.3 2001/11/02 22:44:34 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,32 +26,36 @@ VfatCleanupFile(PDEVICE_EXTENSION DeviceExt,
  */
 {
    DPRINT("VfatCleanupFile(DeviceExt %x, FileObject %x)\n",
-	  DeviceExt, FileObject);
+	 DeviceExt, FileObject);
 
    /* FIXME: handle file/directory deletion here */
 
-   return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
-VfatCleanup (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Cleans up after a file has been closed.
  */
 {
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation (Irp);
-   PFILE_OBJECT FileObject = Stack->FileObject;
-   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
    NTSTATUS Status;
 
    DPRINT("VfatCleanup(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
 
-   Status = VfatCleanupFile(DeviceExtension, FileObject);
+   if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+   {
+     return VfatQueueRequest (IrpContext);
+   }
 
-   Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
+   Status = VfatCleanupFile(IrpContext->DeviceExt, IrpContext->FileObject);
 
-   IoCompleteRequest (Irp, IO_NO_INCREMENT);
+   ExReleaseResourceLite (&IrpContext->DeviceExt->DirResource);
+
+   IrpContext->Irp->IoStatus.Status = Status;
+   IrpContext->Irp->IoStatus.Information = 0;
+
+   IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
+   VfatFreeIrpContext(IrpContext);
    return (Status);
 }
 

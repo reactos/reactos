@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.20 2001/10/10 22:13:26 hbirr Exp $
+ * $Id: dir.c,v 1.21 2001/11/02 22:44:34 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -225,8 +225,7 @@ VfatGetFileBothInformation (PVFATFCB pFcb,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
-DoQuery (PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION Stack)
+NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 {
   NTSTATUS RC = STATUS_SUCCESS;
   long BufferLength = 0;
@@ -235,32 +234,35 @@ DoQuery (PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION Stack)
   unsigned long FileIndex = 0;
   unsigned char *Buffer = NULL;
   PFILE_NAMES_INFORMATION Buffer0 = NULL;
-  PFILE_OBJECT pFileObject = NULL;
   PVFATFCB pFcb;
   VFATFCB tmpFcb;
   PVFATCCB pCcb;
-  PDEVICE_EXTENSION DeviceExt;
   WCHAR star[5], *pCharPattern;
   unsigned long OldEntry, OldSector;
-  DeviceExt = DeviceObject->DeviceExtension;
-  // Obtain the callers parameters
-  BufferLength = Stack->Parameters.QueryDirectory.Length;
-  pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
-  FileInformationClass =
-    Stack->Parameters.QueryDirectory.FileInformationClass;
-  FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
-  pFileObject = Stack->FileObject;
-  pCcb = (PVFATCCB) pFileObject->FsContext2;
+
+  pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
   pFcb = pCcb->pFcb;
-  if (Stack->Flags & SL_RESTART_SCAN)
+
+  if (!ExAcquireResourceSharedLite(&pFcb->MainResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+  {
+     return STATUS_PENDING;
+  }
+
+  // Obtain the callers parameters
+  BufferLength = IrpContext->Stack->Parameters.QueryDirectory.Length;
+  pSearchPattern = IrpContext->Stack->Parameters.QueryDirectory.FileName;
+  FileInformationClass =
+    IrpContext->Stack->Parameters.QueryDirectory.FileInformationClass;
+  FileIndex = IrpContext->Stack->Parameters.QueryDirectory.FileIndex;
+  if (IrpContext->Stack->Flags & SL_RESTART_SCAN)
     {				//FIXME : what is really use of RestartScan ?
       pCcb->StartEntry = pCcb->StartSector = 0;
     }
   // determine Buffer for result :
-  if (Irp->MdlAddress)
-    Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+  if (IrpContext->Irp->MdlAddress)
+    Buffer = MmGetSystemAddressForMdl (IrpContext->Irp->MdlAddress);
   else
-    Buffer = Irp->UserBuffer;
+    Buffer = IrpContext->Irp->UserBuffer;
   DPRINT ("Buffer=%x tofind=%S\n", Buffer, pSearchPattern->Buffer);
   if (pSearchPattern == NULL)
     {
@@ -278,7 +280,7 @@ DoQuery (PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION Stack)
       if (OldSector)
 	pCcb->StartEntry++;
       RC =
-	FindFile (DeviceExt, &tmpFcb, pFcb, pCharPattern, &pCcb->StartEntry, NULL);
+	FindFile (IrpContext->DeviceExt, &tmpFcb, pFcb, pCharPattern, &pCcb->StartEntry, NULL);
     pCcb->StartSector = 1;
       DPRINT ("Found %S,RC=%x, sector %x entry %x\n", tmpFcb.ObjectName, RC,
 	      pCcb->StartSector, pCcb->StartEntry);
@@ -294,19 +296,19 @@ DoQuery (PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION Stack)
 	      break;
 	    case FileDirectoryInformation:
 	      RC =
-		VfatGetFileDirectoryInformation (&tmpFcb, DeviceExt,
+		VfatGetFileDirectoryInformation (&tmpFcb, IrpContext->DeviceExt,
 						(PFILE_DIRECTORY_INFORMATION)
 						Buffer, BufferLength);
 	      break;
 	    case FileFullDirectoryInformation:
 	      RC =
-		VfatGetFileFullDirectoryInformation (&tmpFcb, DeviceExt,
+		VfatGetFileFullDirectoryInformation (&tmpFcb, IrpContext->DeviceExt,
 						    (PFILE_FULL_DIRECTORY_INFORMATION)
 						    Buffer, BufferLength);
 	      break;
 	    case FileBothDirectoryInformation:
 	      RC =
-		VfatGetFileBothInformation (&tmpFcb, DeviceExt,
+		VfatGetFileBothInformation (&tmpFcb, IrpContext->DeviceExt,
 					   (PFILE_BOTH_DIRECTORY_INFORMATION)
 					   Buffer, BufferLength);
 	      break;
@@ -330,7 +332,7 @@ DoQuery (PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION Stack)
 	}
       Buffer0 = (PFILE_NAMES_INFORMATION) Buffer;
       Buffer0->FileIndex = FileIndex++;
-      if (Stack->Flags & SL_RETURN_SINGLE_ENTRY)
+      if (IrpContext->Stack->Flags & SL_RETURN_SINGLE_ENTRY)
 	break;
       BufferLength -= Buffer0->NextEntryOffset;
       Buffer += Buffer0->NextEntryOffset;
@@ -338,27 +340,28 @@ DoQuery (PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION Stack)
   if (Buffer0)
     Buffer0->NextEntryOffset = 0;
   if (FileIndex > 0)
-    return STATUS_SUCCESS;
+    RC = STATUS_SUCCESS;
+
+  if (IrpContext->Flags & IRPCONTEXT_CANWAIT)
+  {
+     ExReleaseResourceLite(&pFcb->MainResource);
+  }
+
   return RC;
 }
 
 
-NTSTATUS STDCALL
-VfatDirectoryControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: directory control : read/write directory informations
  */
 {
   NTSTATUS RC = STATUS_SUCCESS;
-  PFILE_OBJECT FileObject = NULL;
-  PIO_STACK_LOCATION Stack;
-  Stack = IoGetCurrentIrpStackLocation (Irp);
   CHECKPOINT;
-  FileObject = Stack->FileObject;
-  switch (Stack->MinorFunction)
+  switch (IrpContext->MinorFunction)
     {
     case IRP_MN_QUERY_DIRECTORY:
-      RC = DoQuery (DeviceObject, Irp, Stack);
+      RC = DoQuery (IrpContext);
       break;
     case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
       DPRINT (" vfat, dir : change\n");
@@ -367,14 +370,21 @@ VfatDirectoryControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     default:
       // error
       DbgPrint ("unexpected minor function %x in VFAT driver\n",
-		Stack->MinorFunction);
+		IrpContext->MinorFunction);
       RC = STATUS_INVALID_DEVICE_REQUEST;
       break;
     }
-  Irp->IoStatus.Status = RC;
-  Irp->IoStatus.Information = 0;
-
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
+  if (RC == STATUS_PENDING)
+  {
+     RC = VfatQueueRequest(IrpContext);
+  }
+  else
+  {
+    IrpContext->Irp->IoStatus.Status = RC;
+    IrpContext->Irp->IoStatus.Information = 0;
+    IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
+    VfatFreeIrpContext(IrpContext);
+  }
   return RC;
 }
 

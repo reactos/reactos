@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.13 2001/11/01 10:41:53 hbirr Exp $
+/* $Id: volume.c,v 1.14 2001/11/02 22:47:36 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,9 +20,7 @@
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
-			  PVFATFCB FCB,
-			  PDEVICE_OBJECT DeviceObject,
+FsdGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			  PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
 			  PULONG BufferLength)
 {
@@ -38,12 +36,15 @@ FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
   DPRINT("LabelLength %lu\n", LabelLength);
   DPRINT("Label %S\n", DeviceObject->Vpb->VolumeLabel);
 
+  if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))
+    return STATUS_INFO_LENGTH_MISMATCH;
+
   if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength*sizeof(WCHAR)))
-    return(STATUS_BUFFER_OVERFLOW);
+    return STATUS_BUFFER_OVERFLOW;
 
   /* valid entries */
   FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
-  FsVolumeInfo->VolumeLabelLength = LabelLength;
+  FsVolumeInfo->VolumeLabelLength = LabelLength * sizeof (WCHAR);
   wcscpy(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel);
 
   /* dummy entries */
@@ -69,9 +70,11 @@ FsdGetFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
   DPRINT("BufferLength %lu\n", *BufferLength);
   DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6));
 
-  /* FIXME: This does not work correctly! Why?? */
-//  if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6));
-//    return(STATUS_BUFFER_OVERFLOW);
+  if (*BufferLength < sizeof (FILE_FS_ATTRIBUTE_INFORMATION))
+    return STATUS_INFO_LENGTH_MISMATCH;
+
+  if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 6))
+    return STATUS_BUFFER_OVERFLOW;
 
   FsAttributeInfo->FileSystemAttributes =
     FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK;
@@ -175,37 +178,31 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
-VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp)
+NTSTATUS VfatQueryVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Retrieve the specified volume information
  */
 {
-  PIO_STACK_LOCATION Stack;
   FS_INFORMATION_CLASS FsInformationClass;
-  PFILE_OBJECT FileObject = NULL;
-  PVFATFCB FCB = NULL;
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
   ULONG BufferLength;
 
   /* PRECONDITION */
-  assert(DeviceObject != NULL);
-  assert(Irp != NULL);
+  assert(IrpContext);
 
-  DPRINT("FsdQueryVolumeInformation(DeviceObject %x, Irp %x)\n",
-	 DeviceObject, Irp);
+  DPRINT("VfatQueryVolumeInformation(IrpContext %x)\n", IrpContext);
+
+  if (!ExAcquireResourceSharedLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+  {
+     return VfatQueueRequest (IrpContext);
+  }
 
   /* INITIALIZATION */
-  Stack = IoGetCurrentIrpStackLocation (Irp);
-  FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
-  BufferLength = Stack->Parameters.QueryVolume.Length;
-  SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
-  FileObject = Stack->FileObject;
-//   CCB = (PVfatCCB)(FileObject->FsContext2);
-//   FCB = CCB->Buffer; // Should be CCB->FCB???
-  FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
+  FsInformationClass = IrpContext->Stack->Parameters.QueryVolume.FsInformationClass;
+  BufferLength = IrpContext->Stack->Parameters.QueryVolume.Length;
+  SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
+
 
   DPRINT ("FsInformationClass %d\n", FsInformationClass);
   DPRINT ("SystemBuffer %x\n", SystemBuffer);
@@ -213,9 +210,7 @@ VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
   switch (FsInformationClass)
     {
     case FileFsVolumeInformation:
-      RC = FsdGetFsVolumeInformation(FileObject,
-				     FCB,
-				     DeviceObject,
+      RC = FsdGetFsVolumeInformation(IrpContext->DeviceObject,
 				     SystemBuffer,
 				     &BufferLength);
       break;
@@ -226,7 +221,7 @@ VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
       break;
 
     case FileFsSizeInformation:
-      RC = FsdGetFsSizeInformation(DeviceObject,
+      RC = FsdGetFsSizeInformation(IrpContext->DeviceObject,
 				   SystemBuffer,
 				   &BufferLength);
       break;
@@ -240,57 +235,52 @@ VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
       RC = STATUS_NOT_SUPPORTED;
     }
 
-  Irp->IoStatus.Status = RC;
+  ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
+  IrpContext->Irp->IoStatus.Status = RC;
   if (NT_SUCCESS(RC))
-    Irp->IoStatus.Information =
-      Stack->Parameters.QueryVolume.Length - BufferLength;
+    IrpContext->Irp->IoStatus.Information =
+      IrpContext->Stack->Parameters.QueryVolume.Length - BufferLength;
   else
-    Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
+    IrpContext->Irp->IoStatus.Information = 0;
+  IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
+  VfatFreeIrpContext(IrpContext);
 
   return RC;
 }
 
 
-NTSTATUS STDCALL
-VfatSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			 PIRP Irp)
+NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Set the specified volume information
  */
 {
-  PIO_STACK_LOCATION Stack;
   FS_INFORMATION_CLASS FsInformationClass;
-//  PFILE_OBJECT FileObject = NULL;
-//  PVFATFCB FCB = NULL;
   NTSTATUS Status = STATUS_SUCCESS;
   PVOID SystemBuffer;
   ULONG BufferLength;
 
   /* PRECONDITION */
-  assert(DeviceObject != NULL);
-  assert(Irp != NULL);
+  assert(IrpContext);
 
-  DPRINT("FsdSetVolumeInformation(DeviceObject %x, Irp %x)\n",
-	 DeviceObject,
-	 Irp);
+  DPRINT1("VfatSetVolumeInformation(IrpContext %x)\n", IrpContext);
 
-  Stack = IoGetCurrentIrpStackLocation(Irp);
-  FsInformationClass = Stack->Parameters.SetVolume.FsInformationClass;
-  BufferLength = Stack->Parameters.SetVolume.Length;
-  SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
-//  FileObject = Stack->FileObject;
-//  FCB = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
+  if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+  {
+     return VfatQueueRequest (IrpContext);
+  }
 
-  DPRINT("FsInformationClass %d\n", FsInformationClass);
-  DPRINT("BufferLength %d\n", BufferLength);
-  DPRINT("SystemBuffer %x\n", SystemBuffer);
+  FsInformationClass = IrpContext->Stack->Parameters.SetVolume.FsInformationClass;
+  BufferLength = IrpContext->Stack->Parameters.SetVolume.Length;
+  SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
+
+  DPRINT1("FsInformationClass %d\n", FsInformationClass);
+  DPRINT1("BufferLength %d\n", BufferLength);
+  DPRINT1("SystemBuffer %x\n", SystemBuffer);
 
   switch(FsInformationClass)
     {
     case FileFsLabelInformation:
-      Status = FsdSetFsLabelInformation(DeviceObject,
+      Status = FsdSetFsLabelInformation(IrpContext->DeviceObject,
 					SystemBuffer);
       break;
 
@@ -298,10 +288,11 @@ VfatSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
       Status = STATUS_NOT_SUPPORTED;
     }
 
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
+  ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
+  IrpContext->Irp->IoStatus.Status = Status;
+  IrpContext->Irp->IoStatus.Information = 0;
+  IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
+  VfatFreeIrpContext(IrpContext);
 
   return(Status);
 }

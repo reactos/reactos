@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.58 2001/10/10 22:18:58 hbirr Exp $
+/* $Id: iface.c,v 1.59 2001/11/02 22:47:36 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,7 +61,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 	return(Status);
      }
 
-   DPRINT("Boot->SysType %.5s\n", Boot->SysType);
+   DPRINT1("Boot->SysType %.5s\n", Boot->SysType);
    if (strncmp(Boot->SysType, "FAT12", 5) == 0 ||
        strncmp(Boot->SysType, "FAT16", 5) == 0 ||
        strncmp(((struct _BootSector32 *) (Boot))->SysType, "FAT32", 5) == 0)
@@ -153,29 +153,41 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
 
 
 static NTSTATUS
-VfatMount (PDEVICE_OBJECT DeviceToMount)
+VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Mount the filesystem
  */
 {
-  PDEVICE_OBJECT DeviceObject;
-  PDEVICE_EXTENSION DeviceExt;
+  PDEVICE_OBJECT DeviceObject = NULL;
+  PDEVICE_EXTENSION DeviceExt = NULL;
   BOOLEAN RecognizedFS;
   NTSTATUS Status;
-  PVFATFCB Fcb;
-  PVFATCCB Ccb;
+  PVFATFCB Fcb = NULL;
+  PVFATCCB Ccb = NULL;
 
-  Status = VfatHasFileSystem (DeviceToMount, &RecognizedFS);
+  DPRINT1("VfatMount(IrpContext %x)\n", IrpContext);
+
+  assert (IrpContext);
+
+  if (IrpContext->DeviceObject != VfatDriverObject->DeviceObject)
+  {
+     // Only allowed on the main device object
+     Status = STATUS_INVALID_DEVICE_REQUEST;
+     goto ByeBye;
+  }
+
+  Status = VfatHasFileSystem (IrpContext->Stack->Parameters.Mount.DeviceObject, &RecognizedFS);
   if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
+  {
+     goto ByeBye;
+  }
 
   if (RecognizedFS == FALSE)
-    {
-      DPRINT("VFAT: Unrecognized Volume\n");
-      return(STATUS_UNRECOGNIZED_VOLUME);
-    }
+  {
+     DPRINT("VFAT: Unrecognized Volume\n");
+     Status = STATUS_UNRECOGNIZED_VOLUME;
+     goto ByeBye;
+  }
 
   DPRINT("VFAT: Recognized volume\n");
 
@@ -187,21 +199,22 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
 			  FALSE,
 			  &DeviceObject);
   if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
+  {
+    goto ByeBye;
+  }
 
   DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
   DeviceExt = (PVOID) DeviceObject->DeviceExtension;
+  RtlZeroMemory(DeviceExt, sizeof(DEVICE_EXTENSION));
+
   /* use same vpb as device disk */
-  DeviceObject->Vpb = DeviceToMount->Vpb;
-  Status = VfatMountDevice(DeviceExt,
-			   DeviceToMount);
+  DeviceObject->Vpb = IrpContext->Stack->Parameters.Mount.DeviceObject->Vpb;
+  Status = VfatMountDevice(DeviceExt, IrpContext->Stack->Parameters.Mount.DeviceObject);
   if (!NT_SUCCESS(Status))
-    {
-      /* FIXME: delete device object */
-      return(Status);
-    }
+  {
+    /* FIXME: delete device object */
+    goto ByeBye;
+  }
 
 #if 1
   DbgPrint("BytesPerSector:     %d\n", DeviceExt->Boot->BytesPerSector);
@@ -230,24 +243,26 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
     }
 #endif
   DeviceObject->Vpb->Flags |= VPB_MOUNTED;
-  DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
-							 DeviceToMount);
+  DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject, IrpContext->Stack->Parameters.Mount.DeviceObject);
 
   DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
   Fcb = vfatNewFCB(NULL);
   if (Fcb == NULL)
   {
-    return STATUS_INSUFFICIENT_RESOURCES;
+    Status = STATUS_INSUFFICIENT_RESOURCES;
+    goto ByeBye;
   }
   Ccb = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
   if (Ccb == NULL)
   {
-    return STATUS_INSUFFICIENT_RESOURCES;
+    Status =  STATUS_INSUFFICIENT_RESOURCES;
+    goto ByeBye;
   }
   memset(Ccb, 0, sizeof (VFATCCB));
   DeviceExt->FATFileObject->Flags = DeviceExt->FATFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   DeviceExt->FATFileObject->FsContext = (PVOID) &Fcb->RFCB;
   DeviceExt->FATFileObject->FsContext2 = Ccb;
+  DeviceExt->FATFileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
   Ccb->pFcb = Fcb;
   Ccb->PtrFileObject = DeviceExt->FATFileObject;
   Fcb->FileObject = DeviceExt->FATFileObject;
@@ -255,6 +270,16 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
 
   Fcb->Flags = FCB_IS_FAT;
 
+  if (DeviceExt->Boot->Sectors != 0)
+  {
+    DeviceExt->NumberOfClusters = (DeviceExt->Boot->Sectors - DeviceExt->dataStart)
+                                    / DeviceExt->Boot->SectorsPerCluster + 2;
+  }
+  else
+  {
+    DeviceExt->NumberOfClusters = (DeviceExt->Boot->SectorsHuge - DeviceExt->dataStart)
+                                    / DeviceExt->Boot->SectorsPerCluster + 2;
+  }
   if (DeviceExt->FatType == FAT32)
   {
     Fcb->RFCB.FileSize.QuadPart = ((struct _BootSector32 *)DeviceExt->Boot)->FATSectors32 * BLOCKSIZE;
@@ -282,12 +307,10 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
   if (!NT_SUCCESS (Status))
   {
      DbgPrint ("CcRosInitializeFileCache failed\n");
-//     KeBugCheck (0);
-     // FIXME: delete device object
-     return(Status);
+     goto ByeBye;
   }
 
-
+  DeviceExt->LastAvailableCluster = 0;
   ExInitializeResourceLite(&DeviceExt->DirResource);
   ExInitializeResourceLite(&DeviceExt->FatResource);
 
@@ -304,22 +327,39 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
 
   /* read volume label */
   ReadVolumeLabel(DeviceExt,  DeviceObject->Vpb);
+  Status = STATUS_SUCCESS;
 
-  return(STATUS_SUCCESS);
+ByeBye:
+
+  if (!NT_SUCCESS(Status))
+  {
+     // cleanup
+     if (DeviceExt && DeviceExt->FATFileObject)
+        ObDereferenceObject (DeviceExt->FATFileObject);
+     if (Fcb)
+        ExFreePool(Fcb);
+     if (Ccb)
+        ExFreePool(Ccb);
+     if (DeviceObject)
+       IoDeleteDevice(DeviceObject);
+  }
+  return Status;
 }
 
 
-NTSTATUS STDCALL
-VfatFileSystemControl(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp)
+NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: File system control
  */
 {
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation (Irp);
+
    NTSTATUS Status;
 
-   switch (Stack->MinorFunction)
+   DPRINT1("VfatFileSystemControl(IrpContext %x)\n", IrpContext);
+
+   assert (IrpContext);
+
+   switch (IrpContext->MinorFunction)
      {
 	case IRP_MN_USER_FS_REQUEST:
 	   DPRINT1("VFAT FSC: IRP_MN_USER_FS_REQUEST\n");
@@ -327,7 +367,7 @@ VfatFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	   break;
 
 	case IRP_MN_MOUNT_VOLUME:
-	   Status = VfatMount(Stack->Parameters.Mount.DeviceObject);
+	   Status = VfatMount(IrpContext);
 	   break;
 
 	case IRP_MN_VERIFY_VOLUME:
@@ -336,15 +376,15 @@ VfatFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	   break;
 
 	default:
-	   DPRINT1("VFAT FSC: MinorFunction %d\n", Stack->MinorFunction);
+	   DPRINT1("VFAT FSC: MinorFunction %d\n", IrpContext->MinorFunction);
 	   Status = STATUS_INVALID_DEVICE_REQUEST;
 	   break;
      }
 
-   Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
+   IrpContext->Irp->IoStatus.Status = Status;
+   IrpContext->Irp->IoStatus.Information = 0;
 
-   IoCompleteRequest (Irp, IO_NO_INCREMENT);
+   IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
    return (Status);
 }
 
@@ -383,24 +423,24 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
      }
 
    DeviceObject->Flags = DO_DIRECT_IO;
-   VfatDriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatClose;
-   VfatDriverObject->MajorFunction[IRP_MJ_CREATE] = VfatCreate;
-   VfatDriverObject->MajorFunction[IRP_MJ_READ] = VfatRead;
-   VfatDriverObject->MajorFunction[IRP_MJ_WRITE] = VfatWrite;
+   VfatDriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
+   VfatDriverObject->MajorFunction[IRP_MJ_CREATE] = VfatBuildRequest;
+   VfatDriverObject->MajorFunction[IRP_MJ_READ] = VfatBuildRequest;
+   VfatDriverObject->MajorFunction[IRP_MJ_WRITE] = VfatBuildRequest;
    VfatDriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-     VfatFileSystemControl;
+     VfatBuildRequest;
    VfatDriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-     VfatQueryInformation;
+     VfatBuildRequest;
    VfatDriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
-     VfatSetInformation;
+     VfatBuildRequest;
    VfatDriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-     VfatDirectoryControl;
+     VfatBuildRequest;
    VfatDriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-     VfatQueryVolumeInformation;
+     VfatBuildRequest;
    VfatDriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-     VfatSetVolumeInformation;
+     VfatBuildRequest;
    VfatDriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
-   VfatDriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatCleanup;
+   VfatDriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
 
    VfatDriverObject->DriverUnload = NULL;
 

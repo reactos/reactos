@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.35 2001/08/21 20:13:13 chorns Exp $
+# $Id: makefile,v 1.36 2001/11/02 22:47:36 hbirr Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -21,8 +21,14 @@ TARGET_OBJECTS = \
   rw.o \
   shutdown.o \
   string.o \
-  volume.o
+  volume.o \
+  misc.o
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/depend.mk
+

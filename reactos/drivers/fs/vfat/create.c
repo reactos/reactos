@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.33 2001/10/10 22:12:34 hbirr Exp $
+/* $Id: create.c,v 1.34 2001/11/02 22:44:34 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -83,7 +83,7 @@ static void  vfat8Dot3ToVolumeLabel (PCHAR pBasename, PCHAR pExtension, PWSTR pN
 {
   int  fromIndex, toIndex;
 
-  fromIndex = toIndex = 0; 
+  fromIndex = toIndex = 0;
   while (fromIndex < 8 && pBasename [fromIndex] != ' ')
   {
     pName [toIndex++] = pBasename [fromIndex++];
@@ -667,32 +667,32 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
      * same name
      */
     if (RequestedDisposition == FILE_SUPERSEDE)
-	{
-	  ULONG Cluster, NextCluster;
-	  /* FIXME set size to 0 and free clusters */
-	  pFcb->entry.FileSize = 0;
-	  if (DeviceExt->FatType == FAT32)
+    {
+       ULONG Cluster, NextCluster;
+       /* FIXME set size to 0 and free clusters */
+       pFcb->entry.FileSize = 0;
+       if (DeviceExt->FatType == FAT32)
 	    Cluster = pFcb->entry.FirstCluster
 	      + pFcb->entry.FirstClusterHigh * 65536;
-	  else
-	    Cluster = pFcb->entry.FirstCluster;
-	  pFcb->entry.FirstCluster = 0;
-	  pFcb->entry.FirstClusterHigh = 0;
-	  updEntry (DeviceExt, FileObject);
-	  if ((ULONG)pFcb->RFCB.FileSize.QuadPart > 0)
-	  {
-	    pFcb->RFCB.AllocationSize.QuadPart = 0;
-	    pFcb->RFCB.FileSize.QuadPart = 0;
-	    pFcb->RFCB.ValidDataLength.QuadPart = 0;
-	    CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&pFcb->RFCB.AllocationSize);
-	  }
-	  while (Cluster != 0xffffffff && Cluster > 1)
-	  {
-	    Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, FALSE);
-	    WriteCluster (DeviceExt, Cluster, 0);
-	    Cluster = NextCluster;
-	  }
-	}
+       else
+         Cluster = pFcb->entry.FirstCluster;
+       pFcb->entry.FirstCluster = 0;
+       pFcb->entry.FirstClusterHigh = 0;
+       updEntry (DeviceExt, FileObject);
+       if ((ULONG)pFcb->RFCB.FileSize.QuadPart > 0)
+       {
+         pFcb->RFCB.AllocationSize.QuadPart = 0;
+	 pFcb->RFCB.FileSize.QuadPart = 0;
+	 pFcb->RFCB.ValidDataLength.QuadPart = 0;
+	 CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&pFcb->RFCB.AllocationSize);
+       }
+       while (Cluster != 0xffffffff && Cluster > 1)
+       {
+	 Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, FALSE);
+	 WriteCluster (DeviceExt, Cluster, 0);
+	 Cluster = NextCluster;
+       }
+    }
 
     /*
      * Check the file has the requested attributes
@@ -707,7 +707,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	{
 	  Status = STATUS_NOT_A_DIRECTORY;
 	}
-      /* FIXME : test share access */
+    /* FIXME : test share access */
       /* FIXME : test write access if requested */
     if (!NT_SUCCESS (Status))
 	  VfatCloseFile (DeviceExt, FileObject);
@@ -722,39 +722,37 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS STDCALL
-VfatCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Create or open a file
  */
 {
-  NTSTATUS Status = STATUS_SUCCESS;
-  PDEVICE_EXTENSION DeviceExt;
+  NTSTATUS Status;
 
-  assert (DeviceObject);
-  assert (Irp);
+  assert (IrpContext);
 
-  if (DeviceObject->Size == sizeof (DEVICE_OBJECT))
-    {
-      /* DeviceObject represents FileSystem instead of logical volume */
-      DbgPrint ("FsdCreate called with file system\n");
-      Irp->IoStatus.Status = Status;
-      Irp->IoStatus.Information = FILE_OPENED;
-      IoCompleteRequest (Irp, IO_NO_INCREMENT);
-      return (Status);
-    }
+  if (IrpContext->DeviceObject->Size == sizeof (DEVICE_OBJECT))
+  {
+     /* DeviceObject represents FileSystem instead of logical volume */
+     DbgPrint ("FsdCreate called with file system\n");
+     IrpContext->Irp->IoStatus.Information = FILE_OPENED;
+     Status = STATUS_SUCCESS;
+     goto ByeBye;
+  }
 
-  DeviceExt = DeviceObject->DeviceExtension;
-  assert (DeviceExt);
-  ExAcquireResourceExclusiveLite (&DeviceExt->DirResource, TRUE);
+  if (!(IrpContext->Flags & IRPCONTEXT_CANWAIT))
+  {
+     return VfatQueueRequest (IrpContext);
+  }
 
-  Status = VfatCreateFile (DeviceObject, Irp);
+  ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, TRUE);
+  Status = VfatCreateFile (IrpContext->DeviceObject, IrpContext->Irp);
+  ExReleaseResourceLite (&IrpContext->DeviceExt->DirResource);
 
-  ExReleaseResourceLite (&DeviceExt->DirResource);
-
-  Irp->IoStatus.Status = Status;
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
-
+ByeBye:
+  IrpContext->Irp->IoStatus.Status = Status;
+  IoCompleteRequest (IrpContext->Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+  VfatFreeIrpContext(IrpContext);
   return Status;
 }
 

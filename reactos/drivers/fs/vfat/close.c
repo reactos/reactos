@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.8 2001/08/14 20:47:30 hbirr Exp $
+/* $Id: close.c,v 1.9 2001/11/02 22:44:34 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,27 +65,28 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   return  Status;
 }
 
-NTSTATUS STDCALL
-VfatClose (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Closes a file
  */
 {
-  PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation (Irp);
-  PFILE_OBJECT FileObject = Stack->FileObject;
-  PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
   NTSTATUS Status;
 
   DPRINT ("VfatClose(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
 
-  ExAcquireResourceExclusiveLite (&DeviceExtension->DirResource, TRUE);
-  Status = VfatCloseFile (DeviceExtension, FileObject);
-  ExReleaseResourceLite (&DeviceExtension->DirResource);
+  if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
+  {
+     return VfatQueueRequest (IrpContext);
+  }
 
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = 0;
+  Status = VfatCloseFile (IrpContext->DeviceExt, IrpContext->FileObject);
+  ExReleaseResourceLite (&IrpContext->DeviceExt->DirResource);
 
-  IoCompleteRequest (Irp, IO_NO_INCREMENT);
+  IrpContext->Irp->IoStatus.Status = Status;
+  IrpContext->Irp->IoStatus.Information = 0;
+  IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
+  VfatFreeIrpContext(IrpContext);
+
   return (Status);
 }
 
