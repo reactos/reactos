@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.4 2003/04/02 22:09:56 hyperion Exp $
+/* $Id: process.c,v 1.5 2003/04/03 00:06:23 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -31,7 +31,8 @@
 #include <ddk/ntddk.h>
 #include <debug.h>
 #include <stddef.h>
-#include <internal/psapi.h>
+
+#include "internal/psapi.h"
 
 NTSTATUS
 NTAPI
@@ -323,8 +324,6 @@ PsaWalkFirstThread
 )
 {
  static SIZE_T nOffsetOfThreads = 0;
-
-#define printoffset(__T__, __F__) fprintf(stderr, "%02X %s->%s\n", offsetof(__T__, __F__), #__T__, #__F__)
 
  /* get the offset of the Threads field (dependant on the kernel version) */
  if(!nOffsetOfThreads)

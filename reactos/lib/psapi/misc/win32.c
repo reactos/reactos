@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.6 2003/04/02 22:09:57 hyperion Exp $
+/* $Id: win32.c,v 1.7 2003/04/03 00:06:24 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -73,8 +73,7 @@ typedef struct _ENUM_DEVICE_DRIVERS_CONTEXT
 /* callback routine */
 NTSTATUS STDCALL EnumDeviceDriversCallback
 (
- IN ULONG ModuleCount,
- IN PSYSTEM_MODULE_ENTRY CurrentModule,
+ IN PSYSTEM_MODULE_INFORMATION CurrentModule,
  IN OUT PVOID CallbackContext
 )
 {
@@ -86,7 +85,7 @@ NTSTATUS STDCALL EnumDeviceDriversCallback
   return STATUS_INFO_LENGTH_MISMATCH;
 
  /* return current module */
- *(peddcContext->lpImageBase) = CurrentModule->BaseAddress;
+ *(peddcContext->lpImageBase) = CurrentModule->Base;
 
  /* go to next array slot */
  (peddcContext->lpImageBase) ++;
@@ -309,8 +308,7 @@ typedef struct _GET_DEVICE_DRIVER_NAME_CONTEXT
 /* common callback routine */
 NTSTATUS STDCALL GetDeviceDriverNameCallback
 (
- IN ULONG ModuleCount,
- IN PSYSTEM_MODULE_ENTRY CurrentModule,
+ IN PSYSTEM_MODULE_INFORMATION CurrentModule,
  IN OUT PVOID CallbackContext
 )
 {
@@ -318,16 +316,16 @@ NTSTATUS STDCALL GetDeviceDriverNameCallback
   (PGET_DEVICE_DRIVER_NAME_CONTEXT) CallbackContext;
 
  /* module found */
- if(pgddncContext->ImageBase == CurrentModule->BaseAddress)
+ if(pgddncContext->ImageBase == CurrentModule->Base)
  {
   register PCHAR pcModuleName;
   register ULONG l;
 
   /* get the full name or just the filename part */
   if(pgddncContext->bFullName)
-   pcModuleName = &CurrentModule->Name[0];
+   pcModuleName = &CurrentModule->ImageName[0];
   else
-   pcModuleName = &CurrentModule->Name[CurrentModule->PathLength];
+   pcModuleName = &CurrentModule->ImageName[CurrentModule->ModuleNameOffset];
 
   /* get the length of the name */
   l = strlen(pcModuleName);

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.128 2003/03/31 09:30:00 gvg Exp $
+/* $Id: loader.c,v 1.129 2003/04/03 00:06:24 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,7 @@
  *   JF   26/01/2000 Recoded some parts to retrieve export details correctly
  *   DW   27/06/2000 Removed redundant header files
  *   CSH  11/04/2001 Added automatic loading of module symbols if they exist
+ *   KJK  02/04/2003 Nebbet-ized a couple of type names
  */
 
 
@@ -593,7 +594,7 @@ LdrpQueryModuleInformation(PVOID Buffer,
   PLIST_ENTRY current_entry;
   PMODULE_OBJECT current;
   ULONG ModuleCount = 0;
-  PSYSTEM_MODULE_INFORMATION Smi;
+  PSYSTEM_MODULES Smi;
   ANSI_STRING AnsiName;
   PCHAR p;
   KIRQL Irql;
@@ -608,8 +609,8 @@ LdrpQueryModuleInformation(PVOID Buffer,
       current_entry = current_entry->Flink;
     }
 
-  *ReqSize = sizeof(SYSTEM_MODULE_INFORMATION)+
-    (ModuleCount - 1) * sizeof(SYSTEM_MODULE_ENTRY);
+  *ReqSize = sizeof(SYSTEM_MODULES)+
+    (ModuleCount - 1) * sizeof(SYSTEM_MODULE_INFORMATION);
 
   if (Size < *ReqSize)
     {
@@ -620,7 +621,7 @@ LdrpQueryModuleInformation(PVOID Buffer,
   /* fill the buffer */
   memset(Buffer, '=', Size);
 
-  Smi = (PSYSTEM_MODULE_INFORMATION)Buffer;
+  Smi = (PSYSTEM_MODULES)Buffer;
   Smi->Count = ModuleCount;
 
   ModuleCount = 0;
@@ -629,15 +630,18 @@ LdrpQueryModuleInformation(PVOID Buffer,
     {
       current = CONTAINING_RECORD(current_entry,MODULE_OBJECT,ListEntry);
 
-      Smi->Module[ModuleCount].Unknown2 = 0;		/* Always 0 */
-      Smi->Module[ModuleCount].BaseAddress = current->Base;
-      Smi->Module[ModuleCount].Size = current->Length;
-      Smi->Module[ModuleCount].Flags = 0;		/* Flags ??? (GN) */
-      Smi->Module[ModuleCount].EntryIndex = ModuleCount;
+      Smi->Modules[ModuleCount].Reserved[0] = 0;		/* Always 0 */
+      Smi->Modules[ModuleCount].Reserved[1] = 0;		/* Always 0 */
+      Smi->Modules[ModuleCount].Base = current->Base;
+      Smi->Modules[ModuleCount].Size = current->Length;
+      Smi->Modules[ModuleCount].Flags = 0;		/* Flags ??? (GN) */
+      Smi->Modules[ModuleCount].Index = ModuleCount;
+      Smi->Modules[ModuleCount].Unknown = 0;
+      Smi->Modules[ModuleCount].LoadCount = 0; /* FIXME */
 
       AnsiName.Length = 0;
       AnsiName.MaximumLength = 256;
-      AnsiName.Buffer = Smi->Module[ModuleCount].Name;
+      AnsiName.Buffer = Smi->Modules[ModuleCount].ImageName;
       RtlUnicodeStringToAnsiString(&AnsiName,
 				   &current->FullName,
 				   FALSE);
@@ -645,14 +649,12 @@ LdrpQueryModuleInformation(PVOID Buffer,
       p = strrchr(AnsiName.Buffer, '\\');
       if (p == NULL)
 	{
-	  Smi->Module[ModuleCount].PathLength = 0;
-	  Smi->Module[ModuleCount].NameLength = strlen(AnsiName.Buffer);
+	  Smi->Modules[ModuleCount].ModuleNameOffset = 0;
 	}
       else
 	{
 	  p++;
-	  Smi->Module[ModuleCount].PathLength = p - AnsiName.Buffer;
-	  Smi->Module[ModuleCount].NameLength = strlen(p);
+	  Smi->Modules[ModuleCount].ModuleNameOffset = p - AnsiName.Buffer;
 	}
 
       ModuleCount++;

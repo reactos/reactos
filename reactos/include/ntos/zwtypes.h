@@ -301,8 +301,18 @@ struct _SYSTEM_PERFORMANCE_INFORMATION
 
 // SystemModuleInformation (11)
 typedef
-struct _SYSTEM_MODULE_ENTRY
+struct _SYSTEM_MODULE_INFORMATION
 {
+ ULONG Reserved[2];
+ PVOID Base;
+ SIZE_T Size;
+ ULONG Flags;
+ USHORT Index;
+ USHORT Unknown;
+ USHORT LoadCount;
+ USHORT ModuleNameOffset;
+ CHAR ImageName[256];
+#if 0
 	ULONG	Unknown1;
 	ULONG	Unknown2;
 	PVOID	BaseAddress;
@@ -312,14 +322,15 @@ struct _SYSTEM_MODULE_ENTRY
 	USHORT	NameLength; /* Length of module name not including the path, this field contains valid value only for NTOSKRNL module*/
 	USHORT	PathLength; /* Length of 'directory path' part of modulename*/
 	CHAR	Name [256];
-} SYSTEM_MODULE_ENTRY, * PSYSTEM_MODULE_ENTRY;
+#endif
+} SYSTEM_MODULE_INFORMATION, * PSYSTEM_MODULE_INFORMATION;
 
 typedef
-struct _SYSTEM_MODULE_INFORMATION
+struct _SYSTEM_MODULES
 {
-	ULONG			Count;
-	SYSTEM_MODULE_ENTRY	Module [1];
-} SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
+ SIZE_T Count;
+ SYSTEM_MODULE_INFORMATION Modules[ANYSIZE_ARRAY];
+} SYSTEM_MODULES, *PSYSTEM_MODULES;
 
 // SystemHandleInformation (16)
 // (see ontypes.h)

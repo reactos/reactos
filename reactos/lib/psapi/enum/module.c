@@ -1,11 +1,11 @@
-/* $Id: module.c,v 1.4 2003/04/02 22:09:56 hyperion Exp $
+/* $Id: module.c,v 1.5 2003/04/03 00:06:23 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * LICENSE:     See LGPL.txt in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        reactos/lib/psapi/enum/module.c
- * PURPOSE:     Enumerate system and process modules
+ * PURPOSE:     Enumerate process modules
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>
  * UPDATE HISTORY:
  *              10/06/2002: Created
@@ -13,118 +13,13 @@
  *                          more efficient use of memory operations
  *              12/02/2003: malloc and free renamed to PsaiMalloc and PsaiFree,
  *                          for better reusability
+ *              02/04/2003: System modules enumeration moved into its own file
  */
 
 #include <ddk/ntddk.h>
 #include <debug.h>
 #include <internal/psapi.h>
 #include <ntdll/ldr.h>
-
-NTSTATUS
-NTAPI
-PsaEnumerateSystemModules
-(
- IN PSYSMOD_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext
-)
-{
- ULONG nSize;
- register NTSTATUS nErrCode = STATUS_SUCCESS;
- register PULONG pnModuleCount = &nSize;
- register PSYSTEM_MODULE_ENTRY psmeCurModule;
- register ULONG nModuleCount;
-
- /* initial probe */
- nErrCode = NtQuerySystemInformation
- (
-  SystemModuleInformation,
-  pnModuleCount,
-  sizeof(nSize),
-  NULL
- );
- 
- if(nErrCode != STATUS_INFO_LENGTH_MISMATCH && !NT_SUCCESS(nErrCode))
- {
-  /* failure */
-  DPRINT(FAILED_WITH_STATUS, "NtQuerySystemInformation", nErrCode);
-  return nErrCode;
- }
-
- /* RATIONALE: the loading of a system module is a rare occurrence. To minimize
-    memory operations that could be expensive, or fragment the pool/heap, we try
-    to determine the buffer size in advance, knowing that the number of elements
-    is unlikely to change */
- nSize = sizeof(ULONG) + nSize * sizeof(SYSTEM_MODULE_ENTRY);
- pnModuleCount = NULL;
- 
- do
- {
-  register void * pTmp;
-
-  /* free the buffer, and reallocate it to the new size. RATIONALE: since we
-     ignore the buffer's content at this point, there's no point in a realloc(),
-     that could end up copying a large chunk of data we'd discard anyway */
-  PsaiFree(pnModuleCount);
-  pTmp = PsaiMalloc(nSize);
-  
-  if(pTmp == NULL)
-  {
-   /* failure */
-   nErrCode = STATUS_NO_MEMORY;
-   DPRINT(FAILED_WITH_STATUS, "PsaiMalloc", nErrCode);
-   goto esm_Finalize;
-  }
-  
-  pnModuleCount = pTmp;
-  
-  /* query the information */
-  nErrCode = NtQuerySystemInformation
-  (
-   SystemModuleInformation,
-   pnModuleCount,
-   nSize,
-   NULL
-  );
-
-  /* double the buffer for the next loop */
-  nSize += nSize;
- }
- /* repeat until the buffer is big enough */
- while(nErrCode == STATUS_INFO_LENGTH_MISMATCH);
-
- if(!NT_SUCCESS(nErrCode))
- {
-  /* failure */
-  DPRINT(FAILED_WITH_STATUS, "NtQuerySystemInformation", nErrCode);
-  goto esm_Finalize;
- }
-
- /* the array of modules starts right after an ULONG storing their count */
- psmeCurModule = (PSYSTEM_MODULE_ENTRY)(pnModuleCount + 1);
-
- nModuleCount = *pnModuleCount;
-
- /* repeat until all modules have been returned */
- while(nModuleCount > 0)
- {
-  /* return current module to the callback */
-  nErrCode = Callback(nModuleCount, psmeCurModule, CallbackContext);
-  
-  if(!NT_SUCCESS(nErrCode))
-   /* failure */
-   goto esm_Finalize;
-  
-  /* next module */
-  psmeCurModule ++;
-  nModuleCount --;
- }
-
-esm_Finalize:
- /* free the buffer */
- PsaiFree(pnModuleCount);
-
- return (nErrCode);
-}
 
 NTSTATUS
 NTAPI

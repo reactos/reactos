@@ -1,4 +1,4 @@
-/* $Id: psapi.h,v 1.4 2003/04/02 22:09:56 hyperion Exp $
+/* $Id: psapi.h,v 1.5 2003/04/03 00:06:24 hyperion Exp $
 */
 /*
  * internal/psapi.h
@@ -46,8 +46,7 @@ typedef NTSTATUS NTAPI (*PTHREAD_ENUM_ROUTINE)
 
 typedef NTSTATUS NTAPI (*PSYSMOD_ENUM_ROUTINE)
 (
- IN ULONG ModuleCount,
- IN PSYSTEM_MODULE_ENTRY CurrentModule,
+ IN PSYSTEM_MODULE_INFORMATION CurrentModule,
  IN OUT PVOID CallbackContext
 );
 
@@ -62,6 +61,35 @@ typedef NTSTATUS NTAPI (*PPROCMOD_ENUM_ROUTINE)
 #define FAILED_WITH_STATUS DEFINE_DBG_MSG("%s() failed, status 0x%08X")
 
 /* PROTOTYPES */
+/* Processes and threads */
+/* enumeration */
+NTSTATUS
+NTAPI
+PsaEnumerateProcessesAndThreads
+(
+ IN PPROC_ENUM_ROUTINE ProcessCallback,
+ IN OUT PVOID ProcessCallbackContext,
+ IN PTHREAD_ENUM_ROUTINE ThreadCallback,
+ IN OUT PVOID ThreadCallbackContext
+);
+
+NTSTATUS
+NTAPI
+PsaEnumerateProcesses
+(
+ IN PPROC_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext
+);
+
+NTSTATUS
+NTAPI
+PsaEnumerateThreads
+(
+ IN PTHREAD_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext
+);
+
+/* capturing & walking */
 NTSTATUS
 NTAPI
 PsaCaptureProcessesAndThreads
@@ -82,19 +110,20 @@ PsaWalkProcessesAndThreads
 
 NTSTATUS
 NTAPI
-PsaEnumerateProcessesAndThreads
+PsaWalkProcesses
 (
- IN PPROC_ENUM_ROUTINE ProcessCallback,
- IN OUT PVOID ProcessCallbackContext,
- IN PTHREAD_ENUM_ROUTINE ThreadCallback,
- IN OUT PVOID ThreadCallbackContext
+ IN PSYSTEM_PROCESSES ProcessesAndThreads,
+ IN PPROC_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext
 );
 
-VOID
+NTSTATUS
 NTAPI
-PsaFreeCapture
+PsaWalkThreads
 (
- IN PVOID Capture
+ IN PSYSTEM_PROCESSES ProcessesAndThreads,
+ IN PTHREAD_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext
 );
 
 PSYSTEM_PROCESSES
@@ -125,40 +154,8 @@ PsaWalkNextThread
  IN PSYSTEM_THREADS CurrentThread
 );
 
-NTSTATUS
-NTAPI
-PsaWalkProcesses
-(
- IN PSYSTEM_PROCESSES ProcessesAndThreads,
- IN PPROC_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext
-);
-
-NTSTATUS
-NTAPI
-PsaWalkThreads
-(
- IN PSYSTEM_PROCESSES ProcessesAndThreads,
- IN PTHREAD_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext
-);
-
-NTSTATUS
-NTAPI
-PsaEnumerateProcesses
-(
- IN PPROC_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext
-);
-
-NTSTATUS
-NTAPI
-PsaEnumerateThreads
-(
- IN PTHREAD_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext
-);
-
+/* System modules */
+/* enumeration */
 NTSTATUS
 NTAPI
 PsaEnumerateSystemModules
@@ -167,6 +164,38 @@ PsaEnumerateSystemModules
  IN OUT PVOID CallbackContext
 );
 
+/* capturing & walking */
+NTSTATUS
+NTAPI
+PsaCaptureSystemModules
+(
+ OUT PSYSTEM_MODULES * SystemModules
+);
+
+NTSTATUS
+NTAPI
+PsaWalkSystemModules
+(
+ IN PSYSTEM_MODULES SystemModules,
+ IN PSYSMOD_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext
+);
+
+PSYSTEM_MODULE_INFORMATION
+FASTCALL
+PsaWalkFirstSystemModule
+(
+ IN PSYSTEM_MODULES SystemModules
+);
+
+PSYSTEM_MODULE_INFORMATION
+FASTCALL
+PsaWalkNextSystemModule
+(
+ IN PSYSTEM_MODULE_INFORMATION CurrentSystemModule
+);
+
+/* Process modules */
 NTSTATUS
 NTAPI
 PsaEnumerateProcessModules
@@ -174,6 +203,14 @@ PsaEnumerateProcessModules
  IN HANDLE ProcessHandle,
  IN PPROCMOD_ENUM_ROUTINE Callback,
  IN OUT PVOID CallbackContext
+);
+
+/* Miscellaneous */
+VOID
+NTAPI
+PsaFreeCapture
+(
+ IN PVOID Capture
 );
 
 /* The user must define these functions. They are called by PSAPI to allocate 
@@ -188,4 +225,3 @@ void PsaiFree(void *ptr);
 #endif /* __INTERNAL_PSAPI_H_INCLUDED__ */
 
 /* EOF */
-

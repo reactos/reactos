@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2003/04/02 22:09:57 hyperion Exp $
+# $Id: makefile,v 1.5 2003/04/03 00:06:24 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -20,7 +20,8 @@ TARGET_OBJECTS = \
 	misc/stubs.o \
 	misc/win32.o \
 	enum/module.o \
-	enum/process.o
+	enum/process.o \
+	enum/drivers.o
 	
 include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
