@@ -1,5 +1,10 @@
-netapi32.def
-netapi32.dll
-netapi32.dll.dbg.c
-netapi32.spec.c
+*.coff
+*.dll
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp
+Makefile.ros
 netapi32.spec.def
