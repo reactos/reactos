@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.59 2003/05/17 15:27:34 ekohl Exp $
+/* $Id: view.c,v 1.60 2003/05/25 21:49:04 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -454,6 +454,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
 {
   ULONG i;
   PCACHE_SEGMENT current;
+  PCACHE_SEGMENT previous;
   PLIST_ENTRY current_entry;
   NTSTATUS Status;
   KIRQL oldIrql;
@@ -486,6 +487,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
    */
   KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
   current_entry = Bcb->BcbSegmentListHead.Flink;
+  previous = NULL;
   while (current_entry != &Bcb->BcbSegmentListHead)
   {
      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
@@ -505,11 +507,32 @@ CcRosCreateCacheSegment(PBCB Bcb,
 	}
 	return STATUS_SUCCESS;
      }
+     if (current->FileOffset < FileOffset)
+     {
+        if (previous == NULL)
+	{
+	   previous = current;
+	}
+	else
+	{
+	   if (previous->FileOffset < current->FileOffset)
+	   {
+	      previous = current;
+	   }
+	}
+     }
      current_entry = current_entry->Flink;
   }
   /* There was no existing segment. */
   current = *CacheSeg;
-  InsertTailList(&Bcb->BcbSegmentListHead, &current->BcbSegmentListEntry);
+  if (previous)
+  {
+     InsertHeadList(&previous->BcbSegmentListEntry, &current->BcbSegmentListEntry);
+  }
+  else
+  {
+     InsertHeadList(&Bcb->BcbSegmentListHead, &current->BcbSegmentListEntry);
+  }
   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
   InsertTailList(&CacheSegmentListHead, &current->CacheSegmentListEntry);
   InsertTailList(&CacheSegmentLRUListHead, &current->CacheSegmentLRUListEntry);
@@ -665,6 +688,10 @@ CcRosGetCacheSegment(PBCB Bcb,
       * Otherwise create a new segment.
       */
       Status = CcRosCreateCacheSegment(Bcb, FileOffset, &current, TRUE);
+      if (!NT_SUCCESS(Status))
+      {
+	return Status;
+      }
    }
    /*
     * Return information about the segment to the caller.
@@ -946,6 +973,17 @@ VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
   ExAcquireFastMutex(&ViewLock);
   Bcb = (PBCB)FileObject->SectionObjectPointers->SharedCacheMap;
   assert(Bcb);
+  if (Bcb->RefCount == 0)
+  {
+     assert(Bcb->BcbRemoveListEntry.Flink != NULL);
+     RemoveEntryList(&Bcb->BcbRemoveListEntry);
+     Bcb->BcbRemoveListEntry.Flink = NULL;
+
+  }
+  else
+  {
+     assert(Bcb->BcbRemoveListEntry.Flink == NULL);
+  }
   Bcb->RefCount++;
   ExReleaseFastMutex(&ViewLock);
 }
@@ -1179,6 +1217,7 @@ CcInitView(VOID)
 			      CI_CACHESEG_MAPPING_REGION_SIZE,
 			      0,
 			      &marea,
+			      FALSE,
 			      FALSE);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
