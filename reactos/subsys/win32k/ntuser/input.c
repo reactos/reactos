@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.12 2003/08/19 11:48:49 weiden Exp $
+/* $Id: input.c,v 1.13 2003/09/30 22:04:24 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -75,7 +75,7 @@ KeyboardThreadMain(PVOID StartContext)
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Win32K: Failed to open keyboard.\n");
+      DPRINT1("Win32K: Failed to open keyboard.\n");
       return; //(Status);
     }
 
@@ -108,7 +108,7 @@ KeyboardThreadMain(PVOID StartContext)
 			       sizeof(KEY_EVENT_RECORD),
 			       NULL,
 			       NULL);
-    DbgPrint( "KeyRaw: %s %04x\n",
+    DPRINT( "KeyRaw: %s %04x\n",
 	      KeyEvent.bKeyDown ? "down" : "up",
 	      KeyEvent.wVirtualScanCode );
 
@@ -118,12 +118,12 @@ KeyboardThreadMain(PVOID StartContext)
 	    }
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DbgPrint("Win32K: Failed to read from keyboard.\n");
+	      DPRINT1("Win32K: Failed to read from keyboard.\n");
 	      return; //(Status);
 	    }
 	  
     SysKey = KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED);
-	DbgPrint( "Key: %s\n", KeyEvent.bKeyDown ? "down" : "up" );
+	DPRINT( "Key: %s\n", KeyEvent.bKeyDown ? "down" : "up" );
 
 	  /*
 	   * Post a keyboard message.
@@ -210,11 +210,13 @@ InitInputImpl(VOID)
 				NULL);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Win32K: Failed to create keyboard thread.\n");
+      DPRINT1("Win32K: Failed to create keyboard thread.\n");
     }
 
   /*
    * Connect to the mouse class driver.
+   * Failures here don't result in a failure return, the system must be
+   * able to operate without mouse
    */  
   RtlInitUnicodeStringFromLiteral(&MouseDeviceName, L"\\??\\MouseClass");
   InitializeObjectAttributes(&MouseObjectAttributes,
@@ -230,8 +232,8 @@ InitInputImpl(VOID)
 		      0);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Win32K: Failed to open mouse.\n");
-      return(Status);
+      DPRINT1("Win32K: Failed to open mouse.\n");
+      return STATUS_SUCCESS;
     }
   Status = ObReferenceObjectByHandle(MouseDeviceHandle,
 				     FILE_READ_DATA | FILE_WRITE_DATA,
@@ -242,8 +244,9 @@ InitInputImpl(VOID)
    
    if (!NT_SUCCESS(Status))
      {
-       DbgPrint("Win32K: Failed to reference mouse file object.\n");
-       return(Status);
+       DPRINT1("Win32K: Failed to reference mouse file object.\n");
+       NtClose(MouseDeviceHandle);
+       return STATUS_SUCCESS;
      }
    KeInitializeEvent(&IoEvent, FALSE, NotificationEvent);
    GdiInfo.CallBack = MouseGDICallBack;
@@ -275,11 +278,13 @@ InitInputImpl(VOID)
      }
    if (!NT_SUCCESS(Status))
      {
-       DbgPrint("Win32K: Failed to connect to mouse driver.\n");
-       return(Status);
+       DPRINT1("Win32K: Failed to connect to mouse driver.\n");
+       ObDereferenceObject(&FileObject);
+       NtClose(MouseDeviceHandle);
+       return STATUS_SUCCESS;
      }
    
-   return(STATUS_SUCCESS);
+   return STATUS_SUCCESS;
 }
 
 NTSTATUS FASTCALL
