@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.5 2004/04/18 12:59:14 hbirr Exp $
+ * $Id: dispatch.c,v 1.6 2004/06/20 16:05:47 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -49,17 +49,19 @@ IntVideoPortResetDisplayParameters(ULONG Columns, ULONG Rows)
 
    DriverExtension = ResetDisplayParametersDeviceExtension->DriverExtension;
 
-   if (NULL == DriverExtension->InitializationData.HwResetHw ||
-       !DriverExtension->InitializationData.HwResetHw(
-          &ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
-          Columns, Rows))
+   if (DriverExtension->InitializationData.HwResetHw != NULL)
    {
-      ResetDisplayParametersDeviceExtension = NULL;
-      return FALSE;
+      if (DriverExtension->InitializationData.HwResetHw(
+             &ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
+             Columns, Rows))
+      {
+         ResetDisplayParametersDeviceExtension = NULL;
+         return TRUE;
+      }
    }
 
    ResetDisplayParametersDeviceExtension = NULL;
-   return TRUE;
+   return FALSE;
 }
 
 NTSTATUS STDCALL
