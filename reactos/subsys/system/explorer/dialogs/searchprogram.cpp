@@ -153,7 +153,7 @@ void FindProgramDlg::Refresh(bool delete_cache)
 
 	TCHAR buffer[1024];
 	GetWindowText(GetDlgItem(_hwnd, IDC_FILTER), buffer, 1024);
-#ifndef __WINE__ ///@todo
+#ifndef __WINE__ ///@todo _tcslwr() for Wine
 	_tcslwr(buffer);
 #endif
 	_lwr_filter = buffer;
@@ -232,7 +232,7 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 	String lwr_path = cache_entry._path;
 	String lwr_name = cache_entry._entry->_display_name;
 
-#ifndef __WINE__ ///@todo
+#ifndef __WINE__ ///@todo _tcslwr() for Wine
 	_tcslwr((LPTSTR)lwr_path.c_str());
 	_tcslwr((LPTSTR)lwr_name.c_str());
 #endif

@@ -172,7 +172,7 @@ bool FileTypeManager::is_exe_file(LPCTSTR ext)
 
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
-#ifndef __WINE__ ///@todo
+#ifndef __WINE__ ///@todo _tcslwr() for Wine
 	_tcslwr((LPTSTR)ext.c_str());
 #endif
 
@@ -405,7 +405,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 {
 	CachePair key(path, idx);
 
-#ifndef __WINE__ ///@todo
+#ifndef __WINE__ ///@todo _tcslwr() for Wine
 	_tcslwr((LPTSTR)key.first.c_str());
 #endif
 

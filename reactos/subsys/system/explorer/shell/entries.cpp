@@ -116,7 +116,7 @@ Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder, int scan_flags)
 {
 	CONTEXT("Entry::read_tree()");
 
-	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
+	WaitCursor wait;
 
 	Entry* entry = this;
 
@@ -131,8 +131,6 @@ Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder, int scan_flags)
 
 		entry = found;
 	}
-
-	SetCursor(old_cursor);
 
 	return entry;
 }

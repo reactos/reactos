@@ -51,7 +51,7 @@ enum SCAN_FLAGS {
 	SCAN_EXTRACT_ICONS	= 1,
 	SCAN_DO_ACCESS		= 2,
 
-	SCAN_ALL			= 0,//@@3,
+	SCAN_ALL			= 3,
 
 	SCAN_FILESYSTEM		= 4
 };

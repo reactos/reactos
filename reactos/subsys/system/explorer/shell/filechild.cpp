@@ -276,7 +276,9 @@ void FileChildWindow::set_curdir(Entry* entry)
 
 			ListBox_ResetContent(_right_hwnd);
 			_right->insert_entries(entry->_down);
-			_right->calc_widths(false);
+
+			_right->calc_widths(false);	///@todo make configurable (This call takes really _very_ long compared to all other processing!)
+
 			_right->set_header();
 		}
 
@@ -601,7 +603,7 @@ void FileChildWindow::activate_entry(Pane* pane)	///@todo enable using <RETURN> 
 		}
 
 		if (!scanned_old) {
-			pane->calc_widths(FALSE);
+			pane->calc_widths(false);
 
 			pane->set_header();
 		}
