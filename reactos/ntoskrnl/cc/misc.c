@@ -94,7 +94,6 @@ CcSetFileSizes (
       current_entry = current_entry->Flink;
       if (current->FileOffset > FileSizes->AllocationSize.QuadPart)
       {
-        current_entry = current_entry->Flink;
         CcRosFreeCacheSegment(Bcb, current);
       }
     }
