@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.3 2000/06/16 07:34:15 jfilby Exp $
+/* $Id: stubsw.c,v 1.4 2001/05/02 12:35:06 jfilby Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -29,41 +29,6 @@ STDCALL
 CopyMetaFileW(
 	HMETAFILE	a0,
 	LPCWSTR		a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-HFONT
-STDCALL
-CreateFontIndirectW(
-	CONST LOGFONT		*a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-HFONT
-STDCALL
-CreateFontW(
-	int	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	DWORD	a5,
-	DWORD	a6,
-	DWORD	a7,
-	DWORD	a8,
-	DWORD	a9,
-	DWORD	a10,
-	DWORD	a11,
-	DWORD	a12,
-	LPCWSTR	a13
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -281,20 +246,6 @@ GetOutlineTextMetricsW(
 
 BOOL
 APIENTRY
-GetTextExtentPointW(
-	HDC		hDc,
-	LPCWSTR		a1,
-	int		a2,
-	LPSIZE		a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-BOOL
-APIENTRY
 GetTextExtentPoint32W(
 	HDC		hDc,
 	LPCWSTR		a1,
@@ -413,18 +364,6 @@ GetEnhMetaFileDescriptionW(
 }
 
 
-BOOL 
-STDCALL 
-GetTextMetricsW(
-	HDC		hdc, 
-	LPTEXTMETRIC	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 int 
 STDCALL 
 StartDocW(
@@ -447,24 +386,6 @@ GetObjectW(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-BOOL  
-STDCALL 
-ExtTextOutW(
-	HDC		hdc, 
-	int		a1, 
-	int		a2, 
-	UINT		a3,	 
-	CONST RECT	*a4,
-	LPCWSTR		a5, 
-	UINT		a6, 
-	CONST INT	*a7
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.4 2000/07/07 00:37:52 phreak Exp $
+/* $Id: stubs.c,v 1.5 2001/05/02 12:35:06 jfilby Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1602,19 +1602,6 @@ STDCALL
 SetTextCharacterExtra(
 	HDC	a0, 
 	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
- 
-COLORREF 
-STDCALL 
-SetTextColor(
-	HDC		a0, 
-	COLORREF	a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.4 2000/06/16 07:34:15 jfilby Exp $
+/* $Id: stubsa.c,v 1.5 2001/05/02 12:35:06 jfilby Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -37,43 +37,6 @@ CopyMetaFileA(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-HFONT
-STDCALL
-CreateFontIndirectA(
-	CONST LOGFONT		*a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HFONT
-STDCALL
-CreateFontA(
-	int	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	DWORD	a5,
-	DWORD	a6,
-	DWORD	a7,
-	DWORD	a8,
-	DWORD	a9,
-	DWORD	a10,
-	DWORD	a11,
-	DWORD	a12,
-	LPCSTR	a13
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 HDC
 STDCALL
@@ -285,20 +248,6 @@ GetOutlineTextMetricsA(
 
 BOOL
 APIENTRY
-GetTextExtentPointA(
-	HDC		hDc,
-	LPCSTR		a1,
-	int		a2,
-	LPSIZE		a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-BOOL
-APIENTRY
 GetTextExtentPoint32A(
 	HDC		hDc,
 	LPCSTR		a1,
@@ -417,18 +366,6 @@ GetEnhMetaFileDescriptionA(
 }
 
 
-BOOL 
-STDCALL 
-GetTextMetricsA(
-	HDC		hdc, 
-	LPTEXTMETRIC	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 int
 STDCALL
 StartDocA(
@@ -454,24 +391,6 @@ GetObjectA(
 }
 
 
-BOOL  
-STDCALL 
-ExtTextOutA(
-	HDC		hdc, 
-	int		a1, 
-	int		a2, 
-	UINT		a3, 
-	CONST RECT	*a4,
-	LPCSTR		a5, 
-	UINT		a6, 
-	CONST INT	*a7
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
- 
 BOOL  
 STDCALL 
 PolyTextOutA(
