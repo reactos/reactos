@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.16 2003/04/12 18:41:43 ekohl Exp $
+/* $Id: import.c,v 1.17 2003/04/17 11:07:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,9 @@
 
 #include "cm.h"
 
+/* GLOBALS ******************************************************************/
+
+static BOOLEAN CmiHardwareHiveImported = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -865,11 +868,105 @@ CmImportHardwareHive(PCHAR ChunkBase,
 {
 #if 0
   PREGISTRY_HIVE RegistryHive;
-  UNICODE_STRING KeyName;
-  NTSTATUS Status;
 #endif
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  HANDLE HardwareKey;
+  ULONG Disposition;
+  NTSTATUS Status;
 
   DPRINT ("CmImportHardwareHive() called\n");
+
+  if (ChunkBase == NULL &&
+      ChunkSize == 0 &&
+      CmiHardwareHiveImported == FALSE)
+    {
+      /* Create '\Registry\Machine\HARDWARE' key. */
+      RtlInitUnicodeString(&KeyName,
+			   L"\\Registry\\Machine\\HARDWARE");
+      InitializeObjectAttributes (&ObjectAttributes,
+				  &KeyName,
+				  0,
+				  NULL,
+				  NULL);
+      Status = NtCreateKey (&HardwareKey,
+			    KEY_ALL_ACCESS,
+			    &ObjectAttributes,
+			    0,
+			    NULL,
+			    REG_OPTION_VOLATILE,
+			    &Disposition);
+      if (!NT_SUCCESS(Status))
+	{
+	  return FALSE;
+	}
+      NtClose (HardwareKey);
+
+      /* Create '\Registry\Machine\HARDWARE\DESCRIPTION' key. */
+      RtlInitUnicodeString(&KeyName,
+			   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION");
+      InitializeObjectAttributes (&ObjectAttributes,
+				  &KeyName,
+				  0,
+				  NULL,
+				  NULL);
+      Status = NtCreateKey (&HardwareKey,
+			    KEY_ALL_ACCESS,
+			    &ObjectAttributes,
+			    0,
+			    NULL,
+			    REG_OPTION_VOLATILE,
+			    &Disposition);
+      if (!NT_SUCCESS(Status))
+	{
+	  return FALSE;
+	}
+      NtClose (HardwareKey);
+
+      /* Create '\Registry\Machine\HARDWARE\DEVICEMAP' key. */
+      RtlInitUnicodeString(&KeyName,
+			   L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP");
+      InitializeObjectAttributes (&ObjectAttributes,
+				  &KeyName,
+				  0,
+				  NULL,
+				  NULL);
+      Status = NtCreateKey (&HardwareKey,
+			    KEY_ALL_ACCESS,
+			    &ObjectAttributes,
+			    0,
+			    NULL,
+			    REG_OPTION_VOLATILE,
+			    &Disposition);
+      if (!NT_SUCCESS(Status))
+	{
+	  return FALSE;
+	}
+      NtClose (HardwareKey);
+
+      /* Create '\Registry\Machine\HARDWARE\RESOURCEMAP' key. */
+      RtlInitUnicodeString(&KeyName,
+			   L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
+      InitializeObjectAttributes (&ObjectAttributes,
+				  &KeyName,
+				  0,
+				  NULL,
+				  NULL);
+      Status = NtCreateKey (&HardwareKey,
+			    KEY_ALL_ACCESS,
+			    &ObjectAttributes,
+			    0,
+			    NULL,
+			    REG_OPTION_VOLATILE,
+			    &Disposition);
+      if (!NT_SUCCESS(Status))
+	{
+	  return FALSE;
+	}
+      NtClose (HardwareKey);
+
+      return TRUE;
+    }
 
 #if 0
   if (strncmp (ChunkBase, "regf", 4) != 0)
@@ -907,6 +1004,8 @@ CmImportHardwareHive(PCHAR ChunkBase,
   RtlCreateUnicodeString (&RegistryHive->LogFileName,
 			  NULL);
 #endif
+
+  CmiHardwareHiveImported = TRUE;
 
   return TRUE;
 }

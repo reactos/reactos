@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.150 2003/04/01 16:35:22 ekohl Exp $
+/* $Id: main.c,v 1.151 2003/04/17 11:07:47 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -520,6 +520,10 @@ ExpInitializeExecutive(VOID)
 	  CmImportHardwareHive((PCHAR)start, length);
 	}
     }
+
+  /* Create dummy keys if no hardware hive was found */
+  CmImportHardwareHive (NULL, 0);
+
 
   /* Initialize volatile registry settings */
   if (SetupBoot == FALSE)

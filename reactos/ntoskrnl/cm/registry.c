@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.92 2003/04/12 15:09:57 ekohl Exp $
+/* $Id: registry.c,v 1.93 2003/04/17 11:07:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -258,11 +258,6 @@ CmInitializeRegistry(VOID)
   HANDLE KeyHandle;
   NTSTATUS Status;
 
-  /* FIXME: remove the hardware keys before the hardware hive is imported */
-  PKEY_OBJECT HardwareKey;
-  PKEY_OBJECT NewKey;
-
-
   /*  Initialize the Key object type  */
   CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
   assert(CmiKeyType);
@@ -373,113 +368,6 @@ CmInitializeRegistry(VOID)
   UserKey->Name = ExAllocatePool(PagedPool, UserKey->NameSize);
   RtlCopyMemory(UserKey->Name, "User", UserKey->NameSize);
   CmiAddKeyToList(RootKey, UserKey);
-
-
-  /* FIXME: remove the hardware keys before the hardware hive is imported */
-
-  /* Create '\Registry\Machine\HARDWARE' key. */
-  Status = ObCreateObject(&KeyHandle,
-			  STANDARD_RIGHTS_REQUIRED,
-			  NULL,
-			  CmiKeyType,
-			  (PVOID*)&HardwareKey);
-  assert(NT_SUCCESS(Status));
-  Status = CmiAddSubKey(CmiVolatileHive,
-			MachineKey,
-			HardwareKey,
-			L"HARDWARE",
-			wcslen(L"HARDWARE") * sizeof(WCHAR),
-			0,
-			NULL,
-			0);
-  assert(NT_SUCCESS(Status));
-  HardwareKey->RegistryHive = CmiVolatileHive;
-  HardwareKey->Flags = 0;
-  HardwareKey->NumberOfSubKeys = 0;
-  HardwareKey->SubKeys = NULL;
-  HardwareKey->SizeOfSubKeys = HardwareKey->KeyCell->NumberOfSubKeys;
-  HardwareKey->NameSize = strlen("HARDWARE");
-  HardwareKey->Name = ExAllocatePool(PagedPool, strlen("HARDWARE"));
-  RtlCopyMemory(HardwareKey->Name, "HARDWARE", HardwareKey->NameSize);
-  CmiAddKeyToList(MachineKey, HardwareKey);
-
-  /* Create '\Registry\Machine\HARDWARE\DESCRIPTION' key. */
-  Status = ObCreateObject(&KeyHandle,
-			  STANDARD_RIGHTS_REQUIRED,
-			  NULL,
-			  CmiKeyType,
-			  (PVOID*)&NewKey);
-  assert(NT_SUCCESS(Status));
-  Status = CmiAddSubKey(CmiVolatileHive,
-			HardwareKey,
-			NewKey,
-			L"DESCRIPTION",
-			wcslen(L"DESCRIPTION") * sizeof(WCHAR),
-			0,
-			NULL,
-			0);
-  assert(NT_SUCCESS(Status));
-  NewKey->RegistryHive = CmiVolatileHive;
-  NewKey->Flags = 0;
-  NewKey->NumberOfSubKeys = 0;
-  NewKey->SubKeys = NULL;
-  NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->NameSize = strlen("DESCRIPTION");
-  NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
-  RtlCopyMemory(NewKey->Name, "DESCRIPTION", NewKey->NameSize);
-  CmiAddKeyToList(HardwareKey, NewKey);
-
-  /* Create '\Registry\Machine\HARDWARE\DEVICEMAP' key. */
-  Status = ObCreateObject(&KeyHandle,
-			  STANDARD_RIGHTS_REQUIRED,
-			  NULL,
-			  CmiKeyType,
-			  (PVOID*)&NewKey);
-  assert(NT_SUCCESS(Status));
-  Status = CmiAddSubKey(CmiVolatileHive,
-			HardwareKey,
-			NewKey,
-			L"DEVICEMAP",
-			wcslen(L"DEVICEMAP") * sizeof(WCHAR),
-			0,
-			NULL,
-			0);
-  assert(NT_SUCCESS(Status));
-  NewKey->RegistryHive = CmiVolatileHive;
-  NewKey->Flags = 0;
-  NewKey->NumberOfSubKeys = 0;
-  NewKey->SubKeys = NULL;
-  NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->NameSize = strlen("DEVICEMAP");
-  NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
-  RtlCopyMemory(NewKey->Name, "DEVICEMAP", NewKey->NameSize);
-  CmiAddKeyToList(HardwareKey,NewKey);
-
-  /* Create '\Registry\Machine\HARDWARE\RESOURCEMAP' key. */
-  Status = ObCreateObject(&KeyHandle,
-			  STANDARD_RIGHTS_REQUIRED,
-			  NULL,
-			  CmiKeyType,
-			  (PVOID*)&NewKey);
-  assert(NT_SUCCESS(Status));
-  Status = CmiAddSubKey(CmiVolatileHive,
-			HardwareKey,
-			NewKey,
-			L"RESOURCEMAP",
-			wcslen(L"RESOURCEMAP") * sizeof(WCHAR),
-			0,
-			NULL,
-			0);
-  assert(NT_SUCCESS(Status));
-  NewKey->RegistryHive = CmiVolatileHive;
-  NewKey->Flags = 0;
-  NewKey->NumberOfSubKeys = 0;
-  NewKey->SubKeys = NULL;
-  NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->NameSize = strlen("RESOURCEMAP");
-  NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
-  RtlCopyMemory(NewKey->Name, "RESOURCEMAP", NewKey->NameSize);
-  CmiAddKeyToList(HardwareKey, NewKey);
 }
 
 

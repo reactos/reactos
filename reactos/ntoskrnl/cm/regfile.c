@@ -3081,7 +3081,7 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
 	return STATUS_INSUFFICIENT_RESOURCES;
 
       tmpListOffset = ExAllocatePool(PagedPool,
-			  sizeof(BLOCK_OFFSET *) * (RegistryHive->FreeListMax + 32));
+			  sizeof(BLOCK_OFFSET) * (RegistryHive->FreeListMax + 32));
 
       if (tmpListOffset == NULL)
 	{
@@ -3096,7 +3096,7 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
 			sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax));
 	  RtlMoveMemory(tmpListOffset,
 			RegistryHive->FreeListOffset,
-			sizeof(BLOCK_OFFSET *) * (RegistryHive->FreeListMax));
+			sizeof(BLOCK_OFFSET) * (RegistryHive->FreeListMax));
 	  ExFreePool(RegistryHive->FreeList);
 	  ExFreePool(RegistryHive->FreeListOffset);
 	}
