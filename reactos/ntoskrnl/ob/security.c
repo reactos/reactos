@@ -157,10 +157,10 @@ NtQuerySecurityObject(IN HANDLE Handle,
   POBJECT_HEADER Header;
   PVOID Object;
   PSECURITY_DESCRIPTOR ObjectSd;
-  PSID Owner;
-  PSID Group;
-  PACL Dacl;
-  PACL Sacl;
+  PSID Owner = 0;
+  PSID Group = 0;
+  PACL Dacl = 0;
+  PACL Sacl = 0;
   ULONG OwnerLength = 0;
   ULONG GroupLength = 0;
   ULONG DaclLength = 0;
