@@ -133,16 +133,23 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
  *
  * nCmdShow = nCmdShow of CreateProcess
  */
-// TODO: 1) Set errors
-//       2) Take flags into account
+
+// In development now, current status:
+// Currently it does registry settings + file operations
+// Registry settings tested
+// File operations - not tested, just done according to MSDN (file queus)
+// Flags - taken from WINE implementation
+
 void WINAPI InstallHinfSection(HWND hwnd, HINSTANCE handle, LPCSTR lpszCmdLine, INT nCmdShow)
 {
-	LPSTR *pSub;
+    LPSTR *pSub;
     DWORD count;
     HINF hInf = 0;
-    RETERR16 res = OK, tmp;
     WORD wFlags;
     BOOL reboot = FALSE;
+    BOOL err;
+    HSPFILEQ fQueue;
+    PVOID cbContext;
 
     TRACE("(%04x, %04x, %s, %d);\n", hwnd, hinst, lpszCmdLine, nCmdShow);
 
@@ -158,23 +165,61 @@ void WINAPI InstallHinfSection(HWND hwnd, HINSTANCE handle, LPCSTR lpszCmdLine, 
 	hInf = SetupOpenInfFileA(*(pSub+count), NULL, INF_STYLE_WIN4, NULL);
     if (hInf == (HINF)INVALID_HANDLE_VALUE)
     {
-		//res = ERROR_FILE_NOT_FOUND; /* yes, correct */
+        SetLastError(ERROR_FILE_NOT_FOUND);
 		SETUPX_FreeSubStrings(pSub);
 		return;
     }
 
-	// FIXME: Take result in mind	
-	SetupInstallFromInfSectionA(hwnd, hInf, (PCSTR)(*(pSub+1)), SPINST_ALL/*flags*/,
-                                NULL/*HKEY key_root*/, "C:\\"/*PCWSTR src_root*/, 0/*UINT copy_flags*/,
+    // Deal with registry settings    
+	err = SetupInstallFromInfSectionA(hwnd, hInf, (PCSTR)(*(pSub+1)), SPINST_ALL ^ SPINST_FILES/*flags*/,
+                                NULL/*HKEY key_root*/, NULL/*PCWSTR src_root*/, 0/*UINT copy_flags*/,
                                 NULL/*PSP_FILE_CALLBACK_W callback*/, NULL/*PVOID context*/,
                                 NULL/*HDEVINFO devinfo*/, NULL/*PSP_DEVINFO_DATA devinfo_data*/);
-	
-	// release alloced memory
+    
+    if (err)
+    {
+        // TODO: Show some message box saying installing from INF section has failed
+        // FIXME: Use strings from resources, and do it the way Windows does
+        MessageBox(hwnd, "InstallFromHinfSection", "Installing registry settings from an INF section failed", MB_OK);
+
+        // release alloced memory
+	    SetupCloseInfFile(hInf);
+        SETUPX_FreeSubStrings(pSub);
+        return;
+    }
+    
+    // Deal with files now
+    fQueue = SetupOpenFileQueue();
+    
+    if (fQueue == INVALID_HANDLE_VALUE)
+    {
+        // TODO: Show some message box saying creating a file queue has failed
+        MessageBox(hwnd, "InstallFromHinfSection", "File queue opening failed", MB_OK);
+
+        // release alloced memory
+	    SetupCloseInfFile(hInf);
+        SETUPX_FreeSubStrings(pSub);
+        return;
+    }
+    
+    cbContext = SetupInitDefaultQueueCallback(hwnd);
+    
+    // Fullfill the file queue
+    //FIXME: Is the flag (SP_COPY_NEWER) right for this call?
+    SetupInstallFilesFromInfSectionA(hInf, /*HINF hlayout*/NULL, fQueue,
+                                     (PCSTR)(*(pSub+1)), /*PCSTR src_root*/NULL, SP_COPY_NEWER);
+
+    err = SetupCommitFileQueueA(hwnd, fQueue, SetupDefaultQueueCallbackA, cbContext);
+
+
+    // Release all alloced handles and memory
+    SetupCloseFileQueue(fQueue);
+    SetupTermDefaultQueueCallback(cbContext);
 	SetupCloseInfFile(hInf);
-    SETUPX_FreeSubStrings(pSub);	
-	
-/*
-	wFlags = atoi(*(pSub+count-1)) & ~128;
+    SETUPX_FreeSubStrings(pSub);
+    
+    // Deal with flags now
+    wFlags = atoi(*(pSub+count-1)) & ~128;
     switch (wFlags)
     {
 	case HOW_ALWAYS_SILENT_REBOOT:
@@ -183,14 +228,20 @@ void WINAPI InstallHinfSection(HWND hwnd, HINSTANCE handle, LPCSTR lpszCmdLine, 
 	    break;
 	case HOW_ALWAYS_PROMPT_REBOOT:
 	case HOW_PROMPT_REBOOT:
-            if (MessageBoxA(HWND_32(hwnd), "You must restart Wine before the new settings will take effect.\n\nDo you want to exit Wine now ?", "Systems Settings Change", MB_YESNO|MB_ICONQUESTION) == IDYES)
+            // FIXME: What is the SetupPromptReboot() function is for?
+            // Anyway it isn't implemented
+            if (MessageBoxA(hwnd, "You must restart ReactOS before the new settings will take effect.\n\nDo you want to exit ReactOS now ?", "Systems Settings Change", MB_YESNO|MB_ICONQUESTION) == IDYES)
                 reboot = TRUE;
 	    break;
 	default:
 	    ERR("invalid flags %d !\n", wFlags);
-	    goto end;
+	    return;
     }
-*/
+    
+    if (reboot)
+    {
+        ExitWindowsEx(EWX_REBOOT, 0);        
+    }
 }
 
 typedef struct
