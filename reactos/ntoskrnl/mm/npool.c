@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.75 2003/09/14 09:14:20 hbirr Exp $
+/* $Id: npool.c,v 1.76 2003/10/20 18:43:11 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1573,8 +1573,7 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 	KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 	return(NULL);
      }
-   /* Make the size dword alligned, this makes the block dword alligned */  
-   Size = ROUND_UP(Size, sizeof(DWORD));
+
 
    if (Size >= PAGE_SIZE)
      {
@@ -1587,7 +1586,7 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
      }
    else
      {
-       alignment = 0;
+       alignment = MM_POOL_ALIGNMENT;
      }
 
    best = get_block(Size, alignment);

@@ -19,7 +19,12 @@ extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
 
 #define MM_PAGED_POOL_SIZE	(100*1024*1024)
-#define MM_NONPAGED_POOL_SIZE   (100*1024*1024)
+#define MM_NONPAGED_POOL_SIZE	(100*1024*1024)
+
+/*
+ * Paged and non-paged pools are 8-byte aligned
+ */
+#define MM_POOL_ALIGNMENT	8
 
 /*
  * Maximum size of the kmalloc area (this is totally arbitary)

@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.20 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: ppool.c,v 1.21 2003/10/20 18:43:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -195,7 +195,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
     }
   else
     {
-      Alignment = 0;
+      Alignment = MM_POOL_ALIGNMENT;
     }
 
   /*
