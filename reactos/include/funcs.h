@@ -6757,6 +6757,10 @@ STDCALL
 MessageBeep(
 	    UINT uType);
 
+HCURSOR
+STDCALL
+CopyCursor(HCURSOR pcur);
+
 int
 STDCALL
 ShowCursor(

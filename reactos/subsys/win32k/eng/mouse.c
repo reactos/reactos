@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.38 2003/08/28 16:33:22 weiden Exp $
+/* $Id: mouse.c,v 1.39 2003/08/29 00:24:42 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -598,7 +598,7 @@ EnableMouse(HDC hDisplayDC)
     hMouseSurf = EngCreateBitmap(MouseSize, 4, BMF_1BPP, BMF_TOPDOWN, DefaultCursor);
     MouseSurf = (PSURFOBJ)AccessUserObject((ULONG) hMouseSurf);
 
-    DbgPrint("Setting Cursor up at 0x%x, 0x%x\n", CurInfo->x, CurInfo->y);
+    DPRINT("Setting Cursor up at 0x%x, 0x%x\n", CurInfo->x, CurInfo->y);
     IntCheckClipCursor(&CurInfo->x, 
                        &CurInfo->y,
                        CurInfo);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.10 2003/08/22 20:50:44 weiden Exp $
+/* $Id: icon.c,v 1.11 2003/08/29 00:24:42 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -459,14 +459,14 @@ GetIconInfo(
     return FALSE;
   }
   
-  RtlCopyMemory(&IconInfo, piconinfo, sizeof(ICONINFO));
   res = NtUserGetIconInfo(hIcon,
                           &piconinfo->fIcon,
                           &piconinfo->xHotspot,
                           &piconinfo->yHotspot,
                           &piconinfo->hbmMask,
                           &piconinfo->hbmColor);
-  RtlCopyMemory(piconinfo, &IconInfo, sizeof(ICONINFO));
+  if(res)
+    RtlCopyMemory(piconinfo, &IconInfo, sizeof(ICONINFO));
   return res;
 }
 

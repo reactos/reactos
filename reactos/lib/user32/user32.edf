@@ -73,6 +73,7 @@ CloseWindow=CloseWindow@4
 CloseWindowStation=CloseWindowStation@4
 CopyAcceleratorTableA=CopyAcceleratorTableA@12
 CopyAcceleratorTableW=CopyAcceleratorTableW@12
+CopyCursor=CopyCursor@4
 CopyIcon=CopyIcon@4
 CopyImage=CopyImage@20
 CopyRect=CopyRect@8

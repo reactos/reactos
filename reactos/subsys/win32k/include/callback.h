@@ -44,4 +44,7 @@ IntSendSTYLECHANGEDMessage(HWND Wnd, DWORD WhichStyle, STYLESTRUCT* Style);
 HMENU STDCALL
 IntLoadSysMenuTemplate();
 
+BOOL STDCALL
+IntLoadDefaultCursors();
+
 #endif /* __SUBSYS_WIN32K_INCLUDE_CALLBACK_H */

@@ -15,3 +15,6 @@ typedef struct _USER32_THREAD_DATA
 PUSER32_THREAD_DATA User32GetThreadData();
 
 VOID DeleteFrameBrushes(VOID);
+
+BOOL FASTCALL
+User32SetupDefaultCursors(void);

@@ -398,7 +398,7 @@ NtUserSetCursorIconData(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -406,7 +406,7 @@ NtUserSetSystemCursor(
   HCURSOR hcur,
   DWORD id)
 {
-  UNIMPLEMENTED
+  BOOL res = FALSE;
 
-  return 0;
+  return res;
 }
