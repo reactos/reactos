@@ -18,7 +18,6 @@
 /* GLOBALS ******************************************************************/
 
 PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
-PEPROCESS PsIdleProcess = NULL;
 
 POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
