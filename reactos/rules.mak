@@ -74,7 +74,7 @@ endif
 #
 ifeq ($(HOST),mingw32-linux)
 export NASM_FORMAT = win32
-export PREFIX = i386-mingw32-
+export PREFIX = mingw32-
 export EXE_POSTFIX :=
 export EXE_PREFIX := ./
 export DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
