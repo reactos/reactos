@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.45 2002/08/17 15:15:50 hbirr Exp $
+/* $Id: rw.c,v 1.46 2002/08/17 16:51:07 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -930,13 +930,14 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    OldFileSize = Fcb->RFCB.FileSize;
    OldAllocationSize = Fcb->RFCB.AllocationSize.u.LowPart;
 
-   if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+   if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) && 
+       !(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+       ByteOffset.u.LowPart + Length > Fcb->RFCB.FileSize.u.LowPart)
    {
       LARGE_INTEGER AllocationSize;
       AllocationSize.QuadPart = ByteOffset.u.LowPart + Length;
       Status = VfatSetAllocationSizeInformation(IrpContext->FileObject, Fcb,
 	                                        IrpContext->DeviceExt, &AllocationSize);
-      CHECKPOINT;
       if (!NT_SUCCESS (Status))
       {
          CHECKPOINT;
