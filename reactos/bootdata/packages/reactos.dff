@@ -71,7 +71,7 @@ lib\crtdll\crtdll.dll                   1
 lib\dinput\dinput.dll                   1
 lib\dinput8\dinput8.dll                 1
 lib\dsound\dsound.dll			    1
-lib\dxdiagn\dxdigan.dll                 1
+lib\dxdiagn\dxdiagn.dll                 1
 lib\expat\expat.dll                     1
 lib\fmifs\fmifs.dll                     1
 lib\freetype\freetype.dll               1
