@@ -253,10 +253,10 @@ FindResourceExW@16
 FindResourceW@12
 FindVolumeClose@4
 FindVolumeMountPointClose@4
-FlsAlloc@4 ;new for 2003
-FlsFree@4 ;new for 2003
-FlsGetValue@4 ;new for 2003
-FlsSetValue@8 ;new for 2003
+;FlsAlloc@4 ;new for 2003
+;FlsFree@4 ;new for 2003
+;FlsGetValue@4 ;new for 2003
+;FlsSetValue@8 ;new for 2003
 FlushConsoleInputBuffer@4
 FlushFileBuffers@4
 FlushInstructionCache@12

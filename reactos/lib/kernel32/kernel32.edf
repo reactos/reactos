@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.29 2003/09/12 17:51:47 vizzini Exp $
+; $Id: kernel32.edf,v 1.30 2003/11/08 18:05:05 hyperion Exp $
 ;
 ; kernel32.edf
 ;
@@ -257,10 +257,10 @@ FindResourceExW=FindResourceExW@16
 FindResourceW=FindResourceW@12
 FindVolumeClose=FindVolumeClose@4
 FindVolumeMountPointClose=FindVolumeMountPointClose@4
-FlsAlloc=FlsAlloc@4 ;new for 2003
-FlsFree=FlsFree@4 ;new for 2003
-FlsGetValue=FlsGetValue@4 ;new for 2003
-FlsSetValue=FlsSetValue@8 ;new for 2003
+;FlsAlloc=FlsAlloc@4 ;new for 2003
+;FlsFree=FlsFree@4 ;new for 2003
+;FlsGetValue=FlsGetValue@4 ;new for 2003
+;FlsSetValue=FlsSetValue@8 ;new for 2003
 FlushConsoleInputBuffer=FlushConsoleInputBuffer@4
 FlushFileBuffers=FlushFileBuffers@4
 FlushInstructionCache=FlushInstructionCache@12
