@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.18 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: fillshap.c,v 1.19 2003/06/06 10:27:43 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -155,10 +155,10 @@ W32kPolygon(HDC  hDC,
       // Draw the Polygon Edges with the current pen
 	  for (CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint)
       {
-		  DestRect.bottom   = MAX(DestRect.bottom, Points[CurrentPoint].y + dc->w.DCOrgY);
-		  DestRect.top      = MIN(DestRect.top, Points[CurrentPoint].y + dc->w.DCOrgY);
-		  DestRect.right    = MAX(DestRect.right, Points[CurrentPoint].y + dc->w.DCOrgX);
-		  DestRect.left     = MIN(DestRect.left, Points[CurrentPoint].y + dc->w.DCOrgX);
+		  DestRect.bottom   = MAX(DestRect.bottom, Points[CurrentPoint].y);
+		  DestRect.top      = MIN(DestRect.top, Points[CurrentPoint].y);
+		  DestRect.right    = MAX(DestRect.right, Points[CurrentPoint].y);
+		  DestRect.left     = MIN(DestRect.left, Points[CurrentPoint].y);
 	  }//for
 	
 	  //Now fill the polygon with the current brush.
