@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.71 2004/04/18 00:52:57 jimtabor Exp $
+/* $Id: timer.c,v 1.72 2004/04/20 20:38:41 jimtabor Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -236,20 +236,17 @@ KeQueryInterruptTime(PLARGE_INTEGER CurrentTime)
 
 }
 
-
-NTSTATUS STDCALL
-NtGetTickCount (PULONG	UpTime)
+/*
+ * @implemented
+ */
+ULONG
+STDCALL
+NtGetTickCount(VOID)
 {
   LARGE_INTEGER TickCount;
-  if (UpTime == NULL)
-  {
-    return(STATUS_INVALID_PARAMETER);
-  }
-
   KeQueryTickCount(&TickCount);
-  return(MmCopyToCaller(UpTime, &TickCount.u.LowPart, sizeof(*UpTime)));
+  return TickCount.u.LowPart;
 }
-
 
 /*
  * @implemented
