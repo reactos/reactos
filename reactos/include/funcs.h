@@ -1073,29 +1073,6 @@ STDCALL
 RtlQueryDepthSList (
     PSLIST_HEADER ListHead
     );
-NTSTATUS
-STDCALL
-RtlCreateTimer(HANDLE TimerQueue,PHANDLE phNewTimer, WAITORTIMERCALLBACK Callback,PVOID Parameter,DWORD DueTime,DWORD Period,ULONG Flags);
-
-NTSTATUS
-STDCALL
-RtlCreateTimerQueue(PHANDLE TimerQueue);
-
-NTSTATUS
-STDCALL
-RtlDeleteTimer(HANDLE TimerQueue,HANDLE Timer,HANDLE CompletionEvent);
-
-NTSTATUS
-STDCALL
-RtlUpdateTimer(HANDLE TimerQueue,HANDLE Timer,ULONG DueTime,ULONG Period);
-
-NTSTATUS
-STDCALL
-RtlDeleteTimerQueueEx(HANDLE TimerQueue,HANDLE CompletionEvent);
-
-NTSTATUS
-STDCALL
-RtlDeleteTimerQueue(HANDLE TimerQueue);
 
 NTSTATUS
 STDCALL

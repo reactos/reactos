@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.113 2004/07/03 17:13:09 hbirr Exp $
+; $Id: ntdll.edf,v 1.114 2004/07/08 00:40:30 weiden Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -354,6 +354,8 @@ RtlCreateProcessParameters=RtlCreateProcessParameters@40
 RtlCreateRegistryKey=RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 ;RtlCreateTagHeap
+RtlCreateTimer=RtlCreateTimer@28
+RtlCreateTimerQueue=RtlCreateTimerQueue@4
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess=RtlCreateUserProcess@40
@@ -377,6 +379,9 @@ RtlDeleteRange=RtlDeleteRange@24
 RtlDeleteRegistryValue=RtlDeleteRegistryValue@12
 RtlDeleteResource=RtlDeleteResource@4
 ;RtlDeleteSecurityObject
+RtlDeleteTimer=RtlDeleteTimer@12
+RtlDeleteTimerQueue=RtlDeleteTimerQueue@4
+RtlDeleteTimerQueueEx=RtlDeleteTimerQueueEx@8
 RtlDestroyAtomTable=RtlDestroyAtomTable@4
 RtlDestroyEnvironment=RtlDestroyEnvironment@4
 RtlDestroyHandleTable=RtlDestroyHandleTable@4
@@ -625,6 +630,7 @@ RtlUpcaseUnicodeStringToOemString=RtlUpcaseUnicodeStringToOemString@12
 RtlUpcaseUnicodeToCustomCPN=RtlUpcaseUnicodeToCustomCPN@24
 RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
+RtlUpdateTimer=RtlUpdateTimer@16
 RtlUpperChar=RtlUpperChar@4
 RtlUpperString=RtlUpperString@8
 ;RtlUsageHeap

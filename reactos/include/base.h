@@ -733,8 +733,8 @@ typedef enum _MEMORY_RESOURCE_NOTIFICATION_TYPE {
     HighMemoryResourceNotification
 } MEMORY_RESOURCE_NOTIFICATION_TYPE;
 
-typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
-typedef WAITORTIMERCALLBACKFUNC WAITORTIMERCALLBACK;
+typedef VOID (CALLBACK *WAITORTIMERCALLBACK) (PVOID, BOOLEAN );
+
 /* End of stuff from ddeml.h in old Cygnus headers */
 /* ----------------------------------------------- */
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.105 2004/07/03 17:40:23 navaraf Exp $
+# $Id: makefile,v 1.106 2004/07/08 00:40:31 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -83,6 +83,7 @@ RTL_OBJECTS = \
 	rtl/resource.o \
 	rtl/teb.o \
 	rtl/thread.o \
+	rtl/timerqueue.o \
 	rtl/libsupp.o
 
 STDIO_OBJECTS = \

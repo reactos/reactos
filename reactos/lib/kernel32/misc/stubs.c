@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.79 2004/06/26 12:56:11 navaraf Exp $
+/* $Id: stubs.c,v 1.80 2004/07/08 00:40:30 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -653,35 +653,6 @@ CancelDeviceWakeupRequest(
     return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-CancelTimerQueueTimer(
-    HANDLE TimerQueue,
-    HANDLE Timer
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-/*
- * @unimplemented
- */
-
-BOOL
-STDCALL
-ChangeTimerQueueTimer(
-    HANDLE TimerQueue,
-    HANDLE Timer,
-    ULONG DueTime,
-    ULONG Period
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
 
 /*
  * @unimplemented
@@ -739,38 +710,6 @@ CreateMemoryResourceNotification(
 /*
  * @unimplemented
  */
-HANDLE
-STDCALL
-CreateTimerQueue(
-    VOID
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-CreateTimerQueueTimer(
-    PHANDLE phNewTimer,
-    HANDLE TimerQueue,
-    WAITORTIMERCALLBACK Callback,
-    PVOID Parameter,
-    DWORD DueTime,
-    DWORD Period,
-    ULONG Flags
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 DeactivateActCtx(
@@ -779,48 +718,6 @@ DeactivateActCtx(
     )
 {
     DbgPrint("DeactivateActCtx: stub\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeleteTimerQueue(
-    HANDLE TimerQueue
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeleteTimerQueueEx(
-    HANDLE TimerQueue,
-    HANDLE CompletionEvent
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeleteTimerQueueTimer(
-    HANDLE TimerQueue,
-    HANDLE Timer,
-    HANDLE CompletionEvent
-    )
-{
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
@@ -1452,24 +1349,6 @@ EXECUTION_STATE
 STDCALL
 SetThreadExecutionState(
     EXECUTION_STATE esFlags
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-HANDLE
-STDCALL
-SetTimerQueueTimer(
-    HANDLE TimerQueue,
-    WAITORTIMERCALLBACK Callback,
-    PVOID Parameter,
-    DWORD DueTime,
-    DWORD Period,
-    BOOL PreferIo
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

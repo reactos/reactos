@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.123 2004/07/03 17:13:09 hbirr Exp $
+; $Id: ntdll.def,v 1.124 2004/07/08 00:40:30 weiden Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -354,6 +354,8 @@ RtlCreateProcessParameters@40
 RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
 ;RtlCreateTagHeap
+RtlCreateTimer@28
+RtlCreateTimerQueue@4
 RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess@40
@@ -377,6 +379,9 @@ RtlDeleteRange@24
 RtlDeleteRegistryValue@12
 RtlDeleteResource@4
 ;RtlDeleteSecurityObject
+RtlDeleteTimer@12
+RtlDeleteTimerQueue@4
+RtlDeleteTimerQueueEx@8
 RtlDestroyAtomTable@4
 RtlDestroyEnvironment@4
 RtlDestroyHandleTable@4
@@ -623,6 +628,7 @@ RtlUpcaseUnicodeStringToOemString@12
 RtlUpcaseUnicodeToCustomCPN@24
 RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN@20
+RtlUpdateTimer@16
 RtlUpperChar@4
 RtlUpperString@8
 ;RtlUsageHeap
