@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.97 2004/12/04 19:45:56 navaraf Exp $
+/* $Id: stubs.c,v 1.98 2004/12/07 20:18:49 royce Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -1316,7 +1316,7 @@ SetDllDirectoryW(
     )
 {
     STUB;
-    return 0;
+    return TRUE;
 }
 
 /*
@@ -1630,7 +1630,7 @@ SetDllDirectoryA(
     )
 {
     STUB;
-    return 0;
+    return TRUE;
 }
 
 /*
