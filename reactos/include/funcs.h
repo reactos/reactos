@@ -586,6 +586,7 @@ extern "C" {
 #define CreateDialogIndirectParam  CreateDialogIndirectParamA
 #define CreateDialog  CreateDialogA
 #define CreateDialogIndirect  CreateDialogIndirectA
+#define CreateWaitableTimer CreateWaitableTimerA
 #define DialogBoxParam  DialogBoxParamA
 #define DialogBoxIndirectParam  DialogBoxIndirectParamA
 #define DialogBox  DialogBoxA
@@ -4402,7 +4403,14 @@ SetTimer(
 	 UINT uElapse,
 	 TIMERPROC lpTimerFunc);
 
- 
+
+BOOL STDCALL SetWaitableTimer( HANDLE Timer,
+			       const LARGE_INTEGER *duetime,
+			       LONG Period,
+			       PTIMERAPCROUTINE Apcroutine,
+			       LPVOID Param,
+			       BOOL Resume );
+  
 WINBOOL
 STDCALL
 KillTimer(

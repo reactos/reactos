@@ -1037,7 +1037,11 @@ CreateWindowStationA(
     DWORD dwReserved,
     DWORD dwDesiredAccess,
     LPSECURITY_ATTRIBUTES lpsa);
- 
+
+HANDLE STDCALL CreateWaitableTimerA( LPSECURITY_ATTRIBUTES Attributes,
+				     BOOL ManualReset,
+				     LPCTSTR Name );
+  
 HWINSTA
 STDCALL
 OpenWindowStationA(
