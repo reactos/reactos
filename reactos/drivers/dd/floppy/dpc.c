@@ -174,7 +174,7 @@ VOID FloppyDpcReadWrite( PKDPC Dpc,
     }
   else {
     IoFreeController( Controller );
-    // oetherwise, complete the Irp
+    // otherwise, complete the Irp
     IoCompleteRequest( Irp, 0 );
   }
 }
