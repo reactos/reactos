@@ -1,4 +1,4 @@
-/* $Id: uuid.c,v 1.3 2004/12/19 12:52:42 ekohl Exp $
+/* $Id: uuid.c,v 1.4 2004/12/20 14:07:34 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -152,8 +152,16 @@ ExpSaveUuidSequence(PULONG Sequence)
 static VOID
 ExpGetRandomUuidSequence(PULONG Sequence)
 {
-  /* FIXME */
-  *Sequence = 0x70615243;
+  LARGE_INTEGER Counter;
+  LARGE_INTEGER Frequency;
+  ULONG Value;
+
+  Counter = KeQueryPerformanceCounter(&Frequency);
+  Value = Counter.u.LowPart ^ Counter.u.HighPart;
+
+  *Sequence = *Sequence ^ Value;
+
+  DPRINT("Sequence %lx\n", *Sequence);
 }
 
 
@@ -219,7 +227,11 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
   if (!UuidSequenceInitialized)
   {
     Status = ExpLoadUuidSequence(&UuidSequence);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
+    {
+      UuidSequence++;
+    }
+    else
     {
       ExpGetRandomUuidSequence(&UuidSequence);
     }
