@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.8 2002/09/12 17:50:05 guido Exp $
+/* $Id: swprintf.c,v 1.9 2002/09/13 18:43:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -153,12 +153,101 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 	return buf;
 }
 
+static wchar_t*
+string(wchar_t* buf, wchar_t* end, const char* s, int len, int field_width, int precision, int flags)
+{
+	int i;
+	if (s == NULL)
+	{
+		s = "<NULL>";
+		len = 6;
+	}
+	else
+	{
+		if (len == -1)
+		{
+			len = 0;
+			while (s[len] && (unsigned int)len < (unsigned int)precision)
+				len++;
+		}
+		else
+		{
+			if ((unsigned int)len > (unsigned int)precision)
+				len = precision;
+		}
+	}
+	if (!(flags & LEFT))
+		while (len < field_width--)
+		{
+			if (buf <= end)
+				*buf = L' ';
+			++buf;
+		}
+	for (i = 0; i < len; ++i)
+	{
+		if (buf <= end)
+			*buf = *s++;
+		++buf;
+	}
+	while (len < field_width--)
+	{
+		if (buf <= end)
+			*buf = L' ';
+		++buf;
+	}
+	return buf;
+}
+
+static wchar_t* 
+stringw(wchar_t* buf, wchar_t* end, const wchar_t* sw, int len, int field_width, int precision, int flags)
+{
+	int i;
+	if (sw == NULL)
+	{
+		sw = L"<NULL>";
+		len = 6;
+	}
+	else
+	{
+		if (len == -1)
+		{
+			len = 0;
+			while (sw[len] && (unsigned int)len < (unsigned int)precision)
+				len++;
+		}
+		else
+		{
+			if ((unsigned int)len > (unsigned int)precision)
+				len = precision;
+		}
+	}
+	if (!(flags & LEFT))
+		while (len < field_width--)
+		{
+			if (buf <= end)
+				*buf = L' ';
+			buf++;
+		}
+	for (i = 0; i < len; ++i)
+	{
+		if (buf <= end)
+			*buf = *sw++;
+		buf++;
+	}
+	while (len < field_width--)
+	{
+		if (buf <= end)
+			*buf = L' ';
+		buf++;
+	}
+	return buf;
+}
 
 int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 {
 	int len;
 	unsigned long long num;
-	int i, base;
+	int base;
 	wchar_t * str, * end;
 	const char *s;
 	const wchar_t *sw;
@@ -290,57 +379,11 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			if (qualifier == 'h') {
 				/* print ascii string */
 				s = va_arg(args, char *);
-				if (s == NULL)
-					s = "<NULL>";
-
-				len = strlen (s);
-				if ((unsigned int)len > (unsigned int)precision)
-					len = precision;
-
-				if (!(flags & LEFT))
-					while (len < field_width--) {
-						if (str <= end)
-							*str = L' ';
-						++str;
-					}
-				for (i = 0; i < len; ++i) {
-					if (str <= end)
-						*str = (wchar_t)(*s);
-					++str;
-					++s;
-				}
-				while (len < field_width--) {
-					if (str <= end)
-						*str = L' ';
-					++str;
-				}
+				str = string(str, end, s, -1,  field_width, precision, flags);
 			} else {
 				/* print unicode string */
 				sw = va_arg(args, wchar_t *);
-				if (sw == NULL)
-					sw = L"<NULL>";
-
-				len = wcslen (sw);
-				if ((unsigned int)len > (unsigned int)precision)
-					len = precision;
-
-				if (!(flags & LEFT))
-					while (len < field_width--) {
-						if (str <= end)
-							*str = L' ';
-						++str;
-					}
-				for (i = 0; i < len; ++i) {
-					if (str <= end)
-						*str = *sw;
-					++str;
-					++sw;
-				}
-				while (len < field_width--) {
-					if (str <= end)
-						*str = L' ';
-					++str;
-				}
+				str = stringw(str, end, sw, -1, field_width, precision, flags);
 			}
 			continue;
 
@@ -348,57 +391,11 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			if (qualifier == 'l' || qualifier == 'w') {
 				/* print unicode string */
 				sw = va_arg(args, wchar_t *);
-				if (sw == NULL)
-					sw = L"<NULL>";
-
-				len = wcslen (sw);
-				if ((unsigned int)len > (unsigned int)precision)
-					len = precision;
-
-				if (!(flags & LEFT))
-					while (len < field_width--) {
-						if (str <= end)
-							*str = L' ';
-						++str;
-					}
-				for (i = 0; i < len; ++i) {
-					if (str <= end)
-						*str = *sw;
-					++str;
-					++sw;
-				}
-				while (len < field_width--) {
-					if (str <= end)
-						*str = L' ';
-					++str;
-				}
+				str = stringw(str, end, sw, -1, field_width, precision, flags);
 			} else {
 				/* print ascii string */
 				s = va_arg(args, char *);
-				if (s == NULL)
-					s = "<NULL>";
-
-				len = strlen (s);
-				if ((unsigned int)len > (unsigned int)precision)
-					len = precision;
-
-				if (!(flags & LEFT))
-					while (len < field_width--) {
-						if (str <= end)
-							*str = L' ';
-						++str;
-					}
-				for (i = 0; i < len; ++i) {
-					if (str <= end)
-						*str = (wchar_t)(*s);
-					++str;
-					++s;
-				}
-				while (len < field_width--) {
-					if (str <= end)
-						*str = L' ';
-					++str;
-				}
+				str = string(str, end, s, -1,  field_width, precision, flags);
 			}
 			continue;
 
@@ -407,38 +404,24 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 				/* print counted ascii string */
 				PANSI_STRING pus = va_arg(args, PANSI_STRING);
 				if ((pus == NULL) || (pus->Buffer == NULL)) {
-					sw = L"<NULL>";
-					while ((*sw) != 0) {
-						if (str <= end)
-							*str = *sw;
-						++str;
-						++sw;
-					}
+					s = NULL;
+					len = -1;
 				} else {
-					for (i = 0; pus->Buffer[i] && i < pus->Length; i++) {
-						if (str <= end)
-							*str = (wchar_t)(pus->Buffer[i]);
-						++str;
-					}
+					s = pus->Buffer;
+					len = pus->Length;
 				}
+				str = string(str, end, s, len,  field_width, precision, flags);
 			} else {
 				/* print counted unicode string */
 				PUNICODE_STRING pus = va_arg(args, PUNICODE_STRING);
 				if ((pus == NULL) || (pus->Buffer == NULL)) {
-					sw = L"<NULL>";
-					while ((*sw) != 0) {
-						if (str <= end)
-							*str = *sw;
-						++str;
-						++sw;
-					}
+					sw = NULL;
+					len = -1;
 				} else {
-					for (i = 0; pus->Buffer[i] && i < pus->Length / sizeof(WCHAR); i++) {
-						if (str <= end)
-							*str = pus->Buffer[i];
-						++str;
-					}
+					sw = pus->Buffer;
+					len = pus->Length / sizeof(WCHAR);
 				}
+				str = stringw(str, end, sw, len,  field_width, precision, flags);
 			}
 			continue;
 

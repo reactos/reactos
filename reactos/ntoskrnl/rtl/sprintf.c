@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.10 2002/09/12 17:50:05 guido Exp $
+/* $Id: sprintf.c,v 1.11 2002/09/13 18:43:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -150,12 +150,101 @@ number(char *buf, char *end, long long num, int base, int size, int precision, i
   return buf;
 }
 
+static char* 
+string(char* buf, char* end, const char* s, int len, int field_width, int precision, int flags)
+{
+	int i;
+	if (s == NULL)
+	{
+		s = "<NULL>";
+		len = 6;
+	}
+	else
+	{
+		if (len == -1)
+		{
+			len = 0;
+			while (s[len] && (unsigned int)len < (unsigned int)precision)
+				len++;
+		}
+		else
+		{
+			if ((unsigned int)len > (unsigned int)precision)
+				len = precision;
+		}
+	}
+	if (!(flags & LEFT))
+		while (len < field_width--)
+		{
+			if (buf <= end)
+				*buf = ' ';
+			++buf;
+		}
+	for (i = 0; i < len; ++i)
+	{
+		if (buf <= end)
+			*buf = *s++;
+		++buf;
+	}
+	while (len < field_width--)
+	{
+		if (buf <= end)
+			*buf = ' ';
+		++buf;
+	}
+	return buf;
+}
+
+static char* 
+stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int precision, int flags)
+{
+	int i;
+	if (sw == NULL)
+	{
+		sw = L"<NULL>";
+		len = 6;
+	}
+	else
+	{
+		if (len == -1)
+		{
+			len = 0;
+			while (sw[len] && (unsigned int)len < (unsigned int)precision)
+				len++;
+		}
+		else
+		{
+			if ((unsigned int)len > (unsigned int)precision)
+				len = precision;
+		}
+	}
+	if (!(flags & LEFT))
+		while (len < field_width--)
+		{
+			if (buf <= end) 
+				*buf = ' ';
+			++buf;
+		}
+	for (i = 0; i < len; ++i)
+	{
+		if (buf <= end)
+			*buf = (unsigned char)(*sw++);
+		++buf;
+	}
+	while (len < field_width--)
+	{
+		if (buf <= end)
+			*buf = ' ';
+		++buf;
+	}
+	return buf;
+}
 
 int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
   int len;
   unsigned long long num;
-  int i, base;
+  int base;
   char *str, *end;
   const char *s;
   const wchar_t *sw;
@@ -297,59 +386,11 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
       if (qualifier == 'l' || qualifier == 'w') {
         /* print unicode string */
 	sw = va_arg(args, wchar_t *);
-	if (sw == NULL)
-	  sw = L"<NULL>";
-
-	for (len = 0; (unsigned int)len < (unsigned int)precision && sw[len]; len++);
-
-	if (!(flags & LEFT))
-	  while (len < field_width--)
-	    {
-              if (str <= end)
-	        *str = ' ';
-	      ++str;
-	    }
-	for (i = 0; i < len; ++i)
-	  {
-            if (str <= end)
-	      *str = (unsigned char)(*sw);
-	    ++str;
-	    ++sw;
-	  }
-	while (len < field_width--)
-	  {
-            if (str <= end)
-	      *str = ' ';
-	    ++str;
-	  }
+	str = stringw(str, end, sw, -1, field_width, precision, flags);
       } else {
         /* print ascii string */
 	s = va_arg(args, char *);
-	if (s == NULL)
-	  s = "<NULL>";
-
-	for (len = 0; (unsigned int)len < (unsigned int)precision && s[len]; len++);
-
-	if (!(flags & LEFT))
-	  while (len < field_width--)
-	    {
-              if (str <= end)
-	        *str = ' ';
-	      ++str;
-	    }
-	for (i = 0; i < len; ++i)
-	  {
-            if (str <= end)
-	      *str = *s;
-	    ++str;
-	    ++s;
-	  }
-	while (len < field_width--)
-	  {
-            if (str <= end)
-	      *str = ' ';
-	    ++str;
-	  }
+	str = string(str, end, s, -1,  field_width, precision, flags);
       }
       continue;
 
@@ -357,59 +398,11 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
       if (qualifier == 'h') {
                                 /* print ascii string */
 	s = va_arg(args, char *);
-	if (s == NULL)
-	  s = "<NULL>";
-
-	for (len = 0; (unsigned int)len < (unsigned int)precision && s[len]; len++);
-
-	if (!(flags & LEFT))
-	  while (len < field_width--)
-	    {
-              if (str <= end)
-	        *str = ' ';
-	      ++str;
-	    }
-	for (i = 0; i < len; ++i)
-	  {
-            if (str <= end)
-	      *str = *s;
-	    ++str;
-	    ++s;
-	  }
-	while (len < field_width--)
-	  {
-            if (str <= end)
-	      *str = ' ';
-	    ++str;
-	  }
+	str = string(str, end, s, -1,  field_width, precision, flags);
       } else {
         /* print unicode string */
 	sw = va_arg(args, wchar_t *);
-	if (sw == NULL)
-	  sw = L"<NULL>";
-
-	for (len = 0; (unsigned int)len < (unsigned int)precision && sw[len]; len++);
-
-	if (!(flags & LEFT))
-	  while (len < field_width--)
-	    {
-              if (str <= end)
-	        *str = ' ';
-	      ++str;
-	    }
-	for (i = 0; i < len; ++i)
-	  {
-            if (str <= end)
-	      *str = (unsigned char)(*sw);
-	    ++str;
-	    ++sw;
-	  }
-	while (len < field_width--)
-	  {
-            if (str <= end)
-	      *str = ' ';
-	    ++str;
-	  }
+	str = stringw(str, end, sw, -1, field_width, precision, flags);
       }
       continue;
 
@@ -418,42 +411,24 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
         /* print counted unicode string */
 	PUNICODE_STRING pus = va_arg(args, PUNICODE_STRING);
 	if ((pus == NULL) || (pus->Buffer == NULL)) {
-	  s = "<NULL>";
-	  while ((*s) != 0)
-	    {
-              if (str <= end)
-	        *str = *s;
-	      ++str;
-	      ++s;
-	    }
+	  sw = NULL;
+	  len = -1;
 	} else {
-	  for (i = 0; pus->Buffer[i] && i < pus->Length / sizeof(WCHAR); i++)
-	    {
-              if (str <= end)
-	        *str = (unsigned char)(pus->Buffer[i]);
-	      ++str;
-	    }
+	  sw = pus->Buffer;
+	  len = pus->Length / sizeof(WCHAR);
 	}
+	str = stringw(str, end, sw, len, field_width, precision, flags);
       } else {
         /* print counted ascii string */
 	PANSI_STRING pus = va_arg(args, PANSI_STRING);
 	if ((pus == NULL) || (pus->Buffer == NULL)) {
-	  s = "<NULL>";
-	  while ((*s) != 0)
-	    {
-              if (str <= end)
-	        *str = *s;
-	      ++str;
-	      ++s;
-	    }
+	  s = NULL;
+	  len = -1;
 	} else {
-	  for (i = 0; pus->Buffer[i] && i < pus->Length; i++)
-	    {
-              if (str <= end)
-	        *str = pus->Buffer[i];
-	      ++str;
-	    }
+	  s = pus->Buffer;
+	  len = pus->Length;
 	}
+	str = string(str, end, s, len, field_width, precision, flags);
       }
       continue;
 
