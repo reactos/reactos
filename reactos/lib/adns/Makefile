@@ -7,7 +7,7 @@ TARGET_TYPE = library
 TARGET_NAME = adns
 
 TARGET_CFLAGS = \
- -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
+ -O3 -Wall -Wwrite-strings -Wpointer-arith \
  -Wstrict-prototypes -Wmissing-prototypes -Wall -DADNS_JGAA_WIN32 -D__USE_W32API -D__REACTOS__
 
 # require os code to explicitly request A/W version of structs/functions

@@ -157,34 +157,5 @@ ADNS_API int adns_getpid(void);
 
 #include "timercmp.h" /* arty added: mingw headers don't seem to have it */
 
-/*
- * <rant>
- * These fix the following warning in GCC:
- * warning: passing arg 1 of `ntohs' with different width due to prototype
- *
- * Even if you declare an unsigned char or unsigned short variable and pass
- * it to htons or ntohs, this warning will be generated.  I believe this is
- * a gcc bug.  You can try to reproduce the bug like this:
- *
- * u_short foo(u_short bar) {
- *   return htons(bar);
- * }
- *
- * Using the reactos compiler settings this generates the error.  Unless I'm
- * missing something, the active prototypes for htons and ntohs are:
- *
- * u_short PASCAL htons(u_short);
- * u_short PASCAL ntohs(u_short);
- *
- * From winsock2.h.  Since the function above has exactly the same signature
- * as htons except for the required PASCAL (__stdcall) decoration, gcc is
- * erroneously detecting a narrowed value.
- * </rant>
- */
-#ifdef __REACTOS__
-#define htons(x) ((((x)&0xff)<<8)|(((x)>>8)&0xff))
-#define ntohs(x) htons(x)
-#endif
-
 #endif /* ADNS_WIN32_H_INCLUDED */
 
