@@ -285,12 +285,12 @@ VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
  *    shell view to re-sort the item list. dwParam identifies the column
  *    that was clicked.
  */
-int WINAPI SHShellFolderView_Message(
+LRESULT WINAPI SHShellFolderView_Message(
 	HWND hwndCabinet,
-	DWORD dwMessage,
-	DWORD dwParam)
+	UINT uMessage,
+	LPARAM lParam)
 {
-	FIXME("%p %08lx %08lx stub\n",hwndCabinet, dwMessage, dwParam);
+	FIXME("%p %08x %08lx stub\n",hwndCabinet, uMessage, lParam);
 	return 0;
 }
 
@@ -940,15 +940,15 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
  *  see IShellFolder::CreateViewObject
  */
 HRESULT WINAPI SHCreateShellFolderViewEx(
-	LPCSHELLFOLDERVIEWINFO psvcbi, /* [in] shelltemplate struct */
-	LPSHELLVIEW* ppv)              /* [out] IShellView pointer */
+	LPCSFV psvcbi,    /* [in] shelltemplate struct */
+	IShellView **ppv) /* [out] IShellView pointer */
 {
 	IShellView * psf;
 	HRESULT hRes;
 
-	TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=0x%08lx\n",
-	  psvcbi->pshf, psvcbi->pidlFolder, psvcbi->lpfnCallback,
-	  psvcbi->uViewMode, psvcbi->dwUser);
+	TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
+	  psvcbi->pshf, psvcbi->pidlFolder, psvcbi->pfnCallback,
+	  psvcbi->fvm, psvcbi->psvOuter);
 
 	psf = IShellView_Constructor(psvcbi->pshf);
 
@@ -1269,8 +1269,8 @@ HRESULT WINAPI SetAppStartingCursor(HWND u, DWORD v)
  * SHLoadOLE					[SHELL32.151]
  *
  */
-HRESULT WINAPI SHLoadOLE(DWORD u)
-{	FIXME("0x%04lx stub\n",u);
+HRESULT WINAPI SHLoadOLE(LPARAM lParam)
+{	FIXME("0x%04lx stub\n",lParam);
 	return S_OK;
 }
 /*************************************************************************

@@ -1581,9 +1581,30 @@ DECLARE_INTERFACE_(IDropTargetHelper, IUnknown)
 #undef INTERFACE
 #endif /* _WIN32_IE >= 0x0500 */
 
+typedef HRESULT (CALLBACK *LPFNVIEWCALLBACK)(
+	IShellView* dwUser,
+	IShellFolder* pshf,
+	HWND hWnd,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam);
+typedef struct _CSFV
+{
+  UINT             uSize;
+  IShellFolder*    pshf;
+  IShellView*      psvOuter;
+  LPCITEMIDLIST    pidlFolder;
+  LONG             lEvents;
+  LPFNVIEWCALLBACK pfnCallback;
+  FOLDERVIEWMODE   fvm;
+} CSFV, *LPCSFV;
+
 void WINAPI SHAddToRecentDocs(UINT,PCVOID);
 LPITEMIDLIST WINAPI SHBrowseForFolderA(PBROWSEINFOA);
 LPITEMIDLIST WINAPI SHBrowseForFolderW(PBROWSEINFOW);
+DWORD WINAPI SHCLSIDFromStringA(LPCSTR,CLSID*);
+DWORD WINAPI SHCLSIDFromStringW(LPCWSTR,CLSID*);
+HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
 void WINAPI SHChangeNotify(LONG,UINT,PCVOID,PCVOID);
 HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER,LPCITEMIDLIST,int,PVOID,int);
 HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER,LPCITEMIDLIST,int,PVOID,int);
@@ -1648,6 +1669,7 @@ typedef IShellExecuteHookW IShellExecuteHook;
 typedef IShellLinkW IShellLink;
 typedef BROWSEINFOW BROWSEINFO,*PBROWSEINFO,*LPBROWSEINFO;
 #define SHBrowseForFolder SHBrowseForFolderW
+#define SHCLSIDFromString SHCLSIDFromStringW
 #define SHGetDataFromIDList SHGetDataFromIDListW
 #define SHGetPathFromIDList SHGetPathFromIDListW
 #if (_WIN32_IE >= 0x0400)
@@ -1666,6 +1688,7 @@ typedef IShellExecuteHookA IShellExecuteHook;
 typedef IShellLinkA IShellLink;
 typedef BROWSEINFOA BROWSEINFO,*PBROWSEINFO,*LPBROWSEINFO;
 #define SHBrowseForFolder SHBrowseForFolderA
+#define SHCLSIDFromString SHCLSIDFromStringW
 #define SHGetDataFromIDList SHGetDataFromIDListA
 #define SHGetPathFromIDList SHGetPathFromIDListA
 #if (_WIN32_IE >= 0x0400)
