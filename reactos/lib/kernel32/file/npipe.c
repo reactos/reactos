@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.3 2000/06/03 14:47:32 ea Exp $
+/* $Id: npipe.c,v 1.4 2001/03/31 01:17:29 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -376,5 +376,128 @@ BOOL STDCALL SetNamedPipeHandleState(HANDLE hNamedPipe,
      }
    return(TRUE);
 }
+
+WINBOOL
+STDCALL
+CallNamedPipeA (
+	LPCSTR	lpNamedPipeName,
+	LPVOID	lpInBuffer,
+	DWORD	nInBufferSize,
+	LPVOID	lpOutBuffer,
+	DWORD	nOutBufferSize,
+	LPDWORD	lpBytesRead,
+	DWORD	nTimeOut
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+CallNamedPipeW (
+	LPCWSTR	lpNamedPipeName,
+	LPVOID	lpInBuffer,
+	DWORD	nInBufferSize,
+	LPVOID	lpOutBuffer,
+	DWORD	nOutBufferSize,
+	LPDWORD	lpBytesRead,
+	DWORD	nTimeOut
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+DisconnectNamedPipe (
+	HANDLE	hNamedPipe
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+GetNamedPipeHandleStateW (
+	HANDLE	hNamedPipe,
+	LPDWORD	lpState,
+	LPDWORD	lpCurInstances,
+	LPDWORD	lpMaxCollectionCount,
+	LPDWORD	lpCollectDataTimeout,
+	LPWSTR	lpUserName,
+	DWORD	nMaxUserNameSize
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+GetNamedPipeHandleStateA (
+	HANDLE	hNamedPipe,
+	LPDWORD	lpState,
+	LPDWORD	lpCurInstances,
+	LPDWORD	lpMaxCollectionCount,
+	LPDWORD	lpCollectDataTimeout,
+	LPSTR	lpUserName,
+	DWORD	nMaxUserNameSize
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+GetNamedPipeInfo (
+	HANDLE	hNamedPipe,
+	LPDWORD	lpFlags,
+	LPDWORD	lpOutBufferSize,
+	LPDWORD	lpInBufferSize,
+	LPDWORD	lpMaxInstances
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+PeekNamedPipe (
+	HANDLE	hNamedPipe,
+	LPVOID	lpBuffer,
+	DWORD	nBufferSize,
+	LPDWORD	lpBytesRead,
+	LPDWORD	lpTotalBytesAvail,
+	LPDWORD	lpBytesLeftThisMessage
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+TransactNamedPipe (
+	HANDLE		hNamedPipe,
+	LPVOID		lpInBuffer,
+	DWORD		nInBufferSize,
+	LPVOID		lpOutBuffer,
+	DWORD		nOutBufferSize,
+	LPDWORD		lpBytesRead,
+	LPOVERLAPPED	lpOverlapped
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
 
 /* EOF */

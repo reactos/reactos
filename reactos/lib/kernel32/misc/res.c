@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.8 2001/01/25 02:20:05 phreak Exp $
+/* $Id: res.c,v 1.9 2001/03/31 01:17:29 dwelch Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -212,5 +212,169 @@ LockResource (
 {
 	return hResData;
 }
+
+HANDLE
+STDCALL
+BeginUpdateResourceW (
+	LPCWSTR	pFileName,
+	WINBOOL	bDeleteExistingResources
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+HANDLE
+STDCALL
+BeginUpdateResourceA (
+	LPCSTR	pFileName,
+	WINBOOL	bDeleteExistingResources
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+EndUpdateResourceW (
+	HANDLE	hUpdate,
+	WINBOOL	fDiscard
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+EndUpdateResourceA (
+	HANDLE	hUpdate,
+	WINBOOL	fDiscard
+	)
+{
+	return EndUpdateResourceW(
+			hUpdate,
+			fDiscard
+			);
+}
+
+WINBOOL
+STDCALL
+EnumResourceLanguagesW (
+	HINSTANCE	hModule,
+	LPCWSTR		lpType,
+	LPCWSTR		lpName,
+	ENUMRESLANGPROC	lpEnumFunc,
+	LONG		lParam
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+EnumResourceLanguagesA (
+	HINSTANCE	hModule,
+	LPCSTR		lpType,
+	LPCSTR		lpName,
+	ENUMRESLANGPROC	lpEnumFunc,
+	LONG		lParam
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+EnumResourceNamesW (
+	HINSTANCE	hModule,
+	LPCWSTR		lpType,
+	ENUMRESNAMEPROC	lpEnumFunc,
+	LONG		lParam
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+EnumResourceNamesA (
+	HINSTANCE	hModule,
+	LPCSTR		lpType,
+	ENUMRESNAMEPROC	lpEnumFunc,
+	LONG		lParam
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+EnumResourceTypesW (
+	HINSTANCE	hModule,
+	ENUMRESTYPEPROC	lpEnumFunc,
+	LONG		lParam
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+
+WINBOOL
+STDCALL
+EnumResourceTypesA (
+	HINSTANCE	hModule,
+	ENUMRESTYPEPROC	lpEnumFunc,
+	LONG		lParam
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+UpdateResourceA (
+	HANDLE	hUpdate,
+	LPCSTR	lpType,
+	LPCSTR	lpName,
+	WORD	wLanguage,
+	LPVOID	lpData,
+	DWORD	cbData
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+UpdateResourceW (
+	HANDLE	hUpdate,
+	LPCWSTR	lpType,
+	LPCWSTR	lpName,
+	WORD	wLanguage,
+	LPVOID	lpData,
+	DWORD	cbData
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
 
 /* EOF */

@@ -72,6 +72,28 @@ extern ULONG init_stack_top;
 
 static char KiNullLdt[8] = {0,};
 
+static char *ExceptionTypeStrings[] = 
+  {
+    "Divide Error",
+    "Debug Trap",
+    "NMI",
+    "Breakpoint",
+    "Overflow",
+    "BOUND range exceeded",
+    "Invalid Opcode",
+    "No Math Coprocessor",
+    "Double Fault",
+    "Unknown(9)",
+    "Invalid TSS",
+    "Segment Not Present",
+    "Stack Segment Fault",
+    "General Protection",
+    "Page Fault",
+    "Math Fault",
+    "Alignment Check",
+    "Machine Check"
+  };
+
 /* FUNCTIONS ****************************************************************/
 
 extern unsigned int _text_start__, _text_end__;
@@ -107,6 +129,7 @@ print_address(PVOID address)
    return(FALSE);
 }
 
+#if 0
 ULONG
 KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 {
@@ -158,6 +181,120 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   KiDispatchException(&Er, 0, Tf, UserMode, TRUE);
   return(0);
 }
+#endif
+
+ULONG
+KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
+{
+  PULONG Frame;
+  ULONG cr3;
+  ULONG i;
+
+  /*
+   * Get the PDBR
+   */
+  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
+
+   /*
+    * Print out the CPU registers
+    */
+  if (ExceptionNr < 19)
+    {
+      DbgPrint("%s Exception: %d(%x)\n", ExceptionTypeStrings[ExceptionNr],
+	       ExceptionNr, Tf->ErrorCode&0xffff);
+    }
+  else
+    {
+      DbgPrint("Exception: %d(%x)\n", ExceptionNr, Tf->ErrorCode&0xffff);
+    }
+  DbgPrint("CS:EIP %x:%x ", Tf->Cs&0xffff, Tf->Eip);
+  print_address((PVOID)Tf->Eip);
+  DbgPrint("\n");
+  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
+  DbgPrint("CR2 %x CR3 %x ", Cr2, cr3);
+  DbgPrint("Proc: %x ",PsGetCurrentProcess());
+  if (PsGetCurrentProcess() != NULL)
+    {
+      DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
+	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
+    }
+  if (PsGetCurrentThread() != NULL)
+    {
+      DbgPrint("Thrd: %x Tid: %x",
+	       PsGetCurrentThread(),
+	       PsGetCurrentThread()->Cid.UniqueThread);
+    }
+  DbgPrint("\n");
+  DbgPrint("DS %x ES %x FS %x GS %x\n", Tf->Ds&0xffff, Tf->Es&0xffff,
+	   Tf->Fs&0xffff, Tf->Gs&0xfff);
+  DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", Tf->Eax, Tf->Ebx, Tf->Ecx);
+  DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", Tf->Edx, Tf->Ebp, Tf->Esi);
+  DbgPrint("EDI: %.8x   EFLAGS: %.8x ", Tf->Edi, Tf->Eflags);
+  DbgPrint("SS:ESP %x:%x\n", Tf->Ss, Tf->Esp);
+
+#if 0
+  stack=(PULONG)(Tf->Esp);
+  
+  DbgPrint("Stack:\n");
+  for (i=0; i<64; i++)
+    {
+      if (MmIsPagePresent(NULL,&stack[i]))
+	{
+	  DbgPrint("%.8x ",stack[i]);
+	  if (((i+1)%8) == 0)
+	    {
+	      DbgPrint("\n");
+	    }
+	}
+    }
+#endif
+	
+#if 0
+  if (MmIsPagePresent(NULL, (PVOID)Tf->Eip))
+    {
+      unsigned char instrs[512];
+      
+      memcpy(instrs, (PVOID)Tf->Eip, 512);
+	   
+      DbgPrint("Instrs: ");
+      
+      for (i=0; i<10; i++)
+	{
+	  DbgPrint("%x ", instrs[i]);
+	}
+    }
+#endif
+
+  /*
+   * Dump the stack frames
+   */
+  DbgPrint("Frames:   ");
+  i = 1;
+  Frame = (PULONG)Tf->Ebp;
+  while (Frame != NULL)
+    {
+      DbgPrint("%.8x  ", Frame[1]);
+      Frame = (PULONG)Frame[0];
+      i++;
+    }
+  if ((i % 8) != 0)
+    {
+      DbgPrint("\n");
+    }
+
+  /*
+   * Kill the faulting task
+   */
+  __asm__("sti\n\t");
+  ZwTerminateProcess(NtCurrentProcess(),
+		     STATUS_NONCONTINUABLE_EXCEPTION);
+
+  /*
+   * If terminating the process fails then bugcheck
+   */
+  KeBugCheck(0);
+  return(0);
+}
 
 ULONG
 KiDoubleFaultHandler(VOID)
@@ -169,33 +306,13 @@ KiDoubleFaultHandler(VOID)
   ULONG Esp0;
   ULONG ExceptionNr = 8;
   extern KTSS KiTss;
-  static char *TypeStrings[] = 
-  {
-    "Divide Error",
-    "Debug Trap",
-    "NMI",
-    "Breakpoint",
-    "Overflow",
-    "BOUND range exceeded",
-    "Invalid Opcode",
-    "No Math Coprocessor",
-    "Double Fault",
-    "Unknown(9)",
-    "Invalid TSS",
-    "Segment Not Present",
-    "Stack Segment Fault",
-    "General Protection",
-    "Page Fault",
-    "Math Fault",
-    "Alignment Check",
-    "Machine Check"
-  };
+
   
   /* Use the address of the trap frame as approximation to the ring0 esp */
   Esp0 = KiTss.Esp0;
   
-   /* Get CR2 */
-   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
+  /* Get CR2 */
+  __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
    
    /*
     * Check for stack underflow
@@ -213,7 +330,7 @@ KiDoubleFaultHandler(VOID)
     */
    if (ExceptionNr < 19)
      {
-       DbgPrint("%s Exception: %d(%x)\n",TypeStrings[ExceptionNr],
+       DbgPrint("%s Exception: %d(%x)\n", ExceptionTypeStrings[ExceptionNr],
 		ExceptionNr, 0);
      }
    else
@@ -314,27 +431,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    NTSTATUS Status;
    ULONG Esp0;
    ULONG StackLimit;
-   static char *TypeStrings[] = 
-     {
-       "Divide Error",
-       "Debug Trap",
-       "NMI",
-       "Breakpoint",
-       "Overflow",
-       "BOUND range exceeded",
-       "Invalid Opcode",
-       "No Math Coprocessor",
-       "Double Fault",
-       "Unknown(9)",
-       "Invalid TSS",
-       "Segment Not Present",
-       "Stack Segment Fault",
-       "General Protection",
-       "Page Fault",
-       "Math Fault",
-       "Alignment Check",
-       "Machine Check"
-     };
 
    /* Use the address of the trap frame as approximation to the ring0 esp */
    Esp0 = (ULONG)&Tf->Eip;
@@ -351,7 +447,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      }
 
    /*
-    * Check for stack underflow
+    * Check for stack underflow, this may be obsolete
     */
    if (PsGetCurrentThread() != NULL &&
        Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
@@ -360,7 +456,10 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 		 Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
 	ExceptionNr = 12;
      }
-   
+
+   /*
+    * Maybe handle the page fault and return
+    */
    if (ExceptionNr == 14)
      {
 	__asm__("sti\n\t");
@@ -375,19 +474,20 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	  }
      }
 
-#if 0
+   /*
+    * Handle user exceptions differently
+    */
    if ((Tf->Cs & 0xFFFF) == USER_CS)
      {
        return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
      }
-#endif   
 
    /*
     * Print out the CPU registers
     */
    if (ExceptionNr < 19)
      {
-	DbgPrint("%s Exception: %d(%x)\n",TypeStrings[ExceptionNr],
+	DbgPrint("%s Exception: %d(%x)\n", ExceptionTypeStrings[ExceptionNr],
 		 ExceptionNr, Tf->ErrorCode&0xffff);
      }
    else
@@ -427,94 +527,40 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 		      	     
 	  }
      }
-   else
-     {
-	DbgPrint("User ESP %.8x\n", Tf->Esp);
-     }
-  if ((Tf->Cs & 0xffff) == KERNEL_CS)
-    {
-       DbgPrint("ESP %x\n", Esp0);
-       stack = (PULONG) (Esp0 + 24);
-       stack = (PULONG)(((ULONG)stack) & (~0x3));
-       
-       DbgPrint("stack<%p>: ", stack);
 
-       if (PsGetCurrentThread() != NULL)
-	 {
-	   StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
-	 }
-       else
-	 {
-	   StackLimit = (ULONG)&init_stack_top;
-	 }
-	 
-       for (i = 0; i < 18; i = i + 6)
-	 {
-	    DbgPrint("%.8x %.8x %.8x %.8x\n", 
-		     stack[i], stack[i+1], 
-		     stack[i+2], stack[i+3], 
-		     stack[i+4], stack[i+5]);
-	 }
-       DbgPrint("Frames:\n");
-       for (i = 0; i < 32 && ((ULONG)&stack[i] < StackLimit); i++)
-	 {
-	    if (stack[i] > ((unsigned int) &_text_start__) &&
-	      !(stack[i] >= ((ULONG)&init_stack) &&
-		stack[i] <= ((ULONG)&init_stack_top)))
-	      {
-		 //              DbgPrint("  %.8x", stack[i]);
-		 print_address((PVOID)stack[i]);
-		 DbgPrint(" ");
-	      }
-	 }
-    }
+   DbgPrint("ESP %x\n", Esp0);
+   stack = (PULONG) (Esp0 + 24);
+   stack = (PULONG)(((ULONG)stack) & (~0x3));
+   
+   DbgPrint("stack<%p>: ", stack);
+
+   if (PsGetCurrentThread() != NULL)
+     {
+       StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
+     }
    else
      {
-#if 1
-	DbgPrint("SS:ESP %x:%x\n", Tf->Ss, Tf->Esp);
-        stack=(PULONG)(Tf->Esp);
-       
-        DbgPrint("Stack:\n");
-        for (i=0; i<64; i++)
-        {
-	   if (MmIsPagePresent(NULL,&stack[i]))
-	     {
-		DbgPrint("%.8x ",stack[i]);
-		if (((i+1)%8) == 0)
-		  {
-		     DbgPrint("\n");
-		  }
-	     }
-        }
-	
-	if (MmIsPagePresent(NULL, (PVOID)Tf->Eip))
-	  {
-	     unsigned char instrs[512];
-	     
-	     memcpy(instrs, (PVOID)Tf->Eip, 512);
-	     
-	     DbgPrint("Instrs: ");
-	     
-	     for (i=0; i<10; i++)
-	       {
-		  DbgPrint("%x ", instrs[i]);
-	       }
-	  }
-#endif
+       StackLimit = (ULONG)&init_stack_top;
      }
    
-   DbgPrint("\n");
-   if ((Tf->Cs&0xffff) == USER_CS &&
-       Tf->Eip < KERNEL_BASE)
+   for (i = 0; i < 18; i = i + 6)
      {
-	DbgPrint("Killing current task\n");
-	KeLowerIrql(PASSIVE_LEVEL);
-	if ((Tf->Cs&0xffff) == USER_CS)
-	  {
-	     ZwTerminateProcess(NtCurrentProcess(),
-				STATUS_NONCONTINUABLE_EXCEPTION);
-	  }
-     }   
+       DbgPrint("%.8x %.8x %.8x %.8x\n", 
+		stack[i], stack[i+1], 
+		stack[i+2], stack[i+3], 
+		stack[i+4], stack[i+5]);
+     }
+   DbgPrint("Frames:\n");
+   for (i = 0; i < 32 && ((ULONG)&stack[i] < StackLimit); i++)
+     {
+       if (stack[i] > ((unsigned int) &_text_start__) &&
+	   !(stack[i] >= ((ULONG)&init_stack) &&
+	     stack[i] <= ((ULONG)&init_stack_top)))
+	 {
+	   print_address((PVOID)stack[i]);
+	   DbgPrint(" ");
+	 }
+    }
    for(;;);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: cnotify.c,v 1.2 2000/03/15 12:25:47 ekohl Exp $
+/* $Id: cnotify.c,v 1.3 2001/03/31 01:17:29 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,15 +10,12 @@
  */
 
 #include <windows.h>
-#include <wstring.h>
 
 
-WINBOOL
-FindCloseChangeNotification (
-	HANDLE	hChangeHandle
-	)
+WINBOOL STDCALL
+FindCloseChangeNotification (HANDLE hChangeHandle)
 {
-	return FALSE;
+  return FALSE;
 }
 
 
@@ -30,6 +27,7 @@ FindFirstChangeNotificationA (
 	DWORD	dwNotifyFilter
 	)
 {
+#if 0
 	UNICODE_STRING PathNameU;
 	ANSI_STRING PathName;
 	HANDLE Result;
@@ -56,6 +54,7 @@ FindFirstChangeNotificationA (
 	             RootPathNameU.Buffer);
 
 	return Result;
+#endif
 }
 
 

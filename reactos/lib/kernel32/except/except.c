@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.5 2000/06/03 14:47:31 ea Exp $
+/* $Id: except.c,v 1.6 2001/03/31 01:17:29 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -96,6 +96,18 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
 	return EXCEPTION_EXECUTE_HANDLER;
 	
+}
+
+VOID
+STDCALL
+RaiseException (
+	DWORD		dwExceptionCode,
+	DWORD		dwExceptionFlags,
+	DWORD		nNumberOfArguments,
+	CONST DWORD	* lpArguments
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
 /* EOF */

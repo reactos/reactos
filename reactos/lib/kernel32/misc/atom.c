@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.11 2001/03/30 17:26:42 dwelch Exp $
+/* $Id: atom.c,v 1.12 2001/03/31 01:17:29 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -249,7 +249,7 @@ AWGLAddAtom(ATOMTABLE *at, const WCHAR *lpString)
   /* add to a free slot */
   q = AtomHashString(lpString,&atomlen);
   
-  lpfree 	  = 0;
+  lpfree = 0;
   freeindex = 0;
   
   for(index = 0;(lp = GetAtomPointer(at,index));index++) 
@@ -281,7 +281,10 @@ AWGLAddAtom(ATOMTABLE *at, const WCHAR *lpString)
   /* so expand or create the table 				*/
   if(at->AtomTable == 0) 
     {
-      at->AtomTable = (ATOMENTRY *) RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,sizeof(ATOMENTRY));	
+      at->AtomTable = 
+	(ATOMENTRY*) RtlAllocateHeap(GetProcessHeap(),
+				     HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
+				     sizeof(ATOMENTRY));	
       at->TableSize = 1;
       lp = at->AtomTable;
       index = 0;
@@ -289,9 +292,10 @@ AWGLAddAtom(ATOMTABLE *at, const WCHAR *lpString)
   else 
     {
       at->TableSize++;
-      at->AtomTable = (ATOMENTRY *) RtlReAllocateHeap(GetProcessHeap(),0,
-						(LPVOID) at->AtomTable,
-						at->TableSize * sizeof(ATOMENTRY));
+      at->AtomTable = 
+	(ATOMENTRY*) RtlReAllocateHeap(GetProcessHeap(),0,
+				       (LPVOID) at->AtomTable,
+				       at->TableSize * sizeof(ATOMENTRY));
       lp = &at->AtomTable[at->TableSize - 1];
     }
   
@@ -306,11 +310,23 @@ AWGLAddAtom(ATOMTABLE *at, const WCHAR *lpString)
     newlen = at->DataSize + atomlen;
     
     if(at->AtomData == 0) {
-      at->AtomData = (WCHAR *) RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,newlen*2);
+      at->AtomData = 
+	(WCHAR*)RtlAllocateHeap(GetProcessHeap(),
+				HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
+				newlen*2);
+      if (at->AtomData == NULL)
+	{
+	  return(0);
+	}
       lp->idx = 0;
     } else {
       
-      at->AtomData = (WCHAR *) RtlReAllocateHeap(GetProcessHeap(),0,at->AtomData,newlen*2);
+      at->AtomData =
+	(WCHAR*)RtlReAllocateHeap(GetProcessHeap(), 0, at->AtomData, newlen*2);
+      if (at->AtomData == NULL)
+	{
+	  return(0);
+	}
       lp->idx = at->DataSize;
     }
     

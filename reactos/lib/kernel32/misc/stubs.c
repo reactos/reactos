@@ -1,82 +1,10 @@
-/* $Id: stubs.c,v 1.25 2001/03/30 17:26:42 dwelch Exp $
+/* $Id: stubs.c,v 1.26 2001/03/31 01:17:29 dwelch Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
 #include <windows.h>
 
-BOOL
-STDCALL
-AddConsoleAliasA (
-	DWORD a0,
-	DWORD a1,
-	DWORD a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-BOOL
-STDCALL
-AddConsoleAliasW (
-	DWORD a0,
-	DWORD a1,
-	DWORD a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-WINBOOL
-STDCALL
-BackupRead (
-	HANDLE	hFile,
-	LPBYTE	lpBuffer,
-	DWORD	nNumberOfBytesToRead,
-	LPDWORD	lpNumberOfBytesRead,
-	WINBOOL	bAbort,
-	WINBOOL	bProcessSecurity,
-	LPVOID	* lpContext
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-BackupSeek (
-	HANDLE	hFile,
-	DWORD	dwLowBytesToSeek,
-	DWORD	dwHighBytesToSeek,
-	LPDWORD	lpdwLowByteSeeked,
-	LPDWORD	lpdwHighByteSeeked,
-	LPVOID	* lpContext
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-BackupWrite (
-	HANDLE	hFile,
-	LPBYTE	lpBuffer,
-	DWORD	nNumberOfBytesToWrite,
-	LPDWORD	lpNumberOfBytesWritten,
-	WINBOOL	bAbort,
-	WINBOOL	bProcessSecurity,
-	LPVOID	* lpContext
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 BOOL
@@ -88,145 +16,16 @@ BaseAttachCompleteThunk (VOID)
 }
 
 
-HANDLE
-STDCALL
-BeginUpdateResourceW (
-	LPCWSTR	pFileName,
-	WINBOOL	bDeleteExistingResources
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-HANDLE
-STDCALL
-BeginUpdateResourceA (
-	LPCSTR	pFileName,
-	WINBOOL	bDeleteExistingResources
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-BuildCommDCBA (
-	LPCSTR	lpDef,
-	LPDCB	lpDCB
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-BuildCommDCBW (
-	LPCWSTR	lpDef,
-	LPDCB	lpDCB
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-BuildCommDCBAndTimeoutsA (
-	LPCSTR		lpDef,
-	LPDCB		lpDCB,
-	LPCOMMTIMEOUTS	lpCommTimeouts
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-BuildCommDCBAndTimeoutsW (
-	LPCWSTR		lpDef,
-	LPDCB		lpDCB,
-	LPCOMMTIMEOUTS	lpCommTimeouts
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-CallNamedPipeA (
-	LPCSTR	lpNamedPipeName,
-	LPVOID	lpInBuffer,
-	DWORD	nInBufferSize,
-	LPVOID	lpOutBuffer,
-	DWORD	nOutBufferSize,
-	LPDWORD	lpBytesRead,
-	DWORD	nTimeOut
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-CallNamedPipeW (
-	LPCWSTR	lpNamedPipeName,
-	LPVOID	lpInBuffer,
-	DWORD	nInBufferSize,
-	LPVOID	lpOutBuffer,
-	DWORD	nOutBufferSize,
-	LPDWORD	lpBytesRead,
-	DWORD	nTimeOut
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-ClearCommBreak (
-	HANDLE	hFile
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-ClearCommError (
-	HANDLE		hFile,
-	LPDWORD		lpErrors,
-	LPCOMSTAT	lpStat
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-BOOL
-STDCALL
-CloseProfileUserMapping ( VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 BOOL
@@ -240,30 +39,7 @@ CmdBatNotification (
 }
 
 
-WINBOOL
-STDCALL
-CommConfigDialogA (
-	LPCSTR		lpszName,
-	HWND		hWnd,
-	LPCOMMCONFIG	lpCC
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
-
-WINBOOL
-STDCALL
-CommConfigDialogW (
-	LPCWSTR		lpszName,
-	HWND		hWnd,
-	LPCOMMCONFIG	lpCC
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 int
@@ -299,19 +75,6 @@ CompareStringW (
 
 
 
-BOOL
-STDCALL
-ConsoleMenuControl (
-	HANDLE	hConsole,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 LCID
 STDCALL
 ConvertDefaultLocale (
@@ -323,48 +86,9 @@ ConvertDefaultLocale (
 }
 
 
-HANDLE
-STDCALL
-CreateMailslotA (
-	LPCSTR			lpName,
-	DWORD			nMaxMessageSize,
-	DWORD			lReadTimeout,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HANDLE
-STDCALL
-CreateMailslotW (
-	LPCWSTR			lpName,
-	DWORD			nMaxMessageSize,
-	DWORD			lReadTimeout,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
 
 
 
-
-DWORD
-STDCALL
-CreateTapePartition (
-	HANDLE	hDevice,
-	DWORD	dwPartitionMethod,
-	DWORD	dwCount,
-	DWORD	dwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 DWORD
@@ -379,55 +103,12 @@ CreateVirtualBuffer (
 	return 0;
 }
 
-WINBOOL
-STDCALL
-DisconnectNamedPipe (
-	HANDLE	hNamedPipe
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-BOOL
-STDCALL
-DuplicateConsoleHandle (
-	HANDLE	hConsole,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-EndUpdateResourceW (
-	HANDLE	hUpdate,
-	WINBOOL	fDiscard
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-EndUpdateResourceA (
-	HANDLE	hUpdate,
-	WINBOOL	fDiscard
-	)
-{
-	return EndUpdateResourceW(
-			hUpdate,
-			fDiscard
-			);
-}
 
 
 WINBOOL
@@ -485,89 +166,6 @@ EnumDateFormatsA (
 }
 
 
-WINBOOL
-STDCALL
-EnumResourceLanguagesW (
-	HINSTANCE	hModule,
-	LPCWSTR		lpType,
-	LPCWSTR		lpName,
-	ENUMRESLANGPROC	lpEnumFunc,
-	LONG		lParam
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-EnumResourceLanguagesA (
-	HINSTANCE	hModule,
-	LPCSTR		lpType,
-	LPCSTR		lpName,
-	ENUMRESLANGPROC	lpEnumFunc,
-	LONG		lParam
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-EnumResourceNamesW (
-	HINSTANCE	hModule,
-	LPCWSTR		lpType,
-	ENUMRESNAMEPROC	lpEnumFunc,
-	LONG		lParam
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-EnumResourceNamesA (
-	HINSTANCE	hModule,
-	LPCSTR		lpType,
-	ENUMRESNAMEPROC	lpEnumFunc,
-	LONG		lParam
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-EnumResourceTypesW (
-	HINSTANCE	hModule,
-	ENUMRESTYPEPROC	lpEnumFunc,
-	LONG		lParam
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-WINBOOL
-STDCALL
-EnumResourceTypesA (
-	HINSTANCE	hModule,
-	ENUMRESTYPEPROC	lpEnumFunc,
-	LONG		lParam
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -644,29 +242,9 @@ EnumTimeFormatsA (
 }
 
 
-DWORD
-STDCALL
-EraseTape (
-	HANDLE	hDevice,
-	DWORD	dwEraseType,
-	WINBOOL	bImmediate
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
-WINBOOL
-STDCALL
-EscapeCommFunction (
-	HANDLE	hFile,
-	DWORD	dwFunc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+
 
 
 DWORD
@@ -681,26 +259,6 @@ ExitVDM (
 }
 
 
-DWORD
-STDCALL
-ExpungeConsoleCommandHistoryW (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-ExpungeConsoleCommandHistoryA (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 BOOL
@@ -713,54 +271,6 @@ ExtendVirtualBuffer (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-WINBOOL
-STDCALL
-FindCloseChangeNotification (
-	HANDLE	hChangeHandle
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-HANDLE
-STDCALL
-FindFirstChangeNotificationW (
-	LPCWSTR	lpPathName,
-	WINBOOL	bWatchSubtree,
-	DWORD	dwNotifyFilter
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HANDLE
-STDCALL
-FindFirstChangeNotificationA (
-	LPCSTR	lpPathName,
-	WINBOOL	bWatchSubtree,
-	DWORD	dwNotifyFilter
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-WINBOOL
-STDCALL
-FindNextChangeNotification (
-	HANDLE	hChangeHandle
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 
 int
@@ -882,78 +392,6 @@ GetCPInfo (
 }
 
 
-WINBOOL
-STDCALL
-GetCommConfig (
-	HANDLE		hCommDev,
-	LPCOMMCONFIG	lpCC,
-	LPDWORD		lpdwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetCommMask (
-	HANDLE	hFile,
-	LPDWORD	lpEvtMask
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-WINBOOL
-STDCALL
-GetCommModemStatus (
-	HANDLE	hFile,
-	LPDWORD	lpModemStat
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetCommProperties (
-	HANDLE		hFile,
-	LPCOMMPROP	lpCommProp
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetCommState (
-	HANDLE hFile,
-	LPDCB lpDCB
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetCommTimeouts (
-	HANDLE		hFile,
-	LPCOMMTIMEOUTS	lpCommTimeouts
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -1012,237 +450,6 @@ GetComputerNameA (
 }
 
 
-DWORD
-STDCALL
-GetConsoleAliasW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleAliasA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasExesW (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasExesA (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasExesLengthA (VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasExesLengthW (VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasesW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasesA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasesLengthW (
-	DWORD Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-DWORD
-STDCALL
-GetConsoleAliasesLengthA (
-	DWORD Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleCommandHistoryW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleCommandHistoryA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleCommandHistoryLengthW (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleCommandHistoryLengthA (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleDisplayMode (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleFontInfo (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleFontSize (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleHardwareState (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetConsoleInputWaitHandle (VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 int
@@ -1277,17 +484,7 @@ GetCurrencyFormatA (
 }
 
 
-DWORD
-STDCALL
-GetCurrentConsoleFont (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 
 int
@@ -1322,30 +519,6 @@ GetDateFormatA (
 }
 
 
-WINBOOL
-STDCALL
-GetDefaultCommConfigW (
-	LPCWSTR		lpszName,
-	LPCOMMCONFIG	lpCC,
-	LPDWORD		lpdwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetDefaultCommConfigA (
-	LPCSTR		lpszName,
-	LPCOMMCONFIG	lpCC,
-	LPDWORD		lpdwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 int
@@ -1376,68 +549,8 @@ GetLocaleInfoA (
 }
 
 
-WINBOOL
-STDCALL
-GetMailslotInfo (
-	HANDLE	hMailslot,
-	LPDWORD	lpMaxMessageSize,
-	LPDWORD	lpNextSize,
-	LPDWORD	lpMessageCount,
-	LPDWORD	lpReadTimeout
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-GetNamedPipeHandleStateW (
-	HANDLE	hNamedPipe,
-	LPDWORD	lpState,
-	LPDWORD	lpCurInstances,
-	LPDWORD	lpMaxCollectionCount,
-	LPDWORD	lpCollectDataTimeout,
-	LPWSTR	lpUserName,
-	DWORD	nMaxUserNameSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetNamedPipeHandleStateA (
-	HANDLE	hNamedPipe,
-	LPDWORD	lpState,
-	LPDWORD	lpCurInstances,
-	LPDWORD	lpMaxCollectionCount,
-	LPDWORD	lpCollectDataTimeout,
-	LPSTR	lpUserName,
-	DWORD	nMaxUserNameSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetNamedPipeInfo (
-	HANDLE	hNamedPipe,
-	LPDWORD	lpFlags,
-	LPDWORD	lpOutBufferSize,
-	LPDWORD	lpInBufferSize,
-	LPDWORD	lpMaxInstances
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 DWORD
@@ -1483,13 +596,7 @@ GetNumberFormatA (
 }
 
 
-int
-STDCALL
-GetNumberOfConsoleFonts (VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 1; /* FIXME: call csrss.exe */
-}
+
 
 
 UINT
@@ -1501,278 +608,9 @@ GetOEMCP (VOID)
 }
 
 
-UINT
-STDCALL
-GetPrivateProfileIntW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	INT	nDefault,
-	LPCWSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
-UINT
-STDCALL
-GetPrivateProfileIntA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	INT	nDefault,
-	LPCSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-
-DWORD
-STDCALL
-GetPrivateProfileSectionW (
-	LPCWSTR	lpAppName,
-	LPWSTR	lpReturnedString,
-	DWORD	nSize,
-	LPCWSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetPrivateProfileSectionA (
-	LPCSTR	lpAppName,
-	LPSTR	lpReturnedString,
-	DWORD	nSize,
-	LPCSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetPrivateProfileSectionNamesW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetPrivateProfileSectionNamesA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetPrivateProfileStringW (
-	LPCWSTR lpAppName,
-	LPCWSTR lpKeyName,
-	LPCWSTR lpDefault,
-	LPWSTR	lpReturnedString,
-	DWORD	nSize,
-	LPCWSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetPrivateProfileStringA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	LPCSTR	lpDefault,
-	LPSTR	lpReturnedString,
-	DWORD	nSize,
-	LPCSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetPrivateProfileStructW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetPrivateProfileStructA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-WINBOOL
-STDCALL
-GetProcessAffinityMask (
-	HANDLE	hProcess,
-	LPDWORD	lpProcessAffinityMask,
-	LPDWORD lpSystemAffinityMask
-	)
-{
-	if (	(NULL == lpProcessAffinityMask)
-		|| (NULL == lpSystemAffinityMask)
-		)
-	{
-		SetLastError(ERROR_BAD_ARGUMENTS);
-		return FALSE;
-	}
-	/* FIXME: check hProcess is actually a process */
-	/* FIXME: query the kernel process object */
-	*lpProcessAffinityMask = 0x00000001;
-	*lpSystemAffinityMask  = 0x00000001;
-	return TRUE;
-}
-
-
-WINBOOL
-STDCALL
-GetProcessShutdownParameters (
-	LPDWORD	lpdwLevel,
-	LPDWORD	lpdwFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetProcessWorkingSetSize (
-	HANDLE	hProcess,
-	LPDWORD	lpMinimumWorkingSetSize,
-	LPDWORD	lpMaximumWorkingSetSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-UINT
-STDCALL
-GetProfileIntW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	INT	nDefault
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-UINT
-STDCALL
-GetProfileIntA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	INT	nDefault
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetProfileSectionW (
-	LPCWSTR	lpAppName,
-	LPWSTR	lpReturnedString,
-	DWORD	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetProfileSectionA (
-	LPCSTR	lpAppName,
-	LPSTR	lpReturnedString,
-	DWORD	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetProfileStringW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	LPCWSTR	lpDefault,
-	LPWSTR	lpReturnedString,
-	DWORD	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetProfileStringA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	LPCSTR	lpDefault,
-	LPSTR	lpReturnedString,
-	DWORD	nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 WINBOOL
@@ -1871,29 +709,6 @@ GetSystemPowerStatus (
 }
 
 
-DWORD
-STDCALL
-GetTapeParameters (
-	HANDLE	hDevice,
-	DWORD	dwOperation,
-	LPDWORD	lpdwSize,
-	LPVOID	lpTapeInformation
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetTapeStatus (
-	HANDLE	hDevice
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 LCID
@@ -2228,16 +1043,7 @@ HeapWalk (
 	return FALSE;
 }
 
-DWORD
-STDCALL
-InvalidateConsoleDIBits (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 
 WINBOOL
@@ -2624,68 +1430,11 @@ MultiByteToWideChar (
 }
 
 
-DWORD
-STDCALL
-OpenConsoleW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
-DWORD
-STDCALL
-OpenProfileUserMapping (VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
-WINBOOL
-STDCALL
-PeekNamedPipe (
-	HANDLE	hNamedPipe,
-	LPVOID	lpBuffer,
-	DWORD	nBufferSize,
-	LPDWORD	lpBytesRead,
-	LPDWORD	lpTotalBytesAvail,
-	LPDWORD	lpBytesLeftThisMessage
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
-
-DWORD
-STDCALL
-PrepareTape (
-	HANDLE	hDevice,
-	DWORD	dwOperation,
-	WINBOOL	bImmediate
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-WINBOOL
-STDCALL
-PurgeComm (
-	HANDLE	hFile,
-	DWORD	dwFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -2710,31 +1459,9 @@ QueryPerformanceFrequency (
 }
 
 
-WINBOOL
-STDCALL
-QueryWin31IniFilesMappedToRegistry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-VOID
-STDCALL
-RaiseException (
-	DWORD		dwExceptionCode,
-	DWORD		dwExceptionFlags,
-	DWORD		nNumberOfArguments,
-	CONST DWORD	* lpArguments
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
+
 
 
 WINBOOL
@@ -2780,64 +1507,6 @@ RegisterWowExec (
 }
 
 
-WINBOOL
-STDCALL
-SetCommBreak (
-	HANDLE	hFile
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetCommConfig (
-	HANDLE		hCommDev,
-	LPCOMMCONFIG	lpCC,
-	DWORD		dwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetCommMask (
-	HANDLE	hFile,
-	DWORD	dwEvtMask
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetCommState (
-	HANDLE	hFile,
-	LPDCB	lpDCB
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetCommTimeouts (
-	HANDLE		hFile,
-	LPCOMMTIMEOUTS	lpCommTimeouts
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -2862,174 +1531,12 @@ SetComputerNameW (
 }
 
 
-WINBOOL
-STDCALL
-SetConsoleCommandHistoryMode (
-	DWORD	dwMode
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-SetConsoleCursor (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-SetConsoleDisplayMode (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-SetConsoleFont (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetConsoleHardwareState (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetConsoleKeyShortcuts (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetConsoleMaximumWindowSize (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetConsoleMenuClose (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetConsoleNumberOfCommandsA (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetConsoleNumberOfCommandsW (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetConsolePalette (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetDefaultCommConfigA (
-	LPCSTR		lpszName,
-	LPCOMMCONFIG	lpCC,
-	DWORD		dwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetDefaultCommConfigW (
-	LPCWSTR		lpszName,
-	LPCOMMCONFIG	lpCC,
-	DWORD		dwSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetLastConsoleEventActive (VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -3058,43 +1565,9 @@ SetLocaleInfoW (
 }
 
 
-WINBOOL
-STDCALL
-SetMailslotInfo (
-	HANDLE	hMailslot,
-	DWORD	lReadTimeout
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 
-
-WINBOOL
-STDCALL
-SetProcessShutdownParameters (
-	DWORD	dwLevel,
-	DWORD	dwFlags
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetProcessWorkingSetSize (
-	HANDLE	hProcess,
-	DWORD	dwMinimumWorkingSetSize,
-	DWORD	dwMaximumWorkingSetSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -3109,33 +1582,6 @@ SetSystemPowerState (
 }
 
 
-DWORD
-STDCALL
-SetTapeParameters (
-	HANDLE	hDevice,
-	DWORD	dwOperation,
-	LPVOID	lpTapeInformation
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-SetTapePosition (
-	HANDLE	hDevice,
-	DWORD	dwPositionMethod,
-	DWORD	dwPartition,
-	DWORD	dwOffsetLow,
-	DWORD	dwOffsetHigh,
-	WINBOOL	bImmediate
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 WINBOOL
@@ -3161,29 +1607,6 @@ SetVDMCurrentDirectories (
 }
 
 
-WINBOOL
-STDCALL
-SetupComm (
-	HANDLE	hFile,
-	DWORD	dwInQueue,
-	DWORD	dwOutQueue
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-DWORD
-STDCALL
-ShowConsoleCursor (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 
@@ -3193,33 +1616,13 @@ ShowConsoleCursor (
 
 
 
-WINBOOL
-STDCALL
-TransactNamedPipe (
-	HANDLE		hNamedPipe,
-	LPVOID		lpInBuffer,
-	DWORD		nInBufferSize,
-	LPVOID		lpOutBuffer,
-	DWORD		nOutBufferSize,
-	LPDWORD		lpBytesRead,
-	LPOVERLAPPED	lpOverlapped
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
-WINBOOL
-STDCALL
-TransmitCommChar (
-	HANDLE	hFile,
-	char	cChar
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+
+
+
+
+
 
 
 DWORD
@@ -3233,36 +1636,6 @@ TrimVirtualBuffer (
 }
 
 
-WINBOOL
-STDCALL
-UpdateResourceA (
-	HANDLE	hUpdate,
-	LPCSTR	lpType,
-	LPCSTR	lpName,
-	WORD	wLanguage,
-	LPVOID	lpData,
-	DWORD	cbData
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-UpdateResourceW (
-	HANDLE	hUpdate,
-	LPCWSTR	lpType,
-	LPCWSTR	lpName,
-	WORD	wLanguage,
-	LPVOID	lpData,
-	DWORD	cbData
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 DWORD
@@ -3314,15 +1687,7 @@ VerLanguageNameW (
 }
 
 
-DWORD
-STDCALL
-VerifyConsoleIoHandle (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 
 DWORD
@@ -3338,17 +1703,7 @@ VirtualBufferExceptionHandler (
 }
 
 
-WINBOOL
-STDCALL
-WaitCommEvent (
-	HANDLE		hFile,
-	LPDWORD		lpEvtMask,
-	LPOVERLAPPED	lpOverlapped
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+
 
 
 int
@@ -3369,196 +1724,10 @@ WideCharToMultiByte (
 }
 
 
-DWORD
-STDCALL
-WriteConsoleInputVDMA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-WriteConsoleInputVDMW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-WINBOOL
-STDCALL
-WritePrivateProfileSectionA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpString,
-	LPCSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WritePrivateProfileSectionW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpString,
-	LPCWSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WritePrivateProfileStringA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	LPCSTR	lpString,
-	LPCSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WritePrivateProfileStringW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	LPCWSTR	lpString,
-	LPCWSTR	lpFileName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WritePrivateProfileStructA (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WritePrivateProfileStructW (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 
 
-WINBOOL
-STDCALL
-WriteProfileSectionA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WriteProfileSectionW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WriteProfileStringA (
-	LPCSTR	lpAppName,
-	LPCSTR	lpKeyName,
-	LPCSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-WriteProfileStringW (
-	LPCWSTR	lpAppName,
-	LPCWSTR	lpKeyName,
-	LPCWSTR	lpString
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-DWORD
-STDCALL
-WriteTapemark (
-	HANDLE	hDevice,
-	DWORD	dwTapemarkType,
-	DWORD	dwTapemarkCount,
-	WINBOOL	bImmediate
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-DWORD
-STDCALL
-GetTapePosition (
-	HANDLE	hDevice,
-	DWORD	dwPositionType,
-	LPDWORD	lpdwPartition,
-	LPDWORD	lpdwOffsetLow,
-	LPDWORD	lpdwOffsetHigh
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.45 2001/03/30 15:14:52 dwelch Exp $
+# $Id: makefile,v 1.46 2001/03/31 01:17:29 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -17,15 +17,17 @@ all: $(DLLTARGET)
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
                 synch/sem.o synch/timer.o synch/wait.o
 
-MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o \
-		misc/console.o misc/time.o misc/stubs.o misc/ldr.o misc/res.o \
-		misc/debug.o misc/sysinfo.o
+MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
+	       misc/dllmain.o misc/comm.o \
+	       misc/console.o misc/time.o misc/stubs.o misc/ldr.o misc/res.o \
+	       misc/debug.o misc/sysinfo.o misc/profile.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
 	       file/create.o file/find.o file/copy.o file/pipe.o \
 	       file/move.o file/lock.o file/rw.o file/delete.o \
-	       file/npipe.o
+	       file/npipe.o file/tape.o file/mailslot.o file/backup.o \
+	       file/cnotify.o
 
 MEM_OBJECTS = mem/global.o mem/heap.o mem/isbad.o mem/procmem.o \
               mem/section.o mem/virtual.o

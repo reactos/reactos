@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.39 2001/03/13 16:25:51 dwelch Exp $
+/* $Id: proc.c,v 1.40 2001/03/31 01:17:30 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -43,6 +43,78 @@ RegisterWaitForInputIdle (WaitForInputIdleType	lpfnRegisterWaitForInputIdle);
 
 WINBOOL STDCALL
 GetProcessId (HANDLE	hProcess, LPDWORD	lpProcessId);
+
+WINBOOL
+STDCALL
+GetProcessAffinityMask (
+	HANDLE	hProcess,
+	LPDWORD	lpProcessAffinityMask,
+	LPDWORD lpSystemAffinityMask
+	)
+{
+	if (	(NULL == lpProcessAffinityMask)
+		|| (NULL == lpSystemAffinityMask)
+		)
+	{
+		SetLastError(ERROR_BAD_ARGUMENTS);
+		return FALSE;
+	}
+	/* FIXME: check hProcess is actually a process */
+	/* FIXME: query the kernel process object */
+	*lpProcessAffinityMask = 0x00000001;
+	*lpSystemAffinityMask  = 0x00000001;
+	return TRUE;
+}
+
+
+WINBOOL
+STDCALL
+GetProcessShutdownParameters (
+	LPDWORD	lpdwLevel,
+	LPDWORD	lpdwFlags
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+GetProcessWorkingSetSize (
+	HANDLE	hProcess,
+	LPDWORD	lpMinimumWorkingSetSize,
+	LPDWORD	lpMaximumWorkingSetSize
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetProcessShutdownParameters (
+	DWORD	dwLevel,
+	DWORD	dwFlags
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetProcessWorkingSetSize (
+	HANDLE	hProcess,
+	DWORD	dwMinimumWorkingSetSize,
+	DWORD	dwMaximumWorkingSetSize
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
 
 WINBOOL STDCALL
 GetProcessTimes (HANDLE		hProcess,

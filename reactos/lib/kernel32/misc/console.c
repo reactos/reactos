@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.30 2001/02/10 22:26:26 ekohl Exp $
+/* $Id: console.c,v 1.31 2001/03/31 01:17:29 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,6 +27,533 @@
 #include <kernel32/error.h>
 
 /* FUNCTIONS *****************************************************************/
+
+BOOL STDCALL
+AddConsoleAliasA (DWORD a0,
+		  DWORD a1,
+		  DWORD a2)
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+BOOL STDCALL
+AddConsoleAliasW (DWORD a0,
+		  DWORD a1,
+		  DWORD a2)
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+BOOL STDCALL
+ConsoleMenuControl (HANDLE	hConsole,
+		    DWORD	Unknown1,
+		    DWORD	Unknown2)
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+BOOL
+STDCALL
+DuplicateConsoleHandle (
+	HANDLE	hConsole,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+DWORD
+STDCALL
+ExpungeConsoleCommandHistoryW (
+	DWORD	Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+ExpungeConsoleCommandHistoryA (
+	DWORD	Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+DWORD
+STDCALL
+GetConsoleAliasW (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleAliasA (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+
+DWORD
+STDCALL
+GetConsoleAliasExesW (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+
+DWORD
+STDCALL
+GetConsoleAliasExesA (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+
+DWORD
+STDCALL
+GetConsoleAliasExesLengthA (VOID)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+
+DWORD
+STDCALL
+GetConsoleAliasExesLengthW (VOID)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+
+DWORD
+STDCALL
+GetConsoleAliasesW (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+
+DWORD
+STDCALL
+GetConsoleAliasesA (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+
+DWORD
+STDCALL
+GetConsoleAliasesLengthW (
+	DWORD Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+
+DWORD
+STDCALL
+GetConsoleAliasesLengthA (
+	DWORD Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleCommandHistoryW (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleCommandHistoryA (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleCommandHistoryLengthW (
+	DWORD	Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleCommandHistoryLengthA (
+	DWORD	Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleDisplayMode (
+	DWORD	Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleFontInfo (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleFontSize (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleHardwareState (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetConsoleInputWaitHandle (VOID)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+DWORD
+STDCALL
+GetCurrentConsoleFont (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+int
+STDCALL
+GetNumberOfConsoleFonts (VOID)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 1; /* FIXME: call csrss.exe */
+}
+
+DWORD
+STDCALL
+InvalidateConsoleDIBits (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+DWORD
+STDCALL
+OpenConsoleW (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+WINBOOL
+STDCALL
+SetConsoleCommandHistoryMode (
+	DWORD	dwMode
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleCursor (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleDisplayMode (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleFont (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleHardwareState (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleKeyShortcuts (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleMaximumWindowSize (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleMenuClose (
+	DWORD	Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleNumberOfCommandsA (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsoleNumberOfCommandsW (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetConsolePalette (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+SetLastConsoleEventActive (VOID)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+DWORD
+STDCALL
+ShowConsoleCursor (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+DWORD
+STDCALL
+VerifyConsoleIoHandle (
+	DWORD	Unknown0
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+DWORD
+STDCALL
+WriteConsoleInputVDMA (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+DWORD
+STDCALL
+WriteConsoleInputVDMW (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
 
 /*--------------------------------------------------------------
  *	CloseConsoleHandle
