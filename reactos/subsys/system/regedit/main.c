@@ -28,6 +28,7 @@
 #include <fcntl.h>
 
 #include "main.h"
+#include "hexedit.h"
 
 
 BOOL ProcessCmdLine(LPSTR lpCmdLine);
@@ -102,6 +103,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
                          };
     ATOM hChildWndClass = RegisterClassEx(&wcChild); /* register child windows class */
     hChildWndClass = hChildWndClass; /* warning eater */
+    
+    RegisterHexEditorClass(hInstance);
 
     hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDIT_MENU));
     hPopupMenus = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_POPUP_MENUS));
@@ -138,8 +141,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 /******************************************************************************/
 
-void ExitInstance(void)
+void ExitInstance(HINSTANCE hInstance)
 {
+    UnregisterHexEditorClass(hInstance);
     DestroyMenu(hMenuFrame);
 }
 
@@ -191,6 +195,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-    ExitInstance();
+    ExitInstance(hInstance);
     return msg.wParam;
 }

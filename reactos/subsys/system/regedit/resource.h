@@ -121,5 +121,6 @@
 #define IDC_FORMAT_DEC			2005
 
 #define IDD_EDIT_MULTI_STRING		2006
+#define IDD_EDIT_BIN_DATA		2007
 
 #define IDC_STATIC                      -1
