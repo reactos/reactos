@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.137 2004/10/22 20:45:46 ekohl Exp $
+/* $Id: thread.c,v 1.138 2004/11/01 19:10:07 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -56,7 +56,17 @@ static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
  */
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
+#ifdef MP
+   ULONG Flags;
+   PKTHREAD Thread;
+   Ke386SaveFlags(Flags);
+   Ke386DisableInterrupts();
+   Thread = KeGetCurrentKPCR()->PrcbData.CurrentThread;
+   Ke386RestoreFlags(Flags);
+   return Thread;
+#else
    return(KeGetCurrentKPCR()->PrcbData.CurrentThread);
+#endif
 }
 
 /*
@@ -427,7 +437,7 @@ PsDispatchThread(ULONG NewThreadStatus)
 {
    KIRQL oldIrql;
 
-   if (!DoneInitYet)
+   if (!DoneInitYet || KeGetCurrentKPCR()->PrcbData.IdleThread == NULL)
      {
 	return;
      }
@@ -629,7 +639,6 @@ PsSetThreadWin32Thread(
 VOID
 PsApplicationProcessorInit(VOID)
 {
-  KeGetCurrentKPCR()->PrcbData.CurrentThread = KeGetCurrentKPCR()->PrcbData.IdleThread;
 }
 
 VOID INIT_FUNCTION
@@ -650,7 +659,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   IdleThread->Tcb.UserAffinity = 1 << Id;
   IdleThread->Tcb.Priority = LOW_PRIORITY;
   Pcr->PrcbData.IdleThread = &IdleThread->Tcb;
-
+  Pcr->PrcbData.CurrentThread = &IdleThread->Tcb;
   NtClose(IdleThreadHandle);
   DPRINT("IdleThread for Processor %d has PID %d\n",
 	   Id, IdleThread->Cid.UniqueThread);
