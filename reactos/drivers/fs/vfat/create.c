@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.22 2001/03/13 16:25:55 dwelch Exp $
+/* $Id: create.c,v 1.23 2001/04/29 21:08:14 cnettel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -237,8 +237,10 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
   ULONG NextCluster;
   WCHAR TempStr[2];
   NTSTATUS Status;
+  ULONG len;
 
-  DPRINT ("FindFile(Parent %x, FileToFind '%S')\n", Parent, FileToFind);
+//  DPRINT ("FindFile(Parent %x, FileToFind '%S')\n", Parent, FileToFind);
+  DPRINT("FindFile: old Pathname %x, old Objectname %x)\n",Fcb->PathName, Fcb->ObjectName);
 
   if (wcslen (FileToFind) == 0)
     {
@@ -257,8 +259,12 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	  || (FileToFind[0] == '.' && FileToFind[1] == 0))
 	{
 	  /* it's root : complete essentials fields then return ok */
+	  CHECKPOINT;
 	  memset (Fcb, 0, sizeof (VFATFCB));
 	  memset (Fcb->entry.Filename, ' ', 11);
+	  CHECKPOINT;
+	  Fcb->PathName[0]='\\';
+	  Fcb->ObjectName = &Fcb->PathName[1];
 	  Fcb->entry.FileSize = DeviceExt->rootDirectorySectors * BLOCKSIZE;
 	  Fcb->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
 	  if (DeviceExt->FatType == FAT32)
@@ -269,6 +275,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	    *StartSector = StartingSector;
 	  if (Entry)
 	    *Entry = 0;
+	    DPRINT("FindFile: new Pathname %S, new Objectname %S)\n",Fcb->PathName, Fcb->ObjectName);
 	  return (STATUS_SUCCESS);
 	}
     }
@@ -330,6 +337,19 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 				       StartingSector, 1, block);
 		      i = 0;
 		    }
+		  if (Parent && Parent->PathName)
+		  {
+		    len = wcslen(Parent->PathName);
+		    CHECKPOINT;
+		    memcpy(Fcb->PathName, Parent->PathName, len*sizeof(WCHAR));
+		    Fcb->ObjectName=&Fcb->PathName[len];
+		  }
+		  else
+		  	Fcb->ObjectName=Fcb->PathName;
+
+		  Fcb->ObjectName[0]='\\';
+		  Fcb->ObjectName=&Fcb->ObjectName[1];
+
 		  memcpy (&Fcb->entry, &((FATDirEntry *) block)[i],
 			  sizeof (FATDirEntry));
 		  vfat_wcsncpy (Fcb->ObjectName, name, MAX_PATH);
@@ -338,6 +358,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 		  if (Entry)
 		    *Entry = i;
 		  ExFreePool (block);
+	    DPRINT("FindFile: new Pathname %S, new Objectname %S)\n",Fcb->PathName, Fcb->ObjectName);
 		  return (STATUS_SUCCESS);
 		}
 	    }
@@ -390,7 +411,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   PWSTR current = NULL;
   PWSTR next;
   PWSTR string;
-  PWSTR buffer; // used to store a pointer while checking MAX_PATH conformance
+//  PWSTR buffer; // used to store a pointer while checking MAX_PATH conformance
   PVFATFCB ParentFcb;
   PVFATFCB Fcb, pRelFcb;
   PVFATFCB Temp;
@@ -496,9 +517,8 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       else
 	Fcb->entry.FirstCluster = 1;
       /* FIXME : is 1 the good value for mark root? */
-      Fcb->ObjectName--;
       ParentFcb = Fcb;
-      DPRINT("%S filename, PathName: %S \n",FileName, ParentFcb->PathName);
+      DPRINT("%S filename, PathName: %S\n",FileName, ParentFcb->PathName);
       Fcb = NULL;
     }
   else
@@ -549,25 +569,15 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  else
 	      Fcb = ParentFcb;
 
-	  buffer=Fcb->ObjectName;
-	  Fcb->ObjectName = Fcb->PathName + (Temp->ObjectName-Temp->PathName) + wcslen(Temp->ObjectName)+1;
-// The line above should be possible to optimize. I was tired when writing it and always did something wrong
-	  if (Fcb->ObjectName - Fcb->PathName >= MAX_PATH)
-	    {
-	      if (Fcb != NULL)
-		  ExFreePool (Fcb);
-	      if (ParentFcb != NULL)
-		 ExFreePool (ParentFcb);
-	      if (AbsFileName)
-		 ExFreePool (AbsFileName);
+	  if (*(Temp->ObjectName))
+	  {
+	    vfat_wcsncpy(Fcb->PathName+(Fcb->ObjectName-Fcb->PathName),Temp->PathName+(Fcb->ObjectName-Fcb->PathName), MAX_PATH);
 
-	      return STATUS_OBJECT_PATH_NOT_FOUND;
-	// Which error code? It's no input buffer limit, it's the MAX_PATH limit.
-	// However, the current one is still wrong. Fix it!
-	    }
-	  wcscat(buffer, Temp->ObjectName-1);
-	  Fcb->ObjectName[-1]='\\';
-	  Fcb->ObjectName[0]=0;
+	    Fcb->ObjectName = &Fcb->PathName[wcslen(Fcb->PathName)];
+	    Fcb->ObjectName[0]='\\';
+	    Fcb->ObjectName=&Fcb->ObjectName[1];
+	    Fcb->ObjectName[0]=0;
+	  }
 	  
 	  CHECKPOINT;
 	  ParentFcb = Temp;
@@ -594,10 +604,10 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
       Fcb = ParentFcb;
       ParentFcb = Temp;
-      ParentFcb->ObjectName = wcschr (ParentFcb->ObjectName, '\\');
+      ParentFcb->ObjectName = &(wcschr (ParentFcb->ObjectName, '\\'))[1];
     }
 
-  FileObject->Flags = FileObject->Flags | 
+    FileObject->Flags = FileObject->Flags | 
     FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   FileObject->SectionObjectPointers = &ParentFcb->SectionObjectPointers;
   memset(FileObject->SectionObjectPointers, 0, 
