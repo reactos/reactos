@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.6 2003/08/11 18:50:12 chorns Exp $
+/* $Id: display.c,v 1.7 2003/08/24 11:58:16 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -97,9 +97,33 @@
 
 #define SCREEN_SYNCHRONIZATION
 
+#define VGA_AC_INDEX            0x3c0
+#define VGA_AC_READ             0x3c0
+#define VGA_AC_WRITE            0x3c1
 
-#define CRTC_COMMAND       0x3d4
-#define CRTC_DATA          0x3d5
+#define VGA_MISC_WRITE          0x3c2
+
+#define VGA_SEQ_INDEX           0x3c4
+#define VGA_SEQ_DATA            0x3c5
+
+#define VGA_DAC_READ_INDEX      0x3c7
+#define VGA_DAC_WRITE_INDEX     0x3c8
+#define VGA_DAC_DATA            0x3c9
+
+#define VGA_MISC_READ           0x3cc
+
+#define VGA_GC_INDEX            0x3ce
+#define VGA_GC_DATA             0x3cf
+
+#define VGA_CRTC_INDEX          0x3d4
+#define VGA_CRTC_DATA           0x3d5
+
+#define VGA_INSTAT_READ         0x3da
+
+#define VGA_SEQ_NUM_REGISTERS   5
+#define VGA_CRTC_NUM_REGISTERS  25
+#define VGA_GC_NUM_REGISTERS    9
+#define VGA_AC_NUM_REGISTERS    21
 
 #define CRTC_COLUMNS       0x01
 #define CRTC_OVERFLOW      0x07
@@ -127,6 +151,114 @@ static BOOLEAN HalOwnsDisplay = TRUE;
 static WORD *VideoBuffer = NULL;
 
 static PHAL_RESET_DISPLAY_PARAMETERS HalResetDisplayParameters = NULL;
+
+static UCHAR TextPalette[64][3] = 
+  {
+    {0, 0, 0}    /* 0 */,
+    {0, 0, 42}   /* 1 */,
+    {0, 42, 0}   /* 2 */,
+    {0, 42, 42}  /* 3 */,
+    {42, 0, 0}   /* 4 */,
+    {42, 42, 42} /* 5 */,
+    {42, 42, 0}  /* 6 */,
+    {42, 42, 42} /* 7 */,
+    {0, 0, 21}   /* 8 */,
+    {0, 0, 63}   /* 9 */,
+    {0, 42, 21}  /* 10 */,
+    {0, 42, 63}  /* 11 */,
+    {42, 0, 21}  /* 12 */,
+    {42, 0, 63}  /* 13 */,
+    {42, 42, 21} /* 14 */,
+    {42, 42, 63} /* 15 */,
+    {0, 21, 0}   /* 16 */,
+    {0, 21, 42}  /* 17 */,
+    {0, 63, 0}   /* 18 */,
+    {0, 63, 42}  /* 19 */,
+    {42, 21, 0}  /* 20 */,
+    {42, 21, 42} /* 21 */,
+    {42, 63, 0}   /* 22 */,
+    {42, 63, 42} /* 23 */,
+    {0, 21, 21}  /* 24 */,
+    {0, 21, 63}  /* 25 */,
+    {0, 63, 21}  /* 26 */,
+    {0, 63, 63}  /* 27 */,
+    {42, 21, 21} /* 28 */,
+    {42, 21, 63} /* 29 */,
+    {42, 63, 21} /* 30 */,
+    {42, 63, 63} /* 31 */,
+    {21, 0, 0}   /* 32 */,
+    {21, 0, 42}  /* 33 */,
+    {21, 42, 0}  /* 34 */,
+    {21, 42, 42} /* 35 */,
+    {63, 0, 0}   /* 36 */,
+    {63, 0, 42}  /* 37 */,
+    {63, 42, 0}  /* 38 */,
+    {63, 42, 42} /* 39 */,
+    {21, 0, 21}  /* 40 */,
+    {21, 0, 63}  /* 41 */,
+    {21, 42, 21} /* 42 */,
+    {21, 42, 63} /* 43 */,
+    {63, 42, 0}  /* 44 */,
+    {63, 0, 63}  /* 45 */,
+    {63, 42, 21} /* 46 */,
+    {63, 42, 63} /* 47 */,
+    {21, 21, 0}  /* 48 */,
+    {21, 21, 42} /* 49 */,
+    {21, 63, 0}  /* 50 */,
+    {21, 63, 42} /* 51 */,
+    {63, 21, 0}  /* 52 */,
+    {63, 21, 42} /* 53 */,
+    {63, 63, 0}  /* 54 */,
+    {63, 63, 42} /* 55 */,
+    {21, 21, 21} /* 56 */,
+    {21, 21, 63} /* 57 */,
+    {21, 63, 21} /* 58 */,
+    {21, 63, 63} /* 59 */,
+    {63, 21, 21} /* 60 */,
+    {63, 21, 63} /* 61 */,
+    {63, 63, 21} /* 62 */,
+    {63, 63, 63} /* 63 */,
+  };
+
+static UCHAR Text80x25Registers[] =
+{
+  /* MISC */
+  0x67,
+  /* SEQ */
+  0x03, 0x00, 0x03, 0x00, 0x02,
+  /* CRTC */
+  0x5F, 0x4F, 0x50, 0x82, 0x55, 0x81, 0xBF, 0x1F,
+  0x00, 0x4F, 0x0D, 0x0E, 0x00, 0x00, 0x00, 0x50,
+  0x9C, 0x0E, 0x8F, 0x28, 0x1F, 0x96, 0xB9, 0xA3,
+  0xFF,
+  /* GC */
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00,
+  0xFF,
+  /* AC */
+  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07,
+  0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
+  0x0C, 0x00, 0x0F, 0x08, 0x00
+};
+
+static UCHAR Text80x50Registers[] =
+{
+  /* MISC */
+  0x67,
+  /* SEQ */
+  0x03, 0x00, 0x03, 0x00, 0x02,
+  /* CRTC */
+  0x5F, 0x4F, 0x50, 0x82, 0x55, 0x81, 0xBF, 0x1F,
+  0x00, 0x47, 0x06, 0x07, 0x00, 0x00, 0x01, 0x40,
+  0x9C, 0x8E, 0x8F, 0x28, 0x1F, 0x96, 0xB9, 0xA3,
+  0xFF, 
+  /* GC */
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00,
+  0xFF, 
+  /* AC */
+  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07,
+  0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
+  0x0C, 0x00, 0x0F, 0x08, 0x00,
+};
 
 
 /* STATIC FUNCTIONS *********************************************************/
@@ -173,6 +305,66 @@ HalPutCharacter (CHAR Character)
   *ptr = (CHAR_ATTRIBUTE << 8) + Character;
 }
 
+VOID STATIC
+HalSetDisplayMode(PUCHAR Registers)
+{
+  UCHAR Port;
+  ULONG i;
+
+  /* Write MISC register. */
+  WRITE_PORT_UCHAR((PUCHAR)VGA_MISC_WRITE, *Registers);
+  Registers++;
+  /* Write SEQUENCER registers. */
+  for (i = 0; i < VGA_SEQ_NUM_REGISTERS; i++)
+    {
+      WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_INDEX, i);
+      WRITE_PORT_UCHAR((PUCHAR)VGA_SEQ_DATA, *Registers);
+      Registers++;
+    }
+  /* Unlock CRTC registers. */
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, 0x03);
+  Port = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, Port | 0x80);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, 0x11);
+  Port = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, Port & ~0x80);
+  /* Make sure they stay unlocked. */
+  Registers[0x03] |= 0x80;
+  Registers[0x11] &= ~0x80;
+  /* Write CRTC registers. */
+  for (i = 0; i < VGA_CRTC_NUM_REGISTERS; i++)
+    {
+      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, i);
+      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, *Registers);
+      Registers++;
+    }
+  /* Write GC registers. */
+  for (i = 0; i < VGA_GC_NUM_REGISTERS; i++)
+    {
+      WRITE_PORT_UCHAR((PUCHAR)VGA_GC_INDEX, i);
+      WRITE_PORT_UCHAR((PUCHAR)VGA_GC_DATA, *Registers);
+      Registers++;
+    }
+  /* Write AC registers. */
+  for (i = 0; i < VGA_AC_NUM_REGISTERS; i++)
+    {
+      (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
+      WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, i);
+      WRITE_PORT_UCHAR((PUCHAR)VGA_AC_WRITE, *Registers);
+      Registers++;
+    }
+  /* Reset palette. */
+  for (i = 0; i < 64; i++)
+    {
+      WRITE_PORT_UCHAR((PUCHAR)0x03c8, i);
+      WRITE_PORT_UCHAR((PUCHAR)0x03c9, TextPalette[i][0]);
+      WRITE_PORT_UCHAR((PUCHAR)0x03c9, TextPalette[i][1]);
+      WRITE_PORT_UCHAR((PUCHAR)0x03c9, TextPalette[i][2]);
+    }
+  /* Lock 16-colour palette and unblank display. */
+  (VOID)READ_PORT_UCHAR((PUCHAR)VGA_INSTAT_READ);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_AC_INDEX, 0x20);  
+}
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
@@ -200,16 +392,16 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
 
       /* read screen size from the crtc */
       /* FIXME: screen size should be read from the boot parameters */
-      WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_COLUMNS);
-      SizeX = READ_PORT_UCHAR((PUCHAR)CRTC_DATA) + 1;
-      WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_ROWS);
-      SizeY = READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
-      WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_OVERFLOW);
-      Data = READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
+      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_COLUMNS);
+      SizeX = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA) + 1;
+      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_ROWS);
+      SizeY = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA);
+      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_OVERFLOW);
+      Data = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA);
       SizeY |= (((Data & 0x02) << 7) | ((Data & 0x40) << 3));
       SizeY++;
-      WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_SCANLINES);
-      ScanLines = (READ_PORT_UCHAR((PUCHAR)CRTC_DATA) & 0x1F) + 1;
+      WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_SCANLINES);
+      ScanLines = (READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA) & 0x1F) + 1;
       SizeY = SizeY / ScanLines;
 
 #ifdef BOCHS_30ROWS
@@ -236,11 +428,21 @@ HalReleaseDisplayOwnership()
   if (HalOwnsDisplay == TRUE)
     return;
 
-  if (HalResetDisplayParameters(SizeX, SizeY) == TRUE)
+  if (!HalResetDisplayParameters(SizeX, SizeY))
     {
-      HalOwnsDisplay = TRUE;
-      HalClearDisplay(CHAR_ATTRIBUTE);
+      if (SizeX == 80 && SizeY == 25)
+	{
+	  HalSetDisplayMode(Text80x25Registers);
+	}
+      else
+	{
+	  SizeX = 80;
+	  SizeY = 50;
+	  HalSetDisplayMode(Text80x50Registers);
+	}      
     }
+  HalOwnsDisplay = TRUE;
+  HalClearDisplay(CHAR_ATTRIBUTE);
 }
 
 
@@ -295,10 +497,10 @@ HalDisplayString(IN PCH String)
 #endif
   
 #ifdef SCREEN_SYNCHRONIZATION
-  WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
-  offset = READ_PORT_UCHAR((PUCHAR)CRTC_DATA)<<8;
-  WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURLO);
-  offset += READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURHI);
+  offset = READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA)<<8;
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURLO);
+  offset += READ_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA);
   
   CursorY = offset / SizeX;
   CursorX = offset % SizeX;
@@ -335,10 +537,10 @@ HalDisplayString(IN PCH String)
 #ifdef SCREEN_SYNCHRONIZATION
   offset = (CursorY * SizeX) + CursorX;
   
-  WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURLO);
-  WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, offset & 0xff);
-  WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
-  WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, (offset >> 8) & 0xff);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURLO);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, offset & 0xff);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_INDEX, CRTC_CURHI);
+  WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (offset >> 8) & 0xff);
 #endif
   KeReleaseSpinLockFromDpcLevel(&Lock);
   popfl(Flags);
