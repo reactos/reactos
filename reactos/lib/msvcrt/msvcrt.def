@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.5 2001/01/11 02:38:34 phreak Exp $
+; $Id: msvcrt.def,v 1.6 2001/04/10 19:20:37 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -82,7 +82,7 @@ EXPORTS
 ; _Gettnames
 ; _HUGE
 ; _Strftime
-; _XcptFilter
+_XcptFilter
 ; __CxxFrameHandler
 ; __CxxLongjmpUnwind
 ; __RTCastToVoid
@@ -95,7 +95,7 @@ __argv
 ; __crtCompareStringA
 ; __crtGetLocaleInfoW
 ; __crtLCMapStringA
-; __dllonexit
+__dllonexit
 ; __doserrno
 ; __fpecode
 __getmainargs
@@ -110,13 +110,13 @@ __iscsymf
 ; __mb_cur_max
 __p___argc
 __p___argv
-; __p___initenv
+__p___initenv
 ; __p___mb_cur_max
 ; __p___wargv
 ; __p___winitenv
 __p__acmdln
 ; __p__amblksiz
-; __p__commode
+__p__commode
 ; __p__daylight
 ; __p__dstbias
 __p__environ
@@ -141,7 +141,7 @@ __p__winver
 ; __pxcptinfoptrs
 __set_app_type
 ; __setlc_active
-; __setusermatherr
+__setusermatherr
 __threadhandle
 __threadid
 __toascii
@@ -151,7 +151,7 @@ __toascii
 ; __wargv
 ; __wgetmainargs
 ; __winitenv
-; _abnormal_termination
+_abnormal_termination
 _access
 _acmdln DATA
 ; _adj_fdiv_m16i
@@ -167,7 +167,7 @@ _acmdln DATA
 ; _adj_fprem
 ; _adj_fprem1
 ; _adj_fptan
-; _adjust_fdiv
+_adjust_fdiv DATA
 _aexit_rtn
 _amsg_exit
 _assert
@@ -190,10 +190,10 @@ _chdrive
 ; _chsize
 ; _clearfp
 _close
-; _commit
-; _commode
-; _control87
-; _controlfp
+_commit
+_commode DATA
+_control87
+_controlfp
 ; _copysign
 ; _cprintf
 ; _cputs
@@ -211,8 +211,8 @@ _endthreadex
 _environ_dll DATA
 ; _eof
 _errno
-; _except_handler2
-; _except_handler3
+_except_handler2
+_except_handler3
 ; _execl
 ; _execle
 ; _execlp
@@ -243,7 +243,7 @@ _flsbuf
 _flushall
 _fmode DATA
 ; _fpclass
-; _fpieee_flt
+_fpieee_flt
 _fpreset
 ; _fputchar
 ; _fputwchar
@@ -271,7 +271,7 @@ _getpid
 ; _getsystime
 ; _getw
 ; _getws
-; _global_unwind2
+_global_unwind2
 ; _heapadd
 ; _heapchk
 ; _heapmin
@@ -281,7 +281,7 @@ _getpid
 ; _hypot
 ; _i64toa
 ; _i64tow
-; _initterm
+_initterm
 ; _inp
 ; _inpd
 ; _inpw
@@ -326,7 +326,7 @@ _itow
 ; _kbhit
 ; _lfind
 _loaddll
-; _local_unwind2
+_local_unwind2
 ; _lock
 ; _locking
 ; _logb
@@ -400,7 +400,7 @@ _mkdir
 _mktemp
 ; _msize
 ; _nextafter
-; _onexit
+_onexit
 _open
 _open_osfhandle
 _osver DATA

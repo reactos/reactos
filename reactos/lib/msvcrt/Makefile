@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2001/01/07 18:45:21 ekohl Exp $
+# $Id: Makefile,v 1.11 2001/04/10 19:20:37 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -41,13 +41,23 @@ OBJECTS_DIRECT = \
 	direct/mkdir.o \
 	direct/rmdir.o
 
+OBJECTS_EXCEPT = \
+	except/abnorter.o \
+	except/exhand2.o \
+	except/exhand3.o \
+	except/matherr.o \
+	except/unwind.o \
+	except/xcptfil.o
+
 OBJECTS_FLOAT = \
+	float/cntrlfp.o \
 	float/fpreset.o \
 	float/isnan.o
 
 OBJECTS_IO = \
 	io/access.o \
 	io/close.o \
+	io/commit.o \
 	io/fmode.o \
 	io/isatty.o \
 	io/lseek.o \
@@ -59,6 +69,7 @@ OBJECTS_IO = \
 	io/write.o
 
 OBJECTS_MATH = \
+	math/adjust.o \
 	math/modf.o \
 	math/pow.o \
 
@@ -67,6 +78,7 @@ OBJECTS_MISC = \
 	misc/assert.o \
 	misc/dllmain.o \
 	misc/getargs.o \
+	misc/initterm.o \
 	misc/purecall.o \
 	misc/tls.o
 
@@ -218,6 +230,7 @@ OBJECTS_WSTRING = \
 OBJECTS = \
 	$(OBJECTS_CTYPE) \
 	$(OBJECTS_DIRECT) \
+	$(OBJECTS_EXCEPT) \
 	$(OBJECTS_FLOAT) \
 	$(OBJECTS_IO) \
 	$(OBJECTS_MATH) \
