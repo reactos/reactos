@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.10 2003/12/18 18:30:48 fireball Exp $ */
+/* $Id: dib8bpp.c,v 1.11 2003/12/23 19:15:08 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -369,7 +369,7 @@ void ScaleLineAvg8(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
   int skip;
   PIXEL p;
 
-  skip = (TgtWidth < SrcWidth) ? 0 : (TgtWidth / (2*SrcWidth) + 1);
+  skip = (TgtWidth < SrcWidth) ? 0 : (TgtWidth / ((2*SrcWidth) + 1));
   NumPixels -= skip;
 
   while (NumPixels-- > 0) {
@@ -402,7 +402,7 @@ void ScaleRectAvg8(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
   PIXEL *PrevSource = NULL;
   PIXEL *PrevSourceAhead = NULL;
 
-  skip = (TgtHeight < SrcHeight) ? 0 : (TgtHeight / (2*SrcHeight) + 1);
+  skip = (TgtHeight < SrcHeight) ? 0 : (TgtHeight / ((2*SrcHeight) + 1));
   NumPixels -= skip;
 
   ScanLine = (PIXEL*)ExAllocatePool(NonPagedPool, TgtWidth*sizeof(PIXEL)); // FIXME: Should we use PagedPool here?
