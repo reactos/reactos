@@ -491,7 +491,8 @@ MmFindGapBottomUp(
 
    /* Check if there is enough space after the last memory area. */
    AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
-   if ((ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
+   if ((ULONG_PTR)HighestAddress > (ULONG_PTR)AlignedAddress &&
+       (ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
    {
       DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
       return AlignedAddress;
