@@ -1531,7 +1531,34 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                             szCurrentPath[0]=0;
 						}
                         break;
-                    // line number
+                    // a function symbol
+                    case N_FUN:
+                        if(!PICE_strlen(pName))
+						{// it's the end of a function
+                            DPRINT((0,"END of function %s\n",szCurrentFunction));
+
+							szCurrentFunction[0]=0;
+
+                            // in case we haven't had a zero delta match we return from here
+							if(pSrcLine)
+								return pSrcLine;
+
+							break;
+						}
+						else
+                        {// if it has a length it's the start of a function
+                            ULONG len;
+//DPRINT((2,"function: %s @ %x line: %u\n", pName, pStab->n_value, pStab->n_desc));
+                            // extract the name only, the type string is of no use here
+	                        len=StrLenUpToWhiteChar(pName,":");
+	                        PICE_strncpy(szCurrentFunction,pName,len);
+                            szCurrentFunction[len]=0;
+
+                            DPRINT((0,"function %s\n",szCurrentFunction));
+                        }
+						//intentional fall through
+
+					// line number
                     case N_SLINE:
 						// if we're in the function we're looking for
 						if(szCurrentFunction[0] && PICE_fncmp(szCurrentFunction,pFunctionName)==0)
@@ -1547,7 +1574,6 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
 							DPRINT((0,"wanted %s, current: %s\n",szWantedPath, szCurrentPath));
                             // we might have a match if our address is greater than the one in the STAB
                             // and we're lower or equal than minimum value
-							//ei need to add the size of prolog 10(?)
                             if(addr>=start+pStab->n_value &&
                                (addr-(start+pStab->n_value))<=ulMinValue &&
                                PICE_strcmpi(szWantedPath,szCurrentPath)==0 )
@@ -1626,32 +1652,6 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                                 }
                             }
                         }
-                        break;
-                    // a function symbol
-                    case N_FUN:
-                        // if it has a length it's the start of a function
-                        if(PICE_strlen(pName))
-                        {
-                            ULONG len;
-
-                            // extract the name only, the type string is of no use here
-	                        len=StrLenUpToWhiteChar(pName,":");
-	                        PICE_strncpy(szCurrentFunction,pName,len);
-                            szCurrentFunction[len]=0;
-
-                            DPRINT((0,"function %s\n",szCurrentFunction));
-                        }
-                        // else it's the end of a function
-						else
-						{
-                            DPRINT((0,"END of function %s\n",szCurrentFunction));
-
-							szCurrentFunction[0]=0;
-
-                            // in case we haven't had a zero delta match we return from here
-							if(pSrcLine)
-								return pSrcLine;
-						}
                         break;
                 }
                 pStab++;
