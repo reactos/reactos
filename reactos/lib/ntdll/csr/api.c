@@ -1,4 +1,4 @@
-/* $Id: api.c,v 1.8 2000/06/29 23:35:27 dwelch Exp $
+/* $Id: api.c,v 1.9 2001/05/02 22:23:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,10 +23,11 @@ static HANDLE WindowsApiPort;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL CsrClientCallServer(PCSRSS_API_REQUEST Request,
-				     PCSRSS_API_REPLY Reply,
-				     ULONG Length,
-				     ULONG ReplyLength)
+NTSTATUS STDCALL
+CsrClientCallServer(PCSRSS_API_REQUEST Request,
+		    PCSRSS_API_REPLY Reply,
+		    ULONG Length,
+		    ULONG ReplyLength)
 {
    NTSTATUS Status;
    
@@ -45,7 +46,8 @@ NTSTATUS STDCALL CsrClientCallServer(PCSRSS_API_REQUEST Request,
    return(Status);
 }
 
-NTSTATUS STDCALL CsrClientConnectToServer(VOID)
+NTSTATUS STDCALL
+CsrClientConnectToServer(VOID)
 {
    NTSTATUS Status;
    UNICODE_STRING PortName;
@@ -84,14 +86,20 @@ NTSTATUS STDCALL CsrClientConnectToServer(VOID)
    return(STATUS_SUCCESS);
 }
 
-
-NTSTATUS STDCALL CsrSetPriorityClass (HANDLE	hProcess,
-				      DWORD	* PriorityClass)
+NTSTATUS STDCALL
+CsrNewThread(VOID)
 {
-	/* FIXME: call csrss to get hProcess' priority */
-	*PriorityClass = CSR_PRIORITY_CLASS_NORMAL;
+   return (NtRegisterThreadTerminatePort(WindowsApiPort));
+}
 
-	return (STATUS_NOT_IMPLEMENTED);
+NTSTATUS STDCALL
+CsrSetPriorityClass(HANDLE Process,
+		    PULONG PriorityClass)
+{
+   /* FIXME: call csrss to get hProcess' priority */
+   *PriorityClass = CSR_PRIORITY_CLASS_NORMAL;
+
+   return (STATUS_NOT_IMPLEMENTED);
 }
 
 /* EOF */

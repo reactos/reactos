@@ -20,10 +20,8 @@ STUB(CsrCaptureMessageString)
 STUB(CsrCaptureTimeout)
 STUB(CsrFreeCaptureBuffer)
 STUB(CsrIdentifyAlertableThread)
-STUB(CsrNewThread)
 STUB(CsrProbeForRead)
 STUB(CsrProbeForWrite)
-STUB(CsrSetPriorityClass)
 
 STUB(KiRaiseUserExceptionDispatcher)
 

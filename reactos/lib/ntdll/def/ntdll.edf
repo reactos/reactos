@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.58 2001/02/10 22:23:07 ekohl Exp $
+; $Id: ntdll.edf,v 1.59 2001/05/02 22:23:47 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -15,7 +15,7 @@ CsrClientCallServer=CsrClientCallServer@16
 CsrClientConnectToServer=CsrClientConnectToServer@0
 ;CsrFreeCaptureBuffer
 ;CsrIdentifyAlertableThread
-;CsrNewThread
+CsrNewThread=CsrNewThread@0
 ;CsrProbeForRead
 ;CsrProbeForWrite
 CsrSetPriorityClass=CsrSetPriorityClass@8
@@ -400,7 +400,7 @@ RtlFindLongestRunSet=RtlFindLongestRunSet@8
 RtlFindSetBits=RtlFindSetBits@12
 RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
 ;RtlFlushPropertySet
-;RtlFormatCurrentUserKeyPath
+RtlFormatCurrentUserKeyPath=RtlFormatCurrentUserKeyPath@4
 ;RtlFormatMessage
 RtlFreeAnsiString=RtlFreeAnsiString@4
 ;RtlFreeHandle
