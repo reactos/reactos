@@ -556,9 +556,11 @@ static HRESULT WINAPI IDefClF_fnQueryInterface(
 static ULONG WINAPI IDefClF_fnAddRef(LPCLASSFACTORY iface)
 {
 	IDefClFImpl *This = (IDefClFImpl *)iface;
-	TRACE("(%p)->(count=%lu)\n",This,This->ref);
+	ULONG refCount = InterlockedIncrement(&This->ref);
 
-	return InterlockedIncrement(&This->ref);
+	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
+
+	return refCount;
 }
 /******************************************************************************
  * IDefClF_fnRelease
@@ -566,9 +568,11 @@ static ULONG WINAPI IDefClF_fnAddRef(LPCLASSFACTORY iface)
 static ULONG WINAPI IDefClF_fnRelease(LPCLASSFACTORY iface)
 {
 	IDefClFImpl *This = (IDefClFImpl *)iface;
-	TRACE("(%p)->(count=%lu)\n",This,This->ref);
+	ULONG refCount = InterlockedDecrement(&This->ref);
+	
+	TRACE("(%p)->(count=%lu)\n", This, refCount + 1);
 
-	if (!InterlockedDecrement(&This->ref))
+	if (!refCount)
 	{
 	  if (This->pcRefDll) InterlockedDecrement(This->pcRefDll);
 
@@ -576,7 +580,7 @@ static ULONG WINAPI IDefClF_fnRelease(LPCLASSFACTORY iface)
 	  HeapFree(GetProcessHeap(),0,This);
 	  return 0;
 	}
-	return This->ref;
+	return refCount;
 }
 /******************************************************************************
  * IDefClF_fnCreateInstance

@@ -124,16 +124,21 @@ static HRESULT WINAPI IEnumFORMATETC_fnQueryInterface(LPENUMFORMATETC iface, REF
 static ULONG WINAPI IEnumFORMATETC_fnAddRef(LPENUMFORMATETC iface)
 {
 	IEnumFORMATETCImpl *This = (IEnumFORMATETCImpl *)iface;
-	TRACE("(%p)->(count=%lu)\n",This, This->ref);
-	return ++(This->ref);
+	ULONG refCount = InterlockedIncrement(&This->ref);
+
+	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
+
+	return refCount;
 }
 
 static ULONG WINAPI IEnumFORMATETC_fnRelease(LPENUMFORMATETC iface)
 {
 	IEnumFORMATETCImpl *This = (IEnumFORMATETCImpl *)iface;
-	TRACE("(%p)->()\n",This);
+	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	if (!--(This->ref))
+	TRACE("(%p)->(%lu)\n", This, refCount + 1);
+
+	if (!refCount)
 	{
 	  TRACE(" destroying IEnumFORMATETC(%p)\n",This);
 	  if (This->pFmt)
@@ -143,7 +148,7 @@ static ULONG WINAPI IEnumFORMATETC_fnRelease(LPENUMFORMATETC iface)
 	  HeapFree(GetProcessHeap(),0,This);
 	  return 0;
 	}
-	return This->ref;
+	return refCount;
 }
 
 static HRESULT WINAPI IEnumFORMATETC_fnNext(LPENUMFORMATETC iface, ULONG celt, FORMATETC *rgelt, ULONG *pceltFethed)
@@ -291,8 +296,11 @@ static HRESULT WINAPI IDataObject_fnQueryInterface(LPDATAOBJECT iface, REFIID ri
 static ULONG WINAPI IDataObject_fnAddRef(LPDATAOBJECT iface)
 {
 	IDataObjectImpl *This = (IDataObjectImpl *)iface;
-	TRACE("(%p)->(count=%lu)\n",This, This->ref);
-	return ++(This->ref);
+	ULONG refCount = InterlockedIncrement(&This->ref);
+
+	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
+
+	return refCount;
 }
 
 /**************************************************************************
@@ -301,17 +309,18 @@ static ULONG WINAPI IDataObject_fnAddRef(LPDATAOBJECT iface)
 static ULONG WINAPI IDataObject_fnRelease(LPDATAOBJECT iface)
 {
 	IDataObjectImpl *This = (IDataObjectImpl *)iface;
-	TRACE("(%p)->()\n",This);
+	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	if (!--(This->ref))
+	TRACE("(%p)->(%lu)\n", This, refCount + 1);
+
+	if (!refCount)
 	{
 	  TRACE(" destroying IDataObject(%p)\n",This);
 	  _ILFreeaPidl(This->apidl, This->cidl);
 	  ILFree(This->pidl),
 	  HeapFree(GetProcessHeap(),0,This);
-	  return 0;
 	}
-	return This->ref;
+	return refCount;
 }
 
 /**************************************************************************

@@ -106,10 +106,11 @@ static HRESULT WINAPI ISVBgCm_fnQueryInterface(IContextMenu2 *iface, REFIID riid
 static ULONG WINAPI ISVBgCm_fnAddRef(IContextMenu2 *iface)
 {
 	BgCmImpl *This = (BgCmImpl *)iface;
+	ULONG refCount = InterlockedIncrement(&This->ref);
 
-	TRACE("(%p)->(count=%lu)\n",This, This->ref);
+	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
 
-	return ++(This->ref);
+	return refCount;
 }
 
 /**************************************************************************
@@ -118,10 +119,11 @@ static ULONG WINAPI ISVBgCm_fnAddRef(IContextMenu2 *iface)
 static ULONG WINAPI ISVBgCm_fnRelease(IContextMenu2 *iface)
 {
 	BgCmImpl *This = (BgCmImpl *)iface;
+	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->()\n",This);
+	TRACE("(%p)->(count=%li)\n", This, refCount + 1);
 
-	if (!--(This->ref))
+	if (!refCount)
 	{
 	  TRACE(" destroying IContextMenu(%p)\n",This);
 
@@ -129,10 +131,8 @@ static ULONG WINAPI ISVBgCm_fnRelease(IContextMenu2 *iface)
 	    IShellFolder_Release(This->pSFParent);
 
 	  HeapFree(GetProcessHeap(),0,This);
-	  return 0;
 	}
-
-	return This->ref;
+	return refCount;
 }
 
 /**************************************************************************

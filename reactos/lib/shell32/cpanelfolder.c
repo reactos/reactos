@@ -181,26 +181,27 @@ static HRESULT WINAPI ISF_ControlPanel_fnQueryInterface(IShellFolder2 * iface, R
 static ULONG WINAPI ISF_ControlPanel_fnAddRef(IShellFolder2 * iface)
 {
     ICPanelImpl *This = (ICPanelImpl *)iface;
+    ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(count=%lu)\n", This, This->ref);
+    TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
 
-    return ++(This->ref);
+    return refCount;
 }
 
 static ULONG WINAPI ISF_ControlPanel_fnRelease(IShellFolder2 * iface)
 {
     ICPanelImpl *This = (ICPanelImpl *)iface;
+    ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(count=%lu)\n", This, This->ref);
+    TRACE("(%p)->(count=%lu)\n", This, refCount + 1);
 
-    if (!--(This->ref)) {
+    if (!refCount) {
         TRACE("-- destroying IShellFolder(%p)\n", This);
         if (This->pidlRoot)
             SHFree(This->pidlRoot);
         LocalFree((HLOCAL) This);
-        return 0;
     }
-    return This->ref;
+    return refCount;
 }
 
 /**************************************************************************
