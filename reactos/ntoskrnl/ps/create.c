@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.45 2002/02/20 20:15:07 ekohl Exp $
+/* $Id: create.c,v 1.46 2002/03/05 00:20:54 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -322,7 +322,7 @@ PiDeleteThread(PVOID ObjectBody)
 
   DPRINT("Process %x(%d)\n",
 	 Thread->ThreadsProcess,
-	 ObGetReferenceCount(Thread->ThreadsProcess));
+	 ObGetObjectPointerCount(Thread->ThreadsProcess));
   ObDereferenceObject(Thread->ThreadsProcess);
   Thread->ThreadsProcess = NULL;
   PiNrThreads--;
@@ -337,10 +337,10 @@ PiCloseThread(PVOID ObjectBody,
 	      ULONG HandleCount)
 {
    DPRINT("PiCloseThread(ObjectBody %x)\n", ObjectBody);
-   DPRINT("ObGetReferenceCount(ObjectBody) %d "
-	   "ObGetHandleCount(ObjectBody) %d\n",
-	   ObGetReferenceCount(ObjectBody),
-	   ObGetHandleCount(ObjectBody));
+   DPRINT("ObGetObjectPointerCount(ObjectBody) %d "
+	  "ObGetObjectHandleCount(ObjectBody) %d\n",
+	  ObGetObjectPointerCount(ObjectBody),
+	  ObGetObjectHandleCount(ObjectBody));
 }
 
 NTSTATUS

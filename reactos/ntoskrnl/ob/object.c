@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.45 2002/03/01 00:47:40 ekohl Exp $
+/* $Id: object.c,v 1.46 2002/03/05 00:19:28 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -530,7 +530,7 @@ ObfDereferenceObject(IN PVOID Object)
  *	ObGetObjectPointerCount@4
  *
  * DESCRIPTION
- *	Retrieves the reference count of the given object.
+ *	Retrieves the pointer(reference) count of the given object.
  *
  * ARGUMENTS
  *	ObjectBody = Body of the object.
@@ -547,6 +547,31 @@ ObGetObjectPointerCount(PVOID Object)
   Header = BODY_TO_HEADER(Object);
 
   return(Header->RefCount);
+}
+
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	ObGetObjectHandleCount@4
+ *
+ * DESCRIPTION
+ *	Retrieves the handle count of the given object.
+ *
+ * ARGUMENTS
+ *	ObjectBody = Body of the object.
+ *
+ * RETURN VALUE
+ * 	Reference count.
+ */
+ULONG
+ObGetObjectHandleCount(PVOID Object)
+{
+  POBJECT_HEADER Header;
+
+  assert(Object);
+  Header = BODY_TO_HEADER(Object);
+
+  return(Header->HandleCount);
 }
 
 /* EOF */

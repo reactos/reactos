@@ -98,4 +98,7 @@ PVOID ObDeleteHandle(struct _EPROCESS* Process,
 NTSTATUS
 ObpCreateTypeObject(POBJECT_TYPE ObjectType);
 
+ULONG
+ObGetObjectHandleCount(PVOID Object);
+
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */
