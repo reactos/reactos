@@ -8,7 +8,7 @@ ARCH := i386
 
 #
 # Which cpu should reactos optimze for
-# example : i486, i586, pentium, pentium2, pentum3, pentium4
+# example : i486, i586, pentium, pentium2, pentium3, pentium4
 #           athlon-xp, athlon-mp, k6-2, 
 #
 # see gcc manual for more cpu name and which cpu it can 
