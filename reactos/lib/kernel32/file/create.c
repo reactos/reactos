@@ -34,12 +34,11 @@ HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
 			   DWORD dwFlagsAndAttributes,
 			   HANDLE hTemplateFile)
 {
-
    WCHAR FileNameW[MAX_PATH];
    ULONG i = 0;
-   
+
    DPRINT("CreateFileA(lpFileName %s)\n",lpFileName);
-   
+
    while ((*lpFileName)!=0 && i < MAX_PATH)
      {
 	FileNameW[i] = *lpFileName;
@@ -47,7 +46,7 @@ HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
 	i++;
      }
    FileNameW[i] = 0;
- 
+
    return CreateFileW(FileNameW,dwDesiredAccess,
 		      dwShareMode,
 		      lpSecurityAttributes,
@@ -73,39 +72,44 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    ULONG Flags = 0;
    WCHAR PathNameW[MAX_PATH];
    WCHAR FileNameW[MAX_PATH];
-   WCHAR *FilePart;
    UINT Len = 0;
-   
+
    switch (dwCreationDisposition)
      {
       case CREATE_NEW:
 	dwCreationDisposition = FILE_CREATE;
 	break;
-	
+
       case CREATE_ALWAYS:
 	dwCreationDisposition = FILE_OVERWRITE_IF;
 	break;
-	
+
       case OPEN_EXISTING:
 	dwCreationDisposition = FILE_OPEN;
 	break;
-	
+
       case OPEN_ALWAYS:
 	dwCreationDisposition = OPEN_ALWAYS;
 	break;
-	
+
       case TRUNCATE_EXISTING:
 	dwCreationDisposition = FILE_OVERWRITE;
      }
-   
+
    DPRINT("CreateFileW(lpFileName %w)\n",lpFileName);
-  
+
+   if (dwDesiredAccess & GENERIC_READ)
+        dwDesiredAccess |= FILE_GENERIC_READ;
+
+   if (dwDesiredAccess & GENERIC_WRITE)
+        dwDesiredAccess |= FILE_GENERIC_WRITE;
+
    if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
      {
 	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
      }
-   
-   if (lpFileName[1] == (WCHAR)':') 
+
+   if (lpFileName[1] == (WCHAR)':')
      {
 	wcscpy(PathNameW, lpFileName);
      }
@@ -133,25 +137,25 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 	}
 	wcscat(PathNameW,lpFileName); 
      }
-   
+
    FileNameW[0] = '\\';
    FileNameW[1] = '?';
    FileNameW[2] = '?';
    FileNameW[3] = '\\';
    FileNameW[4] = 0;
    wcscat(FileNameW,PathNameW);
-      
+
    FileNameString.Length = wcslen( FileNameW)*sizeof(WCHAR);
-   
+
    if ( FileNameString.Length == 0 )
 	return NULL;
 
    if ( FileNameString.Length > MAX_PATH*sizeof(WCHAR) )
 	return NULL;
-   
+
    FileNameString.Buffer = (WCHAR *)FileNameW;
    FileNameString.MaximumLength = FileNameString.Length + sizeof(WCHAR);
-   
+
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
    ObjectAttributes.ObjectName = &FileNameString;
@@ -160,7 +164,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    ObjectAttributes.SecurityQualityOfService = NULL;
 
    DPRINT("File Name %w\n",FileNameW);
-   
+
    Status = ZwCreateFile(&FileHandle,
 			 dwDesiredAccess,
 			 &ObjectAttributes,
@@ -177,6 +181,6 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 	SetLastError(RtlNtStatusToDosError(Status));
 	return INVALID_HANDLE_VALUE;
    }
-   return(FileHandle);			 
+   return(FileHandle);
 }
 
