@@ -1,4 +1,4 @@
-/* $Id: epsapi.h,v 1.3 2003/06/01 14:59:01 chorns Exp $
+/* $Id: epsapi.h,v 1.4 2004/03/21 12:34:02 gvg Exp $
 */
 /*
  * epsapi.h
@@ -32,25 +32,25 @@
 /* OBJECTS */
 
 /* TYPES */
-typedef NTSTATUS NTAPI (*PPROC_ENUM_ROUTINE)
+typedef NTSTATUS (NTAPI *PPROC_ENUM_ROUTINE)
 (
  IN PSYSTEM_PROCESSES CurrentProcess,
  IN OUT PVOID CallbackContext
 );
 
-typedef NTSTATUS NTAPI (*PTHREAD_ENUM_ROUTINE)
+typedef NTSTATUS (NTAPI *PTHREAD_ENUM_ROUTINE)
 (
  IN PSYSTEM_THREADS CurrentThread,
  IN OUT PVOID CallbackContext
 );
 
-typedef NTSTATUS NTAPI (*PSYSMOD_ENUM_ROUTINE)
+typedef NTSTATUS (NTAPI *PSYSMOD_ENUM_ROUTINE)
 (
  IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
  IN OUT PVOID CallbackContext
 );
 
-typedef NTSTATUS NTAPI (*PPROCMOD_ENUM_ROUTINE)
+typedef NTSTATUS (NTAPI *PPROCMOD_ENUM_ROUTINE)
 (
  IN HANDLE ProcessHandle,
  IN PLDR_MODULE CurrentModule,
