@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.29 2001/07/20 08:00:20 ekohl Exp $
+ * $Id: fat.c,v 1.30 2001/08/14 08:06:26 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -187,7 +187,8 @@ Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 //  DPRINT("Returning %x\n",Entry);
   *NextCluster = Entry;
   CcRosReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
-  return Entry == 0xffffffff ? STATUS_END_OF_FILE : STATUS_SUCCESS;
+//  return Entry == 0xffffffff ? STATUS_END_OF_FILE : STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 NTSTATUS
