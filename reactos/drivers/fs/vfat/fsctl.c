@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.4 2002/05/23 09:53:26 ekohl Exp $
+/* $Id: fsctl.c,v 1.5 2002/05/28 09:25:09 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -103,7 +103,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
          *RecognizedFS = TRUE;
       }
    }
-   else if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType < RemovableMedia)
+   else if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType <= RemovableMedia)
    {
       *RecognizedFS = TRUE;
    }
