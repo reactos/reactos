@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.92 2004/05/29 13:12:08 navaraf Exp $ */
+/* $Id: text.c,v 1.93 2004/05/29 15:10:27 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -451,6 +451,10 @@ NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
     SetLastNtError(Status);
     return 0;
   }
+
+  /* Reserve for prepending '\??\' */
+  SafeFileName.Length += 4 * sizeof(WCHAR);
+  SafeFileName.MaximumLength += 4 * sizeof(WCHAR);
   
   src = SafeFileName.Buffer;
   SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
@@ -460,7 +464,10 @@ NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
     return 0;
   }
   
-  Status = MmCopyFromCaller(SafeFileName.Buffer, src, SafeFileName.MaximumLength);
+  /* Prepend '\??\' */
+  RtlCopyMemory(SafeFileName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
+
+  Status = MmCopyFromCaller(SafeFileName.Buffer + 4, src, SafeFileName.MaximumLength - (4 * sizeof(WCHAR)));
   if(!NT_SUCCESS(Status))
   {
     ExFreePool(SafeFileName.Buffer);
