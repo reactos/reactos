@@ -726,7 +726,7 @@ static HDDEDATA CALLBACK dde_cb(UINT uType, UINT uFmt, HCONV hConv,
  */
 static unsigned dde_connect(char* key, char* start, char* ddeexec,
                             const char* lpFile, void *env,
-			    LPCSTR szCommandline, LPITEMIDLIST pidl,
+			    LPCSTR szCommandline, LPITEMIDLIST pidl, SHELL_ExecuteA1632 execfunc,
 			    LPSHELLEXECUTEINFOA psei, LPSHELLEXECUTEINFOA psei_out)
 {
     char*       endkey = key + strlen(key);
@@ -768,7 +768,7 @@ static unsigned dde_connect(char* key, char* start, char* ddeexec,
     if (!hConv)
     {
         TRACE("Launching '%s'\n", start);
-        ret = SHELL_ExecuteA(start, env, TRUE, psei, psei_out);
+        ret = execfunc(start, env, TRUE, psei, psei_out);
         if (ret < 32)
         {
             TRACE("Couldn't launch\n");
@@ -804,6 +804,7 @@ static unsigned dde_connect(char* key, char* start, char* ddeexec,
  *	execute_from_key [Internal]
  */
 static UINT execute_from_key(LPSTR key, LPCSTR lpFile, void *env, LPCSTR szCommandline,
+			     SHELL_ExecuteA1632 execfunc,
 			     LPSHELLEXECUTEINFOA psei, LPSHELLEXECUTEINFOA psei_out)
 {
     char cmd[1024] = "";
@@ -826,7 +827,7 @@ static UINT execute_from_key(LPSTR key, LPCSTR lpFile, void *env, LPCSTR szComma
         if (RegQueryValueA(HKEY_CLASSES_ROOT, key, param, &paramlen) == ERROR_SUCCESS)
         {
             TRACE("Got ddeexec %s => %s\n", key, param);
-            retval = dde_connect(key, cmd, param, lpFile, env, szCommandline, psei->lpIDList, psei, psei_out);
+            retval = dde_connect(key, cmd, param, lpFile, env, szCommandline, psei->lpIDList, execfunc, psei, psei_out);
         }
         else
         {
@@ -834,7 +835,7 @@ static UINT execute_from_key(LPSTR key, LPCSTR lpFile, void *env, LPCSTR szComma
             cmd[cmdlen] = '\0';
             argifyA(param, sizeof(param), cmd, lpFile, psei->lpIDList, szCommandline);
 
-            retval = SHELL_ExecuteA(param, env, FALSE, psei, psei_out);
+            retval = execfunc(param, env, FALSE, psei, psei_out);
         }
     }
     else TRACE("ooch\n");
@@ -891,7 +892,7 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
  *  FIXME:  use PathProcessCommandA() to processes the command line string
  *	    use PathResolveA() to search for the fully qualified executable path
  */
-BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei)
+BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei, SHELL_ExecuteA1632 execfunc)
 {
     CHAR szApplicationName[MAX_PATH+2], szParameters[MAX_PATH], fileName[MAX_PATH], szDir[MAX_PATH];
     SHELLEXECUTEINFOA sei_tmp;	/* modifyable copy of SHELLEXECUTEINFO struct */
@@ -991,7 +992,7 @@ BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei)
             strcat(buffer, sei_tmp.lpFile);
         }
 
-        retval = SHELL_ExecuteA(buffer, NULL, FALSE, &sei_tmp, psei);
+        retval = execfunc(buffer, NULL, FALSE, &sei_tmp, psei);
         if (retval > 32)
             return TRUE;
         else
@@ -1134,7 +1135,7 @@ BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei)
         strcat(szApplicationName/*sei_tmp.lpFile*/, sei_tmp.lpParameters);
     }
 
-    retval = SHELL_ExecuteA(sei_tmp.lpFile, NULL, FALSE, &sei_tmp, psei);
+    retval = execfunc(sei_tmp.lpFile, NULL, FALSE, &sei_tmp, psei);
     if (retval > 32)
     {
 	/* Now, that we have successfully launched a process, we can free the PIDL.
@@ -1142,7 +1143,7 @@ BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei)
 	if (sei_tmp.lpIDList!=psei->lpIDList && sei_tmp.lpIDList)
 	    SHFree(sei_tmp.lpIDList);
 
-        TRACE("SHELL_ExecuteA: retval=%d psei->hInstApp=%p\n", retval, psei->hInstApp);
+        TRACE("execfunc: retval=%d psei->hInstApp=%p\n", retval, psei->hInstApp);
         return TRUE;
     }
 
@@ -1152,8 +1153,6 @@ BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei)
 
     if (retval > 32)  /* Found */
     {
-	{
-#if 1	/* SHELL_FindExecutable() already quoted by calling argifyA() [not any more] */
         CHAR szQuotedCmd[MAX_PATH+2];
         /* Must quote to handle case where 'buffer' contains spaces, 
          * else security hole if malicious user creates executable file "C:\\Program"
@@ -1170,16 +1169,10 @@ BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei)
         TRACE("%s/%s => %s/%s\n", sei_tmp.lpFile, sei_tmp.lpVerb?sei_tmp.lpVerb:"NULL", szQuotedCmd, szProtocol);
 
         if (*szProtocol)
-            retval = execute_from_key(szProtocol, lpFile, env, sei_tmp.lpParameters, &sei_tmp, psei);
+            retval = execute_from_key(szProtocol, lpFile, env, sei_tmp.lpParameters, execfunc, &sei_tmp, psei);
         else
-            retval = SHELL_ExecuteA(szQuotedCmd, env, FALSE, &sei_tmp, psei);
-#else
-        if (*szProtocol)
-            retval = execute_from_key(szProtocol, lpFile, env, buffer, &sei_tmp, psei);
-        else
-            retval = SHELL_ExecuteA(buffer, env, FALSE, &sei_tmp, psei);
-#endif
-	}
+            retval = execfunc(szQuotedCmd, env, FALSE, &sei_tmp, psei);
+
         if (env) HeapFree( GetProcessHeap(), 0, env );
     }
     else if (PathIsURLA((LPSTR)lpFile))    /* File not found, check for URL */
@@ -1209,7 +1202,7 @@ BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei)
             while (*lpFile == ':') lpFile++;
         }
 
-        retval = execute_from_key(szProtocol, lpFile, NULL, sei_tmp.lpParameters, &sei_tmp, psei);
+        retval = execute_from_key(szProtocol, lpFile, NULL, sei_tmp.lpParameters, execfunc, &sei_tmp, psei);
     }
     /* Check if file specified is in the form www.??????.*** */
     else if (!strncasecmp(lpFile, "www", 3))
@@ -1239,8 +1232,8 @@ BOOL WINAPI ShellExecuteExA32(LPSHELLEXECUTEINFOA psei)
 /*************************************************************************
  * ShellExecuteA			[SHELL32.290]
  */
-HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpOperation,LPCSTR lpFile,
-                               LPCSTR lpParameters,LPCSTR lpDirectory, INT iShowCmd)
+HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpOperation, LPCSTR lpFile,
+                               LPCSTR lpParameters, LPCSTR lpDirectory, INT iShowCmd)
 {
     SHELLEXECUTEINFOA sei;
     HANDLE hProcess = 0;
@@ -1260,7 +1253,7 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpOperation,LPCSTR lpFile,
     sei.dwHotKey = 0;
     sei.hProcess = hProcess;
 
-    ShellExecuteExA32(&sei);
+    ShellExecuteExA32(&sei, SHELL_ExecuteA);
     return sei.hInstApp;
 }
 
@@ -1271,8 +1264,8 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpOperation,LPCSTR lpFile,
 BOOL WINAPI ShellExecuteExAW (LPVOID sei)
 {
     if (SHELL_OsIsUnicode())
-	return ShellExecuteExW (sei);
-    return ShellExecuteExA32(sei);
+	return ShellExecuteExW(sei);
+    return ShellExecuteExA32(sei, SHELL_ExecuteA);
 }
 
 /*************************************************************************
@@ -1281,7 +1274,7 @@ BOOL WINAPI ShellExecuteExAW (LPVOID sei)
  */
 BOOL WINAPI ShellExecuteExA (LPSHELLEXECUTEINFOA sei)
 {
-    BOOL ret = ShellExecuteExA32(sei);
+    BOOL ret = ShellExecuteExA32(sei, SHELL_ExecuteA);
 
     TRACE("ShellExecuteExA(): ret=%d\n", ret);
 
