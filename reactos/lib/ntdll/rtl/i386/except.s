@@ -1,4 +1,4 @@
-/* $Id: except.s,v 1.2 2002/10/26 07:32:08 chorns Exp $
+/* $Id: except.s,v 1.3 2003/05/07 18:45:56 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -174,7 +174,7 @@ _RtlpExecuteHandler:
 
 .reh_loop:
 	jmp	.reh_loop
-	
+
 .reh_stack_looks_ok:
     movl     %fs:0x0, %esp
 
