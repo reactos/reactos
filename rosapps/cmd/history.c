@@ -38,6 +38,10 @@
  */ 
 
 
+
+
+
+
 #include "config.h"
 
 
@@ -70,14 +74,24 @@ static LPHIST_ENTRY Bottom;
 static LPHIST_ENTRY curr_ptr=0;
 
 
+VOID InitHistory(VOID);
+VOID History_move_to_bottom(VOID);
+VOID History (INT dir, LPTSTR commandline);
+VOID CleanHistory(VOID);
+
+/*service functions*/
+VOID del(LPHIST_ENTRY item);
+VOID add_at_bottom(LPTSTR string);
+
+
+
 VOID InitHistory(VOID)
 {
 	size=0;
 	
 	
 	Top = malloc(sizeof(HIST_ENTRY));
-	Bottom = malloc(sizeof(HIST_ENTRY));
-	
+	Bottom = malloc(sizeof(HIST_ENTRY));	
 
 
 	Top->prev = Bottom;
@@ -94,6 +108,19 @@ VOID InitHistory(VOID)
 
 
 
+
+VOID CleanHistory(VOID)
+{
+	
+	while (Bottom->next!=Top)
+		del(Bottom->next);
+
+	free(Top);
+	free(Bottom);
+
+}
+
+
 static
 VOID del(LPHIST_ENTRY item)
 {
@@ -101,15 +128,15 @@ VOID del(LPHIST_ENTRY item)
 	if(item==NULL)
 		return;
 
+	/*free string's mem*/
+	if (item->string)
+		free(item->string);
+
+
 
 	/*set links in prev and next item*/
 	item->next->prev=item->prev;
-	item->prev->next=item->next;
-
-	
-	/*free mem*/
-	if (item->string)
-		free(item->string);
+	item->prev->next=item->next;	
 
 	free(item);
 
@@ -183,7 +210,7 @@ VOID History (INT dir, LPTSTR commandline)
 
 	if(dir<0)/*key up*/
 	{
-		if (curr_ptr->next==Top || curr_ptr->next==0)
+		if (curr_ptr->next==Top || curr_ptr==Top)
 		{
 #ifdef WRAP_HISTORY			
 			curr_ptr=Bottom;			
@@ -208,7 +235,7 @@ VOID History (INT dir, LPTSTR commandline)
 	if(dir>0)
 	{
 
-		if (curr_ptr->prev==Bottom || curr_ptr->prev==0)
+		if (curr_ptr->prev==Bottom || curr_ptr==Bottom)
 		{
 #ifdef WRAP_HISTORY			
 			curr_ptr=Top;

@@ -248,6 +248,7 @@ INT cmd_goto (LPTSTR, LPTSTR);
 VOID History (INT, LPTSTR);
 VOID History_move_to_bottom(VOID);
 VOID InitHistory(VOID);
+VOID CleanHistory(VOID);
 #endif
 
 

@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.15 1999/12/06 19:26:49 paolopan Exp $
+/* $Id: cmd.c,v 1.16 1999/12/07 18:17:17 paolopan Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -1025,6 +1025,7 @@ Initialize (int argc, char *argv[])
 
 
 #ifdef FEATURE_HISTORY
+	/*initialize history*/
 	InitHistory();
 #endif
 
@@ -1084,6 +1085,11 @@ static VOID Cleanup (int argc, char *argv[])
 #ifdef INCLUDE_CMD_CHDIR
 	FreeLastPath ();
 #endif
+
+#ifdef FEATURE_HISTORY	
+	CleanHistory();
+#endif
+
 
 	/* remove ctrl break handler */
 #ifndef __REACTOS__
