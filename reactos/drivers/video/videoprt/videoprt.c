@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.21 2004/03/13 00:41:40 dwelch Exp $
+ * $Id: videoprt.c,v 1.22 2004/03/14 18:35:02 dwelch Exp $
  */
 
 #include "videoprt.h"
@@ -620,7 +620,6 @@ VideoPortInitialize(IN PVOID  Context1,
 
 	  /*  Call HwFindAdapter entry point  */
 	  /* FIXME: Need to figure out what string to pass as param 3  */
-	  DPRINT("FindAdapter %X\n", HwInitializationData->HwFindAdapter);
 	  Status = HwInitializationData->HwFindAdapter(&DeviceExtension->MiniPortDeviceExtension,
 	                                               Context2,
 	                                               NULL,
@@ -1238,7 +1237,26 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   /* Free the VRP */
   ExFreePool(vrp);
 
-  DPRINT("- Returned status: %x\n", Irp->IoStatus.Status);
+  DPRINT("- Returned status: %x/%d\n", Irp->IoStatus.Status,
+	 Irp->IoStatus.Information);
+  if (Irp->IoStatus.Status != STATUS_SUCCESS)
+    {
+      if (Irp->IoStatus.Status != ERROR_MORE_DATA)
+	{
+	  Irp->IoStatus.Information = 0;
+	}
+      /* Map from win32 error codes to ntstatus values. */
+      switch (Irp->IoStatus.Status)
+	{
+	case ERROR_NOT_ENOUGH_MEMORY: return STATUS_INSUFFICIENT_RESOURCES;
+	case ERROR_MORE_DATA: return STATUS_BUFFER_OVERFLOW;
+	case ERROR_INVALID_FUNCTION: return STATUS_NOT_IMPLEMENTED;
+	case ERROR_INVALID_PARAMETER: return STATUS_INVALID_PARAMETER;
+	case ERROR_INSUFFICIENT_BUFFER: return STATUS_BUFFER_TOO_SMALL;
+	case ERROR_DEV_NOT_EXIST: return STATUS_DEVICE_DOES_NOT_EXIST;
+	case ERROR_IO_PENDING: return STATUS_PENDING;
+	}
+    }
 
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
