@@ -1,16 +1,24 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <tchar.h>
+#include <stdio.h>
 #include "resource.h"
 #include "cardlib/cardlib.h"
 //#include "../catch22lib/trace.h"
 #include "solitaire.h"
+
+#if 1
+#define TRACE(s)
+#else
+#define TRACE(s) printf("%s(%i): %s",__FILE__,__LINE__,s)
+#endif
 
 CardStack activepile;
 bool fGameStarted = false;
 
 void NewGame(void)
 {
+	TRACE("ENTER NewGame()\n");
 	int i, j;
 
 	SolWnd.EmptyStacks();
@@ -44,6 +52,7 @@ void NewGame(void)
 	SolWnd.Redraw();
 
 	fGameStarted = false;
+	TRACE("EXIT NewGame()\n");
 }
 
 //
@@ -56,6 +65,7 @@ void NewGame(void)
 //
 bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumDragCards)
 {
+	TRACE("ENTER RowStackDragProc()\n");
 	int numfacedown;
 	int numcards;
 
@@ -63,6 +73,7 @@ bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumDragCards)
 
 	numcards = stackobj.NumCards();
 
+	TRACE("EXIT RowStackDragProc()\n");
 	if(iNumDragCards <= numcards-numfacedown)
 		return true;
 	else
@@ -76,13 +87,17 @@ bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumDragCards)
 //
 bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragcards)
 {
+	TRACE("ENTER RowStackDropProc()\n");
 	Card dragcard = dragcards[dragcards.NumCards() - 1];
 
 	//if we are empty, can only drop a stack with a King at bottom
 	if(stackobj.NumCards() == 0)
 	{
 		if(dragcard.LoVal() != 13)
+		{
+			TRACE("EXIT RowStackDropProc(false)\n");
 			return false;
+		}
 	}
 	else
 	{
@@ -90,14 +105,21 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragca
 		
 		//can only drop if card is 1 less
 		if(mystack[0].LoVal() != dragcard.LoVal() + 1)
+		{
+			TRACE("EXIT RowStackDropProc(false)\n");
 			return false;
+		}
 
 		//can only drop if card is different colour
 		if( mystack[0].IsBlack() && !dragcard.IsRed() ||
 		   !mystack[0].IsBlack() &&  dragcard.IsRed() )
+		{
+			TRACE("EXIT RowStackDropProc(false)\n");
 			return false;
+		}
 	}
 
+	TRACE("EXIT RowStackDropProc(true)\n");
 	return true;
 }
 
@@ -107,6 +129,7 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragca
 //
 bool CanDrop(CardRegion &stackobj, Card card)
 {
+	TRACE("ENTER CanDrop()\n");
 	int topval;
 
 	const CardStack &cardstack = stackobj.GetCardStack();
@@ -115,6 +138,7 @@ bool CanDrop(CardRegion &stackobj, Card card)
 	{
 		if(card.Suit() != cardstack[0].Suit())
 		{
+			TRACE("EXIT CanDrop()\n");
 			return false;
 		}
 
@@ -127,8 +151,12 @@ bool CanDrop(CardRegion &stackobj, Card card)
 
 	//make sure 1 higher
 	if(card.LoVal() != (topval + 1))
+	{
+		TRACE("EXIT CanDrop()\n");
 		return false;
+	}
 
+	TRACE("EXIT CanDrop()\n");
 	return true;
 }
 
@@ -137,13 +165,17 @@ bool CanDrop(CardRegion &stackobj, Card card)
 //
 bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, const CardStack &dragcards)
 {
-	int topval = 0;
-
+	TRACE("ENTER SuitStackDropProc()\n");
 	//only drop 1 card at a time
 	if(dragcards.NumCards() != 1)
+	{
+		TRACE("EXIT SuitStackDropProc()\n");
 		return false;
+	}
 
-	return CanDrop(stackobj, dragcards[0]);
+	bool b = CanDrop(stackobj, dragcards[0]);
+	TRACE("EXIT SuitStackDropProc()\n");
+	return b;
 }
 
 //
@@ -152,6 +184,7 @@ bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, const CardStack &dragca
 //
 void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
 {
+	TRACE("ENTER RowStackClickProc()\n");
 	int numfacedown;
 	
 	stackobj.GetFaceDirection(&numfacedown);
@@ -163,6 +196,7 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
 		stackobj.SetFaceDirection(CS_FACE_DOWNUP, numfacedown);
 		stackobj.Redraw();
 	}
+	TRACE("EXIT RowStackClickProc()\n");
 }
 
 //
@@ -170,12 +204,17 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
 //
 CardRegion *FindSuitStackFromCard(Card card)
 {
+	TRACE("ENTER FindSuitStackFromCard()\n");
 	for(int i = 0; i < 4; i++)
 	{
 		if(CanDrop(*pSuitStack[i], card))
+		{
+			TRACE("EXIT FindSuitStackFromCard()\n");
 			return pSuitStack[i];
+		}
 	}
 
+	TRACE("EXIT FindSuitStackFromCard()\n");
 	return 0;
 }
 
@@ -187,6 +226,7 @@ CardRegion *FindSuitStackFromCard(Card card)
 //
 void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
 {
+	TRACE("ENTER SuitStackAddProc()\n");
 	bool fGameOver = true;
 
 	for(int i = 0; i < 4; i++)
@@ -207,6 +247,7 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
 			pSuitStack[i]->Flash(11, 100);
 		}
 	}
+	TRACE("EXIT SuitStackAddProc()\n");
 }
 
 //
@@ -216,9 +257,13 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
 //
 void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
 {
+	TRACE("ENTER RowStackDblClickProc()\n");
 	//can only move 1 card at a time
 	if(iNumClicked != 1)
+	{
+		TRACE("EXIT RowStackDblClickProc()\n");
 		return;
+	}
 
 	//find a suit-stack to move the card to...
 	const CardStack &cardstack = stackobj.GetCardStack();
@@ -231,6 +276,7 @@ void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
 		//AddProc callbacks called for us on the destination stacks...
 		stackobj.SimulateDrag(pDest, 1, true);
 	}
+	TRACE("EXIT RowStackDblClickProc()\n");
 }
 
 //
@@ -238,7 +284,9 @@ void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
 //
 void CARDLIBPROC PileDblClickProc(CardRegion &stackobj, int iNumClicked)
 {
+	TRACE("ENTER PileDblClickProc()\n");
 	RowStackDblClickProc(stackobj, iNumClicked);
+	TRACE("EXIT PileDblClickProc()\n");
 }
 
 //
@@ -246,6 +294,7 @@ void CARDLIBPROC PileDblClickProc(CardRegion &stackobj, int iNumClicked)
 //
 void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
 {
+	TRACE("ENTER PileRemoveProc()\n");
 	//modify our "virtual" pile by removing the same card
 	//that was removed from the physical card stack
 	activepile.Pop(iItems);
@@ -259,6 +308,7 @@ void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
 		stackobj.SetOffsets(0,0);
 		stackobj.SetCardStack(activepile);
 	}
+	TRACE("EXIT PileRemoveProc()\n");
 }
 
 //
@@ -267,6 +317,7 @@ void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
 //
 void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 {
+	TRACE("ENTER DeckClickProc()\n");
 	CardStack cardstack = stackobj.GetCardStack();
 	CardStack pile		 = pPile->GetCardStack();
 
@@ -305,4 +356,5 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 	pPile->SetCardStack(pile);
 
 	SolWnd.Redraw();
+	TRACE("EXIT DeckClickProc()\n");
 }

@@ -282,7 +282,6 @@ void CardWindow::Paint(HDC hdc)
 {
 	int i;
 	RECT rect;
-	int xpos = 10;
 	HPALETTE hOldPal;
 
 	hOldPal = UseNicePalette(hdc, __hPalette);

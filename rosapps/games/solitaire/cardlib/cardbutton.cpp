@@ -20,7 +20,7 @@ void PaintRect(HDC hdc, RECT *rect, COLORREF colour);
 CardButton::CardButton(CardWindow &parent, int Id, TCHAR *szText, UINT Style, bool visible,
 						int x, int y, int width, int height)
 
- : parentWnd(parent), id(Id), fVisible(visible), uStyle(Style), ButtonCallback(0)
+ : parentWnd(parent), id(Id), uStyle(Style), fVisible(visible), ButtonCallback(0)
 {
 	crText = RGB(255,255,255);
 	crBack = RGB(0, 128, 0);

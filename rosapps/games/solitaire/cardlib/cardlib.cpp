@@ -10,7 +10,7 @@
 
 void LoadCardBitmaps(void);
 
-static bool __CARDLIB_ACES_HIGH = false;
+//static bool __CARDLIB_ACES_HIGH = false;
 extern double __CARDZOOMSPEED;
 
 //

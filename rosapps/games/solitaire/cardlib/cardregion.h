@@ -147,11 +147,11 @@ private:
 
 	bool	fMouseDragging;
 
-	int		xoffset;		//direction that cards take
-	int		yoffset;
-	
 	int		xpos;			//coordinates of stack
 	int		ypos;
+
+	int		xoffset;		//direction that cards take
+	int		yoffset;
 
 	int		width;			//stack-size of all cards
 	int		height;

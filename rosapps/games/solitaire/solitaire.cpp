@@ -28,6 +28,11 @@ void MakePath(TCHAR *szDest, UINT nDestLen, TCHAR *szExt)
 	lstrcpy(ptr + 1, szExt);
 }
 
+int main ( int argc, char** argv )
+{
+	return WinMain ( NULL, NULL, NULL, SW_SHOW );
+}
+
 //
 //	Main entry point
 //

@@ -6,10 +6,17 @@
 //
 #include <windows.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "cardlib.h"
 #include "cardwindow.h"
 #include "cardregion.h"
+
+#if 1
+#define TRACE(s)
+#else
+#define TRACE(s) printf("%s(%i): %s",__FILE__,__LINE__,s)
+#endif
 
 double __CARDZOOMSPEED = 32;
 
@@ -304,8 +311,10 @@ bool CardRegion::OnLButtonUp(int x, int y)
 	
 	// If have found a stack to drop onto
 	//
+	TRACE ( "can I drop card?\n" );
 	if(pDestStack && pDestStack->CanDropCards(dragstack)) 
 	{
+		TRACE ( "yes, dropping card\n" );
 		hdc = GetDC((HWND)parentWnd);
 		//			UseNicePalette(hdc);
 		ZoomCard(hdc, x - mousexoffset, y  - mouseyoffset, pDestStack);
@@ -332,25 +341,32 @@ bool CardRegion::OnLButtonUp(int x, int y)
 			pDestStack->AddCallback(*pDestStack, pDestStack->cardstack);//index, deststack->numcards);
 		
 		RedrawIfNotDim(pDestStack, true);
-	}	
+		TRACE ( "done dropping card\n" );
+	}
 
 	//
 	//	Otherwise, let the cards snap back onto this stack
 	//
 	else
 	{
-		
+		TRACE ( "no, putting card back\n" );
 		hdc = GetDC((HWND)parentWnd);
+		TRACE ( "calling ZoomCard()\n" );
 		ZoomCard(hdc, x - mousexoffset, y - mouseyoffset, this);
+		TRACE ( "cardstack += dragstack\n" );
 		cardstack += dragstack;
+		TRACE ( "calling ReleaseDC()\n" );
 		ReleaseDC((HWND)parentWnd, hdc);
 
+		TRACE ( "calling Update()\n" );
 		Update();		//Update this stack's card count + size
+		TRACE ( "done putting card back\n" );
 	}
 	
 	ReleaseDragBitmaps();
 	ReleaseCapture();
 	
+	TRACE ( "OnLButtonUp() done\n" );
 	return true;
 }
 
@@ -531,6 +547,7 @@ void ZoomCard(HDC hdc, int xpos, int ypos, CARDSTACK *dest)
 #else
 void CardRegion::ZoomCard(HDC hdc, int xpos, int ypos, CardRegion *pDestStack)
 {
+	TRACE ( "ENTER ZoomCard()\n" );
 	double dx, dy, x ,y;
 	int apparentcards;
 	x = (double)xpos; y = (double)ypos;
@@ -552,6 +569,11 @@ void CardRegion::ZoomCard(HDC hdc, int xpos, int ypos, CardRegion *pDestStack)
 	//normalise the motion vector
 	dx = idestx - x;
 	dy = idesty - y;
+	if ( fabs(dx) + fabs(dy) < 0.001f )
+	{
+		MoveDragCardTo(hdc, idestx, idesty);
+		return;
+	}
 	double recip = 1.0 / sqrt(dx*dx + dy*dy);
 	dx *= recip * __CARDZOOMSPEED; dy *= recip * __CARDZOOMSPEED;
 
@@ -566,7 +588,8 @@ void CardRegion::ZoomCard(HDC hdc, int xpos, int ypos, CardRegion *pDestStack)
 
 		ix = (int)x;
 		iy = (int)y;
-		if(dx < 0.0 && ix < idestx) ix = idestx; 
+
+		if(dx < 0.0 && ix < idestx) ix = idestx;
 		else if(dx > 0.0 && ix > idestx) ix = idestx;
 		else attarget = false;
 
@@ -614,5 +637,6 @@ void CardRegion::ZoomCard(HDC hdc, int xpos, int ypos, CardRegion *pDestStack)
 
 		Sleep(10);
 	}
+	TRACE ( "EXIT ZoomCard()\n" );
 }
 #endif

@@ -4,6 +4,8 @@ PATH_TO_TOP = ../../../reactos
 TARGET_TYPE = program
 
 TARGET_APPTYPE = windows
+# change to console for debugging purposes...
+#TARGET_APPTYPE = console
 
 TARGET_INSTALLDIR = system32
 

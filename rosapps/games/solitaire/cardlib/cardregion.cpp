@@ -16,7 +16,7 @@ HBITMAP CreateSinkBmp(HDC hdcCompat, HDC hdc, int width, int height);
 void PaintRect(HDC hdc, RECT *rect, COLORREF colour);
 
 CardRegion::CardRegion(CardWindow &parent, int Id, bool visible, int x, int y, int xOffset, int yOffset) 
-: parentWnd(parent), id(Id), fVisible(visible), xpos(x), ypos(y), xoffset(xOffset), yoffset(yOffset)
+: id(Id), parentWnd(parent), xpos(x), ypos(y), xoffset(xOffset), yoffset(yOffset), fVisible(visible)
 {
 	width  = __cardwidth;
 	height = __cardheight;
@@ -56,7 +56,7 @@ CardRegion::CardRegion(CardWindow &parent, int Id, bool visible, int x, int y, i
 
 	nFlashCount		= 0;
 	fFlashVisible	= false;
-	uFlashTimer		= -1;
+	uFlashTimer		= (UINT)-1;
 
 	fMouseDragging = false;
 
@@ -331,25 +331,25 @@ void CardRegion::Flash(int count, int milliseconds)
 
 void CardRegion::StopFlash()
 {
-	if(uFlashTimer != -1)
+	if(uFlashTimer != (UINT)-1)
 	{
 		KillTimer((HWND)parentWnd, uFlashTimer);
 		nFlashCount		= 0;
-		uFlashTimer		= -1;
+		uFlashTimer		= (UINT)-1;
 		fFlashVisible	= true;
 	}
 }
 
 void CardRegion::DoFlash()
 {
-	if(uFlashTimer != -1)
+	if(uFlashTimer != (UINT)-1)
 	{
 		fFlashVisible = !fFlashVisible;
 
 		if(--nFlashCount == 0)
 		{
 			KillTimer((HWND)parentWnd, uFlashTimer);
-			uFlashTimer = -1;
+			uFlashTimer = (UINT)-1;
 			fFlashVisible = true;
 		}
 	

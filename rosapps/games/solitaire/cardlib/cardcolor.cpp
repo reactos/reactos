@@ -186,28 +186,12 @@ COLORREF ColorScaleRGB(	const COLORREF Col1,
 
 COLORREF ColorDarker(COLORREF col, double ratio)
 {
-	static double Hue, Lum, Sat;
-
-	//RGBtoHLS(col, &Hue, &Lum, &Sat);
-
-	//col = HLStoRGB(Hue, fMax(0.0,Lum-ratio), Sat);
-
 	return ColorScaleHSL(col, RGB(0,0,0), ratio);
-
-	//return col;
 }
 
 COLORREF ColorLighter(COLORREF col, double ratio)
 {
-	static double Hue, Lum, Sat;
-
-	//RGBtoHLS(col, &Hue, &Lum, &Sat);
-
-	//col = HLStoRGB(Hue, fMin(1.0,Lum+ratio), Sat);
-
 	return ColorScaleHSL(col, RGB(255,255,255), ratio);
-
-	//return col;
 }
 
 //
