@@ -119,17 +119,17 @@ Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
 	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
 	Entry* entry = this;
-	Entry* next_entry = entry;
 
-	for(const void*p=path; p&&next_entry; p=entry->get_next_path_component(p)) {
-		entry = next_entry;
-
+	for(const void*p=path; p && entry; ) {
 		entry->read_directory(sortOrder);
 
 		if (entry->_down)
 			entry->_expanded = true;
 
-		next_entry = entry->find_entry(p);
+		Entry* next_entry = entry->find_entry(p);
+		p = entry->get_next_path_component(p);
+
+		entry = next_entry;
 	}
 
 	SetCursor(old_cursor);
@@ -472,21 +472,4 @@ void Entry::free_subentries()
 			delete entry;
 		} while(next);
 	}
-}
-
-
-const void* Directory::get_next_path_component(const void* p)
-{
-	LPCTSTR s = (LPCTSTR) p;
-
-	while(*s && *s!=TEXT('\\') && *s!=TEXT('/'))
-		++s;
-
-	while(*s==TEXT('\\') || *s==TEXT('/'))
-		++s;
-
-	if (!*s)
-		return NULL;
-
-	return s;
 }

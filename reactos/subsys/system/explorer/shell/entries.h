@@ -99,7 +99,7 @@ public:
 	void	extract_icon();
 
 	virtual void read_directory(int scan_flags=SCAN_ALL) {}
-	virtual const void* get_next_path_component(const void*) {return NULL;}
+	virtual const void* get_next_path_component(const void*) const {return NULL;}
 	virtual Entry* find_entry(const void*) {return NULL;}
 	virtual bool get_path(PTSTR path) const = 0;
 	virtual ShellPath create_absolute_pidl() const {return (LPCITEMIDLIST)NULL;}
@@ -113,9 +113,6 @@ struct Directory {
 protected:
 	Directory() : _path(NULL) {}
 	virtual ~Directory() {}
-
-	 // default implementation like that of Windows file systems
-	virtual const void* get_next_path_component(const void*);
 
 	void*	_path;
 };

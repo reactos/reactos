@@ -428,7 +428,7 @@ void ShellDirectory::read_directory(int scan_flags)
 	_scanned = true;
 }
 
-const void* ShellDirectory::get_next_path_component(const void* p)
+const void* ShellDirectory::get_next_path_component(const void* p) const
 {
 	LPITEMIDLIST pidl = (LPITEMIDLIST)p;
 

@@ -61,5 +61,6 @@ struct WinDirectory : public WinEntry, public Directory
 	}
 
 	virtual void read_directory(int scan_flags=SCAN_ALL);
+	virtual const void* get_next_path_component(const void* p) const;
 	virtual Entry* find_entry(const void*);
 };

@@ -100,6 +100,23 @@ void WinDirectory::read_directory(int scan_flags)
 }
 
 
+const void* WinDirectory::get_next_path_component(const void* p) const
+{
+	LPCTSTR s = (LPCTSTR) p;
+
+	while(*s && *s!=TEXT('\\') && *s!=TEXT('/'))
+		++s;
+
+	while(*s==TEXT('\\') || *s==TEXT('/'))
+		++s;
+
+	if (!*s)
+		return NULL;
+
+	return s;
+}
+
+
 Entry* WinDirectory::find_entry(const void* p)
 {
 	LPCTSTR name = (LPCTSTR)p;
