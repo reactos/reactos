@@ -171,7 +171,7 @@ inline void assign_utf8(String& s, const char* str)
 	int lutf8 = strlen(str);
 
 #ifdef UNICODE
-	LPTSTR buffer = (LPTSTR)alloca(lutf8);
+	LPTSTR buffer = (LPTSTR)alloca(sizeof(TCHAR)*lutf8);
 	int l = MultiByteToWideChar(CP_UTF8, 0, str, lutf8, buffer, lutf8);
 #else
 	LPWSTR wbuffer = (LPWSTR)alloca(sizeof(WCHAR)*lutf8);
