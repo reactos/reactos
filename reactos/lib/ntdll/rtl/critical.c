@@ -144,23 +144,27 @@ RtlEnterCriticalSection(
          */
         if (Thread == CriticalSection->OwningThread) {
             
-            /* You own it, so you'll get it when you're done with it! */
+            /* You own it, so you'll get it when you're done with it! No need to
+               use the interlocked functions as only the thread who already owns
+               the lock can modify this data. */
             CriticalSection->RecursionCount++;
             return STATUS_SUCCESS;
         }
-        else if (CriticalSection->OwningThread == (HANDLE)0)
-        {
-            /* No one else owns it either! */
-            DPRINT1("Critical section not initialized (guess)!\n");
-            /* FIXME: raise exception */
-            return STATUS_INVALID_PARAMETER;            
-        }
+
+        /* NOTE - CriticalSection->OwningThread can be NULL here because changing
+                  this information is not serialized. This happens when thread a
+                  acquires the lock (LockCount == 0) and thread b tries to
+                  acquire it as well (LockCount == 1) but thread a hasn't had a
+                  chance to set the OwningThread! So it's not an error when
+                  OwningThread is NULL here! */
         
         /* We don't own it, so we must wait for it */
         RtlpWaitForCriticalSection(CriticalSection);
     }
     
-    /* Lock successful */
+    /* Lock successful. Changing this information has not to be serialized because
+       only one thread at a time can actually change it (the one who acquired
+       the lock)! */
     CriticalSection->OwningThread = Thread;
     CriticalSection->RecursionCount = 1;
     return STATUS_SUCCESS;
