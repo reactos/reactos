@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.24 2003/05/18 17:16:18 ea Exp $
+ * $Id: gdiobj.c,v 1.25 2003/05/29 13:18:39 gvg Exp $
  *
  */
 
@@ -73,7 +73,7 @@ static LOGPEN NullPen =
 { PS_NULL, { 0, 0 }, 0 };
 
 static LOGFONTW OEMFixedFont =
-{ 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
+{ 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
 
 /* Filler to make the location counter dword aligned again.  This is necessary
@@ -82,38 +82,38 @@ static LOGFONTW OEMFixedFont =
 static UINT align_OEMFixedFont = 1;
 
 static LOGFONTW AnsiFixedFont =
-{ 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+{ 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
 
 static UINT align_AnsiFixedFont = 1;
 
 static LOGFONTW AnsiVarFont =
-{ 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+{ 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" };
 
 static UINT align_AnsiVarFont = 1;
 
 static LOGFONTW SystemFont =
-{ 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+{ 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"System" };
 
 static UINT align_SystemFont = 1;
 
 static LOGFONTW DeviceDefaultFont =
-{ 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+{ 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"" };
 
 static UINT align_DeviceDefaultFont = 1;
 
 static LOGFONTW SystemFixedFont =
-{ 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+{ 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
 
 static UINT align_SystemFixedFont = 1;
 
 /* FIXME: Is this correct? */
 static LOGFONTW DefaultGuiFont =
-{ 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+{ 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" };
 
 static UINT align_DefaultGuiFont = 1;
