@@ -523,13 +523,13 @@ IContextMenu* CtxMenuInterfaces::query_interfaces(IContextMenu* pcm1)
 HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl,
 								LPCITEMIDLIST* apidl, int x, int y, CtxMenuInterfaces& cm_ifs)
 {
-	IContextMenu* pcm1;
+	IContextMenu* pcm;
 
-	HRESULT hr = shell_folder->GetUIObjectOf(hwndParent, cidl, apidl, IID_IContextMenu, NULL, (LPVOID*)&pcm1);
-//	HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm1);
+	HRESULT hr = shell_folder->GetUIObjectOf(hwndParent, cidl, apidl, IID_IContextMenu, NULL, (LPVOID*)&pcm);
+//	HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
 
 	if (SUCCEEDED(hr)) {
-		IContextMenu* pcm = cm_ifs.query_interfaces(pcm1);
+		pcm = cm_ifs.query_interfaces(pcm);
 
 		HMENU hmenu = CreatePopupMenu();
 

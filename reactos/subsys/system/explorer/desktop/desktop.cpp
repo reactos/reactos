@@ -522,7 +522,7 @@ bool DesktopShellView::InitDragDrop()
 	return true;
 }
 
-LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+LRESULT DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_CONTEXTMENU:
@@ -599,12 +599,12 @@ bool DesktopShellView::DoContextMenu(int x, int y, CtxMenuInterfaces& cm_ifs)
 
 HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 {
-	IContextMenu* pcm1;
+	IContextMenu* pcm;
 
-	HRESULT hr = DesktopFolder()->GetUIObjectOf(_hwnd, 0, NULL, IID_IContextMenu, NULL, (LPVOID*)&pcm1);
+	HRESULT hr = DesktopFolder()->GetUIObjectOf(_hwnd, 0, NULL, IID_IContextMenu, NULL, (LPVOID*)&pcm);
 
 	if (SUCCEEDED(hr)) {
-		IContextMenu* pcm = _cm_ifs.query_interfaces(pcm1);
+		pcm = _cm_ifs.query_interfaces(pcm);
 
 		HMENU hmenu = CreatePopupMenu();
 
