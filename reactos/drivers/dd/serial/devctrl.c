@@ -12,6 +12,38 @@
 #define NDEBUG
 #include "serial.h"
 
+#define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
+
+static VOID
+SerialGetUserBuffers(
+	IN PIRP Irp,
+	IN ULONG IoControlCode,
+	OUT PVOID* BufferIn,
+	OUT PVOID* BufferOut)
+{
+   ASSERT(Irp);
+   ASSERT(BufferIn);
+   ASSERT(BufferOut);
+   
+	switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
+	{
+		case METHOD_BUFFERED:
+			*BufferIn = *BufferOut = Irp->AssociatedIrp.SystemBuffer;
+			return;
+		case METHOD_IN_DIRECT:
+		case METHOD_OUT_DIRECT:
+			*BufferIn = Irp->AssociatedIrp.SystemBuffer;
+			*BufferOut = MmGetSystemAddressForMdl(Irp->MdlAddress);
+			return;
+		case METHOD_NEITHER:
+			*BufferIn = IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.Type3InputBuffer;
+			*BufferOut = Irp->UserBuffer;
+			return;
+	}
+	
+	/* Should never happen */
+}
+
 NTSTATUS STDCALL
 SerialSetBaudRate(
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension,
@@ -244,10 +276,11 @@ SerialDeviceControl(
 	IN PIRP Irp)
 {
 	PIO_STACK_LOCATION Stack;
+	ULONG IoControlCode;
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	ULONG LengthIn, LengthOut;
 	ULONG Information = 0;
-	PUCHAR Buffer;
+	PVOID BufferIn, BufferOut;
 	PUCHAR ComPortBase;
 	NTSTATUS Status;
 	
@@ -258,13 +291,14 @@ SerialDeviceControl(
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	LengthIn = Stack->Parameters.DeviceIoControl.InputBufferLength;
 	LengthOut = Stack->Parameters.DeviceIoControl.OutputBufferLength;
-	Buffer = Irp->AssociatedIrp.SystemBuffer;
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
+	IoControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
+	SerialGetUserBuffers(Irp, IoControlCode, &BufferIn, &BufferOut);
 	
 	/* FIXME: need to probe buffers */
 	/* FIXME: see http://www.osronline.com/ddkx/serial/serref_61bm.htm */
-	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+	switch (IoControlCode)
 	{
 		case IOCTL_SERIAL_CLEAR_STATS:
 		{
@@ -301,11 +335,11 @@ SerialDeviceControl(
 			/* Obsolete on Microsoft Windows 2000+ */
 			PULONG pConfigSize;
 			DPRINT("Serial: IOCTL_SERIAL_CONFIG_SIZE\n");
-			if (LengthOut != sizeof(ULONG) || Buffer == NULL)
+			if (LengthOut != sizeof(ULONG) || BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pConfigSize = (PULONG)Buffer;
+				pConfigSize = (PULONG)BufferOut;
 				*pConfigSize = 0;
 				Status = STATUS_SUCCESS;
 			}
@@ -314,18 +348,17 @@ SerialDeviceControl(
 		case IOCTL_SERIAL_GET_BAUD_RATE:
 		{
 			DPRINT("Serial: IOCTL_SERIAL_GET_BAUD_RATE\n");
-			/* FIXME: HACK!!! following line MUST NOT be here! */
-			Buffer = Irp->UserBuffer;
 			if (LengthOut < sizeof(SERIAL_BAUD_RATE))
 				Status = STATUS_BUFFER_TOO_SMALL;
-			else if (Buffer == NULL)
+			else if (BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				((PSERIAL_BAUD_RATE)Buffer)->BaudRate = DeviceExtension->BaudRate;
+				((PSERIAL_BAUD_RATE)BufferOut)->BaudRate = DeviceExtension->BaudRate;
 				Information = sizeof(SERIAL_BAUD_RATE);
 				Status = STATUS_SUCCESS;
 			}
+			break;
 		}
 		case IOCTL_SERIAL_GET_CHARS:
 		{
@@ -342,14 +375,14 @@ SerialDeviceControl(
 				DPRINT("Serial: return STATUS_BUFFER_TOO_SMALL\n");
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}
-			else if (Buffer == NULL)
+			else if (BufferOut == NULL)
 			{
 				DPRINT("Serial: return STATUS_INVALID_PARAMETER\n");
 				Status = STATUS_INVALID_PARAMETER;
 			}
 			else
 			{
-				Status = SerialGetCommStatus((PSERIAL_STATUS)Buffer, DeviceExtension);
+				Status = SerialGetCommStatus((PSERIAL_STATUS)BufferOut, DeviceExtension);
 				Information = sizeof(SERIAL_STATUS);
 			}
 			break;
@@ -358,11 +391,11 @@ SerialDeviceControl(
 		{
 			PULONG pDtrRts;
 			DPRINT("Serial: IOCTL_SERIAL_GET_DTRRTS\n");
-			if (LengthOut != sizeof(ULONG) || Buffer == NULL)
+			if (LengthOut != sizeof(ULONG) || BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pDtrRts = (PULONG)Buffer;
+				pDtrRts = (PULONG)BufferOut;
 				*pDtrRts = 0;
 				if (DeviceExtension->MCR & SR_MCR_DTR)
 					*pDtrRts |= SERIAL_DTR_STATE;
@@ -384,11 +417,11 @@ SerialDeviceControl(
 			DPRINT("Serial: IOCTL_SERIAL_GET_LINE_CONTROL\n");
 			if (LengthOut < sizeof(SERIAL_LINE_CONTROL))
 				Status = STATUS_BUFFER_TOO_SMALL;
-			else if (Buffer == NULL)
+			else if (BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				*((PSERIAL_LINE_CONTROL)Buffer) = DeviceExtension->SerialLineControl;
+				*((PSERIAL_LINE_CONTROL)BufferOut) = DeviceExtension->SerialLineControl;
 				Information = sizeof(SERIAL_LINE_CONTROL);
 				Status = STATUS_SUCCESS;
 			}
@@ -398,11 +431,11 @@ SerialDeviceControl(
 		{
 			PULONG pMCR;
 			DPRINT("Serial: IOCTL_SERIAL_GET_MODEM_CONTROL\n");
-			if (LengthOut != sizeof(ULONG) || Buffer == NULL)
+			if (LengthOut != sizeof(ULONG) || BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pMCR = (PULONG)Buffer;
+				pMCR = (PULONG)BufferOut;
 				*pMCR = DeviceExtension->MCR;
 				Status = STATUS_SUCCESS;
 			}
@@ -412,11 +445,11 @@ SerialDeviceControl(
 		{
 			PULONG pMSR;
 			DPRINT("Serial: IOCTL_SERIAL_GET_MODEMSTATUS\n");
-			if (LengthOut != sizeof(ULONG) || Buffer == NULL)
+			if (LengthOut != sizeof(ULONG) || BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pMSR = (PULONG)Buffer;
+				pMSR = (PULONG)BufferOut;
 				*pMSR = DeviceExtension->MSR;
 				Status = STATUS_SUCCESS;
 			}
@@ -430,14 +463,14 @@ SerialDeviceControl(
 				DPRINT("Serial: return STATUS_BUFFER_TOO_SMALL\n");
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}
-			else if (Buffer == NULL)
+			else if (BufferOut == NULL)
 			{
 				DPRINT("Serial: return STATUS_INVALID_PARAMETER\n");
 				Status = STATUS_INVALID_PARAMETER;
 			}
 			else
 			{
-				Status = SerialGetCommProp((PSERIAL_COMMPROP)Buffer, DeviceExtension);
+				Status = SerialGetCommProp((PSERIAL_COMMPROP)BufferOut, DeviceExtension);
 				Information = sizeof(SERIAL_COMMPROP);
 			}
 			break;
@@ -450,7 +483,7 @@ SerialDeviceControl(
 				DPRINT("Serial: return STATUS_BUFFER_TOO_SMALL\n");
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}
-			else if (Buffer == NULL)
+			else if (BufferOut == NULL)
 			{
 				DPRINT("Serial: return STATUS_INVALID_PARAMETER\n");
 				Status = STATUS_INVALID_PARAMETER;
@@ -467,11 +500,11 @@ SerialDeviceControl(
 		case IOCTL_SERIAL_GET_TIMEOUTS:
 		{
 			DPRINT("Serial: IOCTL_SERIAL_GET_TIMEOUTS\n");
-			if (LengthOut != sizeof(SERIAL_TIMEOUTS) || Buffer == NULL)
+			if (LengthOut != sizeof(SERIAL_TIMEOUTS) || BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				*(PSERIAL_TIMEOUTS)Buffer = DeviceExtension->SerialTimeOuts;
+				*(PSERIAL_TIMEOUTS)BufferOut = DeviceExtension->SerialTimeOuts;
 				Status = STATUS_SUCCESS;
 			}
 			break;
@@ -480,11 +513,11 @@ SerialDeviceControl(
 		{
 			PULONG pWaitMask;
 			DPRINT("Serial: IOCTL_SERIAL_GET_WAIT_MASK\n");
-			if (LengthOut != sizeof(ULONG) || Buffer == NULL)
+			if (LengthOut != sizeof(ULONG) || BufferOut == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pWaitMask = (PULONG)Buffer;
+				pWaitMask = (PULONG)BufferOut;
 				*pWaitMask = DeviceExtension->WaitMask;
 				Status = STATUS_SUCCESS;
 			}
@@ -534,11 +567,11 @@ SerialDeviceControl(
 		{
 			PULONG pNewBaudRate;
 			DPRINT("Serial: IOCTL_SERIAL_SET_BAUD_RATE\n");
-			if (LengthIn != sizeof(ULONG) || Buffer == NULL)
+			if (LengthIn != sizeof(ULONG) || BufferIn == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pNewBaudRate = (PULONG)Buffer;
+				pNewBaudRate = (PULONG)BufferIn;
 				Status = SerialSetBaudRate(DeviceExtension, *pNewBaudRate);
 			}
 			break;
@@ -580,11 +613,11 @@ SerialDeviceControl(
 		case IOCTL_SERIAL_SET_FIFO_CONTROL:
 		{
 			DPRINT("Serial: IOCTL_SERIAL_SET_FIFO_CONTROL\n");
-			if (LengthIn != sizeof(ULONG) || Buffer == NULL)
+			if (LengthIn != sizeof(ULONG) || BufferIn == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				WRITE_PORT_UCHAR(SER_FCR(ComPortBase), (UCHAR)((*(PULONG)Buffer) & 0xff));
+				WRITE_PORT_UCHAR(SER_FCR(ComPortBase), (UCHAR)((*(PULONG)BufferIn) & 0xff));
 				Status = STATUS_SUCCESS;
 			}
 			break;
@@ -601,21 +634,21 @@ SerialDeviceControl(
 			DPRINT("Serial: IOCTL_SERIAL_SET_LINE_CONTROL\n");
 			if (LengthIn < sizeof(SERIAL_LINE_CONTROL))
 				Status = STATUS_BUFFER_TOO_SMALL;
-			else if (Buffer == NULL)
+			else if (BufferIn == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
-				Status = SerialSetLineControl(DeviceExtension, (PSERIAL_LINE_CONTROL)Buffer);
+				Status = SerialSetLineControl(DeviceExtension, (PSERIAL_LINE_CONTROL)BufferIn);
 			break;
 		}
 		case IOCTL_SERIAL_SET_MODEM_CONTROL:
 		{
 			PULONG pMCR;
 			DPRINT("Serial: IOCTL_SERIAL_SET_MODEM_CONTROL\n");
-			if (LengthIn != sizeof(ULONG) || Buffer == NULL)
+			if (LengthIn != sizeof(ULONG) || BufferIn == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pMCR = (PULONG)Buffer;
+				pMCR = (PULONG)BufferIn;
 				DeviceExtension->MCR = (UCHAR)(*pMCR & 0xff);
 				WRITE_PORT_UCHAR(SER_MCR(ComPortBase), DeviceExtension->MCR);
 				Status = STATUS_SUCCESS;
@@ -626,22 +659,23 @@ SerialDeviceControl(
 		{
 			if (LengthIn < sizeof(SERIAL_QUEUE_SIZE ))
 				return STATUS_BUFFER_TOO_SMALL;
-			else if (Buffer == NULL)
+			else if (BufferIn == NULL)
 				return STATUS_INVALID_PARAMETER;
 			else
 			{
 				KIRQL Irql;
+				PSERIAL_QUEUE_SIZE NewQueueSize = (PSERIAL_QUEUE_SIZE)BufferIn;
 				Status = STATUS_SUCCESS;
-				if (((PSERIAL_QUEUE_SIZE)Buffer)->InSize > DeviceExtension->InputBuffer.Length)
+				if (NewQueueSize->InSize > DeviceExtension->InputBuffer.Length)
 				{
 					KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
-					Status = IncreaseCircularBufferSize(&DeviceExtension->InputBuffer, ((PSERIAL_QUEUE_SIZE)Buffer)->InSize);
+					Status = IncreaseCircularBufferSize(&DeviceExtension->InputBuffer, NewQueueSize->InSize);
 					KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
 				}
-				if (NT_SUCCESS(Status) && ((PSERIAL_QUEUE_SIZE)Buffer)->OutSize > DeviceExtension->OutputBuffer.Length)
+				if (NT_SUCCESS(Status) && NewQueueSize->OutSize > DeviceExtension->OutputBuffer.Length)
 				{
 					KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
-					Status = IncreaseCircularBufferSize(&DeviceExtension->OutputBuffer, ((PSERIAL_QUEUE_SIZE)Buffer)->OutSize);
+					Status = IncreaseCircularBufferSize(&DeviceExtension->OutputBuffer, NewQueueSize->OutSize);
 					KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
 				}
 			}
@@ -663,11 +697,11 @@ SerialDeviceControl(
 		case IOCTL_SERIAL_SET_TIMEOUTS:
 		{
 			DPRINT("Serial: IOCTL_SERIAL_SET_TIMEOUTS\n");
-			if (LengthIn != sizeof(SERIAL_TIMEOUTS) || Buffer == NULL)
+			if (LengthIn != sizeof(SERIAL_TIMEOUTS) || BufferIn == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				DeviceExtension->SerialTimeOuts = *(PSERIAL_TIMEOUTS)Buffer;
+				DeviceExtension->SerialTimeOuts = *(PSERIAL_TIMEOUTS)BufferIn;
 				Status = STATUS_SUCCESS;
 			}
 			break;
@@ -676,11 +710,11 @@ SerialDeviceControl(
 		{
 			PULONG pWaitMask;
 			DPRINT("Serial: IOCTL_SERIAL_SET_WAIT_MASK\n");
-			if (LengthIn != sizeof(ULONG) || Buffer == NULL)
+			if (LengthIn != sizeof(ULONG) || BufferIn == NULL)
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				pWaitMask = (PULONG)Buffer;
+				pWaitMask = (PULONG)BufferIn;
 				DeviceExtension->WaitMask = *pWaitMask;
 				Status = STATUS_SUCCESS;
 			}
