@@ -179,6 +179,7 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 LRESULT CALLBACK TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 
+/* display error message for the specified WIN32 error code */
 static void display_error(HWND hwnd, DWORD error)
 {
 	PTSTR msg;
@@ -1486,6 +1487,8 @@ static HWND create_child_window(ChildWnd* child)
 
 	UnhookWindowsHookEx(hcbthook);
 
+	ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
+	ListBox_SetItemHeight(child->right.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
 	idx = ListBox_FindItemData(child->left.hwnd, ListBox_GetCurSel(child->left.hwnd), child->left.cur);
 	ListBox_SetCurSel(child->left.hwnd, idx);
 
@@ -1499,7 +1502,7 @@ struct ExecuteDialog {
 };
 
 
-static BOOL CALLBACK ExecuteDialogWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+static BOOL CALLBACK ExecuteDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	static struct ExecuteDialog* dlg;
 
@@ -1520,6 +1523,39 @@ static BOOL CALLBACK ExecuteDialogWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, L
 				EndDialog(hwnd, id);
 
 			return 1;}
+	}
+
+	return 0;
+}
+
+static BOOL CALLBACK sDestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+		case WM_INITDIALOG:
+			SetWindowLong(hwnd, GWL_USERDATA, lparam);
+			return 1;
+
+		case WM_COMMAND: {
+			int id = (int)wparam;
+
+			switch(id) {
+			  case IDOK: {
+				LPTSTR dest = (LPTSTR) GetWindowLong(hwnd, GWL_USERDATA);
+				GetWindowText(GetDlgItem(hwnd, 201), dest, MAX_PATH);
+				EndDialog(hwnd, id);
+				break;}
+
+			  case IDCANCEL:
+				EndDialog(hwnd, id);
+				break;
+
+			  case 254:
+				MessageBox(hwnd, TEXT("Not yet implemented"), TEXT("Winefile"), MB_OK);
+				break;
+			}
+
+			return 1;
+		}
 	}
 
 	return 0;
@@ -1774,6 +1810,53 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 				case ID_WINDOW_ARRANGE:
 					SendMessage(Globals.hmdiclient, WM_MDIICONARRANGE, 0, 0);
 					break;
+					
+				case ID_SELECT_FONT: {
+					TCHAR dlg_name[BUFFER_LEN], dlg_info[BUFFER_LEN];
+					CHOOSEFONT chFont;
+					LOGFONT lFont;
+
+					HDC hdc = GetDC(hwnd);
+					chFont.lStructSize = sizeof(CHOOSEFONT);
+					chFont.hwndOwner = hwnd;
+					chFont.hDC = NULL;
+					chFont.lpLogFont = &lFont;
+					chFont.Flags = CF_SCREENFONTS | CF_FORCEFONTEXIST | CF_LIMITSIZE | CF_NOSCRIPTSEL;
+					chFont.rgbColors = RGB(0,0,0);
+					chFont.lCustData = 0;
+					chFont.lpfnHook = NULL;
+					chFont.lpTemplateName = NULL;
+					chFont.hInstance = Globals.hInstance;
+					chFont.lpszStyle = NULL;
+					chFont.nFontType = SIMULATED_FONTTYPE;
+					chFont.nSizeMin = 0;
+					chFont.nSizeMax = 24;
+
+					if (ChooseFont(&chFont)) {
+						HWND childWnd;
+
+						Globals.hfont = CreateFontIndirect(&lFont);
+						SelectFont(hdc, Globals.hfont);
+						GetTextExtentPoint32(hdc, TEXT(" "), 1, &Globals.spaceSize);
+
+						/* change font in all open child windows */
+						for(childWnd=GetWindow(Globals.hmdiclient,GW_CHILD); childWnd; childWnd=GetNextWindow(childWnd,GW_HWNDNEXT)) {
+							ChildWnd* child = (ChildWnd*) GetWindowLong(childWnd, GWL_USERDATA);
+							SetWindowFont(child->left.hwnd, Globals.hfont, TRUE);
+							SetWindowFont(child->right.hwnd, Globals.hfont, TRUE);
+							InvalidateRect(child->left.hwnd, NULL, TRUE);
+							InvalidateRect(child->right.hwnd, NULL, TRUE);
+						}
+					}
+					else if (CommDlgExtendedError()) {
+						LoadString(Globals.hInstance, IDS_FONT_SEL_DLG_NAME, dlg_name, BUFFER_LEN);
+						LoadString(Globals.hInstance, IDS_FONT_SEL_ERROR, dlg_info, BUFFER_LEN);
+						MessageBox(hwnd, dlg_info, dlg_name, MB_OK);
+					}
+
+					ReleaseDC(hwnd, hdc);
+					break;
+				}
 
 				case ID_VIEW_TOOL_BAR:
 					toggle_child(hwnd, cmd, Globals.htoolbar);
@@ -1792,7 +1875,7 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 					memset(&dlg, 0, sizeof(struct ExecuteDialog));
 
-					if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_EXECUTE), hwnd, ExecuteDialogWndProc, (LPARAM)&dlg) == IDOK) {
+					if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_EXECUTE), hwnd, ExecuteDialogDlgProc, (LPARAM)&dlg) == IDOK) {
 						HINSTANCE hinst = ShellExecute(hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
 
 						if ((int)hinst <= 32)
@@ -3433,6 +3516,42 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 				case ID_ACTIVATE:
 					activate_entry(child, pane, hwnd);
 					break;
+
+				case ID_FILE_MOVE: {
+					TCHAR new_name[BUFFER_LEN], old_name[BUFFER_LEN];
+					int len;
+
+					int ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_SELECT_DESTINATION), hwnd, sDestinationDlgProc, (LPARAM)new_name);
+					if (ret != IDOK)
+						break;
+
+					if (new_name[0]!='/' && new_name[1]!=':') {
+						get_path(pane->cur->up, old_name);
+						len = lstrlen(old_name);
+
+						if (old_name[len-1]!='\\' && old_name[len-1]!='/') {
+							old_name[len++] = '/';
+							old_name[len] = '\n';
+						}
+
+						lstrcpy(&old_name[len], new_name);
+						lstrcpy(new_name, old_name);
+					}
+
+					get_path(pane->cur, old_name);
+
+					if (MoveFileEx(old_name, new_name, MOVEFILE_COPY_ALLOWED)) {
+						if (pane->treePane) {
+							pane->root->scanned = FALSE;
+							pane->cur = pane->root;
+							activate_entry(child, pane, hwnd);
+						}
+						else
+							scan_entry(child, pane->root, hwnd);
+					}
+					else
+						display_error(hwnd, GetLastError());
+					break;}
 
 				default:
 					return pane_command(pane, LOWORD(wparam));

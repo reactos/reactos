@@ -25,6 +25,7 @@ TARGET_SDKLIBS = \
 	user32.a \
 	gdi32.a \
 	comctl32.a \
+	comdlg32.a \
 	ole32.a \
 	oleaut32.a \
 	shell32.a

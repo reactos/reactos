@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, 2003 Martin Fuchs
+ * Copyright 2000, 2003, 2004 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#include <commdlg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
