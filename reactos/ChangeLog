@@ -1,5 +1,9 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/winspool/stubs.c: Add @implemented and @unimplemented to APIs.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/wsock32/stubs.c: Add @implemented and @unimplemented to APIs.
 
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2003/04/30 20:44:06 gvg Exp $
+/* $Id: stubs.c,v 1.2 2003/07/10 21:48:16 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS winspool DRV
@@ -10,6 +10,9 @@
 
 #include <windows.h>
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DllMain(HINSTANCE InstDLL,
@@ -19,6 +22,10 @@ DllMain(HINSTANCE InstDLL,
   return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AbortPrinter(HANDLE Printer)
@@ -29,6 +36,10 @@ AbortPrinter(HANDLE Printer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddFormA(HANDLE Printer, DWORD Level, PBYTE Form)
@@ -39,6 +50,10 @@ AddFormA(HANDLE Printer, DWORD Level, PBYTE Form)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddFormW(HANDLE Printer, DWORD Level, PBYTE Form)
@@ -49,6 +64,10 @@ AddFormW(HANDLE Printer, DWORD Level, PBYTE Form)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddJobA(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
@@ -59,6 +78,10 @@ AddJobA(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddJobW(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
@@ -69,6 +92,10 @@ AddJobW(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddMonitorA(LPSTR Name, DWORD Level, PBYTE Monitors)
@@ -79,6 +106,10 @@ AddMonitorA(LPSTR Name, DWORD Level, PBYTE Monitors)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddMonitorW(LPWSTR Name, DWORD Level, PBYTE Monitors)
@@ -89,6 +120,10 @@ AddMonitorW(LPWSTR Name, DWORD Level, PBYTE Monitors)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPortA(LPSTR Name, HWND Wnd, LPSTR MonitorName)
@@ -99,6 +134,10 @@ AddPortA(LPSTR Name, HWND Wnd, LPSTR MonitorName)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPortW(LPWSTR Name, HWND Wnd, LPWSTR MonitorName)
@@ -109,6 +148,10 @@ AddPortW(LPWSTR Name, HWND Wnd, LPWSTR MonitorName)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 AddPrinterA(LPSTR Name, DWORD Level, PBYTE Buffer)
@@ -119,6 +162,10 @@ AddPrinterA(LPSTR Name, DWORD Level, PBYTE Buffer)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 AddPrinterW(LPWSTR Name, DWORD Level, PBYTE Buffer)
@@ -129,6 +176,10 @@ AddPrinterW(LPWSTR Name, DWORD Level, PBYTE Buffer)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPrinterConnectionA(LPSTR Name)
@@ -139,6 +190,10 @@ AddPrinterConnectionA(LPSTR Name)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPrinterConnectionW(LPWSTR Name)
@@ -149,6 +204,10 @@ AddPrinterConnectionW(LPWSTR Name)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPrinterDriverA(LPSTR Name, DWORD Level, PBYTE Buffer)
@@ -159,6 +218,10 @@ AddPrinterDriverA(LPSTR Name, DWORD Level, PBYTE Buffer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPrinterDriverW(LPWSTR Name, DWORD Level, PBYTE Buffer)
@@ -169,6 +232,10 @@ AddPrinterDriverW(LPWSTR Name, DWORD Level, PBYTE Buffer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPrintProcessorA(LPSTR Name, LPSTR Environment, LPSTR PathName, LPSTR PrintProcessorName)
@@ -179,6 +246,10 @@ AddPrintProcessorA(LPSTR Name, LPSTR Environment, LPSTR PathName, LPSTR PrintPro
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PathName, LPWSTR PrintProcessorName)
@@ -189,6 +260,10 @@ AddPrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PathName, LPWSTR Prin
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPrintProvidorA(LPSTR Name, DWORD Level, PBYTE Buffer)
@@ -199,6 +274,10 @@ AddPrintProvidorA(LPSTR Name, DWORD Level, PBYTE Buffer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 AddPrintProvidorW(LPWSTR Name, DWORD Level, PBYTE Buffer)
@@ -209,6 +288,10 @@ AddPrintProvidorW(LPWSTR Name, DWORD Level, PBYTE Buffer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 AdvancedDocumentPropertiesA(HWND Wnd, HANDLE Printer, LPSTR DeviceName, PDEVMODEA DevModeOut, PDEVMODEA DevModeIn)
@@ -219,6 +302,10 @@ AdvancedDocumentPropertiesA(HWND Wnd, HANDLE Printer, LPSTR DeviceName, PDEVMODE
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 AdvancedDocumentPropertiesW(HWND Wnd, HANDLE Printer, LPWSTR DeviceName, PDEVMODEW DevModeOut, PDEVMODEW DevModeIn)
@@ -229,6 +316,10 @@ AdvancedDocumentPropertiesW(HWND Wnd, HANDLE Printer, LPWSTR DeviceName, PDEVMOD
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ClosePrinter(HANDLE Printer)
@@ -239,6 +330,10 @@ ClosePrinter(HANDLE Printer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ConfigurePortA(LPSTR Name, HWND Wnd, LPSTR PortName)
@@ -249,6 +344,10 @@ ConfigurePortA(LPSTR Name, HWND Wnd, LPSTR PortName)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ConfigurePortW(LPWSTR Name, HWND Wnd, LPWSTR PortName)
@@ -259,6 +358,10 @@ ConfigurePortW(LPWSTR Name, HWND Wnd, LPWSTR PortName)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 ConnectToPrinterDlg(HWND Wnd, DWORD Flags)
@@ -269,6 +372,10 @@ ConnectToPrinterDlg(HWND Wnd, DWORD Flags)
   return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeleteFormA(HANDLE Printer, LPSTR Name)
@@ -279,6 +386,10 @@ DeleteFormA(HANDLE Printer, LPSTR Name)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeleteFormW(HANDLE Printer, LPWSTR Name)
@@ -289,6 +400,10 @@ DeleteFormW(HANDLE Printer, LPWSTR Name)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeleteMonitorA(LPSTR Name, LPSTR Environment, LPSTR MonitorName)
@@ -299,6 +414,10 @@ DeleteMonitorA(LPSTR Name, LPSTR Environment, LPSTR MonitorName)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeleteMonitorW(LPWSTR Name, LPWSTR Environment, LPWSTR MonitorName)
@@ -309,6 +428,10 @@ DeleteMonitorW(LPWSTR Name, LPWSTR Environment, LPWSTR MonitorName)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePortA(LPSTR Name, HWND Wnd, LPSTR PortName)
@@ -319,6 +442,10 @@ DeletePortA(LPSTR Name, HWND Wnd, LPSTR PortName)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePortW(LPWSTR Name, HWND Wnd, LPWSTR PortName)
@@ -329,6 +456,10 @@ DeletePortW(LPWSTR Name, HWND Wnd, LPWSTR PortName)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrinter(HANDLE Printer)
@@ -339,6 +470,10 @@ DeletePrinter(HANDLE Printer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrinterConnectionA(LPSTR Name)
@@ -349,6 +484,10 @@ DeletePrinterConnectionA(LPSTR Name)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrinterConnectionW(LPWSTR Name)
@@ -359,6 +498,10 @@ DeletePrinterConnectionW(LPWSTR Name)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 DeletePrinterDataA(HANDLE Printer, LPSTR Name)
@@ -369,6 +512,10 @@ DeletePrinterDataA(HANDLE Printer, LPSTR Name)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 DeletePrinterDataW(HANDLE Printer, LPWSTR Name)
@@ -379,6 +526,10 @@ DeletePrinterDataW(HANDLE Printer, LPWSTR Name)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrinterDriverA(LPSTR Name, LPSTR Environment, LPSTR Driver)
@@ -389,6 +540,10 @@ DeletePrinterDriverA(LPSTR Name, LPSTR Environment, LPSTR Driver)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrinterDriverW(LPWSTR Name, LPWSTR Environment, LPWSTR Driver)
@@ -399,6 +554,10 @@ DeletePrinterDriverW(LPWSTR Name, LPWSTR Environment, LPWSTR Driver)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrintProcessorA(LPSTR Name, LPSTR Environment, LPSTR PrintProcessor)
@@ -409,6 +568,10 @@ DeletePrintProcessorA(LPSTR Name, LPSTR Environment, LPSTR PrintProcessor)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProcessor)
@@ -419,6 +582,10 @@ DeletePrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProcessor)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrintProvidorA(LPSTR Name, LPSTR Environment, LPSTR PrintProvidor)
@@ -429,6 +596,10 @@ DeletePrintProvidorA(LPSTR Name, LPSTR Environment, LPSTR PrintProvidor)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 DeletePrintProvidorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProvidor)
@@ -439,6 +610,10 @@ DeletePrintProvidorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProvidor)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DeviceCapabilitiesA(LPCSTR Device, LPCSTR Port, WORD Capability, LPSTR Buffer, CONST DEVMODEA *DevMode)
@@ -449,6 +624,10 @@ DeviceCapabilitiesA(LPCSTR Device, LPCSTR Port, WORD Capability, LPSTR Buffer, C
   return -1;
 }
 
+
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 DeviceCapabilitiesW(LPCWSTR Device, LPCWSTR Port, WORD Capability, LPWSTR Buffer, CONST DEVMODEW *DevMode)
@@ -459,6 +638,10 @@ DeviceCapabilitiesW(LPCWSTR Device, LPCWSTR Port, WORD Capability, LPWSTR Buffer
   return -1;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 DocumentPropertiesA(HWND Wnd, HANDLE Printer, LPSTR Device, PDEVMODEA DevModeOut, PDEVMODEA DevModeIn, DWORD Mode)
@@ -469,6 +652,10 @@ DocumentPropertiesA(HWND Wnd, HANDLE Printer, LPSTR Device, PDEVMODEA DevModeOut
   return -1L;
 }
 
+
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 DocumentPropertiesW(HWND Wnd, HANDLE Printer, LPWSTR Device, PDEVMODEW DevModeOut, PDEVMODEW DevModeIn, DWORD Mode)
@@ -479,6 +666,10 @@ DocumentPropertiesW(HWND Wnd, HANDLE Printer, LPWSTR Device, PDEVMODEW DevModeOu
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EndDocPrinter(HANDLE Printer)
@@ -489,6 +680,10 @@ EndDocPrinter(HANDLE Printer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EndPagePrinter(HANDLE Printer)
@@ -499,6 +694,10 @@ EndPagePrinter(HANDLE Printer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumFormsA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -509,6 +708,10 @@ EnumFormsA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Need
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumFormsW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -518,6 +721,10 @@ EnumFormsW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Need
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumJobsA(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -528,6 +735,10 @@ EnumJobsA(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, 
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumJobsW(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -538,6 +749,10 @@ EnumJobsW(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, 
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumMonitorsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -548,6 +763,10 @@ EnumMonitorsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Neede
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumMonitorsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -558,6 +777,10 @@ EnumMonitorsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Need
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPortsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -568,6 +791,10 @@ EnumPortsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, 
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPortsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -578,6 +805,10 @@ EnumPortsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 EnumPrinterDataA(HANDLE Printer, DWORD Index, LPSTR Name, DWORD NameSize, PDWORD NameReturned, PDWORD Type, PBYTE Buffer, DWORD BufSize, PDWORD BufReturned)
@@ -587,6 +818,10 @@ EnumPrinterDataA(HANDLE Printer, DWORD Index, LPSTR Name, DWORD NameSize, PDWORD
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 EnumPrinterDataW(HANDLE Printer, DWORD Index, LPWSTR Name, DWORD NameSize, PDWORD NameReturned, PDWORD Type, PBYTE Buffer, DWORD BufSize, PDWORD BufReturned)
@@ -596,6 +831,10 @@ EnumPrinterDataW(HANDLE Printer, DWORD Index, LPWSTR Name, DWORD NameSize, PDWOR
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPrinterDriversA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -606,6 +845,10 @@ EnumPrinterDriversA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DW
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPrinterDriversW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -616,6 +859,10 @@ EnumPrinterDriversW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, 
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPrintersA(DWORD Flags, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -626,6 +873,10 @@ EnumPrintersA(DWORD Flags, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPrintersW(DWORD Flags, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -636,6 +887,10 @@ EnumPrintersW(DWORD Flags, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPrintProcessorDatatypesA(LPSTR Name, LPSTR PrintProcessor, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -646,6 +901,10 @@ EnumPrintProcessorDatatypesA(LPSTR Name, LPSTR PrintProcessor, DWORD Level, PBYT
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPrintProcessorDatatypesW(LPWSTR Name, LPWSTR PrintProcessor, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -656,6 +915,10 @@ EnumPrintProcessorDatatypesW(LPWSTR Name, LPWSTR PrintProcessor, DWORD Level, PB
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPrintProcessorsA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -666,6 +929,10 @@ EnumPrintProcessorsA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, D
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EnumPrintProcessorsW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
@@ -676,6 +943,10 @@ EnumPrintProcessorsW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FindClosePrinterChangeNotification(HANDLE Printer)
@@ -686,6 +957,10 @@ FindClosePrinterChangeNotification(HANDLE Printer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 FindFirstPrinterChangeNotification(HANDLE Printer, DWORD Flags, DWORD Options, PVOID NotifyOptions)
@@ -696,6 +971,10 @@ FindFirstPrinterChangeNotification(HANDLE Printer, DWORD Flags, DWORD Options, P
   return INVALID_HANDLE_VALUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 FindNextPrinterChangeNotification(HANDLE Printer, PDWORD Change, PVOID NotifyOptions, PVOID* NotifyInfo)
@@ -706,6 +985,10 @@ FindNextPrinterChangeNotification(HANDLE Printer, PDWORD Change, PVOID NotifyOpt
   return INVALID_HANDLE_VALUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FreePrinterNotifyInfo(PVOID /* Really PPRINTER_NOTIFY_INFO */ NotifyInfo)
@@ -716,6 +999,10 @@ FreePrinterNotifyInfo(PVOID /* Really PPRINTER_NOTIFY_INFO */ NotifyInfo)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetFormA(HANDLE Printer, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -726,6 +1013,10 @@ GetFormA(HANDLE Printer, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, P
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetFormW(HANDLE Printer, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -736,6 +1027,10 @@ GetFormW(HANDLE Printer, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, 
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetJobA(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -746,6 +1041,10 @@ GetJobA(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD BufSize, PDW
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetJobW(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -756,6 +1055,10 @@ GetJobW(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD BufSize, PDW
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -766,6 +1069,10 @@ GetPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Nee
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 GetPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -776,6 +1083,10 @@ GetPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Nee
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetPrinterDataA(HANDLE Printer, LPSTR Name, PDWORD Type, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -785,6 +1096,10 @@ GetPrinterDataA(HANDLE Printer, LPSTR Name, PDWORD Type, PBYTE Buffer, DWORD Buf
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetPrinterDataW(HANDLE Printer, LPWSTR Name, PDWORD Type, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -794,6 +1109,10 @@ GetPrinterDataW(HANDLE Printer, LPWSTR Name, PDWORD Type, PBYTE Buffer, DWORD Bu
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetPrinterDriverA(HANDLE Printer, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -804,6 +1123,10 @@ GetPrinterDriverA(HANDLE Printer, LPSTR Environment, DWORD Level, PBYTE Buffer, 
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetPrinterDriverW(HANDLE Printer, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -814,6 +1137,10 @@ GetPrinterDriverW(HANDLE Printer, LPWSTR Environment, DWORD Level, PBYTE Buffer,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetPrinterDriverDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -824,6 +1151,10 @@ GetPrinterDriverDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buf
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetPrinterDriverDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -834,6 +1165,10 @@ GetPrinterDriverDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE B
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetPrintProcessorDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -844,6 +1179,10 @@ GetPrintProcessorDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Bu
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetPrintProcessorDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
@@ -854,6 +1193,10 @@ GetPrintProcessorDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE 
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 OpenPrinterA(LPSTR Name, PHANDLE Printer, LPPRINTER_DEFAULTSA Defaults)
@@ -864,6 +1207,10 @@ OpenPrinterA(LPSTR Name, PHANDLE Printer, LPPRINTER_DEFAULTSA Defaults)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 OpenPrinterW(LPWSTR Name, PHANDLE Printer, LPPRINTER_DEFAULTSW Defaults)
@@ -874,6 +1221,10 @@ OpenPrinterW(LPWSTR Name, PHANDLE Printer, LPPRINTER_DEFAULTSW Defaults)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 PrinterMessageBoxA(HANDLE Printer, DWORD Error, HWND Wnd, LPSTR Text, LPSTR Caption, DWORD Type)
@@ -883,6 +1234,10 @@ PrinterMessageBoxA(HANDLE Printer, DWORD Error, HWND Wnd, LPSTR Text, LPSTR Capt
   return IDCANCEL;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 PrinterMessageBoxW(HANDLE Printer, DWORD Error, HWND Wnd, LPWSTR Text, LPWSTR Caption, DWORD Type)
@@ -892,6 +1247,10 @@ PrinterMessageBoxW(HANDLE Printer, DWORD Error, HWND Wnd, LPWSTR Text, LPWSTR Ca
   return IDCANCEL;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 PrinterProperties(HWND Wnd, HANDLE Printer)
@@ -902,6 +1261,10 @@ PrinterProperties(HWND Wnd, HANDLE Printer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ReadPrinter(HANDLE Printer, PVOID Buffer, DWORD BufSize, PDWORD Received)
@@ -912,6 +1275,10 @@ ReadPrinter(HANDLE Printer, PVOID Buffer, DWORD BufSize, PDWORD Received)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ResetPrinterA(HANDLE Printer, LPPRINTER_DEFAULTSA Defaults)
@@ -922,6 +1289,10 @@ ResetPrinterA(HANDLE Printer, LPPRINTER_DEFAULTSA Defaults)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ResetPrinterW(HANDLE Printer, LPPRINTER_DEFAULTSW Defaults)
@@ -932,6 +1303,10 @@ ResetPrinterW(HANDLE Printer, LPPRINTER_DEFAULTSW Defaults)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ScheduleJob(HANDLE Printer, DWORD Job)
@@ -942,6 +1317,10 @@ ScheduleJob(HANDLE Printer, DWORD Job)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetFormA(HANDLE Printer, LPSTR Form, DWORD Level, PBYTE Buffer)
@@ -952,6 +1331,10 @@ SetFormA(HANDLE Printer, LPSTR Form, DWORD Level, PBYTE Buffer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetFormW(HANDLE Printer, LPWSTR Form, DWORD Level, PBYTE Buffer)
@@ -962,6 +1345,10 @@ SetFormW(HANDLE Printer, LPWSTR Form, DWORD Level, PBYTE Buffer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetJobA(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD Command)
@@ -972,6 +1359,10 @@ SetJobA(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD Command)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetJobW(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD Command)
@@ -982,6 +1373,10 @@ SetJobW(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD Command)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD Command)
@@ -992,6 +1387,10 @@ SetPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD Command)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD Command)
@@ -1002,6 +1401,10 @@ SetPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD Command)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetPrinterDataA(HANDLE Printer, LPSTR Name, DWORD Type, PBYTE Buffer, DWORD BufSize)
@@ -1012,6 +1415,10 @@ SetPrinterDataA(HANDLE Printer, LPSTR Name, DWORD Type, PBYTE Buffer, DWORD BufS
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 SetPrinterDataW(HANDLE Printer, LPWSTR Name, DWORD Type, PBYTE Buffer, DWORD BufSize)
@@ -1022,6 +1429,10 @@ SetPrinterDataW(HANDLE Printer, LPWSTR Name, DWORD Type, PBYTE Buffer, DWORD Buf
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 StartDocPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer)
@@ -1032,6 +1443,10 @@ StartDocPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 StartDocPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer)
@@ -1042,6 +1457,10 @@ StartDocPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 StartPagePrinter(HANDLE Printer)
@@ -1052,6 +1471,10 @@ StartPagePrinter(HANDLE Printer)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 WaitForPrinterChange(HANDLE Printer, DWORD Flags)
@@ -1062,6 +1485,10 @@ WaitForPrinterChange(HANDLE Printer, DWORD Flags)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 WritePrinter(HANDLE Printer, PVOID Buffer, DWORD BufSize, PDWORD Written)
