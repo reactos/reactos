@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.5 2000/06/29 23:35:50 dwelch Exp $
+/* $Id: create.c,v 1.6 2000/07/07 02:14:14 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -218,7 +218,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
    if (wcslen(FileToFind)==0)
      {
 	CHECKPOINT;
-        TempStr[0] = (WCHAR)'.';
+	TempStr[0] = (WCHAR)'.';
 	TempStr[1] = 0;
 	FileToFind=(PWSTR)&TempStr;
      }
@@ -348,40 +348,6 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 }
 
 
-NTSTATUS FsdCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
-/*
- * FUNCTION: Closes a file
- */
-{
-   PVFATFCB pFcb;
-   PVFATCCB pCcb;
-   KIRQL oldIrql;
-   
-   DPRINT("FsdCloseFile(DeviceExt %x, FileObject %x)\n",
-	  DeviceExt,FileObject);
-   
- //FIXME : update entry in directory ?
-   pCcb = (PVFATCCB)(FileObject->FsContext2);
-   
-   DPRINT("pCcb %x\n",pCcb);
-   if (pCcb == NULL)
-     {
-	return(STATUS_SUCCESS);
-     }
-   
-   pFcb = pCcb->pFcb;
-   
-   pFcb->RefCount--;
-   if(pFcb->RefCount<=0)
-   {
-      KeAcquireSpinLock(&DeviceExt->FcbListLock, &oldIrql);
-      RemoveEntryList(&pFcb->FcbListEntry);
-      KeReleaseSpinLock(&DeviceExt->FcbListLock, oldIrql);
-      ExFreePool(pFcb);
-   }
-   ExFreePool(pCcb);
-   return STATUS_SUCCESS;
-}
 
 NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
 		     PWSTR FileName)
@@ -395,7 +361,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    PVFATFCB ParentFcb;
    PVFATFCB Fcb,pRelFcb;
    PVFATFCB Temp;
- PVFATCCB newCCB,pRelCcb;
+   PVFATCCB newCCB,pRelCcb;
    NTSTATUS Status;
    PFILE_OBJECT pRelFileObject;
    PWSTR AbsFileName=NULL;
@@ -408,10 +374,10 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
           FileObject,
           FileName);
    
-  /* FIXME : treat relative name */
+   /* FIXME : treat relative name */
    if(FileObject->RelatedFileObject)
    {
-      DbgPrint("try related for %S\n",FileName);
+     DbgPrint("try related for %S\n",FileName);
      pRelFileObject=FileObject->RelatedFileObject;
      pRelCcb=pRelFileObject->FsContext2;
      assert(pRelCcb);
@@ -437,10 +403,10 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
      AbsFileName[i]=0;
      FileName=AbsFileName;
    }
- 
- /*
-  * try first to find an existing FCB in memory
-  */
+
+   /*
+    * try first to find an existing FCB in memory
+    */
    CHECKPOINT;
    
    KeAcquireSpinLock(&DeviceExt->FcbListLock, &oldIrql);
@@ -470,27 +436,35 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	current_entry = current_entry->Flink;
      }
    KeReleaseSpinLock(&DeviceExt->FcbListLock, oldIrql);
-   
- CHECKPOINT; 
 
- string = FileName;
- ParentFcb = NULL;
- Fcb = ExAllocatePool(NonPagedPool, sizeof(VFATFCB));
- memset(Fcb,0,sizeof(VFATFCB));
- Fcb->ObjectName=Fcb->PathName;
- next = &string[0];   
+CHECKPOINT;
+DPRINT("FileName %S\n", FileName);
+
+   string = FileName;
+   ParentFcb = NULL;
+   Fcb = ExAllocatePool(NonPagedPool, sizeof(VFATFCB));
+   memset(Fcb,0,sizeof(VFATFCB));
+   Fcb->ObjectName=Fcb->PathName;
+   next = &string[0];
    
    CHECKPOINT;
-   while (next!=NULL)
+   while (TRUE)
    {
       CHECKPOINT;
-     *next = '\\';
-     current = next+1;
-     next = wcschr(next+1,'\\');
-     if (next!=NULL)
+      *next = '\\';
+      current = next+1;
+      next = wcschr(next+1,'\\');
+      if (next!=NULL)
 	{
 	   *next=0;
 	}
+      else
+	{
+	   /* reached the last path component */
+	   DPRINT("exiting: current '%S'\n",current);
+	   break;
+	}
+
       DPRINT("current '%S'\n",current);
       Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
       if (Status != STATUS_SUCCESS)
@@ -501,8 +475,10 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	   if (ParentFcb != NULL)
 	     ExFreePool(ParentFcb);
 	   if(AbsFileName)
-             ExFreePool(AbsFileName);
-           return(Status);
+	     ExFreePool(AbsFileName);
+
+	   DPRINT("error STATUS_OBJECT_PATH_NOT_FOUND\n");
+	   return STATUS_OBJECT_PATH_NOT_FOUND;
 	}
       Temp = Fcb;
 CHECKPOINT;
@@ -518,8 +494,41 @@ CHECKPOINT;
 CHECKPOINT;
       ParentFcb = Temp;
    }
+
+   /* searching for last path component */
+   DPRINT("current '%S'\n",current);
+   Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
+   if (Status != STATUS_SUCCESS)
+     {
+	/* file does not exist */
+	CHECKPOINT;
+	if (Fcb != NULL)
+	  ExFreePool(Fcb);
+	if (ParentFcb != NULL)
+	  ExFreePool(ParentFcb);
+	if(AbsFileName)
+	  ExFreePool(AbsFileName);
+
+	return STATUS_OBJECT_NAME_NOT_FOUND;
+     }
+
+   Temp = Fcb;
 CHECKPOINT;
- FileObject->FsContext =(PVOID) &ParentFcb->NTRequiredFCB;
+   if (ParentFcb == NULL)
+     {
+	CHECKPOINT;
+	Fcb = ExAllocatePool(NonPagedPool,sizeof(VFATFCB));
+	memset(Fcb,0,sizeof(VFATFCB));
+	Fcb->ObjectName=Fcb->PathName;
+     }
+   else
+     Fcb = ParentFcb;
+CHECKPOINT;
+   ParentFcb = Temp;
+
+
+CHECKPOINT;
+   FileObject->FsContext =(PVOID) &ParentFcb->NTRequiredFCB;
    newCCB = ExAllocatePool(NonPagedPool,sizeof(VFATCCB));
    memset(newCCB,0,sizeof(VFATCCB));
    FileObject->FsContext2 = newCCB;
@@ -537,35 +546,17 @@ CHECKPOINT;
    ParentFcb->pDevExt=DeviceExt;
    DPRINT("file open, fcb=%x\n",ParentFcb);
    DPRINT("FileSize %d\n",ParentFcb->entry.FileSize);
-   if(Fcb) ExFreePool(Fcb);
-   if(AbsFileName)ExFreePool(AbsFileName);
+   if(Fcb)
+     ExFreePool(Fcb);
+   if(AbsFileName)
+     ExFreePool(AbsFileName);
    CHECKPOINT;
+
    return(STATUS_SUCCESS);
- }
- 
-NTSTATUS FsdClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-/*
- * FUNCTION: Close a file
- */
-{
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   PFILE_OBJECT FileObject = Stack->FileObject;
-   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-   NTSTATUS Status;
-
-   DPRINT("FsdClose(DeviceObject %x, Irp %x)\n",DeviceObject, Irp);
-   
-   Status = FsdCloseFile(DeviceExtension,FileObject);
-
-   Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
-   
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   return(Status);
 }
 
 
-NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS FsdCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Create or open a file
  */
@@ -578,19 +569,6 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PVFATCCB pCcb;
    PVFATFCB pFcb;
 
-   assert(DeviceObject);
-   assert(Irp);
-   
-   if (DeviceObject->Size==sizeof(DEVICE_OBJECT))
-   {
-      /* DeviceObject represent FileSystem instead of  logical volume */
-      DbgPrint("FsdCreate called with file system\n");
-      Irp->IoStatus.Status=Status;
-      Irp->IoStatus.Information=FILE_OPENED;
-      IoCompleteRequest(Irp,IO_NO_INCREMENT);
-      return(Status);
-   }
-   
    Stack = IoGetCurrentIrpStackLocation(Irp);
    assert(Stack);
    RequestedDisposition = ((Stack->Parameters.Create.Options>>24)&0xff);
@@ -598,10 +576,18 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    FileObject = Stack->FileObject;
    DeviceExt = DeviceObject->DeviceExtension;
    assert(DeviceExt);
-   ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+
    Status = FsdOpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
+
    CHECKPOINT;
    Irp->IoStatus.Information = 0;
+   if (Status == STATUS_OBJECT_PATH_NOT_FOUND)
+     {
+	Irp->IoStatus.Status = Status;
+	return Status;
+     }
+
+   CHECKPOINT;
    if(!NT_SUCCESS(Status))
      {
       if(RequestedDisposition==FILE_CREATE
@@ -646,13 +632,47 @@ CHECKPOINT;
      else Irp->IoStatus.Information = FILE_OPENED;
      // FIXME : make supersed or overwrite if requested
    }
-CHECKPOINT;   
-   
-   Irp->IoStatus.Status = Status;   
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   ExReleaseResourceLite(&DeviceExt->DirResource);
-   
+
+CHECKPOINT;
+   Irp->IoStatus.Status = Status;
+
    return Status;
 }
 
 
+NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+/*
+ * FUNCTION: Create or open a file
+ */
+{
+   NTSTATUS Status=STATUS_SUCCESS;
+   PDEVICE_EXTENSION DeviceExt;
+
+   assert(DeviceObject);
+   assert(Irp);
+
+   if (DeviceObject->Size==sizeof(DEVICE_OBJECT))
+   {
+      /* DeviceObject represent FileSystem instead of  logical volume */
+      DbgPrint("FsdCreate called with file system\n");
+      Irp->IoStatus.Status=Status;
+      Irp->IoStatus.Information=FILE_OPENED;
+      IoCompleteRequest(Irp,IO_NO_INCREMENT);
+      return(Status);
+   }
+
+   DeviceExt = DeviceObject->DeviceExtension;
+   assert(DeviceExt);
+   ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+
+   Status = FsdCreateFile (DeviceObject, Irp);
+
+   ExReleaseResourceLite(&DeviceExt->DirResource);
+
+   Irp->IoStatus.Status = Status;
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+   return Status;
+}
+
+/* EOF */

@@ -1,9 +1,10 @@
-# $Id: makefile,v 1.16 2000/06/29 23:35:51 dwelch Exp $
+# $Id: makefile,v 1.17 2000/07/07 02:14:14 ekohl Exp $
 #
 #
 TARGET=vfatfs
 
-OBJECTS = blockdev.o dir.o dirwr.o iface.o string.o fat.o rw.o finfo.o volume.o create.o $(TARGET).coff
+OBJECTS = blockdev.o close.o create.o dir.o dirwr.o iface.o string.o fat.o \
+          rw.o finfo.o volume.o $(TARGET).coff
 LIBS = ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I. -I../../../include
