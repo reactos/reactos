@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.28 2004/04/09 20:03:14 navaraf Exp $
+/* $Id: bitmap.c,v 1.29 2004/04/13 00:06:50 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -89,7 +89,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
    HDC hScreenDc;
    HANDLE hIcon;
    ULONG HeaderSize;
-   ULONG ColourCount;
+   ULONG ColorCount;
    PVOID Data;
    CURSORICONDIRENTRY* dirEntry;
    ICONIMAGE* SafeIconImage;
@@ -234,17 +234,17 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
   if (SafeIconImage->icHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
       BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)SafeIconImage;
-      ColourCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
-      HeaderSize = sizeof(BITMAPCOREHEADER) + ColourCount * sizeof(RGBTRIPLE);
+      ColorCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
+      HeaderSize = sizeof(BITMAPCOREHEADER) + ColorCount * sizeof(RGBTRIPLE);
     }
   else
     {
-      ColourCount = SafeIconImage->icHeader.biClrUsed;
-      if (ColourCount == 0 && SafeIconImage->icHeader.biBitCount <= 8)
+      ColorCount = SafeIconImage->icHeader.biClrUsed;
+      if (ColorCount == 0 && SafeIconImage->icHeader.biBitCount <= 8)
 	{
-	  ColourCount = 1 << SafeIconImage->icHeader.biBitCount;
+	  ColorCount = 1 << SafeIconImage->icHeader.biBitCount;
 	}
-      HeaderSize = sizeof(BITMAPINFOHEADER) + ColourCount * sizeof(RGBQUAD);
+      HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
     }
   
   //make data point to the start of the XOR image data
@@ -269,7 +269,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   HDC hScreenDc;
   HANDLE hIcon;
   ULONG HeaderSize;
-  ULONG ColourCount;
+  ULONG ColorCount;
   PVOID Data;
   CURSORICONDIRENTRY* dirEntry;
   ICONIMAGE* SafeIconImage;
@@ -407,17 +407,17 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   if (SafeIconImage->icHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
       BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)SafeIconImage;
-      ColourCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
-      HeaderSize = sizeof(BITMAPCOREHEADER) + ColourCount * sizeof(RGBTRIPLE);
+      ColorCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
+      HeaderSize = sizeof(BITMAPCOREHEADER) + ColorCount * sizeof(RGBTRIPLE);
     }
   else
     {
-      ColourCount = SafeIconImage->icHeader.biClrUsed;
-      if (ColourCount == 0 && SafeIconImage->icHeader.biBitCount <= 8)
+      ColorCount = SafeIconImage->icHeader.biClrUsed;
+      if (ColorCount == 0 && SafeIconImage->icHeader.biBitCount <= 8)
 	{
-	  ColourCount = 1 << SafeIconImage->icHeader.biBitCount;
+	  ColorCount = 1 << SafeIconImage->icHeader.biBitCount;
 	}
-      HeaderSize = sizeof(BITMAPINFOHEADER) + ColourCount * sizeof(RGBQUAD);
+      HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
     }
   
   //make data point to the start of the XOR image data
@@ -453,7 +453,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
   HDC hScreenDc;
   HANDLE hBitmap;
   ULONG HeaderSize;
-  ULONG ColourCount;
+  ULONG ColorCount;
   PVOID Data;
 
   if (!(fuLoad & LR_LOADFROMFILE))
@@ -521,17 +521,17 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
   if (BitmapInfo->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
       BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)BitmapInfo;
-      ColourCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
-      HeaderSize = sizeof(BITMAPCOREHEADER) + ColourCount * sizeof(RGBTRIPLE);
+      ColorCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
+      HeaderSize = sizeof(BITMAPCOREHEADER) + ColorCount * sizeof(RGBTRIPLE);
     }
   else
     {
-      ColourCount = BitmapInfo->bmiHeader.biClrUsed;
-      if (ColourCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
+      ColorCount = BitmapInfo->bmiHeader.biClrUsed;
+      if (ColorCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
 	{
-	  ColourCount = 1 << BitmapInfo->bmiHeader.biBitCount;
+	  ColorCount = 1 << BitmapInfo->bmiHeader.biBitCount;
 	}
-      HeaderSize = sizeof(BITMAPINFOHEADER) + ColourCount * sizeof(RGBQUAD);
+      HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
     }
   Data = (PVOID)BitmapInfo + HeaderSize;
 
@@ -546,11 +546,12 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
     }
   memcpy(PrivateInfo, BitmapInfo, HeaderSize);
 
-  /* FIXME: Handle colour conversion and transparency. */
+  /* FIXME: Handle color conversion and transparency. */
 
   hScreenDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
   if (hScreenDc == NULL)
     {
+      RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
       if (fuLoad & LR_LOADFROMFILE)
 	{
 	  UnmapViewOfFile(BitmapInfo);
