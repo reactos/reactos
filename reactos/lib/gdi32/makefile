@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.26 2003/04/14 01:19:06 hyperion Exp $
+# $Id: makefile,v 1.27 2003/04/14 12:14:50 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -35,6 +35,8 @@ OBJECTS_OBJECTS = \
 TARGET_OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
+
+DEP_EXCLUDE_FILTER = misc/win32k.%
 
 include $(PATH_TO_TOP)/rules.mak
 
