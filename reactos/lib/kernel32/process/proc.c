@@ -17,14 +17,12 @@
 #include <wchar.h>
 #include <string.h>
 #include <internal/i386/segment.h>
+#include <internal/teb.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* GLOBALS *****************************************************************/
-
-static NT_PEB CurrentPeb;
-static PROCESSINFOW ProcessInfo;
 
 WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
 
@@ -33,19 +31,6 @@ VOID RegisterWaitForInputIdle(WaitForInputIdleType  lpfnRegisterWaitForInputIdle
 /* FUNCTIONS ****************************************************************/
 
 WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId);
-
-VOID InitializePeb(PWSTR CommandLine)
-{
-   DPRINT("InitializePeb(CommandLine %x)\n",CommandLine);
-//   DPRINT("ProcessInfo.CommandLine %x\n",ProcessInfo.CommandLine);
-//   wcscpy(ProcessInfo.CommandLine, CommandLine);
-   CurrentPeb.StartupInfo = &ProcessInfo;
-}
-
-NT_PEB *GetCurrentPeb(VOID)
-{
-   return(&CurrentPeb);
-}
 
 HANDLE STDCALL GetCurrentProcess(VOID)
 {
@@ -249,19 +234,16 @@ SleepEx(
 
 
 
-VOID
-STDCALL
-GetStartupInfoW(
-    LPSTARTUPINFO  lpStartupInfo 	
-   )
+VOID STDCALL GetStartupInfoW(LPSTARTUPINFO lpStartupInfo)
 {
-	NT_PEB *pPeb = GetCurrentPeb();
-
-	if (lpStartupInfo == NULL ) {
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return;
-	}
-
+   NT_PEB *pPeb = NtCurrentPeb();
+   
+   if (lpStartupInfo == NULL)
+     {
+	SetLastError(ERROR_INVALID_PARAMETER);
+	return;
+     }
+   
 	lpStartupInfo->cb = sizeof(STARTUPINFO);
     	lstrcpyW(lpStartupInfo->lpDesktop, pPeb->StartupInfo->Desktop); 
     	lstrcpyW(lpStartupInfo->lpTitle, pPeb->StartupInfo->Title);
@@ -291,75 +273,67 @@ GetStartupInfoW(
 }
 
 
-VOID
-STDCALL
-GetStartupInfoA(
-    LPSTARTUPINFO  lpStartupInfo 	
-   )
+VOID STDCALL GetStartupInfoA(LPSTARTUPINFO lpStartupInfo)
 {
-	NT_PEB *pPeb = GetCurrentPeb();
-	ULONG i = 0;
-	if (lpStartupInfo == NULL ) {
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return;
-	}
-
-	
-	lpStartupInfo->cb = sizeof(STARTUPINFO);
-	i = 0;
-  
-   	while ((pPeb->StartupInfo->Desktop[i])!=0 && i < MAX_PATH)
-     	{
-		lpStartupInfo->lpDesktop[i] = (unsigned char)pPeb->StartupInfo->Desktop[i];
-		i++;
-     	}
-  	lpStartupInfo->lpDesktop[i] = 0;
-    	
-	 i = 0;
-	while ((pPeb->StartupInfo->Title[i])!=0 && i < MAX_PATH)
-     	{
-		lpStartupInfo->lpTitle[i] = (unsigned char)pPeb->StartupInfo->Title[i];
-		i++;
-     	}
-  	lpStartupInfo->lpTitle[i] = 0;
-
-    	lpStartupInfo->dwX = pPeb->StartupInfo->dwX; 
-    	lpStartupInfo->dwY = pPeb->StartupInfo->dwY; 
-    	lpStartupInfo->dwXSize = pPeb->StartupInfo->dwXSize; 
-    	lpStartupInfo->dwYSize = pPeb->StartupInfo->dwYSize; 
-    	lpStartupInfo->dwXCountChars = pPeb->StartupInfo->dwXCountChars; 
-    	lpStartupInfo->dwYCountChars = pPeb->StartupInfo->dwYCountChars; 
-    	lpStartupInfo->dwFillAttribute = pPeb->StartupInfo->dwFillAttribute; 
-    	lpStartupInfo->dwFlags = pPeb->StartupInfo->dwFlags; 
-    	lpStartupInfo->wShowWindow = pPeb->StartupInfo->wShowWindow; 
-    	//lpStartupInfo->cbReserved2 = pPeb->StartupInfo->cbReserved; 
-	//lpStartupInfo->lpReserved = pPeb->StartupInfo->lpReserved1; 
-    	//lpStartupInfo->lpReserved2 = pPeb->StartupInfo->lpReserved2; 
-	
-    	lpStartupInfo->hStdInput = pPeb->StartupInfo->hStdInput; 
-    	lpStartupInfo->hStdOutput = pPeb->StartupInfo->hStdOutput; 
-    	lpStartupInfo->hStdError = pPeb->StartupInfo->hStdError; 
-	
+   NT_PEB *pPeb = NtCurrentPeb();
+   ULONG i = 0;
+   
+   if (lpStartupInfo == NULL) 
+     {
+	SetLastError(ERROR_INVALID_PARAMETER);
 	return;
+     }
+	
+   lpStartupInfo->cb = sizeof(STARTUPINFO);
+   i = 0;
+   
+   while ((pPeb->StartupInfo->Desktop[i])!=0 && i < MAX_PATH)
+     {
+	lpStartupInfo->lpDesktop[i] = (unsigned char)pPeb->StartupInfo->Desktop[i];
+	i++;
+     }
+   lpStartupInfo->lpDesktop[i] = 0;
+   
+   i = 0;
+   while ((pPeb->StartupInfo->Title[i])!=0 && i < MAX_PATH)
+     {
+	lpStartupInfo->lpTitle[i] = (unsigned char)pPeb->StartupInfo->Title[i];
+	i++;
+     }
+   lpStartupInfo->lpTitle[i] = 0;
+   
+   lpStartupInfo->dwX = pPeb->StartupInfo->dwX; 
+   lpStartupInfo->dwY = pPeb->StartupInfo->dwY; 
+   lpStartupInfo->dwXSize = pPeb->StartupInfo->dwXSize; 
+   lpStartupInfo->dwYSize = pPeb->StartupInfo->dwYSize; 
+   lpStartupInfo->dwXCountChars = pPeb->StartupInfo->dwXCountChars; 
+   lpStartupInfo->dwYCountChars = pPeb->StartupInfo->dwYCountChars; 
+   lpStartupInfo->dwFillAttribute = pPeb->StartupInfo->dwFillAttribute; 
+   lpStartupInfo->dwFlags = pPeb->StartupInfo->dwFlags; 
+   lpStartupInfo->wShowWindow = pPeb->StartupInfo->wShowWindow; 
+   //lpStartupInfo->cbReserved2 = pPeb->StartupInfo->cbReserved; 
+   //lpStartupInfo->lpReserved = pPeb->StartupInfo->lpReserved1; 
+   //lpStartupInfo->lpReserved2 = pPeb->StartupInfo->lpReserved2; 
+   
+   lpStartupInfo->hStdInput = pPeb->StartupInfo->hStdInput; 
+   lpStartupInfo->hStdOutput = pPeb->StartupInfo->hStdOutput; 
+   lpStartupInfo->hStdError = pPeb->StartupInfo->hStdError; 
+   
+   return;
 }
 
-BOOL 
-STDCALL
-FlushInstructionCache(
-  
-
-    HANDLE  hProcess,	
-    LPCVOID  lpBaseAddress,	
-    DWORD  dwSize 	
-   )
+BOOL STDCALL FlushInstructionCache(HANDLE hProcess,	
+				   LPCVOID lpBaseAddress,	
+				   DWORD dwSize)
 {
-	NTSTATUS errCode;
-	errCode = NtFlushInstructionCache(hProcess,(PVOID)lpBaseAddress,dwSize);
-	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+   NTSTATUS errCode;
+   errCode = NtFlushInstructionCache(hProcess,(PVOID)lpBaseAddress,dwSize);
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   return TRUE;
 }
 
 VOID STDCALL ExitProcess(UINT uExitCode) 
@@ -367,25 +341,20 @@ VOID STDCALL ExitProcess(UINT uExitCode)
    NtTerminateProcess(NtCurrentProcess() ,uExitCode);
 }
 
-VOID
-STDCALL
-FatalAppExitA(
-	      UINT uAction,
-	      LPCSTR lpMessageText
-	      )
+VOID STDCALL FatalAppExitA(UINT uAction, LPCSTR lpMessageText)
 {
-	WCHAR MessageTextW[MAX_PATH];
-	UINT i;
-	i = 0;
-   	while ((*lpMessageText)!=0 && i < 35)
-     	{
-		MessageTextW[i] = *lpMessageText;
-		lpMessageText++;
-		i++;
-     	}
-   	MessageTextW[i] = 0;
-	
-	return FatalAppExitW(uAction,MessageTextW);
+   WCHAR MessageTextW[MAX_PATH];
+   UINT i;
+   i = 0;
+   while ((*lpMessageText)!=0 && i < 35)
+     {
+	MessageTextW[i] = *lpMessageText;
+	lpMessageText++;
+	i++;
+     }
+   MessageTextW[i] = 0;
+   
+   return FatalAppExitW(uAction,MessageTextW);
 }
 
 

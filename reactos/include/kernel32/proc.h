@@ -13,8 +13,6 @@
 #include <ddk/ntddk.h>
 
 
-NT_PEB *GetCurrentPeb(VOID);
-
 typedef 
 DWORD
 (*WaitForInputIdleType)(

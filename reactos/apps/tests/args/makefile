@@ -1,8 +1,7 @@
 #
 #
 #
-OBJECTS= ../common/crt0.o args.o
-LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
+OBJECTS= args.o
 
 all: args.exe
 
@@ -16,7 +15,7 @@ clean:
 .phony: clean
 
 args.exe: $(OBJECTS) $(LIBS)
-	$(CC) -specs=../../specs $(OBJECTS) $(LIBS) -lgcc -o args.exe
+	$(CC) $(OBJECTS) -o args.exe
 	$(NM) --numeric-sort args.exe > args.sym
 
 include ../../rules.mak

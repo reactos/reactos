@@ -14,7 +14,7 @@
 #include <internal/ke.h>
 #include <internal/mm.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/

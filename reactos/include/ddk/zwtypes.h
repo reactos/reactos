@@ -1,6 +1,13 @@
 #ifndef __INCLUDE_DDK_ZWTYPES_H
 #define __INCLUDE_DDK_ZWTYPES_H
 
+/* Added by David Welch at 09/04/99 */
+typedef struct _PORT_MSG_DATA
+{
+   ULONG DataLength;
+   PVOID Data;
+   HANDLE ReplyPort;
+} PORT_MSG_DATA, *PPORT_MSG_DATA;
 
 
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )

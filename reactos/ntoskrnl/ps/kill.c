@@ -16,10 +16,10 @@
 #include <internal/mm.h>
 #include <internal/ob.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
-/* GLBOALS *******************************************************************/
+/* GLOBALS *******************************************************************/
 
 extern ULONG PiNrThreads;
 
@@ -28,7 +28,8 @@ extern ULONG PiNrThreads;
 VOID PiDeleteProcess(PVOID ObjectBody)
 {
    DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
-   (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
+   /* FIXME: This doesn't work, why? */
+//   (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
 }
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)

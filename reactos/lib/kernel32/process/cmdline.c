@@ -16,30 +16,30 @@
 #include <kernel32/thread.h>
 #include <wchar.h>
 #include <string.h>
+#include <internal/teb.h>
 
 /* GLOBALS ******************************************************************/
 
-static unsigned char CommandLineA[MAX_PATH];
+static CHAR CommandLineA[MAX_PATH];
 
 /* FUNCTIONS ****************************************************************/
 
 LPSTR STDCALL GetCommandLineA(VOID)
 {
-	WCHAR *CommandLineW;
-	ULONG i = 0;
-  	
-	CommandLineW = GetCommandLineW();
-   	while ((CommandLineW[i])!=0 && i < MAX_PATH)
-     	{
-		CommandLineA[i] = (unsigned char)CommandLineW[i];
-		i++;
-     	}
-   	CommandLineA[i] = 0;
-	return CommandLineA;
+   ULONG i;
+   PWSTR CommandLineW;
+   
+   CommandLineW = GetCommandLineW();
+   for (i=0; i<MAX_PATH && CommandLineW[i]!=0; i++)
+     {
+	CommandLineA[i] = (CHAR)CommandLineW[i];
+     }
+   CommandLineW[i] = 0;
+   return(CommandLineA);
 }
 
 LPWSTR STDCALL GetCommandLineW(VOID)
 {
-	return GetCurrentPeb()->StartupInfo->CommandLine;
+   return(NtCurrentPeb()->StartupInfo->CommandLine);
 }
 

@@ -48,11 +48,11 @@ CM_OBJECTS = cm/registry.o
 
 DBG_OBJECTS = dbg/brkpoint.o dbg/errinfo.o
 
-LDR_OBJECTS = ldr/loader.o
+LDR_OBJECTS = ldr/loader.o ldr/init.o
 
 CC_OBJECTS = cc/cacheman.o cc/block.o cc/view.o
 
-objects: ../ntoskrnl/objects
+objects: 
 	mkdir objects
 
 objects/hal.o: $(HAL_OBJECTS)

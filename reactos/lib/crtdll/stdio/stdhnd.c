@@ -39,4 +39,4 @@ FILE _crtdll_iob[] =
 }
 };
 
-FILE (*__imp__iob)[] = &_crtdll_iob;
+FILE (*_iob)[] = &_crtdll_iob;

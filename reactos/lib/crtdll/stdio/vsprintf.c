@@ -4,6 +4,13 @@
 #include <limits.h>
 #include <crtdll/internal/file.h>
 
+#if 1
+int
+vsprintf(char *str, const char *fmt, va_list ap)
+{
+   abort();
+}
+#else
 int
 vsprintf(char *str, const char *fmt, va_list ap)
 {
@@ -17,3 +24,4 @@ vsprintf(char *str, const char *fmt, va_list ap)
   *f._ptr = 0;
   return len;
 }
+#endif

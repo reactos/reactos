@@ -1,4 +1,3 @@
-HOST=mingw32-windows
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
     DLLTARGET=crtdll.a
@@ -27,7 +26,8 @@ DIRECT_OBJECTS = direct/chdir.o direct/chdrive.o direct/getcwd.o direct/getdrive
 
 MALLOC_OBJECTS = malloc/expand.o malloc/heap.o
 
-MISC_OBJECTS =   misc/GetArgs.o misc/setnew.o misc/purecall.o
+#MISC_OBJECTS =   misc/GetArgs.o misc/setnew.o misc/purecall.o
+MISC_OBJECTS = misc/GetArgs.o
 
 STRING_OBJECTS = string/memchr.o string/memcmp.o string/strcat.o \
                  string/strchr.o string/strcmp.o string/strcoll.o \
@@ -100,14 +100,20 @@ MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o mat
 		math/tanh.o math/stubs.o math/j0_y0.o math/j1_y1.o math/jn_yn.o
 
 
-OBJECTS = $(ASSERT_OBJECTS) $(CTYPE_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS)\
-	  $(MISC_OBJECTS) $(STRING_OBJECTS)  $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
-	  $(IO_OBJECTS)  $(PROCESS_OBJECTS) $(TIME_OBJECTS)  $(MALLOC_OBJECTS)\
-	  $(SYS_STAT_OBJECTS) $(SIGNAL_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS)\
-	  $(SEARCH_OBJECTS)
+#OBJECTS = $(ASSERT_OBJECTS) $(CTYPE_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS)\
+#	  $(MISC_OBJECTS) $(STRING_OBJECTS)  $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
+#	  $(IO_OBJECTS)  $(PROCESS_OBJECTS) $(TIME_OBJECTS)  $(MALLOC_OBJECTS)\
+#	  $(SYS_STAT_OBJECTS) $(SIGNAL_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS)\
+#	  $(SEARCH_OBJECTS)
 
 
-crtdll.a: $(OBJECTS)
+OBJECTS = $(MISC_OBJECTS) string/strdup.o stdlib/malloc.o stdlib/abort.o \
+          stdlib/_exit.o stdlib/atexit.o stdio/fileno.o io/fmode.o \
+	  float/fpreset.o stdio/stdhnd.o io/setmode.o io/open.o \
+	  stdio/vsprintf.o
+
+
+ crtdll.a: $(OBJECTS)
 	$(LD)  -r $(OBJECTS) -o crtdll.a
 
 crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def
@@ -115,12 +121,14 @@ crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def
 	$(DLLTOOL) --dllname crtdll.dll --def crtdll.def \
 	           --output-lib crtdll.a
 	$(CC) -specs=crt_specs -mdll -o junk.tmp \
-	      -Wl,--base-file,base.tmp crtdll.o  ../ntdll/ntdll.a
+	      -Wl,--base-file,base.tmp crtdll.o  ../kernel32/kernel32.a \
+	      ../ntdll/ntdll.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname crtdll.dll --base-file base.tmp \
 	           --output-exp temp.exp --def crtdll.def
 	- $(RM) base.tmp
-	$(CC) -specs=crt_specs -mdll -o crtdll.dll crtdll.o  ../ntdll/ntdll.a\
+	$(CC) -specs=crt_specs -mdll -o crtdll.dll crtdll.o  \
+	       ../kernel32/kernel32.a ../ntdll/ntdll.a\
 	      -Wl,--image-base,0x20000000 \
 	      -Wl,--file-alignment,0x1000 \
 	      -Wl,--section-alignment,0x1000 \
@@ -128,5 +136,7 @@ crtdll.dll: $(DLLMAIN) $(OBJECTS) crtdll.def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort crtdll.dll > crtdll.sym
 
-include ../../Rules.mak
+clean:
+
+include ../../rules.mak
 

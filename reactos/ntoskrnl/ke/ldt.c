@@ -18,7 +18,7 @@
 
 
 
-NTSTATUS STDCALL NtSetLdtEntries(PEPROCESS Process,
+NTSTATUS STDCALL NtSetLdtEntries(PETHREAD Thread,
 				 ULONG FirstEntry,
 				 PULONG Entries)
 {

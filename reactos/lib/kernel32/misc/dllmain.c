@@ -12,6 +12,9 @@
 #include <ddk/ntddk.h>
 #include <wchar.h>
 #include <kernel32/proc.h>
+#include <internal/teb.h>
+
+#include <kernel32/kernel32.h>
 
 WINBOOL STDCALL DllMain (HANDLE hInst, 
 			 ULONG ul_reason_for_call,
@@ -19,57 +22,48 @@ WINBOOL STDCALL DllMain (HANDLE hInst,
 
 
 
-NT_TEB *Teb;
-
-
 BOOL WINAPI DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 {
-   return(TRUE);
+   return(DllMain(hDll,dwReason,lpReserved));
 }
 
-WINBOOL STDCALL DllMain (HANDLE hInst, 
-			 ULONG ul_reason_for_call,
-			 LPVOID lpReserved)
-{
- 
-    switch( ul_reason_for_call ) {
-    	case DLL_PROCESS_ATTACH:
-	{
-		
-		GetCurrentPeb()->ProcessHeap = HeapCreate(HEAP_GENERATE_EXCEPTIONS,
-							  8192,
-							  0);
-		InitAtomTable(13);
-		SetCurrentDirectoryW(L"C:");
-	//	SetSystemDirectoryW(L"C:\\Reactos\\System");
-	//	SetWindowsDirectoryW(L"C:\\Reactos");
-		
-	}
-    	case DLL_THREAD_ATTACH:
-	{
-		Teb = HeapAlloc(GetProcessHeap(),0,sizeof(NT_TEB));
-		Teb->Peb = GetCurrentPeb();
-		Teb->HardErrorMode = SEM_NOGPFAULTERRORBOX;
-		Teb->dwTlsIndex=0;
-		break;
-	}
-    	case DLL_PROCESS_DETACH:
-	{
-		HeapFree(GetProcessHeap(),0,Teb);
-		HeapDestroy(GetCurrentPeb()->ProcessHeap);
-		break;
-	}
-	case DLL_THREAD_DETACH:
-	{
-		HeapFree(GetProcessHeap(),0,Teb);
-		break;
-	}
-	default:
-	break;
-    
-    }
-    return TRUE;
+VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize);
 
+WINBOOL STDCALL DllMain(HANDLE hInst, 
+			ULONG ul_reason_for_call,
+			LPVOID lpReserved)
+{
+   DPRINT("DllMain");
+   switch (ul_reason_for_call) 
+     {
+      case DLL_PROCESS_ATTACH:
+	  {     
+	     DPRINT("DLL_PROCESS_ATTACH\n");
+	  }
+    	case DLL_THREAD_ATTACH:
+	  {
+	     //		Teb = HeapAlloc(GetProcessHeap(),0,sizeof(NT_TEB));
+	     //		Teb->Peb = GetCurrentPeb();
+	     //		Teb->HardErrorMode = SEM_NOGPFAULTERRORBOX;
+	     //		Teb->dwTlsIndex=0;
+	     break;
+	  }
+      case DLL_PROCESS_DETACH:
+	  {
+//	     HeapFree(GetProcessHeap(),0,Teb);
+	     HeapDestroy(NtCurrentPeb()->ProcessHeap);
+	     break;
+	  }
+      case DLL_THREAD_DETACH:
+	  {
+	     //		HeapFree(GetProcessHeap(),0,Teb);
+	     break;
+	  }
+      default:
+	break;
+	
+    }
+   return TRUE;  
 }
 
 

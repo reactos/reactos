@@ -16,7 +16,6 @@
 #define __DDK_ZW_H
 
 
-#include <windows.h>
 //#ifndef WIN32_LEAN_AND_MEAN
 #define PTOKEN_GROUPS PVOID
 #define PTOKEN_PRIVILEGES PVOID
@@ -29,14 +28,14 @@
 /*
  * FUNCTION: Checks a clients access rights to a object
  * ARGUMENTS: 
-	  SecurityDescriptor = Security information against which the access is checked
+ *	  SecurityDescriptor = Security information against which the access is checked
  *        ClientToken = Represents a client
-	  DesiredAcces = 
-	  GenericMapping =
-	  PrivilegeSet =
-	  ReturnLength = Bytes written
-	  GrantedAccess = 
-	  AccessStatus = Indicates if the ClientToken allows the requested access
+ *	  DesiredAcces = 
+ *	  GenericMapping =
+ *	  PrivilegeSet =
+ *	  ReturnLength = Bytes written
+ *	  GrantedAccess = 
+ *	  AccessStatus = Indicates if the ClientToken allows the requested access
  * REMARKS: The arguments map to the win32 AccessCheck 
  * RETURNS: Status
  */
@@ -5070,15 +5069,25 @@ NTSTATUS STDCALL NtAcceptConnectPort(VOID);
 
 
 NTSTATUS STDCALL NtCompleteConnectPort(VOID);
-NTSTATUS STDCALL NtConnectPort(VOID);
+//NTSTATUS STDCALL NtConnectPort(VOID);
+NTSTATUS STDCALL NtConnectPort(PHANDLE Handle,
+			       POBJECT_ATTRIBUTES ObjectAttributes);
 
-NTSTATUS STDCALL NtCreatePort(VOID);
+//NTSTATUS STDCALL NtCreatePort(VOID);
+NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
+			      ACCESS_MASK DesiredAccess,
+			      POBJECT_ATTRIBUTES ObjectAttributes);
+
 NTSTATUS STDCALL NtCreateToken(VOID);
 
 NTSTATUS STDCALL NtGetPlugPlayEvent(VOID);
 NTSTATUS STDCALL NtImpersonateClientOfPort(VOID);
 
-NTSTATUS STDCALL NtListenPort(VOID);
+//NTSTATUS STDCALL NtListenPort(VOID);
+NTSTATUS STDCALL NtListenPort(HANDLE PortHandle,
+			      PLARGE_INTEGER Timeout,
+			      PPORT_MSG_DATA Msg);
+
 NTSTATUS STDCALL NtLoadKey2(VOID);
 
 
@@ -5095,12 +5104,17 @@ NTSTATUS STDCALL NtReadRequestData(VOID);
 NTSTATUS STDCALL NtReplyPort(VOID);
 NTSTATUS STDCALL NtReplyWaitReceivePort(VOID);
 NTSTATUS STDCALL NtReplyWaitReplyPort(VOID);
-NTSTATUS STDCALL NtRequestPort(VOID);
+//NTSTATUS STDCALL NtRequestPort(VOID);
+NTSTATUS STDCALL NtRequestPort(HANDLE PortHandle,
+			       ULONG DataLength,
+			       PVOID Data,
+			       ULONG Options,
+			       PHANDLE ReplyPortHandle);
 
 NTSTATUS STDCALL NtSetDefaultLocale(VOID);
 
 //NTSTATUS STDCALL NtSetLdtEntries(VOID);
-NTSTATUS STDCALL NtSetLdtEntries(PEPROCESS Process,
+NTSTATUS STDCALL NtSetLdtEntries(PETHREAD Thread,
 				 ULONG FirstEntry,
 				 PULONG Entries);
 

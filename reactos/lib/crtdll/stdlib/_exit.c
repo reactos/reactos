@@ -6,6 +6,7 @@
 
 struct __atexit *__atexit_ptr = 0;
 
+#if 0
 void exit(int status) 
 {
   //int i;
@@ -27,7 +28,7 @@ void exit(int status)
   _exit(status);
   for(;;);
 }
-
+#endif
 
 
 void _exit(int _status)

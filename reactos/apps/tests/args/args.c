@@ -26,10 +26,13 @@ void main(int argc, char* argv[])
    AllocConsole();
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
-   
+
+   debug_printf("GetCommandLineA() %s\n",GetCommandLineA());
+   #if 0
    for (i=0; i<argc; i++)
      {
 	debug_printf("Args: '%s'\n",argv[i]);
      }
+   #endif
 }
 

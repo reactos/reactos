@@ -4,7 +4,6 @@
 
 #include <kernel32/kernel32.h>
 
-VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize);
 
 VOID KERNEL32_Init()
 {

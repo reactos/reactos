@@ -14,6 +14,20 @@
 #define IDMAP_BASE         (0xd0000000)
 #define VIDMEM_BASE        0xb8000
 
+/*
+ * Return a linear address which can be used to access the physical memory
+ * starting at x 
+ */
+extern inline unsigned int physical_to_linear(unsigned int x)
+{
+        return(x+IDMAP_BASE);
+}
+
+extern inline unsigned int linear_to_physical(unsigned int x)
+{
+        return(x-IDMAP_BASE);
+}
+
 #define NR_ROWS            50
 #define NR_COLUMNS         80
 

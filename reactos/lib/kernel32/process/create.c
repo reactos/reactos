@@ -19,8 +19,9 @@
 #include <pe.h>
 #include <internal/i386/segment.h>
 #include <ntdll/ldr.h>
+#include <internal/teb.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -349,6 +350,68 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 
 #define NTDLL_BASE (0x80000000)
 
+static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
+{
+   NTSTATUS Status;
+   PVOID PebBase;
+   ULONG PebSize;
+   NT_PEB Peb;
+   ULONG BytesWritten;
+   PVOID StartupInfoBase;
+   ULONG StartupInfoSize;
+   PROCESSINFOW StartupInfo;
+   
+   PebBase = PEB_BASE;
+   PebSize = 0x1000;
+   Status = ZwAllocateVirtualMemory(ProcessHandle,
+				    &PebBase,
+				    0,
+				    &PebSize,
+				    MEM_COMMIT,
+				    PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   
+   memset(&Peb, 0, sizeof(Peb));
+   Peb.StartupInfo = PEB_STARTUPINFO;
+
+   ZwWriteVirtualMemory(ProcessHandle,
+			(PVOID)PEB_BASE,
+			&Peb,
+			sizeof(Peb),
+			&BytesWritten);
+   
+   StartupInfoBase = PEB_STARTUPINFO;
+   StartupInfoSize = 0x1000;
+   Status = ZwAllocateVirtualMemory(ProcessHandle,
+				    &StartupInfoBase,
+				    0,
+				    &StartupInfoSize,
+				    MEM_COMMIT,
+				    PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   
+   memset(&StartupInfo, 0, sizeof(StartupInfo));
+   wcscpy(StartupInfo.CommandLine, CommandLine);
+   
+   DPRINT("StartupInfoSize %x\n",StartupInfoSize);
+   ZwWriteVirtualMemory(ProcessHandle,
+			(PVOID)PEB_STARTUPINFO,
+			&StartupInfo,
+			StartupInfoSize,
+			&BytesWritten);
+      
+   return(STATUS_SUCCESS);
+}
+
+
 WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 			       LPWSTR lpCommandLine,
 			       LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -417,7 +480,13 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 	SetLastError(RtlNtStatusToDosError(Status));
 	return FALSE;
      }
-      
+   
+   /*
+    * 
+    */
+   DPRINT("Creating peb\n");
+   CreatePeb(hProcess, TempCommandLine);
+   
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->

@@ -17,7 +17,7 @@
 //#include <stdlib.h>
 
 
-
+#if 0
 
 
 
@@ -526,4 +526,4 @@ int unicode2ansi( char *ansi,const WCHAR *uni, int s)
 
 
 
-
+#endif

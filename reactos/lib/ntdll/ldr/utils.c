@@ -23,6 +23,11 @@
 
 /* FUNCTIONS *****************************************************************/
 
+typedef WINBOOL STDCALL (*PDLLMAIN_FUNC)(HANDLE hInst, 
+					 ULONG ul_reason_for_call,
+					 LPVOID lpReserved);
+
+
 static NTSTATUS LdrLoadDll(PDLL* Dll, PCHAR Name)
 {
    char fqname[255] = "\\??\\C:\\reactos\\system\\";
@@ -37,6 +42,7 @@ static NTSTATUS LdrLoadDll(PDLL* Dll, PCHAR Name)
    ULONG ImageSize, InitialViewSize;
    PVOID ImageBase;
    HANDLE FileHandle, SectionHandle;
+   PDLLMAIN_FUNC Entrypoint;
    
    DPRINT("LdrLoadDll(Base %x, Name %s)\n",Dll,Name);
    
@@ -131,7 +137,12 @@ static NTSTATUS LdrLoadDll(PDLL* Dll, PCHAR Name)
    LdrDllListHead.Next->Prev = (*Dll);
    LdrDllListHead.Next = (*Dll);
    
-   LdrPEStartup(ImageBase, SectionHandle);
+   Entrypoint = (PDLLMAIN_FUNC)LdrPEStartup(ImageBase, SectionHandle);
+   if (Entrypoint != NULL)
+     {
+	DPRINT("Calling entry point at %x\n",Entrypoint);
+	Entrypoint(ImageBase, DLL_PROCESS_ATTACH, NULL);
+     }
    
    return(STATUS_SUCCESS);
 }
