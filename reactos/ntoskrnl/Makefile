@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2001/03/06 14:41:18 dwelch Exp $
+# $Id: Makefile,v 1.10 2001/03/06 14:51:07 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -570,10 +570,10 @@ ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 
 ke/main.o: ke/main.c ../include/reactos/buildno.h
 
-#include $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d))
+include $(filter-out ex/napi.%, $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d)))
 
 %.d: %.c
-	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
+	$(CC) $(CFLAGS) -M $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
 
 %.d: %.s
 	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@\1.d \1.o:@' > $@
