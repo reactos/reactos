@@ -375,6 +375,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
 
+; Boot Video Driver
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Group",0x00000000,"Boot Video Driver"
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ImagePath",0x00020000,"system32\drivers\bootvid.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Type",0x00010001,0x00000002
+
 ; VGA miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video"
