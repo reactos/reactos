@@ -82,7 +82,6 @@ csrss.exe    = 2
 ntvdm.exe    = 2
 smss.exe     = 2
 autochk.exe  = 2
-gstart.exe   = 2
 ;lsass.exe    = 2
 services.exe = 2
 cmd.exe      = 2
