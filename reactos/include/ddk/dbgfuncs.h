@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_DBGFUNCS_H
 #define __INCLUDE_DDK_DBGFUNCS_H
-/* $Id: dbgfuncs.h,v 1.4 2000/03/04 21:58:49 ekohl Exp $ */
+/* $Id: dbgfuncs.h,v 1.5 2000/05/25 15:49:50 ekohl Exp $ */
 
 #define DBG_STATUS_CONTROL_C       1
 #define DBG_STATUS_SYSRQ           2
@@ -10,6 +10,8 @@
 VOID STDCALL DbgBreakPointWithStatus (ULONG Status);
 VOID STDCALL DbgBreakPoint(VOID);
 ULONG DbgPrint(PCH Format,...);
+VOID STDCALL DbgPrompt (PCH OutputString, PCH InputString, USHORT InputSize);
+
 
 #define DBG_GET_SHOW_FACILITY 0x0001
 #define DBG_GET_SHOW_SEVERITY 0x0002

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.5 2000/05/09 21:30:39 ekohl Exp $
+/* $Id: token.c,v 1.6 2000/05/25 15:55:35 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,7 +17,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE SeTokenType = NULL;
+POBJECT_TYPE EXPORTED SeTokenType = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -451,7 +451,7 @@ VOID SepAdjustGroups(PACCESS_TOKEN Token,
 {
    UNIMPLEMENTED;
 }
-			      
+
 NTSTATUS STDCALL NtAdjustGroupsToken(IN	HANDLE		TokenHandle,
 				     IN	BOOLEAN		ResetToDefault,	
 				     IN	PTOKEN_GROUPS	NewState, 

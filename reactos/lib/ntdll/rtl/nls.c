@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.3 2000/05/13 01:47:33 ekohl Exp $
+/* $Id: nls.c,v 1.4 2000/05/25 15:52:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -94,7 +94,7 @@ RtlCustomCPToUnicodeN (
 
 		for (i = 0; i < Size; i++)
 		{
-			*UnicodeString = NlsData->MultiByteToUnicode[*CustomString];
+			*UnicodeString = NlsData->MultiByteToUnicode[(int)*CustomString];
 			UnicodeString++;
 			CustomString++;
 		}

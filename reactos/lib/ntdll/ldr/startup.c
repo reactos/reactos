@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.23 2000/05/24 22:29:35 dwelch Exp $
+/* $Id: startup.c,v 1.24 2000/05/25 15:51:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,10 +21,15 @@
 //#define NDEBUG
 #include <ntdll/ntdll.h>
 
+
+VOID RtlpInitProcessHeaps (PPEB Peb);
+
 /* GLOBALS *******************************************************************/
 
 DLL LdrDllListHead;
 extern unsigned int _image_base__;
+
+CRITICAL_SECTION PebLock;
 
 ULONG NtGlobalFlag = 0;
 
@@ -76,6 +81,15 @@ VOID LdrStartup(VOID)
    /* normalize process parameters */
    RtlNormalizeProcessParams (Peb->ProcessParameters);
 
+#if 0
+   /* initialize NLS data */
+   RtlInitNlsTables (Peb->AnsiCodePageData,
+                     Peb->OemCodePageData,
+                     Peb->UnicodeCaseTableData,
+                     &TranslationTable);
+   RtlResetRtlTranslations (&TranslationTable);
+#endif
+
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
 
    /* create process heap */
@@ -90,6 +104,15 @@ VOID LdrStartup(VOID)
 	DbgPrint("Failed to create process heap\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
+
+   /* initialize process heaps support */
+   RtlpInitProcessHeaps (Peb);
+
+   /* initalize peb lock support */
+   RtlInitializeCriticalSection (&PebLock);
+   Peb->FastPebLock = &PebLock;
+   Peb->FastPebLockRoutine = RtlEnterCriticalSection;
+   Peb->FastPebUnlockRoutine = RtlLeaveCriticalSection;
 
    EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL);
    if (EntryPoint == NULL)

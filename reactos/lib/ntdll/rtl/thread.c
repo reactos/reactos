@@ -13,7 +13,8 @@
 
 #include <ddk/ntddk.h>
 #include <internal/i386/segment.h>
-#include <string.h>
+#include <internal/teb.h>
+//#include <string.h>
 #include <ntdll/rtl.h>
 
 #define NDEBUG
@@ -239,9 +240,50 @@ RtlInitializeContext(HANDLE ProcessHandle,
 }
 
 
-NTSTATUS STDCALL RtlDestroyUserThreadStack(param1, param2)
+NTSTATUS
+STDCALL
+RtlFreeUserThreadStack (
+	HANDLE	ProcessHandle,
+	HANDLE	ThreadHandle
+	)
 {
+	THREAD_BASIC_INFORMATION ThreadInfo;
+	NTSTATUS Status;
+	ULONG BytesRead;
+	ULONG RegionSize;
+	PVOID StackBase;
+	PNT_TEB Teb;
 
+	Status = NtQueryInformationThread (ThreadHandle,
+	                                   ThreadBasicInformation,
+	                                   &ThreadInfo,
+	                                   sizeof(THREAD_BASIC_INFORMATION),
+	                                   NULL);
+	if (!NT_SUCCESS(Status))
+		return Status;
+
+	if (ThreadInfo.TebBaseAddress == NULL)
+		return Status;
+
+	Teb = (PNT_TEB)ThreadInfo.TebBaseAddress;
+	Status = NtReadVirtualMemory (ProcessHandle,
+	                              &Teb->DeallocationStack,
+	                              &StackBase,
+	                              sizeof(PVOID),
+	                              &BytesRead);
+	if (!NT_SUCCESS(Status))
+		return Status;
+
+	if (StackBase == NULL)
+		return Status;
+
+	RegionSize = 0;
+	Status = NtFreeVirtualMemory (ProcessHandle,
+	                              StackBase,
+	                              &RegionSize,
+	                              MEM_RELEASE);
+
+	return Status;
 }
 
 /* EOF */

@@ -87,7 +87,7 @@ typedef struct _PEB
    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;  // 10h
    PVOID SubSystemData;                             // 14h
    PVOID ProcessHeap;                               // 18h
-   PVOID LastPebLock;                               // 1Ch
+   PVOID FastPebLock;                               // 1Ch
    PVOID FastPebLockRoutine;                        // 20h
    PVOID FastPebUnlockRoutine;                      // 24h
    ULONG EnvironmentUpdateCount;                    // 28h

@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.2 2000/01/18 12:04:16 ekohl Exp $
+/* $Id: print.c,v 1.3 2000/05/25 15:50:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,6 +44,31 @@ DbgPrint(PCH Format, ...)
    DbgService (1, &DebugString, NULL);
 
    return (ULONG)DebugString.Length;
+}
+
+
+VOID
+STDCALL
+DbgPrompt (
+	PCH OutputString,
+	PCH InputString,
+	USHORT InputSize
+	)
+{
+	ANSI_STRING Output;
+	ANSI_STRING Input;
+
+	Input.Length = 0;
+	Input.MaximumLength = InputSize;
+	Input.Buffer = InputString;
+
+	Output.Length = strlen (OutputString);
+	Output.MaximumLength = Output.Length + 1;
+	Output.Buffer = OutputString;
+
+	DbgService (2,
+	            &Output,
+	            &Input);
 }
 
 /* EOF */

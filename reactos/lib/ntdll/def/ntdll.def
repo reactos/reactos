@@ -1,22 +1,53 @@
-; $Id: ntdll.def,v 1.54 2000/05/13 01:48:01 ekohl Exp $
+; $Id: ntdll.def,v 1.55 2000/05/25 15:51:05 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
 LIBRARY ntdll.dll
 
 EXPORTS
+;CsrAllocateCaptureBuffer
+;CsrAllocateCapturePointer
+;CsrAllocateMessagePointer
+;CsrCaptureMessageBuffer
+;CsrCaptureMessageString
+;CsrCaptureTimeout
 CsrClientCallServer@16
 ;CsrClientConnectToServer@24
+;CsrFreeCaptureBuffer
+;CsrIdentifyAlertableThread
+;CrsNewThread
+;CsrProbeForRead
+;CsrProbeForWrite
 CsrSetPriorityClass@8
 DbgBreakPoint@0
 DbgPrint
-;DbgPrompt
-;DbgSsHandleKmApiMsg
-;DbgSsInitialize
-;DbgUiConnectToDbg
+DbgPrompt@12
+DbgSsHandleKmApiMsg@8
+DbgSsInitialize@16
+DbgUiConnectToDbg@0
 DbgUiContinue@8
-;DbgUiWaitStateChange
+DbgUiWaitStateChange@8
 DbgUserBreakPoint@0
+;KiRaiseUserExceptionDispatcher
+;KiUserApcDispatcher
+;KiUserCallbackDispatcher
+;KiUserExceptionDispatcher
+LdrAccessResource
+;LdrDisableThreadCalloutsForDll
+;LdrEnumResources
+;LdrFindResourceDirectory_U
+LdrFindResource_U
+;LdrGetDllHandle
+;LdrGetProcedureAddress
+;LdrInitializeThunk
+LdrLoadDll
+;LdrProcessRelocationBlock
+;LdrQueryImageFileExecutionOptions
+;LdrQueryProcessModuleInformation
+;LdrShutdownProcess
+;LdrShutdownThread
+LdrUnloadDll
+;LdrVerifyImageMatchesChecksum
 NlsAnsiCodePage DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
@@ -338,7 +369,7 @@ RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply@8
 RtlEnterCriticalSection@4
-;RtlEnumProcessHeaps
+RtlEnumProcessHeaps@8
 ;RtlEnumerateGenericTable
 ;RtlEnumerateGenericTableWithoutSplaying
 ;RtlEnumerateProperties
@@ -374,7 +405,7 @@ RtlFreeHeap@12
 RtlFreeOemString@4
 RtlFreeSid@4
 RtlFreeUnicodeString@4
-;RtlFreeUserThreadStack
+RtlFreeUserThreadStack@8
 ;RtlGenerate8dot3Name
 RtlGetAce@12
 ;RtlGetCallersAddress
@@ -389,7 +420,7 @@ RtlGetLongestNtPathLength@0
 ;RtlGetNtGlobalFlags
 ;RtlGetNtProductType
 RtlGetOwnerSecurityDescriptor@12
-;RtlGetProcessHeaps
+RtlGetProcessHeaps@8
 RtlGetProcessHeap@0
 RtlGetSaclSecurityDescriptor@16
 ;RtlGetUserInfoHeap
@@ -553,7 +584,7 @@ RtlValidAcl@4
 RtlValidSecurityDescriptor@4
 RtlValidSid@4
 RtlValidateHeap@12
-;RtlValidateProcessHeaps
+RtlValidateProcessHeaps@0
 ;RtlWalkHeap
 ;RtlWriteRegistryValue
 ;RtlZeroHeap
@@ -900,7 +931,3 @@ wcstombs
 wcstoul
 LdrGetExportByName
 LdrGetExportByOrdinal
-LdrLoadDll
-LdrUnloadDll
-LdrFindResource_U
-LdrAccessResource

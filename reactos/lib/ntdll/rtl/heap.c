@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
+CRITICAL_SECTION ProcessHeapsLock;
+
 /* Note: the heap data structures are based on what Pietrek describes in his
  * book 'Windows 95 System Programming Secrets'. The layout is not exactly
  * the same, but could be easily adapted if it turns out some programs
@@ -1270,3 +1272,86 @@ HANDLE WINAPI RtlGetProcessHeap(VOID)
    return (HANDLE)NtCurrentPeb()->ProcessHeap;
 }
 
+VOID
+RtlpInitProcessHeaps (PPEB Peb)
+{
+	Peb->NumberOfHeaps = 0;
+	Peb->MaximumNumberOfHeaps = (PAGESIZE - sizeof(PPEB)) / sizeof(HANDLE);
+	Peb->ProcessHeaps = (PVOID)Peb + sizeof(PEB);
+
+	RtlInitializeCriticalSection (&ProcessHeapsLock);
+}
+
+
+NTSTATUS
+STDCALL
+RtlEnumProcessHeaps (
+	DWORD WINAPI(*func)(void*,LONG),
+	LONG	lParam
+	)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+	ULONG i;
+
+	RtlEnterCriticalSection (&ProcessHeapsLock);
+
+	for (i = 0; i < NtCurrentPeb ()->NumberOfHeaps; i++)
+	{
+		Status = func (NtCurrentPeb ()->ProcessHeaps[i],lParam);
+		if(!NT_SUCCESS(Status))
+			break;
+	}
+
+	RtlLeaveCriticalSection (&ProcessHeapsLock);
+
+	return Status;
+}
+
+
+ULONG
+STDCALL
+RtlGetProcessHeaps (
+	ULONG	HeapCount,
+	HANDLE	*HeapArray
+	)
+{
+	ULONG Result = 0;
+
+	RtlEnterCriticalSection (&ProcessHeapsLock);
+
+	if (NtCurrentPeb ()->NumberOfHeaps <= HeapCount)
+	{
+		Result = NtCurrentPeb ()->NumberOfHeaps;
+		memmove (HeapArray,
+		         NtCurrentPeb ()->ProcessHeaps,
+		         Result * sizeof(HANDLE));
+	}
+
+	RtlLeaveCriticalSection (&ProcessHeapsLock);
+
+	return Result;
+}
+
+
+BOOLEAN
+STDCALL
+RtlValidateProcessHeaps (
+	VOID
+	)
+{
+	HANDLE Heaps[128];
+	BOOLEAN Result = TRUE;
+	ULONG HeapCount;
+	ULONG i;
+
+	HeapCount = RtlGetProcessHeaps (128, Heaps);
+	for (i = 0; i < HeapCount; i++)
+	{
+		if (!RtlValidateHeap (Heaps[i], 0, NULL))
+			Result = FALSE;
+	}
+
+	return Result;
+}
+
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.8 2000/02/27 02:08:33 ekohl Exp $
+/* $Id: print.c,v 1.9 2000/05/25 15:55:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,6 +52,31 @@ ULONG DbgPrint(PCH Format, ...)
    KdpPrintString (&DebugString);
 
    return (ULONG)DebugString.Length;
+}
+
+
+VOID
+STDCALL
+DbgPrompt (
+	PCH OutputString,
+	PCH InputString,
+	USHORT InputSize
+	)
+{
+	ANSI_STRING Output;
+	ANSI_STRING Input;
+
+	Input.Length = 0;
+	Input.MaximumLength = InputSize;
+	Input.Buffer = InputString;
+
+	Output.Length = strlen (OutputString);
+	Output.MaximumLength = Output.Length + 1;
+	Output.Buffer = OutputString;
+
+	/* FIXME: Not implemented yet! */
+//	KdpPromptString (&Output,
+//	                 &Input);
 }
 
 /* EOF */

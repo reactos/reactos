@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.15 2000/04/15 23:11:42 ekohl Exp $
+/* $Id: rtl.h,v 1.16 2000/05/25 15:50:22 ekohl Exp $
  *
  */
 
@@ -93,6 +93,7 @@ RtlLargeIntegerToChar (
 	IN	ULONG		Length,
 	IN OUT	PCHAR		String
 	);
+
 
 /* Path functions */
 
@@ -233,6 +234,13 @@ RtlCreateUserThread (
 	IN	PVOID			Parameter,
 	IN OUT	PHANDLE			ThreadHandle,
 	IN OUT	PCLIENT_ID		ClientId
+	);
+
+NTSTATUS
+STDCALL
+RtlFreeUserThreadStack (
+	IN	HANDLE	ProcessHandle,
+	IN	HANDLE	ThreadHandle
 	);
 
 /*
