@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.52 2003/12/07 23:02:57 gvg Exp $
+/* $Id: winpos.c,v 1.53 2003/12/12 18:18:21 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1236,6 +1236,12 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
   USHORT HitTest;
 
   *Window = NULL;
+  
+  if(!ScopeWin)
+  {
+    DPRINT1("WinPosWindowFromPoint(): ScopeWin == NULL!\n");
+    return(HTERROR);
+  }
 
   if (ScopeWin->Style & WS_DISABLED)
     {

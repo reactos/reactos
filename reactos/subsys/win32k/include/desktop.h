@@ -25,6 +25,9 @@ IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 HDC FASTCALL
 IntGetScreenDC(VOID);
 
+HWND FASTCALL
+IntGetDesktopWindow (VOID);
+
 PUSER_MESSAGE_QUEUE FASTCALL
 IntGetFocusMessageQueue(VOID);
 

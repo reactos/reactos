@@ -127,9 +127,6 @@ IntIsWindowVisible (HWND Wnd);
 BOOL FASTCALL
 IntIsChildWindow (HWND Parent, HWND Child);
 
-HWND FASTCALL
-IntGetDesktopWindow (VOID);
-
 BOOL FASTCALL
 IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
 

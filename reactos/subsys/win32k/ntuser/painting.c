@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.44 2003/12/08 18:21:25 navaraf Exp $
+ *  $Id: painting.c,v 1.45 2003/12/12 18:18:21 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -36,6 +36,7 @@
 #include <include/object.h>
 #include <include/guicheck.h>
 #include <include/window.h>
+#include <include/desktop.h>
 #include <include/winpos.h>
 #include <include/class.h>
 #include <include/caret.h>

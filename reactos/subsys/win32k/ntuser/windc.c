@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.43 2003/12/12 17:20:53 gvg Exp $
+/* $Id: windc.c,v 1.44 2003/12/12 18:18:21 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,6 +37,7 @@
 #include <include/winsta.h>
 #include <include/msgqueue.h>
 #include <include/window.h>
+#include <include/desktop.h>
 #include <include/rect.h>
 #include <include/dce.h>
 #include <include/vis.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.2 2003/12/07 23:02:57 gvg Exp $
+ *  $Id: desktop.c,v 1.3 2003/12/12 18:18:21 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -134,6 +134,17 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
       return;
    }
    pdo->ActiveMessageQueue = NewQueue;
+}
+
+HWND FASTCALL IntGetDesktopWindow(VOID)
+{
+   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   if (!pdo)
+   {
+      DPRINT("No active desktop\n");
+      return NULL;
+   }
+  return pdo->DesktopWindow;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -681,7 +692,7 @@ NtUserSwitchDesktop(HDESK hDesktop)
 
    Status = IntValidateDesktopHandle(
       hDesktop,
-      KernelMode,
+      UserMode,
       0,
       &DesktopObject);
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.158 2003/12/12 16:56:20 weiden Exp $
+/* $Id: window.c,v 1.159 2003/12/12 18:18:21 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -429,12 +429,6 @@ IntGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
   Rect->right = WindowObject->ClientRect.right - WindowObject->ClientRect.left;
   Rect->bottom = 
     WindowObject->ClientRect.bottom - WindowObject->ClientRect.top;
-}
-
-
-HWND FASTCALL IntGetDesktopWindow(VOID)
-{
-  return IntGetActiveDesktop()->DesktopWindow;
 }
 
 
