@@ -532,7 +532,7 @@ BOOLEAN KiTimerInterrupt(VOID)
      }
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,ticks);
    memset(str, 0, sizeof(str));
-   sprintf(str,"%.8u %.8u",EiNrUsedBlocks,KiTimerTicks);
+   sprintf(str,"%.8u %.8u",EiNrUsedBlocks,EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
 //   sprintf(str,"%.8u %.8u",PiNrThreads,KiTimerTicks);
    for (i=0;i<17;i++)

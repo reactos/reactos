@@ -71,7 +71,7 @@ NTSTATUS ScrDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	break;
      }
    
-  
+   IoCompleteRequest(Irp, Status);
 //   DPRINT("Status %d\n",Status);
    return(Status);
 }

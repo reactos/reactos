@@ -75,6 +75,7 @@ void ExecuteDir(char* cmdline)
 	debug_printf("%s\n",FindData.cFileName);
      } while(FindNextFile(shandle,&FindData));
    debug_printf("\n    %d files\n    %d directories\n\n",nFile,nRep);
+   FindClose(shandle);
 }
 
 void ExecuteType(char* cmdline)
@@ -99,6 +100,7 @@ void ExecuteType(char* cmdline)
 	debug_printf("%c",c);
 	c = 0;
      }
+   CloseHandle(FileHandle);
 }
 
 int ExecuteProcess(char* name, char* cmdline)

@@ -34,7 +34,7 @@
 #define VALIDATE_POOL
 #endif
 
-#if 1
+#if 0
 #define POOL_TRACE(args...) do { DbgPrint(args); } while(0);
 #else
 #define POOL_TRACE(args...)

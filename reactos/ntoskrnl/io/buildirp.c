@@ -20,31 +20,45 @@
 NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
 			    PDEVICE_OBJECT DeviceObject,
 			    PVOID Buffer,
-			    PVOID Length)
+			    ULONG Length,
+			    ULONG MajorFunction)
 /*
  * FUNCTION: Prepares the buffer to be used for an IRP
  */
 {
-   Irp->UserBuffer = (LPVOID)Buffer;
-   if (DeviceObject->Flags&DO_BUFFERED_IO)
+   Irp->UserBuffer = Buffer;
+   if (DeviceObject->Flags & DO_BUFFERED_IO)
      {
-	DPRINT("Doing buffer i/o\n",0);
+	DPRINT("Doing buffer i/o\n");
 	Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	  ExAllocatePool(NonPagedPool,Length);
+	                   ExAllocatePool(NonPagedPool,Length);
 	if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	  {
-	     return(STATUS_UNSUCCESSFUL);
+	     IoFreeIrp(Irp);
+	     return(NULL);
 	  }
+        /* FIXME: should copy buffer in on other ops */
+        if (MajorFunction == IRP_MJ_WRITE)
+          {
+             RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
+          }
      }
-   if (DeviceObject->Flags&DO_DIRECT_IO)
+   if (DeviceObject->Flags & DO_DIRECT_IO)
      {
-	DPRINT("Doing direct i/o\n",0);
+	DPRINT("Doing direct i/o\n");
 	
 	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
-	MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+        if (MajorFunction == IRP_MJ_READ)
+          {
+             MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+          }
+        else
+          {
+             MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
+          }
 	Irp->UserBuffer = NULL;
 	Irp->AssociatedIrp.SystemBuffer = NULL;
-     }   
+     }
    return(STATUS_SUCCESS);
 }
 
@@ -236,41 +250,8 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
 	return(NULL);
      }
    
-   Irp->UserBuffer = (LPVOID)Buffer;
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
-   if (DeviceObject->Flags & DO_BUFFERED_IO)
-     {
-	DPRINT("Doing buffer i/o\n");
-	Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	                   ExAllocatePool(NonPagedPool,Length);
-	if (Irp->AssociatedIrp.SystemBuffer==NULL)
-	  {
-	     IoFreeIrp(Irp);
-	     return(NULL);
-	  }
-        /* FIXME: should copy buffer in on other ops */
-        if (MajorFunction == IRP_MJ_WRITE)
-          {
-             RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
-          }
-     }
-   if (DeviceObject->Flags & DO_DIRECT_IO)
-     {
-	DPRINT("Doing direct i/o\n");
-	
-	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
-        if (MajorFunction == IRP_MJ_READ)
-          {
-             MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
-          }
-        else
-          {
-             MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
-          }
-	Irp->UserBuffer = NULL;
-	Irp->AssociatedIrp.SystemBuffer = NULL;
-     }
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = MajorFunction;
@@ -280,14 +261,17 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->FileObject = NULL;
    StackPtr->CompletionRoutine = NULL;
-   StackPtr->Parameters.Write.Length = Length;
+   
+   IoPrepareIrpBuffer(Irp,
+		      DeviceObject,
+		      Buffer,
+		      Length,
+		      MajorFunction);
+   
    if (MajorFunction == IRP_MJ_READ)
      {
        if (StartingOffset != NULL)
          {
-	    DPRINT("StartingOffset:%ld:%ld\n", 
-		   GET_LARGE_INTEGER_HIGH_PART(*StartingOffset),
-		   GET_LARGE_INTEGER_LOW_PART(*StartingOffset));
             StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
          }
        else
@@ -297,6 +281,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
             SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 
 					0);
          }
+	StackPtr->Parameters.Read.Length = Length;
      }
    else
      {
@@ -311,6 +296,7 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
             SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset,
 					0);
          }
+	StackPtr->Parameters.Write.Length = Length;
      }
 
    return(Irp);

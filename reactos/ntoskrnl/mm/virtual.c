@@ -455,7 +455,6 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
-	DbgPrint("ZwFreeVirtualMemory() = %x\n",Status);
 	return(Status);
      }
 
@@ -465,8 +464,9 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   if (FreeType == MEM_RELEASE)
+   switch (FreeType)
      {
+      case MEM_RELEASE:
 	if (MemoryArea->BaseAddress != (*BaseAddress))
 	  {
 	     return(STATUS_UNSUCCESSFUL);
@@ -476,9 +476,18 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
 			 0,
 			 TRUE);
 	return(STATUS_SUCCESS);
+	
+      case MEM_DECOMMIT:	
+	MmSplitMemoryArea(PsGetCurrentProcess(),
+			  MemoryArea,
+			  *BaseAddress,
+			  *RegionSize,
+			  MEMORY_AREA_RESERVE,
+			  MemoryArea->Attributes);
+	return(STATUS_SUCCESS);
      }
    
-   UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS STDCALL NtLockVirtualMemory(HANDLE ProcessHandle,

@@ -160,26 +160,20 @@ PIO_STACK_LOCATION IoGetNextIrpStackLocation(PIRP Irp)
    return(&Irp->Stack[Irp->CurrentLocation-1]);
 }
 
-NTSTATUS IoCallDriver(PDEVICE_OBJECT DevObject, PIRP irp)
+NTSTATUS IoCallDriver(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Sends an IRP to the next lower driver
  */
 {
    NTSTATUS Status;
-   PDRIVER_OBJECT drv = DevObject->DriverObject;
-   IO_STACK_LOCATION* param = IoGetNextIrpStackLocation(irp);
+   PDRIVER_OBJECT DriverObject = DeviceObject->DriverObject;
+   PIO_STACK_LOCATION param = IoGetNextIrpStackLocation(Irp);
 
-   DPRINT("Deviceobject %x\n",DevObject);
-   DPRINT("Irp %x\n",irp);
+   Irp->Tail.Overlay.CurrentStackLocation--;
+   Irp->CurrentLocation--;
 
-   irp->Tail.Overlay.CurrentStackLocation--;
-   irp->CurrentLocation--;
-
-   DPRINT("Io stack address %x\n",param);
-   DPRINT("Function %d Routine %x\n",param->MajorFunction,
-	  drv->MajorFunction[param->MajorFunction]);
-
-   Status = drv->MajorFunction[param->MajorFunction](DevObject,irp);
+   Status = DriverObject->MajorFunction[param->MajorFunction](DeviceObject,
+							      Irp);
    return Status;
 }
 
@@ -193,11 +187,13 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
  */
 {
    PIRP Irp;
-   
+
+#if 0
    DbgPrint("IoAllocateIrp(StackSize %d ChargeQuota %d)\n",
           StackSize,
 	  ChargeQuota);
    KeDumpStackFrames(0,8);
+#endif
    
    if (ChargeQuota)
      {
@@ -269,13 +265,10 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
    NTSTATUS Status;
    
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d)\n",
-                Irp,PriorityBoost);
+	  Irp,PriorityBoost);
 
    for (i=0;i<Irp->StackCount;i++)
      {
-	DPRINT("&Irp->Stack[%d].CompletionRoutine %08lx\n", 
-               i, 
-               Irp->Stack[i].CompletionRoutine);
 	if (Irp->Stack[i].CompletionRoutine != NULL)
 	  {
 	     Status = Irp->Stack[i].CompletionRoutine(
@@ -287,10 +280,8 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 		  return;
 	       }
 	  }
-	DPRINT("Irp->Stack[%d].Control %08lx\n", i, Irp->Stack[i].Control);
 	if (Irp->Stack[i].Control & SL_PENDING_RETURNED)
 	  {
-	     DPRINT("Setting PendingReturned flag\n");
 	     Irp->PendingReturned = TRUE;
 	  }
      }

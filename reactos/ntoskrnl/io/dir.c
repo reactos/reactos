@@ -179,10 +179,7 @@ NTSTATUS STDCALL ZwQueryDirectoryFile(
      }
    if (ReturnSingleEntry)
      {
-	DPRINT("Setting ReturingSingleEntry flag\n");
 	IoStack->Flags = IoStack->Flags | SL_RETURN_SINGLE_ENTRY;
-	DPRINT("SL_RETURN_SINGLE_ENTRY %x\n",SL_RETURN_SINGLE_ENTRY);
-	DPRINT("IoStack->Flags %x\n",IoStack->Flags);
      }
    if (((PFILE_DIRECTORY_INFORMATION)FileInformation)->FileIndex != 0)
      {

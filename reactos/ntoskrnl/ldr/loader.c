@@ -1037,7 +1037,8 @@ LdrProcessPEImage(HANDLE ProcessHandle,
   PIMAGE_NT_HEADERS NTHeaders;
   PMODULE Module;
   LARGE_INTEGER SectionOffset;
-
+  HANDLE SectionHandle;
+   
   /*  Allocate memory for headers  */
   Module = HEADER_TO_BODY(ModuleHandle);
   if (Module == NULL)

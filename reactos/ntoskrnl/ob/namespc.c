@@ -432,12 +432,11 @@ VOID ObCreateEntry(PDIRECTORY_OBJECT parent,POBJECT_HEADER Object)
    InsertTailList(&parent->head,&Object->Entry);
 }
 
-NTSTATUS 
-ObLookupObject(HANDLE rootdir, 
-               PWSTR string, 
-               PVOID* Object,
-               PWSTR* UnparsedSection, 
-               ULONG Attributes)
+NTSTATUS ObLookupObject(HANDLE rootdir, 
+			PWSTR string, 
+			PVOID* Object,
+			PWSTR* UnparsedSection, 
+			ULONG Attributes)
 /*
  * FUNCTION: Lookup an object within the system namespc
  * ARGUMENTS:
@@ -550,7 +549,8 @@ ObLookupObject(HANDLE rootdir,
           current_dir = BODY_TO_HEADER(current_dir)->ObjectType->
             Parse(current_dir, 
                   UnparsedSection);
-          Status = (current_dir != NULL) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+          Status = (current_dir != NULL) ? STATUS_SUCCESS : 
+	   STATUS_UNSUCCESSFUL;
         }
       else
         {

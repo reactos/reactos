@@ -100,16 +100,19 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    PIO_STACK_LOCATION StackLoc;
    PWSTR Remainder;
    
-   DPRINT("ZwCreateFile(FileHandle %x, DesiredAccess %x, "
-	  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %w)\n",
-	  FileHandle,DesiredAccess,ObjectAttributes,
-	  ObjectAttributes->ObjectName->Buffer);   
+   DbgPrint("ZwCreateFile(FileHandle %x, DesiredAccess %x, "
+	    "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %w)\n",
+	    FileHandle,DesiredAccess,ObjectAttributes,
+	    ObjectAttributes->ObjectName->Buffer);   
    
    assert_irql(PASSIVE_LEVEL);
    
    *FileHandle=0;
 
-   FileObject = ObGenericCreateObject(FileHandle,DesiredAccess,NULL,IoFileType);
+   FileObject = ObGenericCreateObject(FileHandle,
+				      DesiredAccess,
+				      NULL,
+				      IoFileType);
    memset(FileObject,0,sizeof(FILE_OBJECT));
 
    Status =  ObOpenObjectByName(ObjectAttributes,&Object,&Remainder);

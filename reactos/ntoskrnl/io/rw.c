@@ -3,7 +3,7 @@
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/io/rw.c
  * PURPOSE:        Implements read/write APIs
- * PROGRAMMER:     David Welch (welch@mcmail.com)
+ * PROGRAMMER:     David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                 30/05/98: Created
  */
@@ -72,11 +72,8 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
-	DPRINT("ZwReadFile() =");
-//	DbgPrintErrorMessage(Status);
 	return(Status);
      }
-   assert(FileObject != NULL);
    
    if (ByteOffset==NULL)
      {
@@ -110,6 +107,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
        return(IoStatusBlock->Status);
      }
+   ObDereferenceObject(FileObject);
    return(Status);
 }
 
@@ -176,16 +174,6 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
-   StackPtr->Parameters.Write.Length = Length;
-   if (ByteOffset!=NULL)
-   {
-        StackPtr->Parameters.Write.ByteOffset = *ByteOffset;
-   }
-   else
-   {
-        SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 0);
-        SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset, 0);
-   }
    if (Key!=NULL)
    {
          StackPtr->Parameters.Write.Key = *Key;
@@ -200,7 +188,8 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
         Status = Irp->IoStatus.Status;
      }
-
+   ObDereferenceObject(FileObject);
+   
    return(Status);
 }
 
