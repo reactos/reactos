@@ -1,8 +1,6 @@
-# 
+# $Id$
 
 PATH_TO_TOP = ../../../reactos
-
-TARGET_NORC = yes
 
 TARGET_TYPE = program
 
