@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.271 2004/12/15 05:08:44 sedwards Exp $
+# $Id: Makefile,v 1.272 2004/12/18 22:28:41 gvg Exp $
 #
 # Global makefile
 #
@@ -6,6 +6,7 @@
 PATH_TO_TOP = .
 
 include $(PATH_TO_TOP)/rules.mak
+include $(PATH_TO_TOP)/config
 
 #
 # Define to build ReactOS external targets
@@ -53,11 +54,10 @@ DLLS_SHELLEXT = shellext
 # libpcap packet epsapi
 DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
 	gdi32 gdiplus glu32 hid imagehlp imm32 iphlpapi kernel32 lzexpand mesa32 midimap mmdrv mpr msacm msafd \
-	msgina msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg opengl32 packet psapi \
-	riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
-	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
-	dnsapi dinput dinput8 dsound \
-	$(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
+	msgina msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg olepro32 opengl32 \
+	packet psapi riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain \
+	unicode user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi dinput \
+	dinput8 dsound $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
 
@@ -773,6 +773,12 @@ hallib_bootcd:
 #
 # Hardware Abstraction Layers
 #
+ifeq ($(MP),1)
+halx86: halx86/mp
+else
+halx86: halx86/up
+endif
+
 $(HALS): %: $(IMPLIB)
 	$(MAKE) -C hal/$*
 

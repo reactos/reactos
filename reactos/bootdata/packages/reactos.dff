@@ -102,6 +102,7 @@ lib\netapi32\netapi32.dll               1
 lib\ntdll\ntdll.dll                     1
 lib\ole32\ole32.dll                     1
 lib\oleaut32\oleaut32.dll               1
+lib\olepro32\olepro32.dll               1
 lib\psapi\psapi.dll                     1
 lib\richedit\riched32.dll               1
 lib\rpcrt4\rpcrt4.dll                   1

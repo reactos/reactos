@@ -53,7 +53,7 @@ reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
 reactos/lib/ole32               # Synced to Wine-20041201
 reactos/lib/oleaut32		# Synced to Wine-20041201
 reactos/lib/oledlg              # Synced to Wine-20041201
-reactos/lib/oldpro32		# Out of sync
+reactos/lib/oldpro32		# Synced to Wine-20041201
 reactos/lib/richedit		# Synced to Wine-20041201
 reactos/lib/rpcrt4		# Synced to Wine-20041201
 reactos/lib/setupapi		# Out of sync
