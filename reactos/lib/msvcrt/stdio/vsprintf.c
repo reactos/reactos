@@ -26,7 +26,7 @@ vswprintf(wchar_t *str, const wchar_t *fmt, va_list ap)
   int len;
 
   f._flag = _IOWRT|_IOSTRG;
-  f._ptr = str;
+  f._ptr = (char*)str;
   f._cnt = INT_MAX;
   f._file = -1;
   len = vfwprintf(&f,fmt, ap);
@@ -56,7 +56,7 @@ _vsnwprintf(wchar_t *str, size_t maxlen, const wchar_t *fmt, va_list ap)
   FILE f;
   int len;
   f._flag = _IOWRT|_IOSTRG;
-  f._ptr = str;
+  f._ptr = (char*)str;
   f._cnt = maxlen;
   f._file = -1;
   len = vfwprintf(&f,fmt, ap);

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.11 2001/03/25 02:34:30 dwelch Exp $
+/* $Id: init.c,v 1.12 2001/06/25 23:48:20 ekohl Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -157,14 +157,14 @@ CsrServerInitialization (
 	return FALSE;
      }
    RtlInitUnicodeString( &RefreshEventName, L"\\TextConsoleRefreshEvent" );
-   InitializeObjectAttributes( &RefreshEventAttr, &RefreshEventName, NULL, NULL, NULL );
+   InitializeObjectAttributes( &RefreshEventAttr, &RefreshEventName, 0, NULL, NULL );
    Status = NtCreateEvent( &RefreshEventHandle, STANDARD_RIGHTS_ALL, &RefreshEventAttr, FALSE, FALSE );
    if( !NT_SUCCESS( Status ) )
      {
        PrintString( "CSR: Unable to create refresh event!\n" );
        return FALSE;
      }
-   Status = RtlCreateUserThread( NtCurrentProcess(), NULL, FALSE, 0, NULL, NULL, (PTHREAD_START_ROUTINE)Console_Api, (DWORD) RefreshEventHandle, NULL, NULL );
+   Status = RtlCreateUserThread( NtCurrentProcess(), NULL, FALSE, 0, NULL, NULL, (PTHREAD_START_ROUTINE)Console_Api, (PVOID) RefreshEventHandle, NULL, NULL );
    if( !NT_SUCCESS( Status ) )
      {
        PrintString( "CSR: Unable to create console thread\n" );
