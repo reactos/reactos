@@ -79,7 +79,6 @@ typedef struct _DC
   HDC  hSelf;
   HDC  hNext;
   DHPDEV  PDev;
-  DEVMODEW  DMW;
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
   PGDIINFO  GDIInfo;
   PDEVINFO  DevInfo;

@@ -172,7 +172,6 @@ NtGdiCreateCompatableDC(HDC hDC)
   NewDC->IsIC = FALSE;
 
   NewDC->PDev = OrigDC->PDev;
-  NewDC->DMW = OrigDC->DMW;
   memcpy(NewDC->FillPatternSurfaces,
          OrigDC->FillPatternSurfaces,
          sizeof OrigDC->FillPatternSurfaces);
@@ -779,7 +778,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   }
 
   NewDC->IsIC = CreateAsIC;
-  NewDC->DMW = PrimarySurface.DMW;
   NewDC->DevInfo = &PrimarySurface.DevInfo;
   NewDC->GDIInfo = &PrimarySurface.GDIInfo;
   memcpy(NewDC->FillPatternSurfaces, PrimarySurface.FillPatterns,
@@ -789,11 +787,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->DriverFunctions = PrimarySurface.DriverFunctions;
   NewDC->w.hBitmap = PrimarySurface.Handle;
 
-  NewDC->DMW.dmSize = sizeof(NewDC->DMW);
-  NewDC->DMW.dmFields = 0x000fc000;
-
-  NewDC->DMW.dmLogPixels = 96;
-  NewDC->w.bitsPerPixel = NewDC->DMW.dmBitsPerPel; // FIXME: set this here??
+  NewDC->w.bitsPerPixel = NewDC->GDIInfo->cBitsPixel * NewDC->GDIInfo->cPlanes;
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
   if (! CreateAsIC)
@@ -805,9 +799,9 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
       DC_FreeDC ( hNewDC) ;
       return NULL;
     }
-    ASSERT(NewDC->DMW.dmBitsPerPel == BitsPerFormat(SurfObj->iBitmapFormat));
-    ASSERT(NewDC->DMW.dmPelsWidth == SurfObj->sizlBitmap.cx);
-    ASSERT(NewDC->DMW.dmPelsHeight == SurfObj->sizlBitmap.cy);
+    ASSERT(NewDC->GDIInfo->cBitsPixel * NewDC->GDIInfo->cPlanes == BitsPerFormat(SurfObj->iBitmapFormat));
+    ASSERT(NewDC->GDIInfo->ulHorzRes == SurfObj->sizlBitmap.cx);
+    ASSERT(NewDC->GDIInfo->ulVertRes == SurfObj->sizlBitmap.cy);
 
     NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
     NewDC->w.ROPmode = R2_COPYPEN;

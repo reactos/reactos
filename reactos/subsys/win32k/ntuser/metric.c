@@ -167,8 +167,8 @@ NtUserGetSystemMetrics(ULONG Index)
 	ScreenDC = DC_LockDc(ScreenDCHandle);
 	if (NULL != ScreenDC)
 	{
-	  Width = ScreenDC->DMW.dmPelsWidth;
-	  Height = ScreenDC->DMW.dmPelsHeight;
+	  Width = ScreenDC->GDIInfo->ulHorzRes;
+	  Height = ScreenDC->GDIInfo->ulVertRes;
 	  DC_UnlockDc(ScreenDCHandle);
 	}
 	NtGdiDeleteDC(ScreenDCHandle);
