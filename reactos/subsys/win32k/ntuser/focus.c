@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.22 2004/05/10 17:07:18 weiden Exp $
+ * $Id: focus.c,v 1.23 2004/06/20 22:25:14 gvg Exp $
  */
 
 #include <w32k.h>
@@ -148,6 +148,12 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    if ((Window->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
       DPRINT("Failed - Child\n");
+      return FALSE;
+   }
+
+   if (0 == (Window->Style & WS_VISIBLE))
+   {
+      DPRINT("Failed - Invisible\n");
       return FALSE;
    }
 
