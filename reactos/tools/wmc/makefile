@@ -47,8 +47,8 @@ clean:
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
-	del *.o
-	del wmc$(EXE_POSTFIX)
+	$(PATH_TO_TOP)/rdel *.o
+	$(PATH_TO_TOP)/rdel wmc$(EXE_POSTFIX)
 endif
 
 .phony: clean

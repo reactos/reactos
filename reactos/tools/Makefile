@@ -62,8 +62,8 @@ clean:
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
-	del $(TOOLS)
-	del mkconfig$(EXE_POSTFIX)
+	$(PATH_TO_TOP)/rdel $(TOOLS)
+	$(PATH_TO_TOP)/rdel mkconfig$(EXE_POSTFIX)
 	make -C wmc clean
 endif
 
