@@ -12,7 +12,6 @@
 
 #include "precomp.h"
 
-
 LIST_ENTRY ReassemblyListHead;
 KSPIN_LOCK ReassemblyListLock;
 NPAGED_LOOKASIDE_LIST IPDRList;
@@ -187,6 +186,8 @@ PIP_PACKET ReassembleDatagram(
  *     The lock is held when this routine is called
  * RETURNS:
  *     Pointer to IP packet, NULL if there was not enough free resources
+ * NOTES:
+ *     At this point, header is expected to point to the IP header
  */
 {
   PIP_PACKET IPPacket;
@@ -199,7 +200,7 @@ PIP_PACKET ReassembleDatagram(
   TI_DbgPrint(DEBUG_IP, ("IPDR->DataSize = %d\n", IPDR->DataSize));
 
   TI_DbgPrint(DEBUG_IP, ("Fragment header:\n"));
-  OskitDumpBuffer(IPDR->IPv4Header, IPDR->HeaderSize);
+  OskitDumpBuffer((PCHAR)IPDR->IPv4Header, IPDR->HeaderSize);
 
   /* FIXME: Assume IPv4 */
   IPPacket = IPCreatePacket(IP_ADDRESS_V4);
@@ -209,7 +210,7 @@ PIP_PACKET ReassembleDatagram(
   IPPacket->TotalSize  = IPDR->HeaderSize + IPDR->DataSize;
   IPPacket->ContigSize = IPPacket->TotalSize;
   IPPacket->HeaderSize = IPDR->HeaderSize;
-  IPPacket->Position   = IPDR->HeaderSize;
+  /*IPPacket->Position   = IPDR->HeaderSize;*/
 
   RtlCopyMemory(&IPPacket->SrcAddr, &IPDR->SrcAddr, sizeof(IP_ADDRESS));
   RtlCopyMemory(&IPPacket->DstAddr, &IPDR->DstAddr, sizeof(IP_ADDRESS));
@@ -431,13 +432,14 @@ VOID ProcessFragment(
       return;
     }
 
-    TI_DbgPrint(DEBUG_IP, ("Fragment data buffer allocated at (0x%X)  Size (%d).\n",
-      Fragment->Data, Fragment->Size));
-
+    /* Position here is an offset from the NdisPacket start, not the header */
+    TI_DbgPrint(DEBUG_IP, ("Fragment data buffer allocated at (0x%X)  Size (%d) Pos (%d).\n",
+			   Fragment->Data, Fragment->Size, IPPacket->Position));
+    
     /* Copy datagram data into fragment buffer */
     CopyPacketToBuffer(Fragment->Data,
 		       IPPacket->NdisPacket,
-		       IPPacket->Position + MaxLLHeaderSize,
+		       IPPacket->Position,
 		       Fragment->Size);
     Fragment->Offset = FragFirst;
     
@@ -472,7 +474,7 @@ VOID ProcessFragment(
     DISPLAY_IP_PACKET(Datagram);
 
     /* Give the packet to the protocol dispatcher */
-    IPDispatchProtocol(IF, Datagram);
+    IPDispatchProtocol(NTE, Datagram);
 
     /* We're done with this datagram */
     exFreePool(Datagram->Header);
@@ -522,7 +524,7 @@ VOID IPDatagramReassemblyTimeout(
 {
 }
 
-VOID IPv4Receive( PIP_INTERFACE IF, PIP_PACKET IPPacket)
+VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives an IPv4 datagram (or fragment)
  * ARGUMENTS:
@@ -563,10 +565,13 @@ VOID IPv4Receive( PIP_INTERFACE IF, PIP_PACKET IPPacket)
     AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
     AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
     
-    IPPacket->Position = IPPacket->HeaderSize;
-    IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize) + 14; /* XXX 14 */
+    IPPacket->Position += IPPacket->HeaderSize;
+    IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize);
     
-    OskitDumpBuffer(IPPacket->Data - IPPacket->HeaderSize, IPPacket->TotalSize);
+    TI_DbgPrint(MID_TRACE,("IPPacket->Position = %d\n",
+			   IPPacket->Position));
+
+    OskitDumpBuffer(IPPacket->Header, IPPacket->TotalSize);
 
     /* FIXME: Possibly forward packets with multicast addresses */
     
@@ -588,7 +593,7 @@ VOID IPv4Receive( PIP_INTERFACE IF, PIP_PACKET IPPacket)
 	if (NCE) {
 	    /* FIXME: Possibly fragment datagram */
 	    /* Forward the packet */
-	    IPSendFragment(IPPacket, NCE);
+	    IPSendFragment(IPPacket->NdisPacket, NCE);
 	} else {
 	    TI_DbgPrint(MIN_TRACE, ("No route to destination (0x%X).\n",
 				    IPPacket->DstAddr.Address.IPv4Address));

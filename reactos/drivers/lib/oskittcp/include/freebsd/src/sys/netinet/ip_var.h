@@ -176,8 +176,8 @@ extern int	 (*ip_mforward) __P((struct ip *, struct ifnet *, struct mbuf *,
 			  struct ip_moptions *));
 int	 ip_next_mtu __P((int, int));
 int	 ip_optcopy __P((struct ip *, struct ip *));
-int	 ip_output __P((struct socket *so, struct mbuf *,
-	    struct mbuf *, struct route *, int, struct ip_moptions *));
+int	 ip_output __P((struct mbuf *, struct mbuf *, struct route *, int, 
+			struct ip_moptions *));
 int	 ip_pcbopts __P((struct mbuf **, struct mbuf *));
 struct ip *
 	 ip_reass __P((struct ipasfrag *, struct ipq *));

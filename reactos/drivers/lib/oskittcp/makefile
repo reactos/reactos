@@ -1,6 +1,6 @@
 
 
-# $Id: makefile,v 1.2 2004/07/18 22:03:48 arty Exp $
+# $Id: makefile,v 1.3 2004/08/19 21:38:53 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -45,6 +45,10 @@ REACTOS_OBJECTS = \
 	oskittcp/param.o \
 	oskittcp/radix.o \
 	oskittcp/random.o \
+	oskittcp/raw_cb.o \
+	oskittcp/raw_ip.o \
+	oskittcp/raw_usrreq.o \
+	oskittcp/route.o \
 	oskittcp/rtsock.o \
 	oskittcp/scanc.o \
 	oskittcp/sleep.o \

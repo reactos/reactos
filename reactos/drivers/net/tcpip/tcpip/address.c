@@ -10,6 +10,7 @@
 
 #include "precomp.h"
 
+extern int sprintf( char *out, const char *fmt, ... );
 
 #ifdef DBG
 
@@ -26,7 +27,6 @@ PCHAR A2S(
  */
 {
     ULONG ip;
-    CHAR b[10];
     PCHAR p;
 
     p = A2SStr;
@@ -38,15 +38,19 @@ PCHAR A2S(
     }
 
     switch (Address->Type) {
-        case IP_ADDRESS_V4:
-            ip = DN2H(Address->Address.IPv4Address);
-            sprintf(p, "%d.%d.%d.%d", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
-            break;
-
-        case IP_ADDRESS_V6:
-            /* FIXME: IPv6 is not supported */
-            strcpy(p, "(IPv6 address not supported)");
-            break;
+    case IP_ADDRESS_V4:
+	ip = DN2H(Address->Address.IPv4Address);
+	sprintf(p, "%d.%d.%d.%d", 
+		(INT)((ip >> 24) & 0xFF), 
+		(INT)((ip >> 16) & 0xFF), 
+		(INT)((ip >> 8) & 0xFF), 
+		(INT)(ip & 0xFF));
+	break;
+	
+    case IP_ADDRESS_V6:
+	/* FIXME: IPv6 is not supported */
+	strcpy(p, "(IPv6 address not supported)");
+	break;
     }
     return p;
 }
@@ -131,9 +135,8 @@ BOOLEAN AddrIsUnspecified(
  */
 NTSTATUS AddrGetAddress(
     PTRANSPORT_ADDRESS AddrList,
-    PIP_ADDRESS *Address,
-    PUSHORT Port,
-    PIP_ADDRESS *Cache)
+    PIP_ADDRESS Address,
+    PUSHORT Port)
 {
     PTA_ADDRESS CurAddr;
     INT i;
@@ -146,45 +149,14 @@ NTSTATUS AddrGetAddress(
         case TDI_ADDRESS_TYPE_IP:
             if (CurAddr->AddressLength >= TDI_ADDRESS_LENGTH_IP) {
                 /* This is an IPv4 address */
-                PIP_ADDRESS IPAddress;
                 PTDI_ADDRESS_IP ValidAddr = (PTDI_ADDRESS_IP)CurAddr->Address;
-
                 *Port = ValidAddr->sin_port;
-
-                if ((Cache) && (*Cache)) {
-                    if (((*Cache)->Type == IP_ADDRESS_V4) &&
-                        ((*Cache)->Address.IPv4Address == ValidAddr->in_addr)) {
-                        *Address = *Cache;
-                        return STATUS_SUCCESS;
-                    } else {
-                        /* Release the cached address as we cannot use it this time */
-                        DereferenceObject(*Cache);
-                        *Cache = NULL;
-                    }
-                }
-
-                IPAddress = ExAllocatePoolWithTag(NonPagedPool,
-					          sizeof(IP_ADDRESS),
-						  FOURCC('I','P','v','4'));
-                if (IPAddress) {
-                    AddrInitIPv4(IPAddress, ValidAddr->in_addr);
-                    *Address = IPAddress;
-
-                    /* Update address cache */
-                    if (Cache) {
-                      *Cache = IPAddress;
-                      ReferenceObject(*Cache);
-                    }
-                    return STATUS_SUCCESS;
-                } else
-                    return STATUS_INSUFFICIENT_RESOURCES;
-            } else
-                return STATUS_INVALID_ADDRESS;
-        default:
-            /* This is an unsupported address type.
-               Skip it and go to the next in the list */
-            CurAddr = (PTA_ADDRESS)((ULONG_PTR)CurAddr->Address + CurAddr->AddressLength);
-        }
+		Address->Type = CurAddr->AddressType;
+		ValidAddr = (PTDI_ADDRESS_IP)CurAddr->Address;
+		AddrInitIPv4(Address, ValidAddr->in_addr);
+		return STATUS_SUCCESS;
+	    }
+	}
     }
 
     return STATUS_INVALID_ADDRESS;
@@ -207,9 +179,6 @@ NTSTATUS AddrBuildAddress(
 {
   PTDI_ADDRESS_IP ValidAddr;
   PIP_ADDRESS IPAddress;
-
-  TI_DbgPrint(MID_TRACE,("Address in:\n"));
-  OskitDumpBuffer( TdiAddress, sizeof(*TdiAddress) );
 
   if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP) {
       TI_DbgPrint
@@ -234,9 +203,6 @@ NTSTATUS AddrBuildAddress(
   AddrInitIPv4(IPAddress, ValidAddr->in_addr);
   *Address = IPAddress;
   *Port = ValidAddr->sin_port;
-
-  TI_DbgPrint(MID_TRACE,("Address out:\n"));
-  OskitDumpBuffer( IPAddress, sizeof(*IPAddress) );
 
   return STATUS_SUCCESS;
 }

@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
 				       PIP_INTERFACE Interface,
 				       PNDIS_BUFFER Buffer,
@@ -19,7 +18,6 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     PIFENTRY OutData;
     PLAN_ADAPTER IF = (PLAN_ADAPTER)Interface->Context;
     PCHAR IFDescr;
-    KIRQL OldIrql;
     ULONG Size;
     UINT DescrLenMax = MAX_IFDESCR_LEN - 1;
 
@@ -48,7 +46,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     IFDescr = (PCHAR)&OutData[1];
 
     if( IF ) {
-	GetInterfaceSpeed( Interface, &OutData->Speed );
+	GetInterfaceSpeed( Interface, (PUINT)&OutData->Speed );
 	TI_DbgPrint(MAX_TRACE,
 		    ("IF Speed = %d * 100bps\n", OutData->Speed));
 	memcpy(OutData->PhysAddr,Interface->Address,Interface->AddressLength);
@@ -67,7 +65,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     TI_DbgPrint(MAX_TRACE, ("Finished IFEntry MIB (%04x:%d) size %d\n",
 			    ID->tei_entity, ID->tei_instance, Size));
 
-    Status = InfoCopyOut( OutData, Size, Buffer, BufferSize );
+    Status = InfoCopyOut( (PCHAR)OutData, Size, Buffer, BufferSize );
     ExFreePool( OutData );
 
     return Status;
@@ -84,7 +82,7 @@ TDI_STATUS InfoInterfaceTdiQueryEx( UINT InfoClass,
 	InfoType == INFO_TYPE_PROVIDER &&
 	InfoId == ENTITY_TYPE_ID ) {
 	ULONG Temp = IF_MIB;
-	return InfoCopyOut( &Temp, sizeof(Temp), Buffer, BufferSize );
+	return InfoCopyOut( (PCHAR)&Temp, sizeof(Temp), Buffer, BufferSize );
     } else if( InfoClass == INFO_CLASS_PROTOCOL && 
 	       InfoType == INFO_TYPE_PROVIDER &&
 	       InfoId == IF_MIB_STATS_ID ) {

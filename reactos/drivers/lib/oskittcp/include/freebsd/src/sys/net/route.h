@@ -36,8 +36,6 @@
 #ifndef _NET_ROUTE_H_
 #define _NET_ROUTE_H_
 
-#include <oskittypes.h>
-
 /*
  * Kernel resident routing tables.
  *
@@ -51,8 +49,26 @@
  * in their control blocks, e.g. inpcb.
  */
 struct route {
-	struct	rtentry ro_rt;
+	struct	rtentry *ro_rt;
 	struct	sockaddr ro_dst;
+};
+
+/*
+ * These numbers are used by reliable protocols for determining
+ * retransmission behavior and are included in the routing structure.
+ */
+struct rt_metrics {
+	u_long	rmx_locks;	/* Kernel must leave these values alone */
+	u_long	rmx_mtu;	/* MTU for this path */
+	u_long	rmx_hopcount;	/* max hops expected */
+	u_long	rmx_expire;	/* lifetime for route, e.g. redirect */
+	u_long	rmx_recvpipe;	/* inbound delay-bandwith product */
+	u_long	rmx_sendpipe;	/* outbound delay-bandwith product */
+	u_long	rmx_ssthresh;	/* outbound gateway buffer limit */
+	u_long	rmx_rtt;	/* estimated round trip time */
+	u_long	rmx_rttvar;	/* estimated rtt variance */
+	u_long	rmx_pksent;	/* packets sent using this route */
+	u_long	rmx_filler[4];	/* will be used for T/TCP later */
 };
 
 /*
@@ -79,15 +95,32 @@ struct mbuf;
 #ifndef RNF_NORMAL
 #include <net/radix.h>
 #endif
+struct rtentry {
+	struct	radix_node rt_nodes[2];	/* tree glue, and other values */
+#define	rt_key(r)	((struct sockaddr *)((r)->rt_nodes->rn_key))
+#define	rt_mask(r)	((struct sockaddr *)((r)->rt_nodes->rn_mask))
+	struct	sockaddr *rt_gateway;	/* value */
+	short	rt_filler;		/* was short flags field */
+	short	rt_refcnt;		/* # held references */
+	u_long	rt_flags;		/* up/down?, host/net */
+	struct	ifnet *rt_ifp;		/* the answer: interface to use */
+	struct	ifaddr *rt_ifa;		/* the answer: interface to use */
+	struct	sockaddr *rt_genmask;	/* for generation of cloned routes */
+	caddr_t	rt_llinfo;		/* pointer to link level info cache */
+	struct	rt_metrics rt_rmx;	/* metrics used by rx'ing protocols */
+	struct	rtentry *rt_gwroute;	/* implied entry for gatewayed routes */
+	int	(*rt_output) __P((struct rtentry *, struct mbuf *,
+				  struct sockaddr *, int));
+					/* output routine for this (rt,if) */
+	struct	rtentry *rt_parent; 	/* cloning parent of this route */
+	void	*rt_filler2;		/* more filler */
+};
 
-#include <oskittcp.h>
-
-#ifndef __REACTOS__
 /*
  * Following structure necessary for 4.3 compatibility;
  * We should eventually move it to a compat file.
  */
-struct rtentry {
+struct ortentry {
 	u_long	rt_hash;		/* to speed lookups */
 	struct	sockaddr rt_dst;	/* key */
 	struct	sockaddr rt_gateway;	/* value */
@@ -96,7 +129,6 @@ struct rtentry {
 	u_long	rt_use;			/* raw # packets forwarded */
 	struct	ifnet *rt_ifp;		/* the answer: interface to use */
 };
-#endif
 
 #define rt_use rt_rmx.rmx_pksent
 
@@ -215,15 +247,11 @@ struct route_cb {
 };
 
 #ifdef KERNEL
-#ifndef __REACTOS__
 #define	RTFREE(rt) \
 	if ((rt)->rt_refcnt <= 1) \
 		rtfree(rt); \
 	else \
 		(rt)->rt_refcnt--;
-#else
-#define RTFREE(rt) rtfree(rt)
-#endif
 
 struct	route_cb route_cb;
 struct	rtstat	rtstat;

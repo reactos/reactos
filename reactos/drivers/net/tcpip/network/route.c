@@ -498,7 +498,7 @@ UINT RouteGetRouteToDestination(
         Destination, NTE));
 
     TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)  NTE (%s).\n",
-        A2S(Destination), A2S(NTE->Address)));
+			       A2S(Destination), NTE ? A2S(NTE->Address) : ""));
 
     KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
 
@@ -608,7 +608,9 @@ PROUTE_CACHE_NODE RouteAddRouteToDestination(
         Destination, NTE, IF, NCE));
 
     TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)  NTE (%s)  NCE (%s).\n",
-        A2S(Destination), A2S(NTE->Address), A2S(NCE->Address)));
+			       A2S(Destination), 
+			       A2S(NTE->Address), 
+			       A2S(&NCE->Address)));
 
     KeAcquireSpinLock(&RouteCacheLock, &OldIrql);
 
@@ -722,10 +724,6 @@ VOID RouteInvalidateNCE(
 
 NTSTATUS
 RouteFriendlyAddRoute( PIPROUTE_ENTRY ire ) {
-    PNET_TABLE_ENTRY Nte;
-    PNEIGHBOR_CACHE_ENTRY Nce;
-    PIP_INTERFACE If;
-    IP_ADDRESS Dest;
     KIRQL OldIrql;
     
 

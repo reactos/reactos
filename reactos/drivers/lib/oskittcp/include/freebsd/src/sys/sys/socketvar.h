@@ -52,6 +52,7 @@ struct socket {
 	short	so_linger;		/* time to linger while closing */
 	short	so_state;		/* internal state flags SS_*, below */
 	caddr_t	so_pcb;			/* protocol control block */
+        void   *so_connection;          /* connection (outside context) */
 	struct	protosw *so_proto;	/* protocol handle */
 /*
  * Variables for connection queueing.
@@ -100,10 +101,6 @@ struct socket {
 	caddr_t	so_tpcb;		/* Wisc. protocol control block XXX */
 	void	(*so_upcall) __P((struct socket *so, caddr_t arg, int waitf));
 	caddr_t	so_upcallarg;		/* Arg for above */
-
-#ifdef __REACTOS__
-    void *so_connection;                /* The connection object used by our parent */
-#endif
 };
 
 /*
@@ -185,7 +182,7 @@ struct socket {
 	(sb)->sb_flags &= ~SB_LOCK; \
 	if ((sb)->sb_flags & SB_WANT) { \
 		(sb)->sb_flags &= ~SB_WANT; \
-		wakeup(so, &(sb)->sb_sel, (caddr_t)&(sb)->sb_flags); \
+		wakeup(so, (caddr_t)&(sb)->sb_flags); \
 	} \
 }
 
@@ -195,7 +192,6 @@ struct socket {
 			}
 
 #define	sowwakeup(so)	sowakeup((so), &(so)->so_snd)
-#define	socwakeup(so)	sowakeup((so), &(so)->so_snd)
 
 #ifdef KERNEL
 extern u_long	sb_max;
@@ -224,7 +220,7 @@ void    sowakeup __P((struct socket *, struct sockbuf *));
 void    socantrcvmore __P((struct socket *));
 void    socantsendmore __P((struct socket *));
 void    sbrelease __P((struct sockbuf *));
-void    sbappend __P((struct socket *, struct sockbuf *, struct mbuf *));
+void    sbappend __P((struct sockbuf *, struct mbuf *));
 void    sbappendrecord __P((struct sockbuf *, struct mbuf *));
 int	sbappendcontrol __P((struct sockbuf *, struct mbuf *, struct mbuf *));
 int	sbappendaddr __P((struct sockbuf *, struct sockaddr *, struct mbuf *, struct mbuf *));

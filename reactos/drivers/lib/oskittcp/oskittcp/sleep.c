@@ -59,7 +59,7 @@ int tsleep( void *token, int priority, char *wmesg, int tmio ) {
     return 0;
 }
 
-void wakeup( struct socket *so, struct selinfo *si, void *token ) {
+void wakeup( struct socket *so, void *token ) {
     KIRQL OldIrql;
     KEVENT Event;
     PLIST_ENTRY Entry;
@@ -73,13 +73,13 @@ void wakeup( struct socket *so, struct selinfo *si, void *token ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket connected!\n"));
 	flags |= SEL_CONNECT;
     }
-    if( so->so_rcv.sb_cc && si ) {
+    if( so->so_rcv.sb_cc > 0 ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket readable\n"));
 	flags |= SEL_READ;
     }
 
-    OS_DbgPrint(OSK_MID_TRACE,("Wakeup %x (socket %x, si_flags %x, state %x)!\n",
-			       token, so, si ? si->si_flags : 0,
+    OS_DbgPrint(OSK_MID_TRACE,("Wakeup %x (socket %x, state %x)!\n",
+			       token, so,
 			       so->so_state));
 
     if( OtcpEvent.SocketState ) 

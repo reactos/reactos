@@ -21,6 +21,7 @@
 #include <pool.h>
 #include <arp.h>
 #include <lan.h>
+#include <irp.h>
 #include <tilists.h>
 #include <dispatch.h>
 #include <fileobjs.h>
@@ -28,3 +29,4 @@
 #include <info.h>
 #include <memtrack.h>
 #include <oskittcp.h>
+#include <interface.h>

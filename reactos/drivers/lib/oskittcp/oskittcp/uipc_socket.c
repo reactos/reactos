@@ -414,6 +414,7 @@ restart:
 			if (flags & MSG_EOR)
 				top->m_flags |= M_EOR;
 		    } else do {
+#ifndef __REACTOS__
 			if (top == 0) {
 				MGETHDR(m, M_WAIT, MT_DATA);
 				mlen = MHLEN;
@@ -423,6 +424,12 @@ restart:
 				MGET(m, M_WAIT, MT_DATA);
 				mlen = MLEN;
 			}
+#else
+			MGETHDR(m, M_WAIT, MT_DATA);
+			mlen = MLEN;
+			m->m_pkthdr.len = 0;
+			m->m_pkthdr.rcvif = (struct ifnet *)0;
+#endif
 			if (resid >= MINCLSIZE) {
 				MCLGET(m, M_WAIT);
 				if ((m->m_flags & M_EXT) == 0)
@@ -444,6 +451,7 @@ nopages:
 			error = uiomove(mtod(m, caddr_t), (int)len, uio);
 			resid = uio->uio_resid;
 #else
+			memcpy(mtod(m, caddr_t), mtod(top, caddr_t), len);
 			resid = 0;
 #endif
 			m->m_len = len;
@@ -494,6 +502,7 @@ out:
 	if (control)
 	    m_freem(control);
 #endif /* The caller owns top and control */
+	OS_DbgPrint(OSK_MID_TRACE,("Leaving\n"));
 	return (error);
 }
 
@@ -847,5 +856,5 @@ sohasoutofband(so)
 		gsignal(-so->so_pgid, SIGURG);
 	else if (so->so_pgid > 0 && (p = pfind(so->so_pgid)) != 0)
 		psignal(p, SIGURG);
-	wakeup(so, NULL, 0);
+	wakeup(so, 0);
 }

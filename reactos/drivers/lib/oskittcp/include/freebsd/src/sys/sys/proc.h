@@ -320,7 +320,7 @@ void	cpu_switch __P((struct proc *));
 void	sleep __P((void *chan, int pri));
 int	tsleep __P((void *chan, int pri, char *wmesg, int timo));
 void	unsleep __P((struct proc *));
-void	wakeup __P((struct socket *so, struct selinfo *si, void *chan));
+void	wakeup __P((struct socket *so, void *chan));
 
 __dead void cpu_exit __P((struct proc *)) __dead2;
 __dead void exit1 __P((struct proc *, int)) __dead2;

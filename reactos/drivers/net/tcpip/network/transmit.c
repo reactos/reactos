@@ -183,7 +183,7 @@ VOID IPSendComplete(
     /* FIXME: Stop sending fragments and cleanup datagram buffers if
        there was an error */
 
-    if (PC(NdisPacket)->Complete)
+    if (PC(NdisPacket) && PC(NdisPacket)->Complete)
         /* This datagram was only one fragment long so call completion handler now */
         (*PC(NdisPacket)->Complete)(PC(NdisPacket)->Context, NdisPacket, NdisStatus);
     else {
@@ -230,6 +230,8 @@ NTSTATUS IPSendFragment(
 
     TI_DbgPrint(MAX_TRACE, ("NCE->State = %d.\n", NCE->State));
 
+    PC(NdisPacket)->DLComplete = IPSendComplete;
+
     switch (NCE->State) {
     case NUD_PERMANENT:
         /* Neighbor is always valid */
@@ -270,7 +272,6 @@ NTSTATUS IPSendFragment(
         return STATUS_SUCCESS;
     }
 
-    PC(NdisPacket)->DLComplete = IPSendComplete;
     (*NCE->Interface->Transmit)(NCE->Interface->Context,
                                 NdisPacket,
                                 MaxLLHeaderSize,
@@ -303,7 +304,7 @@ NTSTATUS IPSendDatagram(
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  RCN (0x%X)\n", IPPacket, RCN));
 
     DISPLAY_IP_PACKET(IPPacket);
-    OskitDumpBuffer( IPPacket->Header, IPPacket->TotalSize );
+    /*OskitDumpBuffer( IPPacket->Header, IPPacket->TotalSize );*/
 
     NCE = RCN->NCE;
 

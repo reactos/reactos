@@ -67,6 +67,9 @@ in_cksum(m, len)
 	} l_util;
 
 	for (;m && len; m = m->m_next) {
+	    OS_DbgPrint(OSK_MID_TRACE,("Processing m %x (%d)\n", m, len));
+	    OskitDumpBuffer( m->m_data, m->m_len );
+
 		if (m->m_len == 0)
 			continue;
 		w = mtod(m, u_short *);
@@ -136,8 +139,9 @@ in_cksum(m, len)
 		} else if (mlen == -1)
 			s_util.c[0] = *(char *)w;
 	}
-	if (len)
-		printf("cksum: out of data\n");
+	if (len) {
+	    panic("cksum: out of data: need %d bytes\n", len);
+	}
 	if (mlen == -1) {
 		/* The last mbuf has odd # of bytes. Follow the
 		   standard (the odd byte may be shifted left by 8 bits

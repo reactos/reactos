@@ -10,6 +10,7 @@
 
 #include "precomp.h"
 #include <debug.h>
+#include <route.h>
 
 TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,
 			PNDIS_BUFFER ClientBuf, PUINT ClientBufSize ) {
@@ -54,7 +55,7 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
 
 VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     KIRQL OldIrql;
-    UINT Count = 0, i;
+    UINT i;
 
     KeAcquireSpinLock( &EntityListLock, &OldIrql );
     
@@ -78,8 +79,6 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
 {
     UINT Count, Size, BufSize = *BufferSize;
     KIRQL OldIrql;
-    TDIEntityID *EntityOutList;
-    PLIST_ENTRY CurrentIFEntry;
 
     TI_DbgPrint(MAX_TRACE,("About to copy %d TDIEntityIDs to user\n",
 			   EntityCount));
@@ -132,7 +131,6 @@ TDI_STATUS InfoTdiQueryInformationEx(
     UINT i;
     PVOID context;
     NTSTATUS Status = STATUS_SUCCESS;
-    TDIEntityID EntityId;
     BOOL FoundEntity = FALSE;
     InfoRequest_f InfoRequest;
 

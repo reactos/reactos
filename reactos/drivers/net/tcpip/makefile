@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.19 2004/08/15 23:41:23 chorns Exp $
+# $Id: makefile,v 1.20 2004/08/19 21:38:58 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -14,6 +14,8 @@ TARGET_PCH = include/precomp.h
 TARGET_CFLAGS = \
 	-D__USE_W32API \
 	-DNDIS40 \
+	-DMEMTRACK \
+	-Wall -Werror \
 	-I./include \
 	-I$(PATH_TO_TOP)/drivers/lib/oskittcp/include \
 	-I$(PATH_TO_TOP)/w32api/include \

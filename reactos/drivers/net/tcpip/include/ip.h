@@ -161,6 +161,8 @@ typedef struct _IP_INTERFACE {
     PUCHAR Address;               /* Pointer to interface address */
     UINT  AddressLength;          /* Length of address in bytes */
     LL_TRANSMIT_ROUTINE Transmit; /* Pointer to transmit function */
+
+    PVOID TCPContext;             /* TCP Content for this interface */
 } IP_INTERFACE, *PIP_INTERFACE;
 
 
@@ -198,6 +200,10 @@ extern UINT MinLLFrameSize;
 
 PIP_PACKET IPCreatePacket(
   ULONG Type);
+
+PIP_PACKET IPInitializePacket(
+    PIP_PACKET IPPacket,
+    ULONG Type);
 
 PNET_TABLE_ENTRY IPCreateNTE(
     PIP_INTERFACE IF,
@@ -239,7 +245,7 @@ VOID STDCALL IPTimeout(
     PVOID SystemArgument2);
 
 VOID IPDispatchProtocol(
-    PIP_INTERFACE IF,
+    PNET_TABLE_ENTRY NTE,
     PIP_PACKET IPPacket);
 
 VOID IPRegisterProtocol(

@@ -117,7 +117,6 @@ NTSTATUS BuildUDPPacket(
  */
 {
   NTSTATUS Status;
-  NDIS_STATUS NdisStatus;
   PDATAGRAM_SEND_REQUEST SendRequest = (PDATAGRAM_SEND_REQUEST)Context;
   PIP_PACKET Packet = &SendRequest->Packet;
 
@@ -126,7 +125,7 @@ NTSTATUS BuildUDPPacket(
   /* Prepare packet */
 
   /* FIXME: Assumes IPv4 */
-  IPInitializePacket(IP_ADDRESS_V4, &SendRequest->Packet);
+  IPInitializePacket(&SendRequest->Packet, IP_ADDRESS_V4);
   if (!Packet)
     return STATUS_INSUFFICIENT_RESOURCES;
 

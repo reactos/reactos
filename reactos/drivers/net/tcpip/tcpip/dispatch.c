@@ -11,7 +11,6 @@
 
 #include "precomp.h"
 
-
 NTSTATUS DispPrepareIrpForCancel(
     PTRANSPORT_CONTEXT Context,
     PIRP Irp,
@@ -256,7 +255,7 @@ NTSTATUS DispTdiAssociateAddress(
   PIO_STACK_LOCATION IrpSp;
   PCONNECTION_ENDPOINT Connection;
   PFILE_OBJECT FileObject;
-  PADDRESS_FILE AddrFile;
+  PADDRESS_FILE AddrFile = NULL;
   NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
@@ -315,11 +314,10 @@ NTSTATUS DispTdiAssociateAddress(
 
   AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
   if (!AddrFile) {
-    ObDereferenceObject(FileObject);
-    TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
-    return STATUS_INVALID_PARAMETER;
+      ObDereferenceObject(FileObject);
+      TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
+      return STATUS_INVALID_PARAMETER;
   }
-
   /* The connection endpoint references the address file object */
   ReferenceObject(AddrFile);
   Connection->AddressFile = AddrFile;
@@ -330,7 +328,7 @@ NTSTATUS DispTdiAssociateAddress(
   /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
   ObDereferenceObject(FileObject);
 
-  return STATUS_SUCCESS;
+		    return Status;
 }
 
 
@@ -376,12 +374,21 @@ NTSTATUS DispTdiConnect(
   Request.RequestNotifyObject      = DispDataRequestComplete;
   Request.RequestContext           = Irp;
 
-  /* XXX Handle connected UDP, etc... */
-  Status = TCPConnect(
-    &Request,
-    Parameters->RequestConnectionInformation,
-    Parameters->ReturnConnectionInformation);
+#if 0
+  Status = TCPBind( Connection,
+		    &Connection->SocketContext,
+		    Parameters->RequestConnectionInformation );
+	
+  TI_DbgPrint(MID_TRACE, ("TCP Bind returned %08x\n", Status));
+	    
+  if( NT_SUCCESS(Status) ) 
+#endif
 
+      Status = TCPConnect(
+	  &Request,
+	  Parameters->RequestConnectionInformation,
+	  Parameters->ReturnConnectionInformation);
+  
   TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
 
   return Status;
@@ -532,7 +539,6 @@ NTSTATUS DispTdiListen(
   PIO_STACK_LOCATION IrpSp;
   PTDI_REQUEST Request;
   NTSTATUS Status;
-  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 

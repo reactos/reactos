@@ -236,8 +236,7 @@ VOID ICMPTransmit(
         IPv4Checksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize, 0);
 
     /* Get a route to the destination address */
-    PNEIGHBOR_CACHE_ENTRY *NCE = RouterGetRoute( &IPPacket->DstAddr, NULL );
-    if (RouteGetRouteToDestination(&IPPacket->DstAddr, NTE, &RCN) == IP_SUCCESS) {
+    if (RouteGetRouteToDestination(&IPPacket->DstAddr, NULL, &RCN) == IP_SUCCESS) {
         /* Send the packet */
         if (IPSendDatagram(IPPacket, RCN) != STATUS_SUCCESS) {
             FreeNdisPacket(IPPacket->NdisPacket);

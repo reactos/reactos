@@ -110,7 +110,6 @@ VOID NBTimeout(
         for (NCE = NeighborCache[i].Cache;
             NCE != NULL; NCE = NCE->Next) {
             /* Check if event timer is running */
-            ASSERT(NCE->EventTimer >= 0);
             if (NCE->EventTimer > 0)  {
                 NCE->EventTimer--;
                 if (NCE->EventTimer == 0) {
@@ -232,7 +231,7 @@ VOID NBSendSolicit(
 	    CurrentEntry = NCE->Interface->NTEListHead.Flink;
 	    NTE = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, 
 				    IFListEntry);
-	    ARPTransmit(NCE->Address, NTE);
+	    ARPTransmit(&NCE->Address, NTE);
         }
       else
         {
@@ -277,6 +276,8 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
     "LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
     Interface, Address, LinkAddress, LinkAddressLength, State));
 
+  ASSERT(Address->Type == IP_ADDRESS_V4);
+
   NCE = ExAllocatePool(NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
   if (NCE == NULL)
     {
@@ -292,7 +293,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   /* Reference once for beeing alive and once for the caller */
   NCE->RefCount = 2;
   NCE->Interface = Interface;
-  NCE->Address = Address;
+  NCE->Address = *Address;
   NCE->LinkAddressLength = LinkAddressLength;
   NCE->LinkAddress = (PVOID)&NCE[1];
   if (LinkAddress != NULL)
@@ -390,7 +391,7 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
 
   NCE = NeighborCache[HashValue].Cache;
 
-  while ((NCE) && (!AddrIsEqual(Address, NCE->Address)))
+  while ((NCE) && (!AddrIsEqual(Address, &NCE->Address)))
     {
       NCE = NCE->Next;
     }
@@ -431,7 +432,7 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
     {
       ReferenceObject(Address);
       NCE = NBAddNeighbor(Interface, Address, NULL, 
-      Interface->AddressLength, NUD_INCOMPLETE);
+			  Interface->AddressLength, NUD_INCOMPLETE);
       NCE->EventTimer = 1;
       NCE->EventCount = 0;
     }
@@ -492,7 +493,7 @@ VOID NBRemoveNeighbor(
 
   TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
 
-  HashValue  = *(PULONG)(&NCE->Address->Address);
+  HashValue  = *(PULONG)(&NCE->Address.Address);
   HashValue ^= HashValue >> 16;
   HashValue ^= HashValue >> 8;
   HashValue ^= HashValue >> 4;
@@ -521,9 +522,6 @@ VOID NBRemoveNeighbor(
 
           /* Remove all references from route cache */
           RouteInvalidateNCE(CurNCE);
-
-          /* Remove reference to the address */
-          DereferenceObject(CurNCE->Address);
 
 #ifdef DBG
           CurNCE->RefCount--;

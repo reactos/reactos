@@ -37,135 +37,75 @@ struct	ifnet *ifnet;
  * Routines with ifa_ifwith* names take sockaddr *'s as
  * parameters.
  */
-void
-ifinit()
-{
+
+PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
+    NTSTATUS Status;
+    POSK_IFADDR ifaddr = exAllocatePool
+	( NonPagedPool, sizeof(*ifaddr) + 2 * sizeof( struct sockaddr_in ) );
+    struct sockaddr_in *addr_in = (struct sockaddr_in *)&ifaddr[1];
+    struct sockaddr_in *dstaddr_in = (struct sockaddr_in *)&addr_in[1];
+    if( !ifaddr ) return NULL;
+
+    TI_DbgPrint(MID_TRACE,("Called\n"));
+
+    ifaddr->ifa_dstaddr = (struct sockaddr *)dstaddr_in;
+    /* XXX - Point-to-point interfaces not supported yet */
+    memset( &ifaddr->ifa_dstaddr, 0, sizeof( struct sockaddr ) );
+    
+    ifaddr->ifa_addr = (struct sockaddr *)addr_in;
+    Status = GetInterfaceIPv4Address( IF,
+				      ADE_UNICAST,
+				      (PULONG)&addr_in->sin_addr.s_addr );
+    
+    if( !NT_SUCCESS(Status) )
+	addr_in->sin_addr.s_addr = 0;
+
+    TI_DbgPrint(MID_TRACE,("Prepare interface %x : addr %x\n",
+			   IF, addr_in->sin_addr.s_addr));
+    
+    ifaddr->ifa_flags = 0; /* XXX what goes here? */
+    ifaddr->ifa_refcnt = 0; /* Anachronistic */
+    ifaddr->ifa_metric = 1; /* We can get it like in ninfo.c, if we want */
+    ifaddr->ifa_mtu = IF->MTU;
+
+    TI_DbgPrint(MID_TRACE,("Leaving\n"));
+
+    return ifaddr;
 }
 
-void
-if_attach(ifp)
-	struct ifnet *ifp;
-{
-    KeBugCheck( 0xface );
-}
-
-struct ifnet *
-ifunit(char *name)
-{
-	return 0;
-}
-
-int ifa_iffind(addr, ifaddr, type)
-	struct sockaddr *addr;
-	struct ifaddr *ifaddr;
-	int type;
-{
+POSK_IFADDR TCPFindInterface( void *ClientData,
+			      OSK_UINT AddrType,
+			      OSK_UINT FindType,
+			      OSK_SOCKADDR *ReqAddr,
+			      OSK_IFADDR *Interface ) {
     PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS Destination;
-    NTSTATUS Status;
-    struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
+    struct sockaddr_in *addr_in = (struct sockaddr_in *)ReqAddr;
+    
+    TI_DbgPrint(MID_TRACE,("called for type %d\n", FindType));
 
-    TI_DbgPrint(MID_TRACE,("called for type %d\n", type));
-
-    if( !addr || !ifaddr ) {
-	TI_DbgPrint(MID_TRACE,("no addr or no ifaddr (%x %x)\n", 
-			       addr, ifaddr));
-	return OSK_EINVAL;
+    if( !ReqAddr ) {
+	TI_DbgPrint(MID_TRACE,("no addr or no ifaddr (%x)\n", ReqAddr));
+	return NULL;
     }
 
     Destination.Type = IP_ADDRESS_V4;
     Destination.Address.IPv4Address = addr_in->sin_addr.s_addr;
+
+    TI_DbgPrint(MID_TRACE,("Address is %x\n", addr_in->sin_addr.s_addr));
 
     NCE = RouterGetRoute(&Destination, NULL);
 
     if( !NCE || !NCE->Interface ) {
 	TI_DbgPrint(MID_TRACE,("no neighbor cache or no interface (%x %x)\n",
 			       NCE, NCE->Interface));
-	return OSK_EADDRNOTAVAIL;
+	return NULL;
     }
 
-    /* XXX - Point-to-point interfaces not supported yet */
-    memset(&ifaddr->ifa_dstaddr, 0, sizeof( struct sockaddr ) );
+    addr_in = (struct sockaddr_in *)
+	((POSK_IFADDR)NCE->Interface->TCPContext)->ifa_addr;
+    TI_DbgPrint(MID_TRACE,("returning addr %x\n", addr_in->sin_addr.s_addr));
     
-    addr_in->sin_family = PF_INET;
-    addr_in = (struct sockaddr_in *)&ifaddr->ifa_addr;
-    Status = GetInterfaceIPv4Address( NCE->Interface,
-				      type,
-				      &addr_in->sin_addr.s_addr );
-
-    if( !NT_SUCCESS(Status) )
-	addr_in->sin_addr.s_addr = 0;
-    
-    ifaddr->ifa_flags = 0; /* XXX what goes here? */
-    ifaddr->ifa_refcnt = 0; /* Anachronistic */
-    ifaddr->ifa_metric = 1; /* We can get it like in ninfo.c, if we want */
-    ifaddr->ifa_mtu = NCE->Interface->MTU;
-    
-    TI_DbgPrint(MID_TRACE,("status in iffind: %x\n", Status));
-
-    return NT_SUCCESS(Status) ? 0 : OSK_EADDRNOTAVAIL;
+    return NCE->Interface->TCPContext;
 }
 
-/*
- * Find an interface on a specific network.  If many, choice
- * is most specific found.
- */
-int ifa_ifwithnet(addr, ifaddr)
-	struct sockaddr *addr;
-	struct ifaddr *ifaddr;
-{
-    return ifa_iffind(addr, ifaddr, ADE_UNICAST);
-}
-
-/*
- * Locate the point to point interface with a given destination address.
- */
-/*ARGSUSED*/
-struct ifaddr *
-ifa_ifwithdstaddr(addr, ifaddr)
-	register struct sockaddr *addr;
-	register struct ifaddr *ifaddr;
-{
-    return ifa_iffind(addr, ifaddr, ADE_POINTOPOINT);
-}
-
-/*
- * Locate an interface based on a complete address.
- */
-/*ARGSUSED*/
-int ifa_ifwithaddr(addr, ifaddr)
-    struct sockaddr *addr;
-    struct ifaddr *ifaddr;
-{
-    int error = ifa_ifwithnet( addr, ifaddr );
-    struct sockaddr_in *addr_in = (struct sockaddr_in *)addr;
-    struct sockaddr_in *faddr_in = (struct sockaddr_in *)ifaddr->ifa_addr;
-    if( error != 0 ) return error;
-    else return 
-	     (faddr_in->sin_addr.s_addr == addr_in->sin_addr.s_addr) ?
-	     0 : OSK_EADDRNOTAVAIL;
-}
-
-/*
- * Handle interface watchdog timer routines.  Called
- * from softclock, we decrement timers (if set) and
- * call the appropriate interface routine on expiration.
- */
-void
-if_slowtimo(arg)
-	void *arg;
-{
-#if 0
-	register struct ifnet *ifp;
-	int s = splimp();
-
-	for (ifp = ifnet; ifp; ifp = ifp->if_next) {
-		if (ifp->if_timer == 0 || --ifp->if_timer)
-			continue;
-		if (ifp->if_watchdog)
-			(*ifp->if_watchdog)(ifp->if_unit);
-	}
-	splx(s);
-	timeout(if_slowtimo, (void *)0, hz / IFNET_SLOWHZ);
-#endif
-}

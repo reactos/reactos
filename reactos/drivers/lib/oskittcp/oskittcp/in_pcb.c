@@ -90,12 +90,21 @@ in_pcbbind(inp, nam)
 	unsigned short *lastport = &inp->inp_pcbinfo->lastport;
 	struct sockaddr_in *sin;
 	struct proc *p = curproc;		/* XXX */
-	struct ifaddr ifa;
 	u_short lport = 0;
 	int wild = 0, reuseport = (so->so_options & SO_REUSEPORT);
 	int error;
 
-	if (inp->inp_lport || inp->inp_laddr.s_addr != INADDR_ANY)
+	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
+
+	OskitDumpBuffer( nam->m_data, nam->m_len );
+
+#ifndef __REACTOS__
+	if (in_ifaddr == 0) {
+	    OS_DbgPrint(OSK_MID_TRACE,("Leaving EADDRNOTAVAIL\n"));
+	    return (EADDRNOTAVAIL);
+	}
+#endif
+	if (inp->inp_lport || inp->inp_laddr.s_addr != INADDR_ANY) 
 		return (EINVAL);
 	if ((so->so_options & (SO_REUSEADDR|SO_REUSEPORT)) == 0 &&
 	    ((so->so_proto->pr_flags & PR_CONNREQUIRED) == 0 ||
@@ -103,15 +112,19 @@ in_pcbbind(inp, nam)
 		wild = INPLOOKUP_WILDCARD;
 	if (nam) {
 		sin = mtod(nam, struct sockaddr_in *);
-		if (nam->m_len != sizeof (*sin))
-			return (EINVAL);
+		if (nam->m_len != sizeof (*sin)) {
+		    OS_DbgPrint(OSK_MID_TRACE,("Leaving EINVAL\n"));
+		    return (EINVAL);
+		}
 #ifdef notdef
 		/*
 		 * We should check the family, but old programs
 		 * incorrectly fail to initialize it.
 		 */
-		if (sin->sin_family != AF_INET)
-			return (EAFNOSUPPORT);
+		if (sin->sin_family != AF_INET) {
+		    OS_DbgPrint(OSK_MID_TRACE,("Leaving EAFNOSUPPORT\n"));
+		    return (EAFNOSUPPORT);
+		}
 #endif
 		lport = sin->sin_port;
 		if (IN_MULTICAST(ntohl(sin->sin_addr.s_addr))) {
@@ -126,34 +139,51 @@ in_pcbbind(inp, nam)
 				reuseport = SO_REUSEADDR|SO_REUSEPORT;
 		} else if (sin->sin_addr.s_addr != INADDR_ANY) {
 			sin->sin_port = 0;		/* yech... */
-			if (ifa_ifwithaddr((struct sockaddr *)sin, &ifa) != 0)
-				return (EADDRNOTAVAIL);
+			OS_DbgPrint(OSK_MID_TRACE,("Calling ifwithaddr\n"));
+			if (ifa_ifwithaddr((struct sockaddr *)sin) == 0) {
+			    OS_DbgPrint(OSK_MID_TRACE,
+					("Leaving EADDRNOTAVAIL\n"));
+			    return (EADDRNOTAVAIL);
+			}
+			OS_DbgPrint(OSK_MID_TRACE,("Yep, we have that addr\n"));
 		}
 		if (lport) {
 			struct inpcb *t;
 
 			/* GROSS */
 			if (ntohs(lport) < IPPORT_RESERVED &&
-			    (error = suser(p->p_ucred, &p->p_acflag)))
-				return (EACCES);
+			    (error = suser(p->p_ucred, &p->p_acflag))) {
+			    OS_DbgPrint(OSK_MID_TRACE,
+					("Leaving EACCESS\n"));
+			    return (EACCES);
+			}
 			t = in_pcblookup(head, zeroin_addr, 0,
 			    sin->sin_addr, lport, wild);
 			if (t && (reuseport & t->inp_socket->so_options) == 0)
-				return (EADDRINUSE);
+			{
+			    OS_DbgPrint(OSK_MID_TRACE,
+					("Leaving EADDRINUSE\n"));
+			    return (EADDRINUSE);
+			}
 		}
 		inp->inp_laddr = sin->sin_addr;
 	}
 	if (lport == 0)
 		do {
-			++*lastport;
-			if (*lastport < IPPORT_RESERVED ||
-			    *lastport > IPPORT_USERRESERVED)
-				*lastport = IPPORT_RESERVED;
-			lport = htons(*lastport);
+		    ++*lastport;
+		    OS_DbgPrint(OSK_MID_TRACE,("Finding port %d\n",
+					       *lastport));
+		    if (*lastport < IPPORT_RESERVED ||
+			*lastport > IPPORT_USERRESERVED)
+			*lastport = IPPORT_RESERVED;
+		    lport = htons(*lastport);
 		} while (in_pcblookup(head,
-			    zeroin_addr, 0, inp->inp_laddr, lport, wild));
+				      zeroin_addr, 0, inp->inp_laddr, 
+				      lport, wild));
 	inp->inp_lport = lport;
 	in_pcbrehash(inp);
+	
+	OS_DbgPrint(OSK_MID_TRACE,("Returning success\n"));
 	return (0);
 }
 
@@ -173,49 +203,118 @@ int
 in_pcbladdr(inp, nam, plocal_sin)
 	register struct inpcb *inp;
 	struct mbuf *nam;
-	struct sockaddr_in *plocal_sin;
+	struct sockaddr_in **plocal_sin;
 {
-	struct ifaddr ifa;
+	struct in_ifaddr *ia;
 	struct sockaddr_in *ifaddr = 0;
 	register struct sockaddr_in *sin = mtod(nam, struct sockaddr_in *);
 
+	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
+
 	if (nam->m_len != sizeof (*sin))
 		return (EINVAL);
-	if (sin->sin_family != AF_INET) {
-	    OS_DbgPrint(OSK_MID_TRACE,("EAFNOSUPPORT: %d\n", sin->sin_family));
+	if (sin->sin_family != AF_INET)
 		return (EAFNOSUPPORT);
-	}
 	if (sin->sin_port == 0)
 		return (EADDRNOTAVAIL);
-	if (inp->inp_laddr.s_addr == INADDR_ANY) {
-	    register struct route *ro;
-	    /*
-	     * If route is known or can be allocated now,
-	     * our src addr is taken from the i/f, else punt.
-	     */
-	    ro = &inp->inp_route;
-	    if ((inp->inp_socket->so_options & SO_DONTROUTE) == 0) {
-		/* No route yet, so try to acquire one */
-		ro->ro_dst.sa_family = AF_INET;
-		/* ro->ro_dst.sa_len = sizeof(struct sockaddr_in); */
-		((struct sockaddr_in *) &ro->ro_dst)->sin_addr =
-		    sin->sin_addr;
-		if( ifa_ifwithnet( sin, &ifa ) == 0 ) {
-		    inp->inp_laddr = 
-			((struct sockaddr_in *)&ifa.ifa_addr)->sin_addr;
-		    OS_DbgPrint(OSK_MID_TRACE,
-				("Assigning local address: %x\n",
-				 inp->inp_laddr.s_addr));
-		}
-	    }
+	if (in_ifaddr) {
+		/*
+		 * If the destination address is INADDR_ANY,
+		 * use the primary local address.
+		 * If the supplied address is INADDR_BROADCAST,
+		 * and the primary interface supports broadcast,
+		 * choose the broadcast address for that interface.
+		 */
+#define	satosin(sa)	((struct sockaddr_in *)(sa))
+#define sintosa(sin)	((struct sockaddr *)(sin))
+#define ifatoia(ifa)	((struct in_ifaddr *)(ifa))
+		if (sin->sin_addr.s_addr == INADDR_ANY)
+		    sin->sin_addr = IA_SIN(in_ifaddr)->sin_addr;
+#ifndef __REACTOS__
+		else if (sin->sin_addr.s_addr == (u_long)INADDR_BROADCAST &&
+			 (in_ifaddr->ia_ifp->if_flags & IFF_BROADCAST))
+		    sin->sin_addr = satosin(&in_ifaddr->ia_broadaddr)->sin_addr;
+#endif
 	}
-	/*
+	if (inp->inp_laddr.s_addr == INADDR_ANY) {
+		register struct route *ro;
+
+		ia = (struct in_ifaddr *)0;
+		/*
+		 * If route is known or can be allocated now,
+		 * our src addr is taken from the i/f, else punt.
+		 */
+		ro = &inp->inp_route;
+		if (ro->ro_rt &&
+		    (satosin(&ro->ro_dst)->sin_addr.s_addr !=
+			sin->sin_addr.s_addr ||
+		    inp->inp_socket->so_options & SO_DONTROUTE)) {
+			RTFREE(ro->ro_rt);
+			ro->ro_rt = (struct rtentry *)0;
+		}
+		if ((inp->inp_socket->so_options & SO_DONTROUTE) == 0 && /*XXX*/
+		    (ro->ro_rt == (struct rtentry *)0 ||
+		    ro->ro_rt->rt_ifp == (struct ifnet *)0)) {
+			/* No route yet, so try to acquire one */
+			ro->ro_dst.sa_family = AF_INET;
+			ro->ro_dst.sa_len = sizeof(struct sockaddr_in);
+			((struct sockaddr_in *) &ro->ro_dst)->sin_addr =
+				sin->sin_addr;
+			rtalloc(ro);
+		}
+		/*
+		 * If we found a route, use the address
+		 * corresponding to the outgoing interface
+		 * unless it is the loopback (in case a route
+		 * to our address on another net goes to loopback).
+		 */
+		if (ro->ro_rt && !(ro->ro_rt->rt_ifp->if_flags & IFF_LOOPBACK))
+			ia = ifatoia(ro->ro_rt->rt_ifa);
+		if (ia == 0) {
+			u_short fport = sin->sin_port;
+
+			sin->sin_port = 0;
+			ia = ifatoia(ifa_ifwithdstaddr(sintosa(sin)));
+
+			if (ia == 0)
+				ia = ifatoia(ifa_ifwithnet(sintosa(sin)));
+			sin->sin_port = fport;
+			if (ia == 0)
+				ia = in_ifaddr;
+			if (ia == 0)
+				return (EADDRNOTAVAIL);
+		}
+		/*
+		 * If the destination address is multicast and an outgoing
+		 * interface has been set as a multicast option, use the
+		 * address of that interface as our source address.
+		 */
+#ifndef __REACTOS__
+		if (IN_MULTICAST(ntohl(sin->sin_addr.s_addr)) &&
+		    inp->inp_moptions != NULL) {
+			struct ip_moptions *imo;
+			struct ifnet *ifp;
+
+			imo = inp->inp_moptions;
+			if (imo->imo_multicast_ifp != NULL) {
+			    ifp = imo->imo_multicast_ifp;
+			    for (ia = in_ifaddr; ia; ia = ia->ia_next)
+				if (ia->ia_ifp == ifp)
+				    break;
+			    if (ia == 0)
+				return (EADDRNOTAVAIL);
+			}
+		}
+#endif
+		/*
 	 * Don't do pcblookup call here; return interface in plocal_sin
 	 * and exit to caller, that will do the lookup.
 	 */
-	plocal_sin->sin_family = AF_INET;
-	plocal_sin->sin_addr = ((struct sockaddr_in *)&ifa.ifa_addr)->sin_addr;
-	plocal_sin->sin_port = sin->sin_port;
+		*plocal_sin = ia->ia_ifa.ifa_addr;
+		OS_DbgPrint(OSK_MID_TRACE,("plocal sin %x\n", 
+					   (*plocal_sin)->sin_addr.s_addr));
+
+	}
 	return(0);
 }
 
@@ -231,7 +330,7 @@ in_pcbconnect(inp, nam)
 	register struct inpcb *inp;
 	struct mbuf *nam;
 {
-	struct sockaddr_in ifaddr;
+	struct sockaddr_in *ifaddr;
 	register struct sockaddr_in *sin = mtod(nam, struct sockaddr_in *);
 	int error;
 
@@ -242,14 +341,13 @@ in_pcbconnect(inp, nam)
 		return(error);
 
 	if (in_pcblookuphash(inp->inp_pcbinfo, sin->sin_addr, sin->sin_port,
-			     inp->inp_laddr.s_addr ? inp->inp_laddr : 
-			     ifaddr.sin_addr,
+	    inp->inp_laddr.s_addr ? inp->inp_laddr : ifaddr->sin_addr,
 	    inp->inp_lport) != NULL)
 		return (EADDRINUSE);
 	if (inp->inp_laddr.s_addr == INADDR_ANY) {
 		if (inp->inp_lport == 0)
 			(void)in_pcbbind(inp, (struct mbuf *)0);
-		inp->inp_laddr = ifaddr.sin_addr;
+		inp->inp_laddr = ifaddr->sin_addr;
 	}
 	inp->inp_faddr = sin->sin_addr;
 	inp->inp_fport = sin->sin_port;
@@ -280,6 +378,8 @@ in_pcbdetach(inp)
 	sofree(so);
 	if (inp->inp_options)
 		(void)m_free(inp->inp_options);
+	if (inp->inp_route.ro_rt)
+		rtfree(inp->inp_route.ro_rt);
 	ip_freemoptions(inp->inp_moptions);
 	s = splnet();
 	LIST_REMOVE(inp, inp_hash);
@@ -299,7 +399,7 @@ in_setsockaddr(inp, nam)
 	sin = mtod(nam, struct sockaddr_in *);
 	bzero((caddr_t)sin, sizeof (*sin));
 	sin->sin_family = AF_INET;
-	/* sin->sin_len = sizeof(*sin); */
+	sin->sin_len = sizeof(*sin);
 	sin->sin_port = inp->inp_lport;
 	sin->sin_addr = inp->inp_laddr;
 }
@@ -315,7 +415,7 @@ in_setpeeraddr(inp, nam)
 	sin = mtod(nam, struct sockaddr_in *);
 	bzero((caddr_t)sin, sizeof (*sin));
 	sin->sin_family = AF_INET;
-	/* sin->sin_len = sizeof(*sin); */
+	sin->sin_len = sizeof(*sin);
 	sin->sin_port = inp->inp_fport;
 	sin->sin_addr = inp->inp_faddr;
 }
@@ -385,6 +485,40 @@ in_pcbnotify(head, dst, fport_arg, laddr, lport_arg, cmd, notify)
 }
 
 /*
+ * Check for alternatives when higher level complains
+ * about service problems.  For now, invalidate cached
+ * routing information.  If the route was created dynamically
+ * (by a redirect), time to try a default gateway again.
+ */
+void
+in_losing(inp)
+	struct inpcb *inp;
+{
+	register struct rtentry *rt;
+	struct rt_addrinfo info;
+
+	if ((rt = inp->inp_route.ro_rt)) {
+		inp->inp_route.ro_rt = 0;
+		bzero((caddr_t)&info, sizeof(info));
+		info.rti_info[RTAX_DST] =
+			(struct sockaddr *)&inp->inp_route.ro_dst;
+		info.rti_info[RTAX_GATEWAY] = rt->rt_gateway;
+		info.rti_info[RTAX_NETMASK] = rt_mask(rt);
+		rt_missmsg(RTM_LOSING, &info, rt->rt_flags, 0);
+		if (rt->rt_flags & RTF_DYNAMIC)
+			(void) rtrequest(RTM_DELETE, rt_key(rt),
+				rt->rt_gateway, rt_mask(rt), rt->rt_flags,
+				(struct rtentry **)0);
+		else
+		/*
+		 * A new route can be allocated
+		 * the next time output is attempted.
+		 */
+			rtfree(rt);
+	}
+}
+
+/*
  * After a routing change, flush old routing
  * and allocate a (hopefully) better one.
  */
@@ -393,6 +527,14 @@ in_rtchange(inp, errno)
 	register struct inpcb *inp;
 	int errno;
 {
+	if (inp->inp_route.ro_rt) {
+		rtfree(inp->inp_route.ro_rt);
+		inp->inp_route.ro_rt = 0;
+		/*
+		 * A new route can be allocated the next time
+		 * output is attempted.
+		 */
+	}
 }
 
 struct inpcb *
@@ -517,5 +659,3 @@ in_pcbrehash(inp)
 	LIST_INSERT_HEAD(head, inp, inp_hash);
 	splx(s);
 }
-
-void in_losing(struct inpcb *inp) { }

@@ -64,6 +64,7 @@
 #ifdef TCPDEBUG
 #include <netinet/tcp_debug.h>
 #endif
+#include <oskittcp.h>
 
 /* patchable/settable parameters for tcp */
 int 	tcp_mssdflt = TCP_MSS;
@@ -114,8 +115,8 @@ tcp_template(tp)
 	register struct tcpiphdr *n;
 
 	if ((n = tp->t_template) == 0) {
-	    m = m_get(M_DONTWAIT, MT_HEADER);
-	    OS_DbgPrint(OSK_MID_TRACE,("Allocated template mbuf at %x\n", m));
+		m = m_get(M_DONTWAIT, MT_HEADER);
+		OS_DbgPrint(OSK_MID_TRACE,("tp->t_template = %x\n", m));
 		if (m == NULL)
 			return (0);
 		m->m_len = sizeof (struct tcpiphdr);
@@ -126,6 +127,7 @@ tcp_template(tp)
 	n->ti_pr = IPPROTO_TCP;
 	n->ti_len = htons(sizeof (struct tcpiphdr) - sizeof (struct ip));
 	n->ti_src = inp->inp_laddr;
+	OS_DbgPrint(OSK_MID_TRACE,("INP_LADDR = %x\n", n->ti_src));
 	n->ti_dst = inp->inp_faddr;
 	n->ti_sport = inp->inp_lport;
 	n->ti_dport = inp->inp_fport;
@@ -218,7 +220,7 @@ tcp_respond(tp, ti, m, ack, seq, flags)
 	if (tp == NULL || (tp->t_inpcb->inp_socket->so_options & SO_DEBUG))
 		tcp_trace(TA_OUTPUT, 0, tp, ti, 0);
 #endif
-	(void) ip_output(0, m, NULL, ro, 0, NULL);
+	(void) ip_output(m, NULL, ro, 0, NULL);
 }
 
 /*
@@ -314,7 +316,9 @@ tcp_close(tp)
 	 * Don't update the default route's characteristics and don't
 	 * update anything that the user "locked".
 	 */
-	if (tp->t_rttupdated >= 16 && (rt = &inp->inp_route.ro_rt)) {
+	if (tp->t_rttupdated >= 16 &&
+	    (rt = inp->inp_route.ro_rt) &&
+	    ((struct sockaddr_in *)rt_key(rt))->sin_addr.s_addr != INADDR_ANY) {
 		register u_long i = 0;
 
 		if ((rt->rt_rmx.rmx_locks & RTV_RTT) == 0) {
@@ -378,12 +382,8 @@ tcp_close(tp)
 		remque(t->ti_prev);
 		m_freem(m);
 	}
-	if (tp->t_template) {
-	    (void) m_free(dtom(tp->t_template));
-	    OS_DbgPrint(OSK_MID_TRACE,("Freeing template mbuf at %x\n", 
-				       tp->t_template));
-	    tp->t_template = 0;
-	}
+	if (tp->t_template)
+		(void) m_free(dtom(tp->t_template));
 	free(tp, M_PCB);
 	inp->inp_ppcb = 0;
 	soisdisconnected(so);
@@ -427,7 +427,7 @@ tcp_notify(inp, error)
 		so->so_error = error;
 	else
 		tp->t_softerror = error;
-	wakeup(so, NULL, (caddr_t) &so->so_timeo);
+	wakeup( so, (caddr_t) &so->so_timeo);
 	sorwakeup(so);
 	sowwakeup(so);
 }
@@ -564,15 +564,16 @@ tcp_rtlookup(inp)
 	struct rtentry *rt;
 
 	ro = &inp->inp_route;
-	rt = &ro->ro_rt;
-	if (!(rt->rt_flags & RTF_UP)) {
+	rt = ro->ro_rt;
+	if (rt == NULL || !(rt->rt_flags & RTF_UP)) {
 		/* No route yet, so try to acquire one */
 		if (inp->inp_faddr.s_addr != INADDR_ANY) {
 			ro->ro_dst.sa_family = AF_INET;
-			/* ro->ro_dst.sa_len = sizeof(ro->ro_dst); */
+			ro->ro_dst.sa_len = sizeof(ro->ro_dst);
 			((struct sockaddr_in *) &ro->ro_dst)->sin_addr =
 				inp->inp_faddr;
-			rt = &ro->ro_rt;
+			rtalloc(ro);
+			rt = ro->ro_rt;
 		}
 	}
 	return rt;

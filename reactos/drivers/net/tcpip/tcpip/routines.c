@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 static UINT RandomNumber = 0x12345678;
 
 
@@ -31,7 +30,7 @@ UINT Random(
 __inline INT SkipToOffset(
     PNDIS_BUFFER Buffer,
     UINT Offset,
-    PUCHAR *Data,
+    PCHAR *Data,
     PUINT Size)
 /*
  * FUNCTION: Skip Offset bytes into a buffer chain
@@ -56,7 +55,7 @@ __inline INT SkipToOffset(
         NdisQueryBuffer(Buffer, (PVOID)Data, Size);
 
         if (Offset < *Size) {
-            *Data = (PUCHAR)((ULONG_PTR) *Data + Offset);
+            *Data = (PCHAR)((ULONG_PTR) *Data + Offset);
             *Size              -= Offset;
             break;
         }
@@ -73,7 +72,7 @@ __inline INT SkipToOffset(
 UINT CopyBufferToBufferChain(
     PNDIS_BUFFER DstBuffer,
     UINT DstOffset,
-    PUCHAR SrcData,
+    PCHAR SrcData,
     UINT Length)
 /*
  * FUNCTION: Copies data from a buffer to an NDIS buffer chain
@@ -90,9 +89,9 @@ UINT CopyBufferToBufferChain(
  */
 {
     UINT BytesCopied, BytesToCopy, DstSize;
-    PUCHAR DstData;
+    PCHAR DstData;
 
-    TI_DbgPrint(DEBUG_BUFFER, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcData (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcData, Length));
+    TI_DbgPrint(DEBUG_PBUFFER, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcData (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcData, Length));
 
     /* Skip DstOffset bytes in the destination buffer chain */
     if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == -1)
@@ -105,7 +104,7 @@ UINT CopyBufferToBufferChain(
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
         BytesCopied += BytesToCopy;
-        SrcData      = (PUCHAR)((ULONG_PTR)SrcData + BytesToCopy);
+        SrcData      = (PCHAR)((ULONG_PTR)SrcData + BytesToCopy);
 
         Length -= BytesToCopy;
         if (Length == 0)
@@ -128,7 +127,7 @@ UINT CopyBufferToBufferChain(
 
 
 UINT CopyBufferChainToBuffer(
-    PUCHAR DstData,
+    PCHAR DstData,
     PNDIS_BUFFER SrcBuffer,
     UINT SrcOffset,
     UINT Length)
@@ -147,9 +146,9 @@ UINT CopyBufferChainToBuffer(
  */
 {
     UINT BytesCopied, BytesToCopy, SrcSize;
-    PUCHAR SrcData;
+    PCHAR SrcData;
 
-    TI_DbgPrint(DEBUG_BUFFER, ("DstData 0x%X  SrcBuffer 0x%X  SrcOffset 0x%X  Length %d\n",DstData,SrcBuffer, SrcOffset, Length));
+    TI_DbgPrint(DEBUG_PBUFFER, ("DstData 0x%X  SrcBuffer 0x%X  SrcOffset 0x%X  Length %d\n",DstData,SrcBuffer, SrcOffset, Length));
     
     /* Skip SrcOffset bytes in the source buffer chain */
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == -1)
@@ -160,11 +159,11 @@ UINT CopyBufferChainToBuffer(
     for (;;) {
         BytesToCopy = MIN(SrcSize, Length);
 
-        TI_DbgPrint(DEBUG_BUFFER, ("Copying (%d) bytes from 0x%X to 0x%X\n", BytesToCopy, SrcData, DstData));
+        TI_DbgPrint(DEBUG_PBUFFER, ("Copying (%d) bytes from 0x%X to 0x%X\n", BytesToCopy, SrcData, DstData));
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
         BytesCopied += BytesToCopy;
-        DstData      = (PUCHAR)((ULONG_PTR)DstData + BytesToCopy);
+        DstData      = (PCHAR)((ULONG_PTR)DstData + BytesToCopy);
 
         Length -= BytesToCopy;
         if (Length == 0)
@@ -187,7 +186,7 @@ UINT CopyBufferChainToBuffer(
 
 
 UINT CopyPacketToBuffer(
-    PUCHAR DstData,
+    PCHAR DstData,
     PNDIS_PACKET SrcPacket,
     UINT SrcOffset,
     UINT Length)
@@ -210,7 +209,7 @@ UINT CopyPacketToBuffer(
     UINT FirstLength;
     UINT TotalLength;
 
-    TI_DbgPrint(DEBUG_BUFFER, ("DstData (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstData, SrcPacket, SrcOffset, Length));
+    TI_DbgPrint(DEBUG_PBUFFER, ("DstData (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstData, SrcPacket, SrcOffset, Length));
 
     NdisGetFirstBufferFromPacket(SrcPacket,
                                  &FirstBuffer,
@@ -244,11 +243,11 @@ UINT CopyPacketToBufferChain(
  */
 {
     PNDIS_BUFFER SrcBuffer;
-    PUCHAR DstData, SrcData;
+    PCHAR DstData, SrcData;
     UINT DstSize, SrcSize;
     UINT Count, Total;
 
-    TI_DbgPrint(DEBUG_BUFFER, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcPacket, SrcOffset, Length));
+    TI_DbgPrint(DEBUG_PBUFFER, ("DstBuffer (0x%X)  DstOffset (0x%X)  SrcPacket (0x%X)  SrcOffset (0x%X)  Length (%d)\n", DstBuffer, DstOffset, SrcPacket, SrcOffset, Length));
 
     /* Skip DstOffset bytes in the destination buffer chain */
     NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
@@ -321,7 +320,7 @@ PVOID AdjustPacket(
     PNDIS_BUFFER NdisBuffer;
     INT Adjust;
 
-    TI_DbgPrint(DEBUG_BUFFER, ("Available = %d, Needed = %d.\n", Available, Needed));
+    TI_DbgPrint(DEBUG_PBUFFER, ("Available = %d, Needed = %d.\n", Available, Needed));
 
     Adjust = Available - Needed;
 
@@ -367,7 +366,7 @@ UINT ResizePacket(
 #ifdef DBG
 
 static VOID DisplayIPHeader(
-    PUCHAR Header,
+    PCHAR Header,
     UINT Length)
 {
     /* FIXME: IPv4 only */
@@ -396,14 +395,13 @@ static VOID DisplayIPHeader(
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket)
 {
-    UINT i;
     PCHAR p;
     UINT Length;
     PNDIS_BUFFER Buffer;
     PNDIS_BUFFER NextBuffer;
-    PUCHAR CharBuffer;
+    PCHAR CharBuffer;
 
-    if ((DebugTraceLevel & (DEBUG_BUFFER | DEBUG_IP)) != (DEBUG_BUFFER | DEBUG_IP)) {
+    if ((DebugTraceLevel & (DEBUG_PBUFFER | DEBUG_IP)) != (DEBUG_PBUFFER | DEBUG_IP)) {
         return;
     }
 
@@ -448,7 +446,7 @@ VOID DisplayIPPacket(
 
 
 static VOID DisplayTCPHeader(
-    PUCHAR Header,
+    PCHAR Header,
     UINT Length)
 {
     /* FIXME: IPv4 only */
@@ -460,7 +458,7 @@ static VOID DisplayTCPHeader(
         return;
     }
 
-    TCPHeader = (PTCPv4_HEADER)((PUCHAR)IPHeader + (IPHeader->VerIHL & 0x0F) * 4);
+    TCPHeader = (PTCPv4_HEADER)((PCHAR)IPHeader + (IPHeader->VerIHL & 0x0F) * 4);
 
     DbgPrint("TCP header:\n");
     DbgPrint("  SourcePort: %d\n", WN2H(TCPHeader->SourcePort));
@@ -485,9 +483,9 @@ VOID DisplayTCPPacket(
     PIP_PACKET IPPacket)
 {
     UINT Length;
-    PUCHAR Buffer;
+    PCHAR Buffer;
 
-    if ((DebugTraceLevel & (DEBUG_BUFFER | DEBUG_TCP)) != (DEBUG_BUFFER | DEBUG_TCP)) {
+    if ((DebugTraceLevel & (DEBUG_PBUFFER | DEBUG_TCP)) != (DEBUG_PBUFFER | DEBUG_TCP)) {
         return;
     }
 
@@ -519,16 +517,16 @@ VOID DisplayTCPPacket(
     }
 }
 
-#endif DBG /* DBG */
+#endif/* DBG */
 
 void GetDataPtr( PNDIS_PACKET Packet,
 		 UINT Offset, 
-		 PUCHAR *DataOut,
+		 PCHAR *DataOut,
 		 PUINT Size ) {
     PNDIS_BUFFER Buffer;
 
     NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
-    if( !Buffer ) return NULL;
+    if( !Buffer ) return;
     SkipToOffset( Buffer, Offset, DataOut, Size );
 }
 
@@ -586,7 +584,7 @@ VOID FreeNdisPacketX
 {
     PNDIS_BUFFER Buffer, NextBuffer;
 
-    TI_DbgPrint(DEBUG_BUFFER, ("Packet (0x%X)\n", Packet));
+    TI_DbgPrint(DEBUG_PBUFFER, ("Packet (0x%X)\n", Packet));
 
     /* Free all the buffers in the packet first */
     NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);

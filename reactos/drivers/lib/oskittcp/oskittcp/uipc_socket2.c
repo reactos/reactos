@@ -97,9 +97,9 @@ void
 soisconnecting(so)
 	register struct socket *so;
 {
-
-	so->so_state &= ~(SS_ISCONNECTED|SS_ISDISCONNECTING);
-	so->so_state |= SS_ISCONNECTING;
+    OS_DbgPrint(OSK_MID_TRACE,("Called %x\n", so));
+    so->so_state &= ~(SS_ISCONNECTED|SS_ISDISCONNECTING);
+    so->so_state |= SS_ISCONNECTING;
 }
 
 void
@@ -108,16 +108,18 @@ soisconnected(so)
 {
 	register struct socket *head = so->so_head;
 
+	OS_DbgPrint(OSK_MID_TRACE,("Called %x\n", so));
+
 	so->so_state &= ~(SS_ISCONNECTING|SS_ISDISCONNECTING|SS_ISCONFIRMING);
 	so->so_state |= SS_ISCONNECTED;
 	if (head && soqremque(so, 0)) {
-	    soqinsque(head, so, 1);
-	    sorwakeup(head);
-	    wakeup(so, NULL, (caddr_t)&head->so_timeo);
+		soqinsque(head, so, 1);
+		sorwakeup(head);
+		wakeup(so, (caddr_t)&head->so_timeo);
 	} else {
-	    wakeup(so, NULL, (caddr_t)&so->so_timeo);
-	    sorwakeup(so);
-	    socwakeup(so);
+		wakeup(so, (caddr_t)&so->so_timeo);
+		sorwakeup(so);
+		sowwakeup(so);
 	}
 }
 
@@ -125,24 +127,25 @@ void
 soisdisconnecting(so)
 	register struct socket *so;
 {
-
-	so->so_state &= ~SS_ISCONNECTING;
-	so->so_state |= (SS_ISDISCONNECTING|SS_CANTRCVMORE|SS_CANTSENDMORE);
-	wakeup(so, NULL, (caddr_t)&so->so_timeo);
-	sowwakeup(so);
-	sorwakeup(so);
+    OS_DbgPrint(OSK_MID_TRACE,("Called %x\n", so));
+    so->so_state &= ~SS_ISCONNECTING;
+    so->so_state |= (SS_ISDISCONNECTING|SS_CANTRCVMORE|SS_CANTSENDMORE);
+    wakeup(so, (caddr_t)&so->so_timeo);
+    sowwakeup(so);
+    sorwakeup(so);
 }
 
 void
 soisdisconnected(so)
 	register struct socket *so;
 {
-
-	so->so_state &= ~(SS_ISCONNECTING|SS_ISCONNECTED|SS_ISDISCONNECTING);
-	so->so_state |= (SS_CANTRCVMORE|SS_CANTSENDMORE);
-	wakeup(so, NULL, (caddr_t)&so->so_timeo);
-	sowwakeup(so);
-	sorwakeup(so);
+    OS_DbgPrint(OSK_MID_TRACE,("Called %x\n", so));
+    
+    so->so_state &= ~(SS_ISCONNECTING|SS_ISCONNECTED|SS_ISDISCONNECTING);
+    so->so_state |= (SS_CANTRCVMORE|SS_CANTSENDMORE);
+    wakeup(so, (caddr_t)&so->so_timeo);
+    sowwakeup(so);
+    sorwakeup(so);
 }
 
 /*
@@ -163,6 +166,8 @@ sonewconn1(head, connstatus)
 {
 	register struct socket *so;
 	int soqueue = connstatus ? 1 : 0;
+
+	OS_DbgPrint(OSK_MID_TRACE,("Called %x\n", head));
 
 	if ((head->so_qlen + head->so_q0len > 3 * head->so_qlimit / 2) &&
 	    (head->so_qlen + head->so_q0len > sominqueue))
@@ -188,7 +193,7 @@ sonewconn1(head, connstatus)
 	}
 	if (connstatus) {
 		sorwakeup(head);
-		wakeup(so, NULL, (caddr_t)&head->so_timeo);
+		wakeup(head, (caddr_t)&head->so_timeo);
 		so->so_state |= connstatus;
 	}
 	return (so);
@@ -321,7 +326,23 @@ sowakeup(so, sb)
 {
 	struct proc *p;
 
-	wakeup(so, &sb->sb_sel, (caddr_t)&sb->sb_cc);
+	wakeup(so, &sb->sb_sel);
+#ifndef OSKIT
+	/*
+	 * in the OS Kit, we do not want notifications to stop
+	 */
+	sb->sb_flags &= ~SB_SEL;
+#endif
+	if (sb->sb_flags & SB_WAIT) {
+		sb->sb_flags &= ~SB_WAIT;
+		wakeup(so, (caddr_t)&sb->sb_cc);
+	}
+	if (so->so_state & SS_ASYNC) {
+		if (so->so_pgid < 0)
+			gsignal(-so->so_pgid, SIGIO);
+		else if (so->so_pgid > 0 && (p = pfind(so->so_pgid)) != 0)
+			psignal(p, SIGIO);
+	}
 }
 
 /*
@@ -361,6 +382,7 @@ soreserve(so, sndcc, rcvcc)
 	register struct socket *so;
 	u_long sndcc, rcvcc;
 {
+
 	if (sbreserve(&so->so_snd, sndcc) == 0)
 		goto bad;
 	if (sbreserve(&so->so_rcv, rcvcc) == 0)
@@ -442,52 +464,31 @@ sbrelease(sb)
  * discarded and mbufs are compacted where possible.
  */
 void
-sbappend(so, sb, m)
-    struct socket *so;
-    struct sockbuf *sb;
-    struct mbuf *m;
+sbappend(sb, m)
+	struct sockbuf *sb;
+	struct mbuf *m;
 {
-	register struct mbuf *n, *new_mbuf;
+	register struct mbuf *n;
 
-	free( malloc( 2 ) );
+	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
 
 	if (m == 0)
 		return;
-
 	n = sb->sb_mb;
-	OS_DbgPrint(OSK_MID_TRACE,("sbappendrecord: %x\n", n));
-
-	while( n && n->m_nextpkt ) n = n->m_nextpkt;
-
-	new_mbuf = malloc( sizeof( *m ) + m->m_len );
-	memset( new_mbuf, 0, sizeof( *m ) );
-
-	free( malloc( 2 ) );
-
-	new_mbuf->m_type = MT_DATA;
-	free( malloc( 2 ) );
-
-	new_mbuf->m_len = m->m_len;
-	free( malloc( 2 ) );
-
-	new_mbuf->m_data = ((caddr_t)new_mbuf) + sizeof(*new_mbuf);
-	free( malloc( 2 ) );
-
-	memcpy( new_mbuf->m_data, m->m_data, m->m_len );
-
-	free( malloc( 2 ) );
-
-	if( n ) {
-	    n->m_nextpkt = new_mbuf;
-	    OS_DbgPrint(OSK_MID_TRACE,("SK BUFF NEW: %x\n", n->m_nextpkt));
-	} else {
-	    sb->sb_mb = new_mbuf;
-	    OS_DbgPrint(OSK_MID_TRACE,
-			("SK BUFF HEAD: %x (new pkt %d bytes)\n", 
-			 sb->sb_mb, sb->sb_mb->m_len));
+	if (n) {
+		while (n->m_nextpkt)
+			n = n->m_nextpkt;
+		do {
+			if (n->m_flags & M_EOR) {
+				sbappendrecord(sb, m); /* XXXXXX!!!! */
+				OS_DbgPrint(OSK_MID_TRACE,("Leaving (rec)\n"));
+				return;
+			}
+		} while (n->m_next && (n = n->m_next));
 	}
+	sbcompress(sb, m, n);
 
-	free( malloc( 2 ) );
+	OS_DbgPrint(OSK_MID_TRACE,("Leaving\n"));
 }
 
 #ifdef SOCKBUF_DEBUG
@@ -535,7 +536,6 @@ sbappendrecord(sb, m0)
 	 * Put the first mbuf on the queue.
 	 * Note this permits zero length records.
 	 */
-
 	sballoc(sb, m0);
 	if (m)
 		m->m_nextpkt = m0;
@@ -609,10 +609,10 @@ sbappendaddr(sb, asa, m0, control)
 	struct mbuf *m0, *control;
 {
 	register struct mbuf *m, *n;
-	int space = /*asa->sa_len;*/ sizeof(struct sockaddr);
+	int space = asa->sa_len;
 
 if (m0 && (m0->m_flags & M_PKTHDR) == 0)
-    panic("sbappendaddr");
+panic("sbappendaddr");
 	if (m0)
 		space += m0->m_pkthdr.len;
 	for (n = control; n; n = n->m_next) {
@@ -622,11 +622,13 @@ if (m0 && (m0->m_flags & M_PKTHDR) == 0)
 	}
 	if (space > sbspace(sb))
 		return (0);
+	if (asa->sa_len > MLEN)
+		return (0);
 	MGET(m, M_DONTWAIT, MT_SONAME);
 	if (m == 0)
 		return (0);
-	m->m_len = sizeof(struct sockaddr); 
-	bcopy((caddr_t)asa, mtod(m, caddr_t), sizeof(struct sockaddr));
+	m->m_len = asa->sa_len;
+	bcopy((caddr_t)asa, mtod(m, caddr_t), asa->sa_len);
 	if (n)
 		n->m_next = m0;		/* concatenate data to control */
 	else
@@ -706,8 +708,6 @@ sbcompress(sb, m, n)
 			    (unsigned)m->m_len);
 			n->m_len += m->m_len;
 			sb->sb_cc += m->m_len;
-			OS_DbgPrint(OSK_MID_TRACE,("SB->SB_CC = %d\n",
-						   sb->sb_cc));
 			m = m_free(m);
 			continue;
 		}
@@ -742,10 +742,8 @@ sbflush(sb)
 		panic("sbflush");
 	while (sb->sb_mbcnt)
 		sbdrop(sb, (int)sb->sb_cc);
-#if 0
 	if (sb->sb_cc || sb->sb_mb)
 		panic("sbflush 2");
-#endif
 }
 
 /*
@@ -772,8 +770,6 @@ sbdrop(sb, len)
 			m->m_len -= len;
 			m->m_data += len;
 			sb->sb_cc -= len;
-			OS_DbgPrint(OSK_MID_TRACE,("SB->SB_CC = %d\n",
-						   sb->sb_cc));
 			break;
 		}
 		len -= m->m_len;

@@ -1,4 +1,3 @@
-
 #include <oskittcp.h>
 #include <oskitdebug.h>
 #include <ntddk.h>
@@ -28,8 +27,26 @@ unsigned net_imask;
 unsigned volatile ipending;
 struct timeval boottime;
 
+void *fbsd_malloc( unsigned int bytes, const char *file, int line, ... ) {
+    void *v = ExAllocatePool( NonPagedPool, bytes );
+    if( v ) TrackWithTag( 'fbsd', v, file, line );
+    return v;
+}
+
+void fbsd_free( void *data, const char *file, int line, ... ) {
+    UntrackFL( file, line, data );
+    ExFreePool( data );
+}
+
 void InitOskitTCP() {
     OS_DbgPrint(OSK_MID_TRACE,("Init Called\n"));
+    OS_DbgPrint(OSK_MID_TRACE,("MB Init\n"));
+    mbinit();
+    OS_DbgPrint(OSK_MID_TRACE,("Rawip Init\n"));
+    rip_init();
+    raw_init();
+    OS_DbgPrint(OSK_MID_TRACE,("Route Init\n"));
+    route_init();
     OS_DbgPrint(OSK_MID_TRACE,("Init fake freebsd scheduling\n"));
     init_freebsd_sched();
     OS_DbgPrint(OSK_MID_TRACE,("Init clock\n"));
@@ -48,6 +65,7 @@ void DeinitOskitTCP() {
 
 void TimerOskitTCP() {
     tcp_slowtimo();
+    tcp_fasttimo();
 }
 
 void RegisterOskitTCPEventHandlers( POSKITTCP_EVENT_HANDLERS EventHandlers ) {
@@ -145,8 +163,34 @@ size_t len;
     return error;
 }
 
-NTSTATUS OskitTCPConnect( PVOID socket, PVOID connection, 
-			  PVOID nam, OSK_UINT namelen ) {
+int OskitTCPBind( PVOID socket, PVOID connection,
+		  PVOID nam, OSK_UINT namelen ) {
+    int error = EFAULT;
+    struct socket *so = socket;
+    struct mbuf sabuf = { 0 };
+    struct sockaddr addr;
+
+    OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
+
+    if( nam )
+	addr = *((struct sockaddr *)nam);
+
+    sabuf.m_data = (void *)&addr;
+    sabuf.m_len = sizeof(addr);
+    
+    addr.sa_family = addr.sa_len;
+    addr.sa_len = sizeof(struct sockaddr);
+
+    OskitDumpBuffer( (PCHAR)&addr, sizeof(addr) );
+
+    error = sobind(so, &sabuf);
+
+    OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
+    return (error);    
+}
+
+int OskitTCPConnect( PVOID socket, PVOID connection, 
+		     PVOID nam, OSK_UINT namelen ) {
     struct socket *so = socket;
     struct connect_args _uap = {
 	0, nam, namelen
@@ -195,10 +239,11 @@ done:
     return (error);    
 }
 
-DWORD OskitTCPClose( void *socket ) {
+int OskitTCPClose( void *socket ) {
     struct socket *so = socket;
     so->so_connection = 0;
     soclose( so );
+    return 0;
 }
 
 int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len, 
@@ -216,10 +261,10 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     return error;
 }
 
-void *OskitTCPAccept( void *socket, 
-		      void *AddrOut, 
-		      OSK_UINT AddrLen,
-		      OSK_UINT *OutAddrLen ) {
+int OskitTCPAccept( void *socket, 
+		    void *AddrOut, 
+		    OSK_UINT AddrLen,
+		    OSK_UINT *OutAddrLen ) {
     struct mbuf nam;
     int error;
 
@@ -229,26 +274,39 @@ void *OskitTCPAccept( void *socket,
     return soaccept( socket, &nam );
 }
 
+/* The story so far
+ * 
+ * We have a packet.  While we store the fields we want in host byte order
+ * outside the original packet, the bsd stack modifies them in place.
+ */
+
 void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len, 
 			      OSK_UINT IpHeaderLen ) {
-    struct mbuf *Ip = m_get(M_DONTWAIT, MT_DATA);
-    char *NewData = malloc( Len );
+    struct mbuf *Ip = m_devget( Data, Len, 0, NULL, NULL );
+    struct ip *iph;
+    
+    if( !Ip ) return; /* drop the segment */
 
-    OS_DbgPrint(OSK_MAX_TRACE, ("OskitTCPReceiveDatagram: %d Bytes\n", Len));
+    memcpy( Ip->m_data, Data, Len );
+    Ip->m_pkthdr.len = IpHeaderLen;
+
+    /* Do the transformations on the header that tcp_input expects */
+    iph = mtod(Ip, struct ip *);
+    NTOHS(iph->ip_len);
+    iph->ip_len -= sizeof(struct ip);
+
+    OS_DbgPrint(OSK_MAX_TRACE, 
+		("OskitTCPReceiveDatagram: %d (%d header) Bytes\n", Len,
+		 IpHeaderLen));
 
     OskitDumpBuffer( Data, Len );
-
-    memset( Ip, 0, sizeof( *Ip ) );
-    Ip->m_len = Len;
-    Ip->m_data = NewData;
-    memcpy( Ip->m_data, Data, Len );
 
     tcp_input(Ip, IpHeaderLen);
 
     /* The buffer Ip is freed by tcp_input */
 }
 
-void OskitTCPListen( void *socket, int backlog ) {
+int OskitTCPListen( void *socket, int backlog ) {
     return solisten( socket, backlog );
 }
 
@@ -269,10 +327,10 @@ void OskitTCPSetAddress( void *socket,
 }
 
 void OskitTCPGetAddress( void *socket, 
-			 PULONG LocalAddress,
-			 PUSHORT LocalPort,
-			 PULONG RemoteAddress,
-			 PUSHORT RemotePort ) {
+			 OSK_UINT *LocalAddress,
+			 OSK_UI16 *LocalPort,
+			 OSK_UINT *RemoteAddress,
+			 OSK_UI16 *RemotePort ) {
     struct socket *so = socket;
     struct inpcb *inp = so ? so->so_pcb : 0;
     if( inp ) {
@@ -286,8 +344,123 @@ void OskitTCPGetAddress( void *socket,
     }
 }
 
+struct ifaddr *ifa_iffind(struct sockaddr *addr, int type)
+{
+    if( OtcpEvent.FindInterface ) 
+	return OtcpEvent.FindInterface( OtcpEvent.ClientData,
+					PF_INET,
+					type,
+					addr );
+    else
+	return NULL;
+}
+
 void oskittcp_die( const char *file, int line ) {
     DbgPrint("\n\n*** OSKITTCP: Panic Called at %s:%d ***\n", file, line);
     KeBugCheck(0);
+}
+
+/* Stuff supporting the BSD network-interface interface */
+struct ifaddr **ifnet_addrs;
+struct	ifnet *ifnet;
+
+void
+ifinit()
+{
+}
+
+
+void
+if_attach(ifp)
+	struct ifnet *ifp;
+{
+    panic("if_attach\n");
+}
+
+struct ifnet *
+ifunit(char *name)
+{
+	return 0;
+}
+
+/*
+ * Handle interface watchdog timer routines.  Called
+ * from softclock, we decrement timers (if set) and
+ * call the appropriate interface routine on expiration.
+ */
+void
+if_slowtimo(arg)
+	void *arg;
+{
+#if 0
+	register struct ifnet *ifp;
+	int s = splimp();
+
+	for (ifp = ifnet; ifp; ifp = ifp->if_next) {
+		if (ifp->if_timer == 0 || --ifp->if_timer)
+			continue;
+		if (ifp->if_watchdog)
+			(*ifp->if_watchdog)(ifp->if_unit);
+	}
+	splx(s);
+	timeout(if_slowtimo, (void *)0, hz / IFNET_SLOWHZ);
+#endif
+}
+
+/*
+ * Locate an interface based on a complete address.
+ */
+
+/*ARGSUSED*/
+struct ifaddr *ifa_ifwithaddr(addr)
+    struct sockaddr *addr;
+{
+    struct ifaddr *ifaddr = ifa_ifwithnet( addr );
+    struct sockaddr_in *addr_in;
+    struct sockaddr_in *faddr_in;
+
+    if( !ifaddr ) {
+	OS_DbgPrint(OSK_MID_TRACE,("No ifaddr\n"));
+	return NULL;
+    } else {
+	OS_DbgPrint(OSK_MID_TRACE,("ifaddr @ %x\n", ifaddr));
+    }
+
+    addr_in = (struct sockaddr_in *)addr;
+    faddr_in = (struct sockaddr_in *)ifaddr->ifa_addr;
+
+    if( faddr_in->sin_addr.s_addr == addr_in->sin_addr.s_addr )
+	return ifaddr;
+    else
+	return NULL;
+}
+
+/*
+ * Locate the point to point interface with a given destination address.
+ */
+/*ARGSUSED*/
+struct ifaddr *
+ifa_ifwithdstaddr(addr)
+	register struct sockaddr *addr;
+{
+    OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
+    return ifa_iffind(addr, IFF_POINTOPOINT);
+}
+
+/*
+ * Find an interface on a specific network.  If many, choice
+ * is most specific found.
+ */
+struct ifaddr *ifa_ifwithnet(addr)
+	struct sockaddr *addr;
+{
+    struct sockaddr_in *sin;
+    struct ifaddr *ifaddr = ifa_iffind(addr, IFF_UNICAST);
+
+    sin = (struct sockaddr *)&ifaddr->ifa_addr;
+
+    OS_DbgPrint(OSK_MID_TRACE,("ifaddr->addr = %x\n", sin->sin_addr.s_addr));
+
+    return ifaddr;
 }
 

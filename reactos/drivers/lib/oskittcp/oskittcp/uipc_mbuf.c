@@ -149,7 +149,11 @@ m_retry(i, t)
  * I'm getting rid of the utterly ugly redefinition of m_retry
  * - same for m_retryhdr below
  */
+#ifndef OSKIT
+	MGET(m,i,t);
+#else
 	MGET_DONT_RECURSE(m, i, t);
+#endif
 	if (m != NULL)
 		mbstat.m_wait++;
 	else
@@ -167,7 +171,11 @@ m_retryhdr(i, t)
 	register struct mbuf *m;
 
 	m_reclaim();
+#ifndef OSKIT
+	MGETHDR(m, i, t);
+#else
 	MGETHDR_DONT_RECURSE(m, i, t);
+#endif
 	if (m != NULL)
 		mbstat.m_wait++;
 	else
@@ -250,7 +258,7 @@ m_freem(m)
 	if (m == NULL)
 		return;
 	do {
-		MFREE(m, n);
+	    MFREE(m, n);
 		m = n;
 	} while (m);
 }
@@ -307,7 +315,7 @@ m_copym(m, off0, len, wait)
 	int copyhdr = 0;
 
 	if (off < 0 || len < 0)
-		panic("m_copym");
+		panic("m_copym: off %d, len %d", off, len);
 	if (off == 0 && m->m_flags & M_PKTHDR)
 		copyhdr = 1;
 	while (off > 0) {
@@ -395,6 +403,8 @@ m_copydata(m, off, len, cp)
 			panic("m_copydata");
 		count = min(m->m_len - off, len);
 		bcopy(mtod(m, caddr_t) + off, cp, count);
+		OS_DbgPrint(OSK_MID_TRACE,("buf %x, len %d\n", m, m->m_len));
+		OskitDumpBuffer(m->m_data, m->m_len);
 		len -= count;
 		cp += count;
 		off = 0;
@@ -668,7 +678,11 @@ m_devget(buf, totlen, off0, ifp, copy)
 	MGETHDR(m, M_DONTWAIT, MT_DATA);
 	if (m == 0)
 		return (0);
+#ifndef __REACTOS__
 	m->m_pkthdr.rcvif = ifp;
+#else
+	m->m_pkthdr.rcvif = 0;
+#endif
 	m->m_pkthdr.len = totlen;
 	m->m_len = MHLEN;
 
@@ -702,7 +716,11 @@ m_devget(buf, totlen, off0, ifp, copy)
 		if (copy)
 			copy(cp, mtod(m, caddr_t), (unsigned)len);
 		else
+#ifdef __REACTOS__
+		    memcpy(mtod(m, caddr_t), cp, len);
+#else
 			bcopy(cp, mtod(m, caddr_t), (unsigned)len);
+#endif
 		cp += len;
 		*mp = m;
 		mp = &m->m_next;

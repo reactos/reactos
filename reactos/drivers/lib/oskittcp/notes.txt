@@ -1,0 +1,6 @@
+The story so far:
+
+tcp_input is called from OskitTCPReceiveDatagram ... I'm not so sure that
+this part is correct.  I believe that at least the ACK number calculation
+is correct as is.
+

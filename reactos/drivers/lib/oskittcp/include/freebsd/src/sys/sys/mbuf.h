@@ -57,6 +57,13 @@
 #include <sys/malloc.h>
 #endif
 
+#ifndef OSKIT
+#ifdef __REACTOS__
+/* #define OSKIT */
+#define LOCAL_OSKIT_DEFINED
+#endif
+#endif
+
 /*
  * Mbufs are of a single size, MSIZE (machine/machparam.h), which
  * includes overhead.  An mbuf may add a single "mbuf cluster" of size
@@ -79,7 +86,11 @@
  * cltom(x) -	convert cluster # to ptr to beginning of cluster
  */
 #define mtod(m,t)	((t)((m)->m_data))
+#ifndef __REACTOS__
+#define	dtom(x)		((struct mbuf *)((int)(x) & ~(MSIZE-1)))
+#else
 #define	dtom(x)		((struct mbuf *)((int)(x) - sizeof(struct m_hdr)))
+#endif
 #ifndef OSKIT
 #define	mtocl(x)	(((u_int)(x) - (u_int)mbutl) >> MCLSHIFT)
 #define	cltom(x)	((caddr_t)((u_int)mbutl + ((u_int)(x) << MCLSHIFT)))
@@ -139,7 +150,7 @@ struct mbuf {
 #define	m_dat		M_dat.M_databuf
 
 /* mbuf flags */
-#ifdef OSKIT
+#if defined(OSKIT) && !defined(__REACTOS__)
 #include <oskit/io/bufio.h>
 /* 
  * A small step for mankind, but a huge leap for BSD:
@@ -203,6 +214,7 @@ struct mbuf {
  */
 #define	MGET(m, how, type) { \
 	MALLOC((m), struct mbuf *, MSIZE, mbtypes[type], (how)); \
+        OS_DbgPrint(OSK_MID_TRACE,("(MGET) got mbuf @ %x\n", m)); \
 	if (m) { \
 		(m)->m_type = (type); \
 		MBUFLOCK(mbstat.m_mtypes[type]++;) \
@@ -216,6 +228,7 @@ struct mbuf {
 
 #define	MGETHDR(m, how, type) { \
 	MALLOC((m), struct mbuf *, MSIZE, mbtypes[type], (how)); \
+        OS_DbgPrint(OSK_MID_TRACE,("(MGETHDR) got mbuf @ %x\n", m)); \
 	if (m) { \
 		(m)->m_type = (type); \
 		MBUFLOCK(mbstat.m_mtypes[type]++;) \
@@ -223,14 +236,14 @@ struct mbuf {
 		(m)->m_nextpkt = (struct mbuf *)NULL; \
 		(m)->m_data = (m)->m_pktdat; \
 		(m)->m_flags = M_PKTHDR; \
-	} else { \
+	} else \
 		(m) = m_retryhdr((how), (type)); \
-        } \
 }
 
-#if defined(OSKIT) || defined(__REACTOS__)
+#ifdef OSKIT
 #define	MGET_DONT_RECURSE(m, how, type) { \
 	MALLOC((m), struct mbuf *, MSIZE, mbtypes[type], (how)); \
+        OS_DbgPrint(OSK_MID_TRACE,("(MGET_DONT_RECURSE) got mbuf @ %x\n", m)); \
 	if (m) { \
 		(m)->m_type = (type); \
 		MBUFLOCK(mbstat.m_mtypes[type]++;) \
@@ -244,6 +257,7 @@ struct mbuf {
 
 #define	MGETHDR_DONT_RECURSE(m, how, type) { \
 	MALLOC((m), struct mbuf *, MSIZE, mbtypes[type], (how)); \
+        OS_DbgPrint(OSK_MID_TRACE,("(MGETHDR_DONT_RECURSE) got mbuf @ %x\n", m)); \
 	if (m) { \
 		(m)->m_type = (type); \
 		MBUFLOCK(mbstat.m_mtypes[type]++;) \
@@ -276,6 +290,7 @@ union mcluster {
 
 #define	MCLALLOC(p, how) \
 	MBUFLOCK( \
+          OS_DbgPrint(OSK_MID_TRACE,("(MCLALLOC)\n")); \
 	  if (mclfree == 0) \
 		(void)m_clalloc(1, (how)); \
 	  (p) = (caddr_t)mclfree; \
@@ -288,6 +303,7 @@ union mcluster {
 
 #define	MCLGET(m, how) \
 	{ MCLALLOC((m)->m_ext.ext_buf, (how)); \
+          OS_DbgPrint(OSK_MID_TRACE,("(MCLGET) m = %x\n", m)); \
 	  if ((m)->m_ext.ext_buf != NULL) { \
 		(m)->m_data = (m)->m_ext.ext_buf; \
 		(m)->m_flags |= M_EXT; \
@@ -297,6 +313,7 @@ union mcluster {
 
 #define	MCLFREE(p) \
 	MBUFLOCK ( \
+          OS_DbgPrint(OSK_MID_TRACE,("(MCLFREE)\n")); \
 	  if (--mclrefcnt[mtocl(p)] == 0) { \
 		((union mcluster *)(p))->mcl_next = mclfree; \
 		mclfree = (union mcluster *)(p); \
@@ -306,6 +323,7 @@ union mcluster {
 #else
 #define	MCLGET(m, how) \
 	{ (m)->m_ext.ext_bufio = oskit_bufio_create(MCLBYTES); \
+          OS_DbgPrint(OSK_MID_TRACE,("(!OSKIT MCLGET)\n")); \
 	  oskit_bufio_map((m)->m_ext.ext_bufio, \
 		(void **)&((m)->m_ext.ext_buf), 0, MCLBYTES);	\
 	  if ((m)->m_ext.ext_buf != NULL) { \
@@ -339,6 +357,7 @@ union mcluster {
 #ifdef OSKIT
 #define	MFREE(m, nn) \
 	{ MBUFLOCK(mbstat.m_mtypes[(m)->m_type]--;) \
+          OS_DbgPrint(OSK_MID_TRACE,("(OSKIT MFREE) m = %x\n", m)); \
 	  if ((m)->m_flags & M_EXT) { \
 		oskit_bufio_release((m)->m_ext.ext_bufio);	\
 	  } \
@@ -348,10 +367,11 @@ union mcluster {
 #else /* !OSKIT */
 #define	MFREE(m, nn) \
 	{ MBUFLOCK(mbstat.m_mtypes[(m)->m_type]--;) \
+          OS_DbgPrint(OSK_MID_TRACE,("(!OSKIT MFREE) m = %x\n", m)); \
 	  if ((m)->m_flags & M_EXT) { \
 		MCLFREE((m)->m_ext.ext_buf); \
 	  } \
-	  /* (nn) = (m)->m_next; */ \
+	  (nn) = (m)->m_next; \
 	  FREE((m), mbtypes[(m)->m_type]); \
 	}
 #endif /* OSKIT */
@@ -362,6 +382,7 @@ union mcluster {
  * from must have M_PKTHDR set, and to must be empty.
  */
 #define	M_COPY_PKTHDR(to, from) { \
+        OS_DbgPrint(OSK_MID_TRACE,("(M_COPY_PKTHDR) to %x from %x\n", to, from)); \
 	(to)->m_pkthdr = (from)->m_pkthdr; \
 	(to)->m_flags = (from)->m_flags & M_COPYFLAGS; \
 	(to)->m_data = (to)->m_pktdat; \
@@ -372,13 +393,19 @@ union mcluster {
  * an object of the specified size at the end of the mbuf, longword aligned.
  */
 #define	M_ALIGN(m, len) \
-	{ (m)->m_data += (MLEN - (len)) &~ (sizeof(long) - 1); }
+	{ \
+          OS_DbgPrint(OSK_MID_TRACE,("(M_ALIGN) %d @ %x\n", m, len)); \
+          (m)->m_data += (MLEN - (len)) &~ (sizeof(long) - 1); \
+        }
 /*
  * As above, for mbufs allocated with m_gethdr/MGETHDR
  * or initialized by M_COPY_PKTHDR.
  */
 #define	MH_ALIGN(m, len) \
-	{ (m)->m_data += (MHLEN - (len)) &~ (sizeof(long) - 1); }
+	{ \
+          OS_DbgPrint(OSK_MID_TRACE,("(MH_ALIGN) %d @ %x\n", m, len)); \
+          (m)->m_data += (MHLEN - (len)) &~ (sizeof(long) - 1); \
+        }
 
 /*
  * Compute the amount of space available
@@ -402,6 +429,7 @@ union mcluster {
  * after the end of data in an mbuf.
  */
 #define	M_TRAILINGSPACE(m) \
+        OS_DbgPrint(OSK_MID_TRACE,("(M_TRAILINGSPACE) %x\n", m)); \
 	((m)->m_flags & M_EXT ? (m)->m_ext.ext_buf + (m)->m_ext.ext_size - \
 	    ((m)->m_data + (m)->m_len) : \
 	    &(m)->m_dat[MLEN] - ((m)->m_data + (m)->m_len))
@@ -413,6 +441,7 @@ union mcluster {
  * is freed and m is set to NULL.
  */
 #define	M_PREPEND(m, plen, how) { \
+        OS_DbgPrint(OSK_MID_TRACE,("(M_PREPEND) %d on %x\n", plen, m)); \
 	if (M_LEADINGSPACE(m) >= (plen)) { \
 		(m)->m_data -= (plen); \
 		(m)->m_len += (plen); \
@@ -424,6 +453,7 @@ union mcluster {
 
 /* change mbuf to new type */
 #define MCHTYPE(m, t) { \
+        OS_DbgPrint(OSK_MID_TRACE,("(MCHTYPE) %x %x\n", m, t)); \
 	MBUFLOCK(mbstat.m_mtypes[(m)->m_type]--; mbstat.m_mtypes[t]++;) \
 	(m)->m_type = t;\
 }
@@ -507,6 +537,11 @@ int mbtypes[] = {				/* XXX */
 #endif
 };
 #endif
+#endif
+
+#ifdef LOCAL_OSKIT_DEFINED
+#undef LOCAL_OSKIT_DEFINED
+#undef OSKIT
 #endif
 
 #endif /* !_SYS_MBUF_H_ */

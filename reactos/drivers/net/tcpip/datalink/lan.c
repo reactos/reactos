@@ -173,7 +173,9 @@ VOID STDCALL ProtocolSendComplete(
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
     AdjustPacket(Packet, Adapter->HeaderSize, PC(Packet)->DLOffset);
+    TI_DbgPrint(DEBUG_DATALINK, ("Calling completion routine\n"));
     (*PC(Packet)->DLComplete)(Adapter->Context, Packet, Status);
+    TI_DbgPrint(DEBUG_DATALINK, ("Finished\n"));
 }
 
 
@@ -218,7 +220,9 @@ VOID STDCALL ProtocolTransferDataComplete(
         OskitDumpBuffer( IPPacket.Header, BytesTransferred );
 
         PacketType = ((PETH_HEADER)IPPacket.Header)->EType;
-	IPPacket.Header += MaxLLHeaderSize;
+	IPPacket.Header = ((PCHAR)IPPacket.Header) + sizeof(ETH_HEADER);
+	IPPacket.Position = sizeof(ETH_HEADER);
+	IPPacket.TotalSize -= sizeof(ETH_HEADER);
 
 	TI_DbgPrint
 		(DEBUG_DATALINK,
@@ -271,7 +275,6 @@ NDIS_STATUS STDCALL ProtocolReceive(
     PCHAR BufferData;
     NDIS_STATUS NdisStatus;
     PNDIS_PACKET NdisPacket;
-    PNDIS_BUFFER NdisBuffer;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
     PETH_HEADER EHeader  = (PETH_HEADER)HeaderBuffer;
 
@@ -319,19 +322,23 @@ NDIS_STATUS STDCALL ProtocolReceive(
 	}
 
     IPPacket.NdisPacket = NdisPacket;
+    IPPacket.Position = 0;
 	
+#if 0
     if (LookaheadBufferSize < PacketSize) {
+#endif
     TI_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
         /* Get the data */
-        NdisTransferData(&NdisStatus,
-                         Adapter->NdisHandle,
-                         MacReceiveContext,
-                         0,
-                         PacketSize,
-                         NdisPacket,
-                         &BytesTransferred);
+    NdisTransferData(&NdisStatus,
+		     Adapter->NdisHandle,
+		     MacReceiveContext,
+		     0,
+		     PacketSize + HeaderBufferSize,
+		     NdisPacket,
+		     &BytesTransferred);
+#if 0
     } else {
-    TI_DbgPrint(DEBUG_DATALINK, ("copy\n"));
+	TI_DbgPrint(DEBUG_DATALINK, ("copy\n"));
 	NdisStatus = NDIS_STATUS_SUCCESS;
 	BytesTransferred = PacketSize;
 	RtlCopyMemory(BufferData,
@@ -340,13 +347,14 @@ NDIS_STATUS STDCALL ProtocolReceive(
 	RtlCopyMemory(BufferData + HeaderBufferSize,
 		      LookaheadBuffer, LookaheadBufferSize);
     }
+#endif
     TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
 
     if (NdisStatus != NDIS_STATUS_PENDING)
 	ProtocolTransferDataComplete(BindingContext,
 				     NdisPacket,
 				     NdisStatus,
-				     BytesTransferred);
+				     PacketSize + HeaderBufferSize);
 
     /* Release the packet descriptor */
     KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
@@ -581,11 +589,9 @@ VOID BindAdapter(
  *    bind the adapter to IP layer
  */
 {
-    INT i;
     PIP_INTERFACE IF;
     PIP_ADDRESS Address = 0;
     PIP_ADDRESS Netmask = 0;
-    PNDIS_PACKET Packet;
     NDIS_STATUS NdisStatus;
     LLIP_BIND_INFO BindInfo;
     ULONG Lookahead = LOOKAHEAD_SIZE;
@@ -732,7 +738,6 @@ NDIS_STATUS LANRegisterAdapter(
     PLAN_ADAPTER IF;
     NDIS_STATUS NdisStatus;
     NDIS_STATUS OpenStatus;
-		PNDIS_CONFIGURATION_PARAMETER Parameter;
     UINT MediaIndex;
     NDIS_MEDIUM MediaArray[MAX_MEDIA];
     UINT AddressOID;

@@ -109,6 +109,15 @@ NTSTATUS TCPSendData(
   ULONG Flags,
   PULONG DataUsed);
 
+NTSTATUS TCPClose
+( PTDI_REQUEST Request );
+
+PVOID TCPPrepareInterface( PIP_INTERFACE IF );
+
+NTSTATUS TCPTranslateError( int OskitError );
+
+VOID TCPTimeout();
+
 NTSTATUS TCPStartup(
   VOID);
 

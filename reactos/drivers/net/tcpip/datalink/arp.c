@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 PNDIS_PACKET PrepareARPPacket(
     USHORT HardwareType,
     USHORT ProtocolType,
@@ -55,7 +54,7 @@ PNDIS_PACKET PrepareARPPacket(
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Size );
     if( !NT_SUCCESS(NdisStatus) ) return NULL;
 
-    GetDataPtr( NdisPacket, 0, &DataBuffer, &Contig );
+    GetDataPtr( NdisPacket, 0, (PCHAR *)&DataBuffer, (PUINT)&Contig );
 
     RtlZeroMemory(DataBuffer, Size);
     Header = (PARP_HEADER)((ULONG_PTR)DataBuffer + MaxLLHeaderSize);
@@ -139,6 +138,8 @@ BOOLEAN ARPTransmit(
             ProtoAddrLen = 16;                 /* Length of IPv6 address */
             break;
         default:
+	    TI_DbgPrint(DEBUG_ARP,("Bad Address Type %x\n", Address->Type));
+	    KeBugCheck(0);
             /* Should not happen */
             return FALSE;
     }
@@ -156,6 +157,8 @@ BOOLEAN ARPTransmit(
 
     PC(NdisPacket)->DLComplete = ARPTransmitComplete;
 
+    TI_DbgPrint(DEBUG_ARP,("Sending ARP Packet\n"));
+    
     (*Interface->Transmit)(Interface->Context, NdisPacket,
         MaxLLHeaderSize, NULL, LAN_PROTO_ARP);
 

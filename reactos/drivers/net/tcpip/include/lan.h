@@ -92,6 +92,13 @@ NTSTATUS LANRegisterProtocol(
 VOID LANUnregisterProtocol(
     VOID);
 
+NDIS_STATUS NDISCall(
+    PLAN_ADAPTER Adapter,
+    NDIS_REQUEST_TYPE Type,
+    NDIS_OID OID,
+    PVOID Buffer,
+    UINT Length);
+
 #endif /* __LAN_H */
 
 /* EOF */

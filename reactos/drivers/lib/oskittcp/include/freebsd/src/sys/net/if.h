@@ -167,6 +167,7 @@ struct ifnet {
 #define if_rawoutput(if, m, sa) if_output(if, m, sa, (struct rtentry *)0)
 
 #define	IFF_UP		0x1		/* interface is up */
+#define IFF_UNICAST     0x1             /* for our interface to reactos */
 #define	IFF_BROADCAST	0x2		/* broadcast address valid */
 #define	IFF_DEBUG	0x4		/* turn on debugging */
 #define	IFF_LOOPBACK	0x8		/* is a loopback net */
@@ -236,13 +237,13 @@ struct ifnet {
 #define	IFQ_MAXLEN	50
 #define	IFNET_SLOWHZ	1		/* granularity is 1 second */
 
-#ifndef __REACTOS__
 /*
  * The ifaddr structure contains information about one address
  * of an interface.  They are maintained by the different address families,
  * are allocated and attached when an address is set, and are linked
  * together so all addresses for an interface can be located.
  */
+#ifndef __REACTOS__
 struct ifaddr {
 	struct	sockaddr *ifa_addr;	/* address of interface */
 	struct	sockaddr *ifa_dstaddr;	/* other end of p-to-p link */
@@ -259,8 +260,8 @@ struct ifaddr {
 	struct	rtentry *ifa_rt;	/* XXXX for ROUTETOIF ????? */
 #endif
 };
-#define	IFA_ROUTE	RTF_UP		/* route installed */
 #endif
+#define	IFA_ROUTE	RTF_UP		/* route installed */
 
 /*
  * Message format for use in obtaining information about interfaces
@@ -374,10 +375,10 @@ int	ifioctl __P((struct socket *, int, caddr_t, struct proc *));
 int	ifpromisc __P((struct ifnet *, int));
 struct	ifnet *ifunit __P((char *));
 
-int ifa_ifwithaddr __P((struct sockaddr *, struct ifaddr *));
+struct	ifaddr *ifa_ifwithaddr __P((struct sockaddr *));
 struct	ifaddr *ifa_ifwithaf __P((int));
-struct	ifaddr *ifa_ifwithdstaddr __P((struct sockaddr *, struct ifaddr *));
-int ifa_ifwithnet __P((struct sockaddr *, struct ifaddr *));
+struct	ifaddr *ifa_ifwithdstaddr __P((struct sockaddr *));
+struct	ifaddr *ifa_ifwithnet __P((struct sockaddr *));
 struct	ifaddr *ifa_ifwithroute __P((int, struct sockaddr *,
 					struct sockaddr *));
 struct	ifaddr *ifaof_ifpforaddr __P((struct sockaddr *, struct ifnet *));

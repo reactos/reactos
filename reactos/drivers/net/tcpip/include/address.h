@@ -37,9 +37,8 @@ BOOLEAN AddrIsUnspecified(
 
 NTSTATUS AddrGetAddress(
     PTRANSPORT_ADDRESS AddrList,
-    PIP_ADDRESS *Address,
-    PUSHORT Port,
-    PIP_ADDRESS *Cache);
+    PIP_ADDRESS Address,
+    PUSHORT Port);
 
 NTSTATUS AddrBuildAddress(
     PTA_ADDRESS TdiAddress,

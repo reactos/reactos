@@ -75,6 +75,11 @@ VOID RouteInvalidateNTE(
 VOID RouteInvalidateNCE(
     PNEIGHBOR_CACHE_ENTRY NCE);
 
+NTSTATUS
+RouteFriendlyAddRoute( PIPROUTE_ENTRY ire );
+
+UINT CountRouteNodes( PROUTE_CACHE_NODE Node );
+
 #endif /* __ROUTE_H */
 
 /* EOF */

@@ -58,15 +58,20 @@ typedef int (*OSKITTCP_SOCKET_STATE)
 
 typedef int (*OSKITTCP_SEND_PACKET)
     ( void *ClientData,
-      void *WhichSocket,
-      void *WhichConnection,
       OSK_PCHAR Data,
       OSK_UINT Len );
+
+typedef struct ifaddr *(*OSKITTCP_FIND_INTERFACE)
+    ( void *ClientData,
+      OSK_UINT AddrType,
+      OSK_UINT FindType,
+      struct sockaddr *ReqAddr );
 
 typedef struct _OSKITTCP_EVENT_HANDLERS {
     void *ClientData;
     OSKITTCP_SOCKET_STATE SocketState;
     OSKITTCP_SEND_PACKET PacketSend;
+    OSKITTCP_FIND_INTERFACE FindInterface;
 } OSKITTCP_EVENT_HANDLERS, *POSKITTCP_EVENT_HANDLERS;
 
 extern OSKITTCP_EVENT_HANDLERS OtcpEvent;
@@ -74,6 +79,7 @@ extern OSKITTCP_EVENT_HANDLERS OtcpEvent;
 extern void InitOskitTCP();
 extern void DeinitOskitTCP();
 extern void TimerOskitTCP();
+extern void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len );
 extern int  OskitTCPSocket( void *Connection, void **ConnectionContext,
 			    int Af, int Type, int Proto );
 extern void RegisterOskitTCPEventHandlers
@@ -91,6 +97,28 @@ extern int OskitTCPSend( void *socket,
 			 OSK_UINT Len,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
+
+extern int OskitTCPConnect( void *socket, void *connection, 
+			    void *nam, OSK_UINT namelen );
+extern int OskitTCPClose( void *socket );
+
+extern int OskitTCPBind( void *socket, void *connection,
+			 void *nam, OSK_UINT namelen );
+
+extern int OskitTCPListen( void *socket, int backlog );
+
+extern int OskitTCPRecv( void *connection,
+			 OSK_PCHAR Data,
+			 OSK_UINT Len,
+			 OSK_UINT *OutLen,
+			 OSK_UINT Flags );
+
+void OskitTCPGetAddress( void *socket, 
+			 OSK_UINT *LocalAddress,
+			 OSK_UI16 *LocalPort,
+			 OSK_UINT *RemoteAddress,
+			 OSK_UI16 *RemotePort );
+
 #undef errno
 
 #define malloc(x,...) fbsd_malloc(x,__FILE__,__LINE__)

@@ -26,11 +26,11 @@ typedef struct NEIGHBOR_CACHE_ENTRY {
     UINT EventTimer;                    /* Ticks since last event */
     UINT EventCount;                    /* Number of events */
     PIP_INTERFACE Interface;            /* Pointer to interface */
-    PIP_ADDRESS Address;                /* IP address of neighbor */
     UINT LinkAddressLength;             /* Length of link address */
     PVOID LinkAddress;                  /* Pointer to link address */
     PNDIS_PACKET WaitQueue;             /* Pointer to NDIS packets
                                            waiting to be sent */
+    IP_ADDRESS Address;                 /* IP address of neighbor */
 } NEIGHBOR_CACHE_ENTRY, *PNEIGHBOR_CACHE_ENTRY;
 
 /* NCE states */

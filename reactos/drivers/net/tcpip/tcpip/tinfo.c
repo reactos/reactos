@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 TDI_STATUS InfoTransportLayerTdiQueryEx( UINT InfoClass,
 					 UINT InfoType,
 					 UINT InfoId,
@@ -22,7 +21,7 @@ TDI_STATUS InfoTransportLayerTdiQueryEx( UINT InfoClass,
 	InfoType == INFO_TYPE_PROVIDER &&
 	InfoId == ENTITY_TYPE_ID ) {
 	ULONG Temp = CL_TL_UDP;
-	return InfoCopyOut( &Temp, sizeof(Temp), Buffer, BufferSize );
+	return InfoCopyOut( (PCHAR)&Temp, sizeof(Temp), Buffer, BufferSize );
     }
     
     return TDI_INVALID_REQUEST;
@@ -35,4 +34,5 @@ TDI_STATUS InfoTransportLayerTdiSetEx( UINT InfoClass,
 				       TDIEntityID *id,
 				       PCHAR Buffer,
 				       UINT BufferSize ) {
+    return TDI_INVALID_REQUEST;
 }

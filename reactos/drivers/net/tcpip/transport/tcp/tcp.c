@@ -25,23 +25,13 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
  *     This is the low level interface for receiving TCP data
  */
 {
-    PCHAR BufferData = exAllocatePool( NonPagedPool, IPPacket->TotalSize );
-
-    if( BufferData ) {
-	TI_DbgPrint(MID_TRACE,("Sending packet %d (%d) to oskit\n", 
-			       IPPacket->TotalSize,
-			       IPPacket->HeaderSize));
-
-	memcpy( BufferData, IPPacket->Header, IPPacket->HeaderSize );
-	memcpy( BufferData + IPPacket->HeaderSize, IPPacket->Data,
-		IPPacket->TotalSize - IPPacket->HeaderSize );
-	
-	OskitTCPReceiveDatagram( BufferData, 
-				 IPPacket->TotalSize, 
-				 IPPacket->HeaderSize );
-
-	exFreePool( BufferData );
-    }
+    TI_DbgPrint(MID_TRACE,("Sending packet %d (%d) to oskit\n", 
+			   IPPacket->TotalSize,
+			   IPPacket->HeaderSize));
+    
+    OskitTCPReceiveDatagram( IPPacket->Header, 
+			     IPPacket->TotalSize, 
+			     IPPacket->HeaderSize );
 }
 
 /* event.c */
@@ -51,15 +41,19 @@ int TCPSocketState( void *ClientData,
 		    OSK_UINT NewState );
 
 int TCPPacketSend( void *ClientData,
-		   void *WhichSocket,
-		   void *WhichConnection,
 		   OSK_PCHAR Data,
 		   OSK_UINT Len );
+
+POSK_IFADDR TCPFindInterface( void *ClientData,
+			      OSK_UINT AddrType,
+			      OSK_UINT FindType,
+			      OSK_SOCKADDR *ReqAddr );
 
 OSKITTCP_EVENT_HANDLERS EventHandlers = {
     NULL, /* Client Data */
     TCPSocketState, /* SocketState */
     TCPPacketSend,  /* PacketSend */
+    TCPFindInterface, /* FindInterface */
 };
 
 NTSTATUS TCPStartup(VOID)
@@ -130,13 +124,47 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     return Status;
 }
 
+#if 0
+NTSTATUS TCPBind
+( PTDI_REQUEST Request,
+  PTDI_CONNECTION_INFORMATION ConnInfo ) {
+    NTSTATUS Status;
+    PCONNECTION_ENDPOINT Connection = Request->Handle.ConnectionContext;
+    SOCKADDR_IN AddressToConnect;
+    PIP_ADDRESS LocalAddress;
+    USHORT LocalPort;
+
+    TI_DbgPrint(MID_TRACE,("Called\n"));
+
+    Status = AddrBuildAddress
+	((PTA_ADDRESS)ConnInfo->LocalAddress,
+	 &LocalAddress,
+	 &LocalPort);
+
+    AddressToBind.sin_family = AF_INET;
+    memcpy( &AddressToBind.sin_addr, 
+	    &LocalAddress->Address.IPv4Address,
+	    sizeof(AddressToBind.sin_addr) );
+    AddressToBind.sin_port = LocalPort;
+
+    Status = OskitTCPBind( Connection->SocketContext,
+			   Connection,
+			   &AddressToBind, 
+			   sizeof(AddressToBind));
+
+    TI_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
+
+    return Status;
+}
+#endif
+
 NTSTATUS TCPConnect
 ( PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo ) {
     KIRQL OldIrql;
     NTSTATUS Status;
-    SOCKADDR_IN AddressToConnect;
+    SOCKADDR_IN AddressToConnect = { 0 }, AddressToBind = { 0 };
     PCONNECTION_ENDPOINT Connection = Request->Handle.ConnectionContext;
     PIP_ADDRESS RemoteAddress;
     USHORT RemotePort;
@@ -169,6 +197,12 @@ NTSTATUS TCPConnect
     }
     
     AddressToConnect.sin_family = AF_INET;
+    AddressToBind = AddressToConnect;
+
+    OskitTCPBind( Connection->SocketContext,
+		  Connection,
+		  &AddressToBind,
+		  sizeof(AddressToBind) );
 
     memcpy( &AddressToConnect.sin_addr, 
 	    &RemoteAddress->Address.IPv4Address,
@@ -210,6 +244,7 @@ NTSTATUS TCPListen
 NTSTATUS TCPAccept
 ( PTDI_REQUEST Request,
   VOID **NewSocketContext ) {
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS TCPReceiveData
@@ -270,7 +305,6 @@ NTSTATUS TCPSendData
     PCONNECTION_ENDPOINT Connection;
     PCHAR BufferData;
     ULONG PacketSize;
-    int error;
 
     Connection = Request->Handle.ConnectionContext;
 
@@ -282,17 +316,21 @@ NTSTATUS TCPSendData
     TI_DbgPrint(MID_TRACE,("Connection->SocketContext = %x\n",
 			   Connection->SocketContext));
 
+    OskitDumpBuffer( BufferData, PacketSize );
+
     Status = OskitTCPSend( Connection->SocketContext, 
-			 BufferData, PacketSize, DataUsed, 0 );
+			   BufferData, PacketSize, (PUINT)DataUsed, 0 );
 
     KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
     return Status;
 }
 
-NTSTATUS TCPTimeout(VOID) { 
+VOID TCPTimeout(VOID) { 
     static int Times = 0;
-    if( (Times++ % 100) == 0 ) TimerOskitTCP();
+    if( (Times++ % 5) == 0 ) {
+	TimerOskitTCP();
+    }
 }
 
 /* EOF */

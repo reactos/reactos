@@ -134,8 +134,6 @@ VOID DeleteConnectionEndpoint(
   PCONNECTION_ENDPOINT Connection)
 {
   KIRQL OldIrql;
-  PLIST_ENTRY CurrentEntry;
-  PLIST_ENTRY NextEntry;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
@@ -304,7 +302,7 @@ NTSTATUS FileOpenAddress(
   case IPPROTO_TCP:
     /* FIXME: If specified port is 0, a port is chosen dynamically */
     AddrFile->Port = Address->Address[0].Address[0].sin_port;
-    AddrFile->Send = TCPSendData;
+    AddrFile->Send = NULL; /* TCPSendData */
     break;
 
   case IPPROTO_UDP:
@@ -434,7 +432,6 @@ NTSTATUS FileOpenConnection(
 {
   NTSTATUS Status;
   PCONNECTION_ENDPOINT Connection;
-  PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
@@ -463,7 +460,7 @@ NTSTATUS FileOpenConnection(
 			   SOCK_STREAM,
 			   IPPROTO_TCP );
   DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
-  
+
   /* Initialize received segments queue */
   InitializeListHead(&Connection->ReceivedSegments);
 
@@ -497,7 +494,6 @@ TI_DbgPrint(MIN_TRACE, ("X1 Blink 0x%x\n", Connection->ReceivedSegments.Blink));
 NTSTATUS FileCloseConnection(
   PTDI_REQUEST Request)
 {
-  KIRQL OldIrql;
   PCONNECTION_ENDPOINT Connection;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -569,7 +565,6 @@ NTSTATUS FileCloseControlChannel(
   PTDI_REQUEST Request)
 {
   PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;
-  KIRQL OldIrql;
   NTSTATUS Status = STATUS_SUCCESS;
 
   ExFreePool(ControlChannel);

@@ -636,7 +636,7 @@ VOID STDCALL IPTimeout(
 
 
 VOID IPDispatchProtocol(
-    PIP_INTERFACE IPInterface,
+    PNET_TABLE_ENTRY NTE,
     PIP_PACKET IPPacket)
 /*
  * FUNCTION: IP protocol dispatcher
@@ -663,7 +663,7 @@ VOID IPDispatchProtocol(
     }
 
     /* Call the appropriate protocol handler */
-    (*ProtocolTable[Protocol])(IPInterface, IPPacket);
+    (*ProtocolTable[Protocol])(NTE, IPPacket);
 }
 
 
@@ -775,7 +775,7 @@ BOOLEAN IPRegisterInterface(
     PROUTE_CACHE_NODE RCN;
     PNEIGHBOR_CACHE_ENTRY NCE;
 
-    TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X).\n", IF));
+    TI_DbgPrint(MID_TRACE, ("Called. IF (0x%X).\n", IF));
 
     KeAcquireSpinLock(&IF->Lock, &OldIrql);
 
@@ -825,6 +825,9 @@ BOOLEAN IPRegisterInterface(
     ExInterlockedInsertTailList(&InterfaceListHead, 
 				&IF->ListEntry, 
 				&InterfaceListLock);
+
+    /* Allow TCP to hang some configuration on this interface */
+    IF->TCPContext = TCPPrepareInterface( IF );
 
     KeReleaseSpinLock(&IF->Lock, OldIrql);
 

@@ -111,7 +111,7 @@ typedef VOID (*DATAGRAM_COMPLETION_ROUTINE)(
 
 typedef struct _DATAGRAM_RECEIVE_REQUEST {
     LIST_ENTRY ListEntry;                   /* Entry on list */
-    PIP_ADDRESS RemoteAddress;              /* Remote address we receive from (NULL means any) */
+    IP_ADDRESS RemoteAddress;              /* Remote address we receive from (NULL means any) */
     USHORT RemotePort;                      /* Remote port we receive from (0 means any) */
     PTDI_CONNECTION_INFORMATION ReturnInfo; /* Return information */
     PNDIS_BUFFER Buffer;                    /* Pointer to receive buffer */

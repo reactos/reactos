@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        tcpip/dispatch.h
  * PURPOSE:     TDI dispatch routines
- * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMMERS: arty
  * REVISIONS:
  *   CSH 01/08-2000 Created
  * TODO:        Validate device object in all dispatch routines

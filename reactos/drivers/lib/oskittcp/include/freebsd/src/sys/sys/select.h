@@ -57,7 +57,7 @@ struct selinfo {
 struct proc;
 
 void	selrecord __P((struct proc *selector, struct selinfo *));
-void	selwakeup __P((struct selinfo *));
+void	selwakeup __P((struct socket *so, struct selinfo *));
 #endif
 
 #endif /* !_SYS_SELECT_H_ */

@@ -107,7 +107,6 @@ VOID SendDatagramComplete(
   KIRQL OldIrql;
   ULONG BytesSent;
   PVOID CompleteContext;
-  PNDIS_BUFFER NdisBuffer;
   PDATAGRAM_SEND_REQUEST SendRequest;
   DATAGRAM_COMPLETION_ROUTINE Complete;
   BOOLEAN QueueWorkItem;
@@ -295,9 +294,7 @@ VOID DGDeliverData(
       while ((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found))
         {
           Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-          if (!Current->RemoteAddress)
-            Found = TRUE;
-          else if (AddrIsEqual(Address, Current->RemoteAddress))
+	  if (AddrIsEqual(Address, &Current->RemoteAddress))
             Found = TRUE;
     
           if (Found)
@@ -329,11 +326,6 @@ VOID DGDeliverData(
           /* Complete the receive request */
           (*Current->Complete)(Current->Context, STATUS_SUCCESS, DataSize);
     
-          /* Finally free the receive request */
-          if (Current->RemoteAddress)
-            {
-              DereferenceObject(Current->RemoteAddress);
-            }
           exFreePool(Current);
         }
     }
@@ -470,12 +462,6 @@ VOID DGCancelReceiveRequest(
       /* Complete the request and free its resources */
       (*Current->Complete)(Current->Context, STATUS_CANCELLED, 0);
 
-      /* Remote address can be NULL if the caller wants to receive
-         packets sent from any address */
-      if (Current->RemoteAddress)
-        {
-          DereferenceObject(Current->RemoteAddress);
-        }
       exFreePool(Current);
     }
   else
@@ -562,8 +548,7 @@ NTSTATUS DGSendDatagram( PTDI_REQUEST Request,
 	if (NT_SUCCESS(Status)) {
 	    Status = AddrGetAddress(ConnInfo->RemoteAddress,
 				    &SendRequest->RemoteAddress,
-				    &SendRequest->RemotePort,
-				    &AddrFile->AddrCache);
+				    &SendRequest->RemotePort);
 	    if (NT_SUCCESS(Status))
 	    {
 		KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
@@ -638,9 +623,8 @@ NTSTATUS DGReceiveDatagram(
           if (((ConnInfo->RemoteAddressLength != 0)) && (ConnInfo->RemoteAddress))
             {
               Status = AddrGetAddress(ConnInfo->RemoteAddress,
-                &ReceiveRequest->RemoteAddress,
-                &ReceiveRequest->RemotePort,
-                &AddrFile->AddrCache);
+				      &ReceiveRequest->RemoteAddress,
+				      &ReceiveRequest->RemotePort);
               if (!NT_SUCCESS(Status))
                 {
                   KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
@@ -651,7 +635,6 @@ NTSTATUS DGReceiveDatagram(
           else
             {
               ReceiveRequest->RemotePort    = 0;
-              ReceiveRequest->RemoteAddress = NULL;
             }
           ReceiveRequest->ReturnInfo = ReturnInfo;
           ReceiveRequest->Buffer = Buffer;

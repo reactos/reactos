@@ -7,11 +7,9 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-
 #include "precomp.h"
 
-
-#define NDEBUG
+//#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
@@ -707,7 +705,6 @@ DriverEntry(
   UNICODE_STRING strDeviceName;
   UNICODE_STRING strNdisDeviceName;
   NDIS_STATUS NdisStatus;
-  NDIS_STRING DeviceName;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
   
@@ -716,8 +713,6 @@ DriverEntry(
   TrackTag(NDIS_PACKET_TAG);
   TrackTag(FBSD_MALLOC);
   TrackTag(EXALLOC_TAG);
-
-  InitOskitTCP();
 
   /* TdiInitialize() ? */
 

@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer, 
 				     PUINT BufferSize ) {
     
@@ -49,7 +48,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
     
     KeReleaseSpinLock(&InterfaceListLock, OldIrql);
 
-    Status = InfoCopyOut( IpAddress, sizeof(*IpAddress) * Count,
+    Status = InfoCopyOut( (PCHAR)IpAddress, sizeof(*IpAddress) * Count,
 			  Buffer, BufferSize );
     
     ExFreePool( IpAddress );
@@ -61,8 +60,6 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 
 /* Get IPRouteEntry s for each of the routes in the system */
 TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
-    PIP_INTERFACE CurrentIF;
-    PLIST_ENTRY CurrentIFEntry;
     TDI_STATUS Status;
     KIRQL OldIrql;
     UINT RtCount = CountFIBs(),
@@ -89,12 +86,12 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     while( RtCurrent < RouteEntries + RtCount ) {
 	/* Copy Desitnation */
 	if( RCacheCur->NetworkAddress && RCacheCur->Netmask && 
-	    RCacheCur->Router && RCacheCur->Router->Address ) {
+	    RCacheCur->Router ) {
 	    TI_DbgPrint(MAX_TRACE, ("%d: NA %08x NM %08x GW %08x MT %d\n",
 				    RtCurrent - RouteEntries,
 				    RCacheCur->NetworkAddress->Address,
 				    RCacheCur->Netmask->Address,
-				    RCacheCur->Router->Address->Address,
+				    RCacheCur->Router->Address.Address,
 				    RCacheCur->Metric));
 	    
 	    RtlCopyMemory( &RtCurrent->Dest, 
@@ -106,7 +103,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 	    /* Currently, this address is stuffed into the pointer.
 	     * That probably is not intended. */
 	    RtlCopyMemory( &RtCurrent->Gw,
-			   &RCacheCur->Router->Address->Address,
+			   &RCacheCur->Router->Address.Address,
 			   sizeof(RtCurrent->Gw) );
 	    RtCurrent->Metric1 = RCacheCur->Metric;
 	    RtCurrent->Type = 2 /* PF_INET */;
@@ -126,13 +123,13 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 				    RCacheCur->Netmask,
 				    RCacheCur->Router,
 				    RCacheCur->Router ? 
-				    RCacheCur->Router->Address : 0,
+				    &RCacheCur->Router->Address : 0,
 				    RCacheCur->Metric));
 	}
 	RtCurrent++; RCacheCur++;
     }
 
-    Status = InfoCopyOut( RouteEntries, Size, Buffer, BufferSize );
+    Status = InfoCopyOut( (PCHAR)RouteEntries, Size, Buffer, BufferSize );
 
     ExFreePool( RouteEntries );
     ExFreePool( RCache );
@@ -171,7 +168,7 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
     SnmpInfo.NumAddr = AddrCount;
     SnmpInfo.NumRoutes = RouteCount;
 
-    Status = InfoCopyOut( &SnmpInfo, sizeof(SnmpInfo), 
+    Status = InfoCopyOut( (PCHAR)&SnmpInfo, sizeof(SnmpInfo), 
 			  Buffer, BufferSize );
 
     TI_DbgPrint(MAX_TRACE, ("Returning %08x\n", Status));
@@ -194,7 +191,7 @@ TDI_STATUS InfoNetworkLayerTdiQueryEx( UINT InfoClass,
     case INFO_CLASS_GENERIC:
 	if( InfoType == INFO_TYPE_PROVIDER && InfoId == ENTITY_TYPE_ID ) {
 	    ULONG Return = CL_NL_IP;
-	    Status = InfoCopyOut( &Return, sizeof(Return), 
+	    Status = InfoCopyOut( (PCHAR)&Return, sizeof(Return), 
 				  Buffer, BufferSize );
 	}
 	break;
@@ -231,4 +228,6 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
 				     TDIEntityID *id,
 				     PCHAR Buffer,
 				     UINT BufferSize ) {
+    TDI_STATUS Status = TDI_INVALID_REQUEST;
+    return Status;
 }

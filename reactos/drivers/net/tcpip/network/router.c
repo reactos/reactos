@@ -284,7 +284,7 @@ PIP_INTERFACE RouterFindOnLinkInterface(
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)  NTE (0x%X).\n", Address, NTE));
 
     TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)  NTE (%s).\n",
-        A2S(Address), A2S(NTE->Address)));
+			       A2S(Address), NTE ? A2S(NTE->Address) : ""));
 
     CurrentEntry = PrefixListHead.Flink;
     while (CurrentEntry != &PrefixListHead) {
@@ -327,7 +327,9 @@ PFIB_ENTRY RouterAddRoute(
         "Router (0x%X)  Metric (%d).\n", NetworkAddress, Netmask, Router, Metric));
 
     TI_DbgPrint(DEBUG_ROUTER, ("NetworkAddress (%s)  Netmask (%s)  Router (%s).\n",
-			       A2S(NetworkAddress), A2S(Netmask), A2S(Router->Address)));
+			       A2S(NetworkAddress), 
+			       A2S(Netmask), 
+			       A2S(&Router->Address)));
 
     FIBE = ExAllocatePool(NonPagedPool, sizeof(FIB_ENTRY));
     if (!FIBE) {
@@ -391,7 +393,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
 
         if ((!NTE) || (NTE->Interface == NCE->Interface)) {
             if (Destination)
-                Length = CommonPrefixLength(Destination, NCE->Address);
+                Length = CommonPrefixLength(Destination, &NCE->Address);
             else
                 Length = 0;
 
