@@ -1,0 +1,11 @@
+These are a selection of services for the ReactOS kernel. They include
+
+    parallel = parallel port driver
+    serial = serial port driver
+    mouse = mouse driver
+    null = null device driver
+    ide = IDE (hard disk) driver
+    keyboard = keyboard driver
+    loop = Allows accessing a file as a block device
+    scramdisk = Filesystem encryption driver
+    event = Sample driver demonstrating notifying a user thread using an event

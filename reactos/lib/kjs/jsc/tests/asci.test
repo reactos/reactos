@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# Test the automatic semicolon insertion.
+#
+
+. $srcdir/defs || exit 1
+
+ascifiles="asci.js"
+
+name="asci.test"
+
+# First, create the state 1 compiler.
+
+rm -f jsc.js
+
+for i in $jscsources; do
+  cat $srcdir/../$i >> jsc.js
+done
+
+echo "$name: creating the state 1 compiler"
+$js -Wall -O2 -c jsc.js
+mv jsc.jsc stage1.jsc
+
+# Now, compile our asci test source files with the state 1 compiler.
+
+for i in $ascifiles; do
+  $js --load stage1.jsc --file $srcdir/../bs.js $srcdir/$i
+done
+
+# Finally, cleanup.
+
+rm -f a.jas a.jsc jsc.js stage1.jsc

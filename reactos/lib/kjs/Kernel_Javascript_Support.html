@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+  <title>Kernel Javascript Support</title>
+</head>
+<body>
+<h1>Kernel Javascript support</h1>
+<br>
+This document details the kernel javascript debugging extension
+recently added to the reactos kernel.<br>
+<h2>Enabling</h2>
+The extension is enabled when KDBG := 1 is set in <span
+ style="font-family: monospace;">config</span> in the reactos source
+tree.<br>
+<br>
+kdb presents the usual prompt when ReactOS starts, but the '<span
+ style="font-family: monospace;">js</span>' command initializes the
+javascript system and allows the user to start working with the system
+in javascript.&nbsp; A welcome banner is displayed when the system is
+ready, along with the prompt <span style="font-family: monospace;">kjs:&gt;</span>.<br>
+<h2>Using</h2>
+You may type as many lines in each input as needed.&nbsp; To cancel
+some input, just enter '.' as the only character on an input
+line.&nbsp; To exit from the javascript interpreter, enter '.' on the
+first input line.&nbsp; In order to determine when the user is finished
+typing, the kernel javascript system uses the harmless ';;'
+sequence.&nbsp; Entering ';;' anywhere in the input terminates input
+and evaluates the current input buffer.&nbsp; The buffer is emptied
+afterward.&nbsp; Any javascript error messages or output are printed
+before the next prompt is displayed.&nbsp; Note that the interpreter
+does not automatically print the evaluation results, so it's useful to
+wrap simple evaluations with write().<br>
+<br>
+<h2>Sample Session</h2>
+<pre>kdb:&gt; js<br>JS Registry Init Complete.  Welcome to ReactOS kernel scripting<br>Kernel Debugger Script Interface (JavaScript :-)<br>Terminate input with ;; and end scripting with .<br>kjs:&gt; write(System.getmodule(1));;                                              <br>hal.dll,3225501696                                                              <br>kjs:&gt; write(System.getmodule(1)[1].toString(16));;                 <br>c0414000<br>kjs:&gt; write(ebp().toString(16));;<br>cee8bf84<br><br>kjs:&gt; function dump_sec(base) {<br>.....   base2 = peekw(base + 0x3c) + base;<br>.....   sec_off = 0xf8;<br>.....   for( i = 0; peekl(base2 + sec_off + (40 * i)); i++ ) {<br>.....     base_sec = base2 + sec_off + (40 * i);<br>.....     write("Section: " + System.mread(0,base_sec) + "\n");<br>.....     write("RVA:     " + peekl(base_sec + 12).toString(16) + "\n");<br>.....   }<br>..... }<br>..... ;;<br>kjs:&gt; dump_sec(0xc0000000);;<br>Section: .text<br>RVA:     1000<br>Section: init<br>RVA:     e6000<br>Section: .data<br>RVA:     f4000<br>Section: .edata<br>RVA:     10d000<br>Section: .idata<br>RVA:     115000<br>Section: .rsrc<br>RVA:     116000<br>Section: .bss<br>RVA:     118000<br>Section: .reloc<br>RVA:     15a000<br><br>kjs:&gt; var key = "\\registry\\machine\\system\\currentcontrolset\\services\\ne20001\\parameters\\tcpip";;<br>kjs:&gt; write(regread(key,"defaultgateway"));;<br>10.0.0.1<br></pre>
+<h2>Builtin and initialized functions</h2>
+These functions are available after a successful javascript
+initialization:<br>
+<br style="font-weight: bold;">
+<span style="font-weight: bold;">System.getmodule(n) =&gt; (string,int)
+array</span><br>
+<br>
+Returns the name and base address of the nth module in the kernel
+module list.<br>
+<br style="font-weight: bold;">
+<span style="font-weight: bold;">System.mread(s,address) =&gt;
+integer/string</span><br>
+<br>
+System.mread reads a value from memory and returns it.&nbsp; s
+determines what type of read is performed, and address specifies the
+starting address of the operation.<br>
+<br>
+Valid values of s are:<br>
+<br>
+0 -- Read a null-terminated ascii string<br>
+1 -- Read a byte<br>
+2 -- Read a word<br>
+4 -- Read a dword<br style="font-weight: bold;">
+<br style="font-weight: bold;">
+<span style="font-weight: bold;">System.mwrite(s,address,value) =&gt;
+bool</span><br>
+<br>
+System.mwrite writes a value to a memory address.&nbsp; The operand
+size depends on s, 1 for byte, 2 for word, 4 for dword.<br>
+<br>
+<span style="font-weight: bold;">System.print(...) =&gt; undefined</span><br>
+<br>
+Uses DbgPrint to print the specified output.&nbsp; In javascript, every
+value is printable, so feel free to give any value type to print.<br>
+Use C style escapes for tabs and newlines: \t and \n.<br>
+<br>
+<span style="font-weight: bold;">System.regs(int) =&gt; int</span><br>
+<br>
+System.regs read the specified word value from the TRAP_FRAME given to
+kdb when it was started.&nbsp; This is useful for locating the stack,
+along with various other queries.&nbsp; The machine registers are also
+provided as named functions by javascript, for example ebp() and eax().<br>
+<br>
+<span style="font-weight: bold;">System.regread(key,value) =&gt;
+string/undefined</span><br>
+<br>
+System.regread reads a string value from the registry (as a member of
+the specified registry key).&nbsp; If the read is successful, the
+string value contained in it is returned.&nbsp; If the value cannot be
+read, then undefined is returned.<br>
+<br>
+This method is used by the registry initializer to read the
+initialization strings.<br>
+<br>
+<span style="font-weight: bold;">ebp(), eip(), esp() ... vm86_gs()
+=&gt; int</span><br>
+<br>
+Every register provided by the system trap frame is available as a
+global function of the same name.&nbsp; This makes reading specific
+registers easy.<br>
+<br>
+<span style="font-weight: bold;">peek,peekw,peekl(int addr) =&gt; int</span><br>
+<br>
+Aliases for System.mread([1,2,4],addr)<br>
+<br>
+<span style="font-weight: bold;">poke,pokew,pokel(int addr, int value)
+=&gt; int</span><br>
+<br>
+Aliases for System.mwrite([1,2,4],addr,value)<br>
+<br>
+<span style="font-weight: bold;">write(...) =&gt; undefined</span><br>
+<br>
+Alias for System.print<br>
+</body>
+</html>

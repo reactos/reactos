@@ -1,0 +1,9 @@
+# $Id$
+
+THREAD_OBJECTS := \
+ $(THREAD_OBJECTS) \
+ thread/linearstack.o \
+ thread/$(ARCH)/context.o \
+ thread/$(ARCH)/stackexit.o
+
+# EOF

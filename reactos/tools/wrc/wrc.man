@@ -1,0 +1,199 @@
+.TH WRC 1 "August 24, 2000" "Version 1.1.8" "Wine Resource Compiler"
+.SH NAME
+wrc \- Wine Resource Compiler
+.SH SYNOPSIS
+.BI "wrc " "[options] " "[inputfile]"
+.SH DESCRIPTION
+.B wrc
+compiles resources from \fBinputfile\fR
+into win16 and win32 compatible binary format.
+.PP
+The source\-file is preprocessed with a builtin ANSI\-C compatible
+preprocessor before the resources are compiled. See \fBPREPROCESSOR\fR
+below.
+.PP
+.B wrc
+takes only one \fBinputfile\fR as argument. The resources are read from 
+standard input if no inputfile is given. If the output file is not 
+specified with \fI-o\fR, then \fBwrc\fR will write the output to 
+\fBinputfile.res\fR with \fB.rc\fR stripped, or to \fBwrc.tab.res\fR if 
+no inputfile was given.
+.SH OPTIONS
+.TP
+.I \fB\-\-debug\fR=\fInn\fR
+Set debug level to \fInn\fR. The value is a bitmask consisting of
+1=verbose, 2=dump internals, 4=resource parser trace, 8=preprocessor
+messages, 16=preprocessor scanner and 32=preprocessor parser trace.
+.TP
+.I \fB\-\-endianess\fR=\fIe\fR
+Win32 only; set output byte\-ordering, where \fIe\fR is one of n[ative],
+l[ittle] or b[ig].  Only resources in source-form can be reorderd. Native
+ordering depends on the system on which \fBwrc\fR was built. You can see
+the native ordering by typing \fIwrc \-h\fR.
+.TP
+.I \fB\-D\fR, \fB\-\-define\fR=\fIid[=val]\fR
+Define preprocessor identifier \fIid\fR to (optionally) value \fIval\fR.
+See also
+.B PREPROCESSOR
+below.
+.TP
+.I \fB\-E\fR
+Preprocess only. The output is written to standard output if no
+outputfile was selected. The output is compatible with what gcc would
+generate.
+.TP
+.I \fB\-F\fR, \fB\-\-target\fR
+Ignored for compatibility with \fIwindres\fR.
+.TP
+.I \fB\-h\fR, \fB\-\-help\fR
+Prints a summary message and exits.
+.TP
+.I \fB\-i\fR, \fB\-\-input\fR=\fIfile\fR
+The name of the input file. If this option is not used, then \fBwrc\fR 
+will use the first non-option argument as the input file name. If there 
+are no non-option arguments, then \fBwrc\fR will read from standard input.
+.TP
+.I \fB\-I\fR, \fB\-\-include\-dir\fR=\fIfile\fR
+Add \fIpath\fR to include search directories. \fIPath\fR may contain
+multiple directories, separated with ':'. It is allowed to specify
+\fI\-I\fR multiple times. Include files are searched in the order in
+with the \fI\-I\fR options were specified.
+.br
+The search is compatible with gcc, in which '<>' quoted filenames are
+searched exclusively via the \fI\-I\fR set path, whereas the '""' quoted
+filenames are first tried to be opened in the current directory. Also
+resource statements with file references are located in the same way.
+.TP
+.I \fB\-J\fR, \fB\-\-input\-format\fR=\fIformat\fR
+Sets the input format. Valid options are 'rc' or 'rc16'. Setting the
+input to 'rc16' disables the recognition of win32 keywords.
+.TP
+.I \fB\-l\fR, \fB\-\-language\fR=\fIlan\fR
+Set default language to \fIlan\fR. Default is the neutral language 0
+(i.e. "LANGUAGE 0, 0").
+.TP
+.I \fB\-\-nostdinc\fR
+Do not search the standard include path, look for include files only
+in the directories explicitly specified with the \fI\-I\fR option.
+.TP
+.I \fB\-\-no\-use\-temp\-file\fR
+Ignored for compatibility with \fIwindres\fR.
+.TP
+.I \fB\-o\fR, \fB\-fo\fR, \fB\-\-output\fR=\fIfile\fR
+Write output to \fIfile\fR. Default is \fBinputfile.res\fR
+with \fB.rc\fR stripped or \fBwrc.tab.res\fR if input is read
+from standard input.
+.TP
+.I \fB\-O\fR, \fB\-\-output\-format\fR=\fIformat\fR
+Sets the output format. The supported formats are 'res' and 'res16'.
+If this option is not specified, format defaults to 'res'.
+.TP
+.I \fB\-\-pedantic\fR
+Enable pedantic warnings. Notably redefinition of #define statements can
+be discovered with this option.
+.TP
+.I \fB\-r\fR
+Ignored for compatibility with \fIrc\fR.
+.TP
+.I \fB\-\-preprocessor\fR=\fIprogram\fR
+This option may be used to specify the preprocessor to use, including any 
+leading arguments. If not specified, \fBwrc\fR uses its builtin processor.
+To disable preprocessing, use \fB--preprocessor=cat\fR.
+.TP
+.I \fB\-U\fR, \fB\-\-undefine\fR=\fIid\fR
+Undefine preprocessor identifier \fIid\fR.  Please note that only macros 
+defined up to this point are undefined by this command. However, these 
+include the special macros defined automatically by \fIwrc\fR.
+See also
+.B PREPROCESSOR
+below.
+.TP
+.I \fB\-\-use\-temp\-file\fR
+Ignored for compatibility with \fIwindres\fR.
+.TP
+.I \fB\-v\fR, \fB\-\-verbose\fR
+Turns on verbose mode (equivalent to -d 1).
+.TP
+.I \fB\-\-version\fR
+Print version end exit.
+.SH PREPROCESSOR
+The preprocessor is ANSI\-C compatible with some of the extensions of 
+the gcc preprocessor. 
+.PP
+The preprocessor recognizes these directives: #include, #define (both
+simple and macro), #undef, #if, #ifdef, #ifndef, #elif, #else, #endif,
+#error, #warning, #line, # (both null\- and line\-directive), #pragma
+(ignored), #ident (ignored).
+.PP
+The preprocessor sets by default several defines:
+.br
+RC_INVOKED      set to 1
+.br
+__WRC__         Major version of wrc
+.br
+__WRC_MINOR__   Minor version of wrc
+.br
+__WRC_MICRO__   Patch level
+.br
+__WRC_PATCH__   Same as __WRC_MICRO__
+.PP
+Win32 compilation mode also sets __WIN32__ to 1 and __FLAT__ to 1.
+.PP
+Special macros __FILE__, __LINE__, __TIME__ and __DATE__ are also
+recognized and expand to their respective equivalent.
+.SH "LANGUAGE SUPPORT"
+Language, version and characteristics can be bound to all resource types that
+have inline data, such as RCDATA. This is an extension to Microsoft's resource
+compiler, which lacks this support completely. Only VERSIONINFO cannot have
+version and characteristics attached, but languages are propagated properly if
+you declare it correctly before the VERSIONINFO resource starts.
+.PP
+Example:
+.PP
+1 RCDATA DISCARDABLE
+.br
+LANGUAGE 1, 0
+.br
+VERSION 312
+.br
+CHARACTERISTICS 876
+.br
+{
+.br
+	1, 2, 3, 4, 5, "and whatever more data you want"
+.br
+	'00 01 02 03 04 05 06 07 08'
+.br
+}
+.SH AUTHORS
+.B wrc
+was written by Bertho A. Stultiens and is a nearly complete rewrite of
+the first wine resource compiler (1994) by Martin von Loewis.
+Additional resource\-types were contributed Ulrich Czekalla and Albert
+den Haan. Many cleanups by Dimitrie O. Paun in 2002-2003.
+Bugfixes have been contributed by many Wine developers.
+.SH BUGS
+\- The preprocessor recognizes variable argument macros, but does not
+expanded them correctly.
+.br
+\- Error reporting should be more precise, as currently the column and
+line number reported are those of the next token. 
+.br
+\- Default memory options should differ between win16 and win32.
+.PP
+There is no support for:
+.br
+\- RT_DLGINCLUDE, RT_VXD, RT_PLUGPLAY and RT_HTML (unknown format)
+.br
+\- PUSHBOX control is unsupported due to lack of original functionality.
+.PP
+Fonts are parsed and generated, but there is no support for the
+generation of the FONTDIR yet. The user must supply the FONTDIR
+resource in the source to match the FONT resources.
+.SH AVAILABILITY
+.B wrc
+is part of the Wine distribution, which is available through
+WineHQ, the Wine development headquarters, at
+.I http://www.winehq.org/.
+.SH "SEE ALSO"
+.BR wine (1)

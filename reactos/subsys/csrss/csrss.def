@@ -1,0 +1,8 @@
+; $Id$
+;
+
+LIBRARY csrss.exe
+
+EXPORTS
+
+CsrServerInitialization
