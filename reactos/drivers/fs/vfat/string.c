@@ -1,4 +1,4 @@
-/* $Id: string.c,v 1.4 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: string.c,v 1.5 2001/03/01 13:46:22 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -151,23 +151,30 @@ BOOLEAN wstrcmpi(PWSTR s1, PWSTR s2)
 
 BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
 /*
- * FUNCTION: Compare to wide character strings, s2 with jokers (* or ?)
+ * FUNCTION: Compare two wide character strings, s2 with jokers (* or ?)
  * return TRUE if s1 like s2
  */
 {
-   while ((*s2=='?')||(towlower(*s1)==towlower(*s2)))
+   while ((*s2=='*')||(*s2=='?')||(towlower(*s1)==towlower(*s2)))
    {
       if ((*s1)==0 && (*s2)==0)
         return(TRUE);
-      s1++;
-      s2++;	
+      if(*s2=='*')
+      {
+	s2++;
+        while (*s1)
+        if (wstrcmpjoki(s1,s2)) return TRUE;
+         else s1++;
+      }
+      else
+      {
+        s1++;
+        s2++;
+      }
    }
-   if(*s2=='*')
+   if ((*s2)=='.')
    {
-     s2++;
-     while (*s1)
-       if (wstrcmpjoki(s1,s2)) return TRUE;
-       else s1++;
+   	for (;((*s2)=='.')||((*s2)=='*')||((*s2)=='?');s2++) {}
    }
    if ((*s1)==0 && (*s2)==0)
         return(TRUE);
