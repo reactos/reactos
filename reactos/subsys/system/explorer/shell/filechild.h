@@ -67,6 +67,7 @@ struct RegistryChildWndInfo : public FileChildWndInfo
 	RegistryChildWndInfo(HWND hmdiclient, LPCTSTR path);
 };
 
+/* disabled
  /// information structure for creation of FileChildWindow
 struct FATChildWndInfo : public FileChildWndInfo
 {
@@ -74,6 +75,7 @@ struct FATChildWndInfo : public FileChildWndInfo
 
 	FATChildWndInfo(HWND hmdiclient, LPCTSTR path);
 };
+*/
 
  /// information structure for creation of WebChildWindow
 struct WebChildWndInfo : public FileChildWndInfo

@@ -82,7 +82,6 @@ OBJECTS = \
 	shellfs.o \
 	ntobjfs.o \
 	regfs.o \
-	fatfs.o \
 	webchild.o \
 	mainframe.o \
 	filechild.o \

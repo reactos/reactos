@@ -732,14 +732,6 @@ SOURCE=.\shell\entries.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\shell\fatfs.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\fatfs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\shell\filechild.cpp
 # End Source File
 # Begin Source File

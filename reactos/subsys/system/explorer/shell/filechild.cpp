@@ -32,7 +32,9 @@
 #include "../globals.h"
 #include "ntobjfs.h"
 #include "regfs.h"
+/* disabled
 #include "fatfs.h"
+*/
 
 #include "../explorer_intres.h"
 
@@ -83,10 +85,12 @@ RegistryChildWndInfo::RegistryChildWndInfo(HWND hmdiclient, LPCTSTR path)
 }
 
 
+/* disabled
 FATChildWndInfo::FATChildWndInfo(HWND hmdiclient, LPCTSTR path)
  :	FileChildWndInfo(hmdiclient, path, ET_FAT)
 {
 }
+*/
 
 
 WebChildWndInfo::WebChildWndInfo(HWND hmdiclient, LPCTSTR url)
@@ -156,6 +160,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		entry = _root._entry->read_tree(info._path, SORT_NONE);
 		break;
 
+/* disabled
 	  case ET_FAT:
 		_root._drive_type = DRIVE_UNKNOWN;
 
@@ -167,6 +172,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		_root._entry = new FATDrive(TEXT("c:/reactos-bochs/cdrv.img"));	//TEXT("\\\\.\\F:"));	//@@
 		entry = _root._entry->read_tree(info._path, SORT_NONE);
 		break;
+*/
 
 	  default:	// ET_WINDOWS
 		_root._drive_type = GetDriveType(info._path);

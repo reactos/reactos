@@ -144,12 +144,14 @@ MainFrame::MainFrame(HWND hwnd)
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
 	++drivebarBtn.iString;
 
+/* disabled
 	 // insert FAT direct file system access button
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("FAT\0"));
 
 	drivebarBtn.idCommand = ID_DRIVE_FAT;
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
 	++drivebarBtn.iString;
+*/
 
 	 // insert web control button
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Web\0"));
@@ -608,6 +610,7 @@ int MainFrame::Command(int id, int code)
 #endif
 	  break;}
 
+/* disabled
 	  case ID_DRIVE_FAT: {
 
 	  	///@todo prompt for image file
@@ -621,6 +624,7 @@ int MainFrame::Command(int id, int code)
 		///@todo SDI implementation
 #endif
 	  break;}
+*/
 
 	  case ID_WEB_WINDOW:
 #ifdef _DEBUG

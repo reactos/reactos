@@ -31,7 +31,6 @@ CPP_SRCS = \
 	shell/shellbrowser.cpp \
 	shell/ntobjfs.cpp \
 	shell/regfs.cpp \
-	shell/fatfs.cpp \
 	shell/webchild.cpp \
 	taskbar/desktopbar.cpp \
 	taskbar/taskbar.cpp \
