@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.152 2004/12/12 21:58:42 royce Exp $
+/* $Id: dc.c,v 1.153 2004/12/13 05:23:59 royce Exp $
  *
  * DC.C - Device context functions
  *
@@ -738,7 +738,11 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   NewDC = DC_LockDc( hNewDC );
   /* FIXME - NewDC can be NULL!!! Don't assert here! */
-  ASSERT( NewDC );
+  if ( !NewDC )
+  {
+    DC_FreeDC( hNewDC );
+    return NULL;
+  }
 
   NewDC->DMW = PrimarySurface.DMW;
   NewDC->DevInfo = &PrimarySurface.DevInfo;
@@ -757,6 +761,12 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   NewDC->DMW.dmLogPixels = 96;
   SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
+  if ( !SurfObj )
+  {
+	  DC_UnlockDc ( hNewDC );
+	  DC_FreeDC ( hNewDC) ;
+	  return NULL;
+  }
   NewDC->DMW.dmBitsPerPel = BitsPerFormat(SurfObj->iBitmapFormat);
   NewDC->DMW.dmPelsWidth = SurfObj->sizlBitmap.cx;
   NewDC->DMW.dmPelsHeight = SurfObj->sizlBitmap.cy;
