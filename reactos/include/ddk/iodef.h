@@ -55,46 +55,60 @@ typedef enum _CONFIGURATION_TYPE
    MaximumType
 } CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
 
-typedef enum _CM_RESOURCE_TYPE
-{
-   CmResourceTypePort = 1,
-   CmResourceTypeInterrupt,
-   CmResourceTypeMemory,
-   CmResourceTypeDma,
-   CmResourceTypeDeviceSpecific,
-   CmResourceTypeMaximum,
-} CM_RESOURCE_TYPE;
+
+typedef int CM_RESOURCE_TYPE;
+
+#define CmResourceTypeNull           0
+#define CmResourceTypePort           1
+#define CmResourceTypeInterrupt      2
+#define CmResourceTypeMemory         3
+#define CmResourceTypeDma            4
+#define CmResourceTypeDeviceSpecific 5
+#define CmResourceTypeBusNumber      6
+#define CmResourceTypeMaximum        7
+
 
 typedef enum _CM_SHARE_DISPOSITION
 {
-   CmResourceShareDeviceExclusive = 1,
-   CmResourceShareDriverExclusive,
-   CmResourceShareShared,
-   CmResourceShareMaximum,
+  CmResourceShareUndetermined = 0,
+  CmResourceShareDeviceExclusive,
+  CmResourceShareDriverExclusive,
+  CmResourceShareShared,
 } CM_SHARE_DISPOSITION;
 
-enum
-{
-   CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE,
-   CM_RESOURCE_INTERRUPT_LATCHED,
-};
 
-enum
-{
-   CM_RESOURCE_MEMORY_READ_WRITE    = 0x0000,
-   CM_RESOURCE_MEMORY_READ_ONLY     = 0x0001,
-   CM_RESOURCE_MEMORY_WRITE_ONLY    = 0x0002,
-   CM_RESOURCE_MEMORY_PREFETCHABLE  = 0x0004,
-   CM_RESOURCE_MEMORY_COMBINEDWRITE = 0x0008,
-   CM_RESOURCE_MEMORY_24            = 0x0010
-};
+#define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0
+#define CM_RESOURCE_INTERRUPT_LATCHED         1
 
 
-enum
-{
-   CM_RESOURCE_PORT_MEMORY,
-   CM_RESOURCE_PORT_IO,
-};
+#define CM_RESOURCE_MEMORY_READ_WRITE    0x0000
+#define CM_RESOURCE_MEMORY_READ_ONLY     0x0001
+#define CM_RESOURCE_MEMORY_WRITE_ONLY    0x0002
+#define CM_RESOURCE_MEMORY_PREFETCHABLE  0x0004
+#define CM_RESOURCE_MEMORY_COMBINEDWRITE 0x0008
+#define CM_RESOURCE_MEMORY_24            0x0010
+
+
+#define CM_RESOURCE_PORT_MEMORY                         0x0000
+#define CM_RESOURCE_PORT_IO                             0x0001
+#define CM_RESOURCE_PORT_FORWARD_FIRST_256_OF_EACH_1024 0x0002
+#define CM_RESOURCE_PORT_10_BIT_DECODE                  0x0004
+#define CM_RESOURCE_PORT_12_BIT_DECODE                  0x0008
+#define CM_RESOURCE_PORT_16_BIT_DECODE                  0x0010
+#define CM_RESOURCE_PORT_POSITIVE_DECODE                0x0020
+#define CM_RESOURCE_PORT_PASSIVE_DECODE                 0x0040
+#define CM_RESOURCE_PORT_WINDOW_DECODE                  0x0080
+
+
+#define CM_RESOURCE_DMA_8          0x0000
+#define CM_RESOURCE_DMA_16         0x0001
+#define CM_RESOURCE_DMA_32         0x0002
+#define CM_RESOURCE_DMA_8_AND_16   0x0004
+#define CM_RESOURCE_DMA_BUS_MASTER 0x0008
+#define CM_RESOURCE_DMA_TYPE_A     0x0010
+#define CM_RESOURCE_DMA_TYPE_B     0x0020
+#define CM_RESOURCE_DMA_TYPE_F     0x0040
+
 
 /*
  * PURPOSE: Irp flags
