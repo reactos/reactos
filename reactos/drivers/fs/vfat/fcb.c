@@ -137,6 +137,10 @@ vfatNewFCB(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING pFileNameU)
   ExInitializeResourceLite(&rcFCB->MainResource);
   FsRtlInitializeFileLock(&rcFCB->FileLock, NULL, NULL); 
   ExInitializeFastMutex(&rcFCB->LastMutex);
+  rcFCB->RFCB.PagingIoResource = &rcFCB->PagingIoResource;
+  rcFCB->RFCB.Resource = &rcFCB->MainResource;
+  rcFCB->RFCB.IsFastIoPossible = FastIoIsNotPossible;
+
   return  rcFCB;
 }
 
@@ -425,6 +429,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   FCB->RFCB.FileSize.QuadPart = Size;
   FCB->RFCB.ValidDataLength.QuadPart = Size;
   FCB->RFCB.AllocationSize.QuadPart = Size;
+  FCB->RFCB.IsFastIoPossible = FastIoIsNotPossible;
 
   vfatFCBInitializeCacheFromVolume(pVCB, FCB);
   vfatAddFCBToTable(pVCB, FCB);
@@ -538,6 +543,12 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   }
   rcFCB->dirIndex = DirContext->DirIndex;
   rcFCB->startIndex = DirContext->StartIndex;
+  if ((rcFCB->Flags & FCB_IS_FATX_ENTRY) && !vfatFCBIsRoot (directoryFCB))
+    {
+      ASSERT(DirContext->DirIndex >= 2 && DirContext->StartIndex >= 2);
+      rcFCB->dirIndex = DirContext->DirIndex-2;
+      rcFCB->startIndex = DirContext->StartIndex-2;
+    }
   rcFCB->RFCB.FileSize.QuadPart = Size;
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
   rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->FatInfo.BytesPerCluster);
