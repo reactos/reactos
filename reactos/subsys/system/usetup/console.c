@@ -1006,13 +1006,9 @@ PrintTextXY(SHORT x, SHORT y, char* fmt,...)
   va_list ap;
   COORD coPos;
 
-CHECKPOINT1;
   va_start(ap, fmt);
   vsprintf(buffer, fmt, ap);
   va_end(ap);
-CHECKPOINT1;
-DPRINT1("%s\n", buffer);
-CHECKPOINT1;
 
   coPos.X = x;
   coPos.Y = y;

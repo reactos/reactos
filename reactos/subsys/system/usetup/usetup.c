@@ -203,10 +203,9 @@ CHECKPOINT1;
 
 
 /*
- * First setup page
+ * Start page
  * RETURNS
- *	TRUE: setup/repair completed successfully
- *	FALSE: setup/repair terminated by user
+ *	Number of the next page.
  */
 static ULONG
 StartPage(PINPUT_RECORD Ir)
@@ -269,12 +268,12 @@ RepairIntroPage(PINPUT_RECORD Ir)
     {
       ConInKey(Ir);
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)		/* ENTER */
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(REBOOT_PAGE);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))	/* ESC */
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
 	  return(INTRO_PAGE);
 	}
@@ -300,9 +299,11 @@ IntroPage(PINPUT_RECORD Ir)
 
   SetTextXY(8, 15, "\xf9  Press ENTER to install ReactOS.");
 
-  SetTextXY(8, 17, "\xf9  Press R to repair ReactOS.");
+  SetTextXY(8, 17, "\xf9  Press E to start the emergency repair console.");
 
-  SetTextXY(8, 19, "\xf9  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 19, "\xf9  Press R to repair ReactOS.");
+
+  SetTextXY(8, 21, "\xf9  Press F3 to quit without installing ReactOS.");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -312,17 +313,23 @@ IntroPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))	/* F3 */
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(INSTALL_INTRO_PAGE);
 	}
-      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')	/* R */
+#if 0
+      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'E') /* E */
+	{
+	  return(RepairConsole());
+	}
+#endif
+      else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
 	{
 	  return(REPAIR_INTRO_PAGE);
 	}
@@ -359,13 +366,13 @@ InstallIntroPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(SELECT_PARTITION_PAGE);
 	}
@@ -408,7 +415,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    {
@@ -418,16 +425,16 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	  break;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
 	  ScrollDownPartitionList(PartList);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
 	  ScrollUpPartitionList(PartList);
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  PartDataValid = GetPartitionData(PartList, &PartData);
 	  DestroyPartitionList(PartList);
@@ -538,18 +545,18 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
 	  break;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))	/* ESC */
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
 	  return(SELECT_PARTITION_PAGE);
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(CHECK_FILE_SYSTEM_PAGE);
 	}
@@ -576,7 +583,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
@@ -617,7 +624,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
@@ -818,7 +825,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(FILE_COPY_PAGE);
 	}
@@ -848,7 +855,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(INIT_SYSTEM_PAGE);
 	}
@@ -974,13 +981,13 @@ InitSystemPage(PINPUT_RECORD Ir)
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return(QUIT_PAGE);
 	  break;
 	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(SUCCESS_PAGE);
 	}
@@ -1006,7 +1013,7 @@ QuitPage(PINPUT_RECORD Ir)
     {
       ConInKey(Ir);
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(REBOOT_PAGE);
 	}
@@ -1030,7 +1037,7 @@ SuccessPage(PINPUT_RECORD Ir)
     {
       ConInKey(Ir);
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return(REBOOT_PAGE);
 	}

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/*
+/* $Id: partlist.c,v 1.3 2002/11/02 23:17:06 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -34,6 +34,7 @@
 #include "usetup.h"
 #include "console.h"
 #include "partlist.h"
+#include "drivesup.h"
 
 
 /* FUNCTIONS ****************************************************************/
@@ -184,6 +185,10 @@ CreatePartitionList(SHORT Left,
 			      List->DiskArray[DiskCount].PartArray[i].PartSize = LayoutBuffer->PartitionEntry[i].PartitionLength.QuadPart;
 			      List->DiskArray[DiskCount].PartArray[i].PartNumber = LayoutBuffer->PartitionEntry[i].PartitionNumber,
 			      List->DiskArray[DiskCount].PartArray[i].PartType = LayoutBuffer->PartitionEntry[i].PartitionType;
+
+			      List->DiskArray[DiskCount].PartArray[i].DriveLetter = GetDriveLetter(DiskCount,
+												   LayoutBuffer->PartitionEntry[i].PartitionNumber);
+
 			      List->DiskArray[DiskCount].PartArray[i].Used = TRUE;
 			    }
 			  else
@@ -368,15 +373,29 @@ PrintPartitionData(PPARTLIST List,
       Unit = "kB";
     }
 
-  sprintf(LineBuffer,
-	  "%d: nr: %d type: %x (%s)  %I64u %s",
-	  PartIndex,
-	  PartEntry->PartNumber,
-	  PartEntry->PartType,
-	  PartType,
-	  PartSize,
-	  Unit);
-
+  if (PartEntry->DriveLetter != (CHAR)0)
+    {
+      sprintf(LineBuffer,
+	      "%c:  %d: nr: %d type: %x (%s)  %I64u %s",
+	      PartEntry->DriveLetter,
+	      PartIndex,
+	      PartEntry->PartNumber,
+	      PartEntry->PartType,
+	      PartType,
+	      PartSize,
+	      Unit);
+    }
+  else
+    {
+      sprintf(LineBuffer,
+	      "    %d: nr: %d type: %x (%s)  %I64u %s",
+	      PartIndex,
+	      PartEntry->PartNumber,
+	      PartEntry->PartType,
+	      PartType,
+	      PartSize,
+	      Unit);
+    }
 
   Attribute = (List->CurrentDisk == DiskIndex &&
 	       List->CurrentPartition == PartIndex) ? 0x71 : 0x17;
@@ -686,6 +705,8 @@ GetPartitionData(PPARTLIST List,
   Data->PartSize = List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].PartSize;
   Data->PartNumber = List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].PartNumber;
   Data->PartType = List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].PartType;
+
+  Data->DriveLetter = List->DiskArray[List->CurrentDisk].PartArray[List->CurrentPartition].DriveLetter;
 
   return(TRUE);
 }

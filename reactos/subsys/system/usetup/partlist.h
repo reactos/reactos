@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/*
+/* $Id: partlist.h,v 1.3 2002/11/02 23:17:06 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -34,9 +34,12 @@ typedef struct _PARTDATA
   USHORT Port;
   USHORT Bus;
   USHORT Id;
+
   ULONGLONG PartSize;
   ULONG PartNumber;
   ULONG PartType;
+
+  CHAR DriveLetter;
 } PARTDATA, *PPARTDATA;
 
 
@@ -45,6 +48,7 @@ typedef struct _PARTENTRY
   ULONGLONG PartSize;
   ULONG PartNumber;
   ULONG PartType;
+
   CHAR DriveLetter;
   BOOL Used;
 } PARTENTRY, *PPARTENTRY;
@@ -106,7 +110,8 @@ VOID
 ScrollUpPartitionList(PPARTLIST List);
 
 BOOL
-GetPartitionData(PPARTLIST List, PPARTDATA Data);
+GetPartitionData(PPARTLIST List,
+		 PPARTDATA Data);
 
 #endif /* __PARTLIST_H__ */
 
