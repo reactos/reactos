@@ -16,6 +16,13 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
+
+#ifndef NDEBUG
+#define DPRINT1(x) DbgPrint(x)
+#else
+#define DPRINT1(x)
+#endif
+
 #define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is umimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
 
 #ifndef NDEBUG

@@ -20,6 +20,8 @@
 
 /* GLOBALS ******************************************************************/
 
+#define BOCHS_LOGGER_PORT (0x3ed)
+
 /*
  * PURPOSE: Current cursor position
  */
@@ -120,7 +122,9 @@ static void putchar(char c)
    char* address;
    int offset;
    int i;
-
+   
+   outb_p(BOCHS_LOGGER_PORT,c);
+   
    switch(c)
      {
       case '\n':
@@ -268,7 +272,7 @@ ULONG DbgPrint(PCH Format, ...)
 	   : "m" (eflags));
 }
 
-void InitConsole(boot_param* bp)
+void HalInitConsole(boot_param* bp)
 /*
  * FUNCTION: Initalize the console
  * ARGUMENTS:

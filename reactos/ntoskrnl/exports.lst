@@ -158,6 +158,7 @@ IoRaiseHardError
 IoRaiseInformationalHardError
 IoReadPartitionTable
 IoRegisterDriverReinitialization
+IoRegisterFileSystem
 IoRegisterShutdownNotification
 IoReleaseCancelSpinLock
 IoRemoveShareAccess
@@ -375,3 +376,4 @@ ZwSetValueKey
 ZwUnmapViewOfSection
 ZwWriteFile
 sprintf
+wcschr

@@ -12,9 +12,10 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/objmgr.h>
-#include <internal/iomgr.h>
+#include <internal/ob.h>
+#include <internal/io.h>
 #include <internal/string.h>
+#include <wstring.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -48,7 +49,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
  *        FileAttributes = Attributes to create the file with
  *        ShareAccess = Type of shared access the caller would like to the file
  *        CreateDisposition = Specifies what to do, depending on whether the
- *                            file already existings
+ *                            file already exists
  *        CreateOptions = Options for creating a new file
  *        EaBuffer = Undocumented
  *        EaLength = Undocumented
@@ -85,47 +86,112 @@ NTSTATUS ZwOpenFile(PHANDLE FileHandle,
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;   
    PIO_STACK_LOCATION StackLoc;
+   PWSTR Remainder;
+   
+   DPRINT("ZwOpenFile(FileHandle %x, ObjectAttributes %x, "
+	  "ObjectAttributes->ObjectName->Buffer %w)\n",FileHandle,
+	  ObjectAttributes,ObjectAttributes->ObjectName->Buffer);
    
    assert_irql(PASSIVE_LEVEL);
    
    *FileHandle=0;
-   
-   Status =  ObOpenObjectByName(ObjectAttributes,&Object);
-   DPRINT("Object %x Status %x\n",Object,Status);
-   if (!NT_SUCCESS(Status))
-     {	
-	return(Status);
-     }
-   
-   DeviceObject = (PDEVICE_OBJECT)Object;
 
    FileObject = ObGenericCreateObject(FileHandle,0,NULL,OBJTYP_FILE);
-   DPRINT("FileObject %x DeviceObject %x\n",FileObject,DeviceObject);
    memset(FileObject,0,sizeof(FILE_OBJECT));
+   
+   Status =  ObOpenObjectByName(ObjectAttributes,&Object,&Remainder);
+   
+   if (Status != STATUS_SUCCESS && Status != STATUS_FS_QUERY_REQUIRED)
+     {
+	DPRINT("%s() = Failed to find object\n",__FUNCTION__);
+	ObDeleteHandle(*FileHandle);
+	*FileHandle=0;
+	ExFreePool(FileObject);
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   
+   DeviceObject = (PDEVICE_OBJECT)Object;
+   DeviceObject = IoGetAttachedDevice(DeviceObject);
+   DPRINT("DeviceObject %x\n",DeviceObject);
+   
+   if (Status == STATUS_SUCCESS)
+     {
+	CHECKPOINT;
+	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
+	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
+						     ObjectAttributes->Length);
+	RtlCopyUnicodeString(&(FileObject->FileName),
+			     ObjectAttributes->ObjectName);
+     }
+   else
+     {
+	CHECKPOINT;
+	if (DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM &&
+	    DeviceObject->DeviceType != FILE_DEVICE_DISK)
+	  {
+	     ObDeleteHandle(*FileHandle);
+	     *FileHandle=0;
+	     ExFreePool(FileObject);
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+	  {
+	     Status = IoTryToMountStorageDevice(DeviceObject);
+	     if (Status!=STATUS_SUCCESS)
+	       {
+		  ObDeleteHandle(*FileHandle);
+		  *FileHandle=0;
+		  ExFreePool(FileObject);
+		  return(Status);
+	       }
+	     DeviceObject = IoGetAttachedDevice(DeviceObject);
+	  }
+	DPRINT("Remainder %w\n",Remainder);
+	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
+						     wstrlen(Remainder));
+	RtlInitUnicodeString(&(FileObject->FileName),Remainder);
+	DPRINT("FileObject->FileName.Buffer %x %w\n",
+	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
+     }
+   CHECKPOINT;
+   
    FileObject->DeviceObject=DeviceObject;
-   FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
+   FileObject->Vpb=DeviceObject->Vpb;
    
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
    
    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {
+	ObDeleteHandle(*FileHandle);
+	*FileHandle=0;
+	ExFreePool(FileObject);
 	return(STATUS_UNSUCCESSFUL);
      }
    
    StackLoc = IoGetNextIrpStackLocation(Irp);
-   DPRINT("StackLoc %x\n",StackLoc);
    StackLoc->MajorFunction = IRP_MJ_CREATE;
    StackLoc->MinorFunction = 0;
    StackLoc->Flags = 0;
    StackLoc->Control = 0;
    StackLoc->DeviceObject = DeviceObject;
    StackLoc->FileObject=FileObject;
-   DPRINT("DeviceObject %x\n",DeviceObject);
-   DPRINT("DeviceObject->DriverObject %x\n",DeviceObject->DriverObject);
-   IoCallDriver(DeviceObject,Irp);
+   Status = IoCallDriver(DeviceObject,Irp);
+   if (Status==STATUS_PENDING)
+     {
+	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	Status = IoStatusBlock->Status;
+     }
    
-   return(STATUS_SUCCESS);
+   if (Status!=STATUS_SUCCESS)
+     {
+	ObDeleteHandle(*FileHandle);
+	*FileHandle=0;
+	ExFreePool(FileObject);
+     }
+   
+   return(Status);
 }
 
 

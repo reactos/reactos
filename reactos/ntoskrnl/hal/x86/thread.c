@@ -13,7 +13,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
-#include <internal/psmgr.h>
+#include <internal/ps.h>
 #include <internal/string.h>
 #include <internal/hal.h>
 #include <internal/hal/segment.h>

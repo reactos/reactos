@@ -159,6 +159,7 @@ void IoRaiseHardError(void);
 void IoRaiseInformationalHardError(void);
 void IoReadPartitionTable(void);
 void IoRegisterDriverReinitialization(void);
+void IoRegisterFileSystem(void);
 void IoRegisterShutdownNotification(void);
 void IoReleaseCancelSpinLock(void);
 void IoRemoveShareAccess(void);
@@ -376,6 +377,7 @@ void ZwSetValueKey(void);
 void ZwUnmapViewOfSection(void);
 void ZwWriteFile(void);
 void sprintf(void);
+void wcschr(void);
 #ifdef __cplusplus
 }
 #endif
@@ -531,6 +533,7 @@ export symbol_table[]={
 {"_IoRaiseInformationalHardError",(unsigned int)IoRaiseInformationalHardError},
 {"_IoReadPartitionTable",(unsigned int)IoReadPartitionTable},
 {"_IoRegisterDriverReinitialization",(unsigned int)IoRegisterDriverReinitialization},
+{"_IoRegisterFileSystem",(unsigned int)IoRegisterFileSystem},
 {"_IoRegisterShutdownNotification",(unsigned int)IoRegisterShutdownNotification},
 {"_IoReleaseCancelSpinLock",(unsigned int)IoReleaseCancelSpinLock},
 {"_IoRemoveShareAccess",(unsigned int)IoRemoveShareAccess},
@@ -748,5 +751,6 @@ export symbol_table[]={
 {"_ZwUnmapViewOfSection",(unsigned int)ZwUnmapViewOfSection},
 {"_ZwWriteFile",(unsigned int)ZwWriteFile},
 {"_sprintf",(unsigned int)sprintf},
+{"_wcschr",(unsigned int)wcschr},
 {NULL,NULL},
 };

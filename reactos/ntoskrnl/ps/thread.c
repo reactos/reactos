@@ -21,10 +21,10 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
-#include <internal/objmgr.h>
+#include <internal/ob.h>
 #include <internal/string.h>
 #include <internal/hal.h>
-#include <internal/psmgr.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -150,7 +150,7 @@ void PsDispatchThread(void)
         if (current->ThreadState == THREAD_STATE_RUNNABLE &&
             current != (PKTHREAD)CurrentThread)
 	  {	     
-	     DPRINT("Scheduling this one %x\n",current);
+	     DPRINT("Scheduling this one %x\n",current);	   	     
 	     CurrentThread = current;
 	     CurrentThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     KeReleaseSpinLock(&ThreadListLock,irql);

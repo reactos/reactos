@@ -45,7 +45,7 @@ endif
 DEFINES = -DCHECKED_BUILD -DWIN32_LEAN_AND_MEAN -DDBG
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
-CFLAGS = -O2 -I../../include -I../include -fno-builtin $(DEFINES) -Wall -Wstrict-prototypes
+CFLAGS = -O2 -I../../../include -I../../include -I../include -fno-builtin $(DEFINES) -Wall -Wstrict-prototypes
 CXXFLAGS = $(CFLAGS)
 NASM = nasm
 NFLAGS = -i../include/ -f$(NASM_FORMAT)

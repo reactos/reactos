@@ -137,7 +137,7 @@ asmlinkage void exception_handler(unsigned int edi,
     */
    printk("Exception: %d(%x)\n",type,error_code&0xffff);
    printk("CS:EIP %x:%x\n",cs&0xffff,eip);
-   for(;;);
+//   for(;;);
    printk("EAX: %.8x   EBX: %.8x   ECX: %.8x\n",eax,ebx,ecx);
    printk("EDX: %.8x   EBP: %.8x   ESI: %.8x\n",edx,ebp,esi);
    printk("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);

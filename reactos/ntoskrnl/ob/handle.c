@@ -12,7 +12,7 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/objmgr.h>
+#include <internal/ob.h>
 #include <internal/string.h>
 
 #define NDEBUG
@@ -26,7 +26,7 @@
 typedef struct
 {
    PVOID obj;
-} HANDLE_REP;
+} HANDLE_REP, *PHANDLE_REP;
 
 #define HANDLE_BLOCK_ENTRIES ((PAGESIZE-sizeof(LIST_ENTRY))/sizeof(HANDLE_REP))
 
@@ -89,8 +89,31 @@ VOID ObjInitializeHandleTable(HANDLE parent)
  *        parent = Parent process (or NULL if this is the first process)
  */
 {
+   DPRINT("ObjInitializeHandleTable(parent %x)\n",parent);
+   
    InitializeListHead(&handle_list_head);
    KeInitializeSpinLock(&handle_list_lock);
+}
+
+static PHANDLE_REP ObTranslateHandle(HANDLE* h)
+{
+   PLIST_ENTRY current = handle_list_head.Flink;
+   unsigned int handle = ((unsigned int)h) - 1;
+   unsigned int count=handle/HANDLE_BLOCK_ENTRIES;
+   HANDLE_BLOCK* blk = NULL;
+   unsigned int i;
+   
+   for (i=0;i<count;i++)
+     {
+	current = current->Flink;
+	if (current==(&handle_list_head))
+	  {
+	     return(NULL);
+	  }
+     }
+   
+   blk = (HANDLE_BLOCK *)current;
+   return(&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
 }
 
 PVOID ObGetObjectByHandle(HANDLE h)
@@ -101,23 +124,20 @@ PVOID ObGetObjectByHandle(HANDLE h)
  * RETURNS: The object
  */
 {
-   LIST_ENTRY* current = handle_list_head.Flink;
-   unsigned int handle = ((unsigned int)h) - 1;
-   unsigned int count=handle/HANDLE_BLOCK_ENTRIES;
-   HANDLE_BLOCK* blk = NULL;
-   unsigned int i;
+   DPRINT("ObGetObjectByHandle(h %x)\n",h);
    
-   for (i=0;i<count;i++)
+   if (h==NULL)
      {
-	current = current->Flink;
-	if (current==NULL)
-	  {
-	     return(NULL);
-	  }
+	return(NULL);
      }
    
-   blk = (HANDLE_BLOCK *)current;
-   return(blk->handles[handle%HANDLE_BLOCK_ENTRIES].obj);
+   return(ObTranslateHandle(h)->obj);
+}
+
+VOID ObDeleteHandle(HANDLE Handle)
+{
+   PHANDLE_REP Rep = ObTranslateHandle(Handle);
+   Rep->obj=NULL;
 }
 
 HANDLE ObAddHandle(PVOID obj)
@@ -134,13 +154,13 @@ HANDLE ObAddHandle(PVOID obj)
    unsigned int i;
    HANDLE_BLOCK* new_blk = NULL;
    
-   DPRINT("ObAddHandle(obj %)\n",obj);
+   DPRINT("ObAddHandle(obj %x)\n",obj);
    
    /*
     * Scan through the currently allocated handle blocks looking for a free
     * slot
     */
-   while (current!=NULL)
+   while (current!=(&handle_list_head))
      {
 	HANDLE_BLOCK* blk = (HANDLE_BLOCK *)current;
 

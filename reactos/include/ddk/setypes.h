@@ -8,7 +8,11 @@
  *                 29/08/98:    ACCESS_TOKEN definition from Boudewijn Dekker
  */
 
+#ifndef __INCLUDE_DDK_SETYPES_H
+#define __INCLUDE_DDK_SETYPES_H
+
 typedef ULONG ACCESS_MODE, *PACCESS_MODE;
+typedef SECURITY_QUALITY_OF_SERVICE* PSECURITY_QUALITY_OF_SERVICE;
 
 typedef struct _SECURITY_SUBJECT_CONTEXT
 {
@@ -39,3 +43,5 @@ typedef struct _ACCESS_TOKEN {
 	PVOID				AuditData;
 	UCHAR				VariablePart[0];
 } ACCESS_TOKEN, *PACCESS_TOKEN;
+
+#endif

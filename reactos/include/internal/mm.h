@@ -26,6 +26,8 @@ enum
 
 typedef struct
 {
+   CSHORT Type;
+   CSHORT Size;
    FILE_OBJECT* File;
 } SECTION_OBJECT;
 
@@ -36,10 +38,15 @@ typedef struct
    ULONG Length;
    ULONG Attributes;
    LIST_ENTRY Entry;
+   ULONG LockCount;
    union
      {
-	SECTION_OBJECT* Section;	
-     } d;
+	struct
+	  {	     
+	     SECTION_OBJECT* Section;
+	     ULONG ViewOffset;
+	  } SectionData;
+     } Data;
 } MEMORY_AREA;
 
 
@@ -84,16 +91,6 @@ asmlinkage unsigned int get_free_page(void);
  *          nr = number of continuous pages to free
  */
 asmlinkage void free_page(unsigned int physical_base, unsigned int nr);
-
-/*
- * FUNCTION: Returns the physical address mapped by a given virtual address 
- * ARGUMENTS:
- *          vaddr = virtual address to query
- * RETURNS: The physical address if present in memory
- *          Zero if paged out or invalid
- * NOTE: This doesn't do any synchronization
- */
-unsigned int get_page_physical_address(unsigned int vaddr);
 
 void mark_page_not_writable(unsigned int vaddr);
 
