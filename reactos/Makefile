@@ -61,7 +61,7 @@ PREAUTO := \
 	lib$(SEP)kernel32$(SEP)errcodes.rc
 
 Makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(WRC_TARGET) \
-               $(RSYM_TARGET) $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO)
+               $(RSYM_TARGET) $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
 
 

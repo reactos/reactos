@@ -1,9 +1,9 @@
-// XML.h
-
 #ifndef XML_H
 #define XML_H
 
 #include "pch.h"
+
+class XMLElement;
 
 void
 InitWorkingDirectory();
@@ -23,11 +23,32 @@ public:
 	Path ( const Path& cwd, const std::string& filename );
 	std::string Fixup ( const std::string& filename, bool include_filename ) const;
 
+	std::string RelativeFromWorkingDirectory ();
 	static std::string RelativeFromWorkingDirectory ( const std::string& path );
 
 	static void Split ( std::vector<std::string>& out,
 	                    const std::string& path,
 	                    bool include_last );
+};
+
+class XMLInclude
+{
+public:
+	XMLElement *e;
+	Path path;
+	std::string topIncludeFilename;
+	bool fileExists;
+
+	XMLInclude ( XMLElement* e_, const Path& path_, const std::string topIncludeFilename_ )
+		: e ( e_ ), path ( path_ ), topIncludeFilename ( topIncludeFilename_ )
+	{
+	}
+};
+
+class XMLIncludes : public std::vector<XMLInclude*>
+{
+public:
+	~XMLIncludes();
 };
 
 class XMLFile
@@ -86,11 +107,8 @@ public:
 };
 
 XMLElement*
-XMLLoadFile ( const std::string& filename, const Path& path );
+XMLLoadFile ( const std::string& filename,
+	          const Path& path,
+	          XMLIncludes& includes );
 
-/*XMLElement*
-XMLParse(XMLFile& f,
-         const Path& path,
-         bool* pend_tag = NULL);*/
-
-#endif//XML_H
+#endif // XML_H

@@ -31,6 +31,7 @@ MingwBackend::Process ()
 	GenerateGlobalVariables ();
 	GenerateAllTarget ();
 	GenerateInitTarget ();
+	GenerateXmlBuildFilesMacro();
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
@@ -254,6 +255,47 @@ MingwBackend::GenerateInitTarget () const
 	          "endif\n" );
 	fprintf ( fMakefile,
 	          "\t${nmkdir} $(ROS_INTERMEDIATE)." SSEP "tools\n" );
+	fprintf ( fMakefile,
+	          "\n" );
+}
+
+void
+MingwBackend::GenerateXmlBuildFilesMacro() const
+{
+	fprintf ( fMakefile,
+	          "XMLBUILDFILES = %s \\\n",
+	          ProjectNode.GetProjectFilename ().c_str () );
+	string xmlbuildFilenames;
+	int numberOfExistingFiles = 0;
+	for ( size_t i = 0; i < ProjectNode.xmlbuildfiles.size (); i++ )
+	{
+		XMLInclude& xmlbuildfile = *ProjectNode.xmlbuildfiles[i];
+		if ( !xmlbuildfile.fileExists )
+			continue;
+		numberOfExistingFiles++;
+		if ( xmlbuildFilenames.length () > 0 )
+			xmlbuildFilenames += " ";
+		xmlbuildFilenames += NormalizeFilename ( xmlbuildfile.topIncludeFilename );
+		if ( numberOfExistingFiles % 5 == 4 || i == ProjectNode.xmlbuildfiles.size () - 1 )
+		{
+			fprintf ( fMakefile,
+			          "\t%s",
+			          xmlbuildFilenames.c_str ());
+			if ( i == ProjectNode.xmlbuildfiles.size () - 1 )
+			{
+				fprintf ( fMakefile,
+				          "\n" );
+			}
+			else
+			{
+				fprintf ( fMakefile,
+				          " \\\n",
+				          xmlbuildFilenames.c_str () );
+			}
+			xmlbuildFilenames.resize ( 0 );
+		}
+		numberOfExistingFiles++;
+	}
 	fprintf ( fMakefile,
 	          "\n" );
 }

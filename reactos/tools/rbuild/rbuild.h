@@ -63,6 +63,7 @@ class Project
 public:
 	std::string name;
 	std::string makefile;
+	XMLIncludes xmlbuildfiles;
 	std::vector<Module*> modules;
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
@@ -78,6 +79,7 @@ public:
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
 	const Module* LocateModule ( const std::string& name ) const;
+	std::string GetProjectFilename () const;
 private:
 	const Property* LookupProperty ( const std::string& name ) const;
 	void SetConfigurationOption ( char* s,

@@ -183,7 +183,7 @@ void
 Project::ReadXml ()
 {
 	Path path;
-	head = XMLLoadFile ( xmlfile, path );
+	head = XMLLoadFile ( xmlfile, path, xmlbuildfiles );
 	node = NULL;
 	for ( size_t i = 0; i < head->subElements.size (); i++ )
 	{
@@ -344,3 +344,11 @@ Project::LocateModule ( const string& name ) const
 
 	return NULL;
 }
+
+std::string
+Project::GetProjectFilename () const
+{
+	return xmlfile;
+}
+
+	

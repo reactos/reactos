@@ -30,6 +30,7 @@ private:
 	void GenerateAllTarget () const;
 	std::string GetBuildToolDependencies () const;
 	void GenerateInitTarget () const;
+	void GenerateXmlBuildFilesMacro() const;
 	void CheckAutomaticDependencies ();
 	FILE* fMakefile;
 };
