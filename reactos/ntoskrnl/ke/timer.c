@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.31 2000/07/04 08:52:40 dwelch Exp $
+/* $Id: timer.c,v 1.32 2000/07/07 00:45:37 phreak Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -135,14 +135,14 @@ NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
 				  IN TIME* Interval)
 {
    NTSTATUS Status;
-   PLARGE_INTEGER IntervalP;
+   LARGE_INTEGER Timeout;
    
-   IntervalP = (PLARGE_INTEGER)Interval;
-   
+   Timeout = *((PLARGE_INTEGER)Interval);
+   Timeout.QuadPart = -Timeout.QuadPart;
    DPRINT("NtDelayExecution(Alertable %d, Internal %x) IntervalP %x\n",
-	  Alertable, Internal, IntervalP);
+	  Alertable, Internal, Timeout);
    
-   Status = KeDelayExecutionThread(UserMode, Alertable, IntervalP);
+   Status = KeDelayExecutionThread(UserMode, Alertable, &Timeout);
    return(Status);
 }
 
@@ -265,15 +265,14 @@ KeSetTimerEx (
 {
    KIRQL oldlvl;
    
-   DPRINT("KeSetTimerEx(Timer %x)\n",Timer);
-   
+   DPRINT("KeSetTimerEx(Timer %x), DueTime: \n",Timer);
    KeRaiseIrql( HIGH_LEVEL, &oldlvl );
    KeAcquireSpinLockAtDpcLevel(&TimerListLock);
    
    Timer->Dpc = Dpc;
    if (DueTime.QuadPart < 0)
      {
-	Timer->DueTime.QuadPart = system_time + (-(DueTime.QuadPart));
+	Timer->DueTime.QuadPart = system_time + 100000000;
      }
    else
      {
@@ -474,7 +473,7 @@ VOID KiUpdateSystemTime (VOID)
 //   extern ULONG EiNrUsedBlocks;
    extern unsigned int EiFreeNonPagedPool;
    extern unsigned int EiUsedNonPagedPool;
-   extern ULONG PiNrThreads;
+   //   extern ULONG PiNrThreads;
 //   extern ULONG MiNrFreePages;
    
    if (TimerInitDone == FALSE)
@@ -503,15 +502,16 @@ VOID KiUpdateSystemTime (VOID)
 	y = (EiUsedNonPagedPool * 100) / 
 	  (EiFreeNonPagedPool + EiUsedNonPagedPool);
      }
-//   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,ticks);
    memset(str, 0, sizeof(str));
 //   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
 //	   (unsigned int)EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
-   sprintf(str,"%.8u %.8u",(unsigned int)PiNrRunnableThreads,
-	   (unsigned int)PiNrThreads);
+//   sprintf(str,"%.8u %.8u",(unsigned int)PiNrRunnableThreads,
+//	   (unsigned int)PiNrThreads);
 //   sprintf(str,"%.8u %.8u", (unsigned int)PiNrRunnableThreads,
 //	   (unsigned int)MiNrFreePages);
+   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,(unsigned int)KiTimerTicks);
+
    for (i=0;i<17;i++)
      {
 	*vidmem=str[i];
