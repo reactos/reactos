@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.49 2003/09/13 06:17:52 vizzini Exp $
+/* $Id: handle.c,v 1.50 2003/09/14 09:19:07 hbirr Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -481,11 +481,11 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
    if (ObjectBody != NULL)
      {
 	Header = BODY_TO_HEADER(ObjectBody);
-	InterlockedDecrement(&(BODY_TO_HEADER(ObjectBody)->HandleCount));
 	ObReferenceObjectByPointer(ObjectBody,
 				   0,
 				   NULL,
 				   UserMode);
+	InterlockedDecrement(&(BODY_TO_HEADER(ObjectBody)->HandleCount));
 	Rep->ObjectBody = NULL;
    
 	KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
