@@ -1,8 +1,7 @@
 /*
- * iphlpapi dll implementation -- physical media stubs
+ * iphlpapi dll implementation -- Route function prototypes.
  *
  * Copyright (C) 2004 Art Yerkes
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -17,23 +16,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "iphlpapi_private.h"
 
-/*
- * @unimplemented
- */
-DWORD STDCALL DisableMediaSense(HANDLE *pHandle,OVERLAPPED *pOverLapped)
-{
-    UNIMPLEMENTED
-    return 0L;
-}
+#ifndef WINE_IPHLP_ROUTE_H_
+#define WINE_IPHLP_ROUTE_H_
 
-/*
- * @unimplemented
- */
-DWORD STDCALL RestoreMediaSense(OVERLAPPED* pOverlapped,LPDWORD lpdwEnableCount)
-{
-    UNIMPLEMENTED
-    return 0L;
-}
+/* Create a route entry. */
 
+DWORD createIpForwardEntry( PMIB_IPFORWARDROW Route );
+DWORD setIpForwardEntry( PMIB_IPFORWARDROW Route );
+DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW Route );
+
+#endif/*WINE_IPHLP_ROUTE_H_*/

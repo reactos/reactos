@@ -1,8 +1,9 @@
 /*
- * iphlpapi dll implementation -- Auxiliary icmp functions
+ * iphlpapi dll implementation -- Auxiliary ICMP functions.
  *
- * These are stubs for functions that provide a simple ICMP probing API.  They
- * will be operating system specific when implemented.
+ * These are stubs for functions that set routing information on the target
+ * operating system.  They are grouped here because their implementation will
+ * vary widely by operating system.
  *
  * Copyright (C) 2004 Art Yerkes
  * This library is free software; you can redistribute it and/or
@@ -52,42 +53,42 @@ WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
  * @unimplemented
  */
 DWORD
-WINAPI
+STDCALL
 IcmpParseReplies(
     LPVOID                   ReplyBuffer,
     DWORD                    ReplySize
     )
 {
-    FIXME(":stub\n");
+    UNIMPLEMENTED
     return 0L;
 }
 
 /*
  * @unimplemented
  */
-HANDLE WINAPI  IcmpCreateFile(
+HANDLE STDCALL  IcmpCreateFile(
     VOID
     )
 {
-    FIXME(":stub\n");
+    UNIMPLEMENTED
     return 0L;
 }
 
 /*
  * @unimplemented
  */
-BOOL WINAPI  IcmpCloseHandle(
+BOOL STDCALL  IcmpCloseHandle(
     HANDLE  IcmpHandle
     )
 {
-    FIXME(":stub\n");
+    UNIMPLEMENTED
     return 0L;
 }
 
 /*
  * @unimplemented
  */
-DWORD WINAPI  IcmpSendEcho(
+DWORD STDCALL  IcmpSendEcho(
     HANDLE                 IcmpHandle,
     IPAddr                 DestinationAddress,
     LPVOID                 RequestData,
@@ -98,7 +99,7 @@ DWORD WINAPI  IcmpSendEcho(
     DWORD                  Timeout
     )
 {
-    FIXME(":stub\n");
+    UNIMPLEMENTED
     return 0L;
 }
 
@@ -106,7 +107,7 @@ DWORD WINAPI  IcmpSendEcho(
  * @unimplemented
  */
 DWORD
-WINAPI 
+STDCALL 
 IcmpSendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
@@ -121,6 +122,6 @@ IcmpSendEcho2(
     DWORD                    Timeout
     )
 {
-    FIXME(":stub\n");
+    UNIMPLEMENTED
     return 0L;
 }

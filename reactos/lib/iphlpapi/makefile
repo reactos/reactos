@@ -2,19 +2,16 @@
 
 PATH_TO_TOP = ../..
 
-TARGET_TYPE = dynlink
+TARGET_TYPE = winedll
 
 TARGET_NAME = iphlpapi
 
 TARGET_BASE = 0x777c0000
 
-TARGET_CFLAGS += -DYDEBUG -DUNICODE -D_UNICODE -D__USE_W32API -D__REACTOS__ -D_WIN32_WINNT=0x0500 -Wall 
-#-Werror
+TARGET_CFLAGS += -DYDEBUG -DUNICODE -D_UNICODE -D__USE_W32API -D__REACTOS__ -Wall -Werror
+# -D_WIN32_WINNT=0x0500
 
 TARGET_SDKLIBS = ntdll.a kernel32.a ws2_32.a
-
-TARGET_OBJECTS = iphlpapi_main.o icmp.o iphlpv6.o media.o registry.o \
-	ifenum_reactos.o ipstats_reactos.o resinfo_reactos.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

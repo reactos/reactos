@@ -1,4 +1,5 @@
-/* Copyright (C) 2003 Juan Lang
+/* Copyright (C) 2003 Art Yerkes
+ * A reimplementation of ifenum.c by Juan Lang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,11 +15,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * This file implements statistics getting using the /proc filesystem exported
- * by Linux, and maybe other OSes.
+ * This file is implemented on the IOCTL_TCP_QUERY_INFORMATION_EX ioctl on
+ * tcpip.sys
  */
 
-#include "ipprivate.h"
+#include "iphlpapi_private.h"
 #include "ipstats.h"
 #include "ifenum.h"
 
@@ -101,10 +102,9 @@ NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
 	}
     }
 
-    DPRINT("Index %d is entity #%d - %04x:%08x\n", index, i, 
-	   entitySet[i].tei_entity, entitySet[i].tei_instance );
-
     if( numRoutes == index && i < numEntities ) {
+	DPRINT("Index %d is entity #%d - %04x:%08x\n", index, i, 
+	       entitySet[i].tei_entity, entitySet[i].tei_instance );
 	memcpy( ent, &entitySet[i], sizeof(*ent) );
 	tdiFreeThingSet( entitySet );
 	return STATUS_SUCCESS;
@@ -169,27 +169,41 @@ NTSTATUS tdiGetMibForIpEntity
 }
 
 NTSTATUS tdiGetRoutesForIpEntity
-( HANDLE tcpFile, TDIEntityID *ent, int numRoutes, IPRouteEntry *routes ) {
-    TCP_REQUEST_QUERY_INFORMATION_EX req = TCP_REQUEST_QUERY_INFORMATION_INIT;
+( HANDLE tcpFile, TDIEntityID *ent, IPRouteEntry **routes, PDWORD numRoutes ) {
     NTSTATUS status = STATUS_SUCCESS;
-    DWORD returnSize;
 
     DPRINT("TdiGetRoutesForIpEntity(tcpFile %x,entityId %x)\n",
 	   (DWORD)tcpFile, ent->tei_instance);
 
-    req.ID.toi_class                = INFO_CLASS_PROTOCOL;
-    req.ID.toi_type                 = INFO_TYPE_PROVIDER;
-    req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
-    req.ID.toi_entity               = *ent;
+    status = tdiGetSetOfThings( tcpFile,
+				INFO_CLASS_PROTOCOL,
+				INFO_TYPE_PROVIDER,
+				IP_MIB_ROUTETABLE_ENTRY_ID,
+				ent->tei_entity,
+				0,
+				sizeof(IPRouteEntry),
+				(PVOID *)routes,
+				numRoutes);
 
-    status = DeviceIoControl( tcpFile,
-			      IOCTL_TCP_QUERY_INFORMATION_EX,
-			      &req,
-			      sizeof(req),
-			      routes,
-			      sizeof(*routes) * numRoutes,
-			      &returnSize,
-			      NULL );
+    return status;    
+}
+
+NTSTATUS tdiGetIpAddrsForIpEntity
+( HANDLE tcpFile, TDIEntityID *ent, IPAddrEntry **addrs, PDWORD numAddrs ) {
+    NTSTATUS status;
+
+    DPRINT("TdiGetIpAddrsForIpEntity(tcpFile %x,entityId %x)\n",
+	   (DWORD)tcpFile, ent->tei_instance);
+
+    status = tdiGetSetOfThings( tcpFile, 
+				INFO_CLASS_PROTOCOL, 
+				INFO_TYPE_PROVIDER,
+				IP_MIB_ADDRTABLE_ENTRY_ID,
+				ent->tei_entity,
+				0,
+				sizeof(IPAddrEntry),
+				(PVOID *)addrs,
+				numAddrs );
 
     return status;    
 }
@@ -444,9 +458,6 @@ RouteTable *getRouteTable(void)
 
 	getNthIpEntity( tcpFile, i, &ent );
 	tdiGetMibForIpEntity( tcpFile, &ent, &snmpInfo );
-	route_set = HeapAlloc( GetProcessHeap(), 0, 
-			       sizeof( IPRouteEntry ) * 
-			       snmpInfo.ipsi_numroutes );
 
 	DPRINT( "%d routes in instance %d\n", snmpInfo.ipsi_numroutes, i );
 
@@ -456,7 +467,7 @@ RouteTable *getRouteTable(void)
 	    return 0;
 	}
 
-	tdiGetRoutesForIpEntity( tcpFile, &ent, numRoutes, route_set );
+	tdiGetRoutesForIpEntity( tcpFile, &ent, &route_set, &numRoutes );
 
 	DPRINT("Route set returned\n");
 #if 0
@@ -478,6 +489,8 @@ RouteTable *getRouteTable(void)
 	    out_route_table->routes[routeNum].metric =
 		route_set[j].ire_metric;
 	}
+
+	if( route_set ) tdiFreeThingSet( route_set );
 
 	routesAdded += snmpInfo.ipsi_numroutes;
     }

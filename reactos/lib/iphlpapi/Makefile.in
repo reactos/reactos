@@ -1,0 +1,28 @@
+EXTRADEFS = 
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = iphlpapi.dll
+IMPORTS   = advapi32 kernel32
+DELAYIMPORTS = 
+EXTRALIBS = 
+
+C_SRCS = \
+	icmp_reactos.c \
+	ifenum_reactos.c \
+	ipstats_reactos.c \
+	iphlpapi_main.c \
+	iphlpv6_reactos.c \
+	media.c \
+	registry.c \
+	resinfo_reactos.c \
+	route.c
+
+RC_SRCS = iphlpapi.rc
+RC_BINSRC = iphlpapi.rc
+RC_BINARIES =
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

@@ -49,15 +49,6 @@ extern DWORD DebugTraceLevel;
 
 #endif /* DBG */
 
-
-#define assert(x) ASSERT(x)
-#define assert_irql(x) ASSERT_IRQL(x)
-
-
-#define UNIMPLEMENTED \
-    WSH_DbgPrint(MIN_TRACE, ("(%s:%d)(%s) is unimplemented, \
-        please try again later.\n", __FILE__, __LINE__, __FUNCTION__));
-
 #define CHECKPOINT \
     WSH_DbgPrint(MIN_TRACE, ("\n"));
 

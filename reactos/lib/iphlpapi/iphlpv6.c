@@ -1,6 +1,28 @@
-#ifdef HAVE_CONFIG_H
+/*
+ * iphlpapi dll implementation -- Auxiliary IPv6 stubs
+ *
+ * These are stubs for functions that provide and set IPv6 information on the
+ * target operating system.  They are grouped here because their
+ * implementation will vary widely by operating system.
+ *
+ * Copyright (C) 2004 Art Yerkes
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+ 
 #include "config.h"
-#endif
+#include "iphlpapi_private.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -18,36 +40,23 @@
 # include <resolv.h>
 #endif
 
-#ifdef __REACTOS__
-# include <windows.h>
-# include <windef.h>
-# include <winbase.h>
-# include <net/miniport.h>
-# include <winsock2.h>
-# include <nspapi.h>
-# include <iptypes.h>
-# include <ws2tcpip.h>
-# include "iphlpapiextra.h"
-#else
-# include "windef.h"
-# include "winbase.h"
-# include "winreg.h"
-#endif
-
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "resinfo.h"
 #include "iphlpapi.h"
-#include "ifenum.h"
-#include "ipstats.h"
-#include "iphlp_res.h"
 #include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
 /*
  * @unimplemented
  */
-HANDLE STDCALL  Icmp6CreateFile(
+HANDLE WINAPI  Icmp6CreateFile(
     VOID
     )
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 
@@ -55,7 +64,7 @@ HANDLE STDCALL  Icmp6CreateFile(
  * @unimplemented
  */
 DWORD
-STDCALL 
+WINAPI 
 Icmp6SendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
@@ -71,7 +80,7 @@ Icmp6SendEcho2(
     DWORD                    Timeout
     )
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 
@@ -79,13 +88,13 @@ Icmp6SendEcho2(
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 Icmp6ParseReplies(
     LPVOID                   ReplyBuffer,
     DWORD                    ReplySize
     )
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 

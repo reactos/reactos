@@ -139,4 +139,7 @@ DWORD getInterfaceEntryByIndex(DWORD index, PMIB_IFROW entry);
  */
 char *toIPAddressString(unsigned int addr, char string[16]);
 
+/* Inserts a route into the route table. */
+DWORD createIpForwardEntryOS(PMIB_IPFORWARDROW pRoute);
+
 #endif /* ndef WINE_IFENUM_H_ */

@@ -1,8 +1,9 @@
 /*
- * iphlpapi dll implementation -- Auxiliary icmp functions
+ * iphlpapi dll implementation -- Setting and storing route information
  *
- * These are stubs for functions that provide a simple ICMP probing API.  They
- * will be operating system specific when implemented.
+ * These are stubs for functions that set routing information on the target
+ * operating system.  They are grouped here because their implementation will
+ * vary widely by operating system.
  *
  * Copyright (C) 2004 Art Yerkes
  * This library is free software; you can redistribute it and/or
@@ -48,18 +49,21 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
-PIPHLP_RES_INFO getResInfo() {
-    PIPHLP_RES_INFO InfoPtr = 
-	(PIPHLP_RES_INFO)HeapAlloc( GetProcessHeap(), 0, 
-				    sizeof(PIPHLP_RES_INFO) );
-    if( InfoPtr ) {
-	InfoPtr->riCount = 0;
-	InfoPtr->riAddressList = (LPSOCKADDR)0;
-    }
-
-    return InfoPtr;
+DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
+    TRACE("pRoute %p\n", pRoute);
+  /* could use SIOCADDRT, not sure I want to */
+  FIXME(":stub\n");
+  return (DWORD) 0;    
 }
 
-VOID disposeResInfo( PIPHLP_RES_INFO InfoPtr ) {
-    HeapFree( GetProcessHeap(), 0, InfoPtr );
+DWORD setIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
+  FIXME(":stub\n");
+  return (DWORD) 0;
+}
+
+DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
+  TRACE("pRoute %p\n", pRoute);
+  /* could use SIOCDELRT, not sure I want to */
+  FIXME(":stub\n");
+  return (DWORD) 0;
 }

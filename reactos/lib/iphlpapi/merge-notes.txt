@@ -3,11 +3,14 @@ Wine uses: Software\\Wine\\Wine\\Config\\Network
      -- Wins support is todo so this part isn't so important.
      -- Overall, workable
 Wine uses ansi functions
+
+-- Done --
 GetNetworkParams --
      -- Make workable interface for _res
         -- Wine based on real _res
 	-- Reactos based on my enumerator funcs
 
+-- Done -- Prints route info on windows
 ROUTE PRINT:
 
 iphlpapi_main.c:137 - ppIfTable 0104bd80, bOrder 1, heap 0xa0000000, flags 0x00000001
@@ -34,3 +37,20 @@ iphlpapi_main.c:1151 - pIpForwardTable a0001d68, pdwSize 0104bd00, bOrder 1
  - GetIpForwardTable again
 iphlpapi_main.c:1214 - returning 122
 iphlpapi_main.c:225 - returning 122
+
+Overall architecture of the ifenum and ipstats functions.
+
+Right now, I rely heavily on a couple of enumeration functions.
+What I need to do is consolidate them and reduce traffic on the ioctl.
+
+There are two things I need to do:
+
+1. Lookup an interface by index (or name)
+2. Get the IP info
+
+I have too many functions that loop over various things.
+
+What I need are the get** functions from ipstats (which I think are ok)
+And then to change the detritus in ifenum to be all based on
+getInterfaceIndexTable and getInterfaceMibByIndex, getInterfaceMibByName
+

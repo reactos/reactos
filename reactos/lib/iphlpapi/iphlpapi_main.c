@@ -18,9 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#include "iphlpapi_private.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -38,28 +37,16 @@
 # include <resolv.h>
 #endif
 
-#ifdef __REACTOS__
-# include <windows.h>
-# include <windef.h>
-# include <winbase.h>
-# include <net/miniport.h>
-# include <winsock2.h>
-# include <nspapi.h>
-# include <iptypes.h>
-# include "iphlpapiextra.h"
-# include "wine/debug.h"
-#else
-# include "windef.h"
-# include "winbase.h"
-# include "winreg.h"
-# include "debug.h"
-#endif
 
-#include <stdio.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
 #include "iphlpapi.h"
 #include "ifenum.h"
 #include "ipstats.h"
-#include "iphlp_res.h"
+#include "resinfo.h"
+#include "route.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -350,10 +337,7 @@ DWORD WINAPI AllocateAndGetUdpTableFromStack(PMIB_UDPTABLE *ppUdpTable,
  */
 DWORD WINAPI CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 {
-  TRACE("pRoute %p\n", pRoute);
-  /* could use SIOCADDRT, not sure I want to */
-  FIXME(":stub\n");
-  return (DWORD) 0;
+    return createIpForwardEntry( pRoute );
 }
 
 
@@ -441,10 +425,7 @@ DWORD WINAPI DeleteIPAddress(ULONG NTEContext)
  */
 DWORD WINAPI DeleteIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 {
-  TRACE("pRoute %p\n", pRoute);
-  /* could use SIOCDELRT, not sure I want to */
-  FIXME(":stub\n");
-  return (DWORD) 0;
+    return deleteIpForwardEntry( pRoute );
 }
 
 
@@ -847,7 +828,7 @@ DWORD WINAPI GetIfEntry(PMIB_IFROW pIfRow)
   if (name) {
     ret = getInterfaceEntryByIndex(pIfRow->dwIndex, pIfRow);
     if (ret == NO_ERROR)
-      ret = getInterfaceStatsByIndex(pIfRow->dwIndex, pIfRow);
+      ret = getInterfaceStatsByName(name, pIfRow);
     consumeInterfaceName(name);
   }
   else
@@ -1355,8 +1336,6 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
   if (!resInfo) 
     return ERROR_OUTOFMEMORY;
 
-  TRACE("resInfo->riCount = %d\n", resInfo->riCount);
-
   size = sizeof(FIXED_INFO) + (resInfo->riCount > 0 ? (resInfo->riCount  - 1) *
    sizeof(IP_ADDR_STRING) : 0);
   if (!pFixedInfo || *pOutBufLen < size) {
@@ -1379,8 +1358,10 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
 
     for (i = 0, ptr = &pFixedInfo->DnsServerList; i < resInfo->riCount && ptr;
      i++, ptr = ptr->Next) {
+	struct sockaddr_in *addr_v4 = 
+	    (struct sockaddr_in *)&resInfo->riAddressList[i];
 	toIPAddressString
-	    (((PSOCKADDR_IN)&resInfo->riAddressList[i])->sin_addr.s_addr,
+	    (addr_v4->sin_addr.s_addr,
 	     ptr->IpAddress.String);
       if (i == resInfo->riCount - 1)
         ptr->Next = NULL;
@@ -1916,12 +1897,7 @@ DWORD WINAPI SetIfEntry(PMIB_IFROW pIfRow)
  */
 DWORD WINAPI SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
 {
-  TRACE("pRoute %p\n", pRoute);
-  /* this is to add a route entry, how's it distinguishable from
-     CreateIpForwardEntry?
-     could use SIOCADDRT, not sure I want to */
-  FIXME(":stub\n");
-  return (DWORD) 0;
+    return setIpForwardEntry( pRoute );
 }
 
 
@@ -2039,9 +2015,9 @@ DWORD WINAPI UnenableRouter(OVERLAPPED * pOverlapped, LPDWORD lpdwEnableCount)
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIpErrorString(IP_STATUS ErrorCode,PWCHAR Buffer,PDWORD Size)
+DWORD WINAPI GetIpErrorString(IP_STATUS ErrorCode,PWCHAR Buffer,PDWORD Size)
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 
@@ -2049,54 +2025,55 @@ DWORD STDCALL GetIpErrorString(IP_STATUS ErrorCode,PWCHAR Buffer,PDWORD Size)
 /*
  * @unimplemented
  */
-PIP_ADAPTER_ORDER_MAP STDCALL GetAdapterOrderMap(VOID)
+PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 
 /*
  * @unimplemented
  */
-DWORD STDCALL GetAdaptersAddresses(ULONG Family,DWORD Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
+DWORD WINAPI GetAdaptersAddresses(ULONG Family,DWORD Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 
 /*
  * @unimplemented
  */
-BOOL STDCALL CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
+BOOL WINAPI CancelIPChangeNotify(LPOVERLAPPED notifyOverlapped)
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 
 /*
  * @unimplemented
  */
-DWORD STDCALL GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex)
+DWORD WINAPI GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex)
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 
 /*
  * @unimplemented
  */
-DWORD STDCALL NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,BOOL bOrder,HANDLE hHeap,DWORD dwFlags)
+DWORD WINAPI NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **ppTable,PDWORD pdwCount,BOOL bOrder,HANDLE hHeap,DWORD dwFlags)
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
 
 /*
  * @unimplemented
  */
-DWORD STDCALL GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
+DWORD WINAPI GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
 {
-    UNIMPLEMENTED
+    FIXME(":stub\n");
     return 0L;
 }
+
 
