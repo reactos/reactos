@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.141 2003/11/21 17:01:16 navaraf Exp $
+/* $Id: window.c,v 1.142 2003/11/21 21:12:08 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -666,6 +666,8 @@ IntInitDesktopWindow(ULONG Width, ULONG Height)
     {
       return;
     }
+  DesktopWindow->WindowRect.left = 0;
+  DesktopWindow->WindowRect.top = 0;
   DesktopWindow->WindowRect.right = Width;
   DesktopWindow->WindowRect.bottom = Height;
   DesktopWindow->ClientRect = DesktopWindow->WindowRect;

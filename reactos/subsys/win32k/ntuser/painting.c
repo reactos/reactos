@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.37 2003/11/21 17:01:16 navaraf Exp $
+ *  $Id: painting.c,v 1.38 2003/11/21 21:12:08 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -169,6 +169,10 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 
 #ifndef DESKTOP_IN_CSRSS
          VIS_RepaintDesktop(hWnd, Window->UpdateRegion);
+         Window->Flags &= ~(WINDOWOBJECT_NEED_NCPAINT |
+            WINDOWOBJECT_NEED_INTERNALPAINT | WINDOWOBJECT_NEED_ERASEBKGND);
+         NtGdiDeleteObject(Window->UpdateRegion);
+         Window->UpdateRegion = NULL;
 #else
          if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
          {
@@ -189,8 +193,8 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
             {
                NtUserSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0);
                NtUserReleaseDC(hWnd, hDC);
-               DeleteObject(WindowObject->UpdateRegion);
-               WindowObject->UpdateRegion = NULL;
+               NtGdiDeleteObject(Window->UpdateRegion);
+               Window->UpdateRegion = NULL;
             }
          }
 #endif
@@ -279,11 +283,13 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
  */
 
 VOID FASTCALL
-IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
+IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
+   BOOL ValidateParent)
 {
    INT RgnType;
    BOOL HadPaintMessage, HadNCPaintMessage;
    BOOL HasPaintMessage, HasNCPaintMessage;
+   HRGN hRgnWindow;
 
    /*
     * Clip the given region with window rectangle (or region)
@@ -293,7 +299,6 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    if (!Window->WindowRegion)
 #endif
    {
-      HRGN hRgnWindow;
       hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
       NtGdiOffsetRgn(hRgnWindow,
          -Window->WindowRect.left,
@@ -373,6 +378,68 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    }
 
    /*
+    * Validate parent covered by region
+    */
+
+   if (ValidateParent)
+   {
+      IntValidateParent(Window);
+   }
+
+   /*
+    * Process children if needed
+    */
+
+   if (!(Flags & RDW_NOCHILDREN) && !(Window->Style & WS_MINIMIZE) &&
+       ((Flags & RDW_ALLCHILDREN) || !(Window->Style & WS_CLIPCHILDREN)))
+   {
+      HWND *List, *phWnd;
+      PWINDOW_OBJECT Child;
+
+      if ((List = IntWinListChildren(Window)))
+      {
+         for (phWnd = List; *phWnd; ++phWnd)
+         {
+            Child = IntGetWindowObject(*phWnd);
+            if ((Child->Style & (WS_VISIBLE | WS_MINIMIZE)) == WS_VISIBLE)
+            {
+               /*
+                * Recursive call to update children UpdateRegion
+                */
+               HRGN hRgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
+               NtGdiCombineRgn(hRgnTemp, hRgn, 0, RGN_COPY);
+               NtGdiOffsetRgn(hRgnTemp,
+                  Window->WindowRect.left - Child->WindowRect.left,
+                  Window->WindowRect.top - Child->WindowRect.top);
+               IntInvalidateWindows(Child, hRgnTemp, Flags, FALSE);
+
+               /*
+                * Update our UpdateRegion depending on children
+                */
+               NtGdiCombineRgn(hRgnTemp, Child->UpdateRegion, 0, RGN_COPY);
+               NtGdiOffsetRgn(hRgnTemp,
+                  Child->WindowRect.left - Window->WindowRect.left,
+                  Child->WindowRect.top - Window->WindowRect.top);
+               hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+               NtGdiOffsetRgn(hRgnWindow,
+                  -Window->WindowRect.left,
+                  -Window->WindowRect.top);
+               NtGdiCombineRgn(hRgnTemp, hRgnTemp, hRgnWindow, RGN_AND);
+               if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
+                   hRgnTemp, RGN_DIFF) == NULLREGION)
+               {
+                  NtGdiDeleteObject(Window->UpdateRegion);
+                  Window->UpdateRegion = NULL;
+               }
+               NtGdiDeleteObject(hRgnTemp);
+            }
+            IntReleaseWindowObject(Child);
+         }
+         ExFreePool(List);
+      }
+   }
+
+   /*
     * Fake post paint messages to window message queue if needed
     */
 
@@ -402,38 +469,6 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 #ifndef DESKTOP_IN_CSRSS
    }
 #endif
-
-   /*
-    * Process children if needed
-    */
-
-   if (!(Flags & RDW_NOCHILDREN) && !(Window->Style & WS_MINIMIZE) &&
-       ((Flags & RDW_ALLCHILDREN) || !(Window->Style & WS_CLIPCHILDREN)))
-   {
-      HWND *List, *phWnd;
-      PWINDOW_OBJECT Child;
-
-      if ((List = IntWinListChildren(Window)))
-      {
-         for (phWnd = List; *phWnd; ++phWnd)
-         {
-            Child = IntGetWindowObject(*phWnd);
-            if ((Child->Style & (WS_VISIBLE | WS_MINIMIZE)) == WS_VISIBLE)
-            {
-               HRGN hRgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
-               Child = IntGetWindowObject(*phWnd);
-               NtGdiCombineRgn(hRgnTemp, hRgn, 0, RGN_COPY);
-               NtGdiOffsetRgn(hRgnTemp,
-                  Window->WindowRect.left - Child->WindowRect.left,
-                  Window->WindowRect.top - Child->WindowRect.top);
-               IntInvalidateWindows(Child, hRgnTemp, Flags);
-               NtGdiDeleteObject(hRgnTemp);
-            }
-            IntReleaseWindowObject(Child);
-         }
-         ExFreePool(List);
-      }
-   }
 }
 
 /*
@@ -528,15 +563,11 @@ IntRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRgn,
 
    if (Flags & (RDW_INVALIDATE | RDW_VALIDATE | RDW_INTERNALPAINT | RDW_NOINTERNALPAINT))
    {
-      IntInvalidateWindows(Window, hRgn, Flags);
-   }
-
-   /*
-    * Validate parent covered by region.
-    */
-
-   if (Window->UpdateRegion != NULL && Flags & (RDW_ERASENOW | RDW_VALIDATE))
+      IntInvalidateWindows(Window, hRgn, Flags, TRUE);
+   } else
+   if (Window->UpdateRegion != NULL && Flags & RDW_ERASENOW)
    {
+      /* Validate parent covered by region. */
       IntValidateParent(Window);
    }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.11 2003/11/21 17:01:16 navaraf Exp $
+ * $Id: vis.c,v 1.12 2003/11/21 21:12:08 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -215,9 +215,12 @@ VOID FASTCALL
 VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn)
 {
   HDC dc = NtUserGetDC(Desktop);
-  HBRUSH DesktopBrush = NtGdiCreateSolidBrush(RGB(58, 110, 165));
-  NtGdiFillRgn(dc, RepaintRgn, DesktopBrush);
-  NtGdiDeleteObject(DesktopBrush);
+  if (dc)
+    {
+      HBRUSH DesktopBrush = NtGdiCreateSolidBrush(RGB(58, 110, 165));
+      NtGdiFillRgn(dc, RepaintRgn, DesktopBrush);
+      NtGdiDeleteObject(DesktopBrush);
+    }
   NtUserReleaseDC(Desktop, dc);
 }
 
