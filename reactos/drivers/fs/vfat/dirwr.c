@@ -40,6 +40,13 @@ VfatUpdateEntry (PVFATFCB pFcb)
 
   DPRINT ("updEntry dirIndex %d, PathName \'%wZ\'\n", dirIndex, &pFcb->PathNameU);
 
+  if (vfatFCBIsRoot(pFcb) || (pFcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)))
+    {
+      return STATUS_SUCCESS;
+    }
+
+  ASSERT (pFcb->parrentFcb);
+  
   Offset.u.HighPart = 0;
   Offset.u.LowPart = dirIndex * SizeDirEntry;
   if (CcPinRead (pFcb->parentFcb->FileObject, &Offset, SizeDirEntry,
@@ -544,6 +551,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    if (!vfatFCBIsRoot(ParentFcb))
    {
       DirContext.DirIndex += 2;
+      DirContext.StartIndex += 2;
    }
   
    DirContext.ShortNameU.Buffer = 0;
