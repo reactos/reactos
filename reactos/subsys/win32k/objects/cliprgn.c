@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.33 2004/04/25 15:52:31 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.34 2004/04/25 16:06:20 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -149,15 +149,6 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
   return retval;
 }
 
-int STDCALL NtGdiExcludeClipRect(HDC  hDC,
-                         int  LeftRect,
-                         int  TopRect,
-                         int  RightRect,
-                         int  BottomRect)
-{
-  UNIMPLEMENTED;
-}
-
 int STDCALL NtGdiExtSelectClipRgn(HDC  hDC,
                           HRGN  hrgn,
                           int  fnMode)
@@ -215,6 +206,53 @@ int STDCALL NtGdiGetMetaRgn(HDC  hDC,
                     HRGN  hrgn)
 {
   UNIMPLEMENTED;
+}
+
+int STDCALL NtGdiExcludeClipRect(HDC  hDC,
+                         int  LeftRect,
+                         int  TopRect,
+                         int  RightRect,
+                         int  BottomRect)
+{
+   INT Result;
+   RECT Rect;
+   HRGN NewRgn;
+   PDC dc = DC_LockDc(hDC);
+
+   if (!dc)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return ERROR;
+   }
+
+   Rect.left = LeftRect;
+   Rect.top = TopRect;
+   Rect.right = RightRect;
+   Rect.bottom = BottomRect;
+
+   IntLPtoDP(dc, (LPPOINT)&Rect, 2);
+
+   NewRgn = UnsafeIntCreateRectRgnIndirect(&Rect);
+   if (!NewRgn)
+   {
+      Result = ERROR;
+   }
+   else if (!dc->w.hClipRgn)
+   {
+      dc->w.hClipRgn = NewRgn;
+      Result = SIMPLEREGION;
+   }
+   else
+   {
+      Result = NtGdiCombineRgn(dc->w.hClipRgn, dc->w.hClipRgn, NewRgn, RGN_DIFF);
+      NtGdiDeleteObject(NewRgn);
+   }
+   if (Result != ERROR)
+      CLIPPING_UpdateGCRegion(dc);
+
+   DC_UnlockDc(hDC);
+
+   return Result;
 }
 
 int STDCALL NtGdiIntersectClipRect(HDC  hDC,

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.57 2004/04/25 15:52:31 weiden Exp $
+/* $Id: stubs.c,v 1.58 2004/04/25 16:06:20 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -169,24 +169,6 @@ Escape(
 	int		a2,
 	LPCSTR		a3,
 	LPVOID		a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-ExcludeClipRect(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.5 2004/04/25 14:46:54 weiden Exp $
+/* $Id: clip.c,v 1.6 2004/04/25 16:06:20 weiden Exp $
  *
  * PROJECT:         ReactOS gdi32.dll
  * FILE:            lib/gdi32/objects/clip.c
@@ -55,4 +55,18 @@ IntersectClipRect(
   return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
-
+/*
+ * @implemented
+ */
+int
+STDCALL
+ExcludeClipRect(
+	HDC		hdc,
+	int		nLeftRect,
+	int		nTopRect,
+	int		nRightRect,
+	int		nBottomRect
+	)
+{
+  return NtGdiExcludeClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+}
