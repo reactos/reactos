@@ -284,11 +284,17 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         case REG_RESOURCE_LIST:
             plvdi->item.pszText = _T("REG_RESOURCE_LIST");
             break;
+        case REG_FULL_RESOURCE_DESCRIPTOR:
+            plvdi->item.pszText = _T("REG_FULL_RESOURCE_DESCRIPTOR");
+            break;
+        case REG_RESOURCE_REQUIREMENTS_LIST:
+            plvdi->item.pszText = _T("REG_RESOURCE_REQUIREMENTS_LIST");
+            break;
         case REG_NONE:
             plvdi->item.pszText = _T("REG_NONE");
             break;
         default:
-            wsprintf(buffer, _T("unknown(%d)"), plvdi->item.lParam);
+            wsprintf(buffer, _T("unknown(0x%lx)"), ((LINE_INFO*)plvdi->item.lParam)->dwValType);
             plvdi->item.pszText = buffer;
             break;
         }
