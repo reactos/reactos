@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.2 2001/05/01 11:09:01 ekohl Exp $
+/* $Id: rw.c,v 1.3 2001/07/29 16:40:20 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -31,6 +31,8 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PLIST_ENTRY current_entry;
 //   PNPFS_CONTEXT current;
    ULONG Information;
+   
+   DPRINT1("NpfsRead()\n");
    
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -88,18 +90,36 @@ NTSTATUS STDCALL
 NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {
-   NTSTATUS Status;
+  PIO_STACK_LOCATION IoStack;
+  PFILE_OBJECT FileObject;
+  PNPFS_FCB Fcb = NULL;
+  PNPFS_PIPE Pipe = NULL;
+  PUCHAR Buffer;
+  NTSTATUS Status = STATUS_SUCCESS;
+  ULONG Length;
+  ULONG Offset;
 
-   DPRINT1("NpfsWrite()\n");
+  DPRINT("NpfsWrite()\n");
 
-   Status = STATUS_SUCCESS;
+  IoStack = IoGetCurrentIrpStackLocation(Irp);
+  FileObject = IoStack->FileObject;
+  DPRINT("FileObject %p\n", FileObject);
+  DPRINT("Pipe name %wZ\n", &FileObject->FileName);
 
-   Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
-   
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   
-   return(Status);
+  Fcb = FileObject->FsContext;
+  Pipe = Fcb->Pipe;
+
+  Length = IoStack->Parameters.Write.Length;
+  Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+  Offset = IoStack->Parameters.Write.ByteOffset.u.LowPart;
+
+
+  Irp->IoStatus.Status = Status;
+  Irp->IoStatus.Information = Length;
+  
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  
+  return(Status);
 }
 
 /* EOF */

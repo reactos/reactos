@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.7 2001/06/12 12:35:04 ekohl Exp $
+/* $Id: create.c,v 1.8 2001/07/29 16:40:20 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -30,22 +30,22 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
    PNPFS_PIPE Pipe;
-   PNPFS_FCB Fcb;
+   PNPFS_FCB ClientFcb;
    PNPFS_FCB ServerFcb;
    PNPFS_PIPE current;
    PLIST_ENTRY current_entry;
    PNPFS_DEVICE_EXTENSION DeviceExt;
    KIRQL oldIrql;
    
-   DPRINT1("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+   DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
    
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
    DPRINT("FileObject %p\n", FileObject);
    
-   Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
-   if (Fcb == NULL)
+   ClientFcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
+   if (ClientFcb == NULL)
      {
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
@@ -75,7 +75,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    
    if (current_entry == &DeviceExt->PipeListHead)
      {
-	ExFreePool(Fcb);
+	ExFreePool(ClientFcb);
 	KeUnlockMutex(&DeviceExt->PipeListLock);
 	
 	Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -88,65 +88,62 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    
    Pipe = current;
    
-   Fcb->WriteModeMessage = FALSE;
-   Fcb->ReadModeMessage = FALSE;
-   Fcb->NonBlocking = FALSE;
-   Fcb->InBufferSize = PAGESIZE;
-   Fcb->OutBufferSize = PAGESIZE;
-   Fcb->Pipe = Pipe;
-   Fcb->IsServer = FALSE;
-   Fcb->OtherSide = NULL;
-
-   /* search for disconnected server fcb */
-
-   current_entry = Pipe->FcbListHead.Flink;
-   while (current_entry != &Pipe->FcbListHead)
-     {
-	ServerFcb = CONTAINING_RECORD(current_entry,
-				      NPFS_FCB,
-				      FcbListEntry);
-	
-	DPRINT("ServerFcb->IsServer: %x\n", ServerFcb->IsServer);
-	DPRINT("ServerFcb->OtherSide: %p\n", ServerFcb->OtherSide);
-	if ((ServerFcb->IsServer == TRUE) && (ServerFcb->OtherSide == NULL))
-	  {
-	     DPRINT("Server found! Fcb %p\n", ServerFcb);
-	     break;
-	  }
-	
-	current_entry = current_entry->Flink;
-     }
+   ClientFcb->Pipe = Pipe;
+   ClientFcb->PipeEnd = FILE_PIPE_CLIENT_END;
+   ClientFcb->OtherSide = NULL;
+   ClientFcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
    
-   if (current_entry == &Pipe->FcbListHead)
-     {
-	DPRINT("No server fcb found!\n");
-	
-	ExFreePool(Fcb);
-	KeUnlockMutex(&DeviceExt->PipeListLock);
-	
-	Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-	Irp->IoStatus.Information = 0;
-	
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	
-	return(STATUS_UNSUCCESSFUL);
-     }
-
+   KeInitializeEvent(&ClientFcb->ConnectEvent,
+		     SynchronizationEvent,
+		     FALSE);
+   
    KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
-   InsertTailList(&Pipe->FcbListHead, &Fcb->FcbListEntry);
+   InsertTailList(&Pipe->ClientFcbListHead, &ClientFcb->FcbListEntry);
    KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
    
    Pipe->ReferenceCount++;
    
-   
-   Fcb->OtherSide = ServerFcb;
-   ServerFcb->OtherSide = Fcb;
-   
-   KeSetEvent(&ServerFcb->ConnectEvent, 0, FALSE);
-   
    KeUnlockMutex(&DeviceExt->PipeListLock);
    
-   FileObject->FsContext = Fcb;
+   /* search for disconnected or listening server fcb */
+   current_entry = Pipe->ServerFcbListHead.Flink;
+   while (current_entry != &Pipe->ServerFcbListHead)
+     {
+	ServerFcb = CONTAINING_RECORD(current_entry,
+				      NPFS_FCB,
+				      FcbListEntry);
+	if ((ServerFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+	    || (ServerFcb->PipeState == FILE_PIPE_DISCONNECTED_STATE))
+	  {
+	     DPRINT("Server found! Fcb %p\n", ServerFcb);
+	     break;
+	  }
+	current_entry = current_entry->Flink;
+     }
+   
+   if (current_entry == &Pipe->ServerFcbListHead)
+     {
+	DPRINT("No server fcb found!\n");
+	
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Information = 0;
+	
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	
+	return(STATUS_SUCCESS);
+     }
+   
+   ClientFcb->OtherSide = ServerFcb;
+   ServerFcb->OtherSide = ClientFcb;
+   ClientFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
+   ServerFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
+   
+   /* FIXME: create data queue(s) */
+   
+   /* wake server thread */
+   KeSetEvent(&ServerFcb->ConnectEvent, 0, FALSE);
+   
+   FileObject->FsContext = ClientFcb;
    
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = 0;
@@ -220,11 +217,19 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
      }
    
    Pipe->ReferenceCount = 0;
-   InitializeListHead(&Pipe->FcbListHead);
+   InitializeListHead(&Pipe->ServerFcbListHead);
+   InitializeListHead(&Pipe->ClientFcbListHead);
    KeInitializeSpinLock(&Pipe->FcbListLock);
    
-   Pipe->MaxInstances = Buffer->MaxInstances;
+   Pipe->PipeType = Buffer->WriteModeMessage;
+   Pipe->PipeReadMode = Buffer->ReadModeMessage;
+   Pipe->PipeBlockMode = Buffer->NonBlocking;
+   Pipe->PipeConfiguration = IoStack->Parameters.Create.Options & 0x3;
+   Pipe->MaximumInstances = Buffer->MaxInstances;
+   Pipe->CurrentInstances = 0;
    Pipe->TimeOut = Buffer->TimeOut;
+   Pipe->InboundQuota = Buffer->InBufferSize;
+   Pipe->OutboundQuota = Buffer->OutBufferSize;
    
    KeLockMutex(&DeviceExt->PipeListLock);
    current_entry = DeviceExt->PipeListHead.Flink;
@@ -254,21 +259,21 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 	InsertTailList(&DeviceExt->PipeListHead, &Pipe->PipeListEntry);
      }
    Pipe->ReferenceCount++;
+   Pipe->CurrentInstances++;
    
    KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
-   InsertTailList(&Pipe->FcbListHead, &Fcb->FcbListEntry);
+   InsertTailList(&Pipe->ServerFcbListHead, &Fcb->FcbListEntry);
    KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
    
-   Fcb->WriteModeMessage = Buffer->WriteModeMessage;
-   Fcb->ReadModeMessage = Buffer->ReadModeMessage;
-   Fcb->NonBlocking = Buffer->NonBlocking;
-   Fcb->InBufferSize = Buffer->InBufferSize;
-   Fcb->OutBufferSize = Buffer->OutBufferSize;
-   
    Fcb->Pipe = Pipe;
-   Fcb->IsServer = TRUE;
+   Fcb->PipeEnd = FILE_PIPE_SERVER_END;
    Fcb->OtherSide = NULL;
-   
+   Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+   Fcb->ReadDataAvailable = 0;
+   Fcb->WriteQuotaAvailable = 0;
+//   Fcb->InBuffer = NULL;
+//   Fcb->OutBuffer = NULL;
+
    KeInitializeEvent(&Fcb->ConnectEvent,
 		     SynchronizationEvent,
 		     FALSE);
@@ -309,11 +314,26 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
 
    KeLockMutex(&DeviceExt->PipeListLock);
 
+   if (Fcb->PipeEnd == FILE_PIPE_SERVER_END)
+     {
+	/* FIXME: Clean up existing connections here ?? */
+	Pipe->CurrentInstances--;
+     }
    Pipe->ReferenceCount--;
+
+   if ((Fcb->PipeEnd == FILE_PIPE_CLIENT_END)
+       && (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE))
+     {
+	Fcb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
+	Fcb->OtherSide->OtherSide = NULL;
+	Fcb->OtherSide = NULL;
+	Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+     }
 
    KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
    RemoveEntryList(&Fcb->FcbListEntry);
    KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
+   
    ExFreePool(Fcb);
    FileObject->FsContext = NULL;
 

@@ -1,6 +1,7 @@
 #ifndef __SERVICES_FS_NP_NPFS_H
 #define __SERVICES_FS_NP_NPFS_H
 
+
 typedef struct
 {
    LIST_ENTRY PipeListHead;
@@ -12,24 +13,30 @@ typedef struct
    UNICODE_STRING PipeName;
    LIST_ENTRY PipeListEntry;
    KSPIN_LOCK FcbListLock;
-   LIST_ENTRY FcbListHead;
+   LIST_ENTRY ServerFcbListHead;
+   LIST_ENTRY ClientFcbListHead;
    ULONG ReferenceCount;
-   ULONG MaxInstances;
+   ULONG PipeType;
+   ULONG PipeReadMode;
+   ULONG PipeBlockMode;
+   ULONG PipeConfiguration;
+   ULONG MaximumInstances;
+   ULONG CurrentInstances;
+   ULONG InboundQuota;
+   ULONG OutboundQuota;
    LARGE_INTEGER TimeOut;
 } NPFS_PIPE, *PNPFS_PIPE;
 
 typedef struct _NPFS_FCB
 {
    LIST_ENTRY FcbListEntry;
-   BOOLEAN WriteModeMessage;
-   BOOLEAN ReadModeMessage;
-   BOOLEAN NonBlocking;
-   ULONG InBufferSize;
-   ULONG OutBufferSize;
-   PNPFS_PIPE Pipe;
    struct _NPFS_FCB* OtherSide;
-   BOOLEAN IsServer;
+   PNPFS_PIPE Pipe;
    KEVENT ConnectEvent;
+   ULONG PipeEnd;
+   ULONG PipeState;
+   ULONG ReadDataAvailable;
+   ULONG WriteQuotaAvailable;
 } NPFS_FCB, *PNPFS_FCB;
 
 

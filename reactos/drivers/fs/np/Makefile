@@ -1,53 +1,38 @@
-# $Id: Makefile,v 1.10 2001/07/28 14:46:27 ea Exp $
+# $Id: Makefile,v 1.11 2001/07/29 16:40:20 ekohl Exp $
 #
 # Named Pipes File System
 #
 PATH_TO_TOP=../../..
 
-TARGETNAME=npfs
+TARGET = npfs
 
-CFLAGS=-D__NTDRIVER__ -I../../../include
+CFLAGS = -D__NTDRIVER__
 
-OBJECTS=create.o finfo.o fsctrl.o mount.o rw.o volume.o npfs.coff
+OBJECTS = create.o finfo.o fsctrl.o npfs.o rw.o volume.o npfs.coff
 
-LIBS=$(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
-all: $(TARGETNAME).sys
+all: $(TARGET).sys.unstripped $(TARGET).sys
 
 .phony: all
 
 clean:
-	- $(RM) *.o npfs.coff junk.tmp base.tmp temp.exp $(TARGETNAME).sys
+	- $(RM) *.o *.sym $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
 
-$(TARGETNAME).sys: $(OBJECTS) $(LIBS)
-	$(CC) \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp \
-		$(OBJECTS) $(LIBS)
-	$(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).sys \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--kill-at
-	$(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-mdll \
-		-o $(TARGETNAME).sys \
-		$(OBJECTS) $(LIBS) \
-		-Wl,temp.exp
-	$(RM) temp.exp
-	$(NM) --numeric-sort npfs.sys > npfs.sym
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(TARGETNAME).coff: $(PATH_TO_TOP)/include/reactos/buildno.h npfs.rc
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
+
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGET).sys
+
+$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
+
+npfs.coff: $(PATH_TO_TOP)/include/reactos/buildno.h npfs.rc
 
 include $(PATH_TO_TOP)/rules.mak

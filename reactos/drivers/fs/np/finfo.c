@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.1 2001/06/12 12:35:04 ekohl Exp $
+/* $Id: finfo.c,v 1.2 2001/07/29 16:40:20 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -19,6 +19,45 @@
 
 
 /* FUNCTIONS *****************************************************************/
+
+static NTSTATUS
+NpfsQueryLocalInformation(PDEVICE_OBJECT DeviceObject,
+			  PNPFS_FCB Fcb,
+			  PFILE_PIPE_LOCAL_INFORMATION Info,
+			  PULONG BufferLength)
+{
+  PNPFS_PIPE Pipe;
+
+  DPRINT("NpfsQueryLocalInformation()\n");
+
+  Pipe = Fcb->Pipe;
+
+  RtlZeroMemory(Info,
+		sizeof(FILE_PIPE_LOCAL_INFORMATION));
+
+  Info->NamedPipeType = Pipe->PipeType;
+  Info->NamedPipeConfiguration = Pipe->PipeConfiguration;
+  Info->MaximumInstances = Pipe->MaximumInstances;
+  Info->CurrentInstances = Pipe->CurrentInstances;
+  Info->InboundQuota = Pipe->InboundQuota;
+  Info->OutboundQuota = Pipe->OutboundQuota;
+  Info->NamedPipeState = Fcb->PipeState;
+  Info->NamedPipeEnd = Fcb->PipeEnd;
+
+  if (Fcb->PipeEnd == FILE_PIPE_SERVER_END)
+    {
+      Info->ReadDataAvailable = Fcb->ReadDataAvailable;
+      Info->WriteQuotaAvailable = Fcb->WriteQuotaAvailable;
+    }
+  else if (Fcb->OtherSide != NULL)
+    {
+      Info->ReadDataAvailable = Fcb->OtherSide->ReadDataAvailable;
+      Info->WriteQuotaAvailable = Fcb->OtherSide->WriteQuotaAvailable;
+    }
+
+  *BufferLength -= sizeof(FILE_PIPE_LOCAL_INFORMATION);
+  return(STATUS_SUCCESS);
+}
 
 
 NTSTATUS STDCALL
@@ -57,12 +96,18 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
      case FilePipeInformation:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
+
      case FilePipeLocalInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
+	Status = NpfsQueryLocalInformation(DeviceObject,
+					   Fcb,
+					   SystemBuffer,
+					   &BufferLength);
 	break;
+
      case FilePipeRemoteInformation:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
+
      default:
 	Status = STATUS_NOT_SUPPORTED;
      }
