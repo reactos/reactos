@@ -132,8 +132,8 @@ RtlCreateUserThread(HANDLE ProcessHandle,
                     LONG StackZeroBits,
                     PULONG StackReserved,
                     PULONG StackCommit,
-                    PVOID StartAddress,
-                    HANDLE DebugPort,
+                    PTHREAD_START_ROUTINE StartAddress,
+                    PVOID   Parameter,
                     PHANDLE ThreadHandle,
                     PCLIENT_ID ClientId)
 {
@@ -214,6 +214,9 @@ DPRINT("Checkpoint\n");
    ObjectAttributes.SecurityQualityOfService = NULL;
 
 
+   if (*StackCommit < 4096)
+      *StackCommit = 4096;
+
    BaseAddress = 0;
    ZwAllocateVirtualMemory(ProcessHandle,
 			   &BaseAddress,
@@ -271,8 +274,8 @@ DPRINT("Checkpoint\n");
 NTSTATUS STDCALL
 RtlInitializeContext(HANDLE ProcessHandle,
                      PCONTEXT Context,
-                     HANDLE DebugPort,
-                     PVOID StartAddress,
+                     PVOID Parameter,
+                     PTHREAD_START_ROUTINE StartAddress,
                      PINITIAL_TEB InitialTeb)
 {
     NTSTATUS Status;
@@ -289,8 +292,16 @@ RtlInitializeContext(HANDLE ProcessHandle,
     Context->SegDs  = USER_DS;
     Context->SegCs  = USER_CS;
     Context->SegSs  = USER_DS;
-    Context->Esp    = InitialTeb->StackBase - InitialTeb->StackCommit;
+    Context->Esp    = (ULONG)InitialTeb->StackBase +
+                      (DWORD)InitialTeb->StackCommit - 8;
     Context->EFlags = (1<<1)+(1<<9);
+
+
+    /* copy Parameter to thread stack */
+    *((PULONG)(InitialTeb->StackBase + (DWORD)InitialTeb->StackCommit - 4))
+        = (DWORD)Parameter;
+
+
 /* #endif */
 
     Status = STATUS_SUCCESS;

@@ -151,6 +151,9 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 	
       case ID_PROCESS_OBJECT:
 	return(KeDispatcherObjectWakeAll(hdr));
+
+      case ID_THREAD_OBJECT:
+	return(KeDispatcherObjectWakeAll(hdr));
      }
    DbgPrint("Dispatcher object %x has unknown type\n",hdr);
    KeBugCheck(0);
@@ -200,6 +203,9 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 	   
 	 case ID_PROCESS_OBJECT:
 	   break;
+
+         case ID_THREAD_OBJECT:
+	   break;
 	   
 	 case NotificationEvent:
 	   break;
@@ -222,7 +228,7 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
    blk.Object=Object;
    blk.Thread=KeGetCurrentThread();
    blk.WaitKey = WaitReason;     // Assumed
-   blk.WaitType = WaitMode;      // Assumed
+   blk.WaitType = WaitAll;
    blk.NextWaitBlock = NULL;
    InsertTailList(&(hdr->WaitListHead),&(blk.WaitListEntry));
 //   DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
@@ -249,7 +255,91 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 				  PLARGE_INTEGER Timeout,
 				  PKWAIT_BLOCK WaitBlockArray)
 {
+#if 0
+   DISPATCHER_HEADER* hdr;
+   PKWAIT_BLOCK blk;
+   ULONG Counter;
+
+   DPRINT("Entering KeWaitForSingleObject(Object %x) "
+   "PsGetCurrentThread() %x\n",Object,PsGetCurrentThread());
+
+   KeAcquireDispatcherDatabaseLock(FALSE);
+
+   for (Counter = 0; Counter < Count; Counter++)
+     {
+        hdr = (DISPATCHER_HEADER *)Object[Counter];
+
+        DPRINT("hdr->SignalState %d\n", hdr->SignalState);
+
+        if (hdr->SignalState > 0)
+          {
+             switch (hdr->Type)
+               {
+                  case SynchronizationEvent:
+                    hdr->SignalState = FALSE;
+                    break;
+
+                  case SemaphoreType:
+                    break;
+
+                  case ID_PROCESS_OBJECT:
+                    break;
+
+                  case ID_THREAD_OBJECT:
+                    break;
+
+                  case NotificationEvent:
+                    break;
+
+                  default:
+                    DbgPrint("(%s:%d) Dispatcher object %x has unknown type\n",
+                             __FILE__,__LINE__,hdr);
+                    KeBugCheck(0);
+
+               }
+             KeReleaseDispatcherDatabaseLock(FALSE);
+             return(STATUS_SUCCESS);
+          }
+     }
+
+   if (Timeout != NULL)
+     {
+	KeAddThreadTimeout(KeGetCurrentThread(),Timeout);
+     }
+
+   for (Counter = 0; Counter < Count; Counter++)
+     {
+        hdr = (DISPATCHER_HEADER *)Object[Counter];
+
+        blk = &WaitBlockArray[Counter];
+
+        blk->Object=Object[Counter];
+        blk->Thread=KeGetCurrentThread();
+        blk->WaitKey = WaitReason;     // Assumed
+        blk->WaitType = WaitType;
+        blk->NextWaitBlock = NULL;
+        InsertTailList(&(hdr->WaitListHead),&(blk.WaitListEntry));
+//        DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
+//               hdr->WaitListHead.Flink,hdr->WaitListHead.Blink);
+     }
+
+   KeReleaseDispatcherDatabaseLock(FALSE);
+
+   DPRINT("Waiting at %s:%d with irql %d\n", __FILE__, __LINE__,
+   KeGetCurrentIrql());
+
+   PsSuspendThread(PsGetCurrentThread());
+
+   if (Timeout != NULL)
+     {
+	KeCancelTimer(&KeGetCurrentThread()->Timer);
+     }
+   DPRINT("Returning from KeWaitForMultipleObject()\n");
+
+   return(STATUS_SUCCESS);
+#else
    UNIMPLEMENTED;
+#endif
 }
 
 VOID KeInitializeDispatcher(VOID)
@@ -267,7 +357,59 @@ NtWaitForMultipleObjects (
 	IN	PLARGE_INTEGER	Time
 	)
 {
-	UNIMPLEMENTED;
+#if 0
+   KWAIT_BLOCK WaitBlockArray[MAXIMUM_WAIT_OBJECTS];
+   PVOID ObjectPtrArray[MAXIMUM_WAIT_OBJECTS];
+   NTSTATUS Status;
+   ULONG i, j;
+
+
+   DPRINT("NtWaitForMultipleObjects(Count %lu Object[] %x, Alertable %d, Time %x)\n",
+          Count,Object,Alertable,Time);
+
+   if (Count > MAXIMUM_WAIT_OBJECTS)
+        return ...; /* WAIT_FAIL */
+
+   /* reference all objects */
+   for (i = 0; i < Count; i++)
+     {
+        Status = ObReferenceObjectByHandle(Object[i],
+                                           SYNCHRONIZE,
+                                           NULL,
+                                           UserMode,
+                                           &ObjectPtrArray[i],
+                                           NULL);
+        if (Status != STATUS_SUCCESS)
+          {
+             /* dereference all referenced objects */
+             for (j = 0; j < i; i++)
+               {
+                  ObDereferenceObject(ObjectPtrArray[j]);
+               }
+
+             return(Status);
+          }
+     }
+
+   Status = KeWaitForMultipleObjects(Count,
+                                     ObjectPtrArray,
+                                     WaitType,
+                                     UserMode,
+                                     UserMode,
+                                     Alertable,
+                                     Time,
+                                     WaitBlockArray);
+
+   /* dereference all objects */
+   for (i = 0; i < Count; i++)
+     {
+        ObDereferenceObject(ObjectPtrArray[i]);
+     }
+
+   return(Status);
+#else
+   UNIMPLEMENTED;
+#endif
 }
 
 

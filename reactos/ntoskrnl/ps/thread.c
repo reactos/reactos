@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.25 1999/08/29 06:59:11 ea Exp $
+/* $Id: thread.c,v 1.26 1999/09/06 21:28:33 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -259,7 +259,12 @@ PsInitializeThread (
    InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[0]);
    InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[1]);
    Thread->Tcb.KernelApcDisable = 1;
-   
+
+   KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
+                                ID_THREAD_OBJECT,
+                                sizeof(ETHREAD),
+                                FALSE);
+
    if (ProcessHandle != NULL)
      {
 	Status = ObReferenceObjectByHandle(ProcessHandle,

@@ -44,6 +44,7 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    CurrentThread->ThreadsProcess = NULL;
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
    CurrentThread->Tcb.State = THREAD_STATE_TERMINATED;
+   KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    ZwYieldExecution();
    for(;;);
 }
@@ -58,6 +59,7 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
    PiNrThreads--;
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
    Thread->Tcb.State = THREAD_STATE_TERMINATED;
+   KeDispatcherObjectWake(&Thread->Tcb.DispatcherHeader);
    ObDereferenceObject(Thread->ThreadsProcess);
    Thread->ThreadsProcess = NULL;
    KeLowerIrql(oldlvl);

@@ -23,6 +23,19 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static VOID STDCALL
+ThreadStartup (LPTHREAD_START_ROUTINE lpStartAddress,
+               LPVOID lpParameter)
+{
+   UINT uExitCode;
+
+   uExitCode = (lpStartAddress)(lpParameter);
+
+   NtTerminateThread(NtCurrentThread(),
+                     uExitCode);
+}
+
+
 HANDLE STDCALL CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
 			    DWORD dwStackSize,
 			    LPTHREAD_START_ROUTINE lpStartAddress,
@@ -55,7 +68,6 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    BOOLEAN CreateSuspended = FALSE;
    PVOID BaseAddress;
    DWORD StackSize;
-   ULONG BytesWritten;
    NTSTATUS Status;
    
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
@@ -94,18 +106,24 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    DPRINT("Stack base address: %p\n", BaseAddress);
    
    memset(&ThreadContext,0,sizeof(CONTEXT));
-   ThreadContext.Eip = (LONG)lpStartAddress;
+//   ThreadContext.Eip = (LONG)lpStartAddress;
+   ThreadContext.Eip = (LONG)ThreadStartup;
    ThreadContext.SegGs = USER_DS;
    ThreadContext.SegFs = USER_DS;
    ThreadContext.SegEs = USER_DS;
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
    ThreadContext.SegSs = USER_DS;        
-   ThreadContext.Esp = (ULONG)(BaseAddress + StackSize - 8);
+   ThreadContext.Esp = (ULONG)(BaseAddress + StackSize - 12);
    ThreadContext.EFlags = (1<<1) + (1<<9);
 
-   /* write lpParameter to highest stack address */
-   *((PBYTE)(BaseAddress + StackSize - 4)) = lpParameter;
+   /* initialize call stack */
+   *((PULONG)(BaseAddress + StackSize - 4)) = (ULONG)lpParameter;
+   *((PULONG)(BaseAddress + StackSize - 8)) = (ULONG)lpStartAddress;
+   *((PULONG)(BaseAddress + StackSize - 12)) = 0xdeadbeef;
+
+   DPRINT("Esp: %p\n", ThreadContext.Esp);
+   DPRINT("Eip: %p\n", ThreadContext.Eip);
 
    Status = NtCreateThread(&ThreadHandle,
                            THREAD_ALL_ACCESS,
