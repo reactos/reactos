@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.48 2000/03/22 18:35:50 dwelch Exp $
+; $Id: ntdll.def,v 1.49 2000/04/05 01:38:50 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -233,12 +233,12 @@ RtlAcquirePebLock@0
 ;RtlAcqureResourceExclusive
 ;RtlAcqureResourceShared
 RtlAddAccessAllowedAce@16
-;RtlAddAccessDeniedAce
+RtlAddAccessDeniedAce@16
 RtlAddAce@20
 ;RtlAddActionToRXact
 ;RtlAtomToAtomTable
 ;RtlAddAttributeActionToRXact
-;RtlAddAuditAccessToAce
+RtlAddAuditAccessAce@24
 ;RtlAddCompoundAce
 ;RtlAdjustPrivilege
 RtlAllocateAndInitializeSid@44
@@ -306,7 +306,7 @@ RtlDeNormalizeProcessParams@4
 ;RtlDecompressBuffer
 ;RtlDecompressFragment
 ;RtlDelete
-;RtlDeleteAce
+RtlDeleteAce@8
 ;RtlDeleteAtomFromAtomTable
 RtlDeleteCriticalSection@4
 ;RtlDeleteElementGenericTable
@@ -369,7 +369,7 @@ RtlFreeSid@4
 RtlFreeUnicodeString@4
 ;RtlFreeUserThreadStack
 ;RtlGenerate8dot3Name
-;RtlGetAce
+RtlGetAce@12
 ;RtlGetCallersAddress
 ;RtlGetCompressionWorkSpaceSize
 RtlGetControlSecurityDescriptor@12
@@ -458,7 +458,7 @@ RtlOemToUnicodeN@20
 ;RtlProtectHeap
 ;RtlQueryAtomInAtomTable
 RtlQueryEnvironmentVariable_U@12
-;RtlQueryInformationAcl
+RtlQueryInformationAcl@16
 ;RtlQueryProcessBackTraceInformation
 ;RtlQueryProcessDebugInformation
 ;RtlQueryProcessHeapInformation
@@ -493,7 +493,7 @@ RtlSetCurrentEnvironment@8
 RtlSetDaclSecurityDescriptor@16
 RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor@12
-;RtlSetInformationAcl
+RtlSetInformationAcl@16
 RtlSetOwnerSecurityDescriptor@12
 ;RtlSetProperties
 ;RtlSetPropertyNames
@@ -542,7 +542,7 @@ RtlUpcaseUnicodeToOemN@20
 RtlUpperChar@4
 RtlUpperString@8
 ;RtlUsageHeap
-;RtlValidAcl
+RtlValidAcl@4
 RtlValidSecurityDescriptor@4
 RtlValidSid@4
 RtlValidateHeap@12

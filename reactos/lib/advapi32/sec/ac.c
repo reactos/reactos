@@ -1,10 +1,13 @@
-/* $Id: ac.c,v 1.1 1999/11/07 08:04:55 ea Exp $
+/* $Id: ac.c,v 1.2 2000/04/05 01:41:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/sec/ac.c
  * PURPOSE:         ACL/ACE functions
  */
+
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
 
 
@@ -19,8 +22,19 @@ GetAclInformation (
 	ACL_INFORMATION_CLASS	dwAclInformationClass
 	)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	NTSTATUS Status;
+
+	Status = RtlQueryInformationAcl (pAcl,
+	                                 pAclInformation,
+	                                 nAclInformationLength,
+	                                 dwAclInformationClass);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -114,8 +128,18 @@ InitializeAcl (
 	DWORD	dwAclRevision
 	)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	NTSTATUS Status;
+
+	Status = RtlCreateAcl (pAcl,
+	                       nAclLength,
+	                       dwAclRevision);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -125,8 +149,7 @@ IsValidAcl (
 	PACL	pAcl
 	)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	return RtlValidAcl (pAcl);
 }
 
 
@@ -139,8 +162,19 @@ SetAclInformation (
 	ACL_INFORMATION_CLASS	dwAclInformationClass
 	)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	NTSTATUS Status;
+
+	Status = RtlSetInformationAcl (pAcl,
+	                               pAclInformation,
+	                               nAclInformationLength,
+	                               dwAclInformationClass);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -177,8 +211,6 @@ SetEntriesInAclW (
 
 /* --- ACE --- */
 
-
-
 WINBOOL
 STDCALL
 AddAccessAllowedAce (
@@ -188,10 +220,20 @@ AddAccessAllowedAce (
 	PSID	pSid
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+	NTSTATUS Status;
 
+	Status = RtlAddAccessAllowedAce (pAcl,
+	                                 dwAceRevision,
+	                                 AccessMask,
+	                                 pSid);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 
 WINBOOL
@@ -203,8 +245,19 @@ AddAccessDeniedAce (
 	PSID	pSid
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	NTSTATUS Status;
+
+	Status = RtlAddAccessDeniedAce (pAcl,
+	                                dwAceRevision,
+	                                AccessMask,
+	                                pSid);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -218,10 +271,21 @@ AddAce (
 	DWORD	nAceListLength
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+	NTSTATUS Status;
 
+	Status = RtlAddAce (pAcl,
+	                    dwAceRevision,
+	                    dwStartingAceIndex,
+	                    pAceList,
+	                    nAceListLength);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 
 WINBOOL
@@ -235,8 +299,21 @@ AddAuditAccessAce (
 	WINBOOL	bAuditFailure
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	NTSTATUS Status;
+
+	Status = RtlAddAuditAccessAce (pAcl,
+	                               dwAceRevision,
+	                               dwAccessMask,
+	                               pSid,
+	                               bAuditSuccess,
+	                               bAuditFailure);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -247,8 +324,17 @@ DeleteAce (
 	DWORD	dwAceIndex
 	)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	NTSTATUS Status;
+
+	Status = RtlDeleteAce (pAcl,
+	                       dwAceIndex);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -259,8 +345,8 @@ FindFirstFreeAce (
 	LPVOID	* pAce
 	)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	return RtlFirstFreeAce (pAcl,
+	                        (PACE*)pAce);
 }
 
 
@@ -272,9 +358,18 @@ GetAce (
 	LPVOID	* pAce
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+	NTSTATUS Status;
 
+	Status = RtlGetAce (pAcl,
+	                    dwAceIndex,
+	                    (PACE*)pAce);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 /* EOF */

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2000/03/26 22:00:07 dwelch Exp $
+# $Id: makefile,v 1.12 2000/04/05 01:40:35 ekohl Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -23,7 +23,7 @@ MISC_OBJECTS = misc/dllmain.o misc/shutdown.o \
 
 REGISTRY_OBJECTS = reg/reg.o
 
-SECURITY_OBJECTS = sec/lsa.o sec/sec.o sec/ac.o
+SECURITY_OBJECTS = sec/lsa.o sec/sec.o sec/ac.o sec/sid.o
 
 SERVICE_OBJECTS = service/scm.o service/sctrl.o service/undoc.o
 

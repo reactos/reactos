@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.1 2000/03/12 01:17:59 ekohl Exp $
+/* $Id: acl.c,v 1.2 2000/04/05 01:39:41 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -24,7 +24,7 @@ RtlFirstFreeAce(PACL Acl, PACE* Ace)
    PACE Current;
    PVOID AclEnd;
    ULONG i;
-     
+
    Current = (PACE)(Acl + 1);
    *Ace = NULL;
    i = 0;
@@ -56,6 +56,14 @@ RtlFirstFreeAce(PACL Acl, PACE* Ace)
      }
    *Ace = Current;
    return(TRUE);
+}
+
+NTSTATUS
+STDCALL
+RtlGetAce(PACL Acl, ULONG AceIndex, PACE *Ace)
+{
+   UNIMPLEMENTED;
+   return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -113,6 +121,18 @@ RtlAddAccessAllowedAce (
 	)
 {
    return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 0));
+}
+
+NTSTATUS
+STDCALL
+RtlAddAccessDeniedAce (
+	PACL		Acl,
+	ULONG		Revision,
+	ACCESS_MASK	AccessMask,
+	PSID		Sid
+	)
+{
+   return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 1));
 }
 
 NTSTATUS
@@ -184,6 +204,28 @@ RtlAddAce (
    return(TRUE);
 }
 
+NTSTATUS
+STDCALL
+RtlAddAuditAccessAce (
+	PACL		Acl,
+	ULONG		Revision,
+	ACCESS_MASK	AccessMask,
+	PSID		Sid,
+	BOOLEAN		Success,
+	BOOLEAN		Failure
+	)
+{
+   UNIMPLEMENTED;
+   return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+STDCALL
+RtlDeleteAce(PACL Acl, ULONG AceIndex)
+{
+   UNIMPLEMENTED;
+   return STATUS_UNSUCCESSFUL;
+}
 
 NTSTATUS
 STDCALL
@@ -211,5 +253,38 @@ RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision)
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS
+STDCALL
+RtlQueryInformationAcl (
+	PACL			Acl,
+	PVOID			Information,
+	ULONG			InformationLength,
+	ACL_INFORMATION_CLASS	InformationClass
+	)
+{
+   UNIMPLEMENTED;
+   return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+STDCALL
+RtlSetInformationAcl (
+	PACL			Acl,
+	PVOID			Information,
+	ULONG			InformationLength,
+	ACL_INFORMATION_CLASS	InformationClass
+	)
+{
+   UNIMPLEMENTED;
+   return STATUS_UNSUCCESSFUL;
+}
+
+BOOLEAN
+STDCALL
+RtlValidAcl (PACL Acl)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
 
 /* EOF */

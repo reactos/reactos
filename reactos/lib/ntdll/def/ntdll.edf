@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.37 2000/03/22 18:35:51 dwelch Exp $
+; $Id: ntdll.edf,v 1.38 2000/04/05 01:38:50 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -226,7 +226,9 @@ NtYieldExecution=NtYieldExecution@0
 RtlAbsoluteToSelfRelativeSD=RtlAbsoluteToSelfRelativeSD@12
 RtlAcquirePebLock=RtlAcquirePebLock@0
 RtlAddAccessAllowedAce=RtlAddAccessAllowedAce@16
+RtlAddAccessDeniedAce=RtlAddAccessDeniedAce@16
 RtlAddAce=RtlAddAce@20
+RtlAddAuditAccessAce=RtlAddAuditAccessAce@24
 RtlAllocateAndInitializeSid=RtlAllocateAndInitializeSid@44
 RtlAllocateHeap=RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
@@ -259,6 +261,7 @@ RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess=RtlCreateUserProcess@40
 RtlCreateUserThread=RtlCreateUserThread@40
 RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
+RtlDeleteAce=RtlDeleteAce@8
 RtlDeleteCriticalSection=RtlDeleteCriticalSection@4
 RtlDestroyEnvironment=RtlDestroyEnvironment@4
 RtlDestroyHeap=RtlDestroyHeap@4
@@ -294,6 +297,7 @@ RtlFreeAnsiString=RtlFreeAnsiString@4
 RtlFreeHeap=RtlFreeHeap@12
 RtlFreeSid=RtlFreeSid@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
+RtlGetAce=RtlGetAce@12
 RtlGetControlSecurityDescriptor=RtlGetControlSecurityDescriptor@12
 RtlGetCurrentDirectory_U=RtlGetCurrentDirectory_U@8
 RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
@@ -342,6 +346,7 @@ RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN=RtlOemToUnicodeN@20
 RtlQueryEnvironmentVariable_U=RtlQueryEnvironmentVariable_U@12
+RtlQueryInformationAcl=RtlQueryInformationAcl@16
 RtlReAllocateHeap=RtlReAllocateHeap@16
 RtlReleasePebLock=RtlReleasePebLock@0
 RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
@@ -353,6 +358,7 @@ RtlSetCurrentEnvironment=RtlSetCurrentEnvironment@8
 RtlSetDaclSecurityDescriptor=RtlSetDaclSecurityDescriptor@16
 RtlSetEnvironmentVariable=RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor=RtlSetGroupSecurityDescriptor@12
+RtlSetInformationAcl=RtlSetInformationAcl@16
 RtlSetOwnerSecurityDescriptor=RtlSetOwnerSecurityDescriptor@12
 RtlSizeHeap=RtlSizeHeap@12
 RtlSubAuthorityCountSid=RtlSubAuthorityCountSid@4
@@ -382,6 +388,7 @@ RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
 RtlUpperChar=RtlUpperChar@4
 RtlUpperString=RtlUpperString@8
+RtlValidAcl=RtlValidAcl@4
 RtlValidSecurityDescriptor=RtlValidSecurityDescriptor@4
 RtlValidSid=RtlValidSid@4
 RtlValidateHeap=RtlValidateHeap@12
