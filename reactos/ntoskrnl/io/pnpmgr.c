@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.47 2004/10/23 17:32:51 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.48 2004/11/07 21:18:33 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -37,6 +37,7 @@ IoInvalidateDeviceRelations(
   IN PDEVICE_OBJECT DeviceObject,
   IN DEVICE_RELATION_TYPE Type)
 {
+  CHECKPOINT1;
 }
 
 PDEVICE_NODE FASTCALL
@@ -277,59 +278,148 @@ IoInvalidateDeviceState(
 {
 }
 
-/*
- * @unimplemented
+/**
+ * @name IoOpenDeviceRegistryKey
+ *
+ * Open a registry key unique for a specified driver or device instance.
+ *
+ * @param DeviceObject   Device to get the registry key for.
+ * @param DevInstKeyType Type of the key to return.
+ * @param DesiredAccess  Access mask (eg. KEY_READ | KEY_WRITE).
+ * @param DevInstRegKey  Handle to the opened registry key on 
+ *                       successful return.
+ *
+ * @return Status.
+ *
+ * @implemented
  */
 NTSTATUS
 STDCALL
 IoOpenDeviceRegistryKey(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG DevInstKeyType,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PHANDLE DevInstRegKey)
+   IN PDEVICE_OBJECT DeviceObject,
+   IN ULONG DevInstKeyType,
+   IN ACCESS_MASK DesiredAccess,
+   OUT PHANDLE DevInstRegKey)
 {
-  static const WCHAR ClassKeyName[] = {
-    '\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\',
-    'S','y','s','t','e','m','\\','C','u','r','r','e','n','t','C','o','n','t',
-    'r','o','l','S','e','t','\\','C','o','n','t','r','o','l','\\',
-    'C','l','a','s','s','\\'};
-  LPWSTR KeyNameBuffer;
-  UNICODE_STRING KeyName;
-  ULONG DriverKeyLength;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  NTSTATUS Status;
+   static WCHAR RootKeyName[] =
+      L"\\Registry\\Machine\\System\\CurrentControlSet\\";
+   static WCHAR ProfileKeyName[] =
+      L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
+   static WCHAR ClassKeyName[] = L"Control\\Class\\";
+   static WCHAR EnumKeyName[] = L"Enum\\";
+   static WCHAR DeviceParametersKeyName[] = L"Device Parameters\\";
+   ULONG KeyNameLength;
+   LPWSTR KeyNameBuffer;
+   UNICODE_STRING KeyName;
+   ULONG DriverKeyLength;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   PDEVICE_NODE DeviceNode = NULL;
+   NTSTATUS Status;
 
-  if (DevInstKeyType == PLUGPLAY_REGKEY_DRIVER)
-  {
-    Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
-                                 0, NULL, &DriverKeyLength);
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-      return Status;
-  
-    KeyNameBuffer = ExAllocatePool(PagedPool, DriverKeyLength + sizeof(ClassKeyName));
-    if (KeyNameBuffer == NULL)
+   if ((DevInstKeyType & (PLUGPLAY_REGKEY_DEVICE | PLUGPLAY_REGKEY_DRIVER)) == 0)
+      return STATUS_INVALID_PARAMETER;
+
+   /*
+    * Calculate the length of the base key name. This is the full
+    * name for driver key or the name excluding "Device Parameters"
+    * subkey for device key.
+    */
+
+   KeyNameLength = sizeof(RootKeyName);
+   if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
+      KeyNameLength += sizeof(ProfileKeyName) - sizeof(UNICODE_NULL);
+   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
+   {
+      KeyNameLength += sizeof(ClassKeyName) - sizeof(UNICODE_NULL);
+      Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
+                                   0, NULL, &DriverKeyLength);
+      if (Status != STATUS_BUFFER_TOO_SMALL)
+         return Status;
+      KeyNameLength += DriverKeyLength;
+   }
+   else
+   {
+      DeviceNode = IopGetDeviceNode(DeviceObject);
+      KeyNameLength += sizeof(EnumKeyName) - sizeof(UNICODE_NULL) +
+                       DeviceNode->InstancePath.Length;
+   }
+
+   /*
+    * Now allocate the buffer for the key name...
+    */
+
+   KeyNameBuffer = ExAllocatePool(PagedPool, KeyNameLength);
+   if (KeyNameBuffer == NULL)
       return STATUS_INSUFFICIENT_RESOURCES;
 
-    RtlCopyMemory(KeyNameBuffer, ClassKeyName, sizeof(ClassKeyName));
-    Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
-                                 DriverKeyLength, KeyNameBuffer +
-                                 (sizeof(ClassKeyName) / sizeof(WCHAR)),
-                                 &DriverKeyLength);
-    if (!NT_SUCCESS(Status))
-    {
-      ExFreePool(KeyNameBuffer);
+   KeyName.Length = 0;
+   KeyName.MaximumLength = KeyNameLength;
+   KeyName.Buffer = KeyNameBuffer;
+
+   /*
+    * ...and build the key name.
+    */
+
+   KeyName.Length += sizeof(RootKeyName) - sizeof(UNICODE_NULL);
+   RtlCopyMemory(KeyNameBuffer, RootKeyName, KeyName.Length);
+
+   if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
+      RtlAppendUnicodeToString(&KeyName, ProfileKeyName);
+  
+   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
+   {
+      RtlAppendUnicodeToString(&KeyName, ClassKeyName);
+      Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
+                                   DriverKeyLength, KeyNameBuffer +
+                                   (KeyName.Length / sizeof(WCHAR)),
+                                   &DriverKeyLength);
+      if (!NT_SUCCESS(Status))
+      {
+         ExFreePool(KeyNameBuffer);
+         return Status;
+      }
+   }
+   else
+   {
+      RtlAppendUnicodeToString(&KeyName, EnumKeyName);
+      RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->InstancePath);
+      if (DeviceNode->InstancePath.Length == 0)
+      {
+         ExFreePool(KeyNameBuffer);
+         return Status;
+      }
+   }
+
+   /*
+    * Open the base key.
+    */
+
+   InitializeObjectAttributes(&ObjectAttributes, &KeyName,
+                              OBJ_CASE_INSENSITIVE, NULL, NULL);
+   Status = ZwOpenKey(DevInstRegKey, DesiredAccess, &ObjectAttributes);
+   ExFreePool(KeyNameBuffer);
+
+   /*
+    * For driver key we're done now. Also if the base key doesn't
+    * exist we can bail out with error...
+    */
+
+   if ((DevInstKeyType & PLUGPLAY_REGKEY_DRIVER) || !NT_SUCCESS(Status))
       return Status;
-    }
 
-    RtlInitUnicodeString(&KeyName, KeyNameBuffer);
-    InitializeObjectAttributes(&ObjectAttributes, &KeyName,
-                               OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = ZwOpenKey(DevInstRegKey, DesiredAccess, &ObjectAttributes);
-    ExFreePool(KeyNameBuffer);
-    return Status;
-  }
+   /*
+    * Let's go further. For device key we must open "Device Parameters"
+    * subkey and create it if it doesn't exist yet.
+    */
 
-  return STATUS_NOT_IMPLEMENTED;
+   RtlInitUnicodeString(&KeyName, DeviceParametersKeyName);
+   InitializeObjectAttributes(&ObjectAttributes, &KeyName,
+                              OBJ_CASE_INSENSITIVE, *DevInstRegKey, NULL);
+   Status = ZwCreateKey(DevInstRegKey, DesiredAccess, &ObjectAttributes,
+                        0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+   ZwClose(ObjectAttributes.RootDirectory);
+
+   return Status;
 }
 
 /*
