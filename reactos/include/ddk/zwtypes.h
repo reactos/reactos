@@ -132,6 +132,7 @@ typedef struct _LPCMESSAGE
 
 #define SystemPerformanceInformation		5
 #define SystemDriverInformation			11
+#define SystemIdentityInformation		12
 #define SystemCacheInformation			21
 #define SystemTimeAdjustmentInformation		28
 #define SystemTimeZoneInformation		44
