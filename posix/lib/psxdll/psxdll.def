@@ -1,16 +1,10 @@
-; $Id: psxdll.def,v 1.3 2002/02/24 22:14:05 ea Exp $
+; $Id: psxdll.def,v 1.4 2002/03/07 06:07:31 hyperion Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
 
 LIBRARY PSXDLL.DLL
 EXPORTS
-
-;misc/init
-__PdxInitializeData@8
-;misc/heap
-GetProcessHeap@0
-
 
 ;dirent
 opendir
@@ -35,21 +29,27 @@ fcntl
 basename
 
 ;misc
-;path
-__PdxPosixPathGetNextComponent_A
-__PdxPosixPathGetNextComponent_U
-__PdxPosixPathResolve_A
-__PdxPosixPathResolve_U
-__PdxPosixPathNameToNtPathName
-;fdtable
+;misc/fdtable
 __fdtable_init
 __fdtable_free
 __fdtable_entry_nextavail
 __fdtable_entry_add
 __fdtable_entry_remove
 __fdtable_entry_get
-;safeobj
+;misc/heap
+GetProcessHeap
+;misc/init
+__PdxInitializeData
+;misc/path
+__PdxPosixPathGetNextComponent_A
+__PdxPosixPathGetNextComponent_U
+__PdxPosixPathResolve_A
+__PdxPosixPathResolve_U
+__PdxPosixPathNameToNtPathName
+;misc/safeobj
 __safeobj_validate
+;misc/spawn
+__PdxSpawnPosixProcess
 
 ;pthread
 pthread_create

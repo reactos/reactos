@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2002/02/24 22:14:05 ea Exp $
+# $Id: Makefile,v 1.4 2002/03/07 06:07:31 hyperion Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -39,6 +39,7 @@ OBJECTS_MISC = \
 	misc/heap.o \
 	misc/interlock.o \
 	misc/safeobj.o \
+ misc/spawn.o \
 	misc/path.o \
 	misc/fdtable.o
 
