@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.25 2003/04/27 10:50:07 ekohl Exp $
+/* $Id: disk.c,v 1.26 2003/04/27 18:10:38 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -86,6 +86,9 @@ DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 static VOID
 DiskClassUpdatePartitionDeviceObjects (IN PDEVICE_OBJECT DeviceObject,
 				       IN PIRP Irp);
+
+static VOID
+ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension);
 
 
 /* FUNCTIONS ****************************************************************/
@@ -628,6 +631,8 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
       DPRINT("  Number of partitions: %u\n", PartitionList->PartitionCount);
 
+      ScsiDiskUpdateFixedDiskGeometry(DiskDeviceExtension);
+
       for (PartitionNumber = 0; PartitionNumber < PartitionList->PartitionCount; PartitionNumber++)
 	{
 	  PartitionEntry = &PartitionList->PartitionEntry[PartitionNumber];
@@ -1086,8 +1091,8 @@ DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
  */
 
 static VOID
-DiskClassUpdatePartitionDeviceObjects (IN PDEVICE_OBJECT DiskDeviceObject,
-				       IN PIRP Irp)
+DiskClassUpdatePartitionDeviceObjects(IN PDEVICE_OBJECT DiskDeviceObject,
+				      IN PIRP Irp)
 {
   PDRIVE_LAYOUT_INFORMATION PartitionList;
   PPARTITION_INFORMATION PartitionEntry;
@@ -1104,6 +1109,8 @@ DiskClassUpdatePartitionDeviceObjects (IN PDEVICE_OBJECT DiskDeviceObject,
   UNICODE_STRING DeviceName;
   PDEVICE_OBJECT DeviceObject;
   NTSTATUS Status;
+
+  DPRINT("ScsiDiskUpdatePartitionDeviceObjects() called\n");
 
   /* Get partition list */
   PartitionList = Irp->AssociatedIrp.SystemBuffer;
@@ -1311,6 +1318,117 @@ DiskClassUpdatePartitionDeviceObjects (IN PDEVICE_OBJECT DiskDeviceObject,
 	      DiskData->PartitionOrdinal,
 	      DiskData->PartitionNumber);
     }
+
+  DPRINT("ScsiDiskUpdatePartitionDeviceObjects() done\n");
+}
+
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	DiskClassUpdateFixedDiskGeometry
+ *
+ * DESCRIPTION
+ *	Updated the geometry of a disk if the disk can be accessed
+ *	by the BIOS.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceExtension
+ *		Disk device extension.
+ *
+ * RETURN VALUE
+ *	None
+ */
+
+static VOID
+ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR ResourceDescriptor;
+  PCM_INT13_DRIVE_PARAMETER DriveParameters;
+  PKEY_VALUE_FULL_INFORMATION ValueBuffer;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  UNICODE_STRING ValueName;
+  HANDLE SystemKey;
+  ULONG Length;
+  ULONG i;
+  NTSTATUS Status;
+
+  DPRINT1("ScsiDiskUpdateFixedDiskGeometry() called\n");
+
+  RtlInitUnicodeString(&KeyName,
+		       L"\\Registry\\Machine\\Hardware\\Description\\System");
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  /* Open the adapter key */
+  Status = ZwOpenKey(&SystemKey,
+		     KEY_READ,
+		     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ZwOpenKey() failed (Status %lx)\n", Status);
+      return;
+    }
+
+  /* Allocate value buffer */
+  ValueBuffer = ExAllocatePool(PagedPool,
+			       1024);
+  if (ValueBuffer == NULL)
+    {
+      DPRINT1("Failed to allocate value buffer\n");
+      ZwClose(SystemKey);
+      return;
+    }
+
+  RtlInitUnicodeString(&ValueName,
+		       L"Configuration Data");
+
+  /* Query 'Configuration Data' value */
+  Status = ZwQueryValueKey(SystemKey,
+			   &ValueName,
+			   KeyValueFullInformation,
+			   ValueBuffer,
+			   1024,
+			   &Length);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ZwQueryValueKey() failed (Status %lx)\n", Status);
+      ExFreePool(ValueBuffer);
+      ZwClose(SystemKey);
+      return;
+    }
+
+  ZwClose(SystemKey);
+
+
+  ResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)
+    ((PUCHAR)ValueBuffer + ValueBuffer->DataOffset);
+
+  DriveParameters = (PCM_INT13_DRIVE_PARAMETER)
+    ((PUCHAR)ResourceDescriptor + sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+
+  for (i = 0; i< DriveParameters[0].NumberDrives; i++)
+    {
+      DPRINT1("Drive %lu: %lu Cylinders  %hu Heads  %hu Sectors\n",
+	      i,
+	      DriveParameters[i].MaxCylinders,
+	      DriveParameters[i].MaxHeads,
+	      DriveParameters[i].SectorsPerTrack);
+    }
+
+  DPRINT1("*** System stopped ***\n");
+  for(;;);
+
+  ExFreePool(ValueBuffer);
+
+  DPRINT1("ScsiDiskUpdateFixedDiskGeometry() done\n");
 }
 
 /* EOF */
