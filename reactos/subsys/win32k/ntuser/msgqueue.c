@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.44 2003/12/14 11:36:43 gvg Exp $
+/* $Id: msgqueue.c,v 1.45 2003/12/14 19:04:51 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -392,6 +392,10 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	      *Message = Current;
 	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
+	    }
+	  else
+	    {
+	      RemoveEntryList(&Current->ListEntry);
 	    }
 	}
     }
