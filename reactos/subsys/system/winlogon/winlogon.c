@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.15 2003/02/02 22:38:54 gvg Exp $
+/* $Id: winlogon.c,v 1.16 2003/03/20 19:21:01 rcampbell Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -243,7 +243,7 @@ static PCHAR GetShell(PCHAR CommandLine)
    if (! GotCommandLine)
      {
 	GetSystemDirectory(CommandLine, MAX_PATH - 10);
-	strcat(CommandLine, "\\shell.exe");
+	strcat(CommandLine, "\\cmd.exe");
      }
 
    return CommandLine;
