@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.11 2001/03/07 16:48:45 dwelch Exp $
+/* $Id: token.c,v 1.12 2001/12/05 01:40:25 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -244,7 +244,7 @@ VOID SeInitializeTokenManager(VOID)
    SeTokenType->QueryName = NULL;
    SeTokenType->OkayToClose = NULL;
    SeTokenType->Create = NULL;
-   
+   SeTokenType->DuplicationNotify = NULL;
 }
 
 NTSTATUS RtlCopySidAndAttributesArray(ULONG Count,             // ebp + 8

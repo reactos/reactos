@@ -3,6 +3,12 @@
 
 #include <napi/lpc.h>
 
+typedef struct _EPORT_LISTENER
+{
+  HANDLE ListenerPid;
+  LIST_ENTRY ListenerListEntry;
+} EPORT_LISTENER, *PEPORT_LISTENER;
+
 typedef struct _EPORT
 {
   KSPIN_LOCK	Lock;
@@ -20,6 +26,11 @@ typedef struct _EPORT
   
   ULONG		MaxDataLength;
   ULONG		MaxConnectInfoLength;
+
+  /*
+   * List of processes that can receive connection requests on this port.
+   */
+  LIST_ENTRY ListenerListHead;
 } EPORT, * PEPORT;
 
 

@@ -303,6 +303,7 @@ ExpWin32kInit(VOID)
   ExWindowStationObjectType->QueryName = NULL;
   ExWindowStationObjectType->OkayToClose = NULL;
   ExWindowStationObjectType->Create = ExpWinStaObjectCreate;
+  ExWindowStationObjectType->DuplicationNotify = NULL;
   RtlInitUnicodeString(&ExWindowStationObjectType->TypeName, L"WindowStation");
 
   /* Create desktop object type */
@@ -330,6 +331,7 @@ ExpWin32kInit(VOID)
   ExDesktopObjectType->QueryName = NULL;
   ExDesktopObjectType->OkayToClose = NULL;
   ExDesktopObjectType->Create = ExpDesktopObjectCreate;
+  ExDesktopObjectType->DuplicationNotify = NULL;
   RtlInitUnicodeString(&ExDesktopObjectType->TypeName, L"Desktop");
 }
 

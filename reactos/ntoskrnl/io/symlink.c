@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.22 2001/08/26 17:27:00 ekohl Exp $
+/* $Id: symlink.c,v 1.23 2001/12/05 01:40:24 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -189,6 +189,7 @@ VOID IoInitSymbolicLinkImplementation (VOID)
    IoSymbolicLinkType->QueryName = NULL;
    IoSymbolicLinkType->OkayToClose = NULL;
    IoSymbolicLinkType->Create = IopCreateSymbolicLink;
+   IoSymbolicLinkType->DuplicationNotify = NULL;
    
    RtlInitUnicodeString(&IoSymbolicLinkType->TypeName,
 			L"SymbolicLink");

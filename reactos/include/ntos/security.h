@@ -4,6 +4,19 @@
 #include <ntos/ntdef.h>
 #include <ntos/types.h>
 
+#if 0
+/* Security descriptor control. */
+#define SECURITY_DESCRIPTOR_REVISION	(1)
+#define SECURITY_DESCRIPTOR_MIN_LENGTH	(20)
+#define SE_OWNER_DEFAULTED	(1)
+#define SE_GROUP_DEFAULTED	(2)
+#define SE_DACL_PRESENT	(4)
+#define SE_DACL_DEFAULTED	(8)
+#define SE_SACL_PRESENT	(16)
+#define SE_SACL_DEFAULTED	(32)
+#define SE_SELF_RELATIVE	(32768)
+#endif
+
 /* ACCESS_MASK */
 #define MAXIMUM_ALLOWED			(0x2000000L)
 #define GENERIC_ALL			(0x10000000L)

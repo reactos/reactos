@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.67 2001/12/02 23:34:42 dwelch Exp $
+/* $Id: section.c,v 1.68 2001/12/05 01:40:25 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -987,6 +987,7 @@ MmInitSectionImplementation(VOID)
    MmSectionObjectType->QueryName = NULL;
    MmSectionObjectType->OkayToClose = NULL;
    MmSectionObjectType->Create = MmpCreateSection;
+   MmSectionObjectType->DuplicationNotify = NULL;
    
    return(STATUS_SUCCESS);
 }

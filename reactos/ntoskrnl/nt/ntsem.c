@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.13 2001/08/26 17:29:36 ekohl Exp $
+/* $Id: ntsem.c,v 1.14 2001/12/05 01:40:25 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,6 +78,7 @@ VOID NtInitializeSemaphoreImplementation(VOID)
    ExSemaphoreType->QueryName = NULL;
    ExSemaphoreType->OkayToClose = NULL;
    ExSemaphoreType->Create = NtpCreateSemaphore;
+   ExSemaphoreType->DuplicationNotify = NULL;
 }
 
 NTSTATUS STDCALL

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.13 2001/08/26 17:23:39 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.14 2001/12/05 01:40:23 dwelch Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -116,6 +116,10 @@ typedef struct _OBJECT_TYPE
 			     PVOID Parent,
 			     PWSTR RemainingPath,
 			     struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+
+  VOID STDCALL (*DuplicationNotify)(PEPROCESS DuplicateTo,
+				    PEPROCESS DuplicateFrom,
+				    PVOID Object);
 } OBJECT_TYPE, *POBJECT_TYPE;
 
 

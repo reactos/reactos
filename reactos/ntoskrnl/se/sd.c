@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.4 2001/12/04 20:47:26 ekohl Exp $
+/* $Id: sd.c,v 1.5 2001/12/05 01:40:25 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -156,10 +156,10 @@ RtlSetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
      }
    SecurityDescriptor->Control = SecurityDescriptor->Control | SE_DACL_PRESENT;
    SecurityDescriptor->Dacl = Dacl;
-   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_DACL_DEFALTED);
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_DACL_DEFAULTED);
    if (DaclDefaulted)
      {
-	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_DACL_DEFALTED;
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_DACL_DEFAULTED;
      }
    return(STATUS_SUCCESS);
 }

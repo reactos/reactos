@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.20 2001/08/26 17:27:00 ekohl Exp $
+/* $Id: iomgr.c,v 1.21 2001/12/05 01:40:24 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -142,6 +142,7 @@ VOID IoInit (VOID)
 	IoDeviceObjectType->QueryName = NULL;
 	IoDeviceObjectType->OkayToClose = NULL;
 	IoDeviceObjectType->Create = IopCreateDevice;
+	IoDeviceObjectType->DuplicationNotify = NULL;
 
 	RtlInitUnicodeString (
 		& IoDeviceObjectType->TypeName,
@@ -174,6 +175,7 @@ VOID IoInit (VOID)
 	IoFileObjectType->QueryName = NULL;
 	IoFileObjectType->OkayToClose = NULL;
 	IoFileObjectType->Create = IopCreateFile;
+	IoFileObjectType->DuplicationNotify = NULL;
 
 	RtlInitUnicodeString (
 		& IoFileObjectType->TypeName,

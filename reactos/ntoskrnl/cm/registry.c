@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.65 2001/09/08 09:02:08 ekohl Exp $
+/* $Id: registry.c,v 1.66 2001/12/05 01:40:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -67,6 +67,7 @@ CmInitializeRegistry(VOID)
   CmiKeyType->QueryName = NULL;
   CmiKeyType->OkayToClose = NULL;
   CmiKeyType->Create = CmiObjectCreate;
+  CmiKeyType->DuplicationNotify = NULL;
   RtlInitUnicodeString(&CmiKeyType->TypeName, L"Key");
 
   /*  Build volitile registry store  */

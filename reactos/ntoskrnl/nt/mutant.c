@@ -105,6 +105,7 @@ NtInitializeMutantImplementation(VOID)
   ExMutantObjectType->QueryName = NULL;
   ExMutantObjectType->OkayToClose = NULL;
   ExMutantObjectType->Create = NtpCreateMutant;
+  ExMutantObjectType->DuplicationNotify = NULL;
 }
 
 

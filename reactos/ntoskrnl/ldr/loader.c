@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.92 2001/12/02 23:37:25 dwelch Exp $
+/* $Id: loader.c,v 1.93 2001/12/05 01:40:24 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -198,6 +198,7 @@ VOID LdrInitModuleManagement(VOID)
   IoDriverObjectType->QueryName = NULL;
   IoDriverObjectType->OkayToClose = NULL;
   IoDriverObjectType->Create = LdrCreateModule;
+  IoDriverObjectType->DuplicationNotify = NULL;
   RtlInitUnicodeString(&IoDriverObjectType->TypeName, L"Driver");
 
   /*  Create Modules object directory  */

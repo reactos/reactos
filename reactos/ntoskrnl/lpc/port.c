@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.7 2001/12/02 23:34:42 dwelch Exp $
+/* $Id: port.c,v 1.8 2001/12/05 01:40:24 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -63,6 +63,7 @@ NTSTATUS NiInitPort (VOID)
    ExPortType->QueryName = NULL;
    ExPortType->OkayToClose = NULL;
    ExPortType->Create = NiCreatePort;
+   ExPortType->DuplicationNotify = NULL;
    
    EiNextLpcMessageId = 0;
    

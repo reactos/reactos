@@ -97,6 +97,7 @@ NtInitializeEventImplementation(VOID)
    ExEventObjectType->QueryName = NULL;
    ExEventObjectType->OkayToClose = NULL;
    ExEventObjectType->Create = NtpCreateEvent;
+   ExEventObjectType->DuplicationNotify = NULL;
 }
 
 

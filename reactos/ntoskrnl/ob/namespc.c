@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.26 2001/08/26 17:29:57 ekohl Exp $
+/* $Id: namespc.c,v 1.27 2001/12/05 01:40:25 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -327,6 +327,7 @@ VOID ObInit(VOID)
    ObDirectoryType->QueryName = NULL;
    ObDirectoryType->OkayToClose = NULL;
    ObDirectoryType->Create = ObpCreateDirectory;
+   ObDirectoryType->DuplicationNotify = NULL;
    
    RtlInitUnicodeString(&ObDirectoryType->TypeName,
 			L"Directory");

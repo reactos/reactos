@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.70 2001/11/29 16:40:45 ekohl Exp $
+/* $Id: process.c,v 1.71 2001/12/05 01:40:25 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -212,6 +212,7 @@ PsInitProcessManagment(VOID)
    PsProcessType->QueryName = NULL;
    PsProcessType->OkayToClose = NULL;
    PsProcessType->Create = NULL;
+   PsProcessType->DuplicationNotify = NULL;
    
    RtlInitUnicodeString(&PsProcessType->TypeName, L"Process");
    

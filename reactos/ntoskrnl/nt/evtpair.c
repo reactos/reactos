@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.9 2001/08/26 17:29:36 ekohl Exp $
+/* $Id: evtpair.c,v 1.10 2001/12/05 01:40:25 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,6 +75,7 @@ VOID NtInitializeEventPairImplementation(VOID)
    ExEventPairObjectType->QueryName = NULL;
    ExEventPairObjectType->OkayToClose = NULL;
    ExEventPairObjectType->Create = NtpCreateEventPair;
+   ExEventPairObjectType->DuplicationNotify = NULL;
 }
 
 

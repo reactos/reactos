@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.12 2001/09/06 22:47:39 dwelch Exp $
+/* $Id: nttimer.c,v 1.13 2001/12/05 01:40:25 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -125,6 +125,7 @@ VOID NtInitializeTimerImplementation(VOID)
    ExTimerType->QueryName = NULL;
    ExTimerType->OkayToClose = NULL;
    ExTimerType->Create = NtpCreateTimer;
+   ExTimerType->DuplicationNotify = NULL;
 }
 
 
