@@ -1,3 +1,9 @@
+2002-11-13  Rick Gaiser  <RickG81@Wanadoo.nl>
+
+	* drivers/bus/isapnp/isapnp.c (FindNextReadPort): Increment Port before
+	checking wether port address is in NE2000 address space range and returning
+	port address value.
+
 2002-11-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/bus/acpi/include/acpi.h: Include platform/types.h.

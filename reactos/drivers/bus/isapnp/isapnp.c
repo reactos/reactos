@@ -1,4 +1,4 @@
-/* $Id: isapnp.c,v 1.4 2002/09/08 10:22:03 chorns Exp $
+/* $Id: isapnp.c,v 1.5 2002/11/13 21:57:47 chorns Exp $
  *
  * PROJECT:         ReactOS ISA PnP Bus driver
  * FILE:            isapnp.c
@@ -217,19 +217,24 @@ static ULONG FindNextReadPort(VOID)
 {
 	ULONG Port;
 
-  Port = (ULONG)IsaPnPReadPort;
-	while (Port <= ISAPNP_MAX_READ_PORT) {
+	Port = (ULONG)IsaPnPReadPort;
+	while (TRUE) {
+		Port += READ_DATA_PORT_STEP;
+
+		if (Port > ISAPNP_MAX_READ_PORT)
+		{
+			return 0;
+		}
+
 		/*
 		 * We cannot use NE2000 probe spaces for
-     * ISAPnP or we will lock up machines
+		 * ISAPnP or we will lock up machines
 		 */
 		if ((Port < 0x280) || (Port > 0x380))
 		{
 			return Port;
 		}
-		Port += READ_DATA_PORT_STEP;
 	}
-	return 0;
 }
 
 static BOOLEAN IsolateReadDataPortSelect(VOID)
