@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.43 2004/06/23 22:31:51 ion Exp $
+/* $Id: catch.c,v 1.44 2004/07/02 01:36:25 royce Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -256,17 +256,28 @@ ExSystemExceptionFilter()
 	return FALSE;
 }
 
+VOID
+FASTCALL
+KeRosTrapReturn ( PKTRAP_FRAME TrapFrame, PKTRAP_FRAME PrevTrapFrame );
+
 NTSTATUS STDCALL
 NtRaiseException (IN PEXCEPTION_RECORD ExceptionRecord,
 		  IN PCONTEXT Context,
 		  IN BOOLEAN SearchFrames)
 {
-  KiDispatchException(ExceptionRecord,
-		      Context,
-		      PsGetCurrentThread()->Tcb.TrapFrame,
-		      (KPROCESSOR_MODE)ExGetPreviousMode(),
-		      SearchFrames);
-  return(STATUS_SUCCESS);
+	PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
+	PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+
+	KeGetCurrentKPCR()->Tib.ExceptionList = TrapFrame->ExceptionList;
+
+	KiDispatchException(ExceptionRecord,
+		Context,
+		PsGetCurrentThread()->Tcb.TrapFrame,
+		(KPROCESSOR_MODE)ExGetPreviousMode(),
+		SearchFrames);
+
+	KeRosTrapReturn ( TrapFrame, PrevTrapFrame );
+	return(STATUS_SUCCESS);
 }
 
 /*

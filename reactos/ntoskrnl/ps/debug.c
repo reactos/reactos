@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.11 2003/07/21 21:36:01 dwelch Exp $
+/* $Id: debug.c,v 1.12 2004/07/02 01:36:25 royce Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
@@ -69,11 +69,7 @@ KeContextToTrapFrame(PCONTEXT Context,
 	TrapFrame->Eax = Context->Eax;
 	TrapFrame->Ebx = Context->Ebx;
 	TrapFrame->Ecx = Context->Ecx;
-	/*
-	 * Edx is used in the TrapFrame to hold the old trap frame pointer
-	 * so we don't want to overwrite it here
-	 */
-/*	TrapFrame->Edx = Context->Edx; */
+	TrapFrame->Edx = Context->Edx;
 	TrapFrame->Esi = Context->Esi;
 	TrapFrame->Edi = Context->Edi;
      }
