@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.27 2004/02/03 14:19:29 ekohl Exp $
+/* $Id: rtl.h,v 1.28 2004/05/17 13:20:05 ekohl Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -649,7 +649,7 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
 	     IN ULONGLONG Start,
 	     IN ULONGLONG End,
 	     IN UCHAR Attributes,
-	     IN ULONG Flags,
+	     IN ULONG Flags,  /* RTL_RANGE_LIST_ADD_... flags */
 	     IN PVOID UserData OPTIONAL,
 	     IN PVOID Owner OPTIONAL);
 

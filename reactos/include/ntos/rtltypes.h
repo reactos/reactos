@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.13 2004/02/10 16:22:56 navaraf Exp $
+/* $Id: rtltypes.h,v 1.14 2004/05/17 13:20:05 ekohl Exp $
  * 
  */
 
@@ -129,11 +129,13 @@ typedef struct _RTL_SPLAY_LINKS
 typedef struct _RTL_RANGE_LIST
 {
   LIST_ENTRY ListHead;
-  ULONG Flags;
+  ULONG Flags;  /* RTL_RANGE_LIST_... flags */
   ULONG Count;
   ULONG Stamp;
 } RTL_RANGE_LIST, *PRTL_RANGE_LIST;
 
+#define RTL_RANGE_LIST_ADD_IF_CONFLICT  0x00000001
+#define RTL_RANGE_LIST_ADD_SHARED       0x00000002
 
 typedef struct _RTL_RANGE
 {
@@ -142,9 +144,11 @@ typedef struct _RTL_RANGE
   PVOID UserData;
   PVOID Owner;
   UCHAR Attributes;
-  UCHAR Flags;
+  UCHAR Flags;  /* RTL_RANGE_... flags */
 } RTL_RANGE, *PRTL_RANGE;
 
+#define RTL_RANGE_SHARED      0x01
+#define RTL_RANGE_CONFLICT    0x02
 
 typedef BOOLEAN
 (STDCALL *PRTL_CONFLICT_RANGE_CALLBACK) (PVOID Context,
