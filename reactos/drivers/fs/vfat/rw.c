@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.25 2001/07/20 08:00:20 ekohl Exp $
+/* $Id: rw.c,v 1.26 2001/08/04 11:02:47 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -369,7 +369,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   assert (FileObject != NULL);
   assert (FileObject->FsContext != NULL);
 
-  DPRINT("VfatReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
+  DPRINT1("VfatReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
 	 "Length %d, ReadOffset 0x%x)\n", DeviceExt, FileObject, Buffer,
 	 Length, ReadOffset);
 
@@ -416,7 +416,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
   /*
    * Find the cluster to start the read from
-   * FIXME: Optimize by remembering the last cluster read and using if 
+   * FIXME: Optimize by remembering the last cluster read and using if
    * possible.
    */
   Status = OffsetToCluster(DeviceExt,
@@ -786,7 +786,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   NTSTATUS Status;
   BOOLEAN Extend;
 
-  DPRINT ("VfatWriteFile(FileObject %x, Buffer %x, Length %x, "
+  DPRINT1 ("VfatWriteFile(FileObject %x, Buffer %x, Length %x, "
 	   "WriteOffset %x\n", FileObject, Buffer, Length, WriteOffset);
 
   /* Locate the first cluster of the file */
@@ -941,8 +941,8 @@ VfatWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   PVOID Buffer;
   ULONG Offset;
   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation (Irp);
-  PFILE_OBJECT FileObject = Stack->FileObject; 
-  PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension; 
+  PFILE_OBJECT FileObject = Stack->FileObject;
+  PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
   NTSTATUS Status;
   ULONG NoCache;
 
@@ -962,8 +962,16 @@ VfatWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       NoCache = FALSE;
     }
 
-  Status = VfatWriteFile (DeviceExt, FileObject, Buffer, Length, Offset, 
-			  NoCache); 
+  Status = VfatWriteFile (DeviceExt, FileObject, Buffer, Length, Offset,
+			  NoCache);
+
+   if (FileObject->Flags & FO_SYNCHRONOUS_IO
+    && !(Irp->Flags & IRP_PAGING_IO)
+    && NT_SUCCESS(Status))
+  {
+    FileObject->CurrentByteOffset.QuadPart = Offset + Length;
+  }
+
 
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = Length;
@@ -1003,7 +1011,7 @@ VfatRead (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   Length = Stack->Parameters.Read.Length;
   Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
   Offset = Stack->Parameters.Read.ByteOffset.u.LowPart;
-  
+
   if (Irp->Flags & IRP_PAGING_IO ||
       FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
     {
@@ -1026,6 +1034,13 @@ VfatRead (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			     FileObject, Buffer, Length, Offset, &LengthRead,
 			     NoCache);
     }
+
+  if (FileObject->Flags & FO_SYNCHRONOUS_IO
+    && !(Irp->Flags & IRP_PAGING_IO)
+    && NT_SUCCESS(Status))
+  {
+    FileObject->CurrentByteOffset.QuadPart = Offset + LengthRead;
+  }
 
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = LengthRead;
