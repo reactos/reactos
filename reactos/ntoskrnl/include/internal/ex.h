@@ -18,6 +18,7 @@ typedef struct _WINSTATION_OBJECT
   LIST_ENTRY DesktopListHead;
   PRTL_ATOM_TABLE AtomTable;
   PVOID HandleTable;
+  HANDLE SystemMenuTemplate;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;

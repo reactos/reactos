@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.22 2003/08/20 18:55:03 chorns Exp $
+/* $Id: menu.c,v 1.23 2003/08/21 15:26:19 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -168,7 +168,7 @@ IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
 		MenuItem->hSubMenu );
     if(SubMenuObject)
     {
-      IntDestroyMenuObject(SubMenuObject, bRecurse);
+      IntDestroyMenuObject(SubMenuObject, bRecurse, TRUE);
     }
   }
   
@@ -219,21 +219,25 @@ IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse)
 }
 
 BOOL FASTCALL
-IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse)
+IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProcess)
 {
   PW32PROCESS W32Process;
   
   if(MenuObject)
-  {  
-    W32Process = PsGetWin32Process();
+  {
+    if(RemoveFromProcess)
+      W32Process = PsGetWin32Process();
     /* remove all menu items */
     ExAcquireFastMutexUnsafe (&MenuObject->MenuItemsLock);
     IntDeleteMenuItems(MenuObject, bRecurse); /* do not destroy submenus */
     ExReleaseFastMutexUnsafe (&MenuObject->MenuItemsLock);
     
-    ExAcquireFastMutexUnsafe(&W32Process->MenuListLock);
-    RemoveEntryList(&MenuObject->ListEntry);
-    ExReleaseFastMutexUnsafe(&W32Process->MenuListLock);
+    if(RemoveFromProcess)
+    {
+      ExAcquireFastMutexUnsafe(&W32Process->MenuListLock);
+      RemoveEntryList(&MenuObject->ListEntry);
+      ExReleaseFastMutexUnsafe(&W32Process->MenuListLock);
+    }
     
     IntReleaseMenuObject(MenuObject); // needed?
     
@@ -245,13 +249,20 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse)
 }
 
 PMENU_OBJECT FASTCALL
-IntCreateMenu(PHANDLE Handle)
+IntCreateMenu(PHANDLE Handle, BOOL AsSysMenuTemplate)
 {
   PW32PROCESS Win32Process = PsGetWin32Process();
   
   PMENU_OBJECT MenuObject = (PMENU_OBJECT)ObmCreateObject(
       Win32Process->WindowStation->HandleTable, Handle, 
       otMenu, sizeof(MENU_OBJECT));
+      
+  if(AsSysMenuTemplate && !Win32Process->WindowStation->SystemMenuTemplate)
+  {
+    Win32Process->WindowStation->SystemMenuTemplate = (HANDLE)*Handle;
+  }
+  else
+    AsSysMenuTemplate = FALSE;
   
   if(!MenuObject)
   {
@@ -273,12 +284,22 @@ IntCreateMenu(PHANDLE Handle)
   MenuObject->MenuItemList = NULL;
   ExInitializeFastMutex(&MenuObject->MenuItemsLock);
   
-  /* Insert menu item into process menu handle list */
-  ExAcquireFastMutexUnsafe (&Win32Process->MenuListLock);
-  InsertTailList (&Win32Process->MenuListHead,  &MenuObject->ListEntry);
-  ExReleaseFastMutexUnsafe (&Win32Process->MenuListLock);
+  if(!AsSysMenuTemplate)
+  {
+    /* Insert menu item into process menu handle list */
+    ExAcquireFastMutexUnsafe (&Win32Process->MenuListLock);
+    InsertTailList (&Win32Process->MenuListHead,  &MenuObject->ListEntry);
+    ExReleaseFastMutexUnsafe (&Win32Process->MenuListLock);
+  }
   
   return MenuObject;
+}
+
+PMENU_OBJECT FASTCALL
+IntCloneMenu(PMENU_OBJECT Source)
+{
+  DbgPrint("IntCloneMenu()\n");
+  return NULL;
 }
 
 BOOL FASTCALL
@@ -874,7 +895,7 @@ IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
     MenuObject = CONTAINING_RECORD(Win32Process->MenuListHead.Flink, MENU_OBJECT, ListEntry);
     
     ExReleaseFastMutexUnsafe(&Win32Process->MenuListLock);
-    IntDestroyMenuObject(MenuObject, FALSE);
+    IntDestroyMenuObject(MenuObject, FALSE, TRUE);
     ExAcquireFastMutexUnsafe(&Win32Process->MenuListLock); 
   }
   ExReleaseFastMutexUnsafe(&Win32Process->MenuListLock);
@@ -974,7 +995,7 @@ NtUserCreateMenu(VOID)
     return (HMENU)0;
   }
 
-  IntCreateMenu(&Handle);
+  IntCreateMenu(&Handle, FALSE);
   ObDereferenceObject(WinStaObject);
   return (HMENU)Handle;
 }
@@ -1020,7 +1041,7 @@ NtUserDestroyMenu(
     return FALSE;
   }
 
-  return IntDestroyMenuObject(MenuObject, FALSE);
+  return IntDestroyMenuObject(MenuObject, FALSE, TRUE);
 }
 
 

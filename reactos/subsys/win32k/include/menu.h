@@ -38,6 +38,7 @@ typedef struct _MENU_OBJECT
   PMENU_ITEM MenuItemList;
   MENUINFO MenuInfo;
   BOOL RtoL;
+  BOOL IsSystemMenu;
 } MENU_OBJECT, *PMENU_OBJECT;
 
 PMENU_OBJECT FASTCALL
@@ -58,10 +59,13 @@ UINT FASTCALL
 IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
 
 BOOL FASTCALL
-IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse);
+IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProcess);
 
 PMENU_OBJECT FASTCALL
-IntCreateMenu(PHANDLE Handle);
+IntCreateMenu(PHANDLE Handle, BOOL AsSysMenuTemplate);
+
+PMENU_OBJECT FASTCALL
+IntCloneMenu(PMENU_OBJECT Source);
 
 BOOL FASTCALL
 IntSetMenuFlagRtoL(PMENU_OBJECT MenuObject);

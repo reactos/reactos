@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.34 2003/08/20 03:07:33 silverblade Exp $
+/* $Id: stubs.c,v 1.35 2003/08/21 15:26:18 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -207,20 +207,6 @@ GetMouseMovePointsEx(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HMENU
-STDCALL
-GetSystemMenu(
-  HWND hWnd,
-  WINBOOL bRevert)
-{
-  UNIMPLEMENTED;
-  return (HMENU)0;
 }
 
 
@@ -984,17 +970,6 @@ SetSystemTimer(
 	       UINT      timeout,
 	       TIMERPROC proc
 	       )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-SetSystemMenu ( HWND hwnd, HMENU hMenu )
 {
   UNIMPLEMENTED;
   return FALSE;

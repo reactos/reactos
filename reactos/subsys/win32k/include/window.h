@@ -43,6 +43,8 @@ typedef struct _WINDOW_OBJECT
   HWND ParentHandle;
   /* Window menu handle. */
   HMENU Menu;
+  /* system menu handle. */
+  HMENU SystemMenu;
   /* Handle of the module that created the window. */
   HINSTANCE Instance;
   /* Unknown. */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.97 2003/08/19 11:48:50 weiden Exp $
+/* $Id: window.c,v 1.98 2003/08/21 15:26:19 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -299,6 +299,71 @@ VOID FASTCALL
 IntReleaseWindowObject(PWINDOW_OBJECT Window)
 {
   ObmDereferenceObject(Window);
+}
+
+HMENU FASTCALL
+IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
+{
+  PMENU_OBJECT MenuObject;
+  PW32PROCESS W32Process;
+
+  if(bRevert)
+  {
+    if(WindowObject->SystemMenu)
+    {
+      MenuObject = IntGetMenuObject(WindowObject->SystemMenu);
+      if(MenuObject)
+      {
+        IntDestroyMenuObject(MenuObject, FALSE, TRUE);
+      }
+    }
+    W32Process = PsGetWin32Process();
+    if(W32Process->WindowStation->SystemMenuTemplate)
+    {
+      /* clone system menu */
+      MenuObject = IntGetMenuObject(W32Process->WindowStation->SystemMenuTemplate);
+      if(!MenuObject)
+        return (HMENU)0;
+
+      MenuObject = IntCloneMenu(MenuObject);
+      if(MenuObject)
+      {
+        WindowObject->SystemMenu = MenuObject->Self;
+        MenuObject->IsSystemMenu = TRUE;
+      }
+    }
+    /* FIXME Load system menu here? 
+    else
+    {
+    
+    }*/
+    return (HMENU)0;
+  }
+  else
+  {
+    return WindowObject->SystemMenu;
+  }
+}
+
+BOOL FASTCALL
+IntSetSystemMenu(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject)
+{
+  PMENU_OBJECT OldMenuObject;
+  if(WindowObject->SystemMenu)
+  {
+    OldMenuObject = IntGetMenuObject(WindowObject->SystemMenu);
+    if(OldMenuObject)
+    {
+      OldMenuObject->IsSystemMenu = FALSE;
+      IntReleaseMenuObject(OldMenuObject);
+    }
+  }
+  
+  WindowObject->SystemMenu = MenuObject->Self;
+  if(MenuObject) /* FIXME check window style, propably return FALSE ? */
+    MenuObject->IsSystemMenu = TRUE;
+  
+  return TRUE;
 }
 
 /*!
@@ -596,6 +661,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   PWNDCLASS_OBJECT ClassObject;
   PWINDOW_OBJECT WindowObject;
   PWINDOW_OBJECT ParentWindow;
+  PMENU_OBJECT SystemMenu;
   UNICODE_STRING WindowName;
   NTSTATUS Status;
   HANDLE Handle;
@@ -679,6 +745,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Style = dwStyle & ~WS_VISIBLE;
   DbgPrint("1: Style is now %d\n", WindowObject->Style);
   
+  SystemMenu = IntGetSystemMenu(WindowObject, TRUE);
+  
   WindowObject->x = x;
   WindowObject->y = y;
   WindowObject->Width = nWidth;
@@ -686,6 +754,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->ContextHelpId = 0;
   WindowObject->ParentHandle = hWndParent;
   WindowObject->Menu = hMenu;
+  if(SystemMenu)
+    WindowObject->SystemMenu = SystemMenu->Self;
+  else
+    WindowObject->SystemMenu = (HMENU)0;
   WindowObject->Instance = hInstance;
   WindowObject->Parameters = lpParam;
   WindowObject->Self = Handle;
@@ -848,7 +920,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       DPRINT("NtUserCreateWindowEx(): send CREATE message failed.\n");
       return((HWND)0);
     } 
-
+  
   /* Send move and size messages. */
   if (!(WindowObject->Flags & WINDOWOBJECT_NEED_SIZE))
     {
@@ -2577,7 +2649,7 @@ NtUserSetMenu(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HMENU
 STDCALL
@@ -2585,14 +2657,23 @@ NtUserGetSystemMenu(
   HWND hWnd,
   BOOL bRevert)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  HMENU res = (HMENU)0;
+  PWINDOW_OBJECT WindowObject;
+  WindowObject = IntGetWindowObject((HWND)hWnd);
+  if(!WindowObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return (HMENU)0;
+  }
+  
+  res = IntGetSystemMenu(WindowObject, bRevert);
+  
+  IntReleaseWindowObject(WindowObject);
+  return res;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -2600,9 +2681,34 @@ NtUserSetSystemMenu(
   HWND hWnd,
   HMENU hMenu)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  BOOL res = FALSE;
+  PWINDOW_OBJECT WindowObject;
+  PMENU_OBJECT MenuObject;
+  WindowObject = IntGetWindowObject((HWND)hWnd);
+  if(!WindowObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  if(hMenu)
+  {
+    /* assign new menu handle */
+    MenuObject = IntGetMenuObject(hMenu);
+    if(!MenuObject)
+    {
+      IntReleaseWindowObject(WindowObject);
+      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+      return FALSE;
+    }
+    
+    res = IntSetSystemMenu(WindowObject, MenuObject);
+    
+    IntReleaseMenuObject(MenuObject);
+  }
+  
+  IntReleaseWindowObject(WindowObject);
+  return res;
 }
 
 
