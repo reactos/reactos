@@ -79,7 +79,8 @@ NTSTATUS ScrDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * Module entry point
  */
-NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+STDCALL NTSTATUS 
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
    ANSI_STRING adevice_name;
