@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.66 2001/01/18 16:55:00 ekohl Exp $
+/* $Id: loader.c,v 1.67 2001/02/21 18:18:31 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,17 +56,17 @@ static NTSTATUS LdrCreateModule(PVOID ObjectBody,
                                 PVOID Parent,
                                 PWSTR RemainingPath,
                                 POBJECT_ATTRIBUTES ObjectAttributes);
+static VOID LdrpBuildModuleBaseName(PUNICODE_STRING BaseName,
+				    PUNICODE_STRING FullName);
 
 /*  PE Driver load support  */
 static PMODULE_OBJECT  LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName);
 static PVOID  LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
                                     char *Name,
                                     unsigned short Hint);
-#if 0
-static unsigned int LdrGetKernelSymbolAddr(char *Name);
-#endif
-static PIMAGE_SECTION_HEADER LdrPEGetEnclosingSectionHeader(DWORD  RVA,
-                                                            PMODULE_OBJECT  ModuleObject);
+static PMODULE_OBJECT LdrPEGetModuleObject(PUNICODE_STRING ModuleName);
+static PVOID LdrPEFixupForward(PCHAR ForwardName);
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -133,14 +133,18 @@ VOID LdrInitModuleManagement(VOID)
                                 IoDriverObjectType);
   assert(ModuleObject != NULL);
 
-  InitializeListHead(&ModuleListHead);
+   InitializeListHead(&ModuleListHead);
 
-  /*  Initialize ModuleObject data  */
-  ModuleObject->Base = (PVOID) KERNEL_BASE;
-  ModuleObject->Flags = MODULE_FLAG_PE;
-  InsertTailList(&ModuleListHead, &ModuleObject->ListEntry);
-  RtlCreateUnicodeString(&ModuleObject->Name,
-			 L"ntoskrnl.exe");
+   /*  Initialize ModuleObject data  */
+   ModuleObject->Base = (PVOID) KERNEL_BASE;
+   ModuleObject->Flags = MODULE_FLAG_PE;
+   InsertTailList(&ModuleListHead,
+		  &ModuleObject->ListEntry);
+   RtlCreateUnicodeString(&ModuleObject->FullName,
+			  L"ntoskrnl.exe");
+   LdrpBuildModuleBaseName(&ModuleObject->BaseName,
+			   &ModuleObject->FullName);
+
   DosHeader = (PIMAGE_DOS_HEADER) KERNEL_BASE;
   ModuleObject->Image.PE.FileHeader =
     (PIMAGE_FILE_HEADER) ((DWORD) ModuleObject->Base +
@@ -519,7 +523,7 @@ LdrpQueryModuleInformation(PVOID Buffer,
 	AnsiName.MaximumLength = 256;
 	AnsiName.Buffer = Smi->Module[ModuleCount].Name;
 	RtlUnicodeStringToAnsiString(&AnsiName,
-				     &current->Name,
+				     &current->FullName,
 				     FALSE);
 
 	p = strrchr (AnsiName.Buffer, '\\');
@@ -543,6 +547,45 @@ LdrpQueryModuleInformation(PVOID Buffer,
 
    return STATUS_SUCCESS;
 }
+
+
+static VOID
+LdrpBuildModuleBaseName(PUNICODE_STRING BaseName,
+			PUNICODE_STRING FullName)
+{
+   UNICODE_STRING Name;
+   PWCHAR p;
+   PWCHAR q;
+
+   DPRINT("LdrpBuildModuleBaseName()\n");
+   DPRINT("FullName %wZ\n", FullName);
+
+   p = wcsrchr(FullName->Buffer, '\\');
+   if (p == NULL)
+     {
+	p = FullName->Buffer;
+     }
+   else
+     {
+	p++;
+     }
+
+   DPRINT("p %S\n", p);
+
+   RtlCreateUnicodeString(&Name, p);
+
+   q = wcschr(p, '.');
+   if (q != NULL)
+     {
+	*q = (WCHAR)0;
+     }
+
+   DPRINT("p %S\n", p);
+
+   RtlCreateUnicodeString(BaseName, p);
+   RtlFreeUnicodeString(&Name);
+}
+
 
 /*  ----------------------------------------------  PE Module support */
 
@@ -855,11 +898,15 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
                                 &ObjectAttributes,
                                 IoDriverObjectType);
 
-  /*  Initialize ModuleObject data  */
-  ModuleObject->Base = DriverBase;
-  ModuleObject->Flags = MODULE_FLAG_PE;
-  InsertTailList(&ModuleListHead, &ModuleObject->ListEntry);
-  RtlCreateUnicodeString(&ModuleObject->Name, FileName->Buffer);
+   /*  Initialize ModuleObject data  */
+   ModuleObject->Base = DriverBase;
+   ModuleObject->Flags = MODULE_FLAG_PE;
+   InsertTailList(&ModuleListHead,
+		  &ModuleObject->ListEntry);
+   RtlCreateUnicodeString(&ModuleObject->FullName,
+			  FileName->Buffer);
+   LdrpBuildModuleBaseName(&ModuleObject->BaseName,
+			   &ModuleObject->FullName);
 
   ModuleObject->EntryPoint = (PVOID) ((DWORD)DriverBase + 
     PEOptionalHeader->AddressOfEntryPoint);
@@ -888,41 +935,33 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
                       unsigned short Hint)
 {
   WORD  Idx;
-  DWORD  ExportsStartRVA, ExportsEndRVA;
   PVOID  ExportAddress;
   PWORD  OrdinalList;
   PDWORD  FunctionList, NameList;
-  PIMAGE_SECTION_HEADER  SectionHeader;
-  PIMAGE_EXPORT_DIRECTORY  ExportDirectory;
+   PIMAGE_EXPORT_DIRECTORY  ExportDir;
+   ULONG ExportDirSize;
 
-  ExportsStartRVA = ModuleObject->Image.PE.OptionalHeader->DataDirectory
-    [IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-  ExportsEndRVA = ExportsStartRVA + 
-    ModuleObject->Image.PE.OptionalHeader->DataDirectory
-      [IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
+   ExportDir = (PIMAGE_EXPORT_DIRECTORY)
+     RtlImageDirectoryEntryToData(ModuleObject->Base,
+				  TRUE,
+				  IMAGE_DIRECTORY_ENTRY_EXPORT,
+				  &ExportDirSize);
+   DPRINT("ExportDir %p ExportDirSize %lx\n", ExportDir, ExportDirSize);
+   if (ExportDir == NULL)
+     {
+	return NULL;
+     }
 
-  /*  Get the IMAGE_SECTION_HEADER that contains the exports.  This is
-      usually the .edata section, but doesn't have to be.  */
-  SectionHeader = LdrPEGetEnclosingSectionHeader(ExportsStartRVA, ModuleObject);
 
-  if (!SectionHeader)
-    {
-      return 0;
-    }
-
-  ExportDirectory = MakePtr(PIMAGE_EXPORT_DIRECTORY,
-                            ModuleObject->Base,
-                            SectionHeader->VirtualAddress);
-
-  FunctionList = (PDWORD)((DWORD)ExportDirectory->AddressOfFunctions + ModuleObject->Base);
-  NameList = (PDWORD)((DWORD)ExportDirectory->AddressOfNames + ModuleObject->Base);
-  OrdinalList = (PWORD)((DWORD)ExportDirectory->AddressOfNameOrdinals + ModuleObject->Base);
+   FunctionList = (PDWORD)((DWORD)ExportDir->AddressOfFunctions + ModuleObject->Base);
+   NameList = (PDWORD)((DWORD)ExportDir->AddressOfNames + ModuleObject->Base);
+   OrdinalList = (PWORD)((DWORD)ExportDir->AddressOfNameOrdinals + ModuleObject->Base);
 
   ExportAddress = 0;
 
   if (Name != NULL)
     {
-      for (Idx = 0; Idx < ExportDirectory->NumberOfNames; Idx++)
+      for (Idx = 0; Idx < ExportDir->NumberOfNames; Idx++)
         {
 #if 0
           DPRINT("  Name:%s  NameList[%d]:%s\n", 
@@ -935,6 +974,14 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
             {
               ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
                 FunctionList[OrdinalList[Idx]]);
+		  if (((ULONG)ExportAddress >= (ULONG)ExportDir) &&
+		      ((ULONG)ExportAddress < (ULONG)ExportDir + ExportDirSize))
+		    {
+		       DPRINT("Forward: %s\n", (PCHAR)ExportAddress);
+		       ExportAddress = LdrPEFixupForward((PCHAR)ExportAddress);
+		       DPRINT("ExportAddress: %p\n", ExportAddress);
+		    }
+
               break;
             }
         }
@@ -942,37 +989,91 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
   else  /*  use hint  */
     {
       ExportAddress = (PVOID) ((DWORD)ModuleObject->Base +
-        FunctionList[Hint - ExportDirectory->Base]);
-    }
-  if (ExportAddress == 0)
-    {
-       DbgPrint("Export not found for %d:%s\n", Hint, 
-		Name != NULL ? Name : "(Ordinal)");
-       KeBugCheck(0);
+        FunctionList[Hint - ExportDir->Base]);
     }
 
-  return  ExportAddress;
+   if (ExportAddress == 0)
+     {
+	DbgPrint("Export not found for %d:%s\n",
+		 Hint,
+		 Name != NULL ? Name : "(Ordinal)");
+	KeBugCheck(0);
+     }
+
+   return ExportAddress;
 }
 
-static PIMAGE_SECTION_HEADER 
-LdrPEGetEnclosingSectionHeader(DWORD  RVA,
-                               PMODULE_OBJECT  ModuleObject)
+
+static PMODULE_OBJECT
+LdrPEGetModuleObject(PUNICODE_STRING ModuleName)
 {
-  PIMAGE_SECTION_HEADER  SectionHeader = SECHDROFFSET(ModuleObject->Base);
-  unsigned  i;
+   PLIST_ENTRY Entry;
+   PMODULE_OBJECT Module;
 
-  for (i = 0; i < ModuleObject->Image.PE.FileHeader->NumberOfSections; 
-       i++, SectionHeader++)
-    {
-      /*  Is the RVA within this section?  */
-      if ((RVA >= SectionHeader->VirtualAddress) && 
-          (RVA < (SectionHeader->VirtualAddress + SectionHeader->Misc.VirtualSize)))
-        {
-          return SectionHeader;
-        }
-    }
+   DPRINT("LdrPEGetModuleObject (ModuleName %wZ)\n",
+          ModuleName);
 
-  return 0;
+   Entry = ModuleListHead.Flink;
+
+   while (Entry != &ModuleListHead)
+     {
+	Module = CONTAINING_RECORD(Entry, MODULE_OBJECT, ListEntry);
+
+	DPRINT("Comparing %wZ and %wZ\n",
+	       &Module->BaseName,
+	       ModuleName);
+
+	if (!RtlCompareUnicodeString(&Module->BaseName, ModuleName, TRUE))
+	  {
+	     DPRINT("Module %x\n", Module);
+	     return Module;
+	  }
+
+	Entry = Entry->Flink;
+     }
+
+   DbgPrint("LdrPEGetModuleObject: Failed to find dll %wZ\n", ModuleName);
+
+   return NULL;
 }
+
+
+static PVOID
+LdrPEFixupForward(PCHAR ForwardName)
+{
+   CHAR NameBuffer[128];
+   UNICODE_STRING ModuleName;
+   PCHAR p;
+   PMODULE_OBJECT ModuleObject;
+
+   DPRINT("LdrPEFixupForward (%s)\n", ForwardName);
+
+   strcpy(NameBuffer, ForwardName);
+   p = strchr(NameBuffer, '.');
+   if (p == NULL)
+     {
+	return NULL;
+     }
+
+   *p = 0;
+
+   DPRINT("Driver: %s  Function: %s\n", NameBuffer, p+1);
+
+   RtlCreateUnicodeStringFromAsciiz(&ModuleName,
+				    NameBuffer);
+   ModuleObject = LdrPEGetModuleObject(&ModuleName);
+   RtlFreeUnicodeString(&ModuleName);
+
+   DPRINT("ModuleObject: %p\n", ModuleObject);
+
+   if (ModuleObject == NULL)
+     {
+	DbgPrint("LdrPEFixupForward: failed to find module %s\n", NameBuffer);
+	return NULL;
+     }
+
+   return LdrPEGetExportAddress(ModuleObject, p+1, 0);
+}
+
 
 /* EOF */

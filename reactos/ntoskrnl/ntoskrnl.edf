@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.84 2001/02/18 19:43:14 phreak Exp $
+; $Id: ntoskrnl.edf,v 1.85 2001/02/21 18:19:19 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -750,7 +750,7 @@ RtlPrefixUnicodeString=RtlPrefixUnicodeString@12
 ;RtlQueryAtomInAtomTable
 RtlQueryRegistryValues=RtlQueryRegistryValues@20
 ;RtlQueryTimeZoneInformation
-;RtlRaiseException
+RtlRaiseException=RtlRaiseException@4
 ;RtlRandom
 ;RtlRemoveUnicodePrefix
 ;RtlReserveChunk
@@ -780,7 +780,7 @@ RtlUnicodeToCustomCPN=RtlUnicodeToCustomCPN@24
 RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
 RtlUnicodeToOemN=RtlUnicodeToOemN@20
-;RtlUnwind
+RtlUnwind=RtlUnwind@16
 RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString=RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString=RtlUpcaseUnicodeStringToAnsiString@12

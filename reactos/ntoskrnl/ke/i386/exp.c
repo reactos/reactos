@@ -74,7 +74,7 @@ print_address(PVOID address)
 	if (address >= current->Base &&
 	    address < (current->Base + current->Length))
 	  {
-	     DbgPrint("<%wZ: %x>", &current->Name, 
+	     DbgPrint("<%wZ: %x>", &current->FullName, 
 		      address - current->Base);
 	     return(TRUE);
 	  }

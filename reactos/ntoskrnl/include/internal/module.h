@@ -14,7 +14,8 @@ typedef struct _MODULE_OBJECT
   ULONG Flags;
   PVOID  EntryPoint;
   LIST_ENTRY ListEntry;
-  UNICODE_STRING Name;
+  UNICODE_STRING FullName;
+  UNICODE_STRING BaseName;
   union
     {
       struct

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.8 2000/12/23 02:37:40 dwelch Exp $
+/* $Id: catch.c,v 1.9 2001/02/21 18:17:57 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -60,6 +60,23 @@ NtRaiseException (IN	PEXCEPTION_RECORD	ExceptionRecord,
 		  IN	BOOL			IsDebugger	OPTIONAL)
 {
   UNIMPLEMENTED;
+}
+
+
+VOID STDCALL
+RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
+{
+
+}
+
+
+VOID STDCALL
+RtlUnwind(ULONG Unknown1,
+	  ULONG Unknown2,
+	  ULONG Unknown3,
+	  ULONG Unknown4)
+{
+
 }
 
 /* EOF */
