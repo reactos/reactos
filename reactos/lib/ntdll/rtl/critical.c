@@ -360,29 +360,29 @@ RtlLeaveCriticalSection(
  *     None
  *
  *--*/
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlTryEnterCriticalSection(
     PRTL_CRITICAL_SECTION CriticalSection)
-{   
+{
     /* Try to take control */
-    if (InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1) == -1) {
+    if (InterlockedCompareExchange(&CriticalSection->LockCount,
+                                   0,
+                                   -1) == -1) {
 
-        /* It's ours. Changing this information does not have to be serialized
-           because we just obtained the lock. */
+        /* It's ours */
         CriticalSection->OwningThread =  NtCurrentTeb()->Cid.UniqueThread;
         CriticalSection->RecursionCount = 1;
         return TRUE;
-   
+
    } else if (CriticalSection->OwningThread == NtCurrentTeb()->Cid.UniqueThread) {
-       
-        /* It's already ours, just increment the recursion counter. This doesn't
-           have to be serialized because only the thread who already holds the
-           lock can do this. */
+
+        /* It's already ours */
+        InterlockedIncrement(&CriticalSection->LockCount);
         CriticalSection->RecursionCount++;
         return TRUE;
     }
-    
+
     /* It's not ours */
     return FALSE;
 }
