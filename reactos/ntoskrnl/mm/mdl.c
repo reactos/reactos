@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.45 2002/10/01 19:27:22 chorns Exp $
+/* $Id: mdl.c,v 1.46 2002/11/05 20:45:09 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -15,6 +15,7 @@
 #include <internal/mm.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -26,8 +27,8 @@
 #define MI_MDL_MAPPING_REGION_SIZE       (256*1024*1024)
 
 static PVOID MiMdlMappingRegionBase = NULL;
-static PULONG MiMdlMappingRegionAllocMap = NULL;
-static ULONG MiMdlMappingRegionHighWaterMark = 0;
+static RTL_BITMAP MiMdlMappingRegionAllocMap;
+static ULONG MiMdlMappingRegionHint;
 static KSPIN_LOCK MiMdlMappingRegionLock;
 
 /* FUNCTIONS *****************************************************************/
@@ -37,7 +38,9 @@ MmInitializeMdlImplementation(VOID)
 {
   MEMORY_AREA* Result;
   NTSTATUS Status;
+  PVOID Buffer;
 
+  MiMdlMappingRegionHint = 0;
   MiMdlMappingRegionBase = NULL;
 
   MmLockAddressSpace(MmGetKernelAddressSpace());
@@ -56,10 +59,11 @@ MmInitializeMdlImplementation(VOID)
     }
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
-  MiMdlMappingRegionAllocMap = 
-    ExAllocatePool(NonPagedPool,
-		   MI_MDL_MAPPING_REGION_SIZE / (PAGE_SIZE * 32));
-  MiMdlMappingRegionHighWaterMark = 0;
+  Buffer = ExAllocatePool(NonPagedPool, MI_MDL_MAPPING_REGION_SIZE / (PAGE_SIZE * 8));
+
+  RtlInitializeBitMap(&MiMdlMappingRegionAllocMap, Buffer, MI_MDL_MAPPING_REGION_SIZE / PAGE_SIZE);
+  RtlClearAllBits(&MiMdlMappingRegionAllocMap);
+
   KeInitializeSpinLock(&MiMdlMappingRegionLock);
 }
 
@@ -130,6 +134,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    PULONG MdlPages;
    KIRQL oldIrql;
    ULONG RegionSize;
+   ULONG StartingOffset;
    
    DPRINT("MmMapLockedPages(Mdl %x, AccessMode %x)\n", Mdl, AccessMode);
 
@@ -149,13 +154,22 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 
    /* Allocate that number of pages from the mdl mapping region. */
    KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
-   Base = MiMdlMappingRegionBase + MiMdlMappingRegionHighWaterMark * PAGE_SIZE;
-   for (i = 0; i < RegionSize; i++)
-     {
-       ULONG Offset = MiMdlMappingRegionHighWaterMark + i;
-       MiMdlMappingRegionAllocMap[Offset / 32] |= (1 << (Offset % 32));
-     }
-   MiMdlMappingRegionHighWaterMark += RegionSize;
+
+   StartingOffset = RtlFindClearBitsAndSet(&MiMdlMappingRegionAllocMap, RegionSize, MiMdlMappingRegionHint);
+  
+   if (StartingOffset == 0xffffffff)
+   {
+      DPRINT1("Out of MDL mapping space\n");
+      KeBugCheck(0);
+   }
+
+   Base = MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE;
+
+   if (MiMdlMappingRegionHint == StartingOffset)
+   {
+       MiMdlMappingRegionHint +=RegionSize; 
+   }
+
    KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
 
    /* Set the virtual mappings for the MDL pages. */
@@ -195,7 +209,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
   ULONG RegionSize;
   ULONG Base;
 
-  DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", Mdl, BaseAddress);
+  DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", BaseAddress, Mdl);
 
   /*
    * In this case, the MDL has the same system address as the base address
@@ -208,6 +222,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
   /* Calculate the number of pages we mapped. */
   RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
+  BaseAddress -= Mdl->ByteOffset;
 
   /* Unmap all the pages. */
   for (i = 0; i < RegionSize; i++)
@@ -221,18 +236,12 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
   KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
   /* Deallocate all the pages used. */
-  Base = (ULONG)(BaseAddress - MiMdlMappingRegionBase - Mdl->ByteOffset);
-  Base = Base / PAGE_SIZE;
-  for (i = 0; i < RegionSize; i++)
-    {
-      ULONG Offset = Base + i;
-      MiMdlMappingRegionAllocMap[Offset / 32] &= ~(1 << (Offset % 32));
-    }
-  /* If all the pages below the high-water mark are free then move it down. */
-  if ((Base + RegionSize) == MiMdlMappingRegionHighWaterMark)
-    {
-      MiMdlMappingRegionHighWaterMark = Base;
-    }
+  Base = (ULONG)(BaseAddress - MiMdlMappingRegionBase) / PAGE_SIZE;
+  
+  RtlClearBits(&MiMdlMappingRegionAllocMap, Base, RegionSize);
+
+  MiMdlMappingRegionHint = min (MiMdlMappingRegionHint, Base);
+
   KeReleaseSpinLock(&MiMdlMappingRegionLock, oldIrql);
   
   /* Reset the MDL state. */
