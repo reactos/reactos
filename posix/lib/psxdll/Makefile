@@ -1,10 +1,12 @@
-# $Id: Makefile,v 1.2 2002/02/20 09:17:56 hyperion Exp $
+# $Id: Makefile,v 1.3 2002/02/24 22:14:05 ea Exp $
 
 PATH_TO_TOP = ../../../..
 
 TARGET_TYPE = dynlink
 
 TARGET_NAME = psxdll
+
+TARGET_LIBPATH = $(PATH_TO_TOP)/dk/psx/lib
 
 TARGET_LFLAGS = -nostartfiles
 
@@ -14,7 +16,15 @@ TARGET_BASE = 0x68EB0000
 
 TARGET_ENTRY = _DllMain@12
 
-TARGET_CFLAGS = -W -nostdinc -nostdlib -fno-builtin -I$(PATH_TO_TOP)/subsys/psx/include -D__PSXDLL__ -D__PSX_DEBUG_WANT_ALL__
+TARGET_CFLAGS =\
+	-W \
+	-nostdinc \
+	-nostdlib \
+	-fno-builtin \
+	-I$(PATH_TO_TOP)/subsys/psx/include \
+	-I$(PATH_TO_TOP)/include \
+	-D__PSXDLL__ \
+	-D__PSX_DEBUG_WANT_ALL__
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
@@ -25,10 +35,12 @@ include $(TOOLS_PATH)/helper.mk
 
 OBJECTS_MISC = \
 	misc/main.o \
+	misc/init.o \
+	misc/heap.o \
 	misc/interlock.o \
 	misc/safeobj.o \
- misc/path.o \
- misc/fdtable.o
+	misc/path.o \
+	misc/fdtable.o
 
 OBJECTS_DIRENT = \
  dirent/opendir.o \
