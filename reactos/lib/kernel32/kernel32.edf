@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.25 2003/06/19 19:38:26 ea Exp $
+; $Id: kernel32.edf,v 1.26 2003/07/24 19:50:03 sedwards Exp $
 ;
 ; kernel32.edf
 ;
@@ -348,6 +348,8 @@ GetSystemPowerStatus=GetSystemPowerStatus@4
 GetSystemTime=GetSystemTime@4
 GetSystemTimeAdjustment=GetSystemTimeAdjustment@12
 GetSystemTimeAsFileTime=GetSystemTimeAsFileTime@4
+GetSystemWindowsDirectoryA=GetSystemWindowsDirectoryA@8
+GetSystemWindowsDirectoryW=GetSystemWindowsDirectoryW@8
 GetTapeParameters=GetTapeParameters@16
 GetTapePosition=GetTapePosition@20
 GetTapeStatus=GetTapeStatus@4

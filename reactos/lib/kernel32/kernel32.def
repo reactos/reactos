@@ -343,6 +343,8 @@ GetSystemPowerStatus@4
 GetSystemTime@4
 GetSystemTimeAdjustment@12
 GetSystemTimeAsFileTime@4
+GetWindowsDirectoryA@8
+GetWindowsDirectoryW@8
 GetTapeParameters@16
 GetTapePosition@20
 GetTapeStatus@4
