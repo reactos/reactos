@@ -1,9 +1,7 @@
 /*
- *  ReactOS regedit
+ * Regedit child window
  *
- *  childwnd.c
- *
- *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
+ * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <tchar.h>
 #include <commctrl.h>
@@ -28,15 +26,11 @@
 #define ASSERT assert
 
 #include "main.h"
-#include "framewnd.h"
-#include "childwnd.h"
-#include "treeview.h"
-#include "listview.h"
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Local module support methods
-//
+/*******************************************************************************
+ * Local module support methods
+ */
 
 static void MakeFullRegPath(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* pPathLen, int max)
 {
@@ -45,7 +39,7 @@ static void MakeFullRegPath(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* p
     item.hItem = hItem;
     if (TreeView_GetItem(hwndTV, &item)) {
         if (item.hItem != TreeView_GetRoot(hwndTV)) {
-            // recurse
+            /* recurse */
             MakeFullRegPath(hwndTV, TreeView_GetParent(hwndTV, hItem), keyPath, pPathLen, max);
             keyPath[*pPathLen] = _T('\\');
             ++(*pPathLen);
@@ -95,23 +89,23 @@ static void OnPaint(HWND hWnd)
     EndPaint(hWnd, &ps);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
-//
-//  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
-//
-//
+/*******************************************************************************
+ *
+ *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
+ *
+ *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
+ *
+ */
 
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (LOWORD(wParam)) {
-    // Parse the menu selections:
+    /* Parse the menu selections: */
     case ID_REGISTRY_EXIT:
         DestroyWindow(hWnd);
         break;
     case ID_VIEW_REFRESH:
-        // TODO:
+        /* TODO */
         break;
     default:
         return FALSE;
@@ -119,21 +113,21 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
-//
-//  PURPOSE:  Processes messages for the child windows.
-//
-//  WM_COMMAND  - process the application menu
-//  WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-//
-//
+/*******************************************************************************
+ *
+ *  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
+ *
+ *  PURPOSE:  Processes messages for the child windows.
+ *
+ *  WM_COMMAND  - process the application menu
+ *  WM_PAINT    - Paint the main window
+ *  WM_DESTROY  - post a quit message and return
+ *
+ */
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static int last_split;
-//    ChildWnd* pChildWnd = (ChildWnd*)GetWindowLong(hWnd, GWL_USERDATA);
+/*    ChildWnd* pChildWnd = (ChildWnd*)GetWindowLong(hWnd, GWL_USERDATA); */
     static ChildWnd* pChildWnd;
 
     switch (message) {
@@ -236,8 +230,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 	case WM_NOTIFY:
         if ((int)wParam == TREE_WINDOW) {
-            switch (((LPNMHDR)lParam)->code) { 
-            case TVN_ITEMEXPANDING: 
+            switch (((LPNMHDR)lParam)->code) {
+            case TVN_ITEMEXPANDING:
                 return !OnTreeExpanding(pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
             case TVN_SELCHANGED:
                 {
@@ -269,7 +263,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         if (wParam != SIZE_MINIMIZED && pChildWnd != NULL) {
 	    	ResizeWnd(pChildWnd, LOWORD(lParam), HIWORD(lParam));
         }
-        // fall through
+        /* fall through */
     default: def:
         return DefWindowProc(hWnd, message, wParam, lParam);
    }

@@ -1,9 +1,7 @@
 /*
- *  ReactOS About Dialog Box
+ * Regedit About Dialog Box
  *
- *  about.c
- *
- *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
+ * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,23 +17,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
-#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+
+//#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
-#include "main.h"
-#include "about.h"
 
+#include "main.h"
 
 extern HINSTANCE hInst;
 
-
-LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND    hLicenseEditWnd;
     TCHAR   strLicense[0x1000];
@@ -58,6 +53,5 @@ LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 void ShowAboutBox(HWND hWnd)
 {
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, (DLGPROC)AboutDialogWndProc);
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutDialogWndProc);
 }
-

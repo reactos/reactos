@@ -1,9 +1,7 @@
 /*
- *  ReactOS Application Debug Routines
+ * Regedit resources
  *
- *  debug.h
- *
- *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
+ * Copyright 2002 Robert Dickenson
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,19 +17,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-    
-#ifndef __DEBUG_H__
-#define __DEBUG_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "windows.h"
+#include "resource.h"
 
+/* define language neutral resources */
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+#include "resource.rc"
 
-#ifdef __cplusplus
-};
-#endif
+/* include localised resources */
 
-#endif // __DEBUG_H__
+#include "En.rc"
+#include "Pt.rc"

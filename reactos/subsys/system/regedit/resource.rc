@@ -1,0 +1,98 @@
+/*
+ * Regedit resources
+ *
+ * Copyright 2002 Robert Dickenson
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+IDB_OPEN_FILE BITMAP  DISCARDABLE
+#ifndef __WINE__
+"res/folder3.bmp"
+#else
+/* BINRES folder3.bmp */
+{
+ '42 4D F6 00 00 00 00 00 00 00 76 00 00 00 28 00'
+ '00 00 10 00 00 00 10 00 00 00 01 00 04 00 00 00'
+ '00 00 80 00 00 00 00 00 00 00 00 00 00 00 00 00'
+ '00 00 00 00 00 00 00 00 00 00 00 00 80 00 00 80'
+ '00 00 00 80 80 00 80 00 00 00 80 00 80 00 80 80'
+ '00 00 80 80 80 00 FF FF FF 00 00 00 FF 00 00 FF'
+ '00 00 00 FF FF 00 FF 00 00 00 FF 00 FF 00 FF FF'
+ '00 00 FF FF FF 00 88 88 88 88 88 88 88 88 88 88'
+ '88 88 88 88 88 88 88 88 88 88 88 88 88 88 80 00'
+ '00 00 00 00 88 88 80 33 33 33 33 33 08 88 80 03'
+ '33 33 33 33 38 88 80 B3 33 33 33 33 30 88 80 B0'
+ '33 33 33 33 33 88 80 BB 33 33 33 33 33 08 80 BB'
+ '00 00 00 00 00 08 80 BB BB BB BB BB 08 88 80 BB'
+ 'BB BB BB BB 08 88 80 BB B0 00 00 00 08 88 80 00'
+ '00 88 88 88 88 88 88 88 88 88 88 88 88 88 88 88'
+ '88 88 88 88 88 88'
+}
+#endif
+
+IDB_CLOSED_FILE BITMAP  DISCARDABLE
+#ifndef __WINE__
+"res/folder2.bmp"
+#else
+/* BINRES folder2.bmp */
+{
+ '42 4D F6 00 00 00 00 00 00 00 76 00 00 00 28 00'
+ '00 00 10 00 00 00 10 00 00 00 01 00 04 00 00 00'
+ '00 00 80 00 00 00 12 0B 00 00 12 0B 00 00 10 00'
+ '00 00 10 00 00 00 00 00 00 00 00 00 80 00 00 80'
+ '00 00 00 80 80 00 80 00 00 00 80 00 80 00 80 80'
+ '00 00 C0 C0 C0 00 80 80 80 00 00 00 FF 00 00 FF'
+ '00 00 00 00 FF 00 FF 00 00 00 FF 00 FF 00 FF FF'
+ '00 00 FF FF FF 00 FF FF FF FF FF FF FF FF FF FF'
+ 'FF FF FF FF FF FF FF 00 00 00 00 00 00 00 F8 88'
+ '88 88 88 88 88 80 F8 FB 7B 7B 7B 7B 7B 80 F8 F7'
+ 'B7 B7 B7 B7 B7 80 F8 FB 7B 7B 7B 7B 7B 80 F8 F7'
+ 'B7 B7 B7 B7 B7 80 F8 FB 7B 7B 7B 7B 7B 80 F8 F7'
+ 'B7 B7 B7 B7 B7 80 F8 FB 7B 7B 7B 7B 7B 80 F8 FF'
+ 'FF FF FF FF FF 80 F8 B7 B7 B7 B8 88 88 8F FF 8B'
+ '7B 7B 8F FF FF FF FF F8 88 88 FF FF FF FF FF FF'
+ 'FF FF FF FF FF FF'
+}
+#endif
+
+IDB_ROOT BITMAP DISCARDABLE
+#ifndef __WINE__
+"res/folder1.bmp"
+#else
+/* BINRES folder1.bmp */
+{
+ '42 4D F6 00 00 00 00 00 00 00 76 00 00 00 28 00'
+ '00 00 10 00 00 00 10 00 00 00 01 00 04 00 00 00'
+ '00 00 80 00 00 00 00 00 00 00 00 00 00 00 10 00'
+ '00 00 10 00 00 00 00 00 00 00 00 00 80 00 00 80'
+ '00 00 00 80 80 00 80 00 00 00 80 00 80 00 80 80'
+ '00 00 C0 C0 C0 00 80 80 80 00 00 00 FF 00 00 FF'
+ '00 00 00 FF FF 00 FF 00 00 00 FF 00 FF 00 FF FF'
+ '00 00 FF FF FF 00 FF FF FF FF FF FF FF FF FF FF'
+ 'FF FF FF FF FF FF FF 00 00 00 00 00 00 00 F8 88'
+ '88 88 88 88 88 80 F8 FB 7B 7B 7B 7B 7B 80 F8 F7'
+ 'B7 B7 B7 B7 B7 80 F8 FB 7B 7B 7B 7B 7B 80 F8 F7'
+ 'B7 B7 B7 B7 B7 80 F8 FB 7B 7B 7B 7B 7B 80 F8 F7'
+ 'B7 B7 B7 B7 B7 80 F8 FB 7B 7B 7B 7B 7B 80 F8 FF'
+ 'FF FF FF FF FF 80 F8 B7 B7 B7 B8 88 88 8F FF 8B'
+ '7B 7B 8F FF FF FF FF F8 88 88 FF FF FF FF FF FF'
+ 'FF FF FF FF FF FF'
+}
+#endif
+
+#ifdef __WINE__
+#include "wine/wine_common_ver.rc"
+#endif

@@ -25,7 +25,6 @@ APPS = 	calc \
 	net$(SEP)finger \
 	net$(SEP)ncftp \
 	net$(SEP)ping \
-	regedit \
 	regedt32 \
 	welcome \
 #	winfile
