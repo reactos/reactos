@@ -125,7 +125,9 @@ copy lib\kernel32\kernel32.dll %ROS_INSTALL%\system32
 copy lib\lzexpand\lz32.dll %ROS_INSTALL%\system32
 copy lib\msafd\msafd.dll %ROS_INSTALL%\system32
 copy lib\msvcrt\msvcrt.dll %ROS_INSTALL%\system32
-
+copy lib\ole32\ole32.dll %ROS_INSTALL%\system32
+copy lib\winmm\winmm.dll %ROS_INSTALL%\system32
+copy lib\comctl32.dll %ROS_INSTALL%\system32
 echo.
 echo installing user-mode dlls (2)...
 copy lib\ntdll\ntdll.dll %ROS_INSTALL%\system32
