@@ -536,7 +536,7 @@ VOID IPv4Receive(
  *     IPPacket = Pointer to IP packet
  */
 {
-//PNEIGHBOR_CACHE_ENTRY NCE;
+  PNEIGHBOR_CACHE_ENTRY NCE;
   PNET_TABLE_ENTRY NTE;
   UINT AddressType;
 
@@ -590,8 +590,9 @@ VOID IPv4Receive(
        try to find a route and forward the packet */
 
     /* FIXME: Check if acting as a router */
-#if 0
-    NCE = RouteFindRouter(&IPPacket->DstAddr, NULL);
+#if 1
+    //NCE = RouteFindRouter(&IPPacket->DstAddr, NULL);
+    NCE = NULL;
     if (NCE) {
       /* FIXME: Possibly fragment datagram */
       /* Forward the packet */
