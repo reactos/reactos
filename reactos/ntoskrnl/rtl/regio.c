@@ -1,4 +1,4 @@
-/* $Id: regio.c,v 1.6 2003/07/11 01:23:16 royce Exp $
+/* $Id: regio.c,v 1.7 2004/06/10 07:50:30 hbirr Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -150,7 +150,7 @@ WRITE_REGISTER_BUFFER_UCHAR (
 {
 	while (Count--)
 	{
-		*Buffer++  = *Register++;
+		*Register++  = *Buffer++;
 	}
 }
 
@@ -167,7 +167,7 @@ WRITE_REGISTER_BUFFER_USHORT (
 {
 	while (Count--)
 	{
-		*Buffer++  = *Register++;
+		*Register++  = *Buffer++;
 	}
 }
 
@@ -184,7 +184,7 @@ WRITE_REGISTER_BUFFER_ULONG (
 {
 	while (Count--)
 	{
-		*Buffer++  = *Register++;
+		*Register++  = *Buffer++;
 	}
 }
 
