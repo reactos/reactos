@@ -257,10 +257,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","Pagin
 ; Subsystems
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00070000,"Posix Os2"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00070001,50,00,6f,00,73,00,69,00,78,00,00,00,4f,00,73,00,32,00,00,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Os2",0x00020000,"%SystemRoot%\system32\os2ss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00070000,"Debug Windows"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00070001,44,00,65,00,62,00,75,00,67,00,00,00,57,00,69,00,6e,00,64,00,6f,00,77,00,73,00,00,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
 
 ; 3Com 3c905 Driver
