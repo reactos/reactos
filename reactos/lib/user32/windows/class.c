@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.20 2003/07/10 21:04:31 chorns Exp $
+/* $Id: class.c,v 1.21 2003/07/27 21:35:50 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -241,23 +241,27 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
   WNDCLASSEXW Class;
   RTL_ATOM Atom;
 
-  if (!RtlCreateUnicodeStringFromAsciiz(&MenuName, (PCSZ)lpwcx->lpszMenuName))
-  {
-    RtlFreeUnicodeString(&MenuName);
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return (ATOM)0;
-  }
-
-  if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpwcx->lpszClassName))
+  RtlMoveMemory(&Class, lpwcx, sizeof(WNDCLASSEXA));  
+  if (HIWORD((ULONG)lpwcx->lpszMenuName) != 0)
     {
-      RtlFreeUnicodeString(&ClassName);
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return (ATOM)0;
+      if (!RtlCreateUnicodeStringFromAsciiz(&MenuName, (PCSZ)lpwcx->lpszMenuName))
+	{
+	  RtlFreeUnicodeString(&MenuName);
+	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	  return (ATOM)0;
+	}
+      Class.lpszMenuName = MenuName.Buffer;
     }
-
-  RtlMoveMemory(&Class, lpwcx, sizeof(WNDCLASSEXA));
-  Class.lpszMenuName = MenuName.Buffer;
-  Class.lpszClassName = ClassName.Buffer;
+  if (HIWORD((ULONG)lpwcx->lpszClassName) != 0)
+    {
+      if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpwcx->lpszClassName))
+	{
+	  RtlFreeUnicodeString(&ClassName);
+	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	  return (ATOM)0;
+	}  
+      Class.lpszClassName = ClassName.Buffer;
+    }
 
   Atom = NtUserRegisterClassExWOW(&Class,
 				  FALSE,
@@ -266,8 +270,14 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 				  0,
 				  0);
 
-  RtlFreeUnicodeString(&ClassName);
-  RtlFreeUnicodeString(&MenuName);
+  if (HIWORD((ULONG)lpwcx->lpszMenuName) != 0)
+    {
+      RtlFreeUnicodeString(&ClassName);
+    }
+  if (HIWORD((ULONG)lpwcx->lpszClassName )!= 0)
+    {
+      RtlFreeUnicodeString(&MenuName);
+    }
 
   return (ATOM)Atom;
 }
@@ -281,7 +291,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
   RTL_ATOM Atom;
 
-  Atom = NtUserRegisterClassExWOW((WNDCLASSEX*)lpwcx,
+  Atom = NtUserRegisterClassExWOW((WNDCLASSEXW*)lpwcx,
 				  TRUE,
 				  0,
 				  0,

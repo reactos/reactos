@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.19 2003/07/11 17:08:44 chorns Exp $
+/* $Id: class.c,v 1.20 2003/07/27 21:35:50 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -56,13 +56,13 @@ CleanupClassImpl(VOID)
 }
 
 
-NTSTATUS STDCALL
-ClassReferenceClassByName(PW32PROCESS Process,
-			  PWNDCLASS_OBJECT* Class,
-			  LPWSTR ClassName)
+NTSTATUS FASTCALL
+ClassReferenceClassByAtom(PWNDCLASS_OBJECT* Class,
+			  RTL_ATOM Atom)
 {
   PWNDCLASS_OBJECT Current;
   PLIST_ENTRY CurrentEntry;
+  PW32PROCESS Process = PsGetWin32Process();
   
   ExAcquireFastMutexUnsafe (&Process->ClassListLock);
   CurrentEntry = Process->ClassListHead.Flink;
@@ -70,7 +70,7 @@ ClassReferenceClassByName(PW32PROCESS Process,
     {
       Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, ListEntry);
       
-      if (_wcsicmp(ClassName, Current->Class.lpszClassName) == 0)
+      if (Current->Class.lpszClassName == (LPWSTR)(ULONG)Atom)
 	{
 	  *Class = Current;
 	  ObmReferenceObject(Current);
@@ -85,16 +85,15 @@ ClassReferenceClassByName(PW32PROCESS Process,
   return(STATUS_NOT_FOUND);
 }
 
-NTSTATUS FASTCALL
-ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
-			  RTL_ATOM ClassAtom)
+NTSTATUS STDCALL
+ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
+			  PWSTR ClassName)
 {
   PWINSTATION_OBJECT WinStaObject;
-  ULONG ClassNameLength;
-  WCHAR ClassName[256];
   NTSTATUS Status;
+  RTL_ATOM ClassAtom;
 
-  if (!ClassAtom)
+  if (!ClassName)
     {
       return(STATUS_INVALID_PARAMETER);
     }
@@ -110,20 +109,19 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
       return(STATUS_UNSUCCESSFUL);
     }
 
-  ClassNameLength = sizeof(ClassName);
-  Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
-				   ClassAtom,
-				   NULL,
-				   NULL,
-				   &ClassName[0],
-				   &ClassNameLength);
+  Status  = RtlLookupAtomInAtomTable(WinStaObject->AtomTable,
+				     ClassName,
+				     &ClassAtom);
+
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(WinStaObject);  
+      return(Status);
+    }
+  Status = ClassReferenceClassByAtom(Class,
+				     ClassAtom);
   
-  Status = ClassReferenceClassByName(PsGetWin32Process(),
-				     Class,
-				     &ClassName[0]);
-  
-  ObDereferenceObject(WinStaObject);
-  
+  ObDereferenceObject(WinStaObject);  
   return(Status);
 }
 
@@ -140,7 +138,7 @@ ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
   }
   else
     {
-      Status = ClassReferenceClassByName(PsGetWin32Process(), Class, 
+      Status = ClassReferenceClassByName(Class, 
 					 ClassNameOrAtom);
     }
 
@@ -185,15 +183,15 @@ NtUserGetWOWClass(DWORD Unknown0,
 
 PWNDCLASS_OBJECT FASTCALL
 W32kCreateClass(LPWNDCLASSEXW lpwcx,
-		BOOL bUnicodeClass)
+		BOOL bUnicodeClass,
+		RTL_ATOM Atom)
 {
   PWNDCLASS_OBJECT ClassObject;
   WORD  objectSize;
   LPTSTR  namePtr;
 
   objectSize = sizeof(WNDCLASS_OBJECT) +
-    (lpwcx->lpszMenuName != 0 ? ((wcslen (lpwcx->lpszMenuName) + 1) * 2) : 0) +
-    ((wcslen (lpwcx->lpszClassName) + 1) * 2);
+    (lpwcx->lpszMenuName != 0 ? ((wcslen (lpwcx->lpszMenuName) + 1) * 2) : 0);
   ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
   if (ClassObject == 0)
     {          
@@ -201,16 +199,14 @@ W32kCreateClass(LPWNDCLASSEXW lpwcx,
     }
 
   ClassObject->Class = *lpwcx;
-  ClassObject->Unicode = bUnicodeClass;
-  namePtr = (LPTSTR)(((PCHAR)ClassObject) + sizeof (WNDCLASS_OBJECT));
+  ClassObject->Unicode = bUnicodeClass;  
   if (lpwcx->lpszMenuName != 0)
     {
+      namePtr = (LPTSTR)(((PCHAR)ClassObject) + sizeof (WNDCLASS_OBJECT));
       ClassObject->Class.lpszMenuName = namePtr;
       wcscpy (namePtr, lpwcx->lpszMenuName);
-      namePtr += wcslen (lpwcx->lpszMenuName) + 1;
     }
-  ClassObject->Class.lpszClassName = namePtr;
-  wcscpy (namePtr, lpwcx->lpszClassName);
+  ClassObject->Class.lpszClassName = (LPWSTR)(ULONG)Atom;
   return(ClassObject);
 }
 
@@ -250,23 +246,31 @@ NtUserRegisterClassExWOW(LPWNDCLASSEXW lpwcx,
 	     PROCESS_WINDOW_STATION());
       return((RTL_ATOM)0);
     }
-
-  Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
-				 (LPWSTR)lpwcx->lpszClassName,
-				 &Atom);
-  if (!NT_SUCCESS(Status))
+  if (!IS_ATOM(lpwcx->lpszClassName))
     {
-      ObDereferenceObject(WinStaObject);
-      DPRINT("Failed adding class name (%wS) to atom table\n",
-	     lpwcx->lpszClassName);
-      SetLastNtError(Status);
-
-      return((RTL_ATOM)0);
+      Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
+				     (LPWSTR)lpwcx->lpszClassName,
+				     &Atom);
+      if (!NT_SUCCESS(Status))
+	{
+	  ObDereferenceObject(WinStaObject);
+	  DPRINT("Failed adding class name (%wS) to atom table\n",
+		 lpwcx->lpszClassName);
+	  SetLastNtError(Status);      
+	  return((RTL_ATOM)0);
+	}
     }
-  ClassObject = W32kCreateClass(lpwcx, bUnicodeClass);
+  else
+    {
+      Atom = (RTL_ATOM)(ULONG)lpwcx->lpszClassName;
+    }
+  ClassObject = W32kCreateClass(lpwcx, bUnicodeClass, Atom);
   if (ClassObject == NULL)
     {
-      RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
+      if (!IS_ATOM(lpwcx->lpszClassName))
+	{
+	  RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
+	}
       ObDereferenceObject(WinStaObject);
       DPRINT("Failed creating window class object\n");
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);

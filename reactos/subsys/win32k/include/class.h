@@ -22,8 +22,7 @@ NTSTATUS FASTCALL
 CleanupClassImpl(VOID);
 
 NTSTATUS STDCALL
-ClassReferenceClassByName(PW32PROCESS Process,
-			  PWNDCLASS_OBJECT *Class,
+ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
 			  LPWSTR ClassName);
 
 NTSTATUS FASTCALL
@@ -35,7 +34,8 @@ ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 				LPWSTR ClassNameOrAtom);
 PWNDCLASS_OBJECT FASTCALL
 W32kCreateClass(LPWNDCLASSEXW lpwcx,
-		BOOL bUnicodeClass);
+		BOOL bUnicodeClass,
+		RTL_ATOM ClassName);
 struct _WINDOW_OBJECT;
 ULONG FASTCALL
 W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset);
