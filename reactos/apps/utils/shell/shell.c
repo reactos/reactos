@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.34 2000/03/16 18:44:55 dwelch Exp $
+/* $Id: shell.c,v 1.35 2000/03/16 20:02:44 ekohl Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -68,14 +68,14 @@ void ExecuteDir(char* cmdline)
 
    if (shandle==INVALID_HANDLE_VALUE)
      {
-	debug_printf("Invalid directory\n");
+	debug_printf("File not found\n\n");
 	return;
      }
    do
      {
 	debug_printf("%-15.15s",FindData.cAlternateFileName);
 	if(FindData.dwFileAttributes &FILE_ATTRIBUTE_DIRECTORY)
-          debug_printf("<DIR>       "),nRep++;
+	  debug_printf("<DIR>       "),nRep++;
 	else
 	  debug_printf(" %10d ",FindData.nFileSizeLow),nFile++;
 
