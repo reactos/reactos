@@ -18,9 +18,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.5 $
- * $Author: sedwards $
- * $Date: 2003/08/25 01:37:47 $
+ * $Revision: 1.6 $
+ * $Author: navaraf $
+ * $Date: 2003/12/26 09:52:37 $
  *
  */
 /* added modfl */
@@ -135,23 +135,6 @@ double  _jn (int n, double x);
 double  _y0 (double x);
 double  _y1 (double x);
 double  _yn (int n, double x);
-
-#ifndef _NO_OLDNAMES
-
-/*
- * Non-underscored versions of non-ANSI functions. These reside in
- * liboldnames.a. Provided for extra portability.
- */
-double cabs (struct _complex x);
-double hypot (double x, double y);
-double j0 (double x);
-double j1 (double x);
-double jn (int n, double x);
-double y0 (double x);
-double y1 (double x);
-double yn (int n, double x);
-
-#endif  /* Not _NO_OLDNAMES */
 
 #endif  /* Not __STRICT_ANSI__ */
 

@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.8 2003/12/18 09:51:08 gvg Exp $
+/* $Id: cmd.c,v 1.9 2003/12/26 09:52:37 navaraf Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -780,7 +780,7 @@ ProcessInput (BOOL bFlag)
 					case _T('9'):
 						if ((tp = FindArg (*ip - _T('0'))))
 						{
-							cp = stpcpy (cp, tp);
+							cp = _stpcpy (cp, tp);
 							ip++;
 						}
 						else
@@ -803,7 +803,7 @@ ProcessInput (BOOL bFlag)
 							/* FIXME: This is just a quick hack!! */
 							/* Do a proper memory allocation!! */
 							if (GetEnvironmentVariable (ip, evar, 512))
-								cp = stpcpy (cp, evar);
+								cp = _stpcpy (cp, evar);
 
 							ip = tp + 1;
 						}

@@ -1,4 +1,4 @@
-/* $Id: video.c,v 1.8 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: video.c,v 1.9 2003/12/26 09:52:37 navaraf Exp $
  *
  * ReactOS Project
  */
@@ -13,6 +13,7 @@ InitializeVideoAddressSpace(VOID)
    NTSTATUS Status;
    HANDLE PhysMemHandle;
    PVOID BaseAddress;
+   PVOID NullAddress;
    LARGE_INTEGER Offset;
    ULONG ViewSize;
    CHAR IVT[1024];
@@ -102,7 +103,8 @@ InitializeVideoAddressSpace(VOID)
    /*
     * Copy the real mode IVT into the right place
     */
-   memcpy((PVOID)0x0, IVT, 1024);
+   NullAddress = (PVOID)0x0; /* Workaround for GCC 3.4 */
+   memcpy(NullAddress, IVT, 1024);
    
    /*
     * Get the BDA from the kernel

@@ -1,4 +1,4 @@
-/* $Id: batch.c,v 1.2 2003/08/07 09:27:42 hbirr Exp $
+/* $Id: batch.c,v 1.3 2003/12/26 09:52:37 navaraf Exp $
  *
  *  BATCH.C - batch file processor for CMD.EXE.
  *
@@ -131,7 +131,7 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 
 	if (s1 && *s1)
 	{
-		s1 = stpcpy (dp, s1);
+		s1 = _stpcpy (dp, s1);
 		*s1++ = _T('\0');
 	}
 	else
@@ -381,7 +381,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 				if ((*sp == _T('%')) && (*(sp + 1) == bc->forvar))
 				{
 					/* replace % var */
-					dp = stpcpy (dp, fv);
+					dp = _stpcpy (dp, fv);
 					sp += 2;
 				}
 				else

@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.3 2003/08/07 09:27:42 hbirr Exp $
+/* $Id: cmd.h,v 1.4 2003/12/26 09:52:37 navaraf Exp $
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -306,7 +306,7 @@ TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
 LPTSTR *split (LPTSTR, LPINT, BOOL);
 VOID   freep (LPTSTR *);
-LPTSTR stpcpy (LPTSTR, LPTSTR);
+LPTSTR _stpcpy (LPTSTR, LPTSTR);
 BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsValidFileName (LPCTSTR);
 BOOL   IsValidDirectory (LPCTSTR);
