@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.16 2004/02/01 15:46:53 gvg Exp $
+ * $Id: focus.c,v 1.17 2004/02/23 12:39:37 gvg Exp $
  */
 
 #include <win32k/win32k.h>
@@ -176,7 +176,7 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    {
       FocusWindow->MessageQueue->FocusWindow = hWndFocus;
    }
-   ExReleaseFastMutex(&Window->MessageQueue->Lock);
+   ExReleaseFastMutex(&FocusWindow->MessageQueue->Lock);
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
    IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
