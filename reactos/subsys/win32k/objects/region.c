@@ -314,35 +314,23 @@ empty:
  */
 HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 {
-  PROSRGNDATA objSrc = RGNDATA_LockRgn(hSrc);
-  HRGN hNewDst;
+  PROSRGNDATA objSrc, rgnDst;
+  HRGN hNewDst, hRet = NULL;
+  GDIMULTILOCK Lock[2] = {{hDst, 0, GO_REGION_MAGIC}, {hSrc, 0, GO_REGION_MAGIC}};
 
-  if(objSrc)
-  {
-	PROSRGNDATA rgnDst;
-
-    if(hDst)
-    {
-      if(!(rgnDst = RGNDATA_LockRgn(hDst)))
-      {
-        hDst = 0;
-        goto done;
-      }
-    }
-	else{
+  if( !hDst ){
 	  if( !( hNewDst = RGNDATA_AllocRgn(1) ) ){
-		RGNDATA_UnlockRgn( hSrc );
 		return 0;
 	  }
+	  Lock[0].hObj = hNewDst;
+  }
 
-      if(!(rgnDst = RGNDATA_LockRgn(hNewDst)))
-      {
-        RGNDATA_FreeRgn( hNewDst );
-		RGNDATA_UnlockRgn( hSrc );
-        return 0;
-      }
-	}
+  GDIOBJ_LockMultipleObj( &Lock, 2 );
+  rgnDst = Lock[0].pObj;
+  objSrc = Lock[1].pObj;
 
+  if( objSrc && rgnDst )
+  {
     if(rgnDst)
     {
       POINT pt = { 0, 0 };
@@ -352,32 +340,15 @@ HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt)
 
       if(REGION_CropAndOffsetRegion(lpPt, lpRect, objSrc, rgnDst) == FALSE)
 	  { // ve failed cleanup and return
-		RGNDATA_UnlockRgn( hSrc );
-
-		if(hDst) // unlock new region if allocated
-		  RGNDATA_UnlockRgn( hDst );
-		else
-		  RGNDATA_UnlockRgn( hNewDst );
-
-		return 0;
+		hRet = NULL;
       }
       else{ // ve are fine. unlock the correct pointer and return correct handle
-		RGNDATA_UnlockRgn( hSrc );
-
-	  	if(hDst == 0){
-			RGNDATA_UnlockRgn( hNewDst );
-			return hNewDst;
-		}
-		else {
-			RGNDATA_UnlockRgn( hDst );
-			return hDst;
-		}
+		hRet = Lock[0].hObj;
 	  }
     }
-done:
-	RGNDATA_UnlockRgn( hSrc );
   }
-  return 0;
+  GDIOBJ_UnlockMultipleObj( &Lock, 2 );
+  return hRet;
 }
 
 /*!
