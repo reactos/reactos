@@ -317,7 +317,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 						    (i * PAGESIZE)),
 					    PAGE_READWRITE,
 					    (ULONG)(LastPhysKernelAddress 
-						    - (i * PAGESIZE)),
+						    - (Reserved * PAGESIZE) + (i * PAGESIZE)),
 					    FALSE);
 	     if (!NT_SUCCESS(Status))
 	       {
