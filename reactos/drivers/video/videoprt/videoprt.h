@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.8 2004/03/19 21:34:49 dwelch Exp $
+ * $Id: videoprt.h,v 1.9 2004/03/21 12:31:19 gvg Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -28,7 +28,7 @@
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
 #include <ddk/ntapi.h>
-/* #define NDEBUG */
+#define NDEBUG
 #include <debug.h>
 
 int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
