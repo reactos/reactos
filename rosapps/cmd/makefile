@@ -47,7 +47,7 @@ $(TARGET:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%): $(PATH_TO_TOP)/$(DIST_DIR)/apps/%
 ifeq ($(DOSCLI),yes)
 	$(CP) $* $(PATH_TO_TOP)\$(DIST_DIR)\apps\$*
 else
-	$(CP) $* $(PATH_TO_TOP)/$(DIST_DIR)/apps\$*
+	$(CP) $* $(PATH_TO_TOP)/$(DIST_DIR)/apps/$*
 endif
 
 include $(PATH_TO_TOP)/rules.mak
