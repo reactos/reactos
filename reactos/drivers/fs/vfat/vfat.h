@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.51 2003/01/11 16:02:29 hbirr Exp $ */
+/* $Id: vfat.h,v 1.52 2003/01/24 13:42:43 ekohl Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -41,8 +41,8 @@ struct _BootSector32
   unsigned short FSVersion;				// 42
   unsigned long  RootCluster;				// 44
   unsigned short FSInfoSector;				// 48
-  unsigned long  BootBackup;				// 50
-  unsigned char  Res3[10];				// 54
+  unsigned short BootBackup;				// 50
+  unsigned char  Res3[12];				// 52
   unsigned char  Drive;					// 64
   unsigned char  Res4;					// 65
   unsigned char  ExtBootSignature;			// 66
