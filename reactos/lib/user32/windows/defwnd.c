@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.95 2003/10/07 15:42:37 weiden Exp $
+/* $Id: defwnd.c,v 1.96 2003/10/07 22:06:52 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -2296,7 +2296,7 @@ DefWindowProcA(HWND hWnd,
                         (LPSTR)(ULONG)GlobalAddAtomA("USER32!WindowTextAtomA");
                 }
                 WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                    strlen(Cs->lpszName) * sizeof(CHAR));
+                    (strlen(Cs->lpszName) + 1) * sizeof(CHAR));
                 strcpy(WindowText, Cs->lpszName);
                 SetPropA(hWnd, WindowTextAtom, WindowText);
 	        }
@@ -2400,7 +2400,7 @@ DefWindowProcW(HWND hWnd,
                         (LPWSTR)(DWORD)GlobalAddAtomW(L"USER32!WindowTextAtomW");
                 }
                 WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-			        wcslen(CreateStruct->lpszName) * sizeof(WCHAR));
+			        (wcslen(CreateStruct->lpszName) + 1) * sizeof(WCHAR));
                 wcscpy(WindowText, CreateStruct->lpszName);
                 SetPropW(hWnd, WindowTextAtom, WindowText);
             }
