@@ -2626,7 +2626,8 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	      return STATUS_UNSUCCESSFUL;
 	    }
 
-	  if (ValueCell->DataSize > sizeof(BLOCK_OFFSET))
+	  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET)
+              && ValueCell->DataSize > sizeof(BLOCK_OFFSET))
 	    {
 	      DataCell = CmiGetCell (RegistryHive,
 				     ValueCell->DataOffset,
@@ -3219,7 +3220,8 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
   VERIFY_VALUE_CELL(ValueCell);
 
   /* Destroy the data cell */
-  if (ValueCell->DataSize > sizeof(BLOCK_OFFSET))
+  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET)
+      && ValueCell->DataSize > sizeof(BLOCK_OFFSET))
     {
       DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, &Bin);
       if (DataCell == NULL)
