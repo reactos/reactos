@@ -52,6 +52,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    ULONG MappedIrq;
    KIRQL Dirql;
    KAFFINITY Affinity;
+   KIRQL oldIrql;
    
    /* FIXME: Register port ranges with HAL */
    MappedIrq = HalGetInterruptVector(Isa,
@@ -221,11 +222,16 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    Config->FloppyCount++;
    // call IoAllocateAdapterChannel, and wait for execution routine to be given the channel
    CHECKPOINT;
+   
+   /* DDK: IoAllocateAdapterChannel _must_ be called at DISPATCH_LEVEL */
+   KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
    Status = IoAllocateAdapterChannel( ControllerExtension->AdapterObject,
 				      DeviceObject,
 				      0x3000/PAGE_SIZE,  // max track size is 12k
 				      FloppyAdapterControl,
 				      ControllerExtension );
+   KeLowerIrql(oldIrql);              
+              
    if( !NT_SUCCESS( Status ) )
      {
        DPRINT1( "Error: IoAllocateAdapterChannel returned %x\n", Status );
