@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.28 2002/01/21 11:41:05 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.29 2002/01/21 22:27:36 hbirr Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -611,13 +611,7 @@ IoGetConfigurationInformation (
  *      IoGetCurrentIrpStackLocation (PIRP Irp)
  */
 #define IoGetCurrentIrpStackLocation(Irp) \
-	(&(Irp)->Stack[(ULONG)((Irp)->CurrentLocation)])
-
-/* original macro */
-/*
-#define IoGetCurrentIrpStackLocation(Irp) \
 	((Irp)->Tail.Overlay.CurrentStackLocation)
-*/
 
 #define IoSetNextIrpStackLocation(Irp) { \
   (Irp)->CurrentLocation--; \
@@ -681,13 +675,8 @@ IoGetInitialStack (
  *      IoGetNextIrpStackLocation (PIRP Irp)
  */
 #define IoGetNextIrpStackLocation(Irp) \
-	(&(Irp)->Stack[(Irp)->CurrentLocation-1])
-
-/* original macro */
-/*
-#define IoGetNextIrpStackLocation(Irp) \
 	((Irp)->Tail.Overlay.CurrentStackLocation-1)
-*/
+
 
 PDEVICE_OBJECT
 STDCALL
