@@ -859,7 +859,17 @@ PPATHOBJ CLIPOBJ_ppoGetPath(PCLIPOBJ ClipObj);
 
 /*
 EngAcquireSemaphore
-EngAllocMem
+*/
+
+/* FIXME: find correct defines for following symbols  */
+#define  ALLOC_TAG  1
+#define  FL_ZERO_MEMORY  1
+
+PVOID  APIENTRY  EngAllocMem(ULONG  Flags,
+                             ULONG  MemSize,
+                             ULONG  Tag);
+
+/*
 EngAllocUserMem
 */
 
@@ -905,7 +915,13 @@ EngCreatePath
 EngCreateSemaphore
 EngCreateWnd
 EngDebugBreak = NTOSKRNL.DbgBreakPoint
-EngDebugPrint
+*/
+
+VOID  APIENTRY  EngDebugPrint(PCHAR  StandardPrefix,
+                              PCHAR  DebugMessage,
+                              va_list  ArgList);
+
+/*
 EngDeleteClip
 EngDeleteDriverObj
 EngDeleteEvent
