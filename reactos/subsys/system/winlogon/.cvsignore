@@ -1,1 +1,6 @@
 winlogon.coff
+winlogon.exe
+winlogon.nostrip.exe
+*.d
+*.o
+*.sym

@@ -1,1 +1,6 @@
 shell.coff
+shell.exe
+shell.nostrip.exe
+*.d
+*.o
+*.sym

@@ -1,4 +1,6 @@
 csrss.coff
+csrss.exe
+csrss.nostrip.exe
 *.d
 *.o
 *.sym

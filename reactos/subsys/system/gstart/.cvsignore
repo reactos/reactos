@@ -1,1 +1,6 @@
 gstart.coff
+gstart.exe
+gstart.nostrip.exe
+*.d
+*.o
+*.sym

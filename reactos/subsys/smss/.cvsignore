@@ -1,4 +1,6 @@
 smss.coff
+smss.exe
+smss.nostrip.exe
 *.d
 *.o
 *.sym
