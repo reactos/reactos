@@ -1236,7 +1236,7 @@ DWORD WINAPI GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize, BOOL bOr
     if (!pIpNetTable || *pdwSize < size) {
       *pdwSize = size;
       ret = ERROR_INSUFFICIENT_BUFFER;
-    }
+    } 
     else {
       PMIB_IPNETTABLE table = getArpTable();
 
