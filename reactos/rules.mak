@@ -26,7 +26,6 @@ EXE_PREFIX := ./
 CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
-#KM_SPECS = $(TOPDIR)/specs
 FLOPPY_DIR = /a
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
@@ -46,7 +45,6 @@ DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasmw
 RM = $(PATH_TO_TOP)/rdel
 RMDIR = rmdir
-#KM_SPECS = specs
 DOSCLI = yes
 FLOPPY_DIR = A:
 # DIST_DIR should be relative from the top of the tree
