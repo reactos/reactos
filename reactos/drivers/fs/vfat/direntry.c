@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.3 2001/07/28 07:05:56 hbirr Exp $
+/* $Id: direntry.c,v 1.4 2001/08/01 15:59:24 hbirr Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -125,7 +125,8 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
                                   cacheSegment);
       return  STATUS_NO_MORE_ENTRIES;
     }
-    else if (vfatIsDirEntryLongName (&fatDirEntry [indexInPage]))
+    else if (vfatIsDirEntryLongName (&fatDirEntry [indexInPage])
+      && !vfatIsDirEntryDeleted (&fatDirEntry [indexInPage]))
     {
       DPRINT ("  long name entry found at %d\n", *pDirectoryIndex);
       longNameEntry = (slot *) currentPage;
@@ -143,7 +144,7 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
       DPRINT ("  longName: [%S]\n", pLongFileName);
 
       cpos = 0;
-      while ((longNameEntry [indexInPage].id != 0x41) && 
+      while ((longNameEntry [indexInPage].id != 0x41) &&
              (longNameEntry [indexInPage].id != 0x01) &&
              (longNameEntry [indexInPage].attr > 0))
       {
@@ -161,8 +162,8 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
           {
             return  status;
           }
-          status = vfatRequestAndValidateRegion (pDeviceExt, 
-                                                 pDirectoryFCB, 
+          status = vfatRequestAndValidateRegion (pDeviceExt,
+                                                 pDirectoryFCB,
                                                  pageNumber * CACHEPAGESIZE(pDeviceExt),
                                                  (PVOID *) &currentPage,
                                                  &cacheSegment,
@@ -203,8 +204,8 @@ vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
         {
           return  status;
         }
-        status = vfatRequestAndValidateRegion (pDeviceExt, 
-                                               pDirectoryFCB, 
+        status = vfatRequestAndValidateRegion (pDeviceExt,
+                                               pDirectoryFCB,
                                                pageNumber * CACHEPAGESIZE(pDeviceExt),
                                                (PVOID *) &currentPage,
                                                &cacheSegment,
