@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.55 2001/09/24 00:51:16 chorns Exp $
+# $Id: Makefile,v 1.56 2001/10/10 22:08:27 hbirr Exp $
 #
 # ReactOS Operating System
 #
@@ -306,7 +306,10 @@ OBJECTS_PO = po/power.o
 # Cache Manager (Cc)
 OBJECTS_CC = \
 	cc/cacheman.o \
-	cc/view.o
+	cc/view.o \
+	cc/copy.o \
+	cc/pin.o \
+	cc/misc.o
 
 # Kernel Debugger Support (Kd)
 OBJECTS_KD = \
