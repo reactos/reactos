@@ -426,8 +426,7 @@ HRESULT WINAPI SHRegisterDragDrop(
 	LPDROPTARGET pDropTarget)
 {
 	FIXME("(%p,%p):stub.\n", hWnd, pDropTarget);
-	if (GetShellOle()) return pRegisterDragDrop(hWnd, pDropTarget);
-        return 0;
+	return RegisterDragDrop(hWnd, pDropTarget);
 }
 
 /*************************************************************************
@@ -439,8 +438,7 @@ HRESULT WINAPI SHRegisterDragDrop(
 HRESULT WINAPI SHRevokeDragDrop(HWND hWnd)
 {
     FIXME("(%p):stub.\n",hWnd);
-    if (GetShellOle()) return pRevokeDragDrop(hWnd);
-    return 0;
+    return RevokeDragDrop(hWnd);
 }
 
 /*************************************************************************
@@ -458,8 +456,7 @@ HRESULT WINAPI SHDoDragDrop(
 {
     FIXME("(%p %p %p 0x%08lx %p):stub.\n",
     hWnd, lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
-	if (GetShellOle()) return pDoDragDrop(lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
-        return 0;
+	return DoDragDrop(lpDataObject, lpDropSource, dwOKEffect, pdwEffect);
 }
 
 /*************************************************************************

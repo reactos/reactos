@@ -656,13 +656,10 @@ static LRESULT ShellView_OnCreate(IShellViewImpl * This)
 	  }
 	}
 
-	if(GetShellOle() && pRegisterDragDrop)
+	if (SUCCEEDED(IShellFolder_CreateViewObject(This->pSFParent, This->hWnd, &IID_IDropTarget, (LPVOID*)&pdt)))
 	{
-	  if (SUCCEEDED(IShellFolder_CreateViewObject(This->pSFParent, This->hWnd, &IID_IDropTarget, (LPVOID*)&pdt)))
-	  {
-	    pRegisterDragDrop(This->hWnd, pdt);
+	    RegisterDragDrop(This->hWnd, pdt);
 	    IDropTarget_Release(pdt);
-	  }
 	}
 
 	/* register for receiving notifications */
@@ -1343,10 +1340,8 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	      DWORD dwAttributes = SFGAO_CANLINK;
 	      DWORD dwEffect = DROPEFFECT_COPY | DROPEFFECT_MOVE;
 
-	      if(GetShellOle() && pDoDragDrop)
+	      if (SUCCEEDED(IShellFolder_GetUIObjectOf(This->pSFParent, This->hWnd, This->cidl, (LPCITEMIDLIST*)This->apidl, &IID_IDataObject,0,(LPVOID *)&pda)))
 	      {
-	        if (SUCCEEDED(IShellFolder_GetUIObjectOf(This->pSFParent, This->hWnd, This->cidl, (LPCITEMIDLIST*)This->apidl, &IID_IDataObject,0,(LPVOID *)&pda)))
-	        {
 	          IDropSource * pds = (IDropSource*)&(This->lpvtblDropSource);	/* own DropSource interface */
 
 	  	  if (SUCCEEDED(IShellFolder_GetAttributesOf(This->pSFParent, This->cidl, (LPCITEMIDLIST*)This->apidl, &dwAttributes)))
@@ -1360,10 +1355,9 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	          if (pds)
 	          {
 	            DWORD dwEffect;
-		    pDoDragDrop(pda, pds, dwEffect, &dwEffect);
+		    DoDragDrop(pda, pds, dwEffect, &dwEffect);
 		  }
 	          IDataObject_Release(pda);
-	        }
 	      }
 	    }
 	    break;
@@ -1568,10 +1562,9 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 
 	  case WM_GETDLGCODE:   return SendMessageA(pThis->hWndList,uMessage,0,0);
 
-	  case WM_DESTROY:	if(GetShellOle() && pRevokeDragDrop)
-				{
-	  			  pRevokeDragDrop(pThis->hWnd);
-				}
+
+	  case WM_DESTROY:	
+	  			RevokeDragDrop(pThis->hWnd);
 				SHChangeNotifyDeregister(pThis->hNotify);
 	                        break;
 

@@ -52,43 +52,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-HRESULT (WINAPI *pOleInitialize)(LPVOID reserved);
-void    (WINAPI *pOleUninitialize)(void);
-HRESULT (WINAPI *pRegisterDragDrop)(HWND hwnd, IDropTarget* pDropTarget);
-HRESULT (WINAPI *pRevokeDragDrop)(HWND hwnd);
-HRESULT (WINAPI *pDoDragDrop)(LPDATAOBJECT,LPDROPSOURCE,DWORD,DWORD*);
-void 	(WINAPI *pReleaseStgMedium)(STGMEDIUM* pmedium);
-HRESULT (WINAPI *pOleSetClipboard)(IDataObject* pDataObj);
-HRESULT (WINAPI *pOleGetClipboard)(IDataObject** ppDataObj);
-
-/**************************************************************************
- * GetShellOle
- *
- * make sure OLE32.DLL is loaded
- */
-BOOL GetShellOle(void)
-{
-    static HANDLE hOle32 = NULL;
-    if(!hOle32)
-    {
-        hOle32 = LoadLibraryA("ole32.dll");
-        if(hOle32)
-        {
-            pOleInitialize=(void*)GetProcAddress(hOle32,"OleInitialize");
-            pOleUninitialize=(void*)GetProcAddress(hOle32,"OleUninitialize");
-            pRegisterDragDrop=(void*)GetProcAddress(hOle32,"RegisterDragDrop");
-            pRevokeDragDrop=(void*)GetProcAddress(hOle32,"RevokeDragDrop");
-            pDoDragDrop=(void*)GetProcAddress(hOle32,"DoDragDrop");
-            pReleaseStgMedium=(void*)GetProcAddress(hOle32,"ReleaseStgMedium");
-            pOleSetClipboard=(void*)GetProcAddress(hOle32,"OleSetClipboard");
-            pOleGetClipboard=(void*)GetProcAddress(hOle32,"OleGetClipboard");
-
-            pOleInitialize(NULL);
-        }
-    }
-    return TRUE;
-}
-
 /**************************************************************************
  * RenderHDROP
  *

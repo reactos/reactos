@@ -130,20 +130,6 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 BOOL SYSTRAY_Init(void);
 #endif
 
-/* OLE32 */
-extern HINSTANCE hShellOle32;
-
-extern HRESULT (WINAPI *pOleInitialize)(LPVOID reserved);
-extern void    (WINAPI *pOleUninitialize)(void);
-extern HRESULT (WINAPI *pRegisterDragDrop)(HWND hwnd, IDropTarget* pDropTarget);
-extern HRESULT (WINAPI *pRevokeDragDrop)(HWND hwnd);
-extern HRESULT (WINAPI *pDoDragDrop)(LPDATAOBJECT,LPDROPSOURCE,DWORD,DWORD*);
-extern void    (WINAPI *pReleaseStgMedium)(STGMEDIUM* pmedium);
-extern HRESULT (WINAPI *pOleSetClipboard)(IDataObject* pDataObj);
-extern HRESULT (WINAPI *pOleGetClipboard)(IDataObject** ppDataObj);
-extern HRESULT (WINAPI *pCoCreateInstance)(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID iid, LPVOID *ppv);
-
-BOOL GetShellOle(void);
 
 HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
 HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);

@@ -4,8 +4,8 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = shell32.dll
-# fixme: avoid ole32.dll import
-IMPORTS   = ole32 shlwapi comctl32 user32 gdi32 advapi32 kernel32 ntdll
+IMPORTS   = shlwapi comctl32 user32 gdi32 advapi32 kernel32
+DELAYIMPORTS = ole32
 ALTNAMES  = shell.dll
 EXTRALIBS = $(LIBUUID) $(LIBUNICODE)
 

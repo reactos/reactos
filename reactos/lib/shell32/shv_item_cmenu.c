@@ -366,62 +366,20 @@ static BOOL DoCopyOrCut(
 
 	TRACE("(%p)->(wnd=%p,bCut=0x%08x)\n",This, hwnd, bCut);
 
-	if(GetShellOle())
+	/* get the active IShellView */
+	if ((lpSB = (LPSHELLBROWSER)SendMessageA(hwnd, CWM_GETISHELLBROWSER,0,0)))
 	{
-	  /* get the active IShellView */
-	  if ((lpSB = (LPSHELLBROWSER)SendMessageA(hwnd, CWM_GETISHELLBROWSER,0,0)))
+	  if (SUCCEEDED(IShellBrowser_QueryActiveShellView(lpSB, &lpSV)))
 	  {
-	    if (SUCCEEDED(IShellBrowser_QueryActiveShellView(lpSB, &lpSV)))
+	    if (SUCCEEDED(IShellView_GetItemObject(lpSV, SVGIO_SELECTION, &IID_IDataObject, (LPVOID*)&lpDo)))
 	    {
-	      if (SUCCEEDED(IShellView_GetItemObject(lpSV, SVGIO_SELECTION, &IID_IDataObject, (LPVOID*)&lpDo)))
-	      {
-	        pOleSetClipboard(lpDo);
-	        IDataObject_Release(lpDo);
-	      }
-	      IShellView_Release(lpSV);
+	      OleSetClipboard(lpDo);
+	      IDataObject_Release(lpDo);
 	    }
+	    IShellView_Release(lpSV);
 	  }
 	}
 	return TRUE;
-#if 0
-/*
-  the following code does the copy operation witout ole32.dll
-  we might need this possibility too (js)
-*/
-	BOOL bSuccess = FALSE;
-
-	TRACE("(%p)\n", iface);
-
-	if(OpenClipboard(NULL))
-	{
-	  if(EmptyClipboard())
-	  {
-	    IPersistFolder2 * ppf2;
-	    IShellFolder_QueryInterface(This->pSFParent, &IID_IPersistFolder2, (LPVOID*)&ppf2);
-	    if (ppf2)
-	    {
-	      LPITEMIDLIST pidl;
-	      IPersistFolder2_GetCurFolder(ppf2, &pidl);
-	      if(pidl)
-	      {
-	        HGLOBAL hMem;
-
-		hMem = RenderHDROP(pidl, This->apidl, This->cidl);
-
-		if(SetClipboardData(CF_HDROP, hMem))
-		{
-		  bSuccess = TRUE;
-		}
-	        SHFree(pidl);
-	      }
-	      IPersistFolder2_Release(ppf2);
-	    }
-
-	  }
-	  CloseClipboard();
-	}
- 	return bSuccess;
-#endif
 }
 /**************************************************************************
 * ISvItemCm_fnInvokeCommand()

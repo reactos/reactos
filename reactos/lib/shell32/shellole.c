@@ -72,30 +72,6 @@ struct {
 };
 
 /*************************************************************************
- * __CoCreateInstance [internal]
- *
- * NOTES
- *   wraper for late bound call to OLE32.DLL
- *
- */
-HRESULT (WINAPI *pCoCreateInstance)(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID iid, LPVOID *ppv) = NULL;
-
-void * __GetExternalFunc(HMODULE * phModule, LPCWSTR szModuleName, LPCSTR szProcName)
-{
-	if (!*phModule) *phModule = GetModuleHandleW(szModuleName);
-	if (!*phModule) *phModule = LoadLibraryW(szModuleName);
-	if (*phModule) return GetProcAddress(*phModule, szProcName);
-	return NULL;
-}
-
-HRESULT  __CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID iid, LPVOID *ppv)
-{
-	if(!pCoCreateInstance) pCoCreateInstance = __GetExternalFunc(&hShellOle32, sOLE32, "CoCreateInstance");
-	if(!pCoCreateInstance) return E_FAIL;
-	return pCoCreateInstance(rclsid, pUnkOuter, dwClsContext, iid, ppv);
-}
-
-/*************************************************************************
  * SHCoCreateInstance [SHELL32.102]
  *
  * NOTES
@@ -211,7 +187,7 @@ LRESULT WINAPI SHCoCreateInstance(
 	} else {
 
 	    /* load a external dll in the usual way */
-	    hres = __CoCreateInstance(myclsid, pUnkOuter, CLSCTX_INPROC_SERVER, refiid, ppv);
+	    hres = CoCreateInstance(myclsid, pUnkOuter, CLSCTX_INPROC_SERVER, refiid, ppv);
 	    goto end;
 	}
 
@@ -437,17 +413,18 @@ static ICOM_VTABLE(IMalloc) VT_Shell_IMalloc32 =
  */
 HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal)
 {
-	HRESULT (WINAPI *pCoGetMalloc)(DWORD,LPMALLOC *);
-	HMODULE hOle32;
-
 	TRACE("(%p)\n", lpmal);
 
 	if (!ShellTaskAllocator)
 	{
-		hOle32 = GetModuleHandleA("OLE32.DLL");
+		HMODULE hOle32 = GetModuleHandleA("OLE32.DLL");
+		/* this is very suspect. we should not being using a different
+		 * allocator from deallocator based on something undeterministic
+		 * like whether ole32 is loaded. as it happens currently, they
+		 * both map to the same allocator deep down, but this could
+		 * change in the future. */
 		if(hOle32) {
-			pCoGetMalloc = (void*) GetProcAddress(hOle32, "CoGetMalloc");
-			if (pCoGetMalloc) pCoGetMalloc(MEMCTX_TASK, &ShellTaskAllocator);
+			CoGetMalloc(MEMCTX_TASK, &ShellTaskAllocator);
 			TRACE("got ole32 IMalloc\n");
 		}
 		if(!ShellTaskAllocator) {
