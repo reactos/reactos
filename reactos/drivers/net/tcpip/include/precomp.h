@@ -35,6 +35,5 @@
 #include <oskittcp.h>
 #include <interface.h>
 #include <ports.h>
-#include <pseh.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
