@@ -52,8 +52,10 @@ VOID IoStartTimer(PDEVICE_OBJECT DeviceObject)
    lli = -1000000;
    li = *(LARGE_INTEGER *)&lli;
       
-   KeSetTimerEx(&DeviceObject->Timer->timer,li,1000,
-		&(DeviceObject->Timer->dpc));
+   KeSetTimerEx(&DeviceObject->Timer->timer,
+                li,
+                1000,
+                &(DeviceObject->Timer->dpc));
 }
 
 VOID IoStopTimer(PDEVICE_OBJECT DeviceObject)
