@@ -47,7 +47,7 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define NR_SECTION_PAGE_ENTRIES          (1024)
 
 #ifndef __USE_W32API
-#define MM_LOWEST_USER_ADDRESS (4096)
+#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
 #endif
 
 #define MM_VIRTMEM_GRANULARITY (64 * 1024) /* Although Microsoft says this isn't hardcoded anymore,
@@ -217,7 +217,7 @@ typedef struct _MADDRESS_SPACE
 {
   LIST_ENTRY MAreaListHead;
   FAST_MUTEX Lock;
-  ULONG LowestAddress;
+  PVOID LowestAddress;
   struct _EPROCESS* Process;
   PUSHORT PageTableRefCountTable;
   ULONG PageTableRefCountTableSize;

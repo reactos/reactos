@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.19 2004/09/09 20:42:33 hbirr Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -76,7 +76,7 @@ MmInitializeAddressSpace(PEPROCESS Process,
    }
    else
    {
-      AddressSpace->LowestAddress = KERNEL_BASE;
+      AddressSpace->LowestAddress = (PVOID)KERNEL_BASE;
    }
    AddressSpace->Process = Process;
    if (Process != NULL)

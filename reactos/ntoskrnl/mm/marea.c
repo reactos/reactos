@@ -253,7 +253,7 @@ static PVOID MmFindGapBottomUp(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG
       Address = (PVOID) MM_ROUND_UP(Address, Granularity);
    }
    /* Check if enough space for the block */
-   if (AddressSpace->LowestAddress < KERNEL_BASE)
+   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
    {
       if ((ULONG_PTR) Address >= KERNEL_BASE || Length > KERNEL_BASE - (ULONG_PTR) Address)
       {
@@ -290,7 +290,7 @@ static PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG 
    Length += PAGE_SIZE; /* For a guard page following the area */
 #endif
 
-   if (AddressSpace->LowestAddress < KERNEL_BASE) //(ULONG_PTR)MmSystemRangeStart)
+   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE) //(ULONG_PTR)MmSystemRangeStart)
    {
       HighestAddress = MmHighestUserAddress;
    }
@@ -337,7 +337,7 @@ static PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length, ULONG 
    }
 
    /* Check if enough space for the block */
-   if (AddressSpace->LowestAddress < KERNEL_BASE)
+   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
    {
       if ((ULONG_PTR) Address >= KERNEL_BASE || Length > KERNEL_BASE - (ULONG_PTR) Address)
       {
@@ -374,7 +374,7 @@ ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, PVOID Address)
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   if (AddressSpace->LowestAddress < KERNEL_BASE)
+   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
    {
       if (Address >= (PVOID)KERNEL_BASE)
       {
@@ -383,7 +383,7 @@ ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, PVOID Address)
    }
    else
    {
-      if ((ULONG_PTR)Address < AddressSpace->LowestAddress)
+      if ((ULONG_PTR)Address < (ULONG_PTR)AddressSpace->LowestAddress)
       {
          return 0;
       }
@@ -405,7 +405,7 @@ ULONG MmFindGapAtAddress(PMADDRESS_SPACE AddressSpace, PVOID Address)
       }
       current_entry = current_entry->Flink;
    }
-   if (AddressSpace->LowestAddress < KERNEL_BASE)
+   if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE)
    {
       return KERNEL_BASE - (ULONG_PTR)Address;
    }
@@ -548,13 +548,13 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
                              - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
-      if (AddressSpace->LowestAddress == KERNEL_BASE &&
+      if (AddressSpace->LowestAddress == (PVOID)KERNEL_BASE &&
             (*BaseAddress) < (PVOID)KERNEL_BASE)
       {
          return STATUS_ACCESS_VIOLATION;
       }
 
-      if (AddressSpace->LowestAddress < KERNEL_BASE &&
+      if (AddressSpace->LowestAddress < (PVOID)KERNEL_BASE &&
             (PVOID)((char*)(*BaseAddress) + tmpLength) > (PVOID)KERNEL_BASE)
       {
          return STATUS_ACCESS_VIOLATION;
