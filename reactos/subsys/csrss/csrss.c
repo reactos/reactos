@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.13 2002/09/08 10:23:44 chorns Exp $
+/* $Id: csrss.c,v 1.14 2002/10/25 22:08:20 chorns Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -39,7 +39,7 @@
 
 /* Native process' entry point */
 
-VOID NtProcessStartup(PPEB Peb)
+VOID STDCALL NtProcessStartup(PPEB Peb)
 {
    PRTL_USER_PROCESS_PARAMETERS ProcParams;
    PWSTR ArgBuffer;

@@ -1,3 +1,11 @@
+2002-10-26  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/ddk/zw.h (NtProcessStartup): Use standard calling convention.
+	* subsys/csrss/csrss.c (NtProcessStartup): Ditto.
+	* subsys/smss/smss.c (NtProcessStartup): Ditto.
+	* subsys/system/autochk/autochk.c (NtProcessStartup): Ditto.
+	* subsys/system/usetup/usetup.c (NtProcessStartup): Ditto.
+
 2002-10-25  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* apps/tests/tokentest/tokentest.c (ROS_ACE_HEADER): Move field

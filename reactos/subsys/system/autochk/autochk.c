@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: autochk.c,v 1.3 2002/09/08 10:23:46 chorns Exp $
+/* $Id: autochk.c,v 1.4 2002/10/25 22:08:20 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,7 +65,7 @@ PrintString(char* fmt,...)
 
 /* Native image's entry point */
 
-VOID
+VOID STDCALL
 NtProcessStartup(PPEB Peb)
 {
   ULONG i;

@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.13 2002/09/08 10:23:46 chorns Exp $
+/* $Id: smss.c,v 1.14 2002/10/25 22:08:20 chorns Exp $
  *
  * smss.c - Session Manager
  * 
@@ -64,7 +64,7 @@ PrintString(char* fmt,...)
 
 /* Native image's entry point */
 
-VOID
+VOID STDCALL
 NtProcessStartup(PPEB Peb)
 {
   HANDLE Children[2]; /* csrss, winlogon */

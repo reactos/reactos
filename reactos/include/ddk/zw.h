@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.53 2002/09/08 10:47:45 chorns Exp $
+/* $Id: zw.h,v 1.54 2002/10/25 22:08:20 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2501,7 +2501,7 @@ ZwPrivilegeObjectAuditAlarm(
  *	Calling proces should terminate itself.
  * RETURNS: Status
  */ 	
-VOID
+VOID STDCALL
 NtProcessStartup(
 	IN	PPEB	Peb
 	);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: usetup.c,v 1.4 2002/10/18 20:04:00 ekohl Exp $
+/* $Id: usetup.c,v 1.5 2002/10/25 22:08:21 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS user-mode setup application
@@ -740,7 +740,7 @@ SuccessPage(PINPUT_RECORD Ir)
 }
 
 
-VOID
+VOID STDCALL
 NtProcessStartup(PPEB Peb)
 {
   NTSTATUS Status;
