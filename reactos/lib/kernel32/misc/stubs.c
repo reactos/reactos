@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.78 2004/06/20 23:42:07 gdalsnes Exp $
+/* $Id: stubs.c,v 1.79 2004/06/26 12:56:11 navaraf Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -106,8 +106,44 @@ CompareStringW (
     int cchCount2
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    INT Result;
+    UNICODE_STRING String1, String2;
+
+    if (!lpString1 || !lpString2)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (dwCmpFlags & ~(NORM_IGNORECASE | NORM_IGNORENONSPACE |
+        NORM_IGNORESYMBOLS | SORT_STRINGSORT | NORM_IGNOREKANATYPE |
+        NORM_IGNOREWIDTH | 0x10000000))
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
+    if (dwCmpFlags & ~NORM_IGNORECASE)
+    {
+        DPRINT1("CompareString: Unimplemented flags - 0x%x\n", 
+           dwCmpFlags & ~NORM_IGNORECASE);
+    }
+
+    if (cchCount1 < 0) cchCount1 = lstrlenW(lpString1);
+    if (cchCount2 < 0) cchCount2 = lstrlenW(lpString2);
+
+    String1.Length = String1.MaximumLength = cchCount1 * sizeof(WCHAR);
+    String1.Buffer = (LPWSTR)lpString1;
+    String2.Length = String2.MaximumLength = cchCount2 * sizeof(WCHAR);
+    String2.Buffer = (LPWSTR)lpString2;
+
+    Result = RtlCompareUnicodeString(
+       &String1, &String2, dwCmpFlags & NORM_IGNORECASE);
+
+    if (Result) /* need to translate result */
+        return (Result < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
+
+    return CSTR_EQUAL;
 }
 
 
