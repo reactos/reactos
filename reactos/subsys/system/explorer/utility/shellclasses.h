@@ -144,7 +144,8 @@ struct COMException : public COMExceptionBase
 	int _line;
 };
 
-#define	CHECKERROR(hr) ((void)(FAILED(hr)? throw COMException(hr, __FILE__, __LINE__): 0))
+#define	THROW_EXCEPTION(e) throw COMException(e, __FILE__, __LINE__)
+#define	CHECKERROR(hr) ((void)(FAILED(hr)? THROW_EXCEPTION(hr): 0))
 
 
 #ifdef _NO_COMUTIL

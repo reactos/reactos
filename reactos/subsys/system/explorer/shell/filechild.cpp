@@ -200,7 +200,8 @@ bool FileChildWindow::expand_entry(Entry* dir)
 	}
 
 	 // no subdirectories ?
-	if (!(p->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+	if (!(p->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&	// not a directory?
+		!p->_down)	// not a file with NTFS sub-streams?
 		return FALSE;
 
 	idx = ListBox_FindItemData(_left_hwnd, 0, dir);
@@ -407,7 +408,9 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 	if (!entry)
 		return;
 
-	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+	if ((entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||	// a directory?
+		entry->_down)	// a file with NTFS sub-streams?
+	{
 		int scanned_old = entry->_scanned;
 
 		if (!scanned_old)

@@ -33,6 +33,86 @@
 #include "winfs.h"
 
 
+int ScanNTFSStreams(Entry* entry, HANDLE hFile)
+{
+	PVOID ctx = 0;
+	DWORD read, seek_high;
+	Entry** pnext = &entry->_down;
+	int cnt = 0;
+
+	for(;;) {
+		struct NTFS_StreamHdr : public WIN32_STREAM_ID {
+			WCHAR name_padding[_MAX_FNAME];	// room for reading stream name
+		} hdr;
+
+		if (!BackupRead(hFile, (LPBYTE)&hdr, (LPBYTE)&hdr.cStreamName-(LPBYTE)&hdr, &read, FALSE, FALSE, &ctx) || (long)read!=(LPBYTE)&hdr.cStreamName-(LPBYTE)&hdr)
+			break;
+
+		if (hdr.dwStreamId == BACKUP_ALTERNATE_DATA) {
+			if (hdr.dwStreamNameSize &&
+				BackupRead(hFile, (LPBYTE)hdr.cStreamName, hdr.dwStreamNameSize, &read, FALSE, FALSE, &ctx) &&
+				read==hdr.dwStreamNameSize)
+			{
+				++cnt;
+
+				int l = hdr.dwStreamNameSize / sizeof(WCHAR);
+				LPCWSTR p = hdr.cStreamName;
+				LPCWSTR e = hdr.cStreamName + l;
+
+				if (l>0 && *p==':') {
+					++p, --l;
+
+					e = p;
+
+					while(l>0 && *e!=':')
+						++e, --l;
+
+					l = e - p;
+				}
+
+				Entry* stream_entry = new WinEntry(entry);
+
+				memcpy(&stream_entry->_data, &entry->_data, sizeof(WIN32_FIND_DATA));
+
+				lstrcpy(stream_entry->_data.cFileName, String(p, l));
+
+				stream_entry->_down = NULL;
+				stream_entry->_expanded = false;
+				stream_entry->_scanned = false;
+				stream_entry->_level = entry->_level + 1;
+				stream_entry->_bhfi_valid = false;
+
+				*pnext = stream_entry;
+				pnext = &stream_entry->_next;
+			}
+		} else if (hdr.dwStreamId == BACKUP_SPARSE_BLOCK) {
+			DWORD sparse_buffer[2];
+
+			if (!BackupRead(hFile, (LPBYTE)&sparse_buffer, 8, &read, FALSE, FALSE, &ctx)) {
+				BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx);
+				THROW_EXCEPTION(GetLastError());
+			}
+		}
+
+		 // jump to the next stream header
+		if (!BackupSeek(hFile, ~0, ~0, &read, &seek_high, &ctx)) {
+			DWORD error = GetLastError();
+
+			if (error != ERROR_SEEK) {
+				BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx);
+				THROW_EXCEPTION(error);
+				//break;
+			}
+		}
+	}
+
+	if (!BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx))
+		THROW_EXCEPTION(GetLastError());
+
+	return cnt;
+}
+
+
 void WinDirectory::read_directory()
 {
 	Entry* first_entry = NULL;
@@ -79,6 +159,9 @@ void WinDirectory::read_directory()
 			if (hFile != INVALID_HANDLE_VALUE) {
 				if (GetFileInformationByHandle(hFile, &entry->_bhfi))
 					entry->_bhfi_valid = true;
+
+				if (ScanNTFSStreams(entry, hFile))
+					entry->_scanned = true;	// There exist named NTFS sub-streams in this file.
 
 				CloseHandle(hFile);
 			}
@@ -158,7 +241,10 @@ void WinEntry::get_path(PTSTR path) const
 				memcpy(path+1, name, l*sizeof(TCHAR));
 				len += l+1;
 
-				path[0] = TEXT('\\');
+				if (entry->_up && !(entry->_up->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	// a NTFS stream?
+					path[0] = TEXT(':');
+				else
+					path[0] = TEXT('\\');
 			}
 
 			entry = entry->_up;

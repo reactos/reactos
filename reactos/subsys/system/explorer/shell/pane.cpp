@@ -408,7 +408,8 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 
 						if (up->_next
 #ifndef _LEFT_FILES
-							&& (up->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
+							&& ((up->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)	// a directory?
+								|| up->_next->_down)	// a file with NTFS sub-streams?
 #endif
 							) {
 							MoveToEx(dis->hDC, x, dis->rcItem.top, 0);
@@ -424,7 +425,8 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 
 				if (entry->_next
 #ifndef _LEFT_FILES
-					&& (entry->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
+					&& ((entry->_next->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)	// a directory?
+						|| entry->_next->_down)	// a file with NTFS sub-streams?
 #endif
 					)
 					LineTo(dis->hDC, x, dis->rcItem.bottom);
@@ -661,7 +663,9 @@ void Pane::insert_entries(Entry* dir, int idx)
 
 	for(; entry; entry=entry->_next) {
 #ifndef _LEFT_FILES
-		if (_treePane && !(entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+		if (_treePane &&
+			!(entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) &&	// not a directory?
+			!entry->_down)	// not a file with NTFS sub-streams?
 			continue;
 #endif
 

@@ -14,6 +14,7 @@
 - Application Desktop Toolbars
 - desktop switching
 - command line in explorer windows
+- hide CVS subdirectories, may be even implement a CVS managment plugin
 - printer and RAS connection icons in desktop notification area
 - make task buttons smaller when running many applications
 - use multi threading for launching of programs and filling start menu subdirectories

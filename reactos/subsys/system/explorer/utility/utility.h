@@ -581,19 +581,24 @@ struct String
 
 	String() {}
 	String(LPCTSTR s) : super(s) {}
+	String(LPCTSTR s, int l) : super(s, l) {}
 	String(const super& other) : super(other) {}
 	String(const String& other) : super(other) {}
 
 #ifdef UNICODE
 	String(LPCSTR s) {assign(s);}
+	String(LPCSTR s, int l) {assign(s, l);}
 	String(const string& other) {assign(other.c_str());}
 	String& operator=(LPCSTR s) {assign(s); return *this;}
 	void assign(LPCSTR s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN));}
+	void assign(LPCSTR s, int l) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, BUFFER_LEN));}
 #else
 	String(LPCWSTR s) {assign(s);}
+	String(LPCWSTR s, int l) {assign(s, l);}
 	String(const wstring& other) {assign(other.c_str());}
 	String& operator=(LPCWSTR s) {assign(s); return *this;}
 	void assign(LPCWSTR s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0));}
+	void assign(LPCWSTR s, int l) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));}
 #endif
 
 	String& operator=(LPCTSTR s) {super::assign(s); return *this;}
