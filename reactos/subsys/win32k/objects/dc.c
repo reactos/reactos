@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.62 2003/06/28 08:39:18 gvg Exp $
+/* $Id: dc.c,v 1.63 2003/07/14 17:36:59 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -28,6 +28,7 @@
 #include <ddk/ntddvid.h>
 
 #include <win32k/bitmaps.h>
+#include <win32k/cliprgn.h>
 #include <win32k/coord.h>
 #include <win32k/driver.h>
 #include <win32k/dc.h>
@@ -123,6 +124,7 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   PDC  NewDC, OrigDC = NULL;
   HBITMAP  hBitmap;
   HDC hNewDC;
+  HRGN hVisRgn;
 
   OrigDC = DC_HandleToPtr(hDC);
   if (OrigDC == NULL)
@@ -194,6 +196,11 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   }
   DC_ReleasePtr( hDC );
   DC_ReleasePtr( hNewDC );
+
+  hVisRgn = W32kCreateRectRgn(0, 0, 1, 1);
+  W32kSelectVisRgn(hNewDC, hVisRgn);
+  W32kDeleteObject(hVisRgn);
+
   DC_InitDC(hNewDC);
 
   return  hNewDC;
@@ -387,6 +394,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   PDC      NewDC;
   HDC      hDC = NULL;
   PSURFGDI SurfGDI;
+  HRGN     hVisRgn;
 
   /*  Check for existing DC object  */
   if ((hNewDC = DC_FindOpenDC(Driver)) != NULL)
@@ -443,10 +451,13 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
-
-  NewDC->w.hVisRgn = W32kCreateRectRgn(0, 0, SurfGDI->SurfObj.sizlBitmap.cx,
-                                       SurfGDI->SurfObj.sizlBitmap.cy);
+  
   DC_ReleasePtr( hNewDC );
+
+  hVisRgn = W32kCreateRectRgn(0, 0, SurfGDI->SurfObj.sizlBitmap.cx,
+                              SurfGDI->SurfObj.sizlBitmap.cy);
+  W32kSelectVisRgn(hNewDC, hVisRgn);
+  W32kDeleteObject(hVisRgn);
 
   /*  Initialize the DC state  */
   DC_InitDC(hNewDC);
@@ -1188,6 +1199,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   WORD  objectMagic;
   COLORREF *ColorMap;
   ULONG NumColors, Index;
+  HRGN hVisRgn;
 
   if(!hDC || !hGDIObj) return NULL;
 
@@ -1282,6 +1294,11 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       } else {
         dc->w.bitsPerPixel = pb->bitmap.bmBitsPixel;
       }
+
+      hVisRgn = W32kCreateRectRgn(0, 0, pb->size.cx, pb->size.cy);
+      W32kSelectVisRgn(hDC, hVisRgn);
+      W32kDeleteObject(hVisRgn);
+
       break;
 
 #if UPDATEREGIONS
