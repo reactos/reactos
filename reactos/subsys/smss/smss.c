@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.3 1999/12/06 00:25:14 ekohl Exp $
+/* $Id: smss.c,v 1.4 1999/12/15 06:48:10 phreak Exp $
  *
  * smss.c - Session Manager
  * 
@@ -77,7 +77,6 @@ NtProcessStartup (PPEB Peb)
 
 	if (TRUE == InitSessionManager(Children))
 	{
-		LARGE_INTEGER	Time = {{(DWORD)-1,(DWORD)-1}}; /* infinite? */
 		NTSTATUS	wws;
 
 		DisplayString( L"SM: Waiting for process termination...\n" );
@@ -88,13 +87,13 @@ NtProcessStartup (PPEB Peb)
 				Children,
 				WaitAny,
 				TRUE,	/* alertable */
-				& Time 
+				NULL    /* NULL for infinite */
 				);
 #endif
 		wws = NtWaitForSingleObject (
 				Children[CHILD_WINLOGON],
 				TRUE,	/* alertable */
-				& Time 
+				NULL
 				);
 
 
