@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.62 2004/04/20 18:59:00 gdalsnes Exp $
+/* $Id: mdl.c,v 1.63 2004/05/16 22:27:57 navaraf Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -235,6 +235,8 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
          KEBUGCHECK(0);
          /* FIXME: handle this? */
       }
+
+      Mdl->Process = CurrentProcess;
    }
    else /* if (AccessMode == KernelMode) */
    {
@@ -408,6 +410,8 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
       }
 
       MmFreeMemoryArea( &Mdl->Process->AddressSpace, Marea->BaseAddress, 0, NULL, NULL );
+
+      Mdl->Process = NULL;
    }
 
 }
