@@ -216,6 +216,7 @@ VOID ProtocolTransferDataComplete(
                                      &IPPacket.Header,
                                      &IPPacket.ContigSize,
                                      &IPPacket.TotalSize);
+
 	IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
         /* Determine which upper layer protocol that should receive
            this packet and pass it to the correct receive handler */
@@ -223,10 +224,13 @@ VOID ProtocolTransferDataComplete(
         OskitDumpBuffer( IPPacket.Header, BytesTransferred );
 
         PacketType = ((PETH_HEADER)IPPacket.Header)->EType;
+	IPPacket.Header += MaxLLHeaderSize;
+
 	TI_DbgPrint
 		(DEBUG_DATALINK,
 		 ("Ether Type = %x ContigSize = %d Total = %d\n",
 		  PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
+	
         switch (PacketType) {
             case ETYPE_IPv4:
             case ETYPE_IPv6:
@@ -235,7 +239,6 @@ VOID ProtocolTransferDataComplete(
                 break;
             case ETYPE_ARP:
 		TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
-		IPPacket.Header += MaxLLHeaderSize;
                 ARPReceive(Adapter->Context, &IPPacket);
             default:
                 break;
@@ -354,7 +357,8 @@ NDIS_STATUS ProtocolReceive(
 	NdisStatus = NDIS_STATUS_SUCCESS;
 	BytesTransferred = PacketSize;
 	RtlCopyMemory(BufferData,
-		      HeaderBuffer, HeaderBufferSize);
+		      HeaderBuffer, 
+		      HeaderBufferSize);
 	RtlCopyMemory(BufferData + HeaderBufferSize,
 		      LookaheadBuffer, LookaheadBufferSize);
     }

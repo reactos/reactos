@@ -189,7 +189,7 @@ VOID DGSend(
       }
       
       /* Get a route to the destination address */
-      if (RouteGetRouteToDestination(SendRequest->RemoteAddress, ADE->NTE, &RCN) == IP_SUCCESS)
+      if (RouteGetRouteToDestination(&SendRequest->RemoteAddress, ADE->NTE, &RCN) == IP_SUCCESS)
       {
           /* Set completion routine and send the packet */
 	  IPPacket = &SendRequest->Packet;
@@ -211,7 +211,7 @@ VOID DGSend(
 	  /* FIXME: Which error code should we use here? */
 	  TI_DbgPrint(MIN_TRACE, 
 		      ("No route to destination address (0x%X).\n",
-		       SendRequest->RemoteAddress->Address.IPv4Address));
+		       SendRequest->RemoteAddress.Address.IPv4Address));
 	  SendDatagramComplete(SendRequest,
 			       IPPacket->NdisPacket,
 			       NDIS_STATUS_REQUEST_ABORTED);
@@ -425,7 +425,6 @@ VOID DGCancelSendRequest(
     {
       /* Complete the request and free its resources */
       (*Current->Complete)(Current->Context, STATUS_CANCELLED, 0);
-      DereferenceObject(Current->RemoteAddress);
       ExFreePool(Current);
     }
   else

@@ -232,9 +232,10 @@ PIP_PACKET IPCreatePacket(
 
   INIT_TAG(IPPacket, TAG('I','P','K','T'));
 
-  IPPacket->Free     = FreePacket;
-  IPPacket->RefCount = 1;
-  IPPacket->Type     = Type;
+  IPPacket->Free       = FreePacket;
+  IPPacket->RefCount   = 1;
+  IPPacket->Type       = Type;
+  IPPacket->HeaderSize = 20;
 
   return IPPacket;
 }

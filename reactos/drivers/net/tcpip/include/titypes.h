@@ -133,7 +133,7 @@ typedef struct _DATAGRAM_SEND_REQUEST {
     PVOID Context;                        /* Pointer to context information */
     IP_PACKET Packet;
     UINT BufferSize;
-    PIP_ADDRESS RemoteAddress;
+    IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
     ULONG Flags;                          /* Protocol specific flags */
 } DATAGRAM_SEND_REQUEST, *PDATAGRAM_SEND_REQUEST;
@@ -307,6 +307,7 @@ typedef struct _CONNECTION_ENDPOINT {
   PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
   PVOID SocketContext;        /* Context for lower layer */
 
+#if 0
   PIP_ADDRESS LocalAddress;   /* Pointer to local IP address */
   USHORT LocalPort;           /* Local port number (network byte order) */
 
@@ -333,6 +334,7 @@ typedef struct _CONNECTION_ENDPOINT {
   /* Statistics for computing the retransmission timeout */
   ULONG TimestampSend;        /* Timestamp when sending a segment */
   ULONG TimestampAck;         /* Timestamp when receiving acknowledgment */
+#endif
 
   /* Requests */
   PTDI_REQUEST ListenRequest; /* Queued listen request */

@@ -53,7 +53,8 @@ PNDIS_PACKET PrepareARPPacket(
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
     /* Prepare ARP packet */
-    Size = MaxLLHeaderSize + sizeof(ARP_HEADER) + 
+    Size = MaxLLHeaderSize +
+	sizeof(ARP_HEADER) + 
         2 * LinkAddressLength + /* Hardware address length */
         2 * ProtoAddressLength; /* Protocol address length */
     Size = MAX(Size, MinLLFrameSize);

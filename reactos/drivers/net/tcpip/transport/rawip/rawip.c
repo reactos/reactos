@@ -40,16 +40,6 @@ NTSTATUS BuildRawIPPacket(
     PDATAGRAM_SEND_REQUEST SendRequest = (PDATAGRAM_SEND_REQUEST)Context;
     PIP_PACKET Packet = &SendRequest->Packet;
 
-#if 0
-    TI_DbgPrint(MAX_TRACE, ("TCPIP.SYS: NDIS data buffer is at (0x%X).\n", SendRequest->Buffer));
-    TI_DbgPrint(MAX_TRACE, ("NDIS data buffer Next is at (0x%X).\n", SendRequest->Buffer->Next));
-    TI_DbgPrint(MAX_TRACE, ("NDIS data buffer Size is (0x%X).\n", SendRequest->Buffer->Size));
-    TI_DbgPrint(MAX_TRACE, ("NDIS data buffer MappedSystemVa is (0x%X).\n", SendRequest->Buffer->MappedSystemVa));
-    TI_DbgPrint(MAX_TRACE, ("NDIS data buffer StartVa is (0x%X).\n", SendRequest->Buffer->StartVa));
-    TI_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteCount is (0x%X).\n", SendRequest->Buffer->ByteCount));
-    TI_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteOffset is (0x%X).\n", SendRequest->Buffer->ByteOffset));
-#endif
-
     /* Prepare packet */
 
     /* FIXME: Assumes IPv4 */
@@ -109,7 +99,6 @@ NTSTATUS RawIPSendDatagram(
  *     Status of operation
  */
 {
-    IP_PACKET Packet;
     NDIS_STATUS Status;
     PCHAR BufferData;
     UINT BufferLen;
@@ -117,22 +106,21 @@ NTSTATUS RawIPSendDatagram(
 	(PADDRESS_FILE)Request->Handle.AddressHandle;
     PDATAGRAM_SEND_REQUEST SendRequest;
 
-    Request = ExAllocatePool( NonPagedPool, sizeof(*Request) );
+    SendRequest = ExAllocatePool( NonPagedPool, sizeof(*SendRequest) );
 
     NdisQueryBuffer( Buffer, &BufferData, &BufferLen );
-    Status = AllocatePacketWithBuffer( &Packet.NdisPacket,
+    Status = AllocatePacketWithBuffer( &SendRequest->Packet.NdisPacket,
 				       BufferData,
 				       BufferLen );
     
-    BuildRawIPPacket( SendRequest,
-		      (PIP_ADDRESS)&AddrFile->ADE->Address->Address.
-		      IPv4Address,
-		      AddrFile->Port );
-
-    if( Status != NDIS_STATUS_SUCCESS ) 
+    if( Status != NDIS_STATUS_SUCCESS ) {
+	BuildRawIPPacket( SendRequest,
+			  (PIP_ADDRESS)&AddrFile->ADE->Address->Address.
+			  IPv4Address,
+			  AddrFile->Port );
 	Status = DGSendDatagram(Request, ConnInfo, &SendRequest->Packet);
-
-    NdisFreeBuffer( Buffer );
+	NdisFreeBuffer( Buffer );
+    }
 
     return Status;
 }

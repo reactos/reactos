@@ -105,10 +105,12 @@ typedef struct _ADDRESS_ENTRY {
     PIP_ADDRESS             Address;    /* Pointer to address identifying this entry */
 } ADDRESS_ENTRY, *PADDRESS_ENTRY;
 
-/* Values for address type */
-#define ADE_UNICAST   0x01
-#define ADE_MULTICAST 0x02
-#define ADE_ADDRMASK  0x03
+/* Values for address type -- also the interface flags */
+/* These values are mean to overlap meaningfully with the BSD ones */
+#define ADE_UNICAST     0x01
+#define ADE_MULTICAST   0x02
+#define ADE_ADDRMASK    0x04
+#define ADE_POINTOPOINT 0x10
 
 /* There is one NTE for each source (unicast) address assigned to an interface */
 typedef struct _NET_TABLE_ENTRY {

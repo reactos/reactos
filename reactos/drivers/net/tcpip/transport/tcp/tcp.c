@@ -32,30 +32,21 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
  *     This is the low level interface for receiving TCP data
  */
 {
-    PNDIS_BUFFER Buffer = 0;
-    PCHAR BufferData = 0;
-    UINT BufferOffset = 0;
-    UINT Length = 0;
+    PCHAR BufferData = ExAllocatePool( NonPagedPool, IPPacket->TotalSize );
 
-    BufferData = ExAllocatePool( NonPagedPool, IPPacket->TotalSize );
     if( BufferData ) {
-	memcpy( BufferData, IPPacket->Header, IPPacket->ContigSize );
-	BufferOffset += IPPacket->ContigSize;
-	if( IPPacket->NdisPacket ) {
-	    NdisQueryPacket( IPPacket->NdisPacket, NULL, NULL, &Buffer, NULL );
-	    if( Buffer ) {
-		Length = CopyBufferChainToBuffer
-		    (BufferData + BufferOffset, 
-		     Buffer, 
-		     0, 
-		     IPPacket->TotalSize - BufferOffset) + BufferOffset;
-	    } else
-		Length = BufferOffset;
-	} else
-	    Length = IPPacket->ContigSize;
+	TI_DbgPrint(MID_TRACE,("Sending packet %d (%d) to oskit\n", 
+			       IPPacket->TotalSize,
+			       IPPacket->HeaderSize));
+
+	memcpy( BufferData, IPPacket->Header, IPPacket->HeaderSize );
+	memcpy( BufferData + IPPacket->HeaderSize, IPPacket->Data,
+		IPPacket->TotalSize );
 	
-	OskitTCPReceiveDatagram( BufferData, Length, IPPacket->HeaderSize );
-	
+	OskitTCPReceiveDatagram( BufferData, 
+				 IPPacket->TotalSize, 
+				 IPPacket->HeaderSize );
+
 	ExFreePool( BufferData );
     }
 }
@@ -71,7 +62,6 @@ int TCPBindEvent( void *ClientData,
 int TCPPacketSend( void *ClientData,
 		   void *WhichSocket,
 		   void *WhichConnection,
-		   POSKIT_TCP_STATE TcpState,
 		   OSK_PCHAR Data,
 		   OSK_UINT Len );
 
@@ -155,16 +145,16 @@ NTSTATUS TCPConnect(
 			    Connection->AddressFile->ADE));
     TI_DbgPrint(MID_TRACE, ("ADEA: %08x\n", 
 			    Connection->AddressFile->ADE->Address));
-    
-    Connection->SendISS      = 0;
-    Connection->LocalAddress = Connection->AddressFile->ADE->Address;
-    Connection->LocalPort    = Connection->AddressFile->Port;
-    Connection->State        = ctSynSent;
-    
+
+    PIP_ADDRESS RemoteAddress;
+    USHORT RemotePort;
+
     Status = AddrBuildAddress(
-	(PTA_ADDRESS)(&((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress)->Address[0]),
-	&Connection->RemoteAddress,
-	&Connection->RemotePort);
+	(PTA_ADDRESS)(&((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress)->
+		      Address[0]),
+	&RemoteAddress,
+	&RemotePort);
+
     if (!NT_SUCCESS(Status)) {
 	TI_DbgPrint(MID_TRACE, ("Could not AddrBuildAddress in TCPConnect\n"));
 	KeReleaseSpinLock(&Connection->Lock, OldIrql);
@@ -174,9 +164,9 @@ NTSTATUS TCPConnect(
     AddressToConnect.sin_family = AF_INET;
 
     memcpy( &AddressToConnect.sin_addr, 
-	    &Connection->RemoteAddress->Address.IPv4Address,
+	    &RemoteAddress->Address.IPv4Address,
 	    sizeof(AddressToConnect.sin_addr) );
-    AddressToConnect.sin_port = htons(Connection->RemotePort);
+    AddressToConnect.sin_port = RemotePort;
     KeReleaseSpinLock(&Connection->Lock, OldIrql);
 
     Status = OskitTCPConnect(Connection->SocketContext,

@@ -150,16 +150,16 @@ UINT CommonPrefixLength(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address1 (0x%X)  Address2 (0x%X).\n", Address1, Address2));
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Address1 (%s) \n", A2S(Address1)));
-    TI_DbgPrint(DEBUG_ROUTER, ("Address2 (%s).\n", A2S(Address2)));
+    TI_DbgPrint(DEBUG_ROUTER, ("Target  (%s) \n", A2S(Address1)));
+    TI_DbgPrint(DEBUG_ROUTER, ("Adapter (%s).\n", A2S(Address2)));
 
     if (Address1->Type == IP_ADDRESS_V4)
         Size = sizeof(IPv4_RAW_ADDRESS);
     else
         Size = sizeof(IPv6_RAW_ADDRESS);
 
-    Addr1 = (PUCHAR)&Address1->Address;
-    Addr2 = (PUCHAR)&Address2->Address;
+    Addr1 = (PUCHAR)&Address1->Address.IPv4Address;
+    Addr2 = (PUCHAR)&Address2->Address.IPv4Address;
 
     /* Find first non-matching byte */
     for (i = 0; i < Size; i++) {
@@ -174,8 +174,8 @@ UINT CommonPrefixLength(
     /* Find first non-matching bit */
     Bitmask = 0x80;
     for (j = 0; ; j++) {
-	TI_DbgPrint(DEBUG_ROUTER, ("Mask: %x, v1: %x, v2: %x\n",
-				   Bitmask, Addr1[i], Addr2[i]));
+	TI_DbgPrint(DEBUG_ROUTER, ("(%d) Mask: %x, v1: %x, v2: %x\n",
+				   i, Bitmask, Addr1[i], Addr2[i]));
         if ((Addr1[i] & Bitmask) != (Addr2[i] & Bitmask))
             break;
         Bitmask >>= 1;

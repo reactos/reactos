@@ -34,7 +34,9 @@ int TCPBindEvent( void *ClientData,
     LPSOCKADDR_IN addr_in = (struct sockaddr_in *)address;
     KIRQL OldIrql;
     PNEIGHBOR_CACHE_ENTRY NCE = 0;
-
+    IP_ADDRESS RemoteAddress, LocalAddress;
+    USHORT RemotePort, LocalPort;
+    
     KeAcquireSpinLock( &Connection->Lock, &OldIrql );
 
     addr_in->sin_family = htons(addr_in->sin_family);
@@ -44,30 +46,39 @@ int TCPBindEvent( void *ClientData,
 
     if( addr_in->sin_family != AF_INET ) return OSK_EPROTONOSUPPORT;
 
-    NCE = RouterGetRoute(Connection->RemoteAddress, NULL);
+    RemoteAddress.Type = LocalAddress.Type = IP_ADDRESS_V4;
+    CP;
+    OskitTCPGetAddress( Connection->SocketContext,
+			&LocalAddress.Address.IPv4Address,
+			&LocalPort,
+			&RemoteAddress.Address.IPv4Address,
+			&RemotePort );
+    CP;
+
+    NCE = RouterGetRoute(&RemoteAddress, NULL);
 
     if( !NCE ) return OSK_EADDRNOTAVAIL;
 
-    if( !Connection->LocalAddress ) {
-	Connection->LocalAddress = ExAllocatePool( NonPagedPool,
-						   sizeof( IP_ADDRESS ) );
-	Connection->LocalAddress->Type = AF_INET;
-	Connection->LocalPort = 1024; // XXX arty hack
-    }
-
-    if( !Connection->LocalAddress ) return OSK_ENOBUFS;
-
     GetInterfaceIPv4Address(NCE->Interface, 
 			    ADE_UNICAST, 
-			    &Connection->LocalAddress->Address.IPv4Address );
+			    &LocalAddress.Address.IPv4Address );
 
     /* XXX arty IPv4 */
     if( addr_in ) 
 	memcpy( &addr_in->sin_addr, 
-		&Connection->LocalAddress->Address.IPv4Address, 
+		&LocalAddress.Address.IPv4Address, 
 		sizeof( addr_in->sin_addr ) );
 
-    addr_in->sin_port = htons(Connection->LocalPort);
+    addr_in->sin_port = htons(LocalPort);
+
+    CP;
+    OskitTCPSetAddress( Connection->SocketContext,
+			&LocalAddress.Address.IPv4Address,
+			LocalPort,
+			&RemoteAddress.Address.IPv4Address,
+			RemotePort );
+    CP;
+
     KeReleaseSpinLock( &Connection->Lock, OldIrql );
 
     return 0;
@@ -117,6 +128,8 @@ NTSTATUS AddHeaderIPv4(
     
     TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n", BufferSize, Header));
     
+    NdisQueryPacketLength( IPPacket->NdisPacket, &PayloadBufferSize );
+
     /* Allocate NDIS buffer for maximum Link level, IP and TCP header */
     NdisAllocateBuffer(&NdisStatus,
 		       &HeaderBuffer,
@@ -132,10 +145,10 @@ NTSTATUS AddHeaderIPv4(
     /* Chain header at front of NDIS packet */
     NdisChainBufferAtFront(IPPacket->NdisPacket, HeaderBuffer);
     
-    IPPacket->ContigSize = BufferSize;
-    IPPacket->TotalSize  = IPPacket->ContigSize + sizeof(*IPPacket);
-    IPPacket->Header     = (PVOID)((ULONG_PTR)Header + MaxLLHeaderSize);
     IPPacket->HeaderSize = 20;
+    IPPacket->ContigSize = BufferSize;
+    IPPacket->TotalSize  = IPPacket->HeaderSize + PayloadBufferSize;
+    IPPacket->Header     = (PVOID)((ULONG_PTR)Header + MaxLLHeaderSize);
     
     /* Build IPv4 header */
     IPHeader = (PIPv4_HEADER)IPPacket->Header;
@@ -148,7 +161,7 @@ NTSTATUS AddHeaderIPv4(
     /* Identification */
     IPHeader->Id = WH2N((USHORT)InterlockedIncrement(&TCP_IPIdentification));
     /* One fragment at offset 0 */
-    IPHeader->FlagsFragOfs = 0;
+    IPHeader->FlagsFragOfs = WH2N((USHORT)IPv4_DF_MASK);
     /* Time-to-Live is 128 */
     IPHeader->Ttl = 128;
     /* Transmission Control Protocol */
@@ -166,7 +179,6 @@ NTSTATUS AddHeaderIPv4(
 int TCPPacketSend(void *ClientData,
 		  void *WhichSocket, 
 		  void *WhichConnection,
-		  POSKIT_TCP_STATE TcpState,
 		  OSK_PCHAR data,
 		  OSK_UINT len ) {
     PADDRESS_FILE AddrFile;
@@ -176,17 +188,34 @@ int TCPPacketSend(void *ClientData,
     NTSTATUS Status = STATUS_NO_MEMORY;
     KIRQL OldIrql;
     PDATAGRAM_SEND_REQUEST SendRequest;
+    PNEIGHBOR_CACHE_ENTRY NCE = 0;
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)WhichConnection;
+    IP_ADDRESS RemoteAddress, LocalAddress;
+    USHORT RemotePort, LocalPort;
 
     SendRequest = 
 	(PDATAGRAM_SEND_REQUEST)
 	ExAllocatePool( NonPagedPool, sizeof( DATAGRAM_SEND_REQUEST ) );
-    if( !SendRequest ) goto end;
+    if( !SendRequest || !Connection ) return OSK_EINVAL;
+
+    RemoteAddress.Type = LocalAddress.Type = IP_ADDRESS_V4;
+    CP;
+    OskitTCPGetAddress( Connection->SocketContext,
+			&LocalAddress.Address.IPv4Address,
+			&LocalPort,
+			&RemoteAddress.Address.IPv4Address,
+			&RemotePort );
+    CP;
+
+    NCE = RouterGetRoute( &RemoteAddress, NULL );
+
+    if( !NCE ) return OSK_EADDRNOTAVAIL;
+
+    GetInterfaceIPv4Address(NCE->Interface, 
+			    ADE_UNICAST, 
+			    &LocalAddress.Address.IPv4Address );
 
     KeAcquireSpinLock( &Connection->Lock, &OldIrql );
-
-    Connection->SendNext = TcpState->SndNxt;
-    Connection->ReceiveNext = TcpState->RcvNxt;
 
     NdisStatus = 
 	AllocatePacketWithBuffer( &SendRequest->PacketToSend, data, len );
@@ -199,16 +228,16 @@ int TCPPacketSend(void *ClientData,
 
     SendRequest->Complete = TCPPacketSendComplete;
     SendRequest->Context = Connection;
-    SendRequest->RemoteAddress = Connection->RemoteAddress;
-    SendRequest->RemotePort = Connection->RemotePort;
+    SendRequest->RemoteAddress = RemoteAddress;
+    SendRequest->RemotePort = RemotePort;
     NdisQueryPacketLength( SendRequest->Packet.NdisPacket,
 			   &SendRequest->BufferSize );
 
     AddHeaderIPv4( SendRequest, 
-		   Connection->LocalAddress, 
-		   Connection->LocalPort,
-		   Connection->RemoteAddress,
-		   Connection->RemotePort );
+		   &LocalAddress, 
+		   LocalPort,
+		   &RemoteAddress,
+		   RemotePort );
 
     DGTransmit( Connection->AddressFile, SendRequest );
 

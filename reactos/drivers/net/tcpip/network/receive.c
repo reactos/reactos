@@ -202,6 +202,11 @@ PIP_PACKET ReassembleDatagram(
   PVOID Data;
 
   TI_DbgPrint(DEBUG_IP, ("Reassembling datagram from IPDR at (0x%X).\n", IPDR));
+  TI_DbgPrint(DEBUG_IP, ("IPDR->HeaderSize = %d\n", IPDR->HeaderSize));
+  TI_DbgPrint(DEBUG_IP, ("IPDR->DataSize = %d\n", IPDR->DataSize));
+
+  TI_DbgPrint(DEBUG_IP, ("Fragment header:\n"));
+  OskitDumpBuffer(IPDR->IPv4Header, IPDR->HeaderSize);
 
   /* FIXME: Assume IPv4 */
   IPPacket = IPCreatePacket(IP_ADDRESS_V4);
@@ -227,7 +232,7 @@ PIP_PACKET ReassembleDatagram(
   /* Copy the header into the buffer */
   RtlCopyMemory(IPPacket->Header, IPDR->IPv4Header, IPDR->HeaderSize);  
   
-  Data = (PVOID)((ULONG_PTR)IPPacket->Header + IPDR->HeaderSize);
+  Data = IPPacket->Header + IPDR->HeaderSize;
   IPPacket->Data = Data;
 
   /* Copy data from all fragments into buffer */
@@ -238,11 +243,10 @@ PIP_PACKET ReassembleDatagram(
     TI_DbgPrint(DEBUG_IP, ("Copying (%d) bytes of fragment data from (0x%X) to offset (%d).\n",
       Current->Size, Data, Current->Offset));
     /* Copy fragment data to the destination buffer at the correct offset */
-    RtlCopyMemory(
-		  (PVOID)((ULONG_PTR)Data + Current->Offset),
-      Current->Data,
-      Current->Size);
-
+    RtlCopyMemory((PVOID)((ULONG_PTR)Data + Current->Offset),
+		  Current->Data,
+		  Current->Size);
+    OskitDumpBuffer( Data, Current->Offset + Current->Size );
     CurrentEntry = CurrentEntry->Flink;
   }
 
@@ -438,13 +442,12 @@ VOID ProcessFragment(
       Fragment->Data, Fragment->Size));
 
     /* Copy datagram data into fragment buffer */
-    CopyPacketToBuffer(
-		  Fragment->Data,
-      IPPacket->NdisPacket,
-      IPPacket->Position,
-      Fragment->Size);
-      Fragment->Offset = FragFirst;
-
+    CopyPacketToBuffer(Fragment->Data,
+		       IPPacket->NdisPacket,
+		       IPPacket->Position + MaxLLHeaderSize,
+		       Fragment->Size);
+    Fragment->Offset = FragFirst;
+    
     /* If this is the last fragment, compute and save the datagram data size */
     if (!MoreFragments)
       IPDR->DataSize = FragFirst + Fragment->Size;
@@ -464,7 +467,7 @@ VOID ProcessFragment(
 
     Datagram = ReassembleDatagram(IPDR);
 
-	  KeReleaseSpinLock(&IPDR->Lock, OldIrql);
+    KeReleaseSpinLock(&IPDR->Lock, OldIrql);
 
     RemoveIPDR(IPDR);
     FreeIPDR(IPDR);
@@ -543,7 +546,8 @@ VOID IPv4Receive(
     TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
     
     IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
-    
+    TI_DbgPrint(DEBUG_IP, ("IPPacket->HeaderSize = %d\n", IPPacket->HeaderSize));
+
     if (IPPacket->HeaderSize > IPv4_MAX_HEADER_SIZE) {
 	TI_DbgPrint
 	    (MIN_TRACE, 
@@ -569,8 +573,10 @@ VOID IPv4Receive(
     AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
     
     IPPacket->Position = IPPacket->HeaderSize;
-    IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize);
+    IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize) + 14; /* XXX 14 */
     
+    OskitDumpBuffer(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize);
+
     /* FIXME: Possibly forward packets with multicast addresses */
     
     /* FIXME: Should we allow packets to be received on the wrong interface? */

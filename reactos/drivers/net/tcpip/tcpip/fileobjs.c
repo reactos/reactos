@@ -17,6 +17,7 @@
 #include <udp.h>
 #include <ip.h>
 #include <fileobjs.h>
+#include <oskittcp.h>
 
 /* List of all address file objects managed by this driver */
 LIST_ENTRY AddressFileListHead;
@@ -461,7 +462,8 @@ NTSTATUS FileOpenConnection(
 
   /* Save client context pointer */
   Connection->ClientContext = ClientContext;
-  Status = OskitTCPSocket( &Connection->SocketContext,
+  Status = OskitTCPSocket( Connection,
+			   &Connection->SocketContext,
 			   AF_INET,
 			   SOCK_STREAM,
 			   IPPROTO_TCP );

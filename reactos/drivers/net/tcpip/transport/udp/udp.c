@@ -92,7 +92,7 @@ NTSTATUS AddUDPHeaderIPv4(
   /* Source address */
   IPHeader->SrcAddr = LocalAddress->Address.IPv4Address;
   /* Destination address. FIXME: IPv4 only */
-  IPHeader->DstAddr = SendRequest->RemoteAddress->Address.IPv4Address;
+  IPHeader->DstAddr = SendRequest->RemoteAddress.Address.IPv4Address;
 
   /* Build UDP header */
   UDPHeader = (PUDP_HEADER)((ULONG_PTR)IPHeader + sizeof(IPv4_HEADER));
@@ -141,7 +141,7 @@ NTSTATUS BuildUDPPacket(
                       sizeof(UDP_HEADER)  +
                       SendRequest->BufferSize;
 
-  switch (SendRequest->RemoteAddress->Type) {
+  switch (SendRequest->RemoteAddress.Type) {
   case IP_ADDRESS_V4:
     Status = AddUDPHeaderIPv4(SendRequest, LocalAddress, LocalPort, Packet);
     break;

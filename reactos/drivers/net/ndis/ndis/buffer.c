@@ -354,6 +354,14 @@ NdisAllocateBuffer(
         "VirtualAddress (0x%X)  Length (%d)\n",
         Status, Buffer, PoolHandle, VirtualAddress, Length));
 
+    Temp = Pool->FreeList;
+    while( Temp ) {
+	NDIS_DbgPrint(MID_TRACE,("Free buffer -> %x\n", Temp));
+	Temp = Temp->Next;
+    }
+    
+    NDIS_DbgPrint(MID_TRACE,("|:. <- End free buffers"));
+
     if(!VirtualAddress && !Length) return;
 
     KeAcquireSpinLock(&Pool->SpinLock, &OldIrql);
@@ -392,8 +400,9 @@ NdisAllocateBuffer(
         *Status = NDIS_STATUS_SUCCESS;
     } else {
         KeReleaseSpinLock(&Pool->SpinLock, OldIrql);
-	ASSERT(FALSE);
         *Status = NDIS_STATUS_FAILURE;
+	NDIS_DbgPrint(MID_TRACE, ("Can't get another packet.\n"));
+	KeBugCheck(0);
     }
 }
 
