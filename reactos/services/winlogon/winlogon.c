@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.4 1999/07/17 23:10:30 ea Exp $
+/* $Id: winlogon.c,v 1.5 1999/11/20 21:53:53 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,9 @@
 
 #include <ddk/ntddk.h>
 //#include <stdio.h>
+
+#include <wchar.h>
+
 
 /* GLOBALS ******************************************************************/
 
@@ -173,7 +176,7 @@ CuiMonitor (VOID)
 	wcscpy( UserName, L"Administrator" );
 
 	/* FIXME: use locale info to format */
-	NtGetSystemtime(
+        NtGetSystemTime(
 		);
 
 	/* Print info and Monitor menu */
