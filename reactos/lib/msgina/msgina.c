@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.6 2003/12/07 00:04:20 weiden Exp $
+/* $Id: msgina.c,v 1.7 2003/12/27 11:09:58 weiden Exp $
  *
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
@@ -195,21 +195,22 @@ WlxActivateUserShell(
   PROCESS_INFORMATION pi;
   HKEY hKey;
   DWORD BufSize, ValueType;
-  WCHAR pszUserInitApp[MAX_PATH + 1];
+  WCHAR pszUserInitApp[MAX_PATH];
+  WCHAR pszExpUserInitApp[MAX_PATH];
   BOOL Ret;
   
   /* get the path of userinit */
   if(RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
-                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 
+                  L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon", 
                   0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
   {
-    /* FIXME - why does this always fail??? */
     VirtualFree(pEnvironment, 0, MEM_RELEASE);
     return FALSE;
   }
   BufSize = MAX_PATH * sizeof(WCHAR);
   if((RegQueryValueEx(hKey, L"Userinit", NULL, &ValueType, (LPBYTE)pszUserInitApp, 
-                     &BufSize) != ERROR_SUCCESS) || (ValueType != REG_SZ))
+                     &BufSize) != ERROR_SUCCESS) || 
+                     !((ValueType == REG_SZ) || (ValueType == REG_EXPAND_SZ)))
   {
     RegCloseKey(hKey);
     VirtualFree(pEnvironment, 0, MEM_RELEASE);
@@ -229,8 +230,10 @@ WlxActivateUserShell(
   si.cbReserved2 = 0;
   si.lpDesktop = pszDesktopName;
   
+  ExpandEnvironmentStrings(pszUserInitApp, pszExpUserInitApp, MAX_PATH);
+  
   Ret = CreateProcessAsUser(pgContext->UserToken,
-                            pszUserInitApp,
+                            pszExpUserInitApp,
                             NULL,
                             NULL,
                             NULL,

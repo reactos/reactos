@@ -3,11 +3,11 @@ Signature="$ReactOS$
 
 [AddReg]
 
-HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Shell",0x00020000,"%SystemRoot%\System32\cmd.exe"
-;HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Shell",0x00020000,"%SystemRoot%\bin\explorer.exe"
-HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","StartServices",0x00010001,0x00000001
-HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","StartGUI",0x00010001,0x00000000
-HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe,"
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\system32\cmd.exe"
+;HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\explorer.exe"
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartServices",0x00010001,0x00000001
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartGUI",0x00010001,0x00000000
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"
 
 HKCU, "Control Panel\Desktop", "CursorBlinkRate",0x00000000,"530"
 

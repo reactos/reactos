@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: userinit.c,v 1.2 2003/12/07 01:17:28 weiden Exp $
+/* $Id: userinit.c,v 1.3 2003/12/27 11:09:58 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Userinit Logon Application
@@ -39,7 +39,7 @@ BOOL GetShell(WCHAR *CommandLine)
   BOOL Ret = FALSE;
   
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 
+                  L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon", 
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
   {
     Size = MAX_PATH * sizeof(WCHAR);
@@ -50,7 +50,7 @@ BOOL GetShell(WCHAR *CommandLine)
                        (LPBYTE)Shell,
                        &Size) == ERROR_SUCCESS)
     {
-      if(Type == REG_SZ)
+      if((Type == REG_SZ) || (Type == REG_EXPAND_SZ))
       {
         wcscpy(CommandLine, Shell);
         Ret = TRUE;
@@ -76,6 +76,7 @@ void StartShell(void)
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
   WCHAR Shell[MAX_PATH];
+  WCHAR ExpandedShell[MAX_PATH];
   
   GetShell(Shell);
   
@@ -83,8 +84,10 @@ void StartShell(void)
   si.cb = sizeof(STARTUPINFO);
   ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
   
+  ExpandEnvironmentStrings(Shell, ExpandedShell, MAX_PATH);
+  
   if(CreateProcess(NULL,
-                   Shell,
+                   ExpandedShell,
                    NULL,
                    NULL,
                    FALSE,
@@ -97,6 +100,8 @@ void StartShell(void)
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   }
+  else
+    MessageBox(0, L"Userinit failed to start the shell!\n", NULL, 0);
 }
 
 int WINAPI
