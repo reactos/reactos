@@ -123,12 +123,12 @@ FindPciBios(PCM_PCI_BUS_DATA BusData)
 
   if (INT386_SUCCESS(RegsOut) && RegsOut.d.edx == 0x20494350 && RegsOut.b.ah == 0)
     {
-//      printf("Found PCI bios\n");
+      DbgPrint((DPRINT_HWDETECT, "Found PCI bios\n"));
 
-//      printf("AL: %x\n", RegsOut.b.al);
-//      printf("BH: %x\n", RegsOut.b.bh);
-//      printf("BL: %x\n", RegsOut.b.bl);
-//      printf("CL: %x\n", RegsOut.b.cl);
+      DbgPrint((DPRINT_HWDETECT, "AL: %x\n", RegsOut.b.al));
+      DbgPrint((DPRINT_HWDETECT, "BH: %x\n", RegsOut.b.bh));
+      DbgPrint((DPRINT_HWDETECT, "BL: %x\n", RegsOut.b.bl));
+      DbgPrint((DPRINT_HWDETECT, "CL: %x\n", RegsOut.b.cl));
 
       BusData->BusCount = RegsOut.b.cl + 1;
       BusData->PciVersion = RegsOut.w.bx;
@@ -138,7 +138,7 @@ FindPciBios(PCM_PCI_BUS_DATA BusData)
     }
 
 
-//  printf("No PCI bios found\n");
+  DbgPrint((DPRINT_HWDETECT, "No PCI bios found\n"));
 
   return FALSE;
 }

@@ -2276,15 +2276,10 @@ PcHwDetect(VOID)
 
   /* Detect buses */
   DetectPciBios(SystemKey, &BusNumber);
-#if 0
-  DetectApmBios(&BusNumber);
-#endif
+  DetectApmBios(SystemKey, &BusNumber);
   DetectPnpBios(SystemKey, &BusNumber);
   DetectIsaBios(SystemKey, &BusNumber);
-#if 0
-  DetectAcpiBios(&BusNumber);
-#endif
-
+  DetectAcpiBios(SystemKey, &BusNumber);
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
 

@@ -207,6 +207,8 @@ ARCH_OBJS	=	fathelp.o	\
 			i386disk.o	\
 			portio.o	\
 			hardware.o	\
+			hwacpi.o	\
+			hwapm.o		\
 			hwcpu.o		\
 			hwpci.o		\
 			archmach.o	\

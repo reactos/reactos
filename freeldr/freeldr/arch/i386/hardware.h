@@ -167,6 +167,12 @@ VOID SetComponentInformation(HKEY ComponentKey,
 			     U32 Key,
 			     U32 Affinity);
 
+/* hwacpi.c */
+VOID DetectAcpiBios(HKEY SystemKey, U32 *BusNumber);
+
+/* hwapm.c */
+VOID DetectApmBios(HKEY SystemKey, U32 *BusNumber);
+
 /* hwcpu.c */
 VOID DetectCPUs(HKEY SystemKey);
 

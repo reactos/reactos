@@ -30,7 +30,7 @@
 
 
 #define MP_FP_SIGNATURE 0x5F504D5F	/* "_MP_" */
-#define MP_CT_SIGNATURE 0x504D4350	/* "_MP_" */
+#define MP_CT_SIGNATURE 0x504D4350	/* "PCMP" */
 
 
 typedef struct _MP_FLOATING_POINT_TABLE

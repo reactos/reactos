@@ -507,6 +507,12 @@ for(;;);
     }
 
 #if 0
+  /* Load acpi.sys */
+  if (!LoadDriver(SourcePath, "acpi.sys"))
+    return;
+#endif
+
+#if 0
   /* Load isapnp.sys */
   if (!LoadDriver(SourcePath, "isapnp.sys"))
     return;
