@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.28 2003/02/27 20:32:31 ekohl Exp $
+/* $Id: scsiport.c,v 1.29 2003/06/24 12:31:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1457,93 +1457,94 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
   KIRQL oldIrql;
 
   DPRINT("ScsiPortDpcForIsr(Dpc %p  DpcDeviceObject %p  DpcIrp %p  DpcContext %p)\n",
-	  Dpc, DpcDeviceObject, DpcIrp, DpcContext);
+	 Dpc, DpcDeviceObject, DpcIrp, DpcContext);
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DpcContext;
 
   KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
   if (DeviceExtension->IrpFlags)
-  {
-  IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
-  Srb = IrpStack->Parameters.Scsi.Srb;
-
-  if (DeviceExtension->OriginalSrb != NULL)
     {
-      DPRINT("Got sense data!\n");
+      IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
+      Srb = IrpStack->Parameters.Scsi.Srb;
 
-      DPRINT("Valid: %x\n", DeviceExtension->InternalSenseData.Valid);
-      DPRINT("ErrorCode: %x\n", DeviceExtension->InternalSenseData.ErrorCode);
-      DPRINT("SenseKey: %x\n", DeviceExtension->InternalSenseData.SenseKey);
-      DPRINT("SenseCode: %x\n", DeviceExtension->InternalSenseData.AdditionalSenseCode);
-
-      /* Copy sense data */
-      if (DeviceExtension->OriginalSrb->SenseInfoBufferLength != 0)
+      if (DeviceExtension->OriginalSrb != NULL)
 	{
-	  RtlCopyMemory(DeviceExtension->OriginalSrb->SenseInfoBuffer,
-			&DeviceExtension->InternalSenseData,
-			sizeof(SENSE_DATA));
-	  DeviceExtension->OriginalSrb->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+	  DPRINT("Got sense data!\n");
+
+	  DPRINT("Valid: %x\n", DeviceExtension->InternalSenseData.Valid);
+	  DPRINT("ErrorCode: %x\n", DeviceExtension->InternalSenseData.ErrorCode);
+	  DPRINT("SenseKey: %x\n", DeviceExtension->InternalSenseData.SenseKey);
+	  DPRINT("SenseCode: %x\n", DeviceExtension->InternalSenseData.AdditionalSenseCode);
+
+	  /* Copy sense data */
+	  if (DeviceExtension->OriginalSrb->SenseInfoBufferLength != 0)
+	    {
+	      RtlCopyMemory(DeviceExtension->OriginalSrb->SenseInfoBuffer,
+			    &DeviceExtension->InternalSenseData,
+			    sizeof(SENSE_DATA));
+	      DeviceExtension->OriginalSrb->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+	    }
+
+	  /* Clear current sense data */
+	  RtlZeroMemory(&DeviceExtension->InternalSenseData, sizeof(SENSE_DATA));
+
+	  IrpStack->Parameters.Scsi.Srb = DeviceExtension->OriginalSrb;
+	  DeviceExtension->OriginalSrb = NULL;
+	}
+      else if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
+	       (Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION))
+	{
+	  DPRINT("SCSIOP_REQUEST_SENSE required!\n");
+
+	  DeviceExtension->OriginalSrb = Srb;
+	  IrpStack->Parameters.Scsi.Srb = ScsiPortInitSenseRequestSrb(DeviceExtension,
+								      Srb);
+	  KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+	  if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+				      ScsiPortStartPacket,
+				      DeviceExtension))
+	    {
+	      DPRINT1("Synchronization failed!\n");
+
+	      DpcIrp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+	      DpcIrp->IoStatus.Information = 0;
+	      IoCompleteRequest(DpcIrp,
+				IO_NO_INCREMENT);
+	      IoStartNextPacket(DpcDeviceObject,
+				FALSE);
+	    }
+
+	  return;
 	}
 
-      /* Clear current sense data */
-      RtlZeroMemory(&DeviceExtension->InternalSenseData, sizeof(SENSE_DATA));
+      DeviceExtension->CurrentIrp = NULL;
 
-      IrpStack->Parameters.Scsi.Srb = DeviceExtension->OriginalSrb;
-      DeviceExtension->OriginalSrb = NULL;
-    }
-  else if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
-	   (Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION))
-    {
-      DPRINT("SCSIOP_REQUEST_SENSE required!\n");
 
-      DeviceExtension->OriginalSrb = Srb;
-      IrpStack->Parameters.Scsi.Srb = ScsiPortInitSenseRequestSrb(DeviceExtension,
-								  Srb);
-      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
-      if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
-				  ScsiPortStartPacket,
-				  DeviceExtension))
+//      DpcIrp->IoStatus.Information = 0;
+//      DpcIrp->IoStatus.Status = STATUS_SUCCESS;
+
+      if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
 	{
-	  DPRINT("Synchronization failed!\n");
-
-	  DpcIrp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-	  DpcIrp->IoStatus.Information = 0;
-	  IoCompleteRequest(DpcIrp,
-			    IO_NO_INCREMENT);
-	  IoStartNextPacket(DpcDeviceObject,
-			    FALSE);
+	  DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
+	  IoCompleteRequest(DpcIrp, IO_NO_INCREMENT);
 	}
 
-      return;
+      if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
+	{
+	  DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
+	  KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+	  IoStartNextPacket(DpcDeviceObject, FALSE);
+	}
+      else
+	{
+	  KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+	}
     }
-
-  DeviceExtension->CurrentIrp = NULL;
-
-
-//  DpcIrp->IoStatus.Information = 0;
-//  DpcIrp->IoStatus.Status = STATUS_SUCCESS;
-
-  if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
-    {
-      DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
-      IoCompleteRequest(DpcIrp, IO_NO_INCREMENT);
-    }
-
-  if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
-    {
-      DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
-      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
-      IoStartNextPacket(DpcDeviceObject, FALSE);
-    }
-    else
-    {
-      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
-    }
-  }
   else
-  {
-    KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
-  }
+    {
+      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+    }
+
   DPRINT("ScsiPortDpcForIsr() done\n");
 }
 
