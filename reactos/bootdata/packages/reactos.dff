@@ -161,6 +161,7 @@ subsys\system\winefile\winefile.exe     1
 services\eventlog\eventlog.exe          1
 services\rpcss\rpcss.exe                1
 apps\utils\net\arp\arp.exe              1
+apps\utils\net\route\route.exe              1
 apps\utils\net\finger\finger.exe        1
 apps\utils\net\ipconfig\ipconfig.exe    1
 apps\utils\net\netstat\netstat.exe      1
