@@ -1,4 +1,4 @@
-<module name="version" type="win32dll">
+<module name="version" type="win32dll" baseaddress="${BASEADDRESS_VERSION}">
 	<dependency>winebuild</dependency>
 	<importlibrary definition="version.def" />
 	<include base="ReactOS">include/wine</include>

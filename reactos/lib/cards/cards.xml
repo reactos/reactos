@@ -1,4 +1,4 @@
-<module name="cards" type="win32dll">
+<module name="cards" type="win32dll" baseaddress="${BASEADDRESS_CARDS}">
 	<importlibrary definition="cards.def" />
 	<include base="cards">.</include>
 	<define name="UNICODE" />

@@ -1,4 +1,4 @@
-<module name="ntdll" type="nativedll">
+<module name="ntdll" type="nativedll" baseaddress="${BASEADDRESS_NTDLL}">
 	<importlibrary definition="def/ntdll.def" />
 	<define name="__NTDLL__" />
 	<define name="_DISABLE_TIDENTS" />

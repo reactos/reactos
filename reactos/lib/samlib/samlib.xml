@@ -1,4 +1,4 @@
-<module name="samlib" type="win32dll">
+<module name="samlib" type="win32dll" baseaddress="${BASEADDRESS_SAMLIB}">
 	<importlibrary definition="samlib.def" />
 	<include base="samlib">.</include>
 	<define name="_DISABLE_TIDENTS" />

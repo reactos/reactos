@@ -1,4 +1,4 @@
-<module name="notifyhook" type="win32dll">
+<module name="notifyhook" type="win32dll" baseaddress="${BASEADDRESS_NOTIFYHOOK}">
 	<importlibrary definition="notifyhook.def" />
 	<include base="notifyhook">.</include>
 	<define name="__USE_W32API" />

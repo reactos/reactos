@@ -1,4 +1,4 @@
-<module name="fmifs" type="win32dll" entrypoint="_InitializeFmIfs@12">
+<module name="fmifs" type="win32dll" entrypoint="_InitializeFmIfs@12" baseaddress="${BASEADDRESS_FMIFS}">
 	<importlibrary definition="fmifs.def" />
 	<include base="fmifs">.</include>
 	<define name="_DISABLE_TIDENTS" />

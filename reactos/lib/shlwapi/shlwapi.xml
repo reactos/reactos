@@ -1,4 +1,4 @@
-<module name="shlwapi" type="win32dll">
+<module name="shlwapi" type="win32dll" baseaddress="${BASEADDRESS_SHLWAPI}">
 	<dependency>winebuild</dependency>
 	<importlibrary definition="shlwapi.spec.def" />
 	<include base="shlwapi">.</include>

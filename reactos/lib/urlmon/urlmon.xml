@@ -1,4 +1,4 @@
-<module name="urlmon" type="win32dll">
+<module name="urlmon" type="win32dll" baseaddress="${BASEADDRESS_URLMON}">
 	<dependency>winebuild</dependency>
 	<importlibrary definition="urlmon.spec.def" />
 	<include base="urlmon">.</include>

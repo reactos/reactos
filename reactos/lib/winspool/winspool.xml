@@ -1,4 +1,4 @@
-<module name="winspool" type="win32dll" extension=".drv">
+<module name="winspool" type="win32dll" extension=".drv" baseaddress="${BASEADDRESS_WINSPOOL}">
 	<importlibrary definition="winspool.def" />
 	<include base="winspool">.</include>
 	<define name="_DISABLE_TIDENTS" />

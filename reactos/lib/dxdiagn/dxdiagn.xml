@@ -1,4 +1,4 @@
-<module name="dxdiagn" type="win32dll">
+<module name="dxdiagn" type="win32dll" baseaddress="${BASEADDRESS_DXDIAGN}">
 	<dependency>winebuild</dependency>
 	<importlibrary definition="dxdiagn.spec.def" />
 	<include base="dxdiagn">.</include>

@@ -1,4 +1,4 @@
-<module name="snmpapi" type="win32dll">
+<module name="snmpapi" type="win32dll" baseaddress="${BASEADDRESS_SNMPAPI}">
 	<importlibrary definition="snmpapi.def" />
 	<include base="snmpapi">.</include>
 	<define name="UNICODE" />

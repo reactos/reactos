@@ -1,4 +1,4 @@
-<module name="control" type="win32gui">
+<module name="control" type="win32gui" baseaddress="${BASEADDRESS_CONTROL}">
 	<include base="control">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />

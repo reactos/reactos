@@ -1,4 +1,4 @@
-<module name="gdiplus" type="win32dll">
+<module name="gdiplus" type="win32dll" baseaddress="${BASEADDRESS_GDIPLUS}">
 	<importlibrary definition="gdiplus.def" />
 	<include base="gdiplus">include</include>
 	<define name="_DISABLE_TIDENTS" />

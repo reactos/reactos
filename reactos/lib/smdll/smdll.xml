@@ -1,4 +1,4 @@
-<module name="smdll" type="win32dll">
+<module name="smdll" type="win32dll" baseaddress="${BASEADDRESS_SMDLL}">
 	<importlibrary definition="smdll.def" />
 	<include base="smdll">.</include>
 	<define name="_DISABLE_TIDENTS" />

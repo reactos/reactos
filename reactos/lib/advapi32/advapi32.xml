@@ -1,4 +1,4 @@
-<module name="advapi32" type="win32dll">
+<module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}">
 	<importlibrary definition="advapi32.def" />
 	<include base="advapi32">.</include>
 	<define name="__USE_W32API" />

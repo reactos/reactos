@@ -1,4 +1,4 @@
-<module name="midimap" type="win32dll">
+<module name="midimap" type="win32dll" baseaddress="${BASEADDRESS_MIDIMAP}">
 	<dependency>winebuild</dependency>
 	<importlibrary definition="midimap.spec.def" />
 	<include base="midimap">.</include>

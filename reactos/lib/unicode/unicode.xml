@@ -1,4 +1,4 @@
-<module name="wine_unicode" type="win32dll">
+<module name="wine_unicode" type="win32dll" baseaddress="${BASEADDRESS_UNICODE}">
 	<importlibrary definition="wine_unicode.def" />
 	<include base="wine_unicode">.</include>
 	<include base="ReactOS">include/wine</include>

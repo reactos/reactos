@@ -1,4 +1,4 @@
-<module name="advpack" type="win32dll">
+<module name="advpack" type="win32dll" baseaddress="${BASEADDRESS_ADVPACK}">
 	<importlibrary definition="advpack.def" />
 	<include base="advpack">.</include>
 	<define name="UNICODE" />

@@ -1,4 +1,4 @@
-<module name="freetype" type="kernelmodedll">
+<module name="freetype" type="kernelmodedll" baseaddress="${BASEADDRESS_FREETYPE}">
 	<importlibrary definition="freetype.def" />
 	<include base="freetype">include</include>
 	<define name="_DISABLE_TIDENTS" />

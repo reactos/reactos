@@ -1,4 +1,4 @@
-<module name="opengl32" type="win32dll">
+<module name="opengl32" type="win32dll" baseaddress="${BASEADDRESS_OPENGL32}">
 	<importlibrary definition="opengl32.def" />
 	<include base="wsock32">.</include>
 	<define name="UNICODE" />

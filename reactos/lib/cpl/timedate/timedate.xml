@@ -1,4 +1,4 @@
-<module name="timedate" type="win32dll" extension=".cpl">
+<module name="timedate" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_TIMEDATE}">
 	<importlibrary definition="timedate.def" />
 	<include base="timedate">.</include>
 	<define name="UNICODE" />

@@ -1,4 +1,4 @@
-<module name="msgina" type="win32dll">
+<module name="msgina" type="win32dll" baseaddress="${BASEADDRESS_MSGINA}">
 	<importlibrary definition="msgina.def" />
 	<include base="msgina">.</include>
 	<include base="msgina">include</include>

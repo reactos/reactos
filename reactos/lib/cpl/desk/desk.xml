@@ -1,4 +1,4 @@
-<module name="desk" type="win32dll" extension=".cpl">
+<module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}">
 	<importlibrary definition="desk.def" />
 	<include base="desk">.</include>
 	<define name="UNICODE" />

@@ -1,4 +1,4 @@
-<module name="wsock32" type="win32dll">
+<module name="wsock32" type="win32dll" baseaddress="${BASEADDRESS_WSOCK32}">
 	<importlibrary definition="wsock32.def" />
 	<include base="wsock32">.</include>
 	<define name="UNICODE" />
