@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.104 2003/11/02 06:58:57 navaraf Exp $
+/* $Id: defwnd.c,v 1.105 2003/11/08 15:33:51 mf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1386,7 +1386,7 @@ DefWindowProcA(HWND hWnd,
                 (WindowText = GetPropA(hWnd, WindowTextAtom)) == NULL)
             {
                 if (wParam > 1)
-	            {
+                {
                     *((PSTR)lParam) = '\0';
                 }
                 return (0);
@@ -1489,11 +1489,11 @@ DefWindowProcW(HWND hWnd,
             if (WindowTextAtom == 0 ||
                 (WindowText = GetPropW(hWnd, WindowTextAtom)) == NULL)
             {
-               if (wParam > 1)
-               {
-                   ((PWSTR)lParam) = '\0';
-               }
-               return (0);
+                if (wParam > 1)
+                {
+                    *((PWSTR)lParam) = '\0';
+                }
+                return (0);
             }
             wcsncpy((PWSTR)lParam, WindowText, wParam);
             return (min(wParam, wcslen(WindowText)));
