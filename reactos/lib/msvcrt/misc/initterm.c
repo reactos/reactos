@@ -18,22 +18,3 @@ void _initterm(void (*fStart[])(void), void (*fEnd[])(void))
 	i++;
      }
 }
-
-
-typedef int (* _onexit_t)(void);
-
-/*
- * @unimplemented
- */
-_onexit_t __dllonexit(_onexit_t func, void (** fStart[])(void),	void (** fEnd[])(void))
-{
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-_onexit_t _onexit(_onexit_t x)
-{
-    return x;
-}

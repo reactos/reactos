@@ -39,7 +39,7 @@ int __vsscanf(const char *s,const char *format,va_list arg)
 
   memset((void *) &f, 0, sizeof (f));
 
-  f._flag = _IOREAD;
+  f._flag = _IOREAD|_IOSTRG|_IOBINARY;
   f._ptr = (char *)s;
   f._base = (char *)s;
   f._bufsiz = strlen(s);
