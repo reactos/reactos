@@ -7,11 +7,13 @@
  *              Vizzini (vizzini@plasmic.com)
  * REVISIONS:
  *   CSH 01/08-2000 Created
- *   8-20-2003 Vizzini - DMA support
+ *   20 Aug 2003 Vizzini - DMA support
+ *   3  Oct 2003 Vizzini - Formatting and minor bugfixes
  */
 #include <ndissys.h>
 #include <miniport.h>
 
+
 VOID STDCALL HandleDeferredProcessing(
     IN  PKDPC   Dpc,
     IN  PVOID   DeferredContext,
@@ -26,32 +28,48 @@ VOID STDCALL HandleDeferredProcessing(
  *     SystemArgument2 = Unused
  */
 {
-    BOOLEAN WasBusy;
-    PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
+  BOOLEAN WasBusy;
+  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-    WasBusy = Adapter->MiniportBusy;
-    Adapter->MiniportBusy = TRUE;
-    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
-    /* Call the deferred interrupt service handler for this adapter */
-    (*Adapter->Miniport->Chars.HandleInterruptHandler)(
+  /* XXX try to grok WasBusy */
+  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    {
+      WasBusy = Adapter->MiniportBusy;
+      Adapter->MiniportBusy = TRUE;
+    }
+  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+
+  /* Call the deferred interrupt service handler for this adapter */
+  (*Adapter->Miniport->Chars.HandleInterruptHandler)(
+      Adapter->NdisMiniportBlock.MiniportAdapterContext);
+
+  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    {
+      if ((!WasBusy) && (Adapter->WorkQueueHead)) 
+        {
+          KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+        } 
+      else 
+        {
+          Adapter->MiniportBusy = WasBusy;
+        }
+    }
+  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+
+  /* re-enable the interrupt */
+  NDIS_DbgPrint(MAX_TRACE, ("re-enabling the interrupt\n"));
+  if(Adapter->Miniport->Chars.EnableInterruptHandler)
+    (*Adapter->Miniport->Chars.EnableInterruptHandler)(
         Adapter->NdisMiniportBlock.MiniportAdapterContext);
 
-    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-    if ((!WasBusy) && (Adapter->WorkQueueHead)) {
-        KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
-    } else {
-        Adapter->MiniportBusy = WasBusy;
-    }
-    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-
-    NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-
+
 BOOLEAN STDCALL ServiceRoutine(
     IN  PKINTERRUPT Interrupt,
     IN  PVOID       ServiceContext)
@@ -64,27 +82,28 @@ BOOLEAN STDCALL ServiceRoutine(
  *     TRUE if a miniport controlled device generated the interrupt
  */
 {
-    BOOLEAN InterruptRecognized;
-    BOOLEAN QueueMiniportHandleInterrupt;
-    PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(ServiceContext);
+  BOOLEAN InterruptRecognized;
+  BOOLEAN QueueMiniportHandleInterrupt;
+  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(ServiceContext);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Called. Adapter (0x%X)\n", Adapter));
+  NDIS_DbgPrint(MAX_TRACE, ("Called. Adapter (0x%X)\n", Adapter));
 
-    (*Adapter->Miniport->Chars.ISRHandler)(&InterruptRecognized,
-                                           &QueueMiniportHandleInterrupt,
-                                           Adapter->NdisMiniportBlock.MiniportAdapterContext);
+  (*Adapter->Miniport->Chars.ISRHandler)(&InterruptRecognized,
+      &QueueMiniportHandleInterrupt,
+      Adapter->NdisMiniportBlock.MiniportAdapterContext);
 
-    if (QueueMiniportHandleInterrupt) {
-        NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
-        KeInsertQueueDpc(&Adapter->NdisMiniportBlock.Interrupt->InterruptDpc, NULL, NULL);
+  if (QueueMiniportHandleInterrupt) 
+    {
+      NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
+      KeInsertQueueDpc(&Adapter->NdisMiniportBlock.Interrupt->InterruptDpc, NULL, NULL);
     }
 
-    NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-    return InterruptRecognized;
+  return InterruptRecognized;
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -101,7 +120,7 @@ NdisCompleteDmaTransfer(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -114,7 +133,7 @@ NdisFlushBuffer(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -125,10 +144,10 @@ NdisGetCacheFillSize(
 {
     UNIMPLEMENTED
 
-	return 0;
+  return 0;
 }
 
-
+
 /*
  * @implemented
  */
@@ -139,11 +158,11 @@ NdisImmediateReadPortUchar(
     IN  ULONG       Port,
     OUT PUCHAR      Data)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    *Data = READ_PORT_UCHAR((PUCHAR)Port); // FIXME: What to do with WrapperConfigurationContext?
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  *Data = READ_PORT_UCHAR((PUCHAR)Port); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
+
 /*
  * @implemented
  */
@@ -154,11 +173,11 @@ NdisImmediateReadPortUlong(
     IN  ULONG       Port,
     OUT PULONG      Data)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    *Data = READ_PORT_ULONG((PULONG)Port); // FIXME: What to do with WrapperConfigurationContext?
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  *Data = READ_PORT_ULONG((PULONG)Port); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
+
 /*
  * @implemented
  */
@@ -169,11 +188,11 @@ NdisImmediateReadPortUshort(
     IN  ULONG       Port,
     OUT PUSHORT     Data)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    *Data = READ_PORT_USHORT((PUSHORT)Port); // FIXME: What to do with WrapperConfigurationContext?
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  *Data = READ_PORT_USHORT((PUSHORT)Port); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
+
 /*
  * @implemented
  */
@@ -184,11 +203,11 @@ NdisImmediateWritePortUchar(
     IN  ULONG       Port,
     IN  UCHAR       Data)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    WRITE_PORT_UCHAR((PUCHAR)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  WRITE_PORT_UCHAR((PUCHAR)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
+
 /*
  * @implemented
  */
@@ -199,11 +218,11 @@ NdisImmediateWritePortUlong(
     IN  ULONG       Port,
     IN  ULONG       Data)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    WRITE_PORT_ULONG((PULONG)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  WRITE_PORT_ULONG((PULONG)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -214,11 +233,11 @@ NdisImmediateWritePortUshort(
     IN  ULONG       Port,
     IN  USHORT      Data)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-    WRITE_PORT_USHORT((PUSHORT)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  WRITE_PORT_USHORT((PUSHORT)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
+
 IO_ALLOCATION_ACTION NdisMapRegisterCallback (
     IN PDEVICE_OBJECT  DeviceObject,
     IN PIRP            Irp,
@@ -383,7 +402,7 @@ NdisMAllocateMapRegisters(
   return NDIS_STATUS_SUCCESS;
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -400,7 +419,7 @@ NdisMCompleteDmaTransfer(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -412,7 +431,7 @@ NdisMDeregisterDmaChannel(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @implemented
  */
@@ -430,7 +449,7 @@ NdisMDeregisterInterrupt(
     IoDisconnectInterrupt(Interrupt->InterruptObject);
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -450,10 +469,10 @@ NdisMDeregisterIoPortRange(
  *     PortOffset            = Pointer to mapped base port address
  */
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+  NDIS_DbgPrint(MAX_TRACE, ("called - IMPLEMENT ME.\n"));
 }
 
-
+
 /*
  * @implemented
  */
@@ -491,7 +510,7 @@ NdisMFreeMapRegisters(
  KeLowerIrql(OldIrql);
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -505,10 +524,10 @@ NdisMMapIoSpace(
 {
     UNIMPLEMENTED
 
-	return NDIS_STATUS_FAILURE;
+  return NDIS_STATUS_FAILURE;
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -519,10 +538,10 @@ NdisMReadDmaCounter(
 {
     UNIMPLEMENTED
 
-	return 0;
+  return 0;
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -538,9 +557,10 @@ NdisMRegisterDmaChannel(
 {
     UNIMPLEMENTED
 
-	return NDIS_STATUS_FAILURE;
+  return NDIS_STATUS_FAILURE;
 }
 
+
 /*
  * @implemented
  */
@@ -568,67 +588,52 @@ NdisMRegisterInterrupt(
  *     Status of operation
  */
 {
-    NTSTATUS Status;
-    ULONG MappedIRQ;
-    KIRQL DIrql;
-    KAFFINITY Affinity;
-    PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
+  NTSTATUS Status;
+  ULONG MappedIRQ;
+  KIRQL DIrql;
+  KAFFINITY Affinity;
+  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Called. InterruptVector (0x%X)  InterruptLevel (0x%X)  "
-        "SharedInterrupt (%d)  InterruptMode (0x%X)\n",
-        InterruptVector, InterruptLevel, SharedInterrupt, InterruptMode));
+  NDIS_DbgPrint(MAX_TRACE, ("Called. InterruptVector (0x%X)  InterruptLevel (0x%X)  "
+      "SharedInterrupt (%d)  InterruptMode (0x%X)\n",
+      InterruptVector, InterruptLevel, SharedInterrupt, InterruptMode));
 
-    RtlZeroMemory(Interrupt, sizeof(NDIS_MINIPORT_INTERRUPT));
+  RtlZeroMemory(Interrupt, sizeof(NDIS_MINIPORT_INTERRUPT));
 
-    KeInitializeSpinLock(&Interrupt->DpcCountLock);
+  KeInitializeSpinLock(&Interrupt->DpcCountLock);
 
-    KeInitializeDpc(&Interrupt->InterruptDpc,
-                    HandleDeferredProcessing,
-                    Adapter);
+  KeInitializeDpc(&Interrupt->InterruptDpc, HandleDeferredProcessing, Adapter);
 
-    KeInitializeEvent(&Interrupt->DpcsCompletedEvent,
-                      NotificationEvent,
-                      FALSE);
+  KeInitializeEvent(&Interrupt->DpcsCompletedEvent, NotificationEvent, FALSE);
 
-    Interrupt->SharedInterrupt = SharedInterrupt;
+  Interrupt->SharedInterrupt = SharedInterrupt;
 
-    Adapter->NdisMiniportBlock.Interrupt = Interrupt;
+  Adapter->NdisMiniportBlock.Interrupt = Interrupt;
 
-    MappedIRQ = HalGetInterruptVector(Adapter->BusType,
-                                      Adapter->BusNumber,
-                                      InterruptLevel,
-                                      InterruptVector,
-                                      &DIrql,
-                                      &Affinity);
+  MappedIRQ = HalGetInterruptVector(Adapter->BusType, Adapter->BusNumber, InterruptLevel, InterruptVector, &DIrql, &Affinity);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Connecting to interrupt vector (0x%X)  Affinity (0x%X).\n", MappedIRQ, Affinity));
+  NDIS_DbgPrint(MAX_TRACE, ("Connecting to interrupt vector (0x%X)  Affinity (0x%X).\n", MappedIRQ, Affinity));
 
-    Status = IoConnectInterrupt(&Interrupt->InterruptObject,
-                                ServiceRoutine,
-                                Adapter,
-                                &Interrupt->DpcCountLock,
-                                MappedIRQ,
-                                DIrql,
-                                DIrql,
-                                InterruptMode,
-                                SharedInterrupt,
-                                Affinity,
-                                FALSE);
+  Status = IoConnectInterrupt(&Interrupt->InterruptObject, ServiceRoutine, Adapter, &Interrupt->DpcCountLock, MappedIRQ,
+      DIrql, DIrql, InterruptMode, SharedInterrupt, Affinity, FALSE);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X).\n", Status));
+  NDIS_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X).\n", Status));
 
-    if (NT_SUCCESS(Status))
-        return NDIS_STATUS_SUCCESS;
+  if (NT_SUCCESS(Status))
+    return NDIS_STATUS_SUCCESS;
 
-    if (Status == STATUS_INSUFFICIENT_RESOURCES) {
+  if (Status == STATUS_INSUFFICIENT_RESOURCES) 
+    {
         /* FIXME: Log error */
-        return NDIS_STATUS_RESOURCE_CONFLICT;
+      NDIS_DbgPrint(MIN_TRACE, ("Resource conflict!\n"));
+      return NDIS_STATUS_RESOURCE_CONFLICT;
     }
 
-    return NDIS_STATUS_FAILURE;
+  NDIS_DbgPrint(MIN_TRACE, ("Function failed\n"));
+  return NDIS_STATUS_FAILURE;
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -727,3 +732,4 @@ NdisMUnmapIoSpace(
 }
 
 /* EOF */
+

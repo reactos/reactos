@@ -9,7 +9,7 @@ HOST = mingw32-windows
 endif
 
 # Build map files which includes source and asm code
-# FULL_MAP = yes
+FULL_MAP = yes
 
 # Default to no PCH support
 ifeq ($(ROS_USE_PCH),)

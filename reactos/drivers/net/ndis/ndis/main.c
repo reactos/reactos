@@ -7,7 +7,8 @@
  *              Vizzini (vizzini@plasmic.com)
  * REVISIONS:
  *   CSH 01/08-2000 Created
- *   8/20/2003 Vizzini - NDIS4/5 revisions
+ *   20 Aug 2003 Vizzini - NDIS4/5 revisions
+ *   3  Oct 2003 Vizzini - formatting and minor bugfixing
  */
 #include <ndissys.h>
 #include <protocol.h>
@@ -25,6 +26,7 @@ DWORD DebugTraceLevel = MIN_TRACE;
 extern KSPIN_LOCK OrphanAdapterListLock;
 extern LIST_ENTRY OrphanAdapterListHead;
 
+
 VOID MainUnload(
     PDRIVER_OBJECT DriverObject)
 /*
@@ -33,9 +35,10 @@ VOID MainUnload(
  *     DriverObject = Pointer to driver object created by the system
  */
 {
-    NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+  NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
+
 NTSTATUS
 STDCALL
 DriverEntry(
@@ -76,6 +79,7 @@ DriverEntry(
   return STATUS_SUCCESS;
 }
 
+
 /*
  * @implemented
  */
@@ -103,13 +107,10 @@ NdisWriteErrorLogEntry(
  */
 {
   NDIS_DbgPrint(MIN_TRACE, ("ERROR: ErrorCode 0x%x\n", ErrorCode));
-
-#if DBG
-  /* break into a debugger so we can see what's up */
-  __asm__("int $3\n");
-#endif
+  ASSERT(0);
 }
 
+
 /*
  * @implemented
  */
@@ -128,6 +129,7 @@ NdisInitializeReadWriteLock(
   memset(Lock,0,sizeof(NDIS_RW_LOCK));
 }
 
+
 /*
  * @implemented
  */

@@ -95,12 +95,14 @@ RtlAssert (
 	PCHAR Message
 	);
 
-#define ASSERT( exp ) if (!(exp)) RtlAssert( #exp, __FILE__, __LINE__, NULL )
+#define ASSERT( exp )         if (!(exp)) RtlAssert( #exp, __FILE__, __LINE__, NULL )
 #define ASSERTMSG( msg, exp ) if (!(exp)) RtlAssert( #exp, __FILE__, __LINE__, msg )
+#define PAGED_CODE()          if (KeGetCurrentIrql() > APC_LEVEL) ASSERT(0); 
 
 #else
 #define ASSERT( exp )
 #define ASSERTMSG( msg, exp )
+#define PAGED_CODE()
 #endif /* DBG */
 
 /* Base types */
@@ -5565,7 +5567,7 @@ NdisReturnPackets(
 /* EOF */
 
 /*
- * XXX - these macros are disabled for the momentdue to the fact that there are definitions for them elsewhere.
+ * XXX - these macros are disabled for the moment due to the fact that there are definitions for them elsewhere.
  * We will have to decide which to keep; we don't need both (no BINARY_COMPATIBLE)
  */
 #if 0

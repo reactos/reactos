@@ -7,12 +7,16 @@
  *              Vizzini (vizzini@plasmic.com)
  * REVISIONS:
  *   CSH 01/08-2000 Created
- *   8/25/2003 Vizzini - NDIS4/5 and PnP additions
+ *   25 Aug 2003 Vizzini - NDIS4/5 and PnP additions
+ *   3  Oct 2003 Vizzini - formatting and minor bugfixes
+ *
+ * TODO:
+ *    - Fix HalGetBusDataByOffset() param 2 in most calls below
  */
 #include <ndissys.h>
 #include <miniport.h>
 
-
+
 /*
  * @implemented
  */
@@ -25,15 +29,10 @@ NdisImmediateReadPciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  return HalGetBusDataByOffset (PCIConfiguration,
-				0, /* FIXME */
-				SlotNumber,
-				Buffer,
-				Offset,
-				Length);
+  return HalGetBusDataByOffset (PCIConfiguration, 0, SlotNumber, Buffer, Offset, Length);
 }
 
-
+
 /*
  * @implemented
  */
@@ -46,15 +45,10 @@ NdisImmediateWritePciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  return HalSetBusDataByOffset (PCIConfiguration,
-				0, /* FIXME */
-				SlotNumber,
-				Buffer,
-				Offset,
-				Length);
+  return HalSetBusDataByOffset (PCIConfiguration, 0, SlotNumber, Buffer, Offset, Length);
 }
 
-
+
 /*
  * @implemented
  */
@@ -88,13 +82,12 @@ NdisMPciAssignResources(
       return NDIS_STATUS_FAILURE;
     }
 
-  *AssignedResources =
-    (PNDIS_RESOURCE_LIST)&ResourceList->List[0].PartialResourceList;
+  *AssignedResources = (PNDIS_RESOURCE_LIST)&ResourceList->List[0].PartialResourceList;
 
   return NDIS_STATUS_SUCCESS;
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -124,10 +117,10 @@ NdisQueryMapRegisterCount(
  * As such, we do what microsoft does on the x86 hals and return as follows
  */
 {
-	return NDIS_STATUS_NOT_SUPPORTED;
+  return NDIS_STATUS_NOT_SUPPORTED;
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -171,15 +164,10 @@ NdisReadPciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  return HalGetBusDataByOffset (PCIConfiguration,
-				0, /* FIXME */
-				SlotNumber,
-				Buffer,
-				Offset,
-				Length);
+  return HalGetBusDataByOffset (PCIConfiguration, 0, SlotNumber, Buffer, Offset, Length);
 }
 
-
+
 /*
  * @implemented
  */
@@ -192,12 +180,8 @@ NdisWritePciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  return HalSetBusDataByOffset (PCIConfiguration,
-				0, /* FIXME */
-				SlotNumber,
-				Buffer,
-				Offset,
-				Length);
+  return HalSetBusDataByOffset (PCIConfiguration, 0, SlotNumber, Buffer, Offset, Length);
 }
 
 /* EOF */
+

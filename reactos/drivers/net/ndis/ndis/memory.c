@@ -7,11 +7,13 @@
  *              Vizzini (vizzini@plasmic.com)
  * REVISIONS:
  *   CSH 01/08-2000 Created
- *   8/15/2003 Vizzini - DMA support
+ *   15 Aug 2003 Vizzini - DMA support
+ *   3  Oct 2003 Vizzini - formatting and minor bugfixing
  */
 #include <ndissys.h>
 #include <miniport.h>
 
+
 /*
  * @implemented
  */
@@ -45,7 +47,7 @@ NdisAllocateMemoryWithTag(
   return NDIS_STATUS_SUCCESS;
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -59,7 +61,7 @@ NdisCreateLookaheadBufferFromSharedMemory(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -71,7 +73,7 @@ NdisDestroyLookaheadBufferFromSharedMemory(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -85,7 +87,7 @@ NdisMoveFromMappedMemory(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -99,7 +101,7 @@ NdisMoveMappedMemory(
     RtlCopyMemory(Destination,Source,Length);
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -113,7 +115,7 @@ NdisMoveToMappedMemory(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -128,7 +130,7 @@ NdisMUpdateSharedMemory(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @implemented
  */
@@ -180,7 +182,7 @@ NdisAllocateMemory(
   return NDIS_STATUS_SUCCESS;
 }
 
-
+
 /*
  * @implemented
  */
@@ -215,7 +217,7 @@ NdisFreeMemory(
   ExFreePool(VirtualAddress);
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -230,7 +232,7 @@ NdisImmediateReadSharedMemory(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -245,7 +247,7 @@ NdisImmediateWriteSharedMemory(
     UNIMPLEMENTED
 }
 
-
+
 /*
  * @implemented
  */
@@ -276,7 +278,7 @@ NdisMAllocateSharedMemory(
   *VirtualAddress = HalAllocateCommonBuffer(Adapter->AdapterObject, Length, PhysicalAddress, Cached);
 }
 
-
+
 /*
  * @unimplemented
  */
@@ -291,9 +293,10 @@ NdisMAllocateSharedMemoryAsync(
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
     UNIMPLEMENTED
 
-	return NDIS_STATUS_FAILURE;
+  return NDIS_STATUS_FAILURE;
 }
 
+
 /*
  * @implemented
  */
@@ -321,7 +324,7 @@ NdisMFreeSharedMemoryPassive(
   ExFreePool(Memory);
 }
 
-
+
 /*
  * @implemented
  */

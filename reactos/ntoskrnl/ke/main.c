@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.172 2003/09/29 20:43:07 navaraf Exp $
+/* $Id: main.c,v 1.173 2003/10/12 16:39:52 vizzini Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -682,7 +682,7 @@ ExpInitializeExecutive(VOID)
   for (i = 2; i < KeLoaderBlock.ModsCount; i++)
     {
 #ifdef KDBG
-       /* Do not free the memory from symbol files, if the kernel debugger is activ */
+       /* Do not free the memory from symbol files, if the kernel debugger is active */
        if (!RtlpCheckFileNameExtension(name, ".sym"))
 #endif
          {

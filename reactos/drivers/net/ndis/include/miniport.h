@@ -79,9 +79,9 @@ typedef struct _ORPHAN_ADATER {
 } ORPHAN_ADAPTER, *PORPHAN_ADAPTER;
 
 /* Information about a logical adapter */
-typedef struct _LOGICAL_ADAPTER {
-    NDIS_MINIPORT_BLOCK NdisMiniportBlock;                                /* NDIS defined fields */
-
+typedef struct _LOGICAL_ADAPTER 
+{
+    NDIS_MINIPORT_BLOCK         NdisMiniportBlock;      /* NDIS defined fields */
     KDPC                        MiniportDpc;            /* DPC routine for adapter */
     BOOLEAN                     MiniportBusy;           /* A MiniportXxx routine is executing */
     NDIS_HANDLE                 MiniportAdapterBinding; /* Binding handle for current caller */
@@ -89,7 +89,6 @@ typedef struct _LOGICAL_ADAPTER {
     NDIS_MINIPORT_WORK_ITEM     WorkQueue[NDIS_MINIPORT_WORK_QUEUE_SIZE];
     PNDIS_MINIPORT_WORK_ITEM    WorkQueueHead;          /* Head of work queue */
     PNDIS_MINIPORT_WORK_ITEM    WorkQueueTail;          /* Tail of work queue */
-
     LIST_ENTRY                  ListEntry;              /* Entry on global list */
     LIST_ENTRY                  MiniportListEntry;      /* Entry on miniport driver list */
     LIST_ENTRY                  ProtocolListHead;       /* List of bound protocols */
@@ -97,8 +96,7 @@ typedef struct _LOGICAL_ADAPTER {
     PMINIPORT_DRIVER            Miniport;               /* Miniport owning this adapter */
     UNICODE_STRING              DeviceName;             /* Device name of this adapter */
     ULONG                       Attributes;             /* Attributes of adapter */
-    /* TRUE if the miniport has called NdisSetAttributes(Ex) for this adapter */
-    BOOLEAN                     AttributesSet;
+    BOOLEAN                     AttributesSet;          /* Whether NdisMSetAttributes(Ex) has been called */
     PVOID                       QueryBuffer;            /* Buffer to use for queries */
     ULONG                       QueryBufferLength;      /* Length of QueryBuffer */
     ULONG                       MediumHeaderSize;       /* Size of medium header */
@@ -108,10 +106,8 @@ typedef struct _LOGICAL_ADAPTER {
     ULONG                       LookaheadLength;        /* Length of lookahead buffer */
     ULONG                       CurLookaheadLength;     /* Current (selected) length of lookahead buffer */
     ULONG                       MaxLookaheadLength;     /* Maximum length of lookahead buffer */
-
     PNDIS_PACKET                PacketQueueHead;        /* Head of packet queue */
     PNDIS_PACKET                PacketQueueTail;        /* Head of packet queue */
-
     PNDIS_PACKET                LoopPacket;             /* Current packet beeing looped */
     PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;        /* Adapter's shutdown handler */
     UINT                        MapRegistersRequested;  /* Number of outstanding map registers requested */
@@ -119,17 +115,17 @@ typedef struct _LOGICAL_ADAPTER {
     ADAPTER_MAP_REGISTER_LIST   MapRegisterList;        /* List of allocated map registers */
     KEVENT                      DmaEvent;               /* Event to support DMA register allocation */
     KSPIN_LOCK                  DmaLock;                /* Spinlock to protect the dma list */
-    UINT                        BusNumber;
-    INTERFACE_TYPE              BusType;
-    UINT                        SlotNumber;
-    ULONG                       Irql;
-    ULONG                       Vector;
-    KAFFINITY                   Affinity;
-    PHYSICAL_ADDRESS            BaseIoAddress;
-    PHYSICAL_ADDRESS            BaseMemoryAddress;      /* multiple ranges? */
-    ULONG                       DmaChannel;
-    ULONG                       DmaPort;
-    PNDIS_MINIPORT_TIMER        Timer;
+    UINT                        BusNumber;              /* The bus number of the adapter  */
+    INTERFACE_TYPE              BusType;                /* The bus type of the adapter */
+    UINT                        SlotNumber;             /* The slot number of the adapter*/
+    ULONG                       Irql;                   /* The Irql assigned to the adapter */
+    ULONG                       Vector;                 /* The interrupt vector assigned to the adapter */
+    KAFFINITY                   Affinity;               /* The processor affinity of the adapter */
+    PHYSICAL_ADDRESS            BaseIoAddress;          /* The base IO address of the adapter */
+    PHYSICAL_ADDRESS            BaseMemoryAddress;      /* The base memory address of mapped memory for the adapter */
+    ULONG                       DmaChannel;             /* The DMA channel number of the adapter */
+    ULONG                       DmaPort;                /* The DMA port number of the adapter */
+    PNDIS_MINIPORT_TIMER        Timer;                  /* The timer  object of the adapter */
 } LOGICAL_ADAPTER, *PLOGICAL_ADAPTER;
 
 #define GET_LOGICAL_ADAPTER(Handle)((PLOGICAL_ADAPTER)Handle)
@@ -206,3 +202,4 @@ NdisStartDevices();
 #endif /* __MINIPORT_H */
 
 /* EOF */
+

@@ -21,8 +21,8 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName",	  RES_STR_COMPANY_NAME
-            VALUE "FileDescription",  "NDIS library\0"
-            VALUE "FileVersion",	  "0.0.0\0"
+            VALUE "FileDescription",  "NDIS Library\0"
+            VALUE "FileVersion",	  "0.1.4\0"
             VALUE "InternalName",	  "ndis\0"
             VALUE "LegalCopyright",	  RES_STR_LEGAL_COPYRIGHT
             VALUE "OriginalFilename", "ndis.sys\0"

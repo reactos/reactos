@@ -10,7 +10,7 @@
 
 #include <ndissys.h>
 #include <net/ndis.h>
-#include "../include/miniport.h"
+#include "miniport.h"
 
 
 typedef struct _PROTOCOL_BINDING {
@@ -52,3 +52,4 @@ ProIndicatePacket(
 #endif /* __PROTOCOL_H */
 
 /* EOF */
+
