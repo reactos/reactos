@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.85 2003/10/03 22:07:40 gvg Exp $
+/* $Id: dc.c,v 1.86 2003/10/04 20:26:43 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -542,7 +542,8 @@ NtGdiDeleteDC(HDC  DCHandle)
       return  FALSE;
     }
   DPRINT( "Deleting DC\n" );
-  if ((!(DCToDelete->w.flags & DC_MEMORY))) // Don't reset the display if its a memory DC
+  if (! (DCToDelete->w.flags & DC_MEMORY)  /* Don't reset the display if its a memory DC */
+      && NULL != DCToDelete->DriverName)
   {
     if (!DRIVER_UnreferenceDriver (DCToDelete->DriverName))
     {
