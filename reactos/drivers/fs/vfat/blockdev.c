@@ -76,7 +76,7 @@ BOOLEAN VFATReadSector(IN PDEVICE_OBJECT pDeviceObject,
     }
 
     if (!NT_SUCCESS(status)) {
-        DbgPrint("IO failed!!! Error code: %d\n", status);
+        DbgPrint("IO failed!!! Error code: %x\n", status);
         ExFreePool(mbr);
         return FALSE;
     }
@@ -85,5 +85,6 @@ BOOLEAN VFATReadSector(IN PDEVICE_OBJECT pDeviceObject,
 
     ExFreePool(mbr);
     DPRINT("Block request succeeded\n");
+
     return TRUE;
 }
