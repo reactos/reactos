@@ -1,3 +1,19 @@
+2003-07-18  Royce Mitchell III  <royce3@ev1.net>
+
+	* include/defines.h: added missing DISP_CHANGE_BADPARAM
+	* include/ntos/gditypes.h: fixed DEVMODEA/W structures
+	(had to move POINTL structure from structs.h)
+	* include/win32k/ntuser.h: fixed some parameter lists
+	* subsys/win32k/ntuser/stubs.c: ditto
+	* lib/user32/misc/devmode.c: new function USER32_DevModeA2W
+	converts DEVMODEA structure to a DEVMODEW
+	* lib/user32/include/user32.h: declaration for USER32_DevModeA2W
+	* lib/user32/makefile: added misc/devmode.c
+	* lib/user32/misc/desktop.c: converting CreateDesktopA's
+	DEVMODEA to a DEVMODEW now.
+	* lib/user32/misc/display.c: implemented all functions except
+	GetMonitorInfoA/W
+
 2003-07-17  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/fs/ntfs/notes.txt: New file.

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.5 2003/07/10 21:04:31 chorns Exp $
+/* $Id: display.c,v 1.6 2003/07/19 01:35:27 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -35,7 +35,7 @@
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 EnumDisplayDevicesA(
@@ -44,13 +44,28 @@ EnumDisplayDevicesA(
   PDISPLAY_DEVICE lpDisplayDevice,
   DWORD dwFlags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  WINBOOL rc;
+  UNICODE_STRING Device;
+  if ( !RtlCreateUnicodeStringFromAsciiz ( &Device, (PCSZ)lpDevice ) )
+    {
+      SetLastError ( ERROR_OUTOFMEMORY );
+      return FALSE;
+    }
+
+  rc = NtUserEnumDisplayDevices (
+    &Device,
+    iDevNum,
+    lpDisplayDevice,
+    dwFlags );
+
+  RtlFreeUnicodeString ( &Device );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -60,29 +75,71 @@ EnumDisplayDevicesW(
   PDISPLAY_DEVICE lpDisplayDevice,
   DWORD dwFlags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  UNICODE_STRING Device;
+  WINBOOL rc;
+
+  RtlInitUnicodeString ( &Device, lpDevice );
+
+  rc = NtUserEnumDisplayDevices (
+    &Device,
+    iDevNum,
+    lpDisplayDevice,
+    dwFlags );
+
+  RtlFreeUnicodeString ( &Device );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
 EnumDisplayMonitors(
   HDC hdc,
-  LPRECT lprcClip,
+  LPCRECT lprcClip,
   MONITORENUMPROC lpfnEnum,
   LPARAM dwData)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserEnumDisplayMonitors ( hdc, lprcClip, lpfnEnum, dwData );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
+ */
+WINBOOL
+STDCALL
+EnumDisplaySettingsExA(
+  LPCSTR lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODEA lpDevMode,
+  DWORD dwFlags)
+{
+  WINBOOL rc;
+  UNICODE_STRING DeviceName;
+  DEVMODEW DevModeW;
+
+  if ( !RtlCreateUnicodeStringFromAsciiz ( &DeviceName, (PCSZ)lpszDeviceName ) )
+    {
+      SetLastError ( ERROR_OUTOFMEMORY );
+      return FALSE;
+    }
+
+  USER32_DevModeA2W ( &DevModeW, lpDevMode );
+
+  rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &DevModeW, dwFlags );
+
+  RtlFreeUnicodeString ( &DeviceName );
+
+  return rc;
+}
+
+
+/*
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -91,45 +148,36 @@ EnumDisplaySettingsA(
   DWORD iModeNum,
   LPDEVMODEA lpDevMode)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+	return EnumDisplaySettingsExA ( lpszDeviceName, iModeNum, lpDevMode, 0 );
 }
 
 
 /*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-EnumDisplaySettingsExA(
-  LPCSTR lpszDeviceName,
-  DWORD iModeNum,
-  LPDEVMODEW lpDevMode,
-  DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
 EnumDisplaySettingsExW(
   LPCWSTR lpszDeviceName,
   DWORD iModeNum,
-  LPDEVMODEA lpDevMode,
+  LPDEVMODEW lpDevMode,
   DWORD dwFlags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  WINBOOL rc;
+  UNICODE_STRING DeviceName;
+
+  RtlInitUnicodeString ( &DeviceName, lpszDeviceName );
+
+  rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, lpDevMode, dwFlags );
+
+  RtlFreeUnicodeString ( &DeviceName );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -138,8 +186,7 @@ EnumDisplaySettingsW(
   DWORD iModeNum,
   LPDEVMODEW lpDevMode)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+	return EnumDisplaySettingsExW ( lpszDeviceName, iModeNum, lpDevMode, 0 );
 }
 
 
@@ -172,21 +219,7 @@ GetMonitorInfoW(
 
 
 /*
- * @unimplemented
- */
-LONG
-STDCALL
-ChangeDisplaySettingsA(
-  LPDEVMODEA lpDevMode,
-  DWORD dwflags)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
+ * @implemented
  */
 LONG
 STDCALL
@@ -197,13 +230,41 @@ ChangeDisplaySettingsExA(
   DWORD dwflags,
   LPVOID lParam)
 {
-  UNIMPLEMENTED;
-  return 0;
+  LONG rc;
+  UNICODE_STRING DeviceName;
+  DEVMODEW DevModeW;
+
+  if ( !RtlCreateUnicodeStringFromAsciiz ( &DeviceName, (PCSZ)lpszDeviceName ) )
+    {
+      SetLastError ( ERROR_OUTOFMEMORY );
+      return DISP_CHANGE_BADPARAM; /* FIXME what to return? */
+    }
+
+  USER32_DevModeA2W ( &DevModeW, lpDevMode );
+
+  rc = NtUserChangeDisplaySettings ( &DeviceName, &DevModeW, hwnd, dwflags, lParam );
+
+  RtlFreeUnicodeString ( &DeviceName );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
+ */
+LONG
+STDCALL
+ChangeDisplaySettingsA(
+  LPDEVMODEA lpDevMode,
+  DWORD dwflags)
+{
+  return ChangeDisplaySettingsExA ( NULL, lpDevMode, NULL, dwflags, 0 );
+}
+
+
+/*
+ * @implemented
  */
 LONG
 STDCALL
@@ -214,13 +275,21 @@ ChangeDisplaySettingsExW(
   DWORD dwflags,
   LPVOID lParam)
 {
-  UNIMPLEMENTED;
-  return 0;
+  LONG rc;
+  UNICODE_STRING DeviceName;
+
+  RtlInitUnicodeString ( &DeviceName, lpszDeviceName );
+
+  rc = NtUserChangeDisplaySettings ( &DeviceName, lpDevMode, hwnd, dwflags, lParam );
+
+  RtlFreeUnicodeString ( &DeviceName );
+
+  return rc;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LONG
 STDCALL
@@ -228,6 +297,5 @@ ChangeDisplaySettingsW(
   LPDEVMODEW lpDevMode,
   DWORD dwflags)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return ChangeDisplaySettingsExW ( NULL, lpDevMode, NULL, dwflags, 0 );
 }

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.13 2003/07/05 16:04:01 chorns Exp $
+/* $Id: stubs.c,v 1.14 2003/07/19 01:35:27 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -194,14 +194,14 @@ NtUserChangeClipboardChain(
   return 0;
 }
 
-DWORD
+LONG
 STDCALL
 NtUserChangeDisplaySettings(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4)
+  PUNICODE_STRING lpszDeviceName,
+  LPDEVMODEW lpDevMode,
+  HWND hwnd,
+  DWORD dwflags,
+  LPVOID lParam)
 {
   UNIMPLEMENTED
 
@@ -511,39 +511,39 @@ NtUserEndMenu(VOID)
   return 0;
 }
 
-DWORD
+WINBOOL
 STDCALL
-NtUserEnumDisplayDevices(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
+NtUserEnumDisplayDevices (
+  PUNICODE_STRING lpDevice, /* device name */
+  DWORD iDevNum, /* display device */
+  PDISPLAY_DEVICE lpDisplayDevice, /* device information */
+  DWORD dwFlags ) /* reserved */
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
-DWORD
+WINBOOL
 STDCALL
 NtUserEnumDisplayMonitors(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
+  HDC hdc,
+  LPCRECT lprcClip,
+  MONITORENUMPROC lpfnEnum,
+  LPARAM dwData)
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
-DWORD
+WINBOOL
 STDCALL
 NtUserEnumDisplaySettings(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
+  PUNICODE_STRING lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODEW lpDevMode, /* FIXME is this correct? */
+  DWORD dwFlags )
 {
   UNIMPLEMENTED
 

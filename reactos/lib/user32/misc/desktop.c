@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.13 2003/07/10 21:04:31 chorns Exp $
+/* $Id: desktop.c,v 1.14 2003/07/19 01:35:27 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -100,6 +100,7 @@ CreateDesktopA(LPCSTR lpszDesktop,
   ANSI_STRING DesktopNameA;
   UNICODE_STRING DesktopNameU;
   HDESK hDesktop;
+  DEVMODEW DevmodeW;
 
   if (lpszDesktop != NULL) 
     {
@@ -110,11 +111,12 @@ CreateDesktopA(LPCSTR lpszDesktop,
     {
       RtlInitUnicodeString(&DesktopNameU, NULL);
     }
-  /* FIXME: Need to convert the DEVMODE parameter. */
-  
+
+  USER32_DevModeA2W ( &DevmodeW, pDevmode );
+
   hDesktop = CreateDesktopW(DesktopNameU.Buffer,
 			    NULL,
-			    (LPDEVMODEW)pDevmode,
+			    &DevmodeW,
 			    dwFlags,
 			    dwDesiredAccess,
 			    lpsa);

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2003/07/11 17:58:51 sedwards Exp $
+# $Id: Makefile,v 1.19 2003/07/19 01:35:27 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -32,6 +32,7 @@ CONTROLS_OBJECTS = \
 MISC_OBJECTS = \
 	misc/dde.o \
 	misc/desktop.o \
+	misc/devmode.o \
 	misc/display.o \
 	misc/dllmain.o \
 	misc/exit.o \

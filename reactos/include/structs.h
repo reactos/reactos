@@ -340,10 +340,12 @@ typedef struct tagPOINTFX {
   FIXED y;
 } POINTFX;
 
+/* moved to gditypes.h since I needed it there - Royce3
 typedef struct _POINTL {
   LONG x;
   LONG y;
 } POINTL, *PPOINTL;
+*/
 
 typedef struct tagPOINTS {
   SHORT x;

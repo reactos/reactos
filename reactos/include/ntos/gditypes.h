@@ -11,10 +11,20 @@
 #ifndef __INCLUDE_NTOS_GDITYPES_H
 #define __INCLUDE_NTOS_GDITYPES_H
 
+#include <structs.h>
+
 #ifndef __USE_W32API
 
 #define CCHDEVICENAME	(32)
 #define CCHFORMNAME	(32)
+
+/* should be in structs.h, but structs.h includes this file and
+ * we need it here - Royce3
+ */
+typedef struct _POINTL {
+  LONG x;
+  LONG y;
+} POINTL, *PPOINTL;
 
 typedef struct _devicemodeA
 {
@@ -24,10 +34,17 @@ typedef struct _devicemodeA
 	WORD dmSize;
 	WORD dmDriverExtra;
 	DWORD dmFields;
-	short dmOrientation;
-	short dmPaperSize;
-	short dmPaperLength;
-	short dmPaperWidth;
+	union
+	{
+		struct
+		{
+			short dmOrientation;
+			short dmPaperSize;
+			short dmPaperLength;
+			short dmPaperWidth;
+		};
+		POINTL dmPosition;
+	};
 	short dmScale;
 	short dmCopies;
 	short dmDefaultSource;
@@ -42,14 +59,28 @@ typedef struct _devicemodeA
 	DWORD dmBitsPerPel;
 	DWORD dmPelsWidth;
 	DWORD dmPelsHeight;
-	DWORD dmDisplayFlags;
+	union
+	{
+		DWORD dmDisplayFlags;
+		DWORD dmNup;
+	};
 	DWORD dmDisplayFrequency;
 	DWORD dmICMMethod;
 	DWORD dmICMIntent;
 	DWORD dmMediaType;
 	DWORD dmDitherType;
-	DWORD dmICCManufacturer;
-	DWORD dmICCModel;
+	union
+	{
+		DWORD dmICCManufacturer;
+		DWORD dmReserved1;
+	};
+	union
+	{
+		DWORD dmICCModel;
+		DWORD dmReserved2;
+	};
+	DWORD dmPanningWidth;
+	DWORD dmPanningHeight;
 } DEVMODEA,*LPDEVMODEA,*PDEVMODEA;
 
 typedef struct _devicemodeW
@@ -60,10 +91,17 @@ typedef struct _devicemodeW
 	WORD dmSize;
 	WORD dmDriverExtra;
 	DWORD dmFields;
-	short dmOrientation;
-	short dmPaperSize;
-	short dmPaperLength;
-	short dmPaperWidth;
+	union
+	{
+		struct
+		{
+			short dmOrientation;
+			short dmPaperSize;
+			short dmPaperLength;
+			short dmPaperWidth;
+		};
+		POINTL dmPosition;
+	};
 	short dmScale;
 	short dmCopies;
 	short dmDefaultSource;
@@ -78,14 +116,28 @@ typedef struct _devicemodeW
 	DWORD dmBitsPerPel;
 	DWORD dmPelsWidth;
 	DWORD dmPelsHeight;
-	DWORD dmDisplayFlags;
+	union
+	{
+		DWORD dmDisplayFlags;
+		DWORD dmNup;
+	};
 	DWORD dmDisplayFrequency;
 	DWORD dmICMMethod;
 	DWORD dmICMIntent;
 	DWORD dmMediaType;
 	DWORD dmDitherType;
-	DWORD dmICCManufacturer;
-	DWORD dmICCModel;
+	union
+	{
+		DWORD dmICCManufacturer;
+		DWORD dmReserved1;
+	};
+	union
+	{
+		DWORD dmICCModel;
+		DWORD dmReserved2;
+	};
+	DWORD dmPanningWidth;
+	DWORD dmPanningHeight;
 } DEVMODEW,*LPDEVMODEW,*PDEVMODEW;
 
 #endif /* !__USE_W32API */

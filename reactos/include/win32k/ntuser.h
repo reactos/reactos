@@ -167,14 +167,14 @@ NtUserChangeClipboardChain(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+LONG
 STDCALL
 NtUserChangeDisplaySettings(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4);
+  PUNICODE_STRING lpszDeviceName,
+  LPDEVMODEW lpDevMode,
+  HWND hwnd,
+  DWORD dwflags,
+  LPVOID lParam);
 
 DWORD
 STDCALL
@@ -449,29 +449,29 @@ NtUserEndMenu(VOID);
 BOOL STDCALL
 NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs);
 
-DWORD
+WINBOOL
 STDCALL
-NtUserEnumDisplayDevices(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+NtUserEnumDisplayDevices (
+  PUNICODE_STRING lpDevice, /* device name */
+  DWORD iDevNum, /* display device */
+  PDISPLAY_DEVICE lpDisplayDevice, /* device information */
+  DWORD dwFlags ); /* reserved */
 
-DWORD
+WINBOOL
 STDCALL
-NtUserEnumDisplayMonitors(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+NtUserEnumDisplayMonitors (
+  HDC hdc,
+  LPCRECT lprcClip,
+  MONITORENUMPROC lpfnEnum,
+  LPARAM dwData );
 
-DWORD
+WINBOOL
 STDCALL
 NtUserEnumDisplaySettings(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  PUNICODE_STRING lpszDeviceName,
+  DWORD iModeNum,
+  LPDEVMODEW lpDevMode, /* FIXME is this correct? */
+  DWORD dwFlags );
 
 DWORD
 STDCALL

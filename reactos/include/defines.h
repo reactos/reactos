@@ -244,6 +244,7 @@ extern "C" {
 #define DISP_CHANGE_FAILED	(-1)
 #define DISP_CHANGE_BADMODE	(-2)
 #define DISP_CHANGE_NOTUPDATED	(-3)
+#define DISP_CHANGE_BADPARAM	(-5)
 
 /* ChangeServiceConfig */
 #define SERVICE_NO_CHANGE	(-1)
