@@ -84,7 +84,7 @@ autochk.exe  = 2
 gstart.exe   = 2
 ;lsass.exe    = 2
 services.exe = 2
-shell.exe    = 2
+cmd.exe      = 2
 winlogon.exe = 2
 
 win32k.sys   = 2
@@ -96,9 +96,3 @@ system.hiv   = 4
 
 [SetupData]
 DefaultPath = \ReactOS
-
-[AddReg]
-HKLM,"System\Setup",00,01,02,03,04,05,0a,a0,ac,ff
-HKLM,"System\Setup","SetupType",0x00010003,1
-HKCU,"Xxxx\XX","bla"
-HKCR,"Fasel","Tick",0x00000001

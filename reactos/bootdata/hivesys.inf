@@ -257,8 +257,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
 
 ; Scsiport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Group"="SCSI Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath"=expand:"system32\drivers\scsiport.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Group",0x00000000,"SCSI Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath",0x00020000,"system32\drivers\scsiport.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
 
@@ -315,7 +315,7 @@ HKLM,"SYSTEM\Select","LastKnownGood",0x00010001,0x00000000
 ; System setup settings
 HKLM,"SYSTEM\Setup","CmdLine",0x00000000,"setup -newsetup"
 HKLM,"SYSTEM\Setup","OsLoaderPath",0x00000000,"\"
-HKLM,"SYSTEM\Setup","SetupType"0x00010001,0x00000000
+HKLM,"SYSTEM\Setup","SetupType",0x00010001,0x00000000
 HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000000
 
