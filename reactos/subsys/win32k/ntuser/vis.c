@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.25 2004/03/23 18:08:07 weiden Exp $
+ * $Id: vis.c,v 1.26 2004/03/27 15:16:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -54,12 +54,12 @@ VIS_ComputeVisibleRegion(
    {
       if(!(ClipRgn = VIS_ComputeVisibleRegion(Window, FALSE, ClipChildren, ClipSiblings)))
       {
-        return NULL;
+        return NtGdiCreateRectRgn(0, 0, 0, 0);
       }
       if(!(VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect)))
       {
         NtGdiDeleteObject(VisRgn);
-        return NULL;
+        return NtGdiCreateRectRgn(0, 0, 0, 0);
       }
       LeftOffset = Window->ClientRect.left - Window->WindowRect.left;
       TopOffset = Window->ClientRect.top - Window->WindowRect.top;
@@ -75,7 +75,7 @@ VIS_ComputeVisibleRegion(
    TopOffset = Window->WindowRect.top;
 
    /*
-    * Walk through all perent windows and for each clip the visble region 
+    * Walk through all parent windows and for each clip the visble region 
     * to the parent's client area and exclude all siblings that are over
     * our window.
     */
@@ -87,7 +87,7 @@ VIS_ComputeVisibleRegion(
       if (!(CurrentWindow->Style & WS_VISIBLE))
       {
          NtGdiDeleteObject(VisRgn);
-         return NULL;
+         return NtGdiCreateRectRgn(0, 0, 0, 0);
       }
       ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentWindow->ClientRect);
       NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
