@@ -3801,13 +3801,6 @@ typedef struct tagTOGGLEKEYS {
   DWORD cbSize; 
   DWORD dwFlags; 
 } TOGGLEKEYS; 
- 
-typedef struct _TOKEN_CONTROL { 
-  LUID TokenId; 
-  LUID AuthenticationId; 
-  LUID ModifiedId; 
-  TOKEN_SOURCE TokenSource; 
-} TOKEN_CONTROL, *PTOKEN_CONTROL ; 
 
 typedef struct {
   UINT      cbSize;
