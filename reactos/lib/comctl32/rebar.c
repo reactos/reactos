@@ -985,7 +985,7 @@ REBAR_CalcHorzBand (REBAR_INFO *infoPtr, UINT rstart, UINT rend, BOOL notify)
       }
 
       /* text is visible */
-      if (lpBand->fStatus & HAS_TEXT) {
+      if ((lpBand->fStatus & HAS_TEXT) && !(lpBand->fStyle & RBBS_HIDETITLE)) {
 	  lpBand->fDraw |= DRAW_TEXT;
 	  lpBand->rcCapText.right = max(lpBand->rcCapText.left,
 					lpBand->rcCapText.right-REBAR_POST_TEXT);
@@ -1131,7 +1131,7 @@ REBAR_CalcVertBand (REBAR_INFO *infoPtr, UINT rstart, UINT rend, BOOL notify)
 	}
 
 	/* text is visible */
-	if (lpBand->fStatus & HAS_TEXT) {
+	if ((lpBand->fStatus & HAS_TEXT) && !(lpBand->fStyle & RBBS_HIDETITLE)) {
 	    lpBand->fDraw |= DRAW_TEXT;
 	    lpBand->rcCapText.bottom = max(lpBand->rcCapText.top,
 					   lpBand->rcCapText.bottom);
@@ -2030,7 +2030,8 @@ REBAR_ValidateBand (REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
     }
 
     /* text is visible */
-    if ((lpBand->fMask & RBBIM_TEXT) && (lpBand->lpText)) {
+    if ((lpBand->fMask & RBBIM_TEXT) && (lpBand->lpText) &&
+        !(lpBand->fStyle & RBBS_HIDETITLE)) {
 	HDC hdc = GetDC (0);
 	HFONT hOldFont = SelectObject (hdc, infoPtr->hFont);
 	SIZE size;

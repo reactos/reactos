@@ -1596,6 +1596,10 @@ extern "C" {
 #define RBBS_HIDDEN 8
 #define RBBS_NOVERT 16
 #define RBBS_FIXEDBMP 32
+#if (_WIN32_IE >= 0x0501)
+#define RBBS_HIDETITLE 0x400
+#define RBBS_TOPALIGN 0x800
+#endif /* _WIN32_IE >= 0x0501 */
 #define RBBIM_STYLE 1
 #define RBBIM_COLORS 2
 #define RBBIM_TEXT 4
