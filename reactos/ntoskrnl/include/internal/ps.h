@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.72 2004/10/30 23:48:56 navaraf Exp $
+/* $Id: ps.h,v 1.73 2004/11/10 02:50:59 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -179,9 +179,11 @@ typedef struct
 typedef struct _ETHREAD
 {
   KTHREAD Tcb;
-  TIME CreateTime;
-  USHORT NestedFaultCount;
-  UCHAR ApcNeeded;
+  union {
+  	TIME CreateTime;
+  	UCHAR NestedFaultCount:2;
+  	UCHAR ApcNeeded:1;
+  };
   TIME ExitTime;
   LIST_ENTRY LpcReplyChain;
   NTSTATUS ExitStatus;
@@ -476,6 +478,11 @@ NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
 NTSTATUS PsSuspendThread(PETHREAD Thread, PULONG PreviousCount);
 NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
 
+VOID STDCALL PsExitSpecialApc(PKAPC Apc, 
+		      PKNORMAL_ROUTINE *NormalRoutine,
+		      PVOID *NormalContext,
+		      PVOID *SystemArgument1,
+		      PVOID *SystemArgument2);
 
 #define THREAD_STATE_INITIALIZED  (0)
 #define THREAD_STATE_READY        (1)

@@ -546,7 +546,7 @@ KeWaitForMultipleObjects(ULONG Count,
        * If we are going to wait alertably and a user apc is pending
        * then return
        */
-      if (Alertable && KiTestAlert())
+      if (Alertable && KeTestAlertThread(KeGetPreviousMode()))
       {
          KeReleaseDispatcherDatabaseLock(OldIrql);
          return (STATUS_USER_APC);

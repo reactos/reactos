@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.19 2004/11/01 14:37:19 hbirr Exp $
+/* $Id: irql.c,v 1.20 2004/11/10 02:50:59 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -188,7 +188,7 @@ HalpLowerIrql(KIRQL NewIrql)
   if (KeGetCurrentThread() != NULL && 
       KeGetCurrentThread()->ApcState.KernelApcPending)
     {
-      KiDeliverApc(0, 0, 0);
+      KiDeliverApc(KernelMode, NULL, NULL);
     }
   KeGetCurrentKPCR()->Irql = PASSIVE_LEVEL;
 }

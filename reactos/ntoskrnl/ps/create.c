@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.84 2004/10/24 20:37:27 weiden Exp $
+/* $Id: create.c,v 1.85 2004/11/10 02:51:00 ion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -758,13 +758,15 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
 		  LdrInitApcRundownRoutine, LdrpGetSystemDllEntryPoint(), 
 		  UserMode, NULL);
   KeInsertQueueApc(LdrInitApc, NULL, NULL, IO_NO_INCREMENT);
-
-  /*
-   * Start the thread running and force it to execute the APC(s) we just
-   * queued before it runs anything else in user-mode.
+  
+  /* 
+   * The thread is non-alertable, so the APC we added did not set UserApcPending to TRUE. 
+   * We must do this manually. Do NOT attempt to set the Thread to Alertable before the call,
+   * doing so is a blatant and erronous hack.
    */
-  Thread->Tcb.Alertable = TRUE;
-  Thread->Tcb.Alerted[0] = 1;
+   Thread->Tcb.ApcState.UserApcPending = TRUE;
+   Thread->Tcb.Alerted[KernelMode] = TRUE;
+
   PsUnblockThread(Thread, NULL);
 
   return(STATUS_SUCCESS);

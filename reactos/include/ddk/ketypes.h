@@ -36,7 +36,23 @@ typedef VOID STDCALL_FUNC
 
 struct _DISPATCHER_HEADER;
 
-
+typedef enum _KERNEL_OBJECTS {
+	KNotificationEvent = 0,
+	KSynchronizationEvent = 1,
+	KMutant = 2,
+	KProcess = 3,
+	KQueue = 4,
+	KSemaphore = 5,
+	KThread = 6,
+	KNotificationTimer = 8,
+	KSynchronizationTimer = 9,
+	KApc = 18,
+	KDpc = 19,
+	KDeviceQueue = 20,
+	KEventPair = 21,
+	KInterrupt = 22,
+	KProfile = 23
+} KERNEL_OBJECTS;
 
 #include <pshpack1.h>
 
@@ -84,7 +100,7 @@ typedef struct _KDEVICE_QUEUE
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE;
 
 
-#include <pshpack1.h>
+#include <pshpack2.h>
 
 typedef struct _KAPC
 {
@@ -101,7 +117,7 @@ typedef struct _KAPC
    PVOID SystemArgument2;
    CCHAR ApcStateIndex;
    KPROCESSOR_MODE ApcMode;
-   USHORT Inserted;
+   BOOLEAN Inserted;
 } KAPC, *PKAPC;
 
 #include <poppack.h>

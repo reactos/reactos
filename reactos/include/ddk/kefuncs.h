@@ -530,10 +530,6 @@ KfReleaseSpinLock (
 	);
 
 
-VOID STDCALL KiDeliverApc(ULONG Unknown1,
-        ULONG Unknown2,
-        ULONG Unknown3);
-
 VOID STDCALL KiDispatchInterrupt(VOID);
 
 /* Stubs Start here */

@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.30 2004/10/22 20:32:49 ekohl Exp $
+/* $Id: usercall.c,v 1.31 2004/11/10 02:51:00 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,11 +43,11 @@ KiAfterSystemCallHook(PKTRAP_FRAME TrapFrame)
 {
   if (KeGetCurrentThread()->Alerted[1] != 0 && TrapFrame->Cs != KERNEL_CS)
     {
-      KiDeliverNormalApc();
+      KiDeliverApc(KernelMode, NULL, NULL);
     }
   if (KeGetCurrentThread()->Alerted[0] != 0 && TrapFrame->Cs != KERNEL_CS)
     {
-      KiDeliverUserApc(TrapFrame);
+      KiDeliverApc(UserMode, NULL, TrapFrame);
     }
 }
 

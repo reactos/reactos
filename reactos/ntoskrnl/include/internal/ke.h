@@ -85,8 +85,20 @@ BOOLEAN KiTestAlert(VOID);
 VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus, BOOL Unblock);
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
 VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
-VOID
-KiDeliverNormalApc(VOID);
+VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
+                  PVOID Reserved,
+                  PKTRAP_FRAME TrapFrame);
+		  
+VOID KiInitializeUserApc(IN PVOID Reserved,
+			 IN PKTRAP_FRAME TrapFrame,
+			 IN PKNORMAL_ROUTINE NormalRoutine,
+			 IN PVOID NormalContext,
+			 IN PVOID SystemArgument1,
+			 IN PVOID SystemArgument2);
+
+BOOLEAN
+STDCALL
+KeTestAlertThread(IN KPROCESSOR_MODE AlertMode);
 
 BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
 PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);

@@ -65,10 +65,10 @@ NTSTATUS MmPageFault(ULONG Cs,
    }
 
    if (KeGetCurrentThread() != NULL &&
-         KeGetCurrentThread()->Alerted[1] != 0 &&
-         Cs != KERNEL_CS)
+      KeGetCurrentThread()->Alerted[UserMode] != 0 &&
+      Cs != KERNEL_CS)
    {
-      KiDeliverNormalApc();
+      KiDeliverApc(KernelMode, NULL, NULL);
    }
    if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
          ((*Eip) >= (ULONG)MmSafeCopyFromUserUnsafeStart) &&

@@ -166,11 +166,14 @@ IoSecondStageCompletion(
    PDEVICE_OBJECT       DeviceObject;
    PFILE_OBJECT         OriginalFileObject;
    PIRP                 Irp;
-   CCHAR                PriorityBoost;
 
-   OriginalFileObject = (PFILE_OBJECT)(*NormalContext);
-   Irp = (PIRP)(*SystemArgument1);
-   PriorityBoost = (CCHAR)(LONG)(*SystemArgument2);
+   if (Apc) DPRINT("IoSecondStageCompletition with APC: %x\n", Apc);
+   
+   OriginalFileObject = (PFILE_OBJECT)(*SystemArgument1);
+   DPRINT("OriginalFileObject: %x\n", OriginalFileObject);
+
+   Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
+   DPRINT("Irp: %x\n", Irp);
    
    /*
     * Note that we'll never see irp's flagged IRP_PAGING_IO (IRP_MOUNT_OPERATION)
@@ -190,11 +193,10 @@ IoSecondStageCompletion(
      InitializeListHead(&Irp->ThreadListEntry);
    }
    
-   DPRINT("Tail Value %x, Irp Value %x\n", Irp->Tail.Overlay.CurrentStackLocation - (PIO_STACK_LOCATION)(Irp+1), Irp->CurrentLocation); 
    IoStack =  (PIO_STACK_LOCATION)(Irp+1) + Irp->CurrentLocation;
    DeviceObject = IoStack->DeviceObject;
 
-   DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d)\n", Irp, PriorityBoost);
+   DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d, MajorFunction %x)\n", Irp, PriorityBoost, IoStack->MajorFunction);
 
    switch (IoStack->MajorFunction)
      {
@@ -240,7 +242,7 @@ IoSecondStageCompletion(
 
    if (Irp->UserEvent)
    {
-      KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
+      KeSetEvent(Irp->UserEvent,0,FALSE);
    }
 
    //Windows NT File System Internals, page 169
@@ -248,11 +250,11 @@ IoSecondStageCompletion(
    {
       if (Irp->UserEvent == NULL)
       {
-         KeSetEvent(&OriginalFileObject->Event,PriorityBoost,FALSE);
+         KeSetEvent(&OriginalFileObject->Event,0,FALSE);
       }
       else if (OriginalFileObject->Flags & FO_SYNCHRONOUS_IO && Irp->UserEvent != &OriginalFileObject->Event)
       {
-         KeSetEvent(&OriginalFileObject->Event,PriorityBoost,FALSE);
+         KeSetEvent(&OriginalFileObject->Event,0,FALSE);
       }
    }
 
@@ -290,7 +292,7 @@ IoSecondStageCompletion(
       KeInsertQueueApc( &Irp->Tail.Apc,
                         Irp->UserIosb,
                         NULL,
-                        PriorityBoost);
+                        2);
 
       //NOTE: kernel (or rundown) routine frees the IRP
 

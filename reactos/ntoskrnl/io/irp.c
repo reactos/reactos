@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.69 2004/10/31 22:21:41 ion Exp $
+/* $Id: irp.c,v 1.70 2004/11/10 02:50:59 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -308,11 +308,8 @@ IofCompleteRequest(PIRP Irp,
    ASSERT(Irp->CancelRoutine == NULL);
    ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
 
-   if (IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED)
-   {
-      Irp->PendingReturned = TRUE;
-   }
-
+   Irp->PendingReturned = IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED;
+   
    /*
     * Run the completion routines.
     */
@@ -455,6 +452,7 @@ IofCompleteRequest(PIRP Irp,
       BOOLEAN bStatus;
       
       DPRINT("Dispatching APC\n");
+
       KeInitializeApc(  &Irp->Tail.Apc,
                              &Irp->Tail.Overlay.Thread->Tcb,
                              Irp->ApcEnvironment,
@@ -462,11 +460,11 @@ IofCompleteRequest(PIRP Irp,
                              NULL,
                              (PKNORMAL_ROUTINE) NULL,
                              KernelMode,
-                             OriginalFileObject);
+                             NULL);
       
       bStatus = KeInsertQueueApc(&Irp->Tail.Apc,
-                                      (PVOID)Irp,
-                                      (PVOID)(ULONG)PriorityBoost,
+                                      (PVOID)OriginalFileObject,
+                                      NULL, // This is used for REPARSE stuff
                                       PriorityBoost);
 
       if (bStatus == FALSE)
@@ -480,7 +478,7 @@ IofCompleteRequest(PIRP Irp,
    {
       DPRINT("Calling IoSecondStageCompletion routine directly\n");
       KeRaiseIrql(APC_LEVEL, &oldIrql);
-      IoSecondStageCompletion(NULL,NULL,(PVOID)&OriginalFileObject,(PVOID) &Irp,(PVOID) &PriorityBoost);
+      IoSecondStageCompletion(&Irp->Tail.Apc,NULL,NULL,(PVOID)&OriginalFileObject, NULL);
       KeLowerIrql(oldIrql);
       DPRINT("Finished completition routine\n");
    }

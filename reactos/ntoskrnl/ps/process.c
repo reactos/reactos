@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.148 2004/10/31 21:22:06 navaraf Exp $
+/* $Id: process.c,v 1.149 2004/11/10 02:51:00 ion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -50,6 +50,16 @@ typedef struct
 } DEL_CONTEXT, *PDEL_CONTEXT;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+STDCALL
+PsExitSpecialApc(PKAPC Apc, 
+		 PKNORMAL_ROUTINE *NormalRoutine,
+		 PVOID *NormalContext,
+		 PVOID *SystemArgument1,
+		 PVOID *SystemArgument2)
+{
+}
 
 PEPROCESS
 PsGetNextProcess(PEPROCESS OldProcess)

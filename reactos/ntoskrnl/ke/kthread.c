@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.57 2004/11/07 22:55:38 navaraf Exp $
+/* $Id: kthread.c,v 1.58 2004/11/10 02:50:59 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -249,27 +249,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->PriorityDecrement = 0;
   Thread->Quantum = Process->ThreadQuantum;
   memset(Thread->WaitBlock, 0, sizeof(KWAIT_BLOCK)*4);
-  Thread->LegoData = 0;
-  
-  /*
-   * FIXME: Why this?
-   */
-//  Thread->KernelApcDisable = 1;
-/*
-It may be correct to have regular kmode APC disabled
-until the thread has been fully created, BUT the problem is: they are 
-currently never enabled again! So until somone figures out how 
-this really work, I'm setting regular kmode APC's intially enabled.
--Gunnar
-
-UPDATE: After enabling regular kmode APC's I have experienced random
-crashes. I'm disabling it again, until we fix the APC implementation...
--Gunnar
-*/
-
-  Thread->KernelApcDisable = -1;
-
-  
+  Thread->LegoData = 0; 
   Thread->UserAffinity = Process->Affinity;
   Thread->SystemAffinityActive = 0;
   Thread->PowerState = 0;
@@ -298,15 +278,11 @@ crashes. I'm disabling it again, until we fix the APC implementation...
   Thread->KernelTime = 0;
   Thread->UserTime = 0;
   memset(&Thread->SavedApcState, 0, sizeof(KAPC_STATE));
-  
-  /* FIXME: is this correct? */
-  Thread->Alertable = 1;
-  
+   
   Thread->ApcStateIndex = OriginalApcEnvironment;
-
   Thread->ApcQueueable = TRUE;
-  
   Thread->AutoAlignment = Process->AutoAlignment;
+  
   KeInitializeApc(&Thread->SuspendApc,
 		  Thread,
 		  OriginalApcEnvironment,
@@ -316,6 +292,7 @@ crashes. I'm disabling it again, until we fix the APC implementation...
 		  KernelMode,
 		  NULL);
   KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);
+  
   InsertTailList(&Process->ThreadListHead,
                  &Thread->ThreadListEntry);
   Thread->FreezeCount = 0;

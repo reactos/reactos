@@ -83,6 +83,8 @@ lib\kbduk\kbduk.dll                     1
 lib\kbdus\kbdus.dll                     1
 lib\kernel32\kernel32.dll               1
 lib\lzexpand\lz32.dll                   1
+lib\midimap\midimap.dll                 1
+lib\mmdrv\mmdrv.dll                     1
 lib\mpr\mpr.dll                         1
 lib\msafd\msafd.dll                     1
 lib\msgina\msgina.dll                   1
