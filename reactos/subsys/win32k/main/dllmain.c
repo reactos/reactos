@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.36 2003/06/05 22:47:47 gdalsnes Exp $
+/* $Id: dllmain.c,v 1.37 2003/06/06 10:18:32 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -142,11 +142,6 @@ W32kInitialize (VOID)
   W32kDeviceProcess = PsGetCurrentProcess();
 
   InitGdiObjectHandleTable ();
-
-  // Create surface used to draw the internal font onto
-#ifdef TODO
-  CreateCellCharSurface();
-#endif
 
   // Initialize FreeType library
   if(!InitFontSupport()) return FALSE;
