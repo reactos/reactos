@@ -1132,6 +1132,9 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 {
    PEPROCESS Process;
    NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
+
+   PreviousMode = ExGetPreviousMode();
 
    /*
     * TODO: Here we should probably check that ProcessInformationLength
@@ -1141,7 +1144,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_QUERY_INFORMATION,
 				      PsProcessType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Process,
 				      NULL);
    if (Status != STATUS_SUCCESS)
@@ -1228,7 +1231,35 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	break;
 
       case ProcessSessionInformation:
+      {
+        if (ProcessInformationLength != sizeof(PROCESS_SESSION_INFORMATION))
+        {
+          Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+          PPROCESS_SESSION_INFORMATION SessionInfo = (PPROCESS_SESSION_INFORMATION)ProcessInformation;
+
+          _SEH_TRY
+          {
+            SessionInfo->SessionId = Process->SessionId;
+            if (ReturnLength)
+            {
+              *ReturnLength = sizeof(PROCESS_SESSION_INFORMATION);
+            }
+            Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+        }
+        break;
+      }
+      
       case ProcessWow64Information:
+        DPRINT1("We currently don't support the ProcessWow64Information information class!\n");
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
@@ -1428,11 +1459,14 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
    PEPROCESS Process;
    NTSTATUS Status;
    PHANDLE ProcessAccessTokenP;
+   KPROCESSOR_MODE PreviousMode;
+   
+   PreviousMode = ExGetPreviousMode();
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_SET_INFORMATION,
 				      PsProcessType,
-				      UserMode,
+				      PreviousMode,
 				      (PVOID*)&Process,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -1474,6 +1508,102 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             Status = _SEH_GetExceptionCode();
           }
           _SEH_END;
+        }
+        break;
+      }
+      
+      case ProcessSessionInformation:
+      {
+        if(ProcessInformationLength != sizeof(UINT))
+        {
+          Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+          PROCESS_SESSION_INFORMATION SessionInfo;
+          Status = STATUS_SUCCESS;
+          
+          _SEH_TRY
+          {
+            /* copy the structure to the stack */
+            SessionInfo = *(PPROCESS_SESSION_INFORMATION)ProcessInformation;
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+          
+          if(NT_SUCCESS(Status))
+          {
+            PEPROCESS Process2;
+            /* we successfully copied the structure to the stack, continue processing */
+            
+            /*
+             * setting the session id requires the SeTcbPrivilege!
+             */
+            if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
+                                       PreviousMode))
+            {
+              /* can't set the session id, bail! */
+              Status = STATUS_PRIVILEGE_NOT_HELD;
+              break;
+            }
+            
+            /*
+             * ntinternals documents a PROCESS_SET_SESSIONID flag for NtOpenProcess,
+             * so we need to open the handle again with this access flag to make
+             * sure the handle has the required permissions to change the session id!
+             */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_SET_INFORMATION | PROCESS_SET_SESSIONID,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process2,
+                                               NULL);
+            if(!NT_SUCCESS(Status))
+            {
+              /* the handle doesn't have the access rights */
+              break;
+            }
+            
+            /* SANITY check, Process2 MUST be the same as Process as it's the same handle! */
+            ASSERT(Process2 == Process);
+            
+            /* FIXME - update the session id for the process token */
+
+            Status = PsLockProcess(Process, TRUE);
+            if(NT_SUCCESS(Status))
+            {
+              Process->SessionId = SessionInfo.SessionId;
+
+              /* Update the session id in the PEB structure */
+              if(Process->Peb != NULL)
+              {
+                /* we need to attach to the process to make sure we're in the right
+                   context to access the PEB structure */
+                KeAttachProcess(&Process->Pcb);
+
+                _SEH_TRY
+                {
+                  /* FIXME: Process->Peb->SessionId = SessionInfo.SessionId; */
+
+                  Status = STATUS_SUCCESS;
+                }
+                _SEH_HANDLE
+                {
+                  Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+
+                KeDetachProcess();
+              }
+
+              PsUnlockProcess(Process);
+            }
+            
+            ObDereferenceObject(Process2);
+          }
         }
         break;
       }
@@ -2296,11 +2426,18 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
                                        KernelMode,
                                        FALSE,
                                        Delay);
-        if(Status == STATUS_TIMEOUT)
+        if(NT_SUCCESS(Status))
         {
+#ifndef NDEBUG
+          if(Status == STATUS_TIMEOUT)
+          {
+            DPRINT1("PsLockProcess(0x%x) timed out!\n", Process);
+          }
+#endif
           KeLeaveCriticalRegion();
-          break;
+
         }
+        break;
       }
       else
       {
