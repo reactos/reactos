@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.11 2000/08/05 18:01:58 dwelch Exp $
+/* $Id: conio.c,v 1.12 2000/10/09 00:12:01 ekohl Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -204,16 +204,21 @@ NTSTATUS CsrpWriteConsole( PCSRSS_CONSOLE Console, CHAR *Buffer, DWORD Length, B
 		{
 		  /* slide viewable screen up */
 		  if( Console->ShowY == Console->CurrentY )
-		    if( Console->ShowY == 0 )
-		      Console->ShowY = Console->MaxY;
-		    else Console->ShowY--;
+		    {
+		      if( Console->ShowY == 0 )
+			Console->ShowY = Console->MaxY;
+		      else
+			Console->ShowY--;
+		    }
 		  /* slide virtual position up */
 		  Console->CurrentX = Console->MaxX;
 		  if( Console->CurrentY == 0 )
 		    Console->CurrentY = Console->MaxY;
-		  else Console->CurrentY--;
+		  else
+		    Console->CurrentY--;
 		}
-	      else Console->CurrentX--;
+	      else
+		Console->CurrentX--;
 	      Console->Buffer[ 2 * ((Console->CurrentY * Console->MaxX) + Console->CurrentX) ] = ' ';
 	      Console->Buffer[ (2 * ((Console->CurrentY * Console->MaxX) + Console->CurrentX)) + 1 ] = Console->DefaultAttrib;
 	      break;
@@ -414,7 +419,7 @@ VOID CsrDrawConsole( PCSRSS_CONSOLE Console )
      }
 }
 
-       
+
 VOID CsrDeleteConsole( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE Console )
 {
    ConsoleInput *Event;
