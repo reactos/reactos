@@ -18,6 +18,7 @@ public:
 	protected:
 
 		Factory ( const std::string& name_ );
+		virtual ~Factory() {}
 
 		virtual Backend* operator() ( Project& ) = 0;
 
