@@ -22,6 +22,7 @@ NtInitializeRegistry(
 	BOOLEAN SetUpBoot
 	)
 {
+  return ZwInitializeRegistry(SetUpBoot);
 }
 
 NTSTATUS
@@ -30,6 +31,7 @@ ZwInitializeRegistry(
 	BOOLEAN SetUpBoot
 	)
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS RtlCheckRegistryKey(ULONG RelativeTo, PWSTR Path)
@@ -114,6 +116,12 @@ NTSTATUS NtEnumerateValueKey(HANDLE KeyHandle, ULONG Index,
 			     ULONG Length,
 			     PULONG ResultLength)
 {
+  return ZwEnumerateValueKey(KeyHandle, 
+                             Index, 
+			     KeyInformationClass,
+			     KeyInformation,
+			     Length,
+			     ResultLength);
 }
 
 NTSTATUS ZwEnumerateValueKey(HANDLE KeyHandle, ULONG Index, 
@@ -127,6 +135,7 @@ NTSTATUS ZwEnumerateValueKey(HANDLE KeyHandle, ULONG Index,
 
 NTSTATUS NtFlushKey(HANDLE KeyHandle)
 {
+  return ZwFlushKey(KeyHandle);
 }
 
 NTSTATUS ZwFlushKey(HANDLE KeyHandle)
@@ -137,6 +146,9 @@ NTSTATUS ZwFlushKey(HANDLE KeyHandle)
 NTSTATUS NtOpenKey(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
 		   POBJECT_ATTRIBUTES ObjectAttributes)
 {
+  return ZwOpenKey(KeyHandle, 
+                   DesiredAccess,
+		   ObjectAttributes);
 }
 
 NTSTATUS ZwOpenKey(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
@@ -151,6 +163,11 @@ NTSTATUS NtQueryKey(HANDLE KeyHandle,
 		    ULONG Length,
 		    PULONG ResultLength)
 {
+  return ZwQueryKey(KeyHandle, 
+		    KeyInformationClass,
+		    PVOID KeyInformation,
+		    ULONG Length,
+		    PULONG ResultLength);
 }
 
 NTSTATUS ZwQueryKey(HANDLE KeyHandle, 
@@ -169,6 +186,12 @@ NTSTATUS NtQueryValueKey(HANDLE KeyHandle,
 		    ULONG Length,
 		    PULONG ResultLength)
 {
+  return ZwQueryValueKey(KeyHandle,
+		         ValueName,
+		         KeyValueInformationClass,
+		         KeyValueInformation,
+		         Length,
+		         ResultLength);
 }
 
 NTSTATUS ZwQueryValueKey(HANDLE KeyHandle,
@@ -185,6 +208,12 @@ NTSTATUS NtSetValueKey(HANDLE KeyHandle, PUNICODE_STRING ValueName,
 		       ULONG TitleIndex, ULONG Type, PVOID Data,
 		       ULONG DataSize)
 {
+  return ZwSetValueKey(KeyHandle, 
+                       ValueName,
+		       TitleIndex, 
+                       Type, 
+                       Data,
+		       DataSize);
 }
 
 NTSTATUS ZwSetValueKey(HANDLE KeyHandle, PUNICODE_STRING ValueName,
@@ -201,6 +230,8 @@ NtDeleteValueKey(
 	IN PUNICODE_STRING ValueName
 	)
 {
+  return ZwDeleteValueKey(KeyHandle,
+                          ValueName);
 }
 
 NTSTATUS
@@ -210,6 +241,7 @@ ZwDeleteValueKey(
 	IN PUNICODE_STRING ValueName	
 		 )
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -219,6 +251,8 @@ NtLoadKey(
 	OBJECT_ATTRIBUTES ObjectAttributes
 	)
 {
+  return ZwLoadKey(KeyHandle,
+                   ObjectAttributes);
 }
 
 NTSTATUS
@@ -228,10 +262,12 @@ ZwLoadKey(
 	OBJECT_ATTRIBUTES ObjectAttributes
 	)
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL NtLoadKey2(VOID)
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -249,6 +285,16 @@ NtNotifyChangeKey(
 	IN BOOLEAN WatchSubtree
 	)
 {
+  return ZwNotifyChangeKey(KeyHandle,
+                           Event,
+                           ApcRoutine, 
+                           ApcContext, 
+                           IoStatusBlock,
+                           CompletionFilter,
+                           Asynchroneous, 
+                           ChangeBuffer,
+                           Length,
+                           WatchSubtree);
 }
 
 NTSTATUS
@@ -266,6 +312,7 @@ ZwNotifyChangeKey(
 	IN BOOLEAN WatchSubtree
 	)
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -279,6 +326,12 @@ NtQueryMultipleValueKey(
    PULONG  ReturnLength
 )
 {
+  return ZwQueryMultipleValueKey(KeyHandle,	
+                                 ListOfValuesToQuery,	
+                                 NumberOfItems,	
+                                 MultipleValueInformation,		
+                                 Length,
+                                 ReturnLength);
 }
 
 NTSTATUS
@@ -292,6 +345,7 @@ ZwQueryMultipleValueKey(
    PULONG  ReturnLength
 )
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -302,6 +356,9 @@ NtReplaceKey(
 	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes 
 	)
 {
+  return ZwReplaceKey(ObjectAttributes, 
+                      Key,
+                      ReplacedObjectAttributes);
 }
 
 NTSTATUS
@@ -312,6 +369,7 @@ ZwReplaceKey(
 	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes 
 	)
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -322,6 +380,9 @@ NtRestoreKey(
 	ULONG RestoreFlags
 	)
 {
+  return ZwRestoreKey(KeyHandle,
+                      FileHandle,
+                      RestoreFlags);
 }
 
 NTSTATUS
@@ -332,6 +393,7 @@ ZwRestoreKey(
 	ULONG RestoreFlags
 	)
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -341,6 +403,8 @@ NtSaveKey(
 	IN HANDLE FileHandle
 	)
 {
+  return ZwSaveKey(KeyHandle,
+                   FileHandle);
 }
 
 NTSTATUS
@@ -350,6 +414,7 @@ ZwSaveKey(
 	IN HANDLE FileHandle
 	)
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -361,6 +426,10 @@ NtSetInformationKey(
 	IN ULONG KeyInformationLength
 	)
 {
+  return ZwSetInformationKey(KeyHandle,
+                             KeyInformationClass,
+                             KeyInformation,
+                             KeyInformationLength);
 }
 
 NTSTATUS
@@ -372,6 +441,7 @@ ZwSetInformationKey(
 	IN ULONG KeyInformationLength
 	)
 {
+  UNIMPLEMENTED;
 }
 
 NTSTATUS 
@@ -380,6 +450,7 @@ NtUnloadKey(
 	HANDLE KeyHandle
 	)
 {
+  return ZwUnloadKey(KeyHandle);
 }
 
 NTSTATUS 
@@ -388,4 +459,5 @@ ZwUnloadKey(
 	HANDLE KeyHandle
 	)
 {
+  UNIMPLEMENTED;
 }
