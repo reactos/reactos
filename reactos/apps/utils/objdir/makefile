@@ -1,12 +1,13 @@
 #
 #
 #
-OBJECTS= ../common/crt0.o objdir.o
+TARGET_NAME=objdir
+OBJECTS= $(TARGET_NAME).o
 
 
-PROGS= objdir.exe 
+PROGS= $(TARGET_NAME).exe 
 
-BASE_CFLAGS = -I../../include
+BASE_CFLAGS = -I../../include -g
 LIB_BASE=../../lib
 LIBS = \
 	$(LIB_BASE)/ntdll/ntdll.a \
@@ -18,9 +19,9 @@ all: $(PROGS)
 .phony: all
 
 clean:
-	- $(RM) objdir.o
-	- $(RM) objdir.exe
-	- $(RM) objdir.sym
+	- $(RM) $(TARGET_NAME).o
+	- $(RM) $(TARGET_NAME).exe
+	- $(RM) $(TARGET_NAME).sym
 
 .phony: clean
 
@@ -42,9 +43,9 @@ else
 	$(CP) $* ../../$(DIST_DIR)/apps/$*
 endif
 
-objdir.exe: $(OBJECTS) $(LIBS)
-	$(LD) $(OBJECTS) $(LIBS) -o objdir.exe
-	$(NM) --numeric-sort objdir.exe > objdir.sym
+$(TARGET_NAME).exe: $(OBJECTS) $(LIBS)
+	$(CC) $(OBJECTS) $(LIBS) -o $(TARGET_NAME).exe
+	$(NM) --numeric-sort $(TARGET_NAME).exe > $(TARGET_NAME).sym
 
 
 include ../../rules.mak

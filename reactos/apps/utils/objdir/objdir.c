@@ -1,10 +1,13 @@
-/* $Id: objdir.c,v 1.4 2000/08/08 17:42:33 ekohl Exp $
+/* $Id: objdir.c,v 1.5 2000/08/11 17:18:31 ea Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
  * REVISIONS
  * 	2000-04-30 (ea)
  * 		Added directory enumeration.
+ * 		(tested under nt4sp4/x86)
+ * 	2000-08-11 (ea)
+ * 		Added symbolic link expansion.
  * 		(tested under nt4sp4/x86)
  */
 
@@ -14,22 +17,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_TYPE 64
-
-typedef
-struct _DIRECTORY_ENTRY_HEADER
-{
-	UNICODE_STRING	Name;
-	UNICODE_STRING	Type;
-	
-} DIRECTORY_ENTRY_HEADER;
-
-struct
-{
-	DIRECTORY_ENTRY_HEADER	Entry;
-	WCHAR			Buffer [MAX_PATH + MAX_TYPE + 2];
-	
-} DirectoryEntry;
+BYTE DirectoryEntry [(2 * MAX_PATH) + sizeof (OBJDIR_INFORMATION)];
+POBJDIR_INFORMATION pDirectoryEntry = (POBJDIR_INFORMATION) DirectoryEntry;
 
 
 static
@@ -41,6 +30,10 @@ StatusToName (NTSTATUS Status)
 	
 	switch (Status)
 	{
+		case STATUS_BUFFER_TOO_SMALL:
+			return "STATUS_BUFFER_TOO_SMALL";
+		case STATUS_INVALID_PARAMETER:
+			return "STATUS_INVALID_PARAMETER";
 		case STATUS_OBJECT_NAME_INVALID:
 			return "STATUS_OBJECT_NAME_INVALID";
 		case STATUS_OBJECT_NAME_NOT_FOUND:
@@ -53,6 +46,80 @@ StatusToName (NTSTATUS Status)
 }
 
 
+BOOL
+STDCALL
+ExpandSymbolicLink (
+	IN	PUNICODE_STRING	DirectoryName,
+	IN	PUNICODE_STRING	SymbolicLinkName,
+	IN OUT	PUNICODE_STRING	TargetObjectName
+	)
+{
+	NTSTATUS		Status;
+	HANDLE			hSymbolicLink;
+	OBJECT_ATTRIBUTES	oa;
+	UNICODE_STRING		Path;
+	WCHAR			PathBuffer [MAX_PATH];
+	ULONG			DataWritten = 0;
+
+
+	Path.Buffer = PathBuffer;
+	Path.Length = 0;
+	Path.MaximumLength = sizeof PathBuffer;
+	
+	RtlCopyUnicodeString (& Path, DirectoryName);
+	if (L'\\' != Path.Buffer [(Path.Length / sizeof Path.Buffer[0]) - 1])
+	{
+		RtlAppendUnicodeToString (& Path, L"\\");
+	}
+	RtlAppendUnicodeStringToString (& Path, SymbolicLinkName);
+
+	oa.Length			= sizeof (OBJECT_ATTRIBUTES);
+	oa.ObjectName			= & Path;
+	oa.Attributes			= 0; /* OBJ_CASE_INSENSITIVE; */
+	oa.RootDirectory		= NULL;
+	oa.SecurityDescriptor		= NULL;
+	oa.SecurityQualityOfService	= NULL;
+
+	Status = NtOpenSymbolicLinkObject(
+			& hSymbolicLink,
+			SYMBOLIC_LINK_QUERY,	/* 0x20001 */
+			& oa
+			);
+
+	if (!NT_SUCCESS(Status))
+	{
+		printf (
+			"Failed to open SymbolicLink object (Status: %s)\n",
+			StatusToName (Status)
+			);
+		return FALSE;
+	}
+	TargetObjectName->Length = TargetObjectName->MaximumLength;
+	memset (
+		TargetObjectName->Buffer,
+		0,
+		TargetObjectName->MaximumLength
+		);
+	Status = NtQuerySymbolicLinkObject(
+			hSymbolicLink,
+			TargetObjectName,
+			& DataWritten
+			);
+	if (!NT_SUCCESS(Status))
+	{
+		printf (
+			"Failed to query SymbolicLink object (Status: %s)\n",
+			StatusToName (Status)
+			);
+		NtClose (hSymbolicLink);
+		return FALSE;
+	}
+	NtClose (hSymbolicLink);
+	return TRUE;
+}
+	
+
+
 int main(int argc, char* argv[])
 {
 	UNICODE_STRING		DirectoryNameW;
@@ -62,6 +129,14 @@ int main(int argc, char* argv[])
 	HANDLE			DirectoryHandle;
 	ULONG			BytesReturned = 0;
 	ULONG			EntryCount = 0;
+	
+	/* For expanding symbolic links */
+	WCHAR			TargetName [2 * MAX_PATH];
+	UNICODE_STRING		TargetObjectName = {
+					sizeof TargetName,
+					sizeof TargetName,
+					TargetName
+				};
 
 	/*
 	 * Check user arguments.
@@ -117,7 +192,7 @@ int main(int argc, char* argv[])
 	 */
 	Status = NtQueryDirectoryObject (
 			DirectoryHandle,
-			(POBJDIR_INFORMATION)& DirectoryEntry,
+			pDirectoryEntry,
 			sizeof DirectoryEntry,
 			TRUE,
 			TRUE,
@@ -136,14 +211,42 @@ int main(int argc, char* argv[])
 	wprintf (L"%d entries:\n", EntryCount);
 	while (STATUS_NO_MORE_ENTRIES != Status)
 	{
-		wprintf (
-			L"%-16s %s\n",
-			DirectoryEntry.Entry.Type.Buffer,
-			DirectoryEntry.Entry.Name.Buffer
-			);
+		if (0 == wcscmp (L"SymbolicLink", pDirectoryEntry->ObjectTypeName.Buffer))
+		{
+			if (TRUE == ExpandSymbolicLink (
+					& DirectoryNameW,
+					& pDirectoryEntry->ObjectName,
+					& TargetObjectName
+					)
+				)
+			{
+				wprintf (
+					L"%-16s %s -> %s\n",
+					pDirectoryEntry->ObjectTypeName.Buffer,
+					pDirectoryEntry->ObjectName.Buffer,
+					TargetObjectName.Buffer
+					);
+			}
+			else
+			{
+				wprintf (
+					L"%-16s %s -> (error!)\n",
+					pDirectoryEntry->ObjectTypeName.Buffer,
+					pDirectoryEntry->ObjectName.Buffer
+					);
+			}
+		}
+		else
+		{
+			wprintf (
+				L"%-16s %s\n",
+				pDirectoryEntry->ObjectTypeName.Buffer,
+				pDirectoryEntry->ObjectName.Buffer
+				);
+		}
 		Status = NtQueryDirectoryObject (
 				DirectoryHandle,
-				(POBJDIR_INFORMATION)& DirectoryEntry,
+				pDirectoryEntry,
 				sizeof DirectoryEntry,
 				TRUE,
 				FALSE,
