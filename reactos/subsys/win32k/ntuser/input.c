@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.28 2004/04/29 20:26:35 weiden Exp $
+/* $Id: input.c,v 1.29 2004/04/29 20:41:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -477,7 +477,7 @@ IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
   PW32THREAD OldBlock;
   ASSERT(W32Thread);
   
-  if(W32Thread->IsExiting && BlockIt)
+  if(!W32Thread->Desktop || (W32Thread->IsExiting && BlockIt))
   {
     /*
      * fail blocking if exiting the thread
@@ -541,7 +541,16 @@ NtUserSendInput(
   LPINPUT pInput,
   INT cbSize)
 {
+  PW32THREAD W32Thread;
   UINT cnt;
+  
+  W32Thread = PsGetWin32Thread();
+  ASSERT(W32Thread);
+  
+  if(!W32Thread->Desktop)
+  {
+    return 0;
+  }
   
   if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
   {
@@ -554,7 +563,7 @@ NtUserSendInput(
    *         e.g. services running in the service window station cannot block input
    */
   if(!ThreadHasInputAccess(W32Thread) ||
-     !IntIsActiveDesktop(PsGetWin32Thread()->Desktop))
+     !IntIsActiveDesktop(W32Thread->Desktop))
   {
     SetLastWin32Error(ERROR_ACCESS_DENIED);
     return 0;
