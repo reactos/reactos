@@ -28,6 +28,7 @@ inline char* strlwr ( char* str )
 
 #define _finite __finite
 #define _isnan __isnan
+#define stricmp strcasecmp
 #endif
 
 #endif//PCH_H
