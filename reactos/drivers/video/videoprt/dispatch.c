@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.1 2004/03/14 17:16:28 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.2 2004/03/14 19:43:30 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -487,6 +487,21 @@ VideoPortDispatchDeviceControl(
 
    DPRINT("- Returned status: %x\n", Irp->IoStatus.Status);
 
+   if (Irp->IoStatus.Status != STATUS_SUCCESS) 
+   { 
+      /* Map from win32 error codes to ntstatus values. */ 
+      switch (Irp->IoStatus.Status) 
+      { 
+         case ERROR_NOT_ENOUGH_MEMORY: Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES; 
+         case ERROR_MORE_DATA: Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW; 
+         case ERROR_INVALID_FUNCTION: Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED; 
+         case ERROR_INVALID_PARAMETER: Irp->IoStatus.Status = STATUS_INVALID_PARAMETER; 
+         case ERROR_INSUFFICIENT_BUFFER: Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL; 
+         case ERROR_DEV_NOT_EXIST: Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST; 
+         case ERROR_IO_PENDING: Irp->IoStatus.Status = STATUS_PENDING; 
+      } 
+   } 
+
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
    return STATUS_SUCCESS;
@@ -497,6 +512,17 @@ VideoPortDispatchPnp(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
 {
+   PIO_STACK_LOCATION IrpSp;
+
+   IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+   switch (IrpSp->MinorFunction)
+   {
+      case IRP_MN_START_DEVICE:
+      case IRP_MN_STOP_DEVICE:
+         return STATUS_SUCCESS;
+   }
+   
    return STATUS_NOT_IMPLEMENTED;
 }
 
