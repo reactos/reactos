@@ -16,7 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/*
+/* $Id: init.c,v 1.38 2002/11/15 22:04:51 ekohl Exp $
+ *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
  * PURPOSE:         Loaders for PE executables
@@ -31,7 +32,7 @@
  *   RJJ  06/03/99  Moved user PE loader into NTDLL
  *   EA   19990717  LdrGetSystemDirectory()
  *   EK   20000618  Using SystemRoot link instead of LdrGetSystemDirectory()
- *   HYP  20020911  Code to determine smss's path from the registry
+ *   EK   20021119  Create a process parameter block for the initial process.
  */
 
 /* INCLUDES *****************************************************************/
@@ -45,11 +46,17 @@
 #include <internal/ldr.h>
 #include <napi/teb.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS *****************************************************************/
 
+/* MACROS ******************************************************************/
+
+#define DENORMALIZE(x,addr) {if(x) x=(VOID*)((ULONG)(x)-(ULONG)(addr));}
+#define ALIGN(x,align)      (((ULONG)(x)+(align)-1UL)&(~((align)-1UL)))
+
+
+/* FUNCTIONS *****************************************************************/
 
 static NTSTATUS
 LdrpMapProcessImage(PHANDLE SectionHandle,
@@ -75,7 +82,7 @@ LdrpMapProcessImage(PHANDLE SectionHandle,
 		      0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
+      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -91,7 +98,7 @@ LdrpMapProcessImage(PHANDLE SectionHandle,
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateSection() failed (Status %lx)\n", Status);
+      DPRINT("NtCreateSection() failed (Status %lx)\n", Status);
     }
 
   return(Status);
@@ -103,46 +110,97 @@ LdrpCreateProcessEnvironment(HANDLE ProcessHandle,
 			     PUNICODE_STRING ImagePath,
 			     PVOID* ImageBaseAddress)
 {
-  NTSTATUS Status;
+  PRTL_USER_PROCESS_PARAMETERS LocalPpb;
+  PRTL_USER_PROCESS_PARAMETERS ProcessPpb;
   ULONG BytesWritten;
   ULONG Offset;
+  ULONG Size;
+  ULONG RegionSize;
+  NTSTATUS Status;
 
-#if 0
-  PVOID PpbBase;
-  ULONG PpbSize;
+  /* Calculate the PPB size */
+  Size = sizeof(RTL_USER_PROCESS_PARAMETERS);
+  Size += ALIGN(ImagePath->Length + sizeof(WCHAR), sizeof(ULONG));
+  RegionSize = ROUND_UP(Size, PAGE_SIZE);
+  DPRINT("Size %lu  RegionSize %lu\n", Size, RegionSize);
 
-  /* create the PPB */
-  PpbBase = NULL;
-  PpbSize = Ppb->AllocationSize;
-  Status = NtAllocateVirtualMemory(ProcessHandle,
-				   &PpbBase,
+  /* Allocate the local PPB */
+  LocalPpb = NULL;
+  Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+				   (PVOID*)&LocalPpb,
 				   0,
-				   &PpbSize,
+				   &RegionSize,
 				   MEM_RESERVE | MEM_COMMIT,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("NtAllocateVirtualMemory() failed (Status %lx)\n", Status);
       return(Status);
     }
 
-  DPRINT("Ppb->AllocationSize %x\n", Ppb->AllocationSize);
-  DPRINT("Ppb->Size %x\n", Ppb->Size);
+  DPRINT("LocalPpb %p  AllocationSize %lu\n", LocalPpb, RegionSize);
 
-  /* write process parameters block*/
+  /* Initialize the local PPB */
+  RtlZeroMemory(LocalPpb,
+		RegionSize);
+  LocalPpb->AllocationSize = RegionSize;
+  LocalPpb->Size = Size;
+  LocalPpb->ImagePathName.Length = ImagePath->Length;
+  LocalPpb->ImagePathName.MaximumLength = ImagePath->Length + sizeof(WCHAR);
+  LocalPpb->ImagePathName.Buffer = (PWCHAR)(LocalPpb + 1);
+
+  /* Copy image path */
+  RtlCopyMemory(LocalPpb->ImagePathName.Buffer,
+		ImagePath->Buffer,
+		ImagePath->Length);
+  LocalPpb->ImagePathName.Buffer[ImagePath->Length / sizeof(WCHAR)] = (WCHAR)0;
+
+  /* Denormalize the process parameter block */
+  DENORMALIZE(LocalPpb->ImagePathName.Buffer, LocalPpb);
+  LocalPpb->Flags &= ~PPF_NORMALIZED;
+
+  /* Create the process PPB */
+  ProcessPpb = NULL;
+  Status = NtAllocateVirtualMemory(ProcessHandle,
+				   (PVOID*)&ProcessPpb,
+				   0,
+				   &RegionSize,
+				   MEM_RESERVE | MEM_COMMIT,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtAllocateVirtualMemory() failed (Status %lx)\n", Status);
+
+      /* Release the local PPB */
+      RegionSize = 0;
+      NtFreeVirtualMemory(NtCurrentProcess(),
+			  (PVOID*)&LocalPpb,
+			  &RegionSize,
+			  MEM_RELEASE);
+      return(Status);
+    }
+
+  /* Copy local PPB into the process PPB */
   NtWriteVirtualMemory(ProcessHandle,
-		       PpbBase,
-		       Ppb,
-		       Ppb->AllocationSize,
+		       ProcessPpb,
+		       LocalPpb,
+		       LocalPpb->AllocationSize,
 		       &BytesWritten);
 
-  /* write pointer to process parameter block */
+  /* Update pointer to process PPB in the process PEB */
   Offset = FIELD_OFFSET(PEB, ProcessParameters);
   NtWriteVirtualMemory(ProcessHandle,
 		       (PVOID)(PEB_BASE + Offset),
-		       &PpbBase,
-		       sizeof(PpbBase),
+		       &ProcessPpb,
+		       sizeof(ProcessPpb),
 		       &BytesWritten);
-#endif
+
+  /* Release local PPB */
+  RegionSize = 0;
+  NtFreeVirtualMemory(NtCurrentProcess(),
+		      (PVOID*)&LocalPpb,
+		      &RegionSize,
+		      MEM_RELEASE);
 
   /* Set image file name */
   Status = NtSetInformationProcess(ProcessHandle,
@@ -151,10 +209,9 @@ LdrpCreateProcessEnvironment(HANDLE ProcessHandle,
 				   5);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtSetInformationProcess() failed (Status %lx)\n", Status);
+      DPRINT("NtSetInformationProcess() failed (Status %lx)\n", Status);
       return(Status);
     }
-
 
   /* Read image base address. */
   Offset = FIELD_OFFSET(PEB, ImageBaseAddress);
@@ -186,7 +243,7 @@ LdrpCreateStack(HANDLE ProcessHandle,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Stack allocation failed (Status %x)", Status);
+      DPRINT("Stack allocation failed (Status %x)", Status);
       return(Status);
     }
 
@@ -208,7 +265,7 @@ LdrpCreateStack(HANDLE ProcessHandle,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Error comitting stack page!\n");
+      DPRINT("Error comitting stack page!\n");
       /* release the stack space */
       NtFreeVirtualMemory(ProcessHandle,
 			  InitialTeb->StackAllocate,
@@ -217,7 +274,7 @@ LdrpCreateStack(HANDLE ProcessHandle,
       return(Status);
     }
 
-  DPRINT1("StackLimit: %p\nStackCommit: 0x%lX\n",
+  DPRINT("StackLimit: %p\nStackCommit: 0x%lX\n",
 	 InitialTeb->StackLimit,
 	 InitialTeb->StackCommit);
 
@@ -229,7 +286,7 @@ LdrpCreateStack(HANDLE ProcessHandle,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Error protecting guard page!\n");
+      DPRINT("Error protecting guard page!\n");
 
       /* release the stack space */
       NtFreeVirtualMemory(ProcessHandle,
@@ -266,7 +323,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 			       &ImagePath);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("LdrpMapImage() failed (Status %lx)\n", Status);
+      DPRINT("LdrpMapImage() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -278,7 +335,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 			   &ResultLength);
   if (!NT_SUCCESS(Status) || ResultLength != sizeof(Sii))
     {
-      DPRINT1("ZwQuerySection failed (Status %X)\n", Status);
+      DPRINT("ZwQuerySection failed (Status %X)\n", Status);
       NtClose(ProcessHandle);
       NtClose(SectionHandle);
       return(Status);
@@ -296,7 +353,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
   NtClose(SectionHandle);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateProcess() failed (Status %lx)\n", Status);
+      DPRINT("NtCreateProcess() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -307,7 +364,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 					&ImageBaseAddress);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("LdrpCreateProcessEnvironment() failed (Status %lx)\n", Status);
+      DPRINT("LdrpCreateProcessEnvironment() failed (Status %lx)\n", Status);
       NtClose(*ProcessHandle);
       return(Status);
     }
@@ -340,7 +397,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 			   &InitialTeb);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Failed to write initial stack.\n");
+      DPRINT("Failed to write initial stack.\n");
       NtClose(ProcessHandle);
       return(Status);
     }
@@ -372,7 +429,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 				&ResultLength);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Failed to write initial stack.\n");
+      DPRINT("Failed to write initial stack.\n");
 
       NtFreeVirtualMemory(*ProcessHandle,
 			  InitialTeb.StackAllocate,
@@ -383,7 +440,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
     }
 
   /* Create initial thread */
-  DPRINT1("Creating thread for initial process\n");
+  DPRINT("Creating thread for initial process\n");
   Status = NtCreateThread(ThreadHandle,
 			  THREAD_ALL_ACCESS,
 			  NULL,
