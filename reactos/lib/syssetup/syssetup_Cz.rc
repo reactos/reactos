@@ -18,6 +18,68 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
+IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT "Welcome to the ReactOS Setup Wizard.", IDC_STATIC, 115, 9, 189, 31
+    LTEXT "This wizard installs ReactOS on your computer. The wizard "\
+          "needs to gather some information about you and your computer "\
+          "to set up ReactOS properly.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "Click Next to continue with Setup.", IDC_STATIC, 115, 160, 189, 31
+END
+
+
+IDD_OWNERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT "Type your full name and the name of your company or organization.",
+          IDC_STATIC, 54, 7, 242, 21
+    LTEXT "Na&me:", IDC_STATIC, 54, 37, 44, 8
+    EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&Organization:", IDC_STATIC, 54, 57, 44, 8
+    EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+END
+
+
+IDD_COMPUTERPAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT "Type a name for your computer that is 63 characters or less. "\
+          "If you are on a network, your computer name must be unique.",
+          IDC_STATIC, 54, 7, 250, 24
+    LTEXT "&Computer Name:", IDC_STATIC, 54, 38, 75, 8
+    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    LTEXT "Setup will create a user account on your computer called Administrator. "\
+          "You can use this account if you need full access to your computer.",
+          IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Type an Administrator Password that is 14 characters or less.",
+          IDC_STATIC, 54, 87, 250, 8
+    LTEXT "&Administrator Password:", IDC_STATIC, 54, 104, 75, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "C&onfirm Password:", IDC_STATIC, 54, 123, 75, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+END
+
+
+IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Completing ReactOS Setup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT "Completing the ReactOS Setup Wizard",IDC_STATIC,115,9,195,37
+    LTEXT "You have successfully completed ReactOS Setup.\n\n" \
+          "When you click Finish, your computer will restart.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "If there is a CD in a drive, remove it. Then, to restart "\
+          "your computer, click Finish.", IDC_STATIC, 115, 160, 195, 31
+END
+
+
 IDD_RESTART DIALOG 6, 18, 245, 116
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "Instatalace ReactOSu"

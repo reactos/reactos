@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.11 2004/04/16 13:37:18 ekohl Exp $
+/* $Id: install.c,v 1.12 2004/04/19 10:54:23 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -34,17 +34,13 @@
 
 #include <samlib.h>
 #include <syssetup.h>
+#include <userenv.h>
 
 #include "globals.h"
 #include "resource.h"
 
 // #define NO_GUI
 #define VMWINST
-
-
-/* userenv.dll */
-BOOL WINAPI InitializeProfiles (VOID);
-BOOL WINAPI CreateUserProfileW (PSID Sid, LPCWSTR lpUserName);
 
 
 /* GLOBALS ******************************************************************/
@@ -75,6 +71,7 @@ DebugPrint(char* fmt,...)
 	       MB_OK);
 #endif
 }
+
 
 #ifdef VMWINST
 static BOOL
@@ -292,14 +289,13 @@ InstallReactOS (HINSTANCE hInstance)
 #endif
 
 #ifdef VMWINST
-  RunVMWInstall();
+  RunVMWInstall ();
 #endif
-  DialogBox(
-//     GetModuleHandle(TEXT("syssetup.dll")),
-     hDllInstance,
-     MAKEINTRESOURCE(IDD_RESTART),
-     NULL,
-     RestartDlgProc);
+
+  DialogBox (hDllInstance,
+	     MAKEINTRESOURCE(IDD_RESTART),
+	     NULL,
+	     RestartDlgProc);
 
   return 0;
 }

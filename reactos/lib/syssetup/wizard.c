@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.1 2004/04/16 13:37:18 ekohl Exp $
+/* $Id: wizard.c,v 1.2 2004/04/19 10:54:23 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -137,8 +137,8 @@ OwnerPageDlgProc(HWND hwndDlg,
                 if (GetDlgItemText(hwndDlg, IDC_OWNERNAME, SetupData->OwnerName, 50) == 0)
                 {
                   MessageBox (hwndDlg,
-                              "Setup cannot continue until you enter your name.",
-                              "ReactOS Setup",
+                              _T("Setup cannot continue until you enter your name."),
+                              _T("ReactOS Setup"),
                               MB_ICONERROR | MB_OK);
                   return -1;
                 }
@@ -212,8 +212,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                 if (GetDlgItemText(hwndDlg, IDC_COMPUTERNAME, SetupData->ComputerName, 64) == 0)
                 {
                   MessageBox (hwndDlg,
-                              "Setup cannot continue until you enter the name of your computer.",
-                              "ReactOS Setup",
+                              _T("Setup cannot continue until you enter the name of your computer."),
+                              _T("ReactOS Setup"),
                               MB_ICONERROR | MB_OK);
                   return -1;
                 }
@@ -226,9 +226,9 @@ ComputerPageDlgProc(HWND hwndDlg,
                 if (_tcscmp (Password1, Password2))
                 {
                   MessageBox (hwndDlg,
-                              "The passwords you entered do not match. Please enter "\
-                              "the desired password again.",
-                              "ReactOS Setup",
+                              _T("The passwords you entered do not match. Please enter "\
+                                 "the desired password again."),
+                              _T("ReactOS Setup"),
                               MB_ICONERROR | MB_OK);
                   return -1;
                 }
@@ -353,7 +353,7 @@ InstallWizard (VOID)
 //  psh.pszbmHeader =       MAKEINTRESOURCE(IDB_BANNER);
 
   /* Display the wizard */
-  PropertySheetA (&psh);
+  PropertySheet (&psh);
 }
 
 /* EOF */
