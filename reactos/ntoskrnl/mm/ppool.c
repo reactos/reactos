@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.22 2003/12/13 21:11:53 gvg Exp $
+/* $Id: ppool.c,v 1.23 2003/12/14 18:36:15 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -453,6 +453,15 @@ ExFreePagedPool(IN PVOID Block)
     //DbgPrint ( "checking buffer-overrun detection bytes..." );
     for ( i = 0; i < MM_PPOOL_REDZONE_BYTES; i++ )
     {
+      if (*(Addr-i-1) != MM_PPOOL_REDZONE_VALUE)
+      {
+        DPRINT1("Attempt to free memory %#08x. Redzone underrun!\n", Block);
+      }
+      if (*(Addr+UsedBlock->UserSize+i) != MM_PPOOL_REDZONE_VALUE)
+      {
+        DPRINT1("Attempt to free memory %#08x. Redzone overrun!\n", Block);
+      }
+
       assert ( *(Addr-i-1) == MM_PPOOL_REDZONE_VALUE );
       assert ( *(Addr+UsedBlock->UserSize+i) == MM_PPOOL_REDZONE_VALUE );
     }
