@@ -99,7 +99,7 @@ BOOL CheckCtrlBreak (INT mode)
 			/* we need to be sure the string arrives on the screen! */
 			do
 				ConOutPuts (_T("\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "));
-			while (!_tcschr ("YNA\3", c = _totupper (cgetchar())) || !c);
+			while (!_tcschr (_T("YNA\3"), c = _totupper (cgetchar())) || !c);
 
 			ConOutPuts (_T("\r\n"));
 
@@ -371,29 +371,35 @@ BOOL IsValidDirectory (LPCTSTR pszPath)
 
 BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 {
-	LPTSTR lpString;
-	TCHAR  ch;
+	LPSTR lpString;
+	CHAR ch;
 	DWORD  dwRead;
-
+	INT len;
+#ifdef _UNICODE
+	lpString = alloca(nBufferLength);
+#else
 	lpString = lpBuffer;
-
+#endif
+	len = 0;
 	while ((--nBufferLength >  0) &&
 		   ReadFile(hFile, &ch, 1, &dwRead, NULL) && dwRead)
 	{
-		if (ch == _T('\r'))
+		if (ch == '\r')
 		{
 			/* overread '\n' */
 			ReadFile (hFile, &ch, 1, &dwRead, NULL);
 			break;
 		}
-		*lpString++ = ch;
+                lpString[len++] = ch;
 	}
 
-	if (!dwRead && lpString == lpBuffer)
+	if (!dwRead && !len)
 		return FALSE;
 
-	*lpString++ = _T('\0');
-
+	lpString[len++] = '\0';
+#ifdef _UNICODE
+	MultiByteToWideChar(CP_ACP, 0, lpString, len, lpBuffer, len);
+#endif
 	return TRUE;
 }
 
@@ -410,7 +416,7 @@ HWND GetConsoleWindow (VOID)
 	if(h)
 		return h;
 
-	GetConsoleTitle (original, sizeof(original));
+	GetConsoleTitle (original, sizeof(original) / sizeof(TCHAR));
 
 	_tcscpy (temp, original);
 	_tcscat (temp, _T("-xxx   "));
@@ -435,7 +441,7 @@ INT PagePrompt (VOID)
 {
 	INPUT_RECORD ir;
 
-	ConOutPrintf ("Press a key to continue...\n");
+	ConOutPrintf (_T("Press a key to continue...\n"));
 
 	RemoveBreakHandler ();
 	ConInDisable ();
