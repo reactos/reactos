@@ -125,16 +125,16 @@ void	printf __P((const char *, ...));
 #include <oskitfreebsd.h>
 #include <oskitdebug.h>
 
+
 int __cdecl vprintf(const char *, va_list);
 
-static inline int log ( int blah, const char* fmt, ... )
+#define log bsd_log
+static inline int bsd_log ( int blah, const char* fmt, ... )
 {
 	va_list arg;
 	int i;
 	va_start(arg, fmt);
-#ifndef __NTDRIVER__
 	i = vprintf ( fmt, arg );
-#endif
 	va_end(arg);
 	return i;
 }

@@ -40,18 +40,13 @@
 struct  listener_mgr;
 #endif
 
-/*
- * Used to maintain information about processes that wish to be
- * notified when I/O becomes possible.
- */
-struct selinfo {
-#if defined(OSKIT)
-	struct  listener_mgr *si_sel;
-#endif /* OSKIT */
-	pid_t	si_pid;		/* process to be notified */
-	short	si_flags;	/* see below */
-};
-#define	SI_COLL	0x0001		/* collision occurred */
+/* Included to suppress warnings about struct socket being declared in the
+ * parameter list.  Selinfo reoredered with struct socket. */
+
+struct selinfo;
+struct socket;
+
+#include <sys/socketvar.h>
 
 #ifdef KERNEL
 struct proc;

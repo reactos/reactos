@@ -365,7 +365,7 @@ int OskitTCPAccept( void *socket,
      */
     so = head->so_q;
 
-    inp = so ? so->so_pcb : 0;
+    inp = so ? (struct inpcb *)so->so_pcb : NULL;
     if( inp ) {
         ((struct sockaddr_in *)AddrOut)->sin_addr.s_addr = 
             inp->inp_faddr.s_addr;
@@ -381,7 +381,7 @@ int OskitTCPAccept( void *socket,
 	    
 	/*so->so_state &= ~SS_COMP;*/
 
-	mnam.m_data = &sa;
+	mnam.m_data = (char *)&sa;
 	mnam.m_len = sizeof(sa);
 	
 	(void) soaccept(so, &mnam);
@@ -452,7 +452,7 @@ void OskitTCPSetAddress( void *socket,
 			 OSK_UINT RemoteAddress,
 			 OSK_UI16 RemotePort ) {
     struct socket *so = socket;
-    struct inpcb *inp = so->so_pcb;
+    struct inpcb *inp = (struct inpcb *)so->so_pcb;
     inp->inp_laddr.s_addr = LocalAddress;
     inp->inp_lport = LocalPort;
     inp->inp_faddr.s_addr = RemoteAddress;
@@ -465,7 +465,7 @@ void OskitTCPGetAddress( void *socket,
 			 OSK_UINT *RemoteAddress,
 			 OSK_UI16 *RemotePort ) {
     struct socket *so = socket;
-    struct inpcb *inp = so ? so->so_pcb : 0;
+    struct inpcb *inp = so ? (struct inpcb *)so->so_pcb : NULL;
     if( inp ) {
 	*LocalAddress = inp->inp_laddr.s_addr;
 	*LocalPort = inp->inp_lport;
@@ -589,7 +589,7 @@ struct ifaddr *ifa_ifwithnet(addr)
 
     if( ifaddr )
     {
-       sin = (struct sockaddr *)&ifaddr->ifa_addr;
+       sin = (struct sockaddr_in *)&ifaddr->ifa_addr;
 
        OS_DbgPrint(OSK_MID_TRACE,("ifaddr->addr = %x\n", 
                                   sin->sin_addr.s_addr));
