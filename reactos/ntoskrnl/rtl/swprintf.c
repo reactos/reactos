@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.7 2002/09/08 10:23:42 chorns Exp $
+/* $Id: swprintf.c,v 1.8 2002/09/12 17:50:05 guido Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -8,7 +8,6 @@
  *                  Eric Kohl
  *
  * TODO:
- *   - Implement maximum length (cnt) in _vsnwprintf().
  *   - Verify the implementation of '%Z'.
  */
 
@@ -61,86 +60,97 @@ static int skip_atoi(const wchar_t **s)
 
 
 static wchar_t *
-number (wchar_t *str, long long num, int base, int size, int precision,
-	int type)
+number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int precision, int type)
 {
-   wchar_t c,sign,tmp[66];
-   const wchar_t *digits = L"0123456789abcdefghijklmnopqrstuvwxyz";
-   int i;
-   
-   if (type & LARGE)
-     digits = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-   if (type & LEFT)
-     type &= ~ZEROPAD;
-   if (base < 2 || base > 36)
-     return 0;
-   
-   c = (type & ZEROPAD) ? L'0' : L' ';
-   sign = 0;
-   
-   if (type & SIGN) 
-     {
-	if (num < 0) 
-	  {
-	     sign = L'-';
-	     num = -num;
-	     size--;
-	  } 
-	else if (type & PLUS) 
-	  {
-	     sign = L'+';
-	     size--;
-	  } 
-	else if (type & SPACE) 
-	  {
-	     sign = L' ';
-	     size--;
-	  }
-     }
-   
-   if (type & SPECIAL) 
-     {
-	if (base == 16)
-	  size -= 2;
-	else if (base == 8)
-	  size--;
-     }
-   
-   i = 0;
-   if (num == 0)
-     tmp[i++]='0';
-   else while (num != 0)
-     tmp[i++] = digits[do_div(num,base)];
-   if (i > precision)
-     precision = i;
-   size -= precision;
-   if (!(type&(ZEROPAD+LEFT)))
-     while(size-->0)
-       *str++ = L' ';
-   if (sign)
-     *str++ = sign;
-   if (type & SPECIAL)
-     {
-	if (base==8)
-	  {
-	     *str++ = L'0';
-	  }
-	else if (base==16) 
-	  {
-	     *str++ = L'0';
-	     *str++ = digits[33];
-	  }
-     }
-   if (!(type & LEFT))
-     while (size-- > 0)
-       *str++ = c;
-   while (i < precision--)
-     *str++ = '0';
-   while (i-- > 0)
-     *str++ = tmp[i];
-   while (size-- > 0)
-     *str++ = L' ';
-   return str;
+	wchar_t c,sign, tmp[66];
+	const wchar_t *digits;
+	const wchar_t small_digits[] = L"0123456789abcdefghijklmnopqrstuvwxyz";
+	const wchar_t large_digits[] = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	int i;
+
+	digits = (type & LARGE) ? large_digits : small_digits;
+	if (type & LEFT)
+		type &= ~ZEROPAD;
+	if (base < 2 || base > 36)
+		return 0;
+	c = (type & ZEROPAD) ? L'0' : L' ';
+	sign = 0;
+	if (type & SIGN) {
+		if (num < 0) {
+			sign = L'-';
+			num = -num;
+			size--;
+		} else if (type & PLUS) {
+			sign = L'+';
+			size--;
+		} else if (type & SPACE) {
+			sign = ' ';
+			size--;
+		}
+	}
+	if (type & SPECIAL) {
+		if (base == 16)
+			size -= 2;
+		else if (base == 8)
+			size--;
+	}
+	i = 0;
+	if (num == 0)
+		tmp[i++] = L'0';
+	else while (num != 0)
+		tmp[i++] = digits[do_div(num,base)];
+	if (i > precision)
+		precision = i;
+	size -= precision;
+	if (!(type&(ZEROPAD+LEFT))) {
+		while(size-->0) {
+			if (buf <= end)
+				*buf = L' ';
+			++buf;
+		}
+	}
+	if (sign) {
+		if (buf <= end)
+			*buf = sign;
+		++buf;
+	}
+	if (type & SPECIAL) {
+		if (base==8) {
+			if (buf <= end)
+				*buf = L'0';
+			++buf;
+		} else if (base==16) {
+			if (buf <= end)
+				*buf = L'0';
+			++buf;
+			if (buf <= end)
+				*buf = digits[33];
+			++buf;
+		}
+	}
+	if (!(type & LEFT)) {
+		while (size-- > 0) {
+			if (buf <= end)
+				*buf = c;
+			++buf;
+		}
+	}
+	while (i < precision--) {
+		if (buf <= end)
+			*buf = L'0';
+		++buf;
+	}
+	while (i-- > 0) {
+		if (buf <= end)
+			*buf = tmp[i];
+		++buf;
+	}
+	while (size-- > 0) {
+		if (buf <= end)
+			*buf = L' ';
+		++buf;
+	}
+	return buf;
 }
 
 
@@ -149,7 +159,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 	int len;
 	unsigned long long num;
 	int i, base;
-	wchar_t * str;
+	wchar_t * str, * end;
 	const char *s;
 	const wchar_t *sw;
 
@@ -160,9 +170,18 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 				   number of chars for from string */
 	int qualifier;		/* 'h', 'l', 'L', 'w' or 'I' for integer fields */
 
-	for (str=buf ; *fmt ; ++fmt) {
+	str = buf;
+	end = buf + cnt - 1;
+	if (end < buf - 1) {
+		end = ((void *) -1);
+		cnt = end - buf + 1;
+	}
+
+	for ( ; *fmt ; ++fmt) {
 		if (*fmt != L'%') {
-			*str++ = *fmt;
+			if (str <= end)
+				*str = *fmt;
+			++str;
 			continue;
 		}
 
@@ -195,7 +214,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 		/* get the precision */
 		precision = -1;
 		if (*fmt == L'.') {
-			++fmt;	
+			++fmt;
 			if (iswdigit(*fmt))
 				precision = skip_atoi(&fmt);
 			else if (*fmt == L'*') {
@@ -223,26 +242,48 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 		switch (*fmt) {
 		case L'c':
 			if (!(flags & LEFT))
-				while (--field_width > 0)
-					*str++ = L' ';
-			if (qualifier == 'h')
-				*str++ = (wchar_t) va_arg(args, int);
-			else
-				*str++ = (wchar_t) va_arg(args, int);
-			while (--field_width > 0)
-				*str++ = L' ';
+				while (--field_width > 0) {
+					if (str <= end)
+						*str = L' ';
+					++str;
+				}
+			if (qualifier == 'h') {
+				if (str <= end)
+					*str = (wchar_t) va_arg(args, int);
+				++str;
+			} else {
+				if (str <= end)
+					*str = (wchar_t) va_arg(args, int);
+				++str;
+			}
+			while (--field_width > 0) {
+				if (str <= end)
+					*str = L' ';
+				++str;
+			}
 			continue;
 
 		case L'C':
 			if (!(flags & LEFT))
-				while (--field_width > 0)
-					*str++ = L' ';
-			if (qualifier == 'l' || qualifier == 'w')
-				*str++ = (wchar_t) va_arg(args, int);
-			else
-				*str++ = (wchar_t) va_arg(args, int);
-			while (--field_width > 0)
-				*str++ = L' ';
+				while (--field_width > 0) {
+					if (str <= end)
+						*str = L' ';
+					++str;
+				}
+			if (qualifier == 'l' || qualifier == 'w') {
+				if (str <= end)
+					*str = (wchar_t) va_arg(args, int);
+				++str;
+			} else {
+				if (str <= end)
+					*str = (wchar_t) va_arg(args, int);
+				++str;
+			}
+			while (--field_width > 0) {
+				if (str <= end)
+					*str = L' ';
+				++str;
+			}
 			continue;
 
 		case L's':
@@ -257,12 +298,22 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 					len = precision;
 
 				if (!(flags & LEFT))
-					while (len < field_width--)
-						*str++ = L' ';
-				for (i = 0; i < len; ++i)
-					*str++ = (wchar_t)(*s++);
-				while (len < field_width--)
-					*str++ = L' ';
+					while (len < field_width--) {
+						if (str <= end)
+							*str = L' ';
+						++str;
+					}
+				for (i = 0; i < len; ++i) {
+					if (str <= end)
+						*str = (wchar_t)(*s);
+					++str;
+					++s;
+				}
+				while (len < field_width--) {
+					if (str <= end)
+						*str = L' ';
+					++str;
+				}
 			} else {
 				/* print unicode string */
 				sw = va_arg(args, wchar_t *);
@@ -274,12 +325,22 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 					len = precision;
 
 				if (!(flags & LEFT))
-					while (len < field_width--)
-						*str++ = L' ';
-				for (i = 0; i < len; ++i)
-					*str++ = *sw++;
-				while (len < field_width--)
-					*str++ = L' ';
+					while (len < field_width--) {
+						if (str <= end)
+							*str = L' ';
+						++str;
+					}
+				for (i = 0; i < len; ++i) {
+					if (str <= end)
+						*str = *sw;
+					++str;
+					++sw;
+				}
+				while (len < field_width--) {
+					if (str <= end)
+						*str = L' ';
+					++str;
+				}
 			}
 			continue;
 
@@ -295,12 +356,22 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 					len = precision;
 
 				if (!(flags & LEFT))
-					while (len < field_width--)
-						*str++ = L' ';
-				for (i = 0; i < len; ++i)
-					*str++ = *sw++;
-				while (len < field_width--)
-					*str++ = L' ';
+					while (len < field_width--) {
+						if (str <= end)
+							*str = L' ';
+						++str;
+					}
+				for (i = 0; i < len; ++i) {
+					if (str <= end)
+						*str = *sw;
+					++str;
+					++sw;
+				}
+				while (len < field_width--) {
+					if (str <= end)
+						*str = L' ';
+					++str;
+				}
 			} else {
 				/* print ascii string */
 				s = va_arg(args, char *);
@@ -312,12 +383,22 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 					len = precision;
 
 				if (!(flags & LEFT))
-					while (len < field_width--)
-						*str++ = L' ';
-				for (i = 0; i < len; ++i)
-					*str++ = (wchar_t)(*s++);
-				while (len < field_width--)
-					*str++ = L' ';
+					while (len < field_width--) {
+						if (str <= end)
+							*str = L' ';
+						++str;
+					}
+				for (i = 0; i < len; ++i) {
+					if (str <= end)
+						*str = (wchar_t)(*s);
+					++str;
+					++s;
+				}
+				while (len < field_width--) {
+					if (str <= end)
+						*str = L' ';
+					++str;
+				}
 			}
 			continue;
 
@@ -327,22 +408,36 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 				PANSI_STRING pus = va_arg(args, PANSI_STRING);
 				if ((pus == NULL) || (pus->Buffer == NULL)) {
 					sw = L"<NULL>";
-					while ((*sw) != 0)
-						*str++ = *sw++;
+					while ((*sw) != 0) {
+						if (str <= end)
+							*str = *sw;
+						++str;
+						++sw;
+					}
 				} else {
-					for (i = 0; pus->Buffer[i] && i < pus->Length; i++)
-						*str++ = (wchar_t)(pus->Buffer[i]);
+					for (i = 0; pus->Buffer[i] && i < pus->Length; i++) {
+						if (str <= end)
+							*str = (wchar_t)(pus->Buffer[i]);
+						++str;
+					}
 				}
 			} else {
 				/* print counted unicode string */
 				PUNICODE_STRING pus = va_arg(args, PUNICODE_STRING);
 				if ((pus == NULL) || (pus->Buffer == NULL)) {
 					sw = L"<NULL>";
-					while ((*sw) != 0)
-						*str++ = *sw++;
+					while ((*sw) != 0) {
+						if (str <= end)
+							*str = *sw;
+						++str;
+						++sw;
+					}
 				} else {
-					for (i = 0; pus->Buffer[i] && i < pus->Length / sizeof(WCHAR); i++)
-						*str++ = pus->Buffer[i];
+					for (i = 0; pus->Buffer[i] && i < pus->Length / sizeof(WCHAR); i++) {
+						if (str <= end)
+							*str = pus->Buffer[i];
+						++str;
+					}
 				}
 			}
 			continue;
@@ -352,12 +447,13 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 				field_width = 2*sizeof(void *);
 				flags |= ZEROPAD;
 			}
-			str = number(str,
+			str = number(str, end,
 				(unsigned long) va_arg(args, void *), 16,
 				field_width, precision, flags);
 			continue;
 
 		case L'n':
+			/* FIXME: What does C99 say about the overflow case here? */
 			if (qualifier == 'l') {
 				long * ip = va_arg(args, long *);
 				*ip = (str - buf);
@@ -389,11 +485,16 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			break;
 
 		default:
-			if (*fmt != L'%')
-				*str++ = L'%';
-			if (*fmt)
-				*str++ = *fmt;
-			else
+			if (*fmt != L'%') {
+				if (str <= end)
+					*str = L'%';
+				++str;
+			}
+			if (*fmt) {
+				if (str <= end)
+					*str = *fmt;
+				++str;
+			} else
 				--fmt;
 			continue;
 		}
@@ -414,9 +515,13 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			else
 				num = va_arg(args, unsigned int);
 		}
-		str = number(str, num, base, field_width, precision, flags);
+		str = number(str, end, num, base, field_width, precision, flags);
 	}
-	*str = L'\0';
+	if (str <= end)
+		*str = L'\0';
+	else if (cnt > 0)
+		/* don't write out a null byte if the buf size is zero */
+		*end = L'\0';
 	return str-buf;
 }
 
