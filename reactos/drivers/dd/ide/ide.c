@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.44 2001/08/27 01:26:38 ekohl Exp $
+/* $Id: ide.c,v 1.45 2001/09/09 21:28:05 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -81,6 +81,49 @@
 
 //  -------------------------------------------------------  File Static Data
 
+#define PCI_TYPE0_ADDRESSES             6
+#define PCI_TYPE1_ADDRESSES             2
+
+typedef struct _PCI_COMMON_CONFIG
+{
+  USHORT VendorID;                   // (ro)
+  USHORT DeviceID;                   // (ro)
+  USHORT Command;                    // Device control
+  USHORT Status;
+  UCHAR  RevisionID;                 // (ro)
+  UCHAR  ProgIf;                     // (ro)
+  UCHAR  SubClass;                   // (ro)
+  UCHAR  BaseClass;                  // (ro)
+  UCHAR  CacheLineSize;              // (ro+)
+  UCHAR  LatencyTimer;               // (ro+)
+  UCHAR  HeaderType;                 // (ro)
+  UCHAR  BIST;                       // Built in self test
+
+  union
+    {
+      struct _PCI_HEADER_TYPE_0
+        {
+          ULONG  BaseAddresses[PCI_TYPE0_ADDRESSES];
+          ULONG  CIS;
+          USHORT SubVendorID;
+          USHORT SubSystemID;
+          ULONG  ROMBaseAddress;
+          ULONG  Reserved2[2];
+
+          UCHAR  InterruptLine;      //
+          UCHAR  InterruptPin;       // (ro)
+          UCHAR  MinimumGrant;       // (ro)
+          UCHAR  MaximumLatency;     // (ro)
+        } type0;
+
+
+    } u;
+
+  UCHAR  DeviceSpecific[192];
+
+} PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
+
+
 typedef struct _IDE_CONTROLLER_PARAMETERS 
 {
   int              CommandPortBase;
@@ -98,12 +141,12 @@ typedef struct _IDE_CONTROLLER_PARAMETERS
 
 #define  IDE_MAX_DRIVES       2
 
-#define  IDE_MAX_CONTROLLERS  1
+#define  IDE_MAX_CONTROLLERS  2
 IDE_CONTROLLER_PARAMETERS Controllers[IDE_MAX_CONTROLLERS] = 
 {
-  {0x01f0, 8, 0x03f6, 1, 14, 14, 15, LevelSensitive, 0xffff}
-  /*{0x0170, 8, 0x0376, 1, 15, 15, 15, LevelSensitive, 0xffff},
-  {0x01E8, 8, 0x03ee, 1, 11, 11, 15, LevelSensitive, 0xffff},
+  {0x01f0, 8, 0x03f6, 1, 14, 14, 15, LevelSensitive, 0xffff},
+  {0x0170, 8, 0x0376, 1, 15, 15, 15, LevelSensitive, 0xffff}
+/*  {0x01E8, 8, 0x03ee, 1, 11, 11, 15, LevelSensitive, 0xffff},
   {0x0168, 8, 0x036e, 1, 10, 10, 15, LevelSensitive, 0xffff}*/
 };
 
@@ -134,9 +177,14 @@ static BOOLEAN IDEInitialized = FALSE;
 
 //  ---------------------------------------------------- Forward Declarations
 
-static BOOLEAN IDECreateController(IN PDRIVER_OBJECT DriverObject,
-                                   IN PIDE_CONTROLLER_PARAMETERS ControllerParams,
-                                   IN int ControllerIdx);
+static NTSTATUS
+IdeFindControllers(IN PDRIVER_OBJECT DriverObject);
+
+static NTSTATUS
+IdeCreateController(IN PDRIVER_OBJECT DriverObject,
+                    IN PIDE_CONTROLLER_PARAMETERS ControllerParams,
+                    IN int ControllerIdx);
+
 static BOOLEAN IDEResetController(IN WORD CommandPort, IN WORD ControlPort);
 static BOOLEAN IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                                 IN PCONTROLLER_OBJECT ControllerObject,
@@ -161,9 +209,6 @@ static NTSTATUS IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
                                          IN ULONG DiskNumber,
                                          IN PIDE_DRIVE_IDENTIFY DrvParms,
                                          IN PPARTITION_INFORMATION PartitionInfo);
-//                                IN ULONG PartitionIdx,
-//                                IN ULONGLONG Offset,
-//                                IN ULONGLONG Size);
 static int IDEPolledRead(IN WORD Address, 
                          IN BYTE PreComp, 
                          IN BYTE SectorCnt, 
@@ -231,12 +276,11 @@ IDESwapBytePairs(char *Buf,
 //  RETURNS:
 //    NTSTATUS  
 
-STDCALL NTSTATUS 
-DriverEntry(IN PDRIVER_OBJECT DriverObject, 
-            IN PUNICODE_STRING RegistryPath) 
+STDCALL NTSTATUS
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+            IN PUNICODE_STRING RegistryPath)
 {
-  BOOLEAN        WeGotSomeDisks;
-  int            ControllerIdx;
+  NTSTATUS Status;
 
   DbgPrint("IDE Driver %s\n", VERSION);
 
@@ -250,29 +294,199 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 //  DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = IDEDispatchSetInformation;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IDEDispatchDeviceControl;
 
-  WeGotSomeDisks = FALSE;
-  for (ControllerIdx = 0; ControllerIdx < IDE_MAX_CONTROLLERS; ControllerIdx++) 
-    {
-      if (IDECreateController(DriverObject, 
-                              &Controllers[ControllerIdx], 
-                              ControllerIdx))
-      {
-        WeGotSomeDisks = TRUE;
-      }
-    }
-
-  if (WeGotSomeDisks)
+  Status = IdeFindControllers(DriverObject);
+  if (NT_SUCCESS(Status))
     {
       IDEInitialized = TRUE;
     }
-
-  DPRINT( "Returning from DriverEntry\n" );
-  return  WeGotSomeDisks ? STATUS_SUCCESS : STATUS_NO_SUCH_DEVICE;
+  return Status;
 }
 
 //  ----------------------------------------------------  Discardable statics
 
-//    IDECreateController
+static NTSTATUS
+IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
+{
+  PCI_COMMON_CONFIG PciConfig;
+  ULONG Bus;
+  ULONG Slot;
+  ULONG Size;
+  ULONG i;
+  NTSTATUS ReturnedStatus = STATUS_NO_SUCH_DEVICE;
+  NTSTATUS Status;
+  INT ControllerIdx = 0;
+  PCONFIGURATION_INFORMATION ConfigInfo;
+
+  DPRINT("IdeFindControllers() called!\n");
+
+  ConfigInfo = IoGetConfigurationInformation();
+
+  /* Search PCI busses for IDE controllers */
+  for (Bus = 0; Bus < 8; Bus++)
+    {
+      for (Slot = 0; Slot < 256; Slot++)
+	{
+	  Size = HalGetBusData(PCIConfiguration,
+			       Bus,
+			       Slot,
+			       &PciConfig,
+			       sizeof(PCI_COMMON_CONFIG));
+	  if (Size != 0)
+	    {
+	      if ((PciConfig.BaseClass == 0x01) &&
+		  (PciConfig.SubClass == 0x01))
+		{
+		  DPRINT("IDE controller found!\n");
+
+		  DPRINT("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
+			Bus,
+			Slot>>3,
+			Slot & 0x07,
+			PciConfig.VendorID,
+			PciConfig.DeviceID);
+		  if ((PciConfig.HeaderType & 0x7FFFFFFF) == 0)
+		    {
+		      DPRINT("  IPR 0x%X  ILR 0x%X\n",
+			      PciConfig.u.type0.InterruptPin,
+			      PciConfig.u.type0.InterruptLine);
+		    }
+
+		  if (PciConfig.ProgIf & 0x01)
+		    {
+		      DPRINT("Primary channel: PCI native mode\n");
+		    }
+		  else
+		    {
+		      DPRINT("Primary channel: Compatibility mode\n");
+		      if (ConfigInfo->AtDiskPrimaryAddressClaimed == FALSE)
+			{
+			  Status = IdeCreateController(DriverObject,
+						       &Controllers[0],
+						       ControllerIdx);
+			  if (NT_SUCCESS(Status))
+			    {
+			      ControllerIdx++;
+			      ConfigInfo->AtDiskPrimaryAddressClaimed = TRUE;
+			      ConfigInfo->ScsiPortCount++;
+			      ReturnedStatus = Status;
+			    }
+			}
+		      else
+			{
+			  /*
+			   * FIXME: Switch controller to native pci mode
+			   *        if it is programmable.
+			   */
+			}
+		    }
+		  if (PciConfig.ProgIf & 0x02)
+		    {
+		      DPRINT("Primary channel: programmable\n");
+		    }
+		  else
+		    {
+		      DPRINT("Primary channel: not programmable\n");
+		    }
+
+		  if (PciConfig.ProgIf & 0x04)
+		    {
+		      DPRINT("Secondary channel: PCI native mode\n");
+		    }
+		  else
+		    {
+		      DPRINT("Secondary channel: Compatibility mode\n");
+#if 0
+		      Status = IdeCreateController(DriverObject,
+						   &Controllers[1],
+						   ControllerIdx);
+		      if (NT_SUCCESS(Status))
+			{
+			  ControllerIdx++;
+			  ConfigInfo->AtDiskSecondaryAddressClaimed = TRUE;
+			  ConfigInfo->ScsiPortCount++;
+			  ReturnedStatus = Status;
+			}
+#endif
+		    }
+		  if (PciConfig.ProgIf & 0x08)
+		    {
+		      DPRINT("Secondary channel: programmable\n");
+		    }
+		  else
+		    {
+		      DPRINT("Secondary channel: not programmable\n");
+		    }
+
+		  if (PciConfig.ProgIf & 0x80)
+		    {
+		      DPRINT("Master IDE device: 1\n");
+		    }
+		  else
+		    {
+		      DPRINT("Master IDE device: 0\n");
+		    }
+
+		  for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
+		    {
+		      DPRINT("BaseAddress: 0x%08X\n", PciConfig.u.type0.BaseAddresses[i]);
+		    }
+		}
+	    }
+	}
+    }
+
+  /* Search for ISA IDE controller if no primary controller was found */
+  if (ConfigInfo->AtDiskPrimaryAddressClaimed == FALSE)
+    {
+      DPRINT("Searching for primary ISA IDE controller!\n");
+
+      if (IDEResetController(Controllers[0].CommandPortBase,
+			     Controllers[0].ControlPortBase))
+	{
+	  Status = IdeCreateController(DriverObject,
+				       &Controllers[0],
+				       ControllerIdx);
+	  if (NT_SUCCESS(Status))
+	    {
+	      DPRINT("  Found primary ISA IDE controller!\n");
+	      ControllerIdx++;
+	      ConfigInfo->AtDiskPrimaryAddressClaimed = TRUE;
+	      ConfigInfo->ScsiPortCount++;
+	      ReturnedStatus = Status;
+	    }
+	}
+    }
+
+#if 0
+  if (ConfigInfo->AtDiskSecondaryAddressClaimed == FALSE)
+    {
+      DPRINT("Searching for secondary ISA IDE controller!\n");
+
+      if (IDEResetController(Controllers[1].CommandPortBase,
+			     Controllers[1].ControlPortBase))
+	{
+	  Status = IdeCreateController(DriverObject,
+				       &Controllers[1],
+				       ControllerIdx);
+	  if (NT_SUCCESS(Status))
+	    {
+	      DPRINT("  Found secondary ISA IDE controller!\n");
+	      ControllerIdx++;
+	      ConfigInfo->AtDiskSecondaryAddressClaimed = TRUE;
+	      ConfigInfo->ScsiPortCount++;
+	      ReturnedStatus = Status;
+	    }
+	}
+    }
+#endif
+
+  DPRINT("IdeFindControllers() done!\n");
+
+  return(ReturnedStatus);
+}
+
+
+//    IdeCreateController
 //
 //  DESCRIPTION:
 //    Creates a controller object and a device object for each valid
@@ -292,10 +506,10 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 //    FALSE  The controller does not respond or there are no devices on it
 //
 
-BOOLEAN  
-IDECreateController(IN PDRIVER_OBJECT DriverObject, 
-                    IN PIDE_CONTROLLER_PARAMETERS ControllerParams, 
-                    IN int ControllerIdx) 
+static NTSTATUS
+IdeCreateController(IN PDRIVER_OBJECT DriverObject,
+                    IN PIDE_CONTROLLER_PARAMETERS ControllerParams,
+                    IN int ControllerIdx)
 {
   BOOLEAN                    CreatedDevices, ThisDriveExists;
   int                        DriveIdx;
@@ -303,22 +517,12 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
   PCONTROLLER_OBJECT         ControllerObject;
   PIDE_CONTROLLER_EXTENSION  ControllerExtension;
 
-    //  Try to reset the controller and return FALSE if it fails
-  if (!IDEResetController(ControllerParams->CommandPortBase,
-                          ControllerParams->ControlPortBase)) 
-    {
-      DbgPrint ("Could not find controller %d at %04lx\n",
-                ControllerIdx,
-                ControllerParams->CommandPortBase);
-      return  FALSE;
-    }
-
   ControllerObject = IoCreateController(sizeof(IDE_CONTROLLER_EXTENSION));
-  if (ControllerObject == NULL) 
+  if (ControllerObject == NULL)
     {
       DbgPrint ("Could not create controller object for controller %d\n",
                 ControllerIdx);
-      return  FALSE;
+      return STATUS_NO_SUCH_DEVICE;
     }
 
     //  Fill out Controller extension data
@@ -337,22 +541,22 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
 
     //  Register an interrupt handler for this controller
   RC = IoConnectInterrupt(&ControllerExtension->Interrupt,
-                          IDEIsr, 
-                          ControllerExtension, 
-                          &ControllerExtension->SpinLock, 
-                          ControllerExtension->Vector, 
-                          ControllerParams->IrqL, 
-                          ControllerParams->SynchronizeIrqL, 
-                          ControllerParams->InterruptMode, 
-                          FALSE, 
-                          ControllerParams->Affinity, 
+                          IDEIsr,
+                          ControllerExtension,
+                          &ControllerExtension->SpinLock,
+                          ControllerExtension->Vector,
+                          ControllerParams->IrqL,
+                          ControllerParams->SynchronizeIrqL,
+                          ControllerParams->InterruptMode,
+                          FALSE,
+                          ControllerParams->Affinity,
                           FALSE);
-  if (!NT_SUCCESS(RC)) 
+  if (!NT_SUCCESS(RC))
     {
       DbgPrint ("Could not Connect Interrupt %d\n", 
                 ControllerExtension->Vector);
       IoDeleteController (ControllerObject);
-      return  FALSE;
+      return RC;
     }
 
 /* TEST */
@@ -373,7 +577,7 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
         }
     }
 
-  if (!CreatedDevices) 
+  if (!CreatedDevices)
     {
       DbgPrint ("Did not find any devices for controller %d\n", 
                 ControllerIdx);
@@ -387,8 +591,9 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
       IoStartTimer(ControllerExtension->TimerDevice);
     }
 
-  return  CreatedDevices;
+  return((CreatedDevices == TRUE)?STATUS_SUCCESS:STATUS_NO_SUCH_DEVICE);
 }
+
 
 //    IDEResetController
 //
