@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.60 2004/12/01 14:28:53 ekohl Exp $
+/* $Id: sysinfo.c,v 1.61 2004/12/01 23:51:11 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -355,7 +355,7 @@ QSI_DEF(SystemBasicInformation)
 	}
 	Sbi->Unknown = 0;
 	Sbi->MaximumIncrement = KeMaximumIncrement;
-	Sbi->PhysicalPageSize = PAGE_SIZE; /* FIXME: it should be PAGE_SIZE */
+	Sbi->PhysicalPageSize = PAGE_SIZE;
 	Sbi->NumberOfPhysicalPages = MmStats.NrTotalPages;
 	Sbi->LowestPhysicalPage = 0; /* FIXME */ 
 	Sbi->HighestPhysicalPage = MmStats.NrTotalPages; /* FIXME */
