@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.46 2002/03/05 00:19:28 ekohl Exp $
+/* $Id: object.c,v 1.47 2002/05/07 22:39:26 hbirr Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -69,7 +69,7 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
 	ObCreateHandle(PsGetCurrentProcess(),
 		       HEADER_TO_BODY(ObjectHeader),
 		       DesiredAccess,
-		       FALSE,
+		       ObjectAttributes && (ObjectAttributes->Attributes & OBJ_INHERIT) ? TRUE : FALSE,
 		       Handle);
      }
 }
@@ -373,7 +373,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
    
-   Header->RefCount++;
+   InterlockedIncrement(&Header->RefCount);
    
    return(STATUS_SUCCESS);
 }
@@ -404,7 +404,7 @@ ObOpenObjectByPointer(IN POBJECT Object,
    Status = ObCreateHandle(PsGetCurrentProcess(),
 			   Object,
 			   DesiredAccess,
-			   FALSE,
+			   HandleAttributes & OBJ_INHERIT,
 			   Handle);
    
    ObDereferenceObject(Object);
@@ -476,7 +476,7 @@ ObfReferenceObject(IN PVOID Object)
 
   Header = BODY_TO_HEADER(Object);
 
-  Header->RefCount++;
+  InterlockedIncrement(&Header->RefCount);
 
   ObpPerformRetentionChecks(Header);
 }
@@ -519,7 +519,7 @@ ObfDereferenceObject(IN PVOID Object)
       DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
     }
   
-  Header->RefCount--;
+  InterlockedDecrement(&Header->RefCount);
   
   ObpPerformRetentionChecks(Header);
 }
