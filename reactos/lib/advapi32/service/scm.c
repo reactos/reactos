@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.23 2004/08/15 17:03:15 chorns Exp $
+/* $Id: scm.c,v 1.24 2004/09/26 20:28:22 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "advapi32.h"
-#define DBG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -38,6 +38,7 @@ ChangeServiceConfigA(
     LPCSTR      lpPassword,
     LPCSTR      lpDisplayName)
 {
+    DPRINT1("ChangeServiceConfigA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -63,6 +64,7 @@ ChangeServiceConfigW(
     LPCWSTR     lpPassword,
     LPCWSTR     lpDisplayName)
 {
+    DPRINT1("ChangeServiceConfigW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -98,6 +100,7 @@ ControlService(SC_HANDLE        hService,
                DWORD            dwControl,
                LPSERVICE_STATUS lpServiceStatus)
 {
+    DPRINT1("ControlService is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -125,8 +128,8 @@ CreateServiceA(
     LPCSTR      lpServiceStartName,
     LPCSTR      lpPassword)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return NULL;
+    DPRINT1("CreateServiceA is unimplemented, but returning INVALID_HANDLE_VALUE instead of NULL\n");
+    return INVALID_HANDLE_VALUE;
 }
 
 
@@ -152,8 +155,8 @@ CreateServiceW(
     LPCWSTR     lpServiceStartName,
     LPCWSTR     lpPassword)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return NULL;
+    DPRINT1("CreateServiceW is unimplemented, but returning INVALID_HANDLE_VALUE instead of NULL\n");
+    return INVALID_HANDLE_VALUE;
 }
 
 
@@ -166,6 +169,7 @@ BOOL
 STDCALL
 DeleteService(SC_HANDLE hService)
 {
+    DPRINT1("DeleteService is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -186,6 +190,7 @@ EnumDependentServicesA(
     LPDWORD         pcbBytesNeeded,
     LPDWORD         lpServicesReturned)
 {
+    DPRINT1("EnumDependentServicesA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -206,6 +211,7 @@ EnumDependentServicesW(
     LPDWORD         pcbBytesNeeded,
     LPDWORD         lpServicesReturned)
 {
+    DPRINT1("EnumDependentServicesW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -229,6 +235,7 @@ EnumServiceGroupW (
     DWORD   Unknown7,
     DWORD   Unknown8)
 {
+    DPRINT1("EnumServiceGroupW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -251,6 +258,7 @@ EnumServicesStatusA (
     LPDWORD                 lpServicesReturned,
     LPDWORD                 lpResumeHandle)
 {
+    DPRINT1("EnumServicesStatusA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -274,6 +282,7 @@ EnumServicesStatusExA(SC_HANDLE  hSCManager,
   LPDWORD  lpResumeHandle,
   LPCSTR  pszGroupName)
 {
+    DPRINT1("EnumServicesStatusExA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -297,6 +306,7 @@ EnumServicesStatusExW(SC_HANDLE  hSCManager,
   LPDWORD  lpResumeHandle,
   LPCWSTR  pszGroupName)
 {
+    DPRINT1("EnumServicesStatusExW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -319,6 +329,7 @@ EnumServicesStatusW(
     LPDWORD                 lpServicesReturned,
     LPDWORD                 lpResumeHandle)
 {
+    DPRINT1("EnumServicesStatusW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -337,6 +348,7 @@ GetServiceDisplayNameA(
     LPSTR       lpDisplayName,
     LPDWORD     lpcchBuffer)
 {
+    DPRINT1("GetServiceDisplayNameA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -355,6 +367,7 @@ GetServiceDisplayNameW(
     LPWSTR      lpDisplayName,
     LPDWORD     lpcchBuffer)
 {
+    DPRINT1("GetServiceDisplayNameW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -373,6 +386,7 @@ GetServiceKeyNameA(
     LPSTR       lpServiceName,
     LPDWORD     lpcchBuffer)
 {
+    DPRINT1("GetServiceKeyNameA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -391,6 +405,7 @@ GetServiceKeyNameW(
     LPWSTR      lpServiceName,
     LPDWORD     lpcchBuffer)
 {
+    DPRINT1("GetServiceKeyNameW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -404,6 +419,7 @@ SC_LOCK
 STDCALL
 LockServiceDatabase(SC_HANDLE   hSCManager)
 {
+    DPRINT1("LockServiceDatabase is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return NULL;
 }
@@ -618,7 +634,7 @@ SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR lpMachineName,
   else
     {
       /* FIXME: Connect to remote SCM */
-      DPRINT("OpenSCManagerW() - FIXME: Connect to remote SCM not implemented.\n");
+      DPRINT("OpenSCManagerW() - FIXME: Connect to remote SCM is unimplemented.\n");
       return NULL;
     }
 }
@@ -634,7 +650,8 @@ OpenServiceA(SC_HANDLE hSCManager,
          LPCSTR  lpServiceName,
          DWORD dwDesiredAccess)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  DPRINT1("OpenServiceA is unimplemented, returning ERROR_SERVICE_DOES_NOT_EXIST for %s\n", lpServiceName);
+  SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
   return NULL;
 }
 
@@ -652,8 +669,9 @@ OpenServiceW(
     DWORD       dwDesiredAccess
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return NULL;
+  DPRINT1("OpenServiceW is unimplemented, returning ERROR_SERVICE_DOES_NOT_EXIST for %S\n", lpServiceName);
+  SetLastError(ERROR_SERVICE_DOES_NOT_EXIST);
+  return NULL;
 }
 
 
@@ -670,6 +688,7 @@ QueryServiceConfigA(
     DWORD           cbBufSize,
     LPDWORD         pcbBytesNeeded)
 {
+    DPRINT1("QueryServiceConfigA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -688,6 +707,7 @@ QueryServiceConfigW(
     DWORD                   cbBufSize,
     LPDWORD                 pcbBytesNeeded)
 {
+    DPRINT1("QueryServiceConfigW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -706,6 +726,7 @@ QueryServiceLockStatusA(
     DWORD               cbBufSize,
     LPDWORD             pcbBytesNeeded)
 {
+    DPRINT1("QueryServiceLockStatusA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -724,6 +745,7 @@ QueryServiceLockStatusW(
     DWORD               cbBufSize,
     LPDWORD             pcbBytesNeeded)
 {
+    DPRINT1("QueryServiceLockStatusW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -743,6 +765,7 @@ QueryServiceObjectSecurity(
     DWORD           cbBufSize,
     LPDWORD         pcbBytesNeeded)
 {
+    DPRINT1("QueryServiceObjectSecurity is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -759,6 +782,7 @@ QueryServiceStatus(
     SC_HANDLE       hService,
     LPSERVICE_STATUS    lpServiceStatus)
 {
+    DPRINT1("QueryServiceStatus is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -777,6 +801,7 @@ QueryServiceStatusEx(SC_HANDLE  hService,
   DWORD  cbBufSize,
   LPDWORD  pcbBytesNeeded)
 {
+    DPRINT1("QueryServiceStatusEx is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -794,6 +819,7 @@ StartServiceA(
     DWORD       dwNumServiceArgs,
     LPCSTR      *lpServiceArgVectors)
 {
+    DPRINT1("StartServiceA is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -813,6 +839,7 @@ StartServiceW(
     DWORD       dwNumServiceArgs,
     LPCWSTR     *lpServiceArgVectors)
 {
+    DPRINT1("StartServiceW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -827,6 +854,7 @@ BOOL
 STDCALL
 UnlockServiceDatabase(SC_LOCK   ScLock)
 {
+    DPRINT1("UnlockServiceDatabase is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
