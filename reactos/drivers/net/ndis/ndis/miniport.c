@@ -198,7 +198,7 @@ MiniIndicateData(
           NDIS_DbgPrint(DEBUG_MINIPORT, ("WARNING: No upper protocol layer.\n"));
         }
 
-      while (CurrentEntry != &Adapter->ProtocolListHead) 
+      while (CurrentEntry->Flink != &Adapter->ProtocolListHead) 
         {
           AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 
