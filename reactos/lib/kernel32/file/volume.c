@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.35 2004/01/12 20:02:42 weiden Exp $
+/* $Id: volume.c,v 1.36 2004/01/17 23:04:28 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -624,7 +624,7 @@ GetVolumeInformationW(
   }
   else
   {
-      wcsncpy (RootPathName, lpRootPathName, min(MAX_PATH, wcslen(lpRootPathName)));
+      wcsncpy (RootPathName, lpRootPathName, min(MAX_PATH, wcslen(lpRootPathName) + 1));
   }
 
   hFile = InternalOpenDirW(RootPathName, FALSE);
