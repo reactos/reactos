@@ -247,6 +247,15 @@ void Entry::sort_directory(SORT_ORDER sortOrder)
 }
 
 
+void Entry::smart_scan()
+{
+	if (!_scanned) {
+		free_subentries();
+		read_directory(SORT_NAME);	// we could use IShellFolder2::GetDefaultColumn to determine sort order
+	}
+}
+
+
 BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 {
 	TCHAR cmd[MAX_PATH];

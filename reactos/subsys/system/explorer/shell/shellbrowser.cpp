@@ -35,6 +35,20 @@
 #include "../explorer_intres.h"
 
 
+static LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)
+{
+	TVITEM tvItem;
+
+	tvItem.mask = TVIF_PARAM;
+	tvItem.hItem = hItem;
+
+	if (!TreeView_GetItem(hwndTreeView, &tvItem))
+		return 0;
+
+	return tvItem.lParam;
+}
+
+
 ShellBrowserChild::ShellBrowserChild(HWND hwnd)
  :	super(hwnd)
 {
@@ -42,6 +56,7 @@ ShellBrowserChild::ShellBrowserChild(HWND hwnd)
 	_pShellView = NULL;
 	_pDropTarget = NULL;
 	_himlSmall = 0;
+	_last_sel = 0;
 }
 
 ShellBrowserChild::~ShellBrowserChild()
@@ -71,7 +86,7 @@ void ShellBrowserChild::OnCreate(LPCREATESTRUCT pcs)
 
 	 // create explorer treeview
 	_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
-					WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS,
+					WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
 					0, rect.top, _split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
 					_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
 
@@ -172,14 +187,11 @@ void ShellBrowserChild::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 
 void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen)
 {
-	TVITEM tvItem;
+	LPARAM itemData = TreeView_GetItemData(hwndTreeView, hItem);
 
-	tvItem.mask = TVIF_PARAM;
-	tvItem.hItem = hItem;
-
-	if (TreeView_GetItem(hwndTreeView, &tvItem)) {
+	if (itemData) {
 		HWND hwndParent = ::GetParent(hwndTreeView);
-		Entry* entry = (Entry*)tvItem.lParam;
+		Entry* entry = (Entry*)itemData;
 
 		IShellFolder* folder;
 
@@ -279,30 +291,20 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 	if (pnmtv->action == TVE_COLLAPSE)
         TreeView_Expand(_left_hwnd, pnmtv->itemNew.hItem, TVE_COLLAPSE|TVE_COLLAPSERESET);
     else if (pnmtv->action == TVE_EXPAND) {
-		TVITEM tvItem;
+		ShellDirectory* entry = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, pnmtv->itemNew.hItem);
 
-		tvItem.mask = TVIF_PARAM;
-		tvItem.hItem = pnmtv->itemNew.hItem;
-
-		if (!TreeView_GetItem(_left_hwnd, &tvItem))
-			return;
-
-		WaitCursor wait;
-
-		ShellDirectory* entry = (ShellDirectory*)tvItem.lParam;
-
-		InsertSubitems(pnmtv->itemNew.hItem, entry, entry->_folder);
+		if (entry)
+			InsertSubitems(pnmtv->itemNew.hItem, entry, entry->_folder);
 	}
 }
 
 void ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder)
 {
+	WaitCursor wait;
+
 	SendMessage(_left_hwnd, WM_SETREDRAW, FALSE, 0);
 
-	if (!entry->_scanned) {
-		entry->free_subentries();
-		entry->read_directory(SORT_NAME);	// we could use IShellFolder2::GetDefaultColumn to determine sort order
-	}
+	entry->smart_scan();
 
 	TV_ITEM tvItem;
 	TV_INSERTSTRUCT tvInsert;
@@ -341,6 +343,8 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 {
 	ShellEntry* entry = (ShellEntry*)pnmtv->itemNew.lParam;
 
+	_last_sel = pnmtv->itemNew.hItem;
+
 	IShellFolder* folder;
 
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -360,7 +364,7 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 		pLastShellView->GetCurrentInfo(&fs);
 	else {
 		fs.ViewMode = FVM_DETAILS;
-		fs.fFlags = 0;
+		fs.fFlags = FWF_NOCLIENTEDGE;
 	}
 
 	HRESULT hr = folder->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
@@ -416,4 +420,94 @@ int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 	}
 
 	return 0;
+}
+
+
+ // process default command: look for folders and traverse into them
+HRESULT ShellBrowserChild::OnDefaultCommand(IShellView* ppshv)
+{
+	static UINT CF_IDLIST = RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+
+	HRESULT ret = E_NOTIMPL;
+
+	IDataObject* selection;
+	HRESULT hr = ppshv->GetItemObject(SVGIO_SELECTION, IID_IDataObject, (void**)&selection);
+	if (FAILED(hr))
+		return hr;
+
+
+    FORMATETC fetc;
+    fetc.cfFormat = CF_IDLIST;
+    fetc.ptd = NULL;
+    fetc.dwAspect = DVASPECT_CONTENT;
+    fetc.lindex = -1;
+    fetc.tymed = TYMED_HGLOBAL;
+
+    hr = selection->QueryGetData(&fetc);
+	if (FAILED(hr))
+		return hr;
+
+
+	STGMEDIUM stgm = {sizeof(STGMEDIUM)};
+
+    hr = selection->GetData(&fetc, &stgm);
+	if (FAILED(hr))
+		return hr;
+
+
+    DWORD pData = (DWORD)GlobalLock(stgm.hGlobal);
+	CIDA* pIDList = (CIDA*)pData;
+
+	if (pIDList->cidl >= 1) {
+		//UINT folderOffset = pIDList->aoffset[0];
+		//LPITEMIDLIST folder = (LPITEMIDLIST)(pData+folderOffset);
+
+		UINT firstOffset = pIDList->aoffset[1];
+		LPITEMIDLIST pidl = (LPITEMIDLIST)(pData+firstOffset);
+
+		//HTREEITEM hitem_sel = TreeView_GetSelection(_left_hwnd);
+
+		if (_last_sel) {
+			ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
+
+			if (parent) {
+				parent->smart_scan();
+
+				Entry* entry = parent->find_entry(pidl);
+
+				if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+					if (expand_folder(static_cast<ShellDirectory*>(entry)))
+						ret = S_OK;
+			}
+		}
+	}
+
+	GlobalUnlock(stgm.hGlobal);
+    ReleaseStgMedium(&stgm);
+
+	selection->Release();
+
+	return ret;
+}
+
+bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
+{
+	//HTREEITEM hitem_sel = TreeView_GetSelection(_left_hwnd);
+	if (!_last_sel)
+		return false;
+
+	if (!TreeView_Expand(_left_hwnd, _last_sel, TVE_EXPAND))
+		return false;
+
+	for(HTREEITEM hitem=TreeView_GetChild(_left_hwnd,_last_sel); hitem; hitem=TreeView_GetNextSibling(_left_hwnd,hitem)) {
+		if ((ShellDirectory*)TreeView_GetItemData(_left_hwnd,hitem) == entry) {
+			if (TreeView_SelectItem(_left_hwnd, hitem) &&
+				TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND))
+				return true;
+
+			break;
+		}
+	}
+
+	return false;
 }

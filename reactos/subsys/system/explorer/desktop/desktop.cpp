@@ -65,13 +65,19 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	// This next part could be improved by working out how much
 	// space the text actually needs...
 
-	rect.left = rect.right - 260;
-	rect.top = rect.bottom - 80;
+	rect.left = rect.right - 280;
+	rect.top = rect.bottom - 60;
 	rect.right = rect.left + 250;
 	rect.bottom = rect.top + 40;
 
-	SetTextColor(hdc, RGB(255,255,255));
 	SetBkMode(hdc, TRANSPARENT);
+
+	SetTextColor(hdc, RGB(128,128,192));
+	DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
+
+	SetTextColor(hdc, RGB(255,255,255));
+	--rect.right;
+	++rect.top;
 	DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
 }
 
@@ -83,7 +89,7 @@ LRESULT	BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		draw_desktop_background(_hwnd, (HDC)wparam);
 		return TRUE;
 
-	  case WM_RBUTTONDBLCLK:
+	  case WM_MBUTTONDBLCLK:
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 		break;
 
@@ -119,6 +125,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_LBUTTONDBLCLK:
 	  case WM_RBUTTONDBLCLK:
+	  case WM_MBUTTONDBLCLK:
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 		break;
 
@@ -134,7 +141,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			FOLDERSETTINGS fs;
 
 			fs.ViewMode = FVM_ICON;
-			fs.fFlags = FWF_DESKTOP|FWF_TRANSPARENT|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
+			fs.fFlags = FWF_DESKTOP|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
 
 			RECT rect;
 			GetClientRect(_hwnd, &rect);

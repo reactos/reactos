@@ -84,7 +84,7 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 		return E_NOTIMPL;
 	}
 
-	STDMETHOD(SendControlMsg)(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pret)
+	STDMETHOD(SendControlMsg)(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pret)
 	{
 		if (!pret)
 			return E_POINTER;
@@ -99,6 +99,8 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 		return E_NOTIMPL;
 	}
 
+	STDMETHOD(OnDefaultCommand)(IShellView* ppshv);
+
 protected:
 	Root	_root;
 
@@ -108,6 +110,8 @@ protected:
 	HIMAGELIST	_himlSmall;		// list
 //	HIMAGELIST	_himlLarge;		// shell image
 	TreeDropTarget* _pDropTarget;
+
+	HTREEITEM _last_sel;
 
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int 	Notify(int id, NMHDR* pnmh);
@@ -123,4 +127,5 @@ protected:
 	void	OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv);
 
 	void	Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen);
+	bool	expand_folder(ShellDirectory* entry);
 };

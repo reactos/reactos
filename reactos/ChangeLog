@@ -2,6 +2,7 @@
 	
 	* subsys/system/explorer Subclassing of shell window for drawing
 	desktop background.
+	* open child folders by double click in ShellBrowserChild
 
 2003-08-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 

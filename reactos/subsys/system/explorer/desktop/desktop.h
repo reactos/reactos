@@ -70,7 +70,7 @@ struct DesktopWindow : public Window, public IShellBrowserImpl
 		return E_NOTIMPL;
 	}
 
-	STDMETHOD(SendControlMsg)(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pret)
+	STDMETHOD(SendControlMsg)(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pret)
 	{
 		return E_NOTIMPL;
 	}

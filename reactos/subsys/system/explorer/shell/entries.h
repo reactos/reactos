@@ -73,6 +73,7 @@ public:
 	void	read_directory(SORT_ORDER sortOrder);
 	Entry*	read_tree(const void* path, SORT_ORDER sortOrder);
 	void	sort_directory(SORT_ORDER sortOrder);
+	void	smart_scan();
 
 	virtual void read_directory() {}
 	virtual const void* get_next_path_component(const void*) {return NULL;}

@@ -63,17 +63,17 @@ struct IShellBrowserImpl : public IShellBrowser, public ICommDlgBrowser
     STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) {return E_NOTIMPL;}
 
 	// *** ICommDlgBrowser methods ***
-    STDMETHOD(OnDefaultCommand)(THIS_ struct IShellView* ppshv)
-	{	//handle double click and ENTER key if needed
+    STDMETHOD(OnDefaultCommand)(struct IShellView* ppshv)
+	{
 		return E_NOTIMPL;
 	}
 
-    STDMETHOD(OnStateChange)(THIS_ struct IShellView* ppshv, ULONG uChange)
+    STDMETHOD(OnStateChange)(struct IShellView* ppshv, ULONG uChange)
 	{	//handle selection, rename, focus if needed
 		return E_NOTIMPL;
 	}
 
-    STDMETHOD(IncludeObject)(THIS_ struct IShellView* ppshv, LPCITEMIDLIST pidl)
+    STDMETHOD(IncludeObject)(struct IShellView* ppshv, LPCITEMIDLIST pidl)
 	{	//filter files if needed
 		return S_OK;
 	}
