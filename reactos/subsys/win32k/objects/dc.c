@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.154 2004/12/21 21:38:27 weiden Exp $
+/* $Id: dc.c,v 1.155 2004/12/24 17:45:59 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -664,6 +664,7 @@ IntCreatePrimarySurface()
       /* FIXME - why does EngEraseSurface() sometimes crash?
         EngEraseSurface(SurfObj, &SurfaceRect, 0); */
       EngUnlockSurface(SurfObj);
+      IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
       break;
    }
 

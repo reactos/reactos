@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.108 2004/12/21 04:05:18 royce Exp $
+# $Id: makefile,v 1.109 2004/12/24 17:45:58 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -43,7 +43,6 @@ TARGET_CFLAGS =\
  -DUNICODE \
  -Wall -Werror \
  -D__USE_W32API -D_WIN32_WINNT=0x0501 \
- -DGDI_DEBUG \
  -DWINVER=0x600 -D_WIN32K_ \
  $(CFLAGS_OPT)
 

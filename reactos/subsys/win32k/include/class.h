@@ -27,7 +27,6 @@ typedef struct _WNDCLASS_OBJECT
   BOOL Unicode;
   BOOL Global;
   LIST_ENTRY ListEntry;
-  LIST_ENTRY GlobalListEntry; /* HACK!!! */
   PCHAR   ExtraData;
   /* list of windows */
   FAST_MUTEX ClassWindowsListLock;
@@ -72,14 +71,6 @@ ClassReferenceClassByNameOrAtom(
    PWNDCLASS_OBJECT *Class,
    LPCWSTR ClassNameOrAtom,
    HINSTANCE hInstance);
-
-PWNDCLASS_OBJECT FASTCALL
-IntCreateClass(
-   CONST WNDCLASSEXW *lpwcx,
-   DWORD Flags,
-   WNDPROC wpExtra,
-   PUNICODE_STRING MenuName,
-   RTL_ATOM Atom);
 
 struct _WINDOW_OBJECT;
 ULONG FASTCALL

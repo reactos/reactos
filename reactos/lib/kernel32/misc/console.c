@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.88 2004/12/21 21:38:25 weiden Exp $
+/* $Id: console.c,v 1.89 2004/12/24 17:45:57 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1344,68 +1344,16 @@ ReadConsoleW(HANDLE hConsoleInput,
  */
 BOOL STDCALL AllocConsole(VOID)
 {
-   PUNICODE_STRING DesktopName, Title;
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
    HANDLE hStdError;
-   ULONG BufSize;
-   PVOID BufferBase, BufferTargetBase;
-   PWCHAR szDest, szTargetDest;
 
    if(NtCurrentPeb()->ProcessParameters->hConsole)
    {
 	DPRINT("AllocConsole: Allocate duplicate console to the same Process\n");
 	SetLastErrorByStatus (STATUS_OBJECT_NAME_EXISTS); 
 	return FALSE;	 
-   }
-   
-   DesktopName = &NtCurrentPeb()->ProcessParameters->DesktopInfo;
-   Title = &NtCurrentPeb()->ProcessParameters->WindowTitle;
-   
-   BufSize = ((DesktopName->Length >= sizeof(WCHAR)) ? DesktopName->Length + sizeof(WCHAR) : 0);
-   BufSize += ((Title->Length >= sizeof(WCHAR)) ? Title->Length + sizeof(WCHAR) : 0);
-   
-   if(BufSize > 0)
-   {
-      Status = CsrCaptureParameterBuffer(NULL, BufSize, &BufferBase, &BufferTargetBase);
-      if(!NT_SUCCESS(Status))
-      {
-         SetLastErrorByStatus(Status);
-         return FALSE;
-      }
-      szDest = BufferBase;
-      szTargetDest = BufferTargetBase;
-
-      if(DesktopName->Length >= sizeof(WCHAR))
-      {
-         memcpy(szDest, DesktopName->Buffer, DesktopName->Length);
-         szDest = (PWSTR)((ULONG_PTR)szDest + DesktopName->Length);
-         *(szDest++) = L'\0';
-         Request.Data.AllocConsoleRequest.DesktopName.Length = DesktopName->Length;
-         Request.Data.AllocConsoleRequest.DesktopName.MaximumLength = DesktopName->Length + sizeof(WCHAR);
-         Request.Data.AllocConsoleRequest.DesktopName.Buffer = szTargetDest;
-         szTargetDest = (PWSTR)((ULONG_PTR)szTargetDest + DesktopName->Length + sizeof(WCHAR));
-      }
-      else
-      {
-         RtlInitUnicodeString(&Request.Data.AllocConsoleRequest.DesktopName, NULL);
-      }
-
-      if(Title->Length >= sizeof(WCHAR))
-      {
-         memcpy(szDest, Title->Buffer, Title->Length);
-         szDest = (PWSTR)((ULONG_PTR)szDest + Title->Length);
-         *(szDest++) = L'\0';
-         Request.Data.AllocConsoleRequest.Title.Length = Title->Length;
-         Request.Data.AllocConsoleRequest.Title.MaximumLength = Title->Length + sizeof(WCHAR);
-         Request.Data.AllocConsoleRequest.Title.Buffer = szTargetDest;
-         szTargetDest = (PWSTR)((ULONG_PTR)szTargetDest + Title->Length + sizeof(WCHAR));
-      }
-      else
-      {
-         RtlInitUnicodeString(&Request.Data.AllocConsoleRequest.Title, NULL);
-      }
    }
 
    Request.Data.AllocConsoleRequest.CtrlDispatcher = (PCONTROLDISPATCHER) &ConsoleControlDispatcher;
@@ -1414,20 +1362,9 @@ BOOL STDCALL AllocConsole(VOID)
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-         if(BufSize > 0)
-         {
-            CsrReleaseParameterBuffer(BufferBase);
-         }
-         SetLastErrorByStatus ( Status );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
-
-   if(BufSize > 0)
-   {
-      CsrReleaseParameterBuffer(BufferBase);
-   }
-
-   /* FIXME - thread-safe exchange!!! */
    NtCurrentPeb()->ProcessParameters->hConsole = Reply.Data.AllocConsoleReply.Console;
    SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.InputHandle );
    SetStdHandle( STD_OUTPUT_HANDLE, Reply.Data.AllocConsoleReply.OutputHandle );
@@ -1617,7 +1554,7 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
                     LPDWORD lpNumberOfEventsRead,
                     BOOL bUnicode)
 {
-  CSRSS_API_REQUEST Request;
+  PCSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   PVOID BufferBase;
@@ -1639,24 +1576,34 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
     return FALSE;
   }
   
-  Request.Type = CSRSS_PEEK_CONSOLE_INPUT;
-  Request.Data.PeekConsoleInputRequest.ConsoleHandle = hConsoleInput;
-  Request.Data.PeekConsoleInputRequest.Unicode = bUnicode;
-  Request.Data.PeekConsoleInputRequest.Length = nLength;
-  Request.Data.PeekConsoleInputRequest.InputRecord = (INPUT_RECORD*)BufferTargetBase;
+  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REQUEST));
+  if(Request == NULL)
+  {
+    CsrReleaseParameterBuffer(BufferBase);
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return FALSE;
+  }
   
-  Status = CsrClientCallServer(&Request, &Reply,
+  Request->Type = CSRSS_PEEK_CONSOLE_INPUT;
+  Request->Data.PeekConsoleInputRequest.ConsoleHandle = hConsoleInput;
+  Request->Data.PeekConsoleInputRequest.Unicode = bUnicode;
+  Request->Data.PeekConsoleInputRequest.Length = nLength;
+  Request->Data.PeekConsoleInputRequest.InputRecord = (INPUT_RECORD*)BufferTargetBase;
+  
+  Status = CsrClientCallServer(Request, &Reply,
                                sizeof(CSRSS_API_REQUEST),
                                sizeof(CSRSS_API_REPLY));
   
   if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
   {
+    RtlFreeHeap(GetProcessHeap(), 0, Request);
     CsrReleaseParameterBuffer(BufferBase);
     return FALSE;
   }
 
   memcpy(lpBuffer, BufferBase, sizeof(INPUT_RECORD) * Reply.Data.PeekConsoleInputReply.Length);
 
+  RtlFreeHeap(GetProcessHeap(), 0, Request);
   CsrReleaseParameterBuffer(BufferBase);
   
   if(lpNumberOfEventsRead != NULL)
@@ -1922,7 +1869,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
                      PSMALL_RECT lpReadRegion,
                      BOOL bUnicode)
 {
-  CSRSS_API_REQUEST Request;
+  PCSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
   PVOID BufferBase;
   PVOID BufferTargetBase;
@@ -1943,22 +1890,31 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-   
-  Request.Type = CSRSS_READ_CONSOLE_OUTPUT;
-  Request.Data.ReadConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
-  Request.Data.ReadConsoleOutputRequest.Unicode = bUnicode;
-  Request.Data.ReadConsoleOutputRequest.BufferSize = dwBufferSize;
-  Request.Data.ReadConsoleOutputRequest.BufferCoord = dwBufferCoord;
-  Request.Data.ReadConsoleOutputRequest.ReadRegion = *lpReadRegion;
-  Request.Data.ReadConsoleOutputRequest.CharInfo = (PCHAR_INFO)BufferTargetBase;
   
-  Status = CsrClientCallServer(&Request, &Reply,
+  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REQUEST));
+  if(Request == NULL)
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    CsrReleaseParameterBuffer(BufferBase);
+    return FALSE;
+  }
+   
+  Request->Type = CSRSS_READ_CONSOLE_OUTPUT;
+  Request->Data.ReadConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
+  Request->Data.ReadConsoleOutputRequest.Unicode = bUnicode;
+  Request->Data.ReadConsoleOutputRequest.BufferSize = dwBufferSize;
+  Request->Data.ReadConsoleOutputRequest.BufferCoord = dwBufferCoord;
+  Request->Data.ReadConsoleOutputRequest.ReadRegion = *lpReadRegion;
+  Request->Data.ReadConsoleOutputRequest.CharInfo = (PCHAR_INFO)BufferTargetBase;
+  
+  Status = CsrClientCallServer(Request, &Reply,
                                sizeof(CSRSS_API_REQUEST),
                                sizeof(CSRSS_API_REPLY));
 
   if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
   {
     SetLastErrorByStatus(Status);
+    RtlFreeHeap(GetProcessHeap(), 0, Request);
     CsrReleaseParameterBuffer(BufferBase);
     return FALSE;
   }
@@ -1967,7 +1923,8 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   SizeY = Reply.Data.ReadConsoleOutputReply.ReadRegion.Bottom - Reply.Data.ReadConsoleOutputReply.ReadRegion.Top + 1;
   
   memcpy(lpBuffer, BufferBase, sizeof(CHAR_INFO) * SizeX * SizeY);
-
+  
+  RtlFreeHeap(GetProcessHeap(), 0, Request);
   CsrReleaseParameterBuffer(BufferBase);
   
   *lpReadRegion = Reply.Data.ReadConsoleOutputReply.ReadRegion;
@@ -2023,7 +1980,7 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
                       PSMALL_RECT lpWriteRegion,
                       BOOL bUnicode)
 {
-  CSRSS_API_REQUEST Request;
+  PCSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   ULONG Size;
@@ -2041,27 +1998,37 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
       SetLastErrorByStatus(Status);
       return(FALSE);
     }
-
-  Request.Type = CSRSS_WRITE_CONSOLE_OUTPUT;
-  Request.Data.WriteConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
-  Request.Data.WriteConsoleOutputRequest.Unicode = bUnicode;
-  Request.Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
-  Request.Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
-  Request.Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
-  Request.Data.WriteConsoleOutputRequest.CharInfo =
+  
+  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+			    sizeof(CSRSS_API_REQUEST));
+  if (Request == NULL)
+    {
+      CsrReleaseParameterBuffer(BufferBase);
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+  Request->Type = CSRSS_WRITE_CONSOLE_OUTPUT;
+  Request->Data.WriteConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
+  Request->Data.WriteConsoleOutputRequest.Unicode = bUnicode;
+  Request->Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
+  Request->Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
+  Request->Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
+  Request->Data.WriteConsoleOutputRequest.CharInfo = 
     (CHAR_INFO*)BufferTargetBase;
   
-  Status = CsrClientCallServer(&Request, &Reply,
+  Status = CsrClientCallServer(Request, &Reply, 
 			       sizeof(CSRSS_API_REQUEST), 
 			       sizeof(CSRSS_API_REPLY));
 
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
     {
       CsrReleaseParameterBuffer(BufferBase);
+      RtlFreeHeap(GetProcessHeap(), 0, Request);
       SetLastErrorByStatus(Status);
       return FALSE;
     }
-
+      
+  RtlFreeHeap(GetProcessHeap(), 0, Request);
   CsrReleaseParameterBuffer(BufferBase);
   
   *lpWriteRegion = Reply.Data.WriteConsoleOutputReply.WriteRegion;

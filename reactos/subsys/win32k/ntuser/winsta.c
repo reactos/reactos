@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.69 2004/12/21 21:38:27 weiden Exp $
+ *  $Id: winsta.c,v 1.70 2004/12/24 17:45:58 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -199,11 +199,6 @@ IntInitializeDesktopGraphics(VOID)
   
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 
-  /* FIXME - HACK - this is to restore the previously visible desktop! */
-  if(IntGetActiveDesktop() != NULL)
-  {
-    IntShowDesktop(IntGetActiveDesktop());
-  }
   return TRUE;
 }
 
@@ -225,39 +220,6 @@ HDC FASTCALL
 IntGetScreenDC(VOID)
 {
    return ScreenDeviceContext;
-}
-
-NTSTATUS FASTCALL
-IntRegisterSystemWindowClasses(PWINSTATION_OBJECT WinStaObject)
-{
-  CSRSS_API_REQUEST Request;
-  CSRSS_API_REPLY Reply;
-  HWINSTA hWindowStation;
-  NTSTATUS Status;
-  
-  /*
-   * Create a valid handle for CSRSS
-   */
-  
-  Status = CsrInsertObject((PVOID)WinStaObject,
-                           NULL,
-                           GENERIC_ALL,
-                           0,
-                           NULL,
-                           (HANDLE*)&hWindowStation);
-  if (!NT_SUCCESS(Status))
-  {
-    return Status;
-  }
-  
-  Request.Type = CSRSS_REGISTER_SYSTEM_CLASSES;
-  Request.Data.RegisterSystemClassesRequest.hWindowStation = hWindowStation;
-  
-  Status = CsrNotify(&Request, &Reply);
-  
-  CsrCloseHandle(hWindowStation);
-  
-  return Status;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -380,6 +342,23 @@ NtUserCreateWindowStation(
       return 0;
    }
 
+   Status = ObInsertObject(
+      (PVOID)WindowStationObject,
+      NULL,
+      STANDARD_RIGHTS_REQUIRED,
+      0,
+      NULL,
+      (PVOID*)&WindowStation);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
+      ExFreePool(WindowStationName.Buffer);
+      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      ObDereferenceObject(WindowStationObject);
+      return 0;
+   }
+
    /*
     * Initialize the new window station object
     */
@@ -404,8 +383,6 @@ NtUserCreateWindowStation(
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
    }
-   
-   WindowStationObject->ActiveDesktop = NULL;
   
    InitHotKeys(WindowStationObject);
   
@@ -426,48 +403,10 @@ NtUserCreateWindowStation(
    CurInfo->DblClickHeight = 4;
    
    WindowStationObject->SystemCursor = CurInfo;
-   
+  
    if (!IntSetupCurIconHandles(WindowStationObject))
    {
        DPRINT1("Setting up the Cursor/Icon Handle table failed!\n");
-       /* FIXME: Complain more loudly? */
-   }
-   
-   Status = ObInsertObject(
-      (PVOID)WindowStationObject,
-      NULL,
-      STANDARD_RIGHTS_REQUIRED,
-      0,
-      NULL,
-      (PVOID*)&WindowStation);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
-      ExFreePool(WindowStationName.Buffer);
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      ObDereferenceObject(WindowStationObject);
-      return 0;
-   }
-   
-   /* Register the system window classes by CSRSS. This works even though CSRSS
-      is not assigned to a window station (because it can't!). The desktop
-      background windows however will be created by CSRSS when needed. This is
-      NOT a hack because CSRSS can manage multiple desktops in different window
-      stations, so whenever CSRSS uses win32 api, the window station is determined
-      by the desktop the calling thread is attached to. The reason it works is that
-      we pass the window station handle to NtUserRegisterClass when registering
-      a system window class - which is only possible in the context of CSRSS so
-      no other application can mess with this. We need to pass that handle so
-      it knows where to register the classes in - basically because at this point
-      CSRSS can't be assigned to any desktop - which would be required to register
-      regular window classes. This is NOT a hack, it's the only clean and consistent
-      way to do what we need to do.
-
-      - Thomas */
-   if(!NT_SUCCESS(IntRegisterSystemWindowClasses(WindowStationObject)))
-   {
-       DPRINT1("Registering the desktop window class failed!\n");
        /* FIXME: Complain more loudly? */
    }
   

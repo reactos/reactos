@@ -521,6 +521,10 @@ PostQuitMessage@4
 PostThreadMessageA@16
 PostThreadMessageW@16
 PrintWindow@12
+PrivateCsrssAcquireOrReleaseInputOwnership@4
+PrivateCsrssRegisterPrimitive@0
+PrivateCsrssManualGuiCheck@4
+PrivateCsrssInitialized@0
 PrivateExtractIconExA@20
 PrivateExtractIconExW@20
 PrivateExtractIconsA@32
@@ -737,14 +741,5 @@ wsprintfA
 wsprintfW
 wvsprintfA@12
 wvsprintfW@12
-
-; REACTOS PRIVATE FUNCTIONS
-PrivateCsrssRegisterBuiltinSystemWindowClasses@4 NONAME
-PrivateCsrssRegisterSystemWindowClass@12 NONAME
-PrivateCsrssAcquireOrReleaseInputOwnership@4 NONAME
-PrivateCsrssRegisterPrimitive@0 NONAME
-PrivateCsrssManualGuiCheck@4 NONAME
-PrivateCsrssInitialized@0 NONAME
-PrivateCsrssIsGUIActive@0 NONAME
 
 ; EOF

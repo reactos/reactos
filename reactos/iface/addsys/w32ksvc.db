@@ -464,7 +464,7 @@ NtUserQueryWindow                       2
 NtUserReleaseDC				2
 NtUserRealChildWindowFromPoint          3
 NtUserRedrawWindow                      4
-NtUserRegisterClassEx                   6
+NtUserRegisterClassExWOW                7
 NtUserRegisterHotKey                    4
 NtUserRegisterTasklist                  1
 NtUserRegisterWindowMessage             1

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.8 2004/12/21 21:38:26 weiden Exp $
+/* $Id: dllmain.c,v 1.9 2004/12/24 17:45:58 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -71,7 +71,6 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(CSRSS_SET_CONSOLE_CP,               CsrSetConsoleCodePage),
     CSRSS_DEFINE_API(CSRSS_GET_CONSOLE_OUTPUT_CP,        CsrGetConsoleOutputCodePage),
     CSRSS_DEFINE_API(CSRSS_SET_CONSOLE_OUTPUT_CP,        CsrSetConsoleOutputCodePage),
-    CSRSS_DEFINE_API(CSRSS_REGISTER_SYSTEM_CLASSES,      CsrRegisterSystemClasses),
     { 0, 0, 0, NULL }
   };
 

@@ -9,7 +9,6 @@ BOOL FASTCALL IntCreatePrimarySurface();
 VOID FASTCALL IntDestroyPrimarySurface();
 
 NTSTATUS FASTCALL InitGuiCheckImpl (VOID);
-BOOL FASTCALL IntIsGUIActive(VOID);
 
 #endif /* _WIN32K_GUICHECK_H */
 

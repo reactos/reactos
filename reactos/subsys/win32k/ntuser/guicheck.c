@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.21 2004/12/21 21:38:27 weiden Exp $
+/* $Id: guicheck.c,v 1.22 2004/12/24 17:45:58 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -77,12 +77,6 @@ RemoveGuiApp(PW32PROCESS W32Data)
       IntEndDesktopGraphics();
       ExReleaseFastMutex(&GuiSwitchLock);
     }
-}
-
-BOOL FASTCALL
-IntIsGUIActive(VOID)
-{
-  return NrGuiAppsRunning > 0;
 }
 
 BOOL FASTCALL

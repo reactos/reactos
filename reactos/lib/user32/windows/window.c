@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.122 2004/12/21 21:38:26 weiden Exp $
+/* $Id: window.c,v 1.123 2004/12/24 17:45:58 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -19,6 +19,8 @@
 #include <user32/regcontrol.h>
 #define NDEBUG
 #include <debug.h>
+
+BOOL ControlsInitialized = FALSE;
 
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn);
 
@@ -192,6 +194,12 @@ CreateWindowExA(DWORD dwExStyle,
 	}
     }
 
+  /* Register built-in controls if not already done */
+  if (! ControlsInitialized)
+    {
+      ControlsInitialized = ControlsInit(ClassName.Buffer);
+    }
+
   if (dwExStyle & WS_EX_MDICHILD)
   {
      if (!IS_ATOM(lpClassName))
@@ -270,6 +278,12 @@ CreateWindowExW(DWORD dwExStyle,
   UNICODE_STRING ClassName;
   WNDCLASSEXW wce;
   HANDLE Handle;
+
+  /* Register built-in controls if not already done */
+  if (! ControlsInitialized)
+    {
+      ControlsInitialized = ControlsInit(lpClassName);
+    }
 
   if (dwExStyle & WS_EX_MDICHILD)
      return CreateMDIWindowW(lpClassName, lpWindowName, dwStyle, x, y,
