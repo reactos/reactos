@@ -426,11 +426,18 @@ GetActiveFatOffset:
 LoadFatSector:
 		push  ecx
 		; EAX holds logical FAT sector number
+		; Check if we have already loaded it
+		cmp  eax,DWORD [FatSectorInCache]
+		je   LoadFatSectorAlreadyLoaded
+
+		mov  DWORD [FatSectorInCache],eax
         mov  bx,7000h
         mov  es,bx
         xor  bx,bx								; We will load it to [7000:0000h]
 		mov  cx,1
 		call ReadSectors
+
+LoadFatSectorAlreadyLoaded:
         mov  bx,7000h
         mov  es,bx
 		pop  ecx
@@ -438,6 +445,9 @@ LoadFatSector:
 		and  eax,0fffffffh						; Mask off reserved bits
 
 		ret
+
+FatSectorInCache:								; This variable tells us which sector we currently have in memory
+	dd	0ffffffffh								; There is no need to re-read the same sector if we don't have to
 
 
 ; Reads cluster number in EAX into [ES:0000]
