@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.6 2004/08/16 09:13:00 ekohl Exp $
+/* $Id: pdo.c,v 1.7 2004/08/18 08:25:58 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -262,47 +262,35 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
 #if 0
   DbgPrint("BaseAddress 0x%08lx  Length 0x%08lx",
            BaseValue, XLength);
-#endif
 
   if (NewValue & 0x00000001)
   {
-#if 0
     DbgPrint("  IO range");
-#endif
   }
   else
   {
-#if 0
     DbgPrint("  Memory range");
-#endif
     if ((NewValue & 0x00000006) == 0)
     {
-#if 0
       DbgPrint(" in 32-Bit address space");
-#endif
     }
     else if ((NewValue & 0x00000006) == 2)
     {
-#if 0
-      DbgPrint("below 1BM ");
-#endif
+      DbgPrint(" below 1BM ");
     }
     else if ((NewValue & 0x00000006) == 4)
     {
-#if 0
       DbgPrint(" in 64-Bit address space");
-#endif
     }
 
     if (NewValue & 0x00000008)
     {
-#if 0
       DbgPrint(" prefetchable");
-#endif
     }
   }
 
   DbgPrint("\n");
+#endif
 
   *Length = XLength;
   *Flags = (NewValue & 0x00000001) ? (NewValue & 0x3) : (NewValue & 0xF);
@@ -317,9 +305,271 @@ PdoQueryResourceRequirements(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+  PCI_COMMON_CONFIG PciConfig;
+  PIO_RESOURCE_REQUIREMENTS_LIST ResourceList;
+  PIO_RESOURCE_DESCRIPTOR Descriptor;
+  ULONG Size;
+  ULONG ResCount = 0;
+  ULONG ListSize;
+  ULONG i;
+  ULONG Base;
+  ULONG Length;
+  ULONG Flags;
+
   DPRINT("PdoQueryResourceRequirements() called\n");
 
-  return STATUS_NOT_IMPLEMENTED;
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+  /* Get PCI configuration space */
+  Size= HalGetBusData(PCIConfiguration,
+                      DeviceExtension->BusNumber,
+                      DeviceExtension->SlotNumber.u.AsULONG,
+                      &PciConfig,
+                      sizeof(PCI_COMMON_CONFIG));
+  DPRINT("Size %lu\n", Size);
+  if (Size < sizeof(PCI_COMMON_CONFIG))
+  {
+    Irp->IoStatus.Information = 0;
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  DPRINT("Command register: 0x%04hx\n", PciConfig.Command);
+
+  /* Count required resource descriptors */
+  ResCount = 0;
+  if ((PciConfig.HeaderType & 0x7F) == 0)
+  {
+    for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
+    {
+      if (!PdoGetRangeLength(DeviceExtension,
+			     0x10 + i * 4,
+			     &Base,
+			     &Length,
+			     &Flags))
+        break;
+
+      ResCount += 2;
+    }
+
+    /* FIXME: Check ROM address */
+
+    if (PciConfig.u.type0.InterruptPin != 0)
+      ResCount++;
+  }
+  else if ((PciConfig.HeaderType & 0x7F) == 1)
+  {
+    for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
+    {
+      if (!PdoGetRangeLength(DeviceExtension,
+			     0x10 + i * 4,
+			     &Base,
+			     &Length,
+			     &Flags))
+        break;
+
+      ResCount += 2;
+    }
+  }
+  else
+  {
+    DPRINT1("Unsupported header type %u\n", PciConfig.HeaderType);
+  }
+
+  if (ResCount == 0)
+  {
+    Irp->IoStatus.Information = 0;
+    return STATUS_SUCCESS;
+  }
+
+  /* Calculate the resource list size */
+  ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+  if (ResCount > 1)
+  {
+    ListSize += ((ResCount - 1) * sizeof(IO_RESOURCE_DESCRIPTOR));
+  }
+
+  DPRINT1("ListSize %lu (0x%lx)\n", ListSize, ListSize);
+
+  /* Allocate the resource requirements list */
+  ResourceList = ExAllocatePool(PagedPool,
+                                ListSize);
+  if (ResourceList == NULL)
+  {
+    Irp->IoStatus.Information = 0;
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  ResourceList->ListSize = ListSize;
+  ResourceList->InterfaceType = PCIBus;
+  ResourceList->AlternativeLists = 1;
+
+  ResourceList->List[0].Version = 1;
+  ResourceList->List[0].Revision = 1;
+  ResourceList->List[0].Count = ResCount;
+
+  Descriptor = &ResourceList->List[0].Descriptors[0];
+  if ((PciConfig.HeaderType & 0x7F) == 0)
+  {
+    for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
+    {
+      if (!PdoGetRangeLength(DeviceExtension,
+			     0x10 + i * 4,
+			     &Base,
+			     &Length,
+			     &Flags))
+      {
+        DPRINT1("PdoGetRangeLength() failed\n");
+        break;
+      }
+
+      if (Length == 0)
+      {
+        DPRINT("Unused address register\n");
+        break;
+      }
+
+      /* Set preferred descriptor */
+      Descriptor->Option = IO_RESOURCE_PREFERRED;
+      if (Flags & PCI_ADDRESS_IO_SPACE)
+      {
+        Descriptor->Type = CmResourceTypePort;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+
+        Descriptor->u.Port.Length = Length;
+        Descriptor->u.Port.Alignment = 1;
+        Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)Base;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(Base + Length - 1);
+      }
+      else
+      {
+        Descriptor->Type = CmResourceTypeMemory;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+
+        Descriptor->u.Memory.Length = Length;
+        Descriptor->u.Memory.Alignment = 1;
+        Descriptor->u.Memory.MinimumAddress.QuadPart = (ULONGLONG)Base;
+        Descriptor->u.Memory.MaximumAddress.QuadPart = (ULONGLONG)(Base + Length - 1);
+      }
+      Descriptor++;
+
+      /* Set alternative descriptor */
+      Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+      if (Flags & PCI_ADDRESS_IO_SPACE)
+      {
+        Descriptor->Type = CmResourceTypePort;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+
+        Descriptor->u.Port.Length = Length;
+        Descriptor->u.Port.Alignment = Length;
+        Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(ULONG)-1;
+      }
+      else
+      {
+        Descriptor->Type = CmResourceTypeMemory;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+
+        Descriptor->u.Memory.Length = Length;
+        Descriptor->u.Memory.Alignment = Length;
+        Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(ULONG)-1;
+      }
+      Descriptor++;
+    }
+
+    /* FIXME: Check ROM address */
+
+    if (PciConfig.u.type0.InterruptPin != 0)
+    {
+      Descriptor->Type = CmResourceTypeInterrupt;
+      Descriptor->ShareDisposition = CmResourceShareShared;
+      Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+      Descriptor->u.Interrupt.MinimumVector = 0;
+      Descriptor->u.Interrupt.MaximumVector = 0xFF;
+    }
+  }
+  else if ((PciConfig.HeaderType & 0x7F) == 1)
+  {
+    for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
+    {
+      if (!PdoGetRangeLength(DeviceExtension,
+			     0x10 + i * 4,
+			     &Base,
+			     &Length,
+			     &Flags))
+      {
+        DPRINT1("PdoGetRangeLength() failed\n");
+        break;
+      }
+
+      if (Length == 0)
+      {
+        DPRINT("Unused address register\n");
+        break;
+      }
+
+      /* Set preferred descriptor */
+      Descriptor->Option = IO_RESOURCE_PREFERRED;
+      if (Flags & PCI_ADDRESS_IO_SPACE)
+      {
+        Descriptor->Type = CmResourceTypePort;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+
+        Descriptor->u.Port.Length = Length;
+        Descriptor->u.Port.Alignment = 1;
+        Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)Base;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(Base + Length - 1);
+      }
+      else
+      {
+        Descriptor->Type = CmResourceTypeMemory;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+
+        Descriptor->u.Memory.Length = Length;
+        Descriptor->u.Memory.Alignment = 1;
+        Descriptor->u.Memory.MinimumAddress.QuadPart = (ULONGLONG)Base;
+        Descriptor->u.Memory.MaximumAddress.QuadPart = (ULONGLONG)(Base + Length - 1);
+      }
+      Descriptor++;
+
+      /* Set alternative descriptor */
+      Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+      if (Flags & PCI_ADDRESS_IO_SPACE)
+      {
+        Descriptor->Type = CmResourceTypePort;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+
+        Descriptor->u.Port.Length = Length;
+        Descriptor->u.Port.Alignment = Length;
+        Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(ULONG)-1;
+      }
+      else
+      {
+        Descriptor->Type = CmResourceTypeMemory;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+
+        Descriptor->u.Memory.Length = Length;
+        Descriptor->u.Memory.Alignment = Length;
+        Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)0x00000000FFFFFFFF;
+      }
+      Descriptor++;
+    }
+  }
+
+  Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -335,7 +585,7 @@ PdoQueryResources(
   PCM_PARTIAL_RESOURCE_LIST PartialList;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
   ULONG Size;
-  ULONG ResCount;
+  ULONG ResCount = 0;
   ULONG ListSize;
   ULONG i;
   ULONG Base;
@@ -367,20 +617,29 @@ PdoQueryResources(
   {
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
-      if (PciConfig.u.type0.BaseAddresses[i] == 0)
+      if (!PdoGetRangeLength(DeviceExtension,
+			     0x10 + i * 4,
+			     &Base,
+			     &Length,
+			     &Flags))
         break;
 
       ResCount++;
     }
 
-    if (PciConfig.u.type0.InterruptLine != 0xFF)
+    if ((PciConfig.u.type0.InterruptPin != 0) &&
+        (PciConfig.u.type0.InterruptLine != 0xFF))
       ResCount++;
   }
   else if ((PciConfig.HeaderType & 0x7F) == 1)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
-      if (PciConfig.u.type0.BaseAddresses[i] != 0)
+      if (!PdoGetRangeLength(DeviceExtension,
+			     0x10 + i * 4,
+			     &Base,
+			     &Length,
+			     &Flags))
         break;
 
       ResCount++;
@@ -389,6 +648,12 @@ PdoQueryResources(
   else
   {
     DPRINT1("Unsupported header type %u\n", PciConfig.HeaderType);
+  }
+
+  if (ResCount == 0)
+  {
+    Irp->IoStatus.Information = 0;
+    return STATUS_SUCCESS;
   }
 
   /* Calculate the resource list size */
@@ -437,7 +702,7 @@ PdoQueryResources(
       if (Flags & PCI_ADDRESS_IO_SPACE)
       {
         Descriptor->Type = CmResourceTypePort;
-//        Descriptor->ShareDisposition =
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
         Descriptor->Flags = CM_RESOURCE_PORT_IO;
         Descriptor->u.Port.Start.QuadPart =
           (ULONGLONG)Base;
@@ -446,7 +711,7 @@ PdoQueryResources(
       else
       {
         Descriptor->Type = CmResourceTypeMemory;
-//        Descriptor->ShareDisposition =
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
         Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
         Descriptor->u.Memory.Start.QuadPart =
           (ULONGLONG)Base;
@@ -456,26 +721,60 @@ PdoQueryResources(
       Descriptor++;
     }
 
-    if (PciConfig.u.type0.InterruptLine != 0xFF)
+    /* Add interrupt resource */
+    if ((PciConfig.u.type0.InterruptPin != 0) &&
+        (PciConfig.u.type0.InterruptLine != 0xFF))
     {
       Descriptor->Type = CmResourceTypeInterrupt;
-//      Descriptor->ShareDisposition =
+      Descriptor->ShareDisposition = CmResourceShareShared;
       Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
       Descriptor->u.Interrupt.Level = PciConfig.u.type0.InterruptLine;
       Descriptor->u.Interrupt.Vector = PciConfig.u.type0.InterruptLine;
       Descriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
     }
   }
-#if 0
   else if ((PciConfig.HeaderType & 0x7F) == 1)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
-      if (PciConfig.u.type0.BaseAddresses[i] != 0)
-        ResCount++;
+      if (!PdoGetRangeLength(DeviceExtension,
+			     0x10 + i * 4,
+			     &Base,
+			     &Length,
+			     &Flags))
+      {
+        DPRINT1("PdoGetRangeLength() failed\n");
+        break;
+      }
+
+      if (Length == 0)
+      {
+        DPRINT("Unused address register\n");
+        break;
+      }
+
+      if (Flags & PCI_ADDRESS_IO_SPACE)
+      {
+        Descriptor->Type = CmResourceTypePort;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+        Descriptor->u.Port.Start.QuadPart =
+          (ULONGLONG)Base;
+        Descriptor->u.Port.Length = Length;
+      }
+      else
+      {
+        Descriptor->Type = CmResourceTypeMemory;
+        Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+        Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+        Descriptor->u.Memory.Start.QuadPart =
+          (ULONGLONG)Base;
+        Descriptor->u.Memory.Length = Length;
+      }
+
+      Descriptor++;
     }
   }
-#endif
 
   Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
 
