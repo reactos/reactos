@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.101 2004/12/13 02:20:09 blight Exp $
+# $Id$
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -51,6 +51,7 @@
 #   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_REGTESTS   = This module has regression tests (no,yes) (optional)
+#   $TARGET_WINETESTS  = This module Wine regression tests (no,yes) (optional)
 #   $TARGET_INSTALL    = Install the file (no,yes) (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
 
@@ -692,6 +693,12 @@ else
   MK_REGTESTS_CLEAN :=
 endif
 
+ifeq ($(TARGET_WINETESTS),yes)
+all:
+	- $(MAKE) -C winetests
+  MK_REGTESTS_CLEAN := clean_winetests
+endif
+
 ifeq ($(TARGET_INSTALL),)
  MK_INSTALL := yes
 else
@@ -709,7 +716,7 @@ ifeq ($(MK_IMPLIBONLY),yes)
 
 TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
-all: $(REGTEST_TARGETS) $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
+all: $(WINETEST_TARGETS) $(REGTEST_TARGETS) $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 
 $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 	$(HALFVERBOSEECHO) [DLLTOOL] $(MK_IMPLIB_FULLNAME)
@@ -1092,7 +1099,10 @@ clean_regtests:
 	- $(MAKE) -C tests TARGET_REGTESTS=no clean
 	- $(RM) ./tests/_rtstub.c ./tests/_hooks.c ./tests/_regtests.c ./tests/_stubs.S ./tests/Makefile.tests
 
-.PHONY: all depends implib clean install dist bootcd depends gen_regtests clean_regtests
+clean_winetests:
+	- $(MAKE) -C winetests clean
+
+.PHONY: all depends implib clean install dist bootcd depends gen_regtests clean_regtests clean_winetests
 
 ifneq ($(SUBDIRS),)
 $(SUBDIRS:%=%_all): %_all:
