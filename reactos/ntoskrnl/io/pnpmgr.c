@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.43 2004/10/22 20:25:54 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.44 2004/10/22 20:44:48 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -992,7 +992,8 @@ IopActionInterrogateDeviceStack(
    {
    }
 
-   if (!DeviceNode->CapabilityFlags->UniqueID)
+   if (DeviceNode->CapabilityFlags != NULL &&
+       !DeviceNode->CapabilityFlags->UniqueID)
    {
       DPRINT("Instance ID is not unique\n");
       /* FIXME: Add information from parent bus driver to InstancePath */
