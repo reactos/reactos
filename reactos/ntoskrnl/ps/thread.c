@@ -52,8 +52,7 @@ ULONG PiNrRunnableThreads = 0;
 
 static PETHREAD CurrentThread = NULL;
 
-static ULONG NextThreadUniqueId = 0;
-//static ULONG NextProcessUniqueId = 0;
+static ULONG NextUniqueThreadId = 0;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -257,8 +256,10 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    InitializeListHead(Thread->Tcb.ApcList);
    InitializeListHead(&(Thread->IrpList));
    Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(
-							  &NextThreadUniqueId);
-   DbgPrint("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
+                                                          &NextUniqueThreadId);
+   Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
+   DbgPrint("Thread->Cid.UniqueThread %d\nThread->Cid.UniqueProcess %d\n",
+            Thread->Cid.UniqueThread, Thread->Cid.UniqueThread);
    ObReferenceObjectByPointer(Thread,
 			      THREAD_ALL_ACCESS,
 			      PsThreadType,

@@ -268,6 +268,9 @@ typedef struct _KPROCESS
 typedef struct _EPROCESS
 {
    KPROCESS Pcb;
+
+   ULONG    UniqueProcessId;
+   ULONG    InheritedFromUniqueProcessId;
 } EPROCESS, *PEPROCESS;
 
 #define PROCESS_STATE_TERMINATED (1)

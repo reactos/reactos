@@ -29,6 +29,8 @@ HANDLE SystemProcessHandle = NULL;
 
 POBJECT_TYPE PsProcessType = NULL;
 
+static ULONG NextUniqueProcessId = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID PsInitProcessManagment(VOID)
@@ -78,6 +80,9 @@ VOID PsInitProcessManagment(VOID)
    InitializeListHead(&(KProcess->MemoryAreaList));
    ObCreateHandleTable(NULL,FALSE,SystemProcess);
    KProcess->PageTableDirectory = get_page_directory();
+
+   SystemProcess->UniqueProcessId = NextUniqueProcessId;
+   SystemProcess->InheritedFromUniqueProcessId = NextUniqueProcessId;
    
    ObCreateHandle(SystemProcess,
 		  SystemProcess,
@@ -192,6 +197,8 @@ NTSTATUS STDCALL ZwCreateProcess(
    KProcess = &(Process->Pcb);
    
    InitializeListHead(&(KProcess->MemoryAreaList));
+   Process->UniqueProcessId = InterlockedIncrement(&NextUniqueProcessId);
+   Process->InheritedFromUniqueProcessId = ParentProcess->UniqueProcessId;
    ObCreateHandleTable(ParentProcess,
 		       InheritObjectTable,
 		       Process);
@@ -273,6 +280,10 @@ NTSTATUS STDCALL ZwQueryInformationProcess(IN HANDLE ProcessHandle,
 	  ProcessInformation;
 	memset(ProcessBasicInformationP, 0, sizeof(PROCESS_BASIC_INFORMATION));
 	ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
+        ProcessBasicInformationP->UniqueProcessId =
+          Process->UniqueProcessId;
+        ProcessBasicInformationP->InheritedFromUniqueProcessId =
+          Process->InheritedFromUniqueProcessId;
 	Status = STATUS_SUCCESS;
 	break;
 	

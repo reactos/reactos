@@ -282,7 +282,8 @@ GetCurrentDirectoryW@8
 GetCurrentDirectoryW = GetCurrentDirectoryW@8
 GetCurrentProcess@0
 GetCurrentProcess = GetCurrentProcess@0
-;GetCurrentProcessId@0
+GetCurrentProcessId@0
+GetCurrentProcessId = GetCurrentProcessId@0
 GetCurrentThread@0
 GetCurrentThread = GetCurrentThread@0
 GetCurrentThreadId@0
