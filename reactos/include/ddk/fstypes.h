@@ -2,7 +2,6 @@
 #define __INCLUDE_DDK_FSTYPES_H
 /* $Id */
 
-#include <internal/ps.h>
 
 typedef
 struct _FILE_LOCK_ANCHOR
