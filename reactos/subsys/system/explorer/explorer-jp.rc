@@ -1,0 +1,354 @@
+/////////////////////////////////////////////////////////////////////////////
+// Japanese (JA) resources
+//
+// =Memo for future Japanese maintainer=
+// For future ease of maintenance, I marked "FIXME?" on strings I suspect I have
+// mistranslated or I haven't translated(especially, "IDM_WINEFILE" have many
+// suspected strings because I haven't tested under WINE). Others are set as is in
+// purpose. BTW, I feel it strange that the word;"directory" turns into "folder" for
+// Japanese Windows(..or English Windows also use "folder" instead of "directory"? I
+// have no idea). I obeyed as the MS do. Also, there might be some menus which have
+// different shortcut keys between EN-Win and JA-Win but I dunno which ones are =D
+// Despite I'm not sure that we can use "MS UI Gothic" under ROS, I changed "MS Sans
+// Serif" to "MS UI Gothic" because it's lear that MS Sans Serif doesn't suit for
+// the Japanese(most of you know this, I suppose).
+// - M.T
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JAP)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "終了(&X)",                       ID_FILE_EXIT
+    END
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "ツールバー(&T)",                    ID_VIEW_TOOL_BAR
+        MENUITEM "ステータスバー(&S)",                 ID_VIEW_STATUSBAR
+    END
+    POPUP "ウィンドウ(&W)"
+    BEGIN
+        MENUITEM "新しいウィンドウ(&W)",                 ID_WINDOW_NEW
+        MENUITEM "カスケード\tShift+F5",         ID_WINDOW_CASCADE
+        MENUITEM "水平に整列(&H)",          ID_WINDOW_TILE_HORZ
+        MENUITEM "垂直に整列(&V)\tShift+F4",  ID_WINDOW_TILE_VERT
+        MENUITEM "自動整列",       ID_WINDOW_AUTOSORT
+        MENUITEM "最小化された子ウィンドウを整列(&S)",  ID_WINDOW_ARRANGE //FIXME?
+        MENUITEM "最新の情報に更新(&R)\tF5",                ID_REFRESH
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_WINEFILE MENU FIXED IMPURE 
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "開く(&O)\tEnter",                101
+        MENUITEM "移動(&M)...\tF7",                106
+        MENUITEM "コピー(&C)...\tF8",                107
+        MENUITEM "クリップボードへ(&I)...\tF9",        118 //FIXME?
+        MENUITEM "削除(&D)\tDel",                108
+        MENUITEM "名前の変更(&N)...",                  109
+        MENUITEM "プロパティ(&I)...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "圧縮(&O)...",                119
+        MENUITEM "展開(&O)...",              120
+        MENUITEM SEPARATOR
+        MENUITEM "実行(&R)...",                     ID_EXECUTE
+        MENUITEM "印刷(&P)...",                   102
+        MENUITEM "関連付け...",                103 //FIXME?
+        MENUITEM SEPARATOR
+        MENUITEM "フォルダを作成(&E)...",        ID_EXECUTE //FIXME?
+        MENUITEM "検索(&H)...",                  104
+        MENUITEM "ファイルを選択(&S)...",            116
+        MENUITEM SEPARATOR
+        MENUITEM "終了(&X)\tAlt+X",                ID_FILE_EXIT
+    END
+    POPUP "ディスク(&D)"
+    BEGIN
+        MENUITEM "ディスクをコピー(&C)...",               201
+        MENUITEM "ディスクにラベルをつける(&L)...",              202
+        MENUITEM SEPARATOR
+        MENUITEM "フォーマット(&F)...",             203
+        MENUITEM SEPARATOR
+        MENUITEM "ネットワークドライブを接続(&N)",      252
+        MENUITEM "ネットワークドライブを切断(&D)",   253
+        MENUITEM SEPARATOR
+        MENUITEM "名前を付けて共有...",                 254
+        MENUITEM "共有解除(&R)...",            255
+        MENUITEM SEPARATOR
+        MENUITEM "ドライブを選択(&S)...",            251
+    END
+    POPUP "ディレクトリ(&D)"
+    BEGIN
+        MENUITEM "次の階層へ(&N)\t+",              301 //FIXME?
+        MENUITEM "ツリーを展開(&T)\t*",             302
+        MENUITEM "全て展開(&A)\tStrg+*",         303
+        MENUITEM "ツリーを畳む(&T)\t-",           304
+        MENUITEM SEPARATOR
+        MENUITEM "子ノードをマーク(&M)",                505 //FIXME?
+    END
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "ツリーとフォルダ(&R)",         413
+        MENUITEM "ツリーのみ(&E)",                  411
+        MENUITEM "フォルダのみ(&O)",             412
+        MENUITEM SEPARATOR
+        MENUITEM "分割(&L)",                      414 //FIXME?
+        MENUITEM SEPARATOR
+        MENUITEM "名前(&N)",                       ID_VIEW_NAME //FIXME?
+        MENUITEM "ファイルの全詳細(&A)",           ID_VIEW_ALL_ATTRIBUTES
+        , CHECKED
+        MENUITEM "詳細を選択表示(&P)...",         ID_VIEW_SELECTED_ATTRIBUTES //FIXME?
+        MENUITEM SEPARATOR
+        MENUITEM "名前順に整列(&S)",               404
+        MENUITEM "種類順に整列(&B)",               405
+        MENUITEM "サイズ順に整列(&Z)",               406
+        MENUITEM "日付順に整列(&D)",               407
+        MENUITEM SEPARATOR
+        MENUITEM "詳細を指定して整列&...",                409 //FIXME?
+    END
+    POPUP "オプション(&O)"
+    BEGIN
+        MENUITEM "確認(&C)...",            65535 //FIXME?
+        MENUITEM "フォント(&F)...",                    65535
+        MENUITEM "ツールバーをカスタマイズ(&B)...",       65535
+        MENUITEM SEPARATOR
+        MENUITEM "ツールバー(&T)",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "ドライブバー(&D)",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "ステータスバー(&S)",                 ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "全画面表示(&U)\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM SEPARATOR
+        MENUITEM "アプリケーション起動後にエクスプローラを最小化(&S)",  65535 //FIXME?
+        MENUITEM "終了時の設定を保存(&E)", 511 //FIXME?
+    END
+    POPUP "セキュリティ(&S)"
+    BEGIN
+        MENUITEM "アクセス(&A)...",                  605
+        MENUITEM "ログ(&L)...",                 606 //FIXME?
+        MENUITEM "所有者(&O)...",                   607 //FIXME?
+    END
+    POPUP "ウィンドウ(&W)"
+    BEGIN
+        MENUITEM "新しいウィンドウ(&W)",                 ID_WINDOW_NEW
+        MENUITEM "カスケード\tCtrl+F5",          ID_WINDOW_CASCADE
+        MENUITEM "水平に整列(&H)",          ID_WINDOW_TILE_HORZ
+        MENUITEM "垂直に並列(&V)\tCtrl+F4",   ID_WINDOW_TILE_VERT
+        MENUITEM "自動整列",       ID_WINDOW_AUTOSORT
+        MENUITEM "最小化された子ウィンドウを整列(&S)",            ID_WINDOW_ARRANGE
+        MENUITEM "最新の情報に更新(&R)\tF5",                ID_REFRESH
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "ヘルプトピック(&H)\tF1",            ID_HELP
+        MENUITEM "ヘルプの検索(&S)...\tF1",         ID_HELP
+        MENUITEM "ヘルプの使い方(&U)\tF1",             ID_HELP_USING //FIXME?
+        MENUITEM SEPARATOR
+        MENUITEM "&Winefileに関する情報...",     ID_ABOUT_WINEFILE
+    END
+END
+
+IDM_DESKTOPBAR MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER //FIXME?
+        MENUITEM "&Settings...",                ID_DESKTOPBAR_SETTINGS //FIXME?
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Execute"
+FONT 8, "MS UI Gothic"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10 //FIXME?
+    CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3, //FIXME?
+                    18,60,10 //FIXME?
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12 //FIXME?
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Cancel",2,158,23,47,14 //FIXME?
+    PUSHBUTTON      "&Help",254,158,43,47,14 //FIXME?
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 144, 65
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Search Program in Startmenu" //FIXME?
+FONT 9, "MS UI Gothic", 0, 0, 0x1 //FIXME?
+BEGIN
+    LTEXT           "&Filter:",IDC_STATIC,7,9,18,8 //FIXME?
+    EDITTEXT        IDC_TOPIC,34,7,103,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_MAILS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,7,25,130,33
+END
+
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 172
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "デスクトップのプロパティ" //FIXME?
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT           "以下のアイコン表示方法が利用出来ます",
+                    IDC_STATIC,7,7,166,8 //FIXME?
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+                    WS_TABSTOP,159,121,46,44
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 154
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "タスクバーのプロパティ"
+FONT 9, "MS UI Gothic"
+BEGIN
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 154
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "スタートメニューのプロパティ"
+FONT 9, "MS UI Gothic"
+BEGIN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SEARCH_PROGRAM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 137
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 58
+    END
+
+    IDD_DESKBAR_DESKTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 165
+    END
+
+    IDD_DESKBAR_TASKBAR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_DESKBAR_STARTMENU, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Reactos Explorer"
+    IDS_START               "ｽﾀｰﾄ"
+    IDS_LOGOFF              "ログオフ..."
+    IDS_SHUTDOWN            "シャットダウン..."
+    IDS_LAUNCH              "ファイル名を指定して実行..."
+    IDS_START_HELP          "ヘルプ"
+    IDS_SEARCH_FILES        "検索"
+    IDS_DOCUMENTS           "マイドキュメント"
+    IDS_FAVORITES           "お気に入り"
+    IDS_PROGRAMS            "プログラム"
+    IDS_SETTINGS            "設定"
+    IDS_EXPLORE             "エクスプローラ" //FIXME?
+    IDS_EMPTY               "(Empty)" //FIXME?
+    IDS_RECENT              "最近使ったファイル" //FIXME?
+    IDS_ADMIN               "管理ツール" //FIXME?
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "ネットワーク"
+    IDS_CONNECTIONS         "ネットワーク接続"
+    IDS_DRIVES              "ローカルディスク"
+    IDS_SEARCH_COMPUTER     "コンピュータの検索..."
+    IDS_SETTINGS_MENU       "設定メニュー" //FIXME?
+    IDS_CONTROL_PANEL       "コントロールパネル"
+    IDS_PRINTERS            "プリンタ"
+    IDS_BROWSE              "ファイルをブラウズ"
+    IDS_SEARCH_PRG          "プログラムを検索..."
+    IDS_ALL_USERS           "All Users\\" //FIXME?
+    IDS_SEARCH              "ファイルやフォルダ"
+    IDS_ABOUT_EXPLORER      "&About Explorer..."
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "二つ以上のプログラムが選択されました。\n実行しますか?"
+    IDS_DESKTOPBAR_SETTINGS "デスクトップの設定"
+    IDS_DESKTOP             "デスクトップ"
+    IDS_TASKBAR             "タスクバー"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "スタートメニュー"
+    IDS_MINIMIZE_ALL        "全ウィンドウを最小化"
+END
+
+#endif    // Japanese (JA) resources
+/////////////////////////////////////////////////////////////////////////////
