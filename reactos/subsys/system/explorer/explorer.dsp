@@ -225,10 +225,6 @@ SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\drivebar.bmp
-# End Source File
-# Begin Source File
-
 SOURCE=".\explorer-jp.rc"
 # PROP Exclude_From_Build 1
 # End Source File

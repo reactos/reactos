@@ -93,25 +93,9 @@ LIBS = gdi32 comctl32 ole32 uuid wsock32
 
 .PHONY: all depends implib clean install dist bootcd depends
 
-all: buildno.h $(TARGET)
-
-docu: doxy-footer.html
-	doxygen Doxyfile
-
-full-docu: docu
-	-cmd /c start /b /low /wait hhc doxy-doc\html\index.hhp
-	cmd /c move /y doxy-doc\html\index.chm ros-explorer.chm
-	doxygen Doxyfile-all
-	-cmd /c start /b /low /wait hhc doxy-doc\html\index.hhp
-	cmd /c move /y doxy-doc\html\index.chm ros-explorer-full.chm
-
-doxy-footer.html: ever
-	updatefooter
+all: $(TARGET)
 
 ever:
-
-buildno.h: ../../../include/reactos/buildno.h
-	$(CD_PREFIX)updatebuildno
 
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))

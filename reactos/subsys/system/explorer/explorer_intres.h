@@ -40,9 +40,7 @@
 #define IDB_TOOLBAR                     103
 #define IDA_EXPLORER                    104
 #define ID_ACTIVATE                     105
-#define IDB_DRIVEBAR                    106
 #define IDD_DESKBAR_DESKTOP             106
-#define IDB_IMAGES                      107
 #define IDD_EXECUTE                     108
 #define IDR_MAINFRAME                   109
 #define IDM_MAINFRAME                   110
