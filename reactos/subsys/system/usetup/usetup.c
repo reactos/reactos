@@ -41,25 +41,27 @@
 #include "registry.h"
 
 
-#define START_PAGE			0
-#define INTRO_PAGE			1
-#define INSTALL_INTRO_PAGE		2
+typedef enum _PAGE_NUMBER
+{
+  START_PAGE,
+  INTRO_PAGE,
+  INSTALL_INTRO_PAGE,
 
-#define SELECT_PARTITION_PAGE		4
-#define SELECT_FILE_SYSTEM_PAGE		5
-#define CHECK_FILE_SYSTEM_PAGE		6
-#define PREPARE_COPY_PAGE		7
-#define INSTALL_DIRECTORY_PAGE		8
-#define FILE_COPY_PAGE			9
-#define REGISTRY_PAGE			10
-#define BOOT_LOADER_PAGE		11
+  SELECT_PARTITION_PAGE,
+  SELECT_FILE_SYSTEM_PAGE,
+  CHECK_FILE_SYSTEM_PAGE,
+  PREPARE_COPY_PAGE,
+  INSTALL_DIRECTORY_PAGE,
+  FILE_COPY_PAGE,
+  REGISTRY_PAGE,
+  BOOT_LOADER_PAGE,
 
-#define REPAIR_INTRO_PAGE		20
+  REPAIR_INTRO_PAGE,
 
-#define SUCCESS_PAGE			100
-#define QUIT_PAGE			101
-#define REBOOT_PAGE			102
-
+  SUCCESS_PAGE,
+  QUIT_PAGE,
+  REBOOT_PAGE,			/* virtual page */
+} PAGE_NUMBER, *PPAGE_NUMBER;
 
 typedef struct _COPYCONTEXT
 {
@@ -372,7 +374,7 @@ ConfirmQuit(PINPUT_RECORD Ir)
  * RETURNS
  *	Number of the next page.
  */
-static ULONG
+static PAGE_NUMBER
 StartPage(PINPUT_RECORD Ir)
 {
   NTSTATUS Status;
@@ -481,7 +483,7 @@ StartPage(PINPUT_RECORD Ir)
 
 
 
-static ULONG
+static PAGE_NUMBER
 RepairIntroPage(PINPUT_RECORD Ir)
 {
   SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
@@ -520,7 +522,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
  *	TRUE: setup/repair completed successfully
  *	FALSE: setup/repair terminated by user
  */
-static ULONG
+static PAGE_NUMBER
 IntroPage(PINPUT_RECORD Ir)
 {
   SetHighlightedTextXY(6, 8, "Welcome to ReactOS Setup");
@@ -570,7 +572,7 @@ IntroPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static PAGE_NUMBER
 InstallIntroPage(PINPUT_RECORD Ir)
 {
   SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
@@ -612,7 +614,7 @@ InstallIntroPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
@@ -705,7 +707,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static PAGE_NUMBER
 SelectFileSystemPage(PINPUT_RECORD Ir)
 {
   ULONGLONG DiskSize;
@@ -855,7 +857,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static PAGE_NUMBER
 InstallDirectoryPage(PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
@@ -974,7 +976,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static PAGE_NUMBER
 PrepareCopyPage(PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
@@ -1227,7 +1229,7 @@ FileCopyCallback(PVOID Context,
 }
 
 
-static ULONG
+static PAGE_NUMBER
 FileCopyPage(PINPUT_RECORD Ir)
 {
   COPYCONTEXT CopyContext;
@@ -1261,7 +1263,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static PAGE_NUMBER
 RegistryPage(PINPUT_RECORD Ir)
 {
   INFCONTEXT InfContext;
@@ -1382,7 +1384,7 @@ RegistryPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static PAGE_NUMBER
 BootLoaderPage(PINPUT_RECORD Ir)
 {
   WCHAR SrcPath[MAX_PATH];
@@ -2012,7 +2014,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 
 
-static ULONG
+static PAGE_NUMBER
 QuitPage(PINPUT_RECORD Ir)
 {
   SetTextXY(10, 6, "ReactOS is not completely installed");
@@ -2036,7 +2038,7 @@ QuitPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static PAGE_NUMBER
 SuccessPage(PINPUT_RECORD Ir)
 {
   SetTextXY(10, 6, "The basic components of ReactOS have been installed successfully.");
@@ -2065,7 +2067,7 @@ NtProcessStartup(PPEB Peb)
 {
   NTSTATUS Status;
   INPUT_RECORD Ir;
-  ULONG Page;
+  PAGE_NUMBER Page;
 
   RtlNormalizeProcessParams(Peb->ProcessParameters);
 
