@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.24 2004/08/20 22:38:10 gvg Exp $
+/* $Id: dirobj.c,v 1.25 2004/08/24 17:07:27 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -266,9 +266,11 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       }
 
     /*
-     * If there's no room to even copy a single entry, return error status
+     * If there's no room to even copy a single entry then return error
+     * status.
      */
-    if (0 == DirectoryCount)
+    if (0 == DirectoryCount && 
+        !(IsListEmpty(&dir->head) && BufferLength >= RequiredSize))
       {
 	KeReleaseSpinLock(&dir->Lock, OldLevel);
 	ObDereferenceObject(dir);
@@ -276,7 +278,6 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 	  {
 	    Status = MmCopyToCaller(UnsafeReturnLength, &RequiredSize, sizeof(ULONG));
 	  }
-
 	return NT_SUCCESS(Status) ? STATUS_BUFFER_TOO_SMALL : Status;
       }
 
