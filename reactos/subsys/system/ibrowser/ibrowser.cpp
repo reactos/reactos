@@ -417,7 +417,37 @@ void ibrowser_about(HWND hwndParent)
 {
 	Dialog::DoModal(IDD_ABOUT_IBROWSER, WINDOW_CREATOR(ExplorerAboutDlg), hwndParent);
 }
+void ibrowser_open(HWND hwndParent)
+{
+    HMODULE            hShell32;
+    RUNFILEDLG        RunFileDlg;
+    OSVERSIONINFO    versionInfo;
+    WCHAR            wTitle[40];
+    WCHAR            wText[256];
+    char            szTitle[40] = "Open";
+    char            szText[256] = "Type the Internet Address of a document or folder and IBrowser will open it for you.";
 
+    hShell32 = LoadLibrary(_T("SHELL32.DLL"));
+    RunFileDlg = (RUNFILEDLG)(FARPROC)GetProcAddress(hShell32, (char*)((long)0x3D));
+
+    /* Show "Run..." dialog */
+    if (RunFileDlg)
+    {
+        versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        GetVersionEx(&versionInfo);
+
+        if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
+        {
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTitle, -1, wTitle, 40);
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szText, -1, wText, 256);
+            RunFileDlg(hwndParent, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
+        }
+        else
+            RunFileDlg(hwndParent, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+    }
+
+    FreeLibrary(hShell32);
+}
 
 static void InitInstance(HINSTANCE hInstance)
 {

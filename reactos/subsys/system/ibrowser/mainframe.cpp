@@ -262,6 +262,10 @@ int MainFrameBase::Command(int id, int code)
 	CONTEXT("MainFrameBase::Command()");
 
 	switch(id) {
+	  case ID_FILE_OPEN:
+		ibrowser_open(_hwnd);
+		break;
+
 	  case ID_FILE_EXIT:
 		SendMessage(_hwnd, WM_CLOSE, 0, 0);
 		break;
