@@ -101,16 +101,16 @@ typedef struct _HIVE_HEADER
   ULONG  Checksum;
 } HIVE_HEADER, *PHIVE_HEADER;
 
-typedef struct _HBIN
+typedef struct _BIN_HEADER
 {
   /* Bin identifier "hbin" (0x6E696268) */
-  ULONG  BlockId;
+  ULONG  HeaderId;
 
   /* Block offset of this bin */
-  BLOCK_OFFSET  BlockOffset;
+  BLOCK_OFFSET  BinOffset;
 
   /* Size in bytes, multiple of the block size (4KB) */
-  ULONG  BlockSize;
+  ULONG  BinSize;
 
   /* ? */
   ULONG  Unused1;
@@ -248,6 +248,13 @@ typedef struct _DATA_CELL
 #include <poppack.h>
 
 
+typedef struct _BLOCK_LIST_ENTRY
+{
+  PHBIN Bin;
+  PVOID Block;
+} BLOCK_LIST_ENTRY, *PBLOCK_LIST_ENTRY;
+
+
 typedef struct _REGISTRY_HIVE
 {
   LIST_ENTRY  HiveList;
@@ -258,7 +265,7 @@ typedef struct _REGISTRY_HIVE
   PHIVE_HEADER  HiveHeader;
   ULONG  UpdateCounter;
   ULONG  BlockListSize;
-  PHBIN  *BlockList;
+  PBLOCK_LIST_ENTRY BlockList;
   ULONG  FreeListSize;
   ULONG  FreeListMax;
   PCELL_HEADER *FreeList;
@@ -351,7 +358,7 @@ extern ERESOURCE CmiHiveListLock;
 
 
 VOID
-CmiVerifyBinCell(PHBIN BinCell);
+CmiVerifyBinHeader(PHBIN BinHeader);
 VOID
 CmiVerifyKeyCell(PKEY_CELL KeyCell);
 VOID
@@ -362,7 +369,7 @@ VOID
 CmiVerifyRegistryHive(PREGISTRY_HIVE RegistryHive);
 
 #ifdef DBG
-#define VERIFY_BIN_CELL CmiVerifyBinCell
+#define VERIFY_BIN_HEADER CmiVerifyBinHeader
 #define VERIFY_KEY_CELL CmiVerifyKeyCell
 #define VERIFY_ROOT_KEY_CELL CmiVerifyRootKeyCell
 #define VERIFY_VALUE_CELL CmiVerifyValueCell
@@ -370,7 +377,7 @@ CmiVerifyRegistryHive(PREGISTRY_HIVE RegistryHive);
 #define VERIFY_KEY_OBJECT CmiVerifyKeyObject
 #define VERIFY_REGISTRY_HIVE CmiVerifyRegistryHive
 #else
-#define VERIFY_BIN_CELL(x)
+#define VERIFY_BIN_HEADER(x)
 #define VERIFY_KEY_CELL(x)
 #define VERIFY_ROOT_KEY_CELL(x)
 #define VERIFY_VALUE_CELL(x)
@@ -380,11 +387,11 @@ CmiVerifyRegistryHive(PREGISTRY_HIVE RegistryHive);
 #endif
 
 NTSTATUS STDCALL
-CmiObjectParse(IN PVOID  ParsedObject,
-	       OUT PVOID  *NextObject,
-	       IN PUNICODE_STRING  FullPath,
-	       IN OUT PWSTR  *Path,
-	       IN ULONG  Attribute);
+CmiObjectParse(IN PVOID ParsedObject,
+	       OUT PVOID *NextObject,
+	       IN PUNICODE_STRING FullPath,
+	       IN OUT PWSTR *Path,
+	       IN ULONG Attribute);
 
 NTSTATUS STDCALL
 CmiObjectCreate(PVOID ObjectBody,
@@ -461,30 +468,30 @@ ULONG
 CmiGetMaxClassLength(IN PKEY_OBJECT KeyObject);
 
 ULONG
-CmiGetMaxValueNameLength(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell);
+CmiGetMaxValueNameLength(IN PREGISTRY_HIVE RegistryHive,
+			 IN PKEY_CELL KeyCell);
 
 ULONG
-CmiGetMaxValueDataLength(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell);
+CmiGetMaxValueDataLength(IN PREGISTRY_HIVE RegistryHive,
+			 IN PKEY_CELL KeyCell);
 
 NTSTATUS
-CmiScanForSubKey(IN PREGISTRY_HIVE  RegistryHive,
-		 IN PKEY_CELL  KeyCell,
-		 OUT PKEY_CELL  *SubKeyCell,
+CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
+		 IN PKEY_CELL KeyCell,
+		 OUT PKEY_CELL *SubKeyCell,
 		 OUT BLOCK_OFFSET *BlockOffset,
 		 IN PUNICODE_STRING KeyName,
-		 IN ACCESS_MASK  DesiredAccess,
+		 IN ACCESS_MASK DesiredAccess,
 		 IN ULONG Attributes);
 
 NTSTATUS
-CmiAddSubKey(IN PREGISTRY_HIVE  RegistryHive,
+CmiAddSubKey(IN PREGISTRY_HIVE RegistryHive,
 	     IN PKEY_OBJECT ParentKey,
 	     OUT PKEY_OBJECT SubKey,
 	     IN PUNICODE_STRING SubKeyName,
-	     IN ULONG  TitleIndex,
-	     IN PUNICODE_STRING  Class,
-	     IN ULONG  CreateOptions);
+	     IN ULONG TitleIndex,
+	     IN PUNICODE_STRING Class,
+	     IN ULONG CreateOptions);
 
 NTSTATUS
 CmiRemoveSubKey(IN PREGISTRY_HIVE RegistryHive,
@@ -492,17 +499,17 @@ CmiRemoveSubKey(IN PREGISTRY_HIVE RegistryHive,
 		IN PKEY_OBJECT SubKey);
 
 NTSTATUS
-CmiScanKeyForValue(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell,
-  IN PUNICODE_STRING  ValueName,
-  OUT PVALUE_CELL  *ValueCell,
-  OUT BLOCK_OFFSET *VBOffset);
+CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
+		   IN PKEY_CELL KeyCell,
+		   IN PUNICODE_STRING ValueName,
+		   OUT PVALUE_CELL *ValueCell,
+		   OUT BLOCK_OFFSET *VBOffset);
 
 NTSTATUS
-CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell,
-  IN ULONG  Index,
-  OUT PVALUE_CELL  *ValueCell);
+CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
+			  IN PKEY_CELL KeyCell,
+			  IN ULONG Index,
+			  OUT PVALUE_CELL *ValueCell);
 
 NTSTATUS
 CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
@@ -519,22 +526,22 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 		      IN PUNICODE_STRING ValueName);
 
 NTSTATUS
-CmiAllocateHashTableCell(IN PREGISTRY_HIVE  RegistryHive,
-  OUT PHASH_TABLE_CELL  *HashBlock,
-  OUT BLOCK_OFFSET  *HBOffset,
-  IN ULONG  HashTableSize);
+CmiAllocateHashTableCell(IN PREGISTRY_HIVE RegistryHive,
+			 OUT PHASH_TABLE_CELL *HashBlock,
+			 OUT BLOCK_OFFSET *HBOffset,
+			 IN ULONG HashTableSize);
 
 PKEY_CELL
 CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
-PHASH_TABLE_CELL  HashBlock,
-ULONG  Index);
+			 PHASH_TABLE_CELL HashBlock,
+			 ULONG Index);
 
 NTSTATUS
 CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
 		     PHASH_TABLE_CELL HashCell,
 		     BLOCK_OFFSET HashCellOffset,
-		     PKEY_CELL  NewKeyCell,
-		     BLOCK_OFFSET  NKBOffset);
+		     PKEY_CELL NewKeyCell,
+		     BLOCK_OFFSET NKBOffset);
 
 NTSTATUS
 CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
@@ -542,31 +549,31 @@ CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
 			  BLOCK_OFFSET NKBOffset);
 
 NTSTATUS
-CmiAllocateValueCell(IN PREGISTRY_HIVE  RegistryHive,
-  OUT PVALUE_CELL  *ValueCell,
-  OUT BLOCK_OFFSET  *VBOffset,
-  IN PUNICODE_STRING ValueName);
+CmiAllocateValueCell(IN PREGISTRY_HIVE RegistryHive,
+		     OUT PVALUE_CELL *ValueCell,
+		     OUT BLOCK_OFFSET *VBOffset,
+		     IN PUNICODE_STRING ValueName);
 
 NTSTATUS
-CmiDestroyValueCell(PREGISTRY_HIVE  RegistryHive,
-  PVALUE_CELL  ValueCell,
-  BLOCK_OFFSET  VBOffset);
+CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
+		    PVALUE_CELL ValueCell,
+		    BLOCK_OFFSET VBOffset);
 
 NTSTATUS
-CmiAllocateCell(PREGISTRY_HIVE  RegistryHive,
-		LONG  CellSize,
-		PVOID  *Cell,
+CmiAllocateCell(PREGISTRY_HIVE RegistryHive,
+		LONG CellSize,
+		PVOID *Cell,
 		BLOCK_OFFSET *CellOffset);
 
 NTSTATUS
-CmiDestroyCell(PREGISTRY_HIVE  RegistryHive,
-  PVOID  Cell,
-  BLOCK_OFFSET CellOffset);
+CmiDestroyCell(PREGISTRY_HIVE RegistryHive,
+	       PVOID Cell,
+	       BLOCK_OFFSET CellOffset);
 
 PVOID
-CmiGetCell (PREGISTRY_HIVE  RegistryHive,
-	    BLOCK_OFFSET  CellOffset,
-	    OUT PHBIN * ppBin);
+CmiGetCell (PREGISTRY_HIVE RegistryHive,
+	    BLOCK_OFFSET CellOffset,
+	    OUT PHBIN *Bin);
 
 VOID
 CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
@@ -577,7 +584,7 @@ CmiMarkBinDirty(PREGISTRY_HIVE RegistryHive,
 		BLOCK_OFFSET BinOffset);
 
 NTSTATUS
-CmiAddFree(PREGISTRY_HIVE  RegistryHive,
+CmiAddFree(PREGISTRY_HIVE RegistryHive,
 	   PCELL_HEADER FreeBlock,
 	   BLOCK_OFFSET FreeOffset,
 	   BOOLEAN MergeFreeBlocks);

@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.28 2004/01/31 14:33:01 ekohl Exp $
+/* $Id: import.c,v 1.29 2004/05/09 12:23:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -82,9 +82,9 @@ CmImportBinaryHive (PCHAR ChunkBase,
 
   /* Allocate block list */
   DPRINT("Space needed for block list describing hive: 0x%x\n",
-	 Hive->BlockListSize * sizeof(PHBIN *));
+	 Hive->BlockListSize * sizeof(BLOCK_LIST_ENTRY));
   Hive->BlockList = ExAllocatePool (NonPagedPool,
-				    Hive->BlockListSize * sizeof(PHBIN *));
+				    Hive->BlockListSize * sizeof(BLOCK_LIST_ENTRY));
   if (Hive->BlockList == NULL)
     {
       DPRINT1 ("Allocating block list failed\n");
@@ -93,7 +93,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
       return FALSE;
     }
   RtlZeroMemory (Hive->BlockList,
-		 Hive->BlockListSize * sizeof(PHBIN *));
+		 Hive->BlockListSize * sizeof(BLOCK_LIST_ENTRY));
 
   /* Import the bins */
   Status = CmiImportHiveBins(Hive,
