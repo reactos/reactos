@@ -23,16 +23,25 @@
  * FILE:              lib/ntdll/rtl/dbgbuffer.c
  * PROGRAMER:         James Tabor
  * Fixme:             Add Process and Thread event pair support.
- *                    Fix Heap support.
+ *                    Start Locks and Heap support. 
+ *                    Test: Create remote thread to help query remote                    
+ *                    processes and use view mapping to read them.
  *
  */
 
 /* INCLUDES *****************************************************************/
 
+#include <windows.h>
 #include <ntos/types.h>
 #include <napi/teb.h>
 #include <ntdll/rtl.h>
+#include <ntdll/ldr.h>
 #include <ddk/ntddk.h>
+
+#include <rosrtl/thread.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 
@@ -43,14 +52,25 @@ PDEBUG_BUFFER STDCALL
 RtlCreateQueryDebugBuffer(IN ULONG Size,
                           IN BOOLEAN EventPair)
 {
+   NTSTATUS Status;
    PDEBUG_BUFFER Buf = NULL;
+   ULONG SectionSize  = 100 * PAGE_SIZE;
    
-   if (Size < sizeof(DEBUG_BUFFER))
+   Status = NtAllocateVirtualMemory( NtCurrentProcess(),
+                                    (PVOID)&Buf,
+                                     0,
+                                    &SectionSize,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
      {
-        Size = sizeof(DEBUG_BUFFER);
+        return NULL;
      }
-      Buf = (PDEBUG_BUFFER) RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
-      memset(Buf, 0, Size);
+
+   Buf->SectionBase = Buf;
+   Buf->SectionSize = SectionSize;
+   
+   DPRINT("RtlCQDB: BA: %x BS: %d\n", Buf->SectionBase, Buf->SectionSize);
 
    return Buf;
 }
@@ -63,18 +83,17 @@ RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
 
-   if (NULL != Buf) {
-     if (NULL != Buf->ModuleInformation)
-         RtlFreeHeap(RtlGetProcessHeap(), 0, Buf->ModuleInformation);
-
-     if (NULL != Buf->HeapInformation)
-         RtlFreeHeap(RtlGetProcessHeap(), 0, Buf->HeapInformation);
-
-     if (NULL != Buf->LockInformation)
-         RtlFreeHeap(RtlGetProcessHeap(), 0, Buf->LockInformation);
-
-     RtlFreeHeap(RtlGetProcessHeap(), 0, Buf);
-   }
+   if (NULL != Buf)
+     {
+     Status = NtFreeVirtualMemory( NtCurrentProcess(),
+                                  (PVOID)&Buf,
+                                  &Buf->SectionSize,
+                                   MEM_RELEASE);
+     }
+   if (!NT_SUCCESS(Status))
+     {
+        DPRINT1("RtlDQDB: Failed to free VM!\n");
+     }
    return Status;
 }
 
@@ -89,37 +108,53 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
    NTSTATUS Status = STATUS_SUCCESS;
 
    Buf->InfoClassMask = DebugInfoMask;
+   Buf->SizeOfInfo = 0;
+
+   DPRINT("QueryProcessDebugInformation Start\n");
    
    if (DebugInfoMask & PDI_MODULES)
      {
-        PDEBUG_MODULE_INFORMATION info = 
-     	   RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DEBUG_MODULE_INFORMATION));
-        memset(info, 0, sizeof(DEBUG_MODULE_INFORMATION));
-        Buf->ModuleInformation = info;
+    PMODULE_INFORMATION Mp;
+    ULONG MSize;
+
+    Mp = (PMODULE_INFORMATION)(Buf + sizeof(DEBUG_BUFFER) + Buf->SizeOfInfo);
+    MSize = sizeof(MODULE_INFORMATION);
+    Buf->ModuleInformation = Mp;        
+    Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
      }
      
    if (DebugInfoMask & PDI_HEAPS)
      {
-        PDEBUG_HEAP_INFORMATION info = 
-           RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DEBUG_HEAP_INFORMATION));
-        memset(info, 0, sizeof(DEBUG_HEAP_INFORMATION));
-     
+   PDEBUG_HEAP_INFORMATION Hp;
+   ULONG HSize;
+
+   Hp = (PDEBUG_HEAP_INFORMATION)(Buf + sizeof(DEBUG_BUFFER) + Buf->SizeOfInfo);
+   HSize = sizeof(DEBUG_HEAP_INFORMATION);
         if (DebugInfoMask & PDI_HEAP_TAGS)
           {
           }
         if (DebugInfoMask & PDI_HEAP_BLOCKS)
           {
           }
-        Buf->HeapInformation = info;
+   Buf->HeapInformation = Hp;        
+   Buf->SizeOfInfo = Buf->SizeOfInfo + HSize;
+        
      }
      
    if (DebugInfoMask & PDI_LOCKS)
      {
-        PDEBUG_LOCK_INFORMATION info = 
-           RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DEBUG_LOCK_INFORMATION));
-        memset(info, 0, sizeof(DEBUG_LOCK_INFORMATION));
-        Buf->LockInformation = info;
+   PDEBUG_LOCK_INFORMATION Lp;
+   ULONG LSize;
+   
+   Lp = (PDEBUG_LOCK_INFORMATION)(Buf + sizeof(DEBUG_BUFFER) + Buf->SizeOfInfo);
+   LSize = sizeof(DEBUG_LOCK_INFORMATION);
+   Buf->LockInformation = Lp;        
+   Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
     }
+
+   DPRINT("QueryProcessDebugInformation end \n");
+   DPRINT("QueryDebugInfo : %d\n", Buf->SizeOfInfo);
+
    return Status;
 
 }
