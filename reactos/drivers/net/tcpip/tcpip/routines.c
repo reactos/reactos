@@ -332,7 +332,7 @@ VOID FreeNdisPacketX(
         NdisGetNextBuffer(Buffer, &NextBuffer);
         NdisQueryBuffer(Buffer, &Data, &Length);
         NdisFreeBuffer(Buffer);
-        ExFreePool(Data);
+        exFreePool(Data);
 
 	MTMARK();
     }
@@ -462,32 +462,21 @@ VOID DisplayIPPacket(
         for (; Buffer != NULL; Buffer = NextBuffer) {
             NdisGetNextBuffer(Buffer, &NextBuffer);
             NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
-
-            for (i = 0; i < Length; i++) {
-                if (i % 16 == 0)
-                    DbgPrint("\n");
-                DbgPrint("%02X ", (p[i]) & 0xFF);
-            }
-            DbgPrint("\n");
+	    OskitDumpBuffer( p, Length );
         }
     } else {
         p      = IPPacket->Header;
         Length = IPPacket->ContigSize;
-        for (i = 0; i < Length; i++) {
-            if (i % 16 == 0)
-                DbgPrint("\n");
-            DbgPrint("%02X ", (p[i]) & 0xFF);
-        }
-        DbgPrint("\n");
+	OskitDumpBuffer( p, Length );
     }
 
     if (IPPacket->NdisPacket) {
         NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
         Length -= MaxLLHeaderSize;
-        CharBuffer = ExAllocatePool(NonPagedPool, Length);
+        CharBuffer = exAllocatePool(NonPagedPool, Length);
         Length = CopyPacketToBuffer(CharBuffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
         DisplayIPHeader(CharBuffer, Length);
-        ExFreePool(CharBuffer);
+        exFreePool(CharBuffer);
     } else {
         CharBuffer = IPPacket->Header;
         Length = IPPacket->ContigSize;
@@ -557,10 +546,10 @@ VOID DisplayTCPPacket(
     if (IPPacket->NdisPacket) {
         NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
         Length -= MaxLLHeaderSize;
-        Buffer = ExAllocatePool(NonPagedPool, Length);
+        Buffer = exAllocatePool(NonPagedPool, Length);
         Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
         DisplayTCPHeader(Buffer, Length);
-        ExFreePool(Buffer);
+        exFreePool(Buffer);
     } else {
         Buffer = IPPacket->Header;
         Length = IPPacket->ContigSize;
@@ -575,7 +564,7 @@ NDIS_STATUS AllocatePacketWithBuffer( PNDIS_PACKET *NdisPacket,
     NDIS_STATUS Status;
     PCHAR NewData;
 
-    NewData = ExAllocatePool( NonPagedPool, Len );
+    NewData = exAllocatePool( NonPagedPool, Len );
     if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX 
 
     if( Data ) 
@@ -583,13 +572,13 @@ NDIS_STATUS AllocatePacketWithBuffer( PNDIS_PACKET *NdisPacket,
 
     NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );
     if( Status != NDIS_STATUS_SUCCESS ) {
-	ExFreePool( NewData );
+	exFreePool( NewData );
 	return Status;
     }
 
     NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewData, Len );
     if( Status != NDIS_STATUS_SUCCESS ) {
-	ExFreePool( NewData );
+	exFreePool( NewData );
 	FreeNdisPacket( Packet );
     }
 

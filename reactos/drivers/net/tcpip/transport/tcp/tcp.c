@@ -32,7 +32,7 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
  *     This is the low level interface for receiving TCP data
  */
 {
-    PCHAR BufferData = ExAllocatePool( NonPagedPool, IPPacket->TotalSize );
+    PCHAR BufferData = exAllocatePool( NonPagedPool, IPPacket->TotalSize );
 
     if( BufferData ) {
 	TI_DbgPrint(MID_TRACE,("Sending packet %d (%d) to oskit\n", 
@@ -41,13 +41,13 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
 
 	memcpy( BufferData, IPPacket->Header, IPPacket->HeaderSize );
 	memcpy( BufferData + IPPacket->HeaderSize, IPPacket->Data,
-		IPPacket->TotalSize );
+		IPPacket->TotalSize - IPPacket->HeaderSize );
 	
 	OskitTCPReceiveDatagram( BufferData, 
 				 IPPacket->TotalSize, 
 				 IPPacket->HeaderSize );
 
-	ExFreePool( BufferData );
+	/*exFreePool( BufferData );*/
     }
 }
 
@@ -126,10 +126,10 @@ NTSTATUS TCPShutdown(VOID)
     return STATUS_SUCCESS;
 }
 
-NTSTATUS TCPConnect(
-  PTDI_REQUEST Request,
+NTSTATUS TCPConnect
+( PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
-  PTDI_CONNECTION_INFORMATION ReturnInfo) {
+  PTDI_CONNECTION_INFORMATION ReturnInfo ) {
     KIRQL OldIrql;
     NTSTATUS Status;
     SOCKADDR_IN AddressToConnect;
@@ -177,31 +177,42 @@ NTSTATUS TCPConnect(
     if( Status == 0 ) return STATUS_PENDING; else return Status;
 }
 
-NTSTATUS TCPListen(
-  PTDI_REQUEST Request,
+NTSTATUS TCPListen
+( PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
-  PTDI_CONNECTION_INFORMATION ReturnInfo) {
+  PTDI_CONNECTION_INFORMATION ReturnInfo ) {
 }
 
-NTSTATUS TCPReceiveData(
-  PTDI_REQUEST Request,
+NTSTATUS TCPReceiveData
+( PTDI_REQUEST Request,
   PNDIS_BUFFER Buffer,
   ULONG ReceiveLength,
   ULONG ReceiveFlags,
-  PULONG BytesReceived) {
+  PULONG BytesReceived ) {
 }
 
-NTSTATUS TCPSendData(
-  PTDI_REQUEST Request,
+NTSTATUS TCPSendData
+( PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PNDIS_BUFFER Buffer,
-  ULONG DataSize) {
+  ULONG DataSize ) {
+    PCONNECTION_ENDPOINT Connection;
+    PCHAR BufferData;
+    ULONG PacketSize;
+    int error;
+
+    NdisQueryBuffer( Buffer, &BufferData, &PacketSize );
+    
+    Connection = Request->Handle.ConnectionContext;
+    /* XXX flags */
+    error = OskitTCPSend( Connection->SocketContext, 
+			  BufferData, PacketSize, 0 );
+    if( error ) return STATUS_UNSUCCESSFUL;
+    else return STATUS_SUCCESS;
 }
 
 NTSTATUS TCPTimeout(VOID) { 
-    static UINT TimesCalled = 0; /* This is called every 100 ms.
-				    freebsd timers need every 500 ms */
-    if( !(TimesCalled++ % 5) ) TimerOskitTCP();
+    TimerOskitTCP();
 }
 
 /* EOF */

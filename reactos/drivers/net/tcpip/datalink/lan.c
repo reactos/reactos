@@ -81,7 +81,7 @@ VOID FreeAdapter(
  *     Adapter = Pointer to LAN_ADAPTER structure to free
  */
 {
-    ExFreePool(Adapter);
+    exFreePool(Adapter);
 }
 
 
@@ -316,7 +316,7 @@ NDIS_STATUS ProtocolReceive(
     /* Get a transfer data packet */
 
     KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
-    BufferData = ExAllocatePool(NonPagedPool, Adapter->MTU);
+    BufferData = exAllocatePool(NonPagedPool, Adapter->MTU);
     if (!BufferData) {
 	TI_DbgPrint(DEBUG_DATALINK, ("No memory left\n"));
 	KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
@@ -326,7 +326,7 @@ NDIS_STATUS ProtocolReceive(
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(DEBUG_DATALINK, ("No available packet descriptors.\n"));
         /* We don't have a free packet descriptor. Drop the packet */
-	ExFreePool(BufferData);
+	exFreePool(BufferData);
         KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
         return NDIS_STATUS_SUCCESS;
     }
@@ -335,7 +335,7 @@ NDIS_STATUS ProtocolReceive(
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(DEBUG_DATALINK, ("No available buffer descriptors.\n"));
         /* We don't have a free packet descriptor. Drop the packet */
-	ExFreePool(BufferData);
+	exFreePool(BufferData);
 	FreeNdisPacket(NdisPacket);
         KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
         return NDIS_STATUS_SUCCESS;
@@ -566,7 +566,7 @@ static NTSTATUS ReadIPAddressFromRegistry( HANDLE RegHandle,
     if(!AnsiLen)
 	return STATUS_NO_MEMORY;
     
-    AnsiAddress.Buffer = ExAllocatePoolWithTag(PagedPool, AnsiLen, 0x01020304);
+    AnsiAddress.Buffer = exAllocatePoolWithTag(PagedPool, AnsiLen, 0x01020304);
     if(!AnsiAddress.Buffer)
 	return STATUS_NO_MEMORY;
 
@@ -575,14 +575,14 @@ static NTSTATUS ReadIPAddressFromRegistry( HANDLE RegHandle,
     
     Status = RtlUnicodeStringToAnsiString(&AnsiAddress, &UnicodeAddress, FALSE);
     if (!NT_SUCCESS(Status)) {
-	ExFreePool(AnsiAddress.Buffer);
+	exFreePool(AnsiAddress.Buffer);
 	return STATUS_UNSUCCESSFUL;
     }
     
     AnsiAddress.Buffer[AnsiAddress.Length] = 0;
     *Address = AddrBuildIPv4(inet_addr(AnsiAddress.Buffer));
     if (!Address) {
-	ExFreePool(AnsiAddress.Buffer);
+	exFreePool(AnsiAddress.Buffer);
 	return STATUS_UNSUCCESSFUL;
     }
 
@@ -760,7 +760,7 @@ NDIS_STATUS LANRegisterAdapter(
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
-    IF = ExAllocatePool(NonPagedPool, sizeof(LAN_ADAPTER));
+    IF = exAllocatePool(NonPagedPool, sizeof(LAN_ADAPTER));
     if (!IF) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NDIS_STATUS_RESOURCES;
@@ -797,7 +797,7 @@ NDIS_STATUS LANRegisterAdapter(
     if (NdisStatus == NDIS_STATUS_PENDING)
         KeWaitForSingleObject(&IF->Event, UserRequest, KernelMode, FALSE, NULL);
     else if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        ExFreePool(IF);
+	exFreePool(IF);
         return NdisStatus;
     }
 
@@ -822,7 +822,7 @@ NDIS_STATUS LANRegisterAdapter(
     default:
         /* Unsupported media */
         TI_DbgPrint(MIN_TRACE, ("Unsupported media.\n"));
-        ExFreePool(IF);
+        exFreePool(IF);
         return NDIS_STATUS_NOT_SUPPORTED;
     }
 
@@ -833,7 +833,7 @@ NDIS_STATUS LANRegisterAdapter(
                           &IF->MTU,
                           sizeof(UINT));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        ExFreePool(IF);
+        exFreePool(IF);
         return NdisStatus;
     }
 
@@ -845,7 +845,7 @@ NDIS_STATUS LANRegisterAdapter(
                           sizeof(UINT));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(MIN_TRACE, ("Query for maximum packet size failed.\n"));
-        ExFreePool(IF);
+        exFreePool(IF);
         return NdisStatus;
     }
 
@@ -868,7 +868,7 @@ NDIS_STATUS LANRegisterAdapter(
                           IF->HWAddressLength);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(MIN_TRACE, ("Query for current hardware address failed.\n"));
-        ExFreePool(IF);
+        exFreePool(IF);
         return NdisStatus;
     }
 
@@ -880,7 +880,7 @@ NDIS_STATUS LANRegisterAdapter(
                           sizeof(UINT));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(MIN_TRACE, ("Query for maximum link speed failed.\n"));
-        ExFreePool(IF);
+        exFreePool(IF);
         return NdisStatus;
     }
 

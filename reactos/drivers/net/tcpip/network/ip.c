@@ -66,7 +66,7 @@ VOID FreeADE(
  *     Object = Pointer to an address entry structure
  */
 {
-    ExFreePool(Object);
+    exFreePool(Object);
 }
 
 
@@ -78,7 +78,7 @@ VOID FreeNTE(
  *     Object = Pointer to an net table entry structure
  */
 {
-    ExFreePool(Object);
+    exFreePool(Object);
 }
 
 
@@ -90,7 +90,7 @@ VOID FreeIF(
  *     Object = Pointer to an interface structure
  */
 {
-    ExFreePool(Object);
+    exFreePool(Object);
 }
 
 
@@ -125,7 +125,7 @@ PADDRESS_ENTRY CreateADE(
         A2S(Address), A2S(NTE->Address)));
 
     /* Allocate space for an ADE and set it up */
-    ADE = ExAllocatePool(NonPagedPool, sizeof(ADDRESS_ENTRY));
+    ADE = exAllocatePool(NonPagedPool, sizeof(ADDRESS_ENTRY));
     if (!ADE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
@@ -291,7 +291,7 @@ PNET_TABLE_ENTRY IPCreateNTE(
     TI_DbgPrint(DEBUG_IP, ("Address (%s).\n", A2S(Address)));
 
     /* Allocate room for an NTE */
-    NTE = ExAllocatePool(NonPagedPool, sizeof(NET_TABLE_ENTRY));
+    NTE = exAllocatePool(NonPagedPool, sizeof(NET_TABLE_ENTRY));
     if (!NTE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
@@ -319,7 +319,7 @@ PNET_TABLE_ENTRY IPCreateNTE(
     ADE = CreateADE(IF, NTE->Address, ADE_UNICAST, NTE);
     if (!ADE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        ExFreePool(NTE);
+        exFreePool(NTE);
         return NULL;
     }
 
@@ -327,7 +327,7 @@ PNET_TABLE_ENTRY IPCreateNTE(
     NTE->PLE = CreatePLE(IF, NTE->Address, PrefixLength);
     if (!NTE->PLE) {
         DestroyADE(IF, ADE);
-        ExFreePool(NTE);
+        exFreePool(NTE);
         return NULL;
     }
 
@@ -389,7 +389,7 @@ VOID DestroyNTE(
     }
 #endif
     /* And free the NTE */
-    ExFreePool(NTE);
+    exFreePool(NTE);
 }
 
 
@@ -719,7 +719,7 @@ PIP_INTERFACE IPCreateInterface(
     }
 #endif
 
-    IF = ExAllocatePool(NonPagedPool, sizeof(IP_INTERFACE));
+    IF = exAllocatePool(NonPagedPool, sizeof(IP_INTERFACE));
     if (!IF) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
@@ -784,7 +784,7 @@ VOID IPDestroyInterface(
     }
 #endif
 
-    ExFreePool(IF);
+    exFreePool(IF);
 }
 
 

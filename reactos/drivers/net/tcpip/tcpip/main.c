@@ -728,6 +728,8 @@ DriverEntry(
   TrackingInit();
   TrackTag(NDIS_BUFFER_TAG);
   TrackTag(NDIS_PACKET_TAG);
+  TrackTag(FBSD_MALLOC);
+  TrackTag(EXALLOC_TAG);
 
   InitOskitTCP();
 

@@ -340,7 +340,7 @@ VOID DGDeliverData(
             {
               DereferenceObject(Current->RemoteAddress);
             }
-          ExFreePool(Current);
+          exFreePool(Current);
         }
     }
   else if (AddrFile->RegisteredReceiveDatagramHandler)
@@ -425,7 +425,7 @@ VOID DGCancelSendRequest(
     {
       /* Complete the request and free its resources */
       (*Current->Complete)(Current->Context, STATUS_CANCELLED, 0);
-      ExFreePool(Current);
+      exFreePool(Current);
     }
   else
     {
@@ -482,7 +482,7 @@ VOID DGCancelReceiveRequest(
         {
           DereferenceObject(Current->RemoteAddress);
         }
-      ExFreePool(Current);
+      exFreePool(Current);
     }
   else
     {
@@ -551,7 +551,7 @@ NTSTATUS DGSendDatagram( PTDI_REQUEST Request,
     
     if (AF_IS_VALID(AddrFile)) {
 	/* Initialize a send request */
-	SendRequest = ExAllocatePool( NonPagedPool,
+	SendRequest = exAllocatePool( NonPagedPool,
 				      sizeof( DATAGRAM_SEND_REQUEST ) );
 	
 	if( SendRequest ) {
@@ -577,7 +577,7 @@ NTSTATUS DGSendDatagram( PTDI_REQUEST Request,
 	    }
 	    else
 	    {
-		ExFreePool(SendRequest);
+		exFreePool(SendRequest);
 	    }
 	}
 	else
@@ -635,7 +635,7 @@ NTSTATUS DGReceiveDatagram(
 
   if (AF_IS_VALID(AddrFile))
     {
-      ReceiveRequest = ExAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
+      ReceiveRequest = exAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
       if (ReceiveRequest)
         {
           /* Initialize a receive request */
@@ -650,7 +650,7 @@ NTSTATUS DGReceiveDatagram(
               if (!NT_SUCCESS(Status))
                 {
                   KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-                  ExFreePool(ReceiveRequest);
+                  exFreePool(ReceiveRequest);
                   return Status;
                 }
             }

@@ -1,3 +1,4 @@
+#define MEMTRACK_NO_POOL
 #include <roscfg.h>
 #include <tcpip.h>
 #include <ntddk.h>

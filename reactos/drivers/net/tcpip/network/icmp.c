@@ -78,7 +78,7 @@ PIP_PACKET PrepareICMPPacket(
 
     Size = MaxLLHeaderSize + sizeof(IPv4_HEADER) +
         sizeof(ICMP_HEADER) + DataSize;
-    DataBuffer = ExAllocatePool(NonPagedPool, Size);
+    DataBuffer = exAllocatePool(NonPagedPool, Size);
     if (!DataBuffer) {
         return NULL;
     }
@@ -88,7 +88,7 @@ PIP_PACKET PrepareICMPPacket(
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        ExFreePool(DataBuffer);
+        exFreePool(DataBuffer);
         return NULL;
     }
     Track(NDIS_PACKET_TAG,NdisPacket);
@@ -100,7 +100,7 @@ PIP_PACKET PrepareICMPPacket(
         DataBuffer, Size);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         FreeNdisPacket(NdisPacket);
-        ExFreePool(DataBuffer);
+        exFreePool(DataBuffer);
         return NULL;
     }
     Track(NDIS_BUFFER_TAG,NdisBuffer);

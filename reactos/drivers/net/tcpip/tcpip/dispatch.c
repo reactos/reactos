@@ -379,6 +379,7 @@ NTSTATUS DispTdiConnect(
   Request.RequestNotifyObject      = DispDataRequestComplete;
   Request.RequestContext           = Irp;
 
+  /* XXX Handle connected UDP, etc... */
   Status = TCPConnect(
     &Request,
     Parameters->RequestConnectionInformation,
@@ -820,9 +821,46 @@ NTSTATUS DispTdiSend(
  *     Status of operation
  */
 {
-  TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+    PIO_STACK_LOCATION IrpSp;
+    TDI_REQUEST Request;
+    PTDI_REQUEST_KERNEL_SEND SendInfo;
+    PTRANSPORT_CONTEXT TranContext;
+    NTSTATUS Status;
 
-	return STATUS_NOT_IMPLEMENTED;
+    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+    IrpSp       = IoGetCurrentIrpStackLocation(Irp);
+    SendInfo    = (PTDI_REQUEST_KERNEL_SEND)&(IrpSp->Parameters);
+    TranContext = IrpSp->FileObject->FsContext;
+
+    /* Initialize a send request */
+    Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
+    Request.RequestNotifyObject  = DispDataRequestComplete;
+    Request.RequestContext       = Irp;
+
+    Status = DispPrepareIrpForCancel(
+        IrpSp->FileObject->FsContext,
+        Irp,
+        (PDRIVER_CANCEL)DispCancelRequest);
+    if (NT_SUCCESS(Status)) {
+
+        /* FIXME: DgramInfo->SendDatagramInformation->RemoteAddress 
+           must be of type PTDI_ADDRESS_IP */
+
+        Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
+            &Request, NULL, 
+	    (PNDIS_BUFFER)Irp->MdlAddress, SendInfo->SendLength);
+        if (Status != STATUS_PENDING) {
+            DispDataRequestComplete(Irp, Status, 0);
+            /* Return STATUS_PENDING because DispPrepareIrpForCancel
+               marks Irp as pending */
+            Status = STATUS_PENDING;
+        }
+    }
+
+    TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
+
+    return Status;
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16.2.5 2004/04/29 02:59:27 arty Exp $
+# $Id: makefile,v 1.16.2.6 2004/05/02 07:15:00 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,14 @@ TARGET_TYPE = export_driver
 
 TARGET_NAME = tcpip
 
-TARGET_CFLAGS = -I./include -DNDIS40 -D__USE_W32API -I$(PATH_TO_TOP)/lib/oskittcp/include -DMEMTRACK
+TARGET_CFLAGS = \
+	-D__USE_W32API \
+	-DNDIS40 \
+	-DMEMTRACK \
+	-I./include \
+	-I$(PATH_TO_TOP)/lib/oskittcp/include \
+	-I$(PATH_TO_TOP)/w32api/include \
+	-I$(PATH_TO_TOP)/include
 
 TARGET_DDKLIBS = ndis.a $(PATH_TO_TOP)/dk/w32/lib/oskittcp.a
 
@@ -19,7 +26,7 @@ TARGET_CLEAN = \
   transport/datagram/*.o \
   transport/rawip/*.o \
   transport/tcp/*.o \
-  transport/udp/*.o
+  transport/udp/*.o 
 
 TCPIP_OBJECTS    = tcpip/main.o tcpip/address.o tcpip/checksum.o \
                    tcpip/dispatch.o tcpip/fileobjs.o \
@@ -47,7 +54,7 @@ TARGET_OBJECTS = \
   $(FREEBSD_OBJECTS) \
   $(REACTOS_OBJECTS) \
   $(UDP_OBJECTS) \
-  $(ARCH_OBJECTS) 
+  $(ARCH_OBJECTS) \
 
 include $(PATH_TO_TOP)/rules.mak
 

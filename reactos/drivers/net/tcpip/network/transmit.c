@@ -67,6 +67,7 @@ BOOLEAN PrepareNextFragment(
         /* Calculate checksum of IP header */
         Header->Checksum = 0;
         Header->Checksum = (USHORT)IPv4Checksum(Header, IFC->HeaderSize, 0);
+	TI_DbgPrint(MID_TRACE,("IP Check: %x\n", Header->Checksum));
 
         /* Update pointers */
         (ULONG_PTR)IFC->DatagramData += DataSize;
@@ -104,23 +105,23 @@ NTSTATUS SendFragments(
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)  PathMTU (%d).\n",
         IPPacket, NCE, PathMTU));
 
-    IFC = ExAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
+    IFC = exAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
     if (IFC == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* We allocate a buffer for a PathMTU sized packet and reuse
        it for all fragments */
-    Data = ExAllocatePool(NonPagedPool, MaxLLHeaderSize + PathMTU);
+    Data = exAllocatePool(NonPagedPool, MaxLLHeaderSize + PathMTU);
     if (Data == NULL) {
-        ExFreePool(IFC);
+        exFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &IFC->NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        ExFreePool(Data);
-        ExFreePool(IFC);
+        exFreePool(Data);
+        exFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -129,8 +130,8 @@ NTSTATUS SendFragments(
         GlobalBufferPool, Data, MaxLLHeaderSize + PathMTU);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         FreeNdisPacket(IFC->NdisPacket);
-        ExFreePool(Data);
-        ExFreePool(IFC);
+        exFreePool(Data);
+        exFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -207,7 +208,7 @@ VOID IPSendComplete(
             /* There are no more fragments to transmit, so call completion handler */
             NdisPacket = IFC->Datagram;
             FreeNdisPacket(IFC->NdisPacket);
-            ExFreePool(IFC);
+            exFreePool(IFC);
             (*PC(NdisPacket)->Complete)
 		(PC(NdisPacket)->Context, 
 		 NdisPacket, 
@@ -316,6 +317,7 @@ NTSTATUS IPSendDatagram(
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  RCN (0x%X)\n", IPPacket, RCN));
 
     DISPLAY_IP_PACKET(IPPacket);
+    OskitDumpBuffer( IPPacket->Header, IPPacket->TotalSize );
 
     NCE = RCN->NCE;
 
@@ -350,6 +352,7 @@ NTSTATUS IPSendDatagram(
 
             ((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
                 IPv4Checksum(IPPacket->Header, IPPacket->HeaderSize, 0);
+	    TI_DbgPrint(MID_TRACE,("IP Check: %x\n", ((PIPv4_HEADER)IPPacket->Header)->Checksum));
 
             TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
                 WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));

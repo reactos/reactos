@@ -90,7 +90,7 @@ void TCPPacketSendComplete( PVOID Context,
     PDATAGRAM_SEND_REQUEST Send = (PDATAGRAM_SEND_REQUEST)Context;
     if( Send->Packet.NdisPacket )
 	FreeNdisPacket( Send->Packet.NdisPacket );
-    ExFreePool( Send );
+    exFreePool( Send );
 }
 
 NTSTATUS AddHeaderIPv4(
@@ -122,7 +122,7 @@ NTSTATUS AddHeaderIPv4(
     IPPacket = &SendRequest->Packet;
 
     BufferSize = MaxLLHeaderSize + sizeof(IPv4_HEADER);
-    Header     = ExAllocatePool(NonPagedPool, BufferSize);
+    Header     = exAllocatePool(NonPagedPool, BufferSize);
     if (!Header)
 	return STATUS_INSUFFICIENT_RESOURCES;
     
@@ -137,18 +137,18 @@ NTSTATUS AddHeaderIPv4(
 		       Header,
 		       BufferSize);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-	ExFreePool(Header);
+	exFreePool(Header);
 	TI_DbgPrint(MAX_TRACE, ("Error from NDIS: %08x\n", NdisStatus));
 	return STATUS_INSUFFICIENT_RESOURCES;
     }
     
     /* Chain header at front of NDIS packet */
     NdisChainBufferAtFront(IPPacket->NdisPacket, HeaderBuffer);
-    
     IPPacket->HeaderSize = 20;
     IPPacket->ContigSize = BufferSize;
     IPPacket->TotalSize  = IPPacket->HeaderSize + PayloadBufferSize;
     IPPacket->Header     = (PVOID)((ULONG_PTR)Header + MaxLLHeaderSize);
+    IPPacket->Flags      = 0;
     
     /* Build IPv4 header */
     IPHeader = (PIPv4_HEADER)IPPacket->Header;
@@ -184,23 +184,25 @@ int TCPPacketSend(void *ClientData,
     PADDRESS_FILE AddrFile;
     PNDIS_BUFFER NdisPacket;
     NDIS_STATUS NdisStatus;
-    PROUTE_CACHE_NODE RCN = 0;
-    NTSTATUS Status = STATUS_NO_MEMORY;
     KIRQL OldIrql;
     PDATAGRAM_SEND_REQUEST SendRequest;
     PNEIGHBOR_CACHE_ENTRY NCE = 0;
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)WhichConnection;
     IP_ADDRESS RemoteAddress, LocalAddress;
     USHORT RemotePort, LocalPort;
+    PULONG AckNumber = (PULONG)data;
+
+    TI_DbgPrint(MID_TRACE,("TCP OUTPUT:\n"));
+    OskitDumpBuffer( data, len );
 
     SendRequest = 
 	(PDATAGRAM_SEND_REQUEST)
-	ExAllocatePool( NonPagedPool, sizeof( DATAGRAM_SEND_REQUEST ) );
-    if( !SendRequest || !Connection ) return OSK_EINVAL;
+	exAllocatePool( NonPagedPool, sizeof( DATAGRAM_SEND_REQUEST ) );
+    /* if( !SendRequest || !Connection ) return OSK_EINVAL; */
 
     RemoteAddress.Type = LocalAddress.Type = IP_ADDRESS_V4;
     CP;
-    OskitTCPGetAddress( Connection->SocketContext,
+    OskitTCPGetAddress( WhichSocket,
 			&LocalAddress.Address.IPv4Address,
 			&LocalPort,
 			&RemoteAddress.Address.IPv4Address,
@@ -215,7 +217,8 @@ int TCPPacketSend(void *ClientData,
 			    ADE_UNICAST, 
 			    &LocalAddress.Address.IPv4Address );
 
-    KeAcquireSpinLock( &Connection->Lock, &OldIrql );
+    if( Connection ) 
+	KeAcquireSpinLock( &Connection->Lock, &OldIrql );
 
     NdisStatus = 
 	AllocatePacketWithBuffer( &SendRequest->PacketToSend, data, len );
@@ -239,15 +242,16 @@ int TCPPacketSend(void *ClientData,
 		   &RemoteAddress,
 		   RemotePort );
 
-    DGTransmit( Connection->AddressFile, SendRequest );
+    if( Connection ) 
+	DGTransmit( Connection->AddressFile, SendRequest );
+    else
+	DbgPrint("Transmit called without connection.\n");
 
 end:
-    KeReleaseSpinLock( &Connection->Lock, OldIrql );
+    if( Connection )
+	KeReleaseSpinLock( &Connection->Lock, OldIrql );
 
-    if( RCN )
-	ObDereferenceObject( RCN );
-
-    if( !NT_SUCCESS(Status) ) return OSK_EINVAL;
+    if( !NT_SUCCESS(NdisStatus) ) return OSK_EINVAL;
     else return 0;
 }
 

@@ -59,14 +59,14 @@ PNDIS_PACKET PrepareARPPacket(
         2 * ProtoAddressLength; /* Protocol address length */
     Size = MAX(Size, MinLLFrameSize);
 
-    DataBuffer = ExAllocatePool(NonPagedPool, Size);
+    DataBuffer = exAllocatePool(NonPagedPool, Size);
     if (!DataBuffer)
         return NULL;
 
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        ExFreePool(DataBuffer);
+        exFreePool(DataBuffer);
         return NULL;
     }
 
@@ -75,7 +75,7 @@ PNDIS_PACKET PrepareARPPacket(
 		       DataBuffer, Size);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         FreeNdisPacket(NdisPacket);
-        ExFreePool(DataBuffer);
+        exFreePool(DataBuffer);
         return NULL;
     }
 

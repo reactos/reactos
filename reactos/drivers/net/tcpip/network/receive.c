@@ -101,7 +101,7 @@ VOID FreeIPDR(
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment data at (0x%X).\n", CurrentF->Data));
 
     /* Free the fragment data buffer */
-    ExFreePool(CurrentF->Data);
+    exFreePool(CurrentF->Data);
 
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment at (0x%X).\n", CurrentF));
 
@@ -113,7 +113,7 @@ VOID FreeIPDR(
   /* Free resources for the header, if it exists */
   if (IPDR->IPv4Header) {
     TI_DbgPrint(DEBUG_IP, ("Freeing IPv4 header data at (0x%X).\n", IPDR->IPv4Header));
-    ExFreePool(IPDR->IPv4Header);
+    exFreePool(IPDR->IPv4Header);
   }
 
   TI_DbgPrint(DEBUG_IP, ("Freeing IPDR data at (0x%X).\n", IPDR));
@@ -222,7 +222,7 @@ PIP_PACKET ReassembleDatagram(
   RtlCopyMemory(&IPPacket->DstAddr, &IPDR->DstAddr, sizeof(IP_ADDRESS));
 
   /* Allocate space for full IP datagram */
-  IPPacket->Header = ExAllocatePool(NonPagedPool, IPPacket->TotalSize);
+  IPPacket->Header = exAllocatePool(NonPagedPool, IPPacket->TotalSize);
   if (!IPPacket->Header) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     (*IPPacket->Free)(IPPacket);
@@ -274,7 +274,7 @@ __inline VOID Cleanup(
   RemoveIPDR(IPDR);
   FreeIPDR(IPDR);
   if (Buffer)
-    ExFreePool(Buffer);
+    exFreePool(Buffer);
 }
 
 
@@ -404,7 +404,7 @@ VOID ProcessFragment(
 
     /* If this is the first fragment, save the IP header */
     if (FragFirst == 0) {
-      IPDR->IPv4Header = ExAllocatePool(NonPagedPool, IPPacket->HeaderSize);
+	IPDR->IPv4Header = exAllocatePool(NonPagedPool, IPPacket->HeaderSize);
       if (!IPDR->IPv4Header) {
         /* We don't have the resources to process this packet, discard it */
         Cleanup(&IPDR->Lock, OldIrql, IPDR, NULL);
@@ -431,7 +431,7 @@ VOID ProcessFragment(
     TI_DbgPrint(DEBUG_IP, ("Fragment descriptor allocated at (0x%X).\n", Fragment));
 
     Fragment->Size = IPPacket->TotalSize - IPPacket->HeaderSize;
-    Fragment->Data = ExAllocatePool(NonPagedPool, Fragment->Size);
+    Fragment->Data = exAllocatePool(NonPagedPool, Fragment->Size);
     if (!Fragment->Data) {
       /* We don't have the resources to process this packet, discard it */
       Cleanup(&IPDR->Lock, OldIrql, IPDR, Fragment);
@@ -482,7 +482,7 @@ VOID ProcessFragment(
     IPDispatchProtocol(NTE, Datagram);
 
     /* We're done with this datagram */
-    ExFreePool(Datagram->Header);
+    exFreePool(Datagram->Header);
     TI_DbgPrint(MAX_TRACE, ("Freeing datagram at (0x%X).\n", Datagram));
     (*Datagram->Free)(Datagram);
   } else
@@ -575,7 +575,7 @@ VOID IPv4Receive(
     IPPacket->Position = IPPacket->HeaderSize;
     IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize) + 14; /* XXX 14 */
     
-    OskitDumpBuffer(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize);
+    OskitDumpBuffer(IPPacket->Data - IPPacket->HeaderSize, IPPacket->TotalSize);
 
     /* FIXME: Possibly forward packets with multicast addresses */
     
