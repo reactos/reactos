@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.56 2004/03/15 23:49:29 gvg Exp $
+/* $Id: menu.c,v 1.57 2004/03/24 08:56:52 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -3888,10 +3888,20 @@ InsertMenuA(
   if(uFlags & MF_BITMAP)
   {
     mii.fType |= MFT_BITMAP;
+    mii.fMask |= MIIM_BITMAP;
+    mii.hbmpItem = (HBITMAP) lpNewItem;
   }
   else if(uFlags & MF_OWNERDRAW)
   {
     mii.fType |= MFT_OWNERDRAW;
+    mii.fMask |= MIIM_DATA;
+    mii.dwItemData = (DWORD) lpNewItem;
+  }
+  else
+  {
+    mii.fMask |= MIIM_TYPE;
+    mii.dwTypeData = (LPSTR)lpNewItem;
+    mii.cch = (NULL == lpNewItem ? 0 : strlen(lpNewItem));
   }
   
   if(uFlags & MF_RIGHTJUSTIFY)
@@ -3915,9 +3925,9 @@ InsertMenuA(
     mii.fState |= MFS_GRAYED;
   }
   
-  mii.dwTypeData = (LPSTR)lpNewItem;
   if(uFlags & MF_POPUP)
   {
+    mii.fType |= MF_POPUP;
     mii.fMask |= MIIM_SUBMENU;
     mii.hSubMenu = (HMENU)uIDNewItem;
   }
@@ -4048,10 +4058,20 @@ InsertMenuW(
   if(uFlags & MF_BITMAP)
   {
     mii.fType |= MFT_BITMAP;
+    mii.fMask |= MIIM_BITMAP;
+    mii.hbmpItem = (HBITMAP) lpNewItem;
   }
   else if(uFlags & MF_OWNERDRAW)
   {
     mii.fType |= MFT_OWNERDRAW;
+    mii.fMask |= MIIM_DATA;
+    mii.dwItemData = (DWORD) lpNewItem;
+  }
+  else
+  {
+    mii.fMask |= MIIM_TYPE;
+    mii.dwTypeData = (LPWSTR)lpNewItem;
+    mii.cch = (NULL == lpNewItem ? 0 : wcslen(lpNewItem));
   }
   
   if(uFlags & MF_RIGHTJUSTIFY)
@@ -4075,8 +4095,6 @@ InsertMenuW(
     mii.fState |= MFS_GRAYED;
   }
   
-  mii.dwTypeData = (LPWSTR)lpNewItem;
-  mii.cch = (NULL == lpNewItem ? 0 : wcslen(lpNewItem));
   if(uFlags & MF_POPUP)
   {
     mii.fType |= MF_POPUP;
