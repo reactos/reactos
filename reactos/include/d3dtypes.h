@@ -25,12 +25,13 @@
 #ifndef __WINE_D3DTYPES_H
 #define __WINE_D3DTYPES_H
 
+/* #include <windows.h> FIXME: Need to include for compatibility. Inclusion caused compile fail */
+
 #include <float.h>
 #include <ddraw.h>
 
 #define D3DVALP(val, prec)      ((float)(val))
 #define D3DVAL(val)             ((float)(val))
-typedef float D3DVALUE,*LPD3DVALUE;
 #define D3DDivide(a, b)         (float)((double) (a) / (double) (b))
 #define D3DMultiply(a, b)       ((a) * (b))
 
@@ -75,53 +76,16 @@ typedef HRESULT (CALLBACK *LPD3DVALIDATECALLBACK)(LPVOID lpUserArg, DWORD dwOffs
 typedef HRESULT (CALLBACK *LPD3DENUMTEXTUREFORMATSCALLBACK)(LPDDSURFACEDESC lpDdsd, LPVOID lpContext);
 typedef HRESULT (CALLBACK *LPD3DENUMPIXELFORMATSCALLBACK)(LPDDPIXELFORMAT lpDDPixFmt, LPVOID lpContext);
 
+#ifndef DX_SHARED_DEFINES
+
+typedef float D3DVALUE,*LPD3DVALUE;
+
 #ifndef D3DCOLOR_DEFINED
 typedef DWORD D3DCOLOR, *LPD3DCOLOR;
 #define D3DCOLOR_DEFINED
 #endif
 
-typedef DWORD D3DMATERIALHANDLE, *LPD3DMATERIALHANDLE;
-typedef DWORD D3DTEXTUREHANDLE,  *LPD3DTEXTUREHANDLE;
-typedef DWORD D3DMATRIXHANDLE,   *LPD3DMATRIXHANDLE;
-
-typedef struct _D3DCOLORVALUE {
-        union {
-                D3DVALUE r;
-                D3DVALUE dvR;
-        } DUMMYUNIONNAME1;
-        union {
-                D3DVALUE g;
-                D3DVALUE dvG;
-        } DUMMYUNIONNAME2;
-        union {
-                D3DVALUE b;
-                D3DVALUE dvB;
-        } DUMMYUNIONNAME3;
-        union {
-                D3DVALUE a;
-                D3DVALUE dvA;
-        } DUMMYUNIONNAME4;
-} D3DCOLORVALUE,*LPD3DCOLORVALUE;
-
-typedef struct _D3DRECT {
-  union {
-    LONG x1;
-    LONG lX1;
-  } DUMMYUNIONNAME1;
-  union {
-    LONG y1;
-    LONG lY1;
-  } DUMMYUNIONNAME2;
-  union {
-    LONG x2;
-    LONG lX2;
-  } DUMMYUNIONNAME3;
-  union {
-    LONG y2;
-    LONG lY2;
-  } DUMMYUNIONNAME4;
-} D3DRECT, *LPD3DRECT;
-
+#ifndef D3DVECTOR_DEFINED
 typedef struct _D3DVECTOR {
   union {
         D3DVALUE        x;
@@ -173,6 +137,53 @@ public:
   friend _D3DVECTOR CrossProduct(const _D3DVECTOR& v1, const _D3DVECTOR& v2);
 #endif
 } D3DVECTOR,*LPD3DVECTOR;
+#define D3DVECTOR_DEFINED
+#endif
+
+#define DX_SHARED_DEFINES
+#endif /* DX_SHARED_DEFINES */
+
+typedef DWORD D3DMATERIALHANDLE, *LPD3DMATERIALHANDLE;
+typedef DWORD D3DTEXTUREHANDLE,  *LPD3DTEXTUREHANDLE;
+typedef DWORD D3DMATRIXHANDLE,   *LPD3DMATRIXHANDLE;
+
+typedef struct _D3DCOLORVALUE {
+        union {
+                D3DVALUE r;
+                D3DVALUE dvR;
+        } DUMMYUNIONNAME1;
+        union {
+                D3DVALUE g;
+                D3DVALUE dvG;
+        } DUMMYUNIONNAME2;
+        union {
+                D3DVALUE b;
+                D3DVALUE dvB;
+        } DUMMYUNIONNAME3;
+        union {
+                D3DVALUE a;
+                D3DVALUE dvA;
+        } DUMMYUNIONNAME4;
+} D3DCOLORVALUE,*LPD3DCOLORVALUE;
+
+typedef struct _D3DRECT {
+  union {
+    LONG x1;
+    LONG lX1;
+  } DUMMYUNIONNAME1;
+  union {
+    LONG y1;
+    LONG lY1;
+  } DUMMYUNIONNAME2;
+  union {
+    LONG x2;
+    LONG lX2;
+  } DUMMYUNIONNAME3;
+  union {
+    LONG y2;
+    LONG lY2;
+  } DUMMYUNIONNAME4;
+} D3DRECT, *LPD3DRECT;
 
 typedef struct _D3DHVERTEX {
     DWORD         dwFlags;
@@ -330,7 +341,7 @@ typedef struct _D3DMATRIX {
 } D3DMATRIX, *LPD3DMATRIX;
 
 #if defined(__cplusplus) && defined(D3D_OVERLOADS)
-#include "d3dvec.inl"
+#include <d3dvec.inl>
 #endif
 
 typedef struct _D3DVIEWPORT {
