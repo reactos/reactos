@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: reginf.c,v 1.6 2003/11/14 17:13:36 weiden Exp $
+/* $Id: reginf.c,v 1.7 2004/06/04 23:47:04 navaraf Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
@@ -379,7 +379,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 
   Ok = InfFindFirstLine (hInf, Section, NULL, &Context);
   if (!Ok)
-    return FALSE;
+    return TRUE; /* Don't fail if the section isn't present */
 
   for (;Ok; Ok = InfFindNextLine (&Context, &Context))
     {
@@ -396,9 +396,16 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 
       DPRINT("KeyName: <%s>\n", Buffer);
 
-      /* get flags */
-      if (!InfGetIntField (&Context, 4, (PLONG)&Flags))
-	Flags = 0;
+      if (Delete)
+        {
+          Flags = FLG_ADDREG_DELVAL;
+        }
+      else
+        {
+          /* get flags */
+          if (!InfGetIntField (&Context, 4, (PLONG)&Flags))
+            Flags = 0;
+        }
 
       DPRINT("Flags: %lx\n", Flags);
 
@@ -453,6 +460,11 @@ ImportRegistryFile(PCHAR FileName,
     {
       DPRINT1 ("InfOpenFile() failed\n");
       return FALSE;
+    }
+
+  if (!registry_callback (hInf, "DelReg", TRUE))
+    {
+      DPRINT1 ("registry_callback() failed\n");
     }
 
   if (!registry_callback (hInf, "AddReg", FALSE))
