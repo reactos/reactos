@@ -957,9 +957,9 @@ GetCursorPos( &point );
 		dod[count_ent].dwData =  point.y - save_point.y;	
 
         dod[count_ent].dwTimeStamp =  time +1;
-        dod[count_ent].dwSequence = last_event++;
+        dod[count_ent].dwSequence = last_event;
 		count_ent++;
-		save_point.y = point.y;
+		save_point.y = point.y;		
 	    }
           
 	 else if (save_b[0] != b[0]) {		 
@@ -967,7 +967,7 @@ GetCursorPos( &point );
 			
         dod[count_ent].dwData =   b[0];
         dod[count_ent].dwTimeStamp =  time +1;
-        dod[count_ent].dwSequence = last_event++;
+        dod[count_ent].dwSequence = last_event;
 		count_ent++;
 		save_b[0] = b[0];
 	    }
@@ -976,8 +976,8 @@ GetCursorPos( &point );
 		dod[count_ent].dwOfs =   DIMOFS_BUTTON1;
 			
         dod[count_ent].dwData =   b[1];
-        dod[count_ent].dwTimeStamp =  time +1;
-        dod[count_ent].dwSequence = last_event++;
+        dod[count_ent].dwTimeStamp =  time ;
+        dod[count_ent].dwSequence = last_event;
 		count_ent++;
 		save_b[1] = b[1];
 	    }
@@ -986,8 +986,8 @@ GetCursorPos( &point );
 		dod[count_ent].dwOfs =   DIMOFS_BUTTON2;
 			
         dod[count_ent].dwData =   b[2];
-        dod[count_ent].dwTimeStamp =  time +1;
-        dod[count_ent].dwSequence = last_event++;
+        dod[count_ent].dwTimeStamp =  time ;
+        dod[count_ent].dwSequence = last_event;
 		count_ent++;
 		save_b[2] = b[2];
 	    }
@@ -996,26 +996,17 @@ GetCursorPos( &point );
 		dod[count_ent].dwOfs =   DIMOFS_BUTTON3;
 			
         dod[count_ent].dwData =   b[3];
-        dod[count_ent].dwTimeStamp =  time +1;
-        dod[count_ent].dwSequence = last_event++;
+        dod[count_ent].dwTimeStamp =  time ;
+        dod[count_ent].dwSequence = last_event;
 		count_ent++;
 		save_b[3] = b[3];
-	    }
-
-     else if (save_b[4] != b[4]) {		 
-		dod[count_ent].dwOfs =   DIMOFS_BUTTON4;
-			
-        dod[count_ent].dwData =   b[4];
-        dod[count_ent].dwTimeStamp =  time +1;
-        dod[count_ent].dwSequence = last_event++;
-		count_ent++;
-		save_b[4] = b[4];
 	    }
 	 
 
   }  // end for
 
-
+if (count_ent>0)last_event++;
+SetCursorPos(save_point.x, save_point.y);
 *entries = count_ent;
 #endif
 
