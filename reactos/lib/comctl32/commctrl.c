@@ -862,7 +862,12 @@ CreateMappedBitmap (HINSTANCE hInstance, INT idBitmap, UINT wFlags,
     if (lpBitmap == NULL)
 	return 0;
 
-    nColorTableSize = (1 << lpBitmap->biBitCount);
+    if (lpBitmap->biSize >= sizeof(BITMAPINFOHEADER) && lpBitmap->biClrUsed)
+        nColorTableSize = lpBitmap->biClrUsed;
+    else if (lpBitmap->biBitCount <= 8)	
+        nColorTableSize = (1 << lpBitmap->biBitCount);
+    else
+        nColorTableSize = 0;
     nSize = lpBitmap->biSize + nColorTableSize * sizeof(RGBQUAD);
     lpBitmapInfo = (LPBITMAPINFOHEADER)GlobalAlloc (GMEM_FIXED, nSize);
     if (lpBitmapInfo == NULL)
@@ -899,7 +904,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT idBitmap, UINT wFlags,
 	HDC hdcDst = CreateCompatibleDC (hdcScreen);
 	HBITMAP hbmOld = SelectObject (hdcDst, hbm);
 	LPBYTE lpBits = (LPBYTE)(lpBitmap + 1);
-	lpBits += (1 << (lpBitmapInfo->biBitCount)) * sizeof(RGBQUAD);
+	lpBits += nColorTableSize * sizeof(RGBQUAD);
 	StretchDIBits (hdcDst, 0, 0, nWidth, nHeight, 0, 0, nWidth, nHeight,
 		         lpBits, (LPBITMAPINFO)lpBitmapInfo, DIB_RGB_COLORS,
 		         SRCCOPY);
