@@ -178,6 +178,38 @@ void BookmarkList::write(XMLPos& pos) const
 }
 
 
+void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent) const
+{
+	TV_INSERTSTRUCT tvi;
+
+	tvi.hParent = parent;
+	tvi.hInsertAfter = TVI_LAST;
+
+	TV_ITEM& tv = tvi.item;
+	tv.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
+
+	for(const_iterator it=begin(); it!=end(); ++it) {
+		const BookmarkNode& node = *it;
+
+		if (node._type == BookmarkNode::BMNT_FOLDER) {
+			const BookmarkFolder& folder = *node._pfolder;
+
+			tv.pszText = (LPTSTR)folder._name.c_str();
+			tv.iSelectedImage = tv.iImage = 0;
+			HTREEITEM hitem = TreeView_InsertItem(hwnd, &tvi);
+
+			folder._bookmarks.fill_tree(hwnd, hitem);
+		} else {
+			const Bookmark& bookmark = *node._pbookmark;
+
+			tv.pszText = (LPTSTR)bookmark._name.c_str();
+			tv.iSelectedImage = tv.iImage = 0;
+			TreeView_InsertItem(hwnd, &tvi);
+		}
+	}
+}
+
+
 void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 {
 	TCHAR path[MAX_PATH], ext[_MAX_EXT];

@@ -275,6 +275,14 @@ MainFrame::MainFrame(HWND hwnd)
 
 	_hstatusbar = CreateStatusWindow(WS_CHILD|WS_VISIBLE, 0, hwnd, IDW_STATUSBAR);
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
+
+	_hsidebar = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, TEXT("Sidebar"),
+					WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
+					-1, -1, 200, 0, _hwnd, (HMENU)IDW_SIDEBAR, g_Globals._hInstance, 0);
+
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_CHECKED);
+
+	FillBookmarks();
 }
 
 
@@ -602,6 +610,10 @@ int MainFrame::Command(int id, int code)
 		toggle_child(_hwnd, id, _hstatusbar);
 		break;
 
+	  case ID_VIEW_SIDE_BAR:
+		toggle_child(_hwnd, id, _hsidebar);
+		break;
+
 	  case ID_EXECUTE: {
 		ExecuteDialog dlg = {{0}, 0};
 
@@ -761,27 +773,27 @@ void MainFrame::resize_frame_rect(PRECT prect)
 	} else {
 		if (IsWindowVisible(_htoolbar)) {
 			SendMessage(_htoolbar, WM_SIZE, 0, 0);
-			ClientRect rt(_htoolbar);
-			prect->top = rt.bottom+3;
-		//	prect->bottom -= rt.bottom+3;
+			WindowRect rt(_htoolbar);
+			prect->top = rt.bottom;
+		//	prect->bottom -= rt.bottom;
 		}
 
 		if (IsWindowVisible(_hextrabar)) {
 			SendMessage(_hextrabar, WM_SIZE, 0, 0);
-			ClientRect rt(_hextrabar);
-			int new_top = --prect->top + rt.bottom+3;
+			WindowRect rt(_hextrabar);
+			int new_top = --prect->top + rt.bottom;
 			MoveWindow(_hextrabar, 0, prect->top, rt.right, new_top, TRUE);
 			prect->top = new_top;
-		//	prect->bottom -= rt.bottom+2;
+		//	prect->bottom -= rt.bottom;
 		}
 
 		if (IsWindowVisible(_hdrivebar)) {
 			SendMessage(_hdrivebar, WM_SIZE, 0, 0);
-			ClientRect rt(_hdrivebar);
-			int new_top = --prect->top + rt.bottom+3;
+			WindowRect rt(_hdrivebar);
+			int new_top = --prect->top + rt.bottom;
 			MoveWindow(_hdrivebar, 0, prect->top, rt.right, new_top, TRUE);
 			prect->top = new_top;
-		//	prect->bottom -= rt.bottom+2;
+		//	prect->bottom -= rt.bottom;
 		}
 	}
 
@@ -801,6 +813,13 @@ void MainFrame::resize_frame_rect(PRECT prect)
 		int mid = (prect->right-prect->left) / 2;	///@todo use split bar
 		SetWindowPos(_haddressedit, 0, 0, prect->bottom, mid, rt.bottom, SWP_NOACTIVATE|SWP_NOZORDER);
 		SetWindowPos(_hcommandedit, 0, mid+1, prect->bottom, prect->right-(mid+1), rt.bottom, SWP_NOACTIVATE|SWP_NOZORDER);
+	}
+
+	if (IsWindowVisible(_hsidebar)) {
+		WindowRect rt(_hsidebar);
+		prect->left += rt.right-rt.left;
+
+		SetWindowPos(_hsidebar, 0, -1, prect->top-1, rt.right-rt.left, prect->bottom-prect->top+1, SWP_NOACTIVATE|SWP_NOZORDER);
 	}
 
 #ifndef _NO_MDI
@@ -986,4 +1005,14 @@ bool MainFrame::activate_child_window(LPCTSTR filesys)
 
 	return false;
 }
+
+void MainFrame::FillBookmarks()
+{
+	HiddenWindow hide(_hsidebar);
+
+	TreeView_DeleteAllItems(_hsidebar);
+
+	g_Globals._favorites.fill_tree(_hsidebar, TVI_ROOT);
+}
+
 #endif

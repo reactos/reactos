@@ -112,6 +112,7 @@
 #define ID_VIEW_DRIVE_BAR               507
 #define ID_VIEW_TOOL_BAR                508
 #define ID_VIEW_EXTRA_BAR               509
+#define ID_VIEW_SIDE_BAR                510
 #define IDC_ROS_EXPLORER                1000
 #define IDC_ICON_ALIGN_0                1002
 #define IDC_ICON_ALIGN_1                1003

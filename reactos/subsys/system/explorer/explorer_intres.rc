@@ -38,6 +38,7 @@ BEGIN
         MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "&Bara de stare",              ID_VIEW_STATUSBAR
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM SEPARATOR
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
     END
@@ -327,6 +328,7 @@ BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
         MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "Lauf&werkleiste",             ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Vollbild\tCtrl+Shift+S",     ID_VIEW_FULLSCREEN
@@ -569,6 +571,7 @@ BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
         MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
@@ -668,6 +671,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
         MENUITEM SEPARATOR
@@ -993,6 +997,7 @@ BEGIN
         MENUITEM "Barre d'&outils",             ID_VIEW_TOOL_BAR
         MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
@@ -1193,6 +1198,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Barra de Ferramentas",        ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "Barra de Drives",             ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "Barra de Estado",             ID_VIEW_STATUSBAR, CHECKED
         MENUITEM "Ecrã Cheio\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
         MENUITEM SEPARATOR

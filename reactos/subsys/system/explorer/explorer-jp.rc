@@ -145,6 +145,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "ツールバー(&T)",              ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "ドライブバー(&D)",            ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Side bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "ステータスバー(&S)",          ID_VIEW_STATUSBAR, CHECKED
         MENUITEM "全画面表\示(&U)\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM SEPARATOR

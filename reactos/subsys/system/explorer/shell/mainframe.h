@@ -60,6 +60,7 @@ protected:
 	WindowHandle _hdrivebar;
 	WindowHandle _haddressedit;
 	WindowHandle _hcommandedit;
+	WindowHandle _hsidebar;
 
 	HMENU	_hMenuFrame;
 	HMENU	_hMenuWindow;
@@ -81,6 +82,8 @@ protected:
 	void	frame_get_clientspace(PRECT prect);
 	BOOL	toggle_fullscreen();
 	void	fullscreen_move();
+
+	void	FillBookmarks();
 
 	HACCEL	_hAccel;
 	TCHAR	_drives[BUFFER_LEN];
