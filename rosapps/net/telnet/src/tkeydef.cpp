@@ -30,6 +30,7 @@
 /////////////////////////////////////////////////////////
 
 #include "tkeydef.h"
+#include <string.h>
 
 // This class did not properly release memory before, and a buffer overrun
 // was apparent in operator=(char*).  Fixed.  (Paul Brannan Feb. 4, 1999)
