@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.40 2002/10/01 19:27:18 chorns Exp $
+ * $Id: fat.c,v 1.41 2003/01/04 02:07:18 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -632,7 +632,7 @@ WriteCluster(PDEVICE_EXTENSION DeviceExt,
   return(Status);
 }
 
-ULONG
+ULONGLONG
 ClusterToSector(PDEVICE_EXTENSION DeviceExt,
 		ULONG Cluster)
 /*
@@ -641,7 +641,8 @@ ClusterToSector(PDEVICE_EXTENSION DeviceExt,
  */
 {
   return DeviceExt->FatInfo.dataStart +
-    ((Cluster - 2) * DeviceExt->FatInfo.SectorsPerCluster);
+    ((ULONGLONG)(Cluster - 2) * DeviceExt->FatInfo.SectorsPerCluster);
+
 }
 
 NTSTATUS
@@ -772,46 +773,6 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   ExReleaseResourceLite(&DeviceExt->FatResource);
 
   return(Status);
-}
-
-
-NTSTATUS
-GetNextSector(PDEVICE_EXTENSION DeviceExt,
-	      ULONG CurrentSector,
-	      PULONG NextSector,
-	      BOOLEAN Extend)
-/* Some functions don't have access to the cluster they're really reading from.
-   Maybe this is a dirty solution, but it will allow them to handle fragmentation. */
-{
-  NTSTATUS Status;
-
-  DPRINT("GetNextSector(DeviceExt %x, CurrentSector %x)\n",
-	 DeviceExt,
-	 CurrentSector);
-  if (CurrentSector<DeviceExt->FatInfo.dataStart || ((CurrentSector - DeviceExt->FatInfo.dataStart + 1) % DeviceExt->FatInfo.SectorsPerCluster))
-  /* Basically, if the next sequential sector would be on a cluster border, then we'll need to check in the FAT */
-    {
-      (*NextSector)=CurrentSector+1;
-      return (STATUS_SUCCESS);
-    }
-  else
-    {
-      CurrentSector = (CurrentSector - DeviceExt->FatInfo.dataStart) / DeviceExt->FatInfo.SectorsPerCluster + 2;
-
-      Status = GetNextCluster(DeviceExt, CurrentSector, NextSector, Extend);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-      if ((*NextSector) == 0 || (*NextSector) == 0xffffffff)
-	{
-	  /* The caller wants to know a sector. These FAT codes don't correspond to any sector. */
-	  return(STATUS_UNSUCCESSFUL);
-	}
-
-      (*NextSector) = ClusterToSector(DeviceExt,(*NextSector));
-      return(STATUS_SUCCESS);
-    }
 }
 
 /* EOF */

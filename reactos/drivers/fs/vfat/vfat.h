@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.49 2002/12/03 01:14:49 hbirr Exp $ */
+/* $Id: vfat.h,v 1.50 2003/01/04 02:07:18 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -397,18 +397,13 @@ NTSTATUS OffsetToCluster (PDEVICE_EXTENSION DeviceExt,
                           PULONG Cluster,
                           BOOLEAN Extend);
 
-ULONG ClusterToSector (PDEVICE_EXTENSION DeviceExt,
-                       ULONG Cluster);
+ULONGLONG ClusterToSector (PDEVICE_EXTENSION DeviceExt,
+			   ULONG Cluster);
 
 NTSTATUS GetNextCluster (PDEVICE_EXTENSION DeviceExt,
                          ULONG CurrentCluster,
                          PULONG NextCluster,
                          BOOLEAN Extend);
-
-NTSTATUS GetNextSector (PDEVICE_EXTENSION DeviceExt,
-                        ULONG CurrentSector,
-                        PULONG NextSector,
-                        BOOLEAN Extend);
 
 NTSTATUS CountAvailableClusters (PDEVICE_EXTENSION DeviceExt,
                                  PLARGE_INTEGER Clusters);
