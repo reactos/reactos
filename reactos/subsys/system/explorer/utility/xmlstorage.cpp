@@ -87,10 +87,11 @@ void XMLCALL XMLReaderBase::XML_XmlDeclHandler(void* userData, const XML_Char* v
 {
 	XMLReaderBase* pReader = (XMLReaderBase*) userData;
 
-	if (version) {
+	if (version)
 		pReader->_xml_version = version;
+
+	if (encoding)
 		pReader->_encoding = encoding;
-	}
 }
 
  /// notifications about XML start tag
@@ -217,11 +218,14 @@ std::string XMLReaderBase::get_error_string() const
 	  case XML_ERROR_FEATURE_REQUIRES_XML_DTD:			return "XML_ERROR_FEATURE_REQUIRES_XML_DTD";
 	  case XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING:	return "XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING";
 	  case XML_ERROR_UNBOUND_PREFIX:					return "XML_ERROR_UNBOUND_PREFIX";
+ // EXPAT version >= 1.95.8
+#if XML_MAJOR_VERSION>1 || (XML_MAJOR_VERSION==1 && XML_MINOR_VERSION>95) || (XML_MAJOR_VERSION==1 && XML_MINOR_VERSION==95 && XML_MICRO_VERSION>7)
 	  case XML_ERROR_SUSPENDED:							return "XML_ERROR_SUSPENDED";
 	  case XML_ERROR_NOT_SUSPENDED:						return "XML_ERROR_NOT_SUSPENDED";
 	  case XML_ERROR_ABORTED:							return "XML_ERROR_ABORTED";
 	  case XML_ERROR_FINISHED:							return "XML_ERROR_FINISHED";
 	  case XML_ERROR_SUSPEND_PE:						return "XML_ERROR_SUSPEND_PE";
+#endif
 	}
 
 	std::ostringstream out;

@@ -1205,7 +1205,7 @@ protected:
 	int _value;
 
 private:
-	void operator=(const XMLBool&); // disallow assignment operations
+	void operator=(const XMLInt&); // disallow assignment operations
 };
 
 struct XMLIntRef
@@ -1235,6 +1235,84 @@ struct XMLIntRef
 
 		_stprintf(buffer, TEXT("%d"), value);
 		_ref.assign(buffer);
+	}
+
+protected:
+	String& _ref;
+};
+
+
+struct XMLString
+{
+	XMLString(const String& value)
+	 :	_value(value)
+	{
+	}
+
+	XMLString(LPCTSTR value, LPCTSTR def=TEXT(""))
+	{
+		if (value && *value)
+			_value = value;
+		else
+			_value = def;
+	}
+
+	XMLString(const XMLNode* node, const String& attr_name, LPCTSTR def=TEXT(""))
+	{
+		const String& value = node->get(attr_name);
+
+		if (!value.empty())
+			_value = value;
+		else
+			_value = def;
+	}
+
+	XMLString(const XMLNode* node, const String& name, const String& attr_name, LPCTSTR def=TEXT(""))
+	{
+		const String& value = node->value(name, attr_name);
+
+		if (!value.empty())
+			_value = value;
+		else
+			_value = def;
+	}
+
+	operator const String&() const
+	{
+		return _value;
+	}
+
+protected:
+	String	_value;
+
+private:
+	void operator=(const XMLString&); // disallow assignment operations
+};
+
+struct XMStringRef
+{
+	XMStringRef(XMLNode* node, const String& name, const String& attr_name, LPCTSTR def=TEXT(""))
+	 :	_ref(node->value(name, attr_name))
+	{
+		if (_ref.empty())
+			assign(def);
+	}
+
+	XMStringRef& operator=(const String& value)
+	{
+		assign(value);
+
+		return *this;
+	}
+
+	operator const String&() const
+	{
+		return _ref;
+	}
+
+	void assign(const String& value)
+	{
+		_ref.assign(value);
 	}
 
 protected:
