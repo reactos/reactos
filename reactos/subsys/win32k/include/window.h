@@ -65,14 +65,19 @@ typedef struct _WINDOW_OBJECT
   UINT IDMenu;
   /* Handle of region of the window to be updated. */
   HANDLE UpdateRegion;
-  /* Pointer to the message queue associated with the window. */
+  /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
   /* Head of the list of child windows. */
   LIST_ENTRY ChildrenListHead;
+  struct _WINDOW_OBJECT* FirstChild;
+  struct _WINDOW_OBJECT* LastChild;
+
   /* Lock for the list of child windows. */
   FAST_MUTEX ChildrenListLock;
   /* Entry in the parent's list of child windows. */
   LIST_ENTRY SiblingListEntry;
+  struct _WINDOW_OBJECT* NextSibling;
+  struct _WINDOW_OBJECT* PrevSibling;
   /* Entry in the list of thread windows. */
   LIST_ENTRY ThreadListEntry;
   /* Pointer to the parent window. */
@@ -88,6 +93,8 @@ typedef struct _WINDOW_OBJECT
   LONG UserData;
   WNDPROC WndProc;
   PETHREAD OwnerThread;
+  HWND hWndOwner; /* handle to the owner window (why not use pointer to window? wine doesn't...)*/
+  HWND hWndLastPopup; /* handle to last active popup window (why not use pointer to window? wine doesn't...)*/
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
 /* Window flags. */
@@ -153,6 +160,12 @@ UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
 
 ULONG
 UserHasThickFrameStyle(ULONG Style, ULONG ExStyle);
+
+PWINDOW_OBJECT FASTCALL
+W32kGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
+
+PWINDOW_OBJECT FASTCALL
+W32kGetParent(PWINDOW_OBJECT Wnd);
 
 #endif /* __WIN32K_WINDOW_H */
 

@@ -319,14 +319,14 @@ NtUserDdeSetQualityOfService(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD STDCALL
+HDWP STDCALL
 NtUserDeferWindowPos(HDWP WinPosInfo,
 		     HWND Wnd,
 		     HWND WndInsertAfter,
-		     LONG x,
-		     LONG y,
-		     LONG cx,
-		     LONG cy,
+		     int x,
+         int y,
+         int cx,
+         int cy,
 		     UINT Flags);
 DWORD
 STDCALL
@@ -364,12 +364,12 @@ LRESULT
 STDCALL
 NtUserDispatchMessage(CONST MSG* lpmsg);
 
-DWORD
+BOOL
 STDCALL
 NtUserDragDetect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  LONG x,
+  LONG y);
 
 DWORD
 STDCALL
@@ -1261,11 +1261,7 @@ NtUserGetCapture(VOID);
 
 DWORD
 STDCALL
-NtUserSetClassLong(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+NtUserSetClassLong(HWND hWnd, int Index, LONG NewValue, DWORD unk);
 
 DWORD
 STDCALL
@@ -1542,12 +1538,8 @@ NtUserSetWindowStationUser(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
-STDCALL
-NtUserSetWindowWord(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+WORD STDCALL
+NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewVal);
 
 DWORD
 STDCALL
@@ -1784,6 +1776,15 @@ NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
 DWORD STDCALL
 NtUserGetQueueStatus(BOOL ClearChanges);
 
+HWND STDCALL
+NtUserGetParent(HWND hWnd);
+
+HWND STDCALL
+NtUserGetWindow(HWND hWnd, UINT Relationship);
+
+HWND STDCALL
+NtUserGetLastActivePopup(HWND hWnd);
+                                    
 #endif /* __WIN32K_NTUSER_H */
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.21 2003/08/02 16:32:18 gdalsnes Exp $
+/* $Id: winsta.c,v 1.22 2003/08/04 16:54:54 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -67,6 +67,23 @@ STATIC PWINSTATION_OBJECT InputWindowStation = NULL;
 static HDC ScreenDeviceContext = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+BOOL FASTCALL W32kVerifyWinStaLock(WINSTA_LOCK_TYPE Type)
+{
+
+  switch (Type)
+  {
+    case None:
+      return !ExIsResourceAcquiredSharedLite(&(PsGetWin32Process()->WindowStation->Resource));
+    case Any: /* exclusive lock is subset of shared lock */
+      return ExIsResourceAcquiredSharedLite(&(PsGetWin32Process()->WindowStation->Resource));
+    case Exclusive:
+      return ExIsResourceAcquiredExclusiveLite(&(PsGetWin32Process()->WindowStation->Resource));
+  }
+
+  return FALSE;
+
+}
 
 inline VOID W32kAcquireWinStaLockShared()
 {

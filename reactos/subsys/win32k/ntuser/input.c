@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.9 2003/07/29 23:03:01 jimtabor Exp $
+/* $Id: input.c,v 1.10 2003/08/04 16:54:54 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -287,5 +287,17 @@ CleanupInputImp(VOID)
 {
   return(STATUS_SUCCESS);
 }
+
+BOOL
+STDCALL
+NtUserDragDetect(
+  HWND hWnd,
+  LONG x,
+  LONG y)
+{
+  UNIMPLEMENTED
+  return 0;
+}
+
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.21 2003/08/01 14:38:51 dwelch Exp $
+/* $Id: stubs.c,v 1.22 2003/08/04 16:54:54 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -331,17 +331,6 @@ NtUserDestroyAcceleratorTable(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserDragDetect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL

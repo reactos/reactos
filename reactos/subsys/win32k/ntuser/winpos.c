@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.20 2003/08/02 19:56:19 dwelch Exp $
+/* $Id: winpos.c,v 1.21 2003/08/04 16:54:54 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -486,7 +486,7 @@ WinPosDoSimpleFrameChanged( PWINDOW_OBJECT wndPtr, RECT* pOldClientRect, WORD sw
     if( i )
     {
 redraw:
-	PaintRedrawWindow( wndPtr->Self, &rect, hrgn, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
+	PaintRedrawWindow( wndPtr, &rect, hrgn, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE |
 			    RDW_ERASENOW | RDW_ALLCHILDREN, RDW_EX_TOPFRAME | RDW_EX_USEHRGN );
     }
     else
@@ -872,9 +872,9 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     {
       if (!(WinPos.flags & SWP_NOREDRAW))
 	{
-	  if (FlagsEx & SWP_EX_PAINTSELF)
+	  if (FlagsEx & SWP_EX_PAINTSELF) 
 	    {
-	      PaintRedrawWindow(Window->Self, NULL,
+	      PaintRedrawWindow(Window, NULL,
 				(VisRgn == (HRGN) 1) ? 0 : VisRgn,
 				RDW_ERASE | RDW_FRAME | RDW_INVALIDATE |
 				RDW_ALLCHILDREN | RDW_ERASENOW, 
@@ -882,7 +882,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	    }
 	  else
 	    {
-	      PaintRedrawWindow(Window->Parent->Self, NULL,
+	      PaintRedrawWindow(Window->Parent, NULL,
 				(VisRgn == (HRGN) 1) ? 0 : VisRgn,
 				RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN |
 	                        RDW_ERASENOW,

@@ -25,7 +25,7 @@
 HWND STDCALL
 PaintingFindWinToRepaint(HWND hWnd, PW32THREAD Thread);
 BOOL STDCALL
-PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
+PaintRedrawWindow(PWINDOW_OBJECT Wnd, const RECT* UpdateRect, HRGN UpdateRgn,
 		  ULONG Flags, ULONG ExFlags);
 BOOL STDCALL
 PaintHaveToDelayNCPaint(PWINDOW_OBJECT Window, ULONG Flags);

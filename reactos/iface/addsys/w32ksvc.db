@@ -554,3 +554,6 @@ NtUserGetDesktopWindow			0
 NtUserAcquireOrReleaseInputOwnership    1
 NtUserGetWindowThreadProcessId          2
 NtUserGetQueueStatus                    1
+NtUserGetParent                         1
+NtUserGetWindow                         2
+NtUserGetLastActivePopup                1

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.3 2003/08/02 19:56:19 dwelch Exp $
+ * $Id: vis.c,v 1.4 2003/08/04 16:54:54 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -209,6 +209,7 @@ VIS_RepaintDesktop(HWND Desktop, HRGN RepaintRgn)
   NtUserReleaseDC(Desktop, dc);
 }
 
+ 
 
 VOID FASTCALL
 VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
@@ -232,7 +233,7 @@ VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
 	{
 	  Covered = UnsafeW32kCreateRectRgnIndirect(&Child->WindowRect);
 	  W32kCombineRgn(Uncovered, Uncovered, Covered, RGN_DIFF);
-	  PaintRedrawWindow(Child->Self, NULL, NULL, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE, 0);
+	  PaintRedrawWindow(Child, NULL, NULL, RDW_INVALIDATE | RDW_FRAME | RDW_ERASE, 0);
 	  W32kDeleteObject(Covered);
 	}
       CurrentEntry = CurrentEntry->Flink;

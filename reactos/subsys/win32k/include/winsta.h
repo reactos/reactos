@@ -7,6 +7,15 @@
 #include <internal/ps.h>
 #include "msgqueue.h"
 
+typedef enum _WINSTA_LOCK_TYPE
+{
+  None,
+  Any,
+  Exclusive
+} WINSTA_LOCK_TYPE; 
+
+#define ASSERT_WINSTA_LOCK(a) (ASSERT(W32kVerifyWinStaLock(a)))
+
 #define PROCESS_WINDOW_STATION() \
   ((HWINSTA)(IoGetCurrentProcess()->Win32WindowStation))
 
@@ -55,6 +64,7 @@ W32kSetCaptureWindow(struct _WINDOW_OBJECT* Window);
 inline VOID W32kAcquireWinStaLockShared();
 inline VOID W32kAcquireWinStaLockExclusive();
 inline VOID W32kReleaseWinStaLock();
+BOOL FASTCALL W32kVerifyWinStaLock(WINSTA_LOCK_TYPE Type);
 
 #endif /* __WIN32K_WINSTA_H */
 

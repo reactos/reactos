@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.20 2003/07/27 21:35:50 dwelch Exp $
+/* $Id: class.c,v 1.21 2003/08/04 16:54:54 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -286,7 +286,7 @@ NtUserRegisterClassExWOW(LPWNDCLASSEXW lpwcx,
 }
 
 ULONG FASTCALL
-W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset)
+W32kGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset)
 {
   LONG Ret;
   switch (Offset)
@@ -330,10 +330,7 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset)
 }
 
 DWORD STDCALL
-NtUserSetClassLong(DWORD Unknown0,
-		   DWORD Unknown1,
-		   DWORD Unknown2,
-		   DWORD Unknown3)
+NtUserSetClassLong(HWND hWnd, int Index, LONG NewValue, DWORD unk)
 {
   UNIMPLEMENTED;
 

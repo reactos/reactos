@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.21 2003/08/02 19:56:19 dwelch Exp $
+/* $Id: painting.c,v 1.22 2003/08/04 16:54:54 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,7 +63,7 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
   HDC hDC;
   HWND hWnd = Window->Self;
   BOOL bIcon = (0 != (Window->Style & WS_MINIMIZE)) &&
-               (0 != NtUserGetClassLong(hWnd, GCL_HICON));
+               (0 != W32kGetClassLong(Window, GCL_HICON));
 
   if (0 != (ExFlags & RDW_EX_DELAY_NCPAINT) ||
       PaintHaveToDelayNCPaint(Window, 0))
@@ -457,21 +457,22 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 }
 
 BOOL STDCALL
-PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
-		  ULONG Flags, ULONG ExFlags)
+PaintRedrawWindow( 
+  PWINDOW_OBJECT Window, 
+  const RECT* UpdateRect, 
+  HRGN UpdateRgn,
+	ULONG Flags, 
+  ULONG ExFlags)
 {
-  PWINDOW_OBJECT Window;
   RECT Rect, Rect2;
   POINT Pt;
   HRGN hRgn = NULL;
 
-  /* FIXME: Return if this is for a desktop. */
-
-  Window = W32kGetWindowObject(hWnd);
-  if (Window == NULL)
-    {
-      return FALSE;
-    }
+  /* Return if this is for a desktop. */
+  if (W32kIsDesktopWindow(Window))
+  {
+    return FALSE;
+  }
 
   if ((RDW_INVALIDATE | RDW_FRAME) == (Flags & (RDW_INVALIDATE | RDW_FRAME)) ||
       (RDW_VALIDATE | RDW_NOFRAME) == (Flags & (RDW_VALIDATE | RDW_NOFRAME)))
@@ -512,7 +513,7 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
 	{
 	  if (! W32kIntersectRect(&Rect2, &Rect, UpdateRect))
 	    {
-	      W32kReleaseWindowObject(Window);
+	      
 	      if ((HRGN) 1 < hRgn && hRgn != UpdateRgn)
 		{
 		  W32kDeleteObject(hRgn);
@@ -565,7 +566,7 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
 	  UnsafeW32kGetRgnBox(hRgn, &Rect2);
 	  if (W32kIsEmptyRect(&Rect2))
 	    {
-	      W32kReleaseWindowObject(Window);
+	      
 	      if ((HRGN) 1 < hRgn && hRgn != UpdateRgn)
 		{
 		  W32kDeleteObject(hRgn);
@@ -577,7 +578,7 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
 	{
 	  if (! W32kIntersectRect(&Rect2, &Rect, UpdateRect))
 	    {
-	      W32kReleaseWindowObject(Window);
+	      
 	      if ((HRGN) 1 < hRgn && hRgn != UpdateRgn)
 		{
 		  W32kDeleteObject(hRgn);
@@ -613,7 +614,7 @@ PaintRedrawWindow(HWND hWnd, const RECT* UpdateRect, HRGN UpdateRgn,
     {
       W32kDeleteObject(hRgn);
     }
-  W32kReleaseWindowObject(Window);
+
   return TRUE;
 }
 
@@ -875,40 +876,40 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
   NTSTATUS Status;
   INT DcxFlags;
 
-  Status =
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-			       hWnd,
-			       otWindow,
-			       (PVOID*)&Window);
-  if (!NT_SUCCESS(Status))
-    {
-      return(NULL);
-    }
-  IsIcon = Window->Style & WS_MINIMIZE &&
-    NtUserGetClassLong(Window->Self, GCL_HICON);
-
+  if (!(Window = W32kGetWindowObject(hWnd)))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return NULL;
+  }
+  
   /* Send WM_NCPAINT */
   PaintUpdateNCRegion(Window, 0, UNC_UPDATE | UNC_IN_BEGINPAINT);
 
-  /* FIXME: Check the window is still valid. */
+  /* Check ifthe window is still valid. */
+  if (!W32kGetWindowObject(hWnd))
+  {
+    return 0;
+  }
 
+  /* retrieve update region */
   UpdateRegion = Window->UpdateRegion;
   Window->UpdateRegion = 0;
-  if (UpdateRegion != NULL ||
-      (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
+  if (UpdateRegion != NULL || (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT))
     {
       MsqDecPaintCountQueue(Window->MessageQueue);
     }
   Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
 
-  /* FIXME: Hide claret. */
+  /* FIXME: Hide caret. */
+
+  IsIcon = (Window->Style & WS_MINIMIZE) && W32kGetClassLong(Window, GCL_HICON);
 
   DcxFlags = DCX_INTERSECTRGN | DCX_WINDOWPAINT | DCX_USESTYLE;
   if (IsIcon)
     {
     DcxFlags |= DCX_WINDOW;
     }
-  if (NtUserGetClassLong(Window->Self, GCL_STYLE) & CS_PARENTDC)
+  if (W32kGetClassLong(Window, GCL_STYLE) & CS_PARENTDC)
     {
       /* Don't clip the output to the update region for CS_PARENTDC window */
       if ((HRGN) 1 < UpdateRegion)
@@ -962,21 +963,21 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 DWORD
 STDCALL
 NtUserInvalidateRect(
-  HWND Wnd,
+  HWND hWnd,
   CONST RECT *Rect,
   WINBOOL Erase)
 {
-  return PaintRedrawWindow(Wnd, Rect, 0, RDW_INVALIDATE | (Erase ? RDW_ERASE : 0), 0);
+  return NtUserRedrawWindow(hWnd, Rect, 0, RDW_INVALIDATE | (Erase ? RDW_ERASE : 0));
 }
 
 DWORD
 STDCALL
 NtUserInvalidateRgn(
-  HWND Wnd,
+  HWND hWnd,
   HRGN Rgn,
   WINBOOL Erase)
 {
-  return PaintRedrawWindow(Wnd, NULL, Rgn, RDW_INVALIDATE | (Erase ? RDW_ERASE : 0), 0);
+  return NtUserRedrawWindow(hWnd, NULL, Rgn, RDW_INVALIDATE | (Erase ? RDW_ERASE : 0));
 }
 
 BOOL
@@ -985,7 +986,7 @@ NtUserValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return PaintRedrawWindow(hWnd, NULL, hRgn, RDW_VALIDATE | RDW_NOCHILDREN, 0);
+  return NtUserRedrawWindow(hWnd, NULL, hRgn, RDW_VALIDATE | RDW_NOCHILDREN);
 }
 
 int
@@ -998,11 +999,11 @@ NtUserGetUpdateRgn(
   PWINDOW_OBJECT Window;
   int RegionType;
 
-  Window = W32kGetWindowObject(hWnd);
-  if (NULL == Window)
-    {
-      return ERROR;
-    }
+  if (!(Window = W32kGetWindowObject(hWnd)))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return ERROR;
+  }
     
   if (NULL == Window->UpdateRegion)
     {
@@ -1023,13 +1024,13 @@ NtUserGetUpdateRgn(
 			  Window->WindowRect.top - Window->ClientRect.top );
     }
 
-  W32kReleaseWindowObject(Window);
-
   if (bErase &&
       (SIMPLEREGION == RegionType || COMPLEXREGION == RegionType))
     {
-      PaintRedrawWindow(hWnd, NULL, NULL, RDW_ERASENOW | RDW_NOCHILDREN, 0);
+      PaintRedrawWindow(Window, NULL, NULL, RDW_ERASENOW | RDW_NOCHILDREN, 0);
     }
+  
+  W32kReleaseWindowObject(Window);
 
   return RegionType;
 }
