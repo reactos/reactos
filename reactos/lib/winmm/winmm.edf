@@ -1,5 +1,9 @@
 LIBRARY WINMM.DLL
 EXPORTS
+joyGetDevCapsA=joyGetDevCapsA@12
+joyGetNumDevs=joyGetNumDevs@0
+joyGetPosEx=joyGetPosEx@8
+mciSendCommandA=mciSendCommandA@16
 midiOutReset=midiOutReset@4
 midiOutClose=midiOutClose@4
 midiOutUnprepareHeader=midiOutUnprepareHeader@12
