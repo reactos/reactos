@@ -16,13 +16,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.10 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: palette.c,v 1.11 2003/08/28 12:35:59 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <win32k/debug.h>
+#include <win32k/debug1.h>
 #include <win32k/bitmaps.h>
 #include <win32k/color.h>
+#include <win32k/gdiobj.h>
 #include <debug.h>
 #include <include/palette.h>
 #include <include/object.h>
@@ -31,6 +33,7 @@
 static int           PALETTE_firstFree = 0; 
 static unsigned char PALETTE_freeList[256];
 
+#ifdef TODO
 static ColorShifts PALETTE_PRed   = {0,0,0};
 //static ColorShifts PALETTE_LRed   = {0,0,0};
 static ColorShifts PALETTE_PGreen = {0,0,0};
@@ -39,6 +42,7 @@ static ColorShifts PALETTE_PBlue  = {0,0,0};
 //static ColorShifts PALETTE_LBlue  = {0,0,0};
 static int PALETTE_Graymax        = 0;
 static int palette_size;
+#endif
 
 int PALETTE_PaletteFlags     = 0;
 PALETTEENTRY *COLOR_sysPal   = NULL;
@@ -50,6 +54,68 @@ int COLOR_max;
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID)
 {
   return COLOR_sysPal;
+}
+
+static BOOL FASTCALL
+PALETTE_InternalDelete(PPALGDI Palette)
+{
+  if (NULL != Palette->IndexedColors)
+    {
+      ExFreePool(Palette->IndexedColors);
+    }
+
+  return TRUE;
+}
+
+HPALETTE FASTCALL
+PALETTE_AllocPalette(ULONG Mode,
+                     ULONG NumColors,
+                     ULONG *Colors,
+                     ULONG Red,
+                     ULONG Green,
+                     ULONG Blue)
+{
+  HPALETTE NewPalette;
+  PPALGDI PalGDI;
+
+  NewPalette = (HPALETTE) GDIOBJ_AllocObj(sizeof(PALGDI), GDI_OBJECT_TYPE_PALETTE, (GDICLEANUPPROC) PALETTE_InternalDelete);
+  if (NULL == NewPalette)
+    {
+      return NULL;
+    }
+
+  PalGDI = PALETTE_LockPalette(NewPalette);
+  ASSERT( PalGDI );
+
+  PalGDI->Self = NewPalette;
+  PalGDI->Mode = Mode;
+
+  if (NULL != Colors)
+    {
+      PalGDI->IndexedColors = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY) * NumColors);
+      if (NULL == PalGDI->IndexedColors)
+	{
+	  PALETTE_UnlockPalette(NewPalette);
+	  PALETTE_FreePalette(NewPalette);
+	  return NULL;
+	}
+      RtlCopyMemory(PalGDI->IndexedColors, Colors, sizeof(PALETTEENTRY) * NumColors);
+    }
+
+  if (PAL_INDEXED == Mode)
+    {
+      PalGDI->NumColors = NumColors;
+    }
+  else if (PAL_BITFIELDS == Mode)
+    {
+      PalGDI->RedMask = Red;
+      PalGDI->GreenMask = Green;
+      PalGDI->BlueMask = Blue;
+    }
+
+  PALETTE_UnlockPalette(NewPalette);
+
+  return NewPalette;
 }
 
 // Create the system palette
@@ -78,7 +144,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
   hpalette = NtGdiCreatePalette(palPtr);
   ExFreePool(palPtr);
 
-  palObj = (PPALOBJ)AccessUserObject((ULONG)hpalette);
+  palObj = (PPALOBJ)PALETTE_LockPalette(hpalette);
   if (palObj)
   {
     if (!(palObj->mapping = ExAllocatePool(NonPagedPool, sizeof(int) * 20)))
@@ -86,7 +152,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
       DbgPrint("Win32k: Can not create palette mapping -- out of memory!");
       return FALSE;
     }
-//      GDI_ReleaseObj( hpalette );
+    PALETTE_UnlockPalette(hpalette);
   }
 
 /*  palette_size = visual->map_entries; */
@@ -114,6 +180,7 @@ static void FASTCALL PALETTE_FormatSystemPalette(void)
   PALETTE_freeList[j] = 0;
 }
 
+#ifdef TODO
 /* Ported from WINE 20020804 (graphics\x11drv\palette.c) */
 static int FASTCALL SysPaletteLookupPixel( COLORREF col, BOOL skipReserved )
 {
@@ -168,6 +235,7 @@ UINT WINAPI GetNearestPaletteIndex(
   DPRINT("(%04x,%06lx): returning %d\n", hpalette, color, index );
   return index;
 }
+#endif
 
 VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
 {
@@ -280,6 +348,7 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
   return iRemapped;
 }
 
+#ifdef TODO
 /* Return the physical color closest to 'color'. */
 /* Ported from WINE 20020804 (graphics\x11drv\palette.c) */
 INT FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color)
@@ -415,4 +484,6 @@ INT FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color)
 //    GDI_ReleaseObj( hPal );
     return index;
 }
+#endif
+
 /* EOF */

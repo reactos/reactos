@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.22 2003/08/24 21:45:40 fireball Exp $ */
+/* $Id: color.c,v 1.23 2003/08/28 12:35:59 gvg Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -167,20 +167,22 @@ HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
 {
   PPALOBJ  PalObj;
 
-  HPALETTE NewPalette = (HPALETTE)EngCreatePalette(
+  HPALETTE NewPalette = PALETTE_AllocPalette(
 	  PAL_INDEXED,
 	  palette->palNumEntries,
 	  (PULONG)palette->palPalEntry,
 	  0, 0, 0);
   ULONG size;
 
-  PalObj = (PPALOBJ)AccessUserObject ( (ULONG)NewPalette );
+  PalObj = (PPALOBJ) PALETTE_LockPalette(NewPalette);
 
   size = sizeof(LOGPALETTE) + (palette->palNumEntries * sizeof(PALETTEENTRY));
   PalObj->logpalette = ExAllocatePool(NonPagedPool, size);
   memcpy(PalObj->logpalette, palette, size);
   PALETTE_ValidateFlags(PalObj->logpalette->palPalEntry, PalObj->logpalette->palNumEntries);
   PalObj->logicalToSystem = NULL;
+
+  PALETTE_UnlockPalette(NewPalette);
 
   return NewPalette;
 }
@@ -198,21 +200,22 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC  hDC,
   PDC dc;
   PPALOBJ palObj;
 
-  if( (dc = DC_LockDc(hDC) ) )
-  {
-    HPALETTE hpal = (dc->w.hPalette)? dc->w.hPalette : NtGdiGetStockObject(DEFAULT_PALETTE);
-    palObj = (PPALOBJ)AccessUserObject((ULONG)hpal);
-    if (!palObj) {
-//      GDI_ReleaseObj(hdc);
-      return nearest;
-    }
+  dc = DC_LockDc(hDC);
+  if (NULL != dc)
+    {
+      HPALETTE hpal = (dc->w.hPalette) ? dc->w.hPalette : NtGdiGetStockObject(DEFAULT_PALETTE);
+      palObj = (PPALOBJ) PALETTE_LockPalette(hpal);
+      if (!palObj)
+	{
+	  DC_UnlockDc(hDC);
+	  return nearest;
+	}
 
-    nearest = COLOR_LookupNearestColor(palObj->logpalette->palPalEntry,
-                                       palObj->logpalette->palNumEntries, Color);
-	// FIXME: release hpal!!
-//    GDI_ReleaseObj( hpal );
-    DC_UnlockDc( hDC );
-  }
+      nearest = COLOR_LookupNearestColor(palObj->logpalette->palPalEntry,
+                                         palObj->logpalette->palNumEntries, Color);
+      PALETTE_UnlockPalette(hpal);
+      DC_UnlockDc( hDC );
+    }
 
   return nearest;
 }
@@ -220,15 +223,15 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC  hDC,
 UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
-  PPALOBJ     palObj = (PPALOBJ)AccessUserObject((ULONG)hpal);
+  PPALOBJ palObj = (PPALOBJ) PALETTE_LockPalette(hpal);
   UINT index  = 0;
 
-  if( palObj )
-  {
-    // Return closest match for the given RGB color
-    index = COLOR_PaletteLookupPixel(palObj->logpalette->palPalEntry, palObj->logpalette->palNumEntries, NULL, Color, FALSE);
-//    GDI_ReleaseObj( hpalette );
-  }
+  if (NULL != palObj)
+    {
+      /* Return closest match for the given RGB color */
+      index = COLOR_PaletteLookupPixel(palObj->logpalette->palPalEntry, palObj->logpalette->palNumEntries, NULL, Color, FALSE);
+      PALETTE_UnlockPalette(hpal);
+    }
 
   return index;
 }
@@ -241,25 +244,35 @@ UINT STDCALL NtGdiGetPaletteEntries(HPALETTE  hpal,
   PPALOBJ palPtr;
   UINT numEntries;
 
-  palPtr = (PPALOBJ)AccessUserObject((ULONG)hpal);
-  if (!palPtr) return 0;
-
-  numEntries = palPtr->logpalette->palNumEntries;
-  if (StartIndex + Entries > numEntries) Entries = numEntries - StartIndex;
-  if (pe)
-  {
-    if (StartIndex >= numEntries)
+  palPtr = (PPALOBJ) PALETTE_LockPalette(hpal);
+  if (NULL == palPtr)
     {
-//      GDI_ReleaseObj( hpalette );
       return 0;
     }
-    memcpy(pe, &palPtr->logpalette->palPalEntry[StartIndex], Entries * sizeof(PALETTEENTRY));
-    for(numEntries = 0; numEntries < Entries ; numEntries++)
-      if (pe[numEntries].peFlags & 0xF0)
-        pe[numEntries].peFlags = 0;
-  }
 
-//  GDI_ReleaseObj( hpalette );
+  numEntries = palPtr->logpalette->palNumEntries;
+  if (numEntries < StartIndex + Entries)
+    {
+      Entries = numEntries - StartIndex;
+    }
+  if (NULL != pe)
+    {
+      if (numEntries <= StartIndex)
+	{
+	  PALETTE_UnlockPalette(hpal);
+	  return 0;
+	}
+      memcpy(pe, &palPtr->logpalette->palPalEntry[StartIndex], Entries * sizeof(PALETTEENTRY));
+      for (numEntries = 0; numEntries < Entries; numEntries++)
+	{
+	  if (pe[numEntries].peFlags & 0xF0)
+	    {
+	      pe[numEntries].peFlags = 0;
+	    }
+	}
+    }
+
+  PALETTE_UnlockPalette(hpal);
   return Entries;
 }
 
@@ -320,7 +333,7 @@ A logical palette is a buffer between color-intensive applications and the syste
    the dc palette.
 -- If it is an RGB palette, then an XLATEOBJ is created between the RGB values and the dc palette.
 */
-UINT STDCALL NtGdiRealizePalette(HDC  hDC)
+UINT STDCALL NtGdiRealizePalette(HDC hDC)
 {
   PPALOBJ palPtr, sysPtr;
   PPALGDI palGDI, sysGDI;
@@ -334,12 +347,12 @@ UINT STDCALL NtGdiRealizePalette(HDC  hDC)
   if (!dc)
   	return 0;
 
-  palPtr = (PPALOBJ)AccessUserObject((ULONG)dc->w.hPalette);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG)dc->Surface);
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
-  sysPtr = (PPALOBJ)AccessUserObject((ULONG)systemPalette);
-  palGDI = (PPALGDI)AccessInternalObject((ULONG)dc->w.hPalette);
-  sysGDI = (PPALGDI)AccessInternalObject((ULONG)systemPalette);
+  palGDI = PALETTE_LockPalette(dc->w.hPalette);
+  palPtr = (PPALOBJ) palGDI;
+  sysGDI = PALETTE_LockPalette(systemPalette);
+  sysPtr = (PPALOBJ) sysGDI;
 
   // Step 1: Create mapping of system palette\DC palette
   realized = PALETTE_SetMapping(palPtr, 0, palPtr->logpalette->palNumEntries,
@@ -368,7 +381,8 @@ UINT STDCALL NtGdiRealizePalette(HDC  hDC)
     palPtr->logicalToSystem = IntEngCreateXlate(sysGDI->Mode, palGDI->Mode, systemPalette, dc->w.hPalette);
   }
 
-//  GDI_ReleaseObj(dc->w.hPalette);
+  PALETTE_UnlockPalette(systemPalette);
+  PALETTE_UnlockPalette(dc->w.hPalette);
   DC_UnlockDc(hDC);
 
   return realized;
@@ -434,14 +448,26 @@ HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
 {
   PDC dc;
   HPALETTE oldPal;
+  PPALGDI PalGDI;
 
   // FIXME: mark the palette as a [fore\back]ground pal
   dc = DC_LockDc(hDC);
-  if( dc ){
-  	oldPal = dc->w.hPalette;
-  	dc->w.hPalette = hpal;
-  	DC_UnlockDc( hDC );
-  }
+  if (NULL != dc)
+    {
+      /* Check if this is a valid palette handle */
+      PalGDI = PALETTE_LockPalette(hpal);
+      if (NULL != PalGDI)
+	{
+	  PALETTE_UnlockPalette(hpal);
+	  oldPal = dc->w.hPalette;
+	  dc->w.hPalette = hpal;
+	}
+      else
+	{
+	  oldPal = NULL;
+	}
+      DC_UnlockDc(hDC);
+    }
 
   return oldPal;
 }
@@ -460,21 +486,25 @@ UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
   PPALOBJ palPtr;
   WORD numEntries;
 
-  palPtr = (PPALOBJ)AccessUserObject((ULONG)hpal);
+  palPtr = (PPALOBJ)PALETTE_LockPalette(hpal);
   if (!palPtr) return 0;
 
   numEntries = palPtr->logpalette->palNumEntries;
   if (Start >= numEntries)
-  {
-//    GDI_ReleaseObj( hpalette );
-    return 0;
-  }
-  if (Start + Entries > numEntries) Entries = numEntries - Start;
+    {
+      PALETTE_UnlockPalette(hpal);
+      return 0;
+    }
+  if (numEntries < Start + Entries)
+    {
+      Entries = numEntries - Start;
+    }
   memcpy(&palPtr->logpalette->palPalEntry[Start], pe, Entries * sizeof(PALETTEENTRY));
   PALETTE_ValidateFlags(palPtr->logpalette->palPalEntry, palPtr->logpalette->palNumEntries);
   ExFreePool(palPtr->logicalToSystem);
   palPtr->logicalToSystem = NULL;
-//  GDI_ReleaseObj( hpalette );
+  PALETTE_UnlockPalette(hpal);
+
   return Entries;
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.16 2003/07/11 15:59:37 royce Exp $
+/* $Id: palette.c,v 1.17 2003/08/28 12:35:59 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,6 +29,7 @@
 
 #include <ddk/winddi.h>
 #include <include/object.h>
+#include <include/palette.h>
 #include "handle.h"
 
 #define NDEBUG
@@ -45,36 +46,7 @@ EngCreatePalette(ULONG Mode,
 		 ULONG Green,
 		 ULONG Blue)
 {
-  HPALETTE NewPalette;
-  PALGDI *PalGDI;
-
-  NewPalette = (HPALETTE)CreateGDIHandle(sizeof(PALGDI), sizeof(PALOBJ));
-  if( !ValidEngHandle( NewPalette ) )
-	return 0;
-
-  PalGDI = (PALGDI*) AccessInternalObject( (ULONG) NewPalette );
-  ASSERT( PalGDI );
-
-  PalGDI->Mode = Mode;
-
-  if(Colors != NULL)
-  {
-    PalGDI->IndexedColors = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY) * NumColors);
-    RtlCopyMemory(PalGDI->IndexedColors, Colors, sizeof(PALETTEENTRY) * NumColors);
-  }
-
-  if(Mode==PAL_INDEXED)
-  {
-    PalGDI->NumColors     = NumColors;
-  } else
-  if(Mode==PAL_BITFIELDS)
-  {
-    PalGDI->RedMask   = Red;
-    PalGDI->GreenMask = Green;
-    PalGDI->BlueMask  = Blue;
-  }
-
-  return NewPalette;
+  return PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
 }
 
 /*
@@ -83,8 +55,7 @@ EngCreatePalette(ULONG Mode,
 BOOL STDCALL
 EngDeletePalette(IN HPALETTE Palette)
 {
-  FreeGDIHandle((ULONG)Palette);
-  return TRUE;
+  return PALETTE_FreePalette(Palette);
 }
 
 /*

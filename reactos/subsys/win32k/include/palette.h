@@ -13,6 +13,28 @@ typedef struct {
     int max;
 } ColorShifts;
 
+typedef struct _PALGDI {
+  PALOBJ		PalObj;
+
+  HPALETTE Self;
+  ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
+  ULONG NumColors;
+  ULONG *IndexedColors;
+  ULONG RedMask;
+  ULONG GreenMask;
+  ULONG BlueMask;
+} PALGDI, *PPALGDI;
+
+HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
+                                       ULONG NumColors,
+                                       ULONG *Colors,
+                                       ULONG Red,
+                                       ULONG Green,
+                                       ULONG Blue);
+#define  PALETTE_FreePalette(hPalette)  GDIOBJ_FreeObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE, GDIOBJFLAG_DEFAULT)
+#define  PALETTE_LockPalette(hPalette) ((PPALGDI)GDIOBJ_LockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE))
+#define  PALETTE_UnlockPalette(hPalette) GDIOBJ_UnlockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE)
+
 HPALETTE FASTCALL PALETTE_Init (VOID);
 VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
 INT      STDCALL  PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly);

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.30 2003/08/25 23:24:02 rcampbell Exp $
+ * $Id: dib.c,v 1.31 2003/08/28 12:35:59 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -32,6 +32,7 @@
 #include <include/dib.h>
 #include <internal/safe.h>
 #include <include/surface.h>
+#include <include/palette.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -48,7 +49,7 @@ UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
 
   if (!(dc = (PDC)AccessUserObject((ULONG)hDC))) return 0;
 
-  if (!(palette = (PPALOBJ)AccessUserObject((ULONG)dc->DevInfo->hpalDefault)))
+  if (!(palette = (PPALOBJ)PALETTE_LockPalette((ULONG)dc->DevInfo->hpalDefault)))
   {
 //    GDI_ReleaseObj( hdc );
     return 0;
@@ -77,7 +78,7 @@ UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
     Entries = 0;
   }
 
-//  GDI_ReleaseObj(dc->DevInfo->hpalDefault);
+  PALETTE_UnlockPalette(dc->DevInfo->hpalDefault);
 //  GDI_ReleaseObj(hdc);
 
   return Entries;
@@ -156,9 +157,10 @@ NtGdiSetDIBits(
   SourceSurf = (PSURFOBJ)AccessUserObject((ULONG)SourceBitmap);
 
   // Destination palette obtained from the hDC
-  hDCPalette = (PPALGDI)AccessInternalObject((ULONG)dc->DevInfo->hpalDefault);
+  hDCPalette = PALETTE_LockPalette(dc->DevInfo->hpalDefault);
   DDB_Palette_Type = hDCPalette->Mode;
   DDB_Palette = dc->DevInfo->hpalDefault;
+  PALETTE_UnlockPalette(dc->DevInfo->hpalDefault);
 
   // Source palette obtained from the BITMAPINFO
   DIB_Palette = BuildDIBPalette ( (PBITMAPINFO)bmi, (PINT)&DIB_Palette_Type );
@@ -186,7 +188,7 @@ NtGdiSetDIBits(
 
   // Clean up
   EngDeleteXlate(XlateObj);
-  EngDeletePalette(DIB_Palette);
+  PALETTE_FreePalette(DIB_Palette);
   EngDeleteSurface(SourceBitmap);
   EngDeleteSurface(DestBitmap);
 
@@ -354,11 +356,12 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
 	      BITMAPOBJ_UnlockBitmap(hBitmap);
 	      return 0;
 	    }
-	  PalGdi = (PPALGDI) AccessInternalObject((ULONG) DCObj->w.hPalette);
+	  PalGdi = PALETTE_LockPalette(DCObj->w.hPalette);
 	  BitField = (DWORD *) ((char *) &InfoWithBitFields + InfoWithBitFields.Info.bmiHeader.biSize);
 	  BitField[0] = PalGdi->RedMask;
 	  BitField[1] = PalGdi->GreenMask;
 	  BitField[2] = PalGdi->BlueMask;
+	  PALETTE_UnlockPalette(DCObj->w.hPalette);
 	  InfoSize = InfoWithBitFields.Info.bmiHeader.biSize + 3 * sizeof(DWORD);
 	  DC_UnlockDc(hDC);
 	}
@@ -872,30 +875,33 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   DWORD *lpIndex;
   PPALOBJ palObj;
 
-  palObj = AccessUserObject ( (ULONG)dc->DevInfo->hpalDefault );
+  palObj = (PPALOBJ) PALETTE_LockPalette(dc->DevInfo->hpalDefault);
 
-  if (palObj == NULL)
-  {
+  if (NULL == palObj)
+    {
 //      RELEASEDCINFO(hDC);
-    return NULL;
-  }
+      return NULL;
+    }
 
   nNumColors = 1 << lpbmi->bmiHeader.biBitCount;
   if (lpbmi->bmiHeader.biClrUsed)
-    nNumColors = min(nNumColors, lpbmi->bmiHeader.biClrUsed);
+    {
+      nNumColors = min(nNumColors, lpbmi->bmiHeader.biClrUsed);
+    }
 
   lpRGB = (RGBQUAD *)ExAllocatePool(NonPagedPool, sizeof(RGBQUAD) * nNumColors);
   lpIndex = (DWORD *)&lpbmi->bmiColors[0];
 
-  for (i=0; i<nNumColors; i++)
-  {
-    lpRGB[i].rgbRed = palObj->logpalette->palPalEntry[*lpIndex].peRed;
-    lpRGB[i].rgbGreen = palObj->logpalette->palPalEntry[*lpIndex].peGreen;
-    lpRGB[i].rgbBlue = palObj->logpalette->palPalEntry[*lpIndex].peBlue;
-    lpIndex++;
-  }
+  for (i = 0; i < nNumColors; i++)
+    {
+      lpRGB[i].rgbRed = palObj->logpalette->palPalEntry[*lpIndex].peRed;
+      lpRGB[i].rgbGreen = palObj->logpalette->palPalEntry[*lpIndex].peGreen;
+      lpRGB[i].rgbBlue = palObj->logpalette->palPalEntry[*lpIndex].peBlue;
+      lpIndex++;
+    }
 //    RELEASEDCINFO(hDC);
-//    RELEASEPALETTEINFO(hPalette);
+  PALETTE_UnlockPalette(dc->DevInfo->hpalDefault);
+
   return lpRGB;
 }
 
@@ -908,14 +914,14 @@ DIBColorTableToPaletteEntries (
 {
   ULONG i;
 
-  for(i=0; i<ColorCount; i++)
-  {
-    palEntries->peRed   = DIBColorTable->rgbRed;
-    palEntries->peGreen = DIBColorTable->rgbGreen;
-    palEntries->peBlue  = DIBColorTable->rgbBlue;
-    palEntries++;
-    DIBColorTable++;
-  }
+  for (i = 0; i < ColorCount; i++)
+    {
+      palEntries->peRed   = DIBColorTable->rgbRed;
+      palEntries->peGreen = DIBColorTable->rgbGreen;
+      palEntries->peBlue  = DIBColorTable->rgbBlue;
+      palEntries++;
+      DIBColorTable++;
+    }
 
   return palEntries;
 }
@@ -932,18 +938,24 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
   bits = bmi->bmiHeader.biBitCount;
 
   // Determine paletteType from Bits Per Pixel
-  if(bits <= 8)
-  {
-    *paletteType = PAL_INDEXED;
-  } else
-  if(bits < 24)
-  {
-    *paletteType = PAL_BITFIELDS;
-  } else {
-    *paletteType = PAL_RGB; // Would it be BGR, considering the BGR nature of the DIB color table?
-  }
+  if (bits <= 8)
+    {
+      *paletteType = PAL_INDEXED;
+    }
+  else if(bits < 24)
+    {
+      *paletteType = PAL_BITFIELDS;
+    }
+  else
+    {
+      *paletteType = PAL_RGB; // Would it be BGR, considering the BGR nature of the DIB color table?
+    }
 
+#ifdef TODO
   if (bmi->bmiHeader.biClrUsed == 0)
+#else
+  if (bmi->bmiHeader.biClrUsed == 0 && bmi->bmiHeader.biBitCount <= 8)
+#endif
     {
       ColorCount = 1 << bmi->bmiHeader.biBitCount;
     }
@@ -954,9 +966,10 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 
   palEntries = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY)*ColorCount);
   DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
-  hPal = EngCreatePalette ( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
+  hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
   ExFreePool(palEntries);
 
   return hPal;
 }
+
 /* EOF */

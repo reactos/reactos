@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.44 2003/08/20 07:45:02 gvg Exp $ */
+/* $Id: text.c,v 1.45 2003/08/28 12:35:59 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -36,6 +36,7 @@
 #include <include/inteng.h>
 #include <include/text.h>
 #include <include/eng.h>
+#include <include/palette.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -1056,6 +1057,7 @@ NtGdiTextOut(HDC  hDC,
   PTEXTOBJ TextObj;
   PPALGDI PalDestGDI;
   PXLATEOBJ XlateObj;
+  ULONG Mode;
 
   if( !dc )
 	return FALSE;
@@ -1105,8 +1107,10 @@ NtGdiTextOut(HDC  hDC,
   }
 
   // Create the brush
-  PalDestGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
-  XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+  PalDestGDI = PALETTE_LockPalette(dc->w.hPalette);
+  Mode = PalDestGDI->Mode;
+  PALETTE_UnlockPalette(dc->w.hPalette);
+  XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
   hBrush = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
   Brush = BRUSHOBJ_LockBrush(hBrush);
   EngDeleteXlate(XlateObj);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.74 2003/08/25 23:24:02 rcampbell Exp $
+/* $Id: dc.c,v 1.75 2003/08/28 12:35:59 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -43,6 +43,7 @@
 #include "../eng/handle.h"
 #include <include/inteng.h>
 #include <include/eng.h>
+#include <include/palette.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -362,6 +363,12 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
 
   DPRINT("Enabling PDev\n");
 
+#ifdef TODO
+PrimarySurface.DMW.dmBitsPerPel = 16;
+PrimarySurface.DMW.dmPelsWidth = 1024;
+PrimarySurface.DMW.dmPelsHeight = 768;
+PrimarySurface.DMW.dmDisplayFrequency = 60;
+#endif
   PrimarySurface.PDev =
     PrimarySurface.DriverFunctions.EnablePDev(&PrimarySurface.DMW,
 					     L"",
@@ -1251,6 +1258,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   COLORREF *ColorMap;
   ULONG NumColors, Index;
   HRGN hVisRgn;
+  USHORT Mode;
 
   if(!hDC || !hGDIObj) return NULL;
 
@@ -1268,11 +1276,13 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       objOrg = (HGDIOBJ)dc->w.hPen;
       dc->w.hPen = hGDIObj;
 
-      // Convert the color of the pen to the format of the DC
-      PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
-      if ( PalGDI )
+      /* Convert the color of the pen to the format of the DC */
+      PalGDI = PALETTE_LockPalette(dc->w.hPalette);
+      if (NULL != PalGDI)
       {
-	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+	Mode = PalGDI->Mode;
+	PALETTE_UnlockPalette(dc->w.hPalette);
+	XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
 	ASSERT ( XlateObj );
 	pen = PENOBJ_LockPen(dc->w.hPen);
 	if( pen )
@@ -1288,11 +1298,13 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       objOrg = (HGDIOBJ)dc->w.hBrush;
       dc->w.hBrush = (HBRUSH) hGDIObj;
 
-      // Convert the color of the brush to the format of the DC
-      PalGDI = (PPALGDI)AccessInternalObject((ULONG) dc->w.hPalette);
-      if( PalGDI )
+      /* Convert the color of the brush to the format of the DC */
+      PalGDI = PALETTE_LockPalette(dc->w.hPalette);
+      if (NULL != PalGDI)
       {
-	XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+	Mode = PalGDI->Mode;
+	PALETTE_UnlockPalette(dc->w.hPalette);
+	XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
 	ASSERT(XlateObj);
 	brush = BRUSHOBJ_LockBrush(dc->w.hBrush);
 	if( brush )
@@ -1342,16 +1354,16 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
                                   pb->ColorMap[Index].rgbGreen,
                                   pb->ColorMap[Index].rgbBlue);
           }
-          dc->w.hPalette = EngCreatePalette(PAL_INDEXED, NumColors, (ULONG *) ColorMap, 0, 0, 0);
+          dc->w.hPalette = PALETTE_AllocPalette(PAL_INDEXED, NumColors, (ULONG *) ColorMap, 0, 0, 0);
           ExFreePool(ColorMap);
         }
         else if ( 16 == pb->dib->dsBmih.biBitCount )
         {
-          dc->w.hPalette = EngCreatePalette(PAL_BITFIELDS, pb->dib->dsBmih.biClrUsed, NULL, 0x7c00, 0x03e0, 0x001f);
+          dc->w.hPalette = PALETTE_AllocPalette(PAL_BITFIELDS, pb->dib->dsBmih.biClrUsed, NULL, 0x7c00, 0x03e0, 0x001f);
         }
         else if(pb->dib->dsBmih.biBitCount >= 24)
         {
-          dc->w.hPalette = EngCreatePalette(PAL_RGB, pb->dib->dsBmih.biClrUsed, NULL, 0, 0, 0);
+          dc->w.hPalette = PALETTE_AllocPalette(PAL_RGB, pb->dib->dsBmih.biClrUsed, NULL, 0, 0, 0);
         }
       }
       else

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.22 2003/08/17 17:32:58 royce Exp $
+/* $Id: xlate.c,v 1.23 2003/08/28 12:35:59 gvg Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -34,6 +34,7 @@
 #include <ddk/ntddvid.h>
 
 #include <include/object.h>
+#include <include/palette.h>
 #include "handle.h"
 
 #define NDEBUG
@@ -223,11 +224,15 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 
   if (NULL != PaletteSource)
   {
-    SourcePalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteSource);
+    SourcePalGDI = PALETTE_LockPalette(PaletteSource);
   }
-  if (NULL != PaletteDest)
+  if (PaletteDest == PaletteSource)
   {
-    DestPalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteDest);
+    DestPalGDI = SourcePalGDI;
+  }
+  else if (NULL != PaletteDest)
+  {
+    DestPalGDI = PALETTE_LockPalette(PaletteDest);
   }
 
   XlateObj->iSrcType = SourcePalType;
@@ -262,6 +267,14 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
       ((DestPalType == PAL_BGR) && (SourcePalType == PAL_BGR)) )
   {
     XlateObj->flXlate |= XO_TRIVIAL;
+    if (NULL != PaletteSource)
+    {
+      PALETTE_UnlockPalette(PaletteSource);
+    }
+    if (NULL != PaletteDest && PaletteDest != PaletteSource)
+    {
+      PALETTE_UnlockPalette(PaletteDest);
+    }
     return XlateObj;
   }
 
@@ -276,6 +289,14 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
       XlateObj->flXlate |= XO_TRIVIAL;
       }
     XlateGDI->UseShiftAndMask = TRUE;
+    if (NULL != PaletteSource)
+    {
+      PALETTE_UnlockPalette(PaletteSource);
+    }
+    if (NULL != PaletteDest && PaletteDest != PaletteSource)
+    {
+      PALETTE_UnlockPalette(PaletteDest);
+    }
     return XlateObj;
   }
 
@@ -312,9 +333,13 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 
         // Converting from indexed to RGB
 
+#ifdef TODO
         XLATEOBJ_cGetPalette(XlateObj, XO_SRCPALETTE,
                              SourcePalGDI->NumColors,
                              XlateGDI->translationTable);
+#else
+	RtlCopyMemory(XlateGDI->translationTable, SourcePalGDI->IndexedColors, sizeof(ULONG) * SourcePalGDI->NumColors);
+#endif
 	if (PAL_BITFIELDS == XlateObj->iDstType)
 	{
 	  for (i = 0; i < SourcePalGDI->NumColors; i++)
@@ -336,17 +361,30 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
       // function anyways if pulXlate is NULL and Dest is PAL_INDEXED
 
       // Converting from RGB to indexed
+#ifdef TODO
       XLATEOBJ_cGetPalette(XlateObj, XO_DESTPALETTE, DestPalGDI->NumColors, XlateGDI->translationTable);
+#else
+      RtlCopyMemory(XlateGDI->translationTable, DestPalGDI->IndexedColors, sizeof(ULONG) * DestPalGDI->NumColors);
+#endif
     }
   }
 
   // FIXME: Add support for XO_TO_MONO
+  if (NULL != PaletteSource)
+  {
+    PALETTE_UnlockPalette(PaletteSource);
+  }
+  if (NULL != PaletteDest && PaletteDest != PaletteSource)
+  {
+    PALETTE_UnlockPalette(PaletteDest);
+  }
+
   return XlateObj;
 }
 
 VOID FASTCALL EngDeleteXlate(XLATEOBJ *XlateObj)
 {
-  HPALETTE HXlate    = (HPALETTE)AccessHandleFromUserObject(XlateObj);
+  HANDLE HXlate    = (HANDLE)AccessHandleFromUserObject(XlateObj);
   XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObject((ULONG)HXlate);
 
   if(XlateGDI->translationTable!=NULL)
@@ -382,6 +420,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
 {
   PALGDI   *PalGDI;
   XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
+  ULONG Closest;
 
   // Return the original color if there's no color translation object
   if(!XlateObj) return Color;
@@ -400,10 +439,12 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
     // FIXME: won't work if destination isn't indexed
 
     // Extract the destination palette
-    PalGDI = (PALGDI*)AccessInternalObject((ULONG)XlateGDI->DestPal);
+    PalGDI = PALETTE_LockPalette(XlateGDI->DestPal);
 
     // Return closest match for the given color
-    return ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
+    Closest = ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
+    PALETTE_UnlockPalette(XlateGDI->DestPal);
+    return Closest;
   } else
   if(XlateObj->iSrcType == PAL_INDEXED)
   {
@@ -438,9 +479,11 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
     HPal = XlateGDI->DestPal;
   }
 
-  PalGDI = (PALGDI*)AccessInternalObject((ULONG)HPal);
+  PalGDI = PALETTE_LockPalette(HPal);
   RtlCopyMemory(OutPal, PalGDI->IndexedColors, sizeof(ULONG)*cPal);
+  PALETTE_UnlockPalette(HPal);
 
   return i;
 }
+
 /* EOF */

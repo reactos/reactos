@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.17 2003/08/12 20:08:45 royce Exp $
+/* $Id: objects.h,v 1.18 2003/08/28 12:35:59 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -90,18 +90,6 @@ typedef struct _FONTGDI {
   FT_Face face;
   TEXTMETRICW TextMetric;
 } FONTGDI, *PFONTGDI;
-
-typedef struct _PALGDI {
-  ENGOBJ 		Header;
-  PALOBJ		PalObj;
-
-  ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
-  ULONG NumColors;
-  ULONG *IndexedColors;
-  ULONG RedMask;
-  ULONG GreenMask;
-  ULONG BlueMask;
-} PALGDI, *PPALGDI;
 
 typedef struct _PATHGDI {
   ENGOBJ 		Header;
