@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.49 2003/06/19 19:01:01 gvg Exp $
+/* $Id: mminit.c,v 1.50 2003/07/05 18:10:50 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -42,13 +42,20 @@ static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
 extern unsigned int _bss_end__;
 
 static MEMORY_AREA* kernel_text_desc = NULL;
+static MEMORY_AREA* kernel_map_desc = NULL;
 static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
 static MEMORY_AREA* kernel_shared_data_desc = NULL;
+static MEMORY_AREA* MiKernelMapDescriptor = NULL;
 static MEMORY_AREA* MiPagedPoolDescriptor = NULL;
 
 PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
+
+PVOID MiNonPagedPoolStart;
+ULONG MiNonPagedPoolLength;
+PVOID MiKernelMapStart;
+ULONG MiKernelMapLength;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -84,13 +91,37 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    DPRINT("MmInitVirtualMemory(%x, %x)\n",LastKernelAddress, KernelLength);
    
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
-   
+
    MmInitMemoryAreas();
-   ExInitNonPagedPool(LastKernelAddress + PAGE_SIZE);
+
+   /* Don't change the start of kernel map. Pte's must always exist for this region. */
+   MiKernelMapStart = (PVOID)LastKernelAddress + PAGE_SIZE;
+   MiKernelMapLength = MM_KERNEL_MAP_SIZE;
+
+   MiNonPagedPoolStart = MiKernelMapStart + MiKernelMapLength + PAGE_SIZE;
+   MiNonPagedPoolLength = MM_NONPAGED_POOL_SIZE;
+
+   MmPagedPoolBase = MiNonPagedPoolStart + MiNonPagedPoolLength + PAGE_SIZE;
+   MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+
+
+   MiInitKernelMap();
+   MiInitializeNonPagedPool();
 
    /*
     * Setup the system area descriptor list
     */
+   BaseAddress = (PVOID)0xf0000000;
+   MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      0x400000,
+		      0,
+		      &kernel_map_desc,
+		      FALSE,
+		      FALSE);
+
    BaseAddress = (PVOID)KERNEL_BASE;
    Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
@@ -108,7 +139,6 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &kernel_text_desc,
 		      FALSE,
 		      FALSE);
-
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
             PAGE_ROUND_UP(((ULONG)&_text_end__));
    ParamLength = ParamLength - Length;
@@ -129,9 +159,8 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &kernel_data_desc,
 		      FALSE,
 		      FALSE);
-   
+
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_bss_end__));
-//   Length = ParamLength;
    Length = LastKernelAddress - (ULONG)BaseAddress;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
@@ -142,33 +171,40 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &kernel_param_desc,
 		      FALSE,
 		      FALSE);
-
-   BaseAddress = (PVOID)(LastKernelAddress + PAGE_SIZE);
-   Length = NONPAGED_POOL_SIZE;
+   
+   BaseAddress = MiNonPagedPoolStart;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_SYSTEM,
 		      &BaseAddress,
-		      Length,
+		      MiNonPagedPoolLength,
 		      0,
 		      &kernel_pool_desc,
 		      FALSE,
 		      FALSE);
 
-   MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-   BaseAddress = (PVOID)(LastKernelAddress + PAGE_SIZE + NONPAGED_POOL_SIZE +
-			 PAGE_SIZE);
-   MmPagedPoolBase = BaseAddress;
-   Length = MM_PAGED_POOL_SIZE;
-   MmCreateMemoryArea(NULL,
+   BaseAddress = MiKernelMapStart;
+   Status = MmCreateMemoryArea(NULL,
+		      MmGetKernelAddressSpace(),
+		      MEMORY_AREA_SYSTEM,
+		      &BaseAddress,
+		      MiKernelMapLength,
+		      0,
+		      &MiKernelMapDescriptor,
+		      FALSE,
+		      FALSE);
+   
+   BaseAddress = MmPagedPoolBase;
+   Status = MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_PAGED_POOL,
 		      &BaseAddress,
-		      Length,
+		      MmPagedPoolSize,
 		      0,
 		      &MiPagedPoolDescriptor,
 		      FALSE,
 		      FALSE);
+
    MmInitializePagedPool();
 
    /*

@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.66 2003/06/27 21:35:05 hbirr Exp $
+/* $Id: npool.c,v 1.67 2003/07/05 18:10:50 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -28,7 +28,7 @@
 //#define ENABLE_VALIDATE_POOL
 
 /* Enable tracking of statistics about the tagged blocks in the pool */
-//#define TAG_STATISTICS_TRACKING
+#define TAG_STATISTICS_TRACKING
 
 /* 
  * Put each block in its own range of pages and position the block at the
@@ -49,6 +49,19 @@
 #define POOL_TRACE(args...)
 #endif
 
+/* avl types ****************************************************************/
+
+/* FIXME:
+ *   This declarations should be moved into a separate header file.
+ */
+
+typedef struct _NODE
+{
+  struct _NODE* link[2];
+  struct _NODE* parent;
+  signed char balance;
+} NODE, *PNODE;
+
 /* TYPES *******************************************************************/
 
 #define BLOCK_HDR_USED_MAGIC (0xdeadbeef)
@@ -62,9 +75,11 @@ typedef struct _BLOCK_HDR
   ULONG Magic;
   ULONG Size;
   LIST_ENTRY ListEntry;
+  LIST_ENTRY AddressList;
+  LIST_ENTRY TagListEntry;
+  NODE Node;
   ULONG Tag;
   PVOID Caller;
-  struct _BLOCK_HDR* tag_next;
   BOOLEAN Dumped;
 } BLOCK_HDR;
 
@@ -75,20 +90,21 @@ ExFreeWholePageBlock(PVOID Addr);
 
 /* GLOBALS *****************************************************************/
 
-/*
- * Memory managment initalized symbol for the base of the pool
- */
-static unsigned int kernel_pool_base = 0;
+extern PVOID MiNonPagedPoolStart;
+extern ULONG MiNonPagedPoolLength;
+static ULONG MiCurrentNonPagedPoolLength = 0;
 
 /*
  * Head of the list of free blocks
  */
-static LIST_ENTRY FreeBlockListHead;
+static PNODE FreeBlockListRoot = NULL;
 
 /*
  * Head of the list of in use block
  */
 static LIST_ENTRY UsedBlockListHead;
+
+static LIST_ENTRY AddressListHead;
 
 #ifndef WHOLE_PAGE_ALLOCATIONS
 /*
@@ -128,10 +144,565 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free);
 
 #ifdef TAG_STATISTICS_TRACKING
 #define TAG_HASH_TABLE_SIZE       (1024)
-static BLOCK_HDR* tag_hash_table[TAG_HASH_TABLE_SIZE];
+static LIST_ENTRY tag_hash_table[TAG_HASH_TABLE_SIZE];
 #endif /* TAG_STATISTICS_TRACKING */
 
-/* FUNCTIONS ***************************************************************/
+/* avl helper functions ****************************************************/
+
+void DumpFreeBlockNode(PNODE p)
+{
+  static int count = 0;
+  BLOCK_HDR* blk;
+
+  count++;
+
+  if (p)
+    {
+      DumpFreeBlockNode(p->link[0]);
+      blk = CONTAINING_RECORD(p, BLOCK_HDR, Node);
+      DbgPrint("%08x %8d (%d)\n", blk, blk->Size, count);
+      DumpFreeBlockNode(p->link[1]);
+    }
+
+  count--;
+}
+void DumpFreeBlockTree(void)
+{
+  DbgPrint("--- Begin tree ------------------\n");
+  DbgPrint("%08x\n", CONTAINING_RECORD(FreeBlockListRoot, BLOCK_HDR, Node));
+  DumpFreeBlockNode(FreeBlockListRoot);
+  DbgPrint("--- End tree --------------------\n");
+}
+
+int compare_node(PNODE p1, PNODE p2)
+{
+  BLOCK_HDR* blk1 = CONTAINING_RECORD(p1, BLOCK_HDR, Node);
+  BLOCK_HDR* blk2 = CONTAINING_RECORD(p2, BLOCK_HDR, Node);
+
+  if (blk1->Size == blk2->Size)
+    {
+      if (blk1 < blk2)
+        {
+	  return -1;
+        }
+      if (blk1 > blk2)
+        {
+	  return 1;
+	}
+    }
+  else
+    {
+      if (blk1->Size < blk2->Size)
+        {
+          return -1;
+        }
+      if (blk1->Size > blk2->Size)
+        {
+          return 1;
+        }
+    }
+  return 0;
+
+}
+
+int compare_value(PVOID value, PNODE p)
+{
+  BLOCK_HDR* blk = CONTAINING_RECORD(p, BLOCK_HDR, Node);
+  ULONG v = *(PULONG)value;
+
+  if (v < blk->Size)
+    {
+      return -1;
+    }
+  if (v > blk->Size)
+    {
+      return 1;
+    }
+  return 0;
+}
+
+/* avl functions **********************************************************/
+
+/* FIXME:
+ *   The avl functions should be moved into a separate file.
+ */
+
+/* The avl_insert and avl_remove are based on libavl (library for manipulation of binary trees). */
+
+void avl_insert (PNODE * root, PNODE n, int (*compare)(PNODE, PNODE))
+{
+  PNODE y;     /* Top node to update balance factor, and parent. */
+  PNODE p, q;  /* Iterator, and parent. */
+  PNODE w;     /* New root of rebalanced subtree. */
+  int dir;     /* Direction to descend. */
+
+  n->link[0] = n->link[1] = n->parent = NULL;
+  n->balance = 0;
+
+  y = *root;
+  for (q = NULL, p = *root; p != NULL; q = p, p = p->link[dir])
+    {
+      dir = compare(n, p) > 0;
+      if (p->balance != 0)
+        {
+          y = p;
+	}
+    }
+
+  n->parent = q;
+  if (q != NULL)
+    {
+      q->link[dir] = n;
+    }
+  else
+    {
+      *root = n;
+    }
+
+  if (*root == n)
+    {
+      return;
+    }
+
+  for (p = n; p != y; p = q)
+    {
+      q = p->parent;
+      dir = q->link[0] != p;
+      if (dir == 0)
+        {
+          q->balance--;
+	}
+      else
+        {
+          q->balance++;
+	}
+    }
+
+  if (y->balance == -2)
+    {
+      PNODE x = y->link[0];
+      if (x->balance == -1)
+        {
+          w = x;
+          y->link[0] = x->link[1];
+          x->link[1] = y;
+          x->balance = y->balance = 0;
+          x->parent = y->parent;
+          y->parent = x;
+          if (y->link[0] != NULL)
+	    {
+              y->link[0]->parent = y;
+	    }
+        }
+      else
+        {
+          assert (x->balance == +1);
+          w = x->link[1];
+          x->link[1] = w->link[0];
+          w->link[0] = x;
+          y->link[0] = w->link[1];
+          w->link[1] = y;
+          if (w->balance == -1)
+	    {
+              x->balance = 0;
+	      y->balance = +1;
+	    }
+          else if (w->balance == 0)
+	    {
+              x->balance = y->balance = 0;
+	    }
+          else /* |w->pavl_balance == +1| */
+	    {
+              x->balance = -1;
+	      y->balance = 0;
+	    }
+          w->balance = 0;
+          w->parent = y->parent;
+          x->parent = y->parent = w;
+          if (x->link[1] != NULL)
+	    {
+              x->link[1]->parent = x;
+	    }
+          if (y->link[0] != NULL)
+	    {
+              y->link[0]->parent = y;
+	    }
+        }
+    }
+  else if (y->balance == +2)
+    {
+      PNODE x = y->link[1];
+      if (x->balance == +1)
+        {
+          w = x;
+          y->link[1] = x->link[0];
+          x->link[0] = y;
+          x->balance = y->balance = 0;
+          x->parent = y->parent;
+          y->parent = x;
+          if (y->link[1] != NULL)
+	    {
+              y->link[1]->parent = y;
+	    }
+        }
+      else
+        {
+          assert (x->balance == -1);
+          w = x->link[0];
+          x->link[0] = w->link[1];
+          w->link[1] = x;
+          y->link[1] = w->link[0];
+          w->link[0] = y;
+          if (w->balance == 1)
+	    {
+              x->balance = 0;
+	      y->balance = -1;
+	    }
+          else if (w->balance == 0)
+	    {
+              x->balance = y->balance = 0;
+	    }
+          else /* |w->pavl_balance == -1| */
+	    {
+              x->balance = +1;
+	      y->balance = 0;
+	    }
+          w->balance = 0;
+          w->parent = y->parent;
+          x->parent = y->parent = w;
+          if (x->link[0] != NULL)
+	    {
+              x->link[0]->parent = x;
+	    }
+          if (y->link[1] != NULL)
+	    {
+              y->link[1]->parent = y;
+	    }
+        }
+    }
+  else
+    {
+      return;
+    }
+  if (w->parent != NULL)
+    {
+      w->parent->link[y != w->parent->link[0]] = w;
+    }
+  else
+    {
+      *root = w;
+    }
+
+  return;
+}
+
+void avl_remove (PNODE *root, PNODE item, int (*compare)(PNODE, PNODE))
+{
+  PNODE p;  /* Traverses tree to find node to delete. */
+  PNODE q;  /* Parent of |p|. */
+  int dir;  /* Side of |q| on which |p| is linked. */
+
+  if (root == NULL || *root == NULL)
+    {
+      return ;
+    }
+
+  p = item;
+  q = p->parent;
+  if (q == NULL)
+    {
+      q = (PNODE) root;
+      dir = 0;
+    }
+  else
+    {
+      dir = compare(p, q) > 0;
+    }
+
+  if (p->link[1] == NULL)
+    {
+      q->link[dir] = p->link[0];
+      if (q->link[dir] != NULL)
+        {
+          q->link[dir]->parent = p->parent;
+	}
+    }
+  else
+    {
+      PNODE r = p->link[1];
+      if (r->link[0] == NULL)
+        {
+          r->link[0] = p->link[0];
+          q->link[dir] = r;
+          r->parent = p->parent;
+          if (r->link[0] != NULL)
+	    {
+              r->link[0]->parent = r;
+	    }
+          r->balance = p->balance;
+          q = r;
+          dir = 1;
+        }
+      else
+        {
+          PNODE s = r->link[0];
+          while (s->link[0] != NULL)
+	    {
+              s = s->link[0];
+	    }
+          r = s->parent;
+          r->link[0] = s->link[1];
+          s->link[0] = p->link[0];
+          s->link[1] = p->link[1];
+          q->link[dir] = s;
+          if (s->link[0] != NULL)
+	    {
+              s->link[0]->parent = s;
+	    }
+          s->link[1]->parent = s;
+          s->parent = p->parent;
+          if (r->link[0] != NULL)
+	    {
+              r->link[0]->parent = r;
+	    }
+          s->balance = p->balance;
+          q = r;
+          dir = 0;
+        }
+    }
+
+  item->link[0] = item->link[1] = item->parent = NULL;
+  item->balance = 0;
+
+  while (q != (PNODE) root)
+    {
+      PNODE y = q;
+
+      if (y->parent != NULL)
+        {
+          q = y->parent;
+	}
+      else
+        {
+          q = (PNODE) root;
+	}
+
+      if (dir == 0)
+        {
+          dir = q->link[0] != y;
+          y->balance++;
+          if (y->balance == +1)
+	    {
+              break;
+	    }
+          else if (y->balance == +2)
+            {
+              PNODE x = y->link[1];
+              if (x->balance == -1)
+                {
+                  PNODE w;
+
+                  assert (x->balance == -1);
+                  w = x->link[0];
+                  x->link[0] = w->link[1];
+                  w->link[1] = x;
+                  y->link[1] = w->link[0];
+                  w->link[0] = y;
+                  if (w->balance == +1)
+		    {
+                      x->balance = 0;
+		      y->balance = -1;
+		    }
+                  else if (w->balance == 0)
+		    {
+                      x->balance = y->balance = 0;
+		    }
+                  else /* |w->pavl_balance == -1| */
+		    {
+                      x->balance = +1;
+		      y->balance = 0;
+		    }
+                  w->balance = 0;
+                  w->parent = y->parent;
+                  x->parent = y->parent = w;
+                  if (x->link[0] != NULL)
+		    {
+                      x->link[0]->parent = x;
+		    }
+                  if (y->link[1] != NULL)
+		    {
+                      y->link[1]->parent = y;
+		    }
+                  q->link[dir] = w;
+                }
+              else
+                {
+                  y->link[1] = x->link[0];
+                  x->link[0] = y;
+                  x->parent = y->parent;
+                  y->parent = x;
+                  if (y->link[1] != NULL)
+		    {
+                      y->link[1]->parent = y;
+		    }
+                  q->link[dir] = x;
+                  if (x->balance == 0)
+                    {
+                      x->balance = -1;
+                      y->balance = +1;
+                      break;
+                    }
+                  else
+                    {
+                      x->balance = y->balance = 0;
+                      y = x;
+                    }
+                }
+            }
+        }
+      else
+        {
+          dir = q->link[0] != y;
+          y->balance--;
+          if (y->balance == -1)
+	    {
+              break;
+	    }
+          else if (y->balance == -2)
+            {
+              PNODE x = y->link[0];
+              if (x->balance == +1)
+                {
+                  PNODE w;
+                  assert (x->balance == +1);
+                  w = x->link[1];
+                  x->link[1] = w->link[0];
+                  w->link[0] = x;
+                  y->link[0] = w->link[1];
+                  w->link[1] = y;
+                  if (w->balance == -1)
+		    {
+                      x->balance = 0;
+		      y->balance = +1;
+		    }
+                  else if (w->balance == 0)
+		    {
+                      x->balance = y->balance = 0;
+		    }
+                  else /* |w->pavl_balance == +1| */
+		    {
+                      x->balance = -1;
+		      y->balance = 0;
+		    }
+                  w->balance = 0;
+                  w->parent = y->parent;
+                  x->parent = y->parent = w;
+                  if (x->link[1] != NULL)
+		    {
+                      x->link[1]->parent = x;
+		    }
+                  if (y->link[0] != NULL)
+		    {
+                      y->link[0]->parent = y;
+		    }
+                  q->link[dir] = w;
+                }
+              else
+                {
+                  y->link[0] = x->link[1];
+                  x->link[1] = y;
+                  x->parent = y->parent;
+                  y->parent = x;
+                  if (y->link[0] != NULL)
+		    {
+                      y->link[0]->parent = y;
+		    }
+                  q->link[dir] = x;
+                  if (x->balance == 0)
+                    {
+                      x->balance = +1;
+                      y->balance = -1;
+                      break;
+                    }
+                  else
+                    {
+                      x->balance = y->balance = 0;
+                      y = x;
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+PNODE avl_get_next(PNODE root, PNODE p)
+{
+  PNODE q;
+  if (p->link[1])
+    {
+      p = p->link[1];
+      while(p->link[0])
+        {
+	  p = p->link[0];
+	}
+      return p;
+    }
+  else
+    {
+      q = p->parent;
+      while (q && q->link[1] == p)
+        {
+	  p = q;
+	  q = q->parent;
+	}
+      if (q == NULL)
+        {
+	  return NULL;
+	}
+      else
+        {
+	  return q;
+	}
+    }
+}
+
+PNODE avl_find_equal_or_greater(PNODE root, ULONG size, int (compare)(PVOID, PNODE))
+{
+  PNODE p;
+  PNODE prev = NULL;
+  int cmp;
+
+  for (p = root; p != NULL;)
+    {
+      cmp = compare((PVOID)&size, p);
+      if (cmp < 0)
+        {
+	  prev = p;
+	  p = p->link[0];
+	}
+      else if (cmp > 0)
+        {
+          p = p->link[1];
+	}
+      else
+        {
+	  while (p->link[0])
+	    {
+              cmp = compare((PVOID)&size, p->link[0]);
+	      if (cmp != 0)
+	        {
+		  break;
+		}
+	      p = p->link[0];
+	    }
+	  return p;
+	}
+    }
+  return prev;
+}
+
+/* non paged pool functions ************************************************/
 
 #ifdef TAG_STATISTICS_TRACKING
 VOID
@@ -140,39 +711,12 @@ MiRemoveFromTagHashTable(BLOCK_HDR* block)
       * Remove a block from the tag hash table
       */
 {
-  BLOCK_HDR* previous;
-  BLOCK_HDR* current;
-  ULONG hash;
-
   if (block->Tag == 0)
     {
       return;
     }
 
-  hash = block->Tag % TAG_HASH_TABLE_SIZE;
-  
-  previous = NULL;
-  current = tag_hash_table[hash];
-  while (current != NULL)
-    {
-      if (current == block)
-	{
-	  if (previous == NULL)
-	    {
-	      tag_hash_table[hash] = block->tag_next;
-	    }
-	  else
-	    {
-	      previous->tag_next = block->tag_next;
-	    }
-	  return;
-	}
-      previous = current;
-      current = current->tag_next;
-    }
-  DPRINT1("Tagged block wasn't on hash table list (Tag %x Caller %x)\n",
-	  block->Tag, block->Caller);
-  KeBugCheck(0);
+  RemoveEntryList(&block->TagListEntry);
 }
 
 VOID
@@ -182,8 +726,6 @@ MiAddToTagHashTable(BLOCK_HDR* block)
       */
 {
   ULONG hash;
-  BLOCK_HDR* current;
-  BLOCK_HDR* previous;
 
   if (block->Tag == 0)
     {
@@ -192,46 +734,25 @@ MiAddToTagHashTable(BLOCK_HDR* block)
 
   hash = block->Tag % TAG_HASH_TABLE_SIZE;
 
-  previous = NULL;
-  current = tag_hash_table[hash];
-  while (current != NULL)
-    {
-      if (current->Tag == block->Tag)
-	{
-	  block->tag_next = current->tag_next;
-	  current->tag_next = block;
-	  return;
-	}
-      previous = current;
-      if (current->tag_next &&((PVOID)current->tag_next >= (PVOID)kernel_pool_base + NONPAGED_POOL_SIZE || (PVOID)current->tag_next < (PVOID)kernel_pool_base))
-	{
-	  DbgPrint("previous %x\n", previous);
-	}
-      current = current->tag_next;
-    }
-  block->tag_next = NULL;
-  if (previous == NULL)
-    {
-      tag_hash_table[hash] = block;
-    }
-  else
-    {
-      previous->tag_next = block;
-    }
+  InsertHeadList(&tag_hash_table[hash], &block->TagListEntry);
 }
 #endif /* TAG_STATISTICS_TRACKING */
 
 VOID 
-ExInitNonPagedPool(ULONG BaseAddress)
+MiInitializeNonPagedPool(VOID)
 {
-   kernel_pool_base = BaseAddress;
-   KeInitializeSpinLock(&MmNpoolLock);
-   MmInitKernelMap((PVOID)BaseAddress);
 #ifdef TAG_STATISTICS_TRACKING
-   memset(tag_hash_table, 0, sizeof(tag_hash_table));
+  ULONG i;
+  for (i = 0; i < TAG_HASH_TABLE_SIZE; i++)
+    {
+      InitializeListHead(&tag_hash_table[i]);
+    }
 #endif
-   InitializeListHead(&FreeBlockListHead);
+   MiCurrentNonPagedPoolLength = 0;
+   KeInitializeSpinLock(&MmNpoolLock);
    InitializeListHead(&UsedBlockListHead);
+   InitializeListHead(&AddressListHead);
+   FreeBlockListRoot = NULL;
 }
 
 #ifdef TAG_STATISTICS_TRACKING
@@ -271,42 +792,56 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
   ULONG CurrentSize;
   ULONG TotalBlocks;
   ULONG TotalSize;
+  LIST_ENTRY tmpListHead;
+  PLIST_ENTRY current_entry;
 
   DbgPrint("******* Dumping non paging pool stats ******\n");
   TotalBlocks = 0;
   TotalSize = 0;
   for (i = 0; i < TAG_HASH_TABLE_SIZE; i++)
     {
-      CurrentTag = 0;
-      CurrentNrBlocks = 0;
-      CurrentSize = 0;
-      current = tag_hash_table[i];
-      while (current != NULL)
-	{
-	  if (current->Tag != CurrentTag)
-	    {
-	      if (CurrentTag != 0 && CurrentNrBlocks != 0)
-		{
-		  MiDumpTagStats(CurrentTag, CurrentNrBlocks, CurrentSize);
-		}
-	      CurrentTag = current->Tag;
-	      CurrentNrBlocks = 0;
-	      CurrentSize = 0;
-	    }
+      InitializeListHead(&tmpListHead);
 
-	  if (!NewOnly || !current->Dumped)
+      while (!IsListEmpty(&tag_hash_table[i]))
+        {
+	  CurrentTag = 0;
+
+          current_entry = tag_hash_table[i].Flink;
+          while (current_entry != &tag_hash_table[i])
 	    {
-	      CurrentNrBlocks++;
-	      TotalBlocks++;
-	      CurrentSize = CurrentSize + current->Size;
-	      TotalSize = TotalSize + current->Size;
-	      current->Dumped = TRUE;
+              current = CONTAINING_RECORD(current_entry, BLOCK_HDR, TagListEntry);
+	      current_entry = current_entry->Flink;
+	      if (CurrentTag == 0)
+	        {
+		  CurrentTag = current->Tag;
+		  CurrentNrBlocks = 0;
+		  CurrentSize = 0;
+		}
+	      if (current->Tag == CurrentTag)
+	        {
+	          RemoveEntryList(&current->TagListEntry);
+		  InsertHeadList(&tmpListHead, &current->TagListEntry);
+		  if (!NewOnly || !current->Dumped)
+		    {
+		      CurrentNrBlocks++;
+		      TotalBlocks++;
+		      CurrentSize += current->Size;
+		      TotalSize += current->Size;
+		      current->Dumped = TRUE;
+		    }
+		}
 	    }
-	  current = current->tag_next;
+	  if (CurrentTag != 0 && CurrentNrBlocks != 0)
+	    {
+	      MiDumpTagStats(CurrentTag, CurrentNrBlocks, CurrentSize);
+	    }
 	}
-      if (CurrentTag != 0 && CurrentNrBlocks != 0)
-	{
-	  MiDumpTagStats(CurrentTag, CurrentNrBlocks, CurrentSize);
+      if (!IsListEmpty(&tmpListHead))
+        {
+          tag_hash_table[i].Flink = tmpListHead.Flink;
+          tag_hash_table[i].Flink->Blink = &tag_hash_table[i];
+	  tag_hash_table[i].Blink = tmpListHead.Blink;
+          tag_hash_table[i].Blink->Flink = &tag_hash_table[i];
 	}
     }
   if (TotalBlocks != 0)
@@ -379,44 +914,44 @@ static void validate_free_list(void)
    PLIST_ENTRY current_entry;
    unsigned int blocks_seen=0;     
    
-   current_entry = FreeBlockListHead.Flink;
-   while (current_entry != &FreeBlockListHead)
+   current_entry = MiFreeBlockListHead.Flink;
+   while (current_entry != &MiFreeBlockListHead)
      {
-	unsigned int base_addr;
+	PVOID base_addr;
 
 	current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
-	base_addr = (int)current;
+	base_addr = (PVOID)current;
 
 	if (current->Magic != BLOCK_HDR_FREE_MAGIC)
 	  {
 	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		      current);
-	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
 	
-	if (base_addr < (kernel_pool_base) ||
-	    (base_addr+current->Size) > (kernel_pool_base)+NONPAGED_POOL_SIZE)
+	if (base_addr < MiNonPagedPoolStart ||
+	    MiNonPagedPoolStart + current->Size > MiNonPagedPoolStart + MiCurrentNonPagedPoolLength)
 	  {		       
 	     DbgPrint("Block %x found outside pool area\n",current);
 	     DbgPrint("Size %d\n",current->Size);
-	     DbgPrint("Limits are %x %x\n",kernel_pool_base,
-		    kernel_pool_base+NONPAGED_POOL_SIZE);
-	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+	     DbgPrint("Limits are %x %x\n",MiNonPagedPoolStart,
+		      MiNonPagedPoolStart+MiCurrentNonPagedPoolLength);
+	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
 	blocks_seen++;
-	if (blocks_seen > EiNrFreeBlocks)
+	if (blocks_seen > MiNrFreeBlocks)
 	  {
 	     DbgPrint("Too many blocks on free list\n");
-	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
-	if (current->ListEntry.Flink != &FreeBlockListHead &&
+	if (current->ListEntry.Flink != &MiFreeBlockListHead &&
 	    current->ListEntry.Flink->Blink != &current->ListEntry)
 	  {
 	     DbgPrint("%s:%d:Break in list (current %x next %x "
-		    "current->next->previous %x)\n",
-		    __FILE__,__LINE__,current, current->ListEntry.Flink,
-		    current->ListEntry.Flink->Blink);
-	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+		      "current->next->previous %x)\n",
+		      __FILE__,__LINE__,current, current->ListEntry.Flink,
+		      current->ListEntry.Flink->Blink);
+	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
 
 	current_entry = current_entry->Flink;
@@ -435,20 +970,20 @@ static void validate_used_list(void)
    current_entry = UsedBlockListHead.Flink;
    while (current_entry != &UsedBlockListHead)
      {
-	unsigned int base_addr;
+	PVOID base_addr;
 
 	current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
-	base_addr = (int)current;
+	base_addr = (PVOID)current;
 	
 	if (current->Magic != BLOCK_HDR_USED_MAGIC)
 	  {
 	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		      current);
-	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+	     KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	  }
-	if (base_addr < (kernel_pool_base) ||
+	if (base_addr < MiNonPagedPoolStart ||
 	    (base_addr+current->Size) >
-	    (kernel_pool_base)+NONPAGED_POOL_SIZE)
+	    MiNonPagedPoolStart+MiCurrentNonPagedPoolLength)
 	  {
 	     DbgPrint("Block %x found outside pool area\n",current);
 	     for(;;);
@@ -484,8 +1019,8 @@ static void check_duplicates(BLOCK_HDR* blk)
    BLOCK_HDR* current;
    PLIST_ENTRY current_entry;
    
-   current_entry = FreeBlockListHead.Flink;
-   while (current_entry != &FreeBlockListHead)
+   current_entry = MiFreeBlockListHead.Flink;
+   while (current_entry != &MiFreeBlockListHead)
      {
        current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
 
@@ -493,7 +1028,7 @@ static void check_duplicates(BLOCK_HDR* blk)
 	 {
 	   DbgPrint("Bad block magic (probable pool corruption) at %x\n",
 		    current);
-	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+	   KeBugCheck(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
 	 }
        
        if ( (int)current > base && (int)current < last ) 
@@ -546,8 +1081,8 @@ static void validate_kernel_pool(void)
    validate_free_list();
    validate_used_list();
 
-   current_entry = FreeBlockListHead.Flink;
-   while (current_entry != &FreeBlockListHead)
+   current_entry = MiFreeBlockListHead.Flink;
+   while (current_entry != &MiFreeBlockListHead)
      {
        current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
        check_duplicates(current);
@@ -584,75 +1119,78 @@ free_pages(BLOCK_HDR* blk)
 }
 #endif
 
-STATIC VOID
-merge_free_block(BLOCK_HDR* blk)
+static void remove_from_used_list(BLOCK_HDR* current)
 {
-  PLIST_ENTRY next_entry;
-  BLOCK_HDR* next;
-  PLIST_ENTRY previous_entry;
-  BLOCK_HDR* previous;
-
-  next_entry = blk->ListEntry.Flink;
-  if (next_entry != &FreeBlockListHead)
-    {
-      next = CONTAINING_RECORD(next_entry, BLOCK_HDR, ListEntry);
-      if (((unsigned int)blk + sizeof(BLOCK_HDR) + blk->Size) == 
-	  (unsigned int)next)
-	{
-	  RemoveEntryList(&next->ListEntry);
-	  blk->Size = blk->Size + next->Size;
-	  memset(next, 0xcc, sizeof(BLOCK_HDR));
-          EiFreeNonPagedPool += sizeof(BLOCK_HDR);
-	  EiNrFreeBlocks--;
-	}
-    }
-
-  previous_entry = blk->ListEntry.Blink;
-  if (previous_entry != &FreeBlockListHead)
-    {
-      previous = CONTAINING_RECORD(previous_entry, BLOCK_HDR, ListEntry);
-      if (((unsigned int)previous + sizeof(BLOCK_HDR) + previous->Size) == 
-	  (unsigned int)blk)
-	{
-	  RemoveEntryList(&blk->ListEntry);
-	  previous->Size = previous->Size + sizeof(BLOCK_HDR) + blk->Size;
-	  memset(blk, 0xcc, sizeof(BLOCK_HDR));
-          EiFreeNonPagedPool += sizeof(BLOCK_HDR);
-	  EiNrFreeBlocks--;
-	}
-    }
+  RemoveEntryList(&current->ListEntry);
+  EiUsedNonPagedPool -= current->Size;
+  EiNrUsedBlocks--;
 }
 
-STATIC VOID 
+static void remove_from_free_list(BLOCK_HDR* current)
+{
+  DPRINT("remove_from_free_list %d\n", current->Size);
+
+  avl_remove(&FreeBlockListRoot, &current->Node, compare_node);
+
+  EiFreeNonPagedPool -= current->Size;
+  EiNrFreeBlocks--;
+  DPRINT("remove_from_free_list done\n");
+#ifdef DUMP_AVL
+  DumpFreeBlockTree();
+#endif
+}
+
+static void 
 add_to_free_list(BLOCK_HDR* blk)
 /*
  * FUNCTION: add the block to the free list (internal)
  */
 {
-  PLIST_ENTRY current_entry;
   BLOCK_HDR* current;
 
-  current_entry = FreeBlockListHead.Flink;
-  while (current_entry != &FreeBlockListHead)
-    {
-      current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+  DPRINT("add_to_free_list (%d)\n", blk->Size);
 
-      if ((unsigned int)current > (unsigned int)blk)
-	{
-	  blk->ListEntry.Flink = current_entry;
-	  blk->ListEntry.Blink = current_entry->Blink;
-	  current_entry->Blink->Flink = &blk->ListEntry;
-	  current_entry->Blink = &blk->ListEntry;
-          EiFreeNonPagedPool += blk->Size;
-	  EiNrFreeBlocks++;
-	  return;
-	}
-
-      current_entry = current_entry->Flink;
-    }
-  InsertTailList(&FreeBlockListHead, &blk->ListEntry);
-  EiFreeNonPagedPool += blk->Size;
   EiNrFreeBlocks++;
+
+  if (blk->AddressList.Blink != &AddressListHead)
+    {
+      current = CONTAINING_RECORD(blk->AddressList.Blink, BLOCK_HDR, AddressList);
+      if (current->Magic == BLOCK_HDR_FREE_MAGIC)
+        {
+	  CHECKPOINT;
+	  assert((PVOID)current + current->Size + sizeof(BLOCK_HDR) == (PVOID)blk);
+          remove_from_free_list(current);
+	  RemoveEntryList(&blk->AddressList);
+	  current->Size = current->Size + sizeof(BLOCK_HDR) + blk->Size;
+	  current->Magic = BLOCK_HDR_USED_MAGIC;
+	  memset(blk, 0xcc, sizeof(BLOCK_HDR));
+	  blk = current;
+	}
+    }
+
+  if (blk->AddressList.Flink != &AddressListHead)
+    {
+      current = CONTAINING_RECORD(blk->AddressList.Flink, BLOCK_HDR, AddressList);
+      if (current->Magic == BLOCK_HDR_FREE_MAGIC)
+        {
+	  CHECKPOINT;
+	  assert((PVOID)blk + blk->Size + sizeof(BLOCK_HDR) == (PVOID)current);
+          remove_from_free_list(current);
+	  RemoveEntryList(&current->AddressList);
+	  blk->Size = blk->Size + sizeof(BLOCK_HDR) + current->Size;
+	  memset(current, 0xcc, sizeof(BLOCK_HDR));
+	}
+    }
+
+  DPRINT("%d\n", blk->Size);
+  blk->Magic = BLOCK_HDR_FREE_MAGIC;
+  EiFreeNonPagedPool += blk->Size;
+  avl_insert(&FreeBlockListRoot, &blk->Node, compare_node);
+
+  DPRINT("add_to_free_list done\n");
+#ifdef DUMP_AVL
+  DumpFreeBlockTree();
+#endif
 }
 
 static void add_to_used_list(BLOCK_HDR* blk)
@@ -664,23 +1202,6 @@ static void add_to_used_list(BLOCK_HDR* blk)
   EiUsedNonPagedPool += blk->Size;
   EiNrUsedBlocks++;
 }
-
-
-static void remove_from_free_list(BLOCK_HDR* current)
-{
-  RemoveEntryList(&current->ListEntry);
-  EiFreeNonPagedPool -= current->Size;
-  EiNrFreeBlocks--;
-}
-
-
-static void remove_from_used_list(BLOCK_HDR* current)
-{
-  RemoveEntryList(&current->ListEntry);
-  EiUsedNonPagedPool -= current->Size;
-  EiNrUsedBlocks--;
-}
-
 
 inline static void* block_to_address(BLOCK_HDR* blk)
 /*
@@ -699,55 +1220,50 @@ inline static BLOCK_HDR* address_to_block(void* addr)
 
 static BLOCK_HDR* lookup_block(unsigned int size)
 {
-   PLIST_ENTRY current_entry;
    BLOCK_HDR* current;
    BLOCK_HDR* best = NULL;
    ULONG new_size;
    PVOID block, block_boundary;
-    
-   current_entry = FreeBlockListHead.Flink;
-   if (size < PAGE_SIZE)
-   {
-      while (current_entry != &FreeBlockListHead)
-      {
-         DPRINT("current %x size %x tag_next %x\n",
-	        current, current->Size, current->tag_next);
-	 current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
-         if (current->Size >= size && 
-	     (best == NULL || current->Size < best->Size)) 
-	 {
-	    best = current;
-	    if (best->Size == size)
-	    {
-	       break;
-	    }
-	 }
-         current_entry = current_entry->Flink;
-      }
-   }
-   else
-   {
-      while (current_entry != &FreeBlockListHead)
-      {
-         DPRINT("current %x size %x tag_next %x\n",
-	        current, current->Size, current->tag_next);
-	 current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+   PNODE p;
 
-	 block = block_to_address(current);
-	 block_boundary = (PVOID)PAGE_ROUND_UP((ULONG)block);
-	 new_size = (ULONG)block_boundary - (ULONG)block + size;
-	 if (new_size != size && (ULONG)block_boundary - (ULONG)block < sizeof(BLOCK_HDR))
-	 {
-	     new_size += PAGE_SIZE;
+   DPRINT("lookup_block %d\n", size);
+
+   if (size < PAGE_SIZE)
+     {
+       p = avl_find_equal_or_greater(FreeBlockListRoot, size, compare_value);
+       if (p)
+	 { 
+	   best = CONTAINING_RECORD(p, BLOCK_HDR, Node);
 	 }
-	 if (current->Size >= new_size && 
-	     (best == NULL || current->Size < best->Size))
-	 {
-	    best = current;
+     }
+   else
+     {
+       p = avl_find_equal_or_greater(FreeBlockListRoot, size, compare_value);
+
+       while(p)
+         {
+           current = CONTAINING_RECORD(p, BLOCK_HDR, Node);
+           block = block_to_address(current);
+           block_boundary = (PVOID)PAGE_ROUND_UP((ULONG)block);
+           new_size = (ULONG)block_boundary - (ULONG)block + size;
+           if (new_size != size && (ULONG)block_boundary - (ULONG)block < sizeof(BLOCK_HDR))
+ 	     {
+               new_size += PAGE_SIZE;
+             }
+           if (current->Size >= new_size && 
+	       (best == NULL || current->Size < best->Size))
+             {
+               best = current;
+             }
+	   if (best && current->Size >= size + PAGE_SIZE + 2 * sizeof(BLOCK_HDR))
+	     {
+	       break;
+	     }
+	   p = avl_get_next(FreeBlockListRoot, p);
+
 	 }
-         current_entry = current_entry->Flink;
-      }
-   }
+     }
+   DPRINT("lookup_block done %d\n", best ? best->Size : 0);
    return best;
 }
 
@@ -759,29 +1275,41 @@ static void* take_block(BLOCK_HDR* current, unsigned int size,
  * RETURNS: The address of the created memory block
  */
 {
-
     BLOCK_HDR* blk;
-    if (size >= PAGE_SIZE)
-    {
-       blk = address_to_block((PVOID)PAGE_ROUND_UP(block_to_address (current)));
-       if (blk != current)
-       {
-          if ((ULONG)blk - (ULONG)current < sizeof(BLOCK_HDR))
-	  {
-             (ULONG)blk += PAGE_SIZE;
-	  }
-	  assert((ULONG)blk - (ULONG)current + size <= current->Size && (ULONG)blk - (ULONG)current >= sizeof(BLOCK_HDR));
+    BOOL Removed = FALSE;
+   
+    DPRINT("take_block\n");
 
-	  memset(blk, 0, sizeof(BLOCK_HDR));
-	  blk->Magic = BLOCK_HDR_FREE_MAGIC;
-	  blk->Size = current->Size - ((ULONG)blk - (ULONG)current);
-	  current->Size -= (blk->Size + sizeof(BLOCK_HDR));
-	  InsertHeadList(&current->ListEntry, &blk->ListEntry);
-          EiFreeNonPagedPool -= sizeof(BLOCK_HDR);
-          EiNrFreeBlocks++;
-	  current = blk;
-       }
-   }
+    if (size >= PAGE_SIZE)
+      {
+        blk = address_to_block((PVOID)PAGE_ROUND_UP(block_to_address (current)));
+        if (blk != current)
+          {
+            if ((ULONG)blk - (ULONG)current < sizeof(BLOCK_HDR))
+	      {
+                (ULONG)blk += PAGE_SIZE;
+	      }
+	    assert((ULONG)blk - (ULONG)current + size <= current->Size && (ULONG)blk - (ULONG)current >= sizeof(BLOCK_HDR));
+
+	    memset(blk, 0, sizeof(BLOCK_HDR));
+	    blk->Magic = BLOCK_HDR_USED_MAGIC;
+	    blk->Size = current->Size - ((ULONG)blk - (ULONG)current);
+	    remove_from_free_list(current);
+	    current->Size -= (blk->Size + sizeof(BLOCK_HDR));
+	    blk->AddressList.Flink = current->AddressList.Flink;
+	    blk->AddressList.Flink->Blink = &blk->AddressList;
+	    blk->AddressList.Blink = &current->AddressList;
+	    current->AddressList.Flink = &blk->AddressList;
+	    add_to_free_list(current);
+	    Removed = TRUE;
+	    current = blk;
+	  }
+      }
+   if (Removed == FALSE)
+     {
+       remove_from_free_list(current);
+     }
+
    /*
     * If the block is much bigger than required then split it and
     * return a pointer to the allocated section. If the difference
@@ -791,32 +1319,30 @@ static void* take_block(BLOCK_HDR* current, unsigned int size,
    if (current->Size > size + sizeof(BLOCK_HDR))
      {
 	BLOCK_HDR* free_blk;
-	
-	EiFreeNonPagedPool -= current->Size;
-	
+
 	/*
 	 * Replace the bigger block with a smaller block in the
 	 * same position in the list
 	 */
         free_blk = (BLOCK_HDR *)(((int)current)
 				 + sizeof(BLOCK_HDR) + size);		
-	free_blk->Magic = BLOCK_HDR_FREE_MAGIC;
-	InsertHeadList(&current->ListEntry, &free_blk->ListEntry);
+
 	free_blk->Size = current->Size - (sizeof(BLOCK_HDR) + size);
-	
 	current->Size=size;
-	RemoveEntryList(&current->ListEntry);
-	add_to_used_list(current);
+        free_blk->AddressList.Flink = current->AddressList.Flink;
+	free_blk->AddressList.Flink->Blink = &free_blk->AddressList;
+	free_blk->AddressList.Blink = &current->AddressList;
+	current->AddressList.Flink = &free_blk->AddressList;
 	current->Magic = BLOCK_HDR_USED_MAGIC;
+	free_blk->Magic = BLOCK_HDR_FREE_MAGIC;
+	add_to_free_list(free_blk);
+	add_to_used_list(current);
 	current->Tag = Tag;
 	current->Caller = Caller;
 	current->Dumped = FALSE;
 #ifdef TAG_STATISTICS_TRACKING
 	MiAddToTagHashTable(current);
 #endif /* TAG_STATISTICS_TRACKING */
-	
-	EiFreeNonPagedPool += free_blk->Size;
-	
 	VALIDATE_POOL;
 	return(block_to_address(current));
      }
@@ -824,13 +1350,12 @@ static void* take_block(BLOCK_HDR* current, unsigned int size,
    /*
     * Otherwise allocate the whole block
     */
-   remove_from_free_list(current);
-   add_to_used_list(current);
-   
+
    current->Magic = BLOCK_HDR_USED_MAGIC;   
    current->Tag = Tag;
    current->Caller = Caller;
    current->Dumped = FALSE;
+   add_to_used_list(current);
 #ifdef TAG_STATISTICS_TRACKING
    MiAddToTagHashTable(current);
 #endif /* TAG_STATISTICS_TRACKING */
@@ -854,12 +1379,19 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    PVOID block = NULL;
 
    if (size >= PAGE_SIZE)
-   {
-      nr_pages++;
-   }
+     {
+       nr_pages ++;
+     }
 
-   start = (ULONG)MiAllocNonPagedPoolRegion(nr_pages);
- 
+   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
+   start = (ULONG)MiNonPagedPoolStart + MiCurrentNonPagedPoolLength;
+   if (MiCurrentNonPagedPoolLength + nr_pages * PAGE_SIZE > MiNonPagedPoolLength)
+     {
+       DbgPrint("CRITICAL: Out of non-paged pool space\n");
+       KeBugCheck(0);
+     }
+   MiCurrentNonPagedPoolLength += nr_pages * PAGE_SIZE;
+
    DPRINT("growing heap for block size %d, ",size);
    DPRINT("start %x\n",start);
   
@@ -877,7 +1409,7 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 				       (PVOID)(start + (i*PAGE_SIZE)),
 				       PAGE_READWRITE|PAGE_SYSTEM,
 				       Page,
-				       FALSE);
+				       TRUE);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
@@ -888,24 +1420,18 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    blk = (struct _BLOCK_HDR *)start;
    memset(blk, 0, sizeof(BLOCK_HDR));
    blk->Size = (nr_pages * PAGE_SIZE) - sizeof(BLOCK_HDR);
-   blk->Magic = BLOCK_HDR_FREE_MAGIC;
    memset(block_to_address(blk), 0xcc, blk->Size);
 
-   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
+   InsertTailList(&AddressListHead, &blk->AddressList);
+   blk->Magic = BLOCK_HDR_FREE_MAGIC;
    add_to_free_list(blk);
-   merge_free_block(blk);
-
    blk = lookup_block(size);
    if (blk)
-   {
-      block = take_block(blk, size, Tag, Caller);
-      VALIDATE_POOL;
-   }
+     {
+       block = take_block(blk, size, Tag, Caller);
+       VALIDATE_POOL;
+     }
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-   if (block == NULL)
-   {
-       CHECKPOINT1;
-   }
    return block;
 }
 
@@ -976,13 +1502,11 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
    MiRemoveFromTagHashTable(blk);
 #endif /* TAG_STATISTICS_TRACKING */
    remove_from_used_list(blk);
-   blk->Magic = BLOCK_HDR_FREE_MAGIC;
    blk->Tag = 0;
    blk->Caller = NULL;
-   blk->tag_next = NULL;
+   blk->TagListEntry.Flink = blk->TagListEntry.Blink = NULL;
+   blk->Magic = BLOCK_HDR_FREE_MAGIC;
    add_to_free_list(blk);
-   merge_free_block(blk);
-
    VALIDATE_POOL;
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 
@@ -1055,19 +1579,24 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
     */
    best = lookup_block(Size);
    if (best == NULL)
-   {
+     {
        KeReleaseSpinLock(&MmNpoolLock, oldIrql);
        block = grow_kernel_pool(Size, Tag, Caller);
+       if (block == NULL)
+       {
+         DPRINT1("%d\n", Size);
+	 DumpFreeBlockTree();
+       }
        assert(block != NULL);
        memset(block,0,Size);
-   }
+     }
    else
-   {
+     {
        block=take_block(best, Size, Tag, Caller);
        VALIDATE_POOL;
        KeReleaseSpinLock(&MmNpoolLock, oldIrql);
        memset(block,0,Size);
-   }
+     }
    return(block);
 #endif /* WHOLE_PAGE_ALLOCATIONS */
 }
@@ -1111,8 +1640,8 @@ ExFreeWholePageBlock(PVOID Addr)
 {
   ULONG NrPages;
   
-  if ((ULONG)Addr < kernel_pool_base ||
-      (ULONG)Addr >= (kernel_pool_base + NONPAGED_POOL_SIZE))
+  if (Addr < MiNonPagedPoolStart ||
+      Addr >= (MiNonPagedPoolStart + MiCurrentNonPagedPoolLength))
     {
       DbgPrint("Block %x found outside pool area\n", Addr);
       KeBugCheck(0);

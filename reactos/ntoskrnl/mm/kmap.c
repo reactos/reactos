@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.24 2003/06/19 19:01:01 gvg Exp $
+/* $Id: kmap.c,v 1.25 2003/07/05 18:10:50 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -20,18 +20,19 @@
 
 /* GLOBALS *****************************************************************/
 
-#define ALLOC_MAP_SIZE (NONPAGED_POOL_SIZE / PAGE_SIZE)
+#define ALLOC_MAP_SIZE (MM_KERNEL_MAP_SIZE / PAGE_SIZE)
 
 /*
  * One bit for each page in the kmalloc region
  *      If set then the page is used by a kmalloc block
  */
-static UCHAR AllocMapBuffer[ROUND_UP(ALLOC_MAP_SIZE, 8) / 8];
+static UCHAR AllocMapBuffer[ROUND_UP(ALLOC_MAP_SIZE, 32) / 8];
 static RTL_BITMAP AllocMap;
 static KSPIN_LOCK AllocMapLock;
 static ULONG AllocMapHint = 0;
 
-static PVOID NonPagedPoolBase;
+extern PVOID MiKernelMapStart;
+extern ULONG MiKernelMapLength;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -39,7 +40,7 @@ VOID
 ExUnmapPage(PVOID Addr)
 {
    KIRQL oldIrql;
-   ULONG Base = (Addr - NonPagedPoolBase) / PAGE_SIZE;
+   ULONG Base = (Addr - MiKernelMapStart) / PAGE_SIZE;
    
    DPRINT("ExUnmapPage(Addr %x)\n",Addr);
    
@@ -109,12 +110,12 @@ ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
    {
       AllocMapHint = Base + 1;
       KeReleaseSpinLock(&AllocMapLock, oldlvl);
-      Addr = NonPagedPoolBase + Base * PAGE_SIZE;
+      Addr = MiKernelMapStart + Base * PAGE_SIZE;
       Status = MmCreateVirtualMapping(NULL, 
 	                              Addr, 
 				      PAGE_READWRITE | PAGE_SYSTEM, 
 				      PhysPage,
-				      FALSE);
+				      TRUE);
       if (!NT_SUCCESS(Status))
       {
           DbgPrint("Unable to create virtual mapping\n");
@@ -127,19 +128,18 @@ ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
 }
 
 VOID 
-MmInitKernelMap(PVOID BaseAddress)
+MiInitKernelMap(VOID)
 {
-   NonPagedPoolBase = BaseAddress;
    KeInitializeSpinLock(&AllocMapLock);
    RtlInitializeBitMap(&AllocMap, (PVOID)&AllocMapBuffer, ALLOC_MAP_SIZE);
    RtlClearAllBits(&AllocMap);
 }
-
+#if 0
 VOID
 MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 {
   ULONG i;
-  ULONG Base = (Addr - NonPagedPoolBase) / PAGE_SIZE;
+  ULONG Base = (Addr - MiKernelMapStart) / PAGE_SIZE;
   KIRQL oldlvl;
   
   for (i = 0; i < Count; i++)
@@ -178,5 +178,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
    }
    KeReleaseSpinLock(&AllocMapLock, oldlvl);
    DPRINT("returning %x\n",NonPagedPoolBase + Base * PAGE_SIZE);
-   return NonPagedPoolBase + Base * PAGE_SIZE;
+   return MiKernelMapStart + Base * PAGE_SIZE;
 }
+#endif
+

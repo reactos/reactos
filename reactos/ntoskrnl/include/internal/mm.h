@@ -198,7 +198,7 @@ NTSTATUS MmCreateMemoryArea(struct _EPROCESS* Process,
 MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace, 
 				       PVOID Address);
 NTSTATUS MmInitMemoryAreas(VOID);
-VOID ExInitNonPagedPool(ULONG BaseAddress);
+VOID MiInitializeNonPagedPool(VOID);
 NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
@@ -333,7 +333,7 @@ VOID MmInit2(VOID);
 VOID MmInit3(VOID);
 NTSTATUS MmInitPagerThread(VOID);
 
-VOID MmInitKernelMap(PVOID BaseAddress);
+VOID MiInitKernelMap(VOID);
 NTSTATUS MmCreatePageTable(PVOID PAddress);
 
 typedef struct
