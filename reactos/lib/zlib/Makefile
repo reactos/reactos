@@ -1,10 +1,12 @@
-# $Id: makefile.reactos,v 1.2 2002/06/07 22:59:01 ekohl Exp $
+# $Id: Makefile,v 1.1 2003/03/24 01:28:35 hyperion Exp $
 
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../..
 
 TARGET_TYPE = library
 
 TARGET_NAME = zlib
+
+TARGET_NORC = yes
 
 TARGET_CFLAGS = \
  -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
@@ -17,6 +19,9 @@ TARGET_OBJECTS = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+zlib.sym:
+	@echo FIXME!>$@
 
 # FIXME: this rule should be defined in helper.mk
 $(TARGET_NAME).nostrip.a:
