@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.42 2003/12/22 15:30:21 navaraf Exp $
+/* $Id: class.c,v 1.43 2004/01/19 20:19:50 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -475,7 +475,7 @@ RegisterClassA(CONST WNDCLASSA *lpWndClass)
   RtlCopyMemory ( &Class.style, lpWndClass, sizeof(WNDCLASSA) );
 
   Class.cbSize = sizeof(WNDCLASSEXA);
-  Class.hIconSm = INVALID_HANDLE_VALUE;
+  Class.hIconSm = NULL;
 
   return RegisterClassExA ( &Class );
 }
@@ -605,7 +605,7 @@ RegisterClassW(CONST WNDCLASSW *lpWndClass)
   RtlCopyMemory ( &Class.style, lpWndClass, sizeof(WNDCLASSW) );
 
   Class.cbSize = sizeof(WNDCLASSEXW);
-  Class.hIconSm = INVALID_HANDLE_VALUE;
+  Class.hIconSm = NULL;
 
   return RegisterClassExW ( &Class );
 }
