@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.66 2004/01/05 14:28:21 weiden Exp $
+/* $Id: timer.c,v 1.67 2004/01/18 22:32:47 gdalsnes Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -225,6 +225,7 @@ KeQueryInterruptTime(PLARGE_INTEGER CurrentTime)
       CurrentTime->u.LowPart = SharedUserData->InterruptTime.LowPart;
     }
   while (CurrentTime->u.HighPart != SharedUserData->InterruptTime.High2Part);
+
 }
 
 
@@ -327,13 +328,21 @@ KeSetTimerEx (PKTIMER		Timer,
      }
    if (Timer->Header.Absolute)
      {
-       InsertAscendingList(&AbsoluteTimerListHead, &Timer->TimerListEntry, 
-	                   KTIMER, TimerListEntry, DueTime.QuadPart);
+       InsertAscendingList(&AbsoluteTimerListHead, 
+                           KTIMER,
+                           TimerListEntry, 
+                           Timer,
+                           DueTime.QuadPart);
+
      }
    else
      {
-       InsertAscendingList(&RelativeTimerListHead, &Timer->TimerListEntry, 
-	                   KTIMER, TimerListEntry, DueTime.QuadPart);
+       InsertAscendingList(&RelativeTimerListHead, 
+                          KTIMER,
+                          TimerListEntry, 
+                          Timer, 
+                          DueTime.QuadPart);
+
      }
 
    KeReleaseSpinLock(&TimerListLock, oldlvl);
@@ -490,13 +499,19 @@ HandleExpiredTimer(PKTIMER Timer)
 	 Timer->Period * SYSTEM_TIME_UNITS_PER_MSEC;
        if (Timer->Header.Absolute)
          {
-           InsertAscendingList(&AbsoluteTimerListHead, &Timer->TimerListEntry, 
-	                       KTIMER, TimerListEntry, DueTime.QuadPart);
+           InsertAscendingList(&AbsoluteTimerListHead, 
+                               KTIMER,
+                               TimerListEntry,
+                               Timer, 
+	                             DueTime.QuadPart);
          }
        else
          {
-           InsertAscendingList(&RelativeTimerListHead, &Timer->TimerListEntry, 
-	                       KTIMER, TimerListEntry, DueTime.QuadPart);
+           InsertAscendingList(&RelativeTimerListHead, 
+                               KTIMER,
+                               TimerListEntry, 
+                               Timer,
+	                             DueTime.QuadPart);
          }
      }
 }
@@ -595,7 +610,7 @@ KiUpdateSystemTime(KIRQL oldIrql,
    KeTickCount++;
    SharedUserData->TickCountLow++;
 
-   KeAcquireSpinLockAtDpcLevel(&TimerValueLock);
+   KiAcquireSpinLock(&TimerValueLock);
 
    Time.u.LowPart = SharedUserData->InterruptTime.LowPart;
    Time.u.HighPart = SharedUserData->InterruptTime.High1Part;
@@ -611,7 +626,7 @@ KiUpdateSystemTime(KIRQL oldIrql,
    SharedUserData->SystemTime.LowPart = Time.u.LowPart;
    SharedUserData->SystemTime.High1Part = Time.u.HighPart;
 
-   KeReleaseSpinLockFromDpcLevel(&TimerValueLock);
+   KiReleaseSpinLock(&TimerValueLock);
 
    /*
     * Queue a DPC that will expire timers
