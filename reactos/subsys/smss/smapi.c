@@ -1,4 +1,4 @@
-/* $Id: smapi.c,v 1.2 1999/12/11 01:42:44 ekohl Exp $
+/* $Id: smapi.c,v 1.3 1999/12/28 16:25:21 ekohl Exp $
  *
  * Reactos Session Manager
  *
@@ -43,20 +43,25 @@ SmApiThread (HANDLE Port)
 
             if (Message.MessageType == LPC_CONNECTION_REQUEST)
             {
-
+//                SmHandleConnectionRequest (Port, &Message);
+                Reply = NULL;
+            }
+            else if (Message.MessageType == LPC_DEBUG_EVENT)
+            {
+//                DbgSsHandleKmApiMsg (&Message, 0);
+                Reply = NULL;
+            }
+            else if (Message.MessageType == LPC_PORT_CLOSED)
+            {
+                Reply = NULL;
             }
             else
             {
 
+//                Reply = &Message;
             }
-
         }
     }
-
-#ifndef NDEBUG
-    DisplayString (L"SmApiThread: terminating\n");
-#endif
-    NtTerminateThread (NtCurrentThread (), STATUS_UNSUCCESSFUL);
 }
 
 /* EOF */
