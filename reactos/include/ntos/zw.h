@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.19 2003/10/13 20:52:31 ekohl Exp $
+/* $Id: zw.h,v 1.20 2003/11/21 18:42:05 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4160,15 +4160,16 @@ ZwYieldExecution(
 
 NTSTATUS
 STDCALL
-NtPlugPlayControl (
-	VOID
-	);
+NtPlugPlayControl (DWORD Unknown1,
+                   DWORD Unknown2,
+                   DWORD Unknown3);
 
 NTSTATUS
 STDCALL
-NtGetPlugPlayEvent (
-	VOID
-	);
+NtGetPlugPlayEvent (ULONG Reserved1,
+                    ULONG Reserved2,
+                    PVOID Buffer,
+                    ULONG BufferLength);
 
 /* --- POWER MANAGEMENT --- */
 

@@ -16,12 +16,21 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtGetPlugPlayEvent(VOID)
+NTSTATUS
+STDCALL
+NtPlugPlayControl (DWORD Unknown1,
+                   DWORD Unknown2,
+                   DWORD Unknown3)
 {
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtPlugPlayControl(VOID)
+NTSTATUS
+STDCALL
+NtGetPlugPlayEvent (ULONG Reserved1,
+                    ULONG Reserved2,
+                    PVOID Buffer,
+                    ULONG BufferLength)
 {
    UNIMPLEMENTED;
 }
