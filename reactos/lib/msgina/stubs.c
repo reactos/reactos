@@ -10,7 +10,7 @@
  *      24-11-2003  Created
  */
 #include <windows.h>
-#include <WinWlx.h>
+#include <winwlx.h>
 
 #define UNIMPLEMENTED \
   DbgPrint("MSGINA:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)

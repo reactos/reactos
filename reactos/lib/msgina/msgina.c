@@ -26,7 +26,7 @@
  *      24-11-2003  Created
  */
 #include <windows.h>
-#include <WinWlx.h>
+#include <winwlx.h>
 #include "msgina.h"
 #include "resource.h"
 
