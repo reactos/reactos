@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.48 2004/05/15 11:20:38 navaraf Exp $
+ * $Id: dib.c,v 1.49 2004/05/15 15:04:43 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -45,7 +45,7 @@ NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Col
    }
 
    if (BitmapObj->dib->dsBmih.biBitCount <= 8 &&
-       StartIndex > (1 << BitmapObj->dib->dsBmih.biBitCount))
+       StartIndex < (1 << BitmapObj->dib->dsBmih.biBitCount))
    {
       if (StartIndex + Entries > (1 << BitmapObj->dib->dsBmih.biBitCount))
          Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
@@ -92,7 +92,7 @@ NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    }
 
    if (BitmapObj->dib->dsBmih.biBitCount <= 8 &&
-       StartIndex > (1 << BitmapObj->dib->dsBmih.biBitCount))
+       StartIndex < (1 << BitmapObj->dib->dsBmih.biBitCount))
    {
       if (StartIndex + Entries > (1 << BitmapObj->dib->dsBmih.biBitCount))
          Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
@@ -1063,7 +1063,7 @@ DIB_CreateDIBSection(
   UINT Entries = 0;
   BITMAP bm;
 
-  DPRINT1("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
+  DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
 	bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
 	bi->biSizeImage, bi->biClrUsed, usage == DIB_PAL_COLORS? "PAL" : "RGB");
 
@@ -1095,7 +1095,8 @@ DIB_CreateDIBSection(
 
 /*  bm.bmBits = ExAllocatePool(NonPagedPool, totalSize); */
 
-  if(usage == DIB_PAL_COLORS) memcpy(bmi->bmiColors, (UINT *)DIB_MapPaletteColors(dc, bmi), sizeof(UINT *));
+  if(usage == DIB_PAL_COLORS)
+    memcpy(bmi->bmiColors, (UINT *)DIB_MapPaletteColors(dc, bmi), sizeof(UINT *));
 
   // Allocate Memory for DIB and fill structure
   if (bm.bmBits)
@@ -1120,8 +1121,7 @@ DIB_CreateDIBSection(
       case 16:
         dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)bmi->bmiColors : 0x7c00;
         dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 1) : 0x03e0;
-        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0x001f;
-        break;
+        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0x001f;        break;
 
       case 24:
         dib->dsBitfields[0] = 0xff;
@@ -1326,10 +1326,10 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 {
   RGBQUAD *lpRGB;
   ULONG nNumColors,i;
-  DWORD *lpIndex;
+  USHORT *lpIndex;
   PPALGDI palGDI;
 
-  palGDI = PALETTE_LockPalette(dc->DevInfo->hpalDefault);
+  palGDI = PALETTE_LockPalette(dc->w.hPalette);
 
   if (NULL == palGDI)
     {
@@ -1344,7 +1344,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
     }
 
   lpRGB = (RGBQUAD *)ExAllocatePoolWithTag(NonPagedPool, sizeof(RGBQUAD) * nNumColors, TAG_COLORMAP);
-  lpIndex = (DWORD *)&lpbmi->bmiColors[0];
+  lpIndex = (USHORT *)&lpbmi->bmiColors[0];
 
   for (i = 0; i < nNumColors; i++)
     {
@@ -1354,7 +1354,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
       lpIndex++;
     }
 //    RELEASEDCINFO(hDC);
-  PALETTE_UnlockPalette(dc->DevInfo->hpalDefault);
+  PALETTE_UnlockPalette(dc->w.hPalette);
 
   return lpRGB;
 }
