@@ -1,0 +1,12 @@
+TARGETNAME=udp
+TARGETPATH=..\..\objects
+TARGETTYPE=LIBRARY
+
+TARGETLIBS=$(DDK_LIB_PATH)\tdi.lib \
+           $(DDK_LIB_PATH)\ndis.lib
+
+INCLUDES=..\..\include;$(BASEDIR)\INC;..\..\..\..\..\include\net
+
+SOURCES= udp.c
+
+MSC_WARNING_LEVEL=/W3 /WX
