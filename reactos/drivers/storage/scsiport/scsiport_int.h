@@ -5,7 +5,7 @@
  *	An enumeration containing the states in the timer DFA
  */
 
-#define VERSION "0.0.2"
+#define VERSION "0.0.3"
 
 typedef enum _SCSI_PORT_TIMER_STATES
 {
@@ -42,9 +42,9 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
 
   ULONG PendingIrpCount;
   ULONG ActiveIrpCount;
-  ULONG NextLuRequestCount;
 
   PIRP NextIrp;
+  ULONG Flags;
 
   /* More data? */
 
@@ -97,17 +97,15 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   PHYSICAL_ADDRESS PhysicalAddress;
   PVOID VirtualAddress;
-  ULONG VirtualAddressMap;
+  RTL_BITMAP SrbExtensionAllocMap;
+  ULONG MaxSrbExtensions;
+  ULONG CurrentSrbExtensions;
   ULONG CommonBufferLength;
 
   LIST_ENTRY PendingIrpListHead;
   PIRP NextIrp;
   ULONG PendingIrpCount;
   ULONG ActiveIrpCount;
-
-  ULONG CompleteRequestCount;
-  ULONG NextRequestCount;
-  ULONG NextLuRequestCount;
 
   UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
