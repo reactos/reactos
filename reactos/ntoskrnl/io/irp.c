@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.43 2002/09/08 10:23:25 chorns Exp $
+/* $Id: irp.c,v 1.44 2002/09/30 20:53:38 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -304,8 +304,8 @@ IoIsOperationSynchronous(IN PIRP Irp)
   PFILE_OBJECT FileObject = NULL;
   ULONG Flags = 0;
 
-  /* Check the associated FILE_OBJECT's flags first. */
-  FileObject = Irp->Tail.Overlay.OriginalFileObject;
+  /* Check the FILE_OBJECT's flags first. */
+  FileObject = IoGetCurrentIrpStackLocation(Irp)->FileObject;
   if (!(FO_SYNCHRONOUS_IO & FileObject->Flags))
     {
       /* Check IRP's flags. */
@@ -318,7 +318,7 @@ IoIsOperationSynchronous(IN PIRP Irp)
 
   /* Check more IRP's flags. */
   Flags = Irp->Flags;
-  if (!(IRP_MOUNT_COMPLETION & Flags)
+  if (!(IRP_PAGING_IO & Flags)
       || (IRP_SYNCHRONOUS_PAGING_IO & Flags))
     {
       return(TRUE);
