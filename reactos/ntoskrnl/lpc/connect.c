@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.23 2004/01/22 21:56:48 ea Exp $
+/* $Id: connect.c,v 1.24 2004/02/01 18:19:28 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,6 +29,16 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	EiConnectPort/12
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
 NTSTATUS STDCALL
 EiConnectPort(IN PEPORT* ConnectedPort,
 	      IN PEPORT NamedPort,
@@ -219,11 +229,11 @@ EiConnectPort(IN PEPORT* ConnectedPort,
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	NtConnectPort@32
+ * 	NtConnectPort/8
  * 	
  * DESCRIPTION
  *	Connect to a named port and wait for the other side to 
- *	accept the connection.
+ *	accept or reject the connection request.
  *
  * ARGUMENTS
  *	ConnectedPort
@@ -500,7 +510,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 
 /**********************************************************************
  * NAME							EXPORTED
- *	NtAcceptConnectPort@24
+ *	NtAcceptConnectPort/6
  *
  * DESCRIPTION
  *
@@ -732,7 +742,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
     {
       CReply->ReceiveClientViewBase = WriteMap->TargetViewBase;
     }
-  CReply->MaximumMessageSize = 0x148;
+  CReply->MaximumMessageSize = PORT_MAX_MESSAGE_LENGTH;
 
 
   /*
@@ -787,7 +797,7 @@ NtSecureConnectPort (OUT    PHANDLE				ConnectedPort,
 		     IN OUT PVOID				ConnectInfo		OPTIONAL,
 		     IN OUT PULONG				UserConnectInfoLength	OPTIONAL)
 {
-  /* TODO: implement a new object type: SecurePort */
+  /* TODO: implement a new object type: WaitablePort */
   /* TODO: verify the process' SID that hosts the rendez-vous port equals ServerSid */
   return NtConnectPort (ConnectedPort,
 		        PortName,

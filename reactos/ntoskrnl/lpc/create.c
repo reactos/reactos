@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.14 2003/12/30 18:52:05 fireball Exp $
+/* $Id: create.c,v 1.15 2004/02/01 18:19:28 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,12 +19,24 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/**********************************************************************
+ * NAME
+ * 	LpcpVerifyCreateParameters/5
+ *
+ * DESCRIPTION
+ *	Verify user parameters in NtCreatePort and in
+ *	NtCreateWaitablePort.
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
 STATIC NTSTATUS STDCALL 
-VerifyCreateParameters (IN	PHANDLE			PortHandle,
-			IN	POBJECT_ATTRIBUTES	ObjectAttributes,
-			IN	ULONG			MaxConnectInfoLength,
-			IN	ULONG			MaxDataLength,
-			IN	ULONG			Reserved)
+LpcpVerifyCreateParameters (IN	PHANDLE			PortHandle,
+			    IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+			    IN	ULONG			MaxConnectInfoLength,
+			    IN	ULONG			MaxDataLength,
+			    IN	ULONG			Reserved)
 {
   if (NULL == PortHandle)
     {
@@ -42,19 +54,30 @@ VerifyCreateParameters (IN	PHANDLE			PortHandle,
   {
     return (STATUS_INVALID_PORT_ATTRIBUTES);
   }
-  if (MaxConnectInfoLength > 0x104) /* FIXME: use a macro! */
+  if (MaxConnectInfoLength > PORT_MAX_DATA_LENGTH)
     {
       return (STATUS_INVALID_PARAMETER_3);
     }
-  if (MaxDataLength > 0x148) /* FIXME: use a macro! */
+  if (MaxDataLength > PORT_MAX_MESSAGE_LENGTH)
     {
       return (STATUS_INVALID_PARAMETER_4);
     }
-  /* FIXME: some checking is done also on Reserved */
+  /* FIXME: some checking is done also on Reserved, but
+   * not in public (free/checked) versions. */
   return (STATUS_SUCCESS);
 }
 
 
+/**********************************************************************
+ * NAME
+ * 	NiCreatePort/4
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
 NTSTATUS STDCALL
 NiCreatePort (PVOID			ObjectBody,
 	      PVOID			Parent,
@@ -77,7 +100,7 @@ NiCreatePort (PVOID			ObjectBody,
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	NtCreatePort@20
+ * 	NtCreatePort/5
  * 	
  * DESCRIPTION
  *
@@ -103,12 +126,12 @@ NtCreatePort (PHANDLE		      PortHandle,
   DPRINT("NtCreatePort() Name %x\n", ObjectAttributes->ObjectName->Buffer);
   
   /* Verify parameters */
-  Status = VerifyCreateParameters (PortHandle,
-				   ObjectAttributes,
-				   MaxConnectInfoLength,
-				   MaxDataLength,
-				   Reserved);
-  if (!NT_SUCCESS(Status))
+  Status = LpcpVerifyCreateParameters (PortHandle,
+				       ObjectAttributes,
+				       MaxConnectInfoLength,
+				       MaxDataLength,
+				       Reserved);
+  if (STATUS_SUCCESS != Status)
     {
       return (Status);
     }
@@ -141,8 +164,8 @@ NtCreatePort (PHANDLE		      PortHandle,
     }
 
   Status = NiInitializePort (Port);
-  Port->MaxConnectInfoLength = 260; /* FIXME: use a macro! */
-  Port->MaxDataLength = 328; /* FIXME: use a macro! */
+  Port->MaxConnectInfoLength = PORT_MAX_DATA_LENGTH;
+  Port->MaxDataLength = PORT_MAX_MESSAGE_LENGTH;
   
   ObDereferenceObject (Port);
   
@@ -151,7 +174,7 @@ NtCreatePort (PHANDLE		      PortHandle,
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	NtCreateWaitablePort@20
+ * 	NtCreateWaitablePort/5
  * 	
  * DESCRIPTION
  *	Waitable ports can be connected to with NtSecureConnectPort.
@@ -178,11 +201,11 @@ NtCreateWaitablePort (OUT	PHANDLE			PortHandle,
   NTSTATUS Status;
   
   /* Verify parameters */
-  Status = VerifyCreateParameters (PortHandle,
-				   ObjectAttributes,
-				   MaxConnectInfoLength,
-				   MaxDataLength,
-				   Reserved);
+  Status = LpcpVerifyCreateParameters (PortHandle,
+				       ObjectAttributes,
+				       MaxConnectInfoLength,
+				       MaxDataLength,
+				       Reserved);
   if (STATUS_SUCCESS != Status)
     {
       return (Status);
