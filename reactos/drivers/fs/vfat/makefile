@@ -1,10 +1,9 @@
-# $Id: makefile,v 1.13 1999/12/18 10:17:42 ea Exp $
+# $Id: makefile,v 1.14 2000/01/19 07:05:04 rex Exp $
 #
 #
 TARGET=vfatfs
 
-OBJECTS = blockdev.o dir.o dirwr.o iface.o string.o fat.o rw.o finfo.o \
-          volume.o create.o $(TARGET).coff
+OBJECTS = blockdev.o dir.o dirwr.o iface.o string.o fat.o rw.o finfo.o volume.o create.o $(TARGET).coff
 LIBS = ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I../../../include
@@ -49,16 +48,7 @@ else
 endif
 
 $(TARGET).sys: $(OBJECTS) $(LIBS)
-	$(CC) \
-		-specs=../../svc_specs \
-		-mdll \
-		-o junk.tmp \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp \
-		-Wl,"-h vfatfs.sys" \
-		$(OBJECTS) $(LIBS)
+	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" $(OBJECTS) $(LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).sys \
@@ -66,16 +56,7 @@ $(TARGET).sys: $(OBJECTS) $(LIBS)
 		--output-exp temp.exp \
 		--def vfatfs.def
 	- $(RM) base.tmp
-	$(CC) \
-		--verbose \
-		-Wl,--image-base,0x10000 \
-		-Wl,-e,_DriverEntry@8 \
-		-Wl,temp.exp \
-		-Wl,"-h vfatfs.sys" \
-		-specs=../../svc_specs \
-		-mdll \
-		-o $(TARGET).sys \
-		$(OBJECTS) $(LIBS)
+	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).sys $(OBJECTS) $(LIBS)
 	- $(RM) temp.exp
 
 

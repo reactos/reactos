@@ -250,15 +250,15 @@ endif
 
 clean_dist_dir:
 ifeq ($(DOSCLI),yes)
-	$(RM) $(DIST_DIR)\dlls\*.*
-	$(RM) $(DIST_DIR)\apps\*.*
-	$(RM) $(DIST_DIR)\drivers\*.*
-	$(RM) $(DIST_DIR)\subsys\*.*
-	$(RMDIR) $(DIST_DIR)\dlls
-	$(RMDIR) $(DIST_DIR)\apps
-	$(RMDIR) $(DIST_DIR)\drivers
-	$(RMDIR) $(DIST_DIR)\subsys
-	$(RMDIR) $(DIST_DIR)
+	- $(RM) $(DIST_DIR)\dlls\*.dll
+	- $(RM) $(DIST_DIR)\apps\*.exe
+	- $(RM) $(DIST_DIR)\drivers\*.sys
+	- $(RM) $(DIST_DIR)\subsys\*.exe
+	- $(RMDIR) $(DIST_DIR)\dlls
+	- $(RMDIR) $(DIST_DIR)\apps
+	- $(RMDIR) $(DIST_DIR)\drivers
+	- $(RMDIR) $(DIST_DIR)\subsys
+	- $(RMDIR) $(DIST_DIR)
 else
 	$(RM) -r $(DIST_DIR)
 endif

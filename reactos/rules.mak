@@ -32,6 +32,7 @@ CP = copy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 RM = del
+RMDIR = rmdir
 KM_SPECS = specs
 DOSCLI = yes
 FLOPPY_DIR = A:
