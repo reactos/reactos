@@ -27,10 +27,8 @@ int process(FILE* in, FILE* out, FILE *out2)
 
    unsigned char first1 = TRUE;
    
-   fprintf(out,"; Machine generated, don't edit\n");
+   fprintf(out,"// Machine generated, don't edit\n");
    fprintf(out,"\n\n");
-   fprintf(out,"SECTION .text\n\n");
-   fprintf(out,"BITS 32\n\n");
    
    fprintf(out2,"// Machine generated, don't edit\n");
    fprintf(out2,"\n\n");
@@ -57,20 +55,20 @@ int process(FILE* in, FILE* out, FILE *out2)
 	     
 //	     printf("name %s value %d\n",name,value);
 #ifdef PARAMETERIZED_LIBS
-	     fprintf(out,"GLOBAL _%s@%s\n",name,nr_args);
-	     fprintf(out,"GLOBAL _%s@%s\n",name2,nr_args);
-	     fprintf(out,"_%s@%s:\n",name,nr_args);
-	     fprintf(out,"_%s@%s:\n",name2,nr_args);
+         fprintf(out,"__asm__(\"\\n\\t.global _%s@%s\\n\\t\"\n",name,nr_args);
+         fprintf(out,"\".global _%s@%s\\n\\t\"\n",name2,nr_args);
+         fprintf(out,"\"_%s@%s:\\n\\t\"\n",name,nr_args);
+         fprintf(out,"\"_%s@%s:\\n\\t\"\n",name2,nr_args);
 #else
-	     fprintf(out,"GLOBAL _%s\n",name);
-	     fprintf(out,"GLOBAL _%s\n",name2);
-	     fprintf(out,"_%s:\n",name);
-	     fprintf(out,"_%s:\n",name2);
+         fprintf(out,"__asm__(\"\\n\\t.global _%s\\n\\t\"\n",name);
+         fprintf(out,"\".global _%s\\n\\t\"\n",name2);
+         fprintf(out,"\"_%s:\\n\\t\"\n",name);
+         fprintf(out,"\"_%s:\\n\\t\"\n",name2);
 #endif
-	     fprintf(out,"\tmov\teax,%d\n",value);
-	     fprintf(out,"\tlea\tedx,[esp+4]\n");
-	     fprintf(out,"\tint\t2Eh\n");
-	     fprintf(out,"\tret\t%s\n\n",nr_args);
+         fprintf(out,"\t\"mov\t$%d,%%eax\\n\\t\"\n",value);
+         fprintf(out,"\t\"lea\t4(%%esp),%%edx\\n\\t\"\n");
+         fprintf(out,"\t\"int\t$0x2E\\n\\t\"\n");
+         fprintf(out,"\t\"ret\t$%s\\n\\t\");\n\n",nr_args);
 		 
 
 	     value++;
