@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.130 2004/07/23 07:44:26 jimtabor Exp $
+/* $Id: thread.c,v 1.131 2004/08/09 22:15:01 gvg Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -910,7 +910,6 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
       PETHREAD EThread = NULL;
 
       if((ClientId)
-	&& (ClientId->UniqueProcess)
 	&& (ClientId->UniqueThread))
       {
          // It is an error to specify both
@@ -923,8 +922,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
             return(STATUS_INVALID_PARAMETER_MIX);
 	 }
 	 // Parameters mix OK
-	 Status = PsLookupProcessThreadByCid(ClientId,
-                     NULL,
+         Status = PsLookupThreadByThreadId(ClientId->UniqueThread,
                      & EThread);
       }
       else if((ObjectAttributes)
