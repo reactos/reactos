@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.20 2003/02/12 00:39:31 hyperion Exp $
+/* $Id: env.c,v 1.21 2003/04/18 08:29:35 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -309,11 +309,8 @@ GetVersionExA(
    gives extra work to RtlUnicodeStringToAnsiString, but spares us an
    RtlInitUnicodeString round
   */
-   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion) *
-   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion[0]) -
-   1,
-   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion) *
-   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion[0]),
+  0,
+  sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion),
   oviVerInfo.szCSDVersion
  };
 
@@ -321,9 +318,7 @@ GetVersionExA(
  ANSI_STRING strVerStr =
  {
   0,
-   sizeof(((LPOSVERSIONINFOA)NULL)->szCSDVersion) *
-   sizeof(((LPOSVERSIONINFOA)NULL)->szCSDVersion[0]) -
-   1,
+  sizeof(((LPOSVERSIONINFOA)NULL)->szCSDVersion),
   lpVersionInformation->szCSDVersion
  };
 
@@ -355,10 +350,11 @@ GetVersionExA(
  /* null-terminate, just in case */
  oviVerInfo.szCSDVersion
  [
-  sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion) *
+  sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion) /
   sizeof(((LPOSVERSIONINFOW)NULL)->szCSDVersion[0]) -
   1
  ] = 0;
+ wstrVerStr.Length = wcslen(wstrVerStr.Buffer) * sizeof(WCHAR);
 
  /* convert the version string */
  nErrCode = RtlUnicodeStringToAnsiString(&strVerStr, &wstrVerStr, FALSE);

@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.47 2002/12/08 15:57:40 robd Exp $
+/* $Id: startup.c,v 1.48 2003/04/18 08:29:35 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -91,6 +91,11 @@ LdrInitializeThunk (ULONG Unknown1,
         DPRINT("ImageBase is null\n");
         ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
      }
+
+   Peb->OSMajorVersion = 4;
+   Peb->OSMinorVersion = 0;
+   Peb->OSBuildNumber = 0;
+   Peb->OSPlatformId = VER_PLATFORM_WIN32_NT;
 
    NtGlobalFlag = Peb->NtGlobalFlag;
 
