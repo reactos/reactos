@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.63 2003/04/28 21:32:10 chorns Exp $
+/* $Id: utils.c,v 1.64 2003/04/30 22:04:12 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -884,7 +884,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   RelocationDDir = 
     &NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
   RelocationRVA = RelocationDDir->VirtualAddress;
-   
+
   if (RelocationRVA)
     {
       RelocationDir = 
@@ -1745,7 +1745,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
                   return STATUS_SUCCESS;
                }
           }
-        DbgPrint("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
+        DPRINT("LdrGetProcedureAddress: Can't resolve symbol '%Z'\n", Name);
      }
    else
      {
@@ -1756,7 +1756,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
              *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
              return STATUS_SUCCESS;
           }
-        DbgPrint("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
+        DPRINT("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
   }
 
    return STATUS_PROCEDURE_NOT_FOUND;
