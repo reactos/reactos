@@ -40,7 +40,7 @@ typedef struct _REG_KEY
   PUCHAR Name;
 
   /* default data */
-  ULONG Type;
+  ULONG DataType;
   ULONG DataSize;
   PUCHAR Data;
 } KEY, *HKEY, **PHKEY;
@@ -55,7 +55,7 @@ typedef struct _REG_VALUE
   PUCHAR Name;
 
   /* value data */
-  ULONG Type;
+  ULONG DataType;
   ULONG DataSize;
   PUCHAR Data;
 } VALUE, *PVALUE;
@@ -207,9 +207,6 @@ typedef struct _REG_VALUE
 	(Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field))
 
 
-//typedef struct _REG_KEY *HKEY, **PHKEY;
-
-
 #define REG_NONE 0
 #define REG_SZ 1
 #define REG_EXPAND_SZ 2
@@ -227,6 +224,9 @@ typedef struct _REG_VALUE
 
 VOID
 RegInitializeRegistry(VOID);
+
+LONG
+RegInitCurrentControlSet(BOOL LastKnownGood);
 
 
 LONG

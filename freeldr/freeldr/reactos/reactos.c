@@ -175,19 +175,21 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
   rc = RegOpenKey(NULL,
 		  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ServiceGroupOrder",
 		  &hGroupKey);
-  DbgPrint((DPRINT_REACTOS, "RegOpenKey(): rc %d\n", (int)rc));
   if (rc != ERROR_SUCCESS)
-    return;
+    {
+      DbgPrint((DPRINT_REACTOS, "Failed to open the 'ServiceGroupOrder key (rc %d)\n", (int)rc));
+      return;
+    }
 
   /* enumerate drivers */
   rc = RegOpenKey(NULL,
 		  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services",
 		  &hServiceKey);
-  DbgPrint((DPRINT_REACTOS, "RegOpenKey(): rc %d\n", (int)rc));
   if (rc != ERROR_SUCCESS)
-    return;
-
-  DbgPrint((DPRINT_REACTOS, "hServiceKey: %x\n", (int)hServiceKey));
+    {
+      DbgPrint((DPRINT_REACTOS, "Failed to open the 'Services' key (rc %d)\n", (int)rc));
+      return;
+    }
 
   BufferSize = sizeof(ValueBuffer);
   rc = RegQueryValue(hGroupKey, "List", NULL, (PUCHAR)ValueBuffer, &BufferSize);
@@ -248,18 +250,18 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		{
 		  DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
 		}
-      DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
+	      DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
 
 	      if (nPos < 100)
 		nPos += 5;
 
 	      LoadDriver(ImagePath, nPos);
 	    }
-		else
-			{
-        DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d and Group '%s' (Current group '%s')\n",
-          ImagePath, StartValue, DriverGroup, GroupName));
-			}
+	  else
+	    {
+	      DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d and Group '%s' (Current group '%s')\n",
+	          ImagePath, StartValue, DriverGroup, GroupName));
+	    }
 	  Index++;
 	}
 
@@ -373,6 +375,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	char* Base;
 	ULONG Size;
 
+
 	//
 	// Open the operating system section
 	// specified in the .ini file
@@ -454,7 +457,6 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	DebugPrint(DPRINT_REACTOS,"SystemRoot: '%s'", szBootPath);
 
 	UiDrawBackdrop();
-
 	UiDrawStatusText("Loading...");
 	UiDrawProgressBarCenter(0, 100);
 
@@ -584,7 +586,6 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	RegImportHive(Base, Size);
 
 	UiDrawProgressBarCenter(15, 100);
-
 	DebugPrint(DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size);
 
 	/*
@@ -597,6 +598,11 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	MultiBootCloseModule(Base, Size);
 #endif
 	UiDrawProgressBarCenter(20, 100);
+
+	/*
+	 * Initialize the 'currentControlSet' link
+	 */
+	RegInitCurrentControlSet(FALSE);
 
 	/*
 	 * Load NLS files
@@ -638,3 +644,4 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	boot_reactos();
 }
 
+/* EOF */

@@ -1,7 +1,7 @@
 /*
  *  FreeLoader
  *
- *  Copyright (C) 2001  Eric Kohl
+ *  Copyright (C) 2001, 2002  Eric Kohl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,6 +31,8 @@
 #include <debug.h>
 #include "registry.h"
 
+#include <ui.h>
+
 static HKEY RootKey;
 
 
@@ -47,9 +49,119 @@ RegInitializeRegistry(VOID)
   RootKey->Name = (PUCHAR)MmAllocateMemory(2);
   strcpy(RootKey->Name, "\\");
 
-  RootKey->Type = 0;
+  RootKey->DataType = 0;
   RootKey->DataSize = 0;
   RootKey->Data = NULL;
+}
+
+
+LONG
+RegInitCurrentControlSet(BOOL LastKnownGood)
+{
+  CHAR ControlSetKeyName[80];
+  HKEY SelectKey;
+  HKEY SystemKey;
+  HKEY ControlSetKey;
+  HKEY LinkKey;
+  ULONG CurrentSet = 0;
+  ULONG DefaultSet = 0;
+  ULONG LastKnownGoodSet = 0;
+  ULONG DataSize;
+  LONG Error;
+
+  Error = RegOpenKey(NULL,
+		     "\\Registry\\Machine\\SYSTEM\\Select",
+		    &SelectKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_REGISTRY, "RegOpenKey() failed (Error %u)\n", (int)Error));
+      return(Error);
+    }
+
+  DataSize = sizeof(ULONG);
+  Error = RegQueryValue(SelectKey,
+			"Default",
+			NULL,
+			(PUCHAR)&DefaultSet,
+			&DataSize);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_REGISTRY, "RegQueryValue('Default') failed (Error %u)\n", (int)Error));
+      return(Error);
+    }
+
+  DataSize = sizeof(ULONG);
+  Error = RegQueryValue(SelectKey,
+			"LastKnownGood",
+			NULL,
+			(PUCHAR)&LastKnownGoodSet,
+			&DataSize);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_REGISTRY, "RegQueryValue('Default') failed (Error %u)\n", (int)Error));
+      return(Error);
+    }
+
+  CurrentSet = (LastKnownGood == TRUE) ? LastKnownGoodSet : DefaultSet;
+  strcpy(ControlSetKeyName, "ControlSet");
+  switch(CurrentSet)
+    {
+      case 1:
+	strcat(ControlSetKeyName, "001");
+	break;
+      case 2:
+	strcat(ControlSetKeyName, "002");
+	break;
+      case 3:
+	strcat(ControlSetKeyName, "003");
+	break;
+      case 4:
+	strcat(ControlSetKeyName, "004");
+	break;
+      case 5:
+	strcat(ControlSetKeyName, "005");
+	break;
+    }
+
+  Error = RegOpenKey(NULL,
+		     "\\Registry\\Machine\\SYSTEM",
+		     &SystemKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_REGISTRY, "RegOpenKey(SystemKey) failed (Error %u)\n", (int)Error));
+      return(Error);
+    }
+
+  Error = RegOpenKey(SystemKey,
+		     ControlSetKeyName,
+		     &ControlSetKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_REGISTRY, "RegOpenKey(ControlSetKey) failed (Error %u)\n", (int)Error));
+      return(Error);
+    }
+
+  Error = RegCreateKey(SystemKey,
+		       "CurrentControlSet",
+		       &LinkKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_REGISTRY, "RegCreateKey(LinkKey) failed (Error %u)\n", (int)Error));
+      return(Error);
+    }
+
+  Error = RegSetValue(LinkKey,
+		      NULL,
+		      REG_LINK,
+		      (PUCHAR)&ControlSetKey,
+		      sizeof(PVOID));
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_REGISTRY, "RegSetValue(LinkKey) failed (Error %u)\n", (int)Error));
+      return(Error);
+    }
+
+  return(ERROR_SUCCESS);
 }
 
 
@@ -67,7 +179,7 @@ RegCreateKey(HKEY ParentKey,
   int subkeyLength;
   int stringLength;
 
-	DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
+  DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
 
   if (*KeyName == '\\')
     {
@@ -83,10 +195,15 @@ RegCreateKey(HKEY ParentKey,
       CurrentKey = ParentKey;
     }
 
+  /* Check whether current key is a link */
+  if (CurrentKey->DataType == REG_LINK)
+    {
+      CurrentKey = (HKEY)CurrentKey->Data;
+    }
 
   while (*KeyName != 0)
     {
-	    DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
+      DbgPrint((DPRINT_REGISTRY, "KeyName '%s'\n", KeyName));
 
       if (*KeyName == '\\')
 	KeyName++;
@@ -107,13 +224,13 @@ RegCreateKey(HKEY ParentKey,
       Ptr = CurrentKey->SubKeyList.Flink;
       while (Ptr != &CurrentKey->SubKeyList)
 	{
-    DbgPrint((DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr));
+	  DbgPrint((DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr));
 
 	  SearchKey = CONTAINING_RECORD(Ptr,
 					KEY,
 					KeyList);
-    DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
-    DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
+	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
+	  DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
 	  if (strncmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
@@ -130,7 +247,7 @@ RegCreateKey(HKEY ParentKey,
 	  InitializeListHead(&NewKey->SubKeyList);
 	  InitializeListHead(&NewKey->ValueList);
 
-	  NewKey->Type = 0;
+	  NewKey->DataType = 0;
 	  NewKey->DataSize = 0;
 	  NewKey->Data = NULL;
 
@@ -142,14 +259,20 @@ RegCreateKey(HKEY ParentKey,
 	  memcpy(NewKey->Name, name, subkeyLength);
 	  NewKey->Name[subkeyLength] = 0;
 
-    DbgPrint((DPRINT_REGISTRY, "NewKey 0x%x\n", NewKey));
-    DbgPrint((DPRINT_REGISTRY, "NewKey '%s'  Length %d\n", NewKey->Name, NewKey->NameSize));
+	  DbgPrint((DPRINT_REGISTRY, "NewKey 0x%x\n", NewKey));
+	  DbgPrint((DPRINT_REGISTRY, "NewKey '%s'  Length %d\n", NewKey->Name, NewKey->NameSize));
 
 	  CurrentKey = NewKey;
 	}
       else
 	{
 	  CurrentKey = SearchKey;
+
+	  /* Check whether current key is a link */
+	  if (CurrentKey->DataType == REG_LINK)
+	    {
+	      CurrentKey = (HKEY)CurrentKey->Data;
+	    }
 	}
 
       KeyName = KeyName + stringLength;
@@ -246,6 +369,11 @@ RegOpenKey(HKEY ParentKey,
       CurrentKey = ParentKey;
     }
 
+  /* Check whether current key is a link */
+  if (CurrentKey->DataType == REG_LINK)
+    {
+      CurrentKey = (HKEY)CurrentKey->Data;
+    }
 
   while (*KeyName != 0)
     {
@@ -270,14 +398,14 @@ RegOpenKey(HKEY ParentKey,
       Ptr = CurrentKey->SubKeyList.Flink;
       while (Ptr != &CurrentKey->SubKeyList)
 	{
-    DbgPrint((DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr));
+	  DbgPrint((DPRINT_REGISTRY, "Ptr 0x%x\n", Ptr));
 
 	  SearchKey = CONTAINING_RECORD(Ptr,
 					KEY,
 					KeyList);
 
-    DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
-    DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
+	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
+	  DbgPrint((DPRINT_REGISTRY, "Searching '%s'\n", SearchKey->Name));
 
 	  if (strncmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
@@ -292,6 +420,12 @@ RegOpenKey(HKEY ParentKey,
       else
 	{
 	  CurrentKey = SearchKey;
+
+	  /* Check whether current key is a link */
+	  if (CurrentKey->DataType == REG_LINK)
+	    {
+	      CurrentKey = (HKEY)CurrentKey->Data;
+	    }
 	}
 
       KeyName = KeyName + stringLength;
@@ -320,12 +454,24 @@ RegSetValue(HKEY Key,
   if ((ValueName == NULL) || (*ValueName == 0))
     {
       /* set default value */
-      if (Key->Data != NULL)
-        MmFreeMemory(Key->Data);
-      Key->Data = (PUCHAR)MmAllocateMemory(DataSize);
-      Key->DataSize = DataSize;
-      Key->Type = Type;
-      memcpy(Key->Data, Data, DataSize);
+      if ((Key->Data != NULL) && (Key->DataSize > sizeof(PUCHAR)))
+	{
+	  MmFreeMemory(Key->Data);
+	}
+
+      if (DataSize <= sizeof(PUCHAR))
+	{
+	  Key->DataSize = DataSize;
+	  Key->DataType = Type;
+	  memcpy(&Key->Data, Data, DataSize);
+	}
+      else
+	{
+	  Key->Data = (PUCHAR)MmAllocateMemory(DataSize);
+	  Key->DataSize = DataSize;
+	  Key->DataType = Type;
+	  memcpy(Key->Data, Data, DataSize);
+	}
     }
   else
     {
@@ -337,7 +483,7 @@ RegSetValue(HKEY Key,
 				    VALUE,
 				    ValueList);
 
-    DbgPrint((DPRINT_REGISTRY, "Value->Name '%s'\n", Value->Name));
+	  DbgPrint((DPRINT_REGISTRY, "Value->Name '%s'\n", Value->Name));
 
 	  if (stricmp(Value->Name, ValueName) == 0)
 	    break;
@@ -348,7 +494,7 @@ RegSetValue(HKEY Key,
       if (Ptr == &Key->ValueList)
 	{
 	  /* add new value */
-    DbgPrint((DPRINT_REGISTRY, "No value found - adding new value\n"));
+	  DbgPrint((DPRINT_REGISTRY, "No value found - adding new value\n"));
 
 	  Value = (PVALUE)MmAllocateMemory(sizeof(VALUE));
 	  if (Value == NULL)
@@ -359,25 +505,30 @@ RegSetValue(HKEY Key,
 	  if (Value->Name == NULL)
 	    return(ERROR_OUTOFMEMORY);
 	  strcpy(Value->Name, ValueName);
+	  Value->DataType = REG_NONE;
+	  Value->DataSize = 0;
 	  Value->Data = NULL;
 	}
 
       /* set new value */
+      if ((Value->Data != NULL) && (Value->DataSize > sizeof(PUCHAR)))
+	{
+	  MmFreeMemory(Value->Data);
+	}
+
       if (DataSize <= sizeof(PUCHAR))
 	{
 	  Value->DataSize = DataSize;
-	  Value->Type = Type;
+	  Value->DataType = Type;
 	  memcpy(&Value->Data, Data, DataSize);
 	}
       else
 	{
-	  if(Value->Data != NULL)
-	    MmFreeMemory(Value->Data);
 	  Value->Data = (PUCHAR)MmAllocateMemory(DataSize);
 	  if (Value->Data == NULL)
 	    return(ERROR_OUTOFMEMORY);
+	  Value->DataType = Type;
 	  Value->DataSize = DataSize;
-	  Value->Type = Type;
 	  memcpy(Value->Data, Data, DataSize);
 	}
     }
@@ -403,12 +554,25 @@ RegQueryValue(HKEY Key,
 	return(ERROR_INVALID_PARAMETER);
 
       if (Type != NULL)
-	*Type = Key->Type;
+	*Type = Key->DataType;
       if ((Data != NULL) && (DataSize != NULL))
 	{
-	  Size = min(Key->DataSize, *DataSize);
-	  memcpy(Data, Key->Data, Size);
-	  *DataSize = Size;
+	  if (Key->DataSize <= sizeof(PUCHAR))
+	    {
+	      Size = min(Key->DataSize, *DataSize);
+	      memcpy(Data, &Key->Data, Size);
+	      *DataSize = Size;
+	    }
+	  else
+	    {
+	      Size = min(Key->DataSize, *DataSize);
+	      memcpy(Data, Key->Data, Size);
+	      *DataSize = Size;
+	    }
+	}
+      else if ((Data == NULL) && (DataSize != NULL))
+	{
+	  *DataSize = Key->DataSize;
 	}
     }
   else
@@ -421,7 +585,7 @@ RegQueryValue(HKEY Key,
 				    VALUE,
 				    ValueList);
 
-    DbgPrint((DPRINT_REGISTRY, "Searching for '%s'. Value name '%s'\n", ValueName, Value->Name));
+	  DbgPrint((DPRINT_REGISTRY, "Searching for '%s'. Value name '%s'\n", ValueName, Value->Name));
 
 	  if (stricmp(Value->Name, ValueName) == 0)
 	    break;
@@ -433,7 +597,7 @@ RegQueryValue(HKEY Key,
 	return(ERROR_INVALID_PARAMETER);
 
       if (Type != NULL)
-	*Type = Value->Type;
+	*Type = Value->DataType;
       if ((Data != NULL) && (DataSize != NULL))
 	{
 	  if (Value->DataSize <= sizeof(PUCHAR))
@@ -448,6 +612,10 @@ RegQueryValue(HKEY Key,
 	      memcpy(Data, Value->Data, Size);
 	      *DataSize = Size;
 	    }
+	}
+      else if ((Data == NULL) && (DataSize != NULL))
+	{
+	  *DataSize = Value->DataSize;
 	}
     }
 
@@ -469,7 +637,7 @@ RegDeleteValue(HKEY Key,
 	MmFreeMemory(Key->Data);
       Key->Data = NULL;
       Key->DataSize = 0;
-      Key->Type = 0;
+      Key->DataType = 0;
     }
   else
     {
@@ -502,7 +670,7 @@ RegDeleteValue(HKEY Key,
 	}
       Value->Data = NULL;
       Value->DataSize = 0;
-      Value->Type = 0;
+      Value->DataType = 0;
 
       RemoveEntryList(&Value->ValueList);
       MmFreeMemory(Value);
@@ -536,7 +704,7 @@ RegEnumValue(HKEY Key,
 	  if (ValueName != NULL)
 	    *ValueName = 0;
 	  if (Type != NULL)
-	    *Type = Key->Type;
+	    *Type = Key->DataType;
 	  if (DataSize != NULL)
 	    *DataSize = Key->DataSize;
 
