@@ -1,9 +1,9 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
 
-#include <ntos/kdbgsyms.h>
 #include <roscfg.h>
 #include <napi/teb.h>
+#include <reactos/rossym.h>
 
 typedef NTSTATUS STDCALL_FUNC (*PEPFUNC)(PPEB);
 
@@ -69,7 +69,7 @@ typedef struct _LDR_MODULE
    ULONG          CheckSum;
    ULONG          TimeDateStamp;
 #if defined(DBG) || defined(KDBG)
-  IMAGE_SYMBOL_INFO SymbolInfo;
+   PROSSYM_INFO   RosSymInfo;
 #endif /* KDBG */
 } LDR_MODULE, *PLDR_MODULE;
 

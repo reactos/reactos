@@ -1220,7 +1220,7 @@ IopInitializeBootDrivers(VOID)
       if (Extension == NULL)
          Extension = "";
 
-      if (!_stricmp(Extension, ".exe") || !_stricmp(Extension, ".dll"))
+      if (!_stricmp(Extension, ".sym") || !_stricmp(Extension, ".dll"))
       {
         /* Process symbols for *.exe and *.dll */
         KDB_SYMBOLFILE_HOOK(ModuleName);

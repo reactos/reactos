@@ -31,6 +31,8 @@
 #include <machine.h>
 #include <inifile.h>
 
+#include <reactos/rossym.h>
+
 #include "registry.h"
 
 
@@ -85,70 +87,72 @@ LoadKernel(PCHAR szFileName, int nPos)
   return(TRUE);
 }
 
-static BOOL
-LoadSymbolFile(PCHAR szSystemRoot,
-  PCHAR ModuleName,
-  int nPos)
+static PVOID
+FreeldrAllocMem(ULONG_PTR Size)
 {
-  CHAR SymbolFileName[1024];
+  return MmAllocateMemory((U32) Size);
+}
+
+static VOID
+FreeldrFreeMem(PVOID Area)
+{
+  MmFreeMemory(Area);
+}
+
+static BOOLEAN
+FreeldrReadFile(PVOID FileContext, PVOID Buffer, ULONG Size)
+{
+  U32 BytesRead;
+
+  return FsReadFile((PFILE) FileContext, (U32) Size, &BytesRead, Buffer)
+         && Size == BytesRead;
+}
+
+static BOOLEAN
+FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
+{
+  FsSetFilePointer((PFILE) FileContext, (U32) Position);
+
+  return TRUE;
+}
+
+static BOOL
+LoadKernelSymbols(PCHAR szKernelName, int nPos)
+{
+  static ROSSYM_CALLBACKS FreeldrCallbacks =
+    {
+      FreeldrAllocMem,
+      FreeldrFreeMem,
+      FreeldrReadFile,
+      FreeldrSeekFile
+    };
   PFILE FilePointer;
-  U32 Length;
-  PCHAR Start;
-  PCHAR Ext;
-  char value[256];
-  char *p;
+  PROSSYM_INFO RosSymInfo;
+  U32 Size;
+  PVOID Base;
 
-  /* Get the path to the symbol store */
-  strcpy(SymbolFileName, szSystemRoot);
-  strcat(SymbolFileName, "symbols\\");
+  RosSymInit(&FreeldrCallbacks);
 
-  /* Get the symbol filename from the module name */
-  Start = strrchr(ModuleName, '\\');
-  if (Start == NULL)
-    Start = ModuleName;
-  else
-    Start++;
-
-  Ext = strrchr(ModuleName, '.');
-  if (Ext != NULL)
-    Length = Ext - Start;
-  else
-    Length = strlen(Start);
-
-  strncat(SymbolFileName, Start, Length);
-  strcat(SymbolFileName, ".sym");
-
-  FilePointer = FsOpenFile((PCHAR)&SymbolFileName[0]);
+  FilePointer = FsOpenFile(szKernelName);
   if (FilePointer == NULL)
     {
-      DbgPrint((DPRINT_REACTOS, "Symbol file %s not loaded.\n", SymbolFileName));
-      /* This is not critical */
       return FALSE;
     }
 
-  DbgPrint((DPRINT_REACTOS, "Symbol file %s is loaded.\n", SymbolFileName));
+  if (! RosSymCreateFromFile(FilePointer, &RosSymInfo))
+    {
+      return FALSE;
+    }
 
-  /*
-   * Update the status bar with the current file
-   */
-  strcpy(value, "Reading ");
-  p = strrchr(SymbolFileName, '\\');
-  if (p == NULL)
-    strcat(value, SymbolFileName);
-  else
-    strcat(value, p + 1);
-  UiDrawStatusText(value);
+  Base = MultiBootCreateModule("NTOSKRNL.SYM");
+  Size = RosSymGetRawDataLength(RosSymInfo);
+  RosSymGetRawData(RosSymInfo, Base);
+  MultiBootCloseModule(Base, Size);
 
-  /*
-   * Load the symbol file
-   */
-  MultiBootLoadModule(FilePointer, SymbolFileName, NULL);
+  RosSymDelete(RosSymInfo);
 
-  UiDrawProgressBarCenter(nPos, 100, "Loading ReactOS...");
-
-  return (TRUE);
+  return TRUE;
 }
-
 
 static BOOL
 LoadDriver(PCHAR szFileName, int nPos)
@@ -366,7 +370,6 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		    nPos += 5;
 
 	          LoadDriver(ImagePath, nPos);
-	          LoadSymbolFile(szSystemRoot, ImagePath, nPos);
 	        }
 	      else
 	        {
@@ -446,7 +449,6 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		nPos += 5;
 
 	      LoadDriver(ImagePath, nPos);
-	      LoadSymbolFile(szSystemRoot, ImagePath, nPos);
 	    }
 	  else
 	    {
@@ -880,21 +882,18 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	        UiMessageBox(MsgBuffer);
 		return;
 	}
-	UiDrawProgressBarCenter(25, 100, "Loading ReactOS...");
+	UiDrawProgressBarCenter(30, 100, "Loading ReactOS...");
 
 	/*
-	 * Load symbol files
+	 * Load kernel symbols
 	 */
-	LoadSymbolFile(szBootPath, szKernelName, 30);
-	LoadSymbolFile(szBootPath, szHalName, 30);
-
-	UiDrawProgressBarCenter(30, 100, "Loading ReactOS...");
+	LoadKernelSymbols(szKernelName, 30);
+	UiDrawProgressBarCenter(40, 100, "Loading ReactOS...");
 
 	/*
 	 * Load boot drivers
 	 */
-	LoadBootDrivers(szBootPath, 30);
-
+	LoadBootDrivers(szBootPath, 40);
 
 #if 0
 	/*
@@ -919,6 +918,14 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 */
 	DiskStopFloppyMotor();
 	boot_reactos();
+}
+
+#undef DbgPrint
+ULONG
+DbgPrint(char *Fmt, ...)
+{
+  UiMessageBox(Fmt);
+  return 0;
 }
 
 /* EOF */

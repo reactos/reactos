@@ -130,44 +130,6 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	return TRUE;
 }
 
-#if 0
-BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
-{
-	U32			dwModuleSize;
-	module_t*	pModule;
-	char*		ModuleNameString;
-	char *          TempName;
-	
-	/*
-	 * Get current module data structure and module name string array
-	 */
-	pModule = &multiboot_modules[mb_info.mods_count];
-	do {
-	  TempName = strchr( ModuleName, '\\' );
-	  if( TempName )
-	    ModuleName = TempName + 1;
-	} while( TempName );
-
-	ModuleNameString = multiboot_module_strings[mb_info.mods_count];
-	
-	dwModuleSize = FsGetFileSize(ModuleImage);
-	pModule->mod_start = next_module_load_base;
-	pModule->mod_end = next_module_load_base + dwModuleSize;
-	strcpy(ModuleNameString, ModuleName);
-	pModule->string = (unsigned long)ModuleNameString;
-	
-	/*
-	 * Load the file image
-	 */
-	FsReadFile(ModuleImage, dwModuleSize, NULL, (void*)next_module_load_base);
-
-	next_module_load_base = ROUND_UP(pModule->mod_end, /*PAGE_SIZE*/4096);
-	mb_info.mods_count++;
-
-	return TRUE;
-}
-#endif
-
 PVOID MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, U32* ModuleSize)
 {
 	U32			dwModuleSize;

@@ -95,7 +95,7 @@ endif
 
 COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES)
 
-COMPILER_INCLUDES	=	-I$(SRCDIR)/include
+COMPILER_INCLUDES	=	-I$(SRCDIR)/include -I$(PATH_TO_TOP)/include
 
 CFLAGS = $(COMPILER_OPTIONS) \
          $(COMPILER_DEFINES) \
@@ -262,9 +262,9 @@ all : freeldr.sys setupldr.sys
 	@echo Make ALL done.
 
 
-freeldr.sys : $(ALL_OBJS)
+freeldr.sys : $(ALL_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
 	@echo ===================================================== LINKING $@
-	@$(LD) $(LFLAGS) -o freeldr.exe $(F_OBJS)
+	@$(LD) $(LFLAGS) -o freeldr.exe $(F_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
 ifeq ($(FULL_MAP),yes)
 	@$(OBJDUMP) -d -S freeldr.exe > freeldr.map
 else

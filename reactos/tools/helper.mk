@@ -647,9 +647,6 @@ ifeq ($(DBG),1)
   TARGET_ASFLAGS += -g
   TARGET_CFLAGS += -g
   TARGET_LFLAGS += -g
-  ifeq ($(INSTALL_SYMBOLS),)
-    INSTALL_SYMBOLS := yes
-  endif
 endif
 
 TARGET_CPPFLAGS += $(MK_CPPFLAGS) $(STD_CPPFLAGS)
@@ -795,10 +792,6 @@ endif
 	  	-o $(MK_NOSTRIPNAME) \
 	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
-ifeq ($(BUILD_SYM),yes)
-	$(HALFVERBOSEECHO) [RSYM]    $(MK_BASENAME).sym
-	- $(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
-endif
 ifeq ($(BUILD_MAP),full)
 	$(HALFVERBOSEECHO) [OBJDUMP] $(MK_BASENAME).map
 	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
@@ -810,47 +803,8 @@ endif
 endif
 
 $(MK_FULLNAME): $(MK_NOSTRIPNAME) $(MK_EXTRADEP)
-	$(HALFVERBOSEECHO) [LD]      $(MK_FULLNAME)
-	-
-ifneq ($(TARGET_CPPAPP),yes)
-	$(LD) --strip-debug -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
-endif
-ifeq ($(MK_EXETYPE),dll)
-	$(LD_CC) -Wl,--base-file,base.tmp \
-		-Wl,--entry,$(TARGET_ENTRY) \
-		-Wl,--strip-debug \
-		$(TARGET_LFLAGS) \
-		-o junk.tmp \
-		$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname $(MK_FULLNAME) \
-		--base-file base.tmp \
-		--output-exp temp.exp $(MK_EXTRACMD)
-	- $(RM) base.tmp
-	$(LD_CC) -Wl,--base-file,base.tmp \
-		-Wl,--entry,$(TARGET_ENTRY) \
-		-Wl,--strip-debug \
-		$(TARGET_LFLAGS) \
-		temp.exp \
-		-o junk.tmp \
-		$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname $(MK_FULLNAME) \
-		--base-file base.tmp \
-		--output-exp temp.exp $(MK_KILLAT) $(MK_EXTRACMD)
-	- $(RM) base.tmp
-endif
-	$(LD_CC) $(TARGET_LFLAGS) \
-		-Wl,--entry,$(TARGET_ENTRY) \
-		-Wl,--strip-debug \
-		$(MK_EXTRACMD2) \
-	  	-o $(MK_FULLNAME) \
-	  	$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
-ifneq ($(TARGET_CPPAPP),yes)
-	- $(RM) temp.exp $(MK_STRIPPED_OBJECT)
-else
-	- $(RM) temp.exp
-endif
+	$(HALFVERBOSEECHO) [RSYM]    $(MK_FULLNAME)
+	$(RSYM) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
 	@echo $(MK_FULLNAME) was successfully built.
 
 endif # KM_MODE
@@ -890,10 +844,6 @@ $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 		-o $(MK_NOSTRIPNAME) \
 	  	$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
-ifeq ($(BUILD_SYM),yes)
-	$(HALFVERBOSEECHO) [RSYM]    $(MK_BASENAME).sym
-	$(RSYM) $(MK_NOSTRIPNAME) $(MK_BASENAME).sym
-endif
 ifeq ($(BUILD_MAP),full)
 	$(HALFVERBOSEECHO) [OBJDUMP] $(MK_BASENAME).map
 	$(OBJDUMP) -d -S $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
@@ -904,36 +854,9 @@ ifeq ($(BUILD_MAP),yes)
 endif
 endif
 
-$(MK_FULLNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS) $(MK_NOSTRIPNAME)
-	-
-	$(HALFVERBOSEECHO) [LD]      $(MK_FULLNAME)
-ifneq ($(TARGET_CPPAPP),yes)
-	$(LD) --strip-debug -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
-endif
-	$(LD_CC) -Wl,--base-file,base.tmp \
-		-Wl,--entry,$(TARGET_ENTRY) \
-		$(TARGET_LFLAGS) \
-		-o junk.tmp \
-		$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
-	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname $(MK_FULLNAME) \
-		--base-file base.tmp \
-		--output-exp temp.exp $(MK_EXTRACMD) $(MK_KILLAT)
-	- $(RM) base.tmp
-	$(LD_CC) $(TARGET_LFLAGS) \
-		-Wl,--subsystem,native \
-		-Wl,--image-base,$(TARGET_BASE) \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--entry,$(TARGET_ENTRY) \
-		-Wl,temp.exp -mdll \
-		-o $(MK_FULLNAME) \
-	  	$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
-ifneq ($(TARGET_CPPAPP),yes)
-	- $(RM) temp.exp $(MK_STRIPPED_OBJECT)
-else
-	- $(RM) temp.exp
-endif
+$(MK_FULLNAME): $(MK_NOSTRIPNAME)
+	$(HALFVERBOSEECHO) [RSYM]    $(MK_FULLNAME)
+	$(RSYM) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
 	@echo $(MK_FULLNAME) was successfully built.
 
 endif # MK_MODE
@@ -1005,6 +928,7 @@ MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d) $(TARGET_PCH:.h=.d)
 MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
+# FIXME: The $(MK_BASENAME).sym can be removed around 15 Feb 2005
 clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
 	$(HALFVERBOSEECHO) [CLEAN]
 	- $(RM) *.o $(MK_PCHNAME) $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
@@ -1052,22 +976,9 @@ install:
 
 endif # MK_INSTALL
 
-ifeq ($(INSTALL_SYMBOLS),yes)
-
-forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME) $(MK_BASENAME).sym
-	$(HALFVERBOSEECHO) [INSTALL] $(MK_FULLNAME) to $(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
-	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
-	$(HALFVERBOSEECHO) [INSTALL] $(MK_BASENAME).sym to symbols/$(MK_INSTALL_BASENAME).sym
-	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_INSTALL_BASENAME).sym
-
-else # INSTALL_SYMBOLS
-
 forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME)
 	$(HALFVERBOSEECHO) [INSTALL] $(MK_FULLNAME) to $(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
 	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
-
-endif # INSTALL_SYMBOLS
-
 
 # Bootstrap files for the bootable CD
 ifeq ($(TARGET_BOOTSTRAP),yes)

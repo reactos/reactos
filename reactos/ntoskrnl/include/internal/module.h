@@ -5,7 +5,7 @@
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <pe.h>
-#include <ntos/kdbgsyms.h>
+#include <reactos/rossym.h>
 
 typedef struct _MODULE_TEXT_SECTION
 {
@@ -15,7 +15,7 @@ typedef struct _MODULE_TEXT_SECTION
   PWCH Name;
   PIMAGE_OPTIONAL_HEADER OptionalHeader;
 #if defined(DBG) || defined(KDBG)
-  IMAGE_SYMBOL_INFO SymbolInfo;
+  PROSSYM_INFO RosSymInfo;
 #endif /* KDBG */
 } MODULE_TEXT_SECTION, *PMODULE_TEXT_SECTION;
 

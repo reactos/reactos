@@ -3,10 +3,10 @@
 
 typedef struct _KDB_MODULE_INFO
 {
-    WCHAR              Name[256];
-    ULONG_PTR          Base;
-    ULONG              Size;
-    PIMAGE_SYMBOL_INFO SymbolInfo;
+    WCHAR        Name[256];
+    ULONG_PTR    Base;
+    ULONG        Size;
+    PROSSYM_INFO RosSymInfo;
 } KDB_MODULE_INFO, *PKDB_MODULE_INFO;
 
 /* from kdb_symbols.c */
@@ -27,24 +27,13 @@ BOOLEAN
 KdbSymPrintAddress(IN PVOID Address);
 
 NTSTATUS
-KdbSymGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
+KdbSymGetAddressInformation(IN PROSSYM_INFO  RosSymInfo,
                             IN ULONG_PTR  RelativeAddress,
                             OUT PULONG LineNumber  OPTIONAL,
                             OUT PCH FileName  OPTIONAL,
                             OUT PCH FunctionName  OPTIONAL);
 
-BOOLEAN
-KdbpSymGetSourceAddress(IN PIMAGE_SYMBOL_INFO SymbolInfo,
-                        IN PCHAR FileName,
-                        IN ULONG LineNumber  OPTIONAL,
-                        IN PCHAR FuncName  OPTIONAL,
-                        OUT PVOID *Address);
-
 /* other functions */
-/*NTSTATUS
-KdbSafeReadMemory(PVOID dst, PVOID src, INT size);
-NTSTATUS
-KdbSafeWriteMemory(PVOID dst, PVOID src, INT size);*/
 #define KdbpSafeReadMemory(dst, src, size) MmSafeCopyFromUser(dst, src, size)
 #define KdbpSafeWriteMemory(dst, src, size) MmSafeCopyToUser(dst, src, size)
 CHAR

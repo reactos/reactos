@@ -39,7 +39,7 @@ else
 OBJECTS_KDBG :=
 endif
 ifeq ($(DBG_OR_KDBG), 1)
-OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_stabs.o dbg/kdb_symbols.o dbg/profile.o
+OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o dbg/profile.o
 endif
 
 TARGET_ASFLAGS = -I./include
@@ -517,6 +517,7 @@ TARGET_LIBS = \
 	$(SDK_PATH_LIB)/libstring.a \
 	$(SDK_PATH_LIB)/librosrtl.a \
 	$(SDK_PATH_LIB)/libpseh.a \
+	$(SDK_PATH_LIB)/librossym.a \
 	$(PATH_TO_TOP)/drivers/lib/csq/csq.o
 
 TARGET_LFLAGS = \

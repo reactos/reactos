@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -136,7 +136,6 @@ KdbProfilerGetSymbolInfo(PVOID address, OUT PCH NameBuffer)
    extern LIST_ENTRY ModuleTextListHead;
    ULONG_PTR RelativeAddress;
    NTSTATUS Status;
-   ULONG LineNumber;
    CHAR FileName[256];
    CHAR FunctionName[256];
 
@@ -152,14 +151,14 @@ KdbProfilerGetSymbolInfo(PVOID address, OUT PCH NameBuffer)
 	    address < (PVOID)(current->Base + current->Length))
 	  {
             RelativeAddress = (ULONG_PTR) address - current->Base;
-            Status = KdbSymGetAddressInformation(&current->SymbolInfo,
+            Status = KdbSymGetAddressInformation(current->RosSymInfo,
               RelativeAddress,
-              &LineNumber,
+              NULL,
               FileName,
               FunctionName);
             if (NT_SUCCESS(Status))
               {
-                sprintf(NameBuffer, "%s (%s)", FileName, FunctionName);
+                sprintf(NameBuffer, "%s (%s)", FunctionName, FileName);
                 return(TRUE);
               }
 	     return(TRUE);
@@ -231,7 +230,7 @@ KdbProfilerWriteSampleGroups(PLIST_ENTRY SamplesListHead)
   PLIST_ENTRY Largest;
 
   KdbProfilerWriteString("\r\n\r\n");
-  KdbProfilerWriteString("Count     Symbol\n");
+  KdbProfilerWriteString("Count     Symbol\r\n");
   KdbProfilerWriteString("--------------------------------------------------\r\n");
 
   current = SamplesListHead->Flink;
@@ -286,7 +285,7 @@ KdbProfilerAnalyzeSamples()
   ULONG Index;
   ULONG_PTR Address;
 
-  if (!ExInitializeHashTable(&Hashtable, 17, KdbProfilerKeyCompare, TRUE))
+  if (!ExInitializeHashTable(&Hashtable, 12, KdbProfilerKeyCompare, TRUE))
     {
       DPRINT1("ExInitializeHashTable() failed.");
       KEBUGCHECK(0);
@@ -353,14 +352,14 @@ KdbProfilerThreadMain(PVOID Context)
 
       KeWaitForSingleObject(&KdbProfilerLock, Executive, KernelMode, FALSE, NULL);
 
-	  KdbSuspendProfiling();
+      KdbSuspendProfiling();
 
       KdbProfilerAnalyzeSamples();
 
-	  KdbResumeProfiling();
+      KdbResumeProfiling();
 
-	  KeReleaseMutex(&KdbProfilerLock, FALSE);
-	}
+      KeReleaseMutex(&KdbProfilerLock, FALSE);
+    }
 }
 
 VOID
@@ -429,6 +428,16 @@ KdbEnableProfiling()
 	      DPRINT1("Failed to create profiler log file\n");
 	      return;
 	    }
+      KeInitializeMutex(&KdbProfilerLock, 0);
+
+      KdbProfileDatabase = ExAllocatePool(NonPagedPool, sizeof(PROFILE_DATABASE));
+      ASSERT(KdbProfileDatabase);
+      InitializeListHead(&KdbProfileDatabase->ListHead);
+      KeInitializeDpc(&KdbProfilerCollectorDpc, KdbProfilerCollectorDpcRoutine, NULL);
+
+	  /* Initialize our periodic timer and its associated DPC object. When the timer
+	     expires, the KdbProfilerSessionEndDpc deferred procedure call (DPC) is queued */
+	  KeInitializeTimerEx(&KdbProfilerTimer, SynchronizationTimer);
 
 	  Status = PsCreateSystemThread(&KdbProfilerThreadHandle,
 		THREAD_ALL_ACCESS,
@@ -442,17 +451,6 @@ KdbEnableProfiling()
 	      DPRINT1("Failed to create profiler thread\n");
 	      return;
 	    }
-
-      KeInitializeMutex(&KdbProfilerLock, 0);
-
-      KdbProfileDatabase = ExAllocatePool(NonPagedPool, sizeof(PROFILE_DATABASE));
-      ASSERT(KdbProfileDatabase);
-      InitializeListHead(&KdbProfileDatabase->ListHead);
-      KeInitializeDpc(&KdbProfilerCollectorDpc, KdbProfilerCollectorDpcRoutine, NULL);
-
-	  /* Initialize our periodic timer and its associated DPC object. When the timer
-	     expires, the KdbProfilerSessionEndDpc deferred procedure call (DPC) is queued */
-	  KeInitializeTimerEx(&KdbProfilerTimer, SynchronizationTimer);
 
 	  /* Start the periodic timer with an initial and periodic
 	     relative expiration time of PROFILE_SESSION_LENGTH seconds */

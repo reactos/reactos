@@ -28,12 +28,18 @@
 #define BOOLEAN	int
 typedef BOOLEAN *PBOOLEAN;
 
-#define CHAR	char
-#define PCHAR	char *
-#define UCHAR	unsigned char
-#define PUCHAR	unsigned char *
-#define WCHAR	unsigned short
-#define PWCHAR	unsigned short *
+#define CHAR		char
+#define PCHAR		char *
+#define UCHAR		unsigned char
+#define PUCHAR		unsigned char *
+#define WCHAR		unsigned short
+#define PWCHAR		unsigned short *
+#define ULONG		unsigned long
+#if defined(_WIN64)
+#define ULONG_PTR	__int64
+#else
+#define ULONG_PTR	unsigned long
+#endif
 
 #define VOID	void
 #define PVOID	VOID*

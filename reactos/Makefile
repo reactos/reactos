@@ -42,7 +42,7 @@ BUS = acpi isapnp pci
 LIB_FSLIB = vfatlib
 
 # Static libraries
-LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid strmiids crt
+LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid strmiids crt rossym
 
 # Keyboard layout libraries
 DLLS_KBD = kbdda kbddv kbdes kbdfr kbdgr kbdse kbduk kbdus
