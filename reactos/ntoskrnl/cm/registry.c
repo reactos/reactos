@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.34 2000/09/14 14:45:06 jean Exp $
+/* $Id: registry.c,v 1.35 2000/09/18 09:39:18 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -86,6 +86,7 @@ typedef struct _FREE_SUB_BLOCK
 
 typedef struct _KEY_BLOCK
 {
+  DWORD  SubBlockSize;
   WORD  SubBlockId;
   WORD  Type;
   LARGE_INTEGER  LastWriteTime;
@@ -102,8 +103,7 @@ typedef struct _KEY_BLOCK
   DWORD  Unused4[5];
   WORD  NameSize;
   WORD  ClassSize;
-//  FIXME : Name is char, not wchar
-  WCHAR  Name[0];
+  UCHAR  Name[0]; /* warning : not zero terminated */
 } KEY_BLOCK, *PKEY_BLOCK;
 
 // hash record :
@@ -116,6 +116,7 @@ typedef struct _HASH_RECORD
 
 typedef struct _HASH_TABLE_BLOCK
 {
+  DWORD  SubBlockSize;
   WORD  SubBlockId;
   WORD  HashTableSize;
   HASH_RECORD  Table[0];
@@ -123,11 +124,13 @@ typedef struct _HASH_TABLE_BLOCK
 
 typedef struct _VALUE_LIST_BLOCK
 {
+  DWORD  SubBlockSize;
   BLOCK_OFFSET  Values[0];
 } VALUE_LIST_BLOCK, *PVALUE_LIST_BLOCK;
 
 typedef struct _VALUE_BLOCK
 {
+  DWORD  SubBlockSize;
   WORD  SubBlockId;	// "kv"
   WORD  NameSize;	// length of Name
   DWORD  DataSize;	// length of datas in the subblock pinted by DataOffset
@@ -136,7 +139,7 @@ typedef struct _VALUE_BLOCK
   WORD  Flags;
   WORD  Unused1;
 //  FIXME : Name is char, not wchar
-  WCHAR  Name[0];
+  WCHAR  Name[0]; /* warning : not zero terminated */
 } VALUE_BLOCK, *PVALUE_BLOCK;
 
 typedef struct _IN_MEMORY_BLOCK
@@ -222,12 +225,12 @@ static ULONG  CmiGetMaxValueDataLength(PREGISTRY_FILE  RegistryFile,
 static NTSTATUS  CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile, 
                                   IN PKEY_BLOCK  KeyBlock, 
                                   OUT PKEY_BLOCK  *SubKeyBlock,
-                                  IN PWSTR  KeyName,
+                                  IN PCHAR  KeyName,
                                   IN ACCESS_MASK  DesiredAccess);
 static NTSTATUS  CmiAddSubKey(IN PREGISTRY_FILE  RegistryFile, 
                               IN PKEY_BLOCK  CurKeyBlock,
                               OUT PKEY_BLOCK  *SubKeyBlock,
-                              IN PWSTR  NewSubKeyName,
+                              IN PCHAR  NewSubKeyName,
                               IN ULONG  TitleIndex,
                               IN PWSTR  Class, 
                               IN ULONG  CreateOptions);
@@ -250,7 +253,7 @@ static NTSTATUS  CmiDeleteValueFromKey(IN PREGISTRY_FILE  RegistryFile,
                                        IN PWSTR  ValueName);
 static NTSTATUS  CmiAllocateKeyBlock(IN PREGISTRY_FILE  RegistryFile,
                                      OUT PKEY_BLOCK  *KeyBlock,
-                                     IN PWSTR  NewSubKeyName,
+                                     IN PCHAR  NewSubKeyName,
                                      IN ULONG  TitleIndex,
                                      IN PWSTR  Class,
                                     IN ULONG  CreateOptions);
@@ -388,7 +391,6 @@ CmInitializeRegistry2(VOID)
  UNICODE_STRING  KeyName;
   /* FIXME : delete temporary \Registry\Machine\System */
   /* load the SYSTEM Hive */
-CHECKPOINT;
   CmiSystemFile = CmiCreateRegistry(SYSTEM_REG_FILE);
   if( CmiSystemFile )
   {
@@ -400,14 +402,14 @@ CHECKPOINT;
                  CmiKeyType);
     NewKey->RegistryFile = CmiSystemFile;
     NewKey->KeyBlock = CmiGetBlock(CmiSystemFile,32);
+DPRINT("root : id = %x\n",NewKey->KeyBlock->SubBlockId);
+DPRINT("root : hashOffset = %x\n",NewKey->KeyBlock->HashTableOffset);
+DPRINT("root : nom = %6.6s\n",NewKey->KeyBlock->Name);
     NewKey->Flags = 0;
     NewKey->NextKey = NULL;
-    NewKey->Name = NewKey->KeyBlock->Name;
-  }
-CHECKPOINT;
 /* tests :*/
  {
-//  HANDLE HKey;
+  HANDLE HKey;
   NTSTATUS Status;
   PKEY_BLOCK SubKeyBlock;
       Status = CmiScanForSubKey(CmiSystemFile, 
@@ -429,11 +431,12 @@ else
  DPRINT("not found subkey ControlSet001\n");
 }
 //RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\Windows");
-//RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System\\ControlSet001");
-//  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
-//  Status = NtOpenKey ( &HKey, KEY_READ , &ObjectAttributes);
-  
+RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System\\ControlSet001");
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
+  Status = NtOpenKey ( &HKey, KEY_READ , &ObjectAttributes);
+DPRINT("  NtOpenKey = %x, HKey=%x\n",Status,HKey);
  }
+  }
 #endif
 }
 
@@ -638,7 +641,7 @@ NtEnumerateKey (
           BasicInformation->LastWriteTime = SubKeyBlock->LastWriteTime;
           BasicInformation->TitleIndex = Index;
           BasicInformation->NameLength = (SubKeyBlock->NameSize + 1) * sizeof(WCHAR);
-          wcsncpy(BasicInformation->Name, 
+          mbstowcs(BasicInformation->Name, 
                   SubKeyBlock->Name, 
                   SubKeyBlock->NameSize);
           BasicInformation->Name[SubKeyBlock->NameSize] = 0;
@@ -665,14 +668,14 @@ NtEnumerateKey (
             SubKeyBlock->NameSize * sizeof(WCHAR);
           NodeInformation->ClassLength = SubKeyBlock->ClassSize;
           NodeInformation->NameLength = (SubKeyBlock->NameSize + 1) * sizeof(WCHAR);
-          wcsncpy(NodeInformation->Name, 
+          mbstowcs(NodeInformation->Name, 
                   SubKeyBlock->Name, 
                   SubKeyBlock->NameSize);
           NodeInformation->Name[SubKeyBlock->NameSize] = 0;
           if (SubKeyBlock->ClassSize != 0)
             {
               wcsncpy(NodeInformation->Name + SubKeyBlock->NameSize + 1,
-                      &SubKeyBlock->Name[SubKeyBlock->NameSize + 1],
+                      (PWSTR)&SubKeyBlock->Name[SubKeyBlock->NameSize + 1],
                       SubKeyBlock->ClassSize);
               NodeInformation->
                 Name[SubKeyBlock->NameSize + 1 + SubKeyBlock->ClassSize] = 0;
@@ -710,7 +713,7 @@ NtEnumerateKey (
           FullInformation->MaxValueDataLen = 
             CmiGetMaxValueDataLength(RegistryFile, SubKeyBlock);
           wcsncpy(FullInformation->Class,
-                  &SubKeyBlock->Name[SubKeyBlock->NameSize + 1],
+                  (PWSTR)&SubKeyBlock->Name[SubKeyBlock->NameSize + 1],
                   SubKeyBlock->ClassSize);
           FullInformation->Class[SubKeyBlock->ClassSize] = 0;
           *ResultLength = sizeof(KEY_FULL_INFORMATION) +
@@ -1009,7 +1012,7 @@ NtQueryKey (
           BasicInformation->LastWriteTime = KeyBlock->LastWriteTime;
           BasicInformation->TitleIndex = 0;
           BasicInformation->NameLength = KeyBlock->NameSize;
-          wcsncpy(BasicInformation->Name, 
+          mbstowcs(BasicInformation->Name, 
                   KeyBlock->Name, 
                   KeyBlock->NameSize);
           BasicInformation->Name[KeyBlock->NameSize] = 0;
@@ -1036,14 +1039,14 @@ NtQueryKey (
             KeyBlock->NameSize * sizeof(WCHAR);
           NodeInformation->ClassLength = KeyBlock->ClassSize;
           NodeInformation->NameLength = KeyBlock->NameSize;
-          wcsncpy(NodeInformation->Name, 
+          mbstowcs(NodeInformation->Name, 
                   KeyBlock->Name, 
                   KeyBlock->NameSize);
           NodeInformation->Name[KeyBlock->NameSize] = 0;
           if (KeyBlock->ClassSize != 0)
             {
               wcsncpy(NodeInformation->Name + KeyBlock->NameSize + 1,
-                      &KeyBlock->Name[KeyBlock->NameSize + 1],
+                      (PWSTR)&KeyBlock->Name[KeyBlock->NameSize + 1],
                       KeyBlock->ClassSize);
               NodeInformation->
                 Name[KeyBlock->NameSize + 1 + KeyBlock->ClassSize] = 0;
@@ -1081,7 +1084,7 @@ NtQueryKey (
           FullInformation->MaxValueDataLen = 
             CmiGetMaxValueDataLength(RegistryFile, KeyBlock);
           wcsncpy(FullInformation->Class,
-                  &KeyBlock->Name[KeyBlock->NameSize + 1],
+                  (PWSTR)&KeyBlock->Name[KeyBlock->NameSize + 1],
                   KeyBlock->ClassSize);
           FullInformation->Class[KeyBlock->ClassSize] = 0;
           *ResultLength = sizeof(KEY_FULL_INFORMATION) +
@@ -1521,7 +1524,7 @@ static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 {
   NTSTATUS  Status;
   /* FIXME: this should be allocated based on the largest subkey name  */
-  WCHAR  CurKeyName[260];
+  CHAR  CurKeyName[260];
   PWSTR  Remainder, NextSlash;
   PREGISTRY_FILE  RegistryFile;
   PKEY_OBJECT  NewKeyObject;
@@ -1561,12 +1564,12 @@ static NTSTATUS CmiObjectParse(PVOID ParsedObject,
       /*  Copy just the current subkey name to a buffer  */
       if (NextSlash != NULL)
         {
-          wcsncpy(CurKeyName, Remainder, NextSlash - Remainder);
+          wcstombs(CurKeyName, Remainder, NextSlash - Remainder);
           CurKeyName[NextSlash - Remainder] = 0;
         }
       else
         {
-          wcscpy(CurKeyName, Remainder);
+          wcstombs(CurKeyName, Remainder, wcslen(Remainder) + 1);
         }
 
       /* Verify existance of CurKeyName  */
@@ -1902,14 +1905,13 @@ CmiCreateRegistry(PWSTR  Filename)
       ZwQuerySystemTime((PTIME) &RootKeyBlock->LastWriteTime);
       RootKeyBlock->ParentKeyOffset = 0;
       RootKeyBlock->NumberOfSubKeys = 0;
-      RootKeyBlock->HashTableOffset = 0;
+      RootKeyBlock->HashTableOffset = -1;
       RootKeyBlock->NumberOfValues = 0;
-      RootKeyBlock->ValuesOffset = 0;
+      RootKeyBlock->ValuesOffset = -1;
       RootKeyBlock->SecurityKeyOffset = 0;
-      RootKeyBlock->ClassNameOffset = sizeof(KEY_BLOCK);
+      RootKeyBlock->ClassNameOffset = -1;
       RootKeyBlock->NameSize = 0;
       RootKeyBlock->ClassSize = 0;
-      RootKeyBlock->Name[0] = 0;
       RegistryFile->HeaderBlock->RootKeyBlock = (BLOCK_OFFSET) RootKeyBlock;
     }
 
@@ -1928,7 +1930,7 @@ CmiCreateKey(IN PREGISTRY_FILE  RegistryFile,
 {
   /* FIXME: this should be allocated based on the largest subkey name  */
   NTSTATUS  Status;
-  WCHAR  CurKeyName[256];
+  CHAR  CurKeyName[256];
   PWSTR  ClassName;
   PWSTR  Remainder, NextSlash;
   PKEY_BLOCK  CurKeyBlock, SubKeyBlock;
@@ -1947,7 +1949,7 @@ CHECKPOINT;
          (NextSlash = wcschr(Remainder, L'\\')) != NULL)
     {
       /*  Copy just the current subkey name to a buffer  */
-      wcsncpy(CurKeyName, Remainder, NextSlash - Remainder);
+      wcstombs(CurKeyName, Remainder, NextSlash - Remainder);
       CurKeyName[NextSlash - Remainder] = 0;
 
       /* Verify existance of/Create CurKeyName  */
@@ -2000,10 +2002,12 @@ CHECKPOINT;
                 {
                   ClassName = NULL;
                 }
+              wcstombs(CurKeyName, Remainder, wcslen(Remainder)+1 );
+              CurKeyName[ wcslen(Remainder)] = 0;
               Status = CmiAddSubKey(RegistryFile,
                                     CurKeyBlock,
                                     &SubKeyBlock,
-                                    Remainder,
+                                    CurKeyName,
                                     TitleIndex,
                                     ClassName,
                                     CreateOptions);
@@ -2038,7 +2042,7 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
 {
   /* FIXME: this should be allocated based on the largest subkey name  */
   NTSTATUS  Status;
-  WCHAR  CurKeyName[256];
+  CHAR  CurKeyName[MAX_PATH];
   PWSTR  Remainder, NextSlash;
   PKEY_BLOCK  CurKeyBlock, SubKeyBlock;
 
@@ -2052,12 +2056,12 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
   /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
   CurKeyBlock = CmiGetBlock(RegistryFile, RegistryFile->HeaderBlock->RootKeyBlock);
   Remainder = KeyNameBuf;
-  wcscpy(CurKeyName, Remainder);
+  wcstombs(CurKeyName, Remainder, wcslen(Remainder) + 1 );
   while (NT_SUCCESS(Status) &&
          (NextSlash = wcschr(Remainder, L'\\')) != NULL)
     {
       /*  Copy just the current subkey name to a buffer  */
-      wcsncpy(CurKeyName, Remainder, NextSlash - Remainder);
+      wcstombs(CurKeyName, Remainder, NextSlash - Remainder);
       CurKeyName[NextSlash - Remainder] = 0;
 
       /* Verify existance of CurKeyName  */
@@ -2238,27 +2242,34 @@ static NTSTATUS
 CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile, 
                  IN PKEY_BLOCK  KeyBlock, 
                  OUT PKEY_BLOCK  *SubKeyBlock,
-                 IN PWSTR  KeyName,
+                 IN PCHAR  KeyName,
                  IN ACCESS_MASK  DesiredAccess)
 {
   ULONG  Idx;
   PHASH_TABLE_BLOCK  HashBlock;
   PKEY_BLOCK  CurSubKeyBlock;
+  WORD KeyLength = strlen(KeyName);
 
   HashBlock = CmiGetBlock(RegistryFile, KeyBlock->HashTableOffset);
   *SubKeyBlock = NULL;
-  if (HashBlock == 0)
+  if (HashBlock == NULL)
     {
       return  STATUS_SUCCESS;
     }
-  for (Idx = 0; Idx < HashBlock->HashTableSize; Idx++)
+DPRINT("hash=%x,hash.id=%x\n",HashBlock,HashBlock->SubBlockId);
+//  for (Idx = 0; Idx < HashBlock->HashTableSize; Idx++)
+  for (Idx = 0; Idx < KeyBlock->NumberOfSubKeys; Idx++)
     {
+DPRINT("&hash=%x,hash=%4.4s\n",&HashBlock->Table[Idx].HashValue,&HashBlock->Table[Idx].HashValue);
       if (HashBlock->Table[Idx].KeyOffset != 0 &&
-          !wcsncmp(KeyName, (PWSTR) &HashBlock->Table[Idx].HashValue, 2))
+           HashBlock->Table[Idx].KeyOffset != -1 &&
+          !strncmp(KeyName, (PCHAR) &HashBlock->Table[Idx].HashValue, 4))
         {
+CHECKPOINT;
           CurSubKeyBlock = CmiGetBlock(RegistryFile,
                                           HashBlock->Table[Idx].KeyOffset);
-          if (!wcscmp(KeyName, CurSubKeyBlock->Name))
+          if ( CurSubKeyBlock->NameSize == KeyLength
+                && !memcmp(KeyName, CurSubKeyBlock->Name, KeyLength))
             {
               *SubKeyBlock = CurSubKeyBlock;
               break;
@@ -2269,6 +2280,7 @@ CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
             }
         }
     }
+CHECKPOINT;
 
   CmiReleaseBlock(RegistryFile, HashBlock);
   
@@ -2279,7 +2291,7 @@ static NTSTATUS
 CmiAddSubKey(PREGISTRY_FILE  RegistryFile, 
              PKEY_BLOCK  KeyBlock,
              PKEY_BLOCK  *SubKeyBlock,
-             PWSTR  NewSubKeyName,
+             PCHAR  NewSubKeyName,
              ULONG  TitleIndex,
              PWSTR  Class, 
              ULONG  CreateOptions)
@@ -2298,7 +2310,7 @@ CmiAddSubKey(PREGISTRY_FILE  RegistryFile,
     {
       return  Status;
     }
-  if (KeyBlock->HashTableOffset == 0)
+  if (KeyBlock->HashTableOffset == -1)
     {
       Status = CmiAllocateHashTableBlock(RegistryFile, 
                                          &HashBlock,
@@ -2534,29 +2546,24 @@ CmiDeleteValueFromKey(IN PREGISTRY_FILE  RegistryFile,
 static NTSTATUS
 CmiAllocateKeyBlock(IN PREGISTRY_FILE  RegistryFile,
                     OUT PKEY_BLOCK  *KeyBlock,
-                    IN PWSTR  KeyName,
+                    IN PCHAR  KeyName,
                     IN ULONG  TitleIndex,
                     IN PWSTR  Class,
                     IN ULONG  CreateOptions)
 {
   NTSTATUS  Status;
-  ULONG  NewKeySize;
+  ULONG  NewBlockSize;
   PKEY_BLOCK  NewKeyBlock;
 
-  DPRINT("RegistryFile %p KeyBlock %p KeyName %S TitleIndex %x Class %S CreateOptions %x\n",
+  DPRINT("RegistryFile %p KeyBlock %p KeyName %s TitleIndex %x Class %S CreateOptions %x\n",
          RegistryFile, KeyBlock, KeyName, TitleIndex, Class,CreateOptions);
 
   Status = STATUS_SUCCESS;
 
-  /*  Handle volatile files first  */
-  if (RegistryFile->Filename == NULL)
-    {
-      NewKeySize = sizeof(KEY_BLOCK) + 
-        (wcslen(KeyName) + 1) * sizeof(WCHAR) + 
-        (Class != NULL ? (wcslen(Class) + 1) * sizeof(WCHAR) : 0);
-DPRINT ("NewKeySize: %lu\n", NewKeySize);
+      NewBlockSize = sizeof(KEY_BLOCK) + (strlen(KeyName) ) ;
+DPRINT ("NewKeySize: %lu\n", NewBlockSize);
 //CHECKPOINT;
-      NewKeyBlock = ExAllocatePool(NonPagedPool, NewKeySize);
+      Status = CmiAllocateBlock(RegistryFile, (PVOID) &NewKeyBlock , NewBlockSize);
 //CHECKPOINT;
       if (NewKeyBlock == NULL)
         {
@@ -2564,32 +2571,26 @@ DPRINT ("NewKeySize: %lu\n", NewKeySize);
         }
       else
         {
-          RtlZeroMemory(NewKeyBlock, NewKeySize);
+          RtlZeroMemory(NewKeyBlock, NewBlockSize);
           NewKeyBlock->SubBlockId = REG_KEY_BLOCK_ID;
           NewKeyBlock->Type = REG_KEY_BLOCK_TYPE;
           ZwQuerySystemTime((PTIME) &NewKeyBlock->LastWriteTime);
-          NewKeyBlock->ParentKeyOffset = 0;
+          NewKeyBlock->ParentKeyOffset = -1;
           NewKeyBlock->NumberOfSubKeys = 0;
-          NewKeyBlock->HashTableOffset = 0;
+          NewKeyBlock->HashTableOffset = -1;
           NewKeyBlock->NumberOfValues = 0;
-          NewKeyBlock->ValuesOffset = 0;
-          NewKeyBlock->SecurityKeyOffset = 0;
-          NewKeyBlock->ClassNameOffset = sizeof(KEY_BLOCK) + wcslen(KeyName);
-          NewKeyBlock->NameSize = wcslen(KeyName);
+          NewKeyBlock->ValuesOffset = -1;
+          NewKeyBlock->SecurityKeyOffset = -1;
+          NewKeyBlock->NameSize = strlen(KeyName);
           NewKeyBlock->ClassSize = (Class != NULL) ? wcslen(Class) : 0;
-          wcscpy(NewKeyBlock->Name, KeyName);
+          memcpy(NewKeyBlock->Name, KeyName, NewKeyBlock->NameSize );
           if (Class != NULL)
             {
-              wcscpy(&NewKeyBlock->Name[wcslen(KeyName) + 1], Class);
+          /* FIXME : ClassName is in a different Block !!! */
             }
           CmiLockBlock(RegistryFile, NewKeyBlock);
           *KeyBlock = NewKeyBlock;
         }
-    }
-  else
-    {
-      UNIMPLEMENTED;
-    }
 
   return  Status;
 }
@@ -2888,8 +2889,9 @@ CmiGetBlock(PREGISTRY_FILE  RegistryFile,
             BLOCK_OFFSET  BlockOffset)
 {
   PVOID  Block;
-  long i;
+  DWORD CurBlock;
   NTSTATUS Status;
+  if( BlockOffset == 0 || BlockOffset == -1) return NULL;
 
   Block = NULL;
   if (RegistryFile->Filename == NULL)
@@ -2904,17 +2906,18 @@ CmiGetBlock(PREGISTRY_FILE  RegistryFile,
 	HEAP_BLOCK tmpHeap;
 	LARGE_INTEGER fileOffset;
 	// search in the heap blocks currently in memory
-	for (i=0; i < RegistryFile->BlockListSize ; i++)
+	for (CurBlock =0; CurBlock  < RegistryFile->BlockListSize ; CurBlock ++)
       {
-	  if (  RegistryFile->BlockList[i]->BlockOffset <= BlockOffset 
-	      && (RegistryFile->BlockList[i]->BlockOffset
-                   +RegistryFile->BlockList[i]->BlockSize > BlockOffset ))
-	    return ((char *)RegistryFile->BlockList[i]
-			+(BlockOffset - RegistryFile->BlockList[i]->BlockOffset));
+	  if (  RegistryFile->BlockList[CurBlock ]->BlockOffset <= BlockOffset 
+	      && (RegistryFile->BlockList[CurBlock ]->BlockOffset
+                   +RegistryFile->BlockList[CurBlock ]->BlockSize > BlockOffset ))
+	    return ((char *)RegistryFile->BlockList[CurBlock ]
+			+(BlockOffset - RegistryFile->BlockList[CurBlock ]->BlockOffset));
       }
-	// not in memory : read from file
+	/* not in memory : read from file */
+        /* increase size of list of blocks */
 	tmpBlockList=ExAllocatePool(NonPagedPool,
-				   sizeof(PHEAP_BLOCK *)*(i+1));
+				   sizeof(PHEAP_BLOCK *)*(CurBlock +1));
 	if (tmpBlockList == NULL)
 	  {
 	     KeBugCheck(0);
@@ -2927,6 +2930,7 @@ CmiGetBlock(PREGISTRY_FILE  RegistryFile,
 	  ExFreePool(RegistryFile->BlockList);
         }
 	RegistryFile->BlockList = tmpBlockList;
+        /* try to find block at 4K limit under blockOffset */
 	fileOffset.u.LowPart = (BlockOffset & 0xfffff000)+REG_BLOCK_SIZE;
 	fileOffset.u.HighPart = 0;
         Status = ZwReadFile(RegistryFile->FileHandle, 
@@ -2934,7 +2938,8 @@ CmiGetBlock(PREGISTRY_FILE  RegistryFile,
                       &tmpHeap, 
                       sizeof(HEAP_BLOCK), 
                       &fileOffset, 0);
-        /* FIXME : better is to start from previous block */
+        /* if it's not a block, try page 4k before ... */
+        /* FIXME : better is to start from previous block in memory */
 	while (tmpHeap.BlockId != 0x6e696268 && fileOffset.u.LowPart  >= REG_BLOCK_SIZE)
 	{
 	   fileOffset.u.LowPart  -= REG_BLOCK_SIZE;
@@ -2946,15 +2951,19 @@ CmiGetBlock(PREGISTRY_FILE  RegistryFile,
 	}
 	if (tmpHeap.BlockId != 0x6e696268 )
 		return NULL;
-	RegistryFile->BlockList [RegistryFile->BlockListSize ++]
+        RegistryFile->BlockListSize ++;
+	RegistryFile->BlockList [CurBlock]
 	   = ExAllocatePool(NonPagedPool,tmpHeap.BlockSize);
+CHECKPOINT;
       Status = ZwReadFile(RegistryFile->FileHandle, 
                       0, 0, 0, 0, 
-                      RegistryFile->HeaderBlock, 
+                      RegistryFile->BlockList[CurBlock ],
                       tmpHeap.BlockSize,
                       &fileOffset, 0);
-      return ((char *)RegistryFile->BlockList[i]
-			+(BlockOffset - RegistryFile->BlockList[i]->BlockOffset));
+DPRINT(" read %d block file %x octets at %x, Status=%x\n",CurBlock,tmpHeap.BlockSize,fileOffset.u.LowPart,Status);
+      Block = ((char *)RegistryFile->BlockList[CurBlock]
+			+(BlockOffset - RegistryFile->BlockList[CurBlock]->BlockOffset));
+DPRINT(" hbin at %x, block at %x\n",RegistryFile->BlockList[CurBlock],Block);
     }
 
   return  Block;
