@@ -32,7 +32,13 @@
 
 #include "windef.h"
 #include "winbase.h"
+#if defined(WIN32)
+#define EXCEPTION_WINE_STUB       0x80000100  /* stub entry point called */
+#define EH_NONCONTINUABLE   0x01
+#else
 #include "wine/exception.h"
+#endif
+
 #include "build.h"
 
 
@@ -900,7 +906,10 @@ void BuildDef32File(FILE *outfile)
         fprintf( outfile, " @%d", odp->ordinal );
         if (!odp->name) fprintf( outfile, " NONAME" );
         if (is_data) fprintf( outfile, " DATA" );
+#if !defined(WIN32)
+        /* MinGW binutils cannot handle this correctly */
         if (odp->flags & FLAG_PRIVATE) fprintf( outfile, " PRIVATE" );
+#endif
         fprintf( outfile, "\n" );
     }
 }

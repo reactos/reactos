@@ -100,6 +100,7 @@ RTOUCH = $(TOOLS_PATH)/rtouch
 REGTESTS = $(TOOLS_PATH)/regtests
 MC = $(TOOLS_PATH)/wmc/wmc
 CABMAN = $(TOOLS_PATH)/cabman/cabman
+WINEBUILD = $(TOOLS_PATH)/winebuild/winebuild
 XSLTPROC = xsltproc
 
 

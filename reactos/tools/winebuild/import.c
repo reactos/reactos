@@ -30,6 +30,10 @@
 # include <unistd.h>
 #endif
 
+#if defined(WIN32)
+#include <windows.h>
+#endif
+
 #include "build.h"
 
 struct func
@@ -634,16 +638,27 @@ static const char *ldcombine_files( char **argv )
     int i, len = 0;
     char *cmd;
     int fd, err;
+#if defined(WIN32)
+	char tmppath[MAX_PATH];
+	char tmpfile[MAX_PATH];
+#endif
 
-    if (output_file_name && output_file_name[0])
+#if defined(WIN32)
+	if (GetTempPathA(MAX_PATH, tmppath) == 0) return NULL;
+	if (GetTempFileNameA(tmppath, "WNB", 0, tmpfile) == 0) fatal_error( "could not generate a temp file\n" );
+	ld_tmp_file = xstrdup( tmpfile );
+	if ((fd = open( ld_tmp_file, O_RDONLY )) == -1)
+#else
+	if (output_file_name && output_file_name[0])
     {
-        ld_tmp_file = xmalloc( strlen(output_file_name) + 10 );
+        ld_tmp_file = xmalloc( MAX_PATH);
         strcpy( ld_tmp_file, output_file_name );
         strcat( ld_tmp_file, ".XXXXXX.o" );
     }
-    else ld_tmp_file = xstrdup( "/tmp/winebuild.tmp.XXXXXX.o" );
-
+	else ld_tmp_file = xstrdup( "/tmp/winebuild.tmp.XXXXXX.o" );
     if ((fd = mkstemps( ld_tmp_file, 2 ) == -1)) fatal_error( "could not generate a temp file\n" );
+#endif
+
     close( fd );
     atexit( remove_ld_tmp_file );
 

@@ -1,5 +1,16 @@
 2003-12-09  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* rules.mak (WINEBUILD): Define.
+	* tools/winebuild/Makefile: New file.
+	* tools/winebuild/import.c (ldcombine_files): Replace mkstemps with Win32
+	APIs.
+	* tools/winebuild/main.c (main): Win16 specs and relays are not supported.
+	* tools/winebuild/spec32.c (EXCEPTION_WINE_STUB, EH_NONCONTINUABLE):
+	Define.
+	(BuildDef32File): Don't emit PRIVATE.
+
+2003-12-09  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* tools/winebuild: Import winebuild from Wine (D20031208).
 
 2003-12-08  Casper S. Hornstrup  <chorns@users.sourceforge.net>
