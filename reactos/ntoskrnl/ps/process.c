@@ -1147,7 +1147,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 				      PreviousMode,
 				      (PVOID*)&Process,
 				      NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
@@ -1161,22 +1161,31 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	}
 	else
 	{
-	  PPROCESS_BASIC_INFORMATION ProcessBasicInformationP =
+          PPROCESS_BASIC_INFORMATION ProcessBasicInformationP =
 	    (PPROCESS_BASIC_INFORMATION)ProcessInformation;
-	  ProcessBasicInformationP->ExitStatus = Process->ExitStatus;
-	  ProcessBasicInformationP->PebBaseAddress = Process->Peb;
-	  ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
-	  ProcessBasicInformationP->UniqueProcessId =
-	    Process->UniqueProcessId;
-	  ProcessBasicInformationP->InheritedFromUniqueProcessId =
-	    (ULONG)Process->InheritedFromUniqueProcessId;
-	  ProcessBasicInformationP->BasePriority =
-	    Process->Pcb.BasePriority;
-	  
-	  if (ReturnLength)
-	  {
-	    *ReturnLength = sizeof(PROCESS_BASIC_INFORMATION);
-	  }
+
+          _SEH_TRY
+          {
+	    ProcessBasicInformationP->ExitStatus = Process->ExitStatus;
+	    ProcessBasicInformationP->PebBaseAddress = Process->Peb;
+	    ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
+	    ProcessBasicInformationP->UniqueProcessId =
+	      Process->UniqueProcessId;
+	    ProcessBasicInformationP->InheritedFromUniqueProcessId =
+	      (ULONG)Process->InheritedFromUniqueProcessId;
+	    ProcessBasicInformationP->BasePriority =
+	      Process->Pcb.BasePriority;
+
+	    if (ReturnLength)
+	    {
+	      *ReturnLength = sizeof(PROCESS_BASIC_INFORMATION);
+	    }
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
 	}
 	break;
 
@@ -1192,18 +1201,24 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	}
 	else
 	{
-	   PKERNEL_USER_TIMES ProcessTimeP =
-	                     (PKERNEL_USER_TIMES)ProcessInformation;
+           PKERNEL_USER_TIMES ProcessTimeP = (PKERNEL_USER_TIMES)ProcessInformation;
+           _SEH_TRY
+           {
+	      ProcessTimeP->CreateTime = Process->CreateTime;
+              ProcessTimeP->UserTime.QuadPart = Process->Pcb.UserTime * 100000LL;
+              ProcessTimeP->KernelTime.QuadPart = Process->Pcb.KernelTime * 100000LL;
+	      ProcessTimeP->ExitTime = Process->ExitTime;
 
-	   ProcessTimeP->CreateTime = Process->CreateTime;
-           ProcessTimeP->UserTime.QuadPart = Process->Pcb.UserTime * 100000LL;
-           ProcessTimeP->KernelTime.QuadPart = Process->Pcb.KernelTime * 100000LL;
-	   ProcessTimeP->ExitTime = Process->ExitTime;
-
-	  if (ReturnLength)
-	  {
-	    *ReturnLength = sizeof(KERNEL_USER_TIMES);
-	  }
+	     if (ReturnLength)
+	     {
+	       *ReturnLength = sizeof(KERNEL_USER_TIMES);
+	     }
+           }
+           _SEH_HANDLE
+           {
+             Status = _SEH_GetExceptionCode();
+           }
+           _SEH_END;
 	}
 	break;
 
@@ -1221,12 +1236,21 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	}
 	else
 	{
-	  PULONG HandleCount = (PULONG)ProcessInformation;
-	  *HandleCount = ObpGetHandleCountByHandleTable(&Process->HandleTable);
-	  if (ReturnLength)
+	  ULONG HandleCount = ObpGetHandleCountByHandleTable(&Process->HandleTable);
+	  
+	  _SEH_TRY
 	  {
-	    *ReturnLength = sizeof(ULONG);
+            *(PULONG)ProcessInformation = HandleCount;
+	    if (ReturnLength)
+	    {
+	      *ReturnLength = sizeof(ULONG);
+	    }
 	  }
+	  _SEH_HANDLE
+	  {
+            Status = _SEH_GetExceptionCode();
+	  }
+	  _SEH_END;
 	}
 	break;
 
@@ -1247,7 +1271,6 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
             {
               *ReturnLength = sizeof(PROCESS_SESSION_INFORMATION);
             }
-            Status = STATUS_SUCCESS;
           }
           _SEH_HANDLE
           {
@@ -1271,27 +1294,36 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	else
 	{
 	  PVM_COUNTERS pOut = (PVM_COUNTERS)ProcessInformation;
-	  pOut->PeakVirtualSize            = Process->PeakVirtualSize;
-	  /*
-	   * Here we should probably use VirtualSize.LowPart, but due to
-	   * incompatibilities in current headers (no unnamed union),
-	   * I opted for cast.
-	   */
-	  pOut->VirtualSize                = (ULONG)Process->VirtualSize.QuadPart;
-	  pOut->PageFaultCount             = Process->Vm.PageFaultCount;
-	  pOut->PeakWorkingSetSize         = Process->Vm.PeakWorkingSetSize;
-	  pOut->WorkingSetSize             = Process->Vm.WorkingSetSize;
-	  pOut->QuotaPeakPagedPoolUsage    = Process->QuotaPeakPoolUsage[0]; // TODO: Verify!
-	  pOut->QuotaPagedPoolUsage        = Process->QuotaPoolUsage[0];     // TODO: Verify!
-	  pOut->QuotaPeakNonPagedPoolUsage = Process->QuotaPeakPoolUsage[1]; // TODO: Verify!
-	  pOut->QuotaNonPagedPoolUsage     = Process->QuotaPoolUsage[1];     // TODO: Verify!
-	  pOut->PagefileUsage              = Process->PagefileUsage;
-	  pOut->PeakPagefileUsage          = Process->PeakPagefileUsage;
-
-	  if (ReturnLength)
+	  
+	  _SEH_TRY
 	  {
-	    *ReturnLength = sizeof(VM_COUNTERS);
-	  }
+	    pOut->PeakVirtualSize            = Process->PeakVirtualSize;
+	    /*
+	     * Here we should probably use VirtualSize.LowPart, but due to
+	     * incompatibilities in current headers (no unnamed union),
+	     * I opted for cast.
+	     */
+	    pOut->VirtualSize                = (ULONG)Process->VirtualSize.QuadPart;
+	    pOut->PageFaultCount             = Process->Vm.PageFaultCount;
+	    pOut->PeakWorkingSetSize         = Process->Vm.PeakWorkingSetSize;
+	    pOut->WorkingSetSize             = Process->Vm.WorkingSetSize;
+	    pOut->QuotaPeakPagedPoolUsage    = Process->QuotaPeakPoolUsage[0]; // TODO: Verify!
+	    pOut->QuotaPagedPoolUsage        = Process->QuotaPoolUsage[0];     // TODO: Verify!
+	    pOut->QuotaPeakNonPagedPoolUsage = Process->QuotaPeakPoolUsage[1]; // TODO: Verify!
+	    pOut->QuotaNonPagedPoolUsage     = Process->QuotaPoolUsage[1];     // TODO: Verify!
+	    pOut->PagefileUsage              = Process->PagefileUsage;
+	    pOut->PeakPagefileUsage          = Process->PeakPagefileUsage;
+
+	    if (ReturnLength)
+	    {
+	      *ReturnLength = sizeof(VM_COUNTERS);
+	    }
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
 	}
 	break;
 
@@ -1310,8 +1342,6 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	    {
 	      *ReturnLength = sizeof(ULONG);
 	    }
-
-            Status = STATUS_SUCCESS;
 	  }
 	  _SEH_HANDLE
 	  {
@@ -1329,12 +1359,21 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	else
 	{
 	  PULONG BoostEnabled = (PULONG)ProcessInformation;
-	  *BoostEnabled = Process->Pcb.DisableBoost ? FALSE : TRUE;
-
-	  if (ReturnLength)
+	  
+	  _SEH_TRY
 	  {
-	    *ReturnLength = sizeof(ULONG);
-	  }
+	    *BoostEnabled = Process->Pcb.DisableBoost ? FALSE : TRUE;
+
+	    if (ReturnLength)
+	    {
+	      *ReturnLength = sizeof(ULONG);
+	    }
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
 	}
 	break;
 
@@ -1345,11 +1384,23 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	}
         else
         {
-	  ObQueryDeviceMapInformation(Process, (PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation);
-	  if (ReturnLength)
+          PROCESS_DEVICEMAP_INFORMATION DeviceMap;
+          
+          ObQueryDeviceMapInformation(Process, &DeviceMap);
+          
+          _SEH_TRY
           {
-	    *ReturnLength = sizeof(PROCESS_DEVICEMAP_INFORMATION);
-	  }
+            *(PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation = DeviceMap;
+	    if (ReturnLength)
+            {
+	      *ReturnLength = sizeof(PROCESS_DEVICEMAP_INFORMATION);
+	    }
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
 	}
 	break;
 
@@ -1361,12 +1412,21 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	else
 	{
 	  PUSHORT Priority = (PUSHORT)ProcessInformation;
-	  *Priority = Process->PriorityClass;
-
-	  if (ReturnLength)
+	  
+	  _SEH_TRY
 	  {
-	    *ReturnLength = sizeof(USHORT);
-	  }
+	    *Priority = Process->PriorityClass;
+
+	    if (ReturnLength)
+	    {
+	      *ReturnLength = sizeof(USHORT);
+	    }
+          }
+          _SEH_HANDLE
+          {
+            Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
 	}
 	break;
 
@@ -1377,23 +1437,51 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
          * Propably if we can't find a PEB or ProcessParameters structure for the
          * process!
          */
-        PRTL_USER_PROCESS_PARAMETERS ProcParams;
-        ASSERT(Process->Peb);
-        ASSERT(Process->Peb->ProcessParameters);
-        ProcParams = Process->Peb->ProcessParameters;
-        if(ProcessInformationLength < sizeof(UNICODE_STRING) + ProcParams->ImagePathName.Length + sizeof(WCHAR))
+        if(Process->Peb != NULL)
         {
-          Status = STATUS_INFO_LENGTH_MISMATCH;
+          PRTL_USER_PROCESS_PARAMETERS ProcParams;
+
+          /* we need to attach to the process to make sure we're in the right context! */
+          KeAttachProcess(&Process->Pcb);
+          
+          ASSERT(Process->Peb->ProcessParameters); /* FIXME - must ProcessParameters be really != NULL? */
+          
+          ProcParams = Process->Peb->ProcessParameters;
+          if(ProcessInformationLength < sizeof(UNICODE_STRING) + ProcParams->ImagePathName.Length + sizeof(WCHAR))
+          {
+            Status = STATUS_INFO_LENGTH_MISMATCH;
+          }
+          else
+          {
+            PUNICODE_STRING DstPath = (PUNICODE_STRING)ProcessInformation;
+
+            _SEH_TRY
+            {
+              DstPath->Length = ProcParams->ImagePathName.Length;
+              DstPath->MaximumLength = DstPath->Length + sizeof(WCHAR);
+              DstPath->Buffer = (PWSTR)(DstPath + 1);
+
+              RtlCopyMemory(DstPath->Buffer, ProcParams->ImagePathName.Buffer, ProcParams->ImagePathName.Length);
+              DstPath->Buffer[DstPath->Length / sizeof(WCHAR)] = L'\0';
+              
+              if (ReturnLength)
+              {
+                *ReturnLength = sizeof(UNICODE_STRING) + ProcParams->ImagePathName.Length + sizeof(WCHAR);
+              }
+            }
+            _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+          }
+          
+          KeDetachProcess();
         }
         else
         {
-          PUNICODE_STRING DstPath = (PUNICODE_STRING)ProcessInformation;
-          DstPath->Length = ProcParams->ImagePathName.Length;
-          DstPath->MaximumLength = DstPath->Length + sizeof(WCHAR);
-          DstPath->Buffer = (PWSTR)(DstPath + 1);
-          
-          RtlCopyMemory(DstPath->Buffer, ProcParams->ImagePathName.Buffer, ProcParams->ImagePathName.Length);
-          DstPath->Buffer[DstPath->Length / sizeof(WCHAR)] = L'\0';
+          /* FIXME - what to do here? */
+          Status = STATUS_UNSUCCESSFUL;
         }
         break;
       }
@@ -1415,8 +1503,9 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       default:
 	Status = STATUS_INVALID_INFO_CLASS;
      }
+
    ObDereferenceObject(Process);
-   return(Status);
+   return Status;
 }
 
 
