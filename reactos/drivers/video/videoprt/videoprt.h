@@ -29,7 +29,7 @@
 #include <ddk/ntddvdeo.h>
 #include <ddk/ntapi.h>
 #include <ddk/ntagp.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
