@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.28 2003/11/26 21:48:35 gvg Exp $ */
+/* $Id: color.c,v 1.29 2003/12/14 21:32:52 navaraf Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -192,11 +192,11 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE  hpal,
     PALETTEOBJ* palPtr = (PALETTEOBJ *)GDI_GetObjPtr(hPal, PALETTE_MAGIC);
     if (!palPtr) return FALSE;
 
-    if( (StartIndex + NumEntries) <= palPtr->logpalette.palNumEntries )
+    if( (StartIndex + NumEntries) <= palPtr->logpalette->palNumEntries )
     {
       UINT u;
       for( u = 0; u < NumEntries; u++ )
-        palPtr->logpalette.palPalEntry[u + StartIndex] = PaletteColors[u];
+        palPtr->logpalette->palPalEntry[u + StartIndex] = PaletteColors[u];
       PALETTE_Driver->pSetMapping(palPtr, StartIndex, NumEntries, hPal != hPrimaryPalette );
       GDI_ReleaseObj(hPal);
       return TRUE;
@@ -431,13 +431,14 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->w.hPalette);
   palPtr = (PPALOBJ) palGDI;
-  sysGDI = PALETTE_LockPalette(systemPalette);
-  sysPtr = (PPALOBJ) sysGDI;
 
   // Step 1: Create mapping of system palette\DC palette
   realized = PALETTE_SetMapping(palPtr, 0, palPtr->logpalette->palNumEntries,
                (dc->w.hPalette != hPrimaryPalette) ||
                (dc->w.hPalette == NtGdiGetStockObject(DEFAULT_PALETTE)));
+
+  sysGDI = PALETTE_LockPalette(systemPalette);
+  sysPtr = (PPALOBJ) sysGDI;
 
   // Step 2:
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
