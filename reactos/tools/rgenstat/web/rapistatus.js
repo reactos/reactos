@@ -145,6 +145,25 @@ function clickHandler (evt)
 
 	if (elt.className == 'l')	// label
 	{
+    var strName;
+
+		eltDiv = getParentDiv (elt);
+		var strEltClass = eltDiv.className;
+		if (strEltClass.charAt (strEltClass.length - 1) == '_')
+			strEltClass = strEltClass.slice (0, strEltClass.length - 1);
+	  strName = getName (eltDiv);
+
+		if (strEltClass == 'f') // Function
+		{
+      var strFilename = elt.nextSibling;
+			if (strFilename && strFilename.innerText)
+			{
+        var strRoot = 'http://mok.lvcm.com/cgi-bin/reactos/ros-cvs/~checkout~/';
+        var strExtra = '?content-type=text/plain';
+
+				window.open (strRoot + strFilename.innerText + strExtra, 'CVS');
+			}
+		}
 	}
 	else
 	{

@@ -1,5 +1,16 @@
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* tools/rgenstat/rgenstat.c (API_INFO): Add filename field.
+	(path_to_url, get_filename): New functions.
+	(parse_file, process_directory): Build cvs path.
+	(generate_xml_for_component): Set file attribute on a function.
+	* tools/rgenstat/web/rapistatus.css (.h): New class.
+	* tools/rgenstat/web/rapistatus.js (clickHandler): Go to the file in
+	ViewCVS on click on a function.
+	* tools/rgenstat/web/rapistatus.xsl: Handle file attribute.
+
+2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* subsys/win32k/objects/region.c (W32kFillRgn): Fix syntax error.
 
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>

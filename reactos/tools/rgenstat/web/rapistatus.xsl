@@ -131,6 +131,7 @@
 				</xsl:otherwise>
 			</xsl:choose>
 			<xsl:call-template name="name"/>
+ 			<xsl:call-template name="file"/>
 			<xsl:call-template name="status"/>
 	</xsl:template>
 
@@ -169,6 +170,12 @@
 	<xsl:template name="name">
 		<xsl:if test="@name">
 			<SPAN class="l"><xsl:value-of select="@name"/></SPAN>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template name="file">
+		<xsl:if test="@file">
+			<SPAN class="h"><xsl:value-of select="@file"/></SPAN>
 		</xsl:if>
 	</xsl:template>
 

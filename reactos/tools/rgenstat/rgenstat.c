@@ -40,6 +40,7 @@ typedef struct _API_INFO
   struct _API_INFO *next;
   int tag_id;
   char name[100];
+  char filename[MAX_PATH];
 } API_INFO, *PAPI_INFO;
 
 
@@ -85,6 +86,23 @@ convert_path(char* origpath)
 	i++;
      }
    return(newpath);
+}
+
+static char*
+path_to_url(char* path)
+{
+   int i;
+      
+   i = 0;
+   while (path[i] != 0)
+     {
+	if (path[i] == '\\')
+	  {
+	     path[i] = '/';
+	  }
+	i++;
+     }
+   return(path);
 }
 
 static void
@@ -380,15 +398,25 @@ skip_to_next_name(char *name)
   return 0;
 }
 
+// Build a path and filename so it is of the format [cvs-module][directory][filename].
+// Also convert all backslashes into forward slashes.
 static void
-parse_file(char *filename)
+get_filename(char *cvspath, char *filename, char *result)
+{
+  strcpy(result, cvspath);
+  strcat(result, filename);
+  path_to_url(result);
+}
+
+static void
+parse_file(char *fullname, char *cvspath, char *filename)
 {
   PAPI_INFO api_info;
   char prev[200];
   char name[200];
   int tag_id;
 
-  read_file(filename);
+  read_file(fullname);
 
   prev[0] = 0;
   do
@@ -407,7 +435,7 @@ parse_file(char *filename)
           if (strlen(name) == 0)
             {
               printf("Warning: empty function name in file %s. Previous function name was %s.\n",
-                filename, prev);
+                fullname, prev);
             }
           api_info = malloc(sizeof(API_INFO));
           if (api_info == NULL)
@@ -418,6 +446,8 @@ parse_file(char *filename)
 
           api_info->tag_id = tag_id;
           strcpy(api_info->name, name);
+
+          get_filename(cvspath, filename, api_info->filename);
 
           api_info->next = api_info_list;
           api_info_list = api_info;
@@ -432,14 +462,13 @@ parse_file(char *filename)
 
 /* Win32 version */
 static void
-process_directory (char *path)
+process_directory (char *path, char *cvspath)
 {
   struct _finddata_t f;
   int findhandle;
   char searchbuf[MAX_PATH];
   char buf[MAX_PATH];
-
-  printf("Processing '%s'\n", path);
+  char newcvspath[MAX_PATH];
 
   strcpy(searchbuf, path);
   strcat(searchbuf, "*.*");
@@ -456,7 +485,12 @@ process_directory (char *path)
                   strcpy(buf, path);
                   strcat(buf, f.name);
                   strcat(buf, DIR_SEPARATOR_STRING);
-                  process_directory(buf);
+
+                  strcpy(newcvspath, cvspath);
+                  strcat(newcvspath, f.name);
+                  strcat(newcvspath, '/');
+
+                  process_directory(buf, cvspath, f.name);
                 }
               continue;
       	    }
@@ -470,7 +504,7 @@ process_directory (char *path)
               continue;
             }
 
-          parse_file(buf);
+          parse_file(buf, cvspath, f.name);
       	}
       while (_findnext(findhandle, &f) == 0);
       _findclose(findhandle);
@@ -486,12 +520,13 @@ process_directory (char *path)
 
 /* Linux version */
 static void
-process_directory (char *path)
+process_directory (char *path, char *cvspath)
 {
   DIR *dirp;
   struct dirent *entry;
   struct stat stbuf;
   char buf[MAX_PATH];
+  char newcvspath[MAX_PATH];
 
 #ifdef HAVE_D_TYPE
   dirp = opendir(path);
@@ -527,7 +562,11 @@ process_directory (char *path)
 
               if (S_ISDIR(stbuf.st_mode))
           	    {
-                  process_directory(buf);
+                  strcpy(newcvspath, cvspath);
+                  strcat(newcvspath, f.name);
+                  strcat(newcvspath, '/');
+
+                  process_directory(buf, newcvspath);
                   continue;
           	    }
 
@@ -537,7 +576,7 @@ process_directory (char *path)
                   continue;
                 }
   
-              parse_file(buf);
+              parse_file(buf, cvspath, entry->d_name);
            }
       }
       closedir(dirp);
@@ -581,7 +620,11 @@ process_directory (char *path)
 
           if (S_ISDIR(stbuf.st_mode))
       	    {
-              process_directory(buf);
+              strcpy(newcvspath, cvspath);
+              strcat(newcvspath, entry->d_name);
+              strcat(newcvspath, "/");
+
+              process_directory(buf, newcvspath);
               continue;
       	    }
 
@@ -591,7 +634,7 @@ process_directory (char *path)
               continue;
             }
 
-          parse_file(buf);
+          parse_file(buf, cvspath, entry->d_name);
         }
       closedir(dirp);
     }
@@ -667,8 +710,10 @@ generate_xml_for_component(char *component_name)
       api_info = api_info_list;
       while (api_info != NULL)
         {
-          sprintf(buf, "<function name=\"%s\" implemented=\"%s\">",
-            api_info->name, api_info->tag_id == TAG_IMPLEMENTED ? "true" : "false");
+          sprintf(buf, "<function name=\"%s\" implemented=\"%s\" file=\"%s\">",
+            api_info->name,
+            api_info->tag_id == TAG_IMPLEMENTED ? "true" : "false",
+            api_info->filename);
           write_line(buf);
           write_line("</function>");
           api_info = api_info->next;
@@ -818,7 +863,7 @@ read_input_file(char *input_file)
       canonical_path = convert_path(component_path);
       if (canonical_path != NULL)
         {
-          process_directory(canonical_path);
+          process_directory(canonical_path, canonical_path);
           free(canonical_path);
           generate_xml_for_component(component_name);
         }
