@@ -123,14 +123,17 @@ CreateNamedPipeW(LPCWSTR lpName,
    if (dwOpenMode & PIPE_ACCESS_DUPLEX)
      {
 	CreateOptions = CreateOptions | FILE_PIPE_FULL_DUPLEX;
+	DesiredAccess |= (FILE_GENERIC_READ | FILE_GENERIC_WRITE);
      }
    else if (dwOpenMode & PIPE_ACCESS_INBOUND)
      {
 	CreateOptions = CreateOptions | FILE_PIPE_INBOUND;
+	DesiredAccess |= FILE_GENERIC_READ;
      }
    else if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
      {
 	CreateOptions = CreateOptions | FILE_PIPE_OUTBOUND;
+	DesiredAccess |= FILE_GENERIC_WRITE;
      }
 
    if (dwPipeMode & PIPE_TYPE_BYTE)
