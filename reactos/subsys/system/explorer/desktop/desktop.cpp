@@ -612,6 +612,7 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 			hr = pcm->QueryContextMenu(hmenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST-1, CMF_NORMAL|CMF_EXPLORE);
 
 			if (SUCCEEDED(hr)) {
+				AppendMenu(hmenu, 0, FCIDM_SHVIEWLAST-3, ResString(IDS_PROPERTIES_EXPLORER));
 				AppendMenu(hmenu, MF_SEPARATOR, 0, NULL);
 				AppendMenu(hmenu, 0, FCIDM_SHVIEWLAST-1, ResString(IDS_ABOUT_EXPLORER));
 
@@ -619,6 +620,24 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 
 				_cm_ifs.reset();
 
+				if (idCmd == FCIDM_SHVIEWLAST-3) {
+					ShellExecute (_hwnd, _T("open"), _T("c:\\reactos\\system32\\rundll32.exe shell32.dll,Control_RunDLL desk.cpl,,0"), NULL, NULL, SW_SHOWNORMAL);
+
+
+					//explorer_about(_hwnd);
+					//system("c:\\reactos\\system32\\cmd.exe");
+					
+					//ShellExecute (_hwnd, _T("open"), _T("%SystemRoot%\\system32\\cmd.exe"), NULL, NULL, SW_SHOWNORMAL);
+					
+					  //ShellExecute(NULL,"open","c:\\windows\\system32\\cmd.exe",NULL,NULL,SW_SHOWNORMAL);
+					//WCHAR* pFile="%SystemRoot%\system32\cmd.exe";
+					//int rcode;
+					 //TCHAR pFile[256];
+					 //strcopy("%SystemRoot%\\system32\\cmd.exe",pFile);
+					 //ShellExecute(NULL, NULL, pFile, NULL, "C:\\", SW_SHOW);
+					//HINSTANCE rcode=ShellExecute(NULL, "open", pFile, NULL, "C:\\", SW_SHOW);
+					//ShellExecute(hwnd, __TEXT("open"), __TEXT("%SystemRoot%\system32\cmd.exe"), __TEXT("c:\"), SH_SHOW); 
+				}
 				if (idCmd == FCIDM_SHVIEWLAST-1) {
 					explorer_about(_hwnd);
 				} else if (idCmd) {
