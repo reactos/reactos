@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.1 2002/06/05 16:52:43 ekohl Exp $
+/* $Id: dos8dot3.c,v 1.2 2002/06/06 16:17:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -124,7 +124,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
   CopyLength = min(NameLength, (CurrentIndex < 10) ? 6 : 5);
   if ((Context->NameLength == CopyLength) &&
       (wcsncmp(Context->NameBuffer, NameBuffer, CopyLength) == 0) &&
-      (Context->ExtensionLength = ExtLength) &&
+      (Context->ExtensionLength == ExtLength) &&
       (wcsncmp(Context->ExtensionBuffer, ExtBuffer, ExtLength) == 0))
     CurrentIndex = Context->LastIndexValue + 1;
   else
@@ -219,15 +219,22 @@ RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
 		break;
 
 	      case '.':
-		if ((HasDot) ||		/* two dots */
-		    (!i) ||		/* point is first char */
-		    (i + 1 == Length) ||/* point is last char */
-		    (Length - i > 4))	/* more than 3 chars of extension */
+		if ((HasDot) ||			/* two or more dots */
+		    (i == 0) ||			/* dot is first char */
+		    (i + 1 == Length) ||	/* dot is last char */
+		    (Length - i > 4) ||		/* more than 3 chars of extension */
+		    (HasDot == FALSE && i > 8))	/* name is longer than 8 chars */
 		  return(FALSE);
 		HasDot = TRUE;
 		break;
 	    }
 	}
+    }
+
+  /* Name is longer than 8 chars and does not have an extension */
+  if (Length > 8 && HasDot == FALSE)
+    {
+      return(FALSE);
     }
 
   if (SpacesFound)
