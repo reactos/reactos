@@ -635,14 +635,14 @@ Beep (DWORD dwFreq, DWORD dwDuration)
     BEEP_SET_PARAMETERS BeepSetParameters;
     DWORD dwReturned;
 
-    hBeep = CreateFile("\\Beep",
+    hBeep = CreateFile("\\\\.\\Beep",
                        FILE_GENERIC_READ | FILE_GENERIC_WRITE,
                        0,
                        NULL,
                        OPEN_EXISTING,
                        0,
                        NULL);
-    if (!hBeep)
+    if (hBeep == INVALID_HANDLE_VALUE)
         return FALSE;
 
     /* Set beep data */
