@@ -26,6 +26,7 @@
 #define TAG_BEZIER	TAG('B', 'E', 'Z', 'R') /* bezier */
 #define TAG_BITMAP	TAG('B', 'T', 'M', 'P') /* bitmap */
 #define TAG_PATBLT	TAG('P', 'B', 'L', 'T') /* patblt */
+#define TAG_CLIP	TAG('C', 'L', 'I', 'P') /* clipping */
 #define TAG_COORD	TAG('C', 'O', 'R', 'D') /* coords */
 #define TAG_DC		TAG('D', 'C', 'D', 'C') /* dc */
 #define TAG_GDIOBJ	TAG('G', 'D', 'I', 'O') /* gdi obj */

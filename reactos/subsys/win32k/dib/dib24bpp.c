@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.26 2004/05/10 17:07:17 weiden Exp $ */
+/* $Id: dib24bpp.c,v 1.27 2004/05/14 22:56:17 gvg Exp $ */
 #include <w32k.h>
 
 VOID
@@ -345,7 +345,8 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
                             POINTL* MaskOrigin, POINTL BrushOrigin,
-			                XLATEOBJ *ColorTranslation, ULONG Mode)
+                            CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                            ULONG Mode)
 {
   DbgPrint("DIB_24BPP_StretchBlt: Source BPP: %u\n", SourceGDI->BitsPerPixel);
   return FALSE;

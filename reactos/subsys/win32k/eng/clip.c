@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.20 2004/05/10 17:07:17 weiden Exp $
+/* $Id: clip.c,v 1.21 2004/05/14 22:56:18 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -331,6 +331,125 @@ CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
   ClipGDI->EnumPos+=nCopy;
 
   return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
+}
+
+static int 
+CompareSpans(const PSPAN Span1, const PSPAN Span2)
+{
+  int Cmp;
+
+  if (Span1->Y < Span2->Y)
+    {
+      Cmp = -1;
+    }
+  else if (Span2->Y < Span1->Y)
+    {
+      Cmp = +1;
+    }
+  else 
+    {
+      if (Span1->X < Span2->X)
+	{
+	  Cmp = -1;
+	}
+      else if (Span2->X < Span1->X)
+	{
+	  Cmp = +1;
+	}
+      else
+	{
+	  Cmp = 0;
+	}
+    }
+
+  return Cmp;
+}
+
+BOOLEAN FASTCALL
+ClipobjToSpans(PSPAN *Spans, UINT *Count, CLIPOBJ *ClipRegion, PRECTL Boundary)
+{
+  BOOL EnumMore;
+  UINT i, NewCount;
+  RECT_ENUM RectEnum;
+  PSPAN NewSpans;
+  RECTL *Rect;
+
+  ASSERT(Boundary->top <= Boundary->bottom && Boundary->left <= Boundary->right);
+
+  *Spans = NULL;
+  if (NULL == ClipRegion || DC_TRIVIAL == ClipRegion->iDComplexity)
+    {
+      *Count = Boundary->bottom - Boundary->top;
+      if (0 != *Count)
+        {
+          *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), TAG_CLIP);
+          if (NULL == *Spans)
+            {
+              *Count = 0;
+              return FALSE;
+            }
+          for (i = 0; i < Boundary->bottom - Boundary->top; i++)
+            {
+              (*Spans)[i].X = Boundary->left;
+              (*Spans)[i].Y = Boundary->top + i;
+              (*Spans)[i].Width = Boundary->right - Boundary->left;
+            }
+        }
+
+      return TRUE;
+    }
+
+  *Count = 0;
+  CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
+  do
+    {
+      EnumMore = CLIPOBJ_bEnum(ClipRegion, (ULONG) sizeof(RECT_ENUM), (PVOID) &RectEnum);
+
+      NewCount = *Count;
+      for (i = 0; i < RectEnum.c; i++)
+        {
+          NewCount += RectEnum.arcl[i].bottom - RectEnum.arcl[i].top;
+        }
+      if (NewCount != *Count)
+        {
+          NewSpans = ExAllocatePoolWithTag(PagedPool, NewCount * sizeof(SPAN), TAG_CLIP);
+          if (NULL == NewSpans)
+            {
+              if (NULL != *Spans)
+                {
+                  ExFreePool(*Spans);
+                  *Spans = NULL;
+                }
+              *Count = 0;
+              return FALSE;
+            }
+          if (0 != *Count)
+            {
+              RtlCopyMemory(NewSpans, *Spans, *Count * sizeof(SPAN));
+              ExFreePool(*Spans);
+            }
+          *Spans = NewSpans;
+        }
+      for (Rect = RectEnum.arcl; Rect < RectEnum.arcl + RectEnum.c; Rect++)
+        {
+          for (i = 0; i < Rect->bottom - Rect->top; i++)
+            {
+              (*Spans)[*Count].X = Rect->left;
+              (*Spans)[*Count].Y = Rect->top + i;
+              (*Spans)[*Count].Width = Rect->right - Rect->left;
+              (*Count)++;
+            }
+        }
+      ASSERT(*Count == NewCount);
+    }
+  while (EnumMore);
+
+  if (0 != *Count)
+    {
+      EngSort((PBYTE) *Spans, sizeof(SPAN), *Count, (SORTCOMP) CompareSpans);
+    }
+
+  return TRUE;
 }
 
 /* EOF */

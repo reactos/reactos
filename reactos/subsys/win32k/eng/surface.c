@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.38 2004/05/10 17:07:17 weiden Exp $
+/* $Id: surface.c,v 1.39 2004/05/14 22:56:18 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -110,7 +110,8 @@ static BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 SURFGDI *DestGDI,  SURFGDI *SourceGDI,
                                 RECTL*  DestRect,  RECTL  *SourceRect,
                                 POINTL* MaskOrigin, POINTL BrushOrign,
-                                XLATEOBJ *ColorTranslation, ULONG Mode)
+                                CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                                ULONG Mode)
 {
   return FALSE;
 }

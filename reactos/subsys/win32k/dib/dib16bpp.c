@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.31 2004/05/10 17:07:17 weiden Exp $ */
+/* $Id: dib16bpp.c,v 1.32 2004/05/14 22:56:17 gvg Exp $ */
 #include <w32k.h>
 
 VOID
@@ -256,7 +256,7 @@ DIB_16BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
 
     default:
-      DbgPrint("DIB_16BPP_Bitblt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
+      DPRINT1("DIB_16BPP_Bitblt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
       return FALSE;
   }
 
@@ -468,26 +468,84 @@ void ScaleLineAvg16(PIXEL *Target, PIXEL *Source, int SrcWidth, int TgtWidth)
     *Target++ = *Source;
 }
 
-//NOTE: If you change something here, please do the same in other dibXXbpp.c files!
-void ScaleRectAvg16(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
-                  int TgtWidth, int TgtHeight, int srcPitch, int dstPitch)
+static BOOLEAN
+FinalCopy16(PIXEL *Target, PIXEL *Source, PSPAN ClipSpans, UINT ClipSpansCount, UINT *SpanIndex,
+            UINT DestY, RECTL *DestRect)
 {
-  int NumPixels = TgtHeight;
-  int IntPart = ((SrcHeight / TgtHeight) * srcPitch) >> 1; //(SrcHeight / TgtHeight) * SrcWidth;
-  int FractPart = SrcHeight % TgtHeight;
-  int Mid = TgtHeight >> 1;
+  LONG Left, Right;
+  
+  while (ClipSpans[*SpanIndex].Y < DestY
+         || (ClipSpans[*SpanIndex].Y == DestY
+             && ClipSpans[*SpanIndex].X + ClipSpans[*SpanIndex].Width < DestRect->left))
+    {
+      (*SpanIndex)++;
+      if (ClipSpansCount <= *SpanIndex)
+        {
+          /* No more spans, everything else is clipped away, we're done */
+          return FALSE;
+        }
+    }
+  while (ClipSpans[*SpanIndex].Y == DestY)
+    {
+      if (ClipSpans[*SpanIndex].X < DestRect->right)
+        {
+          Left = max(ClipSpans[*SpanIndex].X, DestRect->left);
+          Right = min(ClipSpans[*SpanIndex].X + ClipSpans[*SpanIndex].Width, DestRect->right);
+          memcpy(Target + Left - DestRect->left, Source + Left - DestRect->left,
+                 (Right - Left) * sizeof(PIXEL));
+        }
+      (*SpanIndex)++;
+      if (ClipSpansCount <= *SpanIndex)
+        {
+          /* No more spans, everything else is clipped away, we're done */
+          return FALSE;
+        }
+    }
+
+  return TRUE;
+}
+
+//NOTE: If you change something here, please do the same in other dibXXbpp.c files!
+BOOLEAN ScaleRectAvg16(SURFGDI *DestGDI, SURFGDI *SourceGDI,
+                       RECTL* DestRect, RECTL *SourceRect,
+                       POINTL* MaskOrigin, POINTL BrushOrigin,
+                       CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                       ULONG Mode)
+{
+  int NumPixels = DestRect->bottom - DestRect->top;
+  int IntPart = (((SourceRect->bottom - SourceRect->top) / (DestRect->bottom - DestRect->top)) * SourceGDI->SurfObj.lDelta) >> 1; /* ((SourceRect->bottom - SourceRect->top) / (DestRect->bottom - DestRect->top)) * (SourceRect->right - SourceRect->left); */
+  int FractPart = (SourceRect->bottom - SourceRect->top) % (DestRect->bottom - DestRect->top);
+  int Mid = (DestRect->bottom - DestRect->top) >> 1;
   int E = 0;
   int skip;
   PIXEL *ScanLine, *ScanLineAhead;
   PIXEL *PrevSource = NULL;
   PIXEL *PrevSourceAhead = NULL;
+  PIXEL *Target = (PIXEL *) (DestGDI->SurfObj.pvScan0 + (DestRect->top * DestGDI->SurfObj.lDelta) + 2 * DestRect->left);
+  PIXEL *Source = (PIXEL *) (SourceGDI->SurfObj.pvScan0 + (SourceRect->top * SourceGDI->SurfObj.lDelta) + 2 * SourceRect->left);
+  PSPAN ClipSpans;
+  UINT ClipSpansCount;
+  UINT SpanIndex;
+  LONG DestY;
 
-  skip = (TgtHeight < SrcHeight) ? 0 : (TgtHeight / (2*SrcHeight) + 1);
+  if (! ClipobjToSpans(&ClipSpans, &ClipSpansCount, ClipRegion, DestRect))
+    {
+      return FALSE;
+    }
+  if (0 == ClipSpansCount)
+    {
+      /* No clip spans == empty clipping region, everything clipped away */
+      ASSERT(NULL == ClipSpans);
+      return TRUE;
+    }
+  skip = (DestRect->bottom - DestRect->top < SourceRect->bottom - SourceRect->top) ? 0 : ((DestRect->bottom - DestRect->top) / (2 * (SourceRect->bottom - SourceRect->top)) + 1);
   NumPixels -= skip;
 
-  ScanLine = (PIXEL*)ExAllocatePool(NonPagedPool, TgtWidth*sizeof(PIXEL)); // FIXME: Should we use PagedPool here?
-  ScanLineAhead = (PIXEL *)ExAllocatePool(NonPagedPool, TgtWidth*sizeof(PIXEL));
+  ScanLine = (PIXEL*)ExAllocatePool(PagedPool, (DestRect->right - DestRect->left) * sizeof(PIXEL));
+  ScanLineAhead = (PIXEL *)ExAllocatePool(PagedPool, (DestRect->right - DestRect->left) * sizeof(PIXEL));
 
+  DestY = DestRect->top;
+  SpanIndex = 0;
   while (NumPixels-- > 0) {
     if (Source != PrevSource) {
       if (Source == PrevSourceAhead) {
@@ -499,38 +557,57 @@ void ScaleRectAvg16(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
         ScanLine = ScanLineAhead;
         ScanLineAhead = tmp;
       } else {
-        ScaleLineAvg16(ScanLine, Source, SrcWidth, TgtWidth);
+        ScaleLineAvg16(ScanLine, Source, SourceRect->right - SourceRect->left, DestRect->right - DestRect->left);
       } /* if */
       PrevSource = Source;
     } /* if */
     
-    if (E >= Mid && PrevSourceAhead != (PIXEL *)((BYTE *)Source + srcPitch)) {
+    if (E >= Mid && PrevSourceAhead != (PIXEL *)((BYTE *)Source + SourceGDI->SurfObj.lDelta)) {
       int x;
-      ScaleLineAvg16(ScanLineAhead, (PIXEL *)((BYTE *)Source + srcPitch), SrcWidth, TgtWidth);
-      for (x = 0; x < TgtWidth; x++)
+      ScaleLineAvg16(ScanLineAhead, (PIXEL *)((BYTE *)Source + SourceGDI->SurfObj.lDelta), SourceRect->right - SourceRect->left, DestRect->right - DestRect->left);
+      for (x = 0; x < DestRect->right - DestRect->left; x++)
         ScanLine[x] = average16(ScanLine[x], ScanLineAhead[x]);
-      PrevSourceAhead = (PIXEL *)((BYTE *)Source + srcPitch);
+      PrevSourceAhead = (PIXEL *)((BYTE *)Source + SourceGDI->SurfObj.lDelta);
     } /* if */
-    
-    memcpy(Target, ScanLine, TgtWidth*sizeof(PIXEL));
-    Target = (PIXEL *)((BYTE *)Target + dstPitch);
+
+    if (! FinalCopy16(Target, ScanLine, ClipSpans, ClipSpansCount, &SpanIndex, DestY, DestRect))
+      {
+        /* No more spans, everything else is clipped away, we're done */
+        ExFreePool(ClipSpans);
+        ExFreePool(ScanLine);
+        ExFreePool(ScanLineAhead);
+        return TRUE;
+      }
+    DestY++;
+    Target = (PIXEL *)((BYTE *)Target + DestGDI->SurfObj.lDelta);
     Source += IntPart;
     E += FractPart;
-    if (E >= TgtHeight) {
-      E -= TgtHeight;
-      Source = (PIXEL *)((BYTE *)Source + srcPitch);
+    if (E >= DestRect->bottom - DestRect->top) {
+      E -= DestRect->bottom - DestRect->top;
+      Source = (PIXEL *)((BYTE *)Source + SourceGDI->SurfObj.lDelta);
     } /* if */
   } /* while */
 
   if (skip > 0 && Source != PrevSource)
-    ScaleLineAvg16(ScanLine, Source, SrcWidth, TgtWidth);
+    ScaleLineAvg16(ScanLine, Source, SourceRect->right - SourceRect->left, DestRect->right - DestRect->left);
   while (skip-- > 0) {
-    memcpy(Target, ScanLine, TgtWidth*sizeof(PIXEL));
-    Target = (PIXEL *)((BYTE *)Target + dstPitch);
+    if (! FinalCopy16(Target, ScanLine, ClipSpans, ClipSpansCount, &SpanIndex, DestY, DestRect))
+      {
+        /* No more spans, everything else is clipped away, we're done */
+        ExFreePool(ClipSpans);
+        ExFreePool(ScanLine);
+        ExFreePool(ScanLineAhead);
+        return TRUE;
+      }
+    DestY++;
+    Target = (PIXEL *)((BYTE *)Target + DestGDI->SurfObj.lDelta);
   } /* while */
 
+  ExFreePool(ClipSpans);
   ExFreePool(ScanLine);
   ExFreePool(ScanLineAhead);
+
+  return TRUE;
 }
 
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
@@ -538,11 +615,10 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                              SURFGDI *DestGDI, SURFGDI *SourceGDI,
                              RECTL* DestRect, RECTL *SourceRect,
                              POINTL* MaskOrigin, POINTL BrushOrigin,
-                             XLATEOBJ *ColorTranslation, ULONG Mode)
+                             CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                             ULONG Mode)
 {
-  BYTE *SourceLine, *DestLine;
-  
-  DbgPrint("DIB_16BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+  DPRINT("DIB_16BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      SourceGDI->BitsPerPixel, SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
      DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
@@ -561,12 +637,8 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
 
       case 16:
-	    SourceLine = SourceSurf->pvScan0 + (SourceRect->top * SourceSurf->lDelta) + 2 * SourceRect->left;
-	    DestLine = DestSurf->pvScan0 + (DestRect->top * DestSurf->lDelta) + 2 * DestRect->left;
-
-        ScaleRectAvg16((PIXEL *)DestLine, (PIXEL *)SourceLine,
-           SourceRect->right-SourceRect->left, SourceRect->bottom-SourceRect->top, 
-           DestRect->right-DestRect->left, DestRect->bottom-DestRect->top, SourceSurf->lDelta, DestSurf->lDelta);
+        return ScaleRectAvg16(DestGDI, SourceGDI, DestRect, SourceRect, MaskOrigin, BrushOrigin,
+                              ClipRegion, ColorTranslation, Mode);
       break;
     
       case 24:
@@ -578,7 +650,7 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
       
       default:
-         DbgPrint("DIB_16BPP_StretchBlt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
+         DPRINT1("DIB_16BPP_StretchBlt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
       return FALSE;
     }
 

@@ -32,4 +32,13 @@ typedef struct _RECT_ENUM
   RECTL arcl[ENUM_RECT_LIMIT];
 } RECT_ENUM;
 
+typedef struct tagSPAN
+{
+  LONG Y;
+  LONG X;
+  ULONG Width;
+} SPAN, *PSPAN;
+
+BOOLEAN FASTCALL ClipobjToSpans(PSPAN *Spans, UINT *Count, CLIPOBJ *ClipRegion, PRECTL Boundary);
+
 #endif

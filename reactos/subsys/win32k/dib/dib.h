@@ -21,7 +21,8 @@ BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
                             POINTL* MaskOrigin, POINTL BrushOrigin,
-                            XLATEOBJ *ColorTranslation, ULONG Mode);
+                            CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                            ULONG Mode);
 BOOLEAN DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                 RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -40,7 +41,8 @@ BOOLEAN DIB_4BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
                             POINTL* MaskOrigin, POINTL BrushOrigin,
-                            XLATEOBJ *ColorTranslation, ULONG Mode);
+                            CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                            ULONG Mode);
 BOOLEAN DIB_4BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                 RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -59,7 +61,8 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
                             POINTL* MaskOrigin, POINTL BrushOrigin,
-                            XLATEOBJ *ColorTranslation, ULONG Mode);
+                            CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                            ULONG Mode);
 BOOLEAN DIB_8BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                 RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -78,7 +81,8 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                              SURFGDI *DestGDI, SURFGDI *SourceGDI,
                              RECTL* DestRect, RECTL *SourceRect,
                              POINTL* MaskOrigin, POINTL BrushOrigin,
-                             XLATEOBJ *ColorTranslation, ULONG Mode);
+                             CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                             ULONG Mode);
 BOOLEAN DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                  PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                  RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -97,7 +101,8 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                              SURFGDI *DestGDI, SURFGDI *SourceGDI,
                              RECTL* DestRect, RECTL *SourceRect,
                              POINTL* MaskOrigin, POINTL BrushOrigin,
-                             XLATEOBJ *ColorTranslation, ULONG Mode);
+                             CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                             ULONG Mode);
 BOOLEAN DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                  PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                  RECTL*  DestRect,  POINTL  *SourcePoint,
@@ -116,7 +121,8 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                              SURFGDI *DestGDI, SURFGDI *SourceGDI,
                              RECTL* DestRect, RECTL *SourceRect,
                              POINTL* MaskOrigin, POINTL BrushOrigin,
-                             XLATEOBJ *ColorTranslation, ULONG Mode);			             
+                             CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
+                             ULONG Mode);
 BOOLEAN DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                  PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                  RECTL*  DestRect,  POINTL  *SourcePoint,
