@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.34 2004/02/22 17:30:32 chorns Exp $
+/* $Id: dllmain.c,v 1.35 2004/06/26 20:07:40 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,6 +23,7 @@ extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
 
 HANDLE hProcessHeap = NULL;
+HMODULE hCurrentModule = NULL;
 HANDLE hBaseDir = NULL;
 
 static BOOL DllInitialized = FALSE;
@@ -117,6 +118,7 @@ DllMain(HANDLE hDll,
 	  }
 
 	hProcessHeap = RtlGetProcessHeap();
+   hCurrentModule = hDll;
 
 	/*
 	 * Initialize WindowsDirectory and SystemDirectory
