@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.7 2003/07/21 21:53:53 royce Exp $
+/* $Id: w32call.c,v 1.8 2003/07/23 19:13:37 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -46,7 +46,21 @@ typedef struct _NTW32CALL_SAVED_STATE
   PVOID SavedCallbackStack;
 } NTW32CALL_SAVED_STATE, *PNTW32CALL_SAVED_STATE;
 
+typedef struct
+{
+  PVOID BaseAddress;
+  LIST_ENTRY ListEntry;
+} NTW32CALL_CALLBACK_STACK, *PNTW32CALL_CALLBACK_STACK;
+
+static LIST_ENTRY CallbackStackListHead;
+
 /* FUNCTIONS ***************************************************************/
+
+VOID
+PsInitialiseW32Call(VOID)
+{
+  InitializeListHead(&CallbackStackListHead);
+}
 
 NTSTATUS STDCALL
 NtCallbackReturn (PVOID		Result,
@@ -145,6 +159,22 @@ PsFreeCallbackStack(PVOID StackLimit)
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
+VOID
+PsFreeCallbackStacks(VOID)
+{
+  PLIST_ENTRY CurrentListEntry;
+  PNTW32CALL_CALLBACK_STACK Current;
+
+  while (!IsListEmpty(&CallbackStackListHead))
+    {
+      CurrentListEntry = RemoveHeadList(&CallbackStackListHead);
+      Current = CONTAINING_RECORD(CurrentListEntry, NTW32CALL_CALLBACK_STACK,
+				  ListEntry);
+      PsFreeCallbackStack(Current->BaseAddress);
+      ExFreePool(Current);
+    }
+}
+
 PVOID STATIC
 PsAllocateCallbackStack(ULONG StackSize)
 {
@@ -202,6 +232,7 @@ NtW32Call (IN ULONG RoutineIndex,
   KIRQL oldIrql;
   NTSTATUS CallbackStatus;
   NTW32CALL_SAVED_STATE SavedState;
+  PNTW32CALL_CALLBACK_STACK AssignedStack;
 
   DPRINT("NtW32Call(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
 	  RoutineIndex, Argument, ArgumentLength);
@@ -210,7 +241,22 @@ NtW32Call (IN ULONG RoutineIndex,
 
   /* Set up the new kernel and user environment. */
   StackSize = (ULONG)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);  
-  NewStack = PsAllocateCallbackStack(StackSize);
+  if (IsListEmpty(&CallbackStackListHead))
+    {
+      NewStack = PsAllocateCallbackStack(StackSize);
+      AssignedStack = ExAllocatePool(NonPagedPool,
+				     sizeof(NTW32CALL_CALLBACK_STACK));
+      AssignedStack->BaseAddress = NewStack;
+    }
+  else
+    {
+      PLIST_ENTRY StackEntry;      
+
+      StackEntry = RemoveHeadList(&CallbackStackListHead);
+      AssignedStack = CONTAINING_RECORD(StackEntry, NTW32CALL_CALLBACK_STACK, 
+					ListEntry);
+      NewStack = AssignedStack->BaseAddress;
+    }
   /* FIXME: Need to check whether we were interrupted from v86 mode. */
   memcpy(NewStack + StackSize - sizeof(KTRAP_FRAME), Thread->Tcb.TrapFrame,
 	 sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));
@@ -245,7 +291,7 @@ NtW32Call (IN ULONG RoutineIndex,
    * modified.
    */
   KeLowerIrql(PASSIVE_LEVEL);
-  PsFreeCallbackStack(NewStack);
+  InsertTailList(&CallbackStackListHead, &AssignedStack->ListEntry);
   return(CallbackStatus);
 } 
 

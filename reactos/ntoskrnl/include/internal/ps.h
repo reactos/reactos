@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.50 2003/07/17 16:57:38 silverblade Exp $
+/* $Id: ps.h,v 1.51 2003/07/23 19:13:37 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -539,6 +539,9 @@ PsTerminateWin32Process (PEPROCESS Process);
 
 VOID
 PsTerminateWin32Thread (PETHREAD Thread);
+
+VOID
+PsInitialiseW32Call(VOID);
 
 #endif /* ASSEMBLER */
 
