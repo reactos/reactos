@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.23 1999/11/20 21:46:16 ekohl Exp $
+; $Id: ntdll.def,v 1.24 1999/11/25 23:45:29 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -510,6 +510,10 @@ RtlUpperChar@4
 RtlUpperString@8
 RtlValidateHeap@12
 RtlZeroMemory@8
+RtlxAnsiStringToUnicodeSize@4
+RtlxOemStringToUnicodeSize@4
+RtlxUnicodeStringToAnsiSize@4
+RtlxUnicodeStringToOemSize@4
 _memccpy
 _memicmp
 _splitpath

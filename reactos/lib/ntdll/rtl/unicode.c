@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.9 1999/11/20 21:46:46 ekohl Exp $
+/* $Id: unicode.c,v 1.10 1999/11/25 23:43:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1378,6 +1378,47 @@ RtlUpperString (
 }
 
 
+ULONG
+STDCALL
+RtlxAnsiStringToUnicodeSize (
+	IN	PANSI_STRING	AnsiString
+	)
+{
+	return RtlAnsiStringToUnicodeSize (AnsiString);
+}
+
+
+ULONG
+STDCALL
+RtlxOemStringToUnicodeSize (
+	IN	POEM_STRING	OemString
+	)
+{
+	return RtlAnsiStringToUnicodeSize ((PANSI_STRING)OemString);
+}
+
+
+ULONG
+STDCALL
+RtlxUnicodeStringToAnsiSize (
+	IN	PUNICODE_STRING	UnicodeString
+	)
+{
+	return RtlUnicodeStringToAnsiSize (UnicodeString);
+}
+
+
+ULONG
+STDCALL
+RtlxUnicodeStringToOemSize (
+	IN	PUNICODE_STRING	UnicodeString
+	)
+{
+	return RtlUnicodeStringToAnsiSize (UnicodeString);
+}
+
+
+/* This one doesn't belong here! */
 VOID
 STDCALL
 RtlUnwind (
