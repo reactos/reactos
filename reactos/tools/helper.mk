@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.51 2004/02/19 22:24:58 gvg Exp $
+# $Id: helper.mk,v 1.52 2004/02/20 08:33:37 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -121,7 +121,6 @@ ifeq ($(TARGET_TYPE),program)
 ifneq ($(WINE_MODE),yes)
   MK_CFLAGS := -I./ -I$(SDK_PATH_INC)
   MK_CPPFLAGS := -I./ -I$(SDK_PATH_INC)
-  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
 else
   MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
   MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine -I./ -I$(WINE_INCLUDE)
