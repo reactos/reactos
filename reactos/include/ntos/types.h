@@ -373,22 +373,12 @@ typedef struct
 typedef HANDLE *PHANDLE;
 
 typedef struct value_ent {
-    LPWSTR   ve_valuename;
-    DWORD ve_valuelen;
-    DWORD ve_valueptr;
-    DWORD ve_type;
+    LPWSTR ve_valuename;
+    DWORD  ve_valuelen;
+    DWORD  ve_valueptr;
+    DWORD  ve_type;
 } WVALENT, *PWVALENT;
 
-#define EXCEPTION_MAXIMUM_PARAMETERS	(15)
-
-typedef struct _EXCEPTION_RECORD {
-  DWORD ExceptionCode;
-  DWORD ExceptionFlags;
-  struct _EXCEPTION_RECORD *ExceptionRecord;
-  PVOID ExceptionAddress;
-  DWORD NumberParameters;
-  DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD;
 
 typedef const void *LPCVOID;
 typedef BYTE *LPBYTE, *PBYTE;
@@ -427,5 +417,7 @@ typedef VOID STDCALL
 	DWORD dwTimerLowValue,
 	DWORD dwTimerHighValue
 	);
+
+#include "except.h"
 
 #endif /* __INCLUDE_TYPES_H */

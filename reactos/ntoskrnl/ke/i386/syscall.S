@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.2 2001/03/18 19:35:13 dwelch Exp $
+/* $Id: syscall.S,v 1.3 2001/09/24 00:51:17 chorns Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -52,7 +52,7 @@ _interrupt_handler2e:
 	   /* Save the old exception list */
 	   movl         %fs:KPCR_EXCEPTION_LIST, %ebx
 	   pushl	%ebx
-	   /* Put the exception handler chain terminator */
+	   /* Set the exception handler chain terminator */
 	   movl         $0xffffffff, %fs:KPCR_EXCEPTION_LIST
 	   /* Get a pointer to the current thread */
 	   movl         %fs:KPCR_CURRENT_THREAD, %esi

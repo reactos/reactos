@@ -183,7 +183,7 @@ NtEarlyInitVdm(VOID);
 VOID
 KiAddProfileEvent(KPROFILE_SOURCE Source, ULONG Eip);
 VOID 
-KiDispatchException(PEXCEPTION_RECORD Er,
+KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 		    PCONTEXT Context,
 		    PKTRAP_FRAME Tf,
 		    KPROCESSOR_MODE PreviousMode,

@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.6 2001/06/17 20:05:10 ea Exp $
+/* $Id: exception.c,v 1.7 2001/09/24 00:51:16 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -64,10 +64,10 @@ RtlRaiseStatus(NTSTATUS Status)
 
 
 VOID STDCALL
-RtlUnwind(ULONG Unknown1,
-	  ULONG Unknown2,
-	  ULONG Unknown3,
-	  ULONG Unknown4)
+RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
+  PVOID ReturnAddress,
+  PEXCEPTION_RECORD ExceptionRecord,
+  DWORD EaxValue)
 {
 
 }

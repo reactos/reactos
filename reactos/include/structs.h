@@ -1872,11 +1872,6 @@ typedef struct tagEVENTMSG {
   HWND  hwnd; 
 } EVENTMSG; 
  
-typedef struct _EXCEPTION_POINTERS { 
-  PEXCEPTION_RECORD ExceptionRecord; 
-  PCONTEXT ContextRecord; 
-} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS, *LPEXCEPTION_POINTERS; 
- 
 typedef struct _EXT_BUTTON { 
   WORD idCommand; 
   WORD idsHelp; 

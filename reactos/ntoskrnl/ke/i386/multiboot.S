@@ -1,6 +1,7 @@
 #include <roscfg.h>
 #include <internal/ntoskrnl.h>
 #include <internal/i386/segment.h>
+#include <internal/ps.h>
 
 #define KERNEL_BASE (0xc0000000)
 
@@ -265,7 +266,7 @@ _multiboot_entry:
 	 */
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
-	
+
 	/*
 	 * Load the initial kernel stack
 	 */

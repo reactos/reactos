@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.57 2001/09/01 15:36:43 chorns Exp $
+/* $Id: rtl.h,v 1.58 2001/09/24 00:51:15 chorns Exp $
  * 
  */
 
@@ -1830,10 +1830,10 @@ RtlUnlockHeap (
 VOID
 STDCALL
 RtlUnwind (
-	ULONG	Unknown1,
-	ULONG	Unknown2,
-	ULONG	Unknown3,
-	ULONG	Unknown4
+  PEXCEPTION_REGISTRATION RegistrationFrame,
+  PVOID ReturnAddress,
+  PEXCEPTION_RECORD ExceptionRecord,
+  DWORD EaxValue
 	);
 
 WCHAR

@@ -307,6 +307,61 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 }
 #endif
 
+
+ULONG
+KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
+{
+  EXCEPTION_RECORD Er;
+
+  if (ExceptionNr == 0)
+    {
+      Er.ExceptionCode = STATUS_INTEGER_DIVIDE_BY_ZERO;
+    }
+  else if (ExceptionNr == 1)
+    {
+      Er.ExceptionCode = STATUS_SINGLE_STEP;
+    }
+  else if (ExceptionNr == 3)
+    {
+      Er.ExceptionCode = STATUS_BREAKPOINT;
+    }
+  else if (ExceptionNr == 4)
+    {
+      Er.ExceptionCode = STATUS_INTEGER_OVERFLOW;
+    }
+  else if (ExceptionNr == 5)
+    {
+      Er.ExceptionCode = STATUS_ARRAY_BOUNDS_EXCEEDED;
+    }
+  else if (ExceptionNr == 6)
+    {
+      Er.ExceptionCode = STATUS_ILLEGAL_INSTRUCTION;
+    }
+  else
+    {
+      Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
+    }
+  Er.ExceptionFlags = 0;
+  Er.ExceptionRecord = NULL;
+  Er.ExceptionAddress = (PVOID)Tf->Eip;
+  if (ExceptionNr == 14)
+    {
+      Er.NumberParameters = 2;
+      Er.ExceptionInformation[0] = Tf->ErrorCode & 0x1;
+      Er.ExceptionInformation[1] = (ULONG)Cr2;
+    }
+  else
+    {
+      Er.NumberParameters = 0;
+    }
+
+  KiDispatchException(&Er, 0, Tf, KernelMode, TRUE);
+
+  return(0);
+}
+
+
+
 ULONG
 KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 {
@@ -544,13 +599,17 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
  *        Complete CPU context
  */
 {
-   unsigned int cr2, cr3;
+//#define SEH
+   unsigned int cr2;
+#ifndef SEH
+   unsigned int cr3;
    unsigned int i;
+   ULONG StackLimit;
+   PULONG Frame;
+#endif
 //   unsigned int j, sym;
    NTSTATUS Status;
    ULONG Esp0;
-   ULONG StackLimit;
-   PULONG Frame;
 
    /* Use the address of the trap frame as approximation to the ring0 esp */
    Esp0 = (ULONG)&Tf->Eip;
@@ -592,6 +651,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	  {
 	     return(0);
 	  }
+
      }
 
    /*
@@ -601,6 +661,15 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      {
        return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
      }
+   else
+    {
+#ifdef SEH
+      return(KiKernelTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
+#endif
+    }
+
+
+#ifndef SEH
 
    /*
     * Print out the CPU registers
@@ -678,6 +747,9 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      }
 
    for(;;);
+
+   return 0;
+#endif
 }
 
 VOID 
