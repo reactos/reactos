@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.26 2001/05/05 19:13:09 chorns Exp $
+/* $Id: kdebug.c,v 1.27 2001/06/21 04:12:19 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -94,120 +94,73 @@ KdInitSystem (
 		if (!_strnicmp (p2, "DEBUGPORT", 9))
 		{
 			p2 += 9;
-			if (*p2 != '=')
-				break;
-			p2++;
-			if (!_strnicmp (p2, "SCREEN", 6))
-			{
-				p2 += 6;
-				KdDebuggerEnabled = TRUE;
-				KdpDebugType |= ScreenDebug;
-			}
-			else if (!_strnicmp (p2, "BOCHS", 5))
-			{
-				p2 += 5;
-				KdDebuggerEnabled = TRUE;
-				KdpDebugType |= BochsDebug;
-			}
-			else if (!_strnicmp (p2, "COM", 3))
-			{
-				p2 += 3;
-				Value = (ULONG)atol (p2);
-				if (Value > 0 && Value < 5)
+			if (*p2 == '=')
+                        {
+				p2++;
+				if (!_strnicmp (p2, "SCREEN", 6))
 				{
+					p2 += 6;
 					KdDebuggerEnabled = TRUE;
-					KdpDebugType |= SerialDebug;
-					PortInfo.ComPort = Value;
+					KdpDebugType |= ScreenDebug;
+				}
+				else if (!_strnicmp (p2, "BOCHS", 5))
+				{
+					p2 += 5;
+					KdDebuggerEnabled = TRUE;
+					KdpDebugType |= BochsDebug;
+				}
+				else if (!_strnicmp (p2, "COM", 3))
+				{
+					p2 += 3;
+					Value = (ULONG)atol (p2);
+					if (Value > 0 && Value < 5)
+					{
+						KdDebuggerEnabled = TRUE;
+						KdpDebugType |= SerialDebug;
+						PortInfo.ComPort = Value;
+					}
 				}
 			}
-			break;
 		}
-		p1 = p2;
-	}
-	
-
-	
-	/* check for 'BAUDRATE' */
-	p1 = (PCHAR)LoaderBlock->CommandLine;
-	while (p1 && (p2 = strchr (p1, '/')))
-	{
-		p2++;
-		if (!_strnicmp (p2, "BAUDRATE", 8))
-		{
-			p2 += 8;
-			if (*p2 != '=')
-				break;
-			p2++;
-			Value = (ULONG)atol (p2);
-			if (Value > 0)
-			{
-				KdDebuggerEnabled = TRUE;
-				KdpDebugType = KdpDebugType | SerialDebug;
-				PortInfo.BaudRate = Value;
-			}
-			break;
-		}
-		p1 = p2;
-	}
-
-	/* Check for 'DEBUG'. Dont' accept 'DEBUGPORT'!*/
-	p1 = (PCHAR)LoaderBlock->CommandLine;
-	while (p1 && (p2 = strchr (p1, '/')))
-	{
-		p2++;
-		if (!_strnicmp (p2, "DEBUG", 5) &&
-		    _strnicmp (p2, "DEBUGPORT", 9))
+		else if (!_strnicmp (p2, "DEBUG", 5))
 		{
 			p2 += 5;
 			KdDebuggerEnabled = TRUE;
 			KdpDebugType = KdpDebugType | SerialDebug;
-			break;
 		}
-		p1 = p2;
-	}
-
-	/* Check for 'NODEBUG' */
-	p1 = (PCHAR)LoaderBlock->CommandLine;
-	while (p1 && (p2 = strchr (p1, '/')))
-	{
-		p2++;
-		if (!_strnicmp (p2, "NODEBUG", 7))
+		else if (!_strnicmp (p2, "NODEBUG", 7))
 		{
 			p2 += 7;
 			KdDebuggerEnabled = FALSE;
-			break;
 		}
-		p1 = p2;
-	}
-
-	/* Check for 'CRASHDEBUG' */
-	p1 = (PCHAR)LoaderBlock->CommandLine;
-	while (p1 && (p2 = strchr (p1, '/')))
-	{
-		p2++;
-		if (!_strnicmp (p2, "CRASHDEBUG", 10))
+		else if (!_strnicmp (p2, "CRASHDEBUG", 10))
 		{
 			p2 += 10;
 			KdDebuggerEnabled = FALSE;
-			break;
 		}
-		p1 = p2;
-	}
-
-	/* Check for 'BREAK' */
-	p1 = (PCHAR)LoaderBlock->CommandLine;
-	while (p1 && (p2 = strchr (p1, '/')))
-	{
-		p2++;
-		if (!_strnicmp (p2, "BREAK", 5))
+		else if (!_strnicmp (p2, "BREAK", 5))
 		{
 			p2 += 7;
 			KdpBreakPending = TRUE;
-			break;
+		}
+		else if (!_strnicmp (p2, "BAUDRATE", 8))
+		{
+			p2 += 8;
+			if (*p2 != '=')
+			{
+				p2++;
+				Value = (ULONG)atol (p2);
+				if (Value > 0)
+				{
+					KdDebuggerEnabled = TRUE;
+					KdpDebugType = KdpDebugType | SerialDebug;
+					PortInfo.BaudRate = Value;
+				}
+			}
 		}
 		p1 = p2;
 	}
-
+	
 #ifdef DBGPRINT_FILE_LOG
 	KdpDebugType |= FileLogDebug;
 	DebugLogInit();
