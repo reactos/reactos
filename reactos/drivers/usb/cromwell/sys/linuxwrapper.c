@@ -134,6 +134,8 @@ int my_kill_proc(int pid, int signal, int unk)
 {
 	HANDLE hThread;
 
+	// TODO: Implement actual process killing
+
 	hThread = (HANDLE)pid;
 	ZwClose(hThread);
 
@@ -208,9 +210,17 @@ void my_device_initialize(struct device *dev)
 {
 }
 /*------------------------------------------------------------------------*/ 
-void my_wake_up(void* p)
+void my_wake_up(PKEVENT evnt)
 {
 	need_wakeup=1;
+
+	KeSetEvent(evnt, 0, FALSE); // Signal event
+}
+/*------------------------------------------------------------------------*/ 
+void my_init_waitqueue_head(PKEVENT evnt)
+{
+	// this is used only in core/message.c, and it isn't needed there
+	//KeInitializeEvent(evnt, NotificationEvent, TRUE); // signalled state
 }
 /*------------------------------------------------------------------------*/ 
 /* wait until woken up (only one wait allowed!) */
@@ -254,6 +264,12 @@ void my_wait_for_completion(struct completion *x)
 //	printk("wait for completion done %i\n",x->done);
 }
 /*------------------------------------------------------------------------*/ 
+void my_interruptible_sleep_on(PKEVENT evnt)
+{
+	KeWaitForSingleObject(evnt, Executive, KernelMode, FALSE, NULL);
+	KeClearEvent(evnt); // reset to not-signalled
+}
+/*------------------------------------------------------------------------*/ 
 // Helper for pci_module_init
 /*------------------------------------------------------------------------*/ 
 int my_pci_module_init(struct pci_driver *x)
@@ -295,3 +311,54 @@ int my_free_irq(int irq, void* p)
 	return 0;
 }
 /*------------------------------------------------------------------------*/ 
+// Lookaside funcs
+/*------------------------------------------------------------------------*/ 
+kmem_cache_t *my_kmem_cache_create(const char *tag, size_t alloc_size,
+								   size_t offset, unsigned long flags,
+								   void *ctor,
+								   void *dtor)
+{
+	//TODO: Take in account ctor and dtor - callbacks for alloc/free, flags and offset
+	//FIXME: We assume this cache is always NPaged
+	PNPAGED_LOOKASIDE_LIST Lookaside;
+	ULONG Tag=0x11223344; //FIXME: Make this from tag
+
+	Lookaside = ExAllocatePool(NonPagedPool, sizeof(NPAGED_LOOKASIDE_LIST));
+	
+	ExInitializeNPagedLookasideList(
+		Lookaside,
+		NULL,
+		NULL,
+		0,
+		alloc_size,
+		Tag,
+		0);
+
+	return (kmem_cache_t *)Lookaside;
+}
+/*------------------------------------------------------------------------*/ 
+void my_kmem_cache_destroy(kmem_cache_t *co)
+{
+	ExDeleteNPagedLookasideList((PNPAGED_LOOKASIDE_LIST)co);
+
+    ExFreePool(co);
+}
+/*------------------------------------------------------------------------*/ 
+void *my_kmem_cache_alloc(kmem_cache_t *co, int flags)
+{
+	return ExAllocateFromNPagedLookasideList((PNPAGED_LOOKASIDE_LIST)co);
+}
+/*------------------------------------------------------------------------*/ 
+void my_kmem_cache_free(kmem_cache_t *co, void *ptr)
+{
+	ExFreeToNPagedLookasideList((PNPAGED_LOOKASIDE_LIST)co, ptr);
+}
+/*------------------------------------------------------------------------*/ 
+// DMA, not used now
+/*------------------------------------------------------------------------*/ 
+void *my_dma_pool_alloc(struct dma_pool *pool, int gfp_flags, dma_addr_t *dma_handle)
+{
+	// HalAllocCommonBuffer
+	// But ideally IoGetDmaAdapter
+	return NULL;
+}

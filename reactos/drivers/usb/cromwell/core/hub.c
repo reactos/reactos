@@ -1151,9 +1151,9 @@ static int hub_thread(void *__hub)
 
 		//FIXME: Correct this
 		//wait_event_interruptible(khubd_wait, !list_empty(&hub_event_list)); // interruptable_sleep_on analog - below
-		/*while (!list_empty(&hub_event_list)) {
+		while (!list_empty(&hub_event_list)) {
 			interruptible_sleep_on(&khubd_wait);
-		}*/
+		}
 
 		if (current->flags & PF_FREEZE)
 			refrigerator(PF_IOTHREAD);
@@ -1189,6 +1189,10 @@ static struct usb_driver hub_driver = {
 int usb_hub_init(void)
 {
 	pid_t pid;
+
+	// ReactOS-specific
+	// Create Event object, initialize other sync events
+	KeInitializeEvent(&khubd_wait, NotificationEvent, TRUE); // signalled state
 
 	if (usb_register(&hub_driver) < 0) {
 		err("Unable to register USB hub driver");

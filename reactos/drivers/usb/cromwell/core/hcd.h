@@ -161,6 +161,56 @@ struct usb_operations {
 
 struct pt_regs;
 
+// new struct from 2.6
+struct hc_driver {
+	const char	*description;	/* "ehci-hcd" etc */
+
+	/* irq handler */
+	irqreturn_t	(*irq) (struct usb_hcd *hcd, struct pt_regs *regs);
+
+	int	flags;
+#define	HCD_MEMORY	0x0001		/* HC regs use memory (else I/O) */
+#define	HCD_USB11	0x0010		/* USB 1.1 */
+#define	HCD_USB2	0x0020		/* USB 2.0 */
+
+	/* called to init HCD and root hub */
+	int	(*reset) (struct usb_hcd *hcd);
+	int	(*start) (struct usb_hcd *hcd);
+
+	/* called after all devices were suspended */
+	int	(*suspend) (struct usb_hcd *hcd, u32 state);
+
+	/* called before any devices get resumed */
+	int	(*resume) (struct usb_hcd *hcd);
+
+	/* cleanly make HCD stop writing memory and doing I/O */
+	void	(*stop) (struct usb_hcd *hcd);
+
+	/* return current frame number */
+	int	(*get_frame_number) (struct usb_hcd *hcd);
+
+	/* memory lifecycle */
+	struct usb_hcd	*(*hcd_alloc) (void);
+	void		(*hcd_free) (struct usb_hcd *hcd);
+
+	/* manage i/o requests, device state */
+	int	(*urb_enqueue) (struct usb_hcd *hcd, struct urb *urb,
+					int mem_flags);
+	int	(*urb_dequeue) (struct usb_hcd *hcd, struct urb *urb);
+
+	/* hw synch, freeing endpoint resources that urb_dequeue can't */
+	void 	(*endpoint_disable)(struct usb_hcd *hcd,
+			struct hcd_dev *dev, int bEndpointAddress);
+
+	/* root hub support */
+	int		(*hub_status_data) (struct usb_hcd *hcd, char *buf);
+	int		(*hub_control) (struct usb_hcd *hcd,
+				u16 typeReq, u16 wValue, u16 wIndex,
+				char *buf, u16 wLength);
+};
+
+// old version, "just in case"
+#if 0
 struct hc_driver {
 	const char	*description;	/* "ehci-hcd" etc */
 
@@ -206,6 +256,7 @@ struct hc_driver {
 				u16 typeReq, u16 wValue, u16 wIndex,
 				char *buf, u16 wLength);
 };
+#endif
 
 extern void STDCALL usb_hcd_giveback_urb (struct usb_hcd *hcd, struct urb *urb, struct pt_regs *regs);
 extern void STDCALL usb_bus_init (struct usb_bus *bus);

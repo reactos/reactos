@@ -12,6 +12,9 @@
  *
  * All structs and prototypes are based on kernel source 2.5.72
  *
+ * Modified by Aleksey Bragin (aleksey@reactos.com) for ReactOS needs
+ *
+ *
  * #include <standard-GPL-header.h>
  */
 
@@ -143,6 +146,14 @@ struct pt_regs
 struct completion {
         unsigned int done;
         wait_queue_head_t wait;
+};
+
+// windows lookaside list head
+typedef void* kmem_cache_t;
+
+struct dma_pool
+{
+	int dummy;
 };
 
 /* from mod_devicetable.h */
@@ -286,6 +297,8 @@ struct usbdevfs_hub_portinfo
 #define MODULE_DESCRIPTION(a)
 #define MODULE_LICENSE(a)
 #define MODULE_DEVICE_TABLE(type,name) void* module_table_##name=&name
+#define MODULE_PARM(a,b)
+#define MODULE_PARM_DESC(a,b)
 
 #define __devinit
 #define __exit
@@ -312,6 +325,10 @@ struct usbdevfs_hub_portinfo
 #define likely(x) (x)
 #define unlikely(x) (x)
 #define prefetch(x) 1
+
+#define inw(x) READ_PORT_USHORT((PUSHORT)(x))
+#define outw(x,p) WRITE_PORT_USHORT((PUSHORT)(p),(x))
+#define outl(x,p) WRITE_PORT_ULONG((PUSHORT)(p),(x))
 
 /* The kernel macro for list_for_each_entry makes nonsense (have no clue
  * why, this is just the same definition...) */
@@ -372,7 +389,7 @@ struct usbdevfs_hub_portinfo
 #define down_read(a) do {} while(0)
 #define up_read(a) do {} while(0)
 
-#define DECLARE_WAIT_QUEUE_HEAD(x) int x
+#define DECLARE_WAIT_QUEUE_HEAD(x) KEVENT x
 
 #define DECLARE_COMPLETION(x) struct completion x
 
@@ -383,6 +400,8 @@ struct usbdevfs_hub_portinfo
 
 
 /* PCI */
+#define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
+
 #define pci_pool_create(a,b,c,d,e) (void*)1
 
 #define pci_pool_alloc(a,b,c)  my_pci_pool_alloc(a,b,c) 
@@ -427,6 +446,16 @@ int my_pci_module_init(struct pci_driver *x);
 #define bus_register(a) do {} while(0)
 #define bus_unregister(a) do {} while(0)
 
+/* DMA */
+//#define dma_pool_alloc(a,b,c) my_dma_pool_alloc((a),(b),(c))
+#define dma_pool_alloc(a,b,c) pci_pool_alloc(a,b,c)
+#define dma_pool_create(a,b,c,d,e) pci_pool_create(a,b,c,d,e)
+#define dma_pool_free(a,b,c) pci_pool_free(a,b,c)
+#define dma_pool_destroy(a) pci_pool_destroy(a)
+
+#define dma_alloc_coherent(a,b,c,d) NULL
+#define dma_free_coherent(a,b,c,d) do {} while(0)
+
 #define dma_map_single(a,b,c,d) ((u32)(b)&0xfffffff)
 #define dma_unmap_single(a,b,c,d)     do {} while(0)
 #define pci_unmap_single(a,b,c,d)     do {} while(0)
@@ -451,11 +480,15 @@ int my_pci_module_init(struct pci_driver *x);
 #define PCI_ROM_RESOURCE 0
 #define IORESOURCE_IO 1
 
-#define DECLARE_WAITQUEUE(a,b) wait_queue_head_t a=0
-#define init_waitqueue_head(a) do {} while(0)
+#define DECLARE_WAITQUEUE(a,b) KEVENT a=0
+#define init_waitqueue_head(a) my_init_waitqueue_head(a)
 #define add_wait_queue(a,b) do {} while(0)
 #define remove_wait_queue(a,b) do {} while(0)
+void my_init_waitqueue_head(PKEVENT a);
 
+VOID KeMemoryBarrier(VOID);
+
+#define mb() KeMemoryBarrier()
 #define wmb() __asm__ __volatile__ ("": : :"memory")
 #define rmb() __asm__ __volatile__ ("lock; addl $0,0(%%esp)": : :"memory")
 
@@ -478,7 +511,7 @@ void my_wait_for_completion(struct completion*);
 #define wait_event_interruptible(x,y) do {} while(0)
 
 #define interruptible_sleep_on(a) my_interruptible_sleep_on(a)
-void my_interruptible_sleep_on(int a);
+void my_interruptible_sleep_on(PKEVENT evnt);
 
 #define flush_scheduled_work() do {} while(0)
 #define refrigerator(x)        do {} while(0)
@@ -491,6 +524,25 @@ int my_kill_proc(int pid, int signal, int unk);
 
 #define yield() do {} while(0)
 #define cpu_relax() do {} while(0)
+
+#define WARN_ON(a) do {} while(0)
+
+/*------------------------------------------------------------------------*/ 
+/* Lookaside lists funcs */
+/*------------------------------------------------------------------------*/ 
+#define kmem_cache_create(a,b,c,d,e,f) my_kmem_cache_create((a),(b),(c),(d),(e),(f))
+#define kmem_cache_destroy(a) my_kmem_cache_destroy((a))
+#define kmem_cache_alloc(co, flags) my_kmem_cache_alloc((co), (flags))
+#define kmem_cache_free(co, ptr) my_kmem_cache_free((co), (ptr))
+
+kmem_cache_t *my_kmem_cache_create(const char *tag, size_t alloc_size,
+								   size_t offset, unsigned long flags,
+								   void *ctor,
+								   void *dtor);
+
+void my_kmem_cache_destroy(kmem_cache_t *co);
+void *my_kmem_cache_alloc(kmem_cache_t *co, int flags);
+void my_kmem_cache_free(kmem_cache_t *co, void *ptr);
 
 /*------------------------------------------------------------------------*/ 
 /* Kernel macros */
@@ -558,6 +610,21 @@ int my_kill_proc(int pid, int signal, int unk);
 
 #define PCI_DEVFN(a,b) 0
 #define PCI_SLOT(a) 0
+
+/**
+ * PCI_DEVICE_CLASS - macro used to describe a specific pci device class
+ * @dev_class: the class, subclass, prog-if triple for this device
+ * @dev_class_mask: the class mask for this device
+ *
+ * This macro is used to create a struct pci_device_id that matches a
+ * specific PCI class.  The vendor, device, subvendor, and subdevice 
+ * fields will be set to PCI_ANY_ID.
+ */
+#define PCI_DEVICE_CLASS(dev_class,dev_class_mask) \
+	.class = (dev_class), .class_mask = (dev_class_mask), \
+	.vendor = PCI_ANY_ID, .device = PCI_ANY_ID, \
+	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
+
 
 /*------------------------------------------------------------------------*/ 
 /* Stuff from kernel */
@@ -647,6 +714,9 @@ static void __inline__ mod_timer(struct timer_list* t, int ex)
 	add_timer(t);
 }
 
+#define time_after_eq(a,b)	\
+	(((long)(a) - (long)(b) >= 0))
+
 /*------------------------------------------------------------------------*/ 
 /* Device driver and process related stuff */
 /*------------------------------------------------------------------------*/ 
@@ -678,7 +748,7 @@ int my_device_unregister(struct device *dev);
 int my_schedule_timeout(int x);
 
 #define wake_up(x) my_wake_up(x)
-void my_wake_up(void*);
+void my_wake_up(PKEVENT);
 
 // cannot be mapped via macro due to collision with urb->complete
 static void __inline__ complete(struct completion *p)

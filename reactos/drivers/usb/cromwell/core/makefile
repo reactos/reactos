@@ -16,3 +16,7 @@ TARGET_OBJECTS = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+# Automatic dependency tracking
+DEP_OBJECTS := $(TARGET_OBJECTS)
+include $(PATH_TO_TOP)/tools/depend.mk

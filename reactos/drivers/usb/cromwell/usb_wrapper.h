@@ -12,3 +12,4 @@ void wait_ms(int mils);
 #define CONFIG_PCI
 
 #include "linux/usb.h"
+#include "linux/pci_ids.h"
