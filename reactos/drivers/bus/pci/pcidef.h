@@ -1,5 +1,5 @@
 /*
- *	$Id: pcidef.h,v 1.1 2001/09/16 13:18:24 chorns Exp $
+ *	$Id: pcidef.h,v 1.2 2001/11/01 23:17:10 ekohl Exp $
  *
  *	PCI defines and function prototypes
  *	Copyright 1994, Drew Eckhardt
@@ -301,45 +301,6 @@
   
 #define PCI_REGION_FLAG_MASK 0x0f	/* These bits of resource flags tell us the PCI region flags */
 
-
-
-#define PCI_TYPE0_ADDRESSES             6
-#define PCI_TYPE1_ADDRESSES             2
-
-typedef struct _PCI_COMMON_CONFIG
-{
-  USHORT VendorID;                   // (ro)
-  USHORT DeviceID;                   // (ro)
-  USHORT Command;                    // Device control
-  USHORT Status;
-  UCHAR  RevisionID;                 // (ro)
-  UCHAR  ProgIf;                     // (ro)
-  UCHAR  SubClass;                   // (ro)
-  UCHAR  BaseClass;                  // (ro)
-  UCHAR  CacheLineSize;              // (ro+)
-  UCHAR  LatencyTimer;               // (ro+)
-  UCHAR  HeaderType;                 // (ro)
-  UCHAR  BIST;                       // Built in self test
-  union
-    {
-      struct _PCI_HEADER_TYPE_0
-	{
-	  ULONG  BaseAddresses[PCI_TYPE0_ADDRESSES];
-	  ULONG  CIS;
-	  USHORT SubVendorID;
-	  USHORT SubSystemID;
-	  ULONG  ROMBaseAddress;
-    UCHAR  Capabilities; 
-	  UCHAR  Reserved2[3];
-    ULONG  Reserved3;
-	  UCHAR  InterruptLine;      //
-	  UCHAR  InterruptPin;       // (ro)
-	  UCHAR  MinimumGrant;		/* read-only */
-	  UCHAR  MaximumLatency;	/* read-only */
-	} type0;
-    } u;
-  UCHAR DeviceSpecific[192];
-} __attribute__((packed)) PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 
 
 #define CONFIG_CMD(bus, device_fn, where) \
