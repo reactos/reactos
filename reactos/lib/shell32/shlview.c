@@ -1653,6 +1653,8 @@ static ULONG WINAPI IShellView_fnRelease(IShellView * iface)
 	{
 	  TRACE(" destroying IShellView(%p)\n",This);
 
+	  DestroyWindow(This->hWndList);
+
 	  if(This->pSFParent)
 	    IShellFolder_Release(This->pSFParent);
 
