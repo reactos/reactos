@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.63 2004/04/05 21:15:34 weiden Exp $
+/* $Id: windc.c,v 1.64 2004/04/05 21:26:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,10 +55,17 @@ static FAST_MUTEX DceListLock;
 static PDCE FirstDce = NULL;
 static HDC defaultDCstate;
 
+#if 0
+
 #define DCE_LockList() \
   ExAcquireFastMutex(&DceListLock)
 #define DCE_UnlockList() \
   ExReleaseFastMutex(&DceListLock)
+
+#else
+#define DCE_LockList()
+#define DCE_UnlockList()
+#endif
 
 #define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
                               DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)
