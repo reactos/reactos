@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.18 2003/01/25 23:05:36 ei Exp $
+/* $Id: defwnd.c,v 1.19 2003/02/19 22:44:57 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -21,6 +21,7 @@
 /* GLOBALS *******************************************************************/
 
 static HBITMAP hbitmapClose;
+static HBITMAP hbitmapCloseD;
 static HBITMAP hbitmapMinimize;
 static HBITMAP hbitmapMinimizeD;
 static HBITMAP hbitmapMaximize;
@@ -31,12 +32,12 @@ static HBITMAP hbitmapRestoreD;
 static COLORREF SysColours[] =
   {
     RGB(224, 224, 224) /* COLOR_SCROLLBAR */,
-    RGB(192, 192, 192) /* COLOR_BACKGROUND */,
-    RGB(0, 64, 128) /* COLOR_ACTIVECAPTION */,
-    RGB(255, 255, 255) /* COLOR_INACTIVECAPTION */,
-    RGB(255, 255, 255) /* COLOR_MENU */,
-    RGB(255, 255, 255) /* COLOR_WINDOW */,
-    RGB(0, 0, 0) /* COLOR_WINDOWFRAME */,
+    RGB(58, 110, 165) /* COLOR_BACKGROUND */,
+    RGB(0, 0, 128) /* COLOR_ACTIVECAPTION */,
+    RGB(128, 128, 128) /* COLOR_INACTIVECAPTION */,
+    RGB(192, 192, 192) /* COLOR_MENU */,
+    RGB(192, 192, 192) /* COLOR_WINDOW */,
+    RGB(192, 192, 192) /* COLOR_WINDOWFRAME */,
     RGB(0, 0, 0) /* COLOR_MENUTEXT */,
     RGB(0, 0, 0) /* COLOR_WINDOWTEXT */,
     RGB(255, 255, 255) /* COLOR_CAPTIONTEXT */,
@@ -44,12 +45,12 @@ static COLORREF SysColours[] =
     RGB(255, 255, 255) /* COLOR_INACTIVEBORDER */,
     RGB(255, 255, 232) /* COLOR_APPWORKSPACE */,
     RGB(224, 224, 224) /* COLOR_HILIGHT */,
-    RGB(0, 0, 0) /* COLOR_HILIGHTTEXT */,
+    RGB(0, 0, 128) /* COLOR_HILIGHTTEXT */,
     RGB(192, 192, 192) /* COLOR_BTNFACE */,
     RGB(128, 128, 128) /* COLOR_BTNSHADOW */,
     RGB(192, 192, 192) /* COLOR_GRAYTEXT */,
     RGB(0, 0, 0) /* COLOR_BTNTEXT */,
-    RGB(0, 0, 0) /* COLOR_INACTIVECAPTIONTEXT */,
+    RGB(192, 192, 192) /* COLOR_INACTIVECAPTIONTEXT */,
     RGB(255, 255, 255) /* COLOR_BTNHILIGHT */,
     RGB(32, 32, 32) /* COLOR_3DDKSHADOW */,
     RGB(192, 192, 192) /* COLOR_3DLIGHT */,
@@ -166,15 +167,15 @@ UserHasBigFrameStyle(ULONG Style, ULONG ExStyle)
 	 (ExStyle & WS_EX_DLGMODALFRAME));
 }
 
-void UserGetInsideRectNC( HWND hwnd, RECT *rect )
+void UserGetInsideRectNC( HWND hWnd, RECT *rect )
 {
   RECT WindowRect;
   ULONG Style;
   ULONG ExStyle;
 
-  Style = GetWindowLong(hwnd, GWL_STYLE);
-  ExStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-  GetWindowRect(hwnd, &WindowRect);
+  Style = GetWindowLong(hWnd, GWL_STYLE);
+  ExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+  GetWindowRect(hWnd, &WindowRect);
   rect->top    = rect->left = 0;
   rect->right  = WindowRect.right - WindowRect.left;
   rect->bottom = WindowRect.bottom - WindowRect.top;
@@ -211,68 +212,72 @@ void UserGetInsideRectNC( HWND hwnd, RECT *rect )
       }
 }
 
-void UserDrawSysButton( HWND hwnd, HDC hdc, BOOL down )
+void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
 {
-    RECT rect;
-    HDC hdcMem;
-    HBITMAP hbitmap;
-    ULONG Style;
-
-    Style = GetWindowLong(hwnd, GWL_STYLE);
-    UserGetInsideRectNC( hwnd, &rect );
-    hdcMem = CreateCompatibleDC( hdc );
-    hbitmap = SelectObject( hdcMem, hbitmapClose );
-    BitBlt(hdc, rect.left, rect.top, GetSystemMetrics(SM_CXSIZE),
-	   GetSystemMetrics(SM_CYSIZE), hdcMem,
-	   (Style & WS_CHILD) ? GetSystemMetrics(SM_CXSIZE) : 0, 0,
-	   down ? NOTSRCCOPY : SRCCOPY );
-    SelectObject( hdcMem, hbitmap );
-    DeleteDC( hdcMem );
+    /* FIXME:  Implement AppIcon loading/displaying, if AppIcon isn't present,
+               load default (OIC_SAMPLE I believe, not sure */
 }
 
-static void UserDrawMaxButton( HWND hwnd, HDC hdc, BOOL down )
+static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL down )
 {
     RECT rect;
-    HDC hdcMem;
+    HDC hDCMem;
+    
+    UserGetInsideRectNC( hWnd, &rect );
+    hDCMem = CreateCompatibleDC( hDC );
+    
+    SelectObject( hDCMem, (down ? hbitmapCloseD : hbitmapClose) );
+    
+    BitBlt( hDC,rect.right - GetSystemMetrics(SM_CXSMSIZE), rect.top + 1, 
+            GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), 
+            hDCMem,0,0,SRCCOPY );
+        
+    DeleteDC( hDCMem );
+}
 
-    UserGetInsideRectNC( hwnd, &rect );
-    hdcMem = CreateCompatibleDC( hdc );
-    SelectObject( hdcMem,  (IsZoomed(hwnd)
+static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL down )
+{
+    RECT rect;
+    HDC hDCMem;
+
+    UserGetInsideRectNC( hWnd, &rect );
+    hDCMem = CreateCompatibleDC( hDC );
+    SelectObject( hDCMem,  (IsZoomed(hWnd)
 			    ? (down ? hbitmapRestoreD : hbitmapRestore)
 			    : (down ? hbitmapMaximizeD : hbitmapMaximize)) );
-    BitBlt( hdc, rect.right - GetSystemMetrics(SM_CXSMSIZE) - 1, rect.top,
-	    GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), hdcMem, 0, 0,
+    BitBlt( hDC, rect.right - (GetSystemMetrics(SM_CXSMSIZE) * 2) - 3, rect.top + 1,
+	    GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), hDCMem, 0, 0,
 	    SRCCOPY );
-    DeleteDC( hdcMem );
+    DeleteDC( hDCMem );
 }
 
-static void UserDrawMinButton( HWND hwnd, HDC hdc, BOOL down)
+static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL down)
 {
   RECT rect;
-  HDC hdcMem;
+  HDC hDCMem;
 
-  UserGetInsideRectNC(hwnd, &rect);
-  hdcMem = CreateCompatibleDC(hdc);
-  SelectObject(hdcMem, (down ? hbitmapMinimizeD : hbitmapMinimize));
-  if (GetWindowLong(hwnd, GWL_STYLE) & WS_MAXIMIZEBOX)
+  UserGetInsideRectNC(hWnd, &rect);
+  hDCMem = CreateCompatibleDC(hDC);
+  SelectObject(hDCMem, (down ? hbitmapMinimizeD : hbitmapMinimize));
+  if (GetWindowLong(hWnd, GWL_STYLE) & WS_MAXIMIZEBOX)
     {
       rect.right -= GetSystemMetrics(SM_CXSMSIZE)+1;
     }
-  BitBlt( hdc, rect.right - GetSystemMetrics(SM_CXSMSIZE) - 1, rect.top,
+  BitBlt( hDC, rect.right - ( GetSystemMetrics(SM_CXSMSIZE) * 2 ) - 3, rect.top + 1,
 	  GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE),
-	  hdcMem, 0, 0,
+	  hDCMem, 0, 0,
 	  SRCCOPY );
-  DeleteDC( hdcMem );
+  DeleteDC( hDCMem );
 }
 
-static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
+static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 			    DWORD style, BOOL active )
 {
   RECT r = *rect;
   char buffer[256];
 
   if (!hbitmapClose)
-    {
+   {
       hbitmapClose = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_CLOSE));
       hbitmapMinimize  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCE) );
       hbitmapMinimizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCED) );
@@ -280,44 +285,38 @@ static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
       hbitmapMaximizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_ZOOMD) );
       hbitmapRestore   = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORE) );
       hbitmapRestoreD  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORED) );
-    }
+   }
 
-  if (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_DLGMODALFRAME)
-    {
-      HBRUSH hbrushOld = SelectObject(hdc, GetSysColorBrush(COLOR_WINDOW) );
-      PatBlt( hdc, r.left, r.top, 1, r.bottom-r.top+1,PATCOPY );
-      PatBlt( hdc, r.right-1, r.top, 1, r.bottom-r.top+1, PATCOPY );
-      PatBlt( hdc, r.left, r.top-1, r.right-r.left, 1, PATCOPY );
-      r.left++;
-      r.right--;
-      SelectObject( hdc, hbrushOld );
-    }
-
-  MoveToEx( hdc, r.left, r.bottom, NULL );
-  LineTo( hdc, r.right, r.bottom );
-
+  if (GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_DLGMODALFRAME)
+  {
+      /* Unimplemented */
+  }
+    
+    /* Fill the caption with COLOR_(IN)ACTIVECAPTION.
+       In the future this will be GradientFill() */
+       
+    SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
+    PatBlt(hDC,rect->left + 3, rect->top + 3, rect->right - 6, rect->bottom - 1, PATCOPY );
+    
   if (style & WS_SYSMENU)
     {
-      UserDrawSysButton( hwnd, hdc, FALSE );
+      UserDrawSysMenuButton( hWnd, hDC, FALSE );
       r.left += GetSystemMetrics(SM_CXSIZE) + 1;
-      MoveToEx( hdc, r.left - 1, r.top, NULL );
-      LineTo( hdc, r.left - 1, r.bottom );
+      UserDrawCloseButton( hWnd, hDC, FALSE );
     }
   if (style & WS_MAXIMIZEBOX)
     {
-      UserDrawMaxButton( hwnd, hdc, FALSE );
+      UserDrawMaxButton( hWnd, hDC, FALSE );
       r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
     }
   if (style & WS_MINIMIZEBOX)
     {
-      UserDrawMinButton( hwnd, hdc, FALSE );
+      UserDrawMinButton( hWnd, hDC, FALSE );
       r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
     }
 
-  FillRect( hdc, &r, GetSysColorBrush(active ? COLOR_ACTIVECAPTION :
-					    COLOR_INACTIVECAPTION) );
 
-  if (GetWindowTextA( hwnd, buffer, sizeof(buffer) ))
+  if (GetWindowTextA( hWnd, buffer, sizeof(buffer) ))
     {
       NONCLIENTMETRICS nclm;
       HFONT hFont, hOldFont;
@@ -328,96 +327,56 @@ static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
         hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
       else
         hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
-      hOldFont = SelectObject(hdc, hFont);
+      hOldFont = SelectObject(hDC, hFont);
 
-      if (active) SetTextColor( hdc, GetSysColor( COLOR_CAPTIONTEXT ) );
-      else SetTextColor( hdc, GetSysColor( COLOR_INACTIVECAPTIONTEXT ) );
-      SetBkMode( hdc, TRANSPARENT );
-      /*DrawTextA( hdc, buffer, -1, &r,
-	DT_SINGLELINE | DT_CENTER | DT_VCENTER | DT_NOPREFIX );*/
-      TextOutA(hdc, r.left+5, r.top+2, buffer, strlen(buffer));
-      DeleteObject (SelectObject (hdc, hOldFont));
+      SetTextColor(hDC, GetSysColor( (active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT ) ) );
+      SetBkMode( hDC, TRANSPARENT );
+      
+      /*FIXME:  Need verticle centering code and other fixups */
+      TextOutA(hDC, r.left+5, r.top+5, buffer, strlen(buffer));
+      DeleteObject (SelectObject (hDC, hOldFont));
     }
 }
 
 VOID
-UserDrawFrameNC(HDC hdc, RECT* rect, BOOL dlgFrame, BOOL active)
+UserDrawFrameNC(HDC hDC, RECT* rect, BOOL dlgFrame, BOOL active)
 {
-  INT width, height;
-
   if (dlgFrame)
     {
-      width = GetSystemMetrics(SM_CXDLGFRAME) - 1;
-      height = GetSystemMetrics(SM_CYDLGFRAME) - 1;
-      SelectObject( hdc, GetSysColorBrush(active ? COLOR_ACTIVECAPTION :
-					  COLOR_INACTIVECAPTION) );
+      /* Unimplemented */
     }
   else
     {
-      width = GetSystemMetrics(SM_CXFRAME) - 2;
-      height = GetSystemMetrics(SM_CYFRAME) - 2;
-      SelectObject( hdc, GetSysColorBrush(active ? COLOR_ACTIVEBORDER :
-					    COLOR_INACTIVEBORDER) );
+      /* Unimplemented */
     }
 
-  /* Draw frame */
-  PatBlt( hdc, rect->left, rect->top,
-	  rect->right - rect->left, height, PATCOPY );
-  PatBlt( hdc, rect->left, rect->top,
-	  width, rect->bottom - rect->top, PATCOPY );
-  PatBlt( hdc, rect->left, rect->bottom - 1,
-	  rect->right - rect->left, -height, PATCOPY );
-  PatBlt( hdc, rect->right - 1, rect->top,
-	  -width, rect->bottom - rect->top, PATCOPY );
+  SelectObject( hDC, GetSysColorBrush(COLOR_WINDOW) ); 
+  
+  PatBlt( hDC, rect->left, rect->top, rect->right, rect->bottom, PATCOPY);
 
-  if (dlgFrame)
-    {
-      InflateRect( rect, -width, -height );
-    }
-  else
-    {
-      INT decYOff = GetSystemMetrics(SM_CXFRAME) +
-	GetSystemMetrics(SM_CXSIZE) - 1;
-      INT decXOff = GetSystemMetrics(SM_CYFRAME) +
-	GetSystemMetrics(SM_CYSIZE) - 1;
+  SelectObject( hDC, GetStockObject( WHITE_BRUSH ) );
+  
+  PatBlt( hDC, rect->left + 1, rect->top + 1, rect->right - 2, 1, PATCOPY );
+  PatBlt( hDC, rect->left + 1, rect->top + 1, 1, rect->bottom - 2, PATCOPY );
 
-      /* Draw inner rectangle */
-
-      SelectObject( hdc, GetStockObject(NULL_BRUSH) );
-      Rectangle( hdc, rect->left + width, rect->top + height,
-		 rect->right - width , rect->bottom - height );
-
-      /* Draw the decorations */
-
-      MoveToEx( hdc, rect->left, rect->top + decYOff, NULL );
-      LineTo( hdc, rect->left + width, rect->top + decYOff );
-      MoveToEx( hdc, rect->right - 1, rect->top + decYOff, NULL );
-      LineTo( hdc, rect->right - width - 1, rect->top + decYOff );
-      MoveToEx( hdc, rect->left, rect->bottom - decYOff, NULL );
-      LineTo( hdc, rect->left + width, rect->bottom - decYOff );
-      MoveToEx( hdc, rect->right - 1, rect->bottom - decYOff, NULL );
-      LineTo( hdc, rect->right - width - 1, rect->bottom - decYOff );
-
-      MoveToEx( hdc, rect->left + decXOff, rect->top, NULL );
-      LineTo( hdc, rect->left + decXOff, rect->top + height);
-      MoveToEx( hdc, rect->left + decXOff, rect->bottom - 1, NULL );
-      LineTo( hdc, rect->left + decXOff, rect->bottom - height - 1 );
-      MoveToEx( hdc, rect->right - decXOff, rect->top, NULL );
-      LineTo( hdc, rect->right - decXOff, rect->top + height );
-      MoveToEx( hdc, rect->right - decXOff, rect->bottom - 1, NULL );
-      LineTo( hdc, rect->right - decXOff, rect->bottom - height - 1 );
-
-      InflateRect( rect, -width - 1, -height - 1 );
-    }
+  SelectObject( hDC, GetStockObject( GRAY_BRUSH ) );
+  
+  PatBlt( hDC, rect->left + 1, rect->bottom - 1, rect->right - 2, 1, PATCOPY );
+  PatBlt( hDC, rect->right - 1, rect->top + 1, 1, rect->bottom - 2, PATCOPY );
+  
+  SelectObject( hDC, GetStockObject( DKGRAY_BRUSH ) );
+  
+  PatBlt( hDC, rect->left, rect->bottom, rect->right, 1, PATCOPY );
+  PatBlt( hDC, rect->right, rect->top, 1, rect->bottom, PATCOPY );
 }
 
-void SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar, BOOL arrows, BOOL interior);
+void SCROLL_DrawScrollBar (HWND hWnd, HDC hDC, INT nBar, BOOL arrows, BOOL interior);
 
 VOID
 DefWndDoPaintNC(HWND hWnd, HRGN clip)
 {
   ULONG Active;
-  HDC hDc;
+  HDC hDC;
   RECT rect;
   ULONG Style;
   ULONG ExStyle;
@@ -426,9 +385,9 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   Style = GetWindowLong(hWnd, GWL_STYLE);
   ExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
 
-  hDc = GetDCEx(hWnd, (clip > (HRGN)1) ? clip : 0, DCX_USESTYLE | DCX_WINDOW |
+  hDC = GetDCEx(hWnd, (clip > (HRGN)1) ? clip : 0, DCX_USESTYLE | DCX_WINDOW |
 		((clip > (HRGN)1) ? (DCX_INTERSECTRGN | DCX_KEEPCLIPRGN) : 0));
-  if (hDc == 0)
+  if (hDC == 0)
     {
       return;
     }
@@ -440,21 +399,21 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   rect.bottom = rect.bottom - rect.top;
   rect.top = rect.left = 0;
 
-  SelectObject(hDc, GetSysColorPen(COLOR_WINDOWFRAME));
+  SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
   if (UserHasAnyFrameStyle(Style, ExStyle))
     {
-      SelectObject(hDc, GetStockObject(NULL_BRUSH));
-      Rectangle(hDc, 0, 0, rect.right, rect.bottom);
+      SelectObject(hDC, GetStockObject(NULL_BRUSH));
+      //Rectangle(hDC, 0, 0, rect.right, rect.bottom);
       InflateRect(&rect, -1, -1);
     }
 
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
-      UserDrawFrameNC(hDc, &rect, FALSE, Active);
+      UserDrawFrameNC(hDC, &rect, FALSE, Active);
     }
   else if (UserHasDlgFrameStyle(Style, ExStyle))
     {
-      UserDrawFrameNC(hDc, &rect, TRUE, Active);
+      UserDrawFrameNC(hDC, &rect, TRUE, Active);
     }
 
   if (Style & WS_CAPTION)
@@ -463,7 +422,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
       r.bottom = rect.top + GetSystemMetrics(SM_CYSIZE);
       rect.top += GetSystemMetrics(SM_CYSIZE) +
 	GetSystemMetrics(SM_CYBORDER);
-      UserDrawCaptionNC(hDc, &r, hWnd, Style, Active);
+      UserDrawCaptionNC(hDC, &r, hWnd, Style, Active);
     }
 
   /* FIXME: Draw menu bar. */
@@ -471,13 +430,13 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
 DbgPrint("drawing scrollbars..\n");
   /* Draw scrollbars */
   if (Style & WS_VSCROLL)
-      SCROLL_DrawScrollBar(hWnd, hDc, SB_VERT, TRUE, TRUE);
+      SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
   if (Style & WS_HSCROLL)
-      SCROLL_DrawScrollBar(hWnd, hDc, SB_HORZ, TRUE, TRUE);
+      SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
 
   /* FIXME: Draw size box. */
 
-  ReleaseDC(hWnd, hDc);
+  ReleaseDC(hWnd, hDC);
 }
 
 LRESULT
@@ -749,18 +708,18 @@ VOID
 DefWndDrawSysButton(HWND hWnd, HDC hDC, BOOL Down)
 {
   RECT Rect;
-  HDC hDcMem;
+  HDC hDCMem;
   HBITMAP hSavedBitmap;
 
   UserGetInsideRectNC(hWnd, &Rect);
-  hDcMem = CreateCompatibleDC(hDC);
-  hSavedBitmap = SelectObject(hDcMem, hbitmapClose);
+  hDCMem = CreateCompatibleDC(hDC);
+  hSavedBitmap = SelectObject(hDCMem, hbitmapClose);
   BitBlt(hDC, Rect.left, Rect.top, GetSystemMetrics(SM_CXSIZE),
-	 GetSystemMetrics(SM_CYSIZE), hDcMem,
+	 GetSystemMetrics(SM_CYSIZE), hDCMem,
 	 (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ?
 	 GetSystemMetrics(SM_CXSIZE): 0, 0, Down ? NOTSRCCOPY : SRCCOPY);
-  SelectObject(hDcMem, hSavedBitmap);
-  DeleteDC(hDcMem);
+  SelectObject(hDCMem, hSavedBitmap);
+  DeleteDC(hDCMem);
 }
 
 LRESULT
@@ -1125,8 +1084,8 @@ User32DefWindowProc(HWND hWnd,
     case WM_PAINT:
       {
 	PAINTSTRUCT Ps;
-	HDC hDc = BeginPaint(hWnd, &Ps);
-	if (hDc)
+	HDC hDC = BeginPaint(hWnd, &Ps);
+	if (hDC)
 	  {
 	    HICON hIcon;
 	    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
@@ -1139,7 +1098,7 @@ User32DefWindowProc(HWND hWnd,
 		     GetSystemMetrics(SM_CXICON)) / 2;
 		y = (WindowRect.bottom - WindowRect.top -
 		     GetSystemMetrics(SM_CYICON)) / 2;
-		DrawIcon(hDc, x, y, hIcon);
+		DrawIcon(hDC, x, y, hIcon);
 	      }
 	    EndPaint(hWnd, &Ps);
 	  }
