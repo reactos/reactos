@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.62 2000/12/23 02:37:40 dwelch Exp $
+/* $Id: thread.c,v 1.63 2000/12/24 03:35:54 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -297,6 +297,7 @@ ULONG PsFreezeThread(PETHREAD Thread,
    return(r);
 }
 
+#if 1
 ULONG PsResumeThread(PETHREAD Thread)
 {
    KIRQL oldIrql;
@@ -316,8 +317,63 @@ ULONG PsResumeThread(PETHREAD Thread)
 
    return SuspendCount;
 }
+#endif
 
-ULONG PsSuspendThread(PETHREAD Thread)
+#if 0
+VOID
+PiSuspendThreadRundownRoutine(PKAPC Apc)
+{
+   ExFreePool(Apc);
+}
+
+VOID
+PiSuspendThreadKernelRoutine(PKAPC Apc,
+			     PKNORMAL_ROUTINE* NormalRoutine,
+			     PVOID* NormalContext,
+			     PVOID* SystemArgument1,
+			     PVOID* SystemArguemnt2)
+{
+   InterlockedIncrement(&PsGetCurrentThread()->Tcb.SuspendThread);
+   KeWaitForSingleObject((PVOID)&PsGetCurrentThread()->SuspendSemaphore,
+			 0,
+			 UserMode,
+			 TRUE,
+			 NULL);
+   ExFreePool(Apc);
+}
+
+NTSTATUS 
+PsSuspendThread(PETHREAD Thread, PULONG SuspendCount)
+{
+   PKAPC Apc;
+   
+   Apc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
+   if (Apc == NULL)
+     {
+	return(STATUS_NO_MORE_MEMORY);
+     }
+   
+   *SuspendCount = Thread->Tcb.SuspendCount;
+   
+   KeInitializeApc(Apc,
+		   &Thread->Tcb,
+		   NULL,
+		   PiSuspendThreadKernelRoutine,
+		   PiSuspendThreadRundownRoutine,
+		   NULL,
+		   KernelMode,
+		   NULL);
+   KeInsertQueueApc(Apc,
+		    NULL,
+		    NULL,
+		    0);
+   return(STATUS_SUCCESS);
+}
+#endif
+
+#if 1
+ULONG 
+PsSuspendThread(PETHREAD Thread)
 {
    KIRQL oldIrql;
    ULONG PreviousSuspendCount;
@@ -342,6 +398,7 @@ ULONG PsSuspendThread(PETHREAD Thread)
 
    return PreviousSuspendCount;
 }
+#endif
 
 VOID 
 PsInitThreadManagment(VOID)
@@ -607,7 +664,7 @@ NtContinue(IN PCONTEXT	Context,
 
 NTSTATUS STDCALL 
 NtYieldExecution(VOID)
-   PsDispatchThread(THREAD_STATE_RUNNABLE);
+{
    return(STATUS_SUCCESS);
 }
 
