@@ -61,7 +61,7 @@ VOID WINAPI MyFree(LPVOID lpMem)
 
 LPVOID WINAPI MyMalloc(DWORD dwSize)
 {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+    return HeapAlloc(GetProcessHeap(), 0, dwSize);
 }
 
 
