@@ -78,6 +78,7 @@ double pow (double __x, double __y)
   return __value;
 }
 
+
 long double powl (long double __x,long double __y)
 {
 	return pow(__x,__y/2)*pow(__x,__y/2);

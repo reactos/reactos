@@ -13,6 +13,8 @@ static void InitThreadData(PTHREADDATA ThreadData)
 //   ThreadData->terrno = 0;
 //   ThreadData->tdoserrno = 0;
 
+   ThreadData->fpecode = 0;
+
    /* FIXME: init more thread local data */
 
 }

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2001/04/10 19:20:37 ekohl Exp $
+# $Id: Makefile,v 1.12 2001/07/02 21:51:18 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -50,9 +50,18 @@ OBJECTS_EXCEPT = \
 	except/xcptfil.o
 
 OBJECTS_FLOAT = \
+	float/chgsign.o \
+	float/clearfp.o \
 	float/cntrlfp.o \
+	float/copysign.o \
+	float/fpclass.o \
+	float/fpecode.o \
 	float/fpreset.o \
-	float/isnan.o
+	float/isnan.o \
+	float/logb.o \
+	float/nafter.o \
+	float/scalb.o \
+	float/statfp.o
 
 OBJECTS_IO = \
 	io/access.o \
@@ -131,6 +140,7 @@ OBJECTS_STDLIB = \
 	stdlib/atexit.o \
 	stdlib/atof.o \
 	stdlib/atoi.o \
+	stdlib/atoi64.o \
 	stdlib/atol.o \
 	stdlib/bsearch.o \
 	stdlib/div.o \
@@ -157,7 +167,8 @@ OBJECTS_STDLIB = \
 	stdlib/wcstod.o \
 	stdlib/wcstol.o \
 	stdlib/wcstoul.o \
-	stdlib/wtoi.o
+	stdlib/wtoi.o \
+	stdlib/wtoi64.o
 
 OBJECTS_STRING = \
 	string/memccpy.o \

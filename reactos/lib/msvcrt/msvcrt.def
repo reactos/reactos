@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.6 2001/04/10 19:20:37 ekohl Exp $
+; $Id: msvcrt.def,v 1.7 2001/07/02 21:51:18 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -97,7 +97,7 @@ __argv
 ; __crtLCMapStringA
 __dllonexit
 ; __doserrno
-; __fpecode
+__fpecode
 __getmainargs
 ; __initenv
 __isascii
@@ -172,7 +172,7 @@ _aexit_rtn
 _amsg_exit
 _assert
 ; _atodbl
-; _atoi64
+_atoi64
 ; _atoldbl
 _beep
 _beginthread
@@ -184,17 +184,17 @@ _cexit
 ; _cgets
 _chdir
 _chdrive
-; _chgsign
+_chgsign
 ; _chkesp
 ; _chmod
 ; _chsize
-; _clearfp
+_clearfp
 _close
 _commit
 _commode DATA
 _control87
 _controlfp
-; _copysign
+_copysign
 ; _cprintf
 ; _cputs
 ; _creat
@@ -242,7 +242,7 @@ _finite
 _flsbuf
 _flushall
 _fmode DATA
-; _fpclass
+_fpclass
 _fpieee_flt
 _fpreset
 ; _fputchar
@@ -279,8 +279,8 @@ _global_unwind2
 ; _heapused
 ; _heapwalk
 ; _hypot
-; _i64toa
-; _i64tow
+_i64toa
+_i64tow
 _initterm
 ; _inp
 ; _inpd
@@ -329,7 +329,7 @@ _loaddll
 _local_unwind2
 ; _lock
 ; _locking
-; _logb
+_logb
 ; _longjmpex
 _lrotl
 _lrotr
@@ -399,7 +399,7 @@ _memicmp
 _mkdir
 _mktemp
 ; _msize
-; _nextafter
+_nextafter
 _onexit
 _open
 _open_osfhandle
@@ -427,7 +427,7 @@ _rotr
 ; _safe_fdivr
 ; _safe_fprem
 ; _safe_fprem1
-; _scalb
+_scalb
 _searchenv
 ; _seh_longjmp_unwind
 ; _set_error_mode
@@ -454,7 +454,7 @@ _snwprintf
 _splitpath
 _stat
 ; _stati64
-; _statusfp
+_statusfp
 _strcmpi
 ; _strdate
 _strdup
@@ -481,8 +481,8 @@ _tolower
 _toupper
 ; _tzname
 _tzset
-; _ui64toa
-; _ui64tow
+_ui64toa
+_ui64tow
 _ultoa
 _ultow
 ; _umask
@@ -567,7 +567,7 @@ _wsplitpath
 ; _wtempnam
 ; _wtmpnam
 _wtoi
-; _wtoi64
+_wtoi64
 _wtol
 ; _wunlink
 ; _wutime

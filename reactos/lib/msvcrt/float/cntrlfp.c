@@ -1,16 +1,16 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <crtdll/float.h>
+#include <msvcrt/float.h>
 
-unsigned int	_controlfp (unsigned int unNew, unsigned int unMask)
-{	
-	return _control87(unNew,unMask);
+unsigned int _controlfp(unsigned int unNew, unsigned int unMask)
+{
+  return _control87(unNew,unMask);
 }
 
-unsigned int	_control87 (unsigned int unNew, unsigned int unMask)
-{	
-
+unsigned int _control87(unsigned int unNew, unsigned int unMask)
+{
 register unsigned int __res;
+
 __asm__ __volatile__ (
 	"pushl	%%eax \n\t"		/* make room on stack */
 	"fstcw	(%%esp) \n\t"
@@ -30,9 +30,7 @@ __asm__ __volatile__ (
 	"fldcw	(%%esp) \n\t"
 	"popl	%%edx \n\t"
 
-
 	:"=r" (__res):"r" (unNew),"r" (unMask): "ax", "dx", "cx");
-/*	:"=a" (__res):"c" (unNew),"d" (unMask):"ax", "dx", "cx"); */
 
 	return __res;
 }

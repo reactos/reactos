@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ekohl $
- * $Date: 2000/12/03 17:49:21 $
+ * $Date: 2001/07/02 21:52:25 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -55,9 +55,12 @@ extern char***	_environ_dll;
 
 #include <msvcrt/mbstring.h>
 
-#ifndef  __ATTRIB_NORETURN
+#ifndef	__ATTRIB_NORETURN
 #ifdef	__GNUC__
 #define	_ATTRIB_NORETURN	__attribute__ ((noreturn))
+#ifndef	__int64
+#define	__int64		long long
+#endif	/* Not __int64 */
 #else	/* Not __GNUC__ */
 #define	_ATTRIB_NORETURN
 #endif	/* __GNUC__ */
@@ -168,12 +171,16 @@ char*	_fullpath( char* caBuf, const char* szPath, size_t sizeMax );
 wchar_t *_wfullpath( wchar_t *absPath, const wchar_t *relPath, size_t maxLength );
 
 char*	_itoa (int nValue, char* sz, int nRadix);
+char*	_i64toa(__int64 value, char *string, int radix);
 char*	_ltoa (long lnValue, char* sz, int nRadix);
 char*	_ultoa(unsigned long value, char *string, int radix);
+char*	_ui64toa(unsigned __int64 value, char *string, int radix);
 
 wchar_t* _itow (int nValue, wchar_t* sz, int nRadix);
+wchar_t* _i64tow(__int64 value, wchar_t *string, int radix);
 wchar_t* _ltow (long lnValue, wchar_t* sz, int nRadix);
 wchar_t* _ultow(unsigned long value, wchar_t *string, int radix);
+wchar_t* _ui64tow(unsigned __int64 value, wchar_t *string, int radix);
 
 char*	_ecvt (double dValue, int nDig, int* pnDec, int* pnSign);
 char*	_fcvt (double dValue, int nDig, int* pnDec, int* pnSign);
@@ -186,7 +193,10 @@ unsigned int _rotr( unsigned int value, int shift );
 unsigned long _lrotl( unsigned long value, int shift );
 unsigned long _lrotr( unsigned long value, int shift );
 
+__int64	_atoi64(const char *szNumber);
+
 int	_wtoi( const wchar_t *str );
+__int64	_wtoi64(const wchar_t *str);
 long	_wtol( const wchar_t *str );
 
 

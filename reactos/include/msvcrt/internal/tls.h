@@ -7,12 +7,16 @@
 
 typedef struct _ThreadData
 {
-	int terrno;
-	unsigned long tdoserrno;
-	unsigned long long tnext;	/* used by rand/srand */
+  int terrno;
+  unsigned long tdoserrno;
+  unsigned long long tnext;	/* used by rand/srand */
 
-	char *lasttoken;		/* used by strtok */
-	wchar_t *wlasttoken;		/* used by wcstok */
+  char *lasttoken;		/* used by strtok */
+  wchar_t *wlasttoken;		/* used by wcstok */
+
+
+  int fpecode;			/* fp exception code */
+
 
 } THREADDATA, *PTHREADDATA;
 
