@@ -3840,7 +3840,7 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
       DstHive->HiveHeader->RootKeyCell = NewKeyCellOffset;
 
       /* Copy class name */
-      if (SrcKeyCell->ClassNameOffset != -1)
+      if (SrcKeyCell->ClassNameOffset != (BLOCK_OFFSET) -1)
 	{
 	  PDATA_CELL SrcClassNameCell;
 	  PDATA_CELL NewClassNameCell;
@@ -3940,7 +3940,7 @@ CHECKPOINT1;
 			 NewValueCellSize);
 
 	  /* Copy value data cell */
-	  if (SrcValueCell->DataSize > sizeof(PVOID))
+	  if (SrcValueCell->DataSize > (LONG) sizeof(PVOID))
 	    {
 	      SrcValueDataCell = CmiGetBlock (SrcHive, SrcValueCell->DataOffset, NULL);
 
@@ -4005,7 +4005,7 @@ CHECKPOINT1;
 			 NewSubKeyCellSize);
 
 	  /* Copy class name */
-	  if (SrcSubKeyCell->ClassNameOffset != -1)
+	  if (SrcSubKeyCell->ClassNameOffset != (BLOCK_OFFSET) -1)
 	    {
 	      PDATA_CELL SrcClassNameCell;
 	      PDATA_CELL NewClassNameCell;
