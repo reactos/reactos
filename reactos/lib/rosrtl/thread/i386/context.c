@@ -1,4 +1,4 @@
-/* $Id: context.c,v 1.1 2003/07/22 20:10:04 hyperion Exp $
+/* $Id: context.c,v 1.2 2003/08/07 03:35:06 royce Exp $
 */
 /*
 */
@@ -13,7 +13,8 @@
 
 #include <rosrtl/thread.h>
 
-NTSTATUS NTAPI RtlRosInitializeContext
+NTSTATUS NTAPI
+RtlRosInitializeContext
 (
  IN HANDLE ProcessHandle,
  OUT PCONTEXT Context,
