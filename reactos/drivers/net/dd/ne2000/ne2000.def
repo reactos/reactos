@@ -1,0 +1,7 @@
+; Novell Eagle 2000 driver - ReactOS Operating System
+
+LIBRARY NE2000.SYS
+
+EXPORTS
+
+; EOF

@@ -14,7 +14,7 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native iface_additional ntoskrnl
-DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32
+DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32
 SUBSYS = smss win32k csrss
 
 #
@@ -41,11 +41,13 @@ FS_DRIVERS = vfat
 # ndis tdi tcpip tditest
 NET_DRIVERS = ndis tcpip tditest
 
-KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS)
+# ne2000
+NET_DEVICE_DRIVERS = ne2000
+
+KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
 
 APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
-       pteb consume dump_shared_data vmtest
-
+       pteb consume dump_shared_data vmtest wstest
 #       objdir
 
 all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
@@ -182,6 +184,21 @@ $(NET_DRIVERS:%=%_dist): %_dist:
 
 .PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean) $(NET_DRIVERS:%=%_install) \
         $(NET_DRIVERS:%=%_dist)
+
+$(NET_DEVICE_DRIVERS): %:
+	make -C services/net/dd/$*
+
+$(NET_DEVICE_DRIVERS:%=%_clean): %_clean:
+	make -C services/net/dd/$* clean
+
+$(NET_DEVICE_DRIVERS:%=%_install): %_install:
+	make -C services/net/dd/$* install
+
+$(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
+	make -C services/net/dd/$* dist
+
+.PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) \
+        $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_dist)
 
 #
 # Kernel loaders

@@ -1,0 +1,15 @@
+TARGETNAME=ne2000
+TARGETPATH=..\objects
+TARGETTYPE=DRIVER
+
+TARGETLIBS=$(DDK_LIB_PATH)\ndis.lib
+
+C_DEFINES=$(C_DEFINES) -DNDIS_MINIPORT_DRIVER -DDBG
+
+INCLUDES=..\include;..\..\..\..\..\include\net;$(BASEDIR)\inc
+
+SOURCES=main.c   \
+        8390.c \
+        RESOURCE.RC
+
+MSC_WARNING_LEVEL=/W3 /WX
