@@ -77,7 +77,7 @@ static const WCHAR wszEmpty[] = {0};
  * %* all following parameters (see batfile)
  *
  * FIXME: use 'len'
- * FIXME: Careful of going over string-boundries. No checking is done to 'res'...
+ * FIXME: Careful of going over string boundaries. No checking is done to 'res'...
  */
 static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lpFile, LPITEMIDLIST pidl, LPCWSTR args)
 {
@@ -86,13 +86,6 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
     PWSTR   res = out;
     PCWSTR  cmd;
     LPVOID  pv;
-    WCHAR   tmpBuffer[1024];
-    PWSTR   tmpB = tmpBuffer;
-    WCHAR   tmpEnvBuff[MAX_PATH];
-    WCHAR*  tmpE = tmpEnvBuff;
-    DWORD   envRet;
-    static const WCHAR wszSPerc[] = {'%','s',0};
-    static const WCHAR wszPerc[] = {'%',0};
 
     TRACE("%p, %d, %s, %s, %p, %p\n", out, len, debugstr_w(fmt),
           debugstr_w(lpFile), pidl, args);
@@ -186,38 +179,36 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 		}
                 break;
 
-	      default:
-	    /*
-	     * Check if this is a env-variable here...
-	     */
+	    default:
+                /*
+                 * Check if this is a env-variable here...
+                 */
 
-	    /* Make sure that we have at least one more %.*/
-	    if (strstrW(fmt, wszPerc))
-	    {
-			while (*fmt != '%')
-				*tmpB++ = *fmt++;
-			*tmpB++ = 0;
+                /* Make sure that we have at least one more %.*/
+                if (strchrW(fmt, '%'))
+                {
+                    WCHAR   tmpBuffer[1024];
+                    PWSTR   tmpB = tmpBuffer;
+                    WCHAR   tmpEnvBuff[MAX_PATH];
+                    DWORD   envRet;
 
-			TRACE("Checking %s to be a env-var\n", debugstr_w(tmpBuffer));
+                    while (*fmt != '%')
+                        *tmpB++ = *fmt++;
+                    *tmpB++ = 0;
 
-			envRet = GetEnvironmentVariableW(tmpBuffer, tmpE, MAX_PATH);
-			if (envRet == 0 || envRet > MAX_PATH)
-			{
-				TRACE("The env. var can't be found or is bigger than MAX_PATH => useless.");
-				res += sprintfW(res, wszSPerc, tmpBuffer);
+                    TRACE("Checking %s to be a env-var\n", debugstr_w(tmpBuffer));
+
+                    envRet = GetEnvironmentVariableW(tmpBuffer, tmpEnvBuff, MAX_PATH);
+                    if (envRet == 0 || envRet > MAX_PATH)
+                        strcpyW( res, tmpBuffer );
+                    else
+                        strcpyW( res, tmpEnvBuff );
+                    res += strlenW(res);
+                }
+                fmt++;
+                done = TRUE;
+                break;
             }
-			else
-			{
-				TRACE("Found it %s. Replacing... \n", debugstr_w(tmpEnvBuff));
-				res += sprintfW(res, wszSPerc, tmpEnvBuff);
-			}
-		}
-
-	    } /* switch */
-
-
-            fmt++;
-            done = TRUE;
         }
         else
             *res++ = *fmt++;
