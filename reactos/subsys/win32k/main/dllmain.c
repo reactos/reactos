@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.56 2003/12/03 21:50:50 gvg Exp $
+/* $Id: dllmain.c,v 1.57 2003/12/07 12:59:34 chorns Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -40,6 +40,7 @@
 #include <include/text.h>
 #include <include/caret.h>
 #include <include/hotkey.h>
+#include <include/accelerator.h>
 #include <include/guicheck.h>
 
 #define NDEBUG
@@ -268,6 +269,13 @@ DllMain (
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Failed to initialize timer implementation.\n");
+      return(Status);
+    }
+
+  Status = InitAcceleratorImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize accelerator implementation.\n");
       return(Status);
     }
 

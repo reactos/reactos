@@ -265,7 +265,7 @@ NtUserCountClipboardFormats(VOID);
 HACCEL
 STDCALL
 NtUserCreateAcceleratorTable(
- LPACCEL Entries,
+  LPACCEL Entries,
   SIZE_T EntriesCount);
 
 BOOL
@@ -373,7 +373,7 @@ NtUserDeleteMenu(
   UINT uPosition,
   UINT uFlags);
 
-BOOL
+BOOLEAN
 STDCALL
 NtUserDestroyAcceleratorTable(
   HACCEL Table);

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.40 2003/11/30 20:03:47 navaraf Exp $
+/* $Id: stubs.c,v 1.41 2003/12/07 12:59:34 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -158,33 +158,9 @@ NtUserConvertMemHandle(
 
 DWORD
 STDCALL
-NtUserCopyAcceleratorTable(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserCountClipboardFormats(VOID)
 {
   UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCreateAcceleratorTable(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-/*  UNIMPLEMENTED */
-  DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__);
 
   return 0;
 }
@@ -239,17 +215,6 @@ NtUserDdeSetQualityOfService(
 
   return 0;
 }
-
-DWORD
-STDCALL
-NtUserDestroyAcceleratorTable(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
 
 DWORD
 STDCALL
@@ -886,18 +851,6 @@ DWORD
 STDCALL
 NtUserTrackMouseEvent(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserTranslateAccelerator(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 

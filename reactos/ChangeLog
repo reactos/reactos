@@ -1,5 +1,18 @@
 2003-12-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* subsys/win32k/include/accelerator.h: New file.
+	* subsys/win32k/ntuser/accelerator.c: Ditto.
+	* include/win32k/ntuser.h (NtUserDestroyAcceleratorTable): Make returntype
+	BOOLEAN.
+	* subsys/win32k/makefile (NTUSER_OBJECTS): Add ntuser/accelerator.o.
+	* subsys/win32k/include/object.h (USER_OBJECT_TYPE): Add otAcceleratorTable.
+	* subsys/win32k/main/dllmain.c (DllMain): Call InitAcceleratorImpl().
+	* subsys/win32k/ntuser/stubs.c (NtUserCopyAcceleratorTable,
+	NtUserCreateAcceleratorTable, NtUserDestroyAcceleratorTable,
+	NtUserTranslateAccelerator): Move to accelerator.c.
+
+2003-12-07  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* apps/tests/accelerator: New directory.
 	* apps/tests/accelerator/accelerator.c: New file.
 	* apps/tests/accelerator/.cvsignore: Ditto.

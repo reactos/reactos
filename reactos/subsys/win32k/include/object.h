@@ -10,7 +10,8 @@ typedef enum {
   otUnknown = 0,
   otClass,
   otWindow,
-  otMenu
+  otMenu,
+  otAcceleratorTable,
 } USER_OBJECT_TYPE;
 
 typedef struct _USER_OBJECT_HEADER
