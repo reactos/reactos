@@ -5,6 +5,7 @@
  * Version: 1.0                                              */
 
 #include <windows.h>
+#include <stdlib.h>
 
 #define W_WIDTH 320
 #define W_HEIGHT 240
