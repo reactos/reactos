@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.22 2004/06/06 07:52:22 hbirr Exp $
+/* $Id: copy.c,v 1.23 2004/06/06 08:36:30 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,6 +33,15 @@ static PHYSICAL_ADDRESS CcZeroPage = { 0 };
 #endif
 
 #define MAX_ZERO_LENGTH	(256 * 1024)
+#define MAX_RW_LENGTH	(64 * 1024)
+
+#if defined(__GNUC__)
+void * alloca(size_t size);
+#elif defined(_MSC_VER)
+void* _alloca(size_t size);
+#else
+#error Unknown compiler for alloca intrinsic stack allocation "function"
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
@@ -67,6 +76,9 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
   NTSTATUS Status;
   ULONG TempLength;
   KEVENT Event;
+  PMDL Mdl;
+
+  Mdl = alloca(MmSizeOfMdl(NULL, MAX_RW_LENGTH));
 
   Status = CcRosGetCacheSegmentChain(Bcb, ReadOffset, Length, &head);
   if (!NT_SUCCESS(Status))
@@ -105,7 +117,6 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	{
 	  PCACHE_SEGMENT current2;
 	  ULONG current_size;
-	  PMDL Mdl;
 	  ULONG i;
 	  ULONG offset;
 
@@ -124,7 +135,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	  /*
 	   * Create an MDL which contains all their pages.
 	   */
-	  Mdl = MmCreateMdl(NULL, NULL, current_size);
+          MmInitializeMdl(Mdl, NULL, current_size);
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  current2 = current;
 	  offset = 0;
@@ -157,6 +168,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 	     Status = Iosb.Status;
 	  }
+          MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
 	  if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
 	    {
 	      while (current != NULL)
@@ -206,8 +218,10 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
     }
-  Mdl = MmCreateMdl(NULL, CacheSeg->BaseAddress, Size);
+  Mdl = alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
+  MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
   MmBuildMdlForNonPagedPool(Mdl);
+  Mdl->MdlFlags |= MDL_IO_PAGE_READ;
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
   Status = IoPageRead(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, & Event, &IoStatus); 
   if (Status == STATUS_PENDING)
@@ -246,8 +260,10 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
     }
-  Mdl = MmCreateMdl(NULL, CacheSeg->BaseAddress, Size);
+  Mdl = alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
+  MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
   MmBuildMdlForNonPagedPool(Mdl);
+  Mdl->MdlFlags |= MDL_IO_PAGE_READ;
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
   Status = IoPageWrite(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
   if (Status == STATUS_PENDING)
@@ -360,7 +376,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
     }  
   while (Length > 0)
     {
-      TempLength = min(max(Bcb->CacheSegmentSize, 65536), Length);
+      TempLength = min(max(Bcb->CacheSegmentSize, MAX_RW_LENGTH), Length);
       ReadCacheSegmentChain(Bcb, ReadOffset, TempLength, Buffer);
       ReadLength += TempLength;
       Length -= TempLength;
@@ -533,6 +549,8 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
   if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
     {
       /* File is not cached */
+
+      Mdl = alloca(MmSizeOfMdl(NULL, MAX_ZERO_LENGTH));
  
       while (Length > 0)
 	{
@@ -544,12 +562,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	    {
 	      CurrentLength = Length;
 	    }
-          Mdl = MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, CurrentLength);
-
-	  if (Mdl == NULL)
-	    {
-	      return(FALSE);
-	    }
+          MmInitializeMdl(Mdl, (PVOID)WriteOffset.u.LowPart, CurrentLength);
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  for (i = 0; i < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); i++)
 	    {
@@ -562,6 +575,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
              Status = Iosb.Status;
 	  }
+          MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(FALSE);

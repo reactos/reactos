@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.150 2004/05/30 12:55:11 hbirr Exp $
+/* $Id: section.c,v 1.151 2004/06/06 08:36:31 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -396,10 +396,7 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
                    *   process and the current segment (also not within an other process).
                    */
                   NTSTATUS Status;
-                  PMDL Mdl;
-                  Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-                  MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-                  Status = MmWriteToSwapPage(SavedSwapEntry, Mdl);
+                  Status = MmWriteToSwapPage(SavedSwapEntry, &Page);
                   if (!NT_SUCCESS(Status))
                   {
                      DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", Status);
@@ -792,7 +789,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        * Must be private page we have swapped out.
        */
       SWAPENTRY SwapEntry;
-      PMDL Mdl;
 
       /*
        * Sanity check
@@ -813,9 +809,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          KEBUGCHECK(0);
       }
 
-      Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-      MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-      Status = MmReadFromSwapPage(SwapEntry, Mdl);
+      Status = MmReadFromSwapPage(SwapEntry, &Page);
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("MmReadFromSwapPage failed, status = %x\n", Status);
@@ -1078,7 +1072,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    else if (IS_SWAP_FROM_SSE(Entry))
    {
       SWAPENTRY SwapEntry;
-      PMDL Mdl;
 
       SwapEntry = SWAPENTRY_FROM_SSE(Entry);
 
@@ -1095,9 +1088,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          KEBUGCHECK(0);
       }
 
-      Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-      MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-      Status = MmReadFromSwapPage(SwapEntry, Mdl);
+      Status = MmReadFromSwapPage(SwapEntry, &Page);
       if (!NT_SUCCESS(Status))
       {
          KEBUGCHECK(0);
@@ -1434,7 +1425,6 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    PHYSICAL_ADDRESS PhysicalAddress;
    MM_SECTION_PAGEOUT_CONTEXT Context;
    SWAPENTRY SwapEntry;
-   PMDL Mdl;
    ULONG Entry;
    ULONG FileOffset;
    NTSTATUS Status;
@@ -1695,9 +1685,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Write the page to the pagefile
     */
-   Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
-   Status = MmWriteToSwapPage(SwapEntry, Mdl);
+   Status = MmWriteToSwapPage(SwapEntry, &PhysicalAddress);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
@@ -1784,7 +1772,6 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    PMM_SECTION_SEGMENT Segment;
    PHYSICAL_ADDRESS PhysicalAddress;
    SWAPENTRY SwapEntry;
-   PMDL Mdl;
    ULONG Entry;
    BOOLEAN Private;
    NTSTATUS Status;
@@ -1900,9 +1887,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Write the page to the pagefile
     */
-   Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
-   Status = MmWriteToSwapPage(SwapEntry, Mdl);
+   Status = MmWriteToSwapPage(SwapEntry, &PhysicalAddress);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",

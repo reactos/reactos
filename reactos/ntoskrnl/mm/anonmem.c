@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.27 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: anonmem.c,v 1.28 2004/06/06 08:36:31 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -46,7 +46,6 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
 {
    SWAPENTRY SwapEntry;
    LARGE_INTEGER PhysicalAddress;
-   PMDL Mdl;
    NTSTATUS Status;
 
    /*
@@ -99,9 +98,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Write the page to the pagefile
     */
-   Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
-   Status = MmWriteToSwapPage(SwapEntry, Mdl);
+   Status = MmWriteToSwapPage(SwapEntry, &PhysicalAddress);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
@@ -133,7 +130,6 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    BOOL WasDirty;
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
-   PMDL Mdl;
 
    DPRINT("MmPageOutVirtualMemory(Address 0x%.8X) PID %d\n",
           Address, MemoryArea->Process->UniqueProcessId);
@@ -200,9 +196,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Write the page to the pagefile
     */
-   Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-   MmBuildMdlFromPages(Mdl, (ULONG *)&PhysicalAddress.u.LowPart);
-   Status = MmWriteToSwapPage(SwapEntry, Mdl);
+   Status = MmWriteToSwapPage(SwapEntry, &PhysicalAddress);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
@@ -372,12 +366,9 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    if (MmIsPageSwapEntry(NULL, Address))
    {
       SWAPENTRY SwapEntry;
-      PMDL Mdl;
 
       MmDeletePageFileMapping(MemoryArea->Process, Address, &SwapEntry);
-      Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-      MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-      Status = MmReadFromSwapPage(SwapEntry, Mdl);
+      Status = MmReadFromSwapPage(SwapEntry, &Page);
       if (!NT_SUCCESS(Status))
       {
          KEBUGCHECK(0);

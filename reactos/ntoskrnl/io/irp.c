@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.60 2004/04/20 23:14:35 gdalsnes Exp $
+/* $Id: irp.c,v 1.61 2004/06/06 08:36:31 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -294,11 +294,15 @@ IofCompleteRequest(PIRP Irp,
    /* Windows NT File System Internals, page 165 */
    if (Irp->Flags & (IRP_PAGING_IO|IRP_CLOSE_OPERATION))
    {
-      if (Irp->Flags & IRP_PAGING_IO)
+      /* 
+       * If MDL_IO_PAGE_READ is set, then the caller is responsible 
+       * for deallocating of the mdl. 
+       */
+      if (Irp->Flags & IRP_PAGING_IO &&
+          Irp->MdlAddress &&
+          !(Irp->MdlAddress->MdlFlags & MDL_IO_PAGE_READ))
       {
-         /* FIXME:
-          *   The mdl should be freed by the caller! 
-	       */
+
          if (Irp->MdlAddress->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
          {
             MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa, Irp->MdlAddress);            

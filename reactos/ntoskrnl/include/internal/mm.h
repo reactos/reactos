@@ -368,9 +368,9 @@ extern MM_STATS MmStats;
 PVOID 
 MmGetDirtyPagesFromWorkingSet(struct _EPROCESS* Process);
 NTSTATUS 
-MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
+MmWriteToSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page);
 NTSTATUS 
-MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
+MmReadFromSwapPage(SWAPENTRY SwapEntry, PHYSICAL_ADDRESS* Page);
 VOID 
 MmSetFlagsPage(PHYSICAL_ADDRESS PhysicalAddress, ULONG Flags);
 ULONG 
