@@ -30,13 +30,65 @@
 enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4};
 
 
- /// Explorer frame window
-struct MainFrame : public PreTranslateWindow
+ /// Explorer frame window base class
+struct MainFrameBase : public PreTranslateWindow
 {
 	typedef PreTranslateWindow super;
 
-	MainFrame(HWND hwnd);
-	~MainFrame();
+	MainFrameBase(HWND hwnd);
+	~MainFrameBase();
+
+	static HWND Create(LPCTSTR path, bool mdi=true, UINT cmdshow=SW_SHOWNORMAL);
+
+	WindowHandle _hwndrebar;
+
+	WindowHandle _htoolbar;
+	WindowHandle _hstatusbar;
+
+	WindowHandle _haddressedit;
+	WindowHandle _hcommandedit;
+
+	WindowHandle _hsidebar;
+	HIMAGELIST	_himl;
+
+	HMENU	_hMenuFrame;
+	HMENU	_hMenuWindow;
+
+	MenuInfo _menu_info;
+
+protected:
+	FullScreenParameters _fullscreen;
+
+	HACCEL	_hAccel;
+
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	bool	ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRESULT* pres);
+	int		Command(int id, int code);
+	int		Notify(int id, NMHDR* pnmh);
+
+	virtual BOOL TranslateMsg(MSG* pmsg);
+
+	void	toggle_child(HWND hwnd, UINT cmd, HWND hchild, int band_idx=-1);
+
+	void	resize_frame_client();
+	virtual void resize_frame(int cx, int cy);
+	virtual void frame_get_clientspace(PRECT prect);
+
+	BOOL	toggle_fullscreen();
+	void	fullscreen_move();
+
+	void	FillBookmarks();
+	virtual bool go_to(LPCTSTR url, bool new_window);
+};
+
+
+#ifndef _NO_MDI
+
+struct MDIMainFrame : public MainFrameBase
+{
+	typedef MainFrameBase super;
+
+	MDIMainFrame(HWND hwnd);
 
 	static HWND Create();
 	static HWND Create(LPCTSTR path, int mode=OWM_EXPLORE|OWM_DETAILS);
@@ -47,47 +99,68 @@ struct MainFrame : public PreTranslateWindow
 	ChildWindow* CreateChild(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
 
 protected:
-	FullScreenParameters _fullscreen;
-
-#ifndef _NO_MDI
 	HWND	_hmdiclient;
-#endif
 
-	WindowHandle _hstatusbar;
-	WindowHandle _hwndrebar;
-	WindowHandle _htoolbar;
 	WindowHandle _hextrabar;
 	WindowHandle _hdrivebar;
-	WindowHandle _haddressedit;
-	WindowHandle _hcommandedit;
-	WindowHandle _hsidebar;
-
-	HIMAGELIST	_himl;
-
-	HMENU	_hMenuFrame;
-	HMENU	_hMenuWindow;
-
-	MenuInfo _menu_info;
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
-	int		Notify(int id, NMHDR* pnmh);
 
-	void	toggle_child(HWND hwnd, UINT cmd, HWND hchild, int band_idx=-1);
+	virtual BOOL TranslateMsg(MSG* pmsg);
+
 	bool	activate_drive_window(LPCTSTR path);
 	bool	activate_child_window(LPCTSTR filesys);
 
-	void	resize_frame_rect(PRECT prect);
-	void	resize_frame(int cx, int cy);
-	void	resize_frame_client();
-	void	frame_get_clientspace(PRECT prect);
-	BOOL	toggle_fullscreen();
-	void	fullscreen_move();
+	virtual void resize_frame(int cx, int cy);
+	virtual void frame_get_clientspace(PRECT prect);
 
-	void	FillBookmarks();
-	bool	go_to(LPCTSTR url, bool new_window);
+	virtual bool go_to(LPCTSTR url, bool new_window);
 
-	HACCEL	_hAccel;
 	TCHAR	_drives[BUFFER_LEN];
+};
+
+#endif
+
+
+struct SDIMainFrame : public ShellBrowserChildT<MainFrameBase>
+{
+	typedef ShellBrowserChildT<MainFrameBase> super;
+
+	SDIMainFrame(HWND hwnd);
+
+	static HWND Create();
+
+protected:
+	ShellPathInfo _shellpath_info;
+
+	WindowHandle _left_hwnd;
+	WindowHandle _right_hwnd;
+
+/**@todo focus handling for TAB switching
+	int 	_focus_pane;		// 0: left	1: right
+*/
+
+	int 	_split_pos;
+	int		_last_split;
+	RECT	_clnt_rect;
+
+	String	_url;
+
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
+
+	void	resize_frame(int cx, int cy);
+	void	resize_children();
+	void	update_clnt_rect();
+
+	void	update_shell_browser();
+	void	jump_to(LPCTSTR path, int mode);
+	void	jump_to(LPCITEMIDLIST path, int mode);
+
+	 // interface BrowserCallback
+	virtual void	entry_selected(Entry* entry);
+
+	void	set_url(LPCTSTR url);
 };

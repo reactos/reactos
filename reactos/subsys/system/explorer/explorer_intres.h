@@ -56,9 +56,10 @@
 #define IDB_IMAGES                      107
 #define IDD_EXECUTE                     108
 #define IDR_MAINFRAME                   109
-#define IDM_MAINFRAME                   110
+#define IDM_MDIFRAME                    110
 #define ID_EXECUTE                      111
 #define IDM_WINEFILE                    112
+#define IDM_SDIFRAME                    113
 #define IDI_LOGOFF                      124
 #define IDI_FOLDERARROW                 125
 #define IDI_ARROW                       125
@@ -164,11 +165,11 @@
 #define ID_ABOUT_WINDOWS                40002
 #define ID_ABOUT_EXPLORER               40003
 #define ID_DESKTOPBAR_SETTINGS          40004
-#define ID_GO_BACK                  40005
-#define ID_GO_FORWARD               40006
-#define ID_GO_HOME                  40007
-#define ID_GO_SEARCH                40008
-#define ID_GO_UP                    40009
+#define ID_GO_BACK                      40005
+#define ID_GO_FORWARD                   40006
+#define ID_GO_HOME                      40007
+#define ID_GO_SEARCH                    40008
+#define ID_GO_UP                        40009
 #define ID_STOP                         40010
 #define ID_MINIMIZE_ALL                 40011
 #define ID_EXPLORE                      40012
@@ -178,6 +179,8 @@
 #define ID_SHOW_HIDDEN_ICONS            40016
 #define ID_CONFIG_NOTIFYAREA            40017
 #define ID_CONFIG_TIME                  40018
+#define ID_VIEW_MDI                     40019
+#define ID_VIEW_SDI                     40020
 #define ID_SWITCH_DESKTOP_1             50000
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
@@ -196,7 +199,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        166
-#define _APS_NEXT_COMMAND_VALUE         40019
+#define _APS_NEXT_COMMAND_VALUE         40021
 #define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -1,17 +1,4 @@
-// =Memo for future Japanese maintainer=
-// For future ease of maintenance, I marked "FIXME?" on strings I suspect I have
-// mistranslated or I haven't translated(especially, "IDM_WINEFILE" have many
-// suspected strings because I haven't tested under WINE). Others are set as is in
-// purpose. BTW, I feel it strange that the word;"directory" turns into "folder" for
-// Japanese Windows(..or English Windows also use "folder" instead of "directory"? I
-// have no idea). I obeyed as the MS do. Also, there might be some menus which have
-// different shortcut keys between EN-Win and JA-Win but I dunno which ones are =D
-// Despite I'm not sure that we can use "MS UI Gothic" under ROS, I changed "MS Sans
-// Serif" to "MS UI Gothic" because it's lear that MS Sans Serif doesn't suit for
-// the Japanese(most of you know this, I suppose).
-// - M.T
-
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "explorer_intres.h"
 
@@ -26,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Japanese resources
+// Japanisch resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
 #ifdef _WIN32
@@ -39,7 +26,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 // Menu
 //
 
-IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU 
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
@@ -49,6 +36,7 @@ BEGIN
     BEGIN
         MENUITEM "ツールバー(&T)",              ID_VIEW_TOOL_BAR
         MENUITEM "ステータスバー(&S)",          ID_VIEW_STATUSBAR
+        MENUITEM "最新の情報に更新(&R)\tF5",    ID_REFRESH
     END
     POPUP "ウィンドウ(&W)"
     BEGIN
@@ -58,7 +46,6 @@ BEGIN
         MENUITEM "垂直に整列(&V)\tShift+F4",    ID_WINDOW_TILE_VERT
         MENUITEM "自動整列",                    ID_WINDOW_AUTOSORT
         MENUITEM "最小化された子ウィンドウを整列(&S)", ID_WINDOW_ARRANGE
-        MENUITEM "最新の情報に更新(&R)\tF5",    ID_REFRESH
     END
     POPUP "ヘルプ(&H)"
     BEGIN
@@ -68,7 +55,7 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU FIXED IMPURE 
+IDM_WINEFILE MENU
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
@@ -178,7 +165,7 @@ BEGIN
     END
 END
 
-IDM_DESKTOPBAR MENU DISCARDABLE 
+IDM_DESKTOPBAR MENU 
 BEGIN
     POPUP ""
     BEGIN
@@ -189,14 +176,34 @@ BEGIN
     END
 END
 
+IDM_SDIFRAME MENU 
+BEGIN
+    POPUP "ファイル(&F)"
+    BEGIN
+        MENUITEM "終了(&X)",                    ID_FILE_EXIT
+    END
+    POPUP "表\示(&V)"
+    BEGIN
+        MENUITEM "ツールバー(&T)",              ID_VIEW_TOOL_BAR
+        MENUITEM "ステータスバー(&S)",          ID_VIEW_STATUSBAR
+        MENUITEM "最新の情報に更新(&R)\tF5",    ID_REFRESH
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_EXECUTE DIALOG  15, 13, 210, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Execute"
 FONT 8, "MS UI Gothic"
 BEGIN
@@ -212,8 +219,8 @@ BEGIN
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 144, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "スタートメニューからプログラムを検索"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
@@ -225,8 +232,8 @@ BEGIN
                     WS_TABSTOP,7,25,130,33
 END
 
-IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 172
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_DESKTOP DIALOG  0, 0, 212, 172
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "デスクトップのプロパティ"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -258,15 +265,15 @@ BEGIN
                     WS_TABSTOP,159,121,46,44
 END
 
-IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 154
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_TASKBAR DIALOG  0, 0, 210, 154
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "タスクバーのプロパティ"
 FONT 9, "MS UI Gothic"
 BEGIN
 END
 
-IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 154
-STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_DESKBAR_STARTMENU DIALOG  0, 0, 210, 154
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "スタートメニューのプロパティ"
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -278,7 +285,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "ｽﾀｰﾄ"
@@ -297,7 +304,7 @@ BEGIN
     IDS_ADMIN               "管理ツール"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_NETWORK             "ネットワーク"
     IDS_CONNECTIONS         "ネットワーク接続"
@@ -318,18 +325,18 @@ BEGIN
     IDS_TASKBAR             "タスクバー"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_STARTMENU           "スタートメニュー"
     IDS_MINIMIZE_ALL        "全ウィンドウを最小化"
 END
 
-#endif    // Japanese resources
+#endif    // Japanisch resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// German (Germany) resources
+// Deutsch (Deutschland) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
 #ifdef _WIN32
@@ -343,18 +350,18 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "explorer_intres.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include <windows.h>\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -362,7 +369,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // German (Germany) resources
+#endif    // Deutsch (Deutschland) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -376,3 +383,4 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+

@@ -535,31 +535,7 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 	g_Globals._prescan_nodes = false;
 
 	 // create main window
-	HWND hMainFrame = MainFrame::Create();
-
-	if (hMainFrame) {
-		g_Globals._hMainWnd = hMainFrame;
-
-		ShowWindow(hMainFrame, cmdshow);
-		UpdateWindow(hMainFrame);
-
-		bool valid_dir = false;
-
-		if (lpCmdLine) {
-			DWORD attribs = GetFileAttributes(lpCmdLine);
-
-			if (attribs!=INVALID_FILE_ATTRIBUTES && (attribs&FILE_ATTRIBUTE_DIRECTORY))
-				valid_dir = true;
-			else if (*lpCmdLine==':' || *lpCmdLine=='"')
-				valid_dir = true;
-		}
-
-		 // Open the first child window after initializing the application
-		if (valid_dir)
-			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0, (LPARAM)lpCmdLine);
-		else
-			PostMessage(hMainFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
-	}
+	MainFrameBase::Create(lpCmdLine, true, cmdshow);
 }
 
 

@@ -37,7 +37,7 @@ BEGIN
     END
 END
 
-IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
     POPUP "ÎÄ¼þ(&F)"
     BEGIN
@@ -51,7 +51,9 @@ BEGIN
         MENUITEM "²à±ßÀ¸(&S)",                  ID_VIEW_SIDE_BAR
         MENUITEM "×´Ì¬À¸(&S)",                  ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
+        MENUITEM "Ë¢ÐÂ(&R)\tF5",                ID_REFRESH
         MENUITEM "È«ÆÁ(&U)\tCtrl+Shift+S",      ID_VIEW_FULLSCREEN
+        MENUITEM "&SDI",                        ID_VIEW_SDI
     END
     POPUP "´°¿Ú(&W)"
     BEGIN
@@ -61,7 +63,30 @@ BEGIN
         MENUITEM "×ÝÏòÆ½ÆÌ(&V)\tShift+F4",      ID_WINDOW_TILE_VERT
         MENUITEM "×Ô¶¯ÅÅÁÐ(&A)",                ID_WINDOW_AUTOSORT
         MENUITEM "È«²¿×îÐ¡»¯(&S)",              ID_WINDOW_ARRANGE
+    END
+    POPUP "°ïÖú(&H)"
+    BEGIN
+        MENUITEM "ä¯ÀÀÆ÷°ïÖúÎÄµµ(&F)...",       ID_EXPLORER_FAQ
+        MENUITEM "¹ØÓÚä¯ÀÀÆ÷(&A)...",           ID_ABOUT_EXPLORER
+        MENUITEM "¹ØÓÚ²Ù×÷ÏµÍ³(&O)...",         ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "ÎÄ¼þ(&F)"
+    BEGIN
+        MENUITEM "ÍË³ö(&X)",                    ID_FILE_EXIT
+    END
+    POPUP "²é¿´(&V)"
+    BEGIN
+        MENUITEM "¹¤¾ßÀ¸(&T)",                  ID_VIEW_TOOL_BAR
+        MENUITEM "²à±ßÀ¸(&S)",                  ID_VIEW_SIDE_BAR
+        MENUITEM "×´Ì¬À¸(&S)",                  ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
         MENUITEM "Ë¢ÐÂ(&R)\tF5",                ID_REFRESH
+        MENUITEM "È«ÆÁ(&U)\tCtrl+Shift+S",      ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
     END
     POPUP "°ïÖú(&H)"
     BEGIN
@@ -311,7 +336,7 @@ STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "ÔÚ¿ªÊ¼²Ëµ¥ËÑË÷³ÌÐò"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
     EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
@@ -417,7 +442,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 // Menu
 //
 
-IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
     POPUP "&Fiºier"
     BEGIN
@@ -431,7 +456,9 @@ BEGIN
         MENUITEM "&Bara de stare",              ID_VIEW_STATUSBAR
         MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM SEPARATOR
+        MENUITEM "&Resetare\tF5",               ID_REFRESH
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&SDI",                        ID_VIEW_SDI
     END
     POPUP "&Fereastrã"
     BEGIN
@@ -441,7 +468,30 @@ BEGIN
         MENUITEM "Aliniazã &Vertical\tShift+F4", ID_WINDOW_TILE_VERT
         MENUITEM "Aranjeazã automat",           ID_WINDOW_AUTOSORT
         MENUITEM "Aranjeazã &Simbolurile",      ID_WINDOW_ARRANGE
+    END
+    POPUP "&Ajutor"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&Despre Explorer...",         ID_ABOUT_EXPLORER
+        MENUITEM "Despre &OS...",               ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Fiºier"
+    BEGIN
+        MENUITEM "&Ieºire",                     ID_FILE_EXIT
+    END
+    POPUP "&Prezentare"
+    BEGIN
+        MENUITEM "&Bara cu instrumente",        ID_VIEW_TOOL_BAR
+        MENUITEM "&Bara de stare",              ID_VIEW_STATUSBAR
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM SEPARATOR
         MENUITEM "&Resetare\tF5",               ID_REFRESH
+        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
     END
     POPUP "&Ajutor"
     BEGIN
@@ -708,7 +758,7 @@ BEGIN
     END
 END
 
-IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
     POPUP "&Datei"
     BEGIN
@@ -719,10 +769,12 @@ BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
         MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
         MENUITEM "Lauf&werkleiste",             ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
+        MENUITEM "&Aktualisieren\tF5",          ID_REFRESH
         MENUITEM "&Vollbild\tCtrl+Shift+S",     ID_VIEW_FULLSCREEN
+        MENUITEM "&SDI",                        ID_VIEW_SDI
     END
     POPUP "&Fenster"
     BEGIN
@@ -732,9 +784,32 @@ BEGIN
         MENUITEM "&Nebeneinander\tUmschalt+F4", ID_WINDOW_TILE_VERT
         MENUITEM "au&tomatisch anordnen",       ID_WINDOW_AUTOSORT
         MENUITEM "&Symbole anordnen",           ID_WINDOW_ARRANGE
-        MENUITEM "&Aktualisieren\tF5",          ID_REFRESH
     END
-    POPUP "&Help"
+    POPUP "&Hilfe"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "&Beenden",                    ID_FILE_EXIT
+    END
+    POPUP "&Ansicht"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
+        MENUITEM "S&ide Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualisieren\tF5",          ID_REFRESH
+        MENUITEM "&Vollbild\tCtrl+Shift+S",     ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
+    END
+    POPUP "&Hilfe"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
         MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
@@ -776,6 +851,25 @@ BEGIN
     CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
                     151,90,38,12
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUT_EXPLORER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 189
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 102
+    END
+END
+#endif    // APSTUDIO_INVOKED
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -856,25 +950,6 @@ IDI_DOT_RED             ICON    DISCARDABLE     "res/dot_red.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_ABOUT_EXPLORER, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 189
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 102
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // String Table
 //
 
@@ -951,7 +1026,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Menu
 //
 
-IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
     POPUP "&File"
     BEGIN
@@ -965,7 +1040,9 @@ BEGIN
         MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&SDI",                        ID_VIEW_SDI
     END
     POPUP "&Window"
     BEGIN
@@ -975,7 +1052,30 @@ BEGIN
         MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
         MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
         MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5",                ID_REFRESH
+        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
     END
     POPUP "&Help"
     BEGIN
@@ -1378,7 +1478,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 // Menu
 //
 
-IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+IDM_MDIFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
     POPUP "&Fichier"
     BEGIN
@@ -1392,7 +1492,9 @@ BEGIN
         MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&SDI",                        ID_VIEW_SDI
     END
     POPUP "&Window"
     BEGIN
@@ -1402,7 +1504,30 @@ BEGIN
         MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
         MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
         MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
+    END
+    POPUP "A&ide"
+    BEGIN
+        MENUITEM "&FAQ Explorateur...",         ID_EXPLORER_FAQ
+        MENUITEM "A propos de l'&explorateur...", ID_ABOUT_WINDOWS
+        MENUITEM "A propos de l'&OS...",        ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Fermer",                     ID_FILE_EXIT
+    END
+    POPUP "&Affichage"
+    BEGIN
+        MENUITEM "Barre d'&outils",             ID_VIEW_TOOL_BAR
+        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
+        MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5",                ID_REFRESH
+        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI",                        ID_VIEW_MDI
     END
     POPUP "A&ide"
     BEGIN
