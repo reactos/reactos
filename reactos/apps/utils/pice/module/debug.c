@@ -70,13 +70,13 @@ VOID Pice_dprintf(ULONG DebugLevel, PCHAR DebugMessage, ...)
 	va_start(ap, DebugMessage);
 	if (/*DebugLevel <= lDebugLevel*/ DebugLevel == 2)
 	{
-        save_flags(ulDebugFlags);
-        cli();
-		PICE_vsprintf(tempDebug, DebugMessage, ap);
-        //ei DebugSendString(tempDebug);
-		Print(OUTPUT_WINDOW, tempDebug);
-		DbgPrint("%s", tempDebug);
-        restore_flags(ulDebugFlags);
+	  save_flags(ulDebugFlags);
+	  cli();
+	  PICE_vsprintf(tempDebug, DebugMessage, ap);
+	  //ei DebugSendString(tempDebug);
+	  //Print(OUTPUT_WINDOW, tempDebug);
+	  DbgPrint("%s", tempDebug);
+	  restore_flags(ulDebugFlags);
 	}
 	va_end(ap);
 }
