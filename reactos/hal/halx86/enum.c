@@ -1,4 +1,4 @@
-/* $Id: enum.c,v 1.2 2001/08/23 16:31:27 chorns Exp $
+/* $Id: enum.c,v 1.3 2001/08/23 17:34:00 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,15 +20,6 @@
 VOID
 HalpStartEnumerator (VOID)
 {
-#ifdef ACPI
-
-  UNICODE_STRING DriverName;
-
-  RtlInitUnicodeString(&DriverName,
-    L"\\SystemRoot\\system32\\drivers\\acpi.sys");
-  ZwLoadDriver(&DriverName);
-
-#endif /* ACPI */
 }
 
 /* EOF */
