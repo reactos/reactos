@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.73 2004/08/28 22:19:12 navaraf Exp $
+/* $Id: create.c,v 1.74 2004/08/31 16:08:37 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -177,11 +177,9 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   PVOID Context = NULL;
   PVOID Page;
   PVFATFCB rcFcb;
-  BOOLEAN FoundLong;
-  BOOLEAN FoundShort = FALSE;
+  BOOLEAN Found;
   UNICODE_STRING PathNameU;
   BOOLEAN WildCard;
-  PWCHAR curr, last;
 
   DPRINT ("FindFile(Parent %x, FileToFind '%wZ', DirIndex: %d)\n", 
           Parent, FileToFindU, DirContext->DirIndex);
@@ -194,19 +192,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   DirContext->LongNameU.Length = 0;
   DirContext->ShortNameU.Length = 0;
 
-  /* FIXME: Use FsRtlDoesNameContainWildCards */
-  WildCard = FALSE;
-  curr = FileToFindU->Buffer;
-  last = FileToFindU->Buffer + FileToFindU->Length / sizeof(WCHAR);
-  while (curr < last)
-    {
-      if (*curr == L'?' || *curr == L'*')
-        {
-	  WildCard = TRUE;
-	  break;
-	}
-      curr++;
-    }
+  WildCard = FsRtlDoesNameContainWildCards(FileToFindU);
 
   if (WildCard == FALSE)
     {
@@ -256,40 +242,19 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
           DirContext->DirIndex++;
           continue;
         }
-      DirContext->LongNameU.Buffer[DirContext->LongNameU.Length / sizeof(WCHAR)] = 0;
-      DirContext->ShortNameU.Buffer[DirContext->ShortNameU.Length / sizeof(WCHAR)] = 0;
       if (WildCard)
         {
-	  /* FIXME: Use FsRtlIsNameInExpression */
-          if (DirContext->LongNameU.Length > 0 && 
-	      wstrcmpjoki (DirContext->LongNameU.Buffer, FileToFindU->Buffer))
-            {
-	      FoundLong = TRUE;
-	    }
-          else
-            {
-	      FoundLong = FALSE;
-	    }
-          if (FoundLong == FALSE)
-            {
-	      /* FIXME: Use FsRtlIsNameInExpression */
-	      FoundShort = wstrcmpjoki (DirContext->ShortNameU.Buffer, FileToFindU->Buffer);
-	    }
-          else
-            {
-	      FoundShort = FALSE;
-	    }
+          Found = FsRtlIsNameInExpression(FileToFindU, &DirContext->LongNameU, TRUE, NULL) ||
+                  FsRtlIsNameInExpression(FileToFindU, &DirContext->ShortNameU, TRUE, NULL);
 	}
       else
         {
-	  FoundLong = RtlEqualUnicodeString(&DirContext->LongNameU, FileToFindU, TRUE);
-	  if (FoundLong == FALSE)
-	    {
-	      FoundShort = RtlEqualUnicodeString(&DirContext->ShortNameU, FileToFindU, TRUE);
-	    }
+          /* FIXME: Use FsRtlAreNamesEqual */
+          Found = RtlEqualUnicodeString(&DirContext->LongNameU, FileToFindU, TRUE) ||
+	          RtlEqualUnicodeString(&DirContext->ShortNameU, FileToFindU, TRUE);
 	}
 
-      if (FoundLong || FoundShort)
+      if (Found)
         {
 	  if (WildCard)
 	    {

@@ -1,4 +1,4 @@
-/* $Id: string.c,v 1.12 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: string.c,v 1.13 2004/08/31 16:08:38 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,40 +28,3 @@ vfatIsLongIllegal(WCHAR c)
 {
   return wcschr(long_illegals, c) ? TRUE : FALSE;
 }
-
-BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
-/*
- * FUNCTION: Compare two wide character strings, s2 with jokers (* or ?)
- * return TRUE if s1 like s2
- */
-{
-   while ((*s2==L'*')||(*s2==L'?')||(RtlUpcaseUnicodeChar(*s1)==RtlUpcaseUnicodeChar(*s2)))
-   {
-      if ((*s1)==0 && (*s2)==0)
-        return(TRUE);
-      if(*s2=='*')
-      {
-	s2++;
-        while (*s1)
-        if (wstrcmpjoki(s1,s2)) return TRUE;
-         else s1++;
-      }
-      else
-      {
-        s1++;
-        s2++;
-      }
-   }
-   if ((*s2)==L'.')
-   {
-   	for (;((*s2)==L'.')||((*s2)==L'*')||((*s2)==L'?');s2++) {}
-   }
-   if ((*s1)==0 && (*s2)==0)
-        return(TRUE);
-   return(FALSE);
-}
-
-
-
-
-
