@@ -69,7 +69,7 @@ void InitVGAMode()
   int i;
   VIDEO_X86_BIOS_ARGUMENTS vxba;
   VP_STATUS vps;
-
+  
   // FIXME: Use Vidport to map the memory properly
   vidmem = (char *)(0xd0000000 + 0xa0000);
   memset(&vxba, 0, sizeof(vxba));
@@ -116,12 +116,12 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
   vps = VideoPortInt10(NULL, &vxba);
   RtlInitUnicodeString( &Name, L"\\TextConsoleRefreshEvent" );
   InitializeObjectAttributes( &Attr, &Name, 0, 0, 0 );
-  Status = NtOpenEvent( &Event, STANDARD_RIGHTS_ALL, &Attr );
+  Status = ZwOpenEvent( &Event, STANDARD_RIGHTS_ALL, &Attr );
   if( !NT_SUCCESS( Status ) )
     DbgPrint( "VGA: Failed to open refresh event\n" );
   else {
-    NtSetEvent( Event, &ThreadRelease );
-    NtClose( Event );
+    ZwSetEvent( Event, &ThreadRelease );
+    ZwClose( Event );
   }
 }
 
