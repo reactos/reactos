@@ -371,6 +371,48 @@ static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
 	resize_frame_client(hWnd);
 }
 
+static BOOL cmd_drive_select(HWND hWnd, UINT cmd)
+{
+	TCHAR drv[_MAX_DRIVE];
+	//TCHAR path[MAX_PATH];
+	//ChildWnd* pChildWnd;
+	LPCTSTR root = Globals.drives;
+	int i;
+	for (i = cmd - ID_DRIVE_FIRST; i--; root++)
+		while (*root)
+			root++;
+    if (activate_drive_window(root)) {
+        return TRUE;
+    }
+	_tsplitpath(root, drv, 0, 0, 0);
+	if (!SetCurrentDirectory(drv)) {
+		display_error(hWnd, GetLastError());
+        return TRUE;
+	}
+	//GetCurrentDirectory(MAX_PATH, path); //@@ letztes Verzeichnis pro Laufwerk speichern
+    //CreateChildWindow(path);
+    CreateChildWindow(cmd - ID_DRIVE_FIRST);
+//		pChildWnd = alloc_child_window(path);
+//		if (!create_child_window(pChildWnd))
+//			free(pChildWnd);
+    return FALSE;
+}
+
+static BOOL OnComboBoxCmd(HWND hWnd, WPARAM wParam)
+{
+    int index;
+
+    switch (HIWORD(wParam)) {
+    case CBN_SELCHANGE:
+        index = SendMessage(Globals.hDriveCombo, CB_GETCURSEL, 0, 0);
+        cmd_drive_select(hWnd, index + ID_DRIVE_FIRST);
+        break;
+    default:
+        return FALSE;
+    }
+    return TRUE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
@@ -388,30 +430,11 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //	    if (SendMessage(hwndClient, WM_DISPATCH_COMMAND, wParam, lParam))
 //			return 0;
 
+    if ((HWND)lParam == Globals.hDriveCombo) {
+        return OnComboBoxCmd(hWnd, wParam);
+    }
 	if (cmd >= ID_DRIVE_FIRST && cmd <= (ID_DRIVE_FIRST + 0xFF)) {
-		TCHAR drv[_MAX_DRIVE];
-		//TCHAR path[MAX_PATH];
-		//ChildWnd* pChildWnd;
-		LPCTSTR root = Globals.drives;
-		int i;
-		for (i = cmd - ID_DRIVE_FIRST; i--; root++)
-			while (*root)
-				root++;
-        if (activate_drive_window(root)) {
-            return TRUE;
-        }
-		_tsplitpath(root, drv, 0, 0, 0);
-		if (!SetCurrentDirectory(drv)) {
-			display_error(hWnd, GetLastError());
-            return TRUE;
-		}
-		//GetCurrentDirectory(MAX_PATH, path); //@@ letztes Verzeichnis pro Laufwerk speichern
-        //CreateChildWindow(path);
-        CreateChildWindow(cmd - ID_DRIVE_FIRST);
-
-//		pChildWnd = alloc_child_window(path);
-//		if (!create_child_window(pChildWnd))
-//			free(pChildWnd);
+        cmd_drive_select(hWnd, cmd);
 	} else {
 		switch (cmd) {
         case ID_WINDOW_CLOSEALL:
@@ -422,7 +445,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (!SendMessage(hChildWnd, WM_QUERYENDSESSION, 0, 0))
                 SendMessage(Globals.hMDIClient, WM_MDIDESTROY, (WPARAM)hChildWnd, 0);
             break;
-
         case ID_DISK_COPY_DISK:
             CopyDisk(hWnd);
 			break;
@@ -699,6 +721,44 @@ typedef struct _TBBUTTON {
     return 0;
 }
 
+static LRESULT OnDriveBoxNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    LPNMHDR nmhdr = (LPNMHDR)lParam;
+
+//    if (nmhdr->code == NM_HOVER || nmhdr->code == NM_NCHITTEST) return 0;
+
+//    switch (((LPNMHDR)lParam)->code) { 
+    switch (nmhdr->code) { 
+    case NM_OUTOFMEMORY:
+    case NM_CLICK:
+    case NM_DBLCLK:
+    case NM_RETURN:
+    case NM_RCLICK:
+    case NM_RDBLCLK:
+    case NM_SETFOCUS:
+    case NM_KILLFOCUS:
+        break;
+
+#if (_WIN32_IE >= 0x0300)
+    case NM_CUSTOMDRAW:
+    case NM_HOVER:
+        break;
+#endif
+
+#if (_WIN32_IE >= 0x0400)
+    case NM_NCHITTEST:
+    case NM_KEYDOWN:
+    case NM_RELEASEDCAPTURE:
+    case NM_SETCURSOR:
+    case NM_CHAR:
+        break;
+#endif
+    default:
+        break;
+    }
+    return 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  FUNCTION: FrameWndProc(HWND, unsigned, WORD, LONG)
@@ -731,7 +791,15 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
     case WM_NOTIFY:
 
-        if (MsgNotify(hWnd, message, wParam, lParam)) return TRUE;
+        if (((LPNMHDR)lParam)->idFrom == IDW_DRIVEBOX) {
+//            return OnDriveBoxNotify(hWnd, wParam, lParam);
+            return OnDriveBoxNotify(hWnd, wParam, lParam);
+            //return TRUE;
+        }
+
+        if (((LPNMHDR)lParam)->idFrom == IDW_TOOLBAR) {
+            if (MsgNotify(hWnd, message, wParam, lParam)) return TRUE;
+        }
 //        return MsgNotify(hWnd, message, wParam, lParam);
         switch (((LPNMHDR)lParam)->code) { 
 #ifdef _MSC_VER

@@ -44,6 +44,7 @@
 // Global Variables:
 //
 
+
 void ConfigureDriveBar(HWND hDriveBar)
 {
     static DWORD dwLogicalDrivesSaved;
@@ -53,6 +54,7 @@ void ConfigureDriveBar(HWND hDriveBar)
 
     if (dwLogicalDrives != dwLogicalDrivesSaved) {
 	    TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, TBSTYLE_SEP};
+        COMBOBOXEXITEM cbei;
     	int btn = 1;
 	    PTSTR p;
         int count = SendMessage(hDriveBar, TB_BUTTONCOUNT, 0, 0);
@@ -71,8 +73,11 @@ void ConfigureDriveBar(HWND hDriveBar)
         drivebarBtn.idCommand = ID_DRIVE_FIRST;
 		for (p = Globals.drives; *p;) {
 			 // insert drive letter
-			TCHAR b[3] = { tolower(*p) };
-			SendMessage(hDriveBar, TB_ADDSTRING, 0, (LPARAM)b);
+//			TCHAR b[3] = { tolower(*p) };
+//			SendMessage(hDriveBar, TB_ADDSTRING, 0, (LPARAM)b);
+            TCHAR szVolumeNameBuffer[MAX_PATH];
+            TCHAR vol[MAX_PATH] = { tolower(*p) };
+			SendMessage(hDriveBar, TB_ADDSTRING, 0, (LPARAM)vol);
 			switch(GetDriveType(p)) {
 			case DRIVE_REMOVABLE:	drivebarBtn.iBitmap = 1;	break;
 			case DRIVE_CDROM:		drivebarBtn.iBitmap = 3;	break;
@@ -81,70 +86,80 @@ void ConfigureDriveBar(HWND hDriveBar)
 			default:/*DRIVE_FIXED*/	drivebarBtn.iBitmap = 2;
 			}
 			SendMessage(hDriveBar, TB_INSERTBUTTON, btn, (LPARAM)&drivebarBtn);
+
+            vol[0] = toupper(vol[0]);
+            vol[1] = _T(':'); vol[2] = _T('\\'); vol[3] = _T('\0');
+            if (drivebarBtn.iBitmap != 1 /*DRIVE_REMOVABLE*/ &&
+              GetVolumeInformation(vol, szVolumeNameBuffer, 
+              sizeof(szVolumeNameBuffer)/sizeof(TCHAR), 
+              NULL, NULL, NULL, NULL, 0) && 
+              szVolumeNameBuffer[0] != _T('\0')) {
+                vol[2] = _T(' '); vol[3] = _T('['); vol[4] = _T('\0');
+                _tcscat(vol, szVolumeNameBuffer);
+                _tcscat(vol, _T("] "));
+            } else {
+                vol[2] = _T(' ');
+            }
+//            cbei.mask = CBEIF_TEXT | CBEIF_INDENT | CBEIF_IMAGE| CBEIF_SELECTEDIMAGE;
+            cbei.mask = CBEIF_TEXT/* | CBEIF_IMAGE*/;
+            cbei.iItem          = btn - 1;
+            cbei.pszText        = vol;
+            cbei.cchTextMax     = _tcslen(cbei.pszText);
+            cbei.iImage         = drivebarBtn.iBitmap;
+//            cbei.iSelectedImage = IInf[iCnt].iSelectedImage;
+//            cbei.iIndent        = IInf[iCnt].iIndent;
+            SendMessage(Globals.hDriveCombo, CBEM_INSERTITEM, 0, (LPARAM)&cbei); 
+
 			drivebarBtn.idCommand++;
 			drivebarBtn.iString++;
 			while(*p++);
-//
-//			SendMessage(Globals.hDriveCombo, CB_INSERTSTRING, btn, (LPARAM)b);
-//			SendMessage(Globals.hDriveCombo, CB_ADDSTRING, 0, (LPARAM)b);
-//            SendMessage(Globals.hDriveCombo, WM_SETTEXT, 0, (LPARAM)lpszWord); 
-//            SendMessage(Globals.hDriveCombo, CB_ADDSTRING, 0, (LPARAM)&b); 
-//
             ++btn;
 		}
         dwLogicalDrivesSaved = dwLogicalDrives;
-
 //        SendMessage(Globals.hDriveCombo, CB_SHOWDROPDOWN, (WPARAM)TRUE, (LPARAM)0);
     }
+}
+/*
 #ifndef __GNUC__
+    {
+#define MAX_ITEMS 7
 
-            {
-            COMBOBOXEXITEM cbei;
-            int iCnt;
+typedef struct {
+    int iImage;
+    int iSelectedImage;
+    int iIndent;
+    LPTSTR pszText;
+} ITEMINFO, *PITEMINFO;
 
-            typedef struct {
-                int iImage;
-                int iSelectedImage;
-                int iIndent;
-                LPTSTR pszText;
-            } ITEMINFO, *PITEMINFO;
-
-#define MAX_ITEMS 15
-
-    ITEMINFO IInf[] = {
-        { 0, 3,  0, _T("first")}, 
-        { 1, 4,  1, _T("second")},
-        { 2, 5,  2, _T("third")},
-        { 0, 3,  0, _T("fourth")},
-        { 1, 4,  1, _T("fifth")},
+ITEMINFO IInf[] = {
+        { 0, 3,  0, _T("A:")}, 
+        { 1, 4,  1, _T("C: [SYSTEM]")},
+        { 2, 5,  2, _T("D:")},
+        { 0, 3,  0, _T("E: [SOFT_RAID_1]")},
+        { 1, 4,  1, _T("F: [DATAVOL]")},
         { 2, 5,  2, _T("sixth")},
         { 0, 3,  0, _T("seventh")},
-        { 1, 4,  1, _T("eighth")},
-        { 2, 5,  2, _T("ninth")},
-        { 0, 3,  0, _T("tenth")},
-        { 1, 4,  1, _T("eleventh")},
-        { 2, 5,  2, _T("twelfth")},
-        { 0, 3,  0, _T("thirteenth")},
-        { 1, 4,  1, _T("fourteenth")},
-        { 2, 5,  2, _T("fifteenth")}
-    };
+};
 
-            for (iCnt = 0; iCnt < MAX_ITEMS; iCnt++) {
+        COMBOBOXEXITEM cbei;
+        int iCnt;
 
-            cbei.mask = CBEIF_TEXT | CBEIF_INDENT | CBEIF_IMAGE| CBEIF_SELECTEDIMAGE;
+        for (iCnt = 0; iCnt < MAX_ITEMS; iCnt++) {
+//            cbei.mask = CBEIF_TEXT | CBEIF_INDENT | CBEIF_IMAGE| CBEIF_SELECTEDIMAGE;
+            cbei.mask = CBEIF_TEXT;
             cbei.iItem          = iCnt;
             cbei.pszText        = IInf[iCnt].pszText;
-            cbei.cchTextMax     = sizeof(IInf[iCnt].pszText);
-            cbei.iImage         = IInf[iCnt].iImage;
-            cbei.iSelectedImage = IInf[iCnt].iSelectedImage;
-            cbei.iIndent        = IInf[iCnt].iIndent;
-            }
-
-
+//            cbei.cchTextMax     = sizeof(IInf[iCnt].pszText);
+            cbei.cchTextMax     = _tcslen(IInf[iCnt].pszText);
+//            cbei.iImage         = IInf[iCnt].iImage;
+//            cbei.iSelectedImage = IInf[iCnt].iSelectedImage;
+//            cbei.iIndent        = IInf[iCnt].iIndent;
             SendMessage(Globals.hDriveCombo, CBEM_INSERTITEM, 0, (LPARAM)&cbei); 
-            }
-#endif    
+        }
+    }
 }
+#endif
+ */
 
 void _GetFreeSpaceEx(void)
 {

@@ -139,8 +139,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	INITCOMMONCONTROLSEX icc = {
 		sizeof(INITCOMMONCONTROLSEX),
-		ICC_BAR_CLASSES
+		ICC_BAR_CLASSES | ICC_USEREX_CLASSES
 	};
+
+//    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+//    icex.dwICC = ICC_USEREX_CLASSES;
+
 
 //	TCHAR path[MAX_PATH];
 
@@ -267,13 +271,27 @@ typedef struct _TBBUTTON {
             // Create the edit control. Notice that the parent of
             // the toolbar, is used as the parent of the edit control.    
             //hWndEdit = CreateWindowEx(0L, WC_COMBOBOXEX, NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
-            Globals.hDriveCombo = CreateWindowEx(0L, _T("ComboBox"), NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
-                | CBS_DROPDOWNLIST | ES_LEFT | ES_AUTOVSCROLL | ES_MULTILINE, 
+#if 0
+            Globals.hDriveCombo = CreateWindowEx(0L, _T("ComboBox"), NULL, 
+                WS_CHILD | WS_BORDER | WS_VISIBLE | CBS_DROPDOWNLIST | ES_LEFT | ES_AUTOVSCROLL | ES_MULTILINE, 
                 10, 0, DRIVEBOX_WIDTH, DRIVEBOX_HEIGHT, Globals.hMainWnd, (HMENU)IDW_DRIVEBOX, hInstance, 0);
+#else
+    Globals.hDriveCombo = CreateWindowEx(0, WC_COMBOBOXEX, NULL,
+					WS_CHILD | WS_BORDER | WS_VISIBLE | CBS_DROPDOWN,
+					// No size yet--resize after setting image list.
+					10,     // Vertical position of Combobox
+					0,      // Horizontal position of Combobox
+					200,    // Sets the width of Combobox
+					100,    // Sets the height of Combobox
+					Globals.hMainWnd,
+					(HMENU)IDW_DRIVEBOX,
+					hInstance,
+					NULL);
+#endif
             // Set the toolbar window as the parent of the edit control
             // window. You must set the toolbar as the parent of the edit
             // control for it to appear embedded in the toolbar.
-            SetParent (Globals.hDriveCombo, Globals.hToolBar);    
+            SetParent(Globals.hDriveCombo, Globals.hToolBar);    
         }
 		}
 
