@@ -62,11 +62,11 @@
 #define APIC_ICR0_DESTS    (0x3 << 18)    /* Destination Shorthand */
 
 /* Delivery Modes */
-#define APIC_DM_FIXED		  (0x0 << 8)
-#define APIC_DM_LOWEST  	(0x1 << 8)
-#define APIC_DM_SMI		    (0x2 << 8)
-#define APIC_DM_REMRD		  (0x3 << 8)
-#define APIC_DM_NMI		    (0x4 << 8)
+#define APIC_DM_FIXED	  (0x0 << 8)
+#define APIC_DM_LOWEST    (0x1 << 8)
+#define APIC_DM_SMI       (0x2 << 8)
+#define APIC_DM_REMRD     (0x3 << 8)
+#define APIC_DM_NMI       (0x4 << 8)
 #define APIC_DM_INIT      (0x5 << 8)
 #define APIC_DM_STARTUP   (0x6 << 8)
 #define APIC_DM_EXTINT	  (0x7 << 8)
@@ -174,7 +174,7 @@ typedef struct _CPU_INFO
 /* Prototypes */
 
 
-volatile inline ULONG APICRead(ULONG Offset);
+inline ULONG APICRead(ULONG Offset);
 inline VOID APICWrite(ULONG Offset, ULONG Value);
 VOID APICSendIPI(ULONG Target, ULONG Mode); 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: apic.c,v 1.1 2004/12/03 20:10:44 gvg Exp $
+/* $Id: apic.c,v 1.2 2004/12/25 11:21:48 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
@@ -261,7 +261,7 @@ VOID HaliInitBSP(VOID)
    APICCalibrateTimer(BootCPU);
 }
 
-volatile inline ULONG _APICRead(ULONG Offset)
+inline ULONG _APICRead(ULONG Offset)
 {
    PULONG p;
 
@@ -297,7 +297,7 @@ inline VOID APICWrite(ULONG Offset,
 
 
 #if 0
-volatile inline ULONG APICRead(ULONG Offset)
+inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
 
@@ -305,7 +305,7 @@ volatile inline ULONG APICRead(ULONG Offset)
    return *p;
 }
 #else
-volatile inline ULONG APICRead(ULONG Offset)
+inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
    ULONG CPU = (_APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
