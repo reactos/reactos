@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.143 2003/06/20 16:22:56 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.144 2003/07/12 10:24:45 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -29,7 +29,7 @@ ExAcquireResourceExclusiveLite=ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite=ExAcquireResourceSharedLite@8
 ExAcquireSharedStarveExclusive=ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive=ExAcquireSharedWaitForExclusive@8
-ExAllocateFromPagedLookasideList=ExAllocateFromPagedLookasideList@4
+@ExAllocateFromPagedLookasideList=@ExiAllocateFromPagedLookasideList@4
 ExAllocatePool=ExAllocatePool@8
 ExAllocatePoolWithQuota=ExAllocatePoolWithQuota@8
 ExAllocatePoolWithQuotaTag=ExAllocatePoolWithQuotaTag@12
@@ -45,7 +45,7 @@ ExDisableResourceBoostLite=ExDisableResourceBoostLite@4
 ExEventObjectType DATA
 ExExtendZone=ExExtendZone@12
 ExFreePool=ExFreePool@4
-ExFreeToPagedLookasideList=ExFreeToPagedLookasideList@8
+ExFreeToPagedLookasideList=ExiFreeToPagedLookasideList@8
 ExGetExclusiveWaiterCount=ExGetExclusiveWaiterCount@4
 ExGetPreviousMode=ExGetPreviousMode@0
 ExGetSharedWaiterCount=ExGetSharedWaiterCount@4
@@ -56,19 +56,19 @@ ExInitializeResourceLite=ExInitializeResourceLite@4
 ExInitializeZone=ExInitializeZone@16
 ExInterlockedAddLargeInteger=ExInterlockedAddLargeInteger@16
 ExInterlockedAddLargeStatistic=@ExInterlockedAddLargeStatistic@8
-ExInterlockedAddUlong=ExInterlockedAddUlong@12
+@ExInterlockedAddUlong=@ExInterlockedAddUlong@12
 ExInterlockedCompareExchange64=@ExInterlockedCompareExchange64@16
 ExInterlockedDecrementLong=ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong=ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone=ExInterlockedExtendZone@16
 ExInterlockedIncrementLong=ExInterlockedIncrementLong@8
-ExInterlockedInsertHeadList=ExInterlockedInsertHeadList@12
-ExInterlockedInsertTailList=ExInterlockedInsertTailList@12
-ExInterlockedPopEntryList=ExInterlockedPopEntryList@8
-ExInterlockedPopEntrySList=@ExInterlockedPopEntrySList@8
-ExInterlockedPushEntryList=ExInterlockedPushEntryList@12
-ExInterlockedPushEntrySList=@ExInterlockedPushEntrySList@12
-ExInterlockedRemoveHeadList=ExInterlockedRemoveHeadList@8
+@ExInterlockedInsertHeadList=@ExInterlockedInsertHeadList@12
+@ExInterlockedInsertTailList=@ExInterlockedInsertTailList@12
+@ExInterlockedPopEntryList=@ExInterlockedPopEntryList@8
+@ExInterlockedPopEntrySList=@ExInterlockedPopEntrySList@8
+@ExInterlockedPushEntryList=@ExInterlockedPushEntryList@12
+@ExInterlockedPushEntrySList=@ExInterlockedPushEntrySList@12
+@ExInterlockedRemoveHeadList=@ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent=ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite=ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite=ExIsResourceAcquiredSharedLite@4
@@ -217,6 +217,7 @@ InterlockedDecrement=@InterlockedDecrement@4
 InterlockedExchange=@InterlockedExchange@8
 InterlockedExchangeAdd=@InterlockedExchangeAdd@8
 InterlockedIncrement=@InterlockedIncrement@4
+@InterlockedPopEntrySList=@InterlockedPopEntrySList@4
 IoAcquireCancelSpinLock=IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock=IoAcquireVpbSpinLock@4
 IoAdapterObjectType DATA

@@ -288,7 +288,7 @@ ExInterlockedAddLargeStatistic (
 	);
 
 ULONG
-STDCALL
+FASTCALL
 ExInterlockedAddUlong (
 	PULONG		Addend,
 	ULONG		Increment,
@@ -355,21 +355,21 @@ ExInterlockedIncrementLong (
 	PKSPIN_LOCK	Lock
 	);
 PLIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedInsertHeadList (
 	PLIST_ENTRY	ListHead,
 	PLIST_ENTRY	ListEntry,
 	PKSPIN_LOCK	Lock
 	);
 PLIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedInsertTailList (
 	PLIST_ENTRY	ListHead,
 	PLIST_ENTRY	ListEntry,
 	PKSPIN_LOCK	Lock
 	);
 PSINGLE_LIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedPopEntryList (
 	PSINGLE_LIST_ENTRY	ListHead,
 	PKSPIN_LOCK		Lock
@@ -381,7 +381,7 @@ ExInterlockedPopEntrySList (
 	PKSPIN_LOCK	Lock
 	);
 PSINGLE_LIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedPushEntryList (
 	PSINGLE_LIST_ENTRY	ListHead,
 	PSINGLE_LIST_ENTRY	ListEntry,
@@ -403,7 +403,7 @@ ExInterlockedRemoveEntryList (
 	);
 
 PLIST_ENTRY
-STDCALL
+FASTCALL
 ExInterlockedRemoveHeadList (
 	PLIST_ENTRY	Head,
 	PKSPIN_LOCK	Lock
@@ -586,6 +586,18 @@ ExUnregisterCallback (
 	IN	PVOID	CallbackRegistration
 	);
 
+PSLIST_ENTRY
+FASTCALL
+InterlockedPopEntrySList (
+  IN PSLIST_HEADER ListHead
+  );
+
+PSLIST_ENTRY
+FASTCALL
+InterlockedPushEntrySList(
+  IN PSLIST_HEADER ListHead,
+  IN PSLIST_ENTRY ListEntry
+  );
 
 /*
  * PVOID
@@ -614,7 +626,7 @@ ExAllocateFromNPagedLookasideList (
 
 	Lookaside->TotalAllocates++;
 	Entry = ExInterlockedPopEntrySList (&Lookaside->ListHead,
-	                                    &Lookaside->Lock);
+	                                    &Lookaside->Obsoleted);
 	if (Entry == NULL)
 	{
 		Lookaside->AllocateMisses++;
@@ -626,11 +638,21 @@ ExAllocateFromNPagedLookasideList (
   return Entry;
 }
 
-PVOID
-STDCALL
-ExAllocateFromPagedLookasideList (
-	PPAGED_LOOKASIDE_LIST	LookSide
-	);
+static inline PVOID
+ExAllocateFromPagedLookasideList(
+  IN PPAGED_LOOKASIDE_LIST  Lookaside)
+{
+  PVOID Entry;
+
+  Lookaside->TotalAllocates++;
+  Entry = InterlockedPopEntrySList(&Lookaside->ListHead);
+  if (Entry == NULL) {
+    Lookaside->AllocateMisses++;
+    Entry = (Lookaside->Allocate)(Lookaside->Type,
+      Lookaside->Size, Lookaside->Tag);
+  }
+  return Entry;
+}
 
 VOID
 STDCALL
@@ -669,7 +691,7 @@ ExFreeToNPagedLookasideList (
 	)
 {
 	Lookaside->TotalFrees++;
-	if (ExQueryDepthSList (&Lookaside->ListHead) >= Lookaside->MinimumDepth)
+	if (ExQueryDepthSList (&Lookaside->ListHead) >= Lookaside->Depth)
 	{
 		Lookaside->FreeMisses++;
 		(Lookaside->Free)(Entry);
@@ -678,16 +700,23 @@ ExFreeToNPagedLookasideList (
 	{
 		ExInterlockedPushEntrySList (&Lookaside->ListHead,
 		                             (PSINGLE_LIST_ENTRY)Entry,
-		                             &Lookaside->Lock);
+		                             &Lookaside->Obsoleted);
 	}
 }
 
-VOID
-STDCALL
-ExFreeToPagedLookasideList (
-	PPAGED_LOOKASIDE_LIST	Lookaside,
-	PVOID			Entry
-	);
+static inline VOID
+ExFreeToPagedLookasideList(
+  IN PPAGED_LOOKASIDE_LIST  Lookaside,
+  IN PVOID  Entry)
+{
+  Lookaside->TotalFrees++;
+  if (ExQueryDepthSList(&Lookaside->ListHead) >= Lookaside->Depth) {
+    Lookaside->FreeMisses++;
+    (Lookaside->Free)(Entry);
+  } else {
+    InterlockedPushEntrySList(&Lookaside->ListHead, (PSLIST_ENTRY)Entry);
+  }
+}
 
 VOID
 STDCALL

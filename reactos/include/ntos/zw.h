@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.12 2003/06/07 16:16:38 chorns Exp $
+/* $Id: zw.h,v 1.13 2003/07/12 10:24:45 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4269,8 +4269,51 @@ RtlOpenCurrentUser(
   IN  ACCESS_MASK  DesiredAccess,
   OUT  PHANDLE  KeyHandle);
 
+/*
+ * FUNCTION: Checks a clients access rights to a object and issues a audit a alarm. ( it logs the access )
+ * ARGUMENTS: 
+ *	  SubsystemName = Specifies the name of the subsystem, can be "WIN32" or "DEBUG"
+ *	  ObjectHandle =
+ *	  ObjectAttributes =
+ *	  DesiredAcces = 
+ *	  GenericMapping =
+ *	  ObjectCreation = 
+ *	  GrantedAccess = 
+ *	  AccessStatus =
+ *	  GenerateOnClose =
+ * REMARKS: The arguments map to the win32 AccessCheck 
+ * RETURNS: Status
+ */
 
-#ifndef __USE_W32API
+NTSTATUS
+STDCALL
+NtAccessCheckAndAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,
+	IN PHANDLE ObjectHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN ACCESS_MASK DesiredAccess,
+	IN PGENERIC_MAPPING GenericMapping,
+	IN BOOLEAN ObjectCreation,
+	OUT PULONG GrantedAccess,
+	OUT PBOOLEAN AccessStatus,
+	OUT PBOOLEAN GenerateOnClose
+	);
+
+/*
+ * FUNCTION: Cancels a timer
+ * ARGUMENTS: 
+ *        TimerHandle = Handle to the timer
+ *        CurrentState = Specifies the state of the timer when cancelled.
+ * REMARKS:
+ *        The arguments to this function map to the function CancelWaitableTimer. 
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtCancelTimer(
+	IN HANDLE TimerHandle,
+	OUT PBOOLEAN CurrentState OPTIONAL
+	);
 
 /*
  * FUNCTION: Continues a thread with the specified context
@@ -4290,6 +4333,497 @@ NtContinue(
 	IN PCONTEXT Context,
 	IN BOOLEAN TestAlert
 	);
+
+/*
+ * FUNCTION: Creates a paging file.
+ * ARGUMENTS:
+ *        FileName  = Name of the pagefile
+ *        InitialSize = Specifies the initial size in bytes
+ *        MaximumSize = Specifies the maximum size in bytes
+ *        Reserved = Reserved for future use
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtCreatePagingFile(
+	IN PUNICODE_STRING FileName,
+	IN PLARGE_INTEGER InitialSize,
+	IN PLARGE_INTEGER MaxiumSize,
+	IN ULONG Reserved
+	);
+
+
+/*
+ * FUNCTION: Creates a profile
+ * ARGUMENTS:
+ *        ProfileHandle (OUT) = Caller supplied storage for the resulting handle
+ *        ObjectAttribute = Initialized attributes for the object
+ *        ImageBase = Start address of executable image
+ *        ImageSize = Size of the image
+ *        Granularity = Bucket size
+ *        Buffer =  Caller supplies buffer for profiling info
+ *        ProfilingSize = Buffer size
+ *        ClockSource = Specify 0 / FALSE ??
+ *        ProcessorMask = A value of -1 indicates disables  per processor profiling,
+			  otherwise bit set for the processor to profile.
+ * REMARKS:
+ *        This function maps to the win32 CreateProcess. 
+ * RETURNS: Status
+ */
+
+NTSTATUS 
+STDCALL
+NtCreateProfile(OUT PHANDLE ProfileHandle, 
+		IN HANDLE ProcessHandle,
+		IN PVOID ImageBase, 
+		IN ULONG ImageSize, 
+		IN ULONG Granularity,
+		OUT PULONG Buffer, 
+		IN ULONG ProfilingSize,
+		IN KPROFILE_SOURCE Source,
+		IN ULONG ProcessorMask);
+
+/*
+ * FUNCTION: Creates a user mode thread
+ * ARGUMENTS:
+ *        ThreadHandle (OUT) = Caller supplied storage for the resulting handle
+ *        DesiredAccess = Specifies the allowed or desired access to the thread. 
+ *        ObjectAttributes = Initialized attributes for the object.
+ *        ProcessHandle = Handle to the threads parent process.
+ *        ClientId (OUT) = Caller supplies storage for returned process id and thread id.
+ *        ThreadContext = Initial processor context for the thread.
+ *        InitialTeb = Initial user mode stack context for the thread.
+ *        CreateSuspended = Specifies if the thread is ready for scheduling
+ * REMARKS:
+ *        This function maps to the win32 function CreateThread.  
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL 
+NtCreateThread(
+	OUT	PHANDLE			ThreadHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
+	IN	HANDLE			ProcessHandle,
+	OUT	PCLIENT_ID		ClientId,
+	IN	PCONTEXT		ThreadContext,
+	IN	PUSER_STACK		UserStack,
+	IN	BOOLEAN			CreateSuspended
+	);
+
+/*
+ * FUNCTION: Delays the execution of the calling thread.
+ * ARGUMENTS:
+ *        Alertable = If TRUE the thread is alertable during is wait period
+ *        Interval  = Specifies the interval to wait.      
+ * RETURNS: Status
+ */
+
+NTSTATUS
+STDCALL
+NtDelayExecution(
+	IN ULONG Alertable,
+	IN TIME *Interval
+	);
+
+/*
+ * FUNCTION: Extends a section
+ * ARGUMENTS:
+ *       SectionHandle = Handle to the section
+ *	 NewMaximumSize = Adjusted size
+ * RETURNS: Status 
+ */
+NTSTATUS
+STDCALL
+NtExtendSection(
+	IN HANDLE SectionHandle,
+	IN ULONG NewMaximumSize
+	);
+
+/*
+ * FUNCTION: Flushes a the processors instruction cache
+ * ARGUMENTS:
+ *       ProcessHandle = Points to the process owning the cache
+ *	 BaseAddress = // might this be a image address ????
+ *	 NumberOfBytesToFlush = 
+ * RETURNS: Status 
+ * REMARKS:
+ *	This funciton is used by debuggers
+ */
+NTSTATUS
+STDCALL
+NtFlushInstructionCache(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN UINT NumberOfBytesToFlush
+	);
+
+/*
+ * FUNCTION: Flushes virtual memory to file
+ * ARGUMENTS:
+ *        ProcessHandle = Points to the process that allocated the virtual memory
+ *        BaseAddress = Points to the memory address
+ *        NumberOfBytesToFlush = Limits the range to flush,
+ *        NumberOfBytesFlushed = Actual number of bytes flushed
+ * RETURNS: Status 
+ * REMARKS:
+ *	  Check return status on STATUS_NOT_MAPPED_DATA 
+ */
+NTSTATUS
+STDCALL
+NtFlushVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN ULONG NumberOfBytesToFlush,
+	OUT PULONG NumberOfBytesFlushed OPTIONAL
+	);
+
+/*
+ * FUNCTION: Retrieves the uptime of the system
+ * ARGUMENTS:
+ *        UpTime = Number of clock ticks since boot.
+ * RETURNS: Status 
+ */
+NTSTATUS
+STDCALL 
+NtGetTickCount(
+	PULONG UpTime
+	);
+
+/*
+ * FUNCTION: Loads a registry key.
+ * ARGUMENTS:
+ *       KeyObjectAttributes = Key to be loaded
+ *       FileObjectAttributes = File to load the key from
+ * REMARK:
+ *      This procedure maps to the win32 procedure RegLoadKey
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtLoadKey(
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
+	IN	POBJECT_ATTRIBUTES	FileObjectAttributes
+	);
+
+
+/*
+ * FUNCTION: Locks a range of virtual memory.
+ * ARGUMENTS: 
+ *       ProcessHandle = Handle to the process
+ *       BaseAddress =  Lower boundary of the range of bytes to lock.
+ *       NumberOfBytesLock = Offset to the upper boundary.
+ *       NumberOfBytesLocked (OUT) = Number of bytes actually locked.
+ * REMARK:
+	This procedure maps to the win32 procedure VirtualLock.
+ * RETURNS: Status [STATUS_SUCCESS | STATUS_WAS_LOCKED ]
+ */	
+NTSTATUS
+STDCALL
+NtLockVirtualMemory(
+	HANDLE ProcessHandle,
+	PVOID BaseAddress,
+	ULONG NumberOfBytesToLock,
+	PULONG NumberOfBytesLocked
+	);
+
+NTSTATUS
+STDCALL
+NtOpenObjectAuditAlarm(
+	IN PUNICODE_STRING SubsystemName,	
+	IN PVOID HandleId,	
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN HANDLE ClientToken,	
+	IN ULONG DesiredAccess,	
+	IN ULONG GrantedAccess,	
+	IN PPRIVILEGE_SET Privileges,
+	IN BOOLEAN ObjectCreation,	
+	IN BOOLEAN AccessGranted,	
+	OUT PBOOLEAN GenerateOnClose 	
+	);
+
+/*
+ * FUNCTION: Set the access protection of a range of virtual memory
+ * ARGUMENTS:
+ *        ProcessHandle = Handle to process owning the virtual address space
+ *        BaseAddress   = Start address
+ *        NumberOfBytesToProtect = Delimits the range of virtual memory
+ *				for which the new access protection holds
+ *        NewAccessProtection = The new access proctection for the pages
+ *        OldAccessProtection = Caller should supply storage for the old 
+ *				access protection
+ *
+ * REMARKS:
+ *	 The function maps to the win32 VirtualProtectEx
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtProtectVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN ULONG NumberOfBytesToProtect,
+	IN ULONG NewAccessProtection,
+	OUT PULONG OldAccessProtection
+	);
+
+/*
+ * FUNCTION: Query information about the content of a directory object
+ * ARGUMENTS:
+	DirObjInformation =   Buffer must be large enough to hold the name strings too
+        GetNextIndex = If TRUE :return the index of the next object in this directory in ObjectIndex
+		       If FALSE:  return the number of objects in this directory in ObjectIndex
+        IgnoreInputIndex= If TRUE:  ignore input value of ObjectIndex  always start at index 0
+         		  If FALSE use input value of ObjectIndex
+	ObjectIndex =   zero based index of object in the directory  depends on GetNextIndex and IgnoreInputIndex
+        DataWritten  = Actual size of the ObjectIndex ???
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtQueryDirectoryObject(
+	IN	HANDLE			DirObjHandle,
+	OUT	POBJDIR_INFORMATION	DirObjInformation,
+	IN	ULONG			BufferLength,
+	IN	BOOLEAN			GetNextIndex,
+	IN	BOOLEAN			IgnoreInputIndex,
+	IN OUT	PULONG			ObjectIndex,
+	OUT	PULONG			DataWritten OPTIONAL
+	);
+
+/*
+ * FUNCTION: Query the interval and the clocksource for profiling
+ * ARGUMENTS:
+	Interval =   
+        ClockSource = 
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtQueryIntervalProfile(
+	OUT PULONG Interval,
+	OUT KPROFILE_SOURCE ClockSource
+	);
+
+/*
+ * FUNCTION: Queries the information of a section object.
+ * ARGUMENTS: 
+ *        SectionHandle = Handle to the section link object
+ *	  SectionInformationClass = Index to a certain information structure
+ *        SectionInformation (OUT)= Caller supplies storage for resulting information
+ *        Length =  Size of the supplied storage 
+ *        ResultLength = Data written
+ * RETURNS: Status
+ *
+*/
+NTSTATUS
+STDCALL
+NtQuerySection(
+	IN HANDLE SectionHandle,
+	IN CINT SectionInformationClass,
+	OUT PVOID SectionInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
+
+/*
+ * FUNCTION: Queries the virtual memory information.
+ * ARGUMENTS: 
+	  ProcessHandle = Process owning the virtual address space
+	  BaseAddress = Points to the page where the information is queried for. 
+ *        VirtualMemoryInformationClass = Index to a certain information structure
+
+	  MemoryBasicInformation		MEMORY_BASIC_INFORMATION
+
+ *	  VirtualMemoryInformation = caller supplies storage for the information structure
+ *        Length = size of the structure
+	  ResultLength = Data written
+ * RETURNS: Status
+ *
+*/
+
+NTSTATUS
+STDCALL
+NtQueryVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID Address,
+	IN IN CINT VirtualMemoryInformationClass,
+	OUT PVOID VirtualMemoryInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
+
+/*
+ * FUNCTION: Raises a hard error (stops the system)
+ * ARGUMENTS:
+ *	  Status = Status code of the hard error
+ *	  Unknown2 = ??
+ *	  Unknown3 = ??
+ *	  Unknown4 = ??
+ *	  Unknown5 = ??
+ *	  Unknown6 = ??
+ * RETURNS: Status
+ *
+ */
+
+NTSTATUS
+STDCALL
+NtRaiseHardError(
+	IN NTSTATUS Status,
+	ULONG Unknown2,
+	ULONG Unknown3,
+	ULONG Unknown4,
+	ULONG Unknown5,
+	ULONG Unknown6
+	);
+
+/*
+ * FUNCTION: Sets the information of a registry key.
+ * ARGUMENTS: 
+ *       KeyHandle = Handle to the registry key
+ *       KeyInformationClass =  Index to the a certain information structure.
+			Can be one of the following values:
+
+ *	 KeyWriteTimeInformation  KEY_WRITE_TIME_INFORMATION
+
+	 KeyInformation	= Storage for the new information
+ *       KeyInformationLength = Size of the information strucure
+ * RETURNS: Status
+ */
+
+NTSTATUS
+STDCALL
+NtSetInformationKey(
+	IN HANDLE KeyHandle,
+	IN CINT KeyInformationClass,
+	IN PVOID KeyInformation,
+	IN ULONG KeyInformationLength
+	);
+
+/*
+ * FUNCTION: Changes a set of object specific parameters
+ * ARGUMENTS: 
+ *      ObjectHandle = 
+ *	ObjectInformationClass = Index to the set of parameters to change. 
+
+			
+	ObjectBasicInformation  	
+	ObjectTypeInformation 		OBJECT_TYPE_INFORMATION 
+	ObjectAllInformation		
+	ObjectDataInformation		OBJECT_DATA_INFORMATION
+	ObjectNameInformation		OBJECT_NAME_INFORMATION	
+
+
+ *      ObjectInformation = Caller supplies storage for parameters to set.
+ *      Length = Size of the storage supplied
+ * RETURNS: Status
+*/
+NTSTATUS
+STDCALL
+NtSetInformationObject(
+	IN HANDLE ObjectHandle,
+	IN CINT ObjectInformationClass,
+	IN PVOID ObjectInformation,
+	IN ULONG Length 
+	);
+
+/*
+ * FUNCTION: Sets the characteristics of a timer
+ * ARGUMENTS: 
+ *      TimerHandle = Handle to the timer
+ *	DueTime = Time before the timer becomes signalled for the first time.
+ *      TimerApcRoutine = Completion routine can be called on time completion
+ *      TimerContext = Argument to the completion routine
+ *      Resume = Specifies if the timer should repeated after completing one cycle
+ *      Period = Cycle of the timer
+ * REMARKS: This routine maps to the win32 SetWaitableTimer.
+ * RETURNS: Status
+*/
+NTSTATUS
+STDCALL
+NtSetTimer(
+	IN HANDLE TimerHandle,
+	IN PLARGE_INTEGER DueTime,
+	IN PTIMERAPCROUTINE TimerApcRoutine,
+	IN PVOID TimerContext,
+	IN BOOL WakeTimer,
+	IN ULONG Period OPTIONAL,
+	OUT PBOOLEAN PreviousState OPTIONAL
+	);
+
+/*
+ * FUNCTION: Unloads a registry key.
+ * ARGUMENTS:
+ *       KeyHandle = Handle to the registry key
+ * REMARK:
+ *       This procedure maps to the win32 procedure RegUnloadKey
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtUnloadKey(
+	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes
+	);
+
+/*
+ * FUNCTION: Unlocks a range of virtual memory. 
+ * ARGUMENTS: 
+ *       ProcessHandle = Handle to the process
+ *       BaseAddress =   Lower boundary of the range of bytes to unlock. 
+ *       NumberOfBytesToUnlock = Offset to the upper boundary to unlock.
+ *       NumberOfBytesUnlocked (OUT) = Number of bytes actually unlocked.
+ * REMARK:
+	This procedure maps to the win32 procedure VirtualUnlock 
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_PAGE_WAS_ULOCKED ]
+ */	
+NTSTATUS 
+STDCALL
+NtUnlockVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN ULONG  NumberOfBytesToUnlock,
+	OUT PULONG NumberOfBytesUnlocked OPTIONAL
+	);
+
+/*
+ * FUNCTION: Waits for multiple objects to become signalled.
+ * ARGUMENTS: 
+ *       Count = The number of objects
+ *       Object = The array of object handles
+ *       WaitType = Can be one of the values UserMode or KernelMode
+ *       Alertable = If true the wait is alertable.
+ *       Time = The maximum wait time.
+ * REMARKS:
+ *       This function maps to the win32 WaitForMultipleObjectEx.
+ * RETURNS: Status
+ */
+NTSTATUS
+STDCALL
+NtWaitForMultipleObjects (
+	IN ULONG Count,
+	IN HANDLE Object[],
+	IN WAIT_TYPE WaitType,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Time
+	);
+
+
+
+
+
+#ifndef __USE_W32API
+
+/*
+ * FUNCTION: Continues a thread with the specified context
+ * ARGUMENTS: 
+ *        Context = Specifies the processor context
+ *	  IrqLevel = Specifies the Interupt Request Level to continue with. Can
+ *			be PASSIVE_LEVEL or APC_LEVEL
+ * REMARKS
+ *        NtContinue can be used to continue after an exception or apc.
+ * RETURNS: Status
+ */
+//FIXME This function might need another parameter
 
 NTSTATUS STDCALL ZwContinue(IN PCONTEXT Context, IN CINT IrqLevel);
 
@@ -4369,20 +4903,6 @@ ZwDuplicateObject(
 
 NTSTATUS
 STDCALL
-NtAccessCheckAndAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,
-	IN PHANDLE ObjectHandle,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ACCESS_MASK DesiredAccess,
-	IN PGENERIC_MAPPING GenericMapping,
-	IN BOOLEAN ObjectCreation,
-	OUT PULONG GrantedAccess,
-	OUT PBOOLEAN AccessStatus,
-	OUT PBOOLEAN GenerateOnClose
-	);
-
-NTSTATUS
-STDCALL
 ZwAccessCheckAndAuditAlarm(
 	IN PUNICODE_STRING SubsystemName,
 	IN PHANDLE ObjectHandle,
@@ -4434,22 +4954,6 @@ ZwAllocateUuids(
 	PULONG Sequence
 	);
 
-/*
- * FUNCTION: Cancels a timer
- * ARGUMENTS: 
- *        TimerHandle = Handle to the timer
- *        CurrentState = Specifies the state of the timer when cancelled.
- * REMARKS:
- *        The arguments to this function map to the function CancelWaitableTimer. 
- * RETURNS: Status
- */
-NTSTATUS
-STDCALL
-NtCancelTimer(
-	IN HANDLE TimerHandle,
-	OUT PBOOLEAN CurrentState OPTIONAL
-	);
-
 NTSTATUS
 STDCALL
 ZwCancelTimer(
@@ -4466,15 +4970,6 @@ ZwCancelTimer(
  *        Reserved = Reserved for future use
  * RETURNS: Status
  */
-NTSTATUS
-STDCALL
-NtCreatePagingFile(
-	IN PUNICODE_STRING FileName,
-	IN PLARGE_INTEGER InitialSize,
-	IN PLARGE_INTEGER MaxiumSize,
-	IN ULONG Reserved
-	);
-
 NTSTATUS
 STDCALL
 ZwCreatePagingFile(
@@ -4499,19 +4994,6 @@ ZwCreatePagingFile(
  *        This function maps to the win32 function CreateThread.  
  * RETURNS: Status
  */
-NTSTATUS
-STDCALL 
-NtCreateThread(
-	OUT	PHANDLE			ThreadHandle,
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
-	IN	HANDLE			ProcessHandle,
-	OUT	PCLIENT_ID		ClientId,
-	IN	PCONTEXT		ThreadContext,
-	IN	PUSER_STACK		UserStack,
-	IN	BOOLEAN			CreateSuspended
-	);
-
 NTSTATUS
 STDCALL 
 ZwCreateThread(
@@ -4582,14 +5064,6 @@ ZwFindAtom(
  */
 NTSTATUS
 STDCALL
-NtFlushInstructionCache(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN UINT NumberOfBytesToFlush
-	);
-
-NTSTATUS
-STDCALL
 ZwFlushInstructionCache(
 	IN HANDLE ProcessHandle,
 	IN PVOID BaseAddress,
@@ -4609,15 +5083,6 @@ ZwFlushInstructionCache(
  */
 NTSTATUS
 STDCALL
-NtFlushVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN ULONG NumberOfBytesToFlush,
-	OUT PULONG NumberOfBytesFlushed OPTIONAL
-	);
-
-NTSTATUS
-STDCALL
 ZwFlushVirtualMemory(
 	IN HANDLE ProcessHandle,
 	IN PVOID BaseAddress,
@@ -4633,12 +5098,6 @@ ZwFlushVirtualMemory(
  */
 NTSTATUS
 STDCALL 
-NtGetTickCount(
-	PULONG UpTime
-	);
-
-NTSTATUS
-STDCALL 
 ZwGetTickCount(
 	PULONG UpTime
 	);
@@ -4652,13 +5111,6 @@ ZwGetTickCount(
  *      This procedure maps to the win32 procedure RegLoadKey
  * RETURNS: Status
  */
-NTSTATUS
-STDCALL
-NtLoadKey(
-	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes,
-	IN	POBJECT_ATTRIBUTES	FileObjectAttributes
-	);
-
 NTSTATUS
 STDCALL
 ZwLoadKey(
@@ -4679,35 +5131,11 @@ ZwLoadKey(
  */	
 NTSTATUS
 STDCALL
-NtLockVirtualMemory(
-	HANDLE ProcessHandle,
-	PVOID BaseAddress,
-	ULONG NumberOfBytesToLock,
-	PULONG NumberOfBytesLocked
-	);
-
-NTSTATUS
-STDCALL
 ZwLockVirtualMemory(
 	HANDLE ProcessHandle,
 	PVOID BaseAddress,
 	ULONG NumberOfBytesToLock,
 	PULONG NumberOfBytesLocked
-	);
-
-NTSTATUS
-STDCALL
-NtOpenObjectAuditAlarm(
-	IN PUNICODE_STRING SubsystemName,	
-	IN PVOID HandleId,	
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN HANDLE ClientToken,	
-	IN ULONG DesiredAccess,	
-	IN ULONG GrantedAccess,	
-	IN PPRIVILEGE_SET Privileges,
-	IN BOOLEAN ObjectCreation,	
-	IN BOOLEAN AccessGranted,	
-	OUT PBOOLEAN GenerateOnClose 	
 	);
 
 NTSTATUS
@@ -4740,16 +5168,6 @@ ZwOpenObjectAuditAlarm(
  *	 The function maps to the win32 VirtualProtectEx
  * RETURNS: Status
  */
-NTSTATUS
-STDCALL
-NtProtectVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN ULONG NumberOfBytesToProtect,
-	IN ULONG NewAccessProtection,
-	OUT PULONG OldAccessProtection
-	);
-
 NTSTATUS
 STDCALL
 ZwProtectVirtualMemory(
@@ -4792,18 +5210,6 @@ ZwQueryInformationAtom(
         DataWritten  = Actual size of the ObjectIndex ???
  * RETURNS: Status
  */
-NTSTATUS
-STDCALL
-NtQueryDirectoryObject(
-	IN	HANDLE			DirObjHandle,
-	OUT	POBJDIR_INFORMATION	DirObjInformation,
-	IN	ULONG			BufferLength,
-	IN	BOOLEAN			GetNextIndex,
-	IN	BOOLEAN			IgnoreInputIndex,
-	IN OUT	PULONG			ObjectIndex,
-	OUT	PULONG			DataWritten OPTIONAL
-	);
-
 NTSTATUS
 STDCALL
 ZwQueryDirectoryObject(
@@ -4887,13 +5293,6 @@ ZwQueryInformationProcess(
  */
 NTSTATUS
 STDCALL
-NtQueryIntervalProfile(
-	OUT PULONG Interval,
-	OUT KPROFILE_SOURCE ClockSource
-	);
-
-NTSTATUS
-STDCALL
 ZwQueryIntervalProfile(
 	OUT PULONG Interval,
 	OUT KPROFILE_SOURCE ClockSource
@@ -4963,17 +5362,6 @@ ZwQuerySecurityObject(
 
 NTSTATUS
 STDCALL
-NtQueryVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID Address,
-	IN IN CINT VirtualMemoryInformationClass,
-	OUT PVOID VirtualMemoryInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
-	);
-
-NTSTATUS
-STDCALL
 ZwQueryVirtualMemory(
 	IN HANDLE ProcessHandle,
 	IN PVOID Address,
@@ -4995,18 +5383,6 @@ ZwQueryVirtualMemory(
  * RETURNS: Status
  *
  */
-
-NTSTATUS
-STDCALL
-NtRaiseHardError(
-	IN NTSTATUS Status,
-	ULONG Unknown2,
-	ULONG Unknown3,
-	ULONG Unknown4,
-	ULONG Unknown5,
-	ULONG Unknown6
-	);
-
 NTSTATUS
 STDCALL
 ZwRaiseHardError(
@@ -5031,15 +5407,6 @@ ZwRaiseHardError(
  *       KeyInformationLength = Size of the information strucure
  * RETURNS: Status
  */
-
-NTSTATUS
-STDCALL
-NtSetInformationKey(
-	IN HANDLE KeyHandle,
-	IN CINT KeyInformationClass,
-	IN PVOID KeyInformation,
-	IN ULONG KeyInformationLength
-	);
 
 NTSTATUS
 STDCALL
@@ -5068,15 +5435,6 @@ ZwSetInformationKey(
  *      Length = Size of the storage supplied
  * RETURNS: Status
 */
-NTSTATUS
-STDCALL
-NtSetInformationObject(
-	IN HANDLE ObjectHandle,
-	IN CINT ObjectInformationClass,
-	IN PVOID ObjectInformation,
-	IN ULONG Length 
-	);
-
 NTSTATUS
 STDCALL
 ZwSetInformationObject(
@@ -5139,18 +5497,6 @@ ZwSetInformationProcess(
 */
 NTSTATUS
 STDCALL
-NtSetTimer(
-	IN HANDLE TimerHandle,
-	IN PLARGE_INTEGER DueTime,
-	IN PTIMERAPCROUTINE TimerApcRoutine,
-	IN PVOID TimerContext,
-	IN BOOL WakeTimer,
-	IN ULONG Period OPTIONAL,
-	OUT PBOOLEAN PreviousState OPTIONAL
-	);
-
-NTSTATUS
-STDCALL
 ZwSetTimer(
 	IN HANDLE TimerHandle,
 	IN PLARGE_INTEGER DueTime,
@@ -5171,12 +5517,6 @@ ZwSetTimer(
  */
 NTSTATUS
 STDCALL
-NtUnloadKey(
-	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes
-	);
-
-NTSTATUS
-STDCALL
 ZwUnloadKey(
 	IN	POBJECT_ATTRIBUTES	KeyObjectAttributes
 	);
@@ -5191,16 +5531,7 @@ ZwUnloadKey(
  * REMARK:
 	This procedure maps to the win32 procedure VirtualUnlock 
  * RETURNS: Status [ STATUS_SUCCESS | STATUS_PAGE_WAS_ULOCKED ]
- */	
-NTSTATUS 
-STDCALL
-NtUnlockVirtualMemory(
-	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN ULONG  NumberOfBytesToUnlock,
-	OUT PULONG NumberOfBytesUnlocked OPTIONAL
-	);
-
+ */
 NTSTATUS 
 STDCALL
 ZwUnlockVirtualMemory(
@@ -5222,16 +5553,6 @@ ZwUnlockVirtualMemory(
  *       This function maps to the win32 WaitForMultipleObjectEx.
  * RETURNS: Status
  */
-NTSTATUS
-STDCALL
-NtWaitForMultipleObjects (
-	IN ULONG Count,
-	IN HANDLE Object[],
-	IN WAIT_TYPE WaitType,
-	IN BOOLEAN Alertable,
-	IN PLARGE_INTEGER Time
-	);
-
 NTSTATUS
 STDCALL
 ZwWaitForMultipleObjects (
@@ -5262,18 +5583,6 @@ ZwWaitForMultipleObjects (
 
 NTSTATUS 
 STDCALL
-NtCreateProfile(OUT PHANDLE ProfileHandle, 
-		IN HANDLE ProcessHandle,
-		IN PVOID ImageBase, 
-		IN ULONG ImageSize, 
-		IN ULONG Granularity,
-		OUT PULONG Buffer, 
-		IN ULONG ProfilingSize,
-		IN KPROFILE_SOURCE Source,
-		IN ULONG ProcessorMask);
-
-NTSTATUS 
-STDCALL
 ZwCreateProfile(
 	OUT PHANDLE ProfileHandle, 
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -5293,14 +5602,6 @@ ZwCreateProfile(
  *        Interval  = Specifies the interval to wait.      
  * RETURNS: Status
  */
-
-NTSTATUS
-STDCALL
-NtDelayExecution(
-	IN ULONG Alertable,
-	IN TIME *Interval
-	);
-
 NTSTATUS
 STDCALL
 ZwDelayExecution(
@@ -5315,13 +5616,6 @@ ZwDelayExecution(
  *	 NewMaximumSize = Adjusted size
  * RETURNS: Status 
  */
-NTSTATUS
-STDCALL
-NtExtendSection(
-	IN HANDLE SectionHandle,
-	IN ULONG NewMaximumSize
-	);
-
 NTSTATUS
 STDCALL
 ZwExtendSection(
@@ -5340,16 +5634,6 @@ ZwExtendSection(
  * RETURNS: Status
  *
 */
-NTSTATUS
-STDCALL
-NtQuerySection(
-	IN HANDLE SectionHandle,
-	IN CINT SectionInformationClass,
-	OUT PVOID SectionInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
-	);
-
 NTSTATUS
 STDCALL
 ZwQuerySection(

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_HALFUNCS_H
 #define __INCLUDE_DDK_HALFUNCS_H
-/* $Id: halfuncs.h,v 1.7 2003/06/21 14:25:30 gvg Exp $ */
+/* $Id: halfuncs.h,v 1.8 2003/07/12 10:24:45 chorns Exp $ */
 
 #include <ntos/haltypes.h>
 
@@ -145,9 +145,6 @@ FASTCALL
 HalRequestSoftwareInterrupt
 */
 
-VOID STDCALL
-HalReturnToFirmware(ULONG Action);
-
 ULONG STDCALL
 HalSetBusData(BUS_DATA_TYPE BusDataType,
 	      ULONG BusNumber,
@@ -280,13 +277,6 @@ WRITE_PORT_ULONG(PULONG Port,
 VOID STDCALL
 WRITE_PORT_USHORT(PUSHORT Port,
 		  USHORT Value);
-
-/* Non-standard functions */
-VOID STDCALL
-HalReleaseDisplayOwnership();
-
-BOOLEAN STDCALL
-HalQueryDisplayOwnership();
 
 #endif /* __INCLUDE_DDK_HALDDK_H */
 

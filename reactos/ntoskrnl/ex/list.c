@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.9 2003/07/11 01:23:14 royce Exp $
+/* $Id: list.c,v 1.10 2003/07/12 10:24:45 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,18 +13,22 @@
 
 /* INCLUDES *****************************************************************/
 
+#ifdef __USE_W32API
+#define NONAMELESSUNION
+#endif
 #include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS *************************************************************/
+static KSPIN_LOCK ExpGlobalListLock = { 0, };
 
+/* FUNCTIONS *************************************************************/
 
 /*
  * @implemented
  */
-PLIST_ENTRY STDCALL
+PLIST_ENTRY FASTCALL
 ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 			    PLIST_ENTRY ListEntry,
 			    PKSPIN_LOCK Lock)
@@ -59,7 +63,7 @@ ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 /*
  * @implemented
  */
-PLIST_ENTRY STDCALL
+PLIST_ENTRY FASTCALL
 ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 			    PLIST_ENTRY ListEntry,
 			    PKSPIN_LOCK Lock)
@@ -94,7 +98,7 @@ ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
 /*
  * @implemented
  */
-PLIST_ENTRY STDCALL
+PLIST_ENTRY FASTCALL
 ExInterlockedRemoveHeadList(PLIST_ENTRY Head,
 			    PKSPIN_LOCK Lock)
 /*
@@ -150,6 +154,10 @@ ExInterlockedRemoveTailList(PLIST_ENTRY Head,
 }
 
 
+#ifdef ExInterlockedPopEntrySList
+#undef ExInterlockedPopEntrySList
+#endif
+
 /*
  * @implemented
  */
@@ -178,6 +186,10 @@ ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
   return(ret);
 }
 
+
+#ifdef ExInterlockedPushEntrySList
+#undef ExInterlockedPushEntrySList
+#endif
 
 /*
  * @implemented
@@ -211,7 +223,7 @@ ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
 /*
  * @implemented
  */
-PSINGLE_LIST_ENTRY STDCALL
+PSINGLE_LIST_ENTRY FASTCALL
 ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			  IN PKSPIN_LOCK Lock)
 /*
@@ -235,7 +247,7 @@ ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 /*
  * @implemented
  */
-PSINGLE_LIST_ENTRY STDCALL
+PSINGLE_LIST_ENTRY FASTCALL
 ExInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
 			   IN PSINGLE_LIST_ENTRY ListEntry,
 			   IN PKSPIN_LOCK Lock)
@@ -408,6 +420,32 @@ ExfInterlockedRemoveHeadList(IN PLIST_ENTRY Head,
     }
   KeReleaseSpinLock(Lock,oldlvl);
   return(ret);
+}
+
+
+/*
+ * @implemented
+ */
+PSLIST_ENTRY
+FASTCALL
+InterlockedPopEntrySList(IN PSLIST_HEADER ListHead)
+{
+  return (PSLIST_ENTRY) ExInterlockedPopEntrySList(ListHead,
+    &ExpGlobalListLock);
+}
+
+
+/*
+ * @implemented
+ */
+PSLIST_ENTRY
+FASTCALL
+InterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
+  IN PSLIST_ENTRY ListEntry)
+{
+  return (PSLIST_ENTRY) ExInterlockedPushEntrySList(ListHead,
+    ListEntry,
+    &ExpGlobalListLock);
 }
 
 /* EOF */

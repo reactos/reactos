@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.15 2003/06/07 16:16:38 chorns Exp $ */
+/* $Id: extypes.h,v 1.16 2003/07/12 10:24:45 chorns Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -112,7 +112,7 @@ typedef union _SLIST_HEADER
 typedef struct _NPAGED_LOOKASIDE_LIST
 {
    SLIST_HEADER ListHead;
-   USHORT MinimumDepth;
+   USHORT Depth;
    USHORT MaximumDepth;
    ULONG TotalAllocates;
    ULONG AllocateMisses;
@@ -127,13 +127,13 @@ typedef struct _NPAGED_LOOKASIDE_LIST
    ULONG LastTotalAllocates;
    ULONG LastAllocateMisses;
    ULONG Pad[2];
-   KSPIN_LOCK Lock;
+   KSPIN_LOCK Obsoleted;
 } NPAGED_LOOKASIDE_LIST, *PNPAGED_LOOKASIDE_LIST;
 
 typedef struct _PAGED_LOOKASIDE_LIST
 {
    SLIST_HEADER ListHead;
-   USHORT MinimumDepth;
+   USHORT Depth;
    USHORT MaximumDepth;
    ULONG TotalAllocates;
    ULONG AllocateMisses;
@@ -147,7 +147,7 @@ typedef struct _PAGED_LOOKASIDE_LIST
    LIST_ENTRY ListEntry;
    ULONG LastTotalAllocates;
    ULONG LastAllocateMisses;
-   FAST_MUTEX Lock;
+   FAST_MUTEX Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
 
 

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.157 2003/06/20 16:22:56 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.158 2003/07/12 10:24:45 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -29,7 +29,7 @@ ExAcquireResourceExclusiveLite@8
 ExAcquireResourceSharedLite@8
 ExAcquireSharedStarveExclusive@8
 ExAcquireSharedWaitForExclusive@8
-ExAllocateFromPagedLookasideList@4
+@ExAllocateFromPagedLookasideList@4
 ExAllocatePool@8
 ExAllocatePoolWithQuota@8
 ExAllocatePoolWithQuotaTag@12
@@ -56,19 +56,19 @@ ExInitializeResourceLite@4
 ExInitializeZone@16
 ExInterlockedAddLargeInteger@16
 @ExInterlockedAddLargeStatistic@8
-ExInterlockedAddUlong@12
+@ExInterlockedAddUlong@12
 @ExInterlockedCompareExchange64@16
 ExInterlockedDecrementLong@8
 ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone@16
 ExInterlockedIncrementLong@8
-ExInterlockedInsertHeadList@12
-ExInterlockedInsertTailList@12
-ExInterlockedPopEntryList@8
+@ExInterlockedInsertHeadList@12
+@ExInterlockedInsertTailList@12
+@ExInterlockedPopEntryList@8
 @ExInterlockedPopEntrySList@8
-ExInterlockedPushEntryList@12
+@ExInterlockedPushEntryList@12
 @ExInterlockedPushEntrySList@12
-ExInterlockedRemoveHeadList@8
+@ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite@4
 ExIsResourceAcquiredSharedLite@4
@@ -217,6 +217,7 @@ HalPrivateDispatchTable DATA
 @InterlockedExchange@8
 @InterlockedExchangeAdd@8
 @InterlockedIncrement@4
+@InterlockedPopEntrySList@4
 IoAcquireCancelSpinLock@4
 IoAcquireRemoveLockEx@20
 IoAcquireVpbSpinLock@4

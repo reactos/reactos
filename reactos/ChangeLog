@@ -1,3 +1,38 @@
+2003-07-12  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	Changes for compiling with w32api
+
+	* include/ddk/extypes.h (NPAGED_LOOKASIDE_LIST, PAGED_LOOKASIDE_LIST):
+	Match w32api fields.
+	* include/ddk/halfuncs.h (HalReturnToFirmware, HalReleaseDisplayOwnership,
+	HalQueryDisplayOwnership): Move ...
+	* include/ntos/halfuncs.h: ... here.
+	* include/ntos/rtl.h: (PopEntrySList, PushEntrySList): Move to
+	ntoskrnl/ex/lookas.c.
+	* include/ntos/zw.h (NtAccessCheckAndAuditAlarm, NtCancelTimer,
+	NtCreatePagingFile, NtCreateThread, NtFlushInstructionCache,
+	NtFlushVirtualMemory, NtGetTickCount, NtLoadKey, NtLockVirtualMemory,
+	NtOpenObjectAuditAlarm, NtProtectVirtualMemory, NtQueryDirectoryObject,
+	NtQueryIntervalProfile, NtQueryVirtualMemory, NtRaiseHardError,
+	NtSetInformationKey, NtSetInformationObject, NtSetTimer, NtUnloadKey,
+	NtUnlockVirtualMemory, NtWaitForMultipleObjects, NtCreateProfile,
+	NtDelayExecution, NtExtendSection, NtQuerySection): Include for w32api.
+	* ntoskrnl/ntoskrnl.def (ExInterlockedAddUlong,
+	ExInterlockedInsertHeadList, ExInterlockedInsertTailList,
+	ExInterlockedPopEntryList, ExInterlockedPushEntryList,
+	ExInterlockedRemoveHeadList): Make FASTCALL.
+	* ntoskrnl/ntoskrnl.edf: Ditto.
+	* ntoskrnl/ex/list.c: Ditto.
+	* include/ddk/exfuncs.h: Ditto.
+	(InterlockedPopEntrySList, InterlockedPushEntrySList,
+	ExAllocateFromPagedLookasideList, ExFreeToPagedLookasideList): Add.
+	* ntoskrnl/ex/interlck.c (ExInterlockedDecrementLong,
+	ExInterlockedAddUlong, ExInterlockedIncrementLong): Undefine if defined.
+	* ntoskrnl/ex/lookas.c (PopEntrySList, PushEntrySList,
+	LookasideListLock): Add.
+	* drivers/dd/blue/blue.c: Include <roskrnl.h>.
+	* drivers/dd/videoprt/videoprt.c: Ditto.
+
 2003-07-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/user32/controls/edit.c (EDIT_EM_SetLimitText,

@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.8 2003/07/10 21:12:40 chorns Exp $
+/* $Id: videoprt.c,v 1.9 2003/07/12 10:24:45 chorns Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -6,7 +6,7 @@
  */
 
 #include <errors.h>
-#include <ddk/ntddk.h>
+#include <roskrnl.h>
 #include <ddk/ntddvid.h>
 
 #include "../../../ntoskrnl/include/internal/v86m.h"

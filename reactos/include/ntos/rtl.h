@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.12 2003/06/07 16:16:38 chorns Exp $
+/* $Id: rtl.h,v 1.13 2003/07/12 10:24:45 chorns Exp $
  * 
  */
 
@@ -576,94 +576,6 @@ PushEntryList (
 	(Entry)->Next = (ListHead)->Next; \
 	(ListHead)->Next = (Entry)
 */
-
-
-#ifndef __USE_W32API
-
-
-/*
- * An ReactOS extension
- */
-static
-inline
-PSINGLE_LIST_ENTRY
- PopEntrySList(
-	PSLIST_HEADER	ListHead
-	)
-{
-	PSINGLE_LIST_ENTRY ListEntry;
-
-	ListEntry = ListHead->s.Next.Next;
-	if (ListEntry!=NULL)
-	{
-		ListHead->s.Next.Next = ListEntry->Next;
-    ListHead->s.Depth++;
-    ListHead->s.Sequence++;
-  }
-	return ListEntry;
-}
-
-
-/*
- * An ReactOS extension
- */
-static
-inline
-VOID
-PushEntrySList (
-	PSLIST_HEADER	ListHead,
-	PSINGLE_LIST_ENTRY	Entry
-	)
-{
-	Entry->Next = ListHead->s.Next.Next;
-	ListHead->s.Next.Next = Entry;
-  ListHead->s.Depth++;
-  ListHead->s.Sequence++;
-}
-
-#else /* __USE_W32API */
-
-/*
- * An ReactOS extension
- */
-static
-inline
-PSINGLE_LIST_ENTRY
- PopEntrySList(
-	PSLIST_HEADER	ListHead
-	)
-{
-	PSINGLE_LIST_ENTRY ListEntry;
-
-	ListEntry = ListHead->Next.Next;
-	if (ListEntry!=NULL)
-	{
-		ListHead->Next.Next = ListEntry->Next;
-    ListHead->Depth++;
-    ListHead->Sequence++;
-  }
-	return ListEntry;
-}
-
-
-/*
- * An ReactOS extension
- */
-static
-inline
-VOID
-PushEntrySList (
-	PSLIST_HEADER	ListHead,
-	PSINGLE_LIST_ENTRY	Entry
-	)
-{
-	Entry->Next = ListHead->Next.Next;
-	ListHead->Next.Next = Entry;
-  ListHead->Depth++;
-  ListHead->Sequence++;
-}
-
-#endif /* __USE_W32API */
 
 
 NTSTATUS

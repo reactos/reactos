@@ -46,6 +46,16 @@ KIRQL
 STDCALL
 KeRaiseIrqlToSynchLevel(VOID);
 
+VOID STDCALL
+HalReturnToFirmware(ULONG Action);
+
+/* Non-standard functions */
+VOID STDCALL
+HalReleaseDisplayOwnership();
+
+BOOLEAN STDCALL
+HalQueryDisplayOwnership();
+
 #endif /* __INCLUDE_NTOS_HALDDK_H */
 
 /* EOF */
