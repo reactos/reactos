@@ -4,6 +4,8 @@
 #include <windows.h>
 #include <internal/ps.h>
 
+#define HOOK_THREAD_REFERENCED	(0x1)
+
 typedef struct tagHOOK
 {
   LIST_ENTRY Chain;          /* Hook chain entry */
@@ -12,6 +14,7 @@ typedef struct tagHOOK
   int        HookId;         /* Hook table index */
   HOOKPROC   Proc;           /* Hook function */
   BOOLEAN    Ansi;           /* Is it an Ansi hook? */
+  ULONG      Flags;          /* Some internal flags */
   UNICODE_STRING ModuleName; /* Module name for global hooks */
 } HOOK, *PHOOK;
 

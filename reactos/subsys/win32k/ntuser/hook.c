@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.6 2004/02/24 13:27:03 weiden Exp $
+/* $Id: hook.c,v 1.7 2004/04/07 00:58:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -190,7 +190,12 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
 {
   RemoveEntryList(&Hook->Chain);
   RtlFreeUnicodeString(&Hook->ModuleName);
-
+  
+  /* Dereference thread if required */
+  if(Hook->Flags & HOOK_THREAD_REFERENCED)
+    ObDereferenceObject(Hook->Thread);
+  
+  /* Close handle */
   ObmCloseHandle(WinStaObj->HandleTable, Hook->Self);
 }
 
@@ -438,7 +443,7 @@ NtUserSetWindowsHookEx(
   BOOL Ansi)
 {
   PWINSTATION_OBJECT WinStaObj;
-  BOOLEAN Global;
+  BOOLEAN Global, ReleaseThread;
   PETHREAD Thread;
   PHOOK Hook;
   UNICODE_STRING ModuleName;
@@ -473,13 +478,16 @@ NtUserSetWindowsHookEx(
         }
       if (Thread->ThreadsProcess != PsGetCurrentProcess())
         {
+          ObDereferenceObject(Thread);
           DPRINT1("Can't specify thread belonging to another process\n");
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
           return NULL;
         }
+      ReleaseThread = TRUE;
     }
   else  /* system-global hook */
     {
+      ReleaseThread = FALSE;
       if (HookId == WH_KEYBOARD_LL || HookId == WH_MOUSE_LL)
         {
           Mod = NULL;
@@ -505,6 +513,8 @@ NtUserSetWindowsHookEx(
 #else
       DPRINT1("Not implemented: HookId %d Global %s\n", HookId, Global ? "TRUE" : "FALSE");
 #endif
+      if(ReleaseThread)
+        ObDereferenceObject(Thread);
       SetLastWin32Error(ERROR_NOT_SUPPORTED);
       return NULL;
     }
@@ -516,6 +526,8 @@ NtUserSetWindowsHookEx(
   
   if(! NT_SUCCESS(Status))
     {
+      if(ReleaseThread && Thread)
+        ObDereferenceObject(Thread);
       SetLastNtError(Status);
       return (HANDLE) NULL;
     }
@@ -523,10 +535,15 @@ NtUserSetWindowsHookEx(
   Hook = IntAddHook(Thread, HookId, Global, WinStaObj);
   if (NULL == Hook)
     {
+      if(ReleaseThread)
+        ObDereferenceObject(Thread);
       ObDereferenceObject(WinStaObj);
       return NULL;
     }
-
+  
+  if(ReleaseThread)
+    Hook->Flags |= HOOK_THREAD_REFERENCED;
+  
   if (NULL != Mod)
     {
       Status = MmCopyFromCaller(&ModuleName, UnsafeModuleName, sizeof(UNICODE_STRING));
@@ -534,6 +551,8 @@ NtUserSetWindowsHookEx(
         {
           ObmDereferenceObject(Hook);
           IntRemoveHook(Hook, WinStaObj);
+          if(ReleaseThread)
+            ObDereferenceObject(Thread);
           ObDereferenceObject(WinStaObj);
           SetLastNtError(Status);
           return NULL;
@@ -545,6 +564,8 @@ NtUserSetWindowsHookEx(
         {
           ObmDereferenceObject(Hook);
           IntRemoveHook(Hook, WinStaObj);
+          if(ReleaseThread)
+            ObDereferenceObject(Thread);
           ObDereferenceObject(WinStaObj);
           SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
           return NULL;
@@ -557,6 +578,8 @@ NtUserSetWindowsHookEx(
         {
           ObmDereferenceObject(Hook);
           IntRemoveHook(Hook, WinStaObj);
+          if(ReleaseThread)
+            ObDereferenceObject(Thread);
           ObDereferenceObject(WinStaObj);
           SetLastNtError(Status);
           return NULL;
