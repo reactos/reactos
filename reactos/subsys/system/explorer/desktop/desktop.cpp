@@ -299,6 +299,9 @@ void BackgroundWindow::DrawDesktopBkgnd(HDC hdc)
 	DeleteBrush(bkgndBrush);
 */
 	if (_display_version) {
+		static const String s_bkgnd_txt = ResString(IDS_EXPLORER_VERSION_STR) + TEXT("\nby Martin Fuchs");
+
+		FmtString txt(s_bkgnd_txt, (LPCTSTR)ResString(IDS_VERSION_STR));
 		ClientRect rect(_hwnd);
 
 		rect.left = rect.right - 280;
@@ -306,22 +309,15 @@ void BackgroundWindow::DrawDesktopBkgnd(HDC hdc)
 		rect.right = rect.left + 250;
 		rect.bottom = rect.top + 40;
 
-#ifdef _ROS_
-#include <reactos/buildno.h>
-#else
-#include "../buildno.h"
-#endif
-		static const LPCTSTR BkgndText = TEXT("ReactOS ")TEXT(KERNEL_VERSION_STR)TEXT(" Explorer\nby Martin Fuchs");
-
 		BkMode bkMode(hdc, TRANSPARENT);
 
 		TextColor textColor(hdc, RGB(128,128,192));
-		DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
+		DrawText(hdc, txt, -1, &rect, DT_RIGHT);
 
 		SetTextColor(hdc, RGB(255,255,255));
 		--rect.right;
 		++rect.top;
-		DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
+		DrawText(hdc, txt, -1, &rect, DT_RIGHT);
 	}
 }
 
