@@ -372,6 +372,21 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
   {
     return(Status);
   }
+  
+  Status = PsLockProcess(Process, FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+       ObDereferenceObject(Process);
+       return(Status);
+    }
+
+  if(Process->ExitTime.QuadPart != 0)
+    {
+       PsUnlockProcess(Process);
+       return STATUS_PROCESS_IS_TERMINATING;
+    }
+
+  PsUnlockProcess(Process);
 
   Status = PsInitializeThread(Process,
 			      &Thread,

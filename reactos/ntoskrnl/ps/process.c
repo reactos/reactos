@@ -1645,7 +1645,7 @@ PsReturnProcessPagedPoolQuota(
 }
 
 NTSTATUS
-PsLockProcess(PEPROCESS Process, BOOL Timeout)
+PsLockProcess(PEPROCESS Process, BOOLEAN Timeout)
 {
   ULONG Attempts = 0;
   PKTHREAD PrevLockOwner;
@@ -1689,9 +1689,8 @@ PsLockProcess(PEPROCESS Process, BOOL Timeout)
           }
 #endif
           KeLeaveCriticalRegion();
-
+          break;
         }
-        break;
       }
       else
       {
