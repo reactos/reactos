@@ -17,7 +17,7 @@
 
 BOOLEAN AlreadyOpened = FALSE;
 
-VOID MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA MouseDataStart,
+BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA MouseDataStart,
 			PMOUSE_INPUT_DATA MouseDataEnd, PULONG InputCount)
 {
    PDEVICE_EXTENSION ClassDeviceExtension = ClassDeviceObject->DeviceExtension;
@@ -49,34 +49,40 @@ VOID MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA Mous
       IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);      
       ClassDeviceExtension->ReadIsPending = FALSE;
    } */
-   if(*InputCount>0)
-   {
-      // FIXME: If we exceed the buffer, mouse data gets thrown away.. better solution?
 
-      if(ClassDeviceExtension->InputCount + *InputCount > MOUSE_BUFFER_SIZE)
-      {
-         ReadSize = MOUSE_BUFFER_SIZE - ClassDeviceExtension->InputCount;
-      } else {
-         ReadSize = *InputCount;
-      }
+  // If we have data from the port driver and a higher service to send the data to
+  if((*InputCount>0) && (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack != NULL))
+  {
+    if(ClassDeviceExtension->InputCount + *InputCount > MOUSE_BUFFER_SIZE)
+    {
+       ReadSize = MOUSE_BUFFER_SIZE - ClassDeviceExtension->InputCount;
+    } else {
+       ReadSize = *InputCount;
+    }
 
-      // Move the mouse input data from the port data queue to our class data queue
-      RtlMoveMemory(ClassDeviceExtension->PortData, (PCHAR)MouseDataStart,
-                    sizeof(MOUSE_INPUT_DATA) * ReadSize);
+    // FIXME: If we exceed the buffer, mouse data gets thrown away.. better solution?
 
-      // Move the pointer and counter up
-      ClassDeviceExtension->PortData += ReadSize;
-      ClassDeviceExtension->InputCount += ReadSize;
 
-     // Throw data up to GDI callback
-     if(*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack != NULL) {
-        (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack)
-          (ClassDeviceExtension->PortData - ReadSize, ReadSize);
-        ClassDeviceExtension->PortData -= ReadSize;
-        ClassDeviceExtension->InputCount -= ReadSize;
-        ClassDeviceExtension->ReadIsPending = FALSE;
-     }
+    // Move the mouse input data from the port data queue to our class data queue
+    RtlMoveMemory(ClassDeviceExtension->PortData, (PCHAR)MouseDataStart,
+                  sizeof(MOUSE_INPUT_DATA) * ReadSize);
+
+    // Move the pointer and counter up
+    ClassDeviceExtension->PortData += ReadSize;
+    ClassDeviceExtension->InputCount += ReadSize;
+
+    // Throw data up to GDI callback
+    if(*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack != NULL) {
+      (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack)
+        (ClassDeviceExtension->PortData - ReadSize, ReadSize);
+    }
+
+    ClassDeviceExtension->PortData -= ReadSize;
+    ClassDeviceExtension->InputCount -= ReadSize;
+    ClassDeviceExtension->ReadIsPending = FALSE;
   }
+
+  return TRUE;
 }
 
 NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
@@ -189,7 +195,7 @@ VOID MouseClassStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    if(DeviceExtension->InputCount>0)
    {
-      // FIXME: We should not send to much input data.. depends on the max buffer size of the win32k
+      // FIXME: We should not send too much input data.. depends on the max buffer size of the win32k
       ReadSize = DeviceExtension->InputCount * sizeof(MOUSE_INPUT_DATA);
 
       // Bring the PortData back to base so that it can be copied

@@ -27,6 +27,9 @@ BOOLEAN ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
   unsigned status = controller_read_status();
   scancode = controller_read_input();
 
+  // Don't handle the mouse event if we aren't connected to the mouse class driver
+  if(DeviceExtension->ClassInformation.CallBack == NULL) return FALSE;
+
   if((status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) != 0)
   {
     // mouse_handle_event(scancode); proceed to handle it
