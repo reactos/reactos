@@ -1,3 +1,10 @@
+2003-08-17  James Tabor <jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
+
+	* include/csrss/: csrss.h: implemented Ctrl Event handler
+	* subsys/csrss/api/: conio.c:
+	* subsys/csrss/: api.h:
+	* lib/kernel32/misc/: console.c:
+
 2003-08-16  Martin Fuchs	<martin-fuchs@gmx.net>
 
 	* subsys/system/explorer/taskbar/taskbar.cpp:
