@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.60 2004/01/23 17:15:23 ekohl Exp $
+/* $Id: stubs.c,v 1.61 2004/01/29 23:41:36 navaraf Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1098,20 +1098,6 @@ HeapSetInformation (
     HEAP_INFORMATION_CLASS HeapInformationClass,
     PVOID HeapInformation OPTIONAL,
     SIZE_T HeapInformationLength OPTIONAL
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-InitializeCriticalSectionAndSpinCount(
-    LPCRITICAL_SECTION lpCriticalSection,
-    DWORD dwSpinCount
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.15 2004/01/23 21:16:04 ekohl Exp $
+/* $Id: critical.c,v 1.16 2004/01/29 23:41:36 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -31,6 +31,26 @@ InitializeCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
      {
 	RtlRaiseStatus(Status);
      }
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+InitializeCriticalSectionAndSpinCount(
+    LPCRITICAL_SECTION lpCriticalSection,
+    DWORD dwSpinCount
+    )
+{
+    NTSTATUS Status;
+    
+    Status = RtlInitializeCriticalSectionAndSpinCount(lpCriticalSection, dwSpinCount);
+    if (Status)
+      {
+         RtlRaiseStatus(Status);
+      }
+    return NT_SUCCESS(Status);
 }
 
 /* EOF */

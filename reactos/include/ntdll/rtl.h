@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.40 2003/09/12 17:51:46 vizzini Exp $
+/* $Id: rtl.h,v 1.41 2004/01/29 23:41:36 navaraf Exp $
  *
  */
 
@@ -54,7 +54,7 @@ typedef struct _CRITICAL_SECTION {
     LONG RecursionCount;
     HANDLE OwningThread;
     HANDLE LockSemaphore;
-    DWORD Reserved;
+    ULONG_PTR SpinCount;
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
 
 typedef CRITICAL_SECTION RTL_CRITICAL_SECTION;

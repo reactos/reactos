@@ -281,14 +281,6 @@ NTSTATUS  STDCALL RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source)
 /*
  * @unimplemented
  */
-NTSTATUS  STDCALL RtlInitializeCriticalSectionAndSpinCount(RTL_CRITICAL_SECTION *crit, DWORD spincount)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
 NTSTATUS  STDCALL RtlInt64ToUnicodeString(ULONGLONG value,ULONG base,UNICODE_STRING *str)
 {
   return(FALSE);

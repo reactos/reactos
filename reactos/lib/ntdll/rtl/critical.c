@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.15 2003/09/12 17:51:48 vizzini Exp $
+/* $Id: critical.c,v 1.16 2004/01/29 23:41:36 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,7 +25,7 @@ VOID STDCALL
 RtlDeleteCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    NtClose(CriticalSection->LockSemaphore);
-   CriticalSection->Reserved = -1;
+   CriticalSection->SpinCount = -1;
 }
 
 /*
@@ -90,7 +90,7 @@ RtlInitializeCriticalSection(PCRITICAL_SECTION CriticalSection)
    CriticalSection->LockCount = -1;
    CriticalSection->RecursionCount = 0;
    CriticalSection->OwningThread = (HANDLE)0;
-   CriticalSection->Reserved = 0;
+   CriticalSection->SpinCount = 0;
    
    Status = NtCreateSemaphore(&CriticalSection->LockSemaphore,
 			      SEMAPHORE_ALL_ACCESS,
@@ -175,6 +175,16 @@ RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 	return TRUE;
      }
    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlInitializeCriticalSectionAndSpinCount(RTL_CRITICAL_SECTION *crit, DWORD spincount)
+{
+   crit->SpinCount = spincount;
+   return RtlInitializeCriticalSection(crit);
 }
 
 /* EOF */
