@@ -31,8 +31,10 @@ typedef struct _MODULE_TEXT_SECTION
   LIST_ENTRY ListEntry;
   PWCH Name;
 #ifdef KDBG
-	SYMBOL_TABLE Symbols;
+  SYMBOL_TABLE Symbols;
 #endif /* KDBG */
+  PVOID SymbolsBase;
+  ULONG SymbolsLength;
 } MODULE_TEXT_SECTION;
 
 typedef struct _MODULE_OBJECT

@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.9 2001/04/13 16:12:26 chorns Exp $
+/* $Id: irq.c,v 1.10 2001/04/16 02:02:05 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -344,8 +344,8 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    /*
     * Notify the rest of the kernel of the raised irq level
     */
-   HalBeginSystemInterrupt (irq+IRQ_BASE,
-			    HIGH_LEVEL-irq,
+   HalBeginSystemInterrupt (irq + IRQ_BASE,
+			    PROFILE_LEVEL - irq,
 			    &old_level);
 
    /*
@@ -354,7 +354,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     */
    __asm__("sti\n\t");
 
-   if (irq==0)
+   if (irq == 0)
      {
        KiUpdateSystemTime(old_level, Trapframe->Eip);
      }

@@ -108,7 +108,7 @@ _Ki386ContextSwitch:
 	 * Change the address space
 	 */
 	movl	ETHREAD_THREADS_PROCESS(%ebx), %ebx
-	movl	KPROCESS_PAGE_TABLE_DIRECTORY(%ebx), %eax
+	movl	KPROCESS_DIRECTORY_TABLE_BASE(%ebx), %eax
 	movl	%eax, %cr3 
 
 	/*

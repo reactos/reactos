@@ -28,13 +28,17 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ke.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
-USHORT KiGdt[11 * 4] = 
+PUSHORT KiGdtArray[MAXIMUM_PROCESSORS];
+
+USHORT KiBootGdt[11 * 4] = 
 {
  0x0, 0x0, 0x0, 0x0,              /* Null */
  0xffff, 0x0, 0x9a00, 0xcf,       /* Kernel CS */
@@ -53,11 +57,41 @@ struct
 {
   USHORT Length;
   ULONG Base;
-} __attribute__((packed)) KiGdtDescriptor = { 11 * 8, (ULONG)KiGdt };
+} __attribute__((packed)) KiGdtDescriptor = { 11 * 8, (ULONG)KiBootGdt };
 
 static KSPIN_LOCK GdtLock;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+KiInitializeGdt(ULONG Id, PKPCR Pcr)
+{
+  PUSHORT Gdt;
+
+  if (Id == 0)
+    {
+      KiGdtArray[0] = KiBootGdt;
+      return;
+    }
+
+  /*
+   * Allocate a GDT
+   */
+  Gdt = ExAllocatePool(NonPagedPool, sizeof(USHORT) * 4 * 11);
+  if (Gdt == NULL)
+    {
+      KeBugCheck(0);
+    }
+
+  /*
+   * Copy the boot processor's GDT onto this processor's GDT. Note that
+   * the only entries that can change are the PCR, TEB and LDT descriptors.
+   * We will be initializing these later so their current values are
+   * irrelevant.
+   */
+  memcpy(Gdt, KiGdtArray, sizeof(USHORT) * 4 * 11);
+  KiGdtArray[Id] = Gdt;
+}
 
 VOID 
 KeSetBaseGdtSelector(ULONG Entry,
@@ -72,14 +106,14 @@ KeSetBaseGdtSelector(ULONG Entry,
    
    Entry = (Entry & (~0x3)) / 2;
    
-   KiGdt[Entry + 1] = ((ULONG)Base) & 0xffff;
+   KiBootGdt[Entry + 1] = ((ULONG)Base) & 0xffff;
    
-   KiGdt[Entry + 2] = KiGdt[Entry + 2] & ~(0xff);
-   KiGdt[Entry + 2] = KiGdt[Entry + 2] |
+   KiBootGdt[Entry + 2] = KiBootGdt[Entry + 2] & ~(0xff);
+   KiBootGdt[Entry + 2] = KiBootGdt[Entry + 2] |
      ((((ULONG)Base) & 0xff0000) >> 16);
    
-   KiGdt[Entry + 3] = KiGdt[Entry + 3] & ~(0xff00);
-   KiGdt[Entry + 3] = KiGdt[Entry + 3] |
+   KiBootGdt[Entry + 3] = KiBootGdt[Entry + 3] & ~(0xff00);
+   KiBootGdt[Entry + 3] = KiBootGdt[Entry + 3] |
      ((((ULONG)Base) & 0xff000000) >> 16);
    
    DPRINT("%x %x %x %x\n", 
@@ -97,10 +131,10 @@ KeDumpGdtSelector(ULONG Entry)
    USHORT a, b, c, d;
    ULONG RawLimit;
    
-   a = KiGdt[Entry*4];
-   b = KiGdt[Entry*4 + 1];
-   c = KiGdt[Entry*4 + 2];
-   d = KiGdt[Entry*4 + 3];
+   a = KiBootGdt[Entry*4];
+   b = KiBootGdt[Entry*4 + 1];
+   c = KiBootGdt[Entry*4 + 2];
+   d = KiBootGdt[Entry*4 + 3];
    
    DbgPrint("Base: %x\n", b + ((c & 0xff) * (1 << 16)) +
 	    ((d & 0xff00) * (1 << 16)));
@@ -123,65 +157,4 @@ KeDumpGdtSelector(ULONG Entry)
    DbgPrint("G: %d\n", (d & 0x80) >> 7);
 }
 
-#if 0
-VOID KeFreeGdtSelector(ULONG Entry)
-/*
- * FUNCTION: Free a gdt selector
- * ARGUMENTS:
- *       Entry = Entry to free
- */
-{
-   KIRQL oldIrql;
-   
-   DPRINT("KeFreeGdtSelector(Entry %d)\n",Entry);
-   
-   if (Entry > (8 + NR_TASKS))
-     {
-	DPRINT1("Entry too large\n");
-	KeBugCheck(0);
-     }
-   
-   KeAcquireSpinLock(&GdtLock, &oldIrql);
-   KiGdt[Entry*4] = 0;
-   KiGdt[Entry*4 + 1] = 0;
-   KiGdt[Entry*4 + 2] = 0;
-   KiGdt[Entry*4 + 3] = 0;
-   KeReleaseSpinLock(&GdtLock, oldIrql);
-}
-#endif
-
-#if 0
-ULONG 
-KeAllocateGdtSelector(ULONG Desc[2])
-/*
- * FUNCTION: Allocate a gdt selector
- * ARGUMENTS:
- *      Desc = Contents for descriptor
- * RETURNS: The index of the entry allocated
- */
-{
-   ULONG i;
-   KIRQL oldIrql;
-   
-   DPRINT("KeAllocateGdtSelector(Desc[0] %x, Desc[1] %x)\n",
-	  Desc[0], Desc[1]);
-   
-   KeAcquireSpinLock(&GdtLock, &oldIrql);   
-   for (i=8; i<(8 + NR_TASKS); i++)
-     {
-	if (KiGdt[i*4] == 0 &&
-	    KiGdt[i*4 + 1] == 0 &&
-	    KiGdt[i*4 + 2] == 0 &&
-	    KiGdt[i*4 + 3] == 0)
-	  {
-	     ((PULONG)KiGdt)[i*2] = Desc[0];
-	     ((PULONG)KiGdt)[i*2 + 1] = Desc[1];
-	     KeReleaseSpinLock(&GdtLock, oldIrql);
-	     DPRINT("KeAllocateGdtSelector() = %x\n",i);
-	     return(i);
-	  }
-     }
-   KeReleaseSpinLock(&GdtLock, oldIrql);
-   return(0);
-}
-#endif
+/* EOF */

@@ -38,7 +38,7 @@
 
 #define ETHREAD_THREADS_PROCESS   0x258
 
-#define KPROCESS_PAGE_TABLE_DIRECTORY 0x10
+#define KPROCESS_DIRECTORY_TABLE_BASE 0x18
 
 #define KPCR_BASE                 0xFF000000
 
@@ -278,92 +278,179 @@ typedef struct _ETHREAD
    * Added by David Welch (welch@cwcom.net)
    */
   struct _EPROCESS* OldProcess;                     /* 240/26C */
-  struct _WIN32THREADDATA *Win32ThreadData; // Pointer to win32 private thread data
+
+  /* Pointer to win32 private thread data */
+  struct _WIN32THREADDATA *Win32ThreadData; 
   
 } __attribute__((packed)) ETHREAD, *PETHREAD;
 
 
 typedef struct _KPROCESS 
 {
+  /* So it's possible to wait for the process to terminate */
   DISPATCHER_HEADER 	DispatcherHeader;             /* 000 */
-  PVOID		PageTableDirectory;           /* 010 */ 
-   TIME			ElapsedTime;  
-   TIME			KernelTime;
-   TIME			UserTime;
-   LIST_ENTRY		InMemoryList;  
-   LIST_ENTRY		SwappedOutList;   	
-   KSPIN_LOCK		SpinLock;
-   KAFFINITY		Affinity;
-   ULONG		StackCount;
-   KPRIORITY		BasePriority;
-   ULONG		DefaultThreadQuantum;
-   UCHAR		ProcessState;
-   ULONG		ThreadSeed;
-   UCHAR		DisableBoost;
+  /* 
+   * Presumably a list of profile objects associated with this process,
+   * currently unused.
+   */
+  LIST_ENTRY            ProfileListHead;              /* 010 */
+  /*
+   * We use the first member of this array to hold the physical address of
+   * the page directory for this process.
+   */
+  PVOID                 DirectoryTableBase[2];        /* 018 */
+  /*
+   * Presumably a descriptor for the process's LDT, currently unused.
+   */
+  ULONG                 LdtDescriptor[2];             /* 020 */
+  /*
+   * Presumably for processing int 0x21 from V86 mode DOS, currently
+   * unused.
+   */
+  ULONG                 Int21Descriptor[2];           /* 028 */
+  /* Don't know. */
+  USHORT                IopmOffset;                   /* 030 */
+  /* 
+   * Presumably I/O privilege level to be used for this process, currently
+   * unused.
+   */
+  UCHAR                 Iopl;                         /* 032 */
+  /* Set if this process is a virtual dos machine? */
+  UCHAR                 VdmFlag;                      /* 033 */
+  /* Bitmask of the processors being used by this process's threads? */
+  ULONG                 ActiveProcessors;             /* 034 */
+  /* Aggregate of the time this process's threads have spent in kernel mode? */
+  ULONG                 KernelTime;                   /* 038 */
+  /* Aggregate of the time this process's threads have spent in user mode? */
+  ULONG                 UserTime;                     /* 03C */
+  /* List of this process's threads that are ready for execution? */
+  LIST_ENTRY            ReadyListHead;                /* 040 */
+  /* List of this process's threads that have their stacks swapped out? */
+  LIST_ENTRY            SwapListEntry;                /* 048 */
+  /* List of this process's threads? */
+  LIST_ENTRY            ThreadListHead;               /* 050 */
+  /* Maybe a lock for this data structure, the type is assumed. */
+  KSPIN_LOCK            ProcessLock;                  /* 058 */
+  /* Default affinity mask for this process's threads? */
+  ULONG                 Affinity;                     /* 05C */
+  /* Count of the stacks allocated for this process's threads? */
+  USHORT                StackCount;                   /* 060 */
+  /* Base priority for this process's threads? */
+  KPRIORITY             BasePriority;                 /* 062 */
+  /* Default quantum for this process's threads */
+  UCHAR		        ThreadQuantum;                /* 063 */
+  /* Unknown. */
+  UCHAR                 AutoAlignment;                /* 064 */
+  /* Process execution state, currently either active or terminated. */
+  UCHAR		        State;                        /* 065 */
+  /* Seed for generating thread ids for this process's threads? */
+  UCHAR		        ThreadSeed;                   /* 066 */
+  /* Disable priority boosts? */
+  UCHAR		        DisableBoost;                 /* 067 */
 } KPROCESS, *PKPROCESS;
 
 struct _WIN32PROCESSDATA;
 
 typedef struct _EPROCESS
 {
-   KPROCESS Pcb;
-   NTSTATUS ExitStatus;
-   KEVENT LockEvent;
-   ULONG LockCount;
-   TIME CreateTime;
-   TIME ExitTime;
-   PVOID LockOwner;
-   ULONG UniqueProcessId;
-   LIST_ENTRY ActiveProcessLinks;
-   ULONG QuotaPeakPoolUsage[2];
-   ULONG QuotaPoolUsage[2];
-   ULONG PagefileUsage;
-   ULONG CommitCharge;
-   ULONG PeakPagefileUsage;
-   ULONG PeakVirtualUsage;
-   LARGE_INTEGER VirtualSize;
-   PVOID Vm;                // Actually 48 bytes
-   PVOID LastProtoPteFault;
-   struct _EPORT* DebugPort;
-   struct _EPORT* ExceptionPort;
-   PVOID ObjectTable;
-   PVOID Token;
-   KMUTEX WorkingSetLock;
-   PVOID WorkingSetPage;
-   UCHAR ProcessOutswapEnabled;
-   UCHAR ProcessOutswapped;
-   UCHAR AddressSpaceInitialized;
-   UCHAR AddressSpaceDeleted;
-   KMUTEX AddressCreationLock;
-   PVOID ForkInProgress;
-   PVOID VmOperation;
-   PKEVENT VmOperationEvent;
-   PVOID PageDirectoryPte;
-   LARGE_INTEGER LastFaultCount;
-   PVOID VadRoot;
-   PVOID VadHint;
-   PVOID CloneRoot;
-   ULONG NumberOfPrivatePages;
-   ULONG NumberOfLockedPages;
-   UCHAR ForkWasSuccessFul;
-   UCHAR ExitProcessCalled;
-   UCHAR CreateProcessReported;
-   HANDLE SectionHandle;
-   PPEB Peb;
-   PVOID SectionBaseAddress;
-   PVOID QuotaBlock;
-   NTSTATUS LastThreadExitStatus;
-   LARGE_INTEGER WorkingSetWatch;         //
-   ULONG InheritedFromUniqueProcessId;
-   ACCESS_MASK GrantedAccess;
-   ULONG DefaultHardErrorProcessing;
-   PVOID LdtInformation;
-   ULONG VadFreeHint;
-   PVOID VdmObjects;
-   KMUTANT ProcessMutant;
-   CHAR ImageFileName[16];
-   LARGE_INTEGER VmTrimFaultValue;
-   struct _WIN32PROCESSDATA *Win32Process;
+  /* Microkernel specific process state. */
+  KPROCESS              Pcb;                          /* 000 */
+  /* Exit status of the process. */
+  NTSTATUS              ExitStatus;                   /* 068 */
+  /* Unknown. */
+  KEVENT                LockEvent;                    /* 06C */
+  /* Unknown. */
+  ULONG                 LockCount;                    /* 07C */
+  /* Time of process creation. */
+  TIME                  CreateTime;                   /* 080 */
+  /* Time of process exit. */
+  TIME                  ExitTime;                     /* 088 */
+  /* Unknown. */
+  PVOID                 LockOwner;                    /* 090 */
+  /* Process id. */
+  ULONG                 UniqueProcessId;              /* 094 */
+  /* Unknown. */
+  LIST_ENTRY            ActiveProcessLinks;           /* 098 */
+  /* Unknown. */
+  ULONG                 QuotaPeakPoolUsage[2];        /* 0A0 */
+  /* Unknown. */
+  ULONG                 QuotaPoolUsage[2];            /* 0A8 */
+  /* Unknown. */
+  ULONG                 PagefileUsage;                /* 0B0 */
+  /* Unknown. */
+  ULONG                 CommitCharge;                 /* 0B4 */
+  /* Unknown. */
+  ULONG                 PeakPagefileUsage;            /* 0B8 */
+  /* Unknown. */
+  ULONG                 PeakVirtualSize;              /* 0BC */
+  /* Unknown. */
+  LARGE_INTEGER         VirtualSize;                  /* 0C0 */
+  struct
+  {
+    ULONG               LastTrimTime;
+    ULONG               LastTrimFaultCount;
+    ULONG               PageFaultCount;
+    ULONG               PeakWorkingSetSize;
+    ULONG               WorkingSetSize;
+    ULONG               MinimumWorkingSetSize;
+    ULONG               MaximumWorkingSetSize;
+    ULONG               VmWorkingSetList;
+    LIST_ENTRY          WorkingSetExpansionList;
+    UCHAR               AllowWorkingSetAdjustment;
+    UCHAR               AddressSpaceBeingDeleted;
+    UCHAR               ForegroundPrioritySwitch;
+    UCHAR               MemoryPriority;
+  } Vm;
+  PVOID                 LastProtoPteFault;
+  struct _EPORT*        DebugPort;
+  struct _EPORT*        ExceptionPort;
+  PVOID                 ObjectTable;
+  PVOID                 Token;
+  //  FAST_MUTEX            WorkingSetLock;
+  KMUTEX                WorkingSetLock;
+  PVOID                 WorkingSetPage;
+  UCHAR                 ProcessOutswapEnabled;
+  UCHAR                 ProcessOutswapped;
+  UCHAR                 AddressSpaceInitialized;
+  UCHAR                 AddressSpaceDeleted;
+  FAST_MUTEX            AddressCreationLock;
+  KSPIN_LOCK            HyperSpaceLock;
+  PETHREAD              ForkInProgress;
+  USHORT                VmOperation;
+  UCHAR                 ForkWasSuccessful;
+  UCHAR                 MmAgressiveWsTrimMask;
+  PKEVENT               VmOperationEvent;
+  PVOID                 PageDirectoryPte;
+  ULONG                 LastFaultCount;
+  PVOID                 VadRoot;
+  PVOID                 VadHint;
+  PVOID                 CloneRoot;
+  ULONG                 NumberOfPrivatePages;
+  ULONG                 NumberOfLockedPages;
+  USHORT                NextProcessColour;
+  UCHAR                 ExitProcessCalled;
+  UCHAR                 CreateProcessReported;
+  HANDLE                SectionHandle;
+  PPEB                  Peb;
+  PVOID                 SectionBaseAddress;
+  PVOID                 QuotaBlock;
+  NTSTATUS              LastThreadExitStatus;
+  PVOID                 WorkingSetWatch;         
+  HANDLE                InheritedFromUniqueProcessId;
+  ACCESS_MASK           GrantedAccess;
+  ULONG                 DefaultHardErrorProcessing;
+  PVOID                 LdtInformation;
+  ULONG                 VadFreeHint;
+  PVOID                 VdmObjects;
+  KMUTANT               ProcessMutant;
+  CHAR                  ImageFileName[16];
+  ULONG                 VmTrimFaultValue;
+  UCHAR                 SetTimerResolution;
+  UCHAR                 PriorityClass;
+  UCHAR                 SubSystemMinorVersion;
+  UCHAR                 SubSystemMajorVersion;
+  USHORT                SubSystemVersion;
+  struct _WIN32PROCESSDATA *Win32Process;
    
    /*
     * Added by David Welch (welch@mcmail.com)

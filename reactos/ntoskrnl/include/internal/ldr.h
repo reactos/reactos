@@ -75,6 +75,7 @@ RtlImageDirectoryEntryToData (
 	OUT PULONG	Size);
 VOID
 LdrInit1(VOID);
-
+VOID
+LdrInitDebug(PLOADER_MODULE Module, PWCH Name);
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

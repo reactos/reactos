@@ -211,7 +211,6 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    Thread->ApcStateIndex = 0;
    Thread->ApcQueueable = 0;
    Thread->AutoAlignment = 0;
-   Thread->StackBase = KernelStack;
    KeInitializeApc(&Thread->SuspendApc,
 		   Thread,
 		   0,

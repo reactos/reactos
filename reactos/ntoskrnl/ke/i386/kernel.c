@@ -46,21 +46,23 @@ VOID
 KeInit1(VOID)
 {
    PKPCR KPCR;
-   extern USHORT KiGdt[];
+   extern USHORT KiBootGdt[];
 
    KiCheckFPU();
 
    KeInitExceptions ();
    KeInitInterrupts ();
 
-   /* Initialize the initial PCR region. We can't allocate a page
-      with MmAllocPage() here because MmInit1() has not yet been
-      called, so we use a predefined page in low memory */
+   /* 
+    * Initialize the initial PCR region. We can't allocate a page
+    * with MmAllocPage() here because MmInit1() has not yet been
+    * called, so we use a predefined page in low memory 
+    */
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGESIZE);
    KPCR->Self = (PKPCR)KPCR_BASE;
    KPCR->Irql = HIGH_LEVEL;
-   KPCR->GDT = (PUSHORT)&KiGdt;
+   KPCR->GDT = (PUSHORT)&KiBootGdt;
    KPCR->IDT = (PUSHORT)&KiIdt;
    KiPcrInitDone = 1;
 }

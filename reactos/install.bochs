@@ -9,6 +9,6 @@ mount -t vfat /bochs/10M.vga.dos /mnt/floppy -o loop,offset=8704,rw
 ./install.sh /mnt/floppy
 umount /mnt/floppy
 echo "Installing to minix disk."
-mount -t minix /bochs/10M.vga.minix /mnt/floppy -o loop,offset=8704,rw
-./install.sh /mnt/floppy
-umount /mnt/floppy
+#mount -t minix /bochs/10M.vga.minix /mnt/floppy -o loop,offset=8704,rw
+#./install.sh /mnt/floppy
+#umount /mnt/floppy

@@ -64,10 +64,10 @@ multiboot_header:
 	/* entry_addr */
 	.long (0x200000 + _start - KERNEL_BASE)
 
-_multiboot_entry:
+_multiboot_entry:	
 	/*
 	 * This	must be PIC because we haven't set up paging yet
-	 */
+	 */	
 	
 	/*
 	 * Gcc expects this at all times
@@ -76,13 +76,13 @@ _multiboot_entry:
 
 #ifdef MP
 
-   /*
-    * Save the multiboot or application processor magic
-    */
-   movl    %eax, %edx
+	/*
+	 * Save the multiboot or application processor magic
+	 */
+	movl    %eax, %edx
 
-   cmpl    $AP_MAGIC, %edx
-   je      .m1
+	cmpl    $AP_MAGIC, %edx
+	je	.m1
 
 #endif /* MP */
 
@@ -109,9 +109,9 @@ _multiboot_entry:
 	movl	$(V2P(lowmem_pagetable) + 0x7), 0xD00(%esi)
 	movl	$(V2P(startup_pagedirectory) + 0x7), 0xF00(%esi) 
 #ifdef MP
-  movl	$(V2P(apic_pagetable) + 0x7), 0xFEC(%esi)
+	movl	$(V2P(apic_pagetable) + 0x7), 0xFEC(%esi)
 #endif /* MP */
-  movl	$(V2P(kpcr_pagetable) + 0x7), 0xFF0(%esi)
+	movl	$(V2P(kpcr_pagetable) + 0x7), 0xFF0(%esi)
 
 	/*
 	 * Initialize the page table that maps low memory
@@ -145,8 +145,10 @@ _multiboot_entry:
 	 * Initialize the page table that maps the APIC register address space
 	 */
 	 
-  /* FIXME: APIC register address space can be non-standard so do the mapping later */
-
+	/* 
+	 * FIXME: APIC register address space can be non-standard so do the 
+	 * mapping later 
+	 */
 	movl	$V2P(apic_pagetable), %esi
 	movl	$0, %edi
 	movl	$0xFEC0001B, %eax
@@ -171,7 +173,6 @@ _multiboot_entry:
 
 #endif /* MP */
 
-
 	/*
 	 * Set up the PDBR
 	 */	
@@ -186,7 +187,7 @@ _multiboot_entry:
 	movl	%eax, %cr0
 
 	/*
-	 * Do an absolute jump because we now want to execute at 0xc0000000
+	 * Do an absolute jump because we now want to execute above 0xc0000000
 	 */	
 	movl	$.l2, %eax
 	jmp	*%eax
@@ -197,8 +198,7 @@ _multiboot_entry:
 	 * 0xc0000000
 	 */
 	 
-  /* FIXME: Application processors should have their own GDT/IDT */
-  
+	/* FIXME: Application processors should have their own GDT/IDT */
 	lgdt	_KiGdtDescriptor
 	lidt	_KiIdtDescriptor
 
@@ -215,12 +215,12 @@ _multiboot_entry:
 
 #ifdef MP
 
-  cmpl    $AP_MAGIC, %edx
-  jne     .m2
+	cmpl    $AP_MAGIC, %edx
+	jne     .m2
 
-  /*
-   * This is an application processor executing
-   */
+	/*
+	 * This is an application processor executing
+	 */
 
 	/*
 	 * Initialize EFLAGS
@@ -232,16 +232,29 @@ _multiboot_entry:
 	 * Call the application processor initialization code
 	 */
 	pushl	$0
+	pushl	$.l7
 	pushl	$KERNEL_CS
 	pushl	$_KiSystemStartup
-  lret
+	lret
+	popl	%eax
 
+	/*
+	 * Catch illegal returns from KiSystemStartup
+	 */
+.l7:
+	pushl	$0
+	call	_KeBugCheck@4
+	popl	%eax
+.l8:
+	jmp	.l8
+
+	
 .m2:
 
 #endif /* MP */
 
 	/*
-	 * Load the initial ring0 stack
+	 * Load the initial kernel stack
 	 */
 	movl	$_init_stack_top, %esp
 
@@ -252,15 +265,30 @@ _multiboot_entry:
 	popfl
 
 	/*
-	 * Call the main ring0 initialization
+	 * Call the main kernel initialization
 	 */
+	movl	$0, %ebp
 	pushl	%ebx
 	pushl	%edx
-	pushl	$0
+	pushl	$.l5
 	pushl	$KERNEL_CS
 	pushl	$__main
 	lret
+	popl	%eax
+	popl	%eax
+	
+	/*
+	 * Catch illegal returns from main, try bug checking the system,
+	 * if that fails then loop forever.
+	 */
+.l5:
+	pushl	$0
+	call	_KeBugCheck@4
+	popl	%eax
+.l6:
+	jmp	.l6
 
+	
 	/*
 	 * This needs to be page aligned so put it at the beginning of the bss
 	 * segment

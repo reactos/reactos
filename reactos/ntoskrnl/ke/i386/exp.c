@@ -664,7 +664,7 @@ void KeInitExceptions(void)
 {
    int i;
    ULONG base, length;
-   extern USHORT KiGdt[];
+   extern USHORT KiBootGdt[];
    extern unsigned int trap_stack_top;   
    extern KTSS KiTss;
    extern KTSS KiTrapTss;
@@ -681,10 +681,10 @@ void KeInitExceptions(void)
    base = (unsigned int)&KiNullLdt;
    length = sizeof(KiNullLdt) - 1;
    
-   KiGdt[(LDT_SELECTOR / 2) + 0] = (length & 0xFFFF);
-   KiGdt[(LDT_SELECTOR / 2) + 1] = (base & 0xFFFF);
-   KiGdt[(LDT_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
-   KiGdt[(LDT_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+   KiBootGdt[(LDT_SELECTOR / 2) + 0] = (length & 0xFFFF);
+   KiBootGdt[(LDT_SELECTOR / 2) + 1] = (base & 0xFFFF);
+   KiBootGdt[(LDT_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
+   KiBootGdt[(LDT_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
      ((base & 0xFF000000) >> 16);
 
    /*
@@ -694,10 +694,10 @@ void KeInitExceptions(void)
    base = (unsigned int)&KiTss;
    length = sizeof(KiTss) - 1;
          
-   KiGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-   KiGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-   KiGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-   KiGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+   KiBootGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
+   KiBootGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
+   KiBootGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+   KiBootGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
      ((base & 0xFF000000) >> 16);
    
    /*
@@ -724,10 +724,10 @@ void KeInitExceptions(void)
    base = (unsigned int)&KiTrapTss;
    length = sizeof(KiTrapTss) - 1;
          
-   KiGdt[(TRAP_TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-   KiGdt[(TRAP_TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-   KiGdt[(TRAP_TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-   KiGdt[(TRAP_TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+   KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
+   KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
+   KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+   KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
      ((base & 0xFF000000) >> 16);
 
    KiTrapTss.Eflags = 0;

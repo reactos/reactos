@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.72 2001/04/11 12:46:05 chorns Exp $
+/* $Id: loader.c,v 1.73 2001/04/16 02:02:05 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,7 @@
  *   DW   27/06/2000 Removed redundant header files
  *   CSH  11/04/2001 Added automatic loading of module symbols if they exist
  */
+
 
 /* INCLUDES *****************************************************************/
 
@@ -80,6 +81,33 @@ static PVOID LdrPEFixupForward(PCHAR ForwardName);
 /* FUNCTIONS *****************************************************************/
 
 VOID
+LdrInitDebug(PLOADER_MODULE Module, PWCH Name)
+{
+  PLIST_ENTRY current_entry;
+  MODULE_TEXT_SECTION* current;
+
+  current_entry = ModuleTextListHead.Flink;
+  while (current_entry != &ModuleTextListHead)
+    {
+      current = 
+	CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
+      if (wcscmp(current->Name, Name) == 0)
+	{
+	  break;
+	}
+      current_entry = current_entry->Flink;
+    }
+
+  if (current_entry == &ModuleTextListHead)
+    {
+      return;
+    }
+  
+  current->SymbolsBase = (PVOID)Module->ModStart;
+  current->SymbolsLength = Module->ModEnd - Module->ModStart;
+}
+
+VOID
 LdrInit1(VOID)
 {
   PIMAGE_DOS_HEADER DosHeader;
@@ -101,6 +129,8 @@ LdrInit1(VOID)
   NtoskrnlTextSection.Length = SectionList[0].Misc.VirtualSize +
     SectionList[0].VirtualAddress;
   NtoskrnlTextSection.Name = L"ntoskrnl.exe";
+  NtoskrnlTextSection.SymbolsBase = NULL;
+  NtoskrnlTextSection.SymbolsLength = 0;
   InsertTailList(&ModuleTextListHead, &NtoskrnlTextSection.ListEntry);
 }
 
@@ -359,7 +389,7 @@ PSYMBOL LdrParseLine(PCHAR Line,
 }
 
 VOID LdrLoadModuleSymbols(PMODULE_OBJECT ModuleObject,
-													MODULE_TEXT_SECTION* ModuleTextSection)
+			  MODULE_TEXT_SECTION* ModuleTextSection)
 /*
    Symbols must be sorted by address, e.g.
    "nm --numeric-sort module.sys > module.sym"
@@ -1303,6 +1333,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
 				     sizeof(MODULE_TEXT_SECTION));
   ModuleTextSection->Base = (ULONG)DriverBase;
   ModuleTextSection->Length = DriverSize;
+  ModuleTextSection->SymbolsBase = NULL;
+  ModuleTextSection->SymbolsLength = 0;
   ModuleTextSection->Name = 
     ExAllocatePool(NonPagedPool, 
 		   (wcslen(NameBuffer) + 1) * sizeof(WCHAR));

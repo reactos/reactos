@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.26 2001/04/13 16:12:26 chorns Exp $
+/* $Id: page.c,v 1.27 2001/04/16 02:02:05 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -117,8 +117,8 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
    
-   MmDereferencePage(Process->Pcb.PageTableDirectory);
-   Process->Pcb.PageTableDirectory = NULL;
+   MmDereferencePage(Process->Pcb.DirectoryTableBase[0]);
+   Process->Pcb.DirectoryTableBase[0] = NULL;
    
    DPRINT("Finished Mmi386ReleaseMmInfo()\n");
    return(STATUS_SUCCESS);
@@ -140,7 +140,7 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
 	return(STATUS_UNSUCCESSFUL);
      }
    PhysPageDirectory = (PULONG)(MmGetPhysicalAddress(PageDirectory)).u.LowPart;
-   KProcess->PageTableDirectory = PhysPageDirectory;   
+   KProcess->DirectoryTableBase[0] = PhysPageDirectory;   
    CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
    
    memset(PageDirectory,0,PAGESIZE);

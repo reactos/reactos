@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.88 2001/04/16 00:48:04 chorns Exp $
+/* $Id: main.c,v 1.89 2001/04/16 02:02:04 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -383,307 +383,207 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 	KeBugCheck (0x0);
      }
 }
-#if 0
-VOID
-TestV86Mode(VOID)
-{
-  ULONG i;
-  extern UCHAR OrigIVT[1024];
-  KV86M_REGISTERS regs;
-  NTSTATUS Status;
-  struct vesa_info* vi;
-
-  for (i = 0; i < (640 / 4); i++)
-    {
-      MmCreateVirtualMapping(NULL,
-			     (PVOID)(i * 4096),
-			     PAGE_EXECUTE_READWRITE,
-			     (ULONG)MmAllocPage(0));
-    }
-  for (; i < (1024 / 4); i++)
-    {
-      MmCreateVirtualMapping(NULL,
-			     (PVOID)(i * 4096),
-			     PAGE_EXECUTE_READ,
-			     i * 4096);
-    }
-  vi = (struct vesa_info*)0x20000;
-  vi->Signature[0] = 'V';
-  vi->Signature[1] = 'B';
-  vi->Signature[2] = 'E';
-  vi->Signature[3] = '2';
-  memset(&regs, 0, sizeof(regs));
-  regs.Eax = 0x4F00;  
-  regs.Es = 0x2000;
-  regs.Edi = 0x0;
-  memcpy((PVOID)0x0, OrigIVT, 1024);
-  Status = Ke386CallBios(0x10, &regs);
-  DbgPrint("Finished (Status %x, CS:EIP %x:%x)\n", Status, regs.Cs,
-	   regs.Eip);
-  DbgPrint("Eax %x\n", regs.Eax);
-  DbgPrint("Signature %.4s\n", vi->Signature);
-  DbgPrint("TotalVideoMemory %dKB\n", vi->TotalVideoMemory * 64);
-}
-#endif
 
 VOID
 ExpInitializeExecutive(VOID)
 {
-   /*
-    * Initialization phase 0
-    */
-   HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+  ULONG i;
+  ULONG start;
+  PCHAR name;
+  CHAR str[50];
 
-   /* Execute executive initialization code on bootstrap processor only */
-   if (!Initialized)
-   {
-      Initialized = TRUE;
-      DPRINT("Phase 0 initialization started...\n");
+  /*
+   * Fail at runtime if someone has changed various structures without
+   * updating the offsets used for the assembler code.
+   */
+  assert(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
+  assert(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
+  assert(FIELD_OFFSET(KTHREAD, KernelStack) == KTHREAD_KERNEL_STACK);
+  assert(FIELD_OFFSET(KTHREAD, PreviousMode) == KTHREAD_PREVIOUS_MODE);
+  assert(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
+  assert(FIELD_OFFSET(ETHREAD, ThreadsProcess) == ETHREAD_THREADS_PROCESS);
+  assert(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == 
+	 KPROCESS_DIRECTORY_TABLE_BASE);
+  assert(FIELD_OFFSET(KTRAP_FRAME, Reserved9) == KTRAP_FRAME_RESERVED9);
+  assert(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
+  assert(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
+  
+  assert(FIELD_OFFSET(KPCR, ExceptionList) == KPCR_EXCEPTION_LIST);
+  assert(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+  assert(FIELD_OFFSET(KPCR, CurrentThread) == KPCR_CURRENT_THREAD);
+  
+  LdrInit1();
+      
+  KeLowerIrql(DISPATCH_LEVEL);
+  
+  NtEarlyInitVdm();
+  
+  MmInit1(FirstKrnlPhysAddr, LastKrnlPhysAddr, LastKernelAddress);
+  
+  /*
+   * Initialize the kernel debugger
+   */
+  KdInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+  if (KdPollBreakIn ())
+    {
+      DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
+    }
+  
+  MmInit2();
+  KeInit2();
+  
+  KeLowerIrql(PASSIVE_LEVEL);
+      
+  ObInit();
+  PiInitProcessManager();
+  
+  /*
+   * Display version number and copyright/warranty message
+   */
+  HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
+		   KERNEL_VERSION_BUILD_STR")\n");
+  HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
+  HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
+		   "Public License, and you\n");
+  HalDisplayString("are welcome to change it and/or distribute copies of it "
+		   "under certain\n"); 
+  HalDisplayString("conditions. There is absolutely no warranty for "
+		   "ReactOS.\n");
 
-      /*
-       * Fail at runtime if someone has changed various structures without
-       * updating the offsets used for the assembler code.
-       */
-      assert(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
-      assert(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
-      assert(FIELD_OFFSET(KTHREAD, KernelStack) == KTHREAD_KERNEL_STACK);
-      assert(FIELD_OFFSET(KTHREAD, PreviousMode) == KTHREAD_PREVIOUS_MODE);
-      assert(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
-      assert(FIELD_OFFSET(ETHREAD, ThreadsProcess) == ETHREAD_THREADS_PROCESS);
-      assert(FIELD_OFFSET(KPROCESS, PageTableDirectory) == 
-	      KPROCESS_PAGE_TABLE_DIRECTORY);
-      assert(FIELD_OFFSET(KTRAP_FRAME, Reserved9) == KTRAP_FRAME_RESERVED9);
-      assert(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
-      assert(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
+  /* Initialize all processors */
+  KeNumberProcessors = 0;
 
-      assert(FIELD_OFFSET(KPCR, ExceptionList) == KPCR_EXCEPTION_LIST);
-      assert(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
-      assert(FIELD_OFFSET(KPCR, CurrentThread) == KPCR_CURRENT_THREAD);
+  while (!HalAllProcessorsStarted())
+    {
+      HalInitializeProcessor(KeNumberProcessors);
+      KeNumberProcessors++;
+    }
 
-      LdrInit1();
-
-      KeLowerIrql(DISPATCH_LEVEL);
-
-      NtEarlyInitVdm();
-
-			MmInit1(FirstKrnlPhysAddr, LastKrnlPhysAddr, LastKernelAddress);
-
-     /*
-      * Initialize the kernel debugger
-      */
-      KdInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-      if (KdPollBreakIn ())
-      {
-	      DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
-      }
-
-		  MmInit2();
-  	  KeInit2();
-
-      {
-         char tmpbuf[80];
-         sprintf(tmpbuf,"System with %d/%d MB memory\n",
-	         (unsigned int)(KeLoaderBlock.MemLower)/1024,
-	         (unsigned int)(KeLoaderBlock.MemHigher)/1024);
-         HalDisplayString(tmpbuf);
-      }
-
-      KeLowerIrql(PASSIVE_LEVEL);
-
-  		ObInit();
-	  	PiInitProcessManager();
-
-      /*
-       * Allow interrupts
-       */
-     __asm__ ("sti\n\t");
-
-#ifdef MP
-   //Phase1Initialization(NULL);
-#endif
-   }
-}
-
-VOID
-KiSystemStartup(VOID)
-{
-   ExpInitializeExecutive();
-
-	 for (;;)
-   {
-      NtYieldExecution();
-   }
-}
-
-/* Initialization phase 1 */
-VOID Phase1Initialization(PVOID Context)
-{
-   ULONG i;
-   ULONG start;
-   PCHAR name;
-   CHAR str[50];
-
-   DPRINT("Initialization phase 1 started...\n");
-
-   /*
-    * Display version number and copyright/warranty message
-    */
-   HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
-     KERNEL_VERSION_BUILD_STR")\n");
-   HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
-   HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
-     "Public License, and you\n");
-   HalDisplayString("are welcome to change it and/or distribute copies of it "
-	   "under certain\n"); 
-   HalDisplayString("conditions. There is absolutely no warranty for ReactOS.\n");
-
-   /* Initialize all processors */
-   KeNumberProcessors = 0;
-
-   while (!HalAllProcessorsStarted())
-   {
-     HalInitializeProcessor(
-     KeNumberProcessors);
-     KeNumberProcessors++;
-   }
-
-   if (KeNumberProcessors > 1)
-   {
+  if (KeNumberProcessors > 1)
+    {
       sprintf(str, "Found %d system processors.\n",
-			  KeNumberProcessors);
-   }
-   else
-   {
+	      KeNumberProcessors);
+    }
+  else
+    {
       strcpy(str, "Found 1 system processor.\n");
-   }
-   HalDisplayString(str);
+    }
+  HalDisplayString(str);
 
 #ifdef MP
 
-	 DbgPrint("BSP halted\n");
-   for (;;);
+  DbgPrint("BSP halted\n");
+  for (;;);
 
 #endif /* MP */
 
   /*
    * Initialize various critical subsystems
    */
-   HalInitSystem (1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+  HalInitSystem (1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
-   ExInit();
-   IoInit();
-   LdrInitModuleManagement();
-   CmInitializeRegistry();
-   NtInit();
-   MmInit3();
-   
-   /* Report all resources used by hal */
-   HalReportResourceUsage ();
-
-   /*
-    * Enter the kernel debugger before starting up the boot drivers
-    */
+  ExInit();
+  IoInit();
+  LdrInitModuleManagement();
+  CmInitializeRegistry();
+  NtInit();
+  MmInit3();
+  
+  /* Report all resources used by hal */
+  HalReportResourceUsage ();
+  
+  /*
+   * Enter the kernel debugger before starting up the boot drivers
+   */
 #ifdef KDBG
-   KdbEnter();
+  KdbEnter();
 #endif /* KDBG */
-   
-   /*
-    * Initalize services loaded at boot time
-    */
-   DPRINT1("%d files loaded\n",KeLoaderBlock.ModsCount);
-   for (i=0; i < KeLoaderBlock.ModsCount; i++)
-     {
-	DPRINT1("module: %s\n", KeLoaderModules[i].String);
-     }
+  
+  /*
+   * Initalize services loaded at boot time
+   */
+  DPRINT1("%d files loaded\n",KeLoaderBlock.ModsCount);
+  for (i=0; i < KeLoaderBlock.ModsCount; i++)
+    {
+      DPRINT1("module: %s\n", KeLoaderModules[i].String);
+    }
 
-   /*  Pass 1: load registry chunks passed in  */
-   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-     {
-       start = KeLoaderModules[i].ModStart;
-       if (strcmp ((PCHAR) start, "REGEDIT4") == 0)
-	 {
-	    DPRINT1("process registry chunk at %08lx\n", start);
-	    CmImportHive((PCHAR) start);
-	 }
-     }
-
-   /*  Pass 2: process boot loaded drivers  */
-   for (i=1; i < KeLoaderBlock.ModsCount; i++)
-     {
-       start = KeLoaderModules[i].ModStart;
-       name = (PCHAR)KeLoaderModules[i].String;
-       if (strcmp ((PCHAR) start, "REGEDIT4") != 0)
-	 {
-	    DPRINT1("process module '%s' at %08lx\n", name, start);
-	    LdrProcessDriver((PVOID)start, name);
-	 }
+  /*  Pass 1: load registry chunks passed in  */
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      if (strcmp ((PCHAR) start, "REGEDIT4") == 0)
+	{
+	  DPRINT1("process registry chunk at %08lx\n", start);
+	  CmImportHive((PCHAR) start);
 	}
+    }
 
-   DPRINT("About to try MmAllocateContiguousAlignedMemory\n");
-   do
-     {
-extern PVOID STDCALL
-MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
-			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-				  IN ULONG Alignment);
-       PVOID v;
-       PHYSICAL_ADDRESS p;
-       p.QuadPart = 16*1024*1024;
-       v = MmAllocateContiguousAlignedMemory(12*1024, p,
-					     64*1024);
-       if (v != NULL)
-	 {
-	   DPRINT("Worked\n");
-	 }
-       else
-	 {
-	   DPRINT("Failed\n");
-	 }
-     }
-   while (0);
+  /*  Pass 2: process boot loaded drivers  */
+  for (i=1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      name = (PCHAR)KeLoaderModules[i].String;
+      if (strcmp ((PCHAR) start, "REGEDIT4") != 0)
+	{
+	  DPRINT1("process module '%s' at %08lx\n", name, start);
+	  LdrProcessDriver((PVOID)start, name);
+	}
+    }
+  
+  /* Create the SystemRoot symbolic link */
+  DbgPrint("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
 
-   /* Create the SystemRoot symbolic link */
-   DbgPrint("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
-
-   CreateSystemRootLink ((PUCHAR)KeLoaderBlock.CommandLine);
+  CreateSystemRootLink ((PUCHAR)KeLoaderBlock.CommandLine);
 
 #ifdef DBGPRINT_FILE_LOG
-   /* On the assumption that we can now access disks start up the debug 
-      logger thread */
-   DebugLogInit2();
+  /* On the assumption that we can now access disks start up the debug 
+     logger thread */
+  DebugLogInit2();
 #endif /* DBGPRINT_FILE_LOG */
+  
 
+  CmInitializeRegistry2();
 
-   CmInitializeRegistry2();
+  /*
+   * Load Auto configured drivers
+   */
+  LdrLoadAutoConfigDrivers();
 
-   /*
-    * Load Auto configured drivers
-    */
-   LdrLoadAutoConfigDrivers();
+  /*
+   * Assign drive letters
+   */
+  IoAssignDriveLetters ((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock,
+			NULL,
+			NULL,
+			NULL);
+  
+  /*
+   * Initialize shared user page:
+   *  - set dos system path, dos device map, etc.
+   */
+  InitSystemSharedUserPage ((PUCHAR)KeLoaderBlock.CommandLine);
 
-   /*
-    * Assign drive letters
-    */
-   IoAssignDriveLetters ((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock,
-                         NULL,
-                         NULL,
-                         NULL);
+  /*
+   *  Launch initial process
+   */
+  LdrLoadInitialProcess();
+  
+  PsTerminateSystemThread(STATUS_SUCCESS);
+}
 
-   /*
-    * Initialize shared user page:
-    *  - set dos system path, dos device map, etc.
-    */
-   InitSystemSharedUserPage ((PUCHAR)KeLoaderBlock.CommandLine);
-
-   /*
-    *  Launch initial process
-    */
-   LdrLoadInitialProcess();
-
-   DbgPrint("Finished kernel initialization.\n");
-
-	 /* FIXME: Call zero page thread function */
-   PsTerminateSystemThread(STATUS_SUCCESS);
+VOID
+KiSystemStartup(BOOLEAN BootProcessor)
+{
+  HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+  if (BootProcessor)
+    {
+      /* Never returns */
+      ExpInitializeExecutive();
+      KeBugCheck(0);
+    }
+  /* Do application processor initialization */
+  for(;;);
 }
 
 VOID
@@ -697,58 +597,51 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
  * invalid after the memory managment is initialized so we make a local copy.
  */
 {
-   ULONG i;
-   ULONG last_kernel_address;
-   extern ULONG _bss_end__;
+  ULONG i;
+  ULONG last_kernel_address;
+  extern ULONG _bss_end__;
+  
+  /*
+   * Copy the parameters to a local buffer because lowmem will go away
+   */
+  memcpy (&KeLoaderBlock, _LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
+  memcpy (&KeLoaderModules[1], (PVOID)KeLoaderBlock.ModsAddr,
+	  sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
+  KeLoaderBlock.ModsCount++;
+  KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
+  
+  /*
+   * FIXME: Preliminary hack!!!! Add boot device to beginning of command line.
+   * This should be done by the boot loader.
+   */
+  strcpy (KeLoaderCommandLine,
+	  "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
+  strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
+  
+  KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
+  strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
+  KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
+  KeLoaderModules[0].ModStart = 0xC0000000;
+  KeLoaderModules[0].ModEnd = PAGE_ROUND_UP((ULONG)&_bss_end__);
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      strcpy(KeLoaderModuleStrings[i], (PUCHAR)KeLoaderModules[i].String);
+      KeLoaderModules[i].ModStart -= 0x200000;
+      KeLoaderModules[i].ModStart += 0xc0000000;
+      KeLoaderModules[i].ModEnd -= 0x200000;
+      KeLoaderModules[i].ModEnd += 0xc0000000;
+      KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
+    }
+  
+  last_kernel_address = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
+  
+  FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - 0xc0000000 + 0x200000;
+  LastKrnlPhysAddr = last_kernel_address - 0xc0000000 + 0x200000;
+  LastKernelAddress = last_kernel_address;
 
-   /*
-    * Copy the parameters to a local buffer because lowmem will go away
-    */
-   memcpy (&KeLoaderBlock, _LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
-   memcpy (&KeLoaderModules[1], (PVOID)KeLoaderBlock.ModsAddr,
-	   sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
-   KeLoaderBlock.ModsCount++;
-   KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
-
-   /*
-    * FIXME: Preliminary hack!!!! Add boot device to beginning of command line.
-    * This should be done by the boot loader.
-    */
-   strcpy (KeLoaderCommandLine,
-	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
-   strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
-
-   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
-   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
-   KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
-   KeLoaderModules[0].ModStart = 0xC0000000;
-   KeLoaderModules[0].ModEnd = PAGE_ROUND_UP((ULONG)&_bss_end__);
-   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-     {
-	strcpy(KeLoaderModuleStrings[i], (PUCHAR)KeLoaderModules[i].String);
-	KeLoaderModules[i].ModStart -= 0x200000;
-	KeLoaderModules[i].ModStart += 0xc0000000;
-	KeLoaderModules[i].ModEnd -= 0x200000;
-	KeLoaderModules[i].ModEnd += 0xc0000000;
-	KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
-     }
-
-   last_kernel_address = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
-
-   FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - 0xc0000000 + 0x200000;
-   LastKrnlPhysAddr = last_kernel_address - 0xc0000000 + 0x200000;
-   LastKernelAddress = last_kernel_address;
-
-   KeInit1();
-
-#if 0
-      /*
-       * Allow interrupts
-       */
-     __asm__ ("sti\n\t");
-#endif
-
-   KiSystemStartup();
+  KeInit1();
+  
+  KiSystemStartup(1);
 }
 
 /* EOF */

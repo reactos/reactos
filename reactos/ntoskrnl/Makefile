@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.35 2001/04/16 00:48:04 chorns Exp $
+# $Id: Makefile,v 1.36 2001/04/16 02:02:03 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -22,8 +22,12 @@ CONFIG :=
 ifeq ($(DBG), 1)
 CFLAGS_DBG := -g
 CONFIG += DBG
+LINKER_SCRIPT := ntoskrnl.lnk
+STRIP_FLAGS := -Wl,-s
 else
 CFLAGS_DBG :=
+LINKER_SCRIPT := ntoskrnl.lnk
+STRIP_FLAGS := -Wl,-s
 endif
 
 ifeq ($(KDBG), 1)
@@ -52,7 +56,8 @@ all: $(EXE_PREFIX)depends$(EXE_POSTFIX) \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
-	$(TARGETNAME).sym
+	$(TARGETNAME).sym \
+	$(TARGETNAME).dbg
 
 $(EXE_PREFIX)depends$(EXE_POSTFIX): depends.c
 	$(HOST_CC) -o depends$(EXE_POSTFIX) depends.c
@@ -519,9 +524,9 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 		$(TARGETNAME).o -lgcc
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(TARGETNAME).lnk
+$(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(LINKER_SCRIPT)
 	$(CC) \
-		-Wl,-T,ntoskrnl.lnk \
+		-Wl,-T,$(LINKER_SCRIPT) \
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
@@ -540,7 +545,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(TARGETNAME).lnk
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
-		-Wl,-T,ntoskrnl.lnk -Wl,-s\
+		-Wl,-T,$(LINKER_SCRIPT) $(STRIP_FLAGS)\
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGETNAME).exe \
@@ -550,6 +555,42 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(TARGETNAME).lnk
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc
+	- $(RM) temp.exp
+
+$(TARGETNAME).dbg.o: $(TARGETNAME).o
+	$(STRIP) --strip-debug -o $(TARGETNAME).dbg.o $(TARGETNAME).o
+
+$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
+	$(CC) \
+		-Wl,-T,$(TARGETNAME).dbg.lnk \
+		-nostartfiles -nostdlib \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--subsystem,native \
+		-Wl,--image-base,0xc0000000 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,--base-file,base.tmp \
+		$(TARGETNAME).dbg.o -lgcc
+	- $(RM) junk.tmp
+	$(DLLTOOL) \
+		--dllname $(TARGETNAME).dbg \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--def $(TARGETNAME).edf \
+		--kill-at
+	- $(RM) base.tmp
+	$(CC) \
+		-Wl,-T,$(TARGETNAME).dbg.lnk \
+		-nostartfiles -nostdlib \
+		-mdll \
+		-o $(TARGETNAME).dbg \
+		-Wl,--subsystem,native \
+		-Wl,--image-base,0xc0000000 \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,temp.exp \
+		$(TARGETNAME).dbg.o -lgcc
 	- $(RM) temp.exp
 
 $(TARGETNAME).sym: $(TARGETNAME).nostrip.exe

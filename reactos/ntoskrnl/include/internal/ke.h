@@ -193,4 +193,6 @@ VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
 
 #endif /* not __ASM__ */
 
+#define MAXIMUM_PROCESSORS      32
+
 #endif

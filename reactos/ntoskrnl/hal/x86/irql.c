@@ -31,6 +31,9 @@ extern ULONG DpcQueueSize;
 
 static VOID KeSetCurrentIrql(KIRQL newlvl);
 
+#define DIRQL_TO_IRQ(x)  (PROFILE_LEVEL - x)
+#define IRQ_TO_DIRQL(x)  (PROFILE_LEVEL - x)
+
 /* FUNCTIONS ****************************************************************/
 
 VOID HalpInitPICs(VOID)
@@ -53,24 +56,13 @@ VOID HalpInitPICs(VOID)
    WRITE_PORT_UCHAR((PUCHAR)0xa1, 0xff);
 }
 
-#if 0
-static unsigned int HiGetCurrentPICMask(void)
+static ULONG 
+HiSetCurrentPICMask(unsigned int mask)
 {
-   unsigned int mask;
-   
-   mask = READ_PORT_UCHAR((PUCHAR)0x21);
-   mask = mask | (READ_PORT_UCHAR((PUCHAR)0xa1)<<8);
-
-   return mask;
-}
-#endif
-
-static unsigned int HiSetCurrentPICMask(unsigned int mask)
-{
-   WRITE_PORT_UCHAR((PUCHAR)0x21,mask & 0xff);
-   WRITE_PORT_UCHAR((PUCHAR)0xa1,(mask >> 8) & 0xff);
-
-   return mask;
+  WRITE_PORT_UCHAR((PUCHAR)0x21,mask & 0xff);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1,(mask >> 8) & 0xff);
+  
+  return mask;
 }
 
 static VOID HiSwitchIrql(KIRQL oldIrql)
@@ -84,25 +76,48 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
    
    CurrentThread = KeGetCurrentThread();
    
-   if (CurrentIrql == HIGH_LEVEL)
+   /*
+    * Disable all interrupts
+    */
+   if (CurrentIrql >= IPI_LEVEL)
      {
-	HiSetCurrentPICMask(0xffff);
-	return;
+       HiSetCurrentPICMask(0xFFFF);
+       __asm__("sti\n\t");
+       return;
      }
-   if (CurrentIrql > DISPATCH_LEVEL)
+
+   /*
+    * Disable all interrupts but the timer
+    */
+   if (CurrentIrql == PROFILE_LEVEL ||
+       CurrentIrql == CLOCK1_LEVEL ||
+       CurrentIrql == CLOCK2_LEVEL)
      {
-	unsigned int current_mask = 0;
-	
-	for (i=CurrentIrql; i>DISPATCH_LEVEL; i--)
-	  {
-	     current_mask = current_mask | (1 << (HIGH_LEVEL - i));
-	  }
-	
-	HiSetCurrentPICMask(current_mask);
+	HiSetCurrentPICMask(0xFFFE);
 	__asm__("sti\n\t");
 	return;
      }
+
+   /*
+    * Disable all interrupts of lesser priority
+    */
+   if (CurrentIrql > DISPATCH_LEVEL)
+     {
+       unsigned int current_mask = 0;
+	
+       for (i = CurrentIrql; i > (PROFILE_LEVEL - 15); i--)
+	  {
+	     current_mask = current_mask | (1 << (PROFILE_LEVEL - i));
+	  }
+	
+       HiSetCurrentPICMask(current_mask);
+       __asm__("sti\n\t");
+       return;
+     }
    
+   /*
+    * Enable all interrupts
+    */
    if (CurrentIrql == DISPATCH_LEVEL)
      {
 	HiSetCurrentPICMask(0);
@@ -110,40 +125,46 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
 	return;
      }
    
-   HiSetCurrentPICMask(0);
+   /*
+    * APCs are disabled but execute any pending DPCs
+    */
    if (CurrentIrql == APC_LEVEL)
      {
-	if (DpcQueueSize > 0 )
+       HiSetCurrentPICMask(0);
+       __asm__("sti\n\t");
+       if (DpcQueueSize > 0)
 	  {
-	     KeSetCurrentIrql(DISPATCH_LEVEL);
-	     __asm__("sti\n\t");
-	     KiDispatchInterrupt();
-	     __asm__("cli\n\t");
-	     KeSetCurrentIrql(PASSIVE_LEVEL);
+	    CurrentIrql = DISPATCH_LEVEL;
+	    KiDispatchInterrupt();
+	    CurrentIrql = APC_LEVEL;
 	  }
-	__asm__("sti\n\t");
 	return;
      }
    
-   if (CurrentIrql == PASSIVE_LEVEL && 
-       CurrentThread != NULL && 
-       CurrentThread->ApcState.KernelApcPending)
+   /*
+    * Execute any pending DPCs or APCs
+    */
+   if (CurrentIrql == PASSIVE_LEVEL)
      {
-	KeSetCurrentIrql(APC_LEVEL);
-	__asm__("sti\n\t");
-	KiDeliverApc(0, 0, 0);
-	__asm__("cli\n\t");
-	KeSetCurrentIrql(PASSIVE_LEVEL);
-	__asm__("sti\n\t");
-     }
-   else
-     {
-	__asm__("sti\n\t");
+       if (DpcQueueSize > 0)
+	 {
+	   CurrentIrql = DISPATCH_LEVEL;
+	   KiDispatchInterrupt();
+	   CurrentIrql = PASSIVE_LEVEL;
+	 }
+       if (CurrentThread != NULL && 
+	   CurrentThread->ApcState.KernelApcPending)
+	 {
+	   CurrentIrql = APC_LEVEL;
+	   KiDeliverApc(0, 0, 0);
+	   CurrentIrql = PASSIVE_LEVEL;
+	 }
      }
 }
 
 
-KIRQL STDCALL KeGetCurrentIrql (VOID)
+KIRQL STDCALL 
+KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level
  * RETURNS: The current irq level
@@ -153,13 +174,13 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
 }
 
 
-static VOID KeSetCurrentIrql(KIRQL newlvl)
+STATIC VOID 
+KeSetCurrentIrql(KIRQL newlvl)
 /*
  * PURPOSE: Sets the current irq level without taking any action
  */
 {
-//   DPRINT("KeSetCurrentIrql(newlvl %x)\n",newlvl);
-   CurrentIrql = newlvl;
+  CurrentIrql = newlvl;
 }
 
 
@@ -181,27 +202,25 @@ static VOID KeSetCurrentIrql(KIRQL newlvl)
  */
 
 VOID FASTCALL
-KfLowerIrql (
-	KIRQL	NewIrql
-	)
+KfLowerIrql (KIRQL	NewIrql)
 {
-	KIRQL OldIrql;
-
-	__asm__("cli\n\t");
-
-	DPRINT("KfLowerIrql(NewIrql %d)\n", NewIrql);
-
-	if (NewIrql > CurrentIrql)
-	{
-		DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
-		          __FILE__, __LINE__, NewIrql, CurrentIrql);
-		KeDumpStackFrames (0, 32);
-		for(;;);
-	}
-
-	OldIrql = CurrentIrql;
-	CurrentIrql = NewIrql;
-	HiSwitchIrql(OldIrql);
+  KIRQL OldIrql;
+  
+  __asm__("cli\n\t");
+  
+  DPRINT("KfLowerIrql(NewIrql %d)\n", NewIrql);
+  
+  if (NewIrql > CurrentIrql)
+    {
+      DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
+		__FILE__, __LINE__, NewIrql, CurrentIrql);
+      KeDumpStackFrames (0, 32);
+      for(;;);
+    }
+  
+  OldIrql = CurrentIrql;
+  CurrentIrql = NewIrql;
+  HiSwitchIrql(OldIrql);
 }
 
 
@@ -221,13 +240,10 @@ KfLowerIrql (
  * NOTES
  */
 
-VOID
-STDCALL
-KeLowerIrql (
-	KIRQL	NewIrql
-	)
+VOID STDCALL
+KeLowerIrql (KIRQL NewIrql)
 {
-	KfLowerIrql (NewIrql);
+  KfLowerIrql (NewIrql);
 }
 
 
@@ -248,33 +264,30 @@ KeLowerIrql (
  *	Uses fastcall convention
  */
 
-KIRQL
-FASTCALL
-KfRaiseIrql (
-	KIRQL	NewIrql
-	)
+KIRQL FASTCALL
+KfRaiseIrql (KIRQL	NewIrql)
 {
-	KIRQL OldIrql;
-
-	DPRINT("KfRaiseIrql(NewIrql %d)\n", NewIrql);
-
-	if (NewIrql < CurrentIrql)
-	{
-		DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
-		          __FILE__,__LINE__,CurrentIrql,NewIrql);
-		KeBugCheck (0);
-		for(;;);
-	}
-
-	__asm__("cli\n\t");
-	OldIrql = CurrentIrql;
-	CurrentIrql = NewIrql;
-
-	DPRINT ("NewIrql %x OldIrql %x CurrentIrql %x\n",
-	        NewIrql, OldIrql, CurrentIrql);
-	HiSwitchIrql(OldIrql);
-
-	return OldIrql;
+  KIRQL OldIrql;
+  
+  DPRINT("KfRaiseIrql(NewIrql %d)\n", NewIrql);
+  
+  if (NewIrql < CurrentIrql)
+    {
+      DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
+		__FILE__,__LINE__,CurrentIrql,NewIrql);
+      KeBugCheck (0);
+      for(;;);
+    }
+  
+  __asm__("cli\n\t");
+  OldIrql = CurrentIrql;
+  CurrentIrql = NewIrql;
+  
+  DPRINT ("NewIrql %x OldIrql %x CurrentIrql %x\n",
+	  NewIrql, OldIrql, CurrentIrql);
+  HiSwitchIrql(OldIrql);
+  
+  return OldIrql;
 }
 
 
@@ -295,15 +308,11 @@ KfRaiseIrql (
  * NOTES
  *	Calls KfRaiseIrql
  */
-
-VOID
-STDCALL
-KeRaiseIrql (
-	KIRQL	NewIrql,
-	PKIRQL	OldIrql
-	)
+VOID STDCALL
+KeRaiseIrql (KIRQL	NewIrql,
+	     PKIRQL	OldIrql)
 {
-	*OldIrql = KfRaiseIrql (NewIrql);
+  *OldIrql = KfRaiseIrql (NewIrql);
 }
 
 
@@ -324,11 +333,10 @@ KeRaiseIrql (
  *	Calls KfRaiseIrql
  */
 
-KIRQL
-STDCALL
+KIRQL STDCALL
 KeRaiseIrqlToDpcLevel (VOID)
 {
-	return KfRaiseIrql (DISPATCH_LEVEL);
+  return KfRaiseIrql (DISPATCH_LEVEL);
 }
 
 
@@ -349,66 +357,68 @@ KeRaiseIrqlToDpcLevel (VOID)
  *	Calls KfRaiseIrql
  */
 
-KIRQL
-STDCALL
+KIRQL STDCALL
 KeRaiseIrqlToSynchLevel (VOID)
 {
-//	return KfRaiseIrql (CLOCK2_LEVEL);
-	UNIMPLEMENTED;
+  //	return KfRaiseIrql (CLOCK2_LEVEL);
+  UNIMPLEMENTED;
 }
 
 
-BOOLEAN STDCALL HalBeginSystemInterrupt (ULONG Vector,
-					 KIRQL Irql,
-					 PKIRQL OldIrql)
+BOOLEAN STDCALL 
+HalBeginSystemInterrupt (ULONG Vector,
+			 KIRQL Irql,
+			 PKIRQL OldIrql)
 {
-   if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
-	return FALSE;
-
-   /* Send EOI to the PICs */
-   WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
-   if ((Vector-IRQ_BASE)>=8)
-     {
-	WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
-     }
-
-   *OldIrql = KeGetCurrentIrql();
-   if (Vector-IRQ_BASE != 0)
-     {
-	DPRINT("old_level %d\n",*OldIrql);
-     }
-   KeSetCurrentIrql(Irql);
-
-   return TRUE;
+  if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+    return FALSE;
+  
+  /* Send EOI to the PICs */
+  WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
+  if ((Vector-IRQ_BASE)>=8)
+    {
+      WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
+    }
+  
+  *OldIrql = KeGetCurrentIrql();
+  if (Vector-IRQ_BASE != 0)
+    {
+      DPRINT("old_level %d\n",*OldIrql);
+    }
+  KeSetCurrentIrql(Irql);
+  
+  return TRUE;
 }
 
 
 VOID STDCALL HalEndSystemInterrupt (KIRQL Irql,
 				    ULONG Unknown2)
 {
-   KeSetCurrentIrql(Irql);
+  KeSetCurrentIrql(Irql);
 }
 
 
 BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
 					   ULONG Unknown2)
 {
-   ULONG irq;
+  ULONG irq;
+  
+  if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+    return FALSE;
 
-   if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
-	return FALSE;
-
-   irq = Vector - IRQ_BASE;
-   if (irq<8)
+  irq = Vector - IRQ_BASE;
+  if (irq < 8)
      {
-	WRITE_PORT_UCHAR((PUCHAR)0x21, READ_PORT_UCHAR((PUCHAR)0x21)|(1<<irq));
+       WRITE_PORT_UCHAR((PUCHAR)0x21, 
+			READ_PORT_UCHAR((PUCHAR)0x21)|(1<<irq));
      }
-   else
-     {
-	WRITE_PORT_UCHAR((PUCHAR)0xa1, READ_PORT_UCHAR((PUCHAR)0xa1)|(1<<(irq-8)));
-     }
-
-   return TRUE;
+  else
+    {
+      WRITE_PORT_UCHAR((PUCHAR)0xa1, 
+		       READ_PORT_UCHAR((PUCHAR)0xa1)|(1<<(irq-8)));
+    }
+  
+  return TRUE;
 }
 
 
@@ -416,22 +426,24 @@ BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
 					  ULONG Unknown2,
 					  ULONG Unknown3)
 {
-   ULONG irq;
+  ULONG irq;
 
-   if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
-	return FALSE;
+  if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+    return FALSE;
 
-   irq = Vector - IRQ_BASE;
-   if (irq<8)
+  irq = Vector - IRQ_BASE;
+  if (irq < 8)
+    {
+      WRITE_PORT_UCHAR((PUCHAR)0x21, 
+		       READ_PORT_UCHAR((PUCHAR)0x21)&(~(1<<irq)));
+    }
+  else
      {
-	WRITE_PORT_UCHAR((PUCHAR)0x21, READ_PORT_UCHAR((PUCHAR)0x21)&(~(1<<irq)));
-     }
-   else
-     {
-	WRITE_PORT_UCHAR((PUCHAR)0xa1, READ_PORT_UCHAR((PUCHAR)0xa1)&(~(1<<(irq-8))));
+       WRITE_PORT_UCHAR((PUCHAR)0xa1, 
+			READ_PORT_UCHAR((PUCHAR)0xa1)&(~(1<<(irq-8))));
      }
 
-   return TRUE;
+  return TRUE;
 }
 
 /* EOF */

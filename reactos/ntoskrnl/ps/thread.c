@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.73 2001/03/25 02:34:29 dwelch Exp $
+/* $Id: thread.c,v 1.74 2001/04/16 02:02:07 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -454,7 +454,8 @@ NtContinue(IN PCONTEXT	Context,
 NTSTATUS STDCALL 
 NtYieldExecution(VOID)
 {
-   return(STATUS_SUCCESS);
+  PsDispatchThread(THREAD_STATE_RUNNABLE);
+  return(STATUS_SUCCESS);
 }
 
 

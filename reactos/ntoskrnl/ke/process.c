@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.7 2001/03/16 23:04:59 dwelch Exp $
+/* $Id: process.c,v 1.8 2001/04/16 02:02:04 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -60,7 +60,7 @@ KeAttachProcess (PEPROCESS Process)
    
    CurrentThread->OldProcess = PsGetCurrentProcess();
    CurrentThread->ThreadsProcess = Process;
-   PageDir = (ULONG)CurrentThread->ThreadsProcess->Pcb.PageTableDirectory;
+   PageDir = (ULONG)CurrentThread->ThreadsProcess->Pcb.DirectoryTableBase[0];
    DPRINT("Switching process context to %x\n",PageDir)
    __asm__("movl %0,%%cr3\n\t"
 	   : /* no inputs */
@@ -91,7 +91,7 @@ KeDetachProcess (VOID)
    
    CurrentThread->ThreadsProcess = CurrentThread->OldProcess;
    CurrentThread->OldProcess = NULL;
-   PageDir = (ULONG)CurrentThread->ThreadsProcess->Pcb.PageTableDirectory;
+   PageDir = (ULONG)CurrentThread->ThreadsProcess->Pcb.DirectoryTableBase[0];
    __asm__("movl %0,%%cr3\n\t"
 	   : /* no inputs */
 	   : "r" (PageDir));

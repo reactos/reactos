@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.7 2001/04/16 00:48:04 chorns Exp $
+/* $Id: mp.c,v 1.8 2001/04/16 02:02:04 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1802,7 +1802,7 @@ ULONG MPChecksum(
    while (Size--)
       Sum += *Base++;
 
-   return (Sum & 0xFF);
+   return((UCHAR)Sum);
 }
 
 
@@ -2016,11 +2016,12 @@ HaliReadMPConfigTable(
    PUCHAR Entry;
    ULONG Count;
 
-   if ((ULONG)Table->Signature != MPC_SIGNATURE)
+   if (Table->Signature != MPC_SIGNATURE)
    {
-      PCHAR pc = (PCHAR)&Table->Signature;
+      PUCHAR pc = (PUCHAR)&Table->Signature;
 
-      DbgPrint("Bad MP configuration block signature: %c%c%c%c\n", pc[0], pc[1], pc[2], pc[3]);
+      DbgPrint("Bad MP configuration block signature: %c%c%c%c/%x/%x\n", pc[0],
+	       pc[1], pc[2], pc[3], MPC_SIGNATURE, (ULONG)Table->Signature);
       KeBugCheck(0);
       return;
    }
@@ -2225,17 +2226,19 @@ HaliScanForMPConfigTable(
  */
 {
 	 PULONG bp = (PULONG)Base;
-	 PMP_FLOATING_POINTER mpf;
+	 MP_FLOATING_POINTER* mpf;
 
    while (Size > 0)
    {
       if (*bp == MPF_SIGNATURE)
       {
-         if (!MPChecksum((PUCHAR)bp, 16))
+	DbgPrint("Found MPF signature at %x, checksum %x\n", bp,
+		 MPChecksum((PUCHAR)bp, 16));
+         if (MPChecksum((PUCHAR)bp, 16) == 0)
          {
-            mpf = (PMP_FLOATING_POINTER)bp;
+            mpf = (MP_FLOATING_POINTER*)bp;
 
-            DPRINT("Intel MultiProcessor Specification v1.%d compliant system.\n",
+            DbgPrint("Intel MultiProcessor Specification v1.%d compliant system.\n",
               mpf->Specification);
 
             if (mpf->Feature2 & FEATURE2_IMCRP) {
@@ -2273,7 +2276,7 @@ HaliScanForMPConfigTable(
                   DPRINT("MCA and PCI\n");
                   break;
                default:
-                  DPRINT("Unknown standard configuration %d\n", mpf->Feature1);
+                  DbgPrint("Unknown standard configuration %d\n", mpf->Feature1);
                   return FALSE;
             }
 
@@ -2337,7 +2340,7 @@ HalpInitMPS(
       if (!HaliScanForMPConfigTable(0xF0000, 0x10000)) {
         EBDA = *((PUSHORT)0x040E);
         EBDA <<= 4;
-        if (!HaliScanForMPConfigTable((ULONG)EBDA, 0x400)) {
+        if (!HaliScanForMPConfigTable((ULONG)EBDA, 0x1000)) {
           DbgPrint("No multiprocessor compliant system found.\n");
           KeBugCheck(0);
         }

@@ -1,4 +1,4 @@
-/* $Id: ctype.c,v 1.4 2000/01/11 01:16:50 ekohl Exp $
+/* $Id: ctype.c,v 1.5 2001/04/16 02:02:07 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -290,12 +290,13 @@ int iswctype(wint_t wc, wctype_t wctypeFlags)
    return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
 }
 
-/*
+
 int isalpha(int c)
 {
    return(_isctype(c, _ALPHA));
 }
 
+/*
 int isalnum(int c)
 {
    return(_isctype(c, _ALPHA | _DIGIT));

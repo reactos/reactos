@@ -220,7 +220,7 @@ typedef struct _IOAPIC_INFO
 
 typedef struct __attribute__((packed)) _MP_FLOATING_POINTER
 {
-	ULONG Signature[4];     /* _MP_ */
+	ULONG Signature;     /* _MP_ */
 	ULONG Address;          /* Physical Address Pointer (0 means no configuration table exist) */
 	UCHAR Length;           /* Structure length in 16-byte paragraphs */
 	UCHAR Specification;    /* Specification revision	*/
@@ -230,7 +230,7 @@ typedef struct __attribute__((packed)) _MP_FLOATING_POINTER
 	UCHAR Feature3;         /* Unused (0) */
 	UCHAR Feature4;         /* Unused (0) */
 	UCHAR Feature5;         /* Unused (0) */
-} MP_FLOATING_POINTER, *PMP_FLOATING_POINTER;
+} __attribute__((packed)) MP_FLOATING_POINTER, *PMP_FLOATING_POINTER;
 
 #define FEATURE2_IMCRP  0x80
 
@@ -239,7 +239,7 @@ typedef struct __attribute__((packed)) _MP_FLOATING_POINTER
 
 typedef struct __attribute__((packed)) _MP_CONFIGURATION_TABLE
 {
-	ULONG Signature[4];     /* PCMP */
+	ULONG Signature;     /* PCMP */
 	USHORT Length;	        /* Size of configuration table */
 	CHAR  Specification;    /* Specification Revision */
 	CHAR Checksum;          /* Checksum */
@@ -430,3 +430,5 @@ VOID IOAPICDump(VOID);
 VOID APICDump(VOID);
 
 #endif /* __INCLUDE_HAL_MPS */
+
+/* EOF */

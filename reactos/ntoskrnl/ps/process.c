@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.60 2001/03/25 02:34:29 dwelch Exp $
+/* $Id: process.c,v 1.61 2001/04/16 02:02:06 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -36,7 +36,7 @@ HANDLE SystemProcessHandle = NULL;
 
 POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
-static LIST_ENTRY PsProcessListHead;
+LIST_ENTRY PsProcessListHead;
 static KSPIN_LOCK PsProcessListLock;
 static ULONG PiNextProcessUniqueId = 0;
 
@@ -216,7 +216,7 @@ VOID PsInitProcessManagment(VOID)
    MmInitializeAddressSpace(PsInitialSystemProcess,
 			    &PsInitialSystemProcess->AddressSpace);
    ObCreateHandleTable(NULL,FALSE,PsInitialSystemProcess);
-   KProcess->PageTableDirectory = MmGetPageDirectory();
+   KProcess->DirectoryTableBase[0] = MmGetPageDirectory();
    PsInitialSystemProcess->UniqueProcessId = 
      InterlockedIncrement(&PiNextProcessUniqueId);
    
@@ -396,7 +396,8 @@ NtCreateProcess (OUT PHANDLE ProcessHandle,
    MmInitializeAddressSpace(Process,
 			    &Process->AddressSpace);
    Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
-   Process->InheritedFromUniqueProcessId = ParentProcess->UniqueProcessId;
+   Process->InheritedFromUniqueProcessId = 
+     (HANDLE)ParentProcess->UniqueProcessId;
    ObCreateHandleTable(ParentProcess,
 		       InheritObjectTable,
 		       Process);
@@ -407,7 +408,7 @@ NtCreateProcess (OUT PHANDLE ProcessHandle,
    InitializeListHead(&Process->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
-   Process->Pcb.ProcessState = PROCESS_STATE_ACTIVE;
+   Process->Pcb.State = PROCESS_STATE_ACTIVE;
    
    /*
     * Add the debug port
@@ -678,7 +679,7 @@ NTSTATUS STDCALL NtQueryInformationProcess (IN	HANDLE ProcessHandle,
         ProcessBasicInformationP->UniqueProcessId =
           Process->UniqueProcessId;
         ProcessBasicInformationP->InheritedFromUniqueProcessId =
-          Process->InheritedFromUniqueProcessId;
+          (ULONG)Process->InheritedFromUniqueProcessId;
 	Status = STATUS_SUCCESS;
 	break;
 	

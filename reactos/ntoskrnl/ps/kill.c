@@ -203,18 +203,18 @@ PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus)
 	   Process, ExitStatus, ObGetReferenceCount(Process),
 	   ObGetHandleCount(Process));
    
-   if (Process->Pcb.ProcessState == PROCESS_STATE_TERMINATED)
+   if (InterlockedExchange((PLONG)&Process->Pcb.State, 
+			   PROCESS_STATE_TERMINATED) == 
+       PROCESS_STATE_TERMINATED)
      {
 	return(STATUS_SUCCESS);
      }
    
    ObCloseAllHandles(Process);
    KeAcquireDispatcherDatabaseLock(FALSE);
-   Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock(FALSE);
-   DPRINT("RC %d\n", ObGetReferenceCount(Process));
    return(STATUS_SUCCESS);
 }
 
@@ -234,9 +234,9 @@ NTSTATUS STDCALL NtTerminateProcess(IN	HANDLE		ProcessHandle,
                                       (PVOID*)&Process,
 				      NULL);
    if (!NT_SUCCESS(Status))
-   {
-        return(Status);
-   }
+     {
+       return(Status);
+     }
    
    PiTerminateProcessThreads(Process, ExitStatus);
    if (PsGetCurrentThread()->ThreadsProcess == Process)
