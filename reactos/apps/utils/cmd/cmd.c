@@ -939,10 +939,13 @@ static VOID Initialize (int argc, char *argv[])
 	ShowCommands ();
 
 	/* Set COMSPEC environment variable */
-#ifndef __REACTOS__
+/* #ifndef __REACTOS__ */
 	if (argv)
+        {
+                ConErrPrintf("Argv[0]: '%s'", argv[0]);
 		SetEnvironmentVariable (_T("COMSPEC"), argv[0]);
-#endif
+        }
+/* #endif */
 
 	/* add ctrl handler */
 #if 0

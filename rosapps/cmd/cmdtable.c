@@ -169,6 +169,10 @@ COMMAND cmds[] =
 
 	{_T("shift"), CMD_BATCHONLY, cmd_shift},
 
+#ifdef INCLUDE_CMD_START
+	{_T("start"), 0, cmd_start},
+#endif
+
 #ifdef INCLUDE_CMD_TIME
 	{_T("time"), 0, cmd_time},
 #endif

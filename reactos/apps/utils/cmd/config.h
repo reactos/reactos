@@ -20,7 +20,7 @@
 
 
 /* JPP 20 Jul 1998 - define DEBUG to add debugging code */
-#define DEBUG
+/*#define DEBUG */
 
 
 /* Define to enable the alias command, and aliases.*/
@@ -74,6 +74,7 @@
 #define INCLUDE_CMD_RMDIR
 #define INCLUDE_CMD_RENAME
 #define INCLUDE_CMD_SET
+#define INCLUDE_CMD_START
 #define INCLUDE_CMD_TIME
 #define INCLUDE_CMD_TITLE
 #define INCLUDE_CMD_TYPE

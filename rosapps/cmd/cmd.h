@@ -65,8 +65,6 @@
 #define D_OFF        "off"
 
 
-#define CHECKPOINT  ConErrPrintf("%s:%d\n",__FILE__,__LINE__);
-
 
 /* Prototypes for CMD.C */
 extern HANDLE hOut;
@@ -298,6 +296,10 @@ INT cmd_rename (LPTSTR, LPTSTR);
 
 /* Prototypes for SET.C */
 INT cmd_set (LPTSTR, LPTSTR);
+
+
+/* Prototypes for START.C */
+INT cmd_start (LPTSTR, LPTSTR);
 
 
 /* Prototypes for TIME.C */

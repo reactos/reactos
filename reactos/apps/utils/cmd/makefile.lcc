@@ -48,6 +48,7 @@ OBJS=alias.obj \
 	ren.obj \
 	set.obj \
 	shift.obj \
+	start.obj \
 	time.obj \
 	type.obj \
 	ver.obj \
@@ -57,138 +58,10 @@ OBJS=alias.obj \
 
 # MAIN
 
-# What about this implicid rule?
-# It should compile all c files.
-# (To test this, uncomment the following two lines.) EK
-#.c.obj:
-#	$(CC) $(CFLAGS) $<
+.c.obj:
+	$(CC) $(CFLAGS) $<
 
 $(TARGET).exe: $(OBJS)
 	$(LD) $(LFLAGS) $(OBJS)
-
-# MODULES
-
-alias.obj: alias.c 
-	$(CC) $(CFLAGS) alias.c
-
-attrib.obj: attrib.c 
-	$(CC) $(CFLAGS) attrib.c
-
-batch.obj: batch.c 
-	$(CC) $(CFLAGS) batch.c
-
-beep.obj: beep.c 
-	$(CC) $(CFLAGS) beep.c
-
-call.obj: call.c 
-	$(CC) $(CFLAGS) call.c
-
-cls.obj: cls.c 
-	$(CC) $(CFLAGS) cls.c
-
-cmd.obj: cmd.c 
-	$(CC) $(CFLAGS) cmd.c
-
-cmdinput.obj: cmdinput.c 
-	$(CC) $(CFLAGS) cmdinput.c
-
-cmdtable.obj: cmdtable.c 
-	$(CC) $(CFLAGS) cmdtable.c
-
-color.obj: color.c 
-	$(CC) $(CFLAGS) color.c
-
-console.obj: console.c 
-	$(CC) $(CFLAGS) console.c
-
-copy.obj: copy.c 
-	$(CC) $(CFLAGS) copy.c
-
-date.obj: date.c 
-	$(CC) $(CFLAGS) date.c
-
-del.obj: del.c 
-	$(CC) $(CFLAGS) del.c
-
-dir.obj: dir.c 
-	$(CC) $(CFLAGS) dir.c
-
-dirstack.obj: dirstack.c 
-	$(CC) $(CFLAGS) dirstack.c
-
-echo.obj: echo.c 
-	$(CC) $(CFLAGS) echo.c
-
-error.obj: error.c 
-	$(CC) $(CFLAGS) error.c
-
-filecomp.obj: filecomp.c 
-	$(CC) $(CFLAGS) filecomp.c
-
-for.obj: for.c 
-	$(CC) $(CFLAGS) for.c
-
-goto.obj: goto.c 
-	$(CC) $(CFLAGS) goto.c
-
-history.obj: history.c 
-	$(CC) $(CFLAGS) history.c
-
-if.obj: if.c 
-	$(CC) $(CFLAGS) if.c
-
-internal.obj: internal.c 
-	$(CC) $(CFLAGS) internal.c
-
-label.obj: label.c 
-	$(CC) $(CFLAGS) label.c
-
-locale.obj: locale.c 
-	$(CC) $(CFLAGS) locale.c
-
-misc.obj: misc.c 
-	$(CC) $(CFLAGS) misc.c
-
-move.obj: move.c 
-	$(CC) $(CFLAGS) move.c
-
-path.obj: path.c 
-	$(CC) $(CFLAGS) path.c
-
-pause.obj: pause.c 
-	$(CC) $(CFLAGS) pause.c
-
-prompt.obj: prompt.c 
-	$(CC) $(CFLAGS) prompt.c
-
-redir.obj: redir.c 
-	$(CC) $(CFLAGS) redir.c
-
-ren.obj: ren.c 
-	$(CC) $(CFLAGS) ren.c
-
-set.obj: set.c 
-	$(CC) $(CFLAGS) set.c
-
-shift.obj: shift.c 
-	$(CC) $(CFLAGS) shift.c
-
-time.obj: time.c 
-	$(CC) $(CFLAGS) time.c
-
-type.obj: type.c 
-	$(CC) $(CFLAGS) type.c
-
-ver.obj: ver.c 
-	$(CC) $(CFLAGS) ver.c
-
-verify.obj: verify.c 
-	$(CC) $(CFLAGS) verify.c
-
-vol.obj: vol.c 
-	$(CC) $(CFLAGS) vol.c
-
-where.obj: where.c 
-	$(CC) $(CFLAGS) where.c
 
 #EOF
