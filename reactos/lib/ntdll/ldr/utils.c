@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.89.2.1 2004/06/20 10:37:20 gvg Exp $
+/* $Id: utils.c,v 1.89.2.2 2004/06/25 19:01:51 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1239,6 +1239,8 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   NTSTATUS Status;
   PIMAGE_SECTION_HEADER Sections;
   ULONG MaxExtend;
+  ULONG RelocationBlockOffset;
+  ULONG RelocationSectionSize;
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
     {
@@ -1248,6 +1250,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   Sections =
     (PIMAGE_SECTION_HEADER)((PVOID)NTHeaders + sizeof(IMAGE_NT_HEADERS));
   MaxExtend = 0;
+  RelocationSectionSize = 0;
   for (i = 0; i < NTHeaders->FileHeader.NumberOfSections; i++)
     {
       if (!(Sections[i].Characteristics & IMAGE_SECTION_NOLOAD))
@@ -1257,6 +1260,12 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
             (ULONG)(Sections[i].VirtualAddress + Sections[i].Misc.VirtualSize);
           MaxExtend = max(MaxExtend, Extend);
         }
+
+      if (!memcmp(Sections[i].Name,".reloc", 6))
+	{
+	  RelocationSectionSize = Sections[i].Misc.VirtualSize;
+	  DPRINT("Relocation section size: %lx\n", RelocationSectionSize);
+	}
     }
 
   RelocationDDir =
@@ -1268,7 +1277,8 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
       RelocationDir =
         (PRELOCATION_DIRECTORY)((PCHAR)ImageBase + RelocationRVA);
 
-      while (RelocationDir->SizeOfBlock)
+      RelocationBlockOffset = 0;
+      while (RelocationBlockOffset < RelocationSectionSize)
         {
           if (RelocationDir->VirtualAddress > MaxExtend)
             {
@@ -1388,6 +1398,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
           RelocationRVA += RelocationDir->SizeOfBlock;
           RelocationDir =
             (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
+          RelocationBlockOffset += RelocationDir->SizeOfBlock;
         }
     }
   return STATUS_SUCCESS;
