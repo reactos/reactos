@@ -53,11 +53,11 @@ $(ZLIB_PATH)/zlib.a:
 	make -C $(ZLIB_PATH) -f makefile.reactos
 
 $(TARGET).exe: $(OBJECTS) $(ZLIB_PATH)/zlib.a
-	$(CC) $(OBJECTS) -o $(TARGET).exe
+	$(CC) $(OBJECTS) -lstdc++ -o $(TARGET).exe
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 	
 test.exe: $(TEST_OBJECTS)
-	$(CC) $(TEST_OBJECTS) -o test.exe
+	$(CC) $(TEST_OBJECTS) -lstdc++ -o test.exe
 	$(NM) --numeric-sort test.exe > test.sym
 
 include ../../../rules.mak
