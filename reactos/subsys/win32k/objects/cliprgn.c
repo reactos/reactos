@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.40 2004/05/26 18:49:06 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.41 2004/07/07 16:34:33 navaraf Exp $ */
 #include <w32k.h>
 
 int FASTCALL
@@ -251,14 +251,18 @@ int STDCALL NtGdiExcludeClipRect(HDC  hDC,
    {
       Result = ERROR;
    }
-   else if (!dc->w.hClipRgn)
-   {
-      dc->w.hClipRgn = NewRgn;
-      Result = SIMPLEREGION;
-   }
    else
    {
-      Result = NtGdiCombineRgn(dc->w.hClipRgn, dc->w.hClipRgn, NewRgn, RGN_DIFF);
+      if (!dc->w.hClipRgn)
+      {
+         dc->w.hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         NtGdiCombineRgn(dc->w.hClipRgn, dc->w.hVisRgn, NewRgn, RGN_DIFF);         
+         Result = SIMPLEREGION;
+      }
+      else
+      {
+         Result = NtGdiCombineRgn(dc->w.hClipRgn, dc->w.hClipRgn, NewRgn, RGN_DIFF);
+      }
       NtGdiDeleteObject(NewRgn);
    }
    if (Result != ERROR)
