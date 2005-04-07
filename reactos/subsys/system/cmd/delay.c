@@ -10,6 +10,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_DELAY
 
@@ -18,17 +19,14 @@ INT CommandDelay (LPTSTR cmd, LPTSTR param)
 {
 	DWORD val;
 	DWORD mul=1000;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T(
-		              "pause for n seconds or milliseconds"
-		              "\n"
-		              "DELAY [/m]n\n"
-		              "\n"
-		              "  /m          specifiy than n are milliseconds\n"
-		              "              otherwise n are seconds"));
-		return 0;
+	  LoadString( GetModuleHandle(NULL), STRING_DELAY_HELP, (LPTSTR) szMsg,sizeof(szMsg));
+      ConOutPuts (_T((LPTSTR)szMsg));
+	
+	  return 0;
 	}
 
 	if (*param==0)

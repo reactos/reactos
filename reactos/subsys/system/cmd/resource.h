@@ -65,10 +65,26 @@
 #define STRING_DEL_HELP2	               424
 #define STRING_DEL_HELP3                   425
 #define STRING_DEL_HELP4                   426
-#define STRING_EXIT_HELP                   427
-#define STRING_MKDIR_HELP                  428
-#define STRING_RMDIR_HELP                  429
-#define STRING_REM_HELP                    430
+#define STRING_DELAY_HELP                  427 
+
+#define STRING_DIR_HELP1                   428 
+#define STRING_DIR_HELP2                   429
+#define STRING_DIR_HELP3                   430
+#define STRING_DIR_HELP4                   431
+#define STRING_DIR_HELP5                   432
+#define STRING_DIR_HELP6                   433
+#define STRING_DIR_HELP7                   434
+#define STRING_DIR_HELP8                   435
+
+#define STRING_DIRSTACK_HELP1              436
+#define STRING_DIRSTACK_HELP2              437
+#define STRING_DIRSTACK_HELP3              438
+#define STRING_DIRSTACK_HELP4              439
+
+#define STRING_EXIT_HELP                   440
+#define STRING_MKDIR_HELP                  441
+#define STRING_RMDIR_HELP                  442
+#define STRING_REM_HELP                    443
 
 
 

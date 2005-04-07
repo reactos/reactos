@@ -147,9 +147,68 @@ ERASE [/%c /%c /%c /%c /%c /%c /%c] file ...\n\n \
   /%c    Yes. Kill even *.* without asking.\n \
   /%c    Zap. Delete hidden, read-only and system files).\n"
 
+STRING_DEL_HELP2, "All files in the directory will be deleted!\nAre you sure (Y/N)?"
 STRING_DEL_HELP3, "    %lu file deleted\n"
-
 STRING_DEL_HELP4, "    %lu files deleted\n"
+
+STRING_DELAY_HELP, "pause for n seconds or milliseconds\n \
+DELAY [/m]n\n\n \
+  /m          specifiy than n are milliseconds\n \
+              otherwise n are seconds"
+
+STRING_DIR_HELP1, "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n \
+  [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n \
+  [drive:][path][filename]\n \
+              Specifies drive, directory, and/or files to list.\n\n \
+  /A          Displays files with specified attributes.\n \
+  attributes   D  Directories                R  Read-only files\n \
+               H  Hidden files               A  Files ready for archiving\n \
+               S  System files               -  Prefix meaning not\n \
+  /B          Uses bare format (no heading information or summary).\n \
+  /C          Display the thousand separator in file sizes.  This is the\n \
+              default.  Use /-C to disable display of separator.\n \
+  /D          Same as wide but files are list sorted by column.\n \
+  /L          Uses lowercase.\n \
+  /N          New long list format where filenames are on the far right.\n \
+  /O          List by files in sorted order.\n \
+  sortorder    N  By name (alphabetic)       S  By size (smallest first)\n \
+               E  By extension (alphabetic)  D  By date/time (oldest first)\n \
+               G  Group directories first    -  Prefix to reverse order\n \
+  /P          Pauses after each screenful of information.\n \
+  /Q          Display the owner of the file.\n \
+  /S          Displays files in specified directory and all subdirectories.\n \
+  /T          Controls which time field displayed or used for sorting\n \
+  timefield   C  Creation\n \
+              A  Last Access\n \
+              W  Last Written\n \
+  /W          Uses wide list format.\n \
+  /X          This displays the short names generated for non-8dot3 file\n \
+              names.  The format is that of /N with the short name inserted\n \
+              before the long name. If no short name is present, blanks are\n \
+              displayed in its place.\n \
+  /4          Displays four-digit years\n\n \
+Switches may be preset in the DIRCMD environment variable.  Override\n \
+preset switches by prefixing any switch with - (hyphen)--for example, /-W.\n "
+
+STRING_DIR_HELP2, " Volume in drive %c is %s"
+STRING_DIR_HELP3, " Volume in drive %c has no label"
+STRING_DIR_HELP4, " Volume Serial Number is %04X-%04X\n"
+STRING_DIR_HELP5, "\n     Total Files Listed:\n%16i File(s)% 14s bytes\n"
+STRING_DIR_HELP6, "%16i Dir(s)% 15s bytes\n"
+STRING_DIR_HELP7, "\n Directory of %s\n\n"
+STRING_DIR_HELP8, "%16i Dir(s)% 14s bytes\n"
+
+STRING_DIRSTACK_HELP1, "Stores the current directory for use by the POPD command, then\n \
+changes to the specified directory.\n\n \
+PUSHD [path | ..]\n\n \
+  path        Specifies the directory to make the current directory"
+
+STRING_DIRSTACK_HELP2, "Changes to the directory stored by the PUSHD command.\n\nPOPD"
+
+STRING_DIRSTACK_HELP3, "Prints the contents of the directory stack.\n\nDIRS"
+
+STRING_DIRSTACK_HELP4, "Directory stack empty"
+
 
 STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT"
 
@@ -161,10 +220,11 @@ RMDIR [drive:]path\nRD [drive:]path"
 
 STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
-STRING_DEL_HELP2, "All files in the directory will be deleted!\nAre you sure (Y/N)?"
+
 
 
 	
+
 
 
 
