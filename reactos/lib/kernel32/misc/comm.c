@@ -831,28 +831,20 @@ BOOL
 STDCALL
 CommConfigDialogA(LPCSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 {
-	BOOL (STDCALL *drvCommDlgA)(LPCSTR, HWND, LPCOMMCONFIG);
-	HMODULE hSerialuiDll;
+	PWCHAR NameW;
 	BOOL result;
 	
-	//FIXME: Get dll name from registry. (setupapi needed)
-	if(!(hSerialuiDll = LoadLibraryW(L"serialui.dll")))
+	/* don't use the static thread buffer so operations in serialui
+	   don't overwrite the string */
+	if(!(NameW = FilenameA2W(lpszName, TRUE)))
 	{
-		DPRINT("CommConfigDialogA: serialui.dll not found.\n");
 		return FALSE;
 	}
 	
-	drvCommDlgA = GetProcAddress(hSerialuiDll, "drvCommConfigDialogA");
+	result = CommConfigDialogW(NameW, hWnd, lpCC);
+
+	RtlFreeHeap(RtlGetProcessHeap(), 0, NameW);
 	
-	if(!drvCommDlgA)
-	{
-		DPRINT("CommConfigDialogA: serialui does not export drvCommConfigDialogA\n");
-		FreeLibrary(hSerialuiDll);
-		return FALSE;
-	}
-	
-	result = drvCommDlgA(lpszName, hWnd, lpCC);
-	FreeLibrary(hSerialuiDll);
 	return result;
 }
 
