@@ -738,7 +738,7 @@ MingwModuleHandler::GenerateGccCommand (
 	if ( module.pch && use_pch )
 		deps += " " + module.pch->header + ".gch";
 	string objectFilename = GetObjectFilename (
-		sourceFilename, NULL );
+		sourceFilename, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          objectFilename.c_str (),
@@ -1073,7 +1073,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& windresflagsMacro )
 {
 	size_t i;
-
+	
 	const vector<File*>& files = data.files;
 	for ( i = 0; i < files.size (); i++ )
 	{

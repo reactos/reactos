@@ -65,3 +65,4 @@ $(CABMAN_INT_)raw.o: $(CABMAN_BASE_)raw.cxx | $(CABMAN_INT)
 .PHONY: cabman_clean
 cabman_clean:
 	-@$(rm) $(CABMAN_TARGET) $(CABMAN_OBJECTS) 2>$(NUL)
+clean: cabman_clean
