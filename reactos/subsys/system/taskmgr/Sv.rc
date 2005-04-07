@@ -555,6 +555,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "Aktivitetshanteraren"
     IDC_TASKMGR             "Aktivitetshanteraren"
+    IDS_IDLE_PROCESS        "System Idle Process"
 END
 
 STRINGTABLE DISCARDABLE

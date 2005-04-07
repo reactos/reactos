@@ -22,17 +22,6 @@
  */
     
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <winnt.h>
-    
-#include "priority.h"
-#include "procpage.h"
-#include "perfdata.h"
 
 TCHAR                szTemp[256];
 TCHAR                szTempA[256];

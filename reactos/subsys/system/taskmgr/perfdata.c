@@ -21,19 +21,8 @@
  */
     
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <winnt.h>
-#include "perfdata.h"
 
-PROCNTQSI                        NtQuerySystemInformation = NULL;
-PROCGGR                            pGetGuiResources = NULL;
-PROCGPIC                        pGetProcessIoCounters = NULL;
-CRITICAL_SECTION                    PerfDataCriticalSection;
+CRITICAL_SECTION                 PerfDataCriticalSection;
 PPERFDATA                        pPerfDataOld = NULL;    /* Older perf data (saved to establish delta values) */
 PPERFDATA                        pPerfData = NULL;    /* Most recent copy of perf data */
 ULONG                            ProcessCountOld = 0;
@@ -48,20 +37,13 @@ SYSTEM_PERFORMANCE_INFORMATION    SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION        SystemBasicInfo;
 SYSTEM_CACHE_INFORMATION        SystemCacheInfo;
 SYSTEM_HANDLE_INFORMATION        SystemHandleInfo;
-PSYSTEM_PROCESSORTIME_INFO        SystemProcessorTimeInfo = NULL;
+PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SystemProcessorTimeInfo = NULL;
 
 BOOL PerfDataInitialize(void)
 {
-    LONG    status;
-
-    NtQuerySystemInformation = (PROCNTQSI)GetProcAddress(GetModuleHandle(_T("ntdll.dll")), "NtQuerySystemInformation");
-    pGetGuiResources = (PROCGGR)GetProcAddress(GetModuleHandle(_T("user32.dll")), "GetGuiResources");
-    pGetProcessIoCounters = (PROCGPIC)GetProcAddress(GetModuleHandle(_T("kernel32.dll")), "GetProcessIoCounters");
+    NTSTATUS    status;
     
     InitializeCriticalSection(&PerfDataCriticalSection);
-    
-    if (!NtQuerySystemInformation)
-        return FALSE;
     
     /*
      * Get number of processors in the system
@@ -75,15 +57,13 @@ BOOL PerfDataInitialize(void)
 
 void PerfDataUninitialize(void)
 {
-    NtQuerySystemInformation = NULL;
-
     DeleteCriticalSection(&PerfDataCriticalSection);
 }
 
 void PerfDataRefresh(void)
 {
     ULONG                            ulSize;
-    LONG                            status;
+    NTSTATUS                          status;
     LPBYTE                            pBuffer;
     ULONG                            BufferSize;
     PSYSTEM_PROCESS_INFORMATION        pSPI;
@@ -94,18 +74,14 @@ void PerfDataRefresh(void)
     TCHAR                            szTemp[MAX_PATH];
     DWORD                            dwSize;
     SYSTEM_PERFORMANCE_INFORMATION    SysPerfInfo;
-    SYSTEM_TIME_INFORMATION            SysTimeInfo;
+    SYSTEM_TIMEOFDAY_INFORMATION      SysTimeInfo;
     SYSTEM_CACHE_INFORMATION        SysCacheInfo;
     LPBYTE                            SysHandleInfoData;
-    PSYSTEM_PROCESSORTIME_INFO        SysProcessorTimeInfo;
+    PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SysProcessorTimeInfo;
     double                            CurrentKernelTime;
 
-
-    if (!NtQuerySystemInformation)
-        return;
-
     /* Get new system time */
-    status = NtQuerySystemInformation(SystemTimeInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
+    status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
     if (status != NO_ERROR)
         return;
 
@@ -120,8 +96,8 @@ void PerfDataRefresh(void)
         return;
 
     /* Get processor time information */
-    SysProcessorTimeInfo = (PSYSTEM_PROCESSORTIME_INFO)malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors);
-    status = NtQuerySystemInformation(SystemProcessorTimeInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors, &ulSize);
+    SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)HeapAlloc(GetProcessHeap(), 0, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors);
+    status = NtQuerySystemInformation(SystemProcessorPerformanceInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors, &ulSize);
     if (status != NO_ERROR)
         return;
 
@@ -133,12 +109,12 @@ void PerfDataRefresh(void)
     do
     {
         BufferSize += 0x10000;
-        SysHandleInfoData = (LPBYTE)malloc(BufferSize);
+        SysHandleInfoData = (LPBYTE)HeapAlloc(GetProcessHeap(), 0, BufferSize);
 
         status = NtQuerySystemInformation(SystemHandleInformation, SysHandleInfoData, BufferSize, &ulSize);
 
         if (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/) {
-            free(SysHandleInfoData);
+            HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
         }
 
     } while (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/);
@@ -151,12 +127,12 @@ void PerfDataRefresh(void)
     do
     {
         BufferSize += 0x10000;
-        pBuffer = (LPBYTE)malloc(BufferSize);
+        pBuffer = (LPBYTE)HeapAlloc(GetProcessHeap(), 0, BufferSize);
 
         status = NtQuerySystemInformation(SystemProcessInformation, pBuffer, BufferSize, &ulSize);
 
         if (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/) {
-            free(pBuffer);
+            HeapFree(GetProcessHeap(), 0, pBuffer);
         }
 
     } while (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/);
@@ -177,7 +153,7 @@ void PerfDataRefresh(void)
      * Save system processor time info
      */
     if (SystemProcessorTimeInfo) {
-        free(SystemProcessorTimeInfo);
+        HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
     }
     SystemProcessorTimeInfo = SysProcessorTimeInfo;
     
@@ -185,9 +161,9 @@ void PerfDataRefresh(void)
      * Save system handle info
      */
     memcpy(&SystemHandleInfo, SysHandleInfoData, sizeof(SYSTEM_HANDLE_INFORMATION));
-    free(SysHandleInfoData);
+    HeapFree(GetProcessHeap(), 0, SysHandleInfoData);
     
-    for (CurrentKernelTime=0, Idx=0; Idx<SystemBasicInfo.bKeNumberProcessors; Idx++) {
+    for (CurrentKernelTime=0, Idx=0; Idx<SystemBasicInfo.NumberProcessors; Idx++) {
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].KernelTime);
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].DpcTime);
         CurrentKernelTime += Li2Double(SystemProcessorTimeInfo[Idx].InterruptTime);
@@ -196,22 +172,22 @@ void PerfDataRefresh(void)
     /* If it's a first call - skip idle time calcs */
     if (liOldIdleTime.QuadPart != 0) {
         /*  CurrentValue = NewValue - OldValue */
-        dbIdleTime = Li2Double(SysPerfInfo.liIdleTime) - Li2Double(liOldIdleTime);
+        dbIdleTime = Li2Double(SysPerfInfo.IdleTime) - Li2Double(liOldIdleTime);
         dbKernelTime = CurrentKernelTime - OldKernelTime;
-        dbSystemTime = Li2Double(SysTimeInfo.liKeSystemTime) - Li2Double(liOldSystemTime);
+        dbSystemTime = Li2Double(SysTimeInfo.CurrentTime) - Li2Double(liOldSystemTime);
 
         /*  CurrentCpuIdle = IdleTime / SystemTime */
         dbIdleTime = dbIdleTime / dbSystemTime;
         dbKernelTime = dbKernelTime / dbSystemTime;
         
         /*  CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors */
-        dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors; /* + 0.5; */
-        dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors; /* + 0.5; */
+        dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberProcessors; /* + 0.5; */
+        dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberProcessors; /* + 0.5; */
     }
 
     /* Store new CPU's idle and system time */
-    liOldIdleTime = SysPerfInfo.liIdleTime;
-    liOldSystemTime = SysTimeInfo.liKeSystemTime;
+    liOldIdleTime = SysPerfInfo.IdleTime;
+    liOldSystemTime = SysTimeInfo.CurrentTime;
     OldKernelTime = CurrentKernelTime;
 
     /* Determine the process count
@@ -223,24 +199,24 @@ void PerfDataRefresh(void)
     pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
     while (pSPI) {
         ProcessCount++;
-        if (pSPI->RelativeOffset == 0)
+        if (pSPI->NextEntryOffset == 0)
             break;
-        pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->RelativeOffset);
+        pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->NextEntryOffset);
     }
 
     /* Now alloc a new PERFDATA array and fill in the data */
     if (pPerfDataOld) {
-        free(pPerfDataOld);
+        HeapFree(GetProcessHeap(), 0, pPerfDataOld);
     }
     pPerfDataOld = pPerfData;
-    pPerfData = (PPERFDATA)malloc(sizeof(PERFDATA) * ProcessCount);
+    pPerfData = (PPERFDATA)HeapAlloc(GetProcessHeap(), 0, sizeof(PERFDATA) * ProcessCount);
     pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
     for (Idx=0; Idx<ProcessCount; Idx++) {
         /* Get the old perf data for this process (if any) */
         /* so that we can establish delta values */
         pPDOld = NULL;
         for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
-            if (pPerfDataOld[Idx2].ProcessId == pSPI->ProcessId) {
+            if (pPerfDataOld[Idx2].ProcessId == pSPI->UniqueProcessId) {
                 pPDOld = &pPerfDataOld[Idx2];
                 break;
             }
@@ -249,25 +225,26 @@ void PerfDataRefresh(void)
         /* Clear out process perf data structure */
         memset(&pPerfData[Idx], 0, sizeof(PERFDATA));
 
-        if (pSPI->Name.Buffer)
-            wcscpy(pPerfData[Idx].ImageName, pSPI->Name.Buffer);
+        if (pSPI->ImageName.Buffer)
+            wcscpy(pPerfData[Idx].ImageName, pSPI->ImageName.Buffer);
         else
-            wcscpy(pPerfData[Idx].ImageName, L"System Idle Process");
+            LoadStringW(hInst, IDS_IDLE_PROCESS, pPerfData[Idx].ImageName,
+                        sizeof(pPerfData[Idx].ImageName) / sizeof(pPerfData[Idx].ImageName[0]));
 
-        pPerfData[Idx].ProcessId = pSPI->ProcessId;
+        pPerfData[Idx].ProcessId = pSPI->UniqueProcessId;
 
         if (pPDOld)    {
             double    CurTime = Li2Double(pSPI->KernelTime) + Li2Double(pSPI->UserTime);
             double    OldTime = Li2Double(pPDOld->KernelTime) + Li2Double(pPDOld->UserTime);
             double    CpuTime = (CurTime - OldTime) / dbSystemTime;
-            CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.bKeNumberProcessors; /* + 0.5; */
+            CpuTime = CpuTime * 100.0 / (double)SystemBasicInfo.NumberProcessors; /* + 0.5; */
             pPerfData[Idx].CPUUsage = (ULONG)CpuTime;
         }
         pPerfData[Idx].CPUTime.QuadPart = pSPI->UserTime.QuadPart + pSPI->KernelTime.QuadPart;
-        pPerfData[Idx].WorkingSetSizeBytes = pSPI->TotalWorkingSetSizeBytes;
-        pPerfData[Idx].PeakWorkingSetSizeBytes = pSPI->PeakWorkingSetSizeBytes;
+        pPerfData[Idx].WorkingSetSizeBytes = pSPI->WorkingSetSize;
+        pPerfData[Idx].PeakWorkingSetSizeBytes = pSPI->PeakWorkingSetSize;
         if (pPDOld)
-            pPerfData[Idx].WorkingSetSizeDelta = labs((LONG)pSPI->TotalWorkingSetSizeBytes - (LONG)pPDOld->WorkingSetSizeBytes);
+            pPerfData[Idx].WorkingSetSizeDelta = labs((LONG)pSPI->WorkingSetSize - (LONG)pPDOld->WorkingSetSizeBytes);
         else
             pPerfData[Idx].WorkingSetSizeDelta = 0;
         pPerfData[Idx].PageFaultCount = pSPI->PageFaultCount;
@@ -275,15 +252,15 @@ void PerfDataRefresh(void)
             pPerfData[Idx].PageFaultCountDelta = labs((LONG)pSPI->PageFaultCount - (LONG)pPDOld->PageFaultCount);
         else
             pPerfData[Idx].PageFaultCountDelta = 0;
-        pPerfData[Idx].VirtualMemorySizeBytes = pSPI->TotalVirtualSizeBytes;
-        pPerfData[Idx].PagedPoolUsagePages = pSPI->TotalPagedPoolUsagePages;
-        pPerfData[Idx].NonPagedPoolUsagePages = pSPI->TotalNonPagedPoolUsagePages;
+        pPerfData[Idx].VirtualMemorySizeBytes = pSPI->VirtualSize;
+        pPerfData[Idx].PagedPoolUsagePages = pSPI->QuotaPagedPoolUsage;
+        pPerfData[Idx].NonPagedPoolUsagePages = pSPI->QuotaPeakNonPagedPoolUsage;
         pPerfData[Idx].BasePriority = pSPI->BasePriority;
         pPerfData[Idx].HandleCount = pSPI->HandleCount;
-        pPerfData[Idx].ThreadCount = pSPI->ThreadCount;
+        pPerfData[Idx].ThreadCount = pSPI->NumberOfThreads;
         pPerfData[Idx].SessionId = pSPI->SessionId;
         
-        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pSPI->ProcessId);
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pSPI->UniqueProcessId);
         if (hProcess) {
             if (OpenProcessToken(hProcess, TOKEN_QUERY|TOKEN_DUPLICATE|TOKEN_IMPERSONATE, &hProcessToken)) {
                 ImpersonateLoggedOnUser(hProcessToken);
@@ -306,19 +283,16 @@ int MultiByteToWideChar(
                 RevertToSelf();
                 CloseHandle(hProcessToken);
             }
-            if (pGetGuiResources) {
-                pPerfData[Idx].USERObjectCount = pGetGuiResources(hProcess, GR_USEROBJECTS);
-                pPerfData[Idx].GDIObjectCount = pGetGuiResources(hProcess, GR_GDIOBJECTS);
-            }
-            if (pGetProcessIoCounters)
-                pGetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
+            pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
+            pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
+            GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
             CloseHandle(hProcess);
         }
         pPerfData[Idx].UserTime.QuadPart = pSPI->UserTime.QuadPart;
         pPerfData[Idx].KernelTime.QuadPart = pSPI->KernelTime.QuadPart;
-        pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->RelativeOffset);
+        pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->NextEntryOffset);
     }
-    free(pBuffer);
+    HeapFree(GetProcessHeap(), 0, pBuffer);
     LeaveCriticalSection(&PerfDataCriticalSection);
 }
 
@@ -365,7 +339,7 @@ ULONG PerfDataGetProcessId(ULONG Index)
     EnterCriticalSection(&PerfDataCriticalSection);
 
     if (Index < ProcessCount)
-        ProcessId = pPerfData[Index].ProcessId;
+        ProcessId = (ULONG)pPerfData[Index].ProcessId;
     else
         ProcessId = 0;
 
@@ -677,8 +651,8 @@ ULONG PerfDataGetCommitChargeTotalK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    Total = SystemPerfInfo.MmTotalCommitedPages;
-    PageSize = SystemBasicInfo.uPageSize;
+    Total = SystemPerfInfo.TotalCommittedPages;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -694,8 +668,8 @@ ULONG PerfDataGetCommitChargeLimitK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    Limit = SystemPerfInfo.MmTotalCommitLimit;
-    PageSize = SystemBasicInfo.uPageSize;
+    Limit = SystemPerfInfo.TotalCommitLimit;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -711,8 +685,8 @@ ULONG PerfDataGetCommitChargePeakK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    Peak = SystemPerfInfo.MmPeakLimit;
-    PageSize = SystemBasicInfo.uPageSize;
+    Peak = SystemPerfInfo.PeakCommitment;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -730,9 +704,9 @@ ULONG PerfDataGetKernelMemoryTotalK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    Paged = SystemPerfInfo.PoolPagedBytes;
-    NonPaged = SystemPerfInfo.PoolNonPagedBytes;
-    PageSize = SystemBasicInfo.uPageSize;
+    Paged = SystemPerfInfo.PagedPoolUsage;
+    NonPaged = SystemPerfInfo.NonPagedPoolUsage;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -751,8 +725,8 @@ ULONG PerfDataGetKernelMemoryPagedK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    Paged = SystemPerfInfo.PoolPagedBytes;
-    PageSize = SystemBasicInfo.uPageSize;
+    Paged = SystemPerfInfo.PagedPoolUsage;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -768,8 +742,8 @@ ULONG PerfDataGetKernelMemoryNonPagedK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    NonPaged = SystemPerfInfo.PoolNonPagedBytes;
-    PageSize = SystemBasicInfo.uPageSize;
+    NonPaged = SystemPerfInfo.NonPagedPoolUsage;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -785,8 +759,8 @@ ULONG PerfDataGetPhysicalMemoryTotalK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    Total = SystemBasicInfo.uMmNumberOfPhysicalPages;
-    PageSize = SystemBasicInfo.uPageSize;
+    Total = SystemBasicInfo.NumberOfPhysicalPages;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -802,8 +776,8 @@ ULONG PerfDataGetPhysicalMemoryAvailableK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    Available = SystemPerfInfo.MmAvailablePages;
-    PageSize = SystemBasicInfo.uPageSize;
+    Available = SystemPerfInfo.AvailablePages;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -820,7 +794,7 @@ ULONG PerfDataGetPhysicalMemorySystemCacheK(void)
     EnterCriticalSection(&PerfDataCriticalSection);
 
     SystemCache = SystemCacheInfo.CurrentSize;
-    PageSize = SystemBasicInfo.uPageSize;
+    PageSize = SystemBasicInfo.PhysicalPageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
@@ -836,7 +810,7 @@ ULONG PerfDataGetSystemHandleCount(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    HandleCount = SystemHandleInfo.Count;
+    HandleCount = SystemHandleInfo.NumberOfHandles;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 

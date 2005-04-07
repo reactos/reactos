@@ -22,17 +22,6 @@
  */
     
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <winnt.h>
-#include <stdio.h>
-    
-#include "procpage.h"
-#include "affinity.h"
-#include "perfdata.h"
 
 HANDLE        hProcessAffinityHandle;
 TCHAR         szTemp[256];

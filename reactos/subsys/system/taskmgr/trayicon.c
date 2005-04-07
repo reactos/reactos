@@ -22,17 +22,6 @@
  */
     
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <winnt.h>
-    
-#include "trayicon.h"
-#include "perfdata.h"
-#include "shellapi.h"
 
 HICON TrayIcon_GetProcessorUsageIcon(void)
 {

@@ -583,6 +583,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "Task-Manager"
     IDC_TASKMGR             "Task-Manager"
+    IDS_IDLE_PROCESS        "Leerlaufprozess"
 END
 
 STRINGTABLE DISCARDABLE

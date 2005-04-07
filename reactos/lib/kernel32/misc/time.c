@@ -500,12 +500,12 @@ GetSystemTimes(
     LPFILETIME lpUserTime
     )
 {
-   SYSTEM_PROCESSORTIME_INFO SysProcTime;
+   SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SysProcPerfInfo;
    NTSTATUS Status;
    
    Status = ZwQuerySystemInformation(SystemProcessorPerformanceInformation,
-                                     &SysProcTime,
-                                     sizeof(SysProcTime),
+                                     &SysProcPerfInfo,
+                                     sizeof(SysProcPerfInfo),
                                      NULL);
                                      
    if (!NT_SUCCESS(Status))
@@ -517,14 +517,14 @@ GetSystemTimes(
 	Good only for one processor system.
  */
 
-   lpIdleTime->dwLowDateTime = SysProcTime.TotalProcessorRunTime.LowPart;
-   lpIdleTime->dwHighDateTime = SysProcTime.TotalProcessorRunTime.HighPart;
+   lpIdleTime->dwLowDateTime = SysProcPerfInfo.IdleTime.LowPart;
+   lpIdleTime->dwHighDateTime = SysProcPerfInfo.IdleTime.HighPart;
 
-   lpKernelTime->dwLowDateTime = SysProcTime.TotalProcessorTime.LowPart;
-   lpKernelTime->dwHighDateTime = SysProcTime.TotalProcessorTime.HighPart;
+   lpKernelTime->dwLowDateTime = SysProcPerfInfo.KernelTime.LowPart;
+   lpKernelTime->dwHighDateTime = SysProcPerfInfo.KernelTime.HighPart;
 
-   lpUserTime->dwLowDateTime = SysProcTime.TotalProcessorUserTime.LowPart;
-   lpUserTime->dwHighDateTime = SysProcTime.TotalProcessorUserTime.HighPart;
+   lpUserTime->dwLowDateTime = SysProcPerfInfo.UserTime.LowPart;
+   lpUserTime->dwHighDateTime = SysProcPerfInfo.UserTime.HighPart;
    
    return TRUE;
 }

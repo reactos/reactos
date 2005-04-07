@@ -2,6 +2,7 @@
 // Microsoft Developer Studio generated include file.
 // Used by TaskMgr.rc
 //
+#define IDS_IDLE_PROCESS                102
 #define IDD_TASKMGR_DIALOG              102
 #define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103

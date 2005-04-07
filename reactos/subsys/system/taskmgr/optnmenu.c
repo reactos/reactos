@@ -27,15 +27,6 @@
  */
 
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-    
-#include "optnmenu.h"
-#include "procpage.h"
 
 void TaskManager_OnOptionsAlwaysOnTop(void)
 {

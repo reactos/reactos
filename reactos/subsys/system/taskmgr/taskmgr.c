@@ -22,29 +22,6 @@
  */
 
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <winnt.h>
-
-#include "resource.h"
-#include "applpage.h"
-#include "procpage.h"
-#include "perfpage.h"
-#include "run.h"
-#include "perfdata.h"
-#include "optnmenu.h"
-#include "affinity.h"
-#include "priority.h"
-#include "debug.h"
-#include "endproc.h"
-#include "column.h"
-#include "about.h"
-#include "trayicon.h"
-#include "dbgchnl.h"
 
 #define STATUS_WINDOW   2001
 
