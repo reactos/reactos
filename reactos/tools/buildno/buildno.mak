@@ -5,12 +5,12 @@ BUILDNO_INT_ = $(BUILDNO_INT)$(SEP)
 BUILDNO_OUT = $(OUTPUT_)$(BUILDNO_BASE)
 BUILDNO_OUT_ = $(BUILDNO_OUT)$(SEP)
 
-$(BUILDNO_INT): $(TOOLS_INT)
+$(BUILDNO_INT): | $(TOOLS_INT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(BUILDNO_OUT): $(TOOLS_OUT)
+$(BUILDNO_OUT): | $(TOOLS_OUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -32,23 +32,23 @@ BUILDNO_HOST_CFLAGS = -Iinclude/reactos -g -Werror -Wall
 
 BUILDNO_HOST_LFLAGS = -g
 
-$(BUILDNO_TARGET): $(BUILDNO_OBJECTS) $(BUILDNO_OUT)
+$(BUILDNO_TARGET): $(BUILDNO_OBJECTS) | $(BUILDNO_OUT)
 	$(ECHO_LD)
 	${host_gpp} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_LFLAGS) -o $@
 
-$(BUILDNO_INT_)buildno.o: $(BUILDNO_BASE_)buildno.cpp $(BUILDNO_INT)
+$(BUILDNO_INT_)buildno.o: $(BUILDNO_BASE_)buildno.cpp | $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
-$(BUILDNO_INT_)exception.o: $(BUILDNO_BASE_)exception.cpp $(BUILDNO_INT)
+$(BUILDNO_INT_)exception.o: $(BUILDNO_BASE_)exception.cpp | $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
-$(BUILDNO_INT_)ssprintf.o: $(BUILDNO_BASE_)ssprintf.cpp $(BUILDNO_INT)
+$(BUILDNO_INT_)ssprintf.o: $(BUILDNO_BASE_)ssprintf.cpp | $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
-$(BUILDNO_INT_)XML.o: $(BUILDNO_BASE_)XML.cpp $(BUILDNO_INT)
+$(BUILDNO_INT_)XML.o: $(BUILDNO_BASE_)XML.cpp | $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 

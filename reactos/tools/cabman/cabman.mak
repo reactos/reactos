@@ -5,12 +5,12 @@ CABMAN_INT_ = $(CABMAN_INT)$(SEP)
 CABMAN_OUT = $(OUTPUT_)$(CABMAN_BASE)
 CABMAN_OUT_ = $(CABMAN_OUT)$(SEP)
 
-$(CABMAN_INT): $(TOOLS_INT)
+$(CABMAN_INT): | $(TOOLS_INT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(CABMAN_OUT): $(TOOLS_OUT)
+$(CABMAN_OUT): | $(TOOLS_OUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -38,27 +38,27 @@ CABMAN_HOST_LFLAGS = -g $(CABMAN_HOST_LIBS)
 .PHONY: cabman
 cabman: $(CABMAN_TARGET)
 
-$(CABMAN_TARGET): $(CABMAN_OBJECTS) $(CABMAN_HOST_LIBS) $(CABMAN_OUT)
+$(CABMAN_TARGET): $(CABMAN_OBJECTS) $(CABMAN_HOST_LIBS) | $(CABMAN_OUT)
 	$(ECHO_LD)
 	${host_gpp} $(CABMAN_OBJECTS) $(CABMAN_HOST_LFLAGS) -o $@
 
-$(CABMAN_INT_)cabinet.o: $(CABMAN_BASE_)cabinet.cxx $(CABMAN_INT)
+$(CABMAN_INT_)cabinet.o: $(CABMAN_BASE_)cabinet.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 
-$(CABMAN_INT_)dfp.o: $(CABMAN_BASE_)dfp.cxx $(CABMAN_INT)
+$(CABMAN_INT_)dfp.o: $(CABMAN_BASE_)dfp.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 
-$(CABMAN_INT_)main.o: $(CABMAN_BASE_)main.cxx $(CABMAN_INT)
+$(CABMAN_INT_)main.o: $(CABMAN_BASE_)main.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 
-$(CABMAN_INT_)mszip.o: $(CABMAN_BASE_)mszip.cxx $(CABMAN_INT)
+$(CABMAN_INT_)mszip.o: $(CABMAN_BASE_)mszip.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 
-$(CABMAN_INT_)raw.o: $(CABMAN_BASE_)raw.cxx $(CABMAN_INT)
+$(CABMAN_INT_)raw.o: $(CABMAN_BASE_)raw.cxx | $(CABMAN_INT)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 

@@ -5,12 +5,12 @@ TOOLS_INT_ = $(TOOLS_INT)$(SEP)
 TOOLS_OUT = $(OUTPUT_)$(TOOLS_BASE)
 TOOLS_OUT_ = $(TOOLS_OUT)$(SEP)
 
-$(TOOLS_INT): $(INTERMEDIATE)
+$(TOOLS_INT): | $(INTERMEDIATE)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(TOOLS_OUT): $(OUTPUT)
+$(TOOLS_OUT): | $(OUTPUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -39,11 +39,11 @@ RSYM_HOST_LFLAGS = -g
 .PHONY: rsym
 rsym: $(RSYM_TARGET)
 
-$(RSYM_TARGET): $(RSYM_OBJECTS) $(RSYM_OUT)
+$(RSYM_TARGET): $(RSYM_OBJECTS) | $(RSYM_OUT)
 	$(ECHO_LD)
 	${host_gcc} $(RSYM_OBJECTS) $(RSYM_HOST_LFLAGS) -o $@
 
-$(RSYM_INT_)rsym.o: $(RSYM_BASE_)rsym.c $(RSYM_INT)
+$(RSYM_INT_)rsym.o: $(RSYM_BASE_)rsym.c | $(RSYM_INT)
 	$(ECHO_CC)
 	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
 

@@ -5,12 +5,12 @@ WPP_INT_ = $(WPP_INT)$(SEP)
 WPP_OUT = $(OUTPUT_)$(WPP_BASE)
 WPP_OUT_ = $(WPP_OUT)$(SEP)
 
-$(WPP_INT): $(TOOLS_INT)
+$(WPP_INT): | $(TOOLS_INT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(WPP_OUT): $(TOOLS_OUT)
+$(WPP_OUT): | $(TOOLS_OUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -33,23 +33,23 @@ WPP_HOST_CFLAGS = -D__USE_W32API -I$(WPP_BASE) -Iinclude -Iinclude/wine -g
 .PHONY: wpp
 wpp: $(WPP_TARGET)
 
-$(WPP_TARGET): $(WPP_OBJECTS) $(WPP_OUT)
+$(WPP_TARGET): $(WPP_OBJECTS) | $(WPP_OUT)
 	$(ECHO_AR)
 	${host_ar} -rc $(WPP_TARGET) $(WPP_OBJECTS)
 
-$(WPP_INT_)lex.yy.o: $(WPP_BASE_)lex.yy.c $(WPP_INT)
+$(WPP_INT_)lex.yy.o: $(WPP_BASE_)lex.yy.c | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_INT_)preproc.o: $(WPP_BASE_)preproc.c $(WPP_INT)
+$(WPP_INT_)preproc.o: $(WPP_BASE_)preproc.c | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_INT_)wpp.o: $(WPP_BASE_)wpp.c $(WPP_INT)
+$(WPP_INT_)wpp.o: $(WPP_BASE_)wpp.c | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_INT_)wpp.tab.o: $(WPP_BASE_)wpp.tab.c $(WPP_INT)
+$(WPP_INT_)wpp.tab.o: $(WPP_BASE_)wpp.tab.c | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 

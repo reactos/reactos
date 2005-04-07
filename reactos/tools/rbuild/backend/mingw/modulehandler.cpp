@@ -740,7 +740,7 @@ MingwModuleHandler::GenerateGccCommand (
 	string objectFilename = GetObjectFilename (
 		sourceFilename, NULL );
 	fprintf ( fMakefile,
-	          "%s: %s %s\n",
+	          "%s: %s | %s\n",
 	          objectFilename.c_str (),
 	          deps.c_str (),
 	          GetDirectory ( objectFilename ).c_str () );
@@ -760,7 +760,7 @@ MingwModuleHandler::GenerateGccAssemblerCommand (
 	string objectFilename = GetObjectFilename (
 		sourceFilename, &clean_files );
 	fprintf ( fMakefile,
-	          "%s: %s %s\n",
+	          "%s: %s | %s\n",
 	          objectFilename.c_str (),
 	          sourceFilename.c_str (),
 	          GetDirectory ( objectFilename ).c_str () );
@@ -779,7 +779,7 @@ MingwModuleHandler::GenerateNasmCommand (
 	string objectFilename = GetObjectFilename (
 		sourceFilename, &clean_files );
 	fprintf ( fMakefile,
-	          "%s: %s %s\n",
+	          "%s: %s | %s\n",
 	          objectFilename.c_str (),
 	          sourceFilename.c_str (),
 	          GetDirectory ( objectFilename ).c_str () );
@@ -802,7 +802,7 @@ MingwModuleHandler::GenerateWindresCommand (
 	string resFilename = ros_temp +
 		ReplaceExtension ( sourceFilename, ".res" );
 	fprintf ( fMakefile,
-	          "%s: %s %s $(WRC_TARGET)\n",
+	          "%s: %s $(WRC_TARGET) | %s\n",
 	          objectFilename.c_str (),
 	          sourceFilename.c_str (),
 	          GetDirectory ( objectFilename ).c_str () );
@@ -975,7 +975,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	string target_folder ( GetDirectory ( GetTargetFilename ( module, NULL ) ) );
 
 	fprintf ( fMakefile,
-		"%s: %s %s $(RSYM_TARGET)\n",
+		"%s: %s $(RSYM_TARGET) | %s\n",
 		target.c_str (),
 		dependencies.c_str (),
 		target_folder.c_str () );
@@ -1058,7 +1058,7 @@ MingwModuleHandler::GeneratePhonyTarget() const
 	string targetMacro ( GetTargetMacro(module) );
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          targetMacro.c_str ());
-	fprintf ( fMakefile, "%s: %s\n",
+	fprintf ( fMakefile, "%s: | %s\n",
 	          targetMacro.c_str (),
 	          GetDirectory(GetTargetFilename(module,NULL)).c_str () );
 }
@@ -1147,7 +1147,7 @@ MingwModuleHandler::GenerateArchiveTarget ( const string& ar,
 	string archiveFilename ( GetModuleArchiveFilename () );
 	
 	fprintf ( fMakefile,
-	          "%s: %s %s\n",
+	          "%s: %s | %s\n",
 	          archiveFilename.c_str (),
 	          objs_macro.c_str (),
 	          GetDirectory(archiveFilename).c_str() );
@@ -1513,7 +1513,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 			fprintf ( fMakefile, " %s",
 			          deps[i].c_str () );
 
-		fprintf ( fMakefile, " %s\n",
+		fprintf ( fMakefile, " | %s\n",
 		          GetDirectory ( GetTargetFilename ( module, NULL ) ).c_str () );
 
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
@@ -1589,7 +1589,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ()
 	else
 		linker = "${host_gcc}";
 	
-	fprintf ( fMakefile, "%s: %s %s %s\n",
+	fprintf ( fMakefile, "%s: %s %s | %s\n",
 	          targetMacro.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str (),
@@ -1641,7 +1641,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 	GenerateImportLibraryTargetIfNeeded ();
 
-	fprintf ( fMakefile, "%s: %s %s %s $(RSYM_TARGET)\n",
+	fprintf ( fMakefile, "%s: %s %s $(RSYM_TARGET) | %s\n",
 	          targetMacro.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str (),
@@ -2121,7 +2121,7 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 
 	GenerateRules ();
 
-	fprintf ( fMakefile, "%s: %s %s %s\n",
+	fprintf ( fMakefile, "%s: %s %s | %s\n",
 	          targetMacro.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str (),

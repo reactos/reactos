@@ -5,12 +5,12 @@ MKHIVE_INT_ = $(MKHIVE_INT)$(SEP)
 MKHIVE_OUT = $(OUTPUT_)$(MKHIVE_BASE)
 MKHIVE_OUT_ = $(MKHIVE_OUT)$(SEP)
 
-$(MKHIVE_INT): $(TOOLS_INT)
+$(MKHIVE_INT): | $(TOOLS_INT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(MKHIVE_OUT): $(TOOLS_OUT)
+$(MKHIVE_OUT): | $(TOOLS_OUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -36,27 +36,27 @@ MKHIVE_HOST_LFLAGS = -g
 .PHONY: mkhive
 mkhive: $(MKHIVE_TARGET)
 
-$(MKHIVE_TARGET): $(MKHIVE_OBJECTS) $(MKHIVE_OUT)
+$(MKHIVE_TARGET): $(MKHIVE_OBJECTS) | $(MKHIVE_OUT)
 	$(ECHO_LD)
 	${host_gcc} $(MKHIVE_OBJECTS) $(MKHIVE_HOST_LFLAGS) -o $@
 
-$(MKHIVE_INT_)binhive.o: $(MKHIVE_BASE_)binhive.c $(MKHIVE_INT)
+$(MKHIVE_INT_)binhive.o: $(MKHIVE_BASE_)binhive.c | $(MKHIVE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
 
-$(MKHIVE_INT_)infcache.o: $(MKHIVE_BASE_)infcache.c $(MKHIVE_INT)
+$(MKHIVE_INT_)infcache.o: $(MKHIVE_BASE_)infcache.c | $(MKHIVE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
 
-$(MKHIVE_INT_)mkhive.o: $(MKHIVE_BASE_)mkhive.c $(MKHIVE_INT)
+$(MKHIVE_INT_)mkhive.o: $(MKHIVE_BASE_)mkhive.c | $(MKHIVE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
 
-$(MKHIVE_INT_)reginf.o: $(MKHIVE_BASE_)reginf.c $(MKHIVE_INT)
+$(MKHIVE_INT_)reginf.o: $(MKHIVE_BASE_)reginf.c | $(MKHIVE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
 
-$(MKHIVE_INT_)registry.o: $(MKHIVE_BASE_)registry.c $(MKHIVE_INT)
+$(MKHIVE_INT_)registry.o: $(MKHIVE_BASE_)registry.c | $(MKHIVE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(MKHIVE_HOST_CFLAGS) -c $< -o $@
 

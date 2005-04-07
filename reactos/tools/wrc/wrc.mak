@@ -5,12 +5,12 @@ WRC_INT_ = $(WRC_INT)$(SEP)
 WRC_OUT = $(OUTPUT_)$(WRC_BASE)
 WRC_OUT_ = $(WRC_OUT)$(SEP)
 
-$(WRC_INT): $(TOOLS_INT)
+$(WRC_INT): | $(TOOLS_INT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(WRC_OUT): $(TOOLS_OUT)
+$(WRC_OUT): | $(TOOLS_OUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -22,12 +22,12 @@ WRC_PORT_INT_ = $(WRC_PORT_INT)$(SEP)
 WRC_PORT_OUT = $(OUTPUT_)$(WRC_PORT_BASE)
 WRC_PORT_OUT_ = $(WRC_PORT_OUT)$(SEP)
 
-$(WRC_PORT_INT): $(WRC_INT)
+$(WRC_PORT_INT): | $(WRC_INT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(WRC_PORT_OUT): $(WRC_OUT)
+$(WRC_PORT_OUT): | $(WRC_OUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -65,31 +65,31 @@ WRC_LIBS = $(UNICODE_TARGET) $(WPP_TARGET)
 .PHONY: wrc
 wrc: $(WRC_TARGET)
 
-$(WRC_TARGET): $(WRC_OBJECTS) $(WRC_LIBS) $(WRC_OUT)
+$(WRC_TARGET): $(WRC_OBJECTS) $(WRC_LIBS) | $(WRC_OUT)
 	$(ECHO_LD)
 	${host_gcc} $(WRC_OBJECTS) $(WRC_LIBS) $(WRC_HOST_LFLAGS) -o $@
 
-$(WRC_INT_)dumpres.o: $(WRC_BASE_)dumpres.c $(WRC_INT)
+$(WRC_INT_)dumpres.o: $(WRC_BASE_)dumpres.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)genres.o: $(WRC_BASE_)genres.c $(WRC_INT)
+$(WRC_INT_)genres.o: $(WRC_BASE_)genres.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)newstruc.o: $(WRC_BASE_)newstruc.c $(WRC_INT)
+$(WRC_INT_)newstruc.o: $(WRC_BASE_)newstruc.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)readres.o: $(WRC_BASE_)readres.c $(WRC_INT)
+$(WRC_INT_)readres.o: $(WRC_BASE_)readres.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)translation.o: $(WRC_BASE_)translation.c $(WRC_INT)
+$(WRC_INT_)translation.o: $(WRC_BASE_)translation.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)utils.o: $(WRC_BASE_)utils.c $(WRC_INT)
+$(WRC_INT_)utils.o: $(WRC_BASE_)utils.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
@@ -97,19 +97,19 @@ $(WRC_INT_)wrc.o: $(WRC_BASE_)wrc.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)writeres.o: $(WRC_BASE_)writeres.c $(WRC_INT)
+$(WRC_INT_)writeres.o: $(WRC_BASE_)writeres.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)y.tab.o: $(WRC_BASE_)y.tab.c $(WRC_INT)
+$(WRC_INT_)y.tab.o: $(WRC_BASE_)y.tab.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)lex.yy.o: $(WRC_BASE_)lex.yy.c $(WRC_INT)
+$(WRC_INT_)lex.yy.o: $(WRC_BASE_)lex.yy.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_PORT_INT_)mkstemps.o: $(WRC_PORT_BASE_)mkstemps.c $(WRC_PORT_INT)
+$(WRC_PORT_INT_)mkstemps.o: $(WRC_PORT_BASE_)mkstemps.c | $(WRC_PORT_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 

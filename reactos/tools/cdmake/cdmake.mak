@@ -5,12 +5,12 @@ CDMAKE_INT_ = $(CDMAKE_INT)$(SEP)
 CDMAKE_OUT = $(OUTPUT_)$(CDMAKE_BASE)
 CDMAKE_OUT_ = $(CDMAKE_OUT)$(SEP)
 
-$(CDMAKE_INT): $(TOOLS_INT)
+$(CDMAKE_INT): | $(TOOLS_INT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(CDMAKE_OUT): $(TOOLS_OUT)
+$(CDMAKE_OUT): | $(TOOLS_OUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -33,15 +33,15 @@ CDMAKE_HOST_LFLAGS = -g
 .PHONY: cdmake
 cdmake: $(CDMAKE_TARGET)
 
-$(CDMAKE_TARGET): $(CDMAKE_OBJECTS) $(CDMAKE_OUT)
+$(CDMAKE_TARGET): $(CDMAKE_OBJECTS) | $(CDMAKE_OUT)
 	$(ECHO_LD)
 	${host_gcc} $(CDMAKE_OBJECTS) $(CDMAKE_HOST_LFLAGS) -o $@
 
-$(CDMAKE_INT_)cdmake.o: $(CDMAKE_BASE_)cdmake.c $(CDMAKE_INT)
+$(CDMAKE_INT_)cdmake.o: $(CDMAKE_BASE_)cdmake.c | $(CDMAKE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(CDMAKE_HOST_CFLAGS) -c $< -o $@
 
-$(CDMAKE_INT_)llmosrt.o: $(CDMAKE_BASE_)llmosrt.c $(CDMAKE_INT)
+$(CDMAKE_INT_)llmosrt.o: $(CDMAKE_BASE_)llmosrt.c | $(CDMAKE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(CDMAKE_HOST_CFLAGS) -c $< -o $@
 

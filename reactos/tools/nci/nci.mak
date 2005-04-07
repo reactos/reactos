@@ -5,12 +5,12 @@ NCI_INT_ = $(NCI_INT)$(SEP)
 NCI_OUT = $(OUTPUT_)$(NCI_BASE)
 NCI_OUT_ = $(NCI_OUT)$(SEP)
 
-$(NCI_INT): $(TOOLS_INT)
+$(NCI_INT): | $(TOOLS_INT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 
 ifneq ($(INTERMEDIATE),$(OUTPUT))
-$(NCI_OUT): $(TOOLS_OUT)
+$(NCI_OUT): | $(TOOLS_OUT)
 	$(ECHO_MKDIR)
 	${mkdir} $@
 endif
@@ -28,11 +28,11 @@ NCI_HOST_CFLAGS = -Iinclude -g -Werror -Wall
 
 NCI_HOST_LFLAGS = -g
 
-$(NCI_TARGET): $(NCI_OBJECTS) $(NCI_OUT)
+$(NCI_TARGET): $(NCI_OBJECTS) | $(NCI_OUT)
 	$(ECHO_LD)
 	${host_gcc} $(NCI_OBJECTS) $(NCI_HOST_LFLAGS) -o $@
 
-$(NCI_INT_)ncitool.o: $(NCI_BASE_)ncitool.c $(NCI_INT)
+$(NCI_INT_)ncitool.o: $(NCI_BASE_)ncitool.c | $(NCI_INT)
 	$(ECHO_CC)
 	${host_gcc} $(NCI_HOST_CFLAGS) -c $< -o $@
 
