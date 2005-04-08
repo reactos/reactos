@@ -1,11 +1,14 @@
 
-all: lib gui
+all: lib gui cmd-line
 
 lib: dummy
 	$(MAKE) -C lib
        
 gui: dummy
 	$(MAKE) -C gui
+
+cmd-line: dummy
+	$(MAKE) -C cmd-line
 
 dummy:
 
