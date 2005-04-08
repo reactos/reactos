@@ -40,9 +40,8 @@ extern "C" int PML_LoadTree (TREE** tree, char* url, PML_AddItem AddItem)
 // expat callback for start of a "node" tag
 void tree_start (void* usrdata, const char* tag, const char** arg)
 {
-	int i, icon;
+	int i, icon = 0;
 	static int id = 1;
-	const char* name = "\0";
 
 	TREE* tree = (TREE*)usrdata;
 
@@ -58,12 +57,16 @@ void tree_start (void* usrdata, const char* tag, const char** arg)
 	tree->packages[id].icon = FALSE;
 	tree->packages[id].none = TRUE;
 	tree->packages[id].path = NULL;
+	tree->packages[id].name = "\0";
 
 	// read the arguments
 	for (i=0; arg[i]; i+=2) 
 	{
 		if(!strcmp(arg[i], "name"))
-			name = arg[i+1];
+		{
+			tree->packages[id].name = new char [strlen(arg[i+1])+1];
+			strcpy(tree->packages[id].name, arg[i+1]);
+		}
 
 		if(!strcmp(arg[i], "icon"))
 		{
@@ -73,7 +76,7 @@ void tree_start (void* usrdata, const char* tag, const char** arg)
 
 		if(!strcmp(arg[i], "file"))
 		{
-			tree->packages[id].path = new char [strlen(arg[i+1])];
+			tree->packages[id].path = new char [strlen(arg[i+1])+1];
 			strcpy(tree->packages[id].path, arg[i+1]);
 
 			if(strcmp(tag, "bin"))
@@ -84,14 +87,19 @@ void tree_start (void* usrdata, const char* tag, const char** arg)
 		}
 	}
 
-	if(name[0]=='\0') return;
+	if(tree->packages[id].name[0] == '\0') return;
 
 	// add it
 	if(!parents.size())
-	   tree->addItem(id, name, 0, icon);
+	{
+		if(tree->addItem)
+			tree->addItem(id, tree->packages[id].name, 0, icon);
+	}
+
+	// do some manipulation at the parent
 	else
 	{
-	   tree->addItem(id, name, parents.back(), icon);
+		tree->addItem(id, tree->packages[id].name, parents.back(), icon);
 
 	   // list as child in the parent node
 	   tree->packages[parents.back()].children.push_back(id);

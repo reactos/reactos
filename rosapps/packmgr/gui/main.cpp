@@ -204,12 +204,15 @@ int SetButton (DWORD id, BOOL state)
 
     SetMenuItemInfo(hPopup, id, FALSE, &mi);
 
-	return 1;
+	return 0;
 }
 
 // Set the text of the text box
 int SetText (const char* text) 
 {
+	if(!text)
+		return 1;
+
 	int i = 0;
 	string source = text;
 
@@ -257,7 +260,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if(((LPNMHDR)lParam)->code == TVN_SELCHANGED) 
 			{
 				selected = ((LPNMTREEVIEW)lParam)->itemNew.lParam; 
-				PML_LoadPackage (tree, selected, SetButton, SetText);
+				PML_LoadPackage (tree, selected, SetButton);
+				SetText(PML_GetDescription (tree, selected));
 			}
 
 			else if ((int)(((LPNMHDR)lParam)->code) == NM_RCLICK) // <= ahhh LISP

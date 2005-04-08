@@ -84,16 +84,19 @@ void pack_text (void* usrdata, const char* data, int len)
 
 
 // The user clicks on a package
-extern "C" int PML_LoadPackage (TREE* tree, int id, PML_SetButton SetButton, PML_SetText SetText)
+extern "C" int PML_LoadPackage (TREE* tree, int id, PML_SetButton SetButton)
 {
 	PACKAGE* pack = &tree->packages[id];
 	tree->setButton = SetButton;
 
-	SetButton(1, pack->action);
-	SetButton(2, pack->inst); // && pack->action != 0
-	SetButton(3, pack->src_inst); 
-	SetButton(4, pack->update);
-	SetButton(5, pack->uninstall); 
+	if(SetButton)
+	{
+		SetButton(1, pack->action);
+		SetButton(2, pack->inst); // && pack->action != 0
+		SetButton(3, pack->src_inst); 
+		SetButton(4, pack->update);
+		SetButton(5, pack->uninstall); 
+	}
 
 	// root notes (like network) return here
 	if(!pack->path)
@@ -105,10 +108,33 @@ extern "C" int PML_LoadPackage (TREE* tree, int id, PML_SetButton SetButton, PML
 		pack->loaded = TRUE;
 	}
 
-	if(pack->description)
-		SetText(pack->description);
-
 	return ERR_OK;
+}
+
+extern "C" int PML_FindItem (TREE* tree, const char* what)
+{
+	int i, j;
+	bool found;
+
+	// if we have children, same action for them
+	for (i=1; (UINT)i<tree->packages.size(); i++)
+	{
+		found = true;
+
+		for(j=0; (UINT)j<strlen(what); j++)
+		{
+			if(tolower(what[j]) != tolower(tree->packages[i].name[j]))
+			{
+				found = false;
+				break;
+			}
+		}
+
+		if(found)
+			return i;
+	}
+
+	return 0;
 }
 
 // The user chooses a actions like Install
@@ -134,7 +160,8 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 
 	// set the icon
 	if(!pack->icon)
-		SetIcon(id, action);
+		if(SetIcon)
+			SetIcon(id, action);
 
 	// can't do src install yet
 	if(action == 2)
@@ -147,7 +174,8 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 	else if (action != 0)
 	{
 		// since we are setting a action we undo it again
-		tree->setButton(1, 1);
+		if(tree->setButton)
+			tree->setButton(1, 1);
 		//tree->setButton(action+1, 0);
 		pack->action = action;
 
@@ -168,9 +196,10 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 
 	// undoing
 	else 
-	{+
+	{
 		// set other things back
-		tree->setButton(1, 0);
+		if(tree->setButton)
+			tree->setButton(1, 0);
 		//tree->setButton(pack->action+1, 1);
 		pack->action = 0;
 
@@ -187,5 +216,13 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 	}
 
 	return ret;
+}
+
+//
+extern "C" char* PML_GetDescription (TREE* tree, int id)
+{
+	PML_LoadPackage(tree, id, NULL);
+
+	return tree->packages[id].description;
 }
 

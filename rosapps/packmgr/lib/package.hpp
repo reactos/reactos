@@ -71,7 +71,9 @@ extern "C"
   WCHAR* PML_TransError (int code);
 
   int PML_LoadTree (pTree*, char* url, PML_AddItem);
-  int PML_LoadPackage (pTree, int id, PML_SetButton, PML_SetText);
+  int PML_FindItem (TREE* tree, const char* what);
+  int PML_LoadPackage (pTree, int id, PML_SetButton);
+  char* PML_GetDescription (TREE* tree, int id);
   int PML_SetAction (pTree, int package, int action, PML_SetIcon);
   int PML_DoIt (pTree, PML_SetStatus);
 
