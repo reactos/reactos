@@ -135,10 +135,9 @@ CsrpParseCommandLine (
 	                            NULL,
 	                            NULL);
 
-	Status = NtCreateDirectoryObject(&CsrObjectDirectory,
-	                                 0xF000F, /* ea:??? */
-	                                 &Attributes);
-
+	Status = NtOpenDirectoryObject(&CsrObjectDirectory,
+	                               0xF000F, /* ea:??? */
+	                               &Attributes);
 	return Status;
 }
 
