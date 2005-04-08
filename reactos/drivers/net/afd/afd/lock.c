@@ -11,6 +11,7 @@
 #include "tdi_proto.h"
 #include "tdiconn.h"
 #include "debug.h"
+#include "pseh.h"
 
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
@@ -49,21 +50,31 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     PMDL NewMdl;
+    INT NewBufferLen;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     if( NewBuf ) {
 	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
 
-	RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
+        _SEH_TRY {
+            RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
+            NewBufferLen = *AddressLen;
+        } _SEH_HANDLE {
+            AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
+                                    "from userland (%x %x)\n", 
+                                    Buf, AddressLen));
+            ExFreePool( NewBuf );
+            return NULL;
+        } _SEH_END;
 
-	if( LockAddress ) {
-	    NewBuf[Count].buf = AddressBuf;
-	    NewBuf[Count].len = *AddressLen;
-	    Count++;
-	    NewBuf[Count].buf = (PVOID)AddressLen;
-	    NewBuf[Count].len = sizeof(*AddressLen);
-	    Count++;
+        if( LockAddress ) {
+            NewBuf[Count].buf = AddressBuf;
+            NewBuf[Count].len = NewBufferLen;
+            Count++;
+            NewBuf[Count].buf = (PVOID)AddressLen;
+            NewBuf[Count].len = sizeof(*AddressLen);
+            Count++;
 	}
 
 	for( i = 0; i < Count; i++ ) {
