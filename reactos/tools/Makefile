@@ -3,6 +3,14 @@ PATH_TO_TOP = ..
 include $(PATH_TO_TOP)/rules.mak
 
 CFLAGS += -Wall -Werror
+ifeq ($(HOST),mingw32-linux)
+CFLAGS += -DUNIX_PATHS
+rm := @rm
+endif
+ifeq ($(HOST),mingw32-windows)
+CFLAGS += -DDOS_PATHS
+rm := -@del
+endif
 
 TOOLS = \
 	regtests$(EXE_POSTFIX) \
@@ -12,6 +20,7 @@ TOOLS = \
 	rmkdir$(EXE_POSTFIX) \
 	rrmdir$(EXE_POSTFIX) \
 	rsym$(EXE_POSTFIX) \
+	raddr2line$(EXE_POSTFIX) \
 	rtouch$(EXE_POSTFIX) \
 	mkflpimg$(EXE_POSTFIX) \
 	ppc-le2be$(EXE_POSTFIX) \
@@ -30,94 +39,55 @@ tools_check:
 	$(MAKE) -f tools-check.mak
 
 regtests$(EXE_POSTFIX): regtests.c
-	@$(HOST_CC) $(CFLAGS) -o regtests$(EXE_POSTFIX) regtests.c
+	@$(HOST_CC) $(CFLAGS) -o $@ $<
 
-ifeq ($(HOST),mingw32-linux)
 rcopy$(EXE_POSTFIX): rcopy.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rcopy$(EXE_POSTFIX): rcopy.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
-endif
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
 rdel$(EXE_POSTFIX): rdel.c
-	@$(HOST_CC) $(CFLAGS) rdel.c -o rdel$(EXE_POSTFIX)
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
 rline$(EXE_POSTFIX): rline.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rline.c -o rline$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rline$(EXE_POSTFIX): rline.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rline.c -o rline$(EXE_POSTFIX)
-endif
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
 rmkdir$(EXE_POSTFIX): rmkdir.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rmkdir$(EXE_POSTFIX): rmkdir.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
-endif
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
 rrmdir$(EXE_POSTFIX): rrmdir.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rrmdir.c -o rrmdir$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rrmdir$(EXE_POSTFIX): rrmdir.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rrmdir.c -o rrmdir$(EXE_POSTFIX)
-endif
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
-rsym$(EXE_POSTFIX): rsym.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rsym.c -o rsym$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rsym$(EXE_POSTFIX): rsym.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rsym.c -o rsym$(EXE_POSTFIX)
-endif
+rsym_common.o: rsym_common.c rsym.h
+	@$(HOST_CC) $(CFLAGS) -c $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
+rsym.o: rsym.c rsym.h
+	@$(HOST_CC) $(CFLAGS) -c $< -o $@
+
+rsym$(EXE_POSTFIX): rsym.o rsym_common.o
+	@$(HOST_CC) $(CFLAGS) $^ -o $@
+
+raddr2line.o: raddr2line.c rsym.h
+	@$(HOST_CC) $(CFLAGS) -c $< -o $@
+
+raddr2line$(EXE_POSTFIX): raddr2line.o rsym_common.o
+	@$(HOST_CC) $(CFLAGS) $^ -o $@
+
 rtouch$(EXE_POSTFIX): rtouch.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rtouch.c -o rtouch$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-rtouch$(EXE_POSTFIX): rtouch.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS rtouch.c -o rtouch$(EXE_POSTFIX)
-endif
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
 mkflpimg$(EXE_POSTFIX): mkflpimg.c
-	@$(HOST_CC) $(CFLAGS) -DUNIX_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-mkflpimg$(EXE_POSTFIX): mkflpimg.c
-	@$(HOST_CC) $(CFLAGS) -DDOS_PATHS mkflpimg.c -o mkflpimg$(EXE_POSTFIX)
-endif
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
 hack-coff$(EXE_POSTFIX): hack-coff.c
-	@$(HOST_CC) $(CFLAGS) hack-coff.c -o hack-coff$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-hack-coff$(EXE_POSTFIX): hack-coff.c
-	@$(HOST_CC) $(CFLAGS) hack-coff.c -o hack-coff$(EXE_POSTFIX)
-endif
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
-ifeq ($(HOST),mingw32-linux)
 ppc-le2be$(EXE_POSTFIX): ppc-le2be.c
-	@$(HOST_CC) $(CFLAGS) ppc-le2be.c -o ppc-le2be$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
-ppc-le2be$(EXE_POSTFIX): ppc-le2be.c
-	@$(HOST_CC) $(CFLAGS) ppc-le2be.c -o ppc-le2be$(EXE_POSTFIX)
-endif
+	@$(HOST_CC) $(CFLAGS) $< -o $@
 
 depends$(EXE_POSTFIX): depends.c
-	@$(HOST_CC) $(CFLAGS) depends.c -o depends$(EXE_POSTFIX)
+	@$(HOST_CC) $(CFLAGS) $< -o $@
+
+.PHONY: zlib_target wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target wrc_target \
+        widl_target buildno_target lib_unicode lib_wpp
 
 zlib_target:
 	$(MAKE) --silent -C ../lib/zlib -f Makefile.host
@@ -166,11 +136,7 @@ lib_unicode:
 lib_wpp:
 	$(MAKE) -C wpp
 
-.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target wrc_target \
-        widl_target buildno_target lib_unicode lib_wpp
 
-
-ifeq ($(HOST),mingw32-linux)
 clean:
 	$(MAKE) --silent -C buildno clean
 	$(MAKE) --silent -C widl clean
@@ -186,27 +152,13 @@ clean:
 	$(MAKE) --silent -C ../lib/zlib -f Makefile.host clean
 	$(MAKE) -C wpp clean
 	$(MAKE) -C unicode clean
+ifeq ($(HOST),mingw32-linux)
 	@rm mkconfig
 	@rm $(TOOLS)
 endif
 ifeq ($(HOST),mingw32-windows)
-clean:
-	$(MAKE) --silent -C buildno clean
-	$(MAKE) --silent -C widl clean
-	$(MAKE) --silent -C wrc clean
-	$(MAKE) --silent -C cabman clean
-	$(MAKE) --silent -C cdmake clean
-	$(MAKE) --silent -C mkhive clean
-	$(MAKE) --silent -C wmc clean
-	$(MAKE) --silent -C rgenstat clean
 	$(MAKE) --silent -C pipetools clean
-	$(MAKE) --silent -C wine2ros clean
-	$(MAKE) --silent -C winebuild clean
-	$(MAKE) --silent -C bin2res clean
-	$(MAKE) --silent -C ../lib/zlib -f Makefile.host clean
-	$(MAKE) -C wpp clean
-	$(MAKE) -C unicode clean
-	-@del *$(EXE_POSTFIX)
+	$(rm) *$(EXE_POSTFIX)
 endif
 
 .PHONY: all clean
