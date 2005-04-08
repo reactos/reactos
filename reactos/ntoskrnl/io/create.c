@@ -238,7 +238,15 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
   DPRINT("DeviceObject %x\n", DeviceObject);
 
-  CreatedFileObject->DeviceObject = DeviceObject->Vpb->DeviceObject;
+  if (DeviceObject->Vpb && 
+      DeviceObject->Vpb->DeviceObject)
+    {
+      CreatedFileObject->DeviceObject = DeviceObject->Vpb->DeviceObject;
+    }
+  else
+    {
+      CreatedFileObject->DeviceObject = DeviceObject; 
+    }
   CreatedFileObject->Vpb = DeviceObject->Vpb;
   CreatedFileObject->Type = IO_TYPE_FILE;
   CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
@@ -337,11 +345,12 @@ IoCreateFile(OUT PHANDLE		FileHandle,
 	     IN	ULONG			Options)
 {
    PFILE_OBJECT		FileObject;
+   PDEVICE_OBJECT	DeviceObject = NULL;
    PIRP			Irp;
    PIO_STACK_LOCATION	StackLoc;
    IO_SECURITY_CONTEXT  SecurityContext;
    KPROCESSOR_MODE      AccessMode;
-   HANDLE               LocalFileHandle;
+   HANDLE               LocalHandle;
    IO_STATUS_BLOCK      LocalIoStatusBlock;
    LARGE_INTEGER        SafeAllocationSize;
    PVOID                SystemEaBuffer = NULL;
@@ -357,7 +366,7 @@ IoCreateFile(OUT PHANDLE		FileHandle,
    if (IoStatusBlock == NULL || FileHandle == NULL)
      return STATUS_ACCESS_VIOLATION;
 
-   LocalFileHandle = 0;
+   LocalHandle = 0;
 
    if(Options & IO_NO_PARAMETER_CHECKING)
      AccessMode = KernelMode;
@@ -433,21 +442,57 @@ IoCreateFile(OUT PHANDLE		FileHandle,
      DPRINT1("FIXME: IO_CHECK_CREATE_PARAMETERS not yet supported!\n");
    }
 
-   Status = ObCreateObject(AccessMode,
-			   IoFileObjectType,
-			   ObjectAttributes,
-			   AccessMode,
-			   NULL,
-			   sizeof(FILE_OBJECT),
-			   0,
-			   0,
-			   (PVOID*)&FileObject);
-   if (!NT_SUCCESS(Status))
-     {
+   if (CreateDisposition == FILE_OPEN ||
+       CreateDisposition == FILE_OPEN_IF)
+   {
+      Status = ObOpenObjectByName(ObjectAttributes,
+	                          NULL,
+				  NULL,
+				  AccessMode,
+				  DesiredAccess,
+				  NULL,
+				  &LocalHandle);
+      if (NT_SUCCESS(Status))
+      {
+         Status = ObReferenceObjectByHandle(LocalHandle,
+	                                    DesiredAccess,
+					    NULL,
+					    AccessMode,
+					    (PVOID*)&DeviceObject,
+					    NULL);
+	 ObDereferenceObject (DeviceObject);
+	 if (!NT_SUCCESS(Status))
+	 {
+	    return Status;
+	 }
+         if (BODY_TO_HEADER(DeviceObject)->ObjectType != IoDeviceObjectType)
+	 {
+            ZwClose(LocalHandle); 
+	    return STATUS_OBJECT_NAME_COLLISION;
+	 }
+         FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
+         ZwClose(LocalHandle);
+      }
+   }
+
+
+   if (DeviceObject == NULL)
+   {
+      Status = ObCreateObject(AccessMode,
+			      IoFileObjectType,
+			      ObjectAttributes,
+			      AccessMode,
+			      NULL,
+			      sizeof(FILE_OBJECT),
+			      0,
+			      0,
+			      (PVOID*)&FileObject);
+      if (!NT_SUCCESS(Status))
+      {
 	DPRINT("ObCreateObject() failed! (Status %lx)\n", Status);
 	return Status;
-     }
-
+      }
+   }
    RtlMapGenericMask(&DesiredAccess,    
                       BODY_TO_HEADER(FileObject)->ObjectType->Mapping);
                       
@@ -456,7 +501,7 @@ IoCreateFile(OUT PHANDLE		FileHandle,
 			    DesiredAccess,
 			    0,
 			    NULL,
-			    &LocalFileHandle);
+			    &LocalHandle);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
@@ -494,7 +539,7 @@ IoCreateFile(OUT PHANDLE		FileHandle,
    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
    if (Irp == NULL)
      {
-	ZwClose(LocalFileHandle);
+	ZwClose(LocalHandle);
 	return STATUS_UNSUCCESSFUL;
      }
 
@@ -574,13 +619,13 @@ IoCreateFile(OUT PHANDLE		FileHandle,
         FileObject->DeviceObject = NULL;
         FileObject->Vpb = NULL;
 
-	ZwClose(LocalFileHandle);
+	ZwClose(LocalHandle);
      }
    else
      {
 	 _SEH_TRY
 	   {
-	      *FileHandle = LocalFileHandle;
+	      *FileHandle = LocalHandle;
 	      *IoStatusBlock = LocalIoStatusBlock;
 	   }
 	 _SEH_HANDLE
