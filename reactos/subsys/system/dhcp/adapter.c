@@ -91,7 +91,9 @@ void AdapterInit() {
                 Adapter->DhclientConfig.retry_interval;
             strncpy(Adapter->DhclientInfo.name, Adapter->IfMib.bDescr,
                     sizeof(Adapter->DhclientInfo.name));
-            DH_DbgPrint(MID_TRACE,("Adapter Name: [%s]\n", Adapter->DhclientInfo.name));
+            DH_DbgPrint(MID_TRACE,("Adapter Name: [%s] (Bind Status %x)\n", 
+                                   Adapter->DhclientInfo.name,
+                                   Adapter->BindStatus));
             ifi = &Adapter->DhclientInfo;
         }
     }
@@ -156,6 +158,7 @@ PDHCP_ADAPTER AdapterGetNext( PDHCP_ADAPTER This )
 }
 
 void if_register_send(struct interface_info *ip) {
+    
 }
 
 void if_register_receive(struct interface_info *ip) {
