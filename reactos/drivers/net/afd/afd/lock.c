@@ -126,6 +126,7 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     for( i = 0; FileObjects && i < HandleCount; i++ ) {
 	HandleArray[i].Status = 0;
 	HandleArray[i].Events = HandleArray[i].Events;
+        FileObjects[i].Handle = 0;
 	Status = ObReferenceObjectByHandle
 	    ( (PVOID)HandleArray[i].Handle,
 	      FILE_ALL_ACCESS,
