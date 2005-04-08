@@ -216,7 +216,8 @@ SerenumDetectPnpDevice(
 	ULONG Size;
 	ULONG Msr, Purge;
 	ULONG i;
-	BOOLEAN BufferContainsBeginId, BufferContainsEndId;
+	BOOLEAN BufferContainsBeginId = FALSE;
+	BOOLEAN BufferContainsEndId = FALSE;
 	SERIAL_LINE_CONTROL Lcr;
 	SERIAL_TIMEOUTS Timeouts;
 	SERIALPERF_STATS PerfStats;
@@ -325,7 +326,6 @@ SerenumCollectPnpComDeviceId:
 		NULL, 0, &PerfStats, &Size);
 	if (!NT_SUCCESS(Status)) return Status;
 	if (PerfStats.FrameErrorCount + PerfStats.ParityErrorCount != 0) goto SerenumConnectIdle;
-	BufferContainsBeginId = BufferContainsEndId = FALSE;
 	for (i = 0; i < TotalBytesReceived; i++)
 	{
 		if (Buffer[i] == BEGIN_ID) BufferContainsBeginId = TRUE;
