@@ -712,8 +712,13 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       if (ParentHeader &&
 	  RemainingPath.Buffer == NULL)
         {
-          ObDereferenceObject(Parent);
-	  return STATUS_OBJECT_NAME_COLLISION;
+	  if (ParentHeader->ObjectType != Type)
+	    {
+              ObDereferenceObject(Parent);
+	      return STATUS_OBJECT_NAME_COLLISION;
+	    }
+	  *Object = Parent;
+          return STATUS_OBJECT_EXISTS;
 	}
     }
   else
