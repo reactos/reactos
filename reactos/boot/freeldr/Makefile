@@ -20,6 +20,7 @@
 PATH_TO_TOP = ../..
 
 include rules.mak
+include $(PATH_TO_TOP)/config
 
 all:
 	$(MAKE) -C tools
