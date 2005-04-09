@@ -344,8 +344,8 @@ IoCreateFile(OUT PHANDLE		FileHandle,
 	     IN	PVOID			ExtraCreateParameters	OPTIONAL,
 	     IN	ULONG			Options)
 {
-   PFILE_OBJECT		FileObject;
-   PDEVICE_OBJECT	DeviceObject = NULL;
+   PFILE_OBJECT		FileObject = NULL;
+   PDEVICE_OBJECT	DeviceObject;
    PIRP			Irp;
    PIO_STACK_LOCATION	StackLoc;
    IO_SECURITY_CONTEXT  SecurityContext;
@@ -460,23 +460,23 @@ IoCreateFile(OUT PHANDLE		FileHandle,
 					    AccessMode,
 					    (PVOID*)&DeviceObject,
 					    NULL);
-	 ObDereferenceObject (DeviceObject);
+         ZwClose(LocalHandle); 
 	 if (!NT_SUCCESS(Status))
 	 {
 	    return Status;
 	 }
          if (BODY_TO_HEADER(DeviceObject)->ObjectType != IoDeviceObjectType)
 	 {
-            ZwClose(LocalHandle); 
+	    ObDereferenceObject (DeviceObject);
 	    return STATUS_OBJECT_NAME_COLLISION;
 	 }
          FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
-         ZwClose(LocalHandle);
+	 ObDereferenceObject (DeviceObject);
       }
    }
 
 
-   if (DeviceObject == NULL)
+   if (FileObject == NULL)
    {
       Status = ObCreateObject(AccessMode,
 			      IoFileObjectType,
