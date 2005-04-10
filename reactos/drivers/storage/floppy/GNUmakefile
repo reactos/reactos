@@ -30,6 +30,8 @@ TARGET_CFLAGS = -Wall -Werror
 TARGET_OBJECTS = floppy.o csqrtns.o hardware.o readwrite.o ioctl.o
 TARGET_DDKLIBS = csq.a
 
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
 include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
-
+include $(TOOLS_PATH)/depend.mk
