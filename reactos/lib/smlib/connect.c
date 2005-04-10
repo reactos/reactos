@@ -7,7 +7,6 @@
  */
 #define NTOS_MODE_USER
 #include <ntos.h>
-#include <sm/api.h>
 #include <sm/helper.h>
 #include <pe.h>
 
@@ -25,26 +24,34 @@
  * ARGUMENTS
  *	pSbApiPortName: name of the Sb port the calling subsystem
  *		server already created in the system name space;
- *	hSbApiPort: LPC port handle (checked, but not used);
- *	dwSubsystem: a valid IMAGE_SUBSYSTEM_xxx value;
+ *	hSbApiPort: LPC port handle (checked, but not used: the
+ *		subsystem is required to have already created
+ *		the callback port before it connects to the SM);
+ *	wSubsystem: a valid IMAGE_SUBSYSTEM_xxx value;
  *	phSmApiPort: a pointer to a HANDLE, which will be
  *		filled with a valid client-side LPC comm port.
+ *
+ *	There should be only two ways to call this API:
+ *	a) subsystems willing to register with SM will use it
+ *	   with full parameters (the function checks them);
+ *	b) regular SM clients, will set to 0 the 1st, the 2nd,
+ *	   and the 3rd parameter.
  *	
  * RETURN VALUE
  * 	If all three optional values are omitted, an LPC status.
  * 	STATUS_INVALID_PARAMETER_MIX if PortName is defined and
- * 	both hSbApiPort and dwSubsystem are 0.
+ * 	both hSbApiPort and wSubsystem are 0.
  */
 NTSTATUS STDCALL
 SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
 		  IN      HANDLE           hSbApiPort      OPTIONAL,
-		  IN      DWORD            dwSubsystem     OPTIONAL,
+		  IN      WORD             wSubSystemId    OPTIONAL,
 		  IN OUT  PHANDLE          phSmApiPort)
 {
   UNICODE_STRING              SmApiPortName;
   SECURITY_QUALITY_OF_SERVICE SecurityQos;
   NTSTATUS                    Status = STATUS_SUCCESS;
-  SM_CONNECT_DATA             ConnectData = {0,{0}};
+  SM_CONNECT_DATA             ConnectData = {0,0,{0}};
   ULONG                       ConnectDataLength = 0;
 
   DPRINT("SMLIB: %s called\n", __FUNCTION__);
@@ -55,12 +62,13 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
     {
 	  return STATUS_INVALID_PARAMETER_1;
     }
-    if (NULL == hSbApiPort || IMAGE_SUBSYSTEM_UNKNOWN == dwSubsystem)
+    if (NULL == hSbApiPort || IMAGE_SUBSYSTEM_UNKNOWN == wSubSystemId)
     {
       return STATUS_INVALID_PARAMETER_MIX;
     }
     RtlZeroMemory (& ConnectData, sizeof ConnectData);
-    ConnectData.Subsystem = dwSubsystem;
+    ConnectData.Unused = 0;
+    ConnectData.SubSystemId = wSubSystemId;
     if (pSbApiPortName->Length > 0)
     {
       RtlCopyMemory (& ConnectData.SbName,

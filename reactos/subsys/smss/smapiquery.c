@@ -38,7 +38,7 @@ SMAPI(SmQryInfo)
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
 	
-	Request->Status = STATUS_NOT_IMPLEMENTED;
+	Request->SmHeader.Status = STATUS_NOT_IMPLEMENTED;
 	return Status;
 }
 

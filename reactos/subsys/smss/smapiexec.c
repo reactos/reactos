@@ -253,7 +253,7 @@ SMAPI(SmExecPgm)
 	DPRINT("SM: %s called from CID(%lx|%lx)\n",
 		__FUNCTION__, Request->Header.ClientId.UniqueProcess,
 		Request->Header.ClientId.UniqueThread);
-	ExecPgm = & Request->ExecPgm;
+	ExecPgm = & Request->Request.ExecPgm;
 	/* Check if the name lenght is valid */
 	if((ExecPgm->NameLength > 0) &&
 	   (ExecPgm->NameLength <= SM_EXEXPGM_MAX_LENGTH) &&
@@ -277,7 +277,7 @@ SMAPI(SmExecPgm)
 			 * independent process; now it is embedded in the
 			 * SM for performance or security.
 			 */
-			Request->Status = SmInitializeDbgSs();
+			Request->SmHeader.Status = SmInitializeDbgSs();
 		}
 		else
 		{
@@ -299,20 +299,20 @@ SMAPI(SmExecPgm)
 				wcscat (ImagePath, Data);
 			
 				/* Create native process */
-				Request->Status = SmCreateUserProcess(ImagePath,
+				Request->SmHeader.Status = SmCreateUserProcess(ImagePath,
 								      L"", /* FIXME */
 								      FALSE, /* wait */
 				      				      NULL,
 			      					      FALSE, /* terminate */
 			      					      NULL);
 			}else{
-				Request->Status = Status;
+				Request->SmHeader.Status = Status;
 			}
 		}
 	}
 	else
 	{
-		Request->Status = Status = STATUS_INVALID_PARAMETER;
+		Request->SmHeader.Status = Status = STATUS_INVALID_PARAMETER;
 	}
 	return Status;
 }

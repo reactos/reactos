@@ -3,4 +3,4 @@ EXPORTS
 SmCompleteSession@12
 SmConnectApiPort@16
 SmExecuteProgram@8
-SmQuery@16
+SmQueryInformation@20

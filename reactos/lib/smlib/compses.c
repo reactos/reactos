@@ -7,7 +7,6 @@
  */
 #define NTOS_MODE_USER
 #include <ntos.h>
-#include <sm/api.h>
 #include <sm/helper.h>
 
 #define NDEBUG
@@ -42,20 +41,20 @@ SmCompleteSession (IN HANDLE hSmApiPort,
   DPRINT("SMLIB: %s called\n", __FUNCTION__);
 
   /* Marshal Ses in the LPC message */
-  SmReqMsg.CompSes.hApiPort   = hApiPort;
-  SmReqMsg.CompSes.hSbApiPort = hSbApiPort;
+  SmReqMsg.Request.CompSes.hApiPort   = hApiPort;
+  SmReqMsg.Request.CompSes.hSbApiPort = hSbApiPort;
 
   /* SM API to invoke */
-  SmReqMsg.ApiIndex = SM_API_COMPLETE_SESSION;
+  SmReqMsg.SmHeader.ApiIndex = SM_API_COMPLETE_SESSION;
 
   /* Port message */
   SmReqMsg.Header.MessageType = LPC_NEW_MESSAGE;
-  SmReqMsg.Header.DataSize    = SM_PORT_DATA_SIZE(SmReqMsg.CompSes);
+  SmReqMsg.Header.DataSize    = SM_PORT_DATA_SIZE(SmReqMsg.Request);
   SmReqMsg.Header.MessageSize = SM_PORT_MESSAGE_SIZE;
   Status = NtRequestWaitReplyPort (hSmApiPort, (PLPC_MESSAGE) & SmReqMsg, (PLPC_MESSAGE) & SmReqMsg);
   if (NT_SUCCESS(Status))
   {
-    return SmReqMsg.Status;
+    return SmReqMsg.SmHeader.Status;
   }
   DPRINT("SMLIB: %s failed (Status=0x%08lx)\n", __FUNCTION__, Status);
   return Status;

@@ -166,14 +166,14 @@ SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 	/*
 	 * Check if a client for the ID already exist.
 	 */
-	if (SmpLookupClient(ConnectData->Subsystem))
+	if (SmpLookupClient(ConnectData->SubSystemId))
 	{
 		DPRINT("SM: %s: attempt to register again subsystem %d.\n",
 			__FUNCTION__,
-			ConnectData->Subsystem);
+			ConnectData->SubSystemId);
 		return STATUS_UNSUCCESSFUL;
 	}
-	DPRINT("SM: %s: registering subsystem %d \n", __FUNCTION__, ConnectData->Subsystem);
+	DPRINT("SM: %s: registering subsystem ID=%d \n", __FUNCTION__, ConnectData->SubSystemId);
 	/*
 	 * Allocate the storage for client data
 	 */
@@ -188,7 +188,7 @@ SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 	/*
 	 * Initialize the client data
 	 */
-	pClient->SubsystemId = ConnectData->Subsystem;
+	pClient->SubsystemId = ConnectData->SubSystemId;
 	/* SM auto-initializes; other subsystems are required to call
 	 * SM_API_COMPLETE_SESSION via SMDLL. */
 	pClient->Initialized = (IMAGE_SUBSYSTEM_NATIVE == pClient->SubsystemId);
