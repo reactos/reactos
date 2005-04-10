@@ -422,13 +422,36 @@ _FUNCTION_ {
                     }
 	        }
 		break;
-	    case 'n': {
- 		    if (!suppress) {
-			int*n = va_arg(ap, int*);
-			*n = consumed - (nch!=_EOF_);
-		    }
-	        }
-		break;
+       case 'n': {
+          if (!suppress) {
+         int*n = va_arg(ap, int*);
+
+         /* 
+         *n = consumed - (nch!=_EOF_);
+         
+         FIXME: The above is the Wine version and it doesnt work in ros
+         when %n is at end of input string (return one too many).
+         But does it fail in Wine too?? If so wine also needs fixin.
+         -Gunnar
+         */
+
+         *n = consumed - 1;
+          }
+          /* This is an odd one: according to the standard,
+           * "Execution of a %n directive does not increment the
+           * assignment count returned at the completion of
+           * execution" even if it wasn't suppressed with the
+           * '*' flag.  The Corrigendum to the standard seems
+           * to contradict this (comment out the assignment to
+           * suppress below if you want to implement these
+           * alternate semantics) but the windows program I'm
+           * looking at expects the behavior I've coded here
+           * (which happens to be what glibc does as well).
+           */
+          suppress = 1;
+          st = 1;
+           }
+      break;
 	    case '[': {
                     _CHAR_ *str = suppress ? NULL : va_arg(ap, _CHAR_*);
                     _CHAR_ *sptr = str;

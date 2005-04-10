@@ -134,7 +134,7 @@ typedef struct
 
     SIZE    offChild;       /* x,y offset if child is not FIXEDSIZE */
     UINT    uMinHeight;
-    INT     iRow;           /* row this band assigned to */
+    INT     iRow;           /* zero-based index of the row this band assigned to */
     UINT    fStatus;        /* status flags, reset only by _Validate */
     UINT    fDraw;          /* drawing flags, reset only by _Layout */
     UINT    uCDret;         /* last return from NM_CUSTOMDRAW */
@@ -360,8 +360,14 @@ static VOID
 REBAR_DumpBandInfo( LPREBARBANDINFOA pB)
 {
     if( !TRACE_ON(rebar) ) return;
-    TRACE("band info: ID=%u, size=%u, child=%p, clrF=0x%06lx, clrB=0x%06lx\n",
-	  pB->wID, pB->cbSize, pB->hwndChild, pB->clrFore, pB->clrBack);
+    TRACE("band info: ");
+    if (pB->fMask & RBBIM_ID);
+        TRACE("ID=%u, ", pB->wID);
+    TRACE("size=%u, child=%p", pB->cbSize, pB->hwndChild);
+    if (pB->fMask & RBBIM_COLORS)
+        TRACE(", clrF=0x%06lx, clrB=0x%06lx", pB->clrFore, pB->clrBack);
+    TRACE("\n");
+
     TRACE("band info: mask=0x%08x (%s)\n", pB->fMask, REBAR_FmtMask(pB->fMask));
     if (pB->fMask & RBBIM_STYLE)
 	TRACE("band info: style=0x%08x (%s)\n", pB->fStyle, REBAR_FmtStyle(pB->fStyle));
@@ -403,8 +409,14 @@ REBAR_DumpBand (REBAR_INFO *iP)
 	  (iP->NtfUnicode)?"TRUE":"FALSE", (iP->DoRedraw)?"TRUE":"FALSE");
     for (i = 0; i < iP->uNumBands; i++) {
 	pB = &iP->bands[i];
-	TRACE("band # %u: ID=%u, child=%p, row=%u, clrF=0x%06lx, clrB=0x%06lx\n",
-	      i, pB->wID, pB->hwndChild, pB->iRow, pB->clrFore, pB->clrBack);
+	TRACE("band # %u:", i);
+	if (pB->fMask & RBBIM_ID);
+	    TRACE(" ID=%u", pB->wID);
+	if (pB->fMask & RBBIM_CHILD)
+	    TRACE(" child=%p", pB->hwndChild);
+	if (pB->fMask & RBBIM_COLORS)
+	    TRACE(" clrF=0x%06lx clrB=0x%06lx", pB->clrFore, pB->clrBack);
+	TRACE("\n");
 	TRACE("band # %u: mask=0x%08x (%s)\n", i, pB->fMask, REBAR_FmtMask(pB->fMask));
 	if (pB->fMask & RBBIM_STYLE)
 	    TRACE("band # %u: style=0x%08x (%s)\n",
@@ -1419,7 +1431,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	  clientcx, clientcy, adjcx, adjcy);
     x = initx;
     y = inity;
-    row = 1;
+    row = 0;
     cx = 0;
     mcy = 0;
     rowstart = 0;
@@ -1560,7 +1572,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
     }
 
     if (infoPtr->uNumBands)
-        infoPtr->uNumRows = row;
+        infoPtr->uNumRows = row + 1;
 
     /* ******* End Phase 1 - all bands on row at minimum size ******* */
 
@@ -1583,7 +1595,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 
 	/* now adjust all rectangles by using the height found above */
 	xy = 0;
-	row = 1;
+	row = 0;
 	for (i=0; i<infoPtr->uNumBands; i++) {
 	    lpBand = &infoPtr->bands[i];
 	    if (HIDDENBAND(lpBand)) continue;
@@ -1759,6 +1771,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
             if( !(lpBand->fDraw&DRAW_LAST_IN_ROW) )
                 continue;
 
+            /* FIXME: this next line is wrong, but fixing it to be inverted causes IE's sidebars to be the wrong size */
 	    if (lpBand->fMask & RBBS_VARIABLEHEIGHT) continue;
 	    if (((INT)lpBand->cyMaxChild < 1) ||
 		((INT)lpBand->cyIntegral < 1)) {
@@ -1943,7 +1956,7 @@ REBAR_ValidateBand (REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
     infoPtr->fStatus |= BAND_NEEDS_LAYOUT;
 
     /* Header is where the image, text and gripper exist  */
-    /* in the band and preceed the child window.          */
+    /* in the band and precede the child window.          */
 
     /* count number of non-FIXEDSIZE and non-Hidden bands */
     nonfixed = 0;

@@ -32,6 +32,21 @@
 #include "traynotify.h"	// for NOTIFYAREA_WIDTH_DEF
 
 
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_SetTaskmanWindow(TEXT("user32"), "SetTaskmanWindow");
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_RegisterShellHookWindow(TEXT("user32"), "RegisterShellHookWindow");
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_DeregisterShellHookWindow(TEXT("user32"), "DeregisterShellHookWindow");
+
+/*
+DynamicFct<BOOL (WINAPI*)(HWND hWnd, DWORD dwType)> g_RegisterShellHook(TEXT("shell32"), (LPCSTR)0xb5);
+
+ // constants for RegisterShellHook()
+#define RSH_UNREGISTER			0
+#define RSH_REGISTER			1
+#define RSH_REGISTER_PROGMAN	2
+#define RSH_REGISTER_TASKMAN	3
+*/
+
+
 TaskBarEntry::TaskBarEntry()
 {
 	_id = 0;
@@ -53,16 +68,40 @@ TaskBarMap::~TaskBarMap()
 
 
 TaskBar::TaskBar(HWND hwnd)
- :	super(hwnd)
+ :	super(hwnd),
+	WM_SHELLHOOK(RegisterWindowMessage(WINMSG_SHELLHOOK))
 {
 	_last_btn_width = 0;
+
+	_mmMetrics_org.cbSize = sizeof(MINIMIZEDMETRICS);
+
+	SystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(_mmMetrics_org), &_mmMetrics_org, 0);
+
+	 // configure the window manager to hide windows when they are minimized
+	 // This is neccessary to enable shell hook messages.
+	if (!(_mmMetrics_org.iArrange & ARW_HIDE)) {
+		MINIMIZEDMETRICS _mmMetrics_new = _mmMetrics_org;
+
+		_mmMetrics_new.iArrange |= ARW_HIDE;
+
+		SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, sizeof(_mmMetrics_new), &_mmMetrics_new, 0);
+	}
 }
 
 TaskBar::~TaskBar()
 {
-	KillTimer(_hwnd, 0);
+//	if (g_RegisterShellHook)
+//		(*g_RegisterShellHook)(_hwnd, RSH_UNREGISTER);
 
-	//DeinstallShellHook();
+	if (g_DeregisterShellHookWindow)
+		(*g_DeregisterShellHookWindow)(_hwnd);
+	else
+		KillTimer(_hwnd, 0);
+
+	if (g_SetTaskmanWindow)
+		(*g_SetTaskmanWindow)(0);
+
+	SystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(_mmMetrics_org), &_mmMetrics_org, 0);
 }
 
 HWND TaskBar::Create(HWND hwndParent)
@@ -95,11 +134,31 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 
 	_next_id = IDC_FIRST_APP;
 
-	//InstallShellHook(_hwnd, PM_SHELLHOOK_NOTIFY);
+	 // register the taskbar window as task manager window to make the following call to RegisterShellHookWindow working
+	if (g_SetTaskmanWindow)
+		(*g_SetTaskmanWindow)(_hwnd);
 
+	if (g_RegisterShellHookWindow) {
+		LOG(TEXT("Using shell hooks for notification of shell events."));
+
+		(*g_RegisterShellHookWindow)(_hwnd);
+	} else {
+		LOG(TEXT("Shell hooks not available."));
+
+		SetTimer(_hwnd, 0, 200, NULL);
+	}
+
+/* Alternatively we could use the RegisterShellHook() function in SHELL32, but this is not yet implemented in the WINE code.
+	if (g_RegisterShellHook) {
+		(*g_RegisterShellHook)(0, RSH_REGISTER);
+
+		if ((HIWORD(GetVersion())>>14) == W_VER_NT)
+			(*g_RegisterShellHook)(_hwnd, RSH_REGISTER_TASKMAN);
+		else
+			(*g_RegisterShellHook)(_hwnd, RSH_REGISTER);
+	}
+*/
 	Refresh();
-
-	SetTimer(_hwnd, 0, 200, NULL);
 
 	return 0;
 }
@@ -124,28 +183,27 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			break;	// avoid displaying context menu for application button _and_ desktop bar at the same time
 
 		goto def;}
-/*
-//#define PM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
-	  case PM_SHELLHOOK_NOTIFY: {
-		int code = lparam;
-
-		switch(code) {
-		  case HSHELL_WINDOWCREATED:
-		  case HSHELL_WINDOWDESTROYED:
-		  case HSHELL_WINDOWACTIVATED:
-		  case HSHELL_WINDOWREPLACED:
-			Refresh();
-			break;
-		}
-		Refresh();
-		break;}
-*/
 	  case PM_GET_LAST_ACTIVE:
 		return (LRESULT)(HWND)_last_foreground_wnd;
 
 	  default: def:
-		return super::WndProc(nmsg, wparam, lparam);
+		if (nmsg == WM_SHELLHOOK) {
+			switch(wparam) {
+			  case HSHELL_WINDOWCREATED:
+			  case HSHELL_WINDOWDESTROYED:
+			  case HSHELL_WINDOWACTIVATED:
+			  case HSHELL_REDRAW:
+#ifdef HSHELL_FLASH
+			  case HSHELL_FLASH:
+			  case HSHELL_RUDEAPPACTIVATED:
+#endif
+				Refresh();
+				break;
+			}
+		} else {
+			return super::WndProc(nmsg, wparam, lparam);
+		}
 	}
 
 	return 0;
@@ -393,6 +451,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 
 		entry._fsState = btn.fsState;
 
+#ifdef _ROS_	// now handled by activating the ARW_HIDE flag with SystemParametersInfo(SPI_SETMINIMIZEDMETRICS)
 		 // move minimized windows out of sight
 		if (IsIconic(hwnd)) {
 			RECT rect;
@@ -402,6 +461,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			if (rect.bottom > 0)
 				SetWindowPos(hwnd, 0, -32000, -32000, 0, 0, SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
 		}
+#endif
 	}
 
 	return TRUE;

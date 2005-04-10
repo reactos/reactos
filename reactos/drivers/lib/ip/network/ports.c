@@ -20,8 +20,7 @@ VOID PortsStartup( PPORT_SET PortSet,
     RtlInitializeBitMap( &PortSet->ProtoBitmap, 
 			 PortSet->ProtoBitBuffer,
 			 PortSet->PortsToOversee );
-    RtlClearBits( &PortSet->ProtoBitmap, 
-                  PortSet->StartingPort, PortsToManage );
+    RtlClearAllBits( &PortSet->ProtoBitmap );
     ExInitializeFastMutex( &PortSet->Mutex );
 }
 
@@ -30,13 +29,17 @@ VOID PortsShutdown( PPORT_SET PortSet ) {
 }
 
 VOID DeallocatePort( PPORT_SET PortSet, ULONG Port ) {
-    RtlClearBits( &PortSet->ProtoBitmap, 
-		  PortSet->StartingPort + Port, 1 );
+    Port = htons(Port);
+    ASSERT(Port >= PortSet->StartingPort);
+    ASSERT(Port < PortSet->StartingPort + PortSet->PortsToOversee);
+    RtlClearBits( &PortSet->ProtoBitmap, Port - PortSet->StartingPort, 1 );
 }
 
 BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {
     BOOLEAN Clear;
 
+    Port = htons(Port);
+    ASSERT(Port >= PortSet->StartingPort);
     Port -= PortSet->StartingPort;
 
     ExAcquireFastMutex( &PortSet->Mutex );
@@ -58,6 +61,8 @@ ULONG AllocateAnyPort( PPORT_SET PortSet ) {
     }
     ExReleaseFastMutex( &PortSet->Mutex );
 
+    AllocatedPort = htons(AllocatedPort);
+
     return AllocatedPort;
 }
 
@@ -75,6 +80,8 @@ ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
 	AllocatedPort += PortSet->StartingPort;
     }
     ExReleaseFastMutex( &PortSet->Mutex );
+
+    AllocatedPort = htons(AllocatedPort);
 
     return AllocatedPort;
 }

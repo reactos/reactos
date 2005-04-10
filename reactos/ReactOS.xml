@@ -38,6 +38,9 @@
 	<directory name="hal">
 		<xi:include href="hal/directory.xml" />
 	</directory>
+	<directory name="include">
+		<xi:include href="include/directory.xml" />
+	</directory>
 	<directory name="lib">
 		<xi:include href="lib/directory.xml" />
 	</directory>

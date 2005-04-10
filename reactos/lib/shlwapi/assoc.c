@@ -43,7 +43,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
  *  when you right-click on a file).
  *
  * HELPERS
- * You can use this object tranparently by calling the helper functions
+ * You can use this object transparently by calling the helper functions
  * AssocQueryKeyA(), AssocQueryStringA() and AssocQueryStringByKeyA(). These
  * create an IQueryAssociations object, perform the requested actions
  * and then dispose of the object. Alternatively, you can create an instance

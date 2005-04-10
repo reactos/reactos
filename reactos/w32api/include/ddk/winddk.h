@@ -101,6 +101,8 @@ DECLARE_INTERNAL_OBJECT(SECTION_OBJECT)
 /* FIXME: Unknown definitions */
 struct _SET_PARTITION_INFORMATION_EX;
 typedef ULONG WAIT_TYPE;
+#define WaitAll 0
+#define WaitAny 1
 typedef HANDLE TRACEHANDLE;
 typedef PVOID PWMILIB_CONTEXT;
 typedef PVOID PSYSCTL_IRP_DISPOSITION;
@@ -124,6 +126,18 @@ static __inline struct _KPCR * KeGetCurrentKPCR(
     : /* no inputs */
   );
   return (struct _KPCR *) Value;
+}
+
+static __inline struct _KPRCB * KeGetCurrentPrcb(
+  VOID)
+{
+  ULONG Value;
+
+  __asm__ __volatile__ ("movl %%fs:0x20, %0\n\t"
+	  : "=r" (Value)
+    : /* no inputs */
+  );
+  return (struct _KPRCB *) Value;
 }
 
 /*
@@ -3795,6 +3809,10 @@ typedef enum _PROCESSINFOCLASS {
   ProcessDebugObjectHandle,
   ProcessDebugFlags,
   ProcessHandleTracing,
+  ProcessUnknown33,
+  ProcessUnknown34,
+  ProcessUnknown35,
+  ProcessCookie,
   MaxProcessInfoClass
 } PROCESSINFOCLASS;
 

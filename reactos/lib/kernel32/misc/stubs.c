@@ -788,25 +788,8 @@ QueueUserWorkItem(
     return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-ReadDirectoryChangesW(
-    HANDLE hDirectory,
-    LPVOID lpBuffer,
-    DWORD nBufferLength,
-    BOOL bWatchSubtree,
-    DWORD dwNotifyFilter,
-    LPDWORD lpBytesReturned,
-    LPOVERLAPPED lpOverlapped,
-    LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
-    )
-{
-    STUB;
-    return 0;
-}
+
+
 
 /*
  * @unimplemented
@@ -1156,20 +1139,7 @@ GetFirmwareEnvironmentVariableW(
     return 0;
 }
 
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetLongPathNameW(
-    LPCWSTR lpszShortPath,
-    LPWSTR  lpszLongPath,
-    DWORD    cchBuffer
-    )
-{
-    STUB;
-    return 0;
-}
+
 
 /*
  * @unimplemented
@@ -1313,21 +1283,6 @@ SetVolumeMountPointW(
  */
 BOOL
 STDCALL
-VerifyVersionInfoW(
-    LPOSVERSIONINFOEXW lpVersionInformation,
-    DWORD dwTypeMask,
-    DWORDLONG dwlConditionMask
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 DeleteVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint
     )
@@ -1443,20 +1398,7 @@ GetFirmwareEnvironmentVariableA(
     return 0;
 }
 
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetLongPathNameA(
-    LPCSTR lpszShortPath,
-    LPSTR  lpszLongPath,
-    DWORD    cchBuffer
-    )
-{
-    STUB;
-    return 0;
-}
+
 
 /*
  * @unimplemented
@@ -1590,36 +1532,6 @@ SetVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint,
     LPCSTR lpszVolumeName
     )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-VerifyVersionInfoA(
-    LPOSVERSIONINFOEXA lpVersionInformation,
-    DWORD dwTypeMask,
-    DWORDLONG dwlConditionMask
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONGLONG
-STDCALL
-VerSetConditionMask(
-        ULONGLONG   ConditionMask,
-        DWORD   TypeMask,
-        BYTE    Condition
-        )
 {
     STUB;
     return 0;

@@ -45,6 +45,7 @@
 <property name="BASEADDRESS_COMDLG32" value="0x76200000" />
 <property name="BASEADDRESS_OLEAUT32" value="0x76260000" />
 <property name="BASEADDRESS_RICHED32" value="0x76340000" />
+<property name="BASEADDRESS_RICHED20" value="0x76360000" />
 <property name="BASEADDRESS_TWAIN_32" value="0x76380000" />
 <property name="BASEADDRESS_MIDIMAP" value="0x76600000" />
 <property name="BASEADDRESS_MPR" value="0x76620000" />

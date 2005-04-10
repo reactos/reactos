@@ -30,7 +30,6 @@
 #include <ntdll/ldr.h>
 #include <internal/ctype.h>
 #include <internal/ntoskrnl.h>
-#include <internal/id.h>
 #include <internal/ke.h>
 #include <internal/i386/segment.h>
 #include <internal/i386/mm.h>

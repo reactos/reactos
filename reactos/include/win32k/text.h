@@ -7,6 +7,7 @@ typedef struct
 {
    LOGFONTW   logfont;
    FONTOBJ    *Font;
+   BOOLEAN Initialized; /* Don't reinitialize for each DC */
 } TEXTOBJ, *PTEXTOBJ;
 
 /*  Internal interface  */

@@ -320,9 +320,9 @@ LdrAccessResource(IN  PVOID BaseAddress,
  */
 NTSTATUS STDCALL
 LdrFindResourceDirectory_U(IN PVOID BaseAddress,
-                           WCHAR** name,
-                           DWORD level,
-                           OUT PVOID* addr)
+                           IN PLDR_RESOURCE_INFO info,
+                           IN ULONG level,
+                          OUT PIMAGE_RESOURCE_DIRECTORY* addr)
 {
     PIMAGE_RESOURCE_DIRECTORY ResDir;
     PIMAGE_RESOURCE_DIRECTORY_ENTRY ResEntry;
@@ -330,6 +330,7 @@ LdrFindResourceDirectory_U(IN PVOID BaseAddress,
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
     WCHAR* ws;
+    PWCHAR* name = (PWCHAR*) info;
 
     /* Get the pointer to the resource directory */
     ResDir = (PIMAGE_RESOURCE_DIRECTORY)

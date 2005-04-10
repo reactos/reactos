@@ -29,7 +29,7 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 		void * DispatcherContext)
 {
    EXCEPTION_POINTERS ExceptionInfo;
-   EXCEPTION_DISPOSITION ExceptionDisposition;
+   EXCEPTION_DISPOSITION ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
 
    ExceptionInfo.ExceptionRecord = ExceptionRecord;
    ExceptionInfo.ContextRecord = ContextRecord;
@@ -45,10 +45,6 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
          ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
       }
       _SEH_END;
-   }
-   else 
-   {
-      ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
    }
 
    if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
@@ -330,9 +326,9 @@ GetTeb(VOID)
 BOOL STDCALL
 SwitchToThread(VOID)
 {
-  NTSTATUS errCode;
-  errCode = NtYieldExecution();
-  return TRUE;
+  NTSTATUS Status;
+  Status = NtYieldExecution();
+  return Status != STATUS_NO_YIELD_PERFORMED;
 }
 
 

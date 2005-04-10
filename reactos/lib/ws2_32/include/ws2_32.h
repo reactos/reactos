@@ -18,7 +18,7 @@
 #include <windows.h>
 #undef assert
 #include <debug.h>
-#include <WinDNS.h> // DNS_A_DATA
+#include <windns.h> // DNS_A_DATA
 
 /* Exported by ntdll.dll, but where is the prototype? */
 unsigned long strtoul(const char *nptr, char **endptr, int base);

@@ -53,10 +53,12 @@ typedef struct apartment APARTMENT;
 
 typedef enum ifstub_state
 {
-    IFSTUB_STATE_NORMAL_MARSHALED,
-    IFSTUB_STATE_NORMAL_UNMARSHALED,
-    IFSTUB_STATE_TABLE_MARSHALED
-} IFSTUB_STATE;
+    STUBSTATE_NORMAL_MARSHALED,
+    STUBSTATE_NORMAL_UNMARSHALED,
+    STUBSTATE_TABLE_WEAK_MARSHALED,
+    STUBSTATE_TABLE_WEAK_UNMARSHALED,
+    STUBSTATE_TABLE_STRONG,
+} STUB_STATE;
 
 /* an interface stub */
 struct ifstub   
@@ -66,7 +68,6 @@ struct ifstub
     IID               iid;        /* RO */
     IPID              ipid;       /* RO */
     IUnknown         *iface;      /* RO */
-    IFSTUB_STATE      state;      /* CS stub_manager->lock */
 };
 
 
@@ -78,11 +79,12 @@ struct stub_manager
     CRITICAL_SECTION  lock;
     APARTMENT        *apt;        /* owning apt (RO) */
 
-    ULONG             extrefs;    /* number of 'external' references (LOCK) */
+    ULONG             extrefs;    /* number of 'external' references (CS lock) */
     ULONG             refs;       /* internal reference count (CS apt->cs) */
     OID               oid;        /* apartment-scoped unique identifier (RO) */
     IUnknown         *object;     /* the object we are managing the stub for (RO) */
     ULONG             next_ipid;  /* currently unused (LOCK) */
+    STUB_STATE        state;      /* state machine (CS lock) */
 };
 
 /* imported interface proxy */
@@ -95,6 +97,7 @@ struct ifproxy
   IPID ipid;               /* imported interface ID (RO) */
   LPRPCPROXYBUFFER proxy;  /* interface proxy (RO) */
   DWORD refs;              /* imported (public) references (CS parent->cs) */
+  IRpcChannelBuffer *chan; /* channel to object (CS parent->cs) */
 };
 
 /* imported object / proxy manager */
@@ -103,7 +106,6 @@ struct proxy_manager
   const IMultiQIVtbl *lpVtbl;
   struct apartment *parent; /* owning apartment (RO) */
   struct list entry;        /* entry in apartment (CS parent->cs) */
-  LPRPCCHANNELBUFFER chan;  /* channel to object (CS cs) */
   OXID oxid;                /* object exported ID (RO) */
   OID oid;                  /* object ID (RO) */
   struct list interfaces;   /* imported interfaces (CS cs) */
@@ -130,11 +132,10 @@ struct apartment
   struct list proxies;     /* imported objects (CS cs) */
   struct list stubmgrs;    /* stub managers for exported objects (CS cs) */
   BOOL remunk_exported;    /* has the IRemUnknown interface for this apartment been created yet? (CS cs) */
+  LONG remoting_started;   /* has the RPC system been started for this apartment? (LOCK) */
 
-  /* FIXME: These should all be removed long term as they leak information that should be encapsulated */
+  /* FIXME: OID's should be given out by RPCSS */
   OID oidc;                /* object ID counter, starts at 1, zero is invalid OID (CS cs) */
-  DWORD listenertid;       /* id of apartment_listener_thread */
-  HANDLE shutdown_event;   /* event used to tell the client_dispatch_thread to shut down */
 };
 
 /* this is what is stored in TEB->ReservedForOle */
@@ -146,59 +147,49 @@ struct oletls
     DWORD            inits;        /* number of times CoInitializeEx called */
 };
 
+
+/* Global Interface Table Functions */
+
 extern void* StdGlobalInterfaceTable_Construct(void);
 extern void  StdGlobalInterfaceTable_Destroy(void* self);
 extern HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv);
+extern void* StdGlobalInterfaceTableInstance;
 
 /* FIXME: these shouldn't be needed, except for 16-bit functions */
 extern HRESULT WINE_StringFromCLSID(const CLSID *id,LPSTR idstr);
 HRESULT WINAPI __CLSIDFromStringA(LPCSTR idstr, CLSID *id);
 
-extern HRESULT create_marshalled_proxy(REFCLSID rclsid, REFIID iid, LPVOID *ppv);
-
-extern void* StdGlobalInterfaceTableInstance;
-
-/* Standard Marshalling definitions */
-typedef struct _wine_marshal_id {
-    OXID    oxid;       /* id of apartment */
-    OID     oid;        /* id of stub manager */
-    IPID    ipid;       /* id of interface pointer */
-} wine_marshal_id;
-
-inline static BOOL
-MARSHAL_Compare_Mids(wine_marshal_id *mid1,wine_marshal_id *mid2) {
-    return
-	(mid1->oxid == mid2->oxid)	&&
-	(mid1->oid == mid2->oid)	&&
-	IsEqualGUID(&(mid1->ipid),&(mid2->ipid))
-    ;
-}
-
 HRESULT MARSHAL_Disconnect_Proxies(APARTMENT *apt);
 HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv);
 
+/* Stub Manager */
+
 ULONG stub_manager_int_addref(struct stub_manager *This);
 ULONG stub_manager_int_release(struct stub_manager *This);
-struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object);
+struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object, MSHLFLAGS mshlflags);
 ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs);
 ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs);
-struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, BOOL tablemarshal);
+struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid);
 struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid);
 struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object);
 void apartment_disconnect_object(APARTMENT *apt, void *object);
-BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid);
-BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid);
+BOOL stub_manager_notify_unmarshal(struct stub_manager *m);
+BOOL stub_manager_is_table_marshaled(struct stub_manager *m);
+void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs);
 HRESULT register_ifstub(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, MSHLFLAGS mshlflags);
 HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stubmgr_ret);
-IRpcStubBuffer *ipid_to_stubbuffer(const IPID *ipid);
+IRpcStubBuffer *ipid_to_apt_and_stubbuffer(const IPID *ipid, APARTMENT **stub_apt);
 HRESULT start_apartment_remote_unknown(void);
 
-IRpcStubBuffer *mid_to_stubbuffer(wine_marshal_id *mid);
+/* RPC Backend */
 
-void start_apartment_listener_thread(void);
-
-extern HRESULT PIPE_GetNewPipeBuf(wine_marshal_id *mid, IRpcChannelBuffer **pipebuf);
-void RPC_StartLocalServer(REFCLSID clsid, IStream *stream);
+void    RPC_StartRemoting(struct apartment *apt);
+HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid, IRpcChannelBuffer **pipebuf);
+HRESULT RPC_ExecuteCall(RPCOLEMESSAGE *msg, IRpcStubBuffer *stub);
+HRESULT RPC_RegisterInterface(REFIID riid);
+void    RPC_UnregisterInterface(REFIID riid);
+void    RPC_StartLocalServer(REFCLSID clsid, IStream *stream);
+HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv);
 
 /* This function initialize the Running Object Table */
 HRESULT WINAPI RunningObjectTableImpl_Initialize(void);
@@ -209,11 +200,16 @@ HRESULT WINAPI RunningObjectTableImpl_UnInitialize(void);
 /* This function decomposes a String path to a String Table containing all the elements ("\" or "subDirectory" or "Directory" or "FileName") of the path */
 int WINAPI FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable);
 
-/* compobj.c */
+
+/* Apartment Functions */
+
 APARTMENT *COM_ApartmentFromOXID(OXID oxid, BOOL ref);
 APARTMENT *COM_ApartmentFromTID(DWORD tid);
 DWORD COM_ApartmentAddRef(struct apartment *apt);
 DWORD COM_ApartmentRelease(struct apartment *apt);
+
+/* messages used by the apartment window (not compatible with native) */
+#define DM_EXECUTERPC   (WM_USER + 0) /* WPARAM = (RPCOLEMESSAGE *), LPARAM = (IRpcStubBuffer *) */
 
 /*
  * Per-thread values are stored in the TEB on offset 0xF80,

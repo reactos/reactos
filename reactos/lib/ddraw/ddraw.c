@@ -10,31 +10,26 @@
  */
 
 #include <windows.h>
-//#include <ddraw.h>
-
- #define DD_OK 0
- 
-HRESULT STDCALL DirectDrawCreate(
-  GUID FAR* lpGUID, 
-  DWORD FAR* lplpDD, 
-  IUnknown FAR* pUnkOuter
-)
-{
-    return DD_OK;
+#include "ddraw.h"
+#include "rosddraw.h"
+               
+HRESULT WINAPI DirectDrawCreate(LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN pUnkOuter) 
+{    	
+    if (pUnkOuter!=NULL) return DDERR_INVALIDPARAMS;
+	return DDRAW_Create(lpGUID, (LPVOID*) lplpDD, pUnkOuter, &IID_IDirectDraw, FALSE);
 }
 
-HRESULT STDCALL DirectDrawCreateEx(
-  GUID FAR* lpGUID, 
-  DWORD FAR* lplpDD, 
-  DWORD Unknown3,
-  IUnknown FAR* pUnkOuter
-)
+                
+HRESULT WINAPI DirectDrawCreateEx(LPGUID lpGUID, LPVOID* lplpDD, REFIID iid, LPUNKNOWN pUnkOuter)
 {
-    return DD_OK;
+	if (pUnkOuter!=NULL) return DDERR_INVALIDPARAMS;
+	if (!IsEqualGUID(iid, &IID_IDirectDraw7)) return DDERR_INVALIDPARAMS;
+
+    return DDRAW_Create(lpGUID, lplpDD, pUnkOuter, iid, TRUE);
 }
 
 HRESULT WINAPI DirectDrawEnumerateA(
-  DWORD *lpCallback, 
+  LPDDENUMCALLBACKA lpCallback, 
   LPVOID lpContext
 )
 {
@@ -43,7 +38,7 @@ HRESULT WINAPI DirectDrawEnumerateA(
 
 
 HRESULT WINAPI DirectDrawEnumerateW(
-  DWORD *lpCallback, 
+  LPDDENUMCALLBACKW lpCallback, 
   LPVOID lpContext
 )
 {
@@ -51,7 +46,7 @@ HRESULT WINAPI DirectDrawEnumerateW(
 }
 
 HRESULT WINAPI DirectDrawEnumerateExA(
-  DWORD lpCallback, 
+  LPDDENUMCALLBACKEXA lpCallback, 
   LPVOID lpContext, 
   DWORD dwFlags
 )
@@ -60,21 +55,51 @@ HRESULT WINAPI DirectDrawEnumerateExA(
 }
 
 HRESULT WINAPI DirectDrawEnumerateExW(
-  DWORD lpCallback, 
+  LPDDENUMCALLBACKEXW lpCallback, 
   LPVOID lpContext, 
   DWORD dwFlags
 )
 {
     return DD_OK;
 }
-
+ 
 HRESULT WINAPI DirectDrawCreateClipper(
   DWORD dwFlags, 
-  DWORD FAR* lplpDDClipper, 
-  IUnknown FAR* pUnkOuter
+  LPDIRECTDRAWCLIPPER* lplpDDClipper, 
+  LPUNKNOWN pUnkOuter
 )
 {
     return DD_OK;
+}
+
+HRESULT DDRAW_Create(
+	LPGUID lpGUID, LPVOID *lplpDD, LPUNKNOWN pUnkOuter, REFIID iid, BOOL ex) 
+{  		      
+	
+	 HRESULT hr;
+
+     
+    /* TODO 1: 
+	   check the GUID are right 
+	   add scanner that DirectDrawCreate / DirectDrawCreateEx select right driver.
+	   now we will assume it is the current display driver 
+	*/
+
+	 /* TODO 2: 
+	   do not only use hardware mode.
+	*/
+
+	hr = HAL_DirectDraw_Create(lpGUID, lplpDD, pUnkOuter, iid,  ex);
+
+	/* old code 
+	 //HDC desktop;		
+	
+	desktop = GetWindowDC(GetDesktopWindow());
+	lplpDD = OsThunkDdCreateDirectDrawObject(desktop);   
+	if (lplpDD == NULL) return DDERR_NODIRECTDRAWHW;
+	*/
+	 	
+	return hr;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD fwdReason, LPVOID lpvReserved)

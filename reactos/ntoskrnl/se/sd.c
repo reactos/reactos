@@ -108,6 +108,174 @@ SepInitSDs(VOID)
   return TRUE;
 }
 
+
+NTSTATUS
+SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+                                   IN KPROCESSOR_MODE AccessMode,
+                                   IN POOL_TYPE PoolType,
+                                   IN BOOLEAN CaptureIfKernel,
+                                   OUT PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
+                                   OUT PBOOLEAN Present)
+{
+  PSECURITY_QUALITY_OF_SERVICE CapturedQos;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  PAGED_CODE();
+
+  ASSERT(CapturedSecurityQualityOfService);
+  ASSERT(Present);
+
+  if(ObjectAttributes != NULL)
+  {
+    if(AccessMode != KernelMode)
+    {
+      SECURITY_QUALITY_OF_SERVICE SafeQos;
+
+      _SEH_TRY
+      {
+        ProbeForRead(ObjectAttributes,
+                     sizeof(ObjectAttributes),
+                     sizeof(ULONG));
+        if(ObjectAttributes->Length == sizeof(OBJECT_ATTRIBUTES))
+        {
+          if(ObjectAttributes->SecurityQualityOfService != NULL)
+          {
+            ProbeForRead(ObjectAttributes->SecurityQualityOfService,
+                         sizeof(SECURITY_QUALITY_OF_SERVICE),
+                         sizeof(ULONG));
+
+            if(((PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService)->Length ==
+               sizeof(SECURITY_QUALITY_OF_SERVICE))
+            {
+              /* don't allocate memory here because ExAllocate should bugcheck
+                 the system if it's buggy, SEH would catch that! So make a local
+                 copy of the qos structure.*/
+              RtlCopyMemory(&SafeQos,
+                            ObjectAttributes->SecurityQualityOfService,
+                            sizeof(SECURITY_QUALITY_OF_SERVICE));
+              *Present = TRUE;
+            }
+            else
+            {
+              Status = STATUS_INVALID_PARAMETER;
+            }
+          }
+          else
+          {
+            *CapturedSecurityQualityOfService = NULL;
+            *Present = FALSE;
+          }
+        }
+        else
+        {
+          Status = STATUS_INVALID_PARAMETER;
+        }
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
+      if(NT_SUCCESS(Status))
+      {
+        if(*Present)
+        {
+          CapturedQos = ExAllocatePool(PoolType,
+                                       sizeof(SECURITY_QUALITY_OF_SERVICE));
+          if(CapturedQos != NULL)
+          {
+            RtlCopyMemory(CapturedQos,
+                          &SafeQos,
+                          sizeof(SECURITY_QUALITY_OF_SERVICE));
+            *CapturedSecurityQualityOfService = CapturedQos;
+          }
+          else
+          {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+          }
+        }
+        else
+        {
+          *CapturedSecurityQualityOfService = NULL;
+        }
+      }
+    }
+    else
+    {
+      if(ObjectAttributes->Length == sizeof(OBJECT_ATTRIBUTES))
+      {
+        if(CaptureIfKernel)
+        {
+          if(ObjectAttributes->SecurityQualityOfService != NULL)
+          {
+            if(((PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService)->Length ==
+               sizeof(SECURITY_QUALITY_OF_SERVICE))
+            {
+              CapturedQos = ExAllocatePool(PoolType,
+                                           sizeof(SECURITY_QUALITY_OF_SERVICE));
+              if(CapturedQos != NULL)
+              {
+                RtlCopyMemory(CapturedQos,
+                              ObjectAttributes->SecurityQualityOfService,
+                              sizeof(SECURITY_QUALITY_OF_SERVICE));
+                *CapturedSecurityQualityOfService = CapturedQos;
+                *Present = TRUE;
+              }
+              else
+              {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+              }
+            }
+            else
+            {
+              Status = STATUS_INVALID_PARAMETER;
+            }
+          }
+          else
+          {
+            *CapturedSecurityQualityOfService = NULL;
+            *Present = FALSE;
+          }
+        }
+        else
+        {
+          *CapturedSecurityQualityOfService = (PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService;
+          *Present = (ObjectAttributes->SecurityQualityOfService != NULL);
+        }
+      }
+      else
+      {
+        Status = STATUS_INVALID_PARAMETER;
+      }
+    }
+  }
+  else
+  {
+    *CapturedSecurityQualityOfService = NULL;
+    *Present = FALSE;
+  }
+
+  return Status;
+}
+
+
+VOID
+SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService  OPTIONAL,
+                                   IN KPROCESSOR_MODE AccessMode,
+                                   IN BOOLEAN CaptureIfKernel)
+{
+  PAGED_CODE();
+
+  if(CapturedSecurityQualityOfService != NULL &&
+     (AccessMode == UserMode ||
+      (AccessMode == KernelMode && CaptureIfKernel)))
+  {
+    ExFreePool(CapturedSecurityQualityOfService);
+  }
+}
+
+
 /*
  * @implemented
  */
@@ -572,6 +740,8 @@ SeReleaseSecurityDescriptor(
 	IN BOOLEAN CaptureIfKernelMode
 	)
 {
+  PAGED_CODE();
+
   /* WARNING! You need to call this function with the same value for CurrentMode
               and CaptureIfKernelMode that you previously passed to
               SeCaptureSecurityDescriptor() in order to avoid memory leaks! */

@@ -418,6 +418,7 @@ MingwBackend::GenerateGlobalVariables () const
 		"=",
 		ProjectNode.non_if_data );
 	fprintf ( fMakefile, "PROJECT_RCFLAGS = $(PROJECT_CFLAGS)\n" );
+	fprintf ( fMakefile, "PROJECT_WIDLFLAGS = $(PROJECT_CFLAGS)\n" );
 	fprintf ( fMakefile, "PROJECT_LFLAGS = %s\n",
 	          GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "\n" );
@@ -426,11 +427,13 @@ MingwBackend::GenerateGlobalVariables () const
 bool
 MingwBackend::IncludeInAllTarget ( const Module& module ) const
 {
-	if ( module.type == ObjectLibrary )
+	if ( MingwModuleHandler::ReferenceObjects ( module ) )
 		return false;
 	if ( module.type == BootSector )
 		return false;
 	if ( module.type == Iso )
+		return false;
+	if ( module.type == Test )
 		return false;
 	return true;
 }

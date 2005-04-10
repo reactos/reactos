@@ -413,17 +413,19 @@ HalQueryDisplayOwnership();
 #define Ki386EnableInterrupts()	    __asm__ __volatile__("sti\n\t")
 #define Ki386HaltProcessor()	    __asm__ __volatile__("hlt\n\t")
 #define Ki386RdTSC(x)		    __asm__ __volatile__("rdtsc\n\t" : "=A" (x.u.LowPart), "=d" (x.u.HighPart));
+#define Ki386Rdmsr(msr,val1,val2)   __asm__ __volatile__("rdmsr" : "=a" (val1), "=d" (val2) : "c" (msr))
+#define Ki386Wrmsr(msr,val1,val2)   __asm__ __volatile__("wrmsr" : /* no outputs */ : "c" (msr), "a" (val1), "d" (val2))
 
 static inline BYTE Ki386ReadFsByte(ULONG offset)
 {
    BYTE b;
-   __asm__ __volatile__("movb %%fs:(%1),%0":"=q" (b):"0" (offset));
+   __asm__ __volatile__("movb %%fs:(%1),%0":"=r" (b):"r" (offset));
    return b;
 }
 
 static inline VOID Ki386WriteFsByte(ULONG offset, BYTE value)
 {
-    __asm__ __volatile__("movb %0,%%fs:(%1)"::"q" (value), "r" (offset));
+   __asm__ __volatile__("movb %0,%%fs:(%1)"::"r" (value), "r" (offset));
 }
 
 #elif defined(_MSC_VER)

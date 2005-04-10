@@ -3,11 +3,9 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = riched32.dll
-IMPORTS   = user32 kernel32
+IMPORTS   = riched20 user32 kernel32
 
 C_SRCS = \
-	reader.c \
-	text-writer.c \
 	richedit.c
 
 @MAKE_DLL_RULES@

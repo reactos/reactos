@@ -53,6 +53,9 @@ typedef struct tagMSICOMPONENT
 
     BOOL Enabled;
     INT  Cost;
+    INT  RefCount;
+
+    LPWSTR FullKeypath;
 } MSICOMPONENT;
 
 typedef struct tagMSIFOLDER

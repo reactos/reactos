@@ -51,6 +51,7 @@ public:
 	virtual std::string TypeSpecificNasmFlags() { return ""; }
 	void GenerateInvocations () const;
 	void GenerateCleanTarget () const;
+	static bool ReferenceObjects ( const Module& module );
 protected:
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
@@ -58,6 +59,8 @@ protected:
 	std::string GetModuleArchiveFilename () const;
 	bool IsGeneratedFile ( const File& file ) const;
 	std::string GetImportLibraryDependency ( const Module& importedModule );
+	void GetTargets ( const Module& dependencyModule,
+	                  string_list& targets );
 	void GetModuleDependencies ( string_list& dependencies );
 	std::string GetAllDependencies () const;
 	void GetSourceFilenames ( string_list& list, bool includeGeneratedFiles = true ) const;
@@ -122,26 +125,39 @@ private:
 	void GenerateWindresCommand ( const std::string& sourceFilename,
 	                              const std::string& windresflagsMacro );
 	void GenerateWinebuildCommands ( const std::string& sourceFilename );
+	void GenerateWidlCommandsServer (
+		const std::string& sourceFilename,
+		const std::string& widlflagsMacro );
+	void GenerateWidlCommandsClient (
+		const std::string& sourceFilename,
+		const std::string& widlflagsMacro );
+	void GenerateWidlCommands ( const std::string& sourceFilename,
+	                            const std::string& widlflagsMacro );
 	void GenerateCommands ( const std::string& sourceFilename,
 	                        const std::string& cc,
 	                        const std::string& cppc,
 	                        const std::string& cflagsMacro,
 	                        const std::string& nasmflagsMacro,
-	                        const std::string& windresflagsMacro );
+	                        const std::string& windresflagsMacro,
+	                        const std::string& widlflagsMacro );
 	void GenerateObjectFileTargets ( const IfableData& data,
 	                                 const std::string& cc,
 	                                 const std::string& cppc,
 	                                 const std::string& cflagsMacro,
 	                                 const std::string& nasmflagsMacro,
-	                                 const std::string& windresflagsMacro );
+	                                 const std::string& windresflagsMacro,
+	                                 const std::string& widlflagsMacro );
 	void GenerateObjectFileTargets ( const std::string& cc,
 	                                 const std::string& cppc,
 	                                 const std::string& cflagsMacro,
 	                                 const std::string& nasmflagsMacro,
-	                                 const std::string& windresflagsMacro );
+	                                 const std::string& windresflagsMacro,
+	                                 const std::string& widlflagsMacro );
 	std::string GenerateArchiveTarget ( const std::string& ar,
 	                                    const std::string& objs_macro ) const;
 	void GetSpecObjectDependencies ( string_list& dependencies,
+	                                 const std::string& filename ) const;
+	void GetWidlObjectDependencies ( string_list& dependencies,
 	                                 const std::string& filename ) const;
 	void GetDefaultDependencies ( string_list& dependencies ) const;
 	void GetInvocationDependencies ( const Module& module, string_list& dependencies );
@@ -152,8 +168,14 @@ private:
 public:
 	const Module& module;
 	string_list clean_files;
-	std::string cflagsMacro, nasmflagsMacro, windresflagsMacro,
-		linkerflagsMacro, objectsMacro, libsMacro, linkDepsMacro;
+	std::string cflagsMacro;
+	std::string nasmflagsMacro;
+	std::string windresflagsMacro;
+	std::string widlflagsMacro;
+	std::string linkerflagsMacro;
+	std::string objectsMacro;
+	std::string libsMacro;
+	std::string linkDepsMacro;
 };
 
 
@@ -322,6 +344,7 @@ private:
 	void OutputCdfileCopyCommands ( const std::string& bootcdDirectory );
 };
 
+
 class MingwTestModuleHandler : public MingwModuleHandler
 {
 public:
@@ -330,6 +353,24 @@ public:
 	virtual void Process ();
 private:
 	void GenerateTestModuleTarget ();
+};
+
+
+class MingwRpcServerModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwRpcServerModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+};
+
+
+class MingwRpcClientModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwRpcClientModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
 };
 
 #endif /* MINGW_MODULEHANDLER_H */

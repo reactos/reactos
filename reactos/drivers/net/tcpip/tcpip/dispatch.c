@@ -219,6 +219,52 @@ VOID DDKAPI DispCancelRequest(
 }
 
 
+VOID DDKAPI DispCancelListenRequest(
+    PDEVICE_OBJECT Device,
+    PIRP Irp)
+/*
+ * FUNCTION: Cancels a listen IRP
+ * ARGUMENTS:
+ *     Device = Pointer to device object
+ *     Irp    = Pointer to an I/O request packet
+ */
+{
+    PIO_STACK_LOCATION IrpSp;
+    PTRANSPORT_CONTEXT TranContext;
+    PFILE_OBJECT FileObject;
+    PCONNECTION_ENDPOINT Connection;
+    /*NTSTATUS Status = STATUS_SUCCESS;*/
+
+    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+    IrpSp         = IoGetCurrentIrpStackLocation(Irp);
+    FileObject    = IrpSp->FileObject;
+    TranContext   = (PTRANSPORT_CONTEXT)FileObject->FsContext;
+    ASSERT( TDI_LISTEN == IrpSp->MinorFunction);
+
+    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X).\n", Irp));
+
+#ifdef DBG
+    if (!Irp->Cancel)
+        TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
+#endif
+
+    /* Try canceling the request */
+    Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+    TCPAbortListenForSocket(
+	    Connection->AddressFile->Listener,
+	    Connection );
+
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+    DispDataRequestComplete(Irp, STATUS_CANCELLED, 0);
+    
+    DispCancelComplete(FileObject);
+
+    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+}
+
+
 NTSTATUS DispTdiAccept(
   PIRP Irp)
 /*
@@ -535,6 +581,12 @@ NTSTATUS DispTdiListen(
       if( NT_SUCCESS(Status) )
 	  Status = TCPListen( Connection->AddressFile->Listener, 1024 ); 
 	  /* BACKLOG */
+  }
+  if( NT_SUCCESS(Status) ) {
+      Status = DispPrepareIrpForCancel
+          (TranContext->Handle.ConnectionContext, 
+           Irp, 
+           (PDRIVER_CANCEL)DispCancelListenRequest);
   }
 
   if( NT_SUCCESS(Status) ) {
@@ -1410,6 +1462,58 @@ NTSTATUS DispTdiSetInformationEx(
         }
     }
 
+    return Status;
+}
+
+/* TODO: Support multiple addresses per interface.
+ * For now just set the nte context to the interface index.
+ *
+ * Later on, create an NTE context and NTE instance
+ */
+
+NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status = STATUS_DEVICE_DOES_NOT_EXIST;
+    PIP_SET_ADDRESS IpAddrChange = 
+        (PIP_SET_ADDRESS)Irp->AssociatedIrp.SystemBuffer;
+    IF_LIST_ITER(IF);
+
+    ForEachInterface(IF) {
+        if( IF->Unicast.Address.IPv4Address == IpAddrChange->Address ) {
+            Status = STATUS_DUPLICATE_OBJECTID;
+            break;
+        }
+        if( IF->Index == IpAddrChange->NteIndex ) {
+            IF->Unicast.Type = IP_ADDRESS_V4;
+            IF->Unicast.Address.IPv4Address = IpAddrChange->Address;
+            IF->Netmask.Type = IP_ADDRESS_V4;
+            IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
+            IpAddrChange->Address = IF->Index;
+            Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = IF->Index;
+            break;
+        }
+    } EndFor(IF);
+
+    Irp->IoStatus.Status = Status;
+    return Status;
+}
+
+NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    PUSHORT NteIndex = Irp->AssociatedIrp.SystemBuffer;
+    IF_LIST_ITER(IF);
+
+    ForEachInterface(IF) {
+        if( IF->Index == *NteIndex ) {
+            IF->Unicast.Type = IP_ADDRESS_V4;
+            IF->Unicast.Address.IPv4Address = 0;
+            IF->Netmask.Type = IP_ADDRESS_V4;
+            IF->Netmask.Address.IPv4Address = 0;
+            Status = STATUS_SUCCESS;
+        }
+    } EndFor(IF);
+
+    Irp->IoStatus.Status = Status;
     return Status;
 }
 

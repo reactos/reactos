@@ -53,8 +53,8 @@
 @ stub CM_Free_Res_Des
 @ stub CM_Free_Res_Des_Ex
 @ stub CM_Free_Res_Des_Handle
-@ stub CM_Get_Child
-@ stub CM_Get_Child_Ex
+@ stdcall CM_Get_Child(ptr long long)
+@ stdcall CM_Get_Child_Ex(ptr long long long)
 @ stub CM_Get_Class_Key_NameA
 @ stub CM_Get_Class_Key_NameW
 @ stub CM_Get_Class_Key_Name_ExA
@@ -115,23 +115,23 @@
 @ stub CM_Get_Next_Log_Conf_Ex
 @ stub CM_Get_Next_Res_Des
 @ stub CM_Get_Next_Res_Des_Ex
-@ stub CM_Get_Parent
-@ stub CM_Get_Parent_Ex
+@ stdcall CM_Get_Parent(ptr long long)
+@ stdcall CM_Get_Parent_Ex(ptr long long long)
 @ stub CM_Get_Res_Des_Data
 @ stub CM_Get_Res_Des_Data_Ex
 @ stub CM_Get_Res_Des_Data_Size
 @ stub CM_Get_Res_Des_Data_Size_Ex
-@ stub CM_Get_Sibling
-@ stub CM_Get_Sibling_Ex
-@ stub CM_Get_Version
-@ stub CM_Get_Version_Ex
+@ stdcall CM_Get_Sibling(ptr long long)
+@ stdcall CM_Get_Sibling_Ex(ptr long long long)
+@ stdcall CM_Get_Version()
+@ stdcall CM_Get_Version_Ex(long)
 @ stub CM_Intersect_Range_List
 @ stub CM_Invert_Range_List
 @ stub CM_Is_Dock_Station_Present
-@ stub CM_Locate_DevNodeA
-@ stub CM_Locate_DevNodeW
-@ stub CM_Locate_DevNode_ExA
-@ stub CM_Locate_DevNode_ExW
+@ stdcall CM_Locate_DevNodeA(ptr str long)
+@ stdcall CM_Locate_DevNodeW(ptr wstr long)
+@ stdcall CM_Locate_DevNode_ExA(ptr str long long)
+@ stdcall CM_Locate_DevNode_ExW(ptr wstr long long)
 @ stub CM_Merge_Range_List
 @ stub CM_Modify_Res_Des
 @ stub CM_Modify_Res_Des_Ex

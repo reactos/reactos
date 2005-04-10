@@ -46,114 +46,427 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
 }
 #endif
 
+static VOID STDCALL 
+NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
+                           IN PIRP Irp)
+{
+   PNPFS_CONTEXT Context;
+   PNPFS_DEVICE_EXTENSION DeviceExt;
+   PIO_STACK_LOCATION IoStack;
+   PNPFS_FCB Fcb;
+   BOOLEAN Complete = FALSE;
+
+   DPRINT("NpfsReadWriteCancelRoutine(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+
+   IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+   Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
+   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+   IoStack = IoGetCurrentIrpStackLocation(Irp);
+   Fcb = IoStack->FileObject->FsContext;
+
+   KeLockMutex(&DeviceExt->PipeListLock);
+   ExAcquireFastMutex(&Fcb->DataListLock);
+   switch(IoStack->MajorFunction)   
+   {
+      case IRP_MJ_READ:
+         if (Fcb->ReadRequestListHead.Flink != &Context->ListEntry)
+	 {
+	    /* we are not the first in the list, remove an complete us */
+	    RemoveEntryList(&Context->ListEntry);
+	    Complete = TRUE;
+	 }
+	 else
+	 {
+	    KeSetEvent(&Fcb->ReadEvent, IO_NO_INCREMENT, FALSE);
+	 }
+	 break;
+      default:
+         KEBUGCHECK(0);
+   }
+   ExReleaseFastMutex(&Fcb->DataListLock);
+   KeUnlockMutex(&DeviceExt->PipeListLock);
+   if (Complete)
+   {
+      Irp->IoStatus.Status = STATUS_CANCELLED;
+      Irp->IoStatus.Information = 0;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   }
+}
+
+static VOID STDCALL
+NpfsWaiterThread(PVOID InitContext)
+{
+   PNPFS_THREAD_CONTEXT ThreadContext = (PNPFS_THREAD_CONTEXT) InitContext;
+   ULONG CurrentCount;
+   ULONG Count = 0;
+   PIRP Irp = NULL;
+   PIRP NextIrp;
+   NTSTATUS Status;
+   BOOLEAN Terminate = FALSE;
+   BOOLEAN Cancel = FALSE;
+   PIO_STACK_LOCATION IoStack = NULL;
+   PNPFS_CONTEXT Context;
+   PNPFS_CONTEXT NextContext;
+   PNPFS_FCB Fcb;
+
+   KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
+
+   while (1)
+     {
+       CurrentCount = ThreadContext->Count;
+       KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
+       if (Irp)
+         {
+           if (Cancel)
+             {
+	       Irp->IoStatus.Status = STATUS_CANCELLED;
+               Irp->IoStatus.Information = 0;
+               IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	     }
+	   else
+	     {
+               switch (IoStack->MajorFunction)
+	         {
+	           case IRP_MJ_READ:
+                     NpfsRead(IoStack->DeviceObject, Irp);
+		     break;
+		   default:
+		     KEBUGCHECK(0);
+		 }
+	     }
+         }
+       if (Terminate)
+         {
+	   break;
+	 }
+       Status = KeWaitForMultipleObjects(CurrentCount,
+	                                 ThreadContext->WaitObjectArray,
+					 WaitAny,
+					 Executive,
+					 KernelMode,
+					 FALSE,
+					 NULL,
+					 ThreadContext->WaitBlockArray);
+       if (!NT_SUCCESS(Status))
+         {
+           KEBUGCHECK(0);
+         }
+       KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
+       Count = Status - STATUS_SUCCESS;
+       ASSERT (Count < CurrentCount);
+       if (Count > 0)
+       {
+	  Irp = ThreadContext->WaitIrpArray[Count];
+	  ThreadContext->Count--;
+	  ThreadContext->DeviceExt->EmptyWaiterCount++;
+	  ThreadContext->WaitObjectArray[Count] = ThreadContext->WaitObjectArray[ThreadContext->Count];
+	  ThreadContext->WaitIrpArray[Count] = ThreadContext->WaitIrpArray[ThreadContext->Count];
+
+          Cancel = (NULL == IoSetCancelRoutine(Irp, NULL));
+	  Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
+	  IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+	  if (Cancel)
+	  {
+	     Fcb = IoStack->FileObject->FsContext;
+ 	     ExAcquireFastMutex(&Fcb->DataListLock);
+	     RemoveEntryList(&Context->ListEntry);
+	     switch (IoStack->MajorFunction)
+	     {
+	        case IRP_MJ_READ:
+                   if (!IsListEmpty(&Fcb->ReadRequestListHead))
+		   {
+		      /* put the next request on the wait list */
+                      NextContext = CONTAINING_RECORD(Fcb->ReadRequestListHead.Flink, NPFS_CONTEXT, ListEntry);
+		      ThreadContext->WaitObjectArray[ThreadContext->Count] = NextContext->WaitEvent;
+		      NextIrp = CONTAINING_RECORD(NextContext, IRP, Tail.Overlay.DriverContext);
+		      ThreadContext->WaitIrpArray[ThreadContext->Count] = NextIrp;
+		      ThreadContext->Count++;
+                      ThreadContext->DeviceExt->EmptyWaiterCount--;		   
+		   }
+		   break;
+		default:
+		   KEBUGCHECK(0);
+	     }
+	     ExReleaseFastMutex(&Fcb->DataListLock);
+	  }	    
+       }
+       else
+       {  
+	  /* someone has add a new wait request */
+          Irp = NULL;
+       }
+       if (ThreadContext->Count == 1 && ThreadContext->DeviceExt->EmptyWaiterCount >= MAXIMUM_WAIT_OBJECTS)
+        {
+          /* it exist an other thread with empty wait slots, we can remove our thread from the list */
+          RemoveEntryList(&ThreadContext->ListEntry);
+          ThreadContext->DeviceExt->EmptyWaiterCount -= MAXIMUM_WAIT_OBJECTS - 1;
+	  Terminate = TRUE;
+        }
+     }
+   KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
+   ExFreePool(ThreadContext);
+}
+
+static NTSTATUS
+NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
+			       IN PIRP Irp)
+{
+   PLIST_ENTRY ListEntry;
+   PNPFS_THREAD_CONTEXT ThreadContext = NULL;
+   NTSTATUS Status;
+   HANDLE hThread;
+   KIRQL oldIrql;
+
+   PNPFS_CONTEXT Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
+   PNPFS_DEVICE_EXTENSION DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;;
+
+   DPRINT("NpfsAddWaitingReadWriteRequest(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
+
+   KeLockMutex(&DeviceExt->PipeListLock);
+
+   ListEntry = DeviceExt->ThreadListHead.Flink;
+   while (ListEntry != &DeviceExt->ThreadListHead)
+     {
+       ThreadContext = CONTAINING_RECORD(ListEntry, NPFS_THREAD_CONTEXT, ListEntry);
+       if (ThreadContext->Count < MAXIMUM_WAIT_OBJECTS)
+         {
+           break;
+         }
+       ListEntry = ListEntry->Flink;
+     }
+   if (ListEntry == &DeviceExt->ThreadListHead)
+     {
+       ThreadContext = ExAllocatePool(NonPagedPool, sizeof(NPFS_THREAD_CONTEXT));
+       if (ThreadContext == NULL)
+         {
+           KeUnlockMutex(&DeviceExt->PipeListLock);
+           return STATUS_NO_MEMORY;
+         }
+       ThreadContext->DeviceExt = DeviceExt;
+       KeInitializeEvent(&ThreadContext->Event, SynchronizationEvent, FALSE);
+       ThreadContext->Count = 1;
+       ThreadContext->WaitObjectArray[0] = &ThreadContext->Event;
+
+   
+       DPRINT("Creating a new system thread for waiting read/write requests\n");
+      
+       Status = PsCreateSystemThread(&hThread,
+		                     THREAD_ALL_ACCESS,
+				     NULL,
+				     NULL,
+				     NULL,
+				     NpfsWaiterThread,
+				     (PVOID)ThreadContext);
+       if (!NT_SUCCESS(Status))
+         {
+           ExFreePool(ThreadContext);
+           KeUnlockMutex(&DeviceExt->PipeListLock);
+           return Status;
+	 }
+       InsertHeadList(&DeviceExt->ThreadListHead, &ThreadContext->ListEntry);
+       DeviceExt->EmptyWaiterCount += MAXIMUM_WAIT_OBJECTS - 1;       
+     }
+   IoMarkIrpPending(Irp);
+
+   IoAcquireCancelSpinLock(&oldIrql);
+   if (Irp->Cancel)
+     {
+       IoReleaseCancelSpinLock(oldIrql);
+       Status = STATUS_CANCELLED;
+     }
+   else
+     {
+       IoSetCancelRoutine(Irp, NpfsReadWriteCancelRoutine);
+       IoReleaseCancelSpinLock(oldIrql);
+       ThreadContext->WaitObjectArray[ThreadContext->Count] = Context->WaitEvent;
+       ThreadContext->WaitIrpArray[ThreadContext->Count] = Irp;
+       ThreadContext->Count++;
+       DeviceExt->EmptyWaiterCount--;
+       KeSetEvent(&ThreadContext->Event, IO_NO_INCREMENT, FALSE);
+       Status = STATUS_SUCCESS;
+     }
+   KeUnlockMutex(&DeviceExt->PipeListLock);
+   return Status;
+}
 
 NTSTATUS STDCALL
-NpfsRead(PDEVICE_OBJECT DeviceObject,
-	 PIRP Irp)
+NpfsRead(IN PDEVICE_OBJECT DeviceObject,
+	 IN PIRP Irp)
 {
-  PIO_STACK_LOCATION IoStack;
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
-  PNPFS_DEVICE_EXTENSION DeviceExt;
-  KIRQL OldIrql;
-  ULONG Information;
+  NTSTATUS OriginalStatus = STATUS_SUCCESS;
   PNPFS_FCB Fcb;
-  PNPFS_FCB WriterFcb;
-  PNPFS_PIPE Pipe;
+  PNPFS_CONTEXT Context;
+  KEVENT Event;
   ULONG Length;
-  PVOID Buffer;
+  ULONG Information;
   ULONG CopyLength;
   ULONG TempLength;
+  BOOLEAN IsOriginalRequest = TRUE;
+  PVOID Buffer;
 
-  DPRINT("NpfsRead(DeviceObject %p  Irp %p)\n", DeviceObject, Irp);
-
-  DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  IoStack = IoGetCurrentIrpStackLocation(Irp);
-  FileObject = IoStack->FileObject;
-  Fcb = FileObject->FsContext;
-  Pipe = Fcb->Pipe;
-  WriterFcb = Fcb->OtherSide;
+  DPRINT("NpfsRead(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
   if (Irp->MdlAddress == NULL)
-    {
-      DPRINT("Irp->MdlAddress == NULL\n");
-      Status = STATUS_UNSUCCESSFUL;
-      Information = 0;
-      goto done;
-    }
+  {
+     DPRINT("Irp->MdlAddress == NULL\n");
+     Status = STATUS_UNSUCCESSFUL;
+     Irp->IoStatus.Information = 0;
+     goto done;
+  }
+
+  FileObject = IoGetCurrentIrpStackLocation(Irp)->FileObject;
+  Fcb = FileObject->FsContext;
+  Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
 
   if (Fcb->Data == NULL)
-    {
-      DPRINT("Pipe is NOT readable!\n");
-      Status = STATUS_UNSUCCESSFUL;
-      Information = 0;
-      goto done;
-    }
+  {
+     DPRINT1("Pipe is NOT readable!\n");
+     Status = STATUS_UNSUCCESSFUL;
+     Irp->IoStatus.Information = 0;
+     goto done;
+  }
 
-  Status = STATUS_SUCCESS;
-  Length = IoStack->Parameters.Read.Length;
-  Information = 0;
+  ExAcquireFastMutex(&Fcb->DataListLock);
 
-  Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-  KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
-  while (1)
-    {
-      /* FIXME: check if in blocking mode */
-      if (Fcb->ReadDataAvailable == 0)
+  if (IoIsOperationSynchronous(Irp))
+  {
+     InsertTailList(&Fcb->ReadRequestListHead, &Context->ListEntry);
+     if (Fcb->ReadRequestListHead.Flink != &Context->ListEntry)
+     {
+        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+	Context->WaitEvent = &Event;
+        ExReleaseFastMutex(&Fcb->DataListLock);
+        Status = KeWaitForSingleObject(&Event,
+	                               Executive,
+				       KernelMode,
+				       FALSE,
+				       NULL);
+	if (!NT_SUCCESS(Status))
 	{
-	  if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
-	    {
-	      KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
-	    }
-	  KeReleaseSpinLock(&Fcb->DataListLock, OldIrql);
-	  if (Information > 0)
-	    {
-	      Status = STATUS_SUCCESS;
+	   KEBUGCHECK(0);
+	}
+        ExAcquireFastMutex(&Fcb->DataListLock);
+     }
+     Irp->IoStatus.Information = 0;
+  }
+  else
+  {
+     KIRQL oldIrql;
+     if (IsListEmpty(&Fcb->ReadRequestListHead) ||
+	 Fcb->ReadRequestListHead.Flink != &Context->ListEntry)
+     {
+        /* this is a new request */
+        Irp->IoStatus.Information = 0;
+	Context->WaitEvent = &Fcb->ReadEvent;
+        InsertTailList(&Fcb->ReadRequestListHead, &Context->ListEntry);
+	if (Fcb->ReadRequestListHead.Flink != &Context->ListEntry)
+	{
+	   /* there was already a request on the list */
+           IoAcquireCancelSpinLock(&oldIrql);
+           if (Irp->Cancel)
+           {
+	      IoReleaseCancelSpinLock(oldIrql);
+	      RemoveEntryList(&Context->ListEntry);
+	      ExReleaseFastMutex(&Fcb->DataListLock);
+	      Status = STATUS_CANCELLED;
 	      goto done;
-	    }
+           }
+           IoSetCancelRoutine(Irp, NpfsReadWriteCancelRoutine);
+           IoReleaseCancelSpinLock(oldIrql);
+	   ExReleaseFastMutex(&Fcb->DataListLock);
+           IoMarkIrpPending(Irp);
+	   Status = STATUS_PENDING;
+	   goto done;
+	}
+     }
+  }
 
-	  if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
-	    {
+  while (1)
+  {
+     Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+     Information = Irp->IoStatus.Information;
+     Length = IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length;
+     ASSERT (Information <= Length);
+     Buffer += Information;
+     Length -= Information;
+     Status = STATUS_SUCCESS;
+
+     while (1)
+     {
+        if (Fcb->ReadDataAvailable == 0)
+        {
+	   if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+	   {
+	      KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
+	   }
+	   if (Information > 0 &&
+	       (Fcb->Pipe->ReadMode != FILE_PIPE_BYTE_STREAM_MODE ||
+	        Fcb->PipeState != FILE_PIPE_CONNECTED_STATE))
+	   {
+	      break;
+	   }
+      	   if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
+	   {
 	      DPRINT("PipeState: %x\n", Fcb->PipeState);
 	      Status = STATUS_PIPE_BROKEN;
-	      goto done;
-	    }
+	      break;
+           }
+	   ExReleaseFastMutex(&Fcb->DataListLock);
+	   if (IoIsOperationSynchronous(Irp))
+	   {
+	      /* Wait for ReadEvent to become signaled */
 
-	  /* Wait for ReadEvent to become signaled */
-	  DPRINT("Waiting for readable data (%S)\n", Pipe->PipeName.Buffer);
-	  Status = KeWaitForSingleObject(&Fcb->Event,
-				         UserRequest,
-				         KernelMode,
-				         FALSE,
-				         NULL);
-	  DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
-
-	  KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
-	}
-
-      if (Pipe->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
-	{
-	  DPRINT("Byte stream mode\n");
-	  /* Byte stream mode */
-	  while (Length > 0 && Fcb->ReadDataAvailable > 0)
-	    {
+	      DPRINT("Waiting for readable data (%wZ)\n", &Fcb->Pipe->PipeName);
+	      Status = KeWaitForSingleObject(&Fcb->ReadEvent,
+				             UserRequest,
+				             KernelMode,
+				             FALSE,
+				             NULL);
+	      DPRINT("Finished waiting (%wZ)! Status: %x\n", &Fcb->Pipe->PipeName, Status);
+	      ExAcquireFastMutex(&Fcb->DataListLock);
+	   }
+	   else
+	   {
+              PNPFS_CONTEXT Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
+	    
+              Context->WaitEvent = &Fcb->ReadEvent;
+	      Status = NpfsAddWaitingReadWriteRequest(DeviceObject, Irp);
+	         
+	      if (NT_SUCCESS(Status))
+	      {
+	         Status = STATUS_PENDING;
+	      }
+	      ExAcquireFastMutex(&Fcb->DataListLock);
+	      break;
+	   }
+        } 
+        if (Fcb->Pipe->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
+        {
+	   DPRINT("Byte stream mode\n");
+	   /* Byte stream mode */
+	   while (Length > 0 && Fcb->ReadDataAvailable > 0)
+	   {
 	      CopyLength = RtlRosMin(Fcb->ReadDataAvailable, Length);
 	      if (Fcb->ReadPtr + CopyLength <= Fcb->Data + Fcb->MaxDataLength)
-		{
-		  memcpy(Buffer, Fcb->ReadPtr, CopyLength);
-		  Fcb->ReadPtr += CopyLength;
-		  if (Fcb->ReadPtr == Fcb->Data + Fcb->MaxDataLength)
-		    {
-		      Fcb->ReadPtr = Fcb->Data;
-		    }
-		}
-	      else
-		{
-		  TempLength = Fcb->Data + Fcb->MaxDataLength - Fcb->ReadPtr;
-		  memcpy(Buffer, Fcb->ReadPtr, TempLength);
-		  memcpy(Buffer + TempLength, Fcb->Data, CopyLength - TempLength);
-		  Fcb->ReadPtr = Fcb->Data + CopyLength - TempLength;
-		}
+	      {
+	         memcpy(Buffer, Fcb->ReadPtr, CopyLength);
+	         Fcb->ReadPtr += CopyLength;
+	         if (Fcb->ReadPtr == Fcb->Data + Fcb->MaxDataLength)
+	         {
+		    Fcb->ReadPtr = Fcb->Data;
+	         }
+	      }
+              else
+	      {
+	         TempLength = Fcb->Data + Fcb->MaxDataLength - Fcb->ReadPtr;
+	         memcpy(Buffer, Fcb->ReadPtr, TempLength);
+	         memcpy(Buffer + TempLength, Fcb->Data, CopyLength - TempLength);
+	         Fcb->ReadPtr = Fcb->Data + CopyLength - TempLength;
+	      }
 
 	      Buffer += CopyLength;
 	      Length -= CopyLength;
@@ -161,22 +474,25 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 
 	      Fcb->ReadDataAvailable -= CopyLength;
 	      Fcb->WriteQuotaAvailable += CopyLength;
-	    }
+	   }
 
-	  if (Length == 0)
-	    {
-	      KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
-	      KeResetEvent(&Fcb->Event);
-	      break;
-	    }
-	}
-      else
-	{
-	  DPRINT("Message mode\n");
+	   if (Length == 0)
+	   {
+	      if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+	      {
+	         KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
+	      }
+	      KeResetEvent(&Fcb->ReadEvent);
+              break;
+	   }
+        }
+        else
+        {
+	   DPRINT("Message mode\n");
 
-	  /* Message mode */
-	  if (Fcb->ReadDataAvailable)
-	    {
+	   /* Message mode */
+	   if (Fcb->ReadDataAvailable)
+	   {
 	      /* Truncate the message if the receive buffer is too small */
 	      CopyLength = RtlRosMin(Fcb->ReadDataAvailable, Length);
 	      memcpy(Buffer, Fcb->Data, CopyLength);
@@ -189,44 +505,84 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 	      Information = CopyLength;
 
 	      if (Fcb->ReadDataAvailable > Length)
-	        {
-	          memmove(Fcb->Data, Fcb->Data + Length,
-	                  Fcb->ReadDataAvailable - Length);
-	          Fcb->ReadDataAvailable -= Length;
-	          Status = STATUS_MORE_ENTRIES;
-	        }
+	      {
+	         memmove(Fcb->Data, Fcb->Data + Length,
+	                 Fcb->ReadDataAvailable - Length);
+	         Fcb->ReadDataAvailable -= Length;
+	         Status = STATUS_MORE_ENTRIES;
+	      }
 	      else
-	        {
-	          Fcb->ReadDataAvailable = 0;
-	          Fcb->WriteQuotaAvailable = Fcb->MaxDataLength;
-	        }
-	    }
+	      {
+                 KeResetEvent(&Fcb->ReadEvent);
+                 if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+                 {
+                    KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
+                 }
+	         Fcb->ReadDataAvailable = 0;
+	         Fcb->WriteQuotaAvailable = Fcb->MaxDataLength;
+	      }
+	   }
 
-	  if (Information > 0)
-	    {
-	      if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
-	        {
-	          KeSetEvent(&WriterFcb->Event, IO_NO_INCREMENT, FALSE);
-	        }
-	      KeResetEvent(&Fcb->Event);
-	      break;
-	    }
+	   if (Information > 0)
+	   {
+              break;
+	   }
+        }
+     }   
+     Irp->IoStatus.Information = Information;
+     Irp->IoStatus.Status = Status;
+
+     if (IoIsOperationSynchronous(Irp))
+     {
+        RemoveEntryList(&Context->ListEntry);
+        if (!IsListEmpty(&Fcb->ReadRequestListHead))
+	{
+	   Context = CONTAINING_RECORD(Fcb->ReadRequestListHead.Flink, NPFS_CONTEXT, ListEntry);
+           KeSetEvent(Context->WaitEvent, IO_NO_INCREMENT, FALSE);
 	}
-    }
+        ExReleaseFastMutex(&Fcb->DataListLock);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  KeReleaseSpinLock(&Fcb->DataListLock, OldIrql);
+	DPRINT("NpfsRead done (Status %lx)\n", Status);
+        return Status;
+     }
+     else
+     {
+        if (IsOriginalRequest)
+	{
+	   IsOriginalRequest = FALSE;
+	   OriginalStatus = Status;
+	}
+        if (Status == STATUS_PENDING)
+	{
+           ExReleaseFastMutex(&Fcb->DataListLock);
+	   DPRINT("NpfsRead done (Status %lx)\n", OriginalStatus);
+           return OriginalStatus;
+	}
+	RemoveEntryList(&Context->ListEntry);
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        if (IsListEmpty(&Fcb->ReadRequestListHead))
+	{
+           ExReleaseFastMutex(&Fcb->DataListLock);
+	   DPRINT("NpfsRead done (Status %lx)\n", OriginalStatus);
+           return OriginalStatus;
+	}
+        Context = CONTAINING_RECORD(Fcb->ReadRequestListHead.Flink, NPFS_CONTEXT, ListEntry);
+	Irp = CONTAINING_RECORD(Context, IRP, Tail.Overlay.DriverContext);
+     }
+  }	
 
 done:
   Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = Information;
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
+  if (Status != STATUS_PENDING)
+    {
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
   DPRINT("NpfsRead done (Status %lx)\n", Status);
 
   return Status;
 }
-
 
 NTSTATUS STDCALL
 NpfsWrite(PDEVICE_OBJECT DeviceObject,
@@ -241,7 +597,6 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG Length;
   ULONG Offset;
-  KIRQL OldIrql;
   ULONG Information;
   ULONG CopyLength;
   ULONG TempLength;
@@ -293,7 +648,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
   Status = STATUS_SUCCESS;
   Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
 
-  KeAcquireSpinLock(&ReaderFcb->DataListLock, &OldIrql);
+  ExAcquireFastMutex(&ReaderFcb->DataListLock);
 #ifndef NDEBUG
   DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
   HexDump(Buffer, Length);
@@ -303,22 +658,24 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     {
       if (ReaderFcb->WriteQuotaAvailable == 0)
 	{
-	  KeSetEvent(&ReaderFcb->Event, IO_NO_INCREMENT, FALSE);
-	  KeReleaseSpinLock(&ReaderFcb->DataListLock, OldIrql);
+	  KeSetEvent(&ReaderFcb->ReadEvent, IO_NO_INCREMENT, FALSE);
 	  if (Fcb->PipeState != FILE_PIPE_CONNECTED_STATE)
 	    {
 	      Status = STATUS_PIPE_BROKEN;
+	      ExReleaseFastMutex(&ReaderFcb->DataListLock);
 	      goto done;
 	    }
+	  ExReleaseFastMutex(&ReaderFcb->DataListLock);
 
 	  DPRINT("Waiting for buffer space (%S)\n", Pipe->PipeName.Buffer);
-	  Status = KeWaitForSingleObject(&Fcb->Event,
-				         UserRequest,
+	  Status = KeWaitForSingleObject(&Fcb->WriteEvent, 
+	                                 UserRequest,
 				         KernelMode,
 				         FALSE,
 				         NULL);
 	  DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
 
+	  ExAcquireFastMutex(&ReaderFcb->DataListLock);
 	  /*
 	   * It's possible that the event was signaled because the
 	   * other side of pipe was closed.
@@ -327,9 +684,9 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	    {
 	      DPRINT("PipeState: %x\n", Fcb->PipeState);
 	      Status = STATUS_PIPE_BROKEN;
+	      ExReleaseFastMutex(&ReaderFcb->DataListLock);
 	      goto done;
 	    }
-	  KeAcquireSpinLock(&ReaderFcb->DataListLock, &OldIrql);
 	}
 
       if (Pipe->WriteMode == FILE_PIPE_BYTE_STREAM_MODE)
@@ -365,8 +722,8 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
 	  if (Length == 0)
 	    {
-	      KeSetEvent(&ReaderFcb->Event, IO_NO_INCREMENT, FALSE);
-	      KeResetEvent(&Fcb->Event);
+	      KeSetEvent(&ReaderFcb->ReadEvent, IO_NO_INCREMENT, FALSE);
+	      KeResetEvent(&Fcb->WriteEvent);
 	      break;
 	    }
 	}
@@ -383,16 +740,16 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	      ReaderFcb->WriteQuotaAvailable = 0;
 	    }
 
-	  if (Information > 0)
-	    {
-	      KeSetEvent(&ReaderFcb->Event, IO_NO_INCREMENT, FALSE);
-	      KeResetEvent(&Fcb->Event);
-	      break;
-	    }
+   	  if (Information > 0)
+   	    {
+   	      KeSetEvent(&ReaderFcb->ReadEvent, IO_NO_INCREMENT, FALSE);
+   	      KeResetEvent(&Fcb->WriteEvent);
+   	      break;
+   	    }
 	}
     }
 
-  KeReleaseSpinLock(&ReaderFcb->DataListLock, OldIrql);
+  ExReleaseFastMutex(&ReaderFcb->DataListLock);
 
 done:
   Irp->IoStatus.Status = Status;

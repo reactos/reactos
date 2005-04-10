@@ -129,7 +129,8 @@ static struct expr * EXPR_wildcard();
 
 %type <string> column table string_or_id
 %type <column_list> selcollist
-%type <query> from unorderedsel oneselect onequery onecreate oneinsert oneupdate
+%type <query> from unorderedsel oneselect onequery onecreate oneinsert
+%type <query> oneupdate onedelete
 %type <expr> expr val column_val const_val
 %type <column_type> column_type data_type data_type_l data_count
 %type <column_info> column_def table_def
@@ -155,6 +156,11 @@ onequery:
         *sql->view = $1;
     }
   | oneupdate
+    {
+        SQL_input* sql = (SQL_input*) info;
+        *sql->view = $1;
+    }
+  | onedelete
     {
         SQL_input* sql = (SQL_input*) info;
         *sql->view = $1;
@@ -211,6 +217,17 @@ oneupdate:
 
             UPDATE_CreateView( sql->db, &update, $2, &$4, $6 );
             $$ = update;
+        }
+    ;
+
+onedelete:
+    TK_DELETE from
+        {
+            SQL_input* sql = (SQL_input*) info;
+            MSIVIEW *delete = NULL; 
+
+            DELETE_CreateView( sql->db, &delete, $2 );
+            $$ = delete;
         }
     ;
 

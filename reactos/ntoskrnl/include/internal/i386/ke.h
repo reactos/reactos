@@ -69,9 +69,11 @@
 #define KTRAP_FRAME_RESERVED9      (0x8A)
 #define KTRAP_FRAME_SIZE           (0x8C)
 
+#define X86_EFLAGS_TF           0x00000100 /* Trap flag */
 #define X86_EFLAGS_IF           0x00000200 /* Interrupt Enable flag */
 #define X86_EFLAGS_IOPL         0x00003000 /* I/O Privilege Level bits */
 #define X86_EFLAGS_NT           0x00004000 /* Nested Task flag */
+#define X86_EFLAGS_RF           0x00010000 /* Resume flag */
 #define X86_EFLAGS_VM           0x00020000 /* Virtual Mode */
 #define X86_EFLAGS_ID           0x00200000 /* CPUID detection flag */
 
@@ -97,6 +99,7 @@
 #define X86_FEATURE_FXSR        0x01000000 /* FXSAVE/FXRSTOR instructions present */
 #define X86_FEATURE_SSE         0x02000000 /* SSE extension present */
 #define X86_FEATURE_SSE2        0x04000000 /* SSE2 extension present */
+#define X86_FEATURE_HT          0x10000000 /* Hyper-Threading present */
 
 #define X86_EXT_FEATURE_SSE3    0x00000001 /* SSE3 extension present */
 #define X86_EXT_FEATURE_3DNOW   0x40000000 /* 3DNOW! extension present */

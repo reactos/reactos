@@ -679,8 +679,8 @@ cursor_group_t *new_cursor_group(raw_data_t *rd, int *memopt)
  * The "LIST" tag may occur several times and may encapsulate different
  * tags. The `steps' is the number of "icon" tags found (actually the
  * number of steps specified in the aniheader_t structure). The "seq "uence
- * tag can be ommitted, in which case the sequence is equal to the sequence
- * of "icon"s found in the file. Also "rate" may be ommitted, in which case
+ * tag can be omitted, in which case the sequence is equal to the sequence
+ * of "icon"s found in the file. Also "rate" may be omitted, in which case
  * the default from the aniheader_t structure is used.
  *
  * An animated cursor puts `.cur' formatted files into each "icon" tag,

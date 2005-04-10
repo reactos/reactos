@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,8 +41,13 @@
 
 #include "dialogs/settings.h"	// for MdiSdiDlg
 
+#include "services/shellservices.h"
+
 
 extern "C" int initialize_gdb_stub();	// start up GDB stub
+
+
+DynamicLoadLibFct<void(__stdcall*)(BOOL)> g_SHDOCVW_ShellDDEInit(TEXT("SHDOCVW"), 118);
 
 
 ExplorerGlobals g_Globals;
@@ -382,7 +387,7 @@ const Icon& IconCache::extract(const String& path)
 
 	SHFILEINFO sfi;
 
-#if 1	// use system image list
+#if 1	// use system image list - the "search program dialog" needs it
 	HIMAGELIST himlSys = (HIMAGELIST) SHGetFileInfo(path, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
 
 	if (himlSys) {
@@ -705,6 +710,19 @@ int main(int argc, char* argv[])
 #endif	// __MINGW && UNICODE
 
 
+static bool SetShellReadyEvent(LPCTSTR evtName)
+{
+	HANDLE hEvent = OpenEvent(EVENT_MODIFY_STATE, FALSE, evtName);
+	if (!hEvent)
+		return false;
+
+	SetEvent(hEvent);
+	CloseHandle(hEvent);
+
+	return true;
+}
+
+
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd)
 {
 	CONTEXT("WinMain()");
@@ -729,6 +747,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 				RegSetValueEx(hkey, TEXT("Shell"), 0, REG_SZ, (LPBYTE)path, l*sizeof(TCHAR));
 				RegCloseKey(hkey);
 			}
+
+			if (!RegOpenKey(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), &hkey)) {
+
+				///@todo save previous shell application in config file
+
+				RegSetValueEx(hkey, TEXT("Shell"), 0, REG_SZ, (LPBYTE)TEXT(""), l*sizeof(TCHAR));
+				RegCloseKey(hkey);
+			}
 		}
 
 		HWND shellWindow = GetShellWindow();
@@ -750,10 +776,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		}
 
 		startup_desktop = TRUE;
-	} else
+	} else {
 		 // create desktop window and task bar only, if there is no other shell and we are
 		 // the first explorer instance
+		 // MS Explorer looks additionally into the registry entry HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\shell,
+		 // to decide wether it is currently configured as shell application.
 		startup_desktop = !any_desktop_running;
+	}
+
 
 	bool autostart = !any_desktop_running;
 
@@ -795,6 +825,21 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	}
 #endif
 
+
+	if (startup_desktop) {
+		 // hide the XP login screen (Credit to Nicolas Escuder)
+		 // another undocumented event: "Global\\msgina: ReturnToWelcome"
+		if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
+			SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+	}
+
+	if (!any_desktop_running) {
+		 // launch the shell DDE server
+		if (g_SHDOCVW_ShellDDEInit)
+			(*g_SHDOCVW_ShellDDEInit)(TRUE);
+	}
+
+
 	bool use_gdb_stub = false;	// !IsDebuggerPresent();
 
 	if (_tcsstr(lpCmdLine,TEXT("-debug")))
@@ -827,17 +872,31 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	g_Globals.read_persistent();
 
 	if (startup_desktop) {
+		WaitCursor wait;
+
 		g_Globals._desktops.init();
 
 		g_Globals._hwndDesktop = DesktopWindow::Create();
 #ifdef _USE_HDESK
 		g_Globals._desktops.get_current_Desktop()->_hwndDesktop = g_Globals._hwndDesktop;
 #endif
+	}
 
-		if (autostart) {
-			char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
-			startup(2, argv);
-		}
+	if (g_Globals._hwndDesktop)
+		g_Globals._desktop_mode = true;
+
+	Thread* pSSOThread = NULL;
+
+	if (startup_desktop) {
+		 // launch SSO thread to allow message processing independent from the explorer main thread
+		pSSOThread = new SSOThread;
+		pSSOThread->Start();
+	}
+
+	/**TODO launching autostart programs can be moved into a background thread. */
+	if (autostart) {
+		char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
+		startup(2, argv);
 	}
 
 	/**TODO fix command line handling */
@@ -846,13 +905,21 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		lpCmdLine[_tcslen(lpCmdLine)-1] = '\0';
 	}
 
-	if (g_Globals._hwndDesktop)
-		g_Globals._desktop_mode = true;
-
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
 
 	 // write configuration file
 	g_Globals.write_persistent();
+
+	if (pSSOThread) {
+		pSSOThread->Stop();
+		delete pSSOThread;
+	}
+
+	if (!any_desktop_running) {
+		 // shutdown the shell DDE server
+		if (g_SHDOCVW_ShellDDEInit)
+			(*g_SHDOCVW_ShellDDEInit)(FALSE);
+	}
 
 	return ret;
 }

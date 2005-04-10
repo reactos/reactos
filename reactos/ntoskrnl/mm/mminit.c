@@ -386,10 +386,22 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    /*
     * Unmap low memory
     */
-#ifndef CONFIG_SMP
-   /* In SMP mode we unmap the low memory in MmInit3.
+#ifdef CONFIG_SMP
+   /* In SMP mode we unmap the low memory pagetable in MmInit3.
       The APIC needs the mapping of the first pages
-      while the processors are starting up. */
+      while the processors are starting up. 
+      We unmap all pages except page 2 and 3. */
+   for (MappingAddress = 0;
+        MappingAddress < 1024 * PAGE_SIZE;
+        MappingAddress += PAGE_SIZE)
+   {
+      if (MappingAddress != 2 * PAGE_SIZE && 
+          MappingAddress != 3 * PAGE_SIZE)
+      {
+         MmRawDeleteVirtualMapping((PVOID)MappingAddress);
+      }
+   }
+#else
    MmDeletePageTable(NULL, 0);
 #endif
 

@@ -4,6 +4,7 @@
  *  applicationpage.cpp
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *                2005         Klemens Friedl <frik85@reactos.at>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,15 +22,6 @@
  */
 
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-
-#include "applpage.h"
-#include "procpage.h"
 
 typedef struct
 {
@@ -95,12 +87,13 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         /* Initialize the application page's controls */
         column.mask = LVCF_TEXT|LVCF_WIDTH;
-        _tcscpy(szTemp, _T("Task"));
+
+        LoadString(hInst, IDS_TAB_TASK, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 250;
         ListView_InsertColumn(hApplicationPageListCtrl, 0, &column);    /* Add the "Task" column */
         column.mask = LVCF_TEXT|LVCF_WIDTH;
-        _tcscpy(szTemp, _T("Status"));
+        LoadString(hInst, IDS_TAB_STATUS, szTemp, 256);
         column.pszText = szTemp;
         column.cx = 95;
         ListView_InsertColumn(hApplicationPageListCtrl, 1, &column);    /* Add the "Status" column */
@@ -368,7 +361,7 @@ void AddOrUpdateHwnd(HWND hWnd, TCHAR *szTitle, HICON hIcon, BOOL bHung)
     /* It is not already in the list so add it */
     else
     {
-        pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)malloc(sizeof(APPLICATION_PAGE_LIST_ITEM));
+        pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)HeapAlloc(GetProcessHeap(), 0, sizeof(APPLICATION_PAGE_LIST_ITEM));
 
         pAPLI->hWnd = hWnd;
         pAPLI->hIcon = hIcon;
@@ -407,7 +400,7 @@ void AddOrUpdateHwnd(HWND hWnd, TCHAR *szTitle, HICON hIcon, BOOL bHung)
             ImageList_Remove(hImageListSmall, item.iItem);
 
             ListView_DeleteItem(hApplicationPageListCtrl, item.iItem);
-            free(pAPLI);
+            HeapFree(GetProcessHeap(), 0, pAPLI);
             bItemRemoved = TRUE;
         }
     }
@@ -702,7 +695,7 @@ void ApplicationPage_OnWindowsTileHorizontally(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -722,7 +715,7 @@ void ApplicationPage_OnWindowsTileHorizontally(void)
         }
     }
     TileWindows(NULL, MDITILE_HORIZONTAL, NULL, nWndCount, hWndArray);
-    free(hWndArray);
+    HeapFree(GetProcessHeap(), 0, hWndArray);
 }
 
 void ApplicationPage_OnWindowsTileVertically(void)
@@ -733,7 +726,7 @@ void ApplicationPage_OnWindowsTileVertically(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -753,7 +746,7 @@ void ApplicationPage_OnWindowsTileVertically(void)
     }
 
     TileWindows(NULL, MDITILE_VERTICAL, NULL, nWndCount, hWndArray);
-    free(hWndArray);
+    HeapFree(GetProcessHeap(), 0, hWndArray);
 }
 
 void ApplicationPage_OnWindowsMinimize(void)
@@ -806,7 +799,7 @@ void ApplicationPage_OnWindowsCascade(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)HeapAlloc(GetProcessHeap(), 0, sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -824,7 +817,7 @@ void ApplicationPage_OnWindowsCascade(void)
         }
     }
     CascadeWindows(NULL, 0, NULL, nWndCount, hWndArray);
-    free(hWndArray);
+    HeapFree(GetProcessHeap(), 0, hWndArray);
 }
 
 void ApplicationPage_OnWindowsBringToFront(void)

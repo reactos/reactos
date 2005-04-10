@@ -14,7 +14,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Error reporting assistant"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Please describe what you were trying to do when the error occurred.\n\nClick 'Next' to send the report to the ReacOS project or 'Cancel' to not send any information.",-1,10,0,225,40
+  LTEXT "Please describe what you were trying to do when the error occurred.\n\nClick 'Next' to send the report to the ReactOS project or 'Cancel' to not send any information.",-1,10,0,225,40
   LTEXT "Your e-mail address (optional):",-1,10,40,120,20
   EDITTEXT IDE_SUBMIT_REPORT_YOUR_EMAIL, 110,40,150,12
   LTEXT "Description of problem (optional):",-1,10,55,120,20

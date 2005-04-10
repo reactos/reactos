@@ -4,6 +4,7 @@
  *  endproc.cpp
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *                2005         Klemens Friedl <frik85@reactos.at>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,17 +22,9 @@
  */
     
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <winnt.h>
-    
-#include "endproc.h"
-#include "procpage.h"
-#include "perfdata.h"
+
+TCHAR                szTemp[256];
+TCHAR                szTempA[256];
 
 void ProcessPage_OnEndProcess(void)
 {
@@ -60,7 +53,9 @@ void ProcessPage_OnEndProcess(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    if (MessageBox(hMainWnd, _T("WARNING: Terminating a process can cause undesired\nresults including loss of data and system instability. The\nprocess will not be given the chance to save its state or\ndata before it is terminated. Are you sure you want to\nterminate the process?"), _T("Task Manager Warning"), MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadString(hInst, IDS_MSG_WARNINGTERMINATING, szTemp, 256);
+    LoadString(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
+    if (MessageBox(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwProcessId);
@@ -68,14 +63,16 @@ void ProcessPage_OnEndProcess(void)
     if (!hProcess)
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Terminate Process"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLETERMINATEPRO, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
 
     if (!TerminateProcess(hProcess, 0))
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Terminate Process"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLETERMINATEPRO, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);
@@ -108,7 +105,9 @@ void ProcessPage_OnEndProcessTree(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    if (MessageBox(hMainWnd, _T("WARNING: Terminating a process can cause undesired\nresults including loss of data and system instability. The\nprocess will not be given the chance to save its state or\ndata before it is terminated. Are you sure you want to\nterminate the process?"), _T("Task Manager Warning"), MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadString(hInst, IDS_MSG_WARNINGTERMINATING, szTemp, 256);
+    LoadString(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
+    if (MessageBox(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwProcessId);
@@ -116,14 +115,16 @@ void ProcessPage_OnEndProcessTree(void)
     if (!hProcess)
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Terminate Process"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLETERMINATEPRO, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
 
     if (!TerminateProcess(hProcess, 0))
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Terminate Process"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLETERMINATEPRO, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);

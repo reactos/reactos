@@ -379,6 +379,21 @@ RemoveTailList(
 
 NTSTATUS
 STDCALL
+RtlCreateUserThread (
+   IN HANDLE         ProcessHandle,
+   IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+   IN BOOLEAN        CreateSuspended,
+   IN LONG        StackZeroBits,
+   IN OUT   PULONG         StackReserve,
+   IN OUT   PULONG         StackCommit,
+   IN PTHREAD_START_ROUTINE   StartAddress,
+   IN PVOID       Parameter,
+   IN OUT   PHANDLE        ThreadHandle,
+   IN OUT   PCLIENT_ID     ClientId
+   );      
+
+NTSTATUS
+STDCALL
 RtlAppendUnicodeToString (
 	PUNICODE_STRING	Destination,
 	PCWSTR		Source

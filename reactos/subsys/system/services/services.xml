@@ -1,5 +1,6 @@
 <module name="services" type="win32cui">
 	<include base="services">.</include>
+	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>user32</library>

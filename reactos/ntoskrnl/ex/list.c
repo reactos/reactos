@@ -449,7 +449,7 @@ InterlockedPopEntrySList(IN PSLIST_HEADER ListHead)
   
   do
   {
-    oldslh = *ListHead;
+    oldslh = *(volatile SLIST_HEADER *)ListHead;
     le = oldslh.Next.Next;
     if(le == NULL)
     {
@@ -481,7 +481,7 @@ InterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
   
   do
   {
-    oldslh = *ListHead;
+    oldslh = *(volatile SLIST_HEADER *)ListHead;
     newslh.Depth = oldslh.Depth + 1;
     newslh.Sequence = oldslh.Sequence + 1;
     ListEntry->Next = oldslh.Next.Next;

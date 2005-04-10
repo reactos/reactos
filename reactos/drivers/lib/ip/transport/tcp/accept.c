@@ -109,16 +109,16 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
     
-    for( ListEntry = Listener->ListenRequest.Flink;
-	 ListEntry != &Listener->ListenRequest;
-	 ListEntry = ListEntry->Flink ) {
+    ListEntry = Listener->ListenRequest.Flink;
+    while ( ListEntry != &Listener->ListenRequest ) {
 	Bucket = CONTAINING_RECORD(ListEntry, TDI_BUCKET, Entry);
+	ListEntry = ListEntry->Flink;
 
-	if( Bucket->Request.Handle.ConnectionContext == Connection ) {
+	if( Bucket->AssociatedEndpoint == Connection ) {
 #ifdef MEMTRACK
 	    UntrackFL( __FILE__, __LINE__, Bucket->Request.RequestContext );
 #endif
-	    RemoveEntryList( ListEntry );
+	    RemoveEntryList( ListEntry->Blink );
 	    ExFreePool( Bucket );
 	}
     }

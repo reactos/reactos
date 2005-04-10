@@ -11,8 +11,8 @@
 	<library>hal</library>
 	<library>kjs</library>
 	<library>pseh</library>
-	<library>rosrtl</library>
 	<library>rtl</library>
+	<library>rosrtl</library>
 	<library>string</library>
 	<library>rossym</library>
 	<directory name="include">
@@ -41,22 +41,19 @@
 				<file>trap.s</file>
 				<file>tskswitch.S</file>
 				<file>tss.c</file>
-				<file>usercall.c</file>
+				<file>usercall.S</file>
 				<file>usertrap.c</file>
 				<file>v86m.c</file>
 				<file>v86m_sup.S</file>
 				<file>vdm.c</file>
 			</directory>
 		</if>
-		<file>alert.c</file>
 		<file>apc.c</file>
 		<file>bug.c</file>
 		<file>catch.c</file>
 		<file>clock.c</file>
-		<file>critical.c</file>
 		<file>device.c</file>
 		<file>dpc.c</file>
-		<file>error.c</file>
 		<file>event.c</file>
 		<file>gmutex.c</file>
 		<file>ipi.c</file>
@@ -70,6 +67,7 @@
 		<file>sem.c</file>
 		<file>spinlock.c</file>
 		<file>timer.c</file>
+		<file>usercall.c</file>
 		<file>wait.c</file>
 	</directory>
 	<directory name="cc">
@@ -119,24 +117,22 @@
 				<file>interlck.c</file>
 			</directory>
 		</if>
-		<file>btree.c</file>
 		<file>callback.c</file>
+		<file>error.c</file>
 		<file>event.c</file>
 		<file>evtpair.c</file>
 		<file>fmutex.c</file>
-		<file>hashtab.c</file>
+		<file>handle.c</file>
 		<file>init.c</file>
 		<file>interlck.c</file>
 		<file>list.c</file>
 		<file>lookas.c</file>
 		<file>mutant.c</file>
-		<file>napi.c</file>
 		<file>power.c</file>
 		<file>profile.c</file>
 		<file>resource.c</file>
 		<file>rundown.c</file>
 		<file>sem.c</file>
-		<file>stree.c</file>
 		<file>synch.c</file>
 		<file>sysinfo.c</file>
 		<file>time.c</file>
@@ -296,6 +292,7 @@
 		<file>sdcache.c</file>
 		<file>security.c</file>
 		<file>symlink.c</file>
+		<file>wait.c</file>
 	</directory>
 	<directory name="po">
 		<file>power.c</file>
@@ -315,10 +312,10 @@
 		<file>locale.c</file>
 		<file>process.c</file>
 		<file>psmgr.c</file>
+		<file>query.c</file>
+		<file>security.c</file>
 		<file>suspend.c</file>
 		<file>thread.c</file>
-		<file>tinfo.c</file>
-		<file>w32call.c</file>
 		<file>win32.c</file>
 	</directory>
 	<directory name="rtl">

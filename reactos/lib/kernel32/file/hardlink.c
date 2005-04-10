@@ -200,9 +200,7 @@ CreateHardLinkA(LPCSTR lpFileName,
                 LPCSTR lpExistingFileName,
                 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  ANSI_STRING FileNameA, ExistingFileNameA;
-  UNICODE_STRING FileName, ExistingFileName;
-  NTSTATUS Status;
+  PWCHAR FileNameW, ExistingFileNameW;
   BOOL Ret;
   
   if(!lpFileName || !lpExistingFileName)
@@ -211,34 +209,15 @@ CreateHardLinkA(LPCSTR lpFileName,
     return FALSE;
   }
   
-  RtlInitAnsiString(&FileNameA, (LPSTR)lpFileName);
-  RtlInitAnsiString(&ExistingFileNameA, (LPSTR)lpExistingFileName);
-  
-  if(bIsFileApiAnsi)
-    Status = RtlAnsiStringToUnicodeString(&FileName, &FileNameA, TRUE);
-  else
-    Status = RtlOemStringToUnicodeString(&FileName, &FileNameA, TRUE);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
+  if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
     return FALSE;
-  }
-  
-  if(bIsFileApiAnsi)
-    Status = RtlAnsiStringToUnicodeString(&ExistingFileName, &ExistingFileNameA, TRUE);
-  else
-    Status = RtlOemStringToUnicodeString(&ExistingFileName, &ExistingFileNameA, TRUE);
-  if(!NT_SUCCESS(Status))
-  {
-    RtlFreeUnicodeString(&FileName);
-    SetLastErrorByStatus(Status);
+
+  if (!(ExistingFileNameW = FilenameA2W(lpExistingFileName, TRUE)))
     return FALSE;
-  }
+    
+  Ret = CreateHardLinkW(FileNameW , ExistingFileNameW , lpSecurityAttributes);
   
-  Ret = CreateHardLinkW(FileName.Buffer, ExistingFileName.Buffer, lpSecurityAttributes);
-  
-  RtlFreeUnicodeString(&FileName);
-  RtlFreeUnicodeString(&ExistingFileName);
+  RtlFreeHeap(RtlGetProcessHeap(), 0, ExistingFileNameW);
   
   return Ret;
 }

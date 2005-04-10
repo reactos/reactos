@@ -421,7 +421,7 @@ INT WINAPI StrCmpNW(LPCWSTR lpszStr, LPCWSTR lpszComp, INT iLen)
 /**************************************************************************
  * StrRChrA [COMCTL32.351]
  *
- * Find the last occurence of a character in string.
+ * Find the last occurrence of a character in string.
  *
  * PARAMS
  *  lpszStr [I] String to search in
@@ -572,7 +572,7 @@ LPWSTR WINAPI StrChrIW(LPCWSTR lpszStr, WCHAR ch)
 /*************************************************************************
  * StrRStrIA	[COMCTL32.372]
  *
- * Find the last occurence of a substring within a string.
+ * Find the last occurrence of a substring within a string.
  *
  * PARAMS
  *  lpszStr    [I] String to search in
@@ -580,7 +580,7 @@ LPWSTR WINAPI StrChrIW(LPCWSTR lpszStr, WCHAR ch)
  *  lpszSearch [I] String to look for
  *
  * RETURNS
- *  The last occurence lpszSearch within lpszStr, or NULL if not found.
+ *  The last occurrence lpszSearch within lpszStr, or NULL if not found.
  */
 LPSTR WINAPI StrRStrIA(LPCSTR lpszStr, LPCSTR lpszEnd, LPCSTR lpszSearch)
 {
@@ -709,7 +709,7 @@ int WINAPI StrCSpnIW(LPCWSTR lpszStr, LPCWSTR lpszMatch)
 /**************************************************************************
  * StrRChrIA	[COMCTL32.368]
  *
- * Find the last occurence of a character in string, ignoring case.
+ * Find the last occurrence of a character in string, ignoring case.
  *
  * PARAMS
  *  lpszStr [I] String to search in

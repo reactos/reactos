@@ -55,7 +55,7 @@ WRC_OBJECTS = \
 WRC_HOST_CFLAGS = -I$(WRC_BASE) -g -Werror -Wall \
                   -D__USE_W32API -DWINE_UNICODE_API= \
                   -Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
-                  -I$(UNICODE_BASE) -I$(WPP_BASE) -I$(WRC_BASE) \
+                  -I$(UNICODE_BASE) -I$(WPP_BASE) \
                   -Iinclude/wine -Iinclude -Iw32api/include
 
 WRC_HOST_LFLAGS = -g

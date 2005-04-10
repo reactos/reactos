@@ -21,14 +21,6 @@
  */
     
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-    
-#include "about.h"
 
 INT_PTR CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 

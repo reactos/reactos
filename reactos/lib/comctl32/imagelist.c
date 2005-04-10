@@ -1577,84 +1577,28 @@ ImageList_GetImageRect (HIMAGELIST himl, INT i, LPRECT lpRect)
  *
  * Creates an image list from a bitmap, icon or cursor.
  *
- * PARAMS
- *     hi      [I] instance handle
- *     lpbmp   [I] name or id of the image
- *     cx      [I] width of each image
- *     cGrow   [I] number of images to expand
- *     clrMask [I] mask color
- *     uType   [I] type of image to load
- *     uFlags  [I] loading flags
- *
- * RETURNS
- *     Success: handle to the loaded image list
- *     Failure: NULL
- *
  * SEE
- *     LoadImage ()
+ *     ImageList_LoadImageW ()
  */
 
 HIMAGELIST WINAPI
 ImageList_LoadImageA (HINSTANCE hi, LPCSTR lpbmp, INT cx, INT cGrow,
 			COLORREF clrMask, UINT uType, UINT uFlags)
 {
-    HIMAGELIST himl = NULL;
-    HANDLE   handle;
-    INT      nImageCount;
+    HIMAGELIST himl;
+    LPWSTR lpbmpW;
+    DWORD len;
 
-    handle = LoadImageA (hi, lpbmp, uType, 0, 0, uFlags);
-    if (!handle) {
-        ERR("Error loading image!\n");
-        return NULL;
-    }
+    if (!HIWORD(lpbmp))
+        return ImageList_LoadImageW(hi, (LPCWSTR)lpbmp, cx, cGrow, clrMask,
+                                    uType, uFlags);
 
-    if (uType == IMAGE_BITMAP) {
-        BITMAP bmp;
-        GetObjectA (handle, sizeof(BITMAP), &bmp);
+    len = MultiByteToWideChar(CP_ACP, 0, lpbmp, -1, NULL, 0);
+    lpbmpW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, lpbmp, -1, lpbmpW, len);
 
-        /* To match windows behavior, if cx is set to zero and
-         the flag DI_DEFAULTSIZE is specified, cx becomes the
-         system metric value for icons. If the flag is not specified
-         the function sets the size to the height of the bitmap */
-        if (cx == 0)
-        {
-            if (uFlags & DI_DEFAULTSIZE)
-                cx = GetSystemMetrics (SM_CXICON);
-            else
-                cx = bmp.bmHeight;
-        }
-
-        nImageCount = bmp.bmWidth / cx;
-
-        himl = ImageList_Create (cx, bmp.bmHeight, ILC_MASK | ILC_COLOR,
-                                 nImageCount, cGrow);
-        if (!himl) {
-            DeleteObject (handle);
-            return NULL;
-        }
-        ImageList_AddMasked (himl, (HBITMAP)handle, clrMask);
-    }
-    else if ((uType == IMAGE_ICON) || (uType == IMAGE_CURSOR)) {
-        ICONINFO ii;
-        BITMAP bmp;
-
-        GetIconInfo (handle, &ii);
-        GetObjectA (ii.hbmColor, sizeof(BITMAP), (LPVOID)&bmp);
-        himl = ImageList_Create (bmp.bmWidth, bmp.bmHeight,
-                                 ILC_MASK | ILC_COLOR, 1, cGrow);
-        if (!himl) {
-            DeleteObject (ii.hbmColor);
-            DeleteObject (ii.hbmMask);
-            DeleteObject (handle);
-            return NULL;
-        }
-        ImageList_Add (himl, ii.hbmColor, ii.hbmMask);
-        DeleteObject (ii.hbmColor);
-        DeleteObject (ii.hbmMask);
-    }
-
-    DeleteObject (handle);
-
+    himl = ImageList_LoadImageW(hi, lpbmpW, cx, cGrow, clrMask, uType, uFlags);
+    HeapFree(GetProcessHeap(), 0, lpbmpW);
     return himl;
 }
 
@@ -1683,7 +1627,7 @@ ImageList_LoadImageA (HINSTANCE hi, LPCSTR lpbmp, INT cx, INT cGrow,
 
 HIMAGELIST WINAPI
 ImageList_LoadImageW (HINSTANCE hi, LPCWSTR lpbmp, INT cx, INT cGrow,
-			COLORREF clrMask, UINT uType,	UINT uFlags)
+                      COLORREF clrMask, UINT uType, UINT uFlags)
 {
     HIMAGELIST himl = NULL;
     HANDLE   handle;
@@ -1726,7 +1670,7 @@ ImageList_LoadImageW (HINSTANCE hi, LPCWSTR lpbmp, INT cx, INT cGrow,
         BITMAP bmp;
 
         GetIconInfo (handle, &ii);
-        GetObjectW (ii.hbmMask, sizeof(BITMAP), (LPVOID)&bmp);
+        GetObjectW (ii.hbmColor, sizeof(BITMAP), (LPVOID)&bmp);
         himl = ImageList_Create (bmp.bmWidth, bmp.bmHeight,
                                  ILC_MASK | ILC_COLOR, 1, cGrow);
         if (!himl) {

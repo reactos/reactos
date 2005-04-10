@@ -223,6 +223,7 @@ HRESULT WINAPI StdGlobalInterfaceTable_RegisterInterfaceInGlobal(IGlobalInterfac
   IStream* stream = NULL;
   HRESULT hres;
   StdGITEntry* entry;
+  static const LARGE_INTEGER zero;
 
   TRACE("iface=%p, pUnk=%p, riid=%s, pdwCookie=0x%p\n", iface, pUnk, debugstr_guid(riid), pdwCookie);
 
@@ -230,8 +231,18 @@ HRESULT WINAPI StdGlobalInterfaceTable_RegisterInterfaceInGlobal(IGlobalInterfac
   
   /* marshal the interface */
   TRACE("About to marshal the interface\n");
-  hres = CoMarshalInterThreadInterfaceInStream(riid, pUnk, &stream);
+
+  hres = CreateStreamOnHGlobal(0, TRUE, &stream);
   if (hres) return hres;
+  hres = CoMarshalInterface(stream, riid, pUnk, MSHCTX_INPROC, NULL, MSHLFLAGS_TABLESTRONG);
+  if (hres)
+  {
+    IStream_Release(stream);
+    return hres;
+  }
+
+  IStream_Seek(stream, zero, SEEK_SET, NULL);
+
   entry = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGITEntry));
   if (entry == NULL) return E_OUTOFMEMORY;
 
@@ -261,6 +272,7 @@ HRESULT WINAPI StdGlobalInterfaceTable_RegisterInterfaceInGlobal(IGlobalInterfac
 HRESULT WINAPI StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(IGlobalInterfaceTable* iface, DWORD dwCookie) {
   StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
   StdGITEntry* entry;
+  HRESULT hr;
 
   TRACE("iface=%p, dwCookie=0x%x\n", iface, (UINT)dwCookie);
   
@@ -271,6 +283,12 @@ HRESULT WINAPI StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(IGlobalInterfac
   }
   
   /* Free the stream */
+  hr = CoReleaseMarshalData(entry->stream);
+  if (hr != S_OK)
+  {
+    WARN("Failed to release marshal data, hr = 0x%08lx\n", hr);
+    return hr;
+  }
   IStream_Release(entry->stream);
 		    
   /* chop entry out of the list, and free the memory */

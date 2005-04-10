@@ -10,16 +10,21 @@
 
 /* INCLUDES ******************************************************************/
 
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <csrss/csrss.h>
 #include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+
+
+
+#define NDEBUG
 #include <debug.h>
 
 #include "api.h"
 
 /* GLOBALS *******************************************************************/
 
-HANDLE CsrssApiHeap;
+HANDLE CsrssApiHeap = (HANDLE) 0;
 
 static unsigned ApiDefinitionsCount = 0;
 static PCSRSS_API_DEFINITION ApiDefinitions = NULL;
@@ -32,6 +37,8 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
   unsigned NewCount;
   PCSRSS_API_DEFINITION Scan;
   PCSRSS_API_DEFINITION New;
+
+	DPRINT("CSR: %s called", __FUNCTION__);
 
   NewCount = 0;
   for (Scan = NewDefinitions; 0 != Scan->Handler; Scan++)
@@ -107,6 +114,8 @@ ClientConnectionThread(HANDLE ServerPort)
   PCSRSS_PROCESS_DATA ProcessData;
   PCSRSS_API_REPLY Reply;
    
+	DPRINT("CSR: %s called", __FUNCTION__);
+
   Reply = NULL;
    
   for (;;)
@@ -153,34 +162,37 @@ ClientConnectionThread(HANDLE ServerPort)
  * 	Handle connection requests from clients to the port
  * 	"\Windows\ApiPort".
  */
-void STDCALL
+DWORD STDCALL
 ServerApiPortThread (PVOID PortHandle)
 {
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    LPC_MAX_MESSAGE Request;
-   HANDLE ServerPort;
-   HANDLE ServerThread;
-   PCSRSS_PROCESS_DATA ProcessData;
+   HANDLE hApiListenPort = * (PHANDLE) PortHandle;
+   HANDLE ServerPort = (HANDLE) 0;
+   HANDLE ServerThread = (HANDLE) 0;
+   PCSRSS_PROCESS_DATA ProcessData = NULL;
    
    CsrInitProcessData();
    
+	DPRINT("CSR: %s called", __FUNCTION__);
+
    for (;;)
      {
         LPC_SECTION_READ LpcRead;
         ServerPort = NULL;
 
-	Status = NtListenPort(PortHandle, &Request.Header);
+	Status = NtListenPort (hApiListenPort, & Request.Header);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DPRINT1("CSR: NtListenPort() failed\n");
 	     break;
 	  }
-	Status = NtAcceptConnectPort(&ServerPort,
-				     PortHandle,
+	Status = NtAcceptConnectPort(& ServerPort,
+				     hApiListenPort,
 				     NULL,
 				     TRUE,
 				     0,
-				     &LpcRead);
+				     & LpcRead);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DPRINT1("CSR: NtAcceptConnectPort() failed\n");
@@ -215,7 +227,7 @@ ServerApiPortThread (PVOID PortHandle)
 				     NULL,
 				     (PTHREAD_START_ROUTINE)ClientConnectionThread,
 				     ServerPort,
-				     &ServerThread,
+				     & ServerThread,
 				     NULL);
 	if (!NT_SUCCESS(Status))
 	  {
@@ -230,6 +242,7 @@ ServerApiPortThread (PVOID PortHandle)
      }
    NtClose(PortHandle);
    NtTerminateThread(NtCurrentThread(), Status);
+   return 0;
 }
 
 /**********************************************************************
@@ -238,45 +251,88 @@ ServerApiPortThread (PVOID PortHandle)
  *
  * DESCRIPTION
  * 	Handle connection requests from SM to the port
- * 	"\Windows\SbApiPort".
+ * 	"\Windows\SbApiPort". We will accept only one
+ * 	connection request (from the SM).
  */
-VOID STDCALL
+DWORD STDCALL
 ServerSbApiPortThread (PVOID PortHandle)
 {
-	HANDLE          hSbApiPortListen = (HANDLE) PortHandle;
+	HANDLE          hSbApiPortListen = * (PHANDLE) PortHandle;
 	HANDLE          hConnectedPort = (HANDLE) 0;
 	LPC_MAX_MESSAGE Request = {{0}};
+	PVOID           Context = NULL;
 	NTSTATUS        Status = STATUS_SUCCESS;
 
-	while (TRUE)
+	DPRINT("CSR: %s called\n", __FUNCTION__);
+
+	Status = NtListenPort (hSbApiPortListen, & Request.Header);
+	if (!NT_SUCCESS(Status))
 	{
-		Status = NtListenPort (hSbApiPortListen, & Request.Header);
-		if (!NT_SUCCESS(Status))
-		{
-			DPRINT1("CSR: %s: NtListenPort(SB) failed\n", __FUNCTION__);
-			break;
-		}
+		DPRINT1("CSR: %s: NtListenPort(SB) failed (Status=0x%08lx)\n",
+			__FUNCTION__, Status);
+	} else {
+DPRINT("-- 1\n");
 		Status = NtAcceptConnectPort (& hConnectedPort,
 						hSbApiPortListen,
-	   					NULL,
-	   					TRUE,
-	   					NULL,
+   						NULL,
+   						TRUE,
+   						NULL,
 	   					NULL);
 		if(!NT_SUCCESS(Status))
 		{
-			DPRINT1("CSR: %s: NtAcceptConnectPort() failed\n", __FUNCTION__);
-			break;
+			DPRINT1("CSR: %s: NtAcceptConnectPort() failed (Status=0x%08lx)\n",
+				__FUNCTION__, Status);
+		} else {
+DPRINT("-- 2\n");
+			Status = NtCompleteConnectPort (hConnectedPort);
+			if(!NT_SUCCESS(Status))
+			{
+				DPRINT1("CSR: %s: NtCompleteConnectPort() failed (Status=0x%08lx)\n",
+					__FUNCTION__, Status);
+			} else {
+DPRINT("-- 3\n");
+				PLPC_MESSAGE Reply = NULL;
+				/* 
+				 * Tell the init thread the SM gave the
+				 * green light for boostrapping.
+				 */
+				Status = NtSetEvent (hBootstrapOk, NULL);
+				if(!NT_SUCCESS(Status))
+				{
+					DPRINT1("CSR: %s: NtSetEvent failed (Status=0x%08lx)\n",
+						__FUNCTION__, Status);
+				}
+				/* Wait for messages from the SM */
+DPRINT("-- 4\n");
+				while (TRUE)
+				{
+					Status = NtReplyWaitReceivePort(hConnectedPort,
+                                      					Context,
+									Reply,
+									& Request.Header);
+					if(!NT_SUCCESS(Status))
+					{
+						DPRINT1("CSR: %s: NtReplyWaitReceivePort failed (Status=0x%08lx)\n",
+							__FUNCTION__, Status);
+						break;
+					}
+					switch (Request.Header.MessageType)//fix .h PORT_MESSAGE_TYPE(Request))
+					{
+						/* TODO */
+					default:
+						DPRINT1("CSR: %s received message (type=%d)\n",
+							__FUNCTION__, Request.Header.MessageType);
+					}
+DPRINT("-- 5\n");
+				}
+			}
 		}
-		Status = NtCompleteConnectPort (hConnectedPort);
-		if(!NT_SUCCESS(Status))
-		{
-			DPRINT1("CSR: %s: NtCompleteConnectPort() failed\n", __FUNCTION__);
-			break;
-		}
-		/* TODO: create thread for the connected port */
 	}
+	DPRINT1("CSR: %s: terminating!\n", __FUNCTION__);
+	if(hConnectedPort) NtClose (hConnectedPort);
 	NtClose (hSbApiPortListen);
 	NtTerminateThread (NtCurrentThread(), Status);
+	return 0;
 }
 
 /* EOF */

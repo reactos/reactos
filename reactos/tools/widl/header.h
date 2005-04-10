@@ -21,6 +21,7 @@
 #ifndef __WIDL_HEADER_H
 #define __WIDL_HEADER_H
 
+extern int is_base_type(type_t *t);
 extern int is_attr(attr_t *a, enum attr_type t);
 extern void *get_attrp(attr_t *a, enum attr_type t);
 extern unsigned long get_attrv(attr_t *a, enum attr_type t);

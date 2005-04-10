@@ -45,6 +45,18 @@ static void indent(int delta)
   if (delta > 0) indentation += delta;
 }
 
+int is_base_type(type_t *t)
+{
+  return (t->type == RPC_FC_BYTE || t->type == RPC_FC_CHAR ||
+          t->type == RPC_FC_SMALL || t->type == RPC_FC_USMALL ||
+          t->type == RPC_FC_WCHAR || t->type == RPC_FC_SHORT ||
+          t->type == RPC_FC_USHORT || t->type == RPC_FC_LONG ||
+          t->type == RPC_FC_ULONG || t->type == RPC_FC_FLOAT ||
+          t->type == RPC_FC_HYPER || t->type == RPC_FC_DOUBLE ||
+          t->type == RPC_FC_ENUM16 || t->type == RPC_FC_ENUM32 ||
+          t->type == RPC_FC_IGNORE);
+}
+
 int is_attr(attr_t *a, enum attr_type t)
 {
   while (a) {
@@ -839,8 +851,16 @@ void write_rpc_interface(type_t *iface)
   {
     fprintf(header, "extern handle_t %s;\n", var);
   }
-  fprintf(header, "extern RPC_IF_HANDLE %s_v%d_%d_c_ifspec;\n", iface->name, LOWORD(ver), HIWORD(ver));
-  fprintf(header, "extern RPC_IF_HANDLE %s_v%d_%d_s_ifspec;\n", iface->name, LOWORD(ver), HIWORD(ver));
+  if (old_names)
+  {
+    fprintf(header, "extern RPC_IF_HANDLE %s_ClientIfHandle;\n", iface->name);
+    fprintf(header, "extern RPC_IF_HANDLE %s_ServerIfHandle;\n", iface->name);
+  }
+  else
+  {
+    fprintf(header, "extern RPC_IF_HANDLE %s_v%d_%d_c_ifspec;\n", iface->name, LOWORD(ver), HIWORD(ver));
+    fprintf(header, "extern RPC_IF_HANDLE %s_v%d_%d_s_ifspec;\n", iface->name, LOWORD(ver), HIWORD(ver));
+  }
   write_function_proto(iface);
   fprintf(header, "\n");
 

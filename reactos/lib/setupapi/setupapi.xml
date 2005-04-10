@@ -2,6 +2,7 @@
 	<importlibrary definition="setupapi.spec.def" />
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/wine</include>
+	<include base="pnp_client">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
@@ -11,6 +12,7 @@
 	<define name="WINVER">0x501</define>
 	<define name="__WINESRC__" />
 	<define name="_SETUPAPI_" />
+	<library>pnp_client</library>
 	<library>wine</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
@@ -28,6 +30,7 @@
 	<file>queue.c</file>
 	<file>setupcab.c</file>
 	<file>stubs.c</file>
+	<file>rpc.c</file>
 	<file>setupapi.rc</file>
 	<file>setupapi.spec</file>
 </module>

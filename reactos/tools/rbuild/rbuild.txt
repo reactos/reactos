@@ -107,7 +107,7 @@ Module element
 There can be zero or more modules per xml build file.
 
 Syntax:
-	<module name="msvcrt" type="win32dll" extension=".dll" entrypoint="_DllMain@12" baseaddress="0x70000000" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" >
+	<module name="msvcrt" type="win32dll" extension=".dll" entrypoint="_DllMain@12" baseaddress="0x70000000" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" usewrc="false">
 		...
 	</module>
 
@@ -120,6 +120,7 @@ Attributes:
 	mangledsymbols - Controls wether or not to pass --kill-at to dlltool. If this attribute has the value false then --kill-at is passed to dlltool. If the value is true, then --kill-at is not passed to dlltool. If the generated file exports C++ classes then this need to be true.
 	installbase - Base directory of the generated file in the installation directory. This attribute is optional.
 	installname - Name of generated file in the installation directory. This attribute is optional, but if not specified, the generated file is not copied to the installation directory.
+	usewrc - Use WRC to compile resources if true. If false, windres is used. This attribute is optional. If not specified, WRC will be used.
 
 Value:
 	None.
@@ -145,6 +146,8 @@ The module type determines the actions that is to be carried out to process the 
 	bootsector - Builds one or more bootsector binaries. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	iso - Builds a bootable CD. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 	test - Builds a testsuite. Default extension is .exe. Default entrypoint is _mainCRTStartup. The baseaddress module attribute is not applicable for this module type.
+	rpcserver - Generates and builds server code for an RPC interface. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
+	rpcclient - Generates and builds client code for an RPC interface. Default extension is .o. The entrypoint, baseaddress, and mangledsymbols module attributes are not applicable for this module type.
 
 
 Bootstrap element

@@ -42,39 +42,6 @@ struct _SM_CLIENT_DIRECTORY
 
 } SmpClientDirectory;
 
-#if 0
-/**********************************************************************
- *	SmpRegisterSmss/0
- */
-static NTSTATUS
-SmpRegisterSmss(VOID)
-{
-	NTSTATUS Status = STATUS_SUCCESS;
-	UNICODE_STRING SbApiPortName = {0,0,NULL};
-	HANDLE hSmApiPort = (HANDLE) 0;
-
-	DPRINT("SM: %s called\n",__FUNCTION__);
-	
-	Status = SmConnectApiPort(& SbApiPortName,
-				  (HANDLE) -1,
-				  IMAGE_SUBSYSTEM_NATIVE,
-				  & hSmApiPort);
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT("SM: %s: SMDLL!SmConnectApiPort failed (Status=0x%08lx)\n",__FUNCTION__,Status);
-		return Status;
-	}
-	Status = SmCompleteSession (hSmApiPort, (HANDLE)0, hSmApiPort);
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT("SM: %s: SMDLL!SmCompleteSession failed (Status=0x%08lx)\n",__FUNCTION__,Status);
-		return Status;
-	}
-	NtClose(hSmApiPort);
-	return Status;
-}
-#endif
-
 /**********************************************************************
  *	SmInitializeClientManagement/0
  */
@@ -85,26 +52,21 @@ SmInitializeClientManagement (VOID)
 	RtlInitializeCriticalSection(& SmpClientDirectory.Lock);
 	SmpClientDirectory.Count = 0;
 	SmpClientDirectory.Client = NULL;
-#if 0
-	/* Register IMAGE_SUBSYSTE_NATIVE to be managed by SM */
-	return SmpRegisterSmss();
-#endif
 	return STATUS_SUCCESS;
 
 }
 
 /**********************************************************************
- *	SmpLookupClient/1
+ *	SmCompleteClientInitialization/1
  *
  * DESCRIPTION
- * 	Lookup the subsystem server descriptor given its image ID.
- *
- * SIDE EFFECTS
- * 	SmpClientDirectory.Lock is released only on success.
+ * 	Lookup the subsystem server descriptor given the process handle
+ * 	of the subsystem server process.
  */
-static PSM_CLIENT_DATA STDCALL
-SmpLookupClient (USHORT SubsystemId)
+NTSTATUS STDCALL
+SmCompleteClientInitialization (HANDLE hProcess)
 {
+	NTSTATUS        Status = STATUS_SUCCESS;
 	PSM_CLIENT_DATA Client = NULL;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
@@ -115,13 +77,71 @@ SmpLookupClient (USHORT SubsystemId)
 		Client = SmpClientDirectory.Client;
 		while (NULL != Client)
 		{
-			if (SubsystemId == Client->SubsystemId)
+			if (hProcess == Client->ServerProcess)
 			{
-				RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
-				return Client;
+				Client->Initialized = TRUE;
+				break;
 			}
 			Client = Client->Next;
 		}
+		Status = STATUS_NOT_FOUND;
+	}
+	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
+	return Status;
+}
+
+/**********************************************************************
+ *	SmpLookupClient/1					PRIVATE
+ *
+ * DESCRIPTION
+ * 	Lookup the subsystem server descriptor given its image ID.
+ *
+ * SIDE EFFECTS
+ * 	SmpClientDirectory.Lock is released only on success.
+ */
+static PSM_CLIENT_DATA FASTCALL
+SmpLookupClientUnsafe (USHORT           SubsystemId,
+		       PSM_CLIENT_DATA  * Parent)
+{
+	PSM_CLIENT_DATA Client = NULL;
+
+	DPRINT("SM: %s(%d) called\n", __FUNCTION__, SubsystemId);
+	
+	if(NULL != Parent)
+	{
+		*Parent = NULL;
+	}
+	if (SmpClientDirectory.Count > 0)
+	{
+		Client = SmpClientDirectory.Client;
+		while (NULL != Client)
+		{
+			if (SubsystemId == Client->SubsystemId)
+			{
+				break;
+			}
+			if(NULL != Parent)
+			{
+				*Parent = Client;
+			}
+			Client = Client->Next;
+		}
+	}
+	return Client;
+}
+
+static PSM_CLIENT_DATA STDCALL
+SmpLookupClient (USHORT SubsystemId)
+{
+	PSM_CLIENT_DATA Client = NULL;
+
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
+	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
+	Client = SmpLookupClientUnsafe (SubsystemId, NULL);
+	if(NULL != Client)
+	{
+		RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
 	}
 	/*
 	 * Note that we do *not* release SmpClientDirectory.Lock here
@@ -138,7 +158,7 @@ NTSTATUS STDCALL
 SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 {
 	PSM_CLIENT_DATA pClient = NULL;
-	PSM_CONNECT_DATA ConnectData = (PSM_CONNECT_DATA) ((PBYTE) Request) + sizeof (LPC_REQUEST);
+	PSM_CONNECT_DATA ConnectData = SmpGetConnectData (Request);
 	ULONG SbApiPortNameSize = SM_CONNECT_DATA_SIZE(*Request);
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
@@ -148,7 +168,7 @@ SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 	 */
 	if (SmpLookupClient(ConnectData->Subsystem))
 	{
-		DPRINT("SMSS: %s: attempt to register again subsystem %d.\n",
+		DPRINT("SM: %s: attempt to register again subsystem %d.\n",
 			__FUNCTION__,
 			ConnectData->Subsystem);
 		return STATUS_UNSUCCESSFUL;
@@ -209,16 +229,51 @@ SmCreateClient(PSM_PORT_MESSAGE Request, PSM_CLIENT_DATA * ClientData)
 
 /**********************************************************************
  * 	SmpDestroyClient/1
+ *
+ * 	1. close any handle
+ * 	2. kill client process
+ * 	3. release resources
  */
 NTSTATUS STDCALL
 SmDestroyClient (ULONG SubsystemId)
 {
+	NTSTATUS         Status = STATUS_SUCCESS;
+	PSM_CLIENT_DATA  Parent = NULL;
+	PSM_CLIENT_DATA  Client = NULL;
+
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
 	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
-	/* TODO */
+	Client = SmpLookupClientUnsafe (SubsystemId, & Parent);
+	if(NULL == Client)
+	{
+		DPRINT1("SM: %s: del req for non existent subsystem (id=%d)\n",
+			__FUNCTION__, SubsystemId);
+		Status = STATUS_NOT_FOUND;
+	}
+	else
+	{
+		/* 1st in the list? */
+		if(NULL == Parent)
+		{
+			SmpClientDirectory.Client = Client->Next;
+		}
+		else
+		{
+			if(NULL != Parent)
+			{
+				Parent->Next = Client->Next;
+			} else {
+				DPRINT1("SM: %s: n-th has no parent!\n", __FUNCTION__);
+				Status = STATUS_UNSUCCESSFUL; /* FIXME */
+			}
+		}
+		/* TODO: send shutdown or kill */
+		RtlFreeHeap (SmpHeap, 0, Client);
+		-- SmpClientDirectory.Count;
+	}
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
-	return STATUS_SUCCESS;
+	return Status;
 }
 
 /* EOF */

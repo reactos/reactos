@@ -427,18 +427,14 @@ IntGetFontRenderMode(LOGFONTW *logfont)
 {
   switch(logfont->lfQuality)
   {
-    //case ANTIALIASED_QUALITY:
-    case DEFAULT_QUALITY:
-      return FT_RENDER_MODE_NORMAL;
+    case NONANTIALIASED_QUALITY:
+      return FT_RENDER_MODE_MONO;
     case DRAFT_QUALITY:
       return FT_RENDER_MODE_LIGHT;
-    //case NONANTIALIASED_QUALITY:
-    case PROOF_QUALITY:
-      return FT_RENDER_MODE_MONO;
-    //case CLEARTYPE_QUALITY:
-    //  return FT_RENDER_MODE_LCD;
+/*    case CLEARTYPE_QUALITY:
+        return FT_RENDER_MODE_LCD; */
   }
-  return FT_RENDER_MODE_MONO;
+  return FT_RENDER_MODE_NORMAL;
 }
 
 int
@@ -1537,6 +1533,12 @@ NtGdiExtTextOut(
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
+   }
+   if (dc->IsIC)
+   {
+      DC_UnlockDc(hDC);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
    }
 
    if (NULL != UnsafeDx && Count > 0)
@@ -2969,6 +2971,12 @@ TextIntRealizeFont(HFONT FontHandle)
       return STATUS_INVALID_HANDLE;
     }
 
+  if (TextObj->Initialized)
+    {
+      TEXTOBJ_UnlockText(FontHandle);
+      return STATUS_SUCCESS;
+    }
+
   if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.lfFaceName))
     {
       TEXTOBJ_UnlockText(FontHandle);
@@ -3001,6 +3009,7 @@ TextIntRealizeFont(HFONT FontHandle)
     }
   else
     {
+      TextObj->Initialized = TRUE;
       Status = STATUS_SUCCESS;
     }
 

@@ -34,10 +34,10 @@ DbgBreakPoint(VOID)
  * @implemented
  */
 #if defined(__GNUC__)
-__asm__(".globl _DbgBreakPointNoBugCheck@0\n\t"
-	"_DbgBreakPointNoBugCheck@0:\n\t"
-	"int $3\n\t"
-	"ret\n\t");
+ __asm__(".globl _DbgBreakPointNoBugCheck@0\n\t"
+         "_DbgBreakPointNoBugCheck@0:\n\t"
+         "int $3\n\t"
+         "ret\n\t");
 #endif
 
 /*

@@ -50,22 +50,33 @@
 #define	IDC_NETWORK				0x100E
 #define	IDC_CONNECTIONS			0x100F
 #define	IDC_DRIVES				0x1010
-#define	IDC_SETTINGS_MENU		0x1011
-#define	IDC_CONTROL_PANEL		0x1012
+#define	IDC_CONTROL_PANEL		0x1011
+#define	IDC_SETTINGS_MENU		0x1012
 #define	IDC_PRINTERS			0x1013
-#define	IDC_BROWSE				0x1014
-#define	IDC_SEARCH_PROGRAM		0x1015
-#define	IDC_SEARCH				0x1016
+#define	IDC_PRINTERS_MENU		0x1014
+#define	IDC_BROWSE				0x1015
+#define	IDC_SEARCH_PROGRAM		0x1016
+#define	IDC_SEARCH				0x1017
+#define	IDC_TERMINATE			0x1018
 
 #define	IDC_FIRST_MENU			0x3000
 
 
  /// desktop bar window, also known as "system tray"
-struct DesktopBar : public TrayIconControllerTemplate<
-						OwnerDrawParent<Window> >
+struct DesktopBar : public
+#ifdef _ROS_
+	TrayIconControllerTemplate<
+				OwnerDrawParent<Window> >
+#else
+	OwnerDrawParent<Window>
+#endif
 {
+#ifdef _ROS_
 	typedef TrayIconControllerTemplate<
 				OwnerDrawParent<Window> > super;
+#else
+	typedef OwnerDrawParent<Window> super;
+#endif
 
 	DesktopBar(HWND hwnd);
 	~DesktopBar();
@@ -93,9 +104,13 @@ protected:
 
 	struct StartMenuRoot* _startMenuRoot;
 
+#ifdef _ROS_
 	TrayIcon	_trayIcon;
 
 	void	AddTrayIcons();
 	virtual void TrayClick(UINT id, int btn);
 	virtual void TrayDblClick(UINT id, int btn);
+#else
+	const UINT WM_TASKBARCREATED;
+#endif
 };

@@ -6276,7 +6276,7 @@ static BOOL LISTVIEW_SetBkColor(LISTVIEW_INFO *infoPtr, COLORREF clrBk)
 	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
 	infoPtr->clrBk = clrBk;
 	if (clrBk == CLR_NONE)
-	    infoPtr->hBkBrush = (HBRUSH)GetClassLongW(infoPtr->hwndSelf, GCL_HBRBACKGROUND);
+	    infoPtr->hBkBrush = (HBRUSH)GetClassLongPtrW(infoPtr->hwndSelf, GCLP_HBRBACKGROUND);
 	else
 	    infoPtr->hBkBrush = CreateSolidBrush(clrBk);
 	LISTVIEW_InvalidateList(infoPtr);
@@ -8253,6 +8253,7 @@ static LRESULT LISTVIEW_HeaderNotification(LISTVIEW_INFO *infoPtr, const NMHEADE
 
 		lpColumnInfo->rcHeader.right += dx;
 		LISTVIEW_ScrollColumns(infoPtr, lpnmh->iItem + 1, dx);
+		LISTVIEW_UpdateItemSize(infoPtr);
 		if (uView == LVS_REPORT && is_redrawing(infoPtr))
 		{
 		    /* this trick works for left aligned columns only */

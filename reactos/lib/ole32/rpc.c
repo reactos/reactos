@@ -1,6 +1,7 @@
 /*
  *	(Local) RPC Stuff
  *
+ * Copyright 2001  Ove Kåven, TransGaming Technologies
  * Copyright 2002  Marcus Meissner
  * Copyright 2005  Mike Hearn, Rob Shearman for CodeWeavers
  *
@@ -49,425 +50,530 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-#define PIPEPREF "\\\\.\\pipe\\"
-#define OLESTUBMGR PIPEPREF"WINE_OLE_StubMgr"
+static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg);
 
-#define REQTYPE_REQUEST		0
-#define REQTYPE_RESPONSE	1
+/* we only use one function to dispatch calls for all methods - we use the
+ * RPC_IF_OLE flag to tell the RPC runtime that this is the case */
+static RPC_DISPATCH_FUNCTION rpc_dispatch_table[1] = { dispatch_rpc }; /* (RO) */
+static RPC_DISPATCH_TABLE rpc_dispatch = { 1, rpc_dispatch_table }; /* (RO) */
 
-struct request_header
+static struct list registered_interfaces = LIST_INIT(registered_interfaces); /* (CS csRegIf) */
+static CRITICAL_SECTION csRegIf;
+static CRITICAL_SECTION_DEBUG csRegIf_debug =
 {
-    DWORD		reqid;
-    IPID		ipid;
-    DWORD		iMethod;
-    DWORD		cbBuffer;
+    0, 0, &csRegIf,
+    { &csRegIf_debug.ProcessLocksList, &csRegIf_debug.ProcessLocksList },
+      0, 0, { 0, (DWORD)(__FILE__ ": dcom registered server interfaces") }
+};
+static CRITICAL_SECTION csRegIf = { &csRegIf_debug, -1, 0, 0, 0, 0 };
+
+static WCHAR wszPipeTransport[] = {'n','c','a','c','n','_','n','p',0};
+
+
+struct registered_if
+{
+    struct list entry;
+    DWORD refs; /* ref count */
+    RPC_SERVER_INTERFACE If; /* interface registered with the RPC runtime */
 };
 
-struct response_header
+/* get the pipe endpoint specified of the specified apartment */
+static inline void get_rpc_endpoint(LPWSTR endpoint, const OXID *oxid)
 {
-    DWORD		reqid;
-    DWORD		cbBuffer;
-    DWORD		retval;
-};
-
-
-#define REQSTATE_START			0
-#define REQSTATE_REQ_QUEUED		1
-#define REQSTATE_REQ_WAITING_FOR_REPLY	2
-#define REQSTATE_REQ_GOT		3
-#define REQSTATE_INVOKING		4
-#define REQSTATE_RESP_QUEUED		5
-#define REQSTATE_RESP_GOT		6
-#define REQSTATE_DONE			6
-
-struct rpc
-{
-    int				state;
-    HANDLE			hPipe;	/* temp copy of handle */
-    struct request_header	reqh;
-    struct response_header	resph;
-    LPBYTE			Buffer;
-};
-
-/* fixme: this should have a lock */
-static struct rpc **reqs = NULL;
-static int nrofreqs = 0;
-
-/* This pipe is _thread_ based, each thread which talks to a remote
- * apartment (oxid) has its own pipe. The same structure is used both
- * for outgoing and incoming RPCs.
- */
-struct pipe
-{
-    wine_marshal_id	mid;	/* target mid */
-    DWORD		tid;	/* thread which owns this pipe */
-    HANDLE		hPipe;
-
-    int			pending;
-    HANDLE		hThread;
-    CRITICAL_SECTION	crit;
-
-    APARTMENT          *apt;    /* apartment of the marshalling thread for the stub dispatch case */
-};
-
-typedef struct _PipeBuf {
-    IRpcChannelBufferVtbl *lpVtbl;
-    DWORD                  ref;
-
-    wine_marshal_id        mid;
-    HANDLE                 pipe;
-} PipeBuf;
-
-
-
-/* some helper functions */
-
-static HRESULT WINAPI read_pipe(HANDLE hf, LPVOID ptr, DWORD size)
-{
-    DWORD res;
-    
-    if (!ReadFile(hf,ptr,size,&res,NULL))
-    {
-        ERR("Failed to read from %p, le is %ld\n",hf,GetLastError());
-        return E_FAIL;
-    }
-    
-    if (res != size)
-    {
-        if (!res)
-        {
-           WARN("%p disconnected\n", hf);
-           return RPC_E_DISCONNECTED;
-        }
-        ERR("Read only %ld of %ld bytes from %p.\n",res,size,hf);
-        return E_FAIL;
-    }
-    return S_OK;
+    /* FIXME: should get endpoint from rpcss */
+    static const WCHAR wszEndpointFormat[] = {'\\','p','i','p','e','\\','O','L','E','_','%','0','8','l','x','%','0','8','l','x',0};
+    wsprintfW(endpoint, wszEndpointFormat, (DWORD)(*oxid >> 32),(DWORD)*oxid);
 }
 
-static HRESULT WINAPI
-write_pipe(HANDLE hf, LPVOID ptr, DWORD size) {
-    DWORD res;
-    if (!WriteFile(hf,ptr,size,&res,NULL)) {
-	FIXME("Failed to write to %p, le is %ld\n",hf,GetLastError());
-	return E_FAIL;
-    }
-    if (res!=size) {
-	FIXME("Wrote only %ld of %ld bytes to %p.\n",res,size,hf);
-	return E_FAIL;
-    }
-    return S_OK;
-}
-
-static HANDLE dupe_handle(HANDLE h)
+typedef struct
 {
-    HANDLE h2;
-    
-    if (!DuplicateHandle(GetCurrentProcess(), h, GetCurrentProcess(),
-                         &h2, 0, FALSE, DUPLICATE_SAME_ACCESS))
-    {
-        ERR("could not duplicate handle: %ld\n", GetLastError());
-        return INVALID_HANDLE_VALUE;
-    }
-    
-    return h2;
-}
+    const IRpcChannelBufferVtbl *lpVtbl;
+    DWORD                  refs;
+} RpcChannelBuffer;
 
-
-
-
-static DWORD WINAPI client_dispatch_thread(LPVOID);
-
-/* FIXME: this all needs to be made thread safe */
-static HRESULT RPC_GetRequest(struct rpc **req)
+typedef struct
 {
-    static int reqid = 0;
-    int i;
+    RpcChannelBuffer       super; /* superclass */
 
-    /* try to reuse */
-    for (i = 0; i < nrofreqs; i++)
-    {
-        if (reqs[i]->state == REQSTATE_DONE)
-        {
-            TRACE("reusing reqs[%d]\n", i);
-            
-            reqs[i]->reqh.reqid  = reqid++;
-            reqs[i]->resph.reqid = reqs[i]->reqh.reqid;
-            reqs[i]->hPipe = INVALID_HANDLE_VALUE;
-            reqs[i]->state = REQSTATE_START;
-            *req = reqs[i];
-            return S_OK;
-        }
-    }
-    
-    TRACE("creating new struct rpc (request)\n");
-    
-    if (reqs)
-	reqs = (struct rpc**)HeapReAlloc(
-			GetProcessHeap(),
-			HEAP_ZERO_MEMORY,
-			reqs,
-			sizeof(struct rpc*)*(nrofreqs+1)
-		);
-    else
-	reqs = (struct rpc**)HeapAlloc(
-			GetProcessHeap(),
-			HEAP_ZERO_MEMORY,
-			sizeof(struct rpc*)
-		);
-    
-    if (!reqs) return E_OUTOFMEMORY;
-    
-    reqs[nrofreqs] = (struct rpc*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(struct rpc));
-    reqs[nrofreqs]->reqh.reqid = reqid++;
-    reqs[nrofreqs]->resph.reqid = reqs[nrofreqs]->reqh.reqid;
-    reqs[nrofreqs]->hPipe = INVALID_HANDLE_VALUE;
-    reqs[nrofreqs]->state = REQSTATE_START;
-    *req = reqs[nrofreqs];
-    
-    nrofreqs++;
-    
-    return S_OK;
-}
+    RPC_BINDING_HANDLE     bind; /* handle to the remote server */
+} ClientRpcChannelBuffer;
 
-static HRESULT WINAPI
-PipeBuf_QueryInterface(
-    LPRPCCHANNELBUFFER iface,REFIID riid,LPVOID *ppv
-) {
+static HRESULT WINAPI RpcChannelBuffer_QueryInterface(LPRPCCHANNELBUFFER iface, REFIID riid, LPVOID *ppv)
+{
     *ppv = NULL;
-    if (IsEqualIID(riid,&IID_IRpcChannelBuffer) || IsEqualIID(riid,&IID_IUnknown)) {
-	*ppv = (LPVOID)iface;
-	IUnknown_AddRef(iface);
-	return S_OK;
+    if (IsEqualIID(riid,&IID_IRpcChannelBuffer) || IsEqualIID(riid,&IID_IUnknown))
+    {
+        *ppv = (LPVOID)iface;
+        IUnknown_AddRef(iface);
+        return S_OK;
     }
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI
-PipeBuf_AddRef(LPRPCCHANNELBUFFER iface) {
-    PipeBuf *This = (PipeBuf *)iface;
-    return InterlockedIncrement(&This->ref);
+static ULONG WINAPI RpcChannelBuffer_AddRef(LPRPCCHANNELBUFFER iface)
+{
+    RpcChannelBuffer *This = (RpcChannelBuffer *)iface;
+    return InterlockedIncrement(&This->refs);
 }
 
-static ULONG WINAPI
-PipeBuf_Release(LPRPCCHANNELBUFFER iface) {
-    PipeBuf *This = (PipeBuf *)iface;
+static ULONG WINAPI ServerRpcChannelBuffer_Release(LPRPCCHANNELBUFFER iface)
+{
+    RpcChannelBuffer *This = (RpcChannelBuffer *)iface;
     ULONG ref;
 
-    ref = InterlockedDecrement(&This->ref);
+    ref = InterlockedDecrement(&This->refs);
     if (ref)
-	return ref;
+        return ref;
 
-    CloseHandle(This->pipe);
-    HeapFree(GetProcessHeap(),0,This);
+    HeapFree(GetProcessHeap(), 0, This);
     return 0;
 }
 
-static HRESULT WINAPI
-PipeBuf_GetBuffer(LPRPCCHANNELBUFFER iface,RPCOLEMESSAGE* msg,REFIID riid)
+static ULONG WINAPI ClientRpcChannelBuffer_Release(LPRPCCHANNELBUFFER iface)
 {
-    TRACE("(%p,%s)\n",msg,debugstr_guid(riid));
-    /* probably reuses IID in real. */
-    if (msg->cbBuffer && (msg->Buffer == NULL))
-	msg->Buffer = HeapAlloc(GetProcessHeap(),0,msg->cbBuffer);
-    return S_OK;
+    ClientRpcChannelBuffer *This = (ClientRpcChannelBuffer *)iface;
+    ULONG ref;
+
+    ref = InterlockedDecrement(&This->super.refs);
+    if (ref)
+        return ref;
+
+    RpcBindingFree(&This->bind);
+    HeapFree(GetProcessHeap(), 0, This);
+    return 0;
 }
 
-static HRESULT
-COM_InvokeAndRpcSend(struct rpc *req) {
-    IRpcStubBuffer     *stub;
-    RPCOLEMESSAGE	msg;
-    HRESULT		hres;
-    DWORD		reqtype;
+static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE* olemsg, REFIID riid)
+{
+    RpcChannelBuffer *This = (RpcChannelBuffer *)iface;
+    RPC_MESSAGE *msg = (RPC_MESSAGE *)olemsg;
+    RPC_STATUS status;
 
-    if (!(stub = ipid_to_stubbuffer(&(req->reqh.ipid))))
-        /* ipid_to_stubbuffer will already have logged the error */
-        return RPC_E_DISCONNECTED;
+    TRACE("(%p)->(%p,%p)\n", This, olemsg, riid);
 
-    IUnknown_AddRef(stub);
-    msg.Buffer		= req->Buffer;
-    msg.iMethod		= req->reqh.iMethod;
-    msg.cbBuffer	= req->reqh.cbBuffer;
-    msg.dataRepresentation = NDR_LOCAL_DATA_REPRESENTATION;
-    req->state		= REQSTATE_INVOKING;
-    req->resph.retval	= IRpcStubBuffer_Invoke(stub,&msg,NULL);
-    IUnknown_Release(stub);
-    req->Buffer		= msg.Buffer;
-    req->resph.cbBuffer	= msg.cbBuffer;
-    reqtype 		= REQTYPE_RESPONSE;
-    hres = write_pipe(req->hPipe,&reqtype,sizeof(reqtype));
-    if (hres) return hres;
-    hres = write_pipe(req->hPipe,&(req->resph),sizeof(req->resph));
-    if (hres) return hres;
-    hres = write_pipe(req->hPipe,req->Buffer,req->resph.cbBuffer);
-    if (hres) return hres;
-    req->state = REQSTATE_DONE;
-    return S_OK;
+    status = I_RpcGetBuffer(msg);
+
+    TRACE("-- %ld\n", status);
+
+    return HRESULT_FROM_WIN32(status);
 }
 
-static HRESULT process_incoming_rpc(HANDLE pipe);
-
-static HRESULT RPC_QueueRequestAndWait(struct rpc *req, HANDLE pipe)
+static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE* olemsg, REFIID riid)
 {
-    int                 i;
-    struct rpc         *xreq;
-    HRESULT             hres;
-    DWORD               reqtype;
+    ClientRpcChannelBuffer *This = (ClientRpcChannelBuffer *)iface;
+    RPC_MESSAGE *msg = (RPC_MESSAGE *)olemsg;
+    RPC_CLIENT_INTERFACE *cif;
+    RPC_STATUS status;
 
-    req->hPipe = pipe;
-    req->state = REQSTATE_REQ_WAITING_FOR_REPLY;
-    reqtype = REQTYPE_REQUEST;
-    hres = write_pipe(req->hPipe,&reqtype,sizeof(reqtype));
-    if (hres) return hres;
-    hres = write_pipe(req->hPipe,&(req->reqh),sizeof(req->reqh));
-    if (hres) return hres;
-    hres = write_pipe(req->hPipe,req->Buffer,req->reqh.cbBuffer);
-    if (hres) return hres;
+    TRACE("(%p)->(%p,%p)\n", This, olemsg, riid);
 
-    /* This loop is about allowing re-entrancy. While waiting for the
-     * response to one RPC we may receive a request starting another. */
-    while (!hres) {
-	hres = process_incoming_rpc(pipe);
-	if (hres) break;
+    cif = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RPC_CLIENT_INTERFACE));
+    if (!cif)
+        return E_OUTOFMEMORY;
 
-	for (i=0;i<nrofreqs;i++) {
-	    xreq = reqs[i];
-	    if ((xreq->state==REQSTATE_REQ_GOT) && (xreq->hPipe==req->hPipe)) {
-		hres = COM_InvokeAndRpcSend(xreq);
-		if (hres) break;
-	    }
-	}
-	if (req->state == REQSTATE_RESP_GOT)
-	    return S_OK;
-    }
-    if (FAILED(hres))
-        WARN("-- 0x%08lx\n", hres);
-    return hres;
-}
-
-static HRESULT WINAPI
-PipeBuf_SendReceive(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE *msg, ULONG *status)
-{
-    PipeBuf     *This = (PipeBuf *)iface;
-    struct rpc	*req;
-    HRESULT      hres;
-
-    if (This->mid.oxid == COM_CurrentApt()->oxid) {
-	ERR("Need to call directly!\n");
-	return E_FAIL;
-    }
-
-    hres = RPC_GetRequest(&req);
-    if (hres) return hres;
-    req->reqh.iMethod	= msg->iMethod;
-    req->reqh.cbBuffer	= msg->cbBuffer;
-    req->reqh.ipid = This->mid.ipid;
-    req->Buffer = msg->Buffer;
-    TRACE(" ->    rpc   ->\n");
-    hres = RPC_QueueRequestAndWait(req, This->pipe);
-    TRACE(" <- response <-\n");
-    if (hres)
-    {
-        req->state = REQSTATE_DONE;
-	return hres;
-    }
+    cif->Length = sizeof(RPC_CLIENT_INTERFACE);
+    /* RPC interface ID = COM interface ID */
+    cif->InterfaceId.SyntaxGUID = *riid;
+    /* COM objects always have a version of 0.0 */
+    cif->InterfaceId.SyntaxVersion.MajorVersion = 0;
+    cif->InterfaceId.SyntaxVersion.MinorVersion = 0;
+    msg->RpcInterfaceInformation = cif;
+    msg->Handle = This->bind;
     
-    msg->cbBuffer = req->resph.cbBuffer;
-    msg->Buffer	  = req->Buffer;
-    *status       = req->resph.retval;
-    req->state    = REQSTATE_DONE;
-    
-    return S_OK;
+    status = I_RpcGetBuffer(msg);
+
+    TRACE("-- %ld\n", status);
+
+    return HRESULT_FROM_WIN32(status);
 }
 
-
-static HRESULT WINAPI
-PipeBuf_FreeBuffer(LPRPCCHANNELBUFFER iface,RPCOLEMESSAGE* msg)
+struct rpc_sendreceive_params
 {
-    TRACE("(%p)\n",msg);
-    HeapFree(GetProcessHeap(), 0, msg->Buffer);
-    return S_OK;
-}
-
-static HRESULT WINAPI
-PipeBuf_GetDestCtx(LPRPCCHANNELBUFFER iface,DWORD* pdwDestContext,void** ppvDestContext)
-{
-    FIXME("(%p,%p), stub!\n",pdwDestContext,ppvDestContext);
-    return E_FAIL;
-}
-
-static HRESULT WINAPI
-PipeBuf_IsConnected(LPRPCCHANNELBUFFER iface)
-{
-    FIXME("(), stub!\n");
-    return S_OK;
-}
-
-static IRpcChannelBufferVtbl pipebufvt = {
-    PipeBuf_QueryInterface,
-    PipeBuf_AddRef,
-    PipeBuf_Release,
-    PipeBuf_GetBuffer,
-    PipeBuf_SendReceive,
-    PipeBuf_FreeBuffer,
-    PipeBuf_GetDestCtx,
-    PipeBuf_IsConnected
+    RPC_MESSAGE *msg;
+    RPC_STATUS   status;
 };
 
-/* returns a pipebuf for proxies */
-HRESULT PIPE_GetNewPipeBuf(wine_marshal_id *mid, IRpcChannelBuffer **pipebuf)
+/* this thread runs an outgoing RPC */
+static DWORD WINAPI rpc_sendreceive_thread(LPVOID param)
 {
-    wine_marshal_id  ourid;
-    HANDLE           handle;
-    PipeBuf         *pbuf;
-    char             pipefn[200];
+    struct rpc_sendreceive_params *data = (struct rpc_sendreceive_params *) param;
+    
+    TRACE("starting up\n");
 
-    /* connect to the apartment listener thread */
-    sprintf(pipefn,OLESTUBMGR"_%08lx%08lx",(DWORD)(mid->oxid >> 32),(DWORD)mid->oxid);
+    /* FIXME: trap and rethrow RPC exceptions in app thread */
+    data->status = I_RpcSendReceive(data->msg);
 
-    TRACE("proxy pipe: connecting to apartment listener thread: %s\n", pipefn);
+    TRACE("completed with status 0x%lx\n", data->status);
+    
+    return 0;
+}
+
+static HRESULT WINAPI RpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE *olemsg, ULONG *pstatus)
+{
+    RPC_MESSAGE *msg = (RPC_MESSAGE *)olemsg;
+    HRESULT hr = S_OK;
+    HANDLE thread;
+    struct rpc_sendreceive_params *params;
+    DWORD tid, res;
+    RPC_STATUS status;
+    
+    TRACE("(%p)\n", msg);
+
+    params = HeapAlloc(GetProcessHeap(), 0, sizeof(*params));
+    if (!params) return E_OUTOFMEMORY;
+    
+    params->msg = msg;
+
+    /* we use a separate thread here because we need to be able to
+     * pump the message loop in the application thread: if we do not,
+     * any windows created by this thread will hang and RPCs that try
+     * and re-enter this STA from an incoming server thread will
+     * deadlock. InstallShield is an example of that.
+     */
+    
+    thread = CreateThread(NULL, 0, rpc_sendreceive_thread, params, 0, &tid);
+    if (!thread)
+    {
+        ERR("Could not create RpcSendReceive thread, error %lx\n", GetLastError());
+        return E_UNEXPECTED;
+    }
 
     while (TRUE)
     {
-        BOOL ret = WaitNamedPipeA(pipefn, NMPWAIT_USE_DEFAULT_WAIT);
-        if (!ret)
+        TRACE("waiting for rpc completion or window message\n");
+        res = MsgWaitForMultipleObjectsEx(1, &thread, INFINITE, QS_ALLINPUT, 0);
+        
+        if (res == WAIT_OBJECT_0 + 1)  /* messages available */
         {
-            ERR("Could not open named pipe %s, error %ld\n", pipefn, GetLastError());
-            return RPC_E_SERVER_DIED;
+            MSG message;
+            while (PeekMessageW(&message, NULL, 0, 0, PM_REMOVE))
+            {
+                /* FIXME: filter the messages here */
+                if (message.message == DM_EXECUTERPC)
+                    TRACE("received DM_EXECUTRPC dispatch request, re-entering ...\n");
+                else
+                    TRACE("received message whilst waiting for RPC: 0x%x\n", message.message);
+                TranslateMessage(&message);
+                DispatchMessageW(&message);
+            }
         }
-
-        handle = CreateFileA(pipefn, GENERIC_READ | GENERIC_WRITE,
-                             0, NULL, OPEN_EXISTING, 0, 0);
-
-        if (handle == INVALID_HANDLE_VALUE)
+        else if (res == WAIT_OBJECT_0) 
         {
-            if (GetLastError() == ERROR_PIPE_BUSY) continue;
-            
-            ERR("Could not open named pipe %s, error %ld\n", pipefn, GetLastError());
-            return RPC_E_SERVER_DIED;
+            break; /* RPC is completed */
         }
-
-        break;
+        else
+        {
+            ERR("Unexpected wait termination: %ld, %ld\n", res, GetLastError());
+            hr = E_UNEXPECTED;
+            break;
+        }
     }
+
+    CloseHandle(thread);
+
+    status = params->status;
+    HeapFree(GetProcessHeap(), 0, params);
+    params = NULL;
+    if (hr) return hr;
     
-    memset(&ourid,0,sizeof(ourid));
-    ourid.oxid = COM_CurrentApt()->oxid;
-    
-    TRACE("constructing new pipebuf for proxy\n");
-    
-    pbuf = (PipeBuf*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(PipeBuf));
-    pbuf->lpVtbl = &pipebufvt;
-    pbuf->ref 	 = 1;
-    memcpy(&(pbuf->mid),mid,sizeof(*mid));
-    pbuf->pipe  = dupe_handle(handle);
-    
-    *pipebuf = (IRpcChannelBuffer*)pbuf;
-    
+    if (pstatus) *pstatus = status;
+
+    TRACE("RPC call status: 0x%lx\n", status);
+    if (status == RPC_S_OK)
+        hr = S_OK;
+    else if (status == RPC_S_CALL_FAILED)
+        hr = *(HRESULT *)msg->Buffer;
+    else
+        hr = HRESULT_FROM_WIN32(status);
+
+    TRACE("-- 0x%08lx\n", hr);
+
+    return hr;
+}
+
+static HRESULT WINAPI ServerRpcChannelBuffer_FreeBuffer(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE* olemsg)
+{
+    RPC_MESSAGE *msg = (RPC_MESSAGE *)olemsg;
+    RPC_STATUS status;
+
+    TRACE("(%p)\n", msg);
+
+    status = I_RpcFreeBuffer(msg);
+
+    TRACE("-- %ld\n", status);
+
+    return HRESULT_FROM_WIN32(status);
+}
+
+static HRESULT WINAPI ClientRpcChannelBuffer_FreeBuffer(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE* olemsg)
+{
+    RPC_MESSAGE *msg = (RPC_MESSAGE *)olemsg;
+    RPC_STATUS status;
+
+    TRACE("(%p)\n", msg);
+
+    status = I_RpcFreeBuffer(msg);
+
+    HeapFree(GetProcessHeap(), 0, msg->RpcInterfaceInformation);
+    msg->RpcInterfaceInformation = NULL;
+
+    TRACE("-- %ld\n", status);
+
+    return HRESULT_FROM_WIN32(status);
+}
+
+static HRESULT WINAPI RpcChannelBuffer_GetDestCtx(LPRPCCHANNELBUFFER iface, DWORD* pdwDestContext, void** ppvDestContext)
+{
+    FIXME("(%p,%p), stub!\n", pdwDestContext, ppvDestContext);
+    return E_FAIL;
+}
+
+static HRESULT WINAPI RpcChannelBuffer_IsConnected(LPRPCCHANNELBUFFER iface)
+{
+    TRACE("()\n");
+    /* native does nothing too */
     return S_OK;
 }
 
-static HRESULT
-create_server(REFCLSID rclsid)
+static const IRpcChannelBufferVtbl ClientRpcChannelBufferVtbl =
+{
+    RpcChannelBuffer_QueryInterface,
+    RpcChannelBuffer_AddRef,
+    ClientRpcChannelBuffer_Release,
+    ClientRpcChannelBuffer_GetBuffer,
+    RpcChannelBuffer_SendReceive,
+    ClientRpcChannelBuffer_FreeBuffer,
+    RpcChannelBuffer_GetDestCtx,
+    RpcChannelBuffer_IsConnected
+};
+
+static const IRpcChannelBufferVtbl ServerRpcChannelBufferVtbl =
+{
+    RpcChannelBuffer_QueryInterface,
+    RpcChannelBuffer_AddRef,
+    ServerRpcChannelBuffer_Release,
+    ServerRpcChannelBuffer_GetBuffer,
+    RpcChannelBuffer_SendReceive,
+    ServerRpcChannelBuffer_FreeBuffer,
+    RpcChannelBuffer_GetDestCtx,
+    RpcChannelBuffer_IsConnected
+};
+
+/* returns a channel buffer for proxies */
+HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid, IRpcChannelBuffer **chan)
+{
+    ClientRpcChannelBuffer *This;
+    WCHAR                   endpoint[200];
+    RPC_BINDING_HANDLE      bind;
+    RPC_STATUS              status;
+    LPWSTR                  string_binding;
+
+    /* connect to the apartment listener thread */
+    get_rpc_endpoint(endpoint, oxid);
+
+    TRACE("proxy pipe: connecting to endpoint: %s\n", debugstr_w(endpoint));
+
+    status = RpcStringBindingComposeW(
+        NULL,
+        wszPipeTransport,
+        NULL,
+        endpoint,
+        NULL,
+        &string_binding);
+        
+    if (status == RPC_S_OK)
+    {
+        status = RpcBindingFromStringBindingW(string_binding, &bind);
+
+        if (status == RPC_S_OK)
+        {
+            IPID ipid2 = *ipid; /* why can't RpcBindingSetObject take a const? */
+            status = RpcBindingSetObject(bind, &ipid2);
+            if (status != RPC_S_OK)
+                RpcBindingFree(&bind);
+        }
+
+        RpcStringFreeW(&string_binding);
+    }
+
+    if (status != RPC_S_OK)
+    {
+        ERR("Couldn't get binding for endpoint %s, status = %ld\n", debugstr_w(endpoint), status);
+        return HRESULT_FROM_WIN32(status);
+    }
+
+    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    if (!This)
+    {
+        RpcBindingFree(&bind);
+        return E_OUTOFMEMORY;
+    }
+
+    This->super.lpVtbl = &ClientRpcChannelBufferVtbl;
+    This->super.refs = 1;
+    This->bind = bind;
+
+    *chan = (IRpcChannelBuffer*)This;
+
+    return S_OK;
+}
+
+HRESULT RPC_CreateServerChannel(IRpcChannelBuffer **chan)
+{
+    RpcChannelBuffer *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    if (!This)
+        return E_OUTOFMEMORY;
+
+    This->lpVtbl = &ServerRpcChannelBufferVtbl;
+    This->refs = 1;
+    
+    *chan = (IRpcChannelBuffer*)This;
+
+    return S_OK;
+}
+
+
+HRESULT RPC_ExecuteCall(RPCOLEMESSAGE *msg, IRpcStubBuffer *stub)
+{
+    /* FIXME: pass server channel buffer, but don't create it every time */
+    return IRpcStubBuffer_Invoke(stub, msg, NULL);
+}
+
+static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
+{
+    IRpcStubBuffer     *stub;
+    APARTMENT          *apt;
+    IPID                ipid;
+
+    RpcBindingInqObject(msg->Handle, &ipid);
+
+    stub = ipid_to_apt_and_stubbuffer(&ipid, &apt);
+    if (!apt || !stub)
+    {
+        if (apt) COM_ApartmentRelease(apt);
+        /* ipid_to_apt_and_stubbuffer will already have logged the error */
+        return RpcRaiseException(RPC_E_DISCONNECTED);
+    }
+
+    /* Note: this is the important difference between STAs and MTAs - we
+     * always execute RPCs to STAs in the thread that originally created the
+     * apartment (i.e. the one that pumps messages to the window) */
+    if (apt->model & COINIT_APARTMENTTHREADED)
+        SendMessageW(apt->win, DM_EXECUTERPC, (WPARAM)msg, (LPARAM)stub);
+    else
+        RPC_ExecuteCall((RPCOLEMESSAGE *)msg, stub);
+
+    COM_ApartmentRelease(apt);
+    IRpcStubBuffer_Release(stub);
+}
+
+/* stub registration */
+HRESULT RPC_RegisterInterface(REFIID riid)
+{
+    struct registered_if *rif;
+    BOOL found = FALSE;
+    HRESULT hr = S_OK;
+    
+    TRACE("(%s)\n", debugstr_guid(riid));
+
+    EnterCriticalSection(&csRegIf);
+    LIST_FOR_EACH_ENTRY(rif, &registered_interfaces, struct registered_if, entry)
+    {
+        if (IsEqualGUID(&rif->If.InterfaceId.SyntaxGUID, riid))
+        {
+            rif->refs++;
+            found = TRUE;
+            break;
+        }
+    }
+    if (!found)
+    {
+        TRACE("Creating new interface\n");
+
+        rif = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*rif));
+        if (rif)
+        {
+            RPC_STATUS status;
+
+            rif->refs = 1;
+            rif->If.Length = sizeof(RPC_SERVER_INTERFACE);
+            /* RPC interface ID = COM interface ID */
+            rif->If.InterfaceId.SyntaxGUID = *riid;
+            rif->If.DispatchTable = &rpc_dispatch;
+            /* all other fields are 0, including the version asCOM objects
+             * always have a version of 0.0 */
+            status = RpcServerRegisterIfEx(
+                (RPC_IF_HANDLE)&rif->If,
+                NULL, NULL,
+                RPC_IF_OLE | RPC_IF_AUTOLISTEN,
+                RPC_C_LISTEN_MAX_CALLS_DEFAULT,
+                NULL);
+            if (status == RPC_S_OK)
+                list_add_tail(&registered_interfaces, &rif->entry);
+            else
+            {
+                ERR("RpcServerRegisterIfEx failed with error %ld\n", status);
+                HeapFree(GetProcessHeap(), 0, rif);
+                hr = HRESULT_FROM_WIN32(status);
+            }
+        }
+        else
+            hr = E_OUTOFMEMORY;
+    }
+    LeaveCriticalSection(&csRegIf);
+    return hr;
+}
+
+/* stub unregistration */
+void RPC_UnregisterInterface(REFIID riid)
+{
+    struct registered_if *rif;
+    EnterCriticalSection(&csRegIf);
+    LIST_FOR_EACH_ENTRY(rif, &registered_interfaces, struct registered_if, entry)
+    {
+        if (IsEqualGUID(&rif->If.InterfaceId.SyntaxGUID, riid))
+        {
+            if (!--rif->refs)
+            {
+#if 0 /* this is a stub in builtin and spams the console with FIXME's */
+                IID iid = *riid; /* RpcServerUnregisterIf doesn't take const IID */
+                RpcServerUnregisterIf((RPC_IF_HANDLE)&rif->If, &iid, 0);
+                list_remove(&rif->entry);
+                HeapFree(GetProcessHeap(), 0, rif);
+#endif
+            }
+            break;
+        }
+    }
+    LeaveCriticalSection(&csRegIf);
+}
+
+/* make the apartment reachable by other threads and processes and create the
+ * IRemUnknown object */
+void RPC_StartRemoting(struct apartment *apt)
+{
+    if (!InterlockedExchange(&apt->remoting_started, TRUE))
+    {
+        WCHAR endpoint[200];
+        RPC_STATUS status;
+
+        get_rpc_endpoint(endpoint, &apt->oxid);
+    
+        status = RpcServerUseProtseqEpW(
+            wszPipeTransport,
+            RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
+            endpoint,
+            NULL);
+        if (status != RPC_S_OK)
+            ERR("Couldn't register endpoint %s\n", debugstr_w(endpoint));
+
+        /* FIXME: move remote unknown exporting into this function */
+    }
+    start_apartment_remote_unknown();
+}
+
+
+static HRESULT create_server(REFCLSID rclsid)
 {
     static const WCHAR  embedding[] = { ' ', '-','E','m','b','e','d','d','i','n','g',0 };
     HKEY                key;
@@ -512,8 +618,10 @@ create_server(REFCLSID rclsid)
 
     if (!CreateProcessW(exe, command, NULL, NULL, FALSE, 0, NULL, NULL, &sinfo, &pinfo)) {
         WARN("failed to run local server %s\n", debugstr_w(exe));
-        return E_FAIL;
+        return HRESULT_FROM_WIN32(GetLastError());
     }
+    CloseHandle(pinfo.hProcess);
+    CloseHandle(pinfo.hThread);
 
     return S_OK;
 }
@@ -521,8 +629,7 @@ create_server(REFCLSID rclsid)
 /*
  * start_local_service()  - start a service given its name and parameters
  */
-static DWORD
-start_local_service(LPCWSTR name, DWORD num, LPWSTR *params)
+static DWORD start_local_service(LPCWSTR name, DWORD num, LPWSTR *params)
 {
     SC_HANDLE handle, hsvc;
     DWORD     r = ERROR_FUNCTION_FAILED;
@@ -559,8 +666,7 @@ start_local_service(LPCWSTR name, DWORD num, LPWSTR *params)
  *
  * Note:  Local Services are not supported under Windows 9x
  */
-static HRESULT
-create_local_service(REFCLSID rclsid)
+static HRESULT create_local_service(REFCLSID rclsid)
 {
     HRESULT hres = REGDB_E_READREGDB;
     WCHAR buf[40], keyname[50];
@@ -625,8 +731,10 @@ create_local_service(REFCLSID rclsid)
     return hres;
 }
 
-/* http://msdn.microsoft.com/library/en-us/dnmsj99/html/com0199.asp, Figure 4 */
-HRESULT create_marshalled_proxy(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
+#define PIPEPREF "\\\\.\\pipe\\"
+
+/* FIXME: should call to rpcss instead */
+HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
     HRESULT        hres;
     HANDLE         hPipe;
@@ -637,8 +745,8 @@ HRESULT create_marshalled_proxy(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     LARGE_INTEGER  seekto;
     ULARGE_INTEGER newpos;
     int            tries = 0;
-    
-    static const int MAXTRIES = 10000;
+
+    static const int MAXTRIES = 30; /* 30 seconds */
 
     TRACE("rclsid=%s, iid=%s\n", debugstr_guid(rclsid), debugstr_guid(iid));
 
@@ -691,302 +799,13 @@ out:
 }
 
 
-/* this reads an RPC from the given pipe and places it in the global reqs array  */
-static HRESULT process_incoming_rpc(HANDLE pipe)
-{
-    DWORD       reqtype;
-    HRESULT     hres = S_OK;
-
-    hres = read_pipe(pipe,&reqtype,sizeof(reqtype));
-    if (hres) return hres;
-
-    /* only received by servers */
-    if (reqtype == REQTYPE_REQUEST)
-    {
-	struct rpc *xreq;
-
-	RPC_GetRequest(&xreq);
-        
-	xreq->hPipe = pipe;
-	hres = read_pipe(pipe,&(xreq->reqh),sizeof(xreq->reqh));
-	if (hres)
-        {
-            xreq->state = REQSTATE_DONE;
-            return hres;
-        }
-        
-	xreq->resph.reqid = xreq->reqh.reqid;
-	xreq->Buffer = HeapAlloc(GetProcessHeap(),0, xreq->reqh.cbBuffer);
-	hres = read_pipe(pipe,xreq->Buffer,xreq->reqh.cbBuffer);
-	if (hres) goto end;
-
-        TRACE("received RPC for IPID %s\n", debugstr_guid(&xreq->reqh.ipid));
-        
-	xreq->state = REQSTATE_REQ_GOT;
-	goto end;
-    }
-    else if (reqtype == REQTYPE_RESPONSE)
-    {
-	struct response_header	resph;
-	int i;
-
-	hres = read_pipe(pipe,&resph,sizeof(resph));
-	if (hres) goto end;
-
-        TRACE("read RPC response\n");
-        
-	for (i = nrofreqs; i--;)
-        {
-	    struct rpc *xreq = reqs[i];
-            
-	    if (xreq->state != REQSTATE_REQ_WAITING_FOR_REPLY)
-		continue;
-            
-	    if (xreq->reqh.reqid == resph.reqid)
-            {
-		memcpy(&(xreq->resph),&resph,sizeof(resph));
-
-		if (xreq->Buffer)
-		    xreq->Buffer = HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,xreq->Buffer,xreq->resph.cbBuffer);
-		else
-		    xreq->Buffer = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,xreq->resph.cbBuffer);
-
-		hres = read_pipe(pipe,xreq->Buffer,xreq->resph.cbBuffer);
-		if (hres) goto end;
-
-                TRACE("received response for reqid 0x%lx\n", xreq->reqh.reqid);
-                
-		xreq->state = REQSTATE_RESP_GOT;
-		goto end;
-	    }
-	}
-        
-	ERR("protocol error: did not find request for id %lx\n",resph.reqid);
-	hres = E_FAIL;
-	goto end;
-    }
-    
-    ERR("protocol error: unknown reqtype %ld\n",reqtype);
-    hres = E_FAIL;
-end:
-    return hres;
-}
-
-struct stub_dispatch_params
-{
-    struct apartment *apt;
-    HANDLE            pipe;
-};
-
-/* This thread listens on the given pipe for requests to any stub manager */
-static DWORD WINAPI client_dispatch_thread(LPVOID param)
-{
-    HANDLE              pipe = ((struct stub_dispatch_params *)param)->pipe;
-    struct apartment   *apt  = ((struct stub_dispatch_params *)param)->apt;
-    HRESULT             hres = S_OK;
-    HANDLE              shutdown_event = dupe_handle(apt->shutdown_event);
-    
-    HeapFree(GetProcessHeap(), 0, param);
-    
-    /* join marshalling apartment. fixme: this stuff is all very wrong, threading needs to work like native */
-    COM_CurrentInfo()->apt = apt;
-
-    while (TRUE)
-    {
-        int i;
-
-        TRACE("waiting for RPC on OXID: %08lx%08lx\n", (DWORD)(apt->oxid >> 32), (DWORD)(apt->oxid));
-        
-        /* read a new request into the global array, block if no requests have been sent */
-        hres = process_incoming_rpc(pipe);
-        if (hres) break;
-
-        /* do you expect me to talk? */
-        if (WaitForSingleObject(shutdown_event, 0) == WAIT_OBJECT_0)
-        {
-            /* no mr bond, i expect you to die! bwahaha */
-            CloseHandle(shutdown_event);
-            break;
-        }
-        
-        TRACE("received RPC on OXID: %08lx%08lx\n", (DWORD)(apt->oxid >> 32), (DWORD)(apt->oxid));        
-
-        /* now scan the array looking for the RPC just loaded */
-        for (i=nrofreqs;i--;)
-        {
-            struct rpc *req = reqs[i];
-            
-            if ((req->state == REQSTATE_REQ_GOT) && (req->hPipe == pipe))
-            {
-                hres = COM_InvokeAndRpcSend(req);
-                if (!hres) break;
-            }
-        }
-    }
-
-    TRACE("exiting with hres %lx\n",hres);
-
-    /* leave marshalling apartment. fixme: this stuff is all very wrong, threading needs to work like native */
-    COM_CurrentInfo()->apt = NULL;
-
-    DisconnectNamedPipe(pipe);
-    CloseHandle(pipe);
-    return 0;
-}
-
-struct apartment_listener_params
-{
-    APARTMENT *apt;
-    HANDLE event;
-};
-
-/* This thread listens on a named pipe for each apartment that exports
- * objects. It deals with incoming connection requests. Each time a
- * client connects a separate thread is spawned for that particular
- * connection.
- *
- * This architecture is different in native DCOM.
- */
-static DWORD WINAPI apartment_listener_thread(LPVOID p)
-{
-    char pipefn[200];
-    HANDLE listenPipe, thread_handle;
-    OVERLAPPED overlapped;
-    HANDLE wait[2];
-    
-    struct apartment_listener_params * params = (struct apartment_listener_params *)p;
-    struct apartment *apt = params->apt;
-    HANDLE event = params->event;
-    HANDLE apt_shutdown_event = dupe_handle(apt->shutdown_event);
-    OXID   this_oxid = apt->oxid; /* copy here so we can print it when we shut down */
-
-    HeapFree(GetProcessHeap(), 0, params);
-
-    overlapped.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
-    
-    /* we must join the marshalling threads apartment. we already have a ref here */
-    COM_CurrentInfo()->apt = apt;
-
-    sprintf(pipefn,OLESTUBMGR"_%08lx%08lx", (DWORD)(apt->oxid >> 32), (DWORD)(apt->oxid));
-    TRACE("Apartment listener thread starting on (%s)\n",pipefn);
-
-    while (TRUE)
-    {
-        struct stub_dispatch_params *params;
-        DWORD res;
-
-	listenPipe = CreateNamedPipeA(
-	    pipefn,
-	    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
-	    PIPE_TYPE_BYTE|PIPE_WAIT,
-	    PIPE_UNLIMITED_INSTANCES,
-	    4096,
-	    4096,
-	    500 /* 0.5 seconds */,
-	    NULL
-	);
-
-	/* tell function that started this thread that we have attempted to created the
-	 * named pipe. */
-	if (event) {
-	    SetEvent(event);
-	    event = NULL;
-	}
-
-	if (listenPipe == INVALID_HANDLE_VALUE) {
-	    FIXME("pipe creation failed for %s, error %ld\n",pipefn,GetLastError());
-	    break; /* permanent failure, so quit stubmgr thread */
-	}
-
-        TRACE("waiting for a client ...\n");
-        
-	/* an already connected pipe is not an error */
-	if (!ConnectNamedPipe(listenPipe, &overlapped))
-        {
-            DWORD le = GetLastError();
-            
-            if ((le != ERROR_IO_PENDING) && (le != ERROR_PIPE_CONNECTED))
-            {
-                ERR("Failure during ConnectNamedPipe %ld!\n",GetLastError());
-                CloseHandle(listenPipe);
-                continue;
-            }
-	}
-
-        /* wait for action */
-        wait[0] = apt_shutdown_event;
-        wait[1] = overlapped.hEvent;
-        res = WaitForMultipleObjectsEx(2, wait, FALSE, INFINITE, FALSE);
-        if (res == WAIT_OBJECT_0) break;
-
-        ResetEvent(overlapped.hEvent);
-        
-        /* start the stub dispatch thread for this connection */
-        TRACE("starting stub dispatch thread for OXID %08lx%08lx\n", (DWORD)(apt->oxid >> 32), (DWORD)(apt->oxid));
-        params = HeapAlloc(GetProcessHeap(), 0, sizeof(struct stub_dispatch_params));
-        if (!params)
-        {
-            ERR("out of memory, dropping this client\n");
-            CloseHandle(listenPipe);
-            continue;
-        }
-        params->apt = apt;
-        params->pipe = listenPipe;
-        thread_handle = CreateThread(NULL, 0, &client_dispatch_thread, params, 0, NULL);
-        CloseHandle(thread_handle);
-    }
-
-    TRACE("shutting down: %s\n", wine_dbgstr_longlong(this_oxid));
-
-    /* we must leave the marshalling threads apartment. we don't have a ref here */
-    COM_CurrentInfo()->apt = NULL;
-
-    DisconnectNamedPipe(listenPipe);
-    CloseHandle(listenPipe);
-    CloseHandle(overlapped.hEvent);
-    CloseHandle(apt_shutdown_event);
-    return 0;
-}
-
-void start_apartment_listener_thread()
-{
-    APARTMENT *apt = COM_CurrentApt();
-    
-    assert( apt );
-    
-    TRACE("apt->listenertid=%ld\n", apt->listenertid);
-
-    /* apt->listenertid is a hack which needs to die at some point, as
-     * it leaks information into the apartment structure. in fact,
-     * this thread isn't quite correct anyway as native RPC doesn't
-     * use a thread per apartment at all, instead the dispatch thread
-     * either enters the apartment to perform the RPC (for MTAs, RTAs)
-     * or does a context switch into it for STAs.
-     */
-    
-    if (!apt->listenertid)
-    {
-        HANDLE thread;
-        HANDLE event = CreateEventW(NULL, TRUE, FALSE, NULL);
-        struct apartment_listener_params * params = HeapAlloc(GetProcessHeap(), 0, sizeof(*params));
-
-        params->apt = apt;
-        params->event = event;
-        thread = CreateThread(NULL, 0, apartment_listener_thread, params, 0, &apt->listenertid);
-        CloseHandle(thread);
-        /* wait for pipe to be created before returning, otherwise we
-         * might try to use it and fail */
-        WaitForSingleObject(event, INFINITE);
-        CloseHandle(event);
-    }
-}
-
 struct local_server_params
 {
     CLSID clsid;
     IStream *stream;
 };
 
+/* FIXME: should call to rpcss instead */
 static DWORD WINAPI local_server_thread(LPVOID param)
 {
     struct local_server_params * lsp = (struct local_server_params *)param;

@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2004 ReactOS Team
+ *  Copyright (C) 2004, 2005 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@
  * PROGRAMMER:  
  */
 
+/* INCLUDE ***********************************************************************/
+
 #include <ddk/ntddk.h>
 #include <internal/i386/ps.h>
 
@@ -36,22 +38,46 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-BOOLEAN VerifyLocalAPIC(VOID);
-VOID APICCalibrateTimer(ULONG CPU);
+/* GLOBALS ***********************************************************************/
 
-extern VOID MpsTimerInterrupt(VOID);
-extern VOID MpsErrorInterrupt(VOID);
-extern VOID MpsSpuriousInterrupt(VOID);
-extern VOID MpsIpiInterrupt(VOID);
+ULONG CPUCount;					/* Total number of CPUs */
+ULONG BootCPU;					/* Bootstrap processor */
+ULONG OnlineCPUs;				/* Bitmask of online CPUs */
+CPU_INFO CPUMap[MAX_CPU];			/* Map of all CPUs in the system */
 
-extern ULONG APICMode;		/* APIC mode at startup */
-extern PULONG BIOSBase;         /* Virtual address of BIOS data segment */
-extern PULONG CommonBase;       /* Virtual address of common area */
-extern ULONG BootCPU;           /* Bootstrap processor */
-extern ULONG OnlineCPUs;        /* Bitmask of online CPUs */
+#ifdef CONFIG_SMP
+PULONG BIOSBase;				/* Virtual address of BIOS data segment */
+PULONG CommonBase;				/* Virtual address of common area */
+#endif
 
-extern CHAR *APstart, *APend;
-extern VOID (*APflush)(VOID);
+PULONG APICBase = (PULONG)APIC_DEFAULT_BASE;	/* Virtual address of local APIC */
+
+ULONG APICMode;					/* APIC mode at startup */
+
+/* For debugging */
+ULONG lastregr[MAX_CPU];
+ULONG lastvalr[MAX_CPU];
+ULONG lastregw[MAX_CPU];
+ULONG lastvalw[MAX_CPU];
+
+#ifdef CONFIG_SMP
+typedef struct __attribute__((packed)) _COMMON_AREA_INFO
+{
+   ULONG Stack;		    /* Location of AP stack */
+   ULONG PageDirectory;	    /* Page directory for an AP */
+   ULONG NtProcessStartup;  /* Kernel entry point for an AP */
+   ULONG PaeModeEnabled;    /* PAE mode is enabled */
+   ULONG Debug[16];	    /* For debugging */
+} COMMON_AREA_INFO, *PCOMMON_AREA_INFO;
+#endif
+
+CHAR *APstart, *APend;
+
+#define BIOS_AREA	0x0
+#define COMMON_AREA	0x2000
+
+#define HZ		(100)
+#define APIC_DIVISOR	(16)
 
 #define CMOS_READ(address) ({ \
    WRITE_PORT_UCHAR((PUCHAR)0x70, address)); \
@@ -63,19 +89,16 @@ extern VOID (*APflush)(VOID);
    WRITE_PORT_UCHAR((PUCHAR)0x71, value); \
 })
 
-#define BIOS_AREA    0x0
-#define COMMON_AREA  0x2000
+extern PVOID IMPORTED MmSystemRangeStart;
 
+/* FUNCTIONS *********************************************************************/
 
-extern CPU_INFO CPUMap[MAX_CPU];		/* Map of all CPUs in the system */
-
-PULONG APICBase = (PULONG)APIC_DEFAULT_BASE;	/* Virtual address of local APIC */
-
-/* For debugging */
-ULONG lastregr[MAX_CPU];
-ULONG lastvalr[MAX_CPU];
-ULONG lastregw[MAX_CPU];
-ULONG lastvalw[MAX_CPU];
+extern ULONG Read8254Timer(VOID);
+extern VOID WaitFor8254Wraparound(VOID);
+extern VOID MpsTimerInterrupt(VOID);
+extern VOID MpsErrorInterrupt(VOID);
+extern VOID MpsSpuriousInterrupt(VOID);
+extern VOID MpsIpiInterrupt(VOID);
 
 ULONG APICGetMaxLVT(VOID)
 {
@@ -152,7 +175,7 @@ VOID APICClear(VOID)
 }
 
 /* Enable symetric I/O mode ie. connect the BSP's local APIC to INT and NMI lines */
-VOID EnableSMPMode(VOID)
+VOID EnableApicMode(VOID)
 {
    /*
     * Do not trust the local APIC being empty at bootup.
@@ -203,63 +226,6 @@ VOID APICDisable(VOID)
   APICWrite(APIC_SIVR, tmp);
 }
 
-VOID HaliInitBSP(VOID)
-{
-   PUSHORT ps;
-   static BOOLEAN BSPInitialized = FALSE;
-
-   /* Only initialize the BSP once */
-   if (BSPInitialized)
-   {
-      KEBUGCHECK(0);
-      return;
-   }
-
-   BSPInitialized = TRUE;
-
-   DPRINT("APIC is mapped at 0x%X\n", APICBase);
-
-   if (VerifyLocalAPIC()) 
-   {
-      DPRINT("APIC found\n");
-   } 
-   else 
-   {
-      DPRINT("No APIC found\n");
-      KEBUGCHECK(0);
-   }
-
-   if (APICMode == amPIC) 
-   {
-      EnableSMPMode();
-   }
-
-   APICSetup();
-
-   /* BIOS data segment */
-   BIOSBase = (PULONG)BIOS_AREA;
-   
-   /* Area for communicating with the APs */
-   CommonBase = (PULONG)COMMON_AREA;
- 
-   /* Copy bootstrap code to common area */
-   memcpy((PVOID)((ULONG)CommonBase + PAGE_SIZE),
-	  &APstart,
-	  (ULONG)&APend - (ULONG)&APstart + 1);
-
-   /* Set shutdown code */
-   CMOS_WRITE(0xF, 0xA);
-
-   /* Set warm reset vector */
-   ps = (PUSHORT)((ULONG)BIOSBase + 0x467);
-   *ps = (COMMON_AREA + PAGE_SIZE) & 0xF;
- 
-   ps = (PUSHORT)((ULONG)BIOSBase + 0x469);
-   *ps = (COMMON_AREA + PAGE_SIZE) >> 4;
-
-   /* Calibrate APIC timer */
-   APICCalibrateTimer(BootCPU);
-}
 
 inline ULONG _APICRead(ULONG Offset)
 {
@@ -455,7 +421,6 @@ VOID APICDump(VOID)
 BOOLEAN VerifyLocalAPIC(VOID)
 {
    UINT reg0, reg1;
-   CHECKPOINT1;
    /* The version register is read-only in a real APIC */
    reg0 = APICRead(APIC_VER);
    DPRINT1("Getting VERSION: %x\n", reg0);
@@ -502,9 +467,23 @@ BOOLEAN VerifyLocalAPIC(VOID)
       return FALSE;
    }
 
+   ULONG l, h;
+   Ki386Rdmsr(0x1b /*MSR_IA32_APICBASE*/, l, h);
+
+   if (!(l & /*MSR_IA32_APICBASE_ENABLE*/(1<<11))) 
+   {
+      DPRINT1("Local APIC disabled by BIOS -- reenabling.\n");
+      l &= ~/*MSR_IA32_APICBASE_BASE*/(1<<11);
+      l |= /*MSR_IA32_APICBASE_ENABLE | APIC_DEFAULT_PHYS_BASE*/(1<<11)|0xfee00000;
+      Ki386Wrmsr(0x1b/*MSR_IA32_APICBASE*/, l, h);
+   }
+
+    
+
    return TRUE;
 }
 
+#ifdef CONFIG_SMP
 VOID APICSendIPI(ULONG Target, ULONG Mode)
 {
    ULONG tmp, i, flags;
@@ -568,6 +547,7 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
    }
    Ki386RestoreFlags(flags);
 }
+#endif
 
 VOID APICSetup(VOID)
 {
@@ -651,7 +631,6 @@ VOID APICSetup(VOID)
   }
   APICWrite(APIC_LINT0, tmp);
 
-
   /*
    * Only the BSP should see the LINT1 NMI signal, obviously.
    */
@@ -697,7 +676,7 @@ VOID APICSetup(VOID)
      DPRINT("ESR value after enabling vector: 0x%X\n", tmp);
   }
 }
-
+#ifdef CONFIG_SMP
 VOID APICSyncArbIDs(VOID)
 {
    ULONG i, tmp;
@@ -720,6 +699,7 @@ VOID APICSyncArbIDs(VOID)
    DPRINT("Synchronizing Arb IDs.\n");
    APICWrite(APIC_ICR0, APIC_ICR0_DESTS_ALL | APIC_ICR0_LEVEL | APIC_DM_INIT);
 }
+#endif
 
 VOID MpsErrorHandler(VOID)
 {
@@ -769,12 +749,13 @@ VOID MpsSpuriousHandler(VOID)
 #endif
 }
 
+#ifdef CONFIG_SMP
 VOID MpsIpiHandler(VOID)
 {
    KIRQL oldIrql;
 
    HalBeginSystemInterrupt(IPI_VECTOR, 
-                           VECTOR2IRQL(IPI_VECTOR), 
+                           IPI_LEVEL, 
 			   &oldIrql);
    Ki386EnableInterrupts();
 #if 0
@@ -791,6 +772,7 @@ VOID MpsIpiHandler(VOID)
    Ki386DisableInterrupts();
    HalEndSystemInterrupt(oldIrql, 0);
 }
+#endif
 
 VOID
 MpsIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
@@ -823,7 +805,7 @@ MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    static ULONG Count[MAX_CPU] = {0,};
 #endif
    HalBeginSystemInterrupt(LOCAL_TIMER_VECTOR, 
-                           VECTOR2IRQL(LOCAL_TIMER_VECTOR), 
+                           PROFILE_LEVEL, 
 			   &oldIrql);
    Ki386EnableInterrupts();
 
@@ -849,5 +831,319 @@ MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    Ki386DisableInterrupts();
    HalEndSystemInterrupt (oldIrql, 0);
 }
+
+VOID APICSetupLVTT(ULONG ClockTicks)
+{
+   ULONG tmp;
+
+   tmp = GET_APIC_VERSION(APICRead(APIC_VER));
+   if (!APIC_INTEGRATED(tmp))
+   {
+      tmp = SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV) | APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;;
+   }
+   else
+   {
+      /* Periodic timer */
+      tmp = APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;;
+   }
+   APICWrite(APIC_LVTT, tmp);
+
+   tmp = APICRead(APIC_TDCR);
+   tmp &= ~(APIC_TDCR_1 | APIC_TIMER_BASE_DIV);
+   tmp |= APIC_TDCR_16;
+   APICWrite(APIC_TDCR, tmp);
+   APICWrite(APIC_ICRT, ClockTicks / APIC_DIVISOR);
+}
+
+VOID 
+APICCalibrateTimer(ULONG CPU)
+{
+   ULARGE_INTEGER t1, t2;
+   LONG tt1, tt2;
+   BOOLEAN TSCPresent;
+
+   DPRINT("Calibrating APIC timer for CPU %d\n", CPU);
+
+   APICSetupLVTT(1000000000);
+
+   TSCPresent = KeGetCurrentKPCR()->PrcbData.FeatureBits & X86_FEATURE_TSC ? TRUE : FALSE;
+
+   /*
+    * The timer chip counts down to zero. Let's wait
+    * for a wraparound to start exact measurement:
+    * (the current tick might have been already half done)
+    */
+   WaitFor8254Wraparound();
+
+   /*
+    * We wrapped around just now. Let's start
+    */
+   if (TSCPresent)
+   {
+      Ki386RdTSC(t1);
+   }
+   tt1 = APICRead(APIC_CCRT);
+
+   WaitFor8254Wraparound();
+
+
+   tt2 = APICRead(APIC_CCRT);
+   if (TSCPresent)
+   {
+      Ki386RdTSC(t2);
+      CPUMap[CPU].CoreSpeed = (HZ * (t2.QuadPart - t1.QuadPart));
+      DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
+	     CPUMap[CPU].CoreSpeed/1000000,
+	     CPUMap[CPU].CoreSpeed%1000000);
+      KeGetCurrentKPCR()->PrcbData.MHz = CPUMap[CPU].CoreSpeed/1000000;
+   }
+
+   CPUMap[CPU].BusSpeed = (HZ * (long)(tt1 - tt2) * APIC_DIVISOR);
+
+   /* Setup timer for normal operation */
+// APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100);    // 100ns
+   APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 10000);  // 10ms
+// APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100000); // 100ms
+
+   DPRINT("Host bus clock speed is %ld.%04ld MHz.\n",
+	  CPUMap[CPU].BusSpeed/1000000,
+	  CPUMap[CPU].BusSpeed%1000000);
+}
+
+VOID 
+SetInterruptGate(ULONG index, ULONG address)
+{
+  IDT_DESCRIPTOR *idt;
+
+  idt = (IDT_DESCRIPTOR*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(IDT_DESCRIPTOR));
+  idt->a = (((ULONG)address)&0xffff) + (KERNEL_CS << 16);
+  idt->b = 0x8e00 + (((ULONG)address)&0xffff0000);
+}
+
+VOID HaliInitBSP(VOID)
+{
+#ifdef CONFIG_SMP
+   PUSHORT ps;
+#endif
+
+   static BOOLEAN BSPInitialized = FALSE;
+
+   /* Only initialize the BSP once */
+   if (BSPInitialized)
+   {
+      KEBUGCHECK(0);
+      return;
+   }
+
+   BSPInitialized = TRUE;
+
+   /* Setup interrupt handlers */
+   SetInterruptGate(LOCAL_TIMER_VECTOR, (ULONG)MpsTimerInterrupt);
+   SetInterruptGate(ERROR_VECTOR, (ULONG)MpsErrorInterrupt);
+   SetInterruptGate(SPURIOUS_VECTOR, (ULONG)MpsSpuriousInterrupt);
+#ifdef CONFIG_SMP
+   SetInterruptGate(IPI_VECTOR, (ULONG)MpsIpiInterrupt);
+#endif
+   DPRINT("APIC is mapped at 0x%X\n", APICBase);
+
+   if (VerifyLocalAPIC()) 
+   {
+      DPRINT("APIC found\n");
+   } 
+   else 
+   {
+      DPRINT("No APIC found\n");
+      KEBUGCHECK(0);
+   }
+
+   if (APICMode == amPIC) 
+   {
+      EnableApicMode();
+   }
+
+   APICSetup();
+
+#ifdef CONFIG_SMP
+   /* BIOS data segment */
+   BIOSBase = (PULONG)BIOS_AREA;
+   
+   /* Area for communicating with the APs */
+   CommonBase = (PULONG)COMMON_AREA;
+ 
+   /* Copy bootstrap code to common area */
+   memcpy((PVOID)((ULONG)CommonBase + PAGE_SIZE),
+	  &APstart,
+	  (ULONG)&APend - (ULONG)&APstart + 1);
+
+   /* Set shutdown code */
+   CMOS_WRITE(0xF, 0xA);
+
+   /* Set warm reset vector */
+   ps = (PUSHORT)((ULONG)BIOSBase + 0x467);
+   *ps = (COMMON_AREA + PAGE_SIZE) & 0xF;
+ 
+   ps = (PUSHORT)((ULONG)BIOSBase + 0x469);
+   *ps = (COMMON_AREA + PAGE_SIZE) >> 4;
+#endif
+
+   /* Calibrate APIC timer */
+   APICCalibrateTimer(BootCPU);
+}
+
+#ifdef CONFIG_SMP
+VOID
+HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
+{
+   ULONG tmp, maxlvt;
+   PCOMMON_AREA_INFO Common;
+   ULONG StartupCount;
+   ULONG i, j;
+   ULONG DeliveryStatus = 0;
+   ULONG AcceptStatus = 0;
+
+   if (Cpu >= MAX_CPU ||
+       Cpu >= CPUCount ||
+       OnlineCPUs & (1 << Cpu))
+   {
+     KEBUGCHECK(0);
+   }
+   DPRINT1("Attempting to boot CPU %d\n", Cpu);
+
+   /* Send INIT IPI */
+
+   APICSendIPI(Cpu, APIC_DM_INIT|APIC_ICR0_LEVEL_ASSERT);
+ 
+   KeStallExecutionProcessor(200);
+
+   /* Deassert INIT */
+
+   APICSendIPI(Cpu, APIC_DM_INIT|APIC_ICR0_LEVEL_DEASSERT);
+
+   if (APIC_INTEGRATED(CPUMap[Cpu].APICVersion)) 
+   {
+      /* Clear APIC errors */
+      APICWrite(APIC_ESR, 0);
+      tmp = (APICRead(APIC_ESR) & APIC_ESR_MASK);
+   }
+
+   Common = (PCOMMON_AREA_INFO)CommonBase;
+
+   /* Write the location of the AP stack */
+   Common->Stack = (ULONG)Stack;
+   /* Write the page directory page */
+   Ke386GetPageTableDirectory(Common->PageDirectory);
+   /* Write the kernel entry point */
+   Common->NtProcessStartup = (ULONG_PTR)RtlImageNtHeader(MmSystemRangeStart)->OptionalHeader.AddressOfEntryPoint + (ULONG_PTR)MmSystemRangeStart;
+   /* Write the state of the mae mode */
+   Common->PaeModeEnabled = Ke386GetCr4() & X86_CR4_PAE ? 1 : 0;
+
+   DPRINT1("%x %x %x %x\n", Common->Stack, Common->PageDirectory, Common->NtProcessStartup, Common->PaeModeEnabled);
+
+   DPRINT("Cpu %d got stack at 0x%X\n", Cpu, Common->Stack);
+#if 0
+   for (j = 0; j < 16; j++) 
+   {
+      Common->Debug[j] = 0;
+   }
+#endif
+
+   maxlvt = APICGetMaxLVT();
+
+   /* Is this a local APIC or an 82489DX? */
+   StartupCount = (APIC_INTEGRATED(CPUMap[Cpu].APICVersion)) ? 2 : 0;
+
+   for (i = 1; i <= StartupCount; i++)
+   {
+      /* It's a local APIC, so send STARTUP IPI */
+      DPRINT("Sending startup signal %d\n", i);
+      /* Clear errors */
+      APICWrite(APIC_ESR, 0);
+      APICRead(APIC_ESR);
+
+      APICSendIPI(Cpu, APIC_DM_STARTUP | ((COMMON_AREA + PAGE_SIZE) >> 12)|APIC_ICR0_LEVEL_DEASSERT);
+
+      /* Wait up to 10ms for IPI to be delivered */
+      j = 0;
+      do 
+      {
+         KeStallExecutionProcessor(10);
+
+         /* Check Delivery Status */
+         DeliveryStatus = APICRead(APIC_ICR0) & APIC_ICR0_DS;
+
+         j++;
+      } while ((DeliveryStatus) && (j < 1000));
+
+      KeStallExecutionProcessor(200);
+
+      /*
+       * Due to the Pentium erratum 3AP.
+       */
+      if (maxlvt > 3) 
+      {
+        APICRead(APIC_SIVR);
+        APICWrite(APIC_ESR, 0);
+      }
+
+      AcceptStatus = APICRead(APIC_ESR) & APIC_ESR_MASK;
+
+      if (DeliveryStatus || AcceptStatus) 
+      {
+         break;
+      }
+   }
+
+   if (DeliveryStatus) 
+   {
+      DPRINT("STARTUP IPI for CPU %d was never delivered.\n", Cpu);
+   }
+
+   if (AcceptStatus) 
+   {
+      DPRINT("STARTUP IPI for CPU %d was never accepted.\n", Cpu);
+   }
+
+   if (!(DeliveryStatus || AcceptStatus)) 
+   {
+
+      /* Wait no more than 5 seconds for processor to boot */
+      DPRINT("Waiting for 5 seconds for CPU %d to boot\n", Cpu);
+
+      /* Wait no more than 5 seconds */
+      for (j = 0; j < 50000; j++) 
+      {
+         if (CPUMap[Cpu].Flags & CPU_ENABLED)
+	 {
+            break;
+	 }
+         KeStallExecutionProcessor(100);
+      }
+   }
+
+   if (CPUMap[Cpu].Flags & CPU_ENABLED) 
+   {
+      DbgPrint("CPU %d is now running\n", Cpu);
+   } 
+   else 
+   {
+      DbgPrint("Initialization of CPU %d failed\n", Cpu);
+   }
+
+#if 0
+   DPRINT("Debug bytes are:\n");
+
+   for (j = 0; j < 4; j++) 
+   {
+      DPRINT("0x%08X 0x%08X 0x%08X 0x%08X.\n",
+             Common->Debug[j*4+0],
+             Common->Debug[j*4+1],
+             Common->Debug[j*4+2],
+             Common->Debug[j*4+3]);
+   }
+
+#endif
+}
+
+#endif
 
 /* EOF */

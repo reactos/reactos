@@ -287,7 +287,7 @@ UINT STDCALL NtGdiGetSystemPaletteEntries(HDC  hDC,
 
 UINT STDCALL NtGdiGetSystemPaletteUse(HDC  hDC)
 {
-  UNIMPLEMENTED;
+  DPRINT1("NtGdiGetSystemPaletteUse is unimplemented\n");
   return 0;
 }
 

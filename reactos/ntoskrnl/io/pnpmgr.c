@@ -508,7 +508,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
   DPRINT("ParentNode %x PhysicalDeviceObject %x\n",
     ParentNode, PhysicalDeviceObject);
 
-  Node = (PDEVICE_NODE)ExAllocatePool(PagedPool, sizeof(DEVICE_NODE));
+  Node = (PDEVICE_NODE)ExAllocatePool(NonPagedPool, sizeof(DEVICE_NODE));
   if (!Node)
     {
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -764,16 +764,15 @@ IopCreateDeviceKeyPath(PWSTR Path,
     }
 
   wcsncpy (KeyBuffer, Path, MAX_PATH-1);
-  RtlInitUnicodeString (&KeyName, KeyBuffer);
 
   /* Skip \\Registry\\ */
-  Current = KeyName.Buffer;
-  Current = wcschr (Current, '\\') + 1;
-  Current = wcschr (Current, '\\') + 1;
+  Current = KeyBuffer;
+  Current = wcschr (Current, L'\\') + 1;
+  Current = wcschr (Current, L'\\') + 1;
 
   while (TRUE)
     {
-      Next = wcschr (Current, '\\');
+      Next = wcschr (Current, L'\\');
       if (Next == NULL)
 	{
 	  /* The end */
@@ -783,6 +782,7 @@ IopCreateDeviceKeyPath(PWSTR Path,
 	  *Next = 0;
 	}
 
+      RtlInitUnicodeString (&KeyName, KeyBuffer);
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
 				  OBJ_CASE_INSENSITIVE,
@@ -1740,10 +1740,13 @@ IopInvalidateDeviceRelations(
       &IoStatusBlock,
       0,
       0);
- 
-   BootDrivers = NT_SUCCESS(Status) ? FALSE : TRUE;
-
-   ZwClose(Handle);
+   if(NT_SUCCESS(Status))
+   {
+     BootDrivers = FALSE;
+     ZwClose(Handle);
+   }
+   else
+     BootDrivers = TRUE;
 
    /*
     * Initialize services for discovered children. Only boot drivers will

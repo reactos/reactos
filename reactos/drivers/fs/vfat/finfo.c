@@ -268,69 +268,65 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 			      PDEVICE_OBJECT DeviceObject,
 			      PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
-  NTSTATUS Status = STATUS_SUCCESS;
 #ifdef DBG
-  PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+   PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
 #endif
 
-  DPRINT ("FsdSetDispositionInformation()\n");
+   DPRINT ("FsdSetDispositionInformation()\n");
 
-  ASSERT(DeviceExt != NULL);
-  ASSERT(DeviceExt->FatInfo.BytesPerCluster != 0);
-  ASSERT(FCB != NULL);
+   ASSERT(DeviceExt != NULL);
+   ASSERT(DeviceExt->FatInfo.BytesPerCluster != 0);
+   ASSERT(FCB != NULL);
 
-  if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY) 
-    {
+   if (!DispositionInfo->DeleteFile)
+   {
+      /* undelete the file */
+      FCB->Flags &= ~FCB_DELETE_PENDING;
+      FileObject->DeletePending = FALSE;
+      return STATUS_SUCCESS;
+   }
+  
+   if (FCB->Flags & FCB_DELETE_PENDING)
+   {
+      /* stream already marked for deletion. just update the file object */
+      FileObject->DeletePending = TRUE;
+      return STATUS_SUCCESS;
+   }
+  
+   if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY) 
+   {
       return STATUS_CANNOT_DELETE;
-    }
+   }
 
-  if (vfatFCBIsRoot(FCB) || 
+   if (vfatFCBIsRoot(FCB) || 
      (FCB->LongNameU.Length == sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.') ||
      (FCB->LongNameU.Length == 2 * sizeof(WCHAR) && FCB->LongNameU.Buffer[0] == L'.' && FCB->LongNameU.Buffer[1] == L'.'))
-    {
+   {
       // we cannot delete a '.', '..' or the root directory
       return STATUS_ACCESS_DENIED;
-    }
+   }
 
-  if (DispositionInfo->DeleteFile)
-    {
-      if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
-        {
-          if (FCB->OpenHandleCount > 1)
-            {
-	      DPRINT1("%d %x\n", FCB->OpenHandleCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
-              Status = STATUS_ACCESS_DENIED;
-            }
-          else
-            {
-              FCB->Flags |= FCB_DELETE_PENDING;
-              FileObject->DeletePending = TRUE;
-            }
-        }
-      else
-        {
-          DPRINT("MmFlushImageSection returned FALSE\n");
-          Status = STATUS_CANNOT_DELETE;
-        }
-      if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
-        {
-          if (!VfatIsDirectoryEmpty(FCB))
-            {
-              Status = STATUS_DIRECTORY_NOT_EMPTY;
-              FCB->Flags &= ~FCB_DELETE_PENDING;
-              FileObject->DeletePending = FALSE;
-            }
-          else
-            {
-              Status = STATUS_SUCCESS;
-            }
-        }
-     }
-   else
-     {
-       FileObject->DeletePending = FALSE;
-     }
-  return Status;
+
+   if (!MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
+   {
+      /* can't delete a file if its mapped into a process */
+      
+      DPRINT("MmFlushImageSection returned FALSE\n");
+      return STATUS_CANNOT_DELETE;      
+   }
+
+   if (vfatFCBIsDirectory(FCB) && !VfatIsDirectoryEmpty(FCB))
+   {
+      /* can't delete a non-empty directory */
+      
+      return STATUS_DIRECTORY_NOT_EMPTY;
+   }
+
+   /* all good */
+   FCB->Flags |= FCB_DELETE_PENDING;
+   FileObject->DeletePending = TRUE;
+     
+   return STATUS_SUCCESS;
 }
 
 static NTSTATUS

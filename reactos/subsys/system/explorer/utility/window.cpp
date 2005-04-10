@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -277,7 +277,7 @@ LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPAR
 
 LRESULT Window::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-/*@@TODO: replaced by StartMenu::TrackStartmenu()
+/**@todo: replaced by StartMenu::TrackStartmenu()
 	HWND hwnd = _hwnd;
 
 	 // close startup menu and other popup menus
@@ -352,7 +352,7 @@ LRESULT CALLBACK SubclassedWindow::SubclassedWndProc(HWND hwnd, UINT nmsg, WPARA
 
 LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-/*@@TODO: replaced by StartMenu::TrackStartmenu()
+/**@todo: replaced by StartMenu::TrackStartmenu()
 	 // close startup menu and other popup menus
 	 // This functionality is for tray notification icons missing in MS Windows.
 	if (nmsg == WM_SETFOCUS)

@@ -26,13 +26,15 @@
 		<file>wingl.c</file>
 	</directory>
 	<directory name="objects">
-		<file>bitblt.c</file>
+		<file>bitmap.c</file>
+		<file>brush.c</file>
 		<file>dc.c</file>
 		<file>font.c</file>
 		<file>linedda.c</file>
 		<file>metafile.c</file>
 		<file>region.c</file>
 		<file>text.c</file>
+		<file>utils.c</file>
 	</directory>
 	<file>gdi32.rc</file>
 </module>

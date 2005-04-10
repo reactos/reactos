@@ -27,7 +27,8 @@ RSYM_TARGET = \
 	$(EXEPREFIX)$(RSYM_OUT_)rsym$(EXEPOSTFIX)
 
 RSYM_SOURCES = \
-	$(RSYM_BASE_)rsym.c
+	$(RSYM_BASE_)rsym.c \
+	$(RSYM_BASE_)rsym_common.c
 
 RSYM_OBJECTS = \
 	$(addprefix $(INTERMEDIATE_), $(RSYM_SOURCES:.c=.o))
@@ -47,6 +48,10 @@ $(RSYM_INT_)rsym.o: $(RSYM_BASE_)rsym.c | $(RSYM_INT)
 	$(ECHO_CC)
 	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
 
+$(RSYM_INT_)rsym_common.o: $(RSYM_BASE_)rsym_common.c | $(RSYM_INT)
+	$(ECHO_CC)
+	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
+
 .PHONY: rsym_clean
 rsym_clean:
 	-@$(rm) $(RSYM_TARGET) $(RSYM_OBJECTS) 2>$(NUL)
@@ -61,6 +66,7 @@ include tools/mkhive/mkhive.mak
 include tools/nci/nci.mak
 include tools/rbuild/rbuild.mak
 include tools/unicode/unicode.mak
+include tools/widl/widl.mak
 include tools/winebuild/winebuild.mak
 include tools/wmc/wmc.mak
 include tools/wpp/wpp.mak

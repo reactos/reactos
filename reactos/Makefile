@@ -79,6 +79,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_AR      =@echo [AR]       $@
   ECHO_WINEBLD =@echo [WINEBLD]  $@
   ECHO_WRC     =@echo [WRC]      $@
+  ECHO_WIDL    =@echo [WIDL]     $@
   ECHO_BIN2RES =@echo [BIN2RES]  $<
   ECHO_DLLTOOL =@echo [DLLTOOL]  $@
   ECHO_LD      =@echo [LD]       $@
@@ -105,6 +106,7 @@ else
   ECHO_AR      =
   ECHO_WINEBLD =
   ECHO_WRC     =
+  ECHO_WIDL    =
   ECHO_BIN2RES =
   ECHO_DLLTOOL =
   ECHO_LD      =

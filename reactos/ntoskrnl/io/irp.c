@@ -410,7 +410,16 @@ IofCompleteRequest(PIRP Irp,
 
       if (Irp->UserIosb)
       {
-         *Irp->UserIosb = Irp->IoStatus;
+         _SEH_TRY
+         {
+            *Irp->UserIosb = Irp->IoStatus;
+         }
+         _SEH_HANDLE
+         {
+           DPRINT1("Unable to set UserIosb (at 0x%x) to 0x%x, Error: 0x%x\n",
+                   Irp->UserIosb, Irp->IoStatus, _SEH_GetExceptionCode());
+         }
+         _SEH_END;
       }
 
       if (Irp->UserEvent)

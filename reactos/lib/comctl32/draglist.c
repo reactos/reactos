@@ -42,10 +42,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
-/* for compiler compatibility we only accept literal ASCII strings */
-#undef TEXT
-#define TEXT(string) string
-
 #define DRAGLIST_SUBCLASSID     0
 #define DRAGLIST_SCROLLPERIOD 200
 #define DRAGLIST_TIMERID      666
@@ -95,7 +91,7 @@ static LRESULT DragList_Notify(HWND hwndLB, UINT uNotification)
 }
 
 /* cleans up after dragging */
-static inline void DragList_EndDrag(HWND hwnd, DRAGLISTDATA * data)
+static void DragList_EndDrag(HWND hwnd, DRAGLISTDATA * data)
 {
     KillTimer(hwnd, DRAGLIST_TIMERID);
     ReleaseCapture();
@@ -207,12 +203,12 @@ DragList_SubclassWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
  */
 BOOL WINAPI MakeDragList (HWND hwndLB)
 {
-    DRAGLISTDATA * data = Alloc(sizeof(DRAGLISTDATA));
+    DRAGLISTDATA *data = Alloc(sizeof(DRAGLISTDATA));
 
     TRACE("(%p)\n", hwndLB);
 
     if (!uDragListMessage)
-        uDragListMessage = RegisterWindowMessageA(DRAGLISTMSGSTRING);
+        uDragListMessage = RegisterWindowMessageW(DRAGLISTMSGSTRINGW);
 
     return SetWindowSubclass(hwndLB, DragList_SubclassWindowProc, DRAGLIST_SUBCLASSID, (DWORD_PTR)data);
 }
@@ -301,14 +297,14 @@ INT WINAPI LBItemFromPt (HWND hwndLB, POINT pt, BOOL bAutoScroll)
 
     ScreenToClient (hwndLB, &pt);
     GetClientRect (hwndLB, &rcClient);
-    nIndex = (INT)SendMessageA (hwndLB, LB_GETTOPINDEX, 0, 0);
+    nIndex = (INT)SendMessageW (hwndLB, LB_GETTOPINDEX, 0, 0);
 
     if (PtInRect (&rcClient, pt))
     {
         /* point is inside -- get the item index */
         while (TRUE)
         {
-            if (SendMessageA (hwndLB, LB_GETITEMRECT, nIndex, (LPARAM)&rcClient) == LB_ERR)
+            if (SendMessageW (hwndLB, LB_GETITEMRECT, nIndex, (LPARAM)&rcClient) == LB_ERR)
                 return -1;
 
             if (PtInRect (&rcClient, pt))
@@ -338,7 +334,7 @@ INT WINAPI LBItemFromPt (HWND hwndLB, POINT pt, BOOL bAutoScroll)
 
         dwLastScrollTime = dwScrollTime;
 
-        SendMessageA (hwndLB, LB_SETTOPINDEX, (WPARAM)nIndex, 0);
+        SendMessageW (hwndLB, LB_SETTOPINDEX, (WPARAM)nIndex, 0);
     }
 
     return -1;

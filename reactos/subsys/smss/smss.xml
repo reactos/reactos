@@ -21,6 +21,7 @@
 	<file>smapi.c</file>
 	<file>smapicomp.c</file>
 	<file>smapiexec.c</file>
+	<file>smapiquery.c</file>
 	<file>smss.c</file>
 	<file>smss.rc</file>
 </module>

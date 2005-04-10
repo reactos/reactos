@@ -176,7 +176,7 @@ IopCreateFile(PVOID			ObjectBody,
 	 FileObject,
 	 DeviceObject);
   FileObject->Vpb = DeviceObject->Vpb;
-  FileObject->Type = InternalFileType;
+  FileObject->Type = IO_TYPE_FILE;
 
   return(STATUS_SUCCESS);
 }
@@ -240,7 +240,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
   CreatedFileObject->DeviceObject = DeviceObject->Vpb->DeviceObject;
   CreatedFileObject->Vpb = DeviceObject->Vpb;
-  CreatedFileObject->Type = InternalFileType;
+  CreatedFileObject->Type = IO_TYPE_FILE;
   CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
 
   // shouldn't we initialize the lock event, and several other things here too?
@@ -448,9 +448,9 @@ IoCreateFile(OUT PHANDLE		FileHandle,
 	return Status;
      }
 
-   RtlMapGenericMask(&DesiredAccess,
-                     BODY_TO_HEADER(FileObject)->ObjectType->Mapping);
-
+   RtlMapGenericMask(&DesiredAccess,    
+                      BODY_TO_HEADER(FileObject)->ObjectType->Mapping);
+                      
    Status = ObInsertObject ((PVOID)FileObject,
 			    NULL,
 			    DesiredAccess,

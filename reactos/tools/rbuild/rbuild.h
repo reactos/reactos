@@ -137,7 +137,9 @@ enum ModuleType
 	BootLoader,
 	BootSector,
 	Iso,
-	Test
+	Test,
+	RpcServer,
+	RpcClient
 };
 
 enum HostType
@@ -173,6 +175,7 @@ public:
 	HostType host;
 	std::string installBase;
 	std::string installName;
+	bool useWRC;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,

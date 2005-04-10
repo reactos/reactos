@@ -21,17 +21,6 @@
  */
     
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <winnt.h>
-    
-#include "procpage.h"
-#include "proclist.h"
-#include "perfdata.h"
 
 
 INT_PTR CALLBACK    ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

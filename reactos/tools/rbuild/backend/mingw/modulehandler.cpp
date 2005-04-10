@@ -198,6 +198,12 @@ MingwModuleHandler::InstanciateHandler (
 		case Test:
 			handler = new MingwTestModuleHandler ( module );
 			break;
+		case RpcServer:
+			handler = new MingwRpcServerModuleHandler ( module );
+			break;
+		case RpcClient:
+			handler = new MingwRpcClientModuleHandler ( module );
+			break;
 		default:
 			throw UnknownModuleTypeException (
 				module.node.location,
@@ -233,6 +239,17 @@ MingwModuleHandler::GetActualSourceFilename (
 		return PassThruCacheDirectory ( NormalizeFilename ( basename + ".stubs.c" ),
 		                                backend->intermediateDirectory );
 	}
+	else if ( extension == ".idl" || extension == ".IDL" )
+	{
+		string basename = GetBasename ( filename );
+		string newname;
+		if ( module.type == RpcServer )
+			newname = basename + "_s.c";
+		else
+			newname = basename + "_c.c";
+		return PassThruCacheDirectory ( NormalizeFilename ( newname ),
+		                                backend->intermediateDirectory );
+	}
 	else
 		return filename;
 }
@@ -255,16 +272,45 @@ MingwModuleHandler::IsGeneratedFile ( const File& file ) const
 	return ( extension == ".spec" || extension == ".SPEC" );
 }
 
+/*static*/ bool
+MingwModuleHandler::ReferenceObjects (
+	const Module& module )
+{
+	if ( module.type == ObjectLibrary )
+		return true;
+	if ( module.type == RpcServer )
+		return true;
+	if ( module.type == RpcClient )
+		return true;
+	return false;
+}
+
 string
 MingwModuleHandler::GetImportLibraryDependency (
 	const Module& importedModule )
 {
 	string dep;
-	if ( importedModule.type == ObjectLibrary )
+	if ( ReferenceObjects ( importedModule ) )
 		dep = GetTargetMacro ( importedModule );
 	else
 		dep = GetImportLibraryFilename ( importedModule, NULL );
 	return dep;
+}
+
+void
+MingwModuleHandler::GetTargets ( const Module& dependencyModule,
+	                             string_list& targets )
+{
+	if ( dependencyModule.invocations.size () > 0 )
+	{
+		for ( size_t i = 0; i < dependencyModule.invocations.size (); i++ )
+		{
+			Invoke& invoke = *dependencyModule.invocations[i];
+			invoke.GetTargets ( targets );
+		}
+	}
+	else
+		targets.push_back ( GetImportLibraryDependency ( dependencyModule ) );
 }
 
 void
@@ -273,8 +319,6 @@ MingwModuleHandler::GetModuleDependencies (
 {
 	size_t iend = module.dependencies.size ();
 
-	// TODO FIXME - do we *really* not want to call
-	// GetDefinitionDependencies() if dependencies.size() == 0 ???
 	if ( iend == 0 )
 		return;
 	
@@ -282,7 +326,8 @@ MingwModuleHandler::GetModuleDependencies (
 	{
 		const Dependency& dependency = *module.dependencies[i];
 		const Module& dependencyModule = *dependency.dependencyModule;
-		dependencyModule.GetTargets ( dependencies );
+		GetTargets ( dependencyModule,
+		             dependencies );
 	}
 	GetDefinitionDependencies ( dependencies );
 }
@@ -347,6 +392,13 @@ MingwModuleHandler::GetObjectFilename (
 		newExtension = ".coff";
 	else if ( extension == ".spec" || extension == ".SPEC" )
 		newExtension = ".stubs.o";
+	else if ( extension == ".idl" || extension == ".IDL" )
+	{
+		if ( module.type == RpcServer )
+			newExtension = "_s.o";
+		else
+			newExtension = "_c.o";
+	}
 	else
 		newExtension = ".o";
 	
@@ -737,6 +789,10 @@ MingwModuleHandler::GenerateGccCommand (
 	string deps = sourceFilename;
 	if ( module.pch && use_pch )
 		deps += " " + module.pch->header + ".gch";
+	
+	/* WIDL generated headers may be used */
+	deps += " " + GetLinkingDependenciesMacro ();
+
 	string objectFilename = GetObjectFilename (
 		sourceFilename, &clean_files );
 	fprintf ( fMakefile,
@@ -801,31 +857,47 @@ MingwModuleHandler::GenerateWindresCommand (
 		ReplaceExtension ( sourceFilename, ".rci" );
 	string resFilename = ros_temp +
 		ReplaceExtension ( sourceFilename, ".res" );
-	fprintf ( fMakefile,
-	          "%s: %s $(WRC_TARGET) | %s\n",
-	          objectFilename.c_str (),
-	          sourceFilename.c_str (),
-	          GetDirectory ( objectFilename ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
-	fprintf ( fMakefile,
-	         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
-	         windresflagsMacro.c_str (),
-	         sourceFilename.c_str (),
-	         rciFilename.c_str () );
-	fprintf ( fMakefile,
-	         "\t$(Q)$(WRC_TARGET) ${%s} %s %s\n",
-	         windresflagsMacro.c_str (),
-	         rciFilename.c_str (),
-	         resFilename.c_str () );
-	fprintf ( fMakefile,
-	         "\t-@${rm} %s 2>$(NUL)\n",
-	         rciFilename.c_str () );
-	fprintf ( fMakefile,
-	         "\t${windres} %s -o $@\n",
-	         resFilename.c_str () );
-	fprintf ( fMakefile,
-	         "\t-@${rm} %s 2>$(NUL)\n",
-	         resFilename.c_str () );
+	if ( module.useWRC )
+	{
+		fprintf ( fMakefile,
+		          "%s: %s $(WRC_TARGET) | %s\n",
+		          objectFilename.c_str (),
+		          sourceFilename.c_str (),
+		          GetDirectory ( objectFilename ).c_str () );
+		fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
+		fprintf ( fMakefile,
+		         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
+		         windresflagsMacro.c_str (),
+		         sourceFilename.c_str (),
+		         rciFilename.c_str () );
+		fprintf ( fMakefile,
+		         "\t$(Q)$(WRC_TARGET) ${%s} %s %s\n",
+		         windresflagsMacro.c_str (),
+		         rciFilename.c_str (),
+		         resFilename.c_str () );
+		fprintf ( fMakefile,
+		         "\t-@${rm} %s 2>$(NUL)\n",
+		         rciFilename.c_str () );
+		fprintf ( fMakefile,
+		         "\t${windres} %s -o $@\n",
+		         resFilename.c_str () );
+		fprintf ( fMakefile,
+		         "\t-@${rm} %s 2>$(NUL)\n",
+		         resFilename.c_str () );
+	}
+	else
+	{
+		fprintf ( fMakefile,
+		          "%s: %s $(WRC_TARGET) | %s\n",
+		          objectFilename.c_str (),
+		          sourceFilename.c_str (),
+		          GetDirectory ( objectFilename ).c_str () );
+		fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
+		fprintf ( fMakefile,
+		         "\t${windres} $(%s) %s -o $@\n",
+		         windresflagsMacro.c_str (),
+		         sourceFilename.c_str () );
+	}
 }
 
 void
@@ -868,13 +940,99 @@ MingwModuleHandler::GenerateWinebuildCommands (
 }
 
 void
+MingwModuleHandler::GenerateWidlCommandsServer (
+	const string& sourceFilename,
+	const string& widlflagsMacro )
+{
+	string basename = GetBasename ( sourceFilename );
+
+	/*string generatedHeaderFilename = PassThruCacheDirectory (
+		basename + ".h",
+		backend->intermediateDirectory );
+	CLEAN_FILE(generatedHeaderFilename);
+	*/
+	string generatedHeaderFilename = basename + "_s.h";
+	CLEAN_FILE(generatedHeaderFilename);
+
+  	string generatedServerFilename = PassThruCacheDirectory (
+		basename + "_s.c",
+		backend->intermediateDirectory );
+	CLEAN_FILE(generatedServerFilename);
+
+	fprintf ( fMakefile,
+	          "%s %s: %s $(WIDL_TARGET) | %s\n",
+	          generatedServerFilename.c_str (),
+	          generatedHeaderFilename.c_str (),
+	          sourceFilename.c_str (),
+	          GetDirectory ( generatedServerFilename ).c_str () );
+	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
+	fprintf ( fMakefile,
+	          "\t%s %s -h -H %s -s -S %s %s\n",
+	          "$(Q)$(WIDL_TARGET)",
+	          widlflagsMacro.c_str (),
+	          generatedHeaderFilename.c_str (),
+	          generatedServerFilename.c_str (),
+	          sourceFilename.c_str () );
+}
+
+void
+MingwModuleHandler::GenerateWidlCommandsClient (
+	const string& sourceFilename,
+	const string& widlflagsMacro )
+{
+	string basename = GetBasename ( sourceFilename );
+
+	/*string generatedHeaderFilename = PassThruCacheDirectory (
+		basename + ".h",
+		backend->intermediateDirectory );
+	CLEAN_FILE(generatedHeaderFilename);
+	*/
+	string generatedHeaderFilename = basename + "_c.h";
+	CLEAN_FILE(generatedHeaderFilename);
+
+  	string generatedClientFilename = PassThruCacheDirectory (
+		basename + "_c.c",
+		backend->intermediateDirectory );
+	CLEAN_FILE(generatedClientFilename);
+
+	fprintf ( fMakefile,
+	          "%s %s: %s $(WIDL_TARGET) | %s\n",
+	          generatedClientFilename.c_str (),
+	          generatedHeaderFilename.c_str (),
+	          sourceFilename.c_str (),
+	          GetDirectory ( generatedClientFilename ).c_str () );
+	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
+	fprintf ( fMakefile,
+	          "\t%s %s -h -H %s -c -C %s %s\n",
+	          "$(Q)$(WIDL_TARGET)",
+	          widlflagsMacro.c_str (),
+	          generatedHeaderFilename.c_str (),
+	          generatedClientFilename.c_str (),
+	          sourceFilename.c_str () );
+}
+
+void
+MingwModuleHandler::GenerateWidlCommands (
+	const string& sourceFilename,
+	const string& widlflagsMacro )
+{
+	if ( module.type == RpcServer )
+		GenerateWidlCommandsServer ( sourceFilename,
+		                             widlflagsMacro );
+	else
+		GenerateWidlCommandsClient ( sourceFilename,
+		                             widlflagsMacro );
+}
+
+void
 MingwModuleHandler::GenerateCommands (
 	const string& sourceFilename,
 	const string& cc,
 	const string& cppc,
 	const string& cflagsMacro,
 	const string& nasmflagsMacro,
-	const string& windresflagsMacro )
+	const string& windresflagsMacro,
+	const string& widlflagsMacro )
 {
 	string extension = GetExtension ( sourceFilename );
 	if ( extension == ".c" || extension == ".C" )
@@ -915,6 +1073,15 @@ MingwModuleHandler::GenerateCommands (
 	else if ( extension == ".spec" || extension == ".SPEC" )
 	{
 		GenerateWinebuildCommands ( sourceFilename );
+		GenerateGccCommand ( GetActualSourceFilename ( sourceFilename ),
+		                     cc,
+		                     cflagsMacro );
+		return;
+	}
+	else if ( extension == ".idl" || extension == ".IDL" )
+	{
+		GenerateWidlCommands ( sourceFilename,
+		                       widlflagsMacro );
 		GenerateGccCommand ( GetActualSourceFilename ( sourceFilename ),
 		                     cc,
 		                     cflagsMacro );
@@ -1070,7 +1237,8 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& cppc,
 	const string& cflagsMacro,
 	const string& nasmflagsMacro,
-	const string& windresflagsMacro )
+	const string& windresflagsMacro,
+	const string& widlflagsMacro )
 {
 	size_t i;
 	
@@ -1083,7 +1251,8 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		                   cppc,
 		                   cflagsMacro,
 		                   nasmflagsMacro,
-		                   windresflagsMacro );
+		                   windresflagsMacro,
+		                   widlflagsMacro );
 		fprintf ( fMakefile,
 		          "\n" );
 	}
@@ -1096,7 +1265,8 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		                            cppc,
 		                            cflagsMacro,
 		                            nasmflagsMacro,
-		                            windresflagsMacro );
+		                            windresflagsMacro,
+		                            widlflagsMacro );
 	}
 }
 
@@ -1106,7 +1276,8 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& cppc,
 	const string& cflagsMacro,
 	const string& nasmflagsMacro,
-	const string& windresflagsMacro )
+	const string& windresflagsMacro,
+	const string& widlflagsMacro )
 {
 	if ( module.pch )
 	{
@@ -1136,7 +1307,8 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	                            cppc,
 	                            cflagsMacro,
 	                            nasmflagsMacro,
-	                            windresflagsMacro );
+	                            windresflagsMacro,
+	                            widlflagsMacro );
 	fprintf ( fMakefile, "\n" );
 }
 
@@ -1198,7 +1370,7 @@ MingwModuleHandler::GetLinkerMacro () const
 string
 MingwModuleHandler::GetModuleTargets ( const Module& module )
 {
-	if ( module.type == ObjectLibrary )
+	if ( ReferenceObjects ( module ) )
 		return GetObjectsMacro ( module );
 	else
 		return GetTargetFilename ( module, NULL );
@@ -1234,6 +1406,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
 	nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
 	windresflagsMacro = ssprintf ("%s_RCFLAGS", module.name.c_str ());
+	widlflagsMacro = ssprintf ("%s_WIDLFLAGS", module.name.c_str ());
 	linkerflagsMacro = ssprintf ("%s_LFLAGS", module.name.c_str ());
 	libsMacro = ssprintf("%s_LIBS", module.name.c_str ());
 	linkDepsMacro = ssprintf ("%s_LINKDEPS", module.name.c_str ());
@@ -1286,6 +1459,11 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	fprintf (
 		fMakefile,
+		"%s += $(PROJECT_WIDLFLAGS)\n",
+		widlflagsMacro.c_str () );
+
+	fprintf (
+		fMakefile,
 		"%s_LFLAGS += $(PROJECT_LFLAGS) -g\n",
 		module.name.c_str () );
 
@@ -1318,6 +1496,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	// future references to the macros will be to get their values
 	cflagsMacro = ssprintf ("$(%s)", cflagsMacro.c_str ());
 	nasmflagsMacro = ssprintf ("$(%s)", nasmflagsMacro.c_str ());
+	widlflagsMacro = ssprintf ("$(%s)", widlflagsMacro.c_str ());
 }
 
 void
@@ -1338,7 +1517,7 @@ MingwModuleHandler::GenerateRules ()
 		module.name.c_str (),
 		GetTargetMacro ( module ).c_str () );
 
-	if ( module.type != ObjectLibrary )
+	if ( !ReferenceObjects ( module ) )
 	{
 		string ar_target ( GenerateArchiveTarget ( ar, objectsMacro ) );
 		if ( targetMacro != ar_target )
@@ -1351,7 +1530,8 @@ MingwModuleHandler::GenerateRules ()
 								cppc,
 								cflagsMacro,
 								nasmflagsMacro,
-								windresflagsMacro );
+								windresflagsMacro,
+							    widlflagsMacro );
 }
 
 void
@@ -1545,6 +1725,18 @@ MingwModuleHandler::GetSpecObjectDependencies (
 }
 
 void
+MingwModuleHandler::GetWidlObjectDependencies (
+	string_list& dependencies,
+	const string& filename ) const
+{
+	string basename = GetBasename ( filename );
+	string serverDependency = PassThruCacheDirectory (
+		NormalizeFilename ( basename + "_s.c" ),
+		backend->intermediateDirectory );
+	dependencies.push_back ( serverDependency );
+}
+
+void
 MingwModuleHandler::GetDefinitionDependencies (
 	string_list& dependencies ) const
 {
@@ -1557,6 +1749,10 @@ MingwModuleHandler::GetDefinitionDependencies (
 		if ( extension == ".spec" || extension == ".SPEC" )
 		{
 			GetSpecObjectDependencies ( dependencies, file.name );
+		}
+		if ( extension == ".idl" || extension == ".IDL" )
+		{
+			GetWidlObjectDependencies ( dependencies, file.name );
 		}
 	}
 }
@@ -1621,7 +1817,7 @@ void
 MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 {
 	string targetName ( module.GetTargetName () ); // i.e. "ntoskrnl.exe"
-	string targetMacro ( GetTargetMacro (module) ); // i.e. "$(NTOSKRNL_TARGET)"
+	string targetMacro ( GetTargetMacro ( module ) ); // i.e. "$(NTOSKRNL_TARGET)"
 	string workingDirectory = GetWorkingDirectory ();
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
@@ -1740,7 +1936,7 @@ MingwKernelModeDLLModuleHandler::Process ()
 void
 MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 {
-	string targetMacro ( GetTargetMacro (module) );
+	string targetMacro ( GetTargetMacro ( module ) );
 	string workingDirectory = GetWorkingDirectory ( );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
@@ -2420,4 +2616,31 @@ MingwTestModuleHandler::GenerateTestModuleTarget ()
 	{
 		GeneratePhonyTarget();
 	}
+}
+
+
+MingwRpcServerModuleHandler::MingwRpcServerModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwRpcServerModuleHandler::Process ()
+{
+	GenerateRules ();
+}
+
+MingwRpcClientModuleHandler::MingwRpcClientModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwRpcClientModuleHandler::Process ()
+{
+	GenerateRules ();
 }

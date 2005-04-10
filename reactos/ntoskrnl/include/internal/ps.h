@@ -156,6 +156,7 @@ typedef struct
 
 #include <pshpack1.h>
 
+/* This needs to be fixed ASAP! */
 typedef struct _ETHREAD
 {
   KTHREAD Tcb;
@@ -169,7 +170,10 @@ typedef struct _ETHREAD
   NTSTATUS ExitStatus;
   PVOID OfsChain;
   LIST_ENTRY PostBlockList;
-  LIST_ENTRY TerminationPortList;
+  union {
+    struct _TERMINATION_PORT *TerminationPort;
+    struct _ETHREAD* ReaperLink;  
+  };
   KSPIN_LOCK ActiveTimerListLock;
   LIST_ENTRY ActiveTimerListHead;
   CLIENT_ID Cid;
@@ -201,6 +205,7 @@ typedef struct _ETHREAD
   UCHAR ActiveImpersonationInfo;
   ULONG PerformanceCountHigh;
   LIST_ENTRY ThreadListEntry;
+  BOOLEAN SystemThread;
 } ETHREAD;
 
 #include <poppack.h>
@@ -345,7 +350,7 @@ struct _EPROCESS
   LIST_ENTRY            SessionProcessLinks;
   struct _EPORT         *DebugPort;
   struct _EPORT         *ExceptionPort;
-  HANDLE_TABLE          HandleTable;
+  PHANDLE_TABLE         ObjectTable;
   PVOID                 Token;
   FAST_MUTEX            WorkingSetLock;
   ULONG                 WorkingSetPage;
@@ -416,13 +421,13 @@ struct _EPROCESS
   PRTL_BITMAP           VadPhysicalPagesBitMap;
   ULONG                 VadPhysicalPages;
   KSPIN_LOCK            AweLock;
+  ULONG                 Cookie;
 
   /*
    * FIXME - ReactOS specified - remove the following fields ASAP!!!
    */
   MADDRESS_SPACE        AddressSpace;
   LIST_ENTRY            ProcessListEntry;
-  FAST_MUTEX            TebLock;
   PVOID                 TebBlock;
   PVOID                 TebLastAllocated;
 };
@@ -436,7 +441,6 @@ VOID PiShutdownProcessManager(VOID);
 VOID PsInitThreadManagment(VOID);
 VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
-VOID PsDispatchThreadNoLock(ULONG NewThreadStatus);
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
@@ -453,22 +457,27 @@ VOID PsQueueThreadReap(PETHREAD Thread);
 NTSTATUS 
 PsInitializeThread(PEPROCESS Process,
 		   PETHREAD* ThreadPtr,
-		   PHANDLE ThreadHandle,
-		   ACCESS_MASK DesiredAccess,
 		   POBJECT_ATTRIBUTES ObjectAttributes,
+		   KPROCESSOR_MODE AccessMode,
 		   BOOLEAN First);
 
-PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
+PACCESS_TOKEN STDCALL PsReferenceEffectiveToken(PETHREAD Thread,
 					PTOKEN_TYPE TokenType,
 					PUCHAR b,
 					PSECURITY_IMPERSONATION_LEVEL Level);
 
-NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
+NTSTATUS STDCALL PsOpenTokenOfProcess(HANDLE ProcessHandle,
 			      PACCESS_TOKEN* Token);
-
+VOID
+STDCALL
+PspTerminateProcessThreads(PEPROCESS Process,
+                           NTSTATUS ExitStatus);
 NTSTATUS PsSuspendThread(PETHREAD Thread, PULONG PreviousCount);
 NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
-
+NTSTATUS
+STDCALL
+PspAssignPrimaryToken(PEPROCESS Process,
+                      HANDLE TokenHandle);
 VOID STDCALL PsExitSpecialApc(PKAPC Apc, 
 		      PKNORMAL_ROUTINE *NormalRoutine,
 		      PVOID *NormalContext,
@@ -497,38 +506,31 @@ VOID STDCALL PsExitSpecialApc(PKAPC Apc,
 #define PROCESS_PRIO_RT				18
 
 
-VOID 
-KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
-NTSTATUS KeReleaseThread(PKTHREAD Thread);
-
-VOID
-STDCALL
-KeStackAttachProcess (
-    IN PKPROCESS Process,
-    OUT PKAPC_STATE ApcState
-    );
-
-VOID
-STDCALL
-KeUnstackDetachProcess (
-    IN PKAPC_STATE ApcState
-    );
-
 VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
-VOID PsReapThreads(VOID);
-VOID PsInitializeThreadReaper(VOID);
-VOID PsQueueThreadReap(PETHREAD Thread);
+
+VOID 
+STDCALL 
+PspReapRoutine(PVOID Context);
+
+VOID
+STDCALL
+PspExitThread(NTSTATUS ExitStatus);
+
+extern LIST_ENTRY PspReaperListHead;
+extern WORK_QUEUE_ITEM PspReaperWorkItem;
+extern BOOLEAN PspReaping;
+
+VOID
+STDCALL
+PspTerminateThreadByPointer(PETHREAD Thread,
+                            NTSTATUS ExitStatus);
+
 VOID PsUnfreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
 VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 ULONG PsEnumThreadsByProcess(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
-VOID
-PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
-	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason);
-VOID
-PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment);
 VOID
 PsApplicationProcessorInit(VOID);
 VOID
@@ -548,10 +550,19 @@ VOID STDCALL
 PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2);
-VOID STDCALL
-PsDispatchThread(ULONG NewThreadStatus);
 VOID
 PsInitialiseSuspendImplementation(VOID);
+NTSTATUS 
+STDCALL
+PspExitProcess(PEPROCESS Process);
+
+VOID 
+STDCALL 
+PspDeleteProcess(PVOID ObjectBody);
+
+VOID 
+STDCALL
+PspDeleteThread(PVOID ObjectBody);
 
 extern LONG PiNrThreadsAwaitingReaping;
 
@@ -640,27 +651,13 @@ typedef struct _EJOB
 
 VOID INIT_FUNCTION PsInitJobManagment(VOID);
 
-/* CID */
-
-typedef struct _CID_OBJECT
-{
-  LONG ref;
-  HANDLE Handle;
-  LIST_ENTRY Entry;
-  FAST_MUTEX Lock;
-  union
-  {
-    struct _EPROCESS *Process;
-    struct _ETHREAD *Thread;
-    PVOID Object;
-  } Obj;
-} CID_OBJECT, *PCID_OBJECT;
+/* CLIENT ID */
 
 NTSTATUS PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle);
 NTSTATUS PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
-PCID_OBJECT PsLockCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
-VOID PsUnlockCidObject(PCID_OBJECT CidObject);
-NTSTATUS PsLockProcess(PEPROCESS Process, BOOL Timeout);
+PHANDLE_TABLE_ENTRY PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object);
+VOID PsUnlockCidHandle(PHANDLE_TABLE_ENTRY CidEntry);
+NTSTATUS PsLockProcess(PEPROCESS Process, BOOLEAN Timeout);
 VOID PsUnlockProcess(PEPROCESS Process);
 
 #define ETHREAD_TO_KTHREAD(pEThread) (&(pEThread)->Tcb)

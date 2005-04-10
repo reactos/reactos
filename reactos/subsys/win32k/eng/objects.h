@@ -130,6 +130,8 @@ typedef BOOL STDCALL (*PFN_GradientFill)(SURFOBJ*, CLIPOBJ*, XLATEOBJ*, TRIVERTE
 
 typedef struct _WNDGDI {
   WNDOBJ            WndObj;
+  LIST_ENTRY        ListEntry;
+  HWND              Hwnd;
   CLIPOBJ           *ClientClipObj;
   WNDOBJCHANGEPROC  ChangeProc;
   FLONG             Flags;

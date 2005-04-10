@@ -1528,7 +1528,7 @@ static LRESULT FILEDLG95_OnWMGetIShellBrowser(HWND hwnd)
 
   TRACE("\n");
 
-  SetWindowLongA(hwnd,DWL_MSGRESULT,(LONG)fodInfos->Shell.FOIShellBrowser);
+  SetWindowLongPtrW(hwnd,DWLP_MSGRESULT,(LONG_PTR)fodInfos->Shell.FOIShellBrowser);
 
   return TRUE;
 }
@@ -1551,7 +1551,7 @@ static BOOL FILEDLG95_SendFileOK( HWND hwnd, FileOpenDlgInfos *fodInfos )
         TRACE("---\n");
         /* First send CDN_FILEOK as MSDN doc says */
         SendCustomDlgNotificationMessage(hwnd,CDN_FILEOK);
-        if (GetWindowLongW(fodInfos->DlgInfos.hwndCustomDlg, DWL_MSGRESULT))
+        if (GetWindowLongPtrW(fodInfos->DlgInfos.hwndCustomDlg, DWLP_MSGRESULT))
         {
             TRACE("canceled\n");
             return FALSE;
@@ -1560,7 +1560,7 @@ static BOOL FILEDLG95_SendFileOK( HWND hwnd, FileOpenDlgInfos *fodInfos )
         /* fodInfos->ofnInfos points to an ASCII or UNICODE structure as appropriate */
         SendMessageW(fodInfos->DlgInfos.hwndCustomDlg,
                      fodInfos->HookMsg.fileokstring, 0, (LPARAM)fodInfos->ofnInfos);
-        if (GetWindowLongW(fodInfos->DlgInfos.hwndCustomDlg, DWL_MSGRESULT))
+        if (GetWindowLongPtrW(fodInfos->DlgInfos.hwndCustomDlg, DWLP_MSGRESULT))
         {
             TRACE("canceled\n");
             return FALSE;

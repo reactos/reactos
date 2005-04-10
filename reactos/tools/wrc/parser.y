@@ -352,7 +352,6 @@ static int rsrcid_to_token(int lookahead);
 %type <dginit>  dlginit
 %type <styles>  optional_style_pair
 %type <num>	any_num
-%type <style>   optional_style
 %type <style>   style
 %type <str>	filename
 
@@ -458,7 +457,7 @@ resources
 	 * for tNL. However, byacc already generates an error upon reading
 	 * the token instead of keeping it as a lookahead. The reason
 	 * lies in the lack of a $default transition in the "expr : xpr . "
-	 * state (currently state 25). It is probably ommitted because tNL
+	 * state (currently state 25). It is probably omitted because tNL
 	 * is a non-terminal and the state contains 2 s/r conflicts. The
 	 * state enumerates all possible transitions instead of using a
 	 * $default transition.
@@ -735,11 +734,11 @@ dlginit	: tDLGINIT loadmemopts file_raw	{ $$ = new_dlginit($3, $2); }
 
 /* ------------------------------ UserType ------------------------------ */
 userres	: usertype loadmemopts file_raw		{
-		#ifdef WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
 			if(pedantic && byteorder != WRC_BO_LITTLE)
-		#else
+#else
 			if(pedantic && byteorder == WRC_BO_BIG)
-		#endif
+#endif
 				yywarning("Byteordering is not little-endian and type cannot be interpreted");
 			$$ = new_user($1, $3, $2);
 		}
@@ -889,7 +888,7 @@ ctrls	: /* Empty */				{ $$ = NULL; }
 	;
 
 lab_ctrl
-	: tSTRING opt_comma expr ',' expr ',' expr ',' expr ',' expr optional_style {
+	: tSTRING opt_comma expr ',' expr ',' expr ',' expr ',' expr optional_style_pair {
 		$$=new_control();
 		$$->title = new_name_id();
 		$$->title->type = name_str;
@@ -901,14 +900,20 @@ lab_ctrl
 		$$->height = $11;
 		if($12)
 		{
-			$$->style = $12;
+			$$->style = $12->style;
 			$$->gotstyle = TRUE;
+			if ($12->exstyle)
+			{
+			    $$->exstyle = $12->exstyle;
+			    $$->gotexstyle = TRUE;
+			}
+			free($12);
 		}
 		}
 	;
 
 ctrl_desc
-	: expr ',' expr ',' expr ',' expr ',' expr optional_style {
+	: expr ',' expr ',' expr ',' expr ',' expr optional_style_pair {
 		$$ = new_control();
 		$$->id = $1;
 		$$->x = $3;
@@ -917,8 +922,14 @@ ctrl_desc
 		$$->height = $9;
 		if($10)
 		{
-			$$->style = $10;
+			$$->style = $10->style;
 			$$->gotstyle = TRUE;
+			if ($10->exstyle)
+			{
+			    $$->exstyle = $10->exstyle;
+			    $$->gotexstyle = TRUE;
+			}
+			free($10);
 		}
 		}
 	;
@@ -982,11 +993,6 @@ opt_font
 	;
 
 /* ------------------------------ style flags ------------------------------ */
-optional_style		/* Abbused once to get optional ExStyle */
-	: /* Empty */	{ $$ = NULL; }
-	| ',' style	{ $$ = $2; }
-	;
-
 optional_style_pair
 	: /* Empty */		{ $$ = NULL; }
 	| ',' style		{ $$ = new_style_pair($2, 0); }

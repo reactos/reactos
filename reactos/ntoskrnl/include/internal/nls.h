@@ -29,6 +29,7 @@ extern ULONG NlsUnicodeTableOffset;
 extern PUSHORT NlsUnicodeUpcaseTable;
 extern PUSHORT NlsUnicodeLowercaseTable;
 
+VOID STDCALL RtlpInitNls(VOID);
 VOID RtlpImportAnsiCodePage(PUSHORT TableBase, ULONG Size);
 VOID RtlpImportOemCodePage(PUSHORT TableBase, ULONG Size);
 VOID RtlpImportUnicodeCasemap(PUSHORT TableBase, ULONG Size);

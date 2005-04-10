@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <conio.h>
 
+#include <ddk/ntddk.h>
+
 #include <pshpack1.h>
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE

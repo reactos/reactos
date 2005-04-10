@@ -165,6 +165,28 @@ VOID FreeAdapter(
 }
 
 
+NTSTATUS TcpipLanGetDwordOid
+( PIP_INTERFACE Interface,
+  NDIS_OID Oid,
+  PDWORD Result ) {
+    /* Get maximum frame size */
+    if( Interface->Context ) {
+        return NDISCall((PLAN_ADAPTER)Interface->Context,
+                        NdisRequestQueryInformation,
+                        Oid,
+                        Result,
+                        sizeof(DWORD));
+    } else switch( Oid ) { /* Loopback Case */
+    case OID_GEN_HARDWARE_STATUS:
+        *Result = NdisHardwareStatusReady;
+        return STATUS_SUCCESS;
+
+    default:
+        return STATUS_INVALID_PARAMETER;
+    }
+}
+
+
 VOID STDCALL ProtocolOpenAdapterComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status,
@@ -916,10 +938,9 @@ VOID BindAdapter(
     TI_DbgPrint(MID_TRACE,("BCAST(IF) %s\n", A2S(&IF->Broadcast)));
 
     if(NT_SUCCESS(Status)) {
+        RtlZeroMemory( &IF->Name, sizeof(IF->Name) );
 	Status = ReadStringFromRegistry( RegHandle, L"DeviceDesc",
 					 &IF->Name );
-
-	RtlZeroMemory( &IF->Name, sizeof( IF->Name ) );
 
 	/* I think that not getting a devicedesc is not a fatal error */
 	if( !NT_SUCCESS(Status) ) {
@@ -928,6 +949,8 @@ VOID BindAdapter(
 	}
 	Status = STATUS_SUCCESS;
     }
+
+    TI_DbgPrint(MID_TRACE,("Adapter Name: %wZ\n", &IF->Name));
 
     if(!NT_SUCCESS(Status))
     {

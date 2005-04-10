@@ -733,7 +733,7 @@ void getmousesvalue(LPDIRECTINPUTDEVICE8A iface)
 
     
 	
-
+ 
 	if (poll_mouse==1) filp=0;
 	if (filp==2) filp=0;
 	if (filp==0) {
@@ -849,6 +849,7 @@ getmousesvalue(iface);
   *     GetDeviceState : gets buffered input data.
   */
 
+
 static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 						  DWORD dodsize,
 						  LPDIDEVICEOBJECTDATA dod,
@@ -861,62 +862,160 @@ static HRESULT WINAPI SysMouseAImpl_GetDeviceData(LPDIRECTINPUTDEVICE8A iface,
 #ifdef __REACTOS__
 static int last_event=0;
 const int size = sizeof(DIDEVICEOBJECTDATA) * 1;
-static count=0;
+int count=0;
+DWORD count_ent=0;
 static DWORD time=0;
+static POINT save_point;
+static int save_b[5];
+static int b[5];
+static POINT point;
+int calc;
+int count_button;
+int add = 0;
 #endif
 
     
     TRACE("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx)\n",This,dodsize,*entries,flags);
     
 #ifdef __REACTOS__
-getmousesvalue(iface);
+
+if (flags != DIGDD_PEEK) 
+{
+b[0] = ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);	
+b[1] = ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);	
+b[2] = ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);	
+b[3] = ((GetKeyState(VK_XBUTTON1) & 0x80) ? 0xFF : 0x00);	
+b[4] = ((GetKeyState(VK_XBUTTON2) & 0x80) ? 0xFF : 0x00);	
+GetCursorPos( &point );   	
+}
+
 #endif
+
+    
+  
+	
+	
+    
+
+  if (This->acquired == 0) {
+	WARN(" application tries to get data from an unacquired device !\n");
+	return DIERR_NOTACQUIRED;
 
 	// windows does not get any data if 
 	// we do not call manual to mouse Acquire
 	// this is only need if some apps calling on getdevice data direcly
 	// in windows GetdeviceData does always update first the data
 	// then return it.
-	SysMouseAImpl_Acquire(iface);
-
-
-    if (This->acquired == 0) {
-	WARN(" application tries to get data from an unacquired device !\n");
-	return DIERR_NOTACQUIRED;
-    }
+	}
+	
     
+
+   
+
 #ifdef __REACTOS__	
-  FIXME("This is broken in Tribes, need right implant of the buffer!!!!!!!!\n"); 
 
-  *entries = 5;
-  if (GetTickCount()-time <50) return DI_OK;
+
+  if (*entries == 0) return DIERR_INVALIDPARAM;
+
+  if (dodsize < sizeof(DIDEVICEOBJECTDATA_DX3)) {
+	    ERR("Wrong structure size !\n");	 
+	    return DIERR_INVALIDPARAM;
+	}
+	if (This->data_queue==NULL) {
+       WARN("No buffer have been set up !\n");	  
+       return DIERR_NOTINITIALIZED;
+	}   	      
+    
+/* this code are not need it but if we want 100% compatible
+  with ms we should keep it. but the mouse will be choppy 
+  in Unreal 2004 Demo
+
+  if (GetTickCount()-time <50) {
+	  *entries=0;
+	  return DI_OK;
+      }
   time = GetTickCount();
-   
-  dod[0].dwOfs =   DIMOFS_X;
-  dod[0].dwData =   This->m_state.lX;
-  dod[0].dwTimeStamp =  0;
-  dod[0].dwSequence = last_event++;
-   
-  dod[1].dwOfs =   DIMOFS_Y;
-  dod[1].dwData =   This->m_state.lY;
-  dod[1].dwTimeStamp =  0;
-  dod[1].dwSequence = last_event++;
-  
-  dod[2].dwOfs =   DIMOFS_BUTTON0;
-  dod[2].dwData =   This->m_state.rgbButtons[0];
-  dod[2].dwTimeStamp =  0;
-  dod[2].dwSequence = last_event++;
-  
-  dod[3].dwOfs =   DIMOFS_BUTTON1;
-  dod[3].dwData =   This->m_state.rgbButtons[1];
-  dod[3].dwTimeStamp =  0;
-  dod[3].dwSequence = last_event++;
-  
-  dod[4].dwOfs =   DIMOFS_BUTTON2;
-  dod[4].dwData =   This->m_state.rgbButtons[2];
-  dod[4].dwTimeStamp =  50;
-  dod[4].dwSequence = last_event++;
+*/  
+	if (GetTickCount()-time <50)
+	   {
+	    add=0;
+	   }
+	else 
+	{
+	 add=1;
+	 time = GetTickCount();
+	}
 
+
+  for (count=0;count<*entries;count++) {
+	  
+	 
+	  if (save_point.x != point.x) {
+             dod[count_ent].dwOfs =   DIMOFS_X;         
+
+		     dod[count_ent].dwData =  point.x - save_point.x;		         		 
+             dod[count_ent].dwTimeStamp =  GetTickCount();
+             dod[count_ent].dwSequence = last_event+=add;  
+		     count_ent++;
+             save_point.x = point.x;
+		     }
+
+	   else  if (save_point.y != point.y) {
+              dod[count_ent].dwOfs =   DIMOFS_Y;		
+		      dod[count_ent].dwData =  point.y - save_point.y;	
+
+              dod[count_ent].dwTimeStamp =  GetTickCount();
+              dod[count_ent].dwSequence =  last_event+=add;  
+		      count_ent++;
+		      save_point.y = point.y;				
+	          }	      
+
+	 else if (save_b[0] != b[0]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON0;
+			
+        dod[count_ent].dwData =   b[0];
+        dod[count_ent].dwTimeStamp =  GetTickCount();
+        dod[count_ent].dwSequence =  last_event+=add;  
+		count_ent++;
+		save_b[0] = b[0];
+	    }
+
+	 else if (save_b[1] != b[1]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON1;
+			
+        dod[count_ent].dwData =   b[1];
+        dod[count_ent].dwTimeStamp =  GetTickCount();
+        dod[count_ent].dwSequence =  last_event+=add;  
+		count_ent++;
+		save_b[1] = b[1];
+	    }
+
+ 	 else if (save_b[2] != b[2]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON2;
+			
+        dod[count_ent].dwData =   b[2];
+        dod[count_ent].dwTimeStamp =  GetTickCount();
+        dod[count_ent].dwSequence =  last_event+=add;  
+		count_ent++;
+		save_b[2] = b[2];
+	    }
+
+     else if (save_b[3] != b[3]) {		 
+		dod[count_ent].dwOfs =   DIMOFS_BUTTON3;
+			
+        dod[count_ent].dwData =   b[3];
+        dod[count_ent].dwTimeStamp =  GetTickCount();
+        dod[count_ent].dwSequence =  last_event+=add;  
+		count_ent++;
+		save_b[3] = b[3];
+	    }
+	 
+
+  }  // end for
+
+
+SetCursorPos(point.x, point.y);
+*entries = count_ent;
 #endif
 
 #ifndef __REACTOS__
@@ -1016,6 +1115,7 @@ static HRESULT WINAPI SysMouseAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
 	    case (DWORD) DIPROP_AXISMODE: {
 		LPCDIPROPDWORD    pd = (LPCDIPROPDWORD)ph;
 		This->absolute = !(pd->dwData);
+        
 		TRACE("Using %s coordinates mode now\n", This->absolute ? "absolute" : "relative");
 		break;
 	    }
@@ -1037,7 +1137,7 @@ static HRESULT WINAPI SysMouseAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 {
     SysMouseImpl *This = (SysMouseImpl *)iface;
     
-    TRACE("(this=%p,%s,%p): stub!\n",
+    TRACE("(this=%p,%s,%p)\n",
 	  iface, debugstr_guid(rguid), pdiph);
     
     if (TRACE_ON(dinput))

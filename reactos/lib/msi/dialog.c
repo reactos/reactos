@@ -41,6 +41,9 @@ const WCHAR szMsiDialogClass[] = {
     'M','s','i','D','i','a','l','o','g','C','l','o','s','e','C','l','a','s','s',0
 };
 const static WCHAR szStatic[] = { 'S','t','a','t','i','c',0 };
+const static WCHAR szButton[] = { 'B','U','T','T','O','N', 0 };
+
+const static WCHAR szButtonData[] = { 'M','S','I','D','A','T','A',0 };
 
 struct msi_control_tag;
 typedef struct msi_control_tag msi_control;
@@ -83,10 +86,19 @@ struct control_handler
     msi_dialog_control_func func;
 };
 
+typedef struct
+{
+    msi_dialog* dialog;
+    msi_control *parent;
+    DWORD       attributes;
+} radio_button_group_descr;
+
 static UINT msi_dialog_checkbox_handler( msi_dialog *, msi_control *, WPARAM );
 static void msi_dialog_checkbox_sync_state( msi_dialog *, msi_control * );
 static UINT msi_dialog_button_handler( msi_dialog *, msi_control *, WPARAM );
 static UINT msi_dialog_edit_handler( msi_dialog *, msi_control *, WPARAM );
+static UINT msi_dialog_radiogroup_handler( msi_dialog *, msi_control *, WPARAM param );
+static LRESULT WINAPI MSIRadioGroup_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
 INT msi_dialog_scale_unit( msi_dialog *dialog, INT val )
@@ -275,7 +287,6 @@ static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
 
 static UINT msi_dialog_button_control( msi_dialog *dialog, MSIRECORD *rec )
 {
-    const static WCHAR szButton[] = { 'B','U','T','T','O','N', 0 };
     msi_control *control;
 
     TRACE("%p %p\n", dialog, rec);
@@ -288,7 +299,6 @@ static UINT msi_dialog_button_control( msi_dialog *dialog, MSIRECORD *rec )
 
 static UINT msi_dialog_checkbox_control( msi_dialog *dialog, MSIRECORD *rec )
 {
-    const static WCHAR szButton[] = { 'B','U','T','T','O','N', 0 };
     msi_control *control;
     LPCWSTR prop;
 
@@ -319,7 +329,7 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
 
     TRACE("%p %p\n", dialog, rec);
 
-    msi_dialog_add_control( dialog, rec, szEdit,
+    msi_dialog_add_control( dialog, rec, szEdit, WS_BORDER |
                  ES_MULTILINE | WS_VSCROLL | ES_READONLY | ES_AUTOVSCROLL );
 
     return ERROR_SUCCESS;
@@ -350,7 +360,7 @@ static UINT msi_dialog_edit_control( msi_dialog *dialog, MSIRECORD *rec )
     LPCWSTR prop;
     LPWSTR val;
 
-    control = msi_dialog_add_control( dialog, rec, szEdit, 0 );
+    control = msi_dialog_add_control( dialog, rec, szEdit, WS_BORDER );
     control->handler = msi_dialog_edit_handler;
     prop = MSI_RecordGetString( rec, 9 );
     if( prop )
@@ -361,8 +371,125 @@ static UINT msi_dialog_edit_control( msi_dialog *dialog, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
+static UINT msi_dialog_pathedit_control( msi_dialog *dialog, MSIRECORD *rec )
+{
+    FIXME("not implemented properly\n");
+    return msi_dialog_edit_control( dialog, rec );
+}
+
+static UINT msi_dialog_create_radiobutton( MSIRECORD *rec, LPVOID param )
+{
+    radio_button_group_descr *group = (radio_button_group_descr *)param;
+    msi_dialog *dialog = group->dialog;
+    msi_control *control;
+    LPCWSTR prop;
+    DWORD x, y, width, height, style;
+    DWORD attributes = group->attributes;
+    LPCWSTR text, name;
+    LPWSTR font = NULL, title = NULL;
+
+    style = WS_CHILD | BS_AUTORADIOBUTTON | BS_MULTILINE;
+    name = MSI_RecordGetString( rec, 3 );
+    control = HeapAlloc( GetProcessHeap(), 0,
+                         sizeof *control + strlenW(name)*sizeof(WCHAR) );
+    strcpyW( control->name, name );
+    control->next = dialog->control_list;
+    dialog->control_list = control;
+
+    x = MSI_RecordGetInteger( rec, 4 );
+    y = MSI_RecordGetInteger( rec, 5 );
+    width = MSI_RecordGetInteger( rec, 6 );
+    height = MSI_RecordGetInteger( rec, 7 );
+    text = MSI_RecordGetString( rec, 8 );
+
+    x = msi_dialog_scale_unit( dialog, x );
+    y = msi_dialog_scale_unit( dialog, y );
+    width = msi_dialog_scale_unit( dialog, width );
+    height = msi_dialog_scale_unit( dialog, height );
+
+    if( attributes & 1 )
+        style |= WS_VISIBLE;
+    if( ~attributes & 2 )
+        style |= WS_DISABLED;
+
+    if( text )
+    {
+        font = msi_dialog_get_style( &text );
+        deformat_string( dialog->package, text, &title );
+    }
+
+    control->hwnd = CreateWindowW( szButton, title, style, x, y, width, height,
+        group->parent->hwnd, NULL, NULL, NULL );
+
+    TRACE("Dialog %s control %s hwnd %p\n", debugstr_w(dialog->name), debugstr_w(text), control->hwnd);
+
+    msi_dialog_set_font( dialog, control->hwnd,
+            font ? font : dialog->default_font );
+
+    HeapFree( GetProcessHeap(), 0, font );
+    HeapFree( GetProcessHeap(), 0, title );
+
+    control->handler = msi_dialog_radiogroup_handler;
+
+    prop = MSI_RecordGetString( rec, 1 );
+    if( prop )
+        control->property = dupstrW( prop );
+
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_dialog_radiogroup_control( msi_dialog *dialog, MSIRECORD *rec )
+{
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ',
+        'F','R','O','M',' ','R','a','d','i','o','B','u','t','t','o','n',' ',
+        'W','H','E','R','E',' ',
+           '`','P','r','o','p','e','r','t','y','`',' ','=',' ','\'','%','s','\'',0};
+    UINT r;
+    LPCWSTR prop;
+    msi_control *control;
+    MSIQUERY *view = NULL;
+    radio_button_group_descr group;
+    MSIPACKAGE *package = dialog->package;
+
+    prop = MSI_RecordGetString( rec, 9 );
+
+    TRACE("%p %p %s\n", dialog, rec, debugstr_w( prop ));
+
+    /* Create parent group box to hold radio buttons */
+    control = msi_dialog_add_control( dialog, rec, szButton, BS_OWNERDRAW );
+
+    if (control->hwnd)
+    {
+        WNDPROC oldproc = (WNDPROC) SetWindowLongPtrW(control->hwnd, GWLP_WNDPROC,
+            (LONG_PTR)MSIRadioGroup_WndProc);
+        SetPropW(control->hwnd, szButtonData, oldproc);
+    }
+
+    if( prop )
+        control->property = dupstrW( prop );
+
+    /* query the Radio Button table for all control in this group */
+    r = MSI_OpenQuery( package->db, &view, query, prop );
+    if( r != ERROR_SUCCESS )
+    {
+        ERR("query failed for dialog %s radio group %s\n", 
+            debugstr_w(dialog->name), debugstr_w(prop));
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    group.dialog = dialog;
+    group.parent = control;
+    group.attributes = MSI_RecordGetInteger( rec, 8 );
+
+    r = MSI_IterateRecords( view, 0, msi_dialog_create_radiobutton, &group );
+    msiobj_release( &view->hdr );
+
+    return r;
+}
+
 static const WCHAR szText[] = { 'T','e','x','t',0 };
-static const WCHAR szButton[] = { 'P','u','s','h','B','u','t','t','o','n',0 };
+static const WCHAR szPushButton[] = { 'P','u','s','h','B','u','t','t','o','n',0 };
 static const WCHAR szLine[] = { 'L','i','n','e',0 };
 static const WCHAR szBitmap[] = { 'B','i','t','m','a','p',0 };
 static const WCHAR szCheckBox[] = { 'C','h','e','c','k','B','o','x',0 };
@@ -371,11 +498,14 @@ static const WCHAR szScrollableText[] = {
 static const WCHAR szComboBox[] = { 'C','o','m','b','o','B','o','x',0 };
 static const WCHAR szEdit[] = { 'E','d','i','t',0 };
 static const WCHAR szMaskedEdit[] = { 'M','a','s','k','e','d','E','d','i','t',0 };
+static const WCHAR szPathEdit[] = { 'P','a','t','h','E','d','i','t',0 };
+static const WCHAR szRadioButtonGroup[] = { 
+    'R','a','d','i','o','B','u','t','t','o','n','G','r','o','u','p',0 };
 
 struct control_handler msi_dialog_handler[] =
 {
     { szText, msi_dialog_text_control },
-    { szButton, msi_dialog_button_control },
+    { szPushButton, msi_dialog_button_control },
     { szLine, msi_dialog_line_control },
     { szBitmap, msi_dialog_bitmap_control },
     { szCheckBox, msi_dialog_checkbox_control },
@@ -383,6 +513,8 @@ struct control_handler msi_dialog_handler[] =
     { szComboBox, msi_dialog_combo_control },
     { szEdit, msi_dialog_edit_control },
     { szMaskedEdit, msi_dialog_edit_control },
+    { szPathEdit, msi_dialog_pathedit_control },
+    { szRadioButtonGroup, msi_dialog_radiogroup_control },
 };
 
 #define NUM_CONTROL_TYPES (sizeof msi_dialog_handler/sizeof msi_dialog_handler[0])
@@ -791,6 +923,20 @@ static UINT msi_dialog_edit_handler( msi_dialog *dialog,
     return ERROR_SUCCESS;
 }
 
+static UINT msi_dialog_radiogroup_handler( msi_dialog *dialog,
+                msi_control *control, WPARAM param )
+{
+    if( HIWORD(param) != BN_CLICKED )
+        return ERROR_SUCCESS;
+
+    TRACE("clicked radio button %s, set %s\n", debugstr_w(control->name),
+          debugstr_w(control->property));
+
+    MSI_SetPropertyW( dialog->package, control->property, control->name );
+
+    return msi_dialog_button_handler( dialog, control, param );
+}
+
 static LRESULT msi_dialog_oncommand( msi_dialog *dialog, WPARAM param, HWND hwnd )
 {
     msi_control *control;
@@ -816,6 +962,7 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
 {
     msi_dialog *dialog = (LPVOID) GetWindowLongPtrW( hwnd, GWLP_USERDATA );
 
+    TRACE(" 0x%04x\n", msg);
     switch (msg)
     {
     case WM_CREATE:
@@ -970,4 +1117,16 @@ void msi_dialog_register_class( void )
 void msi_dialog_unregister_class( void )
 {
     UnregisterClassW( szMsiDialogClass, NULL );
+}
+
+static LRESULT WINAPI MSIRadioGroup_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC oldproc = (WNDPROC) GetPropW(hWnd, szButtonData);
+
+    TRACE("hWnd %p msg %04x wParam 0x%08x lParam 0x%08lx\n", hWnd, msg, wParam, lParam);
+
+    if (msg == WM_COMMAND) /* Forward notifications to dialog */
+        SendMessageW(GetParent(hWnd), msg, wParam, lParam);
+
+    return CallWindowProcW(oldproc, hWnd, msg, wParam, lParam);
 }

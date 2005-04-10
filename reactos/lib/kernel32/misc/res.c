@@ -8,6 +8,7 @@
  */
 
 #include <k32.h>
+#include <ddk/ldrfuncs.h>
 
 #define NDEBUG
 #include "../include/debug.h"
@@ -312,39 +313,172 @@ EnumResourceLanguagesA (
 }
 
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumResourceNamesW (
-	HINSTANCE		hModule,
-	LPCWSTR			lpType,
-	ENUMRESNAMEPROCW	lpEnumFunc,
-	LONG			lParam
-	)
+
+/* retrieve the resource name to pass to the ntdll functions */
+static NTSTATUS get_res_nameA( LPCSTR name, UNICODE_STRING *str )
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    if (!HIWORD(name))
+    {
+        str->Buffer = (LPWSTR)name;
+        return STATUS_SUCCESS;
+    }
+    if (name[0] == '#')
+    {
+        ULONG value;
+        if (RtlCharToInteger( name + 1, 10, &value ) != STATUS_SUCCESS || HIWORD(value))
+            return STATUS_INVALID_PARAMETER;
+        str->Buffer = (LPWSTR)value;
+        return STATUS_SUCCESS;
+    }
+    RtlCreateUnicodeStringFromAsciiz( str, name );
+    RtlUpcaseUnicodeString( str, str, FALSE );
+    return STATUS_SUCCESS;
+}
+
+/* retrieve the resource name to pass to the ntdll functions */
+static NTSTATUS get_res_nameW( LPCWSTR name, UNICODE_STRING *str )
+{
+    if (!HIWORD(name))
+    {
+        str->Buffer = (LPWSTR)name;
+        return STATUS_SUCCESS;
+    }
+    if (name[0] == '#')
+    {
+        ULONG value;
+        RtlInitUnicodeString( str, name + 1 );
+        if (RtlUnicodeStringToInteger( str, 10, &value ) != STATUS_SUCCESS || HIWORD(value))
+            return STATUS_INVALID_PARAMETER;
+        str->Buffer = (LPWSTR)value;
+        return STATUS_SUCCESS;
+    }
+    RtlCreateUnicodeString( str, name );
+    RtlUpcaseUnicodeString( str, str, FALSE );
+    return STATUS_SUCCESS;
+}
+
+/**********************************************************************
+ * EnumResourceNamesA   (KERNEL32.@)
+ */
+BOOL STDCALL EnumResourceNamesA( HMODULE hmod, LPCSTR type, ENUMRESNAMEPROCA lpfun, LONG_PTR lparam )
+{
+    int i;
+    BOOL ret = FALSE;
+    DWORD len = 0, newlen;
+    LPSTR name = NULL;
+    NTSTATUS status;
+    UNICODE_STRING typeW;
+    LDR_RESOURCE_INFO info;
+    PIMAGE_RESOURCE_DIRECTORY basedir, resdir;
+    const IMAGE_RESOURCE_DIRECTORY_ENTRY *et;
+    const IMAGE_RESOURCE_DIR_STRING_U *str;
+
+    DPRINT( "%p %s %p %lx\n", hmod, type, lpfun, lparam );
+
+    if (!hmod) hmod = GetModuleHandleA( NULL );
+    typeW.Buffer = NULL;
+    if ((status = LdrFindResourceDirectory_U( hmod, NULL, 0, &basedir )) != STATUS_SUCCESS)
+        goto done;
+    if ((status = get_res_nameA( type, &typeW )) != STATUS_SUCCESS)
+        goto done;
+    info.Type = (ULONG)typeW.Buffer;
+    if ((status = LdrFindResourceDirectory_U( hmod, &info, 1, &resdir )) != STATUS_SUCCESS)
+        goto done;
+
+    et = (IMAGE_RESOURCE_DIRECTORY_ENTRY *)(resdir + 1);
+    for (i = 0; i < resdir->NumberOfNamedEntries+resdir->NumberOfIdEntries; i++)
+    {
+        if (et[i].NameIsString)
+        {
+            str = (IMAGE_RESOURCE_DIR_STRING_U *) ((LPBYTE) basedir + et[i].NameOffset);
+            newlen = WideCharToMultiByte(CP_ACP, 0, str->NameString, str->Length, NULL, 0, NULL, NULL);
+            if (newlen + 1 > len)
+            {
+                len = newlen + 1;
+                HeapFree( GetProcessHeap(), 0, name );
+                if (!(name = HeapAlloc(GetProcessHeap(), 0, len + 1 )))
+                {
+                    ret = FALSE;
+                    break;
+                }
+            }
+            WideCharToMultiByte( CP_ACP, 0, str->NameString, str->Length, name, len, NULL, NULL );
+            name[newlen] = 0;
+            ret = lpfun(hmod,type,name,lparam);
+        }
+        else
+        {
+            ret = lpfun( hmod, type, (LPSTR)(int)et[i].Id, lparam );
+        }
+        if (!ret) break;
+    }
+done:
+    HeapFree( GetProcessHeap(), 0, name );
+    if (HIWORD(typeW.Buffer)) HeapFree( GetProcessHeap(), 0, typeW.Buffer );
+    if (status != STATUS_SUCCESS) SetLastError( RtlNtStatusToDosError(status) );
+    return ret;
 }
 
 
-/*
- * @unimplemented
+/**********************************************************************
+ * EnumResourceNamesW   (KERNEL32.@)
  */
-BOOL
-STDCALL
-EnumResourceNamesA (
-	HINSTANCE		hModule,
-	LPCSTR			lpType,
-	ENUMRESNAMEPROCA	lpEnumFunc,
-	LONG			lParam
-	)
+BOOL STDCALL EnumResourceNamesW( HMODULE hmod, LPCWSTR type, ENUMRESNAMEPROCW lpfun, LONG_PTR lparam )
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+    int i, len = 0;
+    BOOL ret = FALSE;
+    LPWSTR name = NULL;
+    NTSTATUS status;
+    UNICODE_STRING typeW;
+    LDR_RESOURCE_INFO info;
+    PIMAGE_RESOURCE_DIRECTORY basedir, resdir;
+    const IMAGE_RESOURCE_DIRECTORY_ENTRY *et;
+    const IMAGE_RESOURCE_DIR_STRING_U *str;
 
+    DPRINT( "%p %s %p %lx\n", hmod, type, lpfun, lparam );
+
+    if (!hmod) hmod = GetModuleHandleW( NULL );
+    typeW.Buffer = NULL;
+    if ((status = LdrFindResourceDirectory_U( hmod, NULL, 0, &basedir )) != STATUS_SUCCESS)
+        goto done;
+    if ((status = get_res_nameW( type, &typeW )) != STATUS_SUCCESS)
+        goto done;
+    info.Type = (ULONG)typeW.Buffer;
+    if ((status = LdrFindResourceDirectory_U( hmod, &info, 1, &resdir )) != STATUS_SUCCESS)
+        goto done;
+
+    et = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(resdir + 1);
+    for (i = 0; i < resdir->NumberOfNamedEntries+resdir->NumberOfIdEntries; i++)
+    {
+        if (et[i].NameIsString)
+        {
+            str = (IMAGE_RESOURCE_DIR_STRING_U *) ((LPBYTE) basedir + et[i].NameOffset);
+            if (str->Length + 1 > len)
+            {
+                len = str->Length + 1;
+                HeapFree( GetProcessHeap(), 0, name );
+                if (!(name = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+                {
+                    ret = FALSE;
+                    break;
+                }
+            }
+            memcpy(name, str->NameString, str->Length * sizeof (WCHAR));
+            name[str->Length] = 0;
+            ret = lpfun(hmod,type,name,lparam);
+        }
+        else
+        {
+            ret = lpfun( hmod, type, (LPWSTR)(int)et[i].Id, lparam );
+        }
+        if (!ret) break;
+    }
+done:
+    HeapFree( GetProcessHeap(), 0, name );
+    if (HIWORD(typeW.Buffer)) HeapFree( GetProcessHeap(), 0, typeW.Buffer );
+    if (status != STATUS_SUCCESS) SetLastError( RtlNtStatusToDosError(status) );
+    return ret;
+}
 
 /*
  * @unimplemented

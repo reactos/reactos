@@ -463,11 +463,41 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                     IN ULONG NumberOfBytesToRead,
                     OUT PULONG NumberOfBytesRead OPTIONAL)
 {
-   NTSTATUS Status;
    PMDL Mdl;
    PVOID SystemAddress;
+   KPROCESSOR_MODE PreviousMode;
    PEPROCESS Process, CurrentProcess;
-
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(Buffer,
+                     NumberOfBytesToRead,
+                     1);
+       if(NumberOfBytesRead != NULL)
+       {
+         ProbeForWrite(NumberOfBytesRead,
+                       sizeof(ULONG),
+                       sizeof(ULONG));
+       }
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    DPRINT("NtReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
           "Buffer %x, NumberOfBytesToRead %d)\n",ProcessHandle,BaseAddress,
@@ -476,7 +506,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_VM_WRITE,
                                       NULL,
-                                      UserMode,
+                                      PreviousMode,
                                       (PVOID*)(&Process),
                                       NULL);
    if (!NT_SUCCESS(Status))
@@ -488,7 +518,15 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
 
    if (Process == CurrentProcess)
    {
-      memcpy(Buffer, BaseAddress, NumberOfBytesToRead);
+      _SEH_TRY
+      {
+        RtlCopyMemory(Buffer, BaseAddress, NumberOfBytesToRead);
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
    }
    else
    {
@@ -500,39 +538,62 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
          ObDereferenceObject(Process);
          return(STATUS_NO_MEMORY);
       }
-      MmProbeAndLockPages(Mdl,
-                          UserMode,
-                          IoWriteAccess);
-
-      KeAttachProcess(&Process->Pcb);
-
-      SystemAddress = MmGetSystemAddressForMdl(Mdl);
-
-        Status = STATUS_SUCCESS;
-        _SEH_TRY {
-            ProbeForRead(BaseAddress, NumberOfBytesToRead, 1);
-            Status = STATUS_PARTIAL_COPY;
-            memcpy(SystemAddress, BaseAddress, NumberOfBytesToRead);
-            Status = STATUS_SUCCESS;
-        } _SEH_HANDLE {
-            if(Status != STATUS_PARTIAL_COPY)
-                Status = _SEH_GetExceptionCode();
-        } _SEH_END;
-
-      KeDetachProcess();
-
-      if (Mdl->MappedSystemVa != NULL)
+      _SEH_TRY
       {
-         MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+        MmProbeAndLockPages(Mdl,
+                            PreviousMode,
+                            IoWriteAccess);
       }
-      MmUnlockPages(Mdl);
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+      
+      if(NT_SUCCESS(Status))
+      {
+        KeAttachProcess(&Process->Pcb);
+
+        SystemAddress = MmGetSystemAddressForMdl(Mdl);
+
+          Status = STATUS_SUCCESS;
+          _SEH_TRY {
+              ProbeForRead(BaseAddress, NumberOfBytesToRead, 1);
+              Status = STATUS_PARTIAL_COPY;
+              RtlCopyMemory(SystemAddress, BaseAddress, NumberOfBytesToRead);
+              Status = STATUS_SUCCESS;
+          } _SEH_HANDLE {
+              if(Status != STATUS_PARTIAL_COPY)
+                  Status = _SEH_GetExceptionCode();
+          } _SEH_END;
+
+        KeDetachProcess();
+
+        if (Mdl->MappedSystemVa != NULL)
+        {
+           MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+        }
+        MmUnlockPages(Mdl);
+      }
       ExFreePool(Mdl);
    }
 
    ObDereferenceObject(Process);
 
-   if (NumberOfBytesRead)
-      *NumberOfBytesRead = NumberOfBytesToRead;
+   if((NT_SUCCESS(Status) || Status == STATUS_PARTIAL_COPY) &&
+      NumberOfBytesRead != NULL)
+   {
+     _SEH_TRY
+     {
+       *NumberOfBytesRead = NumberOfBytesToRead;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+   
    return(Status);
 }
 

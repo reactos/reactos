@@ -14,112 +14,15 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* NOTES **********************************************************************
- *
- */
+ULONG
+STDCALL
+KeResumeThread(PKTHREAD Thread);
 
-/* GLOBALS *******************************************************************/
-
-static FAST_MUTEX SuspendMutex;
-
+ULONG
+STDCALL
+KeSuspendThread(PKTHREAD Thread);
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
-PiSuspendThreadRundownRoutine(PKAPC Apc)
-{
-}
-
-
-VOID STDCALL
-PiSuspendThreadKernelRoutine(PKAPC Apc,
-			     PKNORMAL_ROUTINE* NormalRoutine,
-			     PVOID* NormalContext,
-			     PVOID* SystemArgument1,
-			     PVOID* SystemArguemnt2)
-{
-}
-
-
-VOID STDCALL
-PiSuspendThreadNormalRoutine(PVOID NormalContext,
-			     PVOID SystemArgument1,
-			     PVOID SystemArgument2)
-{
-  PETHREAD CurrentThread = PsGetCurrentThread();
-  while (CurrentThread->Tcb.SuspendCount > 0)
-    {
-      KeWaitForSingleObject(&CurrentThread->Tcb.SuspendSemaphore,
-			    0,
-			    UserMode,
-			    TRUE,
-			    NULL);
-    }
-}
-
-
-NTSTATUS
-PsResumeThread (PETHREAD Thread,
-		PULONG SuspendCount)
-{
-  DPRINT("PsResumeThread (Thread %p  SuspendCount %p) called\n");
-
-  ExAcquireFastMutex (&SuspendMutex);
-
-  if (SuspendCount != NULL)
-    {
-      *SuspendCount = Thread->Tcb.SuspendCount;
-    }
-
-  if (Thread->Tcb.SuspendCount > 0)
-    {
-      Thread->Tcb.SuspendCount--;
-      if (Thread->Tcb.SuspendCount == 0)
-	{
-	  KeReleaseSemaphore (&Thread->Tcb.SuspendSemaphore,
-			      IO_NO_INCREMENT,
-			      1,
-			      FALSE);
-	}
-    }
-
-  ExReleaseFastMutex (&SuspendMutex);
-
-  return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
-PsSuspendThread(PETHREAD Thread, PULONG PreviousSuspendCount)
-{
-  ULONG OldValue;
-
-  ExAcquireFastMutex(&SuspendMutex);
-  OldValue = Thread->Tcb.SuspendCount;
-  Thread->Tcb.SuspendCount++;
-  if (!Thread->Tcb.SuspendApc.Inserted)
-    {
-      if (!KeInsertQueueApc(&Thread->Tcb.SuspendApc,
-			    NULL,
-			    NULL,
-			    IO_NO_INCREMENT))
-	{
-	  Thread->Tcb.SuspendCount--;
-	  ExReleaseFastMutex(&SuspendMutex);
-	  return(STATUS_THREAD_IS_TERMINATING);
-	}
-    }
-  ExReleaseFastMutex(&SuspendMutex);
-  if (PreviousSuspendCount != NULL)
-    {
-      *PreviousSuspendCount = OldValue;
-    }
-  return(STATUS_SUCCESS);
-}
-
-
-NTSTATUS STDCALL
-NtResumeThread(IN HANDLE ThreadHandle,
-	       IN PULONG SuspendCount  OPTIONAL)
 /*
  * FUNCTION: Decrements a thread's resume count
  * ARGUMENTS: 
@@ -127,48 +30,74 @@ NtResumeThread(IN HANDLE ThreadHandle,
  *        ResumeCount =  The resulting resume count.
  * RETURNS: Status
  */
+NTSTATUS
+STDCALL
+NtResumeThread(IN HANDLE ThreadHandle,
+               IN PULONG SuspendCount  OPTIONAL)
 {
-  PETHREAD Thread;
-  NTSTATUS Status;
-  ULONG Count;
+    PETHREAD Thread;
+    ULONG Prev;
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status = STATUS_SUCCESS;
   
-  PAGED_CODE();
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
 
-  DPRINT("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
-	 ThreadHandle, SuspendCount);
+    DPRINT("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
+           ThreadHandle, SuspendCount);
+    
+    /* Check buffer validity */
+    if(SuspendCount && PreviousMode == UserMode) {
+        
+        _SEH_TRY {
+            
+            ProbeForWrite(SuspendCount,
+                          sizeof(ULONG),
+                          sizeof(ULONG));
+         } _SEH_HANDLE {
+             
+            Status = _SEH_GetExceptionCode();
+            
+        } _SEH_END;
 
-  Status = ObReferenceObjectByHandle (ThreadHandle,
-				      THREAD_SUSPEND_RESUME,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&Thread,
-				      NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
+        if(!NT_SUCCESS(Status)) return Status;
     }
 
-  Status = PsResumeThread (Thread, &Count);
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject ((PVOID)Thread);
-      return Status;
+    /* Get the Thread Object */
+    Status = ObReferenceObjectByHandle(ThreadHandle,
+                                       THREAD_SUSPEND_RESUME,
+                                       PsThreadType,
+                                       PreviousMode,
+                                       (PVOID*)&Thread,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) {
+        
+        return Status;
+    }
+    
+    /* Call the Kernel Function */
+    Prev = KeResumeThread(&Thread->Tcb);
+    
+    /* Return it */        
+    if(SuspendCount) {
+            
+        _SEH_TRY {
+                
+            *SuspendCount = Prev;
+            
+        } _SEH_HANDLE {
+                
+            Status = _SEH_GetExceptionCode();
+            
+        } _SEH_END;
     }
 
-  if (SuspendCount != NULL)
-    {
-      *SuspendCount = Count;
-    }
-
-  ObDereferenceObject ((PVOID)Thread);
-
-  return STATUS_SUCCESS;
+    /* Dereference and Return */
+    ObDereferenceObject ((PVOID)Thread);
+    return Status;
 }
 
-
-NTSTATUS STDCALL
-NtSuspendThread(IN HANDLE ThreadHandle,
-		IN PULONG PreviousSuspendCount  OPTIONAL)
 /*
  * FUNCTION: Increments a thread's suspend count
  * ARGUMENTS: 
@@ -182,45 +111,69 @@ NtSuspendThread(IN HANDLE ThreadHandle,
  *        MAXIMUM_SUSPEND_COUNT.
  * RETURNS: Status
  */
+NTSTATUS 
+STDCALL
+NtSuspendThread(IN HANDLE ThreadHandle,
+                IN PULONG PreviousSuspendCount  OPTIONAL)
 {
-  PETHREAD Thread;
-  NTSTATUS Status;
-  ULONG Count;
+    PETHREAD Thread;
+    ULONG Prev;
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status = STATUS_SUCCESS;
   
-  PAGED_CODE();
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
+    
+    /* Check buffer validity */
+    if(PreviousSuspendCount && PreviousMode == UserMode) {
+        
+        _SEH_TRY {
+            
+            ProbeForWrite(PreviousSuspendCount,
+                          sizeof(ULONG),
+                          sizeof(ULONG));
+         } _SEH_HANDLE {
+             
+            Status = _SEH_GetExceptionCode();
+            
+        } _SEH_END;
 
-  Status = ObReferenceObjectByHandle(ThreadHandle,
-				     THREAD_SUSPEND_RESUME,
-				     PsThreadType,
-				     UserMode,
-				     (PVOID*)&Thread,
-				     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
+        if(!NT_SUCCESS(Status)) return Status;
     }
 
-  Status = PsSuspendThread(Thread, &Count);
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject ((PVOID)Thread);
-      return Status;
+    /* Get the Thread Object */
+    Status = ObReferenceObjectByHandle(ThreadHandle,
+                                       THREAD_SUSPEND_RESUME,
+                                       PsThreadType,
+                                       PreviousMode,
+                                       (PVOID*)&Thread,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) {
+        
+        return Status;
+    }
+    
+    /* Call the Kernel Function */
+    Prev = KeSuspendThread(&Thread->Tcb);
+    
+    /* Return it */        
+    if(PreviousSuspendCount) {
+            
+        _SEH_TRY {
+                
+            *PreviousSuspendCount = Prev;
+            
+        } _SEH_HANDLE {
+                
+            Status = _SEH_GetExceptionCode();
+            
+        } _SEH_END;
     }
 
-  if (PreviousSuspendCount != NULL)
-    {
-      *PreviousSuspendCount = Count;
-    }
-
-  ObDereferenceObject ((PVOID)Thread);
-
-  return STATUS_SUCCESS;
-}
-
-VOID INIT_FUNCTION
-PsInitialiseSuspendImplementation(VOID)
-{
-  ExInitializeFastMutex(&SuspendMutex);
+    /* Dereference and Return */
+    ObDereferenceObject((PVOID)Thread);
+    return Status;
 }
 
 /* EOF */

@@ -28,3 +28,9 @@
 
 - Search Programs -> performance monitor.msv -> Abort
 
+
+<Nonvo> Martin, I would have a whish concerning explorer: I often want to start a program and give it some parameters. So nice featue: "Start with param..."
+<tinus_> Nonvo: shell extension
+<m-fuchs> tinus: we should think about installing some default shell extensions
+<tinus_> m-fuchs: perhaps, but it'd be nice if they actually were shell extensions
+

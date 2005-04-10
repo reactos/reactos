@@ -98,7 +98,7 @@ struct NotifyInfo : public NotifyIconIndex, public NotifyIconConfig
 	friend bool operator<(const NotifyInfo& a, const NotifyInfo& b)
 		{return a._idx < b._idx;}
 
-	NotifyInfo& operator=(NOTIFYICONDATA* pnid);
+	bool	modify(NOTIFYICONDATA* pnid);
 
 	int		_idx;	// display index
 	HICON	_hIcon;
@@ -230,6 +230,7 @@ protected:
 	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyInfo&, HDC);
 	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconDlgInfo&, HDC, HICON, NOTIFYICONMODE);
 	void	SetIconMode(NOTIFYICONMODE mode);
+	void	RefreshProperties(const NotifyIconDlgInfo& entry);
 };
 
 

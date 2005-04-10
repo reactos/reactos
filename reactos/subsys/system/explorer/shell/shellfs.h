@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -58,7 +58,7 @@ struct ShellDirectory : public ShellEntry, public Directory
 	{
 		CONTEXT("ShellDirectory::ShellDirectory()");
 
-		lstrcpy(_data.cFileName, root_folder.get_name(shell_path, SHGDN_FORPARSING));
+		lstrcpy(_data.cFileName, root_folder.get_name(shell_path, SHGDN_FORADDRESSBAR));
 		_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 		_shell_attribs = SFGAO_FOLDER;
 

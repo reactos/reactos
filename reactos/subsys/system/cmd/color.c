@@ -16,44 +16,23 @@
  *
  *    14-Oct-1999 (Paolo Pantaleo <paolopan@freemail.it>)
  *        4nt's syntax implemented
+ *
+ *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_COLOR
 
 
 static VOID ColorHelp (VOID)
 {
-		ConOutPuts (_T(
-			"Sets the default foreground and background colors.\n"
-			"\n"
-			"COLOR [attr [/F]] \n\n"
-			"  attr        Specifies color attribute of console output\n"
-			"  /F          fill the console with color attribute\n"
-			"\n"			
-			"There are three ways to specify the colors:"
-			));
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_COLOR_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPuts (_T((LPTSTR)szMsg));
 
-		ConOutPuts (_T(
-			"\n"
-			"1) [bright] name on [bright] name  (only the first three letters are required)\n"
-			"2) decimal on decimal\n"
-			"3) two hex digits\n"
-			"\n"
-			"Colors are:"
-			));
-
-		ConOutPuts (_T(
-			"dec  hex  name       dec  hex  name\n"
-			"0    0    Black       8   8    Gray(Bright black)\n"
-			"1    1    Blue        9   9    Bright Blue\n"
-			"2    2    Green      10   A    Bright Green\n"
-			"3    3    Cyan       11   B    Bright Cyan\n"
-			"4    4    Red        12   C    Bright Red\n"
-			"5    5    Magenta    13   D    Bright Magenta\n"
-			"6    6    Yellow     14   E    Bright Yellow\n"
-			"7    7    White      15   F    Bright White"));
 }
 
 
@@ -62,10 +41,12 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
+    WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-	  ConErrPuts (_T("Same colors error! (Background and foreground can't be the same color)")); 
+	  LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+      ConErrPuts (_T((LPTSTR)szMsg));
     }
     else 
     {
@@ -93,6 +74,8 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
  */
 INT CommandColor (LPTSTR first, LPTSTR rest)
 {
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
 		ColorHelp ();
@@ -109,15 +92,18 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 
 	if (StringToColor (&wColor, &rest) == FALSE)
 	{
-		ConErrPuts(_T("error in color specification"));
+		LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPuts (_T((LPTSTR)szMsg));
 		return 1;
 	}
 
-	ConErrPrintf (_T("Color %x\n"), wColor);
+	LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg), wColor);
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-		ConErrPuts (_T("same colors error!"));
+		LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPrintf (_T((LPTSTR)szMsg), wColor);		
 		return 1;
 	}
 

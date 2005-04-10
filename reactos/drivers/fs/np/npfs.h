@@ -6,7 +6,9 @@
 typedef struct _NPFS_DEVICE_EXTENSION
 {
   LIST_ENTRY PipeListHead;
+  LIST_ENTRY ThreadListHead;
   KMUTEX PipeListLock;
+  ULONG EmptyWaiterCount;
   ULONG MinQuota;
   ULONG DefaultQuota;
   ULONG MaxQuota;
@@ -20,6 +22,7 @@ typedef struct _NPFS_PIPE
   LIST_ENTRY ServerFcbListHead;
   LIST_ENTRY ClientFcbListHead;
   LIST_ENTRY WaiterListHead;
+  LIST_ENTRY EmptyBufferListHead;
   ULONG PipeType;
   ULONG ReadMode;
   ULONG WriteMode;
@@ -39,25 +42,43 @@ typedef struct _NPFS_FCB
   struct ETHREAD *Thread;
   PNPFS_PIPE Pipe;
   KEVENT ConnectEvent;
-  KEVENT Event;
+  KEVENT ReadEvent;
+  KEVENT WriteEvent;
   ULONG PipeEnd;
   ULONG PipeState;
   ULONG ReadDataAvailable;
   ULONG WriteQuotaAvailable;
+
+  LIST_ENTRY ReadRequestListHead;
 
   PVOID Data;
   PVOID ReadPtr;
   PVOID WritePtr;
   ULONG MaxDataLength;
 
-  KSPIN_LOCK DataListLock;	/* Data queue lock */
+  FAST_MUTEX DataListLock;	/* Data queue lock */
 } NPFS_FCB, *PNPFS_FCB;
+
+typedef struct _NPFS_CONTEXT
+{
+  LIST_ENTRY ListEntry;
+  PKEVENT WaitEvent;
+} NPFS_CONTEXT, *PNPFS_CONTEXT;
+
+typedef struct _NPFS_THREAD_CONTEXT
+{
+  ULONG Count;
+  KEVENT Event;
+  PNPFS_DEVICE_EXTENSION DeviceExt;
+  LIST_ENTRY ListEntry;
+  PVOID WaitObjectArray[MAXIMUM_WAIT_OBJECTS];
+  KWAIT_BLOCK WaitBlockArray[MAXIMUM_WAIT_OBJECTS];
+  PIRP WaitIrpArray[MAXIMUM_WAIT_OBJECTS];
+} NPFS_THREAD_CONTEXT, *PNPFS_THREAD_CONTEXT;
 
 typedef struct _NPFS_WAITER_ENTRY
 {
   LIST_ENTRY Entry;
-  PIRP Irp;
-  PNPFS_PIPE Pipe;
   PNPFS_FCB Fcb;
 } NPFS_WAITER_ENTRY, *PNPFS_WAITER_ENTRY;
 
@@ -76,6 +97,7 @@ extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
 NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL NpfsCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL NpfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS STDCALL NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);

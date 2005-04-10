@@ -9,7 +9,7 @@
  */
 #include "precomp.h"
 
-#define NDEBUG
+//#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = DEBUG_ULTRA & ~(DEBUG_LOCK | DEBUG_PBUFFER);
@@ -576,6 +576,16 @@ TiDispatch(
     case IOCTL_TCP_SET_INFORMATION_EX:
       TI_DbgPrint(MIN_TRACE, ("TCP_SET_INFORMATION_EX\n")); 
       Status = DispTdiSetInformationEx(Irp, IrpSp);
+      break;
+
+    case IOCTL_SET_IP_ADDRESS:
+      TI_DbgPrint(MIN_TRACE, ("SET_IP_ADDRESS\n"));
+      Status = DispTdiSetIPAddress(Irp, IrpSp);
+      break;
+
+    case IOCTL_DELETE_IP_ADDRESS:
+      TI_DbgPrint(MIN_TRACE, ("DELETE_IP_ADDRESS\n"));
+      Status = DispTdiDeleteIPAddress(Irp, IrpSp);
       break;
 
     default:

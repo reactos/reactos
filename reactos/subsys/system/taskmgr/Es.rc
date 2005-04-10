@@ -611,6 +611,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "Administrador de Tareas"
     IDC_TASKMGR             "Administrador de Tareas"
+    IDS_IDLE_PROCESS        "System Idle Process"
 END
 
 STRINGTABLE DISCARDABLE

@@ -13,7 +13,7 @@ TARGET_INSTALLDIR = system32
 
 TARGET_NAME = sc
 
-TARGET_CFLAGS = -DDBG -Werror -Wall
+TARGET_CFLAGS = -D__USE_W32API -DDBG -Werror -Wall
 
 TARGET_SDKLIBS = kernel32.a ntdll.a advapi32.a
 

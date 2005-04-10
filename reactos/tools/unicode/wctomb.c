@@ -196,7 +196,7 @@ static int wcstombs_sbcs_slow( const struct sbcs_table *table, int flags,
     int tmp;
     WCHAR composed;
 
-    if (!defchar) defchar = &table_default;
+    if (!defchar) defchar = (const char*)&table_default;
     if (!used) used = &tmp;  /* avoid checking on every char */
     *used = 0;
 

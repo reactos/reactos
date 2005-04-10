@@ -17,6 +17,9 @@
 #include <fcntl.h>
 #include <stdarg.h>
 
+#include <windef.h>
+#include <winbase.h>
+#include <winnt.h>
 
 #ifndef _IORMONCL
 #define _IORMONCL 004000  /* remove on close, for temp files */
@@ -49,9 +52,6 @@ int __fileno_setmode(int _fd, int _newmode);
 void free_fd(int _fd);
 void sigabort_handler(int sig);
 char split_oflags(int oflags);
-
-
-#include <windows.h>
 
 unsigned create_io_inherit_block(STARTUPINFOA* si);
 void UnixTimeToFileTime(time_t unix_time, FILETIME* filetime, DWORD remainder);

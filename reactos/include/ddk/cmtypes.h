@@ -10,7 +10,10 @@ typedef enum _KEY_INFORMATION_CLASS
 {
   KeyBasicInformation,
   KeyNodeInformation,
-  KeyFullInformation
+  KeyFullInformation,
+  KeyNameInformation,
+  KeyCachedInformation,
+  KeyFlagsInformation
 } KEY_INFORMATION_CLASS;
 
 typedef struct _KEY_BASIC_INFORMATION

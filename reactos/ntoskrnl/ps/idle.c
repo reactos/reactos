@@ -16,6 +16,8 @@
 
 /* GLOBALS *******************************************************************/
 
+extern PEPROCESS PsIdleProcess;
+
 /* FUNCTIONS *****************************************************************/
 
 /** System idle thread procedure
@@ -26,11 +28,11 @@ PsIdleThreadMain(PVOID Context)
 {
    KIRQL oldlvl;
 
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKPRCB Prcb = KeGetCurrentPrcb();
    
    for(;;)
      {
-       if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0)
+       if (Prcb->DpcData[0].DpcQueueDepth > 0)
 	 {
 	   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
 	   KiDispatchInterrupt();
@@ -52,35 +54,35 @@ PsInitIdleThread(VOID)
 {
    NTSTATUS Status;
    PETHREAD IdleThread;
-   HANDLE IdleThreadHandle;
+   KIRQL oldIrql;
+
+   Status = PsInitializeThread(PsIdleProcess,
+			       &IdleThread,
+			       NULL,
+			       KernelMode,
+			       FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+        DPRINT1("Couldn't create idle system thread! Status: 0x%x\n", Status);
+        KEBUGCHECK(0);
+        return;
+     }
    
-   Status = PsCreateSystemThread(&IdleThreadHandle,
-			THREAD_ALL_ACCESS,
-			NULL,
-			NULL,
-			NULL,
-			PsIdleThreadMain,
-			NULL);
-   if(!NT_SUCCESS(Status)) 
-   {
-	DPRINT("Couldn't create Idle System Thread!");
-	KEBUGCHECK(0);
-	return;
-   }   
-   Status = ObReferenceObjectByHandle(IdleThreadHandle,
-				      THREAD_ALL_ACCESS,
-				      PsThreadType,
-				      KernelMode,
-				      (PVOID*)&IdleThread,
-				      NULL);
-   if(!NT_SUCCESS(Status)) 
-   {
-	DPRINT("Couldn't get pointer to Idle System Thread!");
-	KEBUGCHECK(0);
-	return;
-   }
-   NtClose(IdleThreadHandle);
-   KeGetCurrentKPCR()->PrcbData.IdleThread = &IdleThread->Tcb;
+   IdleThread->StartAddress = PsIdleThreadMain;
+   Status = KiArchInitThread(&IdleThread->Tcb, PsIdleThreadMain, NULL);
+   if (!NT_SUCCESS(Status))
+     {
+        DPRINT1("Couldn't initialize system idle thread! Status: 0x%x\n", Status);
+        ObDereferenceObject(IdleThread);
+        KEBUGCHECK(0);
+        return;
+     }
+
+   oldIrql = KeAcquireDispatcherDatabaseLock ();
+   KiUnblockThread(&IdleThread->Tcb, NULL, 0);
+   KeReleaseDispatcherDatabaseLock(oldIrql);
+
+   KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;
    KeSetPriorityThread(&IdleThread->Tcb, LOW_PRIORITY);
    KeSetAffinityThread(&IdleThread->Tcb, 1 << 0);
 

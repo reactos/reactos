@@ -14,8 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-VOID INIT_FUNCTION PsInitClientIDManagment(VOID);
-
 /* FUNCTIONS ***************************************************************/
 
 VOID PiShutdownProcessManager(VOID)
@@ -28,12 +26,10 @@ VOID PiShutdownProcessManager(VOID)
 VOID INIT_FUNCTION
 PiInitProcessManager(VOID)
 {
-   PsInitClientIDManagment();
    PsInitJobManagment();
    PsInitProcessManagment();
    PsInitThreadManagment();
    PsInitIdleThread();
-   PsInitialiseSuspendImplementation();
    PsInitialiseW32Call();
 }
 

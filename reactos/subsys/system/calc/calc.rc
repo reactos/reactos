@@ -4,5 +4,3 @@
 #include <reactos/resource.h>
 
 #include "rsrc.rc"
-#include "De.rc"
-

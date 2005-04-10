@@ -425,7 +425,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case PM_SELECT_ENTRY:
-		SelectButtonIndex(0, wparam?true:false);
+		SelectButtonIndex(0, wparam!=0);
 		break;
 
 #ifdef _LIGHT_STARTMENU
@@ -1690,6 +1690,9 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 		AddButton(ResString(IDS_SHUTDOWN),	ICID_LOGOFF, false, IDC_SHUTDOWN);
 
 
+	AddButton(ResString(IDS_TERMINATE),	ICID_LOGOFF, false, IDC_TERMINATE);
+
+
 #ifdef __MINGW32__
 	RegCloseKey(hkeyAdv);
 	RegCloseKey(hkey);
@@ -1830,9 +1833,11 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_LOGOFF:
-		/* The shell32 Dialog prompts about some system setting change. This is not what we want to display here.
 		CloseStartMenu(id);
-		ShowRestartDialog(g_Globals._hwndDesktopBar, EWX_LOGOFF);*/
+		ShowLogoffDialog(g_Globals._hwndDesktopBar);
+		break;
+
+	  case IDC_TERMINATE:
 		DestroyWindow(GetParent(_hwnd));
 		break;
 
@@ -1849,21 +1854,50 @@ int StartMenuHandler::Command(int id, int code)
 		ExplorerPropertySheet(g_Globals._hwndDesktopBar);
 		break;
 
+	  case IDC_CONTROL_PANEL: {
+		CloseStartMenu(id);
+#ifndef _NO_MDI
+		XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
+		bool mdi = XMLBool(explorer_options, "mdi", true);
+
+		if (mdi)
+			MDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+		else
+#endif
+			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+		break;}
+
 	  case IDC_SETTINGS_MENU:
 		CreateSubmenu(id, CSIDL_CONTROLS, ResString(IDS_SETTINGS_MENU));
 		break;
 
-	  case IDC_PRINTERS:
+	  case IDC_PRINTERS: {
+		CloseStartMenu(id);
 #ifdef _ROS_	// to be removed when printer folder will be implemented
 		MessageBox(0, TEXT("printer folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 #else
-		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
-#endif
-		break;
+#ifndef _NO_MDI
+		XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
+		bool mdi = XMLBool(explorer_options, "mdi", true);
 
-	  case IDC_CONTROL_PANEL:
-		CloseStartMenu(id);
-		//@@SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+		if (mdi)
+			MDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}"), 0);
+		else
+#endif
+			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}"), 0);
+#endif
+		break;}
+
+	  case IDC_PRINTERS_MENU:
+		CreateSubmenu(id, CSIDL_PRINTERS, CSIDL_PRINTHOOD, ResString(IDS_PRINTERS));
+/*		StartMenuFolders new_folders;
+
+		try {
+			new_folders.push_back(ShellPath(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}")));
+		} catch(COMException&) {
+		}
+
+		CreateSubmenu(id, new_folders, ResString(IDS_PRINTERS));*/
 		break;
 
 	  case IDC_ADMIN:
@@ -1890,7 +1924,7 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_DRIVES:
-		///@todo exclude removeable drives
+		///@todo exclude removable drives
 		CreateSubmenu(id, CSIDL_DRIVES, ResString(IDS_DRIVES));
 		break;
 
@@ -1952,7 +1986,6 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
 #ifndef _ROS_ /* FIXME: our shell32 always expects Ansi strings */
-#define	W_VER_NT 0
 		if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
 			WCHAR wTitle[40], wText[256];
 
@@ -1967,24 +2000,29 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 	}
 }
 
-void StartMenuHandler::ShowRestartDialog(HWND hwndOwner, UINT flags)
+void StartMenuHandler::ShowLogoffDialog(HWND hwndOwner)
 {
-	static DynamicFct<RESTARTWINDOWSDLG> RestartDlg(TEXT("SHELL32"), 59);
+	static DynamicFct<LOGOFFWINDOWSDIALOG> LogoffWindowsDialog(TEXT("SHELL32"), 54);
+//	static DynamicFct<RESTARTWINDOWSDLG> RestartDialog(TEXT("SHELL32"), 59);
 
-	if (RestartDlg)
-		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	///@todo ANSI string conversion if needed
+	if (LogoffWindowsDialog)
+		(*LogoffWindowsDialog)(0);
+/* The RestartDialog function prompts about some system setting change. This is not what we want to display here.
+	else if (RestartDialog)
+		return (*RestartDialog)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", EWX_LOGOFF) == 1;	///@todo ANSI string conversion if needed
+*/
 	else
-		MessageBox(hwndOwner, TEXT("RestartDlg() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
+		MessageBox(hwndOwner, TEXT("LogoffWindowsDialog() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 void ShowExitWindowsDialog(HWND hwndOwner)
 {
-	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDlg(TEXT("SHELL32"), 60);
+	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDialog(TEXT("SHELL32"), 60);
 
-	if (ExitWindowsDlg)
-		(*ExitWindowsDlg)(hwndOwner);
+	if (ExitWindowsDialog)
+		(*ExitWindowsDialog)(hwndOwner);
 	else
-		MessageBox(hwndOwner, TEXT("ExitWindowsDlg() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
+		MessageBox(hwndOwner, TEXT("ExitWindowsDialog() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 
@@ -1992,16 +2030,11 @@ void SettingsMenu::AddEntries()
 {
 	super::AddEntries();
 
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
-#endif
-		AddButton(ResString(IDS_CONTROL_PANEL),	ICID_CONFIG, false, IDC_CONTROL_PANEL);
-
 #ifdef _ROS_	// to be removed when printer/network will be implemented
-	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS);
+	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
-	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS);
+	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, true, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, true, IDC_CONNECTIONS);
 #endif
 	AddButton(ResString(IDS_ADMIN),				ICID_CONFIG, true, IDC_ADMIN);
@@ -2012,6 +2045,13 @@ void SettingsMenu::AddEntries()
 		AddButton(ResString(IDS_SETTINGS_MENU),	ICID_CONFIG, true, IDC_SETTINGS_MENU);
 
 	AddButton(ResString(IDS_DESKTOPBAR_SETTINGS), ICID_CONFIG, false, ID_DESKTOPBAR_SETTINGS);
+
+	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS);
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCONTROLPANEL))
+#endif
+		AddButton(ResString(IDS_CONTROL_PANEL),	ICID_CONFIG, false, IDC_CONTROL_PANEL);
 }
 
 void BrowseMenu::AddEntries()

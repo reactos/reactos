@@ -216,6 +216,12 @@ Module::Module ( const Project& project,
 		installName = att->value;
 	else
 		installName = "";
+	
+	att = moduleNode.GetAttribute ( "usewrc", false );
+	if ( att != NULL )
+		useWRC = att->value == "true";
+	else
+		useWRC = true;
 }
 
 Module::~Module ()
@@ -450,6 +456,10 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Iso;
 	if ( attribute.value == "test" )
 		return Test;
+	if ( attribute.value == "rpcserver" )
+		return RpcServer;
+	if ( attribute.value == "rpcclient" )
+		return RpcClient;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -484,6 +494,10 @@ Module::GetDefaultModuleExtension () const
 			return ".iso";
 		case Test:
 			return ".exe";
+		case RpcServer:
+			return ".o";
+		case RpcClient:
+			return ".o";
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -517,6 +531,8 @@ Module::GetDefaultModuleEntrypoint () const
 		case BootLoader:
 		case BootSector:
 		case Iso:
+		case RpcServer:
+		case RpcClient:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -551,6 +567,8 @@ Module::GetDefaultModuleBaseaddress () const
 		case BootLoader:
 		case BootSector:
 		case Iso:
+		case RpcServer:
+		case RpcClient:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -599,21 +617,6 @@ string
 Module::GetPathWithPrefix ( const string& prefix ) const
 {
 	return path + CSEP + prefix + GetTargetName ();
-}
-
-void
-Module::GetTargets ( string_list& targets ) const
-{
-	if ( invocations.size () > 0 )
-	{
-		for ( size_t i = 0; i < invocations.size (); i++ )
-		{
-			Invoke& invoke = *invocations[i];
-			invoke.GetTargets ( targets );
-		}
-	}
-	else
-		targets.push_back ( GetPath () );
 }
 
 string

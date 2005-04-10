@@ -32,6 +32,35 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "wine/wine_common_ver.rc"
 
+/* Translators do not need to translate this text, unless the language uses a
+ * different character set or if the distribution of characters looks wrong.
+ * It is rendered illegibly small and is used to make a mock-up of a document.
+ */
+STRINGTABLE DISCARDABLE
+{
+    IDS_FAKEDOCTEXT
+        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. \
+        Nulla a tortor. Etiam aliquet libero venenatis nunc. \n \
+        \n \
+        Sed augue ante, fermentum sit amet, imperdiet et, gravida eu, enim. \
+        Donec nibh quam, sodales in, commodo vel, facilisis id, neque. \n \
+        \n \
+        Nunc eleifend bibendum nibh. Phasellus in lorem. Ut vel odio quis \
+        libero adipiscing consequat. Donec consectetuer laoreet mauris. \n \
+        \n \
+        Maecenas tempor, ligula sed congue nonummy, arcu dolor ornare erat, \
+        egestas iaculis magna purus sed turpis. \n \
+        \n \
+        Morbi ultricies est non ipsum. Cum sociis natoque penatibus et magnis \
+        dis parturient montes, nascetur ridiculus mus. \n \
+        \n \
+        Duis sit amet nibh quis purus sollicitudin blandit. Curabitur justo. \
+        Phasellus varius, erat eu luctus pharetra, odio elit fringilla leo, \
+        non vulputate turpis elit id neque. Vestibulum sit amet tellus sed \
+        tortor fermentum consectetuer."
+}
+
+
 /* BINRES pd32_collate.ico */
 PD32_COLLATE ICON DISCARDABLE LOADONCALL pd32_collate.ico
 /* {

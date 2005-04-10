@@ -73,6 +73,7 @@
 		<file>time.c</file>
 		<file>timerqueue.c</file>
 		<file>toolhelp.c</file>
+		<file>version.c</file>
 	</directory>
 	<directory name="process">
 		<file>cmdline.c</file>

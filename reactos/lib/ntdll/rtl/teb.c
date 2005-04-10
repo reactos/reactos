@@ -9,7 +9,10 @@
 #include <ddk/ntddk.h>
 #include <napi/teb.h>
 
+
 PTEB STDCALL
 _NtCurrentTeb() { return NtCurrentTeb(); }
+
+
 
 /* EOF */

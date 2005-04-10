@@ -68,6 +68,8 @@ typedef struct _DESKTOP_OBJECT
   HANDLE PrevActiveWindow;
   /* Thread blocking input */
   PVOID BlockInputThread;
+
+  LIST_ENTRY ShellHookWindows;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
 
@@ -84,7 +86,9 @@ extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 
 extern POBJECT_TYPE ExEventPairObjectType;
-
+extern POBJECT_TYPE EXPORTED ExMutantObjectType;
+extern POBJECT_TYPE EXPORTED ExSemaphoreObjectType;
+extern POBJECT_TYPE EXPORTED ExTimerType;
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
@@ -98,23 +102,77 @@ ExInit3(VOID);
 VOID
 ExpInitTimeZoneInfo(VOID);
 VOID
-ExInitializeWorkerThreads(VOID);
+ExpInitializeWorkerThreads(VOID);
 VOID
 ExpInitLookasideLists(VOID);
 VOID
 ExpInitializeCallbacks(VOID);
 VOID
 ExpInitUuids(VOID);
+VOID
+STDCALL
+ExpInitializeExecutive(VOID);
+
+/* HANDLE TABLE FUNCTIONS ***************************************************/
+
+#define EX_HANDLE_ENTRY_LOCKED (1 << ((sizeof(PVOID) * 8) - 1))
+#define EX_HANDLE_ENTRY_PROTECTFROMCLOSE (1 << 0)
+#define EX_HANDLE_ENTRY_INHERITABLE (1 << 1)
+#define EX_HANDLE_ENTRY_AUDITONCLOSE (1 << 2)
+
+#define EX_HANDLE_TABLE_CLOSING 0x1
+
+#define EX_INVALID_HANDLE (~0)
+
+#define EX_HANDLE_ENTRY_FLAGSMASK (EX_HANDLE_ENTRY_LOCKED |                    \
+                                   EX_HANDLE_ENTRY_PROTECTFROMCLOSE |          \
+                                   EX_HANDLE_ENTRY_INHERITABLE |               \
+                                   EX_HANDLE_ENTRY_AUDITONCLOSE)
+
+typedef VOID (STDCALL PEX_DESTROY_HANDLE_CALLBACK)(PHANDLE_TABLE HandleTable, PVOID Object, ULONG GrantedAccess, PVOID Context);
+typedef BOOLEAN (STDCALL PEX_DUPLICATE_HANDLE_CALLBACK)(PHANDLE_TABLE HandleTable, PHANDLE_TABLE_ENTRY HandleTableEntry, PVOID Context);
+typedef BOOLEAN (STDCALL PEX_CHANGE_HANDLE_CALLBACK)(PHANDLE_TABLE HandleTable, PHANDLE_TABLE_ENTRY HandleTableEntry, PVOID Context);
+
+VOID
+ExpInitializeHandleTables(VOID);
+PHANDLE_TABLE
+ExCreateHandleTable(IN PEPROCESS QuotaProcess  OPTIONAL);
+VOID
+ExDestroyHandleTable(IN PHANDLE_TABLE HandleTable,
+                     IN PEX_DESTROY_HANDLE_CALLBACK DestroyHandleCallback  OPTIONAL,
+                     IN PVOID Context  OPTIONAL);
+PHANDLE_TABLE
+ExDupHandleTable(IN PEPROCESS QuotaProcess  OPTIONAL,
+                 IN PEX_DUPLICATE_HANDLE_CALLBACK DuplicateHandleCallback  OPTIONAL,
+                 IN PVOID Context  OPTIONAL,
+                 IN PHANDLE_TABLE SourceHandleTable);
+BOOLEAN
+ExLockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
+                       IN PHANDLE_TABLE_ENTRY Entry);
+VOID
+ExUnlockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
+                         IN PHANDLE_TABLE_ENTRY Entry);
+LONG
+ExCreateHandle(IN PHANDLE_TABLE HandleTable,
+               IN PHANDLE_TABLE_ENTRY Entry);
+BOOLEAN
+ExDestroyHandle(IN PHANDLE_TABLE HandleTable,
+                IN LONG Handle);
+VOID
+ExDestroyHandleByEntry(IN PHANDLE_TABLE HandleTable,
+                       IN PHANDLE_TABLE_ENTRY Entry,
+                       IN LONG Handle);
+PHANDLE_TABLE_ENTRY
+ExMapHandleToPointer(IN PHANDLE_TABLE HandleTable,
+                     IN LONG Handle);
+
+BOOLEAN
+ExChangeHandle(IN PHANDLE_TABLE HandleTable,
+               IN LONG Handle,
+               IN PEX_CHANGE_HANDLE_CALLBACK ChangeHandleCallback,
+               IN PVOID Context);
 
 /* OTHER FUNCTIONS **********************************************************/
-
-#ifdef _ENABLE_THRDEVTPAIR
-VOID
-ExpSwapThreadEventPair(
-	IN struct _ETHREAD* Thread,
-	IN struct _KEVENT_PAIR* EventPair
-	);
-#endif /* _ENABLE_THRDEVTPAIR */
 
 LONGLONG 
 FASTCALL
@@ -126,6 +184,10 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
 
 NTSTATUS
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
+
+VOID
+STDCALL
+ExTimerRundown(VOID);
 
 #define InterlockedDecrementUL(Addend) \
    (ULONG)InterlockedDecrement((PLONG)(Addend))

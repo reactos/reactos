@@ -984,7 +984,7 @@ HRESULT WINAPI VariantChangeTypeEx(VARIANTARG* pvargDest, VARIANTARG* pvargSrc,
       {
         VARIANTARG vTmp, vSrcDeref;
 
-        if(V_VT(pvargSrc)&VT_BYREF && !V_BYREF(pvargSrc))
+        if(V_ISBYREF(pvargSrc) && !V_BYREF(pvargSrc))
           res = DISP_E_TYPEMISMATCH;
         else
         {
@@ -2531,7 +2531,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
     }
 
     xmask = (1<<(V_VT(left)&VT_TYPEMASK))|(1<<(V_VT(right)&VT_TYPEMASK));
-    if (xmask & (1<<VT_R8)) {
+    if (xmask & VTBIT_R8) {
 	rc = VariantChangeType(&lv,left,0,VT_R8);
 	if (FAILED(rc)) return rc;
 	rc = VariantChangeType(&rv,right,0,VT_R8);
@@ -2542,7 +2542,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
 	if (V_R8(&lv) > V_R8(&rv)) return VARCMP_GT;
 	return E_FAIL; /* can't get here */
     }
-    if (xmask & (1<<VT_R4)) {
+    if (xmask & VTBIT_R4) {
 	rc = VariantChangeType(&lv,left,0,VT_R4);
 	if (FAILED(rc)) return rc;
 	rc = VariantChangeType(&rv,right,0,VT_R4);
@@ -2558,29 +2558,29 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
            Use LONGLONG to maximize ranges                              */
     lOk = TRUE;
     switch (V_VT(left)&VT_TYPEMASK) {
-    case VT_I1   : lVal = V_UNION(left,cVal); break;
-    case VT_I2   : lVal = V_UNION(left,iVal); break;
-    case VT_I4   : lVal = V_UNION(left,lVal); break;
-    case VT_INT  : lVal = V_UNION(left,lVal); break;
-    case VT_UI1  : lVal = V_UNION(left,bVal); break;
-    case VT_UI2  : lVal = V_UNION(left,uiVal); break;
-    case VT_UI4  : lVal = V_UNION(left,ulVal); break;
-    case VT_UINT : lVal = V_UNION(left,ulVal); break;
-    case VT_BOOL : lVal = V_UNION(left,boolVal); break;
+    case VT_I1   : lVal = V_I1(left); break;
+    case VT_I2   : lVal = V_I2(left); break;
+    case VT_I4   :
+    case VT_INT  : lVal = V_I4(left); break;
+    case VT_UI1  : lVal = V_UI1(left); break;
+    case VT_UI2  : lVal = V_UI2(left); break;
+    case VT_UI4  :
+    case VT_UINT : lVal = V_UI4(left); break;
+    case VT_BOOL : lVal = V_BOOL(left); break;
     default: lOk = FALSE;
     }
 
     rOk = TRUE;
     switch (V_VT(right)&VT_TYPEMASK) {
-    case VT_I1   : rVal = V_UNION(right,cVal); break;
-    case VT_I2   : rVal = V_UNION(right,iVal); break;
-    case VT_I4   : rVal = V_UNION(right,lVal); break;
-    case VT_INT  : rVal = V_UNION(right,lVal); break;
-    case VT_UI1  : rVal = V_UNION(right,bVal); break;
-    case VT_UI2  : rVal = V_UNION(right,uiVal); break;
-    case VT_UI4  : rVal = V_UNION(right,ulVal); break;
-    case VT_UINT : rVal = V_UNION(right,ulVal); break;
-    case VT_BOOL : rVal = V_UNION(right,boolVal); break;
+    case VT_I1   : rVal = V_I1(right); break;
+    case VT_I2   : rVal = V_I2(right); break;
+    case VT_I4   :
+    case VT_INT  : rVal = V_I4(right); break;
+    case VT_UI1  : rVal = V_UI1(right); break;
+    case VT_UI2  : rVal = V_UI2(right); break;
+    case VT_UI4  :
+    case VT_UINT : rVal = V_UI4(right); break;
+    case VT_BOOL : rVal = V_BOOL(right); break;
     default: rOk = FALSE;
     }
 
@@ -2598,20 +2598,20 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
     if ((V_VT(left)&VT_TYPEMASK) == VT_DATE &&
         (V_VT(right)&VT_TYPEMASK) == VT_DATE) {
 
-        if (floor(V_UNION(left,date)) == floor(V_UNION(right,date))) {
+        if (floor(V_DATE(left)) == floor(V_DATE(right))) {
             /* Due to floating point rounding errors, calculate varDate in whole numbers) */
             double wholePart = 0.0;
             double leftR;
             double rightR;
 
             /* Get the fraction * 24*60*60 to make it into whole seconds */
-            wholePart = (double) floor( V_UNION(left,date) );
+            wholePart = (double) floor( V_DATE(left) );
             if (wholePart == 0) wholePart = 1;
-            leftR = floor(fmod( V_UNION(left,date), wholePart ) * (24*60*60));
+            leftR = floor(fmod( V_DATE(left), wholePart ) * (24*60*60));
 
-            wholePart = (double) floor( V_UNION(right,date) );
+            wholePart = (double) floor( V_DATE(right) );
             if (wholePart == 0) wholePart = 1;
-            rightR = floor(fmod( V_UNION(right,date), wholePart ) * (24*60*60));
+            rightR = floor(fmod( V_DATE(right), wholePart ) * (24*60*60));
 
             if (leftR < rightR) {
                 return VARCMP_LT;
@@ -2621,9 +2621,9 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
                 return VARCMP_EQ;
             }
 
-        } else if (V_UNION(left,date) < V_UNION(right,date)) {
+        } else if (V_DATE(left) < V_DATE(right)) {
             return VARCMP_LT;
-        } else if (V_UNION(left,date) > V_UNION(right,date)) {
+        } else if (V_DATE(left) > V_DATE(right)) {
             return VARCMP_GT;
         }
     }
@@ -2665,29 +2665,29 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 
         lOk = TRUE;
         switch (V_VT(left)&VT_TYPEMASK) {
-        case VT_I1   : lVal = V_UNION(left,cVal);  resT=VT_I4; break;
-        case VT_I2   : lVal = V_UNION(left,iVal);  resT=VT_I2; break;
-        case VT_I4   : lVal = V_UNION(left,lVal);  resT=VT_I4; break;
-        case VT_INT  : lVal = V_UNION(left,lVal);  resT=VT_I4; break;
-        case VT_UI1  : lVal = V_UNION(left,bVal);  resT=VT_I4; break;
-        case VT_UI2  : lVal = V_UNION(left,uiVal); resT=VT_I4; break;
-        case VT_UI4  : lVal = V_UNION(left,ulVal); resT=VT_I4; break;
-        case VT_UINT : lVal = V_UNION(left,ulVal); resT=VT_I4; break;
-        case VT_BOOL : rVal = V_UNION(left,boolVal); resT=VT_I4; break;
+        case VT_I1   : lVal = V_I1(left);  resT=VT_I4; break;
+        case VT_I2   : lVal = V_I2(left);  resT=VT_I2; break;
+        case VT_I4   :
+        case VT_INT  : lVal = V_I4(left);  resT=VT_I4; break;
+        case VT_UI1  : lVal = V_UI1(left);  resT=VT_I4; break;
+        case VT_UI2  : lVal = V_UI2(left); resT=VT_I4; break;
+        case VT_UI4  :
+        case VT_UINT : lVal = V_UI4(left); resT=VT_I4; break;
+        case VT_BOOL : rVal = V_BOOL(left); resT=VT_I4; break;
         default: lOk = FALSE;
         }
 
         rOk = TRUE;
         switch (V_VT(right)&VT_TYPEMASK) {
-        case VT_I1   : rVal = V_UNION(right,cVal);  resT=VT_I4; break;
-        case VT_I2   : rVal = V_UNION(right,iVal);  resT=max(VT_I2, resT); break;
-        case VT_I4   : rVal = V_UNION(right,lVal);  resT=VT_I4; break;
-        case VT_INT  : rVal = V_UNION(right,lVal);  resT=VT_I4; break;
-        case VT_UI1  : rVal = V_UNION(right,bVal);  resT=VT_I4; break;
-        case VT_UI2  : rVal = V_UNION(right,uiVal); resT=VT_I4; break;
-        case VT_UI4  : rVal = V_UNION(right,ulVal); resT=VT_I4; break;
-        case VT_UINT : rVal = V_UNION(right,ulVal); resT=VT_I4; break;
-        case VT_BOOL : rVal = V_UNION(right,boolVal); resT=VT_I4; break;
+        case VT_I1   : rVal = V_I1(right);  resT=VT_I4; break;
+        case VT_I2   : rVal = V_I2(right);  resT=max(VT_I2, resT); break;
+        case VT_I4   :
+        case VT_INT  : rVal = V_I4(right);  resT=VT_I4; break;
+        case VT_UI1  : rVal = V_UI1(right);  resT=VT_I4; break;
+        case VT_UI2  : rVal = V_UI2(right); resT=VT_I4; break;
+        case VT_UI4  :
+        case VT_UINT : rVal = V_UI4(right); resT=VT_I4; break;
+        case VT_BOOL : rVal = V_BOOL(right); resT=VT_I4; break;
         default: rOk = FALSE;
         }
 
@@ -2695,11 +2695,11 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
             res = (lVal & rVal);
             V_VT(result) = resT;
             switch (resT) {
-            case VT_I2   : V_UNION(result,iVal)  = res; break;
-            case VT_I4   : V_UNION(result,lVal)  = res; break;
+            case VT_I2   : V_I2(result)  = res; break;
+            case VT_I4   : V_I4(result)  = res; break;
             default:
                 FIXME("Unexpected result variant type %x\n", resT);
-                V_UNION(result,lVal)  = res;
+                V_I4(result)  = res;
             }
             rc = S_OK;
 
@@ -2747,32 +2747,32 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 
         lOk = TRUE;
         switch (V_VT(left)&VT_TYPEMASK) {
-        case VT_I1   : lVal = V_UNION(left,cVal);   break;
-        case VT_I2   : lVal = V_UNION(left,iVal);   break;
-        case VT_I4   : lVal = V_UNION(left,lVal);   break;
-        case VT_INT  : lVal = V_UNION(left,lVal);   break;
-        case VT_UI1  : lVal = V_UNION(left,bVal);   break;
-        case VT_UI2  : lVal = V_UNION(left,uiVal);  break;
-        case VT_UI4  : lVal = V_UNION(left,ulVal);  break;
-        case VT_UINT : lVal = V_UNION(left,ulVal);  break;
-        case VT_R4   : lVal = V_UNION(left,fltVal);  break;
-        case VT_R8   : lVal = V_UNION(left,dblVal);  break;
+        case VT_I1   : lVal = V_I1(left);   break;
+        case VT_I2   : lVal = V_I2(left);   break;
+        case VT_I4   :
+        case VT_INT  : lVal = V_I4(left);   break;
+        case VT_UI1  : lVal = V_UI1(left);   break;
+        case VT_UI2  : lVal = V_UI2(left);  break;
+        case VT_UI4  :
+        case VT_UINT : lVal = V_UI4(left);  break;
+        case VT_R4   : lVal = V_R4(left);  break;
+        case VT_R8   : lVal = V_R8(left);  break;
 	case VT_NULL : lVal = 0.0;  break;
         default: lOk = FALSE;
         }
 
         rOk = TRUE;
         switch (V_VT(right)&VT_TYPEMASK) {
-        case VT_I1   : rVal = V_UNION(right,cVal);  break;
-        case VT_I2   : rVal = V_UNION(right,iVal);  break;
-        case VT_I4   : rVal = V_UNION(right,lVal);  break;
-        case VT_INT  : rVal = V_UNION(right,lVal);  break;
-        case VT_UI1  : rVal = V_UNION(right,bVal);  break;
-        case VT_UI2  : rVal = V_UNION(right,uiVal); break;
-        case VT_UI4  : rVal = V_UNION(right,ulVal); break;
-        case VT_UINT : rVal = V_UNION(right,ulVal); break;
-        case VT_R4   : rVal = V_UNION(right,fltVal);break;
-        case VT_R8   : rVal = V_UNION(right,dblVal);break;
+        case VT_I1   : rVal = V_I1(right);  break;
+        case VT_I2   : rVal = V_I2(right);  break;
+        case VT_I4   :
+        case VT_INT  : rVal = V_I4(right);  break;
+        case VT_UI1  : rVal = V_UI1(right);  break;
+        case VT_UI2  : rVal = V_UI2(right); break;
+        case VT_UI4  :
+        case VT_UINT : rVal = V_UI4(right); break;
+        case VT_R4   : rVal = V_R4(right);break;
+        case VT_R8   : rVal = V_R8(right);break;
 	case VT_NULL : rVal = 0.0; break;
         default: rOk = FALSE;
         }
@@ -2780,7 +2780,7 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
         if (lOk && rOk) {
             res = (lVal + rVal);
             V_VT(result) = VT_R8;
-            V_UNION(result,dblVal)  = res;
+            V_R8(result)  = res;
             rc = S_OK;
         } else {
 	    FIXME("Unhandled type pair %d / %d in double addition.\n",
@@ -2801,30 +2801,30 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 
         lOk = TRUE;
         switch (V_VT(left)&VT_TYPEMASK) {
-        case VT_I1   : lVal = V_UNION(left,cVal);   break;
-        case VT_I2   : lVal = V_UNION(left,iVal);   break;
-        case VT_I4   : lVal = V_UNION(left,lVal);   break;
-        case VT_INT  : lVal = V_UNION(left,lVal);   break;
-        case VT_UI1  : lVal = V_UNION(left,bVal);   break;
-        case VT_UI2  : lVal = V_UNION(left,uiVal);  break;
-        case VT_UI4  : lVal = V_UNION(left,ulVal);  break;
-        case VT_UINT : lVal = V_UNION(left,ulVal);  break;
-        case VT_R4   : lVal = V_UNION(left,fltVal);  break;
+        case VT_I1   : lVal = V_I1(left);   break;
+        case VT_I2   : lVal = V_I2(left);   break;
+        case VT_I4   :
+        case VT_INT  : lVal = V_I4(left);   break;
+        case VT_UI1  : lVal = V_UI1(left);   break;
+        case VT_UI2  : lVal = V_UI2(left);  break;
+        case VT_UI4  :
+        case VT_UINT : lVal = V_UI4(left);  break;
+        case VT_R4   : lVal = V_R4(left);  break;
 	case VT_NULL : lVal = 0.0;  break;
         default: lOk = FALSE;
         }
 
         rOk = TRUE;
         switch (V_VT(right)&VT_TYPEMASK) {
-        case VT_I1   : rVal = V_UNION(right,cVal);  break;
-        case VT_I2   : rVal = V_UNION(right,iVal);  break;
-        case VT_I4   : rVal = V_UNION(right,lVal);  break;
-        case VT_INT  : rVal = V_UNION(right,lVal);  break;
-        case VT_UI1  : rVal = V_UNION(right,bVal);  break;
-        case VT_UI2  : rVal = V_UNION(right,uiVal); break;
-        case VT_UI4  : rVal = V_UNION(right,ulVal); break;
-        case VT_UINT : rVal = V_UNION(right,ulVal); break;
-        case VT_R4   : rVal = V_UNION(right,fltVal);break;
+        case VT_I1   : rVal = V_I1(right);  break;
+        case VT_I2   : rVal = V_I2(right);  break;
+        case VT_I4   :
+        case VT_INT  : rVal = V_I4(right);  break;
+        case VT_UI1  : rVal = V_UI1(right);  break;
+        case VT_UI2  : rVal = V_UI2(right); break;
+        case VT_UI4  :
+        case VT_UINT : rVal = V_UI4(right); break;
+        case VT_R4   : rVal = V_R4(right);break;
 	case VT_NULL : rVal = 0.0; break;
         default: rOk = FALSE;
         }
@@ -2832,7 +2832,7 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
         if (lOk && rOk) {
             res = (lVal + rVal);
             V_VT(result) = VT_R4;
-            V_UNION(result,fltVal)  = res;
+            V_R4(result)  = res;
             rc = S_OK;
         } else {
 	    FIXME("Unhandled type pair %d / %d in float addition.\n",
@@ -2861,28 +2861,28 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 
         lOk = TRUE;
         switch (V_VT(left)&VT_TYPEMASK) {
-        case VT_I1   : lVal = V_UNION(left,cVal);  resT=VT_I4; break;
-        case VT_I2   : lVal = V_UNION(left,iVal);  resT=VT_I2; break;
-        case VT_I4   : lVal = V_UNION(left,lVal);  resT=VT_I4; break;
-        case VT_INT  : lVal = V_UNION(left,lVal);  resT=VT_I4; break;
-        case VT_UI1  : lVal = V_UNION(left,bVal);  resT=VT_I4; break;
-        case VT_UI2  : lVal = V_UNION(left,uiVal); resT=VT_I4; break;
-        case VT_UI4  : lVal = V_UNION(left,ulVal); resT=VT_I4; break;
-        case VT_UINT : lVal = V_UNION(left,ulVal); resT=VT_I4; break;
+        case VT_I1   : lVal = V_I1(left);  resT=VT_I4; break;
+        case VT_I2   : lVal = V_I2(left);  resT=VT_I2; break;
+        case VT_I4   :
+        case VT_INT  : lVal = V_I4(left);  resT=VT_I4; break;
+        case VT_UI1  : lVal = V_UI1(left);  resT=VT_I4; break;
+        case VT_UI2  : lVal = V_UI2(left); resT=VT_I4; break;
+        case VT_UI4  :
+        case VT_UINT : lVal = V_UI4(left); resT=VT_I4; break;
 	case VT_NULL : lVal = 0; resT = VT_I4; break;
         default: lOk = FALSE;
         }
 
         rOk = TRUE;
         switch (V_VT(right)&VT_TYPEMASK) {
-        case VT_I1   : rVal = V_UNION(right,cVal);  resT=VT_I4; break;
-        case VT_I2   : rVal = V_UNION(right,iVal);  resT=max(VT_I2, resT); break;
-        case VT_I4   : rVal = V_UNION(right,lVal);  resT=VT_I4; break;
-        case VT_INT  : rVal = V_UNION(right,lVal);  resT=VT_I4; break;
-        case VT_UI1  : rVal = V_UNION(right,bVal);  resT=VT_I4; break;
-        case VT_UI2  : rVal = V_UNION(right,uiVal); resT=VT_I4; break;
-        case VT_UI4  : rVal = V_UNION(right,ulVal); resT=VT_I4; break;
-        case VT_UINT : rVal = V_UNION(right,ulVal); resT=VT_I4; break;
+        case VT_I1   : rVal = V_I1(right);  resT=VT_I4; break;
+        case VT_I2   : rVal = V_I2(right);  resT=max(VT_I2, resT); break;
+        case VT_I4   :
+        case VT_INT  : rVal = V_I4(right);  resT=VT_I4; break;
+        case VT_UI1  : rVal = V_UI1(right);  resT=VT_I4; break;
+        case VT_UI2  : rVal = V_UI2(right); resT=VT_I4; break;
+        case VT_UI4  :
+        case VT_UINT : rVal = V_UI4(right); resT=VT_I4; break;
 	case VT_NULL : rVal = 0; resT=VT_I4; break;
         default: rOk = FALSE;
         }
@@ -2891,11 +2891,11 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
             res = (lVal + rVal);
             V_VT(result) = resT;
             switch (resT) {
-            case VT_I2   : V_UNION(result,iVal)  = res; break;
-            case VT_I4   : V_UNION(result,lVal)  = res; break;
+            case VT_I2   : V_I2(result)  = res; break;
+            case VT_I4   : V_I4(result)  = res; break;
             default:
                 FIXME("Unexpected result variant type %x\n", resT);
-                V_UNION(result,lVal)  = res;
+                V_I4(result)  = res;
             }
             rc = S_OK;
 
@@ -2927,11 +2927,11 @@ HRESULT WINAPI VarMul(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     lvt = V_VT(left)&VT_TYPEMASK;
     rvt = V_VT(right)&VT_TYPEMASK;
     found = FALSE;resvt=VT_VOID;
-    if (((1<<lvt) | (1<<rvt)) & ((1<<VT_R4)|(1<<VT_R8))) {
+    if (((1<<lvt) | (1<<rvt)) & (VTBIT_R4|VTBIT_R8)) {
 	found = TRUE;
 	resvt = VT_R8;
     }
-    if (!found && (((1<<lvt) | (1<<rvt)) & ((1<<VT_I1)|(1<<VT_I2)|(1<<VT_UI1)|(1<<VT_UI2)|(1<<VT_I4)|(1<<VT_UI4)|(1<<VT_INT)|(1<<VT_UINT)))) {
+    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|(1<<VT_INT)|(1<<VT_UINT)))) {
 	found = TRUE;
 	resvt = VT_I4;
     }
@@ -2984,11 +2984,11 @@ HRESULT WINAPI VarDiv(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     lvt = V_VT(left)&VT_TYPEMASK;
     rvt = V_VT(right)&VT_TYPEMASK;
     found = FALSE;resvt = VT_VOID;
-    if (((1<<lvt) | (1<<rvt)) & ((1<<VT_R4)|(1<<VT_R8))) {
+    if (((1<<lvt) | (1<<rvt)) & (VTBIT_R4|VTBIT_R8)) {
 	found = TRUE;
 	resvt = VT_R8;
     }
-    if (!found && (((1<<lvt) | (1<<rvt)) & ((1<<VT_I1)|(1<<VT_I2)|(1<<VT_UI1)|(1<<VT_UI2)|(1<<VT_I4)|(1<<VT_UI4)|(1<<VT_INT)|(1<<VT_UINT)))) {
+    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|(1<<VT_INT)|(1<<VT_UINT)))) {
 	found = TRUE;
 	resvt = VT_I4;
     }
@@ -3045,7 +3045,7 @@ HRESULT WINAPI VarSub(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 	found = TRUE;
 	resvt = VT_R8;
     }
-    if (!found && (((1<<lvt) | (1<<rvt)) & ((1<<VT_I1)|(1<<VT_I2)|(1<<VT_UI1)|(1<<VT_UI2)|(1<<VT_I4)|(1<<VT_UI4)|(1<<VT_INT)|(1<<VT_UINT)))) {
+    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|(1<<VT_INT)|(1<<VT_UINT)))) {
 	found = TRUE;
 	resvt = VT_I4;
     }

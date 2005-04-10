@@ -14,7 +14,7 @@
 #include <ntos.h>
 #include <windows.h>
 #include <stdio.h>
-#include <WinWlx.h>
+#include <winwlx.h>
 #include <wchar.h>
 #include <reactos/winlogon.h>
 

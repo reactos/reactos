@@ -3,8 +3,8 @@
 	<importlibrary definition="def/ntdll.def" />
 	<define name="__NTDLL__" />
 	<define name="_DISABLE_TIDENTS" />
-	<library>rosrtl</library>
 	<library>rtl</library>
+	<library>rosrtl</library>
 	<library>string</library>
 	<linkerflag>-lgcc</linkerflag>
 	<directory name="csr">
@@ -37,7 +37,6 @@
 			<file>aulldiv.s</file>
 			<file>aullrem.s</file>
 			<file>aullshr.s</file>
-			<file>chkstk.s</file>
 			<file>exception.c</file>
 			<file>float.c</file>
 			<file>ftol.c</file>
@@ -57,13 +56,11 @@
 		<file>message.c</file>
 		<file>misc.c</file>
 		<file>path.c</file>
-		<file>ppb.c</file>
 		<file>process.c</file>
 		<file>propvar.c</file>
 		<file>rangelist.c</file>
 		<file>resource.c</file>
 		<file>teb.c</file>
-		<file>thread.c</file>
 		<file>timerqueue.c</file>
 	</directory>
 	<directory name="stdio">

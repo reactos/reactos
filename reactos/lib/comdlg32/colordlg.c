@@ -461,7 +461,7 @@ void CC_PaintTriangle( HWND hDlg, int y)
  int oben;
  RECT rect;
  HWND hwnd = GetDlgItem(hDlg, 0x2be);
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA( hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW( hDlg, DWLP_USER);
 
  if (IsWindowVisible( GetDlgItem(hDlg, 0x2c6)))   /* if full size */
  {
@@ -480,7 +480,7 @@ void CC_PaintTriangle( HWND hDlg, int y)
    points[2].y = points[0].y - w;
    points[2].x = points[1].x = points[0].x + w;
 
-   FillRect(hDC, &lpp->old3angle, (HBRUSH)GetClassLongA( hwnd, GCL_HBRBACKGROUND));
+   FillRect(hDC, &lpp->old3angle, (HBRUSH)GetClassLongPtrW( hwnd, GCLP_HBRBACKGROUND));
    lpp->old3angle.left  = points[0].x;
    lpp->old3angle.right = points[1].x + 1;
    lpp->old3angle.top   = points[2].y - 1;
@@ -499,7 +499,7 @@ void CC_PaintCross( HWND hDlg, int x, int y)
  HDC hDC;
  int w = GetDialogBaseUnits();
  HWND hwnd = GetDlgItem(hDlg, 0x2c6);
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA( hDlg, DWL_USER );
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW( hDlg, DWLP_USER );
  RECT rect;
  POINT point, p;
  HPEN hPen;
@@ -544,11 +544,11 @@ static void CC_PrepareColorGraph( HWND hDlg )
 {
  int sdif, hdif, xdif, ydif, r, g, b, hue, sat;
  HWND hwnd = GetDlgItem(hDlg, 0x2c6);
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
  HBRUSH hbrush;
  HDC hdc ;
  RECT rect, client;
- HCURSOR hcursor = SetCursor( LoadCursorA(0, (LPSTR)IDC_WAIT) );
+ HCURSOR hcursor = SetCursor( LoadCursorW(0, (LPCWSTR)IDC_WAIT) );
 
  GetClientRect(hwnd, &client);
  hdc = GetDC(hwnd);
@@ -587,7 +587,7 @@ static void CC_PrepareColorGraph( HWND hDlg )
 static void CC_PaintColorGraph( HWND hDlg )
 {
  HWND hwnd = GetDlgItem( hDlg, 0x2c6 );
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
  HDC  hDC;
  RECT rect;
  if (IsWindowVisible(hwnd))   /* if full size */
@@ -647,7 +647,7 @@ static void CC_PaintLumBar( HWND hDlg, int hue, int sat )
 void CC_EditSetRGB( HWND hDlg, COLORREF cr )
 {
  char buffer[10];
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
  int r = GetRValue(cr);
  int g = GetGValue(cr);
  int b = GetBValue(cr);
@@ -670,7 +670,7 @@ void CC_EditSetRGB( HWND hDlg, COLORREF cr )
 void CC_EditSetHSL( HWND hDlg, int h, int s, int l )
 {
  char buffer[10];
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
  lpp->updating = TRUE;
  if (IsWindowVisible( GetDlgItem(hDlg, 0x2c6) ))   /* if full size */
  {
@@ -692,7 +692,7 @@ void CC_EditSetHSL( HWND hDlg, int h, int s, int l )
 void CC_SwitchToFullSize( HWND hDlg, COLORREF result, LPRECT lprect )
 {
  int i;
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
 
  EnableWindow( GetDlgItem(hDlg, 0x2cf), FALSE);
  CC_PrepareColorGraph(hDlg);
@@ -728,7 +728,7 @@ static void CC_PaintPredefColorArray( HWND hDlg, int rows, int cols)
  HDC  hdc;
  HBRUSH hBrush;
  int dx, dy, i, j, k;
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
 
  GetClientRect(hwnd, &rect);
  dx = rect.right / cols;
@@ -737,7 +737,7 @@ static void CC_PaintPredefColorArray( HWND hDlg, int rows, int cols)
 
  hdc = GetDC(hwnd);
  GetClientRect(hwnd, &rect);
- FillRect(hdc, &rect, (HBRUSH)GetClassLongA(hwnd, GCL_HBRBACKGROUND));
+ FillRect(hdc, &rect, (HBRUSH)GetClassLongPtrW(hwnd, GCLP_HBRBACKGROUND));
  for ( j = 0; j < rows; j++ )
  {
   for ( i = 0; i < cols; i++ )
@@ -770,7 +770,7 @@ void CC_PaintUserColorArray( HWND hDlg, int rows, int cols, COLORREF* lpcr )
  HDC  hdc;
  HBRUSH hBrush;
  int dx, dy, i, j, k;
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
 
  GetClientRect(hwnd, &rect);
 
@@ -781,7 +781,7 @@ void CC_PaintUserColorArray( HWND hDlg, int rows, int cols, COLORREF* lpcr )
  hdc = GetDC(hwnd);
  if (hdc)
  {
-  FillRect(hdc, &rect, (HBRUSH)GetClassLongA(hwnd, GCL_HBRBACKGROUND) );
+  FillRect(hdc, &rect, (HBRUSH)GetClassLongPtrW(hwnd, GCLP_HBRBACKGROUND) );
   for (j = 0; j < rows; j++)
   {
    for (i = 0; i < cols; i++)
@@ -842,7 +842,7 @@ LONG CC_WMInitDialog( HWND hDlg, WPARAM wParam, LPARAM lParam )
        return FALSE;
    }
 
-   SetWindowLongA(hDlg, DWL_USER, (LONG)lpp);
+   SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)lpp);
 
    if (!(lpp->lpcc->Flags & CC_SHOWHELP))
       ShowWindow( GetDlgItem(hDlg,0x40e), SW_HIDE);
@@ -936,7 +936,7 @@ LRESULT CC_WMCommand( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD notifyCode, 
     UINT cokmsg;
     HDC hdc;
     COLORREF *cr;
-    LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+    LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
     TRACE("CC_WMCommand wParam=%x lParam=%lx\n", wParam, lParam);
     switch (wParam)
     {
@@ -1058,7 +1058,7 @@ LRESULT CC_WMCommand( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD notifyCode, 
 LRESULT CC_WMPaint( HWND hDlg, WPARAM wParam, LPARAM lParam )
 {
     PAINTSTRUCT ps;
-    LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+    LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
 
     BeginPaint(hDlg, &ps);
     /* we have to paint dialog children except text and buttons */
@@ -1079,7 +1079,7 @@ LRESULT CC_WMPaint( HWND hDlg, WPARAM wParam, LPARAM lParam )
  */
 LRESULT CC_WMLButtonUp( HWND hDlg, WPARAM wParam, LPARAM lParam )
 {
-   LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+   LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
    if (lpp->capturedGraph)
    {
        lpp->capturedGraph = 0;
@@ -1095,7 +1095,7 @@ LRESULT CC_WMLButtonUp( HWND hDlg, WPARAM wParam, LPARAM lParam )
  */
 LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam )
 {
-   LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+   LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
    int r, g, b;
 
    if (lpp->capturedGraph)
@@ -1133,7 +1133,7 @@ LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam )
  */
 LRESULT CC_WMLButtonDown( HWND hDlg, WPARAM wParam, LPARAM lParam )
 {
-   LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+   LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
    int r, g, b, i;
    i = 0;
 
@@ -1192,7 +1192,7 @@ static INT_PTR CALLBACK ColorDlgProc( HWND hDlg, UINT message,
 {
 
  int res;
- LCCPRIV lpp = (LCCPRIV)GetWindowLongA(hDlg, DWL_USER);
+ LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
  if (message != WM_INITDIALOG)
  {
   if (!lpp)
@@ -1217,7 +1217,7 @@ static INT_PTR CALLBACK ColorDlgProc( HWND hDlg, UINT message,
 	                DeleteDC(lpp->hdcMem);
 	                DeleteObject(lpp->hbmMem);
                         HeapFree(GetProcessHeap(), 0, lpp);
-	                SetWindowLongA(hDlg, DWL_USER, 0L); /* we don't need it anymore */
+	                SetWindowLongPtrW(hDlg, DWLP_USER, 0); /* we don't need it anymore */
 	                break;
 	  case WM_COMMAND:
 	                if (CC_WMCommand( hDlg, wParam, lParam, HIWORD(wParam), (HWND) lParam))

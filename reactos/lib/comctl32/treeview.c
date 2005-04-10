@@ -2386,7 +2386,9 @@ TREEVIEW_DrawItem(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem)
 
     /* The custom draw handler can query the text rectangle,
      * so get ready. */
-    TREEVIEW_ComputeTextWidth(infoPtr, wineItem, hdc);
+    /* should already be known, set to 0 when changed */
+    if (!wineItem->textWidth)
+        TREEVIEW_ComputeTextWidth(infoPtr, wineItem, hdc);
 
     cditem = 0;
 
@@ -3084,6 +3086,9 @@ TREEVIEW_Collapse(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 {
     UINT action = TVE_COLLAPSE | (bRemoveChildren ? TVE_COLLAPSERESET : 0);
     BOOL bSetSelection, bSetFirstVisible;
+    RECT scrollRect;
+    LONG scrollDist = 0;
+    TREEVIEW_ITEM *nextItem = NULL, *tmpItem;
 
     TRACE("TVE_COLLAPSE %p %s\n", wineItem, TREEVIEW_ItemName(wineItem));
 
@@ -3106,6 +3111,20 @@ TREEVIEW_Collapse(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 
     bSetFirstVisible = (infoPtr->firstVisible != NULL
                         && TREEVIEW_IsChildOf(wineItem, infoPtr->firstVisible));
+
+    tmpItem = wineItem;
+    while (tmpItem)
+    {
+        if (tmpItem->nextSibling)
+        {
+            nextItem = tmpItem->nextSibling;
+            break;
+        }
+        tmpItem = tmpItem->parent;
+    }
+
+    if (nextItem)
+        scrollDist = nextItem->rect.top;
 
     if (bRemoveChildren)
     {
@@ -3131,8 +3150,8 @@ TREEVIEW_Collapse(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 
     TREEVIEW_RecalculateVisibleOrder(infoPtr, wineItem);
 
-    TREEVIEW_SetFirstVisible(infoPtr, bSetFirstVisible ? wineItem
-			     : infoPtr->firstVisible, TRUE);
+    if (nextItem)
+        scrollDist = -(scrollDist - nextItem->rect.top);
 
     if (bSetSelection)
     {
@@ -3141,12 +3160,29 @@ TREEVIEW_Collapse(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 	    infoPtr->selectedItem->state &= ~TVIS_SELECTED;
 	wineItem->state |= TVIS_SELECTED;
 	infoPtr->selectedItem = wineItem;
-
-	TREEVIEW_EnsureVisible(infoPtr, wineItem, FALSE);
     }
 
     TREEVIEW_UpdateScrollBars(infoPtr);
-    TREEVIEW_Invalidate(infoPtr, NULL);
+
+    scrollRect.left = 0;
+    scrollRect.right = infoPtr->clientWidth;
+    scrollRect.bottom = infoPtr->clientHeight;
+
+    if (nextItem)
+    {
+        scrollRect.top = nextItem->rect.top;
+
+        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, NULL,
+                       NULL, NULL, SW_ERASE | SW_INVALIDATE);
+        TREEVIEW_Invalidate(infoPtr, wineItem);
+    } else {
+        scrollRect.top = wineItem->rect.top;
+        InvalidateRect(infoPtr->hwnd, &scrollRect, TRUE);
+    }
+
+    TREEVIEW_SetFirstVisible(infoPtr,
+                             bSetFirstVisible ? wineItem : infoPtr->firstVisible,
+                             TRUE);
 
     return TRUE;
 }
@@ -3155,10 +3191,29 @@ static BOOL
 TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 		BOOL bExpandPartial, BOOL bUser)
 {
+    LONG scrollDist;
+    LONG orgNextTop = 0;
+    RECT scrollRect;
+    TREEVIEW_ITEM *nextItem, *tmpItem;
+
     TRACE("\n");
 
     if (wineItem->state & TVIS_EXPANDED)
        return TRUE;
+
+    tmpItem = wineItem; nextItem = NULL;
+    while (tmpItem)
+    {
+        if (tmpItem->nextSibling)
+        {
+            nextItem = tmpItem->nextSibling;
+            break;
+        }
+        tmpItem = tmpItem->parent;
+    }
+
+    if (nextItem)
+        orgNextTop = nextItem->rect.top;
 
     TRACE("TVE_EXPAND %p %s\n", wineItem, TREEVIEW_ItemName(wineItem));
 
@@ -3194,6 +3249,22 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     TREEVIEW_UpdateSubTree(infoPtr, wineItem);
     TREEVIEW_UpdateScrollBars(infoPtr);
 
+    scrollRect.left = 0;
+    scrollRect.bottom = infoPtr->treeHeight;
+    scrollRect.right = infoPtr->clientWidth;
+    if (nextItem)
+    {
+        scrollDist = nextItem->rect.top - orgNextTop;
+        scrollRect.top = orgNextTop;
+
+        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, NULL,
+                       NULL, NULL, SW_ERASE | SW_INVALIDATE);
+        TREEVIEW_Invalidate (infoPtr, wineItem);
+    } else {
+        scrollRect.top = wineItem->rect.top;
+        InvalidateRect(infoPtr->hwnd, &scrollRect, FALSE);
+    }
+
     /* Scroll up so that as many children as possible are visible.
      * This fails when expanding causes an HScroll bar to appear, but we
      * don't know that yet, so the last item is obscured. */
@@ -3225,8 +3296,6 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 	    }
 	}
     }
-
-    TREEVIEW_Invalidate(infoPtr, NULL);
 
     return TRUE;
 }
@@ -4735,7 +4804,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     infoPtr->uIndent = MINIMUM_INDENT;
     infoPtr->selectedItem = 0;
     infoPtr->focusedItem = 0;
-    /* hotItem? */
+    infoPtr->hotItem = 0;
     infoPtr->firstVisible = 0;
     infoPtr->maxVisibleOrder = 0;
     infoPtr->dropItem = 0;
@@ -5435,7 +5504,10 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return TREEVIEW_MouseLeave(infoPtr);
 
     case WM_MOUSEMOVE:
-	return TREEVIEW_MouseMove(infoPtr, wParam, lParam);
+        if (infoPtr->dwStyle & TVS_TRACKSELECT)
+            return TREEVIEW_MouseMove(infoPtr, wParam, lParam);
+        else
+            return 0;
 
     case WM_NOTIFY:
 	return TREEVIEW_Notify(infoPtr, wParam, lParam);

@@ -22,11 +22,11 @@
 #define __MEM_H
 
 
-#ifdef __i386__
+#if  defined(__i386__) || defined(_PPC_)
 
 #define MM_PAGE_SIZE	4096
 
-#endif // defined __i386__
+#endif // defined __i386__ or _PPC_
 
 typedef struct
 {

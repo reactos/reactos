@@ -47,8 +47,10 @@ END
 
 
 /* Language-specific resources */
-#include "De.rc"
 #include "En.rc"
+#include "De.rc"
+#include "Dk.rc"
 #include "Es.rc"
+#include "Sv.rc"
 
 /* EOF */

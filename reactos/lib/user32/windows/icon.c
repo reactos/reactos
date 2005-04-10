@@ -566,7 +566,7 @@ LookupIconIdFromDirectoryEx(
       HDC hdc;
       int ColorBits;
 
-      hdc = GetDC(0);
+      hdc = CreateICW(NULL, NULL, NULL, NULL);
       if (Flags & LR_MONOCHROME)
       {
          ColorBits = 1;
@@ -577,7 +577,7 @@ LookupIconIdFromDirectoryEx(
          if (ColorBits > 8)
             ColorBits = 8;
       }
-      ReleaseDC(0, hdc);
+      DeleteDC(hdc);
 
       entry = CURSORICON_FindBestIcon( dir, cxDesired, cyDesired, ColorBits );
 

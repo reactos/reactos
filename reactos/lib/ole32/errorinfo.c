@@ -386,11 +386,10 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetHelpFile(
 	LPOLESTR szHelpFile)
 {
 	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
-	TRACE("(%p)\n",This);
+	TRACE("(%p,%s)\n",This,debugstr_w(szHelpFile));
 	if (This->bstrHelpFile != NULL)
 	    ERRORINFO_SysFreeString(This->bstrHelpFile);
 	This->bstrHelpFile = ERRORINFO_SysAllocString(szHelpFile);
-
 	return S_OK;
 }
 
@@ -399,9 +398,8 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetHelpContext(
  	DWORD dwHelpContext)
 {
 	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
-	TRACE("(%p)\n",This);
+	TRACE("(%p,%ld)\n",This,dwHelpContext);
 	This->m_dwHelpContext = dwHelpContext;
-
 	return S_OK;
 }
 

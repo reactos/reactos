@@ -629,7 +629,7 @@ static BOOL ACTION_IsFullPath(LPCWSTR path)
     WCHAR first = toupperW(path[0]);
     BOOL ret;
 
-    if (first >= 'A' && first <= 'A' && path[1] == ':')
+    if (first >= 'A' && first <= 'Z' && path[1] == ':')
         ret = TRUE;
     else if (path[0] == '\\' && path[1] == '\\')
         ret = TRUE;
@@ -644,6 +644,7 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
     UINT rc;
     BOOL found;
 
+    TRACE("%p, %p, %s, %d\n", package, sig, debugstr_w(expanded), depth);
     if (ACTION_IsFullPath(expanded))
     {
         if (sig->File)
@@ -681,6 +682,7 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
                 }
             }
     }
+    TRACE("returning %d\n", rc);
     return rc;
 }
 

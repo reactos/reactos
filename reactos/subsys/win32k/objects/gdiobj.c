@@ -1216,15 +1216,18 @@ LockHandle:
 
           /* dereference the process' object counter */
           /* FIXME */
-          Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
-          if(NT_SUCCESS(Status))
+          if((ULONG_PTR)PrevProcId & ~0x1)
           {
-            W32Process = OldProcess->Win32Process;
-            if(W32Process != NULL)
+            Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
+            if(NT_SUCCESS(Status))
             {
-              InterlockedDecrement(&W32Process->GDIObjects);
+              W32Process = OldProcess->Win32Process;
+              if(W32Process != NULL)
+              {
+                InterlockedDecrement(&W32Process->GDIObjects);
+              }
+              ObDereferenceObject(OldProcess);
             }
-            ObDereferenceObject(OldProcess);
           }
 
           if(NewOwner != NULL)

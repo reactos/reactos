@@ -754,6 +754,8 @@ DWORD getInterfaceEntryByName(const char *name, PMIB_IFROW entry)
                     sizeof(info.if_info) );
         }
         
+        DPRINT1("entry->bDescr = %s\n", entry->bDescr);
+
         closeTcpFile( tcpFile );
     }
 
@@ -794,4 +796,73 @@ char *toIPAddressString(unsigned int addr, char string[16])
     string[16] = '\0';
   }
   return string;
+}
+
+NTSTATUS addIPAddress( IPAddr Address, IPMask Mask, DWORD IfIndex, 
+                       PULONG NteContext, PULONG NteInstance ) 
+{
+  HANDLE tcpFile;
+  NTSTATUS status = openTcpFile( &tcpFile );
+  IP_SET_DATA Data;
+  IO_STATUS_BLOCK Iosb;
+
+  DPRINT("Called.\n");
+  
+  if( !NT_SUCCESS(status) ) return status;
+
+  Data.NteContext = IfIndex;
+  Data.NewAddress = Address;
+  Data.NewNetmask = Mask;
+
+  status = NtDeviceIoControlFile( tcpFile, 
+                                  NULL,
+                                  NULL,
+                                  NULL, 
+                                  &Iosb,
+                                  IOCTL_SET_IP_ADDRESS,
+                                  &Data,
+                                  sizeof(Data),
+                                  &Data,
+                                  sizeof(Data) );
+
+  closeTcpFile( tcpFile );
+  
+  if( NT_SUCCESS(status) ) {
+      *NteContext = Iosb.Information;
+      *NteInstance = Data.NewAddress;
+  }
+
+  switch( status ) {
+  case STATUS_SUCCESS: return ERROR_SUCCESS;
+  case STATUS_DEVICE_DOES_NOT_EXIST: return ERROR_DEV_NOT_EXIST;
+  default: return status;
+  }
+}
+
+NTSTATUS deleteIpAddress( ULONG NteContext ) 
+{
+  HANDLE tcpFile;
+  NTSTATUS status = openTcpFile( &tcpFile );
+  USHORT TheNteContext = NteContext;
+  IO_STATUS_BLOCK Iosb;
+
+  DPRINT("Called.\n");
+  
+  if( !NT_SUCCESS(status) ) return status;
+
+  status = NtDeviceIoControlFile( tcpFile, 
+                                  NULL,
+                                  NULL,
+                                  NULL, 
+                                  &Iosb,
+                                  IOCTL_DELETE_IP_ADDRESS,
+                                  &NteContext,
+                                  sizeof(USHORT),
+                                  NULL,
+                                  0 );
+
+  closeTcpFile( tcpFile );
+
+  if( NT_SUCCESS(status) ) return ERROR_SUCCESS;
+  else return ERROR_GEN_FAILURE;
 }

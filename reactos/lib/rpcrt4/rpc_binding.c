@@ -147,11 +147,12 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
                                          RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
         HeapFree(GetProcessHeap(), 0, pname);
         memset(&Connection->ovl, 0, sizeof(Connection->ovl));
-        Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
-        if (!ConnectNamedPipe(Connection->conn, &Connection->ovl)) {
+        Connection->ovl[0].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+	Connection->ovl[1].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+        if (!ConnectNamedPipe(Connection->conn, &Connection->ovl[0])) {
           WARN("Couldn't ConnectNamedPipe (error was %ld)\n", GetLastError());
           if (GetLastError() == ERROR_PIPE_CONNECTED) {
-            SetEvent(Connection->ovl.hEvent);
+            SetEvent(Connection->ovl[0].hEvent);
             return RPC_S_OK;
           } else if (GetLastError() == ERROR_IO_PENDING) {
             return RPC_S_OK;
@@ -171,13 +172,16 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
                                          RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
         HeapFree(GetProcessHeap(), 0, pname);
         memset(&Connection->ovl, 0, sizeof(Connection->ovl));
-        Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
-        if (!ConnectNamedPipe(Connection->conn, &Connection->ovl)) {
-          WARN("Couldn't ConnectNamedPipe (error was %ld)\n", GetLastError());
+        Connection->ovl[0].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+        Connection->ovl[1].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+        if (!ConnectNamedPipe(Connection->conn, &Connection->ovl[0])) {
           if (GetLastError() == ERROR_PIPE_CONNECTED) {
-            SetEvent(Connection->ovl.hEvent);
+            SetEvent(Connection->ovl[0].hEvent);
+            return RPC_S_OK;
+          } else if (GetLastError() == ERROR_IO_PENDING) {
             return RPC_S_OK;
           }
+          WARN("Couldn't ConnectNamedPipe (error was %ld)\n", GetLastError());
           return RPC_S_SERVER_UNAVAILABLE;
         }
       }
@@ -211,7 +215,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
             return RPC_S_SERVER_TOO_BUSY;
           } else {
             err = GetLastError();
-            TRACE("connection failed, error=%lx\n", err);
+            WARN("connection failed, error=%lx\n", err);
             HeapFree(GetProcessHeap(), 0, pname);
             return RPC_S_SERVER_UNAVAILABLE;
           }
@@ -223,7 +227,8 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
         /* pipe is connected; change to message-read mode. */
         dwMode = PIPE_READMODE_MESSAGE; 
         SetNamedPipeHandleState(conn, &dwMode, NULL, NULL);
-        Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+        Connection->ovl[0].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+        Connection->ovl[1].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
         Connection->conn = conn;
       }
       /* protseq=ncacn_np: named pipes */
@@ -243,7 +248,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
           err = GetLastError();
           /* we don't need to handle ERROR_PIPE_BUSY here,
            * the doc says that it is returned to the app */
-          TRACE("connection failed, error=%lx\n", err);
+          WARN("connection failed, error=%lx\n", err);
           HeapFree(GetProcessHeap(), 0, pname);
           if (err == ERROR_PIPE_BUSY)
             return RPC_S_SERVER_TOO_BUSY;
@@ -257,7 +262,8 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
         /* pipe is connected; change to message-read mode. */
         dwMode = PIPE_READMODE_MESSAGE;
         SetNamedPipeHandleState(conn, &dwMode, NULL, NULL);
-        Connection->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+        Connection->ovl[0].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+        Connection->ovl[1].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
         Connection->conn = conn;
       } else {
         ERR("protseq %s not supported\n", Connection->Protseq);
@@ -276,9 +282,13 @@ RPC_STATUS RPCRT4_CloseConnection(RpcConnection* Connection)
     CloseHandle(Connection->conn);
     Connection->conn = 0;
   }
-  if (Connection->ovl.hEvent) {
-    CloseHandle(Connection->ovl.hEvent);
-    Connection->ovl.hEvent = 0;
+  if (Connection->ovl[0].hEvent) {
+    CloseHandle(Connection->ovl[0].hEvent);
+    Connection->ovl[0].hEvent = 0;
+  }
+  if (Connection->ovl[1].hEvent) {
+    CloseHandle(Connection->ovl[1].hEvent);
+    Connection->ovl[1].hEvent = 0;
   }
   return RPC_S_OK;
 }
@@ -292,7 +302,8 @@ RPC_STATUS RPCRT4_SpawnConnection(RpcConnection** Connection, RpcConnection* Old
     /* because of the way named pipes work, we'll transfer the connected pipe
      * to the child, then reopen the server binding to continue listening */
     NewConnection->conn = OldConnection->conn;
-    NewConnection->ovl = OldConnection->ovl;
+    NewConnection->ovl[0] = OldConnection->ovl[0];
+    NewConnection->ovl[1] = OldConnection->ovl[1];
     OldConnection->conn = 0;
     memset(&OldConnection->ovl, 0, sizeof(OldConnection->ovl));
     *Connection = NewConnection;
@@ -397,7 +408,7 @@ RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, UUID* ObjectUuid)
 RPC_STATUS RPCRT4_MakeBinding(RpcBinding** Binding, RpcConnection* Connection)
 {
   RpcBinding* NewBinding;
-  TRACE("(*RpcBinding == ^%p, Connection == ^%p)\n", *Binding, Connection);
+  TRACE("(RpcBinding == ^%p, Connection == ^%p)\n", Binding, Connection);
 
   RPCRT4_AllocBinding(&NewBinding, Connection->server);
   NewBinding->Protseq = RPCRT4_strdupA(Connection->Protseq);
@@ -1093,4 +1104,23 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidW(LPWSTR protseq) {
   
   FIXME("Unknown protseq %s - we probably need to implement it one day\n", debugstr_w(protseq));
   return RPC_S_PROTSEQ_NOT_SUPPORTED;
+}
+
+/***********************************************************************
+ *             RpcImpersonateClient (RPCRT4.@)
+ *
+ * Impersonates the client connected via a binding handle so that security
+ * checks are done in the context of the client.
+ *
+ * PARAMS
+ *  BindingHandle [I] Handle to the binding to the client.
+ *
+ * RETURNS
+ *  Success: RPS_S_OK.
+ *  Failure: RPC_STATUS value.
+ */
+RPC_STATUS WINAPI RpcImpersonateClient(RPC_BINDING_HANDLE BindingHandle)
+{
+    FIXME("(%p): stub\n", BindingHandle);
+    return RPC_S_NO_CONTEXT_AVAILABLE;
 }

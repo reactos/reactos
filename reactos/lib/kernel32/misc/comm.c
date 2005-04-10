@@ -7,10 +7,15 @@
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
  *					Robert Dickenson (robd@mok.lvcom.com)
+ *					Saveliy Tretiakov (saveliyt@mail.ru)
  * UPDATE HISTORY:
  *                  Created 01/11/98
- *					RDD (30/09/2002) implemented many function bodies to call serial driver.
- *                                      KJK (11/02/2003) implemented BuildCommDCB & BuildCommDCBAndTimeouts
+ *                  RDD (30/09/2002) implemented many function bodies to call serial driver.
+ *                  KJK (11/02/2003) implemented BuildCommDCB & BuildCommDCBAndTimeouts
+ *                  ST  (21/03/2005) implemented GetCommProperties 
+ *                  ST  (24/03/2005) implemented ClearCommError. Corrected many functions.
+ *                  ST  (05/04/2005) implemented CommConfigDialog
+ *                                      
  */
 
 #include <k32.h>
@@ -23,40 +28,32 @@
 /* TYPES */
 
 /* Pointer to a callback that handles a particular parameter */
-typedef BOOL (*COMMDCB_PARAM_CALLBACK)
-(
- DCB *,
- COMMTIMEOUTS *,
- BOOL *,
- LPWSTR *
-);
+typedef BOOL (*COMMDCB_PARAM_CALLBACK)(DCB *, COMMTIMEOUTS *, BOOL *, LPWSTR *);
 
 /* Symbolic flag of any length */
 typedef struct _COMMDCB_PARAM_STRFLAG
 {
- UNICODE_STRING String;
- ULONG_PTR Value;
-} COMMDCB_PARAM_STRFLAG;
+    UNICODE_STRING String;
+    ULONG_PTR Value;
+} COMMDCB_PARAM_STRFLAG, *PCOMMDCB_PARAM_STRFLAG;
 
 /* One char long symbolic flag */
 typedef struct _COMMDCB_PARAM_CHARFLAG
 {
- WCHAR Char;
- ULONG_PTR Value;
-} COMMDCB_PARAM_CHARFLAG;
+    WCHAR Char;
+    ULONG_PTR Value;
+} COMMDCB_PARAM_CHARFLAG, *PCOMMDCB_PARAM_CHARFLAG;
 
 /* MACROS */
-/* stupid Borland C++ requires this */
-#define _L(__S__) L ## __S__
 
 /* Declare a parameter handler */
 #define COMMDCB_PARAM_HANDLER(__P__) \
  BOOL COMMDCB_ ## __P__ ## Param \
  ( \
-  DCB * Dcb, \
-  COMMTIMEOUTS * Timeouts, \
-  BOOL * StopBitsSet, \
-  LPWSTR * StrTail \
+     DCB * Dcb, \
+     COMMTIMEOUTS * Timeouts, \
+     BOOL *StopBitsSet, \
+     LPWSTR *StrTail \
  )
 
 /* UTILITIES */
@@ -64,67 +61,54 @@ typedef struct _COMMDCB_PARAM_CHARFLAG
  Lookup a string flag and return its numerical value. The flags array must be
  sorted - a dichotomycal search is performed
 */
-BOOL COMMDCB_LookupStrFlag
-(
- UNICODE_STRING * Flag,
- COMMDCB_PARAM_STRFLAG * Flags,
- int FlagCount,
- ULONG_PTR * Value
-)
+static BOOL
+COMMDCB_LookupStrFlag(PUNICODE_STRING Flag,
+                      PCOMMDCB_PARAM_STRFLAG Flags,
+                      int FlagCount,
+                      PULONG_PTR Value)
 {
- /* Lower and upper bound for dichotomycal search */
- int nLowerBound = 0;
- int nUpperBound = FlagCount - 1;
+    /* Lower and upper bound for dichotomycal search */
+    int nLowerBound = 0;
+    int nUpperBound = FlagCount - 1;
 
- do
- {
-  LONG nComparison;
-  /* pick the element in the middle of the area of interest as the pivot */
-  int nCurFlag = nLowerBound + (nUpperBound - nLowerBound) / 2;
+    do
+    {
+        LONG nComparison;
+        /* pick the element in the middle of the area of interest as the pivot */
+        int nCurFlag = nLowerBound + (nUpperBound - nLowerBound) / 2;
 
-  /* compare the string with the pivot */
-  nComparison = RtlCompareUnicodeString
-  (
-   Flag,
-   &Flags[nCurFlag].String,
-   TRUE
-  );
+        /* compare the string with the pivot */
+        nComparison = RtlCompareUnicodeString(Flag,
+                                              &Flags[nCurFlag].String,
+                                              TRUE);
 
-  /* string is equal */
-  if(nComparison == 0)
-  {
-   /* return the flag's value */
-   *Value = Flags[nCurFlag].Value;
+        /* string is equal */
+        if(nComparison == 0)
+        {
+            /* return the flag's value */
+            *Value = Flags[nCurFlag].Value;
 
-   /* success */
-   return TRUE;
-  }
-  /* string is less than */
-  else if(nComparison < 0)
-  {
-   /*
-    restrict the search to the first half of the current slice, minus the pivot
-   */
-   nUpperBound = nCurFlag - 1;
+            /* success */
+            return TRUE;
+        }
+        else if(nComparison < 0)
+        {
+            /*
+             * restrict the search to the first half of the current slice, minus the pivot
+             */
+            nUpperBound = nCurFlag - 1;
+        }
+        else
+        {
+            /*
+             * restrict the search to the second half of the current slice, minus the pivot
+             */
+            nLowerBound = nCurFlag + 1;
+        }
+    } while(nLowerBound <= nUpperBound);
 
-   /* fallthrough */
-  }
-  /* string is greater than */
-  else
-  {
-   /*
-    restrict the search to the second half of the current slice, minus the pivot
-   */
-   nLowerBound = nCurFlag + 1;
-
-   /* fallthrough */
-  }
- }
- /* continue until the slice is empty */
- while(nLowerBound <= nUpperBound);
-
- /* string not found: failure */
- return FALSE;
+    /* string not found: failure */
+    return FALSE;
 }
 
 /* PARSERS */
@@ -132,624 +116,636 @@ BOOL COMMDCB_LookupStrFlag
  Find the next character flag and return its numerical value. The flags array
  must be sorted - a dichotomycal search is performed
 */
-BOOL COMMDCB_ParseCharFlag
-(
- LPWSTR * StrTail,
- COMMDCB_PARAM_CHARFLAG * Flags,
- int FlagCount,
- ULONG_PTR * Value
-)
+static BOOL
+COMMDCB_ParseCharFlag(LPWSTR *StrTail,
+                      PCOMMDCB_PARAM_CHARFLAG Flags,
+                      int FlagCount,
+                      PULONG_PTR Value)
 {
- /* Lower and upper bound for dichotomycal search */
- int nLowerBound = 0;
- int nUpperBound = FlagCount - 1;
- /* get the first character as the flag */
- WCHAR wcFlag = (*StrTail)[0];
+    /* Lower and upper bound for dichotomycal search */
+    int nLowerBound = 0;
+    int nUpperBound = FlagCount - 1;
+    /* get the first character as the flag */
+    WCHAR wcFlag = (*StrTail)[0];
 
- /* premature end of string, or the character is whitespace */
- if(!wcFlag || iswspace(wcFlag))
-  /* failure */
-  return FALSE;
+    /* premature end of string, or the character is whitespace */
+    if(!wcFlag || iswspace(wcFlag))
+        return FALSE;
  
- /* uppercase the character for case-insensitive search */
- wcFlag = towupper(wcFlag);
+    /* uppercase the character for case-insensitive search */
+    wcFlag = towupper(wcFlag);
 
- /* skip the character flag */
- ++ (*StrTail);
+    /* skip the character flag */
+    (*StrTail)++;
 
- /* see COMMDCB_LookupStrFlag for a description of the algorithm */
- do
- {
-  LONG nComparison;
-  int nCurFlag = nLowerBound + (nUpperBound - nLowerBound) / 2;
+    /* see COMMDCB_LookupStrFlag for a description of the algorithm */
+    do
+    {
+        LONG nComparison;
+        int nCurFlag = nLowerBound + (nUpperBound - nLowerBound) / 2;
 
-  nComparison = wcFlag - towupper(Flags[nCurFlag].Char);
+        nComparison = wcFlag - towupper(Flags[nCurFlag].Char);
 
-  if(nComparison == 0)
-  {
-   *Value = Flags[nCurFlag].Value;
+        if(nComparison == 0)
+        {
+            *Value = Flags[nCurFlag].Value;
     
-   return TRUE;
-  }
-  else if(nComparison < 0)
-  {
-   nUpperBound = nCurFlag - 1;
-  }
-  else
-  {
-   nLowerBound = nCurFlag + 1;
-  }
- }
- while(nUpperBound >= nLowerBound);
+            return TRUE;
+        }
+        else if(nComparison < 0)
+        {
+            nUpperBound = nCurFlag - 1;
+        }
+        else
+        {
+            nLowerBound = nCurFlag + 1;
+        }
+    } while(nUpperBound >= nLowerBound);
 
- /* flag not found: failure */
- return FALSE;
+    /* flag not found: failure */
+    return FALSE;
 }
 
 /*
  Find the next string flag and return its numerical value. The flags array must
  be sorted - a dichotomycal search is performed
 */
-BOOL COMMDCB_ParseStrFlag
-(
- LPWSTR * StrTail,
- COMMDCB_PARAM_STRFLAG * Flags,
- int FlagCount,
- ULONG_PTR * Value
-)
+static BOOL
+COMMDCB_ParseStrFlag(LPWSTR *StrTail,
+                     PCOMMDCB_PARAM_STRFLAG Flags,
+                     int FlagCount,
+                     PULONG_PTR Value)
 {
- LPWSTR pwcNewTail = *StrTail;
- UNICODE_STRING wstrFlag;
+    LPWSTR pwcNewTail;
+    UNICODE_STRING wstrFlag;
 
- /* scan the string until the first space character or the terminating null */
- while(pwcNewTail[0] && !iswspace(pwcNewTail[0]))
-  ++ pwcNewTail;
+    /* scan the string until the first space character or the terminating null */
+    for(pwcNewTail = *StrTail;
+        pwcNewTail[0] && !iswspace(pwcNewTail[0]);
+        pwcNewTail++);
 
- /* string flag empty */
- if(pwcNewTail == *StrTail)
-  /* failure */
-  return FALSE;
+    /* string flag empty */
+    if(pwcNewTail == *StrTail)
+        return FALSE;
 
- /* build the UNICODE_STRING description of the string flag */
- wstrFlag.Buffer = *StrTail;
- wstrFlag.Length = (pwcNewTail - *StrTail) * sizeof(WCHAR);
- wstrFlag.MaximumLength = wstrFlag.Length;
+    /* build the UNICODE_STRING description of the string flag */
+    wstrFlag.Buffer = *StrTail;
+    wstrFlag.Length = (pwcNewTail - *StrTail) * sizeof(WCHAR);
+    wstrFlag.MaximumLength = wstrFlag.Length;
 
- /* skip the string flag */
- *StrTail = pwcNewTail;
+    /* skip the string flag */
+    *StrTail = pwcNewTail;
 
- /* lookup the string flag's value and return it */
- return COMMDCB_LookupStrFlag(&wstrFlag, Flags, FlagCount, Value);
+    /* lookup the string flag's value and return it */
+    return COMMDCB_LookupStrFlag(&wstrFlag, Flags, FlagCount, Value);
 }
 
 /*
  Parse a boolean value in the symbolic form on/off
 */
-BOOL COMMDCB_ParseBool(LPWSTR * StrTail, BOOL * Value)
+static BOOL
+COMMDCB_ParseBool(LPWSTR *StrTail,
+                  PBOOL Value)
 {
- BOOL bRetVal;
- ULONG_PTR nValue;
- static COMMDCB_PARAM_STRFLAG a_BoolFlags[] =
- {
-  { ROS_STRING_INITIALIZER(L"off"), FALSE },
-  { ROS_STRING_INITIALIZER(L"on"),  TRUE }
- };
+    BOOL bRetVal;
+    ULONG_PTR nValue;
+    static COMMDCB_PARAM_STRFLAG a_BoolFlags[] = {
+       { ROS_STRING_INITIALIZER(L"off"), FALSE },
+       { ROS_STRING_INITIALIZER(L"on"),  TRUE }
+    };
 
- /* try to recognize the next flag as a boolean */
- bRetVal = COMMDCB_ParseStrFlag
- (
-  StrTail,
-  a_BoolFlags,
-  sizeof(a_BoolFlags) / sizeof(a_BoolFlags[0]),
-  &nValue
- );
+    /* try to recognize the next flag as a boolean */
+    bRetVal = COMMDCB_ParseStrFlag(StrTail,
+                                   a_BoolFlags,
+                                   sizeof(a_BoolFlags) / sizeof(a_BoolFlags[0]),
+                                   &nValue);
 
- /* failure */
- if(!bRetVal) return FALSE;
 
- /* success */
- *Value = nValue ? TRUE : FALSE;
- return TRUE;
+    if(!bRetVal)
+        return FALSE;
+
+    /* success */
+    *Value = (nValue ? TRUE : FALSE);
+    return TRUE;
 }
 
 /*
  Parse a decimal integer
 */
-BOOL COMMDCB_ParseInt(LPWSTR * StrTail, DWORD * Value)
+static BOOL
+COMMDCB_ParseInt(LPWSTR *StrTail,
+                 DWORD *Value)
 {
- LPWSTR pwcPrevTail = *StrTail;
- DWORD nValue = wcstoul(*StrTail, StrTail, 10);
+    LPWSTR pwcPrevTail = *StrTail;
+    DWORD nValue = wcstoul(*StrTail, StrTail, 10);
  
- /* no character was consumed: failure */
- if(pwcPrevTail == *StrTail) return FALSE;
+    /* no character was consumed: failure */
+    if(pwcPrevTail == *StrTail)
+        return FALSE;
 
- /* success */
- *Value = nValue;
- return TRUE;
+    /* success */
+    *Value = nValue;
+    return TRUE;
 }
 
 /* PARAMETER HANDLERS */
 /* baud= */
 COMMDCB_PARAM_HANDLER(baud)
 {
- DWORD nValue;
+    DWORD nValue;
  
- (void)Timeouts;
+    (void)Timeouts;
 
- /* parse the baudrate */
- if(!COMMDCB_ParseInt(StrTail, &nValue))
-  /* failure */
-  return FALSE;
+    /* parse the baudrate */
+    if(!COMMDCB_ParseInt(StrTail, &nValue))
+        return FALSE;
 
- switch(nValue)
- {
-  /* documented abbreviations */
-  case 11: Dcb->BaudRate = 110; break;
-  case 15: Dcb->BaudRate = 150; break;
-  case 30: Dcb->BaudRate = 300; break;
-  case 60: Dcb->BaudRate = 600; break;
-  case 12: Dcb->BaudRate = 1200; break;
-  case 24: Dcb->BaudRate = 2400; break;
-  case 48: Dcb->BaudRate = 4800; break;
-  case 96: Dcb->BaudRate = 9600; break;
-  case 19: Dcb->BaudRate = 19200; break;
-  /* literal value */
-  default: Dcb->BaudRate = nValue; break;
- }
+    switch(nValue)
+    {
+        /* documented abbreviations */
+        case 11:
+            Dcb->BaudRate = 110;
+            break;
+        case 15:
+            Dcb->BaudRate = 150;
+            break;
+        case 30:
+            Dcb->BaudRate = 300;
+            break;
+        case 60:
+            Dcb->BaudRate = 600;
+            break;
+        case 12:
+            Dcb->BaudRate = 1200;
+            break;
+        case 24:
+            Dcb->BaudRate = 2400;
+            break;
+        case 48:
+            Dcb->BaudRate = 4800;
+            break;
+        case 96:
+            Dcb->BaudRate = 9600;
+            break;
+        case 19:
+            Dcb->BaudRate = 19200;
+            break;
 
- /* if the stop bits haven't been specified explicitely */
- if(!(*StopBitsSet))
- {
-  /* default the stop bits to 2 for 110 baud */
-  if(Dcb->BaudRate == 110) Dcb->StopBits = TWOSTOPBITS;
-  /* else, default the stop bits to 1 */  
-  else Dcb->StopBits = ONESTOPBIT;
- }
+        /* literal value */
+        default:
+            Dcb->BaudRate = nValue;
+            break;
+    }
 
- /* success */
- return TRUE;
+    /* if the stop bits haven't been specified explicitely */
+    if(!(*StopBitsSet))
+    {
+        /* default the stop bits to 2 for 110 baud */
+        if(Dcb->BaudRate == 110)
+            Dcb->StopBits = TWOSTOPBITS;
+        /* else, default the stop bits to 1 */
+        else
+            Dcb->StopBits = ONESTOPBIT;
+    }
+
+    /* success */
+    return TRUE;
 }
 
 /* data= */
 COMMDCB_PARAM_HANDLER(data)
 {
- DWORD nValue;
+    DWORD nValue;
 
- (void)Timeouts;
- (void)StopBitsSet;
+    (void)Timeouts;
+    (void)StopBitsSet;
 
- /* parse the data bits */
- if(!COMMDCB_ParseInt(StrTail, &nValue))
-  /* failure */
-  return FALSE;
+    /* parse the data bits */
+    if(!COMMDCB_ParseInt(StrTail, &nValue))
+        return FALSE;
 
- /* value out of range: failure */
- if(nValue < 5 || nValue > 8) return FALSE;
+    /* value out of range: failure */
+    if(nValue < 5 || nValue > 8)
+        return FALSE;
   
- /* success */
- Dcb->ByteSize = nValue;
- return TRUE;
+    /* success */
+    Dcb->ByteSize = nValue;
+    return TRUE;
 }
 
 /* dtr= */
 COMMDCB_PARAM_HANDLER(dtr)
 {
- BOOL bRetVal;
- ULONG_PTR nValue;
- static COMMDCB_PARAM_STRFLAG a_DTRFlags[] =
- {
-  { ROS_STRING_INITIALIZER(L"hs"),  DTR_CONTROL_HANDSHAKE },
-  { ROS_STRING_INITIALIZER(L"off"), DTR_CONTROL_DISABLE },
-  { ROS_STRING_INITIALIZER(L"on"),  DTR_CONTROL_ENABLE }
- };
+    BOOL bRetVal;
+    ULONG_PTR nValue;
+    static COMMDCB_PARAM_STRFLAG a_DTRFlags[] = {
+        { ROS_STRING_INITIALIZER(L"hs"),  DTR_CONTROL_HANDSHAKE },
+        { ROS_STRING_INITIALIZER(L"off"), DTR_CONTROL_DISABLE },
+        { ROS_STRING_INITIALIZER(L"on"),  DTR_CONTROL_ENABLE }
+    };
 
- (void)Timeouts;
- (void)StopBitsSet;
+    (void)Timeouts;
+    (void)StopBitsSet;
 
- /* parse the flag */
- bRetVal = COMMDCB_ParseStrFlag
- (
-  StrTail,
-  a_DTRFlags,
-  sizeof(a_DTRFlags) / sizeof(a_DTRFlags[0]),
-  &nValue
- );
+    /* parse the flag */
+    bRetVal = COMMDCB_ParseStrFlag(StrTail,
+                                   a_DTRFlags,
+                                   sizeof(a_DTRFlags) / sizeof(a_DTRFlags[0]),
+                                   &nValue);
 
- /* failure */
- if(!bRetVal) return FALSE;
+    /* failure */
+    if(!bRetVal)
+        return FALSE;
 
- /* success */
- Dcb->fDtrControl = nValue;
- return TRUE;
+    /* success */
+    Dcb->fDtrControl = nValue;
+    return TRUE;
 }
 
 /* idsr= */
 COMMDCB_PARAM_HANDLER(idsr)
 {
- BOOL bValue;
+    BOOL bValue;
  
- (void)Timeouts;
- (void)StopBitsSet;
+    (void)Timeouts;
+    (void)StopBitsSet;
 
- /* parse the flag */
- if(!COMMDCB_ParseBool(StrTail, &bValue))
-  /* failure */
-  return FALSE;
+    /* parse the flag */
+    if(!COMMDCB_ParseBool(StrTail, &bValue))
+       return FALSE;
 
- /* success */
- Dcb->fDsrSensitivity = bValue;
- return TRUE;
+    /* success */
+    Dcb->fDsrSensitivity = bValue;
+    return TRUE;
 }
 
 /* octs= */
 COMMDCB_PARAM_HANDLER(octs)
 {
- BOOL bValue;
+    BOOL bValue;
 
- (void)Timeouts;
- (void)StopBitsSet;
+    (void)Timeouts;
+    (void)StopBitsSet;
 
- /* parse the flag */
- if(!COMMDCB_ParseBool(StrTail, &bValue))
-  /* failure */
-  return FALSE;
+    /* parse the flag */
+    if(!COMMDCB_ParseBool(StrTail, &bValue))
+        return FALSE;
 
- /* success */
- Dcb->fOutxCtsFlow = bValue;
- return TRUE;
+    /* success */
+    Dcb->fOutxCtsFlow = bValue;
+    return TRUE;
 }
 
 /* odsr= */
 COMMDCB_PARAM_HANDLER(odsr)
 {
- BOOL bValue;
+    BOOL bValue;
 
- (void)Timeouts;
- (void)StopBitsSet;
+    (void)Timeouts;
+    (void)StopBitsSet;
 
- /* parse the flag */
- if(!COMMDCB_ParseBool(StrTail, &bValue))
-  /* failure */
-  return FALSE;
+    /* parse the flag */
+    if(!COMMDCB_ParseBool(StrTail, &bValue))
+        return FALSE;
 
- /* success */
- Dcb->fOutxDsrFlow = bValue;
- return TRUE;
+    /* success */
+    Dcb->fOutxDsrFlow = bValue;
+    return TRUE;
 }
 
 /* parity= */
 COMMDCB_PARAM_HANDLER(parity)
 {
- BOOL bRetVal;
- ULONG_PTR nValue;
- static COMMDCB_PARAM_CHARFLAG a_ParityFlags[] =
- {
-  { L'e', EVENPARITY },
-  { L'm', MARKPARITY },
-  { L'n', NOPARITY },
-  { L'o', ODDPARITY },
-  { L's', SPACEPARITY }
- };
+    BOOL bRetVal;
+    ULONG_PTR nValue;
+    static COMMDCB_PARAM_CHARFLAG a_ParityFlags[] = {
+        { L'e', EVENPARITY },
+        { L'm', MARKPARITY },
+        { L'n', NOPARITY },
+        { L'o', ODDPARITY },
+        { L's', SPACEPARITY }
+    };
 
- (void)Timeouts;
- (void)StopBitsSet;
+    (void)Timeouts;
+    (void)StopBitsSet;
 
- /* parse the flag */
- bRetVal = COMMDCB_ParseCharFlag
- (
-  StrTail,
-  a_ParityFlags,
-  sizeof(a_ParityFlags) / sizeof(a_ParityFlags[0]),
-  &nValue
- );
+    /* parse the flag */
+    bRetVal = COMMDCB_ParseCharFlag(StrTail,
+                                    a_ParityFlags,
+                                    sizeof(a_ParityFlags) / sizeof(a_ParityFlags[0]),
+                                    &nValue);
 
- /* failure */
- if(!bRetVal) return FALSE;
+    /* failure */
+    if(!bRetVal)
+        return FALSE;
 
- /* success */
- Dcb->Parity = nValue;
- return TRUE;
+    /* success */
+    Dcb->Parity = nValue;
+    return TRUE;
 }
 
 /* rts= */
 COMMDCB_PARAM_HANDLER(rts)
 {
- DWORD nRetVal;
- ULONG_PTR nValue;
- static COMMDCB_PARAM_STRFLAG a_RTSFlags[] =
- {
-  { ROS_STRING_INITIALIZER(L"hs"),  RTS_CONTROL_HANDSHAKE },
-  { ROS_STRING_INITIALIZER(L"off"), RTS_CONTROL_DISABLE },
-  { ROS_STRING_INITIALIZER(L"on"),  RTS_CONTROL_ENABLE },
-  { ROS_STRING_INITIALIZER(L"tg"),  RTS_CONTROL_TOGGLE }
- };
+    DWORD nRetVal;
+    ULONG_PTR nValue;
+    static COMMDCB_PARAM_STRFLAG a_RTSFlags[] = {
+        { ROS_STRING_INITIALIZER(L"hs"),  RTS_CONTROL_HANDSHAKE },
+        { ROS_STRING_INITIALIZER(L"off"), RTS_CONTROL_DISABLE },
+        { ROS_STRING_INITIALIZER(L"on"),  RTS_CONTROL_ENABLE },
+        { ROS_STRING_INITIALIZER(L"tg"),  RTS_CONTROL_TOGGLE }
+    };
 
- (void)Timeouts;
- (void)StopBitsSet;
+    (void)Timeouts;
+    (void)StopBitsSet;
 
- /* parse the flag */
- nRetVal = COMMDCB_ParseStrFlag
- (
-  StrTail,
-  a_RTSFlags,
-  sizeof(a_RTSFlags) / sizeof(a_RTSFlags[0]),
-  &nValue
- );
+    /* parse the flag */
+    nRetVal = COMMDCB_ParseStrFlag(StrTail,
+                                   a_RTSFlags,
+                                   sizeof(a_RTSFlags) / sizeof(a_RTSFlags[0]),
+                                   &nValue);
 
- /* failure */
- if(!nRetVal) return FALSE;
+    /* failure */
+    if(!nRetVal)
+        return FALSE;
 
- /* success */
- Dcb->fRtsControl = nValue;
- return TRUE;
+    /* success */
+    Dcb->fRtsControl = nValue;
+    return TRUE;
 }
 
 /* stop= */
 COMMDCB_PARAM_HANDLER(stop)
 {
- BOOL bRetVal;
- ULONG_PTR nValue;
- static COMMDCB_PARAM_STRFLAG a_StopFlags[] =
- {
-  { ROS_STRING_INITIALIZER(L"1"),   ONESTOPBIT },
-  { ROS_STRING_INITIALIZER(L"1.5"), ONE5STOPBITS },
-  { ROS_STRING_INITIALIZER(L"2"),   TWOSTOPBITS }
- };
+    BOOL bRetVal;
+    ULONG_PTR nValue;
+    static COMMDCB_PARAM_STRFLAG a_StopFlags[] = {
+        { ROS_STRING_INITIALIZER(L"1"),   ONESTOPBIT },
+        { ROS_STRING_INITIALIZER(L"1.5"), ONE5STOPBITS },
+        { ROS_STRING_INITIALIZER(L"2"),   TWOSTOPBITS }
+    };
 
- (void)Timeouts;
+    (void)Timeouts;
 
- /* parse the flag */
- bRetVal = COMMDCB_ParseStrFlag
- (
-  StrTail,
-  a_StopFlags,
-  sizeof(a_StopFlags) / sizeof(a_StopFlags[0]),
-  &nValue
- );
+    /* parse the flag */
+    bRetVal = COMMDCB_ParseStrFlag(StrTail,
+                                   a_StopFlags,
+                                   sizeof(a_StopFlags) / sizeof(a_StopFlags[0]),
+                                   &nValue);
 
- /* failure */
- if(!bRetVal) return FALSE;
+    /* failure */
+    if(!bRetVal)
+        return FALSE;
 
- /* tell the baud= handler that the stop bits have been specified explicitely */
- *StopBitsSet = TRUE;
+    /* tell the baud= handler that the stop bits have been specified explicitely */
+    *StopBitsSet = TRUE;
 
- /* success */
- Dcb->StopBits = nValue;
- return TRUE;
+    /* success */
+    Dcb->StopBits = nValue;
+    return TRUE;
 }
 
 /* to= */
 COMMDCB_PARAM_HANDLER(to)
 {
- BOOL bValue;
+    BOOL bValue;
 
- (void)Dcb;
- (void)StopBitsSet;
+    (void)Dcb;
+    (void)StopBitsSet;
 
- /* parse the flag */
- if(!COMMDCB_ParseBool(StrTail, &bValue))
-  /* failure */
-  return FALSE;
+    /* parse the flag */
+    if(!COMMDCB_ParseBool(StrTail, &bValue))
+        return FALSE;
 
- /* for BuildCommDCB(), Timeouts is NULL */
- if(Timeouts)
- {
-  /* why? no idea. All values taken from Windows 2000 with experimentation */
-  Timeouts->ReadIntervalTimeout = 0;
-  Timeouts->ReadTotalTimeoutMultiplier = 0;
-  Timeouts->ReadTotalTimeoutConstant = 0;
-  Timeouts->WriteTotalTimeoutMultiplier = 0;
+    /* for BuildCommDCB(), Timeouts is NULL */
+    if(Timeouts)
+    {
+        /* why? no idea. All values taken from Windows 2000 with experimentation */
+        Timeouts->ReadIntervalTimeout = 0;
+        Timeouts->ReadTotalTimeoutMultiplier = 0;
+        Timeouts->ReadTotalTimeoutConstant = 0;
+        Timeouts->WriteTotalTimeoutMultiplier = 0;
 
-  /* timeout */
-  if(bValue) Timeouts->WriteTotalTimeoutConstant = 60000;
-  /* no timeout */
-  else Timeouts->WriteTotalTimeoutConstant = 0;
- }
+        if(bValue)
+        {
+            /* timeout */
+            Timeouts->WriteTotalTimeoutConstant = 60000;
+        }
+        else
+        {
+            /* no timeout */
+            Timeouts->WriteTotalTimeoutConstant = 0;
+        }
+    }
 
- /* success */
- return TRUE;
+    /* success */
+    return TRUE;
 }
 
 /* xon= */
 COMMDCB_PARAM_HANDLER(xon)
 {
- BOOL bValue;
+    BOOL bValue;
 
- (void)Timeouts;
- (void)StopBitsSet;
+    (void)Timeouts;
+    (void)StopBitsSet;
 
- /* parse the flag */
- if(!COMMDCB_ParseBool(StrTail, &bValue))
-  /* failure */
-  return FALSE;
+    /* parse the flag */
+    if(!COMMDCB_ParseBool(StrTail, &bValue))
+        return FALSE;
 
- /* XON/XOFF */
- if(bValue) Dcb->fInX = Dcb->fOutX = TRUE;
- /* no XON/XOFF */
- else Dcb->fInX = Dcb->fOutX = FALSE;
+    if(bValue)
+    {
+        /* XON/XOFF */
+        Dcb->fInX = Dcb->fOutX = TRUE;
+    }
+    else
+    {
+        /* no XON/XOFF */
+        Dcb->fInX = Dcb->fOutX = FALSE;
+    }
 
- /* success */
- return TRUE;
+    /* success */
+    return TRUE;
 }
 
 /* FUNCTIONS */
 #define COMMDCB_PARAM(__P__) \
  { \
-  ROS_STRING_INITIALIZER(_L(#__P__)), \
+  ROS_STRING_INITIALIZER( L""#__P__ ), \
   (ULONG_PTR)&COMMDCB_ ## __P__ ## Param \
  }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-BuildCommDCBAndTimeoutsW
-(
- LPCWSTR lpDef,
- LPDCB lpDCB,
- LPCOMMTIMEOUTS lpCommTimeouts
-)
+BuildCommDCBAndTimeoutsW(LPCWSTR lpDef,
+                         LPDCB lpDCB,
+                         LPCOMMTIMEOUTS lpCommTimeouts)
 {
- /* tell the baud= handler that the stop bits should be defaulted */
- BOOL bStopBitsSet = FALSE;
+    /* tell the baud= handler that the stop bits should be defaulted */
+    BOOL bStopBitsSet = FALSE;
 
- /* parameter validation */
- if(lpDCB->DCBlength != sizeof(DCB)) goto InvalidParam;
+    /* parameter validation */
+    if(lpDCB->DCBlength != sizeof(DCB))
+        goto InvalidParam;
 
- /* set defaults */
- lpDCB->StopBits = ONESTOPBIT;
+    /* set defaults */
+    lpDCB->StopBits = ONESTOPBIT;
 
- /*
-  The documentation for MODE says that data= defaults to 7, but BuildCommDCB
-  doesn't seem to set it
- */
- /* lpDCB->ByteSize = 7; */
+    /*
+     * The documentation for MODE says that data= defaults to 7, but BuildCommDCB
+     * doesn't seem to set it
+     */
+    /* lpDCB->ByteSize = 7; */
 
- /* skip COMx[n] */
- if
- (
-  lpDef[0] &&
-  towupper(lpDef[0]) == L'C' &&
-  lpDef[1] &&
-  towupper(lpDef[1]) == L'O' &&
-  lpDef[2] &&
-  towupper(lpDef[2]) == L'M'
- )
- {
-  DWORD nDummy;
+    /* skip COMx[n] */
+    if(lpDef[0] &&
+       towupper(lpDef[0]) == L'C' &&
+       lpDef[1] &&
+       towupper(lpDef[1]) == L'O' &&
+       lpDef[2] &&
+       towupper(lpDef[2]) == L'M')
+    {
+        DWORD nDummy;
 
-  /* skip "COM" */
-  lpDef += 3;
+        /* skip "COM" */
+        lpDef += 3;
 
-  /* premature end of string */
-  if(!lpDef[0]) goto InvalidParam;
+        /* premature end of string */
+        if(!lpDef[0])
+            goto InvalidParam;
 
-  /* skip "x" */
-  if(!COMMDCB_ParseInt((LPWSTR *)&lpDef, &nDummy)) goto InvalidParam;
+        /* skip "x" */
+        if(!COMMDCB_ParseInt((LPWSTR *)&lpDef, &nDummy))
+            goto InvalidParam;
 
-  /* skip ":" */
-  if(lpDef[0] == L':') ++ lpDef;
- }
+        /* skip ":" */
+        if(lpDef[0] == L':')
+            lpDef++;
+    }
 
- /* skip leading whitespace */
- while(lpDef[0] && iswspace(lpDef[0])) ++ lpDef;
+    /* skip leading whitespace */
+    while(lpDef[0] && iswspace(lpDef[0]))
+        lpDef++;
 
- /* repeat until the end of the string */
- while(lpDef[0])
- {
-  static COMMDCB_PARAM_STRFLAG a_Params[] =
-  {
-   COMMDCB_PARAM(baud),
-   COMMDCB_PARAM(data),
-   COMMDCB_PARAM(dtr),
-   COMMDCB_PARAM(idsr),
-   COMMDCB_PARAM(octs),
-   COMMDCB_PARAM(odsr),
-   COMMDCB_PARAM(parity),
-   COMMDCB_PARAM(rts),
-   COMMDCB_PARAM(stop),
-   COMMDCB_PARAM(to),
-   COMMDCB_PARAM(xon)
-  };
-  BOOL bRetVal;
-  COMMDCB_PARAM_CALLBACK pCallback;
-  UNICODE_STRING wstrParam;
-  LPWSTR pwcPrevTail = (LPWSTR)lpDef;
+    /* repeat until the end of the string */
+    while(lpDef[0])
+    {
+        static COMMDCB_PARAM_STRFLAG a_Params[] = {
+            COMMDCB_PARAM(baud),
+            COMMDCB_PARAM(data),
+            COMMDCB_PARAM(dtr),
+            COMMDCB_PARAM(idsr),
+            COMMDCB_PARAM(octs),
+            COMMDCB_PARAM(odsr),
+            COMMDCB_PARAM(parity),
+            COMMDCB_PARAM(rts),
+            COMMDCB_PARAM(stop),
+            COMMDCB_PARAM(to),
+            COMMDCB_PARAM(xon)
+        };
+        BOOL bRetVal;
+        COMMDCB_PARAM_CALLBACK pCallback;
+        UNICODE_STRING wstrParam;
+        LPWSTR pwcPrevTail = (LPWSTR)lpDef;
 
-  /* get the parameter */
-  while(lpDef[0] && lpDef[0] != L'=') ++ lpDef;
+        /* get the parameter */
+        while(lpDef[0] && lpDef[0] != L'=')
+            lpDef++;
 
-  /* premature end of string */
-  if(!lpDef[0]) goto InvalidParam;
+        /* premature end of string */
+        if(!lpDef[0])
+            goto InvalidParam;
 
-  /* build the parameter's UNICODE_STRING */
-  wstrParam.Buffer = pwcPrevTail;
-  wstrParam.Length = (lpDef - pwcPrevTail) * sizeof(WCHAR);
-  wstrParam.MaximumLength = wstrParam.Length;
+        /* build the parameter's UNICODE_STRING */
+        wstrParam.Buffer = pwcPrevTail;
+        wstrParam.Length = (lpDef - pwcPrevTail) * sizeof(WCHAR);
+        wstrParam.MaximumLength = wstrParam.Length;
 
-  /* skip the "=" */
-  ++ lpDef;
+        /* skip the "=" */
+        lpDef++;
 
-  /* lookup the callback for the parameter */
-  bRetVal = COMMDCB_LookupStrFlag
-  (
-   &wstrParam,
-   a_Params,
-   sizeof(a_Params) / sizeof(a_Params[0]),
-   (ULONG_PTR *)&pCallback
-  );
+        /* lookup the callback for the parameter */
+        bRetVal = COMMDCB_LookupStrFlag(&wstrParam,
+                                        a_Params,
+                                        sizeof(a_Params) / sizeof(a_Params[0]),
+                                        (ULONG_PTR *)&pCallback);
 
-  /* invalid parameter */
-  if(!bRetVal) goto InvalidParam;
+        /* invalid parameter */
+        if(!bRetVal)
+            goto InvalidParam;
 
-  /* call the callback to parse the parameter's argument */
-  if(!pCallback(lpDCB, lpCommTimeouts, &bStopBitsSet, (LPWSTR *)&lpDef))
-   /* failure */
-   goto InvalidParam;
+        /* call the callback to parse the parameter's argument */
+        if(!pCallback(lpDCB, lpCommTimeouts, &bStopBitsSet, (LPWSTR *)&lpDef))
+            goto InvalidParam;
 
-  /* skip trailing whitespace */
-  while(lpDef[0] && iswspace(lpDef[0])) ++ lpDef;
- }
+        /* skip trailing whitespace */
+        while(lpDef[0] && iswspace(lpDef[0]))
+            lpDef++;
+    }
 
- /* success */
- return TRUE;
+    /* success */
+    return TRUE;
 
 InvalidParam:
- /* failure */
- SetLastError(ERROR_INVALID_PARAMETER);
- return FALSE;
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-BuildCommDCBAndTimeoutsA(LPCSTR lpDef, LPDCB lpDCB,	LPCOMMTIMEOUTS lpCommTimeouts)
+BuildCommDCBAndTimeoutsA(LPCSTR lpDef,
+                         LPDCB lpDCB,
+                         LPCOMMTIMEOUTS lpCommTimeouts)
 {
- NTSTATUS nErrCode;
- BOOL bRetVal;
- ANSI_STRING strDef;
- UNICODE_STRING wstrDef;
+    NTSTATUS Status;
+    BOOL bRetVal;
+    ANSI_STRING strDef;
+    UNICODE_STRING wstrDef;
 
- RtlInitAnsiString(&strDef, (LPSTR)lpDef);
+    RtlInitAnsiString(&strDef, (LPSTR)lpDef);
  
- nErrCode = RtlAnsiStringToUnicodeString(&wstrDef, &strDef, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&wstrDef, &strDef, TRUE);
 
- if(!NT_SUCCESS(nErrCode))
- {
-  SetLastErrorByStatus(nErrCode);
-  return FALSE;
- }
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
  
- bRetVal = BuildCommDCBAndTimeoutsW(wstrDef.Buffer, lpDCB, lpCommTimeouts);
+    bRetVal = BuildCommDCBAndTimeoutsW(wstrDef.Buffer, lpDCB, lpCommTimeouts);
 
- RtlFreeUnicodeString(&wstrDef);
+    RtlFreeUnicodeString(&wstrDef);
  
- return bRetVal;
+    return bRetVal;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 BuildCommDCBA(LPCSTR lpDef, LPDCB lpDCB)
 {
- return BuildCommDCBAndTimeoutsA(lpDef, lpDCB, NULL);
+    return BuildCommDCBAndTimeoutsA(lpDef, lpDCB, NULL);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 BuildCommDCBW(LPCWSTR lpDef, LPDCB lpDCB)
 {
- return BuildCommDCBAndTimeoutsW(lpDef, lpDCB, NULL);
+    return BuildCommDCBAndTimeoutsW(lpDef, lpDCB, NULL);
 }
 
 
@@ -760,91 +756,129 @@ BOOL
 STDCALL
 ClearCommBreak(HANDLE hFile)
 {
-	BOOL result = FALSE;
-	DWORD dwBytesReturned;
-
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_OFF, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
+    DWORD dwBytesReturned;
+    return DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_OFF, 
+                        NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat)
+ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpComStat)
 {
-	BOOL result = FALSE;
+	BOOL status = FALSE;
 	DWORD dwBytesReturned;
+        SERIAL_STATUS SerialStatus;
+        
+        status = DeviceIoControl(hFile, IOCTL_SERIAL_GET_COMMSTATUS, NULL, 0, 
+                        &SerialStatus, sizeof(SERIAL_STATUS), &dwBytesReturned, NULL);
+        
+        if(!NT_SUCCESS(status))
+        {
+            return status;
+        }
+        
+        if(lpErrors)
+        {
+            *lpErrors = 0;
+            if(SerialStatus.Errors & SERIAL_ERROR_BREAK)
+                *lpErrors |= CE_BREAK;
+            if(SerialStatus.Errors & SERIAL_ERROR_FRAMING)
+                *lpErrors |= CE_FRAME;
+            if(SerialStatus.Errors & SERIAL_ERROR_OVERRUN)
+                *lpErrors |= CE_OVERRUN;
+            if(SerialStatus.Errors & SERIAL_ERROR_QUEUEOVERRUN )
+                *lpErrors |= CE_RXOVER;
+            if(SerialStatus.Errors & SERIAL_ERROR_PARITY)
+                *lpErrors |= CE_RXPARITY;
+        }
+        
+	if (lpComStat) 
+        {
+            ZeroMemory(lpComStat, sizeof(COMSTAT));
+            
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_CTS)
+                lpComStat->fCtsHold = TRUE;
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_DSR)
+                lpComStat->fDsrHold = TRUE;
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_DCD)
+                lpComStat->fRlsdHold = TRUE;
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_FOR_XON)
+                lpComStat->fXoffHold = TRUE;
+            if(SerialStatus.HoldReasons & SERIAL_TX_WAITING_XOFF_SENT)
+                lpComStat->fXoffSent = TRUE;
+            
+            if(SerialStatus.EofReceived)
+                lpComStat->fEof = TRUE;
+            
+            if(SerialStatus.WaitForImmediate)
+                lpComStat->fTxim = TRUE;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		//SetLastError(CE_MODE);
-		return FALSE;
-	}
-	if (lpErrors == NULL) {
-        DPRINT("ERROR: GetCommState() - NULL Errors pointer\n");
-		return FALSE;
-	}
-//	*lpErrors = CE_BREAK;
-//	*lpErrors = CE_FRAME;
-//	*lpErrors = CE_IOE;
-//	*lpErrors = CE_MODE;
-//	*lpErrors = CE_OVERRUN;
-//	*lpErrors = CE_RXOVER;
-//	*lpErrors = CE_RXPARITY;
-//	*lpErrors = CE_TXFULL;
-/*
-CE_BREAK The hardware detected a break condition. 
-CE_FRAME The hardware detected a framing error. 
-CE_IOE An I/O error occurred during communications with the device. 
-CE_MODE The requested mode is not supported, or the hFile parameter is invalid. If this value is specified, it is the only valid error. 
-CE_OVERRUN A character-buffer overrun has occurred. The next character is lost. 
-CE_RXOVER An input buffer overflow has occurred. There is either no room in the input buffer, or a character was received after the end-of-file (EOF) character. 
-CE_RXPARITY The hardware detected a parity error. 
-CE_TXFULL The application tried to transmit a character, but the output buffer was full. 
- */
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_RESET_DEVICE, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
-
-	if (lpStat != NULL) {
-		lpStat->fCtsHold = 0;
-		lpStat->fDsrHold = 0;
-		lpStat->fRlsdHold = 0;
-		lpStat->fXoffHold = 0;
-		lpStat->fXoffSent = 0;
-		lpStat->fEof = 0;
-		lpStat->fTxim = 0;
-		lpStat->cbInQue = 0;
-		lpStat->cbOutQue = 0;
+            lpComStat->cbInQue = SerialStatus.AmountInInQueue;
+            lpComStat->cbOutQue = SerialStatus.AmountInOutQueue;
 	}
 	return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 CommConfigDialogA(LPCSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	PWCHAR NameW;
+	BOOL result;
+	
+	/* don't use the static thread buffer so operations in serialui
+	   don't overwrite the string */
+	if(!(NameW = FilenameA2W(lpszName, TRUE)))
+	{
+		return FALSE;
+	}
+	
+	result = CommConfigDialogW(NameW, hWnd, lpCC);
+
+	RtlFreeHeap(RtlGetProcessHeap(), 0, NameW);
+	
+	return result;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 CommConfigDialogW(LPCWSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	BOOL (STDCALL *drvCommDlgW)(LPCWSTR, HWND, LPCOMMCONFIG);
+	HMODULE hSerialuiDll;
+	BOOL result;
+	
+	//FIXME: Get dll name from registry. (setupapi needed)
+	if(!(hSerialuiDll = LoadLibraryW(L"serialui.dll")))
+	{
+		DPRINT("CommConfigDialogW: serialui.dll not found.\n");
+		return FALSE;
+	}
+	
+	drvCommDlgW = GetProcAddress(hSerialuiDll, "drvCommConfigDialogW");
+	
+	if(!drvCommDlgW)
+	{
+		DPRINT("CommConfigDialogW: serialui does not export drvCommConfigDialogW\n");
+		FreeLibrary(hSerialuiDll);
+		return FALSE;
+	}
+	
+	result = drvCommDlgW(lpszName, hWnd, lpCC);
+	FreeLibrary(hSerialuiDll);
+	return result;
 }
 
 
@@ -858,9 +892,6 @@ EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
 	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
 	switch (dwFunc) {
     case CLRDTR: // Clears the DTR (data-terminal-ready) signal. 
         result = DeviceIoControl(hFile, IOCTL_SERIAL_CLR_DTR, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
@@ -891,7 +922,7 @@ EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
     	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 		break;
 	}
-	return TRUE;
+	return result;
 }
 
 
@@ -914,15 +945,9 @@ BOOL
 STDCALL
 GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
-
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_WAIT_MASK, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_GET_WAIT_MASK, 
 		NULL, 0, lpEvtMask, sizeof(DWORD), &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -933,27 +958,23 @@ BOOL
 STDCALL
 GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_MODEMSTATUS,
+	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_MODEMSTATUS,
 		NULL, 0, lpModemStat, sizeof(DWORD), &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	DWORD dwBytesReturned;
+	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_PROPERTIES, 0, 0, 
+		lpCommProp, sizeof(COMMPROP), &dwBytesReturned, 0);
 }
 
 
@@ -974,22 +995,19 @@ GetCommState(HANDLE hFile, LPDCB lpDCB)
 
     DPRINT("GetCommState(%d, %p)\n", hFile, lpDCB);
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-        DPRINT("ERROR: GetCommState() - INVALID_HANDLE_VALUE\n");
-		return FALSE;
-	}
 	if (lpDCB == NULL) {
         DPRINT("ERROR: GetCommState() - NULL DCB pointer\n");
 		return FALSE;
 	}
-	if (lpDCB->DCBlength != sizeof(DCB)) {
-        DPRINT("ERROR: GetCommState() - Invalid DCB size\n");
-		return FALSE;
-	}
 
-//    DPRINT("    GetCommState() CALLING DeviceIoControl\n");
-//    result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_COMMSTATUS, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
-//    DPRINT("    GetCommState() DeviceIoControl returned %d\n", result);
+	lpDCB->DCBlength = sizeof(DCB);
+	
+	/* FIXME: need to fill following fields (1 bit):
+	 * fBinary: binary mode, no EOF check
+	 * fParity: enable parity checking
+	 * fOutX  : XON/XOFF out flow control
+	 * fInX   : XON/XOFF in flow control
+	 */
 
 	result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_BAUD_RATE,
 			 NULL, 0, &BaudRate, sizeof(BaudRate),&dwBytesReturned, NULL);
@@ -1077,20 +1095,16 @@ BOOL
 STDCALL
 GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
 	if (lpCommTimeouts == NULL) {
 		return FALSE;
 	}
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_TIMEOUTS,
+        
+	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_TIMEOUTS,
 							 NULL, 0, 
 							 lpCommTimeouts, sizeof(COMMTIMEOUTS), 
 							 &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1125,15 +1139,10 @@ BOOL
 STDCALL
 PurgeComm(HANDLE hFile, DWORD dwFlags)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_PURGE, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_PURGE, 
 		&dwFlags, sizeof(DWORD), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1144,14 +1153,9 @@ BOOL
 STDCALL
 SetCommBreak(HANDLE hFile)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_ON, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
+        return DeviceIoControl(hFile, IOCTL_SERIAL_SET_BREAK_ON, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
 }
 
 
@@ -1174,15 +1178,10 @@ BOOL
 STDCALL
 SetCommMask(HANDLE hFile, DWORD dwEvtMask)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-    result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_WAIT_MASK, 
+        return DeviceIoControl(hFile, IOCTL_SERIAL_SET_WAIT_MASK, 
 		&dwEvtMask, sizeof(DWORD), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1203,10 +1202,6 @@ SetCommState(HANDLE	hFile, LPDCB lpDCB)
 
     DPRINT("SetCommState(%d, %p) - ENTERED\n", hFile, lpDCB);
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-        DPRINT("SetCommState() - ERROR: INVALID_HANDLE_VALUE\n");
-		return FALSE;
-	}
 	if (lpDCB == NULL) {
         DPRINT("SetCommState() - ERROR: NULL DCB pointer passed\n");
 		return FALSE;
@@ -1324,13 +1319,9 @@ BOOL
 STDCALL
 SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 	SERIAL_TIMEOUTS Timeouts;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
 	if (lpCommTimeouts == NULL) {
 		return FALSE;
 	}
@@ -1339,9 +1330,9 @@ SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 	Timeouts.ReadTotalTimeoutConstant = lpCommTimeouts->ReadTotalTimeoutConstant;
 	Timeouts.WriteTotalTimeoutMultiplier = lpCommTimeouts->WriteTotalTimeoutMultiplier;
 	Timeouts.WriteTotalTimeoutConstant = lpCommTimeouts->WriteTotalTimeoutConstant;
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_TIMEOUTS,
+	
+        return DeviceIoControl(hFile, IOCTL_SERIAL_SET_TIMEOUTS,
 		&Timeouts, sizeof(Timeouts), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1376,18 +1367,13 @@ BOOL
 STDCALL
 SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 	SERIAL_QUEUE_SIZE QueueSize;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
     QueueSize.InSize = dwInQueue;
     QueueSize.OutSize = dwOutQueue;
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_SET_QUEUE_SIZE,
+    return DeviceIoControl(hFile, IOCTL_SERIAL_SET_QUEUE_SIZE,
 		&QueueSize, sizeof(QueueSize), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1398,15 +1384,9 @@ BOOL
 STDCALL
 TransmitCommChar(HANDLE hFile, char cChar)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
-
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_IMMEDIATE_CHAR,
+	return DeviceIoControl(hFile, IOCTL_SERIAL_IMMEDIATE_CHAR,
 		&cChar, sizeof(cChar), NULL, 0, &dwBytesReturned, NULL);
-	return TRUE;
 }
 
 
@@ -1417,18 +1397,14 @@ BOOL
 STDCALL
 WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)
 {
-	BOOL result = FALSE;
 	DWORD dwBytesReturned;
 
-	if (hFile == INVALID_HANDLE_VALUE) {
-		return FALSE;
-	}
 	if (lpEvtMask == NULL) {
 		return FALSE;
 	}
-	result = DeviceIoControl(hFile, IOCTL_SERIAL_WAIT_ON_MASK,
+        
+	return DeviceIoControl(hFile, IOCTL_SERIAL_WAIT_ON_MASK,
 		NULL, 0, lpEvtMask, sizeof(DWORD), &dwBytesReturned, lpOverlapped);
-	return TRUE;
 }
 
 /* EOF */

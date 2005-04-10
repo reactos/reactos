@@ -263,4 +263,105 @@ SepCreateImpersonationTokenDacl(PTOKEN Token,
   return STATUS_SUCCESS;
 }
 
+NTSTATUS
+SepCaptureAcl(IN PACL InputAcl,
+              IN KPROCESSOR_MODE AccessMode,
+              IN POOL_TYPE PoolType,
+              IN BOOLEAN CaptureIfKernel,
+              OUT PACL *CapturedAcl)
+{
+  PACL NewAcl;
+  ULONG AclSize = 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  PAGED_CODE();
+
+  if(AccessMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(InputAcl,
+                   sizeof(ACL),
+                   sizeof(ULONG));
+      AclSize = InputAcl->AclSize;
+      ProbeForRead(InputAcl,
+                   AclSize,
+                   sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(NT_SUCCESS(Status))
+    {
+      NewAcl = ExAllocatePool(PoolType,
+                              AclSize);
+      if(NewAcl != NULL)
+      {
+        _SEH_TRY
+        {
+          RtlCopyMemory(NewAcl,
+                        InputAcl,
+                        AclSize);
+
+          *CapturedAcl = NewAcl;
+        }
+        _SEH_HANDLE
+        {
+          ExFreePool(NewAcl);
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+      }
+      else
+      {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+      }
+    }
+  }
+  else if(!CaptureIfKernel)
+  {
+    *CapturedAcl = InputAcl;
+  }
+  else
+  {
+    AclSize = InputAcl->AclSize;
+
+    NewAcl = ExAllocatePool(PoolType,
+                            AclSize);
+
+    if(NewAcl != NULL)
+    {
+      RtlCopyMemory(NewAcl,
+                    InputAcl,
+                    AclSize);
+
+      *CapturedAcl = NewAcl;
+    }
+    else
+    {
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+  }
+
+  return Status;
+}
+
+VOID
+SepReleaseAcl(IN PACL CapturedAcl,
+              IN KPROCESSOR_MODE AccessMode,
+              IN BOOLEAN CaptureIfKernel)
+{
+  PAGED_CODE();
+
+  if(CapturedAcl != NULL &&
+     (AccessMode == UserMode ||
+      (AccessMode == KernelMode && CaptureIfKernel)))
+  {
+    ExFreePool(CapturedAcl);
+  }
+}
+
 /* EOF */

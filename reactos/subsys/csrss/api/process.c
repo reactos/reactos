@@ -59,6 +59,9 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
 {
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   CLIENT_ID ClientId;
+   NTSTATUS Status;
 
    hash = (ULONG_PTR)ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
    
@@ -80,6 +83,27 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
 	 pProcessData->ProcessId = ProcessId;
 	 pProcessData->next = ProcessData[hash];
 	 ProcessData[hash] = pProcessData;
+
+         ClientId.UniqueThread = NULL;
+         ClientId.UniqueProcess = pProcessData->ProcessId;
+         InitializeObjectAttributes(&ObjectAttributes,
+                                    NULL,
+                                    0,
+                                    NULL,
+                                    NULL);
+
+         /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
+         Status = NtOpenProcess(&pProcessData->Process,
+                                PROCESS_DUP_HANDLE | PROCESS_VM_OPERATION |
+                                PROCESS_VM_WRITE | PROCESS_CREATE_THREAD | SYNCHRONIZE,
+                                &ObjectAttributes,
+                                &ClientId);
+         if (!NT_SUCCESS(Status))
+         {
+            ProcessData[hash] = pProcessData->next;
+	    RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
+	    pProcessData = NULL;
+        }
       }
    }
    else
@@ -115,6 +139,10 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
   if (pProcessData)
     {
       DPRINT("CsrFreeProcessData pid: %d\n", Pid);
+      if (pProcessData->Process)
+      {
+         NtClose(pProcessData->Process);
+      }
       if (pProcessData->Console)
         {
           RtlEnterCriticalSection(&ProcessDataLock);
@@ -167,7 +195,6 @@ CSR_API(CsrCreateProcess)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
    NTSTATUS Status;
-   HANDLE Process;
    CSRSS_API_REQUEST ApiRequest;
    CSRSS_API_REPLY ApiReply;
 
@@ -212,8 +239,6 @@ CSR_API(CsrCreateProcess)
      }
    else
      {
-       CLIENT_ID ClientId;
-
        NewProcessData->Console = ProcessData->Console;
        InterlockedIncrement( &(ProcessData->Console->Header.ReferenceCount) );
        CsrInsertObject(NewProcessData,
@@ -225,27 +250,15 @@ CSR_API(CsrCreateProcess)
           &(NewProcessData->Console->ActiveBuffer->Header) );
 
        RtlLeaveCriticalSection(&ProcessDataLock);
-       ClientId.UniqueProcess = (HANDLE)NewProcessData->ProcessId;
-       Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
-       if( !NT_SUCCESS( Status ) )
-	 {
-	   DbgPrint( "CSR: NtOpenProcess() failed for handle duplication\n" );
-	   InterlockedDecrement( &(NewProcessData->Console->Header.ReferenceCount) );
-	   CsrFreeProcessData( NewProcessData->ProcessId );
-	   Reply->Status = Status;
-	   return Status;
-	 }
-       Status = NtDuplicateObject( NtCurrentProcess(), NewProcessData->Console->ActiveEvent, Process, &NewProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
+       Status = NtDuplicateObject( NtCurrentProcess(), NewProcessData->Console->ActiveEvent, NewProcessData->Process, &NewProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
        if( !NT_SUCCESS( Status ) )
 	 {
 	   DbgPrint( "CSR: NtDuplicateObject() failed: %x\n", Status );
-	   NtClose( Process );
 	   InterlockedDecrement( &(NewProcessData->Console->Header.ReferenceCount) );
 	   CsrFreeProcessData( NewProcessData->ProcessId );
 	   Reply->Status = Status;
 	   return Status;
 	 }
-       NtClose( Process );
        NewProcessData->CtrlDispatcher = Request->Data.CreateProcessRequest.CtrlDispatcher;
        RtlEnterCriticalSection(&ProcessDataLock );
        InsertHeadList(&NewProcessData->Console->ProcessList, &NewProcessData->ProcessEntry);

@@ -43,6 +43,7 @@
 	<file>regsvr.c</file>
 	<file>rpc.c</file>
 	<file>stg_bigblockfile.c</file>
+	<file>stg_prop.c</file>
 	<file>stg_stream.c</file>
 	<file>storage32.c</file>
 	<file>stubmanager.c</file>

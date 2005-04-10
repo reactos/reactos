@@ -978,7 +978,7 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 {
   JoystickImpl *This = (JoystickImpl *)iface;
 
-  TRACE("(this=%p,%s,%p): stub!\n",
+  TRACE("(this=%p,%s,%p)\n",
 	iface, debugstr_guid(rguid), pdiph);
 
   if (TRACE_ON(dinput))

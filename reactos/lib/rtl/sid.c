@@ -200,7 +200,7 @@ RtlCopySidAndAttributesArray(ULONG Count,
       RtlCopySid(SidLength,
                  SidArea,
                  Src[i].Sid);
-      SidArea = SidArea + SidLength;
+      SidArea = (PVOID)((ULONG_PTR)SidArea + SidLength);
    }
    *RemainingSidArea = SidArea;
    *RemainingSidAreaSize = Length;

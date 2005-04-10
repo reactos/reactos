@@ -315,6 +315,7 @@ extern PACL                         SeSystemDefaultDacl;
 #define TOKEN_ADJUST_PRIVILEGES         (0x0020)
 #define TOKEN_ADJUST_GROUPS             (0x0040)
 #define TOKEN_ADJUST_DEFAULT            (0x0080)
+#define TOKEN_ADJUST_SESSIONID          (0x0100)
 
 #define TOKEN_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED |\
                           TOKEN_ASSIGN_PRIMARY     |\
@@ -324,7 +325,8 @@ extern PACL                         SeSystemDefaultDacl;
                           TOKEN_QUERY_SOURCE       |\
                           TOKEN_ADJUST_PRIVILEGES  |\
                           TOKEN_ADJUST_GROUPS      |\
-                          TOKEN_ADJUST_DEFAULT)
+                          TOKEN_ADJUST_DEFAULT     |\
+                          TOKEN_ADJUST_SESSIONID)
 
 #define TOKEN_READ       (STANDARD_RIGHTS_READ     |\
                           TOKEN_QUERY)
@@ -1216,13 +1218,23 @@ typedef struct _GENERATE_NAME_CONTEXT {
     ULONG   LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
 
+typedef struct _HANDLE_TABLE_ENTRY_INFO {
+    ULONG AuditMask;
+} HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
+
 typedef struct _HANDLE_TABLE_ENTRY {
-    PVOID   Object;
-    ULONG   ObjectAttributes;
-    ULONG   GrantedAccess;
-    USHORT  GrantedAccessIndex;
-    USHORT  CreatorBackTraceIndex;
-    ULONG   NextFreeTableEntry;
+    union {
+        PVOID Object;
+        ULONG ObAttributes;
+        PHANDLE_TABLE_ENTRY_INFO InfoTable;
+        ULONG_PTR Value;
+    } u1;
+    union {
+        ULONG GrantedAccess;
+        USHORT GrantedAccessIndex;
+        LONG NextFreeTableEntry;
+    } u2;
+    USHORT CreatorBackTraceIndex;
 } HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
 
 typedef struct _MAPPING_PAIR {

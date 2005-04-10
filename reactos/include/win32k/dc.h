@@ -79,7 +79,6 @@ typedef struct _DC
   HDC  hSelf;
   HDC  hNext;
   DHPDEV  PDev;
-  DEVMODEW  DMW;
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
   PGDIINFO  GDIInfo;
   PDEVINFO  DevInfo;
@@ -104,6 +103,7 @@ typedef struct _DC
   XLATEOBJ *XlatePen;
 
   INT  saveLevel;
+  BOOL IsIC;
 
   WIN_DC_INFO  w;
 } DC, *PDC;
@@ -136,6 +136,8 @@ typedef struct
   DEVINFO DevInfo;
   DRIVER_FUNCTIONS DriverFunctions;
   PFILE_OBJECT VideoFileObject;
+  BOOLEAN PreparedDriver;
+  ULONG DisplayNumber;
 
   GDIPOINTER Pointer;
 

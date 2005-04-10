@@ -9,16 +9,29 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed);
 VOID FASTCALL
 IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ *XlateObj);
 
-HBRUSH FASTCALL
-IntGdiCreateBrushIndirect(PLOGBRUSH lb);
 
-HBRUSH FASTCALL
-IntGdiCreateDIBPatternBrush(HGLOBAL hDIBPacked,
-                            UINT    ColorSpec);
+HBRUSH STDCALL
+IntGdiCreateDIBBrush(
+   CONST BITMAPINFO *BitmapInfo,
+   UINT ColorSpec,
+   UINT BitmapInfoSize,
+   CONST VOID *PackedDIB);
 
-HBRUSH FASTCALL
-IntGdiCreateDIBPatternBrushPt(CONST VOID *PackedDIB,
-                              UINT       Usage);
+HBRUSH STDCALL
+IntGdiCreateHatchBrush(
+   INT Style,
+   COLORREF Color);
+
+HBRUSH STDCALL
+IntGdiCreatePatternBrush(
+   HBITMAP hBitmap);
+
+HBRUSH STDCALL
+IntGdiCreateSolidBrush(
+   COLORREF Color);
+
+HBRUSH STDCALL
+IntGdiCreateNullBrush(VOID);
 
 BOOL FASTCALL
 IntPatBlt(
@@ -130,7 +143,8 @@ HDC FASTCALL
 IntGdiCreateDC(PUNICODE_STRING Driver,
                PUNICODE_STRING Device,
                PUNICODE_STRING Output,
-               CONST PDEVMODEW InitData);
+               CONST PDEVMODEW InitData,
+               BOOL CreateAsIC);
 
 COLORREF FASTCALL
 IntGetDCColor(HDC hDC, ULONG Object);
@@ -191,6 +205,22 @@ IntGdiEscape(PDC    dc,
              INT    InSize,
              LPCSTR InData,
              LPVOID OutData);
+
+BOOL
+FASTCALL
+IntEnumDisplaySettings(
+  IN PUNICODE_STRING pDeviceName  OPTIONAL,
+  IN DWORD iModeNum,
+  IN OUT LPDEVMODEW pDevMode,
+  IN DWORD dwFlags);
+  
+LONG
+FASTCALL
+IntChangeDisplaySettings(
+  IN PUNICODE_STRING pDeviceName  OPTIONAL,
+  IN LPDEVMODEW pDevMode,
+  IN DWORD dwflags,
+  IN PVOID lParam  OPTIONAL);
 
 #endif /* _WIN32K_INTGDI_H */
 

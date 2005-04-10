@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/exp.c
  * PURPOSE:         Handling exceptions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Skywing (skywing@valhallalegends.com)
  */
@@ -120,24 +120,31 @@ KeRosPrintAddress(PVOID address)
    MODULE_TEXT_SECTION* current;
    extern LIST_ENTRY ModuleTextListHead;
    ULONG_PTR RelativeAddress;
+   ULONG i = 0;
 
-   current_entry = ModuleTextListHead.Flink;
+   do
+   {
+     current_entry = ModuleTextListHead.Flink;
 
-   while (current_entry != &ModuleTextListHead &&
-	  current_entry != NULL)
-     {
-	current =
-	  CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
+     while (current_entry != &ModuleTextListHead &&
+            current_entry != NULL)
+       {
+          current =
+            CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
 
-	if (address >= (PVOID)current->Base &&
-	    address < (PVOID)(current->Base + current->Length))
-	  {
-            RelativeAddress = (ULONG_PTR) address - current->Base;
-	    DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
-	    return(TRUE);
-	  }
-	current_entry = current_entry->Flink;
-     }
+          if (address >= (PVOID)current->Base &&
+              address < (PVOID)(current->Base + current->Length))
+            {
+              RelativeAddress = (ULONG_PTR) address - current->Base;
+              DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
+              return(TRUE);
+            }
+          current_entry = current_entry->Flink;
+       }
+
+     address = (PVOID)((ULONG_PTR)address & ~0xC0000000);
+   } while(++i <= 1);
+
    return(FALSE);
 }
 #endif /* KDBG */
@@ -509,6 +516,21 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	ExceptionNr = 12;
      }
 
+   if (ExceptionNr == 15)
+     {
+       /*
+        * FIXME:
+        *   This exception should never occur. The P6 has a bug, which does sometimes deliver
+        *   the apic spurious interrupt as exception 15. On an athlon64, I get one exception
+        *   in the early boot phase in apic mode (using the smp build). I've looked to the linux
+        *   sources. Linux does ignore this exception.
+        *
+        *   Hartmut Birr
+        */
+       DPRINT1("Ignoring P6 Local APIC Spurious Interrupt Bug...\n");
+       return(0);
+     }
+
    /*
     * Maybe handle the page fault and return
     */
@@ -564,6 +586,125 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     {
       return(KiKernelTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
     }
+}
+
+VOID
+KeContextToTrapFrame(PCONTEXT Context,
+		     PKTRAP_FRAME TrapFrame)
+{
+   if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+     {
+	TrapFrame->Esp = Context->Esp;
+	TrapFrame->Ss = Context->SegSs;
+	TrapFrame->Cs = Context->SegCs;
+	TrapFrame->Eip = Context->Eip;
+	TrapFrame->Eflags = Context->EFlags;	
+	TrapFrame->Ebp = Context->Ebp;
+     }
+   if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+     {
+	TrapFrame->Eax = Context->Eax;
+	TrapFrame->Ebx = Context->Ebx;
+	TrapFrame->Ecx = Context->Ecx;
+	TrapFrame->Edx = Context->Edx;
+	TrapFrame->Esi = Context->Esi;
+	TrapFrame->Edi = Context->Edi;
+     }
+   if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
+     {
+	TrapFrame->Ds = Context->SegDs;
+	TrapFrame->Es = Context->SegEs;
+	TrapFrame->Fs = Context->SegFs;
+	TrapFrame->Gs = Context->SegGs;
+     }
+   if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
+     {
+	/*
+	 * Not handled
+	 *
+	 * This should be handled separately I think.
+	 *  - blight
+	 */
+     }
+   if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+     {
+	/*
+	 * Not handled
+	 */
+     }
+}
+
+VOID
+KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
+		     PCONTEXT Context)
+{
+   if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+     {
+	Context->SegSs = TrapFrame->Ss;
+	Context->Esp = TrapFrame->Esp;
+	Context->SegCs = TrapFrame->Cs;
+	Context->Eip = TrapFrame->Eip;
+	Context->EFlags = TrapFrame->Eflags;
+	Context->Ebp = TrapFrame->Ebp;
+     }
+   if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+     {
+	Context->Eax = TrapFrame->Eax;
+	Context->Ebx = TrapFrame->Ebx;
+	Context->Ecx = TrapFrame->Ecx;
+	/*
+	 * NOTE: In the trap frame which is built on entry to a system
+	 * call TrapFrame->Edx will actually hold the address of the
+	 * previous TrapFrame. I don't believe leaking this information
+	 * has security implications. Also EDX holds the address of the
+	 * arguments to the system call in progress so it isn't of much
+	 * interest to the debugger.
+	 */
+	Context->Edx = TrapFrame->Edx;
+	Context->Esi = TrapFrame->Esi;
+	Context->Edi = TrapFrame->Edi;
+     }
+   if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
+     {
+	Context->SegDs = TrapFrame->Ds;
+	Context->SegEs = TrapFrame->Es;
+	Context->SegFs = TrapFrame->Fs;
+	Context->SegGs = TrapFrame->Gs;
+     }
+   if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+     {
+	/*
+	 * FIXME: Implement this case
+	 */	
+	Context->ContextFlags &= (~CONTEXT_DEBUG_REGISTERS) | CONTEXT_i386;
+     }
+   if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
+     {
+	/*
+	 * FIXME: Implement this case
+	 *
+	 * I think this should only be filled for FPU exceptions, otherwise I
+         * would not know where to get it from as it can be the current state
+	 * of the FPU or already saved in the thread's FPU save area.
+	 *  -blight
+	 */
+	Context->ContextFlags &= (~CONTEXT_FLOATING_POINT) | CONTEXT_i386;
+     }
+#if 0
+   if ((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) == CONTEXT_EXTENDED_REGISTERS)
+     {
+	/*
+	 * FIXME: Investigate this
+	 *
+	 * This is the XMM state (first 512 bytes of FXSAVE_FORMAT/FX_SAVE_AREA)
+	 * This should only be filled in case of a SIMD exception I think, so
+	 * this is not the right place (like for FPU the state could already be
+	 * saved in the thread's FX_SAVE_AREA or still be in the CPU)
+	 *  -blight
+	 */
+        Context->ContextFlags &= ~CONTEXT_EXTENDED_REGISTERS;
+     }
+#endif
 }
 
 VOID
@@ -807,7 +948,7 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     } _SEH_HANDLE {
         return(ExceptionCode);
     } _SEH_END;
-            
+
    OldEip = Thread->TrapFrame->Eip;
    Thread->TrapFrame->Eip = (ULONG_PTR)LdrpGetSystemDllRaiseExceptionDispatcher();
    return((NTSTATUS)OldEip);
@@ -838,7 +979,7 @@ NtRaiseException (
     /* Restore the user context */
     Thread->TrapFrame = PrevTrapFrame;
     __asm__("mov %%ebx, %%esp;\n" "jmp _KiServiceExit": : "b" (TrapFrame));
-    
+
     /* We never get here */
     return(STATUS_SUCCESS);
 }

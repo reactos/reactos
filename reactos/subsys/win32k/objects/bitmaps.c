@@ -59,6 +59,12 @@ NtGdiBitBlt(
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
 	}
+	if (DCDest->IsIC)
+	{
+		DC_UnlockDc(hDCDest);
+		/* Yes, Windows really returns TRUE in this case */
+		return TRUE;
+	}
 
 	if (UsesSource)
 	{
@@ -71,6 +77,13 @@ NtGdiBitBlt(
 				DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
 				SetLastWin32Error(ERROR_INVALID_HANDLE);
 				return FALSE;
+			}
+			if (DCSrc->IsIC)
+			{
+				DC_UnlockDc(hDCSrc);
+				DC_UnlockDc(hDCDest);
+				/* Yes, Windows really returns TRUE in this case */
+				return TRUE;
 			}
 		}
 		else
@@ -258,6 +271,12 @@ NtGdiTransparentBlt(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
+  if (DCDest->IsIC)
+  {
+    DC_UnlockDc(hdcDst);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
   
   if((hdcDst != hdcSrc) && !(DCSrc = DC_LockDc(hdcSrc)))
   {
@@ -269,6 +288,16 @@ NtGdiTransparentBlt(
   if(hdcDst == hdcSrc)
   {
     DCSrc = DCDest;
+  }
+  if (DCSrc->IsIC)
+  {
+    DC_UnlockDc(hdcSrc);
+    if(hdcDst != hdcSrc)
+    {
+      DC_UnlockDc(hdcDst);
+    }
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   
   /* Offset positions */
@@ -434,6 +463,10 @@ BITMAP_Cleanup(PVOID ObjectBody)
 		{
 			EngFreeUserMem(pBmp->SurfObj.pvBits);
 		}
+		if (pBmp->hDIBPalette)
+		{
+			NtGdiDeleteObject(pBmp->hDIBPalette);
+		}
 	}
 
 	return TRUE;
@@ -523,8 +556,10 @@ NtGdiExtFloodFill(
 	COLORREF  Color,
 	UINT  FillType)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+   DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
+   
+   /* lie and say we succeded */
+	return TRUE;
 }
 
 BOOL STDCALL
@@ -573,6 +608,11 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	if ( !dc )
 	{
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
+		return Result;
+	}
+	if (dc->IsIC)
+	{
+		DC_UnlockDc(hDC);
 		return Result;
 	}
 	XPos += dc->w.DCOrgX;
@@ -1039,6 +1079,12 @@ NtGdiStretchBlt(
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
 	}
+	if (DCDest->IsIC)
+	{
+		DC_UnlockDc(hDCDest);
+		/* Yes, Windows really returns TRUE in this case */
+		return TRUE;
+	}
 
 	if (UsesSource)
 	{
@@ -1051,6 +1097,13 @@ NtGdiStretchBlt(
 				DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiStretchBlt\n", hDCSrc);
 				SetLastWin32Error(ERROR_INVALID_HANDLE);
 				return FALSE;
+			}
+			if (DCSrc->IsIC)
+			{
+				DC_UnlockDc(hDCSrc);
+				DC_UnlockDc(hDCDest);
+				/* Yes, Windows really returns TRUE in this case */
+				return TRUE;
 			}
 		}
 		else

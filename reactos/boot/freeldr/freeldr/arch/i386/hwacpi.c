@@ -28,6 +28,7 @@
 #include "../../reactos/registry.h"
 #include "hardware.h"
 
+BOOLEAN AcpiPresent = FALSE;
 
 static BOOL
 FindAcpiBios(VOID)
@@ -63,6 +64,7 @@ DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
   if (FindAcpiBios())
     {
+      AcpiPresent = TRUE;
       /* Create new bus key */
       sprintf(Buffer,
 	      "MultifunctionAdapter\\%u", *BusNumber);

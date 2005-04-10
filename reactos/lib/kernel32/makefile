@@ -35,7 +35,7 @@ MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
                misc/sysinfo.o misc/profile.o \
                misc/muldiv.o misc/nls.o misc/computername.o \
                misc/perfcnt.o misc/lzexpand_main.o misc/lcformat.o \
-               misc/chartype.o
+               misc/chartype.o misc/version.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \

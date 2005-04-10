@@ -2,10 +2,9 @@
 	<importlibrary definition="smdll.def" />
 	<include base="smdll">.</include>
 	<define name="_DISABLE_TIDENTS" />
+	<library>smlib</library>
 	<library>ntdll</library>
 	<file>dllmain.c</file>
-	<file>connect.c</file>
-	<file>execpgm.c</file>
-	<file>compses.c</file>
+	<file>query.c</file>
 	<file>smdll.rc</file>
 </module>

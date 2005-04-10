@@ -21,15 +21,6 @@
  */
 
 #include "precomp.h"
-#include <commctrl.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-#include <stdio.h>
-
-#include <math.h>
-#include "graphctl.h"
 
 LONG OldGraphCtrlWndProc;
 

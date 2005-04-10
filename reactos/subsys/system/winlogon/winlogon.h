@@ -27,7 +27,7 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
-#include <WinWlx.h>
+#include <winwlx.h>
 
 VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
 VOID WINAPI WlxSetContextPointer(HANDLE hWlx, PVOID pWlxContext);

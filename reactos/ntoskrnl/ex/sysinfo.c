@@ -15,6 +15,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern PEPROCESS PsIdleProcess;
 extern ULONG NtGlobalFlag; /* FIXME: it should go in a ddk/?.h */
 ULONGLONG STDCALL KeQueryInterruptTime(VOID);
 
@@ -46,17 +47,18 @@ ExGetCurrentProcessorCpuUsage (
 	PULONG	CpuUsage
 	)
 {
-	PKPCR Pcr;
+	PKPRCB Prcb;
 	ULONG TotalTime;
-	ULONG PercentTime = 0;
 	ULONGLONG ScaledIdle;
 
-	Pcr = KeGetCurrentKPCR();
+	Prcb = KeGetCurrentPrcb();
 
-	ScaledIdle = Pcr->PrcbData.IdleThread->KernelTime * 100;
-	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime;
-	if (TotalTime) PercentTime = 100 - (ScaledIdle / TotalTime);
-	CpuUsage = &PercentTime;
+	ScaledIdle = Prcb->IdleThread->KernelTime * 100;
+	TotalTime = Prcb->KernelTime + Prcb->UserTime;
+	if (TotalTime != 0)
+		*CpuUsage = 100 - (ScaledIdle / TotalTime);
+       else
+		*CpuUsage = 0;
 }
 
 /*
@@ -70,20 +72,27 @@ ExGetCurrentProcessorCounts (
 	PULONG	ProcessorNumber
 	)
 {
-	PKPCR Pcr;
-	ULONG TotalTime;
-	ULONG ThreadTime;
-	ULONG ProcNumber;
+	PKPRCB Prcb;
 
-	Pcr = KeGetCurrentKPCR();
+	Prcb = KeGetCurrentPrcb();
 
-	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime;
-	ThreadTime = Pcr->PrcbData.CurrentThread->KernelTime;
-	ProcNumber = Pcr->ProcessorNumber;
+	*ThreadKernelTime = Prcb->KernelTime + Prcb->UserTime;
+	*TotalCpuTime = Prcb->CurrentThread->KernelTime;
+	*ProcessorNumber = KeGetCurrentKPCR()->ProcessorNumber;
+}
 
-	ThreadKernelTime = &ThreadTime;
-	TotalCpuTime = &TotalTime;
-	ProcessorNumber = &ProcNumber;
+/*
+ * @implemented
+ */
+BOOLEAN 
+STDCALL
+ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
+{
+    /* Quick check to see if it exists at all */
+    if (ProcessorFeature >= PROCESSOR_FEATURE_MAX) return(FALSE);
+
+    /* Return our support for it */
+    return(SharedUserData->ProcessorFeatures[ProcessorFeature]);
 }
 
 NTSTATUS STDCALL
@@ -363,7 +372,7 @@ QSI_DEF(SystemProcessorInformation)
 {
 	PSYSTEM_PROCESSOR_INFORMATION Spi 
 		= (PSYSTEM_PROCESSOR_INFORMATION) Buffer;
-	PKPCR Pcr;
+	PKPRCB Prcb;
 	*ReqSize = sizeof (SYSTEM_PROCESSOR_INFORMATION);
 	/*
 	 * Check user buffer's size 
@@ -372,12 +381,12 @@ QSI_DEF(SystemProcessorInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
-	Pcr = KeGetCurrentKPCR();
+	Prcb = KeGetCurrentPrcb();
 	Spi->ProcessorArchitecture = 0; /* Intel Processor */
-	Spi->ProcessorLevel	   = Pcr->PrcbData.CpuType;
-	Spi->ProcessorRevision	   = Pcr->PrcbData.CpuStep;
+	Spi->ProcessorLevel	   = Prcb->CpuType;
+	Spi->ProcessorRevision	   = Prcb->CpuStep;
 	Spi->Unknown 		   = 0;
-	Spi->FeatureBits	   = Pcr->PrcbData.FeatureBits;
+	Spi->FeatureBits	   = Prcb->FeatureBits;
 
 	DPRINT("Arch %d Level %d Rev 0x%x\n", Spi->ProcessorArchitecture,
 		Spi->ProcessorLevel, Spi->ProcessorRevision);
@@ -402,7 +411,7 @@ QSI_DEF(SystemPerformanceInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	
-	TheIdleProcess = PsInitialSystemProcess; /* FIXME */
+	TheIdleProcess = PsIdleProcess;
 	
 	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
 
@@ -603,13 +612,20 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->ProcessName.Buffer = (void*)(pCur+curSize);
 
 		// copy name to the end of the struct
-		RtlInitAnsiString(&imgName, pr->ImageFileName);
-		RtlAnsiStringToUnicodeString(&SpiCur->ProcessName, &imgName, FALSE);
+		if(pr != PsIdleProcess)
+		{
+		  RtlInitAnsiString(&imgName, pr->ImageFileName);
+		  RtlAnsiStringToUnicodeString(&SpiCur->ProcessName, &imgName, FALSE);
+		}
+		else
+		{
+                  RtlInitUnicodeString(&SpiCur->ProcessName, NULL);
+		}
 
 		SpiCur->BasePriority = pr->Pcb.BasePriority;
 		SpiCur->ProcessId = pr->UniqueProcessId;
 		SpiCur->InheritedFromProcessId = pr->InheritedFromUniqueProcessId;
-		SpiCur->HandleCount = ObpGetHandleCountByHandleTable(&pr->HandleTable);
+		SpiCur->HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
 		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
 		SpiCur->VmCounters.VirtualSize = pr->VirtualSize.QuadPart;
 		SpiCur->VmCounters.PageFaultCount = pr->LastFaultCount;
@@ -660,12 +676,13 @@ QSI_DEF(SystemProcessInformation)
 		else
 			pCur = pCur + curSize + inLen;
 	}  while ((pr != syspr) && (pr != NULL));
+	
+	if(pr != NULL)
+	{
+          ObDereferenceObject(pr);
+	}
 
 	*ReqSize = ovlSize;
-	if (pr != NULL)
-	  {
-	    ObDereferenceObject(pr);
-	  }
 	return (STATUS_SUCCESS);
 }
 
@@ -708,38 +725,36 @@ QSI_DEF(SystemDeviceInformation)
 /* Class 8 - Processor Performance Information */
 QSI_DEF(SystemProcessorPerformanceInformation)
 {
-	PSYSTEM_PROCESSORTIME_INFO Spi
-		= (PSYSTEM_PROCESSORTIME_INFO) Buffer;
+	PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION Spi
+		= (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) Buffer;
 
         ULONG i;
 	LARGE_INTEGER CurrentTime;
-	PKPCR Pcr;
+	PKPRCB Prcb;
 
-	*ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSORTIME_INFO);
+	*ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION);
 	/*
-	 * Check user buffer's size 
+	 * Check user buffer's size
 	 */
-	if (Size < KeNumberProcessors * sizeof(SYSTEM_PROCESSORTIME_INFO))
+	if (Size < KeNumberProcessors * sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
 	CurrentTime.QuadPart = KeQueryInterruptTime();
-	Pcr = (PKPCR)KPCR_BASE;   
+	Prcb = ((PKPCR)KPCR_BASE)->Prcb;
 	for (i = 0; i < KeNumberProcessors; i++)
 	{
-
-	   Spi->TotalProcessorRunTime.QuadPart = (Pcr->PrcbData.IdleThread->KernelTime + Pcr->PrcbData.IdleThread->UserTime) * 100000LL; // IdleTime
-           Spi->TotalProcessorTime.QuadPart =  Pcr->PrcbData.KernelTime * 100000LL; // KernelTime
-           Spi->TotalProcessorUserTime.QuadPart = Pcr->PrcbData.UserTime * 100000LL;
-           Spi->TotalDPCTime.QuadPart = Pcr->PrcbData.DpcTime * 100000LL;
-           Spi->TotalInterruptTime.QuadPart = Pcr->PrcbData.InterruptTime * 100000LL;
-           Spi->TotalInterrupts = Pcr->PrcbData.InterruptCount; // Interrupt Count
+	   Spi->IdleTime.QuadPart = (Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime) * 100000LL; // IdleTime
+           Spi->KernelTime.QuadPart =  Prcb->KernelTime * 100000LL; // KernelTime
+           Spi->UserTime.QuadPart = Prcb->UserTime * 100000LL;
+           Spi->DpcTime.QuadPart = Prcb->DpcTime * 100000LL;
+           Spi->InterruptTime.QuadPart = Prcb->InterruptTime * 100000LL;
+           Spi->InterruptCount = Prcb->InterruptCount; // Interrupt Count
 	   Spi++;
-//	   Pcr++;
-	   Pcr = (PKPCR)((ULONG_PTR)Pcr + PAGE_SIZE);
+	   Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
 	}
-     
+
 	return (STATUS_SUCCESS);
 }
 
@@ -843,19 +858,19 @@ QSI_DEF(SystemHandleInformation)
 
         do
 	  {
-            hCount = hCount + ObpGetHandleCountByHandleTable(&pr->HandleTable);
+            hCount = hCount + (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
             pr = PsGetNextProcess(pr);
 
 	    if ((pr == syspr) || (pr == NULL))
 		break;
         } while ((pr != syspr) && (pr != NULL));
+        
+	if(pr != NULL)
+	{
+          ObDereferenceObject(pr);
+	}
 
 	DPRINT("SystemHandleInformation 2\n");
-
-	if (pr != NULL)
-	  {
-	    ObDereferenceObject(pr);
-	  }
 
         curSize = sizeof(SYSTEM_HANDLE_INFORMATION)+
                   (  (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) - 
@@ -877,9 +892,9 @@ QSI_DEF(SystemHandleInformation)
 
 	 do
 	  {
-            int Count = 0, HandleCount = 0;
+            int Count = 0, HandleCount;
 
-            HandleCount = ObpGetHandleCountByHandleTable(&pr->HandleTable);
+            HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
 
             for (Count = 0; HandleCount > 0 ; HandleCount--)
                {
@@ -894,11 +909,10 @@ QSI_DEF(SystemHandleInformation)
 		break;
 	   } while ((pr != syspr) && (pr != NULL));
 
-
-	if (pr != NULL)
-	  {
-	    ObDereferenceObject(pr);
-	  }
+	if(pr != NULL)
+	{
+          ObDereferenceObject(pr);
+	}
 
 	DPRINT("SystemHandleInformation 4\n");
 	return (STATUS_SUCCESS);
@@ -1003,12 +1017,35 @@ QSI_DEF(SystemPoolTagInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 23 - Interrupt Information */
+/* Class 23 - Interrupt Information for all processors */
 QSI_DEF(SystemInterruptInformation)
 {
-	/* FIXME */
-	DPRINT1("NtQuerySystemInformation - SystemInterruptInformation not implemented\n");
-	return (STATUS_NOT_IMPLEMENTED);
+  PKPRCB Prcb;
+  UINT i;
+  ULONG ti;
+  PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
+  
+  if(Size < KeNumberProcessors * sizeof(SYSTEM_INTERRUPT_INFORMATION))
+  {
+    return (STATUS_INFO_LENGTH_MISMATCH);
+  }
+  
+  ti = KeQueryTimeIncrement();
+  
+  Prcb = ((PKPCR)KPCR_BASE)->Prcb;
+  for (i = 0; i < KeNumberProcessors; i++)
+  {
+    sii->ContextSwitches = Prcb->KeContextSwitches;
+    sii->DpcCount = 0; /* FIXME */
+    sii->DpcRate = 0; /* FIXME */
+    sii->TimeIncrement = ti;
+    sii->DpcBypassCount = 0; /* FIXME */
+    sii->ApcBypassCount = 0; /* FIXME */
+    sii++;
+    Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
+  }
+  
+  return STATUS_SUCCESS;
 }
 
 /* Class 24 - DPC Behaviour Information */
@@ -1041,7 +1078,7 @@ QSI_DEF(SystemFullMemoryInformation)
 	}
 	DPRINT("SystemFullMemoryInformation\n");
 
-	TheIdleProcess = PsInitialSystemProcess; /* FIXME */
+	TheIdleProcess = PsIdleProcess;
 
         DPRINT("PID: %d, KernelTime: %u PFFree: %d PFUsed: %d\n",
                TheIdleProcess->UniqueProcessId,

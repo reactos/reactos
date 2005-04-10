@@ -31,9 +31,6 @@ extern "C" {
 #endif
 
 
- // launch start programs
-extern int startup(int argc, char *argv[]);
-
  // explorer main routine
 extern int explorer_main(HINSTANCE hinstance, LPTSTR lpCmdLine, int cmdshow);
 

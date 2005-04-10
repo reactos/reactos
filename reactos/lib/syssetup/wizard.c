@@ -1125,6 +1125,7 @@ static BOOL
 SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 {
   HANDLE hToken;
+  DWORD PrevSize;
   TOKEN_PRIVILEGES priv, previouspriv;
   BOOL Ret = FALSE;
   
@@ -1133,7 +1134,7 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
    */
   
   if(OpenProcessToken(GetCurrentProcess(),
-                      TOKEN_ADJUST_PRIVILEGES,
+                      TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
                       &hToken))
   {
     priv.PrivilegeCount = 1;
@@ -1148,7 +1149,7 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
                                &priv,
                                sizeof(previouspriv),
                                &previouspriv,
-                               0) &&
+                               &PrevSize) &&
          GetLastError() == ERROR_SUCCESS)
       {
         /*

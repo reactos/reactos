@@ -39,7 +39,7 @@ CXXFLAGS = $(CFLAGS)
 EXEC_SUFFIX = .exe
 RES_SUFFIX = .coff
 
-VPATH = shell utility taskbar desktop dialogs
+VPATH = shell utility taskbar desktop dialogs services
 
 PROGRAM = explorer
 
@@ -69,6 +69,7 @@ OBJECTS = \
 	desktopbar.o \
 	taskbar.o \
 	startmenu.o \
+	shellservices.o \
 	traynotify.o \
 	quicklaunch.o \
 	favorites.o \

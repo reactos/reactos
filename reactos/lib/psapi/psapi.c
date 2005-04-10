@@ -282,7 +282,7 @@ InternalGetMappedFileName(BOOLEAN bUnicode,
   }
 
   /* allocate the memory */
-  pmsnName = PsaiMalloc(nBufSize + offsetof(MEMORY_SECTION_NAME, NameBuffer));
+  pmsnName = PsaiMalloc(nBufSize + sizeof(MEMORY_SECTION_NAME));
 
   if(pmsnName == NULL)
   {
@@ -315,7 +315,7 @@ InternalGetMappedFileName(BOOLEAN bUnicode,
    if(bUnicode)
    {
      /* destination is an Unicode string: direct copy */
-     memcpy((LPWSTR)lpName, pmsnName->NameBuffer, pmsnName->SectionFileName.Length);
+     memcpy((LPWSTR)lpName, pmsnName + 1, pmsnName->SectionFileName.Length);
 
      PsaiFree(pmsnName);
 

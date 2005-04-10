@@ -40,6 +40,8 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case ObjectLibrary:
 		case Iso:
 		case Test:
+		case RpcServer:
+		case RpcClient:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,

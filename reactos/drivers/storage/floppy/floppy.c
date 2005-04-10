@@ -58,7 +58,7 @@ static ULONG gNumberOfControllers = 0;
 
 /* Queue thread management */
 static KEVENT QueueThreadTerminate;
-static PVOID ThreadObject;
+static PVOID QueueThreadObject;
 
 
 static VOID NTAPI MotorStopDpcFunc(PKDPC UnusedDpc,
@@ -378,8 +378,8 @@ static VOID NTAPI Unload(PDRIVER_OBJECT DriverObject)
   KdPrint(("floppy: unloading\n"));
 
   KeSetEvent(&QueueThreadTerminate, 0, FALSE);
-  KeWaitForSingleObject(ThreadObject, Executive, KernelMode, FALSE, 0);
-  ObDereferenceObject(ThreadObject);
+  KeWaitForSingleObject(QueueThreadObject, Executive, KernelMode, FALSE, 0);
+  ObDereferenceObject(QueueThreadObject);
 
   for(i = 0; i < gNumberOfControllers; i++)
     {
@@ -861,6 +861,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
       DeviceDescription.DmaChannel = gControllerInfo[i].Dma;
       DeviceDescription.InterfaceType = gControllerInfo[i].InterfaceType;
       DeviceDescription.BusNumber = gControllerInfo[i].BusNumber;
+      DeviceDescription.MaximumLength = 2*18*512; /* based on a 1.44MB floppy */
 
       /* DMA 0,1,2,3 are 8-bit; 4,5,6,7 are 16-bit (4 is chain i think) */
       DeviceDescription.DmaWidth = gControllerInfo[i].Dma > 3 ? Width16Bits: Width8Bits;
@@ -1152,7 +1153,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, NULL, KernelMode, &ThreadObject, NULL) != STATUS_SUCCESS)
+  if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, NULL, KernelMode, &QueueThreadObject, NULL) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: Unable to reference returned thread handle; failing init\n"));
       return STATUS_UNSUCCESSFUL;

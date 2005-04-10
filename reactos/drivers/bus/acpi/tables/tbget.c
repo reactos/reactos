@@ -503,7 +503,7 @@ acpi_tb_get_table_rsdt (
 		REPORT_ERROR (("Invalid signature where RSDP indicates %s should be located\n",
 				  table_signature));
 
-		return (status);
+		return (AE_NO_ACPI_TABLES);
 	}
 
 

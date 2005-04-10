@@ -412,6 +412,8 @@ PSOCKET_INFORMATION GetSocketStructure(
 	SOCKET Handle
 );
 
+VOID DeleteSocketStructure( SOCKET Handle );
+
 int GetSocketInformation(
 	PSOCKET_INFORMATION Socket,
 	ULONG				AfdInformationClass,

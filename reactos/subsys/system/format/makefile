@@ -14,7 +14,7 @@ TARGET_NAME = format
 
 TARGET_INSTALLDIR = system32
 
-TARGET_CFLAGS = -Werror -Wall -Wno-format
+TARGET_CFLAGS = -D__USE_W32API -Werror -Wall -Wno-format
 
 TARGET_OBJECTS = \
 	$(TARGET_NAME).o

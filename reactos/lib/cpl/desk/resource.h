@@ -36,5 +36,20 @@
 #define IDS_STRETCH                 2004
 #define IDS_TILE                    2005
 
+#define IDC_SETTINGS_DEVICE	       201
+#define IDC_SETTINGS_BPP             202
+#define IDC_SETTINGS_RESOLUTION      203
+#define IDC_SETTINGS_RESOLUTION_TEXT 204
+#define IDC_SETTINGS_ADVANCED        205
+
+/* Settings Page */
+
+#define IDS_PIXEL				2301
+
+#define IDS_COLOR_4BIT			2904
+#define IDS_COLOR_8BIT			2908
+#define IDS_COLOR_16BIT			2916
+#define IDS_COLOR_32BIT			2932  
+
 #endif /* __CPL_DESK_RESOURCE_H__ */
 
