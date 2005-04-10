@@ -90,6 +90,25 @@ int Help (void)
 
 	return 0;
 }
+
+int Ask (const WCHAR* question)
+{
+	char answer[255];
+
+	wprintf(question);
+
+	cout << " [y/n] ";
+	cin >> answer;
+	cout << endl;
+
+	if (answer[0]=='y')
+		return 1;
+
+	else if (answer[0]=='n')
+		return 0;
+
+	return Ask(question);
+}
 	
 int SetStatus (int status1, int status2, WCHAR* text)
 {
@@ -125,14 +144,14 @@ int Install (void)
 		int id = PML_FindItem(tree, cmdline[i].c_str());
 
 		if(id)
-			PML_SetAction(tree, id, 1, NULL);
+			PML_SetAction(tree, id, 1, NULL, Ask);
 
 		else 
 			cout << "Could not find the Package \"" << cmdline[i] << "\"\n";
 	}
 
 	// do it
-	error = PML_DoIt (tree, SetStatus);
+	error = PML_DoIt (tree, SetStatus, Ask);
 	if(error)
 	{
 		wprintf(L"%s\n", PML_TransError(error));
@@ -168,15 +187,12 @@ int Show (void)
 	{
 		int id = PML_FindItem(tree, cmdline[i].c_str());
 
-		cout << i << "<" << cmdline.size() << endl;
-
 		if(id)
 			cout << PML_GetDescription (tree, id) << "\n";
 
 		else 
 			cout << "Could not find the Package \"" << cmdline[i] << "\"\n";
 	}
-		cout << i << "<" << cmdline.size() << endl;
 
 	// clean up
 	PML_CloseTree (tree);

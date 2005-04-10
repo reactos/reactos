@@ -99,7 +99,8 @@ void tree_start (void* usrdata, const char* tag, const char** arg)
 	// do some manipulation at the parent
 	else
 	{
-		tree->addItem(id, tree->packages[id].name, parents.back(), icon);
+	   if(tree->addItem)
+	       tree->addItem(id, tree->packages[id].name, parents.back(), icon);
 
 	   // list as child in the parent node
 	   tree->packages[parents.back()].children.push_back(id);
