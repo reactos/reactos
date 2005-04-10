@@ -540,7 +540,7 @@ kmem_cache_t *my_kmem_cache_create(const char *tag, size_t alloc_size,
 								   void *ctor,
 								   void *dtor);
 
-void my_kmem_cache_destroy(kmem_cache_t *co);
+BOOLEAN my_kmem_cache_destroy(kmem_cache_t *co);
 void *my_kmem_cache_alloc(kmem_cache_t *co, int flags);
 void my_kmem_cache_free(kmem_cache_t *co, void *ptr);
 

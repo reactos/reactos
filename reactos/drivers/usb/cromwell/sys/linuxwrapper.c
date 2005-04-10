@@ -337,11 +337,12 @@ kmem_cache_t *my_kmem_cache_create(const char *tag, size_t alloc_size,
 	return (kmem_cache_t *)Lookaside;
 }
 /*------------------------------------------------------------------------*/ 
-void my_kmem_cache_destroy(kmem_cache_t *co)
+BOOLEAN my_kmem_cache_destroy(kmem_cache_t *co)
 {
 	ExDeleteNPagedLookasideList((PNPAGED_LOOKASIDE_LIST)co);
 
-    ExFreePool(co);
+	ExFreePool(co);
+	return FALSE;
 }
 /*------------------------------------------------------------------------*/ 
 void *my_kmem_cache_alloc(kmem_cache_t *co, int flags)
