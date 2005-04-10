@@ -14,6 +14,10 @@ BEGIN
   ERR_SYNATX       "Error while Script Execution.\nWrong Synatx."
   ERR_CALL         "Error while Script Execution.\nCould not find function."
   ERR_PARAMETER    "Error while Script Execution.\nWrong Parameter(s)."
+
+  ERR_DEP1	   "To install this package you have to install the following package(s) as well:\n\n"
+  ERR_DEP2	   "\nDo you want this ?"
+  ERR_READY	   "You choosen to install %d package(s). To install them you have to read and agree with each of thier licences.\n\n Do you want still want to ?"
 END
 
 /* EOF */

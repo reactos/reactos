@@ -18,6 +18,7 @@ typedef int (*PML_SetStatus)	(int status1, int status2, WCHAR* text);
 typedef int (*PML_SetButton)	(DWORD dwID, BOOL state);
 typedef int (*PML_SetIcon)		(int id, int icon);
 typedef int (*PML_SetText)		(const char* text);
+typedef int (*PML_Ask)			(const WCHAR* text);
 
 
 /* Structs */
@@ -32,6 +33,8 @@ typedef struct
   char**		field;
   char*			name;
   char*			description;
+  vector<char*>	depencies;
+  vector<int>	neededBy;
   
   int			action;
   char*			files [4];
@@ -74,8 +77,8 @@ extern "C"
   int PML_FindItem (TREE* tree, const char* what);
   int PML_LoadPackage (pTree, int id, PML_SetButton);
   char* PML_GetDescription (TREE* tree, int id);
-  int PML_SetAction (pTree, int package, int action, PML_SetIcon);
-  int PML_DoIt (pTree, PML_SetStatus);
+  int PML_SetAction (pTree, int package, int action, PML_SetIcon, PML_Ask);
+  int PML_DoIt (pTree, PML_SetStatus, PML_Ask);
 
   void PML_CloseTree (pTree);
 }

@@ -58,6 +58,12 @@ void pack_start (void* usrdata, const char* tag, const char** arg)
 
 		else if(!strcmp(tag, "description"))
 			pack->field = &pack->description;
+
+		else if (!strcmp(tag, "depent"))
+		{
+			pack->depencies.push_back((char*)NULL);
+			pack->field = &pack->depencies.back();
+		}
 	}
 }
 
@@ -81,7 +87,6 @@ void pack_text (void* usrdata, const char* data, int len)
 	strncpy(*pack->field, data, len);
 	(*pack->field)[len] = '\0';
 }
-
 
 // The user clicks on a package
 extern "C" int PML_LoadPackage (TREE* tree, int id, PML_SetButton SetButton)
@@ -138,7 +143,7 @@ extern "C" int PML_FindItem (TREE* tree, const char* what)
 }
 
 // The user chooses a actions like Install
-extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIcon)
+extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIcon, PML_Ask Ask)
 {
 	UINT i;
 	int ret = ERR_OK;
@@ -148,7 +153,7 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 
 	// if we have children, same action for them
 	for (i=0; i<pack->children.size(); i++)
-		ret = ret || PML_SetAction(tree, pack->children[i], action, SetIcon);
+		ret = ret || PML_SetAction(tree, pack->children[i], action, SetIcon, Ask);
 
 	// is the action possible ? 
 	if(!pack->actions[action])
@@ -158,10 +163,65 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 	if(pack->action == action)
 		return ERR_OK;
 
+	//
+	if(pack->depencies.size() && action)
+	{
+		UINT count = pack->depencies.size();
+		WCHAR buffer[2000], buffer2[200];
+		wcscpy(buffer, PML_TransError(ERR_DEP1));
+		
+		for (i=0; i<pack->depencies.size(); i++)
+		{
+			int item = PML_FindItem(tree, pack->depencies[i]);
+
+			if(!item)
+				return ERR_GENERIC;
+
+			if(action == tree->packages[item].action)// || tree->packages[item].installed
+			{
+				count--;
+				continue;
+			}
+
+			MultiByteToWideChar (CP_ACP, 0, pack->depencies[i], strlen(pack->depencies[i])+1, buffer2, 200);
+			wsprintf(buffer, L"%s - %s\n", buffer, buffer2);//
+		}
+
+		wcscat(buffer, PML_TransError(ERR_DEP2));
+
+		if(count)
+			if(!Ask(buffer))
+				return ERR_GENERIC;
+
+		for (i=0; i<pack->depencies.size(); i++)
+		{
+			int item = PML_FindItem(tree, pack->depencies[i]);
+
+			tree->packages[item].neededBy.push_back(id);
+
+			PML_SetAction(tree, item, action, SetIcon, Ask);
+		}
+	}
+
+	// load it if it's not loaded yet
+	else if (!pack->loaded && pack->path)
+	{
+		PML_XmlDownload (pack->path, (void*)pack, pack_start, pack_end, pack_text);
+		pack->loaded = TRUE;
+
+		return PML_SetAction(tree, id, action, SetIcon, Ask);
+	}
+
 	// set the icon
-	if(!pack->icon)
-		if(SetIcon)
+	if(SetIcon && !pack->icon)
 			SetIcon(id, action);
+
+	// set the button(s)
+	if(tree->setButton && action != 2)
+	{
+		tree->setButton(1, action);
+		//tree->setButton(pack->action+1, action);
+	}
 
 	// can't do src install yet
 	if(action == 2)
@@ -177,18 +237,12 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 		if(tree->setButton)
 			tree->setButton(1, 1);
 		//tree->setButton(action+1, 0);
+
 		pack->action = action;
 
 		// root notes (like network) return here
 		if(!pack->path)
 			return ret; 
-
-		// load it if it's not loaded yet
-		if(!pack->loaded)
-		{
-			PML_XmlDownload (pack->path, (void*)pack, pack_start, pack_end, pack_text);
-			pack->loaded = TRUE;
-		}
 
 		// save the name of the corresponding script in a vector
 		tree->todo.push_back(pack->files[action-1]);
@@ -197,10 +251,16 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 	// undoing
 	else 
 	{
-		// set other things back
-		if(tree->setButton)
-			tree->setButton(1, 0);
-		//tree->setButton(pack->action+1, 1);
+		for(i=0; i<pack->neededBy.size(); i++)
+		{
+			if(tree->packages[pack->neededBy[i]].action)
+			{
+				SetIcon(id, pack->action);
+				return ERR_GENERIC;
+			}
+		}
+
+		// set action back
 		pack->action = 0;
 
 		// root notes (like network) return here
@@ -211,8 +271,6 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 		for(i=0; i<tree->todo.size(); i++)
 			if(!strcmp(tree->todo[i], pack->files[pack->action-1])) // look for right entry
 				tree->todo.erase(tree->todo.begin()+i); // delete it
-
-		return ERR_OK;
 	}
 
 	return ret;

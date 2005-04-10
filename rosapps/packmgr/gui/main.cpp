@@ -174,6 +174,17 @@ int SetIcon (int id, int icon)
     return 1;
 }
 
+// Set the Icons
+int Ask (const WCHAR* message) 
+{	
+	int ans = MessageBox (0,message,0,MB_YESNO);
+
+	if(ans == IDYES)
+		return 1;
+
+    return 0;
+}
+
 // En- or Disable a Button inside of the toolbar and the Context Menu
 int SetButton (DWORD id, BOOL state) 
 {
@@ -182,7 +193,12 @@ int SetButton (DWORD id, BOOL state)
 
     ti.cbSize = sizeof (ti);
     ti.dwMask = TBIF_STATE;
-
+/*
+	if(state&&id==1)
+		MessageBox(0,L"on",0,0);
+	else if(!state&&id==1)
+		MessageBox(0,L"off",0,0);
+*/
 	if(state)
 		ti.fsState = TBSTATE_ENABLED;
 	else
@@ -294,7 +310,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if(LOWORD(wParam) <= 5 && LOWORD(wParam) >= 1)
 			{
 				if(selected)
-					if(PML_SetAction(tree, selected, LOWORD(wParam)-1, SetIcon) == ERR_OK)
+					if(PML_SetAction(tree, selected, LOWORD(wParam)-1, SetIcon, Ask) == ERR_OK)
 						break;
 
 				MessageBeep(MB_ICONHAND);
@@ -303,7 +319,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// DoIt
 			else if(LOWORD(wParam)==6)
 			{
-				if(PML_DoIt(tree, SetStatus) == ERR_OK)
+				if(PML_DoIt(tree, SetStatus, Ask) == ERR_OK)
 					DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DOIT), hwnd, StatusProc);
 				else
 					MessageBeep(MB_ICONHAND);
@@ -325,7 +341,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// prozess hotkeys
 		case WM_HOTKEY:
 		{
-			if(PML_SetAction(tree, selected, wParam, SetIcon) != ERR_OK)
+			if(PML_SetAction(tree, selected, wParam, SetIcon, Ask) != ERR_OK)
 				MessageBeep(MB_ICONHAND);
 		}
 		break;

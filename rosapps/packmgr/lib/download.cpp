@@ -16,7 +16,7 @@
 #include <wine/urlmon.h>
 
 // Server there all the files lie
-const char* tree_server = "http://svn.reactos.com/viewcvs/*checkout*/trunk/rosapps/packmgr/tree/"; 
+const char* tree_server = "http://maarten-online.de/xml/"; 
 
 HRESULT WINAPI URLDownloadToFileA(      
     LPUNKNOWN pCaller,

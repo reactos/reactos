@@ -102,7 +102,7 @@ DWORD WINAPI DoitThread (void* lpParam)
 
 	// set all actions to none
 	for(i=0; i<tree->packages.size(); i++)
-		PML_SetAction (tree, i, 0, tree->setIcon);
+		PML_SetAction (tree, i, 0, tree->setIcon, NULL);
 
 	tree->setStatus(1000, ret, NULL);
 
@@ -110,13 +110,21 @@ DWORD WINAPI DoitThread (void* lpParam)
 } 
 
 // Do the actions the user wants us to do
-extern "C" int PML_DoIt (TREE* tree, PML_SetStatus SetStatus)
+extern "C" int PML_DoIt (TREE* tree, PML_SetStatus SetStatus, PML_Ask Ask)
 { 
     DWORD dummy; 
 	tree->setStatus = SetStatus;
 
 	if(!tree->todo.size())
 		return ERR_NOTODO;
+
+	//ask
+	WCHAR buffer [2000];
+	wsprintf(buffer, PML_TransError(ERR_READY), tree->todo.size());
+
+	if(!Ask(buffer))
+		return ERR_GENERIC;
+	
 
 	hThread = CreateThread(NULL, 0, DoitThread, tree, 0, &dummy);
 

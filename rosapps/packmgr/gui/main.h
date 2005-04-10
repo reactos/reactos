@@ -35,6 +35,7 @@ void Help (void);
 int AddItem (int id, const char* name, int parent, int icon);
 int SetText (const char* text);
 int SetStatus (int status1, int status2, WCHAR* text);
+int Ask (const WCHAR* message);
 
 /* Toolbar Releated */
 
