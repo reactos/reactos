@@ -1445,6 +1445,8 @@ MingwModuleHandler::GenerateOtherMacros ()
 	string globalCflags = "-g";
 	if ( backend->usePipe )
 		globalCflags += " -pipe";
+	if ( !module.enableWarnings )
+		globalCflags += " -Werror";
 	
 	fprintf (
 		fMakefile,

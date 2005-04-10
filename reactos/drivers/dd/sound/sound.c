@@ -77,6 +77,7 @@ NTSTATUS ModuleEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  * RETURNS: Success or failure
  */
 {
+#if 0
 	PDEVICE_OBJECT DeviceObject;
 	NTSTATUS ret;
    
@@ -96,7 +97,7 @@ NTSTATUS ModuleEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
 	DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
 	DriverObject->DriverUnload = NULL;
-   
+#endif
 	return(STATUS_SUCCESS);
 }
 

@@ -176,6 +176,7 @@ public:
 	std::string installBase;
 	std::string installName;
 	bool useWRC;
+	bool enableWarnings;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,

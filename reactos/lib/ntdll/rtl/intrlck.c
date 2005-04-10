@@ -122,7 +122,7 @@ InterlockedCompareExchange(PLONG Destination,
 	LONG Exchange,
 	LONG Comperand)
 {	
-	PVOID ret;
+	LONG ret;
 	__asm__ ( /* lock for SMP systems */
                   "lock\n\t"
                   "cmpxchgl %2,(%1)"

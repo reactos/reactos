@@ -417,10 +417,11 @@ MingwBackend::GenerateGlobalVariables () const
 	GenerateGlobalCFlagsAndProperties (
 		"=",
 		ProjectNode.non_if_data );
-	fprintf ( fMakefile, "PROJECT_RCFLAGS = $(PROJECT_CFLAGS)\n" );
-	fprintf ( fMakefile, "PROJECT_WIDLFLAGS = $(PROJECT_CFLAGS)\n" );
-	fprintf ( fMakefile, "PROJECT_LFLAGS = %s\n",
+	fprintf ( fMakefile, "PROJECT_RCFLAGS := $(PROJECT_CFLAGS)\n" );
+	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CFLAGS)\n" );
+	fprintf ( fMakefile, "PROJECT_LFLAGS := %s\n",
 	          GenerateProjectLFLAGS ().c_str () );
+	fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );
 	fprintf ( fMakefile, "\n" );
 }
 

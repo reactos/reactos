@@ -110,7 +110,7 @@ InitializeProfiles (VOID)
   HKEY hKey;
 
   /* Load profiles directory path */
-  if (!LoadString(hInstance,
+  if (!LoadStringW(hInstance,
 		  IDS_PROFILEPATH,
 		  szBuffer,
 		  MAX_PATH))
@@ -289,7 +289,7 @@ InitializeProfiles (VOID)
     }
 
   /* Set 'Fonts' folder path */
-  GetWindowsDirectory(szBuffer, MAX_PATH);
+  GetWindowsDirectoryW(szBuffer, MAX_PATH);
   wcscat(szBuffer, L"\\media\\fonts");
 
   dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
@@ -541,7 +541,7 @@ InitializeProfiles (VOID)
   RegCloseKey(hKey);
 
   /* Load 'Program Files' location */
-  if (!LoadString(hInstance,
+  if (!LoadStringW(hInstance,
 		  IDS_PROGRAMFILES,
 		  szBuffer,
 		  MAX_PATH))

@@ -222,6 +222,12 @@ Module::Module ( const Project& project,
 		useWRC = att->value == "true";
 	else
 		useWRC = true;
+
+	att = moduleNode.GetAttribute ( "warnings", false );
+	if ( att != NULL )
+		enableWarnings = att->value == "true";
+	else
+		enableWarnings = false;
 }
 
 Module::~Module ()

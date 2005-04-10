@@ -7,3 +7,6 @@
 <directory name="pci">
 	<xi:include href="pci/pci.xml" />
 </directory>
+<directory name="serenum">
+	<xi:include href="serenum/serenum.xml" />
+</directory>

@@ -131,7 +131,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
  *  WM_DESTROY  - post a quit message and return
  *
  */
-INT_PTR CALLBACK
+LRESULT CALLBACK
 ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static short last_split;

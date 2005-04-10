@@ -1,4 +1,4 @@
-<module name="rpcrt4" type="win32dll" baseaddress="${BASEADDRESS_RPCRT4}">
+<module name="rpcrt4" type="win32dll" baseaddress="${BASEADDRESS_RPCRT4}" warnings="true">
 	<importlibrary definition="rpcrt4.spec.def" />
 	<include base="rpcrt4">.</include>
 	<include base="ReactOS">include/wine</include>

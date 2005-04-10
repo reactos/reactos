@@ -16,6 +16,9 @@
 <directory name="format">
 	<xi:include href="format/format.xml" />
 </directory>
+<directory name="msiexec">
+	<xi:include href="msiexec/msiexec.xml" />
+</directory>
 <directory name="notepad">
 	<xi:include href="notepad/notepad.xml" />
 </directory>

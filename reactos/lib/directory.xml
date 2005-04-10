@@ -148,6 +148,9 @@
 <directory name="msgina">
 	<xi:include href="msgina/msgina.xml" />
 </directory>
+<directory name="msi">
+	<xi:include href="msi/msi.xml" />
+</directory>
 <directory name="msimg32">
 	<xi:include href="msimg32/msimg32.xml" />
 </directory>
@@ -204,6 +207,9 @@
 </directory>
 <directory name="secur32">
 	<xi:include href="secur32/secur32.xml" />
+</directory>
+<directory name="serialui">
+	<xi:include href="serialui/serialui.xml" />
 </directory>
 <directory name="setupapi">
 	<xi:include href="setupapi/setupapi.xml" />

@@ -113,7 +113,7 @@ VOID DisplayBuffer(
     UINT i;
     PCHAR p;
 
-    printf("Buffer (0x%X)  Size (0x%X).\n", Buffer, Size);
+    printf("Buffer (0x%p)  Size (0x%lX).\n", Buffer, Size);
 
     p = (PCHAR)Buffer;
     for (i = 0; i < Size; i++) {
@@ -386,7 +386,6 @@ VOID QueryTime(PLARGE_INTEGER Time)
 
 VOID TimeToMsString(LPSTR String, LARGE_INTEGER Time)
 {
-    UINT          i, Length;
     CHAR          Convstr[40];
     LARGE_INTEGER LargeTime;
 

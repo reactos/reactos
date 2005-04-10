@@ -25,6 +25,7 @@ unsigned char read_dsp(unsigned short base)
 {
 //	while((inb(base+0x0e)&0x80)==0);	//Wait until there is something to read
 //	return	inb(base+0x0a);
+	return 0;
 }
 
 /************************************'

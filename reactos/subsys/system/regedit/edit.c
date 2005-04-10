@@ -271,7 +271,6 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC oldproc;
-    TCHAR* valueData;
     HWND hwndValue;
     int len;
     TCHAR ValueString[32];
@@ -398,7 +397,6 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 
 INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    PVOID valueData;
     HWND hwndValue;
     int len;
 

@@ -41,16 +41,6 @@
  *          Had to remove local handling.	 Otherwise, same as whois.
  */
 
-#ifndef lint
-static char copyright[] =
-"@(#) Copyright (c) 1989, 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)finger.c	8.5 (Berkeley) 5/4/95";
-#endif /* not lint */
-
 /*
  * Finger prints out information about users.  It is not portable since
  * certain fields (e.g. the full user name, office, and phone numbers) are

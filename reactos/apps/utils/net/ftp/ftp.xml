@@ -1,4 +1,4 @@
-<module name="ftp" type="win32cui" installbase="system32" installname="ftp.exe">
+<module name="ftp" type="win32cui" installbase="system32" installname="ftp.exe" warnings="true">
 	<include base="ftp">.</include>
 	<define name="__USE_W32API" />
 	<library>kernel32</library>

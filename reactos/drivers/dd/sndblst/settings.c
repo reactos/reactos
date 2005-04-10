@@ -292,8 +292,6 @@ NTSTATUS SaveSettings(
         NT status STATUS_SUCCESS if successful
 */
 {
-    NTSTATUS s;
-
     DPRINT("SaveSettings() unimplemented\n");
 
 //    UNIMPLEMENTED;

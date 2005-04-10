@@ -50,8 +50,6 @@ BOOLEAN IsSpeakerEnabled(UINT BasePort)
 
 VOID BeginPlayback(UINT BasePort, UINT BitDepth, UINT Channels, UINT BlockSize)
 {
-    CHAR Command;
-
     DPRINT("BeginPlayback(%d, %d, %d, %d)\n", BasePort, BitDepth, Channels, BlockSize);
 
 //    switch(BitDepth)

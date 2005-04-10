@@ -12,6 +12,12 @@ GetSecurityInfo(HANDLE handle,
                 PACL* ppSacl,
                 PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
 
+extern BOOL
+InitializeAclUiDll(VOID);
+
+extern VOID
+UnloadAclUiDll(VOID);
+
 DEFINE_GUID(IID_CRegKeySecurity, 0x965fc360, 0x16ff, 0x11d0, 0x0091, 0xcb,0x00,0xaa,0x00,0xbb,0xb7,0x23);
 
 /******************************************************************************
@@ -102,23 +108,6 @@ HRESULT STDMETHODCALLTYPE CRegKeySecurity_fnPropertySheetPageCallback(LPREGKEYSE
                                                                       HWND hwnd,
                                                                       UINT uMsg,
                                                                       SI_PAGE_TYPE uPage);
-
-static ifaceCRegKeySecurityVbtl efvt =
-{
-  /* IUnknown methods */
-  CRegKeySecurity_fnQueryInterface,
-  CRegKeySecurity_fnAddRef,
-  CRegKeySecurity_fnRelease,
-  
-  /* CRegKeySecurity methods */
-  CRegKeySecurity_fnGetObjectInformation,
-  CRegKeySecurity_fnGetSecurity,
-  CRegKeySecurity_fnSetSecurity,
-  CRegKeySecurity_fnGetAccessRights,
-  CRegKeySecurity_fnMapGeneric,
-  CRegKeySecurity_fnGetInheritTypes,
-  CRegKeySecurity_fnPropertySheetPageCallback
-};
 
 #endif /* _REGEXP_SECURITY_H */
 

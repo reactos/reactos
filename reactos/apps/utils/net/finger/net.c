@@ -34,10 +34,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)net.c	8.4 (Berkeley) 4/28/95";
-#endif /* not lint */
-
 #include <sys/types.h>
 #include <winsock2.h>
 #include "unistd.h"
@@ -63,7 +59,7 @@ netfinger(char *name)
 	if (!(host = rindex(name, '@')))
 		return;
 
-	*host++ = NULL;
+	*host++ = 0;
 	if (isdigit(*host) && (defaddr.s_addr = inet_addr(host)) != -1) {
 		def.h_name = host;
 		def.h_addr_list = alist;
