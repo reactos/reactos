@@ -208,7 +208,7 @@ typedef struct _mymod {
   WORD maxmod;
   BYTE mod_max[7];
 } INTERNAL_KBD_MODIFIERS;
-// done
+
 ROSDATA INTERNAL_KBD_MODIFIERS modifier_bits[] = {
   modifier_keys,
   3,
@@ -429,7 +429,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(1,1), /* Version 1.0 */
+  MAKELONG(0,1), /* Version 1.0 */
 
   /* Ligatures -- Russian doesn't have any */
   0,
