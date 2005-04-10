@@ -64,6 +64,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00010409","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00010409","Layout Text",0x00000000,"US-Dvorak"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout File",0x00000000,"kbdfr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout Text",0x00000000,"FR"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000419","Layout File",0x00000000,"kbdru.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000419","Layout Text",0x00000000,"Russian"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041d","Layout File",0x00000000,"kbdse.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041d","Layout Text",0x00000000,"SE"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000809","Layout File",0x00000000,"kbduk.dll"
