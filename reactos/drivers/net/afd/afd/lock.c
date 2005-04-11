@@ -50,7 +50,6 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     PMDL NewMdl;
-    INT NewBufferLen;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
@@ -61,7 +60,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
             if( LockAddress ) {
                 NewBuf[Count].buf = AddressBuf;
-                NewBuf[Count].len = NewBufferLen;
+                NewBuf[Count].len = *AddressLen;
                 Count++;
                 NewBuf[Count].buf = (PVOID)AddressLen;
                 NewBuf[Count].len = sizeof(*AddressLen);
