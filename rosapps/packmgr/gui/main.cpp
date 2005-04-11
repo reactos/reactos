@@ -67,8 +67,11 @@ int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, in
 	// Start getting messages
 	while(GetMessage(&msg,NULL,0,0))
 	{
-	  TranslateMessage(&msg);
-	  DispatchMessage(&msg);
+		if(!TranslateAccelerator(hwnd, hHotKeys, &msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 	
 	// Close our handle
@@ -152,11 +155,7 @@ void InitControls (HWND hwnd)
 	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(10))); 
 
 	// Setup Hotkeys
-	RegisterHotKey(hwnd, 1, MOD_CONTROL, VK_1);
-	RegisterHotKey(hwnd, 2, MOD_CONTROL, VK_2);
-	RegisterHotKey(hwnd, 3, MOD_CONTROL, VK_3);
-	RegisterHotKey(hwnd, 4, MOD_CONTROL, VK_4);
-	RegisterHotKey(hwnd, 0, MOD_CONTROL, VK_0);
+	hHotKeys = LoadAccelerators (hinst, MAKEINTRESOURCE(IDR_HOTKEYS));
 }
 
 // Set the Icons

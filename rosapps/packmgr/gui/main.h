@@ -19,6 +19,7 @@ int selected, splitter_pos = 50;
 
 pTree tree;
 HMENU hPopup;
+HACCEL hHotKeys;
 HWND hTBar, hTree, hEdit, hStatus;
 HTREEITEM nodes [MAXNODES];
 

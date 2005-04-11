@@ -12,3 +12,4 @@
 #define IDC_STATUS2		0x111 
 #define IDC_CANCEL		0x112 
 #define IDC_TSTATUS		0x113 
+#define IDR_HOTKEYS		0x114

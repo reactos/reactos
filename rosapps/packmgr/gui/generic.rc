@@ -22,3 +22,13 @@ IDB_TOOLBAR BITMAP DISCARDABLE "res/toolbar.bmp"
 13 ICON DISCARDABLE "res/update.ico"
 14 ICON DISCARDABLE "res/uninstall.ico"
 
+/* HotKeys */
+
+IDR_HOTKEYS ACCELERATORS DISCARDABLE 
+BEGIN
+    "1",   2,   VIRTKEY, CONTROL
+    "2",   3,   VIRTKEY, CONTROL
+    "3",   4,   VIRTKEY, CONTROL
+    "4",   5,   VIRTKEY, CONTROL
+    "0",   1,   VIRTKEY, CONTROL
+END
