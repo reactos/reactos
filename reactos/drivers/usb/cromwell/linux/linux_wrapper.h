@@ -443,6 +443,8 @@ int my_pci_module_init(struct pci_driver *x);
 
 #define pci_unregister_driver(a)      do {} while(0)  
 
+#define pci_write_config_word(a,b,c) my_pci_write_config_word(a,b,c)
+
 #define bus_register(a) do {} while(0)
 #define bus_unregister(a) do {} while(0)
 

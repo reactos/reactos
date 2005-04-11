@@ -688,7 +688,7 @@ struct usb_device STDCALL *usb_alloc_dev(struct usb_device *parent, struct usb_b
  *
  * A pointer to the device with the incremented reference counter is returned.
  */
-struct usb_device *usb_get_dev (struct usb_device *dev)
+struct usb_device STDCALL *usb_get_dev (struct usb_device *dev)
 {
 	struct device *tmp;
 

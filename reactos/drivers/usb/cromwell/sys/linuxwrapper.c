@@ -290,6 +290,16 @@ struct pci_dev *my_pci_find_slot(int a,int b)
 	return NULL;
 }
 /*------------------------------------------------------------------------*/ 
+int my_pci_write_config_word(struct pci_dev *dev, int where, u16 val)
+{
+	//dev->bus, dev->devfn, where, val
+	OHCI_DEVICE_EXTENSION *dev_ext = (OHCI_DEVICE_EXTENSION *)dev->dev_ext;
+
+	//FIXME: Is returning this value correct?
+	//FIXME: Mixing pci_dev and win structs isn't a good thing at all
+	return HalSetBusDataByOffset(PCIConfiguration, dev->bus->number, dev_ext->SystemIoSlotNumber, &val, where, sizeof(val));
+}
+/*------------------------------------------------------------------------*/ 
 int my_request_irq(unsigned int irq,
                        int  (*handler)(int,void *, struct pt_regs *),
                        unsigned long mode, const char *desc, void *data)
