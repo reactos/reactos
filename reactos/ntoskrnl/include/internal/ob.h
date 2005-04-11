@@ -242,6 +242,14 @@ enum
 
 extern PDIRECTORY_OBJECT NameSpaceRoot;
 extern POBJECT_TYPE ObSymbolicLinkType;
+extern PHANDLE_TABLE ObpKernelHandleTable;
+
+#define KERNEL_HANDLE_FLAG (1 << ((sizeof(HANDLE) * 8) - 1))
+#define ObIsKernelHandle(Handle, ProcessorMode)                                \
+  (((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) &&                               \
+   ((ProcessorMode) == KernelMode))
+#define ObKernelHandleToHandle(Handle)                                         \
+  (HANDLE)((ULONG_PTR)(Handle) & ~KERNEL_HANDLE_FLAG)
 
 VOID ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 			  POBJECT_HEADER Header,
@@ -265,10 +273,6 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PUNICODE_STRING RemainingPath,
 		      POBJECT_TYPE ObjectType);
 VOID ObDeleteHandleTable(struct _EPROCESS* Process);
-
-NTSTATUS
-ObDeleteHandle(PEPROCESS Process,
-	       HANDLE Handle);
 
 NTSTATUS
 ObpQueryHandleAttributes(HANDLE Handle,

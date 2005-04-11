@@ -286,6 +286,7 @@ PspPostInitSystemProcess(VOID)
   PsInitClientIDManagment();
   
   ObCreateHandleTable(NULL, FALSE, PsInitialSystemProcess);
+  ObpKernelHandleTable = PsInitialSystemProcess->ObjectTable;
   
   Status = PsCreateCidHandle(PsInitialSystemProcess,
                              PsProcessType,
