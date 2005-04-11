@@ -60,7 +60,7 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      ObjectPath,
-			      Attributes,
+			      Attributes | OBJ_OPENIF,
 			      NULL,
 			      NULL);
    Status = ObFindObject(&ObjectAttributes,
