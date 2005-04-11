@@ -786,19 +786,20 @@ MingwModuleHandler::GenerateGccCommand (
 	const string& cc,
 	const string& cflagsMacro )
 {
-	string deps = sourceFilename;
+	string dependencies = sourceFilename;
 	if ( module.pch && use_pch )
-		deps += " " + module.pch->header + ".gch";
+		dependencies += " " + module.pch->header + ".gch";
 	
 	/* WIDL generated headers may be used */
-	deps += " " + GetLinkingDependenciesMacro ();
+	dependencies += " " + GetLinkingDependenciesMacro ();
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string objectFilename = GetObjectFilename (
 		sourceFilename, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          objectFilename.c_str (),
-	          deps.c_str (),
+	          dependencies.c_str (),
 	          GetDirectory ( objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
 	fprintf ( fMakefile,
@@ -813,12 +814,14 @@ MingwModuleHandler::GenerateGccAssemblerCommand (
 	const string& cc,
 	const string& cflagsMacro )
 {
+	string dependencies = sourceFilename;
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 	string objectFilename = GetObjectFilename (
 		sourceFilename, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          objectFilename.c_str (),
-	          sourceFilename.c_str (),
+	          dependencies.c_str (),
 	          GetDirectory ( objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_GAS)\n" );
 	fprintf ( fMakefile,
@@ -832,12 +835,14 @@ MingwModuleHandler::GenerateNasmCommand (
 	const string& sourceFilename,
 	const string& nasmflagsMacro )
 {
+	string dependencies = sourceFilename;
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 	string objectFilename = GetObjectFilename (
 		sourceFilename, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          objectFilename.c_str (),
-	          sourceFilename.c_str (),
+	          dependencies.c_str (),
 	          GetDirectory ( objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
 	fprintf ( fMakefile,
@@ -851,6 +856,8 @@ MingwModuleHandler::GenerateWindresCommand (
 	const string& sourceFilename,
 	const string& windresflagsMacro )
 {
+	string dependencies = sourceFilename;
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 	string objectFilename =
 		GetObjectFilename ( sourceFilename, &clean_files );
 	string rciFilename = ros_temp +
@@ -862,7 +869,7 @@ MingwModuleHandler::GenerateWindresCommand (
 		fprintf ( fMakefile,
 		          "%s: %s $(WRC_TARGET) | %s\n",
 		          objectFilename.c_str (),
-		          sourceFilename.c_str (),
+		          dependencies.c_str (),
 		          GetDirectory ( objectFilename ).c_str () );
 		fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 		fprintf ( fMakefile,
@@ -890,7 +897,7 @@ MingwModuleHandler::GenerateWindresCommand (
 		fprintf ( fMakefile,
 		          "%s: %s $(WRC_TARGET) | %s\n",
 		          objectFilename.c_str (),
-		          sourceFilename.c_str (),
+		          dependencies.c_str (),
 		          GetDirectory ( objectFilename ).c_str () );
 		fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 		fprintf ( fMakefile,
@@ -904,8 +911,10 @@ void
 MingwModuleHandler::GenerateWinebuildCommands (
 	const string& sourceFilename )
 {
-	string basename = GetBasename ( sourceFilename );
+	string dependencies = sourceFilename;
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
+	string basename = GetBasename ( sourceFilename );
 	string def_file = PassThruCacheDirectory (
 		basename + ".spec.def",
 		backend->intermediateDirectory );
@@ -919,7 +928,7 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	fprintf ( fMakefile,
 	          "%s: %s $(WINEBUILD_TARGET)\n",
 	          def_file.c_str (),
-	          sourceFilename.c_str () );
+	          dependencies.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s --def=%s -o %s\n",
@@ -944,6 +953,9 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 	const string& sourceFilename,
 	const string& widlflagsMacro )
 {
+	string dependencies = sourceFilename;
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
+
 	string basename = GetBasename ( sourceFilename );
 
 	/*string generatedHeaderFilename = PassThruCacheDirectory (
@@ -963,7 +975,7 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 	          "%s %s: %s $(WIDL_TARGET) | %s\n",
 	          generatedServerFilename.c_str (),
 	          generatedHeaderFilename.c_str (),
-	          sourceFilename.c_str (),
+	          dependencies.c_str (),
 	          GetDirectory ( generatedServerFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
@@ -980,6 +992,9 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 	const string& sourceFilename,
 	const string& widlflagsMacro )
 {
+	string dependencies = sourceFilename;
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
+
 	string basename = GetBasename ( sourceFilename );
 
 	/*string generatedHeaderFilename = PassThruCacheDirectory (
@@ -999,7 +1014,7 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 	          "%s %s: %s $(WIDL_TARGET) | %s\n",
 	          generatedClientFilename.c_str (),
 	          generatedHeaderFilename.c_str (),
-	          sourceFilename.c_str (),
+	          dependencies.c_str (),
 	          GetDirectory ( generatedClientFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,

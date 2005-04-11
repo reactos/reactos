@@ -88,6 +88,7 @@ public:
 class XMLElement
 {
 public:
+	XMLFile* xmlFile;
 	std::string location;
 	std::string name;
 	std::vector<XMLAttribute*> attributes;
@@ -95,7 +96,8 @@ public:
 	std::vector<XMLElement*> subElements;
 	std::string value;
 
-	XMLElement ( const std::string& location_ );
+	XMLElement ( XMLFile* xmlFile,
+	             const std::string& location );
 	~XMLElement();
 	bool Parse(const std::string& token,
 	           bool& end_tag);

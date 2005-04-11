@@ -339,9 +339,11 @@ XMLAttribute& XMLAttribute::operator = ( const XMLAttribute& src )
 	return *this;
 }
 
-XMLElement::XMLElement ( const string& location_ )
-	: location(location_),
-	  parentElement(NULL)
+XMLElement::XMLElement ( XMLFile* xmlFile,
+                         const string& location )
+	: xmlFile ( xmlFile ),
+	  location ( location ),
+	  parentElement ( NULL )
 {
 }
 
@@ -517,7 +519,8 @@ XMLParse ( XMLFile& f,
 			return NULL;
 	}
 
-	XMLElement* e = new XMLElement ( f.Location () );
+	XMLElement* e = new XMLElement ( &f,
+	                                 f.Location () );
 	bool bNeedEnd = e->Parse ( token, end_tag );
 
 	if ( e->name == "xi:include" && includes )
@@ -634,8 +637,8 @@ XMLLoadInclude ( XMLInclude& include,
 	string file ( include.path.Fixup(att->value, true) );
 	string top_file ( Path::RelativeFromWorkingDirectory ( file ) );
 	include.e->attributes.push_back ( new XMLAttribute ( "top_href", top_file ) );
-	XMLFile fInc;
-	if ( !fInc.open ( file ) )
+	XMLFile* fInc = new XMLFile();
+	if ( !fInc->open ( file ) )
 	{
 		include.fileExists = false;
 		// look for xi:fallback element
@@ -669,10 +672,11 @@ XMLLoadInclude ( XMLInclude& include,
 	else
 	{
 		include.fileExists = true;
-		XMLElement* new_e = new XMLElement ( include.e->location );
+		XMLElement* new_e = new XMLElement ( fInc,
+		                                     include.e->location );
 		new_e->name = "xi:included";
 		Path path2 ( include.path, att->value );
-		XMLReadFile ( fInc, *new_e, includes, path2 );
+		XMLReadFile ( *fInc, *new_e, includes, path2 );
 		return new_e;
 	}
 }
@@ -682,14 +686,15 @@ XMLLoadFile ( const string& filename,
 	          const Path& path,
 	          XMLIncludes& includes )
 {
-	XMLFile f;
+	XMLFile* f = new XMLFile();
 
-	if ( !f.open ( filename ) )
+	if ( !f->open ( filename ) )
 		throw FileNotFoundException ( filename );
 
-	XMLElement* head = new XMLElement ( "(virtual)" );
+	XMLElement* head = new XMLElement ( f,
+	                                    "(virtual)" );
 
-	XMLReadFile ( f, *head, includes, path );
+	XMLReadFile ( *f, *head, includes, path );
 
 	for ( size_t i = 0; i < includes.size (); i++ )
 	{
@@ -700,7 +705,7 @@ XMLLoadFile ( const string& filename,
 			throw FileNotFoundException (
 				ssprintf ( "%s (referenced from %s)",
 					e->GetAttribute ( "top_href", true )->value.c_str (),
-					f.Location ().c_str () ) );
+					f->Location ().c_str () ) );
 		}
 		XMLElement* parent = e->parentElement;
 		XMLElement** parent_container = NULL;

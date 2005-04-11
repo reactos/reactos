@@ -154,6 +154,7 @@ class Module
 public:
 	const Project& project;
 	const XMLElement& node;
+	std::string xmlbuildFile;
 	std::string name;
 	std::string extension;
 	std::string entrypoint;

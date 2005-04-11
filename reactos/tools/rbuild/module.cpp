@@ -137,6 +137,8 @@ Module::Module ( const Project& project,
 		                                  __LINE__,
 		                                  "Module created with non-<module> node" );
 
+	xmlbuildFile = Path::RelativeFromWorkingDirectory ( moduleNode.xmlFile->filename() );
+
 	path = FixSeparator ( modulePath );
 
 	const XMLAttribute* att = moduleNode.GetAttribute ( "name", true );
