@@ -11,12 +11,8 @@ void *alloca(size_t s)
 	if ( s == 0 )
 		return NULL;
 
-	
-	if ( (s & 0xfffffffc)  != 0 )
-		as += 4;
-		
-	as &= 0xfffffffc;
-	
+	as = (as + 3) & (~3);	
+
 	__asm__ __volatile__(
 	"mov %0, %%edx  	\n"
 //	"popl %%ebp		\n"
