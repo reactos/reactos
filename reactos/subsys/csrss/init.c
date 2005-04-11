@@ -131,7 +131,7 @@ CsrpParseCommandLine (
 
 	InitializeObjectAttributes (&Attributes,
 	                            &CsrDirectoryName,
-	                            0,
+	                            OBJ_OPENIF,
 	                            NULL,
 	                            NULL);
 
