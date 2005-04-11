@@ -511,6 +511,9 @@ IopLoadServiceModule(
  *       Module object representing the driver. It can be retrieve by
  *       IopLoadServiceModule.
  *
+ *    ServiceName
+ *       Name of the service (as in registry).
+ *
  *    FileSystemDriver
  *       Set to TRUE for file system drivers.
  *
@@ -523,6 +526,7 @@ NTSTATUS FASTCALL
 IopInitializeDriverModule(
    IN PDEVICE_NODE DeviceNode,
    IN PMODULE_OBJECT ModuleObject,
+   IN PUNICODE_STRING ServiceName,
    IN BOOLEAN FileSystemDriver,
    OUT PDRIVER_OBJECT *DriverObject)
 {
@@ -533,7 +537,7 @@ IopInitializeDriverModule(
 
    Status = IopCreateDriverObject(
       DriverObject,
-      &DeviceNode->ServiceName,
+      ServiceName,
       FileSystemDriver,
       ModuleObject->Base,
       ModuleObject->Length);
@@ -544,14 +548,14 @@ IopInitializeDriverModule(
       return Status;
    }
 
-   if (DeviceNode->ServiceName.Buffer)
+   if (ServiceName->Buffer)
    {
-      RegistryKey.Length = DeviceNode->ServiceName.Length +
+      RegistryKey.Length = ServiceName->Length +
          sizeof(ServicesKeyName) - sizeof(UNICODE_NULL);
       RegistryKey.MaximumLength = RegistryKey.Length + sizeof(UNICODE_NULL);
       RegistryKey.Buffer = ExAllocatePool(PagedPool, RegistryKey.MaximumLength);
       wcscpy(RegistryKey.Buffer, ServicesKeyName);
-      wcscat(RegistryKey.Buffer, DeviceNode->ServiceName.Buffer);
+      wcscat(RegistryKey.Buffer, ServiceName->Buffer);
    }
    else
    {
@@ -613,7 +617,8 @@ IopAttachFilterDriversCallback(
       if (!NT_SUCCESS(Status))
          continue;
 
-      Status = IopInitializeDriverModule(DeviceNode, ModuleObject, FALSE, &DriverObject);
+      Status = IopInitializeDriverModule(DeviceNode, ModuleObject, &ServiceName,
+                                         FALSE, &DriverObject);
       if (!NT_SUCCESS(Status))
          continue;
 
@@ -1165,8 +1170,8 @@ IopInitializeBuiltinDriver(
     * Initialize the driver
     */
 
-   Status = IopInitializeDriverModule(DeviceNode, ModuleObject, FALSE,
-      &DriverObject);
+   Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+      &DeviceNode->ServiceName, FALSE, &DriverObject);
    
    if (!NT_SUCCESS(Status))
    {
@@ -1873,6 +1878,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    Status = IopInitializeDriverModule(
       DeviceNode,
       ModuleObject,
+      &DeviceNode->ServiceName,
       (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
        Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
       &DriverObject);

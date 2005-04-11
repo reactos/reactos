@@ -1501,7 +1501,8 @@ IopActionInitChildServices(
       Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
       if (NT_SUCCESS(Status))
       {
-         Status = IopInitializeDriverModule(DeviceNode, ModuleObject, FALSE, &DriverObject);
+         Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+            &DeviceNode->ServiceName, FALSE, &DriverObject);
          if (NT_SUCCESS(Status))
          {
             /* Attach lower level filter drivers. */

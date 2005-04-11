@@ -595,6 +595,7 @@ IoInit2(BOOLEAN BootLog)
   Status = IopInitializeDriverModule(
     DeviceNode,
     &ModuleObject,
+    &DeviceNode->ServiceName,
     TRUE,
     &DriverObject);
   if (!NT_SUCCESS(Status))
