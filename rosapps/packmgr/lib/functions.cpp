@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////
 //
-// script.cpp
+// functions.cpp
 // 
 // Script Functions
 //
@@ -15,7 +15,7 @@
 #include "log.h"
 
 extern const char* tree_server;
-char* PML_Download (const char* name, const char* local_name, const char* server, BOOL totemp = TRUE);
+char* PML_Download (const char* url, const char* server,  const char* filename);
 
 
 int debuglog (int argc, char* argv[])
@@ -31,10 +31,10 @@ int download (int argc, char* argv[])
 	char* result;
 
 	if (argc==3)
-		result = PML_Download(argv[1], argv[2], argv[3]);
+		result = PML_Download(argv[1], argv[3], argv[2]);
 
 	else if (argc==2)
-		result = PML_Download(argv[1], argv[2], NULL);
+		result = PML_Download(argv[1], NULL, argv[2]);
 
 	else 
 		return ERR_GENERIC;

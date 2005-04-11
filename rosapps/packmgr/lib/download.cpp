@@ -26,35 +26,48 @@ HRESULT WINAPI URLDownloadToFileA(
     LPBINDSTATUSCALLBACK lpfnCB
 );
 
+int FindCount (string What, string Where, int start = 0, int end = -1);
+
 
 // Download a file
-char* PML_Download (const char* name, const char* local_name = "packmgr.txt", const char* server = tree_server, BOOL totemp = TRUE) 
+char* PML_Download (const char* url, const char* server = "tree", const char* filename = NULL) 
 {
-	char url [MAX_PATH];
-	static char path [MAX_PATH]; 
+	char downl [MAX_PATH];
+	static char path [MAX_PATH];
 
 	// get temp dir
-	if(totemp)
+	if(!filename)
+		GetTempPathA (200, path);
+
+	else if(!strstr(filename, "\\"))
 		GetTempPathA (200, path);
 	
 	// create the local file name
-	if(local_name)
-		strcat(path, local_name);
+	if(filename)
+	{
+		strcat(path, filename);
+		DeleteFileA (path);
+	}
 	else
-		strcat(path, "tmp.tmp"); 
+		GetTempFileNameA (path, "pml", 0, path); 
 
 	// get the url
-	if(server) strcpy(url, server);
-	strcat(url, name);
 	
-	// make sure there is no old file
-	DeleteFileA (path);	
+	if (!server);
+
+	else if(!strcmp(server, "tree")) 
+		strcpy(downl, tree_server);
+
+	else 
+		strcpy(downl, server);
+
+	strcat(downl, url);
 
 	// download the file
-	if(URLDownloadToFileA (NULL, url, path, 0, NULL) != S_OK)
+	if(URLDownloadToFileA (NULL, downl, path, 0, NULL) != S_OK)
 	{
 		Log("!  ERROR: Unable to download ");
-		LogAdd(url);
+		LogAdd(downl);
 
 		return NULL;
 	}

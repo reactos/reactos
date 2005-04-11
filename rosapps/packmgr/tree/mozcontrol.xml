@@ -2,6 +2,5 @@
   <name>MozillaControl</name>
   <description>Provide the Gekko Engine for ReactOS.</description>
   <scripts inst="mozillacontrol.inst.rps" srcinst="mozillacontrol.inst.rps"/>
-  <depent>abiword</depent>
 </package>
 

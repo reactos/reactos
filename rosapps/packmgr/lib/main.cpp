@@ -19,8 +19,7 @@
 HANDLE hThread = NULL;
 BOOL thread_abort = FALSE;
 
-extern const char* tree_server;
-char* PML_Download (const char* name, const char* local_name = "packmgr.txt", const char* server = tree_server, BOOL totemp = TRUE);
+char* PML_Download (const char* url, const char* server = "tree",  const char* filename = NULL);
 
 
 // Abort other thread
