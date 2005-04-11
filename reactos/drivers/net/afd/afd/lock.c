@@ -59,7 +59,14 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 
         _SEH_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
-            NewBufferLen = *AddressLen;
+            if( LockAddress ) {
+                NewBuf[Count].buf = AddressBuf;
+                NewBuf[Count].len = NewBufferLen;
+                Count++;
+                NewBuf[Count].buf = (PVOID)AddressLen;
+                NewBuf[Count].len = sizeof(*AddressLen);
+                Count++;
+            }
         } _SEH_HANDLE {
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
                                     "from userland (%x %x)\n", 
@@ -67,15 +74,6 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             ExFreePool( NewBuf );
             return NULL;
         } _SEH_END;
-
-        if( LockAddress ) {
-            NewBuf[Count].buf = AddressBuf;
-            NewBuf[Count].len = NewBufferLen;
-            Count++;
-            NewBuf[Count].buf = (PVOID)AddressLen;
-            NewBuf[Count].len = sizeof(*AddressLen);
-            Count++;
-	}
 
 	for( i = 0; i < Count; i++ ) {
 	    AFD_DbgPrint(MID_TRACE,("Locking buffer %d (%x:%d)\n",

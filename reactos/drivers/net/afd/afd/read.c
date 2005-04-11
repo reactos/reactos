@@ -36,7 +36,7 @@ BOOLEAN CantReadMore( PAFD_FCB FCB ) {
 VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, UINT Information ) {
     if( Status == STATUS_SUCCESS && Information == 0 ) {
         AFD_DbgPrint(MID_TRACE,("Looks like an EOF\n"));
-        FCB->PollState |= AFD_EVENT_CLOSE /*| AFD_EVENT_DISCONNECT */;
+        FCB->PollState |= AFD_EVENT_DISCONNECT;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 }
@@ -109,10 +109,11 @@ NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 				 ReceiveComplete,
 				 FCB );
 
-            if( Status == STATUS_SUCCESS ) 
-                FCB->Recv.Content = FCB->ReceiveIrp.Iosb.Information;
-            HandleEOFOnIrp( FCB, Status, FCB->Recv.Content );
 	    SocketCalloutLeave( FCB );
+
+            if( Status == STATUS_SUCCESS )
+                FCB->Recv.Content = FCB->ReceiveIrp.Iosb.Information;
+            HandleEOFOnIrp( FCB, Status, FCB->ReceiveIrp.Iosb.Information );
 	}
     }
 
