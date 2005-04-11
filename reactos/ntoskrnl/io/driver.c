@@ -199,6 +199,7 @@ NTSTATUS FASTCALL
 IopCreateDriverObject(
    PDRIVER_OBJECT *DriverObject,
    PUNICODE_STRING ServiceName,
+   ULONG CreateAttributes,
    BOOLEAN FileSystem,
    PVOID DriverImageStart,
    ULONG DriverImageSize)
@@ -240,7 +241,7 @@ IopCreateDriverObject(
    InitializeObjectAttributes(
       &ObjectAttributes,
       &DriverName,
-      OBJ_PERMANENT,
+      CreateAttributes | OBJ_PERMANENT,
       NULL,
       NULL);
 
@@ -265,9 +266,14 @@ IopCreateDriverObject(
    Object->DriverSize = DriverImageSize;
    if (Buffer)
    {
-      Object->DriverName.Buffer = Buffer;
-      Object->DriverName.Length = Object->DriverName.MaximumLength = DriverName.Length;
-      RtlCopyMemory(Object->DriverName.Buffer, DriverName.Buffer, DriverName.Length);
+      if (!Object->DriverName.Buffer)
+      {
+         Object->DriverName.Buffer = Buffer;
+         Object->DriverName.Length = Object->DriverName.MaximumLength = DriverName.Length;
+         RtlCopyMemory(Object->DriverName.Buffer, DriverName.Buffer, DriverName.Length);
+      }
+      else
+         ExFreePool(Buffer);
    }
 
    *DriverObject = Object;
@@ -479,7 +485,7 @@ IopLoadServiceModule(
    else
    {
       DPRINT("Module already loaded\n");
-      Status = STATUS_SUCCESS;
+      Status = STATUS_IMAGE_ALREADY_LOADED;
    }
 
    RtlFreeUnicodeString(&ServiceImagePath);
@@ -538,6 +544,7 @@ IopInitializeDriverModule(
    Status = IopCreateDriverObject(
       DriverObject,
       ServiceName,
+      0,
       FileSystemDriver,
       ModuleObject->Base,
       ModuleObject->Length);
@@ -614,13 +621,29 @@ IopAttachFilterDriversCallback(
 
       /* Load and initialize the filter driver */
       Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
-      if (!NT_SUCCESS(Status))
-         continue;
+      if (Status != STATUS_IMAGE_ALREADY_LOADED)
+      {
+         if (!NT_SUCCESS(Status))
+            continue;
 
-      Status = IopInitializeDriverModule(DeviceNode, ModuleObject, &ServiceName,
-                                         FALSE, &DriverObject);
-      if (!NT_SUCCESS(Status))
-         continue;
+         Status = IopInitializeDriverModule(DeviceNode, ModuleObject, &ServiceName,
+                                            FALSE, &DriverObject);
+         if (!NT_SUCCESS(Status))
+            continue;
+      }
+      else
+      {
+         /* get existing DriverObject pointer */
+         Status = IopCreateDriverObject(
+            &DriverObject,
+            &ServiceName,
+            OBJ_OPENIF,
+            FALSE,
+            ModuleObject->Base,
+            ModuleObject->Length);
+         if (!NT_SUCCESS(Status))
+            continue;
+      }
 
       Status = IopInitializeDevice(DeviceNode, DriverObject);
       if (!NT_SUCCESS(Status))

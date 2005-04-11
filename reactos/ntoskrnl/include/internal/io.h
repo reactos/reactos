@@ -478,6 +478,7 @@ NTSTATUS FASTCALL
 IopCreateDriverObject(
    PDRIVER_OBJECT *DriverObject,
    PUNICODE_STRING ServiceName,
+   ULONG CreateAttributes,
    BOOLEAN FileSystemDriver,
    PVOID DriverImageStart,
    ULONG DriverImageSize);

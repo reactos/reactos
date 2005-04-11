@@ -1499,10 +1499,22 @@ IopActionInitChildServices(
       PDRIVER_OBJECT DriverObject;
 
       Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
-      if (NT_SUCCESS(Status))
+      if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
       {
-         Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
-            &DeviceNode->ServiceName, FALSE, &DriverObject);
+         if (Status != STATUS_IMAGE_ALREADY_LOADED)
+            Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+               &DeviceNode->ServiceName, FALSE, &DriverObject);
+         else
+         {
+            /* get existing DriverObject pointer */
+            Status = IopCreateDriverObject(
+            	&DriverObject,
+            	&DeviceNode->ServiceName,
+            	OBJ_OPENIF,
+            	FALSE,
+            	ModuleObject->Base,
+            	ModuleObject->Length);
+         }
          if (NT_SUCCESS(Status))
          {
             /* Attach lower level filter drivers. */
@@ -1787,7 +1799,7 @@ PnpInit(VOID)
     * Create root device node
     */
 
-   Status = IopCreateDriverObject(&IopRootDriverObject, NULL, FALSE, NULL, 0);
+   Status = IopCreateDriverObject(&IopRootDriverObject, NULL, 0, FALSE, NULL, 0);
    if (!NT_SUCCESS(Status))
    {
       CPRINT("IoCreateDriverObject() failed\n");
