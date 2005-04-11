@@ -120,6 +120,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
     PAFD_ACTIVE_POLL Poll;
     PIRP Irp;
     PAFD_POLL_INFO PollReq;
+    PAFD_HANDLE HandleArray;
     int i;
 
     AFD_DbgPrint(MID_TRACE,("Killing selects that refer to %x\n", FileObject));
@@ -132,11 +133,12 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
 	ListEntry = ListEntry->Flink;
         Irp = Poll->Irp;
         PollReq = Irp->AssociatedIrp.SystemBuffer; 
-        
+        HandleArray = AFD_HANDLES(PollReq);
+
         for( i = 0; i < PollReq->HandleCount; i++ ) {
             AFD_DbgPrint(MAX_TRACE,("Req: %x, This %x\n",
-                                    PollReq->Handles[i].Handle, FileObject));
-            if( (PVOID)PollReq->Handles[i].Handle == FileObject &&
+                                    HandleArray[i].Handle, FileObject));
+            if( (PVOID)HandleArray[i].Handle == FileObject &&
                 (!OnlyExclusive || (OnlyExclusive && Poll->Exclusive)) ) {
                 ZeroEvents( PollReq->Handles, PollReq->HandleCount );
                 SignalSocket( Poll, PollReq, STATUS_SUCCESS );
