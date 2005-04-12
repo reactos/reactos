@@ -1969,6 +1969,7 @@ KdbpReadCommand(
       if (KdDebugState & KD_DEBUG_KDSERIAL)
       {
          Key = (NextKey == '\0') ? KdbpGetCharSerial() : NextKey;
+         NextKey = '\0';
          ScanCode = 0;
          if (Key == KEY_ESC) /* ESC */
          {
@@ -1996,6 +1997,7 @@ KdbpReadCommand(
       {
          ScanCode = 0;
          Key = (NextKey == '\0') ? KdbpGetCharKeyboard(&ScanCode) : NextKey;
+         NextKey = '\0';
       }
 
       if ((Buffer - Orig) >= (Size - 1))
@@ -2014,7 +2016,7 @@ KdbpReadCommand(
             NextKey = KdbpTryGetCharSerial(5);
          else
             NextKey = KdbpTryGetCharKeyboard(&ScanCode, 5);
-         if (NextKey == '\n')
+         if (NextKey == '\n' || NextKey == -1) /* \n or no response at all */
             NextKey = '\0';
          DbgPrint("\n");
 	 /*
