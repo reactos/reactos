@@ -199,6 +199,8 @@ dispatch(void)
     time_t howlong;
     struct timeval timeval;
 
+    ApiLock();
+
     for (l = protocols; l; l = l->next)
         nfds++;
 
@@ -269,8 +271,13 @@ dispatch(void)
         timeval.tv_usec = (to_msec % 1000) * 1000;
         DH_DbgPrint(MID_TRACE,("select(%d,%d.%03d) =>\n", 
                  nfds,timeval.tv_sec,timeval.tv_usec/1000));
+
+        ApiUnlock();
+
         count = select(nfds, &fds, NULL, NULL, &timeval);
         DH_DbgPrint(MID_TRACE,(" => %d\n", count));
+
+        ApiLock();
 
         /* Not likely to be transitory... */
         if (count == SOCKET_ERROR) {
@@ -304,6 +311,8 @@ dispatch(void)
         }
         DH_DbgPrint(MID_TRACE,("Done\n"));
     } while (1);
+
+    ApiUnlock(); /* Not reached currently */
 }
 
 void

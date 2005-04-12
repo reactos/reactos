@@ -7,6 +7,7 @@
 #include <iprtrmib.h>
 #include <iphlpapi.h>
 #include <winsock2.h>
+#include <dhcpcsdk.h>
 #include <stdio.h>
 #include <setjmp.h>
 #include "stdint.h"
@@ -41,6 +42,7 @@ typedef struct _DHCP_ADAPTER {
     MIB_IFROW      IfMib;
     MIB_IPADDRROW  IfAddr;
     SOCKADDR       Address;
+    ULONG NteContext,NteInstance;
     struct interface_info DhclientInfo;
     struct client_state DhclientState;
     struct client_config DhclientConfig;
@@ -49,7 +51,20 @@ typedef struct _DHCP_ADAPTER {
     char recv_buf[1];
 } DHCP_ADAPTER, *PDHCP_ADAPTER;
 
+#include <rosdhcp_public.h>
+
+typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
+
 #define random rand
 #define srandom srand
+
+extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
+extern VOID ApiInit();
+extern VOID ApiLock();
+extern VOID ApiUnlock();
+extern DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req );
+extern DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req );
+extern DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
+extern DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
 
 #endif/*ROSDHCP_H*/

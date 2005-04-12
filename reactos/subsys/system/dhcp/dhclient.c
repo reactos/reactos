@@ -259,7 +259,9 @@ main(int argc, char *argv[])
 	int			 pipe_fd[2];
 	struct passwd		*pw;
 
+        ApiInit();
         AdapterInit();
+        PipeInit();
 
 	tzset();
 	time(&cur_time);

@@ -10,8 +10,9 @@ TARGET_NAME = dhcp
 
 TARGET_CFLAGS = -D__REACTOS__ -D_WIN32_WINNT=0x0501 -D__USE_W32API -Iinclude
 
-TARGET_OBJECTS = adapter.o alloc.o compat.o dhclient.o dispatch.o hash.o \
-		options.o privsep.o socket.o tables.o timer.o util.o
+TARGET_OBJECTS = adapter.o alloc.o api.o compat.o dhclient.o dispatch.o \
+		hash.o options.o pipe.o privsep.o socket.o tables.o timer.o \
+		util.o
 
 TARGET_SDKLIBS = iphlpapi.a ws2_32.a ntdll.a
 
