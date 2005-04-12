@@ -1,4 +1,4 @@
-/* $Id: $
+/* $Id$
  *
  * smapiquery.c - SM_API_QUERY_INFORMATION
  *
@@ -37,8 +37,33 @@ SMAPI(SmQryInfo)
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
-	
-	Request->SmHeader.Status = STATUS_NOT_IMPLEMENTED;
+
+	switch (Request->Request.QryInfo.SmInformationClass)
+	{
+	case SmBasicInformation:
+		if(Request->Request.QryInfo.DataLength != sizeof (SM_BASIC_INFORMATION))
+		{
+			Request->Reply.QryInfo.DataLength = sizeof (SM_BASIC_INFORMATION);
+			Request->SmHeader.Status = STATUS_INFO_LENGTH_MISMATCH;
+		}else{
+			Request->SmHeader.Status =
+				SmGetClientBasicInformation (& Request->Reply.QryInfo.BasicInformation);
+		}
+		break;
+	case SmSubSystemInformation:
+		if(Request->Request.QryInfo.DataLength != sizeof (SM_SUBSYSTEM_INFORMATION))
+		{
+			Request->Reply.QryInfo.DataLength = sizeof (SM_SUBSYSTEM_INFORMATION);
+			Request->SmHeader.Status = STATUS_INFO_LENGTH_MISMATCH;
+		}else{
+			Request->SmHeader.Status =
+				SmGetSubSystemInformation (& Request->Reply.QryInfo.SubSystemInformation);
+		}
+		break;
+	default:
+		Request->SmHeader.Status = STATUS_NOT_IMPLEMENTED;
+		break;
+	}
 	return Status;
 }
 

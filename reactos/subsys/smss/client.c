@@ -276,4 +276,49 @@ SmDestroyClient (ULONG SubsystemId)
 	return Status;
 }
 
+/* === Utilities for SmQryInfo === */
+
+/**********************************************************************
+ * SmGetClientBasicInformation/1
+ */
+NTSTATUS FASTCALL
+SmGetClientBasicInformation (PSM_BASIC_INFORMATION i)
+{
+	INT              Index = 0;
+	PSM_CLIENT_DATA  Client = NULL;
+
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
+	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
+
+	i->SubSystemCount = SmpClientDirectory.Count;
+	i->Unused = 0;
+	
+	if (SmpClientDirectory.Count > 0)
+	{
+		Client = SmpClientDirectory.Client;
+		while ((NULL != Client) && (Index < SM_QRYINFO_MAX_SS_COUNT))
+		{
+			i->SubSystem[Index].Id        = Client->SubsystemId;
+			i->SubSystem[Index].Flags     = 0; /* TODO */
+			i->SubSystem[Index].ProcessId = 0; /* TODO */
+			Client = Client->Next;
+		}
+	}
+
+	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
+	return STATUS_SUCCESS;
+}
+
+/**********************************************************************
+ * SmGetSubSystemInformation/1
+ */
+NTSTATUS FASTCALL
+SmGetSubSystemInformation (PSM_SUBSYSTEM_INFORMATION i)
+{
+	DPRINT("SM: %s called\n", __FUNCTION__);
+
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

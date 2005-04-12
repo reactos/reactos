@@ -24,8 +24,12 @@ TARGET_OBJECTS = $(TARGET_NAME).o \
 		 smapi.o smapicomp.o smapiexec.o smapiquery.o \
 		 client.o debug.o print.o
 
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+include $(TOOLS_PATH)/depend.mk
 
 # EOF
