@@ -63,7 +63,8 @@ DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d
 	msgina msi msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg olepro32 opengl32 \
 	packet psapi riched20 richedit rpcrt4 samlib secur32 serialui setupapi shell32 shlwapi smlib smdll snmpapi \
 	syssetup twain user32 userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda dnsapi \
-	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound lsasrv $(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
+	urlmon shdocvw dinput dinput8 dxdiagn devenum dsound lsasrv dhcpcapi \
+	$(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
 
@@ -105,7 +106,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 # autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format ibrowser msiexec regsvr32 \
   reporterror services setup taskmgr userinit usetup welcome vmwinst rundll32 \
-  winlogon regedit winefile notepad reactos lsass
+  winlogon regedit winefile notepad reactos lsass dhcp
 
 # System services
 SYS_SVC = rpcss eventlog umpnpmgr
