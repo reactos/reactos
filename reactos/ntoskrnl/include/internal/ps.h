@@ -85,7 +85,10 @@ typedef struct _KTHREAD
    CHAR              WaitMode;            /* 55 */
    UCHAR             WaitNext;            /* 56 */
    UCHAR             WaitReason;          /* 57 */
-   PKWAIT_BLOCK      WaitBlockList;       /* 58 */
+   union {                                /* 58 */
+      PKWAIT_BLOCK   WaitBlockList;       /* 58 */
+      PKGATE         GateObject;          /* 58 */
+   };                                     /* 58 */
    LIST_ENTRY        WaitListEntry;       /* 5C */
    ULONG             WaitTime;            /* 64 */
    CHAR              BasePriority;        /* 68 */
