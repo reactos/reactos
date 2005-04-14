@@ -173,6 +173,7 @@ ARCH_I386_OBJS = fathelp.o	\
   xboxvideo.o	\
   xencons.o \
   xenctrlif.o \
+  xendisk.o \
   xenentry.o \
   xenevtchn.o \
   xenmem.o \

@@ -46,16 +46,15 @@
 
 #define asmlinkage __attribute__((regparm(0)))
 
-static unsigned XenCtrlIfIndex;
+static int XenCtrlIfIndex = -1;
 static u32 XenCtrlIfBit;
+static int XenDiskIndex = -1;
+static u32 XenDiskBit;
 
-VOID
-XenEvtchnRegisterCtrlIf(unsigned CtrlIfEvtchn)
+static void
+XenEvtchnSetMask()
 {
   unsigned i;
-
-  XenCtrlIfIndex = CtrlIfEvtchn >> 5;
-  XenCtrlIfBit = 1 << (CtrlIfEvtchn & 0x1f);
 
   /* Mask all event channels except the one we're interested in */
   for (i = 0;
@@ -65,13 +64,42 @@ XenEvtchnRegisterCtrlIf(unsigned CtrlIfEvtchn)
     {
       if (i == XenCtrlIfIndex)
         {
-          XenSharedInfo->evtchn_mask[i] = ~ XenCtrlIfBit;
+          if (i == XenDiskIndex)
+            {
+              XenSharedInfo->evtchn_mask[i] = ~ (XenCtrlIfBit | XenDiskBit);
+            }
+          else
+            {
+              XenSharedInfo->evtchn_mask[i] = ~ XenCtrlIfBit;
+            }
+        }
+      else if (i == XenDiskIndex)
+        {
+          XenSharedInfo->evtchn_mask[i] = ~ XenDiskBit;
         }
       else
         {
           XenSharedInfo->evtchn_mask[i] = ~ 0;
         }
     }
+}
+
+VOID
+XenEvtchnRegisterCtrlIf(unsigned CtrlIfEvtchn)
+{
+  XenCtrlIfIndex = CtrlIfEvtchn >> 5;
+  XenCtrlIfBit = 1 << (CtrlIfEvtchn & 0x1f);
+
+  XenEvtchnSetMask();
+}
+
+VOID
+XenEvtchnRegisterDisk(unsigned DiskEvtchn)
+{
+  XenDiskIndex = DiskEvtchn >> 5;
+  XenDiskBit = 1 << (DiskEvtchn & 0x1f);
+
+  XenEvtchnSetMask();
 }
 
 /* NB. Event delivery is disabled on entry. */
@@ -85,12 +113,31 @@ XenEvtchnDoUpcall(struct pt_regs *Regs)
   XenSharedInfo->vcpu_data[0].evtchn_pending_sel = 0;
 #endif /* XEN_VER */
 
-  while (0 != (XenSharedInfo->evtchn_pending[XenCtrlIfIndex]
-               & ~ XenSharedInfo->evtchn_mask[XenCtrlIfIndex]
-               & XenCtrlIfBit))
+  while ((0 <= XenDiskIndex
+          && 0 != (XenSharedInfo->evtchn_pending[XenDiskIndex]
+                   & ~ XenSharedInfo->evtchn_mask[XenDiskIndex]
+                   & XenDiskBit)) ||
+         (0 <= XenCtrlIfIndex
+          && 0 != (XenSharedInfo->evtchn_pending[XenCtrlIfIndex]
+                   & ~ XenSharedInfo->evtchn_mask[XenCtrlIfIndex]
+                   & XenCtrlIfBit)))
     {
-      XenSharedInfo->evtchn_pending[XenCtrlIfIndex] &= ~ XenCtrlIfBit;
-      XenCtrlIfHandleEvent();
+      if (0 <= XenDiskIndex
+          && 0 != (XenSharedInfo->evtchn_pending[XenDiskIndex]
+                   & ~ XenSharedInfo->evtchn_mask[XenDiskIndex]
+                   & XenDiskBit))
+        {
+          XenSharedInfo->evtchn_pending[XenDiskIndex] &= ~ XenDiskBit;
+          XenDiskHandleEvent();
+        }
+      if (0 <= XenCtrlIfIndex
+          && 0 != (XenSharedInfo->evtchn_pending[XenCtrlIfIndex]
+                   & ~ XenSharedInfo->evtchn_mask[XenCtrlIfIndex]
+                   & XenCtrlIfBit))
+        {
+          XenSharedInfo->evtchn_pending[XenCtrlIfIndex] &= ~ XenCtrlIfBit;
+          XenCtrlIfHandleEvent();
+        }
     }
 }
 

@@ -26,13 +26,13 @@
 /* Page Directory Entry */
 typedef struct _PDE
 {
-  unsigned long Pde;
+  u32 Pde;
 } PDE, *PPDE;
 
 /* Page Table Entry */
 typedef struct _PTE
 {
-  unsigned long Pte;
+  u32 Pte;
 } PTE, *PPTE;
 
 #define PGDIR_SHIFT   22
@@ -306,6 +306,17 @@ XenMemInit(start_info_t *StartInfo)
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
       XenDie();
     }
+}
+
+u32
+XenMemVirtualToMachine(void *VirtualAddress)
+{
+  PPTE PageTable;
+
+  PageTable = (PPTE)((char *) XenPageDir +
+                     (PD_IDX((ULONG_PTR) VirtualAddress) + 1) * PAGE_SIZE);
+  return PageTable[PT_IDX((ULONG_PTR) VirtualAddress)].Pte
+         & PAGE_MASK;
 }
 
 /* EOF */

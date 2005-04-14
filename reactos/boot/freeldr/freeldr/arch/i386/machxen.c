@@ -274,14 +274,6 @@ XenVideoPrepareForReactOS(VOID)
   }
 
 BOOL
-XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber,
-                          ULONG SectorCount, PVOID Buffer)
-  {
-    XEN_UNIMPLEMENTED("XenDiskReadLogicalSectors");
-    return FALSE;
-  }
-
-BOOL
 XenDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber,
                          PPARTITION_TABLE_ENTRY PartitionTableEntry)
   {

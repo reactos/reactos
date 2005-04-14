@@ -35,7 +35,6 @@ extern start_info_t *XenStartInfo;
 extern shared_info_t *XenSharedInfo;
 
 VOID XenMachInit(VOID);
-VOID XenMemInit(start_info_t *StartInfo);
 
 VOID XenCtrlIfInit();
 BOOL XenCtrlIfSendMessageNoblock(ctrl_msg_t *Msg);
@@ -46,6 +45,7 @@ VOID XenCtrlIfRegisterReceiver(u8 Type, ctrl_msg_handler_t Hnd);
 VOID XenCtrlIfHandleEvent();
 VOID XenCtrlIfSendResponse(ctrl_msg_t *Msg);
 
+VOID XenEvtchnRegisterDisk(unsigned DiskEvtchn);
 VOID XenEvtchnRegisterCtrlIf(unsigned CtrlIfEvtchn);
 VOID XenEvtchnDisableEvents();
 VOID XenEvtchnEnableEvents();
@@ -71,11 +71,14 @@ VOID XenVideoSync(VOID);
 VOID XenVideoPrepareForReactOS(VOID);
 
 ULONG XenMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
+VOID XenMemInit(start_info_t *StartInfo);
+u32 XenMemVirtualToMachine(void *VirtualAddress);
 
 BOOL XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOL XenDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL XenDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG XenDiskGetCacheableBlockCount(ULONG DriveNumber);
+VOID XenDiskHandleEvent();
 
 VOID XenRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
