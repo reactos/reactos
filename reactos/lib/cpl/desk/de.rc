@@ -9,13 +9,13 @@ BEGIN
                     150,105,WS_EX_STATICEDGE
     CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,7,139,170,71
+                    WS_BORDER | WS_TABSTOP,7,139,173,71
     LTEXT           "Hintergrundbild:",
                     IDC_STATIC,8,127,180,8
-    PUSHBUTTON      "&Durchsuchen...",IDC_BROWSE_BUTTON,181,175,60,14
-    PUSHBUTTON      "&Farbe...",IDC_COLOR_BUTTON,181,195,60,14
-    LTEXT           "Ausrichtung:",IDC_STATIC,181,138,45,8
-    COMBOBOX        IDC_PLACEMENT_COMBO,181,148,60,90,CBS_DROPDOWNLIST |
+    PUSHBUTTON      "&Durchsuchen...",IDC_BROWSE_BUTTON,186,175,56,14
+    PUSHBUTTON      "&Farbe...",IDC_COLOR_BUTTON,186,195,56,14
+    LTEXT           "Ausrichtung:",IDC_STATIC,186,138,43,8
+    COMBOBOX        IDC_PLACEMENT_COMBO,186,148,50,90,CBS_DROPDOWNLIST |
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
