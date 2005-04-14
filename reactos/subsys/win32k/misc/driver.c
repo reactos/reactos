@@ -187,7 +187,9 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(EnableSurface);
     DRIVER_FUNCTION(DisableSurface);
     DRIVER_FUNCTION(AssertMode);
+    DRIVER_FUNCTION(Offset);
     DRIVER_FUNCTION(ResetPDEV);
+    DRIVER_FUNCTION(DisableDriver);
     DRIVER_FUNCTION(CreateDeviceBitmap);
     DRIVER_FUNCTION(DeleteDeviceBitmap);
     DRIVER_FUNCTION(RealizeBrush);
@@ -200,6 +202,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(TransparentBlt);
     DRIVER_FUNCTION(CopyBits);
     DRIVER_FUNCTION(StretchBlt);
+    DRIVER_FUNCTION(StretchBltROP);
     DRIVER_FUNCTION(SetPalette);
     DRIVER_FUNCTION(TextOut);
     DRIVER_FUNCTION(Escape);
@@ -240,6 +243,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(QuerySpoolType);
     DRIVER_FUNCTION(GradientFill);
     DRIVER_FUNCTION(SynchronizeSurface);
+    DRIVER_FUNCTION(AlphaBlend);
 
   END_FUNCTION_MAP();
 
