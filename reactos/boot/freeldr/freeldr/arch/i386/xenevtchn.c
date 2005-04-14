@@ -15,8 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * Based on XenoLinux drivers/xen/console/console.c
- * Copyright (c) 2002-2004, K A Fraser.
+ * Based on XenoLinux arch/xen/kernel/evtchn.c
+ * Copyright (c) 2002-2004, K A Fraser
  * 
  * This file may be distributed separately from the Linux kernel, or
  * incorporated into other software packages, subject to the following license:
@@ -42,100 +42,66 @@
 
 #include "freeldr.h"
 #include "machxen.h"
+#include "rtl.h"
 
-#include <rosxen.h>
-#include <xen.h>
-#include <ctrl_if.h>
-#include <evtchn.h>
+#define asmlinkage __attribute__((regparm(0)))
 
-/*
- * Extra ring macros to sync a consumer index up to the public producer index.
- * Generally UNSAFE, but we use it for recovery and shutdown in some cases.
- */
-#define RING_DROP_PENDING_RESPONSES(_r)                                 \
-    do {                                                                \
-        (_r)->rsp_cons = (_r)->sring->rsp_prod;                         \
-    } while (0)
-
-#define OUTPUT_BUFFER_SIZE sizeof(((ctrl_msg_t *) NULL)->msg)
-static char OutputBuffer[OUTPUT_BUFFER_SIZE];
-static unsigned OutputPtr = 0;
+static unsigned XenCtrlIfIndex;
+static u32 XenCtrlIfBit;
 
 VOID
-XenConsFlush()
+XenEvtchnRegisterCtrlIf(unsigned CtrlIfEvtchn)
 {
-  ctrl_msg_t Msg;
+  unsigned i;
 
-  if (0 == OutputPtr)
+  XenCtrlIfIndex = CtrlIfEvtchn >> 5;
+  XenCtrlIfBit = 1 << (CtrlIfEvtchn & 0x1f);
+
+  /* Mask all event channels except the one we're interested in */
+  for (i = 0;
+       i < sizeof(XenSharedInfo->evtchn_mask)
+           / sizeof(XenSharedInfo->evtchn_mask[0]);
+       i++)
     {
-      return;
-    }
-
-  Msg.type = CMSG_CONSOLE;
-  Msg.subtype = CMSG_CONSOLE_DATA;
-  Msg.length = OutputPtr;
-  memcpy(Msg.msg, OutputBuffer, OutputPtr);
-  Msg.id      = 0xff;
-
-  XenCtrlIfSendMessageBlock(&Msg);
-
-  OutputPtr = 0;
-}
-
-VOID
-XenConsFlushWait()
-{
-  ctrl_msg_t Msg;
-
-  XenEvtchnDisableEvents();
-
-  while (0 != OutputPtr || ! XenCtrlIfTransmitterEmpty())
-    {
-      XenCtrlIfDiscardResponses();
-
-      if (0 == OutputPtr)
+      if (i == XenCtrlIfIndex)
         {
-          continue;
+          XenSharedInfo->evtchn_mask[i] = ~ XenCtrlIfBit;
         }
-
-      Msg.type = CMSG_CONSOLE;
-      Msg.subtype = CMSG_CONSOLE_DATA;
-      Msg.length = OutputPtr;
-      memcpy(Msg.msg, OutputBuffer, OutputPtr);
-      Msg.id      = 0xff;
-
-      if (XenCtrlIfSendMessageNoblock(&Msg))
+      else
         {
-          OutputPtr = 0;
+          XenSharedInfo->evtchn_mask[i] = ~ 0;
         }
     }
-
-  XenEvtchnEnableEvents();
 }
 
-static VOID
-PutCharInBuffer(int Ch)
+/* NB. Event delivery is disabled on entry. */
+asmlinkage void
+XenEvtchnDoUpcall(struct pt_regs *Regs)
 {
-  if (OUTPUT_BUFFER_SIZE <= OutputPtr)
+  XenSharedInfo->vcpu_data[0].evtchn_upcall_pending = 0;
+#if 2 == XEN_VER
+  XenSharedInfo->evtchn_pending_sel = 0;
+#else /* XEN_VER */
+  XenSharedInfo->vcpu_data[0].evtchn_pending_sel = 0;
+#endif /* XEN_VER */
+
+  while (0 != (XenSharedInfo->evtchn_pending[XenCtrlIfIndex]
+               & ~ XenSharedInfo->evtchn_mask[XenCtrlIfIndex]
+               & XenCtrlIfBit))
     {
-      XenConsFlush();
+      XenSharedInfo->evtchn_pending[XenCtrlIfIndex] &= ~ XenCtrlIfBit;
+      XenCtrlIfHandleEvent();
     }
-  OutputBuffer[OutputPtr++] = Ch;
 }
 
-VOID
-XenConsPutChar(int Ch)
+VOID XenEvtchnDisableEvents()
 {
-  if ('\n' == Ch)
-    {
-      PutCharInBuffer('\r');
-      PutCharInBuffer('\n');
-      XenConsFlush();
-    }
-  else
-    {
-      PutCharInBuffer(Ch);
-    }
+  XenSharedInfo->vcpu_data[0].evtchn_upcall_mask = 1;
+}
+
+VOID XenEvtchnEnableEvents()
+{
+  XenSharedInfo->vcpu_data[0].evtchn_upcall_mask = 0;
 }
 
 /* EOF */

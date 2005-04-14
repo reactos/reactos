@@ -29,50 +29,6 @@
 
 BOOL XenActive = FALSE;
 
-VOID
-XenMachInit(VOID)
-{
-  /* Setup vtbl */
-  MachVtbl.ConsPutChar = XenConsPutChar;
-  MachVtbl.ConsKbHit = XenConsKbHit;
-  MachVtbl.ConsGetCh = XenConsGetCh;
-  MachVtbl.VideoClearScreen = XenVideoClearScreen;
-  MachVtbl.VideoSetDisplayMode = XenVideoSetDisplayMode;
-  MachVtbl.VideoGetDisplaySize = XenVideoGetDisplaySize;
-  MachVtbl.VideoGetBufferSize = XenVideoGetBufferSize;
-  MachVtbl.VideoSetTextCursorPosition = XenVideoSetTextCursorPosition;
-  MachVtbl.VideoSetTextCursorPosition = XenVideoSetTextCursorPosition;
-  MachVtbl.VideoHideShowTextCursor = XenVideoHideShowTextCursor;
-  MachVtbl.VideoPutChar = XenVideoPutChar;
-  MachVtbl.VideoCopyOffScreenBufferToVRAM = XenVideoCopyOffScreenBufferToVRAM;
-  MachVtbl.VideoIsPaletteFixed = XenVideoIsPaletteFixed;
-  MachVtbl.VideoSetPaletteColor = XenVideoSetPaletteColor;
-  MachVtbl.VideoGetPaletteColor = XenVideoGetPaletteColor;
-  MachVtbl.VideoSync = XenVideoSync;
-  MachVtbl.VideoPrepareForReactOS = XenVideoPrepareForReactOS;
-  MachVtbl.GetMemoryMap = XenMemGetMemoryMap;
-  MachVtbl.DiskReadLogicalSectors = XenDiskReadLogicalSectors;
-  MachVtbl.DiskGetPartitionEntry = XenDiskGetPartitionEntry;
-  MachVtbl.DiskGetDriveGeometry = XenDiskGetDriveGeometry;
-  MachVtbl.DiskGetCacheableBlockCount = XenDiskGetCacheableBlockCount;
-  MachVtbl.RTCGetCurrentDateTime = XenRTCGetCurrentDateTime;
-  MachVtbl.HwDetect = XenHwDetect;
-  MachVtbl.Die = XenDie;
-}
-
-VOID
-XenDie()
-{
-  XenConsFlush();
-  while (1)
-    {
-      HYPERVISOR_shutdown();
-    }
-}
-
-extern void (*i386TrapSaveDRHook)(unsigned long *DRRegs);
-extern void i386Breakpoint();
-
 static trap_info_t trap_table[] = {
         {  0, 0, FLAT_RING1_CS, (unsigned long)i386DivideByZero           },
         {  1, 0, FLAT_RING1_CS, (unsigned long)i386DebugException         },
@@ -106,6 +62,87 @@ XenTrapSaveDR(unsigned long *DRRegs)
     }
 }
 
+static void
+XenShutdownHandler(ctrl_msg_t *Msg, unsigned long Id)
+{
+  XenCtrlIfSendResponse(Msg);
+
+  /* FIXME we don't do suspend/resume yet */
+  if (CMSG_SHUTDOWN_SUSPEND == Msg->subtype)
+    {
+      return;
+    }
+
+  XenConsFlushWait();
+  while (1)
+    {
+      switch(Msg->subtype)
+        {
+        case CMSG_SHUTDOWN_REBOOT:
+          HYPERVISOR_reboot();
+          break;
+        case CMSG_SHUTDOWN_POWEROFF:
+        default:
+          HYPERVISOR_shutdown();
+          break;
+        }
+    }
+}
+
+VOID
+XenMachInit(VOID)
+{
+  /* Setup vtbl */
+  MachVtbl.ConsPutChar = XenConsPutChar;
+  MachVtbl.ConsKbHit = XenConsKbHit;
+  MachVtbl.ConsGetCh = XenConsGetCh;
+  MachVtbl.VideoClearScreen = XenVideoClearScreen;
+  MachVtbl.VideoSetDisplayMode = XenVideoSetDisplayMode;
+  MachVtbl.VideoGetDisplaySize = XenVideoGetDisplaySize;
+  MachVtbl.VideoGetBufferSize = XenVideoGetBufferSize;
+  MachVtbl.VideoSetTextCursorPosition = XenVideoSetTextCursorPosition;
+  MachVtbl.VideoSetTextCursorPosition = XenVideoSetTextCursorPosition;
+  MachVtbl.VideoHideShowTextCursor = XenVideoHideShowTextCursor;
+  MachVtbl.VideoPutChar = XenVideoPutChar;
+  MachVtbl.VideoCopyOffScreenBufferToVRAM = XenVideoCopyOffScreenBufferToVRAM;
+  MachVtbl.VideoIsPaletteFixed = XenVideoIsPaletteFixed;
+  MachVtbl.VideoSetPaletteColor = XenVideoSetPaletteColor;
+  MachVtbl.VideoGetPaletteColor = XenVideoGetPaletteColor;
+  MachVtbl.VideoSync = XenVideoSync;
+  MachVtbl.VideoPrepareForReactOS = XenVideoPrepareForReactOS;
+  MachVtbl.GetMemoryMap = XenMemGetMemoryMap;
+  MachVtbl.DiskReadLogicalSectors = XenDiskReadLogicalSectors;
+  MachVtbl.DiskGetPartitionEntry = XenDiskGetPartitionEntry;
+  MachVtbl.DiskGetDriveGeometry = XenDiskGetDriveGeometry;
+  MachVtbl.DiskGetCacheableBlockCount = XenDiskGetCacheableBlockCount;
+  MachVtbl.RTCGetCurrentDateTime = XenRTCGetCurrentDateTime;
+  MachVtbl.HwDetect = XenHwDetect;
+  MachVtbl.Die = XenDie;
+
+  XenCtrlIfInit();
+
+  HYPERVISOR_set_callbacks(FLAT_RING1_CS, (unsigned long) XenHypervisorCallback,
+                           FLAT_RING1_CS, (unsigned long) XenFailsafeCallback);
+
+  i386TrapSaveDRHook = XenTrapSaveDR;
+  HYPERVISOR_set_trap_table(trap_table);
+
+  XenCtrlIfRegisterReceiver(CMSG_SHUTDOWN, XenShutdownHandler);
+
+  /* Ready to receive events now */
+  XenEvtchnEnableEvents();
+}
+
+VOID
+XenDie()
+{
+  XenConsFlushWait();
+  while (1)
+    {
+      HYPERVISOR_shutdown();
+    }
+}
+
 /* _start is the default name ld will use as the entry point.  When xen
  * loads the domain, it will start execution at the elf entry point.  */
 
@@ -129,8 +166,6 @@ void _start()
    */
   XenMemInit(StartInfo);
 
-  XenCtrlIfInit();
-
   /* Now move the stack to low mem */
   /* Copy the stack page */
   __asm__ __volatile__("mov %%esp,%%eax\n" : "=a" (OldStackPtr));
@@ -141,9 +176,6 @@ void _start()
   NewStackPtr = (void *)((char *) NewStackPage + (OldStackPtr - OldStackPage));
   __asm__ __volatile__("mov %%eax,%%esp\n" : : "a"(NewStackPtr));
   /* Don't use stack based variables after this */
-
-  i386TrapSaveDRHook = XenTrapSaveDR;
-  HYPERVISOR_set_trap_table(trap_table);
 
   /* Start freeldr */
   XenActive = TRUE;

@@ -34,15 +34,23 @@ typedef struct {
     blkif_vdev_t   device;       /*  2: only for read/write requests         */
     unsigned long  id;           /*  4: private guest value, echoed in resp  */
     blkif_sector_t sector_number;    /* start sector idx on disk (r/w only)  */
-    /* @f_a_s[2:0]=last_sect ; @f_a_s[5:3]=first_sect ; @f_a_s[:12]=frame.   */
+    /* @f_a_s[2:0]=last_sect ; @f_a_s[5:3]=first_sect                        */
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+    /* @f_a_s[:16]= grant reference (16 bits)                                */
+#else
+    /* @f_a_s[:12]=@frame: machine page frame number.                        */
+#endif
     /* @first_sect: first sector in frame to transfer (inclusive).           */
     /* @last_sect: last sector in frame to transfer (inclusive).             */
-    /* @frame: machine page frame number.                                    */
     unsigned long  frame_and_sects[BLKIF_MAX_SEGMENTS_PER_REQUEST];
 } PACKED blkif_request_t;
 
 #define blkif_first_sect(_fas) (((_fas)>>3)&7)
 #define blkif_last_sect(_fas)  ((_fas)&7)
+
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+#define blkif_gref_from_fas(_fas) ((_fas)>>16)
+#endif
 
 typedef struct {
     unsigned long   id;              /* copied from request */
@@ -57,7 +65,7 @@ typedef struct {
  * Generate blkif ring structures and types.
  */
 
-DEFINE_RING_TYPES(blkif, blkif_request_t, blkif_response_t, PAGE_SIZE);
+DEFINE_RING_TYPES(blkif, blkif_request_t, blkif_response_t);
 
 /*
  * BLKIF_OP_PROBE:

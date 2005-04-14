@@ -39,13 +39,22 @@ VOID XenMemInit(start_info_t *StartInfo);
 
 VOID XenCtrlIfInit();
 BOOL XenCtrlIfSendMessageNoblock(ctrl_msg_t *Msg);
+VOID XenCtrlIfSendMessageBlock(ctrl_msg_t *Msg);
 VOID XenCtrlIfDiscardResponses();
 BOOL XenCtrlIfTransmitterEmpty();
+VOID XenCtrlIfRegisterReceiver(u8 Type, ctrl_msg_handler_t Hnd);
+VOID XenCtrlIfHandleEvent();
+VOID XenCtrlIfSendResponse(ctrl_msg_t *Msg);
+
+VOID XenEvtchnRegisterCtrlIf(unsigned CtrlIfEvtchn);
+VOID XenEvtchnDisableEvents();
+VOID XenEvtchnEnableEvents();
 
 VOID XenConsPutChar(int Ch);
 BOOL XenConsKbHit();
 int XenConsGetCh();
 VOID XenConsFlush();
+VOID XenConsFlushWait();
 
 VOID XenVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE XenVideoSetDisplayMode(char *DisplayMode, BOOL Init);
@@ -73,6 +82,8 @@ VOID XenRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour
 VOID XenHwDetect(VOID);
 
 VOID XenDie(VOID);
+VOID XenHypervisorCallback(VOID);
+VOID XenFailsafeCallback(VOID);
 
 #endif /* __I386_MACHXEN_H_ */
 

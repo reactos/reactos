@@ -140,6 +140,7 @@ typedef struct {
     unsigned long event_callback_eip;
     unsigned long failsafe_callback_cs;     /* CS:EIP of failsafe callback  */
     unsigned long failsafe_callback_eip;
+    unsigned long vm_assist;                /* VMASST_TYPE_* bitmap */
 } PACKED full_execution_context_t;
 
 typedef struct {

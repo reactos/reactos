@@ -58,6 +58,7 @@
 #define __HYPERVISOR_switch_to_user       23 /* x86/64 only */
 #define __HYPERVISOR_boot_vcpu            24
 #define __HYPERVISOR_set_segment_base     25 /* x86/64 only */
+#define __HYPERVISOR_mmuext_op            26
 
 /*
  * MULTICALLS
@@ -86,13 +87,9 @@
  * MMU-UPDATE REQUESTS
  * 
  * HYPERVISOR_mmu_update() accepts a list of (ptr, val) pairs.
+ * A foreigndom (FD) can be specified (or DOMID_SELF for none).
+ * Where the FD has some effect, it is described below.
  * ptr[1:0] specifies the appropriate MMU_* command.
- * 
- * FOREIGN DOMAIN (FD)
- * -------------------
- *  Some commands recognise an explicitly-declared foreign domain,
- *  in which case they will operate with respect to the foreigner rather than
- *  the calling domain. Where the FD has some effect, it is described below.
  * 
  * ptr[1:0] == MMU_NORMAL_PT_UPDATE:
  * Updates an entry in a page table. If updating an L1 table, and the new
@@ -109,77 +106,103 @@
  * ptr[:2]  -- Machine address within the frame whose mapping to modify.
  *             The frame must belong to the FD, if one is specified.
  * val      -- Value to write into the mapping entry.
- *  
- * ptr[1:0] == MMU_EXTENDED_COMMAND:
- * val[7:0] -- MMUEXT_* command.
- * 
- *   val[7:0] == MMUEXT_(UN)PIN_*_TABLE:
- *   ptr[:2]  -- Machine address of frame to be (un)pinned as a p.t. page.
- *               The frame must belong to the FD, if one is specified.
- * 
- *   val[7:0] == MMUEXT_NEW_BASEPTR:
- *   ptr[:2]  -- Machine address of new page-table base to install in MMU.
- * 
- *   val[7:0] == MMUEXT_NEW_USER_BASEPTR: [x86/64 only]
- *   ptr[:2]  -- Machine address of new page-table base to install in MMU
- *               when in user space.
- * 
- *   val[7:0] == MMUEXT_TLB_FLUSH:
- *   No additional arguments.
- * 
- *   val[7:0] == MMUEXT_INVLPG:
- *   ptr[:2]  -- Linear address to be flushed from the TLB.
- * 
- *   val[7:0] == MMUEXT_FLUSH_CACHE:
- *   No additional arguments. Writes back and flushes cache contents.
- * 
- *   val[7:0] == MMUEXT_SET_LDT:
- *   ptr[:2]  -- Linear address of LDT base (NB. must be page-aligned).
- *   val[:8]  -- Number of entries in LDT.
- * 
- *   val[7:0] == MMUEXT_TRANSFER_PAGE:
- *   val[31:16] -- Domain to whom page is to be transferred.
- *   (val[15:8],ptr[9:2]) -- 16-bit reference into transferee's grant table.
- *   ptr[:12]  -- Page frame to be reassigned to the FD.
- *                (NB. The frame must currently belong to the calling domain).
- * 
- *   val[7:0] == MMUEXT_SET_FOREIGNDOM:
- *   val[31:16] -- Domain to set as the Foreign Domain (FD).
- *                 (NB. DOMID_SELF is not recognised)
- *                 If FD != DOMID_IO then the caller must be privileged.
- * 
- *   val[7:0] == MMUEXT_CLEAR_FOREIGNDOM:
- *   Clears the FD.
- * 
- *   val[7:0] == MMUEXT_REASSIGN_PAGE:
- *   ptr[:2]  -- A machine address within the page to be reassigned to the FD.
- *               (NB. page must currently belong to the calling domain).
  */
 #define MMU_NORMAL_PT_UPDATE     0 /* checked '*ptr = val'. ptr is MA.       */
-#define MMU_MACHPHYS_UPDATE      2 /* ptr = MA of frame to modify entry for  */
-#define MMU_EXTENDED_COMMAND     3 /* least 8 bits of val demux further      */
-#define MMUEXT_PIN_L1_TABLE      0 /* ptr = MA of frame to pin               */
-#define MMUEXT_PIN_L2_TABLE      1 /* ptr = MA of frame to pin               */
-#define MMUEXT_PIN_L3_TABLE      2 /* ptr = MA of frame to pin               */
-#define MMUEXT_PIN_L4_TABLE      3 /* ptr = MA of frame to pin               */
-#define MMUEXT_UNPIN_TABLE       4 /* ptr = MA of frame to unpin             */
-#define MMUEXT_NEW_BASEPTR       5 /* ptr = MA of new pagetable base         */
-#define MMUEXT_TLB_FLUSH         6 /* ptr = NULL                             */
-#define MMUEXT_INVLPG            7 /* ptr = VA to invalidate                 */
-#define MMUEXT_FLUSH_CACHE       8
-#define MMUEXT_SET_LDT           9 /* ptr = VA of table; val = # entries     */
-#define MMUEXT_SET_FOREIGNDOM   10 /* val[31:16] = dom                       */
-#define MMUEXT_CLEAR_FOREIGNDOM 11
-#define MMUEXT_TRANSFER_PAGE    12 /* ptr = MA of frame; val[31:16] = dom    */
-#define MMUEXT_REASSIGN_PAGE    13
-#define MMUEXT_NEW_USER_BASEPTR 14
-#define MMUEXT_CMD_MASK        255
-#define MMUEXT_CMD_SHIFT         8
+#define MMU_MACHPHYS_UPDATE      1 /* ptr = MA of frame to modify entry for  */
+
+/*
+ * MMU EXTENDED OPERATIONS
+ * 
+ * HYPERVISOR_mmuext_op() accepts a list of mmuext_op structures.
+ * A foreigndom (FD) can be specified (or DOMID_SELF for none).
+ * Where the FD has some effect, it is described below.
+ * 
+ * cmd: MMUEXT_(UN)PIN_*_TABLE
+ * mfn: Machine frame number to be (un)pinned as a p.t. page.
+ *      The frame must belong to the FD, if one is specified.
+ * 
+ * cmd: MMUEXT_NEW_BASEPTR
+ * mfn: Machine frame number of new page-table base to install in MMU.
+ * 
+ * cmd: MMUEXT_NEW_USER_BASEPTR [x86/64 only]
+ * mfn: Machine frame number of new page-table base to install in MMU
+ *      when in user space.
+ * 
+ * cmd: MMUEXT_TLB_FLUSH_LOCAL
+ * No additional arguments. Flushes local TLB.
+ * 
+ * cmd: MMUEXT_INVLPG_LOCAL
+ * linear_addr: Linear address to be flushed from the local TLB.
+ * 
+ * cmd: MMUEXT_TLB_FLUSH_MULTI
+ * cpuset: Pointer to bitmap of VCPUs to be flushed.
+ * 
+ * cmd: MMUEXT_INVLPG_MULTI
+ * linear_addr: Linear address to be flushed.
+ * cpuset: Pointer to bitmap of VCPUs to be flushed.
+ * 
+ * cmd: MMUEXT_TLB_FLUSH_ALL
+ * No additional arguments. Flushes all VCPUs' TLBs.
+ * 
+ * cmd: MMUEXT_INVLPG_ALL
+ * linear_addr: Linear address to be flushed from all VCPUs' TLBs.
+ * 
+ * cmd: MMUEXT_FLUSH_CACHE
+ * No additional arguments. Writes back and flushes cache contents.
+ * 
+ * cmd: MMUEXT_SET_LDT
+ * linear_addr: Linear address of LDT base (NB. must be page-aligned).
+ * nr_ents: Number of entries in LDT.
+ * 
+ * cmd: MMUEXT_REASSIGN_PAGE
+ * mfn: Machine frame number to be reassigned to the FD.
+ *      (NB. page must currently belong to the calling domain).
+ */
+#define MMUEXT_PIN_L1_TABLE      0
+#define MMUEXT_PIN_L2_TABLE      1
+#define MMUEXT_PIN_L3_TABLE      2
+#define MMUEXT_PIN_L4_TABLE      3
+#define MMUEXT_UNPIN_TABLE       4
+#define MMUEXT_NEW_BASEPTR       5
+#define MMUEXT_TLB_FLUSH_LOCAL   6
+#define MMUEXT_INVLPG_LOCAL      7
+#define MMUEXT_TLB_FLUSH_MULTI   8
+#define MMUEXT_INVLPG_MULTI      9
+#define MMUEXT_TLB_FLUSH_ALL    10
+#define MMUEXT_INVLPG_ALL       11
+#define MMUEXT_FLUSH_CACHE      12
+#define MMUEXT_SET_LDT          13
+#define MMUEXT_REASSIGN_PAGE    14
+#define MMUEXT_NEW_USER_BASEPTR 15
+
+#ifndef __ASSEMBLY__
+struct mmuext_op {
+    unsigned int cmd;
+    union {
+        /* [UN]PIN_TABLE, NEW_BASEPTR, NEW_USER_BASEPTR, REASSIGN_PAGE */
+        memory_t mfn;
+        /* INVLPG_LOCAL, INVLPG_ALL, SET_LDT */
+        memory_t linear_addr;
+    };
+    union {
+        /* SET_LDT */
+        unsigned int nr_ents;
+        /* TLB_FLUSH_MULTI, INVLPG_MULTI */
+        void *cpuset;
+    };
+};
+#endif
 
 /* These are passed as 'flags' to update_va_mapping. They can be ORed. */
-#define UVMF_FLUSH_TLB          1 /* Flush entire TLB. */
-#define UVMF_INVLPG             2 /* Flush the VA mapping being updated. */
-
+/* When specifying UVMF_MULTI, also OR in a pointer to a CPU bitmap.   */
+/* UVMF_LOCAL is merely UVMF_MULTI with a NULL bitmap pointer.         */
+#define UVMF_NONE               (0UL)    /* No flushing at all.   */
+#define UVMF_TLB_FLUSH          (1UL<<0) /* Flush entire TLB(s).  */
+#define UVMF_INVLPG             (2UL<<0) /* Flush only one entry. */
+#define UVMF_FLUSHTYPE_MASK     (3UL<<0)
+#define UVMF_MULTI              (0UL<<1) /* Flush subset of TLBs. */
+#define UVMF_LOCAL              (0UL<<2) /* Flush local TLB.      */
+#define UVMF_ALL                (1UL<<2) /* Flush all TLBs.       */
 
 /*
  * Commands to HYPERVISOR_sched_op().
@@ -257,8 +280,8 @@ typedef u16 domid_t;
  */
 typedef struct
 {
-    memory_t ptr;    /* Machine address of PTE. */
-    memory_t val;    /* New contents of PTE.    */
+    memory_t ptr;       /* Machine address of PTE. */
+    memory_t val;       /* New contents of PTE.    */
 } PACKED mmu_update_t;
 
 /*

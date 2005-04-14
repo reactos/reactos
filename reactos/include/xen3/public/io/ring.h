@@ -18,23 +18,21 @@ typedef unsigned int RING_IDX;
 /*
  * Calculate size of a shared ring, given the total available space for the
  * ring and indexes (_sz), and the name tag of the request/response structure.
- * S ring contains as many entries as will fit, rounded down to the nearest 
+ * A ring contains as many entries as will fit, rounded down to the nearest 
  * power of two (so we can mask with (size-1) to loop around).
  */
-#define __RING_SIZE(_name, _sz)                                         \
-    (__RD32(((_sz) - 2*sizeof(RING_IDX)) / sizeof(union _name##_sring_entry)))
+#define __RING_SIZE(_s, _sz) \
+    (__RD32(((_sz) - 2*sizeof(RING_IDX)) / sizeof((_s)->ring[0])))
 
 /*
  *  Macros to make the correct C datatypes for a new kind of ring.
  * 
  *  To make a new ring datatype, you need to have two message structures,
- *  let's say request_t, and response_t already defined.  You also need to
- *  know how big the shared memory region you want the ring to occupy is
- *  (PAGE_SIZE, of instance).
+ *  let's say request_t, and response_t already defined.
  *
  *  In a header where you want the ring datatype declared, you then do:
  *
- *     DEFINE_RING_TYPES(mytag, request_t, response_t, PAGE_SIZE);
+ *     DEFINE_RING_TYPES(mytag, request_t, response_t);
  *
  *  These expand out to give you a set of types, as you can see below.
  *  The most important of these are:
@@ -43,35 +41,38 @@ typedef unsigned int RING_IDX;
  *     mytag_front_ring_t - The 'front' half of the ring.
  *     mytag_back_ring_t  - The 'back' half of the ring.
  *
- *  To initialize a ring in your code, on the front half, you do:
+ *  To initialize a ring in your code you need to know the location and size
+ *  of the shared memory area (PAGE_SIZE, for instance). To initialise
+ *  the front half:
  *
  *      mytag_front_ring_t front_ring;
  *
  *      SHARED_RING_INIT((mytag_sring_t *)shared_page);
- *      FRONT_RING_INIT(&front_ring, (mytag_sring_t *)shared_page);
+ *      FRONT_RING_INIT(&front_ring, (mytag_sring_t *)shared_page, PAGE_SIZE);
  *
  *  Initializing the back follows similarly...
  */
          
-#define DEFINE_RING_TYPES(__name, __req_t, __rsp_t, __size)             \
+#define DEFINE_RING_TYPES(__name, __req_t, __rsp_t)                     \
                                                                         \
 /* Shared ring entry */                                                 \
 union __name##_sring_entry {                                            \
     __req_t req;                                                        \
     __rsp_t rsp;                                                        \
-} PACKED;                                                               \
+};                                                                      \
                                                                         \
 /* Shared ring page */                                                  \
 struct __name##_sring {                                                 \
     RING_IDX req_prod;                                                  \
     RING_IDX rsp_prod;                                                  \
-    union __name##_sring_entry ring[__RING_SIZE(__name, __size)];       \
-} PACKED;                                                               \
+    union __name##_sring_entry ring[1]; /* variable-length */           \
+};                                                                      \
                                                                         \
 /* "Front" end's private variables */                                   \
 struct __name##_front_ring {                                            \
     RING_IDX req_prod_pvt;                                              \
     RING_IDX rsp_cons;                                                  \
+    unsigned int nr_ents;                                               \
     struct __name##_sring *sring;                                       \
 };                                                                      \
                                                                         \
@@ -79,6 +80,7 @@ struct __name##_front_ring {                                            \
 struct __name##_back_ring {                                             \
     RING_IDX rsp_prod_pvt;                                              \
     RING_IDX req_cons;                                                  \
+    unsigned int nr_ents;                                               \
     struct __name##_sring *sring;                                       \
 };                                                                      \
                                                                         \
@@ -102,41 +104,44 @@ typedef struct __name##_back_ring __name##_back_ring_t;
  *   outstanding requests.
  */
 
-
 /* Initialising empty rings */
 #define SHARED_RING_INIT(_s) do {                                       \
     (_s)->req_prod = 0;                                                 \
     (_s)->rsp_prod = 0;                                                 \
 } while(0)
 
-#define FRONT_RING_INIT(_r, _s) do {                                    \
+#define FRONT_RING_INIT(_r, _s, __size) do {                            \
     (_r)->req_prod_pvt = 0;                                             \
     (_r)->rsp_cons = 0;                                                 \
+    (_r)->nr_ents = __RING_SIZE(_s, __size);                            \
     (_r)->sring = (_s);                                                 \
 } while (0)
 
-#define BACK_RING_INIT(_r, _s) do {                                     \
+#define BACK_RING_INIT(_r, _s, __size) do {                             \
     (_r)->rsp_prod_pvt = 0;                                             \
     (_r)->req_cons = 0;                                                 \
+    (_r)->nr_ents = __RING_SIZE(_s, __size);                            \
     (_r)->sring = (_s);                                                 \
 } while (0)
 
 /* Initialize to existing shared indexes -- for recovery */
-#define FRONT_RING_ATTACH(_r, _s) do {                                  \
+#define FRONT_RING_ATTACH(_r, _s, __size) do {                          \
     (_r)->sring = (_s);                                                 \
     (_r)->req_prod_pvt = (_s)->req_prod;                                \
     (_r)->rsp_cons = (_s)->rsp_prod;                                    \
+    (_r)->nr_ents = __RING_SIZE(_s, __size);                            \
 } while (0)
 
-#define BACK_RING_ATTACH(_r, _s) do {                                   \
+#define BACK_RING_ATTACH(_r, _s, __size) do {                           \
     (_r)->sring = (_s);                                                 \
     (_r)->rsp_prod_pvt = (_s)->rsp_prod;                                \
     (_r)->req_cons = (_s)->req_prod;                                    \
+    (_r)->nr_ents = __RING_SIZE(_s, __size);                            \
 } while (0)
 
 /* How big is this ring? */
 #define RING_SIZE(_r)                                                   \
-    (sizeof((_r)->sring->ring)/sizeof((_r)->sring->ring[0]))
+    ((_r)->nr_ents)
 
 /* How many empty slots are on a ring? */
 #define RING_PENDING_REQUESTS(_r)                                       \

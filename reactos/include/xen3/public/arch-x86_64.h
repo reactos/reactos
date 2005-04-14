@@ -92,6 +92,7 @@
 #define SEGBASE_FS          0
 #define SEGBASE_GS_USER     1
 #define SEGBASE_GS_KERNEL   2
+#define SEGBASE_GS_USER_SEL 3 /* Set user %gs specified in base[15:0] */
 
 /*
  * int HYPERVISOR_switch_to_user(void)
@@ -190,10 +191,10 @@ typedef struct {
     unsigned long kernel_ss, kernel_esp;  /* Virtual TSS (only SS1/ESP1)  */
     unsigned long pt_base;                  /* CR3 (pagetable base)         */
     unsigned long debugreg[8];              /* DB0-DB7 (debug registers)    */
-    unsigned long event_callback_cs;        /* CS:EIP of event callback     */
     unsigned long event_callback_eip;
-    unsigned long failsafe_callback_cs;     /* CS:EIP of failsafe callback  */
     unsigned long failsafe_callback_eip;
+    unsigned long syscall_callback_eip;
+    unsigned long vm_assist;                /* VMASST_TYPE_* bitmap */
 } PACKED full_execution_context_t;
 
 typedef struct {

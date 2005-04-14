@@ -71,6 +71,14 @@ shared_info_t *XenSharedInfo;
 
 static PPDE XenPageDir;
 
+#if 2 == XEN_VER
+#define XEN_MMU_UPDATE(req, count, success, domid) \
+  HYPERVISOR_mmu_update((req), (count), (success))
+#else /* XEN_VER */
+#define XEN_MMU_UPDATE(req, count, success, domid) \
+  HYPERVISOR_mmu_update((req), (count), (success), (domid))
+#endif /* XEN_VER */
+
 ULONG
 XenMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 {
@@ -201,7 +209,7 @@ XenMemInit(start_info_t *StartInfo)
         }
       MmuReq.val = (((u32*)StartInfo->mfn_list)[MfnIndex] << PAGE_SHIFT)
                    | (PA_PRESENT | PA_READWRITE | PA_USER);
-      if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
+      if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
         {
           HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
           XenDie();
@@ -214,7 +222,7 @@ XenMemInit(start_info_t *StartInfo)
                + PT_IDX(HighAddr) * sizeof(PTE);
   MmuReq.val = PageDirMachineAddr
                | (PA_PRESENT | PA_USER);
-  if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
+  if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
       XenDie();
@@ -228,7 +236,7 @@ XenMemInit(start_info_t *StartInfo)
   MfnIndex = StartInfo->nr_pages - (StartPfn + PageTablesRequired + 1);
   MmuReq.val = (((u32*)StartInfo->mfn_list)[MfnIndex] << PAGE_SHIFT)
                | (PA_PRESENT | PA_READWRITE | PA_USER);
-  if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
+  if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
       XenDie();
@@ -244,7 +252,7 @@ XenMemInit(start_info_t *StartInfo)
                     + PT_IDX(HighAddr) * sizeof(PTE);
       MmuReq.val = (XenPageDir[PageTableNumber].Pde & PAGE_MASK)
                    | (PA_PRESENT | PA_USER);
-      if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
+      if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
         {
           HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
           XenDie();
@@ -273,7 +281,7 @@ XenMemInit(start_info_t *StartInfo)
                         + PT_IDX(PageNumber * PAGE_SIZE) * sizeof(PTE);
           MmuReq.val = (((u32 *) StartInfo->mfn_list)[MfnIndex] << PAGE_SHIFT)
                        | (PA_PRESENT | PA_READWRITE | PA_USER);
-          if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
+          if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
             {
               HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
               XenDie();
@@ -293,7 +301,7 @@ XenMemInit(start_info_t *StartInfo)
                + PT_IDX(XenStartInfo->nr_pages * PAGE_SIZE) * sizeof(PTE);
   MmuReq.val = XenStartInfo->shared_info
                | (PA_PRESENT | PA_READWRITE | PA_USER);
-  if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
+  if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
       XenDie();

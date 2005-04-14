@@ -15,6 +15,8 @@
 #define PHYSDEVOP_PCI_PROBE_ROOT_BUSES  3
 #define PHYSDEVOP_IRQ_UNMASK_NOTIFY     4
 #define PHYSDEVOP_IRQ_STATUS_QUERY      5
+#define PHYSDEVOP_SET_IOPL              6
+#define PHYSDEVOP_SET_IOBITMAP          7
 
 /* Read from PCI configuration space. */
 typedef struct {
@@ -62,6 +64,19 @@ typedef struct {
     u32 flags;                        /*  4 */
 } PACKED physdevop_irq_status_query_t; /* 8 bytes */
 
+typedef struct {
+    /* IN */
+    u32 iopl;                         /*  0 */
+} PACKED physdevop_set_iopl_t; /* 4 bytes */
+
+typedef struct {
+    /* IN */
+    memory_t bitmap;                  /*  0 */
+    MEMORY_PADDING;
+    u32      nr_ports;                /*  8 */
+    u32      __pad0;                  /* 12 */
+} PACKED physdevop_set_iobitmap_t; /* 16 bytes */
+
 typedef struct _physdev_op_st 
 {
     u32 cmd;                          /*  0 */
@@ -72,6 +87,8 @@ typedef struct _physdev_op_st
         physdevop_pci_initialise_device_t pci_initialise_device;
         physdevop_pci_probe_root_buses_t  pci_probe_root_buses;
         physdevop_irq_status_query_t      irq_status_query;
+        physdevop_set_iopl_t              set_iopl;
+        physdevop_set_iobitmap_t          set_iobitmap;
         u8                                __dummy[32];
     } PACKED u;
 } PACKED physdev_op_t; /* 40 bytes */

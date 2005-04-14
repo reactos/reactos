@@ -78,7 +78,7 @@ typedef struct {
 	unsigned long dcr;
 	unsigned long itc;
 	unsigned long domain_itm;
-	unsigned long domain_timer_interval;
+	unsigned long domain_itm_last;
 	unsigned long xen_itm;
 	unsigned long xen_timer_interval;
 //} PACKED arch_shared_info_t;

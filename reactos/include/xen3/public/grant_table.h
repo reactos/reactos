@@ -185,6 +185,8 @@ typedef struct {
     u32         __pad;
 } PACKED gnttab_unmap_grant_ref_t; /* 24 bytes */
 
+#define GNTUNMAP_DEV_FROM_VIRT (~0U)
+
 /*
  * GNTTABOP_setup_table: Set up a grant table for <dom> comprising at least
  * <nr_frames> pages. The frame addresses are written to the <frame_list>.
@@ -248,8 +250,9 @@ typedef struct {
 #define GNTST_bad_gntref       (-3) /* Unrecognised or inappropriate gntref. */
 #define GNTST_bad_handle       (-4) /* Unrecognised or inappropriate handle. */
 #define GNTST_bad_virt_addr    (-5) /* Inappropriate virtual address to map. */
-#define GNTST_no_device_space  (-6) /* Out of space in I/O MMU.              */
-#define GNTST_permission_denied (-7) /* Not enough privilege for operation.  */
+#define GNTST_bad_dev_addr     (-6) /* Inappropriate device address to unmap.*/
+#define GNTST_no_device_space  (-7) /* Out of space in I/O MMU.              */
+#define GNTST_permission_denied (-8) /* Not enough privilege for operation.  */
 
 #define GNTTABOP_error_msgs {                   \
     "okay",                                     \
@@ -258,6 +261,7 @@ typedef struct {
     "invalid grant reference",                  \
     "invalid mapping handle",                   \
     "invalid virtual address",                  \
+    "invalid device address",                   \
     "no spare translation slot in the I/O MMU", \
     "permission denied"                         \
 }
