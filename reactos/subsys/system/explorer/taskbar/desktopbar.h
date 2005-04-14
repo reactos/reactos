@@ -92,6 +92,7 @@ protected:
 	int		Command(int id, int code);
 
 	void	Resize(int cx, int cy);
+	void	ControlResize(WPARAM wparam, LPARAM lparam);
 	void	RegisterHotkeys();
 	void	ProcessHotKey(int id_hotkey);
 	void	ShowStartMenu();

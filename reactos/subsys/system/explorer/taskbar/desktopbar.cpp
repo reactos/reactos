@@ -69,7 +69,7 @@ HWND DesktopBar::Create()
 
 	RECT rect;
 
-	rect.left = -2;	// hide left border
+	rect.left = -2; // hide left border
 #ifdef TASKBAR_AT_TOP
 	rect.top = -2;	// hide top border
 #else
@@ -105,7 +105,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	 // create task bar
 	_hwndTaskBar = TaskBar::Create(_hwnd);
 
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+#ifndef __MINGW32__ // SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOTRAYITEMSDISPLAY))
 #endif
 		 // create tray notification area
@@ -222,6 +222,10 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Resize(LOWORD(lparam), HIWORD(lparam));
 		break;
 
+	  case WM_SIZING:
+		ControlResize(wparam, lparam);
+		break;
+
 	  case PM_RESIZE_CHILDREN: {
 		ClientRect size(_hwnd);
 		Resize(size.right, size.bottom);
@@ -336,7 +340,7 @@ int DesktopBar::Command(int id, int code)
 
 		g_Globals._desktops.SwitchToDesktop(desktop_idx);
 
- 		if (_hwndQuickLaunch)
+		if (_hwndQuickLaunch)
 			PostMessage(_hwndQuickLaunch, PM_UPDATE_DESKTOP, desktop_idx, 0);
 		break;}
 
@@ -391,6 +395,35 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 }
 
 
+void DesktopBar::ControlResize(WPARAM wparam, LPARAM lparam)
+{
+	PRECT dragRect = (PRECT) lparam;
+	//int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	///@todo write code for taskbar being at sides or top.
+
+	switch(wparam) {
+	  case WMSZ_BOTTOM: //@todo Taskbar is at the top of the screen
+		break;
+
+	  case WMSZ_TOP:	// Taskbar is at the bottom of the screen
+		dragRect->top = screenHeight - (((screenHeight - dragRect->top) + DESKTOPBARBAR_HEIGHT/2) / DESKTOPBARBAR_HEIGHT) * DESKTOPBARBAR_HEIGHT;
+		if (dragRect->top < screenHeight / 2)
+			dragRect->top = screenHeight - (screenHeight/2 / DESKTOPBARBAR_HEIGHT * DESKTOPBARBAR_HEIGHT);
+		else if (dragRect->top > screenHeight - 5)
+			dragRect->top = screenHeight - 5;
+		break;
+
+	  case WMSZ_RIGHT:	//@todo Taskbar is at the left of the screen
+		break;
+
+	  case WMSZ_LEFT:	//@todo Taskbar is at the right of the screen
+		break;
+	}
+}
+
+
 #ifdef _ROS_
 
 void DesktopBar::AddTrayIcons()
@@ -403,7 +436,7 @@ void DesktopBar::TrayClick(UINT id, int btn)
 	switch(id) {
 	  case ID_TRAY_VOLUME:
 		if (btn == TRAYBUTTON_LEFT)
-			SetTimer(_hwnd, ID_TRAY_VOLUME, 500, NULL);	// wait a bit to correctly handle double clicks
+			SetTimer(_hwnd, ID_TRAY_VOLUME, 500, NULL); // wait a bit to correctly handle double clicks
 		else {
 			PopupMenu menu(IDM_VOLUME);
 			SetMenuDefaultItem(menu, 0, MF_BYPOSITION);
