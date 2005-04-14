@@ -168,7 +168,7 @@ IoAttachDeviceToDeviceStackSafe(
 {
    /* FIXME: IoAttachDeviceToDeviceStackSafe must not call
     * IoAttachDeviceToDeviceStack, but the other way around! */
-   DPRINT1("IoAttachDeviceToDeviceStackSafe() badly implemented!\n");
+   DPRINT("IoAttachDeviceToDeviceStackSafe() badly implemented!\n");
    *AttachedToDeviceObject = IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
    return STATUS_SUCCESS;
 }

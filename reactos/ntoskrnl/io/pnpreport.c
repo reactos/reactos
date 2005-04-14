@@ -81,7 +81,7 @@ IoReportResourceForDetection(
   OUT PBOOLEAN ConflictDetected)
 {
   *ConflictDetected = FALSE;
-  DPRINT1("IoReportResourceForDetection unimplemented\n");
+  DPRINT1("IoReportResourceForDetection partly implemented\n");
   
   /* HACK: check if serial debug output is enabled. If yes,
    * prevent serial port driver to detect this serial port
