@@ -945,6 +945,11 @@ typedef struct _KMUTANT {
   UCHAR  ApcDisable;
 } KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT, KMUTEX, *PKMUTEX, *RESTRICTED_POINTER PRKMUTEX;
 
+typedef struct _KGATE
+{
+  DISPATCHER_HEADER Header;
+} KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
+
 typedef enum _TIMER_TYPE {
   NotificationTimer,
   SynchronizationTimer
