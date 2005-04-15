@@ -437,12 +437,12 @@ static const short yyrline[] = { 0,
    517,   518,   521,   524,   535,   536,   539,   540,   541,   544,
    546,   547,   548,   549,   552,   553,   554,   555,   556,   568,
    570,   571,   572,   573,   574,   577,   578,   581,   582,   583,
-   584,   585,   586,   587,   590,   591,   594,   600,   605,   606,
-   609,   613,   614,   617,   629,   630,   633,   634,   637,   652,
-   653,   656,   657,   660,   668,   676,   683,   686,   688,   691,
-   692,   695,   700,   706,   707,   710,   711,   712,   715,   717,
-   720,   722,   725,   735,   736,   737,   738,   739,   740,   741,
-   742,   743,   744,   747,   759,   763,   776,   778
+   584,   585,   586,   587,   590,   591,   594,   601,   606,   607,
+   610,   614,   615,   618,   630,   631,   634,   635,   638,   653,
+   654,   657,   658,   661,   669,   677,   684,   687,   689,   692,
+   693,   696,   701,   707,   708,   711,   712,   713,   716,   718,
+   721,   723,   726,   737,   738,   739,   740,   741,   742,   743,
+   744,   745,   746,   749,   762,   766,   779,   781
 };
 #endif
 
@@ -2172,37 +2172,38 @@ case 197:
 #line 594 "parser.y"
 { yyval.clas = yyvsp[0].clas;
 						  yyval.clas->attrs = yyvsp[-1].attr;
-                                                  if (!parse_only && do_header) write_coclass(yyval.clas);
+						  if (!parse_only && do_header)
+						    write_coclass(yyval.clas);
 						;
     break;}
 case 198:
-#line 600 "parser.y"
+#line 601 "parser.y"
 { yyval.clas = yyvsp[-3].clas;
 						  yyval.clas->ifaces = yyvsp[-1].ifref;
 						;
     break;}
 case 199:
-#line 605 "parser.y"
+#line 606 "parser.y"
 { yyval.ifref = NULL; ;
     break;}
 case 200:
-#line 606 "parser.y"
+#line 607 "parser.y"
 { LINK(yyvsp[0].ifref, yyvsp[-1].ifref); yyval.ifref = yyvsp[0].ifref; ;
     break;}
 case 201:
-#line 610 "parser.y"
+#line 611 "parser.y"
 { yyval.ifref = make_ifref(yyvsp[0].type); yyval.ifref->attrs = yyvsp[-1].attr; ;
     break;}
 case 202:
-#line 613 "parser.y"
-{ yyval.type = get_type(0, yyvsp[0].str, 0); ;
-    break;}
-case 203:
 #line 614 "parser.y"
 { yyval.type = get_type(0, yyvsp[0].str, 0); ;
     break;}
+case 203:
+#line 615 "parser.y"
+{ yyval.type = get_type(0, yyvsp[0].str, 0); ;
+    break;}
 case 204:
-#line 617 "parser.y"
+#line 618 "parser.y"
 { yyval.type = yyvsp[0].type;
 						  if (yyval.type->defined) yyerror("multiple definition error\n");
 						  yyval.type->attrs = yyvsp[-1].attr;
@@ -2215,23 +2216,23 @@ case 204:
 						;
     break;}
 case 205:
-#line 629 "parser.y"
+#line 630 "parser.y"
 { yyval.var = NULL; ;
     break;}
 case 206:
-#line 630 "parser.y"
+#line 631 "parser.y"
 { LINK(yyvsp[-1].var, yyvsp[-2].var); yyval.var = yyvsp[-1].var; ;
     break;}
 case 207:
-#line 633 "parser.y"
+#line 634 "parser.y"
 { yyval.func = NULL; ;
     break;}
 case 208:
-#line 634 "parser.y"
+#line 635 "parser.y"
 { LINK(yyvsp[-1].func, yyvsp[-2].func); yyval.func = yyvsp[-1].func; ;
     break;}
 case 209:
-#line 640 "parser.y"
+#line 641 "parser.y"
 { yyval.type = yyvsp[-4].type;
 						  yyval.type->fields = yyvsp[-2].var;
 						  yyval.type->funcs = yyvsp[-1].func;
@@ -2239,23 +2240,23 @@ case 209:
 						;
     break;}
 case 210:
-#line 652 "parser.y"
+#line 653 "parser.y"
 { yyval.type = NULL; ;
     break;}
 case 211:
-#line 653 "parser.y"
+#line 654 "parser.y"
 { yyval.type = find_type2(yyvsp[0].str, 0); ;
     break;}
 case 212:
-#line 656 "parser.y"
-{ yyval.type = get_type(RPC_FC_IP, yyvsp[0].str, 0); ;
-    break;}
-case 213:
 #line 657 "parser.y"
 { yyval.type = get_type(RPC_FC_IP, yyvsp[0].str, 0); ;
     break;}
+case 213:
+#line 658 "parser.y"
+{ yyval.type = get_type(RPC_FC_IP, yyvsp[0].str, 0); ;
+    break;}
 case 214:
-#line 660 "parser.y"
+#line 661 "parser.y"
 { yyval.type = yyvsp[0].type;
 						  if (yyval.type->defined) yyerror("multiple definition error\n");
 						  yyval.type->attrs = yyvsp[-1].attr;
@@ -2264,7 +2265,7 @@ case 214:
 						;
     break;}
 case 215:
-#line 669 "parser.y"
+#line 670 "parser.y"
 { yyval.type = yyvsp[-4].type;
 						  yyval.type->ref = yyvsp[-3].type;
 						  yyval.type->funcs = yyvsp[-1].func;
@@ -2272,7 +2273,7 @@ case 215:
 						;
     break;}
 case 216:
-#line 677 "parser.y"
+#line 678 "parser.y"
 { yyval.type = yyvsp[-6].type;
 						  yyval.type->ref = find_type2(yyvsp[-4].str, 0);
 						  if (!yyval.type->ref) yyerror("base class %s not found in import\n", yyvsp[-4].str);
@@ -2281,67 +2282,68 @@ case 216:
 						;
     break;}
 case 217:
-#line 683 "parser.y"
+#line 684 "parser.y"
 { yyval.type = yyvsp[0].type; ;
     break;}
 case 218:
-#line 687 "parser.y"
-{ yyval.type = yyvsp[-1].type; if (!parse_only && do_header) write_forward(yyval.type); ;
-    break;}
-case 219:
 #line 688 "parser.y"
 { yyval.type = yyvsp[-1].type; if (!parse_only && do_header) write_forward(yyval.type); ;
     break;}
-case 220:
-#line 691 "parser.y"
-{ yyval.type = make_type(0, NULL); yyval.type->name = yyvsp[0].str; ;
+case 219:
+#line 689 "parser.y"
+{ yyval.type = yyvsp[-1].type; if (!parse_only && do_header) write_forward(yyval.type); ;
     break;}
-case 221:
+case 220:
 #line 692 "parser.y"
 { yyval.type = make_type(0, NULL); yyval.type->name = yyvsp[0].str; ;
     break;}
+case 221:
+#line 693 "parser.y"
+{ yyval.type = make_type(0, NULL); yyval.type->name = yyvsp[0].str; ;
+    break;}
 case 222:
-#line 695 "parser.y"
+#line 696 "parser.y"
 { yyval.type = yyvsp[0].type;
 						  yyval.type->attrs = yyvsp[-1].attr;
 						;
     break;}
 case 223:
-#line 700 "parser.y"
+#line 701 "parser.y"
 { yyval.type = yyvsp[-3].type;
 						  yyval.type->funcs = yyvsp[-1].func;
 						  /* FIXME: if (!parse_only && do_header) write_module($$); */
 						;
     break;}
 case 224:
-#line 706 "parser.y"
+#line 707 "parser.y"
 { yyval.var = yyvsp[0].var; yyval.var->ptr_level++; ;
     break;}
 case 225:
-#line 707 "parser.y"
+#line 708 "parser.y"
 { yyval.var = yyvsp[0].var; /* FIXME */ ;
     break;}
 case 228:
-#line 712 "parser.y"
+#line 713 "parser.y"
 { yyval.var = yyvsp[-1].var; ;
     break;}
 case 230:
-#line 717 "parser.y"
+#line 718 "parser.y"
 { LINK(yyvsp[0].var, yyvsp[-2].var); yyval.var = yyvsp[0].var; ;
     break;}
 case 231:
-#line 721 "parser.y"
+#line 722 "parser.y"
 { yyval.num = RPC_FC_RP; ;
     break;}
 case 232:
-#line 722 "parser.y"
+#line 723 "parser.y"
 { yyval.num = RPC_FC_UP; ;
     break;}
 case 233:
-#line 725 "parser.y"
+#line 726 "parser.y"
 { yyval.type = get_typev(RPC_FC_STRUCT, yyvsp[-3].var, tsSTRUCT);
 						  /* overwrite RPC_FC_STRUCT with a more exact type */
 						  yyval.type->type = get_struct_type( yyvsp[-1].var );
+						  yyval.type->name = yyvsp[-3].var->name;
 						  yyval.type->fields = yyvsp[-1].var;
 						  yyval.type->defined = TRUE;
 						  if(in_typelib)
@@ -2349,67 +2351,68 @@ case 233:
 						;
     break;}
 case 234:
-#line 735 "parser.y"
+#line 737 "parser.y"
 { yyval.tref = make_tref(NULL, make_type(0, NULL)); ;
     break;}
 case 235:
-#line 736 "parser.y"
+#line 738 "parser.y"
 { yyval.tref = make_tref(yyvsp[0].str, find_type(yyvsp[0].str, 0)); ;
     break;}
 case 236:
-#line 737 "parser.y"
-{ yyval.tref = make_tref(NULL, yyvsp[0].type); ;
-    break;}
-case 237:
-#line 738 "parser.y"
-{ yyval.tref = uniq_tref(yyvsp[0].tref); yyval.tref->ref->is_const = TRUE; ;
-    break;}
-case 238:
 #line 739 "parser.y"
 { yyval.tref = make_tref(NULL, yyvsp[0].type); ;
     break;}
-case 239:
+case 237:
 #line 740 "parser.y"
-{ yyval.tref = make_tref(NULL, find_type2(yyvsp[0].str, tsENUM)); ;
+{ yyval.tref = uniq_tref(yyvsp[0].tref); yyval.tref->ref->is_const = TRUE; ;
     break;}
-case 240:
+case 238:
 #line 741 "parser.y"
 { yyval.tref = make_tref(NULL, yyvsp[0].type); ;
     break;}
-case 241:
+case 239:
 #line 742 "parser.y"
-{ yyval.tref = make_tref(NULL, get_type(RPC_FC_STRUCT, yyvsp[0].str, tsSTRUCT)); ;
+{ yyval.tref = make_tref(NULL, find_type2(yyvsp[0].str, tsENUM)); ;
     break;}
-case 242:
+case 240:
 #line 743 "parser.y"
 { yyval.tref = make_tref(NULL, yyvsp[0].type); ;
     break;}
-case 243:
+case 241:
 #line 744 "parser.y"
+{ yyval.tref = make_tref(NULL, get_type(RPC_FC_STRUCT, yyvsp[0].str, tsSTRUCT)); ;
+    break;}
+case 242:
+#line 745 "parser.y"
+{ yyval.tref = make_tref(NULL, yyvsp[0].type); ;
+    break;}
+case 243:
+#line 746 "parser.y"
 { yyval.tref = make_tref(NULL, find_type2(yyvsp[0].str, tsUNION)); ;
     break;}
 case 244:
-#line 747 "parser.y"
-{ typeref_t *tref = uniq_tref(yyvsp[-1].tref); 
+#line 749 "parser.y"
+{ typeref_t *tref = uniq_tref(yyvsp[-1].tref);
 						  yyvsp[0].var->tname = tref->name;
 						  tref->name = NULL;
 						  yyval.type = type_ref(tref);
 						  yyval.type->attrs = yyvsp[-2].attr;
-						  if (!parse_only && do_header) write_typedef(yyval.type, yyvsp[0].var);
-                                                  if (in_typelib && yyval.type->attrs)
-                                                      add_typedef(yyval.type, yyvsp[0].var);
+						  if (!parse_only && do_header)
+						    write_typedef(yyval.type, yyvsp[0].var);
+						  if (in_typelib && yyval.type->attrs)
+						    add_typedef(yyval.type, yyvsp[0].var);
 						  reg_types(yyval.type, yyvsp[0].var, 0);
 						;
     break;}
 case 245:
-#line 759 "parser.y"
+#line 762 "parser.y"
 { yyval.type = get_typev(RPC_FC_NON_ENCAPSULATED_UNION, yyvsp[-3].var, tsUNION);
 						  yyval.type->fields = yyvsp[-1].var;
 						  yyval.type->defined = TRUE;
 						;
     break;}
 case 246:
-#line 765 "parser.y"
+#line 768 "parser.y"
 { var_t *u = yyvsp[-3].var;
 						  yyval.type = get_typev(RPC_FC_ENCAPSULATED_UNION, yyvsp[-8].var, tsUNION);
 						  if (!u) u = make_var("tagged_union");
@@ -2421,11 +2424,11 @@ case 246:
 						;
     break;}
 case 247:
-#line 777 "parser.y"
+#line 780 "parser.y"
 { yyval.num = MAKELONG(yyvsp[0].num, 0); ;
     break;}
 case 248:
-#line 778 "parser.y"
+#line 781 "parser.y"
 { yyval.num = MAKELONG(yyvsp[-2].num, yyvsp[0].num); ;
     break;}
 }
@@ -2650,7 +2653,7 @@ yyerrhandle:
     }
   return 1;
 }
-#line 781 "parser.y"
+#line 784 "parser.y"
 
 
 static attr_t *make_attr(enum attr_type type)
@@ -2987,6 +2990,7 @@ static type_t *reg_type(type_t *type, char *name, int t)
   nt->t = t;
   nt->next = type_hash[hash];
   type_hash[hash] = nt;
+  type->name = name;
   return type;
 }
 
@@ -3009,7 +3013,14 @@ static unsigned char get_pointer_type( type_t *type )
   }
   t = get_attrv( type->attrs, ATTR_POINTERTYPE );
   if (t) return t;
-  return RPC_FC_FP;
+
+  if(is_attr( type->attrs, ATTR_PTR ))
+    return RPC_FC_FP;
+
+  if(is_attr( type->attrs, ATTR_UNIQUE ))
+    return RPC_FC_UP;
+
+  return RPC_FC_RP;
 }
 
 static type_t *reg_types(type_t *type, var_t *names, int t)
