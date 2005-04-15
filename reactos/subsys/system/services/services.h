@@ -3,9 +3,10 @@
  */
 
 
+
 /* services.c */
 
-void PrintString(char* fmt,...);
+VOID PrintString(LPCSTR fmt, ...);
 
 
 /* database.c */
@@ -13,6 +14,11 @@ void PrintString(char* fmt,...);
 NTSTATUS ScmCreateServiceDataBase(VOID);
 VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
+
+
+/* rpcserver.c */
+
+VOID ScmStartRpcServer(VOID);
 
 
 /* EOF */

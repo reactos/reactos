@@ -16,7 +16,7 @@ TARGET_CFLAGS = -Wall -Werror -fno-builtin \
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a rpcrt4.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_ADVAPI32)
 
@@ -51,7 +51,8 @@ SERVICE_OBJECTS = \
 	service/eventlog.o \
 	service/scm.o \
 	service/sctrl.o \
-	service/undoc.o
+	service/undoc.o \
+	service/svcctl_c.o
 
 TOKEN_OBJECTS = \
 	token/privilege.o \
@@ -67,8 +68,17 @@ TARGET_OBJECTS = \
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
+TARGET_CLEAN = service/svcctl_c.c service/svcctl.h
+
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
 include $(TOOLS_PATH)/depend.mk
+
+WIDL_FLAGS = -o \
+             -D _X86_ -D MIDL_PASS \
+             -I $(PATH_TO_TOP)/w32api/include
+
+service/svcctl_c.c service/svcctl.h: $(PATH_TO_TOP)/include/idl/svcctl.idl
+	$(WIDL) $(WIDL_FLAGS) -h -H service/svcctl.h -c -C service/svcctl_c.c $(PATH_TO_TOP)/include/idl/svcctl.idl

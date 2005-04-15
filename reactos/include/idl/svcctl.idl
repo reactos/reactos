@@ -1,0 +1,72 @@
+/*
+ * Service Control Manager (SCM) interface definition
+ */
+
+//#include <windef.h>
+//#include <winsvc.h>
+
+#define DWORD unsigned long
+#define BOOL unsigned long
+#define SC_HANDLE unsigned int
+#define LPCSTR char*
+#define LPCWSTR wchar_t*
+
+[
+  uuid(367abb81-9844-35f1-ad32-98f038001003),
+  version(2.0),
+  pointer_default(unique),
+  explicit_handle
+]
+interface svcctl
+{
+cpp_quote("#if 0");
+  typedef struct _SERVICE_STATUS
+  {
+    DWORD dwServiceType;
+    DWORD dwCurrentState;
+    DWORD dwControlsAccepted;
+    DWORD dwWin32ExitCode;
+    DWORD dwServiceSpecificExitCode;
+    DWORD dwCheckPoint;
+    DWORD dwWaitHint;
+  } SERVICE_STATUS, *LPSERVICE_STATUS;
+cpp_quote("#endif");
+
+  /* Service 0 */
+  DWORD ScmrCloseServiceHandle([in] handle_t BindingHandle,
+                               [in] SC_HANDLE hSCObject);
+
+  /* Service 1 */
+//  BOOL ScmrControlService([in] handle_t BindingHandle,
+//                          [in] SC_HANDLE hService,
+//                          [in] DWORD dwControl,
+//                          [out] LPSERVICE_STATUS lpServiceStatus);
+
+  /* Service 2 */
+  DWORD ScmrDeleteService([in] handle_t BindingHandle,
+                          [in] SC_HANDLE hService);
+
+  DWORD ScmrOpenSCManagerA([in] handle_t BindingHandle,
+                           [in, string, unique] LPCSTR lpMachineName,
+                           [in, string, unique] LPCSTR lpDatabaseName,
+                           [in] DWORD dwDesiredAccess,
+                           [out] SC_HANDLE *hScm);
+
+  DWORD ScmrOpenSCManagerW([in] handle_t BindingHandle,
+                           [in, string, unique] LPCWSTR lpMachineName,
+                           [in, string, unique] LPCWSTR lpDatabaseName,
+                           [in] DWORD dwDesiredAccess,
+                           [out] SC_HANDLE *hScm);
+
+  SC_HANDLE ScmrOpenServiceA([in] handle_t BindingHandle,
+                             [in] SC_HANDLE hSCManager,
+                             [in, string] LPCSTR lpServiceName,
+                             [in] DWORD dwDesiredAccess,
+                             [out] SC_HANDLE *hScm);
+
+  SC_HANDLE ScmrOpenServiceW([in] handle_t BindingHandle,
+                             [in] SC_HANDLE hSCManager,
+                             [in, string] LPCWSTR lpServiceName,
+                             [in] DWORD dwDesiredAccess,
+                             [out] SC_HANDLE *hScm);
+}
