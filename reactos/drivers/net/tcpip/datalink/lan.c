@@ -18,6 +18,9 @@ UINT TransferDataCompleteCalled = 0;
 UINT LanReceiveWorkerCalled = 0;
 BOOLEAN LanReceiveWorkerBusy = FALSE;
 
+#define CCS_ROOT L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet"
+#define TCPIP_GUID L"{4D36E972-E325-11CE-BFC1-08002BE10318}"
+
 #define NGFP(_Packet)                                             \
     {                                                             \
         PVOID _Header;                                            \
@@ -331,21 +334,21 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 	IPPacket.Position = 0;
 
 	TI_DbgPrint
-		(DEBUG_DATALINK,
-		 ("Ether Type = %x ContigSize = %d Total = %d\n",
-		  PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
+            (DEBUG_DATALINK,
+             ("Ether Type = %x ContigSize = %d Total = %d\n",
+              PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
 	
         switch (PacketType) {
-            case ETYPE_IPv4:
-            case ETYPE_IPv6:
-		TI_DbgPrint(MID_TRACE,("Received IP Packet\n"));
-                IPReceive(Adapter->Context, &IPPacket);
-                break;
-            case ETYPE_ARP:
-		TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
-                ARPReceive(Adapter->Context, &IPPacket);
-            default:
-                break;
+        case ETYPE_IPv4:
+        case ETYPE_IPv6:
+            TI_DbgPrint(MID_TRACE,("Received IP Packet\n"));
+            IPReceive(Adapter->Context, &IPPacket);
+            break;
+        case ETYPE_ARP:
+            TI_DbgPrint(MID_TRACE,("Received ARP Packet\n"));
+            ARPReceive(Adapter->Context, &IPPacket);
+        default:
+            break;
         }
 
 	FreeNdisPacket( Packet );
@@ -599,10 +602,10 @@ VOID STDCALL ProtocolBindAdapter(
  *     SystemSpecific2: Unused & must not be touched
  */
 {
-	/* XXX confirm that this is still true, or re-word the following comment */
-	/* we get to ignore BindContext because we will never pend an operation with NDIS */
-	TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ for %wZ\n", SystemSpecific1, DeviceName));
-	*Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
+    /* XXX confirm that this is still true, or re-word the following comment */
+    /* we get to ignore BindContext because we will never pend an operation with NDIS */
+    TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ for %wZ\n", SystemSpecific1, DeviceName));
+    *Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
 }
 
 
@@ -664,25 +667,25 @@ VOID LANTransmit(
             RtlCopyMemory(EHeader->SrcAddr, Adapter->HWAddress, IEEE_802_ADDR_LENGTH);
 
             switch (Type) {
-                case LAN_PROTO_IPv4:
-                    EHeader->EType = ETYPE_IPv4;
-                    break;
-                case LAN_PROTO_ARP:
-                    EHeader->EType = ETYPE_ARP;
-                    break;
-                case LAN_PROTO_IPv6:
-                    EHeader->EType = ETYPE_IPv6;
-                    break;
-                default:
+            case LAN_PROTO_IPv4:
+                EHeader->EType = ETYPE_IPv4;
+                break;
+            case LAN_PROTO_ARP:
+                EHeader->EType = ETYPE_ARP;
+                break;
+            case LAN_PROTO_IPv6:
+                EHeader->EType = ETYPE_IPv6;
+                break;
+            default:
 #ifdef DBG
-                    /* Should not happen */
-                    TI_DbgPrint(MIN_TRACE, ("Unknown LAN protocol.\n"));
+                /* Should not happen */
+                TI_DbgPrint(MIN_TRACE, ("Unknown LAN protocol.\n"));
 
-                    ProtocolSendComplete((NDIS_HANDLE)Context,
-                                         NdisPacket,
-                                         NDIS_STATUS_FAILURE);
+                ProtocolSendComplete((NDIS_HANDLE)Context,
+                                     NdisPacket,
+                                     NDIS_STATUS_FAILURE);
 #endif
-                    return;
+                return;
             }
             break;
 
@@ -729,7 +732,7 @@ OpenRegistryKey( PNDIS_STRING RegistryPath, PHANDLE RegHandle ) {
     NTSTATUS Status;
     
     InitializeObjectAttributes(&Attributes, RegistryPath, OBJ_CASE_INSENSITIVE, 0, 0);
-    Status = ZwOpenKey(RegHandle, GENERIC_READ, &Attributes);
+    Status = ZwOpenKey(RegHandle, KEY_ALL_ACCESS, &Attributes);
     return Status;
 }
 
@@ -811,7 +814,7 @@ static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
     TI_DbgPrint(MIN_TRACE, ("Information DataLength: 0x%x\n", Information->DataLength));
     
     UnicodeString.Buffer = (PWCHAR)&Information->Data;
-    UnicodeString.Length = Information->DataLength;
+    UnicodeString.Length = Information->DataLength - sizeof(WCHAR);
     UnicodeString.MaximumLength = Information->DataLength;
  
     String->Buffer = 
@@ -826,32 +829,161 @@ static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
     return STATUS_SUCCESS;
 }
 
-static VOID GetSimpleAdapterNameFromRegistryPath
-( PUNICODE_STRING TargetString,
-  PUNICODE_STRING RegistryPath ) {
-    PWCHAR i, LastSlash = NULL;
-    UINT NewStringLength = 0;
+/* 
+ * Utility to copy and append two unicode strings.
+ *
+ * IN OUT PUNICODE_STRING ResultFirst -> First string and result
+ * IN     PUNICODE_STRING Second      -> Second string to append
+ * IN     BOOL            Deallocate  -> TRUE: Deallocate First string before
+ *                                       overwriting.
+ *
+ * Returns NTSTATUS.
+ */
 
-    for( i = RegistryPath->Buffer; 
-	 i < RegistryPath->Buffer + 
-	     (RegistryPath->Length / sizeof(WCHAR));
-	 i++ ) if( *i == '\\' ) LastSlash = i;
+NTSTATUS NTAPI AppendUnicodeString(PUNICODE_STRING ResultFirst,
+				   PUNICODE_STRING Second,
+				   BOOL Deallocate) {
+    NTSTATUS Status;
+    UNICODE_STRING Ustr = *ResultFirst;
+    PWSTR new_string = ExAllocatePoolWithTag
+        (PagedPool,
+         (ResultFirst->Length + Second->Length + sizeof(WCHAR)), TAG_STRING);
+    if( !new_string ) {
+	return STATUS_NO_MEMORY;
+    }
+    memcpy( new_string, ResultFirst->Buffer, ResultFirst->Length );
+    memcpy( new_string + ResultFirst->Length / sizeof(WCHAR),
+	    Second->Buffer, Second->Length );
+    if( Deallocate ) RtlFreeUnicodeString(ResultFirst);
+    ResultFirst->Length = Ustr.Length + Second->Length;
+    ResultFirst->MaximumLength = ResultFirst->Length;
+    new_string[ResultFirst->Length / sizeof(WCHAR)] = 0;
+    Status = RtlCreateUnicodeString(ResultFirst,new_string) ? 
+	STATUS_SUCCESS : STATUS_NO_MEMORY;
+    ExFreePool(new_string);
+    return Status;
+}
 
-    if( LastSlash ) LastSlash++; else LastSlash = RegistryPath->Buffer;
+static NTSTATUS CheckForDeviceDesc( PUNICODE_STRING EnumKeyName,
+                                    PUNICODE_STRING TargetKeyName,
+                                    PUNICODE_STRING ShortName,
+                                    PUNICODE_STRING OutName ) {
+    UNICODE_STRING RootDevice = { 0 }, LinkageKeyName = { 0 };
+    UNICODE_STRING DescKeyName = { 0 }, Linkage = { 0 };
+    UNICODE_STRING BackSlash = { 0 };
+    HANDLE DescKey = NULL, LinkageKey = NULL;
+    NTSTATUS Status;
 
-    NewStringLength = RegistryPath->MaximumLength - 
-	((LastSlash - RegistryPath->Buffer) * sizeof(WCHAR));
+    TI_DbgPrint(DEBUG_DATALINK,("EnumKeyName %wZ\n", EnumKeyName));
 
-    TargetString->Buffer = 
-	(PWCHAR)exAllocatePool( NonPagedPool, NewStringLength );
+    RtlInitUnicodeString(&BackSlash, L"\\");
+    RtlInitUnicodeString(&Linkage, L"\\Linkage");
 
-    if( !TargetString->Buffer ) {
-	TargetString->Length = TargetString->MaximumLength = 0;
-	return;
+    RtlInitUnicodeString(&DescKeyName, L"");
+    AppendUnicodeString( &DescKeyName, EnumKeyName, FALSE );
+    AppendUnicodeString( &DescKeyName, &BackSlash, TRUE );
+    AppendUnicodeString( &DescKeyName, TargetKeyName, TRUE );
+
+    RtlInitUnicodeString(&LinkageKeyName, L"");
+    AppendUnicodeString( &LinkageKeyName, &DescKeyName, FALSE );
+    AppendUnicodeString( &LinkageKeyName, &Linkage, TRUE );
+
+    Status = OpenRegistryKey( &LinkageKeyName, &LinkageKey );
+    if( !NT_SUCCESS(Status) ) goto cleanup;
+
+    Status = ReadStringFromRegistry( LinkageKey, L"RootDevice", &RootDevice );
+    if( !NT_SUCCESS(Status) ) goto cleanup;
+
+    if( RtlCompareUnicodeString( &RootDevice, ShortName, TRUE ) == 0 ) {
+        Status = OpenRegistryKey( &DescKeyName, &DescKey );
+        if( !NT_SUCCESS(Status) ) goto cleanup;
+
+        Status = ReadStringFromRegistry( DescKey, L"DriverDesc", OutName );
+        if( !NT_SUCCESS(Status) ) goto cleanup;
+
+        TI_DbgPrint(DEBUG_DATALINK,("ADAPTER NAME: %wZ\n", OutName));
+    } else Status = STATUS_UNSUCCESSFUL;
+
+cleanup:
+    RtlFreeUnicodeString( &RootDevice );
+    RtlFreeUnicodeString( &LinkageKeyName );
+    RtlFreeUnicodeString( &DescKeyName );
+    if( LinkageKey ) NtClose( LinkageKey );
+    if( DescKey ) NtClose( DescKey );
+
+    TI_DbgPrint(DEBUG_DATALINK,("Returning %x\n", Status));
+
+    return Status;
+}
+
+static NTSTATUS FindDeviceNameForAdapter( PUNICODE_STRING ShortName,
+                                          PUNICODE_STRING OutName ) {
+    UNICODE_STRING EnumKeyName, TargetKeyName;
+    HANDLE EnumKey;
+    NTSTATUS Status;
+    ULONG i;
+    KEY_BASIC_INFORMATION *Kbio = 
+        ExAllocatePool(NonPagedPool, sizeof(KEY_BASIC_INFORMATION));
+    ULONG KbioLength = sizeof(KEY_BASIC_INFORMATION), ResultLength;
+
+    RtlInitUnicodeString
+        (&EnumKeyName, CCS_ROOT L"\\Control\\Class\\" TCPIP_GUID);
+
+    Status = OpenRegistryKey( &EnumKeyName, &EnumKey );
+
+    if( !NT_SUCCESS(Status) )
+        TI_DbgPrint(DEBUG_DATALINK,("Couldn't open Enum key %wZ: %x\n", 
+                                    &EnumKeyName, Status));
+    
+    for( i = 0; NT_SUCCESS(Status); i++ ) {
+        Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation, 
+                                 Kbio, KbioLength, &ResultLength );
+
+        if( Status == STATUS_BUFFER_TOO_SMALL ) {
+            ExFreePool( Kbio );
+            KbioLength = ResultLength;
+            Kbio = ExAllocatePool( NonPagedPool, KbioLength );
+
+            Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation,
+                                     Kbio, KbioLength, &ResultLength );
+
+            TI_DbgPrint(DEBUG_DATALINK,("Couldn't enum key child %d\n", i));
+            return Status;
+        }
+
+        if( NT_SUCCESS(Status) ) {
+            TargetKeyName.Length = TargetKeyName.MaximumLength = 
+                Kbio->NameLength;
+            TargetKeyName.Buffer = Kbio->Name;
+
+            Status = CheckForDeviceDesc
+                ( &EnumKeyName, &TargetKeyName, ShortName, OutName );
+            if( NT_SUCCESS(Status) ) {
+                NtClose( EnumKey );
+                return Status;
+            } else Status = STATUS_SUCCESS;
+        }
     }
 
-    TargetString->Length = TargetString->MaximumLength = NewStringLength;
-    RtlCopyMemory( TargetString->Buffer, LastSlash, NewStringLength );
+    RtlInitUnicodeString( OutName, L"" );
+    AppendUnicodeString( OutName, &TargetKeyName, FALSE );
+    NtClose( EnumKey );
+    return STATUS_UNSUCCESSFUL;
+}
+
+VOID GetShortName( PUNICODE_STRING RegistryKey,
+                   PUNICODE_STRING ShortNameOut ) {
+    PWCHAR Ptr;
+    ShortNameOut->Buffer = 
+        RegistryKey->Buffer + wcslen(CCS_ROOT L"\\Services\\");
+    Ptr = ShortNameOut->Buffer;
+
+    while( *Ptr != L'\\' && 
+           ((PCHAR)Ptr) < ((PCHAR)RegistryKey->Buffer) + RegistryKey->Length ) 
+        Ptr++;
+
+    ShortNameOut->Length = ShortNameOut->MaximumLength = 
+        (Ptr - ShortNameOut->Buffer) * sizeof(WCHAR);
 }
 
 VOID BindAdapter(
@@ -873,10 +1005,13 @@ VOID BindAdapter(
     ULONG Lookahead = LOOKAHEAD_SIZE;
     NTSTATUS Status;
     HANDLE RegHandle = 0;
+    UNICODE_STRING ShortName;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
     Adapter->State = LAN_STATE_OPENING;
+
+    GetShortName( RegistryPath, &ShortName );
 
     NdisStatus = NDISCall(Adapter,
                           NdisRequestSetInformation,
@@ -884,7 +1019,7 @@ VOID BindAdapter(
                           &Lookahead,
                           sizeof(ULONG));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(MID_TRACE, ("Could not set lookahead buffer size (0x%X).\n", NdisStatus));
+        TI_DbgPrint(DEBUG_DATALINK, ("Could not set lookahead buffer size (0x%X).\n", NdisStatus));
         return;
     }
 
@@ -915,6 +1050,11 @@ VOID BindAdapter(
     
     Status = OpenRegistryKey( RegistryPath, &RegHandle );
 	    
+    if(NT_SUCCESS(Status)) {
+	Status = FindDeviceNameForAdapter( &ShortName, &IF->Name );
+        TI_DbgPrint(DEBUG_DATALINK,("Adapter Name: %wZ\n", &IF->Name));
+    }
+
     if(NT_SUCCESS(Status))
 	Status = ReadIPAddressFromRegistry( RegHandle, L"DefaultGateway",
 					    &DefaultGateway );
@@ -935,56 +1075,33 @@ VOID BindAdapter(
         IF->Unicast.Address.IPv4Address | 
         ~IF->Netmask.Address.IPv4Address;
 
-    TI_DbgPrint(MID_TRACE,("BCAST(IF) %s\n", A2S(&IF->Broadcast)));
+    TI_DbgPrint(DEBUG_DATALINK,("BCAST(IF) %s\n", A2S(&IF->Broadcast)));
 
     if(NT_SUCCESS(Status)) {
-        RtlZeroMemory( &IF->Name, sizeof(IF->Name) );
-	Status = ReadStringFromRegistry( RegHandle, L"DeviceDesc",
-					 &IF->Name );
-
-	/* I think that not getting a devicedesc is not a fatal error */
-	if( !NT_SUCCESS(Status) ) {
-	    if( IF->Name.Buffer ) exFreePool( IF->Name.Buffer );
-	    GetSimpleAdapterNameFromRegistryPath( &IF->Name, RegistryPath );
-	}
-	Status = STATUS_SUCCESS;
-    }
-
-    TI_DbgPrint(MID_TRACE,("Adapter Name: %wZ\n", &IF->Name));
-
-    if(!NT_SUCCESS(Status))
-    {
-	TI_DbgPrint(MIN_TRACE, ("Unable to open protocol-specific registry key: 0x%x\n", Status));
-	
-	/* XXX how do we proceed?  No ip address, no parameters... do we guess? */
-	if(RegHandle)  
-	    ZwClose(RegHandle);
-	IPDestroyInterface(IF);
-	return;
-    }
-    
-    TI_DbgPrint
-	(MID_TRACE, 
-	 ("--> Our IP address on this interface: '%s'\n", 
-	  A2S(&IF->Unicast)));
-    
-    TI_DbgPrint
-	(MID_TRACE, 
-	 ("--> Our net mask on this interface: '%s'\n", 
-	  A2S(&IF->Netmask)));
-
-    if( DefaultGateway.Address.IPv4Address ) {
-	TI_DbgPrint
-	    (MID_TRACE, 
-	     ("--> Our gateway is: '%s'\n", 
-	      A2S(&DefaultGateway)));
-
-	/* Create a default route */
-	RouterCreateRoute( &DefaultMask, /* Zero */
-			   &DefaultMask, /* Zero */
-			   &DefaultGateway,
-			   IF,
-			   1 );
+        /* It's ok to fail some of the above.  We'll just use DHCP. */
+        TI_DbgPrint
+            (DEBUG_DATALINK, 
+             ("--> Our IP address on this interface: '%s'\n", 
+              A2S(&IF->Unicast)));
+        
+        TI_DbgPrint
+            (DEBUG_DATALINK, 
+             ("--> Our net mask on this interface: '%s'\n", 
+              A2S(&IF->Netmask)));
+        
+        if( DefaultGateway.Address.IPv4Address ) {
+            TI_DbgPrint
+                (DEBUG_DATALINK, 
+                 ("--> Our gateway is: '%s'\n", 
+                  A2S(&DefaultGateway)));
+            
+            /* Create a default route */
+            RouterCreateRoute( &DefaultMask, /* Zero */
+                               &DefaultMask, /* Zero */
+                               &DefaultGateway,
+                               IF,
+                               1 );
+        }
     }
 
     /* Get maximum link speed */
@@ -1008,7 +1125,7 @@ VOID BindAdapter(
                           sizeof(UINT));
 
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(MID_TRACE, ("Could not set packet filter (0x%X).\n", NdisStatus));
+        TI_DbgPrint(DEBUG_DATALINK, ("Could not set packet filter (0x%X).\n", NdisStatus));
         IPDestroyInterface(IF);
         return;
     }
@@ -1232,10 +1349,10 @@ NDIS_STATUS LANUnregisterAdapter(
         NdisCloseAdapter(&NdisStatus, NdisHandle);
         if (NdisStatus == NDIS_STATUS_PENDING) {
             TcpipWaitForSingleObject(&Adapter->Event,
-                                  UserRequest,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
+                                     UserRequest,
+                                     KernelMode,
+                                     FALSE,
+                                     NULL);
             NdisStatus = Adapter->NdisStatus;
         }
     } else
@@ -1284,16 +1401,16 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;
     ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
 
-	/* Try to register protocol */
+    /* Try to register protocol */
     NdisRegisterProtocol(&NdisStatus,
                          &NdisProtocolHandle,
                          &ProtChars,
                          sizeof(NDIS_PROTOCOL_CHARACTERISTICS));
     if (NdisStatus != NDIS_STATUS_SUCCESS)
-	 {
-		 TI_DbgPrint(MID_TRACE, ("NdisRegisterProtocol failed, status 0x%x\n", NdisStatus));
+    {
+        TI_DbgPrint(DEBUG_DATALINK, ("NdisRegisterProtocol failed, status 0x%x\n", NdisStatus));
         return (NTSTATUS)NdisStatus;
-	 }
+    }
 
     ProtocolRegistered = TRUE;
 
@@ -1323,7 +1440,7 @@ VOID LANUnregisterProtocol(
         CurrentEntry = AdapterListHead.Flink;
         while (CurrentEntry != &AdapterListHead) {
             NextEntry = CurrentEntry->Flink;
-	        Current = CONTAINING_RECORD(CurrentEntry, LAN_ADAPTER, ListEntry);
+            Current = CONTAINING_RECORD(CurrentEntry, LAN_ADAPTER, ListEntry);
             /* Unregister it */
             LANUnregisterAdapter(Current);
             CurrentEntry = NextEntry;
