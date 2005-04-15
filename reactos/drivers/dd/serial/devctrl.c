@@ -20,10 +20,10 @@ SerialGetUserBuffers(
 	OUT PVOID* BufferIn,
 	OUT PVOID* BufferOut)
 {
-   ASSERT(Irp);
-   ASSERT(BufferIn);
-   ASSERT(BufferOut);
-   
+	ASSERT(Irp);
+	ASSERT(BufferIn);
+	ASSERT(BufferOut);
+	
 	switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
 	{
 		case METHOD_BUFFERED:
@@ -118,6 +118,9 @@ SerialSetLineControl(
 	UCHAR Lcr = 0;
 	NTSTATUS Status;
 	
+	ASSERT(DeviceExtension);
+	ASSERT(NewSettings);
+	
 	DPRINT("Serial: SerialSetLineControl(COM%lu, Settings { %lu %lu %lu })\n",
 		DeviceExtension->ComPort, NewSettings->StopBits, NewSettings->Parity, NewSettings->WordLength);
 	
@@ -184,6 +187,8 @@ BOOLEAN
 SerialClearPerfStats(
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
 {
+	ASSERT(DeviceExtension);
+	
 	RtlZeroMemory(&DeviceExtension->SerialPerfStats, sizeof(SERIALPERF_STATS));
 	DeviceExtension->BreakInterruptErrorCount = 0;
 	return TRUE;
@@ -195,6 +200,7 @@ SerialGetPerfStats(IN PIRP pIrp)
 	PSERIAL_DEVICE_EXTENSION pDeviceExtension;
 	pDeviceExtension = (PSERIAL_DEVICE_EXTENSION)
 		IoGetCurrentIrpStackLocation(pIrp)->DeviceObject->DeviceExtension;
+	ASSERT(DeviceExtension);
 	/*
 	 * we assume buffer is big enough to hold SerialPerfStats structure
 	 * caller must verify this
@@ -212,6 +218,8 @@ SerialGetCommProp(
 	OUT PSERIAL_COMMPROP pCommProp,
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
 {
+	ASSERT(pCommProp);
+	
 	RtlZeroMemory(pCommProp, sizeof(SERIAL_COMMPROP));
 	
 	pCommProp->PacketLength = sizeof(SERIAL_COMMPROP);
@@ -257,6 +265,7 @@ SerialGetCommStatus(
 {
 	KIRQL Irql;
 	
+	ASSERT(pSerialStatus);
 	RtlZeroMemory(pSerialStatus, sizeof(SERIAL_STATUS));
 	
 	pSerialStatus->Errors = 0;

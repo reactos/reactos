@@ -17,6 +17,7 @@ InitializeCircularBuffer(
 	IN ULONG BufferSize)
 {
 	DPRINT("Serial: InitializeCircularBuffer(pBuffer %p, BufferSize %lu)\n", pBuffer, BufferSize);
+	ASSERT(pBuffer);
 	pBuffer->Buffer = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, BufferSize * sizeof(UCHAR), SERIAL_TAG);
 	if (!pBuffer->Buffer)
 		return STATUS_INSUFFICIENT_RESOURCES;
@@ -30,6 +31,7 @@ FreeCircularBuffer(
 	IN PCIRCULAR_BUFFER pBuffer)
 {
 	DPRINT("Serial: FreeCircularBuffer(pBuffer %p)\n", pBuffer);
+	ASSERT(pBuffer);
 	ExFreePoolWithTag(pBuffer->Buffer, SERIAL_TAG);
 	return STATUS_SUCCESS;
 }
@@ -39,6 +41,7 @@ IsCircularBufferEmpty(
 	IN PCIRCULAR_BUFFER pBuffer)
 {
 	DPRINT("Serial: IsCircularBufferEmpty(pBuffer %p)\n", pBuffer);
+	ASSERT(pBuffer);
 	return (pBuffer->ReadPosition == pBuffer->WritePosition);
 }
 
@@ -49,6 +52,7 @@ PushCircularBufferEntry(
 {
 	ULONG NextPosition;
 	DPRINT("Serial: PushCircularBufferEntry(pBuffer %p, Entry 0x%x)\n", pBuffer, Entry);
+	ASSERT(pBuffer);
 	ASSERT(pBuffer->Length);
 	NextPosition = (pBuffer->WritePosition + 1) % pBuffer->Length;
 	if (NextPosition == pBuffer->ReadPosition)
@@ -64,6 +68,7 @@ PopCircularBufferEntry(
 	OUT PUCHAR Entry)
 {
 	DPRINT("Serial: PopCircularBufferEntry(pBuffer %p)\n", pBuffer);
+	ASSERT(pBuffer);
 	ASSERT(pBuffer->Length);
 	if (IsCircularBufferEmpty(pBuffer))
 		return STATUS_ARRAY_BOUNDS_EXCEEDED;
@@ -80,6 +85,7 @@ IncreaseCircularBufferSize(
 	PUCHAR NewBuffer;
 	
 	DPRINT("Serial: IncreaseCircularBufferSize(pBuffer %p, NewBufferSize %lu)\n", pBuffer, NewBufferSize);
+	ASSERT(pBuffer);
 	ASSERT(pBuffer->Length);
 	if (pBuffer->Length > NewBufferSize)
 		return STATUS_INVALID_PARAMETER;

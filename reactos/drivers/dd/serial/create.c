@@ -26,6 +26,8 @@ SerialCreate(
 	FileObject = Stack->FileObject;
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
+	ASSERT(FileObject);
+	
 	if (Stack->Parameters.Create.Options & FILE_DIRECTORY_FILE)
 	{
 		CHECKPOINT;

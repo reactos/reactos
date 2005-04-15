@@ -199,7 +199,7 @@ SerenumWait(ULONG milliseconds)
 	KTIMER Timer;
 	LARGE_INTEGER DueTime;
 	
-	DueTime.QuadPart = -milliseconds * 10;
+	DueTime.QuadPart = milliseconds * -10;
 	KeInitializeTimer(&Timer);
 	KeSetTimer(&Timer, DueTime, NULL);
 	return KeWaitForSingleObject(&Timer, Executive, KernelMode, FALSE, NULL);

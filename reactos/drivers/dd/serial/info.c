@@ -37,12 +37,13 @@ SerialQueryInformation(
 			DPRINT("Serial: IRP_MJ_QUERY_INFORMATION / FileStandardInformation\n");
 			if (BufferLength < sizeof(FILE_STANDARD_INFORMATION))
 				Status = STATUS_BUFFER_OVERFLOW;
-			else
+			else if (!StandardInfo)
+				Status = STATUS_INVALID_PARAMETER;
 			{
 				StandardInfo->AllocationSize.QuadPart = 0;
 				StandardInfo->EndOfFile.QuadPart = 0;
-      		StandardInfo->Directory = FALSE;
-      		StandardInfo->NumberOfLinks = 0;
+				StandardInfo->Directory = FALSE;
+				StandardInfo->NumberOfLinks = 0;
   				StandardInfo->DeletePending = FALSE; /* FIXME: should be TRUE sometimes */
   				Status = STATUS_SUCCESS;
 			}
@@ -52,9 +53,13 @@ SerialQueryInformation(
 		{
 			PFILE_POSITION_INFORMATION PositionInfo = (PFILE_POSITION_INFORMATION)SystemBuffer;
 			
+			ASSERT(PositionInfo);
+			
 			DPRINT("Serial: IRP_MJ_QUERY_INFORMATION / FilePositionInformation\n");
 			if (BufferLength < sizeof(PFILE_POSITION_INFORMATION))
 				Status = STATUS_BUFFER_OVERFLOW;
+			else if (!PositionInfo)
+				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
 				PositionInfo->CurrentByteOffset.QuadPart = 0;

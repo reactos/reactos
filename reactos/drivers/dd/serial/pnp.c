@@ -31,6 +31,9 @@ SerialAddDeviceInternal(
 	static ULONG ComPortNumber = 1;
 
 	DPRINT("Serial: SerialAddDeviceInternal called\n");
+	
+	ASSERT(DeviceObject);
+	ASSERT(Pdo);
    
 	/* Create new device object */
 	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceNumber);
@@ -125,12 +128,10 @@ SerialAddDevice(
 	if (Pdo == NULL)
 		return STATUS_SUCCESS;
 	
-	/* We have here a PDO that does not correspond to a legacy
-	 * serial port. So call the internal AddDevice function.
+	/* We have here a PDO not null. It represents a real serial
+	 * port. So call the internal AddDevice function.
 	 */
 	return SerialAddDeviceInternal(DriverObject, Pdo, UartUnknown, NULL, NULL);
-
-
 }
 
 NTSTATUS STDCALL
@@ -160,6 +161,8 @@ SerialPnpStartDevice(
 	
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
+	ASSERT(ResourceList);
+	ASSERT(DeviceExtension);
 	ASSERT(DeviceExtension->PnpState == dsStopped);
 	
 	DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;

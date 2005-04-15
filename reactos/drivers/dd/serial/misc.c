@@ -32,6 +32,8 @@ ForwardIrpAndWait(
 	KEVENT Event;
 	NTSTATUS Status;
 	
+	ASSERT(LowerDevice);
+	
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 	
@@ -55,6 +57,8 @@ ForwardIrpAndForget(
 	IN PIRP Irp)
 {
 	PDEVICE_OBJECT LowerDevice = ((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+	
+	ASSERT(LowerDevice);
 	
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);

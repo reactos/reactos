@@ -99,6 +99,7 @@ SerenumPdoQueryDeviceRelations(
 		return STATUS_INSUFFICIENT_RESOURCES;
 	
 	ObReferenceObject(DeviceObject);
+	DeviceRelations->Count = 1;
 	DeviceRelations->Objects[0] = DeviceObject;
 	
 	*pDeviceRelations = DeviceRelations;
