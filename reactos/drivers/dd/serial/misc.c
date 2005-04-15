@@ -130,11 +130,13 @@ SerialSendByte(
 			DeviceExtension->ComPort, Byte);
 		DeviceExtension->SerialPerfStats.TransmittedCount++;
 	}
+	if (!IsCircularBufferEmpty(&DeviceExtension->OutputBuffer))
+	{
+		/* allow new interrupts */
+		IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
+		WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_THR_EMPTY);
+	}
 	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
-	
-	/* allow new interrupts */
-	IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
-	WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_THR_EMPTY);
 }
 
 BOOLEAN STDCALL
