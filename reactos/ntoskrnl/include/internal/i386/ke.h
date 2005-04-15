@@ -205,6 +205,7 @@ NtEarlyInitVdm(VOID);
 #define LOCK ""
 #endif
 
+#define KeGetCurrentIrql(X) (((PKPCR)KPCR_BASE)->Irql)
 
 #if defined(__GNUC__)
 #define Ke386DisableInterrupts() __asm__("cli\n\t");

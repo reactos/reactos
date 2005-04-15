@@ -180,6 +180,21 @@ typedef struct _KMUTEX
    UCHAR ApcDisable;
 } KMUTEX, *PKMUTEX, KMUTANT, *PKMUTANT;
 
+typedef struct _KGUARDED_MUTEX
+{
+    LONG Count;
+    struct _KTHREAD* Owner;
+    ULONG Contention;
+    KGATE Gate;
+    union {
+        struct {
+            SHORT KernelApcDisable;
+            SHORT SpecialApcDisable;
+        };
+        ULONG CombinedApcDisable;
+    };
+} KGUARDED_MUTEX, *PKGUARDED_MUTEX;
+
 #include <pshpack1.h>
 
 typedef struct _KSEMAPHORE

@@ -748,7 +748,7 @@ KeFlushWriteBuffer(VOID)
   UNIMPLEMENTED;
 }
 
-
+#undef KeGetCurrentIrql
 KIRQL
 STDCALL 
 KeGetCurrentIrql(VOID)

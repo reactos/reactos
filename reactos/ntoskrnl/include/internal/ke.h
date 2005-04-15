@@ -49,6 +49,26 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_DPC		    2
 #define IPI_REQUEST_FREEZE	    3
 
+/* MACROS *************************************************************************/
+
+#define KeEnterCriticalRegion(X) \
+{ \
+    PKTHREAD _Thread = KeGetCurrentThread(); \
+    if (_Thread) _Thread->KernelApcDisable--; \
+}
+    
+#define KeLeaveCriticalRegion(X) \
+{ \
+    PKTHREAD _Thread = KeGetCurrentThread(); \
+    if((_Thread) && (++_Thread->KernelApcDisable == 0)) \
+    { \
+        if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode])) \
+        { \
+            KiKernelApcDeliveryCheck(); \
+        } \
+    } \
+}
+
 /* threadsch.c ********************************************************************/
 
 /* Thread Scheduler Functions */
@@ -77,6 +97,28 @@ STDCALL
 KiUnblockThread(PKTHREAD Thread, 
                 PNTSTATUS WaitStatus, 
                 KPRIORITY Increment);
+       
+/* gmutex.c ********************************************************************/
+
+VOID
+FASTCALL
+KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex);
+
+/* gate.c **********************************************************************/
+         
+VOID 
+FASTCALL
+KeInitializeGate(PKGATE Gate);
+
+VOID
+FASTCALL
+KeSignalGateBoostPriority(PKGATE Gate);
+
+VOID
+FASTCALL
+KeWaitForGate(PKGATE Gate,
+              KWAIT_REASON WaitReason,
+              KPROCESSOR_MODE WaitMode);
 
 /* ipi.c ********************************************************************/
 
@@ -237,7 +279,9 @@ VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
 VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
-
+VOID
+STDCALL
+KiKernelApcDeliveryCheck(VOID);
 LONG 
 STDCALL 
 KiInsertQueue(IN PKQUEUE Queue, 

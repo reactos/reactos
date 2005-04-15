@@ -929,6 +929,21 @@ typedef struct _FAST_MUTEX {
   ULONG  OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
 
+typedef struct _KGUARDED_MUTEX
+{
+    LONG Count;
+    struct _KTHREAD* Owner;
+    ULONG Contention;
+    struct _KGATE* Gate;
+    union {
+        struct {
+            SHORT KernelApcDisable;
+            SHORT SpecialApcDisable;
+        };
+        ULONG CombinedApcDisable;
+    };
+} KGUARDED_MUTEX, *PKGUARDED_MUTEX, *RESTRICTED_POINTER PRKGUARDED_MUTEX;
+
 typedef struct _KTIMER {
   DISPATCHER_HEADER  Header;
   ULARGE_INTEGER  DueTime;

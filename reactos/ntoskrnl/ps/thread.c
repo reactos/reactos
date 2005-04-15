@@ -44,10 +44,15 @@ static GENERIC_MAPPING PiThreadMapping = {STANDARD_RIGHTS_READ | THREAD_GET_CONT
 
 /* FUNCTIONS ***************************************************************/
 
+#ifdef KeGetCurrentThread
+#undef KeGetCurrentThread
+#endif
 /*
  * @implemented
  */
-PKTHREAD STDCALL KeGetCurrentThread(VOID)
+PKTHREAD 
+STDCALL 
+KeGetCurrentThread(VOID)
 {
 #ifdef CONFIG_SMP
    ULONG Flags;

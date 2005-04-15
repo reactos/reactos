@@ -292,6 +292,7 @@ static inline PKPRCB KeGetCurrentPrcb(VOID)
 
 #define KeGetCurrentKPCR(X) ((PKPCR)KPCR_BASE)
 #define KeGetCurrentPrcb() (((PKPCR)KPCR_BASE)->Prcb)
+#define KeGetCurrentThread(X) (((PKPCR)KPCR_BASE)->PrcbData.CurrentThread)
 
 #endif
 

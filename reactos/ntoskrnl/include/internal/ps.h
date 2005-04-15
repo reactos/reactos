@@ -97,7 +97,13 @@ typedef struct _KTHREAD
    CHAR              Quantum;             /* 6B */
    KWAIT_BLOCK       WaitBlock[4];        /* 6C */
    PVOID             LegoData;            /* CC */
-   ULONG             KernelApcDisable;    /* D0 */
+   union {
+          struct {
+              USHORT KernelApcDisable;
+              USHORT SpecialApcDisable;
+          };
+          ULONG      CombinedApcDisable;  /* D0 */
+   };
    KAFFINITY         UserAffinity;        /* D4 */
    UCHAR             SystemAffinityActive;/* D8 */
    UCHAR             PowerState;          /* D9 */

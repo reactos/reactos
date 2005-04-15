@@ -17,6 +17,51 @@
 /* FUNCTIONS *****************************************************************/
 
 /*++
+ * KiKernelApcDeliveryCheck 
+ * @implemented NT 5.2
+ *
+ *     The KiKernelApcDeliveryCheck routine is called whenever APCs have just
+ *     been re-enabled in Kernel Mode, such as after leaving a Critical or
+ *     Guarded Region. It delivers APCs if the environment is right.
+ *
+ * Params:
+ *     None.
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     This routine allows KeLeave/EnterCritical/GuardedRegion to be used as a
+ *     macro from inside WIN32K or other Drivers, which will then only have to
+ *     do an Import API call in the case where APCs are enabled again.
+ *
+ *--*/
+VOID
+STDCALL
+KiKernelApcDeliveryCheck(VOID)
+{
+    /* We should only deliver at passive */
+    if (KeGetCurrentIrql() == PASSIVE_LEVEL)
+    {
+        /* Raise to APC and Deliver APCs, then lower back to Passive */
+        KfRaiseIrql(APC_LEVEL);
+        KiDeliverApc(KernelMode, 0, 0);
+        KfLowerIrql(PASSIVE_LEVEL);
+    }
+    else
+    {
+        /*
+         * If we're not at passive level it means someone raised IRQL
+         * to APC level before the a critical or guarded section was entered
+         * (e.g) by a fast mutex). This implies that the APCs shouldn't
+         * be delivered now, but after the IRQL is lowered to passive
+         * level again.
+         */
+        HalRequestSoftwareInterrupt(APC_LEVEL);
+    }
+}
+
+/*++
  * KeEnterCriticalRegion 
  * @implemented NT4
  *
@@ -37,6 +82,7 @@
  *     Callers of KeEnterCriticalRegion must be running at IRQL <= APC_LEVEL.
  *
  *--*/
+#undef KeEnterCriticalRegion
 VOID 
 STDCALL 
 KeEnterCriticalRegion(VOID)
@@ -44,6 +90,45 @@ KeEnterCriticalRegion(VOID)
     /* Disable Kernel APCs */
     PKTHREAD Thread = KeGetCurrentThread();
     if (Thread) Thread->KernelApcDisable--;
+}
+
+/*++
+ * KeLeaveCriticalRegion 
+ * @implemented NT4
+ *
+ *     The KeLeaveCriticalRegion routine reenables the delivery of normal 
+ *     kernel-mode APCs that were disabled by a call to KeEnterCriticalRegion.
+ *
+ * Params:
+ *     None.
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     Highest-level drivers can call this routine while running in the context
+ *     of the thread that requested the current I/O operation. 
+ *
+ *     Callers of KeLeaveCriticalRegion must be running at IRQL <= DISPATCH_LEVEL.
+ *
+ *--*/
+#undef KeLeaveCriticalRegion
+VOID 
+STDCALL 
+KeLeaveCriticalRegion (VOID)
+{
+    PKTHREAD Thread = KeGetCurrentThread(); 
+
+    /* Check if Kernel APCs are now enabled */
+    if((Thread) && (++Thread->KernelApcDisable == 0)) 
+    { 
+        /* Check if we need to request an APC Delivery */
+        if (!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) 
+        { 
+            /* Check for the right environment */
+            KiKernelApcDeliveryCheck();
+        } 
+    } 
 }
 
 /*++
@@ -323,45 +408,6 @@ KeInsertQueueApc(PKAPC Apc,
     /* Return Sucess if we are here */
     KeReleaseDispatcherDatabaseLock(OldIrql);
     return Inserted;
-}
-
-/*++
- * KeLeaveCriticalRegion 
- * @implemented NT4
- *
- *     The KeLeaveCriticalRegion routine reenables the delivery of normal 
- *     kernel-mode APCs that were disabled by a call to KeEnterCriticalRegion.
- *
- * Params:
- *     None.
- *
- * Returns:
- *     None.
- *
- * Remarks:
- *     Highest-level drivers can call this routine while running in the context
- *     of the thread that requested the current I/O operation. 
- *
- *     Callers of KeLeaveCriticalRegion must be running at IRQL <= DISPATCH_LEVEL.
- *
- *--*/
-VOID 
-STDCALL 
-KeLeaveCriticalRegion (VOID)
-{
-    PKTHREAD Thread = KeGetCurrentThread(); 
-
-    /* Check if Kernel APCs are now enabled */
-    if((Thread) && (++Thread->KernelApcDisable == 0)) { 
-        
-        /* Check if we need to request an APC Delivery */
-        if (!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) { 
-            
-            /* Set APC Pending */
-            Thread->ApcState.KernelApcPending = TRUE; 
-            HalRequestSoftwareInterrupt(APC_LEVEL); 
-        } 
-    } 
 }
 
 /*++

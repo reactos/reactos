@@ -649,6 +649,7 @@ KeWaitForSingleObject@20
 ;KiBugCheckData DATA
 KiCoprocessorError@0
 KiDeliverApc@12
+KiKernelApcDeliveryCheck@0
 KiDispatchInterrupt@0
 KiEnableTimerWatchdog
 KiInterruptDispatch2@8

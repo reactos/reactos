@@ -100,6 +100,8 @@ OBJECTS_KE = \
 	ke/dpc.o \
 	ke/device.o \
 	ke/event.o \
+	ke/gate.o \
+	ke/gmutex.o \
 	ke/kqueue.o \
 	ke/kthread.o \
 	ke/ipi.o \
