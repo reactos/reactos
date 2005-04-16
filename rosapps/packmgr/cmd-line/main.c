@@ -22,43 +22,42 @@ int main (int argc, char **argv)
 	if(argc<2)
 		return Help();
 
-
 	// install a package
-	if (argv[1] == "install") 
+	if (!strcmp(argv[1], "install")) 
 		Install();
 
 	// install a package from source
-	else if (argv[1] == "src-inst")
+	else if (!strcmp(argv[1], "src-inst"))
 	{
 		wprintf(L"Sorry but I can't do that yet. \n");
 	}
 
 	// update a package
-	else if (argv[1] == "update")
+	else if (!strcmp(argv[1], "update"))
 	{
 		wprintf(L"Sorry but I can't do that yet. \n");
 	}
 
 	// update everything
-	else if (argv[1] == "dist-upgrade")
+	else if (!strcmp(argv[1], "dist-upgrade"))
 	{
 		wprintf(L"Sorry but I can't do that yet. \n");
 	}
 
 	// remove a package
-	else if (argv[1] == "remove")
+	else if (!strcmp(argv[1], "remove"))
 	{
 		wprintf(L"Sorry but I can't do that yet. \n");
 	}
 
 	// search for a package
-	else if (argv[1] == "show")
+	else if (!strcmp(argv[1], "show"))
 	{
 		Show();
 	}
 
 	// search for a package
-	else if (argv[1] == "search")
+	else if (!strcmp(argv[1], "search"))
 	{
 		wprintf(L"Sorry but I can't do that yet. \n");
 	}
