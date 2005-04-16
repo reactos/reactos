@@ -71,34 +71,6 @@ IoFreeIrp(PIRP Irp)
 /*
  * @unimplemented
  */
-ULONG
-STDCALL
-IoGetRequestorProcessId(
-    IN PIRP Irp
-    )
-{
-	UNIMPLEMENTED;
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoGetRequestorSessionId(
-	IN PIRP Irp,
-	OUT PULONG pSessionId
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
 BOOLEAN
 STDCALL
 IoIsValidNameGraftingBuffer(

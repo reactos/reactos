@@ -247,30 +247,66 @@ IoGetDeviceAttachmentBaseRef(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
-IoGetDiskDeviceObject(
-    IN  PDEVICE_OBJECT  FileSystemDeviceObject,
-    OUT PDEVICE_OBJECT  *DiskDeviceObject
-    )
+IoGetDiskDeviceObject(IN  PDEVICE_OBJECT FileSystemDeviceObject,
+                      OUT PDEVICE_OBJECT *DiskDeviceObject)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    PDEVOBJ_EXTENSION DeviceExtension;
+    PVPB Vpb;
+    KIRQL OldIrql;
+    
+    /* Make sure there's a VPB */
+    if (!FileSystemDeviceObject->Vpb) return STATUS_INVALID_PARAMETER;
+    
+    /* Acquire it */
+    IoAcquireVpbSpinLock(&OldIrql);
+    
+    /* Get the Device Extension */
+    DeviceExtension = FileSystemDeviceObject->DeviceObjectExtension;
+    
+    /* Make sure this one has a VPB too */
+    Vpb = DeviceExtension->Vpb;
+    if (!Vpb) return STATUS_INVALID_PARAMETER;
+    
+    /* Make sure someone it's mounted */
+    if ((!Vpb->ReferenceCount) || (Vpb->Flags & VPB_MOUNTED)) return STATUS_VOLUME_DISMOUNTED;
+    
+    /* Return the Disk Device Object */
+    *DiskDeviceObject = Vpb->RealDevice;
+    
+    /* Release the lock */
+    IoReleaseVpbSpinLock(OldIrql);
+    return STATUS_SUCCESS;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PDEVICE_OBJECT
 STDCALL
-IoGetLowerDeviceObject(
-    IN  PDEVICE_OBJECT  DeviceObject
-    )
+IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
 {
-	UNIMPLEMENTED;
-	return 0;
+    PDEVOBJ_EXTENSION DeviceExtension = DeviceObject->DeviceObjectExtension;
+    PDEVICE_OBJECT LowerDeviceObject = NULL;
+    
+    /* Make sure it's not getting deleted */
+    if (DeviceExtension->ExtensionFlags & (DOE_UNLOAD_PENDING | 
+                                           DOE_DELETE_PENDING |
+                                           DOE_REMOVE_PENDING | 
+                                           DOE_REMOVE_PROCESSED))
+    {
+        /* Get the Lower Device Object */   
+        LowerDeviceObject = DeviceExtension->AttachedTo;      
+        
+        /* Reference it */
+        ObReferenceObject(LowerDeviceObject);
+    }
+
+    /* Return it */
+    return LowerDeviceObject;
 }
 
 /*

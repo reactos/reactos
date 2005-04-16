@@ -18,44 +18,44 @@
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID 
+STDCALL
 IoGetInitialStack(VOID)
 {
-  return(PsGetCurrentThread()->Tcb.InitialStack);
+    return(PsGetCurrentThread()->Tcb.InitialStack);
 }
-
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID 
+STDCALL
 IoGetStackLimits(OUT PULONG LowLimit,
-		 OUT PULONG HighLimit)
+                 OUT PULONG HighLimit)
 {
-  *LowLimit = (ULONG)NtCurrentTeb()->Tib.StackLimit;
-  *HighLimit = (ULONG)NtCurrentTeb()->Tib.StackBase;
+    *LowLimit = (ULONG)NtCurrentTeb()->Tib.StackLimit;
+    *HighLimit = (ULONG)NtCurrentTeb()->Tib.StackBase;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
-IoIsSystemThread(
-    IN PETHREAD Thread
-    )
+IoIsSystemThread(IN PETHREAD Thread)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    /* Call the Ps Function */
+    return PsIsSystemThread(Thread);
 }
 
 /*
  * @implemented
  */
-PEPROCESS STDCALL
+PEPROCESS
+STDCALL
 IoThreadToProcess(IN PETHREAD Thread)
 {
-  return(Thread->ThreadsProcess);
+    return(Thread->ThreadsProcess);
 }
 
 
@@ -65,9 +65,31 @@ IoThreadToProcess(IN PETHREAD Thread)
 PEPROCESS STDCALL
 IoGetRequestorProcess(IN PIRP Irp)
 {
-  return(Irp->Tail.Overlay.Thread->ThreadsProcess);
+    return(Irp->Tail.Overlay.Thread->ThreadsProcess);
 }
 
+/*
+ * @implemented
+ */
+ULONG
+STDCALL
+IoGetRequestorProcessId(IN PIRP Irp)
+{
+    return (ULONG)(IoGetRequestorProcess(Irp)->UniqueProcessId);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+IoGetRequestorSessionId(IN PIRP Irp,
+                        OUT PULONG pSessionId)
+{
+    *pSessionId = IoGetRequestorProcess(Irp)->SessionId;
+    
+    return STATUS_SUCCESS;
+}
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -84,14 +106,15 @@ IoGetRequestorProcess(IN PIRP Irp)
  *
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN 
+STDCALL
 IoSetThreadHardErrorMode(IN BOOLEAN HardErrorEnabled)
 {
-  BOOLEAN PreviousHEM = (BOOLEAN)(NtCurrentTeb()->HardErrorDisabled);
+    BOOLEAN PreviousHEM = (BOOLEAN)(NtCurrentTeb()->HardErrorDisabled);
 
-  NtCurrentTeb()->HardErrorDisabled = ((TRUE == HardErrorEnabled) ? FALSE : TRUE);
+    NtCurrentTeb()->HardErrorDisabled = ((TRUE == HardErrorEnabled) ? FALSE : TRUE);
 
-  return((TRUE == PreviousHEM) ? FALSE : TRUE);
+    return((TRUE == PreviousHEM) ? FALSE : TRUE);
 }
 
 /* EOF */

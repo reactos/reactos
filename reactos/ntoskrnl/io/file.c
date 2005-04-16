@@ -265,16 +265,14 @@ IoCreateStreamFileObjectLite(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
-IoIsFileOriginRemote(
-    IN PFILE_OBJECT FileObject
-    )
+IoIsFileOriginRemote(IN PFILE_OBJECT FileObject)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    /* Return the flag status */
+    return (FileObject->Flags & FO_REMOTE_ORIGIN);
 }
 
 /*

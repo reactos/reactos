@@ -41,6 +41,7 @@
 
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
+struct _DEVICE_OBJECT_POWER_EXTENSION;
 
 typedef struct _IO_COMPLETION_PACKET{
    PVOID             Key;
@@ -53,10 +54,17 @@ typedef struct _DEVOBJ_EXTENSION {
    CSHORT Type;
    USHORT Size;
    PDEVICE_OBJECT DeviceObject;
-   ULONG Unknown[3];
+   ULONG PowerFlags;
+   struct DEVICE_OBJECT_POWER_EXTENSION *Dope;
+   ULONG ExtensionFlags;
    struct _DEVICE_NODE *DeviceNode;
+   PDEVICE_OBJECT AttachedTo;
+   LONG StartIoCount;
+   LONG StartIoKey;
+   ULONG StartIoFlags;
+   struct _VPB *Vpb;
 } DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
-
+   
 typedef struct _PRIVATE_DRIVER_EXTENSIONS {
    struct _PRIVATE_DRIVER_EXTENSIONS *Link;
    PVOID ClientIdentificationAddress;
