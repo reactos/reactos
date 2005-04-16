@@ -51,6 +51,58 @@ typedef struct _SERVICE_HANDLE
 } SERVICE_HANDLE, *PSERVICE_HANDLE;
 
 
+#define SC_MANAGER_READ \
+  (STANDARD_RIGHTS_READ | \
+   SC_MANAGER_QUERY_LOCK_STATUS | \
+   SC_MANAGER_ENUMERATE_SERVICE)
+
+#define SC_MANAGER_WRITE \
+  (STANDARD_RIGHTS_WRITE | \
+   SC_MANAGER_MODIFY_BOOT_CONFIG | \
+   SC_MANAGER_CREATE_SERVICE)
+
+#define SC_MANAGER_EXECUTE \
+  (STANDARD_RIGHTS_EXECUTE | \
+   SC_MANAGER_LOCK | \
+   SC_MANAGER_ENUMERATE_SERVICE | \
+   SC_MANAGER_CONNECT | \
+   SC_MANAGER_CREATE_SERVICE)
+
+
+#define SERVICE_READ \
+  (STANDARD_RIGHTS_READ | \
+   SERVICE_INTERROGATE | \
+   SERVICE_ENUMERATE_DEPENDENTS | \
+   SERVICE_QUERY_STATUS | \
+   SERVICE_QUERY_CONFIG)
+
+#define SERVICE_WRITE \
+  (STANDARD_RIGHTS_WRITE | \
+   SERVICE_CHANGE_CONFIG)
+
+#define SERVICE_EXECUTE \
+  (STANDARD_RIGHTS_EXECUTE | \
+   SERVICE_USER_DEFINED_CONTROL | \
+   SERVICE_PAUSE_CONTINUE | \
+   SERVICE_STOP | \
+   SERVICE_START)
+
+
+/* VARIABLES ***************************************************************/
+
+static GENERIC_MAPPING
+ScmManagerMapping = {SC_MANAGER_READ,
+                     SC_MANAGER_WRITE,
+                     SC_MANAGER_EXECUTE,
+                     SC_MANAGER_ALL_ACCESS};
+
+static GENERIC_MAPPING
+ScmServiceMapping = {SERVICE_READ,
+                     SERVICE_WRITE,
+                     SERVICE_EXECUTE,
+                     SC_MANAGER_ALL_ACCESS};
+
+
 /* FUNCTIONS ***************************************************************/
 
 VOID
@@ -92,8 +144,7 @@ ScmStartRpcServer(VOID)
 
 static DWORD
 ScmCreateManagerHandle(LPWSTR lpDatabaseName,
-                       SC_HANDLE *Handle,
-                       DWORD dwDesiredAccess)
+                       SC_HANDLE *Handle)
 {
   PMANAGER_HANDLE Ptr;
 
@@ -104,7 +155,6 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
   Ptr->Handle.Tag = MANAGER_TAG;
   Ptr->Handle.RefCount = 1;
-  Ptr->Handle.DesiredAccess = dwDesiredAccess;
 
   /* FIXME: initialize more data here */
 
@@ -118,8 +168,7 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
 static DWORD
 ScmCreateServiceHandle(LPVOID lpDatabaseEntry,
-                       SC_HANDLE *Handle,
-                       DWORD dwDesiredAccess)
+                       SC_HANDLE *Handle)
 {
   PMANAGER_HANDLE Ptr;
 
@@ -130,7 +179,6 @@ ScmCreateServiceHandle(LPVOID lpDatabaseEntry,
 
   Ptr->Handle.Tag = SERVICE_TAG;
   Ptr->Handle.RefCount = 1;
-  Ptr->Handle.DesiredAccess = dwDesiredAccess;
 
   /* FIXME: initialize more data here */
   // Ptr->DatabaseEntry = lpDatabaseEntry;
@@ -141,7 +189,37 @@ ScmCreateServiceHandle(LPVOID lpDatabaseEntry,
 }
 
 
-/* Service 0 */
+static DWORD
+ScmCheckAccess(SC_HANDLE Handle,
+               DWORD dwDesiredAccess)
+{
+  PMANAGER_HANDLE hMgr;
+
+  hMgr = (PMANAGER_HANDLE)Handle;
+  if (hMgr->Handle.Tag == MANAGER_TAG)
+  {
+    RtlMapGenericMask(&dwDesiredAccess,
+                      &ScmManagerMapping);
+
+    hMgr->Handle.DesiredAccess = dwDesiredAccess;
+
+    return ERROR_SUCCESS;
+  }
+  else if (hMgr->Handle.Tag == SERVICE_TAG)
+  {
+    RtlMapGenericMask(&dwDesiredAccess,
+                      &ScmServiceMapping);
+
+    hMgr->Handle.DesiredAccess = dwDesiredAccess;
+
+    return ERROR_SUCCESS;
+  }
+
+  return ERROR_INVALID_HANDLE;
+}
+
+
+/* Function 0 */
 unsigned long
 ScmrCloseServiceHandle(handle_t BindingHandle,
                        unsigned int hScObject)
@@ -193,7 +271,7 @@ ScmrCloseServiceHandle(handle_t BindingHandle,
 }
 
 
-/* Service 1 */
+/* Function 1 */
 #if 0
 unsigned long
 ScmrControlService(handle_t BindingHandle,
@@ -201,7 +279,7 @@ ScmrControlService(handle_t BindingHandle,
                    unsigned long dwControl,
                    LPSERVICE_STATUS lpServiceStatus)
 {
-  DPRINT("ScmrControlService() called\n");
+  DPRINT1("ScmrControlService() called\n");
 
 #if 0
   lpServiceStatus->dwServiceType = 0x12345678;
@@ -218,28 +296,104 @@ ScmrControlService(handle_t BindingHandle,
 #endif
 
 
-/* Service 2 */
+/* Function 2 */
 unsigned long
 ScmrDeleteService(handle_t BindingHandle,
                   unsigned int hService)
 {
-  DPRINT("ScmrDeleteService() called\n");
+  PSERVICE_HANDLE hSvc;
+
+  DPRINT1("ScmrDeleteService() called\n");
+
+  hSvc = (PSERVICE_HANDLE)hService;
+  if (hSvc->Handle.Tag != SERVICE_TAG)
+    return ERROR_INVALID_HANDLE;
+
+  if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                STANDARD_RIGHTS_REQUIRED))
+    return ERROR_ACCESS_DENIED;
+
+  /* FIXME: Delete the service */
+
   return ERROR_SUCCESS;
 }
 
 
+/* Function 3 */
 unsigned long
-ScmrOpenSCManagerA(handle_t BindingHandle,
-                   char *lpMachineName,
-                   char *lpDatabaseName,
-                   unsigned long dwDesiredAccess,
-                   unsigned int *hScm)
+ScmrLockServiceDatabase(handle_t BindingHandle,
+                        unsigned int hSCManager,
+                        unsigned int *hLock)
 {
-  DPRINT("ScmrOpenSCManagerA() called\n");
+  PMANAGER_HANDLE hMgr;
+
+  DPRINT("ScmrLockServiceDatabase() called\n");
+
+  *hLock = 0;
+
+  hMgr = (PMANAGER_HANDLE)hSCManager;
+  if (hMgr->Handle.Tag != MANAGER_TAG)
+    return ERROR_INVALID_HANDLE;
+
+  if (!RtlAreAllAccessesGranted(hMgr->Handle.DesiredAccess,
+                                SC_MANAGER_LOCK))
+    return ERROR_ACCESS_DENIED;
+
+  /* FIXME: Lock the database */
+  *hLock = 0x12345678; /* Dummy! */
+
   return ERROR_SUCCESS;
 }
 
 
+
+/* Function 8 */
+unsigned long
+ScmrUnlockServiceDatabase(handle_t BindingHandle,
+                          unsigned int hLock)
+{
+  DPRINT1("ScmrUnlockServiceDatabase() called\n");
+  return ERROR_SUCCESS;
+}
+
+
+/* Function 9 */
+unsigned long
+ScmrNotifyBootConfigStatus(handle_t BindingHandle,
+                           unsigned long BootAcceptable)
+{
+  DPRINT1("ScmrNotifyBootConfigStatus() called\n");
+  return ERROR_SUCCESS;
+}
+
+
+
+/* Function 12 */
+unsigned long
+ScmrCreateServiceW(handle_t BindingHandle,
+                   unsigned int hSCManager,
+                   wchar_t *lpServiceName,
+                   wchar_t *lpDisplayName,
+                   unsigned long dwDesiredAccess,
+                   unsigned long dwServiceType,
+                   unsigned long dwStartType,
+                   unsigned long dwErrorControl,
+                   wchar_t *lpBinaryPathName,
+                   wchar_t *lpLoadOrderGroup,
+                   unsigned long *lpdwTagId,
+                   wchar_t *lpDependencies,
+                   wchar_t *lpServiceStartName,
+                   wchar_t *lpPassword)
+{
+  DPRINT1("ScmrCreateServiceW() called\n");
+  if (lpdwTagId != NULL)
+    *lpdwTagId = 0;
+  return ERROR_SUCCESS;
+}
+
+
+
+/* Function 15 */
 unsigned long
 ScmrOpenSCManagerW(handle_t BindingHandle,
                    wchar_t *lpMachineName,
@@ -258,11 +412,20 @@ ScmrOpenSCManagerW(handle_t BindingHandle,
   DPRINT("dwDesiredAccess = %x\n", dwDesiredAccess);
 
   dwError = ScmCreateManagerHandle(lpDatabaseName,
-                                   &hHandle,
-                                   dwDesiredAccess);
+                                   &hHandle);
   if (dwError != ERROR_SUCCESS)
   {
     DPRINT1("ScmCreateManagerHandle() failed (Error %lu)\n", dwError);
+    return dwError;
+  }
+
+  /* Check the desired access */
+  dwError = ScmCheckAccess(hHandle,
+                           dwDesiredAccess | SC_MANAGER_CONNECT);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmCheckAccess() failed (Error %lu)\n", dwError);
+    GlobalFree(hHandle);
     return dwError;
   }
 
@@ -275,18 +438,7 @@ ScmrOpenSCManagerW(handle_t BindingHandle,
 }
 
 
-unsigned int
-ScmrOpenServiceA(handle_t BindingHandle,
-                 unsigned int hSCManager,
-                 char *lpServiceName,
-                 unsigned long dwDesiredAccess,
-                 unsigned int *hService)
-{
-  DPRINT("ScmrOpenServiceA() called\n");
-  return 0;
-}
-
-
+/* Function 16 */
 unsigned int
 ScmrOpenServiceW(handle_t BindingHandle,
                  unsigned int hSCManager,
@@ -317,11 +469,20 @@ ScmrOpenServiceW(handle_t BindingHandle,
 
   /* Create a service handle */
   dwError = ScmCreateServiceHandle(NULL,
-                                   &hHandle,
-                                   dwDesiredAccess);
+                                   &hHandle);
   if (dwError != ERROR_SUCCESS)
   {
     DPRINT1("ScmCreateServiceHandle() failed (Error %lu)\n", dwError);
+    return dwError;
+  }
+
+  /* Check the desired access */
+  dwError = ScmCheckAccess(hHandle,
+                           dwDesiredAccess);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmCheckAccess() failed (Error %lu)\n", dwError);
+    GlobalFree(hHandle);
     return dwError;
   }
 
@@ -331,6 +492,33 @@ ScmrOpenServiceW(handle_t BindingHandle,
   DPRINT("ScmrOpenServiceW() done\n");
 
   return ERROR_SUCCESS;
+}
+
+
+
+/* Function 27 */
+unsigned long
+ScmrOpenSCManagerA(handle_t BindingHandle,
+                   char *lpMachineName,
+                   char *lpDatabaseName,
+                   unsigned long dwDesiredAccess,
+                   unsigned int *hScm)
+{
+  DPRINT("ScmrOpenSCManagerA() called\n");
+  return ERROR_SUCCESS;
+}
+
+
+/* Function 28 */
+unsigned int
+ScmrOpenServiceA(handle_t BindingHandle,
+                 unsigned int hSCManager,
+                 char *lpServiceName,
+                 unsigned long dwDesiredAccess,
+                 unsigned int *hService)
+{
+  DPRINT("ScmrOpenServiceA() called\n");
+  return 0;
 }
 
 

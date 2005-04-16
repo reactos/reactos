@@ -8,8 +8,10 @@
 #define DWORD unsigned long
 #define BOOL unsigned long
 #define SC_HANDLE unsigned int
+#define SC_LOCK unsigned int
 #define LPCSTR char*
 #define LPCWSTR wchar_t*
+#define LPDWORD unsigned long*
 
 [
   uuid(367abb81-9844-35f1-ad32-98f038001003),
@@ -32,41 +34,90 @@ cpp_quote("#if 0");
   } SERVICE_STATUS, *LPSERVICE_STATUS;
 cpp_quote("#endif");
 
-  /* Service 0 */
+  /* Function 0 */
   DWORD ScmrCloseServiceHandle([in] handle_t BindingHandle,
                                [in] SC_HANDLE hSCObject);
 
-  /* Service 1 */
+  /* Function 1 */
 //  BOOL ScmrControlService([in] handle_t BindingHandle,
 //                          [in] SC_HANDLE hService,
 //                          [in] DWORD dwControl,
 //                          [out] LPSERVICE_STATUS lpServiceStatus);
 
-  /* Service 2 */
+  /* Function 2 */
   DWORD ScmrDeleteService([in] handle_t BindingHandle,
                           [in] SC_HANDLE hService);
 
-  DWORD ScmrOpenSCManagerA([in] handle_t BindingHandle,
-                           [in, string, unique] LPCSTR lpMachineName,
-                           [in, string, unique] LPCSTR lpDatabaseName,
-                           [in] DWORD dwDesiredAccess,
-                           [out] SC_HANDLE *hScm);
+  /* Function 3 */
+  DWORD ScmrLockServiceDatabase([in] handle_t BindingHandle,
+                                [in] SC_HANDLE hSCManager,
+                                [out] SC_LOCK *hLock);
 
+  /* Function 4 */
+//  DWORD ScmrQueryServiceObjectSecurity();
+
+  /* Function 5 */
+//  DWORD ScmrSetServiceObjectSecurity();
+
+  /* Function 6 */
+//  DWORD ScmrQueryServiceStatus();
+
+  /* Function 7 */
+//  DWORD ScmrSetServiceStatus();
+
+  /* Function 8 */
+  DWORD ScmrUnlockServiceDatabase([in] handle_t BindingHandle,
+                                  [in] SC_LOCK hLock);
+
+  /* Function 9 */
+  DWORD ScmrNotifyBootConfigStatus([in] handle_t BindingHandle,
+                                   [in] BOOL BootAcceptable);
+
+
+  /* Function 12 */
+  DWORD ScmrCreateServiceW([in] handle_t BindingHandle,
+                           [in] SC_HANDLE hSCManager,
+                           [in, string, ref] LPCWSTR lpServiceName,
+                           [in, string, ref] LPCWSTR lpDisplayName,
+                           [in] DWORD dwDesiredAccess,
+                           [in] DWORD dwServiceType,
+                           [in] DWORD dwStartType,
+                           [in] DWORD dwErrorControl,
+                           [in, string, ref] LPCWSTR lpBinaryPathName,
+                           [in, string, unique] LPCWSTR lpLoadOrderGroup,
+                           [out, unique] LPDWORD lpdwTagId,
+                           [in, string, unique] LPCWSTR lpDependencies,
+                           [in, string, unique] LPCWSTR lpServiceStartName,
+                           [in, string, unique] LPCWSTR lpPassword);
+
+
+  /* Function 15 */
   DWORD ScmrOpenSCManagerW([in] handle_t BindingHandle,
                            [in, string, unique] LPCWSTR lpMachineName,
                            [in, string, unique] LPCWSTR lpDatabaseName,
                            [in] DWORD dwDesiredAccess,
                            [out] SC_HANDLE *hScm);
 
+  /* Function 16 */
+  SC_HANDLE ScmrOpenServiceW([in] handle_t BindingHandle,
+                             [in] SC_HANDLE hSCManager,
+                             [in, string] LPCWSTR lpServiceName,
+                             [in] DWORD dwDesiredAccess,
+                             [out] SC_HANDLE *hScm);
+
+
+  /* Function 27 */
+  DWORD ScmrOpenSCManagerA([in] handle_t BindingHandle,
+                           [in, string, unique] LPCSTR lpMachineName,
+                           [in, string, unique] LPCSTR lpDatabaseName,
+                           [in] DWORD dwDesiredAccess,
+                           [out] SC_HANDLE *hScm);
+
+  /* Function 28 */
   SC_HANDLE ScmrOpenServiceA([in] handle_t BindingHandle,
                              [in] SC_HANDLE hSCManager,
                              [in, string] LPCSTR lpServiceName,
                              [in] DWORD dwDesiredAccess,
                              [out] SC_HANDLE *hScm);
 
-  SC_HANDLE ScmrOpenServiceW([in] handle_t BindingHandle,
-                             [in] SC_HANDLE hSCManager,
-                             [in, string] LPCWSTR lpServiceName,
-                             [in] DWORD dwDesiredAccess,
-                             [out] SC_HANDLE *hScm);
 }

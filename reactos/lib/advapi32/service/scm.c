@@ -253,7 +253,7 @@ CreateServiceW(
 /**********************************************************************
  *  DeleteService
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 DeleteService(SC_HANDLE hService)
@@ -516,15 +516,32 @@ GetServiceKeyNameW(
 /**********************************************************************
  *  LockServiceDatabase
  *
- * @unimplemented
+ * @implemented
  */
-SC_LOCK
-STDCALL
+SC_LOCK STDCALL
 LockServiceDatabase(SC_HANDLE hSCManager)
 {
-    DPRINT1("LockServiceDatabase is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  SC_LOCK hLock;
+  DWORD dwError;
+
+  DPRINT("LockServiceDatabase(%x)\n", hSCManager);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrLockServiceDatabase(BindingHandle,
+                                    (unsigned int)hSCManager,
+                                    (unsigned int *)&hLock);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
     return NULL;
+  }
+
+  DPRINT("hLock = %p\n", hLock);
+
+  return hLock;
 }
 
 
@@ -533,7 +550,7 @@ WaitForSCManager(VOID)
 {
   HANDLE hEvent;
 
-  DPRINT1("WaitForSCManager() called\n");
+  DPRINT("WaitForSCManager() called\n");
 
   /* Try to open the existing event */
   hEvent = OpenEventW(SYNCHRONIZE,
@@ -564,7 +581,7 @@ WaitForSCManager(VOID)
   WaitForSingleObject(hEvent, 180000);
   CloseHandle(hEvent);
 
-  DPRINT1("ScmWaitForSCManager() done\n");
+  DPRINT("ScmWaitForSCManager() done\n");
 }
 
 
@@ -581,7 +598,7 @@ OpenSCManagerA(LPCSTR lpMachineName,
   SC_HANDLE hScm = NULL;
   DWORD dwError;
 
-  DPRINT1("OpenSCManagerA(%s, %s, %lx)\n",
+  DPRINT("OpenSCManagerA(%s, %s, %lx)\n",
          lpMachineName, lpDatabaseName, dwDesiredAccess);
 
   WaitForSCManager();
@@ -594,12 +611,14 @@ OpenSCManagerA(LPCSTR lpMachineName,
                                (LPSTR)lpDatabaseName,
                                dwDesiredAccess,
                                (unsigned int*)&hScm);
-  DPRINT1("hScm = %p\n", hScm);
   if (dwError)
   {
+    DPRINT("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
     SetLastError(dwError);
     return NULL;
   }
+
+  DPRINT("hScm = %p\n", hScm);
 
   return hScm;
 }
@@ -608,7 +627,7 @@ OpenSCManagerA(LPCSTR lpMachineName,
 /**********************************************************************
  *  OpenSCManagerW
  *
- * @unimplemented
+ * @implemented
  */
 SC_HANDLE STDCALL
 OpenSCManagerW(LPCWSTR lpMachineName,
@@ -618,7 +637,7 @@ OpenSCManagerW(LPCWSTR lpMachineName,
   SC_HANDLE hScm = NULL;
   DWORD dwError;
 
-  DPRINT1("OpenSCManagerW(%S, %S, %lx)\n",
+  DPRINT("OpenSCManagerW(%S, %S, %lx)\n",
          lpMachineName, lpDatabaseName, dwDesiredAccess);
 
   WaitForSCManager();
@@ -638,7 +657,7 @@ OpenSCManagerW(LPCWSTR lpMachineName,
     return NULL;
   }
 
-  DPRINT1("hScm = %p\n", hScm);
+  DPRINT("hScm = %p\n", hScm);
 
   return hScm;
 }
@@ -651,14 +670,14 @@ OpenSCManagerW(LPCWSTR lpMachineName,
  */
 SC_HANDLE STDCALL
 OpenServiceA(SC_HANDLE hSCManager,
-         LPCSTR  lpServiceName,
-         DWORD dwDesiredAccess)
+             LPCSTR lpServiceName,
+             DWORD dwDesiredAccess)
 {
   SC_HANDLE hService = NULL;
   DWORD dwError;
 
-  DPRINT1("OpenServiceA(%p, %s, %lx)\n",
-          hSCManager, lpServiceName, dwDesiredAccess);
+  DPRINT("OpenServiceA(%p, %s, %lx)\n",
+         hSCManager, lpServiceName, dwDesiredAccess);
 
   HandleBind();
 
@@ -675,7 +694,7 @@ OpenServiceA(SC_HANDLE hSCManager,
     return NULL;
   }
 
-  DPRINT1("hService = %p\n", hService);
+  DPRINT("hService = %p\n", hService);
 
   return hService;
 }
@@ -694,8 +713,8 @@ OpenServiceW(SC_HANDLE hSCManager,
   SC_HANDLE hService = NULL;
   DWORD dwError;
 
-  DPRINT1("OpenServiceW(%p, %S, %lx)\n",
-          hSCManager, lpServiceName, dwDesiredAccess);
+  DPRINT("OpenServiceW(%p, %S, %lx)\n",
+         hSCManager, lpServiceName, dwDesiredAccess);
 
   HandleBind();
 
@@ -712,7 +731,7 @@ OpenServiceW(SC_HANDLE hSCManager,
     return NULL;
   }
 
-  DPRINT1("hService = %p\n", hService);
+  DPRINT("hService = %p\n", hService);
 
   return hService;
 }
@@ -891,15 +910,28 @@ StartServiceW(
 /**********************************************************************
  *  UnlockServiceDatabase
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-UnlockServiceDatabase(SC_LOCK   ScLock)
+BOOL STDCALL
+UnlockServiceDatabase(SC_LOCK ScLock)
 {
-    DPRINT1("UnlockServiceDatabase is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  DWORD dwError;
+
+  DPRINT("UnlockServiceDatabase(%x)\n", hSCManager);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrUnlockServiceDatabase(BindingHandle,
+                                      (unsigned int)ScLock);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
     return FALSE;
+  }
+
+  return TRUE;
 }
 
 
