@@ -1,5 +1,6 @@
 #include "rosdhcp.h"
 
+static SOCKET DhcpSocket = INVALID_SOCKET;
 static LIST_ENTRY AdapterList;
 static WSADATA wsd;
 extern struct interface_info *ifi;
@@ -33,6 +34,10 @@ DWORD GetAddress( PDHCP_ADAPTER Adapter ) {
         }
     }
 }
+
+/*
+ * XXX Figure out the way to bind a specific adapter to a socket.
+ */
 
 void AdapterInit() {
     PMIB_IFTABLE Table = malloc(sizeof(MIB_IFTABLE));
@@ -71,16 +76,22 @@ void AdapterInit() {
             Adapter->DhclientInfo.rbuf_max = Table->table[i].dwMtu;
             Adapter->DhclientInfo.rbuf_len = 
                 Adapter->DhclientInfo.rbuf_offset = 0;
-            Adapter->DhclientInfo.rfdesc = 
-                Adapter->DhclientInfo.wfdesc =
-                socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
-            Adapter->ListenAddr.sin_family = AF_INET;
-            Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
-            Adapter->BindStatus = 
-                (bind( Adapter->DhclientInfo.rfdesc,
-                       (struct sockaddr *)&Adapter->ListenAddr,
-                       sizeof(Adapter->ListenAddr) ) == 0) ?
-                0 : WSAGetLastError();
+            if( DhcpSocket == INVALID_SOCKET ) {
+                DhcpSocket = 
+                    Adapter->DhclientInfo.rfdesc = 
+                    Adapter->DhclientInfo.wfdesc =
+                    socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
+                Adapter->ListenAddr.sin_family = AF_INET;
+                Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
+                Adapter->BindStatus = 
+                    (bind( Adapter->DhclientInfo.rfdesc,
+                           (struct sockaddr *)&Adapter->ListenAddr,
+                           sizeof(Adapter->ListenAddr) ) == 0) ?
+                    0 : WSAGetLastError();
+            } else {
+                Adapter->DhclientInfo.rfdesc = 
+                    Adapter->DhclientInfo.wfdesc = DhcpSocket;
+            }
             Adapter->DhclientState.config = &Adapter->DhclientConfig;
             Adapter->DhclientConfig.initial_interval = DHCP_DISCOVER_INTERVAL;
             Adapter->DhclientConfig.retry_interval = DHCP_DISCOVER_INTERVAL;
