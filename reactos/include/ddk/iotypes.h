@@ -651,6 +651,8 @@ typedef struct _IO_COMPLETION_CONTEXT
 #define FO_FILE_OBJECT_HAS_EXTENSION    0x00800000
 #define FO_REMOTE_ORIGIN                0x01000000
 
+#define IO_ATTACH_DEVICE_API            0x80000000
+
 typedef struct _FILE_OBJECT
 {
    CSHORT Type;

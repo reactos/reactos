@@ -403,13 +403,11 @@ IoIsSystemThread@4
 IoIsValidNameGraftingBuffer@8
 IoIsOperationSynchronous@4
 IoMakeAssociatedIrp@8
-IoOpenDeviceInstanceKey@20
 IoOpenDeviceInterfaceRegistryKey@12
 IoOpenDeviceRegistryKey@16
 IoPageRead@20
 IoPnPDeliverServicePowerNotification@16
 IoQueryDeviceDescription@32
-IoQueryDeviceEnumInfo@8
 IoQueryFileDosDeviceName@8
 IoQueryFileInformation@20
 IoQueryVolumeInformation@20

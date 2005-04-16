@@ -129,8 +129,138 @@ IopCreateDevice(
    return STATUS_SUCCESS;
 }
 
+NTSTATUS
+STDCALL
+IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
+                          IN ACCESS_MASK DesiredAccess,
+                          OUT PFILE_OBJECT *FileObject,
+                          OUT PDEVICE_OBJECT *DeviceObject,
+                          IN ULONG AttachFlag)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK StatusBlock;
+    PFILE_OBJECT LocalFileObject;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+
+    DPRINT("IoGetDeviceObjectPointer(ObjectName %wZ, DesiredAccess %x," 
+            "FileObject %p DeviceObject %p)\n",
+            ObjectName, DesiredAccess, FileObject, DeviceObject);
+
+    /* Open the Device */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               ObjectName,
+                               0,
+                               NULL,
+                               NULL);
+    Status = ZwOpenFile(&FileHandle,
+                        DesiredAccess,
+                        &ObjectAttributes,
+                        &StatusBlock,
+                        0,
+                        FILE_NON_DIRECTORY_FILE | AttachFlag);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenFile failed, Status: 0x%x\n", Status);
+        return Status;
+    }
+
+    /* Get File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       0,
+                                       IoFileObjectType,
+                                       KernelMode,
+                                       (PVOID*)&LocalFileObject,
+                                       NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the requested data */
+        *DeviceObject = IoGetRelatedDeviceObject(LocalFileObject);
+        *FileObject = LocalFileObject;
+    }
+    
+    /* Close the handle */
+    ZwClose(FileHandle);
+    return Status;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+/*
+ * IoAttachDevice
+ *
+ * Layers a device over the highest device in a device stack.
+ *
+ * Parameters
+ *    SourceDevice
+ *       Device to be attached.
+ *
+ *    TargetDevice
+ *       Name of the target device.
+ *
+ *    AttachedDevice
+ *       Caller storage for the device attached to.
+ *
+ * Status
+ *    @implemented
+ */
+NTSTATUS 
+STDCALL
+IoAttachDevice(PDEVICE_OBJECT SourceDevice,
+               PUNICODE_STRING TargetDeviceName,
+               PDEVICE_OBJECT *AttachedDevice)
+{
+   NTSTATUS Status;
+   PFILE_OBJECT FileObject;
+   PDEVICE_OBJECT TargetDevice;
+     
+    /* Call the helper routine for an attach operation */
+    DPRINT("IoAttachDevice\n");
+    Status = IopGetDeviceObjectPointer(TargetDeviceName, 
+                                       FILE_READ_ATTRIBUTES, 
+                                       &FileObject,
+                                       &TargetDevice,
+                                       IO_ATTACH_DEVICE_API);
+   
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get Device Object\n");
+        return Status;
+    }
+    
+    /* Attach the device */
+    IoAttachDeviceToDeviceStackSafe(SourceDevice, TargetDevice, AttachedDevice);
+
+    /* Derference it */
+    ObDereferenceObject(FileObject);
+    return STATUS_SUCCESS;
+}
+
+/*
+ * IoAttachDeviceToDeviceStack
+ *
+ * Status
+ *    @implemented
+ */
+PDEVICE_OBJECT 
+STDCALL
+IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
+                            PDEVICE_OBJECT TargetDevice)
+{
+    NTSTATUS Status;
+    PDEVICE_OBJECT LocalAttach;
+    
+    /* Attach it safely */
+    DPRINT("IoAttachDeviceToDeviceStack\n");
+    Status = IoAttachDeviceToDeviceStackSafe(SourceDevice,
+                                             TargetDevice,
+                                             &LocalAttach);
+                                             
+    /* Return it */
+    DPRINT("IoAttachDeviceToDeviceStack DONE: %x\n", LocalAttach);
+    return LocalAttach;
+}
 /*
  * IoAttachDeviceByPointer
  *
@@ -138,39 +268,70 @@ IopCreateDevice(
  *    @implemented
  */
 
-NTSTATUS STDCALL
-IoAttachDeviceByPointer(
-   IN PDEVICE_OBJECT SourceDevice,
-   IN PDEVICE_OBJECT TargetDevice)
+NTSTATUS 
+STDCALL
+IoAttachDeviceByPointer(IN PDEVICE_OBJECT SourceDevice,
+                        IN PDEVICE_OBJECT TargetDevice)
 {
-   PDEVICE_OBJECT AttachedDevice;
+    PDEVICE_OBJECT AttachedDevice;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("IoAttachDeviceByPointer(SourceDevice %x, TargetDevice %x)\n",
-      SourceDevice, TargetDevice);
+    DPRINT("IoAttachDeviceByPointer(SourceDevice %x, TargetDevice %x)\n",
+            SourceDevice, TargetDevice);
 
-   AttachedDevice = IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
-   if (AttachedDevice == NULL)
-      return STATUS_NO_SUCH_DEVICE;
+    /* Do the Attach */
+    AttachedDevice = IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
+    if (AttachedDevice == NULL) Status = STATUS_NO_SUCH_DEVICE;
 
-   return STATUS_SUCCESS;
+    /* Return the status */
+    return Status;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
-IoAttachDeviceToDeviceStackSafe(
-    IN PDEVICE_OBJECT SourceDevice,
-    IN PDEVICE_OBJECT TargetDevice,
-    OUT PDEVICE_OBJECT *AttachedToDeviceObject
-    )
+IoAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
+                                IN PDEVICE_OBJECT TargetDevice,
+                                OUT PDEVICE_OBJECT *AttachedToDeviceObject)
 {
-   /* FIXME: IoAttachDeviceToDeviceStackSafe must not call
-    * IoAttachDeviceToDeviceStack, but the other way around! */
-   DPRINT("IoAttachDeviceToDeviceStackSafe() badly implemented!\n");
-   *AttachedToDeviceObject = IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
-   return STATUS_SUCCESS;
+    PDEVICE_OBJECT AttachedDevice;
+    PDEVOBJ_EXTENSION SourceDeviceExtension;
+   
+    DPRINT("IoAttachDeviceToDeviceStack(SourceDevice %x, TargetDevice %x)\n",
+            SourceDevice, TargetDevice);
+
+    /* Get the Attached Device and source extension */
+    AttachedDevice = IoGetAttachedDevice(TargetDevice);
+    SourceDeviceExtension = SourceDevice->DeviceObjectExtension;
+    
+    /* Make sure that it's in a correct state */
+    DPRINT1("flags %d\n", AttachedDevice->DeviceObjectExtension->ExtensionFlags);
+    if (!(AttachedDevice->DeviceObjectExtension->ExtensionFlags & 
+        (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING | 
+         DOE_REMOVE_PENDING | DOE_REMOVE_PROCESSED)))
+    {
+        /* Update fields */
+        AttachedDevice->AttachedDevice = SourceDevice;
+        SourceDevice->AttachedDevice = NULL;
+        SourceDevice->StackSize = AttachedDevice->StackSize + 1;
+        SourceDevice->AlignmentRequirement = AttachedDevice->AlignmentRequirement;
+        SourceDevice->SectorSize = AttachedDevice->SectorSize;
+        SourceDevice->Vpb = AttachedDevice->Vpb;
+        
+        /* Set the attachment in the device extension */
+        SourceDeviceExtension->AttachedTo = AttachedDevice;
+    }
+    else 
+    {
+        /* Device was unloading or being removed */
+        AttachedDevice = NULL;
+    }
+    
+    /* Return the attached device */
+    *AttachedToDeviceObject = AttachedDevice;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -179,7 +340,6 @@ IoAttachDeviceToDeviceStackSafe(
  * Status
  *    @implemented
  */
-
 VOID STDCALL
 IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 {
@@ -211,39 +371,78 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
          Previous = Previous->NextDevice;
       Previous->NextDevice = DeviceObject->NextDevice;
    }
-
+   
+   /* I guess this should be removed later... but it shouldn't cause problems */
+   DeviceObject->DeviceObjectExtension->ExtensionFlags |= DOE_DELETE_PENDING;
    ObDereferenceObject(DeviceObject);
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
-IoEnumerateDeviceObjectList(
-    IN  PDRIVER_OBJECT  DriverObject,
-    IN  PDEVICE_OBJECT  *DeviceObjectList,
-    IN  ULONG           DeviceObjectListSize,
-    OUT PULONG          ActualNumberDeviceObjects
-    )
+IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
+                            IN  PDEVICE_OBJECT *DeviceObjectList,
+                            IN  ULONG DeviceObjectListSize,
+                            OUT PULONG ActualNumberDeviceObjects)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    ULONG ActualDevices = 1;
+    PDEVICE_OBJECT CurrentDevice = DriverObject->DeviceObject;
+    
+    DPRINT1("IoEnumerateDeviceObjectList\n");
+    
+    /* Find out how many devices we'll enumerate */
+    while ((CurrentDevice = CurrentDevice->NextDevice))
+    {
+        ActualDevices++;
+    }
+    
+    /* Go back to the first */
+    CurrentDevice = DriverObject->DeviceObject;
+    
+    /* Start by at least returning this */
+    *ActualNumberDeviceObjects = ActualDevices;
+    
+    /* Check if we can support so many */
+    if ((ActualDevices * 4) > DeviceObjectListSize)
+    {
+        /* Fail because the buffer was too small */
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+    
+    /* Check if the caller only wanted the size */
+    if (DeviceObjectList) 
+    {
+        /* Loop through all the devices */
+        while (ActualDevices)
+        {
+            /* Reference each Device */
+            ObReferenceObject(CurrentDevice);
+            
+            /* Add it to the list */
+            *DeviceObjectList = CurrentDevice;
+            
+            /* Go to the next one */
+            CurrentDevice = CurrentDevice->NextDevice;
+            ActualDevices--;
+            DeviceObjectList++;
+        }
+    }
+    
+    /* Return the status */
+    return STATUS_SUCCESS;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 PDEVICE_OBJECT
 STDCALL
-IoGetDeviceAttachmentBaseRef(
-    IN PDEVICE_OBJECT DeviceObject
-    )
+IoGetDeviceAttachmentBaseRef(IN PDEVICE_OBJECT DeviceObject)
 {
-	UNIMPLEMENTED;
-	return 0;
+    /* Return the attached Device */
+    return (DeviceObject->DeviceObjectExtension->AttachedTo);
 }
 
 /*
@@ -318,32 +517,30 @@ IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
  * Status
  *    @implemented
  */
-
-PDEVICE_OBJECT STDCALL
-IoGetRelatedDeviceObject(
-   IN PFILE_OBJECT FileObject)
+PDEVICE_OBJECT 
+STDCALL
+IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
 {
-   /*
-    * Get logical volume mounted on a physical/virtual/logical device
-    */
+    PDEVICE_OBJECT DeviceObject = FileObject->DeviceObject;
+    
+    /* Get logical volume mounted on a physical/virtual/logical device */
+    if (FileObject->Vpb && FileObject->Vpb->DeviceObject)
+    {
+        DeviceObject = FileObject->Vpb->DeviceObject;
+    }
 
-   if (FileObject->Vpb && FileObject->Vpb->DeviceObject)
-   {
-      return IoGetAttachedDevice(FileObject->Vpb->DeviceObject);
-   }
+    /*
+     * Check if file object has an associated device object mounted by some
+     * other file system.
+     */
+    if (FileObject->DeviceObject->Vpb && 
+        FileObject->DeviceObject->Vpb->DeviceObject)
+    {
+        DeviceObject = FileObject->DeviceObject->Vpb->DeviceObject;
+    }
 
-   /*
-    * Check if file object has an associated device object mounted by some
-    * other file system.
-    */
-
-   if (FileObject->DeviceObject->Vpb &&
-       FileObject->DeviceObject->Vpb->DeviceObject)
-   {
-      return IoGetAttachedDevice(FileObject->DeviceObject->Vpb->DeviceObject);
-   }
-
-   return IoGetAttachedDevice(FileObject->DeviceObject);
+    /* Return the highest attached device */
+    return IoGetAttachedDevice(DeviceObject);
 }
 
 /*
@@ -352,74 +549,36 @@ IoGetRelatedDeviceObject(
  * Status
  *    @implemented
  */
-
-NTSTATUS STDCALL
-IoGetDeviceObjectPointer(
-   IN PUNICODE_STRING ObjectName,
-   IN ACCESS_MASK DesiredAccess,
-   OUT PFILE_OBJECT *FileObject,
-   OUT PDEVICE_OBJECT *DeviceObject)
+NTSTATUS 
+STDCALL
+IoGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
+                         IN ACCESS_MASK DesiredAccess,
+                         OUT PFILE_OBJECT *FileObject,
+                         OUT PDEVICE_OBJECT *DeviceObject)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   IO_STATUS_BLOCK StatusBlock;
-   PFILE_OBJECT LocalFileObject;
-   HANDLE FileHandle;
-   NTSTATUS Status;
-
-   DPRINT("IoGetDeviceObjectPointer(ObjectName %wZ, DesiredAccess %x, FileObject %p DeviceObject %p)\n",
-      ObjectName, DesiredAccess, FileObject, DeviceObject);
-
-   InitializeObjectAttributes(
-      &ObjectAttributes,
-      ObjectName,
-      0,
-      NULL,
-      NULL);
-
-   Status = ZwOpenFile(
-      &FileHandle,
-      DesiredAccess,
-      &ObjectAttributes,
-      &StatusBlock,
-      0,
-      FILE_NON_DIRECTORY_FILE);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("NtOpenFile failed, Status: 0x%x\n", Status);
-      return Status;
-   }
-
-   Status = ObReferenceObjectByHandle(
-      FileHandle,
-      0,
-      IoFileObjectType,
-      KernelMode,
-      (PVOID*)&LocalFileObject,
-      NULL);
-
-   if (NT_SUCCESS(Status))
-   {
-      *DeviceObject = IoGetRelatedDeviceObject(LocalFileObject);
-      *FileObject = LocalFileObject;
-   }
-
-   ZwClose(FileHandle);
-
-   return Status;
+    /* Call the helper routine for a normal operation */
+    return IopGetDeviceObjectPointer(ObjectName, 
+                                     DesiredAccess, 
+                                     FileObject, 
+                                     DeviceObject, 
+                                     0);
 }
 
 /*
  * IoDetachDevice
  *
  * Status
- *    @unimplemented
+ *    @implemented
  */
-
-VOID STDCALL
+VOID
+STDCALL
 IoDetachDevice(PDEVICE_OBJECT TargetDevice)
-{
-   DPRINT("IoDetachDevice(TargetDevice %x) - UNIMPLEMENTED\n", TargetDevice);
+{   
+    DPRINT("IoDetachDevice(TargetDevice %x)\n", TargetDevice);   
+    
+    /* Remove the attachment */
+    TargetDevice->AttachedDevice->DeviceObjectExtension->AttachedTo = NULL;
+    TargetDevice->AttachedDevice = NULL;
 }
 
 /*
@@ -428,16 +587,20 @@ IoDetachDevice(PDEVICE_OBJECT TargetDevice)
  * Status
  *    @implemented
  */
-
-PDEVICE_OBJECT STDCALL
+PDEVICE_OBJECT 
+STDCALL
 IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
 {
-   PDEVICE_OBJECT Current = DeviceObject;
+    PDEVICE_OBJECT Current = DeviceObject;
    
-   while (Current->AttachedDevice != NULL)
-      Current = Current->AttachedDevice;
-
-   return Current;
+    /* Get the last attached device */
+    while (Current->AttachedDevice) 
+    {
+        Current = Current->AttachedDevice;
+    }
+    
+    /* Return it */
+    return Current;
 }
 
 /*
@@ -446,89 +609,15 @@ IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
  * Status
  *    @implemented
  */
-
-PDEVICE_OBJECT STDCALL
+PDEVICE_OBJECT 
+STDCALL
 IoGetAttachedDeviceReference(PDEVICE_OBJECT DeviceObject)
 {
-   PDEVICE_OBJECT Current = IoGetAttachedDevice(DeviceObject);
-   ObReferenceObject(Current);
-   return Current;
-}
-
-/*
- * IoAttachDeviceToDeviceStack
- *
- * Status
- *    @implemented
- */
-
-PDEVICE_OBJECT STDCALL
-IoAttachDeviceToDeviceStack(
-   PDEVICE_OBJECT SourceDevice,
-   PDEVICE_OBJECT TargetDevice)
-{
-   PDEVICE_OBJECT AttachedDevice;
+    PDEVICE_OBJECT Current = IoGetAttachedDevice(DeviceObject);
    
-   DPRINT("IoAttachDeviceToDeviceStack(SourceDevice %x, TargetDevice %x)\n",
-      SourceDevice, TargetDevice);
-
-   AttachedDevice = IoGetAttachedDevice(TargetDevice);
-   AttachedDevice->AttachedDevice = SourceDevice;
-   SourceDevice->AttachedDevice = NULL;
-   SourceDevice->StackSize = AttachedDevice->StackSize + 1;
-   SourceDevice->AlignmentRequirement = AttachedDevice->AlignmentRequirement;
-   SourceDevice->SectorSize = AttachedDevice->SectorSize;
-   SourceDevice->Vpb = AttachedDevice->Vpb;
-   return AttachedDevice;
-}
-
-/*
- * IoAttachDevice
- *
- * Layers a device over the highest device in a device stack.
- *
- * Parameters
- *    SourceDevice
- *       Device to be attached.
- *
- *    TargetDevice
- *       Name of the target device.
- *
- *    AttachedDevice
- *       Caller storage for the device attached to.
- *
- * Status
- *    @implemented
- */
-
-NTSTATUS STDCALL
-IoAttachDevice(
-   PDEVICE_OBJECT SourceDevice,
-   PUNICODE_STRING TargetDeviceName,
-   PDEVICE_OBJECT *AttachedDevice)
-{
-   NTSTATUS Status;
-   PFILE_OBJECT FileObject;
-   PDEVICE_OBJECT TargetDevice;
-     
-   Status = IoGetDeviceObjectPointer(
-      TargetDeviceName,
-      FILE_READ_ATTRIBUTES,
-      &FileObject,
-      &TargetDevice);
-   
-   if (!NT_SUCCESS(Status))
-   {
-      return Status;
-   }
-
-   *AttachedDevice = IoAttachDeviceToDeviceStack(
-      SourceDevice,
-      TargetDevice);
-
-   ObDereferenceObject(FileObject);
-
-   return STATUS_SUCCESS;
+    /* Reference the ATtached Device */
+    ObReferenceObject(Current);
+    return Current;
 }
 
 /*
@@ -563,7 +652,6 @@ IoAttachDevice(
  * Status
  *    @implemented
  */
-
 NTSTATUS STDCALL
 IoCreateDevice(
    PDRIVER_OBJECT DriverObject,
@@ -704,6 +792,7 @@ IoCreateDevice(
          sizeof(DEVOBJ_EXTENSION),
          TAG_DEVICE_EXTENSION);
 
+   RtlZeroMemory(DeviceObjectExtension, sizeof(DEVOBJ_EXTENSION));
    DeviceObjectExtension->Type = 0 /* ?? */;
    DeviceObjectExtension->Size = sizeof(DEVOBJ_EXTENSION);
    DeviceObjectExtension->DeviceObject = CreatedDeviceObject;
@@ -717,40 +806,6 @@ IoCreateDevice(
 }
 
 /*
- * IoOpenDeviceInstanceKey
- *
- * Status
- *    @unimplemented
- */
-
-NTSTATUS STDCALL
-IoOpenDeviceInstanceKey(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4)
-{
-   UNIMPLEMENTED;
-   return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoRegisterBootDriverReinitialization(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
-    IN PVOID Context
-    )
-{
-	UNIMPLEMENTED;
-}
-
-
-/*
  * @unimplemented
  */
 NTSTATUS
@@ -761,22 +816,6 @@ IoRegisterLastChanceShutdownNotification(
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * IoQueryDeviceEnumInfo
- *
- * Status
- *    @unimplemented
- */
-
-DWORD STDCALL
-IoQueryDeviceEnumInfo(
-   DWORD Unknown0,
-   DWORD Unknown1)
-{
-   UNIMPLEMENTED;
-   return 0;
 }
 
 /*

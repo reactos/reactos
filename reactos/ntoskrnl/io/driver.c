@@ -60,8 +60,12 @@ typedef struct _DRIVER_REINIT_ITEM
 /* GLOBALS ********************************************************************/
 
 static LIST_ENTRY DriverReinitListHead;
-static PLIST_ENTRY DriverReinitTailEntry;
 static KSPIN_LOCK DriverReinitListLock;
+static PLIST_ENTRY DriverReinitTailEntry;
+
+static PLIST_ENTRY DriverBootReinitTailEntry;
+static LIST_ENTRY DriverBootReinitListHead;
+static KSPIN_LOCK DriverBootReinitListLock;
 
 static LIST_ENTRY GroupListHead = {NULL, NULL};
 static LIST_ENTRY ServiceListHead  = {NULL, NULL};
@@ -117,6 +121,10 @@ IopInitDriverImplementation(VOID)
    InitializeListHead(&DriverReinitListHead);
    KeInitializeSpinLock(&DriverReinitListLock);
    DriverReinitTailEntry = NULL;
+   
+   InitializeListHead(&DriverBootReinitListHead);
+   KeInitializeSpinLock(&DriverBootReinitListLock);
+   DriverBootReinitTailEntry = NULL;
 }
 
 NTSTATUS STDCALL
@@ -1963,9 +1971,40 @@ IoRegisterDriverReinitialization(
    ReinitItem->DriverObject = DriverObject;
    ReinitItem->ReinitRoutine = ReinitRoutine;
    ReinitItem->Context = Context;
+   
+   DriverObject->Flags |= DRVO_REINIT_REGISTERED;
 
    ExInterlockedInsertTailList(
       &DriverReinitListHead,
+      &ReinitItem->ItemEntry,
+      &DriverReinitListLock);
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+IoRegisterBootDriverReinitialization(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
+    IN PVOID Context
+    )
+{
+   PDRIVER_REINIT_ITEM ReinitItem;
+
+   ReinitItem = ExAllocatePool(NonPagedPool, sizeof(DRIVER_REINIT_ITEM));
+   if (ReinitItem == NULL)
+      return;
+
+   ReinitItem->DriverObject = DriverObject;
+   ReinitItem->ReinitRoutine = DriverReinitializationRoutine;
+   ReinitItem->Context = Context;
+   
+   DriverObject->Flags |= DRVO_BOOTREINIT_REGISTERED;
+
+   ExInterlockedInsertTailList(
+      &DriverBootReinitListHead,
       &ReinitItem->ItemEntry,
       &DriverReinitListLock);
 }
