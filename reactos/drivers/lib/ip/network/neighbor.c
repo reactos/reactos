@@ -289,6 +289,8 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   NCE->LinkAddress = (PVOID)&NCE[1];
   if( LinkAddress )
       RtlCopyMemory(NCE->LinkAddress, LinkAddress, LinkAddressLength);
+  else
+      memset(NCE->LinkAddress, 0xff, LinkAddressLength);
   NCE->State = State;
   NCE->EventTimer = 0; /* Not in use */
   InitializeListHead( &NCE->PacketQueue );
