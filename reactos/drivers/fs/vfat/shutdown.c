@@ -48,6 +48,7 @@ VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    NTSTATUS Status;
    PLIST_ENTRY ListEntry;
    PDEVICE_EXTENSION DeviceExt;
+   ULONG eocMark;
 
    DPRINT("VfatShutdown(DeviceObject %x, Irp %x)\n",DeviceObject, Irp);
 
@@ -64,6 +65,17 @@ VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
          ListEntry = ListEntry->Flink;
 
 	 ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+         if (DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY)
+         {
+            /* set clean shutdown bit */
+            Status = GetNextCluster(DeviceExt, 1, &eocMark);
+            if (NT_SUCCESS(Status))
+            {
+               eocMark |= DeviceExt->CleanShutBitMask;
+               if (NT_SUCCESS(WriteCluster(DeviceExt, 1, eocMark)))
+                  DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
+            }
+         }
          Status = VfatFlushVolume(DeviceExt, DeviceExt->VolumeFcb);
          if (NT_SUCCESS(Status))
          {
