@@ -117,7 +117,7 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
         TimerWaitBlock->Thread = CurrentThread;
         TimerWaitBlock->WaitKey = (USHORT)STATUS_TIMEOUT;
         TimerWaitBlock->WaitType = WaitAny;         
-        TimerWaitBlock->NextWaitBlock = NULL;
+        TimerWaitBlock->NextWaitBlock = TimerWaitBlock;
     
         /* Link the timer to this Wait Block */
         InitializeListHead(&ThreadTimer->Header.WaitListHead);
@@ -269,7 +269,7 @@ KeWaitForSingleObject(PVOID Object,
         WaitBlock->Thread = CurrentThread;
         WaitBlock->WaitKey = (USHORT)(STATUS_WAIT_0);
         WaitBlock->WaitType = WaitAny;                       
-        WaitBlock->NextWaitBlock = NULL;
+        WaitBlock->NextWaitBlock = WaitBlock;
                       
         /* Make sure we can satisfy the Alertable request */
         KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status);
@@ -300,7 +300,7 @@ KeWaitForSingleObject(PVOID Object,
             TimerWaitBlock->Thread = CurrentThread;
             TimerWaitBlock->WaitKey = STATUS_TIMEOUT;
             TimerWaitBlock->WaitType = WaitAny;
-            TimerWaitBlock->NextWaitBlock = NULL;
+            TimerWaitBlock->NextWaitBlock = WaitBlock;
             
             /* Link the timer to this Wait Block */
             InitializeListHead(&ThreadTimer->Header.WaitListHead);
@@ -400,7 +400,6 @@ KeWaitForMultipleObjects(ULONG Count,
         /* Check in regards to the Thread Object Limit */
         if (Count > THREAD_WAIT_OBJECTS) {
             
-            DPRINT1("(%s:%d) Too many objects!\n", __FILE__, __LINE__);
             KEBUGCHECK(MAXIMUM_WAIT_OBJECTS_EXCEEDED);
         }
         
@@ -412,7 +411,6 @@ KeWaitForMultipleObjects(ULONG Count,
         /* Using our own Block Array. Check in regards to System Object Limit */
         if (Count > MAXIMUM_WAIT_OBJECTS) {
             
-            DPRINT1("(%s:%d) Too many objects!\n", __FILE__, __LINE__);
             KEBUGCHECK(MAXIMUM_WAIT_OBJECTS_EXCEEDED);
         }
     }
@@ -496,7 +494,7 @@ KeWaitForMultipleObjects(ULONG Count,
        
         /* Return to the Root Wait Block */
         WaitBlock--;
-        WaitBlock->NextWaitBlock = NULL;
+        WaitBlock->NextWaitBlock = WaitBlockArray;
             
         /* Check if this is a Wait All and all the objects are signaled */
         if ((WaitType == WaitAll) && (AllObjectsSignaled)) {
@@ -539,7 +537,7 @@ KeWaitForMultipleObjects(ULONG Count,
             TimerWaitBlock->Thread = CurrentThread;
             TimerWaitBlock->WaitKey = STATUS_TIMEOUT;
             TimerWaitBlock->WaitType = WaitAny;
-            TimerWaitBlock->NextWaitBlock = NULL;
+            TimerWaitBlock->NextWaitBlock = WaitBlockArray;
             
             /* Link the timer to this Wait Block */
             InitializeListHead(&ThreadTimer->Header.WaitListHead);
@@ -555,7 +553,7 @@ KeWaitForMultipleObjects(ULONG Count,
 
         /* Insert into Object's Wait List*/
         WaitBlock = CurrentThread->WaitBlockList;
-        while (WaitBlock) {
+        do {
             
             /* Get the Current Object */
             CurrentObject = WaitBlock->Object;
@@ -565,7 +563,7 @@ KeWaitForMultipleObjects(ULONG Count,
             
             /* Move to the next Wait Block */
             WaitBlock = WaitBlock->NextWaitBlock;
-        }
+        } while (WaitBlock != WaitBlockArray);
         
         /* Handle Kernel Queues */
         if (CurrentThread->Queue) {
@@ -656,6 +654,7 @@ KiWaitTest(PDISPATCHER_HEADER Object,
     PLIST_ENTRY WaitList;
     PKWAIT_BLOCK CurrentWaitBlock;
     PKWAIT_BLOCK NextWaitBlock;
+    PKTHREAD WaitThread;
     
     /* Loop the Wait Entries */
     DPRINT("KiWaitTest for Object: %x\n", Object);
@@ -665,6 +664,7 @@ KiWaitTest(PDISPATCHER_HEADER Object,
         
         /* Get the current wait block */
         CurrentWaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
+        WaitThread = CurrentWaitBlock->Thread;
         
         /* Check the current Wait Mode */
         if (CurrentWaitBlock->WaitType == WaitAny) {
@@ -672,7 +672,7 @@ KiWaitTest(PDISPATCHER_HEADER Object,
             /* Easy case, satisfy only this wait */
             DPRINT("Satisfiying a Wait any\n");
             WaitEntry = WaitEntry->Blink;
-            KiSatisfyObjectWait(Object, CurrentWaitBlock->Thread);
+            KiSatisfyObjectWait(Object, WaitThread);
         
         } else {
         
@@ -681,13 +681,14 @@ KiWaitTest(PDISPATCHER_HEADER Object,
             NextWaitBlock = CurrentWaitBlock->NextWaitBlock;
             
             /* Loop first to make sure they are valid */
-            while (NextWaitBlock) {
+            while (NextWaitBlock != CurrentWaitBlock) {
             
                 /* Check if the object is signaled */
-                if (!KiIsObjectSignaled(Object, CurrentWaitBlock->Thread)) {
+                DPRINT("Checking: %x %d\n", NextWaitBlock->Object, Object->SignalState);
+                if (!KiIsObjectSignaled(NextWaitBlock->Object, WaitThread)) {
                 
                     /* It's not, move to the next one */
-                    DPRINT1("One of the object is non-signaled, sorry.\n");
+                    DPRINT("One of the object is non-signaled, sorry.\n");
                     goto SkipUnwait;
                 }
                 
@@ -703,7 +704,7 @@ KiWaitTest(PDISPATCHER_HEADER Object,
         
         /* All waits satisfied, unwait the thread */
         DPRINT("Unwaiting the Thread\n");
-        KiAbortWaitThread(CurrentWaitBlock->Thread, CurrentWaitBlock->WaitKey, Increment);
+        KiAbortWaitThread(WaitThread, CurrentWaitBlock->WaitKey, Increment);
 
 SkipUnwait:
         /* Next entry */
@@ -729,7 +730,7 @@ KiAbortWaitThread(PKTHREAD Thread,
     /* Remove the Wait Blocks from the list */
     DPRINT("Removing waits\n");
     WaitBlock = Thread->WaitBlockList;
-    while (WaitBlock) {
+    do {
         
         /* Remove it */
         DPRINT("Removing Waitblock: %x, %x\n", WaitBlock, WaitBlock->NextWaitBlock);
@@ -737,7 +738,7 @@ KiAbortWaitThread(PKTHREAD Thread,
         
         /* Go to the next one */
         WaitBlock = WaitBlock->NextWaitBlock;
-    };
+    } while (WaitBlock != Thread->WaitBlockList);
     
     /* Check if there's a Thread Timer */
     if (Thread->Timer.Header.Inserted) {
@@ -821,15 +822,16 @@ inline
 FASTCALL
 KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock)
 {
+    PKWAIT_BLOCK FirstBlock = WaitBlock;
     PKTHREAD WaitThread = WaitBlock->Thread;
     
     /* Loop through all the Wait Blocks, and wake each Object */
-    while (WaitBlock) {
+    do {
          
         /* Wake the Object */
         KiSatisfyObjectWait(WaitBlock->Object, WaitThread);
         WaitBlock = WaitBlock->NextWaitBlock;
-    }      
+    } while (WaitBlock != FirstBlock);
 }
 
 VOID

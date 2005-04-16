@@ -192,10 +192,10 @@ KiBlockThread(PNTSTATUS Status,
         
         /* Remove Waits */
         WaitBlock = Thread->WaitBlockList;
-        while (WaitBlock) {
+        do {
             RemoveEntryList (&WaitBlock->WaitListEntry);
             WaitBlock = WaitBlock->NextWaitBlock;
-        }
+        } while (WaitBlock != Thread->WaitBlockList);
         Thread->WaitBlockList = NULL;
         
         /* Dispatch it and return status */
