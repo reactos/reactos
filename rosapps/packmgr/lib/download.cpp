@@ -53,7 +53,8 @@ char* PML_Download (const char* url, const char* server = "tree", const char* fi
 
 	// get the url
 	
-	if (!server);
+	if (!server)
+		strcpy(downl, "");
 
 	else if(!strcmp(server, "tree")) 
 		strcpy(downl, tree_server);

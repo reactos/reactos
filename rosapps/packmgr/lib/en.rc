@@ -17,7 +17,7 @@ BEGIN
 
   ERR_DEP1	   "To install this package you have to install the following package(s) as well:\n\n"
   ERR_DEP2	   "\nDo you want this ?"
-  ERR_READY	   "You choosen to install %d package(s). To install them you have to read and agree with each of thier licences.\n\n Do you want still want to ?"
+  ERR_READY	   "You choosen to install %d package(s). To install them you have to read and agree with each of thier licences. \n\nDo you want still want to ?"
 END
 
 /* EOF */

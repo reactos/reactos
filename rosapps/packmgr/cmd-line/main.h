@@ -4,13 +4,11 @@
 //				main.cpp's lumber room :)
 ///////////////////////////////////////////////////
 
-#include "package.hpp"
+#include <package.h>
 
-#include <iostream>
-
-
-vector<string> cmdline;
-bool done = false;
+int Argc;
+char **Argv;
+BOOL done = FALSE;
 
 int Help (void);
 int Install (void);
