@@ -111,12 +111,20 @@ int AddItem (int id, const char* name, int parent, int icon)
 // Load the Help from file and display it
 void Help (void)
 {
-	string source;
+	int i;
+	char buffer [2000];
+	FILE* file = fopen ("help.txt", "r");
 
-	ifstream file("help.txt", ios_base::in);
-	getline(file, source, '\0');
+	if(!file)
+		return;
 
-	SetText(source.c_str());
+	for(i=0; i<2000; i++)
+	{
+		buffer[i] = getc(file);
+		if(!buffer[i]) break;
+	}
+
+	SetText(buffer);
 }
 
 // Create our Controls
@@ -225,19 +233,23 @@ int SetButton (DWORD id, BOOL state)
 // Set the text of the text box
 int SetText (const char* text) 
 {
+	int i, j;
+	char buffer [2000];
+
 	if(!text)
 		return 1;
 
-	int i = 0;
-	string source = text;
-
 	// the windows does not need "\n"
 	// for new lines but "\r\n"
-	for(i=0; source[i]; i++)
-		if(source[i]=='\n' && source[i]!='\r')
-			source.insert (i++, "\r");
+	for(i=0,j=0; text[i]; i++,j++)
+	{
+		buffer[j] = text[i];
+		if(buffer[j] == '\n')
+			buffer[++j] = '\r';
+	}
+	buffer[i] = 0;
 
-	SetWindowTextA(hEdit, source.c_str());
+	SetWindowTextA(hEdit, buffer);
 
     return 0;
 }
@@ -279,7 +291,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				SetText(PML_GetDescription (tree, selected));
 			}
 
-			else if ((int)(((LPNMHDR)lParam)->code) == NM_RCLICK) // <= ahhh LISP
+			else if ((int)(((LPNMHDR)lParam)->code) == NM_RCLICK) // <= aarrggg LISP
 			{ 
 				// which item has been click on
 				HTREEITEM item = TreeView_GetDropHilight(hTree);
@@ -331,9 +343,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// Options
 			else if(LOWORD(wParam)==8)
 				DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsProc);
-
-			else
-				MessageBox(0,0,0,0);
 		}
 		break;
 

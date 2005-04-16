@@ -5,12 +5,10 @@
 ///////////////////////////////////////////////////
 
 #include <windows.h>
-#include <ntos/keyboard.h>
 #include <commctrl.h>
-#include <iostream>
-#include <fstream>
+#include <stdio.h>
 
-#include <package.hpp>
+#include <package.h>
 #include "resource.h"
 
 /* Some Variables */ 
