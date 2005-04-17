@@ -412,7 +412,7 @@ static void write_typeformatstring(type_t *iface)
 }
 
 
-static void print_message_buffer_size(func_t *func)
+static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
 {
     unsigned int alignment = 0;
     int size = 0;
@@ -422,6 +422,11 @@ static void print_message_buffer_size(func_t *func)
     int string_attr;
     int empty_line;
     var_t *var;
+
+    int start_new_line = 0;
+    int add_plus = 0;
+
+    unsigned int local_type_offset = *type_offset;
 
     fprintf(server, "\n");
     print_server("_StubMsg.BufferLength =");
@@ -436,7 +441,7 @@ static void print_message_buffer_size(func_t *func)
             {
                 if (is_base_type(var->type))
                 {
-                    if (size != 0 && last_size != 0)
+                    if (start_new_line)
                     {
                         print_server("_StubMsg.BufferLength +=");
                     }
@@ -480,21 +485,23 @@ static void print_message_buffer_size(func_t *func)
                         return;
                     }
 
-                    if (last_size != -1)
+                    if (add_plus)
                         fprintf(server, " +");
                     fprintf(server, " %dU", (size == 0) ? 0 : size + alignment);
 
                     last_size = size;
+                    start_new_line = 0;
+                    add_plus = 1;
                 }
                 else if (var->type->type == RPC_FC_RP)
                 {
                     if (size == 0)
                     {
-                      fprintf(server, " 0;\n");
+                      fprintf(server, " 12U;\n");
                     }
                     else if (last_size != 0)
                     {
-                      fprintf(server, ";\n");
+                      fprintf(server, " + 12U;\n");
                       last_size = 0;
                     }
 
@@ -504,9 +511,37 @@ static void print_message_buffer_size(func_t *func)
                     print_server("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
                     print_server("(unsigned char __RPC_FAR *)%s,\n", var->name);
                     print_server("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n",
-                                 0); /* FIXME */
+                                 local_type_offset + 4); /* FIXME */
                     indent--;
                     fprintf(server,"\n");
+
+                    start_new_line = 1;
+                }
+
+                /* calculate the next type offset */
+                if (var->ptr_level == 0)
+                {
+                    if ((var->type->type == RPC_FC_RP) &&
+                        (var->type->ref->ref->type == RPC_FC_STRUCT))
+                    {
+                        var_t *field = var->type->ref->ref->fields;
+                        int tsize = 9;
+
+                        while (NEXT_LINK(field)) field = NEXT_LINK(field);
+                        while (field)
+                        {
+                            tsize++;
+                            field = PREV_LINK(field);
+                        }
+                        if (tsize % 2)
+                            tsize++;
+
+                        local_type_offset += tsize;
+                    }
+                }
+                else if (var->ptr_level == 1)
+                {
+                    local_type_offset += 4;
                 }
             }
         }
@@ -515,6 +550,12 @@ static void print_message_buffer_size(func_t *func)
     /* return value size */
     if (!is_void(func->def->type, NULL))
     {
+        if (start_new_line)
+        {
+          print_server("_StubMsg.BufferLength +=");
+          add_plus = 0;
+        }
+
         switch(func->def->type->type)
         {
         case RPC_FC_BYTE:
@@ -544,7 +585,7 @@ static void print_message_buffer_size(func_t *func)
             return;
         }
 
-        if (last_size != -1)
+        if (add_plus)
             fprintf(server, " +");
 
         fprintf(server, " %dU", (size == 0) ? 0 : size + alignment);
@@ -1296,7 +1337,7 @@ static void write_function_stubs(type_t *iface)
         /* allocate and fill the return message buffer */
         if (use_return_buffer(func))
         {
-            print_message_buffer_size(func);
+            print_message_buffer_size(func, &type_offset);
             print_server("_pRpcMessage->BufferLength = _StubMsg.BufferLength;\n");
             fprintf(server, "\n");
             print_server("_Status = I_RpcGetBuffer(_pRpcMessage);\n");

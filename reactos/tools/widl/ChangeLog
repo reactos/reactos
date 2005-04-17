@@ -1,5 +1,11 @@
 ChangeLog
 
+2005-04-17 ekohl
+
+   tools/widl/server.c
+
+Support out-pointers to structs.
+
 2005-04-15 ekohl
 
    tools/widl/client.c
