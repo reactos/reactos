@@ -272,7 +272,6 @@ ScmrCloseServiceHandle(handle_t BindingHandle,
 
 
 /* Function 1 */
-#if 0
 unsigned long
 ScmrControlService(handle_t BindingHandle,
                    unsigned int hService,
@@ -281,7 +280,10 @@ ScmrControlService(handle_t BindingHandle,
 {
   DPRINT1("ScmrControlService() called\n");
 
-#if 0
+  /* FIXME: return proper service information */
+
+  /* test data */
+// #if 0
   lpServiceStatus->dwServiceType = 0x12345678;
   lpServiceStatus->dwCurrentState = 0x98765432;
   lpServiceStatus->dwControlsAccepted = 0xdeadbabe;
@@ -289,11 +291,10 @@ ScmrControlService(handle_t BindingHandle,
   lpServiceStatus->dwServiceSpecificExitCode = 0xdeadf00d;
   lpServiceStatus->dwCheckPoint = 0xbaadbabe;
   lpServiceStatus->dwWaitHint = 0x2468ACE1;
-#endif
+// #endif
 
-  return TRUE;
+  return ERROR_SUCCESS;
 }
-#endif
 
 
 /* Function 2 */

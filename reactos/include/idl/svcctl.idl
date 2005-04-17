@@ -39,10 +39,10 @@ cpp_quote("#endif");
                                [in] SC_HANDLE hSCObject);
 
   /* Function 1 */
-//  BOOL ScmrControlService([in] handle_t BindingHandle,
-//                          [in] SC_HANDLE hService,
-//                          [in] DWORD dwControl,
-//                          [out] LPSERVICE_STATUS lpServiceStatus);
+  BOOL ScmrControlService([in] handle_t BindingHandle,
+                          [in] SC_HANDLE hService,
+                          [in] DWORD dwControl,
+                          [out] LPSERVICE_STATUS lpServiceStatus);
 
   /* Function 2 */
   DWORD ScmrDeleteService([in] handle_t BindingHandle,

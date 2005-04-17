@@ -139,20 +139,21 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 {
   DWORD dwError;
 
-  DPRINT1("CloseServiceHandle() called\n");
+  DPRINT("CloseServiceHandle() called\n");
 
   HandleBind();
 
   /* Call to services.exe using RPC */
   dwError = ScmrCloseServiceHandle(BindingHandle,
                                    (unsigned int)hSCObject);
-  DPRINT1("dwError %lu\n", dwError);
-
   if (dwError)
   {
+    DPRINT1("ScmrCloseServiceHandle() failed (Error %lu)\n", dwError);
     SetLastError(dwError);
     return FALSE;
   }
+
+  DPRINT("CloseServiceHandle() done\n");
 
   return TRUE;
 }
@@ -168,11 +169,10 @@ ControlService(SC_HANDLE        hService,
                DWORD            dwControl,
                LPSERVICE_STATUS lpServiceStatus)
 {
-#if 0
   DWORD dwError;
 
-  DPRINT1("ControlService(%x, %x, %p)\n",
-          hService, dwControl, lpServiceStatus);
+  DPRINT("ControlService(%x, %x, %p)\n",
+         hService, dwControl, lpServiceStatus);
 
   HandleBind();
 
@@ -183,18 +183,14 @@ ControlService(SC_HANDLE        hService,
                                lpServiceStatus);
   if (dwError != ERROR_SUCCESS)
   {
+    DPRINT1("ScmrControlService() failed (Error %lu)\n", dwError);
     SetLastError(dwError);
     return FALSE;
   }
 
-  DPRINT1("ControlService() done\n");
+  DPRINT("ControlService() done\n");
 
   return TRUE;
-#endif
-
-  DPRINT1("ControlService is unimplemented\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
 }
 
 
@@ -262,7 +258,7 @@ DeleteService(SC_HANDLE hService)
 {
   DWORD dwError;
 
-  DPRINT1("DeleteService(%x)\n", hService);
+  DPRINT("DeleteService(%x)\n", hService);
 
   HandleBind();
 
@@ -271,6 +267,7 @@ DeleteService(SC_HANDLE hService)
                               (unsigned int)hService);
   if (dwError != ERROR_SUCCESS)
   {
+    DPRINT1("ScmrDeleteService() failed (Error %lu)\n", dwError);
     SetLastError(dwError);
     return FALSE;
   }
@@ -536,7 +533,7 @@ LockServiceDatabase(SC_HANDLE hSCManager)
                                     (unsigned int *)&hLock);
   if (dwError != ERROR_SUCCESS)
   {
-    DPRINT("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
+    DPRINT1("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
     SetLastError(dwError);
     return NULL;
   }
@@ -613,9 +610,9 @@ OpenSCManagerA(LPCSTR lpMachineName,
                                (LPSTR)lpDatabaseName,
                                dwDesiredAccess,
                                (unsigned int*)&hScm);
-  if (dwError)
+  if (dwError != ERROR_SUCCESS)
   {
-    DPRINT("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
+    DPRINT1("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
     SetLastError(dwError);
     return NULL;
   }
@@ -928,7 +925,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
                                       (unsigned int)ScLock);
   if (dwError != ERROR_SUCCESS)
   {
-    DPRINT("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
+    DPRINT1("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
     SetLastError(dwError);
     return FALSE;
   }
