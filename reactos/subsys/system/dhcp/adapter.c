@@ -62,10 +62,11 @@ void AdapterInit() {
     DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
 
     for( i = 0; i < Table->dwNumEntries; i++ ) {
-        DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n", i));
+        DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n", 
+                               Table->table[i].dwIndex));
         Adapter = calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
         
-        if( Adapter ) {
+        if( Adapter && Table->table[i].dwType ) {
             memcpy( &Adapter->IfMib, &Table->table[i], 
                     sizeof(Adapter->IfMib) );
             GetAddress( Adapter );
@@ -93,6 +94,7 @@ void AdapterInit() {
                     Adapter->DhclientInfo.wfdesc = DhcpSocket;
             }
             Adapter->DhclientState.config = &Adapter->DhclientConfig;
+            Adapter->DhclientConfig.timeout = DHCP_PANIC_TIMEOUT;
             Adapter->DhclientConfig.initial_interval = DHCP_DISCOVER_INTERVAL;
             Adapter->DhclientConfig.retry_interval = DHCP_DISCOVER_INTERVAL;
             Adapter->DhclientConfig.select_interval = 1;
@@ -149,6 +151,20 @@ PDHCP_ADAPTER AdapterFindName( const WCHAR *name ) {
          ListEntry = ListEntry->Flink ) {
         Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
         if( !wcsicmp( Adapter->IfMib.wszName, name ) ) return Adapter;
+    }
+
+    return NULL;
+}
+
+PDHCP_ADAPTER AdapterFindInfo( struct interface_info *ip ) {
+    PDHCP_ADAPTER Adapter;
+    PLIST_ENTRY ListEntry;
+
+    for( ListEntry = AdapterList.Flink;
+         ListEntry != &AdapterList;
+         ListEntry = ListEntry->Flink ) {
+        Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
+        if( ip == &Adapter->DhclientInfo ) return Adapter;
     }
 
     return NULL;

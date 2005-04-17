@@ -206,27 +206,16 @@ dispatch(void)
 
     FD_ZERO(&fds);
 
-//	fds = malloc(nfds * sizeof(struct pollfd));
-//	if (fds == NULL)
-//		error("Can't allocate poll structures.");
-
     do {
-        DH_DbgPrint(MID_TRACE,("Cycling dispatch()\n"));
         /*
          * Call any expired timeouts, and then if there's still
          * a timeout registered, time out the select call then.
          */
     another:
         if (timeouts) {
-            DH_DbgPrint(MID_TRACE,("Some timeouts are available\n"));
-            
             struct timeout *t;
 
             if (timeouts->when <= cur_time) {
-                DH_DbgPrint(MID_TRACE,("Calling timeout %x %p %x\n", 
-                                       timeouts->when,
-                                       timeouts->func,
-                                       timeouts->what));
                 t = timeouts;
                 timeouts = timeouts->next;
                 (*(t->func))(t->what);
@@ -253,12 +242,7 @@ dispatch(void)
             struct interface_info *ip = l->local;
 
             if (ip && (l->handler != got_one || !ip->dead)) {
-                DH_DbgPrint(MID_TRACE,("l->fd %d\n", l->fd));
-                        
                 FD_SET(l->fd, &fds);
-//				fds[i].fd = l->fd;
-//				fds[i].events = POLLIN;
-//				fds[i].revents = 0;
                 i++;
             }
         }
@@ -269,13 +253,26 @@ dispatch(void)
         /* Wait for a packet or a timeout... XXX */
         timeval.tv_sec = to_msec / 1000;
         timeval.tv_usec = (to_msec % 1000) * 1000;
-        DH_DbgPrint(MID_TRACE,("select(%d,%d.%03d) =>\n", 
-                 nfds,timeval.tv_sec,timeval.tv_usec/1000));
 
         ApiUnlock();
 
         count = select(nfds, &fds, NULL, NULL, &timeval);
-        DH_DbgPrint(MID_TRACE,(" => %d\n", count));
+
+        DH_DbgPrint(MID_TRACE,("Select: %d\n", count));
+
+        /* Review poll output */
+        for (i = 0, l = protocols; l; l = l->next) {
+            struct interface_info *ip = l->local;
+
+            if (ip && (l->handler != got_one || !ip->dead)) {
+                DH_DbgPrint
+                    (MID_TRACE,
+                     ("set(%d) -> %s\n", 
+                      l->fd, FD_ISSET(l->fd, &fds) ? "true" : "false"));
+                i++;
+            }
+        }
+
 
         ApiLock();
 
@@ -295,9 +292,7 @@ dispatch(void)
         for (l = protocols; l; l = l->next) {
             struct interface_info *ip;
             ip = l->local;
-            if (!FD_ISSET(l->fd, &fds)) {
-//.revents & (POLLIN | POLLHUP))) {
-//				fds[i].revents = 0;
+            if (FD_ISSET(l->fd, &fds)) {
                 if (ip && (l->handler != got_one ||
                            !ip->dead)) {
                     DH_DbgPrint(MID_TRACE,("Handling %x\n", l));
@@ -309,7 +304,6 @@ dispatch(void)
             }
             interfaces_invalidated = 0;
         }
-        DH_DbgPrint(MID_TRACE,("Done\n"));
     } while (1);
 
     ApiUnlock(); /* Not reached currently */

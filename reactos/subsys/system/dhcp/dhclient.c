@@ -85,6 +85,7 @@ int privfd;
 struct iaddr iaddr_broadcast = { 4, { 255, 255, 255, 255 } };
 struct in_addr inaddr_any;
 struct sockaddr_in sockaddr_broadcast;
+unsigned long old_default_route = 0;
 
 /*
  * ASSERT_STATE() does nothing now; it used to be
@@ -437,20 +438,22 @@ state_selecting(void *ipp)
 		/* Check to see if we got an ARPREPLY for the address
 		   in this particular lease. */
 		if (!picked) {
-			script_init("ARPCHECK", lp->medium);
-			script_write_params("check_", lp);
-
-			/* If the ARPCHECK code detects another
-			   machine using the offered address, it exits
-			   nonzero.  We need to send a DHCPDECLINE and
-			   toss the lease. */
-			if (script_go()) {
-				make_decline(ip, lp);
-				send_decline(ip);
-				goto freeit;
-			}
-			picked = lp;
-			picked->next = NULL;
+                    script_init("ARPCHECK", lp->medium);
+                    script_write_params("check_", lp);
+                    
+                    /* If the ARPCHECK code detects another
+                       machine using the offered address, it exits
+                       nonzero.  We need to send a DHCPDECLINE and
+                       toss the lease. */
+#if 0 /* XXX Later check ARP.  For now, trust leases */
+                    if (script_go()) {
+                        make_decline(ip, lp);
+                        send_decline(ip);
+                        goto freeit;
+                    }
+#endif
+                    picked = lp;
+                    picked->next = NULL;
 		} else {
 freeit:
 			free_client_lease(lp);
@@ -580,42 +583,121 @@ dhcpack(struct packet *packet)
 	bind_lease(ip);
 }
 
+void set_name_servers( struct client_lease *new_lease ) {
+    if( new_lease->options[DHO_NAME_SERVERS].len ) {
+        HKEY RegKey;
+        struct iaddr nameserver;
+        char *nsbuf;
+        int i, addrs = 
+            new_lease->options[DHO_NAME_SERVERS].len / sizeof(ULONG);
+
+        nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
+        nsbuf[0] = 0;
+        
+        if( nsbuf && !RegOpenKeyEx
+            ( HKEY_LOCAL_MACHINE, 
+              "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 
+              0, KEY_WRITE, &RegKey ) ) {
+            for( i = 0; i < addrs; i++ ) {
+                memcpy( nameserver.iabuf, 
+                        new_lease->options[DHO_NAME_SERVERS].data + 
+                        (addrs * sizeof(ULONG)), sizeof(ULONG) );
+                strcat( nsbuf, piaddr(nameserver) );
+                if( i != addrs-1 ) strcat( nsbuf, "," );
+            }
+
+            DH_DbgPrint(MID_TRACE,("Setting Nameservers: %s\n", nsbuf));
+        
+            RegSetValueEx( RegKey, "NameServer", 0, REG_SZ,
+                           nsbuf, strlen(nsbuf) );
+            
+            free( nsbuf );
+        }
+    }
+}
+
+void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
+    struct iaddr netmask;
+
+    if( Adapter->NteContext )
+        DeleteIPAddress( Adapter->NteContext );
+    
+    if( new_lease->options[DHO_SUBNET_MASK].len ) {
+        NTSTATUS Status;
+
+        memcpy( netmask.iabuf,
+                new_lease->options[DHO_SUBNET_MASK].data,
+                new_lease->options[DHO_SUBNET_MASK].len );
+        
+        Status = AddIPAddress
+            ( *((ULONG*)new_lease->address.iabuf),
+              *((ULONG*)netmask.iabuf),
+              Adapter->IfMib.dwIndex,
+              &Adapter->NteContext,
+              &Adapter->NteInstance );
+        
+        if( !NT_SUCCESS(Status) )
+            warning("AddIPAddress: %x\n", Status);
+    } 
+    
+    if( new_lease->options[DHO_ROUTERS].len ) {
+        MIB_IPFORWARDROW RouterMib;
+        NTSTATUS Status;
+        struct iaddr router;
+        
+        memcpy( netmask.iabuf,
+                new_lease->options[DHO_ROUTERS].data,
+                new_lease->options[DHO_ROUTERS].len );
+        
+        RouterMib.dwForwardDest = 0; /* Default route */
+        RouterMib.dwForwardMask = 0;
+        RouterMib.dwForwardMetric1 = 1;
+        
+        if( old_default_route ) {
+            RouterMib.dwForwardDest = old_default_route;
+            DeleteIpForwardEntry( &RouterMib );
+        }
+        
+        RouterMib.dwForwardNextHop = *((ULONG*)router.iabuf);
+        
+        Status = CreateIpForwardEntry( &RouterMib );
+        
+        if( !NT_SUCCESS(Status) ) 
+            warning("CreateIpForwardEntry: %x\n", Status);
+        else
+            old_default_route = RouterMib.dwForwardNextHop;
+    }
+}
+
+
 void
 bind_lease(struct interface_info *ip)
 {
-	/* Remember the medium. */
-	ip->client->new->medium = ip->client->medium;
+    PDHCP_ADAPTER Adapter;
+    struct client_lease *new_lease = ip->client->new;
 
-	/* Write out the new lease. */
-	write_client_lease(ip, ip->client->new, 0);
+    /* Remember the medium. */
+    ip->client->new->medium = ip->client->medium;
+    ip->client->active = ip->client->new;
+    ip->client->new = NULL;
 
-	/* Run the client script with the new parameters. */
-	script_init((ip->client->state == S_REQUESTING ? "BOUND" :
-	    (ip->client->state == S_RENEWING ? "RENEW" :
-	    (ip->client->state == S_REBOOTING ? "REBOOT" : "REBIND"))),
-	    ip->client->new->medium);
-	if (ip->client->active && ip->client->state != S_REBOOTING)
-		script_write_params("old_", ip->client->active);
-	script_write_params("new_", ip->client->new);
-	if (ip->client->alias)
-		script_write_params("alias_", ip->client->alias);
-	script_go();
+    /* Set up a timeout to start the renewal process. */
+    add_timeout(ip->client->active->renewal, state_bound, ip);
 
-	/* Replace the old active lease with the new one. */
-	if (ip->client->active)
-		free_client_lease(ip->client->active);
-	ip->client->active = ip->client->new;
-	ip->client->new = NULL;
+    note("bound to %s -- renewal in %d seconds.",
+         piaddr(ip->client->active->address),
+         ip->client->active->renewal - cur_time);
 
-	/* Set up a timeout to start the renewal process. */
-	add_timeout(ip->client->active->renewal, state_bound, ip);
+    ip->client->state = S_BOUND;
+        
+    Adapter = AdapterFindInfo( ip );
 
-	note("bound to %s -- renewal in %d seconds.",
-	    piaddr(ip->client->active->address),
-	    ip->client->active->renewal - cur_time);
-	ip->client->state = S_BOUND;
-	reinitialize_interfaces();
-//	go_daemon();
+    if( Adapter )  setup_adapter( Adapter, new_lease );
+    else warning("Could not find adapter for info %p\n", ip);
+
+    set_name_servers( new_lease );
+
+    reinitialize_interfaces();
 }
 
 /*
@@ -1588,8 +1670,6 @@ rewrite_client_leases(void)
 		write_client_lease(ifi, ifi->client->active, 1);
 
 	fflush(leaseFile);
-//	ftruncate(fileno(leaseFile), ftello(leaseFile));
-//	fsync(fileno(leaseFile));
 }
 
 void

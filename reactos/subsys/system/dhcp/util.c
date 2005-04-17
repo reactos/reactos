@@ -2,8 +2,9 @@
 #include "rosdhcp.h"
 
 char *piaddr( struct iaddr addr ) {
-    struct sockaddr_in *sa = (struct sockaddr_in *)addr.iabuf;
-    return inet_ntoa( sa->sin_addr );
+    struct sockaddr_in sa;
+    memcpy(&sa.sin_addr,addr.iabuf,sizeof(sa.sin_addr));
+    return inet_ntoa( sa.sin_addr );
 }
 
 int note( char *format, ... ) {

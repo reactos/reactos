@@ -21,6 +21,7 @@
 #undef PREFER
 #define DHCP_DISCOVER_INTERVAL 15
 #define DHCP_REBOOT_TIMEOUT 300
+#define DHCP_PANIC_TIMEOUT DHCP_REBOOT_TIMEOUT * 3
 #define DHCP_BACKOFF_MAX 300
 #define _PATH_DHCLIENT_PID "\\systemroot\\system32\\drivers\\etc\\dhclient.pid"
 
@@ -59,6 +60,7 @@ typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
 #define srandom srand
 
 extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
+extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
 extern VOID ApiInit();
 extern VOID ApiLock();
 extern VOID ApiUnlock();
