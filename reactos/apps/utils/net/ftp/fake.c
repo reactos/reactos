@@ -235,7 +235,7 @@ char *getpass (const char * prompt)
   static char input[256];
   HANDLE in;
   HANDLE err;
-  int    count;
+  DWORD    count;
 
   in = GetStdHandle (STD_INPUT_HANDLE);
   err = GetStdHandle (STD_ERROR_HANDLE);
