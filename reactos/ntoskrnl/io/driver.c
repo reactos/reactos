@@ -1649,6 +1649,7 @@ IoCreateDriver (
     PDRIVER_OBJECT DriverObject;
     UNICODE_STRING ServiceKeyName;
     HANDLE hDriver;
+    ULONG i;
     
     /* First, create a unique name for the driver if we don't have one */
     if (!DriverName) {
@@ -1695,7 +1696,12 @@ IoCreateDriver (
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;
-    /* FIXME: Invalidate all Major Functions b/c now they are NULL and might crash */
+    
+    /* Invalidate all Major Functions */
+    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+    {
+        DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
+    }
                
     /* Set up the Service Key Name */
     ServiceKeyName.Buffer = ExAllocatePool(PagedPool, LocalDriverName.Length + sizeof(WCHAR));

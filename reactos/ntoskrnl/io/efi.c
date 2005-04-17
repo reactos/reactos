@@ -1,5 +1,4 @@
-/* $Id:$
- * 
+/* 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/efi.c
@@ -15,9 +14,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @unimplemented
- */
 NTSTATUS
 STDCALL
 NtAddBootEntry(
@@ -28,9 +24,7 @@ NtAddBootEntry(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-/*
- * @unimplemented
- */
+                                 
 NTSTATUS
 STDCALL
 NtDeleteBootEntry(
@@ -41,9 +35,7 @@ NtDeleteBootEntry(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-/*
- * @unimplemented
- */
+                                 
 NTSTATUS
 STDCALL
 NtEnumerateBootEntries(
@@ -54,9 +46,7 @@ NtEnumerateBootEntries(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-/*
- * @unimplemented
- */
+                                   
 NTSTATUS
 STDCALL
 NtQueryBootEntryOrder(
@@ -67,9 +57,7 @@ NtQueryBootEntryOrder(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-/*
- * @unimplemented
- */
+              
 NTSTATUS
 STDCALL
 NtQueryBootOptions(
@@ -80,9 +68,7 @@ NtQueryBootOptions(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-/*
- * @unimplemented
- */
+              
 NTSTATUS
 STDCALL
 NtSetBootEntryOrder(
@@ -93,10 +79,7 @@ NtSetBootEntryOrder(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-
-/*
- * @unimplemented
- */
+            
 NTSTATUS 
 STDCALL 
 NtSetBootOptions(
@@ -106,12 +89,8 @@ NtSetBootOptions(
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
+}              
+                  
 NTSTATUS 
 STDCALL 
 NtTranslateFilePath(
@@ -123,6 +102,5 @@ NtTranslateFilePath(
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
 }
-
 
 /* EOF */

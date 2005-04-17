@@ -417,7 +417,7 @@ IoInit (VOID)
   IoDeviceObjectType->Security = NULL;
   IoDeviceObjectType->QueryName = NULL;
   IoDeviceObjectType->OkayToClose = NULL;
-  IoDeviceObjectType->Create = IopCreateDevice;
+  IoDeviceObjectType->Create = NULL;
   IoDeviceObjectType->DuplicationNotify = NULL;
   
   RtlInitUnicodeString(&IoDeviceObjectType->TypeName, L"Device");
