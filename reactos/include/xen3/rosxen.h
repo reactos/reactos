@@ -5,6 +5,9 @@
 #ifndef ROSXEN_H_INCLUDED
 #define ROSXEN_H_INCLUDED
 
+/* Match this with your dom0 Linux .config */
+#define CONFIG_XEN_BLKDEV_GRANT
+
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned long u32;

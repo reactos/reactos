@@ -73,6 +73,7 @@ VOID XenVideoPrepareForReactOS(VOID);
 ULONG XenMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 VOID XenMemInit(start_info_t *StartInfo);
 u32 XenMemVirtualToMachine(void *VirtualAddress);
+int XenMemGrantForeignAccess(domid_t DomId, void *VirtAddr, BOOL ReadOnly);
 
 BOOL XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOL XenDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);

@@ -23,6 +23,10 @@
 #include <xen.h>
 #include <hypervisor.h>
 
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+#include <grant_table.h>
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
+
 /* Page Directory Entry */
 typedef struct _PDE
 {
@@ -40,9 +44,9 @@ typedef struct _PTE
 #define PTRS_PER_PT   (PAGE_SIZE / sizeof(PTE))
 
 /* Page Directory Index of a given virtual address */
-#define PD_IDX(Va) (((Va) >> PGDIR_SHIFT) & (PTRS_PER_PD - 1))
+#define PD_IDX(Va) ((((ULONG_PTR) Va) >> PGDIR_SHIFT) & (PTRS_PER_PD - 1))
 /* Page Table Index of a give virtual address */
-#define PT_IDX(Va) (((Va) >> PAGE_SHIFT) & (PTRS_PER_PT - 1))
+#define PT_IDX(Va) ((((ULONG_PTR) Va) >> PAGE_SHIFT) & (PTRS_PER_PT - 1))
 /* Convert a Page Directory or Page Table entry to a (machine) address */
 #define PAGE_MASK  (~(PAGE_SIZE-1))
 
@@ -78,6 +82,10 @@ static PPDE XenPageDir;
 #define XEN_MMU_UPDATE(req, count, success, domid) \
   HYPERVISOR_mmu_update((req), (count), (success), (domid))
 #endif /* XEN_VER */
+
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+static grant_entry_t *XenMemBlkdevGrantShared;
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
 
 ULONG
 XenMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
@@ -173,6 +181,10 @@ XenMemInit(start_info_t *StartInfo)
                                        memory */
   unsigned long PageNumber;         /* Index of current page */
   PPTE PageTable;                   /* Page table containing current page */
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+  gnttab_setup_table_t Setup;       /* Grant table setup request */
+  unsigned long Frame;              /* Grant table frame */
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
 
   PageDir = (PPDE) StartInfo->pt_base;
   PageTableForPageDir = (PPTE)((char *) StartInfo->pt_base
@@ -184,8 +196,13 @@ XenMemInit(start_info_t *StartInfo)
   StartPfn = ROUND_DOWN((unsigned long) &start, PAGE_SIZE) / PAGE_SIZE;
 
   /* First, lets connect all our page tables */
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+  PageTablesRequired = ROUND_UP(StartInfo->nr_pages + 2, PTRS_PER_PT)
+                       / PTRS_PER_PT;
+#else /* CONFIG_XEN_BLKDEV_GRANT */
   PageTablesRequired = ROUND_UP(StartInfo->nr_pages + 1, PTRS_PER_PT)
                        / PTRS_PER_PT;
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
   for (PageTableNumber = 0; PageTableNumber < PageTablesRequired;
        PageTableNumber++)
     {
@@ -306,6 +323,33 @@ XenMemInit(start_info_t *StartInfo)
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
       XenDie();
     }
+
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+  /* If we're using grant tables, setup a single shared grant table page
+   * following the shared_info page */
+  Setup.dom = DOMID_SELF;
+  Setup.nr_frames = 1;
+  Setup.frame_list = &Frame;
+
+  if (0 != HYPERVISOR_grant_table_op(GNTTABOP_setup_table, &Setup, 1)
+      || 0 != Setup.status)
+    {
+      HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
+      XenDie();
+    }
+  XenMemBlkdevGrantShared = (grant_entry_t *)((XenStartInfo->nr_pages + 1)
+                                              * PAGE_SIZE);
+  MmuReq.ptr = (XenPageDir[PD_IDX(XenMemBlkdevGrantShared)].Pde
+                & PAGE_MASK)
+               + PT_IDX(XenMemBlkdevGrantShared) * sizeof(PTE);
+  MmuReq.val = (Frame << PAGE_SHIFT)
+               | (PA_PRESENT | PA_READWRITE | PA_USER);
+  if (0 != XEN_MMU_UPDATE(&MmuReq, 1, NULL, DOMID_SELF))
+    {
+      HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
+      XenDie();
+    }
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
 }
 
 u32
@@ -318,5 +362,22 @@ XenMemVirtualToMachine(void *VirtualAddress)
   return PageTable[PT_IDX((ULONG_PTR) VirtualAddress)].Pte
          & PAGE_MASK;
 }
+
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+int
+XenMemGrantForeignAccess(domid_t DomId, void *VirtualAddress, BOOL ReadOnly)
+{
+  int Ref = 0; /* We only do 1 page at the moment */
+
+  XenMemBlkdevGrantShared[Ref].frame = (XenMemVirtualToMachine(VirtualAddress)
+                                        >> PAGE_SHIFT);
+  XenMemBlkdevGrantShared[Ref].domid = DomId;
+  wmb();
+  XenMemBlkdevGrantShared[Ref].flags = GTF_permit_access
+                                       | (ReadOnly ? GTF_readonly : 0);
+
+  return Ref;
+}
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
 
 /* EOF */

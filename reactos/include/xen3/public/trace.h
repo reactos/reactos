@@ -8,8 +8,6 @@
 #ifndef __XEN_PUBLIC_TRACE_H__
 #define __XEN_PUBLIC_TRACE_H__
 
-#include <asm/atomic.h>
-
 /* Trace classes */
 #define TRC_GEN     0x00010000    /* General trace            */
 #define TRC_SCHED   0x00020000    /* Xen Scheduler trace      */

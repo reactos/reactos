@@ -80,6 +80,9 @@ static PXENDISKINFO XenDiskInfo;
 
 static void *XenDiskScratchPage;
 static u32 XenDiskScratchMachine;
+#ifdef CONFIG_XEN_BLKDEV_GRANT
+static int XenDiskScratchGrantRef;
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
 
 static void *
 XenDiskAllocatePageAlignedMemory(unsigned Size)
@@ -163,8 +166,10 @@ XenDiskConnect(blkif_fe_interface_status_t *Status)
   XenEvtchnRegisterDisk(XenDiskEvtchn);
 
 #ifdef CONFIG_XEN_BLKDEV_GRANT
-  rdomid       = status->domid;
-#endif
+  XenDiskScratchGrantRef = XenMemGrantForeignAccess(Status->domid,
+                                                    XenDiskScratchPage,
+                                                    FALSE);
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
 
   XenDiskState = DISK_STATE_CONNECTED;
 }
@@ -377,17 +382,16 @@ XenDiskProbe()
   Req.operation = BLKIF_OP_PROBE;
   Req.nr_segments = 1;
 #ifdef CONFIG_XEN_BLKDEV_GRANT
-  blkif_control_probe_send(&req, &rsp,
-                           (unsigned long)(virt_to_machine(buf)));
-#else
+  Req.frame_and_sects[0] = (((u32) XenDiskScratchGrantRef) << 16) | 7;
+#else /* CONFIG_XEN_BLKDEV_GRANT */
   Req.frame_and_sects[0] = XenDiskScratchMachine | 7;
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
 
   if (! XenDiskControlSend(&Req, &Rsp))
     {
       printf("Unexpected disk disconnect\n");
       XenDie();
     }
-#endif
 
   if (Rsp.status <= 0)
     {
@@ -497,16 +501,16 @@ XenDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber,
       Req.id = 0;
       Req.sector_number = SectorNumber;
 #ifdef CONFIG_XEN_BLKDEV_GRANT
-      blkif_control_probe_send(&req, &rsp,
-                               (unsigned long)(virt_to_machine(buf)));
-#else
+      Req.frame_and_sects[0] = (((u32) XenDiskScratchGrantRef) << 16)
+                               | (Count - 1);
+#else /* CONFIG_XEN_BLKDEV_GRANT */
       Req.frame_and_sects[0] = XenDiskScratchMachine | (Count - 1);
+#endif /* CONFIG_XEN_BLKDEV_GRANT */
 
       if (! XenDiskControlSend(&Req, &Rsp))
         {
           return FALSE;
         }
-#endif
       if (BLKIF_RSP_OKAY != Rsp.status)
         {
           return FALSE;
