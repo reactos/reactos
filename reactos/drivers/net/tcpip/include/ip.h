@@ -207,6 +207,12 @@ PIP_PACKET IPInitializePacket(
 PIP_INTERFACE IPCreateInterface(
     PLLIP_BIND_INFO BindInfo);
 
+VOID IPAddInterfaceRoute(
+    PIP_INTERFACE IF);
+
+VOID IPRemoveInterfaceRoute(
+    PIP_INTERFACE IF);
+
 VOID IPDestroyInterface(
     PIP_INTERFACE IF);
 

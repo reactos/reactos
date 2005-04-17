@@ -1483,10 +1483,20 @@ NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
             break;
         }
         if( IF->Index == IpAddrChange->NteIndex ) {
+            IPRemoveInterfaceRoute( IF );
+
             IF->Unicast.Type = IP_ADDRESS_V4;
             IF->Unicast.Address.IPv4Address = IpAddrChange->Address;
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
+
+            TI_DbgPrint(MID_TRACE,("New Unicast Address: %x\n", 
+                                   IF->Unicast.Address.IPv4Address));
+            TI_DbgPrint(MID_TRACE,("New Netmask        : %x\n", 
+                                   IF->Netmask.Address.IPv4Address));
+
+            IPAddInterfaceRoute( IF );
+    
             IpAddrChange->Address = IF->Index;
             Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = IF->Index;

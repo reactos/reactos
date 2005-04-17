@@ -30,7 +30,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
     
     ForEachInterface(CurrentIF) {
-	IpCurrent->Index     = Count;
+	IpCurrent->Index     = CurrentIF->Index;
 	IpCurrent->Addr      = 0;
 	IpCurrent->BcastAddr = 0;
 	IpCurrent->Mask      = 0;

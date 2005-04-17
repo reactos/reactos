@@ -232,6 +232,27 @@ VOID IPDestroyInterface(
     exFreePool(IF);
 }
 
+VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
+    PNEIGHBOR_CACHE_ENTRY NCE;
+    IP_ADDRESS NetworkAddress;
+
+    /* Add a permanent neighbor for this NTE */
+    NCE = NBAddNeighbor(IF, &IF->Unicast, 
+			IF->Address, IF->AddressLength, 
+			NUD_PERMANENT);
+    if (!NCE) {
+	TI_DbgPrint(MIN_TRACE, ("Could not create NCE.\n"));
+    }
+    
+    AddrWidenAddress( &NetworkAddress, &IF->Unicast, &IF->Netmask );
+
+    if (!RouterAddRoute(&NetworkAddress, &IF->Netmask, NCE, 1)) {
+	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
+    }
+
+    /* Allow TCP to hang some configuration on this interface */
+    IF->TCPContext = TCPPrepareInterface( IF );
+}
 
 BOOLEAN IPRegisterInterface(
     PIP_INTERFACE IF)
@@ -246,8 +267,6 @@ BOOLEAN IPRegisterInterface(
     KIRQL OldIrql;
     UINT ChosenIndex = 1;
     BOOLEAN IndexHasBeenChosen;
-    IP_ADDRESS NetworkAddress;
-    PNEIGHBOR_CACHE_ENTRY NCE;
     IF_LIST_ITER(Interface);
 
     TI_DbgPrint(MID_TRACE, ("Called. IF (0x%X).\n", IF));
@@ -264,38 +283,37 @@ BOOLEAN IPRegisterInterface(
             }
         } EndFor(Interface);
     } while( !IndexHasBeenChosen );
-
+    
     IF->Index = ChosenIndex;
 
-    /* Add a permanent neighbor for this NTE */
-    NCE = NBAddNeighbor(IF, &IF->Unicast, 
-			IF->Address, IF->AddressLength, 
-			NUD_PERMANENT);
-    if (!NCE) {
-	TI_DbgPrint(MIN_TRACE, ("Could not create NCE.\n"));
-	TcpipReleaseSpinLock(&IF->Lock, OldIrql);
-	return FALSE;
-    }
-    
-    AddrWidenAddress( &NetworkAddress, &IF->Unicast, &IF->Netmask );
-
-    if (!RouterAddRoute(&NetworkAddress, &IF->Netmask, NCE, 1)) {
-	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
-    }
+    IPAddInterfaceRoute( IF );
     
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead, 
 				   &IF->ListEntry, 
 				   &InterfaceListLock);
 
-    /* Allow TCP to hang some configuration on this interface */
-    IF->TCPContext = TCPPrepareInterface( IF );
-
     TcpipReleaseSpinLock(&IF->Lock, OldIrql);
 
     return TRUE;
 }
 
+VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
+    PNEIGHBOR_CACHE_ENTRY NCE;
+    IP_ADDRESS GeneralRoute;
+
+    TCPDisposeInterfaceData( IF->TCPContext );
+    IF->TCPContext = NULL;
+
+    AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
+    RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
+    
+    /* Remove permanent NCE, but first we have to find it */
+    NCE = NBLocateNeighbor(&IF->Unicast);
+    if (NCE)
+	NBRemoveNeighbor(NCE);
+
+}
 
 VOID IPUnregisterInterface(
     PIP_INTERFACE IF)
@@ -306,15 +324,11 @@ VOID IPUnregisterInterface(
  */
 {
     KIRQL OldIrql3;
-    PNEIGHBOR_CACHE_ENTRY NCE;
 
     TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X).\n", IF));
 
-    /* Remove permanent NCE, but first we have to find it */
-    NCE = NBLocateNeighbor(&IF->Unicast);
-    if (NCE)
-	NBRemoveNeighbor(NCE);
-    
+    IPRemoveInterfaceRoute( IF );
+
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql3);
     RemoveEntryList(&IF->ListEntry);
     TcpipReleaseSpinLock(&InterfaceListLock, OldIrql3);
