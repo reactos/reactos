@@ -13,7 +13,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "advapi32.h"
-#include "svcctl.h"
+#include "svcctl_c.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -186,6 +186,8 @@ ControlService(SC_HANDLE        hService,
     SetLastError(dwError);
     return FALSE;
   }
+
+  DPRINT1("ControlService() done\n");
 
   return TRUE;
 #endif

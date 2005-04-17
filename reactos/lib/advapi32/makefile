@@ -48,11 +48,11 @@ SECURITY_OBJECTS = \
 	sec/trustee.o
 
 SERVICE_OBJECTS = \
+	service/svcctl_c.o \
 	service/eventlog.o \
 	service/scm.o \
 	service/sctrl.o \
-	service/undoc.o \
-	service/svcctl_c.o
+	service/undoc.o
 
 TOKEN_OBJECTS = \
 	token/privilege.o \
@@ -68,7 +68,7 @@ TARGET_OBJECTS = \
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
-TARGET_CLEAN = service/svcctl_c.c service/svcctl.h
+TARGET_CLEAN = service/svcctl_c.c service/svcctl_c.h
 
 include $(PATH_TO_TOP)/rules.mak
 
@@ -81,4 +81,4 @@ WIDL_FLAGS = -o \
              -I $(PATH_TO_TOP)/w32api/include
 
 service/svcctl_c.c service/svcctl.h: $(PATH_TO_TOP)/include/idl/svcctl.idl
-	$(WIDL) $(WIDL_FLAGS) -h -H service/svcctl.h -c -C service/svcctl_c.c $(PATH_TO_TOP)/include/idl/svcctl.idl
+	$(WIDL) $(WIDL_FLAGS) -h -H service/svcctl_c.h -c -C service/svcctl_c.c $(PATH_TO_TOP)/include/idl/svcctl.idl
