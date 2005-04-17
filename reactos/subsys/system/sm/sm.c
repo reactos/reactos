@@ -148,31 +148,63 @@ SM_CMD_DECL(info)
 {
 	int rc = EXIT_SUCCESS;
 	NTSTATUS Status = STATUS_SUCCESS;
-	SM_BASIC_INFORMATION bi = {0,};
-	ULONG ReturnDataLength = sizeof bi;
+	SM_INFORMATION_CLASS InformationClass = SmBasicInformation;
+	union {
+	SM_BASIC_INFORMATION bi;
+	SM_SUBSYSTEM_INFORMATION ssi;
+	} Info;
+	ULONG DataLength = 0;
+	ULONG ReturnDataLength = 0;
+	INT i = 0;
 
-	Status = SmQueryInformation (hSmApiPort,
-				     SmBasicInformation,
-				     & bi,
-				     sizeof bi,
-				     & ReturnDataLength);
-	if (STATUS_SUCCESS == Status)
+	RtlZeroMemory (& Info, sizeof Info);
+	switch (argc)
 	{
-		int i = 0;
-
-		printf ("SSID PID      Flags\n");
-		for (i = 0; i < bi.SubSystemCount; i ++)
-		{
-			printf ("%04x %08lx %04x\n",
-					bi.SubSystem[i].Id,
-			       		bi.SubSystem[i].ProcessId,
-					bi.SubSystem[i].Flags);
-		}
+	case 2: /* sm info */
+		InformationClass = SmBasicInformation;
+		DataLength = sizeof Info.bi;
+		break;
+	case 3: /* sm info id */
+		InformationClass = SmSubSystemInformation;
+		DataLength = sizeof Info.ssi;
+		Info.ssi.SubSystemId = atol(argv[2]);
+		break;
+	default:
+		return EXIT_FAILURE;
+		break;
 	}
-	else
+	Status = SmQueryInformation (hSmApiPort,
+				     InformationClass,
+				     & Info,
+				     DataLength,
+				     & ReturnDataLength);
+	if (STATUS_SUCCESS != Status)
 	{
 		printf ("Status 0x%08lx\n", Status);
-		rc = EXIT_FAILURE;
+		return EXIT_FAILURE;
+	}
+	switch (argc)
+	{
+	case 2:
+		printf ("SM SubSystem Directory\n\n");
+		printf ("SSID PID      Flags\n");
+		printf ("---- -------- ------------\n");
+		for (i = 0; i < Info.bi.SubSystemCount; i ++)
+		{
+			printf ("%04x %08lx %04x\n",
+				Info.bi.SubSystem[i].Id,
+		       		Info.bi.SubSystem[i].ProcessId,
+				Info.bi.SubSystem[i].Flags);
+		}
+		break;
+	case 3:
+		printf  ("SubSystem ID: %d\n",   Info.ssi.SubSystemId);
+		printf  ("       Flags: %04x\n", Info.ssi.Flags);
+		printf  ("  Process ID: %ld\n",  Info.ssi.ProcessId);
+		wprintf(L"  NSRootNode: '%s'\n", Info.ssi.NameSpaceRootNode);
+		break;
+	default:
+		break;
 	}
 	return rc;
 }
