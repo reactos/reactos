@@ -685,7 +685,7 @@ bind_lease(struct interface_info *ip)
     /* Timeout of zero means no timeout (some implementations seem to use
      * one day).
      */
-    if( ip->client->active->renewal ) 
+    if( ip->client->active->renewal - cur_time ) 
         add_timeout(ip->client->active->renewal, state_bound, ip);
 
     note("bound to %s -- renewal in %d seconds.",
