@@ -30,34 +30,29 @@ IoInitVpbImplementation(VOID)
 }
 
 NTSTATUS
-IoAttachVpb(PDEVICE_OBJECT DeviceObject)
+STDCALL
+IopAttachVpb(PDEVICE_OBJECT DeviceObject)
 {
-   PVPB Vpb;
+    PVPB Vpb;
    
-   Vpb = ExAllocatePoolWithTag(NonPagedPool,
-			       sizeof(VPB),
-			       TAG_VPB);
-   if (Vpb == NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
+    /* Allocate the Vpb */
+    Vpb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(VPB),
+                                TAG_VPB);
+    if (Vpb == NULL) return(STATUS_UNSUCCESSFUL);
+    
+    /* Clear it so we don't waste time manually */
+    RtlZeroMemory(Vpb, sizeof(VPB));
    
-   Vpb->Type = 0;
-   Vpb->Size = sizeof(VPB) / sizeof(DWORD);
-   Vpb->Flags = 0;
-   Vpb->VolumeLabelLength = 0;
-   Vpb->DeviceObject = NULL;
-   Vpb->RealDevice = DeviceObject;
-   Vpb->SerialNumber = 0;
-   Vpb->ReferenceCount = 0;
-   RtlZeroMemory(Vpb->VolumeLabel,
-		 sizeof(WCHAR) * MAXIMUM_VOLUME_LABEL_LENGTH);
-   
-   DeviceObject->Vpb = Vpb;
-   
-   return(STATUS_SUCCESS);
-}
+    /* Set the Header and Device Field */
+    Vpb->Type = IO_TYPE_VPB;
+    Vpb->Size = sizeof(VPB);
+    Vpb->RealDevice = DeviceObject;
 
+    /* link it to the Device Object */
+    DeviceObject->Vpb = Vpb;
+    return(STATUS_SUCCESS);
+}
 
 /*
  * FUNCTION: Queries the volume information

@@ -370,7 +370,10 @@ IopCreateDevice(PVOID ObjectBody,
 		PVOID Parent,
 		PWSTR RemainingPath,
 		POBJECT_ATTRIBUTES ObjectAttributes);
-NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS 
+STDCALL
+IopAttachVpb(PDEVICE_OBJECT DeviceObject);
 
 PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 					 PDEVICE_OBJECT DeviceObject,

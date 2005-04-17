@@ -892,8 +892,19 @@ struct _FAST_IO_DISPATCH_TABLE
 } FAST_IO_DISPATCH_TABLE, * PFAST_IO_DISPATCH_TABLE;
 #endif
 
-#define IO_TYPE_DRIVER 4L
-#define IO_TYPE_FILE 0x0F5L
+#define IO_TYPE_ADAPTER                 0x1L
+#define IO_TYPE_CONTROLLER              0x2L
+#define IO_TYPE_DEVICE                  0x3L
+#define IO_TYPE_DRIVER                  0x4L
+#define IO_TYPE_FILE                    0x0F5L /* Temp Hack */
+#define IO_TYPE_IRP                     0x6L
+#define IO_TYPE_MASTER_ADAPTER          0x7L
+#define IO_TYPE_OPEN_PACKET             0x8L
+#define IO_TYPE_TIMER                   0x9L
+#define IO_TYPE_VPB                     0xaL
+#define IO_TYPE_ERROR_LOG               0xbL
+#define IO_TYPE_ERROR_MESSAGE           0xcL
+#define IO_TYPE_DEVICE_OBJECT_EXTENSION 0xdL
 
 #define DRVO_UNLOAD_INVOKED 0x1L
 #define DRVO_LEGACY_DRIVER  0x2L
@@ -959,7 +970,6 @@ typedef VOID STDCALL_FUNC
 /*
  * PURPOSE: Special timer associated with each device
  */
- #define IO_TYPE_TIMER 9
 typedef struct _IO_TIMER {
    USHORT Type;				/* Every IO Object has a Type */
    USHORT TimerEnabled;			/* Tells us if the Timer is enabled or not */
