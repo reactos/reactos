@@ -351,15 +351,17 @@ USBD_GetInterfaceLength(
     PUCHAR BufferEnd
     )
 {
+    ULONG_PTR Current;
     PUSB_INTERFACE_DESCRIPTOR CurrentDescriptor = InterfaceDescriptor;
     DWORD Length = CurrentDescriptor->bLength;
 
     // USB_ENDPOINT_DESCRIPTOR_TYPE
     if (CurrentDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
     {
-        for (;
-             (PUCHAR)CurrentDescriptor < BufferEnd;
-             (PVOID)CurrentDescriptor += CurrentDescriptor->bLength)
+        for (Current = (ULONG_PTR)CurrentDescriptor;
+             Current < (ULONG_PTR)BufferEnd;
+             Current += CurrentDescriptor->bLength)
+            CurrentDescriptor = (PUSB_INTERFACE_DESCRIPTOR)Current;
             Length += CurrentDescriptor->bLength;
 
     }
