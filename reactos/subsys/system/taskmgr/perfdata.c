@@ -260,15 +260,16 @@ void PerfDataRefresh(void)
         pPerfData[Idx].ThreadCount = pSPI->NumberOfThreads;
         pPerfData[Idx].SessionId = pSPI->SessionId;
         
-        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pSPI->UniqueProcessId);
-        if (hProcess) {
-            if (OpenProcessToken(hProcess, TOKEN_QUERY|TOKEN_DUPLICATE|TOKEN_IMPERSONATE, &hProcessToken)) {
-                ImpersonateLoggedOnUser(hProcessToken);
-                memset(szTemp, 0, sizeof(TCHAR[MAX_PATH]));
-                dwSize = MAX_PATH;
-                GetUserName(szTemp, &dwSize);
+        if (pSPI->UniqueProcessId != NULL) {
+            hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pSPI->UniqueProcessId);
+            if (hProcess) {
+                if (OpenProcessToken(hProcess, TOKEN_QUERY|TOKEN_DUPLICATE|TOKEN_IMPERSONATE, &hProcessToken)) {
+                    ImpersonateLoggedOnUser(hProcessToken);
+                    memset(szTemp, 0, sizeof(TCHAR[MAX_PATH]));
+                    dwSize = MAX_PATH;
+                    GetUserName(szTemp, &dwSize);
 #ifndef UNICODE
-                MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTemp, -1, pPerfData[Idx].UserName, MAX_PATH);
+                    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTemp, -1, pPerfData[Idx].UserName, MAX_PATH);
 /*
 int MultiByteToWideChar(
   UINT CodePage,         // code page
@@ -280,13 +281,25 @@ int MultiByteToWideChar(
 );
  */
 #endif
-                RevertToSelf();
-                CloseHandle(hProcessToken);
+                    RevertToSelf();
+                    CloseHandle(hProcessToken);
+                } else {
+                    pPerfData[Idx].UserName[0] = _T('\0');
+                }
+                pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
+                pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
+                GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
+                CloseHandle(hProcess);
+            } else {
+                goto ClearInfo;
             }
-            pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
-            pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
-            GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
-            CloseHandle(hProcess);
+        } else {
+ClearInfo:
+            /* clear information we were unable to fetch */
+            pPerfData[Idx].UserName[0] = _T('\0');
+            pPerfData[Idx].USERObjectCount = 0;
+            pPerfData[Idx].GDIObjectCount = 0;
+            ZeroMemory(&pPerfData[Idx].IOCounters, sizeof(IO_COUNTERS));
         }
         pPerfData[Idx].UserTime.QuadPart = pSPI->UserTime.QuadPart;
         pPerfData[Idx].KernelTime.QuadPart = pSPI->KernelTime.QuadPart;
