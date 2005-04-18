@@ -38,9 +38,9 @@
 #include <epsapi.h>
 
 NTSTATUS NTAPI
-PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESSES *ProcessesAndThreads)
+PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESS_INFORMATION *ProcessesAndThreads)
 {
-  PSYSTEM_PROCESSES pInfoBuffer = NULL;
+  PSYSTEM_PROCESS_INFORMATION pInfoBuffer = NULL;
   SIZE_T nSize = 0x8000;
   NTSTATUS Status;
 
@@ -94,7 +94,7 @@ PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESSES *ProcessesAndThreads)
 }
 
 NTSTATUS NTAPI
-PsaWalkProcessesAndThreads(IN PSYSTEM_PROCESSES ProcessesAndThreads,
+PsaWalkProcessesAndThreads(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
                            IN PPROC_ENUM_ROUTINE ProcessCallback,
                            IN OUT PVOID ProcessCallbackContext,
                            IN PTHREAD_ENUM_ROUTINE ThreadCallback,
@@ -128,11 +128,11 @@ PsaWalkProcessesAndThreads(IN PSYSTEM_PROCESSES ProcessesAndThreads,
     if(ThreadCallback)
     {
       ULONG i;
-      PSYSTEM_THREADS pCurThread;
+      PSYSTEM_THREAD_INFORMATION pCurThread;
 
       /* scan the current process's thread list */
       for(i = 0, pCurThread = PsaWalkFirstThread(ProcessesAndThreads);
-          i < ProcessesAndThreads->ThreadCount;
+          i < ProcessesAndThreads->NumberOfThreads;
           i++, pCurThread = PsaWalkNextThread(pCurThread))
       {
         Status = ThreadCallback(pCurThread, ThreadCallbackContext);
@@ -158,7 +158,7 @@ PsaEnumerateProcessesAndThreads(IN PPROC_ENUM_ROUTINE ProcessCallback,
                                 IN PTHREAD_ENUM_ROUTINE ThreadCallback,
                                 IN OUT PVOID ThreadCallbackContext)
 {
-  PSYSTEM_PROCESSES pInfoBuffer;
+  PSYSTEM_PROCESS_INFORMATION pInfoBuffer;
   NTSTATUS Status;
 
   if(ProcessCallback == NULL && ThreadCallback == NULL)
@@ -194,7 +194,7 @@ PsaFreeCapture(IN PVOID Capture)
 }
 
 NTSTATUS NTAPI
-PsaWalkProcesses(IN PSYSTEM_PROCESSES ProcessesAndThreads,
+PsaWalkProcesses(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
                  IN PPROC_ENUM_ROUTINE Callback,
                  IN OUT PVOID CallbackContext)
 {
@@ -206,7 +206,7 @@ PsaWalkProcesses(IN PSYSTEM_PROCESSES ProcessesAndThreads,
 }
 
 NTSTATUS NTAPI
-PsaWalkThreads(IN PSYSTEM_PROCESSES ProcessesAndThreads,
+PsaWalkThreads(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
                IN PTHREAD_ENUM_ROUTINE Callback,
                IN OUT PVOID CallbackContext)
 {
@@ -237,42 +237,42 @@ PsaEnumerateThreads(IN PTHREAD_ENUM_ROUTINE Callback,
                                          CallbackContext);
 }
 
-PSYSTEM_PROCESSES FASTCALL
-PsaWalkFirstProcess(IN PSYSTEM_PROCESSES ProcessesAndThreads)
+PSYSTEM_PROCESS_INFORMATION FASTCALL
+PsaWalkFirstProcess(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads)
 {
   return ProcessesAndThreads;
 }
 
-PSYSTEM_PROCESSES FASTCALL
-PsaWalkNextProcess(IN PSYSTEM_PROCESSES CurrentProcess)
+PSYSTEM_PROCESS_INFORMATION FASTCALL
+PsaWalkNextProcess(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess)
 {
-  if(CurrentProcess->NextEntryDelta == 0)
+  if(CurrentProcess->NextEntryOffset == 0)
   {
     return NULL;
   }
   else
   {
-    return (PSYSTEM_PROCESSES)((ULONG_PTR)CurrentProcess + CurrentProcess->NextEntryDelta);
+    return (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)CurrentProcess + CurrentProcess->NextEntryOffset);
   }
 }
 
-PSYSTEM_THREADS FASTCALL
-PsaWalkFirstThread(IN PSYSTEM_PROCESSES CurrentProcess)
+PSYSTEM_THREAD_INFORMATION FASTCALL
+PsaWalkFirstThread(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess)
 {
   static SIZE_T nOffsetOfThreads = 0;
 
   /* get the offset of the Threads field */
-  nOffsetOfThreads = offsetof(SYSTEM_PROCESSES, Threads);
+  nOffsetOfThreads = offsetof(SYSTEM_PROCESS_INFORMATION, TH);
 
-  return (PSYSTEM_THREADS)((ULONG_PTR)CurrentProcess + nOffsetOfThreads);
+  return (PSYSTEM_THREAD_INFORMATION)((ULONG_PTR)CurrentProcess + nOffsetOfThreads);
 }
 
-PSYSTEM_THREADS FASTCALL
-PsaWalkNextThread(IN PSYSTEM_THREADS CurrentThread)
+PSYSTEM_THREAD_INFORMATION FASTCALL
+PsaWalkNextThread(IN PSYSTEM_THREAD_INFORMATION CurrentThread)
 {
-  return (PSYSTEM_THREADS)((ULONG_PTR)CurrentThread +
-                           (offsetof(SYSTEM_PROCESSES, Threads[1]) -
-                            offsetof(SYSTEM_PROCESSES, Threads[0])));
+  return (PSYSTEM_THREAD_INFORMATION)((ULONG_PTR)CurrentThread +
+                           (offsetof(SYSTEM_PROCESS_INFORMATION, TH[1]) -
+                            offsetof(SYSTEM_PROCESS_INFORMATION, TH[0])));
 }
 
 /* EOF */

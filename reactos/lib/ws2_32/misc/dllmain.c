@@ -28,7 +28,7 @@ VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
 
 HANDLE GlobalHeap;
-BOOL Initialized = FALSE;	/* TRUE if WSAStartup() has been successfully called */
+BOOL WsaInitialized = FALSE;	/* TRUE if WSAStartup() has been successfully called */
 WSPUPCALLTABLE UpcallTable;
 
 
