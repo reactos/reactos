@@ -26,6 +26,8 @@ BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
 BOOLEAN Ke386GlobalPagesEnabled = FALSE;
 ULONG KiFastSystemCallDisable = 1;
+extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
+extern ULONG IdleProcessorMask;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -121,6 +123,42 @@ Ki386GetCpuId(VOID)
       Ki386Cpuid(0x80000006, &Dummy, &Dummy, &Ecx, &Dummy);
       Pcr->L2CacheSize = Ecx >> 16;
    }
+}
+
+VOID
+KeApplicationProcessorInitDispatcher(VOID)
+{
+   KIRQL oldIrql;
+   oldIrql = KeAcquireDispatcherDatabaseLock();
+   IdleProcessorMask |= (1 << KeGetCurrentProcessorNumber());
+   KeReleaseDispatcherDatabaseLock(oldIrql);
+}
+
+VOID 
+INIT_FUNCTION
+KeCreateApplicationProcessorIdleThread(ULONG Id)
+{
+  PETHREAD IdleThread;
+  PKPRCB Prcb = ((PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE))->Prcb;
+
+  PsInitializeThread(PsIdleProcess,
+		     &IdleThread,
+		     NULL,
+		     KernelMode,
+		     FALSE);
+  IdleThread->Tcb.State = THREAD_STATE_RUNNING;
+  IdleThread->Tcb.FreezeCount = 0;
+  IdleThread->Tcb.Affinity = 1 << Id;
+  IdleThread->Tcb.UserAffinity = 1 << Id;
+  IdleThread->Tcb.Priority = LOW_PRIORITY;
+  IdleThread->Tcb.BasePriority = LOW_PRIORITY;
+  Prcb->IdleThread = &IdleThread->Tcb;
+  Prcb->CurrentThread = &IdleThread->Tcb;
+
+  Ki386InitialStackArray[Id] = (PVOID)IdleThread->Tcb.StackLimit;
+
+  DPRINT("IdleThread for Processor %d has PID %d\n",
+	   Id, IdleThread->Cid.UniqueThread);
 }
 
 VOID INIT_FUNCTION

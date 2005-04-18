@@ -198,6 +198,10 @@ ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
+VOID
+KeApplicationProcessorInitDispatcher(VOID);
+VOID 
+KeCreateApplicationProcessorIdleThread(ULONG Id);
 
 #ifdef CONFIG_SMP
 #define LOCK "lock ; "

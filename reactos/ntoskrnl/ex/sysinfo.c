@@ -587,8 +587,13 @@ QSI_DEF(SystemProcessInformation)
 
 		SpiCur = (PSYSTEM_PROCESSES)pCur;
 
-		nThreads = PsEnumThreadsByProcess(pr);
-		
+        current_entry = pr->ThreadListHead.Flink;
+        while (current_entry != &pr->ThreadListHead)
+        {
+            nThreads++;
+            current_entry = current_entry->Flink;
+        }
+
 		// size of the structure for every process
 		curSize = sizeof(SYSTEM_PROCESSES)-sizeof(SYSTEM_THREADS)+sizeof(SYSTEM_THREADS)*nThreads;
 		ovlSize += curSize+inLen;
@@ -667,7 +672,7 @@ QSI_DEF(SystemProcessInformation)
                }
 
 		pr = PsGetNextProcess(pr);
-
+        nThreads = 0;
 		if ((pr == syspr) || (pr == NULL))
 		{
 			SpiCur->NextEntryDelta = 0;

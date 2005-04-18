@@ -24,6 +24,11 @@ BOOLEAN PspReaping = FALSE;
 extern LIST_ENTRY PsActiveProcessHead;
 extern FAST_MUTEX PspActiveProcessMutex;
 
+VOID
+STDCALL
+MmDeleteTeb(PEPROCESS Process,
+            PTEB Teb);
+
 /* FUNCTIONS *****************************************************************/
 
 STDCALL
@@ -204,9 +209,8 @@ PspExitThread(NTSTATUS ExitStatus)
     PETHREAD CurrentThread;
     BOOLEAN Last;
     PEPROCESS CurrentProcess;
-    SIZE_T Length = PAGE_SIZE;
-    PVOID TebBlock;
     PTERMINATION_PORT TerminationPort;
+    PTEB Teb;
 
     DPRINT("PspExitThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
 
@@ -285,26 +289,10 @@ PspExitThread(NTSTATUS ExitStatus)
     //CmNotifyRunDown(CurrentThread);
     
     /* Free the TEB */
-    if(CurrentThread->Tcb.Teb) {
+    if((Teb = CurrentThread->Tcb.Teb)) {
 
-        DPRINT("Decommit teb at %p\n", CurrentThread->Tcb.Teb);
-        TebBlock = MM_ROUND_DOWN(CurrentThread->Tcb.Teb, MM_VIRTMEM_GRANULARITY);
-
-        ZwFreeVirtualMemory(NtCurrentProcess(),
-                           (PVOID *)&CurrentThread->Tcb.Teb,
-                           &Length,
-                           MEM_DECOMMIT);
-
-        DPRINT("teb %p, TebBlock %p\n", CurrentThread->Tcb.Teb, TebBlock);
-
-        if (TebBlock != CurrentProcess->TebBlock ||
-            CurrentProcess->TebBlock == CurrentProcess->TebLastAllocated) {
-
-            MmLockAddressSpace(&CurrentProcess->AddressSpace);
-            MmReleaseMemoryAreaIfDecommitted(CurrentProcess, &CurrentProcess->AddressSpace, TebBlock);
-            MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
-        }
-
+        DPRINT1("Decommit teb at %p\n", Teb);
+        MmDeleteTeb(CurrentProcess, Teb);
         CurrentThread->Tcb.Teb = NULL;
     }
    

@@ -16,6 +16,7 @@
 extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
 extern ULONG NtOSCSDVersion;
+
 /* FUNCTIONS *****************************************************************/
   
 PVOID
@@ -28,25 +29,33 @@ MiCreatePebOrTeb(PEPROCESS Process,
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     BoundaryAddressMultiple.QuadPart = 0;
+    PVOID AllocatedBase = BaseAddress;
     
     /* Acquire the Lock */
     MmLockAddressSpace(ProcessAddressSpace);
 
-    /* Create a Peb or Teb */
-    Status = MmCreateMemoryArea(Process,
-                                ProcessAddressSpace,
-                                MEMORY_AREA_PEB_OR_TEB,
-                                &BaseAddress,
-                                PAGE_SIZE,
-                                PAGE_READWRITE,
-                                &MemoryArea,
-                                FALSE,
-                                FALSE,
-                                BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status)) 
-    {
-        DPRINT1("Failed to allocate PEB or TEB\n");
-    }
+    /* 
+     * Create a Peb or Teb. 
+     * Loop until it works, decreasing by PAGE_SIZE each time. The logic here
+     * is that a PEB allocation should never fail since the address is free,
+     * while TEB allocation can fail, and we should simply try the address
+     * below. Is there a nicer way of doing this automagically? (ie: findning)
+     * a gap region? -- Alex
+     */
+    do {
+        DPRINT("Trying to allocate: %x\n", AllocatedBase);
+        Status = MmCreateMemoryArea(Process,
+                                    ProcessAddressSpace,
+                                    MEMORY_AREA_PEB_OR_TEB,
+                                    &AllocatedBase,
+                                    PAGE_SIZE,
+                                    PAGE_READWRITE,
+                                    &MemoryArea,
+                                    TRUE,
+                                    FALSE,
+                                    BoundaryAddressMultiple);
+        AllocatedBase = AllocatedBase - PAGE_SIZE;
+    } while (Status != STATUS_SUCCESS);
        
     /* Initialize the Region */
     MmInitialiseRegion(&MemoryArea->Data.VirtualMemoryData.RegionListHead,
@@ -60,7 +69,7 @@ MiCreatePebOrTeb(PEPROCESS Process,
     /* Unlock Address Space */
     DPRINT("Returning\n");
     MmUnlockAddressSpace(ProcessAddressSpace);
-    return BaseAddress;
+    return AllocatedBase + PAGE_SIZE;
 }
 
 VOID
@@ -77,7 +86,7 @@ MiFreeStackPage(PVOID Context,
 
 VOID
 STDCALL
-MmDeleteKernelStack(PVOID Stack, 
+MmDeleteKernelStack(PVOID Stack,
                     BOOLEAN GuiStack)
 {       
     /* Lock the Address Space */
@@ -91,6 +100,54 @@ MmDeleteKernelStack(PVOID Stack,
                           
     /* Unlock the Address Space */
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
+}
+
+VOID
+MiFreePebPage(PVOID Context, 
+              MEMORY_AREA* MemoryArea, 
+              PVOID Address, 
+              PFN_TYPE Page, 
+              SWAPENTRY SwapEntry, 
+              BOOLEAN Dirty)
+{
+    PEPROCESS Process = (PEPROCESS)Context;
+
+    if (Page != 0)
+    {
+        SWAPENTRY SavedSwapEntry;
+        SavedSwapEntry = MmGetSavedSwapEntryPage(Page);
+        if (SavedSwapEntry != 0)
+        {
+            MmFreeSwapPage(SavedSwapEntry);
+            MmSetSavedSwapEntryPage(Page, 0);
+        }
+        MmDeleteRmap(Page, Process, Address);
+        MmReleasePageMemoryConsumer(MC_USER, Page);
+    }
+    else if (SwapEntry != 0)
+    {
+        MmFreeSwapPage(SwapEntry);
+    }
+}
+
+VOID
+STDCALL
+MmDeleteTeb(PEPROCESS Process,
+            PTEB Teb)
+{       
+    PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
+    
+    /* Lock the Address Space */
+    MmLockAddressSpace(ProcessAddressSpace);
+    
+    /* Delete the Stack */
+    MmFreeMemoryAreaByPtr(ProcessAddressSpace,
+                          Teb,
+                          MiFreePebPage,
+                          Process);
+                          
+    /* Unlock the Address Space */
+    MmUnlockAddressSpace(ProcessAddressSpace);
 }
 
 PVOID
@@ -218,11 +275,64 @@ MmCreatePeb(PEPROCESS Process)
     return STATUS_SUCCESS;
 }
 
-VOID
+PTEB
 STDCALL
-MmCreateTeb(VOID)
+MmCreateTeb(PEPROCESS Process,
+            PCLIENT_ID ClientId,
+            PINITIAL_TEB InitialTeb)
 {
+    PTEB Teb;
+    BOOLEAN Attached = FALSE;
     
+    /* Attach to the process */
+    DPRINT("MmCreateTeb\n");
+    if (Process != PsGetCurrentProcess())
+    {
+        /* Attach to Target */
+        KeAttachProcess(&Process->Pcb);
+        Attached = TRUE;
+    }
+    
+    /* Allocate the TEB */
+    Teb = MiCreatePebOrTeb(Process, (PVOID)TEB_BASE);
+    
+    /* Initialize the PEB */
+    RtlZeroMemory(Teb, sizeof(TEB));
+    
+    /* Set TIB Data */
+    Teb->Tib.ExceptionList = (PVOID)0xFFFFFFFF;
+    Teb->Tib.Version = 1;
+    Teb->Tib.Self = (PNT_TIB)Teb;
+    
+    /* Set TEB Data */
+    Teb->Cid = *ClientId;
+    Teb->RealClientId = *ClientId;
+    Teb->Peb = Process->Peb;
+    Teb->CurrentLocale = PsDefaultThreadLocaleId;
+    
+    /* Store stack information from InitialTeb */
+    if(InitialTeb != NULL)
+    {
+        /* fixed-size stack */
+        if(InitialTeb->StackBase && InitialTeb->StackLimit)
+        {
+            Teb->Tib.StackBase = InitialTeb->StackBase;
+            Teb->Tib.StackLimit = InitialTeb->StackLimit;
+            Teb->DeallocationStack = InitialTeb->StackLimit;
+        }
+        /* expandable stack */
+        else
+        {
+            Teb->Tib.StackBase = InitialTeb->StackCommit;
+            Teb->Tib.StackLimit = InitialTeb->StackCommitMax;
+            Teb->DeallocationStack = InitialTeb->StackReserved;
+        }
+    }
+    
+    /* Return TEB Address */
+    DPRINT("Allocated: %x\n", Teb);
+    if (Attached) KeDetachProcess();
+    return Teb;
 }
 
 NTSTATUS

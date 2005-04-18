@@ -437,8 +437,6 @@ struct _EPROCESS
    */
   MADDRESS_SPACE        AddressSpace;
   LIST_ENTRY            ProcessListEntry;
-  PVOID                 TebBlock;
-  PVOID                 TebLastAllocated;
 };
 
 #define PROCESS_STATE_TERMINATED (1)

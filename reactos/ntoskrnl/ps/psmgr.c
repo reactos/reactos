@@ -15,15 +15,26 @@
 #include <internal/debug.h>
 
 extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
+extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 
 static GENERIC_MAPPING PiProcessMapping = {
     STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
     STANDARD_RIGHTS_WRITE   | PROCESS_CREATE_PROCESS    | PROCESS_CREATE_THREAD   |
     PROCESS_VM_OPERATION    | PROCESS_VM_WRITE          | PROCESS_DUP_HANDLE      |
-    PROCESS_TERMINATE       | PROCESS_SET_QUOTA         | PROCESS_SET_INFORMATION | PROCESS_SET_PORT,
+    PROCESS_TERMINATE       | PROCESS_SET_QUOTA         | PROCESS_SET_INFORMATION | 
+    PROCESS_SET_PORT,
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     PROCESS_ALL_ACCESS};
 
+static GENERIC_MAPPING PiThreadMapping = {
+    STANDARD_RIGHTS_READ    | THREAD_GET_CONTEXT      | THREAD_QUERY_INFORMATION,
+    STANDARD_RIGHTS_WRITE   | THREAD_TERMINATE        | THREAD_SUSPEND_RESUME    |
+    THREAD_ALERT            | THREAD_SET_INFORMATION  | THREAD_SET_CONTEXT,
+    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+    THREAD_ALL_ACCESS};
+    
+BOOLEAN DoneInitYet = FALSE;
+                  
 VOID 
 INIT_FUNCTION
 PsInitClientIDManagment(VOID);
@@ -46,6 +57,60 @@ PiInitProcessManager(VOID)
    PsInitThreadManagment();
    PsInitIdleThread();
    PsInitialiseW32Call();
+}
+
+VOID 
+INIT_FUNCTION
+PsInitThreadManagment(VOID)
+/*
+ * FUNCTION: Initialize thread managment
+ */
+{
+   PETHREAD FirstThread;
+   ULONG i;
+
+   for (i=0; i < MAXIMUM_PRIORITY; i++)
+     {
+	InitializeListHead(&PriorityListHead[i]);
+     }
+
+   PsThreadType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+
+   PsThreadType->Tag = TAG('T', 'H', 'R', 'T');
+   PsThreadType->TotalObjects = 0;
+   PsThreadType->TotalHandles = 0;
+   PsThreadType->PeakObjects = 0;
+   PsThreadType->PeakHandles = 0;
+   PsThreadType->PagedPoolCharge = 0;
+   PsThreadType->NonpagedPoolCharge = sizeof(ETHREAD);
+   PsThreadType->Mapping = &PiThreadMapping;
+   PsThreadType->Dump = NULL;
+   PsThreadType->Open = NULL;
+   PsThreadType->Close = NULL;
+   PsThreadType->Delete = PspDeleteThread;
+   PsThreadType->Parse = NULL;
+   PsThreadType->Security = NULL;
+   PsThreadType->QueryName = NULL;
+   PsThreadType->OkayToClose = NULL;
+   PsThreadType->Create = NULL;
+   PsThreadType->DuplicationNotify = NULL;
+
+   RtlInitUnicodeString(&PsThreadType->TypeName, L"Thread");
+
+   ObpCreateTypeObject(PsThreadType);
+
+   PsInitializeThread(NULL, &FirstThread, NULL, KernelMode, TRUE);
+   FirstThread->Tcb.State = THREAD_STATE_RUNNING;
+   FirstThread->Tcb.FreezeCount = 0;
+   FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
+   FirstThread->Tcb.Affinity = (1 << 0);
+   KeGetCurrentPrcb()->CurrentThread = (PVOID)FirstThread;
+
+   DPRINT("FirstThread %x\n",FirstThread);
+
+   DoneInitYet = TRUE;
+   
+   ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
 }
 
 VOID 

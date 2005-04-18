@@ -342,6 +342,46 @@ KiSuspendThreadNormalRoutine(PVOID NormalContext,
     DPRINT("Done Waiting\n");
 }
 
+#ifdef KeGetCurrentThread
+#undef KeGetCurrentThread
+#endif
+/*
+ * @implemented
+ */
+PKTHREAD 
+STDCALL 
+KeGetCurrentThread(VOID)
+{
+#ifdef CONFIG_SMP
+    ULONG Flags;
+    PKTHREAD Thread;
+    Ke386SaveFlags(Flags);
+    Ke386DisableInterrupts();
+    Thread = KeGetCurrentPrcb()->CurrentThread;
+    Ke386RestoreFlags(Flags);
+    return Thread;
+#else
+    return(KeGetCurrentPrcb()->CurrentThread);
+#endif
+}
+
+VOID
+STDCALL
+KeSetPreviousMode(ULONG Mode)
+{
+    PsGetCurrentThread()->Tcb.PreviousMode = (UCHAR)Mode;
+}
+
+/*
+ * @implemented
+ */
+KPROCESSOR_MODE 
+STDCALL
+KeGetPreviousMode(VOID)
+{
+    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
+}
+
 VOID
 STDCALL
 KeRundownThread(VOID)
@@ -422,7 +462,51 @@ BOOLEAN
 STDCALL
 KiInsertQueueApc(PKAPC Apc,
                  KPRIORITY PriorityBoost);
-                 
+
+/*
+ * Used by the debugging code to freeze all the process's threads
+ * while the debugger is examining their state.
+ */
+VOID
+STDCALL
+KeFreezeAllThreads(PKPROCESS Process)
+{
+    KIRQL OldIrql;
+    PLIST_ENTRY CurrentEntry;
+    PKTHREAD Current;
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+
+    /* Acquire Lock */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+    
+    /* Loop the Process's Threads */
+    CurrentEntry = Process->ThreadListHead.Flink;
+    while (CurrentEntry != &Process->ThreadListHead)
+    {
+        /* Get the Thread */
+        Current = CONTAINING_RECORD(CurrentEntry, KTHREAD, ThreadListEntry);
+        
+        /* Make sure it's not ours */
+        if (Current == CurrentThread) continue;
+        
+        /* Make sure it wasn't already frozen, and that it's not suspended */
+        if (!(++Current->FreezeCount) && !(Current->SuspendCount))
+        {
+            /* Insert the APC */
+            if (!KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT)) 
+            {
+                /* Unsignal the Semaphore, the APC already got inserted */
+                Current->SuspendSemaphore.Header.SignalState--;
+            }
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    /* Release the lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+}
+    
 NTSTATUS
 STDCALL
 KeSuspendThread(PKTHREAD Thread)

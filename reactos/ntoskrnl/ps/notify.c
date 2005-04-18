@@ -18,15 +18,17 @@
 #define MAX_THREAD_NOTIFY_ROUTINE_COUNT    8
 #define TAG_KAPC TAG('k','p','a','p') /* kpap - kernel ps apc */
 
-static ULONG PiThreadNotifyRoutineCount = 0;
+static ULONG PspThreadNotifyRoutineCount = 0;
 static PCREATE_THREAD_NOTIFY_ROUTINE
-PiThreadNotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
+PspThreadNotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
 
 static PCREATE_PROCESS_NOTIFY_ROUTINE 
 PspProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
 
 static PLOAD_IMAGE_NOTIFY_ROUTINE
 PspLoadImageNotifyRoutine[MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT];
+
+static PVOID PspLegoNotifyRoutine;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -72,6 +74,20 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
     
     /* Nothing found */
     return STATUS_INVALID_PARAMETER;
+}
+
+/*
+ * @implemented
+ */                       
+ULONG
+STDCALL
+PsSetLegoNotifyRoutine(PVOID LegoNotifyRoutine)
+{
+    /* Set the System-Wide Lego Routine */
+    PspLegoNotifyRoutine = LegoNotifyRoutine;
+    
+    /* Return the location to the Lego Data */
+    return FIELD_OFFSET(KTHREAD, LegoData);
 }
 
 /*
@@ -124,17 +140,60 @@ PsSetLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
     return STATUS_INVALID_PARAMETER;
 }
 
-VOID STDCALL
-PspRunCreateThreadNotifyRoutines (
-    PETHREAD CurrentThread,
-    BOOLEAN Create )
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+PsRemoveCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
+{
+    ULONG i;
+    
+    /* Loop the routines */
+    for(i=0;i<MAX_THREAD_NOTIFY_ROUTINE_COUNT;i++)
+    {
+        /* Check for a match */
+        if ((PVOID)PspThreadNotifyRoutine[i] == (PVOID)NotifyRoutine)
+        {
+            /* Remove and return */
+            PspThreadNotifyRoutine[i] = NULL;
+            return(STATUS_SUCCESS);
+        }
+    }
+    
+    /* Nothing found */
+    return STATUS_INVALID_PARAMETER;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS 
+STDCALL
+PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
+{
+    if (PspThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
+    {
+        return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+    PspThreadNotifyRoutine[PspThreadNotifyRoutineCount] = NotifyRoutine;
+    PspThreadNotifyRoutineCount++;
+
+    return(STATUS_SUCCESS);
+}
+
+VOID 
+STDCALL
+PspRunCreateThreadNotifyRoutines(PETHREAD CurrentThread,
+                                 BOOLEAN Create)
 {
     ULONG i;
     CLIENT_ID Cid = CurrentThread->Cid;
 
-    for (i = 0; i < PiThreadNotifyRoutineCount; i++)
+    for (i = 0; i < PspThreadNotifyRoutineCount; i++)
     {
-        PiThreadNotifyRoutine[i](Cid.UniqueProcess, Cid.UniqueThread, Create);
+        PspThreadNotifyRoutine[i](Cid.UniqueProcess, Cid.UniqueThread, Create);
     }
 }
 
@@ -171,24 +230,6 @@ PspRunLoadImageNotifyRoutines(PUNICODE_STRING FullImageName,
             PspLoadImageNotifyRoutine[i](FullImageName, ProcessId, ImageInfo);
         }
     }
-}
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-PsSetCreateThreadNotifyRoutine (
-    IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine )
-{
-    if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
-    {
-        return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-    PiThreadNotifyRoutine[PiThreadNotifyRoutineCount] = NotifyRoutine;
-    PiThreadNotifyRoutineCount++;
-
-    return(STATUS_SUCCESS);
 }
 
 /* EOF */

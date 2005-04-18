@@ -109,7 +109,7 @@ KiSystemStartup(BOOLEAN BootProcessor)
     } else {
         
         /* Do application processor initialization */
-        PsApplicationProcessorInit();
+        KeApplicationProcessorInitDispatcher();
         
         /* Lower IRQL and go to Idle Thread */
         KeLowerIrql(PASSIVE_LEVEL);

@@ -461,7 +461,7 @@ ExpInitializeExecutive(VOID)
 
         /* Set up the Kernel and Process Manager for this CPU */
         KePrepareForApplicationProcessorInit(KeNumberProcessors);
-        PsPrepareForApplicationProcessorInit(KeNumberProcessors);
+        KeCreateApplicationProcessorIdleThread(KeNumberProcessors);
 
         /* Allocate a stack for use when booting the processor */
         ProcessorStack = Ki386InitialStackArray[((int)KeNumberProcessors)] + MM_STACK_SIZE;
