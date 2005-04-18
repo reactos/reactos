@@ -342,18 +342,13 @@ OpenProcess(DWORD dwDesiredAccess,
    CLIENT_ID ClientId;
    
    ClientId.UniqueProcess = (HANDLE)dwProcessId;
-   ClientId.UniqueThread = INVALID_HANDLE_VALUE;
+   ClientId.UniqueThread = 0;
    
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = (HANDLE)NULL;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
-   ObjectAttributes.ObjectName = NULL;
-   
-   if (bInheritHandle == TRUE)
-     ObjectAttributes.Attributes = OBJ_INHERIT;
-   else
-     ObjectAttributes.Attributes = 0;
+   InitializeObjectAttributes(&ObjectAttributes,
+                              NULL,
+                              (bInheritHandle ? OBJ_INHERIT : 0),
+                              NULL,
+                              NULL);
    
    errCode = NtOpenProcess(&ProcessHandle,
 			   dwDesiredAccess,
