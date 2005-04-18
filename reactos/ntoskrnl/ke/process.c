@@ -70,7 +70,7 @@ KeInitializeProcess(PKPROCESS Process,
                     KAFFINITY Affinity,
                     LARGE_INTEGER DirectoryTableBase)
 {
-    DPRINT1("KeInitializeProcess. Process: %x, DirectoryTableBase: %x\n", Process, DirectoryTableBase);
+    DPRINT("KeInitializeProcess. Process: %x, DirectoryTableBase: %x\n", Process, DirectoryTableBase);
     
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Process->DispatcherHeader,
@@ -89,7 +89,7 @@ KeInitializeProcess(PKPROCESS Process,
     
     /* Initialize the Thread List */
     InitializeListHead(&Process->ThreadListHead); 
-    DPRINT1("The Process has now been initalized with the Kernel\n");
+    DPRINT("The Process has now been initalized with the Kernel\n");
 }
 
 ULONG

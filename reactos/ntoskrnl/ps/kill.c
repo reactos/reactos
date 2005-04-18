@@ -151,7 +151,7 @@ PspDeleteProcess(PVOID ObjectBody)
 {
     PEPROCESS Process = (PEPROCESS)ObjectBody;
 
-    DPRINT1("PiDeleteProcess(ObjectBody %x)\n",Process);
+    DPRINT1("PiDeleteProcess(ObjectBody %x)\n",Process->UniqueProcessId);
 
     /* Delete the CID Handle */   
     if(Process->UniqueProcessId != NULL) {
@@ -291,7 +291,7 @@ PspExitThread(NTSTATUS ExitStatus)
     /* Free the TEB */
     if((Teb = CurrentThread->Tcb.Teb)) {
 
-        DPRINT1("Decommit teb at %p\n", Teb);
+        DPRINT("Decommit teb at %p\n", Teb);
         MmDeleteTeb(CurrentProcess, Teb);
         CurrentThread->Tcb.Teb = NULL;
     }

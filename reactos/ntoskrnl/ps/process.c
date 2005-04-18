@@ -872,7 +872,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         if (ClientId->UniqueThread)
         {
             /* Get the Process */
-            DPRINT("Opening by Thread ID\n");
+            DPRINT("Opening by Thread ID: %x\n", ClientId->UniqueThread);
             Status = PsLookupProcessThreadByCid(ClientId,
                                                 &Process,
                                                 &Thread);
@@ -881,7 +881,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         else 
         {
             /* Get the Process */
-            DPRINT("Opening by Process ID\n");
+            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
             Status = PsLookupProcessByProcessId(ClientId->UniqueProcess,
                                                 &Process);
             DPRINT("Found: %x\n", Process);
@@ -897,7 +897,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         Status = ObOpenObjectByPointer(Process,
                                        ObjectAttributes->Attributes,
                                        NULL,
-                                       0,
+                                       DesiredAccess,
                                        PsProcessType,
                                        PreviousMode,
                                        ProcessHandle);
