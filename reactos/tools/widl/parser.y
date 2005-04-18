@@ -726,7 +726,6 @@ pointer_type:
 structdef: tSTRUCT t_ident '{' fields '}'	{ $$ = get_typev(RPC_FC_STRUCT, $2, tsSTRUCT);
 						  /* overwrite RPC_FC_STRUCT with a more exact type */
 						  $$->type = get_struct_type( $4 );
-						  $$->name = $2->name;
 						  $$->fields = $4;
 						  $$->defined = TRUE;
 						  if(in_typelib)

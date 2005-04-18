@@ -1,5 +1,11 @@
 ChangeLog
 
+2005-04-18 navaraf
+
+   tools/widl/parser.y
+
+Don't use pointer to freed memory.
+
 2005-04-17 ekohl
 
    tools/widl/server.c
