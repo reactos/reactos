@@ -587,12 +587,13 @@ QSI_DEF(SystemProcessInformation)
 
 		SpiCur = (PSYSTEM_PROCESS_INFORMATION)pCur;
 
-        current_entry = pr->ThreadListHead.Flink;
-        while (current_entry != &pr->ThreadListHead)
-        {
-            nThreads++;
-            current_entry = current_entry->Flink;
-        }
+		nThreads = 0;
+		current_entry = pr->ThreadListHead.Flink;
+		while (current_entry != &pr->ThreadListHead)
+		{
+			nThreads++;
+			current_entry = current_entry->Flink;
+		}
 
 		// size of the structure for every process
 		curSize = sizeof(SYSTEM_PROCESS_INFORMATION)-sizeof(SYSTEM_THREAD_INFORMATION)+sizeof(SYSTEM_THREAD_INFORMATION)*nThreads;
