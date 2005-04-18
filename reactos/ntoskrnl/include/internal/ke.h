@@ -97,6 +97,10 @@ STDCALL
 KiUnblockThread(PKTHREAD Thread, 
                 PNTSTATUS WaitStatus, 
                 KPRIORITY Increment);
+                
+NTSTATUS
+STDCALL
+KeSuspendThread(PKTHREAD Thread);
        
 /* gmutex.c ********************************************************************/
 

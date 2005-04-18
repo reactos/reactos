@@ -533,6 +533,12 @@ PspExitThread(NTSTATUS ExitStatus);
 extern LIST_ENTRY PspReaperListHead;
 extern WORK_QUEUE_ITEM PspReaperWorkItem;
 extern BOOLEAN PspReaping;
+extern PEPROCESS PsInitialSystemProcess;
+extern PEPROCESS PsIdleProcess;
+extern POBJECT_TYPE PsProcessType;
+extern LIST_ENTRY PsActiveProcessHead;
+extern FAST_MUTEX PspActiveProcessMutex;
+extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 
 VOID
 STDCALL
@@ -544,7 +550,7 @@ VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
 VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 ULONG PsEnumThreadsByProcess(PEPROCESS Process);
-PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
+PEPROCESS STDCALL PsGetNextProcess(PEPROCESS OldProcess);
 VOID
 PsApplicationProcessorInit(VOID);
 VOID
@@ -678,6 +684,9 @@ VOID PsUnlockProcess(PEPROCESS Process);
 #define KTHREAD_TO_ETHREAD(pKThread) (CONTAINING_RECORD((pKThread), ETHREAD, Tcb))
 #define EPROCESS_TO_KPROCESS(pEProcess) (&(pEProcess)->Pcb)
 #define KPROCESS_TO_EPROCESS(pKProcess) (CONTAINING_RECORD((pKProcess), EPROCESS, Pcb))
+
+#define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
+#define MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT  8
 
 #endif /* ASSEMBLER */
 

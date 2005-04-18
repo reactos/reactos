@@ -81,6 +81,35 @@ PspReapRoutine(PVOID Context)
 
 VOID
 STDCALL
+PspKillMostProcesses(VOID)
+{
+    PLIST_ENTRY current_entry;
+    PEPROCESS current;
+   
+    /* Acquire the Active Process Lock */
+    ExAcquireFastMutex(&PspActiveProcessMutex);   
+    
+    /* Loop all processes on the list */
+    current_entry = PsActiveProcessHead.Flink;
+    while (current_entry != &PsActiveProcessHead)
+    {
+        current = CONTAINING_RECORD(current_entry, EPROCESS, ProcessListEntry);
+        current_entry = current_entry->Flink;
+    
+        if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
+            current->UniqueProcessId != PsGetCurrentProcessId())
+        {
+            /* Terminate all the Threads in this Process */
+            PspTerminateProcessThreads(current, STATUS_SUCCESS);
+        }
+    }
+   
+    /* Release the lock */
+    ExReleaseFastMutex(&PspActiveProcessMutex);
+}
+
+VOID
+STDCALL
 PspTerminateProcessThreads(PEPROCESS Process,
                            NTSTATUS ExitStatus)
 {

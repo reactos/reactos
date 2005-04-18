@@ -18,9 +18,6 @@ ULONG
 STDCALL
 KeResumeThread(PKTHREAD Thread);
 
-ULONG
-STDCALL
-KeSuspendThread(PKTHREAD Thread);
 /* FUNCTIONS *****************************************************************/
 
 /*

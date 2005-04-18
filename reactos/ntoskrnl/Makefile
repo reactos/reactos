@@ -222,7 +222,6 @@ OBJECTS_OB = \
 # Process Manager (Ps)
 OBJECTS_PS = \
 	ps/cid.o \
-	ps/create.o \
 	ps/debug.o \
 	ps/idle.o \
 	ps/job.o \
@@ -230,6 +229,8 @@ OBJECTS_PS = \
 	ps/locale.o \
 	ps/process.o \
 	ps/psmgr.o \
+	ps/notify.o \
+	ps/quota.o \
 	ps/query.o \
 	ps/security.o \
 	ps/suspend.o \

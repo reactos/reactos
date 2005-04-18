@@ -53,6 +53,16 @@ UpdatePageDirs(PKTHREAD Thread, PKPROCESS Process)
     MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 }
 
+/*
+ * FUNCTION: Returns a pointer to the current process
+ */
+PKPROCESS
+STDCALL
+KeGetCurrentProcess(VOID)
+{
+    return(&(PsGetCurrentProcess()->Pcb));
+}
+
 VOID
 STDCALL
 KeInitializeProcess(PKPROCESS Process,
