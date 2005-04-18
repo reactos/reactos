@@ -48,7 +48,7 @@ LIBUNICODE =
 LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid strmiids crt rossym wdmguid
 
 # Keyboard layout libraries
-DLLS_KBD = kbdda kbddv kbdes kbdfr kbdgr kbdru kbdse kbduk kbdus
+DLLS_KBD = kbdda kbddv kbdes kbdfr kbdgr kbdru kbdse kbdsg kbduk kbdus
 
 # Control Panels
 DLLS_CPL = cpl
