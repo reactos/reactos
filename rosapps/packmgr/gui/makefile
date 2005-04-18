@@ -3,6 +3,7 @@ TARGET_NAME = packmgr
 TARGET_TYPE = program
 TARGET_APPTYPE = windows
 PATH_TO_TOP = ../../../reactos
+TARGET_INSTALLDIR = bin
 
 TARGET_SDKLIBS = kernel32.a user32.a package.a gdi32.a comctl32.a shell32.a
 

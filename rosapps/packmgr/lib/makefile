@@ -2,6 +2,7 @@
 TARGET_TYPE = dynlink
 TARGET_NAME = package
 PATH_TO_TOP = ../../../reactos
+TARGET_INSTALLDIR = bin
 
 TARGET_SDKLIBS = kernel32.a shell32.a user32.a package.a expat.a urlmon.a
 

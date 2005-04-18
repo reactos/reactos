@@ -3,6 +3,7 @@ TARGET_NAME = ros-get
 TARGET_TYPE = program
 TARGET_APPTYPE = console
 PATH_TO_TOP = ../../../reactos
+TARGET_INSTALLDIR = bin
 
 TARGET_SDKLIBS = package.a
 
