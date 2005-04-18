@@ -533,7 +533,6 @@ extern WORK_QUEUE_ITEM PspReaperWorkItem;
 extern BOOLEAN PspReaping;
 extern PEPROCESS PsInitialSystemProcess;
 extern PEPROCESS PsIdleProcess;
-extern POBJECT_TYPE PsProcessType;
 extern LIST_ENTRY PsActiveProcessHead;
 extern FAST_MUTEX PspActiveProcessMutex;
 extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
