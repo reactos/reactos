@@ -137,7 +137,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
         
         if (Candidate == CurrentThread) {
 
-            Candidate->State = Ready;
+            Candidate->State = Running;
             KeReleaseDispatcherDatabaseLockFromDpcLevel();	
             return;
         }
@@ -149,7 +149,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
             DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
 
-            Candidate->State = Ready;
+            Candidate->State = Running;
 
             OldThread = CurrentThread;
             CurrentThread = Candidate;
