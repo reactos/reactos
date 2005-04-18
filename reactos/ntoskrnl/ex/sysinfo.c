@@ -562,12 +562,12 @@ QSI_DEF(SystemProcessInformation)
 
 	/* scan the process list */
 
-	PSYSTEM_PROCESSES Spi
-		= (PSYSTEM_PROCESSES) Buffer;
+	PSYSTEM_PROCESS_INFORMATION Spi
+		= (PSYSTEM_PROCESS_INFORMATION) Buffer;
 
-	*ReqSize = sizeof(SYSTEM_PROCESSES);
+	*ReqSize = sizeof(SYSTEM_PROCESS_INFORMATION);
 
-	if (Size < sizeof(SYSTEM_PROCESSES))
+	if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 	}
@@ -578,14 +578,14 @@ QSI_DEF(SystemProcessInformation)
 
 	do
 	{
-		PSYSTEM_PROCESSES SpiCur;
+		PSYSTEM_PROCESS_INFORMATION SpiCur;
 		int curSize, i = 0;
 		ANSI_STRING	imgName;
 		int inLen=32; // image name len in bytes
 		PLIST_ENTRY current_entry;
 		PETHREAD current;
 
-		SpiCur = (PSYSTEM_PROCESSES)pCur;
+		SpiCur = (PSYSTEM_PROCESS_INFORMATION)pCur;
 
         current_entry = pr->ThreadListHead.Flink;
         while (current_entry != &pr->ThreadListHead)
@@ -595,7 +595,7 @@ QSI_DEF(SystemProcessInformation)
         }
 
 		// size of the structure for every process
-		curSize = sizeof(SYSTEM_PROCESSES)-sizeof(SYSTEM_THREADS)+sizeof(SYSTEM_THREADS)*nThreads;
+		curSize = sizeof(SYSTEM_PROCESS_INFORMATION)-sizeof(SYSTEM_THREAD_INFORMATION)+sizeof(SYSTEM_THREAD_INFORMATION)*nThreads;
 		ovlSize += curSize+inLen;
 
 		if (ovlSize > Size)
@@ -607,45 +607,45 @@ QSI_DEF(SystemProcessInformation)
 		}
 
 		// fill system information
-		SpiCur->NextEntryDelta = curSize+inLen; // relative offset to the beginnnig of the next structure
-		SpiCur->ThreadCount = nThreads;
+		SpiCur->NextEntryOffset = curSize+inLen; // relative offset to the beginnnig of the next structure
+		SpiCur->NumberOfThreads = nThreads;
 		SpiCur->CreateTime = pr->CreateTime;
 		SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000LL; 
 		SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000LL;
-		SpiCur->ProcessName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
-		SpiCur->ProcessName.MaximumLength = inLen;
-		SpiCur->ProcessName.Buffer = (void*)(pCur+curSize);
+		SpiCur->ImageName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
+		SpiCur->ImageName.MaximumLength = inLen;
+		SpiCur->ImageName.Buffer = (void*)(pCur+curSize);
 
 		// copy name to the end of the struct
 		if(pr != PsIdleProcess)
 		{
 		  RtlInitAnsiString(&imgName, pr->ImageFileName);
-		  RtlAnsiStringToUnicodeString(&SpiCur->ProcessName, &imgName, FALSE);
+		  RtlAnsiStringToUnicodeString(&SpiCur->ImageName, &imgName, FALSE);
 		}
 		else
 		{
-                  RtlInitUnicodeString(&SpiCur->ProcessName, NULL);
+                  RtlInitUnicodeString(&SpiCur->ImageName, NULL);
 		}
 
 		SpiCur->BasePriority = pr->Pcb.BasePriority;
-		SpiCur->ProcessId = pr->UniqueProcessId;
-		SpiCur->InheritedFromProcessId = pr->InheritedFromUniqueProcessId;
+		SpiCur->UniqueProcessId = pr->UniqueProcessId;
+		SpiCur->InheritedFromUniqueProcessId = pr->InheritedFromUniqueProcessId;
 		SpiCur->HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
-		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
-		SpiCur->VmCounters.VirtualSize = pr->VirtualSize.QuadPart;
-		SpiCur->VmCounters.PageFaultCount = pr->LastFaultCount;
-		SpiCur->VmCounters.PeakWorkingSetSize = pr->Vm.PeakWorkingSetSize; // Is this right using ->Vm. here ?
-		SpiCur->VmCounters.WorkingSetSize = pr->Vm.WorkingSetSize; // Is this right using ->Vm. here ?
-		SpiCur->VmCounters.QuotaPeakPagedPoolUsage =
+		SpiCur->PeakVirtualSize = pr->PeakVirtualSize;
+		SpiCur->VirtualSize = pr->VirtualSize.QuadPart;
+		SpiCur->PageFaultCount = pr->LastFaultCount;
+		SpiCur->PeakWorkingSetSize = pr->Vm.PeakWorkingSetSize; // Is this right using ->Vm. here ?
+		SpiCur->WorkingSetSize = pr->Vm.WorkingSetSize; // Is this right using ->Vm. here ?
+		SpiCur->QuotaPeakPagedPoolUsage =
 					pr->QuotaPeakPoolUsage[0];
-		SpiCur->VmCounters.QuotaPagedPoolUsage =
+		SpiCur->QuotaPagedPoolUsage =
 					pr->QuotaPoolUsage[0];
-		SpiCur->VmCounters.QuotaPeakNonPagedPoolUsage =
+		SpiCur->QuotaPeakNonPagedPoolUsage =
 					pr->QuotaPeakPoolUsage[1];
-		SpiCur->VmCounters.QuotaNonPagedPoolUsage =
+		SpiCur->QuotaNonPagedPoolUsage =
 					pr->QuotaPoolUsage[1];
-		SpiCur->VmCounters.PagefileUsage = pr->PagefileUsage; // FIXME
-		SpiCur->VmCounters.PeakPagefileUsage = pr->PeakPagefileUsage;
+		SpiCur->PagefileUsage = pr->PagefileUsage; // FIXME
+		SpiCur->PeakPagefileUsage = pr->PeakPagefileUsage;
 		// KJK::Hyperion: I don't know what does this mean. VM_COUNTERS
 		// doesn't seem to contain any equivalent field
 		//SpiCur->TotalPrivateBytes = pr->NumberOfPrivatePages; //FIXME: bytes != pages
@@ -656,17 +656,17 @@ QSI_DEF(SystemProcessInformation)
                  current = CONTAINING_RECORD(current_entry, ETHREAD,
                                              ThreadListEntry);
 
-                 SpiCur->Threads[i].KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
-                 SpiCur->Threads[i].UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
-//                 SpiCur->Threads[i].CreateTime = current->CreateTime;
-                 SpiCur->Threads[i].WaitTime = current->Tcb.WaitTime;
-                 SpiCur->Threads[i].StartAddress = (PVOID) current->StartAddress;
-                 SpiCur->Threads[i].ClientId = current->Cid;
-                 SpiCur->Threads[i].Priority = current->Tcb.Priority;
-                 SpiCur->Threads[i].BasePriority = current->Tcb.BasePriority;
-                 SpiCur->Threads[i].ContextSwitchCount = current->Tcb.ContextSwitches;
-                 SpiCur->Threads[i].State = current->Tcb.State;
-                 SpiCur->Threads[i].WaitReason = current->Tcb.WaitReason;
+                 SpiCur->TH[i].KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
+                 SpiCur->TH[i].UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
+//                 SpiCur->TH[i].CreateTime = current->CreateTime;
+                 SpiCur->TH[i].WaitTime = current->Tcb.WaitTime;
+                 SpiCur->TH[i].StartAddress = (PVOID) current->StartAddress;
+                 SpiCur->TH[i].ClientId = current->Cid;
+                 SpiCur->TH[i].Priority = current->Tcb.Priority;
+                 SpiCur->TH[i].BasePriority = current->Tcb.BasePriority;
+                 SpiCur->TH[i].ContextSwitches = current->Tcb.ContextSwitches;
+                 SpiCur->TH[i].ThreadState = current->Tcb.State;
+                 SpiCur->TH[i].WaitReason = current->Tcb.WaitReason;
                  i++;
                  current_entry = current_entry->Flink;
                }
@@ -675,7 +675,7 @@ QSI_DEF(SystemProcessInformation)
         nThreads = 0;
 		if ((pr == syspr) || (pr == NULL))
 		{
-			SpiCur->NextEntryDelta = 0;
+			SpiCur->NextEntryOffset = 0;
 			break;
 		}
 		else

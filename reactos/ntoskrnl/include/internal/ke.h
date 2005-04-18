@@ -49,6 +49,7 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_DPC		    2
 #define IPI_REQUEST_FREEZE	    3
 
+#ifndef __USE_W32API
 typedef enum _KTHREAD_STATE {
     Initialized,
     Ready,
@@ -59,6 +60,7 @@ typedef enum _KTHREAD_STATE {
     Transition,
     DeferredReady,
 } THREAD_STATE, *PTHREAD_STATE;
+#endif
 
 /* MACROS *************************************************************************/
 
