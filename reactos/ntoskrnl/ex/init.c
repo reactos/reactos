@@ -494,7 +494,7 @@ ExpInitializeExecutive(VOID)
   
     /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
     IoInit();
-    
+       
     /* TBD */
     PoInit((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock, ForceAcpiDisable);
   
@@ -562,6 +562,9 @@ ExpInitializeExecutive(VOID)
     
     /* Create ARC Names, SystemRoot SymLink, Load Drivers and Assign Letters */
     IoInit3();
+    
+    /* Load the System DLL and its Entrypoints */
+    LdrpInitializeSystemDll();
        
     /* Initialize the Default Locale */
     PiInitDefaultLocale();

@@ -37,6 +37,7 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MEMORY_AREA_KERNEL_STACK         (11)
 #define MEMORY_AREA_PAGED_POOL           (12)
 #define MEMORY_AREA_NO_ACCESS            (13)
+#define MEMORY_AREA_PEB_OR_TEB           (14)
 
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
                           ((x) / (4*1024*1024))
@@ -496,6 +497,17 @@ BOOLEAN MmIsAvailableSwapPage(VOID);
 
 VOID MmShowOutOfSpaceMessagePagingFile(VOID);
 
+/* process.c ****************************************************************/
+
+NTSTATUS
+STDCALL
+MmCreateProcessAddressSpace(IN struct _EPROCESS* Process,
+                            IN PSECTION_OBJECT Section OPTIONAL);
+                            
+NTSTATUS
+STDCALL
+MmCreatePeb(PEPROCESS Process);
+
 /* i386/pfault.c *************************************************************/
 
 NTSTATUS MmPageFault(ULONG Cs,
@@ -579,6 +591,17 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 VOID
 MmInitializePageOp(VOID);
 
+/* process.c *****************************************************************/
+
+PVOID
+STDCALL
+MmCreateKernelStack(BOOLEAN GuiStack);
+
+VOID
+STDCALL
+MmDeleteKernelStack(PVOID Stack, 
+                    BOOLEAN GuiStack);
+                    
 /* balace.c ******************************************************************/
 
 VOID MmInitializeMemoryConsumer(ULONG Consumer, 
@@ -737,7 +760,11 @@ VOID MmDeletePageTable(struct _EPROCESS* Process, PVOID Address);
 
 PFN_TYPE MmGetPfnForProcess(struct _EPROCESS* Process, PVOID Address);
 
-NTSTATUS MmCopyMmInfo(struct _EPROCESS* Src, struct _EPROCESS* Dest);
+NTSTATUS 
+STDCALL
+MmCopyMmInfo(struct _EPROCESS* Src, 
+             struct _EPROCESS* Dest, 
+             PPHYSICAL_ADDRESS DirectoryTableBase);
 
 NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
 

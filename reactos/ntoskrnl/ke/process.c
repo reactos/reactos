@@ -53,6 +53,35 @@ UpdatePageDirs(PKTHREAD Thread, PKPROCESS Process)
     MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 }
 
+VOID
+STDCALL
+KeInitializeProcess(PKPROCESS Process,
+                    KPRIORITY Priority,
+                    KAFFINITY Affinity,
+                    LARGE_INTEGER DirectoryTableBase)
+{
+    DPRINT1("KeInitializeProcess. Process: %x, DirectoryTableBase: %x\n", Process, DirectoryTableBase);
+    
+    /* Initialize the Dispatcher Header */
+    KeInitializeDispatcherHeader(&Process->DispatcherHeader,
+                                 ProcessObject,
+                                 sizeof(KPROCESS),
+                                 FALSE);
+    
+    /* Initialize Scheduler Data, Disable Alignment Faults and Set the PDE */
+    Process->Affinity = Affinity;
+    Process->BasePriority = Priority;
+    Process->ThreadQuantum = 6;
+    Process->DirectoryTableBase = DirectoryTableBase;
+    Process->AutoAlignment = TRUE;
+    Process->IopmOffset = 0xFFFF;
+    Process->State = PROCESS_STATE_ACTIVE;
+    
+    /* Initialize the Thread List */
+    InitializeListHead(&Process->ThreadListHead); 
+    DPRINT1("The Process has now been initalized with the Kernel\n");
+}
+
 ULONG
 STDCALL
 KeSetProcess(PKPROCESS Process, 
@@ -148,6 +177,7 @@ KiAttachProcess(PKTHREAD Thread, PKPROCESS Process, KIRQL ApcLock, PRKAPC_STATE 
     }
     
     /* Swap the Processes */
+    DPRINT("Swapping\n");
     KiSwapProcess(Process, SavedApcState->Process);
     
     /* Return to old IRQL*/

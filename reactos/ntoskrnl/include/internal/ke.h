@@ -259,7 +259,14 @@ FASTCALL
 KiAbortWaitThread(PKTHREAD Thread, 
                   NTSTATUS WaitStatus,
                   KPRIORITY Increment);
-                  
+     
+VOID
+STDCALL
+KeInitializeProcess(struct _KPROCESS *Process,
+                    KPRIORITY Priority,
+                    KAFFINITY Affinity,
+                    LARGE_INTEGER DirectoryTableBase);
+                                 
 ULONG
 STDCALL
 KeForceResumeThread(IN PKTHREAD Thread);

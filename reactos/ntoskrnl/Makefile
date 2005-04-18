@@ -144,6 +144,7 @@ OBJECTS_MM = \
 	mm/pool.o \
 	mm/ppool.o \
 	mm/physical.o \
+	mm/process.o \
 	mm/region.o \
 	mm/rmap.o \
 	mm/section.o \

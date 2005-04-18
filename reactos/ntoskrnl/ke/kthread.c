@@ -205,13 +205,14 @@ KiBlockThread(PNTSTATUS Status,
     } else {
 
         /* Set the Thread Data as Requested */
-        DPRINT("Dispatching Thread as blocked\n");
+        DPRINT("Dispatching Thread as blocked: %d\n", Thread->WaitStatus);
         Thread->Alertable = Alertable;
         Thread->WaitMode = (UCHAR)WaitMode;
         Thread->WaitReason = WaitReason;
         
         /* Dispatch it and return status */
         KiDispatchThreadNoLock(THREAD_STATE_BLOCKED);
+        DPRINT("Dispatching Thread as blocked: %d\n", Thread->WaitStatus);
         if (Status != NULL) *Status = Thread->WaitStatus;
     }
     

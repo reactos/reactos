@@ -492,6 +492,11 @@ VOID STDCALL PsExitSpecialApc(PKAPC Apc,
 		      PVOID *NormalContext,
 		      PVOID *SystemArgument1,
 		      PVOID *SystemArgument2);
+              
+NTSTATUS
+STDCALL
+PspInitializeProcessSecurity(PEPROCESS Process,
+                             PEPROCESS Parent OPTIONAL);
 
 #define THREAD_STATE_INITIALIZED  (0)
 #define THREAD_STATE_READY        (1)

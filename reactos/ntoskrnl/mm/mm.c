@@ -384,6 +384,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
+         case MEMORY_AREA_PEB_OR_TEB:
             Status = MmNotPresentFaultVirtualMemory(AddressSpace,
                                                     MemoryArea,
                                                     (PVOID)Address,

@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS ******************************************************************/
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -143,6 +141,66 @@ PsOpenTokenOfProcess(HANDLE ProcessHandle,
     /* Return */
     return Status;
 }
+
+NTSTATUS
+STDCALL
+PspInitializeProcessSecurity(PEPROCESS Process,
+                             PEPROCESS Parent OPTIONAL)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+            
+    /* If we have a parent, then duplicate the Token */
+    if (Parent) {
+    
+        PTOKEN pNewToken;
+        PTOKEN pParentToken;
+        OBJECT_ATTRIBUTES ObjectAttributes;
+
+        pParentToken = (PACCESS_TOKEN)Parent->Token;
+
+        /* Initialize the Object Attributes */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   NULL,
+                                   0,
+                                   NULL,
+                                   NULL);
+        
+        /* Duplicate the Token */
+        Status = SepDuplicateToken(pParentToken,
+                                   &ObjectAttributes,
+                                   FALSE,
+                                   TokenPrimary,
+                                   pParentToken->ImpersonationLevel,
+                                   KernelMode,
+                                   &pNewToken);
+        
+        if(!NT_SUCCESS(Status)) {
+        
+            DPRINT1("Failed to Duplicate Token\n");
+            return Status;
+        }
+     
+        Process->Token = pNewToken;    
+    
+    } else {
+        
+#ifdef SCHED_REWRITE
+        PTOKEN BootToken;
+        
+        /* No parent, this is the Initial System Process. Assign Boot Token */
+        BootToken = SepCreateSystemProcessToken();
+        BootToken->TokenInUse = TRUE;
+        Process->Token = BootToken;
+        ObReferenceObject(BootToken);
+#else
+        DPRINT1("PspInitializeProcessSecurity called with no parent.\n");
+#endif
+    }
+    
+    /* Return to caller */
+    return Status;
+}
+
 
 NTSTATUS
 STDCALL

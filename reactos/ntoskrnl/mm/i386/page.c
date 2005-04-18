@@ -319,9 +319,12 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
+NTSTATUS 
+STDCALL
+MmCopyMmInfo(PEPROCESS Src, 
+             PEPROCESS Dest, 
+             PPHYSICAL_ADDRESS DirectoryTableBase)
 {
-   PKPROCESS KProcess = &Dest->Pcb;
    NTSTATUS Status;
    ULONG i, j;
    PFN_TYPE Pfn[7];
@@ -389,8 +392,9 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
 
       MmDeleteHyperspaceMapping(PageDirectory);
    }
-   KProcess->DirectoryTableBase.QuadPart = PFN_TO_PTE(Pfn[0]);
-   DPRINT("Finished MmCopyMmInfo()\n");
+
+   DirectoryTableBase->QuadPart = PFN_TO_PTE(Pfn[0]);
+   DPRINT("Finished MmCopyMmInfo(): %I64x\n", DirectoryTableBase->QuadPart);
    return(STATUS_SUCCESS);
 }
 

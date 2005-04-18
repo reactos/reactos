@@ -117,9 +117,7 @@ SepCreateImpersonationTokenDacl(PTOKEN Token,
 
 VOID SepInitializeTokenImplementation(VOID);
 
-NTSTATUS SepCreateSystemProcessToken(struct _EPROCESS* Process);
-NTSTATUS SepInitializeNewProcess(struct _EPROCESS* NewProcess,
-				 struct _EPROCESS* ParentProcess);
+PTOKEN STDCALL SepCreateSystemProcessToken(VOID);
 
 NTSTATUS SeExchangePrimaryToken(struct _EPROCESS* Process,
 				PACCESS_TOKEN NewToken,
@@ -148,6 +146,16 @@ SepPrivilegeCheck(PTOKEN Token,
 		  ULONG PrivilegeControl,
 		  KPROCESSOR_MODE PreviousMode);
 
+NTSTATUS
+STDCALL
+SepDuplicateToken(PTOKEN Token,
+		  POBJECT_ATTRIBUTES ObjectAttributes,
+		  BOOLEAN EffectiveOnly,
+		  TOKEN_TYPE TokenType,
+		  SECURITY_IMPERSONATION_LEVEL Level,
+		  KPROCESSOR_MODE PreviousMode,
+		  PTOKEN* NewAccessToken);
+          
 NTSTATUS
 SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
                                    IN KPROCESSOR_MODE AccessMode,

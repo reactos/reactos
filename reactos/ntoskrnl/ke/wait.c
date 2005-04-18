@@ -445,7 +445,6 @@ KeWaitForMultipleObjects(ULONG Count,
              */
             if (CurrentObject->Type == IO_TYPE_FILE) {
                    
-                DPRINT1("Hack used: %x\n", &((PFILE_OBJECT)CurrentObject)->Event);
                 CurrentObject = (PDISPATCHER_HEADER)(&((PFILE_OBJECT)CurrentObject)->Event);
             }
 
@@ -571,7 +570,7 @@ KeWaitForMultipleObjects(ULONG Count,
             DPRINT("Waking Queue\n");
             KiWakeQueue(CurrentThread->Queue);
         }
-
+        
         /* Block the Thread */
         DPRINT("Blocking the Thread: %d, %d, %d, %x\n", Alertable, WaitMode, WaitReason, KeGetCurrentThread());
         KiBlockThread(&Status, 

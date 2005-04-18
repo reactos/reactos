@@ -473,7 +473,6 @@ NtCreateThread (
         UserMode,
         NULL );
     KeInsertQueueApc(LdrInitApc, NULL, NULL, IO_NO_INCREMENT);
-
     /*
     * The thread is non-alertable, so the APC we added did not set UserApcPending to TRUE.
     * We must do this manually. Do NOT attempt to set the Thread to Alertable before the call,
