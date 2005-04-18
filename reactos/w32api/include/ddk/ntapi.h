@@ -264,47 +264,15 @@ typedef struct _VM_COUNTERS {
 } VM_COUNTERS;
 
 typedef enum _THREAD_STATE {
-	StateInitialized,
-	StateReady,
-	StateRunning,
-	StateStandby,
-	StateTerminated,
-	StateWait,
-	StateTransition,
-	StateUnknown
+	Initialized,
+	Ready,
+	Running,
+	Standby,
+	Terminated,
+	Wait,
+	Transition,
+	DeferredReady
 } THREAD_STATE;
-
-typedef struct _SYSTEM_THREADS {
-	LARGE_INTEGER  KernelTime;
-	LARGE_INTEGER  UserTime;
-	LARGE_INTEGER  CreateTime;
-	ULONG  WaitTime;
-	PVOID  StartAddress;
-	CLIENT_ID  ClientId;
-	KPRIORITY  Priority;
-	KPRIORITY  BasePriority;
-	ULONG  ContextSwitchCount;
-	THREAD_STATE  State;
-	KWAIT_REASON  WaitReason;
-} SYSTEM_THREADS, *PSYSTEM_THREADS;
-
-typedef struct _SYSTEM_PROCESSES {
-	ULONG  NextEntryDelta;
-	ULONG  ThreadCount;
-	ULONG  Reserved1[6];
-	LARGE_INTEGER  CreateTime;
-	LARGE_INTEGER  UserTime;
-	LARGE_INTEGER  KernelTime;
-	UNICODE_STRING  ProcessName;
-	KPRIORITY  BasePriority;
-	HANDLE  ProcessId;
-	HANDLE  InheritedFromProcessId;
-	ULONG  HandleCount;
-	ULONG  Reserved2[2];
-	VM_COUNTERS  VmCounters;
-	IO_COUNTERS  IoCounters;
-	SYSTEM_THREADS  Threads[1];
-} SYSTEM_PROCESSES, *PSYSTEM_PROCESSES;
 
 typedef struct _SYSTEM_CALLS_INFORMATION {
 	ULONG  Size;
@@ -659,50 +627,67 @@ typedef struct _SYSTEM_MEMORY_USAGE_INFORMATION {
 	SYSTEM_MEMORY_USAGE  MemoryUsage[1];
 } SYSTEM_MEMORY_USAGE_INFORMATION, *PSYSTEM_MEMORY_USAGE_INFORMATION;
 
-typedef struct _SYSTEM_THREAD_INFORMATION
+// SystemProcessThreadInfo (5)
+typedef struct _SYSTEM_THREAD_INFORMATION 
 {
-	LARGE_INTEGER	KernelTime;
-	LARGE_INTEGER	UserTime;
-	LARGE_INTEGER	CreateTime;
-	ULONG		WaitTime;
-	PVOID		StartAddress;
-	CLIENT_ID	ClientId;
-	KPRIORITY	Priority;
-	LONG		BasePriority;
-	ULONG		ContextSwitches;
-	ULONG		ThreadState;
-	KWAIT_REASON	WaitReason;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER CreateTime;
+    ULONG WaitTime;
+    PVOID StartAddress;
+    CLIENT_ID ClientId;
+    KPRIORITY Priority;
+    LONG BasePriority;
+    ULONG ContextSwitches;
+    ULONG ThreadState;
+    ULONG WaitReason;
 } SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
 
-typedef struct SYSTEM_PROCESS_INFORMATION
+typedef struct _SYSTEM_PROCESS_INFORMATION
 {
-	ULONG				NextEntryOffset;
-	ULONG				NumberOfThreads;
-	LARGE_INTEGER			SpareLi1;
-	LARGE_INTEGER			SpareLi2;
-	LARGE_INTEGER			SpareLi3;
-	LARGE_INTEGER			CreateTime;
-	LARGE_INTEGER			UserTime;
-	LARGE_INTEGER			KernelTime;
-	UNICODE_STRING			ImageName;
-	ULONG				BasePriority;
-	HANDLE				UniqueProcessId;
-	HANDLE				InheritedFromUniqueProcessId;
-	ULONG				HandleCount;
-	ULONG				SessionId;
-	ULONG				SpareUl3;
-	ULONG				PeakVirtualSize;
-	ULONG				VirtualSize;
-	ULONG				PageFaultCount;
-	ULONG				PeakWorkingSetSize;
-	ULONG				WorkingSetSize;
-	ULONG				QuotaPeakPagedPoolUsage;
-	ULONG				QuotaPagedPoolUsage;
-	ULONG				QuotaPeakNonPagedPoolUsage;
-	ULONG				QuotaNonPagedPoolUsage;
-	ULONG				PagefileUsage;
-	ULONG				PeakPagefileUsage;
-	ULONG				PrivatePageCount;
+    ULONG NextEntryOffset;
+    ULONG NumberOfThreads;
+    LARGE_INTEGER SpareLi1;
+    LARGE_INTEGER SpareLi2;
+    LARGE_INTEGER SpareLi3;
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER KernelTime;
+    UNICODE_STRING ImageName;
+    KPRIORITY BasePriority;
+    HANDLE UniqueProcessId;
+    HANDLE InheritedFromUniqueProcessId;
+    ULONG HandleCount;
+    ULONG SessionId;
+    ULONG PageDirectoryFrame;
+    
+    /* 
+     * This part corresponds to VM_COUNTERS_EX. 
+     * NOTE: *NOT* THE SAME AS VM_COUNTERS!
+     */
+    ULONG PeakVirtualSize;
+    ULONG VirtualSize;
+    ULONG PageFaultCount;
+    ULONG PeakWorkingSetSize;
+    ULONG WorkingSetSize;
+    ULONG QuotaPeakPagedPoolUsage;
+    ULONG QuotaPagedPoolUsage;
+    ULONG QuotaPeakNonPagedPoolUsage;
+    ULONG QuotaNonPagedPoolUsage;
+    ULONG PagefileUsage;
+    ULONG PeakPagefileUsage;
+    ULONG PrivateUsage;
+    
+    /* This part corresponds to IO_COUNTERS */
+    LARGE_INTEGER ReadOperationCount;
+    LARGE_INTEGER WriteOperationCount;
+    LARGE_INTEGER OtherOperationCount;
+    LARGE_INTEGER ReadTransferCount;
+    LARGE_INTEGER WriteTransferCount;
+    LARGE_INTEGER OtherTransferCount;
+    
+    /* Finally, the array of Threads */
+    SYSTEM_THREAD_INFORMATION TH[1];
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
 
 NTOSAPI

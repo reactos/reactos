@@ -349,14 +349,13 @@ else
 
        Buf->Unknown[0] = (ULONG)NtCurrentProcess();
 
-       ClientId.UniqueThread = INVALID_HANDLE_VALUE;
+       ClientId.UniqueThread = 0;
        ClientId.UniqueProcess = (HANDLE)ProcessId;
-       ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-       ObjectAttributes.RootDirectory = (HANDLE)NULL;
-       ObjectAttributes.SecurityDescriptor = NULL;
-       ObjectAttributes.SecurityQualityOfService = NULL;
-       ObjectAttributes.ObjectName = NULL;
-       ObjectAttributes.Attributes = 0;
+       InitializeObjectAttributes(&ObjectAttributes,
+                                  NULL,
+                                  0,
+                                  NULL,
+                                  NULL);
 
        Status = NtOpenProcess( &hProcess,
                                 (PROCESS_ALL_ACCESS),

@@ -71,7 +71,7 @@ typedef struct _ENUM_PROCESSES_CONTEXT
 } ENUM_PROCESSES_CONTEXT, *PENUM_PROCESSES_CONTEXT;
 
 NTSTATUS STDCALL
-EnumProcessesCallback(IN PSYSTEM_PROCESSES CurrentProcess,
+EnumProcessesCallback(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
                       IN OUT PVOID CallbackContext)
 {
   PENUM_PROCESSES_CONTEXT Context = (PENUM_PROCESSES_CONTEXT)CallbackContext;
@@ -83,7 +83,7 @@ EnumProcessesCallback(IN PSYSTEM_PROCESSES CurrentProcess,
   }
 
   /* return current process */
-  *Context->lpidProcess = (DWORD)CurrentProcess->ProcessId;
+  *Context->lpidProcess = (DWORD)CurrentProcess->UniqueProcessId;
 
   /* go to next array slot */
   Context->lpidProcess++;
