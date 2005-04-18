@@ -169,6 +169,7 @@ ControlService(SC_HANDLE        hService,
                DWORD            dwControl,
                LPSERVICE_STATUS lpServiceStatus)
 {
+#if 0
   DWORD dwError;
 
   DPRINT("ControlService(%x, %x, %p)\n",
@@ -191,6 +192,10 @@ ControlService(SC_HANDLE        hService,
   DPRINT("ControlService() done\n");
 
   return TRUE;
+#endif
+  DPRINT1("ControlService is unimplemented\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
