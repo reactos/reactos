@@ -427,9 +427,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* FIXME: ObGetObjectSecurity(Process, &SecurityDescriptor)
               SeAccessCheck
     */
-   ObReferenceObject(Process);
-   ObReferenceObject(Process);
-   return Status;
+    ObDereferenceObject(Process);
+    return Status;
    
 exitdereferenceobjects:
     if(SectionObject != NULL) ObDereferenceObject(SectionObject);

@@ -151,7 +151,7 @@ PspDeleteProcess(PVOID ObjectBody)
 {
     PEPROCESS Process = (PEPROCESS)ObjectBody;
 
-    DPRINT("PiDeleteProcess(ObjectBody %x)\n",Process);
+    DPRINT1("PiDeleteProcess(ObjectBody %x)\n",Process);
 
     /* Delete the CID Handle */   
     if(Process->UniqueProcessId != NULL) {

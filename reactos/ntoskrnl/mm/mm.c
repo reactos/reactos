@@ -90,6 +90,7 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
          return(STATUS_SUCCESS);
 
       case MEMORY_AREA_VIRTUAL_MEMORY:
+      case MEMORY_AREA_PEB_OR_TEB:
          MmFreeVirtualMemory(Process, Marea);
          break;
 
