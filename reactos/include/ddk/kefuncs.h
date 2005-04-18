@@ -28,7 +28,7 @@ VOID FASTCALL KiReleaseSpinLock(PKSPIN_LOCK SpinLock);
 
 VOID KeDrainApcQueue(VOID);
 
-struct _KPROCESS* KeGetCurrentProcess(VOID);
+struct _KPROCESS* STDCALL KeGetCurrentProcess(VOID);
 
 /*
  * FUNCTION: Acquires a spinlock so the caller can synchronize access to 

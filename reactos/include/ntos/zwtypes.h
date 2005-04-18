@@ -31,17 +31,6 @@ typedef struct _LDT_ENTRY {
   } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
 
-typedef enum _THREAD_STATE {
-	StateInitialized,
-	StateReady,
-	StateRunning,
-	StateStandby,
-	StateTerminated,
-	StateWait,
-	StateTransition,
-	StateUnknown
-} THREAD_STATE;
-
 typedef enum _DEBUG_CONTROL_CODE
 {
   DebugGetTraceInformation = 1,
@@ -1325,7 +1314,7 @@ typedef struct _SYSTEM_THREADS {
 	KPRIORITY  Priority;
 	KPRIORITY  BasePriority;
 	ULONG  ContextSwitchCount;
-	THREAD_STATE  State;
+	ULONG  State;
 	KWAIT_REASON  WaitReason;
 } SYSTEM_THREADS, *PSYSTEM_THREADS;
 
