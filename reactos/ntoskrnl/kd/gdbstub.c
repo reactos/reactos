@@ -150,17 +150,16 @@ static CPU_REGISTER GspRegisters[NUMREGS] =
   { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Fs), FIELD_OFFSET (CONTEXT, SegFs), TRUE },
   { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Gs), FIELD_OFFSET (CONTEXT, SegGs), TRUE }
 };
-
-static PCHAR GspThreadStates[THREAD_STATE_MAX] =
-{
-  "Initialized",  /* THREAD_STATE_INITIALIZED */
-  "Ready",        /* THREAD_STATE_READY */
-  "Running",      /* THREAD_STATE_RUNNING */
-  "Suspended",    /* THREAD_STATE_SUSPENDED */
-  "Frozen",       /* THREAD_STATE_FROZEN */
-  "Terminated 1", /* THREAD_STATE_TERMINATED_1 */
-  "Terminated 2", /* THREAD_STATE_TERMINATED_2 */
-  "Blocked"       /* THREAD_STATE_BLOCKED */
+                                                                                
+static PCHAR GspThreadStates[DeferredReady+1] =
+{ "Initialized", 
+  "Ready", 
+  "Running",
+  "Standby", 
+  "Terminated", 
+  "Waiting",
+  "Transition", 
+  "DeferredReady" 
 };
 
 char *

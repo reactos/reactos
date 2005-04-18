@@ -53,7 +53,6 @@ ULONG KeMemoryMapRangeCount;
 ULONG_PTR FirstKrnlPhysAddr;
 ULONG_PTR LastKrnlPhysAddr;
 ULONG_PTR LastKernelAddress;
-volatile BOOLEAN Initialized = FALSE;
 
 ULONG KeLargestCacheLine = 0x40; /* FIXME: Arch-specific */
 

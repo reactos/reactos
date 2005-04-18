@@ -313,13 +313,13 @@ KiInsertQueueApc(PKAPC Apc,
         Thread->ApcState.KernelApcPending = TRUE;
         
         /* Check the Thread State */
-        if (Thread->State == THREAD_STATE_RUNNING) { 
+        if (Thread->State == Running) { 
             
             /* FIXME: Use IPI */
             DPRINT ("Requesting APC Interrupt for Running Thread \n");
             HalRequestSoftwareInterrupt(APC_LEVEL);
             
-        } else if ((Thread->State == THREAD_STATE_BLOCKED) && (Thread->WaitIrql == PASSIVE_LEVEL) &&
+        } else if ((Thread->State == Waiting) && (Thread->WaitIrql == PASSIVE_LEVEL) &&
                    ((Apc->NormalRoutine == NULL) || 
                    ((!Thread->KernelApcDisable) && (!Thread->ApcState.KernelApcInProgress)))) {
           
@@ -327,7 +327,7 @@ KiInsertQueueApc(PKAPC Apc,
             KiAbortWaitThread(Thread, STATUS_KERNEL_APC, PriorityBoost);
         }
         
-   } else if ((Thread->State == THREAD_STATE_BLOCKED) && 
+   } else if ((Thread->State == Waiting) && 
               (Thread->WaitMode == UserMode) && 
               (Thread->Alertable)) {
        

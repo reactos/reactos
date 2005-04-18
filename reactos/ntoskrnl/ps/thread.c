@@ -164,9 +164,9 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
                   Thread->ThreadsProcess->UniqueProcessId,
                   Thread->Cid.UniqueThread,
                   Thread->ThreadsProcess->ImageFileName);
-         if(Thread->Tcb.State == THREAD_STATE_READY ||
-            Thread->Tcb.State == THREAD_STATE_SUSPENDED ||
-            Thread->Tcb.State == THREAD_STATE_BLOCKED)
+         if(Thread->Tcb.State == Ready ||
+            Thread->Tcb.State == Standby ||
+            Thread->Tcb.State == Waiting)
          {
            ULONG i = 0;
            PULONG Esp = (PULONG)Thread->Tcb.KernelStack;
@@ -567,6 +567,7 @@ NtCreateThread (
     /* create a client id handle */
     Status = PsCreateCidHandle (
         Thread, PsThreadType, &Thread->Cid.UniqueThread);
+    DPRINT1("cid: %d\n", Thread->Cid.UniqueThread);
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(Thread);
@@ -760,7 +761,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 NTSTATUS STDCALL
 NtYieldExecution(VOID)
 {
-  KiDispatchThread(THREAD_STATE_READY);
+  KiDispatchThread(Ready);
   return(STATUS_SUCCESS);
 }
 

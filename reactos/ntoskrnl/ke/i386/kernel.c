@@ -146,7 +146,7 @@ KeCreateApplicationProcessorIdleThread(ULONG Id)
 		     NULL,
 		     KernelMode,
 		     FALSE);
-  IdleThread->Tcb.State = THREAD_STATE_RUNNING;
+  IdleThread->Tcb.State = Running;
   IdleThread->Tcb.FreezeCount = 0;
   IdleThread->Tcb.Affinity = 1 << Id;
   IdleThread->Tcb.UserAffinity = 1 << Id;

@@ -151,7 +151,7 @@ PspDeleteProcess(PVOID ObjectBody)
 {
     PEPROCESS Process = (PEPROCESS)ObjectBody;
 
-    DPRINT1("PiDeleteProcess(ObjectBody %x)\n",Process->UniqueProcessId);
+    DPRINT("PiDeleteProcess(ObjectBody %x)\n", ObjectBody);
 
     /* Delete the CID Handle */   
     if(Process->UniqueProcessId != NULL) {
@@ -160,6 +160,7 @@ PspDeleteProcess(PVOID ObjectBody)
     }
     
     /* KDB hook */
+    DPRINT1("deleted: %d\n", Process->UniqueProcessId);
     KDB_DELETEPROCESS_HOOK(Process);
     
     /* Dereference the Token and release Memory Information */

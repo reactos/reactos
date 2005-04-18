@@ -496,15 +496,6 @@ STDCALL
 PspInitializeProcessSecurity(PEPROCESS Process,
                              PEPROCESS Parent OPTIONAL);
 
-#define THREAD_STATE_INITIALIZED  (0)
-#define THREAD_STATE_READY        (1)
-#define THREAD_STATE_RUNNING      (2)
-#define THREAD_STATE_SUSPENDED    (3)
-#define THREAD_STATE_FROZEN       (4)
-#define THREAD_STATE_TERMINATED_1 (5)
-#define THREAD_STATE_TERMINATED_2 (6)
-#define THREAD_STATE_BLOCKED      (7)
-#define THREAD_STATE_MAX          (8)
 
 
 /*

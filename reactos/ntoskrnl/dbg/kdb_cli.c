@@ -878,10 +878,10 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
    ULONG Eip;
    ULONG ul = 0;
    PCHAR State, pend, str1, str2;
-   STATIC CONST PCHAR ThreadStateToString[THREAD_STATE_MAX] =
+   STATIC CONST PCHAR ThreadStateToString[DeferredReady+1] =
                                           { "Initialized", "Ready", "Running",
-                                            "Suspended", "Frozen", "Terminated1",
-                                            "Terminated2", "Blocked" };
+                                            "Standby", "Terminated", "Waiting",
+                                            "Transition", "DeferredReady" };
    ASSERT(KdbCurrentProcess != NULL);
 
    if (Argc >= 2 && _stricmp(Argv[1], "list") == 0)
@@ -943,7 +943,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
             if (Ebp != NULL) /* FIXME: Should we attach to the process to read Ebp[1]? */
                KdbpSafeReadMemory(&Eip, Ebp + 1, sizeof (Eip));;
          }
-         if (Thread->Tcb.State < THREAD_STATE_MAX)
+         if (Thread->Tcb.State < (DeferredReady + 1))
             State = ThreadStateToString[Thread->Tcb.State];
          else
             State = "Unknown";
@@ -1001,7 +1001,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
          }
       }
       
-      if (Thread->Tcb.State < THREAD_STATE_MAX)
+      if (Thread->Tcb.State < (DeferredReady + 1))
          State = ThreadStateToString[Thread->Tcb.State];
       else
          State = "Unknown";

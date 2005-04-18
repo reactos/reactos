@@ -49,6 +49,17 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_DPC		    2
 #define IPI_REQUEST_FREEZE	    3
 
+typedef enum _KTHREAD_STATE {
+    Initialized,
+    Ready,
+    Running,
+    Standby,
+    Terminated, 
+    Waiting,
+    Transition,
+    DeferredReady,
+} THREAD_STATE, *PTHREAD_STATE;
+
 /* MACROS *************************************************************************/
 
 #define KeEnterCriticalRegion(X) \

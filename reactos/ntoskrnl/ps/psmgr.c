@@ -104,7 +104,7 @@ PsInitThreadManagment(VOID)
    ObpCreateTypeObject(PsThreadType);
 
    PsInitializeThread(NULL, &FirstThread, NULL, KernelMode, TRUE);
-   FirstThread->Tcb.State = THREAD_STATE_RUNNING;
+   FirstThread->Tcb.State = Running;
    FirstThread->Tcb.FreezeCount = 0;
    FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
    FirstThread->Tcb.Affinity = (1 << 0);

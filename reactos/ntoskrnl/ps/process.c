@@ -363,6 +363,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     Status = PsCreateCidHandle(Process,
                                PsProcessType,
                                &Process->UniqueProcessId);
+    DPRINT1("Created CID: %d\n", Process->UniqueProcessId);
     if(!NT_SUCCESS(Status)) 
     {
         DPRINT1("Failed to create CID handle (unique process ID)! Status: 0x%x\n", Status);
@@ -872,7 +873,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         if (ClientId->UniqueThread)
         {
             /* Get the Process */
-            DPRINT("Opening by Thread ID: %x\n", ClientId->UniqueThread);
+            DPRINT1("Opening by Thread ID: %x\n", ClientId->UniqueThread);
             Status = PsLookupProcessThreadByCid(ClientId,
                                                 &Process,
                                                 &Thread);
@@ -881,7 +882,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         else 
         {
             /* Get the Process */
-            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
+            DPRINT1("Opening by Process ID: %x\n", ClientId->UniqueProcess);
             Status = PsLookupProcessByProcessId(ClientId->UniqueProcess,
                                                 &Process);
             DPRINT("Found: %x\n", Process);

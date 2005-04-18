@@ -45,7 +45,7 @@ VOID
 KiInsertIntoThreadList(KPRIORITY Priority, 
                        PKTHREAD Thread)
 {
-    ASSERT(THREAD_STATE_READY == Thread->State);
+    ASSERT(Ready == Thread->State);
     ASSERT(Thread->Priority == Priority);
     
     if (Priority >= MAXIMUM_PRIORITY || Priority < LOW_PRIORITY) {
@@ -62,7 +62,7 @@ STATIC
 VOID 
 KiRemoveFromThreadList(PKTHREAD Thread)
 {
-    ASSERT(THREAD_STATE_READY == Thread->State);
+    ASSERT(Ready == Thread->State);
     RemoveEntryList(&Thread->QueueListEntry);
     if (IsListEmpty(&PriorityListHead[(ULONG)Thread->Priority])) {
         
@@ -89,12 +89,12 @@ KiScanThreadList(KPRIORITY Priority,
            
             current = CONTAINING_RECORD(current_entry, KTHREAD, QueueListEntry);
             
-            if (current->State != THREAD_STATE_READY) {
+            if (current->State != Ready) {
                 
                 DPRINT1("%d/%d\n", &current, current->State);
             }
             
-            ASSERT(current->State == THREAD_STATE_READY);
+            ASSERT(current->State == Ready);
             
             if (current->Affinity & Affinity) {
                 
@@ -123,7 +123,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
     CurrentThread->State = (UCHAR)NewThreadStatus;
     
-    if (NewThreadStatus == THREAD_STATE_READY) {
+    if (NewThreadStatus == Ready) {
             
         KiInsertIntoThreadList(CurrentThread->Priority,
                                CurrentThread);
@@ -137,7 +137,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
         
         if (Candidate == CurrentThread) {
 
-            Candidate->State = THREAD_STATE_RUNNING;
+            Candidate->State = Ready;
             KeReleaseDispatcherDatabaseLockFromDpcLevel();	
             return;
         }
@@ -149,7 +149,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
             DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
 
-            Candidate->State = THREAD_STATE_RUNNING;
+            Candidate->State = Ready;
 
             OldThread = CurrentThread;
             CurrentThread = Candidate;
@@ -199,7 +199,7 @@ KiBlockThread(PNTSTATUS Status,
         Thread->WaitBlockList = NULL;
         
         /* Dispatch it and return status */
-        KiDispatchThreadNoLock (THREAD_STATE_READY);
+        KiDispatchThreadNoLock (Ready);
         if (Status != NULL) *Status = STATUS_KERNEL_APC;
 
     } else {
@@ -211,7 +211,7 @@ KiBlockThread(PNTSTATUS Status,
         Thread->WaitReason = WaitReason;
         
         /* Dispatch it and return status */
-        KiDispatchThreadNoLock(THREAD_STATE_BLOCKED);
+        KiDispatchThreadNoLock(Waiting);
         DPRINT("Dispatching Thread as blocked: %d\n", Thread->WaitStatus);
         if (Status != NULL) *Status = Thread->WaitStatus;
     }
@@ -241,17 +241,16 @@ KiUnblockThread(PKTHREAD Thread,
                 PNTSTATUS WaitStatus, 
                 KPRIORITY Increment)
 {
-    if (THREAD_STATE_TERMINATED_1 == Thread->State ||
-        THREAD_STATE_TERMINATED_2 == Thread->State) {
+    if (Terminated == Thread->State) {
 
         DPRINT("Can't unblock thread 0x%x because it's terminating\n",
                Thread);
     
-    } else if (THREAD_STATE_READY == Thread->State ||
-               THREAD_STATE_RUNNING == Thread->State) {
+    } else if (Ready == Thread->State ||
+               Running == Thread->State) {
         
         DPRINT("Can't unblock thread 0x%x because it's %s\n",
-               Thread, (Thread->State == THREAD_STATE_READY ? "ready" : "running"));
+               Thread, (Thread->State == Ready ? "ready" : "running"));
     
     } else {
         
@@ -279,7 +278,7 @@ KiUnblockThread(PKTHREAD Thread,
             Thread->WaitStatus = *WaitStatus;
         }
         
-        Thread->State = THREAD_STATE_READY;
+        Thread->State = Ready;
         KiInsertIntoThreadList(Thread->Priority, Thread);
         Processor = KeGetCurrentProcessorNumber();
         Affinity = Thread->Affinity;
@@ -588,7 +587,7 @@ KeAlertResumeThread(IN PKTHREAD Thread)
     if (Thread->Alerted[KernelMode] == FALSE) {
        
         /* If it's Blocked, unblock if it we should */
-        if (Thread->State == THREAD_STATE_BLOCKED &&  Thread->Alertable) {
+        if (Thread->State == Waiting &&  Thread->Alertable) {
             
             DPRINT("Aborting Wait\n");
             KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
@@ -639,7 +638,7 @@ KeAlertThread(PKTHREAD Thread,
     if (PreviousState == FALSE) {
        
         /* If it's Blocked, unblock if it we should */
-        if (Thread->State == THREAD_STATE_BLOCKED && 
+        if (Thread->State == Waiting && 
             (AlertMode == KernelMode || Thread->WaitMode == AlertMode) &&
             Thread->Alertable) {
             
@@ -779,7 +778,7 @@ KeInitializeThread(PKPROCESS Process,
     MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 
     /* Set the Thread to initalized */
-    Thread->State = THREAD_STATE_INITIALIZED;
+    Thread->State = Initialized;
     
     /* The Native API function will initialize the TEB field later */
     Thread->Teb = NULL;
@@ -1017,7 +1016,7 @@ KeRevertToUserAffinityThread(VOID)
         
         /* We need to dispatch a new thread */
         CurrentThread->WaitIrql = OldIrql;
-        KiDispatchThreadNoLock(THREAD_STATE_READY);
+        KiDispatchThreadNoLock(Ready);
         KeLowerIrql(OldIrql);
     }
 }
@@ -1080,7 +1079,7 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
         
         /* We need to dispatch a new thread */
         CurrentThread->WaitIrql = OldIrql;
-        KiDispatchThreadNoLock(THREAD_STATE_READY);
+        KiDispatchThreadNoLock(Ready);
         KeLowerIrql(OldIrql);
     }
 }
@@ -1146,7 +1145,7 @@ KeSetPriorityThread(PKTHREAD Thread,
         
         CurrentThread = KeGetCurrentThread();
         
-        if (Thread->State == THREAD_STATE_READY) {
+        if (Thread->State == Ready) {
             
             KiRemoveFromThreadList(Thread);
             Thread->BasePriority = Thread->Priority = (CHAR)Priority;
@@ -1154,12 +1153,12 @@ KeSetPriorityThread(PKTHREAD Thread,
             
             if (CurrentThread->Priority < Priority) {
                 
-                KiDispatchThreadNoLock(THREAD_STATE_READY);
+                KiDispatchThreadNoLock(Ready);
                 KeLowerIrql(OldIrql);
                 return (OldPriority);
             }
         
-        } else if (Thread->State == THREAD_STATE_RUNNING)  {
+        } else if (Thread->State == Running)  {
             
             Thread->BasePriority = Thread->Priority = (CHAR)Priority;
             
@@ -1171,7 +1170,7 @@ KeSetPriorityThread(PKTHREAD Thread,
                     
                     if (Thread == CurrentThread) {
                         
-                        KiDispatchThreadNoLock(THREAD_STATE_READY);
+                        KiDispatchThreadNoLock(Ready);
                         KeLowerIrql(OldIrql);
                         return (OldPriority);
                         
@@ -1229,14 +1228,14 @@ KeSetAffinityThread(PKTHREAD Thread,
         
         Thread->Affinity = Affinity;
         
-        if (Thread->State == THREAD_STATE_RUNNING) {
+        if (Thread->State == Running) {
             
             ProcessorMask = 1 << KeGetCurrentKPCR()->ProcessorNumber;
             if (Thread == KeGetCurrentThread()) {
                 
                 if (!(Affinity & ProcessorMask)) {
                     
-                    KiDispatchThreadNoLock(THREAD_STATE_READY);
+                    KiDispatchThreadNoLock(Ready);
                     KeLowerIrql(OldIrql);
                     return STATUS_SUCCESS;
                 }
@@ -1318,7 +1317,7 @@ KeTerminateThread(IN KPRIORITY Increment)
     }
     
     /* Find a new Thread */
-    KiDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
+    KiDispatchThreadNoLock(Terminated);
 }
 
 /*

@@ -572,8 +572,10 @@ QSI_DEF(SystemProcessInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 	}
 	
+    DPRINT1("getting next proc\n");
 	syspr = PsGetNextProcess(NULL);
 	pr = syspr;
+    DPRINT1("next proc: %x\n", pr);
 	pCur = (unsigned char *)Spi;
 
 	do
@@ -661,6 +663,7 @@ QSI_DEF(SystemProcessInformation)
 //                 SpiCur->Threads[i].CreateTime = current->CreateTime;
                  SpiCur->Threads[i].WaitTime = current->Tcb.WaitTime;
                  SpiCur->Threads[i].StartAddress = (PVOID) current->StartAddress;
+                 DPRINT1("cid: %d\n", current->Cid.UniqueThread);
                  SpiCur->Threads[i].ClientId = current->Cid;
                  SpiCur->Threads[i].Priority = current->Tcb.Priority;
                  SpiCur->Threads[i].BasePriority = current->Tcb.BasePriority;
@@ -670,8 +673,9 @@ QSI_DEF(SystemProcessInformation)
                  i++;
                  current_entry = current_entry->Flink;
                }
-
+               
 		pr = PsGetNextProcess(pr);
+        DPRINT1("next proc: %x\n", pr);
         nThreads = 0;
 		if ((pr == syspr) || (pr == NULL))
 		{
@@ -688,6 +692,7 @@ QSI_DEF(SystemProcessInformation)
 	}
 
 	*ReqSize = ovlSize;
+    DPRINT1("done\n");
 	return (STATUS_SUCCESS);
 }
 

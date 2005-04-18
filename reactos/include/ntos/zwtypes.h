@@ -338,7 +338,7 @@ typedef struct _SYSTEM_THREAD_INFORMATION
 	KPRIORITY	Priority;
 	LONG		BasePriority;
 	ULONG		ContextSwitches;
-	ULONG		ThreadState;
+	LONG		ThreadState;
 	KWAIT_REASON	WaitReason;
 } SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
 

@@ -724,7 +724,7 @@ KiAbortWaitThread(PKTHREAD Thread,
 
     /* If we are blocked, we must be waiting on something also */
     DPRINT("KiAbortWaitThread: %x, Status: %x, %x \n", Thread, WaitStatus, Thread->WaitBlockList);
-    ASSERT((Thread->State == THREAD_STATE_BLOCKED) == (Thread->WaitBlockList != NULL));
+    ASSERT((Thread->State == Waiting) == (Thread->WaitBlockList != NULL));
 
     /* Remove the Wait Blocks from the list */
     DPRINT("Removing waits\n");
@@ -886,7 +886,7 @@ KeReleaseDispatcherDatabaseLock(KIRQL OldIrql)
     if (!KeIsExecutingDpc() && OldIrql < DISPATCH_LEVEL && KeGetCurrentThread() != NULL && 
         KeGetCurrentThread() == KeGetCurrentPrcb()->IdleThread) {
         
-        KiDispatchThreadNoLock(THREAD_STATE_READY);
+        KiDispatchThreadNoLock(Ready);
         KeLowerIrql(OldIrql);
         
     } else {
