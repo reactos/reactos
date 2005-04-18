@@ -34,7 +34,11 @@ static GENERIC_MAPPING PiThreadMapping = {
     THREAD_ALL_ACCESS};
     
 BOOLEAN DoneInitYet = FALSE;
-                  
+
+extern ULONG NtBuildNumber;
+extern ULONG NtMajorVersion;
+extern ULONG NtMinorVersion;
+
 VOID 
 INIT_FUNCTION
 PsInitClientIDManagment(VOID);
@@ -309,44 +313,39 @@ PspPostInitSystemProcess(VOID)
  *	FALSE	OS is a free build.
  *
  * NOTES
- *	The DDK docs say something about a 'CmCSDVersionString'.
- *	How do we determine in the build is checked or free??
  *
- * @unimplemented
+ * @implemented
  */
-
 BOOLEAN
 STDCALL
-PsGetVersion (
-	PULONG		MajorVersion	OPTIONAL,
-	PULONG		MinorVersion	OPTIONAL,
-	PULONG		BuildNumber	OPTIONAL,
-	PUNICODE_STRING	CSDVersion	OPTIONAL
-	)
+PsGetVersion(PULONG MajorVersion OPTIONAL,
+             PULONG MinorVersion OPTIONAL,
+             PULONG BuildNumber OPTIONAL,
+             PUNICODE_STRING CSDVersion OPTIONAL)
 {
-	if (MajorVersion)
-		*MajorVersion = 4;
+    if (MajorVersion)
+        *MajorVersion = NtMajorVersion;
 
-	if (MinorVersion)
-		*MinorVersion = 0;
+    if (MinorVersion)
+        *MinorVersion = NtMinorVersion;
 
-	if (BuildNumber)
-		*BuildNumber = 1381;
+    if (BuildNumber)
+        *BuildNumber = NtBuildNumber;
 
-	if (CSDVersion)
-	{
-		CSDVersion->Length = 0;
-		CSDVersion->MaximumLength = 0;
-		CSDVersion->Buffer = NULL;
+    if (CSDVersion)
+    {
+        CSDVersion->Length = 0;
+        CSDVersion->MaximumLength = 0;
+        CSDVersion->Buffer = NULL;
 #if 0
-		CSDVersion->Length = CmCSDVersionString.Length;
-		CSDVersion->MaximumLength = CmCSDVersionString.Maximum;
-		CSDVersion->Buffer = CmCSDVersionString.Buffer;
+        CSDVersion->Length = CmCSDVersionString.Length;
+        CSDVersion->MaximumLength = CmCSDVersionString.Maximum;
+        CSDVersion->Buffer = CmCSDVersionString.Buffer;
 #endif
-	}
+    }
 
-	/* FIXME: How do we determine if build is checked or free? */
-	return FALSE;
+    /* Check the High word */
+    return (NtBuildNumber >> 28) == 0xC;
 }
 
 /* EOF */
