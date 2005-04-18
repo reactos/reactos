@@ -272,7 +272,6 @@ ScmrCloseServiceHandle(handle_t BindingHandle,
 
 
 /* Function 1 */
-#if 0
 unsigned long
 ScmrControlService(handle_t BindingHandle,
                    unsigned int hService,
@@ -296,7 +295,6 @@ ScmrControlService(handle_t BindingHandle,
 
   return ERROR_SUCCESS;
 }
-#endif
 
 
 /* Function 2 */

@@ -21,7 +21,7 @@
 ]
 interface svcctl
 {
-cpp_quote("#if 0");
+cpp_quote("#if 0")
   typedef struct _SERVICE_STATUS
   {
     DWORD dwServiceType;
@@ -32,17 +32,17 @@ cpp_quote("#if 0");
     DWORD dwCheckPoint;
     DWORD dwWaitHint;
   } SERVICE_STATUS, *LPSERVICE_STATUS;
-cpp_quote("#endif");
+cpp_quote("#endif")
 
   /* Function 0 */
   DWORD ScmrCloseServiceHandle([in] handle_t BindingHandle,
                                [in] SC_HANDLE hSCObject);
 
   /* Function 1 */
-//  BOOL ScmrControlService([in] handle_t BindingHandle,
-//                          [in] SC_HANDLE hService,
-//                          [in] DWORD dwControl,
-//                          [out] LPSERVICE_STATUS lpServiceStatus);
+  BOOL ScmrControlService([in] handle_t BindingHandle,
+                          [in] SC_HANDLE hService,
+                          [in] DWORD dwControl,
+                          [out] LPSERVICE_STATUS lpServiceStatus);
 
   /* Function 2 */
   DWORD ScmrDeleteService([in] handle_t BindingHandle,
@@ -85,7 +85,7 @@ cpp_quote("#endif");
                            [in] DWORD dwErrorControl,
                            [in, string, ref] LPCWSTR lpBinaryPathName,
                            [in, string, unique] LPCWSTR lpLoadOrderGroup,
-                           [out, unique] LPDWORD lpdwTagId,
+                           [out] LPDWORD lpdwTagId,
                            [in, string, unique] LPCWSTR lpDependencies,
                            [in, string, unique] LPCWSTR lpServiceStartName,
                            [in, string, unique] LPCWSTR lpPassword);
@@ -119,5 +119,4 @@ cpp_quote("#endif");
                              [in, string] LPCSTR lpServiceName,
                              [in] DWORD dwDesiredAccess,
                              [out] SC_HANDLE *hScm);
-
 }
