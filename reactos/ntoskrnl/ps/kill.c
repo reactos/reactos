@@ -160,7 +160,6 @@ PspDeleteProcess(PVOID ObjectBody)
     }
     
     /* KDB hook */
-    DPRINT1("deleted: %d\n", Process->UniqueProcessId);
     KDB_DELETEPROCESS_HOOK(Process);
     
     /* Dereference the Token and release Memory Information */

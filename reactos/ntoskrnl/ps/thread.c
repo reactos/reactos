@@ -567,7 +567,7 @@ NtCreateThread (
     /* create a client id handle */
     Status = PsCreateCidHandle (
         Thread, PsThreadType, &Thread->Cid.UniqueThread);
-    DPRINT1("cid: %d\n", Thread->Cid.UniqueThread);
+
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(Thread);
