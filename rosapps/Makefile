@@ -20,7 +20,9 @@ APPS = cmdutils \
 	hcalc \
 	mc \
 	notevil \
-	packmgr \
+	packmgr$(SEP)lib \
+	packmgr$(SEP)cmd-line \
+	packmgr$(SEP)gui \
 	sysutils \
 	sysutils$(SEP)ctm \
     	sysutils$(SEP)kill \
