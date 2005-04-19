@@ -1,0 +1,5 @@
+Makefile
+rsrc.res
+version.res
+wininet.dll.dbg.c
+wininet.spec.def
