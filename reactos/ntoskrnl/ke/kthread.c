@@ -917,47 +917,6 @@ KeQueryRuntimeThread(IN PKTHREAD Thread,
     return Thread->KernelTime;
 }
 
-VOID
-KeFreeStackPage(PVOID Context, 
-                MEMORY_AREA* MemoryArea, 
-                PVOID Address, 
-                PFN_TYPE Page, 
-                SWAPENTRY SwapEntry, 
-                BOOLEAN Dirty)
-{
-    ASSERT(SwapEntry == 0);
-    if (Page) MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
-}
-
-NTSTATUS
-KeReleaseThread(PKTHREAD Thread)
-/*
- * FUNCTION: Releases the resource allocated for a thread by
- * KeInitializeThread
- * NOTE: The thread had better not be running when this is called
- */
-{
-  extern unsigned int init_stack;
-
-  /* FIXME - lock the process */
-  RemoveEntryList(&Thread->ThreadListEntry);
-  
-  if (Thread->StackLimit != (ULONG_PTR)init_stack)
-    {       
-      MmLockAddressSpace(MmGetKernelAddressSpace());
-      MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
-                            (PVOID)Thread->StackLimit,
-                            KeFreeStackPage,
-                            NULL);
-      MmUnlockAddressSpace(MmGetKernelAddressSpace());
-    }
-  Thread->StackLimit = 0;
-  Thread->InitialStack = NULL;
-  Thread->StackBase = NULL;
-  Thread->KernelStack = NULL;
-  return(STATUS_SUCCESS);
-}
-
 /*
  * @implemented
  */
