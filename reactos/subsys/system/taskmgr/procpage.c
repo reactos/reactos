@@ -492,7 +492,7 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
     ULONG    OldProcessCount = 0;
 
     /* Create the event */
-    hProcessPageEvent = CreateEvent(NULL, TRUE, TRUE, _T("Process Page Event"));
+    hProcessPageEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
     /* If we couldn't create the event then exit the thread */
     if (!hProcessPageEvent)

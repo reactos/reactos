@@ -320,7 +320,7 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 	TCHAR	Text[260];
 
 	/*  Create the event */
-	hPerformancePageEvent = CreateEvent(NULL, TRUE, TRUE, _T("Performance Page Event"));
+	hPerformancePageEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
 	/*  If we couldn't create the event then exit the thread */
 	if (!hPerformancePageEvent)

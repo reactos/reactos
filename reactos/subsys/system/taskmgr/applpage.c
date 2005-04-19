@@ -213,7 +213,7 @@ void UpdateApplicationListControlViewSetting(void)
 DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
 {
     /* Create the event */
-    hApplicationPageEvent = CreateEvent(NULL, TRUE, TRUE, _T("Application Page Event"));
+    hApplicationPageEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
     /* If we couldn't create the event then exit the thread */
     if (!hApplicationPageEvent)
