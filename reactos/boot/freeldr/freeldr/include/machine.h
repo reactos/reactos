@@ -56,6 +56,11 @@ typedef struct tagMACHVTBL
 
   ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
+  BOOL (*DiskGetBootVolume)(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
+  BOOL (*DiskGetSystemVolume)(char *SystemPath, char *RemainingPath, PULONG Device, PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
+  BOOL (*DiskGetBootPath)(char *BootPath, unsigned Size);
+  VOID (*DiskGetBootDevice)(PULONG BootDevice);
+  BOOL (*DiskBootingFromFloppy)(VOID);
   BOOL (*DiskReadLogicalSectors)(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
   BOOL (*DiskGetPartitionEntry)(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
   BOOL (*DiskGetDriveGeometry)(ULONG DriveNumber, PGEOMETRY DriveGeometry);
@@ -87,6 +92,11 @@ extern MACHVTBL MachVtbl;
 #define MachVideoSync()				MachVtbl.VideoSync()
 #define MachVideoPrepareForReactOS()		MachVtbl.VideoPrepareForReactOS()
 #define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
+#define MachDiskGetBootVolume(Drv, Start, Cnt, FsType)	MachVtbl.DiskGetBootVolume((Drv), (Start), (Cnt), (FsType))
+#define MachDiskGetSystemVolume(SysPath, RemPath, Dev, Drv, Start, Cnt, FsType)	MachVtbl.DiskGetSystemVolume((SysPath), (RemPath), (Dev), (Drv), (Start), (Cnt), (FsType))
+#define MachDiskGetBootPath(Path, Size)		MachVtbl.DiskGetBootPath((Path), (Size))
+#define MachDiskGetBootDevice(BootDevice)	MachVtbl.DiskGetBootDevice(BootDevice)
+#define MachDiskBootingFromFloppy()		MachVtbl.DiskBootingFromFloppy()
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)	MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
 #define MachDiskGetPartitionEntry(Drive, Part, Entry)	MachVtbl.DiskGetPartitionEntry((Drive), (Part), (Entry))
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))

@@ -33,22 +33,7 @@ BOOL IniFileInitialize(VOID)
 	BOOL	Success;
 
 	// Open freeldr.ini
-	// BootDrive & BootPartition are passed
-	// in from the boot sector code in the
-	// DL & DH registers.
-	Freeldr_Ini = IniOpenIniFile(BootDrive, BootPartition);
-
-	// If we couldn't open freeldr.ini on the partition
-	// they specified in the boot sector then try
-	// opening the active (boot) partition.
-	if ((Freeldr_Ini == NULL) && (BootPartition != 0))
-	{
-		BootPartition = 0;
-
-		Freeldr_Ini = IniOpenIniFile(BootDrive, BootPartition);
-
-		return FALSE;
-	}
+	Freeldr_Ini = IniOpenIniFile();
 
 	if (Freeldr_Ini == NULL)
 	{
@@ -87,23 +72,9 @@ BOOL IniFileInitialize(VOID)
 	return Success;
 }
 
-PFILE IniOpenIniFile(UCHAR BootDriveNumber, UCHAR BootPartitionNumber)
+PFILE IniOpenIniFile()
 {
 	PFILE	IniFileHandle;	// File handle for freeldr.ini
-
-	if (!FsOpenVolume(BootDriveNumber, BootPartitionNumber))
-	{
-		if (BootPartitionNumber == 0)
-		{
-			printf("Error opening active (bootable) partition on boot drive 0x%x for file access.\n", BootDriveNumber);
-		}
-		else
-		{
-			printf("Error opening partition %d on boot drive 0x%x for file access.\n", BootPartitionNumber, BootDriveNumber);
-		}
-
-		return NULL;
-	}
 
 	// Try to open freeldr.ini
 	IniFileHandle = FsOpenFile("freeldr.ini");

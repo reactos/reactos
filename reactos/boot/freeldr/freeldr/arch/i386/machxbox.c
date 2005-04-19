@@ -21,6 +21,7 @@
 #include "mm.h"
 #include "machine.h"
 #include "machxbox.h"
+#include "i386.h"
 
 VOID
 XboxMachInit(VOID)
@@ -46,6 +47,11 @@ XboxMachInit(VOID)
   MachVtbl.VideoSync = XboxVideoSync;
   MachVtbl.VideoPrepareForReactOS = XboxVideoPrepareForReactOS;
   MachVtbl.GetMemoryMap = XboxMemGetMemoryMap;
+  MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
+  MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
+  MachVtbl.DiskGetBootPath = i386DiskGetBootPath;
+  MachVtbl.DiskGetBootDevice = i386DiskGetBootDevice;
+  MachVtbl.DiskBootingFromFloppy = i386DiskBootingFromFloppy;
   MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
   MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;

@@ -49,6 +49,13 @@ VOID RunLoader(VOID)
 	LONG		TimeOut;
 	ULONG		SelectedOperatingSystem;
 
+	if (!FsOpenBootVolume())
+	{
+		printf("Error opening boot partition for file access.\n");
+		MachConsGetCh();
+		return;
+	}
+
 	if (!IniFileInitialize())
 	{
 		printf("Press any key to reboot.\n");
