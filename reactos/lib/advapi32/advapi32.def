@@ -414,7 +414,7 @@ MD5Update@12
 MakeAbsoluteSD@44
 ;MakeAbsoluteSD2
 MakeSelfRelativeSD@12
-MapGenericMask@8
+MapGenericMask@8=NTDLL.MapGenericMask
 ;NotifyBootConfigStatus@4
 NotifyChangeEventLog@8
 ObjectCloseAuditAlarmA@12
