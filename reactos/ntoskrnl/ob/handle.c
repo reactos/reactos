@@ -48,13 +48,6 @@ PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
-VOID
-STDCALL
-ObKillProcess(PEPROCESS Process)
-{
-    ObDeleteHandleTable(Process);
-}
-
 static VOID
 ObpDecrementHandleCount(PVOID ObjectBody)
 {
@@ -71,6 +64,15 @@ ObpDecrementHandleCount(PVOID ObjectBody)
 
   if(NewHandleCount == 0)
   {
+    if(ObjectHeader->Parent != NULL && !ObjectHeader->Permanent)
+    {
+      /* delete the object from the namespace when the last handle got closed.
+         Only do this if it's actually been inserted into the namespace and
+         if it's not a permanent object. */
+      ObpRemoveEntryDirectory(ObjectHeader);
+    }
+    
+    /* remove the keep-alive reference */
     ObDereferenceObject(ObjectBody);
   }
 }
@@ -519,18 +521,6 @@ DeleteHandleCallback(PHANDLE_TABLE HandleTable,
   ObpDecrementHandleCount(ObjectBody);
 }
 
-VOID ObDeleteHandleTable(PEPROCESS Process)
-/*
- * FUNCTION: Deletes the handle table associated with a process
- */
-{
-   PAGED_CODE();
-
-   ExDestroyHandleTable(Process->ObjectTable,
-                        DeleteHandleCallback,
-                        Process);
-}
-
 static BOOLEAN STDCALL
 DuplicateHandleCallback(PHANDLE_TABLE HandleTable,
                         PHANDLE_TABLE_ENTRY HandleTableEntry,
@@ -580,6 +570,18 @@ VOID ObCreateHandleTable(PEPROCESS Parent,
    {
      Process->ObjectTable = ExCreateHandleTable(Process);
    }
+}
+
+
+VOID
+STDCALL
+ObKillProcess(PEPROCESS Process)
+{
+   PAGED_CODE();
+
+   ExDestroyHandleTable(Process->ObjectTable,
+                        DeleteHandleCallback,
+                        Process);
 }
 
 

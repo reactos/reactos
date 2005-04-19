@@ -385,8 +385,14 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     /* Initialize the Object Attributes */
     InitializeObjectAttributes(&ObjectAttributes, DeviceName, 0, NULL, NULL);
     
-    /* Honour exclusive flag */
+    /* Honor exclusive flag */
     ObjectAttributes.Attributes |= OBJ_EXCLUSIVE;
+    
+    /* Create a permanent object for named devices */
+    if (DeviceName != NULL)
+    {
+        ObjectAttributes.Attributes |= OBJ_PERMANENT;
+    }
     
     /* Align the Extension Size to 8-bytes */
     AlignedDeviceExtensionSize = (DeviceExtensionSize + 7) &~ 7;

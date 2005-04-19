@@ -1021,6 +1021,7 @@ STATIC NTSTATUS
 ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
 			IN LONG OldRefCount)
 {
+#if 0
   if (ObjectHeader->RefCount < 0)
     {
       CPRINT("Object %p/%p has invalid reference count (%d)\n",
@@ -1036,6 +1037,7 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
 	     ObjectHeader->HandleCount);
       KEBUGCHECK(0);
     }
+#endif
 
   
   switch (KeGetCurrentIrql ())

@@ -272,7 +272,6 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 		      PVOID* ReturnedObject,
 		      PUNICODE_STRING RemainingPath,
 		      POBJECT_TYPE ObjectType);
-VOID ObDeleteHandleTable(struct _EPROCESS* Process);
 
 NTSTATUS
 ObpQueryHandleAttributes(HANDLE Handle,
