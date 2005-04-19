@@ -557,6 +557,15 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
    
    /* I guess this should be removed later... but it shouldn't cause problems */
    DeviceObject->DeviceObjectExtension->ExtensionFlags |= DOE_DELETE_PENDING;
+   
+   /* Make the object temporary. This should automatically remove the device
+      from the namespace */
+   ObMakeTemporaryObject(DeviceObject);
+   
+   /* Dereference the driver object */
+   ObDereferenceObject(DeviceObject->DriverObject);
+   
+   /* Remove the keep-alive reference */
    ObDereferenceObject(DeviceObject);
 }
 
