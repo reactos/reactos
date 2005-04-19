@@ -434,6 +434,8 @@ MingwBackend::IncludeInAllTarget ( const Module& module ) const
 		return false;
 	if ( module.type == Iso )
 		return false;
+	if ( module.type == LiveIso )
+		return false;
 	if ( module.type == Test )
 		return false;
 	return true;

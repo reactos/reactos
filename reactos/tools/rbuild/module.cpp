@@ -462,6 +462,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return BootSector;
 	if ( attribute.value == "iso" )
 		return Iso;
+	if ( attribute.value == "liveiso" )
+		return LiveIso;
 	if ( attribute.value == "test" )
 		return Test;
 	if ( attribute.value == "rpcserver" )
@@ -499,6 +501,7 @@ Module::GetDefaultModuleExtension () const
 		case BootSector:
 			return ".o";
 		case Iso:
+		case LiveIso:
 			return ".iso";
 		case Test:
 			return ".exe";
@@ -539,6 +542,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case BootLoader:
 		case BootSector:
 		case Iso:
+		case LiveIso:
 		case RpcServer:
 		case RpcClient:
 			return "";
@@ -575,6 +579,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case BootLoader:
 		case BootSector:
 		case Iso:
+		case LiveIso:
 		case RpcServer:
 		case RpcClient:
 			return "";

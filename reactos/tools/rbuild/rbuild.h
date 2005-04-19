@@ -137,6 +137,7 @@ enum ModuleType
 	BootLoader,
 	BootSector,
 	Iso,
+	LiveIso,
 	Test,
 	RpcServer,
 	RpcClient

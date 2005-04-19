@@ -62,4 +62,8 @@
 
 	<module name="bootcd" type="iso">
 	</module>
+
+	<module name="livecd" type="liveiso">
+	</module>
+
 </project>

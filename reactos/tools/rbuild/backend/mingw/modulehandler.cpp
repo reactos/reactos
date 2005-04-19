@@ -195,6 +195,9 @@ MingwModuleHandler::InstanciateHandler (
 		case Iso:
 			handler = new MingwIsoModuleHandler ( module );
 			break;
+		case LiveIso:
+			handler = new MingwLiveIsoModuleHandler ( module );
+			break;
 		case Test:
 			handler = new MingwTestModuleHandler ( module );
 			break;
@@ -2538,7 +2541,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 		backend->outputDirectory );
 	string bootcdReactosNoFixup = bootcdDirectory + SSEP "reactos";
 	string bootcdReactos = PassThruCacheDirectory (
-		NormalizeFilename ( bootcdReactosNoFixup ),
+		NormalizeFilename ( bootcdReactosNoFixup ) + SSEP,
 		backend->outputDirectory );
 	CLEAN_FILE ( bootcdReactos );
 	string reactosInf = PassThruCacheDirectory (
@@ -2579,6 +2582,158 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	          "\t$(Q)$(CDMAKE_TARGET) -v -m -b %s %s REACTOS ReactOS.iso\n",
 	          isoboot.c_str (),
 	          bootcd.c_str () );
+	fprintf ( fMakefile,
+	          "\n" );
+}
+
+
+MingwLiveIsoModuleHandler::MingwLiveIsoModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwLiveIsoModuleHandler::Process ()
+{
+	GenerateLiveIsoModuleTarget ();
+}
+
+void
+MingwLiveIsoModuleHandler::CreateDirectory ( const string& directory )
+{
+	string normalizedDirectory = MingwModuleHandler::PassThruCacheDirectory (
+		NormalizeFilename ( directory ) + SSEP,
+		backend->outputDirectory );
+}
+
+void
+MingwLiveIsoModuleHandler::OutputCopyCommand ( const string& sourceFilename,
+	                                           const string& targetFilename,
+	                                           const string& targetDirectory )
+{
+	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
+		NormalizeFilename ( targetDirectory + SSEP + targetFilename ),
+		backend->outputDirectory );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_CP)\n" );
+	fprintf ( fMakefile,
+	          "\t${cp} %s %s 1>$(NUL)\n",
+	          sourceFilename.c_str (),
+	          normalizedTargetFilename.c_str () );
+}
+
+void
+MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
+	                                                  string& reactosDirectory )
+{
+	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	{
+		const Module& m = *module.project.modules[i];
+		if ( m.installName.length () > 0 )
+		{
+			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
+				NormalizeFilename ( m.GetPath () ),
+				backend->outputDirectory );
+			OutputCopyCommand ( sourceFilename,
+		                        m.installName,
+		                        livecdDirectory + SSEP + reactosDirectory + SSEP + m.installBase );
+		}
+	}
+}
+
+void
+MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdDirectory,
+	                                                     string& reactosDirectory )
+{
+	for ( size_t i = 0; i < module.project.installfiles.size (); i++ )
+	{
+		const InstallFile& installfile = *module.project.installfiles[i];
+		OutputCopyCommand ( installfile.GetPath (),
+	                        installfile.newname,
+	                        livecdDirectory + SSEP + reactosDirectory + SSEP + installfile.base );
+	}
+}
+
+void
+MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirectory )
+{
+	CreateDirectory ( livecdDirectory + SSEP "Profiles" );
+	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "All Users") ;
+	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "All Users" SSEP "Desktop" );
+	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "Default User" );
+	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "Default User" SSEP "Desktop" );
+	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "Default User" SSEP "My Documents" );
+
+	string livecdIni = "bootdata" SSEP "livecd.ini";
+	OutputCopyCommand ( livecdIni,
+                        "freeldr.ini",
+                        livecdDirectory );
+}
+
+void
+MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
+{
+	string setupldr = PassThruCacheDirectory (
+		NormalizeFilename ( "boot" SSEP "freeldr" SSEP "freeldr" SSEP "setupldr.sys" ),
+		backend->outputDirectory );
+	CreateDirectory ( livecdDirectory + SSEP "loader" );
+	OutputCopyCommand ( setupldr,
+                        "setupldr.sys",
+                        livecdDirectory + SSEP + "loader" );
+}
+
+void
+MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
+{
+	string system32ConfigDirectory = NormalizeFilename (
+		MingwModuleHandler::PassThruCacheDirectory (
+		livecdDirectory + SSEP "system32" SSEP "config" SSEP,
+		backend->outputDirectory ) );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_MKHIVE)\n" );
+	fprintf ( fMakefile,
+	          "\t$(MKHIVE_TARGET) bootdata %s bootdata" SSEP "livecd.inf bootdata" SSEP "hiveinst.inf\n",
+	          system32ConfigDirectory.c_str () );
+}
+
+void
+MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
+{
+	string livecdDirectory = "livecd";
+	string livecd = PassThruCacheDirectory (
+		NormalizeFilename ( livecdDirectory + SSEP ),
+		backend->outputDirectory );
+	string isoboot = PassThruCacheDirectory (
+		NormalizeFilename ( "boot" SSEP "freeldr" SSEP "bootsect" SSEP "isoboot.o" ),
+		backend->outputDirectory );
+	string reactosDirectory = "reactos";
+	string livecdReactosNoFixup = livecdDirectory + SSEP + reactosDirectory;
+	string livecdReactos = NormalizeFilename ( PassThruCacheDirectory (
+		NormalizeFilename ( livecdReactosNoFixup + SSEP ),
+		backend->outputDirectory ) );
+	CLEAN_FILE ( livecdReactos );
+
+	fprintf ( fMakefile, ".PHONY: %s\n\n",
+	          module.name.c_str ());
+	fprintf ( fMakefile,
+	          "%s: all %s %s $(MKHIVE_TARGET) $(CDMAKE_TARGET)\n",
+	          module.name.c_str (),
+	          isoboot.c_str (),
+	          livecdReactos.c_str () );
+	OutputModuleCopyCommands ( livecdDirectory,
+	                           reactosDirectory );
+	OutputNonModuleCopyCommands ( livecdDirectory,
+	                              reactosDirectory );
+	OutputProfilesDirectoryCommands ( livecdDirectory );
+	OutputLoaderCommands ( livecdDirectory );
+	OutputRegistryCommands ( livecdDirectory );
+	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
+	fprintf ( fMakefile,
+	          "\t$(Q)$(CDMAKE_TARGET) -v -m -j -b %s %s REACTOS ReactOS-LiveCD.iso\n",
+	          isoboot.c_str (),
+	          livecd.c_str () );
 	fprintf ( fMakefile,
 	          "\n" );
 }

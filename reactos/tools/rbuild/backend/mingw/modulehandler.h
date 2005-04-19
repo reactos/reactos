@@ -345,6 +345,28 @@ private:
 };
 
 
+class MingwLiveIsoModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwLiveIsoModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+private:
+	void GenerateLiveIsoModuleTarget ();
+	void CreateDirectory ( const std::string& directory );
+	void OutputCopyCommand ( const std::string& sourceFilename,
+	                         const std::string& targetFilename,
+	                         const std::string& targetDirectory );
+	void OutputModuleCopyCommands ( std::string& livecdDirectory,
+	                                std::string& livecdReactos );
+	void OutputNonModuleCopyCommands ( std::string& livecdDirectory,
+	                                   std::string& livecdReactos );
+	void OutputProfilesDirectoryCommands ( std::string& livecdDirectory );
+	void OutputLoaderCommands ( std::string& livecdDirectory );
+	void OutputRegistryCommands ( std::string& livecdDirectory );
+};
+
+
 class MingwTestModuleHandler : public MingwModuleHandler
 {
 public:
