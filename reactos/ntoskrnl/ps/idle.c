@@ -19,7 +19,7 @@
 extern PEPROCESS PsIdleProcess;
 
 /* FUNCTIONS *****************************************************************/
-
+                                                               
 /** System idle thread procedure
  *
  */
@@ -45,45 +45,82 @@ PsIdleThreadMain(PVOID Context)
      }
 }
 
+/* 
+ * HACK-O-RAMA
+ * Antique vestigial code left alive for the sole purpose of First/Idle Thread
+ * creation until I can merge my fix for properly creating them.
+ */
+NTSTATUS
+PsInitializeIdleOrFirstThread(PEPROCESS Process,
+                              PETHREAD* ThreadPtr,
+                              PKSTART_ROUTINE StartRoutine,
+                              KPROCESSOR_MODE AccessMode,
+                              BOOLEAN First)
+{
+    PETHREAD Thread;
+    PVOID KernelStack;
+    extern unsigned int init_stack;
 
-/** Initialization of system idle thread
- *
- */ 
-VOID INIT_FUNCTION
+    PAGED_CODE();
+
+    Thread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
+
+    RtlZeroMemory(Thread, sizeof(ETHREAD));
+    Thread->ThreadsProcess = Process;
+
+    DPRINT("Thread = %x\n",Thread);
+
+    if (First) 
+    {
+        KernelStack = (PVOID)init_stack;
+    }
+    else
+    {
+        KernelStack = MmCreateKernelStack(FALSE);
+    }
+    
+    KeInitializeThread(&Process->Pcb, 
+                       &Thread->Tcb, 
+                       PspSystemThreadStartup,
+                       StartRoutine,
+                       NULL,
+                       NULL,
+                       NULL,
+                       KernelStack);
+    Thread->Tcb.ApcQueueable = TRUE;
+    
+    InitializeListHead(&Thread->IrpList);
+
+    DPRINT("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
+
+    *ThreadPtr = Thread;
+
+    return STATUS_SUCCESS;
+}
+
+/* 
+ * HACK-O-RAMA
+ * Antique vestigial code left alive for the sole purpose of First/Idle Thread
+ * creation until I can merge my fix for properly creating them.
+ */
+VOID 
+INIT_FUNCTION
 PsInitIdleThread(VOID)
 {
-   NTSTATUS Status;
-   PETHREAD IdleThread;
-   KIRQL oldIrql;
+    PETHREAD IdleThread;
+    KIRQL oldIrql;
 
-   Status = PsInitializeThread(PsIdleProcess,
-			       &IdleThread,
-			       NULL,
-			       KernelMode,
-			       FALSE);
-   if (!NT_SUCCESS(Status))
-     {
-        DPRINT1("Couldn't create idle system thread! Status: 0x%x\n", Status);
-        KEBUGCHECK(0);
-        return;
-     }
-   
-   IdleThread->StartAddress = PsIdleThreadMain;
-   Status = KiArchInitThread(&IdleThread->Tcb, PsIdleThreadMain, NULL);
-   if (!NT_SUCCESS(Status))
-     {
-        DPRINT1("Couldn't initialize system idle thread! Status: 0x%x\n", Status);
-        ObDereferenceObject(IdleThread);
-        KEBUGCHECK(0);
-        return;
-     }
+    PsInitializeIdleOrFirstThread(PsIdleProcess,
+                                  &IdleThread,
+                                  PsIdleThreadMain,
+                                  KernelMode,
+                                  FALSE);
 
-   oldIrql = KeAcquireDispatcherDatabaseLock ();
-   KiUnblockThread(&IdleThread->Tcb, NULL, 0);
-   KeReleaseDispatcherDatabaseLock(oldIrql);
+    oldIrql = KeAcquireDispatcherDatabaseLock ();
+    KiUnblockThread(&IdleThread->Tcb, NULL, 0);
+    KeReleaseDispatcherDatabaseLock(oldIrql);
 
-   KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;
-   KeSetPriorityThread(&IdleThread->Tcb, LOW_PRIORITY);
-   KeSetAffinityThread(&IdleThread->Tcb, 1 << 0);
-
+    KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;
+    KeSetPriorityThread(&IdleThread->Tcb, LOW_PRIORITY);
+    KeSetAffinityThread(&IdleThread->Tcb, 1 << 0);
 }
