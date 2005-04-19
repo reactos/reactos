@@ -47,10 +47,10 @@ EXTERN(RealEntryPoint)
 	.code32
 
 	/* Store the boot drive */
-	movb	%dl,(BootDrive)
+	movb	%dl,(i386BootDrive)
 
 	/* Store the boot partition */
-	movb	%dh,(BootPartition)
+	movb	%dh,(i386BootPartition)
 
 	/* GO! */
 	xorl	%eax,%eax
@@ -369,12 +369,12 @@ mb2:
 	movl	MB_INFO_BOOT_DEVICE_OFFSET(%ebx),%eax
 	shrl	$16,%eax
 	incb	%al
-	movb	%al,BootPartition
-	movb	%ah,BootDrive
+	movb	%al,i386BootPartition
+	movb	%ah,i386BootDrive
 	jmp	mb4
 mb3:	/* No boot device known, assume first partition of first harddisk */
-	movb	$0x80,BootDrive
-	movb	$1,BootPartition
+	movb	$0x80,i386BootDrive
+	movb	$1,i386BootPartition
 mb4:
 
 	/* Check for a command line */
@@ -466,8 +466,8 @@ rmode_idtptr:
 	.word	0x3ff		/* Limit */
 	.long	0			/* Base Address */
 
-EXTERN(BootDrive)
+EXTERN(i386BootDrive)
 	.long	0
 
-EXTERN(BootPartition)
+EXTERN(i386BootPartition)
 	.long	0

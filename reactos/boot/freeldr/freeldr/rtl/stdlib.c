@@ -17,16 +17,15 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 /*
  * convert_to_ascii() - converts a number to it's ascii equivalent
  * from:
  *  GRUB  --  GRand Unified Bootloader
  *  Copyright (C) 1996   Erich Boleyn  <erich@uruk.org>
  */
-char *convert_to_ascii(char *buf, int c, ...)
+char *convert_to_ascii(char *buf, int c, int num)
 {
-  unsigned long num = *((&c) + 1), mult = 10;
+  unsigned long mult = 10;
   char *ptr = buf;
 
   if (c == 'x')
@@ -63,9 +62,8 @@ char *convert_to_ascii(char *buf, int c, ...)
   return ptr;
 }
 
-char *convert_i64_to_ascii(char *buf, int c, ...)
+char *convert_i64_to_ascii(char *buf, int c, unsigned long long num)
 {
-  unsigned long long num = *(long long*)((&c) + 1);
   int mult = 10;
   char *ptr = buf;
 

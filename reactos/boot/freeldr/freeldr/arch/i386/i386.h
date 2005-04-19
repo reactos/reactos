@@ -42,6 +42,19 @@ extern void i386MachineCheck();
 
 extern void (*i386TrapSaveDRHook)(unsigned long *DRRegs);
 
+extern ULONG i386BootDrive;
+extern ULONG i386BootPartition;
+
+extern BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector,
+                                  PULONGLONG SectorCount, int *FsType);
+extern BOOL i386DiskGetSystemVolume(char *SystemPath, char *RemainingPath,
+                                    PULONG Device, PULONG DriveNumber,
+                                    PULONGLONG StartSector,
+                                    PULONGLONG SectorCount, int *FsType);
+extern BOOL i386DiskGetBootPath(char *BootPath, unsigned Size);
+extern VOID i386DiskGetBootDevice(PULONG BootDevice);
+extern BOOL i386DiskBootingFromFloppy(VOID);
+
 #endif /* __I386_I386_H_ */
 
 /* EOF */

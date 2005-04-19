@@ -51,109 +51,77 @@ VOID FileSystemError(PUCHAR ErrorString)
 
 /*
  *
- * BOOL FsOpenVolume(ULONG DriveNumber, ULONG PartitionNumber);
+ * BOOL FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount, int Type);
  *
  * This function is called to open a disk volume for file access.
  * It must be called before any of the file functions will work.
- * It takes two parameters:
- *
- * Drive: The BIOS drive number of the disk to open
- * Partition: This is zero for floppy drives.
- *            If the disk is a hard disk then this specifies
- *            The partition number to open (1 - 4)
- *            If it is zero then it opens the active (bootable) partition
  *
  */
-BOOL FsOpenVolume(ULONG DriveNumber, ULONG PartitionNumber)
+static BOOL FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount, int Type)
 {
-	PARTITION_TABLE_ENTRY	PartitionTableEntry;
-	UCHAR					ErrorText[80];
-	UCHAR						VolumeType;
+	UCHAR ErrorText[80];
 
-	DbgPrint((DPRINT_FILESYSTEM, "FsOpenVolume() DriveNumber: 0x%x PartitionNumber: 0x%x\n", DriveNumber, PartitionNumber));
+	FsType = Type;
 
-	// Check and see if it is a floppy drive
-	// If so then just assume FAT12 file system type
-	if (DiskIsDriveRemovable(DriveNumber))
+	switch (FsType)
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "Drive is a floppy diskette drive. Assuming FAT12 file system.\n"));
-
-		FsType = FS_FAT;
-		return FatOpenVolume(DriveNumber, 0, 0);
-	}
-
-	// Check for ISO9660 file system type
-	if (DriveNumber >= 0x80 && FsRecIsIso9660(DriveNumber))
-	{
-		DbgPrint((DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n"));
-
-		FsType = FS_ISO9660;
+	case FS_FAT:
+		return FatOpenVolume(DriveNumber, StartSector, SectorCount);
+	case FS_EXT2:
+		return Ext2OpenVolume(DriveNumber, StartSector);
+	case FS_NTFS:
+		return NtfsOpenVolume(DriveNumber, StartSector);
+	case FS_ISO9660:
 		return IsoOpenVolume(DriveNumber);
-	}
-
-	// Set the boot partition
-	BootPartition = PartitionNumber;
-
-	// Get the requested partition entry
-	if (PartitionNumber == 0)
-	{
-		// Partition requested was zero which means the boot partition
-		if (DiskGetActivePartitionEntry(DriveNumber, &PartitionTableEntry) == FALSE)
-		{
-			FileSystemError("No active partition.");
-			return FALSE;
-		}
-	}
-	else
-	{
-		// Get requested partition
-		if (MachDiskGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry) == FALSE)
-		{
-			FileSystemError("Partition not found.");
-			return FALSE;
-		}
-	}
-
-	// Check for valid partition
-	if (PartitionTableEntry.SystemIndicator == PARTITION_ENTRY_UNUSED)
-	{
-		FileSystemError("Invalid partition.");
-		return FALSE;
-	}
-
-	// Try to recognize the file system
-	if (!FsRecognizeVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, &VolumeType))
-	{
-		FileSystemError("Unrecognized file system.");
-		return FALSE;
-	}
-
-	//switch (PartitionTableEntry.SystemIndicator)
-	switch (VolumeType)
-	{
-	case PARTITION_FAT_12:
-	case PARTITION_FAT_16:
-	case PARTITION_HUGE:
-	case PARTITION_XINT13:
-	case PARTITION_FAT32:
-	case PARTITION_FAT32_XINT13:
-		FsType = FS_FAT;
-		return FatOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, PartitionTableEntry.PartitionSectorCount);
-	case PARTITION_EXT2:
-		FsType = FS_EXT2;
-		return Ext2OpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
-	case PARTITION_NTFS:
-		FsType = FS_NTFS;
-		return NtfsOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
 	default:
 		FsType = 0;
-		sprintf(ErrorText, "Unsupported file system. Type: 0x%x", VolumeType);
+		sprintf(ErrorText, "Unsupported file system. Type: 0x%x", Type);
 		FileSystemError(ErrorText);
+	}
+
+	return FALSE;
+}
+/*
+ *
+ * BOOL FsOpenBootVolume()
+ *
+ * This function is called to open the boot disk volume for file access.
+ * It must be called before any of the file functions will work.
+ */
+BOOL FsOpenBootVolume()
+{
+	ULONG DriveNumber;
+	ULONGLONG StartSector;
+	ULONGLONG SectorCount;
+	int Type;
+
+	if (! MachDiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
+	{
+		FileSystemError("Unable to locate boot partition\n");
 		return FALSE;
 	}
 
-	return TRUE;
+	return FsOpenVolume(DriveNumber, StartSector, SectorCount, Type);
 }
+
+BOOL FsOpenSystemVolume(char *SystemPath, char *RemainingPath, PULONG Device)
+{
+	ULONG DriveNumber;
+	ULONGLONG StartSector;
+	ULONGLONG SectorCount;
+	int Type;
+
+	if (! MachDiskGetSystemVolume(SystemPath, RemainingPath, Device,
+	                              &DriveNumber, &StartSector, &SectorCount,
+	                              &Type))
+	{
+		FileSystemError("Unable to locate system partition\n");
+		return FALSE;
+	}
+
+	return FsOpenVolume(DriveNumber, StartSector, SectorCount, Type);
+}
+
 
 PFILE FsOpenFile(PUCHAR FileName)
 {

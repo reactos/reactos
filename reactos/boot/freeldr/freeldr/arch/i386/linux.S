@@ -30,7 +30,7 @@ EXTERN(BootNewLinuxKernel)
 	.code16
 
 	/* Set the boot drive */
-	movb	(BootDrive),%dl
+	movb	(i386BootDrive),%dl
 
 	/* Load segment registers */
 	cli
@@ -66,7 +66,7 @@ EXTERN(BootOldLinuxKernel)
 	.code16
 
 	/* Set the boot drive */
-	movb	(BootDrive),%dl
+	movb	(i386BootDrive),%dl
 
 	/* Load segment registers */
 	cli

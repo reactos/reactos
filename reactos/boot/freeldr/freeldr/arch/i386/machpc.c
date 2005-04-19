@@ -22,6 +22,7 @@
 #include "machine.h"
 #include "machpc.h"
 #include "rtl.h"
+#include "i386.h"
 
 VOID
 PcMachInit(VOID)
@@ -47,6 +48,11 @@ PcMachInit(VOID)
   MachVtbl.VideoSync = PcVideoSync;
   MachVtbl.VideoPrepareForReactOS = PcVideoPrepareForReactOS;
   MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
+  MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
+  MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
+  MachVtbl.DiskGetBootPath = i386DiskGetBootPath;
+  MachVtbl.DiskGetBootDevice = i386DiskGetBootDevice;
+  MachVtbl.DiskBootingFromFloppy = i386DiskBootingFromFloppy;
   MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = PcDiskGetPartitionEntry;
   MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;

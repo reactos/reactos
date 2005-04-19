@@ -111,6 +111,11 @@ XenMachInit(VOID)
   MachVtbl.VideoSync = XenVideoSync;
   MachVtbl.VideoPrepareForReactOS = XenVideoPrepareForReactOS;
   MachVtbl.GetMemoryMap = XenMemGetMemoryMap;
+  MachVtbl.DiskGetBootVolume = i386DiskGetBootVolume;
+  MachVtbl.DiskGetSystemVolume = i386DiskGetSystemVolume;
+  MachVtbl.DiskGetBootPath = i386DiskGetBootPath;
+  MachVtbl.DiskGetBootDevice = i386DiskGetBootDevice;
+  MachVtbl.DiskBootingFromFloppy = i386DiskBootingFromFloppy;
   MachVtbl.DiskReadLogicalSectors = XenDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = XenDiskGetPartitionEntry;
   MachVtbl.DiskGetDriveGeometry = XenDiskGetDriveGeometry;
@@ -179,7 +184,8 @@ void _start()
 
   /* Start freeldr */
   XenActive = TRUE;
-  BootDrive = 0x80;
+  i386BootDrive = 0x80;
+  i386BootPartition = 0xff;
   BootMain(XenStartInfo->cmd_line);
 
   /* Shouldn't get here */

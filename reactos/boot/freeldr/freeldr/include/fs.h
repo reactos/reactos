@@ -33,7 +33,8 @@
 #define PFILE			FILE *
 
 VOID	FileSystemError(PUCHAR ErrorString);
-BOOL	FsOpenVolume(ULONG DriveNumber, ULONG PartitionNumber);
+BOOL	FsOpenBootVolume();
+BOOL	FsOpenSystemVolume(char *SystemPath, char *RemainingPath, PULONG BootDevice);
 PFILE	FsOpenFile(PUCHAR FileName);
 VOID	FsCloseFile(PFILE FileHandle);
 BOOL	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
