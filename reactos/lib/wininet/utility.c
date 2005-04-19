@@ -42,6 +42,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
 #define TIME_STRING_LEN  30
+#define CP_UNIXCP     65010 /* Wine extension */
+
 
 time_t ConvertTimeString(LPCWSTR asctime)
 {

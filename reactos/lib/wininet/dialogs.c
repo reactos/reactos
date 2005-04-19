@@ -157,6 +157,7 @@ static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
      */
     if( bSet )
     {
+#ifndef __REACTOS__
         szUserPass[0] = 0;
         GetWindowTextW( hUserItem, szUserPass, 
                         (sizeof szUserPass-1)/sizeof(WCHAR) );
@@ -171,14 +172,17 @@ static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
                                (CHAR*)szUserPass, u_len, dwMagic, 0 );
 
         return ( r == WN_SUCCESS );
+#else
+	return FALSE;
+#endif
     }
 
     sz = sizeof szUserPass;
     r_len = (strlenW( szResource ) + 1)*sizeof(WCHAR);
-    r = WNetGetCachedPassword( (CHAR*)szResource, r_len,
-                               (CHAR*)szUserPass, &sz, dwMagic );
-    if( r != WN_SUCCESS )
-        return FALSE;
+//    r = WNetGetCachedPassword( (CHAR*)szResource, r_len,
+//                               (CHAR*)szUserPass, &sz, dwMagic );
+//    if( r != WN_SUCCESS )
+//        return FALSE;
 
     p = strchrW( szUserPass, ':' );
     if( p )
