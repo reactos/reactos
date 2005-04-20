@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Windows
@@ -26,7 +25,9 @@
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  */
+
 /* INCLUDES ******************************************************************/
+
 #include <w32k.h>
 
 static WndProcHandle *WndProcHandlesArray = 0;
@@ -3204,12 +3205,12 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
    }
 
    /*
-    * Only allow CSRSS to mess with the desktop window
+    * WndProc is only available to the owner process
     */
-   if (hWnd == IntGetDesktopWindow()
+   if (GWL_WNDPROC == Index
        && WindowObject->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
    {
-      SetLastWin32Error(STATUS_ACCESS_DENIED);
+      SetLastWin32Error(ERROR_ACCESS_DENIED);
       return 0;
    }
 
