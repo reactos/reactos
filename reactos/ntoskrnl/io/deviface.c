@@ -16,10 +16,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 
-            0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
-
 /* FUNCTIONS *****************************************************************/
+
+static PWCHAR BaseKeyString = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\DeviceClasses\\";
 
 /*
  * @unimplemented
@@ -93,7 +92,6 @@ IoGetDeviceInterfaces(
    IN ULONG Flags,
    OUT PWSTR *SymbolicLinkList)
 {
-   PWCHAR BaseKeyString = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\DeviceClasses\\";
    PWCHAR BaseInterfaceString = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
    UNICODE_STRING GuidString;
    UNICODE_STRING BaseKeyName;
@@ -561,7 +559,7 @@ IoGetDeviceInterfaces(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 
 NTSTATUS STDCALL
@@ -571,16 +569,212 @@ IoRegisterDeviceInterface(
    IN PUNICODE_STRING ReferenceString OPTIONAL,
    OUT PUNICODE_STRING SymbolicLinkName)
 {
-   PWCHAR KeyNameString = L"\\Device\\Serenum";
-
-   DPRINT("IoRegisterDeviceInterface called (UNIMPLEMENTED)\n");
-   if (!memcmp(InterfaceClassGuid, (LPGUID)&GUID_SERENUM_BUS_ENUMERATOR, sizeof(GUID)))
+   PUNICODE_STRING InstancePath;
+   UNICODE_STRING GuidString;
+   UNICODE_STRING SubKeyName;
+   UNICODE_STRING BaseKeyName;
+   UNICODE_STRING DeviceInstance = RTL_CONSTANT_STRING(L"DeviceInstance");
+   UNICODE_STRING SymbolicLink = RTL_CONSTANT_STRING(L"SymbolicLink");
+   HANDLE InterfaceKey;
+   HANDLE SubKey;
+   ULONG StartIndex;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   ULONG i;
+   NTSTATUS Status;
+   
+   Status = RtlStringFromGUID(InterfaceClassGuid, &GuidString);
+   if (!NT_SUCCESS(Status))
    {
-      RtlInitUnicodeString(SymbolicLinkName, KeyNameString);
-      return STATUS_SUCCESS;
+      DPRINT("RtlStringFromGUID() failed with status 0x%08lx\n", Status);
+      return Status;
    }
-
-   return STATUS_INVALID_DEVICE_REQUEST;
+   
+   /* Create base key name for this interface: HKLM\SYSTEM\CurrentControlSet\DeviceClasses\{GUID}\##?#ACPI#PNP0501#1#{GUID} */
+   InstancePath = &PhysicalDeviceObject->DeviceObjectExtension->DeviceNode->InstancePath;
+   BaseKeyName.Length = wcslen(BaseKeyString) * sizeof(WCHAR);
+   BaseKeyName.MaximumLength = BaseKeyName.Length
+      + GuidString.Length
+      + 5 * sizeof(WCHAR) /* 5  = size of \##?# */
+      + InstancePath->Length
+      + sizeof(WCHAR)     /* 1  = size of # */
+      + GuidString.Length;
+   BaseKeyName.Buffer = ExAllocatePool(
+      NonPagedPool,
+      BaseKeyName.MaximumLength);
+   if (!BaseKeyName.Buffer)
+   {
+      DPRINT("ExAllocatePool() failed\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+   wcscpy(BaseKeyName.Buffer, BaseKeyString);
+   RtlAppendUnicodeStringToString(&BaseKeyName, &GuidString);
+   RtlAppendUnicodeToString(&BaseKeyName, L"\\##?#");
+   StartIndex = BaseKeyName.Length / sizeof(WCHAR);
+   RtlAppendUnicodeStringToString(&BaseKeyName, InstancePath);
+   for (i = 0; i < InstancePath->Length / sizeof(WCHAR); i++)
+   {
+      if (BaseKeyName.Buffer[StartIndex + i] == '\\')
+         BaseKeyName.Buffer[StartIndex + i] = '#';
+   }
+   RtlAppendUnicodeToString(&BaseKeyName, L"#");
+   RtlAppendUnicodeStringToString(&BaseKeyName, &GuidString);
+   
+   /* Create BaseKeyName key in registry */
+   InitializeObjectAttributes(
+      &ObjectAttributes,
+      &BaseKeyName,
+      OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE | OBJ_OPENIF,
+      NULL, /* RootDirectory */
+      NULL); /* SecurityDescriptor */
+   
+   Status = ZwCreateKey(
+      &InterfaceKey,
+      KEY_WRITE,
+      &ObjectAttributes,
+      0, /* TileIndex */
+      NULL, /* Class */
+      REG_OPTION_VOLATILE,
+      NULL); /* Disposition */
+   
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+      ExFreePool(BaseKeyName.Buffer);
+      return Status;
+   }
+   
+   /* Write DeviceInstance entry. Value is InstancePath */
+   Status = ZwSetValueKey(
+      InterfaceKey,
+      &DeviceInstance,
+      0, /* TileIndex */
+      REG_SZ,
+      InstancePath->Buffer,
+      InstancePath->Length);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+      ZwClose(InterfaceKey);
+      ExFreePool(BaseKeyName.Buffer);
+      return Status;
+   }
+   
+   /* Create subkey. Name is #ReferenceString */
+   SubKeyName.Length = 0;
+   SubKeyName.MaximumLength = sizeof(WCHAR);
+   if (ReferenceString && ReferenceString->Length)
+      SubKeyName.MaximumLength += ReferenceString->Length;
+   SubKeyName.Buffer = ExAllocatePool(
+      NonPagedPool,
+      SubKeyName.MaximumLength);
+   if (!SubKeyName.Buffer)
+   {
+      DPRINT("ExAllocatePool() failed\n");
+      ZwClose(InterfaceKey);
+      ExFreePool(BaseKeyName.Buffer);
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+   RtlAppendUnicodeToString(&SubKeyName, L"#");
+   if (ReferenceString && ReferenceString->Length)
+      RtlAppendUnicodeStringToString(&SubKeyName, ReferenceString);
+   
+   /* Create SubKeyName key in registry */
+   InitializeObjectAttributes(
+      &ObjectAttributes,
+      &SubKeyName,
+      OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+      InterfaceKey, /* RootDirectory */
+      NULL); /* SecurityDescriptor */
+   
+   Status = ZwCreateKey(
+      &SubKey,
+      KEY_WRITE,
+      &ObjectAttributes,
+      0, /* TileIndex */
+      NULL, /* Class */
+      REG_OPTION_VOLATILE,
+      NULL); /* Disposition */
+   
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+      ZwClose(InterfaceKey);
+      ExFreePool(BaseKeyName.Buffer);
+      return Status;
+   }
+   
+   /* Create symbolic link name: \\?\ACPI#PNP0501#1#{GUID}\ReferenceString */
+   SymbolicLinkName->Length = 0;
+   SymbolicLinkName->MaximumLength = SymbolicLinkName->Length
+      + 4 * sizeof(WCHAR) /* 5 = size of \\??\ */
+      + InstancePath->Length
+      + sizeof(WCHAR)     /* 1  = size of # */
+      + GuidString.Length
+      + sizeof(WCHAR);    /* final NULL */
+   if (ReferenceString && ReferenceString->Length)
+      SymbolicLinkName->MaximumLength += sizeof(WCHAR) + ReferenceString->Length;
+   SymbolicLinkName->Buffer = ExAllocatePool(
+      NonPagedPool,
+      SymbolicLinkName->MaximumLength);
+   if (!SymbolicLinkName->Buffer)
+   {
+      DPRINT("ExAllocatePool() failed\n");
+      ZwClose(InterfaceKey);
+      ZwClose(SubKey);
+      ExFreePool(SubKeyName.Buffer);
+      ExFreePool(BaseKeyName.Buffer);
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+   RtlAppendUnicodeToString(SymbolicLinkName, L"\\\\??\\");
+   StartIndex = SymbolicLinkName->Length / sizeof(WCHAR);
+   RtlAppendUnicodeStringToString(SymbolicLinkName, InstancePath);
+   for (i = 0; i < InstancePath->Length / sizeof(WCHAR); i++)
+   {
+      if (SymbolicLinkName->Buffer[StartIndex + i] == '\\')
+         SymbolicLinkName->Buffer[StartIndex + i] = '#';
+   }
+   RtlAppendUnicodeToString(SymbolicLinkName, L"#");
+   RtlAppendUnicodeStringToString(SymbolicLinkName, &GuidString);
+   if (ReferenceString && ReferenceString->Length)
+   {
+      RtlAppendUnicodeToString(SymbolicLinkName, L"\\");
+      RtlAppendUnicodeStringToString(SymbolicLinkName, ReferenceString);
+   }
+   SymbolicLinkName->Buffer[SymbolicLinkName->Length] = '\0';
+   
+   /* Create symbolic link */
+   Status = IoCreateSymbolicLink(SymbolicLinkName, InstancePath);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
+      ZwClose(InterfaceKey);
+      ZwClose(SubKey);
+      ExFreePool(SubKeyName.Buffer);
+      ExFreePool(BaseKeyName.Buffer);
+      ExFreePool(SymbolicLinkName->Buffer);
+      return Status;
+   }
+   
+   /* Write symbolic link name in registry */
+   Status = ZwSetValueKey(
+      SubKey,
+      &SymbolicLink,
+      0, /* TileIndex */
+      REG_SZ,
+      SymbolicLinkName->Buffer,
+      SymbolicLinkName->Length);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+      ExFreePool(SymbolicLinkName->Buffer);
+   }
+   
+   ZwClose(InterfaceKey);
+   ZwClose(SubKey);
+   ExFreePool(SubKeyName.Buffer);
+   ExFreePool(BaseKeyName.Buffer);
+   
+   return Status;
 }
 
 /*
@@ -592,7 +786,8 @@ IoSetDeviceInterfaceState(
    IN PUNICODE_STRING SymbolicLinkName,
    IN BOOLEAN Enable)
 {
-   return STATUS_NOT_IMPLEMENTED;
+   DPRINT("IoSetDeviceInterfaceState called (UNIMPLEMENTED)\n");
+   return STATUS_SUCCESS;
 }
 
 /* EOF */

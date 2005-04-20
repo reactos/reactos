@@ -64,6 +64,15 @@
 
 #include <pseh.h>
 
+#ifndef RTL_CONSTANT_STRING
+#define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
+{ \
+ sizeof(__SOURCE_STRING__) - sizeof((__SOURCE_STRING__)[0]), \
+ sizeof(__SOURCE_STRING__), \
+ (__SOURCE_STRING__) \
+}
+#endif
+
 #ifdef DBG
 #ifndef PAGED_CODE
 #define PAGED_CODE()                                                           \
