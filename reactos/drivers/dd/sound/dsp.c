@@ -11,8 +11,8 @@
  *			  Minor build fix            
  */
 
-#include "dsp.h"
 #include "sb16.h"
+#include "dsp.h"
 
 /************************************
  * unsigned char read_dsp(void)

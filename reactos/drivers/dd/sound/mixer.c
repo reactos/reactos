@@ -11,8 +11,8 @@
  *			  Minor build fixes             
  */
 
-#include "dsp.h"
 #include "sb16.h"
+#include "dsp.h"
 #include "mixer.h"
 
 unsigned char read_mixer(unsigned short base,unsigned char reg)
