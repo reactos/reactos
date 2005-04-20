@@ -18,7 +18,7 @@ Don't you know going around dereferncing null pointers all day can be hazardous 
 Well, duh!
 There's a bit in cr3 for problems like that.
 Just add a field to the %stru% to keep track of it!
-Don't worry about it... the garbage collector in the kernel will clean it up for you.
+Don't worry about it... the garbage collector in %module% will clean it up for you.
 Did I do that?
 Didn't %dev% fix that already?
 Yes, I think I've seen that bug before... no... that was another program.
@@ -43,7 +43,7 @@ Hmm.. that seems to have been introduced by my last commit... I bet CVS mixed up
 It can't possibly be my fault, so I don't care.
 I'm not experiencing that problem, perhaps it's all in your mind.
 Well... like a good friend of mine said... "Don't Panic!"
-It just shows you how far ReactOS has come along! A year ago a bug like that wouldn't have even been possible!
+It just shows you how far ReactOS has come along! A %period% ago a bug like that wouldn't have even been possible!
 Just surround the code with an #if 0/#endif block, it solves all my problems!
 You know.. if %dev% would just finish %module% for us, we wouldn't be having this problem.
 I say we move on to the next function, since we can't seem to figure this one out.
@@ -54,8 +54,20 @@ ask %dev%
 Thank you for that amazingly keen insight, Commander Obvious.
 Sorry, can't help you right now, trying to track down this bug %dev% caused in %module%
 I dont know about that, but I just fixed a problem in %module% for %dev%
-How should I know? I'm still trying to figure out this main() thing... ooh! wanna see what I did in the kernel?
+How should I know? I'm still trying to figure out this main() thing... ooh! wanna see what I did in %module%?
 lol!
 *wink*
+;)
 42
-It's gonna take me %period%s to fix all %dev%'s bugs in %module% :(
+It's gonna take me over %period% to fix all %dev%'s bugs in %module% :(
+How could %func% return %status%!? It bet %dev% broke it! I didn't touch it... honest!  no.. really! (me hides)
+It's fine if you get %status% there ... just ignore the destruction, and call %func% instead.
+%dev% said %status% isn't really an error in this context because we expect %module% to be toast by now
+heh, I'm still trying to figure out why %func% is returning %status% when I call it from %module%...
+%dev% said it's okay to ignore that as long as you're below %irql%
+erm, what do you mean?
+damn, I do that all the time
+if you want a reply that sounds right, I'd say that %func% support for that is vital to the future of %module%
+Sounds like you're having a problem with %func%. I hate that thing... don't talk to me about it.
+Just return %status% and forget about it. Someone else will fix it, later.
+Blah blah blah... sheesh... can't you figure out *anything*?

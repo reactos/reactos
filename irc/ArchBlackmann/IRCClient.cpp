@@ -81,7 +81,13 @@ IRCClient::Join ( const string& channel )
 bool
 IRCClient::PrivMsg ( const string& to, const string& text )
 {
-	return Send ( "PRIVMSG " + to + " :" + text + "\n" );
+	return Send ( "PRIVMSG " + to + " :" + text + '\n' );
+}
+
+bool
+IRCClient::Action ( const string& to, const string& text )
+{
+	return Send ( "PRIVMSG " + to + " :" + (char)1 + "ACTION " + text + (char)1 + '\n' );
 }
 
 bool
@@ -226,10 +232,41 @@ int IRCClient::Run ( bool launch_thread )
 					printf ( "!!!:OnRecv failure 5 (PRIVMSG w/o target): %s", buf.c_str() );
 					continue;
 				}
-				if ( tgt[0] == '#' )
-					OnChannelMsg ( tgt, src, text );
+				if ( *p == 1 )
+				{
+					p++;
+					p2 = strchr ( p, ' ' );
+					if ( !p2 ) p2 = p + strlen(p);
+					cmd = string ( p, p2-p );
+					strlwr ( &cmd[0] );
+					p = p2 + 1;
+					p2 = strchr ( p, 1 );
+					if ( !p2 )
+					{
+						printf ( "!!!:OnRecv failure 6 (no terminating \x01 for initial \x01 found: %s", buf.c_str() );
+						continue;
+					}
+					text = string ( p, p2-p );
+					if ( cmd == "action" )
+					{
+						if ( tgt[0] == '#' )
+							OnChannelAction ( tgt, src, text );
+						else
+							OnPrivAction ( src, text );
+					}
+					else
+					{
+						printf ( "!!!:OnRecv failure 7 (unrecognized \x01 command '%s': %s", cmd.c_str(), buf.c_str() );
+						continue;
+					}
+				}
 				else
-					OnPrivMsg ( src, text );
+				{
+					if ( tgt[0] == '#' )
+						OnChannelMsg ( tgt, src, text );
+					else
+						OnPrivMsg ( src, text );
+				}
 			}
 			else if ( cmd == "mode" )
 			{
@@ -237,22 +274,22 @@ int IRCClient::Run ( bool launch_thread )
 				//printf ( "[MODE] src='%s' cmd='%s' tgt='%s' text='%s'", src.c_str(), cmd.c_str(), tgt.c_str(), text.c_str() );
 				//OnMode ( 
 				// self mode change:
-				// [MODE] src=Relic3_14 cmd=mode tgt=Relic3_14  text=+i
+				// [MODE] src=Nick cmd=mode tgt=Nick  text=+i
 				// channel mode change:
-				// [MODE] src=Royce3 cmd=mode tgt=#Royce3 text=+o Relic3_14
+				// [MODE] src=Nick cmd=mode tgt=#Channel text=+o Nick
 				if ( tgt[0] == '#' )
 				{
 					p = text.c_str();
 					p2 = strchr ( p, ' ' );
-					if ( !p2 )
-						OnChannelMode ( tgt, text );
-					else
+					if ( p2 && *p2 )
 					{
-						string user ( p, p2-p );
+						string mode ( p, p2-p );
 						p = p2 + 1;
 						p += strspn ( p, " " );
-						OnUserModeInChannel ( src, tgt, user, p );
+						OnUserModeInChannel ( src, tgt, mode, trim(p) );
 					}
+					else
+						OnChannelMode ( tgt, text );
 				}
 				else
 					OnMode ( tgt, text );
@@ -260,6 +297,14 @@ int IRCClient::Run ( bool launch_thread )
 			else if ( cmd == "join" )
 			{
 				OnJoin ( src, text );
+			}
+			else if ( cmd == "part" )
+			{
+				OnPart ( src, text );
+			}
+			else if ( cmd == "nick" )
+			{
+				OnNick ( src, text );
 			}
 			else if ( isdigit(cmd[0]) )
 			{
@@ -307,7 +352,13 @@ int IRCClient::Run ( bool launch_thread )
 			}
 			else
 			{
-				if ( _debug ) printf ( "unrecognized ':' response: %s", buf.c_str() );
+				if ( strstr ( buf.c_str(), "ACTION" ) )
+				{
+					printf ( "ACTION: " );
+					for ( int i = 0; i < buf.size(); i++ )
+						printf ( "%c(%xh)", buf[i], (unsigned)(unsigned char)buf[i] );
+				}
+				else if ( _debug ) printf ( "unrecognized ':' response: %s", buf.c_str() );
 			}
 		}
 		else

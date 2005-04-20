@@ -48,6 +48,9 @@ public:
 	// send message to someone or some channel
 	bool PrivMsg ( const std::string& to, const std::string& text );
 
+	// send /me to someone or some channel
+	bool Action ( const std::string& to, const std::string& text );
+
 	// leave a channel
 	bool Part ( const std::string& channel, const std::string& text );
 
@@ -59,32 +62,45 @@ public:
 	// OnConnected: you just successfully logged into irc server
 	virtual bool OnConnected() = 0;
 
-	// OnJoin: you just successfully joined this channel
-	virtual bool OnJoin ( const std::string& user, const std::string& channel ) = 0;
+	virtual bool OnNick ( const std::string& oldNick, const std::string& newNick ) { return true; }
+
+	// OnJoin: someone just successfully joined a channel you are in ( also sent when you successfully join a channel )
+	virtual bool OnJoin ( const std::string& user, const std::string& channel ) { return true; }
+
+	// OnPart: someone just left a channel you are in
+	virtual bool OnPart ( const std::string& user, const std::string& channel ) { return true; }
 
 	// OnPrivMsg: you just received a private message from a user
-	virtual bool OnPrivMsg ( const std::string& from, const std::string& text ) = 0;
+	virtual bool OnPrivMsg ( const std::string& from, const std::string& text ) { return true; }
+
+	virtual bool OnPrivAction ( const std::string& from, const std::string& text ) { return true; }
 
 	// OnChannelMsg: you just received a chat line in a channel
 	virtual bool OnChannelMsg ( const std::string& channel, const std::string& from,
-		const std::string& text ) = 0;
+		const std::string& text ) { return true; }
+
+	// OnChannelAction: you just received a "/me" line in a channel
+	virtual bool OnChannelAction ( const std::string& channel, const std::string& from,
+		const std::string& text ) { return true; }
 
 	// OnChannelMode: notification of a change of a channel's mode
-	virtual bool OnChannelMode ( const std::string& channel, const std::string& mode ) = 0;
+	virtual bool OnChannelMode ( const std::string& channel, const std::string& mode )
+		{ return true; }
 
 	// OnUserModeInChannel: notification of a mode change of a user with respect to a channel.
 	// f.ex.: this will be called when someone is oped in a channel.
 	virtual bool OnUserModeInChannel ( const std::string& src, const std::string& channel,
-		const std::string& user, const std::string& mode ) = 0;
+		const std::string& mode, const std::string& target ) { return true; }
 
 	// OnMode: you will receive this when you change your own mode, at least...
-	virtual bool OnMode ( const std::string& user, const std::string& mode ) = 0;
+	virtual bool OnMode ( const std::string& user, const std::string& mode ) { return true; }
 
 	// notification of what users are in a channel ( you may get multiple of these... )
-	virtual bool OnChannelUsers ( const std::string& channel, const std::vector<std::string>& users ) = 0;
+	virtual bool OnChannelUsers ( const std::string& channel, const std::vector<std::string>& users )
+		{ return true; }
 
 	// notification that you have received the entire list of users for a channel
-	virtual bool OnEndChannelUsers ( const std::string& channel ) = 0;
+	virtual bool OnEndChannelUsers ( const std::string& channel ) { return true; }
 
 	// OnPing - default implementation replies to PING with a valid PONG. required on some systems to
 	// log in. Most systems require a response in order to stay connected, used to verify a client hasn't
