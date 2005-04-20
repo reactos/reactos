@@ -2068,7 +2068,7 @@ struct cabinet *find_cabs_in_file(LPCSTR name, cab_UBYTE search_buf[])
  */
 void find_cabinet_file(char **cabname, LPCSTR origcab) {
 
-  char *tail, *cab, *name, *nextpart, nametmp[MAX_PATH], *filepart;
+  char *tail, *cab, *name, *nextpart, nametmp[MAX_PATH];
   int found = 0;
 
   TRACE("(*cabname == ^%p, origcab == %s)\n", cabname ? *cabname : NULL, debugstr_a(origcab));
@@ -2107,11 +2107,11 @@ void find_cabinet_file(char **cabname, LPCSTR origcab) {
       nextpart = strchr(name, '\\');
       if (nextpart) *nextpart = '\0';
 
-      found = SearchPathA(cab, name, NULL, MAX_PATH, nametmp, &filepart);
+      found = SearchPathA(cab, name, NULL, MAX_PATH, nametmp, NULL);
 
       /* if the component was not found, look for it in the current dir */
       if (!found) {
-        found = SearchPathA(".", name, NULL, MAX_PATH, nametmp, &filepart);
+        found = SearchPathA(".", name, NULL, MAX_PATH, nametmp, NULL);
       }
       
       if (found) 
@@ -2135,7 +2135,7 @@ void find_cabinet_file(char **cabname, LPCSTR origcab) {
     if (found) {
       free((void *) *cabname);
       *cabname = cab;
-      strncpy(cab, nametmp, found+1);
+      memcpy(cab, nametmp, found+1);
       TRACE("result: %s\n", debugstr_a(cab));
     } else {
       free((void *) cab);
