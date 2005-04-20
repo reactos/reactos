@@ -14,8 +14,8 @@
 #include "expat.h"
 #include "log.h"
 
-int PML_XmlDownload (const char* url, void* usrdata, XML_StartElementHandler start, 
-					 XML_EndElementHandler end, XML_CharacterDataHandler text=0);
+int PML_XmlDownload (pTree, const char* url, void* usrdata, XML_StartElementHandler start, 
+									XML_EndElementHandler end, XML_CharacterDataHandler text=0);
 
 
 // expat callback for start of a package tag
@@ -109,7 +109,7 @@ extern "C" int PML_LoadPackage (TREE* tree, int id, PML_SetButton SetButton)
 
 	if(!pack->loaded)
 	{
-		PML_XmlDownload (pack->path, (void*)pack, pack_start, pack_end, pack_text);
+		PML_XmlDownload (tree, pack->path, (void*)pack, pack_start, pack_end, pack_text);
 		pack->loaded = TRUE;
 	}
 
@@ -208,7 +208,7 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 	// load it if it's not loaded yet
 	else if (!pack->loaded && pack->path)
 	{
-		PML_XmlDownload (pack->path, (void*)pack, pack_start, pack_end, pack_text);
+		PML_XmlDownload (tree, pack->path, (void*)pack, pack_start, pack_end, pack_text);
 		pack->loaded = TRUE;
 
 		return PML_SetAction(tree, id, action, SetIcon, Ask);
@@ -262,17 +262,17 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 			}
 		}
 
-		// set action back
-		pack->action = 0;
-
 		// root notes (like network) return here
 		if(!pack->path || pack->action==0)
 			return ret; 
-	
+
 		// erase from todo list
 		for(i=0; i<tree->todo.size(); i++)
 			if(!strcmp(tree->todo[i], pack->files[pack->action-1])) // look for right entry
 				tree->todo.erase(tree->todo.begin()+i); // delete it
+
+		// set action back
+		pack->action = 0;
 	}
 
 	return ret;

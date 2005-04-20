@@ -121,8 +121,9 @@ void Help (void)
 	for(i=0; i<2000; i++)
 	{
 		buffer[i] = getc(file);
-		if(!buffer[i]) break;
+		if(buffer[i]==EOF) break;
 	}
+	buffer[i] = 0;
 
 	SetText(buffer);
 }
@@ -245,9 +246,12 @@ int SetText (const char* text)
 	{
 		buffer[j] = text[i];
 		if(buffer[j] == '\n')
-			buffer[++j] = '\r';
+		{
+			buffer[j] = '\r';
+			buffer[++j] = '\n';
+		}
 	}
-	buffer[i] = 0;
+	buffer[j] = 0;
 
 	SetWindowTextA(hEdit, buffer);
 

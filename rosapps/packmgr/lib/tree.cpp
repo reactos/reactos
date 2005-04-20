@@ -15,11 +15,13 @@
 
 vector <int> parents;
 
+int LoadOptions (TREE* tree);
+
 void tree_end (void* tree, const char* tag);
 void tree_start (void* usrdata, const char* tag, const char** arg);
 
-int PML_XmlDownload (const char* file, void* usrdata, XML_StartElementHandler start, 
-					 XML_EndElementHandler end, XML_CharacterDataHandler text=0);
+int PML_XmlDownload (pTree tree, const char* file, void* usrdata, XML_StartElementHandler start, 
+											XML_EndElementHandler end, XML_CharacterDataHandler text=0);
 
 
 // Load the tree
@@ -34,7 +36,9 @@ extern "C" int PML_LoadTree (TREE** tree, char* url, PML_AddItem AddItem)
 	// set addItem callback
 	(*tree)->addItem = AddItem;
 
-	return PML_XmlDownload (url, (void*)(*tree), tree_start, tree_end);
+	LoadOptions(*tree);
+
+	return PML_XmlDownload (*tree, url, (void*)(*tree), tree_start, tree_end);
 }
 
 // expat callback for start of a "node" tag
@@ -119,3 +123,4 @@ void tree_end (void* tree, const char* tag)
 	// delete last item
 	parents.pop_back();
 }
+

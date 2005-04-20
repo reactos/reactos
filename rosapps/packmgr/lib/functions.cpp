@@ -15,7 +15,7 @@
 #include "log.h"
 
 extern const char* tree_server;
-char* PML_Download (const char* url, const char* server,  const char* filename);
+char* PML_Download (pTree, const char* url, const char* server,  const char* filename);
 
 
 int debuglog (int argc, char* argv[])
@@ -31,10 +31,10 @@ int download (int argc, char* argv[])
 	char* result;
 
 	if (argc==3)
-		result = PML_Download(argv[1], argv[3], argv[2]);
+		result = PML_Download(NULL, argv[1], argv[3], argv[2]);
 
 	else if (argc==2)
-		result = PML_Download(argv[1], NULL, argv[2]);
+		result = PML_Download(NULL, argv[1], NULL, argv[2]);
 
 	else 
 		return ERR_GENERIC;

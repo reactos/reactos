@@ -15,9 +15,6 @@
 #include "log.h"
 #include <wine/urlmon.h>
 
-// Server there all the files lie
-const char* tree_server = "http://svn.reactos.com/viewcvs/*checkout*/trunk/rosapps/packmgr/tree/"; 
-
 HRESULT WINAPI URLDownloadToFileA(      
     LPUNKNOWN pCaller,
     LPCSTR szURL,
@@ -29,11 +26,16 @@ HRESULT WINAPI URLDownloadToFileA(
 int FindCount (string What, string Where, int start = 0, int end = -1);
 
 
-// Download a file
-char* PML_Download (const char* url, const char* server = "tree", const char* filename = NULL) 
+// Download a file 
+char* PML_Download (pTree tree, const char* url, const char* server = "tree", const char* filename = NULL) 
 {
-	char downl [MAX_PATH];
-	static char path [MAX_PATH];
+	UINT i;
+	static char downl [MAX_PATH]; // the full url
+	static char path [MAX_PATH]; // the full resulting Path
+
+	// It goes to the temp folder when no other path is entered (or even compleatly no filename)
+	// If server == "tree" it will be downloaded from the server speficied in option.xml
+	// File:// links are possible too
 
 	// get temp dir
 	if(!filename)
@@ -52,17 +54,41 @@ char* PML_Download (const char* url, const char* server = "tree", const char* fi
 		GetTempFileNameA (path, "pml", 0, path); 
 
 	// get the url
-	
 	if (!server)
 		strcpy(downl, "");
 
 	else if(!strcmp(server, "tree")) 
-		strcpy(downl, tree_server);
+	{
+		char* ret;
+		for (i=0; i<tree->sources.size(); i++)
+		{
+			ret = PML_Download(tree, url, tree->sources[i], filename);
+			if(ret)
+				return ret;
+		}
+		return NULL;
+	}
 
 	else 
 		strcpy(downl, server);
 
 	strcat(downl, url);
+
+	// is this a file link ?
+	if (strstr(downl, "file://") || strstr(downl, "File://"))
+	{/*
+		if(downl[strlen(downl)] == '\')
+			downl[strlen(downl)] = '\0';
+	*/
+		if(!filename)
+			return &downl[7];
+
+		else
+		{
+			CopyFileA(filename, &downl[7], FALSE);
+			return (char*)filename;
+		}
+	}
 
 	// download the file
 	if(URLDownloadToFileA (NULL, downl, path, 0, NULL) != S_OK)
@@ -77,18 +103,24 @@ char* PML_Download (const char* url, const char* server = "tree", const char* fi
 }
 
 // Download and prozess a xml file
-int PML_XmlDownload (const char* url, void* usrdata, XML_StartElementHandler start, 
-						 XML_EndElementHandler end, XML_CharacterDataHandler text) 
+int PML_XmlDownload (pTree tree, const char* url, void* usrdata,
+						 XML_StartElementHandler start, XML_EndElementHandler end, XML_CharacterDataHandler text) 
 {
-	char buffer[255];
 	int done = 0;
+	char buffer[255];
+	char* filename = 0;
 
 	// logging
 	Log("*  prozess the xml file: ");
 	LogAdd(url);
 
 	// download the file
-	char* filename = PML_Download(url);
+	if(strstr(url, "file://"))
+		filename = PML_Download(tree, url, NULL);
+
+	else
+		filename = PML_Download(tree, url);
+
 
 	if(!filename) 
 	{
@@ -100,7 +132,9 @@ int PML_XmlDownload (const char* url, void* usrdata, XML_StartElementHandler sta
 	FILE* file = fopen(filename, "r");
 	if(!file) 
 	{
-		Log("!  ERROR: Could not open the xml file");
+	MessageBoxA(0,filename,0,0);
+		Log("!  ERROR: Could not open the xml file \"");
+		LogAdd(filename);
 		return ERR_GENERIC;
 	}
 

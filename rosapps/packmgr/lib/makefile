@@ -6,7 +6,7 @@ TARGET_INSTALLDIR = bin
 
 TARGET_SDKLIBS = kernel32.a shell32.a user32.a package.a expat.a urlmon.a
 
-TARGET_OBJECTS = main.o tree.o package.o download.o script.o functions.o log.o
+TARGET_OBJECTS = main.o tree.o package.o download.o script.o functions.o options.o log.o
 
 TARGET_GCCLIBS = stdc++ uuid
 

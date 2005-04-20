@@ -19,7 +19,7 @@
 HANDLE hThread = NULL;
 BOOL thread_abort = FALSE;
 
-char* PML_Download (const char* url, const char* server = "tree",  const char* filename = NULL);
+char* PML_Download (pTree, const char* url, const char* server = "tree",  const char* filename = NULL);
 
 
 // Abort other thread
@@ -47,7 +47,7 @@ DWORD WINAPI DoitThread (void* lpParam)
 	{
 		SCRIPT* script;
 
-		char* path = PML_Download(tree->todo[i]);
+		char* path = PML_Download(tree, tree->todo[i]);
 
 		if(RPS_Load(&script, path) == ERR_OK)
 			scripts.push_back(script);

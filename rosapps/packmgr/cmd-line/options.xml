@@ -1,0 +1,4 @@
+<options>
+  <source>file://C:\Programmieren\reactos\rosapps\packmgr\tree\</source>
+  <source>http://svn.reactos.com/viewcvs/*checkout*/trunk/rosapps/packmgr/tree/</source>
+</options>

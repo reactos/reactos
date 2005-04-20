@@ -26,15 +26,15 @@ typedef int (*PML_Ask)			(const WCHAR* text);
 typedef struct
 {
   char*			path;
-  BOOL			icon;
-  BOOL			loaded;
-  vector<int>	children;
-
-  char**		field;
   char*			name;
   char*			description;
-  vector<char*>	depencies;
+  char**		field;
+
+  BOOL			icon;
+  BOOL			loaded;
   vector<int>	neededBy;
+  vector<int>	children;
+  vector<char*>	depencies;
   
   int			action;
   char*			files [4];
@@ -49,10 +49,11 @@ typedef struct
 
 typedef struct
 {
-  char*				xmltree;
+  char**		field;
 
-  vector<char*>		descriptionPath;
   vector<char*>		todo;
+  vector<char*>		sources;
+  vector<char*>		descriptionPath;
   vector<PACKAGE>	packages;
 
   PML_AddItem		addItem;
