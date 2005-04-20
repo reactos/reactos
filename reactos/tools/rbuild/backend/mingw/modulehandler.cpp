@@ -2550,7 +2550,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 		backend->outputDirectory );
 	string bootcdReactosNoFixup = bootcdDirectory + SSEP "reactos";
 	string bootcdReactos = PassThruCacheDirectory (
-		NormalizeFilename ( bootcdReactosNoFixup ) + SSEP,
+		NormalizeFilename ( bootcdReactosNoFixup + SSEP ),
 		backend->outputDirectory );
 	CLEAN_FILE ( bootcdReactos );
 	string reactosInf = PassThruCacheDirectory (
