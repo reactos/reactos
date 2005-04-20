@@ -17,6 +17,7 @@ using std::string;
 using std::vector;
 
 static string BuildSystem;
+static string RootXmlFile = "ReactOS.xml";
 static bool Verbose = false;
 
 bool
@@ -27,6 +28,9 @@ ParseSwitch ( int argc, char** argv, int index )
 	{
 		case 'v':
 			Verbose = true;
+			break;
+		case 'r':
+			RootXmlFile = string(&argv[index][2]);
 			break;
 		default:
 			printf ( "Unknown switch -%c",
@@ -62,9 +66,10 @@ main ( int argc, char** argv )
 	if ( !ParseArguments ( argc, argv ) )
 	{
 		printf ( "Generates project files for buildsystems\n\n" );
-		printf ( "  rbuild [-v] buildsystem\n\n" );
+		printf ( "  rbuild [-v] [-rfile.xml] buildsystem\n\n" );
 		printf ( "Switches:\n" );
 		printf ( "  -v           Be verbose\n" );
+		printf ( "  -rfile.xml   Name of the root xml file. Default is ReactOS.xml\n" );
 		printf ( "\n" );
 		printf ( "  buildsystem  Target build system. Can be one of:\n" );
 		printf ( "                 mingw   MinGW\n" );
@@ -73,7 +78,7 @@ main ( int argc, char** argv )
 	}
 	try
 	{
-		string projectFilename ( "ReactOS.xml" );
+		string projectFilename ( RootXmlFile );
 		printf ( "Reading build files..." );
 		Project project ( projectFilename );
 		printf ( "done\n" );
