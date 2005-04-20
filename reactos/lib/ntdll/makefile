@@ -63,7 +63,6 @@ RTL_I386_OBJECTS = \
 	rtl/i386/ftol.o
 
 RTL_OBJECTS = \
-	rtl/access.o \
 	rtl/apc.o \
 	rtl/atom.o \
 	rtl/callback.o \

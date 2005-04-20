@@ -17,6 +17,7 @@ TARGET_CFLAGS += -DDBG
 endif
 
 TARGET_OBJECTS = \
+	access.o \
 	acl.o \
 	ppb.o \
 	bit.o \
