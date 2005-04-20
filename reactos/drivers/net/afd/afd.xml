@@ -2,11 +2,11 @@
 	<include base="afd">include</include>
 	<include base="ReactOS">include/afd</include>
 	<define name="__USE_W32API" />
+	<library>pseh</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<library>pseh</library>
 	<directory name="include">
-		<pch>afd.h</pch>
+	<pch>afd.h</pch>
 	</directory>
 	<directory name="afd">
 		<file>bind.c</file>

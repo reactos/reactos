@@ -2,6 +2,7 @@
 	<bootstrap base="reactos" />
 	<include base="vfatfs">.</include>
 	<define name="__USE_W32API" />
+	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>blockdev.c</file>

@@ -35,7 +35,6 @@
 #
 #    ROS_RBUILDFLAGS
 #        Pass parameters to rbuild.
-#
 
 .PHONY: all
 .PHONY: clean

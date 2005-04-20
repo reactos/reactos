@@ -49,6 +49,7 @@ public:
 	virtual void Process () = 0;
 	virtual std::string TypeSpecificCFlags() { return ""; }
 	virtual std::string TypeSpecificNasmFlags() { return ""; }
+	virtual std::string TypeSpecificLinkerFlags() { return ""; }
 	void GenerateInvocations () const;
 	void GenerateCleanTarget () const;
 	static bool ReferenceObjects ( const Module& module );
@@ -196,6 +197,7 @@ public:
 	MingwKernelModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
+	std::string TypeSpecificCFlags() { return "-D_SEH_NO_NATIVE_NLG"; }
 private:
 	void GenerateKernelModuleTarget ();
 };
@@ -229,6 +231,8 @@ public:
 	MingwKernelModeDLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
+	std::string TypeSpecificCFlags() { return "-D_SEH_NO_NATIVE_NLG"; }
+	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateKernelModeDLLModuleTarget ();
 };
@@ -240,7 +244,8 @@ public:
 	MingwKernelModeDriverModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificCFlags() { return "-D__NTDRIVER__"; }
+	std::string TypeSpecificCFlags() { return "-D__NTDRIVER__ -D_SEH_NO_NATIVE_NLG"; }
+	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateKernelModeDriverModuleTarget ();
 };
@@ -252,6 +257,8 @@ public:
 	MingwNativeDLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
+	std::string TypeSpecificCFlags() { return "-D_SEH_NO_NATIVE_NLG"; }
+	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateNativeDLLModuleTarget ();
 };
@@ -263,7 +270,8 @@ public:
 	MingwNativeCUIModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-	std::string TypeSpecificCFlags() { return "-D__NTAPP__"; }
+	std::string TypeSpecificCFlags() { return "-D__NTAPP__ -D_SEH_NO_NATIVE_NLG"; }
+	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateNativeCUIModuleTarget ();
 };
@@ -309,6 +317,7 @@ public:
 	MingwBootLoaderModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
+	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateBootLoaderModuleTarget ();
 };

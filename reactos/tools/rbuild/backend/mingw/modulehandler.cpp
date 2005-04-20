@@ -1511,6 +1511,15 @@ MingwModuleHandler::GenerateOtherMacros ()
 		          nasmflags.c_str () );
 	}
 
+	string linkerflags = TypeSpecificLinkerFlags();
+	if ( linkerflags.size() > 0 )
+	{
+		fprintf ( fMakefile,
+		          "%s += %s\n\n",
+		          linkerflagsMacro.c_str (),
+		          linkerflags.c_str () );
+	}
+
 	fprintf ( fMakefile, "\n\n" );
 
 	// future references to the macros will be to get their values
