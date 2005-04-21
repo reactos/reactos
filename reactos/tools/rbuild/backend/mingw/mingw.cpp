@@ -145,13 +145,15 @@ Directory::GetEnvironmentVariablePathOrDefault ( const string& name,
 string
 Directory::GetIntermediatePath ()
 {
-	return "obj-i386";
+	return GetEnvironmentVariablePathOrDefault ( "ROS_INTERMEDIATE",
+	                                             "obj-i386" );
 }
 
 string
 Directory::GetOutputPath ()
 {
-	return "output-i386";
+	return GetEnvironmentVariablePathOrDefault ( "ROS_OUTPUT",
+	                                             "output-i386" );
 }
 
 string
