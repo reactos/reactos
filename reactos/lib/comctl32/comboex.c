@@ -121,7 +121,11 @@ typedef struct
 /* Offset between image and text */
 #define CBE_SEP			4
 
-#define COMBOEX_SUBCLASS_PROP	"CCComboEx32SubclassInfo"
+static const WCHAR COMBOEX_SUBCLASS_PROP[] = {
+    'C','C','C','o','m','b','o','E','x','3','2',
+    'S','u','b','c','l','a','s','s','I','n','f','o',0
+};
+
 #define COMBOEX_GetInfoPtr(hwnd) ((COMBOEX_INFO *)GetWindowLongPtrW (hwnd, 0))
 
 
@@ -317,13 +321,14 @@ static LPCWSTR COMBOEX_GetText(COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
 
 static void COMBOEX_GetComboFontSize (COMBOEX_INFO *infoPtr, SIZE *size)
 {
+    static const WCHAR strA[] = { 'A', 0 };
     HFONT nfont, ofont;
     HDC mydc;
 
     mydc = GetDC (0); /* why the entire screen???? */
     nfont = (HFONT)SendMessageW (infoPtr->hwndCombo, WM_GETFONT, 0, 0);
     ofont = (HFONT) SelectObject (mydc, nfont);
-    GetTextExtentPointA (mydc, "A", 1, size);
+    GetTextExtentPointW (mydc, strA, 1, size);
     SelectObject (mydc, ofont);
     ReleaseDC (0, mydc);
     TRACE("selected font hwnd=%p, height=%ld\n", nfont, size->cy);
@@ -949,7 +954,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
     /* Native version of ComboEx creates the ComboBox with DROPDOWNLIST */
     /* specified. It then creates it's own version of the EDIT control  */
     /* and makes the ComboBox the parent. This is because a normal      */
-    /* DROPDOWNLIST does not have a EDIT control, but we need one.      */
+    /* DROPDOWNLIST does not have an EDIT control, but we need one.     */
     /* We also need to place the edit control at the proper location    */
     /* (allow space for the icons).                                     */
 
@@ -976,7 +981,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
      * Setup a property to hold the pointer to the COMBOBOXEX
      * data structure.
      */
-    SetPropA(infoPtr->hwndCombo, COMBOEX_SUBCLASS_PROP, hwnd);
+    SetPropW(infoPtr->hwndCombo, COMBOEX_SUBCLASS_PROP, hwnd);
     infoPtr->prevComboWndProc = (WNDPROC)SetWindowLongPtrW(infoPtr->hwndCombo,
 	                        GWLP_WNDPROC, (DWORD_PTR)COMBOEX_ComboWndProc);
     infoPtr->font = (HFONT)SendMessageW (infoPtr->hwndCombo, WM_GETFONT, 0, 0);
@@ -1005,7 +1010,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, LPCREATESTRUCTA cs)
 	 * Setup a property to hold the pointer to the COMBOBOXEX
 	 * data structure.
 	 */
-        SetPropA(infoPtr->hwndEdit, COMBOEX_SUBCLASS_PROP, hwnd);
+        SetPropW(infoPtr->hwndEdit, COMBOEX_SUBCLASS_PROP, hwnd);
 	infoPtr->prevEditWndProc = (WNDPROC)SetWindowLongPtrW(infoPtr->hwndEdit,
 				 GWLP_WNDPROC, (DWORD_PTR)COMBOEX_EditWndProc);
 	infoPtr->font = (HFONT)SendMessageW(infoPtr->hwndCombo, WM_GETFONT, 0, 0);
@@ -1547,11 +1552,12 @@ static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr)
 
 static LRESULT COMBOEX_MeasureItem (COMBOEX_INFO *infoPtr, MEASUREITEMSTRUCT *mis)
 {
+    static const WCHAR strW[] = { 'W', 0 };
     SIZE mysize;
     HDC hdc;
 
     hdc = GetDC (0);
-    GetTextExtentPointA (hdc, "W", 1, &mysize);
+    GetTextExtentPointW (hdc, strW, 1, &mysize);
     ReleaseDC (0, hdc);
     mis->itemHeight = mysize.cy + CBE_EXTRA;
 
@@ -1647,7 +1653,7 @@ static LRESULT COMBOEX_WindowPosChanging (COMBOEX_INFO *infoPtr, WINDOWPOS *wp)
 static LRESULT WINAPI
 COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HWND hwndComboex = (HWND)GetPropA(hwnd, COMBOEX_SUBCLASS_PROP);
+    HWND hwndComboex = (HWND)GetPropW(hwnd, COMBOEX_SUBCLASS_PROP);
     COMBOEX_INFO *infoPtr = COMBOEX_GetInfoPtr (hwndComboex);
     NMCBEENDEDITW cbeend;
     WCHAR edit_text[260];
@@ -1694,7 +1700,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    case VK_ESCAPE:
 		/* native version seems to do following for COMBOEX */
 		/*
-		 *   GetWindowTextA(Edit,&?, 0x104)             x
+		 *   GetWindowTextW(Edit,&?, 0x104)             x
 		 *   CB_GETCURSEL to Combo rets -1              x
 		 *   WM_NOTIFY to COMBOEX parent (rebar)        x
 		 *     (CBEN_ENDEDIT{A|W}
@@ -1735,7 +1741,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    case VK_RETURN:
 		/* native version seems to do following for COMBOEX */
 		/*
-		 *   GetWindowTextA(Edit,&?, 0x104)             x
+		 *   GetWindowTextW(Edit,&?, 0x104)             x
 		 *   CB_GETCURSEL to Combo  rets -1             x
 		 *   CB_GETCOUNT to Combo  rets 0
 		 *   if >0 loop
@@ -1846,7 +1852,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static LRESULT WINAPI
 COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HWND hwndComboex = (HWND)GetPropA(hwnd, COMBOEX_SUBCLASS_PROP);
+    HWND hwndComboex = (HWND)GetPropW(hwnd, COMBOEX_SUBCLASS_PROP);
     COMBOEX_INFO *infoPtr = COMBOEX_GetInfoPtr (hwndComboex);
     NMCBEENDEDITW cbeend;
     NMMOUSE nmmse;
@@ -1955,7 +1961,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		 * Native does:
 		 *
 		 *  GetFocus() retns AA
-		 *  GetWindowTextA(Edit)
+		 *  GetWindowTextW(Edit)
 		 *  CB_GETCURSEL(Combo) (got -1)
 		 *  WM_NOTIFY(CBEN_ENDEDITA) with CBENF_KILLFOCUS
 		 *  CB_GETCURSEL(Combo) (got -1)
@@ -2019,7 +2025,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		INT selected = SendMessageW (infoPtr->hwndCombo,
 					     CB_GETCURSEL, 0, 0);
 
-		/* lstrlenA( lastworkingURL ) */
+		/* lstrlenW( lastworkingURL ) */
 
 		GetWindowTextW (infoPtr->hwndEdit, edit_text, 260);
 		if (selected == -1) {

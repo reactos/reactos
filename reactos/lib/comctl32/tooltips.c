@@ -18,6 +18,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * NOTES
+ *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 08, 2004, by Robert Shearman.
  * 
@@ -214,7 +216,7 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
 
     if (infoPtr->nMaxTipWidth > -1)
 	uFlags |= DT_WORDBREAK;
-    if (GetWindowLongA (hwnd, GWL_STYLE) & TTS_NOPREFIX)
+    if (GetWindowLongW (hwnd, GWL_STYLE) & TTS_NOPREFIX)
 	uFlags |= DT_NOPREFIX;
     GetClientRect (hwnd, &rc);
 
@@ -385,7 +387,7 @@ static void TOOLTIPS_GetDispInfoW(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     else if (ttnmdi.lpszText != LPSTR_TEXTCALLBACKW) {
         INT max_len = (ttnmdi.lpszText == &ttnmdi.szText[0]) ? 
                 sizeof(ttnmdi.szText)/sizeof(ttnmdi.szText[0]) : INFOTIPSIZE-1;
-        strncpyW(infoPtr->szTipText, ttnmdi.lpszText, max_len);
+        lstrcpynW(infoPtr->szTipText, ttnmdi.lpszText, max_len);
         if (ttnmdi.uFlags & TTF_DI_SETITEM) {
             INT len = max(strlenW(ttnmdi.lpszText), max_len);
             toolPtr->hinst = 0;
@@ -610,8 +612,8 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     	rect.top = rect.bottom - size.cy;
     }
 
-    AdjustWindowRectEx (&rect, GetWindowLongA (hwnd, GWL_STYLE),
-			FALSE, GetWindowLongA (hwnd, GWL_EXSTYLE));
+    AdjustWindowRectEx (&rect, GetWindowLongW (hwnd, GWL_STYLE),
+			FALSE, GetWindowLongW (hwnd, GWL_EXSTYLE));
 
     if (style & TTS_BALLOON)
     {
@@ -782,8 +784,8 @@ TOOLTIPS_TrackShow (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     rect.right = rect.left + size.cx;
     rect.bottom = rect.top + size.cy;
 
-    AdjustWindowRectEx (&rect, GetWindowLongA (hwnd, GWL_STYLE),
-			FALSE, GetWindowLongA (hwnd, GWL_EXSTYLE));
+    AdjustWindowRectEx (&rect, GetWindowLongW (hwnd, GWL_STYLE),
+			FALSE, GetWindowLongW (hwnd, GWL_EXSTYLE));
 
     if (GetWindowLongW(hwnd, GWL_STYLE) & TTS_BALLOON)
     {
@@ -945,7 +947,7 @@ TOOLTIPS_CheckTool (HWND hwnd, BOOL bShowTest)
     if (nTool == -1)
 	return -1;
 
-    if (!(GetWindowLongA (hwnd, GWL_STYLE) & TTS_ALWAYSTIP) && bShowTest) {
+    if (!(GetWindowLongW (hwnd, GWL_STYLE) & TTS_ALWAYSTIP) && bShowTest) {
 	if (!TOOLTIPS_IsWindowActive (GetWindow (hwnd, GW_OWNER)))
 	    return -1;
     }
@@ -2395,8 +2397,8 @@ TOOLTIPS_MouseMessage (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TOOLTIPS_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    DWORD dwStyle = GetWindowLongA (hwnd, GWL_STYLE);
-    DWORD dwExStyle = GetWindowLongA (hwnd, GWL_EXSTYLE);
+    DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
+    DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
 
     dwStyle &= 0x0000FFFF;
     dwStyle |= (WS_POPUP | WS_BORDER | WS_CLIPSIBLINGS);
@@ -2405,10 +2407,10 @@ TOOLTIPS_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
      * window region, therefore it is useless to us in balloon mode */
     if (dwStyle & TTS_BALLOON) dwStyle &= ~WS_BORDER;
 
-    SetWindowLongA (hwnd, GWL_STYLE, dwStyle);
+    SetWindowLongW (hwnd, GWL_STYLE, dwStyle);
 
     dwExStyle |= WS_EX_TOOLWINDOW;
-    SetWindowLongA (hwnd, GWL_EXSTYLE, dwExStyle);
+    SetWindowLongW (hwnd, GWL_EXSTYLE, dwExStyle);
 
     return TRUE;
 }

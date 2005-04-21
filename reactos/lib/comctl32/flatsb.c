@@ -245,7 +245,7 @@ static LRESULT WINAPI
 FlatSB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (!FlatSB_GetInfoPtr(hwnd) && (uMsg != WM_CREATE))
-	return DefWindowProcA( hwnd, uMsg, wParam, lParam );
+	return DefWindowProcW( hwnd, uMsg, wParam, lParam );
 
     switch (uMsg)
     {
@@ -259,7 +259,7 @@ FlatSB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
 		ERR("unknown msg %04x wp=%08x lp=%08lx\n",
                     uMsg, wParam, lParam);
-	    return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 }
 
@@ -267,23 +267,23 @@ FlatSB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID
 FLATSB_Register (void)
 {
-    WNDCLASSA wndClass;
+    WNDCLASSW wndClass;
 
-    ZeroMemory (&wndClass, sizeof(WNDCLASSA));
+    ZeroMemory (&wndClass, sizeof(WNDCLASSW));
     wndClass.style         = CS_GLOBALCLASS;
     wndClass.lpfnWndProc   = FlatSB_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(FLATSB_INFO *);
-    wndClass.hCursor       = LoadCursorA (0, (LPSTR)IDC_ARROW);
+    wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wndClass.lpszClassName = FLATSB_CLASSA;
+    wndClass.lpszClassName = FLATSB_CLASSW;
 
-    RegisterClassA (&wndClass);
+    RegisterClassW (&wndClass);
 }
 
 
 VOID
 FLATSB_Unregister (void)
 {
-    UnregisterClassA (FLATSB_CLASSA, NULL);
+    UnregisterClassW (FLATSB_CLASSW, NULL);
 }

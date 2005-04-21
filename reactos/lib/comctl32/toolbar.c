@@ -21,15 +21,6 @@
  *
  * NOTES
  *
- *  Differences between MSDN and actual native control operation:
- *   1. MSDN says: "TBSTYLE_LIST: Creates a flat toolbar with button text
- *                  to the right of the bitmap. Otherwise, this style is
- *                  identical to TBSTYLE_FLAT."
- *      As implemented by both v4.71 and v5.80 of the native COMCTL32.DLL
- *      you can create a TBSTYLE_LIST without TBSTYLE_FLAT and the result
- *      is non-flat non-transparent buttons. Therefore TBSTYLE_LIST does
- *      *not* imply TBSTYLE_FLAT as documented.  (GA 8/2001)
- *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Mar. 14, 2004, by Robert Shearman.
  * 
@@ -66,6 +57,16 @@
  *     setparnt.exe, setrows.exe, toolwnd.exe.
  *   - Microsoft's controlspy examples.
  *   - Charles Petzold's 'Programming Windows': gadgets.exe
+ *
+ *  Differences between MSDN and actual native control operation:
+ *   1. MSDN says: "TBSTYLE_LIST: Creates a flat toolbar with button text
+ *                  to the right of the bitmap. Otherwise, this style is
+ *                  identical to TBSTYLE_FLAT."
+ *      As implemented by both v4.71 and v5.80 of the native COMCTL32.DLL
+ *      you can create a TBSTYLE_LIST without TBSTYLE_FLAT and the result
+ *      is non-flat non-transparent buttons. Therefore TBSTYLE_LIST does
+ *      *not* imply TBSTYLE_FLAT as documented.  (GA 8/2001)
+ *
  */
 
 #include <stdarg.h>
@@ -116,9 +117,9 @@ typedef struct
 
 typedef struct
 {
-    DWORD      dwStructSize;   /* size of TBBUTTON struct */
-    INT      nHeight;        /* height of the toolbar */
-    INT      nWidth;         /* width of the toolbar */
+    DWORD    dwStructSize;    /* size of TBBUTTON struct */
+    INT      nHeight;         /* height of the toolbar */
+    INT      nWidth;          /* width of the toolbar */
     RECT     client_rect;
     RECT     rcBound;         /* bounding rectangle */
     INT      nButtonHeight;
@@ -145,7 +146,7 @@ typedef struct
     INT      iListGap;        /* default gap between text and image for toolbar with list style */
     HFONT    hDefaultFont;
     HFONT    hFont;           /* text font */
-    HIMAGELIST himlInt;         /* image list created internally */
+    HIMAGELIST himlInt;       /* image list created internally */
     PIMLENTRY *himlDef;       /* default image list array */
     INT       cimlDef;        /* default image list array count */
     PIMLENTRY *himlHot;       /* hot image list array */
@@ -162,9 +163,9 @@ typedef struct
     BOOL     bDragOutSent;    /* has TBN_DRAGOUT notification been sent for this drag? */
     BOOL     bUnicode;        /* Notifications are ASCII (FALSE) or Unicode (TRUE)? */
     BOOL     bCaptured;       /* mouse captured? */
-    DWORD      dwStyle;         /* regular toolbar style */
-    DWORD      dwExStyle;       /* extended toolbar style */
-    DWORD      dwDTFlags;       /* DrawText flags */
+    DWORD      dwStyle;       /* regular toolbar style */
+    DWORD      dwExStyle;     /* extended toolbar style */
+    DWORD      dwDTFlags;     /* DrawText flags */
 
     COLORREF   clrInsertMark;   /* insert mark color */
     COLORREF   clrBtnHighlight; /* color for Flat Separator */
@@ -489,7 +490,7 @@ TOOLBAR_DrawFlatSeparator (LPRECT lpRect, HDC hdc, TOOLBAR_INFO *infoPtr)
     newcolor = (infoPtr->clrBtnShadow == CLR_DEFAULT) ?
 	        comctl32_color.clrBtnShadow : infoPtr->clrBtnShadow;
     oldcolor = SetBkColor (hdc, newcolor);
-    ExtTextOutA (hdc, 0, 0, ETO_OPAQUE, &myrect, 0, 0, 0);
+    ExtTextOutW (hdc, 0, 0, ETO_OPAQUE, &myrect, 0, 0, 0);
 
     myrect.left = myrect.right;
     myrect.right = myrect.left + 1;
@@ -497,7 +498,7 @@ TOOLBAR_DrawFlatSeparator (LPRECT lpRect, HDC hdc, TOOLBAR_INFO *infoPtr)
     newcolor = (infoPtr->clrBtnHighlight == CLR_DEFAULT) ?
 	        comctl32_color.clrBtnHighlight : infoPtr->clrBtnHighlight;
     SetBkColor (hdc, newcolor);
-    ExtTextOutA (hdc, 0, 0, ETO_OPAQUE, &myrect, 0, 0, 0);
+    ExtTextOutW (hdc, 0, 0, ETO_OPAQUE, &myrect, 0, 0, 0);
 
     SetBkColor (hdc, oldcolor);
 }
@@ -533,7 +534,7 @@ TOOLBAR_DrawDDFlatSeparator (LPRECT lpRect, HDC hdc, TBUTTON_INFO *btnPtr, TOOLB
     newcolor = (infoPtr->clrBtnShadow == CLR_DEFAULT) ?
 	        comctl32_color.clrBtnShadow : infoPtr->clrBtnShadow;
     oldcolor = SetBkColor (hdc, newcolor);
-    ExtTextOutA (hdc, 0, 0, ETO_OPAQUE, &myrect, 0, 0, 0);
+    ExtTextOutW (hdc, 0, 0, ETO_OPAQUE, &myrect, 0, 0, 0);
 
     myrect.top = myrect.bottom;
     myrect.bottom = myrect.top + 1;
@@ -541,7 +542,7 @@ TOOLBAR_DrawDDFlatSeparator (LPRECT lpRect, HDC hdc, TBUTTON_INFO *btnPtr, TOOLB
     newcolor = (infoPtr->clrBtnHighlight == CLR_DEFAULT) ?
 	        comctl32_color.clrBtnHighlight : infoPtr->clrBtnHighlight;
     SetBkColor (hdc, newcolor);
-    ExtTextOutA (hdc, 0, 0, ETO_OPAQUE, &myrect, 0, 0, 0);
+    ExtTextOutW (hdc, 0, 0, ETO_OPAQUE, &myrect, 0, 0, 0);
 
     SetBkColor (hdc, oldcolor);
 }
@@ -990,9 +991,9 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
             COLORREF oldclr;
 
             oldclr = SetBkColor(hdc, tbcd.clrHighlightHotTrack);
-            ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rc, NULL, 0, 0);
+            ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, NULL, 0, 0);
             if (hasDropDownArrow)
-                ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rcArrow, NULL, 0, 0);
+                ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rcArrow, NULL, 0, 0);
             SetBkColor(hdc, oldclr);
         }
     }
@@ -2531,7 +2532,7 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
        /* copy the bitmap before adding it so that the user's bitmap
         * doesn't get modified.
         */
-       GetObjectA ((HBITMAP)lpAddBmp->nID, sizeof(BITMAP), (LPVOID)&bmp);
+       GetObjectW ((HBITMAP)lpAddBmp->nID, sizeof(BITMAP), (LPVOID)&bmp);
 
        hdcImage  = CreateCompatibleDC(0);
        hdcBitmap = CreateCompatibleDC(0);
@@ -2559,48 +2560,48 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	switch (lpAddBmp->nID)
     {
 	    case IDB_STD_SMALL_COLOR:
-		hbmLoad = LoadBitmapA (COMCTL32_hModule,
-				       MAKEINTRESOURCEA(IDB_STD_SMALL));
+		hbmLoad = LoadBitmapW (COMCTL32_hModule,
+				       MAKEINTRESOURCEW(IDB_STD_SMALL));
 		nIndex = ImageList_AddMasked (himlDef,
 					      hbmLoad, comctl32_color.clrBtnFace);
 		DeleteObject (hbmLoad);
 		break;
 
 	    case IDB_STD_LARGE_COLOR:
-		hbmLoad = LoadBitmapA (COMCTL32_hModule,
-				       MAKEINTRESOURCEA(IDB_STD_LARGE));
+		hbmLoad = LoadBitmapW (COMCTL32_hModule,
+				       MAKEINTRESOURCEW(IDB_STD_LARGE));
 		nIndex = ImageList_AddMasked (himlDef,
 					      hbmLoad, comctl32_color.clrBtnFace);
 		DeleteObject (hbmLoad);
 		break;
 
 	    case IDB_VIEW_SMALL_COLOR:
-		hbmLoad = LoadBitmapA (COMCTL32_hModule,
-				       MAKEINTRESOURCEA(IDB_VIEW_SMALL));
+		hbmLoad = LoadBitmapW (COMCTL32_hModule,
+				       MAKEINTRESOURCEW(IDB_VIEW_SMALL));
 		nIndex = ImageList_AddMasked (himlDef,
 					      hbmLoad, comctl32_color.clrBtnFace);
 		DeleteObject (hbmLoad);
 		break;
 
 	    case IDB_VIEW_LARGE_COLOR:
-		hbmLoad = LoadBitmapA (COMCTL32_hModule,
-				       MAKEINTRESOURCEA(IDB_VIEW_LARGE));
+		hbmLoad = LoadBitmapW (COMCTL32_hModule,
+				       MAKEINTRESOURCEW(IDB_VIEW_LARGE));
 		nIndex = ImageList_AddMasked (himlDef,
 					      hbmLoad, comctl32_color.clrBtnFace);
 		DeleteObject (hbmLoad);
 		break;
 
 	    case IDB_HIST_SMALL_COLOR:
-		hbmLoad = LoadBitmapA (COMCTL32_hModule,
-				       MAKEINTRESOURCEA(IDB_HIST_SMALL));
+		hbmLoad = LoadBitmapW (COMCTL32_hModule,
+				       MAKEINTRESOURCEW(IDB_HIST_SMALL));
 		nIndex = ImageList_AddMasked (himlDef,
 					      hbmLoad, comctl32_color.clrBtnFace);
 		DeleteObject (hbmLoad);
 		break;
 
 	    case IDB_HIST_LARGE_COLOR:
-		hbmLoad = LoadBitmapA (COMCTL32_hModule,
-				       MAKEINTRESOURCEA(IDB_HIST_LARGE));
+		hbmLoad = LoadBitmapW (COMCTL32_hModule,
+				       MAKEINTRESOURCEW(IDB_HIST_LARGE));
 		nIndex = ImageList_AddMasked (himlDef,
 					      hbmLoad, comctl32_color.clrBtnFace);
 		DeleteObject (hbmLoad);
@@ -2614,7 +2615,7 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
     else
     {
-	hbmLoad = LoadBitmapA (lpAddBmp->hInst, (LPSTR)lpAddBmp->nID);
+	hbmLoad = LoadBitmapW (lpAddBmp->hInst, (LPWSTR)lpAddBmp->nID);
 	nIndex = ImageList_AddMasked (himlDef, hbmLoad, comctl32_color.clrBtnFace);
 	DeleteObject (hbmLoad);
     }
@@ -2807,8 +2808,7 @@ TOOLBAR_AddStringA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	INT len;
 	TRACE("adding string from resource!\n");
 
-	len = LoadStringA ((HINSTANCE)wParam, (UINT)lParam,
-			     szString, 256);
+	len = LoadStringA ((HINSTANCE)wParam, (UINT)lParam, szString, sizeof(szString));
 
 	TRACE("len=%d \"%s\"\n", len, szString);
 	nIndex = infoPtr->nNumStrings;
@@ -3445,7 +3445,7 @@ TOOLBAR_GetButtonSize (HWND hwnd)
 	return MAKELONG((WORD)infoPtr->nButtonWidth,
 			(WORD)infoPtr->nButtonHeight);
     else
-	return MAKELONG(8,7);
+	return MAKELONG(23,22);
 }
 
 
@@ -4331,7 +4331,7 @@ TOOLBAR_ReplaceBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
        /* copy the bitmap before adding it so that the user's bitmap
         * doesn't get modified.
         */
-       GetObjectA (hBitmap, sizeof(BITMAP), (LPVOID)&bmp);
+       GetObjectW (hBitmap, sizeof(BITMAP), (LPVOID)&bmp);
 
        hdcImage  = CreateCompatibleDC(0);
        hdcBitmap = CreateCompatibleDC(0);
@@ -4430,7 +4430,7 @@ TOOLBAR_Restore(TOOLBAR_INFO *infoPtr, LPTBSAVEPARAMSW lpSave)
         res = ERROR_FILE_NOT_FOUND;
     if (!res)
     {
-        nmtbr.pData = HeapAlloc(GetProcessHeap(), 0, dwSize);
+        nmtbr.pData = Alloc(dwSize);
         nmtbr.cbData = (UINT)dwSize;
         if (!nmtbr.pData) res = ERROR_OUTOFMEMORY;
     }
@@ -4503,7 +4503,7 @@ TOOLBAR_Restore(TOOLBAR_INFO *infoPtr, LPTBSAVEPARAMSW lpSave)
             if (infoPtr->nNumButtons > 0) ret = TRUE;
         }
     }
-    HeapFree(GetProcessHeap(), 0, nmtbr.pData);
+    Free (nmtbr.pData);
     RegCloseKey(hkey);
 
     return ret;
@@ -4527,22 +4527,33 @@ TOOLBAR_SaveRestoreW (HWND hwnd, WPARAM wParam, LPTBSAVEPARAMSW lpSave)
 static LRESULT
 TOOLBAR_SaveRestoreA (HWND hwnd, WPARAM wParam, LPTBSAVEPARAMSA lpSave)
 {
+    LPWSTR pszValueName = 0, pszSubKey = 0;
     TBSAVEPARAMSW SaveW;
+    LRESULT result = 0;
     int len;
 
     if (lpSave == NULL) return 0;
 
-    SaveW.hkr = lpSave->hkr;
-
     len = MultiByteToWideChar(CP_ACP, 0, lpSave->pszSubKey, -1, NULL, 0);
-    SaveW.pszSubKey = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    MultiByteToWideChar(CP_ACP, 0, lpSave->pszSubKey, -1, (LPWSTR)SaveW.pszSubKey, len);
+    pszSubKey = Alloc(len * sizeof(WCHAR));
+    if (pszSubKey) goto exit;
+    MultiByteToWideChar(CP_ACP, 0, lpSave->pszSubKey, -1, pszSubKey, len);
 
     len = MultiByteToWideChar(CP_ACP, 0, lpSave->pszValueName, -1, NULL, 0);
-    SaveW.pszValueName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    MultiByteToWideChar(CP_ACP, 0, lpSave->pszValueName, -1, (LPWSTR)SaveW.pszValueName, len);
+    pszValueName = Alloc(len * sizeof(WCHAR));
+    if (!pszValueName) goto exit;
+    MultiByteToWideChar(CP_ACP, 0, lpSave->pszValueName, -1, pszValueName, len);
 
-    return TOOLBAR_SaveRestoreW(hwnd, wParam, &SaveW);
+    SaveW.pszValueName = pszValueName;
+    SaveW.pszSubKey = pszSubKey;
+    SaveW.hkr = lpSave->hkr;
+    result = TOOLBAR_SaveRestoreW(hwnd, wParam, &SaveW);
+
+exit:
+    Free (pszValueName);
+    Free (pszSubKey);
+
+    return result;
 }
 
 
@@ -5442,7 +5453,7 @@ TOOLBAR_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
     DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
-    LOGFONTA logFont;
+    LOGFONTW logFont;
 
     TRACE("hwnd = %p\n", hwnd);
 
@@ -5483,13 +5494,13 @@ TOOLBAR_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->bUnicode = infoPtr->hwndNotify && 
         (NFR_UNICODE == SendMessageW(hwnd, WM_NOTIFYFORMAT, (WPARAM)hwnd, (LPARAM)NF_REQUERY));
 
-    SystemParametersInfoA (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
-    infoPtr->hFont = infoPtr->hDefaultFont = CreateFontIndirectA (&logFont);
+    SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
+    infoPtr->hFont = infoPtr->hDefaultFont = CreateFontIndirectW (&logFont);
 
     if (dwStyle & TBSTYLE_TOOLTIPS) {
 	/* Create tooltip control */
 	infoPtr->hwndToolTip =
-	    CreateWindowExA (0, TOOLTIPS_CLASSA, NULL, 0,
+	    CreateWindowExW (0, TOOLTIPS_CLASSW, NULL, 0,
 			       CW_USEDEFAULT, CW_USEDEFAULT,
 			       CW_USEDEFAULT, CW_USEDEFAULT,
 			       hwnd, 0, 0, 0);
@@ -5523,7 +5534,7 @@ TOOLBAR_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	DestroyWindow (infoPtr->hwndToolTip);
 
     /* delete temporary buffer for tooltip text */
-    HeapFree(GetProcessHeap(), 0, infoPtr->pszTooltipText);
+    Free (infoPtr->pszTooltipText);
 
     /* delete button data */
     if (infoPtr->buttons)
@@ -5653,7 +5664,7 @@ TOOLBAR_LButtonDblClk (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (nHit >= 0)
         TOOLBAR_LButtonDown (hwnd, wParam, lParam);
-    else if (GetWindowLongA (hwnd, GWL_STYLE) & CCS_ADJUSTABLE)
+    else if (GetWindowLongW (hwnd, GWL_STYLE) & CCS_ADJUSTABLE)
 	TOOLBAR_Customize (hwnd);
 
     return 0;
@@ -6187,22 +6198,22 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* native control does:
      *    Get a lot of colors and brushes
      *    WM_NOTIFYFORMAT
-     *    SystemParametersInfoA(0x1f, 0x3c, adr1, 0)
-     *    CreateFontIndirectA(adr1)
+     *    SystemParametersInfoW(0x1f, 0x3c, adr1, 0)
+     *    CreateFontIndirectW(adr1)
      *    CreateBitmap(0x27, 0x24, 1, 1, 0)
      *    hdc = GetDC(toolbar)
      *    GetSystemMetrics(0x48)
-     *    fnt2=CreateFontA(0xe, 0, 0, 0, 0x190, 0, 0, 0, 0, 2,
+     *    fnt2=CreateFontW(0xe, 0, 0, 0, 0x190, 0, 0, 0, 0, 2,
      *                     0, 0, 0, 0, "MARLETT")
      *    oldfnt = SelectObject(hdc, fnt2)
-     *    GetCharWidthA(hdc, 0x36, 0x36, adr2)
-     *    GetTextMetricsA(hdc, adr3)
+     *    GetCharWidthW(hdc, 0x36, 0x36, adr2)
+     *    GetTextMetricsW(hdc, adr3)
      *    SelectObject(hdc, oldfnt)
      *    DeleteObject(fnt2)
      *    ReleaseDC(hdc)
      *    InvalidateRect(toolbar, 0, 1)
-     *    SetWindowLongA(toolbar, 0, addr)
-     *    SetWindowLongA(toolbar, -16, xxx)  **sometimes**
+     *    SetWindowLongW(toolbar, 0, addr)
+     *    SetWindowLongW(toolbar, -16, xxx)  **sometimes**
      *                                          WM_STYLECHANGING
      *                             CallWinEx   old         new
      *                       ie 1  0x56000a4c  0x46000a4c  0x56008a4d
@@ -6277,7 +6288,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
 
     TRACE("button index = %d\n", index);
 
-    HeapFree(GetProcessHeap(), 0, infoPtr->pszTooltipText);
+    Free (infoPtr->pszTooltipText);
     infoPtr->pszTooltipText = NULL;
 
     if (index < 0)
@@ -6307,7 +6318,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
             /* need to allocate temporary buffer in infoPtr as there
              * isn't enough space in buffer passed to us by the
              * tooltip control */
-            infoPtr->pszTooltipText = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR));
+            infoPtr->pszTooltipText = Alloc((len+1)*sizeof(WCHAR));
             if (infoPtr->pszTooltipText)
             {
                 memcpy(infoPtr->pszTooltipText, tbgit.pszText, (len+1)*sizeof(WCHAR));
@@ -6345,7 +6356,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
             /* need to allocate temporary buffer in infoPtr as there
              * isn't enough space in buffer passed to us by the
              * tooltip control */
-            infoPtr->pszTooltipText = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR));
+            infoPtr->pszTooltipText = Alloc((len+1)*sizeof(WCHAR));
             if (infoPtr->pszTooltipText)
             {
                 MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, len+1, infoPtr->pszTooltipText, (len+1)*sizeof(WCHAR));
@@ -6375,7 +6386,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
             /* need to allocate temporary buffer in infoPtr as there
              * isn't enough space in buffer passed to us by the
              * tooltip control */
-            infoPtr->pszTooltipText = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR));
+            infoPtr->pszTooltipText = Alloc((len+1)*sizeof(WCHAR));
             if (infoPtr->pszTooltipText)
             {
                 memcpy(infoPtr->pszTooltipText, pszText, (len+1)*sizeof(WCHAR));

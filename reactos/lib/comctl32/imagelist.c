@@ -1405,14 +1405,19 @@ ImageList_GetIcon (HIMAGELIST himl, INT i, UINT fStyle)
     TRACE("%p %d %d\n", himl, i, fStyle);
     if (!is_valid(himl) || (i < 0) || (i >= himl->cCurImage)) return NULL;
 
-    hdcDst = CreateCompatibleDC(0);
-
     ii.fIcon = TRUE;
     ii.xHotspot = 0;
     ii.yHotspot = 0;
 
+    /* create colour bitmap */
+    hdcDst = GetDC(0);
+    ii.hbmColor = CreateCompatibleBitmap(hdcDst, himl->cx, himl->cy);
+    ReleaseDC(0, hdcDst);
+
+    hdcDst = CreateCompatibleDC(0);
+
     /* draw mask*/
-    ii.hbmMask  = CreateCompatibleBitmap (hdcDst, himl->cx, himl->cy);
+    ii.hbmMask  = CreateBitmap (himl->cx, himl->cy, 1, 1, NULL);
     hOldDstBitmap = SelectObject (hdcDst, ii.hbmMask);
     if (himl->hbmMask) {
         BitBlt (hdcDst, 0, 0, himl->cx, himl->cy,
@@ -1422,7 +1427,6 @@ ImageList_GetIcon (HIMAGELIST himl, INT i, UINT fStyle)
         PatBlt (hdcDst, 0, 0, himl->cx, himl->cy, BLACKNESS);
 
     /* draw image*/
-    ii.hbmColor = CreateCompatibleBitmap (himl->hdcImage, himl->cx, himl->cy);
     SelectObject (hdcDst, ii.hbmColor);
     BitBlt (hdcDst, 0, 0, himl->cx, himl->cy,
             himl->hdcImage, i * himl->cx, 0, SRCCOPY);
@@ -1594,11 +1598,11 @@ ImageList_LoadImageA (HINSTANCE hi, LPCSTR lpbmp, INT cx, INT cGrow,
                                     uType, uFlags);
 
     len = MultiByteToWideChar(CP_ACP, 0, lpbmp, -1, NULL, 0);
-    lpbmpW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    lpbmpW = Alloc(len * sizeof(WCHAR));
     MultiByteToWideChar(CP_ACP, 0, lpbmp, -1, lpbmpW, len);
 
     himl = ImageList_LoadImageW(hi, lpbmpW, cx, cGrow, clrMask, uType, uFlags);
-    HeapFree(GetProcessHeap(), 0, lpbmpW);
+    Free (lpbmpW);
     return himl;
 }
 
@@ -2786,7 +2790,7 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT 
 	    BYTE temp;
 
 	    colors = 1 << himl->uBitsPixel;
-	    bmi = HeapAlloc(GetProcessHeap(), 0, sizeof(BITMAPINFOHEADER) +
+	    bmi = Alloc(sizeof(BITMAPINFOHEADER) +
 	                    sizeof(PALETTEENTRY) * colors);
 
 	    pal = (LPPALETTEENTRY)bmi->bmiColors;
@@ -2803,7 +2807,7 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT 
 	}
 	else
 	{
-	    bmi = HeapAlloc(GetProcessHeap(), 0, sizeof(BITMAPINFOHEADER));
+	    bmi = Alloc(sizeof(BITMAPINFOHEADER));
 	}
 
 	bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -2820,7 +2824,7 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT 
 
 	hbmNewBitmap = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, &bits, 0, 0);
 
-	HeapFree(GetProcessHeap(), 0, bmi);
+	Free (bmi);
     }
     else /*if (ilc == ILC_COLORDDB)*/
     {

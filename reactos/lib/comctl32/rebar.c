@@ -17,6 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * NOTES
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 19, 2004, by Robert Shearman.
@@ -1245,8 +1246,9 @@ REBAR_ForceResize (REBAR_INFO *infoPtr)
 static VOID
 REBAR_MoveChildWindows (REBAR_INFO *infoPtr, UINT start, UINT endplus)
 {
+    const static WCHAR strComboBox[] = { 'C','o','m','b','o','B','o','x',0 };
     REBAR_BAND *lpBand;
-    CHAR szClassName[40];
+    WCHAR szClassName[40];
     UINT i;
     NMREBARCHILDSIZE  rbcz;
     NMHDR heightchange;
@@ -1291,9 +1293,9 @@ REBAR_MoveChildWindows (REBAR_INFO *infoPtr, UINT start, UINT endplus)
 	     *     set flag outside of loop
 	     */
 
-	    GetClassNameA (lpBand->hwndChild, szClassName, 40);
-	    if (!lstrcmpA (szClassName, "ComboBox") ||
-		!lstrcmpA (szClassName, WC_COMBOBOXEXA)) {
+	    GetClassNameW (lpBand->hwndChild, szClassName, sizeof(szClassName)/sizeof(szClassName[0]));
+	    if (!lstrcmpW (szClassName, strComboBox) ||
+		!lstrcmpW (szClassName, WC_COMBOBOXEXW)) {
 		INT nEditHeight, yPos;
 		RECT rc;
 
@@ -2276,7 +2278,7 @@ REBAR_InternalEraseBkGnd (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, REC
 	      lpBand->rcBand.right,lpBand->rcBand.bottom,
 	      clip->left, clip->top,
 	      clip->right, clip->bottom);
-	ExtTextOutA (hdc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, 0);
+	ExtTextOutW (hdc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, 0);
 	if (lpBand->clrBack != CLR_NONE)
 	    SetBkColor (hdc, old);
     }
@@ -2473,7 +2475,7 @@ REBAR_HandleLRDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
 	    if (imindBand == -1) imindBand = i;
 	    /* minimum size of each band is size of header plus            */
 	    /* size of minimum child plus offset of child from header plus */
-	    /* a one to separate each band.                                */
+	    /* one to separate each band.                                  */
 	    if (i < ihitBand)
 	        LHeaderSum += (band->lcx + SEP_WIDTH);
 	    else
@@ -3755,7 +3757,7 @@ REBAR_SizeToRect (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 REBAR_Create (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    LPCREATESTRUCTA cs = (LPCREATESTRUCTA) lParam;
+    LPCREATESTRUCTW cs = (LPCREATESTRUCTW) lParam;
     RECT wnrc1, clrc1;
 
     if (TRACE_ON(rebar)) {
@@ -4063,10 +4065,10 @@ REBAR_NCCalcSize (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 REBAR_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    LPCREATESTRUCTA cs = (LPCREATESTRUCTA) lParam;
+    LPCREATESTRUCTW cs = (LPCREATESTRUCTW) lParam;
     REBAR_INFO *infoPtr = REBAR_GetInfoPtr (hwnd);
     RECT wnrc1, clrc1;
-    NONCLIENTMETRICSA ncm;
+    NONCLIENTMETRICSW ncm;
     HFONT tfont;
     INT i;
 
@@ -4098,37 +4100,35 @@ REBAR_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->iGrabbedBand = -1;
     infoPtr->hwndSelf = hwnd;
     infoPtr->DoRedraw = TRUE;
-    infoPtr->hcurArrow = LoadCursorA (0, (LPSTR)IDC_ARROW);
-    infoPtr->hcurHorz  = LoadCursorA (0, (LPSTR)IDC_SIZEWE);
-    infoPtr->hcurVert  = LoadCursorA (0, (LPSTR)IDC_SIZENS);
-    infoPtr->hcurDrag  = LoadCursorA (0, (LPSTR)IDC_SIZE);
+    infoPtr->hcurArrow = LoadCursorW (0, (LPWSTR)IDC_ARROW);
+    infoPtr->hcurHorz  = LoadCursorW (0, (LPWSTR)IDC_SIZEWE);
+    infoPtr->hcurVert  = LoadCursorW (0, (LPWSTR)IDC_SIZENS);
+    infoPtr->hcurDrag  = LoadCursorW (0, (LPWSTR)IDC_SIZE);
     infoPtr->bUnicode = IsWindowUnicode (hwnd);
     infoPtr->fStatus = CREATE_RUNNING;
     infoPtr->hFont = GetStockObject (SYSTEM_FONT);
 
     /* issue WM_NOTIFYFORMAT to get unicode status of parent */
-    i = SendMessageA(REBAR_GetNotifyParent (infoPtr),
+    i = SendMessageW(REBAR_GetNotifyParent (infoPtr),
 		     WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_QUERY);
     if ((i < NFR_ANSI) || (i > NFR_UNICODE)) {
-	ERR("wrong response to WM_NOTIFYFORMAT (%d), assuming ANSI\n",
-	    i);
+	ERR("wrong response to WM_NOTIFYFORMAT (%d), assuming ANSI\n", i);
 	i = NFR_ANSI;
     }
     infoPtr->NtfUnicode = (i == NFR_UNICODE) ? 1 : 0;
 
     /* add necessary styles to the requested styles */
     infoPtr->dwStyle = cs->style | WS_VISIBLE | CCS_TOP;
-    SetWindowLongA (hwnd, GWL_STYLE, infoPtr->dwStyle);
+    SetWindowLongW (hwnd, GWL_STYLE, infoPtr->dwStyle);
 
     /* get font handle for Caption Font */
-    ncm.cbSize = sizeof(NONCLIENTMETRICSA);
-    SystemParametersInfoA (SPI_GETNONCLIENTMETRICS,
-			  ncm.cbSize, &ncm, 0);
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
     /* if the font is bold, set to normal */
     if (ncm.lfCaptionFont.lfWeight > FW_NORMAL) {
 	ncm.lfCaptionFont.lfWeight = FW_NORMAL;
     }
-    tfont = CreateFontIndirectA (&ncm.lfCaptionFont);
+    tfont = CreateFontIndirectW (&ncm.lfCaptionFont);
     if (tfont) {
         infoPtr->hFont = infoPtr->hDefaultFont = tfont;
     }
@@ -4228,11 +4228,10 @@ REBAR_NotifyFormat (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     INT i;
 
     if (lParam == NF_REQUERY) {
-	i = SendMessageA(REBAR_GetNotifyParent (infoPtr),
+	i = SendMessageW(REBAR_GetNotifyParent (infoPtr),
 			 WM_NOTIFYFORMAT, (WPARAM)infoPtr->hwndSelf, NF_QUERY);
 	if ((i < NFR_ANSI) || (i > NFR_UNICODE)) {
-	    ERR("wrong response to WM_NOTIFYFORMAT (%d), assuming ANSI\n",
-		i);
+	    ERR("wrong response to WM_NOTIFYFORMAT (%d), assuming ANSI\n", i);
 	    i = NFR_ANSI;
 	}
 	infoPtr->NtfUnicode = (i == NFR_UNICODE) ? 1 : 0;
@@ -4473,7 +4472,7 @@ REBAR_WindowPosChanged (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     /* Save the new origin of this window - used by _ForceResize */
     infoPtr->origin.x = lpwp->x;
     infoPtr->origin.y = lpwp->y;
-    ret = DefWindowProcA(infoPtr->hwndSelf, WM_WINDOWPOSCHANGED,
+    ret = DefWindowProcW(infoPtr->hwndSelf, WM_WINDOWPOSCHANGED,
 			 wParam, lParam);
     GetWindowRect(infoPtr->hwndSelf, &rc);
     TRACE("hwnd %p new pos (%ld,%ld)-(%ld,%ld)\n",
@@ -4490,7 +4489,7 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     TRACE("hwnd=%p msg=%x wparam=%x lparam=%lx\n",
 	  hwnd, uMsg, wParam, lParam);
     if (!infoPtr && (uMsg != WM_NCCREATE))
-	    return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+        return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     switch (uMsg)
     {
 /*	case RB_BEGINDRAG: */
@@ -4707,7 +4706,7 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
 		ERR("unknown msg %04x wp=%08x lp=%08lx\n",
 		     uMsg, wParam, lParam);
-	    return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 }
 
@@ -4715,9 +4714,9 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID
 REBAR_Register (void)
 {
-    WNDCLASSA wndClass;
+    WNDCLASSW wndClass;
 
-    ZeroMemory (&wndClass, sizeof(WNDCLASSA));
+    ZeroMemory (&wndClass, sizeof(WNDCLASSW));
     wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS;
     wndClass.lpfnWndProc   = REBAR_WindowProc;
     wndClass.cbClsExtra    = 0;
@@ -4727,9 +4726,9 @@ REBAR_Register (void)
 #if GLATESTING
     wndClass.hbrBackground = CreateSolidBrush(RGB(0,128,0));
 #endif
-    wndClass.lpszClassName = REBARCLASSNAMEA;
+    wndClass.lpszClassName = REBARCLASSNAMEW;
 
-    RegisterClassA (&wndClass);
+    RegisterClassW (&wndClass);
 
     mindragx = GetSystemMetrics (SM_CXDRAG);
     mindragy = GetSystemMetrics (SM_CYDRAG);
@@ -4740,5 +4739,5 @@ REBAR_Register (void)
 VOID
 REBAR_Unregister (void)
 {
-    UnregisterClassA (REBARCLASSNAMEA, NULL);
+    UnregisterClassW (REBARCLASSNAMEW, NULL);
 }
