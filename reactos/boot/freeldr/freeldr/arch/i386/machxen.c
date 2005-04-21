@@ -90,7 +90,7 @@ XenShutdownHandler(ctrl_msg_t *Msg, unsigned long Id)
 }
 
 VOID
-XenMachInit(VOID)
+XenMachInit(char *CmdLine)
 {
   /* Setup vtbl */
   MachVtbl.ConsPutChar = XenConsPutChar;
@@ -185,7 +185,7 @@ void _start()
   /* Start freeldr */
   XenActive = TRUE;
   i386BootDrive = 0x80;
-  i386BootPartition = 0xff;
+//  i386BootPartition = 0xff;
   BootMain(XenStartInfo->cmd_line);
 
   /* Shouldn't get here */

@@ -34,7 +34,7 @@ extern BOOL XenActive;
 extern start_info_t *XenStartInfo;
 extern shared_info_t *XenSharedInfo;
 
-VOID XenMachInit(VOID);
+VOID XenMachInit(char *CmdLine);
 
 VOID XenCtrlIfInit();
 BOOL XenCtrlIfSendMessageNoblock(ctrl_msg_t *Msg);

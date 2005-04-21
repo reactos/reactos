@@ -28,7 +28,7 @@
 #include "rtl.h"
 
 VOID
-MachInit(VOID)
+MachInit(char *CmdLine)
 {
   ULONG PciId;
 
@@ -37,7 +37,7 @@ MachInit(VOID)
   /* First check if we were launched by Xen */
   if (XenActive)
     {
-      XenMachInit();
+      XenMachInit(CmdLine);
     }
   else
     {
@@ -47,11 +47,11 @@ MachInit(VOID)
     PciId = READ_PORT_ULONG((ULONG*) 0xcfc);
     if (0x02a510de == PciId)
       {
-        XboxMachInit();
+        XboxMachInit(CmdLine);
       }
     else
       {
-        PcMachInit();
+        PcMachInit(CmdLine);
       }
     }
 

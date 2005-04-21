@@ -25,7 +25,7 @@
 #include "i386.h"
 
 VOID
-PcMachInit(VOID)
+PcMachInit(char *CmdLine)
 {
   EnableA20();
 
