@@ -17,6 +17,14 @@ v2s ( const string_list& v, int wrap_at );
 
 typedef std::map<std::string,Directory*> directory_map;
 
+
+class Environment
+{
+public:
+	static std::string GetVariable ( const std::string& name );
+};
+
+
 class Directory
 {
 public:
@@ -51,6 +59,7 @@ public:
 	virtual void Process ();
 	std::string AddDirectoryTarget ( const std::string& directory,
 	                                 Directory* directoryTree );
+	std::string compilerCommand;
 	bool usePipe;
 	Directory* intermediateDirectory;
 	Directory* outputDirectory;
@@ -73,6 +82,8 @@ private:
 	void GenerateXmlBuildFilesMacro() const;
 	void CheckAutomaticDependencies ();
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
+	bool TryToDetectThisCompiler ( const std::string& compiler );
+	void DetectCompiler ();
 	void DetectPipeSupport ();
 	void DetectPCHSupport ();
 	void ProcessModules ();

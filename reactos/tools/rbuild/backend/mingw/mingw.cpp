@@ -41,6 +41,18 @@ v2s ( const string_list& v, int wrap_at )
 }
 
 
+/* static */ string
+Environment::GetVariable ( const string& name )
+{
+	char* value = getenv ( name.c_str () );
+	if ( value != NULL && strlen ( value ) > 0 )
+		return ssprintf ( "%s",
+		                  value );
+	else
+		return "";
+}
+
+
 Directory::Directory ( const string& name_ )
 	: name(name_)
 {
@@ -120,21 +132,10 @@ Directory::ReplaceVariable ( string name,
 }
 
 string
-Directory::GetEnvironmentVariable ( const string& name )
-{
-	char* value = getenv ( name.c_str () );
-	if ( value != NULL && strlen ( value ) > 0 )
-		return ssprintf ( "%s",
-		                  value );
-	else
-		return "";
-}
-
-string
 Directory::GetEnvironmentVariablePathOrDefault ( const string& name,
 	                                             const string& defaultValue )
 {
-	const string& environmentVariableValue = GetEnvironmentVariable ( name );
+	const string& environmentVariableValue = Environment::GetVariable ( name );
 	if ( environmentVariableValue.length () > 0 )
 		return NormalizeFilename ( environmentVariableValue );
 	else
@@ -283,6 +284,7 @@ MingwBackend::ProcessModules ()
 void
 MingwBackend::Process ()
 {
+	DetectCompiler ();
 	DetectPipeSupport ();
 	DetectPCHSupport ();
 	CreateMakefile ();
@@ -556,6 +558,45 @@ MingwBackend::GenerateDirectories ()
 	printf ( "done\n" );
 }
 
+bool
+MingwBackend::TryToDetectThisCompiler ( const string& compiler )
+{
+	string command = ssprintf (
+		"%s -v 2>%s",
+		compiler.c_str (),
+		NUL );
+	int exitcode = system ( command.c_str () );
+	return (exitcode == 0);
+}
+
+void
+MingwBackend::DetectCompiler ()
+{
+	printf ( "Detecting compiler..." );
+
+	bool detectedCompiler = false;
+	const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
+	if ( ROS_PREFIXValue.length () > 0 )
+	{
+		compilerCommand = ROS_PREFIXValue + "-gcc";
+		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+	}
+	if ( !detectedCompiler )
+	{
+		compilerCommand = "gcc";
+		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+	}
+	if ( !detectedCompiler )
+	{
+		compilerCommand = "mingw32-gcc";
+		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+	}
+	if ( detectedCompiler )
+		printf ( "detected (%s)\n", compilerCommand.c_str () );
+	else
+		printf ( "not detected\n" );
+}
+
 void
 MingwBackend::DetectPipeSupport ()
 {
@@ -565,7 +606,8 @@ MingwBackend::DetectPipeSupport ()
 	string pipe_detectionObjectFilename = ReplaceExtension ( pipe_detection,
 	                                                         ".o" );
 	string command = ssprintf (
-		"gcc -pipe -c %s -o %s 2>%s",
+		"%s -pipe -c %s -o %s 2>%s",
+		compilerCommand.c_str (),
 		pipe_detection.c_str (),
 		pipe_detectionObjectFilename.c_str (),
 		NUL );
@@ -593,7 +635,8 @@ MingwBackend::DetectPCHSupport ()
 
 	string path = "tools" SSEP "rbuild" SSEP "backend" SSEP "mingw" SSEP "pch_detection.h";
 	string cmd = ssprintf (
-		"gcc -c %s 2>%s",
+		"%s -c %s 2>%s",
+		compilerCommand.c_str (),
 		path.c_str (),
 		NUL );
 	system ( cmd.c_str () );
