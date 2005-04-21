@@ -1,5 +1,11 @@
 # Accepted environment variables:
 #
+#    ROS_PREFIX
+#        This variable specifies the prefix of the MinGW installation. On Windows
+#        a prefix is usually not needed, but on linux it is usually "mingw32-". If
+#        not present and no executable named "gcc" can be found, then the prefix is
+#        assumed to be "mingw32-".
+#
 #    ROS_INTERMEDIATE
 #        This variable controls where to put intermediate files. Intermediate
 #        files are generated files that are needed to generate the final
