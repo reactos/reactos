@@ -23,6 +23,8 @@
 
 //static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
 
+//static RTL_CRITICAL_SECTION LocalesListLock;
+
 
 /******************************************************************************
  * @implemented
@@ -281,7 +283,7 @@ EnumSystemLocalesA (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -290,8 +292,91 @@ EnumSystemLocalesW (
     DWORD            dwFlags
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+	NTSTATUS result;
+	HANDLE langKey;
+	UNICODE_STRING langKeyName;
+	OBJECT_ATTRIBUTES objectAttributes;
+	ULONG index, length;
+	unsigned char fullInfo[sizeof(KEY_VALUE_FULL_INFORMATION)+255*2]; //FIXME: MAX_PATH*2
+	PKEY_VALUE_FULL_INFORMATION pFullInfo;
+
+	//TODO: Combine with EnumSystemLocalesA - maybe by having one common part, driven by some
+	//      unicode/non-unicode flag.
+
+	//FIXME: dwFlags is really not used, sorry
+
+	// Check if enum proc is a real one
+	if (lpLocaleEnumProc == NULL)
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return FALSE;
+	}
+
+	// Open language registry key
+	//FIXME: Should we use critical section here?
+
+	RtlRosInitUnicodeStringFromLiteral(&langKeyName,
+		L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Locale");
+
+	InitializeObjectAttributes(&objectAttributes,
+			     &langKeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+	result = NtOpenKey(&langKey,
+			 KEY_READ,
+			 &objectAttributes);
+
+	if (!NT_SUCCESS(result))
+		return result;
+
+	DPRINT1("Registry key succesfully opened\n");
+
+	length = sizeof(KEY_VALUE_FULL_INFORMATION) + 255*2;//MAX_PATH*sizeof(WCHAR);
+	pFullInfo = (PKEY_VALUE_FULL_INFORMATION)&fullInfo;
+	RtlZeroMemory(pFullInfo, length);
+
+	index = 0;
+
+	result = NtEnumerateValueKey(langKey,
+								index,
+								KeyValueFullInformation,
+								pFullInfo,
+								length,
+								&length);
+
+	DPRINT1("First enumerate call result=%x\n", result);
+	while (result != STATUS_NO_MORE_ENTRIES)
+	{
+		int i;
+		TCHAR lpLocale[9];
+
+		// TODO: Here we should check, in case dwFlags & LCID_INSTALLED is specified,
+		// if this locale is really installed
+		// but for now we skip it
+
+		for (i=0; i<8; i++)
+			lpLocale[i] = pFullInfo->Name[i];
+
+		lpLocale[8]=0;
+
+		DPRINT1("Locale=%s\n", lpLocale);
+
+		// Call Enum func
+		if (!lpLocaleEnumProc((LPWSTR)lpLocale))
+            break;
+		
+		// Zero previous values
+		RtlZeroMemory(pFullInfo, length);
+
+		index++;
+		result = NtEnumerateValueKey(langKey, index,KeyValueFullInformation, pFullInfo, length, &length);
+	}
+
+	NtClose(langKey);
+
+	return STATUS_SUCCESS;
 }
 
 
