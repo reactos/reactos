@@ -8,7 +8,7 @@
 using std::string;
 using std::vector;
 
-#define CLEAN_FILE(f) clean_files.push_back ( f ); /*if ( module.name == "crt" ) printf ( "%s(%i): clean: %s\n", __FILE__, __LINE__, f.c_str() )*/
+#define CLEAN_FILE(f) clean_files.push_back ( f );
 
 static string ros_temp = "$(TEMPORARY)";
 MingwBackend*
@@ -1149,6 +1149,17 @@ MingwModuleHandler::GenerateBuildMapCode ()
 }
 
 void
+MingwModuleHandler::GenerateCleanObjectsAsYouGoCode ( const string& files )
+{
+	if ( backend->cleanAsYouGo )
+	{
+		fprintf ( fMakefile,
+		          "\t-@${rm} %s 2>$(NUL)\n",
+		          files.c_str () );
+	}
+}
+
+void
 MingwModuleHandler::GenerateLinkerCommand (
 	const string& dependencies,
 	const string& linker,
@@ -1216,6 +1227,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
 		          temp_exp.c_str () );
+		
+		GenerateCleanObjectsAsYouGoCode ( objectsMacro );
 	}
 	else
 	{
@@ -1227,6 +1240,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
+
+		GenerateCleanObjectsAsYouGoCode ( objectsMacro );
 	}
 
 	GenerateBuildMapCode ();

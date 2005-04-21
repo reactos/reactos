@@ -54,7 +54,9 @@ private:
 class MingwBackend : public Backend
 {
 public:
-	MingwBackend ( Project& project, bool verbose );
+	MingwBackend ( Project& project,
+	               bool verbose,
+	               bool cleanAsYouGo );
 	virtual ~MingwBackend ();
 	virtual void Process ();
 	std::string AddDirectoryTarget ( const std::string& directory,

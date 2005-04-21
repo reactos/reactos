@@ -202,15 +202,21 @@ static class MingwFactory : public Backend::Factory
 {
 public:
 	MingwFactory() : Factory ( "mingw" ) {}
-	Backend* operator() ( Project& project, bool verbose )
+	Backend* operator() ( Project& project,
+	                      bool verbose,
+	                      bool cleanAsYouGo )
 	{
-		return new MingwBackend ( project, verbose );
+		return new MingwBackend ( project,
+		                          verbose,
+		                          cleanAsYouGo );
 	}
 } factory;
 
 
-MingwBackend::MingwBackend ( Project& project, bool verbose )
-	: Backend ( project, verbose ),
+MingwBackend::MingwBackend ( Project& project,
+                             bool verbose,
+                             bool cleanAsYouGo )
+	: Backend ( project, verbose, cleanAsYouGo ),
 	  intermediateDirectory ( new Directory ("$(INTERMEDIATE)" ) ),
 	  outputDirectory ( new Directory ( "$(OUTPUT)" ) ),
 	  installDirectory ( new Directory ( "$(INSTALL)" ) )

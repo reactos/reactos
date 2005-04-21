@@ -21,23 +21,27 @@ public:
 		Factory ( const std::string& name_ );
 		virtual ~Factory();
 
-		virtual Backend* operator() ( Project&, bool verbose ) = 0;
+		virtual Backend* operator() ( Project&,
+		                              bool verbose,
+		                              bool cleanAsYouGo ) = 0;
 
 	public:
 		static Backend* Create ( const std::string& name,
 		                         Project& project,
-		                         bool verbose );
+		                         bool verbose,
+		                         bool cleanAsYouGo );
 	};
 
 protected:
-	Backend ( Project& project, bool verbose );
+	Backend ( Project& project,
+	          bool verbose,
+	          bool cleanAsYouGo );
 
 public:
 	virtual void Process () = 0;
-
-protected:
 	Project& ProjectNode;
 	bool verbose;
+	bool cleanAsYouGo;
 };
 
 #endif /* __BACKEND_H */

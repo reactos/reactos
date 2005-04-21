@@ -77,6 +77,7 @@ protected:
 	std::string GetLinkingDependenciesMacro () const;
 	std::string GetLibsMacro () const;
 	std::string GetLinkerMacro () const;
+	void GenerateCleanObjectsAsYouGoCode ( const std::string& files );
 	void GenerateLinkerCommand ( const std::string& dependencies,
 	                             const std::string& linker,
 	                             const std::string& linkerParameters,
