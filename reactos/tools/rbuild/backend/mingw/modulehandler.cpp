@@ -863,10 +863,8 @@ MingwModuleHandler::GenerateWindresCommand (
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 	string objectFilename =
 		GetObjectFilename ( sourceFilename, &clean_files );
-	string rciFilename = ros_temp +
-		ReplaceExtension ( sourceFilename, ".rci" );
-	string resFilename = ros_temp +
-		ReplaceExtension ( sourceFilename, ".res" );
+	string rciFilename = ros_temp + module.name + ".rci.tmp";
+	string resFilename = ros_temp + module.name + ".res.tmp";
 	if ( module.useWRC )
 	{
 		fprintf ( fMakefile,
