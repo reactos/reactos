@@ -799,6 +799,15 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
 
+; Xbox Nvidia driver
+HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Group",0x00000000,"Video"
+HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","ImagePath",0x00020000,"system32\drivers\xboxvmp.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\XboxVmp\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10DE&DEV_02A0&SUBSYS_00000000&REV_A1\0000","Service",0x00000000,"XboxVmp"
+
 ; VBE SVGA driver
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Group",0x00000000,"Video Save SVGA"
