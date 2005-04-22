@@ -429,11 +429,11 @@ MingwModuleHandler::GenerateCleanTarget () const
 	if ( 0 == clean_files.size() )
 		return;
 	fprintf ( fMakefile, ".PHONY: %s_clean\n", module.name.c_str() );
-	fprintf ( fMakefile, "%s_clean:\n\t-@$(rm)", module.name.c_str() );
+	fprintf ( fMakefile, "%s_clean:\n\t-@${rm}", module.name.c_str() );
 	for ( size_t i = 0; i < clean_files.size(); i++ )
 	{
 		if ( 9==((i+1)%10) )
-			fprintf ( fMakefile, " 2>$(NUL)\n\t-@$(rm)" );
+			fprintf ( fMakefile, " 2>$(NUL)\n\t-@${rm}" );
 		fprintf ( fMakefile, " %s", clean_files[i].c_str() );
 	}
 	fprintf ( fMakefile, " 2>$(NUL)\n" );
@@ -1147,13 +1147,58 @@ MingwModuleHandler::GenerateBuildMapCode ()
 }
 
 void
-MingwModuleHandler::GenerateCleanObjectsAsYouGoCode ( const string& files )
+MergeStringVector ( const vector<string>& input,
+	                vector<string>& output )
+{
+	int wrap_at = 25;
+	string s;
+	int wrap_count = -1;
+	for ( size_t i = 0; i < input.size (); i++ )
+	{
+		if ( input[i].size () == 0 )
+			continue;
+		if ( wrap_count++ == wrap_at )
+		{
+			output.push_back ( s );
+			s = "";
+			wrap_count = 0;
+		}
+		else if ( s.size () > 0)
+			s += " ";
+		s += input[i];
+	}
+	if ( s.length () > 0 )
+		output.push_back ( s );
+}
+
+void
+MingwModuleHandler::GetObjectsVector ( const IfableData& data,
+                                       vector<string>& objectFiles ) const
+{
+	for ( size_t i = 0; i < data.files.size (); i++ )
+	{
+		File& file = *data.files[i];
+		objectFiles.push_back ( GetObjectFilename ( file.name, NULL ) );
+	}
+}
+
+void
+MingwModuleHandler::GenerateCleanObjectsAsYouGoCode () const
 {
 	if ( backend->cleanAsYouGo )
 	{
-		fprintf ( fMakefile,
-		          "\t-@${rm} %s 2>$(NUL)\n",
-		          files.c_str () );
+		vector<string> objectFiles;
+		GetObjectsVector ( module.non_if_data,
+                           objectFiles );
+		vector<string> lines;
+		MergeStringVector ( objectFiles,
+	                        lines );
+		for ( size_t i = 0; i < lines.size (); i++ )
+		{
+			fprintf ( fMakefile,
+			          "\t-@${rm} %s 2>$(NUL)\n",
+			          lines[i].c_str () );
+		}
 	}
 }
 
@@ -1226,7 +1271,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          "\t-@${rm} %s 2>$(NUL)\n",
 		          temp_exp.c_str () );
 		
-		GenerateCleanObjectsAsYouGoCode ( objectsMacro );
+		GenerateCleanObjectsAsYouGoCode ();
 	}
 	else
 	{
@@ -1239,7 +1284,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
 
-		GenerateCleanObjectsAsYouGoCode ( objectsMacro );
+		GenerateCleanObjectsAsYouGoCode ();
 	}
 
 	GenerateBuildMapCode ();
@@ -1361,6 +1406,8 @@ MingwModuleHandler::GenerateArchiveTarget ( const string& ar,
 	          "\t%s -rc $@ %s\n\n",
 	          ar.c_str (),
 	          objs_macro.c_str ());
+
+	GenerateCleanObjectsAsYouGoCode ();
 
 	return archiveFilename;
 }

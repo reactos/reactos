@@ -38,6 +38,8 @@ public:
 		string_list* pclean_files );
 
 	std::string GetModuleTargets ( const Module& module );
+	void GetObjectsVector ( const IfableData& data,
+	                        std::vector<std::string>& objectFiles ) const;
 	void GenerateObjectMacro();
 	void GenerateTargetMacro();
 	void GenerateOtherMacros();
@@ -77,7 +79,7 @@ protected:
 	std::string GetLinkingDependenciesMacro () const;
 	std::string GetLibsMacro () const;
 	std::string GetLinkerMacro () const;
-	void GenerateCleanObjectsAsYouGoCode ( const std::string& files );
+	void GenerateCleanObjectsAsYouGoCode () const;
 	void GenerateLinkerCommand ( const std::string& dependencies,
 	                             const std::string& linker,
 	                             const std::string& linkerParameters,
