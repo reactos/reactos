@@ -1,4 +1,4 @@
-<module name="disk" type="kernelmodedriver" installbase="system32/drivers" installname="debugout.sys">
+<module name="disk" type="kernelmodedriver" installbase="system32/drivers" installname="disk.sys">
 	<bootstrap base="reactos" />
 	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
