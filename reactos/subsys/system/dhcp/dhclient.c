@@ -437,12 +437,12 @@ dhcpack(struct packet *packet)
 }
 
 void set_name_servers( struct client_lease *new_lease ) {
-    if( new_lease->options[DHO_NAME_SERVERS].len ) {
+    if( new_lease->options[DHO_DOMAIN_NAME_SERVERS].len ) {
         HKEY RegKey;
         struct iaddr nameserver;
         char *nsbuf;
         int i, addrs = 
-            new_lease->options[DHO_NAME_SERVERS].len / sizeof(ULONG);
+            new_lease->options[DHO_DOMAIN_NAME_SERVERS].len / sizeof(ULONG);
 
         nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
         nsbuf[0] = 0;
@@ -452,9 +452,10 @@ void set_name_servers( struct client_lease *new_lease ) {
               "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 
               0, KEY_WRITE, &RegKey ) ) {
             for( i = 0; i < addrs; i++ ) {
+                nameserver.len = sizeof(ULONG);
                 memcpy( nameserver.iabuf, 
-                        new_lease->options[DHO_NAME_SERVERS].data + 
-                        (addrs * sizeof(ULONG)), sizeof(ULONG) );
+                        new_lease->options[DHO_DOMAIN_NAME_SERVERS].data + 
+                        (i * sizeof(ULONG)), sizeof(ULONG) );
                 strcat( nsbuf, piaddr(nameserver) );
                 if( i != addrs-1 ) strcat( nsbuf, "," );
             }
@@ -475,6 +476,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     if( Adapter->NteContext )
         DeleteIPAddress( Adapter->NteContext );
     
+    /* Set up our default router if we got one from the DHCP server */
     if( new_lease->options[DHO_SUBNET_MASK].len ) {
         NTSTATUS Status;
 
@@ -496,22 +498,19 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     if( new_lease->options[DHO_ROUTERS].len ) {
         MIB_IPFORWARDROW RouterMib;
         NTSTATUS Status;
-        struct iaddr router;
-        
-        memcpy( netmask.iabuf,
-                new_lease->options[DHO_ROUTERS].data,
-                new_lease->options[DHO_ROUTERS].len );
         
         RouterMib.dwForwardDest = 0; /* Default route */
         RouterMib.dwForwardMask = 0;
         RouterMib.dwForwardMetric1 = 1;
         
         if( old_default_route ) {
+            /* If we set a default route before, delete it before continuing */
             RouterMib.dwForwardDest = old_default_route;
             DeleteIpForwardEntry( &RouterMib );
         }
         
-        RouterMib.dwForwardNextHop = *((ULONG*)router.iabuf);
+        RouterMib.dwForwardNextHop = 
+            *((ULONG*)new_lease->options[DHO_ROUTERS].data);
         
         Status = CreateIpForwardEntry( &RouterMib );
         
