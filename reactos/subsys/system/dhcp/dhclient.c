@@ -108,6 +108,7 @@ int		 ipv4addrs(char * buf);
 int		 res_hnok(const char *dn);
 char		*option_as_string(unsigned int code, unsigned char *data, int len);
 int		 fork_privchld(int, int);
+int              check_arp( struct interface_info *ip, struct client_lease *lp );
 
 #define	ROUNDUP(a) \
 	    ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
@@ -115,142 +116,10 @@ int		 fork_privchld(int, int);
 
 time_t	scripttime;
 
-#if 0
-
-int
-findproto(char *cp, int n)
-{
-	struct sockaddr *sa;
-	int i;
-
-	if (n == 0)
-		return -1;
-	for (i = 1; i; i <<= 1) {
-		if (i & n) {
-			sa = (struct sockaddr *)cp;
-			switch (i) {
-			case RTA_IFA:
-			case RTA_DST:
-			case RTA_GATEWAY:
-			case RTA_NETMASK:
-				if (sa->sa_family == AF_INET)
-					return AF_INET;
-				if (sa->sa_family == AF_INET6)
-					return AF_INET6;
-				break;
-			case RTA_IFP:
-				break;
-			}
-			ADVANCE(cp, sa);
-		}
-	}
-	return (-1);
+/* XXX Implement me */
+int check_arp( struct interface_info *ip, struct client_lease *lp ) {
+    return 1;
 }
-
-
-struct sockaddr *
-get_ifa(char *cp, int n)
-{
-	struct sockaddr *sa;
-	int i;
-
-	if (n == 0)
-		return (NULL);
-	for (i = 1; i; i <<= 1)
-		if (i & n) {
-			sa = (struct sockaddr *)cp;
-			if (i == RTA_IFA)
-				return (sa);
-			ADVANCE(cp, sa);
-		}
-
-	return (NULL);
-}
-struct iaddr defaddr = { 4 };
-
-/* ARGSUSED */
-void
-routehandler(struct protocol *p)
-{
-	char msg[2048];
-	struct rt_msghdr *rtm;
-	struct if_msghdr *ifm;
-	struct ifa_msghdr *ifam;
-	struct if_announcemsghdr *ifan;
-	struct client_lease *l;
-	time_t t = time(NULL);
-	struct sockaddr *sa;
-	struct iaddr a;
-	ssize_t n;
-
-	n = read(routefd, &msg, sizeof(msg));
-	rtm = (struct rt_msghdr *)msg;
-	if (n < sizeof(rtm->rtm_msglen) || n < rtm->rtm_msglen ||
-	    rtm->rtm_version != RTM_VERSION)
-		return;
-
-	switch (rtm->rtm_type) {
-	case RTM_NEWADDR:
-		ifam = (struct ifa_msghdr *)rtm;
-		if (ifam->ifam_index != ifi->index)
-			break;
-		if (findproto((char *)(ifam + 1), ifam->ifam_addrs) != AF_INET)
-			break;
-		if (ifi == NULL)
-			goto die;
-		sa = get_ifa((char *)(ifam + 1), ifam->ifam_addrs);
-		if (sa == NULL)
-			goto die;
-
-		if ((a.len = sizeof(struct in_addr)) > sizeof(a.iabuf))
-			error("king bula sez: len mismatch");
-		memcpy(a.iabuf, &((struct sockaddr_in *)sa)->sin_addr, a.len);
-		if (addr_eq(a, defaddr))
-			break;
-
-		for (l = ifi->client->active; l != NULL; l = l->next)
-			if (addr_eq(a, l->address))
-				break;
-
-		if (l != NULL)	/* new addr is the one we set */
-			break;
-
-		goto die;
-	case RTM_DELADDR:
-		ifam = (struct ifa_msghdr *)rtm;
-		if (ifam->ifam_index != ifi->index)
-			break;
-		if (findproto((char *)(ifam + 1), ifam->ifam_addrs) != AF_INET)
-			break;
-		if (scripttime == 0 || t < scripttime + 10)
-			break;
-		goto die;
-	case RTM_IFINFO:
-		ifm = (struct if_msghdr *)rtm;
-		if (ifm->ifm_index != ifi->index)
-			break;
-		if ((rtm->rtm_flags & RTF_UP) == 0)
-			goto die;
-		break;
-	case RTM_IFANNOUNCE:
-		ifan = (struct if_announcemsghdr *)rtm;
-		if (ifan->ifan_what == IFAN_DEPARTURE &&
-		    ifan->ifan_index == ifi->index)
-			goto die;
-		break;
-	default:
-		break;
-	}
-	return;
-
-die:
-	script_init("FAIL", NULL);
-	if (ifi->client->alias)
-		script_write_params("alias_", ifi->client->alias);
-	script_go();
-	exit(1);
-}
-#endif
 
 int
 main(int argc, char *argv[])
@@ -298,9 +167,6 @@ main(int argc, char *argv[])
         DH_DbgPrint
             (MID_TRACE,
              ("Setting init state and restarting interface %p\n",ifi));
-
-	ifi->client->state = S_INIT;
-	state_reboot(ifi);
 
 	bootp_packet_handler = do_packet;
 
@@ -438,20 +304,7 @@ state_selecting(void *ipp)
 		/* Check to see if we got an ARPREPLY for the address
 		   in this particular lease. */
 		if (!picked) {
-                    script_init("ARPCHECK", lp->medium);
-                    script_write_params("check_", lp);
-                    
-                    /* If the ARPCHECK code detects another
-                       machine using the offered address, it exits
-                       nonzero.  We need to send a DHCPDECLINE and
-                       toss the lease. */
-#if 0 /* XXX Later check ARP.  For now, trust leases */
-                    if (script_go()) {
-                        make_decline(ip, lp);
-                        send_decline(ip);
-                        goto freeit;
-                    }
-#endif
+                    if( !check_arp(ip,lp) ) goto freeit;
                     picked = lp;
                     picked->next = NULL;
 		} else {
@@ -805,8 +658,8 @@ dhcpoffer(struct packet *packet)
 	/* If we're not receptive to an offer right now, or if the offer
 	   has an unrecognizable transaction id, then just drop it. */
 	if (ip->client->state != S_SELECTING ||
-	    packet->interface->client->xid != packet->raw->xid ||
-	    (packet->interface->hw_address.hlen != packet->raw->hlen) ||
+            packet->interface->client->xid != packet->raw->xid ||
+            (packet->interface->hw_address.hlen != packet->raw->hlen) ||
 	    (memcmp(packet->interface->hw_address.haddr,
 	    packet->raw->chaddr, packet->raw->hlen)))
 		return;
@@ -850,14 +703,10 @@ dhcpoffer(struct packet *packet)
 	lease->medium = ip->client->medium;
 
 	/* Send out an ARP Request for the offered IP address. */
-	script_init("ARPSEND", lease->medium);
-	script_write_params("check_", lease);
-	/* If the script can't send an ARP request without waiting,
-	   we'll be waiting when we do the ARPCHECK, so don't wait now. */
-	if (script_go())
-		arp_timeout_needed = 0;
-	else
-		arp_timeout_needed = 2;
+        if( !check_arp( ip, lease ) ) {
+            note("Arp check failed\n");
+            return;
+        }
 
 	/* Figure out when we're supposed to stop selecting. */
 	stop_selecting =
@@ -1072,9 +921,7 @@ again:
 
 		note("Trying medium \"%s\" %d", ip->client->medium->string,
 		    increase);
-		script_init("MEDIUM", ip->client->medium);
-		if (script_go())
-			goto again;
+                /* XXX Support other media types eventually */
 	}
 
 	/*
@@ -1170,25 +1017,22 @@ state_panic(void *ipp)
 			/* If the old lease is still good and doesn't
 			   yet need renewal, go into BOUND state and
 			   timeout at the renewal time. */
-			if (!script_go()) {
-				if (cur_time <
-				    ip->client->active->renewal) {
-					ip->client->state = S_BOUND;
-					note("bound: renewal in %d seconds.",
-					    ip->client->active->renewal -
-					    cur_time);
-					add_timeout(
-					    ip->client->active->renewal,
-					    state_bound, ip);
-				} else {
-					ip->client->state = S_BOUND;
-					note("bound: immediate renewal.");
-					state_bound(ip);
-				}
-				reinitialize_interfaces();
-				//go_daemon();
-				return;
-			}
+                        if (cur_time <
+                            ip->client->active->renewal) {
+                            ip->client->state = S_BOUND;
+                            note("bound: renewal in %d seconds.",
+                                 ip->client->active->renewal -
+                                 cur_time);
+                            add_timeout(
+                                ip->client->active->renewal,
+                                state_bound, ip);
+                        } else {
+                            ip->client->state = S_BOUND;
+                            note("bound: immediate renewal.");
+                            state_bound(ip);
+                        }
+                        reinitialize_interfaces();
+                        return;
 		}
 
 		/* If there are no other leases, give up. */
@@ -1222,14 +1066,10 @@ activate_next:
 	   tell the shell script that we failed to allocate an address,
 	   and try again later. */
 	note("No working leases in persistent database - sleeping.\n");
-	script_init("FAIL", NULL);
-	if (ip->client->alias)
-		script_write_params("alias_", ip->client->alias);
-	script_go();
 	ip->client->state = S_INIT;
 	add_timeout(cur_time + ip->client->config->retry_interval, state_init,
 	    ip);
-//	go_daemon();
+        /* XXX Take any failure actions necessary */
 }
 
 void
@@ -1271,8 +1111,7 @@ cancel:
 		script_init("MEDIUM", ip->client->active->medium);
 
 		/* If the medium we chose won't fly, go to INIT state. */
-		if (script_go())
-			goto cancel;
+                /* XXX Nothing for now */
 
 		/* Record the medium. */
 		ip->client->medium = ip->client->active->medium;
@@ -1282,23 +1121,18 @@ cancel:
 	   to the INIT state. */
 	if (ip->client->state != S_REQUESTING &&
 	    cur_time > ip->client->active->expiry) {
-		/* Run the client script with the new parameters. */
-		script_init("EXPIRE", NULL);
-		script_write_params("old_", ip->client->active);
-		if (ip->client->alias)
-			script_write_params("alias_", ip->client->alias);
-		script_go();
+            PDHCP_ADAPTER Adapter = AdapterFindInfo( ip );
+            /* Run the client script with the new parameters. */
+            /* No script actions necessary in the expiry case */
+            /* Now do a preinit on the interface so that we can
+               discover a new address. */
 
-		/* Now do a preinit on the interface so that we can
-		   discover a new address. */
-		script_init("PREINIT", NULL);
-		if (ip->client->alias)
-			script_write_params("alias_", ip->client->alias);
-		script_go();
-
-		ip->client->state = S_INIT;
-		state_init(ip);
-		return;
+            if( Adapter ) 
+                DeleteIPAddress( Adapter->NteContext );
+            
+            ip->client->state = S_INIT;
+            state_init(ip);
+            return;
 	}
 
 	/* Do the exponential backoff... */
@@ -1973,158 +1807,6 @@ script_write_params(char *prefix, struct client_lease *lease)
 	if (buf_close(privfd, buf) == -1)
 		error("buf_close: %m");
 }
-
-int
-script_go(void)
-{
-	struct imsg_hdr	 hdr;
-	struct buf	*buf;
-	int		 ret;
-
-	scripttime = time(NULL);
-
-	hdr.code = IMSG_SCRIPT_GO;
-	hdr.len = sizeof(struct imsg_hdr);
-
-	if ((buf = buf_open(hdr.len)) == NULL)
-		error("buf_open: %m");
-
-	if (buf_add(buf, &hdr, sizeof(hdr)))
-		error("buf_add: %m");
-
-	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %m");
-
-	memset(&hdr, 0, sizeof(hdr));
-	//bzero(&hdr, sizeof(hdr));
-	buf_read(privfd, &hdr, sizeof(hdr));
-	if (hdr.code != IMSG_SCRIPT_GO_RET)
-		error("unexpected msg type %u", hdr.code);
-	if (hdr.len != sizeof(hdr) + sizeof(int))
-		error("received corrupted message");
-	buf_read(privfd, &ret, sizeof(ret));
-
-	return (ret);
-}
-
-#if 0
-int
-priv_script_go(void)
-{
-	char *scriptName, *argv[2], **envp, *epp[3], reason[] = "REASON=NBI";
-	static char client_path[] = CLIENT_PATH;
-	struct interface_info *ip = ifi;
-	int pid, wpid, wstatus;
-
-	scripttime = time(NULL);
-
-	if (ip) {
-		scriptName = ip->client->config->script_name;
-		envp = ip->client->scriptEnv;
-	} else {
-		scriptName = top_level_config.script_name;
-		epp[0] = reason;
-		epp[1] = client_path;
-		epp[2] = NULL;
-		envp = epp;
-	}
-
-	argv[0] = scriptName;
-	argv[1] = NULL;
-
-	pid = fork();
-	if (pid < 0) {
-		error("fork: %m");
-		wstatus = 0;
-	} else if (pid) {
-		do {
-			wpid = wait(&wstatus);
-		} while (wpid != pid && wpid > 0);
-		if (wpid < 0) {
-			error("wait: %m");
-			wstatus = 0;
-		}
-	} else {
-		execve(scriptName, argv, envp);
-		error("execve (%s, ...): %m", scriptName);
-	}
-
-	if (ip)
-		script_flush_env(ip->client);
-
-	return (wstatus & 0xff);
-}
-#endif
-
-#if 0
-void
-script_set_env(struct client_state *client, const char *prefix,
-    const char *name, const char *value)
-{
-	int i, j, namelen;
-
-	namelen = strlen(name);
-
-	for (i = 0; client->scriptEnv[i]; i++)
-		if (strncmp(client->scriptEnv[i], name, namelen) == 0 &&
-		    client->scriptEnv[i][namelen] == '=')
-			break;
-
-	if (client->scriptEnv[i])
-		/* Reuse the slot. */
-		free(client->scriptEnv[i]);
-	else {
-		/* New variable.  Expand if necessary. */
-		if (i >= client->scriptEnvsize - 1) {
-			char **newscriptEnv;
-			int newscriptEnvsize = client->scriptEnvsize + 50;
-
-			newscriptEnv = realloc(client->scriptEnv,
-			    newscriptEnvsize);
-			if (newscriptEnv == NULL) {
-				free(client->scriptEnv);
-				client->scriptEnv = NULL;
-				client->scriptEnvsize = 0;
-				error("script_set_env: no memory for variable");
-			}
-			client->scriptEnv = newscriptEnv;
-			client->scriptEnvsize = newscriptEnvsize;
-		}
-		/* need to set the NULL pointer at end of array beyond
-		   the new slot. */
-		client->scriptEnv[i + 1] = NULL;
-	}
-	/* Allocate space and format the variable in the appropriate slot. */
-	client->scriptEnv[i] = malloc(strlen(prefix) + strlen(name) + 1 +
-	    strlen(value) + 1);
-	if (client->scriptEnv[i] == NULL)
-		error("script_set_env: no memory for variable assignment");
-
-	/* No `` or $() command substitution allowed in environment values! */
-	for (j=0; j < strlen(value); j++)
-		switch (value[j]) {
-		case '`':
-		case '$':
-			error("illegal character (%c) in value '%s'", value[j],
-			    value);
-			/* not reached */
-		}
-	snprintf(client->scriptEnv[i], strlen(prefix) + strlen(name) +
-	    1 + strlen(value) + 1, "%s%s=%s", prefix, name, value);
-}
-
-void
-script_flush_env(struct client_state *client)
-{
-	int i;
-
-	for (i = 0; client->scriptEnv[i]; i++) {
-		free(client->scriptEnv[i]);
-		client->scriptEnv[i] = NULL;
-	}
-	client->scriptEnvsize = 0;
-}
-#endif
 
 int
 dhcp_option_ev_name(char *buf, size_t buflen, struct dhcp_option *option)

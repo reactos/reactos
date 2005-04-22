@@ -16,6 +16,8 @@ TARGET_OBJECTS = adapter.o alloc.o api.o compat.o dhclient.o dispatch.o \
 
 TARGET_SDKLIBS = iphlpapi.a ws2_32.a ntdll.a
 
+TARGET_INSTALLDIR = system32
+
 TARGET_RC_SRCS = dhcp.rc
 
 TARGET_RC_BINSRC = 

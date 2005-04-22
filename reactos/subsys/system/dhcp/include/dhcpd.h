@@ -171,7 +171,8 @@ enum dhcp_state {
 	S_REQUESTING,
 	S_BOUND,
 	S_RENEWING,
-	S_REBINDING
+	S_REBINDING,
+        S_STATIC
 };
 
 struct client_config {
@@ -342,6 +343,7 @@ void add_timeout(time_t, void (*)(void *), void *);
 void cancel_timeout(void (*)(void *), void *);
 void add_protocol(char *, int, void (*)(struct protocol *), void *);
 void remove_protocol(struct protocol *);
+struct protocol *find_protocol_by_adapter( struct interface_info * );
 int interface_link_status(char *);
 
 /* hash.c */

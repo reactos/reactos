@@ -38,8 +38,11 @@ DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
     Reply.Reply = Adapter ? 1 : 0;
 
     if( Adapter ) {
-        Adapter->DhclientState.state = S_REBOOTING;
-        send_discover( &Adapter->DhclientInfo );
+        add_protocol( Adapter->DhclientInfo.name, 
+                      Adapter->DhclientInfo.rfdesc, got_one, 
+                      &Adapter->DhclientInfo );
+	Adapter->DhclientInfo.client->state = S_INIT;
+	state_reboot(&Adapter->DhclientInfo);
     }
 
     ApiUnlock();
@@ -77,6 +80,7 @@ DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     if( Adapter ) {
         DeleteIPAddress( Adapter->NteContext );
+        remove_protocol( find_protocol_by_adapter( &Adapter->DhclientInfo ) );
     }
 
     ApiUnlock();
@@ -101,6 +105,7 @@ DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     Adapter->DhclientState.state = S_BOUND;
 
+    send_discover( &Adapter->DhclientInfo );
     state_bound( &Adapter->DhclientInfo );
 
     ApiUnlock();
@@ -121,7 +126,8 @@ DWORD DSStaticRefreshParams( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     if( Adapter ) {
         DeleteIPAddress( Adapter->NteContext );
-        Adapter->DhclientState.state = S_BOUND;
+        Adapter->DhclientState.state = S_STATIC;
+        remove_protocol( find_protocol_by_adapter( &Adapter->DhclientInfo ) );
         Status = AddIPAddress( Req->Body.StaticRefreshParams.IPAddress,
                                Req->Body.StaticRefreshParams.Netmask,
                                Req->AdapterIndex,

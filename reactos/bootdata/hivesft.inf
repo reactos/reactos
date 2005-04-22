@@ -725,8 +725,8 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\New Zealand Standa
 0x00,0x00,0x0a,0x00,0x00,0x00,0x01,0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
 
-;HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\system32\cmd.exe"
-HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\explorer.exe"
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\system32\cmd.exe"
+;HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\explorer.exe"
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartServices",0x00010001,0x00000001
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartGUI",0x00010001,0x00000000
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"

@@ -366,6 +366,8 @@ VOID LanSubmitReceiveWork(
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
     KIRQL OldIrql;
 
+    TI_DbgPrint(DEBUG_DATALINK,("called\n"));
+
     TcpipAcquireSpinLock( &LanWorkLock, &OldIrql );
     
     WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
@@ -407,6 +409,8 @@ VOID STDCALL ProtocolTransferDataComplete(
  */
 {
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    TI_DbgPrint(DEBUG_DATALINK,("called\n"));
 
     TransferDataCompleteCalled++;
     ASSERT(TransferDataCompleteCalled <= TransferDataCalled);
@@ -736,59 +740,6 @@ OpenRegistryKey( PNDIS_STRING RegistryPath, PHANDLE RegHandle ) {
     return Status;
 }
 
-static NTSTATUS ReadIPAddressFromRegistry( HANDLE RegHandle,
-					   PWCHAR RegistryValue,
-					   PIP_ADDRESS Address ) {
-    UNICODE_STRING ValueName;
-    UNICODE_STRING UnicodeAddress; 
-    NTSTATUS Status;
-    ULONG ResultLength;
-    UCHAR buf[1024];
-    PKEY_VALUE_PARTIAL_INFORMATION Information = (PKEY_VALUE_PARTIAL_INFORMATION)buf;
-    ANSI_STRING AnsiAddress;
-    ULONG AnsiLen;
-
-    RtlInitUnicodeString(&ValueName, RegistryValue);
-    Status = 
-	ZwQueryValueKey(RegHandle, 
-			&ValueName, 
-			KeyValuePartialInformation, 
-			Information, 
-			sizeof(buf), 
-			&ResultLength);
-
-    if (!NT_SUCCESS(Status))
-	return Status;
-    /* IP address is stored as a REG_MULTI_SZ - we only pay attention to the first one though */
-    TI_DbgPrint(MIN_TRACE, ("Information DataLength: 0x%x\n", Information->DataLength));
-    
-    UnicodeAddress.Buffer = (PWCHAR)&Information->Data;
-    UnicodeAddress.Length = Information->DataLength;
-    UnicodeAddress.MaximumLength = Information->DataLength;
-    
-    AnsiLen = RtlUnicodeStringToAnsiSize(&UnicodeAddress);
-    if(!AnsiLen)
-	return STATUS_NO_MEMORY;
-    
-    AnsiAddress.Buffer = exAllocatePoolWithTag(PagedPool, AnsiLen, 0x01020304);
-    if(!AnsiAddress.Buffer)
-	return STATUS_NO_MEMORY;
-
-    AnsiAddress.Length = AnsiLen;
-    AnsiAddress.MaximumLength = AnsiLen;
-    
-    Status = RtlUnicodeStringToAnsiString(&AnsiAddress, &UnicodeAddress, FALSE);
-    if (!NT_SUCCESS(Status)) {
-	exFreePool(AnsiAddress.Buffer);
-	return STATUS_UNSUCCESSFUL;
-    }
-    
-    AnsiAddress.Buffer[AnsiAddress.Length] = 0;
-    AddrInitIPv4(Address, inet_addr(AnsiAddress.Buffer));
-
-    return STATUS_SUCCESS;
-}
-
 static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
 					PWCHAR RegistryValue,
 					PUNICODE_STRING String ) {
@@ -1001,7 +952,7 @@ VOID BindAdapter(
     PIP_INTERFACE IF;
     NDIS_STATUS NdisStatus;
     LLIP_BIND_INFO BindInfo;
-    IP_ADDRESS DefaultGateway, DefaultMask = { 0 };
+    IP_ADDRESS DefaultMask = { 0 };
     ULONG Lookahead = LOOKAHEAD_SIZE;
     NTSTATUS Status;
     HANDLE RegHandle = 0;
@@ -1055,20 +1006,10 @@ VOID BindAdapter(
         TI_DbgPrint(DEBUG_DATALINK,("Adapter Name: %wZ\n", &IF->Name));
     }
 
-    if(NT_SUCCESS(Status))
-	Status = ReadIPAddressFromRegistry( RegHandle, L"DefaultGateway",
-					    &DefaultGateway );
-    if(!NT_SUCCESS(Status)) {
-	Status = STATUS_SUCCESS;
-	RtlZeroMemory( &DefaultGateway, sizeof(DefaultGateway) );
-    }
+    DefaultMask.Type = IP_ADDRESS_V4;
 
-    if(NT_SUCCESS(Status))
-	Status = ReadIPAddressFromRegistry( RegHandle, L"IPAddress",
-					    &IF->Unicast );
-    if(NT_SUCCESS(Status)) 
-	Status = ReadIPAddressFromRegistry( RegHandle, L"SubnetMask",
-					    &IF->Netmask );
+    IF->Unicast = DefaultMask;
+    IF->Netmask = DefaultMask;
 
     IF->Broadcast.Type = IP_ADDRESS_V4;
     IF->Broadcast.Address.IPv4Address = 
@@ -1076,33 +1017,6 @@ VOID BindAdapter(
         ~IF->Netmask.Address.IPv4Address;
 
     TI_DbgPrint(DEBUG_DATALINK,("BCAST(IF) %s\n", A2S(&IF->Broadcast)));
-
-    if(NT_SUCCESS(Status)) {
-        /* It's ok to fail some of the above.  We'll just use DHCP. */
-        TI_DbgPrint
-            (DEBUG_DATALINK, 
-             ("--> Our IP address on this interface: '%s'\n", 
-              A2S(&IF->Unicast)));
-        
-        TI_DbgPrint
-            (DEBUG_DATALINK, 
-             ("--> Our net mask on this interface: '%s'\n", 
-              A2S(&IF->Netmask)));
-        
-        if( DefaultGateway.Address.IPv4Address ) {
-            TI_DbgPrint
-                (DEBUG_DATALINK, 
-                 ("--> Our gateway is: '%s'\n", 
-                  A2S(&DefaultGateway)));
-            
-            /* Create a default route */
-            RouterCreateRoute( &DefaultMask, /* Zero */
-                               &DefaultMask, /* Zero */
-                               &DefaultGateway,
-                               IF,
-                               1 );
-        }
-    }
 
     /* Get maximum link speed */
     NdisStatus = NDISCall(Adapter,

@@ -25,7 +25,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 	ExAllocatePool( NonPagedPool, sizeof( IPADDR_ENTRY ) * IfCount );
     PIPADDR_ENTRY IpCurrent = IpAddress;
 
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
     
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
     
@@ -56,7 +56,7 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
     
     ExFreePool( IpAddress );
 
-    TI_DbgPrint(MAX_TRACE, ("Returning %08x\n", Status));
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 
     return Status;
 }
@@ -73,7 +73,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     PIPROUTE_ENTRY RouteEntries = ExAllocatePool( NonPagedPool, Size ),
 	RtCurrent = RouteEntries;
 
-    TI_DbgPrint(MAX_TRACE, ("Called, routes = %d, RCache = %08x\n", 
+    TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d, RCache = %08x\n", 
 			    RtCount, RCache));
 
     if( !RCache || !RouteEntries ) {
@@ -106,7 +106,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 	RtCurrent->Type = TDI_ADDRESS_TYPE_IP;
 	
 	TI_DbgPrint
-	    (MAX_TRACE, 
+	    (DEBUG_INFO, 
 	     ("%d: NA %08x NM %08x GW %08x MT %x\n",
 	      RtCurrent - RouteEntries,
 	      RtCurrent->Dest, 
@@ -132,7 +132,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     ExFreePool( RouteEntries );
     ExFreePool( RCache );
 
-    TI_DbgPrint(MAX_TRACE, ("Returning %08x\n", Status));
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 
     return Status;
 }
@@ -144,7 +144,7 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
     UINT RouteCount = CountFIBs( NULL );
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
     RtlZeroMemory(&SnmpInfo, sizeof(IPSNMP_INFO));
 
@@ -155,7 +155,7 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( PNDIS_BUFFER Buffer,
     Status = InfoCopyOut( (PCHAR)&SnmpInfo, sizeof(SnmpInfo), 
 			  Buffer, BufferSize );
 
-    TI_DbgPrint(MAX_TRACE, ("Returning %08x\n", Status));
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 
     return Status;
 }
@@ -169,7 +169,7 @@ TDI_STATUS InfoNetworkLayerTdiQueryEx( UINT InfoClass,
 				       PUINT BufferSize ) {
     TDI_STATUS Status = TDI_INVALID_REQUEST;
     
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
     switch( InfoClass ) {
     case INFO_CLASS_GENERIC:
@@ -200,7 +200,7 @@ TDI_STATUS InfoNetworkLayerTdiQueryEx( UINT InfoClass,
 	}
     }
 
-    TI_DbgPrint(MAX_TRACE, ("Returning %08x\n", Status));
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 
     return Status;
 }
@@ -218,7 +218,7 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
     IP_ADDRESS Router;
     PNEIGHBOR_CACHE_ENTRY NCE;
 
-    TI_DbgPrint(MID_TRACE,("Called\n"));
+    TI_DbgPrint(DEBUG_INFO,("Called\n"));
 
     OskitDumpBuffer( (OSK_PCHAR)Buffer, BufferSize );
 
@@ -232,7 +232,7 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
 	AddrInitIPv4( &Router,  Route->Gw );
 
 	if( Route->Type == IP_ROUTE_TYPE_ADD ) { /* Add the route */
-	    TI_DbgPrint(MID_TRACE,("Adding route (%s)\n", A2S(&Address)));
+	    TI_DbgPrint(DEBUG_INFO,("Adding route (%s)\n", A2S(&Address)));
 	    /* Find the existing route this belongs to */
 	    NCE = RouterGetRoute( &Router );
 	    /* Really add the route */
@@ -243,12 +243,12 @@ TDI_STATUS InfoNetworkLayerTdiSetEx( UINT InfoClass,
 	    else
 		Status = STATUS_UNSUCCESSFUL;
 	} else if( Route->Type == IP_ROUTE_TYPE_DEL ) {
-	    TI_DbgPrint(MID_TRACE,("Removing route (%s)\n", A2S(&Address)));
+	    TI_DbgPrint(DEBUG_INFO,("Removing route (%s)\n", A2S(&Address)));
 	    Status = RouterRemoveRoute( &Address, &Router );
 	} else Status = TDI_INVALID_REQUEST;
     }
 
-    TI_DbgPrint(MID_TRACE,("Returning %x\n", Status));    
+    TI_DbgPrint(DEBUG_INFO,("Returning %x\n", Status));    
 
     return Status;
 }
