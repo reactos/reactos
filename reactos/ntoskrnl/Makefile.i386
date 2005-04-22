@@ -17,9 +17,8 @@ OBJECTS_KE_I386 := \
 	ke/i386/thread.o \
 	ke/i386/usercall.o \
 	ke/i386/trap.o \
-	ke/i386/bthread.o \
 	ke/i386/syscall.o \
-	ke/i386/tskswitch.o \
+	ke/i386/ctxswitch.o \
 	ke/i386/v86m.o \
 	ke/i386/v86m_sup.o \
 	ke/i386/vdm.o \

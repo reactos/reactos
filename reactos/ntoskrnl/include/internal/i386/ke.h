@@ -203,6 +203,28 @@ KeApplicationProcessorInitDispatcher(VOID);
 VOID 
 KeCreateApplicationProcessorIdleThread(ULONG Id);
 
+typedef 
+VOID 
+STDCALL
+(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine, 
+                    PVOID StartContext);
+
+VOID
+STDCALL
+Ke386InitThreadWithContext(PKTHREAD Thread, 
+                           PKSYSTEM_ROUTINE SystemRoutine,
+                           PKSTART_ROUTINE StartRoutine,
+                           PVOID StartContext,
+                           PCONTEXT Context);
+                       
+VOID
+STDCALL
+KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine, 
+                PKSTART_ROUTINE StartRoutine, 
+                PVOID StartContext, 
+                BOOLEAN UserThread,
+                KTRAP_FRAME TrapFrame);
+                
 #ifdef CONFIG_SMP
 #define LOCK "lock ; "
 #else

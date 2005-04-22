@@ -426,7 +426,7 @@ KeEnterKernelDebugger(VOID)
 VOID STDCALL
 KdSystemDebugControl(ULONG Code)
 {
-  extern VOID PsDumpThreads(BOOLEAN IncludeSystem);
+  extern VOID STDCALL PspDumpThreads(BOOLEAN IncludeSystem);
 
   /* A - Dump the entire contents of the non-paged pool. */
   if (Code == 0)
@@ -462,12 +462,12 @@ KdSystemDebugControl(ULONG Code)
   /* F */
   else if (Code == 5)
     {
-      PsDumpThreads(TRUE);
+      PspDumpThreads(TRUE);
     }
   /* G */
   else if (Code == 6)
     {
-      PsDumpThreads(FALSE);
+      PspDumpThreads(FALSE);
     }
   /* H */
   else if (Code == 7)

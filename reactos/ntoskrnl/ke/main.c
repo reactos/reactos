@@ -103,7 +103,7 @@ KiSystemStartup(BOOLEAN BootProcessor)
         MiFreeInitMemory();
         
         /* Never returns */
-        PspExitThread(STATUS_SUCCESS);
+        PsIdleThreadMain(NULL);
         
     } else {
         

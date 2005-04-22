@@ -497,7 +497,18 @@ PspInitializeProcessSecurity(PEPROCESS Process,
                              PEPROCESS Parent OPTIONAL);
 
 
-
+VOID
+STDCALL
+PspSystemThreadStartup(PKSTART_ROUTINE StartRoutine,
+                       PVOID StartContext);
+                       
+NTSTATUS
+PsInitializeIdleOrFirstThread (
+    PEPROCESS Process,
+    PETHREAD* ThreadPtr,
+    PKSTART_ROUTINE StartRoutine,
+    KPROCESSOR_MODE AccessMode,
+    BOOLEAN First);
 /*
  * Internal thread priorities, added by Phillip Susi
  * TODO: rebalence these to make use of all priorities... the ones above 16 

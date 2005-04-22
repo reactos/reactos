@@ -27,8 +27,12 @@
 #define KTHREAD_TEB               0x20
 #define KTHREAD_KERNEL_STACK      0x28
 #define KTHREAD_NPX_STATE         0x31
+#define KTHREAD_STATE             0x2D
+#define KTHREAD_APCSTATE_PROCESS  0x34 + 0x10
 #define KTHREAD_PENDING_USER_APC  0x34 + 0x16
-#define KTHREAD_APCSTATE_PROCESS  0x44
+#define KTHREAD_PENDING_KERNEL_APC 0x34 + 0x15
+#define KTHREAD_CONTEXT_SWITCHES  0x4C
+#define KTHREAD_WAIT_IRQL         0x54
 #define KTHREAD_SERVICE_TABLE     0xDC
 #define KTHREAD_PREVIOUS_MODE     0x137
 #define KTHREAD_TRAP_FRAME        0x128
@@ -44,7 +48,9 @@
 
 #define KPCR_EXCEPTION_LIST       0x0
 #define KPCR_INITIAL_STACK        0x4
+#define KPCR_STACK_LIMIT          0x8
 #define KPCR_SELF                 0x1C
+#define KPCR_GDT                  0x3C
 #define KPCR_TSS                  0x40
 #define KPCR_CURRENT_THREAD       0x124	
 #define KPCR_NPX_THREAD           0x2A4
@@ -297,17 +303,6 @@ static inline PKPRCB KeGetCurrentPrcb(VOID)
 #endif
 
 #endif /* __USE_W32API */
-
-VOID
-Ki386ContextSwitch(struct _KTHREAD* NewThread, 
-		   struct _KTHREAD* OldThread);
-NTSTATUS 
-Ke386InitThread(struct _KTHREAD* Thread, PKSTART_ROUTINE fn, 
-		PVOID StartContext);
-NTSTATUS 
-Ke386InitThreadWithContext(struct _KTHREAD* Thread, PCONTEXT Context);
-NTSTATUS
-Ki386ValidateUserContext(PCONTEXT Context);
 
 #endif /* __ASM__ */
 

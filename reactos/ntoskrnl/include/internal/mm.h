@@ -508,6 +508,17 @@ NTSTATUS
 STDCALL
 MmCreatePeb(PEPROCESS Process);
 
+PTEB
+STDCALL
+MmCreateTeb(PEPROCESS Process,
+            PCLIENT_ID ClientId,
+            PINITIAL_TEB InitialTeb);
+            
+VOID
+STDCALL
+MmDeleteTeb(PEPROCESS Process,
+            PTEB Teb);
+
 /* i386/pfault.c *************************************************************/
 
 NTSTATUS MmPageFault(ULONG Cs,

@@ -167,7 +167,9 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
             MmUpdatePageDir(PsGetCurrentProcess(),((PETHREAD)CurrentThread)->ThreadsProcess, sizeof(EPROCESS));
 
             /* Special note for Filip: This will release the Dispatcher DB Lock ;-) -- Alex */
-            KiArchContextSwitch(CurrentThread, OldThread);
+            DPRINT("You are : %x, swapping to: %x\n", OldThread, CurrentThread);
+            KiArchContextSwitch(CurrentThread);
+            DPRINT("You are : %x, swapped from: %x\n", OldThread, CurrentThread);
             return;
         }
     }
@@ -682,192 +684,39 @@ VOID
 STDCALL
 KeInitializeThread(PKPROCESS Process, 
                    PKTHREAD Thread, 
-                   BOOLEAN First)
-{
-    PVOID KernelStack;
-    NTSTATUS Status;
-    extern unsigned int init_stack_top;
-    extern unsigned int init_stack;
-    PMEMORY_AREA StackArea;
-    ULONG i;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
-  
-    /* Initialize the Boundary Address */
-    BoundaryAddressMultiple.QuadPart = 0;
-  
+                   PKSYSTEM_ROUTINE SystemRoutine,
+                   PKSTART_ROUTINE StartRoutine,
+                   PVOID StartContext,
+                   PCONTEXT Context,
+                   PVOID Teb,
+                   PVOID KernelStack)
+{  
     /* Initalize the Dispatcher Header */
+    DPRINT("Initializing Dispatcher Header for New Thread: %x in Process: %x\n", Thread, Process);
     KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
                                  ThreadObject,
                                  sizeof(KTHREAD),
                                  FALSE);
+    
+    DPRINT("Thread Header Created. SystemRoutine: %x, StartRoutine: %x with Context: %x\n",
+            SystemRoutine, StartRoutine, StartContext);
+    DPRINT("UserMode Information. Context: %x, Teb: %x\n", Context, Teb);
+       
+    /* Initialize the Mutant List */
     InitializeListHead(&Thread->MutantListHead);
     
-    /* If this is isn't the first thread, allocate the Kernel Stack */
-    if (!First) {
-        
-        PFN_TYPE Page[MM_STACK_SIZE / PAGE_SIZE];
-        KernelStack = NULL;
-      
-        MmLockAddressSpace(MmGetKernelAddressSpace());
-        Status = MmCreateMemoryArea(NULL,
-                                    MmGetKernelAddressSpace(),
-                                    MEMORY_AREA_KERNEL_STACK,
-                                    &KernelStack,
-                                    MM_STACK_SIZE,
-                                    0,
-                                    &StackArea,
-                                    FALSE,
-                                    FALSE,
-                                    BoundaryAddressMultiple);
-        MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      
-        /* Check for Success */
-        if (!NT_SUCCESS(Status)) {
-            
-            DPRINT1("Failed to create thread stack\n");
-            KEBUGCHECK(0);
-        }
-        
-        /* Mark the Stack */
-        for (i = 0; i < (MM_STACK_SIZE / PAGE_SIZE); i++) {
-
-            Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page[i]);
-            
-            /* Check for success */
-            if (!NT_SUCCESS(Status)) {
-                
-                KEBUGCHECK(0);
-            }
-        }
-        
-        /* Create a Virtual Mapping for it */
-        Status = MmCreateVirtualMapping(NULL,
-                                        KernelStack,
-                                        PAGE_READWRITE,
-                                        Page,
-                                        MM_STACK_SIZE / PAGE_SIZE);
-        
-        /* Check for success */
-        if (!NT_SUCCESS(Status)) {
-            
-            KEBUGCHECK(0);
-        }
-        
-        /* Set the Kernel Stack */
-        Thread->InitialStack = (PCHAR)KernelStack + MM_STACK_SIZE;
-        Thread->StackBase    = (PCHAR)KernelStack + MM_STACK_SIZE;
-        Thread->StackLimit   = (ULONG_PTR)KernelStack;
-        Thread->KernelStack  = (PCHAR)KernelStack + MM_STACK_SIZE;
-        
-    } else {
-        
-        /* Use the Initial Stack */
-        Thread->InitialStack = (PCHAR)init_stack_top;
-        Thread->StackBase = (PCHAR)init_stack_top;
-        Thread->StackLimit = (ULONG_PTR)init_stack;
-        Thread->KernelStack = (PCHAR)init_stack_top;
-    }
-
-    /* 
-     * Establish the pde's for the new stack and the thread structure within the 
-     * address space of the new process. They are accessed while taskswitching or
-     * while handling page faults. At this point it isn't possible to call the 
-     * page fault handler for the missing pde's. 
-     */
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
-
-    /* Set the Thread to initalized */
-    Thread->State = Initialized;
+    /* Setup the Service Descriptor Table for Native Calls */
+    Thread->ServiceTable = KeServiceDescriptorTable;
     
-    /* The Native API function will initialize the TEB field later */
-    Thread->Teb = NULL;
-    
-    /* Initialize stuff to zero */
-    Thread->TlsArray = NULL;
-    Thread->DebugActive = 0;
-    Thread->Alerted[0] = 0;
-    Thread->Alerted[1] = 0;
-    Thread->Iopl = 0;
-    
-    /* Set up FPU/NPX Stuff */
-    Thread->NpxState = NPX_STATE_INVALID;
-    Thread->NpxIrql = 0;
-   
     /* Setup APC Fields */
     InitializeListHead(&Thread->ApcState.ApcListHead[0]);
     InitializeListHead(&Thread->ApcState.ApcListHead[1]);
     Thread->ApcState.Process = Process;
-    Thread->ApcState.KernelApcInProgress = 0;
-    Thread->ApcState.KernelApcPending = 0;
-    Thread->ApcState.UserApcPending = 0;
     Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
     Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
     Thread->ApcStateIndex = OriginalApcEnvironment;
-    Thread->ApcQueueable = TRUE;
-    RtlZeroMemory(&Thread->SavedApcState, sizeof(KAPC_STATE));
     KeInitializeSpinLock(&Thread->ApcQueueLock);
     
-    /* Setup Wait Fields */
-    Thread->WaitStatus = STATUS_SUCCESS;
-    Thread->WaitIrql = PASSIVE_LEVEL;
-    Thread->WaitMode = 0;
-    Thread->WaitNext = FALSE;
-    Thread->WaitListEntry.Flink = NULL;
-    Thread->WaitListEntry.Blink = NULL;
-    Thread->WaitTime = 0;
-    Thread->WaitBlockList = NULL;
-    RtlZeroMemory(Thread->WaitBlock, sizeof(KWAIT_BLOCK) * 4);
-    RtlZeroMemory(&Thread->Timer, sizeof(KTIMER));
-    KeInitializeTimer(&Thread->Timer);
-    
-    /* Setup scheduler Fields */
-    Thread->BasePriority = Process->BasePriority;
-    Thread->DecrementCount = 0;
-    Thread->PriorityDecrement = 0;
-    Thread->Quantum = Process->ThreadQuantum;
-    Thread->Saturation = 0;
-    Thread->Priority = Process->BasePriority; 
-    Thread->UserAffinity = Process->Affinity;
-    Thread->SystemAffinityActive = 0;
-    Thread->Affinity = Process->Affinity;
-    Thread->Preempted = 0;
-    Thread->ProcessReadyQueue = 0;
-    Thread->KernelStackResident = 1;
-    Thread->NextProcessor = 0;
-    Thread->ContextSwitches = 0;
-    
-    /* Setup Queue Fields */
-    Thread->Queue = NULL;
-    Thread->QueueListEntry.Flink = NULL;
-    Thread->QueueListEntry.Blink = NULL;
-
-    /* Setup Misc Fields */
-    Thread->LegoData = 0; 
-    Thread->PowerState = 0;
-    Thread->ServiceTable = KeServiceDescriptorTable;
-    Thread->CallbackStack = NULL;
-    Thread->Win32Thread = NULL;
-    Thread->TrapFrame = NULL;
-    Thread->EnableStackSwap = 0;
-    Thread->LargeStack = 0;
-    Thread->ResourceIndex = 0;
-    Thread->PreviousMode = KernelMode;
-    Thread->KernelTime = 0;
-    Thread->UserTime = 0;
-    Thread->AutoAlignment = Process->AutoAlignment;
-   
-  /* FIXME OPTIMIZATION OF DOOM. DO NOT ENABLE FIXME */
-#if 0
-  Thread->WaitBlock[3].Object = (PVOID)&Thread->Timer;
-  Thread->WaitBlock[3].Thread = Thread;
-  Thread->WaitBlock[3].WaitKey = STATUS_TIMEOUT;
-  Thread->WaitBlock[3].WaitType = WaitAny;
-  Thread->WaitBlock[3].NextWaitBlock = NULL;
-  InsertTailList(&Thread->Timer.Header.WaitListHead,
-                 &Thread->WaitBlock[3].WaitListEntry);
-#endif
-
     /* Initialize the Suspend APC */  
     KeInitializeApc(&Thread->SuspendApc,
                     Thread,
@@ -879,18 +728,65 @@ KeInitializeThread(PKPROCESS Process,
                     NULL);
      
     /* Initialize the Suspend Semaphore */
-    KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);
+    KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);   
     
+    /* FIXME OPTIMIZATION OF DOOM. DO NOT ENABLE FIXME */
+#if 0
+    Thread->WaitBlock[3].Object = (PVOID)&Thread->Timer;
+    Thread->WaitBlock[3].Thread = Thread;
+    Thread->WaitBlock[3].WaitKey = STATUS_TIMEOUT;
+    Thread->WaitBlock[3].WaitType = WaitAny;
+    Thread->WaitBlock[3].NextWaitBlock = NULL;
+    InsertTailList(&Thread->Timer.Header.WaitListHead,
+                   &Thread->WaitBlock[3].WaitListEntry);
+#endif
+    KeInitializeTimer(&Thread->Timer);
+             
+    /* Set the TEB */
+    Thread->Teb = Teb;
+        
+    /* Set the Thread Stacks */
+    Thread->InitialStack = (PCHAR)KernelStack + MM_STACK_SIZE;
+    Thread->StackBase = (PCHAR)KernelStack + MM_STACK_SIZE;
+    Thread->StackLimit = (ULONG_PTR)KernelStack;
+    Thread->KernelStackResident = TRUE;
+    
+    /* 
+     * Establish the pde's for the new stack and the thread structure within the 
+     * address space of the new process. They are accessed while taskswitching or
+     * while handling page faults. At this point it isn't possible to call the 
+     * page fault handler for the missing pde's. 
+     */
+    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
+    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
+    
+    /* Initalize the Thread Context */
+    DPRINT("Initializing the Context for the thread: %x\n", Thread);
+    KiArchInitThreadWithContext(Thread, 
+                                SystemRoutine,
+                                StartRoutine,
+                                StartContext,
+                                Context);
+    
+    /* Setup scheduler Fields based on Parent */
+    DPRINT("Thread context created, setting Scheduler Data\n");
+    Thread->BasePriority = Process->BasePriority;
+    Thread->Quantum = Process->ThreadQuantum;
+    Thread->Affinity = Process->Affinity;
+    Thread->Priority = Process->BasePriority;
+    Thread->UserAffinity = Process->Affinity;
+    Thread->DisableBoost = Process->DisableBoost;
+    Thread->AutoAlignment = Process->AutoAlignment;
+    Thread->Iopl = Process->Iopl;
+    
+    /* Set the Thread to initalized */
+    Thread->State = Initialized;
+       
     /* Insert the Thread into the Process's Thread List */
     InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
-  
-    /* Set up the Suspend Counts */
-    Thread->FreezeCount = 0;
-    Thread->SuspendCount = 0;
-    ((PETHREAD)Thread)->ReaperLink = NULL; /* Union. Will also clear termination port */
-   
-    /* Do x86 specific part */
+    DPRINT("Thread initalized\n");
 }
+
 
 /*
  * @implemented

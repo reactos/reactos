@@ -502,6 +502,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     */
    if (Tf->Eflags & (1 << 17))
      {
+       DPRINT("Tf->Eflags, %x, Tf->Eip %x, ExceptionNr: %d\n", Tf->Eflags, Tf->Eip, ExceptionNr);
        return(KeV86Exception(ExceptionNr, Tf, cr2));
      }
 
@@ -511,7 +512,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    if (PsGetCurrentThread() != NULL &&
        Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
      {
-	DbgPrint("Stack underflow (tf->esp %x Limit %x)\n",
+	DPRINT1("Stack underflow (tf->esp %x Limit %x)\n",
 		 Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
 	ExceptionNr = 12;
      }

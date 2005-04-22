@@ -114,6 +114,10 @@ KiUnblockThread(PKTHREAD Thread,
 NTSTATUS
 STDCALL
 KeSuspendThread(PKTHREAD Thread);
+
+NTSTATUS
+FASTCALL
+KiSwapContext(PKTHREAD NewThread);
        
 /* gmutex.c ********************************************************************/
 
@@ -238,9 +242,16 @@ VOID inline FASTCALL KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
 VOID inline FASTCALL KeReleaseDispatcherDatabaseLock(KIRQL Irql);
 VOID inline FASTCALL KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
-VOID 
+VOID
 STDCALL
-KeInitializeThread(struct _KPROCESS* Process, PKTHREAD Thread, BOOLEAN First);
+KeInitializeThread(struct _KPROCESS* Process, 
+                   PKTHREAD Thread, 
+                   PKSYSTEM_ROUTINE SystemRoutine,
+                   PKSTART_ROUTINE StartRoutine,
+                   PVOID StartContext,
+                   PCONTEXT Context,
+                   PVOID Teb,
+                   PVOID KernelStack);
 
 VOID
 STDCALL

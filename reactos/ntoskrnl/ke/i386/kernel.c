@@ -133,7 +133,7 @@ KeApplicationProcessorInitDispatcher(VOID)
    IdleProcessorMask |= (1 << KeGetCurrentProcessorNumber());
    KeReleaseDispatcherDatabaseLock(oldIrql);
 }
-
+   
 VOID 
 INIT_FUNCTION
 KeCreateApplicationProcessorIdleThread(ULONG Id)
@@ -141,11 +141,11 @@ KeCreateApplicationProcessorIdleThread(ULONG Id)
   PETHREAD IdleThread;
   PKPRCB Prcb = ((PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE))->Prcb;
 
-  PsInitializeThread(PsIdleProcess,
+  PsInitializeIdleOrFirstThread(PsIdleProcess,
 		     &IdleThread,
 		     NULL,
-		     KernelMode,
-		     FALSE);
+		     KernelMode, 
+             FALSE);
   IdleThread->Tcb.State = Running;
   IdleThread->Tcb.FreezeCount = 0;
   IdleThread->Tcb.Affinity = 1 << Id;

@@ -24,11 +24,6 @@ BOOLEAN PspReaping = FALSE;
 extern LIST_ENTRY PsActiveProcessHead;
 extern FAST_MUTEX PspActiveProcessMutex;
 
-VOID
-STDCALL
-MmDeleteTeb(PEPROCESS Process,
-            PTEB Teb);
-
 /* FUNCTIONS *****************************************************************/
 
 STDCALL
@@ -176,7 +171,6 @@ PspDeleteThread(PVOID ObjectBody)
 {
     PETHREAD Thread = (PETHREAD)ObjectBody;
     PEPROCESS Process = Thread->ThreadsProcess;
-    extern unsigned int init_stack;
 
     DPRINT("PiDeleteThread(ObjectBody 0x%x, process 0x%x)\n",ObjectBody, Thread->ThreadsProcess);
 
@@ -193,8 +187,7 @@ PspDeleteThread(PVOID ObjectBody)
     if(Thread->Tcb.Win32Thread != NULL) ExFreePool (Thread->Tcb.Win32Thread);
 
     /* Release the Kernel Stack */
-    if (Thread->Tcb.StackLimit != (ULONG_PTR)init_stack)
-        MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit, FALSE);
+    MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit, FALSE);
     
     /* Dereference the Process */
     ObDereferenceObject(Process);

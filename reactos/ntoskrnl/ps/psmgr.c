@@ -44,6 +44,7 @@ INIT_FUNCTION
 PsInitClientIDManagment(VOID);
 
 VOID STDCALL PspKillMostProcesses();
+
 /* FUNCTIONS ***************************************************************/
 
 VOID PiShutdownProcessManager(VOID)
@@ -103,7 +104,7 @@ PsInitThreadManagment(VOID)
 
    ObpCreateTypeObject(PsThreadType);
 
-   PsInitializeThread(NULL, &FirstThread, NULL, KernelMode, TRUE);
+   PsInitializeIdleOrFirstThread(PsInitialSystemProcess, &FirstThread, NULL, KernelMode, TRUE);
    FirstThread->Tcb.State = Running;
    FirstThread->Tcb.FreezeCount = 0;
    FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
