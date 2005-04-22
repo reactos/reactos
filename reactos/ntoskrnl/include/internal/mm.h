@@ -508,7 +508,7 @@ NTSTATUS
 STDCALL
 MmCreatePeb(PEPROCESS Process);
 
-PTEB
+struct _TEB*
 STDCALL
 MmCreateTeb(PEPROCESS Process,
             PCLIENT_ID ClientId,
@@ -517,7 +517,7 @@ MmCreateTeb(PEPROCESS Process,
 VOID
 STDCALL
 MmDeleteTeb(PEPROCESS Process,
-            PTEB Teb);
+            struct _TEB* Teb);
 
 /* i386/pfault.c *************************************************************/
 
