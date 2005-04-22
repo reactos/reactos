@@ -1403,11 +1403,13 @@ MingwModuleHandler::GenerateArchiveTarget ( const string& ar,
 	fprintf ( fMakefile, "\t$(ECHO_AR)\n" );
 
 	fprintf ( fMakefile,
-	          "\t%s -rc $@ %s\n\n",
+	          "\t%s -rc $@ %s\n",
 	          ar.c_str (),
 	          objs_macro.c_str ());
 
 	GenerateCleanObjectsAsYouGoCode ();
+
+	fprintf ( fMakefile, "\n" );
 
 	return archiveFilename;
 }
@@ -2037,8 +2039,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies =
-			objectsMacro + " " + linkDepsMacro;
+		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
 		                                     module.entrypoint.c_str (),
@@ -2085,7 +2086,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies = objectsMacro + " " + linkDepsMacro;
+		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
 		                                     module.entrypoint.c_str (),
@@ -2131,8 +2132,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies =
-			objectsMacro + " " + linkDepsMacro;
+		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll",
 		                                     module.entrypoint.c_str (),
@@ -2178,8 +2178,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies =
-			objectsMacro + " " + linkDepsMacro;
+		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib",
 		                                     module.entrypoint.c_str (),
@@ -2249,7 +2248,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies = objectsMacro + " " + linkDepsMacro;
+		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linker;
 		if ( module.cplusplus )
@@ -2301,8 +2300,7 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies =
-			objectsMacro + " " + linkDepsMacro;
+		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linker;
 		if ( module.cplusplus )
@@ -2354,8 +2352,7 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies =
-			objectsMacro + " " + linkDepsMacro;
+		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linker;
 		if ( module.cplusplus )
@@ -2836,7 +2833,7 @@ MingwTestModuleHandler::GenerateTestModuleTarget ()
 	{
 		GenerateRules ();
 
-		string dependencies = objectsMacro + " " + linkDepsMacro;
+		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linker;
 		if ( module.cplusplus )
