@@ -2741,11 +2741,11 @@ MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirec
 void
 MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
 {
-	string setupldr = PassThruCacheDirectory (
-		NormalizeFilename ( "boot" SSEP "freeldr" SSEP "freeldr" SSEP "setupldr.sys" ),
+	string freeldr = PassThruCacheDirectory (
+		NormalizeFilename ( "boot" SSEP "freeldr" SSEP "freeldr" SSEP "freeldr.sys" ),
 		backend->outputDirectory );
 	CreateDirectory ( livecdDirectory + SSEP "loader" );
-	OutputCopyCommand ( setupldr,
+	OutputCopyCommand ( freeldr,
                         "setupldr.sys",
                         livecdDirectory + SSEP + "loader" );
 }
@@ -2753,15 +2753,15 @@ MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
 void
 MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 {
-	string system32ConfigDirectory = NormalizeFilename (
+	string reactosSystem32ConfigDirectory = NormalizeFilename (
 		MingwModuleHandler::PassThruCacheDirectory (
-		livecdDirectory + SSEP "system32" SSEP "config" SSEP,
+		livecdDirectory + SSEP "reactos" SSEP "system32" SSEP "config" SSEP,
 		backend->outputDirectory ) );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(MKHIVE_TARGET) bootdata %s bootdata" SSEP "livecd.inf bootdata" SSEP "hiveinst.inf\n",
-	          system32ConfigDirectory.c_str () );
+	          reactosSystem32ConfigDirectory.c_str () );
 }
 
 void
