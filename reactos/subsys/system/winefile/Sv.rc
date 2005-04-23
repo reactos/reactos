@@ -25,6 +25,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
 /* Menu */
 
+
 IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&Arkiv"  {
@@ -135,16 +136,17 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Uppdatera\tF5",                ID_REFRESH
 	}
 
+
 	POPUP "&?"  {
         MENUITEM "&Hjälpavsnitt\tF1",            ID_HELP
         MENUITEM "Hjälp &sök...\tF1",         ID_HELP
         MENUITEM "&Använda hjälpen\tF1",             ID_HELP_USING
 		MENUITEM SEPARATOR
-        MENUITEM "Information om &Winefile...",     ID_ABOUT_WINEFILE
+        MENUITEM "Information om &Winefile...",     ID_ABOUT
 /*		POPUP "Info..."  {
 		  MENUITEM "Info about &Wine..." ,			ID_ABOUT_WINE
-//		  MENUITEM "&License..."		ID_LICENSE
-//		  MENUITEM "&NO WARRANTY"		ID_NO_WARRANTY
+		  MENUITEM "&License..."		ID_LICENSE
+		  MENUITEM "&NO WARRANTY"		ID_NO_WARRANTY
 		} */
 	}
 }
