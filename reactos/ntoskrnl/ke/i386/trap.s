@@ -77,7 +77,7 @@ _KiTrapRet:
 	popl	%esi
 	popl	%ebx
 
-#ifdef DBG
+#ifdef KDBG
         /*
          * Cleanup the stack which was used to setup a trapframe with SS:ESP when called
          * from kmode.
@@ -106,7 +106,7 @@ _KiTrapRet:
 
 .globl _KiTrapProlog
 _KiTrapProlog:	
-#ifdef DBG
+#ifdef KDBG
         /*
          * If we were called from kmode we start setting up a new trapframe (with SS:ESP at the end)
          */
