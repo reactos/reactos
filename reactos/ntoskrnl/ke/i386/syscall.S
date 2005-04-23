@@ -22,6 +22,7 @@
 
 .globl KeReturnFromSystemCallWithHook
 .globl _KiServiceExit
+.globl _KiServiceExit2
 .globl _KiFastCallEntry
 .globl _KiSystemService
 
@@ -317,3 +318,82 @@ InvalidCall:
     movl $STATUS_INVALID_SYSTEM_SERVICE, %eax
     movl %eax, KTRAP_FRAME_EAX(%ebp)
     jmp _KiServiceExit
+    
+_KiServiceExit2:
+
+    /* Get the Current Thread */
+    cli
+    movl %fs:KPCR_CURRENT_THREAD, %esi
+    
+    /* Deliver APCs only if we were called from user mode */
+    testb $1, KTRAP_FRAME_CS(%esp)
+    je KiRosTrapReturn
+    
+    /* And only if any are actually pending */
+    cmpb $0, KTHREAD_PENDING_USER_APC(%esi)
+    je KiRosTrapReturn
+    
+    /* Save pointer to Trap Frame */
+    movl %esp, %ebx
+    
+    /* Raise IRQL to APC_LEVEL */
+    movl $1, %ecx
+    call @KfRaiseIrql@4
+    
+    /* Save old IRQL */
+    pushl %eax
+    
+    /* Deliver APCs */
+    sti
+    pushl %ebx
+    pushl $0
+    pushl $UserMode
+    call _KiDeliverApc@12
+    cli
+    
+    /* Return to old IRQL */
+    popl %ecx
+    call @KfLowerIrql@4
+    
+    /* Skip useless Debug Data */
+    addl $0x18, %esp                                                   // + 0x74
+    
+    /* Restore Debug Registers */
+    popl %eax                                                          // + 0x5C
+    movl %eax, %dr0
+    popl %eax                                                          // + 0x58
+    movl %eax, %dr1
+    popl %eax                                                          // + 0x54
+    movl %eax, %dr2
+    popl %eax                                                          // + 0x50
+    movl %eax, %dr3
+    popl %eax                                                          // + 0x4C
+    movl %eax, %dr6
+    popl %eax                                                          // + 0x48
+    movl %eax, %dr7
+    
+    /* Restore Registers */
+    popl %gs                                                           // + 0x44
+    popl %es                                                           // + 0x40
+    popl %ds                                                           // + 0x3C
+    popl %edx                                                          // + 0x38
+    popl %ecx                                                          // + 0x34
+    popl %eax                                                          // + 0x30
+
+    /* Restore the old previous mode */
+    popl %ebx                                                          // + 0x2C
+    movb %bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+
+    /* Restore the old exception handler list */
+    popl %fs:KPCR_EXCEPTION_LIST                                       // + 0x28
+
+    /* Restore final registers from trap frame */
+    popl %fs                                                           // + 0x24
+    popl %edi                                                          // + 0x20
+    popl %esi                                                          // + 0x1C
+    popl %ebx                                                          // + 0x18
+    popl %ebp                                                          // + 0x14
+    add $4, %esp                                                       // + 0x10
+
+   /* Return to user-mode */
+    iret

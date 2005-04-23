@@ -88,7 +88,7 @@ _KiThreadStartup@156:
     mov ebp, esp
     
     /* Exit back to user-mode */
-    jmp _KiServiceExit
+    jmp _KiServiceExit2
     
 BadThread:
 
