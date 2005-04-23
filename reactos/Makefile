@@ -39,6 +39,14 @@
 #        without source code) or no (to not build any map files). The variable
 #        defaults to no.
 #
+#    ROS_BUILDNOSTRIP
+#        This variable controls if non-symbol-stripped versions are to be built
+#        of executable output files. Non-symbol-stripped executable output files
+#        have .nostrip added to the filename just before the extension. The value
+#        can be either yes (to build non-symbol-stripped versions of executable
+#        output files) or no (to not build non-symbol-stripped versions of
+#        executable output files). The variable defaults to no.
+#
 #    ROS_RBUILDFLAGS
 #        Pass parameters to rbuild.
 

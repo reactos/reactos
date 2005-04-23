@@ -169,6 +169,7 @@ private:
 	std::string GetDefinitionFilename () const;
 	static std::string RemoveVariables ( std::string path);
 	void GenerateBuildMapCode ();
+	void GenerateBuildNonSymbolStrippedCode ();
 public:
 	const Module& module;
 	string_list clean_files;

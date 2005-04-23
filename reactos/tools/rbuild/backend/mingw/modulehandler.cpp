@@ -1147,6 +1147,32 @@ MingwModuleHandler::GenerateBuildMapCode ()
 }
 
 void
+MingwModuleHandler::GenerateBuildNonSymbolStrippedCode ()
+{
+	fprintf ( fMakefile,
+	          "ifeq ($(ROS_BUILDNOSTRIP),yes)\n" );
+
+	string filename = module.GetPath ();
+	string outputFilename = PassThruCacheDirectory (
+		filename,
+		backend->outputDirectory );
+	string nostripFilename = PassThruCacheDirectory (
+		GetBasename ( filename ) + ".nostrip" + GetExtension ( filename ),
+		backend->outputDirectory );
+	CLEAN_FILE ( nostripFilename );
+	
+	fprintf ( fMakefile,
+	          "\t$(ECHO_CP)\n" );
+	fprintf ( fMakefile,
+			  "\t${cp} %s %s 1>$(NUL)\n",
+			  outputFilename.c_str (),
+	          nostripFilename.c_str () );
+	
+	fprintf ( fMakefile,
+	          "endif\n" );
+}
+
+void
 MergeStringVector ( const vector<string>& input,
 	                vector<string>& output )
 {
@@ -1288,6 +1314,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 	}
 
 	GenerateBuildMapCode ();
+
+	GenerateBuildNonSymbolStrippedCode ();
 
 	fprintf ( fMakefile,
 	          "\t$(ECHO_RSYM)\n" );
