@@ -1,7 +1,0 @@
-<package>
-<name>AbiWord</name>
-<description>Currently it's definitely the best word processor running under ReactOS.</description>
-<scripts inst="abiword.inst.rps" srcinst="abiword.inst.rps"/>
- 
-</package>
-

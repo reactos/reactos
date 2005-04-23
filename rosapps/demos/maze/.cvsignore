@@ -1,7 +1,0 @@
-maze.exe
-maze.nostrip.exe
-maze.sym
-maze.coff
-.*.d
-*.o
-*.map
