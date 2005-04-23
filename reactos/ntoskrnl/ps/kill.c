@@ -148,6 +148,11 @@ PspDeleteProcess(PVOID ObjectBody)
 
     DPRINT("PiDeleteProcess(ObjectBody %x)\n", ObjectBody);
 
+    /* Remove it from the Active List */
+    ExAcquireFastMutex(&PspActiveProcessMutex);
+    RemoveEntryList(&Process->ProcessListEntry);
+    ExReleaseFastMutex(&PspActiveProcessMutex);
+    
     /* Delete the CID Handle */   
     if(Process->UniqueProcessId != NULL) {
     
@@ -411,12 +416,7 @@ PspExitProcess(PEPROCESS Process)
     DPRINT("PspExitProcess 0x%x\n", Process);
            
     PspRunCreateProcessNotifyRoutines(Process, FALSE);
-           
-    /* Remove it from the Active List */
-    ExAcquireFastMutex(&PspActiveProcessMutex);
-    RemoveEntryList(&Process->ProcessListEntry);
-    ExReleaseFastMutex(&PspActiveProcessMutex);
-    
+               
     /* close all handles associated with our process, this needs to be done
        when the last thread still runs */
     ObKillProcess(Process);
