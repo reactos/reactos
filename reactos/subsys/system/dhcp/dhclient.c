@@ -465,9 +465,14 @@ void set_name_servers( struct client_lease *new_lease ) {
             }
 
             DH_DbgPrint(MID_TRACE,("Setting Nameservers: %s\n", nsbuf));
-        
+
+            /* XXX Fixme: I think this may be wrong and that we might have
+             * a problem somewhere else (in iphlpapi for example).
+             *
+             * Recheck the +1 below.
+             */
             RegSetValueEx( RegKey, "NameServer", 0, REG_SZ,
-                           nsbuf, strlen(nsbuf) );
+                           nsbuf, strlen(nsbuf) + 1 );
             
             free( nsbuf );
         }
