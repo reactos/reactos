@@ -1137,6 +1137,9 @@ KeTerminateThread(IN KPRIORITY Increment)
     /* Lock the Dispatcher Database and the APC Queue */
     DPRINT("Terminating\n");
     OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Remove the thread from the list */
+    RemoveEntryList(&Thread->ThreadListEntry);
     
     /* Insert into the Reaper List */
     DPRINT("List: %p\n", PspReaperList);
