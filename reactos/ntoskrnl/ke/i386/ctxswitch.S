@@ -134,18 +134,18 @@ SaveTrapFrameForKDB_Return:
     
 #ifdef CONFIG_SMP
     /* Save FPU state if the thread has used it. */
-    mov [ebx+KPCR_NPX_THREAD], 0
+    mov dword ptr [ebx+KPCR_NPX_THREAD], 0
     test byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_DIRTY
     jz 3f
     mov eax, [edi+KTHREAD_INITIAL_STACK]
-    cmp _FxsrSupport, 0
+    cmp dword ptr _FxsrSupport, 0
     je 1f
     fxsave [eax-SIZEOF_FX_SAVE_AREA]
     jmp 2f
 1:
     fnsave [eax-SIZEOF_FX_SAVE_AREA]
 2:
-    mov byte ptr [edi+KTHREAD_INITIAL_STACK], NPX_STATE_VALID
+    mov byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_VALID
 3:
 #endif /* CONFIG_SMP */
     
