@@ -44,7 +44,7 @@ typedef struct _SERVICE_HANDLE
   SCMGR_HANDLE Handle;
 
   DWORD DesiredAccess;
-  PVOID DatabaseEntry; /* FIXME */
+  PSERVICE ServiceEntry;
 
   /* FIXME: Insert more data here */
 
@@ -167,10 +167,10 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
 
 static DWORD
-ScmCreateServiceHandle(LPVOID lpDatabaseEntry,
+ScmCreateServiceHandle(PSERVICE lpServiceEntry,
                        SC_HANDLE *Handle)
 {
-  PMANAGER_HANDLE Ptr;
+  PSERVICE_HANDLE Ptr;
 
   Ptr = GlobalAlloc(GPTR,
                     sizeof(SERVICE_HANDLE));
@@ -181,7 +181,7 @@ ScmCreateServiceHandle(LPVOID lpDatabaseEntry,
   Ptr->Handle.RefCount = 1;
 
   /* FIXME: initialize more data here */
-  // Ptr->DatabaseEntry = lpDatabaseEntry;
+  Ptr->ServiceEntry = lpServiceEntry;
 
   *Handle = (SC_HANDLE)Ptr;
 
@@ -278,20 +278,41 @@ ScmrControlService(handle_t BindingHandle,
                    unsigned long dwControl,
                    LPSERVICE_STATUS lpServiceStatus)
 {
+  PSERVICE_HANDLE hSvc;
+  PSERVICE lpService;
+
   DPRINT1("ScmrControlService() called\n");
 
-  /* FIXME: return proper service information */
+  hSvc = (PSERVICE_HANDLE)hService;
+  if (hSvc->Handle.Tag != SERVICE_TAG)
+  {
+    DPRINT1("Invalid handle tag!\n");
+    return ERROR_INVALID_HANDLE;
+  }
 
-  /* test data */
-// #if 0
-  lpServiceStatus->dwServiceType = 0x12345678;
-  lpServiceStatus->dwCurrentState = 0x98765432;
-  lpServiceStatus->dwControlsAccepted = 0xdeadbabe;
-  lpServiceStatus->dwWin32ExitCode = 0xbaadf00d;
-  lpServiceStatus->dwServiceSpecificExitCode = 0xdeadf00d;
-  lpServiceStatus->dwCheckPoint = 0xbaadbabe;
-  lpServiceStatus->dwWaitHint = 0x2468ACE1;
-// #endif
+
+  /* FIXME: Check access rights */
+
+
+  lpService = hSvc->ServiceEntry;
+  if (lpService == NULL)
+  {
+    DPRINT1("lpService == NULL!\n");
+    return ERROR_INVALID_HANDLE;
+  }
+
+
+  /* FIXME: Send control code to the service */
+
+
+  /* Return service status information */
+  lpServiceStatus->dwServiceType = lpService->Type;
+  lpServiceStatus->dwCurrentState = lpService->CurrentState;
+  lpServiceStatus->dwControlsAccepted = lpService->ControlsAccepted;
+  lpServiceStatus->dwWin32ExitCode = lpService->Win32ExitCode;
+  lpServiceStatus->dwServiceSpecificExitCode = lpService->ServiceSpecificExitCode;
+  lpServiceStatus->dwCheckPoint = lpService->CheckPoint;
+  lpServiceStatus->dwWaitHint = lpService->WaitHint;
 
   return ERROR_SUCCESS;
 }
@@ -303,6 +324,7 @@ ScmrDeleteService(handle_t BindingHandle,
                   unsigned int hService)
 {
   PSERVICE_HANDLE hSvc;
+  PSERVICE lpService;
 
   DPRINT1("ScmrDeleteService() called\n");
 
@@ -314,7 +336,14 @@ ScmrDeleteService(handle_t BindingHandle,
                                 STANDARD_RIGHTS_REQUIRED))
     return ERROR_ACCESS_DENIED;
 
-  /* FIXME: Delete the service */
+  lpService = hSvc->ServiceEntry;
+  if (lpService == NULL)
+  {
+    DPRINT1("lpService == NULL!\n");
+    return ERROR_INVALID_HANDLE;
+  }
+
+  /* FIXME: Mark service for delete */
 
   return ERROR_SUCCESS;
 }
@@ -347,6 +376,78 @@ ScmrLockServiceDatabase(handle_t BindingHandle,
 }
 
 
+/* Function 4 */
+unsigned long
+ScmrQueryServiceObjectSecurity(handle_t BindingHandle)
+{
+  DPRINT1("ScmrQueryServiceSecurity() is unimplemented\n");
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 5 */
+unsigned long
+ScmrSetServiceObjectSecurity(handle_t BindingHandle)
+{
+  DPRINT1("ScmrSetServiceSecurity() is unimplemented\n");
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 6 */
+unsigned long
+ScmrQueryServiceStatus(handle_t BindingHandle,
+                       unsigned int hService,
+                       LPSERVICE_STATUS lpServiceStatus)
+{
+  PSERVICE_HANDLE hSvc;
+  PSERVICE lpService;
+
+  DPRINT("ScmrQueryServiceStatus() called\n");
+
+  hSvc = (PSERVICE_HANDLE)hService;
+  if (hSvc->Handle.Tag != SERVICE_TAG)
+  {
+    DPRINT1("Invalid handle tag!\n");
+    return ERROR_INVALID_HANDLE;
+  }
+
+  if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                SERVICE_QUERY_STATUS))
+  {
+    DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+    return ERROR_ACCESS_DENIED;
+  }
+
+  lpService = hSvc->ServiceEntry;
+  if (lpService == NULL)
+  {
+    DPRINT1("lpService == NULL!\n");
+    return ERROR_INVALID_HANDLE;
+  }
+
+  /* Return service status information */
+  lpServiceStatus->dwServiceType = lpService->Type;
+  lpServiceStatus->dwCurrentState = lpService->CurrentState;
+  lpServiceStatus->dwControlsAccepted = lpService->ControlsAccepted;
+  lpServiceStatus->dwWin32ExitCode = lpService->Win32ExitCode;
+  lpServiceStatus->dwServiceSpecificExitCode = lpService->ServiceSpecificExitCode;
+  lpServiceStatus->dwCheckPoint = lpService->CheckPoint;
+  lpServiceStatus->dwWaitHint = lpService->WaitHint;
+
+  return ERROR_SUCCESS;
+}
+
+
+/* Function 7 */
+unsigned long
+ScmrSetServiceStatus(handle_t BindingHandle)
+{
+  DPRINT1("ScmrSetServiceStatus() is unimplemented\n");
+ /* FIXME */
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
 
 /* Function 8 */
 unsigned long
@@ -354,6 +455,7 @@ ScmrUnlockServiceDatabase(handle_t BindingHandle,
                           unsigned int hLock)
 {
   DPRINT1("ScmrUnlockServiceDatabase() called\n");
+  /* FIXME */
   return ERROR_SUCCESS;
 }
 
@@ -364,12 +466,14 @@ ScmrNotifyBootConfigStatus(handle_t BindingHandle,
                            unsigned long BootAcceptable)
 {
   DPRINT1("ScmrNotifyBootConfigStatus() called\n");
+  /* FIXME */
   return ERROR_SUCCESS;
 }
 
 
 
 /* Function 12 */
+#if 0
 unsigned long
 ScmrCreateServiceW(handle_t BindingHandle,
                    unsigned int hSCManager,
@@ -391,7 +495,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
     *lpdwTagId = 0;
   return ERROR_SUCCESS;
 }
-
+#endif
 
 
 /* Function 15 */
@@ -447,6 +551,8 @@ ScmrOpenServiceW(handle_t BindingHandle,
                  unsigned long dwDesiredAccess,
                  unsigned int *hService)
 {
+  UNICODE_STRING ServiceName;
+  PSERVICE lpService;
   PMANAGER_HANDLE hManager;
   SC_HANDLE hHandle;
   DWORD dwError;
@@ -464,12 +570,21 @@ ScmrOpenServiceW(handle_t BindingHandle,
     return ERROR_INVALID_HANDLE;
   }
 
-  /* FIXME: Check desired access */
+  /* FIXME: Lock the service list */
 
-  /* FIXME: Get service database entry */
+  /* Get service database entry */
+  RtlInitUnicodeString(&ServiceName,
+                       lpServiceName);
+
+  lpService = ScmGetServiceEntryByName(&ServiceName);
+  if (lpService == NULL)
+  {
+    DPRINT1("Could not find a service!\n");
+    return ERROR_SERVICE_DOES_NOT_EXIST;
+  }
 
   /* Create a service handle */
-  dwError = ScmCreateServiceHandle(NULL,
+  dwError = ScmCreateServiceHandle(lpService,
                                    &hHandle);
   if (dwError != ERROR_SUCCESS)
   {
@@ -505,8 +620,33 @@ ScmrOpenSCManagerA(handle_t BindingHandle,
                    unsigned long dwDesiredAccess,
                    unsigned int *hScm)
 {
+  UNICODE_STRING MachineName;
+  UNICODE_STRING DatabaseName;
+  DWORD dwError;
+
   DPRINT("ScmrOpenSCManagerA() called\n");
-  return ERROR_SUCCESS;
+
+  if (lpMachineName)
+    RtlCreateUnicodeStringFromAsciiz(&MachineName,
+                                     lpMachineName);
+
+  if (lpDatabaseName)
+    RtlCreateUnicodeStringFromAsciiz(&DatabaseName,
+                                     lpDatabaseName);
+
+  dwError = ScmrOpenSCManagerW(BindingHandle,
+                               lpMachineName ? MachineName.Buffer : NULL,
+                               lpDatabaseName ? DatabaseName.Buffer : NULL,
+                               dwDesiredAccess,
+                               hScm);
+
+  if (lpMachineName)
+    RtlFreeUnicodeString(&MachineName);
+
+  if (lpDatabaseName)
+    RtlFreeUnicodeString(&DatabaseName);
+
+  return dwError;
 }
 
 
@@ -518,8 +658,23 @@ ScmrOpenServiceA(handle_t BindingHandle,
                  unsigned long dwDesiredAccess,
                  unsigned int *hService)
 {
+  UNICODE_STRING ServiceName;
+  DWORD dwError;
+
   DPRINT("ScmrOpenServiceA() called\n");
-  return 0;
+
+  RtlCreateUnicodeStringFromAsciiz(&ServiceName,
+                                   lpServiceName);
+
+  dwError = ScmrOpenServiceW(BindingHandle,
+                             hSCManager,
+                             ServiceName.Buffer,
+                             dwDesiredAccess,
+                             hService);
+
+  RtlFreeUnicodeString(&ServiceName);
+
+  return dwError;
 }
 
 

@@ -835,17 +835,31 @@ QueryServiceObjectSecurity(
 /**********************************************************************
  *  QueryServiceStatus
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-QueryServiceStatus(
-    SC_HANDLE       hService,
-    LPSERVICE_STATUS    lpServiceStatus)
+BOOL STDCALL
+QueryServiceStatus(SC_HANDLE hService,
+                   LPSERVICE_STATUS lpServiceStatus)
 {
-    DPRINT1("QueryServiceStatus is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  DWORD dwError;
+
+  DPRINT("QueryServiceStatus(%p, %p)\n",
+         hService, lpServiceStatus);
+
+  HandleBind();
+
+  /* Call to services.exe using RPC */
+  dwError = ScmrQueryServiceStatus(BindingHandle,
+                                   (unsigned int)hService,
+                                   lpServiceStatus);
+  if (dwError != ERROR_SUCCESS)
+  {
+    DPRINT1("ScmrQueryServiceStatus() failed (Error %lu)\n", dwError);
+    SetLastError(dwError);
     return FALSE;
+  }
+
+  return TRUE;
 }
 
 
@@ -884,8 +898,6 @@ StartServiceA(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
-
-
 
 
 /**********************************************************************

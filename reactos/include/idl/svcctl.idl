@@ -54,16 +54,18 @@ cpp_quote("#endif")
                                 [out] SC_LOCK *hLock);
 
   /* Function 4 */
-//  DWORD ScmrQueryServiceObjectSecurity();
+  DWORD ScmrQueryServiceObjectSecurity([in] handle_t BindingHandle); /* FIXME */
 
   /* Function 5 */
-//  DWORD ScmrSetServiceObjectSecurity();
+  DWORD ScmrSetServiceObjectSecurity([in] handle_t BindingHandle); /* FIXME */
 
   /* Function 6 */
-//  DWORD ScmrQueryServiceStatus();
+  DWORD ScmrQueryServiceStatus([in] handle_t BindingHandle,
+                               [in] SC_HANDLE hSCManager,
+                               [out] LPSERVICE_STATUS lpServiceStatus);
 
   /* Function 7 */
-//  DWORD ScmrSetServiceStatus();
+  DWORD ScmrSetServiceStatus([in] handle_t BindingHandle); /* FIXME */
 
   /* Function 8 */
   DWORD ScmrUnlockServiceDatabase([in] handle_t BindingHandle,
@@ -75,20 +77,23 @@ cpp_quote("#endif")
 
 
   /* Function 12 */
-  DWORD ScmrCreateServiceW([in] handle_t BindingHandle,
-                           [in] SC_HANDLE hSCManager,
-                           [in, string, ref] LPCWSTR lpServiceName,
-                           [in, string, ref] LPCWSTR lpDisplayName,
-                           [in] DWORD dwDesiredAccess,
-                           [in] DWORD dwServiceType,
-                           [in] DWORD dwStartType,
-                           [in] DWORD dwErrorControl,
-                           [in, string, ref] LPCWSTR lpBinaryPathName,
-                           [in, string, unique] LPCWSTR lpLoadOrderGroup,
-                           [out] LPDWORD lpdwTagId,
-                           [in, string, unique] LPCWSTR lpDependencies,
-                           [in, string, unique] LPCWSTR lpServiceStartName,
-                           [in, string, unique] LPCWSTR lpPassword);
+//  DWORD ScmrCreateServiceW([in] handle_t BindingHandle,
+//                           [in] SC_HANDLE hSCManager,
+//                           [in, string, ref] LPCWSTR lpServiceName,
+//                           [in, string, ref] LPCWSTR lpDisplayName,
+//                           [in] DWORD dwDesiredAccess,
+//                           [in] DWORD dwServiceType,
+//                           [in] DWORD dwStartType,
+//                           [in] DWORD dwErrorControl,
+//                           [in, string, ref] LPCWSTR lpBinaryPathName,
+//                           [in, string, unique] LPCWSTR lpLoadOrderGroup,
+//                           [out] LPDWORD lpdwTagId,
+//                           [in, size_is(dwDepwndenciesLength), unique] LPCWSTR lpDependencies,
+//                           [in] DWORD dwDependenciesLength,
+//                           [in, string, unique] LPCWSTR lpServiceStartName,
+//                           [in, size_is(dwPasswordLength), unique] LPCWSTR lpPassword,
+//                           [in] DWORD dwPasswordLength,
+//                           [out] SC_HANDLE *hService);
 
 
   /* Function 15 */
