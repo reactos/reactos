@@ -87,6 +87,9 @@ PspSystemThreadStartup(PKSTART_ROUTINE StartRoutine,
         /* Call it */
         (StartRoutine)(StartContext);
     }
+    
+    /* Exit the thread */
+    PspExitThread(STATUS_SUCCESS);
 }
 
 NTSTATUS
