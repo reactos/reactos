@@ -27,8 +27,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* include localised resources */
 
-#include "de.rc"
 #include "en.rc"
+#include "cz.rc"
+#include "de.rc"
 #include "es.rc"
 #include "fr.rc"
 #include "hu.rc"
@@ -37,6 +38,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "pt.rc"
 #include "ru.rc"
 #include "si.rc"
-#include "sv.rc"
 #include "zh.rc"
+#include "sv.rc"
 
