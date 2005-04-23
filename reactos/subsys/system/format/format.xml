@@ -1,4 +1,4 @@
-<module name="format" type="win32cui" installbase="system32" installname="format.exe">
+<module name="format" type="win32cui" installbase="system32" installname="format.exe" warnings="false">
 	<include base="format">.</include>
 	<define name="__USE_W32API" />
 	<library>ntdll</library>
