@@ -161,12 +161,16 @@ main(int argc, char *argv[])
 
         DH_DbgPrint(MID_TRACE,("Discover Interfaces\n"));
 
-	/* set up the interface */
-	discover_interfaces(ifi);
+        /* If no adapters were found, just idle for now ... If any show up,
+         * then we'll start it later */
+        if( ifi ) {
+            /* set up the interface */
+            discover_interfaces(ifi);
 
-        DH_DbgPrint
-            (MID_TRACE,
-             ("Setting init state and restarting interface %p\n",ifi));
+            DH_DbgPrint
+                (MID_TRACE,
+                 ("Setting init state and restarting interface %p\n",ifi));
+        }
 
 	bootp_packet_handler = do_packet;
 
