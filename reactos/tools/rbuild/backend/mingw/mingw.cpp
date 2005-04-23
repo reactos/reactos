@@ -590,11 +590,13 @@ MingwBackend::DetectCompiler ()
 		compilerCommand = ROS_PREFIXValue + "-gcc";
 		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
 	}
+#if defined(WIN32)
 	if ( !detectedCompiler )
 	{
 		compilerCommand = "gcc";
 		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
 	}
+#endif
 	if ( !detectedCompiler )
 	{
 		compilerCommand = "mingw32-gcc";
