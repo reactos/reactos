@@ -152,11 +152,6 @@ KdInitSystem(ULONG BootPhase,
 		  p2 += 4;
 		  KdDebugState |= KD_DEBUG_FILELOG;
 		}
-	      else if (!_strnicmp(p2, "MDA", 3) && BootPhase > 0)
-		{
-		  p2 += 3;
-		  KdDebugState |= KD_DEBUG_MDA;
-		}
 	    }
 	}
       else if (!_strnicmp(p2, "KDSERIAL", 8) && BootPhase > 0)
@@ -243,9 +238,6 @@ KdInitSystem(ULONG BootPhase,
 
       if (KdDebugState & KD_DEBUG_FILELOG && BootPhase > 0)
 	    DebugLogInit();
-
-      if (KdDebugState & KD_DEBUG_MDA && BootPhase > 0)
-	    KdInitializeMda();
 }
 
 
@@ -352,9 +344,6 @@ KdpPrintString(PANSI_STRING String)
 
 	if (KdDebugState & KD_DEBUG_FILELOG)
 		DebugLogWrite(pch);
-
-	if (KdDebugState & KD_DEBUG_MDA)
-	        KdPrintMda(pch);
 
 	return((ULONG)String->Length);
 }
