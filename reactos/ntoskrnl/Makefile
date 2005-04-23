@@ -332,7 +332,6 @@ OBJECTS_KD = \
 	kd/dlog.o \
 	kd/gdbstub.o \
 	kd/kdebug.o \
-	kd/mda.o \
 	kd/service.o
 	
 # User-Mode Debugging (Dbgk)
