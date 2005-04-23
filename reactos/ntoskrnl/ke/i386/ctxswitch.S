@@ -281,8 +281,8 @@ SameProcess:
     
     /* Return the registers */
     mov ebp, [esp+0]
-    mov esi, [esp+4]
-    mov edi, [esp+8]
+    mov edi, [esp+4]
+    mov esi, [esp+8]
     mov ebx, [esp+12]
     
     /* Clean stack */
