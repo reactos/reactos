@@ -511,8 +511,6 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     CreatedDeviceObject->NextDevice = DriverObject->DeviceObject;
     DriverObject->DeviceObject = CreatedDeviceObject;
     
-    /* Close the temporary handle, but do an extra reference first so it doesn't die */
-    ObReferenceObject(CreatedDeviceObject);
     NtClose(TempHandle);
     
     /* Return to caller */
