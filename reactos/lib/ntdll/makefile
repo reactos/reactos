@@ -51,15 +51,6 @@ LDR_OBJECTS = \
 	ldr/utils.o
 
 RTL_I386_OBJECTS = \
-	rtl/i386/alldiv.o \
-	rtl/i386/allmul.o \
-	rtl/i386/allrem.o \
-	rtl/i386/allshl.o \
-	rtl/i386/allshr.o \
-	rtl/i386/aulldiv.o \
-	rtl/i386/aullrem.o \
-	rtl/i386/aullshr.o \
-	rtl/i386/float.o \
 	rtl/i386/ftol.o
 
 RTL_OBJECTS = \

@@ -1,9 +1,9 @@
-/* $Id$
+/* $Id: allrem.s 12852 2005-01-06 13:58:04Z mf $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Math support for IA-32
- * FILE:              lib/ntdll/rtl/i386/math.s
+ * FILE:              ntoskrnl/rtl/i386/math.s
  * PROGRAMER:         Eric Kohl (ekohl@rz-online.de)
  * NOTES:             This file is shared with ntoskrnl/rtl/i386/math.s.
  *                    Please keep the files synchronized!

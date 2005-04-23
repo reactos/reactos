@@ -1,9 +1,9 @@
-/* $Id$
+/* $Id: allmul.s 12852 2005-01-06 13:58:04Z mf $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Math support for IA-32
- * FILE:              lib/ntdll/rtl/i386/allmul.s
+ * FILE:              ntoskrnl/rtl/i386/allmul.s
  * PROGRAMER:         Eric Kohl (ekohl@rz-online.de)
  */
 
