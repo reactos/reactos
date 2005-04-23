@@ -287,6 +287,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Clean up the Object */
     DPRINT("Cleaning Process Object\n");
     RtlZeroMemory(Process, sizeof(EPROCESS));
+
+    KeQuerySystemTime(&Process->CreateTime);
     
     /* Inherit stuff from the Parent since we now have the object created */
     if (pParentProcess) 
@@ -387,6 +389,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         
         /* Let's take advantage of this time to kill the reference too */
         ObDereferenceObject(pParentProcess);
+        pParentProcess = NULL;
     }
 
     /* W00T! The process can now be activated */
@@ -407,23 +410,23 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                             &hProcess);
     if (!NT_SUCCESS(Status)) 
     {
-        DPRINT1("Could not get a handle to the Process Object\n");
-        ObDereferenceObject(Process);
-        goto exitdereferenceobjects;
+       DPRINT1("Could not get a handle to the Process Object\n");
+       ExAcquireFastMutex(&PspActiveProcessMutex);
+       RemoveEntryList(&Process->ProcessListEntry);
+       ExReleaseFastMutex(&PspActiveProcessMutex);
+       ObDereferenceObject(Process);
+       goto exitdereferenceobjects;
     }
-               
+            
     DPRINT("Done. Returning handle: %x\n", hProcess);
-    if (NT_SUCCESS(Status)) 
+    _SEH_TRY 
     {
-        _SEH_TRY 
-        {
-            *ProcessHandle = hProcess;
-        } 
-        _SEH_HANDLE 
-        {
-            Status = _SEH_GetExceptionCode();
-        } _SEH_END;
-    }
+       *ProcessHandle = hProcess;
+    } 
+    _SEH_HANDLE 
+    {
+       Status = _SEH_GetExceptionCode();
+    } _SEH_END;
     
     /* FIXME: ObGetObjectSecurity(Process, &SecurityDescriptor)
               SeAccessCheck
