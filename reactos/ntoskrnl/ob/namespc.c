@@ -221,7 +221,11 @@ ObpRemoveEntryDirectory(POBJECT_HEADER Header)
   DPRINT("ObpRemoveEntryDirectory(Header %x)\n",Header);
 
   KeAcquireSpinLock(&(Header->Parent->Lock),&oldlvl);
-  RemoveEntryList(&(Header->Entry));
+  if (Header->Entry.Flink && Header->Entry.Blink)
+  {
+    RemoveEntryList(&(Header->Entry));
+    Header->Entry.Flink = Header->Entry.Blink = NULL;
+  }
   KeReleaseSpinLock(&(Header->Parent->Lock),oldlvl);
 }
 
