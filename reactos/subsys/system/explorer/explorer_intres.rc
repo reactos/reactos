@@ -126,7 +126,6 @@ BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Începe"
     IDS_LOGOFF              "Închide sesiunea ..."
-    IDS_TERMINATE           "Închide sesiunea"
     IDS_SHUTDOWN            "Oprire calculator ..."
     IDS_LAUNCH              "Pornire ..."
     IDS_START_HELP          "Ajutor"
@@ -584,7 +583,6 @@ BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
     IDS_LOGOFF              "Abmelden..."
-    IDS_TERMINATE           "ROS Explorer beenden"
     IDS_SHUTDOWN            "Herunterfahren..."
     IDS_LAUNCH              "Starten..."
     IDS_START_HELP          "Hilfe"
@@ -1077,7 +1075,6 @@ BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
     IDS_LOGOFF              "Log Off..."
-    IDS_TERMINATE           "Terminate ROS Explorer"
     IDS_SHUTDOWN            "Turn Off..."
     IDS_LAUNCH              "Run..."
     IDS_START_HELP          "Help"
@@ -1541,7 +1538,6 @@ BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Iniciar"
     IDS_LOGOFF              "Salir..."
-    IDS_TERMINATE           "Salir"
     IDS_SHUTDOWN            "Apagar..."
     IDS_LAUNCH              "Ejecutar..."
     IDS_START_HELP          "Ayuda"
@@ -1712,7 +1708,6 @@ BEGIN
     IDS_TITLE               "Explorateur Reactos"
     IDS_START               "Démarrer"
     IDS_LOGOFF              "Déconnexion ..."
-    IDS_TERMINATE           "Déconnexion"
     IDS_SHUTDOWN            "Arrêter..."
     IDS_LAUNCH              "Exécuter..."
     IDS_START_HELP          "Aide"
@@ -1926,7 +1921,6 @@ BEGIN
     IDS_TITLE               "Explorador do Reactos"
     IDS_START               "Iniciar"
     IDS_LOGOFF              "Terminar sessão..."
-    IDS_TERMINATE           "Terminar ROS Explorador"
     IDS_SHUTDOWN            "Desligar..."
     IDS_LAUNCH              "Executar..."
     IDS_START_HELP          "Ajuda"
@@ -1988,7 +1982,7 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_SWE)
 #ifdef _WIN32
 LANGUAGE LANG_SWEDISH, SUBLANG_SWEDISH
-#pragma code_page(850)
+#pragma code_page(1252)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2030,7 +2024,7 @@ BEGIN
     POPUP "&Hjälp"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&Om Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "Om &Explorer...",          ID_ABOUT_EXPLORER
         MENUITEM "Om &OS...",                ID_ABOUT_WINDOWS
     END
 END
@@ -2418,7 +2412,6 @@ BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
     IDS_LOGOFF              "Logga ut..."
-    IDS_TERMINATE           "Logga ut"
     IDS_SHUTDOWN            "Stäng av..."
     IDS_LAUNCH              "Kör..."
     IDS_START_HELP          "Hjälp"
