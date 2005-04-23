@@ -27,8 +27,8 @@
 #define KTRAP_FRAME_DEBUGEIP     (0x4)
 #define KTRAP_FRAME_DEBUGARGMARK (0x8)
 #define KTRAP_FRAME_DEBUGPOINTER (0xC)
-#define KTRAP_FRAME_TEMPCS       (0x10)
-#define KTRAP_FRAME_TEMPEIP      (0x14)
+#define KTRAP_FRAME_TEMPSS       (0x10)
+#define KTRAP_FRAME_TEMPESP      (0x14)
 #define KTRAP_FRAME_DR0          (0x18)
 #define KTRAP_FRAME_DR1          (0x1C)
 #define KTRAP_FRAME_DR2          (0x20)
@@ -117,8 +117,8 @@ typedef struct _KTRAP_FRAME
    PVOID DebugEip;
    PVOID DebugArgMark;
    PVOID DebugPointer;
-   PVOID TempCs;
-   PVOID TempEip;
+   PVOID TempSegSs;
+   PVOID TempEsp;
    ULONG Dr0;
    ULONG Dr1;
    ULONG Dr2;

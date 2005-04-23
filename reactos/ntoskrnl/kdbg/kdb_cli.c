@@ -374,6 +374,19 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
 
    if (Argv[0][0] == 'r') /* regs */
    {
+      ULONG Esp;
+      USHORT Ss;
+      
+      if (!(Tf->Cs & 1))
+      {
+          Esp = (ULONG)Tf->TempEsp;
+          Ss = (USHORT)((ULONG)Tf->TempSegSs & 0xFFFF);
+      }
+      else
+      {
+          Esp = Tf->Esp;
+          Ss = Tf->Ss;
+      }
       KdbpPrint("CS:EIP  0x%04x:0x%08x\n"
                 "SS:ESP  0x%04x:0x%08x\n"
                 "   EAX  0x%08x   EBX  0x%08x\n"
@@ -381,7 +394,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
                 "   ESI  0x%08x   EDI  0x%08x\n"
                 "   EBP  0x%08x\n",
                 Tf->Cs & 0xFFFF, Tf->Eip,
-                Tf->Ss, Tf->Esp,
+                Ss, Esp,
                 Tf->Eax, Tf->Ebx,
                 Tf->Ecx, Tf->Edx,
                 Tf->Esi, Tf->Edi,
