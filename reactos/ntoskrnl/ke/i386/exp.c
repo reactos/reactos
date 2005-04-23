@@ -589,50 +589,55 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     }
 }
 
-VOID
+BOOLEAN
+STDCALL
 KeContextToTrapFrame(PCONTEXT Context,
-		     PKTRAP_FRAME TrapFrame)
+                     PKTRAP_FRAME TrapFrame)
 {
-   if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
-     {
-	TrapFrame->Esp = Context->Esp;
-	TrapFrame->Ss = Context->SegSs;
-	TrapFrame->Cs = Context->SegCs;
-	TrapFrame->Eip = Context->Eip;
-	TrapFrame->Eflags = Context->EFlags;	
-	TrapFrame->Ebp = Context->Ebp;
-     }
-   if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
-     {
-	TrapFrame->Eax = Context->Eax;
-	TrapFrame->Ebx = Context->Ebx;
-	TrapFrame->Ecx = Context->Ecx;
-	TrapFrame->Edx = Context->Edx;
-	TrapFrame->Esi = Context->Esi;
-	TrapFrame->Edi = Context->Edi;
-     }
-   if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
-     {
-	TrapFrame->Ds = Context->SegDs;
-	TrapFrame->Es = Context->SegEs;
-	TrapFrame->Fs = Context->SegFs;
-	TrapFrame->Gs = Context->SegGs;
-     }
-   if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
-     {
-	/*
-	 * Not handled
-	 *
-	 * This should be handled separately I think.
-	 *  - blight
-	 */
-     }
-   if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
-     {
-	/*
-	 * Not handled
-	 */
-     }
+    /* Start with the basic Registers */
+    if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+    {
+        TrapFrame->Esp = Context->Esp;
+        TrapFrame->Ss = Context->SegSs;
+        TrapFrame->Cs = Context->SegCs;
+        TrapFrame->Eip = Context->Eip;
+        TrapFrame->Eflags = Context->EFlags;	
+        TrapFrame->Ebp = Context->Ebp;
+    }
+    
+    /* Process the Integer Registers */
+    if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+    {
+        TrapFrame->Eax = Context->Eax;
+        TrapFrame->Ebx = Context->Ebx;
+        TrapFrame->Ecx = Context->Ecx;
+        TrapFrame->Edx = Context->Edx;
+        TrapFrame->Esi = Context->Esi;
+        TrapFrame->Edi = Context->Edi;
+    }
+    
+    /* Process the Context Segments */
+    if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
+    {
+        TrapFrame->Ds = Context->SegDs;
+        TrapFrame->Es = Context->SegEs;
+        TrapFrame->Fs = Context->SegFs;
+        TrapFrame->Gs = Context->SegGs;
+    }
+     
+    /* Handle the Debug Registers */
+    if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+    {
+        TrapFrame->Dr0 = Context->Dr0;
+        TrapFrame->Dr1 = Context->Dr1;
+        TrapFrame->Dr2 = Context->Dr2;
+        TrapFrame->Dr3 = Context->Dr3;
+        TrapFrame->Dr6 = Context->Dr6;
+        TrapFrame->Dr7 = Context->Dr7;
+    }
+    
+    /* Handle FPU and Extended Registers */
+    return KiContextToFxSaveArea((PFX_SAVE_AREA)(TrapFrame + 1), Context);
 }
 
 VOID

@@ -115,9 +115,13 @@ BadThread:
  *--*/
 .globl @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
-    
+#ifdef KDBG
+    //jmp SaveTrapFrameForKDB
+SaveTrapFrameForKDB_Return:
+#endif
+
     /* Get the PCR. It's faster to use ebx+offset then fs:offset */
-    mov ebx, [fs:0x1C]
+    mov ebx, [fs:KPCR_SELF]
     
     /* Set the Thread to running */
     mov byte ptr [esi+KTHREAD_STATE], Running
@@ -224,10 +228,9 @@ SameProcess:
     
     /* Restore exception list */
     pop [ebx+KPCR_EXCEPTION_LIST]
-    
-    call @KeReleaseDispatcherDatabaseLockFromDpcLevel@0
 
     /* Return */
+    call @KeReleaseDispatcherDatabaseLockFromDpcLevel@0
     ret 
 
 /*++
@@ -253,7 +256,6 @@ SameProcess:
  *--*/
 .globl @KiSwapContext@4
 @KiSwapContext@4:
-
     /* Note, we CANNOT touch ebp */
 
     /* Save 4 registers */
@@ -285,6 +287,92 @@ SameProcess:
     
     /* Clean stack */
     add esp, 4 * 4
-    
     ret
+    
+#ifdef KDBG
+
+SaveTrapFrameForKDB:
+    /* Set up a trap frame */
+    
+    /* Fake Interrupt Stack */
+    push esp                                     // 0x74
+    pushf                                        // 0x70
+    push cs                                      // 0x6C
+    push [esp+12]    /* EIP */                   // 0x68
+    mov [esp+16], ss                             // 0x78
+    
+    /* Trap Frame */
+    push 0           /* Error Code */            // 0x64
+    push ebp                                     // 0x60
+    push ebx
+    push esi
+    push edi
+    push fs
+    push -1          /* Exception List */        // 0x4C
+    push 0           /* Previous Mode */         // 0x48
+    push eax
+    push ecx
+    push edx
+    push ds
+    push es
+    push gs                                      // 0x30
+    sub esp, 0x28    /* Debug Registers */       // 0x8
+    push [esp+60]    /* Debug EIP */             // 0x4
+    push ebp         /* Debug EBP */             // 0x0
+    
+    /* Set Stack */
+    mov ebp, esp
+    
+    /* Push old Trap Frame */
+    push [edi+KTHREAD_TRAP_FRAME]
+    
+    /* Save new one */
+    mov [edi+KTHREAD_TRAP_FRAME], ebp
+    
+    /* Return EIP */
+    push offset RestoreTrapFrameForKDB
+        
+    /* Restore EBP */
+    mov ebp, [ebp+KTRAP_FRAME_EBP]
+    
+    /* Jump to normal code */
+    jmp SaveTrapFrameForKDB_Return
+
+RestoreTrapFrameForKDB:
+  
+    /* Restore the old trapframe */
+    pop [edi+KTHREAD_TRAP_FRAME]
+        
+    /* Pop unused portions of the trap frame */
+    add esp, 0x30
+
+    /* Restore registers from Trap frame */
+    pop gs
+    pop es
+    pop ds
+    pop edx
+    pop ecx
+    pop eax
+    add esp, 8
+    pop fs
+    pop edi
+    pop esi
+    pop ebx
+
+    /* Remove SS:ESP from the stack */
+    mov ebp, [esp+16]
+    mov [esp+24], ebp
+    mov ebp, [esp+12]
+    mov [esp+20], ebp
+    mov ebp, [esp+8]
+    mov [esp+16], ebp
+    
+    /* Restore Fake INT Stack */
+    pop ebp
+    add esp, 12
+
+    /* Return to the caller. */
+    iret
+#endif /* KDBG */
+
 

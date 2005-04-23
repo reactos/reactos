@@ -74,73 +74,48 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         
     /* Check if this is a With-Context Thread */
     DPRINT("Ke386InitThreadContext\n");
-    if (Context) {
-    
+    if (Context) 
+    {
         /* Set up the Initial Frame */
         PKUINIT_FRAME InitFrame;
         InitFrame = (PKUINIT_FRAME)((ULONG_PTR)Thread->InitialStack - sizeof(KUINIT_FRAME));
         DPRINT("Setting up a user-mode thread with the Frame at: %x\n", InitFrame);
-                
-        /* Setup the Fx Area */
-        FxSaveArea = &InitFrame->FxSaveArea;
-        DPRINT("Fx Save Area: %x\n", FxSaveArea);
-    
-        /* Setup the Initial Fx State */
-        if (KiContextToFxSaveArea(FxSaveArea, Context)) {
-
-            Thread->NpxState = NPX_STATE_VALID;
-        
-        } else {
-            
-            Thread->NpxState = NPX_STATE_INVALID;
-        }
         
         /* Setup the Trap Frame */
         TrapFrame = &InitFrame->TrapFrame;
-        DPRINT("TrapFrame: %x\n", TrapFrame);
                
         /* Set up a trap frame from the context. */
-        TrapFrame->DebugEbp = (PVOID)Context->Ebp;
-        TrapFrame->DebugEip = (PVOID)Context->Eip;
-        TrapFrame->DebugArgMark = 0;
-        TrapFrame->DebugPointer = 0;
-        TrapFrame->TempCs = 0;
-        TrapFrame->TempEip = 0;
-        TrapFrame->Gs = (USHORT)Context->SegGs;
-        TrapFrame->Es = (USHORT)Context->SegEs;
-        TrapFrame->Ds = (USHORT)Context->SegDs;
-        TrapFrame->Edx = Context->Edx;
-        TrapFrame->Ecx = Context->Ecx;
-        TrapFrame->Eax = Context->Eax;
-        TrapFrame->PreviousMode = UserMode;
-        TrapFrame->ExceptionList = (PVOID)0xFFFFFFFF;
-        TrapFrame->Fs = TEB_SELECTOR;
-        TrapFrame->Edi = Context->Edi;
-        TrapFrame->Esi = Context->Esi;
-        TrapFrame->Ebx = Context->Ebx;
-        TrapFrame->Ebp = Context->Ebp;
-        TrapFrame->ErrorCode = 0;
-        TrapFrame->Cs = Context->SegCs;
-        TrapFrame->Eip = Context->Eip;
+        if (KeContextToTrapFrame(Context, TrapFrame))
+        {
+            Thread->NpxState = NPX_STATE_VALID;
+        } 
+        else 
+        {    
+            Thread->NpxState = NPX_STATE_INVALID;
+        }
+        
+        /* Enable Interrupts and disable some unsupported flags right now */
         TrapFrame->Eflags = Context->EFlags | X86_EFLAGS_IF;
         TrapFrame->Eflags &= ~(X86_EFLAGS_VM | X86_EFLAGS_NT | X86_EFLAGS_IOPL);
-        TrapFrame->Esp = Context->Esp;
-        TrapFrame->Ss = (USHORT)Context->SegSs;
+        
+        /* Set the previous mode as user */
+        TrapFrame->PreviousMode = UserMode;
+        
+        /* Terminate the Exception Handler List */
+        TrapFrame->ExceptionList = (PVOID)0xFFFFFFFF;
         
         /* Setup the Stack for KiThreadStartup and Context Switching */
         StartFrame = &InitFrame->StartFrame;
         CtxSwitchFrame = &InitFrame->CtxSwitchFrame;
-        DPRINT("StartFrame: %x\n", StartFrame);
-        DPRINT("CtxSwitchFrame: %x\n", CtxSwitchFrame);
        
         /* Tell the thread it will run in User Mode */
         Thread->PreviousMode = UserMode;
         
         /* Tell KiThreadStartup of that too */
         StartFrame->UserThread = TRUE;
-    
-    } else {
-        
+    } 
+    else 
+    {
         /* No context Thread, meaning System Thread */
        
         /* Set up the Initial Frame */
@@ -150,15 +125,12 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
                 
         /* Setup the Fx Area */
         FxSaveArea = &InitFrame->FxSaveArea;
-        DPRINT("Fx Save Area: %x\n", FxSaveArea);
         RtlZeroMemory(FxSaveArea, sizeof(FX_SAVE_AREA));
         Thread->NpxState = NPX_STATE_INVALID;
         
         /* Setup the Stack for KiThreadStartup and Context Switching */
         StartFrame = &InitFrame->StartFrame;
         CtxSwitchFrame = &InitFrame->CtxSwitchFrame;
-        DPRINT("StartFrame: %x\n", StartFrame);
-        DPRINT("CtxSwitchFrame: %x\n", CtxSwitchFrame);
         
         /* Tell the thread it will run in Kernel Mode */
         Thread->PreviousMode = KernelMode;
@@ -168,7 +140,6 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
     }
     
     /* Now setup the remaining data for KiThreadStartup */
-    DPRINT("Settingup the Start and Context Frames\n");
     StartFrame->StartContext = StartContext;
     StartFrame->StartRoutine = StartRoutine;
     StartFrame->SystemRoutine = SystemRoutine;
@@ -179,8 +150,8 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
     CtxSwitchFrame->ExceptionList = (PVOID)0xFFFFFFFF;
         
     /* Save back the new value of the kernel stack. */
-    Thread->KernelStack = (PVOID)CtxSwitchFrame;
     DPRINT("Final Kernel Stack: %x \n", CtxSwitchFrame);
+    Thread->KernelStack = (PVOID)CtxSwitchFrame;
     return;
 }
 
