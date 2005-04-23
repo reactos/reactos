@@ -782,7 +782,11 @@ KeInitializeThread(PKPROCESS Process,
     /* Set the Thread to initalized */
     Thread->State = Initialized;
        
-    /* Insert the Thread into the Process's Thread List */
+    /* 
+     * Insert the Thread into the Process's Thread List 
+     * Note, this is the KTHREAD Thread List. It is removed in
+     * ke/kthread.c!KeTerminateThread.
+     */
     InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
     DPRINT("Thread initalized\n");
 }

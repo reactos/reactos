@@ -250,7 +250,11 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
                            KernelStack); 
     }
 
-    /* Insert into Process List */
+    /* 
+     * Insert the Thread into the Process's Thread List 
+     * Note, this is the ETHREAD Thread List. It is removed in
+     * ps/kill.c!PspExitThread.
+     */
     DPRINT("Inserting into Process Thread List \n");
     InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
    
