@@ -26,7 +26,7 @@
 
 UCHAR XboxFont8x16[256 * 16];
 
-VOID XboxMachInit(char *CmdLine);
+VOID XboxMachInit(VOID);
 
 VOID XboxConsPutChar(int Ch);
 BOOL XboxConsKbHit();

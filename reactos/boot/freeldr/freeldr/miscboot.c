@@ -33,9 +33,10 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 {
 	PFILE	FilePointer;
 	UCHAR	SettingName[80];
-	ULONG	SectionId;
+	UCHAR	SettingValue[80];
+	ULONG		SectionId;
 	UCHAR	FileName[260];
-	ULONG	BytesRead;
+	ULONG		BytesRead;
 
 	// Find all the message box settings and run them
 	UiShowMessageBoxesInSection(OperatingSystemName);
@@ -48,13 +49,27 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 		return;
 	}
 
+	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 80))
+	{
+		UiMessageBox("Boot drive not specified for selected OS!");
+		return;
+	}
+
+	BootDrive = DriveMapGetBiosDriveNumber(SettingValue);
+
+	BootPartition = 0;
+	if (IniReadSettingByName(SectionId, "BootPartition", SettingValue, 80))
+	{
+		BootPartition = atoi(SettingValue);
+	}
+
 	if (!IniReadSettingByName(SectionId, "BootSectorFile", FileName, 260))
 	{
 		UiMessageBox("Boot sector file not specified for selected OS!");
 		return;
 	}
 
-	if (!FsOpenSystemVolume(FileName, FileName, NULL))
+	if (!FsOpenVolume(BootDrive, BootPartition))
 	{
 		UiMessageBox("Failed to open boot drive.");
 		return;
@@ -96,12 +111,10 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 
 VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 {
-	UCHAR			SettingName[80];
-	UCHAR			SettingValue[80];
-	ULONG			SectionId;
+	UCHAR					SettingName[80];
+	UCHAR					SettingValue[80];
+	ULONG						SectionId;
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
-	ULONG			DriveNumber;
-	ULONG			PartitionNumber;
 
 	// Find all the message box settings and run them
 	UiShowMessageBoxesInSection(OperatingSystemName);
@@ -121,7 +134,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	DriveNumber = DriveMapGetBiosDriveNumber(SettingValue);
+	BootDrive = DriveMapGetBiosDriveNumber(SettingValue);
 
 	// Read the boot partition
 	if (!IniReadSettingByName(SectionId, "BootPartition", SettingValue, 80))
@@ -130,17 +143,17 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	PartitionNumber = atoi(SettingValue);
+	BootPartition = atoi(SettingValue);
 
 	// Get the partition table entry
-	if (!DiskGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry))
+	if (!DiskGetPartitionEntry(BootDrive, BootPartition, &PartitionTableEntry))
 	{
 		return;
 	}
 
 	// Now try to read the partition boot sector
 	// If this fails then abort
-	if (!MachDiskReadLogicalSectors(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, 1, (PVOID)0x7C00))
+	if (!MachDiskReadLogicalSectors(BootDrive, PartitionTableEntry.SectorCountBeforePartition, 1, (PVOID)0x7C00))
 	{
 		return;
 	}
@@ -169,8 +182,7 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 {
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
-	ULONG	SectionId;
-	ULONG	DriveNumber;
+	ULONG		SectionId;
 
 	// Find all the message box settings and run them
 	UiShowMessageBoxesInSection(OperatingSystemName);
@@ -189,11 +201,11 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 		return;
 	}
 
-	DriveNumber = DriveMapGetBiosDriveNumber(SettingValue);
+	BootDrive = DriveMapGetBiosDriveNumber(SettingValue);
 
 	// Now try to read the boot sector (or mbr)
 	// If this fails then abort
-	if (!MachDiskReadLogicalSectors(DriveNumber, 0, 1, (PVOID)0x7C00))
+	if (!MachDiskReadLogicalSectors(BootDrive, 0, 1, (PVOID)0x7C00))
 	{
 		return;
 	}

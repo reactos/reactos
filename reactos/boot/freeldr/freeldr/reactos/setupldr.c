@@ -312,11 +312,13 @@ VOID RunLoader(VOID)
   UiDrawStatusText("");
 #endif
 
-  /* set boot device */
-  MachDiskGetBootDevice(&LoaderBlock.BootDevice);
+  /* set boot drive and partition */
+  ((char *)(&LoaderBlock.BootDevice))[0] = (char)BootDrive;
+  ((char *)(&LoaderBlock.BootDevice))[1] = (char)BootPartition;
+
 
   /* Open boot drive */
-  if (!FsOpenBootVolume())
+  if (!FsOpenVolume(BootDrive, BootPartition))
     {
 #ifdef USE_UI
       UiMessageBox("Failed to open boot drive.");
@@ -328,7 +330,7 @@ VOID RunLoader(VOID)
 
   /* Open 'txtsetup.sif' */
   if (!InfOpenFile (&InfHandle,
-		    MachDiskBootingFromFloppy() ? "\\txtsetup.sif" : "\\reactos\\txtsetup.sif",
+		    (BootDrive < 0x80) ? "\\txtsetup.sif" : "\\reactos\\txtsetup.sif",
 		    &ErrorLine))
     {
       printf("Failed to open 'txtsetup.sif'\n");
@@ -356,7 +358,7 @@ VOID RunLoader(VOID)
   printf("LoadOptions: '%s'\n", LoadOptions);
 #endif
 
-  if (MachDiskBootingFromFloppy())
+  if (BootDrive < 0x80)
     {
       /* Boot from floppy disk */
       SourcePath = "\\";
@@ -368,9 +370,12 @@ VOID RunLoader(VOID)
     }
 
   /* Set kernel command line */
-  MachDiskGetBootPath(multiboot_kernel_cmdline, sizeof(multiboot_kernel_cmdline));
-  strcat(strcat(strcat(multiboot_kernel_cmdline, SourcePath), " "),
-         LoadOptions);
+  sprintf(multiboot_kernel_cmdline,
+	  "multi(0)disk(0)%s(%u)%s  %s",
+	  (BootDrive < 0x80) ? "fdisk" : "cdrom",
+	  (unsigned int)BootDrive,
+	  SourcePath,
+	  LoadOptions);
 
   /* Load ntoskrnl.exe */
   if (!LoadKernel(SourcePath, "ntoskrnl.exe"))
@@ -395,7 +400,7 @@ for(;;);
 #endif
 
   /* Insert boot disk 2 */
-  if (MachDiskBootingFromFloppy())
+  if (BootDrive < 0x80)
     {
 #ifdef USE_UI
       UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
@@ -405,7 +410,7 @@ for(;;);
 #endif
 
       /* Open boot drive */
-      if (!FsOpenBootVolume())
+      if (!FsOpenVolume(BootDrive, BootPartition))
 	{
 #ifdef USE_UI
 	  UiMessageBox("Failed to open boot drive.");

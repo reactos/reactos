@@ -47,10 +47,10 @@ EXTERN(RealEntryPoint)
 	.code32
 
 	/* Store the boot drive */
-	movb	%dl,(_i386BootDrive)
+	movb	%dl,(_BootDrive)
 
 	/* Store the boot partition */
-	movb	%dh,(_i386BootPartition)
+	movb	%dh,(_BootPartition)
 
 	/* GO! */
 	xorl	%eax,%eax
@@ -275,11 +275,9 @@ EXTERN(_DisableA20)
  * other boot loaders like Grub
  */
 
-#define MB_INFO_SIZE                90
 #define MB_INFO_FLAGS_OFFSET        0
 #define MB_INFO_BOOT_DEVICE_OFFSET  12
 #define MB_INFO_COMMAND_LINE_OFFSET 16
-#define CMDLINE_SIZE                256
 
 /*
  * We want to execute at 0x8000 (to be compatible with bootsector
@@ -287,6 +285,7 @@ EXTERN(_DisableA20)
  * above 1MB. So we let Grub load us there and then relocate
  * ourself to 0x8000
  */
+#define CMDLINE_BASE 0x7000
 #define FREELDR_BASE 0x8000
 #define INITIAL_BASE 0x200000
 
@@ -329,31 +328,6 @@ mb1:
 	movw	%dx,%ds
 	movw	%dx,%es
 
-	/* Check for valid multiboot signature */
-	cmpl	$MULTIBOOT_BOOTLOADER_MAGIC,%eax
-	jne	mbfail
-
-	/* Store multiboot info in a safe place */
-	movl	%ebx,%esi
-	movl	$(mb_info + INITIAL_BASE - FREELDR_BASE),%edi
-	movl	$MB_INFO_SIZE,%ecx
-	rep movsb
-
-	/* Save commandline */
-	movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
-	testl	$MB_INFO_FLAG_COMMAND_LINE,MB_INFO_FLAGS_OFFSET(%ebx)
-	jz	mb3
-	movl	MB_INFO_COMMAND_LINE_OFFSET(%ebx),%esi
-	movl	$(cmdline + INITIAL_BASE - FREELDR_BASE),%edi
-	movl	$CMDLINE_SIZE,%ecx
-mb2:	lodsb
-	stosb
-	testb	%al,%al
-	jz	mb3
-	dec	%ecx
-	jnz	mb2
-mb3:
-
 	/* Copy to low mem */
 	movl	$INITIAL_BASE,%esi
 	movl	$FREELDR_BASE,%edi
@@ -368,8 +342,8 @@ mb3:
 
 	/* Clear prefetch queue & correct CS,
 	 * jump to low mem */
-	ljmp	$PMODE_CS, $mb4
-mb4:
+	ljmp	$PMODE_CS, $mb2
+mb2:
 	/* Reload segment selectors */
 	movw	$PMODE_DS,%dx
 	movw	%dx,%ds
@@ -379,28 +353,39 @@ mb4:
 	movw	%dx,%ss
 	movl	$STACK32ADDR,%esp
 
-	movl	$mb_info,%ebx
+	/* Check for valid multiboot signature */
+	cmpl	$MULTIBOOT_BOOTLOADER_MAGIC,%eax
+	jne	mbfail
+
 	/* See if the boot device was passed in */
 	movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
 	testl	$MB_INFO_FLAG_BOOT_DEVICE,%edx
-	jz	mb5
+	jz	mb3
 	/* Retrieve boot device info */
 	movl	MB_INFO_BOOT_DEVICE_OFFSET(%ebx),%eax
 	shrl	$16,%eax
 	incb	%al
-	movb	%al,_i386BootPartition
-	movb	%ah,_i386BootDrive
-	jmp	mb6
-mb5:	/* No boot device known, assume first partition of first harddisk */
-	movb	$0x80,_i386BootDrive
-	movb	$1,_i386BootPartition
-mb6:
-	/* Check for command line */
-	mov	$cmdline,%eax
-	testl	$MB_INFO_FLAG_COMMAND_LINE,MB_INFO_FLAGS_OFFSET(%ebx)
-	jnz	mb7
+	movb	%al,_BootPartition
+	movb	%ah,_BootDrive
+	jmp	mb4
+mb3:	/* No boot device known, assume first partition of first harddisk */
+	movb	$0x80,_BootDrive
+	movb	$1,_BootPartition
+mb4:
+
+	/* Check for a command line */
 	xorl	%eax,%eax
-mb7:
+	testl	$MB_INFO_FLAG_COMMAND_LINE,%edx
+	jz	mb6
+	/* Copy command line to low mem*/
+	movl	MB_INFO_COMMAND_LINE_OFFSET(%ebx),%esi
+	movl	$CMDLINE_BASE,%edi
+mb5:	lodsb
+	stosb
+	testb	%al,%al
+	jnz	mb5
+	movl	$CMDLINE_BASE,%eax
+mb6:
 
 	/* GO! */
 	pushl	%eax	
@@ -477,15 +462,8 @@ rmode_idtptr:
 	.word	0x3ff		/* Limit */
 	.long	0			/* Base Address */
 
-EXTERN(_i386BootDrive)
+EXTERN(_BootDrive)
 	.long	0
 
-EXTERN(_i386BootPartition)
+EXTERN(_BootPartition)
 	.long	0
-
-.bss
-mb_info:
-	.fill	MB_INFO_SIZE, 1, 0
-
-cmdline:
-	.fill	CMDLINE_SIZE, 1, 0

@@ -27,7 +27,7 @@
 #include "rtl.h"
 
 VOID
-MachInit(char *CmdLine)
+MachInit(VOID)
 {
   ULONG PciId;
 
@@ -39,11 +39,11 @@ MachInit(char *CmdLine)
   PciId = READ_PORT_ULONG((ULONG*) 0xcfc);
   if (0x02a510de == PciId)
     {
-      XboxMachInit(CmdLine);
+      XboxMachInit();
     }
   else
     {
-      PcMachInit(CmdLine);
+      PcMachInit();
     }
 
   HalpCalibrateStallExecution();

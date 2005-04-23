@@ -37,11 +37,6 @@
 #undef MachVideoSync
 #undef MachVideoPrepareForReactOS
 #undef MachGetMemoryMap
-#undef MachDiskGetBootVolume
-#undef MachDiskGetSystemVolume
-#undef MachDiskGetBootPath
-#undef MachDiskGetBootDevice
-#undef MachDiskBootingFromFloppy
 #undef MachDiskReadLogicalSectors
 #undef MachDiskGetPartitionEntry
 #undef MachDiskGetDriveGeometry
@@ -151,44 +146,6 @@ ULONG
 MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
 {
   return MachVtbl.GetMemoryMap(BiosMemoryMap, MaxMemoryMapSize);
-}
-
-BOOL
-MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
-{
-  return MachVtbl.DiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
-}
-
-BOOL
-MachDiskGetSystemVolume(char *SystemPath,
-                        char *RemainingPath,
-                        PULONG Device,
-                        PULONG DriveNumber,
-                        PULONGLONG StartSector,
-                        PULONGLONG SectorCount,
-                        int *FsType)
-{
-  return MachVtbl.DiskGetSystemVolume(SystemPath, RemainingPath, Device,
-                                      DriveNumber, StartSector, SectorCount,
-                                      FsType);
-}
-
-BOOL
-MachDiskGetBootPath(char *BootPath, unsigned Size)
-{
-  return MachVtbl.DiskGetBootPath(BootPath, Size);
-}
-
-VOID
-MachDiskGetBootDevice(PULONG BootDevice)
-{
-  MachVtbl.DiskGetBootDevice(BootDevice);
-}
-
-BOOL
-MachDiskBootingFromFloppy()
-{
-  return MachVtbl.DiskBootingFromFloppy();
 }
 
 BOOL

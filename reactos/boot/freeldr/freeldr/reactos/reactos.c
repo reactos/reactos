@@ -15,6 +15,16 @@
 #define NDEBUG
 #include <debug.h>
 
+#define IsRecognizedPartition(P)  \
+    ((P) == PARTITION_FAT_12       || \
+     (P) == PARTITION_FAT_16       || \
+     (P) == PARTITION_HUGE         || \
+     (P) == PARTITION_IFS          || \
+     (P) == PARTITION_EXT2         || \
+     (P) == PARTITION_FAT32        || \
+     (P) == PARTITION_FAT32_XINT13 || \
+     (P) == PARTITION_XINT13)
+
 BOOL
 STDCALL
 FrLdrLoadKernel(PCHAR szFileName,
@@ -554,7 +564,6 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	PFILE FilePointer;
 	CHAR  name[1024];
 	CHAR  value[1024];
-	CHAR  SystemPath[1024];
 	CHAR  szKernelName[1024];
 	CHAR  szHalName[1024];
 	CHAR  szFileName[1024];
@@ -565,6 +574,9 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
 	ULONG_PTR Base;
 	ULONG Size;
+
+	PARTITION_TABLE_ENTRY PartitionTableEntry;
+	ULONG rosPartition;
  
 	extern ULONG PageDirectoryStart;
 	extern ULONG PageDirectoryEnd;
@@ -633,7 +645,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Make sure the system path is set in the .ini file
 	 */
-	if (!IniReadSettingByName(SectionId, "SystemPath", SystemPath, sizeof(SystemPath)))
+	if (!IniReadSettingByName(SectionId, "SystemPath", value, 1024))
 	{
 		UiMessageBox("System path not specified for selected operating system.");
 		return;
@@ -642,19 +654,61 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Special case for Live CD.
 	 */
-	if (!stricmp(SystemPath, "LiveCD"))
+	if (!stricmp(value, "LiveCD"))
 	{
-		/* Normalize */
-		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
-		strcat(SystemPath, "\\reactos");
-		strcat(strcpy(multiboot_kernel_cmdline, SystemPath),
-		       " /MININT");
+		strcpy(szBootPath, "\\reactos");
+
+		/* Set kernel command line */
+		sprintf(multiboot_kernel_cmdline,
+		        "multi(0)disk(0)cdrom(%u)\\reactos /MININT",
+		        (unsigned int)BootDrive);
 	}
 	else
 	{
-		/* copy system path into kernel command line */
-		strcpy(multiboot_kernel_cmdline, SystemPath);
+		/*
+		 * Verify system path
+		 */
+		if (!DissectArcPath(value, szBootPath, &BootDrive, &BootPartition))
+		{
+			sprintf(MsgBuffer,"Invalid system path: '%s'", value);
+			UiMessageBox(MsgBuffer);
+			return;
+		}
+
+		/* recalculate the boot partition for freeldr */
+		i = 0;
+		rosPartition = 0;
+		while (1)
+		{
+		   if (!MachDiskGetPartitionEntry(BootDrive, ++i, &PartitionTableEntry))
+		   {
+		      BootPartition = 0;
+		      break;
+		   }
+		   if (IsRecognizedPartition(PartitionTableEntry.SystemIndicator))
+		   {
+		      if (++rosPartition == BootPartition)
+		      {
+		         BootPartition = i;
+			 break;
+		      }
+		   }
+		}
+
+		if (BootPartition == 0)
+		{
+			sprintf(MsgBuffer,"Invalid system path: '%s'", value);
+			UiMessageBox(MsgBuffer);
+			return;
+		}
+
+		/* copy ARC path into kernel command line */
+		strcpy(multiboot_kernel_cmdline, value);
 	}
+
+	/* Set boot drive and partition */
+	((LPSTR )(&LoaderBlock.BootDevice))[0] = (CHAR)BootDrive;
+	((LPSTR )(&LoaderBlock.BootDevice))[1] = (CHAR)BootPartition;
 
 	/*
 	 * Read the optional kernel parameters (if any)
@@ -664,6 +718,13 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		strcat(multiboot_kernel_cmdline, " ");
 		strcat(multiboot_kernel_cmdline, value);
 	}
+
+	/* append a backslash */
+	if ((strlen(szBootPath)==0) ||
+	    szBootPath[strlen(szBootPath)] != '\\')
+		strcat(szBootPath, "\\");
+
+	DbgPrint((DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath));
 
 
 	UiDrawBackdrop();
@@ -680,20 +741,13 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	UiDrawProgressBarCenter(0, 100, "Loading ReactOS...");
 
 	/*
-	 * Try to open system drive
+	 * Try to open boot drive
 	 */
-	if (!FsOpenSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
+	if (!FsOpenVolume(BootDrive, BootPartition))
 	{
 		UiMessageBox("Failed to open boot drive.");
 		return;
 	}
-
-	/* append a backslash */
-	if ((strlen(szBootPath)==0) ||
-	    szBootPath[strlen(szBootPath)] != '\\')
-		strcat(szBootPath, "\\");
-
-	DbgPrint((DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath));
 
 	/*
 	 * Find the kernel image name

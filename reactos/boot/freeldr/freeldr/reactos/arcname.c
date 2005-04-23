@@ -43,21 +43,7 @@ BOOL DissectArcPath(char *ArcPath, char *BootPath, ULONG* BootDrive, ULONG* Boot
 		if (p == NULL)
 			return FALSE;
 		p++;
-		*BootPartition = 0xff;
-	}
-	else if (strnicmp(p, "cdrom(", 6) == 0)
-	{
-		/*
-		 * cdrom path:
-		 *  multi(0)disk(0)cdrom(x)\path
-		 */
-		p = p + 6;
-		*BootDrive = atoi(p);
-		p = strchr(p, ')');
-		if (p == NULL)
-			return FALSE;
-		p++;
-		*BootPartition = 0xff;
+		*BootPartition = 0;
 	}
 	else if (strnicmp(p, "rdisk(", 6) == 0)
 	{
