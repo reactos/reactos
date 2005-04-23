@@ -287,8 +287,6 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Clean up the Object */
     DPRINT("Cleaning Process Object\n");
     RtlZeroMemory(Process, sizeof(EPROCESS));
-
-    KeQuerySystemTime(&Process->CreateTime);
     
     /* Inherit stuff from the Parent since we now have the object created */
     if (pParentProcess) 
@@ -411,13 +409,13 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) 
     {
        DPRINT1("Could not get a handle to the Process Object\n");
-       ExAcquireFastMutex(&PspActiveProcessMutex);
-       RemoveEntryList(&Process->ProcessListEntry);
-       ExReleaseFastMutex(&PspActiveProcessMutex);
        ObDereferenceObject(Process);
        goto exitdereferenceobjects;
     }
             
+    /* Set the Creation Time */
+    KeQuerySystemTime(&Process->CreateTime);
+    
     DPRINT("Done. Returning handle: %x\n", hProcess);
     _SEH_TRY 
     {
