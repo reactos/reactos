@@ -24,18 +24,6 @@ endif
 LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 
-ifeq ($(KDBG), 1)
-OBJECTS_KDBG := dbg/kdb.o dbg/kdb_cli.o dbg/kdb_expr.o dbg/kdb_keyboard.o \
-                dbg/kdb_serial.o dbg/kdb_string.o dbg/rdebug.o dbg/i386/kdb_help.o \
-                dbg/i386/i386-dis.o dbg/i386/longjmp.o dbg/i386/setjmp.o
-preall: all
-else
-OBJECTS_KDBG :=
-endif
-ifeq ($(DBG_OR_KDBG), 1)
-OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o
-endif
-
 TARGET_ASFLAGS = -I./include
 TARGET_CFLAGS = -I./include $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT)
 
@@ -74,6 +62,7 @@ OBJECTS_RTL = \
 	rtl/atom.o \
 	rtl/capture.o \
 	rtl/ctype.o \
+	rtl/debug.o \
 	rtl/handle.o \
 	rtl/message.o \
 	rtl/misc.o \
@@ -240,6 +229,7 @@ OBJECTS_PS = \
 # Executive Subsystem (Ex)
 OBJECTS_EX = \
 	ex/callback.o \
+	ex/dbgctrl.o \
 	ex/error.o \
 	ex/event.o \
 	ex/evtpair.o \
@@ -301,14 +291,6 @@ OBJECTS_CM = \
 	cm/registry.o  \
 	cm/regobj.o \
 
-# Debugger Support (Dbg)
-OBJECTS_DBG = \
-	dbg/dbgctrl.o \
-	dbg/errinfo.o \
-	dbg/print.o \
-	dbg/user.o \
-	$(OBJECTS_KDBG)
-
 # Loader
 OBJECTS_LDR = \
 	ldr/init.o \
@@ -352,6 +334,29 @@ OBJECTS_KD = \
 	kd/kdebug.o \
 	kd/mda.o \
 	kd/service.o
+	
+# User-Mode Debugging (Dbgk)
+OBJECTS_DBGK = \
+	dbgk/dbgkutil.o \
+	dbgk/debug.o
+
+ifeq ($(KDBG), 1)
+OBJECTS_KDBG := \
+	kdbg/kdb.o \
+	kdbg/kdb_cli.o \
+	kdbg/kdb_expr.o \
+	kdbg/kdb_keyboard.o \
+	kdbg/kdb_serial.o \
+	kdbg/kdb_string.o
+preall: all
+else
+OBJECTS_KDBG :=
+endif
+ifeq ($(DBG_OR_KDBG), 1)
+OBJECTS_KDBG := \
+	$(OBJECTS_KDBG) \
+	kdbg/kdb_symbols.o
+endif
 
 # Boot video (Inbv)
 OBJECTS_INBV = \
@@ -360,7 +365,7 @@ OBJECTS_INBV = \
 DEP_OBJECTS := $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
 	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
-	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
+	$(OBJECTS_KDBG) $(OBJECTS_DBGK) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
 	$(OBJECTS_PO) $(OBJECTS_KD) $(OBJECTS_RTL) $(OBJECTS_INBV)
 
 TAG_OBJECTS := $(join $(dir $(DEP_OBJECTS)),$(patsubst %.o, .%.TAG, $(notdir $(DEP_OBJECTS))))
@@ -383,12 +388,12 @@ OBJECTS := \
 	$(OBJECTS_KE) \
 	$(OBJECTS_CC) \
 	$(OBJECTS_CM) \
-	$(OBJECTS_DBG) \
 	$(OBJECTS_EX) \
 	$(OBJECTS_LPC) \
 	$(OBJECTS_FS) \
 	$(OBJECTS_IO) \
 	$(OBJECTS_KD) \
+	$(OBJECTS_DBGK) \
 	$(OBJECTS_LDR) \
 	$(OBJECTS_MM) \
 	$(OBJECTS_OB) \
@@ -396,6 +401,7 @@ OBJECTS := \
 	$(OBJECTS_PS) \
 	$(OBJECTS_RTL) \
 	$(OBJECTS_SE) \
+	$(OBJECTS_KDBG) \
 	$(OBJECTS_INBV) \
 	$(OBJECTS_RESOURCE)
 

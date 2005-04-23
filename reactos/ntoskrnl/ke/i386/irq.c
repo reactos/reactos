@@ -20,7 +20,7 @@
 
 #include <ntoskrnl.h>
 #if defined(KDBG) || defined(DBG)
-#include <../dbg/kdb.h>
+#include <internal/kdb.h>
 #endif /* KDBG */
 
 #include <../hal/halx86/include/halirq.h>

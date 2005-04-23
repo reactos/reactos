@@ -9,7 +9,7 @@
  */
 
 #include <ntoskrnl.h>
-#include "../dbg/kdb.h"
+#include <internal/kdb.h>
 #include <internal/debug.h>
 
 /* serial debug connection */
@@ -78,11 +78,6 @@ KdInitSystem(ULONG BootPhase,
 
   if (BootPhase > 0)
     {
-#ifdef KDBG
-      /* Initialize runtime debugging if available */
-      DbgRDebugInit();
-#endif
-
 #ifdef KDBG
       /* Initialize the local kernel debugger. */
       KdDebuggerEnabled = TRUE;

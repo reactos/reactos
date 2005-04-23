@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #include <ntos/bootvid.h>
-#include "../dbg/kdb.h"
+#include <internal/kdb.h>
 #define NDEBUG
 #include <internal/debug.h>
 

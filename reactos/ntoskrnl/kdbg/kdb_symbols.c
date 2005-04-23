@@ -28,7 +28,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#include "kdb.h"
+#include <internal/kdb.h>
 
 /* GLOBALS ******************************************************************/
 

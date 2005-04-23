@@ -11,7 +11,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#include "../dbg/kdb.h"
+#include <internal/kdb.h>
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -642,7 +642,6 @@ IoInit3(VOID)
     Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
     if (!NT_SUCCESS(Status)) {
         DbgPrint("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
-        DbgPrintErrorMessage (Status);
         KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
     }
 

@@ -52,10 +52,21 @@ OBJECTS_RTL_I386 := \
 	rtl/i386/exception.o \
 	rtl/i386/seh.o
 
+ifeq ($(KDBG), 1)
+OBJECTS_KDBG_I386 := \
+	kdbg/i386/kdb_help.o \
+	kdbg/i386/i386-dis.o \
+	kdbg/i386/longjmp.o \
+	kdbg/i386/setjmp.o
+preall: all
+else
+OBJECTS_KDBG_I386 :=
+endif
+
 OBJECTS_PS_I386 := \
 	ps/i386/continue.o
 
 RTL_EXCLUDE_FILTER := 
 
 OBJECTS_ARCH = $(OBJECTS_BOOT) $(OBJECTS_EX_I386) $(OBJECTS_KE_I386) $(OBJECTS_MM_I386) \
-  $(OBJECTS_RTL_I386) $(OBJECTS_PS_I386)
+  $(OBJECTS_RTL_I386) $(OBJECTS_KDBG_I386) $(OBJECTS_PS_I386)

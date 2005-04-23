@@ -54,6 +54,7 @@
 #include <internal/port.h>
 #include <internal/nls.h>
 #include <internal/dbg.h>
+#include <internal/dbgk.h>
 #include <internal/trap.h>
 #include <internal/safe.h>
 #include <internal/test.h>
