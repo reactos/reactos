@@ -57,7 +57,7 @@ find_rossym_section ( PIMAGE_FILE_HEADER PEFileHeader,
 	size_t i;
 	for ( i = 0; i < PEFileHeader->NumberOfSections; i++ )
 	{
-		if ( 0 == strcmp ( PESectionHeaders[i].Name, ".rossym" ) )
+		if ( 0 == strcmp ( (char*)PESectionHeaders[i].Name, ".rossym" ) )
 			return &PESectionHeaders[i];
 	}
 	return NULL;
