@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define LOGFILE	"packmgr.log"
+#define LOGFILE	"logfile.html"
 
 extern bool LogCreated;
 

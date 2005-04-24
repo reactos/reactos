@@ -28,10 +28,14 @@ void Log (const char *message)
 	char version[50];
 	char versionos[50];
 
-	if (!LogCreated) {		
+	if (!LogCreated) 
+	{		
 		file = fopen(LOGFILE, "w");
 		LogCreated = true;
 
+		//HTML Header
+		fputs("<html><head><title>Logfile</title></head><body>", file);
+		
 		// date and time
 		time_t now;
 		now = time(NULL);
@@ -49,32 +53,43 @@ void Log (const char *message)
 			KERNEL_VERSION_MINOR,
 			KERNEL_VERSION_PATCH_LEVEL);
 
-		fputs("# ReactOS Package Manager - Log File\n#\n# WARNING: This is still pre-alpha software.\n# Date: ", file);
+		fputs("<h2>ReactOS Package Manager - Log File</h2><br>\n", file);
+		fputs("WARNING: This is still pre-alpha software.<br>\n", file);
+
+		fputs("Date: ", file); 
 		fputs(GTime, file);
-		fputs("\n#\n#", file);
-		fputs(version, file);
-		fputs("\n#", file);
-		fputs(versionos, file);
-		fputs("\n#\n", file);
+		fputs("<br>\n", file);
+
+		fputs(version, file); 
+		fputs("<br>\n", file);
+		fputs(versionos, file); 
+		fputs("<br>\n", file);
 	}
+
 	else		
 		file = fopen(LOGFILE, "a");
 		
-	if (file == NULL) {
-
+	if (file == NULL) 
+	{
 		if (LogCreated)
 			LogCreated = false;
 
-		return;
+		return Log(message);
 	}
+
 	else
 	{
 		// Save log entry (+ add time)
-		fputs("\n", file);
+		fputs("<br>\n", file);
+
 		time_t now;
 		now = time(NULL);
 		strftime(GTime,sizeof GTime,"%I:%M:%S %p  ",localtime(&now));
+
+		fputs("<b>", file);
 		fputs(GTime, file);
+		fputs("</b>", file);
+
 		fputs(message, file);
 		fclose(file);
 	}

@@ -27,7 +27,7 @@ int FindCount (string What, string Where, int start = 0, int end = -1);
 
 
 // Download a file 
-char* PML_Download (pTree tree, const char* url, const char* server = "tree", const char* filename = NULL) 
+char* PML_Download (pTree tree, const char* url, const char* server = "tree", const char* filename = "packmgr.xml") 
 {
 	UINT i;
 	static char downl [MAX_PATH]; // the full url
@@ -43,6 +43,10 @@ char* PML_Download (pTree tree, const char* url, const char* server = "tree", co
 
 	else if(!strstr(filename, "\\"))
 		GetTempPathA (200, path);
+
+	else
+		strcpy(path, "");
+
 	
 	// create the local file name
 	if(filename)
@@ -51,7 +55,7 @@ char* PML_Download (pTree tree, const char* url, const char* server = "tree", co
 		DeleteFileA (path);
 	}
 	else
-		GetTempFileNameA (path, "pml", 0, path); 
+		GetTempFileNameA (path, "pml", 1, path); 
 
 	// get the url
 	if (!server)
@@ -76,12 +80,11 @@ char* PML_Download (pTree tree, const char* url, const char* server = "tree", co
 
 	// is this a file link ?
 	if (strstr(downl, "file://") || strstr(downl, "File://"))
-	{/*
-		if(downl[strlen(downl)] == '\')
-			downl[strlen(downl)] = '\0';
-	*/
+	{
 		if(!filename)
+		{
 			return &downl[7];
+		}
 
 		else
 		{
@@ -89,6 +92,7 @@ char* PML_Download (pTree tree, const char* url, const char* server = "tree", co
 			return (char*)filename;
 		}
 	}
+
 
 	// download the file
 	if(URLDownloadToFileA (NULL, downl, path, 0, NULL) != S_OK)
@@ -116,7 +120,7 @@ int PML_XmlDownload (pTree tree, const char* url, void* usrdata,
 
 	// download the file
 	if(strstr(url, "file://"))
-		filename = PML_Download(tree, url, NULL);
+		filename = PML_Download(tree, url, NULL, NULL);
 
 	else
 		filename = PML_Download(tree, url);
@@ -132,8 +136,7 @@ int PML_XmlDownload (pTree tree, const char* url, void* usrdata,
 	FILE* file = fopen(filename, "r");
 	if(!file) 
 	{
-	MessageBoxA(0,filename,0,0);
-		Log("!  ERROR: Could not open the xml file \"");
+		Log("!  ERROR: Could not open the xml file ");
 		LogAdd(filename);
 		return ERR_GENERIC;
 	}
