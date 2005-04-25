@@ -103,8 +103,18 @@ KiSystemStartup(BOOLEAN BootProcessor)
         MiFreeInitMemory();
         
         /* Never returns */
-        PsIdleThreadMain(NULL);
-        
+#if 0
+	/* FIXME:
+         *   The initial thread isn't a real ETHREAD object, we cannot call PspExitThread.
+	 */
+	PspExitThread(STATUS_SUCCESS);
+#else
+	while (1) {
+	   LARGE_INTEGER Timeout;
+	   Timeout.QuadPart = 0x7fffffffffffffffLL;
+	   KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+	}
+#endif        
     } else {
         
         /* Do application processor initialization */
