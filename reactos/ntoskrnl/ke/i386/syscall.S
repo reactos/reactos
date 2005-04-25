@@ -401,20 +401,40 @@ _KiServiceExit2:
     
 .intel_syntax noprefix
 _KiDebugService:
-    /* Save the user context */
+    
+    /* Create the Trap Frame */
+    push 0
     push ebp
-    push eax
-    push ecx
-    push edx
     push ebx
     push esi
     push edi
+    push fs
+    
+    /* Switch to correct FS */
+    mov bx, PCR_SELECTOR
+    mov fs, bx
+    
+    /* Save Exception List */
+    push fs:[KPCR_EXCEPTION_LIST]
+    
+    /* Use Old Previous Mode */
+    mov ebx, fs:[KPCR_CURRENT_THREAD]
+    push [ebx+KTHREAD_PREVIOUS_MODE]
+    
+    /* Continue building the Trap Frame */
+    push eax
+    push ecx
+    push edx
     push ds
     push es
-    push fs
     push gs
-    sub esp, 112  /* FloatSave */
-
+    
+    /* Switch Segments to Kernel */
+    mov bx, KERNEL_DS
+    mov ds, bx
+    mov es, bx
+    
+    /* Save Debug Registers */
     mov ebx, eax
     mov eax, dr7 
     push eax
@@ -429,16 +449,9 @@ _KiDebugService:
     mov eax, dr0 
     push eax
     mov eax, ebx
-
-    push 0 /* ContextFlags */
-
-    /*  Set ES to kernel segment  */
-    mov bx, KERNEL_DS
-    mov es, bx
-
-    /* FIXME: check to see if SS is valid/inrange */
-
-    mov ds, bx	/*  DS is now also kernel segment */
+    
+    /* Skip useless debug data */
+    sub esp, 0x18
 
     /* Call debug service dispatcher */
     push edx
@@ -446,31 +459,5 @@ _KiDebugService:
     push eax
     call _KdpServiceDispatcher@12
     
-    /*  Restore the user context  */
-    add esp, 4	/* UserContext */
-    pop eax 
-    mov dr0, eax
-    pop eax 
-    mov dr1, eax
-    pop eax 
-    mov dr2, eax
-    pop eax 
-    mov dr3, eax
-    pop eax 
-    mov dr6, eax
-    pop eax 
-    mov dr7, eax
-    add esp, 112  /* FloatingSave */
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    pop edi
-    pop esi
-    pop ebx
-    pop edx
-    pop ecx
-    add esp, 4   /* Eax Not restored */
-    pop ebp
-
-    iretd
+    /* Exit through common routine */
+    jmp _KiServiceExit2
