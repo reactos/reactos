@@ -80,16 +80,6 @@ typedef enum _KDB_OUTPUT_SETTINGS
    KD_DEBUG_KDNOECHO
 } KDB_OUTPUT_SETTINGS;
 
-/* from kdb_symbols.c */
-typedef struct _KDB_MODULE_INFO
-{
-    WCHAR        Name[256];
-    ULONG_PTR    Base;
-    ULONG        Size;
-    PROSSYM_INFO RosSymInfo;
-} KDB_MODULE_INFO, *PKDB_MODULE_INFO;
-
-
 /* FUNCTIONS *****************************************************************/
 
 /* from i386/i386-dis.c */
@@ -171,50 +161,6 @@ BOOLEAN
 KdbpSymFindModuleByIndex(IN INT Index,
                          OUT PKDB_MODULE_INFO pInfo);
 
-BOOLEAN 
-KdbSymPrintAddress(IN PVOID Address);
-
-NTSTATUS
-KdbSymGetAddressInformation(IN PROSSYM_INFO  RosSymInfo,
-                            IN ULONG_PTR  RelativeAddress,
-                            OUT PULONG LineNumber  OPTIONAL,
-                            OUT PCH FileName  OPTIONAL,
-                            OUT PCH FunctionName  OPTIONAL);
-                            
-VOID
-KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule);
-
-VOID
-KdbSymFreeProcessSymbols(IN PEPROCESS Process);
-
-VOID
-KdbSymLoadDriverSymbols(IN PUNICODE_STRING Filename,
-                        IN PMODULE_OBJECT Module);
-
-VOID
-KdbSymUnloadDriverSymbols(IN PMODULE_OBJECT ModuleObject);
-
-VOID
-KdbSymProcessBootSymbols(IN PCHAR FileName);
-
-VOID
-KdbSymInit(IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
-           IN PMODULE_TEXT_SECTION LdrHalTextSection);
-
-
-BOOLEAN 
-KdbSymPrintAddress(IN PVOID Address);
-
-KD_CONTINUE_TYPE
-KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-                           KPROCESSOR_MODE PreviousMode,
-                           PCONTEXT Context,
-                           PKTRAP_FRAME TrapFrame,
-                           BOOLEAN FirstChance);
-
-VOID
-KdbDeleteProcessHook(IN PEPROCESS Process);
-
 /* from kdb.c */
 
 extern PEPROCESS KdbCurrentProcess;
@@ -291,6 +237,12 @@ VOID
 STDCALL
 KdbpGetCommandLineSettings(PCHAR p1);
 
+KD_CONTINUE_TYPE
+KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+                           KPROCESSOR_MODE PreviousMode,
+                           PCONTEXT Context,
+                           PKTRAP_FRAME TrapFrame,
+                           BOOLEAN FirstChance);
 /* other functions */
 
 #define KdbpSafeReadMemory(dst, src, size)   MmSafeCopyFromUser(dst, src, size)

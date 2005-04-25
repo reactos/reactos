@@ -97,7 +97,7 @@ _KiSystemService:
     pushl %gs                                                          // + 0x48
     sub $0x28, %esp                                                    // + 0x70
 
-#ifdef GDB
+#ifdef DBG
     /* Trick gdb 6 into backtracing over the system call */
     mov 0x6c(%esp), %ebx
     pushl 4(%ebx)    /* DebugEIP */                                    // + 0x74
@@ -124,7 +124,7 @@ _KiSystemService:
 
 CheckValidCall:
     
-#ifdef GDB
+#ifdef DBG
     /*
      * GDB thinks the function starts here and
      * wants a standard prolog, so let's give it

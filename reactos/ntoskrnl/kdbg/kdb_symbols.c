@@ -11,24 +11,11 @@
 
 #include <ddk/ntddk.h>
 #include <roscfg.h>
-#include <internal/ntoskrnl.h>
-#include <internal/ke.h>
-#include <internal/i386/segment.h>
-#include <internal/i386/mm.h>
-#include <internal/module.h>
-#include <internal/mm.h>
-#include <internal/ps.h>
-#include <internal/trap.h>
-#include <ntdll/ldr.h>
-#include <internal/safe.h>
-#include <internal/kd.h>
-#include <rosrtl/string.h>
+#include <ntoskrnl.h>
 #include <reactos/rossym.h>
 
 #define NDEBUG
 #include <internal/debug.h>
-
-#include <internal/kdb.h>
 
 /* GLOBALS ******************************************************************/
 
