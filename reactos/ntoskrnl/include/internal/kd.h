@@ -12,10 +12,8 @@
 
 struct _KD_DISPATCH_TABLE;
 
-#ifdef GDB
+#ifdef DBG
 #include "kdgdb.h"
-#endif
-#ifdef BOCHS
 #include "kdbochs.h"
 #endif
 

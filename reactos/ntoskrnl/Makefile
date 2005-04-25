@@ -332,8 +332,13 @@ OBJECTS_KD = \
 	kd/kdinit.o \
 	kd/kdmain.o \
 	kd/kdio.o \
+    
+ifeq ($(DBG), 1)
+OBJECTS_KD := \
+	$(OBJECTS_KD) \
 	kd/wrappers/gdbstub.o \
 	kd/wrappers/bochs.o
+endif
 
 # User-Mode Debugging (Dbgk)
 OBJECTS_DBGK = \

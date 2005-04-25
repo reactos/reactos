@@ -23,9 +23,9 @@ KDBG := 0
 
 #
 # Whether to compile for debugging
+# Enabling this enables ASSERTS, GDB and Special Debug Routines
 #
 DBG := 0
-GDB := 1
 
 #
 # Whether to compile a multiprocessor or single processor version

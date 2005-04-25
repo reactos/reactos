@@ -34,7 +34,7 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
 {
     PCHAR p2 = Currentp2;
     
-#ifdef BOCHS
+#ifdef DBG
     /* Check for BOCHS Debugging */
     if (!_strnicmp(p2, "BOCHS", 5))
     {
@@ -43,9 +43,7 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
         KdpDebugMode.Bochs = TRUE;
         WrapperInitRoutine = KdpBochsInit;
     }
-#endif
 
-#ifdef GDB
     /* Check for GDB Debugging */
     if (!_strnicmp(p2, "GDB", 3))
     {
@@ -62,9 +60,7 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
         PortInfo.ComPort = DEFAULT_DEBUG_PORT;
         PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
     }
-#endif
-    
-#ifdef ICE
+
     /* Check for PICE Debugging */
     else if (!_strnicmp(p2, "PICE", 4))
     {
