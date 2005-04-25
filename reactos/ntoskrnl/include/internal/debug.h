@@ -19,8 +19,6 @@
 #define __INTERNAL_DEBUG
 
 #include <internal/ntoskrnl.h>
-#include <internal/dbg.h>
-
 
 #if defined(_MSC_VER) && (_MSC_VER < 1300)
 /* TODO: Verify which version the MS compiler learned the __FUNCTION__ macro */

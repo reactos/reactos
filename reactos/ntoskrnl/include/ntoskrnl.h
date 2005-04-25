@@ -53,7 +53,6 @@
 #include <internal/ifs.h>
 #include <internal/port.h>
 #include <internal/nls.h>
-#include <internal/dbg.h>
 #ifdef KDBG
 #include <internal/kdb.h>
 #endif
