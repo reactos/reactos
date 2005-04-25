@@ -25,6 +25,7 @@
 .globl _KiServiceExit2
 .globl _KiFastCallEntry
 .globl _KiSystemService
+.globl _KiDebugService
 
 _KiFastCallEntry:
     
@@ -397,3 +398,79 @@ _KiServiceExit2:
 
    /* Return to user-mode */
     iret
+    
+.intel_syntax noprefix
+_KiDebugService:
+    /* Save the user context */
+    push ebp
+    push eax
+    push ecx
+    push edx
+    push ebx
+    push esi
+    push edi
+    push ds
+    push es
+    push fs
+    push gs
+    sub esp, 112  /* FloatSave */
+
+    mov ebx, eax
+    mov eax, dr7 
+    push eax
+    mov eax, dr6 
+    push eax
+    mov eax, dr3 
+    push eax
+    mov eax, dr2 
+    push eax
+    mov eax, dr1 
+    push eax
+    mov eax, dr0 
+    push eax
+    mov eax, ebx
+
+    push 0 /* ContextFlags */
+
+    /*  Set ES to kernel segment  */
+    mov bx, KERNEL_DS
+    mov es, bx
+
+    /* FIXME: check to see if SS is valid/inrange */
+
+    mov ds, bx	/*  DS is now also kernel segment */
+
+    /* Call debug service dispatcher */
+    push edx
+    push ecx
+    push eax
+    call _KdpServiceDispatcher@12
+    
+    /*  Restore the user context  */
+    add esp, 4	/* UserContext */
+    pop eax 
+    mov dr0, eax
+    pop eax 
+    mov dr1, eax
+    pop eax 
+    mov dr2, eax
+    pop eax 
+    mov dr3, eax
+    pop eax 
+    mov dr6, eax
+    pop eax 
+    mov dr7, eax
+    add esp, 112  /* FloatingSave */
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    pop edi
+    pop esi
+    pop ebx
+    pop edx
+    pop ecx
+    add esp, 4   /* Eax Not restored */
+    pop ebp
+
+    iretd

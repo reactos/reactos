@@ -27,7 +27,7 @@
 #endif
 
 extern void KiSystemService(void);
-extern void interrupt_handler2d(void);
+extern void KiDebugService(void);
 
 extern VOID KiTrap0(VOID);
 extern VOID KiTrap1(VOID);
@@ -928,7 +928,7 @@ KeInitExceptions(VOID)
         set_trap_gate(i,(int)KiTrapUnknown, 0);
      }
 
-   set_system_call_gate(0x2d,(int)interrupt_handler2d);
+   set_system_call_gate(0x2d,(int)KiDebugService);
    set_system_call_gate(0x2e,(int)KiSystemService);
 }
 

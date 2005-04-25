@@ -332,7 +332,6 @@ OBJECTS_KD = \
 	kd/kdinit.o \
 	kd/kdmain.o \
 	kd/kdio.o \
-	kd/service.o \
 	kd/wrappers/gdbstub.o \
 	kd/wrappers/bochs.o
 
