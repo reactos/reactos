@@ -236,7 +236,7 @@ int main(int argc,char *argv[])
                  (debuglevel & DEBUGLEVEL_PPTRACE) != 0,
                  (debuglevel & DEBUGLEVEL_PPMSG) != 0 );
 
-  if (!header_name && do_header) {
+  if (!header_name) {
     header_name = dup_basename(input_name, ".idl");
     strcat(header_name, ".h");
   }

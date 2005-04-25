@@ -31,6 +31,20 @@ Generate a type library.
 Define the name of the type library to be generated. 
 The default filename is infile.tlb.
 .PP
+.B Proxy/stub generation options:
+.IP \fB-c\fR
+Generate client stub.
+.IP \fB-C \fIfile\fR
+Name of client stub file (default is infile_c.c)
+.IP \fB-c\fR
+Generate proxy.
+.IP \fB-P \fIfile\fR
+Name of proxy file (default is infile_p.c)
+.IP \fB-s\fR
+Generate server stub.
+.IP \fB-S \fIfile\fR
+Name of server stub file (default is infile_s.c)
+.PP
 .B Preprocessor options:
 .IP "\fB-I \fIpath\fR"
 Add a header search dir to path. Multiple search 

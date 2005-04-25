@@ -286,6 +286,7 @@ static struct keyword {
 /* ... */
 	{"short",			tSHORT},
 	{"signed",			tSIGNED},
+	{"single",			tSINGLE},
 	{"size_is",			tSIZEIS},
 	{"sizeof",			tSIZEOF},
 /* ... */
