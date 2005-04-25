@@ -31,12 +31,14 @@ KdpBochsDebugPrint(IN PCH Message)
     }
 }
 
+
+
 VOID
 STDCALL
 KdpBochsInit(PKD_DISPATCH_TABLE WrapperTable,
              ULONG BootPhase)
 {
-    if (!KdDebuggerEnabled || !KdpDebugMode.Bochs) return;
+    if (!KdpDebugMode.Bochs) return;
 
     if (BootPhase == 0)
     {
