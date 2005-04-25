@@ -267,7 +267,7 @@ static int cmp_res( const void *ptr1, const void *ptr2 )
 /* build the 3-level (type,name,language) resource tree */
 static struct res_tree *build_resource_tree( DLLSPEC *spec )
 {
-    int i;
+    unsigned int i;
     struct res_tree *tree;
     struct res_type *type = NULL;
     struct res_name *name = NULL;
@@ -297,7 +297,7 @@ static struct res_tree *build_resource_tree( DLLSPEC *spec )
 /* free the resource tree */
 static void free_resource_tree( struct res_tree *tree )
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < tree->nb_types; i++) free( tree->types[i].names );
     free( tree->types );
@@ -318,8 +318,8 @@ static void output_string( FILE *outfile, const WCHAR *name )
 /* output the resource definitions */
 void output_resources( FILE *outfile, DLLSPEC *spec )
 {
-    int i, j, k, nb_id_types;
-    unsigned int n, offset, data_offset;
+    int j, k, nb_id_types;
+    unsigned int i, n, offset, data_offset;
     struct res_tree *tree;
     struct res_type *type;
     struct res_name *name;

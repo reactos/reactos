@@ -215,7 +215,7 @@ static int cmp_res( const void *ptr1, const void *ptr2 )
 /* build the 2-level (type,name) resource tree */
 static struct res_tree *build_resource_tree( DLLSPEC *spec )
 {
-    int i;
+    unsigned int i;
     struct res_tree *tree;
     struct res_type *type = NULL;
 
@@ -270,7 +270,8 @@ int output_res16_data( FILE *outfile, DLLSPEC *spec )
 {
     const struct resource *res;
     unsigned char *buffer, *p;
-    int i, total;
+    unsigned int i;
+    int total;
 
     if (!spec->nb_resources) return 0;
 
@@ -292,8 +293,8 @@ int output_res16_data( FILE *outfile, DLLSPEC *spec )
 /* output the resource definitions */
 int output_res16_directory( unsigned char *buffer, DLLSPEC *spec )
 {
-    int i, offset, res_offset = 0;
-    unsigned int j;
+    int offset, res_offset = 0;
+    unsigned int i, j;
     struct res_tree *tree;
     const struct res_type *type;
     const struct resource *res;
