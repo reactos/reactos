@@ -16,7 +16,6 @@
 # define RTL_NUMBER_OF(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
-
 /* TYPES *********************************************************************/
 
 /* from kdb.c */
@@ -75,6 +74,11 @@ typedef enum _KDB_ENTER_CONDITION
    KdbEnterFromUmode
 } KDB_ENTER_CONDITION;
 
+typedef enum _KDB_OUTPUT_SETTINGS
+{
+   KD_DEBUG_KDSERIAL,
+   KD_DEBUG_KDNOECHO
+} KDB_OUTPUT_SETTINGS;
 
 /* from kdb_symbols.c */
 typedef struct _KDB_MODULE_INFO
@@ -176,6 +180,40 @@ KdbSymGetAddressInformation(IN PROSSYM_INFO  RosSymInfo,
                             OUT PULONG LineNumber  OPTIONAL,
                             OUT PCH FileName  OPTIONAL,
                             OUT PCH FunctionName  OPTIONAL);
+                            
+VOID
+KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule);
+
+VOID
+KdbSymFreeProcessSymbols(IN PEPROCESS Process);
+
+VOID
+KdbSymLoadDriverSymbols(IN PUNICODE_STRING Filename,
+                        IN PMODULE_OBJECT Module);
+
+VOID
+KdbSymUnloadDriverSymbols(IN PMODULE_OBJECT ModuleObject);
+
+VOID
+KdbSymProcessBootSymbols(IN PCHAR FileName);
+
+VOID
+KdbSymInit(IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
+           IN PMODULE_TEXT_SECTION LdrHalTextSection);
+
+
+BOOLEAN 
+KdbSymPrintAddress(IN PVOID Address);
+
+KD_CONTINUE_TYPE
+KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+                           KPROCESSOR_MODE PreviousMode,
+                           PCONTEXT Context,
+                           PKTRAP_FRAME TrapFrame,
+                           BOOLEAN FirstChance);
+
+VOID
+KdbDeleteProcessHook(IN PEPROCESS Process);
 
 /* from kdb.c */
 
@@ -185,13 +223,7 @@ extern LONG KdbLastBreakPointNr;
 extern ULONG KdbNumSingleSteps;
 extern BOOLEAN KdbSingleStepOver;
 extern PKDB_KTRAP_FRAME KdbCurrentTrapFrame;
-
-VOID
-KdbInit();
-
-VOID
-KdbModuleLoaded(
-   IN PUNICODE_STRING Name);
+extern ULONG KdbDebugState;
 
 LONG
 KdbpGetNextBreakPointNr(
@@ -255,6 +287,10 @@ BOOLEAN
 KdbpAttachToProcess(
    PVOID ProcessId);
 
+VOID
+STDCALL
+KdbpGetCommandLineSettings(PCHAR p1);
+
 /* other functions */
 
 #define KdbpSafeReadMemory(dst, src, size)   MmSafeCopyFromUser(dst, src, size)
@@ -278,7 +314,10 @@ VOID
 DbgEnableFile(PCH Filename);
 VOID
 DbgDisableFile(PCH Filename);
-
+VOID
+KbdDisableMouse();
+VOID
+KbdEnableMouse();
 
 #endif /* NTOSKRNL_KDB_H */
 

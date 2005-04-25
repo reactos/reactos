@@ -979,11 +979,8 @@ LdrPEProcessModule(
 
     DPRINT("Loading Module %wZ...\n", FileName);
 
-    if (KdDebuggerEnabled && (KdDebugState & KD_DEBUG_GDB))
-    {
-        DPRINT("Module %wZ loaded at 0x%.08x.\n",
+    DPRINT("Module %wZ loaded at 0x%.08x.\n",
             FileName, CreatedModuleObject->Base);
-    }
 
     return STATUS_SUCCESS;
 }

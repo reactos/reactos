@@ -1734,7 +1734,7 @@ KdbpPrint(
    if ((KdbNumberOfRowsTerminal < 0) || (KdbNumberOfColsTerminal < 0) ||
        (KdbNumberOfRowsPrinted) == 0) /* Refresh terminal size each time when number of rows printed is 0 */
    {
-      if ((KdDebugState & KD_DEBUG_KDSERIAL) && TerminalReportsSize)
+      if ((KdbDebugState & KD_DEBUG_KDSERIAL) && TerminalReportsSize)
       {
          /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
          TerminalReportsSize = FALSE;
@@ -1813,7 +1813,7 @@ KdbpPrint(
          if (KdbNumberOfColsPrinted > 0)
             DbgPrint("\n");
          DbgPrint("--- Press q to abort, any other key to continue ---");
-         if (KdDebugState & KD_DEBUG_KDSERIAL)
+         if (KdbDebugState & KD_DEBUG_KDSERIAL)
             c = KdbpGetCharSerial();
          else
             c = KdbpGetCharKeyboard(&ScanCode);
@@ -1822,7 +1822,7 @@ KdbpPrint(
             /* Try to read '\n' which might follow '\r' - if \n is not received here
              * it will be interpreted as "return" when the next command should be read.
              */
-            if (KdDebugState & KD_DEBUG_KDSERIAL)
+            if (KdbDebugState & KD_DEBUG_KDSERIAL)
                c = KdbpTryGetCharSerial(5);
             else
                c = KdbpTryGetCharKeyboard(&ScanCode, 5);
@@ -1975,11 +1975,11 @@ KdbpReadCommand(
    INT CmdHistIndex = -1;
    INT i;
 
-   EchoOn = !((KdDebugState & KD_DEBUG_KDNOECHO) != 0);
+   EchoOn = !((KdbDebugState & KD_DEBUG_KDNOECHO) != 0);
 
    for (;;)
    {
-      if (KdDebugState & KD_DEBUG_KDSERIAL)
+      if (KdbDebugState & KD_DEBUG_KDSERIAL)
       {
          Key = (NextKey == '\0') ? KdbpGetCharSerial() : NextKey;
          NextKey = '\0';
@@ -2025,7 +2025,7 @@ KdbpReadCommand(
          /* Read the next char - this is to throw away a \n which most clients should
           * send after \r.
           */
-         if (KdDebugState & KD_DEBUG_KDSERIAL)
+         if (KdbDebugState & KD_DEBUG_KDSERIAL)
             NextKey = KdbpTryGetCharSerial(5);
          else
             NextKey = KdbpTryGetCharKeyboard(&ScanCode, 5);
@@ -2213,7 +2213,7 @@ KdbpCliMainLoop(
    }
 
    /* Flush the input buffer */
-   if (KdDebugState & KD_DEBUG_KDSERIAL)
+   if (KdbDebugState & KD_DEBUG_KDSERIAL)
    {
       while (KdbpTryGetCharSerial(1) != -1);
    }

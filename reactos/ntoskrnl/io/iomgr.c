@@ -11,7 +11,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/kdb.h>
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -645,13 +644,11 @@ IoInit3(VOID)
         KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
     }
 
-    /* Start Profiling on a Debug Build */
-#if defined(KDBG)
+    /* Read KDB Data */
     KdbInit();
-#endif /* KDBG */
 
-    /* I/O is now setup for disk access, so start the debugging logger thread. */
-    if (KdDebugState & KD_DEBUG_FILELOG) DebugLogInit2();
+    /* I/O is now setup for disk access, so phase 3 */
+    KdInitSystem(3, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Load services for devices found by PnP manager */
     IopInitializePnpServices(IopRootDeviceNode, FALSE);

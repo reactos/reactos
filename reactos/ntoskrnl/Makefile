@@ -329,11 +329,13 @@ OBJECTS_CC = \
 
 # Kernel Debugger Support (Kd)
 OBJECTS_KD = \
-	kd/dlog.o \
-	kd/gdbstub.o \
-	kd/kdebug.o \
-	kd/service.o
-	
+	kd/kdinit.o \
+	kd/kdmain.o \
+	kd/kdio.o \
+	kd/service.o \
+	kd/wrappers/gdbstub.o \
+	kd/wrappers/bochs.o
+
 # User-Mode Debugging (Dbgk)
 OBJECTS_DBGK = \
 	dbgk/dbgkutil.o \

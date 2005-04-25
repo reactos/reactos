@@ -16,18 +16,15 @@
 #define NDEBUG
 #include <debug.h>
 
-extern KD_PORT_INFORMATION LogPortInfo;
-
-
 CHAR
 KdbpTryGetCharSerial(UINT Retry)
 {
   CHAR Result = -1;
 
   if (Retry == 0)
-     while (!KdPortGetByteEx(&LogPortInfo, (PUCHAR)&Result));
+     while (!KdPortGetByteEx(&SerialPortInfo, (PUCHAR)&Result));
   else
-     while (!KdPortGetByteEx(&LogPortInfo, (PUCHAR)&Result) && Retry-- > 0);
+     while (!KdPortGetByteEx(&SerialPortInfo, (PUCHAR)&Result) && Retry-- > 0);
 
   return Result;
 }

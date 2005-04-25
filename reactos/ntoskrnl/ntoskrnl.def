@@ -503,7 +503,7 @@ KdEnableDebugger@0
 KdEnteredDebugger
 KdPollBreakIn@0
 KdPowerTransition@4
-KdSystemDebugControl@4
+KdpServiceDispatcher@12
 Ke386CallBios@8
 Ke386IoSetAccessProcess@8
 Ke386QueryIoAccessMap@8
@@ -944,7 +944,7 @@ READ_REGISTER_USHORT@4
 READ_REGISTER_BUFFER_UCHAR@12
 READ_REGISTER_BUFFER_ULONG@12
 READ_REGISTER_BUFFER_USHORT@12
-KeRosPrintAddress@4
+KiRosPrintAddress@4
 KeRosDumpStackFrames@8
 KeRosGetStackFrames@8
 RtlAbsoluteToSelfRelativeSD@12

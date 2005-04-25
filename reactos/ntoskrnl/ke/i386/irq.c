@@ -19,10 +19,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#if defined(KDBG) || defined(DBG)
-#include <internal/kdb.h>
-#endif /* KDBG */
-
 #include <../hal/halx86/include/halirq.h>
 
 #define NDEBUG

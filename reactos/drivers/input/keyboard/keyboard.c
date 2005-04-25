@@ -114,7 +114,7 @@ static const BYTE asciiTable4[37]=
 };
 
 VOID STDCALL
-KdSystemDebugControl(ULONG Code);
+KdpServiceDispatcher(ULONG Code, PVOID Context1, PVOID Context2);
 
 static LONG DoSystemDebug = -1;
 static BOOLEAN InSysRq = FALSE;
@@ -421,7 +421,7 @@ KbdWorkItemRoutine(IN PDEVICE_OBJECT DeviceObject,
    Debug = InterlockedExchange(&DoSystemDebug, -1);
    if (Debug != -1)
      {
-       KdSystemDebugControl(Debug);
+       KdpServiceDispatcher(TAG('R', 'o', 's', ' '), (PVOID)Debug, NULL);
      }
 }
 
@@ -447,7 +447,7 @@ KbdDpcRoutine(PKDPC Dpc,
          }
        else
          {
-           KdSystemDebugControl(DoSystemDebug);
+           KdpServiceDispatcher(TAG('R', 'o', 's', ' '), (PVOID)DoSystemDebug, NULL);
            DoSystemDebug = -1;
          }
        return;

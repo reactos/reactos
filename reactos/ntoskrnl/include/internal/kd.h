@@ -10,160 +10,169 @@
 #include <internal/ldr.h>
 #include <ntdll/ldr.h>
 
-#define KD_DEBUG_DISABLED	0x00
-#define KD_DEBUG_GDB		0x01
-#define KD_DEBUG_PICE		0x02
-#define KD_DEBUG_SCREEN		0x04
-#define KD_DEBUG_SERIAL		0x08
-#define KD_DEBUG_BOCHS		0x10
-#define KD_DEBUG_FILELOG	0x20
-#define KD_DEBUG_MDA            0x40
-#define KD_DEBUG_KDB            0x80
-#define KD_DEBUG_KDSERIAL       0x100
-#define KD_DEBUG_KDNOECHO       0x200
+struct _KD_DISPATCH_TABLE;
 
-extern ULONG KdDebugState;
+#ifdef GDB
+#include "kdgdb.h"
+#endif
+#ifdef BOCHS
+#include "kdbochs.h"
+#endif
 
-KD_PORT_INFORMATION GdbPortInfo;
-KD_PORT_INFORMATION LogPortInfo;
+/* KD ROUTINES ***************************************************************/
 
 typedef enum _KD_CONTINUE_TYPE
 {
-  kdContinue = 0,
-  kdDoNotHandleException,
-  kdHandleException
+    kdContinue = 0,
+    kdDoNotHandleException,
+    kdHandleException
 } KD_CONTINUE_TYPE;
 
+typedef
 VOID
-KbdDisableMouse();
+STDCALL
+(*PKDP_INIT_ROUTINE)(struct _KD_DISPATCH_TABLE *DispatchTable,
+                     ULONG BootPhase);
+
+typedef
+VOID
+STDCALL
+(*PKDP_PRINT_ROUTINE)(PCH String);
+
+typedef
+VOID
+STDCALL
+(*PKDP_PROMPT_ROUTINE)(PCH String);
+
+typedef
+KD_CONTINUE_TYPE
+STDCALL
+(*PKDP_EXCEPTION_ROUTINE)(PEXCEPTION_RECORD ExceptionRecord,
+                          PCONTEXT Context,
+                          PKTRAP_FRAME TrapFrame);
+
+/* INIT ROUTINES *************************************************************/
 
 VOID
-KbdEnableMouse();
+STDCALL
+KdpScreenInit(struct _KD_DISPATCH_TABLE *DispatchTable,
+              ULONG BootPhase);
+              
+VOID
+STDCALL
+KdpSerialInit(struct _KD_DISPATCH_TABLE *DispatchTable,
+              ULONG BootPhase);
+              
+VOID
+STDCALL
+KdpInitDebugLog(struct _KD_DISPATCH_TABLE *DispatchTable,
+                ULONG BootPhase);
+                
+/* KD ROUTINES ***************************************************************/
 
+KD_CONTINUE_TYPE
+STDCALL
+KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+                          KPROCESSOR_MODE PreviousMode,
+                          PCONTEXT Context,
+                          PKTRAP_FRAME TrapFrame,
+                          BOOLEAN FirstChance,
+                          BOOLEAN Gdb);
+                          
 ULONG
-KdpPrintString (PANSI_STRING String);
-
-VOID
-DebugLogWrite(PCH String);
-VOID
-DebugLogInit(VOID);
-VOID
-DebugLogInit2(VOID);
-
-VOID
 STDCALL
-KdDisableDebugger(
-    VOID
-    );
-
-VOID
-STDCALL
-KdEnableDebugger(
-    VOID
-    );
-
-NTSTATUS
-STDCALL
-KdPowerTransition(
-	ULONG PowerState
-	);
+KdpPrintString(PANSI_STRING String);
 
 BOOLEAN
 STDCALL
-KeIsAttachedProcess(
-	VOID
-	);
+KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
+              
+/* KD GLOBALS  ***************************************************************/
 
-VOID
-KdInit1(VOID);
+/* serial debug connection */
+#define DEFAULT_DEBUG_PORT      2 /* COM2 */
+#define DEFAULT_DEBUG_COM1_IRQ  4 /* COM1 IRQ */
+#define DEFAULT_DEBUG_COM2_IRQ  3 /* COM2 IRQ */
+#define DEFAULT_DEBUG_BAUD_RATE 115200 /* 115200 Baud */
 
-VOID
-KdInit2(VOID);
+/* KD Native Modes */
+#define KdScreen 0
+#define KdSerial 1
+#define KdFile 2
+#define KdMax 3
 
-VOID
-KdInit3(VOID);
+/* KD Private Debug Modes */
+typedef struct _KDP_DEBUG_MODE
+{
+    union {
+        struct {
+            /* Native Modes */
+            UCHAR Screen :1;
+            UCHAR Serial :1;
+            UCHAR File   :1;
+    
+            /* Currently Supported Wrappers */
+            UCHAR Pice   :1;
+            UCHAR Gdb    :1;
+            UCHAR Bochs  :1;
+        };
+        
+        /* Generic Value */
+        ULONG Value;
+    };
+} KDP_DEBUG_MODE;
 
-VOID
-KdPutChar(UCHAR Value);
+/* KD Internal Debug Services */
+typedef enum _KDP_DEBUG_SERVICE
+{
+    DumpNonPagedPool = 0,
+    ManualBugCheck,
+    DumpNonPagedPoolStats,
+    DumpNewNonPagedPool,
+    DumpNewNonPagedPoolStats,
+    DumpAllThreads,
+    DumpUserThreads,
+    KdSpare1,
+    KdSpare2,
+    KdSpare3,
+    EnterDebugger
+} KDP_DEBUG_SERVICE;
 
-UCHAR
-KdGetChar(VOID);
+/* Dispatch Table for Wrapper Functions */
+typedef struct _KD_DISPATCH_TABLE
+{
+    LIST_ENTRY KdProvidersList;
+    PKDP_INIT_ROUTINE KdpInitRoutine;
+    PKDP_PRINT_ROUTINE KdpPrintRoutine;
+    PKDP_PROMPT_ROUTINE KdpPromptRoutine;  
+    PKDP_EXCEPTION_ROUTINE KdpExceptionRoutine;
+} KD_DISPATCH_TABLE, *PKD_DISPATCH_TABLE;
 
-VOID
-KdGdbStubInit(ULONG Phase);
+/* The current Debugging Mode */
+extern KDP_DEBUG_MODE KdpDebugMode;
 
-VOID
-KdGdbDebugPrint (LPSTR Message);
+/* The current Port IRQ */
+extern ULONG KdpPortIrq;
 
-VOID
-KdDebugPrint (LPSTR Message);
+/* The current Port */
+extern ULONG KdpPort;
 
-KD_CONTINUE_TYPE
-KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-			 PCONTEXT Context,
-			 PKTRAP_FRAME TrapFrame);
-VOID KdInitializeMda(VOID);
-VOID KdPrintMda(PCH pch);
+/* Port Information for the Serial Native Mode */
+extern KD_PORT_INFORMATION SerialPortInfo;
 
-#if !defined(KDBG) && !defined(DBG)
-# define KDB_LOADUSERMODULE_HOOK(LDRMOD)	do { } while (0)
-# define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	do { } while (0)
-# define KDB_UNLOADDRIVER_HOOK(MODULE)		do { } while (0)
-# define KDB_LOADERINIT_HOOK(NTOS, HAL)		do { } while (0)
-# define KDB_SYMBOLFILE_HOOK(FILENAME)		do { } while (0)
-# define KDB_CREATE_THREAD_HOOK(CONTEXT)	do { } while (0)
-#else
-# define KDB_LOADUSERMODULE_HOOK(LDRMOD)	KdbSymLoadUserModuleSymbols(LDRMOD)
-# define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	KdbSymLoadDriverSymbols(FILENAME, MODULE)
-# define KDB_UNLOADDRIVER_HOOK(MODULE)		KdbSymUnloadDriverSymbols(MODULE)
-# define KDB_LOADERINIT_HOOK(NTOS, HAL)		KdbSymInit(NTOS, HAL)
-# define KDB_SYMBOLFILE_HOOK(FILENAME)		KdbSymProcessBootSymbols(FILENAME)
-/*#define KDB_CREATE_THREAD_HOOK(CONTEXT) \
-        KdbCreateThreadHook(CONTEXT)
-*/
+/* Init Functions for Native Providers */
+extern PKDP_INIT_ROUTINE InitRoutines[KdMax];
 
-VOID
-KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule);
+/* Wrapper Init Function */
+extern PKDP_INIT_ROUTINE WrapperInitRoutine;
+                                                        
+/* Dispatch Tables for Native Providers */
+extern KD_DISPATCH_TABLE DispatchTable[KdMax];
 
-VOID
-KdbSymFreeProcessSymbols(IN PEPROCESS Process);
-
-VOID
-KdbSymLoadDriverSymbols(IN PUNICODE_STRING Filename,
-                        IN PMODULE_OBJECT Module);
-
-VOID
-KdbSymUnloadDriverSymbols(IN PMODULE_OBJECT ModuleObject);
-
-VOID
-KdbSymProcessBootSymbols(IN PCHAR FileName);
-
-VOID
-KdbSymInit(IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
-           IN PMODULE_TEXT_SECTION LdrHalTextSection);
-
-
-BOOLEAN 
-KdbSymPrintAddress(IN PVOID Address);
-
-KD_CONTINUE_TYPE
-KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-			  KPROCESSOR_MODE PreviousMode,
-                          PCONTEXT Context,
-                          PKTRAP_FRAME TrapFrame,
-			  BOOLEAN FirstChance);
-
-#endif /* KDBG || DBG */
-
-#if !defined(KDBG)
-# define KDB_DELETEPROCESS_HOOK(PROCESS)	do { } while (0)
-#else
-# define KDB_DELETEPROCESS_HOOK(PROCESS)	KdbDeleteProcessHook(PROCESS)
-VOID
-KdbDeleteProcessHook(IN PEPROCESS Process);
-#endif /* KDBG */
-
-VOID
-DebugLogDumpMessages(VOID);
+/* Dispatch Table for the Wrapper */
+extern KD_DISPATCH_TABLE WrapperTable;
+                                     
+/* The KD Native Provider List */
+extern LIST_ENTRY KdProviders;
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

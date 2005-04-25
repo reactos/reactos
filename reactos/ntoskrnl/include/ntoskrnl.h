@@ -54,6 +54,9 @@
 #include <internal/port.h>
 #include <internal/nls.h>
 #include <internal/dbg.h>
+#ifdef KDBG
+#include <internal/kdb.h>
+#endif
 #include <internal/dbgk.h>
 #include <internal/trap.h>
 #include <internal/safe.h>

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kd/service.c
@@ -12,35 +11,6 @@
 
 
 /* FUNCTIONS ***************************************************************/
-
-/*
- * Note: DON'T CHANGE THIS FUNCTION!!!
- *       DON'T CALL HalDisplayString OR SOMETING ELSE!!!
- *       You'll only break the serial/bochs debugging feature!!!
- */
-
-ULONG
-KdpServiceDispatcher (
-        ULONG Service,
-        PVOID Context1,
-        PVOID Context2)
-{
-    ULONG Result = 0;
-
-    switch (Service)
-    {
-        case 1: /* DbgPrint */
-            Result = KdpPrintString ((PANSI_STRING)Context1);
-            break;
-
-        default:
-            HalDisplayString ("Invalid debug service call!\n");
-            break;
-    }
-
-    return Result;
-}
-
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
@@ -95,8 +65,7 @@ void interrupt_handler2d(void);
            "pushl %edx\n\t"
            "pushl %ecx\n\t"
            "pushl %eax\n\t"
-	   "call _KdpServiceDispatcher\n\t"
-	   "addl $12,%esp\n\t"   /* restore stack pointer */
+	   "call _KdpServiceDispatcher@12\n\t"
 
 	   /*  Restore the user context  */
 	   "addl $4,%esp\n\t"    /* UserContext */

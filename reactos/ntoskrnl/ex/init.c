@@ -11,7 +11,6 @@
 
 #include <ntoskrnl.h>
 #include <ntos/bootvid.h>
-#include <internal/kdb.h>
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -416,8 +415,8 @@ ExpInitializeExecutive(VOID)
     /* Parse the Loaded Modules (by FreeLoader) and cache the ones we'll need */
     ParseAndCacheLoadedModules(&SetupBoot);
     
-    /* Initialize the kernel debugger */
-    KdInitSystem (1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    /* Initialize the kernel debugger parameters */
+    KdInitSystem(0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
     
     /* Initialize the Dispatcher, Clock and Bug Check Mechanisms. */
     KeInit2();
@@ -489,8 +488,8 @@ ExpInitializeExecutive(VOID)
     /* initialize callbacks */
     ExpInitializeCallbacks();
     
-    /* Initialize the GDB Stub and break */
-    KdInit1();
+    /* Call KD Providers at Phase 1 */
+    KdInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
   
     /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
     IoInit();
@@ -506,9 +505,6 @@ ExpInitializeExecutive(VOID)
   
     /* Initialize Cache Views */
     CcInit();
-  
-    /* Hook System Interrupt for the Debugger */
-    KdInit2();
     
     /* Initialize File Locking */
     FsRtlpInitFileLockingImplementation();
@@ -537,8 +533,8 @@ ExpInitializeExecutive(VOID)
             (KeLoaderBlock.MemHigher + 1088)/ 1024);
     HalDisplayString(str);
 
-    /* Print which Debugger is being used */
-    KdInit3();
+    /* Call KD Providers at Phase 2 */
+    KdInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Import and create NLS Data and Sections */
     RtlpInitNls();
@@ -549,10 +545,8 @@ ExpInitializeExecutive(VOID)
     /* Initialize the time zone information from the registry */
     ExpInitTimeZoneInfo();
    
-  /* Enter the kernel debugger before starting up the boot drivers */
-#ifdef KDBG
+   /* Enter the kernel debugger before starting up the boot drivers */
     KdbEnter();
-#endif /* KDBG */
 
     /* Setup Drivers and Root Device Node */
     IoInit2(BootLog);

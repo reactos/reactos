@@ -1,17 +1,15 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/dbg/kdb.c
- * PURPOSE:         Kernel debugger
+ * FILE:            ntoskrnl/kdbg/kdb.c
+ * PURPOSE:         Kernel Debugger
  * 
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     Gregor Anich
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/kdb.h>
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -43,7 +41,7 @@ STATIC PKDB_BREAKPOINT KdbBreakPointToReenable = NULL; /* Set to a breakpoint st
 LONG KdbLastBreakPointNr = -1;  /* Index of the breakpoint which cause KDB to be entered */
 ULONG KdbNumSingleSteps = 0; /* How many single steps to do */
 BOOLEAN KdbSingleStepOver = FALSE; /* Whether to step over calls/reps. */
-
+ULONG KdbDebugState = 0; /* KDBG Settings (NOECHO, KDSERIAL) */
 STATIC BOOLEAN KdbEnteredOnSingleStep = FALSE; /* Set to true when KDB was entered because of single step */
 PEPROCESS KdbCurrentProcess = NULL;  /* The current process context in which KDB runs */
 PEPROCESS KdbOriginalProcess = NULL; /* The process in whichs context KDB was intered */
@@ -1084,7 +1082,7 @@ KdbpInternalEnter()
    ULONG SavedStackLimit;
    
    KbdDisableMouse();
-   if (KdDebugState & KD_DEBUG_SCREEN)
+   if (KdpDebugMode.Screen)
    {
       HalReleaseDisplayOwnership();
    }
@@ -1484,12 +1482,6 @@ continue_execution:
 }
 
 VOID
-KdbInit()
-{
-   KdbpCliInit();
-}
-
-VOID
 KdbDeleteProcessHook(IN PEPROCESS Process)
 {
    KdbSymFreeProcessSymbols(Process);
@@ -1498,9 +1490,27 @@ KdbDeleteProcessHook(IN PEPROCESS Process)
 }
 
 VOID
-KdbModuleLoaded(IN PUNICODE_STRING Name)
+STDCALL
+KdbpGetCommandLineSettings(PCHAR p1)
 {
-   KdbpCliModuleLoaded(Name);
+    PCHAR p2;
+
+    while (p1 && (p2 = strchr(p1, '/')))
+    {
+        p2++;
+
+        if (!_strnicmp(p2, "KDSERIAL", 8))
+        {
+            p2 += 8;
+            KdbDebugState |= KD_DEBUG_KDSERIAL;
+            KdpDebugMode.Serial = TRUE;
+        }
+        else if (!_strnicmp(p2, "KDNOECHO", 8))
+        {
+            p2 += 8;
+            KdbDebugState |= KD_DEBUG_KDNOECHO;
+        }
+        
+        p1 = p2;
+    }
 }
-
-

@@ -427,10 +427,8 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
   NTSTATUS Status;
   IO_STATUS_BLOCK IoStatusBlock;
 
-#ifdef KDBG
   /* Allow KDB to break on module load */
   KdbModuleLoaded(FileName);
-#endif
 
   /*  Try to find cached (already loaded) symbol file  */
   *RosSymInfo = KdbpSymFindCachedFile(FileName);

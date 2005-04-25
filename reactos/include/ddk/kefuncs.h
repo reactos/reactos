@@ -22,6 +22,10 @@ KeSaveFloatingPointState(
 
 VOID STDCALL KeAttachProcess(struct _KPROCESS *Process);
 
+BOOLEAN
+STDCALL
+KeIsAttachedProcess(VOID);
+
 VOID FASTCALL KiAcquireSpinLock(PKSPIN_LOCK SpinLock);
 
 VOID FASTCALL KiReleaseSpinLock(PKSPIN_LOCK SpinLock);
@@ -378,9 +382,6 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
 
 ULONG STDCALL
 KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
-
-BOOLEAN STDCALL
-KeRosPrintAddress(PVOID address);
 
 NTSTATUS STDCALL
 KeSetAffinityThread(PKTHREAD	Thread,

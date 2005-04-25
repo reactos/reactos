@@ -300,7 +300,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
      
     /* Make sure we're switching back to the blue screen and print messages on it */
     HalReleaseDisplayOwnership();
-    if (0 == (KdDebugState & KD_DEBUG_GDB)) KdDebugState |= KD_DEBUG_SCREEN;
+    if (KdpDebugMode.Gdb) KdpDebugMode.Screen = TRUE;
  
     /* Try to find out who did this. For this, we need a Trap Frame.
      * Note: Some special BSODs pass the Frame/EIP as a Param. MSDN has the
@@ -337,9 +337,6 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     /* Raise IRQL to HIGH_LEVEL */
     Ke386DisableInterrupts();
     KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-    /* Disable Interrupts, Dump Debug Messages */
-    DebugLogDumpMessages();
 
     /* Unload the Kernel Adress Space if we own it */
     if (MmGetKernelAddressSpace()->Lock.Owner == KeGetCurrentThread())

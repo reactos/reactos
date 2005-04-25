@@ -107,6 +107,7 @@ static PETHREAD GspDbgThread;
 static PETHREAD GspEnumThread;
 
 extern LIST_ENTRY PsActiveProcessHead;
+KD_PORT_INFORMATION GdbPortInfo;
 
 /* Number of Registers.  */
 #define NUMREGS	16
@@ -238,6 +239,22 @@ HexValue (CHAR ch)
 static CHAR GspInBuffer[BUFMAX];
 static CHAR GspOutBuffer[BUFMAX];
 
+VOID
+GdbPutChar(UCHAR Value)
+{
+  KdPortPutByteEx (&GdbPortInfo, Value);
+}
+
+UCHAR
+GdbGetChar(VOID)
+{
+  UCHAR Value;
+
+  while (!KdPortGetByteEx (&GdbPortInfo, &Value));
+
+  return Value;
+}
+
 /* scan for the sequence $<data>#<Checksum>     */
 
 PCHAR
@@ -252,7 +269,7 @@ GspGetPacket()
   while (TRUE)
     {
       /* wait around for the start character, ignore all other characters */
-      while ((ch = KdGetChar ()) != '$');
+      while ((ch = GdbGetChar ()) != '$');
 
     retry:
       Checksum = 0;
@@ -262,7 +279,7 @@ GspGetPacket()
       /* now, read until a # or end of Buffer is found */
       while (Count < BUFMAX)
 	{
-	  ch = KdGetChar ();
+	  ch = GdbGetChar ();
 	  if (ch == '$')
 	    goto retry;
 	  if (ch == '#')
@@ -275,24 +292,24 @@ GspGetPacket()
 
       if (ch == '#')
 	{
-	  ch = KdGetChar ();
+	  ch = GdbGetChar ();
 	  XmitChecksum = (CHAR)(HexValue (ch) << 4);
-	  ch = KdGetChar ();
+	  ch = GdbGetChar ();
 	  XmitChecksum += (CHAR)(HexValue (ch));
 
 	  if (Checksum != XmitChecksum)
 	    {
-	      KdPutChar ('-');	/* failed checksum */
+	      GdbPutChar ('-');	/* failed checksum */
 	    }
 	  else
 	    {
-	      KdPutChar ('+');	/* successful transfer */
+	      GdbPutChar ('+');	/* successful transfer */
 
 	      /* if a sequence char is present, reply the sequence ID */
 	      if (Buffer[2] == ':')
 		{
-		  KdPutChar (Buffer[0]);
-		  KdPutChar (Buffer[1]);
+		  GdbPutChar (Buffer[0]);
+		  GdbPutChar (Buffer[1]);
 
 		  return &Buffer[3];
 		}
@@ -315,22 +332,22 @@ GspPutPacket (PCHAR Buffer)
   /*  $<packet info>#<Checksum>. */
   do
     {
-      KdPutChar ('$');
+      GdbPutChar ('$');
       Checksum = 0;
       Count = 0;
 
       while ((ch = Buffer[Count]))
 				{
-				  KdPutChar (ch);
+				  GdbPutChar (ch);
 				  Checksum += ch;
 				  Count += 1;
 				}
 
-      KdPutChar ('#');
-      KdPutChar (HexChars[(Checksum >> 4) & 0xf]);
-      KdPutChar (HexChars[Checksum & 0xf]);
+      GdbPutChar ('#');
+      GdbPutChar (HexChars[(Checksum >> 4) & 0xf]);
+      GdbPutChar (HexChars[Checksum & 0xf]);
     }
-  while (KdGetChar () != '+');
+  while (GdbGetChar () != '+');
 }
 
 
@@ -342,20 +359,20 @@ GspPutPacketNoWait (PCHAR Buffer)
   CHAR ch;
 
   /*  $<packet info>#<Checksum>. */
-  KdPutChar ('$');
+  GdbPutChar ('$');
   Checksum = 0;
   Count = 0;
 
   while ((ch = Buffer[Count]))
 		{
-		  KdPutChar (ch);
+		  GdbPutChar (ch);
 		  Checksum += ch;
 		  Count += 1;
 		}
 
-  KdPutChar ('#');
-  KdPutChar (HexChars[(Checksum >> 4) & 0xf]);
-  KdPutChar (HexChars[Checksum & 0xf]);
+  GdbPutChar ('#');
+  GdbPutChar (HexChars[(Checksum >> 4) & 0xf]);
+  GdbPutChar (HexChars[Checksum & 0xf]);
 }
 
 /* Indicate to caller of GspMem2Hex or GspHex2Mem that there has been an
@@ -1109,9 +1126,10 @@ GspSetHwBreakpoint(ULONG BreakpointNumber,
  * This function does all command procesing for interfacing to gdb.
  */
 KD_CONTINUE_TYPE
-KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-			 PCONTEXT Context,
-			 PKTRAP_FRAME TrapFrame)
+STDCALL
+KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+                             PCONTEXT Context,
+                             PKTRAP_FRAME TrapFrame)
 {
   BOOLEAN Stepping;
   LONG Address;
@@ -1457,7 +1475,7 @@ GspBreakIn(PKINTERRUPT Interrupt,
 
   KeTrapFrameToContext (TrapFrame, &Context);
 
-  KdEnterDebuggerException (NULL, &Context, TrapFrame);
+  KdpGdbEnterDebuggerException (NULL, &Context, TrapFrame);
 
   KeContextToTrapFrame (&Context, TrapFrame);
 
@@ -1469,72 +1487,10 @@ GspBreakIn(PKINTERRUPT Interrupt,
 
 extern ULONG KdpPortIrq;
 
-/* Initialize the GDB stub */
-VOID INIT_FUNCTION
-KdGdbStubInit(ULONG Phase)
-{
-#if 0
-  KAFFINITY Affinity;
-  NTSTATUS Status;
-  ULONG MappedIrq;
-  KIRQL Dirql;
-#endif
-
-  if (Phase == 0)
-    {
-      GspInitialized = TRUE;
-      GspRunThread = PsGetCurrentThread();
-     
-      ObReferenceObject(GspRunThread);
-
-/*      GspDbgThread = PsGetCurrentThread(); */
-      GspDbgThread = NULL;
-      GspEnumThread = NULL;
-
-      HalDisplayString("Waiting for GDB to attach\n");
-      DbgPrint("Module 'hal.dll' loaded at 0x%.08x.\n", LdrHalBase);
-      DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
-    }
-  else if (Phase == 1)
-    {
-#if 0
-		  /* Hook an interrupt handler to allow the debugger to break into
-		     the system */
-		  MappedIrq = HalGetInterruptVector (Internal,
-		    0,
-		    0,
-		    KdpPortIrq,
-		    &Dirql,
-		    &Affinity);
-
-		  Status = IoConnectInterrupt(&GspInterrupt,
-		    GspBreakIn,
-		    NULL,
-		    NULL,
-		    MappedIrq,
-		    Dirql,
-		    Dirql,
-		    0,
-		    FALSE,
-		    Affinity,
-		    FALSE);
-      if (!NT_SUCCESS (Status))
-      {
-        DPRINT1("Could not connect to IRQ line %d (0x%x)\n",
-          KdpPortIrq, Status);
-        return;
-      }
-
-       KdPortEnableInterrupts();
-
-       DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
-#endif
-  }
-}
-
 
 VOID
-KdGdbDebugPrint(LPSTR Message)
+STDCALL
+KdpGdbDebugPrint(PCH Message)
 {
 #if 0
   /* This can be quite annoying! */
@@ -1581,3 +1537,44 @@ KdGdbListModules()
 
   DbgPrint ("%d modules listed\n", ModuleCount);
 }
+
+/* Initialize the GDB stub */
+VOID 
+STDCALL
+KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
+               ULONG BootPhase)
+{
+    if (!KdDebuggerEnabled || !KdpDebugMode.Gdb) return;
+    
+    if (BootPhase == 0)
+    {
+        
+      /* Initialize the Port */
+      KdPortInitializeEx(&GdbPortInfo, 0, 0);
+    }
+    else if (BootPhase == 1)
+    {
+      GspInitialized = TRUE;
+      GspRunThread = PsGetCurrentThread();
+     
+      ObReferenceObject(GspRunThread);
+
+      GspDbgThread = NULL;
+      GspEnumThread = NULL;
+      
+      /* Write out the functions that we support for now */
+      WrapperTable->KdpInitRoutine = KdpGdbStubInit;
+      WrapperTable->KdpPrintRoutine = KdpGdbDebugPrint;
+      WrapperTable->KdpExceptionRoutine = KdpGdbEnterDebuggerException;
+
+      HalDisplayString("Waiting for GDB to attach\n");
+      DbgPrint("Module 'hal.dll' loaded at 0x%.08x.\n", LdrHalBase);
+      DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
+    } 
+    else if (BootPhase == 2)
+    {
+      HalDisplayString("\n   GDB debugging enabled\n\n");
+    }
+}
+
+/* EOF */

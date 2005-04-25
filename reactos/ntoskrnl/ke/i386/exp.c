@@ -106,15 +106,8 @@ NTSTATUS ExceptionToNtStatus[] =
 
 /* FUNCTIONS ****************************************************************/
 
-#if defined(DBG) || defined(KDBG)
 BOOLEAN STDCALL
-KeRosPrintAddress(PVOID address)
-{
-  return KdbSymPrintAddress(address);
-}
-#else /* KDBG */
-BOOLEAN STDCALL
-KeRosPrintAddress(PVOID address)
+KiRosPrintAddress(PVOID address)
 {
    PLIST_ENTRY current_entry;
    MODULE_TEXT_SECTION* current;
@@ -147,7 +140,6 @@ KeRosPrintAddress(PVOID address)
 
    return(FALSE);
 }
-#endif /* KDBG */
 
 ULONG
 KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
