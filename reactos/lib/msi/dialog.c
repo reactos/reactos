@@ -18,6 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define COBJMACROS
+
 #include <stdarg.h>
 
 #include "windef.h"
@@ -28,6 +30,8 @@
 #include "msi.h"
 #include "msipriv.h"
 #include "msidefs.h"
+#include "ocidl.h"
+#include "olectl.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -55,6 +59,7 @@ struct msi_control_tag
     HWND hwnd;
     msi_handler handler;
     LPWSTR property;
+    IPicture *pic;
     WCHAR name[1];
 };
 
@@ -131,7 +136,7 @@ static LPWSTR msi_dialog_get_style( LPCWSTR *text )
     ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
     if( !ret )
         return ret;
-    strncpyW( ret, p, len );
+    memcpy( ret, p, len*sizeof(WCHAR) );
     ret[len-1] = 0;
     return ret;
 }
@@ -226,17 +231,16 @@ static UINT msi_dialog_build_font_list( msi_dialog *dialog )
     return r;
 }
 
-static msi_control *msi_dialog_add_control( msi_dialog *dialog,
-                MSIRECORD *rec, LPCWSTR szCls, DWORD style )
+static msi_control *msi_dialog_create_window( msi_dialog *dialog,
+                MSIRECORD *rec, LPCWSTR szCls, LPCWSTR name, LPCWSTR text,
+                DWORD style, HWND parent )
 {
-    DWORD x, y, width, height, attributes;
-    LPCWSTR text, name;
+    DWORD x, y, width, height;
     LPWSTR font = NULL, title = NULL;
-    msi_control *control = NULL;
+    msi_control *control;
 
     style |= WS_CHILD | WS_GROUP;
 
-    name = MSI_RecordGetString( rec, 2 );
     control = HeapAlloc( GetProcessHeap(), 0,
                          sizeof *control + strlenW(name)*sizeof(WCHAR) );
     strcpyW( control->name, name );
@@ -244,37 +248,55 @@ static msi_control *msi_dialog_add_control( msi_dialog *dialog,
     dialog->control_list = control;
     control->handler = NULL;
     control->property = NULL;
+    control->pic = NULL;
 
     x = MSI_RecordGetInteger( rec, 4 );
     y = MSI_RecordGetInteger( rec, 5 );
     width = MSI_RecordGetInteger( rec, 6 );
     height = MSI_RecordGetInteger( rec, 7 );
-    attributes = MSI_RecordGetInteger( rec, 8 );
-    text = MSI_RecordGetString( rec, 10 );
-
-    TRACE("Dialog %s control %s\n", debugstr_w(dialog->name), debugstr_w(text));
 
     x = msi_dialog_scale_unit( dialog, x );
     y = msi_dialog_scale_unit( dialog, y );
     width = msi_dialog_scale_unit( dialog, width );
     height = msi_dialog_scale_unit( dialog, height );
 
-    if( attributes & 1 )
-        style |= WS_VISIBLE;
-    if( ~attributes & 2 )
-        style |= WS_DISABLED;
     if( text )
     {
         font = msi_dialog_get_style( &text );
         deformat_string( dialog->package, text, &title );
     }
+
     control->hwnd = CreateWindowW( szCls, title, style,
-                          x, y, width, height, dialog->hwnd, NULL, NULL, NULL );
+                          x, y, width, height, parent, NULL, NULL, NULL );
+
+    TRACE("Dialog %s control %s hwnd %p\n",
+           debugstr_w(dialog->name), debugstr_w(text), control->hwnd );
+
     msi_dialog_set_font( dialog, control->hwnd,
                          font ? font : dialog->default_font );
+
     HeapFree( GetProcessHeap(), 0, font );
     HeapFree( GetProcessHeap(), 0, title );
+
     return control;
+}
+
+/* everything except radio buttons */
+static msi_control *msi_dialog_add_control( msi_dialog *dialog,
+                MSIRECORD *rec, LPCWSTR szCls, DWORD style )
+{
+    DWORD attributes;
+    LPCWSTR text, name;
+
+    name = MSI_RecordGetString( rec, 2 );
+    attributes = MSI_RecordGetInteger( rec, 8 );
+    text = MSI_RecordGetString( rec, 10 );
+    if( attributes & 1 )
+        style |= WS_VISIBLE;
+    if( ~attributes & 2 )
+        style |= WS_DISABLED;
+    return msi_dialog_create_window( dialog, rec, szCls, name, text,
+                                     style, dialog->hwnd );
 }
 
 static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
@@ -309,7 +331,7 @@ static UINT msi_dialog_checkbox_control( msi_dialog *dialog, MSIRECORD *rec )
     control->handler = msi_dialog_checkbox_handler;
     prop = MSI_RecordGetString( rec, 9 );
     if( prop )
-        control->property = dupstrW( prop );
+        control->property = strdupW( prop );
     msi_dialog_checkbox_sync_state( dialog, control );
 
     return ERROR_SUCCESS;
@@ -327,7 +349,7 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     const static WCHAR szEdit[] = { 'E','D','I','T',0 };
 
-    TRACE("%p %p\n", dialog, rec);
+    FIXME("%p %p\n", dialog, rec);
 
     msi_dialog_add_control( dialog, rec, szEdit, WS_BORDER |
                  ES_MULTILINE | WS_VSCROLL | ES_READONLY | ES_AUTOVSCROLL );
@@ -335,12 +357,64 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
+static UINT msi_load_bitmap( MSIDATABASE *db, LPCWSTR name, IPicture **pic )
+{
+    const static WCHAR query[] = {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ','B','i','n','a','r','y',' ',
+        'w','h','e','r','e',' ',
+            '`','N','a','m','e','`',' ','=',' ','\'','%','s','\'',0
+    };
+    MSIQUERY *view = NULL;
+    MSIRECORD *rec = NULL;
+    IStream *stm = NULL;
+    UINT r;
+
+    r = MSI_OpenQuery( db, &view, query, name );
+    if( r != ERROR_SUCCESS )
+        return r;
+
+    MSI_ViewExecute( view, NULL );
+    MSI_ViewFetch( view, &rec );
+    MSI_ViewClose( view );
+    msiobj_release( &view->hdr );
+
+    if( !rec )
+        return ERROR_FUNCTION_FAILED;
+
+    r = MSI_RecordGetIStream( rec, 2, &stm );
+    msiobj_release( &rec->hdr );
+    if( r != ERROR_SUCCESS )
+        return r;
+
+    r = OleLoadPicture( stm, 0, TRUE, &IID_IPicture, (LPVOID*) pic );
+    IStream_Release( stm );
+    if( FAILED( r ) )
+        return ERROR_FUNCTION_FAILED;
+
+    return ERROR_SUCCESS;
+}
+
 static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
 {
-    TRACE("%p %p\n", dialog, rec);
+    IPicture *pic = NULL;
+    msi_control *control;
+    OLE_HANDLE hBitmap = 0;
+    LPCWSTR text;
+    UINT r;
 
-    msi_dialog_add_control( dialog, rec, szStatic,
+    control = msi_dialog_add_control( dialog, rec, szStatic,
                             SS_BITMAP | SS_LEFT | SS_CENTERIMAGE );
+    text = MSI_RecordGetString( rec, 10 );
+    r = msi_load_bitmap( dialog->package->db, text, &pic );
+    if( r == ERROR_SUCCESS )
+    {
+        r = IPicture_get_Handle( pic, &hBitmap );
+        if( SUCCEEDED( r ) )
+            SendMessageW( control->hwnd, STM_SETIMAGE, IMAGE_BITMAP, hBitmap );
+        control->pic = pic;
+    }
+    
     return ERROR_SUCCESS;
 }
 
@@ -364,7 +438,7 @@ static UINT msi_dialog_edit_control( msi_dialog *dialog, MSIRECORD *rec )
     control->handler = msi_dialog_edit_handler;
     prop = MSI_RecordGetString( rec, 9 );
     if( prop )
-        control->property = dupstrW( prop );
+        control->property = strdupW( prop );
     val = load_dynamic_property( dialog->package, control->property, NULL );
     SetWindowTextW( control->hwnd, val );
     HeapFree( GetProcessHeap(), 0, val );
@@ -377,63 +451,31 @@ static UINT msi_dialog_pathedit_control( msi_dialog *dialog, MSIRECORD *rec )
     return msi_dialog_edit_control( dialog, rec );
 }
 
+/* radio buttons are a bit different from normal controls */
 static UINT msi_dialog_create_radiobutton( MSIRECORD *rec, LPVOID param )
 {
     radio_button_group_descr *group = (radio_button_group_descr *)param;
     msi_dialog *dialog = group->dialog;
     msi_control *control;
-    LPCWSTR prop;
-    DWORD x, y, width, height, style;
+    LPCWSTR prop, text, name;
+    DWORD style;
     DWORD attributes = group->attributes;
-    LPCWSTR text, name;
-    LPWSTR font = NULL, title = NULL;
 
     style = WS_CHILD | BS_AUTORADIOBUTTON | BS_MULTILINE;
     name = MSI_RecordGetString( rec, 3 );
-    control = HeapAlloc( GetProcessHeap(), 0,
-                         sizeof *control + strlenW(name)*sizeof(WCHAR) );
-    strcpyW( control->name, name );
-    control->next = dialog->control_list;
-    dialog->control_list = control;
-
-    x = MSI_RecordGetInteger( rec, 4 );
-    y = MSI_RecordGetInteger( rec, 5 );
-    width = MSI_RecordGetInteger( rec, 6 );
-    height = MSI_RecordGetInteger( rec, 7 );
     text = MSI_RecordGetString( rec, 8 );
-
-    x = msi_dialog_scale_unit( dialog, x );
-    y = msi_dialog_scale_unit( dialog, y );
-    width = msi_dialog_scale_unit( dialog, width );
-    height = msi_dialog_scale_unit( dialog, height );
-
     if( attributes & 1 )
         style |= WS_VISIBLE;
     if( ~attributes & 2 )
         style |= WS_DISABLED;
 
-    if( text )
-    {
-        font = msi_dialog_get_style( &text );
-        deformat_string( dialog->package, text, &title );
-    }
-
-    control->hwnd = CreateWindowW( szButton, title, style, x, y, width, height,
-        group->parent->hwnd, NULL, NULL, NULL );
-
-    TRACE("Dialog %s control %s hwnd %p\n", debugstr_w(dialog->name), debugstr_w(text), control->hwnd);
-
-    msi_dialog_set_font( dialog, control->hwnd,
-            font ? font : dialog->default_font );
-
-    HeapFree( GetProcessHeap(), 0, font );
-    HeapFree( GetProcessHeap(), 0, title );
-
+    control = msi_dialog_create_window( dialog, rec, szButton, name, text,
+                                        style, group->parent->hwnd );
     control->handler = msi_dialog_radiogroup_handler;
 
     prop = MSI_RecordGetString( rec, 1 );
     if( prop )
-        control->property = dupstrW( prop );
+        control->property = strdupW( prop );
 
     return ERROR_SUCCESS;
 }
@@ -467,7 +509,7 @@ static UINT msi_dialog_radiogroup_control( msi_dialog *dialog, MSIRECORD *rec )
     }
 
     if( prop )
-        control->property = dupstrW( prop );
+        control->property = strdupW( prop );
 
     /* query the Radio Button table for all control in this group */
     r = MSI_OpenQuery( package->db, &view, query, prop );
@@ -1078,6 +1120,8 @@ void msi_dialog_destroy( msi_dialog *dialog )
         dialog->control_list = t->next;
         /* leave dialog->hwnd - destroying parent destroys child windows */
         HeapFree( GetProcessHeap(), 0, t->property );
+        if( t->pic )
+            IPicture_Release( t->pic );
         HeapFree( GetProcessHeap(), 0, t );
     }
 

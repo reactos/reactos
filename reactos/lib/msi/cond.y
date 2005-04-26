@@ -701,7 +701,7 @@ static LPWSTR COND_GetString( struct cond_str *str )
     ret = HeapAlloc( GetProcessHeap(), 0, (str->len+1) * sizeof (WCHAR) );
     if( ret )
     {
-        strncpyW( ret, str->data, str->len );
+        memcpy( ret, str->data, str->len * sizeof(WCHAR));
         ret[str->len]=0;
     }
     TRACE("Got identifier %s\n",debugstr_w(ret));

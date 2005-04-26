@@ -1,7 +1,7 @@
 /*
- * Spanish resources for MSI
+ * Durch resources for MSI
  *
- * Copyright 2005 José Manuel Ferrer Ortiz
+ * Copyright 2005 Hans Leidekker
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +18,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_DUTCH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-	5 "ruta %s no encontrada"
-	9 "inserte el disco %s"
-	10 "parámetros incorrectos"
-	11 "introduzca qué carpeta contiene %s"
-	12 "instalar fuente para característica ausente"
-	13 "unidad de red para característica ausente"
-	14 "característica de:"
-	15 "elija qué carpeta contiene %s"
+	5 "Pad %s niet gevonden"
+	9 "Plaats disk %s"
+	10 "Ongeldige parameters"
+	11 "Voer de map in die %s bevat"
+	12 "De installatiebron van het feature ontbreekt"
+	13 "De netwerkschijf met het feature ontbreekt"
+	14 "Feature van:"
+	15 "Kies de map die %s bevat"
 }

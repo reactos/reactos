@@ -132,16 +132,16 @@ UINT WINAPI MsiPreviewDialogW( MSIHANDLE hPreview, LPCWSTR szDialogName )
 
 UINT WINAPI MsiPreviewDialogA( MSIHANDLE hPreview, LPCSTR szDialogName )
 {
-    UINT r, len;
+    UINT r;
     LPWSTR strW = NULL;
 
     TRACE("%ld %s\n", hPreview, debugstr_a(szDialogName));
 
     if( szDialogName )
     {
-        len = MultiByteToWideChar( CP_ACP, 0, szDialogName, -1, NULL, 0 );
-        strW = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, szDialogName, -1, strW, len );
+        strW = strdupAtoW( szDialogName );
+        if( !strW )
+            return ERROR_OUTOFMEMORY;
     }
     r = MsiPreviewDialogW( hPreview, strW );
     HeapFree( GetProcessHeap(), 0, strW );

@@ -469,14 +469,13 @@ UINT WINAPI MsiOpenPackageW(LPCWSTR szPackage, MSIHANDLE *phPackage)
 UINT WINAPI MsiOpenPackageExA(LPCSTR szPackage, DWORD dwOptions, MSIHANDLE *phPackage)
 {
     LPWSTR szwPack = NULL;
-    UINT len, ret;
+    UINT ret;
 
     if( szPackage )
     {
-        len = MultiByteToWideChar( CP_ACP, 0, szPackage, -1, NULL, 0 );
-        szwPack = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
-        if( szwPack )
-            MultiByteToWideChar( CP_ACP, 0, szPackage, -1, szwPack, len );
+        szwPack = strdupAtoW( szPackage );
+        if( !szwPack )
+            return ERROR_OUTOFMEMORY;
     }
 
     ret = MsiOpenPackageExW( szwPack, dwOptions, phPackage );
@@ -638,29 +637,20 @@ UINT WINAPI MsiSetPropertyA( MSIHANDLE hInstall, LPCSTR szName, LPCSTR szValue)
 {
     LPWSTR szwName = NULL, szwValue = NULL;
     UINT hr = ERROR_INSTALL_FAILURE;
-    UINT len;
 
-    if (0 == hInstall) {
-      return ERROR_INVALID_HANDLE;
-    }
-    if (NULL == szName) {
-      return ERROR_INVALID_PARAMETER;
-    }
-    if (NULL == szValue) {
-      return ERROR_INVALID_PARAMETER;
+    if( szName )
+    {
+        szwName = strdupAtoW( szName );
+        if( !szwName )
+            goto end;
     }
 
-    len = MultiByteToWideChar( CP_ACP, 0, szName, -1, NULL, 0 );
-    szwName = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-    if( !szwName )
-        goto end;
-    MultiByteToWideChar( CP_ACP, 0, szName, -1, szwName, len );
-
-    len = MultiByteToWideChar( CP_ACP, 0, szValue, -1, NULL, 0 );
-    szwValue = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-    if( !szwValue)
-        goto end;
-    MultiByteToWideChar( CP_ACP, 0, szValue , -1, szwValue, len );
+    if( szValue )
+    {
+        szwValue = strdupAtoW( szValue );
+        if( !szwValue)
+            goto end;
+    }
 
     hr = MsiSetPropertyW( hInstall, szwName, szwValue);
 
@@ -703,7 +693,7 @@ UINT MSI_SetPropertyW( MSIPACKAGE *package, LPCWSTR szName, LPCWSTR szValue)
     }
     else
     {
-       strcpyW(Query,Insert);
+        strcpyW(Query,Insert);
 
         row = MSI_CreateRecord(2);
         MSI_RecordSetStringW(row,1,szName);
@@ -732,8 +722,13 @@ UINT WINAPI MsiSetPropertyW( MSIHANDLE hInstall, LPCWSTR szName, LPCWSTR szValue
     MSIPACKAGE *package;
     UINT ret;
 
+    if (NULL == szName)
+        return ERROR_INVALID_PARAMETER;
+    if (NULL == szValue)
+        return ERROR_INVALID_PARAMETER;
+
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
-    if( !package)
+    if( !package )
         return ERROR_INVALID_HANDLE;
     ret = MSI_SetPropertyW( package, szName, szValue);
     msiobj_release( &package->hdr );
@@ -808,17 +803,18 @@ UINT MSI_GetPropertyA(MSIPACKAGE *package, LPCSTR szName,
                            LPSTR szValueBuf, DWORD* pchValueBuf)
 {
     MSIRECORD *row;
-    UINT rc, len;
-    LPWSTR szwName;
+    UINT rc;
+    LPWSTR szwName = NULL;
 
     if (*pchValueBuf > 0)
         szValueBuf[0] = 0;
     
-    len = MultiByteToWideChar( CP_ACP, 0, szName, -1, NULL, 0 );
-    szwName = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-    if (!szwName)
-        return ERROR_NOT_ENOUGH_MEMORY;
-    MultiByteToWideChar( CP_ACP, 0, szName, -1, szwName, len );
+    if( szName )
+    {
+        szwName = strdupAtoW( szName );
+        if (!szwName)
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
 
     rc = MSI_GetPropertyRow(package, szwName, &row);
     if (rc == ERROR_SUCCESS)

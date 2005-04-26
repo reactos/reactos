@@ -116,39 +116,3 @@ int get_loaded_component(MSIPACKAGE* package, LPCWSTR Component );
 int get_loaded_feature(MSIPACKAGE* package, LPCWSTR Feature );
 int get_loaded_file(MSIPACKAGE* package, LPCWSTR file);
 int track_tempfile(MSIPACKAGE *package, LPCWSTR name, LPCWSTR path);
-
-
-
-inline static char *strdupWtoA( const WCHAR *str )
-{
-    char *ret = NULL;
-    if (str)
-    {
-        DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL
-);
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
-            WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
-    }
-    return ret;
-}
-
-inline static WCHAR *strdupAtoW( const char *str )
-{
-    WCHAR *ret = NULL;
-    if (str)
-    {
-        DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
-            MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
-    }
-    return ret;
-}
-
-inline static LPWSTR dupstrW(LPCWSTR src)
-{
-    LPWSTR dest;
-    if (!src) return NULL;
-    dest = HeapAlloc(GetProcessHeap(), 0, (strlenW(src)+1)*sizeof(WCHAR));
-    strcpyW(dest, src);
-    return dest;
-}
