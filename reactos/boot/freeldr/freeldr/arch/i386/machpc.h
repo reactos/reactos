@@ -26,7 +26,7 @@
 #include "mm.h"
 #endif
 
-VOID PcMachInit(VOID);
+VOID PcMachInit(char *CmdLine);
 
 VOID PcConsPutChar(int Ch);
 BOOL PcConsKbHit();

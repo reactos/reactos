@@ -31,7 +31,7 @@ VOID BootMain(char *CmdLine)
 {
 	CmdLineParse(CmdLine);
 
-	MachInit();
+	MachInit(CmdLine);
 
 	DebugInit();
 

@@ -57,7 +57,7 @@ extern	PINI_SECTION		IniFileSectionListHead;
 extern	ULONG					IniFileSectionCount;
 extern	ULONG					IniFileSettingCount;
 
-PFILE	IniOpenIniFile(UCHAR BootDriveNumber, UCHAR BootPartitionNumber);
+PFILE	IniOpenIniFile();
 
 BOOL	IniParseFile(PUCHAR IniFileData, ULONG IniFileSize);
 ULONG		IniGetNextLineSize(PUCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset);
