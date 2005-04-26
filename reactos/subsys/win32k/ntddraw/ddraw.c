@@ -361,13 +361,8 @@ DWORD STDCALL NtGdiDdBlt(
  return ddRVal;
 }
 
-DWORD STDCALL NtGdiDdAlphaBlt(VOID)
-{
-	// MSDN on all windows 95 to windows xp this call are unsuported
-	// see Graphics Low Level Client Support
 
-	return DDERR_UNSUPPORTED;
-}
+
 
 
 /* EOF */

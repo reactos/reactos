@@ -551,4 +551,10 @@ DWORD STDCALL NtGdiDdUpdateOverlay(
 }
 
 
+DWORD STDCALL NtGdiDdAlphaBlt(VOID)
+{
+	UNIMPLEMENTED
+
+	return 0;
+}
 /* EOF */
