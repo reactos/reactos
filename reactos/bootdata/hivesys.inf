@@ -178,6 +178,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x0000000
 
 ; Suported and installed locales
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000407",0x00010001,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000409",0x00010001,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","0000040a",0x00010001,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","0000040b",0x00010001,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","0000040c",0x00010001,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","00000419",0x00010001,"5"
 
 ; Some installers check for SP6
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
