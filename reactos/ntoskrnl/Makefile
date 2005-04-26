@@ -149,14 +149,13 @@ OBJECTS_IO = \
 	io/buildirp.o \
 	io/cancel.o \
 	io/cleanup.o \
-	io/cntrller.o \
+	io/controller.o \
 	io/create.o \
 	io/device.o \
 	io/deviface.o \
 	io/dir.o \
 	io/driver.o \
 	io/efi.o \
-	io/errlog.o \
 	io/error.o \
 	io/event.o \
 	io/file.o \

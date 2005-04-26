@@ -684,6 +684,34 @@ typedef struct _FILE_OBJECT
    PIO_COMPLETION_CONTEXT CompletionContext;
 } FILE_OBJECT, *PFILE_OBJECT;
 
+typedef IO_ALLOCATION_ACTION STDCALL_FUNC
+(*PDRIVER_CONTROL)(struct _DEVICE_OBJECT *DeviceObject,
+		   struct _IRP *Irp,
+		   PVOID MapRegisterBase,
+		   PVOID Context);
+#if (_WIN32_WINNT >= 0x0400)
+typedef VOID STDCALL_FUNC
+(*PFSDNOTIFICATIONPROC)(IN struct _DEVICE_OBJECT *PtrTargetFileSystemDeviceObject,
+			IN BOOLEAN DriverActive);
+#endif // (_WIN32_WINNT >= 0x0400)
+
+typedef struct _KDEVICE_QUEUE_ENTRY
+{
+   LIST_ENTRY DeviceListEntry;
+   ULONG SortKey;
+   BOOLEAN Inserted;
+} KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY;
+
+typedef struct _WAIT_CONTEXT_BLOCK
+{
+  KDEVICE_QUEUE_ENTRY WaitQueueEntry;
+  PDRIVER_CONTROL DeviceRoutine;
+  PVOID DeviceContext;
+  ULONG NumberOfMapRegisters;
+  PVOID DeviceObject;
+  PVOID CurrentIrp;
+  PKDPC BufferChainingDpc;
+} WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
 typedef struct _IRP
 {
@@ -756,7 +784,6 @@ typedef struct _VPB
    ULONG ReferenceCount;
    WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH];
 } VPB, *PVPB;
-
 
 typedef struct _DEVICE_OBJECT
 {
@@ -1131,18 +1158,6 @@ typedef struct _DRIVER_LAYOUT_INFORMATION
    ULONG Signature;
    PARTITION_INFORMATION PartitionEntry[1];
 } DRIVER_LAYOUT_INFORMATION, *PDRIVER_LAYOUT_INFORMATION;
-
-
-typedef IO_ALLOCATION_ACTION STDCALL_FUNC
-(*PDRIVER_CONTROL)(PDEVICE_OBJECT DeviceObject,
-		   PIRP Irp,
-		   PVOID MapRegisterBase,
-		   PVOID Context);
-#if (_WIN32_WINNT >= 0x0400)
-typedef VOID STDCALL_FUNC
-(*PFSDNOTIFICATIONPROC)(IN PDEVICE_OBJECT PtrTargetFileSystemDeviceObject,
-			IN BOOLEAN DriverActive);
-#endif // (_WIN32_WINNT >= 0x0400)
 
 
 typedef struct _NAMED_PIPE_CREATE_PARAMETERS

@@ -285,37 +285,6 @@ typedef struct _KDPC_DATA {
   ULONG  DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
 
-typedef struct _KDEVICE_QUEUE_ENTRY
-{
-   LIST_ENTRY DeviceListEntry;
-   ULONG SortKey;
-   BOOLEAN Inserted;
-} KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY;
-
-typedef struct _WAIT_CONTEXT_BLOCK
-{
-  KDEVICE_QUEUE_ENTRY WaitQueueEntry;
-  /*
-   * XXX THIS IS WRONG XXX
-   *
-   * Our headers have enough circular dependancies that
-   * I can't figure out, given 5 minutes of testing, what
-   * order to include them in to get PDRIVER_CONTROL to be
-   * defined here.  The proper definition of the next item
-   * is:
-   *
-   * PDRIVER_CONTROL DeviceRoutine;
-   *
-   * but instead we use PVOID until headers are fixed.
-   */
-  PVOID DeviceRoutine;
-  PVOID DeviceContext;
-  ULONG NumberOfMapRegisters;
-  PVOID DeviceObject;
-  PVOID CurrentIrp;
-  PKDPC BufferChainingDpc;
-} WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
-
 typedef enum _KBUGCHECK_CALLBACK_REASON {
     KbCallbackInvalid,
     KbCallbackReserved1,
