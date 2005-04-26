@@ -448,6 +448,8 @@ void set_name_servers( struct client_lease *new_lease ) {
         int i, addrs = 
             new_lease->options[DHO_DOMAIN_NAME_SERVERS].len / sizeof(ULONG);
 
+               /* XXX I'm setting addrs to 1 until we are ready up the chain */
+               addrs = 1;
         nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
         nsbuf[0] = 0;
         
@@ -1896,7 +1898,7 @@ check_option(struct client_lease *l, int option)
 	case DHO_FONT_SERVERS:
 	case DHO_DHCP_SERVER_IDENTIFIER:
 		if (!ipv4addrs(opbuf)) {
-			warning("Invalid IP address in option: %s", opbuf);
+                        warning("Invalid IP address in option(%d): %s", option, opbuf);
 			return (0);
 		}
 		return (1)  ;
@@ -1991,19 +1993,20 @@ res_hnok(const char *dn)
 int
 ipv4addrs(char * buf)
 {
-	struct in_addr jnk;
-	int count = 0;
+    char *tmp;
+    struct in_addr jnk;
+    int i = 0;
+    
+    note("Input: %s\n", buf);
 
-	while (inet_aton(buf, &jnk) == 1){
-		count++;
-		while (periodchar(*buf) || digitchar(*buf))
-			buf++;
-		if (*buf == '\0')
-			return (count);
-		while (*buf ==  ' ')
-			buf++;
-	}
-	return (0);
+    do {
+        tmp = strtok(buf, " ");
+        note("got %s\n", tmp);
+        if( tmp && inet_aton(tmp, &jnk) ) i++;
+        buf = NULL;
+    } while( tmp );
+
+    return (i);
 }
 
 

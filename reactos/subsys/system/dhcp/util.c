@@ -70,19 +70,19 @@ void error( char *format, ... ) {
 }    
 
 int16_t getShort( unsigned char *data ) {
-    return 0;
+    return (int16_t) ntohs(*(int16_t*) data);
 }
 
 u_int16_t getUShort( unsigned char *data ) {
-    return 0;
+    return (u_int16_t) ntohs(*(u_int16_t*) data);
 }
 
 int32_t getLong( unsigned char *data ) {
-    return 0;
+       return (int32_t) ntohl(*(u_int32_t*) data);
 }
 
 u_int32_t getULong( unsigned char *data ) {
-    return 0;
+       return ntohl(*(u_int32_t*)data);
 }
 
 int addr_eq( struct iaddr a, struct iaddr b ) {
@@ -93,6 +93,7 @@ void *dmalloc( int size, char *name ) { return malloc( size ); }
 void dfree( void *v, char *name ) { free( v ); }
 
 int read_client_conf(void) {
+       error("util.c read_client_conf not implemented!");
     return 0;
 }
 
