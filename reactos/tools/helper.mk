@@ -255,6 +255,8 @@ ifeq ($(TARGET_TYPE),driver)
   MK_BOOTCDDIR := .
   MK_DISTDIR := drivers
   MK_RES_BASE := $(TARGET_NAME)
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
 endif
 
 ifeq ($(TARGET_TYPE),export_driver)
@@ -295,6 +297,8 @@ ifeq ($(TARGET_TYPE),hal)
   MK_RES_BASE := $(TARGET_NAME)
   MK_INSTALL_BASENAME := hal
   MK_INSTALL_FULLNAME := hal.dll
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
   ifeq ($(TARGET_BOOTSTRAP),yes)
     TARGET_BOOTSTRAP_NAME := hal.dll
   else
@@ -316,6 +320,8 @@ ifeq ($(TARGET_TYPE),bootpgm)
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
   MK_INSTALLDIR := system32
   MK_BOOTCDDIR := system32
   MK_DISTDIR := # FIXME
@@ -336,6 +342,8 @@ ifeq ($(TARGET_TYPE),miniport)
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
   MK_BOOTCDDIR := .
   MK_DISTDIR := drivers
   MK_RES_BASE := $(TARGET_NAME)
@@ -357,6 +365,8 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_INSTALLDIR := system32
   MK_BOOTCDDIR := .
   MK_DISTDIR := dlls
+  MK_LFLAGS := -Wl,--file-alignment,0x1000 \
+	           -Wl,--section-alignment,0x1000
   MK_RES_BASE := $(TARGET_NAME)
 endif
 
@@ -660,8 +670,13 @@ endif
 # if needed, until their problems can be found
 #
 ifneq ($(DBG),1)
-  MK_CFLAGS += -Os -Wno-strict-aliasing -funit-at-a-time -fweb -ftracer -momit-leaf-frame-pointer
+  MK_CFLAGS += -Os -Wno-strict-aliasing -ftracer -momit-leaf-frame-pointer
   MK_CFLAGS += -mpreferred-stack-boundary=2
+
+  CC_VERSION=$(word 1,$(shell gcc -dumpversion))  
+  ifeq ($(CC_VERSION),3.4.3)
+  MK_CFLAGS += -funit-at-a-time -fweb 
+  endif
     
   #
   # Remove Symbols if no debugging is used at all
