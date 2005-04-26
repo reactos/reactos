@@ -21,8 +21,7 @@ DWORD STDCALL NtGdiDdGetAvailDriverMemory(
     PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
 )
 {
-	UNIMPLEMENTED
-	
+	UNIMPLEMENTED	
 
 	return 0;
 }
@@ -91,12 +90,7 @@ DWORD STDCALL NtGdiDdAddAttachedSurface(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdAlphaBlt(VOID)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 BOOL STDCALL NtGdiDdAttachSurface(      
     HANDLE hSurfaceFrom,
@@ -118,16 +112,6 @@ DWORD STDCALL NtGdiDdBeginMoCompFrame(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdBlt(      
-    HANDLE hSurfaceDest,
-    HANDLE hSurfaceSrc,
-    PDD_BLTDATA puBltData
-)
-{
-	UNIMPLEMENTED
-
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdCanCreateD3DBuffer(      
     HANDLE hDirectDraw,
@@ -435,26 +419,6 @@ DWORD STDCALL NtGdiDdLockD3D(
 	return 0;
 }
 
-/*
-BOOL STDCALL NtGdiDdQueryDirectDrawObject(      
-    HANDLE hDirectDrawLocal,
-    DD_HALINFO *pHalInfo,
-    DWORD *pCallBackFlags,
-    PD3DNTHAL_CALLBACKS puD3dCallbacks,
-    PD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
-    PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
-    LPDDSURFACEDESC puD3dTextureFormats,
-    DWORD *puNumHeaps,
-    VIDEOMEMORY *puvmList,
-    DWORD *puNumFourCC,
-    DWORD *puFourCC
-)
-{
-	UNIMPLEMENTED
-
-	return 0;
-}
-*/
 
 DWORD STDCALL NtGdiDdQueryMoCompStatus(      
     HANDLE hMoComp,

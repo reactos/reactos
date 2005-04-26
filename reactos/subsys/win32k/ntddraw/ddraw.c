@@ -187,6 +187,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 		pDirectDraw->DdLockD3DBuffer = puD3dBufferCallbacks->LockD3DBuffer;
 		pDirectDraw->DdUnlockD3DBuffer = puD3dBufferCallbacks->UnlockD3DBuffer;
 	}
+
 	
 	GDIOBJ_UnlockObj(hDirectDrawLocal);
 
@@ -286,14 +287,14 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
     DWORD  pdwNumFourCC;
     DWORD  *pdwFourCC = NULL;
 	DWORD  ddRVal;
-	
-
+	    
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
-	ddRVal = pDirectDraw->DrvGetDirectDrawInfo(
+	
+	 ddRVal = pDirectDraw->DrvGetDirectDrawInfo(
                  pDirectDraw->Global.dhpdev,(PDD_HALINFO) puGetDriverInfoData,
                  &pdwNumHeaps, pvmList, &pdwNumFourCC, pdwFourCC);
-
+	
     GDIOBJ_UnlockObj(hDirectDrawLocal);
 	
 	return ddRVal;
@@ -328,6 +329,8 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
+	puCanCreateSurfaceData->lpDD = pDirectDraw->Local.lpGbl;
+
 	ddRVal = pDirectDraw->DdCanCreateSurface(puCanCreateSurfaceData);
 
 	GDIOBJ_UnlockObj(hDirectDrawLocal);
@@ -336,6 +339,35 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 }
 
 
+
+DWORD STDCALL NtGdiDdBlt(      
+    HANDLE hSurfaceDest,
+    HANDLE hSurfaceSrc,
+    PDD_BLTDATA puBltData
+)
+{
+ DWORD  ddRVal;
+
+ PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);		
+ 
+ puBltData->lpDDDestSurface =  hSurfaceDest;
+ puBltData->lpDDSrcSurface  =  hSurfaceSrc;
+ puBltData->lpDD = pDirectDraw->Local.lpGbl;
+
+ ddRVal = pDirectDraw->DdBlt(puBltData);
+
+ GDIOBJ_UnlockObj(hSurfaceDest);
+
+ return ddRVal;
+}
+
+DWORD STDCALL NtGdiDdAlphaBlt(VOID)
+{
+	// MSDN on all windows 95 to windows xp this call are unsuported
+	// see Graphics Low Level Client Support
+
+	return DDERR_UNSUPPORTED;
+}
 
 
 /* EOF */
