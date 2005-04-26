@@ -47,7 +47,8 @@ BOOL CALLBACK LocalesEnumProc(
 	TCHAR lang[255];
 	int index;
 
-	swscanf(lpLocale, L"%lx", &lcid); // maybe use wcstoul?
+	//swscanf(lpLocale, L"%lx", &lcid); // maybe use wcstoul?
+	lcid = wcstoul(lpLocale, NULL, 16);
 
 	GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang));
 
@@ -74,7 +75,7 @@ CreateLanguagesList(HWND hwnd)
 	EnumSystemLocalesW(LocalesEnumProc, LCID_SUPPORTED);
 
 	// Select current locale
-	GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)); // or should it be System?
+	GetLocaleInfo(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)); // or should it be System and not user?
 	
 	SendMessageW(hList,
 		   CB_SELECTSTRING,
