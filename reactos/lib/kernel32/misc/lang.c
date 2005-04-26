@@ -350,7 +350,7 @@ EnumSystemLocalesW (
 	while (result != STATUS_NO_MORE_ENTRIES)
 	{
 		int i;
-		TCHAR lpLocale[9];
+		WCHAR lpLocale[9];
 
 		// TODO: Here we should check, in case dwFlags & LCID_INSTALLED is specified,
 		// if this locale is really installed
@@ -361,7 +361,7 @@ EnumSystemLocalesW (
 
 		lpLocale[8]=0;
 
-		DPRINT1("Locale=%s\n", lpLocale);
+		DPRINT1("Locale=%S\n", lpLocale);
 
 		// Call Enum func
 		if (!lpLocaleEnumProc((LPWSTR)lpLocale))
@@ -694,6 +694,8 @@ GetLocaleInfoW (
         return 0;
     }
     if (!cchData) lpLCData = NULL;
+
+	DPRINT1("Info for locale: %x\n", Locale); // REMOVE Fireball
 
     if (Locale == LOCALE_NEUTRAL || Locale == LOCALE_SYSTEM_DEFAULT) Locale = GetSystemDefaultLCID();
     else if (Locale == LOCALE_USER_DEFAULT) Locale = GetUserDefaultLCID();
