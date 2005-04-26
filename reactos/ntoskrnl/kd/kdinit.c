@@ -13,7 +13,7 @@
 
 /* VARIABLES ***************************************************************/
 
-KD_PORT_INFORMATION PortInfo;
+KD_PORT_INFORMATION PortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0};
 ULONG KdpPortIrq;
 KDP_DEBUG_MODE KdpDebugMode;
 LIST_ENTRY KdProviders;
@@ -54,11 +54,6 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
         /* Enable Debugging */
         KdDebuggerEnabled = TRUE;
         WrapperInitRoutine = KdpGdbStubInit;
-
-        /* Reset port information to defaults */
-        RtlMoveMemory(&GdbPortInfo, &PortInfo, sizeof(KD_PORT_INFORMATION));
-        PortInfo.ComPort = DEFAULT_DEBUG_PORT;
-        PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
     }
 
     /* Check for PICE Debugging */
@@ -210,7 +205,7 @@ KdInitSystem(ULONG BootPhase,
                 Value = (ULONG)atol(p2);
                 
                 /* Check if it's valid and Set it */
-                if (0 < Value) PortInfo.BaudRate = Value;
+                if (0 < Value) PortInfo.BaudRate = SerialPortInfo.BaudRate = Value;
             }
             /* Check Serial Port Settings [IRQ] */
             else if (!_strnicmp(p2, "IRQ=", 4))

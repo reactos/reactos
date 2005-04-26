@@ -22,7 +22,7 @@ CHAR DebugBuffer[BufferSize];
 ULONG CurrentPosition;
 WORK_QUEUE_ITEM KdpDebugLogQueue;
 BOOLEAN ItemQueued;
-KD_PORT_INFORMATION SerialPortInfo;
+KD_PORT_INFORMATION SerialPortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0};
 
 /* Current Port in use. FIXME: Do we support more then one? */
 ULONG KdpPort;
