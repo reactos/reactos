@@ -78,7 +78,7 @@ double			dbIdleTime;
 double			dbKernelTime;
 double			dbSystemTime;
 LARGE_INTEGER		liOldIdleTime = {{0,0}};
-double			OldKernelTime = 0;
+LARGE_INTEGER		liOldKernelTime = {{0,0}};
 LARGE_INTEGER		liOldSystemTime = {{0,0}};
 
 PPERFDATA		pPerfDataOld = NULL;	// Older perf data (saved to establish delta values)
@@ -357,43 +357,47 @@ void PerfDataRefresh()
 	PPERFDATA						pPDOld;
 	TCHAR							szTemp[MAX_PATH];
 	DWORD							dwSize;
-	double							CurrentKernelTime;
+#ifdef TIMES
+	LARGE_INTEGER 						liCurrentKernelTime;
+	LARGE_INTEGER						liCurrentIdleTime;
+	LARGE_INTEGER						liCurrentTime;
+#endif
 	PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION		SysProcessorTimeInfo;
-	SYSTEM_PERFORMANCE_INFORMATION	SysPerfInfo;
-	SYSTEM_TIMEOFDAY_INFORMATION            SysTimeInfo;
+	SYSTEM_TIMEOFDAY_INFORMATION				SysTimeInfo;
 
 #ifdef TIMES
 	// Get new system time
 	status = NtQuerySystemInformation(SystemTimeInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
 	if (status != NO_ERROR)
 		return;
-
-	// Get new CPU's idle time
-	status = NtQuerySystemInformation(SystemPerformanceInformation, &SysPerfInfo, sizeof(SysPerfInfo), NULL);
-	if (status != NO_ERROR)
-		return;
 #endif
 	// Get processor information	
-	SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)malloc(sizeof(PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors);
-	status = NtQuerySystemInformation(SystemProcessorTimes, SysProcessorTimeInfo, sizeof(PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors, &ulSize);
+	SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)malloc(sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors);
+	status = NtQuerySystemInformation(SystemProcessorPerformanceInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors, &ulSize);
 
 
 	// Get process information
 	PsaCaptureProcessesAndThreads((PSYSTEM_PROCESS_INFORMATION *)&pBuffer);
 
 #ifdef TIMES
-	for (CurrentKernelTime=0, Idx=0; Idx<SystemBasicInfo.NumberProcessors; Idx++) {
-		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].KernelTime);
-		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].DpcTime);
-		CurrentKernelTime += Li2Double(SysProcessorTimeInfo[Idx].InterruptTime);
+	liCurrentKernelTime.QuadPart = 0;
+	liCurrentIdleTime.QuadPart = 0;
+	for (Idx=0; Idx<SystemBasicInfo.NumberProcessors; Idx++) {
+		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].KernelTime.QuadPart;
+		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].DpcTime.QuadPart;
+		liCurrentKernelTime.QuadPart += SysProcessorTimeInfo[Idx].InterruptTime.QuadPart;
+		liCurrentIdleTime.QuadPart += SysProcessorTimeInfo[Idx].IdleTime.QuadPart;
 	}
 
 	// If it's a first call - skip idle time calcs
 	if (liOldIdleTime.QuadPart != 0) {
 		// CurrentValue = NewValue - OldValue
-		dbIdleTime = Li2Double(SysPerfInfo.IdleTime) - Li2Double(liOldIdleTime);
-		dbKernelTime = CurrentKernelTime - OldKernelTime;
-		dbSystemTime = Li2Double(SysTimeInfo.CurrentTime) - Li2Double(liOldSystemTime);
+		liCurrentTime.QuadPart = liCurrentIdleTime.QuadPart - liOldIdleTime.QuadPart;
+		dbIdleTime = Li2Double(liCurrentTime);
+		liCurrentTime.QuadPart = liCurrentKernelTime.QuadPart - liOldKernelTime.QuadPart;
+		dbKernelTime = Li2Double(liCurrentTime);
+		liCurrentTime.QuadPart = SysTimeInfo.CurrentTime.QuadPart - liOldSystemTime.QuadPart;
+	    	dbSystemTime = Li2Double(liCurrentTime);
 
 		// CurrentCpuIdle = IdleTime / SystemTime
 		dbIdleTime = dbIdleTime / dbSystemTime;
@@ -405,9 +409,9 @@ void PerfDataRefresh()
 	}
 
 	// Store new CPU's idle and system time
-	liOldIdleTime = SysPerfInfo.IdleTime;
+	liOldIdleTime = liCurrentIdleTime;
 	liOldSystemTime = SysTimeInfo.CurrentTime;
-	OldKernelTime = CurrentKernelTime;
+	liOldKernelTime = liCurrentKernelTime;
 #endif
 
 	// Determine the process count
@@ -434,7 +438,9 @@ void PerfDataRefresh()
 		// so that we can establish delta values
 		pPDOld = NULL;
 		for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
-			if (pPerfDataOld[Idx2].ProcessId == pSPI->UniqueProcessId) {
+			if (pPerfDataOld[Idx2].ProcessId == (ULONG)(pSPI->UniqueProcessId) &&
+			    /* check also for the creation time, a new process may have an id of an old one */
+			    pPerfDataOld[Idx2].CreateTime.QuadPart == pSPI->CreateTime.QuadPart) {
 				pPDOld = &pPerfDataOld[Idx2];
 				break;
 			}
@@ -456,7 +462,8 @@ void PerfDataRefresh()
 #endif
 		}
 
-		pPerfData[Idx].ProcessId = pSPI->UniqueProcessId;
+		pPerfData[Idx].ProcessId = (ULONG)(pSPI->UniqueProcessId);
+		pPerfData[Idx].CreateTime = pSPI->CreateTime;
 
 		if (pPDOld)	{
 #ifdef TIMES
