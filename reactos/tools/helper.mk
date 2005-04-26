@@ -644,16 +644,6 @@ endif
 endif
 
 #
-# Enable Tree-Wide Optimization if Debug is on.
-# Protect uncompatible files here with an ifneq
-# if needed, until their problems can be found
-#
-ifneq ($(DBG),1)
-  MK_CFLAGS += -O2 -Wno-strict-aliasing
-  MK_CPPFLAGS += -O2 -Wno-strict-aliasing
-endif
-
-#
 # Force Optimization for w3seek
 #
 ifeq ($(OPTIMIZE),yes)
@@ -662,6 +652,19 @@ ifeq ($(OPTIMIZE),yes)
       MK_CFLAGS += -O2 -Wno-strict-aliasing
       MK_CPPFLAGS += -O2 -Wno-strict-aliasing
     endif
+endif
+
+#
+# Enable Tree-Wide Optimization if Debug is on.
+# Protect uncompatible files here with an ifneq
+# if needed, until their problems can be found
+#
+ifneq ($(DBG),1)
+  MK_CFLAGS += -Os -Wno-strict-aliasing -funit-at-a-time -fweb -ftracer -momit-leaf-frame-pointer
+  TARGET_LFLAGS += -Wl,-O1 -Wl,--sort-common -s
+  MK_CFLAGS += -mpreferred-stack-boundary=2
+  MK_CPPFLAGS += -O2 -Wno-strict-aliasing
+  MK_CPPFLAGS += -mpreferred-stack-boundary=2
 endif
 
 ifneq ($(TARGET_LIBS),)
