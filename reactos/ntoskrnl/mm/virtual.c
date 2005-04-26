@@ -504,7 +504,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
           Buffer,NumberOfBytesToRead);
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_WRITE,
+                                      PROCESS_VM_READ,
                                       NULL,
                                       PreviousMode,
                                       (PVOID*)(&Process),
