@@ -319,5 +319,23 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 }
 
 
+DWORD STDCALL NtGdiDdCanCreateSurface(      
+    HANDLE hDirectDrawLocal,
+    PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+
+	ddRVal = pDirectDraw->DdCanCreateSurface(puCanCreateSurfaceData);
+
+	GDIOBJ_UnlockObj(hDirectDrawLocal);
+	
+	return ddRVal;
+}
+
+
+
 
 /* EOF */

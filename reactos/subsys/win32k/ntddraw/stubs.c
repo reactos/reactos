@@ -139,15 +139,7 @@ DWORD STDCALL NtGdiDdCanCreateD3DBuffer(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdCanCreateSurface(      
-    HANDLE hDirectDraw,
-    PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdColorControl(      
     HANDLE hSurface,
