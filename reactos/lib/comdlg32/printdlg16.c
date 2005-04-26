@@ -427,7 +427,7 @@ BOOL16 WINAPI PrintDlg16(
         ptr16 = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PRINT_PTRA16));
         ptr16->lpPrintDlg16 = lppd;
         PrintStructures = &ptr16->print32;
-        PrintStructures->lpPrintDlg = (LPPRINTDLGA)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(PRINTDLGA));
+        PrintStructures->lpPrintDlg = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(PRINTDLGA));
 #define CVAL(x)	PrintStructures->lpPrintDlg->x = lppd->x;
 #define MVAL(x)	PrintStructures->lpPrintDlg->x = MapSL(lppd->x);
 	CVAL(Flags);
