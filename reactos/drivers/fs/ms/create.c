@@ -28,7 +28,7 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
    PMSFS_DEVICE_EXTENSION DeviceExtension;
    PMSFS_MAILSLOT Mailslot;
    PMSFS_FCB Fcb;
-   PMSFS_MAILSLOT current;
+   PMSFS_MAILSLOT current = NULL;
    PLIST_ENTRY current_entry;
    KIRQL oldIrql;
 
