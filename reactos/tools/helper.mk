@@ -661,8 +661,15 @@ endif
 #
 ifneq ($(DBG),1)
   MK_CFLAGS += -Os -Wno-strict-aliasing -funit-at-a-time -fweb -ftracer -momit-leaf-frame-pointer
-  TARGET_LFLAGS += -Wl,-O1 -Wl,--sort-common -s
   MK_CFLAGS += -mpreferred-stack-boundary=2
+    
+  #
+  # Remove Symbols if no debugging is used at all
+  #
+  ifneq ($(KDBG),1)
+  TARGET_LFLAGS += -Wl,-O1 -Wl,--sort-common -s
+  endif
+  
   MK_CPPFLAGS += -O2 -Wno-strict-aliasing
   MK_CPPFLAGS += -mpreferred-stack-boundary=2
 endif
