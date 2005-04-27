@@ -93,8 +93,10 @@ NlsInit()
    InitializeObjectAttributes(&ObjectAttributes, &DirName,
                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                               NULL, NULL);
-   NtCreateDirectoryObject(&Handle, DIRECTORY_ALL_ACCESS, &ObjectAttributes);
-   NtClose(Handle);
+   if (NT_SUCCESS(NtCreateDirectoryObject(&Handle, DIRECTORY_ALL_ACCESS, &ObjectAttributes)))
+   {
+      NtClose(Handle);
+   }
    
    /* Setup ANSI code page. */
    AnsiCodePage.CodePage = CP_ACP;
