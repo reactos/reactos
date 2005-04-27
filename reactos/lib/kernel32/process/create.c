@@ -1398,7 +1398,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 				  (PVOID)((ULONG_PTR)ImageBaseAddress + Sii.EntryPoint),
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
-   if (hThread == INVALID_HANDLE_VALUE)
+   if (hThread == NULL)
    {
       return FALSE;
    }
