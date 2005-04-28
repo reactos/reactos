@@ -59,7 +59,9 @@
 #define STRING_FOR_ERROR4                  337
 #define STRING_FREE_ERROR1                 338
 #define STRING_FREE_ERROR2                 339
-#define STRING_PARAM_ERROR                 340
+#define STRING_GOTO_ERROR1                 340
+#define STRING_GOTO_ERROR2                 341
+#define STRING_PARAM_ERROR                 342
 
 
 #define STRING_ATTRIB_HELP                 600
@@ -115,9 +117,24 @@
 
 #define STRING_FOR_HELP1                   646
 
-#define STRING_MKDIR_HELP                  647
-#define STRING_RMDIR_HELP                  648
-#define STRING_REM_HELP                    649
+#define STRING_FREE_HELP1                  647 
+#define STRING_FREE_HELP2                  648
+
+#define STRING_IF_HELP1                    650
+
+#define STRING_GOTO_HELP1                  651
+
+#define STRING_LABEL_HELP1                 652
+#define STRING_LABEL_HELP2                 653
+#define STRING_LABEL_HELP3                 654
+#define STRING_LABEL_HELP4                 655
+#define STRING_LABEL_HELP5                 656
+
+#define STRING_MKDIR_HELP                  657
+
+#define STRING_RMDIR_HELP                  658
+
+#define STRING_REM_HELP                    659
 
 
 

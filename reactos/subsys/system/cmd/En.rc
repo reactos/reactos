@@ -239,6 +239,41 @@ FOR %variable IN (set) DO command [parameters]\n\n \
 To user the FOR comamnd in a batch program, specify %%variable instead of\n \
 %variable."
 
+STRING_FREE_HELP1, "\n Volume in drive %s is %-11s   Serial number is %s\n \
+  %16s bytes total disk space\n \
+  %16s bytes used\n \
+  %16s bytes free\n"
+
+STRING_FREE_HELP2, "Displays drive information.\n\nFREE [drive: ...]"
+
+STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n \
+  IF [NOT] ERRORLEVEL number command\n \
+  IF [NOT] string1==string2 command\n \
+  IF [NOT] EXIST filename command\n \
+  IF [NOT] DEFINED variable command\n\n \
+NOT               Specifies that CMD should carry out the command only if\n \
+                  the condition is false\n \
+ERRORLEVEL number Specifies a true condition if the last program run returned\n \
+                  an exit code equal or greater than the number specified.\n \
+command           Specifies the command to carry out if the condition is met.\n \
+string1==string2  Specifies a true condition if the specified text strings\n \
+                  match.\n \
+EXIST filename    Specifies a true condition if the specified filename exists.\n \
+DEFINED variable  Specifies a true condition if the specified variable is\n \
+                  defined."
+	              
+STRING_GOTO_HELP1,  "Directs CMD to a labeled line in a batch script.\n\n \
+GOTO label\n\n \
+  label  Specifies a text string used in a batch script as a label.\n\n \
+You type a label on a line by itself, beginning with a colon."
+
+STRING_LABEL_HELP1, "Displays or changes drive label.\n\nLABEL [drive:][label]"
+
+STRING_LABEL_HELP2, "Volume in drive %c: is %s\n"
+STRING_LABEL_HELP3, "Volume in drive %c: has no label\n"
+STRING_LABEL_HELP4, "Volume Serial Number is %04X-%04X\n"
+STRING_LABEL_HELP5, "Drive label (11 Characters, ENTER if none)? "
+
 
 STRING_MKDIR_HELP,   "Creates a directory.\n\n \
 MKDIR [drive:]path\nMD [drive:]path"
@@ -293,15 +328,16 @@ STRING_DEL_ERROR7,           "Deleting: %s\n"
 STRING_DEL_ERROR8,           "No Wildcards!\n"
 STRING_ERROR_ERROR1,         "Unknown error! Error code: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Syntax error"
-STRING_FOR_ERROR1, "'in' missing in for statement."
-STRING_FOR_ERROR2, "no brackets found."
-STRING_FOR_ERROR3, "'do' missing." 
-STRING_FOR_ERROR4, "no command after 'do'." 
-STRING_FREE_ERROR1, "Invalid drive"
-STRING_FREE_ERROR2, "unlabeled"
+STRING_FOR_ERROR1,           "'in' missing in for statement."
+STRING_FOR_ERROR2,           "no brackets found."
+STRING_FOR_ERROR3,           "'do' missing." 
+STRING_FOR_ERROR4,           "no command after 'do'." 
+STRING_FREE_ERROR1,          "Invalid drive"
+STRING_FREE_ERROR2,          "unlabeled"
+STRING_GOTO_ERROR1,          "No label specified for GOTO"
+STRING_GOTO_ERROR2,          "Label '%s' not found\n"
 
 STRING_PARAM_ERROR,          "Required parameter missing\n"
-
 
 STRING_ERROR_PARAMETERF_ERROR,	   "Parameter format not correct - %c\n"
 STRING_ERROR_INVALID_SWITCH,       "Invalid switch - /%c\n"

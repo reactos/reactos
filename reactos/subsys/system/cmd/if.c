@@ -24,9 +24,14 @@
  *
  *    17-Feb-2001 (ea)
  *        IF DEFINED variable command
+ *
+ *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
+ *
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 #define X_EXEC 1
@@ -36,6 +41,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 {
 	INT x_flag = 0; /* when set cause 'then' clause to be executed */
 	LPTSTR pp;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_if: (\'%S\', \'%S\')\n"), cmd, param);
@@ -43,23 +49,8 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Performs conditional processing in batch programs.\n"
-		               "\n"
-		               "  IF [NOT] ERRORLEVEL number command\n"
-		               "  IF [NOT] string1==string2 command\n"
-		               "  IF [NOT] EXIST filename command\n"
-			       "  IF [NOT] DEFINED variable command\n"
-		               "\n"
-		               "NOT               Specifies that CMD should carry out the command only if\n"
-		               "                  the condition is false\n"
-		               "ERRORLEVEL number Specifies a true condition if the last program run returned\n"
-		               "                  an exit code equal or greater than the number specified.\n"
-		               "command           Specifies the command to carry out if the condition is met.\n"
-		               "string1==string2  Specifies a true condition if the specified text strings\n"
-		               "                  match.\n"
-		               "EXIST filename    Specifies a true condition if the specified filename exists.\n"
-			       "DEFINED variable  Specifies a true condition if the specified variable is\n"
-			       "                  defined."));
+		LoadString( GetModuleHandle(NULL), STRING_IF_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts((LPTSTR)szMsg);
 		return 0;
 	}
 
