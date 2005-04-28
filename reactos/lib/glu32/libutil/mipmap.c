@@ -7012,7 +7012,7 @@ static void emptyImage3D(const PixelStorageModes *psm,
    int groupSize;
    int rowSize;
    int padding;
-   GLubyte *start, *rowStart, *iter;
+   GLubyte *start, *rowStart, *iter=NULL;
    int elementsPerLine;
    const GLushort *iter2;
    int ii, jj, dd, k;
@@ -7367,7 +7367,7 @@ static void closestFit3D(GLenum target, GLint width, GLint height, GLint depth,
    GLint widthPowerOf2= nearestPower(width);
    GLint heightPowerOf2= nearestPower(height);	        
    GLint depthPowerOf2= nearestPower(depth);
-   GLint proxyWidth;
+   GLint proxyWidth ;
 
    do {
       /* compute level 1 width & height & depth, clamping each at 1 */
@@ -7380,7 +7380,7 @@ static void closestFit3D(GLenum target, GLint width, GLint height, GLint depth,
       GLint depthAtLevelOne= (depthPowerOf2 > 1) ?
 			      depthPowerOf2 >> 1 :
 			      depthPowerOf2;
-      GLenum proxyTarget;
+      GLenum proxyTarget = 0;
       assert(widthAtLevelOne > 0);
       assert(heightAtLevelOne > 0);
       assert(depthAtLevelOne > 0);
