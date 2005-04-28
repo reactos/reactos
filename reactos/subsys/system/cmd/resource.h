@@ -132,9 +132,12 @@
 
 #define STRING_MKDIR_HELP                  657
 
-#define STRING_RMDIR_HELP                  658
+#define STRING_MEMMORY_HELP1               658
+#define STRING_MEMMORY_HELP2               659
 
-#define STRING_REM_HELP                    659
+#define STRING_RMDIR_HELP                  660
+
+#define STRING_REM_HELP                    661
 
 
 

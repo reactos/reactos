@@ -278,6 +278,17 @@ STRING_LABEL_HELP5, "Drive label (11 Characters, ENTER if none)? "
 STRING_MKDIR_HELP,   "Creates a directory.\n\n \
 MKDIR [drive:]path\nMD [drive:]path"
 
+STRING_MEMMORY_HELP1, "Displays the amount of system memory.\n\nMEMORY"
+
+STRING_MEMMORY_HELP2, "\n  %12s%% memory load.\n\n \
+  %13s bytes total physical RAM.\n \
+  %13s bytes available physical RAM.\n\n \
+  %13s bytes total page file.\n \
+  %13s bytes available page file.\n\n \
+  %13s bytes total virtual memory.\n \
+  %13s bytes available virtual memory.\n"
+
+
 STRING_RMDIR_HELP,   "Removes a directory.\n\n \
 RMDIR [drive:]path\nRD [drive:]path"  
 

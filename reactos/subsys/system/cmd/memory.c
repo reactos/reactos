@@ -6,9 +6,13 @@
  *
  *    01-Sep-1999 (Eric Kohl)
  *        Started.
+ *
+ *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_MEMORY
 
@@ -60,12 +64,12 @@ INT CommandMemory (LPTSTR cmd, LPTSTR param)
 	TCHAR szAvailPageFile[20];
 	TCHAR szTotalVirtual[20];
 	TCHAR szAvailVirtual[20];
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays the amount of system memory.\n"
-		               "\n"
-		               "MEMORY"));
+		LoadString( GetModuleHandle(NULL), STRING_MEMMORY_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		return 0;
 	}
 
@@ -81,17 +85,8 @@ INT CommandMemory (LPTSTR cmd, LPTSTR param)
 	ConvertDWord (ms.dwTotalVirtual, szTotalVirtual, 20, TRUE);
 	ConvertDWord (ms.dwAvailVirtual, szAvailVirtual, 20, TRUE);
 
-	ConOutPrintf (_T("\n"
-	                 "  %12s%% memory load.\n"
-	                 "\n"
-	                 "  %13s bytes total physical RAM.\n"
-	                 "  %13s bytes available physical RAM.\n"
-	                 "\n"
-	                 "  %13s bytes total page file.\n"
-	                 "  %13s bytes available page file.\n"
-	                 "\n"
-	                 "  %13s bytes total virtual memory.\n"
-	                 "  %13s bytes available virtual memory.\n"),
+	LoadString( GetModuleHandle(NULL), STRING_MEMMORY_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPrintf ((LPTSTR)szMsg,
 	              szMemoryLoad, szTotalPhys, szAvailPhys, szTotalPageFile,
 	              szAvailPageFile, szTotalVirtual, szAvailVirtual);
 
