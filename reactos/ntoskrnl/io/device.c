@@ -1,11 +1,11 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/io/device.c
- * PURPOSE:         Manage devices
+ * PURPOSE:         Device Object Management, including Notifications and Queues.
  * 
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ * PROGRAMMERS:     Alex Ionescu
+ *                  David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *******************************************************************/
@@ -17,15 +17,67 @@
 /* GLOBALS ********************************************************************/
 
 #define TAG_DEVICE_EXTENSION   TAG('D', 'E', 'X', 'T')
+#define TAG_SHUTDOWN_ENTRY    TAG('S', 'H', 'U', 'T')
 
 static ULONG IopDeviceObjectNumber = 0;
 
+typedef struct _SHUTDOWN_ENTRY
+{
+   LIST_ENTRY ShutdownList;
+   PDEVICE_OBJECT DeviceObject;
+} SHUTDOWN_ENTRY, *PSHUTDOWN_ENTRY;
+
+LIST_ENTRY ShutdownListHead;
+KSPIN_LOCK ShutdownListLock;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
-NTSTATUS FASTCALL
-IopInitializeDevice(
-   PDEVICE_NODE DeviceNode,
-   PDRIVER_OBJECT DriverObject)
+VOID 
+IoShutdownRegisteredDevices(VOID)
+{
+   PSHUTDOWN_ENTRY ShutdownEntry;
+   PLIST_ENTRY Entry;
+   IO_STATUS_BLOCK StatusBlock;
+   PIRP Irp;
+   KEVENT Event;
+   NTSTATUS Status;
+
+   Entry = ShutdownListHead.Flink;
+   while (Entry != &ShutdownListHead)
+     {
+	ShutdownEntry = CONTAINING_RECORD(Entry, SHUTDOWN_ENTRY, ShutdownList);
+
+	KeInitializeEvent (&Event,
+	                   NotificationEvent,
+	                   FALSE);
+
+	Irp = IoBuildSynchronousFsdRequest (IRP_MJ_SHUTDOWN,
+	                                    ShutdownEntry->DeviceObject,
+	                                    NULL,
+	                                    0,
+	                                    NULL,
+	                                    &Event,
+	                                    &StatusBlock);
+
+	Status = IoCallDriver (ShutdownEntry->DeviceObject,
+	                       Irp);
+	if (Status == STATUS_PENDING)
+	{
+		KeWaitForSingleObject (&Event,
+		                       Executive,
+		                       KernelMode,
+		                       FALSE,
+		                       NULL);
+	}
+
+	Entry = Entry->Flink;
+     }
+}
+
+NTSTATUS 
+FASTCALL
+IopInitializeDevice(PDEVICE_NODE DeviceNode,
+                    PDRIVER_OBJECT DriverObject)
 {
    IO_STATUS_BLOCK IoStatusBlock;
    IO_STACK_LOCATION Stack;
@@ -815,12 +867,35 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
  */
 NTSTATUS
 STDCALL
-IoRegisterLastChanceShutdownNotification(
-    IN PDEVICE_OBJECT DeviceObject
-    )
+IoRegisterLastChanceShutdownNotification(IN PDEVICE_OBJECT DeviceObject)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL 
+IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
+{
+   PSHUTDOWN_ENTRY Entry;
+
+   Entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(SHUTDOWN_ENTRY),
+				 TAG_SHUTDOWN_ENTRY);
+   if (Entry == NULL)
+     return STATUS_INSUFFICIENT_RESOURCES;
+
+   Entry->DeviceObject = DeviceObject;
+
+   ExInterlockedInsertHeadList(&ShutdownListHead,
+			       &Entry->ShutdownList,
+			       &ShutdownListLock);
+
+   DeviceObject->Flags |= DO_SHUTDOWN_REGISTERED;
+
+   return STATUS_SUCCESS;
 }
 
 /*
@@ -828,13 +903,147 @@ IoRegisterLastChanceShutdownNotification(
  */
 VOID
 STDCALL
-IoSetStartIoAttributes(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN BOOLEAN DeferredStartIo,
-    IN BOOLEAN NonCancelable
-    )
+IoSetStartIoAttributes(IN PDEVICE_OBJECT DeviceObject,
+                       IN BOOLEAN DeferredStartIo,
+                       IN BOOLEAN NonCancelable)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ *
+ * FUNCTION: Dequeues the next packet from the given device object's
+ * associated device queue according to a specified sort-key value and calls
+ * the drivers StartIo routine with that IRP
+ * ARGUMENTS:
+ *      DeviceObject = Device object for which the irp is to dequeued
+ *      Cancelable = True if IRPs in the key can be canceled
+ *      Key = Sort key specifing which entry to remove from the queue
+ */
+VOID
+STDCALL
+IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
+                       BOOLEAN Cancelable,
+                       ULONG Key)
+{
+   PKDEVICE_QUEUE_ENTRY entry;
+   PIRP Irp;
+   
+   entry = KeRemoveByKeyDeviceQueue(&DeviceObject->DeviceQueue,
+				    Key);
+   
+   if (entry != NULL)
+     {
+	Irp = CONTAINING_RECORD(entry,
+				IRP,
+				Tail.Overlay.DeviceQueueEntry);
+        DeviceObject->CurrentIrp = Irp;
+	DPRINT("Next irp is %x\n", Irp);
+	DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+     }
+   else
+     {
+	DPRINT("No next irp\n");
+        DeviceObject->CurrentIrp = NULL;
+     }   
+}
+
+/*
+ * @implemented
+ *
+ * FUNCTION: Removes the next packet from the device's queue and calls
+ * the driver's StartIO
+ * ARGUMENTS:
+ *         DeviceObject = Device
+ *         Cancelable = True if irps in the queue can be canceled
+ */
+VOID
+STDCALL
+IoStartNextPacket(PDEVICE_OBJECT DeviceObject, 
+                  BOOLEAN Cancelable)
+{
+   PKDEVICE_QUEUE_ENTRY entry;
+   PIRP Irp;
+   
+   DPRINT("IoStartNextPacket(DeviceObject %x, Cancelable %d)\n",
+	  DeviceObject,Cancelable);
+   
+   entry = KeRemoveDeviceQueue(&DeviceObject->DeviceQueue);
+   
+   if (entry!=NULL)
+     {
+	Irp = CONTAINING_RECORD(entry,IRP,Tail.Overlay.DeviceQueueEntry);
+        DeviceObject->CurrentIrp = Irp;
+	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);	
+     }
+   else
+     {
+        DeviceObject->CurrentIrp = NULL;
+     }
+}
+
+/*
+ * @implemented
+ *
+ * FUNCTION: Either call the device's StartIO routine with the packet or,
+ * if the device is busy, queue it.
+ * ARGUMENTS:
+ *       DeviceObject = Device to start the packet on
+ *       Irp = Irp to queue
+ *       Key = Where to insert the irp
+ *             If zero then insert in the tail of the queue
+ *       CancelFunction = Optional function to cancel the irqp
+ */
+VOID
+STDCALL
+IoStartPacket(PDEVICE_OBJECT DeviceObject,
+              PIRP Irp, 
+              PULONG Key, 
+              PDRIVER_CANCEL CancelFunction)
+{
+   BOOLEAN stat;
+   KIRQL oldirql;
+   
+   DPRINT("IoStartPacket(Irp %x)\n", Irp);
+   
+   ASSERT_IRQL(DISPATCH_LEVEL);
+   
+   IoAcquireCancelSpinLock(&oldirql);
+   
+   if (CancelFunction != NULL)
+     {
+	Irp->CancelRoutine = CancelFunction;
+     }
+   
+   if (Key!=0)
+     {
+	stat = KeInsertByKeyDeviceQueue(&DeviceObject->DeviceQueue,
+					&Irp->Tail.Overlay.DeviceQueueEntry,
+					*Key);
+     }
+   else
+     {
+	stat = KeInsertDeviceQueue(&DeviceObject->DeviceQueue,
+				   &Irp->Tail.Overlay.DeviceQueueEntry);
+     }
+   
+   
+   if (!stat)
+     {			   
+        IoReleaseCancelSpinLock(DISPATCH_LEVEL);
+        DeviceObject->CurrentIrp = Irp;
+	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);
+	if (oldirql < DISPATCH_LEVEL)
+	  {
+            KeLowerIrql(oldirql);
+        }
+     }
+   else
+     {
+        IoReleaseCancelSpinLock(oldirql);
+     }
+
 }
 
 /*
@@ -842,12 +1051,41 @@ IoSetStartIoAttributes(
  */
 VOID
 STDCALL
-IoSynchronousInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN DEVICE_RELATION_TYPE Type
-    )
+IoSynchronousInvalidateDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
+                                       IN DEVICE_RELATION_TYPE Type)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+VOID 
+STDCALL 
+IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
+{
+   PSHUTDOWN_ENTRY ShutdownEntry;
+   PLIST_ENTRY Entry;
+   KIRQL oldlvl;
+
+   Entry = ShutdownListHead.Flink;
+   while (Entry != &ShutdownListHead)
+     {
+	ShutdownEntry = CONTAINING_RECORD(Entry, SHUTDOWN_ENTRY, ShutdownList);
+	if (ShutdownEntry->DeviceObject == DeviceObject)
+	  {
+	    DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
+
+	    KeAcquireSpinLock(&ShutdownListLock,&oldlvl);
+	    RemoveEntryList(Entry);
+	    KeReleaseSpinLock(&ShutdownListLock,oldlvl);
+
+	    ExFreePool(Entry);
+	    return;
+	  }
+
+	Entry = Entry->Flink;
+     }
 }
 
 /*
@@ -855,13 +1093,124 @@ IoSynchronousInvalidateDeviceRelations(
  */
 NTSTATUS
 STDCALL
-IoValidateDeviceIoControlAccess(
-    IN  PIRP    Irp,
-    IN  ULONG   RequiredAccess
-    )
+IoValidateDeviceIoControlAccess(IN  PIRP Irp,
+                                IN  ULONG RequiredAccess)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+NtDeviceIoControlFile (IN HANDLE DeviceHandle,
+		       IN HANDLE Event OPTIONAL,
+		       IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+		       IN PVOID UserApcContext OPTIONAL,
+		       OUT PIO_STATUS_BLOCK IoStatusBlock,
+		       IN ULONG IoControlCode,
+		       IN PVOID InputBuffer,
+		       IN ULONG InputBufferLength OPTIONAL,
+		       OUT PVOID OutputBuffer,
+		       IN ULONG OutputBufferLength OPTIONAL)
+{
+  NTSTATUS Status;
+  PFILE_OBJECT FileObject;
+  PDEVICE_OBJECT DeviceObject;
+  PIRP Irp;
+  PIO_STACK_LOCATION StackPtr;
+  PKEVENT EventObject;
+  KPROCESSOR_MODE PreviousMode;
+
+  DPRINT("NtDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
+         "UserApcContext %x IoStatusBlock %x IoControlCode %x "
+         "InputBuffer %x InputBufferLength %x OutputBuffer %x "
+         "OutputBufferLength %x)\n",
+         DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,
+         IoControlCode,InputBuffer,InputBufferLength,OutputBuffer,
+         OutputBufferLength);
+
+  if (IoStatusBlock == NULL)
+    return STATUS_ACCESS_VIOLATION;
+
+  PreviousMode = ExGetPreviousMode();
+
+  /* Check granted access against the access rights from IoContolCode */
+  Status = ObReferenceObjectByHandle (DeviceHandle,
+				      (IoControlCode >> 14) & 0x3,
+				      IoFileObjectType,
+				      PreviousMode,
+				      (PVOID *) &FileObject,
+				      NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+  if (Event != NULL)
+    {
+      Status = ObReferenceObjectByHandle (Event,
+                                          SYNCHRONIZE,
+                                          ExEventObjectType,
+                                          PreviousMode,
+                                          (PVOID*)&EventObject,
+                                          NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  ObDereferenceObject (FileObject);
+	  return Status;
+	}
+     }
+   else
+     {
+       EventObject = &FileObject->Event;
+       KeResetEvent (EventObject);
+     }
+
+  DeviceObject = FileObject->DeviceObject;
+
+  Irp = IoBuildDeviceIoControlRequest (IoControlCode,
+				       DeviceObject,
+				       InputBuffer,
+				       InputBufferLength,
+				       OutputBuffer,
+				       OutputBufferLength,
+				       FALSE,
+				       EventObject,
+				       IoStatusBlock);
+
+  /* Trigger FileObject/Event dereferencing */
+  Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
+  Irp->RequestorMode = PreviousMode;
+  Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
+  Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;
+
+  StackPtr = IoGetNextIrpStackLocation(Irp);
+  StackPtr->FileObject = FileObject;
+  StackPtr->DeviceObject = DeviceObject;
+  StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferLength;
+  StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferLength;
+
+  Status = IoCallDriver(DeviceObject,Irp);
+  if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+    {
+      Status = KeWaitForSingleObject (EventObject,
+				      Executive,
+				      PreviousMode,
+				      FileObject->Flags & FO_ALERTABLE_IO,
+				      NULL);
+      if (Status != STATUS_WAIT_0)
+	{
+	  /* Wait failed. */
+	  return Status;
+	}
+
+      Status = IoStatusBlock->Status;
+    }
+
+  return Status;
 }
 
 /* EOF */

@@ -2146,6 +2146,13 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   UnitInfo = (PSCSI_INQUIRY_DATA)
 	((PUCHAR)AdapterBusInfo + sizeof(SCSI_ADAPTER_BUS_INFO) +
 	 (sizeof(SCSI_BUS_DATA) * (AdapterBusInfo->NumberOfBuses - 1)));
+     
+  /*
+   * RANT:
+   * Whoever originally coded this to depend on the IRP's System Buffer to be
+   * magically cleared for him should never be allowed to code drivers again.
+   */
+  RtlZeroMemory(UnitInfo, sizeof(*UnitInfo));
 
   for (Bus = 0; Bus < AdapterBusInfo->NumberOfBuses; Bus++)
     {

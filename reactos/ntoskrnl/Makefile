@@ -146,54 +146,36 @@ OBJECTS_IO = \
 	io/adapter.o \
 	io/arcname.o \
 	io/bootlog.o \
-	io/buildirp.o \
-	io/cancel.o \
-	io/cleanup.o \
 	io/controller.o \
-	io/create.o \
 	io/device.o \
 	io/deviface.o \
-	io/dir.o \
+	io/disk.o \
 	io/driver.o \
 	io/efi.o \
 	io/error.o \
 	io/event.o \
 	io/file.o \
-	io/flush.o \
 	io/fs.o \
 	io/iocomp.o \
-	io/ioctrl.o \
 	io/iomgr.o \
 	io/iowork.o \
 	io/irp.o \
 	io/irq.o \
-	io/lock.o \
-	io/mailslot.o \
 	io/mdl.o \
-	io/npipe.o \
-	io/page.o \
-	io/parttab.o \
 	io/plugplay.o \
-	io/process.o \
 	io/pnpdma.o \
 	io/pnpmgr.o \
 	io/pnpnotify.o \
 	io/pnpreport.o \
 	io/pnproot.o \
-	io/queue.o \
 	io/rawfs.o \
 	io/remlock.o \
 	io/resource.o \
-	io/rw.o \
 	io/share.o \
-	io/shutdown.o \
 	io/symlink.o \
 	io/timer.o \
 	io/vpb.o \
-	io/wdm.o \
 	io/wmi.o \
-	io/xhaldisp.o \
-	io/xhaldrv.o
 
 # Object Manager (Ob)
 OBJECTS_OB = \

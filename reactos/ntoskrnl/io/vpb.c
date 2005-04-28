@@ -376,4 +376,17 @@ IoReleaseVpbSpinLock(IN KIRQL Irql)
 		     Irql);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoCheckQuerySetVolumeInformation(IN FS_INFORMATION_CLASS FsInformationClass,
+                                 IN ULONG Length,
+                                 IN BOOLEAN SetOperation)
+{
+     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

@@ -528,4 +528,30 @@ IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
     return(FALSE);
 }
 
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	IoSetThreadHardErrorMode@4
+ *
+ * ARGUMENTS
+ * 	HardErrorEnabled
+ * 		TRUE : enable hard errors processing;
+ * 		FALSE: do NOT process hard errors.
+ *
+ * RETURN VALUE
+ * 	Previous value for the current thread's hard errors
+ * 	processing policy.
+ *
+ * @implemented
+ */
+BOOLEAN 
+STDCALL
+IoSetThreadHardErrorMode(IN BOOLEAN HardErrorEnabled)
+{
+    BOOLEAN PreviousHEM = (BOOLEAN)(NtCurrentTeb()->HardErrorDisabled);
+
+    NtCurrentTeb()->HardErrorDisabled = ((TRUE == HardErrorEnabled) ? FALSE : TRUE);
+
+    return((TRUE == PreviousHEM) ? FALSE : TRUE);
+}
+
 /* EOF */

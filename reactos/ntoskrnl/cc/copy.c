@@ -263,7 +263,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
   MmBuildMdlForNonPagedPool(Mdl);
   Mdl->MdlFlags |= MDL_IO_PAGE_READ;
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
-  Status = IoPageWrite(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
+  Status = IoSynchronousPageWrite(CacheSeg->Bcb->FileObject, Mdl, &SegOffset, &Event, &IoStatus);
   if (Status == STATUS_PENDING)
   {
      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -643,7 +643,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	      ((PPFN_TYPE)(Mdl + 1))[i] = CcZeroPage;
 	    }
           KeInitializeEvent(&Event, NotificationEvent, FALSE);
-	  Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
+	  Status = IoSynchronousPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
           if (Status == STATUS_PENDING)
 	  {
              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);

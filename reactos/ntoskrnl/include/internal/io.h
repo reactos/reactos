@@ -518,7 +518,39 @@ IopMarkLastReinitializeDriver(VOID);
 VOID FASTCALL
 IopReinitializeDrivers(VOID);
 
+/* file.c */
 
+NTSTATUS 
+STDCALL
+IopCreateFile(PVOID ObjectBody,
+              PVOID Parent,
+              PWSTR RemainingPath,
+              POBJECT_ATTRIBUTES ObjectAttributes);
+              
+VOID 
+STDCALL
+IopDeleteFile(PVOID ObjectBody);
+
+NTSTATUS
+STDCALL
+IopSecurityFile(PVOID ObjectBody,
+                SECURITY_OPERATION_CODE OperationCode,
+                SECURITY_INFORMATION SecurityInformation,
+                PSECURITY_DESCRIPTOR SecurityDescriptor,
+                PULONG BufferLength);
+                
+NTSTATUS
+STDCALL
+IopQueryNameFile(PVOID ObjectBody,
+                 POBJECT_NAME_INFORMATION ObjectNameInfo,
+                 ULONG Length,
+                 PULONG ReturnLength);
+                 
+VOID 
+STDCALL
+IopCloseFile(PVOID ObjectBody,
+             ULONG HandleCount);
+             
 /* plugplay.c */
 
 NTSTATUS INIT_FUNCTION

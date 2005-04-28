@@ -1,9 +1,8 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/xhaldrv.c
- * PURPOSE:         Hal drive routines
+ * FILE:            ntoskrnl/io/disk.c
+ * PURPOSE:         I/O Support for Hal Disk (Partition Table/MBR) Routines.
  *
  * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -58,6 +57,38 @@ typedef enum _DISK_MANAGER
   OntrackDiskManager,
   EZ_Drive
 } DISK_MANAGER;
+
+HAL_DISPATCH EXPORTED HalDispatchTable =
+{
+    HAL_DISPATCH_VERSION,
+    (pHalQuerySystemInformation) NULL,	// HalQuerySystemInformation
+    (pHalSetSystemInformation) NULL,	// HalSetSystemInformation
+    (pHalQueryBusSlots) NULL,			// HalQueryBusSlots
+    0,
+    (pHalExamineMBR) xHalExamineMBR,
+    (pHalIoAssignDriveLetters) xHalIoAssignDriveLetters,
+    (pHalIoReadPartitionTable) xHalIoReadPartitionTable,
+    (pHalIoSetPartitionInformation) xHalIoSetPartitionInformation,
+    (pHalIoWritePartitionTable) xHalIoWritePartitionTable,
+    (pHalHandlerForBus) NULL,			// HalReferenceHandlerForBus
+    (pHalReferenceBusHandler) NULL,		// HalReferenceBusHandler
+    (pHalReferenceBusHandler) NULL,		// HalDereferenceBusHandler
+    (pHalInitPnpDriver) NULL,               //HalInitPnpDriver;
+    (pHalInitPowerManagement) NULL,         //HalInitPowerManagement;
+    (pHalGetDmaAdapter) NULL,               //HalGetDmaAdapter;
+    (pHalGetInterruptTranslator) NULL,      //HalGetInterruptTranslator;
+    (pHalStartMirroring) NULL,              //HalStartMirroring;
+    (pHalEndMirroring) NULL,                //HalEndMirroring;
+    (pHalMirrorPhysicalMemory) NULL,        //HalMirrorPhysicalMemory;
+    (pHalEndOfBoot) NULL,                   //HalEndOfBoot;
+    (pHalMirrorVerify) NULL                //HalMirrorVerify;
+};
+
+
+HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
+{
+    HAL_PRIVATE_DISPATCH_VERSION
+};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1430,4 +1461,189 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   return Status;
 }
 
+/*
+ * @unimplemented
+ *
+STDCALL
+VOID
+IoAssignDriveLetters(
+   		IN PLOADER_PARAMETER_BLOCK   	 LoaderBlock,
+		IN PSTRING  	NtDeviceName,
+		OUT PUCHAR  	NtSystemPath,
+		OUT PSTRING  	NtSystemPathString
+    )
+{
+	UNIMPLEMENTED;
+*/
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoCreateDisk(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN struct _CREATE_DISK* Disk
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoGetBootDiskInformation(
+    IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
+    IN ULONG Size
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoReadDiskSignature(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG BytesPerSector,
+    OUT PDISK_SIGNATURE Signature
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoReadPartitionTableEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN struct _DRIVE_LAYOUT_INFORMATION_EX** DriveLayout
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoSetPartitionInformationEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG PartitionNumber,
+    IN struct _SET_PARTITION_INFORMATION_EX* PartitionInfo
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoSetSystemPartition(
+    PUNICODE_STRING VolumeNameString
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoVerifyPartitionTable(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN BOOLEAN FixErrors
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoVolumeDeviceToDosName(
+    IN  PVOID           VolumeDeviceObject,
+    OUT PUNICODE_STRING DosName
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+IoWritePartitionTableEx(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN struct _DRIVE_LAYOUT_INFORMATION_EX* DriveLayfout
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS FASTCALL
+IoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
+		     ULONG SectorSize,
+		     BOOLEAN ReturnRecognizedPartitions,
+		     PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+{
+  return(HalIoReadPartitionTable(DeviceObject,
+				 SectorSize,
+				 ReturnRecognizedPartitions,
+				 PartitionBuffer));
+}
+
+
+NTSTATUS FASTCALL
+IoSetPartitionInformation(PDEVICE_OBJECT DeviceObject,
+			  ULONG SectorSize,
+			  ULONG PartitionNumber,
+			  ULONG PartitionType)
+{
+  return(HalIoSetPartitionInformation(DeviceObject,
+				      SectorSize,
+				      PartitionNumber,
+				      PartitionType));
+}
+
+
+NTSTATUS FASTCALL
+IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
+		      ULONG SectorSize,
+		      ULONG SectorsPerTrack,
+		      ULONG NumberOfHeads,
+		      PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+{
+  return(HalIoWritePartitionTable(DeviceObject,
+				  SectorSize,
+				  SectorsPerTrack,
+				  NumberOfHeads,
+				  PartitionBuffer));
+}
 /* EOF */
