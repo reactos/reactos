@@ -122,7 +122,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		 LoadString( GetModuleHandle(NULL), STRING_DEL_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-         ConOutPrintf (_T((LPTSTR)szMsg),
+         ConOutPrintf ((LPTSTR)szMsg,
 					   lpOptions[2],Options[3],lpOptions[6],lpOptions[4],lpOptions[7],lpOptions[9],lpOptions[10],
                        lpOptions[2],Options[3],lpOptions[6],lpOptions[4],lpOptions[7],lpOptions[9],lpOptions[10],
 		               lpOptions[2],Options[3],lpOptions[6],lpOptions[4],lpOptions[7],lpOptions[9],lpOptions[10],
@@ -232,7 +232,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					/* wildcards in filespec */
 #ifdef _DEBUG
 					LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-                    ConErrPrintf (_T((LPTSTR)szMsg));
+                    ConErrPrintf ((LPTSTR)szMsg);
 #endif
 
 					GetFullPathName (arg[i],
@@ -242,10 +242,10 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 #ifdef _DEBUG
 					 LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-                     ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+                     ConErrPrintf ((LPTSTR)szMsg, szFullPath);
 
 					 LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-                     ConErrPrintf (_T((LPTSTR)szMsg), pFilePart);
+                     ConErrPrintf ((LPTSTR)szMsg, pFilePart);
 					
 #endif
 
@@ -269,17 +269,17 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 #ifdef _DEBUG
 						LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
-                        ConErrPrintf (_T((LPTSTR)szMsg));
+                        ConErrPrintf ((LPTSTR)szMsg);
 
 #endif
 						/* ask for deleting */
 						if (dwFlags & DEL_PROMPT) 
 						{							
 							LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR5, (LPTSTR) szMsg,sizeof(szMsg));
-                            ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+                            ConErrPrintf ((LPTSTR)szMsg, szFullPath);
 							
 							LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR6, (LPTSTR) szMsg,sizeof(szMsg));
-							res = FilePromptYN (_T((LPTSTR)szMsg));
+							res = FilePromptYN ((LPTSTR)szMsg);
 
 							if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 							{
@@ -290,7 +290,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 						if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
 						    {
 							 LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR7, (LPTSTR) szMsg,sizeof(szMsg));
-                             ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);								
+                             ConErrPrintf ((LPTSTR)szMsg, szFullPath);								
 							}
 
 						/* delete the file */
@@ -335,7 +335,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					/* no wildcards in filespec */
 #ifdef _DEBUG
 					LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR8, (LPTSTR) szMsg,sizeof(szMsg));
-                    ConErrPrintf (_T((LPTSTR)szMsg));
+                    ConErrPrintf ((LPTSTR)szMsg);
 #endif
 					GetFullPathName (arg[i],
 					                 MAX_PATH,
@@ -346,10 +346,10 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					if((dwFlags & DEL_PROMPT) && (FindFirstFile(szFullPath, &f) != INVALID_HANDLE_VALUE)) //Don't ask if the file doesn't exist, the following code will make the error-msg 
 					{
 						LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR5, (LPTSTR) szMsg,sizeof(szMsg));
-                        ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+                        ConErrPrintf ((LPTSTR)szMsg, szFullPath);
 						
 						LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR6, (LPTSTR) szMsg,sizeof(szMsg));
-						res = FilePromptYN (_T((LPTSTR)szMsg));
+						res = FilePromptYN ((LPTSTR)szMsg);
 
 						if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 						{
@@ -359,12 +359,12 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 #ifdef _DEBUG
 					LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-                    ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+                    ConErrPrintf ((LPTSTR)szMsg, szFullPath);
 #endif
 					if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
 					   {
 					     LoadString( GetModuleHandle(NULL), STRING_DEL_ERROR7, (LPTSTR) szMsg,sizeof(szMsg));
-                         ConErrPrintf (_T((LPTSTR)szMsg), szFullPath);
+                         ConErrPrintf ((LPTSTR)szMsg, szFullPath);
 					    }
 
 					if (!(dwFlags & DEL_NOTHING))
@@ -424,7 +424,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
              LoadString( GetModuleHandle(NULL), STRING_DEL_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
 		   }
 		
-	   ConOutPrintf (_T((LPTSTR)szMsg), dwFiles);	   		
+	   ConOutPrintf ((LPTSTR)szMsg, dwFiles);	   		
 	}
 
 	return 0;

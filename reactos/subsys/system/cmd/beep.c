@@ -37,7 +37,7 @@ INT cmd_beep (LPTSTR cmd, LPTSTR param)
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
 		LoadString( GetModuleHandle(NULL), STRING_ALIAS_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		return 0;
 	}
 

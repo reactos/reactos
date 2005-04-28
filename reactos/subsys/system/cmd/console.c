@@ -234,7 +234,7 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	else
 	{
 		LoadString( GetModuleHandle(NULL), STRING_CONSOLE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf (_T((LPTSTR)szMsg));
+        ConErrPrintf ((LPTSTR)szMsg);
 	}
 }
 

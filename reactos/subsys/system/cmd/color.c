@@ -31,7 +31,7 @@ static VOID ColorHelp (VOID)
 {
 	WCHAR szMsg[RC_STRING_MAX_SIZE];
 	LoadString( GetModuleHandle(NULL), STRING_COLOR_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts (_T((LPTSTR)szMsg));
+    ConOutPuts ((LPTSTR)szMsg);
 
 }
 
@@ -46,7 +46,7 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
 	  LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-      ConErrPuts (_T((LPTSTR)szMsg));
+      ConErrPuts ((LPTSTR)szMsg);
     }
     else 
     {
@@ -93,17 +93,17 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 	if (StringToColor (&wColor, &rest) == FALSE)
 	{
 		LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPuts (_T((LPTSTR)szMsg));
+        ConErrPuts ((LPTSTR)szMsg);
 		return 1;
 	}
 
 	LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-    ConErrPrintf (_T((LPTSTR)szMsg), wColor);
+    ConErrPrintf ((LPTSTR)szMsg, wColor);
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
 		LoadString( GetModuleHandle(NULL), STRING_COLOR_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf (_T((LPTSTR)szMsg), wColor);		
+        ConErrPrintf ((LPTSTR)szMsg, wColor);		
 		return 1;
 	}
 

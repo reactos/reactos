@@ -54,17 +54,17 @@ PrintDateString (VOID)
 		case 0: /* mmddyy */
 		default:
 			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
+            ConOutPrintf ((LPTSTR)szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 1: /* ddmmyy */
 			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
+            ConOutPrintf ((LPTSTR)szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 2: /* yymmdd */
 			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
+            ConOutPrintf ((LPTSTR)szMsg, cDateSeparator, cDateSeparator);
 			break;
 	}
 }
@@ -194,7 +194,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_DATE_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		return 0;
 	}
 
@@ -248,7 +248,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			return 0;
 		}
 		LoadString( GetModuleHandle(NULL), STRING_DATE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPuts (_T((LPTSTR)szMsg));
+        ConErrPuts ((LPTSTR)szMsg);
 		
 	}
 

@@ -41,7 +41,7 @@ INT cmd_cls (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_CLS_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		return 0;
 	}
 

@@ -42,7 +42,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));			
+        ConOutPuts ((LPTSTR)szMsg);			
 		return 0;
 	}
 
@@ -63,7 +63,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 			ConOutPuts (param);
 		else {
              LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-             ConOutPrintf (_T((LPTSTR)szMsg), bEcho ? D_ON : D_OFF);
+             ConOutPrintf ((LPTSTR)szMsg, bEcho ? D_ON : D_OFF);
 		     }
 	}
 
@@ -81,7 +81,7 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts(_T((LPTSTR)szMsg));	
+        ConOutPuts((LPTSTR)szMsg);	
 		
 		return 0;
 	}
@@ -104,7 +104,7 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts(_T((LPTSTR)szMsg));	
+        ConOutPuts((LPTSTR)szMsg);	
 
 		return 0;
 	}
@@ -137,7 +137,7 @@ INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts(_T((LPTSTR)szMsg));	
+        ConOutPuts((LPTSTR)szMsg);	
 
 		return 0;
 	}

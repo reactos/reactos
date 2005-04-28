@@ -53,62 +53,71 @@
 #define STRING_DEL_ERROR8                  331
 #define STRING_ERROR_ERROR1                332
 #define STRING_ERROR_ERROR2                333
+#define STRING_FOR_ERROR1                  334 
+#define STRING_FOR_ERROR2                  335
+#define STRING_FOR_ERROR3                  336
+#define STRING_FOR_ERROR4                  337
+#define STRING_FREE_ERROR1                 338
+#define STRING_FREE_ERROR2                 339
+#define STRING_PARAM_ERROR                 340
 
-#define STRING_PARAM_ERROR                 334
 
-#define STRING_ATTRIB_HELP                 400
-#define STRING_ALIAS_HELP                  401
-#define STRING_BEEP_HELP                   402
-#define STRING_CALL_HELP                   403
-#define STRING_CD_HELP                     404
-#define STRING_CHCP_HELP                   405
-#define STRING_CHOICE_HELP                 406
-#define STRING_CLS_HELP                    407
-#define STRING_CMD_HELP1                   408 
-#define STRING_CMD_HELP2                   409
-#define STRING_CMD_HELP3                   410
-#define STRING_CMD_HELP4                   411
-#define STRING_CMD_HELP5                   412
-#define STRING_CMD_HELP6                   413
-#define STRING_CMD_HELP7                   414
-#define STRING_CMD_HELP8                   415
-#define STRING_COLOR_HELP1                 416
-#define STRING_COPY_HELP1                  417
-#define STRING_COPY_HELP2                  418
-#define STRING_DATE_HELP1                  419
-#define STRING_DATE_HELP2                  420
-#define STRING_DATE_HELP3                  421
-#define STRING_DATE_HELP4                  422
-#define STRING_DEL_HELP1                   423
-#define STRING_DEL_HELP2	               424
-#define STRING_DEL_HELP3                   425
-#define STRING_DEL_HELP4                   426
-#define STRING_DELAY_HELP                  427 
+#define STRING_ATTRIB_HELP                 600
+#define STRING_ALIAS_HELP                  601
+#define STRING_BEEP_HELP                   602
+#define STRING_CALL_HELP                   603
+#define STRING_CD_HELP                     604
+#define STRING_CHCP_HELP                   605
+#define STRING_CHOICE_HELP                 606
+#define STRING_CLS_HELP                    607
+#define STRING_CMD_HELP1                   608 
+#define STRING_CMD_HELP2                   609
+#define STRING_CMD_HELP3                   610
+#define STRING_CMD_HELP4                   611
+#define STRING_CMD_HELP5                   612
+#define STRING_CMD_HELP6                   613
+#define STRING_CMD_HELP7                   614
+#define STRING_CMD_HELP8                   615
+#define STRING_COLOR_HELP1                 616
+#define STRING_COPY_HELP1                  617
+#define STRING_COPY_HELP2                  618
+#define STRING_DATE_HELP1                  619
+#define STRING_DATE_HELP2                  620
+#define STRING_DATE_HELP3                  621
+#define STRING_DATE_HELP4                  622
+#define STRING_DEL_HELP1                   623
+#define STRING_DEL_HELP2	               624
+#define STRING_DEL_HELP3                   625
+#define STRING_DEL_HELP4                   626
+#define STRING_DELAY_HELP                  627 
 
-#define STRING_DIR_HELP1                   428 
-#define STRING_DIR_HELP2                   429
-#define STRING_DIR_HELP3                   430
-#define STRING_DIR_HELP4                   431
-#define STRING_DIR_HELP5                   432
-#define STRING_DIR_HELP6                   433
-#define STRING_DIR_HELP7                   434
-#define STRING_DIR_HELP8                   435
+#define STRING_DIR_HELP1                   628 
+#define STRING_DIR_HELP2                   629
+#define STRING_DIR_HELP3                   630
+#define STRING_DIR_HELP4                   631
+#define STRING_DIR_HELP5                   632
+#define STRING_DIR_HELP6                   633
+#define STRING_DIR_HELP7                   634
+#define STRING_DIR_HELP8                   635
 
-#define STRING_DIRSTACK_HELP1              436
-#define STRING_DIRSTACK_HELP2              437
-#define STRING_DIRSTACK_HELP3              438
-#define STRING_DIRSTACK_HELP4              439
+#define STRING_DIRSTACK_HELP1              636
+#define STRING_DIRSTACK_HELP2              637
+#define STRING_DIRSTACK_HELP3              638
+#define STRING_DIRSTACK_HELP4              639
 
-#define STRING_ECHO_HELP1                  440
-#define STRING_ECHO_HELP2                  441
-#define STRING_ECHO_HELP3                  442
-#define STRING_ECHO_HELP4                  443 
-#define STRING_ECHO_HELP5                  444 
+#define STRING_ECHO_HELP1                  640
+#define STRING_ECHO_HELP2                  641
+#define STRING_ECHO_HELP3                  642
+#define STRING_ECHO_HELP4                  643 
+#define STRING_ECHO_HELP5                  644 
 
-#define STRING_EXIT_HELP                   445
-#define STRING_MKDIR_HELP                  446
-#define STRING_RMDIR_HELP                  447
-#define STRING_REM_HELP                    448
+#define STRING_EXIT_HELP                   645
+
+#define STRING_FOR_HELP1                   646
+
+#define STRING_MKDIR_HELP                  647
+#define STRING_RMDIR_HELP                  648
+#define STRING_REM_HELP                    649
 
 
 

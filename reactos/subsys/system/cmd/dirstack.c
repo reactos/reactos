@@ -145,7 +145,7 @@ INT CommandPushd (LPTSTR first, LPTSTR rest)
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_DIRSTACK_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		
 		return 0;
 	}
@@ -178,7 +178,7 @@ INT CommandPopd (LPTSTR first, LPTSTR rest)
 	if (!_tcsncmp(rest, _T("/?"), 2))
 	{   
 		LoadString( GetModuleHandle(NULL), STRING_DIRSTACK_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		
 		return 0;
 	}
@@ -206,7 +206,7 @@ INT CommandDirs (LPTSTR first, LPTSTR rest)
 	if (!_tcsncmp(rest, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_DIRSTACK_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		
 		return 0;
 	}
@@ -217,7 +217,7 @@ INT CommandDirs (LPTSTR first, LPTSTR rest)
 	if (lpDir == NULL)
 	{
 		LoadString( GetModuleHandle(NULL), STRING_DIRSTACK_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		
 		return 0;
 	}

@@ -212,7 +212,7 @@ static VOID
 {
 	WCHAR szMsg[RC_STRING_MAX_SIZE];
 	LoadString( GetModuleHandle(NULL), STRING_DIR_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts (_T((LPTSTR)szMsg));
+    ConOutPuts ((LPTSTR)szMsg);
 }
 
 
@@ -829,12 +829,12 @@ PrintDirectoryHeader (LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
   if (szVolName[0] != _T('\0'))
      {
 	  LoadString( GetModuleHandle(NULL), STRING_DIR_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-      ConOutPrintf (_T((LPTSTR)szMsg), szRootName[0], szVolName);
+      ConOutPrintf ((LPTSTR)szMsg, szRootName[0], szVolName);
 	 }
   else
      {
 	  LoadString( GetModuleHandle(NULL), STRING_DIR_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-      ConOutPrintf (_T((LPTSTR)szMsg), szRootName[0]);
+      ConOutPrintf ((LPTSTR)szMsg, szRootName[0]);
 	 }
 
   
@@ -843,7 +843,7 @@ PrintDirectoryHeader (LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
   /* print the volume serial number if the return was successful */
 	 
   LoadString( GetModuleHandle(NULL), STRING_DIR_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-  ConOutPrintf (_T((LPTSTR)szMsg),
+  ConOutPrintf ((LPTSTR)szMsg,
 	            HIWORD(dwSerialNr),
 	            LOWORD(dwSerialNr));
 
@@ -1075,7 +1075,7 @@ WCHAR szMsg[RC_STRING_MAX_SIZE];
 		ConvertULargeInteger (u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 		
 		LoadString( GetModuleHandle(NULL), STRING_DIR_HELP5, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf (_T((LPTSTR)szMsg),ulFiles, szBuffer);
+        ConOutPrintf ((LPTSTR)szMsg,ulFiles, szBuffer);
     }
 
 	/* Print total  directories and freespace */
@@ -1083,7 +1083,7 @@ WCHAR szMsg[RC_STRING_MAX_SIZE];
 	GetUserDiskFreeSpace(szRoot, &uliFree);
 	ConvertULargeInteger (uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 	LoadString( GetModuleHandle(NULL), STRING_DIR_HELP6, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf (_T((LPTSTR)szMsg),ulDirs, szBuffer);
+    ConOutPrintf ((LPTSTR)szMsg,ulDirs, szBuffer);
 
   return 0;
 }
@@ -1729,7 +1729,7 @@ WCHAR szMsg[RC_STRING_MAX_SIZE];
 	{
 		ConvertULargeInteger(u64CountBytes, szBytes, 20, lpFlags->bTSeperator);
 		LoadString( GetModuleHandle(NULL), STRING_DIR_HELP8, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf (_T((LPTSTR)szMsg),dwCountFiles, szBytes);
+        ConOutPrintf ((LPTSTR)szMsg,dwCountFiles, szBytes);
 	}
 
 	/* Add statistics to recursive statistics*/

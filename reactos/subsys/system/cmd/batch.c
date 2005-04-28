@@ -233,7 +233,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
 		LoadString( GetModuleHandle(NULL), STRING_BATCH_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf (_T((LPTSTR)szMsg));
+        ConErrPrintf ((LPTSTR)szMsg);
 		return FALSE;
 	}
 

@@ -635,14 +635,14 @@ VOID ParseCommandLine (LPTSTR cmd)
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
 			LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg), in);
+            ConErrPrintf ((LPTSTR)szMsg, in);
 			return;
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
 		{
 			LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg), in);
+            ConErrPrintf ((LPTSTR)szMsg, in);
 			return;
 		}
 #ifdef _DEBUG
@@ -668,7 +668,7 @@ VOID ParseCommandLine (LPTSTR cmd)
       if (hFile[1] == INVALID_HANDLE_VALUE){
 
          LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-         ConErrPrintf (_T((LPTSTR)szMsg));
+         ConErrPrintf ((LPTSTR)szMsg);
          return;
       }
 
@@ -721,7 +721,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
 			LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg), out);
+            ConErrPrintf ((LPTSTR)szMsg, out);
 
 			return;
 		}
@@ -729,7 +729,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
 		{
 			LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg), out);
+            ConErrPrintf ((LPTSTR)szMsg, out);
 			return;
 		}
 
@@ -783,7 +783,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 			if (hFile == INVALID_HANDLE_VALUE)
 			{
 				LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-                ConErrPrintf (_T((LPTSTR)szMsg), err);
+                ConErrPrintf ((LPTSTR)szMsg, err);
 
 				return;
 			}
@@ -791,7 +791,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		if (!SetStdHandle (STD_ERROR_HANDLE, hFile))
 		{
 			LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg), err);
+            ConErrPrintf ((LPTSTR)szMsg, err);
 
 			return;
 		}
@@ -1080,32 +1080,32 @@ ShowCommands (VOID)
 
 	/* print command list */
 	LoadString( GetModuleHandle(NULL), STRING_CMD_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf (_T((LPTSTR)szMsg));
+    ConOutPrintf ((LPTSTR)szMsg);
 	PrintCommandList ();
 
 	/* print feature list */
 	 LoadString( GetModuleHandle(NULL), STRING_CMD_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-     ConOutPuts (_T((LPTSTR)szMsg));
+     ConOutPuts ((LPTSTR)szMsg);
 
 #ifdef FEATURE_ALIASES	
 	LoadString( GetModuleHandle(NULL), STRING_CMD_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts (_T((LPTSTR)szMsg));
+    ConOutPuts ((LPTSTR)szMsg);
 #endif
 #ifdef FEATURE_HISTORY
 	LoadString( GetModuleHandle(NULL), STRING_CMD_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts (_T((LPTSTR)szMsg));
+    ConOutPuts ((LPTSTR)szMsg);
 #endif
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 	LoadString( GetModuleHandle(NULL), STRING_CMD_HELP5, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts (_T((LPTSTR)szMsg));
+    ConOutPuts ((LPTSTR)szMsg);
 #endif
 #ifdef FEATURE_DIRECTORY_STACK
 	LoadString( GetModuleHandle(NULL), STRING_CMD_HELP6, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts (_T((LPTSTR)szMsg));
+    ConOutPuts ((LPTSTR)szMsg);
 #endif
 #ifdef FEATURE_REDIRECTION
 	LoadString( GetModuleHandle(NULL), STRING_CMD_HELP7, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts (_T((LPTSTR)szMsg));
+    ConOutPuts ((LPTSTR)szMsg);
 #endif
 	ConOutChar (_T('\n'));
 }
@@ -1155,7 +1155,7 @@ Initialize (int argc, TCHAR* argv[])
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_CMD_HELP8, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		ExitProcess (0);
 	}
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
@@ -1260,7 +1260,7 @@ Initialize (int argc, TCHAR* argv[])
 		if (IsExistingFile (_T("commandline")))
 		{
 			LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg), commandline);
+            ConErrPrintf ((LPTSTR)szMsg, commandline);
 			ParseCommandLine (commandline);
 		}
 	}
@@ -1297,14 +1297,14 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 	if (IsExistingFile (_T("cmdexit.bat")))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR5, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf (_T((LPTSTR)szMsg));
+        ConErrPrintf ((LPTSTR)szMsg);
 
 		ParseCommandLine (_T("cmdexit.bat"));
 	}
 	else if (IsExistingFile (_T("\\cmdexit.bat")))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR5, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf (_T((LPTSTR)szMsg));
+        ConErrPrintf ((LPTSTR)szMsg);
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}
 #ifndef __REACTOS__
@@ -1321,7 +1321,7 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 		if (IsExistingFile (_T("commandline")))
 		{
 			LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg), commandline);
+            ConErrPrintf ((LPTSTR)szMsg, commandline);
 			ParseCommandLine (commandline);
 		}
 	}

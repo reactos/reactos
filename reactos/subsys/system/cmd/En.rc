@@ -228,8 +228,17 @@ Type ECHO without a parameter to display the current ECHO setting."
 
 STRING_ECHO_HELP5, "ECHO is %s\n"
 
-
 STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT"
+
+STRING_FOR_HELP1, "Runs a specified command for each file in a set of files\n\n \
+FOR %variable IN (set) DO command [parameters]\n\n \
+  %variable  Specifies a replaceable parameter.\n \
+  (set)      Specifies a set of one or more files. Wildcards may be used.\n \
+  command    Specifies the command to carry out for each file.\n \
+  parameters Specifies parameters or switches for the specified command.\n\n \
+To user the FOR comamnd in a batch program, specify %%variable instead of\n \
+%variable."
+
 
 STRING_MKDIR_HELP,   "Creates a directory.\n\n \
 MKDIR [drive:]path\nMD [drive:]path"
@@ -240,6 +249,7 @@ RMDIR [drive:]path\nRD [drive:]path"
 STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
 
+	            
 
 
 
@@ -283,6 +293,12 @@ STRING_DEL_ERROR7,           "Deleting: %s\n"
 STRING_DEL_ERROR8,           "No Wildcards!\n"
 STRING_ERROR_ERROR1,         "Unknown error! Error code: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Syntax error"
+STRING_FOR_ERROR1, "'in' missing in for statement."
+STRING_FOR_ERROR2, "no brackets found."
+STRING_FOR_ERROR3, "'do' missing." 
+STRING_FOR_ERROR4, "no command after 'do'." 
+STRING_FREE_ERROR1, "Invalid drive"
+STRING_FREE_ERROR2, "unlabeled"
 
 STRING_PARAM_ERROR,          "Required parameter missing\n"
 

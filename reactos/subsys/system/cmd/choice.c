@@ -129,7 +129,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
 	 LoadString( GetModuleHandle(NULL), STRING_CHOICE_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-     ConOutPuts (_T((LPTSTR)szMsg));
+     ConOutPuts ((LPTSTR)szMsg);
 
 	 return 0;
 	}
@@ -172,7 +172,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 				{
 					
 					LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-					ConErrPuts (_T((LPTSTR)szMsg));
+					ConErrPuts ((LPTSTR)szMsg);
 					freep (arg);
 					return 1;
 				}
@@ -203,7 +203,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 				if (*s != _T(','))
 				{
 					LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR_TXT, (LPTSTR) szMsg,sizeof(szMsg));
-                    ConErrPuts (_T((LPTSTR)szMsg));
+                    ConErrPuts ((LPTSTR)szMsg);
 					freep (arg);
 					return 1;
 				}
@@ -215,7 +215,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 			else if (arg[i][0] == _T('/'))
 			{
 				LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR_OPTION, (LPTSTR) szMsg,sizeof(szMsg));               
-				ConErrPrintf (_T((LPTSTR)szMsg), arg[i]);
+				ConErrPrintf ((LPTSTR)szMsg, arg[i]);
 				freep (arg);
 				return 1;
 			}

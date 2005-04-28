@@ -307,7 +307,7 @@ Overwrite (LPTSTR fn)
     lpOptions = _T(Options);
 
     LoadString( GetModuleHandle(NULL), STRING_COPY_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf (_T((LPTSTR)szMsg));
+    ConOutPrintf ((LPTSTR)szMsg);
 	
 	ConInString (inp, 10);
 	ConOutPuts (_T(""));
@@ -352,7 +352,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	if (hFileSrc == INVALID_HANDLE_VALUE)
 	{
 		  LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-          ConErrPrintf (_T((LPTSTR)szMsg), source);
+          ConErrPrintf ((LPTSTR)szMsg, source);
 		return 0;
 	}
 
@@ -380,7 +380,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		if (!_tcscmp (dest, source))
 		{
 			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg), source);
+            ConErrPrintf ((LPTSTR)szMsg, source);
 			
 			CloseHandle (hFileSrc);
 			return 0;
@@ -457,7 +457,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		{
 			
 			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf (_T((LPTSTR)szMsg));
+            ConErrPrintf ((LPTSTR)szMsg);
 
 			free (buffer);
 			CloseHandle (hFileDest);
@@ -656,7 +656,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_COPY_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
 		return 1;
 	}
 
@@ -729,7 +729,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	else if (bDestFound && bWildcards)
 	{
 		LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf (_T((LPTSTR)szMsg));
+        ConErrPrintf ((LPTSTR)szMsg);
 
 		DeleteFileList (sources);
 		freep (p);
