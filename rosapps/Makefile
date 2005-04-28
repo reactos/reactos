@@ -17,7 +17,6 @@ APPS = cmdutils \
 	dflat32 \
     	games$(SEP)winemine \
 	games$(SEP)solitaire \
-	hcalc \
 	mc \
 	notevil \
 	packmgr$(SEP)lib \
