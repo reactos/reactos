@@ -1,5 +1,20 @@
 #define RC_STRING_MAX_SIZE                 2048
 
+
+#define STRING_ERROR_PARAMETERF_ERROR      100
+#define STRING_ERROR_INVALID_SWITCH        101
+#define STRING_ERROR_TOO_MANY_PARAMETERS   102
+#define STRING_ERROR_PATH_NOT_FOUND 	   103
+#define STRING_ERROR_FILE_NOT_FOUND 	   104
+#define STRING_ERROR_REQ_PARAM_MISSING 	   105
+#define STRING_ERROR_INVALID_DRIVE 		   106
+#define STRING_ERROR_INVALID_PARAM_FORMAT  107
+#define STRING_ERROR_BADCOMMAND 		   108
+#define STRING_ERROR_OUT_OF_MEMORY		   109
+#define STRING_ERROR_CANNOTPIPE 		   110
+#define STRING_ERROR_D_PAUSEMSG 		   111
+#define STRING_ERROR_DRIVER_NOT_READY      112
+
 #define STRING_CHOICE_OPTION               200
 #define STRING_COPY_OPTION                 201
 #define STRING_DEL_OPTION                  202
@@ -36,7 +51,10 @@
 #define STRING_DEL_ERROR6                  329
 #define STRING_DEL_ERROR7                  330
 #define STRING_DEL_ERROR8                  331
-#define STRING_PARAM_ERROR                 332
+#define STRING_ERROR_ERROR1                332
+#define STRING_ERROR_ERROR2                333
+
+#define STRING_PARAM_ERROR                 334
 
 #define STRING_ATTRIB_HELP                 400
 #define STRING_ALIAS_HELP                  401
@@ -81,10 +99,16 @@
 #define STRING_DIRSTACK_HELP3              438
 #define STRING_DIRSTACK_HELP4              439
 
-#define STRING_EXIT_HELP                   440
-#define STRING_MKDIR_HELP                  441
-#define STRING_RMDIR_HELP                  442
-#define STRING_REM_HELP                    443
+#define STRING_ECHO_HELP1                  440
+#define STRING_ECHO_HELP2                  441
+#define STRING_ECHO_HELP3                  442
+#define STRING_ECHO_HELP4                  443 
+#define STRING_ECHO_HELP5                  444 
+
+#define STRING_EXIT_HELP                   445
+#define STRING_MKDIR_HELP                  446
+#define STRING_RMDIR_HELP                  447
+#define STRING_REM_HELP                    448
 
 
 

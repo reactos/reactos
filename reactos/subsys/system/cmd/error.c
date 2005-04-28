@@ -15,11 +15,15 @@
  *
  *    02-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Use FormatMessage() for error reports.
+ *
+ *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
-
+/*
 #define PARAMETERF_ERROR	_T("Parameter format not correct - %c\n")
 #define INVALID_SWITCH		_T("Invalid switch - /%c\n")
 #define TOO_MANY_PARAMETERS	_T("Too many parameters - %s\n")
@@ -33,14 +37,17 @@
 #define CANNOTPIPE		_T("Error!  Cannot pipe!  Cannot open temporary file!\n")
 
 #define D_PAUSEMSG		_T("Press any key to continue . . .")
-
+*/
 
 
 VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 {
 	TCHAR  szMessage[1024];
+#ifndef __REACTOS__
 	LPTSTR szError;
+#endif
 	va_list arg_ptr;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (dwErrorCode == ERROR_SUCCESS)
 		return;
@@ -64,7 +71,8 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 	}
 	else
 	{
-		ConErrPrintf (_T("Unknown error! Error code: 0x%lx\n"), dwErrorCode);
+		LoadString( GetModuleHandle(NULL), STRING_ERROR_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPrintf (_T((LPTSTR)szMsg), dwErrorCode);
 		return;
 	}
 
@@ -72,112 +80,144 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 
 	switch (dwErrorCode)
 	{
-		case ERROR_FILE_NOT_FOUND:
-			szError = _T("File not found");
+		case ERROR_FILE_NOT_FOUND:			
+			LoadString( GetModuleHandle(NULL), STRING_ERROR_FILE_NOT_FOUND, (LPTSTR) szMsg,sizeof(szMsg));            
 			break;
 
 		case ERROR_PATH_NOT_FOUND:
-			szError = _T("Path not found");
+			LoadString( GetModuleHandle(NULL), STRING_ERROR_PATH_NOT_FOUND, (LPTSTR) szMsg,sizeof(szMsg)); 			
 			break;
 
 		case ERROR_NOT_READY:
-			szError = _T("Drive not ready");
+			LoadString( GetModuleHandle(NULL), STRING_ERROR_DRIVER_NOT_READY, (LPTSTR) szMsg,sizeof(szMsg)); 						
 			break;
 
 		default:
-			ConErrPrintf (_T("Unknown error! Error code: 0x%lx\n"), dwErrorCode);
+			LoadString( GetModuleHandle(NULL), STRING_ERROR_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+            ConErrPrintf (_T((LPTSTR)szMsg));				
 			return;
 	}
 
 	if (szFormat)
-		ConErrPrintf (_T("%s -- %s\n"), szError, szMessage);
+		ConErrPrintf (_T("%s -- %s\n"), szMsg, szMessage);
 	else
-		ConErrPrintf (_T("%s\n"), szError);
+		ConErrPrintf (_T("%s\n"), szMsg);
 #endif
 }
 
 VOID error_parameter_format(TCHAR ch)
 {
-	ConErrPrintf (PARAMETERF_ERROR, ch);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_PARAMETERF_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg), ch);
 }
 
 
 VOID error_invalid_switch (TCHAR ch)
-{
-	ConErrPrintf (INVALID_SWITCH, ch);
+{	
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_INVALID_SWITCH, (LPTSTR) szMsg,sizeof(szMsg));
+	ConErrPrintf (_T((LPTSTR)szMsg), ch);
 }
 
 
 VOID error_too_many_parameters (LPTSTR s)
 {
-	ConErrPrintf (TOO_MANY_PARAMETERS, s);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_TOO_MANY_PARAMETERS, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg), s);
 }
 
 
 VOID error_path_not_found (VOID)
 {
-	ConErrPrintf (PATH_NOT_FOUND);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_PATH_NOT_FOUND, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg));
 }
 
 
 VOID error_file_not_found (VOID)
 {
-	ConErrPrintf (FILE_NOT_FOUND);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_FILE_NOT_FOUND, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg));
 }
 
 
 VOID error_sfile_not_found (LPTSTR f)
 {
-	ConErrPrintf (FILE_NOT_FOUND _T(" - %s\n"), f);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_FILE_NOT_FOUND, (LPTSTR) szMsg,sizeof(szMsg));    
+	ConErrPrintf ("%s - %s\n", (LPTSTR)szMsg,f);
 }
 
 
 VOID error_req_param_missing (VOID)
 {
-	ConErrPrintf (REQ_PARAM_MISSING);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_REQ_PARAM_MISSING, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg));
 }
 
 
 VOID error_invalid_drive (VOID)
 {
-	ConErrPrintf (INVALID_DRIVE);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_INVALID_DRIVE, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg));
 }
 
 
 VOID error_bad_command (VOID)
 {
-	ConErrPrintf (BADCOMMAND);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_BADCOMMAND, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg));	
 }
 
 
 VOID error_no_pipe (VOID)
 {
-	ConErrPrintf (CANNOTPIPE);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_CANNOTPIPE, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg));	
 }
 
 
 VOID error_out_of_memory (VOID)
 {
-	ConErrPrintf (OUT_OF_MEMORY);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_OUT_OF_MEMORY, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg));	
 }
 
 
 VOID error_invalid_parameter_format (LPTSTR s)
 {
-	ConErrPrintf (INVALID_PARAM_FORMAT, s);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_INVALID_PARAM_FORMAT, (LPTSTR) szMsg,sizeof(szMsg));
+    ConErrPrintf (_T((LPTSTR)szMsg), s);
 }
 
 
 VOID error_syntax (LPTSTR s)
 {
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+
 	if (s)
-		ConErrPrintf (_T("Syntax error - %s\n"), s);
+		ConErrPrintf (_T("%s - %s\n"),_T((LPTSTR)szMsg), s);
 	else
-		ConErrPrintf (_T("Syntax error.\n"));
+		ConErrPrintf (_T("%s.\n"), _T((LPTSTR)szMsg) );
 }
 
 
 VOID msg_pause (VOID)
 {
-	ConOutPuts (D_PAUSEMSG);
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
+	LoadString( GetModuleHandle(NULL), STRING_ERROR_D_PAUSEMSG, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPuts (_T((LPTSTR)szMsg));	
 }

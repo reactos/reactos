@@ -6,6 +6,7 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
+
 STRING_ATTRIB_HELP,    "Displays or changes file attributes.\n\n \
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n \
        [/S [/D]]\n\n \
@@ -209,6 +210,24 @@ STRING_DIRSTACK_HELP3, "Prints the contents of the directory stack.\n\nDIRS"
 
 STRING_DIRSTACK_HELP4, "Directory stack empty"
 
+STRING_ECHO_HELP1,  "Display a messages without trailing carridge return and line feed.\n\n \
+  ECHOS message"
+
+STRING_ECHO_HELP2,  "Displays a message to the standard error.\n\n \
+  ECHOERR message\n \
+  ECHOERR.           prints an empty line"
+
+STRING_ECHO_HELP3, "Prints a messages to standard error output without trailing carridge return and line feed.\n\n \
+  ECHOSERR message"
+
+STRING_ECHO_HELP4, "Displays a message or switches command echoing on or off.\n\n \
+  ECHO [ON | OFF]\n \
+  ECHO [message]\n \
+  ECHO.             prints an empty line\n\n \
+Type ECHO without a parameter to display the current ECHO setting."
+
+STRING_ECHO_HELP5, "ECHO is %s\n"
+
 
 STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT"
 
@@ -223,13 +242,8 @@ STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
 
 
+
 	
-
-
-
-
-
-
 STRING_CHOICE_OPTION,         "YN"
 STRING_COPY_OPTION,           "YNA"
 STRING_DEL_OPTION,            "AENPQSTWXYZ"
@@ -267,7 +281,24 @@ STRING_DEL_ERROR5,           "The file %s will be deleted! "
 STRING_DEL_ERROR6,           "Are you sure (Y/N)?"
 STRING_DEL_ERROR7,           "Deleting: %s\n"
 STRING_DEL_ERROR8,           "No Wildcards!\n"
+STRING_ERROR_ERROR1,         "Unknown error! Error code: 0x%lx\n"
+STRING_ERROR_ERROR2,         "Syntax error"
+
 STRING_PARAM_ERROR,          "Required parameter missing\n"
 
+
+STRING_ERROR_PARAMETERF_ERROR,	   "Parameter format not correct - %c\n"
+STRING_ERROR_INVALID_SWITCH,       "Invalid switch - /%c\n"
+STRING_ERROR_TOO_MANY_PARAMETERS,  "Too many parameters - %s\n"
+STRING_ERROR_PATH_NOT_FOUND,	   "Path not found\n"
+STRING_ERROR_FILE_NOT_FOUND,	   "File not found\n"
+STRING_ERROR_REQ_PARAM_MISSING,	   "Required parameter missing\n"
+STRING_ERROR_INVALID_DRIVE,		   "Invalid drive specification\n"
+STRING_ERROR_INVALID_PARAM_FORMAT, "Invalid parameter format - %s\n"
+STRING_ERROR_BADCOMMAND,		   "Bad command or filename\n"
+STRING_ERROR_OUT_OF_MEMORY,		   "Out of memory error.\n"
+STRING_ERROR_CANNOTPIPE,		   "Error!  Cannot pipe!  Cannot open temporary file!\n"
+STRING_ERROR_D_PAUSEMSG,		   "Press any key to continue . . ."
+STRING_ERROR_DRIVER_NOT_READY      "Drive not ready" 
 
 }
