@@ -71,14 +71,16 @@ ReadBytes(
 	PIRP Irp;
 	IO_STATUS_BLOCK ioStatus;
 	KEVENT event;
+	LARGE_INTEGER zero;
 	NTSTATUS Status;
 	
 	KeInitializeEvent(&event, NotificationEvent, FALSE);
+	zero.QuadPart = 0;
 	Irp = IoBuildSynchronousFsdRequest(
 		IRP_MJ_READ,
 		LowerDevice,
 		Buffer, BufferSize,
-		0,
+		&zero,
 		&event,
 		&ioStatus);
 	if (!Irp)
@@ -421,6 +423,10 @@ SerenumDetectLegacyDevice(
 	UNICODE_STRING HardwareIds;
 	UNICODE_STRING CompatibleIds;
 	NTSTATUS Status;
+	
+	DPRINT("Serenum: SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
+		DeviceObject,
+		LowerDevice);
 	
 	RtlZeroMemory(Buffer, sizeof(Buffer));
 	
