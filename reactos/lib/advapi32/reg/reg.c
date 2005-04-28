@@ -1731,6 +1731,10 @@ RegOpenKeyA (HKEY hKey,
   NTSTATUS Status;
 
   DPRINT("RegOpenKeyA hKey 0x%x lpSubKey %s phkResult %p\n", hKey, lpSubKey, phkResult);
+
+  // Check input params
+  if (phkResult == NULL) return ERROR_INVALID_PARAMETER;
+
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
@@ -1782,6 +1786,10 @@ RegOpenKeyW (HKEY hKey,
   NTSTATUS Status;
 
   DPRINT("RegOpenKeyW hKey 0x%x lpSubKey %S phkResult %p\n", hKey, lpSubKey, phkResult);
+
+  // Check input params
+  if (phkResult == NULL) return ERROR_INVALID_PARAMETER;
+
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
