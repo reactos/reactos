@@ -72,7 +72,7 @@ void sampleCompRight(Real* topVertex, Real* botVertex,
    */
   Int midIndex1;
   Int midIndex2;
-  Int gridMidIndex1, gridMidIndex2;
+  Int gridMidIndex1 =0, gridMidIndex2 =0;
   //midIndex1: array[i] <= v, array[i+1] > v
   //midIndex2: array[i] >= v,  array[i+1] < v
   midIndex1 = rightChain->findIndexBelowGen(rightGridChain->get_v_value(gridIndex1),
