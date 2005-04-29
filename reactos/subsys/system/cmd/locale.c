@@ -12,6 +12,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 TCHAR cDateSeparator;
@@ -148,21 +149,24 @@ VOID PrintTime (VOID)
 {
 #ifdef __REACTOS__
 	SYSTEMTIME st;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	GetLocalTime (&st);
+
+	LoadString( GetModuleHandle(NULL), STRING_LOCALE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
 
 	switch (nTimeFormat)
 	{
 		case 0: /* 12 hour format */
-		default:
-			ConOutPrintf (_T("Current time is %2d%c%02d%c%02d%c%02d%c\n"),
+		default:			
+            ConOutPrintf (_T("%s %2d%c%02d%c%02d%c%02d%c\n"),(LPTSTR)szMsg,
 					(st.wHour == 0 ? 12 : (st.wHour <= 12 ? st.wHour : st.wHour - 12)),
 					cTimeSeparator, st.wMinute, cTimeSeparator, st.wSecond, cDecimalSeparator,
 					st.wMilliseconds / 10, (st.wHour <= 11 ? 'a' : 'p'));
 			break;
 
 		case 1: /* 24 hour format */
-			ConOutPrintf (_T("Current time is %2d%c%02d%c%02d%c%02d\n"),
+			ConOutPrintf (_T("%s %2d%c%02d%c%02d%c%02d\n"),(LPTSTR)szMsg,			
 					st.wHour, cTimeSeparator, st.wMinute, cTimeSeparator,
 					st.wSecond, cDecimalSeparator, st.wMilliseconds / 10);
 			break;
@@ -172,6 +176,8 @@ VOID PrintTime (VOID)
 
 	GetTimeFormat (LOCALE_USER_DEFAULT, 0, NULL, NULL,
 				   szTime, sizeof (szTime));
-	ConOutPrintf (_T("Current time is: %s\n"), szTime);
+
+    LoadString( GetModuleHandle(NULL), STRING_LOCALE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+	ConOutPrintf (_T("%s: %s\n"),(LPTSTR)szMsg, szTime);
 #endif
 }

@@ -274,6 +274,7 @@ STRING_LABEL_HELP3, "Volume in drive %c: has no label\n"
 STRING_LABEL_HELP4, "Volume Serial Number is %04X-%04X\n"
 STRING_LABEL_HELP5, "Drive label (11 Characters, ENTER if none)? "
 
+STRING_LOCALE_HELP1, "Current time is"
 
 STRING_MKDIR_HELP,   "Creates a directory.\n\n \
 MKDIR [drive:]path\nMD [drive:]path"

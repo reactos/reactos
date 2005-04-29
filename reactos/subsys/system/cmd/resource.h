@@ -130,14 +130,16 @@
 #define STRING_LABEL_HELP4                 655
 #define STRING_LABEL_HELP5                 656
 
-#define STRING_MKDIR_HELP                  657
+#define STRING_LOCALE_HELP1                657
 
-#define STRING_MEMMORY_HELP1               658
-#define STRING_MEMMORY_HELP2               659
+#define STRING_MKDIR_HELP                  658
 
-#define STRING_RMDIR_HELP                  660
+#define STRING_MEMMORY_HELP1               659
+#define STRING_MEMMORY_HELP2               660
 
-#define STRING_REM_HELP                    661
+#define STRING_RMDIR_HELP                  661
+
+#define STRING_REM_HELP                    662
 
 
 
