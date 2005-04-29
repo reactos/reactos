@@ -215,6 +215,7 @@ NtRequestPort@8
 NtRequestWaitReplyPort@12
 NtResetEvent@8
 NtRestoreKey@12
+NtResumeProcess@4
 NtResumeThread@8
 NtSaveKey@8
 NtSetContextThread@8
@@ -251,6 +252,7 @@ NtShutdownSystem@4
 NtSignalAndWaitForSingleObject@16
 NtStartProfile@4
 NtStopProfile@4
+NtSuspendProcess@4
 NtSuspendThread@8
 NtSystemDebugControl@24
 NtTerminateJobObject@8
@@ -843,6 +845,7 @@ ZwRequestPort@8
 ZwRequestWaitReplyPort@12
 ZwResetEvent@8
 ZwRestoreKey@12
+ZwResumeProcess@4
 ZwResumeThread@8
 ZwSaveKey@8
 ZwSetContextThread@8
@@ -878,6 +881,7 @@ ZwShutdownSystem@4
 ZwSignalAndWaitForSingleObject@16
 ZwStartProfile@4
 ZwStopProfile@4
+ZwSuspendProcess@4
 ZwSuspendThread@8
 ZwSystemDebugControl@24
 ZwTerminateProcess@8

@@ -16,7 +16,6 @@
 
 /* GLOBALS ******************************************************************/
 
-
 static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
 {
   ICI_SQ_SAME( sizeof(PROCESS_BASIC_INFORMATION),     sizeof(ULONG), ICIF_QUERY ),                     /* ProcessBasicInformation */
@@ -26,7 +25,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
   ICI_SQ_SAME( sizeof(KERNEL_USER_TIMES),             sizeof(ULONG), ICIF_QUERY ),                     /* ProcessTimes */
   ICI_SQ_SAME( sizeof(KPRIORITY),                     sizeof(ULONG), ICIF_SET ),                       /* ProcessBasePriority */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_SET ),                       /* ProcessRaisePriority */
-  ICI_SQ_SAME( sizeof(HANDLE),                        sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessDebugPort */
+  ICI_SQ_SAME( sizeof(HANDLE),                        sizeof(ULONG), ICIF_QUERY ),                     /* ProcessDebugPort */
   ICI_SQ_SAME( sizeof(HANDLE),                        sizeof(ULONG), ICIF_SET ),                       /* ProcessExceptionPort */
   ICI_SQ_SAME( sizeof(PROCESS_ACCESS_TOKEN),          sizeof(ULONG), ICIF_SET ),                       /* ProcessAccessToken */
   ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessLdtInformation */
@@ -672,8 +671,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
        Access = PROCESS_SET_INFORMATION | PROCESS_SET_SESSIONID;
        break;
      case ProcessExceptionPort:
-     case ProcessDebugPort:
-       Access = PROCESS_SET_INFORMATION | PROCESS_SET_PORT;
+       Access = PROCESS_SET_INFORMATION | PROCESS_SUSPEND_RESUME;
        break;
 
      default:
@@ -699,87 +697,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessRaisePriority:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
-
-      case ProcessDebugPort:
-      {
-        HANDLE PortHandle = NULL;
-
-        /* make a safe copy of the buffer on the stack */
-        _SEH_TRY
-        {
-          PortHandle = *(PHANDLE)ProcessInformation;
-          Status = (PortHandle != NULL ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER);
-        }
-        _SEH_HANDLE
-        {
-          Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-
-        if(NT_SUCCESS(Status))
-        {
-          PEPORT DebugPort;
-
-          /* in case we had success reading from the buffer, verify the provided
-           * LPC port handle
-           */
-          Status = ObReferenceObjectByHandle(PortHandle,
-                                             0,
-                                             LpcPortObjectType,
-                                             PreviousMode,
-                                             (PVOID)&DebugPort,
-                                             NULL);
-          if(NT_SUCCESS(Status))
-          {
-            /* lock the process to be thread-safe! */
-
-            Status = PsLockProcess(Process, FALSE);
-            if(NT_SUCCESS(Status))
-            {
-              /*
-               * according to "NT Native API" documentation, setting the debug
-               * port is only permitted once!
-               */
-              if(Process->DebugPort == NULL)
-              {
-                /* keep the reference to the handle! */
-                Process->DebugPort = DebugPort;
-                
-                if(Process->Peb)
-                {
-                  /* we're now debugging the process, so set the flag in the PEB
-                     structure. However, to access it we need to attach to the
-                     process so we're sure we're in the right context! */
-
-                  KeAttachProcess(&Process->Pcb);
-                  _SEH_TRY
-                  {
-                    Process->Peb->BeingDebugged = TRUE;
-                  }
-                  _SEH_HANDLE
-                  {
-                    DPRINT1("Trying to set the Peb->BeingDebugged field of process 0x%x failed, exception: 0x%x\n", Process, _SEH_GetExceptionCode());
-                  }
-                  _SEH_END;
-                  KeDetachProcess();
-                }
-                Status = STATUS_SUCCESS;
-              }
-              else
-              {
-                ObDereferenceObject(DebugPort);
-                Status = STATUS_PORT_ALREADY_SET;
-              }
-              PsUnlockProcess(Process);
-            }
-            else
-            {
-              ObDereferenceObject(DebugPort);
-            }
-          }
-        }
-        break;
-      }
 
       case ProcessExceptionPort:
       {
@@ -988,6 +905,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessWx86Information:
       case ProcessHandleCount:
       case ProcessWow64Information:
+      case ProcessDebugPort:
       default:
 	Status = STATUS_INVALID_INFO_CLASS;
      }

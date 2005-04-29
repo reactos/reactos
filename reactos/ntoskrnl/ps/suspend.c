@@ -173,4 +173,72 @@ NtSuspendThread(IN HANDLE ThreadHandle,
     return Status;
 }
 
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtSuspendProcess(IN HANDLE ProcessHandle)
+{
+    KPROCESSOR_MODE PreviousMode;
+    PEPROCESS Process;
+    NTSTATUS Status;
+    
+    PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
+    
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_SUSPEND_RESUME,
+                                       PsProcessType,
+                                       PreviousMode,
+                                       (PVOID*)&Process,
+                                       NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* FIXME */
+        Status = STATUS_NOT_IMPLEMENTED;
+        DPRINT1("NtSuspendProcess not yet implemented!\n");
+        
+        ObDereferenceObject(Process);
+    }
+    
+    return Status;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtResumeProcess(IN HANDLE ProcessHandle)
+{
+    KPROCESSOR_MODE PreviousMode;
+    PEPROCESS Process;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_SUSPEND_RESUME,
+                                       PsProcessType,
+                                       PreviousMode,
+                                       (PVOID*)&Process,
+                                       NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* FIXME */
+        Status = STATUS_NOT_IMPLEMENTED;
+        DPRINT1("NtResumeProcess not yet implemented!\n");
+        
+        ObDereferenceObject(Process);
+    }
+
+    return Status;
+}
+
 /* EOF */
