@@ -132,7 +132,7 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
             else
             {
                 /* Set the Input Operation flag and set this as a User Buffer */
-                Irp->Flags = IRP_INPUT_OPERATION;
+                Irp->Flags |= IRP_INPUT_OPERATION;
                 Irp->UserBuffer = Buffer;
             }
         }
@@ -189,6 +189,7 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
     }
     
     /* Set the Current Thread and IOSB */
+    if (!IoStatusBlock) KEBUGCHECK(0); /* Temporary to catch illegal ROS Drivers */
     Irp->UserIosb = IoStatusBlock;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     
@@ -391,6 +392,7 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
     }
     
     /* Now write the Event and IoSB */
+    if (!IoStatusBlock) KEBUGCHECK(0); /* Temporary to catch illegal ROS Drivers */
     Irp->UserIosb = IoStatusBlock;
     Irp->UserEvent = Event;
 
@@ -1172,309 +1174,223 @@ IoSynchronousPageWrite(PFILE_OBJECT FileObject,
 }
 
 VOID 
-IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
-                          PIRP Irp,
-                          PIO_STACK_LOCATION IoStack)
+STDCALL
+IoSecondStageCompletion_KernelApcRoutine(PKAPC Apc,
+                                         PKNORMAL_ROUTINE *NormalRoutine,
+                                         PVOID *NormalContext,
+                                         PVOID *SystemArgument1,
+                                         PVOID *SystemArgument2)
 {
-   ULONG IoControlCode;
-   ULONG OutputBufferLength;
-
-   if (IoStack->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL)
-     {
-       IoControlCode = 
-	 IoStack->Parameters.FileSystemControl.FsControlCode;
-       OutputBufferLength = 
-	 IoStack->Parameters.FileSystemControl.OutputBufferLength;
-     }
-   else
-     {
-       IoControlCode = IoStack->Parameters.DeviceIoControl.IoControlCode;
-       
-       if (NT_SUCCESS(Irp->IoStatus.Status))
-         {
-           OutputBufferLength = Irp->IoStatus.Information;
-           
-           if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < OutputBufferLength)
-             {
-               OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-             }
-         }
-       else
-         {
-           OutputBufferLength = 0;
-         }
-     }
-   
-   switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
-     {
-      case METHOD_BUFFERED:
-	
-	/* copy output buffer back and free it */
-	if (Irp->AssociatedIrp.SystemBuffer)
-	  {
-	     if (OutputBufferLength)
-	       {
-		  RtlCopyMemory(Irp->UserBuffer,
-				Irp->AssociatedIrp.SystemBuffer,
-				OutputBufferLength);
-	       }
-	     ExFreePool (Irp->AssociatedIrp.SystemBuffer);
-	  }
-	break;
-	
-      case METHOD_IN_DIRECT:
-	DPRINT ("Using METHOD_IN_DIRECT!\n");
-	/* use the same code as for METHOD_OUT_DIRECT */
-	
-      case METHOD_OUT_DIRECT:
-	DPRINT ("Using METHOD_OUT_DIRECT!\n");
-	
-	/* free input buffer (control buffer) */
-	if (Irp->AssociatedIrp.SystemBuffer)
-	  ExFreePool (Irp->AssociatedIrp.SystemBuffer);
-	
-	/* free output buffer (data transfer buffer) */
-	if (Irp->MdlAddress)
-	  IoFreeMdl (Irp->MdlAddress);
-	break;
-	
-      case METHOD_NEITHER:
-	DPRINT ("Using METHOD_NEITHER!\n");
-	/* nothing to do */
-	break;
-     }
+    /* Free the IRP */
+    IoFreeIrp(CONTAINING_RECORD(Apc, IRP, Tail.Apc));
 }
 
-VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp,
-			   PIO_STACK_LOCATION IoStack)
-{   
-   PFILE_OBJECT FileObject;
-   
-   FileObject = IoStack->FileObject;
-   
-   if (DeviceObject->Flags & DO_BUFFERED_IO)
-   {
-      if (IoStack->MajorFunction == IRP_MJ_READ)
-      {
-         DPRINT("Copying buffered io back to user\n");
-         memcpy(Irp->UserBuffer,Irp->AssociatedIrp.SystemBuffer,
-		    IoStack->Parameters.Read.Length);
-      }
-      ExFreePool(Irp->AssociatedIrp.SystemBuffer);
-   }
-
-   if (DeviceObject->Flags & DO_DIRECT_IO)
-   {
-      if (Irp->MdlAddress)
-      {
-         IoFreeMdl(Irp->MdlAddress);
-      }
-   }
-}
-
-VOID IoVolumeInformationCompletion(PDEVICE_OBJECT DeviceObject,
-				   PIRP Irp,
-				   PIO_STACK_LOCATION IoStack)
+VOID 
+STDCALL
+IoSecondStageCompletion_RundownApcRoutine(PKAPC Apc)
 {
+    /* Free the IRP */
+    IoFreeIrp(CONTAINING_RECORD(Apc, IRP, Tail.Apc));
 }
-
-
-VOID STDCALL
-IoSecondStageCompletion_KernelApcRoutine(
-    IN PKAPC Apc,
-    IN OUT PKNORMAL_ROUTINE *NormalRoutine,
-    IN OUT PVOID *NormalContext,
-    IN OUT PVOID *SystemArgument1,
-    IN OUT PVOID *SystemArgument2
-    )
-{
-   PIRP Irp;
-
-   Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
-   IoFreeIrp(Irp);
-}
-
-
-VOID STDCALL
-IoSecondStageCompletion_RundownApcRoutine(
-   IN PKAPC Apc
-   )
-{
-   PIRP Irp;
-
-   Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
-   IoFreeIrp(Irp);
-}
-
 
 /*
  * FUNCTION: Performs the second stage of irp completion for read/write irps
  * 
  * Called as a special kernel APC kernel-routine or directly from IofCompleteRequest()
+ *
+ * Note that we'll never see irp's flagged IRP_PAGING_IO (IRP_MOUNT_OPERATION)
+ * or IRP_CLOSE_OPERATION (IRP_MJ_CLOSE and IRP_MJ_CLEANUP) here since their
+ * cleanup/completion is fully taken care of in IoCompleteRequest.
+ * -Gunnar
  */
-VOID STDCALL
-IoSecondStageCompletion(
-   PKAPC Apc,
-   PKNORMAL_ROUTINE* NormalRoutine,
-   PVOID* NormalContext,
-   PVOID* SystemArgument1,
-   PVOID* SystemArgument2)
-
+VOID 
+STDCALL
+IoSecondStageCompletion(PKAPC Apc,
+                        PKNORMAL_ROUTINE* NormalRoutine,
+                        PVOID* NormalContext,
+                        PVOID* SystemArgument1,
+                        PVOID* SystemArgument2)
 {
-   PIO_STACK_LOCATION   IoStack;
-   PDEVICE_OBJECT       DeviceObject;
-   PFILE_OBJECT         OriginalFileObject;
-   PIRP                 Irp;
+    PFILE_OBJECT FileObject;
+    PIRP Irp;
+    PMDL Mdl, NextMdl;
 
-   if (Apc) DPRINT("IoSecondStageCompletition with APC: %x\n", Apc);
+    if (Apc) DPRINT("IoSecondStageCompletition with APC: %x\n", Apc);
    
-   OriginalFileObject = (PFILE_OBJECT)(*SystemArgument1);
-   DPRINT("OriginalFileObject: %x\n", OriginalFileObject);
-
-   Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
-   DPRINT("Irp: %x\n", Irp);
-   
-   /*
-    * Note that we'll never see irp's flagged IRP_PAGING_IO (IRP_MOUNT_OPERATION)
-    * or IRP_CLOSE_OPERATION (IRP_MJ_CLOSE and IRP_MJ_CLEANUP) here since their
-    * cleanup/completion is fully taken care of in IoCompleteRequest.
-    * -Gunnar
-    */
+    /* Get data from the APC */
+    FileObject = (PFILE_OBJECT)(*SystemArgument1);
+    Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
+    DPRINT("IoSecondStageCompletition, %x\n", Irp);
+     
+    /* Handle Buffered case first */
+    if (Irp->Flags & IRP_BUFFERED_IO)
+    {
+        /* Check if we have an input buffer and if we suceeded */
+        if (Irp->Flags & IRP_INPUT_OPERATION && NT_SUCCESS(Irp->IoStatus.Status))
+        {
+            /* Copy the buffer back to the user */
+            RtlCopyMemory(Irp->UserBuffer,
+                          Irp->AssociatedIrp.SystemBuffer,
+                          Irp->IoStatus.Information);
+        }
+        
+        /* Also check if we should de-allocate it */
+        if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
+        {
+            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+        }
+    }
     
-   /* 
-   Remove synchronous irp's from the threads cleanup list.
-   To synchronize with the code inserting the entry, this code must run 
-   at APC_LEVEL
-   */
-   if (!IsListEmpty(&Irp->ThreadListEntry))
-   {
-     RemoveEntryList(&Irp->ThreadListEntry);
-     InitializeListHead(&Irp->ThreadListEntry);
-   }
-   
-   IoStack =  (PIO_STACK_LOCATION)(Irp+1) + Irp->CurrentLocation;
-   DeviceObject = IoStack->DeviceObject;
+    /* Now we got rid of these two... */
+    Irp->Flags &= ~(IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);
+    
+    /* Check if there's an MDL */
+    if ((Mdl = Irp->MdlAddress))
+    {
+        /* Clear all of them */
+        do
+        {
+            NextMdl = Mdl->Next;
+            IoFreeMdl(Mdl);
+            Mdl = NextMdl;
+        } while (Mdl);
+    }
+    Irp->MdlAddress = NULL;
+    
+    /* Check for Success but allow failure for Async IRPs */
+    if (NT_SUCCESS(Irp->IoStatus.Status) || 
+        (Irp->PendingReturned &&
+        !(Irp->Flags & IRP_SYNCHRONOUS_API) &&
+        (FileObject == NULL || FileObject->Flags & FO_SYNCHRONOUS_IO)))
+    {    
+        /*  Save the IOSB Information */
+        *Irp->UserIosb = Irp->IoStatus;
+    
+        /* Check if there's an event */
+        if (Irp->UserEvent)
+        {
+            /* Signal the Event */
+            KeSetEvent(Irp->UserEvent, 0, FALSE);
+    
+        }
+        else if (FileObject)
+        {
+            /* Signal the File Object Instead */
+            KeSetEvent(&FileObject->Event, 0, FALSE);
+        
+            /* Set the Status */
+            FileObject->FinalStatus = Irp->IoStatus.Status;
+        }
+    
+        /* Check if there's a File Object */
+        if (FileObject)
+        {
+            /* Dereference the Event if this is an ASYNC IRP */
+            if (!Irp->Flags & IRP_SYNCHRONOUS_API)
+            {
+                ObDereferenceObject(Irp->UserEvent);
+            }
+            
+            /* If the File Object is SYNC, then we need to signal its event too */
+            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+            {
+                /* Signal Event */
 
-   DPRINT("IoSecondStageCompletion(Irp %x, MajorFunction %x)\n", Irp, IoStack->MajorFunction);
+                KeSetEvent(&FileObject->Event, 0, FALSE);
+                
+                /* Set the Status */
+                FileObject->FinalStatus = Irp->IoStatus.Status;
+            }
+        }
+    
+        /* Remove the IRP from the list of Thread Pending IRPs */
+        RemoveEntryList(&Irp->ThreadListEntry);
+        InitializeListHead(&Irp->ThreadListEntry);  
+    
+        /* Now call the User APC if one was requested */
+        if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)
+        {
+            KeInitializeApc(&Irp->Tail.Apc,
+                            KeGetCurrentThread(),
+                            CurrentApcEnvironment,
+                            IoSecondStageCompletion_KernelApcRoutine,
+                            IoSecondStageCompletion_RundownApcRoutine,
+                            (PKNORMAL_ROUTINE)Irp->Overlay.AsynchronousParameters.UserApcRoutine,
+                            Irp->RequestorMode,
+                            Irp->Overlay.AsynchronousParameters.UserApcContext);
 
-   switch (IoStack->MajorFunction)
-     {
-      case IRP_MJ_CREATE:
-      case IRP_MJ_FLUSH_BUFFERS:
-	/* NOP */
-	break;
-   
-      case IRP_MJ_READ:
-      case IRP_MJ_WRITE:
-	IoReadWriteCompletion(DeviceObject,Irp,IoStack);
-	break;
-   
-      case IRP_MJ_DEVICE_CONTROL:
-      case IRP_MJ_INTERNAL_DEVICE_CONTROL:
-      case IRP_MJ_FILE_SYSTEM_CONTROL:
-	IoDeviceControlCompletion(DeviceObject, Irp, IoStack);
-	break;
-   
-      case IRP_MJ_QUERY_VOLUME_INFORMATION:
-      case IRP_MJ_SET_VOLUME_INFORMATION:
-	IoVolumeInformationCompletion(DeviceObject, Irp, IoStack);
-	break;
-   
-      default:
-	break;
-     }
-   
-   if (Irp->UserIosb!=NULL)
-   {
-      if (Irp->RequestorMode == KernelMode)
-      {
-	*Irp->UserIosb = Irp->IoStatus;
-      }
-      else
-      {
-	DPRINT("Irp->RequestorMode == UserMode\n");
-	MmSafeCopyToUser(Irp->UserIosb,
-			 &Irp->IoStatus,
-			 sizeof(IO_STATUS_BLOCK));
-      }
-   }
-
-   if (Irp->UserEvent)
-   {
-      KeSetEvent(Irp->UserEvent,0,FALSE);
-   }
-
-   //Windows NT File System Internals, page 169
-   if (OriginalFileObject)
-   {
-      if (Irp->UserEvent == NULL)
-      {
-         KeSetEvent(&OriginalFileObject->Event,0,FALSE);
-      }
-      else if (OriginalFileObject->Flags & FO_SYNCHRONOUS_IO && Irp->UserEvent != &OriginalFileObject->Event)
-      {
-         KeSetEvent(&OriginalFileObject->Event,0,FALSE);
-      }
-   }
-
-   //Windows NT File System Internals, page 154
-   if (OriginalFileObject)   
-   {
-      // if the event is not the one in the file object, it needs dereferenced
-      if (Irp->UserEvent && Irp->UserEvent != &OriginalFileObject->Event)
-      {
-         ObDereferenceObject(Irp->UserEvent);
-      }
-  
-      ObDereferenceObject(OriginalFileObject);
-   }
-
-   if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)
-   {
-      PKNORMAL_ROUTINE UserApcRoutine;
-      PVOID UserApcContext;
-   
-      DPRINT("Dispatching user APC\n");
-
-      UserApcRoutine = (PKNORMAL_ROUTINE)Irp->Overlay.AsynchronousParameters.UserApcRoutine;
-      UserApcContext = (PVOID)Irp->Overlay.AsynchronousParameters.UserApcContext;
-
-      KeInitializeApc(  &Irp->Tail.Apc,
-                        KeGetCurrentThread(),
-                        CurrentApcEnvironment,
-                        IoSecondStageCompletion_KernelApcRoutine,
-                        IoSecondStageCompletion_RundownApcRoutine,
-                        UserApcRoutine,
-                        UserMode,
-                        UserApcContext);
-
-      KeInsertQueueApc( &Irp->Tail.Apc,
-                        Irp->UserIosb,
-                        NULL,
-                        2);
-
-      //NOTE: kernel (or rundown) routine frees the IRP
-
-      return;
-
-   }
-
-   if (NULL != IoStack->FileObject
-       && NULL != IoStack->FileObject->CompletionContext
-       && (0 != (Irp->Flags & IRP_SYNCHRONOUS_API)
-           || 0 == (IoStack->FileObject->Flags & FO_SYNCHRONOUS_IO)))
-   {
-      PFILE_OBJECT FileObject = IoStack->FileObject;
-      IoSetIoCompletion(FileObject->CompletionContext->Port,
-                        FileObject->CompletionContext->Key,
-                        Irp->Overlay.AsynchronousParameters.UserApcContext,
-                        Irp->IoStatus.Status,
-                        Irp->IoStatus.Information,
-                        FALSE);
-   }
-
-   IoFreeIrp(Irp);
+            KeInsertQueueApc(&Irp->Tail.Apc,
+                             Irp->UserIosb,
+                             NULL,
+                             2);
+        }
+        else if (FileObject && FileObject->CompletionContext)
+        {
+            /* Call the IO Completion Port if we have one, instead */
+            IoSetIoCompletion(FileObject->CompletionContext->Port,
+                              FileObject->CompletionContext->Key,
+                              Irp->Overlay.AsynchronousParameters.UserApcContext,
+                              Irp->IoStatus.Status,
+                              Irp->IoStatus.Information,
+                              FALSE);
+        }
+        else
+        {
+            /* Don't have anything, free it */
+            IoFreeIrp(Irp);
+        }
+        
+        /* Dereference the File Object */
+        if (FileObject) ObDereferenceObject(FileObject);
+    }
+    else
+    {   
+        /* Remove the IRP from the list of Thread Pending IRPs */
+        RemoveEntryList(&Irp->ThreadListEntry);
+        InitializeListHead(&Irp->ThreadListEntry);  
+        
+        /* Signal the Events only if PendingReturned and we have a File Object */
+        if (FileObject && Irp->PendingReturned)
+        {
+            /* Check for SYNC IRP */
+            if (Irp->Flags & IRP_SYNCHRONOUS_API)
+            {
+                /* Set the status in this case only */
+                *Irp->UserIosb = Irp->IoStatus;
+            
+                /* Signal our event if we have one */
+                if (Irp->UserEvent)
+                {
+                    KeSetEvent(Irp->UserEvent, 0, FALSE);
+                }
+                else
+                {
+                    /* Signal the File's Event instead */
+                    KeSetEvent(&FileObject->Event, 0, FALSE);
+                }
+            }
+            else
+            {
+                /* We'll report the Status to the File Object, not the IRP */
+                FileObject->FinalStatus = Irp->IoStatus.Status;
+                
+                /* Signal the File Object ONLY if this was Async */
+                KeSetEvent(&FileObject->Event, 0, FALSE);
+            }
+        }
+        
+        /* Dereference the Event if it's an ASYNC IRP on a File Object */
+        if (Irp->UserEvent && !(Irp->Flags & IRP_SYNCHRONOUS_API) && FileObject)
+        {
+            ObDereferenceObject(Irp->UserEvent);
+        }
+        
+        /* Dereference the File Object */
+        if (FileObject) ObDereferenceObject(FileObject);
+        
+        /* Free the IRP */
+        IoFreeIrp(Irp);
+    }
 }
 
 /* EOF */

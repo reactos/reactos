@@ -500,13 +500,18 @@ IopCloseFile(PVOID ObjectBody,
 
    KeResetEvent( &FileObject->Event );
   
+   IO_STATUS_BLOCK Dummy;
+   /* WRONG WRONG WRONG WRONG!!!!!! */
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLEANUP,
           FileObject->DeviceObject,
           NULL,
           0,
           NULL,
           &FileObject->Event,
-          NULL);
+          &Dummy);
+   /* Hack to fix the above WRONG WRONG WRONG WRONG CODE!!! */
+   Irp->UserIosb = &Irp->IoStatus;
+   
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    
@@ -890,6 +895,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
     * immediately.
     */
    Status = IofCallDriver(FileObject->DeviceObject, Irp );
+   DPRINT1("Status :%x\n", Status);
    
    if (Status == STATUS_PENDING)
      {
