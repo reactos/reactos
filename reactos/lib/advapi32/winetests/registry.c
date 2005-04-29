@@ -48,7 +48,7 @@ static DWORD delete_key( HKEY hkey )
         if (ret) break;
     }
     if (ret != ERROR_NO_MORE_ITEMS) return ret;
-    RegDeleteKeyA( hkey, NULL );
+    RegDeleteKeyA( hkey, "" );
     return 0;
 }
 
@@ -75,6 +75,7 @@ static void create_test_entries(void)
 static void test_enum_value(void)
 {
     DWORD res;
+    HKEY test_key;
     char value[20], data[20];
     WCHAR valueW[20], dataW[20];
     DWORD val_count, data_count, type;
@@ -82,18 +83,22 @@ static void test_enum_value(void)
     static const WCHAR testW[] = {'T','e','s','t',0};
     static const WCHAR xxxW[] = {'x','x','x','x','x','x','x','x',0};
 
+    /* create the working key for new 'Test' value */
+    res = RegCreateKeyA( hkey_main, "TestKey", &test_key );
+    ok( res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", res);
+
     /* check NULL data with zero length */
-    res = RegSetValueExA( hkey_main, "Test", 0, REG_SZ, NULL, 0 );
+    res = RegSetValueExA( test_key, "Test", 0, REG_SZ, NULL, 0 );
     if (GetVersion() & 0x80000000)
         ok( res == ERROR_INVALID_PARAMETER, "RegSetValueExA returned %ld\n", res );
     else
         ok( !res, "RegSetValueExA returned %ld\n", res );
-    res = RegSetValueExA( hkey_main, "Test", 0, REG_EXPAND_SZ, NULL, 0 );
-    ok( !res, "RegSetValueExA returned %ld\n", res );
-    res = RegSetValueExA( hkey_main, "Test", 0, REG_BINARY, NULL, 0 );
-    ok( !res, "RegSetValueExA returned %ld\n", res );
+    res = RegSetValueExA( test_key, "Test", 0, REG_EXPAND_SZ, NULL, 0 );
+    ok( ERROR_SUCCESS == res || ERROR_INVALID_PARAMETER == res, "RegSetValueExA returned %ld\n", res );
+    res = RegSetValueExA( test_key, "Test", 0, REG_BINARY, NULL, 0 );
+    ok( ERROR_SUCCESS == res || ERROR_INVALID_PARAMETER == res, "RegSetValueExA returned %ld\n", res );
 
-    res = RegSetValueExA( hkey_main, "Test", 0, REG_SZ, (BYTE *)"foobar", 7 );
+    res = RegSetValueExA( test_key, "Test", 0, REG_SZ, (BYTE *)"foobar", 7 );
     ok( res == 0, "RegSetValueExA failed error %ld\n", res );
 
     /* overflow both name and data */
@@ -102,7 +107,7 @@ static void test_enum_value(void)
     type = 1234;
     strcpy( value, "xxxxxxxxxx" );
     strcpy( data, "xxxxxxxxxx" );
-    res = RegEnumValueA( hkey_main, 0, value, &val_count, NULL, &type, data, &data_count );
+    res = RegEnumValueA( test_key, 0, value, &val_count, NULL, &type, data, &data_count );
     ok( res == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %ld\n", res );
     ok( val_count == 2, "val_count set to %ld\n", val_count );
     ok( data_count == 7, "data_count set to %ld instead of 7\n", data_count );
@@ -116,7 +121,7 @@ static void test_enum_value(void)
     type = 1234;
     strcpy( value, "xxxxxxxxxx" );
     strcpy( data, "xxxxxxxxxx" );
-    res = RegEnumValueA( hkey_main, 0, value, &val_count, NULL, &type, data, &data_count );
+    res = RegEnumValueA( test_key, 0, value, &val_count, NULL, &type, data, &data_count );
     ok( res == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %ld\n", res );
     /* Win9x returns 2 as specified by MSDN but NT returns 3... */
     ok( val_count == 2 || val_count == 3, "val_count set to %ld\n", val_count );
@@ -134,7 +139,7 @@ static void test_enum_value(void)
     type = 1234;
     strcpy( value, "xxxxxxxxxx" );
     strcpy( data, "xxxxxxxxxx" );
-    res = RegEnumValueA( hkey_main, 0, value, &val_count, NULL, &type, data, &data_count );
+    res = RegEnumValueA( test_key, 0, value, &val_count, NULL, &type, data, &data_count );
     ok( res == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %ld\n", res );
     ok( val_count == 0, "val_count set to %ld\n", val_count );
     ok( data_count == 7, "data_count set to %ld instead of 7\n", data_count );
@@ -151,7 +156,7 @@ static void test_enum_value(void)
     type = 1234;
     strcpy( value, "xxxxxxxxxx" );
     strcpy( data, "xxxxxxxxxx" );
-    res = RegEnumValueA( hkey_main, 0, value, &val_count, NULL, &type, data, &data_count );
+    res = RegEnumValueA( test_key, 0, value, &val_count, NULL, &type, data, &data_count );
     ok( res == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %ld\n", res );
     ok( val_count == 20, "val_count set to %ld\n", val_count );
     ok( data_count == 7, "data_count set to %ld instead of 7\n", data_count );
@@ -165,7 +170,7 @@ static void test_enum_value(void)
     type = 1234;
     strcpy( value, "xxxxxxxxxx" );
     strcpy( data, "xxxxxxxxxx" );
-    res = RegEnumValueA( hkey_main, 0, value, &val_count, NULL, &type, data, &data_count );
+    res = RegEnumValueA( test_key, 0, value, &val_count, NULL, &type, data, &data_count );
     ok( res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", res );
     ok( val_count == 4, "val_count set to %ld instead of 4\n", val_count );
     ok( data_count == 7, "data_count set to %ld instead of 7\n", data_count );
@@ -176,9 +181,9 @@ static void test_enum_value(void)
     /* Unicode tests */
 
     SetLastError(0);
-    res = RegSetValueExW( hkey_main, testW, 0, REG_SZ, (const BYTE *)foobarW, 7*sizeof(WCHAR) );
+    res = RegSetValueExW( test_key, testW, 0, REG_SZ, (const BYTE *)foobarW, 7*sizeof(WCHAR) );
     if (res==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
-        goto CLEANUP;
+        return;
     ok( res == 0, "RegSetValueExW failed error %ld\n", res );
 
     /* overflow both name and data */
@@ -187,7 +192,7 @@ static void test_enum_value(void)
     type = 1234;
     memcpy( valueW, xxxW, sizeof(xxxW) );
     memcpy( dataW, xxxW, sizeof(xxxW) );
-    res = RegEnumValueW( hkey_main, 0, valueW, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
+    res = RegEnumValueW( test_key, 0, valueW, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
     ok( res == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %ld\n", res );
     ok( val_count == 2, "val_count set to %ld\n", val_count );
     ok( data_count == 7*sizeof(WCHAR), "data_count set to %ld instead of 7*sizeof(WCHAR)\n", data_count );
@@ -201,7 +206,7 @@ static void test_enum_value(void)
     type = 1234;
     memcpy( valueW, xxxW, sizeof(xxxW) );
     memcpy( dataW, xxxW, sizeof(xxxW) );
-    res = RegEnumValueW( hkey_main, 0, valueW, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
+    res = RegEnumValueW( test_key, 0, valueW, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
     ok( res == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %ld\n", res );
     ok( val_count == 3, "val_count set to %ld\n", val_count );
     ok( data_count == 7*sizeof(WCHAR), "data_count set to %ld instead of 7*sizeof(WCHAR)\n", data_count );
@@ -215,7 +220,7 @@ static void test_enum_value(void)
     type = 1234;
     memcpy( valueW, xxxW, sizeof(xxxW) );
     memcpy( dataW, xxxW, sizeof(xxxW) );
-    res = RegEnumValueW( hkey_main, 0, valueW, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
+    res = RegEnumValueW( test_key, 0, valueW, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
     ok( res == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %ld\n", res );
     ok( val_count == 4, "val_count set to %ld instead of 4\n", val_count );
     ok( data_count == 7*sizeof(WCHAR), "data_count set to %ld instead of 7*sizeof(WCHAR)\n", data_count );
@@ -229,17 +234,13 @@ static void test_enum_value(void)
     type = 1234;
     memcpy( valueW, xxxW, sizeof(xxxW) );
     memcpy( dataW, xxxW, sizeof(xxxW) );
-    res = RegEnumValueW( hkey_main, 0, valueW, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
+    res = RegEnumValueW( test_key, 0, valueW, &val_count, NULL, &type, (BYTE*)dataW, &data_count );
     ok( res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", res );
     ok( val_count == 4, "val_count set to %ld instead of 4\n", val_count );
     ok( data_count == 7*sizeof(WCHAR), "data_count set to %ld instead of 7*sizeof(WCHAR)\n", data_count );
     ok( type == REG_SZ, "type %ld is not REG_SZ\n", type );
     ok( !memcmp( valueW, testW, sizeof(testW) ), "value is not 'Test'\n" );
     ok( !memcmp( dataW, foobarW, sizeof(foobarW) ), "data is not 'foobar'\n" );
-
-CLEANUP:
-    /* cleanup */
-    RegDeleteValueA( hkey_main, "Test" );
 }
 
 static void test_query_value_ex()
@@ -269,8 +270,8 @@ static void test_reg_open_key()
     /* open same key twice */
     ret = RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Test", &hkResult);
     ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", ret);
-    ok(hkResult != hkPreserve && hkResult != NULL, 
-		"expected hkResult != hkPreserve and hkResult != NULL\n");
+    ok(hkResult != hkPreserve, "epxected hkResult != hkPreserve\n");
+    ok(hkResult != NULL, "hkResult != NULL\n");
     RegCloseKey(hkResult);
 
     /* open nonexistent key
@@ -314,7 +315,8 @@ static void test_reg_open_key()
      */
     hkResult = hkPreserve;
     ret = RegOpenKeyA(NULL, "Software\\Wine\\Test", &hkResult);
-    ok(ret == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %ld\n", ret);
+    ok(ret == ERROR_INVALID_HANDLE || ret == ERROR_BADKEY, /* Windows 95 returns BADKEY */
+       "expected ERROR_INVALID_HANDLE or ERROR_BADKEY, got %ld\n", ret);
     ok(hkResult == hkPreserve, "expected hkResult == hkPreserve\n");
     RegCloseKey(hkResult);
 
@@ -336,12 +338,89 @@ static void test_reg_close_key()
     ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", ret);
 
     /* try to close the key twice */
-    ret = RegCloseKey(hkHandle);
-    ok(ret == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %ld\n", ret);
-
+    ret = RegCloseKey(hkHandle); /* Windows 95 doesn't mind. */
+    ok(ret == ERROR_INVALID_HANDLE || ret == ERROR_SUCCESS,
+       "expected ERROR_INVALID_HANDLE or ERROR_SUCCESS, got %ld\n", ret);
+    
     /* try to close a NULL handle */
     ret = RegCloseKey(NULL);
-    ok(ret == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %ld\n", ret);
+    ok(ret == ERROR_INVALID_HANDLE || ret == ERROR_BADKEY, /* Windows 95 returns BADKEY */
+       "expected ERROR_INVALID_HANDLE or ERROR_BADKEY, got %ld\n", ret);
+}
+
+static void test_reg_delete_key()
+{
+    DWORD ret;
+
+    ret = RegDeleteKey(hkey_main, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_ACCESS_DENIED,
+       "expected ERROR_INVALID_PARAMETER or ERROR_ACCESS_DENIED, got %ld\n", ret);
+}
+
+static void test_reg_save_key()
+{
+    DWORD ret;
+
+    ret = RegSaveKey(hkey_main, "saved_key", NULL);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", ret);
+}
+
+static void test_reg_load_key()
+{
+    DWORD ret;
+    HKEY hkHandle;
+
+    ret = RegLoadKey(HKEY_LOCAL_MACHINE, "Test", "saved_key");
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", ret);
+
+    ret = RegOpenKey(HKEY_LOCAL_MACHINE, "Test", &hkHandle);
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", ret);
+
+    RegCloseKey(hkHandle);
+}
+
+static void test_reg_unload_key()
+{
+    DWORD ret;
+
+    ret = RegUnLoadKey(HKEY_LOCAL_MACHINE, "Test");
+    ok(ret == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", ret);
+
+    DeleteFile("saved_key");
+}
+
+static BOOL set_privileges(LPCSTR privilege, BOOL set)
+{
+    TOKEN_PRIVILEGES tp;
+    HANDLE hToken;
+    LUID luid;
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+        return FALSE;
+
+    if(!LookupPrivilegeValue(NULL, privilege, &luid))
+    {
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Luid = luid;
+    
+    if (set)
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    else
+        tp.Privileges[0].Attributes = 0;
+
+    AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL);
+    if (GetLastError() != ERROR_SUCCESS)
+    {
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    CloseHandle(hToken);
+    return TRUE;
 }
 
 START_TEST(registry)
@@ -349,10 +428,24 @@ START_TEST(registry)
     setup_main_key();
     create_test_entries();
     test_enum_value();
+#if 0
     test_query_value_ex();
     test_reg_open_key();
     test_reg_close_key();
+    test_reg_delete_key();
 
+    /* SaveKey/LoadKey require the SE_BACKUP_NAME privilege to be set */
+    if (set_privileges(SE_BACKUP_NAME, TRUE) &&
+        set_privileges(SE_RESTORE_NAME, TRUE))
+    {
+        test_reg_save_key();
+        test_reg_load_key();
+        test_reg_unload_key();
+
+        set_privileges(SE_BACKUP_NAME, FALSE);
+        set_privileges(SE_RESTORE_NAME, FALSE);
+    }
+#endif
     /* cleanup */
     delete_key( hkey_main );
 }

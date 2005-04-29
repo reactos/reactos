@@ -31,6 +31,8 @@ typedef BOOL (WINAPI *fnBuildTrusteeWithSidA)( TRUSTEE *trustee, PSID psid );
 typedef BOOL (WINAPI *fnBuildTrusteeWithNameA)( TRUSTEE *trustee, LPSTR str );
 typedef BOOL (WINAPI *fnConvertSidToStringSidA)( PSID pSid, LPSTR *str );
 typedef BOOL (WINAPI *fnConvertStringSidToSidA)( LPCSTR str, PSID pSid );
+typedef BOOL (WINAPI *fnGetFileSecurityA)(LPCSTR, SECURITY_INFORMATION,
+                                          PSECURITY_DESCRIPTOR, DWORD, LPDWORD);
 
 static HMODULE hmod;
 
@@ -38,6 +40,7 @@ fnBuildTrusteeWithSidA   pBuildTrusteeWithSidA;
 fnBuildTrusteeWithNameA  pBuildTrusteeWithNameA;
 fnConvertSidToStringSidA pConvertSidToStringSidA;
 fnConvertStringSidToSidA pConvertStringSidToSidA;
+fnGetFileSecurityA pGetFileSecurityA;
 
 struct sidRef
 {
@@ -109,10 +112,12 @@ void test_sid()
         ok( r, "failed to allocate sid\n" );
         r = pConvertSidToStringSidA( psid, &str );
         ok( r, "failed to convert sid\n" );
-        ok( !strcmp( str, refs[i].refStr ),
-         "incorrect sid, expected %s, got %s\n", refs[i].refStr, str );
-        if( str )
+        if (r)
+        {
+            ok( !strcmp( str, refs[i].refStr ),
+                "incorrect sid, expected %s, got %s\n", refs[i].refStr, str );
             LocalFree( str );
+        }
         if( psid )
             FreeSid( psid );
 
@@ -287,7 +292,7 @@ static void test_lookupPrivilegeName(void)
         luid.LowPart = i;
         cchName = sizeof(buf);
         ret = pLookupPrivilegeNameA(NULL, &luid, buf, &cchName);
-        ok( ret && GetLastError() != ERROR_NO_SUCH_PRIVILEGE,
+        ok( ret || GetLastError() == ERROR_NO_SUCH_PRIVILEGE,
          "LookupPrivilegeNameA(0.%ld) failed: %ld\n", i, GetLastError());
     }
     /* check a bogus LUID */
@@ -398,6 +403,35 @@ static void test_luid(void)
     test_lookupPrivilegeValue();
 }
 
+static void test_FileSecurity(void)
+{
+    char directory[MAX_PATH];
+    DWORD retval, outSize;
+    BOOL result;
+    BYTE buffer[0x40];
+
+    pGetFileSecurityA = (fnGetFileSecurityA)
+                    GetProcAddress( hmod, "GetFileSecurityA" );
+    if( !pGetFileSecurityA )
+        return;
+
+    retval = GetTempPathA(sizeof(directory), directory);
+    if (!retval) {
+        trace("GetTempPathA failed\n");
+        return;
+    }
+
+    strcpy(directory, "\\Should not exist");
+
+    SetLastError(NO_ERROR);
+    result = pGetFileSecurityA( directory,OWNER_SECURITY_INFORMATION,buffer,0x40,&outSize);
+    ok(!result, "GetFileSecurityA should fail for not existing directories/files\n"); 
+    ok( (GetLastError() == ERROR_FILE_NOT_FOUND ) ||
+        (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) , 
+        "last error ERROR_FILE_NOT_FOUND / ERROR_CALL_NOT_IMPLEMENTED (98) "
+        "expected, got %ld\n", GetLastError());
+}
+
 START_TEST(security)
 {
     init();
@@ -405,4 +439,5 @@ START_TEST(security)
     test_sid();
     test_trustee();
     test_luid();
+    test_FileSecurity();
 }
