@@ -695,8 +695,6 @@ GetLocaleInfoW (
     }
     if (!cchData) lpLCData = NULL;
 
-	DPRINT1("Info for locale: %x\n", Locale); // REMOVE Fireball
-
     if (Locale == LOCALE_NEUTRAL || Locale == LOCALE_SYSTEM_DEFAULT) Locale = GetSystemDefaultLCID();
     else if (Locale == LOCALE_USER_DEFAULT) Locale = GetUserDefaultLCID();
 
