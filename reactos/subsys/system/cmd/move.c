@@ -20,9 +20,13 @@
  *
  *    03-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added "/N" option.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_MOVE
 
@@ -37,8 +41,10 @@ static INT Overwrite (LPTSTR fn)
 {
 	TCHAR inp[10];
 	LPTSTR p;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	ConOutPrintf (_T("Overwrite %s (Yes/No/All)? "), fn);
+	LoadString( GetModuleHandle(NULL), STRING_MOVE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPrintf ((LPTSTR)szMsg, fn);	
 	ConInString (inp, 10);
 
 	_tcsupr (inp);
@@ -67,6 +73,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	HANDLE hFile;
 	LPTSTR pszFile;
 	BOOL   bNothing = FALSE;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -85,20 +92,8 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		               "  /-Y\n"
 		               "..."));
 #else
-		ConOutPuts (_T("Moves files and renames files and directories.\n\n"
-		               "To move one or more files:\n"
-		               "MOVE [/N][drive:][path]filename1[,...] destination\n"
-		               "\n"
-		               "To rename a directory:\n"
-		               "MOVE [/N][drive:][path]dirname1 dirname2\n"
-		               "\n"
-		               "  [drive:][path]filename1  Specifies the location and name of the file\n"
-		               "                           or files you want to move.\n"
-		               "  /N                       Nothing. Don everthing but move files or direcories.\n"
-		               "\n"
-		               "Current limitations:\n"
-		               "  - You can't move a file or directory from one drive to another.\n"
-		               ));
+		LoadString( GetModuleHandle(NULL), STRING_MOVE_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);			
 #endif
 		return 0;
 	}
@@ -106,6 +101,8 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	arg = split (param, &argc, FALSE);
 	nFiles = argc;
 
+	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, (LPTSTR) szMsg,sizeof(szMsg));
+        	
 	/* read options */
 	for (i = 0; i < argc; i++)
 	{
@@ -117,14 +114,14 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 			if (*p == _T('-'))
 			{
 				p++;
-				if (_totupper (*p) == _T('Y'))
+				if ((WCHAR*) _totupper (*p) ==  &szMsg[0])
 					bPrompt = TRUE;
 			}
 			else
 			{
-				if (_totupper (*p) == _T('Y'))
+				if ((WCHAR*) _totupper (*p) ==  &szMsg[0])
 					bPrompt = FALSE;
-				else if  (_totupper (*p) == _T('N'))
+				else if  ((WCHAR*) _totupper (*p) ==  &szMsg[1])
 					bNothing = TRUE;
 			}
 			nFiles--;
@@ -197,9 +194,11 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 						if (!bNothing)
 						{
 							if (MoveFile (szSrcPath, szFullDestPath))
-								ConOutPrintf (_T("[OK]\n"));
+								LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
 							else
-								ConOutPrintf (_T("[Error]\n"));
+								LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+							
+                            ConOutPrintf ((LPTSTR)szMsg);
 						}
 					}
 					else
@@ -219,9 +218,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 							if (!bNothing)
 							{
 								if (MoveFile (szSrcPath, szDestPath))
-									ConOutPrintf (_T("[OK]\n"));
+									LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
 								else
-									ConOutPrintf (_T("[Error]\n"));
+									LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+                               ConOutPrintf ((LPTSTR)szMsg);
 							}
 						}
 					}
@@ -238,9 +238,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					if (!bNothing)
 					{
 						if (MoveFile (szSrcPath, szFullDestPath))
-							ConOutPrintf (_T("[OK]\n"));
-						else
-							ConOutPrintf (_T("[Error]\n"));
+							LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+                        else
+							LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+                        ConOutPrintf ((LPTSTR)szMsg);						
 					}
 				}
 			}

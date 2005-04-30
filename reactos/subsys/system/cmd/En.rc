@@ -289,6 +289,52 @@ STRING_MEMMORY_HELP2, "\n  %12s%% memory load.\n\n \
   %13s bytes total virtual memory.\n \
   %13s bytes available virtual memory.\n"
 
+STRING_MISC_HELP1, "Press a key to continue...\n"
+
+STRING_MOVE_HELP1, "Overwrite %s (Yes/No/All)? "
+
+STRING_MOVE_HELP2, "Moves files and renames files and directories.\n\n \
+To move one or more files:\n \
+MOVE [/N][drive:][path]filename1[,...] destination\n\n \
+To rename a directory:\n \
+MOVE [/N][drive:][path]dirname1 dirname2\n\n \
+  [drive:][path]filename1  Specifies the location and name of the file\n \
+                           or files you want to move.\n \
+  /N                       Nothing. Don everthing but move files or direcories.\n\n \
+Current limitations:\n \
+  - You can't move a file or directory from one drive to another.\n"
+		              
+
+
+STRING_PROMPT_HELP1, "Changes the command prompt.\n\n \
+PROMPT [text]\n\n \
+  text    Specifies a new command prompt.\n\n \
+Prompt can be made up of normal characters and the following special codes:\n\n \
+  $A   & (Ampersand)\n \
+  $B   | (pipe)\n \
+  $C   ( (Left parenthesis)\n \
+  $D   Current date\n \
+  $E   Escape code (ASCII code 27)\n \
+  $F   ) (Right parenthesis)\n \
+  $G   > (greater-than sign)\n \
+  $H   Backspace (erases previous character)\n \
+  $L   < (less-than sign)\n \
+  $N   Current drive\n \
+  $P   Current drive and path\n \
+  $Q   = (equal sign)\n \
+  $T   Current time\n \
+  $V   OS version number\n \
+  $_   Carriage return and linefeed\n \
+  $$   $ (dollar sign)"
+
+STRING_PAUSE_HELP1, "Stops the execution of a batch file and shows the following message:\n \
+'Press any key to continue...' or a user defined message.\n\n \
+PAUSE [message]"
+
+STRING_PROMPT_HELP2, "  $+   Displays the current depth of the directory stack"
+
+STRING_PROMPT_HELP3, "\nType PROMPT without parameters to reset the prompt to the default setting."
+
 
 STRING_RMDIR_HELP,   "Removes a directory.\n\n \
 RMDIR [drive:]path\nRD [drive:]path"  
@@ -348,6 +394,9 @@ STRING_FREE_ERROR1,          "Invalid drive"
 STRING_FREE_ERROR2,          "unlabeled"
 STRING_GOTO_ERROR1,          "No label specified for GOTO"
 STRING_GOTO_ERROR2,          "Label '%s' not found\n"
+
+STRING_MOVE_ERROR1,          "[OK]\n"
+STRING_MOVE_ERROR2,          "[Error]\n"
 
 STRING_PARAM_ERROR,          "Required parameter missing\n"
 

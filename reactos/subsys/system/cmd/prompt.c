@@ -42,8 +42,12 @@
  *
  *    24-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed Win32 environment handling.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 #include "precomp.h"
+#include "resource.h"
 
 /*
  * print the command-line prompt
@@ -178,32 +182,19 @@ VOID PrintPrompt(VOID)
 
 INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 {
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Changes the command prompt.\n\n"
-			  "PROMPT [text]\n\n"
-			  "  text    Specifies a new command prompt.\n\n"
-			  "Prompt can be made up of normal characters and the following special codes:\n\n"
-			  "  $A   & (Ampersand)\n"
-			  "  $B   | (pipe)\n"
-			  "  $C   ( (Left parenthesis)\n"
-			  "  $D   Current date\n"
-			  "  $E   Escape code (ASCII code 27)\n"
-			  "  $F   ) (Right parenthesis)\n"
-			  "  $G   > (greater-than sign)\n"
-			  "  $H   Backspace (erases previous character)\n"
-			  "  $L   < (less-than sign)\n"
-			  "  $N   Current drive\n"
-			  "  $P   Current drive and path\n"
-			  "  $Q   = (equal sign)\n"
-			  "  $T   Current time\n"
-			  "  $V   OS version number\n"
-			  "  $_   Carriage return and linefeed\n"
-			  "  $$   $ (dollar sign)"));
+		LoadString( GetModuleHandle(NULL), STRING_PROMPT_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);
+
 #ifdef FEATURE_DIRECTORY_STACK
-		ConOutPuts (_T("  $+   Displays the current depth of the directory stack"));
+		LoadString( GetModuleHandle(NULL), STRING_PROMPT_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);		
 #endif
-		ConOutPuts (_T("\nType PROMPT without parameters to reset the prompt to the default setting."));
+		LoadString( GetModuleHandle(NULL), STRING_PROMPT_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
 		return 0;
 	}
 

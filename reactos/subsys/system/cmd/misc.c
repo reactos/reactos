@@ -27,9 +27,13 @@
  *
  *    06-Nov-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added PagePrompt() and FilePrompt().
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 /*
@@ -434,8 +438,10 @@ HWND GetConsoleWindow (VOID)
 INT PagePrompt (VOID)
 {
 	INPUT_RECORD ir;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	ConOutPrintf (_T("Press a key to continue...\n"));
+	LoadString( GetModuleHandle(NULL), STRING_MISC_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPrintf((LPTSTR)szMsg);		
 
 	RemoveBreakHandler ();
 	ConInDisable ();
@@ -464,6 +470,8 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 {
         TCHAR szOut[512];
 	va_list arg_ptr;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 //        TCHAR cKey = 0;
 //        LPTSTR szKeys = _T("yna");
 
@@ -484,10 +492,16 @@ INT FilePromptYN (LPTSTR szFormat, ...)
         for (p = szIn; _istspace (*p); p++)
 		;
 
-	if (*p == _T('Y'))
-		return PROMPT_YES;
-	else if (*p == _T('N'))
-		return PROMPT_NO;
+		LoadString( GetModuleHandle(NULL), STRING_CHOICE_OPTION, (LPTSTR) szMsg,sizeof(szMsg));
+		
+
+		
+	if (wcsncmp(((WCHAR*) p),&szMsg[0],1)==0)
+       return PROMPT_YES;
+     else if (wcsncmp(((WCHAR*) p),&szMsg[1],1)==0)
+       return PROMPT_NO;
+
+	
 #if 0
 	else if (*p == _T('\03'))
 		return PROMPT_BREAK;
@@ -533,6 +547,8 @@ INT FilePromptYNA (LPTSTR szFormat, ...)
 	va_list arg_ptr;
 //        TCHAR cKey = 0;
 //        LPTSTR szKeys = _T("yna");
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+    
 
         TCHAR szIn[10];
 	LPTSTR p;
@@ -551,12 +567,16 @@ INT FilePromptYNA (LPTSTR szFormat, ...)
         for (p = szIn; _istspace (*p); p++)
 		;
 
-	if (*p == _T('Y'))
-		return PROMPT_YES;
-	else if (*p == _T('N'))
-		return PROMPT_NO;
-	if (*p == _T('A'))
-		return PROMPT_ALL;
+    LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, (LPTSTR) szMsg,sizeof(szMsg));
+	
+
+	if (wcsncmp(((WCHAR*) p),&szMsg[0],1)==0)
+       return PROMPT_YES;
+     else if (wcsncmp(((WCHAR*) p),&szMsg[1],1)==0)
+       return PROMPT_NO;
+	 else if (wcsncmp(  ((WCHAR*) p),&szMsg[2],1)==0)
+       return PROMPT_ALL;
+
 #if 0
 	else if (*p == _T('\03'))
 		return PROMPT_BREAK;

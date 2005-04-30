@@ -18,6 +18,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_PAUSE
 
@@ -29,19 +30,24 @@
  *
  * ?? Extend to include functionality of CHOICE if switch chars
  *     specified.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 INT cmd_pause (LPTSTR cmd, LPTSTR param)
 {
+ WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_pause: \'%s\' : \'%s\')\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Stops the execution of a batch file and shows the following message:\n"
-					   "\"Press any key to continue...\" or a user defined message.\n\n"
-					   "PAUSE [message]"));
+		LoadString( GetModuleHandle(NULL), STRING_PAUSE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
+
 		return 0;
 	}
 
