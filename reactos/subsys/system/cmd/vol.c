@@ -31,6 +31,8 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 {
 	TCHAR szVolName[80];
 	DWORD dwSerialNr;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 
 	/* get the volume information of the drive */
 	if(!GetVolumeInformation (pszRootPath,
@@ -47,16 +49,27 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 	}
 
 	/* print drive info */
-	ConOutPrintf (_T(" Volume in drive %c:"), pszRootPath[0]);
+	
+	
+    
 
 	if (szVolName[0] != '\0')
-		ConOutPrintf (_T(" is %s\n"),
-			      szVolName);
+	{
+		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPrintf ((LPTSTR)szMsg, pszRootPath[0],szVolName);
+	}
 	else
-		ConOutPrintf (_T(" has no label\n"));
+	{
+		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPrintf ((LPTSTR)szMsg, pszRootPath[0]);
+	}
+
+	
+	
 
 	/* print the volume serial number */
-	ConOutPrintf (_T(" Volume Serial Number is %04X-%04X\n"),
+	LoadString( GetModuleHandle(NULL), STRING_VOL_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPrintf ((LPTSTR)szMsg,
 		      HIWORD(dwSerialNr),
 		      LOWORD(dwSerialNr));
 	return 0;
@@ -67,11 +80,13 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szRootPath[] = _T("A:\\");
 	TCHAR szPath[MAX_PATH];
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays the disk volume label and serial number, if they exist.\n\n"
-			    "VOL [drive:]"));
+		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
+
 		return 0;
 	}
 

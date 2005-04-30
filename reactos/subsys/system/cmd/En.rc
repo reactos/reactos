@@ -461,6 +461,10 @@ Updates are available at: http://www.reactos.com"
 
 STRING_VERSION_HELP6, "FreeDOS version written by:\n%s\nReactOS version written by:\n%s\n"
 
+STRING_VOL_HELP1, " Volume in drive %c: is %s"
+STRING_VOL_HELP2, " Volume in drive %c: has no label"
+STRING_VOL_HELP3, " Volume Serial Number is %04X-%04X\n"
+STRING_VOL_HELP4, "Displays the disk volume label and serial number, if they exist.\n\nVOL [drive:]"
 
 STRING_WINDOW_HELP1, "change console window aspect\n\n \
 WINDOW [/POS[=]left,top,width,heigth]\n \
@@ -479,6 +483,7 @@ MIN           minimize the window\n \
 MAX           maximize the window\n \
 RESTORE       restore the window\n \
 title          new title"
+
 
 	
 STRING_CHOICE_OPTION,         "YN"

@@ -199,8 +199,13 @@
 #define STRING_VERSION_HELP5               691
 #define STRING_VERSION_HELP6               692
 
-#define STRING_WINDOW_HELP1                693
-#define STRING_WINDOW_HELP2                694
+#define STRING_VOL_HELP1                   693 
+#define STRING_VOL_HELP2                   694
+#define STRING_VOL_HELP3                   695
+#define STRING_VOL_HELP4                   696
+
+#define STRING_WINDOW_HELP1                697
+#define STRING_WINDOW_HELP2                698
 
 #define STRING_FreeDOS_DEV                 800
 #define STRING_REACTOS_DEV                 801
