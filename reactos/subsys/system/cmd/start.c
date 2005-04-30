@@ -6,9 +6,13 @@
  *
  *    24-Jul-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Started.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_START
 
@@ -18,13 +22,13 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 	TCHAR szFullName[MAX_PATH];
 	BOOL bWait = FALSE;
 	TCHAR *param;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
-		ConOutPuts (_T("Starts a command.\n\n"
-				   "START command \n\n"
-				   "  command     Specifies the command to run.\n\n"
-				   "At the moment all commands are started asynchronously.\n"));
+		
+		LoadString( GetModuleHandle(NULL), STRING_START_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts((LPTSTR)szMsg);	
 
 		return 0;
 	}
@@ -68,7 +72,9 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
-		ConErrPuts (_T("No batch support at the moment!"));
+
+		LoadString( GetModuleHandle(NULL), STRING_START_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPuts ((LPTSTR)szMsg);			
 	}
 	else
 	{

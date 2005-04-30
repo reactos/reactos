@@ -355,6 +355,23 @@ STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 STRING_RMDIR_HELP,   "Removes a directory.\n\n \
 RMDIR [drive:]path\nRD [drive:]path"  
 
+STRING_REN_HELP1, "Renames a file/directory or files/directories.\n\n \
+RENAME [/E /N /P /Q /S /T] old_name ... new_name\n \
+REN [/E /N /P /Q /S /T] old_name ... new_name\n\n \
+  /E    No eror messages.\n \
+  /N    Nothing.\n \
+  /P    Prompts for confirmation before renaming each file.\n \
+        (Not implemented yet!)\n \
+  /Q    Quiet.\n \
+  /S    Rename subdirectories.\n \
+  /T    Display total number of renamed files.\n\n \
+Note that you cannot specify a new drive or path for your destination. Use\n \
+the MOVE command for that purpose."
+
+STRING_REN_HELP2, "    %lu file renamed\n"
+
+STRING_REN_HELP3, "    %lu files renamed\n"
+		 
 STRING_SHIFT_HELP, "Changes the position of replaceable parameters in a batch file.\n\n \
 SHIFT [DOWN]"
 
@@ -369,11 +386,22 @@ SET [variable[=][string]]\n\n \
   string    Specifies a series of characters to assign to the variable.\n\n \
 Type SET without parameters to display the current environment variables.\n"
 
+STRING_START_HELP1, "Starts a command.\n\n \
+START command \n\n \
+  command     Specifies the command to run.\n\n \
+At the moment all commands are started asynchronously.\n"
+
 STRING_TITLE_HELP, "Sets the window title for the command prompt window.\n\n \
 TITLE [string]\n\n \
 string       Specifies the title for the command prompt window."
 
-	            
+STRING_TIME_HELP1, "Displays or sets the system time.\n\n \
+TIME [/T][time]\n\n \
+  /T    display only\n\n \
+Type TIME with no parameters to display the current time setting and a prompt\n \
+for a new one.  Press ENTER to keep the same time."
+
+STRING_TIME_HELP2, "Enter new time: "
 
 
 
@@ -431,7 +459,13 @@ STRING_MOVE_ERROR2,          "[Error]\n"
 
 STRING_PARAM_ERROR,          "Required parameter missing\n"
 
-STRING_PATH_ERROR            "CMD: Not in environment 'PATH'\n"
+STRING_PATH_ERROR,           "CMD: Not in environment 'PATH'\n"
+
+STRING_REN_ERROR1,           "MoveFile() failed. Error: %lu\n"
+
+STRING_START_ERROR1,         "No batch support at the moment!"
+
+STRING_TIME_ERROR1,          "Invalid time."
 
 STRING_ERROR_PARAMETERF_ERROR,	   "Parameter format not correct - %c\n"
 STRING_ERROR_INVALID_SWITCH,       "Invalid switch - /%c\n"

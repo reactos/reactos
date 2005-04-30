@@ -65,6 +65,9 @@
 #define STRING_MOVE_ERROR2                 343
 #define STRING_PARAM_ERROR                 344
 #define STRING_PATH_ERROR                  345
+#define STRING_REN_ERROR1                  346
+#define STRING_START_ERROR1                347
+#define STRING_TIME_ERROR1                 348
 
 
 
@@ -158,15 +161,24 @@
 
 #define STRING_REM_HELP                    670
 
-#define STRING_RMDIR_HELP                  671
+#define STRING_REN_HELP1                   671
+#define STRING_REN_HELP2                   672
+#define STRING_REN_HELP3                   673
 
-#define STRING_SCREEN_HELP                 672
+#define STRING_RMDIR_HELP                  672
 
-#define STRING_SHIFT_HELP                  673
+#define STRING_SCREEN_HELP                 673
 
-#define STRING_SET_HELP                    674
+#define STRING_SHIFT_HELP                  674
 
-#define STRING_TITLE_HELP                  675
+#define STRING_SET_HELP                    675
+
+#define STRING_START_HELP1                 676
+
+#define STRING_TITLE_HELP                  677
+
+#define STRING_TIME_HELP1                  678
+#define STRING_TIME_HELP2                  679
 
 
 

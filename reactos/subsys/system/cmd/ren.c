@@ -15,9 +15,13 @@
  *
  *    17-Oct-2001 (Eric Kohl <ekohl@rz.online.de>
  *        Implemented basic rename code.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc 
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_RENAME
 
@@ -54,24 +58,13 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 
   HANDLE hFile;
   WIN32_FIND_DATA f;
+  WCHAR szMsg[RC_STRING_MAX_SIZE];
 
   if (!_tcsncmp(param, _T("/?"), 2))
     {
-      ConOutPuts(_T("Renames a file/directory or files/directories.\n"
-		    "\n"
-		    "RENAME [/E /N /P /Q /S /T] old_name ... new_name\n"
-		    "REN [/E /N /P /Q /S /T] old_name ... new_name\n"
-		    "\n"
-		    "  /E    No eror messages.\n"
-		    "  /N    Nothing.\n"
-		    "  /P    Prompts for confirmation before renaming each file.\n"
-		    "        (Not implemented yet!)\n"
-		    "  /Q    Quiet.\n"
-		    "  /S    Rename subdirectories.\n"
-		    "  /T    Display total number of renamed files.\n"
-		    "\n"
-		    "Note that you cannot specify a new drive or path for your destination. Use\n"
-		    "the MOVE command for that purpose."));
+     LoadString( GetModuleHandle(NULL), STRING_REN_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+     ConOutPuts((LPTSTR)szMsg);
+
       return(0);
     }
 
@@ -245,7 +238,10 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 	      else
 		{
 		  if (!(dwFlags & REN_ERROR))
-		    ConErrPrintf(_T("MoveFile() failed. Error: %lu\n"), GetLastError());
+		  {
+		    LoadString( GetModuleHandle(NULL), STRING_REN_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+            ConErrPrintf ((LPTSTR)szMsg, GetLastError());
+		  }
 		}
 	    }
 	}
@@ -256,13 +252,15 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
   if (!(dwFlags & REN_QUIET))
     {
 	if (dwFiles == 1)
-	  ConOutPrintf(_T("    %lu file renamed\n"),
-		       dwFiles);
+	  LoadString( GetModuleHandle(NULL), STRING_REN_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
 	else
-	  ConOutPrintf(_T("    %lu files renamed\n"),
-		       dwFiles);
+	  LoadString( GetModuleHandle(NULL), STRING_REN_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+    
+	ConOutPrintf((LPTSTR)szMsg,dwFiles);	
     }
 
+	
+  
   freep(arg);
 
   return(0);
