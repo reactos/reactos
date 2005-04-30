@@ -11,6 +11,7 @@
 /* Language specific */
 
 #include "en.rc"
+#include "cz.rc"
 #include "es.rc"
 
 /* EOF */
