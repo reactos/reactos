@@ -5,9 +5,13 @@
  *
  * 25 Aug 1999
  *     started - Paolo Pantaleo <paolopan@freemail.it>
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_MSGBOX
 
@@ -28,6 +32,7 @@ INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 	//and to find window handle to pass to MessageBox
 	HWND hWnd;
 	TCHAR buff[128];
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	//these are MessabeBox() parameters
 	LPTSTR title, prompt="";
@@ -39,22 +44,8 @@ INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T(
-		              "display a message box and return user responce\n"
-		              "\n"
-		              "MSGBOX type [\"title\"] prompt\n"
-		              "\n"
-		              "type          button displayed\n"
-		              "              possible values are: OK, OKCANCEL,\n" 
-		              "              YESNO, YESNOCANCEL\n"
-		              "title         title of message box\n"
-		              "prompt        text displayed by the message box\n"
-		              "\n"
-		              "\n"
-		              "ERRORLEVEL is set according the button pressed:\n"
-		              "\n"
-		              "YES  :  10    |  NO      :  11\n"
-		              "OK   :  10    |  CANCEL  :  12\n"));
+		LoadString( GetModuleHandle(NULL), STRING_MSGBOX_HELP, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts((LPTSTR)szMsg);			
 		return 0;
 	}
 

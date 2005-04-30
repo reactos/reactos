@@ -21,8 +21,12 @@
  *
  *    24-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed Win32 environment handling.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_PATH
 
@@ -32,13 +36,13 @@
 
 INT cmd_path (LPTSTR cmd, LPTSTR param)
 {
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		ConOutPuts (_T("Displays or sets a search path for executable files.\n\n"
-				   "PATH [[drive:]path[;...]]\nPATH ;\n\n"
-				   "Type PATH ; to clear all search-path settings and direct the command shell\n"
-				   "to search only in the current directory.\n"
-				   "Type PATH without parameters to display the current path.\n"));
+	{		
+        LoadString( GetModuleHandle(NULL), STRING_PATH_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
+
 		return 0;
 	}
 
@@ -52,7 +56,8 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 		dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
-			ConErrPrintf (_T("CMD: Not in environment \"PATH\"\n"));
+			LoadString( GetModuleHandle(NULL), STRING_PATH_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
+            ConErrPrintf ((LPTSTR)szMsg);	
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)

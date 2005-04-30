@@ -64,6 +64,8 @@
 #define STRING_MOVE_ERROR1                 342                
 #define STRING_MOVE_ERROR2                 343
 #define STRING_PARAM_ERROR                 344
+#define STRING_PATH_ERROR                  345
+
 
 
 #define STRING_ATTRIB_HELP                 600
@@ -144,15 +146,19 @@
 #define STRING_MOVE_HELP1                  662
 #define STRING_MOVE_HELP2                  663
 
-#define STRING_PAUSE_HELP1                 664
+#define STRING_MSGBOX_HELP                 664 
 
-#define STRING_PROMPT_HELP1                665
-#define STRING_PROMPT_HELP2                666
-#define STRING_PROMPT_HELP3                667
+#define STRING_PATH_HELP1                  665
 
-#define STRING_RMDIR_HELP                  668
+#define STRING_PAUSE_HELP1                 666
 
-#define STRING_REM_HELP                    669
+#define STRING_PROMPT_HELP1                667
+#define STRING_PROMPT_HELP2                668
+#define STRING_PROMPT_HELP3                669
+
+#define STRING_RMDIR_HELP                  670
+
+#define STRING_REM_HELP                    671
 
 
 

@@ -303,8 +303,23 @@ MOVE [/N][drive:][path]dirname1 dirname2\n\n \
   /N                       Nothing. Don everthing but move files or direcories.\n\n \
 Current limitations:\n \
   - You can't move a file or directory from one drive to another.\n"
-		              
 
+STRING_MSGBOX_HELP, "display a message box and return user responce\n\n \
+MSGBOX type ['title'] prompt\n\n \
+type          button displayed\n \
+              possible values are: OK, OKCANCEL,\n \
+              YESNO, YESNOCANCEL\n \
+title         title of message box\n \
+prompt        text displayed by the message box\n\n\n \
+ERRORLEVEL is set according the button pressed:\n\n \
+YES  :  10    |  NO      :  11\n \
+OK   :  10    |  CANCEL  :  12\n"
+
+STRING_PATH_HELP1, "Displays or sets a search path for executable files.\n\n \
+PATH [[drive:]path[;...]]\nPATH ;\n\n \
+Type PATH ; to clear all search-path settings and direct the command shell\n \
+to search only in the current directory.\n \
+Type PATH without parameters to display the current path.\n"
 
 STRING_PROMPT_HELP1, "Changes the command prompt.\n\n \
 PROMPT [text]\n\n \
@@ -399,6 +414,8 @@ STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Error]\n"
 
 STRING_PARAM_ERROR,          "Required parameter missing\n"
+
+STRING_PATH_ERROR            "CMD: Not in environment 'PATH'\n"
 
 STRING_ERROR_PARAMETERF_ERROR,	   "Parameter format not correct - %c\n"
 STRING_ERROR_INVALID_SWITCH,       "Invalid switch - /%c\n"
