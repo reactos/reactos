@@ -569,6 +569,15 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
          return TRUE;
       }
    }
+   else
+   {
+      KdbpPrint("Eip:\n");
+      /* Try printing the function at EIP */
+      if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip))
+         KdbpPrint("<%08x>\n", KdbCurrentTrapFrame->Tf.Eip);
+      else
+         KdbpPrint("\n");
+   }
 
    KdbpPrint("Frames:\n");
    while (Frame != 0)
