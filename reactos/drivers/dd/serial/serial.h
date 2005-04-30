@@ -100,6 +100,8 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	CIRCULAR_BUFFER OutputBuffer;
 	KSPIN_LOCK OutputBufferLock;
 	
+	UNICODE_STRING SerialInterfaceName;
+	
 	/* Current values */
 	UCHAR MCR; /* Base+4, Modem Control Register */
 	UCHAR MSR; /* Base+6, Modem Status Register */

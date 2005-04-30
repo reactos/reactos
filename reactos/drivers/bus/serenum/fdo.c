@@ -18,11 +18,10 @@ SerenumAddDevice(
 {
 	PDEVICE_OBJECT Fdo;
 	PFDO_DEVICE_EXTENSION DeviceExtension;
-	//UNICODE_STRING SymbolicLinkName;
 	NTSTATUS Status;
-
+	
 	DPRINT("Serenum: SerenumAddDevice called. Pdo = %p\n", Pdo);
-   
+	
 	/* Create new device object */
 	Status = IoCreateDevice(DriverObject,
 	                        sizeof(FDO_DEVICE_EXTENSION),
@@ -36,27 +35,22 @@ SerenumAddDevice(
 		DPRINT("Serenum: IoCreateDevice() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
+	DeviceExtension = (PFDO_DEVICE_EXTENSION)Fdo->DeviceExtension;
+	RtlZeroMemory(DeviceExtension, sizeof(FDO_DEVICE_EXTENSION));
 	
 	/* Register device interface */
-#if 0 /* FIXME: activate */
-	Status = IoRegisterDeviceInterface(Pdo, &GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR, NULL, &SymbolicLinkName);
+	Status = IoRegisterDeviceInterface(
+		Pdo,
+		&GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR,
+		NULL,
+		&DeviceExtension->SerenumInterfaceName);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("Serenum: IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
-		goto ByeBye;
+		IoDeleteDevice(Fdo);
+		return Status;
 	}
-	DPRINT1("Serenum: IoRegisterDeviceInterface() returned '%wZ'\n", &SymbolicLinkName);
-	Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Serenum: IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
-		goto ByeBye;
-	}
-	RtlFreeUnicodeString(&SymbolicLinkName);
-#endif
 	
-	DeviceExtension = (PFDO_DEVICE_EXTENSION)Fdo->DeviceExtension;
-	RtlZeroMemory(DeviceExtension, sizeof(FDO_DEVICE_EXTENSION));
 	DeviceExtension->Common.IsFDO = TRUE;
 	DeviceExtension->Common.PnpState = dsStopped;
 	DeviceExtension->Pdo = Pdo;
@@ -80,13 +74,22 @@ SerenumFdoStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	PCOMMON_DEVICE_EXTENSION DeviceExtension;
+	PFDO_DEVICE_EXTENSION DeviceExtension;
+	NTSTATUS Status;
 	
 	DPRINT("Serenum: SerenumFdoStartDevice() called\n");
-	DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
-	ASSERT(DeviceExtension->PnpState == dsStopped);
-	DeviceExtension->PnpState = dsStarted;
+	ASSERT(DeviceExtension->Common.PnpState == dsStopped);
+	
+	Status = IoSetDeviceInterfaceState(&DeviceExtension->SerenumInterfaceName, TRUE);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Serenum: IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+	
+	DeviceExtension->Common.PnpState = dsStarted;
 	
 	return STATUS_SUCCESS;
 }

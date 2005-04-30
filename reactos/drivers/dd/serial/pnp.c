@@ -26,15 +26,14 @@ SerialAddDeviceInternal(
 	NTSTATUS Status;
 	WCHAR DeviceNameBuffer[32];
 	UNICODE_STRING DeviceName;
-	//UNICODE_STRING SymbolicLinkName;
 	static ULONG DeviceNumber = 0;
 	static ULONG ComPortNumber = 1;
-
+	
 	DPRINT("Serial: SerialAddDeviceInternal called\n");
 	
 	ASSERT(DeviceObject);
 	ASSERT(Pdo);
-   
+	
 	/* Create new device object */
 	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceNumber);
 	RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
@@ -55,23 +54,13 @@ SerialAddDeviceInternal(
 	RtlZeroMemory(DeviceExtension, sizeof(SERIAL_DEVICE_EXTENSION));
 	
 	/* Register device interface */
-#if 0 /* FIXME: activate */
-	Status = IoRegisterDeviceInterface(Pdo, &GUID_DEVINTERFACE_COMPORT, NULL, &SymbolicLinkName);
+	Status = IoRegisterDeviceInterface(Pdo, &GUID_DEVINTERFACE_COMPORT, NULL, &DeviceExtension->SerialInterfaceName);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("Serial: IoRegisterDeviceInterface() failed with status 0x%08x\n", Status);
 		goto ByeBye;
 	}
-	DPRINT1("Serial: IoRegisterDeviceInterface() returned '%wZ'\n", &SymbolicLinkName);
-	Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Serial: IoSetDeviceInterfaceState() failed with status 0x%08x\n", Status);
-		goto ByeBye;
-	}
-	RtlFreeUnicodeString(&SymbolicLinkName);
-#endif
-
+	
 	DeviceExtension->SerialPortNumber = DeviceNumber++;
 	if (pComPortNumber == NULL)
 		DeviceExtension->ComPort = ComPortNumber++;
@@ -254,6 +243,15 @@ SerialPnpStartDevice(
 		return Status;
 	}
 	
+	/* Activate serial interface */
+	Status = IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, TRUE);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Serial: IoSetDeviceInterfaceState() failed with status 0x%08x\n", Status);
+		IoDeleteSymbolicLink(&LinkName);
+		return Status;
+	}
+	
 	/* Connect interrupt and enable them */
 	Status = IoConnectInterrupt(
 		&DeviceExtension->Interrupt, SerialInterruptService,
@@ -264,6 +262,7 @@ SerialPnpStartDevice(
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("Serial: IoConnectInterrupt() failed with status 0x%08x\n", Status);
+		IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, FALSE);
 		IoDeleteSymbolicLink(&LinkName);
 		return Status;
 	}
@@ -366,6 +365,7 @@ SerialPnp(
 			IoAcquireRemoveLock
 			IoReleaseRemoveLockAndWait
 			pass request to DeviceExtension-LowerDriver
+			disable interface
 			IoDeleteDevice(Fdo) and/or IoDetachDevice
 			break;
 		}*/
