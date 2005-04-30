@@ -22,6 +22,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 VOID ShortVersion (VOID)
@@ -63,16 +64,15 @@ VOID ShortVersion (VOID)
 INT cmd_ver (LPTSTR cmd, LPTSTR param)
 {
 	INT i;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	WCHAR rosdev[RC_STRING_MAX_SIZE];
+    WCHAR fredev[RC_STRING_MAX_SIZE];
 
 	if (_tcsstr (param, _T("/?")) != NULL)
 	{
-		ConOutPuts (_T("Displays shell version information\n"
-		               "\n"
-		               "VER [/C][/R][/W]\n"
-		               "\n"
-		               "  /C  Displays credits.\n"
-		               "  /R  Displays redistribution information.\n"
-		               "  /W  Displays warranty information."));
+		LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
+
 		return 0;
 	}
 
@@ -83,11 +83,9 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	/* Basic copyright notice */
 	if (param[0] == _T('\0'))
 	{
-		ConOutPuts (_T("\n"SHELLINFO
-		               " comes with ABSOLUTELY NO WARRANTY; for details\n"
-		               "type: `ver /w'. This is free software, and you are welcome to redistribute\n"
-		               "it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n"
-		               "listing of credits."));
+		ConOutPuts (_T("\n"SHELLINFO));
+	   LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+       ConOutPuts ((LPTSTR)szMsg);	
 	}
 	else
 	{
@@ -111,22 +109,25 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			if (_totupper (param[i]) == _T('W'))
 			{
 				/* Warranty notice */
-				ConOutPuts (_T("\n This program is distributed in the hope that it will be useful,\n"
-				               " but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-				               " MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-				               " GNU General Public License for more details."));
+				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+                ConOutPuts ((LPTSTR)szMsg);	
 			}
 			else if (_totupper (param[i]) == _T('R'))
 			{
 				/* Redistribution notice */
-				ConOutPuts (_T("\n This program is free software; you can redistribute it and/or modify\n"
-				               " it under the terms of the GNU General Public License as published by\n"
-				               " the Free Software Foundation; either version 2 of the License, or\n"
-				               " (at your option) any later version."));
+				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
+                ConOutPuts ((LPTSTR)szMsg);					
 			}
 			else if (_totupper (param[i]) == _T('C'))
 			{
 				/* Developer listing */
+				
+				LoadString( GetModuleHandle(NULL), STRING_REACTOS_DEV, (LPTSTR) rosdev,sizeof(rosdev));
+                LoadString( GetModuleHandle(NULL), STRING_FreeDOS_DEV, (LPTSTR) fredev,sizeof(fredev));
+				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP6, (LPTSTR) szMsg,sizeof(szMsg));				                
+                ConOutPrintf ((LPTSTR)szMsg,fredev,rosdev);
+				
+				/*
 				ConOutPuts (_T("\n"
 				               "FreeDOS version written by:\n"
 				               "    Tim Norman      Matt Rains\n"
@@ -139,6 +140,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 				               "ReactOS version written by:\n"
 				               "    Eric Kohl       Emanuele Aliberti\n"
 				               "    Paolo Pantaleo  Phillip Susi\n"));
+			   */
 			}
 			else
 			{
@@ -148,9 +150,8 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 		}
 	}
 
-	ConOutPuts (_T("\n"
-	               "Send bug reports to <ekohl@rz-online.de>.\n"
-	               "Updates are available at: http://www.reactos.com"));
+	LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP5, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPuts ((LPTSTR)szMsg);	
 	return 0;
 }
 

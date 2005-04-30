@@ -13,9 +13,13 @@
  *
  *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Unicode and redirection ready!
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_VERIFY
 
@@ -26,24 +30,27 @@ static BOOL bVerify = FALSE;
 
 INT cmd_verify (LPTSTR cmd, LPTSTR param)
 {
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("This command is just a dummy!!\n"
-					   "Sets whether to verify that your files are written correctly to a\n"
-					   "disk.\n\n"
-					   "VERIFY [ON | OFF]\n\n"
-					   "Type VERIFY without a parameter to display the current VERIFY setting."));
+		LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
 		return 0;
 	}
 
 	if (!*param)
-		ConOutPrintf (_T("VERIFY is %s.\n"), bVerify ? D_ON : D_OFF);
+	{
+		LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+		ConOutPrintf ((LPTSTR)szMsg, bVerify ? D_ON : D_OFF);
+	}
 	else if (_tcsicmp (param, D_OFF) == 0)
 		bVerify = FALSE;
 	else if (_tcsicmp (param, D_ON) == 0)
 		bVerify = TRUE;
-	else
-		ConOutPuts (_T("Must specify ON or OFF."));
+	else		
+	    LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
 
 	return 0;
 }

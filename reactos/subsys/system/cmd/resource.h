@@ -68,6 +68,8 @@
 #define STRING_REN_ERROR1                  346
 #define STRING_START_ERROR1                347
 #define STRING_TIME_ERROR1                 348
+#define STRING_TYPE_ERROR1                 349
+#define STRING_WINDOW_ERROR1               350
 
 
 
@@ -183,6 +185,28 @@
 #define STRING_TIMER_HELP1                 680
 #define STRING_TIMER_HELP2                 681
 #define STRING_TIMER_HELP3                 682
+
+#define STRING_TYPE_HELP1                  683
+
+#define STRING_VERIFY_HELP1                684
+#define STRING_VERIFY_HELP2                685
+#define STRING_VERIFY_HELP3                686
+
+#define STRING_VERSION_HELP1               687
+#define STRING_VERSION_HELP2               688
+#define STRING_VERSION_HELP3               689
+#define STRING_VERSION_HELP4               690
+#define STRING_VERSION_HELP5               691
+#define STRING_VERSION_HELP6               692
+
+#define STRING_WINDOW_HELP1                693
+#define STRING_WINDOW_HELP2                694
+
+#define STRING_FreeDOS_DEV                 800
+#define STRING_REACTOS_DEV                 801
+
+
+
 
 
   

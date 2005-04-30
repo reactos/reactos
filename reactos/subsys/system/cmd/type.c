@@ -21,9 +21,13 @@
  *
  *    19-Jan-1999 (Paolo Pantaleo <paolopan@freemail.it>)
  *        Added multiple file support (copied from y.c)
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_TYPE
 
@@ -38,13 +42,14 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	INT    argc,i;
 	LPTSTR *argv;
 	LPTSTR errmsg;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 	
 	hConsoleOut=GetStdHandle (STD_OUTPUT_HANDLE);
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays the contents of text files.\n\n"
-					   "TYPE [drive:][path]filename"));
+		LoadString( GetModuleHandle(NULL), STRING_TYPE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
 		return 0;
 	}
 
@@ -60,7 +65,8 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	{
 		if (_T('/') == argv[i][0])
 		{
-			ConErrPrintf(_T("Invalid option \"%S\"\n"), argv[i] + 1);
+			LoadString( GetModuleHandle(NULL), STRING_TYPE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+            ConErrPrintf ((LPTSTR)szMsg, argv[i] + 1);
 			continue;
 		}
 		hFile = CreateFile(argv[i],

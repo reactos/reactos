@@ -8,6 +8,19 @@
 #define REACTOS_STR_LEGAL_COPYRIGHT     "Copyright (C) 1998-2001 Eric Kohl and others\0"
 #include <reactos/version.rc>
 #include "En.rc"
+STRINGTABLE DISCARDABLE
+{
+ STRING_FreeDOS_DEV, "    Tim Norman      Matt Rains\n \
+    Evan Jeffrey    Steffen Kaiser\n \
+    Svante Frey     Oliver Mueller\n \
+    Aaron Kaufman   Marc Desrochers\n \
+    Rob Lake        John P Price\n \
+    Hans B Pufal\n"
+
+ STRING_REACTOS_DEV,  "    Eric Kohl       Emanuele Aliberti\n \
+    Paolo Pantaleo  Phillip Susi\n"
+ 
+}
 
 
 

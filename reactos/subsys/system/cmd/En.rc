@@ -423,7 +423,62 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n \
 if none of ON, OFF or /S is specified the command\n \
 will toggle stopwach state\n\n"
 		               
+STRING_TYPE_HELP1, "Displays the contents of text files.\n\nTYPE [drive:][path]filename"
 
+STRING_VERIFY_HELP1, "This command is just a dummy!!\n \
+Sets whether to verify that your files are written correctly to a\n \
+disk.\n\n \
+VERIFY [ON | OFF]\n\n \
+Type VERIFY without a parameter to display the current VERIFY setting."
+
+STRING_VERIFY_HELP2, "VERIFY is %s.\n"
+
+STRING_VERIFY_HELP3, "Must specify ON or OFF."
+
+STRING_VERSION_HELP1, "Displays shell version information\n\n \
+VER [/C][/R][/W]\n\n \
+  /C  Displays credits.\n \
+  /R  Displays redistribution information.\n \
+  /W  Displays warranty information."
+
+STRING_VERSION_HELP2, " comes with ABSOLUTELY NO WARRANTY; for details\n \
+type: `ver /w'. This is free software, and you are welcome to redistribute\n \
+it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n \
+listing of credits."
+
+STRING_VERSION_HELP3, "\n This program is distributed in the hope that it will be useful,\n \
+ but WITHOUT ANY WARRANTY; without even the implied warranty of\n \
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n \
+ GNU General Public License for more details."
+
+ STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it and/or modify\n \
+ it under the terms of the GNU General Public License as published by\n \
+ the Free Software Foundation; either version 2 of the License, or\n \
+ (at your option) any later version."
+
+STRING_VERSION_HELP5, "\nSend bug reports to <ros-dev@reactos.com>.\n \
+Updates are available at: http://www.reactos.com"
+
+STRING_VERSION_HELP6, "FreeDOS version written by:\n%s\nReactOS version written by:\n%s\n"
+
+
+STRING_WINDOW_HELP1, "change console window aspect\n\n \
+WINDOW [/POS[=]left,top,width,heigth]\n \
+              [MIN|MAX|RESTORE] ['title']\n\n \
+/POS          specify window placement and dimensions\n \
+MIN           minimize the window\n \
+MAX           maximize the window\n \
+RESTORE       restore the window"
+
+STRING_WINDOW_HELP2, "change console window aspect\n\n \
+ACTIAVTE 'window' [/POS[=]left,top,width,heigth]\n \
+              [MIN|MAX|RESTORE] ['title']\n\n \
+window        tile of window on wich perform actions\n \
+/POS          specify window placement and dimensions\n \
+MIN           minimize the window\n \
+MAX           maximize the window\n \
+RESTORE       restore the window\n \
+title          new title"
 
 	
 STRING_CHOICE_OPTION,         "YN"
@@ -486,6 +541,11 @@ STRING_REN_ERROR1,           "MoveFile() failed. Error: %lu\n"
 STRING_START_ERROR1,         "No batch support at the moment!"
 
 STRING_TIME_ERROR1,          "Invalid time."
+
+STRING_TYPE_ERROR1,          "Invalid option '/%s'\n"
+
+STRING_WINDOW_ERROR1,        "window not found"
+
 
 STRING_ERROR_PARAMETERF_ERROR,	   "Parameter format not correct - %c\n"
 STRING_ERROR_INVALID_SWITCH,       "Invalid switch - /%c\n"

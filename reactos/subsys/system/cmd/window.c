@@ -10,10 +10,14 @@
  * 29 Sep 1999 (Paolo Pantaleo)
  *     activate and window in a single file using mainly the same code
  *     (nice size optimization :)
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 
 #include "precomp.h"
+#include "resource.h"
 
 #if (  defined(INCLUDE_CMD_WINDOW) ||  defined(INCLUDE_CMD_ACTIVATE)  )
 
@@ -173,18 +177,13 @@ INT ServiceActivate (LPTSTR param, HWND hWnd)
 INT CommandWindow (LPTSTR cmd, LPTSTR param)
 {
 	HWND h;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T("change console window aspect\n"
-		              "\n"
-		              "WINDOW [/POS[=]left,top,width,heigth]\n"
-		              "              [MIN|MAX|RESTORE] [\"title\"]\n"
-		              "\n"
-		              "/POS          specify window placement and dimensions\n"
-		              "MIN           minimize the window\n"
-		              "MAX           maximize the window\n"
-		              "RESTORE       restore the window"));
+		LoadString( GetModuleHandle(NULL), STRING_WINDOW_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
+
 		return 0;
 	}
 
@@ -198,20 +197,12 @@ INT CommandActivate (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR str;
 	HWND h;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T("change console window aspect\n"
-		              "\n"
-		              "ACTIAVTE \"window\" [/POS[=]left,top,width,heigth]\n"
-		              "              [MIN|MAX|RESTORE] [\"title\"]\n"		              
-		              "\n"
-		              "window        tile of window on wich perform actions\n"
-		              "/POS          specify window placement and dimensions\n"
-		              "MIN           minimize the window\n"
-		              "MAX           maximize the window\n"
-		              "RESTORE       restore the window\n"
-		              "title          new title"));
+		LoadString( GetModuleHandle(NULL), STRING_WINDOW_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts ((LPTSTR)szMsg);	
 		return 0;
 	}
 
@@ -231,7 +222,8 @@ INT CommandActivate (LPTSTR cmd, LPTSTR param)
 	h=FindWindow(NULL, param);
 	if (!h)
 	{
-		ConErrPuts("window not found");
+		LoadString( GetModuleHandle(NULL), STRING_WINDOW_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPuts ((LPTSTR)szMsg);			
 		return 1;
 	}
 
