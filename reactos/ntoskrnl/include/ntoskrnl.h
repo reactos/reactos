@@ -27,6 +27,7 @@
 #include <ddk/kefuncs.h>
 #include <ddk/pnptypes.h>
 #include <ddk/pnpfuncs.h>
+#include <ddk/wdmguid.h>
 #include <ntdll/ldr.h>
 #include <internal/ctype.h>
 #include <internal/ntoskrnl.h>
