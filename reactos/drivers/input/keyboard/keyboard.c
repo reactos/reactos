@@ -457,7 +457,6 @@ KbdDpcRoutine(PKDPC Dpc,
    DPRINT("KbdDpcRoutine(DeviceObject %x, Irp %x)\n",
 	    DeviceObject,Irp);
    Irp->IoStatus.Status = STATUS_SUCCESS;
-   Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp,IO_NO_INCREMENT);
    IoStartNextPacket(DeviceObject,FALSE);
 }
@@ -592,8 +591,9 @@ KeyboardHandler(PKINTERRUPT Interrupt,
 	DPRINT("KeysRequired %d KeysRead %x\n",KeysRequired,KeysRead);
 	if (KeysRead==KeysRequired)
 	  {
-	  	 PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT) Context;
+	     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT) Context;
 	     KeInsertQueueDpc(&KbdDpc,DeviceObject,CurrentIrp);
+	     CurrentIrp->IoStatus.Information = KeysRead * sizeof(KEY_EVENT_RECORD);
 	     CurrentIrp=NULL;
 	  }
 	CHECKPOINT;
@@ -721,6 +721,7 @@ KbdSynchronizeRoutine(PVOID Context)
     }
    if ((stk->Parameters.Read.Length/sizeof(KEY_EVENT_RECORD))==NrToRead)
      {
+        Irp->IoStatus.Information = stk->Parameters.Read.Length;
 	return(TRUE);
      }
 
@@ -743,7 +744,6 @@ VOID STDCALL KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      {
         KIRQL oldIrql;
 	Irp->IoStatus.Status = STATUS_SUCCESS;
-	Irp->IoStatus.Information = 0;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	oldIrql = KeGetCurrentIrql();
         if (oldIrql < DISPATCH_LEVEL)
