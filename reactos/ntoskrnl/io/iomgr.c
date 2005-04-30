@@ -216,6 +216,7 @@ IoInit (VOID)
   IoInitFileSystemImplementation();
   IoInitVpbImplementation();
   IoInitShutdownNotification();
+  IopInitPnpNotificationImplementation();
   IopInitErrorLog();
   IopInitTimerImplementation();
   IopInitIoCompletionImplementation();

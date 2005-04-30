@@ -215,6 +215,13 @@ ExFreePool (
 	PVOID	block
 	);
 
+void
+STDCALL
+ExFreePoolWithTag (
+	PVOID	block,
+	ULONG	tag
+	);
+
 /*
  * PVOID
  * ExFreeToZone (

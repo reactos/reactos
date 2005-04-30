@@ -147,7 +147,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
        Object == NULL)
      {
 	RtlFreeUnicodeString(&RemainingPath);
-	return STATUS_UNSUCCESSFUL;
+	return STATUS_OBJECT_NAME_INVALID;
      }
 
    Status = ObCreateHandle(PsGetCurrentProcess(),

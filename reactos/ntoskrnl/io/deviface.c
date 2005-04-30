@@ -7,6 +7,7 @@
  * 
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  *                  Matthew Brace (ismarc@austin.rr.com)
+ *                  Hervé Poussineau (hpoussin@reactos.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -573,6 +574,8 @@ IoRegisterDeviceInterface(
    UNICODE_STRING GuidString;
    UNICODE_STRING SubKeyName;
    UNICODE_STRING BaseKeyName;
+   UCHAR PdoNameInfoBuffer[sizeof(OBJECT_NAME_INFORMATION) + (256 * sizeof(WCHAR))];
+   POBJECT_NAME_INFORMATION PdoNameInfo = (POBJECT_NAME_INFORMATION)PdoNameInfoBuffer;
    UNICODE_STRING DeviceInstance = RTL_CONSTANT_STRING(L"DeviceInstance");
    UNICODE_STRING SymbolicLink = RTL_CONSTANT_STRING(L"SymbolicLink");
    HANDLE InterfaceKey;
@@ -588,6 +591,19 @@ IoRegisterDeviceInterface(
       DPRINT("RtlStringFromGUID() failed with status 0x%08lx\n", Status);
       return Status;
    }
+   
+   /* Create Pdo name: \Device\xxxxxxxx (unnamed device) */
+   Status = ObQueryNameString(
+      PhysicalDeviceObject,
+      PdoNameInfo,
+      sizeof(PdoNameInfoBuffer),
+      &i);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ObQueryNameString() failed with status 0x%08lx\n", Status);
+      return Status;
+   }
+   ASSERT(PdoNameInfo->Name.Length);
    
    /* Create base key name for this interface: HKLM\SYSTEM\CurrentControlSet\DeviceClasses\{GUID}\##?#ACPI#PNP0501#1#{GUID} */
    InstancePath = &PhysicalDeviceObject->DeviceObjectExtension->DeviceNode->InstancePath;
@@ -703,10 +719,10 @@ IoRegisterDeviceInterface(
       return Status;
    }
    
-   /* Create symbolic link name: \\?\ACPI#PNP0501#1#{GUID}\ReferenceString */
+   /* Create symbolic link name: \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
    SymbolicLinkName->Length = 0;
    SymbolicLinkName->MaximumLength = SymbolicLinkName->Length
-      + 4 * sizeof(WCHAR) /* 5 = size of \\??\ */
+      + 4 * sizeof(WCHAR) /* 4 = size of \??\ */
       + InstancePath->Length
       + sizeof(WCHAR)     /* 1  = size of # */
       + GuidString.Length
@@ -725,7 +741,7 @@ IoRegisterDeviceInterface(
       ExFreePool(BaseKeyName.Buffer);
       return STATUS_INSUFFICIENT_RESOURCES;
    }
-   RtlAppendUnicodeToString(SymbolicLinkName, L"\\\\??\\");
+   RtlAppendUnicodeToString(SymbolicLinkName, L"\\??\\");
    StartIndex = SymbolicLinkName->Length / sizeof(WCHAR);
    RtlAppendUnicodeStringToString(SymbolicLinkName, InstancePath);
    for (i = 0; i < InstancePath->Length / sizeof(WCHAR); i++)
@@ -743,7 +759,8 @@ IoRegisterDeviceInterface(
    SymbolicLinkName->Buffer[SymbolicLinkName->Length] = '\0';
    
    /* Create symbolic link */
-   Status = IoCreateSymbolicLink(SymbolicLinkName, InstancePath);
+   DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
+   Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
@@ -778,7 +795,7 @@ IoRegisterDeviceInterface(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 
 NTSTATUS STDCALL
@@ -786,7 +803,40 @@ IoSetDeviceInterfaceState(
    IN PUNICODE_STRING SymbolicLinkName,
    IN BOOLEAN Enable)
 {
-   DPRINT("IoSetDeviceInterfaceState called (UNIMPLEMENTED)\n");
+   PDEVICE_OBJECT PhysicalDeviceObject;
+   PFILE_OBJECT FileObject;
+   UNICODE_STRING GuidString;
+   PWCHAR StartPosition;
+   PWCHAR EndPosition;
+   NTSTATUS Status;
+   
+   if (SymbolicLinkName == NULL)
+      return STATUS_INVALID_PARAMETER_1;
+   
+   DPRINT("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
+   Status = IoGetDeviceObjectPointer(SymbolicLinkName,
+      0, /* DesiredAccess */
+      &FileObject,
+      &PhysicalDeviceObject);
+   if (!NT_SUCCESS(Status))
+      return Status;
+   
+   /* Symbolic link name is \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
+   /* Get GUID from SymbolicLinkName */
+   StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
+   EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
+   if (!StartPosition ||!EndPosition || StartPosition > EndPosition)
+      return STATUS_INVALID_PARAMETER_1;
+   GuidString.Buffer = StartPosition;
+   GuidString.MaximumLength = GuidString.Length = (ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition;
+   
+   IopNotifyPlugPlayNotification(
+      PhysicalDeviceObject,
+      EventCategoryDeviceInterfaceChange,
+      Enable ? (LPGUID)&GUID_DEVICE_INTERFACE_ARRIVAL : (LPGUID)&GUID_DEVICE_INTERFACE_REMOVAL,
+      &GuidString,
+      (PVOID)SymbolicLinkName);
+   
    return STATUS_SUCCESS;
 }
 
