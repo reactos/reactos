@@ -1288,7 +1288,10 @@ IoSecondStageCompletion(PKAPC Apc,
             /* Dereference the Event if this is an ASYNC IRP */
             if (!Irp->Flags & IRP_SYNCHRONOUS_API)
             {
-                ObDereferenceObject(Irp->UserEvent);
+                if (Irp->UserEvent != &FileObject->Event)
+                {
+                    ObDereferenceObject(Irp->UserEvent);
+                }
             }
             
             /* If the File Object is SYNC, then we need to signal its event too */
@@ -1382,7 +1385,10 @@ IoSecondStageCompletion(PKAPC Apc,
         /* Dereference the Event if it's an ASYNC IRP on a File Object */
         if (Irp->UserEvent && !(Irp->Flags & IRP_SYNCHRONOUS_API) && FileObject)
         {
-            ObDereferenceObject(Irp->UserEvent);
+            if (Irp->UserEvent != &FileObject->Event)
+            {
+                ObDereferenceObject(Irp->UserEvent);
+            }   
         }
         
         /* Dereference the File Object */
