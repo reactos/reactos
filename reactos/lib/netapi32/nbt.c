@@ -65,6 +65,7 @@
  * See also other FIXMEs in the code.
  */
 
+#include <ctype.h>
 #include "config.h"
 #include <stdarg.h>
 
