@@ -8,6 +8,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_TIMER
 
@@ -36,7 +37,7 @@
 static VOID
 PrintElapsedTime (DWORD time,INT format)
 {
-	
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 	DWORD h,m,s,ms;
 
 #ifdef _DEBUG
@@ -46,7 +47,8 @@ PrintElapsedTime (DWORD time,INT format)
 	switch (format)
 	{
 	case 0:
-		ConOutPrintf(_T("Elapsed %d msecs\n"),time);
+		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPrintf((LPTSTR)szMsg,time);
 		break;
 
 	case 1:
@@ -56,7 +58,8 @@ PrintElapsedTime (DWORD time,INT format)
 		time /=60;
 		m = time % 60;		
 		h = time / 60;
-		ConOutPrintf(_T("Elapsed %02d%c%02d%c%02d%c%02d\n"),
+		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPrintf((LPTSTR)szMsg,
 		             h,cTimeSeparator,
 		             m,cTimeSeparator,
 		             s,cDecimalSeparator,ms/10);
@@ -67,6 +70,8 @@ PrintElapsedTime (DWORD time,INT format)
 
 INT CommandTimer (LPTSTR cmd, LPTSTR param)
 {
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	// all timers are kept
 	static DWORD clksT[10];
 	
@@ -99,29 +104,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPrintf(_T(
-		                "allow the use of ten stopwaches.\n"
-		                "\n"
-		                "TIMER  [ON|OFF] [/S] [/n] [/Fn]\n"
-		                "\n"
-		                "  ON          set stopwach ON\n"
-		                "  OFF         set stopwach OFF\n"
-		                "  /S          Split time. Return stopwach split\n"
-		                "              time without changing its value\n"
-		                "  /n          Specifiy the stopwach number.\n"
-		                "              Stopwaches avaliable are 0 to 10\n" 
-		                "              If it is not specified default is 1\n"
-		                "  /Fn         Format for output\n"
-		                "              n can be:\n"
-		                "                    0    milliseconds\n"
-		                "                    1    hh%cmm%css%cdd\n"
-		                "\n"),
-		                cTimeSeparator,cTimeSeparator,cDecimalSeparator);
-
-		ConOutPrintf(_T(
-		                "if none of ON, OFF or /S is specified the command\n"
-		                "will toggle stopwach state\n"
-		                "\n"));
+		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPrintf ((LPTSTR)szMsg,cTimeSeparator,cTimeSeparator,cDecimalSeparator);		
 		return 0;
 	}
 

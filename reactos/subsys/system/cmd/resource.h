@@ -180,6 +180,9 @@
 #define STRING_TIME_HELP1                  678
 #define STRING_TIME_HELP2                  679
 
+#define STRING_TIMER_HELP1                 680
+#define STRING_TIMER_HELP2                 681
+#define STRING_TIMER_HELP3                 682
 
 
   
