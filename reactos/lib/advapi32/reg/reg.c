@@ -850,166 +850,163 @@ RegEnumKeyExA (HKEY hKey,
 	       LPDWORD lpcbClass,
 	       PFILETIME lpftLastWriteTime)
 {
-  union
-  {
-    KEY_NODE_INFORMATION Node;
-    KEY_BASIC_INFORMATION Basic;
-  } *KeyInfo;
-
-  UNICODE_STRING StringU;
-  ANSI_STRING StringA;
-  LONG ErrorCode = ERROR_SUCCESS;
-  DWORD NameLength;
-  DWORD ClassLength = 0;
-  DWORD BufferSize;
-  DWORD ResultSize;
-  HANDLE KeyHandle;
-  NTSTATUS Status;
-
-  DPRINT("RegEnumKeyExA(hKey 0x%x, dwIndex %d, lpName 0x%x, *lpcbName %d, lpClass 0x%x, lpcbClass %d)\n",
-         hKey, dwIndex, lpName, *lpcbName, lpClass, lpcbClass ? *lpcbClass : 0);
-
-  if ((lpClass) && (!lpcbClass))
-    {
-      SetLastError (ERROR_INVALID_PARAMETER);
-      return ERROR_INVALID_PARAMETER;
-    }
-
-  Status = MapDefaultKey(&KeyHandle,
-			 hKey);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError (Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
-    }
-
-  if (*lpcbName > 0)
-    {
-      NameLength = min (*lpcbName - 1 , REG_MAX_NAME_SIZE) * sizeof (WCHAR);
-    }
-  else
-    {
-      NameLength = 0;
-    }
-
-  if (lpClass)
-    {
-      if (*lpcbClass > 0)
+	union
 	{
-	  ClassLength = min (*lpcbClass -1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
-	}
-      else
+		KEY_NODE_INFORMATION Node;
+		KEY_BASIC_INFORMATION Basic;
+	} *KeyInfo;
+
+	UNICODE_STRING StringU;
+	ANSI_STRING StringA;
+	LONG ErrorCode = ERROR_SUCCESS;
+	DWORD NameLength;
+	DWORD ClassLength = 0;
+	DWORD BufferSize;
+	DWORD ResultSize;
+	HANDLE KeyHandle;
+	NTSTATUS Status;
+
+	DPRINT("RegEnumKeyExA(hKey 0x%x, dwIndex %d, lpName 0x%x, *lpcbName %d, lpClass 0x%x, lpcbClass %d)\n",
+		hKey, dwIndex, lpName, *lpcbName, lpClass, lpcbClass ? *lpcbClass : 0);
+
+	if ((lpClass) && (!lpcbClass))
 	{
-	  ClassLength = 0;
+		SetLastError (ERROR_INVALID_PARAMETER);
+		return ERROR_INVALID_PARAMETER;
 	}
 
-      /* The class name should start at a dword boundary */
-      BufferSize = ((sizeof(KEY_NODE_INFORMATION) + NameLength + 3) & ~3) + ClassLength;
-    }
-  else
-    {
-      BufferSize = sizeof(KEY_BASIC_INFORMATION) + NameLength;
-    }
-
-  KeyInfo = RtlAllocateHeap (ProcessHeap,
-			     0,
-			     BufferSize);
-  if (KeyInfo == NULL)
-    {
-      SetLastError (ERROR_OUTOFMEMORY);
-      return ERROR_OUTOFMEMORY;
-    }
-
-  Status = NtEnumerateKey (KeyHandle,
-			   (ULONG)dwIndex,
-			   lpClass == NULL ? KeyBasicInformation : KeyNodeInformation,
-			   KeyInfo,
-			   BufferSize,
-			   &ResultSize);
-  DPRINT("NtEnumerateKey() returned status 0x%X\n", Status);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError (Status);
-    }
-  else
-    {
-      if (lpClass == NULL)
+	Status = MapDefaultKey(&KeyHandle, hKey);
+	if (!NT_SUCCESS(Status))
 	{
-	  if (KeyInfo->Basic.NameLength > NameLength)
-	    {
-	      ErrorCode = ERROR_BUFFER_OVERFLOW;
-	    }
-	  else
-	    {
-	      StringU.Buffer = KeyInfo->Basic.Name;
-	      StringU.Length = KeyInfo->Basic.NameLength;
-	      StringU.MaximumLength = KeyInfo->Basic.NameLength;
-	    }
-	}
-      else
-	{
-	  if (KeyInfo->Node.NameLength > NameLength ||
-	      KeyInfo->Node.ClassLength > ClassLength)
-	    {
-	      ErrorCode = ERROR_BUFFER_OVERFLOW;
-	    }
-	  else
-	    {
-	      StringA.Buffer = lpClass;
-	      StringA.Length = 0;
-	      StringA.MaximumLength = *lpcbClass;
-	      StringU.Buffer = (PWCHAR)((ULONG_PTR)KeyInfo->Node.Name + KeyInfo->Node.ClassOffset);
-	      StringU.Length = KeyInfo->Node.ClassLength;
-	      StringU.MaximumLength = KeyInfo->Node.ClassLength;
-	      RtlUnicodeStringToAnsiString (&StringA, &StringU, FALSE);
-	      lpClass[StringA.Length] = 0;
-	      *lpcbClass = StringA.Length;
-	      StringU.Buffer = KeyInfo->Node.Name;
-	      StringU.Length = KeyInfo->Node.NameLength;
-	      StringU.MaximumLength = KeyInfo->Node.NameLength;
-	    }
+		ErrorCode = RtlNtStatusToDosError (Status);
+		SetLastError (ErrorCode);
+		return ErrorCode;
 	}
 
-      if (ErrorCode == ERROR_SUCCESS)
+	if (*lpcbName > 0)
 	{
-	  StringA.Buffer = lpName;
-	  StringA.Length = 0;
-	  StringA.MaximumLength = *lpcbName;
-	  RtlUnicodeStringToAnsiString (&StringA, &StringU, FALSE);
-	  lpName[StringA.Length] = 0;
-	  *lpcbName = StringA.Length;
-	  if (lpftLastWriteTime != NULL)
-	    {
-	      if (lpClass == NULL)
+		NameLength = min (*lpcbName - 1 , REG_MAX_NAME_SIZE) * sizeof (WCHAR);
+	}
+	else
+	{
+		NameLength = 0;
+	}
+
+	if (lpClass)
+	{
+		if (*lpcbClass > 0)
 		{
-		  lpftLastWriteTime->dwLowDateTime = KeyInfo->Basic.LastWriteTime.u.LowPart;
-		  lpftLastWriteTime->dwHighDateTime = KeyInfo->Basic.LastWriteTime.u.HighPart;
+			ClassLength = min (*lpcbClass -1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
 		}
-	      else
+		else
 		{
-		  lpftLastWriteTime->dwLowDateTime = KeyInfo->Node.LastWriteTime.u.LowPart;
-		  lpftLastWriteTime->dwHighDateTime = KeyInfo->Node.LastWriteTime.u.HighPart;
+			ClassLength = 0;
 		}
-	    }
+
+		/* The class name should start at a dword boundary */
+		BufferSize = ((sizeof(KEY_NODE_INFORMATION) + NameLength + 3) & ~3) + ClassLength;
 	}
-    }
+	else
+	{
+		BufferSize = sizeof(KEY_BASIC_INFORMATION) + NameLength;
+	}
 
-  DPRINT("Key Namea0 Length %d\n", StringU.Length);
-  DPRINT("Key Namea1 Length %d\n", NameLength);
-  DPRINT("Key Namea Length %d\n", *lpcbName);
-  DPRINT("Key Namea %s\n", lpName);
+	KeyInfo = RtlAllocateHeap (ProcessHeap, 0, BufferSize);
+	if (KeyInfo == NULL)
+	{
+		SetLastError (ERROR_OUTOFMEMORY);
+		return ERROR_OUTOFMEMORY;
+	}
 
-  RtlFreeHeap (ProcessHeap,
-	       0,
-	       KeyInfo);
+	Status = NtEnumerateKey (KeyHandle,
+								(ULONG)dwIndex,
+								lpClass == NULL ? KeyBasicInformation : KeyNodeInformation,
+								KeyInfo,
+								BufferSize,
+								&ResultSize);
+	DPRINT("NtEnumerateKey() returned status 0x%X\n", Status);
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode = RtlNtStatusToDosError (Status);
+	}
+	else
+	{
+		if (lpClass == NULL)
+		{
+			if (KeyInfo->Basic.NameLength > NameLength)
+			{
+				ErrorCode = ERROR_BUFFER_OVERFLOW;
+			}
+			else
+			{
+				StringU.Buffer = KeyInfo->Basic.Name;
+				StringU.Length = KeyInfo->Basic.NameLength;
+				StringU.MaximumLength = KeyInfo->Basic.NameLength;
+			}
+		}
+		else
+		{
+			if (KeyInfo->Node.NameLength > NameLength ||
+				KeyInfo->Node.ClassLength > ClassLength)
+			{
+				ErrorCode = ERROR_BUFFER_OVERFLOW;
+			}
+			else
+			{
+				StringA.Buffer = lpClass;
+				StringA.Length = 0;
+				StringA.MaximumLength = *lpcbClass;
+				StringU.Buffer = (PWCHAR)((ULONG_PTR)KeyInfo->Node.Name + KeyInfo->Node.ClassOffset);
+				StringU.Length = KeyInfo->Node.ClassLength;
+				StringU.MaximumLength = KeyInfo->Node.ClassLength;
+				RtlUnicodeStringToAnsiString (&StringA, &StringU, FALSE);
+				lpClass[StringA.Length] = 0;
+				*lpcbClass = StringA.Length;
+				StringU.Buffer = KeyInfo->Node.Name;
+				StringU.Length = KeyInfo->Node.NameLength;
+				StringU.MaximumLength = KeyInfo->Node.NameLength;
+			}
+		}
 
-  if (ErrorCode != ERROR_SUCCESS)
-    {
-      SetLastError(ErrorCode);
-    }
+		if (ErrorCode == ERROR_SUCCESS)
+		{
+			StringA.Buffer = lpName;
+			StringA.Length = 0;
+			StringA.MaximumLength = *lpcbName;
+			RtlUnicodeStringToAnsiString (&StringA, &StringU, FALSE);
+			lpName[StringA.Length] = 0;
+			*lpcbName = StringA.Length;
+			if (lpftLastWriteTime != NULL)
+			{
+				if (lpClass == NULL)
+				{
+					lpftLastWriteTime->dwLowDateTime = KeyInfo->Basic.LastWriteTime.u.LowPart;
+					lpftLastWriteTime->dwHighDateTime = KeyInfo->Basic.LastWriteTime.u.HighPart;
+				}
+				else
+				{
+					lpftLastWriteTime->dwLowDateTime = KeyInfo->Node.LastWriteTime.u.LowPart;
+					lpftLastWriteTime->dwHighDateTime = KeyInfo->Node.LastWriteTime.u.HighPart;
+				}
+			}
+		}
+	}
 
-  return ErrorCode;
+	DPRINT("Key Namea0 Length %d\n", StringU.Length);
+	DPRINT("Key Namea1 Length %d\n", NameLength);
+	DPRINT("Key Namea Length %d\n", *lpcbName);
+	DPRINT("Key Namea %s\n", lpName);
+
+	RtlFreeHeap (ProcessHeap,
+		0,
+		KeyInfo);
+
+	if (ErrorCode != ERROR_SUCCESS)
+	{
+		SetLastError(ErrorCode);
+	}
+
+	return ErrorCode;
 }
 
 
@@ -1174,161 +1171,222 @@ LONG STDCALL
 RegEnumValueA (HKEY hKey,
 	       DWORD dwIndex,
 	       LPSTR lpValueName,
-	       LPDWORD lpcbValueName,
+	       LPDWORD lpcbValueName, // lpValueName buffer len
 	       LPDWORD lpReserved,
 	       LPDWORD lpType,
 	       LPBYTE lpData,
-	       LPDWORD lpcbData)
+	       LPDWORD lpcbData) // lpData buffer len
 {
-  union
-  {
-    KEY_VALUE_FULL_INFORMATION Full;
-    KEY_VALUE_BASIC_INFORMATION Basic;
-  } *ValueInfo;
-
-  ULONG NameLength;
-  ULONG BufferSize;
-  ULONG DataLength = 0;
-  ULONG ResultSize;
-  HANDLE KeyHandle;
-  LONG ErrorCode;
-  NTSTATUS Status;
-  UNICODE_STRING StringU;
-  ANSI_STRING StringA;
-  BOOL IsStringType;
-
-  ErrorCode = ERROR_SUCCESS;
-
-  Status = MapDefaultKey (&KeyHandle,
-			  hKey);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError (Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
-    }
-
-  if (*lpcbValueName > 0)
-    {
-      NameLength = min (*lpcbValueName - 1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
-    }
-  else
-    {
-      NameLength = 0;
-    }
-
-  if (lpData)
-    {
-      DataLength = min (*lpcbData * sizeof(WCHAR), REG_MAX_DATA_SIZE);
-      BufferSize = ((sizeof(KEY_VALUE_FULL_INFORMATION) + NameLength + 3) & ~3) + DataLength;
-    }
-  else
-    {
-      BufferSize = sizeof(KEY_VALUE_BASIC_INFORMATION) + NameLength;
-    }
-
-  ValueInfo = RtlAllocateHeap (ProcessHeap,
-			       0,
-			       BufferSize);
-  if (ValueInfo == NULL)
-    {
-      SetLastError(ERROR_OUTOFMEMORY);
-      return ERROR_OUTOFMEMORY;
-    }
-
-  Status = NtEnumerateValueKey (KeyHandle,
-				(ULONG)dwIndex,
-				lpData ? KeyValueFullInformation : KeyValueBasicInformation,
-				ValueInfo,
-				BufferSize,
-				&ResultSize);
-
-  DPRINT("NtEnumerateValueKey() returned status 0x%X\n", Status);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError (Status);
-    }
-  else
-    {
-      if (lpData)
-        {
-	  IsStringType = (ValueInfo->Full.Type == REG_SZ) ||
-			 (ValueInfo->Full.Type == REG_MULTI_SZ) ||
-			 (ValueInfo->Full.Type == REG_EXPAND_SZ);
-	  if (ValueInfo->Full.NameLength > NameLength ||
-	      (!IsStringType && ValueInfo->Full.DataLength > *lpcbData) ||
-	      ValueInfo->Full.DataLength > DataLength)
-	    {
-	      ErrorCode = ERROR_BUFFER_OVERFLOW;
-	    }
-	  else
-	    {
-	      if (IsStringType)
-	        {
-		  StringU.Buffer = (PWCHAR)((ULONG_PTR)ValueInfo + ValueInfo->Full.DataOffset);
-		  StringU.Length = ValueInfo->Full.DataLength;
-		  StringU.MaximumLength = DataLength;
-		  StringA.Buffer = (PCHAR)lpData;
-		  StringA.Length = 0;
-		  StringA.MaximumLength = *lpcbData;
-		  RtlUnicodeStringToAnsiString (&StringA,
-						&StringU,
-						FALSE);
-		  *lpcbData = StringA.Length;
-		}
-	      else
-		{
-		  RtlCopyMemory (lpData,
-				 (PVOID)((ULONG_PTR)ValueInfo + ValueInfo->Full.DataOffset),
-				 ValueInfo->Full.DataLength);
-		  *lpcbData = ValueInfo->Full.DataLength;
-		}
-
-	      StringU.Buffer = ValueInfo->Full.Name;
-	      StringU.Length = ValueInfo->Full.NameLength;
-	      StringU.MaximumLength = NameLength;
-	    }
-	}
-      else
+	union
 	{
-	  if (ValueInfo->Basic.NameLength > NameLength)
-	    {
-	      ErrorCode = ERROR_BUFFER_OVERFLOW;
-	    }
-	  else
-	    {
-	      StringU.Buffer = ValueInfo->Basic.Name;
-	      StringU.Length = ValueInfo->Basic.NameLength;
-	      StringU.MaximumLength = NameLength;
-	    }
+		KEY_VALUE_FULL_INFORMATION Full;
+		KEY_VALUE_BASIC_INFORMATION	Basic;
+	} *ValueInfo;
+
+	ULONG NameLength;
+	ULONG BufferSize;
+	ULONG DataLength = 0;
+	ULONG ResultSize;
+	HANDLE KeyHandle;
+	LONG ErrorCode;
+	NTSTATUS Status;
+	UNICODE_STRING StringU;
+	ANSI_STRING	StringA;
+	BOOL IsStringType;
+
+	ErrorCode =	ERROR_SUCCESS;
+
+	Status = MapDefaultKey (&KeyHandle, hKey);
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode =	RtlNtStatusToDosError (Status);
+		SetLastError (ErrorCode);
+		return ErrorCode;
 	}
 
-      if (ErrorCode == ERROR_SUCCESS)
-        {
-	  StringA.Buffer = (PCHAR)lpValueName;
-	  StringA.Length = 0;
-	  StringA.MaximumLength = *lpcbValueName;
-	  RtlUnicodeStringToAnsiString (&StringA,
-					&StringU,
-					FALSE);
-	  StringA.Buffer[StringA.Length] = 0;
-	  *lpcbValueName = StringA.Length;
-	  if (lpType)
-	    {
-	      *lpType = lpData ? ValueInfo->Full.Type : ValueInfo->Basic.Type;
-	    }
+	if (*lpcbValueName > 0)
+		NameLength = min (*lpcbValueName - 1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
+	else
+		NameLength = 0;
+
+	if (lpData)
+	{
+		DataLength = min (*lpcbData	* sizeof(WCHAR), REG_MAX_DATA_SIZE);
+		BufferSize = ((sizeof(KEY_VALUE_FULL_INFORMATION) +	NameLength + 3)	& ~3) +	DataLength;
 	}
-    }
+	else
+	{
+		BufferSize = sizeof(KEY_VALUE_BASIC_INFORMATION) + NameLength;
+	}
 
-  RtlFreeHeap (ProcessHeap,
-	       0,
-	       ValueInfo);
-  if (ErrorCode != ERROR_SUCCESS)
-    {
-      SetLastError(ErrorCode);
-    }
+	ValueInfo =	RtlAllocateHeap	(ProcessHeap, 0, BufferSize);
+	if (ValueInfo == NULL)
+	{
+		SetLastError(ERROR_OUTOFMEMORY);
+		return ERROR_OUTOFMEMORY;
+	}
 
-  return ErrorCode;
+	Status = NtEnumerateValueKey (KeyHandle,
+		(ULONG)dwIndex,
+		lpData ? KeyValueFullInformation : KeyValueBasicInformation,
+		ValueInfo,
+		BufferSize,
+		&ResultSize);
+
+	DPRINT("NtEnumerateValueKey() returned status 0x%X\n", Status);
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode =	RtlNtStatusToDosError (Status);
+
+		// handle case when BufferSize was too small
+		// we must let caller know the minimum accepted size
+		// and value type
+		if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+		{
+			ErrorCode = ERROR_MORE_DATA;
+
+			// query now with the sufficient buffer size
+			RtlFreeHeap	(ProcessHeap, 0, ValueInfo);
+			BufferSize = ResultSize;
+			ValueInfo =	RtlAllocateHeap	(ProcessHeap, 0, BufferSize); // will be freed at the bottom, as usual
+			if (ValueInfo == NULL)
+			{
+				SetLastError(ERROR_OUTOFMEMORY);
+				return ERROR_OUTOFMEMORY;
+			}
+
+			Status = NtEnumerateValueKey (KeyHandle,
+										(ULONG)dwIndex,
+										lpData ? KeyValueFullInformation : KeyValueBasicInformation,
+										ValueInfo,
+										BufferSize,
+										&ResultSize);
+			if (!NT_SUCCESS(Status))
+			{
+				// ok, some other error
+				ErrorCode =	RtlNtStatusToDosError (Status);
+			}
+			else
+			{
+				// we have information now, pass it to the caller
+				// but don't touch valueName length here
+				IsStringType = (ValueInfo->Full.Type ==	REG_SZ)	||
+							(ValueInfo->Full.Type == REG_MULTI_SZ) ||
+							(ValueInfo->Full.Type == REG_EXPAND_SZ); //FIXME: Include REG_LINK ?
+
+				if (lpData)
+				{
+					if (lpcbData)
+					{
+						if (IsStringType)
+							*lpcbData = ValueInfo->Full.DataLength / sizeof(WCHAR);
+						else
+							*lpcbData = ValueInfo->Full.DataLength;
+					}
+				}
+
+				// pass type also
+				if (lpType)
+					*lpType	= lpData ? ValueInfo->Full.Type	: ValueInfo->Basic.Type;
+			}            
+		}
+	}
+	else
+	{
+		if (lpData)
+		{
+			IsStringType = (ValueInfo->Full.Type ==	REG_SZ)	||
+				(ValueInfo->Full.Type == REG_MULTI_SZ) ||
+				(ValueInfo->Full.Type == REG_EXPAND_SZ);
+			if (ValueInfo->Full.NameLength > NameLength	||
+				(!IsStringType && ValueInfo->Full.DataLength > *lpcbData) ||
+				ValueInfo->Full.DataLength > DataLength)
+			{
+				// overflow data
+				ErrorCode =	ERROR_MORE_DATA;
+
+				// return correct information for data length and type
+                if (lpcbData)
+				{
+					if (IsStringType)
+						*lpcbData = ValueInfo->Full.DataLength / sizeof(WCHAR);
+					else
+						*lpcbData = ValueInfo->Full.DataLength;
+				}
+
+				if (lpType)
+					*lpType	= ValueInfo->Full.Type;
+			}
+			else
+			{
+				if (IsStringType)
+				{
+					StringU.Buffer = (PWCHAR)((ULONG_PTR)ValueInfo + ValueInfo->Full.DataOffset);
+					StringU.Length = ValueInfo->Full.DataLength;
+					StringU.MaximumLength =	DataLength;
+					StringA.Buffer = (PCHAR)lpData;
+					StringA.Length = 0;
+					StringA.MaximumLength =	*lpcbData;
+					RtlUnicodeStringToAnsiString (&StringA,	&StringU, FALSE);
+					*lpcbData =	StringA.Length;
+				}
+				else
+				{
+					RtlCopyMemory (lpData,
+						(PVOID)((ULONG_PTR)ValueInfo + ValueInfo->Full.DataOffset),
+						ValueInfo->Full.DataLength);
+					*lpcbData =	ValueInfo->Full.DataLength;
+				}
+
+				StringU.Buffer = ValueInfo->Full.Name;
+				StringU.Length = ValueInfo->Full.NameLength;
+				StringU.MaximumLength =	NameLength;
+			}
+		}
+		else
+		{
+			if (ValueInfo->Basic.NameLength	> NameLength)
+			{
+				// overflow name
+				ErrorCode =	ERROR_MORE_DATA;
+
+				if (IsStringType)
+					*lpcbData = ValueInfo->Full.DataLength / sizeof(WCHAR);
+				else
+					*lpcbData = ValueInfo->Full.DataLength;
+
+				if (lpType)
+					*lpType	= ValueInfo->Basic.Type;
+			}
+			else
+			{
+				StringU.Buffer = ValueInfo->Basic.Name;
+				StringU.Length = ValueInfo->Basic.NameLength;
+				StringU.MaximumLength =	NameLength;
+			}
+		}
+
+		if (ErrorCode == ERROR_SUCCESS)
+		{
+			StringA.Buffer = (PCHAR)lpValueName;
+			StringA.Length = 0;
+			StringA.MaximumLength =	*lpcbValueName;
+			RtlUnicodeStringToAnsiString (&StringA,	&StringU, FALSE);
+			StringA.Buffer[StringA.Length] = 0;
+			*lpcbValueName = StringA.Length;
+			if (lpType)
+			{
+				*lpType	= lpData ? ValueInfo->Full.Type	: ValueInfo->Basic.Type;
+			}
+		}
+	}
+
+	RtlFreeHeap	(ProcessHeap, 0, ValueInfo);
+
+	if (ErrorCode != ERROR_SUCCESS)
+		SetLastError(ErrorCode);
+
+	return ErrorCode;
 }
 
 
@@ -1347,127 +1405,170 @@ RegEnumValueW (HKEY hKey,
 	       LPBYTE lpData,
 	       LPDWORD lpcbData)
 {
-  union
-  {
-    KEY_VALUE_FULL_INFORMATION Full;
-    KEY_VALUE_BASIC_INFORMATION Basic;
-  } *ValueInfo;
-
-  ULONG NameLength;
-  ULONG BufferSize;
-  ULONG DataLength = 0;
-  ULONG ResultSize;
-  HANDLE KeyHandle;
-  LONG ErrorCode;
-  NTSTATUS Status;
-
-  ErrorCode = ERROR_SUCCESS;
-
-  Status = MapDefaultKey (&KeyHandle,
-			  hKey);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError (Status);
-      SetLastError (ErrorCode);
-      return ErrorCode;
-    }
-
-  if (*lpcbValueName > 0)
-    {
-      NameLength = min (*lpcbValueName - 1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
-    }
-  else
-    {
-      NameLength = 0;
-    }
-
-  if (lpData)
-    {
-      DataLength = min(*lpcbData, REG_MAX_DATA_SIZE);
-      BufferSize = ((sizeof(KEY_VALUE_FULL_INFORMATION) + NameLength + 3) & ~3) + DataLength;
-    }
-  else
-    {
-      BufferSize = sizeof(KEY_VALUE_BASIC_INFORMATION) + NameLength;
-    }
-  ValueInfo = RtlAllocateHeap (ProcessHeap,
-			       0,
-			       BufferSize);
-  if (ValueInfo == NULL)
-    {
-      SetLastError (ERROR_OUTOFMEMORY);
-      return ERROR_OUTOFMEMORY;
-    }
-  Status = NtEnumerateValueKey (KeyHandle,
-				(ULONG)dwIndex,
-				lpData ? KeyValueFullInformation : KeyValueBasicInformation,
-				ValueInfo,
-				BufferSize,
-				&ResultSize);
-
-  DPRINT("NtEnumerateValueKey() returned status 0x%X\n", Status);
-  if (!NT_SUCCESS(Status))
-    {
-      ErrorCode = RtlNtStatusToDosError (Status);
-    }
-  else
-    {
-      if (lpData)
+	union
 	{
-	  if (ValueInfo->Full.DataLength > DataLength ||
-	      ValueInfo->Full.NameLength > NameLength)
-	    {
-	      ErrorCode = ERROR_BUFFER_OVERFLOW;
-	    }
-	  else
-	    {
-	      RtlCopyMemory (lpValueName,
-			     ValueInfo->Full.Name,
-			     ValueInfo->Full.NameLength);
-	      *lpcbValueName = (DWORD)(ValueInfo->Full.NameLength / sizeof(WCHAR));
-	      lpValueName[*lpcbValueName] = 0;
-	      RtlCopyMemory (lpData,
-			     (PVOID)((ULONG_PTR)ValueInfo + ValueInfo->Full.DataOffset),
-			     ValueInfo->Full.DataLength);
-	      *lpcbData = (DWORD)ValueInfo->Full.DataLength;
-	    }
-	}
-      else
+		KEY_VALUE_FULL_INFORMATION Full;
+		KEY_VALUE_BASIC_INFORMATION Basic;
+	} *ValueInfo;
+
+	ULONG NameLength;
+	ULONG BufferSize;
+	ULONG DataLength = 0;
+	ULONG ResultSize;
+	HANDLE KeyHandle;
+	LONG ErrorCode;
+	NTSTATUS Status;
+
+	ErrorCode = ERROR_SUCCESS;
+
+	Status = MapDefaultKey (&KeyHandle, hKey);
+	if (!NT_SUCCESS(Status))
 	{
-	  if (ValueInfo->Basic.NameLength > NameLength)
-	    {
-	      ErrorCode = ERROR_BUFFER_OVERFLOW;
-	    }
-	  else
-	    {
-	      RtlCopyMemory (lpValueName,
-			     ValueInfo->Basic.Name,
-			     ValueInfo->Basic.NameLength);
-	      *lpcbValueName = (DWORD)(ValueInfo->Basic.NameLength / sizeof(WCHAR));
-	      lpValueName[*lpcbValueName] = 0;
-	    }
-	  if (NULL != lpcbData)
-	    {
-	      *lpcbData = (DWORD)ValueInfo->Full.DataLength;
-	    }
+		ErrorCode = RtlNtStatusToDosError (Status);
+		SetLastError (ErrorCode);
+		return ErrorCode;
 	}
 
-      if (ErrorCode == ERROR_SUCCESS && lpType != NULL)
+	if (*lpcbValueName > 0)
+		NameLength = min (*lpcbValueName - 1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
+	else
+		NameLength = 0;
+
+	if (lpData)
 	{
-	  *lpType = lpData ? ValueInfo->Full.Type : ValueInfo->Basic.Type;
+		DataLength = min(*lpcbData, REG_MAX_DATA_SIZE);
+		BufferSize = ((sizeof(KEY_VALUE_FULL_INFORMATION) + NameLength + 3) & ~3) + DataLength;
 	}
-    }
+	else
+	{
+		BufferSize = sizeof(KEY_VALUE_BASIC_INFORMATION) + NameLength;
+	}
+	ValueInfo = RtlAllocateHeap (ProcessHeap, 0, BufferSize);
+	if (ValueInfo == NULL)
+	{
+		SetLastError (ERROR_OUTOFMEMORY);
+		return ERROR_OUTOFMEMORY;
+	}
+	Status = NtEnumerateValueKey (KeyHandle,
+		(ULONG)dwIndex,
+		lpData ? KeyValueFullInformation : KeyValueBasicInformation,
+		ValueInfo,
+		BufferSize,
+		&ResultSize);
 
-  RtlFreeHeap (ProcessHeap,
-	       0,
-	       ValueInfo);
+	DPRINT("NtEnumerateValueKey() returned status 0x%X\n", Status);
+	if (!NT_SUCCESS(Status))
+	{
+		ErrorCode = RtlNtStatusToDosError (Status);
 
-  if (ErrorCode != ERROR_SUCCESS)
-    {
-      SetLastError (ErrorCode);
-    }
+		// handle case when BufferSize was too small
+		// we must let caller know the minimum accepted size
+		// and value type
+		if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+		{
+			ErrorCode = ERROR_MORE_DATA;
 
-  return ErrorCode;
+			// query now with the sufficient buffer size
+			RtlFreeHeap	(ProcessHeap, 0, ValueInfo);
+			BufferSize = ResultSize;
+			ValueInfo =	RtlAllocateHeap	(ProcessHeap, 0, BufferSize); // will be freed at the bottom, as usual
+			if (ValueInfo == NULL)
+			{
+				SetLastError(ERROR_OUTOFMEMORY);
+				return ERROR_OUTOFMEMORY;
+			}
+
+			Status = NtEnumerateValueKey (KeyHandle,
+										(ULONG)dwIndex,
+										lpData ? KeyValueFullInformation : KeyValueBasicInformation,
+										ValueInfo,
+										BufferSize,
+										&ResultSize);
+			if (!NT_SUCCESS(Status))
+			{
+				// ok, some other error
+				ErrorCode =	RtlNtStatusToDosError (Status);
+			}
+			else
+			{
+				// we have information now, pass it to the caller
+				// but don't touch valueName length here
+				if (lpData && lpcbData)
+					*lpcbData = ValueInfo->Full.DataLength;
+
+				// pass type also
+				if (lpType)
+					*lpType	= lpData ? ValueInfo->Full.Type	: ValueInfo->Basic.Type;
+			}
+		}
+	}
+	else
+	{
+		if (lpData)
+		{
+			if (ValueInfo->Full.DataLength > DataLength ||
+				ValueInfo->Full.NameLength > NameLength)
+			{
+				// overflow data
+				ErrorCode =	ERROR_MORE_DATA;
+
+				// return correct information for data length and type
+                if (lpcbData)
+					*lpcbData = ValueInfo->Full.DataLength;
+
+				if (lpType)
+					*lpType	= ValueInfo->Full.Type;
+			}
+			else
+			{
+				RtlCopyMemory (lpValueName, ValueInfo->Full.Name, ValueInfo->Full.NameLength);
+				*lpcbValueName = (DWORD)(ValueInfo->Full.NameLength / sizeof(WCHAR));
+				lpValueName[*lpcbValueName] = 0;
+				RtlCopyMemory (lpData,
+					(PVOID)((ULONG_PTR)ValueInfo + ValueInfo->Full.DataOffset),
+					ValueInfo->Full.DataLength);
+				*lpcbData = (DWORD)ValueInfo->Full.DataLength;
+			}
+		}
+		else
+		{
+			if (ValueInfo->Basic.NameLength > NameLength)
+			{
+				// overflow name
+				ErrorCode =	ERROR_MORE_DATA;
+
+                if (lpcbData)
+					*lpcbData = ValueInfo->Full.DataLength;
+
+				if (lpType)
+					*lpType	= ValueInfo->Basic.Type;
+			}
+			else
+			{
+				RtlCopyMemory (lpValueName, ValueInfo->Basic.Name, ValueInfo->Basic.NameLength);
+				*lpcbValueName = (DWORD)(ValueInfo->Basic.NameLength / sizeof(WCHAR));
+				lpValueName[*lpcbValueName] = 0;
+			}
+
+			if (NULL != lpcbData)
+			{
+				*lpcbData = (DWORD)ValueInfo->Full.DataLength;
+				DPRINT1("BUG: Using ValueInfo as FULL when it is really BASIC\n");
+			}
+		}
+
+		if (ErrorCode == ERROR_SUCCESS && lpType != NULL)
+		{
+			*lpType = lpData ? ValueInfo->Full.Type : ValueInfo->Basic.Type;
+		}
+	}
+
+	RtlFreeHeap (ProcessHeap, 0, ValueInfo);
+
+	if (ErrorCode != ERROR_SUCCESS)
+		SetLastError (ErrorCode);
+
+	return ErrorCode;
 }
 
 
@@ -1741,7 +1842,7 @@ RegOpenKeyA (HKEY hKey,
     {
       ErrorCode = RtlNtStatusToDosError (Status);
       SetLastError (ErrorCode);
-      return ErrorCode;
+      return Status;
     }
 
   RtlCreateUnicodeStringFromAsciiz (&SubKeyString,
@@ -1796,7 +1897,7 @@ RegOpenKeyW (HKEY hKey,
     {
       ErrorCode = RtlNtStatusToDosError (Status);
       SetLastError (ErrorCode);
-      return ErrorCode;
+      return Status;
     }
 
   RtlInitUnicodeString (&SubKeyString,
