@@ -35,6 +35,7 @@ IDI_MAINICON            ICON    DISCARDABLE     "resources/config.ico"
  * a neutral version. This is to get localized bitmaps for example.
  */
 
+#include "Cz.rc"
 #include "En.rc"
 #include "De.rc"
 #include "Dk.rc"

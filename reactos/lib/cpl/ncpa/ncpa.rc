@@ -22,6 +22,7 @@ IDI_HORIZONTAL ICON "resources/HORIZ.ICO"
 IDI_VERTICAL ICON "resources/VERTIC.ICO"
 IDI_NETSTAT ICON "resources/NETCONN.ICO"
 
+#include "cz.rc"
 #include "en.rc"
 #include "de.rc"
 #include "dk.rc"
