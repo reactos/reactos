@@ -152,10 +152,13 @@ IntVideoPortAllocateDeviceNumber(VOID)
          DeviceNumber++;
          continue;
       }
-      else if (Status == STATUS_NOT_FOUND || Status == STATUS_UNSUCCESSFUL)
+      else if (Status == STATUS_OBJECT_NAME_INVALID)
          break;
       else
+      {
+         DPRINT1("ZwOpenSymbolicLinkObject() returned unexpected status: 0x%08lx\n", Status);
          return 0xFFFFFFFF;
+      }
    }
 
    return DeviceNumber;
