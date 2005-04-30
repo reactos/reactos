@@ -350,12 +350,28 @@ STRING_PROMPT_HELP2, "  $+   Displays the current depth of the directory stack"
 
 STRING_PROMPT_HELP3, "\nType PROMPT without parameters to reset the prompt to the default setting."
 
+STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
 STRING_RMDIR_HELP,   "Removes a directory.\n\n \
 RMDIR [drive:]path\nRD [drive:]path"  
 
-STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
+STRING_SHIFT_HELP, "Changes the position of replaceable parameters in a batch file.\n\n \
+SHIFT [DOWN]"
 
+STRING_SCREEN_HELP, "move cursor and optionally print text\n\n \
+SCREEN row col [text]\n\n \
+  row         row to wich move the cursor\n \
+  col         column to wich move the cursor"
+
+STRING_SET_HELP, "Displays, sets, or removes environment variables.\n\n \
+SET [variable[=][string]]\n\n \
+  variable  Specifies the environment-variable name.\n \
+  string    Specifies a series of characters to assign to the variable.\n\n \
+Type SET without parameters to display the current environment variables.\n"
+
+STRING_TITLE_HELP, "Sets the window title for the command prompt window.\n\n \
+TITLE [string]\n\n \
+string       Specifies the title for the command prompt window."
 
 	            
 

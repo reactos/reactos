@@ -6,10 +6,13 @@
  * 30 Aug 1999
  *     started - Paolo Pantaleo <paolopan@freemail.it>
  *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  *
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_SCREEN
 
@@ -18,16 +21,13 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 {
 	SHORT x,y;
 	BOOL bSkipText = FALSE;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T(
-		              "move cursor and optionally print text\n"
-		              "\n"
-		              "SCREEN row col [text]\n"
-		              "\n"
-		              "  row         row to wich move the cursor\n"
-		              "  col         column to wich move the cursor"));
+		LoadString( GetModuleHandle(NULL), STRING_SCREEN_HELP, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts((LPTSTR)szMsg);	
+
 		return 0;
 	}
 

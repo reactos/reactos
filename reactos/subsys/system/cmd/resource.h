@@ -156,9 +156,17 @@
 #define STRING_PROMPT_HELP2                668
 #define STRING_PROMPT_HELP3                669
 
-#define STRING_RMDIR_HELP                  670
+#define STRING_REM_HELP                    670
 
-#define STRING_REM_HELP                    671
+#define STRING_RMDIR_HELP                  671
+
+#define STRING_SCREEN_HELP                 672
+
+#define STRING_SHIFT_HELP                  673
+
+#define STRING_SET_HELP                    674
+
+#define STRING_TITLE_HELP                  675
 
 
 
