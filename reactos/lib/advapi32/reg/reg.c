@@ -1293,11 +1293,11 @@ RegEnumValueA (HKEY hKey,
 	}
 	else
 	{
-		if (lpData)
-		{
-			IsStringType = (ValueInfo->Full.Type ==	REG_SZ)	||
+		IsStringType = (ValueInfo->Full.Type ==	REG_SZ)	||
 				(ValueInfo->Full.Type == REG_MULTI_SZ) ||
 				(ValueInfo->Full.Type == REG_EXPAND_SZ);
+                if (lpData)
+		{
 			if (ValueInfo->Full.NameLength > NameLength	||
 				(!IsStringType && ValueInfo->Full.DataLength > *lpcbData) ||
 				ValueInfo->Full.DataLength > DataLength)
