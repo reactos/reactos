@@ -895,7 +895,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
     * immediately.
     */
    Status = IofCallDriver(FileObject->DeviceObject, Irp );
-   DPRINT1("Status :%x\n", Status);
+   DPRINT("Status :%x\n", Status);
    
    if (Status == STATUS_PENDING)
      {
