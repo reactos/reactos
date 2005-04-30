@@ -837,6 +837,8 @@ IoSetDeviceInterfaceState(
       &GuidString,
       (PVOID)SymbolicLinkName);
    
+   ObDereferenceObject(FileObject);
+   
    return STATUS_SUCCESS;
 }
 
