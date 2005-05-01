@@ -62,7 +62,7 @@
 typedef struct
 {
 	UCHAR		JumpBoot[3];			// Jump to the boot loader routine
-	UCHAR		SystemId[8];			// System Id ("NTFS    ")
+	CHAR		SystemId[8];			// System Id ("NTFS    ")
 	USHORT		BytesPerSector;			// Bytes per sector
 	UCHAR		SectorsPerCluster;		// Number of sectors in a cluster
 	UCHAR		Unused1[7];
@@ -219,7 +219,7 @@ typedef struct
 } PACKED NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 
 BOOL	NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector);
-FILE*	NtfsOpenFile(PUCHAR FileName);
+FILE*	NtfsOpenFile(PCHAR FileName);
 BOOL	NtfsReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG	NtfsGetFileSize(FILE *FileHandle);
 VOID	NtfsSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);

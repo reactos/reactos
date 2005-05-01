@@ -315,6 +315,7 @@ DefWndStartSizeMove(HWND hWnd, WPARAM wParam, POINT *capturePoint)
     }
   else  /* SC_SIZE */
     {
+      pt.x = pt.y = 0;
       while(!hittest)
 	{
 	  if (GetMessageW(&msg, NULL, 0, 0) <= 0)

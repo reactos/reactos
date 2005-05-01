@@ -189,9 +189,9 @@ void adns__querysend_tcp(adns_query qu, struct timeval now) {
   if (ads->tcpsend.used) {
     wr= 0;
   } else {
-    iov[0].iov_base= length;
+    iov[0].iov_base= (char*)length;
     iov[0].iov_len= 2;
-    iov[1].iov_base= qu->query_dgram;
+    iov[1].iov_base= (char*)qu->query_dgram;
     iov[1].iov_len= qu->query_dglen;
     adns__sigpipe_protect(qu->ads);
     wr= writev(qu->ads->tcpsocket,iov,2);
@@ -251,7 +251,7 @@ void adns__query_send(adns_query qu, struct timeval now) {
   servaddr.sin_port= htons(DNS_PORT);
   
   ADNS_CLEAR_ERRNO;
-  r= sendto(ads->udpsocket,qu->query_dgram,qu->query_dglen,0,
+  r= sendto(ads->udpsocket,(char*)qu->query_dgram,qu->query_dglen,0,
 	    (const struct sockaddr*)&servaddr,sizeof(servaddr));
   ADNS_CAPTURE_ERRNO;
   if (r<0 && errno == EMSGSIZE) { qu->retries= 0; query_usetcp(qu,now); return; }

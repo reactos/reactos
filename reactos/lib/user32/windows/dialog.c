@@ -632,6 +632,13 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
         result->faceName = (LPCWSTR)p;
         p += wcslen( result->faceName ) + 1;
     }
+    else
+    {
+        result->pointSize = 0;
+        result->weight = FW_DONTCARE;
+        result->italic = FALSE;
+        result->faceName = NULL;
+    }
 
     /* First control is on dword boundary */
     return (LPCSTR)((((int)p) + 3) & ~3);

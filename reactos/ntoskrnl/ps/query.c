@@ -466,6 +466,8 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
             else
             {
               PWSTR StrSource = NULL;
+              
+              RtlZeroMemory(&LocalDest, sizeof(LocalDest));
 
               /* create a DstPath structure on the stack */
               _SEH_TRY
@@ -804,6 +806,8 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       {
         PROCESS_SESSION_INFORMATION SessionInfo;
         Status = STATUS_SUCCESS;
+        
+        RtlZeroMemory(&SessionInfo, sizeof(SessionInfo));
         
         _SEH_TRY
         {

@@ -34,12 +34,12 @@ typedef struct _REG_KEY
   ULONG ValueCount;
 
   ULONG NameSize;
-  PUCHAR Name;
+  PCHAR Name;
 
   /* default data */
   ULONG DataType;
   ULONG DataSize;
-  PUCHAR Data;
+  PCHAR Data;
 } KEY, *FRLDRHKEY, **PFRLDRHKEY;
 
 
@@ -49,12 +49,12 @@ typedef struct _REG_VALUE
 
   /* value name */
   ULONG NameSize;
-  PUCHAR Name;
+  PCHAR Name;
 
   /* value data */
   ULONG DataType;
   ULONG DataSize;
-  PUCHAR Data;
+  PCHAR Data;
 } VALUE, *PVALUE;
 
 
@@ -217,7 +217,7 @@ LONG
 RegSetValue(FRLDRHKEY Key,
 	    PCHAR ValueName,
 	    ULONG Type,
-	    PUCHAR Data,
+	    PCHAR Data,
 	    ULONG DataSize);
 
 LONG

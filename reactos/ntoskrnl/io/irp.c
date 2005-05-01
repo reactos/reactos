@@ -159,16 +159,23 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
                 IoFreeIrp(Irp);
                 return EXCEPTION_CONTINUE_SEARCH;
              } 
-            _SEH_TRY_FILTER(FreeAndGoOn) 
+            _SEH_TRY
             {
                 /* Do the probe */
                 MmProbeAndLockPages(Irp->MdlAddress, KernelMode, AccessType);
             }
             _SEH_HANDLE
             {
-                return NULL;
+                /* Free the IRP and its MDL */
+                IoFreeMdl(Irp->MdlAddress);
+                IoFreeIrp(Irp);
+                /* FIXME - pass the exception to the caller? */
+                Irp = NULL;
             }
             _SEH_END;
+            
+            if (!Irp)
+                return NULL;
         } 
         else
         {
@@ -197,6 +204,7 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
     return Irp;
 }
 
+
 /*
  * @implemented
  *
@@ -216,9 +224,9 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
  * RETURNS: The IRP allocated on success, or
  *          NULL on failure
  */
-PIRP 
+PIRP
 STDCALL
-IoBuildDeviceIoControlRequest(ULONG IoControlCode,
+IoBuildDeviceIoControlRequest (ULONG IoControlCode,
                               PDEVICE_OBJECT DeviceObject,
                               PVOID InputBuffer,
                               ULONG InputBufferLength,
@@ -239,17 +247,17 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
            "Event %x, IoStatusBlock %x\n",IoControlCode,DeviceObject,
            InputBuffer,InputBufferLength,OutputBuffer,OutputBufferLength,
            InternalDeviceIoControl,Event,IoStatusBlock);
-   
+
     /* Allocate IRP */
     if (!(Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE))) return Irp;
-   
+
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
-    
+
     /* Set the DevCtl Type */
-    StackPtr->MajorFunction = InternalDeviceIoControl ? 
+    StackPtr->MajorFunction = InternalDeviceIoControl ?
                               IRP_MJ_INTERNAL_DEVICE_CONTROL : IRP_MJ_DEVICE_CONTROL;
-   
+
     /* Set the IOCTL Data */
     StackPtr->Parameters.DeviceIoControl.IoControlCode = IoControlCode;
     StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferLength;
@@ -260,16 +268,16 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
     {
         case METHOD_BUFFERED:
         DPRINT("Using METHOD_BUFFERED!\n");
-      
+
         /* Select the right Buffer Length */
         BufferLength = InputBufferLength > OutputBufferLength ? InputBufferLength : OutputBufferLength;
-        
+
         /* Make sure there is one */
         if (BufferLength)
         {
             /* Allocate the System Buffer */
-            Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool, 
-                                                                    BufferLength, 
+            Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                                    BufferLength,
                                                                     TAG_SYS_BUF);
 
             /* Fail if we couldn't */
@@ -278,20 +286,20 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
                 IoFreeIrp(Irp);
                 return(NULL);
             }
-          
+
             /* Check if we got a buffer */
             if (InputBuffer)
             {
                 /* Copy into the System Buffer */
-                RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, 
-                              InputBuffer, 
+                RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                              InputBuffer,
                               InputBufferLength);
             }
-        
+
             /* Write the flags */
             Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
             if (OutputBuffer) Irp->Flags |= IRP_INPUT_OPERATION;
-            
+
             /* Save the Buffer */
             Irp->UserBuffer = OutputBuffer;
         }
@@ -311,8 +319,8 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
         if (InputBuffer)
         {
             /* Allocate the System Buffer */
-            Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool, 
-                                                                    InputBufferLength, 
+            Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                                    InputBufferLength,
                                                                     TAG_SYS_BUF);
 
             /* Fail if we couldn't */
@@ -321,12 +329,12 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
                 IoFreeIrp(Irp);
                 return(NULL);
             }
-            
+
             /* Copy into the System Buffer */
-            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, 
-                          InputBuffer, 
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                          InputBuffer,
                           InputBufferLength);
-        
+
             /* Write the flags */
             Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
         }
@@ -334,7 +342,7 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
         {
             Irp->Flags = 0;
         }
-        
+
         /* Check if we got an output buffer */
         if (OutputBuffer)
         {
@@ -351,16 +359,9 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
                 IoFreeIrp(Irp);
                 return NULL;
             }
-            
+
             /* Probe and Lock */
-            _SEH_FILTER(FreeAndGoOn) 
-            {
-                /* Free the MDL and IRP */
-                IoFreeMdl(Irp->MdlAddress);
-                IoFreeIrp(Irp);
-                return EXCEPTION_CONTINUE_SEARCH;
-            } 
-            _SEH_TRY_FILTER(FreeAndGoOn) 
+            _SEH_TRY
             {
                 /* Use the right Access Type */
                 if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_IN_DIRECT)
@@ -371,15 +372,22 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
                 {
                     AccessType = IoWriteAccess;
                 }
-                
+
                 /* Do the probe */
                 MmProbeAndLockPages(Irp->MdlAddress, KernelMode, AccessType);
             }
             _SEH_HANDLE
             {
-                return NULL;
+                /* Free the MDL and IRP */
+                IoFreeMdl(Irp->MdlAddress);
+                IoFreeIrp(Irp);
+                /* FIXME - pass the exception to the caller? */
+                Irp = NULL;
             }
             _SEH_END;
+            
+            if (!Irp)
+                return NULL;
         }
         break;
 
@@ -390,7 +398,7 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
         StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
         break;
     }
-    
+
     /* Now write the Event and IoSB */
     if (!IoStatusBlock) KEBUGCHECK(0); /* Temporary to catch illegal ROS Drivers */
     Irp->UserIosb = IoStatusBlock;
@@ -399,7 +407,7 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
     /* Sync IRPs are queued to requestor thread's irp cancel/cleanup list */
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IoQueueThreadIrp(Irp);
-    
+
     /* Return the IRP */
     return Irp;
 }

@@ -1755,7 +1755,7 @@ char *prep_nid_for_label(const name_id_t *nid)
 
 	if(nid->type == name_str && nid->name.s_name->type == str_unicode)
 	{
-		short *sptr;
+		WCHAR *sptr;
 		int i;
 		sptr = nid->name.s_name->str.wstr;
 		buf[0] = '\0';

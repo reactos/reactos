@@ -68,7 +68,7 @@ PCHAR RegReadString( HKEY Root, PCHAR Subkey, PCHAR Value ) {
     DH_DbgPrint(MID_TRACE,("Got Key %x\n", ValueKey));
 
     if( (Error = RegQueryValueEx( ValueKey, Value, NULL, NULL, 
-                                  SubOut, &SubOutLen )) != ERROR_SUCCESS ) 
+                                  (LPBYTE)SubOut, &SubOutLen )) != ERROR_SUCCESS )
         goto regerror;
 
     DH_DbgPrint(MID_TRACE,("Value %s has size %d\n", Value, SubOutLen));
@@ -77,7 +77,7 @@ PCHAR RegReadString( HKEY Root, PCHAR Subkey, PCHAR Value ) {
         goto regerror;
 
     if( (Error = RegQueryValueEx( ValueKey, Value, NULL, NULL,
-                                  SubOut, &SubOutLen )) != ERROR_SUCCESS )
+                                  (LPBYTE)SubOut, &SubOutLen )) != ERROR_SUCCESS )
         goto regerror;
 
     DH_DbgPrint(MID_TRACE,("Value %s is %s\n", Value, SubOut));
@@ -159,7 +159,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     MIB_IPFORWARDROW DefGatewayRow;
 
     Adapter->DhclientState.config = &Adapter->DhclientConfig;
-    strncpy(Adapter->DhclientInfo.name, Adapter->IfMib.bDescr,
+    strncpy(Adapter->DhclientInfo.name, (char*)Adapter->IfMib.bDescr,
             sizeof(Adapter->DhclientInfo.name));
 
     AdapterKey = FindAdapterKey( Adapter );

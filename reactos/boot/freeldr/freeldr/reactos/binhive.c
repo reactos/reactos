@@ -178,7 +178,7 @@ typedef struct _KEY_CELL
   USHORT ClassSize;
 
   /* Name of key (not zero terminated) */
-  UCHAR  Name[0];
+  CHAR  Name[0];
 } __attribute__((packed)) KEY_CELL, *PKEY_CELL;
 
 
@@ -223,7 +223,7 @@ typedef struct _VALUE_CELL
   ULONG  DataType;
   USHORT  Flags;
   USHORT Unused1;
-  UCHAR  Name[0]; /* warning : not zero terminated */
+  CHAR  Name[0]; /* warning : not zero terminated */
 } __attribute__((packed)) VALUE_CELL, *PVALUE_CELL;
 
 /* VALUE_CELL.Flags constants */
@@ -237,7 +237,7 @@ typedef struct _VALUE_CELL
 typedef struct _DATA_CELL
 {
   LONG  CellSize;
-  UCHAR  Data[0];
+  CHAR  Data[0];
 } __attribute__((packed)) DATA_CELL, *PDATA_CELL;
 
 
@@ -1018,7 +1018,7 @@ CmiExportValue (PREGISTRY_HIVE Hive,
   ULONG SrcDataSize;
   ULONG DstDataSize;
   ULONG DataType;
-  PUCHAR Data;
+  PCHAR Data;
   BOOL Expand = FALSE;
 
   DbgPrint((DPRINT_REGISTRY, "CmiExportValue('%s') called\n",
@@ -1398,7 +1398,7 @@ RegImportValue (PHBIN RootBin,
       Error = RegSetValue(Key,
 			  cName,
 			  ValueCell->DataType,
-			  (PUCHAR)&ValueCell->DataOffset,
+			  (PCHAR)&ValueCell->DataOffset,
 			  DataSize);
       if (Error != ERROR_SUCCESS)
 	{
@@ -1441,7 +1441,7 @@ RegImportValue (PHBIN RootBin,
 	  Error = RegSetValue (Key,
 			       cName,
 			       ValueCell->DataType,
-			       (PUCHAR)DataCell->Data,
+			       DataCell->Data,
 			       DataSize);
 	}
       if (Error != ERROR_SUCCESS)

@@ -28,7 +28,7 @@
 #include <video.h>
 
 
-BOOL TuiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOL TuiDisplayMenu(PCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	TUI_MENU_INFO	MenuInformation;
 	ULONG		LastClockSecond;
@@ -216,8 +216,8 @@ VOID TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 
 VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 {
-	UCHAR	MenuLineText[80];
-	UCHAR	TempString[80];
+	CHAR	MenuLineText[80];
+	CHAR	TempString[80];
 	ULONG		Idx;
 
 	//
@@ -265,7 +265,7 @@ VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber)
 {
 	ULONG		Idx;
-	UCHAR	MenuLineText[80];
+	CHAR	MenuLineText[80];
 	ULONG		SpaceTotal;
 	ULONG		SpaceLeft;
 	ULONG		SpaceRight;

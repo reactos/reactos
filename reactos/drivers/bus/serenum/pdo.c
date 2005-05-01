@@ -157,7 +157,7 @@ SerenumPdoPnp(
 				}
 				case TargetDeviceRelation:
 				{
-					PDEVICE_RELATIONS DeviceRelations;
+					PDEVICE_RELATIONS DeviceRelations = NULL;
 					DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / TargetDeviceRelation\n");
 					Status = SerenumPdoQueryDeviceRelations(DeviceObject, &DeviceRelations);
 					Information = (ULONG_PTR)DeviceRelations;

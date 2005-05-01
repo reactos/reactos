@@ -24,18 +24,18 @@
 #include <mm.h>
 #include <ui.h>
 
-BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer)
+BOOL InitOperatingSystemList(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer)
 {
 	ULONG		Idx;
 	ULONG		CurrentOperatingSystemIndex;
-	UCHAR	SettingName[260];
-	UCHAR	SettingValue[260];
+	CHAR	SettingName[260];
+	CHAR	SettingValue[260];
 	ULONG		OperatingSystemCount;
 	ULONG		SectionId;
 	ULONG		OperatingSystemSectionId;
 	ULONG		SectionSettingCount;
-	PUCHAR	*OperatingSystemSectionNames;
-	PUCHAR	*OperatingSystemDisplayNames;
+	PCHAR	*OperatingSystemSectionNames;
+	PCHAR	*OperatingSystemDisplayNames;
 
 	//
 	// Open the [FreeLoader] section
@@ -88,8 +88,8 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 ULONG CountOperatingSystems(ULONG SectionId)
 {
 	ULONG		Idx;
-	UCHAR	SettingName[260];
-	UCHAR	SettingValue[260];
+	CHAR	SettingName[260];
+	CHAR	SettingValue[260];
 	ULONG		OperatingSystemCount = 0;
 	ULONG		SectionSettingCount;
 	
@@ -115,17 +115,17 @@ ULONG CountOperatingSystems(ULONG SectionId)
 	return OperatingSystemCount;
 }
 
-BOOL AllocateListMemory(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, ULONG OperatingSystemCount)
+BOOL AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount)
 {
 	ULONG		Idx;
-	PUCHAR	*OperatingSystemSectionNames = NULL;
-	PUCHAR	*OperatingSystemDisplayNames = NULL;
+	PCHAR	*OperatingSystemSectionNames = NULL;
+	PCHAR	*OperatingSystemDisplayNames = NULL;
 
 	//
 	// Allocate memory to hold operating system list arrays
 	//
-	OperatingSystemSectionNames = (PUCHAR*) MmAllocateMemory( sizeof(PUCHAR) * OperatingSystemCount);
-	OperatingSystemDisplayNames = (PUCHAR*) MmAllocateMemory( sizeof(PUCHAR) * OperatingSystemCount);
+	OperatingSystemSectionNames = MmAllocateMemory( sizeof(PCHAR) * OperatingSystemCount);
+	OperatingSystemDisplayNames = MmAllocateMemory( sizeof(PCHAR) * OperatingSystemCount);
 	
 	//
 	// If either allocation failed then return FALSE
@@ -148,16 +148,16 @@ BOOL AllocateListMemory(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPoint
 	//
 	// Clear our newly allocated memory
 	//
-	memset(OperatingSystemSectionNames, 0, sizeof(PUCHAR) * OperatingSystemCount);
-	memset(OperatingSystemDisplayNames, 0, sizeof(PUCHAR) * OperatingSystemCount);
+	memset(OperatingSystemSectionNames, 0, sizeof(PCHAR) * OperatingSystemCount);
+	memset(OperatingSystemDisplayNames, 0, sizeof(PCHAR) * OperatingSystemCount);
 
 	//
 	// Loop through each array element and allocate it's string memory
 	//
 	for (Idx=0; Idx<OperatingSystemCount; Idx++)
 	{
-		OperatingSystemSectionNames[Idx] = (PUCHAR) MmAllocateMemory(80);
-		OperatingSystemDisplayNames[Idx] = (PUCHAR) MmAllocateMemory(80);
+		OperatingSystemSectionNames[Idx] = MmAllocateMemory(80);
+		OperatingSystemDisplayNames[Idx] = MmAllocateMemory(80);
 
 		//
 		// If it failed then jump to the cleanup code
@@ -200,9 +200,9 @@ AllocateListMemoryFailed:
 	return FALSE;
 }
 
-BOOL RemoveQuotes(PUCHAR QuotedString)
+BOOL RemoveQuotes(PCHAR QuotedString)
 {
-	UCHAR	TempString[200];
+	CHAR	TempString[200];
 
 	//
 	// If this string is not quoted then return FALSE

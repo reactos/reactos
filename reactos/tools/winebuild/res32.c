@@ -205,7 +205,7 @@ static void load_next_resource( DLLSPEC *spec )
     get_dword();                        /* skip version */
     get_dword();                        /* skip characteristics */
 
-    file_pos = (const char *)res->data + res->data_size;
+    file_pos = (const unsigned char *)res->data + res->data_size;
     if (file_pos > file_end) fatal_error( "%s is a truncated file\n", file_name );
 }
 

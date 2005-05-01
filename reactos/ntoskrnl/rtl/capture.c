@@ -34,6 +34,8 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
   
   if(CurrentMode == UserMode)
   {
+    RtlZeroMemory(&Src, sizeof(Src));
+    
     _SEH_TRY
     {
       ProbeForRead(UnsafeSrc,

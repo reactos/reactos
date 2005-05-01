@@ -44,21 +44,21 @@ ULONG			SetupSectorSize = 0;
 BOOL			NewStyleLinuxKernel = FALSE;
 ULONG			LinuxKernelSize = 0;
 ULONG			LinuxInitrdSize = 0;
-UCHAR			LinuxKernelName[260];
-UCHAR			LinuxInitrdName[260];
+CHAR			LinuxKernelName[260];
+CHAR			LinuxInitrdName[260];
 BOOL			LinuxHasInitrd = FALSE;
-UCHAR			LinuxCommandLine[260] = "";
+CHAR			LinuxCommandLine[260] = "";
 ULONG			LinuxCommandLineSize = 0;
 PVOID			LinuxKernelLoadAddress = NULL;
 PVOID			LinuxInitrdLoadAddress = NULL;
-UCHAR			LinuxBootDescription[80];
-UCHAR			LinuxBootPath[260] = "";
+CHAR			LinuxBootDescription[80];
+CHAR			LinuxBootPath[260] = "";
 
-VOID LoadAndBootLinux(PUCHAR OperatingSystemName, PUCHAR Description)
+VOID LoadAndBootLinux(PCHAR OperatingSystemName, PCHAR Description)
 {
 	PFILE	LinuxKernel = NULL;
 	PFILE	LinuxInitrdFile = NULL;
-	UCHAR	TempString[260];
+	CHAR	TempString[260];
 
 	UiDrawBackdrop();
 
@@ -224,9 +224,9 @@ LinuxBootFailed:
 	LinuxCommandLineSize = 0;
 }
 
-BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
+BOOL LinuxParseIniSection(PCHAR OperatingSystemName)
 {
-	UCHAR	SettingName[260];
+	CHAR	SettingName[260];
 	ULONG	SectionId;
 
 	// Find all the message box settings and run them
@@ -375,7 +375,7 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 {
 	ULONG		BytesLoaded;
-	UCHAR	StatusText[260];
+	CHAR	StatusText[260];
 	PVOID	LoadAddress;
 
 	sprintf(StatusText, "Loading %s", LinuxKernelName);
@@ -448,7 +448,7 @@ BOOL LinuxCheckKernelVersion(VOID)
 BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 {
 	ULONG		BytesLoaded;
-	UCHAR	StatusText[260];
+	CHAR	StatusText[260];
 
 	sprintf(StatusText, "Loading %s", LinuxInitrdName);
 	UiDrawStatusText(StatusText);

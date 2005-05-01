@@ -49,7 +49,7 @@ typedef struct _DHCP_ADAPTER {
     struct client_config DhclientConfig;
     struct sockaddr_in ListenAddr;
     unsigned int BindStatus;
-    char recv_buf[1];
+    unsigned char recv_buf[1];
 } DHCP_ADAPTER, *PDHCP_ADAPTER;
 
 #include <rosdhcp_public.h>

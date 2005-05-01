@@ -41,7 +41,7 @@
 
 #ifndef ASM
 
-PUCHAR	GetFreeLoaderVersionString(VOID);
+PCHAR	GetFreeLoaderVersionString(VOID);
 
 #endif // ASM
 

@@ -178,7 +178,7 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
       Error = RegSetValue(TableKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PUCHAR)"PCI Real-mode IRQ Routing Table",
+			  "PCI Real-mode IRQ Routing Table",
 			  32);
       if (Error != ERROR_SUCCESS)
 	{
@@ -216,7 +216,7 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
       Error = RegSetValue(TableKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PUCHAR) FullResourceDescriptor,
+			  (PCHAR) FullResourceDescriptor,
 			  Size);
       MmFreeMemory(FullResourceDescriptor);
       if (Error != ERROR_SUCCESS)
@@ -272,7 +272,7 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
       Error = RegSetValue(BiosKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PUCHAR)"PCI BIOS",
+			  "PCI BIOS",
 			  9);
       if (Error != ERROR_SUCCESS)
 	{
@@ -301,7 +301,7 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
       Error = RegSetValue(BiosKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PUCHAR) FullResourceDescriptor,
+			  (PCHAR) FullResourceDescriptor,
 			  Size);
       MmFreeMemory(FullResourceDescriptor);
       if (Error != ERROR_SUCCESS)

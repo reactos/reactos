@@ -405,22 +405,22 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	return DirectoryBuffer;
 }
 
-BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	ULONG		EntryCount;
 	ULONG		CurrentEntry;
 	PDIRENTRY	DirEntry;
 	PLFN_DIRENTRY	LfnDirEntry;
-	UCHAR		LfnNameBuffer[265];
-	UCHAR		ShortNameBuffer[20];
+	CHAR		LfnNameBuffer[265];
+	CHAR		ShortNameBuffer[20];
 	ULONG		StartCluster;
 
 	EntryCount = DirectorySize / sizeof(DIRENTRY);
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x EntryCount = %d FileName = %s\n", DirectoryBuffer, EntryCount, FileName));
 
-	memset(ShortNameBuffer, 0, 13 * sizeof(UCHAR));
-	memset(LfnNameBuffer, 0, 261 * sizeof(UCHAR));
+	memset(ShortNameBuffer, 0, 13 * sizeof(CHAR));
+	memset(LfnNameBuffer, 0, 261 * sizeof(CHAR));
 
 	DirEntry = (PDIRENTRY) DirectoryBuffer;
 	for (CurrentEntry=0; CurrentEntry<EntryCount; CurrentEntry++, DirEntry++)
@@ -436,7 +436,7 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize,
 		// entries after this one are unused. If this is the
 		// last entry then we didn't find the file in this directory.
 		//
-		if (DirEntry->FileName[0] == 0x00)
+		if (DirEntry->FileName[0] == '\0')
 		{
 			return FALSE;
 		}
@@ -444,10 +444,10 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize,
 		//
 		// Check if this is a deleted entry or not
 		//
-		if (DirEntry->FileName[0] == 0xE5)
+		if (DirEntry->FileName[0] == '\xE5')
 		{
-			memset(ShortNameBuffer, 0, 13 * sizeof(UCHAR));
-			memset(LfnNameBuffer, 0, 261 * sizeof(UCHAR));
+			memset(ShortNameBuffer, 0, 13 * sizeof(CHAR));
+			memset(LfnNameBuffer, 0, 261 * sizeof(CHAR));
 			continue;
 		}
 
@@ -616,7 +616,7 @@ BOOL FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize,
 	return FALSE;
 }
 
-BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	ULONG		EntryCount;
 	ULONG		CurrentEntry;
@@ -687,11 +687,11 @@ BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-BOOL FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+BOOL FatLookupFile(PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	int		i;
 	ULONG		NumberOfPathParts;
-	UCHAR		PathPart[261];
+	CHAR		PathPart[261];
 	PVOID		DirectoryBuffer;
 	ULONG		DirectoryStartCluster = 0;
 	ULONG		DirectorySize;
@@ -777,7 +777,7 @@ BOOL FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
  * is in the form of "FILE   EXT" and puts it in Buffer
  * in the form of "file.ext"
  */
-void FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry)
+void FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry)
 {
 	ULONG		Idx;
 
@@ -915,7 +915,7 @@ BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* FatOpenFile(PUCHAR FileName)
+FILE* FatOpenFile(PCHAR FileName)
 {
 	FAT_FILE_INFO		TempFatFileInfo;
 	PFAT_FILE_INFO		FileHandle;

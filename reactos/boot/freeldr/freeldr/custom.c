@@ -32,20 +32,20 @@
 #include <machine.h>
 
 
-UCHAR	BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";
-UCHAR	BootPartitionPrompt[] = "Enter the boot partition.\n\nEnter 0 for the active (bootable) partition.";
-UCHAR	BootSectorFilePrompt[] = "Enter the boot sector file path.\n\nExamples:\n\\BOOTSECT.DOS\n/boot/bootsect.dos";
-UCHAR	LinuxKernelPrompt[] = "Enter the Linux kernel image path.\n\nExamples:\n/vmlinuz\n/boot/vmlinuz-2.4.18";
-UCHAR	LinuxInitrdPrompt[] = "Enter the initrd image path.\n\nExamples:\n/initrd.gz\n/boot/root.img.gz\n\nLeave blank for no initial ram disk.";
-UCHAR	LinuxCommandLinePrompt[] = "Enter the Linux kernel command line.\n\nExamples:\nroot=/dev/hda1\nroot=/dev/fd0 read-only\nroot=/dev/sdb1 init=/sbin/init";
-UCHAR	ReactOSSystemPathPrompt[] = "Enter the path to your ReactOS system directory.\n\nExamples:\n\\REACTOS\n\\ROS";
-UCHAR	ReactOSOptionsPrompt[] = "Enter the options you want passed to the kernel.\n\nExamples:\n/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200\n/FASTDETECT /SOS /NOGUIBOOT\n/BASEVIDEO /MAXMEM=64\n/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
+CHAR	BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";
+CHAR	BootPartitionPrompt[] = "Enter the boot partition.\n\nEnter 0 for the active (bootable) partition.";
+CHAR	BootSectorFilePrompt[] = "Enter the boot sector file path.\n\nExamples:\n\\BOOTSECT.DOS\n/boot/bootsect.dos";
+CHAR	LinuxKernelPrompt[] = "Enter the Linux kernel image path.\n\nExamples:\n/vmlinuz\n/boot/vmlinuz-2.4.18";
+CHAR	LinuxInitrdPrompt[] = "Enter the initrd image path.\n\nExamples:\n/initrd.gz\n/boot/root.img.gz\n\nLeave blank for no initial ram disk.";
+CHAR	LinuxCommandLinePrompt[] = "Enter the Linux kernel command line.\n\nExamples:\nroot=/dev/hda1\nroot=/dev/fd0 read-only\nroot=/dev/sdb1 init=/sbin/init";
+CHAR	ReactOSSystemPathPrompt[] = "Enter the path to your ReactOS system directory.\n\nExamples:\n\\REACTOS\n\\ROS";
+CHAR	ReactOSOptionsPrompt[] = "Enter the options you want passed to the kernel.\n\nExamples:\n/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200\n/FASTDETECT /SOS /NOGUIBOOT\n/BASEVIDEO /MAXMEM=64\n/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
 
-UCHAR	CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
+CHAR	CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
 
 VOID OptionMenuCustomBoot(VOID)
 {
-	PUCHAR	CustomBootMenuList[] = { "Disk", "Partition", "Boot Sector File", "ReactOS", "Linux" };
+	PCHAR	CustomBootMenuList[] = { "Disk", "Partition", "Boot Sector File", "ReactOS", "Linux" };
 	ULONG		CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
 	ULONG		SelectedMenuItem;
 
@@ -77,8 +77,8 @@ VOID OptionMenuCustomBoot(VOID)
 
 VOID OptionMenuCustomBootDisk(VOID)
 {
-	UCHAR	SectionName[100];
-	UCHAR	BootDriveString[20];
+	CHAR	SectionName[100];
+	CHAR	BootDriveString[20];
 	ULONG	SectionId;
 	ULONG	Year, Month, Day, Hour, Minute, Second;
 
@@ -119,9 +119,9 @@ VOID OptionMenuCustomBootDisk(VOID)
 
 VOID OptionMenuCustomBootPartition(VOID)
 {
-	UCHAR	SectionName[100];
-	UCHAR	BootDriveString[20];
-	UCHAR	BootPartitionString[20];
+	CHAR	SectionName[100];
+	CHAR	BootDriveString[20];
+	CHAR	BootPartitionString[20];
 	ULONG	SectionId;
 	ULONG	Year, Month, Day, Hour, Minute, Second;
 
@@ -174,10 +174,10 @@ VOID OptionMenuCustomBootPartition(VOID)
 
 VOID OptionMenuCustomBootBootSectorFile(VOID)
 {
-	UCHAR	SectionName[100];
-	UCHAR	BootDriveString[20];
-	UCHAR	BootPartitionString[20];
-	UCHAR	BootSectorFileString[200];
+	CHAR	SectionName[100];
+	CHAR	BootDriveString[20];
+	CHAR	BootPartitionString[20];
+	CHAR	BootSectorFileString[200];
 	ULONG	SectionId;
 	ULONG	Year, Month, Day, Hour, Minute, Second;
 
@@ -242,12 +242,12 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 
 VOID OptionMenuCustomBootReactOS(VOID)
 {
-	UCHAR	SectionName[100];
-	UCHAR	BootDriveString[20];
-	UCHAR	BootPartitionString[20];
-	UCHAR	ReactOSSystemPath[200];
-	UCHAR	ReactOSARCPath[200];
-	UCHAR	ReactOSOptions[200];
+	CHAR	SectionName[100];
+	CHAR	BootDriveString[20];
+	CHAR	BootPartitionString[20];
+	CHAR	ReactOSSystemPath[200];
+	CHAR	ReactOSARCPath[200];
+	CHAR	ReactOSOptions[200];
 	ULONG	SectionId;
 	ULONG	Year, Month, Day, Hour, Minute, Second;
 
@@ -315,12 +315,12 @@ VOID OptionMenuCustomBootReactOS(VOID)
 
 VOID OptionMenuCustomBootLinux(VOID)
 {
-	UCHAR	SectionName[100];
-	UCHAR	BootDriveString[20];
-	UCHAR	BootPartitionString[20];
-	UCHAR	LinuxKernelString[200];
-	UCHAR	LinuxInitrdString[200];
-	UCHAR	LinuxCommandLineString[200];
+	CHAR	SectionName[100];
+	CHAR	BootDriveString[20];
+	CHAR	BootPartitionString[20];
+	CHAR	LinuxKernelString[200];
+	CHAR	LinuxInitrdString[200];
+	CHAR	LinuxCommandLineString[200];
 	ULONG	SectionId;
 	ULONG	Year, Month, Day, Hour, Minute, Second;
 

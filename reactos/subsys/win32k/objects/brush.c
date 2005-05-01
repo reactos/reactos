@@ -241,7 +241,7 @@ IntGdiCreateDIBBrush(
    ULONG_PTR DataPtr;
    UINT PaletteEntryCount;
    PBITMAPOBJ BitmapObject;
-   UINT PaletteType;
+   INT PaletteType;
 
    if (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
    {

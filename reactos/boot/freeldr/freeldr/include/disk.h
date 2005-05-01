@@ -119,8 +119,8 @@ BOOL	DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 VOID	DiskReportError (BOOL bError);
-VOID	DiskError(PUCHAR ErrorString, ULONG ErrorCode);
-PUCHAR	DiskGetErrorCodeString(ULONG ErrorCode);
+VOID	DiskError(PCHAR ErrorString, ULONG ErrorCode);
+PCHAR	DiskGetErrorCodeString(ULONG ErrorCode);
 BOOL	DiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
 BOOL	DiskIsDriveRemovable(ULONG DriveNumber);
 VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c

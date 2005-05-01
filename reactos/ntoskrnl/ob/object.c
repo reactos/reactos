@@ -47,6 +47,8 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 
   if(AccessMode != KernelMode)
   {
+    RtlZeroMemory(&AttributesCopy, sizeof(AttributesCopy));
+    
     _SEH_TRY
     {
       ProbeForRead(ObjectAttributes,
@@ -140,6 +142,8 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
     if(AttributesCopy.SecurityQualityOfService != NULL)
     {
       SECURITY_QUALITY_OF_SERVICE SafeQoS;
+      
+      RtlZeroMemory(&SafeQoS, sizeof(SafeQoS));
 
       _SEH_TRY
       {
@@ -193,6 +197,8 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
 
       if(AccessMode != KernelMode)
       {
+        RtlZeroMemory(&OriginalCopy, sizeof(OriginalCopy));
+        
         _SEH_TRY
         {
           /* probe the ObjectName structure and make a local stack copy of it */

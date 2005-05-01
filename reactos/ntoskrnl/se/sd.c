@@ -301,6 +301,8 @@ SeCaptureSecurityDescriptor(
   {
     if(CurrentMode != KernelMode)
     {
+      RtlZeroMemory(&DescriptorCopy, sizeof(DescriptorCopy));
+      
       _SEH_TRY
       {
         /* first only probe and copy until the control field of the descriptor

@@ -185,7 +185,7 @@ typedef struct _KPRCB {
 	LONG MmMappedPagesWriteCount;
 	LONG MmMappedWriteIoCount;
 	ULONG SpareFields0[1];
-	UCHAR VendorString[13];
+	CHAR VendorString[13];
 	UCHAR InitialApicId;
 	UCHAR LogicalProcessorsPerPhysicalProcessor;
 	ULONG MHz;

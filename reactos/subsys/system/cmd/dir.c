@@ -1212,7 +1212,7 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 		 TCHAR *szCurPath,		/* [IN] Full path of current directory */
 		 LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags used */
 {
-  USHORT iScreenWidth;
+  SHORT iScreenWidth;
   USHORT iColumns;
   USHORT iLines;
   INT iLongestName;

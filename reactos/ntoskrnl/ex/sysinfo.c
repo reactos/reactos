@@ -952,6 +952,7 @@ QSI_DEF(SystemPageFileInformation)
 	}
 
 	UNICODE_STRING FileName; /* FIXME */
+	RtlInitUnicodeString(&FileName, NULL); /* FIXME */
 
 	/* FIXME */
 	Spfi->NextEntryOffset = 0;

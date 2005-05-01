@@ -474,7 +474,7 @@ void set_name_servers( struct client_lease *new_lease ) {
              * Recheck the +1 below.
              */
             RegSetValueEx( RegKey, "NameServer", 0, REG_SZ,
-                           nsbuf, strlen(nsbuf) + 1 );
+                           (LPBYTE)nsbuf, strlen(nsbuf) + 1 );
             
             free( nsbuf );
         }

@@ -101,9 +101,9 @@ typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
 typedef struct _CM_PNP_BIOS_DEVICE_NODE
 {
   USHORT Size;
-  UCHAR  Node;
+  CHAR  Node;
   ULONG ProductId;
-  UCHAR  DeviceType[3];
+  CHAR  DeviceType[3];
   USHORT DeviceAttributes;
 } __attribute__((packed)) CM_PNP_BIOS_DEVICE_NODE, *PCM_PNP_BIOS_DEVICE_NODE;
 
@@ -258,7 +258,7 @@ SetComponentInformation(FRLDRHKEY ComponentKey,
   Error = RegSetValue(ComponentKey,
 		      "Component Information",
 		      REG_BINARY,
-		      (PUCHAR)&CompInfo,
+		      (PCHAR)&CompInfo,
 		      sizeof(CM_COMPONENT_INFORMATION));
   if (Error != ERROR_SUCCESS)
     {
@@ -287,7 +287,7 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   LONG Error;
 
   InstData = (PCM_PNP_BIOS_INSTALLATION_CHECK)PnpBiosSupported();
-  if (InstData == NULL || strncmp(InstData->Signature, "$PnP", 4))
+  if (InstData == NULL || strncmp((CHAR*)InstData->Signature, "$PnP", 4))
     {
       DbgPrint((DPRINT_HWDETECT, "PnP-BIOS not supported\n"));
       return;
@@ -335,7 +335,7 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   Error = RegSetValue(BusKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PUCHAR)"PNP BIOS",
+		      "PNP BIOS",
 		      9);
   if (Error != ERROR_SUCCESS)
     {
@@ -413,7 +413,7 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   Error = RegSetValue(BusKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PUCHAR) FullResourceDescriptor,
+		      (PCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -495,7 +495,7 @@ SetHarddiskConfigurationData(FRLDRHKEY DiskKey,
   Error = RegSetValue(DiskKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PUCHAR) FullResourceDescriptor,
+		      (PCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -516,7 +516,7 @@ SetHarddiskIdentifier(FRLDRHKEY DiskKey,
   ULONG i;
   ULONG Checksum;
   ULONG Signature;
-  char Identifier[20];
+  CHAR Identifier[20];
   LONG Error;
 
   /* Read the MBR */
@@ -568,7 +568,7 @@ SetHarddiskIdentifier(FRLDRHKEY DiskKey,
   Error = RegSetValue(DiskKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PUCHAR) Identifier,
+		      Identifier,
 		      20);
   if (Error != ERROR_SUCCESS)
     {
@@ -673,7 +673,7 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
   Error = RegSetValue(SystemKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PUCHAR) FullResourceDescriptor,
+		      (PCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -829,7 +829,7 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
     Error = RegSetValue(PeripheralKey,
 			"Configuration Data",
 			REG_FULL_RESOURCE_DESCRIPTOR,
-			(PUCHAR) FullResourceDescriptor,
+			(PCHAR) FullResourceDescriptor,
 			Size);
     MmFreeMemory(FullResourceDescriptor);
     if (Error != ERROR_SUCCESS)
@@ -845,7 +845,7 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
     Error = RegSetValue(PeripheralKey,
 			"Identifier",
 			REG_SZ,
-			(PUCHAR)Identifier,
+			(PCHAR)Identifier,
 			strlen(Identifier) + 1);
     if (Error != ERROR_SUCCESS)
     {
@@ -939,7 +939,7 @@ DetectBiosFloppyController(FRLDRHKEY SystemKey,
   Error = RegSetValue(ControllerKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PUCHAR) FullResourceDescriptor,
+		      (PCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -1280,7 +1280,7 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
       Error = RegSetValue(PeripheralKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PUCHAR)&FullResourceDescriptor,
+			  (PCHAR)&FullResourceDescriptor,
 			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
 			  sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
       if (Error != ERROR_SUCCESS)
@@ -1294,7 +1294,7 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
       Error = RegSetValue(PeripheralKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PUCHAR)Identifier,
+			  Identifier,
 			  strlen(Identifier) + 1);
       if (Error != ERROR_SUCCESS)
 	{
@@ -1409,7 +1409,7 @@ DetectSerialPorts(FRLDRHKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PUCHAR) FullResourceDescriptor,
+			  (PCHAR) FullResourceDescriptor,
 			  Size);
       MmFreeMemory(FullResourceDescriptor);
       if (Error != ERROR_SUCCESS)
@@ -1426,7 +1426,7 @@ DetectSerialPorts(FRLDRHKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PUCHAR)Buffer,
+			  Buffer,
 			  strlen(Buffer) + 1);
       if (Error != ERROR_SUCCESS)
 	{
@@ -1542,7 +1542,7 @@ DetectParallelPorts(FRLDRHKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PUCHAR) FullResourceDescriptor,
+			  (PCHAR) FullResourceDescriptor,
 			  Size);
       MmFreeMemory(FullResourceDescriptor);
       if (Error != ERROR_SUCCESS)
@@ -1559,7 +1559,7 @@ DetectParallelPorts(FRLDRHKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PUCHAR)Buffer,
+			  Buffer,
 			  strlen(Buffer) + 1);
       if (Error != ERROR_SUCCESS)
 	{
@@ -1702,7 +1702,7 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
     Error = RegSetValue(PeripheralKey,
 			"Configuration Data",
 			REG_FULL_RESOURCE_DESCRIPTOR,
-			(PUCHAR)FullResourceDescriptor,
+			(PCHAR)FullResourceDescriptor,
 			Size);
     MmFreeMemory(FullResourceDescriptor);
     if (Error != ERROR_SUCCESS)
@@ -1718,7 +1718,7 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
     Error = RegSetValue(ControllerKey,
 			"Identifier",
 			REG_SZ,
-			(PUCHAR)Buffer,
+			Buffer,
 			strlen(Buffer) + 1);
     if (Error != ERROR_SUCCESS)
     {
@@ -1804,7 +1804,7 @@ DetectKeyboardController(FRLDRHKEY BusKey)
   Error = RegSetValue(ControllerKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PUCHAR)FullResourceDescriptor,
+		      (PCHAR)FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)
@@ -1972,7 +1972,7 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
       Error = RegSetValue(ControllerKey,
 			  "Configuration Data",
 			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PUCHAR)&FullResourceDescriptor,
+			  (PCHAR)&FullResourceDescriptor,
 			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
       if (Error != ERROR_SUCCESS)
 	{
@@ -2014,7 +2014,7 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
 	  Error = RegSetValue(PeripheralKey,
 			      "Configuration Data",
 			      REG_FULL_RESOURCE_DESCRIPTOR,
-			      (PUCHAR)&FullResourceDescriptor,
+			      (PCHAR)&FullResourceDescriptor,
 			      sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
 			      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 	  if (Error != ERROR_SUCCESS)
@@ -2029,7 +2029,7 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
 	  Error = RegSetValue(PeripheralKey,
 			      "Identifier",
 			      REG_SZ,
-			      (PUCHAR)"MICROSOFT PS2 MOUSE",
+			      "MICROSOFT PS2 MOUSE",
 			      20);
 	  if (Error != ERROR_SUCCESS)
 	    {
@@ -2098,7 +2098,7 @@ DetectDisplayController(FRLDRHKEY BusKey)
   Error = RegSetValue(ControllerKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PUCHAR)Buffer,
+		      Buffer,
 		      strlen(Buffer) + 1);
   if (Error != ERROR_SUCCESS)
     {
@@ -2146,7 +2146,7 @@ DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   Error = RegSetValue(BusKey,
 		      "Identifier",
 		      REG_SZ,
-		      (PUCHAR)"ISA",
+		      "ISA",
 		      4);
   if (Error != ERROR_SUCCESS)
     {
@@ -2175,7 +2175,7 @@ DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   Error = RegSetValue(BusKey,
 		      "Configuration Data",
 		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PUCHAR) FullResourceDescriptor,
+		      (PCHAR) FullResourceDescriptor,
 		      Size);
   MmFreeMemory(FullResourceDescriptor);
   if (Error != ERROR_SUCCESS)

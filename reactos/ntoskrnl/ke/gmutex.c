@@ -86,7 +86,7 @@ KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex)
     LONG OldValue;
     
     /* Increase the contention count */
-    InterlockedIncrement(&GuardedMutex->Contention);
+    InterlockedIncrement((PLONG)&GuardedMutex->Contention);
     
     /* Start by unlocking the Guarded Mutex */
     BitsToRemove = GM_LOCK_BIT;

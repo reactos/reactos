@@ -394,7 +394,7 @@ int adns_processreadable(adns_state ads, ADNS_SOCKET fd, const struct timeval *n
     for (;;) {
       udpaddrlen= sizeof(udpaddr);
 	  ADNS_CLEAR_ERRNO;
-      r= recvfrom(ads->udpsocket,udpbuf,sizeof(udpbuf),0,
+      r= recvfrom(ads->udpsocket,(char*)udpbuf,sizeof(udpbuf),0,
 		  (struct sockaddr*)&udpaddr,&udpaddrlen);
 	  ADNS_CAPTURE_ERRNO;
       if (r<0) {

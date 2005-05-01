@@ -376,7 +376,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     }
     
     /* There can only be one Bugcheck per Bootup */
-    if (!InterlockedDecrement(&KeBugCheckCount)) {
+    if (!InterlockedDecrement((PLONG)&KeBugCheckCount)) {
 
 #ifdef CONFIG_SMP
         ULONG i;

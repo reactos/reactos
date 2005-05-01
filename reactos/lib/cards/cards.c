@@ -77,6 +77,37 @@ BOOL WINAPI cdtDraw(HDC hdc, INT x, INT y, INT card, INT type, COLORREF color)
 }
 
 /*
+ * internal
+ */
+inline VOID BltCard(HDC hdc, INT x, INT y, INT dx, INT dy, HDC hdcCard, DWORD dwRasterOp, BOOL bStretch)
+{
+	if (bStretch)
+	{
+		StretchBlt(hdc, x, y, dx, dy, hdcCard, 0, 0, CARD_WIDTH, CARD_HEIGHT, dwRasterOp);
+	} else
+	{
+		BitBlt(hdc, x, y, dx, dy, hdcCard, 0, 0, dwRasterOp);
+/*
+ * This is need when using Microsoft images, because they use two-color red/white images for
+ * red cards and thus needs fix-up of the edge to black color.
+ */
+#if 0
+		if (ISREDCARD(card))
+		{
+			PatBlt(hdc, x, y + 2, 1, dy - 4, BLACKNESS);
+			PatBlt(hdc, x + dx - 1, y + 2, 1, dy - 4, BLACKNESS);
+			PatBlt(hdc, x + 2, y, dx - 4, 1, BLACKNESS);
+			PatBlt(hdc, x + 2, y + dy - 1, dx - 4, 1, BLACKNESS);
+	   		SetPixel(hdc, x + 1, y + 1, 0);
+	   		SetPixel(hdc, x + dx - 2, y + 1, 0);
+   			SetPixel(hdc, x + 1, y + dy - 2, 0);
+   			SetPixel(hdc, x + dx - 2, y + dy - 2, 0);
+		}
+#endif
+	}
+}
+
+/*
  * Render card
  *
  * Parameters:
@@ -92,7 +123,6 @@ BOOL WINAPI cdtDraw(HDC hdc, INT x, INT y, INT card, INT type, COLORREF color)
 BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type, COLORREF color)
 {
 	HDC hdcCard;
-	COLORREF SavedPixels[12];
 	DWORD dwRasterOp = SRCCOPY, OldBkColor;
 	BOOL bSaveEdges = TRUE;
 	BOOL bStretch = FALSE;
@@ -154,6 +184,7 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
 		OldBkColor = SetBkColor(hdc, (type == ectFACES) ? 0xFFFFFF : color);
 		if (bSaveEdges)
 		{
+	   		COLORREF SavedPixels[12];
 	   		SavedPixels[0] = GetPixel(hdc, x, y);
    			SavedPixels[1] = GetPixel(hdc, x + 1, y);
 	   		SavedPixels[2] = GetPixel(hdc, x, y + 1);
@@ -165,35 +196,11 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
 	   		SavedPixels[8] = GetPixel(hdc, x, y + dy - 2);
 	   		SavedPixels[9] = GetPixel(hdc, x + dx - 1, y + dy - 1);
    			SavedPixels[10] = GetPixel(hdc, x + dx - 2, y + dy - 1);
-	   		SavedPixels[11] = GetPixel(hdc, x + dx - 1, y + dy - 2);
-		}
-		if (bStretch)
-		{
-			StretchBlt(hdc, x, y, dx, dy, hdcCard, 0, 0, CARD_WIDTH, CARD_HEIGHT, dwRasterOp);
-		} else
-		{
-			BitBlt(hdc, x, y, dx, dy, hdcCard, 0, 0, dwRasterOp);
-/*
- * This is need when using Microsoft images, because they use two-color red/white images for
- * red cards and thus needs fix-up of the edge to black color.
- */
-#if 0
-			if (ISREDCARD(card))
-			{
-				PatBlt(hdc, x, y + 2, 1, dy - 4, BLACKNESS);
-				PatBlt(hdc, x + dx - 1, y + 2, 1, dy - 4, BLACKNESS);
-				PatBlt(hdc, x + 2, y, dx - 4, 1, BLACKNESS);
-				PatBlt(hdc, x + 2, y + dy - 1, dx - 4, 1, BLACKNESS);
-		   		SetPixel(hdc, x + 1, y + 1, 0);
-		   		SetPixel(hdc, x + dx - 2, y + 1, 0);
-	   			SetPixel(hdc, x + 1, y + dy - 2, 0);
-	   			SetPixel(hdc, x + dx - 2, y + dy - 2, 0);
-			}
-#endif
-		}
-		if (bSaveEdges)
-		{
-	   		SetPixel(hdc, x, y, SavedPixels[0]);
+   			SavedPixels[11] = GetPixel(hdc, x + dx - 1, y + dy - 2);
+
+   			BltCard(hdc, x, y, dx, dy, hdcCard, dwRasterOp, bStretch);
+
+   			SetPixel(hdc, x, y, SavedPixels[0]);
    			SetPixel(hdc, x + 1, y, SavedPixels[1]);
    			SetPixel(hdc, x, y + 1, SavedPixels[2]);
 	   		SetPixel(hdc, x + dx - 1, y, SavedPixels[3]);
@@ -205,7 +212,11 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
 	   		SetPixel(hdc, x + dx - 1, y + dy - 1, SavedPixels[9]);
    			SetPixel(hdc, x + dx - 2, y + dy - 1, SavedPixels[10]);
    			SetPixel(hdc, x + dx - 1, y + dy - 2, SavedPixels[11]);
-		}
+   		}
+   		else
+   		{
+   			BltCard(hdc, x, y, dx, dy, hdcCard, dwRasterOp, bStretch);
+   		}
 		SetBkColor(hdc, OldBkColor);
 		DeleteDC(hdcCard);
 	}

@@ -29,12 +29,12 @@
 #include <drivemap.h>
 #include <machine.h>
 
-VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
+VOID LoadAndBootBootSector(PCHAR OperatingSystemName)
 {
 	PFILE	FilePointer;
-	UCHAR	SettingName[80];
+	CHAR	SettingName[80];
 	ULONG	SectionId;
-	UCHAR	FileName[260];
+	CHAR	FileName[260];
 	ULONG	BytesRead;
 
 	// Find all the message box settings and run them
@@ -94,10 +94,10 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	ChainLoadBiosBootSectorCode();
 }
 
-VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
+VOID LoadAndBootPartition(PCHAR OperatingSystemName)
 {
-	UCHAR			SettingName[80];
-	UCHAR			SettingValue[80];
+	CHAR			SettingName[80];
+	CHAR			SettingValue[80];
 	ULONG			SectionId;
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	ULONG			DriveNumber;
@@ -165,10 +165,10 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	ChainLoadBiosBootSectorCode();
 }
 
-VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
+VOID LoadAndBootDrive(PCHAR OperatingSystemName)
 {
-	UCHAR	SettingName[80];
-	UCHAR	SettingValue[80];
+	CHAR	SettingName[80];
+	CHAR	SettingValue[80];
 	ULONG	SectionId;
 	ULONG	DriveNumber;
 

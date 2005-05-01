@@ -67,7 +67,7 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
         ASSERT((NTSTATUS)QueueEntry != STATUS_TIMEOUT);
     
         /* Increment Processed Work Items */
-        InterlockedIncrement(&WorkQueue->WorkItemsProcessed);
+        InterlockedIncrement((PLONG)&WorkQueue->WorkItemsProcessed);
 
         /* Get the Work Item */
         WorkItem = CONTAINING_RECORD(QueueEntry, WORK_QUEUE_ITEM, List);

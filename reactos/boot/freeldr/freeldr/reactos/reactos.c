@@ -343,11 +343,11 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
     ULONG ValueType;
     ULONG StartValue;
     ULONG TagValue;
-    UCHAR DriverGroup[256];
+    CHAR DriverGroup[256];
     ULONG DriverGroupSize;
 
-    UCHAR ImagePath[256];
-    UCHAR TempImagePath[256];
+    CHAR ImagePath[256];
+    CHAR TempImagePath[256];
 
     /* get 'service group order' key */
     rc = RegOpenKey(NULL,
@@ -549,7 +549,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
 }
 
 VOID
-LoadAndBootReactOS(PUCHAR OperatingSystemName)
+LoadAndBootReactOS(PCHAR OperatingSystemName)
 {
 	PFILE FilePointer;
 	CHAR  name[1024];

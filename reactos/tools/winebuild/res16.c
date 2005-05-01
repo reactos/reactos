@@ -142,7 +142,7 @@ static void get_string( struct string_id *str )
     }
     else
     {
-        char *p = xmalloc( (strlen(file_pos) + 1) );
+        char *p = xmalloc( (strlen((char*)file_pos) + 1) );
         str->str = p;
         str->id = 0;
         while ((*p++ = get_byte()));
