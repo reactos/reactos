@@ -34,7 +34,7 @@ LIBS = $(LIB_WPP_DIR)/libwpp.a
 
 CLEAN_FILES = *.o $(TARGET)
 
-HOST_CFLAGS = -DYYDEBUG=1 -DINT16=SHORT -D__USE_W32API \
+HOST_CFLAGS = $(HOSTARCH) -DYYDEBUG=1 -DINT16=SHORT -D__USE_W32API \
               -I$(LIB_WPP_DIR) -I$(PATH_TO_TOP)/include/wine \
               -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/w32api/include \
               -Werror -Wall
@@ -43,13 +43,12 @@ HOST_CFLAGS = -DYYDEBUG=1 -DINT16=SHORT -D__USE_W32API \
 	$(HOST_CC) $(HOST_CFLAGS) -c $< -o $@
 
 $(TARGET): $(OBJECTS) $(LIBS)
-	$(HOST_CC) -o $(TARGET) $(OBJECTS) $(LIBS)
+	$(HOST_CC) $(HOSTARCH) -o $(TARGET) $(OBJECTS) $(LIBS)
 
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 clean:
 	-rm -f $(OBJECTS) $(TARGET)
-endif
-ifneq ($(HOST),mingw32-linux)
+else
 clean:
 	-del $(TARGET)
 	-del *.o

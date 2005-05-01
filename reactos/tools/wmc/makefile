@@ -40,12 +40,11 @@ write.o: write.c
 y_tab.o: y_tab.c
 	$(HOST_CC) $(HOST_CFLAGS) -g -c y_tab.c -o y_tab.o
 
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 clean:
 	rm -f *.o
 	rm -f wmc$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
+else
 clean:
 	-del *.o
 	-del wmc$(EXE_POSTFIX)

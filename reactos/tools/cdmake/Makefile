@@ -22,12 +22,11 @@ llmosrt.o: llmosrt.c
 cdmake$(EXE_POSTFIX): $(OBJECTS)
 	$(HOST_CC) $(OBJECTS) -o cdmake$(EXE_POSTFIX)
 
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 clean:
 	rm -f *.o
 	rm -f cdmake$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
+else
 clean:
 	-del *.o
 	-del cdmake$(EXE_POSTFIX)

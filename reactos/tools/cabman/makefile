@@ -33,12 +33,11 @@ dfp.o: dfp.cxx
 cabman$(EXE_POSTFIX): $(OBJECTS)
 	$(HOST_CXX) $(OBJECTS) $(HOST_LFLAGS) -o cabman$(EXE_POSTFIX)
 
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 clean:
 	rm -f *.o
 	rm -f cabman$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
+else
 clean:
 	-del *.o
 	-del cabman$(EXE_POSTFIX)

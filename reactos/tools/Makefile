@@ -3,11 +3,10 @@ PATH_TO_TOP = ..
 include $(PATH_TO_TOP)/rules.mak
 
 CFLAGS += -Wall -Werror
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 CFLAGS += -DUNIX_PATHS
 rm := @rm
-endif
-ifeq ($(HOST),mingw32-windows)
+else
 CFLAGS += -DDOS_PATHS
 rm := -@del
 endif
@@ -152,11 +151,10 @@ clean:
 	$(MAKE) --silent -C ../lib/zlib -f Makefile.host clean
 	$(MAKE) -C wpp clean
 	$(MAKE) -C unicode clean
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 	@rm mkconfig
 	@rm $(TOOLS)
-endif
-ifeq ($(HOST),mingw32-windows)
+else
 	$(MAKE) --silent -C pipetools clean
 	$(rm) *$(EXE_POSTFIX)
 endif

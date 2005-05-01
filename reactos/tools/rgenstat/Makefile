@@ -19,12 +19,11 @@ llmosrt.o: llmosrt.c
 rgenstat$(EXE_POSTFIX): $(OBJECTS)
 	$(HOST_CC) $(OBJECTS) -o rgenstat$(EXE_POSTFIX)
 
-ifeq ($(HOST),mingw32-linux)
+ifeq ($(HOST_TYPE),unix)
 clean:
 	rm -f *.o
 	rm -f rgenstat$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
+else
 clean:
 	-del *.o
 	-del rgenstat$(EXE_POSTFIX)

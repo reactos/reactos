@@ -2473,7 +2473,7 @@ unsigned long CCabinet::ComputeChecksum(void* Buffer,
     /* FIXME: Doesn't seem to be correct. EXTRACT.EXE
        won't accept checksums computed by this routine */
 
-    DPRINT(MIN_TRACE, ("Checksumming buffer (0x%X)  Size (%d)\n", (unsigned int)Buffer, Size));
+    DPRINT(MIN_TRACE, ("Checksumming buffer (0x%p)  Size (%d)\n", Buffer, Size));
 
     UlongCount = Size / 4;              // Number of ULONGs
     Checksum   = Seed;                  // Init checksum

@@ -230,6 +230,7 @@ ifeq ($(TARGET_TYPE),host_library)
   MK_DEFEXT := .a
   MK_CFLAGS := 
   MK_CPPFLAGS := 
+  MK_HOST_CFLAGS := yes
   MK_LIBPATH := .
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
@@ -513,6 +514,7 @@ ifeq ($(TARGET_TYPE),winedll)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_STDDEF_H -I$(PATH_TO_TOP)/include/wine
   MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_HOST_CFLAGS := yes
   MK_PREPROC_FOR_RC_FLAGS := -xc -E -DRC_INVOKED -D__USE_W32API -I$(PATH_TO_TOP)/include/wine -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/w32api/include
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
@@ -547,6 +549,7 @@ ifeq ($(TARGET_TYPE),winedrv)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include/wine
   MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
+  MK_HOST_CFLAGS := yes
   MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
@@ -641,6 +644,13 @@ ifeq ($(MK_MODE),user)
   endif
 endif
 
+ifeq ($(MK_HOST_CFLAGS),yes)
+  MK_CFLAGS += $(HOST_STD_CFLAGS)
+  MK_CPPFLAGS += $(HOST_STD_CPPFLAGS)
+else
+  MK_CFLAGS += $(STD_CFLAGS)
+  MK_CPPFLAGS += $(STD_CPPFLAGS)
+endif
 
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
@@ -709,9 +719,9 @@ endif
 include $(PATH_TO_TOP)/config
 
 
-TARGET_CFLAGS += $(MK_CFLAGS) $(STD_CFLAGS) -g
+TARGET_CFLAGS += $(MK_CFLAGS) -g
 
-TARGET_CPPFLAGS += $(MK_CPPFLAGS) $(STD_CPPFLAGS) -g
+TARGET_CPPFLAGS += $(MK_CPPFLAGS) -g
 
 TARGET_RCFLAGS += $(MK_RCFLAGS) $(STD_RCFLAGS)
 
@@ -767,7 +777,7 @@ endif
 ifeq ($(TARGET_WINETESTS),yes)
 all:
 	- $(MAKE) -C winetests
-  MK_REGTESTS_CLEAN := clean_winetests
+	MK_REGTESTS_CLEAN := clean_winetests
 endif
 
 ifeq ($(TARGET_INSTALL),)
