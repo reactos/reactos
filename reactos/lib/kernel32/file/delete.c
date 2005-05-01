@@ -66,20 +66,19 @@ DeleteFileW (
 
 	DPRINT("NtPathU \'%wZ\'\n", &NtPathU);
 
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-	ObjectAttributes.ObjectName = &NtPathU;
-	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
-	ObjectAttributes.SecurityDescriptor = NULL;
-	ObjectAttributes.SecurityQualityOfService = NULL;
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &NtPathU,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
 
 	Status = NtCreateFile (&FileHandle,
-	                       FILE_WRITE_ATTRIBUTES,
+	                       DELETE,
 	                       &ObjectAttributes,
 	                       &IoStatusBlock,
 	                       NULL,
 	                       FILE_ATTRIBUTE_NORMAL,
-	                       0,
+	                       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 	                       FILE_OPEN,
                                FILE_NON_DIRECTORY_FILE,
 	                       NULL,
