@@ -1134,19 +1134,15 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OVERWRITE_IF,
-			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-			NULL,
-			0);
+  Status = NtOpenFile(&FileHandle,
+		      FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      0,
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
   if (!NT_SUCCESS(Status))
   {
+    DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -1295,19 +1291,15 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OVERWRITE_IF,
-			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-			NULL,
-			0);
+  Status = NtOpenFile(&FileHandle,
+		      FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      0,
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
   if (!NT_SUCCESS(Status))
   {
+    DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -2080,7 +2072,7 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
   wcscpy(SrcPath, SourceRootPath->Buffer);
   wcscat(SrcPath, L"\\loader\\freeldr.sys");
 
-  wcscat(DstPath, L"\\Device\\Floppy0\\freeldr.sys");
+  wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.sys");
 
   DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
   Status = SetupCopyFile(SrcPath, DstPath);
@@ -2091,7 +2083,7 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
     }
 
   /* Create new 'freeldr.ini' */
-  wcscat(DstPath, L"\\Device\\Floppy0\\freeldr.ini");
+  wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.ini");
 
   DPRINT("Create new 'freeldr.ini'\n");
   Status = CreateFreeLoaderIniForReactos(DstPath,
@@ -2106,7 +2098,7 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
   wcscpy(SrcPath, SourceRootPath->Buffer);
   wcscat(SrcPath, L"\\loader\\fat.bin");
 
-  wcscat(DstPath, L"\\Device\\Floppy0");
+  wcscpy(DstPath, L"\\Device\\Floppy0");
 
   DPRINT("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
   Status = InstallFat16BootCodeToDisk(SrcPath,
