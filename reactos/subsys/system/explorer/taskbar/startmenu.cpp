@@ -40,6 +40,11 @@
 #include "../dialogs/settings.h"
 
 
+#define	SHELLPATH_CONTROL_PANEL		TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}")
+#define	SHELLPATH_PRINTERS			TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}")
+#define	SHELLPATH_NET_CONNECTIONS	TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}")
+
+
 StartMenu::StartMenu(HWND hwnd)
  :	super(hwnd)
 {
@@ -1817,24 +1822,40 @@ int StartMenuHandler::Command(int id, int code)
 		ExplorerPropertySheet(g_Globals._hwndDesktopBar);
 		break;
 
-	  case IDC_PRINTERS:
-		CloseStartMenu(id);
-		MainFrame::Create(SpecialFolderPath(CSIDL_PRINTERS, _hwnd), OWM_PIDL);
-		break;
-
 	  case IDC_CONTROL_PANEL:
 		CloseStartMenu(id);
-		MainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+#ifndef ROSSHELL
+		MainFrame::Create(SHELLPATH_CONTROL_PANEL, 0);
+#else
+		launch_file(_hwnd, SHELLPATH_CONTROL_PANEL);
+#endif
 		break;
 
-	  case IDC_ADMIN:
+	  case IDC_PRINTERS:
 		CloseStartMenu(id);
-		MainFrame::Create(SpecialFolderPath(CSIDL_COMMON_ADMINTOOLS, _hwnd), OWM_PIDL);
+#ifndef ROSSHELL
+		MainFrame::Create(SpecialFolderPath(CSIDL_PRINTERS, _hwnd), OWM_PIDL);
+#else
+		launch_file(_hwnd, SHELLPATH_PRINTERS);
+#endif
 		break;
 
 	  case IDC_CONNECTIONS:
 		CloseStartMenu(id);
+#ifndef ROSSHELL
 		MainFrame::Create(SpecialFolderPath(CSIDL_CONNECTIONS, _hwnd), OWM_PIDL);
+#else
+		launch_file(_hwnd, SHELLPATH_NET_CONNECTIONS);
+#endif
+		break;
+
+	  case IDC_ADMIN:
+		CloseStartMenu(id);
+#ifndef ROSSHELL
+		MainFrame::Create(SpecialFolderPath(CSIDL_COMMON_ADMINTOOLS, _hwnd), OWM_PIDL);
+#else
+		launch_file(_hwnd, SpecialFolderFSPath(CSIDL_COMMON_ADMINTOOLS, _hwnd));
+#endif
 		break;
 
 

@@ -136,9 +136,9 @@ extern BOOL time_to_filetime(const time_t* t, FILETIME* ftime);
 extern int find_window_class(LPCTSTR classname);
 
  // launch a program or document file
-extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow);
+extern BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow=SW_SHOWNORMAL);
 #ifdef UNICODE
-extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow);
+extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow=SW_SHOWNORMAL);
 #else
 #define	launch_fileA launch_file
 #endif

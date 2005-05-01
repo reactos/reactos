@@ -75,8 +75,8 @@ precomp.h.gch: *.h utility/*.h shell/*.h desktop/*.h
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))
 
-explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
-	windres $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
+$(PROGRAM)$(RES_SUFFIX): explorer_intres.rc res/*.bmp res/*.ico
+	windres $(RCFLAGS) -o $@ explorer_intres.rc
 
 clean:
 	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) precomp.h.gch \

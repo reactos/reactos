@@ -1,5 +1,5 @@
 #
-#  ReactOS lean explorer
+#  ReactOS lean shell
 #
 #  Makefile
 #
@@ -101,8 +101,8 @@ ever:
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))
 
-explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
-	$(RC) $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
+explorer$(RES_SUFFIX): explorer_intres.rc res/*.bmp res/*.ico
+	$(RC) $(RCFLAGS) -o $@ explorer_intres.rc
 
 clean:
 	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) \

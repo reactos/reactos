@@ -44,11 +44,15 @@ ExplorerGlobals g_Globals;
 ExplorerGlobals::ExplorerGlobals()
 {
 	_hInstance = 0;
-	_hframeClass = 0;
 	_cfStrFName = 0;
+
+#ifndef ROSSHELL
+	_hframeClass = 0;
 	_hMainWnd = 0;
-	_prescan_nodes = false;
 	_desktop_mode = false;
+	_prescan_nodes = false;
+#endif
+
 	_log = NULL;
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	_SHRestricted = 0;
@@ -413,6 +417,8 @@ ResBitmap::ResBitmap(UINT nid)
 }
 
 
+#ifndef ROSSHELL
+
 void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 {
 	if (g_Globals._hMainWnd) {
@@ -453,6 +459,18 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0/*OWM_EXPLORE|OWM_DETAILS*/, 0);
 	}
 }
+
+#else
+
+void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
+{
+	if (!lpCmdLine)
+		lpCmdLine = TEXT("explorer.exe");
+
+	launch_file(GetDesktopWindow(), lpCmdLine, cmdshow);
+}
+
+#endif
 
 
 PopupMenu::PopupMenu(UINT nid)
@@ -534,6 +552,7 @@ static void InitInstance(HINSTANCE hInstance)
 
 	setlocale(LC_COLLATE, "");	// set collating rules to local settings for compareName
 
+#ifndef ROSSHELL
 	 // register frame window class
 	g_Globals._hframeClass = IconWindowClass(CLASSNAME_FRAME,IDI_EXPLORER);
 
@@ -542,6 +561,7 @@ static void InitInstance(HINSTANCE hInstance)
 
 	 // register tree windows class
 	WindowClass(CLASSNAME_WINEFILETREE, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
+#endif
 
 	g_Globals._cfStrFName = RegisterClipboardFormat(CFSTR_FILENAME);
 }
@@ -561,6 +581,7 @@ int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
 		return -1;
 	}
 
+#ifndef ROSSHELL
 	if (cmdshow != SW_HIDE) {
 /*	// don't maximize if being called from the ROS desktop
 		if (cmdshow == SW_SHOWNORMAL)
@@ -570,6 +591,7 @@ int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
 
 		explorer_show_frame(cmdshow, lpCmdLine);
 	}
+#endif
 
 	return Window::MessageLoop();
 }
@@ -684,12 +706,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	 // If there is given the command line option "-desktop", create desktop window anyways
 	if (_tcsstr(lpCmdLine,TEXT("-desktop")))
 		startup_desktop = TRUE;
+#ifndef ROSSHELL
 	else if (_tcsstr(lpCmdLine,TEXT("-nodesktop")))
 		startup_desktop = FALSE;
 
 	 // Don't display cabinet window in desktop mode
 	if (startup_desktop && !_tcsstr(lpCmdLine,TEXT("-explorer")))
 		nShowCmd = SW_HIDE;
+#endif
 
 	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
@@ -704,6 +728,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		if (g_SHDOCVW_ShellDDEInit)
 			(*g_SHDOCVW_ShellDDEInit)(TRUE);
 	}
+#ifdef ROSSHELL
+	else
+		return 0;	// no shell to launch, so exit immediatelly
+#endif
 
 
 	g_Globals.init(hInstance);
@@ -723,6 +751,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		}
 	}
 
+#ifndef ROSSHELL
 	/**TODO fix command line handling */
 	if (*lpCmdLine=='"' && lpCmdLine[_tcslen(lpCmdLine)-1]=='"') {
 		++lpCmdLine;
@@ -731,6 +760,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	if (g_Globals._hwndDesktop)
 		g_Globals._desktop_mode = true;
+#endif
 
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
 
