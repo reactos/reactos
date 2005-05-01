@@ -632,6 +632,10 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 
   IntLockQueueState;
 
+  /* All messages have to contain the cursor point. */
+  IntGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation,
+                       &NewMsg.pt);
+
   UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
 			  QueueKeyStateTable, wp, 2, 0, 
 			  keyLayout );
@@ -659,6 +663,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 
 	  DPRINT("FINAL CHAR: %c\n", wp[0]);
 	}
+      
       if (dead_char) 
 	{
 	  NewMsg.hwnd = lpMsg->hwnd;
