@@ -490,6 +490,7 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
 {
     ULONG    OldProcessorUsage = 0;
     ULONG    OldProcessCount = 0;
+    TCHAR    szCpuUsage[256], szProcesses[256];
 
     /* Create the event */
     hProcessPageEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
@@ -497,6 +498,9 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
     /* If we couldn't create the event then exit the thread */
     if (!hProcessPageEvent)
         return 0;
+
+    LoadString(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
+    LoadString(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     while (1) {
         DWORD    dwWaitVal;

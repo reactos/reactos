@@ -318,6 +318,7 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 	ULONG	TotalProcesses;
 
 	TCHAR	Text[260];
+	TCHAR	szMemUsage[256];
 
 	/*  Create the event */
 	hPerformancePageEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
@@ -325,6 +326,8 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 	/*  If we couldn't create the event then exit the thread */
 	if (!hPerformancePageEvent)
 		return 0;
+
+	LoadString(hInst, IDS_STATUS_MEMUSAGE, szMemUsage, 256);
 
 	while (1)
 	{
@@ -358,7 +361,7 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			SetWindowText(hPerformancePageCommitChargeLimitEdit, Text);
 			_ultoa(CommitChargePeak, Text, 10);
 			SetWindowText(hPerformancePageCommitChargePeakEdit, Text);
-			wsprintf(Text, _T("Mem Usage: %dK / %dK"), CommitChargeTotal, CommitChargeLimit);
+			wsprintf(Text, szMemUsage, CommitChargeTotal, CommitChargeLimit);
 			SendMessage(hStatusWnd, SB_SETTEXT, 2, (LPARAM)Text);
 
 			/* 
