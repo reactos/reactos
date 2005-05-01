@@ -527,12 +527,12 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
 
             if (OldProcessorUsage != PerfDataGetProcessorUsage()) {
                 OldProcessorUsage = PerfDataGetProcessorUsage();
-                wsprintf(text, _T("CPU Usage: %3d%%"), OldProcessorUsage);
+                wsprintf(text, szCpuUsage, OldProcessorUsage);
                 SendMessage(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
             }
             if (OldProcessCount != PerfDataGetProcessCount()) {
                 OldProcessCount = PerfDataGetProcessCount();
-                wsprintf(text, _T("Processes: %d"), OldProcessCount);
+                wsprintf(text, szProcesses, OldProcessCount);
                 SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
             }
         }
