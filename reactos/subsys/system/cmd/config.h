@@ -52,9 +52,13 @@
 /* Define one of these to select the used locale. */
 /*  (date and time formats etc.) used in DATE, TIME, */
 /*  DIR, PROMPT etc. */
+#ifdef __REACTOS__
+#define LOCALE_DEFAULT
+#else
 #define LOCALE_WINDOWS   /* System locale */
 /* #define LOCALE_GERMAN */    /* German locale */
 /* #define LOCALE_DEFAULT */   /* United States locale */
+#endif
 
 #ifndef __REACTOS__
 #define INCLUDE_CMD_ACTIVATE
