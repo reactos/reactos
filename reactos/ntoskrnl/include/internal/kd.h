@@ -79,13 +79,17 @@ typedef struct _KDB_MODULE_INFO
 # define KDB_CREATE_THREAD_HOOK(CONTEXT)	do { } while (0)
 #endif
 
-#ifdef KDBG
+#if defined(KDBG) || defined(DBG)
 # define KeRosPrintAddress(ADDRESS)         KdbSymPrintAddress(ADDRESS)
+#else
+# define KeRosPrintAddress(ADDRESS)         KiRosPrintAddress(ADDRESS)
+#endif
+
+#ifdef KDBG
 # define KdbInit()                          KdbpCliInit()
 # define KdbModuleLoaded(FILENAME)          KdbpCliModuleLoaded(FILENAME)
 # define KDB_DELETEPROCESS_HOOK(PROCESS)	KdbDeleteProcessHook(PROCESS)
 #else
-# define KeRosPrintAddress(ADDRESS)         KiRosPrintAddress(ADDRESS)
 # define KdbEnterDebuggerException(ER, PM, C, TF, F)  kdHandleException
 # define KdbInit()                          do { } while (0)
 # define KdbEnter()                         do { } while (0)
