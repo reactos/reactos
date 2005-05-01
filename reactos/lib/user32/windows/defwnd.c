@@ -479,19 +479,15 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	}
     }
 
-  if (Style & WS_CHILD)
-    {
-      hWndParent = GetParent(hwnd);
-    }
-  
   /* Get min/max info */
   
   WinPosGetMinMaxInfo(hwnd, NULL, NULL, &minTrack, &maxTrack);
   GetWindowRect(hwnd, &sizingRect);
-  unmodRect = sizingRect;
   if (Style & WS_CHILD)
     {
+      hWndParent = GetParent(hwnd);
       MapWindowPoints( 0, hWndParent, (LPPOINT)&sizingRect, 2 );
+      unmodRect = sizingRect;
       GetClientRect(hWndParent, &mouseRect );
       clipRect = mouseRect;
       MapWindowPoints(hWndParent, HWND_DESKTOP, (LPPOINT)&clipRect, 2);
@@ -508,6 +504,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
         SetRect(&mouseRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
         clipRect = mouseRect;
       }
+      unmodRect = sizingRect;
     }
   ClipCursor(&clipRect);
   
