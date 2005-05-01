@@ -152,7 +152,7 @@ IntVideoPortAllocateDeviceNumber(VOID)
          DeviceNumber++;
          continue;
       }
-      else if (Status == STATUS_OBJECT_NAME_INVALID)
+      else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
          break;
       else
       {
