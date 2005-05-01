@@ -177,56 +177,71 @@ VOID
 STDCALL
 IopDeleteFile(PVOID ObjectBody)
 {
-   PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
-   PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
-   NTSTATUS Status;
+    PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
+    PIRP Irp;
+    PIO_STACK_LOCATION StackPtr;
+    NTSTATUS Status;
+    KEVENT Event;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
    
-   DPRINT("IopDeleteFile()\n");
+    DPRINT("IopDeleteFile()\n");
 
-   if (FileObject->DeviceObject)
-   {
-#if 0
-//NOTE: Allmost certain that the latest changes to I/O Mgr makes this redundant (OriginalFileObject case)
-     
-     ObReferenceObjectByPointer(ObjectBody,
-           STANDARD_RIGHTS_REQUIRED,
-           IoFileObjectType,
-           UserMode);
-#endif   
-     KeResetEvent( &FileObject->Event );
-
-     Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, TRUE);
-     if (Irp == NULL)
-     {
-        /*
-         * FIXME: This case should eventually be handled. We should wait
-         * until enough memory is available to allocate the IRP.
-         */
-        ASSERT(FALSE);
-     }
+    if (FileObject->DeviceObject)
+    {    
+        /* Check if this is a direct open or not */
+        if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+        {
+            DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+        }
+        else
+        {
+            DeviceObject = IoGetRelatedDeviceObject(FileObject);
+        }
+        
+        /* Clear and set up Events */
+        KeClearEvent(&FileObject->Event);
+        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+         
+        /* Allocate an IRP */
+        Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+        
+        /* Set it up */
+        Irp->UserEvent = &Event;
+        Irp->UserIosb = &IoStatusBlock;
+        Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+        Irp->Tail.Overlay.OriginalFileObject= FileObject;
+        Irp->Flags = IRP_CLOSE_OPERATION | IRP_SYNCHRONOUS_API;
+        
+        /* Set up Stack Pointer Data */
+        StackPtr = IoGetNextIrpStackLocation(Irp);
+        StackPtr->MajorFunction = IRP_MJ_CLOSE;
+        StackPtr->DeviceObject = DeviceObject;
+        StackPtr->FileObject = FileObject;
    
-     Irp->UserEvent = &FileObject->Event;
-     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-     Irp->Flags |= IRP_CLOSE_OPERATION;
-   
-     StackPtr = IoGetNextIrpStackLocation(Irp);
-     StackPtr->MajorFunction = IRP_MJ_CLOSE;
-     StackPtr->DeviceObject = FileObject->DeviceObject;
-     StackPtr->FileObject = FileObject;
-   
-     Status = IoCallDriver(FileObject->DeviceObject, Irp);
-     if (Status == STATUS_PENDING)
-     {
-        KeWaitForSingleObject(&FileObject->Event, Executive, KernelMode, FALSE, NULL);
-     }
-   }
-   
-   if (FileObject->FileName.Buffer != NULL)
-     {
- ExFreePool(FileObject->FileName.Buffer);
- FileObject->FileName.Buffer = 0;
-     }
+        /* Call the FS Driver */
+        Status = IoCallDriver(DeviceObject, Irp);
+        
+        /* Wait for completion */
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        }
+      
+        /* Clear the file name */  
+        if (FileObject->FileName.Buffer)
+        {
+            ExFreePool(FileObject->FileName.Buffer);
+            FileObject->FileName.Buffer = NULL;
+        }
+        
+        /* Free the completion context */
+        if (FileObject->CompletionContext)
+        {
+            ObDereferenceObject(FileObject->CompletionContext->Port);
+            ExFreePool(FileObject->CompletionContext);
+        }
+    }
 }
 
 static 
