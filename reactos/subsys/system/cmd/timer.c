@@ -37,7 +37,7 @@
 static VOID
 PrintElapsedTime (DWORD time,INT format)
 {
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	DWORD h,m,s,ms;
 
 #ifdef _DEBUG
@@ -47,8 +47,8 @@ PrintElapsedTime (DWORD time,INT format)
 	switch (format)
 	{
 	case 0:
-		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf((LPTSTR)szMsg,time);
+		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPrintf(szMsg,time);
 		break;
 
 	case 1:
@@ -58,8 +58,8 @@ PrintElapsedTime (DWORD time,INT format)
 		time /=60;
 		m = time % 60;		
 		h = time / 60;
-		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf((LPTSTR)szMsg,
+		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPrintf(szMsg,
 		             h,cTimeSeparator,
 		             m,cTimeSeparator,
 		             s,cDecimalSeparator,ms/10);
@@ -70,7 +70,7 @@ PrintElapsedTime (DWORD time,INT format)
 
 INT CommandTimer (LPTSTR cmd, LPTSTR param)
 {
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	// all timers are kept
 	static DWORD clksT[10];
@@ -104,8 +104,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf ((LPTSTR)szMsg,cTimeSeparator,cTimeSeparator,cDecimalSeparator);		
+		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPrintf (szMsg,cTimeSeparator,cTimeSeparator,cDecimalSeparator);		
 		return 0;
 	}
 

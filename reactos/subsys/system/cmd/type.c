@@ -42,14 +42,14 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	INT    argc,i;
 	LPTSTR *argv;
 	LPTSTR errmsg;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	
 	hConsoleOut=GetStdHandle (STD_OUTPUT_HANDLE);
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		LoadString( GetModuleHandle(NULL), STRING_TYPE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);	
+		ConOutPuts (szMsg);	
 		return 0;
 	}
 
@@ -66,7 +66,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 		if (_T('/') == argv[i][0])
 		{
 			LoadString( GetModuleHandle(NULL), STRING_TYPE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf ((LPTSTR)szMsg, argv[i] + 1);
+			ConErrPrintf (szMsg, argv[i] + 1);
 			continue;
 		}
 		hFile = CreateFile(argv[i],

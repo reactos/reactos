@@ -31,7 +31,7 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 {
 	TCHAR szVolName[80];
 	DWORD dwSerialNr;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 
 	/* get the volume information of the drive */
@@ -55,21 +55,21 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 
 	if (szVolName[0] != '\0')
 	{
-		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf ((LPTSTR)szMsg, pszRootPath[0],szVolName);
+		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPrintf (szMsg, pszRootPath[0],szVolName);
 	}
 	else
 	{
-		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf ((LPTSTR)szMsg, pszRootPath[0]);
+		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPrintf (szMsg, pszRootPath[0]);
 	}
 
 	
 	
 
 	/* print the volume serial number */
-	LoadString( GetModuleHandle(NULL), STRING_VOL_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf ((LPTSTR)szMsg,
+	LoadString( GetModuleHandle(NULL), STRING_VOL_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+	ConOutPrintf (szMsg,
 		      HIWORD(dwSerialNr),
 		      LOWORD(dwSerialNr));
 	return 0;
@@ -80,12 +80,12 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szRootPath[] = _T("A:\\");
 	TCHAR szPath[MAX_PATH];
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_VOL_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPuts ((LPTSTR)szMsg);	
 
 		return 0;
 	}

@@ -64,14 +64,14 @@ VOID ShortVersion (VOID)
 INT cmd_ver (LPTSTR cmd, LPTSTR param)
 {
 	INT i;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
-	WCHAR rosdev[RC_STRING_MAX_SIZE];
-    WCHAR fredev[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR rosdev[RC_STRING_MAX_SIZE];
+	TCHAR fredev[RC_STRING_MAX_SIZE];
 
 	if (_tcsstr (param, _T("/?")) != NULL)
 	{
 		LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);	
+		ConOutPuts (szMsg);	
 
 		return 0;
 	}
@@ -84,8 +84,8 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	if (param[0] == _T('\0'))
 	{
 		ConOutPuts (_T("\n"SHELLINFO));
-	   LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-       ConOutPuts ((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+		ConOutPuts (szMsg);	
 	}
 	else
 	{
@@ -110,22 +110,22 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			{
 				/* Warranty notice */
 				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-                ConOutPuts ((LPTSTR)szMsg);	
+				ConOutPuts (szMsg);	
 			}
 			else if (_totupper (param[i]) == _T('R'))
 			{
 				/* Redistribution notice */
 				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-                ConOutPuts ((LPTSTR)szMsg);					
+				ConOutPuts (szMsg);					
 			}
 			else if (_totupper (param[i]) == _T('C'))
 			{
 				/* Developer listing */
 				
-				LoadString( GetModuleHandle(NULL), STRING_REACTOS_DEV, (LPTSTR) rosdev,sizeof(rosdev));
-                LoadString( GetModuleHandle(NULL), STRING_FreeDOS_DEV, (LPTSTR) fredev,sizeof(fredev));
-				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP6, (LPTSTR) szMsg,sizeof(szMsg));				                
-                ConOutPrintf ((LPTSTR)szMsg,fredev,rosdev);
+				LoadString( GetModuleHandle(NULL), STRING_REACTOS_DEV, rosdev,sizeof(rosdev)/sizeof(TCHAR));
+				LoadString( GetModuleHandle(NULL), STRING_FreeDOS_DEV, fredev,sizeof(fredev)/sizeof(TCHAR));
+				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP6, (LPTSTR) szMsg,sizeof(szMsg));	                
+				ConOutPrintf ((LPTSTR)szMsg,fredev,rosdev);
 				
 				/*
 				ConOutPuts (_T("\n"
@@ -151,7 +151,7 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	}
 
 	LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP5, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts ((LPTSTR)szMsg);	
+	ConOutPuts (szMsg);	
 	return 0;
 }
 

@@ -121,17 +121,16 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 	INT GCret;
 	TCHAR Ch;
 	DWORD amount,clk;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    LoadString( GetModuleHandle(NULL), STRING_CHOICE_OPTION, (LPTSTR) Options,sizeof(lpOptions));
-    lpOptions = _T(Options);
+	LoadString( GetModuleHandle(NULL), STRING_CHOICE_OPTION, Options,sizeof(lpOptions)/sizeof(TCHAR));
+	lpOptions = Options;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-	 LoadString( GetModuleHandle(NULL), STRING_CHOICE_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-     ConOutPuts ((LPTSTR)szMsg);
-
-	 return 0;
+	    LoadString( GetModuleHandle(NULL), STRING_CHOICE_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+	    ConOutPuts (szMsg);
+	     return 0;
 	}
 
 	/* retrieve text */
@@ -171,8 +170,8 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 				if (_tcslen (lpOptions) == 0)
 				{
 					
-					LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-					ConErrPuts ((LPTSTR)szMsg);
+					LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+					ConErrPuts (szMsg);
 					freep (arg);
 					return 1;
 				}
@@ -202,8 +201,8 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 
 				if (*s != _T(','))
 				{
-					LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR_TXT, (LPTSTR) szMsg,sizeof(szMsg));
-                    ConErrPuts ((LPTSTR)szMsg);
+					LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR_TXT, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+					ConErrPuts (szMsg);
 					freep (arg);
 					return 1;
 				}
@@ -214,8 +213,8 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 			}
 			else if (arg[i][0] == _T('/'))
 			{
-				LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR_OPTION, (LPTSTR) szMsg,sizeof(szMsg));               
-				ConErrPrintf ((LPTSTR)szMsg, arg[i]);
+				LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR_OPTION, szMsg,sizeof(szMsg)/sizeof(TCHAR));               
+				ConErrPrintf (szMsg, arg[i]);
 				freep (arg);
 				return 1;
 			}

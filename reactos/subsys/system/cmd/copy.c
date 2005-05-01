@@ -301,13 +301,13 @@ Overwrite (LPTSTR fn)
 	
 	LPTSTR lpOptions;
 	TCHAR Options[3];
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, (LPTSTR) Options,sizeof(Options)+sizeof(WCHAR));
-    lpOptions = _T(Options);
+	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, Options,sizeof(Options)/sizeof(TCHAR));
+	lpOptions = Options;
 
-    LoadString( GetModuleHandle(NULL), STRING_COPY_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf ((LPTSTR)szMsg);
+	LoadString( GetModuleHandle(NULL), STRING_COPY_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+	ConOutPrintf (szMsg);
 	
 	ConInString (inp, 10);
 	ConOutPuts (_T(""));
@@ -339,7 +339,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	DWORD  dwWritten;
 	DWORD  i;
 	BOOL   bEof = FALSE;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("checking mode\n"));
@@ -351,8 +351,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 						   NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
 	{
-		  LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-          ConErrPrintf ((LPTSTR)szMsg, source);
+		LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConErrPrintf (szMsg, source);
 		return 0;
 	}
 
@@ -379,8 +379,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	{
 		if (!_tcscmp (dest, source))
 		{
-			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf ((LPTSTR)szMsg, source);
+			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+			ConErrPrintf (szMsg, source);
 			
 			CloseHandle (hFileSrc);
 			return 0;
@@ -456,8 +456,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		if (dwWritten != dwRead)
 		{
 			
-			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf ((LPTSTR)szMsg);
+			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR3, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+			ConErrPrintf (szMsg);
 
 			free (buffer);
 			CloseHandle (hFileDest);
@@ -638,7 +638,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	TCHAR dir_d[_MAX_DIR];
 	TCHAR file_d[_MAX_FNAME];
 	TCHAR ext_d[_MAX_EXT];
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	int argc;
 	int append;
@@ -655,8 +655,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_COPY_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_COPY_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPuts (szMsg);
 		return 1;
 	}
 
@@ -728,8 +728,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	}
 	else if (bDestFound && bWildcards)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR4, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConErrPrintf (szMsg);
 
 		DeleteFileList (sources);
 		freep (p);

@@ -210,9 +210,9 @@ static ULARGE_INTEGER recurse_bytes;
 static VOID
 	DirHelp (VOID)
 {
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
-	LoadString( GetModuleHandle(NULL), STRING_DIR_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPuts ((LPTSTR)szMsg);
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	LoadString( GetModuleHandle(NULL), STRING_DIR_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+	ConOutPuts (szMsg);
 }
 
 
@@ -228,13 +228,13 @@ DirReadParam (LPTSTR line,				/* [IN] The line with the parameters & switches */
 			  LPDIRSWITCHFLAGS lpFlags	/* [IN/OUT] The flags after calculating switches */
 			  )
 {
-TCHAR cCurSwitch;	/* The current switch */
-TCHAR cCurChar;		/* Current examing character */
-TCHAR cCurUChar;	/* Current upper examing character */
-BOOL bNegative;		/* Negative switch */
-BOOL bPNegative;	/* Negative switch parameter */
-BOOL bIntoQuotes;	/* A flag showing if we are in quotes (") */
-LPTSTR ptrLast;		/* A pointer to the last character of param */
+	TCHAR cCurSwitch;	/* The current switch */
+	TCHAR cCurChar;		/* Current examing character */
+	TCHAR cCurUChar;	/* Current upper examing character */
+	BOOL bNegative;		/* Negative switch */
+	BOOL bPNegative;	/* Negative switch parameter */
+	BOOL bIntoQuotes;	/* A flag showing if we are in quotes (") */
+	LPTSTR ptrLast;		/* A pointer to the last character of param */
 
 	/* Initialize variables; */
 	cCurSwitch = _T(' ');
@@ -773,7 +773,7 @@ PrintDirectoryHeader (LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
   TCHAR szVolName[80];
   DWORD dwSerialNr;
   LPTSTR p;
-  WCHAR szMsg[RC_STRING_MAX_SIZE];
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
 
   if (lpFlags->bBareFormat)
     return(TRUE);
@@ -828,22 +828,22 @@ PrintDirectoryHeader (LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
    
   if (szVolName[0] != _T('\0'))
      {
-	  LoadString( GetModuleHandle(NULL), STRING_DIR_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-      ConOutPrintf ((LPTSTR)szMsg, szRootName[0], szVolName);
-	 }
+	    LoadString( GetModuleHandle(NULL), STRING_DIR_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+	    ConOutPrintf (szMsg, szRootName[0], szVolName);
+     }
   else
      {
-	  LoadString( GetModuleHandle(NULL), STRING_DIR_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-      ConOutPrintf ((LPTSTR)szMsg, szRootName[0]);
-	 }
+	    LoadString( GetModuleHandle(NULL), STRING_DIR_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+	    ConOutPrintf (szMsg, szRootName[0]);
+     }
 
   
 
 
   /* print the volume serial number if the return was successful */
 	 
-  LoadString( GetModuleHandle(NULL), STRING_DIR_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-  ConOutPrintf ((LPTSTR)szMsg,
+  LoadString( GetModuleHandle(NULL), STRING_DIR_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+  ConOutPrintf (szMsg,
 	            HIWORD(dwSerialNr),
 	            LOWORD(dwSerialNr));
 
@@ -926,11 +926,11 @@ DirPrintFileDateTime (TCHAR * lpDate,
 					  LPWIN32_FIND_DATA lpFile,
 					  LPDIRSWITCHFLAGS lpFlags)
 {
-FILETIME ft;
-SYSTEMTIME dt;
-TCHAR szDate[30];
-TCHAR szTime[30];
-WORD wYear;
+	FILETIME ft;
+	SYSTEMTIME dt;
+	TCHAR szDate[30];
+	TCHAR szTime[30];
+	WORD wYear;
 
 	/* Select the right time field */
 	switch (lpFlags->stTimeField.eTimeField)
@@ -1053,10 +1053,10 @@ PrintSummary(LPTSTR szPath,
 	     LPINT pLine,
 	     LPDIRSWITCHFLAGS lpFlags)
 {
-TCHAR szBuffer[64];
-ULARGE_INTEGER uliFree;
-TCHAR szRoot[] = _T("A:\\");
-WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szBuffer[64];
+	ULARGE_INTEGER uliFree;
+	TCHAR szRoot[] = _T("A:\\");
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 
 	/* Here we check if we didn't find anything */
@@ -1074,16 +1074,16 @@ WCHAR szMsg[RC_STRING_MAX_SIZE];
 	{
 		ConvertULargeInteger (u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 		
-		LoadString( GetModuleHandle(NULL), STRING_DIR_HELP5, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf ((LPTSTR)szMsg,ulFiles, szBuffer);
-    }
+		LoadString( GetModuleHandle(NULL), STRING_DIR_HELP5, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPrintf (szMsg,ulFiles, szBuffer);
+	}
 
 	/* Print total  directories and freespace */
 	szRoot[0] = szPath[0];
 	GetUserDiskFreeSpace(szRoot, &uliFree);
 	ConvertULargeInteger (uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
-	LoadString( GetModuleHandle(NULL), STRING_DIR_HELP6, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf ((LPTSTR)szMsg,ulDirs, szBuffer);
+	LoadString( GetModuleHandle(NULL), STRING_DIR_HELP6, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+	ConOutPrintf (szMsg,ulDirs, szBuffer);
 
   return 0;
 }
@@ -1096,8 +1096,8 @@ WCHAR szMsg[RC_STRING_MAX_SIZE];
 TCHAR* getExt(const TCHAR* file)
 {
 	
-	TCHAR* tmp = _tcsrchr(file,'.');
-	return tmp?tmp+1:"";
+	TCHAR* tmp = _tcsrchr(file,_T('.'));
+	return tmp?tmp+1:_T("");
 }
 
 /*
@@ -1169,13 +1169,13 @@ ULARGE_INTEGER u64FileSize;		/* The file size */
 		/* Calculate short name */
 		szShortName[0] = _T('\0');
 		if (lpFlags->bShortName)		
-			_stprintf(szShortName," %-12s", ptrFiles[i]->cAlternateFileName);
+			_stprintf(szShortName,_T(" %-12s"), ptrFiles[i]->cAlternateFileName);
 		
 		/* Format date and time */
 		DirPrintFileDateTime(szDate,szTime,ptrFiles[i],lpFlags);
 
 		/* Print the line */
-		ConOutPrintf("%10s  %-8s    %*s%s %s\n",
+		ConOutPrintf(_T("%10s  %-8s    %*s%s %s\n"),
 			szDate,
 			szTime,
 			iSizeFormat,
@@ -1244,13 +1244,13 @@ TCHAR szTempFname[MAX_PATH];	/* Temporary string */
 				DWORD temp = (j*iLines)+i;
 				if (temp >= dwCount) break;
 				if (ptrFiles[temp]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-					_stprintf(szTempFname, "[%s]", ptrFiles[temp]->cFileName);
+					_stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->cFileName);
 				else
-					_stprintf(szTempFname, "%s", ptrFiles[temp]->cFileName);
+					_stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
 
-				ConOutPrintf("%-*s",iBiggestName + 1 , szTempFname );
+				ConOutPrintf(_T("%-*s"),iBiggestName + 1 , szTempFname );
 			}				
-			ConOutPrintf("\n");
+			ConOutPrintf(_T("\n"));
 		}
 	}
 	/* Print Line sorted */
@@ -1259,18 +1259,18 @@ TCHAR szTempFname[MAX_PATH];	/* Temporary string */
 		for (i = 0;i < dwCount;i++)
 		{
 			if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				_stprintf(szTempFname, "[%s]", ptrFiles[i]->cFileName);
+				_stprintf(szTempFname, _T("[%s]"), ptrFiles[i]->cFileName);
 			else
-				_stprintf(szTempFname, "%s", ptrFiles[i]->cFileName);
+				_stprintf(szTempFname, _T("%s"), ptrFiles[i]->cFileName);
 
-				ConOutPrintf("%-*s", iBiggestName + 1, szTempFname );
+				ConOutPrintf(_T("%-*s"), iBiggestName + 1, szTempFname );
 			/* We print a new line at the end of each column
 			   except for the case that it is the last item.*/
 			if (!((i+1)%iColumns) && (i < (dwCount-1)))
-				ConOutPrintf("\n");
+				ConOutPrintf(_T("\n"));
 		}
 		/* Add a new line after the last item */
-		ConOutPrintf("\n");
+		ConOutPrintf(_T("\n"));
 	}
 	return 0;
 }
@@ -1329,7 +1329,7 @@ ULARGE_INTEGER u64FileSize;		/* The file size */
 		DirPrintFileDateTime(szDate,szTime,ptrFiles[i],lpFlags);
 
 		/* Print the line */
-		ConOutPrintf("%-8s %-3s  %*s %s  %s\n",
+		ConOutPrintf(_T("%-8s %-3s  %*s %s  %s\n"),
 			szName,			/* The file's 8.3 name */
 			szExt,			/* The file's 8.3 extension */
 			iSizeFormat,	/* print format for size column */
@@ -1367,11 +1367,11 @@ TCHAR szFullName[MAX_PATH];		/* The fullpath name of file */
 		{
 			_tcscpy(szFullName, szCurPath);
 			_tcscat(szFullName, ptrFiles[i]->cFileName);
-			ConOutPrintf("%s\n", szFullName);
+			ConOutPrintf(_T("%s\n"), szFullName);
 		}
 		/* if we are not in recursive mode we print the file names */
 		else
-			ConOutPrintf("%s\n",ptrFiles[i]->cFileName);	
+			ConOutPrintf(_T("%s\n"),ptrFiles[i]->cFileName);	
 	}
 	return 0;
 }
@@ -1388,7 +1388,7 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 				LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags used */
 {
 TCHAR szTemp[MAX_PATH];			/* A buffer to format the directory header */
-WCHAR szMsg[RC_STRING_MAX_SIZE];
+TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* Print directory header */
 	_tcscpy(szTemp, szCurPath);
@@ -1399,8 +1399,8 @@ WCHAR szMsg[RC_STRING_MAX_SIZE];
 	   and if we are in recursive mode... we must have results */
 	if (!(lpFlags->bBareFormat ) && !((lpFlags->bRecursive) && (dwCount <= 0)))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_DIR_HELP7, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf (_T( (LPTSTR)szMsg), szTemp);
+		LoadString( GetModuleHandle(NULL), STRING_DIR_HELP7, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPrintf (szMsg, szTemp);
 	}
 
 	/* Bare format */
@@ -1478,10 +1478,10 @@ long iComp = 0;					/* The comparison result */
 				(lpFile1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
 			break;
 		case ORDER_EXTENSION:	/* Order by extension name /o:e */
-			iComp = _stricmp(getExt(lpFile1->cFileName),getExt(lpFile2->cFileName));
+			iComp = _tcsicmp(getExt(lpFile1->cFileName),getExt(lpFile2->cFileName));
 			break;
 		case ORDER_NAME:		/* Order by filename /o:n */
-			iComp = _stricmp(lpFile1->cFileName, lpFile2->cFileName);
+			iComp = _tcsicmp(lpFile1->cFileName, lpFile2->cFileName);
 			break;
 		case ORDER_TIME:		/* Order by file's time /o:t */
 
@@ -1610,7 +1610,7 @@ DWORD dwCountFiles;						/* Counter for files */
 DWORD dwCountDirs;						/* Counter for directories */
 ULARGE_INTEGER u64CountBytes;			/* Counter for bytes */
 ULARGE_INTEGER u64Temp;					/* A temporary counter */
-WCHAR szMsg[RC_STRING_MAX_SIZE];
+TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* Initialize Variables */
 	ptrStartNode = NULL;
@@ -1728,8 +1728,8 @@ WCHAR szMsg[RC_STRING_MAX_SIZE];
 	if (!(lpFlags->bBareFormat) && (dwCount > 0))
 	{
 		ConvertULargeInteger(u64CountBytes, szBytes, 20, lpFlags->bTSeperator);
-		LoadString( GetModuleHandle(NULL), STRING_DIR_HELP8, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf ((LPTSTR)szMsg,dwCountFiles, szBytes);
+		LoadString( GetModuleHandle(NULL), STRING_DIR_HELP8, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPrintf (szMsg,dwCountFiles, szBytes);
 	}
 
 	/* Add statistics to recursive statistics*/
@@ -1751,8 +1751,8 @@ WCHAR szMsg[RC_STRING_MAX_SIZE];
 			if (hRecSearch != INVALID_HANDLE_VALUE)
 			{
 				/* We search for directories other than "." and ".." */
-				if ((_stricmp(wfdFileInfo.cFileName, _T(".")) != 0)
-					&& (_stricmp(wfdFileInfo.cFileName, _T("..")) != 0 )
+				if ((_tcsicmp(wfdFileInfo.cFileName, _T(".")) != 0)
+					&& (_tcsicmp(wfdFileInfo.cFileName, _T("..")) != 0 )
 					&& (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 				{
 					/* Concat the path and the directory to do recursive */

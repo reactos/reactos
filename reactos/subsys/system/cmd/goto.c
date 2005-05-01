@@ -41,7 +41,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR tmp;
 	LONG   lNewPosHigh;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_goto (\'%s\', \'%s\'\n"), cmd, param);
@@ -49,8 +49,8 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_GOTO_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_GOTO_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts (szMsg);	
 
 		return 0;
 	}
@@ -64,8 +64,8 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 	if (*param == _T('\0'))
 	{
 		
-		LoadString( GetModuleHandle(NULL), STRING_GOTO_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-		ExitBatch ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_GOTO_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ExitBatch (szMsg);
 		return 1;
 	}
 
@@ -97,8 +97,8 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 			return 0;
 	}
 
-	LoadString( GetModuleHandle(NULL), STRING_GOTO_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-    ConErrPrintf ((LPTSTR)szMsg,param);		
+	LoadString( GetModuleHandle(NULL), STRING_GOTO_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	ConErrPrintf (szMsg,param);		
 	ExitBatch (NULL);
 
 	return 1;

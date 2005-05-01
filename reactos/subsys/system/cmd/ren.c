@@ -58,14 +58,14 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 
   HANDLE hFile;
   WIN32_FIND_DATA f;
-  WCHAR szMsg[RC_STRING_MAX_SIZE];
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
 
   if (!_tcsncmp(param, _T("/?"), 2))
     {
-     LoadString( GetModuleHandle(NULL), STRING_REN_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-     ConOutPuts((LPTSTR)szMsg);
+	LoadString( GetModuleHandle(NULL), STRING_REN_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	ConOutPuts(szMsg);
 
-      return(0);
+	return(0);
     }
 
   /* split the argument list */
@@ -239,8 +239,8 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 		{
 		  if (!(dwFlags & REN_ERROR))
 		  {
-		    LoadString( GetModuleHandle(NULL), STRING_REN_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-            ConErrPrintf ((LPTSTR)szMsg, GetLastError());
+		    LoadString( GetModuleHandle(NULL), STRING_REN_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		    ConErrPrintf (szMsg, GetLastError());
 		  }
 		}
 	    }
@@ -252,11 +252,11 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
   if (!(dwFlags & REN_QUIET))
     {
 	if (dwFiles == 1)
-	  LoadString( GetModuleHandle(NULL), STRING_REN_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+	  LoadString( GetModuleHandle(NULL), STRING_REN_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
 	else
-	  LoadString( GetModuleHandle(NULL), STRING_REN_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+	  LoadString( GetModuleHandle(NULL), STRING_REN_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
     
-	ConOutPrintf((LPTSTR)szMsg,dwFiles);	
+	ConOutPrintf(szMsg,dwFiles);	
     }
 
 	

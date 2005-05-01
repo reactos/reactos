@@ -33,7 +33,7 @@
 
 INT CommandEcho (LPTSTR cmd, LPTSTR param)
 {
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEcho '%s' : '%s'\n"), cmd, param);
@@ -41,8 +41,8 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);			
+		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts (szMsg);			
 		return 0;
 	}
 
@@ -62,8 +62,8 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 		else if (*param)
 			ConOutPuts (param);
 		else {
-             LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-             ConOutPrintf ((LPTSTR)szMsg, bEcho ? D_ON : D_OFF);
+             LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+             ConOutPrintf (szMsg, bEcho ? D_ON : D_OFF);
 		     }
 	}
 
@@ -72,7 +72,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 
 INT CommandEchos (LPTSTR cmd, LPTSTR param)
 {
- WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEchos '%s' : '%s'\n"), cmd, param);
@@ -80,8 +80,8 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts(szMsg);	
 		
 		return 0;
 	}
@@ -95,7 +95,7 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 
 INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 {
- WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEchoerr '%s' : '%s'\n"), cmd, param);
@@ -103,8 +103,8 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts((LPTSTR)szMsg);	
 
 		return 0;
 	}
@@ -126,7 +126,7 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 
 INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 {
- WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEchoserr '%s' : '%s'\n"), cmd, param);
@@ -136,8 +136,8 @@ INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts(szMsg);	
 
 		return 0;
 	}

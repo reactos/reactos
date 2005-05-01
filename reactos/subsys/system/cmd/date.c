@@ -47,24 +47,24 @@ static WORD awMonths[2][13] =
 static VOID
 PrintDateString (VOID)
 {
-  WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	switch (nDateFormat)
 	{
 		case 0: /* mmddyy */
 		default:
-			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf ((LPTSTR)szMsg, cDateSeparator, cDateSeparator);
+			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+			ConOutPrintf (szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 1: /* ddmmyy */
-			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf ((LPTSTR)szMsg, cDateSeparator, cDateSeparator);
+			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+			ConOutPrintf (szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 2: /* yymmdd */
-			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf ((LPTSTR)szMsg, cDateSeparator, cDateSeparator);
+			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+			ConOutPrintf (szMsg, cDateSeparator, cDateSeparator);
 			break;
 	}
 }
@@ -189,12 +189,12 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 	INT    i;
 	BOOL   bPrompt = TRUE;
 	INT    nDateString = -1;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_DATE_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_DATE_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts ((LPTSTR)szMsg);
 		return 0;
 	}
 
@@ -247,8 +247,8 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			freep (arg);
 			return 0;
 		}
-		LoadString( GetModuleHandle(NULL), STRING_DATE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPuts ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_DATE_ERROR, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPuts (szMsg);
 		
 	}
 

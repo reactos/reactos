@@ -41,7 +41,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 {
 	INT x_flag = 0; /* when set cause 'then' clause to be executed */
 	LPTSTR pp;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_if: (\'%S\', \'%S\')\n"), cmd, param);
@@ -49,8 +49,8 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_IF_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_IF_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts(szMsg);
 		return 0;
 	}
 

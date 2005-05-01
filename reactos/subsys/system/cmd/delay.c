@@ -19,14 +19,14 @@ INT CommandDelay (LPTSTR cmd, LPTSTR param)
 {
 	DWORD val;
 	DWORD mul=1000;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-	  LoadString( GetModuleHandle(NULL), STRING_DELAY_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-      ConOutPuts ((LPTSTR)szMsg);
+	    LoadString( GetModuleHandle(NULL), STRING_DELAY_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	    ConOutPuts (szMsg);
 	
-	  return 0;
+	    return 0;
 	}
 
 	if (*param==0)

@@ -64,12 +64,12 @@ INT CommandMemory (LPTSTR cmd, LPTSTR param)
 	TCHAR szAvailPageFile[20];
 	TCHAR szTotalVirtual[20];
 	TCHAR szAvailVirtual[20];
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_MEMMORY_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_MEMMORY_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts (szMsg);
 		return 0;
 	}
 
@@ -85,8 +85,8 @@ INT CommandMemory (LPTSTR cmd, LPTSTR param)
 	ConvertDWord (ms.dwTotalVirtual, szTotalVirtual, 20, TRUE);
 	ConvertDWord (ms.dwAvailVirtual, szAvailVirtual, 20, TRUE);
 
-	LoadString( GetModuleHandle(NULL), STRING_MEMMORY_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf ((LPTSTR)szMsg,
+	LoadString( GetModuleHandle(NULL), STRING_MEMMORY_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	ConOutPrintf (szMsg,
 	              szMemoryLoad, szTotalPhys, szAvailPhys, szTotalPageFile,
 	              szAvailPageFile, szTotalVirtual, szAvailVirtual);
 

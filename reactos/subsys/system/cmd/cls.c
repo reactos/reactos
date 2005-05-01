@@ -36,12 +36,12 @@ INT cmd_cls (LPTSTR cmd, LPTSTR param)
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CLS_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_CLS_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts (szMsg);
 		return 0;
 	}
 

@@ -47,12 +47,12 @@
 INT cmd_set (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR p;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-	    LoadString( GetModuleHandle(NULL), STRING_SET_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);	
+	    LoadString( GetModuleHandle(NULL), STRING_SET_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	    ConOutPuts (szMsg);	
 
 		return 0;
 	}

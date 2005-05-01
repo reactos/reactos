@@ -30,27 +30,27 @@ static BOOL bVerify = FALSE;
 
 INT cmd_verify (LPTSTR cmd, LPTSTR param)
 {
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPuts (szMsg);	
 		return 0;
 	}
 
 	if (!*param)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-		ConOutPrintf ((LPTSTR)szMsg, bVerify ? D_ON : D_OFF);
+		LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPrintf (szMsg, bVerify ? D_ON : D_OFF);
 	}
 	else if (_tcsicmp (param, D_OFF) == 0)
 		bVerify = FALSE;
 	else if (_tcsicmp (param, D_ON) == 0)
 		bVerify = TRUE;
 	else		
-	    LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);	
+	    LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+        ConOutPuts (szMsg);	
 
 	return 0;
 }

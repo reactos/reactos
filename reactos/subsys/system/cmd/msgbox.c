@@ -32,7 +32,7 @@ INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 	//and to find window handle to pass to MessageBox
 	HWND hWnd;
 	TCHAR buff[128];
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	//these are MessabeBox() parameters
 	LPTSTR title, prompt="";
@@ -44,8 +44,8 @@ INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_MSGBOX_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts((LPTSTR)szMsg);			
+		LoadString( GetModuleHandle(NULL), STRING_MSGBOX_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts(szMsg);			
 		return 0;
 	}
 

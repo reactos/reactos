@@ -22,13 +22,13 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	INT    args;
 	UINT uOldCodePage;
 	UINT uNewCodePage;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_CHCP_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPuts (szMsg);
 		return 0;
 	}
 
@@ -38,8 +38,8 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	if (args == 0)
 	{
 		/* display active code page number */
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf ((LPTSTR)szMsg, GetConsoleCP ());
+		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPrintf (szMsg, GetConsoleCP ());
 
 		return 0;
 	}
@@ -47,8 +47,8 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	if (args >= 2)
 	{
 		/* too many parameters */
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf ((LPTSTR)szMsg, param);
+		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPrintf (szMsg, param);
 
 		return 1;
 	}
@@ -61,16 +61,16 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 
 	if (uNewCodePage == 0)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf ((LPTSTR)szMsg, arg[0]);
+		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPrintf (szMsg, arg[0]);
 		freep (arg);
 		return 1;
 	}
 
 	if (!SetConsoleCP (uNewCodePage))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf ((LPTSTR)szMsg);		
+		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPrintf (szMsg);		
 	}
 	else
 	{

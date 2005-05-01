@@ -17,7 +17,7 @@
 
 INT cmd_title (LPTSTR cmd, LPTSTR param)
 {
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* Do nothing if no args */
 	if (*param == _T('\0'))
@@ -26,8 +26,8 @@ INT cmd_title (LPTSTR cmd, LPTSTR param)
 	/* Asking help? */
 	if (!_tcsncmp(param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_TITLE_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_TITLE_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts(szMsg);	
 		return 0;
 	}
 

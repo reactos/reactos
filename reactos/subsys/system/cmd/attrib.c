@@ -197,7 +197,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	BOOL   bDirectories = FALSE;
 	DWORD  dwAttrib = 0;
 	DWORD  dwMask = 0;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* initialize strings */
 	szPath[0] = _T('\0');
@@ -206,8 +206,8 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ATTRIB_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_ATTRIB_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts (szMsg);
 		return 0;
 	}
 

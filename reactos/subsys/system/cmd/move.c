@@ -41,10 +41,10 @@ static INT Overwrite (LPTSTR fn)
 {
 	TCHAR inp[10];
 	LPTSTR p;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	LoadString( GetModuleHandle(NULL), STRING_MOVE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf ((LPTSTR)szMsg, fn);	
+	LoadString( GetModuleHandle(NULL), STRING_MOVE_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	ConOutPrintf (szMsg, fn);	
 	ConInString (inp, 10);
 
 	_tcsupr (inp);
@@ -73,7 +73,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	HANDLE hFile;
 	LPTSTR pszFile;
 	BOOL   bNothing = FALSE;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -92,8 +92,8 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		               "  /-Y\n"
 		               "..."));
 #else
-		LoadString( GetModuleHandle(NULL), STRING_MOVE_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);			
+		LoadString( GetModuleHandle(NULL), STRING_MOVE_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
+		ConOutPuts (szMsg);			
 #endif
 		return 0;
 	}
@@ -101,7 +101,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	arg = split (param, &argc, FALSE);
 	nFiles = argc;
 
-	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, (LPTSTR) szMsg,sizeof(szMsg));
+	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
         	
 	/* read options */
 	for (i = 0; i < argc; i++)
@@ -114,14 +114,14 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 			if (*p == _T('-'))
 			{
 				p++;
-				if ((WCHAR*) _totupper (*p) ==  &szMsg[0])
+				if (_totupper (*p) ==  szMsg[0])
 					bPrompt = TRUE;
 			}
 			else
 			{
-				if ((WCHAR*) _totupper (*p) ==  &szMsg[0])
+				if (_totupper (*p) ==  szMsg[0])
 					bPrompt = FALSE;
-				else if  ((WCHAR*) _totupper (*p) ==  &szMsg[1])
+				else if  (_totupper (*p) ==  szMsg[1])
 					bNothing = TRUE;
 			}
 			nFiles--;
@@ -194,9 +194,9 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 						if (!bNothing)
 						{
 							if (MoveFile (szSrcPath, szFullDestPath))
-								LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+								LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
 							else
-								LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+								LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
 							
                             ConOutPrintf ((LPTSTR)szMsg);
 						}
@@ -218,9 +218,9 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 							if (!bNothing)
 							{
 								if (MoveFile (szSrcPath, szDestPath))
-									LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+									LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
 								else
-									LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+									LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
                                ConOutPrintf ((LPTSTR)szMsg);
 							}
 						}
@@ -238,10 +238,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					if (!bNothing)
 					{
 						if (MoveFile (szSrcPath, szFullDestPath))
-							LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+							LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
                         else
-							LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-                        ConOutPrintf ((LPTSTR)szMsg);						
+							LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+						ConOutPrintf ((LPTSTR)szMsg);						
 					}
 				}
 			}

@@ -214,7 +214,7 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	DWORD ret;
 	LPTSTR text;
 	va_list arg_ptr;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	
 	va_start (arg_ptr, MessageId);
 	ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -233,8 +233,8 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	}
 	else
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CONSOLE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_CONSOLE_ERROR, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPrintf (szMsg);
 	}
 }
 

@@ -438,10 +438,10 @@ HWND GetConsoleWindow (VOID)
 INT PagePrompt (VOID)
 {
 	INPUT_RECORD ir;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	LoadString( GetModuleHandle(NULL), STRING_MISC_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf((LPTSTR)szMsg);		
+	LoadString( GetModuleHandle(NULL), STRING_MISC_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	ConOutPrintf(szMsg);		
 
 	RemoveBreakHandler ();
 	ConInDisable ();
@@ -470,7 +470,7 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 {
         TCHAR szOut[512];
 	va_list arg_ptr;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 //        TCHAR cKey = 0;
 //        LPTSTR szKeys = _T("yna");
@@ -489,17 +489,16 @@ INT FilePromptYN (LPTSTR szFormat, ...)
         ConOutPrintf (_T("\n"));
 
         _tcsupr (szIn);
-        for (p = szIn; _istspace (*p); p++)
-		;
+        for (p = szIn; _istspace (*p); p++);
 
-		LoadString( GetModuleHandle(NULL), STRING_CHOICE_OPTION, (LPTSTR) szMsg,sizeof(szMsg));
+	LoadString( GetModuleHandle(NULL), STRING_CHOICE_OPTION, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
 		
 
 		
-	if (wcsncmp(((WCHAR*) p),&szMsg[0],1)==0)
-       return PROMPT_YES;
-     else if (wcsncmp(((WCHAR*) p),&szMsg[1],1)==0)
-       return PROMPT_NO;
+	if (_tcsncmp(p,&szMsg[0],1)==0)
+	    return PROMPT_YES;
+	else if (_tcsncmp(p,&szMsg[1],1)==0)
+	    return PROMPT_NO;
 
 	
 #if 0
@@ -547,7 +546,7 @@ INT FilePromptYNA (LPTSTR szFormat, ...)
 	va_list arg_ptr;
 //        TCHAR cKey = 0;
 //        LPTSTR szKeys = _T("yna");
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
     
 
         TCHAR szIn[10];
@@ -564,18 +563,17 @@ INT FilePromptYNA (LPTSTR szFormat, ...)
         ConOutPrintf (_T("\n"));
 
         _tcsupr (szIn);
-        for (p = szIn; _istspace (*p); p++)
-		;
+        for (p = szIn; _istspace (*p); p++);
 
-    LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, (LPTSTR) szMsg,sizeof(szMsg));
+	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
 	
 
-	if (wcsncmp(((WCHAR*) p),&szMsg[0],1)==0)
-       return PROMPT_YES;
-     else if (wcsncmp(((WCHAR*) p),&szMsg[1],1)==0)
-       return PROMPT_NO;
-	 else if (wcsncmp(  ((WCHAR*) p),&szMsg[2],1)==0)
-       return PROMPT_ALL;
+	if (_tcsncmp(p,&szMsg[0],1)==0)
+	    return PROMPT_YES;
+	else if (_tcsncmp(p,&szMsg[1],1)==0)
+	    return PROMPT_NO;
+	else if (_tcsncmp(p,&szMsg[2],1)==0)
+	    return PROMPT_ALL;
 
 #if 0
 	else if (*p == _T('\03'))

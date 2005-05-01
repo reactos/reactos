@@ -53,7 +53,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	LPBATCH_CONTEXT lpNew;
 	LPTSTR pp;
 	TCHAR  var;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_for (\'%s\', \'%s\'\n"), cmd, param);
@@ -61,8 +61,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_FOR_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_FOR_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts ((LPTSTR)szMsg);	
 
 		return 0;
 	}
@@ -83,8 +83,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check next element is 'IN' */
 	if ((_tcsnicmp (param, _T("in"), 2) != 0) || !_istspace (*(param + 2)))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_FOR_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-		error_syntax ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_FOR_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		error_syntax (szMsg);
 		return 1;
 	}
 
@@ -95,8 +95,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Folowed by a '(', find also matching ')' */
 	if ((*param != _T('(')) || (NULL == (pp = _tcsrchr (param, _T(')')))))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_FOR_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
-        error_syntax ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_FOR_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		error_syntax (szMsg);
 
 		return 1;
 	}
@@ -110,8 +110,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check DO follows */
 	if ((_tcsnicmp (pp, _T("do"), 2) != 0) || !_istspace (*(pp + 2)))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_FOR_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
-        error_syntax ((LPTSTR)szMsg);		
+		LoadString( GetModuleHandle(NULL), STRING_FOR_ERROR3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		error_syntax (szMsg);		
 		return 1;
 	}
 
@@ -122,8 +122,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check that command tail is not empty */
 	if (*pp == _T('\0'))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_FOR_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
-        error_syntax ((LPTSTR)szMsg);		
+		LoadString( GetModuleHandle(NULL), STRING_FOR_ERROR4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		error_syntax (szMsg);		
 		
 		return 1;
 	}

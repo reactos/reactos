@@ -71,13 +71,13 @@ PrintDiskInfo (LPTSTR szDisk)
 	DWORD dwBytPerSec;
 	DWORD dwFreeCl;
 	DWORD dwTotCl;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcslen (szDisk) < 2 || szDisk[1] != _T(':'))
 	{
 		
-		LoadString( GetModuleHandle(NULL), STRING_FREE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPrintf ((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPrintf (szMsg);	
 		
 		return;
 	}
@@ -88,16 +88,16 @@ PrintDiskInfo (LPTSTR szDisk)
 	if (!GetVolumeInformation (szRootPath, szVolume, 64, &dwSerial,
 	                           NULL, NULL, NULL, 0))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_FREE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));        
-		ConErrPrintf (_T("%s %s:\n"),(LPTSTR)szMsg, szDrive);
+		LoadString( GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPrintf (_T("%s %s:\n"),szMsg, szDrive);
 		return;
 	}
 
 	if (szVolume[0] == _T('\0'))
 	{
 		
-		LoadString( GetModuleHandle(NULL), STRING_FREE_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));        
-		_tcscpy (szVolume,  (LPTSTR) szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_FREE_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		_tcscpy (szVolume,  szMsg);
 	}
 
 	_stprintf (szSerial,
@@ -108,8 +108,8 @@ PrintDiskInfo (LPTSTR szDisk)
 	if (!GetDiskFreeSpace (szRootPath, &dwSecPerCl,
 	                       &dwBytPerSec, &dwFreeCl, &dwTotCl))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_FREE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));        
-		ConErrPrintf (_T("%s %s:\n"),(LPTSTR)szMsg, szDrive);		
+		LoadString( GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPrintf (_T("%s %s:\n"),szMsg, szDrive);		
 		return;
 	}
 
@@ -123,8 +123,8 @@ PrintDiskInfo (LPTSTR szDisk)
 	ConvertULargeInteger (uliSize, szFree, 40);
 
 	
-	LoadString( GetModuleHandle(NULL), STRING_FREE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf ((LPTSTR)szMsg,szDrive, szVolume, szSerial,szTotal, szUsed, szFree);
+	LoadString( GetModuleHandle(NULL), STRING_FREE_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	ConOutPrintf (szMsg,szDrive, szVolume, szSerial,szTotal, szUsed, szFree);
 }
 
 
@@ -134,12 +134,12 @@ INT CommandFree (LPTSTR cmd, LPTSTR param)
 	TCHAR  szDefPath[MAX_PATH];
 	INT argc, i;
 	LPTSTR *arg;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_FREE_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_FREE_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts (szMsg);
 
 		return 0;
 	}

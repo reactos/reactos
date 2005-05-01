@@ -137,13 +137,13 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 	INT    i;
 	BOOL   bPrompt = TRUE;
 	INT    nTimeString = -1;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_TIME_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_TIME_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPuts(szMsg);	
 		return 0;
 	}
 
@@ -175,8 +175,8 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 		{
 			TCHAR  s[40];
 
-			LoadString( GetModuleHandle(NULL), STRING_TIME_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf ((LPTSTR)szMsg);
+			LoadString( GetModuleHandle(NULL), STRING_TIME_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+			ConOutPrintf (szMsg);
 
 			ConInString (s, 40);
 
@@ -204,8 +204,8 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 			/* force input the next time around. */
 			nTimeString = -1;
 		}
-		LoadString( GetModuleHandle(NULL), STRING_TIME_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPuts ((LPTSTR)szMsg);			
+		LoadString( GetModuleHandle(NULL), STRING_TIME_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConErrPuts (szMsg);			
 	}
 
 	freep (arg);

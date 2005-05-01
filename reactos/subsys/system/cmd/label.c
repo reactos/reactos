@@ -31,7 +31,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	DWORD  dwSerialNr;
 	LPTSTR *arg;
 	INT    args;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* set empty label string */
 	szLabel[0] = _T('\0');
@@ -39,8 +39,8 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf ((LPTSTR)szMsg);	
+		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPrintf (szMsg);	
 
 		return 0;
 	}
@@ -94,25 +94,25 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	/* print drive info */	
 	if (szOldLabel[0] != _T('\0'))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-	    ConOutPrintf ((LPTSTR) szMsg, _totupper (szRootPath[0]), szOldLabel);
+		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPrintf (szMsg, _totupper (szRootPath[0]), szOldLabel);
 	}
 	else
 	{
-		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-		ConOutPrintf ((LPTSTR) szMsg, _totupper (szRootPath[0]));
+		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPrintf (szMsg, _totupper (szRootPath[0]));
 	}
 
 
 
 	/* print the volume serial number */
-	LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-    ConOutPrintf ((LPTSTR)szMsg, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
+	LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+	ConOutPrintf (szMsg, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
 
 	if (szLabel[0] == _T('\0'))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP5, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPrintf ((LPTSTR)szMsg);
+		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP5, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		ConOutPrintf (szMsg);
 		
 		ConInString (szLabel, 80);
 	}

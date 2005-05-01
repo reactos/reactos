@@ -33,24 +33,32 @@ VOID InitLocale (VOID)
 
 	/* date settings */
 	GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SDATE, szBuffer, 256);
-	CharToOem (szBuffer, szBuffer);
+#if !defined(_UNICODE) && !defined(UNICODE)	
+        CharToOem (szBuffer, szBuffer);
+#endif
 	cDateSeparator = szBuffer[0];
 	GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_IDATE, szBuffer, 256);
 	nDateFormat = _ttoi (szBuffer);
 
 	/* time settings */
 	GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_STIME, szBuffer, 256);
+#if !defined(_UNICODE) && !defined(UNICODE)	
 	CharToOem (szBuffer, szBuffer);
+#endif
 	cTimeSeparator = szBuffer[0];
 	GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_ITIME, szBuffer, 256);
 	nTimeFormat = _ttoi (szBuffer);
 
 	/* number settings */
 	GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, szBuffer, 256);
+#if !defined(_UNICODE) && !defined(UNICODE)	
 	CharToOem (szBuffer, szBuffer);
+#endif
 	cThousandSeparator = szBuffer[0];
 	GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szBuffer, 256);
+#if !defined(_UNICODE) && !defined(UNICODE)	
 	CharToOem (szBuffer, szBuffer);
+#endif
 	cDecimalSeparator  = szBuffer[0];
 	GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SGROUPING, szBuffer, 256);
 	nNumberGroups = _ttoi (szBuffer);
@@ -59,7 +67,9 @@ VOID InitLocale (VOID)
 	for (i = 0; i < 7; i++)
 	{
 		GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SABBREVDAYNAME1 + i, szBuffer, 256);
+#if !defined(_UNICODE) && !defined(UNICODE)	
 		CharToOem (szBuffer, szBuffer);
+#endif		
 		_tcscpy (aszDayNames[(i+1)%7], szBuffer); /* little hack */
 	}
 #endif
@@ -149,24 +159,24 @@ VOID PrintTime (VOID)
 {
 #ifdef __REACTOS__
 	SYSTEMTIME st;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	GetLocalTime (&st);
 
-	LoadString( GetModuleHandle(NULL), STRING_LOCALE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+	LoadString( GetModuleHandle(NULL), STRING_LOCALE_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
 
 	switch (nTimeFormat)
 	{
 		case 0: /* 12 hour format */
 		default:			
-            ConOutPrintf (_T("%s %2d%c%02d%c%02d%c%02d%c\n"),(LPTSTR)szMsg,
+			ConOutPrintf (_T("%s %2d%c%02d%c%02d%c%02d%c\n"),szMsg,
 					(st.wHour == 0 ? 12 : (st.wHour <= 12 ? st.wHour : st.wHour - 12)),
 					cTimeSeparator, st.wMinute, cTimeSeparator, st.wSecond, cDecimalSeparator,
 					st.wMilliseconds / 10, (st.wHour <= 11 ? 'a' : 'p'));
 			break;
 
 		case 1: /* 24 hour format */
-			ConOutPrintf (_T("%s %2d%c%02d%c%02d%c%02d\n"),(LPTSTR)szMsg,			
+			ConOutPrintf (_T("%s %2d%c%02d%c%02d%c%02d\n"),szMsg,			
 					st.wHour, cTimeSeparator, st.wMinute, cTimeSeparator,
 					st.wSecond, cDecimalSeparator, st.wMilliseconds / 10);
 			break;
@@ -174,10 +184,10 @@ VOID PrintTime (VOID)
 #else
     TCHAR szTime[32];
 
-	GetTimeFormat (LOCALE_USER_DEFAULT, 0, NULL, NULL,
+    GetTimeFormat (LOCALE_USER_DEFAULT, 0, NULL, NULL,
 				   szTime, sizeof (szTime));
 
-    LoadString( GetModuleHandle(NULL), STRING_LOCALE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-	ConOutPrintf (_T("%s: %s\n"),(LPTSTR)szMsg, szTime);
+    LoadString( GetModuleHandle(NULL), STRING_LOCALE_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+    ConOutPrintf (_T("%s: %s\n"),(LPTSTR)szMsg, szTime);
 #endif
 }
