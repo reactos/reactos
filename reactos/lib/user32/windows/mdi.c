@@ -1099,7 +1099,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     if (!hIcon)
         hIcon = (HICON)GetClassLongW(hChild, GCL_HICON);
     if (!hIcon)
-        hIcon = LoadImageW(0, MAKEINTRESOURCEW(IDI_WINLOGO), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+        hIcon = LoadIconW(NULL, IDI_APPLICATION);
     if (hIcon)
     {
       HDC hMemDC;
