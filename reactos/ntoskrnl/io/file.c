@@ -183,7 +183,6 @@ IopDeleteFile(PVOID ObjectBody)
     NTSTATUS Status;
     KEVENT Event;
     PDEVICE_OBJECT DeviceObject;
-    IO_STATUS_BLOCK IoStatusBlock;
    
     DPRINT("IopDeleteFile()\n");
 
@@ -208,9 +207,9 @@ IopDeleteFile(PVOID ObjectBody)
         
         /* Set it up */
         Irp->UserEvent = &Event;
-        Irp->UserIosb = &IoStatusBlock;
+        Irp->UserIosb = &Irp->IoStatus;
         Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-        Irp->Tail.Overlay.OriginalFileObject= FileObject;
+        Irp->Tail.Overlay.OriginalFileObject = FileObject;
         Irp->Flags = IRP_CLOSE_OPERATION | IRP_SYNCHRONOUS_API;
         
         /* Set up Stack Pointer Data */
@@ -493,48 +492,54 @@ STDCALL
 IopCloseFile(PVOID ObjectBody,
              ULONG HandleCount)
 {
-   PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
-   PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
-   NTSTATUS Status;
+    PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
+    KEVENT Event;
+    PIRP Irp;
+    PIO_STACK_LOCATION StackPtr;
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
    
-   DPRINT("IopCloseFile()\n");
+    DPRINT("IopCloseFile()\n");
    
-   if (HandleCount > 1 || FileObject->DeviceObject == NULL)
-     {
- return;
-     }
+    if (HandleCount > 1 || FileObject->DeviceObject == NULL) return;
 
-#if 0
-//NOTE: Allmost certain that the latest changes to I/O Mgr makes this redundant (OriginalFileObject case)
-   ObReferenceObjectByPointer(FileObject,
-         STANDARD_RIGHTS_REQUIRED,
-         IoFileObjectType,
-         UserMode);
-#endif
-
-   KeResetEvent( &FileObject->Event );
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+    
+    /* Clear and set up Events */
+    KeClearEvent(&FileObject->Event);
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
   
-   IO_STATUS_BLOCK Dummy;
-   /* WRONG WRONG WRONG WRONG!!!!!! */
-   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLEANUP,
-          FileObject->DeviceObject,
-          NULL,
-          0,
-          NULL,
-          &FileObject->Event,
-          &Dummy);
-   /* Hack to fix the above WRONG WRONG WRONG WRONG CODE!!! */
-   Irp->UserIosb = &Irp->IoStatus;
+    /* Allocate an IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+        
+    /* Set it up */
+    Irp->UserEvent = &Event;
+    Irp->UserIosb = &Irp->IoStatus;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Flags = IRP_CLOSE_OPERATION | IRP_SYNCHRONOUS_API;
+        
+    /* Set up Stack Pointer Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_CLEANUP;
+    StackPtr->FileObject = FileObject;
    
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->FileObject = FileObject;
-   
-   Status = IoCallDriver(FileObject->DeviceObject, Irp);
-   if (Status == STATUS_PENDING)
-   {
-      KeWaitForSingleObject(&FileObject->Event, Executive, KernelMode, FALSE, NULL);
-   }
+    /* Call the FS Driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+        
+    /* Wait for completion */
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+    }
 }
 
 /* FUNCTIONS *****************************************************************/
