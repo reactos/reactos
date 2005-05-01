@@ -41,6 +41,11 @@
 #include "../dialogs/settings.h"
 
 
+#define	SHELLPATH_CONTROL_PANEL		TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}")
+#define	SHELLPATH_PRINTERS			TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}")
+#define	SHELLPATH_NET_CONNECTIONS	TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}")
+
+
 StartMenu::StartMenu(HWND hwnd)
  :	super(hwnd)
 {
@@ -1856,6 +1861,7 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_CONTROL_PANEL: {
 		CloseStartMenu(id);
+#ifndef ROSSHELL
 #ifndef _NO_MDI
 		XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 		bool mdi = XMLBool(explorer_options, "mdi", true);
@@ -1865,6 +1871,9 @@ int StartMenuHandler::Command(int id, int code)
 		else
 #endif
 			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+#else
+		launch_file(_hwnd, SHELLPATH_CONTROL_PANEL);
+#endif
 		break;}
 
 	  case IDC_SETTINGS_MENU:
@@ -1873,6 +1882,8 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_PRINTERS: {
 		CloseStartMenu(id);
+
+#ifndef ROSSHELL
 #ifdef _ROS_	// to be removed when printer folder will be implemented
 		MessageBox(0, TEXT("printer folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 #else
@@ -1885,6 +1896,9 @@ int StartMenuHandler::Command(int id, int code)
 		else
 #endif
 			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}"), 0);
+#endif
+#else
+		launch_file(_hwnd, SHELLPATH_PRINTERS);
 #endif
 		break;}
 
@@ -1901,14 +1915,26 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_ADMIN:
+#ifndef ROSSHELL
 		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS, ResString(IDS_ADMIN));
+		//CloseStartMenu(id);
+		//MainFrame::Create(SpecialFolderPath(CSIDL_COMMON_ADMINTOOLS, _hwnd), OWM_PIDL);
+#else
+		launch_file(_hwnd, SpecialFolderFSPath(CSIDL_COMMON_ADMINTOOLS, _hwnd));
+#endif
 		break;
 
 	  case IDC_CONNECTIONS:
+#ifndef ROSSHELL
 #ifdef _ROS_	// to be removed when RAS will be implemented
 		MessageBox(0, TEXT("RAS folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 #else
 		CreateSubmenu(id, CSIDL_CONNECTIONS, ResString(IDS_CONNECTIONS));
+		//CloseStartMenu(id);
+		//MainFrame::Create(SpecialFolderPath(CSIDL_CONNECTIONS, _hwnd), OWM_PIDL);
+#endif
+#else
+		launch_file(_hwnd, SHELLPATH_NET_CONNECTIONS);
 #endif
 		break;
 

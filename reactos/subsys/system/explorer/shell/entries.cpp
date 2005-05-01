@@ -141,6 +141,7 @@ void Entry::read_directory_base(SORT_ORDER sortOrder, int scan_flags)
 	 // call into subclass
 	read_directory(scan_flags);
 
+#ifndef ROSSHELL
 	if (g_Globals._prescan_nodes) {	//@todo _prescan_nodes should not be used for reading the start menu.
 		for(Entry*entry=_down; entry; entry=entry->_next)
 			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -148,6 +149,7 @@ void Entry::read_directory_base(SORT_ORDER sortOrder, int scan_flags)
 				entry->sort_directory(sortOrder);
 			}
 	}
+#endif
 
 	sort_directory(sortOrder);
 }
