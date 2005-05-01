@@ -12,6 +12,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 /* IDI_WINLOGON ICON "resources/winlogon.ico" */
 
+#include "Cz.rc"
 #include "En.rc"
 #include "De.rc"
 
