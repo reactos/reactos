@@ -58,6 +58,7 @@ EngDeviceIoControl(HANDLE  hDevice,
 				      nInBufferSize,
 				      lpOutBuffer,
 				      nOutBufferSize, FALSE, &Event, &Iosb);
+    DPRINT1("IRP: %x\n", Irp);
 
   Status = IoCallDriver(DeviceObject, Irp);
 

@@ -5,6 +5,7 @@
 
 /* ntuser */
 #define TAG_MOUSE	TAG('M', 'O', 'U', 'S') /* mouse */
+#define TAG_KEYBOARD	TAG('K', 'B', 'D', ' ') /* keyboard */
 #define TAG_ACCEL	TAG('A', 'C', 'C', 'L') /* accelerator */
 #define TAG_HOOK	TAG('W', 'N', 'H', 'K') /* hook */
 #define TAG_HOTKEY	TAG('H', 'O', 'T', 'K') /* hotkey */

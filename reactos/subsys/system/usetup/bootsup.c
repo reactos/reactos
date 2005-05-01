@@ -371,7 +371,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    NULL,
 		    INSERT_LAST,
 		    L"Options",
-		    L"/DEBUGPORT=SCREEN /NOGUIBOOT");
+		    L"/DEBUGPORT=COM1 /NOGUIBOOT");
 
   /* Save the ini file */
   IniCacheSave(IniCache, IniPath);

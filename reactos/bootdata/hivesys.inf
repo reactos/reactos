@@ -575,11 +575,28 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","Type",0x00010001,0x00000001
 
 ; Keyboard driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Group",0x00000000,"Keyboard Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","ImagePath",0x00020000,"system32\drivers\keyboard.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Group",0x00000000,"Keyboard Port"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","ImagePath",0x00020000,"system32\drivers\keyboard.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Start",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Type",0x00010001,0x00000001
+
+; i8042 port driver
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Group",0x00000000,"Keyboard Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","ImagePath",0x00020000,"system32\drivers\i8042prt.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Type",0x00010001,0x00000001
+
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","SampleRate",0x00010001,0x00000060
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
+
+; Keyboard class driver
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Group",0x00000000,"Keyboard Class"
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ImagePath",0x00020000,"system32\drivers\kbdclass.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
 
 ; Serial port enumerator
 HKLM,"SYSTEM\CurrentControlSet\Services\serenum","ErrorControl",0x00010001,0x00000001
@@ -840,12 +857,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
 
 ; PS/2 mouse port driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Group",0x00000000,"Pointer Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ImagePath",0x00020000,"system32\drivers\psaux.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Psaux\Parameters","DisableExtensionDetection",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Group",0x00000000,"Pointer Port"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ImagePath",0x00020000,"system32\drivers\psaux.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000004
+;HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Psaux\Parameters","DisableExtensionDetection",0x00010001,0x00000000
 
 ; RPC service
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001

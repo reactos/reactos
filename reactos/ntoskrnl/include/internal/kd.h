@@ -203,17 +203,17 @@ typedef struct _KDP_DEBUG_MODE
 /* KD Internal Debug Services */
 typedef enum _KDP_DEBUG_SERVICE
 {
-    DumpNonPagedPool = 0,
-    ManualBugCheck,
-    DumpNonPagedPoolStats,
-    DumpNewNonPagedPool,
-    DumpNewNonPagedPoolStats,
-    DumpAllThreads,
-    DumpUserThreads,
-    KdSpare1,
-    KdSpare2,
-    KdSpare3,
-    EnterDebugger
+    DumpNonPagedPool		= 0x1e, /* a */
+    ManualBugCheck		= 0x30, /* b */
+    DumpNonPagedPoolStats	= 0x2e, /* c */
+    DumpNewNonPagedPool		= 0x20, /* d */
+    DumpNewNonPagedPoolStats	= 0x12, /* e */
+    DumpAllThreads		= 0x21, /* f */
+    DumpUserThreads		= 0x22, /* g */
+    KdSpare1			= 0x23, /* h */
+    KdSpare2			= 0x17, /* i */
+    KdSpare3			= 0x24, /* j */
+    EnterDebugger		= 0x25  /* k */
 } KDP_DEBUG_SERVICE;
 
 /* Dispatch Table for Wrapper Functions */

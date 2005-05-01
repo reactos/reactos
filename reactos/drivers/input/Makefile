@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-DRIVERS = keyboard mouclass psaux sermouse
+DRIVERS = keyboard mouclass psaux sermouse i8042prt kbdclass
 
 all: $(DRIVERS)
 

@@ -84,7 +84,7 @@ DRIVERS_LIB = bzip2 oskittcp ip csq
 DEVICE_DRIVERS = beep blue debugout null serial bootvid
 
 # Kernel mode input drivers
-INPUT_DRIVERS = keyboard mouclass psaux sermouse
+INPUT_DRIVERS = keyboard mouclass psaux sermouse i8042prt kbdclass
 
 # Kernel mode file system drivers
 # cdfs ext2 fs_rec ms np vfat

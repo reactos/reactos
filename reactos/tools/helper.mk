@@ -683,10 +683,10 @@ ifneq ($(DBG),1)
   MK_CFLAGS += -Os -Wno-strict-aliasing -ftracer -momit-leaf-frame-pointer
   MK_CFLAGS += -mpreferred-stack-boundary=2
   
-  CC_VERSION=$(word 1,$(shell gcc -dumpversion))
-  ifeq ($(CC_VERSION),3.4.3)
+  #CC_VERSION=$(word 1,$(shell gcc -dumpversion))
+  #ifeq ($(CC_VERSION),3.4.3)
   MK_CFLAGS += -funit-at-a-time -fweb
-  endif
+  #endif
     
   #
   # Remove Symbols if no debugging is used at all

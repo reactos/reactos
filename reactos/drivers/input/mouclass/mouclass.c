@@ -21,17 +21,22 @@
 
 BOOLEAN MouseClassCallBack(
    PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA MouseDataStart,
-   PMOUSE_INPUT_DATA MouseDataEnd, PULONG InputCount)
+   PMOUSE_INPUT_DATA MouseDataEnd, PULONG ConsumedCount)
 {
    PDEVICE_EXTENSION ClassDeviceExtension = ClassDeviceObject->DeviceExtension;
    PIRP Irp;
    KIRQL OldIrql;
    PIO_STACK_LOCATION Stack;
-   ULONG SafeInputCount = *InputCount;
+   ULONG InputCount = MouseDataEnd - MouseDataStart;
    ULONG ReadSize;
 
    DPRINT("Entering MouseClassCallBack\n");
-   if (ClassDeviceExtension->ReadIsPending == TRUE)
+   /* A filter driver might have consumed all the data already; I'm
+    * not sure if they are supposed to move the packets when they
+    * consume them though.
+    */ 
+   if (ClassDeviceExtension->ReadIsPending == TRUE &&
+       InputCount)
    {
       Irp = ClassDeviceObject->CurrentIrp;
       ClassDeviceObject->CurrentIrp = NULL;
@@ -52,19 +57,20 @@ BOOLEAN MouseClassCallBack(
 
       /* Skip the packet we just sent away */
       MouseDataStart++;
-      SafeInputCount--;
+      (*ConsumedCount)++;
+      InputCount--;
    }
 
    /* If we have data from the port driver and a higher service to send the data to */
-   if (SafeInputCount != 0)
+   if (InputCount != 0)
    {
       KeAcquireSpinLock(&ClassDeviceExtension->SpinLock, &OldIrql);
 
-      if (ClassDeviceExtension->InputCount + SafeInputCount > MOUSE_BUFFER_SIZE)
+      if (ClassDeviceExtension->InputCount + InputCount > MOUSE_BUFFER_SIZE)
       {
          ReadSize = MOUSE_BUFFER_SIZE - ClassDeviceExtension->InputCount;
       } else {
-         ReadSize = SafeInputCount;
+         ReadSize = InputCount;
       }
 
       /*
@@ -84,6 +90,7 @@ BOOLEAN MouseClassCallBack(
       ClassDeviceExtension->InputCount += ReadSize;
 
       KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
+      (*ConsumedCount) += ReadSize;
    } else {
       DPRINT("MouseClassCallBack() entered, InputCount = %d - DOING NOTHING\n", *InputCount);
    }
