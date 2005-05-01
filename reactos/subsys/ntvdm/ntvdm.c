@@ -276,12 +276,12 @@ WinMain(HINSTANCE hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nSho
     ULONG i;
     BOOL vdmStarted = FALSE;
 
-    TCHAR WelcomeMsg[RC_STRING_MAX_SIZE];
-    TCHAR PromptMsg[RC_STRING_MAX_SIZE];
+    WCHAR WelcomeMsg[RC_STRING_MAX_SIZE];
+    WCHAR PromptMsg[RC_STRING_MAX_SIZE];
     CHAR InputBuffer[255];
 
-	LoadString( GetModuleHandle(NULL), STRING_WelcomeMsg, WelcomeMsg,sizeof(WelcomeMsg));
-    LoadString( GetModuleHandle(NULL), STRING_PromptMsg, PromptMsg ,sizeof(PromptMsg));
+	LoadString( GetModuleHandle(NULL), STRING_WelcomeMsg,  (LPTSTR) WelcomeMsg,sizeof(WelcomeMsg));
+    LoadString( GetModuleHandle(NULL), STRING_PromptMsg,  (LPTSTR) PromptMsg ,sizeof(PromptMsg));
 
     AllocConsole();
     SetConsoleTitleW(L"ntvdm");
