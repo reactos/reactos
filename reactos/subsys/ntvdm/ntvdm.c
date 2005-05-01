@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <wchar.h>
+#include "resource.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -205,6 +206,7 @@ CreateVDM(PVDM_CONTROL_BLOCK vdm)
     SYSTEM_INFO inf;
     MEMORYSTATUS stat;
 
+
     GlobalMemoryStatus(&stat);
     if (stat.dwLength != sizeof(MEMORYSTATUS)) {
         printf("WARNING: GlobalMemoryStatus() returned unknown structure version, size %ld, expected %d.\n", stat.dwLength, sizeof(stat));
@@ -223,6 +225,7 @@ CreateVDM(PVDM_CONTROL_BLOCK vdm)
             //SetLastError();
             return FALSE;
         }
+	 
     }
  
     GetSystemInfo(&inf);
@@ -273,10 +276,13 @@ WinMain(HINSTANCE hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nSho
     ULONG i;
     BOOL vdmStarted = FALSE;
 
-    WCHAR WelcomeMsg[] = L"ReactOS Virtual DOS Machine support.\n";
-    WCHAR PromptMsg[] = L"Type r<cr> to run, s<cr> to shutdown or q<cr> to quit now.";
+    TCHAR WelcomeMsg[RC_STRING_MAX_SIZE];
+    TCHAR PromptMsg[RC_STRING_MAX_SIZE];
     CHAR InputBuffer[255];
-    
+
+	LoadString( GetModuleHandle(NULL), STRING_WelcomeMsg, WelcomeMsg,sizeof(WelcomeMsg));
+    LoadString( GetModuleHandle(NULL), STRING_PromptMsg, PromptMsg ,sizeof(PromptMsg));
+
     AllocConsole();
     SetConsoleTitleW(L"ntvdm");
 
