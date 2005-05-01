@@ -180,7 +180,7 @@ CreateNamedPipeW(LPCWSTR lpName,
 	nMaxInstances = ULONG_MAX;
      }
 
-   DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000;
+   DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000LL;
 
    Status = NtCreateNamedPipeFile(&PipeHandle,
 				  DesiredAccess,
@@ -273,7 +273,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 	return(FALSE);
      }
    
-   WaitPipe.Timeout.QuadPart = nTimeOut * -10000;
+   WaitPipe.Timeout.QuadPart = nTimeOut * -10000LL;
    
    Status = NtFsControlFile(FileHandle,
 			    NULL,
@@ -428,7 +428,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
    
    if (lpCollectDataTimeout != NULL)
      {
-	SetState.Timeout.QuadPart = (*lpCollectDataTimeout) * -10000;
+	SetState.Timeout.QuadPart = (*lpCollectDataTimeout) * -10000LL;
      }
    else
      {
