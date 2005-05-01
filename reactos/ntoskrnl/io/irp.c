@@ -1279,7 +1279,26 @@ IoSecondStageCompletion(PKAPC Apc,
         {
             /* Signal the Event */
             KeSetEvent(Irp->UserEvent, 0, FALSE);
-    
+            
+            /* Check if we should signal the File Object Event as well */
+            if (FileObject)
+            {
+                /* Dereference the Event if this is an ASYNC IRP */
+                if (!Irp->Flags & IRP_SYNCHRONOUS_API)
+                {
+                    ObDereferenceObject(Irp->UserEvent);
+                }
+                
+                 /* If the File Object is SYNC, then we need to signal its event too */
+                if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+                {
+                    /* Signal Event */
+                    KeSetEvent(&FileObject->Event, 0, FALSE);
+                
+                    /* Set the Status */
+                    FileObject->FinalStatus = Irp->IoStatus.Status;
+                }
+            }
         }
         else if (FileObject)
         {
@@ -1289,31 +1308,7 @@ IoSecondStageCompletion(PKAPC Apc,
             /* Set the Status */
             FileObject->FinalStatus = Irp->IoStatus.Status;
         }
-    
-        /* Check if there's a File Object */
-        if (FileObject)
-        {
-            /* Dereference the Event if this is an ASYNC IRP */
-            if (!Irp->Flags & IRP_SYNCHRONOUS_API)
-            {
-                if (Irp->UserEvent != &FileObject->Event)
-                {
-                    ObDereferenceObject(Irp->UserEvent);
-                }
-            }
-            
-            /* If the File Object is SYNC, then we need to signal its event too */
-            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-            {
-                /* Signal Event */
-
-                KeSetEvent(&FileObject->Event, 0, FALSE);
-                
-                /* Set the Status */
-                FileObject->FinalStatus = Irp->IoStatus.Status;
-            }
-        }
-    
+        
         /* Remove the IRP from the list of Thread Pending IRPs */
         RemoveEntryList(&Irp->ThreadListEntry);
         InitializeListHead(&Irp->ThreadListEntry);  
