@@ -258,7 +258,9 @@ END
 
 3 TEXTINCLUDE DISCARDABLE 
 BEGIN
+    "#ifndef ROSSHELL\r\n"
     "IDB_TOOLBAR BITMAP DISCARDABLE ""res/toolbar.bmp""\r\n"
+    "#endif\r\n"
     "#ifndef _ROS_\r\n"
     "LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL\r\n"
     "STRINGTABLE DISCARDABLE \r\n"

@@ -131,9 +131,9 @@ void DesktopBar::RegisterHotkeys()
 void DesktopBar::ProcessHotKey(int id_hotkey)
 {
 	switch(id_hotkey) {
-	  case 0:	
-		explorer_show_frame(SW_SHOWNORMAL);
+	  case 0:	explorer_show_frame(SW_SHOWNORMAL);
 		break;
+
 		///@todo implement all common hotkeys
 	}
 }

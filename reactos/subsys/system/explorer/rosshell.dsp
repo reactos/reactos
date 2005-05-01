@@ -297,7 +297,7 @@ SOURCE=".\res\ros-big.ico"
 # End Source File
 # Begin Source File
 
-SOURCE=".\rosshell-jp.rc"
+SOURCE=".\explorer-jp.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
