@@ -351,6 +351,8 @@ NpfsGetState(PIRP Irp,
   Reply->OutBufferSize = Pipe->OutboundQuota;
   Reply->Timeout = Pipe->TimeOut;
 
+  Irp->IoStatus.Information = sizeof(NPFS_GET_STATE);
+
   DPRINT("Status (0x%X).\n", STATUS_SUCCESS);
 
   return STATUS_SUCCESS;
@@ -463,6 +465,8 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("Pipe: %p\n", Pipe);
   DPRINT("PipeName: %wZ\n", &Pipe->PipeName);
 
+  Irp->IoStatus.Information = 0;
+
   switch (IoStack->Parameters.FileSystemControl.FsControlCode)
     {
       case FSCTL_PIPE_ASSIGN_EVENT:
@@ -553,7 +557,6 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   if (Status != STATUS_PENDING)
     {
       Irp->IoStatus.Status = Status;
-      Irp->IoStatus.Information = 0;
  
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
