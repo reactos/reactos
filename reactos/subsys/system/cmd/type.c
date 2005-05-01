@@ -34,6 +34,7 @@
 
 INT cmd_type (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  buff[256];
 	HANDLE hFile, hConsoleOut;
 	DWORD  dwRead;
@@ -42,14 +43,13 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	INT    argc,i;
 	LPTSTR *argv;
 	LPTSTR errmsg;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	
+
 	hConsoleOut=GetStdHandle (STD_OUTPUT_HANDLE);
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_TYPE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-		ConOutPuts (szMsg);	
+		LoadString(GetModuleHandle(NULL), STRING_TYPE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -65,10 +65,11 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	{
 		if (_T('/') == argv[i][0])
 		{
-			LoadString( GetModuleHandle(NULL), STRING_TYPE_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
-			ConErrPrintf (szMsg, argv[i] + 1);
+			LoadString(GetModuleHandle(NULL), STRING_TYPE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg, argv[i] + 1);
 			continue;
 		}
+
 		hFile = CreateFile(argv[i],
 			GENERIC_READ,
 			FILE_SHARE_READ,NULL,
@@ -101,8 +102,8 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 		} while(dwRead>0 && bRet);
 
 		CloseHandle(hFile);
-	}	
-	
+	}
+
 	freep (argv);
 
 	return 0;

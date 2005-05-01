@@ -25,13 +25,13 @@
 
 INT cmd_label (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  szRootPath[] = _T("A:\\");
 	TCHAR  szLabel[80];
 	TCHAR  szOldLabel[80];
 	DWORD  dwSerialNr;
 	LPTSTR *arg;
 	INT    args;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* set empty label string */
 	szLabel[0] = _T('\0');
@@ -39,9 +39,8 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPrintf (szMsg);	
-
+		LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPrintf(szMsg);
 		return 0;
 	}
 
@@ -88,40 +87,40 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	GetVolumeInformation (szRootPath, szOldLabel, 80, &dwSerialNr,
-						  NULL, NULL, NULL, 0);
+	GetVolumeInformation(szRootPath, szOldLabel, 80, &dwSerialNr,
+			      NULL, NULL, NULL, 0);
 
 	/* print drive info */	
 	if (szOldLabel[0] != _T('\0'))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPrintf (szMsg, _totupper (szRootPath[0]), szOldLabel);
+		LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPrintf(szMsg, _totupper(szRootPath[0]), szOldLabel);
 	}
 	else
 	{
-		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPrintf (szMsg, _totupper (szRootPath[0]));
+		LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPrintf(szMsg, _totupper(szRootPath[0]));
 	}
 
-
-
 	/* print the volume serial number */
-	LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-	ConOutPrintf (szMsg, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
+	LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP4, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPrintf(szMsg, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
 
 	if (szLabel[0] == _T('\0'))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_LABEL_HELP5, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPrintf (szMsg);
-		
-		ConInString (szLabel, 80);
+		LoadString(GetModuleHandle(NULL), STRING_LABEL_HELP5, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPrintf(szMsg);
+
+		ConInString(szLabel, 80);
 	}
 
-	SetVolumeLabel (szRootPath, szLabel);
+	SetVolumeLabel(szRootPath, szLabel);
 
-	freep (arg);
+	freep(arg);
 
 	return 0;
 }
 
 #endif /* INCLUDE_CMD_LABEL */
+
+/* EOF */

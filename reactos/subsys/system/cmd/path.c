@@ -39,10 +39,9 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
-		LoadString( GetModuleHandle(NULL), STRING_PATH_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);	
-
+	{
+		LoadString(GetModuleHandle(NULL), STRING_PATH_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -56,8 +55,8 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 		dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
-			LoadString( GetModuleHandle(NULL), STRING_PATH_ERROR, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-			ConErrPrintf (szMsg);	
+			LoadString(GetModuleHandle(NULL), STRING_PATH_ERROR, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg);
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)
@@ -84,3 +83,5 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 }
 
 #endif
+
+/* EOF */

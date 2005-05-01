@@ -44,7 +44,7 @@ PrintAttribute (LPTSTR pszPath, LPTSTR pszFile, BOOL bRecurse)
 	WIN32_FIND_DATA findData;
 	HANDLE hFind;
 	TCHAR  szFullName[MAX_PATH];
-	LPTSTR pszFileName;	 
+	LPTSTR pszFileName;
 
 	/* prepare full file name buffer */
 	_tcscpy (szFullName, pszPath);
@@ -112,7 +112,7 @@ PrintAttribute (LPTSTR pszPath, LPTSTR pszFile, BOOL bRecurse)
 
 static VOID
 ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
-				 DWORD dwAttrib, BOOL bRecurse, BOOL bDirectories)
+		 DWORD dwAttrib, BOOL bRecurse, BOOL bDirectories)
 {
 	WIN32_FIND_DATA findData;
 	HANDLE hFind;
@@ -143,7 +143,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
 				if (!_tcscmp (findData.cFileName, _T(".")) ||
-					!_tcscmp (findData.cFileName, _T("..")))
+				    !_tcscmp (findData.cFileName, _T("..")))
 					continue;
 
 				_tcscpy (pszFileName, findData.cFileName);
@@ -189,6 +189,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 
 INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
 	INT    argc, i;
 	TCHAR  szPath[MAX_PATH];
@@ -197,7 +198,6 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	BOOL   bDirectories = FALSE;
 	DWORD  dwAttrib = 0;
 	DWORD  dwMask = 0;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* initialize strings */
 	szPath[0] = _T('\0');
@@ -206,8 +206,8 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ATTRIB_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_ATTRIB_HELP, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -321,7 +321,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	/* get full file name */
 	for (i = 0; i < argc; i++)
 	{
-		if ((*arg[i] != _T('+')) && (*arg[i] != _T('-')) &&	(*arg[i] != _T('/')))
+		if ((*arg[i] != _T('+')) && (*arg[i] != _T('-')) && (*arg[i] != _T('/')))
 		{
 			LPTSTR p;
 			GetFullPathName (arg[i], MAX_PATH, szPath, NULL);
@@ -333,7 +333,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 				PrintAttribute (szPath, szFileName, bRecurse);
 			else
 				ChangeAttribute (szPath, szFileName, dwMask,
-								 dwAttrib, bRecurse, bDirectories);
+						 dwAttrib, bRecurse, bDirectories);
 		}
 	}
 

@@ -34,23 +34,25 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConOutPuts (szMsg);	
+		LoadString(GetModuleHandle(NULL), STRING_VERIFY_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
 	if (!*param)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConOutPrintf (szMsg, bVerify ? D_ON : D_OFF);
+		LoadString(GetModuleHandle(NULL), STRING_VERIFY_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPrintf((LPTSTR)szMsg, bVerify ? D_ON : D_OFF);
 	}
 	else if (_tcsicmp (param, D_OFF) == 0)
 		bVerify = FALSE;
 	else if (_tcsicmp (param, D_ON) == 0)
 		bVerify = TRUE;
-	else		
-	    LoadString( GetModuleHandle(NULL), STRING_VERIFY_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-        ConOutPuts (szMsg);	
+	else
+	{
+		LoadString(GetModuleHandle(NULL), STRING_VERIFY_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
+	}
 
 	return 0;
 }

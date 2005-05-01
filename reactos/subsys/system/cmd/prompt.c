@@ -51,7 +51,6 @@
 
 /*
  * print the command-line prompt
- *
  */
 VOID PrintPrompt(VOID)
 {
@@ -186,15 +185,15 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_PROMPT_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 
 #ifdef FEATURE_DIRECTORY_STACK
-		LoadString( GetModuleHandle(NULL), STRING_PROMPT_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);		
+		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 #endif
-		LoadString( GetModuleHandle(NULL), STRING_PROMPT_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);	
+		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -205,3 +204,5 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 	return 0;
 }
 #endif
+
+/* EOF */

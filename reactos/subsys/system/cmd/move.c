@@ -39,21 +39,21 @@
 
 static INT Overwrite (LPTSTR fn)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR inp[10];
 	LPTSTR p;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	LoadString( GetModuleHandle(NULL), STRING_MOVE_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-	ConOutPrintf (szMsg, fn);	
-	ConInString (inp, 10);
+	LoadString(GetModuleHandle(NULL), STRING_MOVE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPrintf(szMsg, fn);
+	ConInString(inp, 10);
 
 	_tcsupr (inp);
-	for (p=inp; _istspace (*p); p++)
+	for (p = inp; _istspace(*p); p++)
 		;
 
-	if (*p != _T('Y') && *p != _T('A'))
+	if (*p != szMsg[0] && *p != szMsg[2])
 		return OVERWRITE_NO;
-	if (*p == _T('A'))
+	if (*p == szMsg[2])
 		return OVERWRITE_ALL;
 
 	return OVERWRITE_YES;
@@ -63,6 +63,7 @@ static INT Overwrite (LPTSTR fn)
 
 INT cmd_move (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
 	INT argc, i, nFiles;
 	TCHAR szDestPath[MAX_PATH];
@@ -72,8 +73,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	WIN32_FIND_DATA findBuffer;
 	HANDLE hFile;
 	LPTSTR pszFile;
-	BOOL   bNothing = FALSE;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	BOOL bNothing = FALSE;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -92,8 +92,8 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		               "  /-Y\n"
 		               "..."));
 #else
-		LoadString( GetModuleHandle(NULL), STRING_MOVE_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConOutPuts (szMsg);			
+		LoadString(GetModuleHandle(NULL), STRING_MOVE_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 #endif
 		return 0;
 	}
@@ -101,8 +101,6 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	arg = split (param, &argc, FALSE);
 	nFiles = argc;
 
-	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-        	
 	/* read options */
 	for (i = 0; i < argc; i++)
 	{
@@ -114,14 +112,14 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 			if (*p == _T('-'))
 			{
 				p++;
-				if (_totupper (*p) ==  szMsg[0])
+				if (_totupper (*p) == _T('Y'))
 					bPrompt = TRUE;
 			}
 			else
 			{
-				if (_totupper (*p) ==  szMsg[0])
+				if (_totupper (*p) == _T('Y'))
 					bPrompt = FALSE;
-				else if  (_totupper (*p) ==  szMsg[1])
+				else if (_totupper (*p) == _T('N'))
 					bNothing = TRUE;
 			}
 			nFiles--;
@@ -194,11 +192,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 						if (!bNothing)
 						{
 							if (MoveFile (szSrcPath, szFullDestPath))
-								LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+								LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 							else
-								LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-							
-                            ConOutPrintf ((LPTSTR)szMsg);
+								LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+							ConOutPrintf(szMsg);
 						}
 					}
 					else
@@ -218,10 +215,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 							if (!bNothing)
 							{
 								if (MoveFile (szSrcPath, szDestPath))
-									LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+									LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 								else
-									LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-                               ConOutPrintf ((LPTSTR)szMsg);
+									LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+								ConOutPrintf(szMsg);
 							}
 						}
 					}
@@ -238,10 +235,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					if (!bNothing)
 					{
 						if (MoveFile (szSrcPath, szFullDestPath))
-							LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-                        else
-							LoadString( GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-						ConOutPrintf ((LPTSTR)szMsg);						
+							LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+						else
+							LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+						ConOutPrintf(szMsg);
 					}
 				}
 			}

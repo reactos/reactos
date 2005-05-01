@@ -5,26 +5,25 @@
 #define REACTOS_STR_INTERNAL_NAME	"cmd\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"cmd.exe\0"
 #define REACTOS_STR_ORIGINAL_COPYRIGHT	"Copyright (C) 1994-1998 Tim Norman and others\0"
-#define REACTOS_STR_LEGAL_COPYRIGHT     "Copyright (C) 1998-2001 Eric Kohl and others\0"
+#define REACTOS_STR_LEGAL_COPYRIGHT     "Copyright (C) 1998-2005 Eric Kohl and others\0"
+
 #include <reactos/version.rc>
 #include "En.rc"
+
 STRINGTABLE DISCARDABLE
 {
- STRING_FreeDOS_DEV, "    Tim Norman      Matt Rains\n \
-    Evan Jeffrey    Steffen Kaiser\n \
-    Svante Frey     Oliver Mueller\n \
-    Aaron Kaufman   Marc Desrochers\n \
-    Rob Lake        John P Price\n \
+  STRING_FREEDOS_DEV, "    Tim Norman      Matt Rains\n\
+    Evan Jeffrey    Steffen Kaiser\n\
+    Svante Frey     Oliver Mueller\n\
+    Aaron Kaufman   Marc Desrochers\n\
+    Rob Lake        John P Price\n\
     Hans B Pufal\n"
 
- STRING_REACTOS_DEV,  "    Eric Kohl       Emanuele Aliberti\n \
+  STRING_REACTOS_DEV,  "    Eric Kohl       Emanuele Aliberti\n\
     Paolo Pantaleo  Phillip Susi\n"
- 
 }
 
-
-
-1	ICON	DISCARDABLE	res/terminal.ico
+1 ICON DISCARDABLE res/terminal.ico
 
 
 

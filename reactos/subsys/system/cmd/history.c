@@ -120,7 +120,7 @@ INT CommandHistory (LPTSTR cmd, LPTSTR param)
 	}
 	else
 	{
-		for(h_tmp=Top->prev;h_tmp!=Bottom;h_tmp=h_tmp->prev)
+		for (h_tmp = Top->prev; h_tmp != Bottom; h_tmp = h_tmp->prev)
 			ConErrPuts(h_tmp->string);
 	}
 	return 0;
@@ -128,11 +128,9 @@ INT CommandHistory (LPTSTR cmd, LPTSTR param)
 
 VOID set_size(INT new_size)
 {
-
-	while(new_size<size)
+	while (new_size<size)
 		del(Top->prev);
-		
-		
+
 	max_size=new_size;
 }
 
@@ -140,19 +138,16 @@ VOID set_size(INT new_size)
 VOID InitHistory(VOID)
 {
 	size=0;
-	
-	
-	Top = malloc(sizeof(HIST_ENTRY));
-	Bottom = malloc(sizeof(HIST_ENTRY));	
 
+	Top = malloc(sizeof(HIST_ENTRY));
+	Bottom = malloc(sizeof(HIST_ENTRY));
 
 	Top->prev = Bottom;
 	Top->next = NULL;
 	Top->string = NULL;
 
-	
 	Bottom->prev = NULL;
-	Bottom->next = Top;	
+	Bottom->next = Top;
 	Bottom->string = NULL;
 
 	curr_ptr=Bottom;
@@ -163,49 +158,44 @@ VOID InitHistory(VOID)
 
 VOID CleanHistory(VOID)
 {
-	
 	while (Bottom->next!=Top)
 		del(Bottom->next);
 
 	free(Top);
 	free(Bottom);
-
 }
 
 
 VOID History_del_current_entry(LPTSTR str)
 {
 	LPHIST_ENTRY tmp;
-	
-	if (size==0)
+
+	if (size == 0)
 		return;
 
-	if(curr_ptr==Bottom)
+	if (curr_ptr == Bottom)
 		curr_ptr=Bottom->next;
 
-	if(curr_ptr==Top)
+	if (curr_ptr == Top)
 		curr_ptr=Top->prev;
 
 
-	tmp=curr_ptr;		
-	curr_ptr=curr_ptr->prev;
+	tmp = curr_ptr;
+	curr_ptr = curr_ptr->prev;
 	del(tmp);
-	History(-1,str);
-
+	History(-1, str);
 }
 
 
 static
 VOID del(LPHIST_ENTRY item)
 {
-
-	if( item==NULL || item==Top || item==Bottom )
+	if (item==NULL || item==Top || item==Bottom)
 	{
 #ifdef _DEBUG
 		DebugPrintf(_T("del in " __FILE__  ": retrning\n"
 			    "item is 0x%08x (Bottom is0x%08x)\n"),
-			    item, Bottom);			
-
+			    item, Bottom);
 #endif
 		return;
 	}
@@ -215,10 +205,6 @@ VOID del(LPHIST_ENTRY item)
 	/*free string's mem*/
 	if (item->string)
 		free(item->string);
-	
-
-
-
 
 	/*set links in prev and next item*/
 	item->next->prev=item->prev;
@@ -227,17 +213,15 @@ VOID del(LPHIST_ENTRY item)
 	free(item);
 
 	size--;
-
 }
+
 
 #if 0
 static
 VOID add_before_last(LPTSTR string)
-{	
-
+{
 	LPHIST_ENTRY tmp,before,after;
 
-		
 	/*delete first entry if maximum number of entries is reached*/
 	while(size>=max_size)
 		del(Top->prev);
@@ -248,14 +232,11 @@ VOID add_before_last(LPTSTR string)
 	if (*string==_T('\0'))
 		return;
 
-
-
 	/*allocte entry and string*/
 	tmp=malloc(sizeof(HIST_ENTRY));
 	tmp->string=malloc((_tcslen(string)+1)*sizeof(TCHAR));
-	_tcscpy(tmp->string,string);		
-	
-	
+	_tcscpy(tmp->string,string);
+
 	/*set links*/
 	before=Bottom->next;
 	after=before->next;
@@ -265,12 +246,6 @@ VOID add_before_last(LPTSTR string)
 
 	after->prev=tmp;
 	before->next=tmp;
-
-
-
-	
-
-
 
 	/*set new size*/
 	size++;

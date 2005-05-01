@@ -37,53 +37,52 @@
 
 */
 
-static
-INT ServiceActivate (LPTSTR param, HWND hWnd)
+static INT ServiceActivate (LPTSTR param, HWND hWnd)
 {
-	LPTSTR *p=0,p_tmp;
-	INT argc=0,i;
-	INT iAction=0;
-	LPTSTR title=0;
+	LPTSTR *p = 0, p_tmp;
+	INT argc = 0, i;
+	INT iAction = 0;
+	LPTSTR title = 0;
 	WINDOWPLACEMENT wp;
 	RECT pos;
 	LPTSTR tmp;
 
 
-	if(*param)
-		p=split(param,&argc);
+	if (*param)
+		p = split(param, &argc);
 
 
-	for(i = 0; i < argc; i++)
+	for (i = 0; i < argc; i++)
 	{
-		p_tmp=p[i];
+		p_tmp = p[i];
 		if (*p_tmp == _T('/'))
 			p_tmp++;
 
-		if (_tcsicmp(p_tmp,_T("min"))==0)
+		if (_tcsicmp(p_tmp, _T("min")) == 0)
 		{
 			iAction |= A_MIN;
 			continue;
 		}
 
-		if (_tcsicmp(p_tmp,_T("max"))==0)
+		if (_tcsicmp(p_tmp, _T("max")) == 0)
 		{
 			iAction |= A_MAX;
 			continue;
 		}
 
-		if (_tcsicmp(p_tmp,_T("restore"))==0)
+		if (_tcsicmp(p_tmp, _T("restore")) == 0)
 		{
 			iAction |= A_RESTORE;
 			continue;
 		}
 
-		if (_tcsicmp(p_tmp,_T("close"))==0)
+		if (_tcsicmp(p_tmp, _T("close")) == 0)
 		{
 			iAction |= A_CLOSE;
 			continue;
 		}
 
-		if (_tcsnicmp(p_tmp,_T("pos"),3)==0)
+		if (_tcsnicmp(p_tmp, _T("pos"), 3) == 0)
 		{
 			iAction |= A_POS;
 			tmp = p_tmp+3;
@@ -91,7 +90,7 @@ INT ServiceActivate (LPTSTR param, HWND hWnd)
 				tmp++;
 
 			pos.left= _ttoi(tmp);
-			if(!(tmp=_tcschr(tmp,_T(','))))
+			if(!(tmp=_tcschr(tmp, _T(','))))
 			{
 				error_invalid_parameter_format(p[i]);
 				freep(p);
@@ -99,15 +98,15 @@ INT ServiceActivate (LPTSTR param, HWND hWnd)
 			}
 
 			pos.top = _ttoi (++tmp);
-			if(!(tmp=_tcschr(tmp,_T(','))))
+			if(!(tmp=_tcschr(tmp, _T(','))))
 			{
 				error_invalid_parameter_format(p[i]);
 				freep(p);
 				return 1;
 			}
 
-			pos.right = _ttoi(++tmp)+pos.left;
-			if(!(tmp=_tcschr(tmp,_T(','))))
+			pos.right = _ttoi(++tmp) + pos.left;
+			if (!(tmp = _tcschr(tmp, _T(','))))
 			{
 				error_invalid_parameter_format(p[i]);
 				freep(p);
@@ -117,13 +116,13 @@ INT ServiceActivate (LPTSTR param, HWND hWnd)
 			continue;
 		}
 
-		if (_tcsnicmp(p_tmp,_T("size"),4)==0)
+		if (_tcsnicmp(p_tmp, _T("size"), 4)==0)
 		{
 			iAction |=A_SIZE;
 			continue;
 		}
 
-		/*none of them=window title*/
+		/* none of them=window title */
 		if (title)
 		{
 			error_invalid_parameter_format(p[i]);
@@ -133,39 +132,39 @@ INT ServiceActivate (LPTSTR param, HWND hWnd)
 
 		if (p_tmp[0] == _T('"'))
 		{
-			title = (p_tmp+1);
-			*_tcschr(p_tmp+1,_T('"'))=0;
+			title = (p_tmp + 1);
+			*_tcschr(p_tmp + 1, _T('"')) = 0;
 			continue;
 		}
 		title = p_tmp;
 	}
 
-	if(title)
-		SetWindowText(hWnd,title);
+	if (title)
+		SetWindowText(hWnd, title);
 
-	wp.length=sizeof(WINDOWPLACEMENT);
-	GetWindowPlacement(hWnd,&wp);
+	wp.length = sizeof(WINDOWPLACEMENT);
+	GetWindowPlacement(hWnd, &wp);
 
-	if(iAction & A_POS)	
-		wp.rcNormalPosition = pos;	
+	if (iAction & A_POS)
+		wp.rcNormalPosition = pos;
 
-	if(iAction & A_MIN)
-		wp.showCmd=SW_MINIMIZE;
+	if (iAction & A_MIN)
+		wp.showCmd = SW_MINIMIZE;
 
-	if(iAction & A_MAX)
-		wp.showCmd=SW_SHOWMAXIMIZED;
+	if (iAction & A_MAX)
+		wp.showCmd = SW_SHOWMAXIMIZED;
 
 	/*if no actions are specified default is SW_RESTORE*/
-	if( (iAction & A_RESTORE) || (!iAction) )
-		wp.showCmd=SW_RESTORE;
+	if ((iAction & A_RESTORE) || (!iAction))
+		wp.showCmd = SW_RESTORE;
 
-	if(iAction & A_CLOSE)
+	if (iAction & A_CLOSE)
 		ConErrPrintf(_T("!!!FIXME:  CLOSE Not implemented!!!\n"));
 
-	wp.length=sizeof(WINDOWPLACEMENT);
-	SetWindowPlacement(hWnd,&wp);
+	wp.length = sizeof(WINDOWPLACEMENT);
+	SetWindowPlacement(hWnd, &wp);
 
-	if(p)
+	if (p)
 		freep(p);
 
 	return 0;
@@ -176,33 +175,32 @@ INT ServiceActivate (LPTSTR param, HWND hWnd)
 
 INT CommandWindow (LPTSTR cmd, LPTSTR param)
 {
-	HWND h;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	HWND hwnd;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_WINDOW_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConOutPuts (szMsg);	
-
+		LoadString(GetModuleHandle(NULL), STRING_WINDOW_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
 	h = GetConsoleWindow();
 	Sleep(0);
-	return ServiceActivate(param,h);
+	return ServiceActivate(param, hwnd);
 }
 
 
 INT CommandActivate (LPTSTR cmd, LPTSTR param)
 {
-	LPTSTR str;
-	HWND h;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	LPTSTR str;
+	HWND hwnd;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_WINDOW_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConOutPuts (szMsg);	
+		LoadString(GetModuleHandle(NULL), STRING_WINDOW_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -219,15 +217,15 @@ INT CommandActivate (LPTSTR cmd, LPTSTR param)
 	else
 		str = "";
 
-	h=FindWindow(NULL, param);
-	if (!h)
+	hwnd = FindWindow(NULL, param);
+	if (hwnd == NULL)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_WINDOW_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConErrPuts (szMsg);			
+		LoadString(GetModuleHandle(NULL), STRING_WINDOW_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPuts(szMsg);
 		return 1;
 	}
 
-	return ServiceActivate(str,h);
+	return ServiceActivate(str, hwnd);
 }
 
 #endif /* (  defined(INCLUDE_CMD_WINDOW) ||  defined(INCLUDE_CMD_ACTIVATE)  ) */

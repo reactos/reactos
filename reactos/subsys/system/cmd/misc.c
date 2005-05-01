@@ -387,7 +387,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 			ReadFile (hFile, &ch, 1, &dwRead, NULL);
 			break;
 		}
-                lpString[len++] = ch;
+		lpString[len++] = ch;
 	}
 
 	if (!dwRead && !len)
@@ -437,11 +437,11 @@ HWND GetConsoleWindow (VOID)
 
 INT PagePrompt (VOID)
 {
-	INPUT_RECORD ir;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	INPUT_RECORD ir;
 
-	LoadString( GetModuleHandle(NULL), STRING_MISC_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-	ConOutPrintf(szMsg);		
+	LoadString(GetModuleHandle(NULL), STRING_MISC_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPrintf(szMsg);
 
 	RemoveBreakHandler ();
 	ConInDisable ();
@@ -468,39 +468,35 @@ INT PagePrompt (VOID)
 
 INT FilePromptYN (LPTSTR szFormat, ...)
 {
-        TCHAR szOut[512];
-	va_list arg_ptr;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szOut[512];
+	va_list arg_ptr;
+//	TCHAR cKey = 0;
+//	LPTSTR szKeys = _T("yna");
 
-//        TCHAR cKey = 0;
-//        LPTSTR szKeys = _T("yna");
-
-        TCHAR szIn[10];
+	TCHAR szIn[10];
 	LPTSTR p;
 
 	va_start (arg_ptr, szFormat);
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-        ConOutPrintf (szFormat);
+	ConOutPrintf (szFormat);
 
-/* preliminary fix */
-        ConInString (szIn, 10);
-        ConOutPrintf (_T("\n"));
+	/* preliminary fix */
+	ConInString (szIn, 10);
+	ConOutPrintf (_T("\n"));
 
-        _tcsupr (szIn);
-        for (p = szIn; _istspace (*p); p++);
+	_tcsupr (szIn);
+	for (p = szIn; _istspace (*p); p++)
+		;
 
-	LoadString( GetModuleHandle(NULL), STRING_CHOICE_OPTION, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		
+	LoadString(GetModuleHandle(NULL), STRING_CHOICE_OPTION, szMsg, RC_STRING_MAX_SIZE);
 
-		
-	if (_tcsncmp(p,&szMsg[0],1)==0)
-	    return PROMPT_YES;
-	else if (_tcsncmp(p,&szMsg[1],1)==0)
-	    return PROMPT_NO;
-
-	
+	if (_tcsncmp(p, &szMsg[0], 1) == 0)
+		return PROMPT_YES;
+	else if (_tcsncmp(p, &szMsg[1], 1) == 0)
+		return PROMPT_NO;
 #if 0
 	else if (*p == _T('\03'))
 		return PROMPT_BREAK;
@@ -509,7 +505,7 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 	return PROMPT_NO;
 
 
-/* unfinished sollution */
+	/* unfinished sollution */
 #if 0
 	RemoveBreakHandler ();
 	ConInDisable ();
@@ -517,9 +513,9 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 	do
 	{
 		ConInKey (&ir);
-                cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
-                if (_tcschr (szKeys, cKey[0]) == NULL)
-                        cKey = 0;
+		cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
+		if (_tcschr (szKeys, cKey[0]) == NULL)
+			cKey = 0;
 
 
 	}
@@ -542,38 +538,37 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 
 INT FilePromptYNA (LPTSTR szFormat, ...)
 {
-        TCHAR szOut[512];
-	va_list arg_ptr;
-//        TCHAR cKey = 0;
-//        LPTSTR szKeys = _T("yna");
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-    
+	TCHAR szOut[512];
+	va_list arg_ptr;
+//	TCHAR cKey = 0;
+//	LPTSTR szKeys = _T("yna");
 
-        TCHAR szIn[10];
+	TCHAR szIn[10];
 	LPTSTR p;
 
 	va_start (arg_ptr, szFormat);
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-        ConOutPrintf (szFormat);
+	ConOutPrintf (szFormat);
 
-/* preliminary fix */
-        ConInString (szIn, 10);
-        ConOutPrintf (_T("\n"));
+	/* preliminary fix */
+	ConInString (szIn, 10);
+	ConOutPrintf (_T("\n"));
 
-        _tcsupr (szIn);
-        for (p = szIn; _istspace (*p); p++);
+	_tcsupr (szIn);
+	for (p = szIn; _istspace (*p); p++)
+		;
 
-	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-	
+	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szMsg, RC_STRING_MAX_SIZE);
 
-	if (_tcsncmp(p,&szMsg[0],1)==0)
-	    return PROMPT_YES;
-	else if (_tcsncmp(p,&szMsg[1],1)==0)
-	    return PROMPT_NO;
-	else if (_tcsncmp(p,&szMsg[2],1)==0)
-	    return PROMPT_ALL;
+	if (_tcsncmp(p, &szMsg[0], 1) == 0)
+		return PROMPT_YES;
+	else if (_tcsncmp(p, &szMsg[1], 1) == 0)
+		return PROMPT_NO;
+	else if (_tcsncmp(p, &szMsg[2], 1) == 0)
+		return PROMPT_ALL;
 
 #if 0
 	else if (*p == _T('\03'))
@@ -591,11 +586,9 @@ INT FilePromptYNA (LPTSTR szFormat, ...)
 	do
 	{
 		ConInKey (&ir);
-                cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
-                if (_tcschr (szKeys, cKey[0]) == NULL)
-                        cKey = 0;
-
-
+		cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
+		if (_tcschr (szKeys, cKey[0]) == NULL)
+			cKey = 0;
 	}
 	while ((ir.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
 	       (ir.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  COPY.C -- copy internal command.
  *
  *
@@ -296,29 +295,26 @@ DeleteFileList (LPFILES f)
 static INT
 Overwrite (LPTSTR fn)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR inp[10];
 	LPTSTR p;
-	
-	LPTSTR lpOptions;
-	TCHAR Options[3];
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szOptions[4];
 
-	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, Options,sizeof(Options)/sizeof(TCHAR));
-	lpOptions = Options;
+	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szOptions, 4);
 
-	LoadString( GetModuleHandle(NULL), STRING_COPY_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-	ConOutPrintf (szMsg);
+	LoadString(GetModuleHandle(NULL), STRING_COPY_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPrintf(szMsg);
 	
-	ConInString (inp, 10);
-	ConOutPuts (_T(""));
+	ConInString(inp, 10);
+	ConOutPuts(_T(""));
 
 	_tcsupr (inp);
 	for (p = inp; _istspace (*p); p++)
 		;
 
-	if (*p != lpOptions[0] && *p != lpOptions[2])
+	if (*p != szOptions[0] && *p != szOptions[2])
 		return 0;
-	if (*p == lpOptions[2])
+	if (*p == szOptions[2])
 		return 2;
 
 	return 1;
@@ -330,6 +326,7 @@ Overwrite (LPTSTR fn)
 
 int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	FILETIME srctime;
 	HANDLE hFileSrc;
 	HANDLE hFileDest;
@@ -339,7 +336,6 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	DWORD  dwWritten;
 	DWORD  i;
 	BOOL   bEof = FALSE;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("checking mode\n"));
@@ -351,8 +347,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 						   NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConErrPrintf (szMsg, source);
+		LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg, source);
 		return 0;
 	}
 
@@ -379,8 +375,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	{
 		if (!_tcscmp (dest, source))
 		{
-			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-			ConErrPrintf (szMsg, source);
+			LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg, source);
 			
 			CloseHandle (hFileSrc);
 			return 0;
@@ -456,8 +452,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		if (dwWritten != dwRead)
 		{
 			
-			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR3, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-			ConErrPrintf (szMsg);
+			LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg);
 
 			free (buffer);
 			CloseHandle (hFileDest);
@@ -633,12 +629,12 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 
 INT cmd_copy (LPTSTR first, LPTSTR rest)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR **p;
 	TCHAR drive_d[_MAX_DRIVE];
 	TCHAR dir_d[_MAX_DIR];
 	TCHAR file_d[_MAX_FNAME];
 	TCHAR ext_d[_MAX_EXT];
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	int argc;
 	int append;
@@ -655,8 +651,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_COPY_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConOutPuts (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_COPY_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 1;
 	}
 
@@ -728,8 +724,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	}
 	else if (bDestFound && bWildcards)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR4, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConErrPrintf (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg);
 
 		DeleteFileList (sources);
 		freep (p);

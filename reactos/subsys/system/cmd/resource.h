@@ -4,24 +4,23 @@
 #define STRING_ERROR_PARAMETERF_ERROR      100
 #define STRING_ERROR_INVALID_SWITCH        101
 #define STRING_ERROR_TOO_MANY_PARAMETERS   102
-#define STRING_ERROR_PATH_NOT_FOUND 	   103
-#define STRING_ERROR_FILE_NOT_FOUND 	   104
-#define STRING_ERROR_REQ_PARAM_MISSING 	   105
-#define STRING_ERROR_INVALID_DRIVE 		   106
+#define STRING_ERROR_PATH_NOT_FOUND        103
+#define STRING_ERROR_FILE_NOT_FOUND        104
+#define STRING_ERROR_REQ_PARAM_MISSING     105
+#define STRING_ERROR_INVALID_DRIVE         106
 #define STRING_ERROR_INVALID_PARAM_FORMAT  107
-#define STRING_ERROR_BADCOMMAND 		   108
-#define STRING_ERROR_OUT_OF_MEMORY		   109
-#define STRING_ERROR_CANNOTPIPE 		   110
-#define STRING_ERROR_D_PAUSEMSG 		   111
+#define STRING_ERROR_BADCOMMAND            108
+#define STRING_ERROR_OUT_OF_MEMORY         109
+#define STRING_ERROR_CANNOTPIPE            110
+#define STRING_ERROR_D_PAUSEMSG            111
 #define STRING_ERROR_DRIVER_NOT_READY      112
 
 #define STRING_CHOICE_OPTION               200
 #define STRING_COPY_OPTION                 201
-#define STRING_DEL_OPTION                  202
 
 #define STRING_ALIAS_ERROR                 300
 #define STRING_BATCH_ERROR                 301
-#define STRING_CHCP_ERROR1                 302 
+#define STRING_CHCP_ERROR1                 302
 #define STRING_CHCP_ERROR2                 303
 #define STRING_CHCP_ERROR3                 304
 #define STRING_CHCP_ERROR4                 305
@@ -43,17 +42,12 @@
 #define STRING_COPY_ERROR3                 321
 #define STRING_COPY_ERROR4                 322
 #define STRING_DATE_ERROR                  323
-#define STRING_DEL_ERROR1                  324
-#define STRING_DEL_ERROR2                  325
-#define STRING_DEL_ERROR3                  326
-#define STRING_DEL_ERROR4                  327
 #define STRING_DEL_ERROR5                  328
 #define STRING_DEL_ERROR6                  329
 #define STRING_DEL_ERROR7                  330
-#define STRING_DEL_ERROR8                  331
 #define STRING_ERROR_ERROR1                332
 #define STRING_ERROR_ERROR2                333
-#define STRING_FOR_ERROR1                  334 
+#define STRING_FOR_ERROR1                  334
 #define STRING_FOR_ERROR2                  335
 #define STRING_FOR_ERROR3                  336
 #define STRING_FOR_ERROR4                  337
@@ -61,7 +55,7 @@
 #define STRING_FREE_ERROR2                 339
 #define STRING_GOTO_ERROR1                 340
 #define STRING_GOTO_ERROR2                 341
-#define STRING_MOVE_ERROR1                 342                
+#define STRING_MOVE_ERROR1                 342
 #define STRING_MOVE_ERROR2                 343
 #define STRING_PARAM_ERROR                 344
 #define STRING_PATH_ERROR                  345
@@ -81,7 +75,7 @@
 #define STRING_CHCP_HELP                   605
 #define STRING_CHOICE_HELP                 606
 #define STRING_CLS_HELP                    607
-#define STRING_CMD_HELP1                   608 
+#define STRING_CMD_HELP1                   608
 #define STRING_CMD_HELP2                   609
 #define STRING_CMD_HELP3                   610
 #define STRING_CMD_HELP4                   611
@@ -97,12 +91,12 @@
 #define STRING_DATE_HELP3                  621
 #define STRING_DATE_HELP4                  622
 #define STRING_DEL_HELP1                   623
-#define STRING_DEL_HELP2	               624
+#define STRING_DEL_HELP2                   624
 #define STRING_DEL_HELP3                   625
 #define STRING_DEL_HELP4                   626
-#define STRING_DELAY_HELP                  627 
+#define STRING_DELAY_HELP                  627
 
-#define STRING_DIR_HELP1                   628 
+#define STRING_DIR_HELP1                   628
 #define STRING_DIR_HELP2                   629
 #define STRING_DIR_HELP3                   630
 #define STRING_DIR_HELP4                   631
@@ -119,14 +113,14 @@
 #define STRING_ECHO_HELP1                  640
 #define STRING_ECHO_HELP2                  641
 #define STRING_ECHO_HELP3                  642
-#define STRING_ECHO_HELP4                  643 
-#define STRING_ECHO_HELP5                  644 
+#define STRING_ECHO_HELP4                  643
+#define STRING_ECHO_HELP5                  644
 
 #define STRING_EXIT_HELP                   645
 
 #define STRING_FOR_HELP1                   646
 
-#define STRING_FREE_HELP1                  647 
+#define STRING_FREE_HELP1                  647
 #define STRING_FREE_HELP2                  648
 
 #define STRING_IF_HELP1                    650
@@ -151,7 +145,7 @@
 #define STRING_MOVE_HELP1                  662
 #define STRING_MOVE_HELP2                  663
 
-#define STRING_MSGBOX_HELP                 664 
+#define STRING_MSGBOX_HELP                 664
 
 #define STRING_PATH_HELP1                  665
 
@@ -198,24 +192,18 @@
 #define STRING_VERSION_HELP4               690
 #define STRING_VERSION_HELP5               691
 #define STRING_VERSION_HELP6               692
+#define STRING_VERSION_HELP7               693
 
-#define STRING_VOL_HELP1                   693 
-#define STRING_VOL_HELP2                   694
-#define STRING_VOL_HELP3                   695
-#define STRING_VOL_HELP4                   696
+#define STRING_VOL_HELP1                   694
+#define STRING_VOL_HELP2                   695
+#define STRING_VOL_HELP3                   696
+#define STRING_VOL_HELP4                   697
 
-#define STRING_WINDOW_HELP1                697
-#define STRING_WINDOW_HELP2                698
+#define STRING_WINDOW_HELP1                698
+#define STRING_WINDOW_HELP2                699
 
-#define STRING_FreeDOS_DEV                 800
+/* These strings are language independent (cmd.rc) */
+#define STRING_FREEDOS_DEV                 800
 #define STRING_REACTOS_DEV                 801
 
-
-
-
-
-  
-
-
-
-
+/* EOF */

@@ -17,16 +17,15 @@
 
 INT CommandDelay (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	DWORD val;
 	DWORD mul=1000;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-	    LoadString( GetModuleHandle(NULL), STRING_DELAY_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-	    ConOutPuts (szMsg);
-	
-	    return 0;
+		LoadString(GetModuleHandle(NULL), STRING_DELAY_HELP, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
+		return 0;
 	}
 
 	if (*param==0)
@@ -42,7 +41,7 @@ INT CommandDelay (LPTSTR cmd, LPTSTR param)
 	}
 
 	val = _ttoi(param);
-	Sleep(val*mul);
+	Sleep(val * mul);
 
 	return 0;
 }

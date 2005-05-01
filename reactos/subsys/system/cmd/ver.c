@@ -63,29 +63,26 @@ VOID ShortVersion (VOID)
  */
 INT cmd_ver (LPTSTR cmd, LPTSTR param)
 {
-	INT i;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	TCHAR rosdev[RC_STRING_MAX_SIZE];
-	TCHAR fredev[RC_STRING_MAX_SIZE];
+	INT i;
 
 	if (_tcsstr (param, _T("/?")) != NULL)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-		ConOutPuts (szMsg);	
-
+		LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
 	ShortVersion();
 	ConOutPuts (_T("Copyright (C) 1994-1998 Tim Norman and others."));
-	ConOutPuts (_T("Copyright (C) 1998-2001 Eric Kohl and others."));
+	ConOutPuts (_T("Copyright (C) 1998-2005 Eric Kohl and others."));
 
 	/* Basic copyright notice */
 	if (param[0] == _T('\0'))
 	{
-		ConOutPuts (_T("\n"SHELLINFO));
-		LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-		ConOutPuts (szMsg);	
+		ConOutPuts(_T("\n"SHELLINFO));
+		LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 	}
 	else
 	{
@@ -109,38 +106,26 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			if (_totupper (param[i]) == _T('W'))
 			{
 				/* Warranty notice */
-				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-				ConOutPuts (szMsg);	
+				LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP3, szMsg, RC_STRING_MAX_SIZE);
+				ConOutPuts(szMsg);
 			}
 			else if (_totupper (param[i]) == _T('R'))
 			{
 				/* Redistribution notice */
-				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-				ConOutPuts (szMsg);					
+				LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP4, szMsg, RC_STRING_MAX_SIZE);
+				ConOutPuts(szMsg);
 			}
 			else if (_totupper (param[i]) == _T('C'))
 			{
 				/* Developer listing */
-				
-				LoadString( GetModuleHandle(NULL), STRING_REACTOS_DEV, rosdev,sizeof(rosdev)/sizeof(TCHAR));
-				LoadString( GetModuleHandle(NULL), STRING_FreeDOS_DEV, fredev,sizeof(fredev)/sizeof(TCHAR));
-				LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP6, (LPTSTR) szMsg,sizeof(szMsg));	                
-				ConOutPrintf ((LPTSTR)szMsg,fredev,rosdev);
-				
-				/*
-				ConOutPuts (_T("\n"
-				               "FreeDOS version written by:\n"
-				               "    Tim Norman      Matt Rains\n"
-				               "    Evan Jeffrey    Steffen Kaiser\n"
-				               "    Svante Frey     Oliver Mueller\n"
-				               "    Aaron Kaufman   Marc Desrochers\n"
-				               "    Rob Lake        John P Price\n"
-				               "    Hans B Pufal\n"
-				               "\n"
-				               "ReactOS version written by:\n"
-				               "    Eric Kohl       Emanuele Aliberti\n"
-				               "    Paolo Pantaleo  Phillip Susi\n"));
-			   */
+				LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP6, szMsg, RC_STRING_MAX_SIZE);
+				ConOutPrintf(szMsg);
+				LoadString(GetModuleHandle(NULL), STRING_FREEDOS_DEV, szMsg, RC_STRING_MAX_SIZE);
+				ConOutPrintf(szMsg);
+				LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP7, szMsg, RC_STRING_MAX_SIZE);
+				ConOutPrintf(szMsg);
+				LoadString(GetModuleHandle(NULL), STRING_REACTOS_DEV, szMsg, RC_STRING_MAX_SIZE);
+				ConOutPrintf(szMsg);
 			}
 			else
 			{
@@ -150,8 +135,8 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 		}
 	}
 
-	LoadString( GetModuleHandle(NULL), STRING_VERSION_HELP5, (LPTSTR) szMsg,sizeof(szMsg));
-	ConOutPuts (szMsg);	
+	LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP5, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPuts(szMsg);
 	return 0;
 }
 

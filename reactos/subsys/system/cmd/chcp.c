@@ -18,17 +18,17 @@
 
 INT CommandChcp (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
 	INT    args;
 	UINT uOldCodePage;
 	UINT uNewCodePage;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));
-		ConOutPuts (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_CHCP_HELP, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -38,39 +38,37 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	if (args == 0)
 	{
 		/* display active code page number */
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConErrPrintf (szMsg, GetConsoleCP ());
-
+		LoadString(GetModuleHandle(NULL), STRING_CHCP_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg, GetConsoleCP());
 		return 0;
 	}
 
 	if (args >= 2)
 	{
 		/* too many parameters */
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConErrPrintf (szMsg, param);
-
+		LoadString(GetModuleHandle(NULL), STRING_CHCP_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg, param);
 		return 1;
 	}
 
 
 	/* save old code page */
-	uOldCodePage = GetConsoleCP ();
+	uOldCodePage = GetConsoleCP();
 
-	uNewCodePage = (UINT)_ttoi (arg[0]);
+	uNewCodePage = (UINT)_ttoi(arg[0]);
 
 	if (uNewCodePage == 0)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConErrPrintf (szMsg, arg[0]);
+		LoadString(GetModuleHandle(NULL), STRING_CHCP_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg, arg[0]);
 		freep (arg);
 		return 1;
 	}
 
-	if (!SetConsoleCP (uNewCodePage))
+	if (!SetConsoleCP(uNewCodePage))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CHCP_ERROR4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConErrPrintf (szMsg);		
+		LoadString(GetModuleHandle(NULL), STRING_CHCP_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg);
 	}
 	else
 	{

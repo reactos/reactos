@@ -19,17 +19,15 @@
 
 INT cmd_start (LPTSTR first, LPTSTR rest)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szFullName[MAX_PATH];
 	BOOL bWait = FALSE;
 	TCHAR *param;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
-		
-		LoadString( GetModuleHandle(NULL), STRING_START_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts(szMsg);	
-
+		LoadString(GetModuleHandle(NULL), STRING_START_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -47,11 +45,13 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 
 		return 0;
 	}
+
 	if( !*rest )
 	  {
 	    // FIXME: use comspec instead
 	    rest = _T("cmd");
 	  }
+
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
 	param = _tcschr( rest, _T(' ') );  // skip program name to reach parameters
@@ -60,21 +60,23 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 	    *param = 0;
 	    param++;
 	  }
+
 	if (!SearchForExecutable (rest, szFullName))
 	{
 		error_bad_command ();
 		return 1;
 	}
+
 	/* check if this is a .BAT or .CMD file */
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
-		!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
+	    !_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
 	{
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
 
-		LoadString( GetModuleHandle(NULL), STRING_START_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConErrPuts (szMsg);			
+		LoadString(GetModuleHandle(NULL), STRING_START_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPuts(szMsg);
 	}
 	else
 	{
@@ -101,7 +103,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		stui.wShowWindow = SW_SHOWDEFAULT;
 			
 		if (CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-						   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
+		                   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
 		{
 			if (bWait)
 			{
@@ -115,8 +117,8 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		}
 		else
 		{
-			ErrorMessage (GetLastError (),
-						  _T("Error executing CreateProcess()!!\n"));
+			ErrorMessage(GetLastError (),
+			              _T("Error executing CreateProcess()!!\n"));
 		}
 	}
 

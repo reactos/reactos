@@ -281,8 +281,9 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 				m = _tcslen (ptr->lpSubst);
 				if ((int)(_tcslen (cmd) - len + m - n) > maxlen)
 				{
-					LoadString( GetModuleHandle(NULL), STRING_ALIAS_ERROR, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-					ConErrPrintf (szMsg);					
+					LoadString(GetModuleHandle(NULL), STRING_ALIAS_ERROR, szMsg, RC_STRING_MAX_SIZE);
+					ConErrPrintf(szMsg);
+
 					/* the parser won't cause any problems with an empty line */
 					cmd[0] = _T('\0');
 				}
@@ -305,13 +306,13 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 
 INT CommandAlias (LPTSTR cmd, LPTSTR param)
 {
-	LPTSTR ptr;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	LPTSTR ptr;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ALIAS_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_ALIAS_HELP, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 

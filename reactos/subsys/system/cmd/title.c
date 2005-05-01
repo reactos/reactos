@@ -26,8 +26,8 @@ INT cmd_title (LPTSTR cmd, LPTSTR param)
 	/* Asking help? */
 	if (!_tcsncmp(param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_TITLE_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts(szMsg);	
+		LoadString(GetModuleHandle(NULL), STRING_TITLE_HELP, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 

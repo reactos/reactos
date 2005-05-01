@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  CONSOLE.C - console input/output functions.
  *
  *
@@ -211,11 +210,11 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 
 VOID ConOutFormatMessage (DWORD MessageId, ...)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	DWORD ret;
 	LPTSTR text;
 	va_list arg_ptr;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	
+
 	va_start (arg_ptr, MessageId);
 	ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 	       NULL,
@@ -233,8 +232,8 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	}
 	else
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CONSOLE_ERROR, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConErrPrintf (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg);
 	}
 }
 

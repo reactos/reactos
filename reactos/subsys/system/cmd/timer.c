@@ -47,8 +47,8 @@ PrintElapsedTime (DWORD time,INT format)
 	switch (format)
 	{
 	case 0:
-		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPrintf(szMsg,time);
+		LoadString(GetModuleHandle(NULL), STRING_TIMER_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPrintf(szMsg, time);
 		break;
 
 	case 1:
@@ -56,13 +56,13 @@ PrintElapsedTime (DWORD time,INT format)
 		time /= 1000;
 		s = time % 60;
 		time /=60;
-		m = time % 60;		
+		m = time % 60;
 		h = time / 60;
-		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP2, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg,
-		             h,cTimeSeparator,
-		             m,cTimeSeparator,
-		             s,cDecimalSeparator,ms/10);
+		             h, cTimeSeparator,
+		             m, cTimeSeparator,
+		             s, cDecimalSeparator, ms/10);
 		break;
 	}
 }
@@ -104,8 +104,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPrintf (szMsg,cTimeSeparator,cTimeSeparator,cDecimalSeparator);		
+		LoadString(GetModuleHandle(NULL), STRING_TIMER_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPrintf(szMsg, cTimeSeparator, cTimeSeparator, cDecimalSeparator);
 		return 0;
 	}
 
@@ -132,7 +132,6 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		// other options
 		if (p[i][0] == _T('/'))
 		{
-
 			// set timer number
 			if (_istdigit(p[i][1]) && bCanNSet)
 			{
@@ -149,7 +148,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 			}
 			
 			// specify format
-			if(_totupper(p[i][1]) == _T('F'))
+			if (_totupper(p[i][1]) == _T('F'))
 			{
 				iFormat = p[i][2] - _T('0');
 				continue;
@@ -184,9 +183,10 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	if(NewClkStatus == NCS_NOT_SPECIFIED)
-	{	
-		if(cS){
+	if (NewClkStatus == NCS_NOT_SPECIFIED)
+	{
+		if (cS)
+		{
 			cS=FALSE;
 			PS;
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
@@ -202,9 +202,9 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	}
 
 
-	if(NewClkStatus == NCS_OFF)
+	if (NewClkStatus == NCS_OFF)
 	{
-		if(cS)
+		if (cS)
 		{
 			cS=FALSE;
 			PS;

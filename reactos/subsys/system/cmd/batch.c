@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  BATCH.C - batch file processor for CMD.EXE.
  *
  *
@@ -218,12 +217,12 @@ VOID ExitBatch (LPTSTR msg)
 
 BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 {
-	HANDLE hFile;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	HANDLE hFile;
 
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_READ, NULL,
-						OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
-						FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
+			    FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 
 #ifdef _DEBUG
 	DebugPrintf (_T("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n"),
@@ -232,8 +231,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_BATCH_ERROR, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConErrPrintf (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_BATCH_ERROR, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg);
 		return FALSE;
 	}
 

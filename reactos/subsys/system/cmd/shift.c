@@ -47,9 +47,8 @@ INT cmd_shift (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_SHIFT_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		LoadString(GetModuleHandle(NULL), STRING_SHIFT_HELP, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPuts(szMsg);
-
 		return 0;
 	}
 
@@ -69,3 +68,5 @@ INT cmd_shift (LPTSTR cmd, LPTSTR param)
 
 	return 0;
 }
+
+/* EOF */

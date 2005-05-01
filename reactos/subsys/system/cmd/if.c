@@ -39,9 +39,9 @@
 
 INT cmd_if (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	INT x_flag = 0; /* when set cause 'then' clause to be executed */
 	LPTSTR pp;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("cmd_if: (\'%S\', \'%S\')\n"), cmd, param);
@@ -49,7 +49,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_IF_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
+		LoadString(GetModuleHandle(NULL), STRING_IF_HELP1, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPuts(szMsg);
 		return 0;
 	}
@@ -90,10 +90,9 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		else
 			return 0;
 	}
-
-	/* Check for 'defined' form */
 	else if (!_tcsnicmp (param, _T("defined"), 7) && _istspace (*(param + 7)))
 	{
+		/* Check for 'defined' form */
 		TCHAR Value [1];
 		INT   ValueSize = 0;
 
@@ -121,10 +120,9 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		else
 			return 0;
 	}
-
-	/* Check for 'errorlevel' form */
 	else if (!_tcsnicmp (param, _T("errorlevel"), 10) && _istspace (*(param + 10)))
 	{
+		/* Check for 'errorlevel' form */
 		INT n = 0;
 
 		pp = param + 10;
@@ -138,14 +136,12 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 		x_flag |= X_EMPTY;          /* Syntax error if comd empty */
 	}
-
-	/* Check that '==' is present, syntax error if not */
 	else if (NULL == (pp = _tcsstr (param, _T("=="))))
 	{
+		/* Check that '==' is present, syntax error if not */
 		error_syntax (NULL);
 		return 1;
 	}
-
 	else
 	{
 		/* Change first '='to space to terminate comparison loop */
@@ -193,3 +189,5 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 	return 0;
 }
+
+/* EOF */

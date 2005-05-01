@@ -33,29 +33,29 @@
 
 INT cmd_cls (LPTSTR cmd, LPTSTR param)
 {
-	DWORD dwWritten;
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	DWORD dwWritten;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_CLS_HELP, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);
+		LoadString(GetModuleHandle(NULL), STRING_CLS_HELP, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
-	GetConsoleScreenBufferInfo (hConsole, &csbi);
+	GetConsoleScreenBufferInfo(hConsole, &csbi);
 
 	coPos.X = 0;
 	coPos.Y = 0;
-	FillConsoleOutputAttribute (hConsole, wColor,
-								(csbi.dwSize.X)*(csbi.dwSize.Y),
-								coPos, &dwWritten);
-	FillConsoleOutputCharacter (hConsole, _T(' '),
-								(csbi.dwSize.X)*(csbi.dwSize.Y),
-								coPos, &dwWritten);
-	SetConsoleCursorPosition (hConsole, coPos);
+	FillConsoleOutputAttribute(hConsole, wColor,
+	                           csbi.dwSize.X * csbi.dwSize.Y,
+	                           coPos, &dwWritten);
+	FillConsoleOutputCharacter(hConsole, _T(' '),
+	                           csbi.dwSize.X * csbi.dwSize.Y,
+	                           coPos, &dwWritten);
+	SetConsoleCursorPosition(hConsole, coPos);
 
 	bIgnoreEcho = TRUE;
 

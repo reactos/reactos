@@ -45,9 +45,8 @@ INT cmd_pause (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_PAUSE_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);	
-
+		LoadString(GetModuleHandle(NULL), STRING_PAUSE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -62,3 +61,5 @@ INT cmd_pause (LPTSTR cmd, LPTSTR param)
 }
 
 #endif
+
+/* EOF */

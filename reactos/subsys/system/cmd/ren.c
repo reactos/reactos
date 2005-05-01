@@ -43,6 +43,7 @@ enum
  */
 INT cmd_rename (LPTSTR cmd, LPTSTR param)
 {
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
   LPTSTR *arg = NULL;
   INT args = 0;
   INT nEvalArgs = 0; /* nunber of evaluated arguments */
@@ -58,15 +59,13 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 
   HANDLE hFile;
   WIN32_FIND_DATA f;
-  TCHAR szMsg[RC_STRING_MAX_SIZE];
 
   if (!_tcsncmp(param, _T("/?"), 2))
-    {
-	LoadString( GetModuleHandle(NULL), STRING_REN_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-	ConOutPuts(szMsg);
-
-	return(0);
-    }
+  {
+    LoadString(GetModuleHandle(NULL), STRING_REN_HELP1, szMsg, RC_STRING_MAX_SIZE);
+    ConOutPuts(szMsg);
+    return 0;
+  }
 
   /* split the argument list */
   arg = split(param, &args, FALSE);
@@ -76,7 +75,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
       if (!(dwFlags & REN_ERROR))
 	error_req_param_missing();
       freep(arg);
-      return(1);
+      return 1;
     }
 
   /* read options */
@@ -127,7 +126,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
       if (!(dwFlags & REN_ERROR))
 	error_req_param_missing();
       freep(arg);
-      return(1);
+      return 1;
     }
 
   /* get destination pattern */
@@ -239,8 +238,8 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 		{
 		  if (!(dwFlags & REN_ERROR))
 		  {
-		    LoadString( GetModuleHandle(NULL), STRING_REN_ERROR1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		    ConErrPrintf (szMsg, GetLastError());
+		    LoadString(GetModuleHandle(NULL), STRING_REN_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		    ConErrPrintf(szMsg, GetLastError());
 		  }
 		}
 	    }
@@ -250,20 +249,17 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
     }
 
   if (!(dwFlags & REN_QUIET))
-    {
-	if (dwFiles == 1)
-	  LoadString( GetModuleHandle(NULL), STRING_REN_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-	else
-	  LoadString( GetModuleHandle(NULL), STRING_REN_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-    
-	ConOutPrintf(szMsg,dwFiles);	
-    }
+  {
+    if (dwFiles == 1)
+      LoadString( GetModuleHandle(NULL), STRING_REN_HELP2, szMsg, RC_STRING_MAX_SIZE);
+    else
+      LoadString( GetModuleHandle(NULL), STRING_REN_HELP3, szMsg, RC_STRING_MAX_SIZE);
+    ConOutPrintf((LPTSTR)szMsg,dwFiles);
+  }
 
-	
-  
   freep(arg);
 
-  return(0);
+  return 0;
 }
 
 #endif

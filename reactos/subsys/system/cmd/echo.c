@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  ECHO.C - internal echo commands.
  *
  *
@@ -41,8 +40,8 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts (szMsg);			
+		LoadString(GetModuleHandle(NULL), STRING_ECHO_HELP4, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -61,14 +60,16 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 			bEcho = TRUE;
 		else if (*param)
 			ConOutPuts (param);
-		else {
-             LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP4, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-             ConOutPrintf (szMsg, bEcho ? D_ON : D_OFF);
-		     }
+		else
+		{
+			LoadString(GetModuleHandle(NULL), STRING_ECHO_HELP4, szMsg, RC_STRING_MAX_SIZE);
+			ConOutPrintf(szMsg, bEcho ? D_ON : D_OFF);
+		}
 	}
 
 	return 0;
 }
+
 
 INT CommandEchos (LPTSTR cmd, LPTSTR param)
 {
@@ -80,9 +81,8 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP1, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts(szMsg);	
-		
+		LoadString(GetModuleHandle(NULL), STRING_ECHO_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -103,9 +103,8 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP2, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts((LPTSTR)szMsg);	
-
+		LoadString(GetModuleHandle(NULL), STRING_ECHO_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -124,6 +123,7 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 	return 0;
 }
 
+
 INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -132,13 +132,10 @@ INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 	DebugPrintf (_T("CommandEchoserr '%s' : '%s'\n"), cmd, param);
 #endif
 
-	
-
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_ECHO_HELP3, szMsg,sizeof(szMsg)/sizeof(TCHAR));    
-		ConOutPuts(szMsg);	
-
+		LoadString(GetModuleHandle(NULL), STRING_ECHO_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts((LPTSTR)szMsg);
 		return 0;
 	}
 
