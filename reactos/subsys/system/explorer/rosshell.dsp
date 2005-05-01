@@ -233,6 +233,10 @@ SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\explorer.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\explorer_intres.h
 # End Source File
 # Begin Source File
@@ -383,6 +387,10 @@ SOURCE=.\shell\entries.cpp
 # Begin Source File
 
 SOURCE=.\shell\entries.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\shell\shellbrowser.h
 # End Source File
 # Begin Source File
 

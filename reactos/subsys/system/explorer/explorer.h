@@ -54,4 +54,7 @@
 
 
 #include "shell/shellbrowser.h"
+
+#ifndef ROSSHELL
 #include "shell/mainframe.h"
+#endif

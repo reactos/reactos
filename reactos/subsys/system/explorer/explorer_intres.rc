@@ -83,7 +83,6 @@ BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Începe"
     IDS_LOGOFF              "Închide sesiunea ..."
-    IDS_TERMINATE           "Închide"
     IDS_SHUTDOWN            "Oprire calculator ..."
     IDS_LAUNCH              "Pornire ..."
     IDS_START_HELP          "Ajutor"
@@ -96,6 +95,14 @@ BEGIN
     IDS_EMPTY               "(Empty)"
     IDS_RECENT              "Documente Recente"
     IDS_ADMIN               "Administrare"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_TERMINATE           "Închide"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -116,13 +123,6 @@ BEGIN
     IDS_TASKBAR             "Taskbar"
 END
 
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "mimimize all windows"
-    IDS_DESKTOP_NUM         "Desktop %d"
-END
-
 #endif    // Romanian resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -141,7 +141,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // Bitmap
 //
 
-IDB_TOOLBAR             BITMAP  DISCARDABLE     "res/toolbar.bmp"
 IDB_LOGOV               BITMAP  DISCARDABLE     "res/logov.bmp"
 IDB_LOGOV256            BITMAP  DISCARDABLE     "res/logov256.bmp"
 IDB_LOGOV16             BITMAP  DISCARDABLE     "res/logov16.bmp"
@@ -259,6 +258,7 @@ END
 
 3 TEXTINCLUDE DISCARDABLE 
 BEGIN
+    "IDB_TOOLBAR BITMAP DISCARDABLE ""res/toolbar.bmp""\r\n"
     "#ifndef _ROS_\r\n"
     "LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL\r\n"
     "STRINGTABLE DISCARDABLE \r\n"
@@ -339,7 +339,6 @@ BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
     IDS_LOGOFF              "Abmelden..."
-    IDS_TERMINATE           "ROS Explorer beenden"
     IDS_SHUTDOWN            "Herunterfahren..."
     IDS_LAUNCH              "Starten..."
     IDS_START_HELP          "Hilfe"
@@ -352,6 +351,14 @@ BEGIN
     IDS_EMPTY               "(Empty)"
     IDS_RECENT              "Aktuelle Dokumente"
     IDS_ADMIN               "Verwaltung"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "alle Fenster minimieren"
+    IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_TERMINATE           "ROS Explorer beenden"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -370,13 +377,6 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Desktop-Einstellungen"
     IDS_DESKTOP             "Desktop"
     IDS_TASKBAR             "Taskbar"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "alle Fenster minimieren"
-    IDS_DESKTOP_NUM         "Desktop %d"
 END
 
 #endif    // German (Germany) resources
@@ -553,7 +553,6 @@ BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
     IDS_LOGOFF              "Log Off..."
-    IDS_TERMINATE           "Terminate ROS Explorer"
     IDS_SHUTDOWN            "Turn Off..."
     IDS_LAUNCH              "Run..."
     IDS_START_HELP          "Help"
@@ -566,6 +565,14 @@ BEGIN
     IDS_EMPTY               "(Empty)"
     IDS_RECENT              "Recent Documents"
     IDS_ADMIN               "Administration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_TERMINATE           "Terminate ROS Explorer"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -584,13 +591,6 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
     IDS_DESKTOP             "Desktop"
     IDS_TASKBAR             "Taskbar"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "mimimize all windows"
-    IDS_DESKTOP_NUM         "Desktop %d"
 END
 
 #endif    // English (U.S.) resources
@@ -668,7 +668,6 @@ BEGIN
     IDS_TITLE               "Explorateur Reactos"
     IDS_START               "Démarrer"
     IDS_LOGOFF              "Déconnexion ..."
-    IDS_TERMINATE           "Déconnexion"
     IDS_SHUTDOWN            "Arrêter..."
     IDS_LAUNCH              "Exécuter..."
     IDS_START_HELP          "Aide"
@@ -681,6 +680,14 @@ BEGIN
     IDS_EMPTY               "(Vide)"
     IDS_RECENT              "Documents récents"
     IDS_ADMIN               "Administration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Bureau %d"
+    IDS_TERMINATE           "Déconnexion"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -699,13 +706,6 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Bureau"
     IDS_DESKTOP             "Bureau"
     IDS_TASKBAR             "Taskbar"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "mimimize all windows"
-    IDS_DESKTOP_NUM         "Bureau %d"
 END
 
 #endif    // French (France) resources
@@ -753,7 +753,6 @@ BEGIN
     IDS_TITLE               "Explorador do Reactos"
     IDS_START               "Iniciar"
     IDS_LOGOFF              "Terminar sessão..."
-    IDS_TERMINATE           "Terminar ROS Explorer"
     IDS_SHUTDOWN            "Desligar..."
     IDS_LAUNCH              "Executar..."
     IDS_START_HELP          "Ajuda"
@@ -766,6 +765,14 @@ BEGIN
     IDS_EMPTY               "(Vazio)"
     IDS_RECENT              "Documentos recentes"
     IDS_ADMIN               "Administrar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
+    IDS_MINIMIZE_ALL        "mimimize all windows"
+    IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_TERMINATE           "Terminar ROS Explorer"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -786,13 +793,6 @@ BEGIN
     IDS_TASKBAR             "Taskbar"
 END
 
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "mimimize all windows"
-    IDS_DESKTOP_NUM         "Desktop %d"
-END
-
 #endif    // Portuguese (Portugal) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -803,6 +803,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
+IDB_TOOLBAR BITMAP DISCARDABLE "res/toolbar.bmp"
 #ifndef _ROS_
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE 
