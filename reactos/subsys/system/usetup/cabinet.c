@@ -1319,7 +1319,7 @@ CabinetOpen(VOID)
         NULL);
 
       NtStatus = NtOpenFile(&FileHandle,
-        FILE_READ_ACCESS,
+		    GENERIC_READ,
 		    &ObjectAttributes,
 		    &IoStatusBlock,
 		    FILE_SHARE_READ,
@@ -1673,7 +1673,7 @@ CabinetExtractFile(PWCHAR FileName)
     NULL);
 
   NtStatus = NtCreateFile(&DestFile,
-    FILE_WRITE_ACCESS,
+    GENERIC_WRITE|FILE_READ_ATTRIBUTES,
     &ObjectAttributes,
     &IoStatusBlock,
     NULL,
@@ -1692,7 +1692,7 @@ CabinetExtractFile(PWCHAR FileName)
         {
           /* Create destination file, overwrite if it already exists */
           NtStatus = NtCreateFile(&DestFile,
-            FILE_WRITE_ACCESS,
+            GENERIC_WRITE|FILE_READ_ATTRIBUTES,
             &ObjectAttributes,
             &IoStatusBlock,
             NULL,

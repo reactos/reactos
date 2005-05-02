@@ -564,7 +564,7 @@ SaveCurrentBootSector(PWSTR RootPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -602,7 +602,7 @@ SaveCurrentBootSector(PWSTR RootPath,
 			     NULL);
 
   Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
+			GENERIC_WRITE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -667,7 +667,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -716,7 +716,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -762,7 +762,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 			     NULL);
 
   Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
+			GENERIC_WRITE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -831,7 +831,7 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -880,7 +880,7 @@ CHECKPOINT1;
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -932,7 +932,7 @@ CHECKPOINT1;
 			     NULL);
 
   Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
+			GENERIC_WRITE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -975,7 +975,7 @@ CHECKPOINT1;
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_WRITE_ACCESS,
+		      GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1038,7 +1038,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1087,7 +1087,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1135,7 +1135,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
+		      GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1195,7 +1195,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1244,7 +1244,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1292,7 +1292,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
+		      GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1357,7 +1357,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1406,7 +1406,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1457,7 +1457,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
+		      GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1555,7 +1555,7 @@ UnprotectBootIni(PWSTR FileName,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+		      GENERIC_READ|GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1626,7 +1626,7 @@ ProtectBootIni(PWSTR FileName,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+		      GENERIC_READ|GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
