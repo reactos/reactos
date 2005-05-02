@@ -74,10 +74,11 @@ typedef enum _KDB_ENTER_CONDITION
    KdbEnterFromUmode
 } KDB_ENTER_CONDITION;
 
+/* These values MUST be nonzero.  They're used as bit masks. */
 typedef enum _KDB_OUTPUT_SETTINGS
 {
-   KD_DEBUG_KDSERIAL,
-   KD_DEBUG_KDNOECHO
+   KD_DEBUG_KDSERIAL = 1,
+   KD_DEBUG_KDNOECHO = 2
 } KDB_OUTPUT_SETTINGS;
 
 /* FUNCTIONS *****************************************************************/
