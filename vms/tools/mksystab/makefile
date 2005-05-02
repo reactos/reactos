@@ -1,0 +1,5 @@
+all: implib
+
+implib:
+
+clean:
