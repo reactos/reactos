@@ -1131,75 +1131,90 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
                        OUT PVOID FileInformation,
                        OUT PULONG ReturnedLength)
 {
-   IO_STATUS_BLOCK IoStatusBlock;
-   PIRP Irp;
-   PDEVICE_OBJECT DeviceObject;
-   PIO_STACK_LOCATION StackPtr;
-   NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
+    PIO_STACK_LOCATION StackPtr;
+    BOOLEAN LocalEvent = FALSE;
+    KEVENT Event;
+    NTSTATUS Status;
    
-   ASSERT(FileInformation != NULL);
+    ASSERT(FileInformation != NULL);
    
-   Status = ObReferenceObjectByPointer(FileObject,
-           FILE_READ_ATTRIBUTES,
-           IoFileObjectType,
-           KernelMode);
-   if (!NT_SUCCESS(Status))
-     {
- return(Status);
-     }
+    Status = ObReferenceObjectByPointer(FileObject,
+                                        FILE_READ_ATTRIBUTES,
+                                        IoFileObjectType,
+                                        KernelMode);
+    if (!NT_SUCCESS(Status)) return(Status);
    
-   DPRINT("FileObject %x\n", FileObject);
+    DPRINT("FileObject %x\n", FileObject);
    
-   DeviceObject = FileObject->DeviceObject;
+    /* Get the Device Object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        /* Use local event */
+        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
+    }
    
-   Irp = IoAllocateIrp(DeviceObject->StackSize,
-         TRUE);
-   if (Irp == NULL)
-     {
- ObDereferenceObject(FileObject);
- return STATUS_INSUFFICIENT_RESOURCES;
-     }
-
-   /* Trigger FileObject/Event dereferencing */
-   Irp->Tail.Overlay.OriginalFileObject = FileObject;
-   Irp->RequestorMode = KernelMode;
-   Irp->AssociatedIrp.SystemBuffer = FileInformation;
-   Irp->UserIosb = &IoStatusBlock;
-   Irp->UserEvent = &FileObject->Event;
-   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-   KeResetEvent( &FileObject->Event );
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+     
+    /* Set the IRP */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = KernelMode;
+    Irp->AssociatedIrp.SystemBuffer = FileInformation;
+    Irp->UserIosb = &IoStatusBlock;
+    Irp->UserEvent = (LocalEvent) ? &Event : NULL;
+    Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
-   StackPtr->MinorFunction = 0;
-   StackPtr->Flags = 0;
-   StackPtr->Control = 0;
-   StackPtr->DeviceObject = DeviceObject;
-   StackPtr->FileObject = FileObject;
+    /* Set the Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;    
+    StackPtr->FileObject = FileObject;
    
-   StackPtr->Parameters.QueryFile.FileInformationClass =
-     FileInformationClass;
-   StackPtr->Parameters.QueryFile.Length = Length;
+    /* Set Parameters */
+    StackPtr->Parameters.QueryFile.FileInformationClass = FileInformationClass;
+    StackPtr->Parameters.QueryFile.Length = Length;
    
-   Status = IoCallDriver(FileObject->DeviceObject,
-    Irp);
-   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
-     {
- KeWaitForSingleObject(&FileObject->Event,
-         Executive,
-         KernelMode,
-         FileObject->Flags & FO_ALERTABLE_IO,
-         NULL);
- Status = IoStatusBlock.Status;
-     }
+    /* Call the Driver */
+    Status = IoCallDriver(FileObject->DeviceObject, Irp);
+    
+    if (Status == STATUS_PENDING)
+    {
+        if (LocalEvent)
+        {
+            KeWaitForSingleObject(&Event, 
+                                  Executive, 
+                                  KernelMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = IoStatusBlock.Status;
+        }
+        else
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive, 
+                                  KernelMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
+        
    
-   if (ReturnedLength != NULL)
-     {
- *ReturnedLength = IoStatusBlock.Information;
-     }
-   
-   
-   return Status;
+    /* Return the Length and Status. ReturnedLength is NOT optional */
+    *ReturnedLength = IoStatusBlock.Information;
+    return Status;
 }
 
 /*
@@ -2170,132 +2185,150 @@ NtQueryInformationFile(HANDLE FileHandle,
                        ULONG Length,
                        FILE_INFORMATION_CLASS FileInformationClass)
 {
-  OBJECT_HANDLE_INFORMATION HandleInformation;
-  PFILE_OBJECT FileObject;
-  NTSTATUS Status;
-  PIRP Irp;
-  PDEVICE_OBJECT DeviceObject;
-  PIO_STACK_LOCATION StackPtr;
-  PVOID SystemBuffer;
-  KPROCESSOR_MODE PreviousMode;
-  BOOLEAN Failed = FALSE;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
+    PFILE_OBJECT FileObject;
+    NTSTATUS Status;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
+    PIO_STACK_LOCATION StackPtr;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KEVENT Event;
+    BOOLEAN LocalEvent = FALSE;
+    BOOLEAN Failed = FALSE;
 
-  ASSERT(IoStatusBlock != NULL);
-  ASSERT(FileInformation != NULL);
+    ASSERT(IoStatusBlock != NULL);
+    ASSERT(FileInformation != NULL);
 
-  DPRINT("NtQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
-         "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
-         Length, FileInformationClass);
+    DPRINT("NtQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
+           "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
+            Length, FileInformationClass);
 
-  PreviousMode = ExGetPreviousMode();
+    /* Reference the Handle */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       0,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID *)&FileObject,
+                                       &HandleInformation);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  Status = ObReferenceObjectByHandle(FileHandle,
-                                     0,
-                                     IoFileObjectType,
-                                     PreviousMode,
-                                     (PVOID *)&FileObject,
-                                     &HandleInformation);
-  if (!NT_SUCCESS(Status))
-  {
+    /* Check information class specific access rights */
+    switch (FileInformationClass)
+    {
+        case FileBasicInformation:
+            if (!(HandleInformation.GrantedAccess & FILE_READ_ATTRIBUTES))
+                Failed = TRUE;
+            break;
+
+        case FilePositionInformation:
+            if (!(HandleInformation.GrantedAccess & (FILE_READ_DATA | FILE_WRITE_DATA)) ||
+                !(FileObject->Flags & FO_SYNCHRONOUS_IO))
+                Failed = TRUE;
+            break;
+
+        case FileAlignmentInformation:
+            if (!(FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING))
+                Failed = TRUE;
+            break;
+
+        default:
+            break;
+    }
+
+    if (Failed)
+    {
+        DPRINT1("NtQueryInformationFile() returns STATUS_ACCESS_DENIED!\n");
+        ObDereferenceObject(FileObject);
+        return STATUS_ACCESS_DENIED;
+    }
+
+    DPRINT("FileObject %x\n", FileObject);
+        
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+    
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        /* Use local event */
+        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
+    }
+
+    /* Allocate the IRP */
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    {
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    /* Allocate the System Buffer */
+    if (!(Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool, 
+                                                                  Length, 
+                                                                  TAG_SYSB)))
+    {
+        IoFreeIrp(Irp);
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Set up the IRP */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = PreviousMode;
+    Irp->UserIosb = IoStatusBlock;
+    Irp->UserEvent = (LocalEvent) ? &Event : NULL;
+    Irp->UserBuffer = FileInformation;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER | IRP_INPUT_OPERATION;
+    Irp->Flags |= (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    
+    /* Set up Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
+    StackPtr->FileObject = FileObject;
+
+    /* Set the Parameters */
+    StackPtr->Parameters.QueryFile.FileInformationClass = FileInformationClass;
+    StackPtr->Parameters.QueryFile.Length = Length;
+    
+    /* Call the Driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        if (LocalEvent)
+        {
+            KeWaitForSingleObject(&Event, 
+                                  Executive, 
+                                  PreviousMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = IoStatusBlock->Status;
+        }
+        else
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive, 
+                                  PreviousMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
+
+    /* Return the Status */
     return Status;
-  }
-
-  /* Check information class specific access rights */
-  switch (FileInformationClass)
-  {
-    case FileBasicInformation:
-      if (!(HandleInformation.GrantedAccess & FILE_READ_ATTRIBUTES))
-        Failed = TRUE;
-      break;
-
-    case FilePositionInformation:
-      if (!(HandleInformation.GrantedAccess & (FILE_READ_DATA | FILE_WRITE_DATA)) ||
-          !(FileObject->Flags & FO_SYNCHRONOUS_IO))
-        Failed = TRUE;
-      break;
-
-    case FileAlignmentInformation:
-      if (!(FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING))
-        Failed = TRUE;
-      break;
-
-    default:
-      break;
-  }
-
-  if (Failed)
-  {
-    DPRINT1("NtQueryInformationFile() returns STATUS_ACCESS_DENIED!\n");
-    ObDereferenceObject(FileObject);
-    return STATUS_ACCESS_DENIED;
-  }
-
-  DPRINT("FileObject %x\n", FileObject);
-
-  DeviceObject = FileObject->DeviceObject;
-
-  Irp = IoAllocateIrp(DeviceObject->StackSize,
-                      TRUE);
-  if (Irp == NULL)
-  {
-    ObDereferenceObject(FileObject);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                       Length,
-                                       TAG_SYSB);
-  if (SystemBuffer == NULL)
-  {
-    IoFreeIrp(Irp);
-    ObDereferenceObject(FileObject);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  /* Trigger FileObject/Event dereferencing */
-  Irp->Tail.Overlay.OriginalFileObject = FileObject;
-  Irp->RequestorMode = PreviousMode;
-  Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
-  Irp->UserIosb = IoStatusBlock;
-  Irp->UserEvent = &FileObject->Event;
-  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-  KeResetEvent(&FileObject->Event);
-
-  StackPtr = IoGetNextIrpStackLocation(Irp);
-  StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
-  StackPtr->MinorFunction = 0;
-  StackPtr->Flags = 0;
-  StackPtr->Control = 0;
-  StackPtr->DeviceObject = DeviceObject;
-  StackPtr->FileObject = FileObject;
-
-  StackPtr->Parameters.QueryFile.FileInformationClass =
-    FileInformationClass;
-  StackPtr->Parameters.QueryFile.Length = Length;
-
-  Status = IoCallDriver(FileObject->DeviceObject,
-                        Irp);
-  if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
-  {
-    KeWaitForSingleObject(&FileObject->Event,
-                          Executive,
-                          PreviousMode,
-                          FileObject->Flags & FO_ALERTABLE_IO,
-                          NULL);
-    Status = IoStatusBlock->Status;
-  }
-
-  if (NT_SUCCESS(Status))
-  {
-    DPRINT("Information %lu\n", IoStatusBlock->Information);
-    MmSafeCopyToUser(FileInformation,
-                     SystemBuffer,
-                     IoStatusBlock->Information);
-  }
-
-  ExFreePool(SystemBuffer);
-
-  return Status;
 }
 
 /*
