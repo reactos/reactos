@@ -533,9 +533,8 @@ void InitKbdLayout( PVOID *pkKeyboardLayout )
       RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
 
       if( !NT_SUCCESS(Status) ) {
-	DPRINT1("Got default locale but not layout file. (%08x)\n",
+	DPRINT1("Got default locale but not layout file. (%08lx)\n",
 		 Status);
-	RtlFreeUnicodeString(&LayoutFile);
       } else {
 	DPRINT("Read registry and got %wZ\n", &LayoutFile);
     
@@ -566,9 +565,9 @@ void InitKbdLayout( PVOID *pkKeyboardLayout )
 
         if( !kbModule )
 	  DPRINT1( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
+	
+	RtlFreeUnicodeString(&FullLayoutPath);
       }
-
-      RtlFreeUnicodeString(&FullLayoutPath);
     }
 
     if( !kbModule )
