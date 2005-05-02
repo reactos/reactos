@@ -143,15 +143,21 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 	return Status;
      }
 
+   if (Object == NULL)
+     {
+       RtlFreeUnicodeString(&RemainingPath);
+       return STATUS_UNSUCCESSFUL;
+     }
    if (RemainingPath.Buffer != NULL)
    {
       if (wcschr(RemainingPath.Buffer + 1, L'\\') == NULL)
-         return STATUS_OBJECT_NAME_NOT_FOUND;
+         Status = STATUS_OBJECT_NAME_NOT_FOUND;
       else
-         return STATUS_OBJECT_PATH_NOT_FOUND;
+         Status =STATUS_OBJECT_PATH_NOT_FOUND;
+      RtlFreeUnicodeString(&RemainingPath);
+      ObDereferenceObject(Object);
+      return Status;
    }
-   if (Object == NULL)
-      return STATUS_UNSUCCESSFUL;
 
    Status = ObCreateHandle(PsGetCurrentProcess(),
 			   Object,
