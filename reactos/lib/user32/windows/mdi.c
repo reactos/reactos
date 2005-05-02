@@ -2034,8 +2034,16 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 #ifndef __REACTOS__
     HWND *list;
 #else
+    WINDOWINFO WindowInfo;
     HWND hWndCurrent;
 #endif
+    /* The rectangle returned by GetClientRect always has 0,0 as top left
+     * because it is in client coordinates. The rectangles returned by
+     * GetWindowRect are in screen coordinates to make this complicated.
+     *
+     * Apparently (in ReactOS at least) the rcClient returned by GetWindowInfo
+     * is in screen coordinates too.
+     */
 
     GetClientRect( hwnd, &clientRect );
     SetRectEmpty( &childRect );
@@ -2063,6 +2071,13 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         HeapFree( GetProcessHeap(), 0, list );
     }
 #else
+    WindowInfo.cbSize = sizeof(WindowInfo);
+    if (!GetWindowInfo(hwnd, &WindowInfo))
+    {
+	ERR("Can't get window info\n");
+	return;
+    }
+
     hWndCurrent = GetWindow(hwnd, GW_CHILD);
     while (hWndCurrent != NULL)
     {
@@ -2077,6 +2092,9 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
             RECT WindowRect;
 
             GetWindowRect( hWndCurrent, &WindowRect );
+            OffsetRect(&WindowRect,
+       	               -WindowInfo.rcClient.left,
+       	               -WindowInfo.rcClient.top);
             UnionRect( &childRect, &WindowRect, &childRect );
         }
         hWndCurrent = GetWindow(hWndCurrent, GW_HWNDNEXT);
@@ -2086,23 +2104,30 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 
     /* set common info values */
     info.cbSize = sizeof(info);
-    info.fMask = SIF_POS | SIF_RANGE;
+    info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
 
-    /* set the specific */
+    /* set the specific scrollbars*/
+    /* Note how we set nPos to 0 because we scroll the clients instead of
+     * the window, and we set nPage to 1 bigger than the clientRect because
+     * otherwise the scrollbar never disables. This causes a somewhat ugly
+     * effect though while scrolling.
+     */
     switch( scroll )
     {
 	case SB_BOTH:
 	case SB_HORZ:
 			info.nMin = childRect.left;
-			info.nMax = childRect.right - clientRect.right;
-			info.nPos = clientRect.left - childRect.left;
+			info.nMax = childRect.right;
+			info.nPos = 0;
+			info.nPage = 1 + clientRect.right - clientRect.left;
 			SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
 			if (scroll == SB_HORZ) break;
 			/* fall through */
 	case SB_VERT:
 			info.nMin = childRect.top;
-			info.nMax = childRect.bottom - clientRect.bottom;
-			info.nPos = clientRect.top - childRect.top;
+			info.nMax = childRect.bottom;
+			info.nPos = 0;
+			info.nPage = 1 + clientRect.bottom - clientRect.top;
 			SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
 			break;
     }
