@@ -43,8 +43,9 @@ drivers\fs\fs_rec\fs_rec.sys            2
 drivers\fs\ms\msfs.sys                  2
 drivers\fs\mup\mup.sys                  2
 drivers\fs\np\npfs.sys                  2
+drivers\input\i8042prt\i8042prt.sys     2
+drivers\input\kbdclass\kbdclass.sys     2
 drivers\input\mouclass\mouclass.sys     2
-drivers\input\psaux\psaux.sys           2
 drivers\input\sermouse\sermouse.sys     2
 drivers\net\afd\afd.sys                 2
 drivers\net\ndis\ndis.sys               2
