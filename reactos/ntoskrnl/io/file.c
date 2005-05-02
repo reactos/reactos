@@ -1532,10 +1532,6 @@ NtFlushWriteBuffer(VOID)
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
-STDCALL
-NtFlushBuffersFile (IN  HANDLE FileHandle,
-                    OUT PIO_STATUS_BLOCK IoStatusBlock)
 /*
  * FUNCTION: Flushes cached file data to disk
  * ARGUMENTS:
@@ -1546,54 +1542,98 @@ NtFlushBuffersFile (IN  HANDLE FileHandle,
  * RETURNS: Status 
  * REMARKS: This function maps to the win32 FlushFileBuffers
  */
+NTSTATUS
+STDCALL
+NtFlushBuffersFile(IN  HANDLE FileHandle,
+                   OUT PIO_STATUS_BLOCK IoStatusBlock)
 {
-   PFILE_OBJECT FileObject = NULL;
-   PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
-   NTSTATUS Status;
-   KPROCESSOR_MODE PreviousMode;
+    PFILE_OBJECT FileObject = NULL;
+    PIRP Irp;
+    PIO_STACK_LOCATION StackPtr;
+    NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
+    KEVENT Event;
+    BOOLEAN LocalEvent = FALSE;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
-   PreviousMode = ExGetPreviousMode();
+    /* Get the File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       FILE_WRITE_DATA,
+                                       NULL,
+                                       PreviousMode,
+                                       (PVOID*)&FileObject,
+                                       NULL);
+    if (Status != STATUS_SUCCESS) return(Status);
 
-   Status = ObReferenceObjectByHandle(FileHandle,
-          FILE_WRITE_DATA,
-          NULL,
-          PreviousMode,
-          (PVOID*)&FileObject,
-          NULL);
-   if (Status != STATUS_SUCCESS)
-     {
- return(Status);
-     }
-   KeResetEvent( &FileObject->Event );
-   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_FLUSH_BUFFERS,
-          FileObject->DeviceObject,
-          NULL,
-          0,
-          NULL,
-          &FileObject->Event,
-          IoStatusBlock);
+    /* Check if this is a direct open or not */
+    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    {
+        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+    }
+    else
+    {
+        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+    
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        /* Use local event */
+        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
+    }
 
-   /* Trigger FileObject/Event dereferencing */
-   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    /* Allocate the IRP */
+    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE)))
+    {
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    /* Set up the IRP */
+    Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    Irp->RequestorMode = PreviousMode;
+    Irp->UserIosb = IoStatusBlock;
+    Irp->UserEvent = (LocalEvent) ? &Event : NULL;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
-   Irp->RequestorMode = PreviousMode;
+    /* Set up Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_FLUSH_BUFFERS;
+    StackPtr->FileObject = FileObject;
+    
+    /* Call the Driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        if (LocalEvent)
+        {
+            KeWaitForSingleObject(&Event, 
+                                  Executive, 
+                                  PreviousMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = IoStatusBlock->Status;
+        }
+        else
+        {
+            KeWaitForSingleObject(&FileObject->Event,
+                                  Executive, 
+                                  PreviousMode, 
+                                  FileObject->Flags & FO_ALERTABLE_IO, 
+                                  NULL);
+            Status = FileObject->FinalStatus;
+        }
+    }
 
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->FileObject = FileObject;
-
-   Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   if (Status == STATUS_PENDING)
-     {
- KeWaitForSingleObject(&FileObject->Event,
-         Executive,
-         PreviousMode,
-         FileObject->Flags & FO_ALERTABLE_IO,
-         NULL);
- Status = IoStatusBlock->Status;
-     }
-
-   return(Status);
+    /* Return the Status */
+    return Status;
 }
 
 /*
@@ -1650,18 +1690,17 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
      }
    }
 
-   Status = ObReferenceObjectByHandle(FileHandle,
-          FILE_LIST_DIRECTORY,
-          IoFileObjectType,
-          PreviousMode,
-          (PVOID *)&FileObject,
-          NULL);
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       FILE_LIST_DIRECTORY,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID *)&FileObject,
+                                       NULL);
+    if (Status != STATUS_SUCCESS) return(Status);
    
-   if (Status != STATUS_SUCCESS)
-     {
- return(Status);
-     }
+   
    DeviceObject = FileObject->DeviceObject;
+   
    
    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
    if (Irp==NULL)
