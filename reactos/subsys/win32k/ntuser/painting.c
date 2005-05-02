@@ -1211,17 +1211,19 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
       {
          int i;
          RECT r, dummy;
+         POINT ClientOrigin;
          PWINDOW_OBJECT WindowObject;
 
+         IntGetClientOrigin(hWnd, &ClientOrigin);
          for (i = 0; List[i]; i++)
          {
-            NtUserGetWindowRect(List[i], &r);
-            WindowObject = IntGetWindowObject((hWnd ? hWnd : IntGetDesktopWindow()));
+            WindowObject = IntGetWindowObject(List[i]);
             if (!WindowObject) continue;
-            r.left -= WindowObject->ClientRect.top;
-            r.top -= WindowObject->ClientRect.top;
-            r.right -= WindowObject->ClientRect.left;
-            r.bottom -= WindowObject->ClientRect.top;
+            r = WindowObject->WindowRect;
+            r.left -= ClientOrigin.x;
+            r.top -= ClientOrigin.y;
+            r.right -= ClientOrigin.x;
+            r.bottom -= ClientOrigin.y;
             IntReleaseWindowObject(WindowObject);
             if (! UnsafeRect || IntGdiIntersectRect(&dummy, &r, &rc))
                WinPosSetWindowPos(List[i], 0, r.left + dx, r.top + dy, 0, 0,
