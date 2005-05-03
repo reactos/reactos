@@ -327,7 +327,7 @@ WSAStringToAddressA(
 
 
 /*
- * @unimplemented
+ * @implement 
  */
 INT
 EXPORT
@@ -338,9 +338,76 @@ WSAStringToAddressW(
     OUT     LPSOCKADDR lpAddress,
     IN OUT  LPINT lpAddressLength)
 {
-    UNIMPLEMENTED
+    int pos=0;		
+	int res=0;
+	LONG inetaddr = 0;	
+    LPWSTR *bp=NULL;
 
-    return 0;
+	SOCKADDR_IN *sockaddr = (SOCKADDR_IN *) lpAddress;
+
+	if (!lpAddressLength || !lpAddress) 
+		return SOCKET_ERROR;
+	
+	if (AddressString==NULL) 
+		return WSAEINVAL;
+    		
+    /* Set right adress family */
+    if (lpProtocolInfo!=NULL) 
+	   sockaddr->sin_family = lpProtocolInfo->iAddressFamily;
+
+	else sockaddr->sin_family = AddressFamily; 	
+   
+	/* Report size */
+	if (AddressFamily == AF_INET)
+	{
+		if (*lpAddressLength < sizeof(SOCKADDR_IN))
+		{
+			*lpAddressLength = sizeof(SOCKADDR_IN);
+		    res = WSAEFAULT;
+		}
+		else
+		{
+         if (!lpAddress) 
+			res = WSAEINVAL;
+		 else 
+		 {
+		  // translate now ip string to ip
+
+		  /* rest sockaddr.sin_addr.s_addr  
+		     for we need to be sure it is zero when we come to while */
+		  memset(lpAddress,0,sizeof(SOCKADDR_IN));
+
+		  /* Set right adress family */
+          sockaddr->sin_family = AF_INET;
+
+		  /* Get port number */
+		  pos = wcscspn(AddressString,L":") + 1;
+		  if (pos < wcslen(AddressString))	    	      
+	          sockaddr->sin_port = wcstol(&AddressString[pos],bp,10); 		   		   
+
+		   else
+			   sockaddr->sin_port = 0;
+          		  
+		  /* Get ip number */		  
+		  pos=0;
+		  inetaddr=0;
+
+          while (pos < wcslen(AddressString))
+          {	      
+	       inetaddr = (inetaddr<<8) + ((UCHAR)wcstol(&AddressString[pos],bp,10));	 	           
+	       pos += wcscspn( &AddressString[pos],L".") +1 ;	 	       		   
+	       }
+
+          res = 0;
+		  sockaddr->sin_addr.s_addr = inetaddr;				  
+		  }
+
+		}
+	}
+
+    WSASetLastError(res);
+	if (!res) return 0;			
+    return SOCKET_ERROR;	    
 }
 
 void check_hostent(struct hostent **he) {
@@ -1215,3 +1282,4 @@ WSAAsyncGetServByPort(
 }
 
 /* EOF */
+
