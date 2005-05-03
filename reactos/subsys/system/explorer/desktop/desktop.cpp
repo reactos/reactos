@@ -547,7 +547,8 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 
 				  hr = pcm->InvokeCommand(&cmi);
 				}
-			}
+			} else
+				_cm_ifs.reset();
 		}
 
 		pcm->Release();
