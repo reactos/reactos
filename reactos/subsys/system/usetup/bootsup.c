@@ -1244,7 +1244,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      GENERIC_WRITE,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
