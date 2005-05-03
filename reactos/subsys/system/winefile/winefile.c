@@ -3499,7 +3499,8 @@ static HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParen
 
 				  hr = (*pcm->lpVtbl->InvokeCommand)(pcm, &cmi);
 				}
-			}
+			} else
+				CtxMenu_reset();
 		}
 
 		(*pcm->lpVtbl->Release)(pcm);
