@@ -2083,7 +2083,7 @@ void SettingsMenu::AddEntries()
 {
 	super::AddEntries();
 
-#ifdef _ROS_	// to be removed when printer/network will be implemented
+#if defined(ROSSHELL) || defined(_ROS_)	// _ROS_ to be removed when printer/network will be implemented
 	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
@@ -2114,7 +2114,7 @@ void BrowseMenu::AddEntries()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
 #endif
-#ifdef _ROS_	// to be removed when printer/network will be implemented
+#if defined(ROSSHELL) || defined(_ROS_)	// _ROS_ to be removed when printer/network will be implemented
 		AddButton(ResString(IDS_NETWORK),		ICID_NETWORK, false, IDC_NETWORK);
 #else
 		AddButton(ResString(IDS_NETWORK),		ICID_NETWORK, true, IDC_NETWORK);
