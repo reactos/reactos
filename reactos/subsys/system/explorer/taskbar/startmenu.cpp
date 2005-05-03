@@ -252,7 +252,8 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 
 		if (_tcsicmp(trim_path_slash(dir_path), trim_path_slash(ignore_path)))
 			*ignore_name = '\0';
-	}
+	} else
+		*ignore_name = '\0';
 
 	int cnt = 0;
 	for(Entry*entry=dir._down; entry; entry=entry->_next) {
@@ -261,10 +262,9 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 		//not appropriate for drive roots: if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 			continue;
 
-		 // hide subfolders if requested
-		if (!ignore.empty())
-			if (*ignore_name && !_tcsicmp(entry->_data.cFileName, ignore_name))
-				continue;
+		 // hide "Programs" subfolders if requested
+		if (*ignore_name && !_tcsicmp(entry->_data.cFileName, ignore_name))
+			continue;
 
 		 // only 'max' entries shall be added.
 		if (++cnt == max)
