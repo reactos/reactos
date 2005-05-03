@@ -1265,14 +1265,18 @@ IoSecondStageCompletion(PKAPC Apc,
     }
     Irp->MdlAddress = NULL;
     
+    if (Irp->UserIosb)
+    {
+       /*  Save the IOSB Information */
+       *Irp->UserIosb = Irp->IoStatus;
+    }
+
     /* Check for Success but allow failure for Async IRPs */
     if (NT_SUCCESS(Irp->IoStatus.Status) || 
         (Irp->PendingReturned &&
         !(Irp->Flags & IRP_SYNCHRONOUS_API) &&
         (FileObject == NULL || FileObject->Flags & FO_SYNCHRONOUS_IO)))
     {    
-        /*  Save the IOSB Information */
-        *Irp->UserIosb = Irp->IoStatus;
     
         /* Check if there's an event */
         if (Irp->UserEvent)
@@ -1361,9 +1365,7 @@ IoSecondStageCompletion(PKAPC Apc,
             /* Check for SYNC IRP */
             if (Irp->Flags & IRP_SYNCHRONOUS_API)
             {
-                /* Set the status in this case only */
-                *Irp->UserIosb = Irp->IoStatus;
-            
+           
                 /* Signal our event if we have one */
                 if (Irp->UserEvent)
                 {
