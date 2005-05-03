@@ -219,15 +219,42 @@ void StartMenu::AddEntries()
 #endif
 		}
 
-		AddShellEntries(dir, -1, smd._subfolders);
+		AddShellEntries(dir, -1, smd._ignore);
 	}
 }
 
 
-void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfolders)
+static LPTSTR trim_path_slash(LPTSTR path)
 {
-	int cnt = 0;
+	LPTSTR p = path;
 
+	while(*p)
+		++p;
+
+	if (p>path && (p[-1]=='\\' || p[-1]=='/'))
+		*--p = '\0';
+
+	return path;
+}
+
+void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String& ignore)
+{
+	TCHAR ignore_path[MAX_PATH], ignore_dir[MAX_PATH], ignore_name[_MAX_FNAME], ignore_ext[_MAX_EXT];
+	TCHAR dir_path[MAX_PATH];
+
+	if (!ignore.empty()) {
+		_tsplitpath(ignore, ignore_path, ignore_dir, ignore_name, ignore_ext);
+
+		_tcscat(ignore_path, ignore_dir);
+		_tcscat(ignore_name, ignore_ext);
+
+		dir.get_path(dir_path);
+
+		if (_tcsicmp(trim_path_slash(dir_path), trim_path_slash(ignore_path)))
+			*ignore_name = '\0';
+	}
+
+	int cnt = 0;
 	for(Entry*entry=dir._down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
 		if (entry->_shell_attribs & SFGAO_HIDDEN)
@@ -235,8 +262,8 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfold
 			continue;
 
 		 // hide subfolders if requested
-		if (!subfolders)
-			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		if (!ignore.empty())
+			if (*ignore_name && !_tcsicmp(entry->_data.cFileName, ignore_name))
 				continue;
 
 		 // only 'max' entries shall be added.
@@ -1494,7 +1521,7 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 		try {
 			 // insert directory "All Users\Start Menu"
 			ShellDirectory cmn_startmenu(GetDesktopFolder(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
-			_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// don't add subfolders
+			_dirs.push_back(StartMenuDirectory(cmn_startmenu, (LPCTSTR)SpecialFolderFSPath(CSIDL_COMMON_PROGRAMS, _hwnd)));
 		} catch(COMException&) {
 			// ignore exception and don't show additional shortcuts
 		}
@@ -1503,7 +1530,7 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 		 // insert directory "<user name>\Start Menu"
 
 		ShellDirectory usr_startmenu(GetDesktopFolder(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
-		_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// don't add subfolders
+		_dirs.push_back(StartMenuDirectory(usr_startmenu, (LPCTSTR)SpecialFolderFSPath(CSIDL_PROGRAMS, _hwnd)));
 	} catch(COMException&) {
 		// ignore exception and don't show additional shortcuts
 	}
@@ -2128,7 +2155,7 @@ void RecentStartMenu::AddEntries()
 		}
 
 		dir.sort_directory(SORT_DATE);
-		AddShellEntries(dir, RECENT_DOCS_COUNT, smd._subfolders);
+		AddShellEntries(dir, RECENT_DOCS_COUNT, smd._ignore);	///@todo read max. count of entries from registry
 	}
 }
 
