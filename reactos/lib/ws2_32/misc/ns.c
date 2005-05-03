@@ -320,10 +320,35 @@ WSAStringToAddressA(
     OUT     LPSOCKADDR lpAddress,
     IN OUT  LPINT lpAddressLength)
 {
-    UNIMPLEMENTED
+    INT ret, len;
+	LPWSTR szTemp;
+	LPWSAPROTOCOL_INFOW lpProtoInfoW = NULL;
 
-    return 0;
+	len = MultiByteToWideChar( CP_ACP, 0, AddressString, -1, NULL, 0 );
+	szTemp = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );	
+	MultiByteToWideChar( CP_ACP, 0, AddressString, -1, szTemp, len );
+	
+    if (lpProtocolInfo)
+	{
+	 len =   WSAPROTOCOL_LEN+1;
+	 lpProtoInfoW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );	
+   
+	 memcpy( lpProtoInfoW, lpProtocolInfo, sizeof(LPWSAPROTOCOL_INFOA));
+
+	 MultiByteToWideChar( CP_ACP, 0, lpProtocolInfo->szProtocol, -1, lpProtoInfoW->szProtocol, len );
+	}
+         
+	ret = WSAStringToAddressW(szTemp, AddressFamily, lpProtoInfoW, lpAddress, lpAddressLength);
+
+	HeapFree( GetProcessHeap(), 0, szTemp );
+
+	if (lpProtocolInfo)
+	   HeapFree( GetProcessHeap(), 0, lpProtoInfoW );
+	
+	WSASetLastError(ret);
+    return ret;
 }
+
 
 
 /*
