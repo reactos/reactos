@@ -54,7 +54,7 @@ KiInsertIntoThreadList(KPRIORITY Priority,
         KEBUGCHECK(0);
     }
     
-    InsertTailList(&PriorityListHead[Priority], &Thread->QueueListEntry);
+    InsertTailList(&PriorityListHead[Priority], &Thread->WaitListEntry);
     PriorityListMask |= (1 << Priority);
 }
 
@@ -63,7 +63,7 @@ VOID
 KiRemoveFromThreadList(PKTHREAD Thread)
 {
     ASSERT(Ready == Thread->State);
-    RemoveEntryList(&Thread->QueueListEntry);
+    RemoveEntryList(&Thread->WaitListEntry);
     if (IsListEmpty(&PriorityListHead[(ULONG)Thread->Priority])) {
         
         PriorityListMask &= ~(1 << Thread->Priority);
@@ -87,7 +87,7 @@ KiScanThreadList(KPRIORITY Priority,
         
         while (current_entry != &PriorityListHead[Priority]) {
            
-            current = CONTAINING_RECORD(current_entry, KTHREAD, QueueListEntry);
+            current = CONTAINING_RECORD(current_entry, KTHREAD, WaitListEntry);
             
             if (current->State != Ready) {
                 
