@@ -15,4 +15,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #include "Cz.rc"
 #include "En.rc"
 #include "De.rc"
+#include "Sv.rc"
+
 
