@@ -237,6 +237,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         /* System Thread */
         DPRINT("Initialliazing Thread Start Address :%x\n", StartRoutine);
         Thread->StartAddress = StartRoutine;
+        Thread->SystemThread = TRUE;
         
         /* Let the kernel intialize the Thread */
         DPRINT("Initialliazing Kernel Thread\n");
