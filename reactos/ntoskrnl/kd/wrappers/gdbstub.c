@@ -107,7 +107,7 @@ static PETHREAD GspDbgThread;
 static PETHREAD GspEnumThread;
 
 extern LIST_ENTRY PsActiveProcessHead;
-KD_PORT_INFORMATION GdbPortInfo;
+KD_PORT_INFORMATION GdbPortInfo = { 2, 115200, 0 }; /* FIXME hardcoded for COM2, 115200 baud */
 
 /* Number of Registers.  */
 #define NUMREGS	16
@@ -714,19 +714,24 @@ GspSetThread(PCHAR Request)
   {
     case 'c': /* Run thread */
       if (GspFindThread (ptr, &ThreadInfo))
-			  {
-			    GspOutBuffer[0] = 'O';
-			    GspOutBuffer[1] = 'K';
+        {
+          GspOutBuffer[0] = 'O';
+          GspOutBuffer[1] = 'K';
 
-                            if(GspRunThread) ObDereferenceObject(GspRunThread);
-
-	                    GspRunThread = ThreadInfo;
-	                    if (GspRunThread) ObReferenceObject(GspRunThread);
-			  }
-			  else
-			  {
-			    GspOutBuffer[0] = 'E';
-			  }
+          if (NULL != GspRunThread)
+            {
+              ObDereferenceObject(GspRunThread);
+            }
+          GspRunThread = ThreadInfo;
+          if (NULL != GspRunThread)
+            {
+              ObReferenceObject(GspRunThread);
+            }
+        }
+      else
+        {
+          GspOutBuffer[0] = 'E';
+        }
       break;
     case 'g': /* Debug thread */
       if (GspFindThread (ptr, &ThreadInfo))
@@ -1548,6 +1553,10 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
     
     if (BootPhase == 0)
     {
+      /* Write out the functions that we support for now */
+      WrapperTable->KdpInitRoutine = KdpGdbStubInit;
+      WrapperTable->KdpPrintRoutine = KdpGdbDebugPrint;
+      WrapperTable->KdpExceptionRoutine = KdpGdbEnterDebuggerException;
         
       /* Initialize the Port */
       KdPortInitializeEx(&GdbPortInfo, 0, 0);
@@ -1555,17 +1564,10 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
     else if (BootPhase == 1)
     {
       GspInitialized = TRUE;
-      GspRunThread = PsGetCurrentThread();
-     
-      ObReferenceObject(GspRunThread);
 
+      GspRunThread = NULL;
       GspDbgThread = NULL;
       GspEnumThread = NULL;
-      
-      /* Write out the functions that we support for now */
-      WrapperTable->KdpInitRoutine = KdpGdbStubInit;
-      WrapperTable->KdpPrintRoutine = KdpGdbDebugPrint;
-      WrapperTable->KdpExceptionRoutine = KdpGdbEnterDebuggerException;
 
       HalDisplayString("Waiting for GDB to attach\n");
       DbgPrint("Module 'hal.dll' loaded at 0x%.08x.\n", LdrHalBase);
