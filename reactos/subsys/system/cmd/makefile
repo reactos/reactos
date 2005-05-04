@@ -18,7 +18,7 @@ TARGET_PCH = precomp.h
 TARGET_INSTALLDIR = system32
 
 TARGET_CFLAGS = -D__USE_W32API -DANONYMOUSUNIONS -Wall -Werror \
-                -I$(PATH_TO_TOP)/include/wine -D_WIN32_WINNT=0x0501 #-DUNICODE -D_UNICODE
+                -I$(PATH_TO_TOP)/include/wine -D_WIN32_WINNT=0x0501 -DUNICODE -D_UNICODE
 
 TARGET_OBJECTS = \
 	cmd.o attrib.o alias.o batch.o beep.o call.o chcp.o choice.o \

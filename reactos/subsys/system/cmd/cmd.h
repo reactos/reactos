@@ -288,10 +288,9 @@ extern TCHAR cDateSeparator;
 extern INT   nDateFormat;
 extern TCHAR cTimeSeparator;
 extern INT   nTimeFormat;
-extern TCHAR aszDayNames[7][8];
 extern TCHAR cThousandSeparator;
 extern TCHAR cDecimalSeparator;
-extern INT   nNumberGroups;
+extern INT nNumberGroups;
 
 VOID InitLocale (VOID);
 VOID PrintDate (VOID);

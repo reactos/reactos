@@ -917,7 +917,7 @@ ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperato
 		{
 			if ((((c + 1) % (nNumberGroups + 1)) == 0) && (bPutSeperator))
 				temp[30 - c++] = cThousandSeparator;
-			temp[30 - c++] = (TCHAR)(num.QuadPart % 10) + _T('0');
+   temp[30 - c++] = (TCHAR)(num.QuadPart % 10) + _T('0');
 			num.QuadPart /= 10;
 		}
 
@@ -1107,9 +1107,9 @@ PrintSummary(LPTSTR szPath,
  */
 TCHAR* getExt(const TCHAR* file)
 {
-	
-	TCHAR* tmp = _tcsrchr(file, _T('.'));
-	return tmp?tmp+1:"";
+        static TCHAR *NoExt = _T("");
+        TCHAR* lastdot = _tcsrchr(file, _T('.'));
+	return (lastdot != NULL ? lastdot + 1 : NoExt);
 }
 
 /*
@@ -1394,12 +1394,12 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 			/* at recursive mode we print full path of file */
 			_tcscpy(szFullName, lpCurPath);
 			_tcscat(szFullName, ptrFiles[i]->cFileName);
-			ConOutPrintf("%s\n", szFullName);
+			ConOutPrintf(_T("%s\n"), szFullName);
 		}
 		else
 		{
 			/* if we are not in recursive mode we print the file names */
-			ConOutPrintf("%s\n",ptrFiles[i]->cFileName);
+			ConOutPrintf(_T("%s\n"),ptrFiles[i]->cFileName);
 		}
 	}
 }
@@ -1507,11 +1507,11 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1,	/* [IN] A pointer to WIN32_FIND_DATA of 
 			break;
 
 		case ORDER_EXTENSION:	/* Order by extension name /o:e */
-			iComp = _stricmp(getExt(lpFile1->cFileName),getExt(lpFile2->cFileName));
+			iComp = _tcsicmp(getExt(lpFile1->cFileName),getExt(lpFile2->cFileName));
 			break;
 
 		case ORDER_NAME:		/* Order by filename /o:n */
-			iComp = _stricmp(lpFile1->cFileName, lpFile2->cFileName);
+			iComp = _tcsicmp(lpFile1->cFileName, lpFile2->cFileName);
 			break;
 
 		case ORDER_TIME:		/* Order by file's time /o:t */

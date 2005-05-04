@@ -317,7 +317,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 	if (!dir)
 	{
 		LoadString( GetModuleHandle(NULL), STRING_PARAM_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-		ConErrPrintf (_T((LPTSTR)szMsg));
+		ConErrPrintf (szMsg);
 		return 1;
 	}
 
