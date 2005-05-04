@@ -347,7 +347,7 @@ NTSTATUS STDCALL
 NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 		   IN	HANDLE		SourceHandle,
 		   IN	HANDLE		TargetProcessHandle,
-		   OUT	PHANDLE		TargetHandle,
+		   OUT	PHANDLE		TargetHandle  OPTIONAL,
 		   IN	ACCESS_MASK	DesiredAccess,
 		   IN	BOOLEAN		InheritHandle,
 		   ULONG		Options)
@@ -386,7 +386,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    
    PreviousMode = ExGetPreviousMode();
    
-   if(PreviousMode != KernelMode)
+   if(TargetHandle != NULL && PreviousMode != KernelMode)
    {
      _SEH_TRY
      {
@@ -488,7 +488,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    ObDereferenceObject(TargetProcess);
    ObDereferenceObject(SourceProcess);
 
-   if(NT_SUCCESS(Status))
+   if(NT_SUCCESS(Status) && TargetHandle != NULL)
    {
      _SEH_TRY
      {
