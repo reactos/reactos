@@ -493,8 +493,8 @@ END
 3 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "#ifndef ROSSHELL\r\n"
-    "IDB_IMAGES		BITMAP DISCARDABLE ""res/images.bmp""\r\n"
-    "IDB_TOOLBAR	BITMAP DISCARDABLE ""res/toolbar.bmp""\r\n"
+    "IDB_IMAGES         BITMAP DISCARDABLE ""res/images.bmp""\r\n"
+    "IDB_TOOLBAR        BITMAP DISCARDABLE ""res/toolbar.bmp""\r\n"
     "#endif\r\n"
     "#ifndef _ROS_\r\n"
     "LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL\r\n"
@@ -1862,7 +1862,7 @@ BEGIN
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
         MENUITEM "&Om Explorer...",             ID_ABOUT_EXPLORER
-        MENUITEM "Om &operativsystemet...",                   ID_ABOUT_WINDOWS
+        MENUITEM "Om &operativsystemet...",     ID_ABOUT_WINDOWS
     END
 END
 
@@ -2294,6 +2294,10 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
+#ifndef ROSSHELL
+IDB_IMAGES         BITMAP DISCARDABLE "res/images.bmp"
+IDB_TOOLBAR        BITMAP DISCARDABLE "res/toolbar.bmp"
+#endif
 #ifndef _ROS_
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE 
