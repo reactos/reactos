@@ -824,6 +824,10 @@ void TaskManager_OnExitMenuLoop(HWND hWnd)
     RECT  rc;
     int   nParts[3];
     TCHAR text[260];
+    TCHAR szCpuUsage[256], szProcesses[256];
+
+    LoadString(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
+    LoadString(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     bInMenuLoop = FALSE;
     /* Update the status bar pane sizes */
@@ -833,9 +837,9 @@ void TaskManager_OnExitMenuLoop(HWND hWnd)
     nParts[2] = rc.right;
     SendMessage(hStatusWnd, SB_SETPARTS, 3, (long)nParts);
     SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)_T(""));
-    wsprintf(text, _T("CPU Usage: %3d%%"), PerfDataGetProcessorUsage());
+    wsprintf(text, szCpuUsage, PerfDataGetProcessorUsage());
     SendMessage(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
-    wsprintf(text, _T("Processes: %d"), PerfDataGetProcessCount());
+    wsprintf(text, szProcesses, PerfDataGetProcessCount());
     SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
 }
 
