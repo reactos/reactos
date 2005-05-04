@@ -80,9 +80,10 @@ NTSTATUS I8042ReadData(BYTE *Data)
 	// If data is available
 	if ((Status & KBD_OBF)) {
 		Data[0]=READ_PORT_UCHAR((PUCHAR)I8042_DATA_PORT);
+		DPRINT("Read: %x (status: %x)\n", Data[0], Status);
 
 		// If the data is valid (not timeout, not parity error)
-		if ((~Status) & (KBD_GTO | KBD_PERR))
+		if (0 == (Status & (KBD_GTO | KBD_PERR)))
 			return STATUS_SUCCESS;
 	}
 	return STATUS_UNSUCCESSFUL;
@@ -613,13 +614,16 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 
 	DPRINT("I8042AddDevice\n");
 
-	IoCreateDevice(DriverObject,
+	Status = IoCreateDevice(DriverObject,
 	               sizeof(DEVICE_EXTENSION),
 	               NULL,
 	               FILE_DEVICE_8042_PORT,
 	               FILE_DEVICE_SECURE_OPEN,
 	               TRUE,
 	               &Fdo);
+
+	if (!NT_SUCCESS(Status))
+		return Status;
 
 	IoAttachDeviceToDeviceStack(Fdo, Pdo);
 
@@ -647,7 +651,7 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 	KeInitializeTimer(&DevExt->TimerMouseTimeout);
 
 	Status = I8042Initialize(DevExt);
-	if (STATUS_SUCCESS != Status) {
+	if (!NT_SUCCESS(STATUS_SUCCESS)) {
 		DPRINT1("Initialization failure: %x\n", Status);
 		return Status;
 	}
@@ -668,31 +672,36 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 		                        TRUE,
 		                        &Fdo);
 
-		FdoDevExt = Fdo->DeviceExtension;
+		if (NT_SUCCESS(Status))
+		{
+			FdoDevExt = Fdo->DeviceExtension;
 
-		RtlZeroMemory(FdoDevExt, sizeof(FDO_DEVICE_EXTENSION));
+			RtlZeroMemory(FdoDevExt, sizeof(FDO_DEVICE_EXTENSION));
 
-		FdoDevExt->PortDevExt = DevExt;
-		FdoDevExt->Type = Keyboard;
-		FdoDevExt->DeviceObject = Fdo;
+			FdoDevExt->PortDevExt = DevExt;
+			FdoDevExt->Type = Keyboard;
+			FdoDevExt->DeviceObject = Fdo;
 
-		Fdo->Flags |= DO_BUFFERED_IO;
+			Fdo->Flags |= DO_BUFFERED_IO;
 
-		DevExt->DebugWorkItem = IoAllocateWorkItem(Fdo);
-		DevExt->KeyboardObject = Fdo;
+			DevExt->DebugWorkItem = IoAllocateWorkItem(Fdo);
+			DevExt->KeyboardObject = Fdo;
 
-		DevExt->KeyboardBuffer = ExAllocatePoolWithTag(
-		               NonPagedPool,
-	                       DevExt->KeyboardAttributes.InputDataQueueLength *
-	                                  sizeof(KEYBOARD_INPUT_DATA),
-	                       TAG_I8042);
+			DevExt->KeyboardBuffer = ExAllocatePoolWithTag(
+			               NonPagedPool,
+			               DevExt->KeyboardAttributes.InputDataQueueLength *
+			                          sizeof(KEYBOARD_INPUT_DATA),
+			               TAG_I8042);
 
-		if (!DevExt->KeyboardBuffer) {
-			DPRINT1("No memory for keyboardbuffer\n");
-			return STATUS_INSUFFICIENT_RESOURCES;
+			if (!DevExt->KeyboardBuffer) {
+				DPRINT1("No memory for keyboardbuffer\n");
+				return STATUS_INSUFFICIENT_RESOURCES;
+			}
+
+			InsertTailList(&DevExt->BusDevices, &FdoDevExt->BusDevices);
 		}
-
-		InsertTailList(&DevExt->BusDevices, &FdoDevExt->BusDevices);
+		else
+			DevExt->KeyboardExists = FALSE;
 	}
 
 	if (DevExt->MouseExists) {
@@ -711,30 +720,35 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 		                        TRUE,
 		                        &Fdo);
 
-		FdoDevExt = Fdo->DeviceExtension;
+		if (NT_SUCCESS(Status))
+		{
+			FdoDevExt = Fdo->DeviceExtension;
 
-		RtlZeroMemory(FdoDevExt, sizeof(FDO_DEVICE_EXTENSION));
+			RtlZeroMemory(FdoDevExt, sizeof(FDO_DEVICE_EXTENSION));
 
-		FdoDevExt->PortDevExt = DevExt;
-		FdoDevExt->Type = Mouse;
-		FdoDevExt->DeviceObject = Fdo;
+			FdoDevExt->PortDevExt = DevExt;
+			FdoDevExt->Type = Mouse;
+			FdoDevExt->DeviceObject = Fdo;
 
-		Fdo->Flags |= DO_BUFFERED_IO;
-		DevExt->MouseObject = Fdo;
+			Fdo->Flags |= DO_BUFFERED_IO;
+			DevExt->MouseObject = Fdo;
+	
+			DevExt->MouseBuffer = ExAllocatePoolWithTag(
+			               NonPagedPool,
+			               DevExt->MouseAttributes.InputDataQueueLength *
+			                             sizeof(MOUSE_INPUT_DATA),
+			               TAG_I8042);
 
-		DevExt->MouseBuffer = ExAllocatePoolWithTag(
-		               NonPagedPool,
-	                       DevExt->MouseAttributes.InputDataQueueLength *
-	                                     sizeof(MOUSE_INPUT_DATA),
-	                       TAG_I8042);
+			if (!DevExt->MouseBuffer) {
+				ExFreePoolWithTag(DevExt->KeyboardBuffer, TAG_I8042);
+				DPRINT1("No memory for mouse buffer\n");
+				return STATUS_INSUFFICIENT_RESOURCES;
+			}
 
-		if (!DevExt->MouseBuffer) {
-			ExFreePool(DevExt->KeyboardBuffer);
-			DPRINT1("No memory for mouse buffer\n");
-			return STATUS_INSUFFICIENT_RESOURCES;
+			InsertTailList(&DevExt->BusDevices, &FdoDevExt->BusDevices);
 		}
-
-		InsertTailList(&DevExt->BusDevices, &FdoDevExt->BusDevices);
+		else
+			DevExt->MouseExists = FALSE;
 	}
 
 	if (DirqlKeyboard > DirqlMouse)

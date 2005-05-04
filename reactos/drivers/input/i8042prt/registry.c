@@ -231,7 +231,7 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 		DPRINT1 ("Manually set defaults\n");
 
 	}
-	ExFreePool(ParametersPath.Buffer);
+	ExFreePoolWithTag(ParametersPath.Buffer, TAG_I8042);
 	DPRINT("Done reading registry\n");
 }
 
