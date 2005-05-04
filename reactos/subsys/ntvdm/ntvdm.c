@@ -280,8 +280,8 @@ WinMain(HINSTANCE hInstance,  HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nSho
     WCHAR PromptMsg[RC_STRING_MAX_SIZE];
     CHAR InputBuffer[255];
 
-	LoadString( GetModuleHandle(NULL), STRING_WelcomeMsg,  (LPTSTR) WelcomeMsg,sizeof(WelcomeMsg));
-    LoadString( GetModuleHandle(NULL), STRING_PromptMsg,  (LPTSTR) PromptMsg ,sizeof(PromptMsg));
+    LoadString( GetModuleHandle(NULL), STRING_WelcomeMsg,  (LPTSTR) WelcomeMsg,sizeof(WelcomeMsg) / sizeof(WelcomeMsg[0]));
+    LoadString( GetModuleHandle(NULL), STRING_PromptMsg,  (LPTSTR) PromptMsg ,sizeof(PromptMsg) / sizeof(PromptMsg[0]));
 
     AllocConsole();
     SetConsoleTitleW(L"ntvdm");
