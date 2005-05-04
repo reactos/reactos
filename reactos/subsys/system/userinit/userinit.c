@@ -105,8 +105,8 @@ void StartShell(void)
   }
   else
   {
-   LoadString( GetModuleHandle(NULL), STRING_USERINIT_FAIL, (LPTSTR) szMsg,sizeof(szMsg));
-   MessageBox(0, szMsg, NULL, 0);
+    LoadString( GetModuleHandle(NULL), STRING_USERINIT_FAIL, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+    MessageBox(0, szMsg, NULL, 0);
   }
 }
 
