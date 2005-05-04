@@ -583,6 +583,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Type",0x00010001,0x00000001
 
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","SampleRate",0x00010001,0x00000060
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","MouseResolution",0x00010001,0x00000003
 
 ; Keyboard class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ErrorControl",0x00010001,0x00000000

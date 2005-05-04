@@ -87,7 +87,7 @@ typedef struct _I8042_SETTINGS
 	DWORD OverrideKeyboardSubtype;
 	DWORD MouseResendStallTime;
 	DWORD MouseSynchIn100ns;
-	DWORD MouseResolution;
+	DWORD MouseResolution;        /* done */
 	DWORD NumberOfButtons;
 	DWORD EnableWheelDetection;
 } I8042_SETTINGS, *PI8042_SETTINGS;
