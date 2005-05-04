@@ -6,7 +6,7 @@
 
 #ifdef _UNICODE
 
-   #define  __TEXT(q)   L##q
+   #define  __T(q)   L##q
    
    #ifndef _TCHAR_DEFINED
       #ifndef RC_INVOKED
@@ -203,7 +203,7 @@
    
 #else
 
-   #define  __TEXT(q)   q
+   #define  __T(q)   q
    
    #ifndef _TCHAR_DEFINED
       #ifndef RC_INVOKED
@@ -403,8 +403,8 @@
    
 
 
-#define _TEXT(x)  __TEXT(x)
-#define  _T(x)    __TEXT(x)
+#define _TEXT(x)  __T(x)
+#define _T(x)     __T(x)
 
 #endif /* _TCHAR_H_ */
 
