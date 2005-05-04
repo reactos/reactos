@@ -1664,20 +1664,20 @@ BEGIN
     END
     POPUP "&Visa"
     BEGIN
-        MENUITEM "&Verktygsfõlt",               ID_VIEW_TOOL_BAR
-        MENUITEM "&Extrafõlt",                  ID_VIEW_EXTRA_BAR
-        MENUITEM "E&nhetsfõlt",                 ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "S&idfõlt",                    ID_VIEW_SIDE_BAR
-        MENUITEM "&Statusfõlt",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Verktygsfält",               ID_VIEW_TOOL_BAR
+        MENUITEM "&Extrafält",                  ID_VIEW_EXTRA_BAR
+        MENUITEM "E&nhetsfält",                 ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "S&idfält",                    ID_VIEW_SIDE_BAR
+        MENUITEM "&Statusfält",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Uppdatera\tF5",              ID_REFRESH
-        MENUITEM "F&ullskõrm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "F&ullskärm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
         MENUITEM "SDI",                         ID_VIEW_SDI
     END
-    POPUP "&F÷nster"
+    POPUP "&Fönster"
     BEGIN
-        MENUITEM "Nytt &f÷nster",               ID_WINDOW_NEW
-        MENUITEM "Íverlappande\tShift+F5",      ID_WINDOW_CASCADE
+        MENUITEM "Nytt &fönster",               ID_WINDOW_NEW
+        MENUITEM "Överlappande\tShift+F5",      ID_WINDOW_CASCADE
         MENUITEM "Ordna &horizontellt",         ID_WINDOW_TILE_HORZ
         MENUITEM "Ordna &vertikalt\tShift+F4",  ID_WINDOW_TILE_VERT
         MENUITEM "Ordna automatiskt",           ID_WINDOW_AUTOSORT
@@ -1687,7 +1687,7 @@ BEGIN
     BEGIN
         MENUITEM "&Alternativ",                 ID_TOOLS_OPTIONS
     END
-    POPUP "&Hjõlp"
+    POPUP "&Hjälp"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
         MENUITEM "Om &Explorer...",             ID_ABOUT_EXPLORER
@@ -1699,7 +1699,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 BEGIN
     POPUP "&Arkiv"
     BEGIN
-        MENUITEM "&Íppna\tEnter",               101
+        MENUITEM "&Öppna\tEnter",               101
         MENUITEM "&Flytta...\tF7",              106
         MENUITEM "&Kopiera...\tF8",             107
         MENUITEM "&I urklipp...\tF9",           118
@@ -1710,13 +1710,13 @@ BEGIN
         MENUITEM "&Komprimera...",              119
         MENUITEM "Packa &upp...",               120
         MENUITEM SEPARATOR
-        MENUITEM "&K÷r...",                     ID_EXECUTE
+        MENUITEM "&Kör...",                     ID_EXECUTE
         MENUITEM "&Skriv ut...",                102
         MENUITEM "Associera...",                103
         MENUITEM SEPARATOR
         MENUITEM "Skapa mapp...",               ID_EXECUTE
-        MENUITEM "&S÷k...",                     104
-        MENUITEM "&Võlj filer...",              116
+        MENUITEM "&Sök...",                     104
+        MENUITEM "&Välj filer...",              116
         MENUITEM SEPARATOR
         MENUITEM "&Avsluta\tAlt+X",             ID_FILE_EXIT
     END
@@ -1727,27 +1727,27 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Formatera disk...",          203
         MENUITEM SEPARATOR
-        MENUITEM "Anslut &Nõtverksenhet",       252
-        MENUITEM "&Koppla ifrÕn Nõtverksenhet", 253
+        MENUITEM "Anslut &Nätverksenhet",       252
+        MENUITEM "&Koppla ifrån Nätverksenhet", 253
         MENUITEM SEPARATOR
         MENUITEM "Dela ut...",                  254
         MENUITEM "&Ta bort utdelning...",       255
         MENUITEM SEPARATOR
-        MENUITEM "&Võlj enhet...",              251
+        MENUITEM "&Välj enhet...",              251
     END
     POPUP "&Mappar"
     BEGIN
-        MENUITEM "&Nõsta nivÕ\t+",              301
-        MENUITEM "Ut÷ka &trõd\t*",              302
-        MENUITEM "Ut÷ka &alla\tCtrl+*",         303
-        MENUITEM "Kollapsa &trõd\t-",           304
+        MENUITEM "&Nästa nivå\t+",              301
+        MENUITEM "Utöka &träd\t*",              302
+        MENUITEM "Utöka &alla\tCtrl+*",         303
+        MENUITEM "Kollapsa &träd\t-",           304
         MENUITEM SEPARATOR
         MENUITEM "&Markera undermappar",        505
     END
     POPUP "&Visa"
     BEGIN
-        MENUITEM "&Trõd och mapp",              413
-        MENUITEM "Bara tr&õd",                  411
+        MENUITEM "&Träd och mapp",              413
+        MENUITEM "Bara tr&äd",                  411
         MENUITEM "Bara &mapp",                  412
         MENUITEM SEPARATOR
         MENUITEM "De&la",                       414
@@ -1764,31 +1764,31 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sortera efter &...",          409
     END
-    POPUP "&Instõllningar"
+    POPUP "&Inställningar"
     BEGIN
-        MENUITEM "&Bekrõftelse...",             65535
+        MENUITEM "&Bekräftelse...",             65535
         MENUITEM "&Teckensnitt...",             65535
-        MENUITEM "&Konfigurera verktygsfõlt...", 65535
+        MENUITEM "&Konfigurera verktygsfält...", 65535
         MENUITEM SEPARATOR
-        MENUITEM "&Verktygsfõlt",               ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Enhetsfõlt",                 ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Sidfõlt",                    ID_VIEW_SIDE_BAR
-        MENUITEM "St&atusfõlt",                 ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "F&ullskõrm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "&Verktygsfält",               ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Enhetsfält",                 ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Sidfält",                    ID_VIEW_SIDE_BAR
+        MENUITEM "St&atusfält",                 ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "F&ullskärm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
         MENUITEM SEPARATOR
-        MENUITEM "&Symbol efter k÷rning",       65535
-        MENUITEM "&Spara õndringar vid stõngning", 511
+        MENUITEM "&Symbol efter körning",       65535
+        MENUITEM "&Spara ändringar vid stängning", 511
     END
-    POPUP "&Sõkerhet"
+    POPUP "&Säkerhet"
     BEGIN
-        MENUITEM "&+tkomst...",                 605
+        MENUITEM "&Åtkomst...",                 605
         MENUITEM "&Loggning...",                606
-        MENUITEM "&-gare...",                   607
+        MENUITEM "&Ägare...",                   607
     END
-    POPUP "&F÷nster"
+    POPUP "&Fönster"
     BEGIN
-        MENUITEM "Nytt &f÷nster",               ID_WINDOW_NEW
-        MENUITEM "Íverlappande\tCtrl+F5",       ID_WINDOW_CASCADE
+        MENUITEM "Nytt &fönster",               ID_WINDOW_NEW
+        MENUITEM "Överlappande\tCtrl+F5",       ID_WINDOW_CASCADE
         MENUITEM "Ordna &horizontellt",         ID_WINDOW_TILE_HORZ
         MENUITEM "Ordna &vertikalt\tCtrl+F4",   ID_WINDOW_TILE_VERT
         MENUITEM "Ordna automatiskt",           ID_WINDOW_AUTOSORT
@@ -1797,9 +1797,9 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Hjõlpavsnitt\tF1",           ID_HELP
-        MENUITEM "Hjõlp &s÷k...\tF1",           ID_HELP
-        MENUITEM "&Anvõnda hjõlpen\tF1",        ID_HELP_USING
+        MENUITEM "&Hjälpavsnitt\tF1",           ID_HELP
+        MENUITEM "Hjälp &sök...\tF1",           ID_HELP
+        MENUITEM "&Använda hjälpen\tF1",        ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "Information om &Winefile...", ID_ABOUT_WINEFILE
     END
@@ -1809,7 +1809,7 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Instõllningar...",           ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Inställningar...",           ID_DESKTOPBAR_SETTINGS
         MENUITEM "&Aktivitetshanteraren...",    ID_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Om Explorer...",             ID_ABOUT_EXPLORER
@@ -1820,8 +1820,8 @@ IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Íppna volymkontroll",         ID_TRAY_VOLUME
-        MENUITEM "Justera ljudinstõllningar",   ID_VOLUME_PROPERTIES
+        MENUITEM "Öppna volymkontroll",         ID_TRAY_VOLUME
+        MENUITEM "Justera ljudinställningar",   ID_VOLUME_PROPERTIES
     END
 END
 
@@ -1846,23 +1846,23 @@ BEGIN
     END
     POPUP "&Visa"
     BEGIN
-        MENUITEM "&Verktygsfõlt",               ID_VIEW_TOOL_BAR
-        MENUITEM "&Sidfõlt",                    ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Statusfõlt",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Verktygsfält",               ID_VIEW_TOOL_BAR
+        MENUITEM "&Sidfält",                    ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Statusfält",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Uppdatera\tF5",              ID_REFRESH
-        MENUITEM "&Fullskõrm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "&Fullskärm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
         MENUITEM "&MDI",                        ID_VIEW_MDI
     END
     POPUP "&Verktyg"
     BEGIN
         MENUITEM "&Alternativ",                 ID_TOOLS_OPTIONS
     END
-    POPUP "&Hjõlp"
+    POPUP "&Hjälp"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
         MENUITEM "&Om Explorer...",             ID_ABOUT_EXPLORER
-        MENUITEM "Om &OS...",                   ID_ABOUT_WINDOWS
+        MENUITEM "Om &operativsystemet...",                   ID_ABOUT_WINDOWS
     END
 END
 
@@ -1874,7 +1874,7 @@ END
 
 IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "K÷r"
+CAPTION "Kör"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
@@ -1885,14 +1885,14 @@ BEGIN
                     3,45,71,12
     DEFPUSHBUTTON   "&OK",1,158,6,47,14
     PUSHBUTTON      "&Avbryt",2,158,23,47,14
-    PUSHBUTTON      "&Hjõlp",254,158,43,47,14
+    PUSHBUTTON      "&Hjälp",254,158,43,47,14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "S÷k program pÕ startmenyn"
+CAPTION "Sök program på startmenyn"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
@@ -1905,26 +1905,26 @@ END
 
 IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Skrivbordsinstõllningar"
+CAPTION "Skrivbordsinställningar"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Võlj frÕn vilket h÷rn ock Õt vilket hÕll du f÷redrar att rada upp ikonerna:",
+    LTEXT           "Välj från vilket hörn och åt vilket håll du föredrar att rada upp ikonerna:",
                     IDC_STATIC,7,7,166,8
-    CONTROL         "võ. och nerÕt",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+    CONTROL         "vä. och neråt",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "÷vre Õt h÷.",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+    CONTROL         "övre åt hö.",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "÷vre Õt võ.",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+    CONTROL         "övre åt vä.",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "h÷. och nerÕt",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+    CONTROL         "hö. och neråt",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "võ. och uppÕt",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+    CONTROL         "vä. och uppåt",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "nedre Õt h÷.",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+    CONTROL         "nedre åt hö.",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "nedre Õt võ.",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+    CONTROL         "nedre åt vä.",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "h÷. och uppÕt",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+    CONTROL         "hö. och uppåt",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
     CONTROL         "sidor och ner",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
@@ -1940,19 +1940,19 @@ END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Aktivitetsfõltsinstõllningar"
+CAPTION "Aktivitetsfältsinställningar"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "visa &klockan",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,152,52,10
-    CONTROL         "&G÷m inaktiva meddelandeikoner",ID_HIDE_INACTIVE_ICONS,
+    CONTROL         "&Göm inaktiva meddelandeikoner",ID_HIDE_INACTIVE_ICONS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,174,111,10
     PUSHBUTTON      "&Meddelanden...",ID_CONFIG_NOTIFYAREA,153,173,50,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Startmenyinstõllningar"
+CAPTION "Startmenyinställningar"
 FONT 8, "MS Sans Serif"
 BEGIN
 END
@@ -1961,26 +1961,26 @@ IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Instõllningar f÷r meddelandeikoner"
+CAPTION "Inställningar för meddelandeikoner"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
-    LTEXT           "&Hjõlptext:",IDC_LABEL1,7,44,40,8
+    LTEXT           "&Hjälptext:",IDC_LABEL1,7,44,40,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
-    LTEXT           "&F÷nstertitel:",IDC_LABEL2,7,63,44,8
+    LTEXT           "&Fönstertitel:",IDC_LABEL2,7,63,44,8
     EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
-    LTEXT           "&Moduls÷kvõg:",IDC_LABEL3,7,81,43,8
+    LTEXT           "&Modulsökväg:",IDC_LABEL3,7,81,43,8
     EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
-    GROUPBOX        "&Visningslõge",IDC_LABEL4,7,96,157,28
+    GROUPBOX        "&Visningsläge",IDC_LABEL4,7,96,157,28
     CONTROL         "v&isa",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
                     WS_TABSTOP,15,108,33,10
-    CONTROL         "&d÷lj",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
+    CONTROL         "&dölj",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
                     108,29,10
-    CONTROL         "d÷lj a&utomatiskt",IDC_NOTIFY_AUTOHIDE,"Button",
+    CONTROL         "dölj a&utomatiskt",IDC_NOTIFY_AUTOHIDE,"Button",
                     BS_AUTORADIOBUTTON,112,108,43,10
     ICON            "",IDC_PICTURE,173,101,21,20
-    LTEXT           "&Senast õndrad:",IDC_LABEL6,7,132,43,8
+    LTEXT           "&Senast ändrad:",IDC_LABEL6,7,132,43,8
     EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
                     ES_READONLY
     CONTROL         "visa d&olda",ID_SHOW_HIDDEN_ICONS,"Button",
@@ -1992,15 +1992,15 @@ END
 IDD_MDI_SDI DIALOGEX 0, 0, 188, 126
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Võlj MDI / SDI Lõge"
+CAPTION "Välj MDI / SDI Läge"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "Võlj det grõnssnitt du f÷redrar:",IDC_STATIC,7,7,160,8
+    LTEXT           "Välj det gränssnitt du föredrar:",IDC_STATIC,7,7,160,8
     CONTROL         "&MDI (multiple document interface)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,30,121,10
     CONTROL         "&SDI (single document interface)",IDC_SDI,"Button",
                     BS_AUTORADIOBUTTON,7,53,115,10
-    LTEXT           "Den hõr instõllningen kommer att gõlla som standard i alla nya explorer-f÷nster.",
+    LTEXT           "Den här inställningen kommer att gälla som standard i alla nya explorer-fönster.",
                     IDC_STATIC,7,76,174,22
     DEFPUSHBUTTON   "&OK",IDOK,29,105,50,14,WS_GROUP
     PUSHBUTTON      "&Avbryt",IDCANCEL,106,105,50,14
@@ -2017,14 +2017,14 @@ BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
     IDS_LOGOFF              "Logga ut..."
-    IDS_SHUTDOWN            "Stõng av..."
-    IDS_LAUNCH              "K÷r..."
-    IDS_START_HELP          "Hjõlp"
-    IDS_SEARCH_FILES        "S÷k..."
+    IDS_SHUTDOWN            "Stäng av..."
+    IDS_LAUNCH              "Kör..."
+    IDS_START_HELP          "Hjälp"
+    IDS_SEARCH_FILES        "Sök..."
     IDS_DOCUMENTS           "Dokument"
     IDS_FAVORITES           "Favoriter"
     IDS_PROGRAMS            "Program"
-    IDS_SETTINGS            "Instõllningar"
+    IDS_SETTINGS            "Inställningar"
     IDS_EXPLORE             "Utforska"
     IDS_EMPTY               "(tom)"
     IDS_RECENT              "Senaste dokumenten"
@@ -2034,7 +2034,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Startmeny"
-    IDS_MINIMIZE_ALL        "minimera alla f÷nster"
+    IDS_MINIMIZE_ALL        "minimera alla fönster"
     IDS_DESKTOP_NUM         "Skrivbord %d"
     IDS_VOLUME              "Volym"
     IDS_ITEMS_CUR           "aktuella meddelanden"
@@ -2042,32 +2042,32 @@ BEGIN
     IDS_ITEMS_VISIBLE       "synlig"
     IDS_ITEMS_HIDDEN        "dold"
     IDS_NOTIFY_SHOW         "visa"
-    IDS_NOTIFY_HIDE         "d÷lj"
-    IDS_NOTIFY_AUTOHIDE     "d÷lj automatiskt"
+    IDS_NOTIFY_HIDE         "dölj"
+    IDS_NOTIFY_AUTOHIDE     "dölj automatiskt"
     IDS_SHOW_HIDDEN_ICONS   "Visa dolda ikoner"
-    IDS_HIDE_ICONS          "D÷lj ikoner"
+    IDS_HIDE_ICONS          "Dölj ikoner"
     IDS_TERMINATE           "Logga ut"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_NETWORK             "Nõtverk"
-    IDS_CONNECTIONS         "Nõtverksanslutningar"
+    IDS_NETWORK             "Nätverk"
+    IDS_CONNECTIONS         "Nätverksanslutningar"
     IDS_DRIVES              "Enheter"
-    IDS_SEARCH_COMPUTER     "S÷k dator..."
-    IDS_SETTINGS_MENU       "Instõllningsmeny"
+    IDS_SEARCH_COMPUTER     "Sök dator..."
+    IDS_SETTINGS_MENU       "Inställningsmeny"
     IDS_CONTROL_PANEL       "Kontrollpanelen"
     IDS_PRINTERS            "Skrivare"
     IDS_BROWSE              "Utforska filer"
-    IDS_SEARCH_PRG          "S÷k program..."
-    IDS_ALL_USERS           "Alla anvõndare\\"
-    IDS_SEARCH              "S÷k"
+    IDS_SEARCH_PRG          "Sök program..."
+    IDS_ALL_USERS           "Alla användare\\"
+    IDS_SEARCH              "Sök"
     IDS_ABOUT_EXPLORER      "&Om Explorer..."
     IDS_LAUNCH_MANY_PROGRAMS 
-                            "Du har valt fler õn ett program.\n-r du sõker pÕ att du vill ÷ppna dem alla?"
-    IDS_DESKTOPBAR_SETTINGS "Skrivbordsinstõllningar"
+                            "Du har valt fler än ett program.\nÄr du säker på att du vill öppna dem alla?"
+    IDS_DESKTOPBAR_SETTINGS "Skrivbordsinställningar"
     IDS_DESKTOP             "Skrivbord"
-    IDS_TASKBAR             "Aktivitetsfõlt"
+    IDS_TASKBAR             "Aktivitetsfält"
 END
 
 #endif    // Swedish resources
