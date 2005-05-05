@@ -160,6 +160,37 @@ typedef struct tagDEC {
 	};
 } DECIMAL;
 typedef void *HMETAFILEPICT;
+typedef struct tagCSPLATFORM {
+    DWORD dwPlatformId;
+    DWORD dwVersionHi;
+    DWORD dwVersionLo;
+    DWORD dwProcessorArch;
+} CSPLATFORM;
+typedef struct tagQUERYCONTEXT {
+    DWORD dwContext;
+    CSPLATFORM Platform;
+    LCID Locale;
+    DWORD dwVersionHi;
+    DWORD dwVersionLo;
+} QUERYCONTEXT;
+typedef struct {
+    DWORD tyspec;
+    union {
+        CLSID clsid;
+        LPOLESTR pFileExt;
+        LPOLESTR pMimeType;
+        LPOLESTR pProgId;
+        LPOLESTR pFileName;
+        struct {
+            LPOLESTR pPackageName;
+            GUID PolicyId;
+        } ByName;
+        struct {
+            GUID ObjectId;
+            GUID PolicyId;
+        } ByObjectId;
+    } tagged_union;
+} uCLSSPEC;
 #ifdef __cplusplus
 }
 #endif
