@@ -54,7 +54,7 @@ CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
     if (f->dwMask & CFM_FACE)
       MultiByteToWideChar(0, 0, f->szFaceName, -1, to->szFaceName, sizeof(to->szFaceName));
     /* copy the rest of the 2A structure to 2W */
-    CopyMemory(1+((CHARFORMATW *)from), f+1, sizeof(CHARFORMAT2A)-sizeof(CHARFORMATA));
+    CopyMemory(1+((CHARFORMATW *)to), f+1, sizeof(CHARFORMAT2A)-sizeof(CHARFORMATA));
     to->cbSize = sizeof(CHARFORMAT2W);
     return to;
   }
@@ -124,6 +124,7 @@ ME_Style *ME_MakeStyle(CHARFORMAT2W *style) {
   s->nSequence = -2;
   s->nRefs = 1;
   s->hFont = NULL;
+  s->tm.tmAscent = -1;
   all_refs++;
   return s;
 }

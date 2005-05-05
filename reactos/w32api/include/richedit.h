@@ -59,6 +59,19 @@ extern "C" {
 #define CFE_AUTOBACKCOLOR	0x04000000
 #define CFE_SUBSCRIPT	0x00010000
 #define CFE_SUPERSCRIPT	0x00020000
+#define CFE_ALLCAPS	CFM_ALLCAPS
+#define CFE_EMBOSS	CFM_EMBOSS
+#define CFE_HIDDEN	CFM_HIDDEN
+#define CFE_IMPRINT	CFM_IMPRINT
+#define CFE_OUTLINE	CFM_OUTLINE
+#define CFE_SHADOW	CFM_SHADOW
+#define CFE_SMALLCAPS	CFM_SMALLCAPS
+#define CFU_CF1UNDERLINE	0xff
+#define CFU_UNDERLINENONE	0
+#define CFU_UNDERLINE	1
+#define CFU_UNDERLINEWORD	2
+#define CFU_UNDERLINEDOUBLE	3
+#define CFU_UNDERLINEDOTTED	4
 #define IMF_FORCENONE	1
 #define IMF_FORCEENABLE	2
 #define IMF_FORCEDISABLE	4
@@ -453,7 +466,7 @@ typedef struct _paraformat2 {
 	LONG dySpaceBefore;
 	LONG dySpaceAfter;
 	LONG dyLineSpacing;
-	SHORT sStype;
+	SHORT sStyle;
 	BYTE bLineSpacingRule;
 	BYTE bOutlineLevel;
 	WORD wShadingWeight;

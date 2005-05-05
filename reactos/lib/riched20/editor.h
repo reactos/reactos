@@ -20,8 +20,8 @@
 
 #include "editstr.h"
 
-#define ALLOC_OBJ(type) (type *)HeapAlloc(me_heap, 0, sizeof(type))
-#define ALLOC_N_OBJ(type, count) (type *)HeapAlloc(me_heap, 0, count*sizeof(type))
+#define ALLOC_OBJ(type) HeapAlloc(me_heap, 0, sizeof(type))
+#define ALLOC_N_OBJ(type, count) HeapAlloc(me_heap, 0, (count)*sizeof(type))
 #define FREE_OBJ(ptr) HeapFree(me_heap, 0, ptr)
 
 /* style.c */
@@ -85,6 +85,10 @@ void ME_EndToUnicode(HWND hWnd, LPVOID psz);
 LPSTR ME_ToAnsi(HWND hWnd, LPVOID psz);
 void ME_EndToAnsi(HWND hWnd, LPVOID psz);
 
+static inline int ME_IsWSpace(WCHAR ch)
+{
+  return ch > '\0' && ch <= ' ';
+}
 
 /* note: those two really return the first matching offset (starting from EOS)+1 
  * in other words, an offset of the first trailing white/black */
@@ -104,7 +108,7 @@ ME_DisplayItem *ME_InsertRun(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem
 void ME_CheckCharOffsets(ME_TextEditor *editor);
 void ME_PropagateCharOffset(ME_DisplayItem *p, int shift);
 void ME_GetGraphicsSize(ME_TextEditor *editor, ME_Run *run, SIZE *pSize);
-int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run);
+int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Paragraph *para, ME_Run *run);
 /* this one accounts for 1/2 char tolerance */
 int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run);
 int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset);
@@ -116,8 +120,8 @@ ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, i
 int ME_FindSplitPoint(ME_Context *c, POINT *pt, ME_Run *run, int desperate);
 void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run);
 ME_DisplayItem *ME_SplitFurther(ME_TextEditor *editor, ME_DisplayItem *run);
-void ME_CalcRunExtent(ME_Context *c, ME_Run *run);
-SIZE ME_GetRunSize(ME_Context *c, ME_Run *run, int nLen);
+void ME_CalcRunExtent(ME_Context *c, ME_Paragraph *para, ME_Run *run);
+SIZE ME_GetRunSize(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLen);
 void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCursor);
 void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppRun, int *pOfs);
 int ME_CharOfsFromRunOfs(ME_TextEditor *editor, ME_DisplayItem *pRun, int nOfs);
@@ -157,13 +161,14 @@ void ME_InsertGraphicsFromCursor(ME_TextEditor *editor, int nCursor);
 void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, int nChars);
 int ME_GetTextLength(ME_TextEditor *editor);
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor);
+BOOL ME_UpdateSelection(ME_TextEditor *editor, ME_Cursor *pTempCursor);
 
 /* wrap.c */
 void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp);
 ME_DisplayItem *ME_MakeRow(int height, int baseline, int width);
 void ME_InsertRowStart(ME_WrapContext *wc, ME_DisplayItem *pEnd);
 void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp);
-void ME_WrapMarkedParagraphs(ME_TextEditor *editor);
+BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor);
 
 /* para.c */
 ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 
@@ -185,10 +190,11 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpda
 void ME_Repaint(ME_TextEditor *editor);
 void ME_UpdateRepaint(ME_TextEditor *editor);
 void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph);
-void ME_UpdateScrollBar(ME_TextEditor *editor, int ypos);
-int ME_GetScrollPos(ME_TextEditor *editor);
+void ME_UpdateScrollBar(ME_TextEditor *editor);
+int ME_GetYScrollPos(ME_TextEditor *editor);
 void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun);
 COLORREF ME_GetBackColor(ME_TextEditor *editor);
+void ME_Scroll(ME_TextEditor *editor, int cx, int cy);
 
 /* richole.c */
 extern LRESULT CreateIRichEditOle(LPVOID *);
@@ -206,7 +212,12 @@ void ME_Undo(ME_TextEditor *editor);
 void ME_Redo(ME_TextEditor *editor);
 void ME_EmptyUndoStack(ME_TextEditor *editor);
 int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, BOOL bCRLF);
+ME_DisplayItem *ME_FindItemAtOffset(ME_TextEditor *editor, ME_DIType nItemType, int nOffset, int *nItemOffset);
+void ME_StreamInFill(ME_InStream *stream);
 
 extern int me_debug;
 extern HANDLE me_heap;
 extern void DoWrap(ME_TextEditor *editor);
+
+/* writer.c */
+LRESULT ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream);

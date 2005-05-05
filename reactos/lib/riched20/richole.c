@@ -64,6 +64,7 @@ IRichEditOle_fnQueryInterface(IRichEditOle *me, REFIID riid, LPVOID *ppvObj)
         *ppvObj = (LPVOID) This;
         return S_OK;
     }
+    FIXME("%p: unhandled interface %s\n", This, debugstr_guid(riid) );
  
     return E_NOINTERFACE;   
 }
@@ -215,7 +216,7 @@ static HRESULT WINAPI IRichEditOle_fnSetHostNames(IRichEditOle *me,
                LPCSTR lpstrContainerApp, LPCSTR lpstrContainerObj)
 {
     IRichEditOleImpl *This = (IRichEditOleImpl *)me;
-    FIXME("stub %p\n",This);
+    FIXME("stub %p %s %s\n",This, lpstrContainerApp, lpstrContainerObj);
     return E_NOTIMPL;
 }
 

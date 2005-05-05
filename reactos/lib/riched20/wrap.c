@@ -26,16 +26,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 /*
  * Unsolved problems:
- *  
+ *
  * - center and right align in WordPad omits all spaces at the start, we don't
  * - objects/images are not handled yet
- * - no tabs 
- */ 
- 
+ * - no tabs
+ */
+
 ME_DisplayItem *ME_MakeRow(int height, int baseline, int width)
 {
   ME_DisplayItem *item = ME_MakeDI(diStartRow);
-  
+
   item->member.row.nHeight = height;
   item->member.row.nBaseline = baseline;
   item->member.row.nWidth = width;
@@ -49,7 +49,7 @@ void ME_BeginRow(ME_WrapContext *wc)
   wc->pLastSplittableRun = NULL;
   wc->nAvailWidth = wc->nTotalWidth - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin;
   wc->pt.x = 0;
-}  
+}
 
 void ME_InsertRowStart(ME_WrapContext *wc, ME_DisplayItem *pEnd)
 {
@@ -95,7 +95,7 @@ void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
 {
   if (wc->pRowStart)
     ME_InsertRowStart(wc, p->next);
-    
+
   /*
   p = p->member.para.prev_para->next;
   while(p) {
@@ -109,15 +109,15 @@ void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
     p = p->next;
   }
   */
-}  
+}
 
 void ME_WrapSizeRun(ME_WrapContext *wc, ME_DisplayItem *p)
 {
   /* FIXME compose style (out of character and paragraph styles) here */
-  
+
   ME_UpdateRunFlags(wc->context->editor, &p->member.run);
-  
-  ME_CalcRunExtent(wc->context, &p->member.run);
+
+  ME_CalcRunExtent(wc->context, &ME_GetParagraph(p)->member.para, &p->member.run);
 }
 
 ME_DisplayItem *ME_MaximizeSplit(ME_WrapContext *wc, ME_DisplayItem *p, int i)
@@ -139,7 +139,7 @@ ME_DisplayItem *ME_MaximizeSplit(ME_WrapContext *wc, ME_DisplayItem *p, int i)
     while(piter != wc->pRowStart)
     {
       piter = ME_FindItemBack(piter, diRun);
-      if (piter->member.run.nFlags & MERF_WHITESPACE) 
+      if (piter->member.run.nFlags & MERF_WHITESPACE)
       {
         pp = piter;
         continue;
@@ -167,8 +167,8 @@ ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem *p, in
   ME_DisplayItem *piter = p, *pp;
   int i, idesp, len;
   ME_Run *run = &p->member.run;
-  
-  idesp = i = ME_CharFromPoint(wc->context->editor, loc, run);
+
+  idesp = i = ME_CharFromPoint(wc->context->editor, loc, &ME_GetParagraph(p)->member.para, run);
   len = ME_StrVLen(run->strText);
   assert(len>0);
   assert(i<len);
@@ -182,7 +182,7 @@ ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem *p, in
   TRACE("Must backtrack to split at: %s\n", debugstr_w(p->member.run.strText->szData));
   if (wc->pLastSplittableRun)
   {
-    if (wc->pLastSplittableRun->member.run.nFlags & MERF_GRAPHICS)
+    if (wc->pLastSplittableRun->member.run.nFlags & (MERF_GRAPHICS|MERF_TAB))
     {
       wc->pt = wc->ptLastSplittableRun;
       return wc->pLastSplittableRun;
@@ -193,7 +193,7 @@ ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem *p, in
          they serve no other purpose */
       ME_UpdateRunFlags(wc->context->editor, run);
       assert((wc->pLastSplittableRun->member.run.nFlags & MERF_SPLITTABLE));
-      
+
       piter = wc->pLastSplittableRun;
       run = &piter->member.run;
       len = ME_StrVLen(run->strText);
@@ -201,7 +201,7 @@ ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem *p, in
       i = ME_ReverseFindWhitespaceV(run->strText, len);
       if (i == len)
         i = ME_ReverseFindNonWhitespaceV(run->strText, len);
-      if (i) {        
+      if (i) {
         ME_DisplayItem *piter2 = ME_SplitRun(wc->context, piter, i);
         wc->pt = piter2->member.run.pt;
         return piter2;
@@ -239,7 +239,7 @@ ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem *p, in
     }
     /* the run is one char, can't split it */
     return piter;
-  }  
+  }
 }
 
 ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
@@ -248,24 +248,24 @@ ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
   ME_Run *run;
   int len;
 
-  assert(p->type == diRun);  
+  assert(p->type == diRun);
   if (!wc->pRowStart)
     wc->pRowStart = p;
-  ME_WrapSizeRun(wc, p);
   run = &p->member.run;
   run->pt.x = wc->pt.x;
   run->pt.y = wc->pt.y;
-  len = ME_StrVLen(run->strText);  
-  
+  ME_WrapSizeRun(wc, p);
+  len = ME_StrVLen(run->strText);
+
   if (wc->bOverflown) /* just skipping final whitespaces */
-  {    
-    if (run->nFlags & MERF_WHITESPACE) {
+  {
+    if (run->nFlags & (MERF_WHITESPACE|MERF_TAB)) {
       p->member.run.nFlags |= MERF_SKIPPED;
       /* wc->pt.x += run->nWidth; */
       /* skip runs consisting of only whitespaces */
       return p->next;
     }
-    
+
     if (run->nFlags & MERF_STARTWHITE) {
       /* try to split the run at the first non-white char */
       int black;
@@ -274,10 +274,6 @@ ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
         wc->bOverflown = FALSE;
         pp = ME_SplitRun(wc->context, p, black);
         p->member.run.nFlags |= MERF_SKIPPED;
-/*
-        run->pt = wc->pt;
-        wc->pt.x += run->nWidth;
-        */
         ME_InsertRowStart(wc, pp);
         return pp;
       }
@@ -290,15 +286,15 @@ ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
   /* will current run fit? */
   if (wc->pt.x + run->nWidth > wc->nAvailWidth)
   {
-    int loc = wc->nAvailWidth - wc->pt.x;    
+    int loc = wc->nAvailWidth - wc->pt.x;
     /* total white run ? */
     if (run->nFlags & MERF_WHITESPACE) {
       /* let the overflow logic handle it */
       wc->bOverflown = TRUE;
       return p;
     }
-    /* graphics - we can split before */
-    if (run->nFlags & MERF_GRAPHICS) {
+    /* graphics or TAB - we can split before */
+    if (run->nFlags & (MERF_GRAPHICS|MERF_TAB)) {
       wc->bOverflown = TRUE;
       return p;
     }
@@ -330,8 +326,8 @@ ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
     ERR("failure!\n");
     /* not found anything - writing over margins is the only option left */
   }
-  if ((run->nFlags & (MERF_SPLITTABLE | MERF_STARTWHITE)) 
-    || ((run->nFlags & MERF_GRAPHICS) && (p != wc->pRowStart)))
+  if ((run->nFlags & (MERF_SPLITTABLE | MERF_STARTWHITE))
+    || ((run->nFlags & (MERF_GRAPHICS|MERF_TAB)) && (p != wc->pRowStart)))
   {
     wc->pLastSplittableRun = p;
     wc->ptLastSplittableRun = wc->pt;
@@ -339,20 +335,24 @@ ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
   wc->pt.x += run->nWidth;
   return p->next;
 }
-  
+
 void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p;
   ME_WrapContext wc;
+  int dpi = GetDeviceCaps(c->hDC, LOGPIXELSX);
 
-  assert(tp->type == diParagraph);  
+  assert(tp->type == diParagraph);
   if (!(tp->member.para.nFlags & MEPF_REWRAP)) {
     return;
   }
   ME_PrepareParagraphForWrapping(c, tp);
-  
+
   wc.context = c;
 /*   wc.para_style = tp->member.para.style; */
   wc.style = NULL;
+  tp->member.para.nRightMargin = tp->member.para.pFmt->dxRightIndent*dpi/1440;
+  tp->member.para.nFirstMargin = tp->member.para.pFmt->dxStartIndent*dpi/1440;
+  tp->member.para.nLeftMargin = (tp->member.para.pFmt->dxStartIndent+tp->member.para.pFmt->dxOffset)*dpi/1440;
   wc.nFirstMargin = tp->member.para.nFirstMargin;
   wc.nLeftMargin = tp->member.para.nLeftMargin;
   wc.nRightMargin = tp->member.para.nRightMargin;
@@ -362,7 +362,7 @@ void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   wc.nTotalWidth = c->rcView.right - c->rcView.left;
   wc.nAvailWidth = wc.nTotalWidth - wc.nFirstMargin - wc.nRightMargin;
   wc.pRowStart = NULL;
-  
+
   ME_BeginRow(&wc);
   for (p = tp->next; p!=tp->member.para.next_para; ) {
     assert(p->type != diStartRow);
@@ -413,29 +413,32 @@ void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
   }
 }
 
-void ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
+BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   HWND hWnd = editor->hWnd;
   HDC hDC = GetDC(hWnd);
   ME_DisplayItem *item;
   ME_Context c;
-  
+  BOOL bModified = FALSE;
+
   ME_InitContext(&c, editor, hDC);
   c.pt.x = 0;
   c.pt.y = 0;
   item = editor->pBuffer->pFirst->next;
   while(item != editor->pBuffer->pLast) {
     BOOL bRedraw = FALSE;
-    
+
     assert(item->type == diParagraph);
     if ((item->member.para.nFlags & MEPF_REWRAP)
      || (item->member.para.nYPos != c.pt.y))
       bRedraw = TRUE;
     item->member.para.nYPos = c.pt.y;
-    
+
     ME_WrapTextParagraph(&c, item);
 
     if (bRedraw)
       item->member.para.nFlags |= MEPF_REPAINT;
+
+    bModified = bModified | bRedraw;
 
     c.pt.y += item->member.para.nHeight;
     item = item->member.para.next_para;
@@ -443,7 +446,8 @@ void ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   editor->sizeWindow.cx = c.rcView.right-c.rcView.left;
   editor->sizeWindow.cy = c.rcView.bottom-c.rcView.top;
   editor->nTotalLength = c.pt.y;
-  
+
   ME_DestroyContext(&c);
   ReleaseDC(hWnd, hDC);
+  return bModified;
 }

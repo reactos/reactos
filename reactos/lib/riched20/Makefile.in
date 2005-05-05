@@ -20,7 +20,8 @@ C_SRCS = \
 	string.c \
 	style.c \
 	undo.c \
-	wrap.c
+	wrap.c \
+	writer.c
 
 @MAKE_DLL_RULES@
 
