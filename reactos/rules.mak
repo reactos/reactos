@@ -35,6 +35,11 @@ export MAKE := @$(MAKE)
 ifeq ($(VERBOSE),no)
 endif
 
+# detect msys on a Windows host as linux
+ifeq ($(OSTYPE),msys)
+export HOST=mingw32-linux
+endif
+
 # detect Windows host environment
 ifeq ($(HOST),)
 ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
@@ -94,8 +99,13 @@ endif
 ifeq ($(HOST),mingw32-linux)
 export HOST_TYPE = unix
 export NASM_FORMAT = win32
+ifeq ($(OSTYPE),msys)
+export PREFIX := 
+export EXE_POSTFIX := .exe
+else
 export PREFIX = mingw32-
 export EXE_POSTFIX :=
+endif
 export EXE_PREFIX := ./
 export DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 #
