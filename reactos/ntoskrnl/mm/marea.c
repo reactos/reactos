@@ -812,7 +812,7 @@ MmFreeMemoryArea(
       }
    }
 
-   ExFreePool(MemoryArea);
+   ExFreePoolWithTag(MemoryArea, TAG_MAREA);
 
    DPRINT("MmFreeMemoryAreaByNode() succeeded\n");
 

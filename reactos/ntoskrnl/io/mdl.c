@@ -132,7 +132,7 @@ IoFreeMdl(PMDL Mdl)
 
    MmPrepareMdlForReuse(Mdl);
 
-   ExFreePool(Mdl);
+   ExFreePoolWithTag(Mdl, TAG_MDL);
 }
 
 

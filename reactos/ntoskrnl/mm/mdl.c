@@ -16,7 +16,7 @@
 
 /* GLOBALS *******************************************************************/
 
-#define TAG_MDL    TAG('M', 'M', 'D', 'L')
+#define TAG_MDL    TAG('M', 'D', 'L', ' ')
 
 #define MI_MDL_MAPPING_REGION_SIZE       (256*1024*1024)
 

@@ -18,6 +18,7 @@
 
 #define TAG_DEVICE_EXTENSION   TAG('D', 'E', 'X', 'T')
 #define TAG_SHUTDOWN_ENTRY    TAG('S', 'H', 'U', 'T')
+#define TAG_IO_TIMER      TAG('I', 'O', 'T', 'M')
 
 static ULONG IopDeviceObjectNumber = 0;
 
@@ -589,7 +590,7 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
    if (DeviceObject->Timer)
    {
       IopRemoveTimerFromTimerList(DeviceObject->Timer);
-      ExFreePool(DeviceObject->Timer);
+      ExFreePoolWithTag(DeviceObject->Timer, TAG_IO_TIMER);
    }
 
    /* Remove device from driver device list */

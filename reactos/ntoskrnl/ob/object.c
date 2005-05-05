@@ -507,7 +507,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
   if (current)
      RtlpCreateUnicodeString (RemainingPath, current, NonPagedPool);
-  RtlFreeUnicodeString (&PathString);
+  ExFreePool(PathString.Buffer);
   *ReturnedObject = CurrentObject;
 
   return STATUS_SUCCESS;
@@ -806,7 +806,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 	    }
 	  RtlFreeUnicodeString(&Header->Name);
 	  RtlFreeUnicodeString(&RemainingPath);
-	  ExFreePool(Header);
+	  ExFreePoolWithTag(Header, Header->ObjectType->Tag);
 	  DPRINT("Create Failed\n");
 	  return Status;
 	}
@@ -1000,7 +1000,7 @@ ObpDeleteObject(POBJECT_HEADER Header)
     }
 
   DPRINT("ObPerformRetentionChecks() = Freeing object\n");
-  ExFreePool(Header);
+  ExFreePoolWithTag(Header, Header->ObjectType->Tag);
 
   return(STATUS_SUCCESS);
 }
@@ -1010,16 +1010,14 @@ VOID STDCALL
 ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
 {
   PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)Parameter;
-  /* ULONG Tag; */ /* See below */
+  ULONG Tag;
 
   ASSERT(Params);
   ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL); /* We need PAGED_CODE somewhere... */
 
-  /* Turn this on when we have ExFreePoolWithTag
-  Tag = Params->ObjectHeader->ObjectType->Tag; */
+  Tag = Params->ObjectHeader->ObjectType->Tag;
   ObpDeleteObject(Params->ObjectHeader);
-  ExFreePool(Params);
-  /* ExFreePoolWithTag(Params, Tag); */
+  ExFreePoolWithTag(Params, Tag); 
 }
 
 

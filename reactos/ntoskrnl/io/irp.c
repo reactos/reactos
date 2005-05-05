@@ -871,7 +871,7 @@ STDCALL
 IoFreeIrp(PIRP Irp)
 {
     /* Free the pool memory associated with it */
-    ExFreePool(Irp);
+    ExFreePoolWithTag(Irp, TAG_IRP);
 }
 
 /*
@@ -1253,7 +1253,7 @@ IoSecondStageCompletion(PKAPC Apc,
         /* Also check if we should de-allocate it */
         if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
         {
-            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+            ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_SYS_BUF);
         }
     }
     

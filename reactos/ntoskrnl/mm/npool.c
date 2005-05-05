@@ -1458,6 +1458,28 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
 
 #endif /* not WHOLE_PAGE_ALLOCATIONS */
 
+ULONG STDCALL
+ExRosQueryNonPagedPoolTag ( PVOID Addr )
+{
+#ifdef WHOLE_PAGE_ALLOCATIONS /* WHOLE_PAGE_ALLOCATIONS */
+
+   UNIMPLEMENTED;
+   return 0;
+   
+#else /* not WHOLE_PAGE_ALLOCATIONS */
+
+   BLOCK_HDR* blk=address_to_block(Addr);
+   
+   if (blk->Magic != BLOCK_HDR_USED_MAGIC)
+      KEBUGCHECK(0);
+   if (blk->Magic == BLOCK_HDR_FREE_MAGIC)
+      KEBUGCHECK(0);
+   
+   return blk->Used.Tag;
+
+#endif /* WHOLE_PAGE_ALLOCATIONS */
+}
+
 VOID STDCALL ExFreeNonPagedPool (PVOID block)
 /*
  * FUNCTION: Releases previously allocated memory
