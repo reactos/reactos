@@ -482,6 +482,8 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   if (FileIndex > 0)
     {
       RC = STATUS_SUCCESS;
+      IrpContext->Irp->IoStatus.Information = Stack->Parameters.QueryDirectory.Length - BufferLength;
+
     }
   ExReleaseResourceLite(&pFcb->MainResource);
   return RC;
@@ -495,6 +497,7 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
 {
   NTSTATUS RC = STATUS_SUCCESS;
   CHECKPOINT;
+  IrpContext->Irp->IoStatus.Information = 0;
   switch (IrpContext->MinorFunction)
     {
     case IRP_MN_QUERY_DIRECTORY:
@@ -518,7 +521,6 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
   else
   {
     IrpContext->Irp->IoStatus.Status = RC;
-    IrpContext->Irp->IoStatus.Information = 0;
     IoCompleteRequest (IrpContext->Irp, IO_NO_INCREMENT);
     VfatFreeIrpContext(IrpContext);
   }
