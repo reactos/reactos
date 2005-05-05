@@ -63,6 +63,16 @@ ExFreePool(IN PVOID Mem)
       Mem);
 }
 
+VOID
+STDCALL
+ExFreePoolWithTag(IN PVOID Mem, IN ULONG Tag)
+{
+   RtlFreeHeap (
+      RtlGetProcessHeap (),
+      0,
+      Mem);
+}
+
 
 #ifdef DBG
 VOID FASTCALL
