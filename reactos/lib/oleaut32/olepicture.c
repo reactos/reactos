@@ -185,6 +185,36 @@ static void OLEPictureImpl_SetBitmap(OLEPictureImpl*This) {
   DeleteDC(hdcRef);
 }
 
+static void OLEPictureImpl_SetIcon(OLEPictureImpl * This)
+{
+    ICONINFO infoIcon;
+
+    TRACE("icon handle %p\n", This->desc.u.icon.hicon);
+    if (GetIconInfo(This->desc.u.icon.hicon, &infoIcon)) {
+        HDC hdcRef;
+        BITMAP bm;
+
+        TRACE("bitmap handle for icon is %p\n", infoIcon.hbmColor);
+        if(GetObjectA(infoIcon.hbmColor ? infoIcon.hbmColor : infoIcon.hbmMask, sizeof(bm), &bm) != sizeof(bm)) {
+            ERR("GetObject fails on icon bitmap\n");
+            return;
+        }
+
+        This->origWidth = bm.bmWidth;
+        This->origHeight = infoIcon.hbmColor ? bm.bmHeight : bm.bmHeight / 2;
+        /* see comment on HIMETRIC on OLEPictureImpl_SetBitmap() */
+        hdcRef = GetDC(0);
+        This->himetricWidth = (This->origWidth *2540)/GetDeviceCaps(hdcRef, LOGPIXELSX);
+        This->himetricHeight= (This->origHeight *2540)/GetDeviceCaps(hdcRef, LOGPIXELSY);
+        ReleaseDC(0, hdcRef);
+
+        DeleteObject(infoIcon.hbmMask);
+        if (infoIcon.hbmColor) DeleteObject(infoIcon.hbmColor);
+    } else {
+        ERR("GetIconInfo() fails on icon %p\n", This->desc.u.icon.hicon);
+    }
+}
+
 /************************************************************************
  * OLEPictureImpl_Construct
  *
@@ -260,6 +290,8 @@ static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
 	break;
 
       case PICTYPE_ICON:
+        OLEPictureImpl_SetIcon(newObject);
+        break;
       case PICTYPE_ENHMETAFILE:
       default:
 	FIXME("Unsupported type %d\n", pictDesc->picType);
@@ -1071,7 +1103,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
 	eb = si->ExtensionBlocks + i;
 	if (eb->Function == 0xF9 && eb->ByteCount == 4) {
 	    if ((eb->Bytes[0] & 1) == 1) {
-		transparent = eb->Bytes[3];
+		transparent = (unsigned char)eb->Bytes[3];
 	    }
 	}
     }
@@ -1145,7 +1177,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
 
 	This->hbmMask = CreateBitmap(bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, 1, 1, NULL);
 
-	hOldbitmap = SelectObject(hdc,This->desc.u.bmp.hbitmap); 
+	hOldbitmap = SelectObject(hdc,This->desc.u.bmp.hbitmap);
 	hOldbitmapmask = SelectObject(hdcMask, This->hbmMask);
 	SetBkColor(hdc, This->rgbTrans);
 	BitBlt(hdcMask, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, hdc, 0, 0, SRCCOPY);
@@ -1501,7 +1533,7 @@ static int serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLengt
     BITMAPFILEHEADER * pFileHeader;
     BITMAPINFO * pInfoHeader;
 
-    pInfoBitmap = (BITMAPINFO *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+    pInfoBitmap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
         sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
 
     /* Find out bitmap size and padded length */
@@ -1511,8 +1543,7 @@ static int serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLengt
 
     /* Fetch bitmap palette & pixel data */
 
-    pPixelData = (unsigned char *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-        pInfoBitmap->bmiHeader.biSizeImage);
+    pPixelData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pInfoBitmap->bmiHeader.biSizeImage);
     GetDIBits(hDC, hBitmap, 0, pInfoBitmap->bmiHeader.biHeight, pPixelData, pInfoBitmap, DIB_RGB_COLORS);
 
     /* Calculate the total length required for the BMP data */
@@ -1530,7 +1561,7 @@ static int serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLengt
         sizeof(BITMAPINFOHEADER) +
         iNumPaletteEntries * sizeof(RGBQUAD) +
         pInfoBitmap->bmiHeader.biSizeImage;
-    *ppBuffer = (void *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, *pLength);
+    *ppBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, *pLength);
 
     /* Fill the BITMAPFILEHEADER */
     pFileHeader = (BITMAPFILEHEADER *)(*ppBuffer);
@@ -1569,7 +1600,7 @@ static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 		unsigned char * pIconData = NULL;
 		unsigned int iDataSize = 0;
 
-        pInfoBitmap = (BITMAPINFO *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+        pInfoBitmap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
 
 		/* Find out icon size */
 		hDC = GetDC(0);
@@ -1603,7 +1634,7 @@ static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 */
 			/* Let's start with one CURSORICONFILEDIR and one CURSORICONFILEDIRENTRY */
 			iDataSize += 3 * sizeof(WORD) + sizeof(CURSORICONFILEDIRENTRY) + sizeof(BITMAPINFOHEADER);
-			pIconData = (unsigned char *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, iDataSize);
+			pIconData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, iDataSize);
 
 			/* Fill out the CURSORICONFILEDIR */
 			pIconDir = (CURSORICONFILEDIR *)pIconData;
@@ -1651,7 +1682,7 @@ static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 			iDataSize += pIconBitmapHeader->biHeight * iLengthScanLineMask;
 			pIconBitmapHeader->biSizeImage += pIconBitmapHeader->biHeight * iLengthScanLineMask;
 			pIconBitmapHeader->biHeight *= 2;
-			pIconData = (unsigned char *)HeapReAlloc(GetProcessHeap(), 0, pIconData, iDataSize);
+			pIconData = HeapReAlloc(GetProcessHeap(), 0, pIconData, iDataSize);
 			pIconEntry = (CURSORICONFILEDIRENTRY *)(pIconData + 3 * sizeof(WORD));
 			pIconBitmapHeader = (BITMAPINFOHEADER *)(pIconData + 3 * sizeof(WORD) + sizeof(CURSORICONFILEDIRENTRY));
 			pIconEntry->dwDIBSize = iDataSize - (3 * sizeof(WORD) + sizeof(CURSORICONFILEDIRENTRY));
