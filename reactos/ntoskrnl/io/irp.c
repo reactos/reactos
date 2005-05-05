@@ -1231,8 +1231,11 @@ IoSecondStageCompletion(PKAPC Apc,
     FileObject = (PFILE_OBJECT)(*SystemArgument1);
     Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
     DPRINT("IoSecondStageCompletition, %x\n", Irp);
-     
+    
+    /* Save the User Event */
     UserEvent = Irp->UserEvent;
+    
+    /* Remember if the IRP is Sync or not */
     SyncIrp = Irp->Flags & IRP_SYNCHRONOUS_API ? TRUE : FALSE;
 
     /* Handle Buffered case first */
@@ -1276,84 +1279,84 @@ IoSecondStageCompletion(PKAPC Apc,
 
     if (NT_SUCCESS(Irp->IoStatus.Status) || Irp->PendingReturned)
     {
-       _SEH_TRY
-       {
-          /*  Save the IOSB Information */
-          *Irp->UserIosb = Irp->IoStatus;
-       }
-       _SEH_HANDLE
-       {
-          /* Ignore any error */
-       }
-       _SEH_END;
+        _SEH_TRY
+        {
+            /*  Save the IOSB Information */
+            *Irp->UserIosb = Irp->IoStatus;
+        }
+        _SEH_HANDLE
+        {
+            /* Ignore any error */
+        }
+        _SEH_END;
 
-       if (FileObject)
-       {
-          if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-	  {
-             /* Set the Status */
-             FileObject->FinalStatus = Irp->IoStatus.Status;
+        if (FileObject)
+        {
+            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+            {
+                /* Set the Status */
+                FileObject->FinalStatus = Irp->IoStatus.Status;
 
-	     if (UserEvent != &FileObject->Event)
-	     {
-	        /* Signal Event */
-                KeSetEvent(&FileObject->Event, 0, FALSE);
-	     }
-	  }
-       }
+                /* FIXME: Remove this check when I/O code is fixed */
+                if (UserEvent != &FileObject->Event)
+                {
+                    /* Signal Event */
+                    KeSetEvent(&FileObject->Event, 0, FALSE);
+                }
+            }
+        }
         
-       /* Signal the user event, if one exist */
-       if (UserEvent)
-       {
-          KeSetEvent(UserEvent, 0, FALSE);
-       }
+        /* Signal the user event, if one exist */
+        if (UserEvent)
+        {
+            KeSetEvent(UserEvent, 0, FALSE);
+        }
 
-       /* Now call the User APC if one was requested */
-       if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)
-       {
-          KeInitializeApc(&Irp->Tail.Apc,
-                          KeGetCurrentThread(),
-                          CurrentApcEnvironment,
-                          IoSecondStageCompletion_KernelApcRoutine,
-                          IoSecondStageCompletion_RundownApcRoutine,
-                          (PKNORMAL_ROUTINE)Irp->Overlay.AsynchronousParameters.UserApcRoutine,
-                          Irp->RequestorMode,
-                          Irp->Overlay.AsynchronousParameters.UserApcContext);
+        /* Now call the User APC if one was requested */
+        if (Irp->Overlay.AsynchronousParameters.UserApcRoutine)
+        {
+            KeInitializeApc(&Irp->Tail.Apc,
+                            KeGetCurrentThread(),
+                            CurrentApcEnvironment,
+                            IoSecondStageCompletion_KernelApcRoutine,
+                            IoSecondStageCompletion_RundownApcRoutine,
+                            (PKNORMAL_ROUTINE)Irp->Overlay.AsynchronousParameters.UserApcRoutine,
+                            Irp->RequestorMode,
+                            Irp->Overlay.AsynchronousParameters.UserApcContext);
 
-          KeInsertQueueApc(&Irp->Tail.Apc,
-                           Irp->UserIosb,
-                           NULL,
-                           2);
-	  Irp = NULL;
-       }
-       else if (FileObject && FileObject->CompletionContext)
-       {
-          /* Call the IO Completion Port if we have one, instead */
-          IoSetIoCompletion(FileObject->CompletionContext->Port,
-                            FileObject->CompletionContext->Key,
-                            Irp->Overlay.AsynchronousParameters.UserApcContext,
-                            Irp->IoStatus.Status,
-                            Irp->IoStatus.Information,
-                            FALSE);
-	  Irp = NULL;
-       }
+            KeInsertQueueApc(&Irp->Tail.Apc,
+                             Irp->UserIosb,
+                             NULL,
+                             2);
+            Irp = NULL;
+        }
+        else if (FileObject && FileObject->CompletionContext)
+        {
+            /* Call the IO Completion Port if we have one, instead */
+            IoSetIoCompletion(FileObject->CompletionContext->Port,
+                              FileObject->CompletionContext->Key,
+                              Irp->Overlay.AsynchronousParameters.UserApcContext,
+                              Irp->IoStatus.Status,
+                              Irp->IoStatus.Information,
+                              FALSE);
+            Irp = NULL;
+        }
     }
     
-    if (Irp)
-    {
-       IoFreeIrp(Irp);
-    }
+    /* Free the Irp if it hasn't already */
+    if (Irp) IoFreeIrp(Irp);
 
     if (FileObject)
     {
-       /* Dereference the user event, if it is an event object */
-       if (UserEvent && !SyncIrp && UserEvent != &FileObject->Event) 
-       {
-          ObDereferenceObject(UserEvent);
-       }
+        /* Dereference the user event, if it is an event object */
+        /* FIXME: Remove last check when I/O code is fixed */
+        if (UserEvent && !SyncIrp && UserEvent != &FileObject->Event) 
+        {
+            ObDereferenceObject(UserEvent);
+        }
 
-       /* Dereference the File Object */
-       ObDereferenceObject(FileObject);
+        /* Dereference the File Object */
+        ObDereferenceObject(FileObject);
     }
 }
 
