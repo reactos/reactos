@@ -256,8 +256,8 @@ InternalFindFirstFile (
 	                     FILE_LIST_DIRECTORY,
 	                     &ObjectAttributes,
 	                     &IoStatusBlock,
-	                     FILE_OPEN_IF,
-	                     OPEN_EXISTING);
+	                     FILE_SHARE_READ|FILE_SHARE_WRITE,
+	                     FILE_DIRECTORY_FILE);
 
 	RtlFreeHeap (hProcessHeap,
 	             0,
@@ -298,6 +298,7 @@ InternalFindFirstFile (
 	if (!NT_SUCCESS(Status))
 	{
 	   DPRINT("Status %lx\n", Status);
+	   CloseHandle (IData->DirectoryHandle);
 	   RtlFreeHeap (hProcessHeap, 0, IData);
 	   SetLastErrorByStatus (Status);
 	   return NULL;
