@@ -42,109 +42,11 @@ struct _EJOB;
 #ifndef __ASM__
 
 #include <internal/mm.h>
+#include <internal/ke.h>
 #include <napi/teb.h>
-
-#ifndef KeGetCurrentProcessorNumber
-#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
-#endif
 
 extern LCID PsDefaultThreadLocaleId;
 extern LCID PsDefaultSystemLocaleId;
-
-#include <pshpack1.h>
-
-typedef struct _KTHREAD
-{
-   /* For waiting on thread exit */
-   DISPATCHER_HEADER DispatcherHeader;    /* 00 */
-   
-   /* List of mutants owned by the thread */
-   LIST_ENTRY        MutantListHead;      /* 10 */
-   PVOID             InitialStack;        /* 18 */
-   ULONG_PTR         StackLimit;          /* 1C */
-   
-   /* Pointer to the thread's environment block in user memory */
-   PTEB              Teb;                 /* 20 */
-   
-   /* Pointer to the thread's TLS array */
-   PVOID             TlsArray;            /* 24 */
-   PVOID             KernelStack;         /* 28 */
-   UCHAR             DebugActive;         /* 2C */
-   
-   /* Thread state (one of THREAD_STATE_xxx constants below) */
-   UCHAR             State;               /* 2D */
-   BOOLEAN           Alerted[2];          /* 2E */
-   UCHAR             Iopl;                /* 30 */
-   UCHAR             NpxState;            /* 31 */
-   CHAR              Saturation;          /* 32 */
-   CHAR              Priority;            /* 33 */
-   KAPC_STATE        ApcState;            /* 34 */
-   ULONG             ContextSwitches;     /* 4C */
-   LONG              WaitStatus;          /* 50 */
-   KIRQL             WaitIrql;            /* 54 */
-   CHAR              WaitMode;            /* 55 */
-   UCHAR             WaitNext;            /* 56 */
-   UCHAR             WaitReason;          /* 57 */
-   union {                                /* 58 */
-      PKWAIT_BLOCK   WaitBlockList;       /* 58 */
-      PKGATE         GateObject;          /* 58 */
-   };                                     /* 58 */
-   LIST_ENTRY        WaitListEntry;       /* 5C */
-   ULONG             WaitTime;            /* 64 */
-   CHAR              BasePriority;        /* 68 */
-   UCHAR             DecrementCount;      /* 69 */
-   UCHAR             PriorityDecrement;   /* 6A */
-   CHAR              Quantum;             /* 6B */
-   KWAIT_BLOCK       WaitBlock[4];        /* 6C */
-   PVOID             LegoData;            /* CC */
-   union {
-          struct {
-              USHORT KernelApcDisable;
-              USHORT SpecialApcDisable;
-          };
-          ULONG      CombinedApcDisable;  /* D0 */
-   };
-   KAFFINITY         UserAffinity;        /* D4 */
-   UCHAR             SystemAffinityActive;/* D8 */
-   UCHAR             PowerState;          /* D9 */
-   UCHAR             NpxIrql;             /* DA */
-   UCHAR             Pad[1];              /* DB */
-   SSDT_ENTRY        *ServiceTable;       /* DC */
-   PKQUEUE           Queue;               /* E0 */
-   KSPIN_LOCK        ApcQueueLock;        /* E4 */
-   KTIMER            Timer;               /* E8 */
-   LIST_ENTRY        QueueListEntry;      /* 110 */
-   KAFFINITY         Affinity;            /* 118 */
-   UCHAR             Preempted;           /* 11C */
-   UCHAR             ProcessReadyQueue;   /* 11D */
-   UCHAR             KernelStackResident; /* 11E */
-   UCHAR             NextProcessor;       /* 11F */
-   PVOID             CallbackStack;       /* 120 */
-   struct _W32THREAD *Win32Thread;        /* 124 */
-   struct _KTRAP_FRAME *TrapFrame;        /* 128 */
-   PKAPC_STATE       ApcStatePointer[2];  /* 12C */
-   UCHAR             EnableStackSwap;     /* 134 */
-   UCHAR             LargeStack;          /* 135 */
-   UCHAR             ResourceIndex;       /* 136 */
-   UCHAR             PreviousMode;        /* 137 */
-   ULONG             KernelTime;          /* 138 */
-   ULONG             UserTime;            /* 13C */
-   KAPC_STATE        SavedApcState;       /* 140 */
-   UCHAR             Alertable;           /* 158 */
-   UCHAR             ApcStateIndex;       /* 159 */
-   UCHAR             ApcQueueable;        /* 15A */
-   UCHAR             AutoAlignment;       /* 15B */
-   PVOID             StackBase;           /* 15C */
-   KAPC              SuspendApc;          /* 160 */
-   KSEMAPHORE        SuspendSemaphore;    /* 190 */
-   LIST_ENTRY        ThreadListEntry;     /* 1A4 */
-   CHAR              FreezeCount;         /* 1AC */
-   UCHAR             SuspendCount;        /* 1AD */
-   UCHAR             IdealProcessor;      /* 1AE */
-   UCHAR             DisableBoost;        /* 1AF */
-} KTHREAD;
-
-#include <poppack.h>
 
 /* Top level irp definitions. */
 #define	FSRTL_FSP_TOP_LEVEL_IRP			(0x01)
@@ -219,102 +121,9 @@ typedef struct _ETHREAD
 
 #include <poppack.h>
 
-
 #ifndef __USE_W32API
 
 typedef struct _ETHREAD *PETHREAD;
-
-#endif /* __USE_W32API */
-
-
-typedef struct _KPROCESS 
-{
-  /* So it's possible to wait for the process to terminate */
-  DISPATCHER_HEADER 	DispatcherHeader;             /* 000 */
-  /* 
-   * Presumably a list of profile objects associated with this process,
-   * currently unused.
-   */
-  LIST_ENTRY            ProfileListHead;              /* 010 */
-  /*
-   * We use the first member of this array to hold the physical address of
-   * the page directory for this process.
-   */
-  PHYSICAL_ADDRESS      DirectoryTableBase;           /* 018 */
-  /*
-   * Presumably a descriptor for the process's LDT, currently unused.
-   */
-  ULONG                 LdtDescriptor[2];             /* 020 */
-  /*
-   * Virtual Dos Machine flag.
-   */
-  ULONG                 NtVdmFlag;                    /* 028 */
-  ULONG                 VdmUnused;                    /* 02C */
-  /* Is the i/o permission map enabled for the process. */
-  USHORT                IopmOffset;                   /* 030 */
-  /* 
-   * Presumably I/O privilege level to be used for this process, currently
-   * unused.
-   */
-  UCHAR                 Iopl;                         /* 032 */
-  /* Set if this process is a virtual dos machine? */
-  UCHAR                 VdmFlag;                      /* 033 */
-  /* Bitmask of the processors being used by this process's threads? */
-  ULONG                 ActiveProcessors;             /* 034 */
-  /* Aggregate of the time this process's threads have spent in kernel mode? */
-  ULONG                 KernelTime;                   /* 038 */
-  /* Aggregate of the time this process's threads have spent in user mode? */
-  ULONG                 UserTime;                     /* 03C */
-  /* List of this process's threads that are ready for execution? */
-  LIST_ENTRY            ReadyListHead;                /* 040 */
-  /* List of this process's threads that have their stacks swapped out? */
-  LIST_ENTRY            SwapListEntry;                /* 048 */
-  /* List of this process's threads? */
-  LIST_ENTRY            ThreadListHead;               /* 050 */
-  /* Maybe a lock for this data structure, the type is assumed. */
-  KSPIN_LOCK            ProcessLock;                  /* 058 */
-  /* Default affinity mask for this process's threads? */
-  ULONG                 Affinity;                     /* 05C */
-  /* Count of the stacks allocated for this process's threads? */
-  USHORT                StackCount;                   /* 060 */
-  /* Base priority for this process's threads? */
-  KPRIORITY             BasePriority;                 /* 062 */
-  /* Default quantum for this process's threads */
-  UCHAR		        ThreadQuantum;                /* 063 */
-  /* Unknown. */
-  UCHAR                 AutoAlignment;                /* 064 */
-  /* Process execution state, currently either active or terminated. */
-  UCHAR		        State;                        /* 065 */
-  /* Seed for generating thread ids for this process's threads? */
-  UCHAR		        ThreadSeed;                   /* 066 */
-  /* Disable priority boosts? */
-  UCHAR		        DisableBoost;                 /* 067 */
-} KPROCESS;
-
-#ifndef __USE_W32API
-
-typedef struct _KPROCESS *PKPROCESS;
-
-typedef struct _HARDWARE_PTE_X86 {
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
-
-typedef struct _WOW64_PROCESS
-{
-  PVOID Wow64;
-} WOW64_PROCESS, *PWOW64_PROCESS;
 
 #endif /* __USE_W32API */
 

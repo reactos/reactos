@@ -464,7 +464,6 @@ extern PACL                         SeSystemDefaultDacl;
 
 typedef PVOID PEJOB;
 typedef PVOID OPLOCK, *POPLOCK;
-typedef PVOID PWOW64_PROCESS;
 
 typedef struct _CACHE_MANAGER_CALLBACKS         *PCACHE_MANAGER_CALLBACKS;
 typedef struct _EPROCESS_QUOTA_BLOCK            *PEPROCESS_QUOTA_BLOCK;
@@ -530,22 +529,6 @@ typedef enum _OBJECT_INFO_CLASS {
     ObjectProtectionInfo
 } OBJECT_INFO_CLASS;
 
-typedef struct _HARDWARE_PTE_X86 {
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
-
 typedef struct _KAPC_STATE {
     LIST_ENTRY  ApcListHead[2];
     PKPROCESS   Process;
@@ -553,38 +536,6 @@ typedef struct _KAPC_STATE {
     BOOLEAN     KernelApcPending;
     BOOLEAN     UserApcPending;
 } KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
-
-typedef struct _KGDTENTRY {
-    USHORT LimitLow;
-    USHORT BaseLow;
-    union {
-        struct {
-            UCHAR BaseMid;
-            UCHAR Flags1;
-            UCHAR Flags2;
-            UCHAR BaseHi;
-        } Bytes;
-        struct {
-            ULONG BaseMid       : 8;
-            ULONG Type          : 5;
-            ULONG Dpl           : 2;
-            ULONG Pres          : 1;
-            ULONG LimitHi       : 4;
-            ULONG Sys           : 1;
-            ULONG Reserved_0    : 1;
-            ULONG Default_Big   : 1;
-            ULONG Granularity   : 1;
-            ULONG BaseHi        : 8;
-        } Bits;
-    } HighWord;
-} KGDTENTRY, *PKGDTENTRY;
-
-typedef struct _KIDTENTRY {
-    USHORT Offset;
-    USHORT Selector;
-    USHORT Access;
-    USHORT ExtendedOffset;
-} KIDTENTRY, *PKIDTENTRY;
 
 #if (VER_PRODUCTBUILD >= 2600)
 

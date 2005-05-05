@@ -179,6 +179,38 @@ typedef struct _KIRQ_TRAPFRAME
    ULONG Eflags;
 } KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
 
+typedef struct _KGDTENTRY {
+    USHORT LimitLow;
+    USHORT BaseLow;
+    union {
+        struct {
+            UCHAR BaseMid;
+            UCHAR Flags1;
+            UCHAR Flags2;
+            UCHAR BaseHi;
+        } Bytes;
+        struct {
+            ULONG BaseMid       : 8;
+            ULONG Type          : 5;
+            ULONG Dpl           : 2;
+            ULONG Pres          : 1;
+            ULONG LimitHi       : 4;
+            ULONG Sys           : 1;
+            ULONG Reserved_0    : 1;
+            ULONG Default_Big   : 1;
+            ULONG Granularity   : 1;
+            ULONG BaseHi        : 8;
+        } Bits;
+    } HighWord;
+} KGDTENTRY, *PKGDTENTRY;
+
+typedef struct _KIDTENTRY {
+    USHORT Offset;
+    USHORT Selector;
+    USHORT Access;
+    USHORT ExtendedOffset;
+} KIDTENTRY, *PKIDTENTRY;
+
 extern ULONG Ke386CacheAlignment;
 
 struct _KPCR;

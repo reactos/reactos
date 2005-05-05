@@ -73,7 +73,7 @@ KeInitializeProcess(PKPROCESS Process,
     DPRINT("KeInitializeProcess. Process: %x, DirectoryTableBase: %x\n", Process, DirectoryTableBase);
     
     /* Initialize the Dispatcher Header */
-    KeInitializeDispatcherHeader(&Process->DispatcherHeader,
+    KeInitializeDispatcherHeader(&Process->Header,
                                  ProcessObject,
                                  sizeof(KPROCESS),
                                  FALSE);
@@ -81,7 +81,7 @@ KeInitializeProcess(PKPROCESS Process,
     /* Initialize Scheduler Data, Disable Alignment Faults and Set the PDE */
     Process->Affinity = Affinity;
     Process->BasePriority = Priority;
-    Process->ThreadQuantum = 6;
+    Process->QuantumReset = 6;
     Process->DirectoryTableBase = DirectoryTableBase;
     Process->AutoAlignment = TRUE;
     Process->IopmOffset = 0xFFFF;
@@ -104,11 +104,11 @@ KeSetProcess(PKPROCESS Process,
     OldIrql = KeAcquireDispatcherDatabaseLock();
     
     /* Get Old State */
-    OldState = Process->DispatcherHeader.SignalState;
+    OldState = Process->Header.SignalState;
     
     /* Signal the Process */
-    Process->DispatcherHeader.SignalState = TRUE;
-    if ((OldState == 0) && IsListEmpty(&Process->DispatcherHeader.WaitListHead) != TRUE) {
+    Process->Header.SignalState = TRUE;
+    if ((OldState == 0) && IsListEmpty(&Process->Header.WaitListHead) != TRUE) {
         
         /* Satisfy waits */
         KiWaitTest((PVOID)Process, Increment);
@@ -198,19 +198,12 @@ KiAttachProcess(PKTHREAD Thread, PKPROCESS Process, KIRQL ApcLock, PRKAPC_STATE 
 
 VOID
 STDCALL
-KiSwapProcess(PKPROCESS NewProcess, PKPROCESS OldProcess) 
+KiSwapProcess(PKPROCESS NewProcess, 
+              PKPROCESS OldProcess) 
 {
-    //PKPCR Pcr = KeGetCurrentKpcr();
-
-    /* Do they have an LDT? */
-    if ((NewProcess->LdtDescriptor) || (OldProcess->LdtDescriptor)) {
-        
-        /* FIXME : SWitch GDT/IDT */
-    }
+    /* FIXME: Write this in ASM. Much easier */
     DPRINT("Switching CR3 to: %x\n", NewProcess->DirectoryTableBase.u.LowPart);
     Ke386SetPageTableDirectory(NewProcess->DirectoryTableBase.u.LowPart);
-    
-    /* FIXME: Set IopmOffset in TSS */
 }
 
 /*

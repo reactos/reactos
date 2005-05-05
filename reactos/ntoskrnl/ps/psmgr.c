@@ -182,14 +182,12 @@ PsInitProcessManagment(VOID)
    
    PsIdleProcess->Pcb.Affinity = 0xFFFFFFFF;
    PsIdleProcess->Pcb.IopmOffset = 0xffff;
-   PsIdleProcess->Pcb.LdtDescriptor[0] = 0;
-   PsIdleProcess->Pcb.LdtDescriptor[1] = 0;
    PsIdleProcess->Pcb.BasePriority = PROCESS_PRIO_IDLE;
-   PsIdleProcess->Pcb.ThreadQuantum = 6;
+   PsIdleProcess->Pcb.QuantumReset = 6;
    InitializeListHead(&PsIdleProcess->Pcb.ThreadListHead);
    InitializeListHead(&PsIdleProcess->ThreadListHead);
    InitializeListHead(&PsIdleProcess->ProcessListEntry);
-   KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.DispatcherHeader,
+   KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.Header,
 				ProcessObject,
 				sizeof(EPROCESS),
 				FALSE);
@@ -217,14 +215,13 @@ PsInitProcessManagment(VOID)
      }
    
    /* System threads may run on any processor. */
+   RtlZeroMemory(PsInitialSystemProcess, sizeof(EPROCESS));
    PsInitialSystemProcess->Pcb.Affinity = 0xFFFFFFFF;
    PsInitialSystemProcess->Pcb.IopmOffset = 0xffff;
-   PsInitialSystemProcess->Pcb.LdtDescriptor[0] = 0;
-   PsInitialSystemProcess->Pcb.LdtDescriptor[1] = 0;
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
-   PsInitialSystemProcess->Pcb.ThreadQuantum = 6;
+   PsInitialSystemProcess->Pcb.QuantumReset = 6;
    InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);
-   KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.DispatcherHeader,
+   KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.Header,
 				ProcessObject,
 				sizeof(EPROCESS),
 				FALSE);
@@ -234,8 +231,6 @@ PsInitProcessManagment(VOID)
 			    &PsInitialSystemProcess->AddressSpace);
    
    KeInitializeEvent(&PsInitialSystemProcess->LockEvent, SynchronizationEvent, FALSE);
-   PsInitialSystemProcess->LockCount = 0;
-   PsInitialSystemProcess->LockOwner = NULL;
 
 #if defined(__GNUC__)
    KProcess->DirectoryTableBase = 

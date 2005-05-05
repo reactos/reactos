@@ -272,7 +272,7 @@ KiUnblockThread(PKTHREAD Thread,
             
         } else {
             
-            Thread->Quantum = Thread->ApcState.Process->ThreadQuantum;
+            Thread->Quantum = Thread->QuantumReset;
         }
      
         if (WaitStatus != NULL) {
@@ -771,7 +771,8 @@ KeInitializeThread(PKPROCESS Process,
     /* Setup scheduler Fields based on Parent */
     DPRINT("Thread context created, setting Scheduler Data\n");
     Thread->BasePriority = Process->BasePriority;
-    Thread->Quantum = Process->ThreadQuantum;
+    Thread->Quantum = Process->QuantumReset;
+    Thread->QuantumReset = Process->QuantumReset;
     Thread->Affinity = Process->Affinity;
     Thread->Priority = Process->BasePriority;
     Thread->UserAffinity = Process->Affinity;

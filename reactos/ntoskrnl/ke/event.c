@@ -259,7 +259,7 @@ KeSetEventBoostPriority(IN PKEVENT Event,
         if ARGUMENT_PRESENT(Thread) *Thread = WaitingThread;
 
         /* Reset the Quantum and Unwait the Thread */
-        WaitingThread->Quantum = WaitingThread->ApcState.Process->ThreadQuantum;
+        WaitingThread->Quantum = WaitingThread->QuantumReset;
         KiAbortWaitThread(WaitingThread, STATUS_SUCCESS, EVENT_INCREMENT);
     }
    

@@ -444,8 +444,9 @@ KiQuantumEnd(VOID)
     
     /* Check if Quantum expired */
     if (CurrentThread->Quantum <= 0) {
-        /* Set the new Quantum */
-        CurrentThread->Quantum = Process->ThreadQuantum;
+        
+        /* Reset the new Quantum */
+        CurrentThread->Quantum = CurrentThread->QuantumReset;
         
         /* Calculate new priority */
         OldPriority = CurrentThread->Priority;

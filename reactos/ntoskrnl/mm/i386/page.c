@@ -203,7 +203,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 
    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
 
-   LdtDescriptor = (PUSHORT) &Process->Pcb.LdtDescriptor[0];
+   LdtDescriptor = (PUSHORT) &Process->Pcb.LdtDescriptor;
    LdtBase = LdtDescriptor[1] |
              ((LdtDescriptor[2] & 0xff) << 16) |
              ((LdtDescriptor[3] & ~0xff) << 16);
