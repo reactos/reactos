@@ -32,7 +32,8 @@ FreeCircularBuffer(
 {
 	DPRINT("Serial: FreeCircularBuffer(pBuffer %p)\n", pBuffer);
 	ASSERT(pBuffer);
-	ExFreePoolWithTag(pBuffer->Buffer, SERIAL_TAG);
+	if (pBuffer->Buffer != NULL)
+		ExFreePoolWithTag(pBuffer->Buffer, SERIAL_TAG);
 	return STATUS_SUCCESS;
 }
 
