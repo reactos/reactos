@@ -224,15 +224,13 @@ OpenThreadToken (HANDLE ThreadHandle,
  * @implemented
  */
 BOOL STDCALL
-SetThreadToken (PHANDLE ThreadHandle,
-                HANDLE TokenHandle)
+SetThreadToken (IN PHANDLE ThreadHandle  OPTIONAL,
+                IN HANDLE TokenHandle)
 {
   NTSTATUS Status;
   HANDLE hThread;
 
-  hThread = NtCurrentThread();
-  if (ThreadHandle != NULL)
-    hThread = ThreadHandle;
+  hThread = ((ThreadHandle != NULL) ? *ThreadHandle : NtCurrentThread());
 
   Status = NtSetInformationThread (hThread,
 				   ThreadImpersonationToken,
@@ -252,12 +250,12 @@ SetThreadToken (PHANDLE ThreadHandle,
  * @implemented
  */
 BOOL STDCALL
-DuplicateTokenEx (HANDLE ExistingTokenHandle,
-                  DWORD  dwDesiredAccess,
-                  LPSECURITY_ATTRIBUTES lpTokenAttributes,
-                  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-                  TOKEN_TYPE TokenType,
-                  PHANDLE DuplicateTokenHandle)
+DuplicateTokenEx (IN HANDLE ExistingTokenHandle,
+                  IN DWORD dwDesiredAccess,
+                  IN LPSECURITY_ATTRIBUTES lpTokenAttributes  OPTIONAL,
+                  IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+                  IN TOKEN_TYPE TokenType,
+                  OUT PHANDLE DuplicateTokenHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   HANDLE NewToken;
@@ -269,20 +267,29 @@ DuplicateTokenEx (HANDLE ExistingTokenHandle,
   Sqos.ContextTrackingMode = 0;
   Sqos.EffectiveOnly = FALSE;
 
-  InitializeObjectAttributes(
-      &ObjectAttributes,
-      NULL,
-      lpTokenAttributes->bInheritHandle ? OBJ_INHERIT : 0,
-      NULL,
-      lpTokenAttributes->lpSecurityDescriptor
-      );
- 
-  ObjectAttributes.SecurityQualityOfService = &Sqos;
+  if (lpTokenAttributes != NULL)
+    {
+      InitializeObjectAttributes(&ObjectAttributes,
+                                 NULL,
+                                 lpTokenAttributes->bInheritHandle ? OBJ_INHERIT : 0,
+                                 NULL,
+                                 lpTokenAttributes->lpSecurityDescriptor);
+    }
+  else
+    {
+      InitializeObjectAttributes(&ObjectAttributes,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+    }
 
+  ObjectAttributes.SecurityQualityOfService = &Sqos;
+  
   Status = NtDuplicateToken (ExistingTokenHandle,
 			     dwDesiredAccess,
 			     &ObjectAttributes,
-              Sqos.EffectiveOnly, /* why both here _and_ in Sqos? */
+			     FALSE,
 			     TokenType,
 			     &NewToken);
   if (!NT_SUCCESS(Status))
@@ -299,12 +306,12 @@ DuplicateTokenEx (HANDLE ExistingTokenHandle,
  * @implemented
  */
 BOOL STDCALL
-DuplicateToken (HANDLE ExistingTokenHandle,
-                SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-                PHANDLE DuplicateTokenHandle)
+DuplicateToken (IN HANDLE ExistingTokenHandle,
+                IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+                OUT PHANDLE DuplicateTokenHandle)
 {
   return DuplicateTokenEx (ExistingTokenHandle,
-                           TOKEN_DUPLICATE | TOKEN_IMPERSONATE | TOKEN_QUERY,
+                           TOKEN_IMPERSONATE | TOKEN_QUERY,
                            NULL,
                            ImpersonationLevel,
                            TokenImpersonation,
