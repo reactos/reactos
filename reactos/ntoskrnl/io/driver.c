@@ -1311,7 +1311,7 @@ IopLoadDriver(PSERVICE Service)
    IopBootLog(&Service->ImagePath, NT_SUCCESS(Status) ? TRUE : FALSE);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("NtLoadDriver() failed (Status %lx)\n", Status);
+      DPRINT("IopLoadDriver() failed (Status %lx)\n", Status);
 #if 0
       if (Service->ErrorControl == 1)
       {
@@ -1783,14 +1783,18 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
    UNICODE_STRING ImagePath;
    UNICODE_STRING ServiceName;
+   UNICODE_STRING CapturedDriverServiceName;
+   KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
    ULONG Type;
    PDEVICE_NODE DeviceNode;
    PMODULE_OBJECT ModuleObject;
    PDRIVER_OBJECT DriverObject;
-   LPWSTR Start;
-
-   DPRINT("NtLoadDriver('%wZ')\n", DriverServiceName);
+   WCHAR *cur;
+   
+   PAGED_CODE();
+   
+   PreviousMode = KeGetPreviousMode();
 
    /*
     * Check security privileges
@@ -1798,26 +1802,46 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 
 /* FIXME: Uncomment when privileges will be correctly implemented. */
 #if 0
-   if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, KeGetPreviousMode()))
+   if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
    {
       DPRINT("Privilege not held\n");
       return STATUS_PRIVILEGE_NOT_HELD;
    }
 #endif
 
+   Status = RtlCaptureUnicodeString(&CapturedDriverServiceName,
+                                    PreviousMode,
+                                    PagedPool,
+                                    FALSE,
+                                    DriverServiceName);
+   if (!NT_SUCCESS(Status))
+   {
+      return Status;
+   }
+
+   DPRINT("NtLoadDriver('%wZ')\n", &CapturedDriverServiceName);
+
    RtlInitUnicodeString(&ImagePath, NULL);
 
    /*
     * Get the service name from the registry key name.
     */
+   ASSERT(CapturedDriverServiceName.Length >= sizeof(WCHAR));
 
-   Start = wcsrchr(DriverServiceName->Buffer, L'\\');
-   if (Start == NULL)
-      Start = DriverServiceName->Buffer;
-   else
-      Start++;
-
-   RtlInitUnicodeString(&ServiceName, Start);
+   ServiceName = CapturedDriverServiceName;
+   cur = CapturedDriverServiceName.Buffer + (CapturedDriverServiceName.Length / sizeof(WCHAR)) - 1;
+   while (CapturedDriverServiceName.Buffer != cur)
+   {
+      if(*cur == L'\\')
+      {
+         ServiceName.Buffer = cur + 1;
+         ServiceName.Length = CapturedDriverServiceName.Length -
+                              (USHORT)((ULONG_PTR)ServiceName.Buffer -
+                                       (ULONG_PTR)CapturedDriverServiceName.Buffer);
+         break;
+      }
+      cur--;
+   }
 
    /*
     * Get service type.
@@ -1836,13 +1860,13 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    QueryTable[1].EntryContext = &ImagePath;
 
    Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-      DriverServiceName->Buffer, QueryTable, NULL, NULL);
+      CapturedDriverServiceName.Buffer, QueryTable, NULL, NULL);
 
    if (!NT_SUCCESS(Status))
    {
       DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
       RtlFreeUnicodeString(&ImagePath);
-      return Status;
+      goto ReleaseCapturedString;
    }
 
    /*
@@ -1854,10 +1878,10 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IopNormalizeImagePath() failed (Status %x)\n", Status);
-      return Status;
+      goto ReleaseCapturedString;
    }
 
-   DPRINT("FullImagePath: '%S'\n", ImagePath.Buffer);
+   DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
    DPRINT("Type: %lx\n", Type);
 
    /*
@@ -1868,7 +1892,8 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    if (ModuleObject != NULL)
    {
       DPRINT("Image already loaded\n");
-      return STATUS_IMAGE_ALREADY_LOADED;
+      Status = STATUS_IMAGE_ALREADY_LOADED;
+      goto ReleaseCapturedString;
    }
 
    /*
@@ -1881,7 +1906,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IopCreateDeviceNode() failed (Status %lx)\n", Status);
-      return Status;
+      goto ReleaseCapturedString;
    }
 
    /*
@@ -1894,19 +1919,14 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    {
       DPRINT("LdrLoadModule() failed (Status %lx)\n", Status);
       IopFreeDeviceNode(DeviceNode);
-      return Status;
+      goto ReleaseCapturedString;
    }
 
    /*
     * Set a service name for the device node
     */
 
-   Start = wcsrchr(DriverServiceName->Buffer, L'\\');
-   if (Start == NULL)
-      Start = DriverServiceName->Buffer;
-   else
-      Start++;
-   RtlpCreateUnicodeString(&DeviceNode->ServiceName, Start, NonPagedPool);
+   RtlpCreateUnicodeString(&DeviceNode->ServiceName, ServiceName.Buffer, NonPagedPool);
 
    /*
     * Initialize the driver module
@@ -1925,10 +1945,15 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
       DPRINT("IopInitializeDriver() failed (Status %lx)\n", Status);
       LdrUnloadModule(ModuleObject);
       IopFreeDeviceNode(DeviceNode);
-      return Status;
+      goto ReleaseCapturedString;
    }
 
    IopInitializeDevice(DeviceNode, DriverObject);
+   
+ReleaseCapturedString:
+   RtlReleaseCapturedUnicodeString(&CapturedDriverServiceName,
+                                   PreviousMode,
+                                   FALSE);
 
    return Status;
 }

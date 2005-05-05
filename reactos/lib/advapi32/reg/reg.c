@@ -3003,14 +3003,21 @@ RegSetValueExA (HKEY hKey,
       pValueName = NULL;
     }
 
-  if ((dwType == REG_SZ) ||
-      (dwType == REG_MULTI_SZ) ||
-      (dwType == REG_EXPAND_SZ))
+  if (((dwType == REG_SZ) ||
+       (dwType == REG_MULTI_SZ) ||
+       (dwType == REG_EXPAND_SZ)) &&
+      (cbData != 0))
     {
+      /* NT adds one if the caller forgot the NULL-termination character */
+      if (lpData[cbData - 1] != '\0')
+      {
+         cbData++;
+      }
+      
       RtlInitAnsiString (&AnsiString,
 			 NULL);
       AnsiString.Buffer = (PSTR)lpData;
-      AnsiString.Length = cbData;
+      AnsiString.Length = cbData - 1;
       AnsiString.MaximumLength = cbData;
       RtlAnsiStringToUnicodeString (&Data,
 				    &AnsiString,
@@ -3088,6 +3095,15 @@ RegSetValueExW (HKEY hKey,
       RtlInitUnicodeString (&ValueName, L"");
     }
   pValueName = &ValueName;
+  
+  if (((dwType == REG_SZ) ||
+       (dwType == REG_MULTI_SZ) ||
+       (dwType == REG_EXPAND_SZ)) &&
+      (cbData != 0) && (*(((PWCHAR)lpData) + (cbData / sizeof(WCHAR)) - 1) != L'\0'))
+    {
+      /* NT adds one if the caller forgot the NULL-termination character */
+      cbData += sizeof(WCHAR);
+    }
 
   Status = NtSetValueKey (KeyHandle,
 			  pValueName,
@@ -3118,51 +3134,41 @@ RegSetValueA (HKEY hKey,
 	      LPCSTR lpData,
 	      DWORD cbData)
 {
-  WCHAR SubKeyNameBuffer[MAX_PATH+1];
-  UNICODE_STRING SubKeyName;
-  UNICODE_STRING Data;
-  ANSI_STRING AnsiString;
-  LONG DataSize;
-  LONG ErrorCode;
+  LONG ret;
+  HKEY hSubKey;
+  
+  if (dwType != REG_SZ)
+  {
+     return ERROR_INVALID_PARAMETER;
+  }
+  
+  if (lpSubKey != NULL && lpSubKey[0] != '\0')
+  {
+     ret = RegCreateKeyA(hKey,
+                         lpSubKey,
+                         &hSubKey);
 
-  if (lpData == NULL)
-    {
-      SetLastError (ERROR_INVALID_PARAMETER);
-      return ERROR_INVALID_PARAMETER;
-    }
+     if (ret != ERROR_SUCCESS)
+     {
+        return ret;
+     }
+  }
+  else
+     hSubKey = hKey;
+  
+  ret = RegSetValueExA(hSubKey,
+                       NULL,
+                       0,
+                       REG_SZ,
+                       lpData,
+                       strlen(lpData) + 1);
+  
+  if (hSubKey != hKey)
+  {
+     RegCloseKey(hSubKey);
+  }
 
-  RtlInitUnicodeString (&SubKeyName, NULL);
-  RtlInitUnicodeString (&Data, NULL);
-  if (lpSubKey != NULL && (strlen(lpSubKey) != 0))
-    {
-      RtlInitAnsiString (&AnsiString, (LPSTR)lpSubKey);
-      SubKeyName.Buffer = &SubKeyNameBuffer[0];
-      SubKeyName.MaximumLength = sizeof(SubKeyNameBuffer);
-      RtlAnsiStringToUnicodeString (&SubKeyName, &AnsiString, FALSE);
-    }
-
-  DataSize = cbData * sizeof(WCHAR);
-  Data.MaximumLength = DataSize;
-  Data.Buffer = RtlAllocateHeap (ProcessHeap,
-				 0,
-				 DataSize);
-  if (Data.Buffer == NULL)
-    {
-      SetLastError (ERROR_OUTOFMEMORY);
-      return ERROR_OUTOFMEMORY;
-    }
-
-  ErrorCode = RegSetValueW (hKey,
-			    (LPCWSTR)SubKeyName.Buffer,
-			    dwType,
-			    Data.Buffer,
-			    DataSize);
-
-  RtlFreeHeap (ProcessHeap,
-	       0,
-	       Data.Buffer);
-
-  return ErrorCode;
+  return ret;
 }
 
 
