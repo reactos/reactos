@@ -161,14 +161,14 @@ HRESULT WINAPI SHCoCreateInstance(
 
 	TRACE("WithoutCom=%u FromShell=%u\n", bLoadWithoutCOM, bLoadFromShell32);
 
-	/* now we create a instance */
+	/* now we create an instance */
 	if (bLoadFromShell32) {
 	    if (! SUCCEEDED(SHELL32_DllGetClassObject(myclsid, &IID_IClassFactory,(LPVOID*)&pcf))) {
 	        ERR("LoadFromShell failed for CLSID=%s\n", shdebugstr_guid(myclsid));
 	    }
 	} else if (bLoadWithoutCOM) {
 
-	    /* load a external dll without ole32 */
+	    /* load an external dll without ole32 */
 	    HANDLE hLibrary;
 	    typedef HRESULT (CALLBACK *DllGetClassObjectFunc)(REFCLSID clsid, REFIID iid, LPVOID *ppv);
 	    DllGetClassObjectFunc DllGetClassObject;
@@ -189,7 +189,7 @@ HRESULT WINAPI SHCoCreateInstance(
 
 	} else {
 
-	    /* load a external dll in the usual way */
+	    /* load an external dll in the usual way */
 	    hres = CoCreateInstance(myclsid, pUnkOuter, CLSCTX_INPROC_SERVER, refiid, ppv);
 	    goto end;
 	}
@@ -212,7 +212,7 @@ end:
 }
 
 /*************************************************************************
- * DllGetClassObject   [SHELL32.128]
+ * DllGetClassObject   [SHELL32.@]
  */
 HRESULT WINAPI SHELL32_DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
@@ -317,7 +317,7 @@ static LPVOID WINAPI IShellMalloc_fnAlloc(LPMALLOC iface, DWORD cb)
 {
         LPVOID addr;
 
-	addr = (LPVOID) LocalAlloc(GMEM_ZEROINIT, cb);
+	addr = (LPVOID) LocalAlloc(LMEM_ZEROINIT, cb);
         TRACE("(%p,%ld);\n",addr,cb);
         return addr;
 }
@@ -331,14 +331,14 @@ static LPVOID WINAPI IShellMalloc_fnRealloc(LPMALLOC iface, LPVOID pv, DWORD cb)
 
 	if (pv) {
 		if (cb) {
-			addr = (LPVOID) LocalReAlloc((HANDLE) pv, cb, GMEM_ZEROINIT | GMEM_MOVEABLE);
+			addr = (LPVOID) LocalReAlloc((HANDLE) pv, cb, LMEM_ZEROINIT | LMEM_MOVEABLE);
 		} else {
 			LocalFree((HANDLE) pv);
 			addr = NULL;
 		}
 	} else {
 		if (cb) {
-			addr = (LPVOID) LocalAlloc(GMEM_ZEROINIT, cb);
+			addr = (LPVOID) LocalAlloc(LMEM_ZEROINIT, cb);
 		} else {
 			addr = NULL;
 		}
@@ -492,9 +492,9 @@ HRESULT WINAPI SHGetDesktopFolder(IShellFolder **psf)
  * SHCreateDefClassObject
  *
  * NOTES
- *  helper function for dll's without a own classfactory
- *  a generic classfactory is returned
- *  when the CreateInstance of the cf is called the callback is executed
+ *  Helper function for dlls without their own classfactory.
+ *  A generic classfactory is returned.
+ *  When the CreateInstance of the cf is called the callback is executed.
  */
 
 typedef struct
@@ -517,7 +517,7 @@ IClassFactory * IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll,
 {
 	IDefClFImpl* lpclf;
 
-	lpclf = (IDefClFImpl*)HeapAlloc(GetProcessHeap(),0,sizeof(IDefClFImpl));
+	lpclf = HeapAlloc(GetProcessHeap(),0,sizeof(IDefClFImpl));
 	lpclf->ref = 1;
 	lpclf->lpVtbl = &dclfvt;
 	lpclf->lpfnCI = lpfnCI;
@@ -645,7 +645,7 @@ HRESULT WINAPI SHCreateDefClassObject(
 }
 
 /*************************************************************************
- *  DragAcceptFiles		[SHELL32.54]
+ *  DragAcceptFiles		[SHELL32.@]
  */
 void WINAPI DragAcceptFiles(HWND hWnd, BOOL b)
 {
@@ -661,7 +661,7 @@ void WINAPI DragAcceptFiles(HWND hWnd, BOOL b)
 }
 
 /*************************************************************************
- * DragFinish		[SHELL32.80]
+ * DragFinish		[SHELL32.@]
  */
 void WINAPI DragFinish(HDROP h)
 {
@@ -670,7 +670,7 @@ void WINAPI DragFinish(HDROP h)
 }
 
 /*************************************************************************
- * DragQueryPoint		[SHELL32.135]
+ * DragQueryPoint		[SHELL32.@]
  */
 BOOL WINAPI DragQueryPoint(HDROP hDrop, POINT *p)
 {
@@ -689,8 +689,8 @@ BOOL WINAPI DragQueryPoint(HDROP hDrop, POINT *p)
 }
 
 /*************************************************************************
- *  DragQueryFile 		[SHELL32.81]
- *  DragQueryFileA		[SHELL32.82]
+ *  DragQueryFile 		[SHELL32.@]
+ *  DragQueryFileA		[SHELL32.@]
  */
 UINT WINAPI DragQueryFileA(
 	HDROP hDrop,
@@ -712,7 +712,7 @@ UINT WINAPI DragQueryFileA(
             LPWSTR lpszFileW = NULL;
 
             if(lpszFile) {
-                lpszFileW = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, lLength*sizeof(WCHAR));
+                lpszFileW = HeapAlloc(GetProcessHeap(), 0, lLength*sizeof(WCHAR));
                 if(lpszFileW == NULL) {
                     goto end;
                 }
@@ -747,7 +747,7 @@ end:
 }
 
 /*************************************************************************
- *  DragQueryFileW		[SHELL32.133]
+ *  DragQueryFileW		[SHELL32.@]
  */
 UINT WINAPI DragQueryFileW(
 	HDROP hDrop,
@@ -769,7 +769,7 @@ UINT WINAPI DragQueryFileW(
             LPSTR lpszFileA = NULL;
 
             if(lpszwFile) {
-                lpszFileA = (LPSTR) HeapAlloc(GetProcessHeap(), 0, lLength);
+                lpszFileA = HeapAlloc(GetProcessHeap(), 0, lLength);
                 if(lpszFileA == NULL) {
                     goto end;
                 }

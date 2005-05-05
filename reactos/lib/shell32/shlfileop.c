@@ -719,6 +719,8 @@ LPWSTR SHFileStrCpyCatW(LPWSTR pTo, LPCWSTR pFrom, LPCWSTR pCatStr)
 	    lstrcpyW(&pTo[i_len+1], pCatStr);
 	  }
 	  pToFile = StrRChrW(pTo,NULL,'\\');
+	  if (!pToFile)
+	    pToFile = pTo;
 	  /* termination of the new string-group */
 	  pTo[(lstrlenW(pTo)) + 1] = '\0';
 	}
@@ -931,9 +933,9 @@ static int shfileops_check_flags(SHFILEOPSTRUCTW nFileOp)
     if (OFl)
     {
         if (OFl & (~(FOF_CONFIRMMOUSE | FOF_SILENT | FOF_RENAMEONCOLLISION |
-                        FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_NOCOPYSECURITYATTRIBS)))
+                        FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_NOCOPYSECURITYATTRIBS | FOF_ALLOWUNDO)))
         {
-            TRACE("%s level=%ld lpFileOp->fFlags=0x%x not implemented, Aborted=TRUE, stub\n",
+            FIXME("%s level=%ld lpFileOp->fFlags=0x%x not implemented, Aborted=TRUE, stub\n",
                     debug_shfileops_action(FuncSwitch), level, OFl);
             return 0x403; /* 1027, we need an extension to shlfileop */
         }

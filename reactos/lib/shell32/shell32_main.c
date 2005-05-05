@@ -44,6 +44,7 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "version.h"
+#include "shresdef.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -501,7 +502,7 @@ DWORD WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
             lstrcpynW(sTemp, szFullPath, MAX_PATH);
 
             if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                psfi->iIcon = 2;
+                psfi->iIcon = SIC_GetIconIndex(swShell32Name, -IDI_SHELL_FOLDER);
             else
             {
                 static const WCHAR p1W[] = {'%','1',0};

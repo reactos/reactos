@@ -172,7 +172,7 @@ typedef void (CALLBACK *PFNSHGETSETTINGSPROC)(LPSHELLFLAGSTATE lpsfs, DWORD dwMa
  */
 IShellView * IShellView_Constructor( IShellFolder * pFolder)
 {	IShellViewImpl * sv;
-	sv=(IShellViewImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IShellViewImpl));
+	sv=HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IShellViewImpl));
 	sv->ref=1;
 	sv->lpVtbl=&svvt;
 	sv->lpvtblOleCommandTarget=&ctvt;
@@ -217,7 +217,7 @@ static HRESULT OnDefaultCommand(IShellViewImpl * This)
 	{
 	  TRACE("ICommDlgBrowser::OnDefaultCommand\n");
 	  ret = ICommDlgBrowser_OnDefaultCommand(This->pCommDlgBrowser, (IShellView*)This);
-	  TRACE("--\n");
+	  TRACE("-- returns %08lx\n", ret);
 	}
 	return ret;
 }
@@ -962,7 +962,7 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 		  if (uCommand==FCIDM_SHVIEW_OPEN && IsInCommDlg(This))
 		  {
 		    TRACE("-- dlg: OnDefaultCommand\n");
-		    if (FAILED(OnDefaultCommand(This)))
+		    if (OnDefaultCommand(This) != S_OK)
 		    {
 		      ShellView_OpenSelectedItems(This);
 		    }

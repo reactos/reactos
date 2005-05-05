@@ -71,7 +71,7 @@ HRESULT WINAPI IDropTargetHelper_Constructor (IUnknown * pUnkOuter, REFIID riid,
     if (pUnkOuter)
 	return CLASS_E_NOAGGREGATION;
 
-    dth = (IDropTargetHelperImpl *) LocalAlloc (GMEM_ZEROINIT, sizeof (IDropTargetHelperImpl));
+    dth = (IDropTargetHelperImpl *) LocalAlloc (LMEM_ZEROINIT, sizeof (IDropTargetHelperImpl));
     if (!dth) return E_OUTOFMEMORY;
 
     dth->ref = 0;

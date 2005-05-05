@@ -193,7 +193,7 @@ static BOOL DeleteList(
 
 IEnumIDList * IEnumIDList_Constructor(void)
 {
-    IEnumIDListImpl *lpeidl = (IEnumIDListImpl*)HeapAlloc(GetProcessHeap(),
+    IEnumIDListImpl *lpeidl = HeapAlloc(GetProcessHeap(),
      HEAP_ZERO_MEMORY, sizeof(IEnumIDListImpl));
 
     if (lpeidl)

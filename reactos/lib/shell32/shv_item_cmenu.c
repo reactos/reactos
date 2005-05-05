@@ -82,7 +82,7 @@ IContextMenu2 *ISvItemCm_Constructor(LPSHELLFOLDER pSFParent, LPCITEMIDLIST pidl
 {	ItemCmImpl* cm;
 	UINT  u;
 
-	cm = (ItemCmImpl*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(ItemCmImpl));
+	cm = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(ItemCmImpl));
 	cm->lpVtbl = &cmvt;
 	cm->ref = 1;
 	cm->pidl = ILClone(pidl);

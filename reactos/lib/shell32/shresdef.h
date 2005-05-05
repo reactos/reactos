@@ -89,4 +89,30 @@
 #define IDD_TITLE		0x3742
 #define IDD_TREEVIEW		0x3741
 
+#define IDI_SHELL_DOCUMENT           1
+#define IDI_SHELL_FOLDER             4
+#define IDI_SHELL_FOLDER_OPEN        5
+#define IDI_SHELL_5_12_FLOPPY        6
+#define IDI_SHELL_3_14_FLOPPY        7
+#define IDI_SHELL_FLOPPY             8
+#define IDI_SHELL_DRIVE              9
+#define IDI_SHELL_NETDRIVE          10
+#define IDI_SHELL_NETDRIVE2         11
+#define IDI_SHELL_CDROM             12
+#define IDI_SHELL_RAMDISK           13
+#define IDI_SHELL_ENTIRE_NETWORK    14
+#define IDI_SHELL_NETWORK           15
+#define IDI_SHELL_MY_COMPUTER       16
+#define IDI_SHELL_PRINTER           17
+#define IDI_SHELL_MY_NETWORK_PLACES 18
+#define IDI_SHELL_COMPUTERS_NEAR_ME 19
+#define IDI_SHELL_SEARCH            23
+#define IDI_SHELL_HELP              24
+#define IDI_SHELL_EMPTY_RECYCLE_BIN 32
+#define IDI_SHELL_FULL_RECYCLE_BIN  33
+#define IDI_SHELL_DESKTOP           35
+#define IDI_SHELL_CONTROL_PANEL     36
+#define IDI_SHELL_PRINTERS_FOLDER   38
+#define IDI_SHELL_FONTS_FOLDER      39
+
 #endif

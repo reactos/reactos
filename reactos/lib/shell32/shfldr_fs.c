@@ -104,7 +104,7 @@ static struct ISFHelperVtbl shvt;
 #define _ICOM_THIS_From_ISFHelper(class, name) class* This = (class*)(((char*)name)-_ISFHelper_Offset);
 
 /*
-  converts This to a interface pointer
+  converts This to an interface pointer
 */
 #define _IUnknown_(This)        (IUnknown*)&(This->lpVtbl)
 #define _IShellFolder_(This)    (IShellFolder*)&(This->lpvtblShellFolder)
@@ -233,7 +233,7 @@ IFSFolder_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
 
     if (pUnkOuter && !IsEqualIID (riid, &IID_IUnknown))
         return CLASS_E_NOAGGREGATION;
-    sf = (IGenericSFImpl *) LocalAlloc (GMEM_ZEROINIT, sizeof (IGenericSFImpl));
+    sf = (IGenericSFImpl *) LocalAlloc (LMEM_ZEROINIT, sizeof (IGenericSFImpl));
     if (!sf)
         return E_OUTOFMEMORY;
 
@@ -686,45 +686,46 @@ static const WCHAR HideFileExtW[] = { 'H','i','d','e','F','i','l','e','E','x',
 static const WCHAR NeverShowExtW[] = { 'N','e','v','e','r','S','h','o','w','E',
  'x','t',0 };
 
+static BOOL hide_extension(LPWSTR szPath)
+{
+    HKEY hKey;
+    DWORD dwData;
+    DWORD dwDataSize = sizeof (DWORD);
+    BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
+    
+    if (!RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0)) {
+        if (!RegQueryValueExW(hKey, HideFileExtW, 0, 0, (LPBYTE) &dwData, &dwDataSize))
+            doHide = dwData;
+        RegCloseKey (hKey);
+    }
+
+    if (!doHide) {
+        LPWSTR ext = PathFindExtensionW(szPath);
+
+        if (*ext != '\0') {
+            WCHAR classname[MAX_PATH];
+            LONG classlen = sizeof(classname);
+
+            if (!RegQueryValueW(HKEY_CLASSES_ROOT, ext, classname, &classlen))
+                if (!RegOpenKeyW(HKEY_CLASSES_ROOT, classname, &hKey)) {
+                    if (!RegQueryValueExW(hKey, NeverShowExtW, 0, NULL, NULL, NULL))
+                        doHide = TRUE;
+                    RegCloseKey(hKey);
+                }
+        }
+    }
+    return doHide;
+}
+    
 void SHELL_FS_ProcessDisplayFilename(LPSTR szPath, DWORD dwFlags)
 {
+    WCHAR pathW[MAX_PATH];
+
     /*FIXME: MSDN also mentions SHGDN_FOREDITING which is not yet handled. */
     if (!(dwFlags & SHGDN_FORPARSING) &&
         ((dwFlags & SHGDN_INFOLDER) || (dwFlags == SHGDN_NORMAL))) {
-        HKEY hKey;
-        DWORD dwData;
-        DWORD dwDataSize = sizeof (DWORD);
-        BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
-
-        if (!RegCreateKeyExW (HKEY_CURRENT_USER, AdvancedW,
-         0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0)) {
-            if (!RegQueryValueExW (hKey, HideFileExtW, 0, 0, (LPBYTE) &dwData,
-             &dwDataSize))
-                doHide = dwData;
-
-            RegCloseKey (hKey);
-        }
-
-        if (!doHide) {
-            LPSTR ext = PathFindExtensionA(szPath);
-
-            if (ext) {
-                char classname[MAX_PATH];
-                LONG classlen = MAX_PATH;
-
-                if (!RegQueryValueA(HKEY_CLASSES_ROOT, ext, classname,
-                 &classlen))
-                    if (!RegOpenKeyA(HKEY_CLASSES_ROOT, classname, &hKey)) {
-                        if (!RegQueryValueExW(hKey, NeverShowExtW, 0, NULL,
-                         NULL, NULL))
-                            doHide = TRUE;
-
-                        RegCloseKey(hKey);
-                    }
-            }
-        }
-
-        if (doHide && szPath[0] != '.')
+        MultiByteToWideChar(CP_ACP, 0, szPath, -1, pathW, MAX_PATH);
+        if (hide_extension(pathW) && szPath[0] != '.')
             PathRemoveExtensionA (szPath);
     }
 }
@@ -828,22 +829,30 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface,
      debugstr_w (lpName), dwFlags, pPidlOut);
 
     /* build source path */
-    if (dwFlags & SHGDN_INFOLDER) {
-        MultiByteToWideChar(CP_ACP, 0, This->sPathTarget, -1, szSrc, MAX_PATH);
-        ptr = PathAddBackslashW (szSrc);
-        if (ptr)
-            _ILSimpleGetTextW (pidl, ptr, MAX_PATH - (ptr - szSrc));
-    } else {
-        /* FIXME: Can this work with a simple PIDL? */
-        SHGetPathFromIDListW (pidl, szSrc);
-    }
+    MultiByteToWideChar(CP_ACP, 0, This->sPathTarget, -1, szSrc, MAX_PATH);
+    ptr = PathAddBackslashW (szSrc);
+    if (ptr)
+        _ILSimpleGetTextW (pidl, ptr, MAX_PATH - (ptr - szSrc));
 
     /* build destination path */
-    MultiByteToWideChar(CP_ACP, 0, This->sPathTarget, -1, szDest, MAX_PATH);
-    ptr = PathAddBackslashW (szDest);
-    if (ptr)
-        lstrcpynW(ptr, lpName, MAX_PATH - (ptr - szDest));
+    if (dwFlags == SHGDN_NORMAL || dwFlags & SHGDN_INFOLDER) {
+        MultiByteToWideChar(CP_ACP, 0, This->sPathTarget, -1, szDest, MAX_PATH);
+        ptr = PathAddBackslashW (szDest);
+        if (ptr)
+            lstrcpynW(ptr, lpName, MAX_PATH - (ptr - szDest));
+    } else
+        lstrcpynW(szDest, lpName, MAX_PATH);
+
+    if(!(dwFlags & SHGDN_FORPARSING) && hide_extension(szSrc)) {
+        WCHAR *ext = PathFindExtensionW(szSrc);
+        if(*ext != '\0') {
+            INT len = strlenW(szDest);
+            lstrcpynW(szDest + len, ext, MAX_PATH - len);
+        }
+    }
+    
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
+
     if (MoveFileW (szSrc, szDest)) {
         HRESULT hr = S_OK;
 

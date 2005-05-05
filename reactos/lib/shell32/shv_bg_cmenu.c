@@ -59,7 +59,7 @@ IContextMenu2 *ISvBgCm_Constructor(IShellFolder* pSFParent, BOOL bDesktop)
 {
 	BgCmImpl* cm;
 
-	cm = (BgCmImpl*)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(BgCmImpl));
+	cm = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(BgCmImpl));
 	cm->lpVtbl = &cmvt;
 	cm->ref = 1;
 	cm->pSFParent = pSFParent;
@@ -378,14 +378,14 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 		break;
 
 	      default:
-	        /* if it's a id just pass it to the parent shv */
+	        /* if it's an id just pass it to the parent shv */
 	        if (hWndSV) SendMessageA(hWndSV, WM_COMMAND, MAKEWPARAM(LOWORD(lpcmi->lpVerb), 0),0 );
 		break;
 	    }
 	  }
 
         if (lpSV)
-	  IShellView_Release(lpSV);	/* QueryActiveShellView does AddRef*/
+	  IShellView_Release(lpSV);	/* QueryActiveShellView does AddRef */
 
 	return NOERROR;
 }

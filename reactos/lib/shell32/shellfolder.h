@@ -1,5 +1,5 @@
 /*
- * defines helperfunctions to manipulate the contents of a IShellFolder
+ * Defines helper functions to manipulate the contents of an IShellFolder
  *
  * Copyright 2000 Juergen Schmied
  *

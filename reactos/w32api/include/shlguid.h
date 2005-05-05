@@ -10,6 +10,7 @@ extern "C" {
 #define DEFINE_SHLGUID(n,l,w1,w2) DEFINE_GUID(n,l,w1,w2,0xC0,0,0,0,0,0,0,0x46)
 #define SID_SShellBrowser IID_IShellBrowser
 extern const GUID CLSID_MyComputer;
+extern const GUID CLSID_MyDocuments;
 extern const GUID CLSID_ShellDesktop;
 extern const GUID CLSID_ShellLink;
 extern const GUID CLSID_ControlPanel;

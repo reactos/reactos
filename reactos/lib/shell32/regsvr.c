@@ -477,6 +477,12 @@ static struct regsvr_coclass const coclass_list[] = {
 	"shell32.dll",
 	"Apartment"
     },
+    {   &CLSID_DragDropHelper,
+        "Shell Drag and Drop Helper",
+        NULL,
+        "shell32.dll",
+        "Apartment"
+    },
     {   &CLSID_MyComputer,
 	"My Computer",
 	NULL,

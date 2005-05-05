@@ -287,11 +287,11 @@ HICON16 WINAPI ExtractIconEx16(
     int		i;
 
     if (phiconLarge)
-    	ilarge = (HICON*)HeapAlloc(GetProcessHeap(),0,nIcons*sizeof(HICON));
+    	ilarge = HeapAlloc(GetProcessHeap(),0,nIcons*sizeof(HICON));
     else
     	ilarge = NULL;
     if (phiconSmall)
-    	ismall = (HICON*)HeapAlloc(GetProcessHeap(),0,nIcons*sizeof(HICON));
+    	ismall = HeapAlloc(GetProcessHeap(),0,nIcons*sizeof(HICON));
     else
     	ismall = NULL;
     ret = HICON_16(ExtractIconExA(lpszFile,nIconIndex,ilarge,ismall,nIcons));
@@ -368,7 +368,7 @@ SEGPTR WINAPI FindEnvironmentString16(LPSTR str)
 DWORD WINAPI DoEnvironmentSubst16(LPSTR str,WORD length)
 {
   LPSTR   lpEnv = MapSL(GetDOSEnvironment16());
-  LPSTR   lpBuffer = (LPSTR)HeapAlloc( GetProcessHeap(), 0, length);
+  LPSTR   lpBuffer = HeapAlloc( GetProcessHeap(), 0, length);
   LPSTR   lpstr = str;
   LPSTR   lpbstr = lpBuffer;
 
