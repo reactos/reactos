@@ -1720,6 +1720,152 @@ RegOpenKeyExW (HKEY hKey,
 
 
 /************************************************************************
+ *  RegOpenUserClassesRoot
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegOpenUserClassesRoot (IN HANDLE hToken,
+                        IN DWORD dwOptions,
+                        IN REGSAM samDesired,
+                        OUT PHKEY phkResult)
+{
+  const WCHAR UserClassesKeyPrefix[] = L"\\Registry\\User\\";
+  const WCHAR UserClassesKeySuffix[] = L"_Classes";
+  PTOKEN_USER TokenUserData;
+  ULONG RequiredLength;
+  UNICODE_STRING UserSidString, UserClassesKeyRoot;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  LONG ErrorCode;
+  NTSTATUS Status;
+  
+  /* check parameters */
+  if (hToken == NULL || dwOptions != 0 || phkResult == NULL)
+  {
+    return ERROR_INVALID_PARAMETER;
+  }
+  
+  /*
+   * Get the user sid from the token
+   */
+
+ReadTokenSid:
+  /* determine how much memory we need */
+  Status = NtQueryInformationToken(hToken,
+                                   TokenUser,
+                                   NULL,
+                                   0,
+                                   &RequiredLength);
+  if (!NT_SUCCESS(Status) && (Status != STATUS_BUFFER_TOO_SMALL))
+  {
+    /* NOTE - as opposed to all other registry functions windows does indeed
+              change the last error code in case the caller supplied a invalid
+              handle for example! */
+    ErrorCode = RtlNtStatusToDosError (Status);
+    return ErrorCode;
+  }
+
+  TokenUserData = RtlAllocateHeap(ProcessHeap,
+                                  0,
+                                  RequiredLength);
+  if (TokenUserData == NULL)
+  {
+    return ERROR_NOT_ENOUGH_MEMORY;
+  }
+
+  /* attempt to read the information */
+  Status = NtQueryInformationToken(hToken,
+                                   TokenUser,
+                                   TokenUserData,
+                                   RequiredLength,
+                                   &RequiredLength);
+  if (!NT_SUCCESS(Status))
+  {
+    RtlFreeHeap(ProcessHeap,
+                0,
+                TokenUserData);
+    if (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+      /* the information appears to have changed?! try again */
+      goto ReadTokenSid;
+    }
+    
+    /* NOTE - as opposed to all other registry functions windows does indeed
+              change the last error code in case the caller supplied a invalid
+              handle for example! */
+    ErrorCode = RtlNtStatusToDosError (Status);
+    return ErrorCode;
+  }
+  
+  /*
+   * Build the absolute path for the user's registry in the form
+   * "\Registry\User\<SID>_Classes"
+   */
+  Status = RtlConvertSidToUnicodeString(&UserSidString,
+                                        TokenUserData->User.Sid,
+                                        TRUE);
+
+  /* we don't need the user data anymore, free it */
+  RtlFreeHeap(ProcessHeap,
+              0,
+              TokenUserData);
+
+  if (!NT_SUCCESS(Status))
+  {
+    return RtlNtStatusToDosError (Status);
+  }
+  
+  /* allocate enough memory for the entire key string */
+  UserClassesKeyRoot.Length = 0;
+  UserClassesKeyRoot.MaximumLength = UserSidString.Length +
+                                     sizeof(UserClassesKeyPrefix) +
+                                     sizeof(UserClassesKeySuffix);
+  UserClassesKeyRoot.Buffer = RtlAllocateHeap(ProcessHeap,
+                                              0,
+                                              UserClassesKeyRoot.MaximumLength);
+  if (UserClassesKeyRoot.Buffer == NULL)
+  {
+    RtlFreeUnicodeString(&UserSidString);
+    return RtlNtStatusToDosError (Status);
+  }
+  
+  /* build the string */
+  RtlAppendUnicodeToString(&UserClassesKeyRoot,
+                           UserClassesKeyPrefix);
+  RtlAppendUnicodeStringToString(&UserClassesKeyRoot,
+                                 &UserSidString);
+  RtlAppendUnicodeToString(&UserClassesKeyRoot,
+                           UserClassesKeySuffix);
+  
+  DPRINT("RegOpenUserClassesRoot: Absolute path: %wZ\n", &UserClassesKeyRoot);
+
+  /*
+   * Open the key
+   */
+
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &UserClassesKeyRoot,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+  
+  Status = NtOpenKey((PHANDLE)phkResult,
+                     samDesired,
+                     &ObjectAttributes);
+  
+  RtlFreeUnicodeString(&UserSidString);
+  RtlFreeUnicodeString(&UserClassesKeyRoot);
+  
+  if (!NT_SUCCESS(Status))
+  {
+    return RtlNtStatusToDosError (Status);
+  }
+  
+  return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
  *  RegQueryInfoKeyA
  *
  * @implemented

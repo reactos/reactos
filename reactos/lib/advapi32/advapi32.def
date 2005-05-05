@@ -492,7 +492,7 @@ RegOpenKeyA@12
 RegOpenKeyExA@20
 RegOpenKeyExW@20
 RegOpenKeyW@12
-;RegOpenUserClassesRoot
+RegOpenUserClassesRoot@16
 ;RegOverridePredefKey
 RegQueryInfoKeyA@48
 RegQueryInfoKeyW@48
