@@ -1634,6 +1634,29 @@ RegNotifyChangeKeyValue (HKEY hKey,
 
 
 /************************************************************************
+ *  RegOpenCurrentUser
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegOpenCurrentUser (IN REGSAM samDesired,
+                    OUT PHKEY phkResult)
+{
+  NTSTATUS Status;
+
+  Status = RtlOpenCurrentUser((ACCESS_MASK)samDesired,
+                              (PHANDLE)phkResult);
+  if (!NT_SUCCESS(Status))
+  {
+    /* NOTE - don't set the last error code! just return the error! */
+    return RtlNtStatusToDosError(Status);
+  }
+
+  return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
  *  RegOpenKeyA
  *
  *  20050503 Fireball - imported from WINE

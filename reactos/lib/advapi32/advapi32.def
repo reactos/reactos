@@ -51,10 +51,10 @@ BuildImpersonateTrusteeW@8
 ;BuildSecurityDescriptorW@36
 BuildTrusteeWithNameA@8
 BuildTrusteeWithNameW@8
-;BuildTrusteeWithObjectsAndNameA@24
-;BuildTrusteeWithObjectsAndNameW@24
-;BuildTrusteeWithObjectsAndSidA@20
-;BuildTrusteeWithObjectsAndSidW@20
+BuildTrusteeWithObjectsAndNameA@24
+BuildTrusteeWithObjectsAndNameW@24
+BuildTrusteeWithObjectsAndSidA@20
+BuildTrusteeWithObjectsAndSidW@20
 BuildTrusteeWithSidA@8
 BuildTrusteeWithSidW@8
 ;CancelOverlappedAccess@4
@@ -271,7 +271,7 @@ GetOldestEventLogRecord@8
 GetSecurityDescriptorControl@12
 GetSecurityDescriptorDacl@16
 GetSecurityDescriptorGroup@12
-GetSecurityDescriptorLength@4
+GetSecurityDescriptorLength@4=NTDLL.RtlLengthSecurityDescriptor
 GetSecurityDescriptorOwner@12
 GetSecurityDescriptorRMControl@8
 GetSecurityDescriptorSacl@16
@@ -487,7 +487,7 @@ RegGetKeySecurity@16
 RegLoadKeyA@12
 RegLoadKeyW@12
 RegNotifyChangeKeyValue@20
-;RegOpenCurrentUser
+RegOpenCurrentUser@8
 RegOpenKeyA@12
 RegOpenKeyExA@20
 RegOpenKeyExW@20
