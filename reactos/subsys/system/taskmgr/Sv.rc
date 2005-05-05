@@ -35,7 +35,7 @@ BEGIN
     BEGIN
         MENUITEM "&Ny Aktivitet (Kör...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Avsluta aktivitetshanteraren",          ID_FILE_EXIT
+        MENUITEM "&Avsluta Aktivitetshanteraren",          ID_FILE_EXIT
     END
     POPUP "&Alternativ"
     BEGIN
@@ -264,12 +264,12 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    LTEXT           "Totalt",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "Växlat",IDS_KERNEL_MEMORY_PAGED,137,184,24,8
-    LTEXT           "Icke växlat",IDS_KERNEL_MEMORY_NONPAGED,137,193,44,8
+    LTEXT           "Totalt",IDS_KERNEL_MEMORY_TOTAL,137,175,27,8
+    LTEXT           "Fysiskt / virtuellt",IDS_KERNEL_MEMORY_PAGED,137,184,56,8
+    LTEXT           "Fysiskt",IDS_KERNEL_MEMORY_NONPAGED,137,193,44,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
+    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,190,184,43,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
@@ -555,7 +555,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "Aktivitetshanteraren"
     IDC_TASKMGR             "Aktivitetshanteraren"
-    IDS_IDLE_PROCESS        "System Idle Process"
+    IDS_IDLE_PROCESS        "Systemets lediga resurser"
 END
 
 STRINGTABLE DISCARDABLE
@@ -579,7 +579,7 @@ BEGIN
     ID_VIEW_UPDATESPEED_PAUSED "Uppdaterar inte automatiskt"
     ID_WINDOWS_TILEHORIZONTALLY
                             "Ordna fönstren horizontellt på skrivbordet"
-    ID_WINDOWS_TILEVERTICALLY "Ordna fönstren vertikalt på skrivborder"
+    ID_WINDOWS_TILEVERTICALLY "Ordna fönstren vertikalt på skrivbordet"
     ID_WINDOWS_MINIMIZE     "Minimerar fönstret"
     ID_WINDOWS_MAXIMIZE     "Maximerar fönstret"
     ID_WINDOWS_CASCADE      "Ordna fönstren diagonalt överlappande på skrivbordet"
@@ -677,8 +677,10 @@ BEGIN
     IDS_MSG_UNABLETERMINATEPRO    "Kunde inte avsluta processen"
     IDS_MSG_UNABLECHANGEPRIORITY  "Kunde inte ändra prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "VARNING: Ändring av prioritetsklassen hos den här processen kan\norsaka oönskade effekter och påverka systemets stabilitet. Är du\nsäker på att du vill ändra prioritetsklassen?"
-    IDS_MSG_TRAYICONCPUUSAGE      "CPU-anv: %d%%"
-
+    IDS_MSG_TRAYICONCPUUSAGE      "Processoranvändning: %d%%"
+    IDS_STATUS_MEMUSAGE           "Minnesanv: %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "Processoranv: %3d%%"
+    IDS_STATUS_PROCESSES          "Processer: %d"
 END
 
 
