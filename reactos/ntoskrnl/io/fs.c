@@ -35,7 +35,7 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
 static ERESOURCE FileSystemListLock;
 static LIST_ENTRY FileSystemListHead;
 
-static FAST_MUTEX FsChangeNotifyListLock;
+static KGUARDED_MUTEX FsChangeNotifyListLock;
 static LIST_ENTRY FsChangeNotifyListHead;
 
 #define TAG_FILE_SYSTEM       TAG('F', 'S', 'Y', 'S')
@@ -178,7 +178,7 @@ IoInitFileSystemImplementation(VOID)
   ExInitializeResourceLite(&FileSystemListLock);
 
   InitializeListHead(&FsChangeNotifyListHead);
-  ExInitializeFastMutex(&FsChangeNotifyListLock);
+  KeInitializeGuardedMutex(&FsChangeNotifyListLock);
 }
 
 
@@ -631,7 +631,7 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
       if (current->DeviceObject == DeviceObject)
 	{
 	  RemoveEntryList(current_entry);
-	  ExFreePool(current);
+	  ExFreePoolWithTag(current, TAG_FILE_SYSTEM);
 	  ExReleaseResourceLite(&FileSystemListLock);
 	  KeLeaveCriticalRegion();
 	  IopNotifyFileSystemChange(DeviceObject, FALSE);
@@ -710,7 +710,7 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
   PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
   PLIST_ENTRY Entry;
 
-  ExAcquireFastMutex(&FsChangeNotifyListLock);
+  KeAcquireGuardedMutex(&FsChangeNotifyListLock);
   Entry = FsChangeNotifyListHead.Flink;
   while (Entry != &FsChangeNotifyListHead)
     {
@@ -720,7 +720,7 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 
       Entry = Entry->Flink;
     }
-  ExReleaseFastMutex(&FsChangeNotifyListLock);
+  KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 }
 
 
@@ -742,10 +742,10 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
   Entry->DriverObject = DriverObject;
   Entry->FSDNotificationProc = FSDNotificationProc;
 
-  ExAcquireFastMutex(&FsChangeNotifyListLock);
+  KeAcquireGuardedMutex(&FsChangeNotifyListLock);
   InsertHeadList(&FsChangeNotifyListHead,
 			      &Entry->FsChangeNotifyList);
-  ExReleaseFastMutex(&FsChangeNotifyListLock);
+  KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 
   return(STATUS_SUCCESS);
 }
@@ -768,11 +768,11 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
       if (ChangeEntry->DriverObject == DriverObject &&
 	  ChangeEntry->FSDNotificationProc == FSDNotificationProc)
 	{
-	  ExAcquireFastMutex(&FsChangeNotifyListLock);
+	  KeAcquireGuardedMutex(&FsChangeNotifyListLock);
 	  RemoveEntryList(Entry);
-	  ExReleaseFastMutex(&FsChangeNotifyListLock);
+	  KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 
-	  ExFreePool(Entry);
+	  ExFreePoolWithTag(Entry, TAG_FS_CHANGE_NOTIFY);
 	  return;
 	}
 
