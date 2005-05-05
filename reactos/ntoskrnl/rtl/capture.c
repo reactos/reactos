@@ -123,7 +123,7 @@ RtlReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
 {
   if(CurrentMode != KernelMode || CaptureIfKernel )
   {
-    RtlFreeUnicodeString(CapturedString);
+    ExFreePool(CapturedString->Buffer);
   }
 }
 

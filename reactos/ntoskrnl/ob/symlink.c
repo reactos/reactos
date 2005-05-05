@@ -72,7 +72,7 @@ ObpDeleteSymbolicLink(PVOID ObjectBody)
 {
   PSYMLINK_OBJECT SymlinkObject = (PSYMLINK_OBJECT)ObjectBody;
 
-  RtlFreeUnicodeString(&SymlinkObject->TargetName);
+  ExFreePool(SymlinkObject->TargetName.Buffer);
 }
 
 
@@ -129,7 +129,7 @@ ObpParseSymbolicLink(PVOID Object,
      }
 
    /* transfer target path buffer into FullPath */
-   RtlFreeUnicodeString(FullPath);
+   ExFreePool(FullPath->Buffer);
    FullPath->Length = TargetPath.Length;
    FullPath->MaximumLength = TargetPath.MaximumLength;
    FullPath->Buffer = TargetPath.Buffer;

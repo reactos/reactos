@@ -125,14 +125,14 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
                                       &ObjectAttributes);
     
     /* Free the String */
-    RtlFreeUnicodeString(&ArcName);
+    ExFreePool(ArcName.Buffer);
     
     /* Check for Success */
     if (!NT_SUCCESS(Status)) {
         
         /* Free the Strings */
         RtlFreeUnicodeString(&BootPath);
-        RtlFreeUnicodeString(&ArcDeviceName);
+        ExFreePool(ArcDeviceName.Buffer);
         CPRINT("NtOpenSymbolicLinkObject() failed (Status %x)\n", Status);
         KEBUGCHECK(0);
     }
@@ -148,7 +148,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
         
         /* Free the Strings */
         RtlFreeUnicodeString(&BootPath);
-        RtlFreeUnicodeString(&ArcDeviceName);
+        ExFreePool(ArcDeviceName.Buffer);
         CPRINT("NtQuerySymbolicLinkObject() failed (Status %x)\n", Status);
         KEBUGCHECK(0);
     }
@@ -209,8 +209,8 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     
     /* Free all the Strings we have in memory */
     RtlFreeUnicodeString (&BootPath);
-    RtlFreeUnicodeString (&DriveDeviceName);
-    RtlFreeUnicodeString (&ArcDeviceName);
+    ExFreePool(DriveDeviceName.Buffer);
+    ExFreePool(ArcDeviceName.Buffer);
 
     /* Make sure we found the Boot Drive */
     if (BootDriveFound == FALSE) {

@@ -188,7 +188,7 @@ IopDeleteDriver(PVOID ObjectBody)
    DPRINT("IopDeleteDriver(ObjectBody %x)\n", ObjectBody);
 
    ExFreePool(Object->DriverExtension);
-   RtlFreeUnicodeString(&Object->DriverName);
+   ExFreePool(Object->DriverName.Buffer);
 
    OldIrql = KeRaiseIrqlToDpcLevel();
 
@@ -197,7 +197,7 @@ IopDeleteDriver(PVOID ObjectBody)
         DriverExtension = NextDriverExtension)
    {
       NextDriverExtension = DriverExtension->Link;
-      ExFreePool(DriverExtension);
+      ExFreePoolWithTag(DriverExtension, TAG_DRIVER_EXTENSION);
    }
 
    KfLowerIrql(OldIrql);
@@ -358,7 +358,7 @@ IopNormalizeImagePath(
 
       wcscpy(ImagePath->Buffer, L"\\SystemRoot\\");
       wcscat(ImagePath->Buffer, InputImagePath.Buffer);
-      RtlFreeUnicodeString(&InputImagePath);
+      ExFreePool(InputImagePath.Buffer);
    }
 
    return STATUS_SUCCESS;
@@ -496,7 +496,7 @@ IopLoadServiceModule(
       Status = STATUS_IMAGE_ALREADY_LOADED;
    }
 
-   RtlFreeUnicodeString(&ServiceImagePath);
+   ExFreePool(ServiceImagePath.Buffer);
 
    /*
     * Now check if the module was loaded successfully.
@@ -908,8 +908,8 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 				  NULL);
   if (!NT_SUCCESS(Status) || Service->Start > 1)
     {
-      RtlFreeUnicodeString(&Service->ServiceGroup);
-      RtlFreeUnicodeString(&Service->ImagePath);
+      ExFreePool(Service->ServiceGroup.Buffer);
+      ExFreePool(Service->ImagePath.Buffer);
       ExFreePool(Service);
       return(Status);
     }
@@ -1065,7 +1065,7 @@ IoDestroyDriverList(VOID)
     {
       CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
 
-      RtlFreeUnicodeString(&CurrentGroup->GroupName);
+      ExFreePool(CurrentGroup->GroupName.Buffer);
       RemoveEntryList(GroupEntry);
       if (CurrentGroup->TagArray)
         {
@@ -1082,10 +1082,10 @@ IoDestroyDriverList(VOID)
     {
       CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-      RtlFreeUnicodeString(&CurrentService->ServiceName);
-      RtlFreeUnicodeString(&CurrentService->RegistryPath);
-      RtlFreeUnicodeString(&CurrentService->ServiceGroup);
-      RtlFreeUnicodeString(&CurrentService->ImagePath);
+      ExFreePool(CurrentService->ServiceName.Buffer);
+      ExFreePool(CurrentService->RegistryPath.Buffer);
+      ExFreePool(CurrentService->ServiceGroup.Buffer);
+      ExFreePool(CurrentService->ImagePath.Buffer);
       RemoveEntryList(ServiceEntry);
       ExFreePool(CurrentService);
 
@@ -1547,7 +1547,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     * Free the service path
     */
 
-   RtlFreeUnicodeString(&ImagePath);
+   ExFreePool(ImagePath.Buffer);
 
    /*
     * Unload the module and release the references to the device object
@@ -1865,7 +1865,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-      RtlFreeUnicodeString(&ImagePath);
+      ExFreePool(ImagePath.Buffer);
       goto ReleaseCapturedString;
    }
 

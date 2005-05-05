@@ -413,15 +413,15 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
   if (!NT_SUCCESS(Status))
     {
       RtlFreeUnicodeString(&BootPath);
-      RtlFreeUnicodeString(&DeviceName);
+      ExFreePool(DeviceName.Buffer);
       CPRINT("ZwOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
 	     &ArcName,
 	     Status);
-      RtlFreeUnicodeString(&ArcName);
+      ExFreePool(ArcName.Buffer);
 
       return(Status);
     }
-  RtlFreeUnicodeString(&ArcName);
+  ExFreePool(ArcName.Buffer);
 
   Status = ZwQuerySymbolicLinkObject(Handle,
 				     &DeviceName,
@@ -430,7 +430,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
   if (!NT_SUCCESS(Status))
     {
       RtlFreeUnicodeString(&BootPath);
-      RtlFreeUnicodeString(&DeviceName);
+      ExFreePool(DeviceName.Buffer);
       CPRINT("ZwQuerySymbolicObject() failed (Status %x)\n",
 	     Status);
 
@@ -450,7 +450,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 
   Status = IoCreateSymbolicLink(&LinkName,
 				&DeviceName);
-  RtlFreeUnicodeString (&DeviceName);
+  ExFreePool(DeviceName.Buffer);
   if (!NT_SUCCESS(Status))
     {
       CPRINT("IoCreateSymbolicLink() failed (Status %x)\n",
