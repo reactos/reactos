@@ -227,19 +227,20 @@ IopDeleteFile(PVOID ObjectBody)
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
       
-        /* Clear the file name */  
-        if (FileObject->FileName.Buffer)
-        {
-            ExFreePool(FileObject->FileName.Buffer);
-            FileObject->FileName.Buffer = NULL;
-        }
+    }
+
+    /* Clear the file name */  
+    if (FileObject->FileName.Buffer)
+    {
+       ExFreePool(FileObject->FileName.Buffer);
+       FileObject->FileName.Buffer = NULL;
+    }
         
-        /* Free the completion context */
-        if (FileObject->CompletionContext)
-        {
-            ObDereferenceObject(FileObject->CompletionContext->Port);
-            ExFreePool(FileObject->CompletionContext);
-        }
+    /* Free the completion context */
+    if (FileObject->CompletionContext)
+    {
+       ObDereferenceObject(FileObject->CompletionContext->Port);
+       ExFreePool(FileObject->CompletionContext);
     }
 }
 
@@ -2146,7 +2147,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
    IoStack->Parameters.QueryDirectory.Length = Length;
    
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
  KeWaitForSingleObject(&FileObject->Event,
          Executive,
