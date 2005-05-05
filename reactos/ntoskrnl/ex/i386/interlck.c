@@ -414,7 +414,7 @@ __asm__("\n\t.global @InterlockedClearBit@8\n\t"
 	LOCK
 	"btr %edx,(%ecx)\n\t"
 	"setc %al\n\t"
-	"ret $8\n\t");
+	"ret\n\t");
 
 #elif defined(_MSC_VER)
 /*
