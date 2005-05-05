@@ -585,6 +585,12 @@ IoRegisterDeviceInterface(
    ULONG i;
    NTSTATUS Status;
    
+   if (!(PhysicalDeviceObject->Flags & DO_BUS_ENUMERATED_DEVICE))
+   {
+     DPRINT("PhysicalDeviceObject 0x%p is not a valid Pdo\n", PhysicalDeviceObject);
+     return STATUS_INVALID_PARAMETER_1;
+   }
+   
    Status = RtlStringFromGUID(InterfaceClassGuid, &GuidString);
    if (!NT_SUCCESS(Status))
    {
@@ -606,6 +612,7 @@ IoRegisterDeviceInterface(
    ASSERT(PdoNameInfo->Name.Length);
    
    /* Create base key name for this interface: HKLM\SYSTEM\CurrentControlSet\DeviceClasses\{GUID}\##?#ACPI#PNP0501#1#{GUID} */
+   ASSERT(PhysicalDeviceObject->DeviceObjectExtension->DeviceNode);
    InstancePath = &PhysicalDeviceObject->DeviceObjectExtension->DeviceNode->InstancePath;
    BaseKeyName.Length = wcslen(BaseKeyString) * sizeof(WCHAR);
    BaseKeyName.MaximumLength = BaseKeyName.Length
