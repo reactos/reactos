@@ -93,11 +93,11 @@ HGLOBAL16 WINAPI OleMetaFilePictFromIconAndLabel16(
 	LPCOLESTR16 lpszSourceFile,
 	UINT16 iIconIndex
 ) {
-    METAFILEPICT16 *mf;
-    HGLOBAL16 hmf;
+    METAFILEPICT16 *mf16;
+    HGLOBAL16 hmf16;
+    HMETAFILE hmf;
+    INT mfSize;
     HDC hdc;
-
-    FIXME("(%04x, '%s', '%s', %d): incorrect metrics, please try to correct them !\n\n\n", hIcon, lpszLabel, lpszSourceFile, iIconIndex);
 
     if (!hIcon) {
         if (lpszSourceFile) {
@@ -110,16 +110,27 @@ HGLOBAL16 WINAPI OleMetaFilePictFromIconAndLabel16(
 	    return 0;
     }
 
-    hdc = CreateMetaFileA(NULL);
+    FIXME("(%04x, '%s', '%s', %d): incorrect metrics, please try to correct them !\n", 
+          hIcon, lpszLabel, lpszSourceFile, iIconIndex);
+
+    hdc = CreateMetaFileW(NULL);
     DrawIcon(hdc, 0, 0, HICON_32(hIcon)); /* FIXME */
     TextOutA(hdc, 0, 0, lpszLabel, 1); /* FIXME */
-    hmf = GlobalAlloc16(0, sizeof(METAFILEPICT16));
-    mf = (METAFILEPICT16 *)GlobalLock16(hmf);
-    mf->mm = MM_ANISOTROPIC;
-    mf->xExt = 20; /* FIXME: bogus */
-    mf->yExt = 20; /* dito */
-    mf->hMF = CloseMetaFile16(HDC_16(hdc));
-    return hmf;
+    hmf = CloseMetaFile(hdc);
+
+    hmf16 = GlobalAlloc16(0, sizeof(METAFILEPICT16));
+    mf16 = (METAFILEPICT16 *)GlobalLock16(hmf16);
+    mf16->mm = MM_ANISOTROPIC;
+    mf16->xExt = 20; /* FIXME: bogus */
+    mf16->yExt = 20; /* dito */
+    mfSize = GetMetaFileBitsEx(hmf, 0, 0);
+    mf16->hMF = GlobalAlloc16(GMEM_MOVEABLE, mfSize);
+    if(mf16->hMF)
+    {
+        GetMetaFileBitsEx(hmf, mfSize, GlobalLock16(mf16->hMF));
+        GlobalUnlock16(mf16->hMF);
+    }
+    return hmf16;
 }
 
 

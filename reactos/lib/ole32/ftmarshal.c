@@ -224,7 +224,7 @@ HRESULT WINAPI CoCreateFreeThreadedMarshaler (LPUNKNOWN punkOuter, LPUNKNOWN * p
 
     TRACE ("(%p %p)\n", punkOuter, ppunkMarshal);
 
-    ftm = (FTMarshalImpl *) HeapAlloc (GetProcessHeap (), 0, sizeof (FTMarshalImpl));
+    ftm = HeapAlloc (GetProcessHeap (), 0, sizeof (FTMarshalImpl));
     if (!ftm)
 	return E_OUTOFMEMORY;
 

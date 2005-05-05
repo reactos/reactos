@@ -80,6 +80,11 @@ typedef enum tagCOINIT {
 	COINIT_DISABLE_OLE1DDE		= 0x4,
 	COINIT_SPEED_OVER_MEMORY	= 0x8
 } COINIT;
+typedef enum tagCOWAIT_FLAGS
+{
+    COWAIT_WAITALL   = 0x01,
+    COWAIT_ALERTABLE = 0x02
+} COWAIT_FLAGS;
 typedef enum tagSTDMSHLFLAGS {
     SMEXF_SERVER  = 0x01,
     SMEXF_HANDLER = 0x02
@@ -193,6 +198,7 @@ WINOLEAPI CoResumeClassObjects(void);
 WINOLEAPI CoSuspendClassObjects(void);
 WINOLEAPI CoGetPSClsid(REFIID,CLSID*);
 WINOLEAPI CoRegisterPSClsid(REFIID,REFCLSID);
+WINOLEAPI CoWaitForMultipleHandles(DWORD dwFlags,DWORD dwTimeout,ULONG cHandles,const HANDLE* pHandles,LPDWORD lpdwindex);
 
 #pragma pack(pop)
 #endif

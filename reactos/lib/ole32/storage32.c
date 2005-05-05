@@ -157,70 +157,6 @@ static DWORD GetShareModeFromSTGM(DWORD stgm);
 static DWORD GetAccessModeFromSTGM(DWORD stgm);
 static DWORD GetCreationModeFromSTGM(DWORD stgm);
 
-/*
- * Virtual function table for the IStorage32Impl class.
- */
-static IStorageVtbl Storage32Impl_Vtbl =
-{
-    StorageBaseImpl_QueryInterface,
-    StorageBaseImpl_AddRef,
-    StorageBaseImpl_Release,
-    StorageBaseImpl_CreateStream,
-    StorageBaseImpl_OpenStream,
-    StorageImpl_CreateStorage,
-    StorageBaseImpl_OpenStorage,
-    StorageImpl_CopyTo,
-    StorageImpl_MoveElementTo,
-    StorageImpl_Commit,
-    StorageImpl_Revert,
-    StorageBaseImpl_EnumElements,
-    StorageImpl_DestroyElement,
-    StorageBaseImpl_RenameElement,
-    StorageImpl_SetElementTimes,
-    StorageBaseImpl_SetClass,
-    StorageImpl_SetStateBits,
-    StorageImpl_Stat
-};
-
-/*
- * Virtual function table for the Storage32InternalImpl class.
- */
-static IStorageVtbl Storage32InternalImpl_Vtbl =
-  {
-    StorageBaseImpl_QueryInterface,
-    StorageBaseImpl_AddRef,
-    StorageBaseImpl_Release,
-    StorageBaseImpl_CreateStream,
-    StorageBaseImpl_OpenStream,
-    StorageImpl_CreateStorage,
-    StorageBaseImpl_OpenStorage,
-    StorageImpl_CopyTo,
-    StorageImpl_MoveElementTo,
-    StorageInternalImpl_Commit,
-    StorageInternalImpl_Revert,
-    StorageBaseImpl_EnumElements,
-    StorageImpl_DestroyElement,
-    StorageBaseImpl_RenameElement,
-    StorageImpl_SetElementTimes,
-    StorageBaseImpl_SetClass,
-    StorageImpl_SetStateBits,
-    StorageBaseImpl_Stat
-};
-
-/*
- * Virtual function table for the IEnumSTATSTGImpl class.
- */
-static IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
-{
-    IEnumSTATSTGImpl_QueryInterface,
-    IEnumSTATSTGImpl_AddRef,
-    IEnumSTATSTGImpl_Release,
-    IEnumSTATSTGImpl_Next,
-    IEnumSTATSTGImpl_Skip,
-    IEnumSTATSTGImpl_Reset,
-    IEnumSTATSTGImpl_Clone
-};
-
 extern IPropertySetStorageVtbl IPropertySetStorage_Vtbl;
 
 
@@ -280,7 +216,7 @@ HRESULT WINAPI StorageBaseImpl_QueryInterface(
    * Query Interface always increases the reference count by one when it is
    * successful
    */
-  StorageBaseImpl_AddRef(iface);
+  IStorage_AddRef(iface);
 
   return S_OK;
 }
@@ -435,7 +371,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
        * Since we are returning a pointer to the interface, we have to
        * nail down the reference.
        */
-      StgStreamImpl_AddRef(*ppstm);
+      IStream_AddRef(*ppstm);
 
       res = S_OK;
       goto end;
@@ -622,7 +558,7 @@ HRESULT WINAPI StorageBaseImpl_EnumElements(
      * Don't forget to nail down a reference to the new object before
      * returning it.
      */
-    IEnumSTATSTGImpl_AddRef(*ppenum);
+    IEnumSTATSTG_AddRef(*ppenum);
 
     return S_OK;
   }
@@ -735,7 +671,7 @@ HRESULT WINAPI StorageBaseImpl_RenameElement(
     return STG_E_FILEALREADYEXISTS;
   }
 
-  IEnumSTATSTGImpl_Reset((IEnumSTATSTG*)propertyEnumeration);
+  IEnumSTATSTG_Reset((IEnumSTATSTG*)propertyEnumeration);
 
   /*
    * Search the enumeration for the old property name
@@ -834,7 +770,7 @@ HRESULT WINAPI StorageBaseImpl_RenameElement(
      * Invoke Destroy to get rid of the ole property and automatically redo
      * the linking of it's previous and next members...
      */
-    StorageImpl_DestroyElement((IStorage*)This->ancestorStorage, pwcsOldName);
+    IStorage_DestroyElement((IStorage*)This->ancestorStorage, pwcsOldName);
 
   }
   else
@@ -996,7 +932,7 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
      * Since we are returning a pointer to the interface, we have to nail down
      * the reference.
      */
-    StgStreamImpl_AddRef(*ppstm);
+    IStream_AddRef(*ppstm);
   }
   else
   {
@@ -2199,6 +2135,31 @@ HRESULT WINAPI StorageImpl_SetStateBits(
   FIXME("not implemented!\n");
   return E_NOTIMPL;
 }
+
+/*
+ * Virtual function table for the IStorage32Impl class.
+ */
+static IStorageVtbl Storage32Impl_Vtbl =
+{
+    StorageBaseImpl_QueryInterface,
+    StorageBaseImpl_AddRef,
+    StorageBaseImpl_Release,
+    StorageBaseImpl_CreateStream,
+    StorageBaseImpl_OpenStream,
+    StorageImpl_CreateStorage,
+    StorageBaseImpl_OpenStorage,
+    StorageImpl_CopyTo,
+    StorageImpl_MoveElementTo,
+    StorageImpl_Commit,
+    StorageImpl_Revert,
+    StorageBaseImpl_EnumElements,
+    StorageImpl_DestroyElement,
+    StorageBaseImpl_RenameElement,
+    StorageImpl_SetElementTimes,
+    StorageBaseImpl_SetClass,
+    StorageImpl_SetStateBits,
+    StorageImpl_Stat
+};
 
 HRESULT StorageImpl_Construct(
   StorageImpl* This,
@@ -3416,7 +3377,7 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
   cbTotalRead = 0;
   cbTotalWritten = 0;
 
-  buffer = (BYTE *) HeapAlloc(GetProcessHeap(),0,DEF_SMALL_BLOCK_SIZE);
+  buffer = HeapAlloc(GetProcessHeap(),0,DEF_SMALL_BLOCK_SIZE);
   do
   {
     successRead = SmallBlockChainStream_ReadAt(*ppsbChain,
@@ -3472,48 +3433,6 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
   return bigBlockChain;
 }
 
-/******************************************************************************
-** Storage32InternalImpl implementation
-*/
-
-StorageInternalImpl* StorageInternalImpl_Construct(
-  StorageImpl* ancestorStorage,
-  ULONG          rootPropertyIndex)
-{
-  StorageInternalImpl* newStorage;
-
-  /*
-   * Allocate space for the new storage object
-   */
-  newStorage = HeapAlloc(GetProcessHeap(), 0, sizeof(StorageInternalImpl));
-
-  if (newStorage!=0)
-  {
-    memset(newStorage, 0, sizeof(StorageInternalImpl));
-
-    /*
-     * Initialize the virtual function table.
-     */
-    newStorage->base.lpVtbl = &Storage32InternalImpl_Vtbl;
-    newStorage->base.v_destructor = &StorageInternalImpl_Destroy;
-
-    /*
-     * Keep the ancestor storage pointer and nail a reference to it.
-     */
-    newStorage->base.ancestorStorage = ancestorStorage;
-    StorageBaseImpl_AddRef((IStorage*)(newStorage->base.ancestorStorage));
-
-    /*
-     * Keep the index of the root property set for this storage,
-     */
-    newStorage->base.rootPropertySetIndex = rootPropertyIndex;
-
-    return newStorage;
-  }
-
-  return 0;
-}
-
 void StorageInternalImpl_Destroy( StorageBaseImpl *iface)
 {
   StorageInternalImpl* This = (StorageInternalImpl*) iface;
@@ -3549,52 +3468,6 @@ HRESULT WINAPI StorageInternalImpl_Revert(
   return S_OK;
 }
 
-/******************************************************************************
-** IEnumSTATSTGImpl implementation
-*/
-
-IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(
-  StorageImpl* parentStorage,
-  ULONG          firstPropertyNode)
-{
-  IEnumSTATSTGImpl* newEnumeration;
-
-  newEnumeration = HeapAlloc(GetProcessHeap(), 0, sizeof(IEnumSTATSTGImpl));
-
-  if (newEnumeration!=0)
-  {
-    /*
-     * Set-up the virtual function table and reference count.
-     */
-    newEnumeration->lpVtbl    = &IEnumSTATSTGImpl_Vtbl;
-    newEnumeration->ref       = 0;
-
-    /*
-     * We want to nail-down the reference to the storage in case the
-     * enumeration out-lives the storage in the client application.
-     */
-    newEnumeration->parentStorage = parentStorage;
-    IStorage_AddRef((IStorage*)newEnumeration->parentStorage);
-
-    newEnumeration->firstPropertyNode   = firstPropertyNode;
-
-    /*
-     * Initialize the search stack
-     */
-    newEnumeration->stackSize    = 0;
-    newEnumeration->stackMaxSize = ENUMSTATSGT_SIZE_INCREMENT;
-    newEnumeration->stackToVisit =
-      HeapAlloc(GetProcessHeap(), 0, sizeof(ULONG)*ENUMSTATSGT_SIZE_INCREMENT);
-
-    /*
-     * Make sure the current node of the iterator is the first one.
-     */
-    IEnumSTATSTGImpl_Reset((IEnumSTATSTG*)newEnumeration);
-  }
-
-  return newEnumeration;
-}
-
 void IEnumSTATSTGImpl_Destroy(IEnumSTATSTGImpl* This)
 {
   IStorage_Release((IStorage*)This->parentStorage);
@@ -3623,28 +3496,15 @@ HRESULT WINAPI IEnumSTATSTGImpl_QueryInterface(
   /*
    * Compare the riid with the interface IDs implemented by this object.
    */
-  if (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0)
+  if (IsEqualGUID(&IID_IUnknown, riid) ||
+      IsEqualGUID(&IID_IStorage, riid))
   {
     *ppvObject = (IEnumSTATSTG*)This;
-  }
-  else if (memcmp(&IID_IStorage, riid, sizeof(IID_IEnumSTATSTG)) == 0)
-  {
-    *ppvObject = (IEnumSTATSTG*)This;
+    IEnumSTATSTG_AddRef((IEnumSTATSTG*)This);
+    return S_OK;
   }
 
-  /*
-   * Check that we obtained an interface.
-   */
-  if ((*ppvObject)==0)
-    return E_NOINTERFACE;
-
-  /*
-   * Query Interface always increases the reference count by one when it is
-   * successful
-   */
-  IEnumSTATSTGImpl_AddRef((IEnumSTATSTG*)This);
-
-  return S_OK;
+  return E_NOINTERFACE;
 }
 
 ULONG   WINAPI IEnumSTATSTGImpl_AddRef(
@@ -4062,46 +3922,175 @@ ULONG IEnumSTATSTGImpl_PopSearchNode(
   return topNode;
 }
 
+/*
+ * Virtual function table for the IEnumSTATSTGImpl class.
+ */
+static IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
+{
+    IEnumSTATSTGImpl_QueryInterface,
+    IEnumSTATSTGImpl_AddRef,
+    IEnumSTATSTGImpl_Release,
+    IEnumSTATSTGImpl_Next,
+    IEnumSTATSTGImpl_Skip,
+    IEnumSTATSTGImpl_Reset,
+    IEnumSTATSTGImpl_Clone
+};
+
 /******************************************************************************
-** StorageUtl implementation
+** IEnumSTATSTGImpl implementation
 */
 
-void StorageUtl_ReadWord(void* buffer, ULONG offset, WORD* value)
+IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(
+  StorageImpl* parentStorage,
+  ULONG          firstPropertyNode)
 {
-  memcpy(value, (BYTE*)buffer+offset, sizeof(WORD));
+  IEnumSTATSTGImpl* newEnumeration;
+
+  newEnumeration = HeapAlloc(GetProcessHeap(), 0, sizeof(IEnumSTATSTGImpl));
+
+  if (newEnumeration!=0)
+  {
+    /*
+     * Set-up the virtual function table and reference count.
+     */
+    newEnumeration->lpVtbl    = &IEnumSTATSTGImpl_Vtbl;
+    newEnumeration->ref       = 0;
+
+    /*
+     * We want to nail-down the reference to the storage in case the
+     * enumeration out-lives the storage in the client application.
+     */
+    newEnumeration->parentStorage = parentStorage;
+    IStorage_AddRef((IStorage*)newEnumeration->parentStorage);
+
+    newEnumeration->firstPropertyNode   = firstPropertyNode;
+
+    /*
+     * Initialize the search stack
+     */
+    newEnumeration->stackSize    = 0;
+    newEnumeration->stackMaxSize = ENUMSTATSGT_SIZE_INCREMENT;
+    newEnumeration->stackToVisit =
+      HeapAlloc(GetProcessHeap(), 0, sizeof(ULONG)*ENUMSTATSGT_SIZE_INCREMENT);
+
+    /*
+     * Make sure the current node of the iterator is the first one.
+     */
+    IEnumSTATSTGImpl_Reset((IEnumSTATSTG*)newEnumeration);
+  }
+
+  return newEnumeration;
 }
 
-void StorageUtl_WriteWord(void* buffer, ULONG offset, WORD value)
+/*
+ * Virtual function table for the Storage32InternalImpl class.
+ */
+static IStorageVtbl Storage32InternalImpl_Vtbl =
 {
-  memcpy((BYTE*)buffer+offset, &value, sizeof(WORD));
+    StorageBaseImpl_QueryInterface,
+    StorageBaseImpl_AddRef,
+    StorageBaseImpl_Release,
+    StorageBaseImpl_CreateStream,
+    StorageBaseImpl_OpenStream,
+    StorageImpl_CreateStorage,
+    StorageBaseImpl_OpenStorage,
+    StorageImpl_CopyTo,
+    StorageImpl_MoveElementTo,
+    StorageInternalImpl_Commit,
+    StorageInternalImpl_Revert,
+    StorageBaseImpl_EnumElements,
+    StorageImpl_DestroyElement,
+    StorageBaseImpl_RenameElement,
+    StorageImpl_SetElementTimes,
+    StorageBaseImpl_SetClass,
+    StorageImpl_SetStateBits,
+    StorageBaseImpl_Stat
+};
+
+/******************************************************************************
+** Storage32InternalImpl implementation
+*/
+
+StorageInternalImpl* StorageInternalImpl_Construct(
+  StorageImpl* ancestorStorage,
+  ULONG          rootPropertyIndex)
+{
+  StorageInternalImpl* newStorage;
+
+  /*
+   * Allocate space for the new storage object
+   */
+  newStorage = HeapAlloc(GetProcessHeap(), 0, sizeof(StorageInternalImpl));
+
+  if (newStorage!=0)
+  {
+    memset(newStorage, 0, sizeof(StorageInternalImpl));
+
+    /*
+     * Initialize the virtual function table.
+     */
+    newStorage->base.lpVtbl = &Storage32InternalImpl_Vtbl;
+    newStorage->base.v_destructor = &StorageInternalImpl_Destroy;
+
+    /*
+     * Keep the ancestor storage pointer and nail a reference to it.
+     */
+    newStorage->base.ancestorStorage = ancestorStorage;
+    StorageBaseImpl_AddRef((IStorage*)(newStorage->base.ancestorStorage));
+
+    /*
+     * Keep the index of the root property set for this storage,
+     */
+    newStorage->base.rootPropertySetIndex = rootPropertyIndex;
+
+    return newStorage;
+  }
+
+  return 0;
 }
 
-void StorageUtl_ReadDWord(void* buffer, ULONG offset, DWORD* value)
+/******************************************************************************
+** StorageUtl implementation
+* FIXME: these should read and write in little-endian order on all
+* architectures, but right now just assume the host is little-endian.
+*/
+
+void StorageUtl_ReadWord(const BYTE* buffer, ULONG offset, WORD* value)
 {
-  memcpy(value, (BYTE*)buffer+offset, sizeof(DWORD));
+  memcpy(value, buffer+offset, sizeof(WORD));
 }
 
-void StorageUtl_WriteDWord(void* buffer, ULONG offset, DWORD value)
+void StorageUtl_WriteWord(BYTE* buffer, ULONG offset, WORD value)
 {
-  memcpy((BYTE*)buffer+offset, &value, sizeof(DWORD));
+  memcpy(buffer+offset, &value, sizeof(WORD));
 }
 
-void StorageUtl_ReadGUID(void* buffer, ULONG offset, GUID* value)
+void StorageUtl_ReadDWord(const BYTE* buffer, ULONG offset, DWORD* value)
+{
+  memcpy(value, buffer+offset, sizeof(DWORD));
+}
+
+void StorageUtl_WriteDWord(BYTE* buffer, ULONG offset, DWORD value)
+{
+  memcpy(buffer+offset, &value, sizeof(DWORD));
+}
+
+void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value)
 {
   StorageUtl_ReadDWord(buffer, offset,   &(value->Data1));
   StorageUtl_ReadWord(buffer,  offset+4, &(value->Data2));
   StorageUtl_ReadWord(buffer,  offset+6, &(value->Data3));
 
-  memcpy(value->Data4, (BYTE*)buffer+offset+8, sizeof(value->Data4));
+  memcpy(value->Data4, buffer+offset+8, sizeof(value->Data4));
 }
 
-void StorageUtl_WriteGUID(void* buffer, ULONG offset, GUID* value)
+void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value)
 {
   StorageUtl_WriteDWord(buffer, offset,   value->Data1);
   StorageUtl_WriteWord(buffer,  offset+4, value->Data2);
   StorageUtl_WriteWord(buffer,  offset+6, value->Data3);
 
-  memcpy((BYTE*)buffer+offset+8, value->Data4, sizeof(value->Data4));
+  memcpy(buffer+offset+8, value->Data4, sizeof(value->Data4));
 }
 
 void StorageUtl_CopyPropertyToSTATSTG(
@@ -4789,7 +4778,7 @@ HRESULT SmallBlockChainStream_GetNextBlockInChain(
 
   if (success)
   {
-    StorageUtl_ReadDWord(&buffer, 0, nextBlockInChain);
+    StorageUtl_ReadDWord((BYTE *)&buffer, 0, nextBlockInChain);
     return S_OK;
   }
 
@@ -4816,7 +4805,7 @@ void SmallBlockChainStream_SetNextBlockInChain(
   offsetOfBlockInDepot.u.HighPart = 0;
   offsetOfBlockInDepot.u.LowPart  = blockIndex * sizeof(ULONG);
 
-  StorageUtl_WriteDWord(&buffer, 0, nextBlock);
+  StorageUtl_WriteDWord((BYTE *)&buffer, 0, nextBlock);
 
   /*
    * Read those bytes in the buffer from the small block file.
@@ -4880,7 +4869,7 @@ ULONG SmallBlockChainStream_GetNextFreeBlock(
      */
     if (success)
     {
-      StorageUtl_ReadDWord(&buffer, 0, &nextBlockIndex);
+      StorageUtl_ReadDWord((BYTE *)&buffer, 0, &nextBlockIndex);
 
       if (nextBlockIndex != BLOCK_UNUSED)
         blockIndex++;
@@ -5484,7 +5473,7 @@ HRESULT WINAPI StgCreateDocfile(
     WCHAR tempPath[MAX_PATH];
     static const WCHAR prefix[] = { 'S', 'T', 'O', 0 };
 
-    if (STGM_SHARE_MODE(grfMode) == STGM_SHARE_EXCLUSIVE)
+    if (STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE)
       goto end;
 
     memset(tempPath, 0, sizeof(tempPath));
@@ -5677,6 +5666,15 @@ HRESULT WINAPI StgOpenStorage(
     goto end;
   }
 
+  /* shared reading requires transacted mode */
+  if( STGM_SHARE_MODE(grfMode) == STGM_SHARE_DENY_WRITE &&
+      STGM_ACCESS_MODE(grfMode) == STGM_READWRITE &&
+     !(grfMode&STGM_TRANSACTED) )
+  {
+    hr = STG_E_INVALIDFLAG;
+    goto end;
+  }
+
   /*
    * Interpret the STGM value grfMode
    */
@@ -5728,7 +5726,17 @@ HRESULT WINAPI StgOpenStorage(
     goto end;
   }
 
+  /*
+   * Refuse to open the file if it's too small to be a structured storage file
+   * FIXME: verify the file when reading instead of here
+   */
   length = GetFileSize(hFile, NULL);
+  if (length < 0x100)
+  {
+    CloseHandle(hFile);
+    hr = STG_E_FILEALREADYEXISTS;
+    goto end;
+  }
 
   /*
    * Allocate and initialize the new IStorage32object.
@@ -5749,7 +5757,7 @@ HRESULT WINAPI StgOpenStorage(
          NULL,
          grfMode,
          TRUE,
-	 !length );
+	 FALSE );
 
   if (FAILED(hr))
   {
@@ -6134,7 +6142,7 @@ static HRESULT validateSTGM(DWORD stgm)
   /*
    * STGM_NOSCRATCH requires STGM_TRANSACTED
    */
-  if ( (stgm & STGM_NOSCRATCH) && (stgm & STGM_TRANSACTED) )
+  if ( (stgm & STGM_NOSCRATCH) && !(stgm & STGM_TRANSACTED) )
     return E_FAIL;
 
   /*
@@ -6310,7 +6318,7 @@ HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM_DATA *
 			{
 					if(pData->dwOleObjFileNameLength < 1) /* there is no file name exist */
 						pData->dwOleObjFileNameLength = sizeof(pData->dwOleObjFileNameLength);
-					pData->pstrOleObjFileName = (CHAR *)HeapAlloc(GetProcessHeap(), 0, pData->dwOleObjFileNameLength);
+					pData->pstrOleObjFileName = HeapAlloc(GetProcessHeap(), 0, pData->dwOleObjFileNameLength);
 					if(pData->pstrOleObjFileName)
 					{
 						dwSize = pOleStream->lpstbl->Get(pOleStream, (void *)(pData->pstrOleObjFileName),pData->dwOleObjFileNameLength);
@@ -6367,7 +6375,7 @@ HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM_DATA *
 			{
 				if(pData->dwDataLength > 0)
 				{
-					pData->pData = (BYTE *)HeapAlloc(GetProcessHeap(),0,pData->dwDataLength);
+					pData->pData = HeapAlloc(GetProcessHeap(),0,pData->dwDataLength);
 
 					/* Get Data (ex. IStorage, Metafile, or BMP) */
 					if(pData->pData)
@@ -6594,7 +6602,7 @@ DWORD OLECONVERT_WriteOLE20ToBuffer(LPSTORAGE pStorage, BYTE **pData)
         if(hFile != INVALID_HANDLE_VALUE)
         {
             nDataLength = GetFileSize(hFile, NULL);
-            *pData = (BYTE *) HeapAlloc(GetProcessHeap(),0,nDataLength);
+            *pData = HeapAlloc(GetProcessHeap(),0,nDataLength);
             ReadFile(hFile, *pData, nDataLength, &nDataLength, 0);
             CloseHandle(hFile);
         }
@@ -6755,61 +6763,6 @@ static HRESULT STORAGE_WriteCompObj( LPSTORAGE pstg, CLSID *clsid,
     return r;
 }
 
-/* enumerate HKEY_CLASSES_ROOT\\CLSID looking for a CLSID whose name matches */
-static HRESULT CLSIDFromUserType(LPCWSTR lpszUserType, CLSID *clsid)
-{
-    LONG r, i, len;
-    ULONG count;
-    WCHAR szKey[0x40];
-    HKEY hkey, hkeyclsid;
-    LPWSTR buffer = NULL;
-    BOOL found = FALSE;
-    static const WCHAR szclsid[] = { 'C','L','S','I','D',0 };
-
-    TRACE("Finding CLSID for %s\n", debugstr_w(lpszUserType));
-
-    r = RegOpenKeyW( HKEY_CLASSES_ROOT, szclsid, &hkeyclsid );
-    if( r )
-        return E_INVALIDARG;
-
-    len = lstrlenW( lpszUserType ) + 1;
-    buffer = CoTaskMemAlloc( len * sizeof (WCHAR) );
-    if( !buffer )
-        goto end;
-
-    for(i=0; !found; i++ )
-    {
-        r = RegEnumKeyW( hkeyclsid, i, szKey, sizeof(szKey)/sizeof(WCHAR));
-        if( r != ERROR_SUCCESS )
-            break;
-        hkey = 0;
-        r = RegOpenKeyW( hkeyclsid, szKey, &hkey );
-        if( r != ERROR_SUCCESS )
-            break;
-        count = len * sizeof (WCHAR);
-        r = RegQueryValueW( hkey, NULL, buffer, &count );
-        found = ( r == ERROR_SUCCESS ) &&
-                ( count == len*sizeof(WCHAR) ) && 
-                !lstrcmpW( buffer, lpszUserType ) ;
-        RegCloseKey( hkey );
-    }
-
-end:
-    if( buffer )
-        CoTaskMemFree( buffer );
-    RegCloseKey( hkeyclsid );
-
-    if ( !found )
-        return E_INVALIDARG;
-
-    TRACE("clsid is %s\n", debugstr_w( szKey ) );
-
-    r = CLSIDFromString( szKey, clsid );
-
-    return r;
-}
-
-
 /***********************************************************************
  *               WriteFmtUserTypeStg (OLE32.@)
  */
@@ -6818,17 +6771,11 @@ HRESULT WINAPI WriteFmtUserTypeStg(
 {
     HRESULT r;
     WCHAR szwClipName[0x40];
-    WCHAR szCLSIDName[OLESTREAM_MAX_STR_LEN];
-    CLSID clsid;
-    LPWSTR wstrProgID;
+    CLSID clsid = CLSID_NULL;
+    LPWSTR wstrProgID = NULL;
     DWORD n;
-    LPMALLOC allocator = NULL;
 
     TRACE("(%p,%x,%s)\n",pstg,cf,debugstr_w(lpszUserType));
-
-    r = CoGetMalloc(0, &allocator);
-    if( FAILED( r) )
-        return E_OUTOFMEMORY;
 
     /* get the clipboard format name */
     n = GetClipboardFormatNameW( cf, szwClipName, sizeof(szwClipName) );
@@ -6836,29 +6783,20 @@ HRESULT WINAPI WriteFmtUserTypeStg(
 
     TRACE("Clipboard name is %s\n", debugstr_w(szwClipName));
 
-    /* Get the CLSID */
-    szCLSIDName[0]=0;
-    r = CLSIDFromUserType(lpszUserType, &clsid);
-    if( FAILED( r ) )
-        return r;
+    /* FIXME: There's room to save a CLSID and its ProgID, but
+       the CLSID is not looked up in the registry and in all the
+       tests I wrote it was CLSID_NULL.  Where does it come from?
+    */
 
-    TRACE("CLSID is %s\n",debugstr_guid(&clsid));
-
-    /* get the real program ID */
-    r = ProgIDFromCLSID( &clsid, &wstrProgID);
-    if( FAILED( r ) )
-        return r;
+    /* get the real program ID.  This may fail, but that's fine */
+    ProgIDFromCLSID(&clsid, &wstrProgID);
 
     TRACE("progid is %s\n",debugstr_w(wstrProgID));
 
-    /* if we have a good string, write the stream */
-    if( wstrProgID )
-        r = STORAGE_WriteCompObj( pstg, &clsid, 
-                lpszUserType, szwClipName, wstrProgID );
-    else
-        r = E_OUTOFMEMORY;
+    r = STORAGE_WriteCompObj( pstg, &clsid, 
+                              lpszUserType, szwClipName, wstrProgID );
 
-    IMalloc_Free( allocator, wstrProgID);
+    CoTaskMemFree(wstrProgID);
 
     return r;
 }
@@ -7273,7 +7211,7 @@ void OLECONVERT_GetOle10PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
         IStream_Read(pStream, &(pOleStreamData->dwDataLength), sizeof(pOleStreamData->dwDataLength), NULL);
         if(pOleStreamData->dwDataLength > 0)
         {
-            pOleStreamData->pData = (LPSTR) HeapAlloc(GetProcessHeap(),0,pOleStreamData->dwDataLength);
+            pOleStreamData->pData = HeapAlloc(GetProcessHeap(),0,pOleStreamData->dwDataLength);
             IStream_Read(pStream, pOleStreamData->pData, pOleStreamData->dwDataLength, NULL);
         }
         IStream_Release(pStream);
@@ -7362,7 +7300,7 @@ void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
             MetaFilePict.hMF = 0;
 
             /* Get Metafile Data */
-            pOleStreamData[1].pData = (BYTE *) HeapAlloc(GetProcessHeap(),0,pOleStreamData[1].dwDataLength);
+            pOleStreamData[1].pData = HeapAlloc(GetProcessHeap(),0,pOleStreamData[1].dwDataLength);
             memcpy(pOleStreamData[1].pData, &MetaFilePict, sizeof(MetaFilePict));
             IStream_Read(pStream, &(pOleStreamData[1].pData[sizeof(MetaFilePict)]), pOleStreamData[1].dwDataLength-sizeof(METAFILEPICT16), NULL);
         }

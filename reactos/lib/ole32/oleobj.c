@@ -88,9 +88,7 @@ static LPOLEADVISEHOLDER OleAdviseHolderImpl_Constructor()
   OleAdviseHolderImpl* lpoah;
   DWORD                index;
 
-  lpoah= (OleAdviseHolderImpl*)HeapAlloc(GetProcessHeap(),
-					 0,
-					 sizeof(OleAdviseHolderImpl));
+  lpoah = HeapAlloc(GetProcessHeap(), 0, sizeof(OleAdviseHolderImpl));
 
   lpoah->lpVtbl = &oahvt;
   lpoah->ref = 1;
@@ -430,9 +428,7 @@ static IDataAdviseHolder* DataAdviseHolder_Constructor()
 {
   DataAdviseHolder* newHolder;
 
-  newHolder = (DataAdviseHolder*)HeapAlloc(GetProcessHeap(),
-					   0,
-					   sizeof(DataAdviseHolder));
+  newHolder = HeapAlloc(GetProcessHeap(), 0, sizeof(DataAdviseHolder));
 
   newHolder->lpVtbl = &DataAdviseHolderImpl_VTable;
   newHolder->ref = 1;

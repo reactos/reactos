@@ -172,7 +172,7 @@ BigBlockFile * BIGBLOCKFILE_Construct(
 {
   LPBIGBLOCKFILE This;
 
-  This = (LPBIGBLOCKFILE)HeapAlloc(GetProcessHeap(), 0, sizeof(BigBlockFile));
+  This = HeapAlloc(GetProcessHeap(), 0, sizeof(BigBlockFile));
 
   if (This == NULL)
     return NULL;

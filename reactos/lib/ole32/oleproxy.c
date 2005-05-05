@@ -161,7 +161,7 @@ CFStub_Invoke(
 	TRACE("->CreateInstance(%s)\n",debugstr_guid(&iid));
 	hres = IUnknown_QueryInterface(This->pUnkServer,&IID_IClassFactory,(LPVOID*)&classfac);
 	if (hres) {
-	    FIXME("Ole server does not provide a IClassFactory?\n");
+	    FIXME("Ole server does not provide an IClassFactory?\n");
 	    return hres;
 	}
 	hres = IClassFactory_CreateInstance(classfac,NULL,&iid,(LPVOID*)&ppv);
