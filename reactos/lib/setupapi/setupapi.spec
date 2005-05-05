@@ -223,13 +223,13 @@
 @ stub MyGetFileTitle
 @ stdcall MyMalloc(long)
 @ stdcall MyRealloc(ptr long)
-@ stub OpenAndMapFileForRead
+@ stdcall OpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub OutOfMemory
 @ stub QueryMultiSzValueToArray
 @ stdcall QueryRegistryValue(long wstr ptr ptr ptr)
 @ stub ReadAsciiOrUnicodeTextFile
 @ stub RegistryDelnode
-@ stub RetreiveFileSecurity
+@ stdcall RetreiveFileSecurity(wstr ptr)
 @ stub RetrieveServiceConfig
 @ stub SearchForInfFile
 @ stub SetArrayToMultiSzValue
@@ -512,7 +512,7 @@
 @ stdcall SetupTermDefaultQueueCallback(ptr)
 @ stdcall SetupTerminateFileLog(long)
 @ stub ShouldDeviceBeExcluded
-@ stub StampFileSecurity
+@ stdcall StampFileSecurity(wstr ptr)
 @ stub StringTableAddString
 @ stub StringTableAddStringEx
 @ stub StringTableDestroy
@@ -526,9 +526,9 @@
 @ stub StringTableSetExtraData
 @ stub StringTableStringFromId
 @ stub StringTableTrim
-@ stub TakeOwnershipOfFile
+@ stdcall TakeOwnershipOfFile(wstr)
 @ stdcall UnicodeToMultiByte(wstr long)
-@ stub UnmapAndCloseFile
+@ stdcall UnmapAndCloseFile(long long ptr)
 @ stub VerifyCatalogFile
 @ stub VerifyFile
 @ stub pSetupAccessRunOnceNodeList
