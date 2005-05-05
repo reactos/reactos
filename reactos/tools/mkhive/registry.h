@@ -47,12 +47,12 @@ typedef struct _REG_KEY
   ULONG ValueCount;
 
   USHORT NameSize;
-  PUCHAR Name;
+  PCHAR Name;
 
   /* default data */
   ULONG DataType;
   ULONG DataSize;
-  PUCHAR Data;
+  PCHAR Data;
 } KEY, *HKEY, **PHKEY;
 
 
@@ -62,12 +62,12 @@ typedef struct _REG_VALUE
 
   /* value name */
   ULONG NameSize;
-  PUCHAR Name;
+  PCHAR Name;
 
   /* value data */
   ULONG DataType;
   ULONG DataSize;
-  PUCHAR Data;
+  PCHAR Data;
 } VALUE, *PVALUE;
 
 
@@ -260,14 +260,14 @@ LONG
 RegSetValue(HKEY Key,
 	    PCHAR ValueName,
 	    ULONG Type,
-	    PUCHAR Data,
+	    PCHAR Data,
 	    ULONG DataSize);
 
 LONG
 RegQueryValue(HKEY Key,
 	      PCHAR ValueName,
 	      PULONG Type,
-	      PUCHAR Data,
+	      PCHAR Data,
 	      PULONG DataSize);
 
 LONG
@@ -280,7 +280,7 @@ RegEnumValue(HKEY Key,
 	     PCHAR ValueName,
 	     PULONG NameSize,
 	     PULONG Type,
-	     PUCHAR Data,
+	     PCHAR Data,
 	     PULONG DataSize);
 
 USHORT

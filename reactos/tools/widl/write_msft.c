@@ -297,7 +297,7 @@ static int ctl2_encode_name(
 
     converted_name[1] = 0x00;
 
-    value = lhash_val_of_name_sys(typelib->typelib_header.varflags & 0x0f, typelib->typelib_header.lcid, converted_name + 4);
+    value = lhash_val_of_name_sys(typelib->typelib_header.varflags & 0x0f, typelib->typelib_header.lcid, (LPCSTR)converted_name + 4);
 
     converted_name[2] = value;
     converted_name[3] = value >> 8;

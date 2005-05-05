@@ -254,8 +254,11 @@ class File
 public:
 	std::string name;
 	bool first;
+	std::string switches;
 
-	File ( const std::string& _name, bool _first );
+	File ( const std::string& _name,
+	       bool _first,
+	       std::string _switches );
 
 	void ProcessXML();
 };

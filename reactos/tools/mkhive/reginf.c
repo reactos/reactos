@@ -124,7 +124,7 @@ AppendMultiSzValue (HKEY KeyHandle,
   Error = RegQueryValue (KeyHandle,
 			 ValueName,
 			 NULL,
-			 (PUCHAR)Buffer,
+			 (PCHAR)Buffer,
 			 &Size);
   if (Error != ERROR_SUCCESS)
      goto done;
@@ -154,7 +154,7 @@ AppendMultiSzValue (HKEY KeyHandle,
       RegSetValue (KeyHandle,
 		   ValueName,
 		   REG_MULTI_SZ,
-		   (PUCHAR)Buffer,
+		   (PCHAR)Buffer,
 		   Total);
     }
 
@@ -331,7 +331,7 @@ do_reg_operation(HKEY KeyHandle,
     }
   else  /* get the binary data */
     {
-      PUCHAR Data = NULL;
+      PCHAR Data = NULL;
 
       if (!InfGetBinaryField (Context, 5, NULL, 0, &Size))
 	Size = 0;

@@ -63,120 +63,21 @@ static int interface_status(struct interface_info *ifinfo);
  * register that interface with the network I/O software, figure out
  * what subnet it's on, and add it to the list of interfaces.
  */
-#if 0
-void
-discover_interfaces(struct interface_info *iface)
-{
-    struct ifaddrs *ifap, *ifa;
-    struct sockaddr_in foo;
-    struct ifreq *tif;
-
-    if (getifaddrs(&ifap) != 0)
-        error("getifaddrs failed");
-
-    for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
-        if ((ifa->ifa_flags & IFF_LOOPBACK) ||
-            (ifa->ifa_flags & IFF_POINTOPOINT) ||
-            (!(ifa->ifa_flags & IFF_UP)))
-            continue;
-
-
-        if (strcmp(iface->name, ifa->ifa_name))
-            continue;
-
-        /*
-         * If we have the capability, extract link information
-         * and record it in a linked list.
-         */
-        if (ifa->ifa_addr->sa_family == AF_LINK) {
-            struct sockaddr_dl *foo =
-                (struct sockaddr_dl *)ifa->ifa_addr;
-
-            iface->index = foo->sdl_index;
-            iface->hw_address.hlen = foo->sdl_alen;
-            iface->hw_address.htype = HTYPE_ETHER; /* XXX */
-            memcpy(iface->hw_address.haddr,
-                   LLADDR(foo), foo->sdl_alen);
-        } else if (ifa->ifa_addr->sa_family == AF_INET) {
-            struct iaddr addr;
-
-            memcpy(&foo, ifa->ifa_addr, sizeof(foo));
-            if (foo.sin_addr.s_addr == htonl(INADDR_LOOPBACK))
-                continue;
-            if (!iface->ifp) {
-                int len = IFNAMSIZ + ifa->ifa_addr->sa_len;
-                if ((tif = malloc(len)) == NULL)
-                    error("no space to remember ifp");
-                strlcpy(tif->ifr_name, ifa->ifa_name, IFNAMSIZ);
-                memcpy(&tif->ifr_addr, ifa->ifa_addr,
-                       ifa->ifa_addr->sa_len);
-                iface->ifp = tif;
-                iface->primary_address = foo.sin_addr;
-            }
-            addr.len = 4;
-            memcpy(addr.iabuf, &foo.sin_addr.s_addr, addr.len);
-        }
-    }
-
-    if (!iface->ifp)
-        error("%s: not found", iface->name);
-
-    /* Register the interface... */
-    if_register_receive(iface);
-    if_register_send(iface);
-    add_protocol(iface->name, iface->rfdesc, got_one, iface);
-    freeifaddrs(ifap);
-}
-#else
 void
 discover_interfaces(struct interface_info *iface)
 {
     NTSTATUS Status;
-    ULONG dim;
-    char TmpName [IFNAMSIZ];
+    PDHCP_ADAPTER Adapter = AdapterFindInfo( iface );
 
-    PIP_ADAPTER_INFO pAdapterInfo;
-    PIP_ADAPTER_INFO pAdapter = NULL;
+    if_register_receive(iface);
+    if_register_send(iface);
 
-    pAdapterInfo = malloc(sizeof(IP_ADAPTER_INFO));
-    dim = sizeof(IP_ADAPTER_INFO);
-
-    if (GetAdaptersInfo( pAdapterInfo, &dim) != ERROR_SUCCESS) {
-        free(pAdapterInfo);
-        pAdapterInfo = (IP_ADAPTER_INFO *) malloc (dim);
-    }
-
-    if ((Status = GetAdaptersInfo( pAdapterInfo, &dim)) != NO_ERROR) {
-        note("Error %x", Status);
-        free (pAdapterInfo);
-        return;
-    }
-
-    for (pAdapter = pAdapterInfo; pAdapter; pAdapter = pAdapter->Next) {
-        /* we only do ethernet */
-        note("found: %s %x\n", pAdapter->AdapterName, pAdapter->Address);
-        if (pAdapter->Type != MIB_IF_TYPE_ETHERNET) {
-            continue;
-        }
-        note ("found ethernet\n");
-
-        iface->hw_address.hlen = pAdapter->AddressLength;
-        iface->hw_address.htype = HTYPE_ETHER;
-        memcpy (&iface->hw_address.haddr[0],
-                pAdapter->Address, iface->hw_address.hlen);
-
-        if (pAdapter->IpAddressList.IpAddress.String)
-            iface->primary_address.S_un.S_addr = inet_addr(pAdapter->IpAddressList.IpAddress.String);
-
-    }
-    if (iface) {
-        if_register_receive(iface);
-        if_register_send(iface);
+    if( Adapter->DhclientState.state != S_STATIC ) {
         add_protocol(iface->name, iface->rfdesc, got_one, iface);
+	iface->client->state = S_INIT;
+	state_reboot(iface);
     }
-    free (pAdapterInfo);
 }
-#endif
 
 void
 reinitialize_interfaces(void)
@@ -199,32 +100,23 @@ dispatch(void)
     time_t howlong;
     struct timeval timeval;
 
+    ApiLock();
+
     for (l = protocols; l; l = l->next)
         nfds++;
 
     FD_ZERO(&fds);
 
-//	fds = malloc(nfds * sizeof(struct pollfd));
-//	if (fds == NULL)
-//		error("Can't allocate poll structures.");
-
     do {
-        DH_DbgPrint(MID_TRACE,("Cycling dispatch()\n"));
         /*
          * Call any expired timeouts, and then if there's still
          * a timeout registered, time out the select call then.
          */
     another:
         if (timeouts) {
-            DH_DbgPrint(MID_TRACE,("Some timeouts are available\n"));
-            
             struct timeout *t;
 
             if (timeouts->when <= cur_time) {
-                DH_DbgPrint(MID_TRACE,("Calling timeout %x %p %x\n", 
-                                       timeouts->when,
-                                       timeouts->func,
-                                       timeouts->what));
                 t = timeouts;
                 timeouts = timeouts->next;
                 (*(t->func))(t->what);
@@ -251,26 +143,43 @@ dispatch(void)
             struct interface_info *ip = l->local;
 
             if (ip && (l->handler != got_one || !ip->dead)) {
-                DH_DbgPrint(MID_TRACE,("l->fd %d\n", l->fd));
-                        
                 FD_SET(l->fd, &fds);
-//				fds[i].fd = l->fd;
-//				fds[i].events = POLLIN;
-//				fds[i].revents = 0;
                 i++;
             }
         }
 
-        if (i == 0)
-            error("No live interfaces to poll on - exiting.");
+        if (i == 0) {
+            /* No interfaces for now, set the select timeout reasonably so
+             * we can recover from that condition later. */
+            timeval.tv_sec = 5;
+            timeval.tv_usec = 0;
+        } else {
+            /* Wait for a packet or a timeout... XXX */
+            timeval.tv_sec = to_msec / 1000;
+            timeval.tv_usec = (to_msec % 1000) * 1000;
+        }
 
-        /* Wait for a packet or a timeout... XXX */
-        timeval.tv_sec = to_msec / 1000;
-        timeval.tv_usec = (to_msec % 1000) * 1000;
-        DH_DbgPrint(MID_TRACE,("select(%d,%d.%03d) =>\n", 
-                 nfds,timeval.tv_sec,timeval.tv_usec/1000));
+        ApiUnlock();
+
         count = select(nfds, &fds, NULL, NULL, &timeval);
-        DH_DbgPrint(MID_TRACE,(" => %d\n", count));
+
+        DH_DbgPrint(MID_TRACE,("Select: %d\n", count));
+
+        /* Review poll output */
+        for (i = 0, l = protocols; l; l = l->next) {
+            struct interface_info *ip = l->local;
+
+            if (ip && (l->handler != got_one || !ip->dead)) {
+                DH_DbgPrint
+                    (MID_TRACE,
+                     ("set(%d) -> %s\n", 
+                      l->fd, FD_ISSET(l->fd, &fds) ? "true" : "false"));
+                i++;
+            }
+        }
+
+
+        ApiLock();
 
         /* Not likely to be transitory... */
         if (count == SOCKET_ERROR) {
@@ -288,9 +197,7 @@ dispatch(void)
         for (l = protocols; l; l = l->next) {
             struct interface_info *ip;
             ip = l->local;
-            if (!FD_ISSET(l->fd, &fds)) {
-//.revents & (POLLIN | POLLHUP))) {
-//				fds[i].revents = 0;
+            if (FD_ISSET(l->fd, &fds)) {
                 if (ip && (l->handler != got_one ||
                            !ip->dead)) {
                     DH_DbgPrint(MID_TRACE,("Handling %x\n", l));
@@ -302,8 +209,9 @@ dispatch(void)
             }
             interfaces_invalidated = 0;
         }
-        DH_DbgPrint(MID_TRACE,("Done\n"));
     } while (1);
+
+    ApiUnlock(); /* Not reached currently */
 }
 
 void
@@ -542,6 +450,18 @@ remove_protocol(struct protocol *proto)
             free(p);
         }
     }
+}
+
+struct protocol *
+find_protocol_by_adapter(struct interface_info *info) 
+{
+    struct protocol *p;
+
+    for( p = protocols; p; p = p->next ) {
+        if( p->local == (void *)info ) return p;
+    }
+
+    return NULL;
 }
 
 int

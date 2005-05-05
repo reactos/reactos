@@ -14,10 +14,12 @@
 
 NTSTATUS
 SerenumDuplicateUnicodeString(
-  OUT PUNICODE_STRING Destination,
-  IN PUNICODE_STRING Source,
-  IN POOL_TYPE PoolType)
+	OUT PUNICODE_STRING Destination,
+	IN PUNICODE_STRING Source,
+	IN POOL_TYPE PoolType)
 {
+	ASSERT(Destination);
+	
 	if (Source == NULL)
 	{
 		RtlInitUnicodeString(Destination, NULL);
@@ -51,6 +53,8 @@ SerenumInitMultiSzString(
 	UNICODE_STRING UnicodeString;
 	ULONG DestinationSize = 0;
 	NTSTATUS Status = STATUS_SUCCESS;
+	
+	ASSERT(Destination);
 	
 	/* Calculate length needed for destination unicode string */
 	va_start(args, Destination);
@@ -133,6 +137,8 @@ ForwardIrpAndWait(
 	ASSERT(((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO);
 	LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
 	
+	ASSERT(LowerDevice);
+	
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 	
@@ -162,6 +168,7 @@ ForwardIrpToLowerDeviceAndForget(
 	ASSERT(DeviceExtension->Common.IsFDO);
 	
 	LowerDevice = DeviceExtension->LowerDevice;
+	ASSERT(LowerDevice);
 	DPRINT("Serenum: calling lower device 0x%p [%wZ]\n",
 		LowerDevice, &LowerDevice->DriverObject->DriverName);
 	IoSkipCurrentIrpStackLocation(Irp);
@@ -180,6 +187,7 @@ ForwardIrpToAttachedFdoAndForget(
 	ASSERT(!DeviceExtension->Common.IsFDO);
 	
 	Fdo = DeviceExtension->AttachedFdo;
+	ASSERT(Fdo);
 	DPRINT("Serenum: calling attached Fdo 0x%p [%wZ]\n",
 		Fdo, &Fdo->DriverObject->DriverName);
 	IoSkipCurrentIrpStackLocation(Irp);
@@ -195,6 +203,7 @@ ForwardIrpAndForget(
 	
 	ASSERT(((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO);
 	LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+	ASSERT(LowerDevice);
 	
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);

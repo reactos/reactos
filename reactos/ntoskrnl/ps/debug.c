@@ -267,4 +267,78 @@ NtSetContextThread(IN HANDLE ThreadHandle,
     return Status;
 }
 
+VOID 
+STDCALL
+PspDumpThreads(BOOLEAN IncludeSystem)
+{
+    PLIST_ENTRY CurrentThread, CurrentProcess;
+    PEPROCESS Process;
+    PETHREAD Thread;
+    ULONG nThreads = 0;
+   
+    /* Loop all Active Processes */
+    CurrentProcess = PsActiveProcessHead.Flink;
+    while(CurrentProcess != &PsActiveProcessHead)
+    {
+    
+        /* Get the process */
+        Process = CONTAINING_RECORD(CurrentProcess, EPROCESS, ProcessListEntry);
+        
+        /* Skip the Initial Process if requested */
+        if((Process != PsInitialSystemProcess) ||
+           (Process == PsInitialSystemProcess && IncludeSystem))
+        {
+            /* Loop all its threads */
+            CurrentThread = Process->ThreadListHead.Flink;
+            while(CurrentThread != &Process->ThreadListHead)
+            {
+            
+                /* Get teh Thread */
+                Thread = CONTAINING_RECORD(CurrentThread, ETHREAD, ThreadListEntry);
+                nThreads++;
+                
+                /* Print the Info */
+                DbgPrint("State %d Affinity %08x Priority %d PID.TID %d.%d Name %.8s Stack: \n",
+                         Thread->Tcb.State,
+                         Thread->Tcb.Affinity,
+                         Thread->Tcb.Priority,
+                         Thread->Cid.UniqueProcess,
+                         Thread->Cid.UniqueThread,
+                         Thread->ThreadsProcess->ImageFileName);
+                
+                /* Make sure it's not running */
+                if(Thread->Tcb.State == Ready ||
+                   Thread->Tcb.State == Standby ||
+                   Thread->Tcb.State == Waiting)
+                {
+                    ULONG i = 0;
+                    PULONG Esp = (PULONG)Thread->Tcb.KernelStack;
+                    PULONG Ebp = (PULONG)Esp[4];
+                    
+                    /* Print EBP */
+                    DbgPrint("Ebp 0x%.8X\n", Ebp);
+                    
+                    /* Walk it */
+                    while(Ebp != 0 && Ebp >= (PULONG)Thread->Tcb.StackLimit)
+                    {
+                        /* Print what's on the stack */
+                        DbgPrint("%.8X %.8X%s", Ebp[0], Ebp[1], (i % 8) == 7 ? "\n" : "  ");
+                        Ebp = (PULONG)Ebp[0];
+                        i++;
+                    }
+                    
+                    /* Print a new line if there's nothing */
+                    if((i % 8) != 0) DbgPrint("\n");
+                }
+            }
+            
+            /* Move to the next Thread */
+         CurrentThread = CurrentThread->Flink;
+        }
+        
+        /* Move to the next Process */
+        CurrentProcess = CurrentProcess->Flink;
+    }
+}
+
 /* EOF */

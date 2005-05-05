@@ -66,6 +66,8 @@ typedef struct _FDO_DEVICE_EXTENSION
 	PDEVICE_OBJECT Pdo;
 	IO_REMOVE_LOCK RemoveLock;
 	
+	UNICODE_STRING SerenumInterfaceName;
+	
 	PDEVICE_OBJECT AttachedPdo;
 	ULONG Flags;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
@@ -122,7 +124,7 @@ SerenumDuplicateUnicodeString(
 NTSTATUS
 SerenumInitMultiSzString(
 	OUT PUNICODE_STRING Destination,
-	... /* list of ANSI_STRINGs */);
+	... /* list of PCSZ */);
 
 NTSTATUS
 ForwardIrpAndWait(

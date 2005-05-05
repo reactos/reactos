@@ -136,7 +136,7 @@ VOID TuiDrawBackdrop(VOID)
  * FillArea()
  * This function assumes coordinates are zero-based
  */
-VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
+VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	ULONG		i, j;
@@ -162,7 +162,7 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillCha
 		// Loop through each character (column) in the line and fill it in
 		for (j=Left; j<=Right; j++)
 		{
-			ScreenMemory[((i*2)*UiScreenWidth)+(j*2)] = FillChar;
+			ScreenMemory[((i*2)*UiScreenWidth)+(j*2)] = (UCHAR)FillChar;
 			ScreenMemory[((i*2)*UiScreenWidth)+(j*2)+1] = Attr;
 		}
 	}
@@ -304,7 +304,7 @@ VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyl
  * DrawText()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
+VOID TuiDrawText(ULONG X, ULONG Y, PCHAR Text, UCHAR Attr)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
 	ULONG		i, j;
@@ -312,12 +312,12 @@ VOID TuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 	// Draw the text
 	for (i=X, j=0; Text[j]  && i<UiScreenWidth; i++,j++)
 	{
-		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = Text[j];
+		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = (UCHAR)Text[j];
 		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
 	}
 }
 
-VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr)
+VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCHAR TextString, UCHAR Attr)
 {
 	ULONG		TextLength;
 	ULONG		BoxWidth;
@@ -329,7 +329,7 @@ VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHA
 	ULONG		RealTop;
 	ULONG		X;
 	ULONG		Y;
-	UCHAR	Temp[2];
+	CHAR	Temp[2];
 
 	TextLength = strlen(TextString);
 
@@ -378,7 +378,7 @@ VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHA
 	}
 }
 
-VOID TuiDrawStatusText(PUCHAR StatusText)
+VOID TuiDrawStatusText(PCHAR StatusText)
 {
 	ULONG		i;
 
@@ -397,9 +397,9 @@ VOID TuiUpdateDateTime(VOID)
 {
 	ULONG	Year, Month, Day;
 	ULONG	Hour, Minute, Second;
-	UCHAR	DateString[40];
-	UCHAR	TimeString[40];
-	UCHAR	TempString[20];
+	CHAR	DateString[40];
+	CHAR	TimeString[40];
+	CHAR	TempString[20];
 	BOOL	PMHour = FALSE;
 
 	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
@@ -498,7 +498,7 @@ VOID TuiRestoreScreen(PUCHAR Buffer)
 	}
 }
 
-VOID TuiMessageBox(PUCHAR MessageText)
+VOID TuiMessageBox(PCHAR MessageText)
 {
 	PVOID	ScreenBuffer;
 
@@ -514,7 +514,7 @@ VOID TuiMessageBox(PUCHAR MessageText)
 	MmFreeMemory(ScreenBuffer);
 }
 
-VOID TuiMessageBoxCritical(PUCHAR MessageText)
+VOID TuiMessageBoxCritical(PCHAR MessageText)
 {
 	int		width = 8;
 	int		height = 1;
@@ -603,7 +603,7 @@ VOID TuiMessageBoxCritical(PUCHAR MessageText)
 }
 
 
-VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PUCHAR ProgressText)
+VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 {
 	ULONG		Left, Top, Right, Bottom;
 	ULONG		Width = 50; // Allow for 50 "bars"
@@ -618,7 +618,7 @@ VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PUCHAR ProgressText)
 	TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
-VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PUCHAR ProgressText)
+VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
 {
 	ULONG		i;
 	ULONG		ProgressBarWidth = (Right - Left) - 3;
@@ -655,7 +655,7 @@ VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG 
 	VideoCopyOffScreenBufferToVRAM();
 }
 
-UCHAR TuiTextToColor(PUCHAR ColorText)
+UCHAR TuiTextToColor(PCHAR ColorText)
 {
 	if (stricmp(ColorText, "Black") == 0)
 		return COLOR_BLACK;
@@ -693,7 +693,7 @@ UCHAR TuiTextToColor(PUCHAR ColorText)
 	return COLOR_BLACK;
 }
 
-UCHAR TuiTextToFillStyle(PUCHAR FillStyleText)
+UCHAR TuiTextToFillStyle(PCHAR FillStyleText)
 {
 	if (stricmp(FillStyleText, "Light") == 0)
 	{
@@ -765,7 +765,7 @@ VOID TuiFadeOut(VOID)
 
 }
 
-BOOL TuiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, ULONG Length)
+BOOL TuiEditBox(PCHAR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	int		width = 8;
 	int		height = 1;

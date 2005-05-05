@@ -279,7 +279,7 @@ void PpcInit( of_proxy the_ofproxy ) {
     BootMain("freeldr-ppc");    
 }
 
-void MachInit() {
+void MachInit(char *CmdLine) {
     int len;
     printf( "Determining boot device:\n" );
     len = ofw_getprop(chosen_package, "bootpath", 

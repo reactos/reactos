@@ -2146,7 +2146,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   UnitInfo = (PSCSI_INQUIRY_DATA)
 	((PUCHAR)AdapterBusInfo + sizeof(SCSI_ADAPTER_BUS_INFO) +
 	 (sizeof(SCSI_BUS_DATA) * (AdapterBusInfo->NumberOfBuses - 1)));
-
+     
   for (Bus = 0; Bus < AdapterBusInfo->NumberOfBuses; Bus++)
     {
       AdapterBusInfo->BusData[Bus].InitiatorBusId =
@@ -2169,7 +2169,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		{
 		  DPRINT("(Bus %lu Target %lu Lun %lu)\n",
 			 Bus, Target, Lun);
-
+          RtlZeroMemory(UnitInfo, sizeof(*UnitInfo));
 		  UnitInfo->PathId = Bus;
 		  UnitInfo->TargetId = Target;
 		  UnitInfo->Lun = Lun;

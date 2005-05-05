@@ -617,6 +617,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PUSER_MESSAGE_QUEUE FocusMessageQueue;
   MSG Msg;
+  LARGE_INTEGER LargeTickCount;
 
   DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
     uMsg, wParam, lParam);
@@ -625,10 +626,15 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   Msg.message = uMsg;
   Msg.wParam = wParam;
   Msg.lParam = lParam;
-  /* FIXME: Initialize time and point. */
+
+  KeQueryTickCount(&LargeTickCount);
+  Msg.time = LargeTickCount.u.LowPart;
+  /* We can't get the Msg.pt point here since we don't know thread
+     (and thus the window station) the message will end up in yet. */
   
   FocusMessageQueue = IntGetFocusMessageQueue();
   if( !IntGetScreenDC() ) {
+    /* FIXME: What to do about Msg.pt here? */
     if( W32kGetPrimitiveMessageQueue() ) {
       MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg, FALSE, QS_KEY);
     }
@@ -643,6 +649,8 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
       {
 	Msg.hwnd = FocusMessageQueue->FocusWindow;
         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
+        IntGetCursorLocation(FocusMessageQueue->Desktop->WindowStation,
+                             &Msg.pt);
 	MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
       }
     else
@@ -659,6 +667,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
   PW32THREAD Win32Thread;
   PWINSTATION_OBJECT WinSta;
   MSG Mesg;
+  LARGE_INTEGER LargeTickCount;
   NTSTATUS Status;
 
   Status = ObReferenceObjectByPointer (Thread,
@@ -688,10 +697,9 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
   Mesg.message = WM_HOTKEY;
   Mesg.wParam = wParam;
   Mesg.lParam = lParam;
-//      Mesg.pt.x = PsGetWin32Process()->WindowStation->SystemCursor.x;
-//      Mesg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
-//      KeQueryTickCount(&LargeTickCount);
-//      Mesg.time = LargeTickCount.u.LowPart;
+  KeQueryTickCount(&LargeTickCount);
+  Mesg.time = LargeTickCount.u.LowPart;
+  IntGetCursorLocation(WinSta, &Mesg.pt);
   MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
   ObmDereferenceObject(Window);
   ObDereferenceObject (Thread);

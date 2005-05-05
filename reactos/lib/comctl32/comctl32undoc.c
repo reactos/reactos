@@ -88,6 +88,8 @@ typedef struct _LOADDATA
 
 typedef HRESULT (CALLBACK *DPALOADPROC)(LPLOADDATA,IStream*,LPARAM);
 
+static const WCHAR strMRUList[] = { 'M','R','U','L','i','s','t',0 };
+
 /**************************************************************************
  * DPA_LoadStream [COMCTL32.9]
  *
@@ -558,7 +560,7 @@ typedef struct tagWINEMRULIST
     BOOL           isUnicode;   /* is compare fn Unicode */
     DWORD          wineFlags;   /* internal flags                    */
     DWORD          cursize;     /* current size of realMRU           */
-    LPSTR          realMRU;     /* pointer to string of index names  */
+    LPWSTR         realMRU;     /* pointer to string of index names  */
     LPWINEMRUITEM  *array;      /* array of pointers to data         */
                                 /* in 'a' to 'z' order               */
 } WINEMRULIST, *LPWINEMRULIST;
@@ -603,12 +605,12 @@ static void MRU_SaveChanged ( LPWINEMRULIST mp )
     }
     if (mp->wineFlags & WMRUF_CHANGED) {
 	mp->wineFlags &= ~WMRUF_CHANGED;
-	err = RegSetValueExA(newkey, "MRUList", 0, REG_SZ,
-			     mp->realMRU, strlen(mp->realMRU) + 1);
+	err = RegSetValueExW(newkey, strMRUList, 0, REG_SZ, (LPBYTE)mp->realMRU,
+			     (strlenW(mp->realMRU) + 1)*sizeof(WCHAR));
 	if (err) {
 	    ERR("error saving MRUList, err=%d\n", err);
 	}
-	TRACE("saving MRUList=/%s/\n", mp->realMRU);
+	TRACE("saving MRUList=/%s/\n", debugstr_w(mp->realMRU));
     }
     realname[1] = 0;
     for(i=0; i<mp->cursize; i++) {
@@ -768,7 +770,7 @@ INT WINAPI AddMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData)
 
     if ((replace = FindMRUData (hList, lpData, cbData, NULL)) >= 0) {
         /* Item exists, just move it to the front */
-        LPSTR pos = strchr(mp->realMRU, replace + 'a');
+        LPWSTR pos = strchrW(mp->realMRU, replace + 'a');
         while (pos > mp->realMRU)
         {
             pos[0] = pos[-1];
@@ -961,7 +963,7 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
     /* get space to save indices that will turn into names
      * but in order of most to least recently used
      */
-    mp->realMRU = Alloc(mp->extview.nMaxItems + 2);
+    mp->realMRU = Alloc((mp->extview.nMaxItems + 2) * sizeof(WCHAR));
 
     /* get space to save pointers to actual data in order of
      * 'a' to 'z' (0 to n).
@@ -988,14 +990,14 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
     /* get values from key 'MRUList' */
     if (newkey) {
 	datasize = mp->extview.nMaxItems + 1;
-	if((err=RegQueryValueExA( newkey, "MRUList", 0, &type, mp->realMRU,
-				  &datasize))) {
+	if((err=RegQueryValueExW( newkey, strMRUList, 0, &type,
+				  (LPBYTE)mp->realMRU, &datasize))) {
 	    /* not present - set size to 1 (will become 0 later) */
 	    datasize = 1;
 	    *mp->realMRU = 0;
 	}
 
-	TRACE("MRU list = %s, datasize = %ld\n", mp->realMRU, datasize);
+	TRACE("MRU list = %s, datasize = %ld\n", debugstr_w(mp->realMRU), datasize);
 
 	mp->cursize = datasize - 1;
 	/* datasize now has number of items in the MRUList */
@@ -1824,7 +1826,7 @@ HDPA WINAPI DPA_Clone (const HDPA hdpa, const HDPA hdpaNew)
 
     if (!hdpaNew) {
 	/* create a new DPA */
-	hdpaTemp = (HDPA)HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
+	hdpaTemp = HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
 				    sizeof(*hdpaTemp));
 	hdpaTemp->hHeap = hdpa->hHeap;
 	hdpaTemp->nGrow = hdpa->nGrow;
@@ -1844,8 +1846,7 @@ HDPA WINAPI DPA_Clone (const HDPA hdpa, const HDPA hdpaNew)
     nNewItems = hdpaTemp->nGrow *
 		((INT)((hdpa->nItemCount - 1) / hdpaTemp->nGrow) + 1);
     nSize = nNewItems * sizeof(LPVOID);
-    hdpaTemp->ptrs =
-	(LPVOID*)HeapAlloc (hdpaTemp->hHeap, HEAP_ZERO_MEMORY, nSize);
+    hdpaTemp->ptrs = HeapAlloc (hdpaTemp->hHeap, HEAP_ZERO_MEMORY, nSize);
     hdpaTemp->nMaxCount = nNewItems;
 
     /* clone the pointer array */
@@ -1985,9 +1986,9 @@ BOOL WINAPI DPA_SetPtr (const HDPA hdpa, INT i, LPVOID p)
 	    INT nSize = nNewItems * sizeof(LPVOID);
 
 	    if (hdpa->ptrs)
-	        lpTemp = (LPVOID*)HeapReAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY, hdpa->ptrs, nSize);
+	        lpTemp = HeapReAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY, hdpa->ptrs, nSize);
 	    else
-		lpTemp = (LPVOID*)HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY, nSize);
+		lpTemp = HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY, nSize);
 	    
 	    if (!lpTemp)
 		return FALSE;
@@ -2046,7 +2047,7 @@ LPVOID WINAPI DPA_DeletePtr (const HDPA hdpa, INT i)
     if ((hdpa->nMaxCount - hdpa->nItemCount) >= hdpa->nGrow) {
 	INT nNewItems = max(hdpa->nGrow * 2, hdpa->nItemCount);
 	nSize = nNewItems * sizeof(LPVOID);
-	lpDest = (LPVOID)HeapReAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
+	lpDest = HeapReAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
 				      hdpa->ptrs, nSize);
 	if (!lpDest)
 	    return NULL;
@@ -2083,7 +2084,7 @@ BOOL WINAPI DPA_DeleteAllPtrs (const HDPA hdpa)
 
     hdpa->nItemCount = 0;
     hdpa->nMaxCount = hdpa->nGrow * 2;
-    hdpa->ptrs = (LPVOID*)HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
+    hdpa->ptrs = HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY,
 				     hdpa->nMaxCount * sizeof(LPVOID));
 
     return TRUE;
@@ -2280,7 +2281,7 @@ HDPA WINAPI DPA_CreateEx (INT nGrow, HANDLE hHeap)
     TRACE("(%d %p)\n", nGrow, hHeap);
 
     if (hHeap)
-	hdpa = (HDPA)HeapAlloc (hHeap, HEAP_ZERO_MEMORY, sizeof(*hdpa));
+	hdpa = HeapAlloc (hHeap, HEAP_ZERO_MEMORY, sizeof(*hdpa));
     else
 	hdpa = Alloc (sizeof(*hdpa));
 
@@ -2367,7 +2368,7 @@ static LRESULT DoNotify (LPNOTIFYDATA lpNotify, UINT uCode, LPNMHDR lpHdr)
 	lpNmh->code = uCode;
     }
 
-    return SendMessageA (lpNotify->hwndTo, WM_NOTIFY, idFrom, (LPARAM)lpNmh);
+    return SendMessageW (lpNotify->hwndTo, WM_NOTIFY, idFrom, (LPARAM)lpNmh);
 }
 
 

@@ -1115,6 +1115,10 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	 ObjectAttributes,
 	 ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
 
+  /* Check place for result handle, if it's null - return immediately */
+  if (KeyHandle == NULL)
+	  return(STATUS_INVALID_PARAMETER);
+
   PreviousMode = ExGetPreviousMode();
 
   if(PreviousMode != KernelMode)
@@ -1137,6 +1141,10 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     }
   }
 
+  /* WINE checks for the length also */
+  /*if (ObjectAttributes->ObjectName->Length > MAX_NAME_LENGTH)
+	  return(STATUS_BUFFER_OVERFLOW);*/
+
   RemainingPath.Buffer = NULL;
   Status = ObFindObject(ObjectAttributes,
 			&Object,
@@ -1144,7 +1152,10 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 			CmiKeyType);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      DPRINT("ObFindObject() returned 0x%08lx\n", Status);
+	  Status = STATUS_INVALID_HANDLE; /* Because ObFindObject returns STATUS_UNSUCCESSFUL */
+	  hKey = *KeyHandle; /* Preserve hkResult value */
+	  goto openkey_cleanup;
     }
 
   VERIFY_KEY_OBJECT((PKEY_OBJECT) Object);
@@ -1155,7 +1166,9 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     {
       ObDereferenceObject(Object);
       RtlFreeUnicodeString(&RemainingPath);
-      return STATUS_OBJECT_NAME_NOT_FOUND;
+      Status = STATUS_OBJECT_NAME_NOT_FOUND;
+      hKey = NULL;
+	  goto openkey_cleanup;
     }
 
   RtlFreeUnicodeString(&RemainingPath);
@@ -1164,7 +1177,9 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
     {
       ObDereferenceObject(Object);
-      return(STATUS_UNSUCCESSFUL);
+	  Status = STATUS_UNSUCCESSFUL;
+      hKey = NULL;
+	  goto openkey_cleanup;
     }
 
   Status = ObCreateHandle(PsGetCurrentProcess(),
@@ -1175,10 +1190,9 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   ObDereferenceObject(Object);
 
   if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
+     hKey = NULL;
 
+openkey_cleanup:
   _SEH_TRY
   {
     *KeyHandle = hKey;

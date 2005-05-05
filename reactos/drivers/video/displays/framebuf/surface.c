@@ -172,13 +172,19 @@ DrvAssertMode(
 
    if (bEnable)
    {
+      BOOLEAN Result;
       /*
        * Reinitialize the device to a clean state.
        */
+      Result = EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_SET_CURRENT_MODE,
+                                  &(ppdev->ModeIndex), sizeof(ULONG), NULL, 0,
+                                  &ulTemp);
+      if (ppdev->BitsPerPixel == 8)
+      {
+	 IntSetPalette(dhpdev, ppdev->PaletteEntries, 0, 256);
+      }
+      return Result;
 
-      return !EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_SET_CURRENT_MODE,
-                                 &(ppdev->ModeIndex), sizeof(ULONG), NULL, 0,
-                                 &ulTemp);
    }
    else
    {

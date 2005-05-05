@@ -8,6 +8,7 @@
  * REVISION HISTORY:  2003/04/24 Created
  */
 
+int _fltused = 0x9875;
 /*
  * This routine is called by MSVC-generated code to convert from floating point
  * to integer representation. The floating point number to be converted is

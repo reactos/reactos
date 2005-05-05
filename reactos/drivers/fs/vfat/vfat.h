@@ -13,6 +13,7 @@ NTSTATUS NTAPI RtlOemStringToUnicodeString(PUNICODE_STRING, CONST STRING *, BOOL
 NTSTATUS NTAPI RtlDowncaseUnicodeString(PUNICODE_STRING, PCUNICODE_STRING, BOOLEAN);
 NTSTATUS NTAPI RtlUnicodeStringToOemString(POEM_STRING, PCUNICODE_STRING, BOOLEAN);
 #undef DeleteFile /* FIXME */
+#define VOLUME_IS_DIRTY 0x00000001 /* FIXME */
 #endif
 
 #ifdef USE_ROS_CC_AND_FS
@@ -193,6 +194,8 @@ typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
 #define VCB_VOLUME_LOCKED       0x0001
 #define VCB_DISMOUNT_PENDING    0x0002
 #define VCB_IS_FATX             0x0004
+#define VCB_IS_DIRTY            0x4000 /* Volume is dirty */
+#define VCB_CLEAR_DIRTY         0x8000 /* Clean dirty flag at shutdown */
 
 typedef struct
 {
@@ -257,6 +260,7 @@ typedef struct DEVICE_EXTENSION
   PGET_NEXT_CLUSTER GetNextCluster;
   PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
   PWRITE_CLUSTER WriteCluster;
+  ULONG CleanShutBitMask;
   
   /* Pointers to functions for manipulating directory entries. */
   PGET_NEXT_DIR_ENTRY GetNextDirEntry;

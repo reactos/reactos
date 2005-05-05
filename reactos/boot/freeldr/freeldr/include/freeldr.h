@@ -38,8 +38,6 @@
 #define ROUND_DOWN(N, S) ((N) & ~((S) - 1))
 #define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
                                            
-extern ULONG BootDrive; /* BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc. */
-extern ULONG BootPartition; /* Boot Partition, 1-4 */
 extern BOOL UserInterfaceUp;	/* Tells us if the user interface is displayed */
 
 VOID BootMain(LPSTR CmdLine);

@@ -60,8 +60,12 @@ typedef struct _DRIVER_REINIT_ITEM
 /* GLOBALS ********************************************************************/
 
 static LIST_ENTRY DriverReinitListHead;
-static PLIST_ENTRY DriverReinitTailEntry;
 static KSPIN_LOCK DriverReinitListLock;
+static PLIST_ENTRY DriverReinitTailEntry;
+
+static PLIST_ENTRY DriverBootReinitTailEntry;
+static LIST_ENTRY DriverBootReinitListHead;
+static KSPIN_LOCK DriverBootReinitListLock;
 
 static LIST_ENTRY GroupListHead = {NULL, NULL};
 static LIST_ENTRY ServiceListHead  = {NULL, NULL};
@@ -117,6 +121,10 @@ IopInitDriverImplementation(VOID)
    InitializeListHead(&DriverReinitListHead);
    KeInitializeSpinLock(&DriverReinitListLock);
    DriverReinitTailEntry = NULL;
+   
+   InitializeListHead(&DriverBootReinitListHead);
+   KeInitializeSpinLock(&DriverBootReinitListLock);
+   DriverBootReinitTailEntry = NULL;
 }
 
 NTSTATUS STDCALL
@@ -199,6 +207,7 @@ NTSTATUS FASTCALL
 IopCreateDriverObject(
    PDRIVER_OBJECT *DriverObject,
    PUNICODE_STRING ServiceName,
+   ULONG CreateAttributes,
    BOOLEAN FileSystem,
    PVOID DriverImageStart,
    ULONG DriverImageSize)
@@ -240,7 +249,7 @@ IopCreateDriverObject(
    InitializeObjectAttributes(
       &ObjectAttributes,
       &DriverName,
-      OBJ_PERMANENT,
+      CreateAttributes | OBJ_PERMANENT,
       NULL,
       NULL);
 
@@ -265,9 +274,14 @@ IopCreateDriverObject(
    Object->DriverSize = DriverImageSize;
    if (Buffer)
    {
-      Object->DriverName.Buffer = Buffer;
-      Object->DriverName.Length = Object->DriverName.MaximumLength = DriverName.Length;
-      RtlCopyMemory(Object->DriverName.Buffer, DriverName.Buffer, DriverName.Length);
+      if (!Object->DriverName.Buffer)
+      {
+         Object->DriverName.Buffer = Buffer;
+         Object->DriverName.Length = Object->DriverName.MaximumLength = DriverName.Length;
+         RtlCopyMemory(Object->DriverName.Buffer, DriverName.Buffer, DriverName.Length);
+      }
+      else
+         ExFreePool(Buffer);
    }
 
    *DriverObject = Object;
@@ -479,7 +493,7 @@ IopLoadServiceModule(
    else
    {
       DPRINT("Module already loaded\n");
-      Status = STATUS_SUCCESS;
+      Status = STATUS_IMAGE_ALREADY_LOADED;
    }
 
    RtlFreeUnicodeString(&ServiceImagePath);
@@ -511,6 +525,9 @@ IopLoadServiceModule(
  *       Module object representing the driver. It can be retrieve by
  *       IopLoadServiceModule.
  *
+ *    ServiceName
+ *       Name of the service (as in registry).
+ *
  *    FileSystemDriver
  *       Set to TRUE for file system drivers.
  *
@@ -523,6 +540,7 @@ NTSTATUS FASTCALL
 IopInitializeDriverModule(
    IN PDEVICE_NODE DeviceNode,
    IN PMODULE_OBJECT ModuleObject,
+   IN PUNICODE_STRING ServiceName,
    IN BOOLEAN FileSystemDriver,
    OUT PDRIVER_OBJECT *DriverObject)
 {
@@ -533,7 +551,8 @@ IopInitializeDriverModule(
 
    Status = IopCreateDriverObject(
       DriverObject,
-      &DeviceNode->ServiceName,
+      ServiceName,
+      0,
       FileSystemDriver,
       ModuleObject->Base,
       ModuleObject->Length);
@@ -544,14 +563,14 @@ IopInitializeDriverModule(
       return Status;
    }
 
-   if (DeviceNode->ServiceName.Buffer)
+   if (ServiceName->Buffer)
    {
-      RegistryKey.Length = DeviceNode->ServiceName.Length +
+      RegistryKey.Length = ServiceName->Length +
          sizeof(ServicesKeyName) - sizeof(UNICODE_NULL);
       RegistryKey.MaximumLength = RegistryKey.Length + sizeof(UNICODE_NULL);
       RegistryKey.Buffer = ExAllocatePool(PagedPool, RegistryKey.MaximumLength);
       wcscpy(RegistryKey.Buffer, ServicesKeyName);
-      wcscat(RegistryKey.Buffer, DeviceNode->ServiceName.Buffer);
+      wcscat(RegistryKey.Buffer, ServiceName->Buffer);
    }
    else
    {
@@ -610,12 +629,29 @@ IopAttachFilterDriversCallback(
 
       /* Load and initialize the filter driver */
       Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
-      if (!NT_SUCCESS(Status))
-         continue;
+      if (Status != STATUS_IMAGE_ALREADY_LOADED)
+      {
+         if (!NT_SUCCESS(Status))
+            continue;
 
-      Status = IopInitializeDriverModule(DeviceNode, ModuleObject, FALSE, &DriverObject);
-      if (!NT_SUCCESS(Status))
-         continue;
+         Status = IopInitializeDriverModule(DeviceNode, ModuleObject, &ServiceName,
+                                            FALSE, &DriverObject);
+         if (!NT_SUCCESS(Status))
+            continue;
+      }
+      else
+      {
+         /* get existing DriverObject pointer */
+         Status = IopCreateDriverObject(
+            &DriverObject,
+            &ServiceName,
+            OBJ_OPENIF,
+            FALSE,
+            ModuleObject->Base,
+            ModuleObject->Length);
+         if (!NT_SUCCESS(Status))
+            continue;
+      }
 
       Status = IopInitializeDevice(DeviceNode, DriverObject);
       if (!NT_SUCCESS(Status))
@@ -1165,8 +1201,8 @@ IopInitializeBuiltinDriver(
     * Initialize the driver
     */
 
-   Status = IopInitializeDriverModule(DeviceNode, ModuleObject, FALSE,
-      &DriverObject);
+   Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+      &DeviceNode->ServiceName, FALSE, &DriverObject);
    
    if (!NT_SUCCESS(Status))
    {
@@ -1613,6 +1649,7 @@ IoCreateDriver (
     PDRIVER_OBJECT DriverObject;
     UNICODE_STRING ServiceKeyName;
     HANDLE hDriver;
+    ULONG i;
     
     /* First, create a unique name for the driver if we don't have one */
     if (!DriverName) {
@@ -1659,7 +1696,12 @@ IoCreateDriver (
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;
-    /* FIXME: Invalidate all Major Functions b/c now they are NULL and might crash */
+    
+    /* Invalidate all Major Functions */
+    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+    {
+        DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
+    }
                
     /* Set up the Service Key Name */
     ServiceKeyName.Buffer = ExAllocatePool(PagedPool, LocalDriverName.Length + sizeof(WCHAR));
@@ -1873,6 +1915,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    Status = IopInitializeDriverModule(
       DeviceNode,
       ModuleObject,
+      &DeviceNode->ServiceName,
       (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
        Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
       &DriverObject);
@@ -1934,9 +1977,40 @@ IoRegisterDriverReinitialization(
    ReinitItem->DriverObject = DriverObject;
    ReinitItem->ReinitRoutine = ReinitRoutine;
    ReinitItem->Context = Context;
+   
+   DriverObject->Flags |= DRVO_REINIT_REGISTERED;
 
    ExInterlockedInsertTailList(
       &DriverReinitListHead,
+      &ReinitItem->ItemEntry,
+      &DriverReinitListLock);
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+IoRegisterBootDriverReinitialization(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
+    IN PVOID Context
+    )
+{
+   PDRIVER_REINIT_ITEM ReinitItem;
+
+   ReinitItem = ExAllocatePool(NonPagedPool, sizeof(DRIVER_REINIT_ITEM));
+   if (ReinitItem == NULL)
+      return;
+
+   ReinitItem->DriverObject = DriverObject;
+   ReinitItem->ReinitRoutine = DriverReinitializationRoutine;
+   ReinitItem->Context = Context;
+   
+   DriverObject->Flags |= DRVO_BOOTREINIT_REGISTERED;
+
+   ExInterlockedInsertTailList(
+      &DriverBootReinitListHead,
       &ReinitItem->ItemEntry,
       &DriverReinitListLock);
 }

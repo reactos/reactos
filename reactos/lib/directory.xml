@@ -106,8 +106,14 @@
 <directory name="kbdgr">
 	<xi:include href="kbdgr/kbdgr.xml" />
 </directory>
+<directory name="kbdru">
+	<xi:include href="kbdru/kbdru.xml" />
+</directory>
 <directory name="kbdse">
 	<xi:include href="kbdse/kbdse.xml" />
+</directory>
+<directory name="kbdsg">
+	<xi:include href="kbdsg/kbdsg.xml" />
 </directory>
 <directory name="kbduk">
 	<xi:include href="kbduk/kbduk.xml" />

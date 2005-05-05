@@ -71,14 +71,16 @@ ReadBytes(
 	PIRP Irp;
 	IO_STATUS_BLOCK ioStatus;
 	KEVENT event;
+	LARGE_INTEGER zero;
 	NTSTATUS Status;
 	
 	KeInitializeEvent(&event, NotificationEvent, FALSE);
+	zero.QuadPart = 0;
 	Irp = IoBuildSynchronousFsdRequest(
 		IRP_MJ_READ,
 		LowerDevice,
 		Buffer, BufferSize,
-		0,
+		&zero,
 		&event,
 		&ioStatus);
 	if (!Irp)
@@ -199,7 +201,7 @@ SerenumWait(ULONG milliseconds)
 	KTIMER Timer;
 	LARGE_INTEGER DueTime;
 	
-	DueTime.QuadPart = -milliseconds * 10;
+	DueTime.QuadPart = milliseconds * -10;
 	KeInitializeTimer(&Timer);
 	KeSetTimer(&Timer, DueTime, NULL);
 	return KeWaitForSingleObject(&Timer, Executive, KernelMode, FALSE, NULL);
@@ -216,7 +218,8 @@ SerenumDetectPnpDevice(
 	ULONG Size;
 	ULONG Msr, Purge;
 	ULONG i;
-	BOOLEAN BufferContainsBeginId, BufferContainsEndId;
+	BOOLEAN BufferContainsBeginId = FALSE;
+	BOOLEAN BufferContainsEndId = FALSE;
 	SERIAL_LINE_CONTROL Lcr;
 	SERIAL_TIMEOUTS Timeouts;
 	SERIALPERF_STATS PerfStats;
@@ -325,7 +328,6 @@ SerenumCollectPnpComDeviceId:
 		NULL, 0, &PerfStats, &Size);
 	if (!NT_SUCCESS(Status)) return Status;
 	if (PerfStats.FrameErrorCount + PerfStats.ParityErrorCount != 0) goto SerenumConnectIdle;
-	BufferContainsBeginId = BufferContainsEndId = FALSE;
 	for (i = 0; i < TotalBytesReceived; i++)
 	{
 		if (Buffer[i] == BEGIN_ID) BufferContainsBeginId = TRUE;
@@ -421,6 +423,10 @@ SerenumDetectLegacyDevice(
 	UNICODE_STRING HardwareIds;
 	UNICODE_STRING CompatibleIds;
 	NTSTATUS Status;
+	
+	DPRINT("Serenum: SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
+		DeviceObject,
+		LowerDevice);
 	
 	RtlZeroMemory(Buffer, sizeof(Buffer));
 	

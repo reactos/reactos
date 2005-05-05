@@ -25,6 +25,7 @@
 	<file>cond.tab.c</file>
 	<file>create.c</file>
 	<file>custom.c</file>
+	<file>database.c</file>
 	<file>delete.c</file>
 	<file>dialog.c</file>
 	<file>distinct.c</file>

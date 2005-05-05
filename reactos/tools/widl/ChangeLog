@@ -1,5 +1,25 @@
 ChangeLog
 
+2005-04-18 navaraf
+
+   tools/widl/parser.y
+
+Don't use pointer to freed memory.
+
+2005-04-17 ekohl
+
+   tools/widl/server.c
+
+Support out-pointers to structs.
+
+2005-04-15 ekohl
+
+   tools/widl/client.c
+   tools/widl/parser.y
+   tools/widl/server.c
+
+Support in-pointers to structs.
+
 2005-04-03 ekohl
 
    tools/widl/client.c

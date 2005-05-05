@@ -11,6 +11,7 @@ C_SRCS = \
 	appsearch.c \
 	create.c \
 	custom.c \
+	database.c \
 	delete.c \
 	dialog.c \
 	distinct.c \

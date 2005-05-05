@@ -56,6 +56,7 @@ NtProcessStartup(PPEB Peb)
   }
   /* Initialize the system */
   Status = InitSessionManager();
+  /* Watch required subsystems TODO */
 #if 0
   if (!NT_SUCCESS(Status))
     {

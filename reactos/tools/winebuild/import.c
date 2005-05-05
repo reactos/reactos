@@ -703,6 +703,7 @@ static int output_immediate_imports( FILE *outfile )
             fprintf( outfile, "    \"\\t.globl " __ASM_NAME("%s") "\\n\"\n", name );
             fprintf( outfile, "    \"" __ASM_NAME("%s") ":\\n\\t", name);
 
+#ifndef __REACTOS__
 #if defined(__i386__)
             if (strstr( name, "__wine_call_from_16" ))
                 fprintf( outfile, ".byte 0x2e\\n\\tjmp *(imports+%d)\\n\\tnop\\n", pos );
@@ -754,6 +755,7 @@ static int output_immediate_imports( FILE *outfile )
 #else
 #error You need to define import thunks for your architecture!
 #endif
+#endif /*__REACTOS__*/
             fprintf( outfile, "\"\n" );
             output_function_size( outfile, name );
         }

@@ -360,7 +360,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
   /* Check if the scrollbar should be hidden or disabled */
   if (0 != (lpsi->fMask & (SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL)))
     {
-      if (Info->nMin >= Info->nMax - max(Info->nPage - 1, 0))
+      if (Info->nMin >= (int)(Info->nMax - max(Info->nPage - 1, 0)))
         {
           /* Hide or disable scroll-bar */
           if (0 != (lpsi->fMask & SIF_DISABLENOSCROLL))

@@ -846,8 +846,11 @@ void BuildDef32File( FILE *outfile, DLLSPEC *spec )
     const char *name;
     int i;
 
-    fprintf(outfile, "; File generated automatically from %s; do not edit!\n\n",
-            input_file_name );
+    if (spec_file_name)
+        fprintf( outfile, "; File generated automatically from %s; do not edit!\n\n",
+                 spec_file_name );
+    else
+        fprintf( outfile, "; File generated automatically; do not edit!\n\n" );
 
     fprintf(outfile, "LIBRARY %s\n\n", spec->file_name);
 

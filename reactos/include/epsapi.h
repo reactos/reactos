@@ -32,10 +32,10 @@
 /* OBJECTS */
 
 /* TYPES */
-typedef NTSTATUS (NTAPI *PPROC_ENUM_ROUTINE)(IN PSYSTEM_PROCESSES CurrentProcess,
+typedef NTSTATUS (NTAPI *PPROC_ENUM_ROUTINE)(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
                                              IN OUT PVOID CallbackContext);
 
-typedef NTSTATUS (NTAPI *PTHREAD_ENUM_ROUTINE)(IN PSYSTEM_THREADS CurrentThread,
+typedef NTSTATUS (NTAPI *PTHREAD_ENUM_ROUTINE)(IN PSYSTEM_THREAD_INFORMATION CurrentThread,
                                                IN OUT PVOID CallbackContext);
 
 typedef NTSTATUS (NTAPI *PSYSMOD_ENUM_ROUTINE)(IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
@@ -67,36 +67,36 @@ PsaEnumerateThreads(IN PTHREAD_ENUM_ROUTINE Callback,
 
 /* capturing & walking */
 NTSTATUS NTAPI
-PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESSES * ProcessesAndThreads);
+PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESS_INFORMATION * ProcessesAndThreads);
 
 NTSTATUS NTAPI
-PsaWalkProcessesAndThreads(IN PSYSTEM_PROCESSES ProcessesAndThreads,
+PsaWalkProcessesAndThreads(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
                            IN PPROC_ENUM_ROUTINE ProcessCallback,
                            IN OUT PVOID ProcessCallbackContext,
                            IN PTHREAD_ENUM_ROUTINE ThreadCallback,
                            IN OUT PVOID ThreadCallbackContext);
 
 NTSTATUS NTAPI
-PsaWalkProcesses(IN PSYSTEM_PROCESSES ProcessesAndThreads,
+PsaWalkProcesses(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
                  IN PPROC_ENUM_ROUTINE Callback,
                  IN OUT PVOID CallbackContext);
 
 NTSTATUS NTAPI
-PsaWalkThreads(IN PSYSTEM_PROCESSES ProcessesAndThreads,
+PsaWalkThreads(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
                IN PTHREAD_ENUM_ROUTINE Callback,
                IN OUT PVOID CallbackContext);
 
-PSYSTEM_PROCESSES FASTCALL
-PsaWalkFirstProcess(IN PSYSTEM_PROCESSES ProcessesAndThreads);
+PSYSTEM_PROCESS_INFORMATION FASTCALL
+PsaWalkFirstProcess(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads);
 
-PSYSTEM_PROCESSES FASTCALL
-PsaWalkNextProcess(IN PSYSTEM_PROCESSES CurrentProcess);
+PSYSTEM_PROCESS_INFORMATION FASTCALL
+PsaWalkNextProcess(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess);
 
-PSYSTEM_THREADS FASTCALL
-PsaWalkFirstThread(IN PSYSTEM_PROCESSES CurrentProcess);
+PSYSTEM_THREAD_INFORMATION FASTCALL
+PsaWalkFirstThread(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess);
 
-PSYSTEM_THREADS FASTCALL
-PsaWalkNextThread(IN PSYSTEM_THREADS CurrentThread);
+PSYSTEM_THREAD_INFORMATION FASTCALL
+PsaWalkNextThread(IN PSYSTEM_THREAD_INFORMATION CurrentThread);
 
 /* System modules */
 /* enumeration */

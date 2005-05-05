@@ -1,9 +1,18 @@
 <module name="rtl" type="staticlibrary">
 	<directory name="i386">
+		<file>allshl.s</file>
+		<file>aulldiv.s</file>
+		<file>aullrem.s</file>
+		<file>allshr.s</file>
+		<file>allmul.s</file>
+		<file>aullshr.s</file>
+		<file>alldiv.s</file>
+		<file>allrem.s</file>
 		<file>chkstk.s</file>
 		<file>except.s</file>
 		<file>exception.c</file>
 	</directory>
+	<file>access.c</file>
 	<file>acl.c</file>
 	<file>bit.c</file>
 	<file>bitmap.c</file>

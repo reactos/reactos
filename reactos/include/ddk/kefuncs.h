@@ -22,13 +22,17 @@ KeSaveFloatingPointState(
 
 VOID STDCALL KeAttachProcess(struct _KPROCESS *Process);
 
+BOOLEAN
+STDCALL
+KeIsAttachedProcess(VOID);
+
 VOID FASTCALL KiAcquireSpinLock(PKSPIN_LOCK SpinLock);
 
 VOID FASTCALL KiReleaseSpinLock(PKSPIN_LOCK SpinLock);
 
 VOID KeDrainApcQueue(VOID);
 
-struct _KPROCESS* KeGetCurrentProcess(VOID);
+struct _KPROCESS* STDCALL KeGetCurrentProcess(VOID);
 
 /*
  * FUNCTION: Acquires a spinlock so the caller can synchronize access to 
@@ -378,9 +382,6 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
 
 ULONG STDCALL
 KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
-
-BOOLEAN STDCALL
-KeRosPrintAddress(PVOID address);
 
 NTSTATUS STDCALL
 KeSetAffinityThread(PKTHREAD	Thread,
@@ -807,6 +808,50 @@ NTSTATUS
 STDCALL
 KeRaiseUserException(
 	IN NTSTATUS	ExceptionCode
+);
+
+VOID 
+FASTCALL
+KeAcquireGuardedMutex(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID
+FASTCALL
+KeAcquireGuardedMutexUnsafe(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID 
+STDCALL
+KeEnterGuardedRegion(VOID);
+
+VOID
+STDCALL
+KeLeaveGuardedRegion(VOID);
+
+VOID 
+FASTCALL
+KeInitializeGuardedMutex(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID 
+FASTCALL
+KeReleaseGuardedMutexUnsafe(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID 
+FASTCALL
+KeReleaseGuardedMutex(
+    PKGUARDED_MUTEX GuardedMutex
+);
+
+BOOL 
+FASTCALL
+KeTryToAcquireGuardedMutex(
+    PKGUARDED_MUTEX GuardedMutex
 );
 
 #endif /* __INCLUDE_DDK_KEFUNCS_H */

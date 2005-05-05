@@ -61,6 +61,16 @@ typedef LPFINDINFOW LPLVFINDINFOW;
 #define SB_SETBORDERS		(WM_USER+5)
 
 #define FLATSB_CLASSA           "flatsb_class32"
+#if defined(__GNUC__)
+# define FLATSB_CLASSW (const WCHAR []){ 'f','l','a','t','s','b','_', \
+  'c','l','a','s','s','3','2',0 }
+#elif defined(_MSC_VER)
+# define FLATSB_CLASSW        L"flatsb_class32"
+#else
+static const WCHAR FLATSB_CLASSW[] = { 'f','l','a','t','s','b','_',
+  'c','l','a','s','s','3','2',0 };
+#endif
+
 #define DRAGLISTMSGSTRINGA      "commctrl_DragListMsg"
 #if defined(__GNUC__)
 # define DRAGLISTMSGSTRINGW (const WCHAR []){ 'c','o','m','m','c','t','r','l', \

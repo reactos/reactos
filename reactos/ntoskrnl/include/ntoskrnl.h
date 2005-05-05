@@ -27,6 +27,7 @@
 #include <ddk/kefuncs.h>
 #include <ddk/pnptypes.h>
 #include <ddk/pnpfuncs.h>
+#include <ddk/wdmguid.h>
 #include <ntdll/ldr.h>
 #include <internal/ctype.h>
 #include <internal/ntoskrnl.h>
@@ -53,7 +54,10 @@
 #include <internal/ifs.h>
 #include <internal/port.h>
 #include <internal/nls.h>
-#include <internal/dbg.h>
+#ifdef KDBG
+#include <internal/kdb.h>
+#endif
+#include <internal/dbgk.h>
 #include <internal/trap.h>
 #include <internal/safe.h>
 #include <internal/test.h>
@@ -63,6 +67,15 @@
 #include <napi/win32.h>
 
 #include <pseh.h>
+
+#ifndef RTL_CONSTANT_STRING
+#define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
+{ \
+ sizeof(__SOURCE_STRING__) - sizeof((__SOURCE_STRING__)[0]), \
+ sizeof(__SOURCE_STRING__), \
+ (__SOURCE_STRING__) \
+}
+#endif
 
 #ifdef DBG
 #ifndef PAGED_CODE

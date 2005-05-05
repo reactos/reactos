@@ -7,6 +7,7 @@
 #include <iprtrmib.h>
 #include <iphlpapi.h>
 #include <winsock2.h>
+#include <dhcpcsdk.h>
 #include <stdio.h>
 #include <setjmp.h>
 #include "stdint.h"
@@ -20,9 +21,10 @@
 #undef PREFER
 #define DHCP_DISCOVER_INTERVAL 15
 #define DHCP_REBOOT_TIMEOUT 300
+#define DHCP_PANIC_TIMEOUT DHCP_REBOOT_TIMEOUT * 3
 #define DHCP_BACKOFF_MAX 300
 #define _PATH_DHCLIENT_PID "\\systemroot\\system32\\drivers\\etc\\dhclient.pid"
-
+#define RRF_RT_REG_SZ 2
 typedef void *VOIDPTR;
 
 #define NTOS_MODE_USER
@@ -41,15 +43,30 @@ typedef struct _DHCP_ADAPTER {
     MIB_IFROW      IfMib;
     MIB_IPADDRROW  IfAddr;
     SOCKADDR       Address;
+    ULONG NteContext,NteInstance;
     struct interface_info DhclientInfo;
     struct client_state DhclientState;
     struct client_config DhclientConfig;
     struct sockaddr_in ListenAddr;
     unsigned int BindStatus;
-    char recv_buf[1];
+    unsigned char recv_buf[1];
 } DHCP_ADAPTER, *PDHCP_ADAPTER;
+
+#include <rosdhcp_public.h>
+
+typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
 
 #define random rand
 #define srandom srand
+
+extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
+extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
+extern VOID ApiInit();
+extern VOID ApiLock();
+extern VOID ApiUnlock();
+extern DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req );
+extern DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req );
+extern DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
+extern DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
 
 #endif/*ROSDHCP_H*/

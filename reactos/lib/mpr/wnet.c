@@ -138,7 +138,7 @@ static void _tryLoadProvider(PCWSTR provider)
             RegQueryValueExW(hKey, szProviderName, NULL, NULL, NULL, &size);
             if (size)
             {
-                name = (PWSTR)HeapAlloc(GetProcessHeap(), 0, size);
+                name = HeapAlloc(GetProcessHeap(), 0, size);
                 if (RegQueryValueExW(hKey, szProviderName, NULL, &type,
                  (LPBYTE)name, &size) != ERROR_SUCCESS || type != REG_SZ)
                 {
@@ -243,7 +243,7 @@ void wnetInit(HINSTANCE hInstDll)
         RegQueryValueExW(hKey, providerOrder, NULL, NULL, NULL, &size);
         if (size)
         {
-            PWSTR providers = (PWSTR)HeapAlloc(GetProcessHeap(), 0, size);
+            PWSTR providers = HeapAlloc(GetProcessHeap(), 0, size);
 
             if (providers)
             {
@@ -264,7 +264,7 @@ void wnetInit(HINSTANCE hInstDll)
                         if (ptr)
                             numToAllocate++;
                     }
-                    providerTable = (PWNetProviderTable)
+                    providerTable =
                      HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                      sizeof(WNetProviderTable)
                      + (numToAllocate - 1) * sizeof(WNetProvider));
@@ -275,7 +275,7 @@ void wnetInit(HINSTANCE hInstDll)
 
                         entireNetworkLen = LoadStringW(hInstDll,
                          IDS_ENTIRENETWORK, NULL, 0);
-                        providerTable->entireNetwork = (LPWSTR)HeapAlloc(
+                        providerTable->entireNetwork = HeapAlloc(
                          GetProcessHeap(), 0, (entireNetworkLen + 1) *
                          sizeof(WCHAR));
                         if (providerTable->entireNetwork)
@@ -343,8 +343,7 @@ static LPNETRESOURCEW _copyNetResourceForEnumW(LPNETRESOURCEW lpNet)
 
     if (lpNet)
     {
-        ret = (LPNETRESOURCEW)HeapAlloc(GetProcessHeap(), 0,
-         sizeof(NETRESOURCEW));
+        ret = HeapAlloc(GetProcessHeap(), 0, sizeof(NETRESOURCEW));
         if (ret)
         {
             size_t len;
@@ -354,8 +353,7 @@ static LPNETRESOURCEW _copyNetResourceForEnumW(LPNETRESOURCEW lpNet)
             if (lpNet->lpRemoteName)
             {
                 len = strlenW(lpNet->lpRemoteName) + 1;
-                ret->lpRemoteName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                 len * sizeof(WCHAR));
+                ret->lpRemoteName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
                 if (ret->lpRemoteName)
                     strcpyW(ret->lpRemoteName, lpNet->lpRemoteName);
             }
@@ -377,7 +375,7 @@ static void _freeEnumNetResource(LPNETRESOURCEW lpNet)
 
 static PWNetEnumerator _createNullEnumerator(void)
 {
-    PWNetEnumerator ret = (PWNetEnumerator)HeapAlloc(GetProcessHeap(),
+    PWNetEnumerator ret = HeapAlloc(GetProcessHeap(),
      HEAP_ZERO_MEMORY, sizeof(WNetEnumerator));
 
     if (ret)
@@ -388,7 +386,7 @@ static PWNetEnumerator _createNullEnumerator(void)
 static PWNetEnumerator _createGlobalEnumeratorW(DWORD dwScope, DWORD dwType,
  DWORD dwUsage, LPNETRESOURCEW lpNet)
 {
-    PWNetEnumerator ret = (PWNetEnumerator)HeapAlloc(GetProcessHeap(),
+    PWNetEnumerator ret = HeapAlloc(GetProcessHeap(),
      HEAP_ZERO_MEMORY, sizeof(WNetEnumerator));
 
     if (ret)
@@ -411,8 +409,7 @@ static PWNetEnumerator _createProviderEnumerator(DWORD dwScope, DWORD dwType,
         ret = NULL;
     else
     {
-        ret = (PWNetEnumerator)HeapAlloc(GetProcessHeap(),
-         HEAP_ZERO_MEMORY, sizeof(WNetEnumerator));
+        ret = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WNetEnumerator));
         if (ret)
         {
             ret->enumType      = WNET_ENUMERATOR_TYPE_PROVIDER;
@@ -429,7 +426,7 @@ static PWNetEnumerator _createProviderEnumerator(DWORD dwScope, DWORD dwType,
 static PWNetEnumerator _createContextEnumerator(DWORD dwScope, DWORD dwType,
  DWORD dwUsage)
 {
-    PWNetEnumerator ret = (PWNetEnumerator)HeapAlloc(GetProcessHeap(),
+    PWNetEnumerator ret = HeapAlloc(GetProcessHeap(),
      HEAP_ZERO_MEMORY, sizeof(WNetEnumerator));
 
     if (ret)
@@ -641,7 +638,7 @@ DWORD WINAPI WNetOpenEnumA( DWORD dwScope, DWORD dwType, DWORD dwUsage,
             ret = _thunkNetResourceArrayAToW(lpNet, &count, buf, &size);
             if (ret == WN_MORE_DATA)
             {
-                lpNetWide = (LPNETRESOURCEW)HeapAlloc(GetProcessHeap(), 0,
+                lpNetWide = HeapAlloc(GetProcessHeap(), 0,
                  size);
                 if (lpNetWide)
                 {
@@ -1538,7 +1535,7 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
 
         if (len)
         {
-            PWSTR wideLocalName = (PWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+            PWSTR wideLocalName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
 
             if (wideLocalName)
             {
@@ -1569,7 +1566,7 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
                 }
                 else if (ret == WN_MORE_DATA)
                 {
-                    PWSTR wideRemote = (PWSTR)HeapAlloc(GetProcessHeap(), 0,
+                    PWSTR wideRemote = HeapAlloc(GetProcessHeap(), 0,
                      wideRemoteSize * sizeof(WCHAR));
 
                     if (wideRemote)
@@ -1863,8 +1860,7 @@ DWORD WINAPI WNetGetNetworkInformationA( LPCSTR lpProvider,
         len = MultiByteToWideChar(CP_ACP, 0, lpProvider, -1, NULL, 0);
         if (len)
         {
-            LPWSTR wideProvider = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-             len * sizeof(WCHAR));
+            LPWSTR wideProvider = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
 
             if (wideProvider)
             {

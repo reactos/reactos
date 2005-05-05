@@ -45,7 +45,7 @@ VOID
 KiInsertIntoThreadList(KPRIORITY Priority, 
                        PKTHREAD Thread)
 {
-    ASSERT(THREAD_STATE_READY == Thread->State);
+    ASSERT(Ready == Thread->State);
     ASSERT(Thread->Priority == Priority);
     
     if (Priority >= MAXIMUM_PRIORITY || Priority < LOW_PRIORITY) {
@@ -54,7 +54,7 @@ KiInsertIntoThreadList(KPRIORITY Priority,
         KEBUGCHECK(0);
     }
     
-    InsertTailList(&PriorityListHead[Priority], &Thread->QueueListEntry);
+    InsertTailList(&PriorityListHead[Priority], &Thread->WaitListEntry);
     PriorityListMask |= (1 << Priority);
 }
 
@@ -62,8 +62,8 @@ STATIC
 VOID 
 KiRemoveFromThreadList(PKTHREAD Thread)
 {
-    ASSERT(THREAD_STATE_READY == Thread->State);
-    RemoveEntryList(&Thread->QueueListEntry);
+    ASSERT(Ready == Thread->State);
+    RemoveEntryList(&Thread->WaitListEntry);
     if (IsListEmpty(&PriorityListHead[(ULONG)Thread->Priority])) {
         
         PriorityListMask &= ~(1 << Thread->Priority);
@@ -87,14 +87,14 @@ KiScanThreadList(KPRIORITY Priority,
         
         while (current_entry != &PriorityListHead[Priority]) {
            
-            current = CONTAINING_RECORD(current_entry, KTHREAD, QueueListEntry);
+            current = CONTAINING_RECORD(current_entry, KTHREAD, WaitListEntry);
             
-            if (current->State != THREAD_STATE_READY) {
+            if (current->State != Ready) {
                 
                 DPRINT1("%d/%d\n", &current, current->State);
             }
             
-            ASSERT(current->State == THREAD_STATE_READY);
+            ASSERT(current->State == Ready);
             
             if (current->Affinity & Affinity) {
                 
@@ -123,7 +123,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
     CurrentThread->State = (UCHAR)NewThreadStatus;
     
-    if (NewThreadStatus == THREAD_STATE_READY) {
+    if (NewThreadStatus == Ready) {
             
         KiInsertIntoThreadList(CurrentThread->Priority,
                                CurrentThread);
@@ -137,7 +137,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
         
         if (Candidate == CurrentThread) {
 
-            Candidate->State = THREAD_STATE_RUNNING;
+            Candidate->State = Running;
             KeReleaseDispatcherDatabaseLockFromDpcLevel();	
             return;
         }
@@ -149,7 +149,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
             DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
 
-            Candidate->State = THREAD_STATE_RUNNING;
+            Candidate->State = Running;
 
             OldThread = CurrentThread;
             CurrentThread = Candidate;
@@ -167,7 +167,9 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
             MmUpdatePageDir(PsGetCurrentProcess(),((PETHREAD)CurrentThread)->ThreadsProcess, sizeof(EPROCESS));
 
             /* Special note for Filip: This will release the Dispatcher DB Lock ;-) -- Alex */
-            KiArchContextSwitch(CurrentThread, OldThread);
+            DPRINT("You are : %x, swapping to: %x\n", OldThread, CurrentThread);
+            KiArchContextSwitch(CurrentThread);
+            DPRINT("You are : %x, swapped from: %x\n", OldThread, CurrentThread);
             return;
         }
     }
@@ -192,26 +194,27 @@ KiBlockThread(PNTSTATUS Status,
         
         /* Remove Waits */
         WaitBlock = Thread->WaitBlockList;
-        while (WaitBlock) {
+        do {
             RemoveEntryList (&WaitBlock->WaitListEntry);
             WaitBlock = WaitBlock->NextWaitBlock;
-        }
+        } while (WaitBlock != Thread->WaitBlockList);
         Thread->WaitBlockList = NULL;
         
         /* Dispatch it and return status */
-        KiDispatchThreadNoLock (THREAD_STATE_READY);
+        KiDispatchThreadNoLock (Ready);
         if (Status != NULL) *Status = STATUS_KERNEL_APC;
 
     } else {
 
         /* Set the Thread Data as Requested */
-        DPRINT("Dispatching Thread as blocked\n");
+        DPRINT("Dispatching Thread as blocked: %d\n", Thread->WaitStatus);
         Thread->Alertable = Alertable;
         Thread->WaitMode = (UCHAR)WaitMode;
         Thread->WaitReason = WaitReason;
         
         /* Dispatch it and return status */
-        KiDispatchThreadNoLock(THREAD_STATE_BLOCKED);
+        KiDispatchThreadNoLock(Waiting);
+        DPRINT("Dispatching Thread as blocked: %d\n", Thread->WaitStatus);
         if (Status != NULL) *Status = Thread->WaitStatus;
     }
     
@@ -240,17 +243,16 @@ KiUnblockThread(PKTHREAD Thread,
                 PNTSTATUS WaitStatus, 
                 KPRIORITY Increment)
 {
-    if (THREAD_STATE_TERMINATED_1 == Thread->State ||
-        THREAD_STATE_TERMINATED_2 == Thread->State) {
+    if (Terminated == Thread->State) {
 
         DPRINT("Can't unblock thread 0x%x because it's terminating\n",
                Thread);
     
-    } else if (THREAD_STATE_READY == Thread->State ||
-               THREAD_STATE_RUNNING == Thread->State) {
+    } else if (Ready == Thread->State ||
+               Running == Thread->State) {
         
         DPRINT("Can't unblock thread 0x%x because it's %s\n",
-               Thread, (Thread->State == THREAD_STATE_READY ? "ready" : "running"));
+               Thread, (Thread->State == Ready ? "ready" : "running"));
     
     } else {
         
@@ -278,7 +280,7 @@ KiUnblockThread(PKTHREAD Thread,
             Thread->WaitStatus = *WaitStatus;
         }
         
-        Thread->State = THREAD_STATE_READY;
+        Thread->State = Ready;
         KiInsertIntoThreadList(Thread->Priority, Thread);
         Processor = KeGetCurrentProcessorNumber();
         Affinity = Thread->Affinity;
@@ -339,6 +341,46 @@ KiSuspendThreadNormalRoutine(PVOID NormalContext,
                           FALSE,
                           NULL);
     DPRINT("Done Waiting\n");
+}
+
+#ifdef KeGetCurrentThread
+#undef KeGetCurrentThread
+#endif
+/*
+ * @implemented
+ */
+PKTHREAD 
+STDCALL 
+KeGetCurrentThread(VOID)
+{
+#ifdef CONFIG_SMP
+    ULONG Flags;
+    PKTHREAD Thread;
+    Ke386SaveFlags(Flags);
+    Ke386DisableInterrupts();
+    Thread = KeGetCurrentPrcb()->CurrentThread;
+    Ke386RestoreFlags(Flags);
+    return Thread;
+#else
+    return(KeGetCurrentPrcb()->CurrentThread);
+#endif
+}
+
+VOID
+STDCALL
+KeSetPreviousMode(ULONG Mode)
+{
+    PsGetCurrentThread()->Tcb.PreviousMode = (UCHAR)Mode;
+}
+
+/*
+ * @implemented
+ */
+KPROCESSOR_MODE 
+STDCALL
+KeGetPreviousMode(VOID)
+{
+    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
 VOID
@@ -421,7 +463,51 @@ BOOLEAN
 STDCALL
 KiInsertQueueApc(PKAPC Apc,
                  KPRIORITY PriorityBoost);
-                 
+
+/*
+ * Used by the debugging code to freeze all the process's threads
+ * while the debugger is examining their state.
+ */
+VOID
+STDCALL
+KeFreezeAllThreads(PKPROCESS Process)
+{
+    KIRQL OldIrql;
+    PLIST_ENTRY CurrentEntry;
+    PKTHREAD Current;
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+
+    /* Acquire Lock */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+    
+    /* Loop the Process's Threads */
+    CurrentEntry = Process->ThreadListHead.Flink;
+    while (CurrentEntry != &Process->ThreadListHead)
+    {
+        /* Get the Thread */
+        Current = CONTAINING_RECORD(CurrentEntry, KTHREAD, ThreadListEntry);
+        
+        /* Make sure it's not ours */
+        if (Current == CurrentThread) continue;
+        
+        /* Make sure it wasn't already frozen, and that it's not suspended */
+        if (!(++Current->FreezeCount) && !(Current->SuspendCount))
+        {
+            /* Insert the APC */
+            if (!KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT)) 
+            {
+                /* Unsignal the Semaphore, the APC already got inserted */
+                Current->SuspendSemaphore.Header.SignalState--;
+            }
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    /* Release the lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+}
+    
 NTSTATUS
 STDCALL
 KeSuspendThread(PKTHREAD Thread)
@@ -503,7 +589,7 @@ KeAlertResumeThread(IN PKTHREAD Thread)
     if (Thread->Alerted[KernelMode] == FALSE) {
        
         /* If it's Blocked, unblock if it we should */
-        if (Thread->State == THREAD_STATE_BLOCKED &&  Thread->Alertable) {
+        if (Thread->State == Waiting &&  Thread->Alertable) {
             
             DPRINT("Aborting Wait\n");
             KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
@@ -554,7 +640,7 @@ KeAlertThread(PKTHREAD Thread,
     if (PreviousState == FALSE) {
        
         /* If it's Blocked, unblock if it we should */
-        if (Thread->State == THREAD_STATE_BLOCKED && 
+        if (Thread->State == Waiting && 
             (AlertMode == KernelMode || Thread->WaitMode == AlertMode) &&
             Thread->Alertable) {
             
@@ -598,192 +684,39 @@ VOID
 STDCALL
 KeInitializeThread(PKPROCESS Process, 
                    PKTHREAD Thread, 
-                   BOOLEAN First)
-{
-    PVOID KernelStack;
-    NTSTATUS Status;
-    extern unsigned int init_stack_top;
-    extern unsigned int init_stack;
-    PMEMORY_AREA StackArea;
-    ULONG i;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
-  
-    /* Initialize the Boundary Address */
-    BoundaryAddressMultiple.QuadPart = 0;
-  
+                   PKSYSTEM_ROUTINE SystemRoutine,
+                   PKSTART_ROUTINE StartRoutine,
+                   PVOID StartContext,
+                   PCONTEXT Context,
+                   PVOID Teb,
+                   PVOID KernelStack)
+{  
     /* Initalize the Dispatcher Header */
+    DPRINT("Initializing Dispatcher Header for New Thread: %x in Process: %x\n", Thread, Process);
     KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
                                  ThreadObject,
                                  sizeof(KTHREAD),
                                  FALSE);
+    
+    DPRINT("Thread Header Created. SystemRoutine: %x, StartRoutine: %x with Context: %x\n",
+            SystemRoutine, StartRoutine, StartContext);
+    DPRINT("UserMode Information. Context: %x, Teb: %x\n", Context, Teb);
+       
+    /* Initialize the Mutant List */
     InitializeListHead(&Thread->MutantListHead);
     
-    /* If this is isn't the first thread, allocate the Kernel Stack */
-    if (!First) {
-        
-        PFN_TYPE Page[MM_STACK_SIZE / PAGE_SIZE];
-        KernelStack = NULL;
-      
-        MmLockAddressSpace(MmGetKernelAddressSpace());
-        Status = MmCreateMemoryArea(NULL,
-                                    MmGetKernelAddressSpace(),
-                                    MEMORY_AREA_KERNEL_STACK,
-                                    &KernelStack,
-                                    MM_STACK_SIZE,
-                                    0,
-                                    &StackArea,
-                                    FALSE,
-                                    FALSE,
-                                    BoundaryAddressMultiple);
-        MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      
-        /* Check for Success */
-        if (!NT_SUCCESS(Status)) {
-            
-            DPRINT1("Failed to create thread stack\n");
-            KEBUGCHECK(0);
-        }
-        
-        /* Mark the Stack */
-        for (i = 0; i < (MM_STACK_SIZE / PAGE_SIZE); i++) {
-
-            Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page[i]);
-            
-            /* Check for success */
-            if (!NT_SUCCESS(Status)) {
-                
-                KEBUGCHECK(0);
-            }
-        }
-        
-        /* Create a Virtual Mapping for it */
-        Status = MmCreateVirtualMapping(NULL,
-                                        KernelStack,
-                                        PAGE_READWRITE,
-                                        Page,
-                                        MM_STACK_SIZE / PAGE_SIZE);
-        
-        /* Check for success */
-        if (!NT_SUCCESS(Status)) {
-            
-            KEBUGCHECK(0);
-        }
-        
-        /* Set the Kernel Stack */
-        Thread->InitialStack = (PCHAR)KernelStack + MM_STACK_SIZE;
-        Thread->StackBase    = (PCHAR)KernelStack + MM_STACK_SIZE;
-        Thread->StackLimit   = (ULONG_PTR)KernelStack;
-        Thread->KernelStack  = (PCHAR)KernelStack + MM_STACK_SIZE;
-        
-    } else {
-        
-        /* Use the Initial Stack */
-        Thread->InitialStack = (PCHAR)init_stack_top;
-        Thread->StackBase = (PCHAR)init_stack_top;
-        Thread->StackLimit = (ULONG_PTR)init_stack;
-        Thread->KernelStack = (PCHAR)init_stack_top;
-    }
-
-    /* 
-     * Establish the pde's for the new stack and the thread structure within the 
-     * address space of the new process. They are accessed while taskswitching or
-     * while handling page faults. At this point it isn't possible to call the 
-     * page fault handler for the missing pde's. 
-     */
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
-
-    /* Set the Thread to initalized */
-    Thread->State = THREAD_STATE_INITIALIZED;
+    /* Setup the Service Descriptor Table for Native Calls */
+    Thread->ServiceTable = KeServiceDescriptorTable;
     
-    /* The Native API function will initialize the TEB field later */
-    Thread->Teb = NULL;
-    
-    /* Initialize stuff to zero */
-    Thread->TlsArray = NULL;
-    Thread->DebugActive = 0;
-    Thread->Alerted[0] = 0;
-    Thread->Alerted[1] = 0;
-    Thread->Iopl = 0;
-    
-    /* Set up FPU/NPX Stuff */
-    Thread->NpxState = NPX_STATE_INVALID;
-    Thread->NpxIrql = 0;
-   
     /* Setup APC Fields */
     InitializeListHead(&Thread->ApcState.ApcListHead[0]);
     InitializeListHead(&Thread->ApcState.ApcListHead[1]);
     Thread->ApcState.Process = Process;
-    Thread->ApcState.KernelApcInProgress = 0;
-    Thread->ApcState.KernelApcPending = 0;
-    Thread->ApcState.UserApcPending = 0;
     Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
     Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
     Thread->ApcStateIndex = OriginalApcEnvironment;
-    Thread->ApcQueueable = TRUE;
-    RtlZeroMemory(&Thread->SavedApcState, sizeof(KAPC_STATE));
     KeInitializeSpinLock(&Thread->ApcQueueLock);
     
-    /* Setup Wait Fields */
-    Thread->WaitStatus = STATUS_SUCCESS;
-    Thread->WaitIrql = PASSIVE_LEVEL;
-    Thread->WaitMode = 0;
-    Thread->WaitNext = FALSE;
-    Thread->WaitListEntry.Flink = NULL;
-    Thread->WaitListEntry.Blink = NULL;
-    Thread->WaitTime = 0;
-    Thread->WaitBlockList = NULL;
-    RtlZeroMemory(Thread->WaitBlock, sizeof(KWAIT_BLOCK) * 4);
-    RtlZeroMemory(&Thread->Timer, sizeof(KTIMER));
-    KeInitializeTimer(&Thread->Timer);
-    
-    /* Setup scheduler Fields */
-    Thread->BasePriority = Process->BasePriority;
-    Thread->DecrementCount = 0;
-    Thread->PriorityDecrement = 0;
-    Thread->Quantum = Process->ThreadQuantum;
-    Thread->Saturation = 0;
-    Thread->Priority = Process->BasePriority; 
-    Thread->UserAffinity = Process->Affinity;
-    Thread->SystemAffinityActive = 0;
-    Thread->Affinity = Process->Affinity;
-    Thread->Preempted = 0;
-    Thread->ProcessReadyQueue = 0;
-    Thread->KernelStackResident = 1;
-    Thread->NextProcessor = 0;
-    Thread->ContextSwitches = 0;
-    
-    /* Setup Queue Fields */
-    Thread->Queue = NULL;
-    Thread->QueueListEntry.Flink = NULL;
-    Thread->QueueListEntry.Blink = NULL;
-
-    /* Setup Misc Fields */
-    Thread->LegoData = 0; 
-    Thread->PowerState = 0;
-    Thread->ServiceTable = KeServiceDescriptorTable;
-    Thread->CallbackStack = NULL;
-    Thread->Win32Thread = NULL;
-    Thread->TrapFrame = NULL;
-    Thread->EnableStackSwap = 0;
-    Thread->LargeStack = 0;
-    Thread->ResourceIndex = 0;
-    Thread->PreviousMode = KernelMode;
-    Thread->KernelTime = 0;
-    Thread->UserTime = 0;
-    Thread->AutoAlignment = Process->AutoAlignment;
-   
-  /* FIXME OPTIMIZATION OF DOOM. DO NOT ENABLE FIXME */
-#if 0
-  Thread->WaitBlock[3].Object = (PVOID)&Thread->Timer;
-  Thread->WaitBlock[3].Thread = Thread;
-  Thread->WaitBlock[3].WaitKey = STATUS_TIMEOUT;
-  Thread->WaitBlock[3].WaitType = WaitAny;
-  Thread->WaitBlock[3].NextWaitBlock = NULL;
-  InsertTailList(&Thread->Timer.Header.WaitListHead,
-                 &Thread->WaitBlock[3].WaitListEntry);
-#endif
-
     /* Initialize the Suspend APC */  
     KeInitializeApc(&Thread->SuspendApc,
                     Thread,
@@ -795,18 +728,69 @@ KeInitializeThread(PKPROCESS Process,
                     NULL);
      
     /* Initialize the Suspend Semaphore */
-    KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);
+    KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);   
     
-    /* Insert the Thread into the Process's Thread List */
+    /* FIXME OPTIMIZATION OF DOOM. DO NOT ENABLE FIXME */
+#if 0
+    Thread->WaitBlock[3].Object = (PVOID)&Thread->Timer;
+    Thread->WaitBlock[3].Thread = Thread;
+    Thread->WaitBlock[3].WaitKey = STATUS_TIMEOUT;
+    Thread->WaitBlock[3].WaitType = WaitAny;
+    Thread->WaitBlock[3].NextWaitBlock = NULL;
+    InsertTailList(&Thread->Timer.Header.WaitListHead,
+                   &Thread->WaitBlock[3].WaitListEntry);
+#endif
+    KeInitializeTimer(&Thread->Timer);
+             
+    /* Set the TEB */
+    Thread->Teb = Teb;
+        
+    /* Set the Thread Stacks */
+    Thread->InitialStack = (PCHAR)KernelStack + MM_STACK_SIZE;
+    Thread->StackBase = (PCHAR)KernelStack + MM_STACK_SIZE;
+    Thread->StackLimit = (ULONG_PTR)KernelStack;
+    Thread->KernelStackResident = TRUE;
+    
+    /* 
+     * Establish the pde's for the new stack and the thread structure within the 
+     * address space of the new process. They are accessed while taskswitching or
+     * while handling page faults. At this point it isn't possible to call the 
+     * page fault handler for the missing pde's. 
+     */
+    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
+    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
+    
+    /* Initalize the Thread Context */
+    DPRINT("Initializing the Context for the thread: %x\n", Thread);
+    KiArchInitThreadWithContext(Thread, 
+                                SystemRoutine,
+                                StartRoutine,
+                                StartContext,
+                                Context);
+    
+    /* Setup scheduler Fields based on Parent */
+    DPRINT("Thread context created, setting Scheduler Data\n");
+    Thread->BasePriority = Process->BasePriority;
+    Thread->Quantum = Process->ThreadQuantum;
+    Thread->Affinity = Process->Affinity;
+    Thread->Priority = Process->BasePriority;
+    Thread->UserAffinity = Process->Affinity;
+    Thread->DisableBoost = Process->DisableBoost;
+    Thread->AutoAlignment = Process->AutoAlignment;
+    Thread->Iopl = Process->Iopl;
+    
+    /* Set the Thread to initalized */
+    Thread->State = Initialized;
+       
+    /* 
+     * Insert the Thread into the Process's Thread List 
+     * Note, this is the KTHREAD Thread List. It is removed in
+     * ke/kthread.c!KeTerminateThread.
+     */
     InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
-  
-    /* Set up the Suspend Counts */
-    Thread->FreezeCount = 0;
-    Thread->SuspendCount = 0;
-    ((PETHREAD)Thread)->ReaperLink = NULL; /* Union. Will also clear termination port */
-   
-    /* Do x86 specific part */
+    DPRINT("Thread initalized\n");
 }
+
 
 /*
  * @implemented
@@ -831,47 +815,6 @@ KeQueryRuntimeThread(IN PKTHREAD Thread,
     
     /* Return the Kernel Time */
     return Thread->KernelTime;
-}
-
-VOID
-KeFreeStackPage(PVOID Context, 
-                MEMORY_AREA* MemoryArea, 
-                PVOID Address, 
-                PFN_TYPE Page, 
-                SWAPENTRY SwapEntry, 
-                BOOLEAN Dirty)
-{
-    ASSERT(SwapEntry == 0);
-    if (Page) MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
-}
-
-NTSTATUS
-KeReleaseThread(PKTHREAD Thread)
-/*
- * FUNCTION: Releases the resource allocated for a thread by
- * KeInitializeThread
- * NOTE: The thread had better not be running when this is called
- */
-{
-  extern unsigned int init_stack;
-
-  /* FIXME - lock the process */
-  RemoveEntryList(&Thread->ThreadListEntry);
-  
-  if (Thread->StackLimit != (ULONG_PTR)init_stack)
-    {       
-      MmLockAddressSpace(MmGetKernelAddressSpace());
-      MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
-                            (PVOID)Thread->StackLimit,
-                            KeFreeStackPage,
-                            NULL);
-      MmUnlockAddressSpace(MmGetKernelAddressSpace());
-    }
-  Thread->StackLimit = 0;
-  Thread->InitialStack = NULL;
-  Thread->StackBase = NULL;
-  Thread->KernelStack = NULL;
-  return(STATUS_SUCCESS);
 }
 
 /*
@@ -932,7 +875,7 @@ KeRevertToUserAffinityThread(VOID)
         
         /* We need to dispatch a new thread */
         CurrentThread->WaitIrql = OldIrql;
-        KiDispatchThreadNoLock(THREAD_STATE_READY);
+        KiDispatchThreadNoLock(Ready);
         KeLowerIrql(OldIrql);
     }
 }
@@ -995,7 +938,7 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
         
         /* We need to dispatch a new thread */
         CurrentThread->WaitIrql = OldIrql;
-        KiDispatchThreadNoLock(THREAD_STATE_READY);
+        KiDispatchThreadNoLock(Ready);
         KeLowerIrql(OldIrql);
     }
 }
@@ -1061,7 +1004,7 @@ KeSetPriorityThread(PKTHREAD Thread,
         
         CurrentThread = KeGetCurrentThread();
         
-        if (Thread->State == THREAD_STATE_READY) {
+        if (Thread->State == Ready) {
             
             KiRemoveFromThreadList(Thread);
             Thread->BasePriority = Thread->Priority = (CHAR)Priority;
@@ -1069,12 +1012,12 @@ KeSetPriorityThread(PKTHREAD Thread,
             
             if (CurrentThread->Priority < Priority) {
                 
-                KiDispatchThreadNoLock(THREAD_STATE_READY);
+                KiDispatchThreadNoLock(Ready);
                 KeLowerIrql(OldIrql);
                 return (OldPriority);
             }
         
-        } else if (Thread->State == THREAD_STATE_RUNNING)  {
+        } else if (Thread->State == Running)  {
             
             Thread->BasePriority = Thread->Priority = (CHAR)Priority;
             
@@ -1086,7 +1029,7 @@ KeSetPriorityThread(PKTHREAD Thread,
                     
                     if (Thread == CurrentThread) {
                         
-                        KiDispatchThreadNoLock(THREAD_STATE_READY);
+                        KiDispatchThreadNoLock(Ready);
                         KeLowerIrql(OldIrql);
                         return (OldPriority);
                         
@@ -1144,14 +1087,14 @@ KeSetAffinityThread(PKTHREAD Thread,
         
         Thread->Affinity = Affinity;
         
-        if (Thread->State == THREAD_STATE_RUNNING) {
+        if (Thread->State == Running) {
             
             ProcessorMask = 1 << KeGetCurrentKPCR()->ProcessorNumber;
             if (Thread == KeGetCurrentThread()) {
                 
                 if (!(Affinity & ProcessorMask)) {
                     
-                    KiDispatchThreadNoLock(THREAD_STATE_READY);
+                    KiDispatchThreadNoLock(Ready);
                     KeLowerIrql(OldIrql);
                     return STATUS_SUCCESS;
                 }
@@ -1198,6 +1141,9 @@ KeTerminateThread(IN KPRIORITY Increment)
     /* Lock the Dispatcher Database and the APC Queue */
     DPRINT("Terminating\n");
     OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Remove the thread from the list */
+    RemoveEntryList(&Thread->ThreadListEntry);
     
     /* Insert into the Reaper List */
     DPRINT("List: %p\n", PspReaperList);
@@ -1233,7 +1179,7 @@ KeTerminateThread(IN KPRIORITY Increment)
     }
     
     /* Find a new Thread */
-    KiDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
+    KiDispatchThreadNoLock(Terminated);
 }
 
 /*

@@ -27,38 +27,43 @@ void TaskManager_OnFileNew(void)
 {
     HMODULE          hShell32;
     RUNFILEDLG       RunFileDlg;
-    OSVERSIONINFO    versionInfo;
-    WCHAR            wTitle[40];
-    WCHAR            wText[256];
-    TCHAR            szTemp[256];
-    char             szTitle[40];
-    char             szText[256];
+    TCHAR            szTitle[40];
+    TCHAR            szText[256];
 
-    /* Load language string from resource file */
-    LoadString(hInst, IDS_CREATENEWTASK, szTemp, 40);
-    strcpy(szTitle,szTemp);
-
-    LoadString(hInst, IDS_CREATENEWTASK_DESC, szTemp, 256);
-    strcpy(szText,szTemp);
+    /* Load language strings from resource file */
+    LoadString(hInst, IDS_CREATENEWTASK, szTitle, sizeof(szTitle) / sizeof(szTitle[0]));
+    LoadString(hInst, IDS_CREATENEWTASK_DESC, szText, sizeof(szText) / sizeof(szText[0]));
 
 
     hShell32 = LoadLibrary(_T("SHELL32.DLL"));
-    RunFileDlg = (RUNFILEDLG)(FARPROC)GetProcAddress(hShell32, (char*)((long)0x3D));
+    RunFileDlg = (RUNFILEDLG)(FARPROC)GetProcAddress(hShell32, (LPCSTR)0x3D);
 
     /* Show "Run..." dialog */
     if (RunFileDlg)
     {
-        versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-        GetVersionEx(&versionInfo);
-
-        if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
+#ifndef UNICODE
+        if (GetVersion() < 0x80000000)
         {
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTitle, -1, wTitle, 40);
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szText, -1, wText, 256);
-            RunFileDlg(hMainWnd, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
+            WCHAR wTitle[40];
+            WCHAR wText[256];
+            
+            /* RunFileDlg is always unicode on NT systems, convert the ansi
+               strings to unicode */
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTitle, -1, wTitle, sizeof(szTitle) / sizeof(szTitle[0]));
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szText, -1, wText, sizeof(szText) / sizeof(szText[0]));
+            
+            RunFileDlg(hMainWnd, 0, NULL, wTitle, wText, RFF_CALCDIRECTORY);
         }
         else
-            RunFileDlg(hMainWnd, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+        {
+            /* RunFileDlg is ansi on win 9x systems */
+            RunFileDlg(hMainWnd, 0, NULL, (LPCWSTR)szTitle, (LPCWSTR)szText, RFF_CALCDIRECTORY);
+        }
+#else
+        /* NOTE - don't check whether running on win 9x or NT, let's just
+                  assume that a unicode build only runs on NT */
+        RunFileDlg(hMainWnd, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+#endif
     }
 
     FreeLibrary(hShell32);

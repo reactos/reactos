@@ -99,6 +99,7 @@ SerenumPdoQueryDeviceRelations(
 		return STATUS_INSUFFICIENT_RESOURCES;
 	
 	ObReferenceObject(DeviceObject);
+	DeviceRelations->Count = 1;
 	DeviceRelations->Objects[0] = DeviceObject;
 	
 	*pDeviceRelations = DeviceRelations;
@@ -156,7 +157,7 @@ SerenumPdoPnp(
 				}
 				case TargetDeviceRelation:
 				{
-					PDEVICE_RELATIONS DeviceRelations;
+					PDEVICE_RELATIONS DeviceRelations = NULL;
 					DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / TargetDeviceRelation\n");
 					Status = SerenumPdoQueryDeviceRelations(DeviceObject, &DeviceRelations);
 					Information = (ULONG_PTR)DeviceRelations;

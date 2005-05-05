@@ -31,6 +31,7 @@
 
 #include <w32k.h>
 #include <rosrtl/string.h>
+#include <ddk/ntddkbd.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -219,6 +220,185 @@ MouseThreadMain(PVOID StartContext)
   }
 }
 
+/* Returns a value that indicates if the key is a modifier key, and
+ * which one.
+ */
+STATIC UINT STDCALL
+IntKeyboardGetModifiers(KEYBOARD_INPUT_DATA *InputData)
+{
+  if (InputData->Flags & KEY_E1)
+      return 0;
+
+  if (!(InputData->Flags & KEY_E0))
+    {
+      switch (InputData->MakeCode)
+        {
+          case 0x2a: /* left shift */
+          case 0x36: /* right shift */
+              return MOD_SHIFT;
+
+          case 0x1d: /* left control */
+              return MOD_CONTROL;
+
+          case 0x38: /* left alt */
+              return MOD_ALT;
+
+          default:
+              return 0;
+        }
+    }
+  else
+    {
+      switch (InputData->MakeCode)
+        {
+          case 0x1d: /* right control */
+              return MOD_CONTROL;
+
+          case 0x38: /* right alt */
+              return MOD_ALT;
+
+          case 0x5b: /* left gui (windows) */
+          case 0x5c: /* right gui (windows) */
+              return MOD_WIN;
+
+          default:
+              return 0;
+        }
+    }
+}
+
+/* Asks the keyboard driver to send a small table that shows which
+ * lights should connect with which scancodes
+ */
+STATIC NTSTATUS STDCALL
+IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
+			     PKEYBOARD_INDICATOR_TRANSLATION *IndicatorTrans)
+{
+  NTSTATUS Status;
+  DWORD Size = 0;
+  IO_STATUS_BLOCK Block;
+  PKEYBOARD_INDICATOR_TRANSLATION Ret;
+
+  Size = sizeof(KEYBOARD_INDICATOR_TRANSLATION);
+
+  Ret = ExAllocatePoolWithTag(PagedPool,
+		  	      Size,
+			      TAG_KEYBOARD);
+  
+  while (Ret)
+    {
+      Status = NtDeviceIoControlFile(KeyboardDeviceHandle,
+				     NULL,
+				     NULL,
+				     NULL,
+				     &Block,
+				     IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION,
+				     NULL, 0,
+				     Ret, Size);
+
+      if (Status != STATUS_BUFFER_TOO_SMALL)
+	break;
+
+      ExFreePool(Ret);
+
+      Size += sizeof(KEYBOARD_INDICATOR_TRANSLATION);
+
+      Ret = ExAllocatePoolWithTag(PagedPool,
+				  Size,
+				  TAG_KEYBOARD);
+    }
+
+  if (!Ret)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  if (Status != STATUS_SUCCESS)
+    {
+      ExFreePool(Ret);
+      return Status;
+    }
+
+  *IndicatorTrans = Ret;
+  return Status;
+}
+
+/* Sends the keyboard commands to turn on/off the lights.
+ */
+STATIC NTSTATUS STDCALL
+IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
+		      PKEYBOARD_INPUT_DATA KeyInput,
+		      PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans)
+{
+  NTSTATUS Status;
+  UINT Count;
+  static KEYBOARD_INDICATOR_PARAMETERS Indicators;
+  IO_STATUS_BLOCK Block;
+
+  if (!IndicatorTrans)
+    return STATUS_NOT_SUPPORTED;
+
+  if (KeyInput->Flags & (KEY_E0 | KEY_E1 | KEY_BREAK))
+    return STATUS_SUCCESS;
+
+  for (Count = 0; Count < IndicatorTrans->NumberOfIndicatorKeys; Count++)
+    {
+      if (KeyInput->MakeCode == IndicatorTrans->IndicatorList[Count].MakeCode)
+	{
+	  Indicators.LedFlags ^= 
+			IndicatorTrans->IndicatorList[Count].IndicatorFlags;
+
+	  /* Update the lights on the hardware */
+
+  	  Status = NtDeviceIoControlFile(KeyboardDeviceHandle,
+					 NULL,
+					 NULL,
+					 NULL,
+					 &Block,
+					 IOCTL_KEYBOARD_SET_INDICATORS,
+					 &Indicators, sizeof(Indicators),
+					 NULL, 0);
+
+	  return Status;
+	}
+    }
+
+  return STATUS_SUCCESS;
+}
+
+STATIC VOID STDCALL
+IntKeyboardSendWinKeyMsg()
+{
+  PWINDOW_OBJECT Window;
+  MSG Mesg;
+  NTSTATUS Status;
+
+  Status = ObmReferenceObjectByHandle(InputWindowStation->HandleTable,
+                                      InputWindowStation->ShellWindow,
+				      otWindow,
+				      (PVOID *)&Window);
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Couldn't find window to send Windows key message!\n");
+      return;
+    }
+
+  Mesg.hwnd = InputWindowStation->ShellWindow;
+  Mesg.message = WM_SYSCOMMAND;
+  Mesg.wParam = SC_TASKLIST;
+  Mesg.lParam = 0;
+
+  /* The QS_HOTKEY is just a guess */
+  MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
+
+  ObmDereferenceObject(Window);
+}
+
+STATIC VOID STDCALL
+IntKeyboardSendAltKeyMsg()
+{
+  MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
+}
+
 STATIC VOID STDCALL
 KeyboardThreadMain(PVOID StartContext)
 {
@@ -229,6 +409,12 @@ KeyboardThreadMain(PVOID StartContext)
   MSG msg;
   PUSER_MESSAGE_QUEUE FocusQueue;
   struct _ETHREAD *FocusThread;
+
+  PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans = NULL;
+  UINT ModifierState = 0;
+  USHORT LastMakeCode = 0;
+  USHORT LastFlags = 0;
+  UINT RepeatCount = 0;
   
   RtlRosInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
   InitializeObjectAttributes(&KeyboardObjectAttributes,
@@ -247,6 +433,9 @@ KeyboardThreadMain(PVOID StartContext)
       DPRINT1("Win32K: Failed to open keyboard.\n");
       return; //(Status);
     }
+
+  IntKeyboardGetIndicatorTrans(KeyboardDeviceHandle,
+		  	       &IndicatorTrans);
 
   for (;;)
     {
@@ -267,8 +456,11 @@ KeyboardThreadMain(PVOID StartContext)
       while (InputThreadsRunning)
 	{
 	  KEY_EVENT_RECORD KeyEvent;
+	  BOOLEAN NumKeys = 1;
+	  KEYBOARD_INPUT_DATA KeyInput;
+	  KEYBOARD_INPUT_DATA NextKeyInput;
 	  LPARAM lParam = 0;
-	  UINT fsModifiers;
+	  UINT fsModifiers, fsNextModifiers;
 	  struct _ETHREAD *Thread;
 	  HWND hWnd;
 	  int id;
@@ -278,123 +470,222 @@ KeyboardThreadMain(PVOID StartContext)
 			       NULL,
 			       NULL,
 			       &Iosb,
-			       &KeyEvent,
-			       sizeof(KEY_EVENT_RECORD),
+			       &KeyInput,
+			       sizeof(KEYBOARD_INPUT_DATA),
 			       NULL,
 			       NULL);
-	  DPRINT( "KeyRaw: %s %04x\n",
-		 KeyEvent.bKeyDown ? "down" : "up",
-		 KeyEvent.wVirtualScanCode );
+	  DPRINT("KeyRaw: %s %04x\n",
+		 (KeyInput.Flags & KEY_BREAK) ? "up" : "down",
+		 KeyInput.MakeCode );
 
 	  if (Status == STATUS_ALERTED && !InputThreadsRunning)
-	    {
-	      break;
-	    }
+	    break;
+
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DPRINT1("Win32K: Failed to read from keyboard.\n");
 	      return; //(Status);
 	    }
 
-	  DPRINT( "Key: %s\n", KeyEvent.bKeyDown ? "down" : "up" );
+	  /* Update modifier state */
+	  fsModifiers = IntKeyboardGetModifiers(&KeyInput);
 
-	  fsModifiers = 0;
-	  if (KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
-	    fsModifiers |= MOD_ALT;
-
-	  if (KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-	    fsModifiers |= MOD_CONTROL;
-
-	  if (KeyEvent.dwControlKeyState & SHIFT_PRESSED)
-	    fsModifiers |= MOD_SHIFT;
-
-	  /* FIXME: Support MOD_WIN */
-
-	  lParam = KeyEvent.wRepeatCount | 
-	    ((KeyEvent.wVirtualScanCode << 16) & 0x00FF0000) | 0x40000000;
-	  
-	  /* Bit 24 indicates if this is an extended key */
-	  if (KeyEvent.dwControlKeyState & ENHANCED_KEY)
+	  if (fsModifiers)
 	    {
-	      lParam |= (1 << 24);
-	    }
-	  
-	  if (fsModifiers & MOD_ALT)
-	    {
-	      /* Context mode. 1 if ALT if pressed while the key is pressed */
-	      lParam |= (1 << 29);
-	    }
-
-	  if (! KeyEvent.bKeyDown)
-	    {
-	      /* Transition state. 1 for KEY_UP etc, 0 for KEY_DOWN */
-	      lParam |= (1 << 31);
-	    }
-	  
-	  if (GetHotKey(InputWindowStation,
-			fsModifiers,
-			KeyEvent.wVirtualKeyCode,
-			&Thread,
-			&hWnd,
-			&id))
-	    {
-	      if (KeyEvent.bKeyDown)
+	      if (KeyInput.Flags & KEY_BREAK)
 		{
-		  DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
-		  MsqPostHotKeyMessage (Thread,
-					hWnd,
-					(WPARAM)id,
-					MAKELPARAM((WORD)fsModifiers, 
-						   (WORD)msg.wParam));
+		  ModifierState &= ~fsModifiers;
 		}
-	      continue;	
+	      else
+		{
+		  ModifierState |= fsModifiers;
+
+		  if (ModifierState == fsModifiers &&
+		      (fsModifiers == MOD_ALT || fsModifiers == MOD_WIN))
+		    {
+		      /* First send out special notifications 
+		       * (For alt, the message that turns on accelerator
+		       * display, not sure what for win. Both TODO though.)
+		       */
+
+		      /* Read the next key before sending this one */
+		      do
+			{
+		          Status = NtReadFile (KeyboardDeviceHandle,
+				               NULL,
+					       NULL,
+					       NULL,
+					       &Iosb,
+					       &NextKeyInput,
+					       sizeof(KEYBOARD_INPUT_DATA),
+					       NULL,
+					       NULL);
+		          DPRINT("KeyRaw: %s %04x\n",
+		 	         (NextKeyInput.Flags & KEY_BREAK) ? "up":"down",
+		 	         NextKeyInput.MakeCode );
+
+		          if (Status == STATUS_ALERTED && !InputThreadsRunning)
+	    		    goto KeyboardEscape;
+
+			} while ((!(NextKeyInput.Flags & KEY_BREAK)) &&
+			         NextKeyInput.MakeCode == KeyInput.MakeCode);
+		      /* ^ Ignore repeats, they'll be KEY_MAKE and the same
+		       *   code. I'm not caring about the counting, not sure
+		       *   if that matters. I think not.
+		       */
+
+		      /* If the ModifierState is now empty again, send a
+		       * special notification and eat both keypresses
+		       */
+
+		      fsNextModifiers = IntKeyboardGetModifiers(&NextKeyInput);
+
+		      if (fsNextModifiers)
+			ModifierState ^= fsNextModifiers;
+
+		      if (ModifierState == 0)
+			{
+			  if (fsModifiers == MOD_WIN)
+			    IntKeyboardSendWinKeyMsg();
+			  else if (fsModifiers == MOD_ALT)
+			    IntKeyboardSendAltKeyMsg();
+			  continue;
+			}
+
+		      NumKeys = 2;
+		    }
+		}
 	    }
 
-	  /* Find the target thread whose locale is in effect */
-	  if (!IntGetScreenDC())
+	  for (;NumKeys;memcpy(&KeyInput, &NextKeyInput, sizeof(KeyInput)),
+			NumKeys--)
 	    {
-	      FocusQueue = W32kGetPrimitiveMessageQueue();
-	    }
-	  else
-	    {
-      	      FocusQueue = IntGetFocusMessageQueue();
-	    }
+	      lParam = 0;
 
-	  if (!FocusQueue) continue;
+	      IntKeyboardUpdateLeds(KeyboardDeviceHandle,
+			            &KeyInput,
+				    IndicatorTrans);
 
-	  if(KeyEvent.bKeyDown && (fsModifiers & MOD_ALT)) 
-	    msg.message = WM_SYSKEYDOWN;
-	  else if(KeyEvent.bKeyDown)
-	    msg.message = WM_KEYDOWN;
-	  else if(fsModifiers & MOD_ALT)
-	    msg.message = WM_SYSKEYUP;
-	  else
-	    msg.message = WM_KEYUP;
+	  /* While we are working, we set up lParam. The format is:
+	   *  0-15: The number of times this key has autorepeated
+	   * 16-23: The keyboard scancode
+	   *    24: Set if it's and extended key (I assume KEY_E0 | KEY_E1)
+	   *        Note that E1 is only used for PAUSE (E1-1D-45) and
+	   *        E0-45 happens not to be anything.
+	   *    29: Alt is pressed ('Context code')
+	   *    30: Previous state, if the key was down before this message
+	   *        This is a cheap way to ignore autorepeat keys
+	   *    31: 1 if the key is being pressed
+	   */
 
-	  msg.wParam = KeyEvent.wVirtualKeyCode;
-	  msg.lParam = lParam;
-	  msg.hwnd = FocusQueue->FocusWindow;
+	  /* If it's a KEY_MAKE (which is 0, so test using !KEY_BREAK)
+	   * and it's the same key as the last one, increase the repeat
+	   * count.
+	   */
 
-	  FocusThread = FocusQueue->Thread;
+	      if (!(KeyInput.Flags & KEY_BREAK))
+		{
+		  if (((KeyInput.Flags & (KEY_E0 | KEY_E1)) == LastFlags) &&
+		      (KeyInput.MakeCode == LastMakeCode))
+		    {
+		      RepeatCount++;
+		      lParam |= (1 << 30);
+		    }
+	          else
+		    {
+		      RepeatCount = 0;
+		      LastFlags = KeyInput.Flags & (KEY_E0 | KEY_E1);
+		      LastMakeCode = KeyInput.MakeCode;
+		    }
+	        }
+	      else
+	        {
+	          LastFlags = 0;
+	          LastMakeCode = 0; /* Should never match */
+	          lParam |= (1 << 30) | (1 << 31);
+	        }
 
-	  if (FocusThread && FocusThread->Tcb.Win32Thread &&
-	      FocusThread->Tcb.Win32Thread->KeyboardLayout)
-	    {
+	      lParam |= RepeatCount;
+
+	      lParam |= (KeyInput.MakeCode & 0xff) << 16;
+
+	      if (KeyInput.Flags & (KEY_E0 | KEY_E1))
+	          lParam |= (1 << 24);
+
+	      if (ModifierState & MOD_ALT)
+	        {
+	          lParam |= (1 << 29);
+
+	          if (!(KeyInput.Flags & KEY_BREAK))
+		    msg.message = WM_SYSKEYDOWN;
+	          else
+		    msg.message = WM_SYSKEYUP;
+	        }
+	      else
+	        {
+	          if (!(KeyInput.Flags & KEY_BREAK))
+		    msg.message = WM_KEYDOWN;
+	          else
+		    msg.message = WM_KEYUP;
+	        }
+
+	      /* Find the target thread whose locale is in effect */
+	      if (!IntGetScreenDC())
+	        FocusQueue = W32kGetPrimitiveMessageQueue();
+	      else
+      	        FocusQueue = IntGetFocusMessageQueue();
+
+	      /* This might cause us to lose hot keys, which are important
+	       * (ctrl-alt-del secure attention sequence). Not sure if it
+	       * can happen though.
+	       */
+	      if (!FocusQueue) continue;
+
+	      msg.lParam = lParam;
+	      msg.hwnd = FocusQueue->FocusWindow;
+
+	      FocusThread = FocusQueue->Thread;
+
+	      if (!(FocusThread && FocusThread->Tcb.Win32Thread &&
+	            FocusThread->Tcb.Win32Thread->KeyboardLayout))
+	        continue;
+
+	      /* This function uses lParam to fill wParam according to the
+	       * keyboard layout in use.
+	       */
 	      W32kKeyProcessMessage(&msg,
 				    FocusThread->Tcb.Win32Thread->KeyboardLayout);
-	    } 
-	  else
-	    continue;
+
+	      if (GetHotKey(InputWindowStation,
+			    ModifierState,
+			    msg.wParam,
+			    &Thread,
+			    &hWnd,
+			    &id))
+	        {
+	          if (KeyEvent.bKeyDown)
+		    {
+		      DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
+		      MsqPostHotKeyMessage (Thread,
+					    hWnd,
+					    (WPARAM)id,
+					    MAKELPARAM((WORD)ModifierState, 
+						       (WORD)msg.wParam));
+		    }
+	          continue;	/* Eat key up motion too */
+	        }
 	  
-	  /*
-	   * Post a keyboard message.
-	   */
-	  MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
+	      /*
+	       * Post a keyboard message.
+	       */
+	      MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
+	    } 
 	}
+
+KeyboardEscape:
       DPRINT( "KeyboardInput Thread Stopped...\n" );
     }
 }
-
 
 NTSTATUS STDCALL
 NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)

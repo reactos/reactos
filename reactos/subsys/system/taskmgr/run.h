@@ -36,9 +36,9 @@ void TaskManager_OnFileNew(void);
 typedef	void (WINAPI *RUNFILEDLG)(
 HWND    hwndOwner, 
 HICON   hIcon, 
-LPCSTR  lpstrDirectory, 
-LPCSTR  lpstrTitle, 
-LPCSTR  lpstrDescription,
+LPCWSTR lpstrDirectory,
+LPCWSTR lpstrTitle,
+LPCWSTR  lpstrDescription,
 UINT    uFlags); 
 
 /*

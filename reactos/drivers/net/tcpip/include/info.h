@@ -74,11 +74,13 @@ typedef struct IFENTRY {
     ULONG LastChange;
     ULONG InOctets;
     ULONG InUcastPackets;
+    ULONG InNUcastPackets;
     ULONG InDiscards;
     ULONG InErrors;
     ULONG InUnknownProtos;
     ULONG OutOctets;
     ULONG OutUcastPackets;
+    ULONG OutNUcastPackets;
     ULONG OutDiscards;
     ULONG OutErrors;
     ULONG OutQLen;

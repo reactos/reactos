@@ -131,14 +131,13 @@ CsrpParseCommandLine (
 
 	InitializeObjectAttributes (&Attributes,
 	                            &CsrDirectoryName,
-	                            0,
+	                            OBJ_OPENIF,
 	                            NULL,
 	                            NULL);
 
-	Status = NtCreateDirectoryObject(&CsrObjectDirectory,
-	                                 0xF000F, /* ea:??? */
-	                                 &Attributes);
-
+	Status = NtOpenDirectoryObject(&CsrObjectDirectory,
+	                               0xF000F, /* ea:??? */
+	                               &Attributes);
 	return Status;
 }
 

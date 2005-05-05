@@ -18,6 +18,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#undef KeEnterCriticalRegion
+#undef KeLeaveCriticalRegion
 VOID FASTCALL
 ExAcquireFastMutex (PFAST_MUTEX	FastMutex)
 {

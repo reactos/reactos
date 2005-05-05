@@ -224,11 +224,11 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    file_offset = MmGetOffsetPageFile(PagingFileList[i]->RetrievalPointers, file_offset);
 
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-   Status = IoPageWrite(PagingFileList[i]->FileObject,
-                        Mdl,
-                        &file_offset,
-                        &Event,
-                        &Iosb);
+   Status = IoSynchronousPageWrite(PagingFileList[i]->FileObject,
+                                   Mdl,
+                                   &file_offset,
+                                   &Event,
+                                   &Iosb);
    if (Status == STATUS_PENDING)
    {
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);

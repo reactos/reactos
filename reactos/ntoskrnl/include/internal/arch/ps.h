@@ -21,8 +21,7 @@
 
 #ifdef i386
 #include <internal/i386/ps.h>
-#define KiArchContextSwitch          Ki386ContextSwitch
-#define KiArchInitThread             Ke386InitThread
+#define KiArchContextSwitch          KiSwapContext
 #define KiArchInitThreadWithContext  Ke386InitThreadWithContext
 #else
 #error "Unknown processor"

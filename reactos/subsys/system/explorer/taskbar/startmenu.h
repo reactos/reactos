@@ -56,8 +56,8 @@
  /// StartMenuDirectory is used to store the base directory of start menus.
 struct StartMenuDirectory
 {
-	StartMenuDirectory(const ShellDirectory& dir, bool subfolders=true)
-	 :	_dir(dir), _subfolders(subfolders)
+	StartMenuDirectory(const ShellDirectory& dir, const String& ignore="")
+	 :	_dir(dir), _ignore(ignore)
 	{
 	}
 
@@ -67,7 +67,7 @@ struct StartMenuDirectory
 	}
 
 	ShellDirectory _dir;
-	bool	_subfolders;
+	String	_ignore;
 };
 
 typedef list<StartMenuDirectory> StartMenuShellDirs;
@@ -280,7 +280,7 @@ protected:
 	ShellEntryMap::iterator AddEntry(const ShellFolder folder, ShellEntry* entry);
 	ShellEntryMap::iterator AddEntry(const ShellFolder folder, Entry* entry);
 
-	void	AddShellEntries(const ShellDirectory& dir, int max=-1, bool subfolders=true);
+	void	AddShellEntries(const ShellDirectory& dir, int max=-1, const String& ignore="");
 
 	void	AddButton(LPCTSTR title, ICON_ID icon_id=ICID_NONE, bool hasSubmenu=false, int id=-1, bool enabled=true);
 	void	AddSeparator();

@@ -114,7 +114,7 @@ static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz)
     index = get_loaded_file(package,key);
     if (index >=0)
     {
-        value = dupstrW(package->files[index].TargetPath);
+        value = strdupW(package->files[index].TargetPath);
         *sz = (strlenW(value)) * sizeof(WCHAR);
     }
 
@@ -137,7 +137,7 @@ static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key,
     }
     else
     {
-        ERR("Unknown environment variable\n");
+        ERR("Unknown environment variable %s\n", debugstr_w(key));
         *chunk = 0;
         value = NULL;
     }
@@ -252,7 +252,7 @@ static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
     *key = HeapAlloc(GetProcessHeap(),0,i*sizeof(WCHAR));
     /* do not have the [] in the key */
     i -= 1;
-    strncpyW(*key,&(*mark)[1],i);
+    memcpy(*key,&(*mark)[1],i*sizeof(WCHAR));
     (*key)[i] = 0;
 
     TRACE("Found Key %s\n",debugstr_w(*key));
@@ -358,11 +358,12 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
                 value = deformat_index(record,key,&chunk);  
             else
             {
-                chunk = (strlenW(key) + 2)*sizeof(WCHAR);
+                DWORD keylen = strlenW(key);
+                chunk = (keylen + 2)*sizeof(WCHAR);
                 value = HeapAlloc(GetProcessHeap(),0,chunk);
                 value[0] = '[';
-                memcpy(&value[1],key,strlenW(key)*sizeof(WCHAR));
-                value[strlenW(key)+1] = ']';
+                memcpy(&value[1],key,keylen*sizeof(WCHAR));
+                value[1+keylen] = ']';
             }
         }
         else

@@ -47,24 +47,24 @@ static WORD awMonths[2][13] =
 static VOID
 PrintDateString (VOID)
 {
-  WCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	switch (nDateFormat)
 	{
 		case 0: /* mmddyy */
 		default:
-			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
+			LoadString(GetModuleHandle(NULL), STRING_DATE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 1: /* ddmmyy */
-			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
+			LoadString(GetModuleHandle(NULL), STRING_DATE_HELP2, szMsg, RC_STRING_MAX_SIZE);
+			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 
 		case 2: /* yymmdd */
-			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
+			LoadString(GetModuleHandle(NULL), STRING_DATE_HELP3, szMsg, RC_STRING_MAX_SIZE);
+			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
 			break;
 	}
 }
@@ -157,7 +157,7 @@ ParseDate (LPTSTR s)
 			break;
 	}
 
-    /* if only entered two digits: */
+	/* if only entered two digits: */
 	/*   assume 2000's if value less than 80 */
 	/*   assume 1900's if value greater or equal 80 */
 	if (d.wYear <= 99)
@@ -184,17 +184,17 @@ ParseDate (LPTSTR s)
 
 INT cmd_date (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
 	INT    argc;
 	INT    i;
 	BOOL   bPrompt = TRUE;
 	INT    nDateString = -1;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_DATE_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
+		LoadString(GetModuleHandle(NULL), STRING_DATE_HELP4, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -247,14 +247,15 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			freep (arg);
 			return 0;
 		}
-		LoadString( GetModuleHandle(NULL), STRING_DATE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-        ConErrPuts (_T((LPTSTR)szMsg));
-		
+
+		LoadString(GetModuleHandle(NULL), STRING_DATE_ERROR, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPuts(szMsg);
 	}
 
 	freep (arg);
 
 	return 0;
 }
-#endif
+#endif /* INCLUDE_CMD_DATE */
 
+/* EOF */

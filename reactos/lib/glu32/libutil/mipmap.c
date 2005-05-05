@@ -4862,6 +4862,7 @@ static void fill_image(const PixelStorageModes *psm,
 	if (padding) {
 	    rowsize += psm->unpack_alignment - padding;
 	}
+
 	start = (const GLubyte *) userdata + psm->unpack_skip_rows * rowsize +
 		(psm->unpack_skip_pixels * components / 8);
 	elements_per_line = width * components;
@@ -5102,7 +5103,7 @@ static void empty_image(const PixelStorageModes *psm,
     GLint group_size;
     GLint elements_per_line;
     GLubyte *start;
-    GLubyte *iter;
+    GLubyte *iter = NULL;
     const GLushort *iter2;
     GLint i, j, k;
     GLint myswap_bytes;
@@ -5987,7 +5988,7 @@ static void scaleInternalPackedPixel(int components,
     int i,j,k,xindex;
 
     const char *temp, *temp0;
-    int outindex;
+    int outindex = 0;
 
     int lowx_int, highx_int, lowy_int, highy_int;
     float x_percent, y_percent;
@@ -7011,7 +7012,7 @@ static void emptyImage3D(const PixelStorageModes *psm,
    int groupSize;
    int rowSize;
    int padding;
-   GLubyte *start, *rowStart, *iter;
+   GLubyte *start, *rowStart, *iter=NULL;
    int elementsPerLine;
    const GLushort *iter2;
    int ii, jj, dd, k;
@@ -7366,7 +7367,7 @@ static void closestFit3D(GLenum target, GLint width, GLint height, GLint depth,
    GLint widthPowerOf2= nearestPower(width);
    GLint heightPowerOf2= nearestPower(height);	        
    GLint depthPowerOf2= nearestPower(depth);
-   GLint proxyWidth;
+   GLint proxyWidth ;
 
    do {
       /* compute level 1 width & height & depth, clamping each at 1 */
@@ -7379,7 +7380,7 @@ static void closestFit3D(GLenum target, GLint width, GLint height, GLint depth,
       GLint depthAtLevelOne= (depthPowerOf2 > 1) ?
 			      depthPowerOf2 >> 1 :
 			      depthPowerOf2;
-      GLenum proxyTarget;
+      GLenum proxyTarget = 0;
       assert(widthAtLevelOne > 0);
       assert(heightAtLevelOne > 0);
       assert(depthAtLevelOne > 0);

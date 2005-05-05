@@ -65,6 +65,7 @@ KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
 
 /* FUNCTIONS ****************************************************************/
 
+#undef KeGetCurrentIrql
 KIRQL STDCALL KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level

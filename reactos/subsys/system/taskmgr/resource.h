@@ -237,6 +237,9 @@
 #define IDS_MSG_UNABLECHANGEPRIORITY    360
 #define IDS_MSG_WARNINGCHANGEPRIORITY   361
 #define IDS_MSG_TRAYICONCPUUSAGE        362
+#define IDS_STATUS_MEMUSAGE             363
+#define IDS_STATUS_CPUUSAGE             364
+#define IDS_STATUS_PROCESSES            365
 
 
 // Next default values for new objects

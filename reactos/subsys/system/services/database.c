@@ -1,4 +1,4 @@
-/* $Id$
+/*
  *
  * service control manager
  * 
@@ -53,25 +53,6 @@ typedef struct _SERVICE_GROUP
 } SERVICE_GROUP, *PSERVICE_GROUP;
 
 
-typedef struct _SERVICE
-{
-  LIST_ENTRY ServiceListEntry;
-  UNICODE_STRING ServiceName;
-  UNICODE_STRING RegistryPath;
-  UNICODE_STRING ServiceGroup;
-
-  ULONG Start;
-  ULONG Type;
-  ULONG ErrorControl;
-  ULONG Tag;
-
-  BOOLEAN ServiceRunning;
-  BOOLEAN ServiceVisited;
-
-  HANDLE ControlPipeHandle;
-  ULONG ProcessId;
-  ULONG ThreadId;
-} SERVICE, *PSERVICE;
 
 
 /* GLOBALS *******************************************************************/
@@ -81,6 +62,35 @@ LIST_ENTRY ServiceListHead;
 
 
 /* FUNCTIONS *****************************************************************/
+
+PSERVICE
+ScmGetServiceEntryByName(PUNICODE_STRING ServiceName)
+{
+  PLIST_ENTRY ServiceEntry;
+  PSERVICE CurrentService;
+
+  DPRINT("ScmGetServiceEntryByName() called\n");
+
+  ServiceEntry = ServiceListHead.Flink;
+  while (ServiceEntry != &ServiceListHead)
+  {
+    CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                       SERVICE,
+                                       ServiceListEntry);
+    if (RtlEqualUnicodeString(&CurrentService->ServiceName, ServiceName, TRUE))
+    {
+      DPRINT("Found service: '%wZ'\n", &CurrentService->ServiceName);
+      return CurrentService;
+    }
+
+    ServiceEntry = ServiceEntry->Flink;
+  }
+
+  DPRINT("Couldn't find a matching service\n");
+
+  return NULL;
+}
+
 
 static NTSTATUS STDCALL
 CreateGroupOrderListRoutine(PWSTR ValueName,
@@ -277,6 +287,13 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
   InsertTailList(&ServiceListHead,
 		 &Service->ServiceListEntry);
 
+  Service->CurrentState = SERVICE_STOPPED;
+  Service->ControlsAccepted = 0;
+  Service->Win32ExitCode = 0;
+  Service->ServiceSpecificExitCode = 0;
+  Service->CheckPoint = 0;
+  Service->WaitHint = 2000; /* 2 seconds */
+
   return STATUS_SUCCESS;
 }
 
@@ -461,7 +478,7 @@ ScmCheckDriver(PSERVICE Service)
 	  DPRINT("Found: '%wZ'  '%wZ'\n", &Service->ServiceName, &DirInfo->ObjectName);
 
 	  /* Mark service as 'running' */
-	  Service->ServiceRunning = TRUE;
+	  Service->CurrentState = SERVICE_RUNNING;
 
 	  /* Find the driver's group and mark it as 'running' */
 	  if (Service->ServiceGroup.Buffer != NULL)
@@ -767,7 +784,7 @@ ScmStartService(PSERVICE Service,
 	{
 	  Group->ServicesRunning = TRUE;
 	}
-      Service->ServiceRunning = TRUE;
+      Service->CurrentState = SERVICE_RUNNING;
     }
 #if 0
   else

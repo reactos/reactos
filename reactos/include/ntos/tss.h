@@ -6,6 +6,7 @@
 #define __INCLUDE_DDK_I386_TSS_H
 
 #define KTSS_ESP0      (0x4)
+#define KTSS_CR3       (0x1C)
 #define KTSS_EFLAGS    (0x24)
 #define KTSS_IOMAPBASE (0x66)
 

@@ -40,24 +40,25 @@
 
 PLINUX_BOOTSECTOR	LinuxBootSector = NULL;
 PLINUX_SETUPSECTOR	LinuxSetupSector = NULL;
-ULONG					SetupSectorSize = 0;
-BOOL				NewStyleLinuxKernel = FALSE;
-ULONG					LinuxKernelSize = 0;
-ULONG					LinuxInitrdSize = 0;
-UCHAR				LinuxKernelName[260];
-UCHAR				LinuxInitrdName[260];
-BOOL				LinuxHasInitrd = FALSE;
-UCHAR				LinuxCommandLine[260] = "";
-ULONG					LinuxCommandLineSize = 0;
-PVOID				LinuxKernelLoadAddress = NULL;
-PVOID				LinuxInitrdLoadAddress = NULL;
-UCHAR				LinuxBootDescription[80];
+ULONG			SetupSectorSize = 0;
+BOOL			NewStyleLinuxKernel = FALSE;
+ULONG			LinuxKernelSize = 0;
+ULONG			LinuxInitrdSize = 0;
+CHAR			LinuxKernelName[260];
+CHAR			LinuxInitrdName[260];
+BOOL			LinuxHasInitrd = FALSE;
+CHAR			LinuxCommandLine[260] = "";
+ULONG			LinuxCommandLineSize = 0;
+PVOID			LinuxKernelLoadAddress = NULL;
+PVOID			LinuxInitrdLoadAddress = NULL;
+CHAR			LinuxBootDescription[80];
+CHAR			LinuxBootPath[260] = "";
 
-VOID LoadAndBootLinux(PUCHAR OperatingSystemName, PUCHAR Description)
+VOID LoadAndBootLinux(PCHAR OperatingSystemName, PCHAR Description)
 {
 	PFILE	LinuxKernel = NULL;
 	PFILE	LinuxInitrdFile = NULL;
-	UCHAR	TempString[260];
+	CHAR	TempString[260];
 
 	UiDrawBackdrop();
 
@@ -80,7 +81,7 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName, PUCHAR Description)
 	}
 
 	// Open the boot volume
-	if (!FsOpenVolume(BootDrive, BootPartition))
+	if (!FsOpenSystemVolume(LinuxBootPath, NULL, NULL))
 	{
 		UiMessageBox("Failed to open boot drive.");
 		goto LinuxBootFailed;
@@ -223,11 +224,10 @@ LinuxBootFailed:
 	LinuxCommandLineSize = 0;
 }
 
-BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
+BOOL LinuxParseIniSection(PCHAR OperatingSystemName)
 {
-	UCHAR	SettingName[260];
-	UCHAR	SettingValue[260];
-	ULONG		SectionId;
+	CHAR	SettingName[260];
+	ULONG	SectionId;
 
 	// Find all the message box settings and run them
 	UiShowMessageBoxesInSection(OperatingSystemName);
@@ -240,18 +240,10 @@ BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
 		return FALSE;
 	}
 
-	if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, 260))
+	if (!IniReadSettingByName(SectionId, "BootPath", LinuxBootPath, 260))
 	{
-		UiMessageBox("Boot drive not specified for selected OS!");
+		UiMessageBox("Boot path not specified for selected OS!");
 		return FALSE;
-	}
-
-	BootDrive = DriveMapGetBiosDriveNumber(SettingValue);
-
-	BootPartition = 0;
-	if (IniReadSettingByName(SectionId, "BootPartition", SettingValue, 260))
-	{
-		BootPartition = atoi(SettingValue);
 	}
 
 	// Get the kernel name
@@ -383,7 +375,7 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 {
 	ULONG		BytesLoaded;
-	UCHAR	StatusText[260];
+	CHAR	StatusText[260];
 	PVOID	LoadAddress;
 
 	sprintf(StatusText, "Loading %s", LinuxKernelName);
@@ -456,7 +448,7 @@ BOOL LinuxCheckKernelVersion(VOID)
 BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 {
 	ULONG		BytesLoaded;
-	UCHAR	StatusText[260];
+	CHAR	StatusText[260];
 
 	sprintf(StatusText, "Loading %s", LinuxInitrdName);
 	UiDrawStatusText(StatusText);

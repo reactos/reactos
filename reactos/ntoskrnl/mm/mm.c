@@ -90,6 +90,7 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
          return(STATUS_SUCCESS);
 
       case MEMORY_AREA_VIRTUAL_MEMORY:
+      case MEMORY_AREA_PEB_OR_TEB:
          MmFreeVirtualMemory(Process, Marea);
          break;
 
@@ -384,6 +385,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
+         case MEMORY_AREA_PEB_OR_TEB:
             Status = MmNotPresentFaultVirtualMemory(AddressSpace,
                                                     MemoryArea,
                                                     (PVOID)Address,

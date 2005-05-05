@@ -56,7 +56,7 @@ typedef enum _KWAIT_REASON
    WrPageOut,
    WrRendezvous,
    Spare2,
-   Spare3,
+   WrGuardedMutex,
    Spare4,
    Spare5,
    Spare6,

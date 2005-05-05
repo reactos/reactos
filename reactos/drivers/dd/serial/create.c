@@ -26,6 +26,8 @@ SerialCreate(
 	FileObject = Stack->FileObject;
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
+	ASSERT(FileObject);
+	
 	if (Stack->Parameters.Create.Options & FILE_DIRECTORY_FILE)
 	{
 		CHECKPOINT;
@@ -43,7 +45,7 @@ SerialCreate(
 	
 	if(DeviceExtension->IsOpened)
 	{
-		DPRINT("Serial: COM%lu is already opened", DeviceExtension->ComPort);
+		DPRINT("Serial: COM%lu is already opened\n", DeviceExtension->ComPort);
 		Status = STATUS_ACCESS_DENIED;
 		goto ByeBye;
 	}

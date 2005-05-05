@@ -49,6 +49,39 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_DPC		    2
 #define IPI_REQUEST_FREEZE	    3
 
+#ifndef __USE_W32API
+typedef enum _KTHREAD_STATE {
+    Initialized,
+    Ready,
+    Running,
+    Standby,
+    Terminated, 
+    Waiting,
+    Transition,
+    DeferredReady,
+} THREAD_STATE, *PTHREAD_STATE;
+#endif
+
+/* MACROS *************************************************************************/
+
+#define KeEnterCriticalRegion(X) \
+{ \
+    PKTHREAD _Thread = KeGetCurrentThread(); \
+    if (_Thread) _Thread->KernelApcDisable--; \
+}
+    
+#define KeLeaveCriticalRegion(X) \
+{ \
+    PKTHREAD _Thread = KeGetCurrentThread(); \
+    if((_Thread) && (++_Thread->KernelApcDisable == 0)) \
+    { \
+        if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode])) \
+        { \
+            KiKernelApcDeliveryCheck(); \
+        } \
+    } \
+}
+
 /* threadsch.c ********************************************************************/
 
 /* Thread Scheduler Functions */
@@ -77,6 +110,36 @@ STDCALL
 KiUnblockThread(PKTHREAD Thread, 
                 PNTSTATUS WaitStatus, 
                 KPRIORITY Increment);
+                
+NTSTATUS
+STDCALL
+KeSuspendThread(PKTHREAD Thread);
+
+NTSTATUS
+FASTCALL
+KiSwapContext(PKTHREAD NewThread);
+       
+/* gmutex.c ********************************************************************/
+
+VOID
+FASTCALL
+KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex);
+
+/* gate.c **********************************************************************/
+         
+VOID 
+FASTCALL
+KeInitializeGate(PKGATE Gate);
+
+VOID
+FASTCALL
+KeSignalGateBoostPriority(PKGATE Gate);
+
+VOID
+FASTCALL
+KeWaitForGate(PKGATE Gate,
+              KWAIT_REASON WaitReason,
+              KPROCESSOR_MODE WaitMode);
 
 /* ipi.c ********************************************************************/
 
@@ -168,6 +231,9 @@ KeProfileInterruptWithSource(
 	IN KPROFILE_SOURCE		Source
 );
 
+BOOLEAN 
+STDCALL
+KiRosPrintAddress(PVOID Address);
 
 VOID STDCALL KeUpdateSystemTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
 VOID STDCALL KeUpdateRunTime(PKTRAP_FRAME TrapFrame, KIRQL Irql);
@@ -179,9 +245,16 @@ VOID inline FASTCALL KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
 VOID inline FASTCALL KeReleaseDispatcherDatabaseLock(KIRQL Irql);
 VOID inline FASTCALL KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
-VOID 
+VOID
 STDCALL
-KeInitializeThread(struct _KPROCESS* Process, PKTHREAD Thread, BOOLEAN First);
+KeInitializeThread(struct _KPROCESS* Process, 
+                   PKTHREAD Thread, 
+                   PKSYSTEM_ROUTINE SystemRoutine,
+                   PKSTART_ROUTINE StartRoutine,
+                   PVOID StartContext,
+                   PCONTEXT Context,
+                   PVOID Teb,
+                   PVOID KernelStack);
 
 VOID
 STDCALL
@@ -217,7 +290,14 @@ FASTCALL
 KiAbortWaitThread(PKTHREAD Thread, 
                   NTSTATUS WaitStatus,
                   KPRIORITY Increment);
-                  
+     
+VOID
+STDCALL
+KeInitializeProcess(struct _KPROCESS *Process,
+                    KPRIORITY Priority,
+                    KAFFINITY Affinity,
+                    LARGE_INTEGER DirectoryTableBase);
+                                 
 ULONG
 STDCALL
 KeForceResumeThread(IN PKTHREAD Thread);
@@ -233,11 +313,13 @@ VOID inline FASTCALL KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock);
 VOID FASTCALL KiWaitTest(PDISPATCHER_HEADER Object, KPRIORITY Increment);
 
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
-VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
+BOOLEAN STDCALL KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
 VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
-
+VOID
+STDCALL
+KiKernelApcDeliveryCheck(VOID);
 LONG 
 STDCALL 
 KiInsertQueue(IN PKQUEUE Queue, 

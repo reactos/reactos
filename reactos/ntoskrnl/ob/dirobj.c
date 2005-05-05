@@ -169,6 +169,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
   KPROCESSOR_MODE PreviousMode;
   ULONG SkipEntries = 0;
   ULONG NextEntry = 0;
+  ULONG CopyBytes = 0;
   NTSTATUS Status = STATUS_SUCCESS;
   
   PAGED_CODE();
@@ -318,63 +319,66 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
         Status = STATUS_MORE_ENTRIES;
       }
 
-      if(NT_SUCCESS(Status))
+      if(NT_SUCCESS(Status) && nDirectories > 0)
       {
-        if(nDirectories > 0)
+        PWSTR strbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer + nDirectories);
+        PWSTR deststrbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)Buffer + nDirectories);
+        
+        CopyBytes = nDirectories * sizeof(OBJECT_DIRECTORY_INFORMATION);
+        
+        /* copy the names from the objects and append them to the list of the
+           objects. copy to the temporary buffer only because the directory
+           lock can't be released and the buffer might be pagable memory! */
+        for(DirInfo = (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
+            nDirectories > 0;
+            nDirectories--, DirInfo++)
         {
-          _SEH_TRY
+          ULONG NameLength;
+          
+          if(DirInfo->ObjectName.Length > 0)
           {
-            POBJECT_DIRECTORY_INFORMATION DestDirInfo = (POBJECT_DIRECTORY_INFORMATION)Buffer;
-            PWSTR strbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)Buffer + nDirectories);
+            RtlCopyMemory(strbuf,
+                          DirInfo->ObjectName.Buffer,
+                          DirInfo->ObjectName.Length);
+            /* change the buffer pointer to the buffer */
+            DirInfo->ObjectName.Buffer = deststrbuf;
+            NameLength = DirInfo->ObjectName.Length / sizeof(WCHAR);
+            /* NULL-terminate the string */
+            strbuf[NameLength] = L'\0';
+            strbuf += NameLength + 1;
+            deststrbuf += NameLength + 1;
 
-            /* copy all OBJECT_DIRECTORY_INFORMATION structures to the buffer and
-               just append all strings (whose pointers are stored in the buffer!)
-               and replace the pointers */
-            for(DirInfo = (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
-                nDirectories > 0;
-                nDirectories--, DirInfo++, DestDirInfo++)
-            {
-              if(DirInfo->ObjectName.Length > 0)
-              {
-                DestDirInfo->ObjectName.Length = DirInfo->ObjectName.Length;
-                DestDirInfo->ObjectName.MaximumLength = DirInfo->ObjectName.MaximumLength;
-                DestDirInfo->ObjectName.Buffer = strbuf;
-                RtlCopyMemory(strbuf,
-                              DirInfo->ObjectName.Buffer,
-                              DirInfo->ObjectName.Length);
-                /* NULL-terminate the string */
-                strbuf[DirInfo->ObjectName.Length / sizeof(WCHAR)] = L'\0';
-                strbuf += (DirInfo->ObjectName.Length / sizeof(WCHAR)) + 1;
-              }
-              
-              DestDirInfo->ObjectTypeName.Length = DirInfo->ObjectTypeName.Length;
-              DestDirInfo->ObjectTypeName.MaximumLength = DirInfo->ObjectTypeName.MaximumLength;
-              DestDirInfo->ObjectTypeName.Buffer = strbuf;
-              RtlCopyMemory(strbuf,
-                            DirInfo->ObjectTypeName.Buffer,
-                            DirInfo->ObjectTypeName.Length);
-              /* NULL-terminate the string */
-              strbuf[DirInfo->ObjectTypeName.Length / sizeof(WCHAR)] = L'\0';
-              strbuf += (DirInfo->ObjectTypeName.Length / sizeof(WCHAR)) + 1;
-            }
+            CopyBytes += (NameLength + 1) * sizeof(WCHAR);
           }
-          _SEH_HANDLE
-          {
-            Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
+          
+          RtlCopyMemory(strbuf,
+                        DirInfo->ObjectTypeName.Buffer,
+                        DirInfo->ObjectTypeName.Length);
+          /* change the buffer pointer to the buffer */
+          DirInfo->ObjectTypeName.Buffer = deststrbuf;
+          NameLength = DirInfo->ObjectTypeName.Length / sizeof(WCHAR);
+          /* NULL-terminate the string */
+          strbuf[NameLength] = L'\0';
+          strbuf += NameLength + 1;
+          deststrbuf += NameLength + 1;
+          
+          CopyBytes += (NameLength + 1) * sizeof(WCHAR);
         }
       }
 
       KeReleaseSpinLock(&Directory->Lock, OldLevel);
       ObDereferenceObject(Directory);
-      
-      ExFreePool(TemporaryBuffer);
 
       if(NT_SUCCESS(Status) || ReturnSingleEntry)
       {
         _SEH_TRY
         {
+          if(CopyBytes != 0)
+          {
+            RtlCopyMemory(Buffer,
+                          TemporaryBuffer,
+                          CopyBytes);
+          }
           *Context = NextEntry;
           if(ReturnLength != NULL)
           {
@@ -387,6 +391,8 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
         }
         _SEH_END;
       }
+      
+      ExFreePool(TemporaryBuffer);
     }
     else
     {

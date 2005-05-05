@@ -27,8 +27,8 @@ freeldr.o: $(FREELDR)
 	rm freeldr.tmp
 
 ofwldr: $(OBJS)
-	mppcw32-ld --no-omagic $(LDSECT) $(OBJS) -g -o $@.elf
-	mppcw32-objcopy $(SECTIONS) -O aixcoff-rs6000 $@.elf $@
+	$(LD) -melf32ppc --no-omagic $(LDSECT) $(OBJS) -g -o $@.elf
+	$(OBJCOPY) $(SECTIONS) -O aixcoff-rs6000 $@.elf $@
 	$(TOOLS)/hack-coff $@
 
 clean:

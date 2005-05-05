@@ -1114,8 +1114,8 @@ CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
   PDEBUG_BUFFER HeapDebug, ModuleDebug;
   PVOID ProcThrdInfo;
   ULONG ProcThrdInfoSize;
-  HANDLE hSnapShotSection;
   NTSTATUS Status;
+  HANDLE hSnapShotSection = NULL;
 
   if(th32ProcessID == 0)
   {

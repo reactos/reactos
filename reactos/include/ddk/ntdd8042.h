@@ -204,18 +204,18 @@ typedef struct _INTERNAL_I8042_HOOK_KEYBOARD {
     //
     // Write function
     //
- //UNIMPLEMENTED   IN PI8042_ISR_WRITE_PORT IsrWritePort;
+    IN PI8042_ISR_WRITE_PORT IsrWritePort;
 
     //
     // Queue the current packet (ie the one passed into the isr callback hook)
     // to be reported to the class driver
     //
- //UNIMPLEMENTED  IN PI8042_QUEUE_PACKET QueueKeyboardPacket;
+    IN PI8042_QUEUE_PACKET QueueKeyboardPacket;
 
     //
     // Context for IsrWritePort, QueueKeyboardPacket
     //
- //UNIMPLEMENTED  IN PVOID CallContext;
+    IN PVOID CallContext;
 
 } INTERNAL_I8042_HOOK_KEYBOARD, *PINTERNAL_I8042_HOOK_KEYBOARD;
 

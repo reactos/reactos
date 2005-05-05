@@ -294,7 +294,7 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
                                                                                \
    default:                                                                    \
    {                                                                           \
-    switch(state)                                                              \
+    switch(_SEH2State)                                                              \
     {                                                                          \
      case _SEH2_STATE_INIT_EXCEPT: _SEH2Filter = NULL; break;                  \
      case _SEH2_STATE_INIT_FINALLY: _SEH2Finally = NULL; break;                \

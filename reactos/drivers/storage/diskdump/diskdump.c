@@ -41,6 +41,7 @@
 #undef VERSION
 #define VERSION  "0.0.1"
 
+#undef KeGetCurrentIrql
 /* PROTOTYPES ***************************************************************/
 
 NTSTATUS STDCALL

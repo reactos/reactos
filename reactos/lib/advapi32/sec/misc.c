@@ -338,18 +338,6 @@ SetKernelObjectSecurity(HANDLE Handle,
 /*
  * @implemented
  */
-VOID STDCALL
-MapGenericMask(PDWORD AccessMask,
-	       PGENERIC_MAPPING GenericMapping)
-{
-  RtlMapGenericMask(AccessMask,
-		    GenericMapping);
-}
-
-
-/*
- * @implemented
- */
 BOOL STDCALL
 ImpersonateLoggedOnUser(HANDLE hToken)
 {

@@ -19,8 +19,6 @@
 #define __INTERNAL_DEBUG
 
 #include <internal/ntoskrnl.h>
-#include <internal/dbg.h>
-
 
 #if defined(_MSC_VER) && (_MSC_VER < 1300)
 /* TODO: Verify which version the MS compiler learned the __FUNCTION__ macro */
@@ -93,19 +91,6 @@
 
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0)
 
-#if defined(KDBG) && defined(NDEBUG) && defined(__NTOSKRNL__)
-
-#define DPRINT(args...) do { \
-  if (DbgShouldPrint(__FILE__)) { \
-    DbgPrint("(%s:%d) ",__FILE__,__LINE__); \
-    DbgPrint(args); \
-  } \
-} while(0)
-
-#define CHECKPOINT
-
-#else /* KDBG && NDEBUG && __NTOSKRNL__ */
-
 #ifndef NDEBUG
 #ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
 #define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
@@ -122,7 +107,6 @@
 #define CHECKPOINT
 #endif /* NDEBUG */
 
-#endif /* KDBG && NDEBUG */
 
 /*
  * FUNCTION: Assert a maximum value for the current irql

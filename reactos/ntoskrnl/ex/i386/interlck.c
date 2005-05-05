@@ -396,6 +396,44 @@ InterlockedExchangeAdd(PLONG Addend,
 #error Unknown compiler for inline assembler
 #endif
 
+/**********************************************************************
+ * FASTCALL: @InterlockedClearBit@8
+ * STDCALL: _InterlockedClearBit@8
+ */
+#if defined(__GNUC__)
+/*
+ * @implemented
+ */
+UCHAR
+FASTCALL
+InterlockedClearBit(PLONG Destination,
+                    LONG Bit);
+
+__asm__("\n\t.global @InterlockedClearBit@8\n\t"
+	"@InterlockedClearBit@8:\n\t"
+	LOCK
+	"btr %edx,(%ecx)\n\t"
+	"setc %al\n\t"
+	"ret $8\n\t");
+
+#elif defined(_MSC_VER)
+/*
+ * @implemented
+ */
+__declspec(naked)
+UCHAR
+FASTCALL
+InterlockedClearBit(PUCHAR Destination,
+                    UCHAR Bit)
+{
+	__asm LOCK btr [ecx], edx
+	__asm setc al
+	__asm ret
+}
+
+#else
+#error Unknown compiler for inline assembler
+#endif
 
 /**********************************************************************
  * FASTCALL: @InterlockedCompareExchange@12

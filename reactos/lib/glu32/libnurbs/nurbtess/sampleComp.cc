@@ -157,9 +157,9 @@ void sampleCompLeft(Real* topVertex, Real* botVertex,
   /*find out whether there is a trim vertex which is
    *inbetween the top and bot grid lines or not.
    */
-  Int midIndex1;
-  Int midIndex2;
-  Int gridMidIndex1, gridMidIndex2;
+  Int midIndex1 = 0;
+  Int midIndex2 = 0;
+  Int gridMidIndex1 = 0, gridMidIndex2 = 0;
   //midIndex1: array[i] <= v, array[i-1] > v
   //midIndex2: array[i] >= v, array[i+1] < v
   // v(gridMidIndex1) >= v(midindex1) > v(gridMidIndex1+1)

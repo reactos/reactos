@@ -65,7 +65,7 @@ static const COLORREF predefcolors[6][8]=
 /* Chose Color PRIVATE Structure:
  *
  * This structure is duplicated in the 16 bit code with
- * a extra member
+ * an extra member
  */
 
 typedef struct CCPRIVATE

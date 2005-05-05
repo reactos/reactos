@@ -149,7 +149,7 @@ int adns__vbuf_append(vbuf *vb, const byte *data, int len) {
 int adns__vbuf_appendstr(vbuf *vb, const char *data) {
   int l;
   l= strlen(data);
-  return adns__vbuf_append(vb,data,l);
+  return adns__vbuf_append(vb,(byte*)data,l);
 }
 
 void adns__vbuf_free(vbuf *vb) {
@@ -172,15 +172,15 @@ const char *adns__diag_domain(adns_state ads, int serv, adns_query qu,
     if (!(adns__vbuf_appendstr(vb,"<bad format... ") &&
 	  adns__vbuf_appendstr(vb,adns_strerror(st)) &&
 	  adns__vbuf_appendstr(vb,">") &&
-	  adns__vbuf_append(vb,"",1))) {
+	  adns__vbuf_append(vb,(byte*)"",1))) {
       return "<cannot report bad format... out of memory>";
     }
   }
   if (!vb->used) {
     adns__vbuf_appendstr(vb,"<truncated ...>");
-    adns__vbuf_append(vb,"",1);
+    adns__vbuf_append(vb,(byte*)"",1);
   }
-  return vb->buf;
+  return (char*)vb->buf;
 }
 
 adns_status adns_rr_info(adns_rrtype type,
@@ -203,10 +203,10 @@ adns_status adns_rr_info(adns_rrtype type,
   adns__vbuf_init(&vb);
   st= typei->convstring(&vb,datap);
   if (st) goto x_freevb;
-  if (!adns__vbuf_append(&vb,"",1)) { st= adns_s_nomemory; goto x_freevb; }
-  assert((int)strlen(vb.buf) == vb.used-1);
+  if (!adns__vbuf_append(&vb,(byte*)"",1)) { st= adns_s_nomemory; goto x_freevb; }
+  assert((int)strlen((char*)vb.buf) == vb.used-1);
   *data_r= realloc(vb.buf, (size_t) vb.used);
-  if (!*data_r) *data_r= vb.buf;
+  if (!*data_r) *data_r= (char*)vb.buf;
   return adns_s_ok;
 
  x_freevb:

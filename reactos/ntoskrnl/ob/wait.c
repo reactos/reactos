@@ -111,7 +111,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                                      UserRequest,
                                      PreviousMode,
                                      Alertable,
-				     TimeOut,
+                                     TimeOut,
                                      WaitBlockArray);
 
    /* dereference all objects */

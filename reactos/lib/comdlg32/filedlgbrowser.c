@@ -95,6 +95,49 @@ extern HRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode);
  *   Helper functions
  */
 
+#define add_flag(a) if (flags & a) {strcat(str, #a );strcat(str," ");}
+static void COMDLG32_DumpSBSPFlags(UINT uflags)
+{
+    if (TRACE_ON(commdlg))
+    {
+	unsigned int   i;
+	static const struct {
+	    DWORD       mask;
+	    const char  *name;
+	} flags[] = {
+#define FE(x) { x, #x}
+            /* SBSP_DEFBROWSER == 0 */
+            FE(SBSP_SAMEBROWSER),
+            FE(SBSP_NEWBROWSER),
+
+            /* SBSP_DEFMODE == 0 */
+            FE(SBSP_OPENMODE),
+            FE(SBSP_EXPLOREMODE),
+            FE(SBSP_HELPMODE),
+            FE(SBSP_NOTRANSFERHIST),
+
+            /* SBSP_ABSOLUTE == 0 */
+            FE(SBSP_RELATIVE),
+            FE(SBSP_PARENT),
+            FE(SBSP_NAVIGATEBACK),
+            FE(SBSP_NAVIGATEFORWARD),
+            FE(SBSP_ALLOW_AUTONAVIGATE),
+
+            FE(SBSP_NOAUTOSELECT),
+            FE(SBSP_WRITENOHISTORY),
+
+            FE(SBSP_REDIRECT),
+            FE(SBSP_INITIATEDBYHLINKFRAME),
+        };
+#undef FE
+        DPRINTF("SBSP Flags: %08x =", uflags);
+	for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++)
+	    if (flags[i].mask & uflags)
+		DPRINTF("%s ", flags[i].name);
+	DPRINTF("\n");
+    }
+}
+
 static void COMDLG32_UpdateCurrentDir(FileOpenDlgInfos *fodInfos)
 {
     char lpstrPath[MAX_PATH];
@@ -314,10 +357,8 @@ HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
 
     IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
 
-    TRACE("(%p)(pidl=%p,flags=0x%08x(%s))\n", This, pidl, wFlags,
-	(wFlags & SBSP_RELATIVE) ? "SBSP_RELATIVE" :
-	(wFlags & SBSP_PARENT) ? "SBSP_PARENT" :
- 	(wFlags & SBSP_ABSOLUTE) ? "SBSP_ABSOLUTE" : "SBPS_????");
+    TRACE("(%p)(pidl=%p,flags=0x%08x)\n", This, pidl, wFlags);
+    COMDLG32_DumpSBSPFlags(wFlags);
 
     fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
 
@@ -720,7 +761,7 @@ HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDlgBrowse
 
     fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
 
-    /* If the selected object is not a folder, send a IDOK command to parent window */
+    /* If the selected object is not a folder, send an IDOK command to parent window */
     if((pidl = GetPidlFromDataObject(fodInfos->Shell.FOIDataObject, 1)))
     {
         HRESULT hRes;

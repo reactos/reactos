@@ -23,7 +23,7 @@
 typedef struct _FAT_BOOTSECTOR
 {
 	UCHAR		JumpBoot[3];				// Jump instruction to boot code
-	UCHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
+	CHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
 	USHORT		BytesPerSector;				// Bytes per sector
 	UCHAR		SectorsPerCluster;			// Number of sectors in a cluster
 	USHORT		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
@@ -40,8 +40,8 @@ typedef struct _FAT_BOOTSECTOR
 	UCHAR		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
 	UCHAR		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
 	ULONG		VolumeSerialNumber;			// Volume serial number
-	UCHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
-	UCHAR		FileSystemType[8];			// One of the strings "FAT12   ", "FAT16   ", or "FAT     "
+	CHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
+	CHAR		FileSystemType[8];			// One of the strings "FAT12   ", "FAT16   ", or "FAT     "
 
 	UCHAR		BootCodeAndData[448];		// The remainder of the boot sector
 
@@ -52,7 +52,7 @@ typedef struct _FAT_BOOTSECTOR
 typedef struct _FAT32_BOOTSECTOR
 {
 	UCHAR		JumpBoot[3];				// Jump instruction to boot code
-	UCHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
+	CHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
 	USHORT		BytesPerSector;				// Bytes per sector
 	UCHAR		SectorsPerCluster;			// Number of sectors in a cluster
 	USHORT		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
@@ -76,8 +76,8 @@ typedef struct _FAT32_BOOTSECTOR
 	UCHAR		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
 	UCHAR		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
 	ULONG		VolumeSerialNumber;			// Volume serial number
-	UCHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
-	UCHAR		FileSystemType[8];			// Always set to the string "FAT32   "
+	CHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
+	CHAR		FileSystemType[8];			// Always set to the string "FAT32   "
 
 	UCHAR		BootCodeAndData[420];		// The remainder of the boot sector
 
@@ -87,7 +87,7 @@ typedef struct _FAT32_BOOTSECTOR
 
 typedef struct _FATX_BOOTSECTOR
 {
-	UCHAR		FileSystemType[4];			/* String "FATX" */
+	CHAR		FileSystemType[4];			/* String "FATX" */
 	ULONG		VolumeSerialNumber;			/* Volume serial number */
 	ULONG		SectorsPerCluster;			/* Number of sectors in a cluster */
 	USHORT		NumberOfFats;				/* Number of FAT tables */
@@ -101,7 +101,7 @@ typedef struct _FATX_BOOTSECTOR
  */
 typedef struct //_DIRENTRY
 {
-	UCHAR	FileName[11];	/* Filename + extension */
+	CHAR	FileName[11];	/* Filename + extension */
 	UCHAR	Attr;		/* File attributes */
 	UCHAR	ReservedNT;	/* Reserved for use by Windows NT */
 	UCHAR	TimeInTenths;	/* Millisecond stamp at file creation */
@@ -131,7 +131,7 @@ typedef struct
 {
 	UCHAR	FileNameSize;	/* Size of filename (max 42) */
 	UCHAR	Attr;		/* File attributes */
-	UCHAR	FileName[42];	/* Filename in ASCII, padded with 0xff (not zero-terminated) */
+	CHAR	FileName[42];	/* Filename in ASCII, padded with 0xff (not zero-terminated) */
 	ULONG	StartCluster;	/* Starting cluster number */
 	ULONG	Size;		/* File size */
 	USHORT	Time;		/* Time last modified */
@@ -155,11 +155,11 @@ typedef struct
 BOOL	FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSectorCount);
 ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
 PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOL RootDirectory);
-BOOL	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-BOOL	FatLookupFile(PUCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-void	FatParseShortFileName(PUCHAR Buffer, PDIRENTRY DirEntry);
+BOOL	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
+BOOL	FatLookupFile(PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
+void	FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry);
 BOOL	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
-FILE*	FatOpenFile(PUCHAR FileName);
+FILE*	FatOpenFile(PCHAR FileName);
 ULONG	FatCountClustersInChain(ULONG StartCluster);
 ULONG*	FatGetClusterChainArray(ULONG StartCluster);
 BOOL	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);

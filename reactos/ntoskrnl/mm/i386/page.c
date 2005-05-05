@@ -319,9 +319,12 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
+NTSTATUS 
+STDCALL
+MmCopyMmInfo(PEPROCESS Src, 
+             PEPROCESS Dest, 
+             PPHYSICAL_ADDRESS DirectoryTableBase)
 {
-   PKPROCESS KProcess = &Dest->Pcb;
    NTSTATUS Status;
    ULONG i, j;
    PFN_TYPE Pfn[7];
@@ -389,8 +392,9 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
 
       MmDeleteHyperspaceMapping(PageDirectory);
    }
-   KProcess->DirectoryTableBase.QuadPart = PFN_TO_PTE(Pfn[0]);
-   DPRINT("Finished MmCopyMmInfo()\n");
+
+   DirectoryTableBase->QuadPart = PFN_TO_PTE(Pfn[0]);
+   DPRINT("Finished MmCopyMmInfo(): %I64x\n", DirectoryTableBase->QuadPart);
    return(STATUS_SUCCESS);
 }
 
@@ -2007,7 +2011,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
       {
          KEBUGCHECK(0);
       }
-      InterlockedExchange(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
+      InterlockedExchange((PLONG)Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
       MiFlushTlb(Pt, Address);
    }
 }
@@ -2197,7 +2201,7 @@ MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
    else
    {
       ULONG Entry;
-      Entry = InterlockedExchange(ADDR_TO_PTE(Address), PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE);
+      Entry = InterlockedExchange((PLONG)ADDR_TO_PTE(Address), PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE);
       Pfn = PTE_TO_PFN(Entry);
    }
    FLUSH_TLB_ONE(Address);
@@ -2218,7 +2222,7 @@ MmDeleteHyperspaceMapping(PVOID Address)
    else
    {
       ULONG Entry;
-      Entry = InterlockedExchange(ADDR_TO_PTE(Address), 0);
+      Entry = InterlockedExchange((PLONG)ADDR_TO_PTE(Address), 0);
       Pfn = PTE_TO_PFN(Entry);
    }
    FLUSH_TLB_ONE(Address);

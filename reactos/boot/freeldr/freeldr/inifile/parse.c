@@ -30,11 +30,11 @@ ULONG					IniFileSectionCount = 0;
 ULONG					IniFileSettingCount = 0;
 
 
-BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
+BOOL IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 {
 	ULONG					CurrentOffset;
 	ULONG					CurrentLineNumber;
-	PUCHAR				IniFileLine;
+	PCHAR				IniFileLine;
 	ULONG					IniFileLineSize;
 	ULONG					LineLength;
 	PINI_SECTION		CurrentSection = NULL;
@@ -189,7 +189,7 @@ BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
 	return TRUE;
 }
 
-ULONG IniGetNextLineSize(PUCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset)
+ULONG IniGetNextLineSize(PCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset)
 {
 	ULONG		Idx;
 	ULONG		LineCharCount = 0;
@@ -216,7 +216,7 @@ ULONG IniGetNextLineSize(PUCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOff
 	return LineCharCount;
 }
 
-ULONG IniGetNextLine(PUCHAR IniFileData, ULONG IniFileSize, PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset)
+ULONG IniGetNextLine(PCHAR IniFileData, ULONG IniFileSize, PCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset)
 {
 	ULONG		Idx;
 
@@ -252,7 +252,7 @@ ULONG IniGetNextLine(PUCHAR IniFileData, ULONG IniFileSize, PUCHAR Buffer, ULONG
 	return CurrentOffset;
 }
 
-BOOL IniIsLineEmpty(PUCHAR LineOfText, ULONG TextLength)
+BOOL IniIsLineEmpty(PCHAR LineOfText, ULONG TextLength)
 {
 	ULONG		Idx;
 
@@ -275,7 +275,7 @@ BOOL IniIsLineEmpty(PUCHAR LineOfText, ULONG TextLength)
 	return TRUE;
 }
 
-BOOL IniIsCommentLine(PUCHAR LineOfText, ULONG TextLength)
+BOOL IniIsCommentLine(PCHAR LineOfText, ULONG TextLength)
 {
 	ULONG		Idx;
 
@@ -301,7 +301,7 @@ BOOL IniIsCommentLine(PUCHAR LineOfText, ULONG TextLength)
 	return FALSE;
 }
 
-BOOL IniIsSectionName(PUCHAR LineOfText, ULONG TextLength)
+BOOL IniIsSectionName(PCHAR LineOfText, ULONG TextLength)
 {
 	ULONG		Idx;
 
@@ -327,7 +327,7 @@ BOOL IniIsSectionName(PUCHAR LineOfText, ULONG TextLength)
 	return FALSE;
 }
 
-ULONG IniGetSectionNameSize(PUCHAR SectionNameLine, ULONG LineLength)
+ULONG IniGetSectionNameSize(PCHAR SectionNameLine, ULONG LineLength)
 {
 	ULONG		Idx;
 	ULONG		NameSize;
@@ -368,7 +368,7 @@ ULONG IniGetSectionNameSize(PUCHAR SectionNameLine, ULONG LineLength)
 	return NameSize;
 }
 
-VOID IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, ULONG LineLength)
+VOID IniExtractSectionName(PCHAR SectionName, PCHAR SectionNameLine, ULONG LineLength)
 {
 	ULONG		Idx;
 	ULONG		DestIdx;
@@ -408,7 +408,7 @@ VOID IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, ULONG Lin
 	SectionName[DestIdx] = '\0';
 }
 
-BOOL IniIsSetting(PUCHAR LineOfText, ULONG TextLength)
+BOOL IniIsSetting(PCHAR LineOfText, ULONG TextLength)
 {
 	ULONG		Idx;
 
@@ -424,7 +424,7 @@ BOOL IniIsSetting(PUCHAR LineOfText, ULONG TextLength)
 	return FALSE;
 }
 
-ULONG IniGetSettingNameSize(PUCHAR SettingNameLine, ULONG LineLength)
+ULONG IniGetSettingNameSize(PCHAR SettingNameLine, ULONG LineLength)
 {
 	ULONG		Idx;
 	ULONG		NameSize;
@@ -462,7 +462,7 @@ ULONG IniGetSettingNameSize(PUCHAR SettingNameLine, ULONG LineLength)
 	return NameSize;
 }
 
-ULONG IniGetSettingValueSize(PUCHAR SettingValueLine, ULONG LineLength)
+ULONG IniGetSettingValueSize(PCHAR SettingValueLine, ULONG LineLength)
 {
 	ULONG		Idx;
 	ULONG		ValueSize;
@@ -515,7 +515,7 @@ ULONG IniGetSettingValueSize(PUCHAR SettingValueLine, ULONG LineLength)
 	return ValueSize;
 }
 
-VOID IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, ULONG LineLength)
+VOID IniExtractSettingName(PCHAR SettingName, PCHAR SettingNameLine, ULONG LineLength)
 {
 	ULONG		Idx;
 	ULONG		DestIdx;
@@ -552,7 +552,7 @@ VOID IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, ULONG Lin
 	SettingName[DestIdx] = '\0';
 }
 
-VOID IniExtractSettingValue(PUCHAR SettingValue, PUCHAR SettingValueLine, ULONG LineLength)
+VOID IniExtractSettingValue(PCHAR SettingValue, PCHAR SettingValueLine, ULONG LineLength)
 {
 	ULONG		Idx;
 	ULONG		DestIdx;

@@ -529,7 +529,7 @@ typedef VOID
   IN PVOID  Context, 
   IN ULONG  Count); 
 
-typedef NTSTATUS
+typedef VOID
 (DDKAPI *PDRIVER_STARTIO)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
@@ -929,6 +929,21 @@ typedef struct _FAST_MUTEX {
   ULONG  OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
 
+typedef struct _KGUARDED_MUTEX
+{
+    LONG Count;
+    struct _KTHREAD* Owner;
+    ULONG Contention;
+    struct _KGATE* Gate;
+    union {
+        struct {
+            SHORT KernelApcDisable;
+            SHORT SpecialApcDisable;
+        };
+        ULONG CombinedApcDisable;
+    };
+} KGUARDED_MUTEX, *PKGUARDED_MUTEX, *RESTRICTED_POINTER PRKGUARDED_MUTEX;
+
 typedef struct _KTIMER {
   DISPATCHER_HEADER  Header;
   ULARGE_INTEGER  DueTime;
@@ -944,6 +959,11 @@ typedef struct _KMUTANT {
   BOOLEAN  Abandoned;
   UCHAR  ApcDisable;
 } KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT, KMUTEX, *PKMUTEX, *RESTRICTED_POINTER PRKMUTEX;
+
+typedef struct _KGATE
+{
+  DISPATCHER_HEADER Header;
+} KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
 
 typedef enum _TIMER_TYPE {
   NotificationTimer,
@@ -1412,14 +1432,14 @@ typedef struct _CM_KEYBOARD_DEVICE_DATA {
   USHORT  KeyboardFlags;
 } CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
 
-#define KEYBOARD_INSERT_ON                0x80
-#define KEYBOARD_CAPS_LOCK_ON             0x40
-#define KEYBOARD_NUM_LOCK_ON              0x20
-#define KEYBOARD_SCROLL_LOCK_ON           0x10
-#define KEYBOARD_ALT_KEY_DOWN             0x08
-#define KEYBOARD_CTRL_KEY_DOWN            0x04
-#define KEYBOARD_LEFT_SHIFT_DOWN          0x02
-#define KEYBOARD_RIGHT_SHIFT_DOWN         0x01
+#define KEYBOARD_INSERT_ON                0x08
+#define KEYBOARD_CAPS_LOCK_ON             0x04
+#define KEYBOARD_NUM_LOCK_ON              0x02
+#define KEYBOARD_SCROLL_LOCK_ON           0x01
+#define KEYBOARD_ALT_KEY_DOWN             0x80
+#define KEYBOARD_CTRL_KEY_DOWN            0x40
+#define KEYBOARD_LEFT_SHIFT_DOWN          0x20
+#define KEYBOARD_RIGHT_SHIFT_DOWN         0x10
 
 typedef struct _CM_MCA_POS_DATA {
   USHORT  AdapterId;

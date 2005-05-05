@@ -21,6 +21,9 @@
 
 #include <internal/debug.h>
 
+/* Hmm, needed for KDBG := 1. Why? */
+#undef KeGetCurrentIrql
+
 /* FUNCTIONS ***************************************************************/
 
 VOID STDCALL

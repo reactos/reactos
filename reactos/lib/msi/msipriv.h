@@ -29,6 +29,7 @@
 #include "msiquery.h"
 #include "objbase.h"
 #include "objidl.h"
+#include "wine/unicode.h"
 
 #define MSI_DATASIZEMASK 0x00ff
 #define MSITYPE_VALID    0x0100
@@ -170,12 +171,6 @@ typedef struct tagMSIVIEWOPS
 
 } MSIVIEWOPS;
 
-typedef struct tagMSISUMMARYINFO
-{
-    MSIOBJECTHDR hdr;
-    IPropertyStorage *propstg;
-} MSISUMMARYINFO;
-
 struct tagMSIVIEW
 {
     MSIOBJECTHDR hdr;
@@ -307,6 +302,7 @@ extern UINT ACTION_DialogBox( MSIPACKAGE*, LPCWSTR);
 
 /* record internals */
 extern UINT MSI_RecordSetIStream( MSIRECORD *, unsigned int, IStream *);
+extern UINT MSI_RecordGetIStream( MSIRECORD *, unsigned int, IStream **);
 extern const WCHAR *MSI_RecordGetString( MSIRECORD *, unsigned int );
 extern MSIRECORD *MSI_CreateRecord( unsigned int );
 extern UINT MSI_RecordSetInteger( MSIRECORD *, unsigned int, int );
@@ -385,5 +381,39 @@ extern INSTALLUI_HANDLERW gUIHandlerW;
 extern DWORD gUIFilter;
 extern LPVOID gUIContext;
 extern WCHAR gszLogFile[MAX_PATH];
+
+inline static char *strdupWtoA( LPCWSTR str )
+{
+    LPSTR ret = NULL;
+    if (str)
+    {
+        DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL
+);
+        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
+            WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
+    }
+    return ret;
+}
+
+inline static LPWSTR strdupAtoW( LPCSTR str )
+{
+    LPWSTR ret = NULL;
+    if (str)
+    {
+        DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+            MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
+    }
+    return ret;
+}
+
+inline static LPWSTR strdupW( LPCWSTR src )
+{
+    LPWSTR dest;
+    if (!src) return NULL;
+    dest = HeapAlloc(GetProcessHeap(), 0, (strlenW(src)+1)*sizeof(WCHAR));
+    strcpyW(dest, src);
+    return dest;
+}
 
 #endif /* __WINE_MSI_PRIVATE__ */

@@ -85,7 +85,10 @@ typedef struct _KTHREAD
    CHAR              WaitMode;            /* 55 */
    UCHAR             WaitNext;            /* 56 */
    UCHAR             WaitReason;          /* 57 */
-   PKWAIT_BLOCK      WaitBlockList;       /* 58 */
+   union {                                /* 58 */
+      PKWAIT_BLOCK   WaitBlockList;       /* 58 */
+      PKGATE         GateObject;          /* 58 */
+   };                                     /* 58 */
    LIST_ENTRY        WaitListEntry;       /* 5C */
    ULONG             WaitTime;            /* 64 */
    CHAR              BasePriority;        /* 68 */
@@ -94,7 +97,13 @@ typedef struct _KTHREAD
    CHAR              Quantum;             /* 6B */
    KWAIT_BLOCK       WaitBlock[4];        /* 6C */
    PVOID             LegoData;            /* CC */
-   ULONG             KernelApcDisable;    /* D0 */
+   union {
+          struct {
+              USHORT KernelApcDisable;
+              USHORT SpecialApcDisable;
+          };
+          ULONG      CombinedApcDisable;  /* D0 */
+   };
    KAFFINITY         UserAffinity;        /* D4 */
    UCHAR             SystemAffinityActive;/* D8 */
    UCHAR             PowerState;          /* D9 */
@@ -428,8 +437,6 @@ struct _EPROCESS
    */
   MADDRESS_SPACE        AddressSpace;
   LIST_ENTRY            ProcessListEntry;
-  PVOID                 TebBlock;
-  PVOID                 TebLastAllocated;
 };
 
 #define PROCESS_STATE_TERMINATED (1)
@@ -483,18 +490,25 @@ VOID STDCALL PsExitSpecialApc(PKAPC Apc,
 		      PVOID *NormalContext,
 		      PVOID *SystemArgument1,
 		      PVOID *SystemArgument2);
-
-#define THREAD_STATE_INITIALIZED  (0)
-#define THREAD_STATE_READY        (1)
-#define THREAD_STATE_RUNNING      (2)
-#define THREAD_STATE_SUSPENDED    (3)
-#define THREAD_STATE_FROZEN       (4)
-#define THREAD_STATE_TERMINATED_1 (5)
-#define THREAD_STATE_TERMINATED_2 (6)
-#define THREAD_STATE_BLOCKED      (7)
-#define THREAD_STATE_MAX          (8)
+              
+NTSTATUS
+STDCALL
+PspInitializeProcessSecurity(PEPROCESS Process,
+                             PEPROCESS Parent OPTIONAL);
 
 
+VOID
+STDCALL
+PspSystemThreadStartup(PKSTART_ROUTINE StartRoutine,
+                       PVOID StartContext);
+                       
+NTSTATUS
+PsInitializeIdleOrFirstThread (
+    PEPROCESS Process,
+    PETHREAD* ThreadPtr,
+    PKSTART_ROUTINE StartRoutine,
+    KPROCESSOR_MODE AccessMode,
+    BOOLEAN First);
 /*
  * Internal thread priorities, added by Phillip Susi
  * TODO: rebalence these to make use of all priorities... the ones above 16 
@@ -519,6 +533,11 @@ PspExitThread(NTSTATUS ExitStatus);
 extern LIST_ENTRY PspReaperListHead;
 extern WORK_QUEUE_ITEM PspReaperWorkItem;
 extern BOOLEAN PspReaping;
+extern PEPROCESS PsInitialSystemProcess;
+extern PEPROCESS PsIdleProcess;
+extern LIST_ENTRY PsActiveProcessHead;
+extern FAST_MUTEX PspActiveProcessMutex;
+extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 
 VOID
 STDCALL
@@ -530,7 +549,7 @@ VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
 VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 ULONG PsEnumThreadsByProcess(PEPROCESS Process);
-PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
+PEPROCESS STDCALL PsGetNextProcess(PEPROCESS OldProcess);
 VOID
 PsApplicationProcessorInit(VOID);
 VOID
@@ -664,6 +683,9 @@ VOID PsUnlockProcess(PEPROCESS Process);
 #define KTHREAD_TO_ETHREAD(pKThread) (CONTAINING_RECORD((pKThread), ETHREAD, Tcb))
 #define EPROCESS_TO_KPROCESS(pEProcess) (&(pEProcess)->Pcb)
 #define KPROCESS_TO_EPROCESS(pKProcess) (CONTAINING_RECORD((pKProcess), EPROCESS, Pcb))
+
+#define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
+#define MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT  8
 
 #endif /* ASSEMBLER */
 

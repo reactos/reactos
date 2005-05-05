@@ -9,7 +9,8 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
-#include <errno.h>
+#include <unistd.h>
+
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
 #ifdef c_plusplus
@@ -22,9 +23,6 @@
 #ifdef __cplusplus
 
 #include <stdlib.h>
-#ifndef _WIN32
-#include <unistd.h>
-#endif
 
 /* Use prototypes in function declarations. */
 #define YY_USE_PROTOS
@@ -63,7 +61,6 @@
 #else
 #define YY_PROTO(proto) ()
 #endif
-
 
 /* Returned upon end-of-file. */
 #define YY_NULL 0
@@ -6887,7 +6884,7 @@ static yyconst short int yy_rule_linenum[92] =
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "parser.l"
+#line 1 "./parser.l"
 #define INITIAL 0
 /* -*-C-*-
  *
@@ -6989,7 +6986,7 @@ char *yytext;
 #define YY_STACK_USED 1
 #define YY_NEVER_INTERACTIVE 1
 /* Some shortcut definitions */
-#line 97 "parser.l"
+#line 97 "./parser.l"
 
 /*#define LEX_DEBUG*/
 
@@ -7197,7 +7194,7 @@ static struct keyword *iskeyword(char *kw)
  * The flexer starts here
  **************************************************************************
  */
-#line 7201 "lex.yy.c"
+#line 7198 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -7297,20 +7294,9 @@ YY_MALLOC_DECL
 			YY_FATAL_ERROR( "input in flex scanner failed" ); \
 		result = n; \
 		} \
-	else \
-		{ \
-		errno=0; \
-		while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) \
-			{ \
-			if( errno != EINTR) \
-				{ \
-				YY_FATAL_ERROR( "input in flex scanner failed" ); \
-				break; \
-				} \
-			errno=0; \
-			clearerr(yyin); \
-			} \
-		}
+	else if ( ((result = fread( buf, 1, max_size, yyin )) == 0) \
+		  && ferror( yyin ) ) \
+		YY_FATAL_ERROR( "input in flex scanner failed" );
 #endif
 
 /* No semi-colon after return; correct usage is to write "yyterminate();" -
@@ -7359,10 +7345,10 @@ YY_MALLOC_DECL
 YY_DECL
 	{
 	register yy_state_type yy_current_state;
-	register char *yy_cp, *yy_bp;
+	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
-#line 306 "parser.l"
+#line 306 "./parser.l"
 
 	/*
 	 * Catch the GCC-style line statements here and parse them.
@@ -7382,7 +7368,7 @@ YY_DECL
 	 * because we only want to know the linenumber and
 	 * filename.
 	 */
-#line 7386 "lex.yy.c"
+#line 7372 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -7471,17 +7457,17 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 325 "parser.l"
+#line 325 "./parser.l"
 yy_push_state(pp_pragma);
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 326 "parser.l"
+#line 326 "./parser.l"
 yy_push_state(pp_line);
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 327 "parser.l"
+#line 327 "./parser.l"
 {
 		int lineno;
 		char *cptr;
@@ -7504,22 +7490,22 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 347 "parser.l"
+#line 347 "./parser.l"
 yyless(9); yy_pop_state(); yy_push_state(pp_code_page);
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 348 "parser.l"
+#line 348 "./parser.l"
 yy_pop_state(); if (pedantic) yywarning("Unrecognized #pragma directive '%s'",yytext);
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 350 "parser.l"
+#line 350 "./parser.l"
 current_codepage = -1; yy_pop_state();
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 351 "parser.l"
+#line 351 "./parser.l"
 {
         char *p = yytext;
         yy_pop_state();
@@ -7534,7 +7520,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 362 "parser.l"
+#line 362 "./parser.l"
 yy_pop_state(); yyerror("Malformed #pragma code_page directive");
 	YY_BREAK
 /*
@@ -7544,42 +7530,42 @@ yy_pop_state(); yyerror("Malformed #pragma code_page directive");
 	 */
 case 9:
 YY_RULE_SETUP
-#line 369 "parser.l"
+#line 369 "./parser.l"
 stripslevel++;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 370 "parser.l"
+#line 370 "./parser.l"
 stripslevel--;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 371 "parser.l"
+#line 371 "./parser.l"
 if(!stripslevel) yy_pop_state();
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 372 "parser.l"
+#line 372 "./parser.l"
 ; /* To catch comments */
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 373 "parser.l"
+#line 373 "./parser.l"
 ; /* Ignore rest */
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 374 "parser.l"
+#line 374 "./parser.l"
 line_number++; char_number = 1;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 376 "parser.l"
+#line 376 "./parser.l"
 stripplevel++;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 377 "parser.l"
+#line 377 "./parser.l"
 {
 					stripplevel--;
 					if(!stripplevel)
@@ -7591,62 +7577,62 @@ YY_RULE_SETUP
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 385 "parser.l"
+#line 385 "./parser.l"
 ; /* To catch comments */
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 386 "parser.l"
+#line 386 "./parser.l"
 ; /* Ignore rest */
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 387 "parser.l"
+#line 387 "./parser.l"
 line_number++; char_number = 1;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 389 "parser.l"
+#line 389 "./parser.l"
 ; /* Ignore */
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 390 "parser.l"
+#line 390 "./parser.l"
 yy_pop_state(); /* Kill the semicolon */
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 391 "parser.l"
+#line 391 "./parser.l"
 line_number++; char_number = 1; yy_pop_state();
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 392 "parser.l"
+#line 392 "./parser.l"
 yyless(0); yy_pop_state();
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 394 "parser.l"
+#line 394 "./parser.l"
 return tBEGIN;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 395 "parser.l"
+#line 395 "./parser.l"
 return tEND;
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 397 "parser.l"
+#line 397 "./parser.l"
 { yylval.num = strtoul(yytext,  0, 10); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 398 "parser.l"
+#line 398 "./parser.l"
 { yylval.num = strtoul(yytext,  0, 16); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 399 "parser.l"
+#line 399 "./parser.l"
 { yylval.num = strtoul(yytext+2, 0, 8); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
 	YY_BREAK
 /*
@@ -7658,7 +7644,7 @@ YY_RULE_SETUP
 	 */
 case 29:
 YY_RULE_SETUP
-#line 408 "parser.l"
+#line 408 "./parser.l"
 {
 				struct keyword *tok = iskeyword(yytext);
 
@@ -7681,7 +7667,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 427 "parser.l"
+#line 427 "./parser.l"
 yylval.str = make_string(yytext); return tFILENAME;
 	YY_BREAK
 /*
@@ -7689,7 +7675,7 @@ yylval.str = make_string(yytext); return tFILENAME;
 	 */
 case 31:
 YY_RULE_SETUP
-#line 432 "parser.l"
+#line 432 "./parser.l"
 {
 				yy_push_state(yylstr);
 				wbufidx = 0;
@@ -7698,10 +7684,10 @@ YY_RULE_SETUP
 			}
 	YY_BREAK
 case 32:
-#line 439 "parser.l"
+#line 439 "./parser.l"
 case 33:
 YY_RULE_SETUP
-#line 439 "parser.l"
+#line 439 "./parser.l"
 {
 				yy_pop_state();
 				yylval.str = get_buffered_wstring();
@@ -7710,7 +7696,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 444 "parser.l"
+#line 444 "./parser.l"
 { /* octal escape sequence */
 				unsigned int result;
 				result = strtoul(yytext+1, 0, 8);
@@ -7721,7 +7707,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 451 "parser.l"
+#line 451 "./parser.l"
 {  /* hex escape sequence */
 				unsigned int result;
 				result = strtoul(yytext+2, 0, 16);
@@ -7730,82 +7716,82 @@ YY_RULE_SETUP
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 456 "parser.l"
+#line 456 "./parser.l"
 {  yyerror("Invalid hex escape sequence '%s'", yytext); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 458 "parser.l"
+#line 458 "./parser.l"
 yyerror("Bad escape sequence");
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 459 "parser.l"
+#line 459 "./parser.l"
 line_number++; char_number = 1; /* backslash at EOL continues string after leading whitespace on next line */
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 460 "parser.l"
+#line 460 "./parser.l"
 addwchar('\a');
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 461 "parser.l"
+#line 461 "./parser.l"
 addwchar('\b');
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 462 "parser.l"
+#line 462 "./parser.l"
 addwchar('\f');
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 463 "parser.l"
+#line 463 "./parser.l"
 addwchar('\n');
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 464 "parser.l"
+#line 464 "./parser.l"
 addwchar('\r');
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 465 "parser.l"
+#line 465 "./parser.l"
 addwchar('\t');
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 466 "parser.l"
+#line 466 "./parser.l"
 addwchar('\v');
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 467 "parser.l"
+#line 467 "./parser.l"
 addwchar(yytext[1]);
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 468 "parser.l"
+#line 468 "./parser.l"
 addwchar(yytext[2]); line_number++; char_number = 1;
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 469 "parser.l"
+#line 469 "./parser.l"
 addwchar('\"');		/* "bla""bla"  -> "bla\"bla" */
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 470 "parser.l"
+#line 470 "./parser.l"
 addwchar('\"');		/* "bla\""bla" -> "bla\"bla" */
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 471 "parser.l"
+#line 471 "./parser.l"
 ;			/* "bla" "bla" -> "blabla" */
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 472 "parser.l"
+#line 472 "./parser.l"
 {
 				char *yptr = yytext;
 				while(*yptr)	/* FIXME: codepage translation */
@@ -7814,7 +7800,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 477 "parser.l"
+#line 477 "./parser.l"
 yyerror("Unterminated string");
 	YY_BREAK
 /*
@@ -7822,14 +7808,14 @@ yyerror("Unterminated string");
 	 */
 case 53:
 YY_RULE_SETUP
-#line 482 "parser.l"
+#line 482 "./parser.l"
 yy_push_state(yystr); cbufidx = 0;
 	YY_BREAK
 case 54:
-#line 484 "parser.l"
+#line 484 "./parser.l"
 case 55:
 YY_RULE_SETUP
-#line 484 "parser.l"
+#line 484 "./parser.l"
 {
 				yy_pop_state();
 				yylval.str = get_buffered_cstring();
@@ -7838,7 +7824,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 489 "parser.l"
+#line 489 "./parser.l"
 { /* octal escape sequence */
 				int result;
 				result = strtol(yytext+1, 0, 8);
@@ -7849,7 +7835,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 496 "parser.l"
+#line 496 "./parser.l"
 {  /* hex escape sequence */
 				int result;
 				result = strtol(yytext+2, 0, 16);
@@ -7858,67 +7844,67 @@ YY_RULE_SETUP
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 501 "parser.l"
+#line 501 "./parser.l"
 {  yyerror("Invalid hex escape sequence '%s'", yytext); }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 503 "parser.l"
+#line 503 "./parser.l"
 yyerror("Bad escape sequence");
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 504 "parser.l"
+#line 504 "./parser.l"
 line_number++; char_number = 1; /* backslash at EOL continues string after leading whitespace on next line */
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 505 "parser.l"
+#line 505 "./parser.l"
 addcchar('\a');
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 506 "parser.l"
+#line 506 "./parser.l"
 addcchar('\b');
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 507 "parser.l"
+#line 507 "./parser.l"
 addcchar('\f');
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 508 "parser.l"
+#line 508 "./parser.l"
 addcchar('\n');
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 509 "parser.l"
+#line 509 "./parser.l"
 addcchar('\r');
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 510 "parser.l"
+#line 510 "./parser.l"
 addcchar('\t');
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 511 "parser.l"
+#line 511 "./parser.l"
 addcchar('\v');
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 512 "parser.l"
+#line 512 "./parser.l"
 addcchar(yytext[1]);
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 513 "parser.l"
+#line 513 "./parser.l"
 addcchar(yytext[2]); line_number++; char_number = 1;
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 514 "parser.l"
+#line 514 "./parser.l"
 {
 				char *yptr = yytext;
 				while(*yptr)
@@ -7927,22 +7913,22 @@ YY_RULE_SETUP
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 519 "parser.l"
+#line 519 "./parser.l"
 addcchar('\"');		/* "bla""bla"   -> "bla\"bla" */
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 520 "parser.l"
+#line 520 "./parser.l"
 addcchar('\"');		/* "bla\""bla"  -> "bla\"bla" */
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 521 "parser.l"
+#line 521 "./parser.l"
 ;			/* "bla" "bla"  -> "blabla" */
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 522 "parser.l"
+#line 522 "./parser.l"
 yyerror("Unterminated string");
 	YY_BREAK
 /*
@@ -7950,12 +7936,12 @@ yyerror("Unterminated string");
 	 */
 case 75:
 YY_RULE_SETUP
-#line 527 "parser.l"
+#line 527 "./parser.l"
 yy_push_state(yyrcd); cbufidx = 0;
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 528 "parser.l"
+#line 528 "./parser.l"
 {
 				yy_pop_state();
 				yylval.raw = new_raw_data();
@@ -7967,7 +7953,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 536 "parser.l"
+#line 536 "./parser.l"
 {
 				int result;
 				result = strtol(yytext, 0, 16);
@@ -7976,17 +7962,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 541 "parser.l"
+#line 541 "./parser.l"
 ;	/* Ignore space */
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 542 "parser.l"
+#line 542 "./parser.l"
 line_number++; char_number = 1;
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 543 "parser.l"
+#line 543 "./parser.l"
 yyerror("Malformed data-line");
 	YY_BREAK
 /*
@@ -7995,7 +7981,7 @@ yyerror("Malformed data-line");
 	 */
 case 81:
 YY_RULE_SETUP
-#line 549 "parser.l"
+#line 549 "./parser.l"
 {
 				yy_push_state(comment);
 				save_wanted_id = wanted_id;
@@ -8005,37 +7991,37 @@ YY_RULE_SETUP
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 555 "parser.l"
+#line 555 "./parser.l"
 ;
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 556 "parser.l"
+#line 556 "./parser.l"
 ;
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 557 "parser.l"
+#line 557 "./parser.l"
 line_number++; char_number = 1;
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 558 "parser.l"
+#line 558 "./parser.l"
 yy_pop_state(); want_id = save_wanted_id;
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 560 "parser.l"
+#line 560 "./parser.l"
 want_id = wanted_id; /* not really comment, but left-over c-junk */
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 561 "parser.l"
+#line 561 "./parser.l"
 want_id = wanted_id; if(!no_preprocess) yywarning("Found comments after preprocessing, please report");
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 563 "parser.l"
+#line 563 "./parser.l"
 {
 				want_id = wanted_id;
 				line_number++;
@@ -8049,12 +8035,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 573 "parser.l"
+#line 573 "./parser.l"
 want_id = wanted_id;	/* Eat whitespace */
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 575 "parser.l"
+#line 575 "./parser.l"
 return yytext[0];
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -8069,7 +8055,7 @@ case YY_STATE_EOF(pp_stripp_final):
 case YY_STATE_EOF(pp_line):
 case YY_STATE_EOF(pp_pragma):
 case YY_STATE_EOF(pp_code_page):
-#line 577 "parser.l"
+#line 577 "./parser.l"
 {
 				if(YY_START == pp_strips || YY_START == pp_stripe || YY_START == pp_stripp || YY_START == pp_stripp_final)
 					yyerror("Unexpected end of file during c-junk scanning (started at %d)", cjunk_tagline);
@@ -8079,7 +8065,7 @@ case YY_STATE_EOF(pp_code_page):
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 584 "parser.l"
+#line 584 "./parser.l"
 {
 				/* Catch all rule to find any unmatched text */
 				if(*yytext == '\n')
@@ -8093,10 +8079,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 595 "parser.l"
+#line 595 "./parser.l"
 ECHO;
 	YY_BREAK
-#line 8100 "lex.yy.c"
+#line 8086 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -8472,6 +8458,7 @@ register char *yy_bp;
 #endif	/* ifndef YY_NO_UNPUT */
 
 
+#ifndef YY_NO_INPUT
 #ifdef __cplusplus
 static int yyinput()
 #else
@@ -8544,7 +8531,7 @@ static int input()
 
 	return c;
 	}
-
+#endif /* YY_NO_INPUT */
 
 #ifdef YY_USE_PROTOS
 void yyrestart( FILE *input_file )
@@ -8655,15 +8642,6 @@ YY_BUFFER_STATE b;
 	}
 
 
-#ifndef _WIN32
-#include <unistd.h>
-#else
-#ifndef YY_ALWAYS_INTERACTIVE
-#ifndef YY_NEVER_INTERACTIVE
-extern int isatty YY_PROTO(( int ));
-#endif
-#endif
-#endif
 
 #ifdef YY_USE_PROTOS
 void yy_init_buffer( YY_BUFFER_STATE b, FILE *file )
@@ -8981,7 +8959,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 595 "parser.l"
+#line 595 "./parser.l"
 
 
 #ifndef yywrap

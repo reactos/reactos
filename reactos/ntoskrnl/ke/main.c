@@ -19,7 +19,7 @@
 #define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
 
 
-ULONG NtMajorVersion = 4;
+ULONG NtMajorVersion = 5;
 ULONG NtMinorVersion = 0;
 ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(6, 0);
 #ifdef  __GNUC__
@@ -53,7 +53,6 @@ ULONG KeMemoryMapRangeCount;
 ULONG_PTR FirstKrnlPhysAddr;
 ULONG_PTR LastKrnlPhysAddr;
 ULONG_PTR LastKernelAddress;
-volatile BOOLEAN Initialized = FALSE;
 
 ULONG KeLargestCacheLine = 0x40; /* FIXME: Arch-specific */
 
@@ -104,12 +103,22 @@ KiSystemStartup(BOOLEAN BootProcessor)
         MiFreeInitMemory();
         
         /* Never returns */
-        PspExitThread(STATUS_SUCCESS);
-        
+#if 0
+	/* FIXME:
+         *   The initial thread isn't a real ETHREAD object, we cannot call PspExitThread.
+	 */
+	PspExitThread(STATUS_SUCCESS);
+#else
+	while (1) {
+	   LARGE_INTEGER Timeout;
+	   Timeout.QuadPart = 0x7fffffffffffffffLL;
+	   KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+	}
+#endif        
     } else {
         
         /* Do application processor initialization */
-        PsApplicationProcessorInit();
+        KeApplicationProcessorInitDispatcher();
         
         /* Lower IRQL and go to Idle Thread */
         KeLowerIrql(PASSIVE_LEVEL);

@@ -95,7 +95,7 @@ DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
       Error = RegSetValue(BiosKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PUCHAR)"APM",
+			  "APM",
 			  4);
       if (Error != ERROR_SUCCESS)
 	{

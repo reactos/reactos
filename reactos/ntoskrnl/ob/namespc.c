@@ -60,7 +60,7 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      ObjectPath,
-			      Attributes,
+			      Attributes | OBJ_OPENIF,
 			      NULL,
 			      NULL);
    Status = ObFindObject(&ObjectAttributes,
@@ -143,12 +143,21 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 	return Status;
      }
 
-   if (RemainingPath.Buffer != NULL ||
-       Object == NULL)
+   if (Object == NULL)
      {
-	RtlFreeUnicodeString(&RemainingPath);
-	return STATUS_UNSUCCESSFUL;
+       RtlFreeUnicodeString(&RemainingPath);
+       return STATUS_UNSUCCESSFUL;
      }
+   if (RemainingPath.Buffer != NULL)
+   {
+      if (wcschr(RemainingPath.Buffer + 1, L'\\') == NULL)
+         Status = STATUS_OBJECT_NAME_NOT_FOUND;
+      else
+         Status =STATUS_OBJECT_PATH_NOT_FOUND;
+      RtlFreeUnicodeString(&RemainingPath);
+      ObDereferenceObject(Object);
+      return Status;
+   }
 
    Status = ObCreateHandle(PsGetCurrentProcess(),
 			   Object,
@@ -221,7 +230,11 @@ ObpRemoveEntryDirectory(POBJECT_HEADER Header)
   DPRINT("ObpRemoveEntryDirectory(Header %x)\n",Header);
 
   KeAcquireSpinLock(&(Header->Parent->Lock),&oldlvl);
-  RemoveEntryList(&(Header->Entry));
+  if (Header->Entry.Flink && Header->Entry.Blink)
+  {
+    RemoveEntryList(&(Header->Entry));
+    Header->Entry.Flink = Header->Entry.Blink = NULL;
+  }
   KeReleaseSpinLock(&(Header->Parent->Lock),oldlvl);
 }
 

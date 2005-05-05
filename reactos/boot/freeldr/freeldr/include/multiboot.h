@@ -210,7 +210,7 @@ FASTCALL
 FrLdrSetupPageDirectory(VOID);
 
 VOID
-LoadAndBootReactOS(PUCHAR OperatingSystemName);
+LoadAndBootReactOS(PCHAR OperatingSystemName);
 
 VOID FASTCALL AsmCode(VOID);
 typedef VOID (FASTCALL *ASMCODE)(ULONG Magic,

@@ -6,9 +6,13 @@
  *
  *    01-Sep-1999 (Eric Kohl)
  *        Started.
+ *
+ *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_FREE
 
@@ -54,6 +58,7 @@ ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len)
 static VOID
 PrintDiskInfo (LPTSTR szDisk)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szRootPath[4] = _T("A:\\");
 	TCHAR szDrive[2] = _T("A");
 	TCHAR szVolume[64];
@@ -70,7 +75,8 @@ PrintDiskInfo (LPTSTR szDisk)
 
 	if (_tcslen (szDisk) < 2 || szDisk[1] != _T(':'))
 	{
-		ConErrPrintf (_T("Invalid drive %s\n"), szDisk);
+		LoadString(GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(szMsg);
 		return;
 	}
 
@@ -80,12 +86,17 @@ PrintDiskInfo (LPTSTR szDisk)
 	if (!GetVolumeInformation (szRootPath, szVolume, 64, &dwSerial,
 	                           NULL, NULL, NULL, 0))
 	{
-		ConErrPrintf (_T("Invalid drive %s:\n"), szDrive);
+		LoadString(GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf(_T("%s %s:\n"), szMsg, szDrive);
 		return;
 	}
 
 	if (szVolume[0] == _T('\0'))
-		_tcscpy (szVolume, _T("unlabeled"));
+	{
+		
+		LoadString(GetModuleHandle(NULL), STRING_FREE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+		_tcscpy (szVolume, szMsg);
+	}
 
 	_stprintf (szSerial,
 	           _T("%04X-%04X"),
@@ -95,7 +106,8 @@ PrintDiskInfo (LPTSTR szDisk)
 	if (!GetDiskFreeSpace (szRootPath, &dwSecPerCl,
 	                       &dwBytPerSec, &dwFreeCl, &dwTotCl))
 	{
-		ConErrPrintf (_T("Invalid drive %s:\n"), szDrive);
+		LoadString(GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf (_T("%s %s:\n"), szMsg, szDrive);
 		return;
 	}
 
@@ -108,18 +120,15 @@ PrintDiskInfo (LPTSTR szDisk)
 	uliSize.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
 	ConvertULargeInteger (uliSize, szFree, 40);
 
-	ConOutPrintf (_T("\n"
-	                 " Volume in drive %s is %-11s   Serial number is %s\n"
-	                 "  %16s bytes total disk space\n"
-	                 "  %16s bytes used\n"
-	                 "  %16s bytes free\n"),
-	              szDrive, szVolume, szSerial,
-	              szTotal, szUsed, szFree);
+	
+	LoadString(GetModuleHandle(NULL), STRING_FREE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPrintf(szMsg, szDrive, szVolume, szSerial, szTotal, szUsed, szFree);
 }
 
 
 INT CommandFree (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR szParam;
 	TCHAR  szDefPath[MAX_PATH];
 	INT argc, i;
@@ -127,9 +136,8 @@ INT CommandFree (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays drive information.\n"
-		               "\n"
-		               "FREE [drive: ...]"));
+		LoadString(GetModuleHandle(NULL), STRING_FREE_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 

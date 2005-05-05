@@ -169,6 +169,7 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %token tRETVAL
 %token tSHORT
 %token tSIGNED
+%token tSINGLE
 %token tSIZEIS tSIZEOF
 %token tSMALL
 %token tSOURCE
@@ -565,9 +566,9 @@ base_type: tBYTE				{ $$ = make_type(RPC_FC_BYTE, NULL); }
 						  default: break;
 						  }
 						}
-	| tUNSIGNED				{ $$ = make_type(RPC_FC_ULONG, &std_int);
-						  $$->sign = -1; }
+	| tUNSIGNED				{ $$ = make_type(RPC_FC_ULONG, &std_int); $$->sign = -1; }
 	| tFLOAT				{ $$ = make_type(RPC_FC_FLOAT, NULL); }
+	| tSINGLE				{ $$ = make_type(RPC_FC_FLOAT, NULL); }
 	| tDOUBLE				{ $$ = make_type(RPC_FC_DOUBLE, NULL); }
 	| tBOOLEAN				{ $$ = make_type(RPC_FC_SMALL, &std_bool); }
 	| tERRORSTATUST				{ $$ = make_type(RPC_FC_ERROR_STATUS_T, NULL); }
@@ -593,7 +594,8 @@ coclass:  tCOCLASS aIDENTIFIER			{ $$ = make_class($2); }
 
 coclasshdr: attributes coclass			{ $$ = $2;
 						  $$->attrs = $1;
-                                                  if (!parse_only && do_header) write_coclass($$);
+						  if (!parse_only && do_header)
+						    write_coclass($$);
 						}
 	;
 
@@ -744,14 +746,15 @@ type:	  tVOID					{ $$ = make_tref(NULL, make_type(0, NULL)); }
 	| tUNION aIDENTIFIER			{ $$ = make_tref(NULL, find_type2($2, tsUNION)); }
 	;
 
-typedef: tTYPEDEF m_attributes type pident_list	{ typeref_t *tref = uniq_tref($3); 
+typedef: tTYPEDEF m_attributes type pident_list	{ typeref_t *tref = uniq_tref($3);
 						  $4->tname = tref->name;
 						  tref->name = NULL;
 						  $$ = type_ref(tref);
 						  $$->attrs = $2;
-						  if (!parse_only && do_header) write_typedef($$, $4);
-                                                  if (in_typelib && $$->attrs)
-                                                      add_typedef($$, $4);
+						  if (!parse_only && do_header)
+						    write_typedef($$, $4);
+						  if (in_typelib && $$->attrs)
+						    add_typedef($$, $4);
 						  reg_types($$, $4, 0);
 						}
 	;
@@ -1114,6 +1117,7 @@ static type_t *reg_type(type_t *type, char *name, int t)
   nt->t = t;
   nt->next = type_hash[hash];
   type_hash[hash] = nt;
+  type->name = name;
   return type;
 }
 
@@ -1136,7 +1140,14 @@ static unsigned char get_pointer_type( type_t *type )
   }
   t = get_attrv( type->attrs, ATTR_POINTERTYPE );
   if (t) return t;
-  return RPC_FC_FP;
+
+  if(is_attr( type->attrs, ATTR_PTR ))
+    return RPC_FC_FP;
+
+  if(is_attr( type->attrs, ATTR_UNIQUE ))
+    return RPC_FC_UP;
+
+  return RPC_FC_RP;
 }
 
 static type_t *reg_types(type_t *type, var_t *names, int t)

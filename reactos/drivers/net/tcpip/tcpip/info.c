@@ -28,7 +28,7 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     KIRQL OldIrql;
     UINT Count = 0, i;
 
-    TI_DbgPrint(MAX_TRACE, 
+    TI_DbgPrint(DEBUG_INFO, 
 		("Inserting interface %08x (%d entities already)\n", 
 		 Interface, EntityCount));
 
@@ -38,7 +38,7 @@ VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     for( i = 0; i < EntityCount; i++ )
 	if( EntityList[i].tei_entity == IF_ENTITY ) {
 	    Count++;
-	    TI_DbgPrint(MAX_TRACE, ("Entity %d is an IF.  Found %d\n", 
+	    TI_DbgPrint(DEBUG_INFO, ("Entity %d is an IF.  Found %d\n", 
 				    i, Count));
 	}
     
@@ -80,7 +80,7 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
     UINT Count, Size, BufSize = *BufferSize;
     KIRQL OldIrql;
 
-    TI_DbgPrint(MAX_TRACE,("About to copy %d TDIEntityIDs to user\n",
+    TI_DbgPrint(DEBUG_INFO,("About to copy %d TDIEntityIDs to user\n",
 			   EntityCount));
     
     TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
@@ -134,7 +134,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
     BOOL FoundEntity = FALSE;
     InfoRequest_f InfoRequest = NULL;
 
-    TI_DbgPrint(MAX_TRACE,
+    TI_DbgPrint(DEBUG_INFO,
 		("InfoEx Req: %x %x %x!%04x:%d\n",
 		 ID->toi_class,
 		 ID->toi_type,
@@ -148,7 +148,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
 	if ((ID->toi_class != INFO_CLASS_GENERIC) ||
 	    (ID->toi_type != INFO_TYPE_PROVIDER) ||
 	    (ID->toi_id != ENTITY_LIST_ID)) {
-	    TI_DbgPrint(MAX_TRACE,("Invalid parameter\n"));
+	    TI_DbgPrint(DEBUG_INFO,("Invalid parameter\n"));
 	    Status = TDI_INVALID_PARAMETER;
         } else
 	    Status = InfoTdiQueryListEntities(Buffer, BufferSize);
@@ -168,7 +168,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
 	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
 	
 	if( FoundEntity ) {
-	    TI_DbgPrint(MAX_TRACE,
+	    TI_DbgPrint(DEBUG_INFO,
 			("Calling Entity %d (%04x:%d) InfoEx (%x,%x,%x)\n",
 			 i, ID->toi_entity.tei_entity,
 			 ID->toi_entity.tei_instance,
@@ -183,7 +183,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
 	}
     }
 
-    TI_DbgPrint(MAX_TRACE,("Status: %08x\n", Status));
+    TI_DbgPrint(DEBUG_INFO,("Status: %08x\n", Status));
 
     return Status;
 }

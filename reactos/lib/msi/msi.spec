@@ -24,8 +24,8 @@
 24 stdcall MsiDatabaseGenerateTransformW(long long wstr long long)
 25 stdcall MsiDatabaseGetPrimaryKeysA(long str ptr)
 26 stdcall MsiDatabaseGetPrimaryKeysW(long wstr ptr)
-27 stdcall MsiDatabaseImportA(str str)
-28 stdcall MsiDatabaseImportW(wstr wstr)
+27 stdcall MsiDatabaseImportA(str str long)
+28 stdcall MsiDatabaseImportW(wstr wstr long)
 29 stub MsiDatabaseMergeA
 30 stub MsiDatabaseMergeW
 31 stdcall MsiDatabaseOpenViewA(long str ptr)
@@ -219,7 +219,7 @@
 219 stub MsiGetFileHashW
 220 stub MsiEnumComponentCostsA
 221 stub MsiEnumComponentCostsW
-222 stdcall MsiCreateAndVerifyInstallerDirectory()
+222 stdcall MsiCreateAndVerifyInstallerDirectory(long)
 223 stdcall MsiGetFileSignatureInformationA(str long ptr ptr ptr)
 224 stdcall MsiGetFileSignatureInformationW(wstr long ptr ptr ptr)
 225 stdcall MsiProvideAssemblyA(str str long long str ptr)

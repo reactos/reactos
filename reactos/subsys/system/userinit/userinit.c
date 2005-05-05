@@ -24,6 +24,7 @@
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
  */
 #include <windows.h>
+#include "resource.h"
 
 
 /* GLOBALS ******************************************************************/
@@ -77,6 +78,7 @@ void StartShell(void)
   PROCESS_INFORMATION pi;
   WCHAR Shell[MAX_PATH];
   WCHAR ExpandedShell[MAX_PATH];
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
   
   GetShell(Shell);
   
@@ -102,7 +104,10 @@ void StartShell(void)
     CloseHandle(pi.hThread);
   }
   else
-    MessageBox(0, L"Userinit failed to start the shell!\n", NULL, 0);
+  {
+   LoadString( GetModuleHandle(NULL), STRING_USERINIT_FAIL, (LPTSTR) szMsg,sizeof(szMsg));
+   MessageBox(0, szMsg, NULL, 0);
+  }
 }
 
 static

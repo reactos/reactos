@@ -239,7 +239,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             WaitBlock->WaitKey = STATUS_SUCCESS;
             WaitBlock->WaitType = WaitAny;
             WaitBlock->Thread = Thread;
-            WaitBlock->NextWaitBlock = NULL;
+            WaitBlock->NextWaitBlock = WaitBlock;
             
             Thread->WaitStatus = STATUS_SUCCESS;
             
@@ -270,7 +270,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 TimerWaitBlock->Thread = Thread;
                 TimerWaitBlock->WaitKey = STATUS_TIMEOUT;
                 TimerWaitBlock->WaitType = WaitAny;
-                TimerWaitBlock->NextWaitBlock = NULL;
+                TimerWaitBlock->NextWaitBlock = TimerWaitBlock;
             
                 /* Link the timer to this Wait Block */
                 InitializeListHead(&Timer->Header.WaitListHead);

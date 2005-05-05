@@ -87,12 +87,12 @@ BOOL Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector)
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* Ext2OpenFile(PUCHAR FileName)
+FILE* Ext2OpenFile(PCHAR FileName)
 {
 	EXT2_FILE_INFO		TempExt2FileInfo;
 	PEXT2_FILE_INFO		FileHandle;
-	UCHAR				SymLinkPath[EXT3_NAME_LEN];
-	UCHAR				FullPath[EXT3_NAME_LEN * 2];
+	CHAR				SymLinkPath[EXT3_NAME_LEN];
+	CHAR				FullPath[EXT3_NAME_LEN * 2];
 	ULONG					Index;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2OpenFile() FileName = %s\n", FileName));
@@ -190,11 +190,11 @@ FILE* Ext2OpenFile(PUCHAR FileName)
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-BOOL Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
+BOOL Ext2LookupFile(PCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 {
 	int				i;
 	ULONG				NumberOfPathParts;
-	UCHAR			PathPart[261];
+	CHAR			PathPart[261];
 	PVOID			DirectoryBuffer;
 	ULONG				DirectoryInode = EXT3_ROOT_INO;
 	EXT2_INODE		InodeData;
@@ -289,7 +289,7 @@ BOOL Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 	return TRUE;
 }
 
-BOOL Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PUCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry)
+BOOL Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry)
 {
 	ULONG				CurrentOffset;
 	PEXT2_DIR_ENTRY	CurrentDirectoryEntry;
@@ -839,7 +839,7 @@ BOOL Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePoi
 
 BOOL Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 {
-	UCHAR			ErrorString[80];
+	CHAR			ErrorString[80];
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadBlock() BlockNumber = %d Buffer = 0x%x\n", BlockNumber, Buffer));
 
@@ -913,7 +913,7 @@ BOOL Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	ULONG				InodeGroupNumber;
 	ULONG				InodeBlockNumber;
 	ULONG				InodeOffsetInBlock;
-	UCHAR			ErrorString[80];
+	CHAR			ErrorString[80];
 	EXT2_GROUP_DESC	GroupDescriptor;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadInode() Inode = %d\n", Inode));

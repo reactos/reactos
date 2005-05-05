@@ -858,8 +858,8 @@ ani_curico_t *new_ani_curico(enum res_e type, raw_data_t *rd, int *memopt)
 		/* We only go through the RIFF file if we need to swap
 		 * bytes in words/dwords. Else we couldn't care less
 		 * what the file contains. This is consistent with
-		 * MS' rc.exe, which doesn't complain at all, eventhough
-		 * the fileformat might not be entirely correct.
+		 * MS' rc.exe, which doesn't complain at all, even though
+		 * the file format might not be entirely correct.
 		 */
 		rtp++;	/* Skip the "RIFF" tag */
 

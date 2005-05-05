@@ -36,6 +36,11 @@ clean:
 	rm -f *.o
 	rm -f mkhive$(EXE_POSTFIX)
 endif
+ifeq ($(HOST),mingw32-linux64)
+clean:
+	rm -f *.o
+	rm -f mkhive$(EXE_POSTFIX)
+endif
 ifeq ($(HOST),mingw32-windows)
 clean:
 	-del *.o

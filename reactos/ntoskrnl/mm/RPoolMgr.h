@@ -244,9 +244,9 @@ RPoolRemoveFree ( PR_POOL pool, PR_FREE Item )
 		ASSERT ( pool->FirstFree == Item );
 		pool->FirstFree = Item->NextFree;
 	}
-#if defined(DBG) || defined(KDBG)
+#ifdef DBG
 	Item->NextFree = Item->PrevFree = (PR_FREE)(ULONG_PTR)0xDEADBEEF;
-#endif//DBG || KDBG
+#endif//DBG
 }
 
 static void
@@ -280,9 +280,9 @@ RFreeInit ( void* memory )
 #endif//R_FREEMAGIC
 	block->Status = 0;
 	RFreeFillStack ( block );
-#if defined(DBG) || defined(KDBG)
+#ifdef DBG
 	block->PrevFree = block->NextFree = (PR_FREE)(ULONG_PTR)0xDEADBEEF;
-#endif//DBG || KDBG
+#endif//DBG
 	return block;
 }
 
@@ -643,7 +643,7 @@ RiUsedInit ( PR_USED Block, rulong Tag )
 	//ASSERT_SIZE ( Block->Size );
 
 	// now add the block to the used block list
-#if defined(DBG) || defined(KDBG)
+#ifdef DBG
 	Block->NextUsed = (PR_USED)(ULONG_PTR)0xDEADBEEF;
 #endif//R_USED_LIST
 
@@ -661,9 +661,9 @@ RiUsedInitRedZone ( PR_USED Block, rulong UserSize )
 	Block->UserSize = UserSize;
 	memset ( Addr - R_RZ, R_RZ_LOVALUE, R_RZ );
 	memset ( Addr + Block->UserSize, R_RZ_HIVALUE, R_RZ );
-#if defined(DBG) || defined(KDBG)
+#ifdef DBG
 	memset ( Addr, 0xCD, UserSize );
-#endif//DBG || KDBG
+#endif//DBG
 }
 #endif//R_RZ
 

@@ -14,9 +14,7 @@ typedef struct _MODULE_TEXT_SECTION
   LIST_ENTRY ListEntry;
   PWCH Name;
   PIMAGE_OPTIONAL_HEADER OptionalHeader;
-#if defined(DBG) || defined(KDBG)
   PROSSYM_INFO RosSymInfo;
-#endif /* KDBG */
 } MODULE_TEXT_SECTION, *PMODULE_TEXT_SECTION;
 
 typedef struct _MODULE_OBJECT

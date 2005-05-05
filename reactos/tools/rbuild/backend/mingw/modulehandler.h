@@ -129,15 +129,16 @@ private:
 	void GenerateWindresCommand ( const std::string& sourceFilename,
 	                              const std::string& windresflagsMacro );
 	void GenerateWinebuildCommands ( const std::string& sourceFilename );
+	std::string GetWidlFlags ( const File& file );
 	void GenerateWidlCommandsServer (
-		const std::string& sourceFilename,
+		const File& file,
 		const std::string& widlflagsMacro );
 	void GenerateWidlCommandsClient (
-		const std::string& sourceFilename,
+		const File& file,
 		const std::string& widlflagsMacro );
-	void GenerateWidlCommands ( const std::string& sourceFilename,
+	void GenerateWidlCommands ( const File& file,
 	                            const std::string& widlflagsMacro );
-	void GenerateCommands ( const std::string& sourceFilename,
+	void GenerateCommands ( const File& file,
 	                        const std::string& cc,
 	                        const std::string& cppc,
 	                        const std::string& cflagsMacro,

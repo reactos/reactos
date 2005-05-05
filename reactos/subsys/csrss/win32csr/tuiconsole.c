@@ -22,7 +22,7 @@ static COORD PhysicalConsoleSize;
 static HANDLE ConsoleDeviceHandle;
 static PCSRSS_CONSOLE ActiveConsole;
 
-static BOOL Initialized = FALSE;
+static BOOL ConsInitialized = FALSE;
 
 static BOOL FASTCALL
 TuiInit(VOID)
@@ -234,12 +234,12 @@ static CSRSS_CONSOLE_VTBL TuiVtbl =
 NTSTATUS FASTCALL
 TuiInitConsole(PCSRSS_CONSOLE Console)
 {
-  if (! Initialized)
+  if (! ConsInitialized)
     {
-      Initialized = TRUE;
+      ConsInitialized = TRUE;
       if (! TuiInit())
         {
-          Initialized = FALSE;
+          ConsInitialized = FALSE;
           return STATUS_UNSUCCESSFUL;
         }
     }

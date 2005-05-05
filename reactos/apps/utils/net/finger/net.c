@@ -33,7 +33,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
 #include <sys/types.h>
 #include <winsock2.h>
 #include "unistd.h"
@@ -52,14 +51,14 @@ netfinger(char *name)
 	struct hostent *hp, def;
 	struct servent *sp;
 	struct sockaddr_in sin;
-	int s;
+	SOCKET s;
 	char *alist[1], *host;
 
 	/* If this is a local request */
 	if (!(host = rindex(name, '@')))
 		return;
 
-	*host++ = 0;
+	*host++ = '\0';
 	if (isdigit(*host) && (defaddr.s_addr = inet_addr(host)) != -1) {
 		def.h_name = host;
 		def.h_addr_list = alist;
@@ -80,7 +79,7 @@ netfinger(char *name)
 	sin.sin_family = hp->h_addrtype;
 	bcopy(hp->h_addr, (char *)&sin.sin_addr, hp->h_length);
 	sin.sin_port = sp->s_port;
-	if ((s = socket(hp->h_addrtype, SOCK_STREAM, 0)) < 0) {
+	if ((s = socket(hp->h_addrtype, SOCK_STREAM, 0)) == INVALID_SOCKET) {
 		perror("finger: socket");
 		return;
 	}

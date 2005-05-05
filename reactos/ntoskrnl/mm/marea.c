@@ -189,8 +189,7 @@ MmLocateMemoryAreaByAddress(
    DPRINT("MmLocateMemoryAreaByAddress(AddressSpace %p, Address %p)\n",
            AddressSpace, Address);
 
-   if (!(KdDebugState & KD_DEBUG_SCREEN))
-      MmVerifyMemoryAreas(AddressSpace);
+   MmVerifyMemoryAreas(AddressSpace);
 
    while (Node != NULL)
    {

@@ -7,7 +7,6 @@
  */
 #define NTOS_MODE_USER
 #include <ntos.h>
-#include <sm/api.h>
 #include <sm/helper.h>
 #include <string.h>
 
@@ -41,7 +40,8 @@ SmExecuteProgram (IN HANDLE          hSmApiPort,
   SM_PORT_MESSAGE  SmReqMsg;
 
 
-  DPRINT("SMLIB: %s called\n", __FUNCTION__);
+  DPRINT("SMLIB: %s(%08lx,'%S') called\n",
+	__FUNCTION__, hSmApiPort, Pgm->Buffer);
 
   /* Check Pgm's length */
   if (Pgm->Length > (sizeof (Pgm->Buffer[0]) * SM_EXEXPGM_MAX_LENGTH))
@@ -50,24 +50,35 @@ SmExecuteProgram (IN HANDLE          hSmApiPort,
   }
   /* Marshal Pgm in the LPC message */
   RtlZeroMemory (& SmReqMsg, sizeof SmReqMsg);
-  SmReqMsg.ExecPgm.NameLength = Pgm->Length;
-  RtlCopyMemory (SmReqMsg.ExecPgm.Name,
+  SmReqMsg.Request.ExecPgm.NameLength = Pgm->Length;
+  RtlCopyMemory (SmReqMsg.Request.ExecPgm.Name,
 		 Pgm->Buffer,
 		 Pgm->Length);
 		
   /* SM API to invoke */
-  SmReqMsg.ApiIndex = SM_API_EXECUTE_PROGRAMME;
+  SmReqMsg.SmHeader.ApiIndex = SM_API_EXECUTE_PROGRAMME;
 
   /* LPC message */
   SmReqMsg.Header.MessageType = LPC_NEW_MESSAGE;
-  SmReqMsg.Header.DataSize    = SM_PORT_DATA_SIZE(SmReqMsg.ExecPgm);
+  SmReqMsg.Header.DataSize    = SM_PORT_DATA_SIZE(SmReqMsg.Request);
   SmReqMsg.Header.MessageSize = SM_PORT_MESSAGE_SIZE;
+
+  DPRINT("SMLIB: %s:\n"
+	  "  MessageType = %d\n"
+	  "  DataSize    = %d\n"
+	  "  MessageSize = %d\n"
+	  "  sizeof(LPC_MESSAGE)==%d\n",
+	  __FUNCTION__,
+	  SmReqMsg.Header.MessageType,
+	  SmReqMsg.Header.DataSize,
+	  SmReqMsg.Header.MessageSize,
+	  sizeof(LPC_MESSAGE));
 
   /* Call SM and wait for a reply */
   Status = NtRequestWaitReplyPort (hSmApiPort, (PLPC_MESSAGE) & SmReqMsg, (PLPC_MESSAGE) & SmReqMsg);
   if (NT_SUCCESS(Status))
   {
-    return SmReqMsg.Status;
+    return SmReqMsg.SmHeader.Status;
   }
   DPRINT("SMLIB: %s failed (Status=0x%08lx)\n", __FUNCTION__, Status);
   return Status;

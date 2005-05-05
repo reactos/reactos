@@ -26,7 +26,6 @@ DriverEntry(
 	IN PUNICODE_STRING RegPath)
 {
 	ULONG i;
-	static BOOLEAN FirstTime = TRUE;
 	
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = SerialAddDevice;
@@ -43,16 +42,5 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_PNP] = SerialPnp;
 	DriverObject->MajorFunction[IRP_MJ_POWER] = SerialPower;
 	
-	/* FIXME: It seems that DriverEntry function may be called more
-	 * than once. Do only legacy detection the first time. */
-	if (FirstTime)
-	{
-		FirstTime = FALSE;
-		return DetectLegacyDevices(DriverObject);
-	}
-	else
-	{
-		DPRINT1("Serial: DriverEntry called for the second time!\n");
-		return STATUS_SUCCESS;
-	}
+	return DetectLegacyDevices(DriverObject);
 }

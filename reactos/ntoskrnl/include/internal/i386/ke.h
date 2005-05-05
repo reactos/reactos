@@ -27,8 +27,8 @@
 #define KTRAP_FRAME_DEBUGEIP     (0x4)
 #define KTRAP_FRAME_DEBUGARGMARK (0x8)
 #define KTRAP_FRAME_DEBUGPOINTER (0xC)
-#define KTRAP_FRAME_TEMPCS       (0x10)
-#define KTRAP_FRAME_TEMPEIP      (0x14)
+#define KTRAP_FRAME_TEMPSS       (0x10)
+#define KTRAP_FRAME_TEMPESP      (0x14)
 #define KTRAP_FRAME_DR0          (0x18)
 #define KTRAP_FRAME_DR1          (0x1C)
 #define KTRAP_FRAME_DR2          (0x20)
@@ -117,8 +117,8 @@ typedef struct _KTRAP_FRAME
    PVOID DebugEip;
    PVOID DebugArgMark;
    PVOID DebugPointer;
-   PVOID TempCs;
-   PVOID TempEip;
+   PVOID TempSegSs;
+   PVOID TempEsp;
    ULONG Dr0;
    ULONG Dr1;
    ULONG Dr2;
@@ -198,13 +198,39 @@ ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
+VOID
+KeApplicationProcessorInitDispatcher(VOID);
+VOID 
+KeCreateApplicationProcessorIdleThread(ULONG Id);
 
+typedef 
+VOID 
+STDCALL
+(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine, 
+                    PVOID StartContext);
+
+VOID
+STDCALL
+Ke386InitThreadWithContext(PKTHREAD Thread, 
+                           PKSYSTEM_ROUTINE SystemRoutine,
+                           PKSTART_ROUTINE StartRoutine,
+                           PVOID StartContext,
+                           PCONTEXT Context);
+                       
+VOID
+STDCALL
+KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine, 
+                PKSTART_ROUTINE StartRoutine, 
+                PVOID StartContext, 
+                BOOLEAN UserThread,
+                KTRAP_FRAME TrapFrame);
+                
 #ifdef CONFIG_SMP
 #define LOCK "lock ; "
 #else
 #define LOCK ""
+#define KeGetCurrentIrql(X) (((PKPCR)KPCR_BASE)->Irql)
 #endif
-
 
 #if defined(__GNUC__)
 #define Ke386DisableInterrupts() __asm__("cli\n\t");

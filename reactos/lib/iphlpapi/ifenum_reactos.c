@@ -77,7 +77,8 @@ NTSTATUS openTcpFile(PHANDLE tcpFile) {
                                 NULL );
 
     status = ZwCreateFile( tcpFile,
-                           SYNCHRONIZE | GENERIC_EXECUTE,
+                           SYNCHRONIZE | GENERIC_EXECUTE | 
+                           GENERIC_READ | GENERIC_WRITE,
                            &objectAttributes,
                            &ioStatusBlock,
                            NULL,

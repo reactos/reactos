@@ -174,11 +174,11 @@ static
 WORD txt_clr(LPTSTR str)
 {
 	INT i;
-	
-	for(i=0;*(clrtable[i].name);i++)
-		if(	_tcsnicmp(str,clrtable[i].name,_tcslen(clrtable[i].name)) == 0)			
+
+	for(i = 0; *(clrtable[i].name); i++)
+		if (_tcsnicmp(str, clrtable[i].name, _tcslen(clrtable[i].name)) == 0)
 			return clrtable[i].val;
-	
+
 	return (WORD)-1;
 }
 
@@ -188,37 +188,35 @@ WORD txt_clr(LPTSTR str)
 static
 WORD str_to_color(LPTSTR* arg_str)
 {
-	LPTSTR str;	
+	LPTSTR str;
 	BOOL bBri;
 
 	WORD tmp_clr,ret_clr;
 
 	str = *arg_str;
 
-
-	
-	if(!(*str))
+	if (!(*str))
 		return (WORD)-1;
 
 
 	/*foreground*/
-        bBri = FALSE;
+	bBri = FALSE;
 
-	if(_tcsnicmp(str,_T("bri"),3) == 0 )
+	if (_tcsnicmp(str,_T("bri"),3) == 0)
 	{
 		bBri = TRUE;
 
-		if(chop_blank(&str))
+		if (chop_blank(&str))
 			return (WORD)-1;
 	}
 
-	if( (tmp_clr = txt_clr(str)) == (WORD)-1 )
+	if ((tmp_clr = txt_clr(str)) == (WORD)-1)
 	{
 		return (WORD)-1;
 	}
 
-	/*skip spaces and "on"*/	
-	if ( chop_blank(&str) || chop_blank(&str) )
+	/*skip spaces and "on"*/
+	if (chop_blank(&str) || chop_blank(&str))
 		return (WORD)-1;
 
 	ret_clr = tmp_clr | (bBri << 3);

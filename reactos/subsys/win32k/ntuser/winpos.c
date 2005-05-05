@@ -1283,6 +1283,10 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
        * FIXME: Need to check the window wasn't destroyed during the 
        * window procedure. 
        */
+      if (!(Window->Parent))
+        {
+          IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)Wnd);
+        }
     }
 
   /* We can't activate a child window */
@@ -1313,6 +1317,11 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
           IntIsChildWindow(Wnd, IntGetThreadFocusWindow()))
         {
           NtUserSetFocus(Window->Parent);
+        }
+
+      if (!(Window->Parent))
+        {
+          IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM)Wnd);
         }
     }
 

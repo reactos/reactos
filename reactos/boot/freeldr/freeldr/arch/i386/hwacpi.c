@@ -92,7 +92,7 @@ DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
       Error = RegSetValue(BiosKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PUCHAR)"ACPI BIOS",
+			  "ACPI BIOS",
 			  10);
       if (Error != ERROR_SUCCESS)
 	{

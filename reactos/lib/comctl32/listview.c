@@ -40,8 +40,7 @@
  *
  * Bugs
  *   -- Expand large item in ICON mode when the cursor is flying over the icon or text.
- *   -- Support CustonDraw options for _WIN32_IE >= 0x560 (see NMLVCUSTOMDRAW docs.
- *   -- in LISTVIEW_AddGroupSelection, we would send LVN_ODSTATECHANGED 
+ *   -- Support CustomDraw options for _WIN32_IE >= 0x560 (see NMLVCUSTOMDRAW docs).
  *   -- LVA_SNAPTOGRID not implemented
  *   -- LISTVIEW_ApproximateViewRect partially implemented
  *   -- LISTVIEW_[GS]etColumnOrderArray stubs
@@ -98,7 +97,6 @@
  *   -- LVN_HOTTRACK
  *   -- LVN_MARQUEEBEGIN
  *   -- LVN_ODFINDITEM
- *   -- LVN_ODSTATECHANGED
  *   -- LVN_SETDISPINFO
  *   -- NM_HOVER
  *
@@ -441,7 +439,7 @@ static inline LPWSTR textdupTtoW(LPCWSTR text, BOOL isW)
     if (!isW && is_textT(text, isW))
     {
 	INT len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)text, -1, NULL, 0);
-	wstr = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+	wstr = Alloc(len * sizeof(WCHAR));
 	if (wstr) MultiByteToWideChar(CP_ACP, 0, (LPCSTR)text, -1, wstr, len);
     }
     TRACE("   wstr=%s\n", text == LPSTR_TEXTCALLBACKW ?  "(callback)" : debugstr_w(wstr));
@@ -450,7 +448,7 @@ static inline LPWSTR textdupTtoW(LPCWSTR text, BOOL isW)
 
 static inline void textfreeT(LPWSTR wstr, BOOL isW)
 {
-    if (!isW && is_textT(wstr, isW)) HeapFree(GetProcessHeap(), 0, wstr);
+    if (!isW && is_textT(wstr, isW)) Free (wstr);
 }
 
 /*
@@ -558,7 +556,7 @@ static inline const char* debugrect(const RECT *rect)
     } else return "(null)";
 }
 
-static const char * debugscrollinfo(const SCROLLINFO *pScrollInfo)
+static const char* debugscrollinfo(const SCROLLINFO *pScrollInfo)
 {
     char* buf = debug_getbuf(), *text = buf;
     int len, size = DEBUG_BUFFER_SIZE;
@@ -853,8 +851,7 @@ static BOOL notify_dispinfoT(LISTVIEW_INFO *infoPtr, INT notificationCode, LPNML
  	    *pdi->item.pszText = 0; /* make sure we don't process garbage */
  	}
 
-	pszTempBuf = HeapAlloc(GetProcessHeap(), 0,
-	    (convertToUnicode ? sizeof(WCHAR) : sizeof(CHAR)) * cchTempBufMax);
+	pszTempBuf = Alloc( (convertToUnicode ? sizeof(WCHAR) : sizeof(CHAR)) * cchTempBufMax);
         if (!pszTempBuf) return FALSE;
 
 	if (convertToUnicode)
@@ -887,7 +884,7 @@ static BOOL notify_dispinfoT(LISTVIEW_INFO *infoPtr, INT notificationCode, LPNML
 	                        savPszText, savCchTextMax);
         pdi->item.pszText = savPszText; /* restores our buffer */
         pdi->item.cchTextMax = savCchTextMax;
-        HeapFree(GetProcessHeap(), 0, pszTempBuf);
+        Free (pszTempBuf);
     }
     return bResult;
 }
@@ -1023,7 +1020,7 @@ static inline BOOL ranges_delitem(RANGES ranges, INT nItem)
  *       five versa, should leave the iterator at the same item:
  *           prev * n, next * n = next * n, prev * n
  *
- * The iterator has a notion of a out-of-order, special item,
+ * The iterator has a notion of an out-of-order, special item,
  * which sits at the start of the list. This is used in
  * LVS_ICON, and LVS_SMALLICON mode to handle the focused item,
  * which needs to be first, as it may overlap other items.
@@ -2970,22 +2967,35 @@ static void LISTVIEW_AddGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
 {
     INT nFirst = min(infoPtr->nSelectionMark, nItem);
     INT nLast = max(infoPtr->nSelectionMark, nItem);
-    INT i;
+    NMLVODSTATECHANGE nmlv;
     LVITEMW item;
+    BOOL bOldChange;
+    INT i;
+
+    /* Temporarily disable change notification
+     * If the control is LVS_OWNERDATA, we need to send
+     * only one LVN_ODSTATECHANGED notification.
+     * See MSDN documentation for LVN_ITEMCHANGED.
+     */
+    bOldChange = infoPtr->bDoChangeNotify;
+    if (infoPtr->dwStyle & LVS_OWNERDATA) infoPtr->bDoChangeNotify = FALSE;
 
     if (nFirst == -1) nFirst = nItem;
 
     item.state = LVIS_SELECTED;
     item.stateMask = LVIS_SELECTED;
 
-    /* FIXME: this is not correct LVS_OWNERDATA
-     * setting the item states individually will generate
-     * a LVN_ITEMCHANGED notification for each one. Instead,
-     * we have to send a LVN_ODSTATECHANGED notification.
-     * See MSDN documentation for LVN_ITEMCHANGED.
-     */
     for (i = nFirst; i <= nLast; i++)
 	LISTVIEW_SetItemState(infoPtr,i,&item);
+
+    ZeroMemory(&nmlv, sizeof(nmlv));
+    nmlv.iFrom = nFirst;
+    nmlv.iTo = nLast;
+    nmlv.uNewState = 0;
+    nmlv.uOldState = item.state;
+
+    notify_hdr(infoPtr, LVN_ODSTATECHANGED, (LPNMHDR)&nmlv);
+    infoPtr->bDoChangeNotify = bOldChange;
 }
 
 
@@ -7075,7 +7085,7 @@ static BOOL LISTVIEW_SetItemState(LISTVIEW_INFO *infoPtr, INT nItem, const LVITE
 	bResult = LISTVIEW_SetItemT(infoPtr, &lvItem, TRUE);
 
     /*
-     *update selection mark
+     * Update selection mark
      *
      * Investigation on windows 2k showed that selection mark was updated
      * whenever a new selection was made, but if the selected item was
@@ -9551,7 +9561,7 @@ static HWND CreateEditLabelT(LISTVIEW_INFO *infoPtr, LPCWSTR text, DWORD style,
 
     TRACE("(text=%s, ..., isW=%d)\n", debugtext_t(text, isW), isW);
 
-    style |= WS_CHILDWINDOW|WS_CLIPSIBLINGS|ES_LEFT|WS_BORDER;
+    style |= WS_CHILDWINDOW|WS_CLIPSIBLINGS|ES_LEFT|ES_AUTOHSCROLL|WS_BORDER;
     hdc = GetDC(infoPtr->hwndSelf);
 
     /* Select the font to get appropriate metric dimensions */

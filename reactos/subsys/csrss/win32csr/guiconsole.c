@@ -45,7 +45,7 @@ typedef struct GUI_CONSOLE_DATA_TAG
 
 #define CURSOR_BLINK_TIME 500
 
-static BOOL Initialized = FALSE;
+static BOOL ConsInitialized = FALSE;
 static HWND NotifyWnd;
 
 /* FUNCTIONS *****************************************************************/
@@ -975,12 +975,12 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
   HANDLE GraphicsStartupEvent;
   HANDLE ThreadHandle;
 
-  if (! Initialized)
+  if (! ConsInitialized)
     {
-      Initialized = TRUE;
+      ConsInitialized = TRUE;
       if (! GuiInit())
         {
-          Initialized = FALSE;
+          ConsInitialized = FALSE;
           return STATUS_UNSUCCESSFUL;
         }
     }

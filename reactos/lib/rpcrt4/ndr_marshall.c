@@ -1161,7 +1161,15 @@ unsigned char * WINAPI NdrSimpleStructMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   if (pFormat[0] != RPC_FC_STRUCT)
     EmbeddedPointerMarshall(pStubMsg, pMemory, pFormat+4);
 
+  /*
+   * This test does not work when NdrSimpleStructMarshall is called
+   * by an rpc-server to marshall data to return to the client because
+   * BufferStart and BufferEnd are bogus. MIDL does not update them
+   * when a new buffer is allocated in order to return data to the caller.
+   */
+#if 0
   STD_OVERFLOW_CHECK(pStubMsg);
+#endif
 
   return NULL;
 }
@@ -1201,20 +1209,22 @@ unsigned char * WINAPI NdrSimpleStructUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 
 
 /***********************************************************************
- *           NdrSimpleStructUnmarshall [RPCRT4.@]
+ *           NdrSimpleTypeUnmarshall [RPCRT4.@]
  */
-void WINAPI NdrSimpleTypeMarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory,
-                                   unsigned char FormatChar )
+void WINAPI NdrSimpleTypeMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                  unsigned char *pMemory,
+                                  unsigned char FormatChar)
 {
     FIXME("stub\n");
 }
 
 
 /***********************************************************************
- *           NdrSimpleStructUnmarshall [RPCRT4.@]
+ *           NdrSimpleTypeUnmarshall [RPCRT4.@]
  */
-void WINAPI NdrSimpleTypeUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory,
-                                     unsigned char FormatChar )
+void WINAPI NdrSimpleTypeUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                    unsigned char *pMemory,
+                                    unsigned char FormatChar)
 {
     FIXME("stub\n");
 }

@@ -17,6 +17,7 @@ TARGET_CFLAGS += -DDBG
 endif
 
 TARGET_OBJECTS = \
+	access.o \
 	acl.o \
 	ppb.o \
 	bit.o \
@@ -51,7 +52,15 @@ TARGET_OBJECTS = \
 	version.o \
 	i386/chkstk.o \
 	i386/exception.o \
-	i386/except.o
+	i386/except.o \
+	i386/alldiv.o \
+	i386/allmul.o \
+	i386/allrem.o \
+	i386/allshl.o \
+	i386/allshr.o \
+	i386/aulldiv.o \
+	i386/aullrem.o \
+	i386/aullshr.o \
 
 #	atom
 #	registry

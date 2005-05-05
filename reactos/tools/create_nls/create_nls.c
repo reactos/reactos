@@ -611,8 +611,10 @@ int write_nls_files()
 
 static WORD *to_upper_org = NULL, *to_lower_org = NULL;
 
+#if 0
 static WORD diffs[256];
 static int number_of_diffs;
+#endif
 
 static WORD number_of_subtables_with_diffs;
 /* pointers to subtables with 16 elements in each to the main table */
@@ -624,7 +626,7 @@ static WORD subtables_with_offsets[4096 * 16];
 
 static void test_packed_table(WCHAR *table)
 {
-    WCHAR test_str[] = L"This is an English text. По-русски я писать умею немножко. 1234567890";
+    WCHAR test_str[] = L"This is an English text. \x0CF\x0EE-\x0F0\x0F3\x0F1\x0F1\x0EA\x0E8 \x0FF \x0EF\x0E8\x0F1\x0E0\x0F2\x0FC \x0F3\x0EC\x0E5\x0FE \x0ED\x0E5\x0EC\x0ED\x0EE\x0E6\x0EA\x0EE. 1234567890";
     //WORD diff, off;
     //WORD *sub_table;
     DWORD i, len;
@@ -805,6 +807,7 @@ static BOOL CreateCaseDiff(char *table_name)
     return TRUE;
 }
 
+#if 0
 static int find_diff(WORD diff)
 {
     int i;
@@ -816,6 +819,7 @@ static int find_diff(WORD diff)
 
     return -1;
 }
+#endif
 
 static WORD find_subtable_with_diffs(WORD *table, WORD *subtable)
 {

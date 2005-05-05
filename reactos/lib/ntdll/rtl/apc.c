@@ -28,6 +28,7 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
+#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 
@@ -41,12 +42,14 @@ KiUserApcDispatcher(PIO_APC_ROUTINE ApcRoutine,
    /*
     * Call the APC 
     */
+   //DPRINT1("ITS ME\n");
    ApcRoutine(ApcContext,
 	      Iosb,
 	      Reserved);
    /*
     * Switch back to the interrupted context
     */
+    //DPRINT1("switch back\n");
    NtContinue(Context, 1);
 }
 

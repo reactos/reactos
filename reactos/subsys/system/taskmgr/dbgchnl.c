@@ -69,11 +69,11 @@ static DWORD    get_selected_pid(void)
     return dwProcessId;
 }
 
-static int     list_channel_CB(HANDLE hProcess, void* addr, char* buffer, void* user)
+static int     list_channel_CB(HANDLE hProcess, void* addr, TCHAR* buffer, void* user)
 {
     int         j;
-    char        val[2];
-    LVITEMA     lvi;
+    TCHAR       val[2];
+    LVITEM      lvi;
     int         index;
     HWND        hChannelLV = (HWND)user;
 
@@ -85,10 +85,10 @@ static int     list_channel_CB(HANDLE hProcess, void* addr, char* buffer, void* 
     index = ListView_InsertItem(hChannelLV, &lvi);
     if (index == -1) return 0;
 
-    val[1] = '\0';
+    val[1] = TEXT('\0');
     for (j = 0; j < 4; j++)
     {
-        val[0] = (buffer[0] & (1 << j)) ? 'x' : ' ';
+        val[0] = (buffer[0] & (1 << j)) ? TEXT('x') : TEXT(' ');
         ListView_SetItemText(hChannelLV, index, j + 1, val);
     }
     return 1;
@@ -96,7 +96,7 @@ static int     list_channel_CB(HANDLE hProcess, void* addr, char* buffer, void* 
 
 struct cce_user
 {
-    const char* name;           /* channel to look for */
+    LPCTSTR     name;           /* channel to look for */
     unsigned    value, mask;    /* how to change channel */
     unsigned    done;           /* number of successful changes */
     unsigned    notdone;        /* number of unsuccessful changes */
@@ -107,11 +107,11 @@ struct cce_user
  *
  * Callback used for changing a given channel attributes
  */
-static int change_channel_CB(HANDLE hProcess, void* addr, char* buffer, void* pmt)
+static int change_channel_CB(HANDLE hProcess, void* addr, TCHAR* buffer, void* pmt)
 {
     struct cce_user* user = (struct cce_user*)pmt;
 
-    if (!user->name || !strcmp(buffer + 1, user->name))
+    if (!user->name || !_tcscmp(buffer + 1, user->name))
     {
         buffer[0] = (buffer[0] & ~user->mask) | (user->value & user->mask);
         if (WriteProcessMemory(hProcess, addr, buffer, 1, NULL))
@@ -222,7 +222,7 @@ struct dll_option_layout
     int                 nb_channels;
 };
 
-typedef int (*EnumChannelCB)(HANDLE, void*, char*, void*);
+typedef int (*EnumChannelCB)(HANDLE, void*, TCHAR*, void*);
 
 /******************************************************************
  *		enum_channel
@@ -235,15 +235,15 @@ static int enum_channel(HANDLE hProcess, EnumChannelCB ce, void* user, unsigned 
     struct dll_option_layout    dol;
     int                         i, j, ret = 1;
     void*                       buf_addr;
-    char                        buffer[32];
+    TCHAR                       buffer[32];
     void*                       addr;
-    const char**                cache = NULL;
+    const TCHAR**                cache = NULL;
     unsigned                    num_cache, used_cache;
 
     addr = get_symbol(hProcess, "first_dll", "libwine.so");
     if (!addr) return -1;
     if (unique)
-        cache = HeapAlloc(GetProcessHeap(), 0, (num_cache = 32) * sizeof(char*));
+        cache = HeapAlloc(GetProcessHeap(), 0, (num_cache = 32) * sizeof(TCHAR*));
     else
         num_cache = 0;
     used_cache = 0;
@@ -265,12 +265,12 @@ static int enum_channel(HANDLE hProcess, EnumChannelCB ce, void* user, unsigned 
                      * them again
                      */
                     for (j = 0; j < used_cache; j++)
-                        if (!strcmp(cache[j], buffer + 1)) break;
+                        if (!_tcscmp(cache[j], buffer + 1)) break;
                     if (j != used_cache) continue;
                     if (used_cache == num_cache)
-                        cache = HeapReAlloc(GetProcessHeap(), 0, cache, (num_cache *= 2) * sizeof(char*));
-                    cache[used_cache++] = strcpy(HeapAlloc(GetProcessHeap(), 0, strlen(buffer + 1) + 1), 
-                                                 buffer + 1);
+                        cache = HeapReAlloc(GetProcessHeap(), 0, cache, (num_cache *= 2) * sizeof(TCHAR*));
+                    cache[used_cache++] = _tcscpy(HeapAlloc(GetProcessHeap(), 0, (_tcslen(buffer + 1) + 1) * sizeof(TCHAR)),
+                                                  buffer + 1);
                 }
                 ret = ce(hProcess, buf_addr, buffer, user);
             }
@@ -278,7 +278,7 @@ static int enum_channel(HANDLE hProcess, EnumChannelCB ce, void* user, unsigned 
     }
     if (unique)
     {
-        for (j = 0; j < used_cache; j++) HeapFree(GetProcessHeap(), 0, (char*)cache[j]);
+        for (j = 0; j < used_cache; j++) HeapFree(GetProcessHeap(), 0, (TCHAR*)cache[j]);
         HeapFree(GetProcessHeap(), 0, cache);
     }
     return 0;
@@ -365,13 +365,13 @@ static void DebugChannels_OnNotify(HWND hDlg, LPARAM lParam)
                 ListView_GetItemText(hChannelLV, lhti.iItem, 0, name, sizeof(name) / sizeof(name[0]));
                 ListView_GetItemText(hChannelLV, lhti.iItem, lhti.iSubItem, val, sizeof(val) / sizeof(val[0]));
                 user.name = name;
-                user.value = (val[0] == 'x') ? 0 : bitmask;
+                user.value = (val[0] == TEXT('x')) ? 0 : bitmask;
                 user.mask = bitmask;
                 user.done = user.notdone = 0;
                 enum_channel(hProcess, change_channel_CB, &user, FALSE);
                 if (user.done)
                 {
-                    val[0] ^= ('x' ^ ' ');
+                    val[0] ^= (TEXT('x') ^ TEXT(' '));
                     ListView_SetItemText(hChannelLV, lhti.iItem, lhti.iSubItem, val);
                 }
                 if (user.notdone)

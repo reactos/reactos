@@ -56,6 +56,7 @@ char **debug_channels = NULL;
 char **lib_path = NULL;
 
 char *input_file_name = NULL;
+char *spec_file_name = NULL;
 const char *output_file_name = NULL;
 
 char *ld_command = "ld";
@@ -65,7 +66,6 @@ static FILE *output_file;
 static const char *current_src_dir;
 static int nb_res_files;
 static char **res_files;
-static char *spec_file_name;
 
 /* execution mode */
 enum exec_mode_values

@@ -110,8 +110,8 @@ int main()
     DWORD r;
     ANSI_STRING astring;
     HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    PSYSTEM_PROCESSES SystemProcesses = NULL;
-    PSYSTEM_PROCESSES CurrentProcess;
+    PSYSTEM_PROCESS_INFORMATION SystemProcesses = NULL;
+    PSYSTEM_PROCESS_INFORMATION CurrentProcess;
     ULONG BufferSize, ReturnSize;
     NTSTATUS Status;
     char buf[256];
@@ -140,7 +140,7 @@ int main()
 
     /* For every process print the information. */
     CurrentProcess = SystemProcesses;
-    while (CurrentProcess->NextEntryDelta != 0)
+    while (CurrentProcess->NextEntryOffset != 0)
     {
         int hour, hour1, thour, thour1;
         unsigned char minute, minute1, tmin, tmin1;
@@ -159,53 +159,53 @@ int main()
 	minute1  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
 	seconds1 = (ptime.QuadPart / 10000000LL) % 60LL;
 
-	RtlUnicodeStringToAnsiString(&astring, &CurrentProcess->ProcessName, TRUE);
+	RtlUnicodeStringToAnsiString(&astring, &CurrentProcess->ImageName, TRUE);
 
         wsprintf(buf,"P%8d %8d %3d:%02d:%02d  %3d:%02d:%02d   ProcName: %s\n",
-                 CurrentProcess->ProcessId, CurrentProcess->InheritedFromProcessId,
+                 CurrentProcess->UniqueProcessId, CurrentProcess->InheritedFromUniqueProcessId,
                  hour, minute, seconds, hour1, minute1, seconds1,
                  astring.Buffer);
         WriteFile(stdout, buf, lstrlen(buf), &r, NULL);
         
         RtlFreeAnsiString(&astring);
 
-	for (ti = 0; ti < CurrentProcess->ThreadCount; ti++)
+	for (ti = 0; ti < CurrentProcess->NumberOfThreads; ti++)
 	   {
 		struct status *statt;
 		struct waitres *waitt;
 		char szWindowName[30] = {" "};
 
-		ptime = CurrentProcess->Threads[ti].KernelTime;
+		ptime = CurrentProcess->TH[ti].KernelTime;
 		thour = (ptime.QuadPart / (10000000LL * 3600LL));
 		tmin  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
 		tsec  = (ptime.QuadPart / 10000000LL) % 60LL;
 
-		ptime  = CurrentProcess->Threads[ti].UserTime;
+		ptime  = CurrentProcess->TH[ti].UserTime;
 		thour1 = (ptime.QuadPart / (10000000LL * 3600LL));
 		tmin1  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
 		tsec1  = (ptime.QuadPart / 10000000LL) % 60LL;
 
 		statt = thread_stat;
-                while (statt->state != CurrentProcess->Threads[ti].State  && statt->state >= 0)
+                while (statt->state != CurrentProcess->TH[ti].ThreadState  && statt->state >= 0)
                 	statt++;
 
 		waitt = waitreason;
-                while (waitt->state != CurrentProcess->Threads[ti].WaitReason  && waitt->state >= 0)
+                while (waitt->state != CurrentProcess->TH[ti].WaitReason  && waitt->state >= 0)
                         waitt++;
 
 		wsprintf (buf1, 
 		          "t%         %8d %3d:%02d:%02d  %3d:%02d:%02d   %s %s\n",
-		          CurrentProcess->Threads[ti].ClientId.UniqueThread,
+		          CurrentProcess->TH[ti].ClientId.UniqueThread,
 		          thour, tmin, tsec, thour1, tmin1, tsec1,
 		          statt->desc , waitt->desc);
         	WriteFile(stdout, buf1, lstrlen(buf1), &r, NULL);
 
-		EnumThreadWindows((DWORD)CurrentProcess->Threads[ti].ClientId.UniqueThread,
+		EnumThreadWindows((DWORD)CurrentProcess->TH[ti].ClientId.UniqueThread,
 		                  (ENUMWINDOWSPROC) EnumThreadProc,
 		                  (LPARAM)(LPTSTR) szWindowName );
 	   }
-	   CurrentProcess = (PSYSTEM_PROCESSES)((ULONG_PTR)CurrentProcess +
-	                     CurrentProcess->NextEntryDelta);
+	   CurrentProcess = (PSYSTEM_PROCESS_INFORMATION)((ULONG_PTR)CurrentProcess +
+	                     CurrentProcess->NextEntryOffset);
 	} 
   	return (0);
 }

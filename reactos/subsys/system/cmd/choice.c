@@ -103,6 +103,7 @@ IsKeyInString (LPTSTR lpString, TCHAR cKey, BOOL bCaseSensitive)
 INT
 CommandChoice (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR lpOptions;
 	TCHAR Options[2];
 	LPTSTR lpText    = NULL;
@@ -121,17 +122,15 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 	INT GCret;
 	TCHAR Ch;
 	DWORD amount,clk;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    LoadString( GetModuleHandle(NULL), STRING_CHOICE_OPTION, (LPTSTR) Options,sizeof(lpOptions));
-    lpOptions = _T(Options);
+	LoadString(GetModuleHandle(NULL), STRING_CHOICE_OPTION, Options, 2);
+	lpOptions = Options;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-	 LoadString( GetModuleHandle(NULL), STRING_CHOICE_HELP, (LPTSTR) szMsg,sizeof(szMsg));
-     ConOutPuts (_T((LPTSTR)szMsg));
-
-	 return 0;
+		LoadString(GetModuleHandle(NULL), STRING_CHOICE_HELP, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
+		return 0;
 	}
 
 	/* retrieve text */
@@ -170,9 +169,8 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 
 				if (_tcslen (lpOptions) == 0)
 				{
-					
-					LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
-					ConErrPuts (_T((LPTSTR)szMsg));
+					LoadString(GetModuleHandle(NULL), STRING_CHOICE_ERROR, szMsg, RC_STRING_MAX_SIZE);
+					ConErrPuts(szMsg);
 					freep (arg);
 					return 1;
 				}
@@ -202,8 +200,8 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 
 				if (*s != _T(','))
 				{
-					LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR_TXT, (LPTSTR) szMsg,sizeof(szMsg));
-                    ConErrPuts (_T((LPTSTR)szMsg));
+					LoadString(GetModuleHandle(NULL), STRING_CHOICE_ERROR_TXT, szMsg, RC_STRING_MAX_SIZE);
+					ConErrPuts(szMsg);
 					freep (arg);
 					return 1;
 				}
@@ -214,8 +212,8 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 			}
 			else if (arg[i][0] == _T('/'))
 			{
-				LoadString( GetModuleHandle(NULL), STRING_CHOICE_ERROR_OPTION, (LPTSTR) szMsg,sizeof(szMsg));               
-				ConErrPrintf (_T((LPTSTR)szMsg), arg[i]);
+				LoadString(GetModuleHandle(NULL), STRING_CHOICE_ERROR_OPTION, szMsg, RC_STRING_MAX_SIZE);
+				ConErrPrintf(szMsg, arg[i]);
 				freep (arg);
 				return 1;
 			}

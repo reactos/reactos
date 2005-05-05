@@ -30,6 +30,7 @@
 
 #include <debug.h>
 
+#define TAG_STRING	TAG('S', 'T', 'R', ' ') /* string */
 
 /* Define _NTTEST_ to make test version. Device names are prefixed with
    'NT' to allow the driver to run side by side with MS TCP/IP driver */

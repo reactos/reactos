@@ -71,6 +71,8 @@ PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType)
   
   PAGED_CODE();
 
+  KeEnterCriticalRegion();
+
   Entry = ExMapHandleToPointer(PspCidTable,
                                ExHandle);
   if(Entry != NULL)
@@ -81,16 +83,18 @@ PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType)
       ExDestroyHandleByEntry(PspCidTable,
                              Entry,
                              ExHandle);
+      KeLeaveCriticalRegion();
       return STATUS_SUCCESS;
     }
     else
     {
       ExUnlockHandleTableEntry(PspCidTable,
                                Entry);
+      KeLeaveCriticalRegion();
       return STATUS_OBJECT_TYPE_MISMATCH;
     }
   }
-
+  KeLeaveCriticalRegion();
   return STATUS_INVALID_HANDLE;
 }
 

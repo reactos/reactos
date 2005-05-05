@@ -2104,7 +2104,7 @@ MmCreatePhysicalMemorySection(VOID)
    SectionSize.QuadPart = 0xFFFFFFFF;
    InitializeObjectAttributes(&Obj,
                               &Name,
-                              0,
+                              OBJ_PERMANENT,
                               NULL,
                               NULL);
    Status = MmCreateSection(&PhysSection,

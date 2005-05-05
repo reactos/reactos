@@ -6,7 +6,7 @@ PATH_TO_TOP = ../../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-DRIVERS = core host
+DRIVERS = core host uhci
 
 all: $(DRIVERS)
 

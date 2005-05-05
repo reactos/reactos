@@ -61,7 +61,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
  */
 static UINT ACTION_ProcessExecSequence(MSIPACKAGE *package, BOOL UIran);
 static UINT ACTION_ProcessUISequence(MSIPACKAGE *package);
-static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq);
+static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq, BOOL UI);
 static UINT build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name, 
                             LPWSTR *FilePath);
 
@@ -508,8 +508,8 @@ int track_tempfile(MSIPACKAGE *package, LPCWSTR name, LPCWSTR path)
 
     memset(&package->files[index],0,sizeof(MSIFILE));
 
-    package->files[index].File = dupstrW(name);
-    package->files[index].TargetPath = dupstrW(path);
+    package->files[index].File = strdupW(name);
+    package->files[index].TargetPath = strdupW(path);
     package->files[index].Temporary = TRUE;
 
     TRACE("Tracking tempfile (%s)\n",debugstr_w(package->files[index].File));  
@@ -677,7 +677,7 @@ static void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * recor
         package->ActionFormat = load_dynamic_stringW(row,3);
 
         HeapFree(GetProcessHeap(),0,package->LastAction);
-        package->LastAction = dupstrW(action);
+        package->LastAction = strdupW(action);
 
         msiobj_release(&row->hdr);
         MSI_ViewClose(view);
@@ -864,6 +864,7 @@ UINT ACTION_DoTopLevelINSTALL(MSIPACKAGE *package, LPCWSTR szPackagePath,
     DWORD sz;
     WCHAR buffer[10];
     UINT rc;
+    BOOL ui = FALSE;
     static const WCHAR szUILevel[] = {'U','I','L','e','v','e','l',0};
     static const WCHAR szAction[] = {'A','C','T','I','O','N',0};
     static const WCHAR szInstall[] = {'I','N','S','T','A','L','L',0};
@@ -875,8 +876,8 @@ UINT ACTION_DoTopLevelINSTALL(MSIPACKAGE *package, LPCWSTR szPackagePath,
     {
         LPWSTR p, check, path;
  
-        package->PackagePath = dupstrW(szPackagePath);
-        path = dupstrW(szPackagePath);
+        package->PackagePath = strdupW(szPackagePath);
+        path = strdupW(szPackagePath);
         p = strrchrW(path,'\\');    
         if (p)
         {
@@ -921,7 +922,7 @@ UINT ACTION_DoTopLevelINSTALL(MSIPACKAGE *package, LPCWSTR szPackagePath,
                 while (*ptr == ' ') ptr++;
                 len = ptr2-ptr;
                 prop = HeapAlloc(GetProcessHeap(),0,(len+1)*sizeof(WCHAR));
-                strncpyW(prop,ptr,len);
+                memcpy(prop,ptr,len*sizeof(WCHAR));
                 prop[len]=0;
                 ptr2++;
            
@@ -941,7 +942,7 @@ UINT ACTION_DoTopLevelINSTALL(MSIPACKAGE *package, LPCWSTR szPackagePath,
                     len -= 2;
                 }
                 val = HeapAlloc(GetProcessHeap(),0,(len+1)*sizeof(WCHAR));
-                strncpyW(val,ptr2,len);
+                memcpy(val,ptr2,len*sizeof(WCHAR));
                 val[len] = 0;
 
                 if (strlenW(prop) > 0)
@@ -963,6 +964,7 @@ UINT ACTION_DoTopLevelINSTALL(MSIPACKAGE *package, LPCWSTR szPackagePath,
         if (atoiW(buffer) >= INSTALLUILEVEL_REDUCED)
         {
             rc = ACTION_ProcessUISequence(package);
+            ui = TRUE;
             if (rc == ERROR_SUCCESS)
                 rc = ACTION_ProcessExecSequence(package,TRUE);
         }
@@ -980,13 +982,13 @@ UINT ACTION_DoTopLevelINSTALL(MSIPACKAGE *package, LPCWSTR szPackagePath,
 
     /* process the ending type action */
     if (rc == ERROR_SUCCESS)
-        ACTION_PerformActionSequence(package,-1);
+        ACTION_PerformActionSequence(package,-1,ui);
     else if (rc == ERROR_INSTALL_USEREXIT) 
-        ACTION_PerformActionSequence(package,-2);
+        ACTION_PerformActionSequence(package,-2,ui);
     else if (rc == ERROR_FUNCTION_FAILED) 
-        ACTION_PerformActionSequence(package,-3);
+        ACTION_PerformActionSequence(package,-3,ui);
     else if (rc == ERROR_INSTALL_SUSPEND) 
-        ACTION_PerformActionSequence(package,-4);
+        ACTION_PerformActionSequence(package,-4,ui);
 
     /* finish up running custom actions */
     ACTION_FinishCustomActions(package);
@@ -994,7 +996,7 @@ UINT ACTION_DoTopLevelINSTALL(MSIPACKAGE *package, LPCWSTR szPackagePath,
     return rc;
 }
 
-static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq)
+static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq, BOOL UI)
 {
     MSIQUERY * view;
     UINT rc;
@@ -1007,7 +1009,16 @@ static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq)
          'S','e','q','u','e','n','c','e',' ', 'W','H','E','R','E',' ',
          'S','e','q','u','e','n','c','e',' ', '=',' ','%','i',0};
 
-    rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery, seq);
+    static const WCHAR UISeqQuery[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+	 'I','n','s','t','a','l','l','U','I','S','e','q','u','e','n','c','e',
+	 ' ', 'W','H','E','R','E',' ', 'S','e','q','u','e','n','c','e',
+	 ' ', '=',' ','%','i',0};
+
+    if (UI)
+        rc = MSI_OpenQuery(package->db, &view, UISeqQuery, seq);
+    else
+        rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery, seq);
 
     if (rc == ERROR_SUCCESS)
     {
@@ -1058,7 +1069,10 @@ static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq)
             goto end;
         }
 
-        rc = ACTION_PerformAction(package,buffer);
+        if (UI)
+            rc = ACTION_PerformUIAction(package,buffer);
+        else
+            rc = ACTION_PerformAction(package,buffer);
         msiobj_release(&row->hdr);
 end:
         MSI_ViewClose(view);
@@ -1921,7 +1935,7 @@ static INT load_folder(MSIPACKAGE *package, const WCHAR* dir)
 
     memset(&package->folders[index],0,sizeof(MSIFOLDER));
 
-    package->folders[index].Directory = dupstrW(dir);
+    package->folders[index].Directory = strdupW(dir);
 
     rc = MSI_OpenQuery(package->db, &view, Query, dir);
     if (rc != ERROR_SUCCESS)
@@ -1980,13 +1994,13 @@ static INT load_folder(MSIPACKAGE *package, const WCHAR* dir)
     {
         TRACE("   TargetDefault = %s\n",debugstr_w(targetdir));
         HeapFree(GetProcessHeap(),0, package->folders[index].TargetDefault);
-        package->folders[index].TargetDefault = dupstrW(targetdir);
+        package->folders[index].TargetDefault = strdupW(targetdir);
     }
 
     if (srcdir)
-       package->folders[index].SourceDefault = dupstrW(srcdir);
+        package->folders[index].SourceDefault = strdupW(srcdir);
     else if (targetdir)
-        package->folders[index].SourceDefault = dupstrW(targetdir);
+        package->folders[index].SourceDefault = strdupW(targetdir);
     HeapFree(GetProcessHeap(), 0, ptargetdir);
 
     parent = load_dynamic_stringW(row,2);
@@ -2084,13 +2098,13 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
 
     if (!source && package->folders[i].ResolvedTarget)
     {
-        path = dupstrW(package->folders[i].ResolvedTarget);
+        path = strdupW(package->folders[i].ResolvedTarget);
         TRACE("   already resolved to %s\n",debugstr_w(path));
         return path;
     }
     else if (source && package->folders[i].ResolvedSource)
     {
-        path = dupstrW(package->folders[i].ResolvedSource);
+        path = strdupW(package->folders[i].ResolvedSource);
         return path;
     }
     else if (!source && package->folders[i].Property)
@@ -2114,7 +2128,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
         {
             TRACE("   TargetDefault = %s\n",debugstr_w(package->folders[i].TargetDefault));
             path = build_directory_name(3, p, package->folders[i].TargetDefault, NULL);
-            package->folders[i].ResolvedTarget = dupstrW(path);
+            package->folders[i].ResolvedTarget = strdupW(path);
             TRACE("   resolved into %s\n",debugstr_w(path));
             if (set_prop)
                 MSI_SetPropertyW(package,name,path);
@@ -2122,7 +2136,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
         else 
         {
             path = build_directory_name(3, p, package->folders[i].SourceDefault, NULL);
-            package->folders[i].ResolvedSource = dupstrW(path);
+            package->folders[i].ResolvedSource = strdupW(path);
         }
         HeapFree(GetProcessHeap(),0,p);
     }
@@ -3119,7 +3133,7 @@ inline static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key,
         {
             if (package->files[index].State >= 2)
             {
-                *file_source = dupstrW(package->files[index].TargetPath);
+                *file_source = strdupW(package->files[index].TargetPath);
                 return ERROR_SUCCESS;
             }
             else
@@ -3231,7 +3245,7 @@ static UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
         if (MSI_RecordIsNull(row,5))
         {
             LPWSTR p;
-            dest_path = dupstrW(file_source);
+            dest_path = strdupW(file_source);
             p = strrchrW(dest_path,'\\');
             if (p)
                 *p=0;
@@ -3523,7 +3537,8 @@ static UINT ACTION_WriteRegistryValues(MSIPACKAGE *package)
             value_data = parse_value(package, value, &type, &size); 
         else
         {
-            value_data = NULL;
+            static const WCHAR szEmpty[] = {0};
+            value_data = (LPSTR)strdupW(szEmpty);
             size = 0;
             type = REG_SZ;
         }
@@ -3759,7 +3774,7 @@ static LPWSTR resolve_keypath( MSIPACKAGE* package, INT
 
         if (j>=0)
         {
-            LPWSTR p = dupstrW(package->files[j].TargetPath);
+            LPWSTR p = strdupW(package->files[j].TargetPath);
             return p;
         }
     }
@@ -4005,6 +4020,61 @@ end:
     return rc;
 }
 
+typedef struct {
+    CLSID       clsid;
+    LPWSTR      source;
+
+    LPWSTR      path;
+    ITypeLib    *ptLib;
+} typelib_struct;
+
+BOOL CALLBACK Typelib_EnumResNameProc( HMODULE hModule, LPCWSTR lpszType, 
+                                       LPWSTR lpszName, LONG_PTR lParam)
+{
+    TLIBATTR *attr;
+    typelib_struct *tl_struct = (typelib_struct*) lParam;
+    static const WCHAR fmt[] = {'%','s','\\','%','i',0};
+    int sz; 
+    HRESULT res;
+
+    if (!IS_INTRESOURCE(lpszName))
+    {
+        ERR("Not Int Resource Name %s\n",debugstr_w(lpszName));
+        return TRUE;
+    }
+
+    sz = strlenW(tl_struct->source)+4;
+    sz *= sizeof(WCHAR);
+
+    tl_struct->path = HeapAlloc(GetProcessHeap(),0,sz);
+    sprintfW(tl_struct->path,fmt,tl_struct->source, lpszName);
+
+    TRACE("trying %s\n", debugstr_w(tl_struct->path));
+    res = LoadTypeLib(tl_struct->path,&tl_struct->ptLib);
+    if (!SUCCEEDED(res))
+    {
+        HeapFree(GetProcessHeap(),0,tl_struct->path);
+        tl_struct->path = NULL;
+
+        return TRUE;
+    }
+
+    ITypeLib_GetLibAttr(tl_struct->ptLib, &attr);
+    if (IsEqualGUID(&(tl_struct->clsid),&(attr->guid)))
+    {
+        ITypeLib_ReleaseTLibAttr(tl_struct->ptLib, attr);
+        return FALSE;
+    }
+
+    HeapFree(GetProcessHeap(),0,tl_struct->path);
+    tl_struct->path = NULL;
+
+    ITypeLib_ReleaseTLibAttr(tl_struct->ptLib, attr);
+    ITypeLib_Release(tl_struct->ptLib);
+
+    return TRUE;
+}
+
 static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
 {
     /* 
@@ -4019,8 +4089,6 @@ static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
     static const WCHAR Query[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          'T','y','p','e','L','i','b',0};
-    ITypeLib *ptLib;
-    HRESULT res;
 
     if (!package)
         return ERROR_INVALID_HANDLE;
@@ -4042,6 +4110,10 @@ static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
         WCHAR component[0x100];
         DWORD sz;
         INT index;
+        LPWSTR guid;
+        typelib_struct tl_struct;
+        HMODULE module;
+        static const WCHAR szTYPELIB[] = {'T','Y','P','E','L','I','B',0};
 
         rc = MSI_ViewFetch(view,&row);
         if (rc != ERROR_SUCCESS)
@@ -4082,46 +4154,59 @@ static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
             continue;
         }
 
-        res = LoadTypeLib(package->files[index].TargetPath,&ptLib);
-        if (SUCCEEDED(res))
+        guid = load_dynamic_stringW(row,1);
+        module = LoadLibraryExW(package->files[index].TargetPath, NULL,
+                        LOAD_LIBRARY_AS_DATAFILE);
+        if (module != NULL)
         {
-            LPWSTR help;
-            WCHAR helpid[0x100];
+            CLSIDFromString(guid, &tl_struct.clsid);
+            tl_struct.source = strdupW(package->files[index].TargetPath);
+            tl_struct.path = NULL;
 
-            sz = 0x100;
-            MSI_RecordGetStringW(row,6,helpid,&sz);
+            EnumResourceNamesW(module, szTYPELIB, Typelib_EnumResNameProc, 
+                               (LONG_PTR)&tl_struct);
 
-            help = resolve_folder(package,helpid,FALSE,FALSE,NULL);
-            res = RegisterTypeLib(ptLib,package->files[index].TargetPath,help);
-            HeapFree(GetProcessHeap(),0,help);
-
-            if (!SUCCEEDED(res))
-                ERR("Failed to register type library %s\n",
-                     debugstr_w(package->files[index].TargetPath));
-            else
+            if (tl_struct.path != NULL)
             {
-                /* Yes the row has more fields than I need, but #1 is 
-                   correct and the only one I need. Why make a new row? */
+                LPWSTR help;
+                WCHAR helpid[0x100];
+                HRESULT res;
 
-                ui_actiondata(package,szRegisterTypeLibraries,row);
+                sz = 0x100;
+                MSI_RecordGetStringW(row,6,helpid,&sz);
+
+                help = resolve_folder(package,helpid,FALSE,FALSE,NULL);
+                res = RegisterTypeLib(tl_struct.ptLib,tl_struct.path,help);
+                HeapFree(GetProcessHeap(),0,help);
+
+                if (!SUCCEEDED(res))
+                    ERR("Failed to register type library %s\n", 
+                            debugstr_w(tl_struct.path));
+                else
+                {
+                    ui_actiondata(package,szRegisterTypeLibraries,row);
                 
-                TRACE("Registered %s\n",
-                       debugstr_w(package->files[index].TargetPath));
-            }
+                    TRACE("Registered %s\n", debugstr_w(tl_struct.path));
+                }
 
-            if (ptLib)
-                ITypeLib_Release(ptLib);
+                ITypeLib_Release(tl_struct.ptLib);
+                HeapFree(GetProcessHeap(),0,tl_struct.path);
+            }
+            else
+                ERR("Failed to load type library %s\n", 
+                    debugstr_w(tl_struct.source));
+       
+            FreeLibrary(module);
+            HeapFree(GetProcessHeap(),0,tl_struct.source);
         }
         else
-            ERR("Failed to load type library %s\n",
-                debugstr_w(package->files[index].TargetPath));
-        
+            ERR("Could not load file! %s\n",
+                    debugstr_w(package->files[index].TargetPath));
         msiobj_release(&row->hdr);
     }
     MSI_ViewClose(view);
     msiobj_release(&view->hdr);
     return rc;
-   
 }
 
 static UINT register_appid(MSIPACKAGE *package, LPCWSTR clsid, LPCWSTR app )
@@ -4362,7 +4447,7 @@ static UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         HeapFree(GetProcessHeap(),0,argument);
         size += (strlenW(package->files[index].TargetPath))*sizeof(WCHAR);
 
-        argument = (LPWSTR)HeapAlloc(GetProcessHeap(),0,size+sizeof(WCHAR));
+        argument = HeapAlloc(GetProcessHeap(),0,size+sizeof(WCHAR));
         strcpyW(argument,package->files[index].TargetPath);
         if (deformated)
         {
@@ -4882,7 +4967,7 @@ static UINT ACTION_CreateShortcuts(MSIPACKAGE *package)
         {
             LPWSTR keypath;
             FIXME("poorly handled shortcut format, advertised shortcut\n");
-            keypath = dupstrW(package->components[index].FullKeypath);
+            keypath = strdupW(package->components[index].FullKeypath);
             IShellLinkW_SetPath(sl,keypath);
             HeapFree(GetProcessHeap(),0,keypath);
         }

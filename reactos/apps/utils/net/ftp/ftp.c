@@ -97,7 +97,7 @@ uid_t	getuid();
 sig_t	lostpeer();
 off_t	restart_point = 0;
 
-int cin, cout;
+SOCKET cin, cout;
 int	dataconn(char *mode);
 
 int command(char *fmt, ...);
@@ -113,7 +113,8 @@ void psabort(int sig);
 char *hookup(char *host, int port)
 {
 	register struct hostent *hp = 0;
-	int s,len;
+	int len;
+	SOCKET s;
 	static char hostnamebuf[80];
 
 	bzero((char *)&hisctladdr, sizeof (hisctladdr));
@@ -136,7 +137,7 @@ char *hookup(char *host, int port)
 	}
 	hostname = hostnamebuf;
 	s = socket(hisctladdr.sin_family, SOCK_STREAM, 0);
-	if (s < 0) {
+	if (s == INVALID_SOCKET) {
 		perror("ftp: socket");
 		code = -1;
 		return (0);
@@ -1327,8 +1328,8 @@ void pswitch(int flag)
 		char name[MAXHOSTNAMELEN];
 		struct sockaddr_in mctl;
 		struct sockaddr_in hctl;
-		FILE *in;
-		FILE *out;
+		SOCKET in;
+		SOCKET out;
 		int tpe;
 		int cpnd;
 		int sunqe;
@@ -1371,10 +1372,10 @@ void pswitch(int flag)
 	hisctladdr = op->hctl;
 	ip->mctl = myctladdr;
 	myctladdr = op->mctl;
-	(int) ip->in = cin; // What the hell am I looking at...?
-	cin = (int) op->in;
-	(int) ip->out = cout; // Same again...
-	cout = (int) op->out;
+	ip->in = cin;
+	cin = op->in;
+	ip->out = cout;
+	cout = op->out;
 	ip->tpe = type;
 	type = op->tpe;
 	if (!type)

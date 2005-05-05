@@ -332,7 +332,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 						{
 							if (((charcount + orgx) / maxx) + orgy > maxy - 1)
 								orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
-					        }
+						}
 
 						/* set cursor position */
 						SetCursorXY ((orgx + current) % maxx,

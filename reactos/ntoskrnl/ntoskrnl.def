@@ -403,13 +403,11 @@ IoIsSystemThread@4
 IoIsValidNameGraftingBuffer@8
 IoIsOperationSynchronous@4
 IoMakeAssociatedIrp@8
-IoOpenDeviceInstanceKey@20
 IoOpenDeviceInterfaceRegistryKey@12
 IoOpenDeviceRegistryKey@16
 IoPageRead@20
 IoPnPDeliverServicePowerNotification@16
 IoQueryDeviceDescription@32
-IoQueryDeviceEnumInfo@8
 IoQueryFileDosDeviceName@8
 IoQueryFileInformation@20
 IoQueryVolumeInformation@20
@@ -505,7 +503,7 @@ KdEnableDebugger@0
 KdEnteredDebugger
 KdPollBreakIn@0
 KdPowerTransition@4
-KdSystemDebugControl@4
+KdpServiceDispatcher@12
 Ke386CallBios@8
 Ke386IoSetAccessProcess@8
 Ke386QueryIoAccessMap@8
@@ -649,6 +647,7 @@ KeWaitForSingleObject@20
 ;KiBugCheckData DATA
 KiCoprocessorError@0
 KiDeliverApc@12
+KiKernelApcDeliveryCheck@0
 KiDispatchInterrupt@0
 KiEnableTimerWatchdog
 KiInterruptDispatch2@8
@@ -945,7 +944,7 @@ READ_REGISTER_USHORT@4
 READ_REGISTER_BUFFER_UCHAR@12
 READ_REGISTER_BUFFER_ULONG@12
 READ_REGISTER_BUFFER_USHORT@12
-KeRosPrintAddress@4
+KiRosPrintAddress@4
 KeRosDumpStackFrames@8
 KeRosGetStackFrames@8
 RtlAbsoluteToSelfRelativeSD@12

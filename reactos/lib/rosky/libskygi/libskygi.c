@@ -404,7 +404,7 @@ GI_create_app(app_para *p)
   Style = IntMapWindowStyle(p->ulStyle, &ExStyle);
   
   /* convert the window caption to unicode */
-  MultiByteToWideChar(CP_UTF8, 0, p->cpName, -1, WindowName,
+  MultiByteToWideChar(CP_UTF8, 0, (char*)p->cpName, -1, WindowName,
                       sizeof(WindowName) / sizeof(WindowName[0]));
   
   skw->Window.win_func = p->win_func;
@@ -1076,7 +1076,7 @@ GI_create_menu_item(unsigned char *Text,
    DBG("GI_create_menu_item(0x%x, 0x%x, 0x%x, 0x%x)\n",
        Text, Id, Flags, Enabled);
 
-   TextLength = MultiByteToWideChar(CP_UTF8, 0, Text, -1, NULL, 0);
+   TextLength = MultiByteToWideChar(CP_UTF8, 0, (char*)Text, -1, NULL, 0);
    MenuItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                         sizeof(SKY_MENUITEM) + TextLength * sizeof(WCHAR));
    if (MenuItem == NULL)
@@ -1084,7 +1084,7 @@ GI_create_menu_item(unsigned char *Text,
       return NULL;
    }
 
-   lstrcpyA(MenuItem->MenuItem.text, Text);
+   lstrcpyA((char*)MenuItem->MenuItem.text, (char*)Text);
    MenuItem->MenuItem.ID = Id;
    MenuItem->MenuItem.flags = Flags;
    MenuItem->MenuItem.enabled = Enabled;
@@ -1099,7 +1099,7 @@ GI_create_menu_item(unsigned char *Text,
    MenuItem->MenuItemInfo.wID = Id;
    MenuItem->MenuItemInfo.dwTypeData = (LPWSTR)(MenuItem + 1);
    MenuItem->MenuItemInfo.cch = TextLength;
-   MultiByteToWideChar(CP_UTF8, 0, Text, TextLength, (LPWSTR)(MenuItem + 1),
+   MultiByteToWideChar(CP_UTF8, 0, (char*)Text, TextLength, (LPWSTR)(MenuItem + 1),
                        TextLength);
 
    return (widget_menu_item *)MenuItem;

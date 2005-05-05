@@ -65,6 +65,10 @@ PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
     return ifaddr;
 }
 
+VOID TCPDisposeInterfaceData( PVOID Ptr ) {
+    exFreePool( Ptr );
+}
+
 POSK_IFADDR TCPFindInterface( void *ClientData,
 			      OSK_UINT AddrType,
 			      OSK_UINT FindType,

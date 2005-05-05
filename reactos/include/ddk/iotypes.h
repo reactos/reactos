@@ -645,6 +645,13 @@ typedef struct _IO_COMPLETION_CONTEXT
 #define FO_OPENED_CASE_SENSITIVE        0x00020000
 #define FO_HANDLE_CREATED               0x00040000
 #define FO_FILE_FAST_IO_READ            0x00080000
+#define FO_RANDOM_ACCESS                0x00100000
+#define FO_FILE_OPEN_CANCELLED          0x00200000
+#define FO_VOLUME_OPEN                  0x00400000
+#define FO_FILE_OBJECT_HAS_EXTENSION    0x00800000
+#define FO_REMOTE_ORIGIN                0x01000000
+
+#define IO_ATTACH_DEVICE_API            0x80000000
 
 typedef struct _FILE_OBJECT
 {
@@ -677,6 +684,34 @@ typedef struct _FILE_OBJECT
    PIO_COMPLETION_CONTEXT CompletionContext;
 } FILE_OBJECT, *PFILE_OBJECT;
 
+typedef IO_ALLOCATION_ACTION STDCALL_FUNC
+(*PDRIVER_CONTROL)(struct _DEVICE_OBJECT *DeviceObject,
+		   struct _IRP *Irp,
+		   PVOID MapRegisterBase,
+		   PVOID Context);
+#if (_WIN32_WINNT >= 0x0400)
+typedef VOID STDCALL_FUNC
+(*PFSDNOTIFICATIONPROC)(IN struct _DEVICE_OBJECT *PtrTargetFileSystemDeviceObject,
+			IN BOOLEAN DriverActive);
+#endif // (_WIN32_WINNT >= 0x0400)
+
+typedef struct _KDEVICE_QUEUE_ENTRY
+{
+   LIST_ENTRY DeviceListEntry;
+   ULONG SortKey;
+   BOOLEAN Inserted;
+} KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY;
+
+typedef struct _WAIT_CONTEXT_BLOCK
+{
+  KDEVICE_QUEUE_ENTRY WaitQueueEntry;
+  PDRIVER_CONTROL DeviceRoutine;
+  PVOID DeviceContext;
+  ULONG NumberOfMapRegisters;
+  PVOID DeviceObject;
+  PVOID CurrentIrp;
+  PKDPC BufferChainingDpc;
+} WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
 typedef struct _IRP
 {
@@ -749,7 +784,6 @@ typedef struct _VPB
    ULONG ReferenceCount;
    WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH];
 } VPB, *PVPB;
-
 
 typedef struct _DEVICE_OBJECT
 {
@@ -885,8 +919,19 @@ struct _FAST_IO_DISPATCH_TABLE
 } FAST_IO_DISPATCH_TABLE, * PFAST_IO_DISPATCH_TABLE;
 #endif
 
-#define IO_TYPE_DRIVER 4L
-#define IO_TYPE_FILE 0x0F5L
+#define IO_TYPE_ADAPTER                 0x1L
+#define IO_TYPE_CONTROLLER              0x2L
+#define IO_TYPE_DEVICE                  0x3L
+#define IO_TYPE_DRIVER                  0x4L
+#define IO_TYPE_FILE                    0x0F5L /* Temp Hack */
+#define IO_TYPE_IRP                     0x6L
+#define IO_TYPE_MASTER_ADAPTER          0x7L
+#define IO_TYPE_OPEN_PACKET             0x8L
+#define IO_TYPE_TIMER                   0x9L
+#define IO_TYPE_VPB                     0xaL
+#define IO_TYPE_ERROR_LOG               0xbL
+#define IO_TYPE_ERROR_MESSAGE           0xcL
+#define IO_TYPE_DEVICE_OBJECT_EXTENSION 0xdL
 
 #define DRVO_UNLOAD_INVOKED 0x1L
 #define DRVO_LEGACY_DRIVER  0x2L
@@ -895,6 +940,12 @@ struct _FAST_IO_DISPATCH_TABLE
 #define DRVO_INITIALIZED 0x10L
 #define DRVO_BOOTREINIT_REGISTERED 0x20L
 #define DRVO_LEGACY_RESOURCES 0x40L
+
+#define DOE_UNLOAD_PENDING    0x1
+#define DOE_DELETE_PENDING    0x2
+#define DOE_REMOVE_PENDING    0x4
+#define DOE_REMOVE_PROCESSED  0x8
+#define DOE_START_PENDING     0x10
 
 typedef struct _DRIVER_OBJECT
 {
@@ -946,7 +997,6 @@ typedef VOID STDCALL_FUNC
 /*
  * PURPOSE: Special timer associated with each device
  */
- #define IO_TYPE_TIMER 9
 typedef struct _IO_TIMER {
    USHORT Type;				/* Every IO Object has a Type */
    USHORT TimerEnabled;			/* Tells us if the Timer is enabled or not */
@@ -1108,18 +1158,6 @@ typedef struct _DRIVER_LAYOUT_INFORMATION
    ULONG Signature;
    PARTITION_INFORMATION PartitionEntry[1];
 } DRIVER_LAYOUT_INFORMATION, *PDRIVER_LAYOUT_INFORMATION;
-
-
-typedef IO_ALLOCATION_ACTION STDCALL_FUNC
-(*PDRIVER_CONTROL)(PDEVICE_OBJECT DeviceObject,
-		   PIRP Irp,
-		   PVOID MapRegisterBase,
-		   PVOID Context);
-#if (_WIN32_WINNT >= 0x0400)
-typedef VOID STDCALL_FUNC
-(*PFSDNOTIFICATIONPROC)(IN PDEVICE_OBJECT PtrTargetFileSystemDeviceObject,
-			IN BOOLEAN DriverActive);
-#endif // (_WIN32_WINNT >= 0x0400)
 
 
 typedef struct _NAMED_PIPE_CREATE_PARAMETERS

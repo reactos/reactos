@@ -196,7 +196,7 @@ typedef struct _KEY_CELL
   USHORT  ClassSize;
 
   /* Name of key (not zero terminated) */
-  UCHAR  Name[0];
+  CHAR  Name[0];
 } GCC_PACKED KEY_CELL, *PKEY_CELL;
 
 /* KEY_CELL.Type constants */
@@ -237,7 +237,7 @@ typedef struct _VALUE_CELL
   ULONG  DataType;
   USHORT  Flags;
   USHORT  Unused1;
-  UCHAR  Name[0]; /* warning : not zero terminated */
+  CHAR  Name[0]; /* warning : not zero terminated */
 } GCC_PACKED VALUE_CELL, *PVALUE_CELL;
 
 /* VALUE_CELL.Flags constants */
@@ -250,7 +250,7 @@ typedef struct _VALUE_CELL
 typedef struct _DATA_CELL
 {
   LONG  CellSize;
-  UCHAR  Data[0];
+  CHAR  Data[0];
 } GCC_PACKED DATA_CELL, *PDATA_CELL;
 
 #ifdef _MSC_VER
@@ -1028,7 +1028,7 @@ CmiExportValue (PREGISTRY_HIVE Hive,
   ULONG SrcDataSize;
   ULONG DstDataSize;
   ULONG DataType;
-  PUCHAR Data;
+  PCHAR Data;
   BOOL Expand = FALSE;
 
   DPRINT ("CmiExportValue('%s') called\n", (Value == NULL) ? "<default>" : (PCHAR)Value->Name);

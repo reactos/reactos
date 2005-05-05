@@ -373,6 +373,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\$$Fat$$");
    UNICODE_STRING VolumeNameU = RTL_CONSTANT_STRING(L"\\$$Volume$$");
    ULONG HashTableSize;
+   ULONG eocMark;
    FATINFO FatInfo;
 
    DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
@@ -460,6 +461,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
          DeviceExt->GetNextCluster = FAT12GetNextCluster;
          DeviceExt->FindAndMarkAvailableCluster = FAT12FindAndMarkAvailableCluster;
          DeviceExt->WriteCluster = FAT12WriteCluster;
+         DeviceExt->CleanShutBitMask = 0;
          break;
 
       case FAT16:
@@ -467,6 +469,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
          DeviceExt->GetNextCluster = FAT16GetNextCluster;
          DeviceExt->FindAndMarkAvailableCluster = FAT16FindAndMarkAvailableCluster;
          DeviceExt->WriteCluster = FAT16WriteCluster;
+         DeviceExt->CleanShutBitMask = 0x8000;
          break;
 
       case FAT32:
@@ -474,6 +477,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
          DeviceExt->GetNextCluster = FAT32GetNextCluster;
          DeviceExt->FindAndMarkAvailableCluster = FAT32FindAndMarkAvailableCluster;
          DeviceExt->WriteCluster = FAT32WriteCluster;
+         DeviceExt->CleanShutBitMask = 0x80000000;
          break;
    }
    
@@ -576,6 +580,20 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    /* read volume label */
    ReadVolumeLabel(DeviceExt,  DeviceObject->Vpb);
+   
+   /* read clean shutdown bit status */
+   Status = GetNextCluster(DeviceExt, 1, &eocMark);
+   if (NT_SUCCESS(Status))
+   {
+      if (eocMark & DeviceExt->CleanShutBitMask)
+      {
+         /* unset clean shutdown bit */
+         eocMark &= ~DeviceExt->CleanShutBitMask;
+         WriteCluster(DeviceExt, 1, eocMark);
+         VolumeFcb->Flags |= VCB_CLEAR_DIRTY;
+      }
+   }
+   VolumeFcb->Flags |= VCB_IS_DIRTY;
 
    Status = STATUS_SUCCESS;
 ByeBye:
@@ -787,6 +805,56 @@ VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
 }
 #endif
 
+static NTSTATUS
+VfatIsVolumeDirty(PVFAT_IRP_CONTEXT IrpContext)
+{
+   PULONG Flags;
+   
+   DPRINT("VfatIsVolumeDirty(IrpContext %x)\n", IrpContext);
+   
+   if (IrpContext->Stack->Parameters.FileSystemControl.OutputBufferLength != sizeof(ULONG))
+      return STATUS_INVALID_BUFFER_SIZE;
+   else if (!IrpContext->Irp->AssociatedIrp.SystemBuffer)
+      return STATUS_INVALID_USER_BUFFER;
+   
+   Flags = (PULONG)IrpContext->Irp->AssociatedIrp.SystemBuffer;
+   *Flags = 0;
+   
+   if (IrpContext->DeviceExt->VolumeFcb->Flags & VCB_IS_DIRTY
+      && !(IrpContext->DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY))
+   {
+      *Flags |= VOLUME_IS_DIRTY;
+   }
+   
+   return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+VfatMarkVolumeDirty(PVFAT_IRP_CONTEXT IrpContext)
+{
+   ULONG eocMark;
+   PDEVICE_EXTENSION DeviceExt;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   DPRINT("VfatMarkVolumeDirty(IrpContext %x)\n", IrpContext);
+   DeviceExt = IrpContext->DeviceExt;
+   
+   if (!(DeviceExt->VolumeFcb->Flags & VCB_IS_DIRTY))
+   {
+      Status = GetNextCluster(DeviceExt, 1, &eocMark);
+      if (NT_SUCCESS(Status))
+      {
+         /* unset clean shutdown bit */
+         eocMark &= ~DeviceExt->CleanShutBitMask;
+         Status = WriteCluster(DeviceExt, 1, eocMark);
+      }
+   }
+   
+   DeviceExt->VolumeFcb->Flags &= ~VCB_CLEAR_DIRTY;
+   
+   return Status;
+}
+
 NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: File system control
@@ -822,6 +890,12 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 	       Status = VfatRosQueryLcnMapping(IrpContext);
 	       break;
 #endif
+	    case FSCTL_IS_VOLUME_DIRTY:
+	       Status = VfatIsVolumeDirty(IrpContext);
+	       break;
+	    case FSCTL_MARK_VOLUME_DIRTY:
+	       Status = VfatMarkVolumeDirty(IrpContext);
+	       break;
 	    default:
 	       Status = STATUS_INVALID_DEVICE_REQUEST;
 	 }

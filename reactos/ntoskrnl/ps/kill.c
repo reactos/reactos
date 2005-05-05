@@ -81,6 +81,35 @@ PspReapRoutine(PVOID Context)
 
 VOID
 STDCALL
+PspKillMostProcesses(VOID)
+{
+    PLIST_ENTRY current_entry;
+    PEPROCESS current;
+   
+    /* Acquire the Active Process Lock */
+    ExAcquireFastMutex(&PspActiveProcessMutex);   
+    
+    /* Loop all processes on the list */
+    current_entry = PsActiveProcessHead.Flink;
+    while (current_entry != &PsActiveProcessHead)
+    {
+        current = CONTAINING_RECORD(current_entry, EPROCESS, ProcessListEntry);
+        current_entry = current_entry->Flink;
+    
+        if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
+            current->UniqueProcessId != PsGetCurrentProcessId())
+        {
+            /* Terminate all the Threads in this Process */
+            PspTerminateProcessThreads(current, STATUS_SUCCESS);
+        }
+    }
+   
+    /* Release the lock */
+    ExReleaseFastMutex(&PspActiveProcessMutex);
+}
+
+VOID
+STDCALL
 PspTerminateProcessThreads(PEPROCESS Process,
                            NTSTATUS ExitStatus)
 {
@@ -117,8 +146,13 @@ PspDeleteProcess(PVOID ObjectBody)
 {
     PEPROCESS Process = (PEPROCESS)ObjectBody;
 
-    DPRINT("PiDeleteProcess(ObjectBody %x)\n",Process);
+    DPRINT("PiDeleteProcess(ObjectBody %x)\n", ObjectBody);
 
+    /* Remove it from the Active List */
+    ExAcquireFastMutex(&PspActiveProcessMutex);
+    RemoveEntryList(&Process->ProcessListEntry);
+    ExReleaseFastMutex(&PspActiveProcessMutex);
+    
     /* Delete the CID Handle */   
     if(Process->UniqueProcessId != NULL) {
     
@@ -157,8 +191,8 @@ PspDeleteThread(PVOID ObjectBody)
     /* Free the W32THREAD structure if present */
     if(Thread->Tcb.Win32Thread != NULL) ExFreePool (Thread->Tcb.Win32Thread);
 
-    /* Release the Thread */
-    KeReleaseThread(ETHREAD_TO_KTHREAD(Thread)); 
+    /* Release the Kernel Stack */
+    MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit, FALSE);
     
     /* Dereference the Process */
     ObDereferenceObject(Process);
@@ -175,9 +209,8 @@ PspExitThread(NTSTATUS ExitStatus)
     PETHREAD CurrentThread;
     BOOLEAN Last;
     PEPROCESS CurrentProcess;
-    SIZE_T Length = PAGE_SIZE;
-    PVOID TebBlock;
     PTERMINATION_PORT TerminationPort;
+    PTEB Teb;
 
     DPRINT("PspExitThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
 
@@ -256,26 +289,10 @@ PspExitThread(NTSTATUS ExitStatus)
     //CmNotifyRunDown(CurrentThread);
     
     /* Free the TEB */
-    if(CurrentThread->Tcb.Teb) {
+    if((Teb = CurrentThread->Tcb.Teb)) {
 
-        DPRINT("Decommit teb at %p\n", CurrentThread->Tcb.Teb);
-        TebBlock = MM_ROUND_DOWN(CurrentThread->Tcb.Teb, MM_VIRTMEM_GRANULARITY);
-
-        ZwFreeVirtualMemory(NtCurrentProcess(),
-                           (PVOID *)&CurrentThread->Tcb.Teb,
-                           &Length,
-                           MEM_DECOMMIT);
-
-        DPRINT("teb %p, TebBlock %p\n", CurrentThread->Tcb.Teb, TebBlock);
-
-        if (TebBlock != CurrentProcess->TebBlock ||
-            CurrentProcess->TebBlock == CurrentProcess->TebLastAllocated) {
-
-            MmLockAddressSpace(&CurrentProcess->AddressSpace);
-            MmReleaseMemoryAreaIfDecommitted(CurrentProcess, &CurrentProcess->AddressSpace, TebBlock);
-            MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
-        }
-
+        DPRINT("Decommit teb at %p\n", Teb);
+        MmDeleteTeb(CurrentProcess, Teb);
         CurrentThread->Tcb.Teb = NULL;
     }
    
@@ -399,12 +416,7 @@ PspExitProcess(PEPROCESS Process)
     DPRINT("PspExitProcess 0x%x\n", Process);
            
     PspRunCreateProcessNotifyRoutines(Process, FALSE);
-           
-    /* Remove it from the Active List */
-    ExAcquireFastMutex(&PspActiveProcessMutex);
-    RemoveEntryList(&Process->ProcessListEntry);
-    ExReleaseFastMutex(&PspActiveProcessMutex);
-    
+               
     /* close all handles associated with our process, this needs to be done
        when the last thread still runs */
     ObKillProcess(Process);

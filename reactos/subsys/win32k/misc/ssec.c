@@ -310,6 +310,7 @@ IntUserMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
   ASSERT(SharedSectionPool && Process && SystemMappedBase && UserMappedBase);
 
   SectionObject = NULL;
+  SharedSection = NULL;
 
   ExAcquireFastMutex(&SharedSectionPool->Lock);
 

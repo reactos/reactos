@@ -93,33 +93,17 @@ struct udphdr {
 #define USE_SOCKET_SEND
 
 #include <sys/types.h>
-
-//#include <sys/socket.h>
-//#include <sys/sockio.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-//#include <sys/un.h>
-//#include <sys/wait.h>
-
-//#include <net/if.h>
-//#include <net/if_dl.h>
-//#include <net/route.h>
-
-//#include <netinet/in.h>
-//#include <arpa/inet.h>
-
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-//#include <netdb.h>
-//#include <paths.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -187,7 +171,8 @@ enum dhcp_state {
 	S_REQUESTING,
 	S_BOUND,
 	S_RENEWING,
-	S_REBINDING
+	S_REBINDING,
+        S_STATIC
 };
 
 struct client_config {
@@ -358,6 +343,7 @@ void add_timeout(time_t, void (*)(void *), void *);
 void cancel_timeout(void (*)(void *), void *);
 void add_protocol(char *, int, void (*)(struct protocol *), void *);
 void remove_protocol(struct protocol *);
+struct protocol *find_protocol_by_adapter( struct interface_info * );
 int interface_link_status(char *);
 
 /* hash.c */

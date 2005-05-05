@@ -281,7 +281,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		bool first = false;
 		const XMLAttribute* att = e.GetAttribute ( "first", false );
-		if ( att )
+		if ( att != NULL )
 		{
 			if ( !stricmp ( att->value.c_str(), "true" ) )
 				first = true;
@@ -290,6 +290,10 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 					e.location,
 					"attribute 'first' of <file> element can only be 'true' or 'false'" );
 		}
+		string switches = "";
+		att = e.GetAttribute ( "switches", false );
+		if ( att != NULL )
+			switches = att->value;
 		if ( !cplusplus )
 		{
 			// check for c++ file
@@ -301,7 +305,9 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			else if ( !stricmp ( ext.c_str(), ".cxx" ) )
 				cplusplus = true;
 		}
-		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ), first );
+		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ),
+		                         first,
+		                         switches );
 		if ( pIf )
 			pIf->data.files.push_back ( pFile );
 		else
@@ -677,8 +683,11 @@ Module::InvokeModule () const
 }
 
 
-File::File ( const string& _name, bool _first )
-	: name(_name), first(_first)
+File::File ( const string& _name, bool _first,
+	       std::string _switches )
+	: name(_name),
+	  first(_first),
+	  switches(_switches)
 {
 }
 

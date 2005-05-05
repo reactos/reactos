@@ -563,10 +563,10 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
     return FALSE;
 }
 
-BOOL NtfsLookupFile(PUCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
+BOOL NtfsLookupFile(PCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
 {
     ULONG NumberOfPathParts;
-    UCHAR PathPart[261];
+    CHAR PathPart[261];
     ULONG CurrentMFTIndex;
     UCHAR i;
 
@@ -680,7 +680,7 @@ BOOL NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
     return TRUE;
 }
 
-FILE* NtfsOpenFile(PUCHAR FileName)
+FILE* NtfsOpenFile(PCHAR FileName)
 {
     PNTFS_FILE_HANDLE FileHandle;
     PNTFS_MFT_RECORD MftRecord;

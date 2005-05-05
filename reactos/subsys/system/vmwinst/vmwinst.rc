@@ -22,6 +22,7 @@ IDB_HEADER    BITMAP "resources/header.bmp"
  * files. Note that you can and may override resources which also have
  * a neutral version. This is to get localized bitmaps for example.
  */
+#include "Cz.rc"
 #include "En.rc"
 #include "De.rc"
 #include "Dk.rc"

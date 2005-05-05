@@ -165,7 +165,7 @@ typedef struct tagMSFT_ImpInfo {
 /* function description data */
 typedef struct {
 /*  INT   recsize;       record size including some xtra stuff */
-    INT   DataType;     /* data type of the memeber, eg return of function */
+    INT   DataType;     /* data type of the member, eg return of function */
     INT   Flags;        /* something to do with attribute flags (LOWORD) */
 #ifdef WORDS_BIGENDIAN
     INT16 funcdescsize; /* size of reconstituted FUNCDESC and related structs */

@@ -52,7 +52,9 @@ IrpStub(
 			{
 				DPRINT1("Serenum: FDO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
+#ifndef NDEBUG
 				DbgBreakPoint();
+#endif
 				Status = Irp->IoStatus.Status;
 			}
 		}
@@ -73,7 +75,9 @@ IrpStub(
 			{
 				DPRINT1("Serenum: PDO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
+#ifndef NDEBUG
 				DbgBreakPoint();
+#endif
 				Status = Irp->IoStatus.Status;
 			}
 		}
@@ -100,12 +104,6 @@ DriverEntry(
 	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = IrpStub;
 	
-	/*DriverObject->MajorFunction[IRP_MJ_CREATE] = SerialCreate;
-	DriverObject->MajorFunction[IRP_MJ_CLOSE] = SerialClose;
-	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = SerialCleanup;
-	DriverObject->MajorFunction[IRP_MJ_READ] = SerialRead;
-	DriverObject->MajorFunction[IRP_MJ_WRITE] = SerialWrite;*/
-	//DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = Serenum;
 	//DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = SerialQueryInformation;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = SerenumPnp;
 	//DriverObject->MajorFunction[IRP_MJ_POWER] = SerialPower;

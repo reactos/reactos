@@ -448,7 +448,6 @@ UINT WINAPI MsiRecordDataSize(MSIHANDLE handle, unsigned int iField)
 UINT MSI_RecordSetStringA( MSIRECORD *rec, unsigned int iField, LPCSTR szValue )
 {
     LPWSTR str;
-    UINT len;
 
     TRACE("%p %d %s\n", rec, iField, debugstr_a(szValue));
 
@@ -458,9 +457,7 @@ UINT MSI_RecordSetStringA( MSIRECORD *rec, unsigned int iField, LPCSTR szValue )
     MSI_FreeField( &rec->fields[iField] );
     if( szValue && szValue[0] )
     {
-        len = MultiByteToWideChar( CP_ACP, 0, szValue, -1, NULL, 0 );
-        str = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, szValue, -1, str, len );
+        str = strdupAtoW( szValue );
         rec->fields[iField].type = MSIFIELD_WSTR;
         rec->fields[iField].u.szwVal = str;
     }
@@ -493,7 +490,6 @@ UINT WINAPI MsiRecordSetStringA( MSIHANDLE handle, unsigned int iField, LPCSTR s
 UINT MSI_RecordSetStringW( MSIRECORD *rec, unsigned int iField, LPCWSTR szValue )
 {
     LPWSTR str;
-    UINT len;
 
     TRACE("%p %d %s\n", rec, iField, debugstr_w(szValue));
 
@@ -504,10 +500,7 @@ UINT MSI_RecordSetStringW( MSIRECORD *rec, unsigned int iField, LPCWSTR szValue 
 
     if( szValue && szValue[0] )
     {
-        len = lstrlenW(szValue) + 1;
-        str = HeapAlloc( GetProcessHeap(), 0, len*sizeof (WCHAR));
-        lstrcpyW( str, szValue );
-
+        str = strdupW( szValue );
         rec->fields[iField].type = MSIFIELD_WSTR;
         rec->fields[iField].u.szwVal = str;
     }
@@ -633,15 +626,15 @@ UINT MSI_RecordSetStreamW(MSIRECORD *rec, unsigned int iField, LPCWSTR szFilenam
 UINT WINAPI MsiRecordSetStreamA(MSIHANDLE hRecord, unsigned int iField, LPCSTR szFilename)
 {
     LPWSTR wstr = NULL;
-    UINT ret, len;
+    UINT ret;
 
     TRACE("%ld %d %s\n", hRecord, iField, debugstr_a(szFilename));
 
     if( szFilename )
     {
-        len = MultiByteToWideChar(CP_ACP,0,szFilename,-1,NULL,0);
-        wstr = HeapAlloc(GetProcessHeap(),0,len*sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP,0,szFilename,-1,wstr,len);
+        wstr = strdupAtoW( szFilename );
+        if( !wstr )
+             return ERROR_OUTOFMEMORY;
     }
     ret = MsiRecordSetStreamW(hRecord, iField, wstr);
     HeapFree(GetProcessHeap(),0,wstr);
@@ -748,6 +741,22 @@ UINT MSI_RecordSetIStream( MSIRECORD *rec, unsigned int iField, IStream *stm )
     rec->fields[iField].type = MSIFIELD_STREAM;
     rec->fields[iField].u.stream = stm;
     IStream_AddRef( stm );
+
+    return ERROR_SUCCESS;
+}
+
+UINT MSI_RecordGetIStream( MSIRECORD *rec, unsigned int iField, IStream **pstm)
+{
+    TRACE("%p %d %p\n", rec, iField, pstm);
+
+    if( iField > rec->count )
+        return ERROR_INVALID_FIELD;
+
+    if( rec->fields[iField].type != MSIFIELD_STREAM )
+        return ERROR_INVALID_FIELD;
+
+    *pstm = rec->fields[iField].u.stream;
+    IStream_AddRef( *pstm );
 
     return ERROR_SUCCESS;
 }

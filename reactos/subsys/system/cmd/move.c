@@ -20,9 +20,13 @@
  *
  *    03-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added "/N" option.
+ *
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_MOVE
 
@@ -35,19 +39,21 @@
 
 static INT Overwrite (LPTSTR fn)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR inp[10];
 	LPTSTR p;
 
-	ConOutPrintf (_T("Overwrite %s (Yes/No/All)? "), fn);
-	ConInString (inp, 10);
+	LoadString(GetModuleHandle(NULL), STRING_MOVE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	ConOutPrintf(szMsg, fn);
+	ConInString(inp, 10);
 
 	_tcsupr (inp);
-	for (p=inp; _istspace (*p); p++)
+	for (p = inp; _istspace(*p); p++)
 		;
 
-	if (*p != _T('Y') && *p != _T('A'))
+	if (*p != szMsg[0] && *p != szMsg[2])
 		return OVERWRITE_NO;
-	if (*p == _T('A'))
+	if (*p == szMsg[2])
 		return OVERWRITE_ALL;
 
 	return OVERWRITE_YES;
@@ -57,6 +63,7 @@ static INT Overwrite (LPTSTR fn)
 
 INT cmd_move (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
 	INT argc, i, nFiles;
 	TCHAR szDestPath[MAX_PATH];
@@ -66,7 +73,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	WIN32_FIND_DATA findBuffer;
 	HANDLE hFile;
 	LPTSTR pszFile;
-	BOOL   bNothing = FALSE;
+	BOOL bNothing = FALSE;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -85,20 +92,8 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		               "  /-Y\n"
 		               "..."));
 #else
-		ConOutPuts (_T("Moves files and renames files and directories.\n\n"
-		               "To move one or more files:\n"
-		               "MOVE [/N][drive:][path]filename1[,...] destination\n"
-		               "\n"
-		               "To rename a directory:\n"
-		               "MOVE [/N][drive:][path]dirname1 dirname2\n"
-		               "\n"
-		               "  [drive:][path]filename1  Specifies the location and name of the file\n"
-		               "                           or files you want to move.\n"
-		               "  /N                       Nothing. Don everthing but move files or direcories.\n"
-		               "\n"
-		               "Current limitations:\n"
-		               "  - You can't move a file or directory from one drive to another.\n"
-		               ));
+		LoadString(GetModuleHandle(NULL), STRING_MOVE_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 #endif
 		return 0;
 	}
@@ -124,7 +119,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 			{
 				if (_totupper (*p) == _T('Y'))
 					bPrompt = FALSE;
-				else if  (_totupper (*p) == _T('N'))
+				else if (_totupper (*p) == _T('N'))
 					bNothing = TRUE;
 			}
 			nFiles--;
@@ -197,9 +192,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 						if (!bNothing)
 						{
 							if (MoveFile (szSrcPath, szFullDestPath))
-								ConOutPrintf (_T("[OK]\n"));
+								LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 							else
-								ConOutPrintf (_T("[Error]\n"));
+								LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+							ConOutPrintf(szMsg);
 						}
 					}
 					else
@@ -219,9 +215,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 							if (!bNothing)
 							{
 								if (MoveFile (szSrcPath, szDestPath))
-									ConOutPrintf (_T("[OK]\n"));
+									LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 								else
-									ConOutPrintf (_T("[Error]\n"));
+									LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+								ConOutPrintf(szMsg);
 							}
 						}
 					}
@@ -238,9 +235,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					if (!bNothing)
 					{
 						if (MoveFile (szSrcPath, szFullDestPath))
-							ConOutPrintf (_T("[OK]\n"));
+							LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 						else
-							ConOutPrintf (_T("[Error]\n"));
+							LoadString(GetModuleHandle(NULL), STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+						ConOutPrintf(szMsg);
 					}
 				}
 			}

@@ -86,14 +86,14 @@ static WCHAR wszFakeDocumentText[1024];
  */
 BOOL PRINTDLG_OpenDefaultPrinter(HANDLE *hprn)
 {
-    char buf[260];
-    DWORD dwBufLen = sizeof(buf);
+    WCHAR buf[260];
+    DWORD dwBufLen = sizeof(buf) / sizeof(buf[0]);
     BOOL res;
-    if(!GetDefaultPrinterA(buf, &dwBufLen))
+    if(!GetDefaultPrinterW(buf, &dwBufLen))
         return FALSE;
-    res = OpenPrinterA(buf, hprn, NULL);
+    res = OpenPrinterW(buf, hprn, NULL);
     if (!res)
-	FIXME("Could not open printer %s?!\n",buf);
+        WARN("Could not open printer %s\n", debugstr_w(buf));
     return res;
 }
 
@@ -459,7 +459,7 @@ static BOOL PRINTDLG_PaperSizeA(
 	goto out;
     }
 
-    Names = (char*)HeapAlloc(GetProcessHeap(),0,NrOfEntries*64);
+    Names = HeapAlloc(GetProcessHeap(),0,NrOfEntries*64);
     if (NrOfEntries != (ret=DeviceCapabilitiesA(devname,portname,DC_PAPERNAMES,Names,dm))) {
 	FIXME("Number of returned vals %d is not %d\n",NrOfEntries,ret);
 	goto out;
@@ -517,7 +517,7 @@ static BOOL PRINTDLG_PaperSizeW(
 	goto out;
     }
 
-    Names = (WCHAR*)HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*NrOfEntries*64);
+    Names = HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*NrOfEntries*64);
     if (NrOfEntries != (ret=DeviceCapabilitiesW(devname,portname,DC_PAPERNAMES,Names,dm))) {
 	FIXME("Number of returned vals %d is not %d\n",NrOfEntries,ret);
 	goto out;
@@ -3026,6 +3026,7 @@ HRESULT WINAPI PrintDlgExA(LPPRINTDLGEXA lpPrintDlgExA)
 	FIXME("stub\n");
 	return E_NOTIMPL;
 }
+
 /***********************************************************************
  *	PrintDlgExW (COMDLG32.@)
  */

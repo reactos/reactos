@@ -156,6 +156,8 @@ NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection );
 
 PVOID TCPPrepareInterface( PIP_INTERFACE IF );
 
+VOID TCPDisposeInterfaceData( PVOID Data );
+
 NTSTATUS TCPTranslateError( int OskitError );
 
 VOID TCPTimeout();

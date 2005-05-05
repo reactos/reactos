@@ -949,15 +949,21 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	          stub_file.c_str () );
 }
 
+string
+MingwModuleHandler::GetWidlFlags ( const File& file )
+{
+	return file.switches;
+}
+		
 void
 MingwModuleHandler::GenerateWidlCommandsServer (
-	const string& sourceFilename,
+	const File& file,
 	const string& widlflagsMacro )
 {
-	string dependencies = sourceFilename;
+	string dependencies = file.name;
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
-	string basename = GetBasename ( sourceFilename );
+	string basename = GetBasename ( file.name );
 
 	/*string generatedHeaderFilename = PassThruCacheDirectory (
 		basename + ".h",
@@ -980,23 +986,24 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 	          GetDirectory ( generatedServerFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
-	          "\t%s %s -h -H %s -s -S %s %s\n",
+	          "\t%s %s %s -h -H %s -s -S %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
+	          GetWidlFlags ( file ).c_str (),
 	          widlflagsMacro.c_str (),
 	          generatedHeaderFilename.c_str (),
 	          generatedServerFilename.c_str (),
-	          sourceFilename.c_str () );
+	          file.name.c_str () );
 }
 
 void
 MingwModuleHandler::GenerateWidlCommandsClient (
-	const string& sourceFilename,
+	const File& file,
 	const string& widlflagsMacro )
 {
-	string dependencies = sourceFilename;
+	string dependencies = file.name;
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
-	string basename = GetBasename ( sourceFilename );
+	string basename = GetBasename ( file.name );
 
 	/*string generatedHeaderFilename = PassThruCacheDirectory (
 		basename + ".h",
@@ -1019,30 +1026,31 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 	          GetDirectory ( generatedClientFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
-	          "\t%s %s -h -H %s -c -C %s %s\n",
+	          "\t%s %s %s -h -H %s -c -C %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
+	          GetWidlFlags ( file ).c_str (),
 	          widlflagsMacro.c_str (),
 	          generatedHeaderFilename.c_str (),
 	          generatedClientFilename.c_str (),
-	          sourceFilename.c_str () );
+	          file.name.c_str () );
 }
 
 void
 MingwModuleHandler::GenerateWidlCommands (
-	const string& sourceFilename,
+	const File& file,
 	const string& widlflagsMacro )
 {
 	if ( module.type == RpcServer )
-		GenerateWidlCommandsServer ( sourceFilename,
+		GenerateWidlCommandsServer ( file,
 		                             widlflagsMacro );
 	else
-		GenerateWidlCommandsClient ( sourceFilename,
+		GenerateWidlCommandsClient ( file,
 		                             widlflagsMacro );
 }
 
 void
 MingwModuleHandler::GenerateCommands (
-	const string& sourceFilename,
+	const File& file,
 	const string& cc,
 	const string& cppc,
 	const string& cflagsMacro,
@@ -1050,10 +1058,10 @@ MingwModuleHandler::GenerateCommands (
 	const string& windresflagsMacro,
 	const string& widlflagsMacro )
 {
-	string extension = GetExtension ( sourceFilename );
+	string extension = GetExtension ( file.name );
 	if ( extension == ".c" || extension == ".C" )
 	{
-		GenerateGccCommand ( sourceFilename,
+		GenerateGccCommand ( file.name,
 		                     cc,
 		                     cflagsMacro );
 		return;
@@ -1062,43 +1070,43 @@ MingwModuleHandler::GenerateCommands (
 	          extension == ".cpp" || extension == ".CPP" ||
 	          extension == ".cxx" || extension == ".CXX" )
 	{
-		GenerateGccCommand ( sourceFilename,
+		GenerateGccCommand ( file.name,
 		                     cppc,
 		                     cflagsMacro );
 		return;
 	}
 	else if ( extension == ".s" || extension == ".S" )
 	{
-		GenerateGccAssemblerCommand ( sourceFilename,
+		GenerateGccAssemblerCommand ( file.name,
 		                              cc,
 		                              cflagsMacro );
 		return;
 	}
 	else if ( extension == ".asm" || extension == ".ASM" )
 	{
-		GenerateNasmCommand ( sourceFilename,
+		GenerateNasmCommand ( file.name,
 		                      nasmflagsMacro );
 		return;
 	}
 	else if ( extension == ".rc" || extension == ".RC" )
 	{
-		GenerateWindresCommand ( sourceFilename,
+		GenerateWindresCommand ( file.name,
 		                         windresflagsMacro );
 		return;
 	}
 	else if ( extension == ".spec" || extension == ".SPEC" )
 	{
-		GenerateWinebuildCommands ( sourceFilename );
-		GenerateGccCommand ( GetActualSourceFilename ( sourceFilename ),
+		GenerateWinebuildCommands ( file.name );
+		GenerateGccCommand ( GetActualSourceFilename ( file.name ),
 		                     cc,
 		                     cflagsMacro );
 		return;
 	}
 	else if ( extension == ".idl" || extension == ".IDL" )
 	{
-		GenerateWidlCommands ( sourceFilename,
+		GenerateWidlCommands ( file,
 		                       widlflagsMacro );
-		GenerateGccCommand ( GetActualSourceFilename ( sourceFilename ),
+		GenerateGccCommand ( GetActualSourceFilename ( file.name ),
 		                     cc,
 		                     cflagsMacro );
 		return;
@@ -1108,7 +1116,7 @@ MingwModuleHandler::GenerateCommands (
 	                                  __LINE__,
 	                                  "Unsupported filename extension '%s' in file '%s'",
 	                                  extension.c_str (),
-	                                  sourceFilename.c_str () );
+	                                  file.name.c_str () );
 }
 
 void
@@ -1349,8 +1357,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const vector<File*>& files = data.files;
 	for ( i = 0; i < files.size (); i++ )
 	{
-		string sourceFilename = files[i]->name;
-		GenerateCommands ( sourceFilename,
+		GenerateCommands ( *files[i],
 		                   cc,
 		                   cppc,
 		                   cflagsMacro,

@@ -32,6 +32,8 @@ ForwardIrpAndWait(
 	KEVENT Event;
 	NTSTATUS Status;
 	
+	ASSERT(LowerDevice);
+	
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 	
@@ -55,6 +57,8 @@ ForwardIrpAndForget(
 	IN PIRP Irp)
 {
 	PDEVICE_OBJECT LowerDevice = ((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+	
+	ASSERT(LowerDevice);
 	
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);
@@ -126,11 +130,13 @@ SerialSendByte(
 			DeviceExtension->ComPort, Byte);
 		DeviceExtension->SerialPerfStats.TransmittedCount++;
 	}
+	if (!IsCircularBufferEmpty(&DeviceExtension->OutputBuffer))
+	{
+		/* allow new interrupts */
+		IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
+		WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_THR_EMPTY);
+	}
 	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
-	
-	/* allow new interrupts */
-	IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
-	WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_THR_EMPTY);
 }
 
 BOOLEAN STDCALL

@@ -169,6 +169,7 @@ SepFindPrimaryGroupAndDefaultOwner(PTOKEN Token,
 
 
 NTSTATUS
+STDCALL
 SepDuplicateToken(PTOKEN Token,
 		  POBJECT_ATTRIBUTES ObjectAttributes,
 		  BOOLEAN EffectiveOnly,
@@ -298,39 +299,6 @@ SepDuplicateToken(PTOKEN Token,
 
   ObDereferenceObject(AccessToken);
   return(Status);
-}
-
-
-NTSTATUS
-SepInitializeNewProcess(struct _EPROCESS* NewProcess,
-			struct _EPROCESS* ParentProcess)
-{
-  NTSTATUS Status;
-  PTOKEN pNewToken;
-  PTOKEN pParentToken;
-  
-  OBJECT_ATTRIBUTES ObjectAttributes;
-
-  pParentToken = (PACCESS_TOKEN) ParentProcess->Token;
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			    NULL,
-			    0,
-			    NULL,
-			    NULL);
-
-  Status = SepDuplicateToken(pParentToken,
-			     &ObjectAttributes,
-			     FALSE,
-			     TokenPrimary,
-			     pParentToken->ImpersonationLevel,
-			     KernelMode,
-			     &pNewToken);
-  if ( ! NT_SUCCESS(Status) )
-    return Status;
-
-  NewProcess->Token = pNewToken;
-  return(STATUS_SUCCESS);
 }
 
 /*
@@ -1800,9 +1768,9 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
   return Status;
 }
 
-
-NTSTATUS
-SepCreateSystemProcessToken(struct _EPROCESS* Process)
+PTOKEN
+STDCALL
+SepCreateSystemProcessToken(VOID)
 {
   NTSTATUS Status;
   ULONG uSize;
@@ -1833,28 +1801,28 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
 			  (PVOID*)&AccessToken);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return NULL;
     }
 
   Status = ExpAllocateLocallyUniqueId(&AccessToken->TokenId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
-      return(Status);
+      return NULL;
     }
 
   Status = ExpAllocateLocallyUniqueId(&AccessToken->ModifiedId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
-      return(Status);
+      return NULL;
     }
 
   Status = ExpAllocateLocallyUniqueId(&AccessToken->AuthenticationId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
-      return Status;
+      return NULL;
     }
 
   AccessToken->TokenLock = &SepTokenLock;
@@ -2002,11 +1970,10 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
   if ( ! NT_SUCCESS(Status) )
     {
       ObDereferenceObject(AccessToken);
-      return Status;
+      return NULL;
     }
 
-  Process->Token = AccessToken;
-  return(STATUS_SUCCESS);
+  return AccessToken;
 }
 
 

@@ -224,6 +224,12 @@ ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent)
 
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
   ObjectHeader->Permanent = Permanent;
+  
+  if (ObjectHeader->HandleCount == 0 && !Permanent && ObjectHeader->Parent != NULL)
+  {
+    /* Remove the object from the namespace */
+    ObpRemoveEntryDirectory(ObjectHeader);
+  }
 }
 
 /**********************************************************************

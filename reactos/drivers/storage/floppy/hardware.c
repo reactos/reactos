@@ -991,7 +991,7 @@ NTSTATUS NTAPI HwSpecify(PCONTROLLER_INFO ControllerInfo,
   Buffer[1] = (StepRateTime << 4) + HeadUnloadTime;
   Buffer[2] = (HeadLoadTime << 1) + (NonDma ? 1 : 0);
   */
-  Buffer[1] = 0xd1;
+  Buffer[1] = 0xdf;
   Buffer[2] = 0x2;
 
   //KdPrint(("HwSpecify: sending 0x%x 0x%x 0x%x to FIFO\n", Buffer[0], Buffer[1], Buffer[2]));

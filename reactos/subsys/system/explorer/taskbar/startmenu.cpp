@@ -41,6 +41,11 @@
 #include "../dialogs/settings.h"
 
 
+#define	SHELLPATH_CONTROL_PANEL		TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}")
+#define	SHELLPATH_PRINTERS			TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}")
+#define	SHELLPATH_NET_CONNECTIONS	TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}")
+
+
 StartMenu::StartMenu(HWND hwnd)
  :	super(hwnd)
 {
@@ -214,25 +219,52 @@ void StartMenu::AddEntries()
 #endif
 		}
 
-		AddShellEntries(dir, -1, smd._subfolders);
+		AddShellEntries(dir, -1, smd._ignore);
 	}
 }
 
 
-void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, bool subfolders)
+static LPTSTR trim_path_slash(LPTSTR path)
 {
-	int cnt = 0;
+	LPTSTR p = path;
 
+	while(*p)
+		++p;
+
+	if (p>path && (p[-1]=='\\' || p[-1]=='/'))
+		*--p = '\0';
+
+	return path;
+}
+
+void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String& ignore)
+{
+	TCHAR ignore_path[MAX_PATH], ignore_dir[MAX_PATH], ignore_name[_MAX_FNAME], ignore_ext[_MAX_EXT];
+	TCHAR dir_path[MAX_PATH];
+
+	if (!ignore.empty()) {
+		_tsplitpath(ignore, ignore_path, ignore_dir, ignore_name, ignore_ext);
+
+		_tcscat(ignore_path, ignore_dir);
+		_tcscat(ignore_name, ignore_ext);
+
+		dir.get_path(dir_path);
+
+		if (_tcsicmp(trim_path_slash(dir_path), trim_path_slash(ignore_path)))
+			*ignore_name = '\0';
+	} else
+		*ignore_name = '\0';
+
+	int cnt = 0;
 	for(Entry*entry=dir._down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
 		if (entry->_shell_attribs & SFGAO_HIDDEN)
 		//not appropriate for drive roots: if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 			continue;
 
-		 // hide subfolders if requested
-		if (!subfolders)
-			if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				continue;
+		 // hide "Programs" subfolders if requested
+		if (*ignore_name && !_tcsicmp(entry->_data.cFileName, ignore_name))
+			continue;
 
 		 // only 'max' entries shall be added.
 		if (++cnt == max)
@@ -1489,7 +1521,7 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 		try {
 			 // insert directory "All Users\Start Menu"
 			ShellDirectory cmn_startmenu(GetDesktopFolder(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
-			_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// don't add subfolders
+			_dirs.push_back(StartMenuDirectory(cmn_startmenu, (LPCTSTR)SpecialFolderFSPath(CSIDL_COMMON_PROGRAMS, _hwnd)));
 		} catch(COMException&) {
 			// ignore exception and don't show additional shortcuts
 		}
@@ -1498,7 +1530,7 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 		 // insert directory "<user name>\Start Menu"
 
 		ShellDirectory usr_startmenu(GetDesktopFolder(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
-		_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// don't add subfolders
+		_dirs.push_back(StartMenuDirectory(usr_startmenu, (LPCTSTR)SpecialFolderFSPath(CSIDL_PROGRAMS, _hwnd)));
 	} catch(COMException&) {
 		// ignore exception and don't show additional shortcuts
 	}
@@ -1856,6 +1888,7 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_CONTROL_PANEL: {
 		CloseStartMenu(id);
+#ifndef ROSSHELL
 #ifndef _NO_MDI
 		XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 		bool mdi = XMLBool(explorer_options, "mdi", true);
@@ -1865,6 +1898,9 @@ int StartMenuHandler::Command(int id, int code)
 		else
 #endif
 			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+#else
+		launch_file(_hwnd, SHELLPATH_CONTROL_PANEL);
+#endif
 		break;}
 
 	  case IDC_SETTINGS_MENU:
@@ -1873,6 +1909,8 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_PRINTERS: {
 		CloseStartMenu(id);
+
+#ifndef ROSSHELL
 #ifdef _ROS_	// to be removed when printer folder will be implemented
 		MessageBox(0, TEXT("printer folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 #else
@@ -1885,6 +1923,9 @@ int StartMenuHandler::Command(int id, int code)
 		else
 #endif
 			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}"), 0);
+#endif
+#else
+		launch_file(_hwnd, SHELLPATH_PRINTERS);
 #endif
 		break;}
 
@@ -1901,14 +1942,26 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_ADMIN:
+#ifndef ROSSHELL
 		CreateSubmenu(id, CSIDL_COMMON_ADMINTOOLS, CSIDL_ADMINTOOLS, ResString(IDS_ADMIN));
+		//CloseStartMenu(id);
+		//MainFrame::Create(SpecialFolderPath(CSIDL_COMMON_ADMINTOOLS, _hwnd), OWM_PIDL);
+#else
+		launch_file(_hwnd, SpecialFolderFSPath(CSIDL_COMMON_ADMINTOOLS, _hwnd));
+#endif
 		break;
 
 	  case IDC_CONNECTIONS:
+#ifndef ROSSHELL
 #ifdef _ROS_	// to be removed when RAS will be implemented
 		MessageBox(0, TEXT("RAS folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 #else
 		CreateSubmenu(id, CSIDL_CONNECTIONS, ResString(IDS_CONNECTIONS));
+		//CloseStartMenu(id);
+		//MainFrame::Create(SpecialFolderPath(CSIDL_CONNECTIONS, _hwnd), OWM_PIDL);
+#endif
+#else
+		launch_file(_hwnd, SHELLPATH_NET_CONNECTIONS);
 #endif
 		break;
 
@@ -2030,7 +2083,7 @@ void SettingsMenu::AddEntries()
 {
 	super::AddEntries();
 
-#ifdef _ROS_	// to be removed when printer/network will be implemented
+#if defined(ROSSHELL) || defined(_ROS_)	// _ROS_ to be removed when printer/network will be implemented
 	AddButton(ResString(IDS_PRINTERS),			ICID_PRINTER, false, IDC_PRINTERS_MENU);
 	AddButton(ResString(IDS_CONNECTIONS),		ICID_NETWORK, false, IDC_CONNECTIONS);
 #else
@@ -2061,7 +2114,7 @@ void BrowseMenu::AddEntries()
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NONETHOOD))	// or REST_NOENTIRENETWORK ?
 #endif
-#ifdef _ROS_	// to be removed when printer/network will be implemented
+#if defined(ROSSHELL) || defined(_ROS_)	// _ROS_ to be removed when printer/network will be implemented
 		AddButton(ResString(IDS_NETWORK),		ICID_NETWORK, false, IDC_NETWORK);
 #else
 		AddButton(ResString(IDS_NETWORK),		ICID_NETWORK, true, IDC_NETWORK);
@@ -2102,7 +2155,7 @@ void RecentStartMenu::AddEntries()
 		}
 
 		dir.sort_directory(SORT_DATE);
-		AddShellEntries(dir, RECENT_DOCS_COUNT, smd._subfolders);
+		AddShellEntries(dir, RECENT_DOCS_COUNT, smd._ignore);	///@todo read max. count of entries from registry
 	}
 }
 

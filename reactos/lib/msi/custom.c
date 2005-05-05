@@ -145,7 +145,7 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
                 else
                     newbuf = HeapAlloc(GetProcessHeap(),0, sizeof(LPWSTR));
 
-                newbuf[count] = dupstrW(action);
+                newbuf[count] = strdupW(action);
                 package->CommitAction = newbuf;
             }
             else
@@ -160,7 +160,7 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
                 else
                     newbuf = HeapAlloc(GetProcessHeap(),0, sizeof(LPWSTR));
 
-                newbuf[count] = dupstrW(action);
+                newbuf[count] = strdupW(action);
                 package->DeferredAction = newbuf;
             }
 
@@ -326,7 +326,7 @@ static void file_running_action(MSIPACKAGE* package, HANDLE Handle,
 
     newbuf[count].handle = Handle;
     newbuf[count].process = process;
-    newbuf[count].name = dupstrW(name);
+    newbuf[count].name = strdupW(name);
 
     package->RunningAction = newbuf;
 }
@@ -508,8 +508,8 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
     info = HeapAlloc( GetProcessHeap(), 0, sizeof(*info) );
     msiobj_addref( &package->hdr );
     info->package = package;
-    info->target = dupstrW(target);
-    info->source = dupstrW(tmp_file);
+    info->target = strdupW(target);
+    info->source = strdupW(tmp_file);
 
     ThreadHandle = CreateThread(NULL,0,DllThread,(LPVOID)info,0,&ThreadId);
 
@@ -542,7 +542,7 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
     if (deformated)
         len += strlenW(deformated);
    
-    cmd = (WCHAR*)HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*len);
+    cmd = HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*len);
 
     strcpyW(cmd,tmp_file);
     if (deformated)
@@ -595,7 +595,7 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
         len += strlenW(deformated);
     len += 2;
 
-    cmd = (WCHAR*)HeapAlloc(GetProcessHeap(),0,len * sizeof(WCHAR));
+    cmd = HeapAlloc(GetProcessHeap(),0,len * sizeof(WCHAR));
 
     strcpyW(cmd, package->files[index].TargetPath);
     if (deformated)
@@ -692,7 +692,7 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
     if (deformated)
          len += strlenW(deformated);
 
-    cmd = (WCHAR*)HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*len);
+    cmd = HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*len);
 
     strcpyW(cmd,prop);
     if (deformated)

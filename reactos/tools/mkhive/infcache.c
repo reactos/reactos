@@ -1192,7 +1192,7 @@ InfGetFieldCount(PINFCONTEXT Context)
 BOOL
 InfGetBinaryField (PINFCONTEXT Context,
 		   ULONG FieldIndex,
-		   PUCHAR ReturnBuffer,
+		   PCHAR ReturnBuffer,
 		   ULONG ReturnBufferSize,
 		   PULONG RequiredSize)
 {
@@ -1200,7 +1200,7 @@ InfGetBinaryField (PINFCONTEXT Context,
   PINFCACHEFIELD CacheField;
   ULONG Index;
   ULONG Size;
-  PUCHAR Ptr;
+  PCHAR Ptr;
 
   if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
     {
@@ -1234,7 +1234,7 @@ InfGetBinaryField (PINFCONTEXT Context,
       Ptr = ReturnBuffer;
       while (CacheField != NULL)
 	{
-	  *Ptr = (UCHAR)strtoul (CacheField->Data, NULL, 16);
+	  *Ptr = (CHAR)strtoul (CacheField->Data, NULL, 16);
 
 	  Ptr++;
 	  CacheField = CacheField->Next;

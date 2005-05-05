@@ -137,16 +137,15 @@ INT GetDirectoryStackDepth (VOID)
  */
 INT CommandPushd (LPTSTR first, LPTSTR rest)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR curPath[MAX_PATH];
 	TCHAR newPath[MAX_PATH];
 	BOOL  bChangePath = FALSE;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_DIRSTACK_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
-		
+		LoadString(GetModuleHandle(NULL), STRING_DIRSTACK_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -172,14 +171,13 @@ INT CommandPushd (LPTSTR first, LPTSTR rest)
  */
 INT CommandPopd (LPTSTR first, LPTSTR rest)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szPath[MAX_PATH];
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp(rest, _T("/?"), 2))
-	{   
-		LoadString( GetModuleHandle(NULL), STRING_DIRSTACK_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
-		
+	{
+		LoadString(GetModuleHandle(NULL), STRING_DIRSTACK_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -200,14 +198,13 @@ INT CommandPopd (LPTSTR first, LPTSTR rest)
  */
 INT CommandDirs (LPTSTR first, LPTSTR rest)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPDIRENTRY lpDir;
-	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp(rest, _T("/?"), 2))
 	{
-		LoadString( GetModuleHandle(NULL), STRING_DIRSTACK_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
-		
+		LoadString(GetModuleHandle(NULL), STRING_DIRSTACK_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -216,9 +213,8 @@ INT CommandDirs (LPTSTR first, LPTSTR rest)
 
 	if (lpDir == NULL)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_DIRSTACK_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
-        ConOutPuts (_T((LPTSTR)szMsg));
-		
+		LoadString(GetModuleHandle(NULL), STRING_DIRSTACK_HELP4, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 

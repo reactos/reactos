@@ -34,10 +34,18 @@ LdrInitModuleManagement (
 	);
 
 NTSTATUS
-LdrpMapSystemDll (
-	HANDLE	ProcessHandle,
-	PVOID	* LdrStartupAddress
-	);
+STDCALL
+LdrpMapSystemDll(PEPROCESS Process, 
+                 PVOID *DllBase);
+
+NTSTATUS
+STDCALL
+LdrpInitializeSystemDll(VOID);
+
+NTSTATUS
+STDCALL
+LdrpGetSystemDllEntryPoints(VOID);
+
 PVOID
 LdrpGetSystemDllEntryPoint (VOID);
 PVOID 

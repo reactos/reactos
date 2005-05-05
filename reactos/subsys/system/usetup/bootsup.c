@@ -564,7 +564,7 @@ SaveCurrentBootSector(PWSTR RootPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -602,7 +602,7 @@ SaveCurrentBootSector(PWSTR RootPath,
 			     NULL);
 
   Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
+			GENERIC_WRITE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -667,7 +667,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -716,7 +716,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -762,7 +762,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 			     NULL);
 
   Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
+			GENERIC_WRITE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -831,7 +831,7 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -880,7 +880,7 @@ CHECKPOINT1;
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -932,7 +932,7 @@ CHECKPOINT1;
 			     NULL);
 
   Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
+			GENERIC_WRITE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -975,7 +975,7 @@ CHECKPOINT1;
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_WRITE_ACCESS,
+		      GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1038,7 +1038,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1087,7 +1087,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1134,19 +1134,15 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OVERWRITE_IF,
-			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-			NULL,
-			0);
+  Status = NtOpenFile(&FileHandle,
+		      GENERIC_WRITE,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      0,
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
   if (!NT_SUCCESS(Status))
   {
+    DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -1199,7 +1195,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1248,7 +1244,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1295,19 +1291,15 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
-			FILE_WRITE_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OVERWRITE_IF,
-			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-			NULL,
-			0);
+  Status = NtOpenFile(&FileHandle,
+		      GENERIC_WRITE,
+		      &ObjectAttributes,
+		      &IoStatusBlock,
+		      0,
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
   if (!NT_SUCCESS(Status))
   {
+    DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
     return(Status);
   }
@@ -1365,7 +1357,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1414,7 +1406,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ACCESS,
+		      GENERIC_READ,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1465,7 +1457,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
+		      GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1563,7 +1555,7 @@ UnprotectBootIni(PWSTR FileName,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+		      GENERIC_READ|GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -1634,7 +1626,7 @@ ProtectBootIni(PWSTR FileName,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+		      GENERIC_READ|GENERIC_WRITE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
@@ -2080,7 +2072,7 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
   wcscpy(SrcPath, SourceRootPath->Buffer);
   wcscat(SrcPath, L"\\loader\\freeldr.sys");
 
-  wcscat(DstPath, L"\\Device\\Floppy0\\freeldr.sys");
+  wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.sys");
 
   DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
   Status = SetupCopyFile(SrcPath, DstPath);
@@ -2091,7 +2083,7 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
     }
 
   /* Create new 'freeldr.ini' */
-  wcscat(DstPath, L"\\Device\\Floppy0\\freeldr.ini");
+  wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.ini");
 
   DPRINT("Create new 'freeldr.ini'\n");
   Status = CreateFreeLoaderIniForReactos(DstPath,
@@ -2106,7 +2098,7 @@ InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
   wcscpy(SrcPath, SourceRootPath->Buffer);
   wcscat(SrcPath, L"\\loader\\fat.bin");
 
-  wcscat(DstPath, L"\\Device\\Floppy0");
+  wcscpy(DstPath, L"\\Device\\Floppy0");
 
   DPRINT("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
   Status = InstallFat16BootCodeToDisk(SrcPath,

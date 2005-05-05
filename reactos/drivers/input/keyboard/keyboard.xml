@@ -1,8 +1,0 @@
-<module name="keyboard" type="kernelmodedriver" installbase="system32/drivers" installname="keyboard.sys">
-	<bootstrap base="reactos" />
-	<include base="keyboard">.</include>
-	<library>ntoskrnl</library>
-	<library>hal</library>
-	<file>keyboard.c</file>
-	<file>keyboard.rc</file>
-</module>

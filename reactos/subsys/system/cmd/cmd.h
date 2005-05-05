@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  CMD.H - header file for the modules in CMD.EXE
  *
  *
@@ -170,7 +169,7 @@ VOID ConOutPrintf (LPTSTR, ...);
 VOID ConErrChar (TCHAR);
 VOID ConErrPuts (LPTSTR);
 VOID ConErrPrintf (LPTSTR, ...);
-VOID ConOutFormatMessage (DWORD MessageId, ...);	
+VOID ConOutFormatMessage (DWORD MessageId, ...);
 
 SHORT GetCursorX  (VOID);
 SHORT GetCursorY  (VOID);
@@ -289,10 +288,9 @@ extern TCHAR cDateSeparator;
 extern INT   nDateFormat;
 extern TCHAR cTimeSeparator;
 extern INT   nTimeFormat;
-extern TCHAR aszDayNames[7][8];
 extern TCHAR cThousandSeparator;
 extern TCHAR cDecimalSeparator;
-extern INT   nNumberGroups;
+extern INT nNumberGroups;
 
 VOID InitLocale (VOID);
 VOID PrintDate (VOID);

@@ -30,13 +30,13 @@ ULONG		OldInt13HandlerAddress = 0;	// Address of BIOS int 13h handler
 ULONG		DriveMapHandlerAddress = 0;	// Linear address of our drive map handler
 ULONG		DriveMapHandlerSegOff = 0;	// Segment:offset style address of our drive map handler
 
-VOID DriveMapMapDrivesInSection(PUCHAR SectionName)
+VOID DriveMapMapDrivesInSection(PCHAR SectionName)
 {
-	UCHAR			SettingName[80];
-	UCHAR			SettingValue[80];
-	UCHAR			ErrorText[260];
-	UCHAR			Drive1[80];
-	UCHAR			Drive2[80];
+	CHAR			SettingName[80];
+	CHAR			SettingValue[80];
+	CHAR			ErrorText[260];
+	CHAR			Drive1[80];
+	CHAR			Drive2[80];
 	ULONG				SectionId;
 	ULONG				SectionItemCount;
 	ULONG				Index;
@@ -117,7 +117,7 @@ VOID DriveMapMapDrivesInSection(PUCHAR SectionName)
 	}
 }
 
-BOOL DriveMapIsValidDriveString(PUCHAR DriveString)
+BOOL DriveMapIsValidDriveString(PCHAR DriveString)
 {
 	ULONG		Index;
 	
@@ -147,7 +147,7 @@ BOOL DriveMapIsValidDriveString(PUCHAR DriveString)
 	return TRUE;
 }
 
-ULONG DriveMapGetBiosDriveNumber(PUCHAR DeviceName)
+ULONG DriveMapGetBiosDriveNumber(PCHAR DeviceName)
 {
 	ULONG		BiosDriveNumber = 0;
 

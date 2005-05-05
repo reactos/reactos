@@ -21,9 +21,9 @@
 #include <version.h>
 #include <rtl.h>
 
-UCHAR	FreeLoaderVersionString[80];
+CHAR	FreeLoaderVersionString[80];
 
-PUCHAR GetFreeLoaderVersionString(VOID)
+PCHAR GetFreeLoaderVersionString(VOID)
 {
 	if (FREELOADER_PATCH_VERSION == 0)
 	{

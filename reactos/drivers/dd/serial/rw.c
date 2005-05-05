@@ -37,6 +37,9 @@ ReadBytes(
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 	
+	ASSERT(DeviceObject);
+	ASSERT(WorkItemData);
+	
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
 	Length = IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length;
@@ -285,9 +288,19 @@ SerialWrite(
 		Status = PushCircularBufferEntry(&DeviceExtension->OutputBuffer, Buffer[Information]);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("Serial: buffer overrun on COM%lu\n", DeviceExtension->ComPort);
-			DeviceExtension->SerialPerfStats.BufferOverrunErrorCount++;
-			break;
+			if (Status == STATUS_BUFFER_TOO_SMALL)
+			{
+				KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
+				SerialSendByte(NULL, DeviceExtension, NULL, NULL);
+				KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
+				continue;
+			}
+			else
+			{
+				DPRINT("Serial: buffer overrun on COM%lu\n", DeviceExtension->ComPort);
+				DeviceExtension->SerialPerfStats.BufferOverrunErrorCount++;
+				break;
+			}
 		}
 		Information++;
 	}

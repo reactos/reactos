@@ -467,8 +467,10 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 HRESULT DesktopWindow::OnDefaultCommand(LPIDA pida)
 {
+#ifndef ROSSHELL	// in shell-only-mode fall through and let shell32 handle the command
 	if (MainFrameBase::OpenShellFolders(pida, 0))
 		return S_OK;
+#endif
 
 	return E_NOTIMPL;
 }
@@ -641,7 +643,8 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 
 				  hr = pcm->InvokeCommand(&cmi);
 				}
-			}
+			} else
+				_cm_ifs.reset();
 		}
 
 		pcm->Release();

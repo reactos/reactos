@@ -21,9 +21,13 @@
  *
  *    27-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added help text ("/?").
+ *
+ *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 /*
@@ -35,6 +39,7 @@
 
 INT cmd_goto (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR tmp;
 	LONG   lNewPosHigh;
 
@@ -44,13 +49,8 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Directs CMD to a labeled line in a batch script.\n"
-					   "\n"
-					   "GOTO label\n"
-					   "\n"
-					   "  label  Specifies a text string used in a batch script as a label.\n"
-					   "\n"
-					   "You type a label on a line by itself, beginning with a colon."));
+		LoadString(GetModuleHandle(NULL), STRING_GOTO_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutPuts(szMsg);
 		return 0;
 	}
 
@@ -62,7 +62,8 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 
 	if (*param == _T('\0'))
 	{
-		ExitBatch (_T("No label specified for GOTO\n"));
+		LoadString(GetModuleHandle(NULL), STRING_GOTO_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		ExitBatch(szMsg);
 		return 1;
 	}
 
@@ -94,8 +95,11 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 			return 0;
 	}
 
-	ConErrPrintf (_T("Label '%s' not found\n"), param);
-	ExitBatch (NULL);
+	LoadString(GetModuleHandle(NULL), STRING_GOTO_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+	ConErrPrintf(szMsg, param);
+	ExitBatch(NULL);
 
 	return 1;
 }
+
+/* EOF */
