@@ -114,7 +114,7 @@
 
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 static UUID uuid_nil;
 static HANDLE master_mutex;
@@ -328,11 +328,11 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
     DWORD status = RPC_S_OK;
 
     ULONG buflen = sizeof(IP_ADAPTER_INFO);
-    PIP_ADAPTER_INFO adapter = (PIP_ADAPTER_INFO)HeapAlloc(GetProcessHeap(), 0, buflen);
+    PIP_ADAPTER_INFO adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
 
     if (GetAdaptersInfo(adapter, &buflen) == ERROR_BUFFER_OVERFLOW) {
         HeapFree(GetProcessHeap(), 0, adapter);
-        adapter = (IP_ADAPTER_INFO *)HeapAlloc(GetProcessHeap(), 0, buflen);
+        adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
     }
 
     if (GetAdaptersInfo(adapter, &buflen) == NO_ERROR) {
@@ -347,7 +347,7 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
             address[i] = rand() & 0xff;
         }
 
-        address[0] |= 0x80;
+        address[0] |= 0x01;
         status = RPC_S_UUID_LOCAL_ONLY;
     }
 

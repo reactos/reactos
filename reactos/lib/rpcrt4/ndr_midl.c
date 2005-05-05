@@ -44,7 +44,7 @@
 #include "ndr_misc.h"
 #include "rpcndr.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 /***********************************************************************
  *           NdrProxyInitialize [RPCRT4.@]

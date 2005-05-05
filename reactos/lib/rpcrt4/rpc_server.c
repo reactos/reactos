@@ -50,7 +50,7 @@
 
 #define MAX_THREADS 128
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 typedef struct _RpcPacket
 {
@@ -91,8 +91,12 @@ static CRITICAL_SECTION_DEBUG listen_cs_debug =
 };
 static CRITICAL_SECTION listen_cs = { &listen_cs_debug, -1, 0, 0, 0, 0 };
 
+/* whether the server is currently listening */
 static BOOL std_listen;
-static LONG listen_count = -1;
+/* number of manual listeners (calls to RpcServerListen) */
+static LONG manual_listen_count;
+/* total listeners including auto listeners */
+static LONG listen_count;
 /* set on change of configuration (e.g. listening on new protseq) */
 static HANDLE mgr_event;
 /* mutex for ensuring only one thread can change state at a time */
@@ -156,7 +160,7 @@ static RpcServerInterface* RPCRT4_find_interface(UUID* object,
   while (cif) {
     if (!memcmp(if_id, &cif->If->InterfaceId, sizeof(RPC_SYNTAX_IDENTIFIER)) &&
         (check_object == FALSE || UuidEqual(MgrType, &cif->MgrTypeUuid, &status)) &&
-        (std_listen || (cif->Flags & RPC_IF_AUTOLISTEN))) break;
+        std_listen) break;
     cif = cif->Next;
   }
   LeaveCriticalSection(&server_cs);
@@ -583,38 +587,45 @@ static void RPCRT4_sync_with_server_thread(void)
   ReleaseMutex(mgr_mutex);
 }
 
-static void RPCRT4_start_listen(void)
+static void RPCRT4_start_listen(BOOL auto_listen)
 {
   TRACE("\n");
 
   EnterCriticalSection(&listen_cs);
-  if (! ++listen_count) {
-    if (!mgr_mutex) mgr_mutex = CreateMutexW(NULL, FALSE, NULL);
-    if (!mgr_event) mgr_event = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if (!server_ready_event) server_ready_event = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if (!server_sem) server_sem = CreateSemaphoreW(NULL, 0, MAX_THREADS, NULL);
-    if (!worker_tls) worker_tls = TlsAlloc();
-    std_listen = TRUE;
-    server_thread = CreateThread(NULL, 0, RPCRT4_server_thread, NULL, 0, NULL);
-    LeaveCriticalSection(&listen_cs);
-  } else {
-    LeaveCriticalSection(&listen_cs);
-    RPCRT4_sync_with_server_thread();
+  if (auto_listen || (manual_listen_count++ == 0))
+  {
+    if (++listen_count == 1) {
+      /* first listener creates server thread */
+      if (!mgr_mutex) mgr_mutex = CreateMutexW(NULL, FALSE, NULL);
+      if (!mgr_event) mgr_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+      if (!server_ready_event) server_ready_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+      if (!server_sem) server_sem = CreateSemaphoreW(NULL, 0, MAX_THREADS, NULL);
+      if (!worker_tls) worker_tls = TlsAlloc();
+      std_listen = TRUE;
+      server_thread = CreateThread(NULL, 0, RPCRT4_server_thread, NULL, 0, NULL);
+    } else {
+      LeaveCriticalSection(&listen_cs);
+      RPCRT4_sync_with_server_thread();
+      return;
+    }
   }
+  LeaveCriticalSection(&listen_cs);
 }
 
-static void RPCRT4_stop_listen(void)
+static void RPCRT4_stop_listen(BOOL auto_listen)
 {
   EnterCriticalSection(&listen_cs);
-  if (listen_count == -1)
-    LeaveCriticalSection(&listen_cs);
-  else if (--listen_count == -1) {
-    std_listen = FALSE;
-    LeaveCriticalSection(&listen_cs);
-    RPCRT4_sync_with_server_thread();
-  } else
-    LeaveCriticalSection(&listen_cs);
-  assert(listen_count > -2);
+  if (auto_listen || (--manual_listen_count == 0))
+  {
+    if (listen_count != 0 && --listen_count == 0) {
+      std_listen = FALSE;
+      LeaveCriticalSection(&listen_cs);
+      RPCRT4_sync_with_server_thread();
+      return;
+    }
+    assert(listen_count >= 0);
+  }
+  LeaveCriticalSection(&listen_cs);
 }
 
 static RPC_STATUS RPCRT4_use_protseq(RpcServerProtseq* ps)
@@ -847,7 +858,7 @@ RPC_STATUS WINAPI RpcServerRegisterIf2( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid,
 
   if (sif->Flags & RPC_IF_AUTOLISTEN) {
     /* well, start listening, I think... */
-    RPCRT4_start_listen();
+    RPCRT4_start_listen(TRUE);
   }
 
   return RPC_S_OK;
@@ -978,7 +989,7 @@ RPC_STATUS WINAPI RpcServerListen( UINT MinimumCallThreads, UINT MaxCalls, UINT 
     return RPC_S_ALREADY_LISTENING;
   }
 
-  RPCRT4_start_listen();
+  RPCRT4_start_listen(FALSE);
 
   LeaveCriticalSection(&listen_cs);
 
@@ -1029,11 +1040,7 @@ RPC_STATUS WINAPI RpcMgmtStopServerListening ( RPC_BINDING_HANDLE Binding )
     return RPC_S_WRONG_KIND_OF_BINDING;
   }
   
-  /* hmm... */
-  EnterCriticalSection(&listen_cs);
-  while (std_listen)
-    RPCRT4_stop_listen();
-  LeaveCriticalSection(&listen_cs);
+  RPCRT4_stop_listen(FALSE);
 
   return RPC_S_OK;
 }

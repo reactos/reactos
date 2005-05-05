@@ -112,7 +112,7 @@
 @ stdcall RpcRaiseException(long)
 @ stub RpcRegisterAsyncInfo
 @ stub RpcRevertToSelf
-@ stub RpcRevertToSelfEx
+@ stdcall RpcRevertToSelfEx(ptr)
 @ stdcall RpcServerInqBindings(ptr)
 @ stub RpcServerInqCallAttributesA # wxp
 @ stub RpcServerInqCallAttributesW # wxp
