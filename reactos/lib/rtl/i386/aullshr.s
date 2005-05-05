@@ -1,4 +1,4 @@
-/* $Id: aullshr.s 12852 2005-01-06 13:58:04Z mf $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
