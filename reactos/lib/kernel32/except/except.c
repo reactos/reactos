@@ -171,23 +171,31 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       _dump_context ( ExceptionInfo->ContextRecord );
 #ifdef _X86_
       DbgPrint("Frames:\n");
-      Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
-      while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
+      _SEH_TRY
       {
-         if (IsBadReadPtr((PVOID)Frame[1], 4)) {
-           DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
-         } else {
-           _module_name_from_addr((const void*)Frame[1], &StartAddr, 
-                                  szMod, sizeof(szMod));
-           DbgPrint("   %8x+%-8x   %s\n", 
-                   (PVOID)StartAddr, 
-                   (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr, szMod);
+         Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
+         while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
+         {
+            if (IsBadReadPtr((PVOID)Frame[1], 4)) {
+              DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
+            } else {
+              _module_name_from_addr((const void*)Frame[1], &StartAddr,
+                                     szMod, sizeof(szMod));
+              DbgPrint("   %8x+%-8x   %s\n",
+                      (PVOID)StartAddr,
+                      (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr, szMod);
+            }
+            if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2)) {
+              break;
+            }
+            Frame = (PULONG)Frame[0];
          }
-         if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2)) {
-           break;
-         }
-         Frame = (PULONG)Frame[0];
       }
+      _SEH_HANDLE
+      {
+         DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH_GetExceptionCode());
+      }
+      _SEH_END;
 #endif
    }
 
