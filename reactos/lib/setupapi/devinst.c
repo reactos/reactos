@@ -34,6 +34,7 @@
 #include "setupapi.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
+#include "cfgmgr32.h"
 #include "initguid.h"
 #include "winioctl.h"
 #include "rpc.h"
@@ -469,8 +470,24 @@ BOOL WINAPI SetupDiClassNameFromGuidExA(
         PCSTR MachineName,
         PVOID Reserved)
 {
-  FIXME("\n");
-  return FALSE;
+    WCHAR ClassNameW[MAX_CLASS_NAME_LEN];
+    LPWSTR MachineNameW = NULL;
+    BOOL ret;
+
+    if (MachineName)
+        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+    ret = SetupDiClassNameFromGuidExW(ClassGuid, ClassNameW, MAX_CLASS_NAME_LEN,
+     NULL, MachineNameW, Reserved);
+    if (ret)
+    {
+        int len = WideCharToMultiByte(CP_ACP, 0, ClassNameW, -1, ClassName,
+         ClassNameSize, NULL, NULL);
+
+        if (!ClassNameSize && RequiredSize)
+            *RequiredSize = len;
+    }
+    MyFree(MachineNameW);
+    return ret;
 }
 
 /***********************************************************************
@@ -859,8 +876,7 @@ static HDEVINFO SETUP_CreateSerialDeviceList(void)
                 size *= 2;
                 if (devices != buf)
                     HeapFree(GetProcessHeap(), 0, devices);
-                devices = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                 size * sizeof(WCHAR));
+                devices = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
                 if (!devices)
                     failed = TRUE;
                 else
@@ -892,7 +908,7 @@ static HDEVINFO SETUP_CreateSerialDeviceList(void)
             {
                 if (!strncmpW(comW, ptr, sizeof(comW) / sizeof(comW[0]) - 1))
                 {
-                    strncpyW(list->names[list->numPorts].name, ptr,
+                    lstrcpynW(list->names[list->numPorts].name, ptr,
                      sizeof(list->names[list->numPorts].name) /
                      sizeof(list->names[list->numPorts].name[0]));
                     TRACE("Adding %s to list\n",

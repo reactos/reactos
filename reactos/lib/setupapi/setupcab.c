@@ -363,9 +363,7 @@ static INT_PTR sc_FNNOTIFY_A(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
     } else {
       if (mysterio[0]) {
         /* some easy paranoia.  no such carefulness exists on the wide API IIRC */
-        mysterio[SIZEOF_MYSTERIO - 1] = '\0';
-        strncpy(pfdin->psz3, &(mysterio[0]), 255);
-        mysterio[255] = '\0';
+        lstrcpynA(pfdin->psz3, &(mysterio[0]), SIZEOF_MYSTERIO);
       }
       return 0;
     }
