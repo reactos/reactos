@@ -407,7 +407,7 @@ CreateNestedKey(PHKEY KeyHandle,
           break;
         }
       Status = NtCreateKey (&LocalKeyHandle,
-			    KEY_ALL_ACCESS,
+			    KEY_CREATE_SUB_KEY,
 			    &LocalObjectAttributes,
 			    0,
 			    NULL,
@@ -575,7 +575,7 @@ RegCreateKeyA (HKEY hKey,
 			  0,
 			  NULL,
 			  0,
-			  KEY_ALL_ACCESS,
+			  MAXIMUM_ALLOWED,
 			  NULL,
 			  phkResult,
 			  NULL);
@@ -597,7 +597,7 @@ RegCreateKeyW (HKEY hKey,
 			  0,
 			  NULL,
 			  0,
-			  KEY_ALL_ACCESS,
+			  MAXIMUM_ALLOWED,
 			  NULL,
 			  phkResult,
 			  NULL);
@@ -1653,7 +1653,7 @@ RegOpenKeyA (HKEY hKey,
 		return ERROR_SUCCESS;
 	}
 
-	return RegOpenKeyExA( hKey, lpSubKey, 0, KEY_ALL_ACCESS, phkResult);
+	return RegOpenKeyExA( hKey, lpSubKey, 0, MAXIMUM_ALLOWED, phkResult);
 }
 
 
@@ -1678,7 +1678,7 @@ RegOpenKeyW (HKEY hKey,
 		*phkResult = hKey;
 		return ERROR_SUCCESS;
 	}
-	return RegOpenKeyExW(hKey, lpSubKey, 0, KEY_ALL_ACCESS, phkResult);
+	return RegOpenKeyExW(hKey, lpSubKey, 0, MAXIMUM_ALLOWED, phkResult);
 }
 
 
@@ -2214,7 +2214,7 @@ RegQueryValueExW (HKEY hKey,
       return ERROR_OUTOFMEMORY;
     }
 
-  Status = NtQueryValueKey (hKey,
+  Status = NtQueryValueKey (KeyHandle,
 			    &ValueName,
 			    KeyValuePartialInformation,
 			    ValueInfo,
@@ -2526,7 +2526,7 @@ RegQueryValueW (HKEY hKey,
 				  KeyHandle,
 				  NULL);
       Status = NtOpenKey (&RealKey,
-			  KEY_ALL_ACCESS,
+			  KEY_QUERY_VALUE,
 			  &ObjectAttributes);
       if (!NT_SUCCESS(Status))
 	{
@@ -2641,7 +2641,7 @@ RegReplaceKeyW (HKEY hKey,
 				  KeyHandle,
 				  NULL);
       Status = NtOpenKey (&RealKeyHandle,
-			  KEY_ALL_ACCESS,
+			  MAXIMUM_ALLOWED,
 			  &KeyObjectAttributes);
       if (!NT_SUCCESS(Status))
 	{
@@ -3205,7 +3205,7 @@ RegSetValueW (HKEY hKey,
 				  KeyHandle,
 				  NULL);
       Status = NtOpenKey (&RealKey,
-			  KEY_ALL_ACCESS,
+			  KEY_SET_VALUE,
 			  &ObjectAttributes);
       if (!NT_SUCCESS(Status))
 	{
