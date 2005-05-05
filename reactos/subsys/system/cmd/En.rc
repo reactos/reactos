@@ -19,7 +19,7 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
   H   Hidden file attribute\n\
   /S  Processes matching files in the current directory\n\
       and all subdirectories\n\
-  /D  Processes direcories as well\n\n\
+  /D  Processes directories as well\n\n\
 Type ATTRIB without a parameter to display the attributes of all files."
 
 STRING_ALIAS_HELP,  "Sets, removes or shows aliases.\n\n\
@@ -237,10 +237,11 @@ FOR %variable IN (set) DO command [parameters]\n\n\
   (set)      Specifies a set of one or more files. Wildcards may be used.\n\
   command    Specifies the command to carry out for each file.\n\
   parameters Specifies parameters or switches for the specified command.\n\n\
-To user the FOR comamnd in a batch program, specify %%variable instead of\n\
+To use the FOR comamnd in a batch program, specify %%variable instead of\n\
 %variable."
 
-STRING_FREE_HELP1, "\n Volume in drive %s is %-11s   Serial number is %s\n\
+STRING_FREE_HELP1, "\nVolume in drive %s is %-11s\n\
+ Serial number is %s\n\
   %16s bytes total disk space\n\
   %16s bytes used\n\
   %16s bytes free\n"
@@ -301,7 +302,7 @@ To rename a directory:\n\
 MOVE [/N][drive:][path]dirname1 dirname2\n\n\
   [drive:][path]filename1  Specifies the location and name of the file\n\
                            or files you want to move.\n\
-  /N                       Nothing. Do everything but move files or direcories.\n\n\
+  /N                    Nothing. Do everything but move files or directories.\n\n\
 Current limitations:\n\
   - You can't move a file or directory from one drive to another.\n"
 
@@ -412,7 +413,7 @@ STRING_TIMER_HELP3, "allow the use of ten stopwaches.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON          set stopwach ON\n\
   OFF         set stopwach OFF\n\
-  /S          Split time. Return stopwach split\n\
+  /S          Split time. Return stopwatch split\n\
               time without changing its value\n\
   /n          Specifiy the stopwach number.\n\
               Stopwaches avaliable are 0 to 10\n\
@@ -478,7 +479,7 @@ MAX           maximize the window\n\
 RESTORE       restore the window"
 
 STRING_WINDOW_HELP2, "change console window aspect\n\n\
-ACTIAVTE 'window' [/POS[=]left,top,width,heigth]\n\
+ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        tile of window on wich perform actions\n\
 /POS          specify window placement and dimensions\n\
@@ -532,8 +533,6 @@ STRING_GOTO_ERROR2,          "Label '%s' not found\n"
 
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Error]\n"
-
-STRING_PARAM_ERROR,          "Required parameter missing\n"
 
 STRING_PATH_ERROR,           "CMD: Not in environment 'PATH'\n"
 

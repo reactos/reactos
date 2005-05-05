@@ -1,4 +1,4 @@
-#define RC_STRING_MAX_SIZE                 2048
+#define RC_STRING_MAX_SIZE                 3072
 
 
 #define STRING_ERROR_PARAMETERF_ERROR      100
@@ -57,7 +57,6 @@
 #define STRING_GOTO_ERROR2                 341
 #define STRING_MOVE_ERROR1                 342
 #define STRING_MOVE_ERROR2                 343
-#define STRING_PARAM_ERROR                 344
 #define STRING_PATH_ERROR                  345
 #define STRING_REN_ERROR1                  346
 #define STRING_START_ERROR1                347
