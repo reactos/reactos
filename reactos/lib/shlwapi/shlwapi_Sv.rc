@@ -1,7 +1,7 @@
 /*
- * Top level resource file for shlwapi
+ * Swedish resources for shlwapi
  *
- * Copyright 2004 Jon Griffiths
+ * Copyright 2005 Andreas Bjerkeholt
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +18,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "resource.h"
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
-#include "shlwapi_De.rc"
-#include "shlwapi_En.rc"
-#include "shlwapi_Es.rc"
-#include "shlwapi_Nl.rc"
-#include "shlwapi_It.rc"
-#include "shlwapi_Ja.rc"
-#include "shlwapi_Pt.rc"
-#include "shlwapi_Sv.rc"
+IDD_ERR_DIALOG DIALOG MOVEABLE DISCARDABLE 0, 0, 220, 60
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Fel!"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
+ LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
+ CHECKBOX "&Visa inte detta meddelande igen", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&OK" IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Avbryt" IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Ja" IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Nej" IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+}
