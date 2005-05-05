@@ -352,7 +352,7 @@ RtlFreeAnsiString(IN PANSI_STRING AnsiString)
    if (AnsiString->Buffer == NULL)
       return;
 
-   ExFreePool(AnsiString->Buffer);
+   ExFreePoolWithTag(AnsiString->Buffer, TAG_ASTR);
 
    AnsiString->Buffer = NULL;
    AnsiString->Length = 0;
@@ -370,7 +370,7 @@ RtlFreeOemString(IN POEM_STRING OemString)
    if (OemString->Buffer == NULL)
       return;
 
-   ExFreePool(OemString->Buffer);
+   ExFreePoolWithTag(OemString->Buffer, TAG_OSTR);
 
    OemString->Buffer = NULL;
    OemString->Length = 0;
@@ -388,7 +388,7 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
    if (UnicodeString->Buffer == NULL)
       return;
 
-   ExFreePool(UnicodeString->Buffer);
+   ExFreePoolWithTag(UnicodeString->Buffer, TAG_USTR);
 
    UnicodeString->Buffer = NULL;
    UnicodeString->Length = 0;
@@ -1010,7 +1010,7 @@ RtlpUnicodeStringToAnsiString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool (AnsiDest->Buffer);
+      ExFreePoolWithTag(AnsiDest->Buffer, TAG_ASTR);
       return Status;
    }
 
@@ -1094,7 +1094,7 @@ RtlpOemStringToUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool (UniDest->Buffer);
+      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
@@ -1178,7 +1178,7 @@ RtlpUnicodeStringToOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(OemDest->Buffer);
+      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
@@ -1320,7 +1320,7 @@ RtlpOemStringToCountedUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool (UniDest->Buffer);
+      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
@@ -1653,7 +1653,7 @@ RtlpUnicodeStringToCountedOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(OemDest->Buffer);
+      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
    }
 
    return Status;
@@ -1857,7 +1857,7 @@ RtlpUpcaseUnicodeStringToAnsiString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(AnsiDest->Buffer);
+      ExFreePoolWithTag(AnsiDest->Buffer, TAG_ASTR);
       return Status;
    }
 
@@ -1945,7 +1945,7 @@ RtlpUpcaseUnicodeStringToCountedOemString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(OemDest->Buffer);
+      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
@@ -2032,7 +2032,7 @@ RtlpUpcaseUnicodeStringToOemString (
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(OemDest->Buffer);
+      ExFreePoolWithTag(OemDest->Buffer, TAG_OSTR);
       return Status;
    }
 
@@ -2495,7 +2495,7 @@ RtlpAnsiStringToUnicodeString(
 
    if (!NT_SUCCESS(Status) && AllocateDestinationString)
    {
-      ExFreePool(UniDest->Buffer);
+      ExFreePoolWithTag(UniDest->Buffer, TAG_USTR);
       return Status;
    }
 
