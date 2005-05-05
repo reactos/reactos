@@ -375,7 +375,7 @@ static BOOL UIINSERTOBJECTDLG_PopulateObjectTypes(InsertObjectDlgInfo* pdlgInfo)
     len = MAX_PATH;
     if (ERROR_SUCCESS == RegQueryValueA(hkey, NULL, keydesc, &len))
     {
-       CLSID* lpclsid = (CLSID*) HeapAlloc(GetProcessHeap(), 0, sizeof(CLSID));
+       CLSID* lpclsid = HeapAlloc(GetProcessHeap(), 0, sizeof(CLSID));
        memcpy(lpclsid, &clsid, sizeof(CLSID));
 
        len = SendMessageA(pdlgInfo->hwndObjTypeLB, LB_ADDSTRING, 0, (LPARAM)keydesc);
@@ -479,7 +479,7 @@ static BOOL UIINSERTOBJECTDLG_OnOpen(InsertObjectDlgInfo* pdlgInfo)
       WCHAR wcsFile[MAX_PATH];
 
       SendMessageA(pdlgInfo->hwndFileTB, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)fname);
-      strncpy(pdlgInfo->lpOleUIInsertObject->lpszFile, fname, pdlgInfo->lpOleUIInsertObject->cchFile);
+      lstrcpynA(pdlgInfo->lpOleUIInsertObject->lpszFile, fname, pdlgInfo->lpOleUIInsertObject->cchFile);
 
       RtlMultiByteToUnicodeN(wcsFile, MAX_PATH, NULL, fname, MAX_PATH); 
       if (ERROR_SUCCESS == (hres = GetClassFile(wcsFile, &pdlgInfo->lpOleUIInsertObject->clsid)))
