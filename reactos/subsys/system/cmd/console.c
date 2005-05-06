@@ -17,7 +17,6 @@
 
 #define OUTPUT_BUFFER_SIZE  4096
 
-
 VOID ConInDisable (VOID)
 {
 	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
@@ -105,7 +104,7 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 	ReadFile (hFile, (PVOID)pBuf, dwLength, &dwRead, NULL);
 
 #ifdef _UNICODE
-	MultiByteToWideChar( GetConsoleOutputCP(), 0, pBuf, dwLength + 1, lpInput, dwLength + 1);
+	MultiByteToWideChar(  GetConsoleCP(), 0, pBuf, dwLength + 1, lpInput, dwLength + 1);
 #endif
 	p = lpInput;
 	for (i = 0; i < dwRead; i++, p++)
