@@ -1078,7 +1078,7 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
       KdbpPrint("  PID         State       Filename\n");
       do
       {
-         Process = CONTAINING_RECORD(Entry, EPROCESS, ProcessListEntry);
+         Process = CONTAINING_RECORD(Entry, EPROCESS, ActiveProcessLinks);
 
          if (Process == KdbCurrentProcess)
          {

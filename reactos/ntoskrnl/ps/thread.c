@@ -423,7 +423,7 @@ HANDLE
 STDCALL
 PsGetThreadSessionId(PETHREAD Thread)
 {
-    return (HANDLE)Thread->ThreadsProcess->SessionId;
+    return (HANDLE)Thread->ThreadsProcess->Session;
 }
 
 /*

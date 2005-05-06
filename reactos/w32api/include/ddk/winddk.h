@@ -929,12 +929,17 @@ typedef struct _FAST_MUTEX {
   ULONG  OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
 
+typedef struct _KGATE
+{
+    DISPATCHER_HEADER Header;
+} KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
+
 typedef struct _KGUARDED_MUTEX
 {
     LONG Count;
     struct _KTHREAD* Owner;
     ULONG Contention;
-    struct _KGATE* Gate;
+    KGATE Gate;
     union {
         struct {
             SHORT KernelApcDisable;
@@ -959,11 +964,6 @@ typedef struct _KMUTANT {
   BOOLEAN  Abandoned;
   UCHAR  ApcDisable;
 } KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT, KMUTEX, *PKMUTEX, *RESTRICTED_POINTER PRKMUTEX;
-
-typedef struct _KGATE
-{
-  DISPATCHER_HEADER Header;
-} KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
 
 typedef enum _TIMER_TYPE {
   NotificationTimer,

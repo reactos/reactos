@@ -13,6 +13,32 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* INTERNAL ******************************************************************/
+
+/* FIXME: Turn into Macro */
+VOID
+STDCALL
+PspLockProcessSecurityShared(PEPROCESS Process)
+{
+    /* Enter a Guarded Region */
+    KeEnterGuardedRegion();
+        
+    /* Lock the Process */
+    //ExAcquirePushLockShared(&Process->ProcessLock);    
+}
+
+/* FIXME: Turn into Macro */
+VOID
+STDCALL
+PspUnlockProcessSecurityShared(PEPROCESS Process)
+{
+    /* Unlock the Process */
+    //ExReleasePushLockShared(&Process->ProcessLock);
+        
+    /* Leave Guarded Region */
+    KeLeaveGuardedRegion();
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -104,12 +130,26 @@ PACCESS_TOKEN
 STDCALL
 PsReferencePrimaryToken(PEPROCESS Process)
 {
-    /* Reference and return the Token */
-    ObReferenceObjectByPointer(Process->Token,
-                               TOKEN_ALL_ACCESS,
-                               SepTokenObjectType,
-                               KernelMode);
-    return(Process->Token);
+    PACCESS_TOKEN Token;
+    
+    /* Fast Reference the Token */
+    Token = ObFastReferenceObject(&Process->Token);
+    
+    /* Check if we got the Token or if we got locked */
+    if (!Token)
+    {
+        /* Lock the Process */
+        PspLockProcessSecurityShared(Process);
+        
+        /* Do a Locked Fast Reference */
+        //Token = ObFastReferenceObjectLocked(&Process->Token);
+        
+        /* Unlock the Process */
+        PspUnlockProcessSecurityShared(Process);
+    }
+    
+    /* Return the Token */
+    return Token;
 }
 
 /*
@@ -156,7 +196,8 @@ PspInitializeProcessSecurity(PEPROCESS Process,
         PTOKEN pParentToken;
         OBJECT_ATTRIBUTES ObjectAttributes;
 
-        pParentToken = (PACCESS_TOKEN)Parent->Token;
+        /* Get the Parent Token */
+        pParentToken = PsReferencePrimaryToken(Parent);
 
         /* Initialize the Object Attributes */
         InitializeObjectAttributes(&ObjectAttributes,
@@ -180,7 +221,11 @@ PspInitializeProcessSecurity(PEPROCESS Process,
             return Status;
         }
      
-        Process->Token = pNewToken;    
+        /* Dereference the Token */
+        ObFastDereferenceObject(&Parent->Token, pParentToken);
+        
+        /* Set the new Token */
+        ObInitializeFastReference(&Process->Token, pNewToken);
     
     } else {
         
@@ -227,7 +272,6 @@ PspAssignPrimaryToken(PEPROCESS Process,
     Status = SeExchangePrimaryToken(Process, Token, &OldToken);
         
     /* Derefernece Tokens and Return */
-    if (NT_SUCCESS(Status)) ObDereferenceObject(OldToken);
     ObDereferenceObject(Token);
     return(Status);
 }
@@ -356,22 +400,37 @@ PsReferenceEffectiveToken(PETHREAD Thread,
     PEPROCESS Process;
     PACCESS_TOKEN Token;
    
-    if (Thread->ActiveImpersonationInfo == FALSE) {
-        
+    if (Thread->ActiveImpersonationInfo == FALSE) 
+    {    
         Process = Thread->ThreadsProcess;
         *TokenType = TokenPrimary;
         *EffectiveOnly = FALSE;
-        Token = Process->Token;
     
-    } else {
-
+        /* Fast Reference the Token */
+        Token = ObFastReferenceObject(&Process->Token);
+    
+        /* Check if we got the Token or if we got locked */
+        if (!Token)
+        {
+            /* Lock the Process */
+            PspLockProcessSecurityShared(Process);
+        
+            /* Do a Locked Fast Reference */
+            //Token = ObFastReferenceObjectLocked(&Process->Token);
+        
+            /* Unlock the Process */
+            PspUnlockProcessSecurityShared(Process);
+        }   
+    } 
+    else 
+    {
         Token = Thread->ImpersonationInfo->Token;
         *TokenType = TokenImpersonation;
         *EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
         *Level = Thread->ImpersonationInfo->ImpersonationLevel;
     }
     
-    return(Token);
+    return Token;
 }
 
 NTSTATUS 

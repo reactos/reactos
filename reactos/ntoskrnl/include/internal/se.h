@@ -20,7 +20,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_SE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_SE_H
 
-
 extern POBJECT_TYPE SepTokenObjectType;
 
 /* SID Authorities */
@@ -109,6 +108,8 @@ VOID SepInitPrivileges(VOID);
 BOOLEAN SepInitSecurityIDs(VOID);
 BOOLEAN SepInitDACLs(VOID);
 BOOLEAN SepInitSDs(VOID);
+
+VOID SeDeassignPrimaryToken(struct _EPROCESS *Process);
 
 NTSTATUS STDCALL 
 SepCreateImpersonationTokenDacl(PTOKEN Token, 

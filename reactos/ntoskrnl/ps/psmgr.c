@@ -186,7 +186,7 @@ PsInitProcessManagment(VOID)
    PsIdleProcess->Pcb.QuantumReset = 6;
    InitializeListHead(&PsIdleProcess->Pcb.ThreadListHead);
    InitializeListHead(&PsIdleProcess->ThreadListHead);
-   InitializeListHead(&PsIdleProcess->ProcessListEntry);
+   InitializeListHead(&PsIdleProcess->ActiveProcessLinks);
    KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.Header,
 				ProcessObject,
 				sizeof(EPROCESS),
@@ -248,7 +248,7 @@ PsInitProcessManagment(VOID)
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    
    InsertHeadList(&PsActiveProcessHead,
-		  &PsInitialSystemProcess->ProcessListEntry);
+		  &PsInitialSystemProcess->ActiveProcessLinks);
    InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
    
 #ifndef SCHED_REWRITE
@@ -257,7 +257,7 @@ PsInitProcessManagment(VOID)
     /* No parent, this is the Initial System Process. Assign Boot Token */
     BootToken = SepCreateSystemProcessToken();
     BootToken->TokenInUse = TRUE;
-    PsInitialSystemProcess->Token = BootToken;
+    PsInitialSystemProcess->Token.Object = BootToken; /* FIXME */
     ObReferenceObject(BootToken);
 #endif
 }

@@ -135,12 +135,12 @@ PsGetNextProcess(PEPROCESS OldProcess)
     {
         /* Get the Process Link */
         PLIST_ENTRY Flink = (NextProcess == PsIdleProcess ? PsActiveProcessHead.Flink :
-                             NextProcess->ProcessListEntry.Flink);
+                             NextProcess->ActiveProcessLinks.Flink);
         
         /* Move to the next Process if we're not back at the beginning */
         if (Flink != &PsActiveProcessHead)
         {
-            NextProcess = CONTAINING_RECORD(Flink, EPROCESS, ProcessListEntry);
+            NextProcess = CONTAINING_RECORD(Flink, EPROCESS, ActiveProcessLinks);
         }
         else
         {
@@ -292,7 +292,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (pParentProcess) 
     {
         Process->InheritedFromUniqueProcessId = pParentProcess->UniqueProcessId;
-        Process->SessionId = pParentProcess->SessionId;
+        Process->Session = pParentProcess->Session;
     }
     
     /* FIXME: Set up the Quota Block from the Parent
@@ -393,7 +393,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* W00T! The process can now be activated */
     DPRINT("Inserting into Active Process List\n");
     ExAcquireFastMutex(&PspActiveProcessMutex);
-    InsertTailList(&PsActiveProcessHead, &Process->ProcessListEntry);
+    InsertTailList(&PsActiveProcessHead, &Process->ActiveProcessLinks);
     ExReleaseFastMutex(&PspActiveProcessMutex);
     
     /* FIXME: SeCreateAccessStateEx */
@@ -547,7 +547,7 @@ BOOLEAN
 STDCALL
 PsGetProcessExitProcessCalled(PEPROCESS Process)
 {
-    return Process->ExitProcessCalled;	
+    return Process->ProcessExiting;
 }
 
 /*
@@ -636,7 +636,7 @@ ULONG
 STDCALL
 PsGetCurrentProcessSessionId(VOID)
 {
-    return PsGetCurrentProcess()->SessionId;
+    return PsGetCurrentProcess()->Session;
 }
 
 /*
@@ -666,7 +666,7 @@ HANDLE
 STDCALL
 PsGetProcessSessionId(PEPROCESS Process)
 {
-    return (HANDLE)Process->SessionId;
+    return (HANDLE)Process->Session;
 }
 
 /*

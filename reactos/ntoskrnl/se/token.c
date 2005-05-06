@@ -79,33 +79,45 @@ NTSTATUS SepCopyProxyData(PVOID* Dest, PVOID Src)
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
-				PACCESS_TOKEN NewTokenP,
-				PACCESS_TOKEN* OldTokenP)
+NTSTATUS 
+SeExchangePrimaryToken(PEPROCESS Process,
+                       PACCESS_TOKEN NewTokenP,
+                       PACCESS_TOKEN* OldTokenP)
 {
-   PTOKEN OldToken;
-   PTOKEN NewToken = (PTOKEN)NewTokenP;
+    PTOKEN OldToken;
+    PTOKEN NewToken = (PTOKEN)NewTokenP;
    
-   PAGED_CODE();
+    PAGED_CODE();
    
-   if (NewToken->TokenType != TokenPrimary)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   if (NewToken->TokenInUse != 0)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   OldToken = Process->Token;
-   Process->Token = NewToken;
-   NewToken->TokenInUse = 1;
-   ObReferenceObjectByPointer(NewToken,
-			      TOKEN_ALL_ACCESS,
-			      SepTokenObjectType,
-			      KernelMode);
-   OldToken->TokenInUse = 0;
-   *OldTokenP = (PACCESS_TOKEN)OldToken;
-   return(STATUS_SUCCESS);
+    if (NewToken->TokenType != TokenPrimary) return(STATUS_BAD_TOKEN_TYPE);
+    if (NewToken->TokenInUse) return(STATUS_TOKEN_ALREADY_IN_USE);
+   
+    /* Mark new token in use */
+    NewToken->TokenInUse = 1;
+    
+    /* Reference the New Token */
+    ObReferenceObject(NewToken);
+    
+    /* Replace the old with the new */
+    OldToken = ObFastReplaceObject(&Process->Token, NewToken);
+    
+    /* Mark the Old Token as free */
+    OldToken->TokenInUse = 0;
+    
+    *OldTokenP = (PACCESS_TOKEN)OldToken;
+    return STATUS_SUCCESS;
+}
+
+VOID
+SeDeassignPrimaryToken(PEPROCESS Process)
+{
+    PTOKEN OldToken;
+    
+    /* Remove the Token */
+    OldToken = ObFastReplaceObject(&Process->Token, NULL);
+    
+    /* Mark the Old Token as free */
+    OldToken->TokenInUse = 0;
 }
 
 static ULONG

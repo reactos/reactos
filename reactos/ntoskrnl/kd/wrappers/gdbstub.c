@@ -789,7 +789,7 @@ GspQuery(PCHAR Request)
     AProcess = PsActiveProcessHead.Flink;
     while(AProcess != &PsActiveProcessHead)
     {
-      Process = CONTAINING_RECORD(AProcess, EPROCESS, ProcessListEntry);
+      Process = CONTAINING_RECORD(AProcess, EPROCESS, ActiveProcessLinks);
       AThread = Process->ThreadListHead.Flink;
       if(AThread != &Process->ThreadListHead)
       {
@@ -831,10 +831,10 @@ GspQuery(PCHAR Request)
       else
       {
         PETHREAD Thread = NULL;
-        AProcess = Process->ProcessListEntry.Flink;
+        AProcess = Process->ActiveProcessLinks.Flink;
         while(AProcess != &PsActiveProcessHead)
         {
-          Process = CONTAINING_RECORD(AProcess, EPROCESS, ProcessListEntry);
+          Process = CONTAINING_RECORD(AProcess, EPROCESS, ActiveProcessLinks);
           AThread = Process->ThreadListHead.Flink;
           if(AThread != &Process->ThreadListHead)
           {

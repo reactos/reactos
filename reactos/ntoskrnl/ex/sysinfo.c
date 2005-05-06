@@ -633,23 +633,17 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->InheritedFromUniqueProcessId = pr->InheritedFromUniqueProcessId;
 		SpiCur->HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
 		SpiCur->PeakVirtualSize = pr->PeakVirtualSize;
-		SpiCur->VirtualSize = pr->VirtualSize.QuadPart;
-		SpiCur->PageFaultCount = pr->LastFaultCount;
+		SpiCur->VirtualSize = pr->VirtualSize;
+		SpiCur->PageFaultCount = pr->Vm.PageFaultCount;
 		SpiCur->PeakWorkingSetSize = pr->Vm.PeakWorkingSetSize; // Is this right using ->Vm. here ?
 		SpiCur->WorkingSetSize = pr->Vm.WorkingSetSize; // Is this right using ->Vm. here ?
-		SpiCur->QuotaPeakPagedPoolUsage =
-					pr->QuotaPeakPoolUsage[0];
-		SpiCur->QuotaPagedPoolUsage =
-					pr->QuotaPoolUsage[0];
-		SpiCur->QuotaPeakNonPagedPoolUsage =
-					pr->QuotaPeakPoolUsage[1];
-		SpiCur->QuotaNonPagedPoolUsage =
-					pr->QuotaPoolUsage[1];
-		SpiCur->PagefileUsage = pr->PagefileUsage; // FIXME
-		SpiCur->PeakPagefileUsage = pr->PeakPagefileUsage;
-		// KJK::Hyperion: I don't know what does this mean. VM_COUNTERS
-		// doesn't seem to contain any equivalent field
-		//SpiCur->TotalPrivateBytes = pr->NumberOfPrivatePages; //FIXME: bytes != pages
+		SpiCur->QuotaPeakPagedPoolUsage = pr->QuotaPeak[0];
+		SpiCur->QuotaPagedPoolUsage = pr->QuotaUsage[0];
+		SpiCur->QuotaPeakNonPagedPoolUsage = pr->QuotaPeak[1];
+		SpiCur->QuotaNonPagedPoolUsage = pr->QuotaUsage[1];
+		SpiCur->PagefileUsage = pr->QuotaUsage[3];
+		SpiCur->PeakPagefileUsage = pr->QuotaPeak[3];
+		SpiCur->PrivateUsage = pr->CommitCharge;
 
           current_entry = pr->ThreadListHead.Flink;
           while (current_entry != &pr->ThreadListHead)

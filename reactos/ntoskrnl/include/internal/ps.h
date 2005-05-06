@@ -126,127 +126,140 @@ typedef struct _ETHREAD
 typedef struct _ETHREAD *PETHREAD;
 
 #endif /* __USE_W32API */
-
+  
+#include <pshpack4.h>
 struct _EPROCESS
 {
-  /* Microkernel specific process state. */
-  KPROCESS              Pcb;                          /* 000 */
-  /* Exit status of the process. */
-  NTSTATUS              ExitStatus;                   /* 068 */
-  /* Unknown. */
-  KEVENT                LockEvent;                    /* 06C */
-  /* Unknown. */
-  ULONG                 LockCount;                    /* 07C */
+    KPROCESS              Pcb;                          /* 000 */
+    EX_PUSH_LOCK          ProcessLock;                  /* 078 */
+    LARGE_INTEGER         CreateTime;                   /* 080 */
+    LARGE_INTEGER         ExitTime;                     /* 088 */    
+    EX_RUNDOWN_REF        RundownProtect;               /* 090 */
+    HANDLE                UniqueProcessId;              /* 094 */  
+    LIST_ENTRY            ActiveProcessLinks;           /* 098 */  
+    ULONG                 QuotaUsage[3];                /* 0A0 */
+    ULONG                 QuotaPeak[3];                 /* 0AC */
+    ULONG                 CommitCharge;                 /* 0B8 */  
+    ULONG                 PeakVirtualSize;              /* 0BC */  
+    ULONG                 VirtualSize;                  /* 0C0 */  
+    LIST_ENTRY            SessionProcessLinks;          /* 0C4 */
+    PVOID                 DebugPort;                    /* 0CC */
+    PVOID                 ExceptionPort;                /* 0D0 */
+    PHANDLE_TABLE         ObjectTable;                  /* 0D4 */
+    EX_FAST_REF           Token;                        /* 0D8 */
+    ULONG                 WorkingSetPage;               /* 0DC */
+    KGUARDED_MUTEX        AddressCreationLock;          /* 0E0 */
+    KSPIN_LOCK            HyperSpaceLock;               /* 100 */
+    PETHREAD              ForkInProgress;               /* 104 */
+    ULONG                 HardwareTrigger;              /* 108 */
+    MM_AVL_TABLE          PhysicalVadroot;              /* 10C */
+    PVOID                 CloneRoot;                    /* 110 */
+    ULONG                 NumberOfPrivatePages;         /* 114 */
+    ULONG                 NumberOfLockedPages;          /* 118 */
+    PVOID                 *Win32Process;                /* 11C */
+    struct _EJOB          *Job;                         /* 120 */
+    PVOID                 SectionObject;                /* 124 */
+    PVOID                 SectionBaseAddress;           /* 128 */
+    PEPROCESS_QUOTA_BLOCK QuotaBlock;                   /* 12C */
+    PPAGEFAULT_HISTORY    WorkingSetWatch;              /* 130 */
+    PVOID                 Win32WindowStation;           /* 134 */
+    HANDLE                InheritedFromUniqueProcessId; /* 138 */
+    PVOID                 LdtInformation;               /* 13C */
+    PVOID                 VadFreeHint;                  /* 140 */
+    PVOID                 VdmObjects;                   /* 144 */
+    PVOID                 DeviceMap;                    /* 148 */
+    PVOID                 Spare0[3];                    /* 14C */
+    union {
+        HARDWARE_PTE_X86  PagedirectoryPte;             /* 158 */
+        ULONGLONG         Filler;                       /* 158 */
+    };
+    ULONG                 Session;                      /* 160 */
+    UCHAR                 ImageFileName[16];            /* 164 */
+    LIST_ENTRY            JobLinks;                     /* 174 */
+    PVOID                 LockedPagesList;              /* 17C */
+    LIST_ENTRY            ThreadListHead;               /* 184 */
+    PVOID                 SecurityPort;                 /* 188 */
+    PVOID                 PaeTop;                       /* 18C */
+    ULONG                 ActiveThreds;                 /* 190 */
+    ACCESS_MASK           GrantedAccess;                /* 194 */
+    ULONG                 DefaultHardErrorProcessing;   /* 198 */
+    NTSTATUS              LastThreadExitStatus;         /* 19C */
+    PPEB                  Peb;                          /* 1A0 */
+    EX_FAST_REF           PrefetchTrace;                /* 1A4 */
+    LARGE_INTEGER         ReadOperationCount;           /* 1A8 */
+    LARGE_INTEGER         WriteOperationCount;          /* 1B0 */
+    LARGE_INTEGER         OtherOperationCount;          /* 1B8 */
+    LARGE_INTEGER         ReadTransferCount;            /* 1C0 */
+    LARGE_INTEGER         WriteTransferCount;           /* 1C8 */
+    LARGE_INTEGER         OtherTransferCount;           /* 1D0 */
+    ULONG                 CommitChargeLimit;            /* 1D8 */
+    ULONG                 CommitChargePeak;             /* 1DC */
+    PVOID                 AweInfo;                      /* 1E0 */
+    SE_AUDIT_PROCESS_CREATION_INFO SeAuditProcessCreationInfo; /* 1E4 */
+    MMSUPPORT             Vm;                           /* 1E8 */
+    LIST_ENTRY            MmProcessLinks;               /* 230 */
+    ULONG                 ModifiedPageCount;            /* 238 */
+    ULONG                 JobStatus;                    /* 23C */
+    union {
+        struct {
+            ULONG         CreateReported:1;
+            ULONG         NoDebugInherit:1;
+            ULONG         ProcessExiting:1;
+            ULONG         ProcessDelete:1;
+            ULONG         Wow64SplitPages:1;
+            ULONG         VmDeleted:1;
+            ULONG         OutswapEnabled:1;
+            ULONG         Outswapped:1;
+            ULONG         ForkFailed:1;
+            ULONG         Wow64VaSpace4Gb:1;
+            ULONG         AddressSpaceInitialized:2;
+            ULONG         SetTimerResolution:1;
+            ULONG         BreakOnTermination:1;
+            ULONG         SessionCreationUnderway:1;
+            ULONG         WriteWatch:1;
+            ULONG         ProcessInSession:1;
+            ULONG         OverrideAddressSpace:1;
+            ULONG         HasAddressSpace:1;
+            ULONG         LaunchPrefetched:1;
+            ULONG         InjectInpageErrors:1;
+            ULONG         VmTopDown:1;
+            ULONG         ImageNotifyDone:1;
+            ULONG         PdeUpdateNeeded:1;
+            ULONG         VdmAllowed:1;
+            ULONG         SmapAllowed:1;
+            ULONG         CreateFailed:1;
+            ULONG         DefaultIoPriority:3;
+            ULONG         Spare1:1;
+            ULONG         Spare2:1;
+        };
+        ULONG             Flags;                        /* 240 */
+    };
+  
+    NTSTATUS              ExitStatus;                   /* 244 */
+    USHORT                NextPageColor;                /* 248 */
+    union {
+        struct {
+            UCHAR         SubSystemMinorVersion;        /* 24A */
+            UCHAR         SubSystemMajorVersion;        /* 24B */
+        };
+        USHORT            SubSystemVersion;             /* 24A */
+    };
+    UCHAR                 PriorityClass;                /* 24C */
+    MM_AVL_TABLE          VadRoot;                      /* 250 */
+    ULONG                 Cookie;                       /* 270 */
 
-  /* Time of process creation. */
-  LARGE_INTEGER         CreateTime;                   /* 080 */
-
-  /* Time of process exit. */
-  LARGE_INTEGER         ExitTime;                     /* 088 */
-  /* Unknown. */
-  PKTHREAD              LockOwner;                    /* 090 */
-  /* Process id. */
-  HANDLE                UniqueProcessId;              /* 094 */
-  /* Unknown. */
-  LIST_ENTRY            ActiveProcessLinks;           /* 098 */
-  /* Unknown. */
-  ULONG                 QuotaPeakPoolUsage[2];        /* 0A0 */
-  /* Unknown. */
-  ULONG                 QuotaPoolUsage[2];            /* 0A8 */
-  /* Unknown. */
-  ULONG                 PagefileUsage;                /* 0B0 */
-  /* Unknown. */
-  ULONG                 CommitCharge;                 /* 0B4 */
-  /* Unknown. */
-  ULONG                 PeakPagefileUsage;            /* 0B8 */
-  /* Unknown. */
-  ULONG                 PeakVirtualSize;              /* 0BC */
-  /* Unknown. */
-  LARGE_INTEGER         VirtualSize;                  /* 0C0 */
-
-  MMSUPPORT             Vm;
-  LIST_ENTRY            SessionProcessLinks;
-  struct _EPORT         *DebugPort;
-  struct _EPORT         *ExceptionPort;
-  PHANDLE_TABLE         ObjectTable;
-  PVOID                 Token;
-  FAST_MUTEX            WorkingSetLock;
-  ULONG                 WorkingSetPage;
-  UCHAR                 ProcessOutswapEnabled;
-  UCHAR                 ProcessOutswapped;
-  UCHAR                 AddressSpaceInitialized;
-  UCHAR                 AddressSpaceDeleted;
-  FAST_MUTEX            AddressCreationLock;
-  KSPIN_LOCK            HyperSpaceLock;
-  PETHREAD              ForkInProgress;
-  USHORT                VmOperation;
-  UCHAR                 ForkWasSuccessful;
-  UCHAR                 MmAgressiveWsTrimMask;
-  PKEVENT               VmOperationEvent;
-  PVOID                 PaeTop;
-  ULONG                 LastFaultCount;
-  ULONG                 ModifiedPageCount;
-  PVOID                 VadRoot;
-  PVOID                 VadHint;
-  PVOID                 CloneRoot;
-  ULONG                 NumberOfPrivatePages;
-  ULONG                 NumberOfLockedPages;
-  USHORT                NextPageColor;
-  UCHAR                 ExitProcessCalled;
-  UCHAR                 CreateProcessReported;
-  HANDLE                SectionHandle;
-  PPEB                  Peb;
-  PVOID                 SectionBaseAddress;
-  PEPROCESS_QUOTA_BLOCK QuotaBlock;
-  NTSTATUS              LastThreadExitStatus;
-  PPAGEFAULT_HISTORY    WorkingSetWatch;
-  HANDLE                Win32WindowStation;
-  HANDLE                InheritedFromUniqueProcessId;
-  ULONG                 GrantedAccess;
-  ULONG                 DefaultHardErrorProcessing;
-  PVOID                 LdtInformation;
-  PVOID                 VadFreeHint;
-  PVOID                 VdmObjects;
-  PVOID                 DeviceObjects;
-  ULONG                 SessionId;
-  LIST_ENTRY            PhysicalVadList;
-  HARDWARE_PTE_X86      PageDirectoryPte;
-  ULONGLONG             Filler;
-  ULONG                 PaePageDirectoryPage;
-  CHAR                  ImageFileName[16];
-  ULONG                 VmTrimFaultValue;
-  UCHAR                 SetTimerResolution;
-  UCHAR                 PriorityClass;
-  UCHAR                 SubSystemMinorVersion;
-  UCHAR                 SubSystemMajorVersion;
-  USHORT                SubSystemVersion;
-  struct _W32PROCESS    *Win32Process;
-  struct _EJOB          *Job;
-  ULONG                 JobStatus;
-  LIST_ENTRY            JobLinks;
-  PVOID                 LockedPagesList;
-  struct _EPORT         *SecurityPort;
-  PWOW64_PROCESS        Wow64;
-  LARGE_INTEGER         ReadOperationCount;
-  LARGE_INTEGER         WriteOperationCount;
-  LARGE_INTEGER         OtherOperationCount;
-  LARGE_INTEGER         ReadTransferCount;
-  LARGE_INTEGER         WriteTransferCount;
-  LARGE_INTEGER         OtherTransferCount;
-  ULONG                 CommitChargeLimit;
-  ULONG                 CommitChargePeak;
-  LIST_ENTRY            ThreadListHead;
-  PRTL_BITMAP           VadPhysicalPagesBitMap;
-  ULONG                 VadPhysicalPages;
-  KSPIN_LOCK            AweLock;
-  ULONG                 Cookie;
-
-  /*
-   * FIXME - ReactOS specified - remove the following fields ASAP!!!
-   */
-  MADDRESS_SPACE        AddressSpace;
-  LIST_ENTRY            ProcessListEntry;
+/***************************************************************
+ *                REACTOS SPECIFIC START 
+ ***************************************************************/    
+    /* FIXME WILL BE DEPRECATED WITH PUSHLOCK SUPPORT IN 0.3.0 */
+    KEVENT                LockEvent;                    /* 274 */
+    ULONG                 LockCount;                    /* 284 */
+    struct _KTHREAD       *LockOwner;                   /* 288 */
+    
+    /* FIXME MOVE TO AVL TREES                                 */
+    MADDRESS_SPACE        AddressSpace;                 /* 28C */
 };
+#include <poppack.h>
 
 #define PROCESS_STATE_TERMINATED (1)
 #define PROCESS_STATE_ACTIVE     (2)

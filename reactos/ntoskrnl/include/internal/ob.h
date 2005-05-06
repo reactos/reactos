@@ -209,7 +209,6 @@ typedef struct _TYPE_OBJECT
   POBJECT_TYPE ObjectType;
 } TYPE_OBJECT, *PTYPE_OBJECT;
 
-
 /*
  * Enumeration of object types
  */
@@ -326,6 +325,25 @@ ObpReferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 VOID
 ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
+VOID
+FASTCALL
+ObInitializeFastReference(IN PEX_FAST_REF FastRef, 
+                          PVOID Object);
+
+PVOID
+FASTCALL
+ObFastReplaceObject(IN PEX_FAST_REF FastRef,
+                    PVOID Object);
+                    
+PVOID
+FASTCALL
+ObFastReferenceObject(IN PEX_FAST_REF FastRef);
+
+VOID
+FASTCALL
+ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
+                        PVOID Object);
+                        
 /* Secure object information functions */
 
 typedef struct _CAPTURED_OBJECT_ATTRIBUTES

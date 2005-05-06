@@ -188,6 +188,28 @@ typedef struct _PAGEFAULT_HISTORY
 
 #endif /* __USE_W32API */
 
+typedef struct _MMADDRESS_NODE
+{
+   union {
+       ULONG Balance:2;
+       struct _MMADDRESS_NODE *Parent;
+   } u1;
+   struct _MMADDRESS_NODE *LeftChild;
+   struct _MMADDRESS_NODE *RightChild;
+   ULONG StartingVpn;
+   ULONG EndingVpn;
+} MMADDRESS_NODE, *PMMADDRESS_NODE;
+
+typedef struct _MM_AVL_TABLE
+{
+    MMADDRESS_NODE BalancedRoot;
+    ULONG DepthOfTree:5;
+    ULONG Unused:3;
+    ULONG NumberGenericTableElements:24;
+    PVOID NodeHint;
+    PVOID NodeFreeHint;
+} MM_AVL_TABLE, *PMM_AVL_TABLE;
+
 typedef struct _MEMORY_AREA
 {
   PVOID StartingAddress;

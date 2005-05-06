@@ -280,9 +280,8 @@ PspDumpThreads(BOOLEAN IncludeSystem)
     CurrentProcess = PsActiveProcessHead.Flink;
     while(CurrentProcess != &PsActiveProcessHead)
     {
-    
         /* Get the process */
-        Process = CONTAINING_RECORD(CurrentProcess, EPROCESS, ProcessListEntry);
+        Process = CONTAINING_RECORD(CurrentProcess, EPROCESS, ActiveProcessLinks);
         
         /* Skip the Initial Process if requested */
         if((Process != PsInitialSystemProcess) ||

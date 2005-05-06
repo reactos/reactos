@@ -54,7 +54,7 @@ PsGetWin32Thread(VOID)
 PW32PROCESS STDCALL
 PsGetWin32Process(VOID)
 {
-  return(PsGetCurrentProcess()->Win32Process);
+  return (PW32PROCESS)PsGetCurrentProcess()->Win32Process;
 }
 
 NTSTATUS STDCALL

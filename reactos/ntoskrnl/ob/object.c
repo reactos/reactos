@@ -507,7 +507,7 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
   if (current)
      RtlpCreateUnicodeString (RemainingPath, current, NonPagedPool);
-  ExFreePool(PathString.Buffer);
+  RtlFreeUnicodeString (&PathString);
   *ReturnedObject = CurrentObject;
 
   return STATUS_SUCCESS;
@@ -806,7 +806,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 	    }
 	  RtlFreeUnicodeString(&Header->Name);
 	  RtlFreeUnicodeString(&RemainingPath);
-	  ExFreePoolWithTag(Header, Header->ObjectType->Tag);
+	  ExFreePool(Header);
 	  DPRINT("Create Failed\n");
 	  return Status;
 	}
@@ -1000,7 +1000,7 @@ ObpDeleteObject(POBJECT_HEADER Header)
     }
 
   DPRINT("ObPerformRetentionChecks() = Freeing object\n");
-  ExFreePoolWithTag(Header, Header->ObjectType->Tag);
+  ExFreePool(Header);
 
   return(STATUS_SUCCESS);
 }
@@ -1010,14 +1010,16 @@ VOID STDCALL
 ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
 {
   PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)Parameter;
-  ULONG Tag;
+  /* ULONG Tag; */ /* See below */
 
   ASSERT(Params);
   ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL); /* We need PAGED_CODE somewhere... */
 
-  Tag = Params->ObjectHeader->ObjectType->Tag;
+  /* Turn this on when we have ExFreePoolWithTag
+  Tag = Params->ObjectHeader->ObjectType->Tag; */
   ObpDeleteObject(Params->ObjectHeader);
-  ExFreePoolWithTag(Params, Tag); 
+  ExFreePool(Params);
+  /* ExFreePoolWithTag(Params, Tag); */
 }
 
 
@@ -1115,7 +1117,6 @@ ObfReferenceObject(IN PVOID Object)
 
 }
 
-
 /**********************************************************************
  * NAME							EXPORTED
  *	ObfDereferenceObject@4
@@ -1161,6 +1162,56 @@ ObfDereferenceObject(IN PVOID Object)
     }
 }
 
+VOID
+FASTCALL
+ObInitializeFastReference(IN PEX_FAST_REF FastRef, 
+                          PVOID Object)
+{
+    /* FIXME: Fast Referencing is Unimplemented */
+    FastRef->Object = Object;
+}
+
+
+PVOID
+FASTCALL
+ObFastReferenceObject(IN PEX_FAST_REF FastRef)
+{
+    /* FIXME: Fast Referencing is Unimplemented */
+    
+    /* Do a normal Reference */
+    ObReferenceObject(FastRef->Object);
+    
+    /* Return the Object */
+    return FastRef->Object;
+}
+
+VOID
+FASTCALL
+ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
+                        PVOID Object)
+{
+    /* FIXME: Fast Referencing is Unimplemented */
+    
+    /* Do a normal Dereference */
+    ObDereferenceObject(FastRef->Object);
+}
+
+PVOID
+FASTCALL
+ObFastReplaceObject(IN PEX_FAST_REF FastRef,
+                    PVOID Object)
+{
+    PVOID OldObject = FastRef->Object;
+    
+    /* FIXME: Fast Referencing is Unimplemented */
+    FastRef->Object = Object;
+    
+    /* Do a normal Dereference */
+    ObDereferenceObject(OldObject);
+
+    /* Return old Object*/
+    return OldObject;
+}
 
 /**********************************************************************
  * NAME							EXPORTED

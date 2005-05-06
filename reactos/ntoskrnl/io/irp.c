@@ -901,7 +901,7 @@ STDCALL
 IoGetRequestorSessionId(IN PIRP Irp,
                         OUT PULONG pSessionId)
 {
-    *pSessionId = IoGetRequestorProcess(Irp)->SessionId;
+    *pSessionId = IoGetRequestorProcess(Irp)->Session;
     
     return STATUS_SUCCESS;
 }

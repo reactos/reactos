@@ -93,7 +93,7 @@ PspKillMostProcesses(VOID)
     current_entry = PsActiveProcessHead.Flink;
     while (current_entry != &PsActiveProcessHead)
     {
-        current = CONTAINING_RECORD(current_entry, EPROCESS, ProcessListEntry);
+        current = CONTAINING_RECORD(current_entry, EPROCESS, ActiveProcessLinks);
         current_entry = current_entry->Flink;
     
         if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
@@ -150,7 +150,7 @@ PspDeleteProcess(PVOID ObjectBody)
 
     /* Remove it from the Active List */
     ExAcquireFastMutex(&PspActiveProcessMutex);
-    RemoveEntryList(&Process->ProcessListEntry);
+    RemoveEntryList(&Process->ActiveProcessLinks);
     ExReleaseFastMutex(&PspActiveProcessMutex);
     
     /* Delete the CID Handle */   
@@ -162,8 +162,10 @@ PspDeleteProcess(PVOID ObjectBody)
     /* KDB hook */
     KDB_DELETEPROCESS_HOOK(Process);
     
-    /* Dereference the Token and release Memory Information */
-    ObDereferenceObject(Process->Token);
+    /* Dereference the Token */
+    SeDeassignPrimaryToken(Process);
+    
+    /* Release Memory Information */
     MmReleaseMmInfo(Process);
  
     /* Delete the W32PROCESS structure if there's one associated */

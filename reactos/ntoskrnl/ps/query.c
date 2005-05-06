@@ -287,7 +287,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 
         _SEH_TRY
         {
-          SessionInfo->SessionId = Process->SessionId;
+          SessionInfo->SessionId = Process->Session;
           if (ReturnLength)
           {
             *ReturnLength = sizeof(PROCESS_SESSION_INFORMATION);
@@ -318,16 +318,16 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	   * incompatibilities in current headers (no unnamed union),
 	   * I opted for cast.
 	   */
-	  pOut->VirtualSize                = (ULONG)Process->VirtualSize.QuadPart;
+	  pOut->VirtualSize                = (ULONG)Process->VirtualSize;
 	  pOut->PageFaultCount             = Process->Vm.PageFaultCount;
 	  pOut->PeakWorkingSetSize         = Process->Vm.PeakWorkingSetSize;
 	  pOut->WorkingSetSize             = Process->Vm.WorkingSetSize;
-	  pOut->QuotaPeakPagedPoolUsage    = Process->QuotaPeakPoolUsage[0]; // TODO: Verify!
-	  pOut->QuotaPagedPoolUsage        = Process->QuotaPoolUsage[0];     // TODO: Verify!
-	  pOut->QuotaPeakNonPagedPoolUsage = Process->QuotaPeakPoolUsage[1]; // TODO: Verify!
-	  pOut->QuotaNonPagedPoolUsage     = Process->QuotaPoolUsage[1];     // TODO: Verify!
-	  pOut->PagefileUsage              = Process->PagefileUsage;
-	  pOut->PeakPagefileUsage          = Process->PeakPagefileUsage;
+	  pOut->QuotaPeakPagedPoolUsage    = Process->QuotaPeak[0]; // TODO: Verify!
+	  pOut->QuotaPagedPoolUsage        = Process->QuotaUsage[0];     // TODO: Verify!
+	  pOut->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1]; // TODO: Verify!
+	  pOut->QuotaNonPagedPoolUsage     = Process->QuotaUsage[1];     // TODO: Verify!
+	  pOut->PagefileUsage              = Process->QuotaUsage[2];
+	  pOut->PeakPagefileUsage          = Process->QuotaPeak[2];
 
 	  if (ReturnLength)
 	  {
@@ -841,7 +841,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
           Status = PsLockProcess(Process, FALSE);
           if(NT_SUCCESS(Status))
           {
-            Process->SessionId = SessionInfo.SessionId;
+            Process->Session = SessionInfo.SessionId;
 
             /* Update the session id in the PEB structure */
             if(Process->Peb != NULL)
