@@ -61,7 +61,14 @@ typedef enum _KWAIT_REASON
    Spare5,
    Spare6,
    WrKernel,
-   MaximumWaitReason,
+   WrResource,
+   WrPushLock,
+   WrMutex,
+   WrQuantumEnd,
+   WrDispatchInt,
+   WrPreempted,
+   WrYieldExecution,
+   MaximumWaitReason
 } KWAIT_REASON;
 
 #endif

@@ -695,13 +695,6 @@ typedef VOID STDCALL_FUNC
 			IN BOOLEAN DriverActive);
 #endif // (_WIN32_WINNT >= 0x0400)
 
-typedef struct _KDEVICE_QUEUE_ENTRY
-{
-   LIST_ENTRY DeviceListEntry;
-   ULONG SortKey;
-   BOOLEAN Inserted;
-} KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY;
-
 typedef struct _WAIT_CONTEXT_BLOCK
 {
   KDEVICE_QUEUE_ENTRY WaitQueueEntry;

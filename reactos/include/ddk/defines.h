@@ -99,10 +99,12 @@ enum
 #define DESKTOP_SWITCHDESKTOP	(0x100L)
 #define DESKTOP_WRITEOBJECTS	(0x80L)
 
-#endif /* __ASM__ */
+#else
 
 /* Values returned by KeGetPreviousMode() */
 #define KernelMode (0)
 #define UserMode   (1)
+
+#endif /* __ASM__ */
 
 #endif /* ndef _DDK_DEFINES_H */

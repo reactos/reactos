@@ -39,6 +39,8 @@ typedef struct _KPROCESS *PKPROCESS;
 
 #endif /* __USE_W32API */
 
+typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
+
 typedef struct _HARDWARE_PTE_X86 {
     ULONG Valid             : 1;
     ULONG Write             : 1;
