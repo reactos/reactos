@@ -523,7 +523,7 @@ Module::GetDefaultModuleExtension () const
 string
 Module::GetDefaultModuleEntrypoint () const
 {
-	switch (type)
+	switch ( type )
 	{
 		case Kernel:
 			return "_NtProcessStartup";
@@ -560,7 +560,7 @@ Module::GetDefaultModuleEntrypoint () const
 string
 Module::GetDefaultModuleBaseaddress () const
 {
-	switch (type)
+	switch ( type )
 	{
 		case Kernel:
 			return "0xc0000000";
@@ -598,6 +598,36 @@ bool
 Module::HasImportLibrary () const
 {
 	return importLibrary != NULL;
+}
+
+bool
+Module::IsDLL () const
+{
+	switch ( type )
+	{
+		case Kernel:
+		case KernelModeDLL:
+		case NativeDLL:
+		case Win32DLL:
+		case KernelModeDriver:
+			return true;
+		case NativeCUI:
+		case Win32CUI:
+		case Test:
+		case Win32GUI:
+		case BuildTool:
+		case StaticLibrary:
+		case ObjectLibrary:
+		case BootLoader:
+		case BootSector:
+		case Iso:
+		case LiveIso:
+		case RpcServer:
+		case RpcClient:
+			return false;
+	}
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
 }
 
 string

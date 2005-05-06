@@ -1254,7 +1254,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 		target_folder.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	string targetName ( module.GetTargetName () );
-	if ( module.importLibrary != NULL )
+
+	if ( module.IsDLL () )
 	{
 		string base_tmp = ros_temp + module.name + ".base.tmp";
 		CLEAN_FILE ( base_tmp );
@@ -1263,7 +1264,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
 		string def_file = GetDefinitionFilename ();
-
+	
 		fprintf ( fMakefile,
 		          "\t%s %s -Wl,--base-file,%s -o %s %s %s %s\n",
 		          linker.c_str (),
@@ -1273,11 +1274,11 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
-
+	
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
 		          junk_tmp.c_str () );
-
+	
 		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s %s\n",
@@ -1286,11 +1287,11 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          def_file.c_str (),
 		          temp_exp.c_str (),
 		          killAt.c_str () );
-
+	
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
 		          base_tmp.c_str () );
-
+	
 		fprintf ( fMakefile,
 		          "\t%s %s %s -o %s %s %s %s\n",
 		          linker.c_str (),
@@ -1300,12 +1301,21 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
-
+	
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
 		          temp_exp.c_str () );
 		
 		GenerateCleanObjectsAsYouGoCode ();
+	
+		GenerateBuildMapCode ();
+	
+		GenerateBuildNonSymbolStrippedCode ();
+	
+		fprintf ( fMakefile,
+		          "\t$(ECHO_RSYM)\n" );
+		fprintf ( fMakefile,
+		          "\t$(Q)$(RSYM_TARGET) $@ $@\n\n" );
 	}
 	else
 	{
@@ -1320,15 +1330,6 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 		GenerateCleanObjectsAsYouGoCode ();
 	}
-
-	GenerateBuildMapCode ();
-
-	GenerateBuildNonSymbolStrippedCode ();
-
-	fprintf ( fMakefile,
-	          "\t$(ECHO_RSYM)\n" );
-	fprintf ( fMakefile,
-	          "\t$(Q)$(RSYM_TARGET) $@ $@\n\n" );
 }
 
 void
@@ -1790,12 +1791,17 @@ MingwModuleHandler::IsWineModule () const
 string
 MingwModuleHandler::GetDefinitionFilename () const
 {
-	string defFilename = module.GetBasePath () + SSEP + module.importLibrary->definition;
-	if ( IsWineModule () )
-		return PassThruCacheDirectory ( NormalizeFilename ( defFilename ),
-		                                backend->intermediateDirectory );
+	if ( module.importLibrary != NULL )
+	{
+		string defFilename = module.GetBasePath () + SSEP + module.importLibrary->definition;
+		if ( IsWineModule () )
+			return PassThruCacheDirectory ( NormalizeFilename ( defFilename ),
+			                                backend->intermediateDirectory );
+		else
+			return defFilename;
+	}
 	else
-		return defFilename;
+		return "tools" SSEP "rbuild" SSEP "empty.def";
 }
 
 void
@@ -1954,7 +1960,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 	CLEAN_FILE ( junk_tmp );
 	string temp_exp = ros_temp + module.name + ".temp.exp";
 	CLEAN_FILE ( temp_exp );
-	string gccOptions = ssprintf ("-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+	string gccOptions = ssprintf ("-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll -Wl,--dll",
 	                              module.GetBasePath ().c_str (),
 	                              module.entrypoint.c_str (),
 	                              module.baseaddress.c_str () );
@@ -2076,7 +2082,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll --dll",
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
@@ -2123,7 +2129,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll -Wl,--dll",
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
@@ -2169,7 +2175,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll",
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll -Wl,--dll",
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
@@ -2291,7 +2297,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 		else
 			linker = "${gcc}";
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll",
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll -Wl,--dll",
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,

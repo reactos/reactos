@@ -123,24 +123,24 @@ private:
 
 enum ModuleType
 {
-	BuildTool,
-	StaticLibrary,
-	ObjectLibrary,
-	Kernel,
-	KernelModeDLL,
-	KernelModeDriver,
-	NativeDLL,
-	NativeCUI,
-	Win32DLL,
-	Win32CUI,
-	Win32GUI,
-	BootLoader,
-	BootSector,
-	Iso,
-	LiveIso,
-	Test,
-	RpcServer,
-	RpcClient
+	BuildTool = 0,
+	StaticLibrary = 1,
+	ObjectLibrary = 2,
+	Kernel = 3,
+	KernelModeDLL = 4,
+	KernelModeDriver = 5,
+	NativeDLL = 6,
+	NativeCUI = 7,
+	Win32DLL = 8,
+	Win32CUI = 9,
+	Win32GUI = 10,
+	BootLoader = 11,
+	BootSector = 12,
+	Iso = 13,
+	LiveIso = 14,
+	Test = 15,
+	RpcServer = 16,
+	RpcClient = 17
 };
 
 enum HostType
@@ -187,6 +187,7 @@ public:
 	ModuleType GetModuleType ( const std::string& location,
 	                           const XMLAttribute& attribute );
 	bool HasImportLibrary () const;
+	bool IsDLL () const;
 	std::string GetTargetName () const;
 	std::string GetDependencyPath () const;
 	std::string GetBasePath () const;

@@ -40,7 +40,7 @@ OutOfMemoryException::OutOfMemoryException ()
 
 
 InvalidOperationException::InvalidOperationException ( const char* filename,
-	                                                   const int linenumber )
+                                                       const int linenumber )
 {
 	Message = ssprintf ( "%s:%d",
 	                     filename,
@@ -48,9 +48,9 @@ InvalidOperationException::InvalidOperationException ( const char* filename,
 }
 
 InvalidOperationException::InvalidOperationException ( const char* filename,
-	                                                   const int linenumber,
-	                                                   const char* message,
-	                                                   ... )
+                                                       const int linenumber,
+                                                       const char* message,
+                                                       ... )
 {
 	string errorMessage;
 	va_list args;
