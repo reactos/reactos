@@ -71,12 +71,12 @@ IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
       return FALSE;
     }
 
-    LogonProcess = Process->Win32Process;
+    LogonProcess = (PW32PROCESS)Process->Win32Process;
   }
   else
   {
     /* Deregister the logon process */
-    if (LogonProcess != Process->Win32Process)
+    if (LogonProcess != (PW32PROCESS)Process->Win32Process)
     {
       ObDereferenceObject(Process);
       return FALSE;
@@ -1277,7 +1277,7 @@ NtUserGetGuiResources(
     return 0;
   }
   
-  W32Process = Process->Win32Process;
+  W32Process = (PW32PROCESS)Process->Win32Process;
   if(!W32Process)
   {
     ObDereferenceObject(Process);

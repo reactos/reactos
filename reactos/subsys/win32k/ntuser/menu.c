@@ -234,9 +234,9 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject,
     
     if(RemoveFromProcess)
     {
-      IntLockProcessMenus(MenuObject->Process->Win32Process);
+      IntLockProcessMenus((PW32PROCESS)MenuObject->Process->Win32Process);
       RemoveEntryList(&MenuObject->ListEntry);
-      IntUnLockProcessMenus(MenuObject->Process->Win32Process);
+      IntUnLockProcessMenus((PW32PROCESS)MenuObject->Process->Win32Process);
     }
     
     Status = ObReferenceObjectByHandle(MenuObject->Process->Win32WindowStation,

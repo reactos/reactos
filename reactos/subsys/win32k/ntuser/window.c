@@ -566,7 +566,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
   ULONG Cnt = 0;
 
   Win32Thread = Thread->Tcb.Win32Thread;
-  Win32Process = Thread->ThreadsProcess->Win32Process;
+  Win32Process = (PW32PROCESS)Thread->ThreadsProcess->Win32Process;
   
   IntLockThreadWindows(Win32Thread);
   Current = Win32Thread->WindowListHead.Flink;

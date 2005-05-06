@@ -93,7 +93,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 {
   PW32PROCESS Win32Process;
   
-  Win32Process = Process->Win32Process;
+  Win32Process = (PW32PROCESS)Process->Win32Process;
   if (Create)
     {
       DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());

@@ -660,7 +660,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
     {
       KeAttachProcess(Process);
     }
-  W32Process = Process->Win32Process;
+  W32Process = (PW32PROCESS)Process->Win32Process;
   ASSERT(W32Process);
 
   if(W32Process->GDIObjects > 0)
@@ -1110,7 +1110,7 @@ LockHandle:
             Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
             if(NT_SUCCESS(Status))
             {
-              W32Process = OldProcess->Win32Process;
+              W32Process = (PW32PROCESS)OldProcess->Win32Process;
               if(W32Process != NULL)
               {
                 InterlockedDecrement(&W32Process->GDIObjects);
@@ -1221,7 +1221,7 @@ LockHandle:
             Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
             if(NT_SUCCESS(Status))
             {
-              W32Process = OldProcess->Win32Process;
+              W32Process = (PW32PROCESS)OldProcess->Win32Process;
               if(W32Process != NULL)
               {
                 InterlockedDecrement(&W32Process->GDIObjects);
@@ -1235,7 +1235,7 @@ LockHandle:
             ProcessId = PsGetProcessId(NewOwner);
 
             /* Increase the new process' object counter */
-            W32Process = NewOwner->Win32Process;
+            W32Process = (PW32PROCESS)NewOwner->Win32Process;
             if(W32Process != NULL)
             {
               InterlockedIncrement(&W32Process->GDIObjects);
