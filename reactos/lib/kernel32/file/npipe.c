@@ -892,64 +892,93 @@ PeekNamedPipe(HANDLE hNamedPipe,
  * @implemented
  */
 BOOL STDCALL
-TransactNamedPipe(HANDLE hNamedPipe,
-		  LPVOID lpInBuffer,
-		  DWORD nInBufferSize,
-		  LPVOID lpOutBuffer,
-		  DWORD nOutBufferSize,
-		  LPDWORD lpBytesRead,
-		  LPOVERLAPPED lpOverlapped)
+TransactNamedPipe(IN HANDLE hNamedPipe,
+                  IN LPVOID lpInBuffer,
+                  IN DWORD nInBufferSize,
+                  OUT LPVOID lpOutBuffer,
+                  IN DWORD nOutBufferSize,
+                  OUT LPDWORD lpBytesRead  OPTIONAL,
+                  IN LPOVERLAPPED lpOverlapped  OPTIONAL)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
+   NTSTATUS Status;
+   
+   if (lpBytesRead != NULL)
+     {
+        *lpBytesRead = 0;
+     }
 
-  if (lpOverlapped == NULL)
-    {
-      Status = NtFsControlFile(hNamedPipe,
-			       NULL,
-			       NULL,
-			       NULL,
-			       &IoStatusBlock,
-			       FSCTL_PIPE_TRANSCEIVE,
-			       lpInBuffer,
-			       nInBufferSize,
-			       lpOutBuffer,
-			       nOutBufferSize);
-      if (Status == STATUS_PENDING)
-	{
-	  NtWaitForSingleObject(hNamedPipe,
-				0,
-				FALSE);
-	  Status = IoStatusBlock.Status;
-	}
-      if (NT_SUCCESS(Status))
-	{
-	  *lpBytesRead = IoStatusBlock.Information;
-	}
-    }
-  else
-    {
-      lpOverlapped->Internal = STATUS_PENDING;
+   if (lpOverlapped != NULL)
+     {
+        PVOID ApcContext;
 
-      Status = NtFsControlFile(hNamedPipe,
-			       lpOverlapped->hEvent,
-			       NULL,
-			       NULL,
-			       (PIO_STATUS_BLOCK)lpOverlapped,
-			       FSCTL_PIPE_TRANSCEIVE,
-			       lpInBuffer,
-			       nInBufferSize,
-			       lpOutBuffer,
-			       nOutBufferSize);
-    }
+        ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
+        lpOverlapped->Internal = STATUS_PENDING;
 
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
+        Status = NtFsControlFile(hNamedPipe,
+                                 lpOverlapped->hEvent,
+                                 NULL,
+                                 ApcContext,
+                                 (PIO_STATUS_BLOCK)lpOverlapped,
+                                 FSCTL_PIPE_TRANSCEIVE,
+                                 lpInBuffer,
+                                 nInBufferSize,
+                                 lpOutBuffer,
+                                 nOutBufferSize);
 
-  return(TRUE);
+        /* return FALSE in case of failure and pending operations! */
+        if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
+          {
+             SetLastErrorByStatus(Status);
+             return FALSE;
+          }
+
+        if (lpBytesRead != NULL)
+          {
+             *lpBytesRead = lpOverlapped->InternalHigh;
+          }
+     }
+   else
+     {
+        IO_STATUS_BLOCK Iosb;
+        
+        Status = NtFsControlFile(hNamedPipe,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &Iosb,
+                                 FSCTL_PIPE_TRANSCEIVE,
+                                 lpInBuffer,
+                                 nInBufferSize,
+                                 lpOutBuffer,
+                                 nOutBufferSize);
+
+        /* wait in case operation is pending */
+        if (Status == STATUS_PENDING)
+          {
+             Status = NtWaitForSingleObject(hNamedPipe,
+                                            FALSE,
+                                            NULL);
+             if (NT_SUCCESS(Status))
+               {
+                  Status = Iosb.Status;
+               }
+          }
+
+        if (NT_SUCCESS(Status))
+          {
+             /* lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
+                check that case either and crashes (only after the operation
+                completed) */
+             *lpBytesRead = Iosb.Information;
+          }
+        else
+          {
+             SetLastErrorByStatus(Status);
+             return FALSE;
+          }
+     }
+
+   return TRUE;
 }
 
 /* EOF */
