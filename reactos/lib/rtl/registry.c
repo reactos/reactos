@@ -257,7 +257,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
   DPRINT ("RtlFormatCurrentUserKeyPath() called\n");
 
   Status = ZwOpenThreadToken (NtCurrentThread (),
-			      TOKEN_READ,
+			      TOKEN_QUERY,
 			      TRUE,
 			      &TokenHandle);
   if (!NT_SUCCESS (Status))
@@ -269,7 +269,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 	}
 
       Status = ZwOpenProcessToken (NtCurrentProcess (),
-				   TOKEN_READ,
+				   TOKEN_QUERY,
 				   &TokenHandle);
       if (!NT_SUCCESS (Status))
 	{
