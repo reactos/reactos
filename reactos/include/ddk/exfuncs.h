@@ -719,9 +719,9 @@ ExVerifySuite(
     SUITE_TYPE SuiteType
     );
 
-BOOLEAN
+LONG
 STDCALL
-ExSystemExceptionFilter();
+ExSystemExceptionFilter(VOID);
 
 VOID
 STDCALL

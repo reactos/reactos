@@ -120,7 +120,7 @@ NtCreateEvent(OUT PHANDLE EventHandle,
             ProbeForWrite(EventHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -164,7 +164,7 @@ NtCreateEvent(OUT PHANDLE EventHandle,
                 
                 *EventHandle = hEvent;
             
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
                 
@@ -200,7 +200,7 @@ NtOpenEvent(OUT PHANDLE EventHandle,
             ProbeForWrite(EventHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -225,7 +225,7 @@ NtOpenEvent(OUT PHANDLE EventHandle,
             
             *EventHandle = hEvent;
                 
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -260,7 +260,7 @@ NtPulseEvent(IN HANDLE EventHandle,
             ProbeForWrite(PreviousState,
                           sizeof(LONG),
                           sizeof(ULONG));
-         } _SEH_HANDLE {
+         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
              
             Status = _SEH_GetExceptionCode();
             
@@ -291,7 +291,7 @@ NtPulseEvent(IN HANDLE EventHandle,
                 
                 *PreviousState = Prev;
             
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
             
@@ -358,12 +358,12 @@ NtQueryEvent(IN HANDLE EventHandle,
             /* Return length */
             if(ReturnLength) *ReturnLength = sizeof(EVENT_BASIC_INFORMATION);
             
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
         } _SEH_END;
-     
+
         /* Dereference the Object */
         ObDereferenceObject(Event);
    }
@@ -396,7 +396,7 @@ NtResetEvent(IN HANDLE EventHandle,
             ProbeForWrite(PreviousState,
                           sizeof(LONG),
                           sizeof(ULONG));
-         } _SEH_HANDLE {
+         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
              
             Status = _SEH_GetExceptionCode();
             
@@ -427,7 +427,7 @@ NtResetEvent(IN HANDLE EventHandle,
                 
                 *PreviousState = Prev;
             
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
             
@@ -463,7 +463,7 @@ NtSetEvent(IN HANDLE EventHandle,
             ProbeForWrite(PreviousState,
                           sizeof(LONG),
                           sizeof(ULONG));
-         } _SEH_HANDLE {
+         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
              
             Status = _SEH_GetExceptionCode();
             
@@ -494,7 +494,7 @@ NtSetEvent(IN HANDLE EventHandle,
                 
                 *PreviousState = Prev;
             
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
             

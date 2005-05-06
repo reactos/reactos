@@ -131,7 +131,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
                       sizeof(ULONG));
       }
     }
-    _SEH_HANDLE
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
       Status = _SEH_GetExceptionCode();
     }
@@ -208,7 +208,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
       RtlInitAnsiString(&AValue, Value);
       Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, TRUE);
     }
-    _SEH_HANDLE
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
       Status = _SEH_GetExceptionCode();
     }
@@ -230,7 +230,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 
         Status = STATUS_SUCCESS;
       }
-      _SEH_HANDLE
+      _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
       {
         Status = _SEH_GetExceptionCode();
       }
@@ -740,7 +740,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 
 	*ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION);
 	/*
-	 * Check user buffer's size
+	 * Check user buffer's size 
 	 */
 	if (Size < KeNumberProcessors * sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION))
 	{
@@ -760,7 +760,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	   Spi++;
 	   Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
 	}
-
+     
 	return (STATUS_SUCCESS);
 }
 

@@ -1,4 +1,4 @@
-; Copyright (c) 2004 KJK::Hyperion
+; Copyright (c) 2004/2005 KJK::Hyperion
 
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,11 @@ __SEHCleanHandlerEnvironment:
  cld
  ret
 
+global __SEHCurrentRegistration
+__SEHCurrentRegistration:
+ mov eax, [fs:0]
+ ret
+
 global __SEHRegisterFrame
 __SEHRegisterFrame:
  mov ecx, [esp+4]
@@ -35,33 +40,32 @@ __SEHRegisterFrame:
 
 global __SEHUnregisterFrame
 __SEHUnregisterFrame:
- mov ecx, [esp+4]
- mov ecx, [ecx]
+ mov ecx, [fs:0]
+ mov ecx, [ecx+0]
  mov [fs:0], ecx
  ret
 
-global __SEHUnwind
-__SEHUnwind:
+global __SEHGlobalUnwind
+__SEHGlobalUnwind:
 
  extern __SEHRtlUnwind
 
- mov ecx, [esp+4]
-
 ; RtlUnwind clobbers all the "don't clobber" registers, so we save them
+ push ebx
+ mov ebx, [esp+8]
  push esi
  push edi
- push ebx
 
- xor eax, eax
- push eax ; ReturnValue
- push eax ; ExceptionRecord
- push eax ; TargetIp
- push ecx ; TargetFrame
+ push 0x0 ; ReturnValue
+ push 0x0 ; ExceptionRecord
+ push .RestoreRegisters ; TargetIp
+ push ebx ; TargetFrame
  call [__SEHRtlUnwind]
 
- pop ebx
+.RestoreRegisters:
  pop edi
  pop esi
+ pop ebx
 
  ret
 

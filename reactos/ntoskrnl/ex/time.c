@@ -170,7 +170,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
                       sizeof(ULONG));
       }
     }
-    _SEH_HANDLE
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
       Status = _SEH_GetExceptionCode();
     }
@@ -213,7 +213,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     {
       *PreviousTime = OldSystemTime;
     }
-    _SEH_HANDLE
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
       Status = _SEH_GetExceptionCode();
     }
@@ -253,7 +253,7 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
          can happen! */
       KeQuerySystemTime(SystemTime);
     }
-    _SEH_HANDLE
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
       Status = _SEH_GetExceptionCode();
     }

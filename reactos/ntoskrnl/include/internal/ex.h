@@ -172,6 +172,17 @@ ExChangeHandle(IN PHANDLE_TABLE HandleTable,
                IN PEX_CHANGE_HANDLE_CALLBACK ChangeHandleCallback,
                IN PVOID Context);
 
+/* PSEH EXCEPTION HANDLING **************************************************/
+
+LONG
+STDCALL
+ExSystemExceptionFilter(VOID);
+
+static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
+{
+  return ExSystemExceptionFilter();
+}
+
 /* OTHER FUNCTIONS **********************************************************/
 
 LONGLONG 

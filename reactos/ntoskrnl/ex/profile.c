@@ -137,7 +137,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
             ProbeForWrite(Buffer,
                           BufferSize,
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         } _SEH_END;
@@ -219,7 +219,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
         
         *ProfileHandle = hProfile;
         
-    } _SEH_HANDLE {
+    } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
         
         Status = _SEH_GetExceptionCode();
     } _SEH_END;
@@ -249,7 +249,7 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
             ProbeForWrite(PerformanceFrequency,
                           sizeof(LARGE_INTEGER),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         } _SEH_END;
@@ -267,7 +267,7 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
             
             *PerformanceFrequency = PerfFrequency;
         }
-    } _SEH_HANDLE {
+    } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
         
         Status = _SEH_GetExceptionCode();
     
@@ -420,7 +420,7 @@ NtQueryIntervalProfile(IN  KPROFILE_SOURCE ProfileSource,
                           sizeof(ULONG),
                           sizeof(ULONG));
             
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         } _SEH_END;
@@ -436,7 +436,7 @@ NtQueryIntervalProfile(IN  KPROFILE_SOURCE ProfileSource,
         
         *Interval = ReturnInterval;
         
-    } _SEH_HANDLE {
+    } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
         
         Status = _SEH_GetExceptionCode();
         

@@ -5,6 +5,9 @@
 #define __WIN32K__
 #define NTOS_MODE_KERNEL
 
+#include <malloc.h>
+#include <pseh.h>
+
 #include <roscfg.h>
 #include <roskrnl.h>
 

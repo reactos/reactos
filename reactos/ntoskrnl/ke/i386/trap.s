@@ -71,8 +71,8 @@ _KiTrapRet:
 	/* Restore the old exception handler list */
 	popl	%ebx
 	movl	%ebx, %fs:KPCR_EXCEPTION_LIST
-	
-	popl	%fs 
+
+	popl	%fs
 	popl	%edi
 	popl	%esi
 	popl	%ebx

@@ -211,10 +211,10 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
             /* Couldn't charge, so free the pool and let the caller SEH manage */
             ExFreePool(Block);
             return EXCEPTION_CONTINUE_SEARCH;
-        } _SEH_TRY_FILTER(FreeAndGoOn) {
+        } _SEH_TRY {
             //* FIXME: Is there a way to get the actual Pool size allocated from the pool header? */
             PsChargePoolQuota(Process, PoolType, NumberOfBytes);
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(FreeAndGoOn) {
             /* Quota Exceeded and the caller had no SEH! */
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
         } _SEH_END;

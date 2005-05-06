@@ -102,7 +102,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
             ProbeForWrite(MutantHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -145,7 +145,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
                 
                 *MutantHandle = hMutant;
             
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
                 
@@ -181,7 +181,7 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
             ProbeForWrite(MutantHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -206,7 +206,7 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
             
             *MutantHandle = hMutant;
         
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -270,7 +270,7 @@ NtQueryMutant(IN HANDLE MutantHandle,
             /* Return the Result Length if requested */
            if(ResultLength) *ResultLength = sizeof(MUTANT_BASIC_INFORMATION);
         
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -313,7 +313,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
             ProbeForWrite(PreviousCount,
                           sizeof(LONG),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -341,7 +341,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
 
             Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, FALSE, FALSE);
 
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
 
@@ -358,7 +358,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
 
                     *PreviousCount = Prev;
 
-                } _SEH_HANDLE {
+                } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                     Status = _SEH_GetExceptionCode();
 

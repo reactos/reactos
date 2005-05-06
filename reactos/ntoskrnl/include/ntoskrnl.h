@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 #include <wchar.h>
 #include <roskrnl.h>
 #include <ntos/minmax.h>
@@ -29,6 +30,7 @@
 #include <ddk/pnpfuncs.h>
 #include <ddk/wdmguid.h>
 #include <ntdll/ldr.h>
+#include <pseh.h>
 #include <internal/ctype.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
@@ -65,8 +67,6 @@
 #include <napi/dbg.h>
 #include <napi/teb.h>
 #include <napi/win32.h>
-
-#include <pseh.h>
 
 #ifndef RTL_CONSTANT_STRING
 #define RTL_CONSTANT_STRING(__SOURCE_STRING__) \

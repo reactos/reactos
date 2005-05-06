@@ -85,7 +85,7 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
             ProbeForWrite(SemaphoreHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -136,7 +136,7 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
                 
                 *SemaphoreHandle = hSemaphore;
             
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
                 
@@ -171,7 +171,7 @@ NtOpenSemaphore(OUT PHANDLE SemaphoreHandle,
             ProbeForWrite(SemaphoreHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -196,7 +196,7 @@ NtOpenSemaphore(OUT PHANDLE SemaphoreHandle,
             
             *SemaphoreHandle = hSemaphore;
         
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -261,7 +261,7 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
             /* Return length */
             if(ReturnLength) *ReturnLength = sizeof(SEMAPHORE_BASIC_INFORMATION);
             
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -298,7 +298,7 @@ NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
             ProbeForWrite(PreviousCount,
                           sizeof(LONG),
                           sizeof(ULONG));
-         } _SEH_HANDLE {
+         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
              
             Status = _SEH_GetExceptionCode();
             
@@ -339,7 +339,7 @@ NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
                 
                 *PreviousCount = PrevCount;
             
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
             

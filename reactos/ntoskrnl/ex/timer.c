@@ -278,7 +278,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
             ProbeForWrite(CurrentState,
                           sizeof(BOOLEAN),
                           sizeof(BOOLEAN));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             Status = _SEH_GetExceptionCode();
         } _SEH_END;
      
@@ -356,7 +356,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
                 
                 *CurrentState = State;
                 
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
                 
@@ -392,7 +392,7 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
             ProbeForWrite(TimerHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -444,7 +444,7 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
             
             *TimerHandle = hTimer;
             
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -478,7 +478,7 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
             
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -504,7 +504,7 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
             
             *TimerHandle = hTimer;
             
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -567,7 +567,7 @@ NtQueryTimer(IN HANDLE TimerHandle,
 
             if(ReturnLength != NULL) *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
 
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
                   
@@ -621,7 +621,7 @@ NtSetTimer(IN HANDLE TimerHandle,
                               sizeof(BOOLEAN));
             }
             
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
@@ -745,7 +745,7 @@ NtSetTimer(IN HANDLE TimerHandle,
                 
                 *PreviousState = State;
                 
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
                 

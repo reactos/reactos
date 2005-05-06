@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <malloc.h>
 #include <limits.h>
 #include <wchar.h>
 #include <string.h>

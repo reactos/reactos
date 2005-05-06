@@ -78,7 +78,7 @@ ExRaiseException (PEXCEPTION_RECORD ExceptionRecord)
 /*
  * @implemented
  */
-BOOLEAN
+LONG
 STDCALL
 ExSystemExceptionFilter(VOID)
 {

@@ -79,7 +79,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
             ProbeForWrite(EventPairHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -123,7 +123,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
                 
                 *EventPairHandle = hEventPair;
             
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
                 
                 Status = _SEH_GetExceptionCode();
                 
@@ -155,7 +155,7 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
             ProbeForWrite(EventPairHandle,
                           sizeof(HANDLE),
                           sizeof(ULONG));
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
         
@@ -180,7 +180,7 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
             
             *EventPairHandle = hEventPair;
                 
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
             
             Status = _SEH_GetExceptionCode();
             
