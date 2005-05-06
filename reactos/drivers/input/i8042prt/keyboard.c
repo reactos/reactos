@@ -551,6 +551,26 @@ intcontfailure:
 	return Irp->IoStatus.Status;
 }
 
+/* This is all pretty confusing. There's more than one way to
+ * disable/enable the keyboard. You can send KBD_ENABLE to the
+ * keyboard, and it will start scanning keys. Sending KBD_DISABLE
+ * will disable the key scanning but also reset the parameters to
+ * defaults.
+ *
+ * You can also send 0xAE to the controller for enabling the
+ * keyboard clock line and 0xAD for disabling it. Then it'll
+ * automatically get turned on at the next command. The last
+ * way is by modifying the bit that drives the clock line in the
+ * 'command byte' of the controller. This is almost, but not quite,
+ * the same as the AE/AD thing. The difference can be used to detect
+ * some really old broken keyboard controllers which I hope won't be
+ * necessary.
+ *
+ * Anyway, disabling the keyboard helps the detection and it also
+ * clears the keyboard buffer and sets defaults which is what we
+ * want.
+ */
+
 BOOLEAN STDCALL I8042KeyboardEnable(PDEVICE_EXTENSION DevExt)
 {
 	DPRINT("Enabling keyboard\n");
@@ -559,6 +579,19 @@ BOOLEAN STDCALL I8042KeyboardEnable(PDEVICE_EXTENSION DevExt)
 	                                          KBD_ENABLE,
 	                                          TRUE)) {
 		DPRINT("Can't enable keyboard\n");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOLEAN STDCALL I8042KeyboardDefaultsAndDisable(PDEVICE_EXTENSION DevExt)
+{
+	DPRINT("Disabling keyboard\n");
+	if (STATUS_SUCCESS != I8042SynchWritePort(DevExt,
+	                                          0,
+	                                          KBD_DISABLE,
+	                                          TRUE)) {
+		DPRINT("Can't disable keyboard\n");
 		return FALSE;
 	}
 	return TRUE;
@@ -606,12 +639,14 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 
 	DPRINT("Detecting keyboard\n");
 
+	I8042KeyboardDefaultsAndDisable(DevExt);
+
 	do {
 		Status = I8042SynchWritePort(DevExt, 0, KBD_GET_ID, TRUE);
 	} while (STATUS_TIMEOUT == Status && RetryCount--);
 
 	if (Status != STATUS_SUCCESS) {
-		DPRINT("Can't write GET_ID (%x)\n", Status);
+		DPRINT1("Can't write GET_ID (%x)\n", Status);
 		return FALSE;
 	}
 
