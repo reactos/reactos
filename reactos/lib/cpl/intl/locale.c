@@ -83,40 +83,43 @@ CreateLanguagesList(HWND hwnd)
 		   (LPARAM)langSel);
 }
 
-/*
-static VOID
-ShowLanguagesList(HWND hwnd)
+// Sets new locale
+void SetNewLocale(LCID lcid)
 {
-  TIME_ZONE_INFORMATION TimeZoneInfo;
-  PTIMEZONE_ENTRY Entry;
-  DWORD dwIndex;
-  DWORD i;
+	// HKCU\\Control Panel\\International\\Locale = 0409 (type=0)
+	// HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409" (type=0)
+	// HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409" (type=0)
 
-  GetTimeZoneInformation(&TimeZoneInfo);
+	// Set locale
+	HKEY localeKey;
+	HKEY langKey;
+	DWORD ret;
+	TCHAR value[9];
 
-  dwIndex = 0;
-  i = 0;
-  Entry = TimeZoneListHead;
-  while (Entry != NULL)
-    {
-      SendMessageW(hwnd,
-		   CB_ADDSTRING,
-		   0,
-		   (LPARAM)Entry->Description);
+	ret = RegOpenKeyW(HKEY_CURRENT_USER, L"Control Panel\\International", &localeKey);
 
-      if (!wcscmp(Entry->StandardName, TimeZoneInfo.StandardName))
-	dwIndex = i;
+	if (ret != ERROR_SUCCESS)
+	{
+		// some serious error
+		//TODO: Tell user about it
+		return;
+	}
 
-      i++;
-      Entry = Entry->Next;
-    }
+	wsprintf(value, L"%04x", (DWORD)lcid);
 
-  SendMessageW(hwnd,
-	       CB_SETCURSEL,
-	       (WPARAM)dwIndex,
-	       0);
+	RegSetValueExW(localeKey, L"Locale", 0, REG_SZ, (BYTE *)value, sizeof(value));
+	RegCloseKey(localeKey);
+
+	// Set language
+	ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language", &langKey);
+
+	if (ret != ERROR_SUCCESS)
+		return;
+
+	RegSetValueExW(langKey, L"Default", 0, REG_SZ, (BYTE *)value, sizeof(value));
+	RegSetValueExW(langKey, L"InstallLanguage", 0, REG_SZ, (BYTE *)value, sizeof(value));
+	RegCloseKey(langKey);
 }
-*/
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -150,7 +153,6 @@ LocalePageProc(HWND hwndDlg,
 				// Apply changes
 				LCID NewLcid;
 				int iCurSel;
-				char tmp[100];
 
 				// Acquire new value
 				iCurSel = SendMessageW(hList,
@@ -167,12 +169,10 @@ LocalePageProc(HWND hwndDlg,
 
 				if (NewLcid == CB_ERR)
 					break;
-
-
-				//TOOD: Actually set new locale
-
-				sprintf(tmp, "%x, cursel=%d", NewLcid, iCurSel);
-				MessageBoxA(hwndDlg, tmp, "debug", MB_OK);
+                
+                
+				// Actually set new locale
+				SetNewLocale(NewLcid);
 			}
 		}
 		break;
