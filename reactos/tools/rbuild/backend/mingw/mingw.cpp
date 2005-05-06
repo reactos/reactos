@@ -283,6 +283,7 @@ MingwBackend::ProcessModules ()
 		h.Process ();
 		h.GenerateInvocations ();
 		h.GenerateCleanTarget ();
+		h.GenerateInstallTarget ();
 		delete v[i];
 	}
 

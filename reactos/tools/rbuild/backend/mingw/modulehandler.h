@@ -54,6 +54,7 @@ public:
 	virtual std::string TypeSpecificLinkerFlags() { return ""; }
 	void GenerateInvocations () const;
 	void GenerateCleanTarget () const;
+	void GenerateInstallTarget () const;
 	static bool ReferenceObjects ( const Module& module );
 protected:
 	std::string GetWorkingDirectory () const;
