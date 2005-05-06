@@ -278,14 +278,14 @@ CreateHTTPPostRequest(LPSTR requestBuffer,
   memset(parameterBuffer, '\0', MAX_REQUEST_BUFFER_SIZE);
 
   strcat(parameterBuffer, "errorReport=");
-  strcat(parameterBuffer, "<ErrorReportResponse>");
+  strcat(parameterBuffer, "<ErrorReportRequest>");
   strcat(parameterBuffer, "<YourEmail>");
   strcat(parameterBuffer, errorReport->YourEmail);
   strcat(parameterBuffer, "</YourEmail>");
   strcat(parameterBuffer, "<ProblemDescription>");
   strcat(parameterBuffer, errorReport->ProblemDescription);
   strcat(parameterBuffer, "</ProblemDescription>");
-  strcat(parameterBuffer, "</ErrorReportResponse>");
+  strcat(parameterBuffer, "</ErrorReportRequest>");
   strcat(parameterBuffer, "\r\n");
 
   urlencodeBuffer = malloc(MAX_REQUEST_BUFFER_SIZE);
@@ -311,7 +311,6 @@ CreateHTTPPostRequest(LPSTR requestBuffer,
 BOOL
 WasErrorReportDelivered(LPSTR httpResponse)
 {
-
   return strstr(httpResponse, "&lt;/ErrorReportResponse&gt;") != NULL;
 }
 
