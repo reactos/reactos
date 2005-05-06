@@ -581,7 +581,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","ImagePath",0x00020000,"system
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Type",0x00010001,0x00000001
 
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","SampleRate",0x00010001,0x00000060
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","SampleRate",0x00010001,0x0000003c
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","MouseResolution",0x00010001,0x00000003
 
