@@ -930,6 +930,16 @@ DECLARE_INTERFACE_(IQueryInfo,IUnknown)
 };
 #undef INTERFACE
 
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IQueryInfo_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define IQueryInfo_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define IQueryInfo_Release(p)                 (p)->lpVtbl->Release(p)
+/*** IQueryInfo methods ***/
+#define IQueryInfo_GetInfoTip(p,a,b)          (p)->lpVtbl->GetInfoTip(p,a,b)
+#define IQueryInfo_GetInfoFlags(p,a)          (p)->lpVtbl->GetInfoFlags(p,a)
+#endif
+
 #define INTERFACE IShellExtInit
 DECLARE_INTERFACE_(IShellExtInit, IUnknown)
 {
@@ -1621,6 +1631,52 @@ DECLARE_INTERFACE_(IDropTargetHelper, IUnknown)
 };
 #undef INTERFACE
 #endif /* _WIN32_IE >= 0x0500 */
+
+#define INTERFACE IInputObject
+DECLARE_INTERFACE_(IInputObject,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IInputObject methods ***/
+    STDMETHOD(UIActivateIO)(THIS_ BOOL bActivating, LPMSG lpMsg) PURE;
+    STDMETHOD(HasFocusIO)(THIS) PURE;
+    STDMETHOD(TranslateAcceleratorIO)(THIS_ LPMSG lpMsg) PURE;
+};
+#undef INTERFACE
+
+#if defined(COBJMACROS)
+/*** IUnknown methods ***/
+#define IInputObject_QueryInterface(p,a,b)       (p)->lpVtbl->QueryInterface(p,a,b)
+#define IInputObject_AddRef(p)                   (p)->lpVtbl->AddRef(p)
+#define IInputObject_Release(p)                  (p)->lpVtbl->Release(p)
+/*** IInputObject methods ***/
+#define IInputObject_UIActivateIO(p,a,b)         (p)->lpVtbl->UIActivateIO(p,a,b)
+#define IInputObject_HasFocusIO(p)               (p)->lpVtbl->HasFocusIO(p)
+#define IInputObject_TranslateAcceleratorIO(p,a) (p)->lpVtbl->TranslateAcceleratorIO(p,a)
+#endif
+
+#define INTERFACE IInputObjectSite
+DECLARE_INTERFACE_(IInputObjectSite,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    /*** IInputObjectSite methods ***/
+    STDMETHOD(OnFocusChangeIS)(THIS_ LPUNKNOWN lpUnknown, BOOL bFocus) PURE;
+};
+#undef INTERFACE
+
+#if defined(COBJMACROS)
+/*** IUnknown methods ***/
+#define IInputObjectSite_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define IInputObjectSite_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define IInputObjectSite_Release(p)             (p)->lpVtbl->Release(p)
+/*** IInputObject methods ***/
+#define IInputObjectSite_OnFocusChangeIS(p,a,b) (p)->lpVtbl->OnFocusChangeIS(p,a,b)
+#endif
 
 typedef HRESULT (CALLBACK *LPFNVIEWCALLBACK)(
 	IShellView* dwUser,

@@ -95,6 +95,8 @@ extern const GUID IID_IFileSystemBindData;
 #define IID_IShellExecuteHook	IID_IShellExecuteHookA
 #define IID_INewShortcutHook	IID_INewShortcutHookA
 #endif
+extern const GUID IID_IInputObject;
+extern const GUID IID_IInputObjectSite;
 
 #ifdef __cplusplus
 }

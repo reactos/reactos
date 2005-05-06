@@ -308,6 +308,22 @@ DECLARE_INTERFACE_(IOleInPlaceActiveObject,IOleWindow)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IOleInPlaceActiveObject_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IOleInPlaceActiveObject_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IOleInPlaceActiveObject_Release(p) (p)->lpVtbl->Release(p)
+/*** IOleWindow methods ***/
+#define IOleInPlaceActiveObject_GetWindow(p,a) (p)->lpVtbl->GetWindow(p,a)
+#define IOleInPlaceActiveObject_ContextSensitiveHelp(p,a) (p)->lpVtbl->ContextSensitiveHelp(p,a)
+/*** IOleInPlaceActiveObject methods ***/
+#define IOleInPlaceActiveObject_TranslateAccelerator(p,a) (p)->lpVtbl->TranslateAccelerator(p,a)
+#define IOleInPlaceActiveObject_OnFrameWindowActivate(p,a) (p)->lpVtbl->OnFrameWindowActivate(p,a)
+#define IOleInPlaceActiveObject_OnDocWindowActivate(p,a) (p)->lpVtbl->OnDocWindowActivate(p,a)
+#define IOleInPlaceActiveObject_ResizeBorder(p,a,b,c) (p)->lpVtbl->ResizeBorder(p,a,b,c)
+#define IOleInPlaceActiveObject_EnableModeless(p,a) (p)->lpVtbl->EnableModeless(p,a)
+#endif
+
 EXTERN_C const IID IID_IOleInPlaceFrame;
 #define INTERFACE IOleInPlaceFrame
 DECLARE_INTERFACE_(IOleInPlaceFrame,IOleInPlaceUIWindow)

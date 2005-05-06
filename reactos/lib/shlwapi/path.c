@@ -168,14 +168,14 @@ LPWSTR WINAPI PathCombineW(LPWSTR lpszDest, LPCWSTR lpszDir, LPCWSTR lpszFile)
   if (!lpszFile || !*lpszFile)
   {
     /* Use dir only */
-    strncpyW(szTemp, lpszDir, MAX_PATH);
+    lstrcpynW(szTemp, lpszDir, MAX_PATH);
   }
   else if (!lpszDir || !*lpszDir || !PathIsRelativeW(lpszFile))
   {
     if (!lpszDir || !*lpszDir || *lpszFile != '\\' || PathIsUNCW(lpszFile))
     {
       /* Use file only */
-      strncpyW(szTemp, lpszFile, MAX_PATH);
+      lstrcpynW(szTemp, lpszFile, MAX_PATH);
     }
     else
     {
@@ -188,7 +188,7 @@ LPWSTR WINAPI PathCombineW(LPWSTR lpszDest, LPCWSTR lpszDir, LPCWSTR lpszFile)
 
   if (bUseBoth)
   {
-    strncpyW(szTemp, lpszDir, MAX_PATH);
+    lstrcpynW(szTemp, lpszDir, MAX_PATH);
     if (bStrip)
     {
       PathStripToRootW(szTemp);
@@ -1687,7 +1687,8 @@ BOOL WINAPI PathFileExistsA(LPCSTR lpszPath)
   if (!lpszPath)
     return FALSE;
 
-  iPrevErrMode = SetErrorMode(1);
+  /* Prevent a dialog box if path is on a disk that has been ejected. */
+  iPrevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   dwAttr = GetFileAttributesA(lpszPath);
   SetErrorMode(iPrevErrMode);
   return dwAttr == INVALID_FILE_ATTRIBUTES ? FALSE : TRUE;
@@ -1708,7 +1709,7 @@ BOOL WINAPI PathFileExistsW(LPCWSTR lpszPath)
   if (!lpszPath)
     return FALSE;
 
-  iPrevErrMode = SetErrorMode(1);
+  iPrevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   dwAttr = GetFileAttributesW(lpszPath);
   SetErrorMode(iPrevErrMode);
   return dwAttr == INVALID_FILE_ATTRIBUTES ? FALSE : TRUE;
@@ -2580,20 +2581,23 @@ BOOL WINAPI PathMakePrettyA(LPSTR lpszPath)
 
   TRACE("(%s)\n", debugstr_a(lpszPath));
 
-  if (!pszIter || !*pszIter)
+  if (!pszIter)
     return FALSE;
 
-  while (*pszIter)
+  if (*pszIter)
   {
-    if (islower(*pszIter) || IsDBCSLeadByte(*pszIter))
-      return FALSE; /* Not DOS path */
-    pszIter++;
-  }
-  pszIter = lpszPath + 1;
-  while (*pszIter)
-  {
-    *pszIter = tolower(*pszIter);
-    pszIter++;
+    do
+    {
+      if (islower(*pszIter) || IsDBCSLeadByte(*pszIter))
+        return FALSE; /* Not DOS path */
+      pszIter++;
+    } while (*pszIter);
+    pszIter = lpszPath + 1;
+    while (*pszIter)
+    {
+      *pszIter = tolower(*pszIter);
+      pszIter++;
+    }
   }
   return TRUE;
 }
@@ -2609,20 +2613,23 @@ BOOL WINAPI PathMakePrettyW(LPWSTR lpszPath)
 
   TRACE("(%s)\n", debugstr_w(lpszPath));
 
-  if (!pszIter || !*pszIter)
+  if (!pszIter)
     return FALSE;
 
-  while (*pszIter)
+  if (*pszIter)
   {
-    if (islowerW(*pszIter))
-      return FALSE; /* Not DOS path */
-    pszIter++;
-  }
-  pszIter = lpszPath + 1;
-  while (*pszIter)
-  {
-    *pszIter = tolowerW(*pszIter);
-    pszIter++;
+    do
+    {
+      if (islowerW(*pszIter))
+        return FALSE; /* Not DOS path */
+      pszIter++;
+    } while (*pszIter);
+    pszIter = lpszPath + 1;
+    while (*pszIter)
+    {
+      *pszIter = tolowerW(*pszIter);
+      pszIter++;
+    }
   }
   return TRUE;
 }
@@ -2767,7 +2774,7 @@ int WINAPI PathCommonPrefixW(LPCWSTR lpszFile1, LPCWSTR lpszFile2, LPWSTR achPat
  *  dx       [I]   Desired width
  *
  * RETURNS
- *  TRUE  If the path was modified.
+ *  TRUE  If the path was modified/went well.
  *  FALSE Otherwise.
  */
 BOOL WINAPI PathCompactPathA(HDC hDC, LPSTR lpszPath, UINT dx)
@@ -2803,7 +2810,7 @@ BOOL WINAPI PathCompactPathW(HDC hDC, LPWSTR lpszPath, UINT dx)
   TRACE("(%p,%s,%d)\n", hDC, debugstr_w(lpszPath), dx);
 
   if (!lpszPath)
-    return bRet;
+    return FALSE;
 
   if (!hDC)
     hdc = hDC = GetDC(0);
@@ -2838,7 +2845,7 @@ BOOL WINAPI PathCompactPathW(HDC hDC, LPWSTR lpszPath, UINT dx)
        * the file name as possible, allowing for the ellipses, e.g:
        * c:\some very long path\filename ==> c:\some v...\filename
        */
-      strncpyW(buff, sFile, MAX_PATH);
+      lstrcpynW(buff, sFile, MAX_PATH);
 
       do
       {
@@ -2880,7 +2887,7 @@ BOOL WINAPI PathCompactPathW(HDC hDC, LPWSTR lpszPath, UINT dx)
 
     if (dwLen > MAX_PATH - 3)
       dwLen =  MAX_PATH - 3;
-    strncpyW(buff, sFile, dwLen);
+    lstrcpynW(buff, sFile, dwLen);
 
     do {
       dwLen--;
@@ -3390,8 +3397,8 @@ BOOL WINAPI PathRelativePathToW(LPWSTR lpszPath, LPCWSTR lpszFrom, DWORD dwAttrF
     return FALSE;
 
   *lpszPath = '\0';
-  strncpyW(szFrom, lpszFrom, MAX_PATH);
-  strncpyW(szTo, lpszTo, MAX_PATH);
+  lstrcpynW(szFrom, lpszFrom, MAX_PATH);
+  lstrcpynW(szTo, lpszTo, MAX_PATH);
 
   if(!(dwAttrFrom & FILE_ATTRIBUTE_DIRECTORY))
     PathRemoveFileSpecW(szFrom);
@@ -3739,7 +3746,7 @@ BOOL WINAPI PathIsDirectoryEmptyW(LPCWSTR lpszPath)
   if (!lpszPath || !PathIsDirectoryW(lpszPath))
       return FALSE;
 
-  strncpyW(szSearch, lpszPath, MAX_PATH);
+  lstrcpynW(szSearch, lpszPath, MAX_PATH);
   PathAddBackslashW(szSearch);
   dwLen = strlenW(szSearch);
   if (dwLen > MAX_PATH - 4)

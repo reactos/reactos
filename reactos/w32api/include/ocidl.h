@@ -21,6 +21,7 @@ typedef interface IFont *LPFONT;
 typedef interface IFontDisp *LPFONTDISP;
 typedef interface IOleUndoManager *LPOLEUNDOMANAGER;
 typedef interface IQuickActivate *LPQUICKACTIVATE;
+typedef interface IObjectWithSite *LPOBJECTWITHSITE;
 
 #ifndef OLE2ANSI
 typedef TEXTMETRICW TEXTMETRICOLE;
@@ -730,6 +731,16 @@ DECLARE_INTERFACE_(IObjectWithSite,IUnknown)
 	STDMETHOD(GetSite)(THIS_ REFIID, void**) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IObjectWithSite_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IObjectWithSite_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IObjectWithSite_Release(p) (p)->lpVtbl->Release(p)
+/*** IObjectWithSite methods ***/
+#define IObjectWithSite_SetSite(p,a) (p)->lpVtbl->SetSite(p,a)
+#define IObjectWithSite_GetSite(p,a,b) (p)->lpVtbl->GetSite(p,a,b)
+#endif
 
 EXTERN_C const IID IID_IOleInPlaceSiteWindowless;
 #define INTERFACE IOleInPlaceSiteWindowless
