@@ -91,7 +91,7 @@ CmiObjectParse(PVOID ParsedObject,
   {
      ExReleaseResourceLite(&CmiRegistryLock);
      KeLeaveCriticalRegion();
-     ExFreePool(KeyName.Buffer);
+     RtlFreeUnicodeString(&KeyName);
      return Status;
   }
   if (FoundObject == NULL)
@@ -107,7 +107,7 @@ CmiObjectParse(PVOID ParsedObject,
 	{
           ExReleaseResourceLite(&CmiRegistryLock);
           KeLeaveCriticalRegion();
-	  ExFreePool(KeyName.Buffer);
+	  RtlFreeUnicodeString(&KeyName);
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
@@ -140,7 +140,7 @@ CmiObjectParse(PVOID ParsedObject,
 		  wcscat(TargetPath.Buffer, EndPtr);
 		}
 
-	      ExFreePool(FullPath->Buffer);
+	      RtlFreeUnicodeString(FullPath);
 	      RtlFreeUnicodeString(&LinkPath);
 	      FullPath->Length = TargetPath.Length;
 	      FullPath->MaximumLength = TargetPath.MaximumLength;
@@ -153,7 +153,7 @@ CmiObjectParse(PVOID ParsedObject,
 
 	      *NextObject = NULL;
 
-	      ExFreePool(KeyName.Buffer);
+	      RtlFreeUnicodeString(&KeyName);
 	      return(STATUS_REPARSE);
 	    }
 	}
@@ -173,7 +173,7 @@ CmiObjectParse(PVOID ParsedObject,
 	{
           ExReleaseResourceLite(&CmiRegistryLock);
           KeLeaveCriticalRegion();
-	  ExFreePool(KeyName.Buffer);
+	  RtlFreeUnicodeString(&KeyName);
 	  return(Status);
 	}
       /* Add the keep-alive reference */
@@ -224,8 +224,8 @@ CmiObjectParse(PVOID ParsedObject,
 		  wcscat(TargetPath.Buffer, EndPtr);
 		}
 
-	      ExFreePool(FullPath->Buffer);
-	      ExFreePool(LinkPath.Buffer);
+	      RtlFreeUnicodeString(FullPath);
+	      RtlFreeUnicodeString(&LinkPath);
 	      FullPath->Length = TargetPath.Length;
 	      FullPath->MaximumLength = TargetPath.MaximumLength;
 	      FullPath->Buffer = TargetPath.Buffer;
@@ -237,7 +237,7 @@ CmiObjectParse(PVOID ParsedObject,
 
 	      *NextObject = NULL;
 
-	      ExFreePool(KeyName.Buffer);
+	      RtlFreeUnicodeString(&KeyName);
 	      return(STATUS_REPARSE);
 	    }
 	}
@@ -258,7 +258,7 @@ CmiObjectParse(PVOID ParsedObject,
 
   *NextObject = FoundObject;
 
-  ExFreePool(KeyName.Buffer);
+  RtlFreeUnicodeString(&KeyName);
 
   return(STATUS_SUCCESS);
 }
