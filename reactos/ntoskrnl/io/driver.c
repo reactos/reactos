@@ -544,10 +544,29 @@ IopInitializeDriverModule(
    IN BOOLEAN FileSystemDriver,
    OUT PDRIVER_OBJECT *DriverObject)
 {
+   const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
    UNICODE_STRING RegistryKey;
-   PDRIVER_INITIALIZE DriverEntry = ModuleObject->EntryPoint;
+   PDRIVER_INITIALIZE DriverEntry;
    NTSTATUS Status;
-   WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
+   
+   DriverEntry = ModuleObject->EntryPoint;
+   
+   if (ServiceName != NULL && ServiceName->Length != 0)
+   {
+      RegistryKey.Length = 0;
+      RegistryKey.MaximumLength = sizeof(ServicesKeyName) + ServiceName->Length;
+      RegistryKey.Buffer = ExAllocatePool(PagedPool, RegistryKey.MaximumLength);
+      if (RegistryKey.Buffer == NULL)
+      {
+         return STATUS_INSUFFICIENT_RESOURCES;
+      }
+      RtlAppendUnicodeToString(&RegistryKey, ServicesKeyName);
+      RtlAppendUnicodeStringToString(&RegistryKey, ServiceName);
+   }
+   else
+   {
+      RtlInitUnicodeString(&RegistryKey, NULL);
+   }
 
    Status = IopCreateDriverObject(
       DriverObject,
@@ -563,26 +582,15 @@ IopInitializeDriverModule(
       return Status;
    }
 
-   if (ServiceName->Buffer)
-   {
-      RegistryKey.Length = ServiceName->Length +
-         sizeof(ServicesKeyName) - sizeof(UNICODE_NULL);
-      RegistryKey.MaximumLength = RegistryKey.Length + sizeof(UNICODE_NULL);
-      RegistryKey.Buffer = ExAllocatePool(PagedPool, RegistryKey.MaximumLength);
-      wcscpy(RegistryKey.Buffer, ServicesKeyName);
-      wcscat(RegistryKey.Buffer, ServiceName->Buffer);
-   }
-   else
-   {
-      RtlInitUnicodeString(&RegistryKey, NULL);
-   }
-
    DPRINT("RegistryKey: %wZ\n", &RegistryKey);
    DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
 
    IopMarkLastReinitializeDriver();
 
    Status = DriverEntry(*DriverObject, &RegistryKey);
+   
+   RtlFreeUnicodeString(&RegistryKey);
+   
    if (!NT_SUCCESS(Status))
    {
       ObMakeTemporaryObject(*DriverObject);

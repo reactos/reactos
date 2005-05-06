@@ -587,7 +587,26 @@ VideoPortInitialize(
    }
    DriverExtension->HwContext = HwContext;
 
-   RtlCopyMemory(&DriverExtension->RegistryPath, RegistryPath, sizeof(UNICODE_STRING));
+   /* we can't use RtlDuplicateUnicodeString because only ntdll exposes it... */
+   if (RegistryPath->Length != 0)
+   {
+      DriverExtension->RegistryPath.Length = 0;
+      DriverExtension->RegistryPath.MaximumLength = RegistryPath->Length + sizeof(UNICODE_NULL);
+      DriverExtension->RegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                                   DriverExtension->RegistryPath.MaximumLength,
+                                                                   TAG('U', 'S', 'T', 'R'));
+      if (DriverExtension->RegistryPath.Buffer == NULL)
+      {
+         RtlInitUnicodeString(&DriverExtension->RegistryPath, NULL);
+         return STATUS_INSUFFICIENT_RESOURCES;
+      }
+
+      RtlCopyUnicodeString(&DriverExtension->RegistryPath, RegistryPath);
+   }
+   else
+   {
+      RtlInitUnicodeString(&DriverExtension->RegistryPath, NULL);
+   }
 
    switch (HwInitializationData->HwInitDataSize)
    {
