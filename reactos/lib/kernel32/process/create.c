@@ -275,7 +275,6 @@ BOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
    return bRetVal;
 }
 
-
 static EXCEPTION_DISPOSITION __cdecl
 _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 		void * EstablisherFrame,
@@ -323,14 +322,34 @@ BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
 		 DWORD lpParameter)
 {
    UINT uExitCode = 0;
+#if 1
+   PVOID OldHandler;
+#endif
 
    DPRINT("BaseProcessStart(..) - setting up exception frame.\n");
 
+#if 1
+   __asm__ __volatile__ ("movl %%fs:0, %0\n\t" \
+                         "movl %1, %%fs:0\n\t" \
+                         : "=r" (OldHandler)
+                         : "r" (_except_handler));
+#else
+   /* FIXME:
+    *   We cannot use push (__try1) and pop (__except1). 
+    *   Gcc doesn't like it, if anyone changes the stack layout.
+    */
    __try1(_except_handler)
+#endif
    {
       uExitCode = (lpStartAddress)((PVOID)lpParameter);
-   } __except1
-
+   } 
+#if 1
+   __asm__ __volatile__ ("movl %0, %%fs:0\n\t" \
+                         : 
+                         : "r" (OldHandler));
+#else
+   __except1
+#endif
    ExitProcess(uExitCode);
 }
 
