@@ -300,55 +300,71 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
  * @implemented
  */
 BOOL STDCALL
-ConnectNamedPipe(HANDLE hNamedPipe,
-		 LPOVERLAPPED lpOverlapped)
+ConnectNamedPipe(IN HANDLE hNamedPipe,
+                 IN LPOVERLAPPED lpOverlapped)
 {
-  PIO_STATUS_BLOCK IoStatusBlock;
-  IO_STATUS_BLOCK Iosb;
-  HANDLE hEvent;
-  NTSTATUS Status;
+   NTSTATUS Status;
+   
+   if (lpOverlapped != NULL)
+     {
+        PVOID ApcContext;
+        
+        lpOverlapped->Internal = STATUS_PENDING;
+        ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
+        
+        Status = NtFsControlFile(hNamedPipe,
+                                 lpOverlapped->hEvent,
+                                 NULL,
+                                 ApcContext,
+                                 (PIO_STATUS_BLOCK)lpOverlapped,
+                                 FSCTL_PIPE_LISTEN,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
 
-  if (lpOverlapped != NULL)
-    {
-      lpOverlapped->Internal = STATUS_PENDING;
-      hEvent = lpOverlapped->hEvent;
-      IoStatusBlock = (PIO_STATUS_BLOCK)lpOverlapped;
-    }
-  else
-    {
-      IoStatusBlock = &Iosb;
-      hEvent = NULL;
-    }
+        /* return FALSE in case of failure and pending operations! */
+        if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
+          {
+             SetLastErrorByStatus(Status);
+             return FALSE;
+          }
+     }
+   else
+     {
+        IO_STATUS_BLOCK Iosb;
+        
+        Status = NtFsControlFile(hNamedPipe,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &Iosb,
+                                 FSCTL_PIPE_LISTEN,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
 
-  Status = NtFsControlFile(hNamedPipe,
-			   hEvent,
-			   NULL,
-			   NULL,
-			   IoStatusBlock,
-			   FSCTL_PIPE_LISTEN,
-			   NULL,
-			   0,
-			   NULL,
-			   0);
-  if ((lpOverlapped == NULL) && (Status == STATUS_PENDING))
-    {
-      Status = NtWaitForSingleObject(hNamedPipe,
-				     FALSE,
-				     NULL);
-      if (NT_SUCCESS(Status))
-	{
-	  Status = Iosb.Status;
-	}
-    }
+        /* wait in case operation is pending */
+        if (Status == STATUS_PENDING)
+          {
+             Status = NtWaitForSingleObject(hNamedPipe,
+                                            FALSE,
+                                            NULL);
+             if (NT_SUCCESS(Status))
+               {
+                  Status = Iosb.Status;
+               }
+          }
 
-  if ((!NT_SUCCESS(Status) && Status != STATUS_PIPE_CONNECTED) ||
-      (Status == STATUS_PENDING))
-    {
-      SetLastErrorByStatus(Status);
-      return FALSE;
-    }
+        if (!NT_SUCCESS(Status))
+          {
+             SetLastErrorByStatus(Status);
+             return FALSE;
+          }
+     }
 
-  return TRUE;
+   return TRUE;
 }
 
 
