@@ -564,21 +564,18 @@ Module::GetDefaultModuleBaseaddress () const
 	{
 		case Kernel:
 			return "0xc0000000";
-		case KernelModeDLL:
-			return "0x10000";
-		case NativeDLL:
-			return "0x10000";
-		case NativeCUI:
-			return "0x10000";
 		case Win32DLL:
-			return "0x10000";
+			return "0x10000000";
+		case NativeDLL:
+		case NativeCUI:
 		case Win32CUI:
 		case Test:
 			return "0x00400000";
 		case Win32GUI:
 			return "0x00400000";
+		case KernelModeDLL:
 		case KernelModeDriver:
-			return "0x10000";
+			return "0x00010000";
 		case BuildTool:
 		case StaticLibrary:
 		case ObjectLibrary:
