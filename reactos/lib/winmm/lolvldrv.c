@@ -309,6 +309,7 @@ LPWINE_MLD	MMDRV_Alloc(UINT size, UINT type, LPHANDLE hndl, DWORD* dwFlags,
     if (i == MAX_MM_MLDRVS) {
 	/* the MM_MLDrvs table could be made growable in the future if needed */
 	ERR("Too many open drivers\n");
+        HeapFree(GetProcessHeap(), 0, mld);
 	return NULL;
     }
     MM_MLDrvs[i] = mld;
@@ -714,78 +715,60 @@ static	BOOL	MMDRV_Install(LPCSTR drvRegName, LPCSTR drvFileName, BOOL bIsMapper)
 }
 
 /**************************************************************************
- * 				MMDRV_InitFromRegistry		[internal]
+ * 				MMDRV_Init
  */
-static BOOL	MMDRV_InitFromRegistry(void)
+BOOL	MMDRV_Init(void)
 {
     HKEY	hKey;
-    char	buffer[256];
+    char	driver_buffer[256];
+    char	mapper_buffer[256];
+    char	midi_buffer[256];
     char*	p1;
     char*	p2;
     DWORD	type, size;
     BOOL	ret = FALSE;
     TRACE("()\n");
 
-    if (RegCreateKeyA(HKEY_LOCAL_MACHINE, "Software\\Wine\\Wine\\Config\\WinMM", &hKey)) {
-	TRACE("Cannot open WinMM config key\n");
-	return FALSE;
+    strcpy(driver_buffer, WINE_DEFAULT_WINMM_DRIVER);
+    strcpy(mapper_buffer, WINE_DEFAULT_WINMM_MAPPER);
+    strcpy(midi_buffer, WINE_DEFAULT_WINMM_MIDI);
+
+    if (! RegCreateKeyA(HKEY_LOCAL_MACHINE, "Software\\Wine\\Wine\\Config\\WinMM", &hKey)) {
+        size = sizeof(driver_buffer);
+        if (RegQueryValueExA(hKey, "Drivers", 0, &type, (LPVOID)driver_buffer, &size)) 
+            strcpy(driver_buffer, WINE_DEFAULT_WINMM_DRIVER);
+
+        /* finish with mappers */
+        size = sizeof(mapper_buffer);
+        if (RegQueryValueExA(hKey, "WaveMapper", 0, &type, (LPVOID)mapper_buffer, &size))
+            strcpy(mapper_buffer, WINE_DEFAULT_WINMM_MAPPER);
+
+        size = sizeof(midi_buffer);
+        if (RegQueryValueExA(hKey, "MidiMapper", 0, &type, (LPVOID)midi_buffer, &size))
+            strcpy(midi_buffer, WINE_DEFAULT_WINMM_MIDI);
+
+        RegCloseKey(hKey);
     }
 
-    size = sizeof(buffer);
-    if (!RegQueryValueExA(hKey, "Drivers", 0, &type, (LPVOID)buffer, &size)) {
-	p1 = buffer;
-	while (p1) {
-	    p2 = strchr(p1, ';');
-	    if (p2) *p2++ = '\0';
-	    ret |= MMDRV_Install(p1, p1, FALSE);
-	    p1 = p2;
-	}
-    }
-
-    /* finish with mappers */
-    size = sizeof(buffer);
-    if (!RegQueryValueExA(hKey, "WaveMapper", 0, &type, (LPVOID)buffer, &size))
-	ret |= MMDRV_Install("wavemapper", buffer, TRUE);
-    size = sizeof(buffer);
-    if (!RegQueryValueExA(hKey, "MidiMapper", 0, &type, (LPVOID)buffer, &size))
-	ret |= MMDRV_Install("midimapper", buffer, TRUE);
-
-    RegCloseKey(hKey);
-
-    return ret;
-}
-
-/**************************************************************************
- * 				MMDRV_InitHardcoded		[internal]
- */
-static BOOL	MMDRV_InitHardcoded(void)
-{
-    TRACE("()\n");
-    /* first load hardware drivers */
 #ifndef __REACTOS__
-    MMDRV_Install("wineoss.drv",   	"wineoss.drv",	FALSE);
-#endif /* __REACTOS__ */
+    p1 = driver_buffer;
+    while (p1) {
+        p2 = strchr(p1, ';');
+        if (p2) *p2++ = '\0';
+        ret |= MMDRV_Install(p1, p1, FALSE);
+        p1 = p2;
+    }
+#endif
 
 #ifdef __REACTOS__
     // AG: TESTING:
-    MMDRV_Install("mmdrv.dll", "mmdrv.dll", FALSE);
+    ret |= MMDRV_Install("mmdrv.dll", "mmdrv.dll", FALSE);
 #endif
 
-    /* finish with mappers */
-    MMDRV_Install("wavemapper",     "msacm32.dll",    TRUE);
-    MMDRV_Install("midimapper",     "midimap.dll",  TRUE);
+    ret |= MMDRV_Install("wavemapper", mapper_buffer, TRUE);
+    ret |= MMDRV_Install("midimapper", midi_buffer, TRUE);
+    return ret;
 
-    return TRUE;
-}
-
-/**************************************************************************
- * 				MMDRV_Init			[internal]
- */
-BOOL	MMDRV_Init(void)
-{
-    TRACE("()\n");
-    /* FIXME: MMDRV_InitFromRegistry shall be MMDRV_Init in a near future */
-    return MMDRV_InitFromRegistry() || MMDRV_InitHardcoded();
 }
 
 /******************************************************************

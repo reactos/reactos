@@ -1458,7 +1458,11 @@ DWORD WINAPI mciSendStringA(LPCSTR lpstrCommand, LPSTR lpstrRet,
     if (lpstrRet)
     {
         lpwstrRet = HeapAlloc(GetProcessHeap(), 0, uRetLen * sizeof(WCHAR));
-        if (!lpwstrRet) return MCIERR_OUT_OF_MEMORY;
+        if (!lpwstrRet) {
+            WARN("no memory\n");
+            HeapFree( GetProcessHeap(), 0, lpwstrCommand );
+            return MCIERR_OUT_OF_MEMORY;
+        }
     }
     ret = mciSendStringW(lpwstrCommand, lpwstrRet, uRetLen, hwndCallback);
     if (lpwstrRet)

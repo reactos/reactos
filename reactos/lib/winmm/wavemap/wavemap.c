@@ -166,6 +166,7 @@ static	DWORD	wodOpen(LPDWORD lpdwUser, LPWAVEOPENDESC lpDesc, DWORD dwFlags)
     if (dwFlags & WAVE_MAPPED) {
 	if (lpDesc->uMappedDeviceID >= ndhi) {
             WARN("invalid parameter: dwFlags WAVE_MAPPED\n");
+            HeapFree(GetProcessHeap(), 0, wom);
             return MMSYSERR_INVALPARAM;
         }
 	ndlo = lpDesc->uMappedDeviceID;
@@ -427,9 +428,10 @@ static	DWORD	wodGetPosition(WAVEMAPDATA* wom, LPMMTIME lpTime, DWORD dwParam2)
     if (lpTime->wType == TIME_MS)
         timepos.wType = TIME_BYTES;
 
+    /* This can change timepos.wType if the requested type is not supported */
     val = waveOutGetPosition(wom->u.out.hInnerWave, &timepos, dwParam2);
 
-    if (lpTime->wType == TIME_BYTES || lpTime->wType == TIME_MS)
+    if (timepos.wType == TIME_BYTES)
     {
         DWORD dwInnerSamplesPerOuter = wom->nSamplesPerSecInner / wom->nSamplesPerSecOuter;
         if (dwInnerSamplesPerOuter > 0)
@@ -463,10 +465,12 @@ static	DWORD	wodGetPosition(WAVEMAPDATA* wom, LPMMTIME lpTime, DWORD dwParam2)
 
         /* Once we have the TIME_BYTES right, we can easily convert to TIME_MS */
         if (lpTime->wType == TIME_MS)
-            lpTime->u.cb = MulDiv(lpTime->u.cb, 1000, wom->avgSpeedOuter);
+            lpTime->u.ms = MulDiv(lpTime->u.cb, 1000, wom->avgSpeedOuter);
+        else
+            lpTime->wType = TIME_BYTES;
     }
-    else if (lpTime->wType == TIME_SAMPLES)
-        lpTime->u.cb = MulDiv(timepos.u.cb, wom->nSamplesPerSecOuter, wom->nSamplesPerSecInner);
+    else if (lpTime->wType == TIME_SAMPLES && timepos.wType == TIME_SAMPLES)
+        lpTime->u.sample = MulDiv(timepos.u.sample, wom->nSamplesPerSecOuter, wom->nSamplesPerSecInner);
     else
         /* other time types don't require conversion */
         lpTime->u = timepos.u;
@@ -586,6 +590,13 @@ static  DWORD	wodMapperStatus(WAVEMAPDATA* wom, DWORD flags, LPVOID ptr)
     return ret;
 }
 
+static  DWORD   wodMapperReconfigure(WAVEMAPDATA* wom, DWORD dwParam1, DWORD dwParam2)
+{
+    FIXME("(%p %08lx %08lx) stub!\n", wom, dwParam1, dwParam2);
+
+    return MMSYSERR_NOERROR;
+}
+
 /**************************************************************************
  * 				wodMessage (MSACM.@)
  */
@@ -621,6 +632,7 @@ DWORD WINAPI WAVEMAP_wodMessage(UINT wDevID, UINT wMsg, DWORD dwUser,
     case WODM_RESTART:		return wodRestart	((WAVEMAPDATA*)dwUser);
     case WODM_RESET:		return wodReset		((WAVEMAPDATA*)dwUser);
     case WODM_MAPPER_STATUS:	return wodMapperStatus  ((WAVEMAPDATA*)dwUser, dwParam1, (LPVOID)dwParam2);
+    case DRVM_MAPPER_RECONFIGURE: return wodMapperReconfigure((WAVEMAPDATA*)dwUser, dwParam1, dwParam2);
     /* known but not supported */
     case DRV_QUERYDEVICEINTERFACESIZE:
     case DRV_QUERYDEVICEINTERFACE:
@@ -961,15 +973,62 @@ static	DWORD	widUnprepare(WAVEMAPDATA* wim, LPWAVEHDR lpWaveHdrDst, DWORD dwPara
 static	DWORD	widGetPosition(WAVEMAPDATA* wim, LPMMTIME lpTime, DWORD dwParam2)
 {
     DWORD       val;
-
+    MMTIME      timepos;
     TRACE("(%p %p %08lx)\n", wim, lpTime, dwParam2);
 
-    val = waveInGetPosition(wim->u.in.hInnerWave, lpTime, dwParam2);
-    if (lpTime->wType == TIME_BYTES)
-        lpTime->u.cb = MulDiv(lpTime->u.cb, wim->avgSpeedOuter, wim->avgSpeedInner);
-    if (lpTime->wType == TIME_SAMPLES)
-        lpTime->u.cb = MulDiv(lpTime->u.cb, wim->nSamplesPerSecOuter, wim->nSamplesPerSecInner);
-    /* other time types don't require conversion */
+    memcpy(&timepos, lpTime, sizeof(timepos));
+
+    /* For TIME_MS, we're going to recalculate using TIME_BYTES */
+    if (lpTime->wType == TIME_MS)
+        timepos.wType = TIME_BYTES;
+
+    /* This can change timepos.wType if the requested type is not supported */
+    val = waveInGetPosition(wim->u.in.hInnerWave, &timepos, dwParam2);
+
+    if (timepos.wType == TIME_BYTES)
+    {
+        DWORD dwInnerSamplesPerOuter = wim->nSamplesPerSecInner / wim->nSamplesPerSecOuter;
+        if (dwInnerSamplesPerOuter > 0)
+        {
+            DWORD dwInnerBytesPerSample = wim->avgSpeedInner / wim->nSamplesPerSecInner;
+            DWORD dwInnerBytesPerOuterSample = dwInnerBytesPerSample * dwInnerSamplesPerOuter;
+            DWORD remainder = 0;
+
+            /* If we are up sampling (going from lower sample rate to higher),
+            **   we need to make a special accomodation for times when we've
+            **   written a partial output sample.  This happens frequently
+            **   to us because we use msacm to do our up sampling, and it
+            **   will up sample on an unaligned basis.
+            ** For example, if you convert a 2 byte wide 8,000 'outer'
+            **   buffer to a 2 byte wide 48,000 inner device, you would
+            **   expect 2 bytes of input to produce 12 bytes of output.
+            **   Instead, msacm will produce 8 bytes of output.
+            **   But reporting our position as 1 byte of output is
+            **   nonsensical; the output buffer position needs to be
+            **   aligned on outer sample size, and aggressively rounded up.
+            */
+            remainder = timepos.u.cb % dwInnerBytesPerOuterSample;
+            if (remainder > 0)
+            {
+                timepos.u.cb -= remainder;
+                timepos.u.cb += dwInnerBytesPerOuterSample;
+            }
+        }
+
+        lpTime->u.cb = MulDiv(timepos.u.cb, wim->avgSpeedOuter, wim->avgSpeedInner);
+
+        /* Once we have the TIME_BYTES right, we can easily convert to TIME_MS */
+        if (lpTime->wType == TIME_MS)
+            lpTime->u.ms = MulDiv(lpTime->u.cb, 1000, wim->avgSpeedOuter);
+        else
+            lpTime->wType = TIME_BYTES;
+    }
+    else if (lpTime->wType == TIME_SAMPLES && timepos.wType == TIME_SAMPLES)
+        lpTime->u.sample = MulDiv(timepos.u.sample, wim->nSamplesPerSecOuter, wim->nSamplesPerSecInner);
+    else
+        /* other time types don't require conversion */
+        lpTime->u = timepos.u;
+
     return val;
 }
 
@@ -1058,6 +1117,13 @@ static  DWORD	widMapperStatus(WAVEMAPDATA* wim, DWORD flags, LPVOID ptr)
     return ret;
 }
 
+static  DWORD   widMapperReconfigure(WAVEMAPDATA* wim, DWORD dwParam1, DWORD dwParam2)
+{
+    FIXME("(%p %08lx %08lx) stub!\n", wim, dwParam1, dwParam2);
+
+    return MMSYSERR_NOERROR;
+}
+
 /**************************************************************************
  * 				widMessage (MSACM.@)
  */
@@ -1088,6 +1154,7 @@ DWORD WINAPI WAVEMAP_widMessage(WORD wDevID, WORD wMsg, DWORD dwUser,
     case WIDM_START:		return widStart         ((WAVEMAPDATA*)dwUser);
     case WIDM_STOP:		return widStop          ((WAVEMAPDATA*)dwUser);
     case WIDM_MAPPER_STATUS:	return widMapperStatus  ((WAVEMAPDATA*)dwUser, dwParam1, (LPVOID)dwParam2);
+    case DRVM_MAPPER_RECONFIGURE: return widMapperReconfigure((WAVEMAPDATA*)dwUser, dwParam1, dwParam2);
     /* known but not supported */
     case DRV_QUERYDEVICEINTERFACESIZE:
     case DRV_QUERYDEVICEINTERFACE:

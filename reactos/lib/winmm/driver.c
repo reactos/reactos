@@ -308,13 +308,13 @@ HDRVR WINAPI OpenDriverA(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lPara
     INT                 len;
     LPWSTR 		dn = NULL;
     LPWSTR 		sn = NULL;
-    HDRVR		ret;
+    HDRVR		ret = 0;
 
     if (lpDriverName)
     {
         len = MultiByteToWideChar( CP_ACP, 0, lpDriverName, -1, NULL, 0 );
         dn = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-        if (!dn) return 0;
+        if (!dn) goto done;
         MultiByteToWideChar( CP_ACP, 0, lpDriverName, -1, dn, len );
     }
 
@@ -322,14 +322,15 @@ HDRVR WINAPI OpenDriverA(LPCSTR lpDriverName, LPCSTR lpSectionName, LPARAM lPara
     {
         len = MultiByteToWideChar( CP_ACP, 0, lpSectionName, -1, NULL, 0 );
         sn = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-        if (!sn) return 0;
+        if (!sn) goto done;
         MultiByteToWideChar( CP_ACP, 0, lpSectionName, -1, sn, len );
     }
 
     ret = OpenDriver(dn, sn, lParam);
 
-    if (dn) HeapFree(GetProcessHeap(), 0, dn);
-    if (sn) HeapFree(GetProcessHeap(), 0, sn);
+done:
+    HeapFree(GetProcessHeap(), 0, dn);
+    HeapFree(GetProcessHeap(), 0, sn);
     return ret;
 }
 
