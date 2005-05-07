@@ -2,7 +2,7 @@
 @ stub AddMiniIconToList
 @ stub AddTagToGroupOrderListEntry
 @ stub AppendStringToMultiSz
-@ stub AssertFail
+@ stdcall AssertFail(str long str)
 @ stub CMP_Init_Detection
 @ stub CMP_RegisterNotification
 @ stub CMP_Report_LogOn
@@ -205,7 +205,7 @@
 @ stub FreeStringArray
 @ stub GetCurrentDriverSigningPolicy
 @ stub GetNewInfName
-@ stub GetSetFileTimestamp
+@ stdcall GetSetFileTimestamp(wstr ptr ptr ptr long)
 @ stub GetVersionInfoFromImage
 @ stub InfIsFromOemLocation
 @ stub InstallCatalog
@@ -525,6 +525,7 @@
 @ stub StringTableLookUpStringEx
 @ stub StringTableSetExtraData
 @ stub StringTableStringFromId
+@ stub StringTableStringFromIdEx
 @ stub StringTableTrim
 @ stdcall TakeOwnershipOfFile(wstr)
 @ stdcall UnicodeToMultiByte(wstr long)

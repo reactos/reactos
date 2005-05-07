@@ -802,6 +802,8 @@ DWORD WINAPI RetreiveFileSecurity(LPCWSTR lpFileName,
     DWORD dwSize = 0x100;
     DWORD dwError;
 
+    TRACE("%s %p\n", debugstr_w(lpFileName), pSecurityDescriptor);
+
     SecDesc = (PSECURITY_DESCRIPTOR)MyMalloc(dwSize);
     if (SecDesc == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
@@ -837,4 +839,98 @@ DWORD WINAPI RetreiveFileSecurity(LPCWSTR lpFileName,
     MyFree(SecDesc);
 
     return dwError;
+}
+
+
+/**************************************************************************
+ * AssertFail [SETUPAPI.@]
+ *
+ * Display an assertion message.
+ *
+ * PARAMS
+ *     lpFile    [I] File name
+ *     uLine     [I] Line number
+ *     lpMessage [I] Assertion message
+ *
+ * RETURNS
+ *     Nothing
+ */
+VOID WINAPI AssertFail(LPSTR lpFile, UINT uLine, LPSTR lpMessage)
+{
+    CHAR szModule[MAX_PATH];
+    CHAR szBuffer[2048];
+    LPSTR lpName;
+    LPSTR lpBuffer;
+
+    TRACE("%s %u %s\n", lpFile, uLine, lpMessage);
+
+    GetModuleFileNameA(hInstance, szModule, MAX_PATH);
+    lpName = strrchr(szModule, '\\');
+    if (lpName != NULL)
+        lpName++;
+    else
+        lpName = szModule;
+
+    wsprintfA(szBuffer,
+              "Assertion failure at line %u in file %s: %s\n\nCall DebugBreak()?",
+              uLine, lpFile, lpMessage);
+
+    if (MessageBoxA(NULL, szBuffer, lpName, MB_SETFOREGROUND |
+                    MB_TASKMODAL | MB_ICONERROR | MB_YESNO) == IDYES)
+        DebugBreak();
+}
+
+
+/**************************************************************************
+ * GetSetFileTimestamp [SETUPAPI.@]
+ *
+ * Gets or sets a files timestamp.
+ *
+ * PARAMS
+ *     lpFileName       [I]   File name
+ *     lpCreationTime   [I/O] Creation time
+ *     lpLastAccessTime [I/O] Last access time
+ *     lpLastWriteTime  [I/O] Last write time
+ *     bSetFileTime     [I]   TRUE: Set file times
+ *                            FALSE: Get file times
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: other
+ */
+DWORD WINAPI GetSetFileTimestamp(LPCWSTR lpFileName,
+                                 LPFILETIME lpCreationTime,
+                                 LPFILETIME lpLastAccessTime,
+                                 LPFILETIME lpLastWriteTime,
+                                 BOOLEAN bSetFileTime)
+{
+    HANDLE hFile;
+    BOOLEAN bRet;
+    DWORD dwError = ERROR_SUCCESS;
+
+    TRACE("%s %p %p %p %x\n", debugstr_w(lpFileName), lpCreationTime,
+          lpLastAccessTime, lpLastWriteTime, bSetFileTime);
+
+    hFile = CreateFileW(lpFileName,
+                        bSetFileTime ? GENERIC_WRITE : GENERIC_READ,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL,
+                        OPEN_EXISTING,
+                        0,
+                        NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE)
+        return GetLastError();
+
+    if (bSetFileTime)
+        bRet = SetFileTime(hFile, lpCreationTime, lpLastAccessTime, lpLastWriteTime);
+    else
+        bRet = GetFileTime(hFile, lpCreationTime, lpLastAccessTime, lpLastWriteTime);
+
+    if (bRet == FALSE)
+        dwError = GetLastError();
+
+     CloseHandle(hFile);
+
+     return dwError;
 }

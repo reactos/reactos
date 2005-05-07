@@ -1,4 +1,4 @@
-/* 
+/*
  * Setupapi cabinet routines
  *
  * Copyright 2003 Gregory M. Turner
@@ -20,7 +20,7 @@
  *
  * Many useful traces are commented in code, uncomment them if you have
  * trouble and run with WINEDEBUG=+setupapi
- * 
+ *
  */
 
 #include <stdarg.h>
@@ -44,6 +44,7 @@
 
 #include "wine/debug.h"
 
+HINSTANCE hInstance = 0;
 OSVERSIONINFOW OsVersionInfo;
 
 static HINSTANCE CABINET_hInstance = 0;
@@ -544,7 +545,7 @@ BOOL WINAPI SetupIterateCabinetA(PCSTR CabinetFile, DWORD Reserved,
   TRACE("(CabinetFile == %s, Reserved == %lu, MsgHandler == ^%p, Context == ^%p)\n",
         debugstr_a(CabinetFile), Reserved, MsgHandler, Context);
 
-  if (! LoadCABINETDll()) 
+  if (! LoadCABINETDll())
     return FALSE;
 
   memset(&my_hsc, 0, sizeof(SC_HSC_A));
@@ -677,6 +678,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
         if (!GetVersionExW(&OsVersionInfo))
             return FALSE;
+        hInstance = (HINSTANCE)hinstDLL;
         break;
     case DLL_PROCESS_DETACH:
         UnloadCABINETDll();

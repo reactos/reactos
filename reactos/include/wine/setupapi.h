@@ -666,6 +666,7 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 
 
 LONG     WINAPI AddTagToGroupOrderList(PCWSTR lpGroupName, DWORD dwUnknown2, DWORD dwUnknown3);
+VOID     WINAPI AssertFail(LPSTR, UINT, LPSTR);
 DWORD    WINAPI CaptureAndConvertAnsiArg(PCSTR lpSrc, PWSTR *lpDst);
 DWORD    WINAPI CaptureStringArg(PCWSTR lpSrc, PWSTR *lpDst);
 BOOL     WINAPI DelayedMove(PCWSTR lpExistingFileName, PCWSTR lpNewFileName);
@@ -673,6 +674,7 @@ BOOL     WINAPI DoesUserHavePrivilege(PCWSTR lpPrivilegeName);
 PWSTR    WINAPI DuplicateString(PCWSTR lpSrc);
 BOOL     WINAPI EnablePrivilege(PCWSTR lpPrivilegeName, BOOL bEnable);
 BOOL     WINAPI FileExists(PCWSTR lpFileName, PWIN32_FIND_DATAW lpFileFindData);
+DWORD    WINAPI GetSetFileTimestamp(PCWSTR, PFILETIME, PFILETIME, PFILETIME, BOOLEAN);
 void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, PCSTR cmdline, INT show );
 void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, PCWSTR cmdline, INT show );
 #define         InstallHinfSection WINELIB_NAME_AW(InstallHinfSection)
