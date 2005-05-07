@@ -48,12 +48,14 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 	{
 		DWORD  dwBuffer;
 		LPTSTR pszBuffer;
+		TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 		pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 		dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
-		{			
-			ConErrResPuts(STRING_PATH_ERROR);
+		{
+			LoadString(CMD_ModuleHandle, STRING_VOL_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		    ConOutPrintf(szMsg, _T("PATH"));			
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)

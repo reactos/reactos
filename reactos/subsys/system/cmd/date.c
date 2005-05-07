@@ -235,7 +235,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 				freep (arg);
 				return 0;
 			}
-			ConErrResPuts(STRING_ERROR_WRONG_DATE);
+			ConErrResPuts(STRING_DATE_ERROR);
 			
 		}
 	}

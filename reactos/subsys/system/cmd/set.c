@@ -104,7 +104,7 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		dwBuffer = GetEnvironmentVariable (param, pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
-			LoadString(CMD_ModuleHandle, STRING_SET_ERROR, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_PATH_ERROR, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf (szMsg, param);
 			return 0;
 		}

@@ -534,8 +534,6 @@ STRING_GOTO_ERROR2,          "Label '%s' not found\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Error]\n"
 
-STRING_PATH_ERROR,           "CMD: Not in environment 'PATH'\n"
-
 STRING_REN_ERROR1,           "MoveFile() failed. Error: %lu\n"
 
 STRING_START_ERROR1,         "No batch support at the moment!"
@@ -561,6 +559,5 @@ STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary 
 STRING_ERROR_D_PAUSEMSG,           "Press any key to continue . . ."
 STRING_ERROR_DRIVER_NOT_READY,     "Drive not ready"
 
-STRING_ERROR_WRONG_DATE,           "Invalid date."
-STRING_SET_ERROR                   "CMD: Not in environment '%s'\n"
+STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 }

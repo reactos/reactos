@@ -14,7 +14,6 @@
 #define STRING_ERROR_CANNOTPIPE            110
 #define STRING_ERROR_D_PAUSEMSG            111
 #define STRING_ERROR_DRIVER_NOT_READY      112
-#define STRING_ERROR_WRONG_DATE            113 
 
 #define STRING_CHOICE_OPTION               200
 #define STRING_COPY_OPTION                 201
@@ -64,7 +63,6 @@
 #define STRING_TIME_ERROR1                 348
 #define STRING_TYPE_ERROR1                 349
 #define STRING_WINDOW_ERROR1               350
-#define STRING_SET_ERROR                   351 
 
 
 

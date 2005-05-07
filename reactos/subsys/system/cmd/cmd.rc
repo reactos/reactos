@@ -11,6 +11,7 @@
 #include "En.rc"
 #include "Fr.rc"
 
+
 STRINGTABLE DISCARDABLE
 {
   STRING_FREEDOS_DEV, "    Tim Norman        Matt Rains\n\

@@ -545,7 +545,7 @@ STRING_GOTO_ERROR2,          "Label '%s' non trouv‚\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Erreur]\n"
 
-STRING_PATH_ERROR,           "CMD: Pas dans l'environnement 'PATH'\n"
+STRING_PATH_ERROR,           "CMD: Pas dans l'environnement '%s'\n"
 
 STRING_REN_ERROR1,           "MoveFile() a ‚chou‚. Erreur: %lu\n"
 
