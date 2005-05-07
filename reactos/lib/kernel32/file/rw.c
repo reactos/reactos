@@ -221,7 +221,7 @@ ReadFile(IN HANDLE hFile,
              /* lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
                 check that case either and crashes (only after the operation
                 completed) */
-             *lpNumberOfBytesRead = Iosb.Information;
+             *lpNumberOfBytesRead = 0;
              return TRUE;
           }
 
