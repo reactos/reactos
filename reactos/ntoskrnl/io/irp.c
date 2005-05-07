@@ -19,6 +19,187 @@
 #define TAG_IRP      TAG('I', 'R', 'P', ' ')
 #define TAG_SYS_BUF  TAG('S', 'Y', 'S' , 'B')
 
+/* PRIVATE FUNCTIONS  ********************************************************/
+
+VOID 
+STDCALL
+IopFreeIrpKernelApc(PKAPC Apc,
+                    PKNORMAL_ROUTINE *NormalRoutine,
+                    PVOID *NormalContext,
+                    PVOID *SystemArgument1,
+                    PVOID *SystemArgument2)
+{
+    /* Free the IRP */
+    IoFreeIrp(CONTAINING_RECORD(Apc, IRP, Tail.Apc));
+}
+
+VOID 
+STDCALL
+IopAbortIrpKernelApc(PKAPC Apc)
+{
+    /* Free the IRP */
+    IoFreeIrp(CONTAINING_RECORD(Apc, IRP, Tail.Apc));
+}
+
+/*
+ * FUNCTION: Performs the second stage of irp completion for read/write irps
+ * 
+ * Called as a special kernel APC kernel-routine or directly from IofCompleteRequest()
+ *
+ * Note that we'll never see irp's flagged IRP_PAGING_IO (IRP_MOUNT_OPERATION)
+ * or IRP_CLOSE_OPERATION (IRP_MJ_CLOSE and IRP_MJ_CLEANUP) here since their
+ * cleanup/completion is fully taken care of in IoCompleteRequest.
+ * -Gunnar
+ */
+VOID 
+STDCALL
+IopCompleteRequest(PKAPC Apc,
+                   PKNORMAL_ROUTINE* NormalRoutine,
+                   PVOID* NormalContext,
+                   PVOID* SystemArgument1,
+                   PVOID* SystemArgument2)
+{
+    PFILE_OBJECT FileObject;
+    PIRP Irp;
+    PMDL Mdl, NextMdl;
+    PKEVENT UserEvent;
+    BOOLEAN SyncIrp;
+
+    if (Apc) DPRINT("IoSecondStageCompletition with APC: %x\n", Apc);
+   
+    /* Get data from the APC */
+    FileObject = (PFILE_OBJECT)(*SystemArgument1);
+    Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
+    DPRINT("IoSecondStageCompletition, %x\n", Irp);
+    
+    /* Save the User Event */
+    UserEvent = Irp->UserEvent;
+    
+    /* Remember if the IRP is Sync or not */
+    SyncIrp = Irp->Flags & IRP_SYNCHRONOUS_API ? TRUE : FALSE;
+
+    /* Handle Buffered case first */
+    if (Irp->Flags & IRP_BUFFERED_IO)
+    {
+        /* Check if we have an input buffer and if we suceeded */
+        if (Irp->Flags & IRP_INPUT_OPERATION && NT_SUCCESS(Irp->IoStatus.Status))
+        {
+            /* Copy the buffer back to the user */
+            RtlCopyMemory(Irp->UserBuffer,
+                          Irp->AssociatedIrp.SystemBuffer,
+                          Irp->IoStatus.Information);
+        }
+        
+        /* Also check if we should de-allocate it */
+        if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
+        {
+            ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_SYS_BUF);
+        }
+    }
+    
+    /* Now we got rid of these two... */
+    Irp->Flags &= ~(IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);
+    
+    /* Check if there's an MDL */
+    if ((Mdl = Irp->MdlAddress))
+    {
+        /* Clear all of them */
+        do
+        {
+            NextMdl = Mdl->Next;
+            IoFreeMdl(Mdl);
+            Mdl = NextMdl;
+        } while (Mdl);
+    }
+    Irp->MdlAddress = NULL;
+
+    /* Remove the IRP from the list of Thread Pending IRPs */
+    RemoveEntryList(&Irp->ThreadListEntry);
+    InitializeListHead(&Irp->ThreadListEntry);  
+
+    if (NT_SUCCESS(Irp->IoStatus.Status) || Irp->PendingReturned)
+    {
+        _SEH_TRY
+        {
+            /*  Save the IOSB Information */
+            *Irp->UserIosb = Irp->IoStatus;
+        }
+        _SEH_HANDLE
+        {
+            /* Ignore any error */
+        }
+        _SEH_END;
+
+        if (FileObject)
+        {
+            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+            {
+                /* Set the Status */
+                FileObject->FinalStatus = Irp->IoStatus.Status;
+
+                /* FIXME: Remove this check when I/O code is fixed */
+                if (UserEvent != &FileObject->Event)
+                {
+                    /* Signal Event */
+                    KeSetEvent(&FileObject->Event, 0, FALSE);
+                }
+            }
+        }
+        
+        /* Signal the user event, if one exist */
+        if (UserEvent)
+        {
+            KeSetEvent(UserEvent, 0, FALSE);
+        }
+
+        /* Now call the User APC if one was requested */
+        if (Irp->Overlay.AsynchronousParameters.UserApcRoutine)
+        {
+            KeInitializeApc(&Irp->Tail.Apc,
+                            KeGetCurrentThread(),
+                            CurrentApcEnvironment,
+                            IopFreeIrpKernelApc,
+                            IopAbortIrpKernelApc,
+                            (PKNORMAL_ROUTINE)Irp->Overlay.AsynchronousParameters.UserApcRoutine,
+                            Irp->RequestorMode,
+                            Irp->Overlay.AsynchronousParameters.UserApcContext);
+
+            KeInsertQueueApc(&Irp->Tail.Apc,
+                             Irp->UserIosb,
+                             NULL,
+                             2);
+            Irp = NULL;
+        }
+        else if (FileObject && FileObject->CompletionContext)
+        {
+            /* Call the IO Completion Port if we have one, instead */
+            IoSetIoCompletion(FileObject->CompletionContext->Port,
+                              FileObject->CompletionContext->Key,
+                              Irp->Overlay.AsynchronousParameters.UserApcContext,
+                              Irp->IoStatus.Status,
+                              Irp->IoStatus.Information,
+                              FALSE);
+            Irp = NULL;
+        }
+    }
+    
+    /* Free the Irp if it hasn't already */
+    if (Irp) IoFreeIrp(Irp);
+
+    if (FileObject)
+    {
+        /* Dereference the user event, if it is an event object */
+        /* FIXME: Remove last check when I/O code is fixed */
+        if (UserEvent && !SyncIrp && UserEvent != &FileObject->Event) 
+        {
+            ObDereferenceObject(UserEvent);
+        }
+
+        /* Dereference the File Object */
+        ObDereferenceObject(FileObject);
+    }
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -628,11 +809,7 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
 #endif
 /*
  * @implemented
- */
-VOID FASTCALL
-IofCompleteRequest(PIRP Irp,
-         CCHAR PriorityBoost)
-/*
+ *
  * FUNCTION: Indicates the caller has finished all processing for a given
  * I/O request and is returning the given IRP to the I/O manager
  * ARGUMENTS:
@@ -640,211 +817,190 @@ IofCompleteRequest(PIRP Irp,
  *         PriorityBoost = Increment by which to boost the priority of the
  *                         thread making the request
  */
+VOID 
+FASTCALL
+IofCompleteRequest(PIRP Irp,
+                   CCHAR PriorityBoost)
 {
-   ULONG             i;
-   NTSTATUS          Status;
-   PFILE_OBJECT      OriginalFileObject;
-   PDEVICE_OBJECT    DeviceObject;
-   KIRQL             oldIrql;
-   PMDL              Mdl;
-   PIO_STACK_LOCATION Stack = (PIO_STACK_LOCATION)(Irp + 1);
+    PIO_STACK_LOCATION StackPtr;
+    PDEVICE_OBJECT DeviceObject;
+    PFILE_OBJECT FileObject = Irp->Tail.Overlay.OriginalFileObject;
+    PETHREAD Thread = Irp->Tail.Overlay.Thread;
+    NTSTATUS Status;
+    PMDL Mdl;
 
-   DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
-      Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
+    DPRINT("IofCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
+            Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
 
-   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-   ASSERT(Irp->CancelRoutine == NULL);
-   ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
-
-   Irp->PendingReturned = IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED;
-   
-   /*
-    * Run the completion routines.
-    */
-
-   for (i=Irp->CurrentLocation;i<(ULONG)Irp->StackCount;i++)
-   {
-      /*
-      Completion routines expect the current irp stack location to be the same as when
-      IoSetCompletionRoutine was called to set them. A side effect is that completion
-      routines set by highest level drivers without their own stack location will receive
-      an invalid current stack location (at least it should be considered as invalid).
-      Since the DeviceObject argument passed is taken from the current stack, this value
-      is also invalid (NULL).
-      */
-      if (Irp->CurrentLocation < Irp->StackCount - 1)
-      {
-         IoSkipCurrentIrpStackLocation(Irp);
-         DeviceObject = IoGetCurrentIrpStackLocation(Irp)->DeviceObject;
-      }
-      else
-      {
-         DeviceObject = NULL;
-      }
-
-      if (Stack[i].CompletionRoutine != NULL &&
-         ((NT_SUCCESS(Irp->IoStatus.Status) && (Stack[i].Control & SL_INVOKE_ON_SUCCESS)) ||
-         (!NT_SUCCESS(Irp->IoStatus.Status) && (Stack[i].Control & SL_INVOKE_ON_ERROR)) ||
-         (Irp->Cancel && (Stack[i].Control & SL_INVOKE_ON_CANCEL))))
-      {
-         Status = Stack[i].CompletionRoutine(DeviceObject,
-                                                  Irp,
-                                                  Stack[i].Context);
-
-         if (Status == STATUS_MORE_PROCESSING_REQUIRED)
-         {
-            return;
-         }
-      }
-   
-      if (IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED)
-      {
-         Irp->PendingReturned = TRUE;
-      }
-   }
-
-   /* Windows NT File System Internals, page 165 */
-   if (Irp->Flags & IRP_ASSOCIATED_IRP)
-   {
-      ULONG MasterIrpCount;
-      PIRP MasterIrp = Irp->AssociatedIrp.MasterIrp;
-
-      /* This should never happen! */
-      ASSERT(IsListEmpty(&Irp->ThreadListEntry));
-
-      MasterIrpCount = InterlockedDecrement(&MasterIrp->AssociatedIrp.IrpCount);
-      while ((Mdl = Irp->MdlAddress))
-      {
-         Irp->MdlAddress = Mdl->Next;
-         IoFreeMdl(Mdl);
-      }
-      IoFreeIrp(Irp);
-      if (MasterIrpCount == 0)
-      {
-         IofCompleteRequest(MasterIrp, IO_NO_INCREMENT);
-      }
-      return;
-   }
-
-   /*
-    * Were done calling completion routines. Now do any cleanup that can be 
-    * done in an arbitrarily context.
-    */
-
-   /* Windows NT File System Internals, page 165 */
-   if (Irp->Flags & (IRP_PAGING_IO|IRP_CLOSE_OPERATION))
-   {
-      /* This should never happen! */
-      ASSERT(IsListEmpty(&Irp->ThreadListEntry));
-
-      /* 
-       * If MDL_IO_PAGE_READ is set, then the caller is responsible 
-       * for deallocating of the mdl. 
-       */
-      if (Irp->Flags & IRP_PAGING_IO &&
-          Irp->MdlAddress &&
-          !(Irp->MdlAddress->MdlFlags & MDL_IO_PAGE_READ))
-      {
-
-         if (Irp->MdlAddress->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
-         {
-            MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa, Irp->MdlAddress);
-         }
-
-         ExFreePool(Irp->MdlAddress);
-      }
-
-      if (Irp->UserIosb)
-      {
-         _SEH_TRY
-         {
-            *Irp->UserIosb = Irp->IoStatus;
-         }
-         _SEH_HANDLE
-         {
-           DPRINT1("Unable to set UserIosb (at 0x%x) to 0x%x, Error: 0x%x\n",
-                   Irp->UserIosb, Irp->IoStatus, _SEH_GetExceptionCode());
-         }
-         _SEH_END;
-      }
-
-      if (Irp->UserEvent)
-      {
-         KeSetEvent(Irp->UserEvent, PriorityBoost, FALSE);
-      }
-      
-      /* io manager frees the irp for close operations */
-//      if (Irp->Flags & IRP_PAGING_IO)
-//      {
-         IoFreeIrp(Irp);
-//      }
-      
-      return;
-   }
-   
-   
-   /*
-   Hi Dave,
-   
-    I went through my old notes. You are correct and in most cases
-   IoCompleteRequest() will issue an MmUnlockPages() for each MDL in the IRP
-   chain. There are however few exceptions: one is MDLs for associated IRPs,
-   it's expected that those MDLs have been initialized with
-   IoBuildPartialMdl(). Another exception is PAGING_IO irps, the i/o completion
-   code doesn't do anything to MDLs of those IRPs.
-   
-   sara
-   
-*/
-   
-
-   for (Mdl = Irp->MdlAddress; Mdl; Mdl = Mdl->Next)
-   {
-      /* 
-       * Undo the MmProbeAndLockPages. If MmGetSystemAddressForMdl was called
-       * on this mdl, this mapping (if any) is also undone by MmUnlockPages.
-       */
-      MmUnlockPages(Mdl);
-   }
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+    ASSERT(!Irp->CancelRoutine);
+    ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
     
-   //Windows NT File System Internals, page 154
-   OriginalFileObject = Irp->Tail.Overlay.OriginalFileObject;
+    /* Get the Current Stack */
+    StackPtr = IoGetCurrentIrpStackLocation(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    
+    /* Loop the Stacks and complete the IRPs */
+    for (;Irp->CurrentLocation <= (Irp->StackCount + 1); StackPtr++)
+    {
+        /* Set Pending Returned */
+        Irp->PendingReturned = StackPtr->Control & SL_PENDING_RETURNED;
+        
+        /*
+         * Completion routines expect the current irp stack location to be the same as when
+         * IoSetCompletionRoutine was called to set them. A side effect is that completion
+         * routines set by highest level drivers without their own stack location will receive
+         * an invalid current stack location (at least it should be considered as invalid).
+         * Since the DeviceObject argument passed is taken from the current stack, this value
+         * is also invalid (NULL).
+         */
+        if (Irp->CurrentLocation == (Irp->StackCount + 1))
+        {
+            DeviceObject = NULL;
+        }
+        else
+        {
+            DeviceObject = IoGetCurrentIrpStackLocation(Irp)->DeviceObject;
+        }
 
-   if (Irp->PendingReturned || KeGetCurrentIrql() == DISPATCH_LEVEL)
-   {
-      BOOLEAN bStatus;
+        /* Check if there is a Completion Routine to Call */
+        if ((NT_SUCCESS(Irp->IoStatus.Status) && 
+             (StackPtr->Control & SL_INVOKE_ON_SUCCESS)) ||
+            (!NT_SUCCESS(Irp->IoStatus.Status) && 
+             (StackPtr->Control & SL_INVOKE_ON_ERROR)) ||
+            (Irp->Cancel && (StackPtr->Control & SL_INVOKE_ON_CANCEL)))
+        {
+            /* Call it */
+            Status = StackPtr->CompletionRoutine(DeviceObject,
+                                                 Irp,
+                                                 StackPtr->Context);
+
+            /* Don't touch the Packet if this was returned. It might be gone! */
+            if (Status == STATUS_MORE_PROCESSING_REQUIRED) return;
+        }
+        else
+        {
+            if ((Irp->CurrentLocation <= Irp->StackCount) && (Irp->PendingReturned))
+            {
+                if (IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED)
+                {
+                    Irp->PendingReturned = TRUE;
+                }  
+            }
+        }
+        
+        /* Move to next stack */
+        IoSkipCurrentIrpStackLocation(Irp);
+    }
+
+    /* Windows NT File System Internals, page 165 */
+    if (Irp->Flags & IRP_ASSOCIATED_IRP)
+    {
+        ULONG MasterIrpCount;
+        PIRP MasterIrp = Irp->AssociatedIrp.MasterIrp;
+
+        DPRINT("Handling Associated IRP\n");
+        /* This should never happen! */
+        ASSERT(IsListEmpty(&Irp->ThreadListEntry));
+
+        /* Decrement and get the old count */
+        MasterIrpCount = InterlockedDecrement(&MasterIrp->AssociatedIrp.IrpCount);
+        
+        /* Free MDLs and IRP */
+        while ((Mdl = Irp->MdlAddress))
+        {
+            Irp->MdlAddress = Mdl->Next;
+            IoFreeMdl(Mdl);
+        }
+        IoFreeIrp(Irp);
       
-      DPRINT("Dispatching APC\n");
+        /* Complete the Master IRP */
+        if (!MasterIrpCount) IofCompleteRequest(MasterIrp, IO_NO_INCREMENT);
+        return;
+    }
 
-      KeInitializeApc(  &Irp->Tail.Apc,
-                             &Irp->Tail.Overlay.Thread->Tcb,
-                             Irp->ApcEnvironment,
-                             IoSecondStageCompletion,//kernel routine
+    /* Windows NT File System Internals, page 165 */
+    if (Irp->Flags & (IRP_PAGING_IO|IRP_CLOSE_OPERATION))
+    {
+        DPRINT("Handling Paging or Close I/O\n");
+        /* This should never happen! */
+        ASSERT(IsListEmpty(&Irp->ThreadListEntry));
+
+        /* Handle a Close Operation or Sync Paging I/O (see page 165) */
+        if (Irp->Flags & (IRP_SYNCHRONOUS_PAGING_IO | IRP_CLOSE_OPERATION))
+        {
+            /* Set the I/O Status and Signal the Event */
+            DPRINT("Handling Sync Paging or Close I/O\n");
+            *Irp->UserIosb = Irp->IoStatus;
+            KeSetEvent(Irp->UserEvent, PriorityBoost, FALSE);
+            
+            /* Free the IRP for a Paging I/O Only, Close is handled by us */
+            if (Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO)
+            {
+                DPRINT("Handling Sync Paging I/O\n");
+                IoFreeIrp(Irp);
+            }
+        } 
+        else
+        {
+            DPRINT1("BUG BUG, YOU SHOULDNT BE HERE\n");
+            #if 0
+            /* Page 166 */
+            /* When we'll actually support Async Paging I/O Properly... */
+            KeInitializeApc(&Irp->Tail.Apc
+                            &Irp->tail.Overlay.Thread->Tcb,
+                            Irp->ApcEnvironment,
+                            IopCompletePageWrite,
+                            NULL,
+                            NULL,
+                            KernelMode,
+                            NULL);
+            KeInsertQueueApc(&Irp->Tail.Apc,
                              NULL,
-                             (PKNORMAL_ROUTINE) NULL,
-                             KernelMode,
-                             NULL);
-      
-      bStatus = KeInsertQueueApc(&Irp->Tail.Apc,
-                                      (PVOID)OriginalFileObject,
-                                      NULL, // This is used for REPARSE stuff
-                                      PriorityBoost);
+                             NULL,
+                             PriorityBoost);
+            #endif
+        }
+        return;
+    }
 
-      if (bStatus == FALSE)
-      {
-         DPRINT1("Error queueing APC for thread. Thread has probably exited.\n");
-      }
+    /* Unlock MDL Pages, page 167. */
+    while ((Mdl = Irp->MdlAddress))
+    {
+        DPRINT("Unlocking MDL: %x\n", Mdl);
+        Irp->MdlAddress = Mdl->Next;
+        MmUnlockPages(Mdl);
+    }        
 
-      DPRINT("Finished dispatching APC\n");
-   }
-   else
-   {
-      DPRINT("Calling IoSecondStageCompletion routine directly\n");
-      KeRaiseIrql(APC_LEVEL, &oldIrql);
-      IoSecondStageCompletion(&Irp->Tail.Apc,NULL,NULL,(PVOID)&OriginalFileObject, NULL);
-      KeLowerIrql(oldIrql);
-      DPRINT("Finished completition routine\n");
-   }
+    /* Check if we should exit because of a Deferred I/O (page 168) */
+    if (Irp->Flags & IRP_DEFER_IO_COMPLETION && !Irp->PendingReturned)
+    {
+        DPRINT("Quick return\n");
+        return;
+    }
+    
+    /* Now queue the special APC */
+    if (!Irp->Cancel)
+    {
+        DPRINT("KMODE APC QUEUE\n");
+        KeInitializeApc(&Irp->Tail.Apc,
+                        &Thread->Tcb,
+                        Irp->ApcEnvironment,
+                        IopCompleteRequest,
+                        NULL,
+                        (PKNORMAL_ROUTINE) NULL,
+                        KernelMode,
+                        NULL);
+        KeInsertQueueApc(&Irp->Tail.Apc,
+                         FileObject,
+                         NULL, /* This is used for REPARSE stuff */
+                         PriorityBoost);
+    }
+    else
+    {
+        /* The IRP just got cancelled... don't think this happens in ROS yet */
+        DPRINT1("The IRP was cancelled. Go Bug Alex\n");
+    }
 }
 
 /*
@@ -942,7 +1098,7 @@ IoInitializeIrp(PIRP Irp,
     Irp->Type = IO_TYPE_IRP;
     Irp->Size = PacketSize;
     Irp->StackCount = StackSize;
-    Irp->CurrentLocation = StackSize;
+    Irp->CurrentLocation = StackSize + 1;
     Irp->ApcEnvironment =  KeGetCurrentThread()->ApcStateIndex;
     Irp->Tail.Overlay.CurrentStackLocation = (PIO_STACK_LOCATION)(Irp + 1) + StackSize;
     
@@ -1179,185 +1335,6 @@ IoSynchronousPageWrite(PFILE_OBJECT FileObject,
     
     /* Call the Driver */
     return IofCallDriver(DeviceObject, Irp);
-}
-
-VOID 
-STDCALL
-IoSecondStageCompletion_KernelApcRoutine(PKAPC Apc,
-                                         PKNORMAL_ROUTINE *NormalRoutine,
-                                         PVOID *NormalContext,
-                                         PVOID *SystemArgument1,
-                                         PVOID *SystemArgument2)
-{
-    /* Free the IRP */
-    IoFreeIrp(CONTAINING_RECORD(Apc, IRP, Tail.Apc));
-}
-
-VOID 
-STDCALL
-IoSecondStageCompletion_RundownApcRoutine(PKAPC Apc)
-{
-    /* Free the IRP */
-    IoFreeIrp(CONTAINING_RECORD(Apc, IRP, Tail.Apc));
-}
-
-/*
- * FUNCTION: Performs the second stage of irp completion for read/write irps
- * 
- * Called as a special kernel APC kernel-routine or directly from IofCompleteRequest()
- *
- * Note that we'll never see irp's flagged IRP_PAGING_IO (IRP_MOUNT_OPERATION)
- * or IRP_CLOSE_OPERATION (IRP_MJ_CLOSE and IRP_MJ_CLEANUP) here since their
- * cleanup/completion is fully taken care of in IoCompleteRequest.
- * -Gunnar
- */
-VOID 
-STDCALL
-IoSecondStageCompletion(PKAPC Apc,
-                        PKNORMAL_ROUTINE* NormalRoutine,
-                        PVOID* NormalContext,
-                        PVOID* SystemArgument1,
-                        PVOID* SystemArgument2)
-{
-    PFILE_OBJECT FileObject;
-    PIRP Irp;
-    PMDL Mdl, NextMdl;
-    PKEVENT UserEvent;
-    BOOLEAN SyncIrp;
-
-    if (Apc) DPRINT("IoSecondStageCompletition with APC: %x\n", Apc);
-   
-    /* Get data from the APC */
-    FileObject = (PFILE_OBJECT)(*SystemArgument1);
-    Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
-    DPRINT("IoSecondStageCompletition, %x\n", Irp);
-    
-    /* Save the User Event */
-    UserEvent = Irp->UserEvent;
-    
-    /* Remember if the IRP is Sync or not */
-    SyncIrp = Irp->Flags & IRP_SYNCHRONOUS_API ? TRUE : FALSE;
-
-    /* Handle Buffered case first */
-    if (Irp->Flags & IRP_BUFFERED_IO)
-    {
-        /* Check if we have an input buffer and if we suceeded */
-        if (Irp->Flags & IRP_INPUT_OPERATION && NT_SUCCESS(Irp->IoStatus.Status))
-        {
-            /* Copy the buffer back to the user */
-            RtlCopyMemory(Irp->UserBuffer,
-                          Irp->AssociatedIrp.SystemBuffer,
-                          Irp->IoStatus.Information);
-        }
-        
-        /* Also check if we should de-allocate it */
-        if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
-        {
-            ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_SYS_BUF);
-        }
-    }
-    
-    /* Now we got rid of these two... */
-    Irp->Flags &= ~(IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);
-    
-    /* Check if there's an MDL */
-    if ((Mdl = Irp->MdlAddress))
-    {
-        /* Clear all of them */
-        do
-        {
-            NextMdl = Mdl->Next;
-            IoFreeMdl(Mdl);
-            Mdl = NextMdl;
-        } while (Mdl);
-    }
-    Irp->MdlAddress = NULL;
-
-    /* Remove the IRP from the list of Thread Pending IRPs */
-    RemoveEntryList(&Irp->ThreadListEntry);
-    InitializeListHead(&Irp->ThreadListEntry);  
-
-    if (NT_SUCCESS(Irp->IoStatus.Status) || Irp->PendingReturned)
-    {
-        _SEH_TRY
-        {
-            /*  Save the IOSB Information */
-            *Irp->UserIosb = Irp->IoStatus;
-        }
-        _SEH_HANDLE
-        {
-            /* Ignore any error */
-        }
-        _SEH_END;
-
-        if (FileObject)
-        {
-            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-            {
-                /* Set the Status */
-                FileObject->FinalStatus = Irp->IoStatus.Status;
-
-                /* FIXME: Remove this check when I/O code is fixed */
-                if (UserEvent != &FileObject->Event)
-                {
-                    /* Signal Event */
-                    KeSetEvent(&FileObject->Event, 0, FALSE);
-                }
-            }
-        }
-        
-        /* Signal the user event, if one exist */
-        if (UserEvent)
-        {
-            KeSetEvent(UserEvent, 0, FALSE);
-        }
-
-        /* Now call the User APC if one was requested */
-        if (Irp->Overlay.AsynchronousParameters.UserApcRoutine)
-        {
-            KeInitializeApc(&Irp->Tail.Apc,
-                            KeGetCurrentThread(),
-                            CurrentApcEnvironment,
-                            IoSecondStageCompletion_KernelApcRoutine,
-                            IoSecondStageCompletion_RundownApcRoutine,
-                            (PKNORMAL_ROUTINE)Irp->Overlay.AsynchronousParameters.UserApcRoutine,
-                            Irp->RequestorMode,
-                            Irp->Overlay.AsynchronousParameters.UserApcContext);
-
-            KeInsertQueueApc(&Irp->Tail.Apc,
-                             Irp->UserIosb,
-                             NULL,
-                             2);
-            Irp = NULL;
-        }
-        else if (FileObject && FileObject->CompletionContext)
-        {
-            /* Call the IO Completion Port if we have one, instead */
-            IoSetIoCompletion(FileObject->CompletionContext->Port,
-                              FileObject->CompletionContext->Key,
-                              Irp->Overlay.AsynchronousParameters.UserApcContext,
-                              Irp->IoStatus.Status,
-                              Irp->IoStatus.Information,
-                              FALSE);
-            Irp = NULL;
-        }
-    }
-    
-    /* Free the Irp if it hasn't already */
-    if (Irp) IoFreeIrp(Irp);
-
-    if (FileObject)
-    {
-        /* Dereference the user event, if it is an event object */
-        /* FIXME: Remove last check when I/O code is fixed */
-        if (UserEvent && !SyncIrp && UserEvent != &FileObject->Event) 
-        {
-            ObDereferenceObject(UserEvent);
-        }
-
-        /* Dereference the File Object */
-        ObDereferenceObject(FileObject);
-    }
 }
 
 /* EOF */
