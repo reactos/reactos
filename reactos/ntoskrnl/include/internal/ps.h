@@ -65,58 +65,101 @@ typedef struct
 } PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
 #endif
 
-#include <pshpack1.h>
-
-/* This needs to be fixed ASAP! */
+#include <pshpack4.h>
+/*
+ * NAME:           ETHREAD
+ * DESCRIPTION:    Internal Executive Thread Structure.
+ * PORTABILITY:    Architecture Independent.
+ * KERNEL VERSION: 5.2
+ * DOCUMENTATION:  http://reactos.com/wiki/index.php/ETHREAD
+ */
 typedef struct _ETHREAD
 {
-  KTHREAD Tcb;
-  union {
-  	LARGE_INTEGER CreateTime;
-  	UCHAR NestedFaultCount:2;
-  	UCHAR ApcNeeded:1;
-  };
-  LARGE_INTEGER ExitTime;
-  LIST_ENTRY LpcReplyChain;
-  NTSTATUS ExitStatus;
-  PVOID OfsChain;
-  LIST_ENTRY PostBlockList;
-  union {
-    struct _TERMINATION_PORT *TerminationPort;
-    struct _ETHREAD* ReaperLink;  
-  };
-  KSPIN_LOCK ActiveTimerListLock;
-  LIST_ENTRY ActiveTimerListHead;
-  CLIENT_ID Cid;
-  KSEMAPHORE LpcReplySemaphore;
-  PVOID LpcReplyMessage;
-  ULONG LpcReplyMessageId;
-  ULONG PerformanceCountLow;
-  PPS_IMPERSONATION_INFORMATION ImpersonationInfo;
-  LIST_ENTRY IrpList;
-  PIRP TopLevelIrp;
-  PDEVICE_OBJECT DeviceToVerify;
-  ULONG ReadClusterSize;
-  UCHAR ForwardClusterOnly;
-  UCHAR DisablePageFaultClustering;
-  UCHAR DeadThread;
-  UCHAR HideFromDebugger;
-  ULONG HasTerminated;
-#ifdef _ENABLE_THRDEVTPAIR
-  PVOID EventPair;
-#endif /* _ENABLE_THRDEVTPAIR */
-  ACCESS_MASK GrantedAccess;
-  struct _EPROCESS *ThreadsProcess;
-  PKSTART_ROUTINE StartAddress;
-  LPTHREAD_START_ROUTINE Win32StartAddress;
-  ULONG LpcReceivedMessageId;
-  UCHAR LpcExitThreadCalled;
-  UCHAR HardErrorsAreDisabled;
-  UCHAR LpcReceivedMsgIdValid;
-  UCHAR ActiveImpersonationInfo;
-  ULONG PerformanceCountHigh;
-  LIST_ENTRY ThreadListEntry;
-  BOOLEAN SystemThread;
+    KTHREAD                        Tcb;                         /* 1C0 */
+    LARGE_INTEGER                  CreateTime;                  /* 1C0 */
+    LARGE_INTEGER                  ExitTime;                    /* 1C0 */
+    union {
+        LIST_ENTRY                 LpcReplyChain;               /* 1C0 */
+        LIST_ENTRY                 KeyedWaitChain;              /* 1C0 */
+    };
+    union {
+        NTSTATUS                   ExitStatus;                  /* 1C8 */
+        PVOID                      OfsChain;                    /* 1C8 */
+    };
+    LIST_ENTRY                     PostBlockList;               /* 1CC */
+    union {
+        struct _TERMINATION_PORT   *TerminationPort;            /* 1D4 */
+        struct _ETHREAD            *ReaperLink;                 /* 1D4 */
+        PVOID                      KeyedWaitValue;              /* 1D4 */
+    };
+    KSPIN_LOCK                     ActiveTimerListLock;         /* 1D8 */
+    LIST_ENTRY                     ActiveTimerListHead;         /* 1D8 */
+    CLIENT_ID                      Cid;                         /* 1E0 */
+    union {
+        KSEMAPHORE                 LpcReplySemaphore;           /* 1E4 */
+        KSEMAPHORE                 KeyedReplySemaphore;         /* 1E4 */
+    };
+    union {
+        PVOID                      LpcReplyMessage;             /* 200 */
+        PVOID                      LpcWaitingOnPort;            /* 200 */
+    };
+    PPS_IMPERSONATION_INFORMATION  ImpersonationInfo;           /* 204 */
+    LIST_ENTRY                     IrpList;                     /* 208 */
+    ULONG                          TopLevelIrp;                 /* 210 */
+    PDEVICE_OBJECT                 DeviceToVerify;              /* 214 */
+    struct _EPROCESS               *ThreadsProcess;             /* 218 */
+    PKSTART_ROUTINE                StartAddress;                /* 21C */
+    union {
+        LPTHREAD_START_ROUTINE     Win32StartAddress;           /* 220 */
+        ULONG                      LpcReceivedMessageId;        /* 220 */
+    };
+    LIST_ENTRY                     ThreadListEntry;             /* 224 */
+    EX_RUNDOWN_REF                 RundownProtect;              /* 22C */
+    EX_PUSH_LOCK                   ThreadLock;                  /* 230 */
+    ULONG                          LpcReplyMessageId;           /* 234 */
+    ULONG                          ReadClusterSize;             /* 238 */
+    ACCESS_MASK                    GrantedAccess;               /* 23C */
+    union {
+        struct {
+           ULONG                   Terminated:1;
+           ULONG                   DeadThread:1;
+           ULONG                   HideFromDebugger:1;
+           ULONG                   ActiveImpersonationInfo:1;
+           ULONG                   SystemThread:1;
+           ULONG                   HardErrorsAreDisabled:1;
+           ULONG                   BreakOnTermination:1;
+           ULONG                   SkipCreationMsg:1;
+           ULONG                   SkipTerminationMsg:1;
+        };
+        ULONG                      CrossThreadFlags;            /* 240 */
+    };
+    union {
+        struct {
+           ULONG                   ActiveExWorker:1;
+           ULONG                   ExWorkerCanWaitUser:1;
+           ULONG                   MemoryMaker:1;
+           ULONG                   KeyedEventInUse:1;
+        };
+        ULONG                      SameThreadPassiveFlags;      /* 244 */
+    };
+    union {
+        struct {
+           ULONG                   LpcReceivedMsgIdValid:1;
+           ULONG                   LpcExitThreadCalled:1;
+           ULONG                   AddressSpaceOwner:1;
+           ULONG                   OwnsProcessWorkingSetExclusive:1;
+           ULONG                   OwnsProcessWorkingSetShared:1;
+           ULONG                   OwnsSystemWorkingSetExclusive:1;
+           ULONG                   OwnsSystemWorkingSetShared:1;
+           ULONG                   OwnsSessionWorkingSetExclusive:1;
+           ULONG                   OwnsSessionWorkingSetShared:1;
+           ULONG                   ApcNeeded:1;
+        };
+        ULONG                      SameThreadPassiveFlags;      /* 248 */
+    };   
+    UCHAR                          ForwardClusterOnly;          /* 24C */
+    UCHAR                          DisablePageFaultClustering;  /* 24D */
+    UCHAR                          ActiveFaultCount;            /* 24E */
 } ETHREAD;
 
 #include <poppack.h>
@@ -128,6 +171,13 @@ typedef struct _ETHREAD *PETHREAD;
 #endif /* __USE_W32API */
   
 #include <pshpack4.h>
+/*
+ * NAME:           EPROCESS
+ * DESCRIPTION:    Internal Executive Process Structure.
+ * PORTABILITY:    Architecture Independent.
+ * KERNEL VERSION: 5.2
+ * DOCUMENTATION:  http://reactos.com/wiki/index.php/EPROCESS
+ */
 struct _EPROCESS
 {
     KPROCESS              Pcb;                          /* 000 */

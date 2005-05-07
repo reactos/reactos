@@ -913,7 +913,7 @@ PIRP
 STDCALL
 IoGetTopLevelIrp(VOID)
 {
-    return(PsGetCurrentThread()->TopLevelIrp);
+    return (PIRP)PsGetCurrentThread()->TopLevelIrp;
 }
 
 /*
@@ -1131,7 +1131,7 @@ VOID
 STDCALL
 IoSetTopLevelIrp(IN PIRP Irp)
 {
-    PsGetCurrentThread()->TopLevelIrp = Irp;
+    PsGetCurrentThread()->TopLevelIrp = (ULONG)Irp;
 }
 
 /*

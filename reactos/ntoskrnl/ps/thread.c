@@ -46,7 +46,7 @@ PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
            "This is my IRQL: %d. This is my Thread Pointer: %x.\n", StartRoutine,
             StartContext, KeGetCurrentIrql(), Thread);
     
-    if (!Thread->HasTerminated) {
+    if (!Thread->Terminated) {
     
         /* Allocate the APC */
         ThreadApc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG('T', 'h', 'r','d'));
@@ -82,7 +82,7 @@ PspSystemThreadStartup(PKSTART_ROUTINE StartRoutine,
     KeLowerIrql(PASSIVE_LEVEL);
     
     /* Make sure it's not terminated by now */
-    if (!Thread->HasTerminated) {
+    if (!Thread->Terminated) {
     
         /* Call it */
         (StartRoutine)(StartContext);
@@ -483,7 +483,7 @@ BOOLEAN
 STDCALL
 PsIsThreadTerminating(IN PETHREAD Thread)
 {
-    return (Thread->HasTerminated ? TRUE : FALSE);
+    return (Thread->Terminated ? TRUE : FALSE);
 }
 
 /*

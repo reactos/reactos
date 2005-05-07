@@ -129,9 +129,9 @@ PspTerminateProcessThreads(PEPROCESS Process,
         if (Thread != CurrentThread) {
         
             /* Make sure it didn't already terminate */
-            if (!Thread->HasTerminated) {
+            if (!Thread->Terminated) {
 
-                Thread->HasTerminated = TRUE;
+                Thread->Terminated = TRUE;
                 
                 /* Terminate it by APC */
                 PspTerminateThreadByPointer(Thread, ExitStatus);
@@ -485,7 +485,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
 
             /* mark our thread as terminating so attempts to terminate it, when
                unlocking the process, fail */
-            CurrentThread->HasTerminated = TRUE;
+            CurrentThread->Terminated = TRUE;
 
             PsUnlockProcess(Process);
 
@@ -549,9 +549,9 @@ NtTerminateThread(IN HANDLE ThreadHandle,
         PsLockProcess(Thread->ThreadsProcess, FALSE);
         
         /* This isn't our thread, terminate it if not already done */
-        if (!Thread->HasTerminated) {
+        if (!Thread->Terminated) {
          
-             Thread->HasTerminated = TRUE;
+             Thread->Terminated = TRUE;
              
              /* Terminate it */
              PspTerminateThreadByPointer(Thread, ExitStatus);
@@ -564,7 +564,7 @@ NtTerminateThread(IN HANDLE ThreadHandle,
         
     } else {
 
-        Thread->HasTerminated = TRUE;
+        Thread->Terminated = TRUE;
         
         /* it's safe to dereference thread, there's at least the keep-alive
            reference which will be removed by the thread reaper causing the
