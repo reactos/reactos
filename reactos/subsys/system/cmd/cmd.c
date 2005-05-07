@@ -426,6 +426,9 @@ Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
 				ENABLE_PROCESSED_INPUT );
 	}
 
+	/* Get code page if it has been change */
+	GetCodePage = GetConsoleCP();
+    OutCodePage = GetConsoleOutputCP();
 #ifndef __REACTOS__
 	SetConsoleTitle (szWindowTitle);
 #endif
@@ -1416,6 +1419,8 @@ int main (int argc, char *argv[])
 #endif
 
   SetFileApisToOEM();
+  GetCodePage = 0;
+  OutCodePage = 0;
 
   hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
                         FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
@@ -1427,6 +1432,9 @@ int main (int argc, char *argv[])
     }
   wColor = Info.wAttributes;
   wDefColor = wColor;
+
+  GetCodePage = GetConsoleCP();
+  OutCodePage = GetConsoleOutputCP();
 
   /* check switches on command-line */
   Initialize(argc, argv);

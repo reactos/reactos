@@ -292,10 +292,14 @@ extern TCHAR cThousandSeparator;
 extern TCHAR cDecimalSeparator;
 extern INT nNumberGroups;
 
+
 VOID InitLocale (VOID);
 VOID PrintDate (VOID);
 VOID PrintTime (VOID);
 
+/* cache codepage */
+extern UINT GetCodePage;
+extern UINT OutCodePage;
 
 /* Prototypes for MEMORY.C */
 INT CommandMemory (LPTSTR, LPTSTR);

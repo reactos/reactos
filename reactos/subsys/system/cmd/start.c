@@ -114,6 +114,9 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 			}
 			CloseHandle (prci.hThread);
 			CloseHandle (prci.hProcess);
+		/* Get New code page if it has change */
+		GetCodePage = GetConsoleCP();
+        OutCodePage = GetConsoleOutputCP();
 		}
 		else
 		{

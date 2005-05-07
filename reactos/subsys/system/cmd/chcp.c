@@ -14,6 +14,8 @@
 #include "precomp.h"
 #include "resource.h"
 
+
+
 #ifdef INCLUDE_CMD_CHCP
 
 INT CommandChcp (LPTSTR cmd, LPTSTR param)
@@ -39,7 +41,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	{
 		/* display active code page number */
 		LoadString(GetModuleHandle(NULL), STRING_CHCP_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg, GetConsoleCP());
+		ConErrPrintf(szMsg, GetCodePage);
 		return 0;
 	}
 
@@ -53,7 +55,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 
 
 	/* save old code page */
-	uOldCodePage = GetConsoleCP();
+	uOldCodePage = GetCodePage;
 
 	uNewCodePage = (UINT)_ttoi(arg[0]);
 
@@ -72,8 +74,10 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	}
 	else
 	{
+		
 		SetConsoleOutputCP (uNewCodePage);
 		InitLocale ();
+		GetCodePage = GetConsoleCP();
 	}
 
 	freep (arg);
