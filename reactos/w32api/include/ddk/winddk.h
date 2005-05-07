@@ -2159,6 +2159,7 @@ typedef struct _FILE_NAME_INFORMATION {
   WCHAR  FileName[1];                                      
 } FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;           
 
+#include <pshpack8.h>
 typedef struct _FILE_BASIC_INFORMATION {
   LARGE_INTEGER  CreationTime;
   LARGE_INTEGER  LastAccessTime;
@@ -2166,6 +2167,7 @@ typedef struct _FILE_BASIC_INFORMATION {
   LARGE_INTEGER  ChangeTime;
   ULONG  FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+#include <poppack.h>
 
 typedef struct _FILE_STANDARD_INFORMATION {
   LARGE_INTEGER  AllocationSize;

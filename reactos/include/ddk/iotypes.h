@@ -92,6 +92,7 @@ typedef VOID (NTAPI *PDRIVER_FS_NOTIFICATION) (
 
 /* STRUCTURE TYPES ***********************************************************/
 
+#include <pshpack8.h>
 typedef struct _FILE_BASIC_INFORMATION
 {
     LARGE_INTEGER CreationTime;
@@ -100,6 +101,7 @@ typedef struct _FILE_BASIC_INFORMATION
     LARGE_INTEGER ChangeTime;
     ULONG FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+#include <poppack.h>
 
 typedef struct _FILE_STANDARD_INFORMATION
 {
