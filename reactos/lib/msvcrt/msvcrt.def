@@ -517,11 +517,11 @@ _strcmpi
 _strdate
 _strdup
 _strerror
-_stricmp=NTDLL.stricmp
+_stricmp=NTDLL._stricmp
 _stricoll
 _strlwr=NTDLL._strlwr
 _strncoll
-_strnicmp=NTDLL.strnicmp
+_strnicmp=NTDLL._strnicmp
 _strnicoll
 _strnset
 _strrev
