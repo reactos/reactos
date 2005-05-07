@@ -20,8 +20,8 @@
 #define OUTPUT_BUFFER_SIZE  4096
 
 
-UINT GetCodePage;
-UINT OutCodePage;
+UINT InputCodePage;
+UINT OutputCodePage;
 
 
 VOID ConInDisable (VOID)
@@ -111,7 +111,7 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 	ReadFile (hFile, (PVOID)pBuf, dwLength, &dwRead, NULL);
 
 #ifdef _UNICODE
-	MultiByteToWideChar(  GetCodePage, 0, pBuf, dwLength + 1, lpInput, dwLength + 1);
+	MultiByteToWideChar(  InputCodePage, 0, pBuf, dwLength + 1, lpInput, dwLength + 1);
 #endif
 	p = lpInput;
 	for (i = 0; i < dwRead; i++, p++)
@@ -139,7 +139,7 @@ static VOID ConChar(TCHAR c, DWORD nStdHandle)
 	WCHAR ws[2];
 	ws[0] = c;
 	ws[1] = 0;
-	WideCharToMultiByte( OutCodePage, 0, ws, 2, as, 2, NULL, NULL);
+	WideCharToMultiByte( OutputCodePage, 0, ws, 2, as, 2, NULL, NULL);
 	cc = as[0];
 #else
 	cc = c;
@@ -165,7 +165,7 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 	len = _tcslen(szText);
 #ifdef _UNICODE
 	pBuf = malloc(len + 1);
-	len = WideCharToMultiByte( OutCodePage, 0, szText, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+	len = WideCharToMultiByte( OutputCodePage, 0, szText, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szText;
 #endif
@@ -200,7 +200,7 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 	len = _vstprintf (szOut, szFormat, arg_ptr);
 #ifdef _UNICODE
 	pBuf = malloc(len + 1);
-	len = WideCharToMultiByte( OutCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szOut;
 #endif

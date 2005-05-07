@@ -77,7 +77,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 		
 		SetConsoleOutputCP (uNewCodePage);
 		InitLocale ();
-		GetCodePage = GetConsoleCP();
+		InputCodePage= GetConsoleCP();
 	}
 
 	freep (arg);

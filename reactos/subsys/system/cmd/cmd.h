@@ -298,8 +298,8 @@ VOID PrintDate (VOID);
 VOID PrintTime (VOID);
 
 /* cache codepage */
-extern UINT GetCodePage;
-extern UINT OutCodePage;
+extern UINT InputCodePage;
+extern UINT OutputCodePage;
 
 /* Prototypes for MEMORY.C */
 INT CommandMemory (LPTSTR, LPTSTR);
