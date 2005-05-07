@@ -5,16 +5,6 @@
 
 #include <ntos/fstypes.h>
 
-/* Some comments on the Prototypes that aren't in the IFS:
-
-FsRtlMdlReadCompleteDev (FsRtlMdlReadComplete is on GNU IFS. The Dev Suffix simply means an extra PDEVICE_OBJECT param)
-FsRtlMdlReadDev (FsRtlMdlReadDev is on GNU IFS. The Dev Suffix simply means an extra PDEVICE_OBJECT param)
-FsRtlMdlWriteCompleteDev FsRtlMdlWriteCompleteDev is on GNU IFS. The Dev Suffix simply means an extra PDEVICE_OBJECT param)
-FsRtlPrepareMdlWrite (Compared with CcMdlWrite, which is already documented)
-FsRtlPrepareMdlWriteDev (Same as above, and add a pointer to device object (Dev suffix)
-
-*/
-
 #ifdef __NTOSKRNL__
 extern PUCHAR EXPORTED FsRtlLegalAnsiCharacterArray;
 #else

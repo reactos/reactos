@@ -92,6 +92,47 @@ typedef VOID (NTAPI *PDRIVER_FS_NOTIFICATION) (
 
 /* STRUCTURE TYPES ***********************************************************/
 
+typedef struct _FILE_BASIC_INFORMATION
+{
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    ULONG FileAttributes;
+} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+
+typedef struct _FILE_STANDARD_INFORMATION
+{
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    ULONG NumberOfLinks;
+    BOOLEAN DeletePending;
+    BOOLEAN Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
+typedef struct _FILE_NETWORK_OPEN_INFORMATION
+{
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    ULONG FileAttributes;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+
+typedef struct _COMPRESSED_DATA_INFO 
+{
+    USHORT CompressionFormatAndEngine;
+    UCHAR CompressionUnitShift;
+    UCHAR ChunkShift;
+    UCHAR ClusterShift;
+    UCHAR Reserved;
+    USHORT NumberOfChunks;
+    ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
+} COMPRESSED_DATA_INFO;
+
+typedef COMPRESSED_DATA_INFO *PCOMPRESSED_DATA_INFO;
 typedef struct _ADAPTER_OBJECT ADAPTER_OBJECT, *PADAPTER_OBJECT;
 
 typedef struct _IO_SECURITY_CONTEXT
@@ -811,59 +852,258 @@ typedef struct _DEVICE_OBJECT
    PVOID Reserved;
 } DEVICE_OBJECT, *PDEVICE_OBJECT;
 
-
-/*
- * Fast i/o routine type declaration
- */
-//typedef NTSTATUS (*PFAST_IO_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
-//FIXME : this type is ok for read and write, but not for all routines
 typedef BOOLEAN STDCALL_FUNC
-(*PFAST_IO_ROUTINE)(IN struct _FILE_OBJECT *FileObject,
-		    IN PLARGE_INTEGER FileOffset,
-		    IN ULONG Length,
-		    IN BOOLEAN Wait,
-		    IN ULONG LockKey,
-		    OUT PVOID Buffer,
-		    OUT PIO_STATUS_BLOCK IoStatus,
-		    IN struct _DEVICE_OBJECT *DeviceObject);
+(*PFAST_IO_CHECK_IF_POSSIBLE) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN BOOLEAN Wait,
+    IN ULONG LockKey,
+    IN BOOLEAN CheckForReadOperation,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
 
-typedef VOID
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_READ) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN BOOLEAN Wait,
+    IN ULONG LockKey,
+    OUT PVOID Buffer,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_WRITE) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN BOOLEAN Wait,
+    IN ULONG LockKey,
+    IN PVOID Buffer,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_QUERY_BASIC_INFO) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN BOOLEAN Wait,
+    OUT struct _FILE_BASIC_INFORMATION *Buffer,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_QUERY_STANDARD_INFO) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN BOOLEAN Wait,
+    OUT struct _FILE_STANDARD_INFORMATION *Buffer,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_LOCK) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN PLARGE_INTEGER Length,
+    PEPROCESS ProcessId,
+    ULONG Key,
+    BOOLEAN FailImmediately,
+    BOOLEAN ExclusiveLock,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_UNLOCK_SINGLE) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN PLARGE_INTEGER Length,
+    PEPROCESS ProcessId,
+    ULONG Key,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_UNLOCK_ALL) (
+    IN struct _FILE_OBJECT *FileObject,
+    PEPROCESS ProcessId,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_UNLOCK_ALL_BY_KEY) (
+    IN struct _FILE_OBJECT *FileObject,
+    PVOID ProcessId,
+    ULONG Key,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_DEVICE_CONTROL) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN BOOLEAN Wait,
+    IN PVOID InputBuffer OPTIONAL,
+    IN ULONG InputBufferLength,
+    OUT PVOID OutputBuffer OPTIONAL,
+    IN ULONG OutputBufferLength,
+    IN ULONG IoControlCode,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef VOID STDCALL_FUNC
 (*PFAST_IO_ACQUIRE_FILE) (
     IN struct _FILE_OBJECT *FileObject);
 
-typedef VOID
+typedef VOID STDCALL_FUNC
 (*PFAST_IO_RELEASE_FILE) (
     IN struct _FILE_OBJECT *FileObject);
 
-typedef struct _FAST_IO_DISPATCH {
-   ULONG SizeOfFastIoDispatch;
-   PFAST_IO_ROUTINE FastIoCheckIfPossible;
-   PFAST_IO_ROUTINE FastIoRead;
-   PFAST_IO_ROUTINE FastIoWrite;
-   PFAST_IO_ROUTINE FastIoQueryBasicInfo;
-   PFAST_IO_ROUTINE FastIoQueryStandardInfo;
-   PFAST_IO_ROUTINE FastIoLock;
-   PFAST_IO_ROUTINE FastIoUnlockSingle;
-   PFAST_IO_ROUTINE FastIoUnlockAll;
-   PFAST_IO_ROUTINE FastIoUnlockAllByKey;
-   PFAST_IO_ROUTINE FastIoDeviceControl;
-   PFAST_IO_ACQUIRE_FILE AcquireFileForNtCreateSection;
-   PFAST_IO_RELEASE_FILE ReleaseFileForNtCreateSection;
-   PFAST_IO_ROUTINE FastIoDetachDevice;
-   PFAST_IO_ROUTINE FastIoQueryNetworkOpenInfo;
-   PFAST_IO_ROUTINE AcquireForModWrite;
-   PFAST_IO_ROUTINE MdlRead;
-   PFAST_IO_ROUTINE MdlReadComplete;
-   PFAST_IO_ROUTINE PrepareMdlWrite;
-   PFAST_IO_ROUTINE MdlWriteComplete;
-   PFAST_IO_ROUTINE FastIoReadCompressed;
-   PFAST_IO_ROUTINE FastIoWriteCompressed;
-   PFAST_IO_ROUTINE MdlReadCompleteCompressed;
-   PFAST_IO_ROUTINE MdlWriteCompleteCompressed;
-   PFAST_IO_ROUTINE FastIoQueryOpen;
-   PFAST_IO_ROUTINE ReleaseForModWrite;
-   PFAST_IO_ROUTINE AcquireForCcFlush;
-   PFAST_IO_ROUTINE ReleaseForCcFlush;
+typedef VOID STDCALL_FUNC
+(*PFAST_IO_DETACH_DEVICE) (
+    IN struct _DEVICE_OBJECT *SourceDevice,
+    IN struct _DEVICE_OBJECT *TargetDevice);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_QUERY_NETWORK_OPEN_INFO) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN BOOLEAN Wait,
+    OUT struct _FILE_NETWORK_OPEN_INFORMATION *Buffer,
+    OUT struct _IO_STATUS_BLOCK *IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_MDL_READ) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN ULONG LockKey,
+    OUT PMDL *MdlChain,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_MDL_READ_COMPLETE) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PMDL MdlChain,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_PREPARE_MDL_WRITE) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN ULONG LockKey,
+    OUT PMDL *MdlChain,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_MDL_WRITE_COMPLETE) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN PMDL MdlChain,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef NTSTATUS STDCALL_FUNC
+(*PFAST_IO_ACQUIRE_FOR_MOD_WRITE) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER EndingOffset,
+    OUT struct _ERESOURCE **ResourceToRelease,
+    IN struct _DEVICE_OBJECT *DeviceObject);    
+
+typedef NTSTATUS STDCALL_FUNC
+(*PFAST_IO_RELEASE_FOR_MOD_WRITE) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN struct _ERESOURCE *ResourceToRelease,
+    IN struct _DEVICE_OBJECT *DeviceObject);  
+
+typedef NTSTATUS STDCALL_FUNC
+(*PFAST_IO_ACQUIRE_FOR_CCFLUSH) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef NTSTATUS STDCALL_FUNC
+(*PFAST_IO_RELEASE_FOR_CCFLUSH) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN struct _DEVICE_OBJECT *DeviceObject);      
+
+typedef
+BOOLEAN STDCALL_FUNC
+(*PFAST_IO_READ_COMPRESSED) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN ULONG LockKey,
+    OUT PVOID Buffer,
+    OUT PMDL *MdlChain,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    OUT struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
+    IN ULONG CompressedDataInfoLength,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_WRITE_COMPRESSED) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN ULONG LockKey,
+    IN PVOID Buffer,
+    OUT PMDL *MdlChain,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
+    IN ULONG CompressedDataInfoLength,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_MDL_READ_COMPLETE_COMPRESSED) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PMDL MdlChain,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED) (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN PMDL MdlChain,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef BOOLEAN STDCALL_FUNC
+(*PFAST_IO_QUERY_OPEN) (
+    IN struct _IRP *Irp,
+    OUT struct _FILE_NETWORK_OPEN_INFORMATION *NetworkInformation,
+    IN struct _DEVICE_OBJECT *DeviceObject);
+
+typedef struct _FAST_IO_DISPATCH 
+{
+    ULONG SizeOfFastIoDispatch;
+    PFAST_IO_CHECK_IF_POSSIBLE FastIoCheckIfPossible;
+    PFAST_IO_READ FastIoRead;
+    PFAST_IO_WRITE FastIoWrite;
+    PFAST_IO_QUERY_BASIC_INFO FastIoQueryBasicInfo;
+    PFAST_IO_QUERY_STANDARD_INFO FastIoQueryStandardInfo;
+    PFAST_IO_LOCK FastIoLock;
+    PFAST_IO_UNLOCK_SINGLE FastIoUnlockSingle;
+    PFAST_IO_UNLOCK_ALL FastIoUnlockAll;
+    PFAST_IO_UNLOCK_ALL_BY_KEY FastIoUnlockAllByKey;
+    PFAST_IO_DEVICE_CONTROL FastIoDeviceControl;
+    PFAST_IO_ACQUIRE_FILE AcquireFileForNtCreateSection;
+    PFAST_IO_RELEASE_FILE ReleaseFileForNtCreateSection;
+    PFAST_IO_DETACH_DEVICE FastIoDetachDevice;
+    PFAST_IO_QUERY_NETWORK_OPEN_INFO FastIoQueryNetworkOpenInfo;
+    PFAST_IO_ACQUIRE_FOR_MOD_WRITE AcquireForModWrite;
+    PFAST_IO_MDL_READ MdlRead;
+    PFAST_IO_MDL_READ_COMPLETE MdlReadComplete;
+    PFAST_IO_PREPARE_MDL_WRITE PrepareMdlWrite;
+    PFAST_IO_MDL_WRITE_COMPLETE MdlWriteComplete;
+    PFAST_IO_READ_COMPRESSED FastIoReadCompressed;
+    PFAST_IO_WRITE_COMPRESSED FastIoWriteCompressed;
+    PFAST_IO_MDL_READ_COMPLETE_COMPRESSED MdlReadCompleteCompressed;
+    PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED MdlWriteCompleteCompressed;
+    PFAST_IO_QUERY_OPEN FastIoQueryOpen;
+    PFAST_IO_RELEASE_FOR_MOD_WRITE ReleaseForModWrite;
+    PFAST_IO_ACQUIRE_FOR_CCFLUSH AcquireForCcFlush;
+    PFAST_IO_RELEASE_FOR_CCFLUSH ReleaseForCcFlush;
 } FAST_IO_DISPATCH, *PFAST_IO_DISPATCH;
 
 /*
