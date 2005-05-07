@@ -602,8 +602,7 @@ ExtendFilespec (LPTSTR file)
 	len = _tcslen (file);
 	if (file[len - 1] == _T('.'))
 	{
-		_tcscat (file, _T("*"));
-		ConOutPrintf(L"file3 : %s\n",file);
+		_tcscat (file, _T("*"));		
 		return;
 	}
 }
