@@ -41,7 +41,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	{
 		/* display active code page number */
 		LoadString(GetModuleHandle(NULL), STRING_CHCP_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg, GetCodePage);
+		ConErrPrintf(szMsg, InputCodePage);
 		return 0;
 	}
 
@@ -55,7 +55,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 
 
 	/* save old code page */
-	uOldCodePage = GetCodePage;
+	uOldCodePage = InputCodePage;
 
 	uNewCodePage = (UINT)_ttoi(arg[0]);
 
