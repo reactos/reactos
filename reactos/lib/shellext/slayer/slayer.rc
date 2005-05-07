@@ -17,4 +17,6 @@
 
 #include "En.rc"
 #include "De.rc"
+#include "Sv.rc"
+
 
