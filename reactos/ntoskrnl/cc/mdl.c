@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,11 +17,11 @@
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
-CcMdlRead (
+CcMdlRead(
 	IN	PFILE_OBJECT		FileObject,
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	ULONG			Length,
@@ -32,71 +32,117 @@ CcMdlRead (
 	UNIMPLEMENTED;
 }
 
-/**********************************************************************
+/*
  * NAME							INTERNAL
- * 	CcMdlReadCompleteDev@8
+ * CcMdlReadCompleteDev@8
  *
  * DESCRIPTION
  *
  * ARGUMENTS
- *	MdlChain
- *	DeviceObject
- *	
+ * MdlChain
+ * DeviceObject
+ *
  * RETURN VALUE
- * 	None.
+ *  None.
  *
  * NOTE
  * 	Used by CcMdlReadComplete@8 and FsRtl
  *
  */
-VOID STDCALL
-CcMdlReadCompleteDev (IN	PMDL		MdlChain,
-		      IN	PDEVICE_OBJECT	DeviceObject)
+VOID 
+STDCALL
+CcMdlReadCompleteDev(IN PMDL MdlChain,
+                     IN PFILE_OBJECT FileObject)
 {
-  UNIMPLEMENTED;
+    PMDL Mdl;
+    
+    /* Free MDLs */
+    while ((Mdl = MdlChain))
+    {
+        MdlChain = Mdl->Next;
+        MmUnlockPages(Mdl);
+        IoFreeMdl(Mdl);
+    }
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	CcMdlReadComplete@8
+/*
+ * NAME    EXPORTED
+ * CcMdlReadComplete@8
  *
  * DESCRIPTION
  *
  * ARGUMENTS
  *
  * RETURN VALUE
- * 	None.
+ * None.
  *
  * NOTE
- * 	From Bo Branten's ntifs.h v13.
+ * From Bo Branten's ntifs.h v13.
  *
- * @unimplemented
- */
-VOID STDCALL
-CcMdlReadComplete (IN	PFILE_OBJECT	FileObject,
-		   IN	PMDL		MdlChain)
-{
-   PDEVICE_OBJECT	DeviceObject = NULL;
-   
-   DeviceObject = IoGetRelatedDeviceObject (FileObject);
-   /* FIXME: try fast I/O first */
-   CcMdlReadCompleteDev (MdlChain,
-			 DeviceObject);
-}
-
-/*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
-CcMdlWriteComplete (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	PMDL			MdlChain
-	)
+CcMdlReadComplete(IN PFILE_OBJECT FileObject,
+                  IN PMDL MdlChain)
 {
-	UNIMPLEMENTED;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PFAST_IO_DISPATCH FastDispatch;
+   
+    /* Get Fast Dispatch Data */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    
+    /* Check if we support Fast Calls, and check this one */
+    if (FastDispatch && FastDispatch->MdlReadComplete)
+    {
+         /* Use the fast path */
+        FastDispatch->MdlReadComplete(FileObject,
+                                      MdlChain,
+                                      DeviceObject);
+    }
+    
+    /* Use slow path */
+    CcMdlReadCompleteDev(MdlChain, FileObject);
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+CcMdlWriteComplete(IN PFILE_OBJECT FileObject,
+                   IN PLARGE_INTEGER FileOffset,
+                   IN PMDL MdlChain)
+{
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PFAST_IO_DISPATCH FastDispatch;
+   
+    /* Get Fast Dispatch Data */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    
+    /* Check if we support Fast Calls, and check this one */
+    if (FastDispatch && FastDispatch->MdlWriteComplete)
+    {
+         /* Use the fast path */
+        FastDispatch->MdlWriteComplete(FileObject,
+                                       FileOffset,
+                                       MdlChain,
+                                       DeviceObject);
+    }
+    
+    /* Use slow path */
+    CcMdlWriteCompleteDev(FileOffset, MdlChain, FileObject);
+}
+
+VOID
+STDCALL
+CcMdlWriteCompleteDev(IN PLARGE_INTEGER FileOffset,
+                      IN PMDL MdlChain,
+                      IN PFILE_OBJECT FileObject)
+{
+    UNIMPLEMENTED;
 }
 
 /*

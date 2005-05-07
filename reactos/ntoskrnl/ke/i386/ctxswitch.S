@@ -157,7 +157,10 @@ SaveTrapFrameForKDB_Return:
     mov [edi+KTHREAD_KERNEL_STACK], esp
     mov esp, [esi+KTHREAD_KERNEL_STACK]
    
-    /* Change the address space */
+    /* 
+     * Sadly, ROS memory management is screwed up, so 
+     * we must change the address space here.
+     */
     mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
     mov eax, [eax+KPROCESS_DIRECTORY_TABLE_BASE]
     mov cr3, eax
@@ -200,10 +203,6 @@ NoLdt:
 
     /* Set current IOPM offset in the TSS */
     mov [ebp+KTSS_IOMAPBASE], cx
-
-    /* Change the address space */
-    mov eax, [edi+KPROCESS_DIRECTORY_TABLE_BASE]
-    mov cr3, eax
     
 SameProcess:
     

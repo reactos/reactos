@@ -62,9 +62,16 @@ typedef struct _INTERNAL_BCB
   CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
-VOID STDCALL
-CcMdlReadCompleteDev (IN PMDL		MdlChain,
-		      IN PDEVICE_OBJECT	DeviceObject);
+VOID 
+STDCALL
+CcMdlReadCompleteDev(IN PMDL MdlChain,
+                     IN PFILE_OBJECT FileObject);
+                     
+VOID 
+STDCALL
+CcMdlWriteCompleteDev(IN PLARGE_INTEGER FileOffset,
+                      IN PMDL MdlChain,
+                      IN PFILE_OBJECT FileObject);
 
 NTSTATUS
 CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment);

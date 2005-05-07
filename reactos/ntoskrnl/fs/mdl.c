@@ -1,18 +1,24 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/fs/mdl.c
- * PURPOSE:         No purpose listed.
+ * PURPOSE:         Cached MDL Access Helper Routines for File System Drivers
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
+/* INCLUDES ****************************************************************/
+
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <internal/debug.h>
+
+/* GLOBALS *******************************************************************/
 
 extern ULONG CcFastReadResourceMiss;
 extern ULONG CcFastReadNoWait;
+
+/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
@@ -54,147 +60,314 @@ FsRtlIncrementCcFastReadNoWait( VOID )
     CcFastReadNoWait++;
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlMdlRead@24
+/*
+ * NAME    EXPORTED
+ * FsRtlMdlRead@24
  *
  * DESCRIPTION
- *	
+ *
  * ARGUMENTS
  *
  * RETURN VALUE
- *
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-FsRtlMdlRead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	ULONG			LockKey,
-	OUT	PMDL			*MdlChain,
-	OUT	PIO_STATUS_BLOCK	IoStatus
-	)
-{
-	return FALSE; /* FIXME: call FsRtlMdlReadDev ? */
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlMdlReadComplete@8
- *
- * DESCRIPTION
- *	
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * @unimplemented
- */
-BOOLEAN STDCALL
-FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
-		     IN OUT PMDL Mdl)
-{
-	PDEVICE_OBJECT	DeviceObject [2] = {NULL};
-	PDRIVER_OBJECT	DriverObject = NULL;
-
-	/*
-	 * Try fast I/O first
-	 */
-	DeviceObject [0] = IoGetRelatedDeviceObject (FileObject);
-	DriverObject = DeviceObject [0]->DriverObject;
-	if (NULL != DriverObject->FastIoDispatch)
-	{
-#if 0
-		if (IRP_MJ_READ <= DriverObject->FastIoDispatch->Count)
-		{
-			return FALSE;
-		}
-		if (NULL == DriverObject->FastIoDispatch->Dispatch [IRP_MJ_READ])
-		{
-			return FALSE;
-		}
-		return DriverObject->FastIoDispatch->Dispatch
-			[IRP_MJ_READ] (
-				Mdl,
-				NULL /* FIXME: how to get the IRP? */
-				);
-#endif
-	}
-	/*
-	 * Default I/O path
-	 */
-	DeviceObject [1] = IoGetBaseFileSystemDeviceObject (FileObject);
-	/*
-	 * Did IoGetBaseFileSystemDeviceObject ()
-	 * returned the same device
-	 * IoGetRelatedDeviceObject () returned?
-	 */
-	if (DeviceObject [1] != DeviceObject [0])
-	{
-#if 0
-		DriverObject = DeviceObject [1]->DriverObject;
-		if (NULL != DriverObject->FastIoDispatch)
-		{
-			/* 
-			 * Check if the driver provides
-			 * IRP_MJ_READ.
-			 */
-			if (IRP_MJ_READ <= DriverObject->FastIoDispatch->Count)
-			{
-				if (NULL == DriverObject->FastIoDispatch->Dispatch [IRP_MJ_READ])
-				{
-					return FALSE;
-				}
-			}
-		}
-#endif
-		DeviceObject [0] = DeviceObject [1];
-	}
-	return FsRtlMdlReadCompleteDev (
-			FileObject,
-			Mdl,
-			DeviceObject [0]
-			);
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlMdlReadCompleteDev@12
- *
- * DESCRIPTION
- *	
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- * 	From Bo Branten's ntifs.h v13.
- * 	(CcMdlReadCompleteDev declared in internal/cc.h)
  *
  * @implemented
  */
 BOOLEAN
 STDCALL
-FsRtlMdlReadCompleteDev (
-	IN	PFILE_OBJECT	FileObject,
-	IN	PMDL		MdlChain,
-	IN	PDEVICE_OBJECT	DeviceObject
-	)
+FsRtlMdlRead(IN PFILE_OBJECT FileObject,
+             IN PLARGE_INTEGER FileOffset,
+             IN ULONG Length,
+             IN ULONG LockKey,
+             OUT PMDL *MdlChain,
+             OUT PIO_STATUS_BLOCK IoStatus)
 {
-	FileObject = FileObject; /* unused parameter */
-	CcMdlReadCompleteDev (MdlChain, DeviceObject);
-	return TRUE;
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+    
+    /* Get Device Object and Fast Calls */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    
+    /* Check if we support Fast Calls, and check this one */
+    if (FastDispatch && FastDispatch->MdlRead)
+    {
+        /* Use the fast path */
+        return FastDispatch->MdlRead(FileObject,
+                                     FileOffset,
+                                     Length,
+                                     LockKey,
+                                     MdlChain,
+                                     IoStatus,
+                                     DeviceObject);
+    }
+    
+    /* Get the Base File System (Volume) and Fast Calls */
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
+    
+    /* If the Base Device Object has its own FastDispatch Routine, fail */
+    if (FastDispatch && FastDispatch->MdlRead && 
+        BaseDeviceObject != DeviceObject)
+    {
+        return FALSE;
+    }
+    
+    /* No fast path, use slow path */
+    return FsRtlMdlReadDev(FileObject,
+                           FileOffset,
+                           Length,
+                           LockKey,
+                           MdlChain,
+                           IoStatus,
+                           DeviceObject);
+}
+
+/*
+ * NAME    EXPORTED
+ * FsRtlMdlReadComplete@8
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * @implemented
+ */
+BOOLEAN 
+STDCALL
+FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
+                     IN OUT PMDL MdlChain)
+{
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+    
+    /* Get Device Object and Fast Calls */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    
+    /* Check if we support Fast Calls, and check this one */
+    if (FastDispatch && FastDispatch->MdlReadComplete)
+    {
+        /* Use the fast path */
+        return FastDispatch->MdlReadComplete(FileObject,
+                                             MdlChain,
+                                             DeviceObject);
+    }
+    
+    /* Get the Base File System (Volume) and Fast Calls */
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
+    
+    /* If the Base Device Object has its own FastDispatch Routine, fail */
+    if (FastDispatch && FastDispatch->MdlReadComplete && 
+        BaseDeviceObject != DeviceObject)
+    {
+        return FALSE;
+    }
+    
+    /* No fast path, use slow path */
+    return FsRtlMdlReadCompleteDev(FileObject, MdlChain, DeviceObject);
 }
 
 
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlMdlReadDev@28
+/*
+ * NAME    EXPORTED
+ * FsRtlMdlReadCompleteDev@12
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * NOTE
+ * From Bo Branten's ntifs.h v13.
+ * (CcMdlReadCompleteDev declared in internal/cc.h)
+ *
+ * @implemented
+ */
+BOOLEAN
+STDCALL
+FsRtlMdlReadCompleteDev(IN PFILE_OBJECT FileObject,
+                        IN PMDL MdlChain,
+                        IN PDEVICE_OBJECT DeviceObject)
+{
+    /* Call the Cache Manager */
+    CcMdlReadCompleteDev(MdlChain, FileObject);
+    return TRUE;
+}
+
+/*
+ * NAME    EXPORTED
+ * FsRtlMdlReadDev@28
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+FsRtlMdlReadDev(IN PFILE_OBJECT FileObject,
+                IN PLARGE_INTEGER FileOffset,
+                IN ULONG Length,
+                IN ULONG LockKey,
+                OUT PMDL *MdlChain,
+                OUT PIO_STATUS_BLOCK IoStatus,
+                IN PDEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * NAME    EXPORTED
+ * FsRtlMdlWriteComplete@12
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * @implemented
+ */
+BOOLEAN
+STDCALL
+FsRtlMdlWriteComplete(IN PFILE_OBJECT FileObject,
+                      IN PLARGE_INTEGER FileOffset,
+                      IN PMDL MdlChain)
+{
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+    
+    /* Get Device Object and Fast Calls */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    
+    /* Check if we support Fast Calls, and check this one */
+    if (FastDispatch && FastDispatch->MdlWriteComplete)
+    {
+        /* Use the fast path */
+        return FastDispatch->MdlWriteComplete(FileObject,
+                                              FileOffset,
+                                              MdlChain,
+                                              DeviceObject);
+    }
+    
+    /* Get the Base File System (Volume) and Fast Calls */
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
+    
+    /* If the Base Device Object has its own FastDispatch Routine, fail */
+    if (FastDispatch && FastDispatch->MdlWriteComplete && 
+        BaseDeviceObject != DeviceObject)
+    {
+        return FALSE;
+    }
+    
+    /* No fast path, use slow path */
+    return FsRtlMdlWriteCompleteDev(FileObject, 
+                                    FileOffset, 
+                                    MdlChain, 
+                                    DeviceObject);
+}
+
+/*
+ * NAME EXPORTED
+ * FsRtlMdlWriteCompleteDev@16
+ *
+ * DESCRIPTION
+ * 
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * @implemented
+ */
+BOOLEAN
+STDCALL
+FsRtlMdlWriteCompleteDev(IN PFILE_OBJECT FileObject,
+                         IN PLARGE_INTEGER FileOffset,
+                         IN PMDL MdlChain,
+                         IN PDEVICE_OBJECT DeviceObject)
+{
+    /* Call the Cache Manager */
+    CcMdlWriteCompleteDev(FileOffset, MdlChain, FileObject);
+    return TRUE;
+}
+
+
+/*
+ * NAME    EXPORTED
+ * FsRtlPrepareMdlWrite@24
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * @implemented
+ */
+BOOLEAN
+STDCALL
+FsRtlPrepareMdlWrite(IN  PFILE_OBJECT FileObject,
+                     IN  PLARGE_INTEGER FileOffset,
+                     IN  ULONG Length,
+                     IN  ULONG LockKey,
+                     OUT PMDL *MdlChain,
+                     OUT PIO_STATUS_BLOCK IoStatus)
+{
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+    
+    /* Get Device Object and Fast Calls */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    
+    /* Check if we support Fast Calls, and check this one */
+    if (FastDispatch && FastDispatch->PrepareMdlWrite)
+    {
+        /* Use the fast path */
+        return FastDispatch->PrepareMdlWrite(FileObject,
+                                             FileOffset,
+                                             Length,
+                                             LockKey,
+                                             MdlChain,
+                                             IoStatus,
+                                             DeviceObject);
+    }
+    
+    /* Get the Base File System (Volume) and Fast Calls */
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = BaseDeviceObject->DriverObject->FastIoDispatch;
+    
+    /* If the Base Device Object has its own FastDispatch Routine, fail */
+    if (FastDispatch && FastDispatch->PrepareMdlWrite && 
+        BaseDeviceObject != DeviceObject)
+    {
+        return FALSE;
+    }
+    
+    /* No fast path, use slow path */
+    return FsRtlPrepareMdlWriteDev(FileObject,
+                                   FileOffset,
+                                   Length,
+                                   LockKey,
+                                   MdlChain,
+                                   IoStatus,
+                                   DeviceObject);
+}
+
+/*
+ * NAME EXPORTED
+ * FsRtlPrepareMdlWriteDev@28
  *
  * DESCRIPTION
  *	
@@ -206,121 +379,16 @@ FsRtlMdlReadCompleteDev (
  */
 BOOLEAN
 STDCALL
-FsRtlMdlReadDev (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	ULONG			LockKey,
-	OUT	PMDL			*MdlChain,
-	OUT	PIO_STATUS_BLOCK	IoStatus,
-	IN	PDEVICE_OBJECT		DeviceObject
-	)
+FsRtlPrepareMdlWriteDev(IN  PFILE_OBJECT FileObject,
+                        IN  PLARGE_INTEGER FileOffset,
+                        IN  ULONG Length,
+                        IN  ULONG LockKey,
+                        OUT PMDL *MdlChain,
+                        OUT PIO_STATUS_BLOCK IoStatus,
+                        IN PDEVICE_OBJECT DeviceObject)
 {
-	return FALSE;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlMdlWriteComplete@12
- *
- * DESCRIPTION
- *	
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-FsRtlMdlWriteComplete (
-	IN	PFILE_OBJECT	FileObject,
-	IN	PLARGE_INTEGER	FileOffset,
-	IN	PMDL		MdlChain
-	)
-{
-	return FALSE; /* FIXME: call FsRtlMdlWriteCompleteDev ? */
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlMdlWriteCompleteDev@16
- *
- * DESCRIPTION
- *	
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-FsRtlMdlWriteCompleteDev (
-	IN	PFILE_OBJECT	FileObject,
-	IN	PLARGE_INTEGER	FileOffset,
-	IN	PMDL		MdlChain,
-	IN	PDEVICE_OBJECT	DeviceObject
-	)
-{
-	return FALSE;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlPrepareMdlWrite@24
- *
- * DESCRIPTION
- *	
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-FsRtlPrepareMdlWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	ULONG			LockKey,
-	OUT	PMDL			*MdlChain,
-	OUT	PIO_STATUS_BLOCK	IoStatus
-	)
-{
-	return FALSE; /* call FsRtlPrepareMdlWriteDev ? */
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlPrepareMdlWriteDev@28
- *
- * DESCRIPTION
- *	
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-FsRtlPrepareMdlWriteDev (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	ULONG			LockKey,
-	OUT	PMDL			*MdlChain,
-	OUT	PIO_STATUS_BLOCK	IoStatus,
-	IN	PDEVICE_OBJECT		DeviceObject
-	)
-{
-	return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
