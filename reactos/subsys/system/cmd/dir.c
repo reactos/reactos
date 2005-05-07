@@ -262,7 +262,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	{
 		/* we save current character as it is and its upper case */
 		cCurChar = *Line;
-		cCurUChar = _toupper(*Line);
+		cCurUChar = _totupper(*Line);
 		
 		/* 1st section (see README_DIR.txt) */
 		/* When a switch is expecting */
