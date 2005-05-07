@@ -916,8 +916,20 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 				  NULL);
   if (!NT_SUCCESS(Status) || Service->Start > 1)
     {
-      ExFreePool(Service->ServiceGroup.Buffer);
-      ExFreePool(Service->ImagePath.Buffer);
+      /*
+       * If something goes wrong during RtlQueryRegistryValues
+       * it'll just drop everything on the floor and return,
+       * so you have to check if the buffers were filled.
+       * Luckily we zerofilled the Service.
+       */
+      if (Service->ServiceGroup.Buffer)
+        {
+          ExFreePool(Service->ServiceGroup.Buffer);
+        }
+      if (Service->ImagePath.Buffer)
+        {
+          ExFreePool(Service->ImagePath.Buffer);
+        }
       ExFreePool(Service);
       return(Status);
     }
