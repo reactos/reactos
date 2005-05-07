@@ -567,13 +567,20 @@ ExtendFilespec (LPTSTR file)
 
 	if (!file)
 		return;
+	
 
 	/* if no file spec, change to "*.*" */
 	if (*file == _T('\0'))
-	{
-		_tcscpy (file, _T("*.*"));
+	{		
+		_tcscpy (file, _T("*.*"));		
 		return;
 	}
+
+	// add support for *.
+	if ((file[0] == _T('*')) && (file[1] == _T('.') ))
+	 {		
+		 return;
+	 }
 
 	/* if starts with . add * in front */
 	if (*file == _T('.'))
@@ -585,15 +592,18 @@ ExtendFilespec (LPTSTR file)
 	/* if no . add .* */
 	if (!_tcschr (file, _T('.')))
 	{
-		_tcscat (file, _T(".*"));
+		_tcscat (file, _T(".*"));	
 		return;
 	}
+
+     
 
 	/* if last character is '.' add '*' */
 	len = _tcslen (file);
 	if (file[len - 1] == _T('.'))
 	{
 		_tcscat (file, _T("*"));
+		ConOutPrintf(L"file3 : %s\n",file);
 		return;
 	}
 }
