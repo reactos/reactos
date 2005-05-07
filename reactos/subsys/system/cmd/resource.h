@@ -160,46 +160,46 @@
 #define STRING_REN_HELP2                   672
 #define STRING_REN_HELP3                   673
 
-#define STRING_RMDIR_HELP                  672
+#define STRING_RMDIR_HELP                  674
 
-#define STRING_SCREEN_HELP                 673
+#define STRING_SCREEN_HELP                 675
 
-#define STRING_SHIFT_HELP                  674
+#define STRING_SHIFT_HELP                  676
 
-#define STRING_SET_HELP                    675
+#define STRING_SET_HELP                    677
 
-#define STRING_START_HELP1                 676
+#define STRING_START_HELP1                 678
 
-#define STRING_TITLE_HELP                  677
+#define STRING_TITLE_HELP                  679
 
-#define STRING_TIME_HELP1                  678
-#define STRING_TIME_HELP2                  679
+#define STRING_TIME_HELP1                  680
+#define STRING_TIME_HELP2                  681
 
-#define STRING_TIMER_HELP1                 680
-#define STRING_TIMER_HELP2                 681
-#define STRING_TIMER_HELP3                 682
+#define STRING_TIMER_HELP1                 682
+#define STRING_TIMER_HELP2                 683
+#define STRING_TIMER_HELP3                 684
 
-#define STRING_TYPE_HELP1                  683
+#define STRING_TYPE_HELP1                  685
 
-#define STRING_VERIFY_HELP1                684
-#define STRING_VERIFY_HELP2                685
-#define STRING_VERIFY_HELP3                686
+#define STRING_VERIFY_HELP1                686
+#define STRING_VERIFY_HELP2                687
+#define STRING_VERIFY_HELP3                688
 
-#define STRING_VERSION_HELP1               687
-#define STRING_VERSION_HELP2               688
-#define STRING_VERSION_HELP3               689
-#define STRING_VERSION_HELP4               690
-#define STRING_VERSION_HELP5               691
-#define STRING_VERSION_HELP6               692
-#define STRING_VERSION_HELP7               693
+#define STRING_VERSION_HELP1               689
+#define STRING_VERSION_HELP2               690
+#define STRING_VERSION_HELP3               691
+#define STRING_VERSION_HELP4               692
+#define STRING_VERSION_HELP5               693
+#define STRING_VERSION_HELP6               694
+#define STRING_VERSION_HELP7               695
 
-#define STRING_VOL_HELP1                   694
-#define STRING_VOL_HELP2                   695
-#define STRING_VOL_HELP3                   696
-#define STRING_VOL_HELP4                   697
+#define STRING_VOL_HELP1                   696
+#define STRING_VOL_HELP2                   697
+#define STRING_VOL_HELP3                   698
+#define STRING_VOL_HELP4                   699
 
-#define STRING_WINDOW_HELP1                698
-#define STRING_WINDOW_HELP2                699
+#define STRING_WINDOW_HELP1                700
+#define STRING_WINDOW_HELP2                701
 
 /* These strings are language independent (cmd.rc) */
 #define STRING_FREEDOS_DEV                 800
