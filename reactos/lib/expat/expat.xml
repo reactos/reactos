@@ -1,10 +1,8 @@
-<module name="expat" type="win32dll">
-	<importlibrary definition="lib/libexpat.def" />
+<module name="expat" type="staticlibrary">
 	<include base="expat">.</include>
 	<include base="expat">lib</include>
 	<define name="HAVE_EXPAT_CONFIG_H" />
 	<define name="__USE_W32API" />
-	<library>kernel32</library>
 	<directory name="lib">
 		<file>xmlparse.c</file>
 		<file>xmlrole.c</file>
