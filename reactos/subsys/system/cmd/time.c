@@ -131,8 +131,7 @@ static BOOL ParseTime (LPTSTR s)
 
 
 INT cmd_time (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	LPTSTR *arg;
 	INT    argc;
 	INT    i;
@@ -140,9 +139,8 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 	INT    nTimeString = -1;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_TIME_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_TIME_HELP1);
 		return 0;
 	}
 
@@ -173,9 +171,8 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 		if (nTimeString == -1)
 		{
 			TCHAR  s[40];
-
-			LoadString(GetModuleHandle(NULL), STRING_TIME_HELP2, szMsg, RC_STRING_MAX_SIZE);
-			ConOutPrintf(szMsg);
+			
+			ConOutResPuts(STRING_TIME_HELP2);
 
 			ConInString (s, 40);
 
@@ -203,9 +200,8 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 			/* force input the next time around. */
 			nTimeString = -1;
 		}
-
-		LoadString(GetModuleHandle(NULL), STRING_TIME_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+		
+		ConErrResPuts(STRING_TIME_ERROR1);
 	}
 
 	freep (arg);

@@ -184,6 +184,14 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 #endif
 }
 
+VOID ConOutResPuts (UINT resID)
+{
+  TCHAR szMsg[RC_STRING_MAX_SIZE];	
+  LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+
+  ConPuts(szMsg, STD_OUTPUT_HANDLE);
+}
+
 VOID ConOutPuts (LPTSTR szText)
 {
 	ConPuts(szText, STD_OUTPUT_HANDLE);
@@ -238,7 +246,7 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	}
 	else
 	{
-		LoadString(GetModuleHandle(NULL), STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg);
 	}
 }
@@ -257,6 +265,13 @@ VOID ConErrChar (TCHAR c)
 	ConChar(c, STD_ERROR_HANDLE);
 }
 
+
+VOID ConErrResPuts (UINT resID)
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];	
+    LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+	ConPuts(szMsg, STD_ERROR_HANDLE);
+}
 
 VOID ConErrPuts (LPTSTR szText)
 {

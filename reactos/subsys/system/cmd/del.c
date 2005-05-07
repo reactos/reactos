@@ -111,9 +111,8 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	LONG ch;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_DEL_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg);
+	{		
+		ConOutResPuts(STRING_DEL_HELP1);
 		return 0;
 	}
 
@@ -187,7 +186,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 			{
 				if (!((dwFlags & DEL_YES) || (dwFlags & DEL_QUIET) || (dwFlags & DEL_PROMPT)))
 				{
-					LoadString( GetModuleHandle(NULL), STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
+					LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
 
 					res = FilePromptYN (szMsg);
 					if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
@@ -243,10 +242,10 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 						/* ask for deleting */
 						if (dwFlags & DEL_PROMPT) 
 						{
-							LoadString(GetModuleHandle(NULL), STRING_DEL_ERROR5, szMsg, RC_STRING_MAX_SIZE);
+							LoadString(CMD_ModuleHandle, STRING_DEL_ERROR5, szMsg, RC_STRING_MAX_SIZE);
 							ConErrPrintf(szMsg, szFullPath);
 							
-							LoadString(GetModuleHandle(NULL), STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
+							LoadString(CMD_ModuleHandle, STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
 							res = FilePromptYN ((LPTSTR)szMsg);
 
 							if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
@@ -257,7 +256,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 						if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
 						{
-							LoadString(GetModuleHandle(NULL), STRING_DEL_ERROR7, szMsg, RC_STRING_MAX_SIZE);
+							LoadString(CMD_ModuleHandle, STRING_DEL_ERROR7, szMsg, RC_STRING_MAX_SIZE);
 							ConErrPrintf(szMsg, szFullPath);
 						}
 
@@ -313,10 +312,10 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					// Don't ask if the file doesn't exist, the following code will make the error-msg
 					if((dwFlags & DEL_PROMPT) && (FindFirstFile(szFullPath, &f) != INVALID_HANDLE_VALUE))
 					{
-						LoadString(GetModuleHandle(NULL), STRING_DEL_ERROR5, szMsg, RC_STRING_MAX_SIZE);
+						LoadString(CMD_ModuleHandle, STRING_DEL_ERROR5, szMsg, RC_STRING_MAX_SIZE);
 						ConErrPrintf(szMsg, szFullPath);
 
-						LoadString(GetModuleHandle(NULL), STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
+						LoadString(CMD_ModuleHandle, STRING_DEL_ERROR6, szMsg, RC_STRING_MAX_SIZE);
 						res = FilePromptYN ((LPTSTR)szMsg);
 
 						if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
@@ -330,7 +329,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 #endif
 					if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
 					{
-						LoadString(GetModuleHandle(NULL), STRING_DEL_ERROR7, szMsg, RC_STRING_MAX_SIZE);
+						LoadString(CMD_ModuleHandle, STRING_DEL_ERROR7, szMsg, RC_STRING_MAX_SIZE);
 						ConErrPrintf(szMsg, szFullPath);
 					}
 
@@ -384,11 +383,11 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	{
 		if (dwFiles < 2)
 		{
-			LoadString(GetModuleHandle(NULL), STRING_DEL_HELP3, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_DEL_HELP3, szMsg, RC_STRING_MAX_SIZE);
 		}
 		else
 		{
-			LoadString(GetModuleHandle(NULL), STRING_DEL_HELP4, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_DEL_HELP4, szMsg, RC_STRING_MAX_SIZE);
 		}
 
 		ConOutPrintf(szMsg, dwFiles);

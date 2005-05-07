@@ -48,8 +48,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_TYPE_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutResPuts(STRING_TYPE_HELP1);
 		return 0;
 	}
 
@@ -65,7 +64,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	{
 		if (_T('/') == argv[i][0])
 		{
-			LoadString(GetModuleHandle(NULL), STRING_TYPE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_TYPE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, argv[i] + 1);
 			continue;
 		}

@@ -16,15 +16,13 @@
 
 
 INT CommandDelay (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	DWORD val;
 	DWORD mul=1000;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_DELAY_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_DELAY_HELP);
 		return 0;
 	}
 

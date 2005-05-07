@@ -28,10 +28,7 @@
 
 static VOID ColorHelp (VOID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
-	LoadString(GetModuleHandle(NULL), STRING_COLOR_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	ConOutResPuts(STRING_COLOR_HELP1);
 }
 
 
@@ -40,12 +37,11 @@ VOID SetScreenColor (WORD wColor, BOOL bFill)
 	DWORD dwWritten;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_COLOR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+	{		
+		ConErrResPuts(STRING_COLOR_ERROR1);
 	}
 	else
 	{
@@ -90,18 +86,17 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 	}
 
 	if (StringToColor(&wColor, &rest) == FALSE)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_COLOR_ERROR2, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+	{		
+		ConErrResPuts(STRING_COLOR_ERROR2);
 		return 1;
 	}
 
-	LoadString(GetModuleHandle(NULL), STRING_COLOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(szMsg, wColor);
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_COLOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, wColor);
 		return 1;
 	}

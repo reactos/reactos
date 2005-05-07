@@ -32,16 +32,14 @@
 #ifdef INCLUDE_CMD_CLS
 
 INT cmd_cls (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;
 	DWORD dwWritten;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_CLS_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_CLS_HELP);
 		return 0;
 	}
 

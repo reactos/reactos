@@ -175,13 +175,11 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
 
 INT CommandWindow (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	HWND hwnd;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_WINDOW_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_WINDOW_HELP1);
 		return 0;
 	}
 
@@ -192,15 +190,13 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 
 
 INT CommandActivate (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	LPTSTR str;
 	HWND hwnd;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_WINDOW_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_WINDOW_HELP2);
 		return 0;
 	}
 
@@ -219,9 +215,8 @@ INT CommandActivate (LPTSTR cmd, LPTSTR param)
 
 	hwnd = FindWindow(NULL, param);
 	if (hwnd == NULL)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_WINDOW_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+	{		
+		ConErrResPuts(STRING_WINDOW_ERROR1);
 		return 1;
 	}
 

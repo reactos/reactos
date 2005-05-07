@@ -181,19 +181,15 @@ VOID PrintPrompt(VOID)
 
 INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
+	
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_PROMPT_HELP1);
 
-#ifdef FEATURE_DIRECTORY_STACK
-		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
-#endif
-		LoadString(GetModuleHandle(NULL), STRING_PROMPT_HELP3, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+#ifdef FEATURE_DIRECTORY_STACK		
+		ConOutResPuts(STRING_PROMPT_HELP2);
+#endif		
+		ConOutResPuts(STRING_PROMPT_HELP3);
 		return 0;
 	}
 

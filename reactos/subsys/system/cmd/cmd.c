@@ -155,6 +155,7 @@ OSVERSIONINFO osvi;
 HANDLE hIn;
 HANDLE hOut;
 HANDLE hConsole;
+HANDLE CMD_ModuleHandle;
 
 static NtQueryInformationProcessProc NtQueryInformationProcessPtr;
 static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr;
@@ -1074,37 +1075,28 @@ VOID RemoveBreakHandler (VOID)
 #if 0
 static VOID
 ShowCommands (VOID)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
-	/* print command list */
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg);
+{	
+	/* print command list */	
+	ConOutResPuts(STRING_CMD_HELP1);
 	PrintCommandList();
 
-	/* print feature list */
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP2, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	/* print feature list */	
+	ConOutResPuts(STRING_CMD_HELP2);
 
-#ifdef FEATURE_ALIASES	
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP3, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+#ifdef FEATURE_ALIASES		
+	ConOutResPuts(STRING_CMD_HELP3);
 #endif
-#ifdef FEATURE_HISTORY
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP4, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+#ifdef FEATURE_HISTORY	
+	ConOutResPuts(STRING_CMD_HELP4);
 #endif
-#ifdef FEATURE_UNIX_FILENAME_COMPLETION
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP5, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+#ifdef FEATURE_UNIX_FILENAME_COMPLETION	
+	ConOutResPuts(STRING_CMD_HELP5);
 #endif
-#ifdef FEATURE_DIRECTORY_STACK
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP6, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+#ifdef FEATURE_DIRECTORY_STACK	
+	ConOutResPuts(STRING_CMD_HELP6);
 #endif
-#ifdef FEATURE_REDIRECTION
-	LoadString(GetModuleHandle(NULL), STRING_CMD_HELP7, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+#ifdef FEATURE_REDIRECTION	
+	ConOutResPuts(STRING_CMD_HELP7);
 #endif
 	ConOutChar(_T('\n'));
 }
@@ -1119,8 +1111,7 @@ ShowCommands (VOID)
  */
 static VOID
 Initialize (int argc, TCHAR* argv[])
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR ModuleName[_MAX_PATH + 1];
 	INT i;
@@ -1152,9 +1143,8 @@ Initialize (int argc, TCHAR* argv[])
 
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_CMD_HELP8, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_CMD_HELP8);
 		ExitProcess(0);
 	}
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
@@ -1290,20 +1280,20 @@ Initialize (int argc, TCHAR* argv[])
 
 static VOID Cleanup (int argc, TCHAR *argv[])
 {
+#ifndef __REACTOS__
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+#endif
 
 	/* run cmdexit.bat */
 	if (IsExistingFile (_T("cmdexit.bat")))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_CMD_ERROR5, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+	{		
+		ConErrResPuts(STRING_CMD_ERROR5);
 
 		ParseCommandLine (_T("cmdexit.bat"));
 	}
 	else if (IsExistingFile (_T("\\cmdexit.bat")))
-	{
-		LoadString( GetModuleHandle(NULL), STRING_CMD_ERROR5, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf ((LPTSTR)szMsg);
+	{		
+		ConErrResPuts (STRING_CMD_ERROR5);
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}
 #ifndef __REACTOS__
@@ -1435,6 +1425,7 @@ int main (int argc, char *argv[])
 
   InputCodePage= GetConsoleCP();
   OutputCodePage = GetConsoleOutputCP();
+  CMD_ModuleHandle = GetModuleHandle(NULL);
 
   /* check switches on command-line */
   Initialize(argc, argv);

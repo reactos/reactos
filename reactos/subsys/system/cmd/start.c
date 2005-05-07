@@ -19,15 +19,13 @@
 
 INT cmd_start (LPTSTR first, LPTSTR rest)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szFullName[MAX_PATH];
 	BOOL bWait = FALSE;
 	TCHAR *param;
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_START_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_START_HELP1);
 		return 0;
 	}
 
@@ -74,9 +72,8 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
-
-		LoadString(GetModuleHandle(NULL), STRING_START_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPuts(szMsg);
+		
+		ConErrResPuts(STRING_START_ERROR1);
 	}
 	else
 	{

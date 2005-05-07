@@ -188,8 +188,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 
 
 INT CommandAttrib (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	LPTSTR *arg;
 	INT    argc, i;
 	TCHAR  szPath[MAX_PATH];
@@ -205,9 +204,8 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_ATTRIB_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_ATTRIB_HELP);
 		return 0;
 	}
 

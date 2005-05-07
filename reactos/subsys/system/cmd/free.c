@@ -75,7 +75,7 @@ PrintDiskInfo (LPTSTR szDisk)
 
 	if (_tcslen (szDisk) < 2 || szDisk[1] != _T(':'))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg);
 		return;
 	}
@@ -86,7 +86,7 @@ PrintDiskInfo (LPTSTR szDisk)
 	if (!GetVolumeInformation (szRootPath, szVolume, 64, &dwSerial,
 	                           NULL, NULL, NULL, 0))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(_T("%s %s:\n"), szMsg, szDrive);
 		return;
 	}
@@ -94,7 +94,7 @@ PrintDiskInfo (LPTSTR szDisk)
 	if (szVolume[0] == _T('\0'))
 	{
 		
-		LoadString(GetModuleHandle(NULL), STRING_FREE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_FREE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 		_tcscpy (szVolume, szMsg);
 	}
 
@@ -106,7 +106,7 @@ PrintDiskInfo (LPTSTR szDisk)
 	if (!GetDiskFreeSpace (szRootPath, &dwSecPerCl,
 	                       &dwBytPerSec, &dwFreeCl, &dwTotCl))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf (_T("%s %s:\n"), szMsg, szDrive);
 		return;
 	}
@@ -121,23 +121,21 @@ PrintDiskInfo (LPTSTR szDisk)
 	ConvertULargeInteger (uliSize, szFree, 40);
 
 	
-	LoadString(GetModuleHandle(NULL), STRING_FREE_HELP1, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_FREE_HELP1, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg, szDrive, szVolume, szSerial, szTotal, szUsed, szFree);
 }
 
 
 INT CommandFree (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	LPTSTR szParam;
 	TCHAR  szDefPath[MAX_PATH];
 	INT argc, i;
 	LPTSTR *arg;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_FREE_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_FREE_HELP2);
 		return 0;
 	}
 

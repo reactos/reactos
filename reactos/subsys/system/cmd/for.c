@@ -60,9 +60,8 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_FOR_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_FOR_HELP1);
 		return 0;
 	}
 
@@ -82,7 +81,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check next element is 'IN' */
 	if ((_tcsnicmp (param, _T("in"), 2) != 0) || !_istspace (*(param + 2)))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_FOR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_FOR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		error_syntax(szMsg);
 		return 1;
 	}
@@ -94,7 +93,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Folowed by a '(', find also matching ')' */
 	if ((*param != _T('(')) || (NULL == (pp = _tcsrchr (param, _T(')')))))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_FOR_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_FOR_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 		error_syntax(szMsg);
 		return 1;
 	}
@@ -108,7 +107,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check DO follows */
 	if ((_tcsnicmp (pp, _T("do"), 2) != 0) || !_istspace (*(pp + 2)))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_FOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_FOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
 		error_syntax(szMsg);
 		return 1;
 	}
@@ -120,7 +119,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check that command tail is not empty */
 	if (*pp == _T('\0'))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_FOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_FOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
 		error_syntax(szMsg);
 		return 1;
 	}

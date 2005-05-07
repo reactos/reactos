@@ -33,15 +33,14 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_VERIFY_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_VERIFY_HELP1);
 		return 0;
 	}
 
 	if (!*param)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_VERIFY_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_VERIFY_HELP2, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf((LPTSTR)szMsg, bVerify ? D_ON : D_OFF);
 	}
 	else if (_tcsicmp (param, D_OFF) == 0)
@@ -49,9 +48,8 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 	else if (_tcsicmp (param, D_ON) == 0)
 		bVerify = TRUE;
 	else
-	{
-		LoadString(GetModuleHandle(NULL), STRING_VERIFY_HELP3, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_VERIFY_HELP3);
 	}
 
 	return 0;

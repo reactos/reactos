@@ -216,9 +216,7 @@ static ULARGE_INTEGER recurse_bytes;
  */
 static VOID DirHelp(VOID)
 {
-  TCHAR szMsg[RC_STRING_MAX_SIZE];
-  LoadString(GetModuleHandle(NULL), STRING_DIR_HELP1, szMsg, RC_STRING_MAX_SIZE);
-  ConOutPuts(szMsg);
+  ConOutResPuts(STRING_DIR_HELP1);
 }
 
 
@@ -839,17 +837,17 @@ PrintDirectoryHeader(LPTSTR szPath, LPINT pLine, LPDIRSWITCHFLAGS lpFlags)
   /* print drive info */
   if (szVolName[0] != _T('\0'))
     {
-      LoadString(GetModuleHandle(NULL), STRING_DIR_HELP2, szMsg, RC_STRING_MAX_SIZE);
+      LoadString(CMD_ModuleHandle, STRING_DIR_HELP2, szMsg, RC_STRING_MAX_SIZE);
       ConOutPrintf((LPTSTR)szMsg, szRootName[0], szVolName);
     }
   else
     {
-      LoadString(GetModuleHandle(NULL), STRING_DIR_HELP3, szMsg, RC_STRING_MAX_SIZE);
+      LoadString(CMD_ModuleHandle, STRING_DIR_HELP3, szMsg, RC_STRING_MAX_SIZE);
       ConOutPrintf(szMsg, szRootName[0]);
     }
 
   /* print the volume serial number if the return was successful */
-  LoadString(GetModuleHandle(NULL), STRING_DIR_HELP4, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
+  LoadString(CMD_ModuleHandle, STRING_DIR_HELP4, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
   ConOutPrintf((LPTSTR)szMsg,
                HIWORD(dwSerialNr),
                LOWORD(dwSerialNr));
@@ -1086,7 +1084,7 @@ PrintSummary(LPTSTR szPath,
 	{
 		ConvertULargeInteger(u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 
-		LoadString(GetModuleHandle(NULL), STRING_DIR_HELP5, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_DIR_HELP5, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg,ulFiles, szBuffer);
 	}
 
@@ -1094,7 +1092,7 @@ PrintSummary(LPTSTR szPath,
 	szRoot[0] = szPath[0];
 	GetUserDiskFreeSpace(szRoot, &uliFree);
 	ConvertULargeInteger(uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
-	LoadString(GetModuleHandle(NULL), STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf((LPTSTR)szMsg,ulDirs, szBuffer);
 
 	return 0;
@@ -1430,7 +1428,7 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 	   and if we are in recursive mode... we must have results */
 	if (!(lpFlags->bBareFormat ) && !((lpFlags->bRecursive) && (dwCount <= 0)))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_DIR_HELP7, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_DIR_HELP7, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, szTemp);
 	}
 
@@ -1782,7 +1780,7 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 	if (!(lpFlags->bBareFormat) && (dwCount > 0))
 	{
 		ConvertULargeInteger(u64CountBytes, szBytes, 20, lpFlags->bTSeperator);
-		LoadString(GetModuleHandle(NULL), STRING_DIR_HELP8, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_DIR_HELP8, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg,dwCountFiles, szBytes);
 	}
 

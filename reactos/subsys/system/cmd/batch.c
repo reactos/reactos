@@ -216,8 +216,7 @@ VOID ExitBatch (LPTSTR msg)
  */
 
 BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	HANDLE hFile;
 
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -230,9 +229,8 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 #endif
 
 	if (hFile == INVALID_HANDLE_VALUE)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_BATCH_ERROR, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+	{		
+		ConErrResPuts(STRING_BATCH_ERROR);
 		return FALSE;
 	}
 

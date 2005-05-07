@@ -45,14 +45,13 @@
 
 
 INT cmd_set (LPTSTR cmd, LPTSTR param)
-{
+{	
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR p;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_SET_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_SET_HELP);
 		return 0;
 	}
 
@@ -105,7 +104,8 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		dwBuffer = GetEnvironmentVariable (param, pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
-			ConErrPrintf (_T("CMD: Not in environment \"%s\"\n"), param);
+			LoadString(CMD_ModuleHandle, STRING_SET_ERROR, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf (szMsg, param);
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)

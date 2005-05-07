@@ -62,14 +62,12 @@ VOID ShortVersion (VOID)
  *
  */
 INT cmd_ver (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	INT i;
 
 	if (_tcsstr (param, _T("/?")) != NULL)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_VERSION_HELP1);
 		return 0;
 	}
 
@@ -80,9 +78,8 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	/* Basic copyright notice */
 	if (param[0] == _T('\0'))
 	{
-		ConOutPuts(_T("\n"SHELLINFO));
-		LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		ConOutPuts(_T("\n"SHELLINFO));		
+		ConOutResPuts(STRING_VERSION_HELP2);
 	}
 	else
 	{
@@ -105,27 +102,21 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 
 			if (_totupper (param[i]) == _T('W'))
 			{
-				/* Warranty notice */
-				LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP3, szMsg, RC_STRING_MAX_SIZE);
-				ConOutPuts(szMsg);
+				/* Warranty notice */				
+				ConOutResPuts(STRING_VERSION_HELP3);
 			}
 			else if (_totupper (param[i]) == _T('R'))
 			{
-				/* Redistribution notice */
-				LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP4, szMsg, RC_STRING_MAX_SIZE);
-				ConOutPuts(szMsg);
+				/* Redistribution notice */				
+				ConOutResPuts(STRING_VERSION_HELP4);
 			}
 			else if (_totupper (param[i]) == _T('C'))
 			{
-				/* Developer listing */
-				LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP6, szMsg, RC_STRING_MAX_SIZE);
-				ConOutPrintf(szMsg);
-				LoadString(GetModuleHandle(NULL), STRING_FREEDOS_DEV, szMsg, RC_STRING_MAX_SIZE);
-				ConOutPrintf(szMsg);
-				LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP7, szMsg, RC_STRING_MAX_SIZE);
-				ConOutPrintf(szMsg);
-				LoadString(GetModuleHandle(NULL), STRING_REACTOS_DEV, szMsg, RC_STRING_MAX_SIZE);
-				ConOutPrintf(szMsg);
+				/* Developer listing */				
+				ConOutResPuts(STRING_VERSION_HELP6);				
+				ConOutResPuts(STRING_FREEDOS_DEV);				
+				ConOutResPuts(STRING_VERSION_HELP7);
+                ConOutResPuts(STRING_REACTOS_DEV); 				
 			}
 			else
 			{
@@ -134,9 +125,8 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			}
 		}
 	}
-
-	LoadString(GetModuleHandle(NULL), STRING_VERSION_HELP5, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPuts(szMsg);
+	
+	ConOutResPuts(STRING_VERSION_HELP5);
 	return 0;
 }
 

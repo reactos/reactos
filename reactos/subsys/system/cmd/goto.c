@@ -49,8 +49,8 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_GOTO_HELP1, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+		LoadString(CMD_ModuleHandle, STRING_GOTO_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		ConOutResPuts(STRING_GOTO_HELP1);
 		return 0;
 	}
 
@@ -62,7 +62,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 
 	if (*param == _T('\0'))
 	{
-		LoadString(GetModuleHandle(NULL), STRING_GOTO_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_GOTO_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ExitBatch(szMsg);
 		return 1;
 	}
@@ -95,7 +95,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 			return 0;
 	}
 
-	LoadString(GetModuleHandle(NULL), STRING_GOTO_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+	LoadString(CMD_ModuleHandle, STRING_GOTO_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(szMsg, param);
 	ExitBatch(NULL);
 

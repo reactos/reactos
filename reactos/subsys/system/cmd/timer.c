@@ -47,7 +47,7 @@ PrintElapsedTime (DWORD time,INT format)
 	switch (format)
 	{
 	case 0:
-		LoadString(GetModuleHandle(NULL), STRING_TIMER_HELP1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_TIMER_HELP1, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, time);
 		break;
 
@@ -58,7 +58,7 @@ PrintElapsedTime (DWORD time,INT format)
 		time /=60;
 		m = time % 60;
 		h = time / 60;
-		LoadString( GetModuleHandle(NULL), STRING_TIMER_HELP2, szMsg, RC_STRING_MAX_SIZE);
+		LoadString( CMD_ModuleHandle, STRING_TIMER_HELP2, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg,
 		             h, cTimeSeparator,
 		             m, cTimeSeparator,
@@ -104,7 +104,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_TIMER_HELP3, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_TIMER_HELP3, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, cTimeSeparator, cTimeSeparator, cDecimalSeparator);
 		return 0;
 	}

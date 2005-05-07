@@ -18,15 +18,13 @@
 
 
 INT CommandScreen (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	SHORT x,y;
 	BOOL bSkipText = FALSE;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_SCREEN_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_SCREEN_HELP);
 		return 0;
 	}
 

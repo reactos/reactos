@@ -295,15 +295,13 @@ DeleteFileList (LPFILES f)
 static INT
 Overwrite (LPTSTR fn)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR inp[10];
 	LPTSTR p;
 	TCHAR szOptions[4];
 
-	LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, szOptions, 4);
-
-	LoadString(GetModuleHandle(NULL), STRING_COPY_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg);
+	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szOptions, 4);
+	
+	ConOutResPuts(STRING_COPY_HELP1);
 	
 	ConInString(inp, 10);
 	ConOutPuts(_T(""));
@@ -347,7 +345,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 						   NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
 	{
-		LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+		LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, source);
 		return 0;
 	}
@@ -375,7 +373,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	{
 		if (!_tcscmp (dest, source))
 		{
-			LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+			LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, source);
 			
 			CloseHandle (hFileSrc);
@@ -450,10 +448,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 
 		WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 		if (dwWritten != dwRead)
-		{
-			
-			LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg);
+		{						
+			ConErrResPuts(STRING_COPY_ERROR3);
 
 			free (buffer);
 			CloseHandle (hFileDest);
@@ -628,8 +624,7 @@ SetupCopy (LPFILES sources, TCHAR **p, BOOL bMultiple,
 
 
 INT cmd_copy (LPTSTR first, LPTSTR rest)
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+{	
 	TCHAR **p;
 	TCHAR drive_d[_MAX_DRIVE];
 	TCHAR dir_d[_MAX_DIR];
@@ -650,9 +645,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	DWORD dwFlags = 0;
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
-	{
-		LoadString(GetModuleHandle(NULL), STRING_COPY_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{		
+		ConOutResPuts(STRING_COPY_HELP2);
 		return 1;
 	}
 
@@ -723,9 +717,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 		copied = SetupCopy (sources, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags);
 	}
 	else if (bDestFound && bWildcards)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_COPY_ERROR4, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+	{		
+		ConErrResPuts(STRING_COPY_ERROR4);
 
 		DeleteFileList (sources);
 		freep (p);

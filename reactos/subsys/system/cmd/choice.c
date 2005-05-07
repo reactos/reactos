@@ -123,13 +123,12 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 	TCHAR Ch;
 	DWORD amount,clk;
 
-	LoadString(GetModuleHandle(NULL), STRING_CHOICE_OPTION, Options, 2);
+	LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, Options, 2);
 	lpOptions = Options;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
-	{
-		LoadString(GetModuleHandle(NULL), STRING_CHOICE_HELP, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPuts(szMsg);
+	{				
+		ConOutResPuts(STRING_CHOICE_HELP);
 		return 0;
 	}
 
@@ -168,9 +167,8 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 					lpOptions = &arg[i][2];
 
 				if (_tcslen (lpOptions) == 0)
-				{
-					LoadString(GetModuleHandle(NULL), STRING_CHOICE_ERROR, szMsg, RC_STRING_MAX_SIZE);
-					ConErrPuts(szMsg);
+				{					
+					ConErrResPuts(STRING_CHOICE_ERROR);
 					freep (arg);
 					return 1;
 				}
@@ -199,9 +197,8 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 				}
 
 				if (*s != _T(','))
-				{
-					LoadString(GetModuleHandle(NULL), STRING_CHOICE_ERROR_TXT, szMsg, RC_STRING_MAX_SIZE);
-					ConErrPuts(szMsg);
+				{					
+					ConErrResPuts(STRING_CHOICE_ERROR_TXT);
 					freep (arg);
 					return 1;
 				}
@@ -212,7 +209,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 			}
 			else if (arg[i][0] == _T('/'))
 			{
-				LoadString(GetModuleHandle(NULL), STRING_CHOICE_ERROR_OPTION, szMsg, RC_STRING_MAX_SIZE);
+				LoadString(CMD_ModuleHandle, STRING_CHOICE_ERROR_OPTION, szMsg, RC_STRING_MAX_SIZE);
 				ConErrPrintf(szMsg, arg[i]);
 				freep (arg);
 				return 1;

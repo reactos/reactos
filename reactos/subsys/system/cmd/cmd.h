@@ -124,6 +124,8 @@ VOID ParseCommandLine (LPTSTR);
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 
+extern HANDLE CMD_ModuleHandle;
+
 
 /* Prototypes for CMDINPUT.C */
 VOID ReadCommand (LPTSTR, INT);
@@ -179,6 +181,8 @@ VOID  SetCursorXY (SHORT, SHORT);
 VOID GetScreenSize (PSHORT, PSHORT);
 VOID SetCursorType (BOOL, BOOL);
 
+VOID ConOutResPuts (UINT resID);
+VOID ConErrResPuts (UINT resID);
 
 /* Prototypes for COPY.C */
 INT cmd_copy (LPTSTR, LPTSTR);
