@@ -44,7 +44,7 @@
 #include <process.h>
 #include <stdio.h>
 #include <wchar.h>
-    
+
 #include <ctype.h>
 #include <limits.h>
 #include <winnt.h>
@@ -112,9 +112,9 @@ static HKEY reg_class_keys[REG_CLASS_NUMBER] = {
 #endif
 
 #ifdef UNICODE
-#define _TEOF WEOF 
+#define _TEOF WEOF
 #else
-#define _TEOF EOF 
+#define _TEOF EOF
 #endif
 
 /******************************************************************************

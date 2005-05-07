@@ -16,7 +16,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -109,7 +109,7 @@ static void listmode_refresh (void)
 {
     attrset (COLOR_NORMAL);
     dlg_erase (listmode_dlg);
-    
+
     draw_box (listmode_dlg, 1, 2, 20, 70);
     draw_box (listmode_dlg, UY, UX, 4, 63);
     draw_box (listmode_dlg, UY + 4, UX, 11, 18);
@@ -130,11 +130,11 @@ static int bminus_cback (int action, void *data)
 static int listmode_callback (Dlg_head * h, int Par, int Msg)
 {
     switch (Msg) {
-#ifndef HAVE_X    
+#ifndef HAVE_X
     case DLG_DRAW:
 	listmode_refresh ();
 	break;
-#endif	
+#endif
 
     case DLG_POST_KEY:
 	/* fall */
@@ -165,7 +165,7 @@ static void init_listmode (char *oldlistformat)
     listmode_dlg = create_dlg (0, 0, 22, 74, dialog_colors,
 			      listmode_callback, listmode_section, "listmode",
 			      DLG_CENTER);
-    x_set_dialog_title (listmode_dlg, "Listing format edit");	    
+    x_set_dialog_title (listmode_dlg, "Listing format edit");
 
 #define XTRACT(i) BY+listmode_but[i].y, BX+listmode_but[i].x, listmode_but[i].ret_cmd, listmode_but[i].flags, listmode_but[i].text, 0, 0, NULL
 

@@ -7,7 +7,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -193,13 +193,13 @@ char *mad_strdup (const char *s, char *file, int line)
 void mad_free (void *ptr, char *file, int line)
 {
     int i;
-    
+
     mad_check (file, line);
 
     if (watch_free_pointer && ptr == watch_free_pointer){
 	printf ("watch free pointer found\n");
     }
-    
+
     if (ptr == NULL){
 	fprintf (stderr, "MAD: Attempted to free a NULL pointer in file \"%s\" at line %d.\n",
 		 file, line);
@@ -229,7 +229,7 @@ void mad_free (void *ptr, char *file, int line)
 void mad_finalize (char *file, int line)
 {
     int i;
-    
+
     mad_check (file, line);
 
     /* Following can be commented out if you don't want to see the

@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include "main.h"
 #include "settings.h"
 #include "framewnd.h"
@@ -61,8 +61,8 @@ void ConfigureDriveBar(HWND hDriveBar)
         while (count) {
 //			SendMessage(Globals.hDriveCombo, CB_DELETESTRING, (WPARAM)--count, 0);
         }
-        SendMessage(Globals.hDriveCombo, CB_RESETCONTENT, 0, 0); 
- 
+        SendMessage(Globals.hDriveCombo, CB_RESETCONTENT, 0, 0);
+
         memset(Globals.drives, 0, BUFFER_LEN);
 	    GetLogicalDriveStrings(BUFFER_LEN, Globals.drives);
     	drivebarBtn.fsStyle = TBSTYLE_BUTTON;
@@ -86,9 +86,9 @@ void ConfigureDriveBar(HWND hDriveBar)
             vol[0] = toupper(vol[0]);
             vol[1] = _T(':'); vol[2] = _T('\\'); vol[3] = _T('\0');
             if (drivebarBtn.iBitmap != 1 /*DRIVE_REMOVABLE*/ &&
-              GetVolumeInformation(vol, szVolumeNameBuffer, 
-              sizeof(szVolumeNameBuffer)/sizeof(TCHAR), 
-              NULL, NULL, NULL, NULL, 0) && 
+              GetVolumeInformation(vol, szVolumeNameBuffer,
+              sizeof(szVolumeNameBuffer)/sizeof(TCHAR),
+              NULL, NULL, NULL, NULL, 0) &&
               szVolumeNameBuffer[0] != _T('\0')) {
                 vol[2] = _T(' '); vol[3] = _T('['); vol[4] = _T('\0');
                 _tcscat(vol, szVolumeNameBuffer);
@@ -104,7 +104,7 @@ void ConfigureDriveBar(HWND hDriveBar)
             cbei.iImage         = drivebarBtn.iBitmap;
 //            cbei.iSelectedImage = IInf[iCnt].iSelectedImage;
 //            cbei.iIndent        = IInf[iCnt].iIndent;
-            SendMessage(Globals.hDriveCombo, CBEM_INSERTITEM, 0, (LPARAM)&cbei); 
+            SendMessage(Globals.hDriveCombo, CBEM_INSERTITEM, 0, (LPARAM)&cbei);
 
 			drivebarBtn.idCommand++;
 			drivebarBtn.iString++;
@@ -129,7 +129,7 @@ typedef struct {
 } ITEMINFO, *PITEMINFO;
 
 ITEMINFO IInf[] = {
-        { 0, 3,  0, _T("A:")}, 
+        { 0, 3,  0, _T("A:")},
         { 1, 4,  1, _T("C: [SYSTEM]")},
         { 2, 5,  2, _T("D:")},
         { 0, 3,  0, _T("E: [SOFT_RAID_1]")},
@@ -151,7 +151,7 @@ ITEMINFO IInf[] = {
 //            cbei.iImage         = IInf[iCnt].iImage;
 //            cbei.iSelectedImage = IInf[iCnt].iSelectedImage;
 //            cbei.iIndent        = IInf[iCnt].iIndent;
-            SendMessage(Globals.hDriveCombo, CBEM_INSERTITEM, 0, (LPARAM)&cbei); 
+            SendMessage(Globals.hDriveCombo, CBEM_INSERTITEM, 0, (LPARAM)&cbei);
         }
     }
 }

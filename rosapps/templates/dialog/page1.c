@@ -29,24 +29,24 @@
 #include "trace.h"
 
 
-#define XBITMAP 80 
-#define YBITMAP 20 
- 
-#define BUFFER_LEN MAX_PATH 
- 
+#define XBITMAP 80
+#define YBITMAP 20
+
+#define BUFFER_LEN MAX_PATH
+
 extern HINSTANCE hInst;
 
-HBITMAP hbmpPicture; 
-HBITMAP hbmpOld; 
+HBITMAP hbmpPicture;
+HBITMAP hbmpOld;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void AddItem(HWND hListBox, LPCTSTR lpstr, HBITMAP hbmp) 
-{ 
-    int nItem = SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)lpstr); 
-    SendMessage(hListBox, LB_SETITEMDATA, nItem, (LPARAM)hbmp); 
-} 
+static void AddItem(HWND hListBox, LPCTSTR lpstr, HBITMAP hbmp)
+{
+    int nItem = SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)lpstr);
+    SendMessage(hListBox, LB_SETITEMDATA, nItem, (LPARAM)hbmp);
+}
 
 static TCHAR* items[] = {
     _T("services"),
@@ -70,61 +70,61 @@ static void InitListCtrl(HWND hDlg)
         SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)szBuffer);
     }
 
-    SetFocus(hListBox); 
-    SendMessage(hListBox, LB_SETCURSEL, 0, 0); 
+    SetFocus(hListBox);
+    SendMessage(hListBox, LB_SETCURSEL, 0, 0);
 }
 
 static void OnDrawItem(HWND hWnd, LPARAM lParam)
 {
-//    int nItem; 
-    TCHAR tchBuffer[BUFFER_LEN]; 
-//    HBITMAP hbmp; 
-    TEXTMETRIC tm; 
-    int y; 
-    HDC hdcMem; 
-    LPDRAWITEMSTRUCT lpdis; 
-    RECT rcBitmap; 
+//    int nItem;
+    TCHAR tchBuffer[BUFFER_LEN];
+//    HBITMAP hbmp;
+    TEXTMETRIC tm;
+    int y;
+    HDC hdcMem;
+    LPDRAWITEMSTRUCT lpdis;
+    RECT rcBitmap;
 
-    lpdis = (LPDRAWITEMSTRUCT)lParam; 
-    // If there are no list box items, skip this message. 
-    if (lpdis->itemID != -1) { 
-        // Draw the bitmap and text for the list box item. Draw a rectangle around the bitmap if it is selected. 
-        switch (lpdis->itemAction) { 
-        case ODA_SELECT: 
-        case ODA_DRAWENTIRE: 
-            // Display the bitmap associated with the item. 
-            hbmpPicture = (HBITMAP)SendMessage(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, (LPARAM)0); 
-            hdcMem = CreateCompatibleDC(lpdis->hDC); 
-            hbmpOld = SelectObject(hdcMem, hbmpPicture); 
-            BitBlt(lpdis->hDC, 
-                   lpdis->rcItem.left, lpdis->rcItem.top, 
-                   lpdis->rcItem.right - lpdis->rcItem.left, 
-                   lpdis->rcItem.bottom - lpdis->rcItem.top, 
-                   hdcMem, 0, 0, SRCCOPY); 
-            // Display the text associated with the item. 
-            SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer); 
-            GetTextMetrics(lpdis->hDC, &tm); 
-            y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2; 
-            TextOut(lpdis->hDC, XBITMAP + 6, y, tchBuffer, _tcslen(tchBuffer)); 
-            SelectObject(hdcMem, hbmpOld); 
-            DeleteDC(hdcMem); 
-            // Is the item selected? 
-            if (lpdis->itemState & ODS_SELECTED) { 
-                // Set RECT coordinates to surround only the bitmap. 
-                rcBitmap.left = lpdis->rcItem.left; 
-                rcBitmap.top = lpdis->rcItem.top; 
-                rcBitmap.right = lpdis->rcItem.left + XBITMAP; 
-                rcBitmap.bottom = lpdis->rcItem.top + YBITMAP; 
-                // Draw a rectangle around bitmap to indicate the selection. 
-                DrawFocusRect(lpdis->hDC, &rcBitmap); 
-            } 
-            break; 
-        case ODA_FOCUS: 
-            // Do not process focus changes. The focus caret (outline rectangle) 
-            // indicates the selection. The IDOK button indicates the final selection. 
-            break; 
-        } 
-    } 
+    lpdis = (LPDRAWITEMSTRUCT)lParam;
+    // If there are no list box items, skip this message.
+    if (lpdis->itemID != -1) {
+        // Draw the bitmap and text for the list box item. Draw a rectangle around the bitmap if it is selected.
+        switch (lpdis->itemAction) {
+        case ODA_SELECT:
+        case ODA_DRAWENTIRE:
+            // Display the bitmap associated with the item.
+            hbmpPicture = (HBITMAP)SendMessage(lpdis->hwndItem, LB_GETITEMDATA, lpdis->itemID, (LPARAM)0);
+            hdcMem = CreateCompatibleDC(lpdis->hDC);
+            hbmpOld = SelectObject(hdcMem, hbmpPicture);
+            BitBlt(lpdis->hDC,
+                   lpdis->rcItem.left, lpdis->rcItem.top,
+                   lpdis->rcItem.right - lpdis->rcItem.left,
+                   lpdis->rcItem.bottom - lpdis->rcItem.top,
+                   hdcMem, 0, 0, SRCCOPY);
+            // Display the text associated with the item.
+            SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
+            GetTextMetrics(lpdis->hDC, &tm);
+            y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
+            TextOut(lpdis->hDC, XBITMAP + 6, y, tchBuffer, _tcslen(tchBuffer));
+            SelectObject(hdcMem, hbmpOld);
+            DeleteDC(hdcMem);
+            // Is the item selected?
+            if (lpdis->itemState & ODS_SELECTED) {
+                // Set RECT coordinates to surround only the bitmap.
+                rcBitmap.left = lpdis->rcItem.left;
+                rcBitmap.top = lpdis->rcItem.top;
+                rcBitmap.right = lpdis->rcItem.left + XBITMAP;
+                rcBitmap.bottom = lpdis->rcItem.top + YBITMAP;
+                // Draw a rectangle around bitmap to indicate the selection.
+                DrawFocusRect(lpdis->hDC, &rcBitmap);
+            }
+            break;
+        case ODA_FOCUS:
+            // Do not process focus changes. The focus caret (outline rectangle)
+            // indicates the selection. The IDOK button indicates the final selection.
+            break;
+        }
+    }
 }
 
 
@@ -143,15 +143,15 @@ void OnSetFont(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 void OnMeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 {
-    HFONT hFont; 
+    HFONT hFont;
 	LOGFONT lf;
 
-    hFont = GetStockObject(SYSTEM_FONT); 
+    hFont = GetStockObject(SYSTEM_FONT);
     GetObject(hFont, sizeof(LOGFONT), &lf);
 	if (lf.lfHeight < 0)
-		lpMeasureItemStruct->itemHeight = -lf.lfHeight; 
+		lpMeasureItemStruct->itemHeight = -lf.lfHeight;
 	else
-		lpMeasureItemStruct->itemHeight = lf.lfHeight; 
+		lpMeasureItemStruct->itemHeight = lf.lfHeight;
 }
 
 LRESULT CALLBACK PageWndProc1(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -160,15 +160,15 @@ LRESULT CALLBACK PageWndProc1(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
     case WM_INITDIALOG:
         InitListCtrl(hDlg);
         return TRUE;
-    case WM_SETFONT: 
+    case WM_SETFONT:
         OnSetFont(hDlg, wParam, lParam);
         return TRUE;
-    case WM_MEASUREITEM: 
+    case WM_MEASUREITEM:
         OnMeasureItem((LPMEASUREITEMSTRUCT)lParam);
-        return TRUE; 
-    case WM_DRAWITEM: 
+        return TRUE;
+    case WM_DRAWITEM:
         OnDrawItem(hDlg, lParam);
-        return TRUE; 
+        return TRUE;
     case WM_COMMAND:
         switch (LOWORD(wParam)) {
         case IDOK:

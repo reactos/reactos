@@ -58,28 +58,28 @@
          passed on subsequent calls as the fmtID parameter to
          "format the same type you did last time".
 
-   *****************************************************************/ 
+   *****************************************************************/
    DWORD WINAPI SHFormatDrive(HWND hWnd,
                               UINT drive,
                               UINT fmtID,
                               UINT options);
 
-   // 
+   //
    // Special value of fmtID which means "use the defaultformat"
-   // 
+   //
 
    #define SHFMT_ID_DEFAULT   0xFFFF
 
-   // 
+   //
    // Option bits for options parameter
-   // 
+   //
 
    #define SHFMT_OPT_FULL     0x0001
    #define SHFMT_OPT_SYSONLY  0x0002
 
-   // 
+   //
    // Special return values. PLEASE NOTE that these are DWORD values.
-   // 
+   //
 
    #define SHFMT_ERROR     0xFFFFFFFFL    // Error on last format,
                                           // drive may be formatable

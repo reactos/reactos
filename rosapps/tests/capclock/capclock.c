@@ -1,4 +1,4 @@
-/* $Id: capclock.c,v 1.1 2004/10/21 05:11:59 sedwards Exp $
+/* $Id$
  *
  * DESCRIPTION: Simple Win32 Caption Clock
  * PROJECT    : ReactOS (test applications)

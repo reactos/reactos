@@ -1,11 +1,11 @@
 /* Directory routines
    Copyright (C) 1994 Miguel de Icaza.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,7 +33,7 @@
 #include "tree.h"
 #include "../vfs/vfs.h"
 
-/* "$Id: dir.c,v 1.1 2001/12/30 09:55:26 sedwards Exp $" */
+/* "$Id$" */
 
 /* If true show files starting with a dot */
 int show_dot_files = 1;
@@ -84,7 +84,7 @@ sort_name (const file_entry *a, const file_entry *b)
 {
     int ad = MY_ISDIR (a);
     int bd = MY_ISDIR (b);
-    
+
     if (ad == bd || mix_all_files)
 	return string_sortcomp (a->fname, b->fname) * reverse;
     return bd-ad;
@@ -115,7 +115,7 @@ sort_owner (const file_entry *a, const file_entry *b)
 {
     int ad = MY_ISDIR (a);
     int bd = MY_ISDIR (b);
-    
+
     if (ad == bd || mix_all_files)
 	return string_sortcomp (get_owner (a->buf.st_uid), get_owner (a->buf.st_uid)) * reverse;
     return bd-ad;
@@ -126,7 +126,7 @@ sort_group (const file_entry *a, const file_entry *b)
 {
     int ad = MY_ISDIR (a);
     int bd = MY_ISDIR (b);
-    
+
     if (ad == bd || mix_all_files)
 	return string_sortcomp (get_group (a->buf.st_gid), get_group (a->buf.st_gid)) * reverse;
     return bd-ad;
@@ -232,7 +232,7 @@ inline static int
 file_type_to_num (const file_entry *fe)
 {
     const struct stat *s = &fe->buf;
-    
+
     if (S_ISDIR (s->st_mode))
 	return 0;
     if (S_ISLNK (s->st_mode)){
@@ -261,7 +261,7 @@ sort_type (const file_entry *a, const file_entry *b)
 {
     int aa  = file_type_to_num (a);
     int bb  = file_type_to_num (b);
-    
+
     return bb-aa;
 }
 
@@ -302,13 +302,13 @@ void clean_dir (dir_list *list, int count)
     }
 }
 
-static int 
+static int
 add_dotdot_to_list (dir_list *list, int index)
 {
     char buffer [MC_MAXPATHLEN + MC_MAXPATHLEN];
     char *p, *s;
     int i = 0;
-    
+
     /* Need to grow the *list? */
     if (index == list->size) {
 	list->list = realloc (list->list, sizeof (file_entry) *
@@ -323,7 +323,7 @@ add_dotdot_to_list (dir_list *list, int index)
     (list->list) [index].cache = NULL;
     (list->list) [index].f.link_to_dir = 0;
     (list->list) [index].f.stalled_link = 0;
-    
+
     /* FIXME: We need to get the panel definition! to use file_mark */
     (list->list) [index].f.marked = 0;
     mc_get_current_wd (buffer, sizeof (buffer) - 1 );
@@ -383,7 +383,7 @@ int handle_dirent (dir_list *list, char *filter, struct dirent *dp,
 
     if (S_ISDIR (buf1->st_mode))
 	tree_check (dp->d_name);
-    
+
     /* A link to a file or a directory? */
     *link_to_dir = 0;
     *stalled_link = 0;
@@ -409,9 +409,9 @@ int handle_dirent (dir_list *list, char *filter, struct dirent *dp,
     return 1;
 }
 
-/* handle_path is a simplified handle_dirent. The difference is that 
+/* handle_path is a simplified handle_dirent. The difference is that
    handle_path doesn't pay attention to show_dot_files and show_backups.
-   Moreover handle_path can't be used with a filemask. 
+   Moreover handle_path can't be used with a filemask.
    If you change handle_path then check also handle_dirent. */
 /* Return values: -1 = failure, 0 = don't add, 1 = add to the list */
 int handle_path (dir_list *list, char *path,
@@ -425,7 +425,7 @@ int handle_path (dir_list *list, char *path,
 
     if (S_ISDIR (buf1->st_mode))
 	tree_check (path);
-    
+
     /* A link to a file or a directory? */
     *link_to_dir = 0;
     *stalled_link = 0;
@@ -458,7 +458,7 @@ int do_load_dir(dir_list *list, sortfn *sort, int reverse, int case_sensitive, c
     int dotdot_found = 0;
 
     start_tree_check (NULL);
-    
+
     dirp = mc_opendir (".");
     if (!dirp){
 	return set_zero_dir (list);
@@ -472,7 +472,7 @@ int do_load_dir(dir_list *list, sortfn *sort, int reverse, int case_sensitive, c
 	    return next_free;
 	list->list [next_free].fnamelen = NLENGTH (dp);
 	list->list [next_free].fname = strdup (dp->d_name);
-	list->list [next_free].cache = NULL; 
+	list->list [next_free].cache = NULL;
 	list->list [next_free].f.marked = 0;
 	list->list [next_free].f.link_to_dir = link_to_dir;
 	list->list [next_free].f.stalled_link = stalled_link;
@@ -491,7 +491,7 @@ int do_load_dir(dir_list *list, sortfn *sort, int reverse, int case_sensitive, c
     }
     else
 	return set_zero_dir (list);
-    
+
     mc_closedir (dirp);
     end_tree_check (NULL);
     return next_free;
@@ -500,7 +500,7 @@ int do_load_dir(dir_list *list, sortfn *sort, int reverse, int case_sensitive, c
 int link_isdir (file_entry *file)
 {
     struct stat b;
-    
+
     if (S_ISLNK (file->buf.st_mode)){
 	mc_stat (file->fname, &b);
 	if (S_ISDIR (b.st_mode))
@@ -508,7 +508,7 @@ int link_isdir (file_entry *file)
     }
     return 0;
 }
- 
+
 int if_link_is_exe (file_entry *file)
 {
     struct stat b;
@@ -525,7 +525,7 @@ static dir_list dir_copy = { 0, 0 };
 static void alloc_dir_copy (int size)
 {
     int i;
-	    
+
     if (dir_copy.size < size){
 	if (dir_copy.list){
 
@@ -558,7 +558,7 @@ int do_reload_dir (dir_list *list, sortfn *sort, int count, int rev,
     int           i, found, status, link_to_dir, stalled_link;
     struct stat   buf;
     int		  tmp_len;  /* For optimisation */
-    int 	  dotdot_found = 0; 
+    int 	  dotdot_found = 0;
 
     start_tree_check (NULL);
     dirp = mc_opendir (".");
@@ -584,19 +584,19 @@ int do_reload_dir (dir_list *list, sortfn *sort, int count, int rev,
 	    continue;
 	if (status == -1) {
 	    mc_closedir (dirp);
-	    /* Norbert (Feb 12, 1997): 
+	    /* Norbert (Feb 12, 1997):
 	     Just in case someone finds this memory leak:
-	     -1 means big trouble (at the moment no memory left), 
+	     -1 means big trouble (at the moment no memory left),
 	     I don't bother with further cleanup because if one gets to
 	     this point he will have more problems than a few memory
 	     leaks and because one 'clean_dir' would not be enough (and
-	     because I don't want to spent the time to make it working, 
-             IMHO it's not worthwhile). 
+	     because I don't want to spent the time to make it working,
+             IMHO it's not worthwhile).
 	    clean_dir (&dir_copy, count);
              */
 	    return next_free;
 	}
-	
+
 	tmp_len = NLENGTH (dp);
 	for (found = i = 0; i < count; i++)
 	    if (tmp_len == dir_copy.list [i].fnamelen
@@ -605,10 +605,10 @@ int do_reload_dir (dir_list *list, sortfn *sort, int count, int rev,
 		found = 1;
 		break;
 	    }
-	
+
 	if (!found)
 	    list->list [next_free].f.marked = 0;
-	
+
 	list->list [next_free].fnamelen = tmp_len;
 	list->list [next_free].fname = strdup (dp->d_name);
 	list->list [next_free].cache = NULL;

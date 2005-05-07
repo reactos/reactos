@@ -9,7 +9,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -75,19 +75,19 @@ static int old_error;		/* File descriptor of old standard error */
 /* Creates a pipe to hold standard error for a later analysis. */
 /* The pipe can hold 4096 bytes. Make sure no more is written */
 /* or a deadlock might occur. */
-void 
+void
 open_error_pipe (void)
 {
    return;
 }
 
-void 
+void
 close_error_pipe (int error, char *text)
 {
    return;
 }
 
-void 
+void
 check_error_pipe (void)
 {
     char error[MAX_PIPE_SIZE];
@@ -110,7 +110,7 @@ check_error_pipe (void)
 }
 
 
-static int 
+static int
 StartWindowsProg (char *name, SHORT type)
 {
 #if 0 /* FIXME: PM DDL's should be loaded (or not loaded) at run time */
@@ -141,25 +141,25 @@ StartWindowsProg (char *name, SHORT type)
       pDetails.progt.progc = PROG_31_ENHSEAMLESSCOMMON ;
      break;
    }
-   WinStartApp(NULLHANDLE, 
-               &pDetails, 
-               NULL, 
-               NULL, 
+   WinStartApp(NULLHANDLE,
+               &pDetails,
+               NULL,
+               NULL,
                SAF_INSTALLEDCMDLINE|SAF_STARTCHILDAPP) ;
 #endif
    return 0;
 }
 
 
-static int 
+static int
 os2_system (int as_shell_command, const char *shell, const char *command, char *parm);
 
-/* 
+/*
   as_shell_command = 1: If a program is started during input line, CTRL-O
-                        or RETURN 
+                        or RETURN
                    = 0: F3, F4
 */
-int 
+int
 my_system (int as_shell_command, const char *shell, const char *command)
 {
    char *sh;            /* This is the shell -- always! */
@@ -170,9 +170,9 @@ my_system (int as_shell_command, const char *shell, const char *command)
 
    sh = get_default_shell();
    if (strcmp(sh, shell)) {
-      /* 
+      /*
          Not equal  -- That means: shell is the program and command is the
-         parameter 
+         parameter
       */
       cmd  = (char *) shell;
       parm = (char *) command;
@@ -185,7 +185,7 @@ my_system (int as_shell_command, const char *shell, const char *command)
             if (command[i] == ' ') {
                temp[i] = (char) 0;
                length--;
-            } else 
+            } else
                 break;
          }
          if (i==-1) {
@@ -205,30 +205,30 @@ my_system (int as_shell_command, const char *shell, const char *command)
    return os2_system (as_shell_command, sh, cmd, parm);
 }
 
-static int 
-ux_startp (const char *shell, const char *command, const char *parm) 
+static int
+ux_startp (const char *shell, const char *command, const char *parm)
 {
     if (parm) {
-         spawnlp (P_WAIT, 
-              (char *) shell, 
-              (char *) shell, 
-              "/c", 
-              (char *) command, 
+         spawnlp (P_WAIT,
+              (char *) shell,
+              (char *) shell,
+              "/c",
+              (char *) command,
               (char *) parm,
               (char *) 0);
     } else {
-         spawnlp (P_WAIT, 
-              (char *) shell, 
-              (char *) shell, 
-              "/c", 
-              (char *) command, 
+         spawnlp (P_WAIT,
+              (char *) shell,
+              (char *) shell,
+              "/c",
+              (char *) command,
               (char *) 0);
     }
     return 0;
 }
 
 
-static int 
+static int
 os2_system (int as_shell_command, const char *shell, const char *command, char *parm)
 {
    register int i, j;
@@ -236,7 +236,7 @@ os2_system (int as_shell_command, const char *shell, const char *command, char *
    APIRET       rc = NO_ERROR;                  /* Return Code */
    char         pathValue[5] = "PATH";          /* For DosSearchPath */
    UCHAR        searchResult[MC_MAXPATHLEN * 2 + 1];     /* For DosSearchPath */
-   
+
    char         *cmdString;
    char         *postFix[3];
    char         *line;
@@ -248,26 +248,26 @@ os2_system (int as_shell_command, const char *shell, const char *command, char *
 
    if (command == NULL) {
       /* .ado: just start a shell, we don't need the parameter */
-      spawnl (P_WAIT, 
-              (char *) shell, 
-              (char *) shell, 
-              (char *) command, (char *) 0);  
+      spawnl (P_WAIT,
+              (char *) shell,
+              (char *) shell,
+              (char *) command, (char *) 0);
       return 0;
    }
 
    memset(&StartData, 0, sizeof(StartData)) ;
-   StartData.Length             = sizeof(StartData);    
+   StartData.Length             = sizeof(StartData);
    StartData.Related            = SSF_RELATED_CHILD;
    StartData.FgBg               = SSF_FGBG_BACK;
-   StartData.TraceOpt           = SSF_TRACEOPT_NONE;   
-   StartData.PgmTitle           = NULL;                
-   StartData.TermQ              = NULL;                 
+   StartData.TraceOpt           = SSF_TRACEOPT_NONE;
+   StartData.PgmTitle           = NULL;
+   StartData.TermQ              = NULL;
    StartData.InheritOpt         = SSF_INHERTOPT_PARENT;
-   StartData.IconFile           = 0;              
-   StartData.PgmHandle          = 0;             
-   StartData.PgmControl         = SSF_CONTROL_VISIBLE ; 
-   StartData.ObjectBuffer       = ObjBuf;          
-   StartData.ObjectBuffLen      = 100;            
+   StartData.IconFile           = 0;
+   StartData.PgmHandle          = 0;
+   StartData.PgmControl         = SSF_CONTROL_VISIBLE ;
+   StartData.ObjectBuffer       = ObjBuf;
+   StartData.ObjectBuffLen      = 100;
    StartData.PgmInputs          = parm;
 
    postFix[0] = ".exe";
@@ -300,7 +300,7 @@ os2_system (int as_shell_command, const char *shell, const char *command, char *
                             sizeof(searchResult));
       }
       free (line);
-   } else {         
+   } else {
       /* Just search */
       rc = DosSearchPath((SEARCH_IGNORENETERRS | SEARCH_ENVIRONMENT | SEARCH_CUR_DIRECTORY),
                          (PSZ) pathValue,
@@ -350,9 +350,9 @@ os2_system (int as_shell_command, const char *shell, const char *command, char *
    } else {
       /* It's not a known exe type or it's a CMD/BAT file */
       i = strlen(searchResult);
-      if ((toupper(searchResult[--i]) == 'T') && 
-          (toupper(searchResult[--i]) == 'A') &&  
-          (toupper(searchResult[--i]) == 'B') &&  
+      if ((toupper(searchResult[--i]) == 'T') &&
+          (toupper(searchResult[--i]) == 'A') &&
+          (toupper(searchResult[--i]) == 'B') &&
           (searchResult[--i] == '.')   ) {
         StartData.SessionType = PROG_WINDOWEDVDM;
         rc = DosStartSession(&StartData, &SessionID, &pid) ;
@@ -432,7 +432,7 @@ canonicalize_pathname (char *path)
 	        continue;
 	    }
 
-	    /* Handle `../' or trailing `..' by itself. 
+	    /* Handle `../' or trailing `..' by itself.
 	       Remove the previous ?/ part with the exception of
 	       ../, which we should leave intact. */
 	    if (path[i + 1] == '.' && (path[i + 2] == PATH_SEP || !path[i + 2])) {
@@ -454,7 +454,7 @@ canonicalize_pathname (char *path)
 }
 
 
-void 
+void
 my_statfs (struct my_statfs *myfs_stats, char *path)
 {
     PFSALLOCATE pBuf;
@@ -483,15 +483,15 @@ my_statfs (struct my_statfs *myfs_stats, char *path)
     /* KBytes available */
     myfs_stats->avail = pBuf->cSectorUnit * pBuf->cUnitAvail * pBuf->cbSector / 1024;
     /* KBytes total */
-    myfs_stats->total = pBuf->cSectorUnit * pBuf->cUnit * pBuf->cbSector / 1024; 
+    myfs_stats->total = pBuf->cSectorUnit * pBuf->cUnit * pBuf->cbSector / 1024;
     myfs_stats->nfree = pBuf->cUnitAvail;
     myfs_stats->nodes = pBuf->cbSector;
 
     lghBuf  = sizeof(FSINFO);
     pFsInfo = (PFSINFO) malloc(lghBuf);
-    rc      = DosQueryFSInfo(0L, 
-                             FSIL_VOLSER, 
-                             (PVOID) pFsInfo, 
+    rc      = DosQueryFSInfo(0L,
+                             FSIL_VOLSER,
+                             (PVOID) pFsInfo,
                              lghBuf);
     /* Get name */
     myfs_stats->device = strdup(pFsInfo->vol.szVolLabel);    /* Label of the Disk */
@@ -501,10 +501,10 @@ my_statfs (struct my_statfs *myfs_stats, char *path)
 
     szDeviceName[0] = (UCHAR) (diskNum + (ULONG) 'A' - 1);
     /* Now get the type of the disk */
-    rc = DosQueryFSAttach(szDeviceName, 
-                          0L, 
-                          FSAIL_QUERYNAME, 
-                          pfsqBuffer, 
+    rc = DosQueryFSAttach(szDeviceName,
+                          0L,
+                          FSAIL_QUERYNAME,
+                          pfsqBuffer,
                           &cbBuffer);
 
     pszFSDName = pfsqBuffer->szName + pfsqBuffer->cbName + 1;
@@ -524,14 +524,14 @@ my_statfs (struct my_statfs *myfs_stats, char *path)
     free(pFsInfo);
 }
 
-int 
+int
 gettimeofday (struct timeval* tvp, void *p)
 {
    DATETIME     pdt = {0};
    if (p != NULL)		/* what is "p"? */
-	return 0;	
-	
-    /* Since MC only calls this func from get_random_hint we return 
+	return 0;
+
+    /* Since MC only calls this func from get_random_hint we return
      * some value, not exactly the "correct" one
      */
     DosGetDateTime(&pdt);
@@ -543,7 +543,7 @@ gettimeofday (struct timeval* tvp, void *p)
 
 /* FAKE functions */
 
-int 
+int
 look_for_exe(const char* pathname)
 {
    int j;
@@ -557,9 +557,9 @@ look_for_exe(const char* pathname)
       for (j=0; j<lgh-4; j++) {
          p++;
       }
-      if (!stricmp(p, ".exe") || 
-          !stricmp(p, ".bat") || 
-          !stricmp(p, ".com") || 
+      if (!stricmp(p, ".exe") ||
+          !stricmp(p, ".bat") ||
+          !stricmp(p, ".com") ||
           !stricmp(p, ".cmd")) {
          return 1;
       }
@@ -567,7 +567,7 @@ look_for_exe(const char* pathname)
    return 0;
 }
 
-int 
+int
 lstat (const char* pathname, struct stat *buffer)
 {
    int rc = stat (pathname, buffer);
@@ -583,61 +583,61 @@ lstat (const char* pathname, struct stat *buffer)
    return rc;
 }
 
-int 
-getuid ()	      
+int
+getuid ()
 {
     return 0;
 }
 
-int 
-getgid ()	      
+int
+getgid ()
 {
     return 0;
 }
 
-int 
+int
 readlink (char* path, char* buf, int size)
 {
     return -1;
 }
 
-int 
+int
 symlink (char *n1, char *n2)
 {
     return -1;
 }
 
-int 
+int
 link (char *p1, char *p2)
 {
     return -1;
 }
 
-int 
+int
 chown (char *path, int owner, int group)
 {
     return -1;
 }
 
-int 
+int
 mknod (char *path, int mode, int dev)
 {
     return -1;
 }
 
-void 
+void
 init_uid_gid_cache (void)
 {
     return;
 }
 
-int 
+int
 mc_doublepopen (int inhandle, int inlen, pid_t *the_pid, char *command, ...)
 {
 	return 0;
 }
 
-int 
+int
 mc_doublepclose (int pipe, pid_t pid)
 {
 	return 0;
@@ -650,13 +650,13 @@ vfs_get_current_dir (void)
 	return NULL;
 }
 
-int 
+int
 vfs_current_is_extfs (void)
 {
 	return 0;
 }
 
-int 
+int
 vfs_file_is_ftp (char *filename)
 {
 	return 0;
@@ -695,7 +695,7 @@ mc_chdir(char *pathname)
       /* First set the default drive */
       if (lgh > 1) {
          if (pathname[1] == ':') {
-             ret = DosSetDefaultDisk(toupper(pathname[0]) - 'A' + 1); 
+             ret = DosSetDefaultDisk(toupper(pathname[0]) - 'A' + 1);
          }
       }
       /* After that, set the current dir! */
@@ -703,7 +703,7 @@ mc_chdir(char *pathname)
    }
    return ret;
 }
- 
+
 int
 mc_chmod(char *pathName, int unxmode)
 {
@@ -731,7 +731,7 @@ conv_os2_unx_rc(int os2rc)
       case ERROR_INVALID_PARAMETER:
          errCode = EINVAL;
          break;
-      default: 
+      default:
          errCode = EINVAL;
         break;
    }
@@ -747,7 +747,7 @@ mc_open (char *file, int flags, int pmode)
 int
 mc_unlink(char *pathName)
 {
-   /* Use OS/2 API to delete a file, if the file is set as read-only, 
+   /* Use OS/2 API to delete a file, if the file is set as read-only,
       the file will be deleted without asking the user! */
    APIRET       rc;
    rc = DosDelete(pathName);
@@ -776,7 +776,7 @@ get_default_editor (void)
 	APIRET  rc;
 	char    pathValue[5] = "PATH";
 	UCHAR   searchResult[MC_MAXPATHLEN + 1];
-	
+
         /* EPM is not always be installed */
 	rc = DosSearchPath((SEARCH_IGNORENETERRS | SEARCH_ENVIRONMENT | SEARCH_CUR_DIRECTORY),
 			   (PSZ) pathValue,

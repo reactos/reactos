@@ -1,11 +1,11 @@
 /* Pulldown menu code.
    Copyright (C) 1994 Miguel de Icaza.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,7 +33,7 @@
 #include "win.h"
 #include "key.h"	/* For mi_getch() */
 
-/* "$Id: menu.c,v 1.1 2001/12/30 09:55:23 sedwards Exp $" */
+/* "$Id$" */
 
 extern int is_right;
 int menubar_visible = 1;	/* This is the new default */
@@ -143,7 +143,7 @@ static void menubar_draw (WMenu *menubar)
 {
     const int items = menubar->items;
     int   i;
-    
+
     /* First draw the complete menubar */
     attrset (SELECTED_COLOR);
     widget_move (&menubar->widget, 0, 0);
@@ -163,8 +163,8 @@ static void menubar_draw (WMenu *menubar)
 
     if (menubar->dropped)
 	menubar_draw_drop (menubar);
-    else 
-	widget_move (&menubar->widget, 0, 
+    else
+	widget_move (&menubar->widget, 0,
 		menubar-> menu[menubar->selected]->start_x);
 }
 
@@ -219,7 +219,7 @@ static void menubar_drop (WMenu *menubar, int selected)
 static void menubar_execute (WMenu *menubar, int entry)
 {
     const Menu menu = menubar->menu [menubar->selected];
-    
+
     is_right = menubar->selected != 0;
     (*menu->entries [entry].call_back)(0);
     menubar_finish (menubar);
@@ -234,7 +234,7 @@ static void menubar_move (WMenu *menubar, int step)
 	menubar->subsel += step;
 	if (menubar->subsel < 0)
 	    menubar->subsel = menu->count - 1;
-	
+
 	menubar->subsel %= menu->count;
     } while  (!menu->entries [menubar->subsel].call_back);
     menubar_paint_idx (menubar, menubar->subsel, MENU_SELECTED_COLOR);
@@ -247,7 +247,7 @@ static int menubar_handle_key (WMenu *menubar, int key)
     /* Lowercase */
     if (key < 256 && isalpha (key)) /* Linux libc.so.5.x.x bug fix */
 	key = tolower (key);
-    
+
     if (is_abort_char (key)){
 	menubar_finish (menubar);
 	return 1;
@@ -275,7 +275,7 @@ static int menubar_handle_key (WMenu *menubar, int key)
 	    /* Hack, we should check for the upper case letter */
 	    if (tolower (menu->name [1]) == key){
 		menubar_drop (menubar, i);
-		return 1; 
+		return 1;
 	    }
 	}
 	if (key == KEY_ENTER || key == XCTRL ('n') || key == KEY_DOWN
@@ -288,14 +288,14 @@ static int menubar_handle_key (WMenu *menubar, int key)
 	const int selected = menubar->selected;
 	const Menu menu = menubar->menu [selected];
 	const int items = menu->count;
-	
+
 	for (i = 0; i < items; i++){
 	    if (!menu->entries [i].call_back)
 		continue;
-	    
+
 		if (key != menu->entries [i].hot_key)
 			continue;
-	    
+
 	    menubar_execute (menubar, i);
 	    return 1;
 	}
@@ -304,11 +304,11 @@ static int menubar_handle_key (WMenu *menubar, int key)
 	    menubar_execute (menubar, menubar->subsel);
 	    return 1;
 	}
-	
-	
+
+
 	if (key == KEY_DOWN || key == XCTRL ('n'))
 	    menubar_move (menubar, 1);
-	
+
 	if (key == KEY_UP || key == XCTRL ('p'))
 	    menubar_move (menubar, -1);
     }
@@ -347,7 +347,7 @@ static int menubar_callback (Dlg_head *h, WMenu *menubar, int msg, int par)
     case WIDGET_CURSOR:
 	/* Put the cursor in a suitable place */
 	return 0;
-	
+
     case WIDGET_UNFOCUS:
 	if (menubar->active)
 	    return 0;
@@ -372,7 +372,7 @@ menubar_event    (Gpm_Event *event, WMenu *menubar)
 
     if (!(event->type & (GPM_UP|GPM_DOWN|GPM_DRAG)))
 	return MOU_NORMAL;
-    
+
     if (!menubar->dropped){
 	menubar->previous_selection = dlg_item_number(menubar->widget.parent);
 	menubar->active = 1;
@@ -385,16 +385,16 @@ menubar_event    (Gpm_Event *event, WMenu *menubar)
     if (event->y == 1 || !was_active){
 	if (event->type & GPM_UP)
 	    return MOU_NORMAL;
-    
+
 	new_selection = 0;
-	while (new_selection < menubar->items 
+	while (new_selection < menubar->items
 		&& event->x > menubar->menu[new_selection]->start_x
 	)
 		new_selection++;
 
 	if (new_selection) /* Don't set the invalid value -1 */
 		--new_selection;
-	
+
 	if (!was_active){
 	    menubar->selected = new_selection;
 	    dlg_select_widget (menubar->widget.parent, menubar);
@@ -402,7 +402,7 @@ menubar_event    (Gpm_Event *event, WMenu *menubar)
 	    menubar_draw (menubar);
 	    return MOU_NORMAL;
 	}
-	
+
 	menubar_remove (menubar);
 
 	menubar->selected = new_selection;
@@ -414,11 +414,11 @@ menubar_event    (Gpm_Event *event, WMenu *menubar)
 
     if (!menubar->dropped)
 	return MOU_NORMAL;
-    
+
     /* Ignore the events on anything below the third line */
     if (event->y <= 2)
 	return MOU_NORMAL;
-    
+
     /* Else, the mouse operation is on the menus or it is not */
 	left_x = menubar->menu[menubar->selected]->start_x;
 	right_x = left_x + menubar->max_entry_len + 4;
@@ -435,7 +435,7 @@ menubar_event    (Gpm_Event *event, WMenu *menubar)
 
 	if (!menubar->menu [menubar->selected]->entries [pos].call_back)
 	    return MOU_NORMAL;
-	
+
 	menubar_paint_idx (menubar, menubar->subsel, MENU_ENTRY_COLOR);
 	menubar->subsel = pos;
 	menubar_paint_idx (menubar, menubar->subsel, MENU_SELECTED_COLOR);
@@ -445,7 +445,7 @@ menubar_event    (Gpm_Event *event, WMenu *menubar)
     } else
 	if (event->type & GPM_DOWN)
 	    menubar_finish (menubar);
-	 
+
     return MOU_NORMAL;
 }
 
@@ -511,7 +511,7 @@ destroy_menu (Menu menu)
 WMenu *menubar_new (int y, int x, int cols, Menu menu [], int items)
 {
     WMenu *menubar = (WMenu *) xmalloc (sizeof (WMenu), "menubar_new");
-   
+
     memset(menubar, 0, sizeof(*menubar)); /* FIXME: subsel used w/o being set */
     init_widget (&menubar->widget, y, x, 1, cols,
                  (callback_fn) menubar_callback,

@@ -1,4 +1,4 @@
-/* $Id: Completion.h,v 1.2 2001/01/13 23:54:07 narnaoud Exp $ */
+/* $Id$ */
 
 // Completion.h - declaration for completion related functions
 

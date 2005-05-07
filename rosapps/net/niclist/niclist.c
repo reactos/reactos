@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     int nAdapterCount;
     int i;
 
-	char* PacketLibraryVersion; 
+	char* PacketLibraryVersion;
 
 
     // Attemp to load the WinPCap dynamic link library

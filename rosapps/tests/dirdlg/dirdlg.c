@@ -7,7 +7,7 @@
 static char selected[MAX_PATH + 1];
 
 INT_PTR
-CALLBACK 
+CALLBACK
 DlgMainProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -16,7 +16,7 @@ DlgMainProc(
 )
 {
   char dir[MAX_PATH + 1];
-  
+
   switch(uMsg)
   {
     case WM_COMMAND:
@@ -52,7 +52,7 @@ DlgMainProc(
             {
               char file[MAX_PATH + 1];
               int len;
-              
+
               if(!DlgDirSelectEx(hwndDlg, file, MAX_PATH, IDC_DIRS))
               {
                 GetCurrentDirectory(MAX_PATH, selected);
@@ -97,7 +97,7 @@ DlgMainProc(
   return FALSE;
 }
 
-int WINAPI 
+int WINAPI
 WinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,

@@ -65,7 +65,7 @@ typedef struct format_e {
 typedef struct {
     Widget   widget;
     dir_list dir;		/* Directory contents */
-    
+
     int      list_type;		/* listing type (was view_type) */
     int      active;		/* If panel is currently selected */
     char     cwd [MC_MAXPATHLEN];/* Current Working Directory */
@@ -97,7 +97,7 @@ typedef struct {
     format_e *status_format;    /* Mini status format */
 
     int      format_modified;	/* If the format was changed this is set */
-    
+
     char     *panel_name;	/* The panel name */
     struct   stat dir_stat;	/* Stat of current dir: used by execute () */
 
@@ -107,17 +107,17 @@ typedef struct {
     int	     total_width;
     int	     ascent;
     int	     descent;
-    
+
     int      searching;
     char     search_buffer [256];
-   
+
     int      has_dir_sizes;	/* Set if directories have sizes = to du -s */
 
 #ifdef HAVE_GNOME
     /* These are standard GtkWidgets */
-	
+
     void *xwindow;		/* The toplevel window */
-	
+
     void *table;
     void *list;
     void *icons;

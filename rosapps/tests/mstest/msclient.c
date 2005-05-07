@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
    LPSTR lpszMailslotName = "\\\\.\\MAILSLOT\\mymailslot";
    LPSTR lpszTestMessage = "Mailslot test message!";
    DWORD cbLength, cbWritten;
-   
+
    hMailslot = CreateFile(lpszMailslotName,
 			  GENERIC_WRITE,
 			  FILE_SHARE_READ,
@@ -28,17 +28,17 @@ int main(int argc, char *argv[])
 	printf("CreateFile() failed\n");
 	return 0;
      }
-   
+
    cbLength = (ULONG)strlen(lpszTestMessage)+1;
-   
+
    WriteFile(hMailslot,
 	     lpszTestMessage,
 	     cbLength,
 	     &cbWritten,
 	     NULL);
-   
+
    CloseHandle(hMailslot);
-   
+
    return 0;
 }
 

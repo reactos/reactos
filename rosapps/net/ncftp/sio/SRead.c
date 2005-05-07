@@ -144,7 +144,7 @@ SRead(int sfd, char *const buf0, size_t size, int tlen, int retry)
 			}
 			goto done;
 		}
-		
+
 		if (!firstRead || ((retry & kNoFirstSelect) == 0)) {
 			forever {
 				errno = 0;
@@ -157,7 +157,7 @@ SRead(int sfd, char *const buf0, size_t size, int tlen, int retry)
 					/* ready */
 					break;
 				} else if (result == 0) {
-					/* timeout */		
+					/* timeout */
 					nread = size - nleft;
 					if ((nread > 0) && ((retry & (kFullBufferRequired|kFullBufferRequiredExceptLast)) == 0))
 						return (nread);

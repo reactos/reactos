@@ -1,16 +1,16 @@
 /* Slang interface to the Midnight Commander
    This emulates some features of ncurses on top of slang
-   
+
    Copyright (C) 1995, 1996 The Free Software Foundation.
 
    Author Miguel de Icaza
           Norbert Warmuth
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -86,14 +86,14 @@ static unsigned int SLang_getkey2 (void)
 {
    unsigned int imax;
    unsigned int ch;
-   
+
    if (SLang_Input_Buffer_Len)
      {
 	ch = (unsigned int) *SLang_Input_Buffer;
 	SLang_Input_Buffer_Len--;
 	imax = SLang_Input_Buffer_Len;
-   
-	memcpy ((char *) SLang_Input_Buffer, 
+
+	memcpy ((char *) SLang_Input_Buffer,
 		(char *) (SLang_Input_Buffer + 1), imax);
 	return(ch);
      }
@@ -109,16 +109,16 @@ static int SLang_input_pending2 (int tsecs)
    int n;
    unsigned char c;
    if (SLang_Input_Buffer_Len) return (int) SLang_Input_Buffer_Len;
-#if SLANG_VERSION >= 10000  
+#if SLANG_VERSION >= 10000
    n = _SLsys_input_pending (tsecs);
 #else
    n = SLsys_input_pending (tsecs);
 #endif
    if (n <= 0) return 0;
-   
+
    c = (unsigned char) SLang_getkey2 ();
    SLang_ungetkey_string (&c, 1);
-   
+
    return n;
 }
 /* }}} */
@@ -142,7 +142,7 @@ void
 enable_interrupt_key(void)
 {
     struct sigaction act;
-    
+
     act.sa_handler = slang_intr;
     sigemptyset (&act.sa_mask);
     act.sa_flags = 0;
@@ -154,7 +154,7 @@ void
 disable_interrupt_key(void)
 {
     struct sigaction act;
-    
+
     act.sa_handler = SIG_IGN;
     act.sa_flags = 0;
     sigemptyset (&act.sa_mask);
@@ -179,12 +179,12 @@ slang_init (void)
     extern int SLtt_Has_Alt_Charset;
     extern int force_ugly_line_drawing;
     struct sigaction act, oact;
-    
+
     SLtt_get_terminfo ();
     tcgetattr (fileno (stdin), &boot_mode);
     /* 255 = ignore abort char; XCTRL('g') for abort char = ^g */
-    SLang_init_tty (XCTRL('c'), 1, 0);	
-    
+    SLang_init_tty (XCTRL('c'), 1, 0);
+
     /* If SLang uses fileno(stderr) for terminal input MC will hang
        if we call SLang_getkey between calls to open_error_pipe and
        close_error_pipe, e.g. when we do a growing view of an gzipped
@@ -238,7 +238,7 @@ void
 slang_shutdown ()
 {
     char *op_cap;
-    
+
     slang_shell_mode ();
     do_exit_ca_mode ();
     SLang_reset_tty ();
@@ -255,19 +255,19 @@ slang_shutdown ()
 
 /* HP Terminals have capabilities (pfkey, pfloc, pfx) to program function keys.
    elm 2.4pl15 invoked with the -K option utilizes these softkeys and the
-   consequence is that function keys don't work in MC sometimes. 
-   Unfortunately I don't now the one and only escape sequence to turn off 
-   softkeys (elm uses three different capabilities to turn on softkeys and two 
-   capabilities to turn them off). 
-   Among other things elm uses the pair we already use in slang_keypad. That's 
+   consequence is that function keys don't work in MC sometimes.
+   Unfortunately I don't now the one and only escape sequence to turn off
+   softkeys (elm uses three different capabilities to turn on softkeys and two
+   capabilities to turn them off).
+   Among other things elm uses the pair we already use in slang_keypad. That's
    the reason why I call slang_reset_softkeys from slang_keypad. In lack of
    something better the softkeys are programmed to their defaults from the
    termcap/terminfo database.
-   The escape sequence to program the softkeys is taken from elm and it is 
-   hardcoded because neither slang nor ncurses 4.1 know how to 'printf' this 
+   The escape sequence to program the softkeys is taken from elm and it is
+   hardcoded because neither slang nor ncurses 4.1 know how to 'printf' this
    sequence. -- Norbert
- */   
-   
+ */
+
 void
 slang_reset_softkeys (void)
 {
@@ -275,7 +275,7 @@ slang_reset_softkeys (void)
     char *send;
     char *display = "                ";
     char tmp[100];
-    
+
     for ( key = 1; key < 9; key++ ) {
 	sprintf ( tmp, "k%d", key);
 	send = (char *) SLtt_tgetstr (tmp);
@@ -293,7 +293,7 @@ slang_keypad (int set)
 {
     char *keypad_string;
     extern int reset_hp_softkeys;
-    
+
     keypad_string = (char *) SLtt_tgetstr (set ? "ks" : "ke");
     if (keypad_string)
 	SLtt_write_string (keypad_string);
@@ -314,7 +314,7 @@ hline (int ch, int len)
 
     last_x = SLsmg_get_column ();
     last_y = SLsmg_get_row ();
-    
+
     if (ch == 0)
 	ch = ACS_HLINE;
 
@@ -459,7 +459,7 @@ int has_colors ()
         }
       }
     }
-    
+
     /* Setup emulated colors */
     if (SLtt_Use_Ansi_Colors){
         if (use_colors){
@@ -469,7 +469,7 @@ int has_colors ()
 	    init_pair (A_REVERSE, "black", "lightgray");
 	    init_pair (A_BOLD, "white", "black");
 	    init_pair (A_BOLD_REVERSE, "white", "lightgray");
-	} 
+	}
     } else {
 	SLtt_set_mono (A_BOLD,    NULL, SLTT_BOLD_MASK);
 	SLtt_set_mono (A_REVERSE, NULL, SLTT_REV_MASK);
@@ -485,7 +485,7 @@ attrset (int color)
 	SLsmg_set_color (color);
 	return;
     }
-    
+
     if (color & A_BOLD){
 	if (color == A_BOLD)
 	    SLsmg_set_color (A_BOLD);
@@ -527,7 +527,7 @@ struct {
     { KEY_F(17), "F7" },
     { KEY_F(18), "F8" },
     { KEY_F(19), "F9" },
-    { KEY_F(20), "FA" },	
+    { KEY_F(20), "FA" },
     { KEY_IC,    "kI" },
     { KEY_NPAGE, "kN" },
     { KEY_PPAGE, "kP" },
@@ -541,7 +541,7 @@ struct {
     { KEY_END,	 "@7" },
     { 0, 0}
 };
-	
+
 void
 do_define_key (int code, char *strcap)
 {

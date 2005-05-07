@@ -1,4 +1,4 @@
-/* $Id: RegistryKey.h,v 1.4 2001/01/13 23:54:41 narnaoud Exp $ */
+/* $Id$ */
 
 // RegistryKey.h: interface for the CRegistryKey class.
 //
@@ -7,12 +7,12 @@
 #if !defined(REGISTRYKEY_H__FEF419ED_6EB6_11D3_907D_204C4F4F5020__INCLUDED_)
 #define REGISTRYKEY_H__FEF419ED_6EB6_11D3_907D_204C4F4F5020__INCLUDED_
 
-class CRegistryKey  
+class CRegistryKey
 {
 public:
   // Constructor. Call InitXXX methods to make real construct.
   CRegistryKey();
-  
+
   // Call this key to init root key.
   //
   // Parameters:
@@ -47,7 +47,7 @@ public:
   //   S_OK - All ok.
   //   E_XXX - Error.
   HRESULT Uninit();
-  
+
   // Destructor
 	virtual ~CRegistryKey();
 
@@ -80,7 +80,7 @@ public:
   //   If the method succeeds, the return value is ERROR_SUCCESS.
   //   If the method fails, the return value is a nonzero error code defined in winerror.h.
 	LONG OpenSubkey(REGSAM samDesired, const TCHAR *pszSubkeyName, HKEY &rhKey);
-  
+
   // Call this method to open existing subkey of this key.
   //
   // Parameters:
@@ -165,7 +165,7 @@ public:
                             BYTE *pbValueDataBuffer,
                             DWORD dwValueDataBufferSize,
                             DWORD *pdwType);
-  
+
   // Call this method to get next value  name/data/type. Name/data/type is/are stored in buffer(s) specified in call to InitValueEnumeration.
   //
   // Parameters:
@@ -177,7 +177,7 @@ public:
   //   If the method fails, the return value is a nonzero error code defined in winerror.h.
   //   If no more items available, return error is ERROR_NO_MORE_ITEMS.
 	LONG GetNextValue(DWORD *pdwNameActualSize = NULL, DWORD *pdwDataActualSize = NULL);
-  
+
   // Call this method to get count of values.
   //
   // Parameters:
@@ -195,7 +195,7 @@ public:
   //   pbValueDataBuffer - optional pointer to buffer receiving default value data. NULL if not requred.
   //   dwValueDataBufferSize - size of buffer pointer by pbValueDataBuffer. Ignored if pbValueDataBuffer is NULL.
   //   pdwValueDataActualSize - optional pointer to variable receiving size, in bytes, of data stored into buffer. If pbValueDataBuffer is NULL, returned value is size of default value data, in bytes.
-  // 
+  //
   // Return value:
   //   If the method succeeds, the return value is ERROR_SUCCESS.
   //   If the method fails, the return value is a nonzero error code defined in winerror.h.
@@ -209,7 +209,7 @@ public:
   // Return value:
   //   text representation od value type.
 	static const TCHAR * GetValueTypeName(DWORD dwType);
-  
+
 	DWORD GetValue(TCHAR *pchValueName, DWORD *pdwType, LPBYTE lpValueDataBuffer, DWORD *pdwValueDataSize);
 
   // Call this method to create subkey of this key.
@@ -225,13 +225,13 @@ public:
   //   If the method succeeds, the return value is ERROR_SUCCESS.
   //   If the method fails, the return value is a nonzero error code defined in winerror.h.
 	LONG CreateSubkey(REGSAM samDesired, const TCHAR *pszKeyName, HKEY &rhKey, BOOL *pblnOpened = NULL, BOOL blnVolatile = FALSE);
-  
+
 	LONG GetLastWriteTime(SYSTEMTIME& st);
 	const TCHAR * GetLastWriteTime();
-  
+
 	LONG DeleteValue(const TCHAR *pszValueName);
 	LONG DeleteSubkey(const TCHAR *pszPatternSubkeyName);
-  
+
 	LONG SetValue(LPCTSTR pszValueName, DWORD dwType, BYTE *lpData, DWORD dwDataSize);
 	TCHAR * GetSubKeyNameByIndex(DWORD dwIndex);
 	LONG GetSecurityDescriptor(SECURITY_INFORMATION SecurityInformation, PSECURITY_DESCRIPTOR pSecurityDescriptor, LPDWORD lpcbSecurityDescriptor);
@@ -242,14 +242,14 @@ private:
 	DWORD m_dwCurrentSubKeyIndex;
   TCHAR *m_pchSubkeyNameBuffer;
   DWORD m_dwSubkeyNameBufferSize;
-  
+
 	DWORD m_dwCurrentValueIndex;
   TCHAR *m_pszValueNameBuffer;
   DWORD m_dwValueNameBufferSize;
   BYTE *m_pbValueDataBuffer;
   DWORD m_dwValueDataBufferSize;
   DWORD *m_pdwType;
-  
+
 	HKEY m_hKey;
 	TCHAR *m_pszKeyName;
 	TCHAR *m_pszMachineName;

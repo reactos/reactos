@@ -1,4 +1,4 @@
-/* $Id: ShellCommandConnect.h,v 1.2 2001/01/13 23:55:36 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommandConnect.h: interface for the CShellCommandConnect class.
 //
@@ -10,7 +10,7 @@
 #include "ShellCommand.h"
 #include "RegistryTree.h"
 
-class CShellCommandConnect : public CShellCommand  
+class CShellCommandConnect : public CShellCommand
 {
 public:
 	CShellCommandConnect(CRegistryTree& rTree);

@@ -7,7 +7,7 @@
  *         You must add entries to the DfColor tables in
  *         DFCONFIG.C for new classes.
  *
- *        Class Name  Base Class   Processor       Attribute    
+ *        Class Name  Base Class   Processor       Attribute
  *       ------------  --------- ---------------  -----------
  */
 DfClassDef(  DF_NORMAL,      -1,      DfNormalProc,      0 )

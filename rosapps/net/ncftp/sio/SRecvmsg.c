@@ -93,7 +93,7 @@ SRecvmsg(int sfd, void *const msg, int fl, int tlen)
 	done = now + tlen;
 	tleft = (int) (done - now);
 	forever {
-				
+
 		for (;;) {
 			errno = 0;
 			FD_ZERO(&ss);

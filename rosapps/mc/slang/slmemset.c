@@ -1,6 +1,6 @@
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -10,7 +10,7 @@
    use system rouines.  For msdos, I use inline assembly. */
 
 /* The current versions only work in the forward direction only!! */
-      
+
 #include "config.h"
 
 #include <stdio.h>
@@ -34,10 +34,10 @@ void SLmemset(char *p, char space, int n)
 
    pmax = p + (n - 4);
    n = n % 4;
-   while (p <= pmax) 
+   while (p <= pmax)
      {
 	*p++ = space; *p++ = space; *p++ = space; *p++= space;
      }
-   while (n--) *p++ = space;     
+   while (n--) *p++ = space;
 #endif
 }

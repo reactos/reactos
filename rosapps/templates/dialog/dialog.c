@@ -32,9 +32,9 @@
 #define _USE_MSG_PUMP_
 
 typedef struct tagDialogData {
-    HWND hWnd; 
+    HWND hWnd;
     LONG lData;
-} DialogData; 
+} DialogData;
 
 HINSTANCE hInst;
 HWND      hTabWnd;
@@ -46,7 +46,7 @@ LRESULT CreateMemoryDialog(HINSTANCE, HWND hwndOwner, LPSTR lpszMessage);
 LRESULT CALLBACK PageWndProc1(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PageWndProc2(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK PageWndProc3(HWND, UINT, WPARAM, LPARAM);
- 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static BOOL OnCreate(HWND hWnd, LONG lData)

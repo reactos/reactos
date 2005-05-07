@@ -5,7 +5,7 @@ int main()
 {
   int i;
 
-  printf("TickCountLow: %lx\n", 
+  printf("TickCountLow: %lx\n",
 	 SharedUserData->TickCountLow);
   printf("Drives: ");
   for (i = 0; i < 26; i++)

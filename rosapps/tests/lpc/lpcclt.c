@@ -1,4 +1,4 @@
-/* $Id: lpcclt.c,v 1.1 2004/10/21 04:58:59 sedwards Exp $
+/* $Id$
  *
  * DESCRIPTION: Simple LPC Client
  * PROGRAMMER:  David Welch
@@ -38,9 +38,9 @@ int main(int argc, char* argv[])
    ULONG ConnectInfo;
    ULONG ConnectInfoLength = 0;
    SECURITY_QUALITY_OF_SERVICE Sqos;
-   
+
    printf("%s: Lpc test client\n", MyName);
-   
+
    printf("%s: Connecting to port \"%s\"...\n", MyName, TEST_PORT_NAME);
    ConnectInfoLength = 0;
    ZeroMemory (& Sqos, sizeof Sqos);
@@ -63,24 +63,24 @@ int main(int argc, char* argv[])
    ZeroMemory(& Request, sizeof Request);
    strcpy(Request.Data, GetCommandLineA());
    Request.Header.DataSize = strlen(Request.Data);
-   Request.Header.MessageSize = sizeof(LPC_MESSAGE) + 
+   Request.Header.MessageSize = sizeof(LPC_MESSAGE) +
      Request.Header.DataSize;
-   
-   printf("%s: Sending to port 0x%x message \"%s\"...\n", 
+
+   printf("%s: Sending to port 0x%x message \"%s\"...\n",
           MyName,
           PortHandle,
 	  (char *) Request.Data);
-   Status = NtRequestPort(PortHandle, 
+   Status = NtRequestPort(PortHandle,
 			  &Request.Header);
    if (!NT_SUCCESS(Status))
      {
-	printf("%s: NtRequestPort(0x%x) failed with status = 0x%8X.\n", 
+	printf("%s: NtRequestPort(0x%x) failed with status = 0x%8X.\n",
                MyName,
                PortHandle,
 	       Status);
 	return EXIT_FAILURE;
      }
-   
+
    printf("%s: Sending datagram to port 0x%x succeeded.\n", MyName, PortHandle);
 
    Sleep(2000);

@@ -33,7 +33,7 @@ extern "C" {
 
 
 LRESULT CALLBACK PanelWndProc(HWND, UINT, WPARAM, LPARAM);
-    
+
 
 #ifdef __cplusplus
 };

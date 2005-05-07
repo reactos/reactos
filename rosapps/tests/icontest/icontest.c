@@ -27,7 +27,7 @@ HINSTANCE hInst;
 
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
     LPSTR lpszCmdLine,
@@ -38,7 +38,7 @@ WinMain(HINSTANCE hInstance,
   HWND hWnd;
 
   hInst = hInstance;
-  
+
   #ifdef _GetCursorInfo
   GetCursorInfo = (GETCURSORINFO)GetProcAddress(GetModuleHandleW(L"user32.dll"), "GetCursorInfo");
   #endif
@@ -75,13 +75,13 @@ WinMain(HINSTANCE hInstance,
     DbgPrint("CreateWindow failed (last error 0x%X)\n", GetLastError());
     return(1);
   }
-    
+
   tf = CreateFontA(14,0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
                    ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                    DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
 
   ShowWindow(hWnd, nCmdShow);
-  
+
   SetTimer(hWnd, 1, 1000, NULL);
 
   while(GetMessage(&msg, NULL, 0, 0))
@@ -105,19 +105,19 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     BITMAP bmp;
     RECT rc;
     CHAR str[20];
-        
+
     switch(msg)
     {
     case WM_PAINT:
       hDC = BeginPaint(hWnd, &ps);
       SelectObject(hDC, tf);
       SetBkMode(hDC, TRANSPARENT);
-      
+
       TextOut(hDC, 160, 10, file, strlen(file));
       TextOut(hDC, 15, 85, titleDrwIco, strlen(titleDrwIco));
       TextOut(hDC, 160, 85, titleMask, strlen(titleMask));
       TextOut(hDC, 300, 85, titleXor, strlen(titleXor));
-      
+
       hIcon = LoadImage(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE|LR_LOADFROMFILE);
       DrawIcon(hDC,50,50,hIcon);
 
@@ -132,18 +132,18 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
       DeleteObject(iconinfo.hbmMask);
       DeleteObject(iconinfo.hbmColor);
-      
+
       TextOut(hDC, 145, 150, res, strlen(res));
       TextOut(hDC, 15, 225, titleDrwIco, strlen(titleDrwIco));
       TextOut(hDC, 160, 225, titleMask, strlen(titleMask));
       TextOut(hDC, 300, 225, titleXor, strlen(titleXor));
-          
-      hIcon = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);          
+
+      hIcon = LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
       DrawIcon(hDC,50,190,hIcon);
-          
+
       GetIconInfo(hIcon, &iconinfo);
-      DestroyIcon(hIcon);          
-          
+      DestroyIcon(hIcon);
+
       SelectObject(hMemDC, iconinfo.hbmMask);
       BitBlt(hDC, 200, 190, 32, 32, hMemDC, 0, 0, SRCCOPY);
       SelectObject(hMemDC, iconinfo.hbmColor);
@@ -151,7 +151,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
       DeleteObject(iconinfo.hbmMask);
       DeleteObject(iconinfo.hbmColor);
-      
+
       cursorinfo.cbSize = sizeof(CURSORINFO);
       if(GetCursorInfo(&cursorinfo))
       {
@@ -161,10 +161,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           DrawIcon(hDC, 50, 330, cursorinfo.hCursor);
           GetIconInfo(cursorinfo.hCursor, &iconinfo);
           TextOut(hDC, 15, 365, titleDrwIco, strlen(titleDrwIco));
-          
+
           sprintf(str, "Hotspot: %ld; %ld", iconinfo.xHotspot, iconinfo.yHotspot);
           TextOut(hDC, 15, 380, str, strlen(str));
-          
+
           if(iconinfo.hbmMask)
           {
             GetObjectW(iconinfo.hbmMask, sizeof(BITMAP), &bmp);
@@ -172,11 +172,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             BitBlt(hDC, 200, 330, bmp.bmWidth, bmp.bmHeight, hMemDC, 0, 0, SRCCOPY);
             DeleteObject(iconinfo.hbmMask);
             TextOut(hDC, 160, 365 - 32 + bmp.bmHeight, cursormask, strlen(cursormask));
-            
+
             sprintf(str, "%dBPP", bmp.bmBitsPixel);
             TextOut(hDC, 160, 380 - 32 + bmp.bmHeight, str, strlen(str));
           }
-          
+
           if(iconinfo.hbmColor)
           {
             GetObjectW(iconinfo.hbmColor, sizeof(BITMAP), &bmp);
@@ -184,19 +184,19 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             BitBlt(hDC, 350, 330, bmp.bmWidth, bmp.bmHeight, hMemDC, 0, 0, SRCCOPY);
             DeleteObject(iconinfo.hbmColor);
             TextOut(hDC, 300, 365 - 32 + bmp.bmHeight, cursorcolor, strlen(cursorcolor));
-            
+
             sprintf(str, "%dBPP", bmp.bmBitsPixel);
             TextOut(hDC, 300, 380 - 32 + bmp.bmHeight, str, strlen(str));
           }
         }
       }
-      
+
       SelectObject(hMemDC, hOld);
-      
-      DeleteObject(hMemDC);          
+
+      DeleteObject(hMemDC);
       EndPaint(hWnd, &ps);
     break;
-    
+
     case WM_TIMER:
       rc.left = 0;
       rc.top = 330;

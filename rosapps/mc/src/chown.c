@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -85,7 +85,7 @@ static struct {
     { B_SETALL, NORMAL_BUTTON,  0, 3,  N_("Set &all") },
 };
 
-#define LABELS 5 
+#define LABELS 5
 static struct {
     int y, x;
     WLabel *l;
@@ -119,7 +119,7 @@ static void chown_refresh (void)
     addstr (N_(" Size "));
     dlg_move (ch_dlg, TY + 9, TX + 1);
     addstr (N_(" Permission "));
-    
+
     attrset (COLOR_HOT_NORMAL);
     dlg_move (ch_dlg, 1, 28);
     addstr (N_(" Chown command "));
@@ -165,7 +165,7 @@ static void init_chown (void)
 
     do_refresh ();
     end_chown = need_update = current_file = 0;
-    single_set = (cpanel->marked < 2) ? 3 : 0;    
+    single_set = (cpanel->marked < 2) ? 3 : 0;
 
     ch_dlg = create_dlg (0, 0, 18, 74, dialog_colors, chown_callback,
 			 "[Chown]", "chown", DLG_CENTER);
@@ -196,13 +196,13 @@ static void init_chown (void)
 	listbox_add_item (l_user, 0, 0, l_pass->pw_name, NULL);
     }
     endpwent ();
-    
+
     setgrent ();		/* get and put group names in the listbox */
     while ((l_grp = getgrent ())) {
 	listbox_add_item (l_group, 0, 0, l_grp->gr_name, NULL);
     }
     endgrent ();
-    
+
     tk_new_frame (ch_dlg, "f.");
     add_widget (ch_dlg, l_group);
     tk_new_frame (ch_dlg, "g.");
@@ -229,13 +229,13 @@ static inline void do_chown (uid_t u, gid_t g)
 static void apply_chowns (uid_t u, gid_t g)
 {
     char *fname;
-  
+
     need_update = end_chown = 1;
     do_chown (u,g);
-  
+
     do {
 	fname = next_file ();
-    
+
 	do_chown (u,g);
     } while (cpanel->marked);
 }
@@ -271,17 +271,17 @@ void chown_cmd (void)
 	    fname = next_file ();	        /* next marked file */
 	else
 	    fname = selection (cpanel)->fname;	        /* single file */
-	
+
 	if (!stat_file (fname, &sf_stat)){	/* get status of file */
 	    destroy_dlg (ch_dlg);
 	    break;
 	}
-	
+
 	/* select in listboxes */
 	fe = listbox_search_text (l_user, get_owner(sf_stat.st_uid));
 	if (fe)
 	    listbox_select_entry (l_user, fe);
-    
+
 	fe = listbox_search_text (l_group, get_group(sf_stat.st_gid));
 	if (fe)
 	    listbox_select_entry (l_group, fe);
@@ -294,12 +294,12 @@ void chown_cmd (void)
 	chown_label (4, string_perm (sf_stat.st_mode));
 
 	run_dlg (ch_dlg);
-    
+
 	switch (ch_dlg->ret_value) {
 	case B_CANCEL:
 	    end_chown = 1;
 	    break;
-	    
+
 	case B_SETUSR:
 	{
 	    struct passwd *user;
@@ -310,7 +310,7 @@ void chown_cmd (void)
 		apply_chowns (new_user, new_group);
 	    }
 	    break;
-	}   
+	}
 	case B_SETGRP:
 	{
 	    struct group *grp;
@@ -327,7 +327,7 @@ void chown_cmd (void)
 	{
 	    struct group *grp;
 	    struct passwd *user;
-	    
+
 	    grp = getgrnam (l_group->current->text);
 	    if (grp)
 		new_group = grp->gr_gid;
@@ -344,13 +344,13 @@ void chown_cmd (void)
 	    break;
 	}
 	}
-	
+
 	if (cpanel->marked && ch_dlg->ret_value != B_CANCEL){
 	    do_file_mark (cpanel, current_file, 0);
 	    need_update = 1;
 	}
 	destroy_dlg (ch_dlg);
     } while (cpanel->marked && !end_chown);
-    
+
     chown_done ();
 }

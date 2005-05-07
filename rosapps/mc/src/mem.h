@@ -12,7 +12,7 @@
 #define index strchr
 #   endif
 
-#   ifndef rindex 
+#   ifndef rindex
 #       define rindex strrchr
 #   endif
 

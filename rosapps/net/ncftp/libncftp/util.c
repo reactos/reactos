@@ -51,13 +51,13 @@ FTPGetLocalCWD(char *buf, size_t size)
 		cwdBufSize *= 2;
 		cwdBuf = (char *) Realloc(cwdBuf, cwdBufSize);
 	}
-	
+
 	return (Strncpy(buf, cwdBuf, size));
 #else
 #ifdef HAVE_GETWD
 	static char *cwdBuf = NULL;
 	char *dp;
-	
+
 	/* Due to the way getwd is usually implemented, it's
 	 * important to have a buffer large enough to hold the
 	 * whole thing.  getwd usually starts at the end of the
@@ -111,7 +111,7 @@ char *
 FGets(char *str, size_t size, FILE *fp)
 {
 	char *cp, *nlptr;
-	
+
 	cp = fgets(str, ((int) size) - 1, fp);
 	if (cp != NULL) {
 		cp[((int) size) - 1] = '\0';	/* ensure terminator */
@@ -166,7 +166,7 @@ GetPwByName(void)
 {
 	char *cp;
 	struct passwd *pw;
-	
+
 	cp = getlogin();
 	if (cp == NULL) {
 		cp = (char *) getenv("LOGNAME");
@@ -454,14 +454,14 @@ time_t GetUTCOffset(int mon, int mday)
 	ZERO(local_tm);
 	ZERO(utc_tm);
 	utcOffset = 0;
-	
+
 	local_tm.tm_year = 94;	/* Doesn't really matter. */
 	local_tm.tm_mon = mon;
 	local_tm.tm_mday = mday;
 	local_tm.tm_hour = 12;
 	local_tm.tm_isdst = -1;
 	local_t = mktime(&local_tm);
-	
+
 	if (local_t != (time_t) -1) {
 		utc_tmptr = gmtime(&local_t);
 		utc_tm.tm_year = utc_tmptr->tm_year;
@@ -515,7 +515,7 @@ time_t UnMDTMDate(char *dstr)
 		&ut.tm_hour,
 		&ut.tm_min,
 		&ut.tm_sec) == 6)
-	{	
+	{
 		--ut.tm_mon;
 		ut.tm_year -= 1900;
 		mt = mktime(&ut);
@@ -1008,7 +1008,7 @@ FilenameExtensionIndicatesASCII(const char *const pathName, const char *const ex
 	 *
 	 * 	|ext1|ext2|ext3|...|extN|
 	 *
-	 * I.e, each filename extension is delimited with 
+	 * I.e, each filename extension is delimited with
 	 * a pipe, and we always begin and end the string
 	 * with a pipe.
 	 */

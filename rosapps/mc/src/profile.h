@@ -7,7 +7,7 @@ short GetPrivateProfileString (char * AppName, char * KeyName,
 			       char * Default, char * ReturnedString,
 			       short Size, char * FileName);
 
-int GetProfileString (char * AppName, char * KeyName, char * Default, 
+int GetProfileString (char * AppName, char * KeyName, char * Default,
 		      char * ReturnedString, int Size);
 
 int GetPrivateProfileInt (char * AppName, char * KeyName, int Default,

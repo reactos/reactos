@@ -122,9 +122,9 @@ void check(CONTEXT * actualContext)
   (actualContext->EFlags & ZWC_EFLAGS_BITS) ==
   (continueContext.EFlags & ZWC_EFLAGS_BITS)
  );
- 
+
  assert(actualContext->Esp == continueContext.Esp);
- 
+
  assert
  (
   (actualContext->SegSs & ZWC_SEGMENT_BITS) ==

@@ -449,7 +449,7 @@ void DfBuildFileName(char *path, char *ext)
 	cp = strrchr(path, '\\');
 	if (cp == NULL)
 		cp = path;
-	else 
+	else
 		cp++;
 	strcpy(cp, DFlatApplication);
 	strcat(cp, ext);

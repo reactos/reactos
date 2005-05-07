@@ -17,11 +17,11 @@
 #    include "../src/tty.h"
 #    include <sys/stat.h>
 #    include <errno.h>
-     
+
 #    ifdef HAVE_FCNTL_H
 #        include <fcntl.h>
 #    endif
-     
+
 #    include <stdlib.h>
 #    include <malloc.h>
 
@@ -31,18 +31,18 @@
 #    include <stdio.h>
 #    include <stdarg.h>
 #    include <sys/types.h>
-     
+
 #    	 ifdef HAVE_UNISTD_H
 #    	     include <unistd.h>
 #    	 endif
-     
+
 #    include <my_string.h>
 #    include <sys/stat.h>
-     
+
 #    ifdef HAVE_FCNTL_H
 #    	 include <fcntl.h>
 #    endif
-     
+
 #    include <stdlib.h>
 #    include <stdarg.h>
 
@@ -56,7 +56,7 @@
 #    	     include <time.h>
 #    	 endif
 #    endif
- 
+
 #    include "regex.h"
 
 #endif
@@ -91,7 +91,7 @@
 #    include "../src/menu.h"
 #    include "../src/regex.h"
 #    define WANT_WIDGETS
-     
+
 #    define WIDGET_COMMAND (WIDGET_USER + 10)
 #    define N_menus 5
 
@@ -282,9 +282,9 @@ struct editor_widget {
 				   deleted at all since last load or save */
 #ifdef MIDNIGHT
     int delete_file;			/* has the file been created in edit_load_file? Delete
-			           it at end of editing when it hasn't been modified 
+			           it at end of editing when it hasn't been modified
 				   or saved */
-#endif				   
+#endif
     unsigned char highlight;
     long prev_col;		/*recent column position of the curser - used when moving
 				   up or down past lines that are shorter than the current line */
@@ -463,7 +463,7 @@ void edit_get_syntax_color (WEdit * edit, long byte_index, int *fg, int *bg);
 
 #    define FONT_PIX_PER_LINE 1
 #    define FONT_MEAN_WIDTH 1
-     
+
 #    define get_sys_error(s) (s)
 #    define open mc_open
 #    define close(f) mc_close(f)
@@ -476,7 +476,7 @@ void edit_get_syntax_color (WEdit * edit, long byte_index, int *fg, int *bg);
 #    define edit_get_load_file(d,f,h) input_dialog (h, _(" Enter file name: "), f)
 #    define edit_get_save_file(d,f,h) input_dialog (h, _(" Enter file name: "), f)
 #    define CMalloc(x) malloc(x)
-     
+
 #    define set_error_msg(s) edit_init_error_msg = strdup(s)
 
 #    ifdef _EDIT_C
@@ -502,7 +502,7 @@ extern char *edit_init_error_msg;
 
 #    define MY_O_TEXT 0
 #    define WIN_MESSAGES edit->widget->mainid, 20, 20
-     
+
 #    define edit_get_load_file(d,f,h) CGetLoadFile(WIN_MESSAGES,d,f,h)
 #    define edit_get_save_file(d,f,h) CGetSaveFile(WIN_MESSAGES,d,f,h)
 #    define edit_error_dialog(h,t) CErrorDialog(WIN_MESSAGES,h,"%s",t)

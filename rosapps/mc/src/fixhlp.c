@@ -1,12 +1,12 @@
 /* HLP converter
    Copyright (C) 1994, 1995 Janne Kukonlehto
    Copyright (C) 1995  Jakub Jelinek
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -65,7 +65,7 @@ int string_len (char *buffer)
     for (i = 0; i < strlen (buffer); i ++)
     {
 	c = buffer [i];
-	if (c == CHAR_LINK_POINTER) 
+	if (c == CHAR_LINK_POINTER)
 	    link_flag = 1;	/* Link target name starts */
 	else if (c == CHAR_LINK_END)
 	    link_flag = 0;	/* Link target name ends */
@@ -107,7 +107,7 @@ void print_string (char *buffer)
     p = strchr (buffer, CHAR_LINK_POINTER);
     if (p) {
         char *q;
-        
+
         *p = 0;
         print_string (buffer);
         q = strchr (p + 1, CHAR_LINK_END);
@@ -124,7 +124,7 @@ void print_string (char *buffer)
     buffer = strtok (buffer, " \t\n");
     /* Repeat for each word */
     while (buffer){
-	/* Skip empty strings */  
+	/* Skip empty strings */
 	if (strlen (buffer) > 0){
 	    len = string_len (buffer);
 	    /* Change the line if about to break the right margin */
@@ -165,7 +165,7 @@ int main (int argc, char **argv)
     int len;			/* Length of input line */
     char buffer [BUFFER_SIZE];	/* Input line */
     int i, j;
-    char *p; 
+    char *p;
     int ignore_newline = 0;
 
     /* Validity check for arguments */
@@ -173,7 +173,7 @@ int main (int argc, char **argv)
 	fprintf (stderr, _("Usage: fixhlp <width> <tocname>\n"));
 	return 3;
     }
-    
+
     if ((toc_file = fopen (argv[2], "w")) == NULL) {
     	fprintf (stderr, _("fixhlp: Cannot open toc for writing"));
     	return 4;
@@ -209,7 +209,7 @@ int main (int argc, char **argv)
 	    } else {
 	        char *p, *q;
 	        int i;
-	        
+
 	        for (p = buffer, q = strchr (p, CHAR_RESERVED); q != NULL;
 	            p = q + 1, q = strchr (p, CHAR_RESERVED)) {
 	            *q = 0;

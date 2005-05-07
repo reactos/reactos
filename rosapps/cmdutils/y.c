@@ -80,7 +80,7 @@ int main (int argc, char **argv)
 	for (i = 1; i < argc; i++)
 	{
 		hFind=FindFirstFile(argv[i],&FindData);
-		
+
 		if (hFind==INVALID_HANDLE_VALUE)
 		{
 			ConErrPrintf("File not found - %s\n",argv[i]);
@@ -107,7 +107,7 @@ int main (int argc, char **argv)
 
 				if (dwRead>0 && bRet)
 					WriteFile(hConsoleOut,buff,dwRead,&dwWritten,NULL);
-			
+
 			} while(dwRead>0 && bRet);
 
 			CloseHandle(hFile);

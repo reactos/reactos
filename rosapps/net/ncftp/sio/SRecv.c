@@ -133,7 +133,7 @@ SRecv(int sfd, char *const buf0, size_t size, int fl, int tlen, int retry)
 				/* ready */
 				break;
 			} else if (result == 0) {
-				/* timeout */		
+				/* timeout */
 				nread = size - nleft;
 				if ((nread > 0) && (retry == kFullBufferNotRequired))
 					return (nread);

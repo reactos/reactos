@@ -398,7 +398,7 @@ static void FlipSelection(DFWINDOW wnd, int sel)
 }
 
 static int ExtendSelections(DFWINDOW wnd, int sel, int shift)
-{    
+{
     if (shift & (DF_LEFTSHIFT | DF_RIGHTSHIFT) &&
                         wnd->AnchorPoint != -1)    {
         int i = sel;

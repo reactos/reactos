@@ -1,13 +1,13 @@
 /* trace_nt.c - Debugging routines
 		  for Midnight Commander, under Win32
-   
+
    Written 951215 by Juan Grigera <grigera@isis.unlp.edu.ar>
- 
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include <config.h>
 #ifdef HAVE_TRACE
@@ -28,7 +28,7 @@
 #include "trace_nt.h"
 
 /* Global variables */
-int __win32_tracing_enabled = 1;  
+int __win32_tracing_enabled = 1;
 
 static int _win32_tracing_started = 0;
 static FILE *__win32_trace_f = NULL;
@@ -45,7 +45,7 @@ static char *visbuf(const char *buf);
 
 /*
     void _win32InitTrace()
-	This func will open file TRACE_FILE for output and add _win32EndTrace to onexit 
+	This func will open file TRACE_FILE for output and add _win32EndTrace to onexit
 	list of funcs.
  */
 static void _win32InitTrace()
@@ -71,7 +71,7 @@ static void _win32EndTrace()
 		_win32_tracing_started = 0;
 		if (__win32_trace_f)
 			fclose (__win32_trace_f);
-	}	
+	}
 
 }
 
@@ -102,12 +102,12 @@ void _win32Trace (const char *fmt, ...)
 	#endif
 #endif
 
-	if(__win32_trace_f) 
+	if(__win32_trace_f)
 		fprintf (__win32_trace_f, "%s\n", vp);
 }
 
 /*
-	void SetTrace (int trace) 
+	void SetTrace (int trace)
 	Control debug output. Turn it of or on.
 		trace: 0 = off, 1 = on.
  */

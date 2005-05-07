@@ -3,10 +3,10 @@
    ctm.c - main program file
 
    Written by: Aleksey Bragin (aleksey@studiocerebral.com)
-   
+
    Most of the code dealing with getting system parameters is taken from
    ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)
-   
+
    Localization features added by Hervé Poussineau (hpoussineau@fr.st)
 
    History:
@@ -15,12 +15,12 @@
    	20 March 2003 - v0.03, works good under ReactOS, and allows process
 			killing
 	18 March 2003 - Initial version 0.01, doesn't work under RectOS
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -61,7 +61,7 @@ DWORD columnRightPositions[5];
 TCHAR lpSeparator[80];
 TCHAR lpHeader[80];
 TCHAR lpMemUnit[3];
-TCHAR lpIdleProcess[80];;
+TCHAR lpIdleProcess[80];
 TCHAR lpTitle[80];
 TCHAR lpHeader[80];
 TCHAR lpMenu[80];
@@ -159,7 +159,7 @@ void DisplayScreen()
 		// Footer
 		pos.X = 2; pos.Y = ProcPerScreen+6;
 		WriteConsoleOutputCharacter(hStdout, lpSeparator, _tcslen(lpSeparator), pos, &numChars);
-		
+
 		// Menu
 		pos.X = 2; pos.Y = ProcPerScreen+7;
 		WriteConsoleOutputCharacter(hStdout, lpEmpty, _tcslen(lpEmpty), pos, &numChars);
@@ -181,7 +181,7 @@ void DisplayScreen()
 		TCHAR lpMemUsg[12];
 		TCHAR lpPageFaults[15];
 		WORD wColor;
-		
+
 		for (i = 0; i < 80; i++)
 			lpStr[i] = _T(' ');
 
@@ -189,8 +189,8 @@ void DisplayScreen()
 		if (idx < lines && scrolled + idx < ProcessCount)
 		{
 			// image name
-#ifdef _UNICODE		
-		   len = wcslen(pPerfData[scrolled+idx].ImageName);  
+#ifdef _UNICODE
+		   len = wcslen(pPerfData[scrolled+idx].ImageName);
 #else
 		   WideCharToMultiByte(CP_ACP, 0, pPerfData[scrolled+idx].ImageName, -1,
 			               imgName, MAX_PATH, NULL, NULL);
@@ -237,25 +237,25 @@ void DisplayScreen()
 		pos.X = 3; pos.Y = 6+idx;
 		if (selection == idx)
 		{
-			wColor = BACKGROUND_GREEN | 
-				FOREGROUND_RED | 
-				FOREGROUND_GREEN | 
+			wColor = BACKGROUND_GREEN |
+				FOREGROUND_RED |
+				FOREGROUND_GREEN |
 				FOREGROUND_BLUE;
 		}
 		else
 		{
 			wColor = BACKGROUND_BLUE |
-					FOREGROUND_RED | 
-					FOREGROUND_GREEN | 
+					FOREGROUND_RED |
+					FOREGROUND_GREEN |
 					FOREGROUND_BLUE;
 		}
 
-		FillConsoleOutputAttribute( 
-			hStdout,          // screen buffer handle 
-			wColor,           // color to fill with 
+		FillConsoleOutputAttribute(
+			hStdout,          // screen buffer handle
+			wColor,           // color to fill with
 			columnRightPositions[0] - 1,	// number of cells to fill
-			pos,            // first cell to write to 
-			&numChars);       // actual number written 
+			pos,            // first cell to write to
+			&numChars);       // actual number written
 	}
 
 	return;
@@ -292,7 +292,7 @@ int ProcessKeys(int numEvents)
 			HANDLE hProcess;
 			pId = pPerfData[selection+scrolled].ProcessId;
 			hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pId);
-			
+
 			if (hProcess)
 			{
 				if (!TerminateProcess(hProcess, 0))
@@ -318,7 +318,7 @@ int ProcessKeys(int numEvents)
 				Sleep(1000);
 			}
 		}
-		
+
 		first = 0;
 	}
 	else if (key == VK_UP)
@@ -335,7 +335,7 @@ int ProcessKeys(int numEvents)
 		else if ((selection == MAX_PROC-1) && (selection+scrolled < ProcessCount-1))
 			scrolled++;
 	}
-	
+
 	return FALSE;
 }
 
@@ -371,7 +371,7 @@ void PerfDataRefresh()
 	if (status != NO_ERROR)
 		return;
 #endif
-	// Get processor information	
+	// Get processor information
 	SysProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)malloc(sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors);
 	status = NtQuerySystemInformation(SystemProcessorPerformanceInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * SystemBasicInfo.NumberProcessors, &ulSize);
 
@@ -402,9 +402,9 @@ void PerfDataRefresh()
 		// CurrentCpuIdle = IdleTime / SystemTime
 		dbIdleTime = dbIdleTime / dbSystemTime;
 		dbKernelTime = dbKernelTime / dbSystemTime;
-		
+
 		// CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors
-		dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5; 
+		dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5;
 		dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberProcessors;// + 0.5;
 	}
 
@@ -563,7 +563,7 @@ int main(int *argc, char **argv)
 {
 	int i;
 	TCHAR lpStr[80];
-	
+
 	for (i = 0; i < 80; i++)
 		lpEmpty[i] = lpHeader[i] = _T(' ');
 	lpEmpty[79] = _T('\0');
@@ -595,7 +595,7 @@ int main(int *argc, char **argv)
 		columnRightPositions[4] = columnRightPositions[3] + _tcslen(lpStr) + 3;
 		_tcsncpy(&lpHeader[columnRightPositions[3] + 2], lpStr, _tcslen(lpStr));
 	}
-	
+
 	for (i = 0; i < columnRightPositions[4]; i++)
 		lpSeparator[i] = _T('-');
 	lpHeader[0] = _T('|');
@@ -608,7 +608,7 @@ int main(int *argc, char **argv)
 	lpSeparator[columnRightPositions[4] + 1] = _T('\0');
 	lpHeader[columnRightPositions[4] + 1] = _T('\0');
 
-	
+
 	if (!LoadString(hInst, IDS_APP_TITLE, lpTitle, 80))
 		lpTitle[0] = _T('\0');
 	if (!LoadString(hInst, IDS_COLUMN_MEM_UNIT, lpMemUnit, 3))
@@ -617,7 +617,7 @@ int main(int *argc, char **argv)
 		lpMenu[0] = _T('\0');
 	if (!LoadString(hInst, IDS_IDLE_PROCESS, lpIdleProcess, 80))
 		lpIdleProcess[0] = _T('\0');
-	
+
 	if (LoadString(hInst, IDS_MENU_QUIT, lpStr, 2))
 		KEY_QUIT = lpStr[0];
 	if (LoadString(hInst, IDS_MENU_KILL_PROCESS, lpStr, 2))

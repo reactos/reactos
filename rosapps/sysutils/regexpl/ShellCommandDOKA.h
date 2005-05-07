@@ -1,4 +1,4 @@
-/* $Id: ShellCommandDOKA.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommandDOKA.h: interface for the CShellCommandDOKA class.
 //
@@ -10,7 +10,7 @@
 #include "ShellCommand.h"
 #include "RegistryTree.h"
 
-class CShellCommandDOKA : public CShellCommand  
+class CShellCommandDOKA : public CShellCommand
 {
 public:
 	CShellCommandDOKA(CRegistryTree& rTree);

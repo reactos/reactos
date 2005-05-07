@@ -22,7 +22,7 @@ int run_listbox (Listbox *l);
 
 /* Quick Widgets */
 enum {
-    quick_end, quick_checkbox, 
+    quick_end, quick_checkbox,
     quick_button, quick_input,
     quick_label, quick_radio
 } /* quick_t */;
@@ -48,7 +48,7 @@ typedef struct {
     char *tkname;		/* Name of the widget used for Tk only */
     void *the_widget;		/* For the quick quick dialog manager */
 } QuickWidget;
-    
+
 typedef struct {
     int  xlen, ylen;
     int  xpos, ypos; /* if -1, then center the dialog */

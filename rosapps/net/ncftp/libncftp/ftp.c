@@ -54,7 +54,7 @@ GetHostEntry(char *host, struct in_addr *ip_address)
 {
 	struct in_addr ip;
 	struct hostent *hp;
-	
+
 	/* See if the host was given in the dotted IP format, like "36.44.0.2."
 	 * If it was, inet_addr will convert that to a 32-bit binary value;
 	 * it not, inet_addr will return (-1L).
@@ -106,7 +106,7 @@ GetOurHostName(char *host, size_t siz)
 		 */
 		return (2);		/* Success */
 	}
-	
+
 	hp = gethostbyname(host);
 	if (hp != NULL) {
 		/* Maybe the host entry has the full name. */
@@ -145,7 +145,7 @@ GetOurHostName(char *host, size_t siz)
 		}
 	}
 #	endif	/* HAVE_RES_INIT && HAVE__RES_DEFDNAME */
-	
+
 	if (domain[0] == '\0') {
 		FILE *fp;
 		char line[256];
@@ -410,7 +410,7 @@ OpenControlConnection(const FTPCIPtr cip, char *host, unsigned int port)
 		cip->servCtlAddr.sin_family = hp->h_addrtype;
 		/* We'll fill in the rest of the structure below. */
 	}
-	
+
 	/* After obtaining a socket, try to connect it to a remote
 	 * address.  If we didn't get a host entry, we will only have
 	 * one thing to try (ip_address);  if we do have one, we can try
@@ -585,7 +585,7 @@ OpenControlConnection(const FTPCIPtr cip, char *host, unsigned int port)
 #endif /* NO_SIGNALS */
 		}
 	}
-	
+
 	if (err < 0) {
 		/* Could not connect.  Close up shop and go home. */
 
@@ -728,7 +728,7 @@ OpenControlConnection(const FTPCIPtr cip, char *host, unsigned int port)
 	else
 		(void) STRNCPY(cip->actualHost, (char *) hp->h_name);
 
-	/* Read the startup message from the server. */	
+	/* Read the startup message from the server. */
 	rp = InitResponse();
 	if (rp == NULL) {
 		Error(cip, kDontPerror, "Malloc failed.\n");
@@ -748,7 +748,7 @@ OpenControlConnection(const FTPCIPtr cip, char *host, unsigned int port)
 		secondLine = NULL;
 		if (rp->msg.first->next != NULL)
 			secondLine = rp->msg.first->next->line;
-		
+
 		if (strstr(firstLine, "Version wu-") != NULL) {
 			cip->serverType = kServerTypeWuFTPd;
 			srvr = "wu-ftpd";
@@ -811,12 +811,12 @@ OpenControlConnection(const FTPCIPtr cip, char *host, unsigned int port)
 	cip->connected = 1;
 	DoneWithResponse(cip, rp);
 	return (kNoErr);
-	
+
 fatal:
 	if (sockfd > 0)
 		(void) closesocket(sockfd);
 	if (sock2fd > 0)
-		(void) closesocket(sock2fd);		
+		(void) closesocket(sock2fd);
 	CloseFile(&cip->cin);
 	CloseFile(&cip->cout);
 	cip->ctrlSocketR = kClosedFileDescriptor;
@@ -1090,7 +1090,7 @@ tryPort:
 		cip->ourDataAddr.sin_port = 0;
 		if (Rbind(dataSocket, (struct sockaddr *) &cip->ourDataAddr,
 			(int) sizeof (cip->ourDataAddr),
-			cip->servCtlAddr.sin_addr.s_addr) < 0) 
+			cip->servCtlAddr.sin_addr.s_addr) < 0)
 #else
 		if (BindToEphemeralPortNumber(dataSocket, &cip->ourDataAddr, (int) cip->ephemLo, (int) cip->ephemHi) < 0)
 #endif
@@ -1100,27 +1100,27 @@ tryPort:
 			cip->errNo = kErrBindDataSocket;
 			goto bad;
 		}
-	
+
 		/* Need to do this so we can figure out which port the system
 		 * gave to us.
 		 */
 		if ((result = GetSocketAddress(cip, dataSocket, &cip->ourDataAddr)) < 0)
 			goto bad;
-	
+
 		if (listen(dataSocket, 1) < 0) {
 			Error(cip, kDoPerror, "listen failed");
 			result = kErrListenDataSocket;
 			cip->errNo = kErrListenDataSocket;
 			goto bad;
 		}
-	
+
 		if ((result = SendPort(cip, &cip->ourDataAddr)) < 0)
 			goto bad;
-	
+
 		cip->dataPortMode = kSendPortMode;
 	} else {
 		/* Passive mode.  Let the other side decide where to send. */
-		
+
 		cip->servDataAddr = cip->servCtlAddr;
 		cip->servDataAddr.sin_family = AF_INET;
 		cip->ourDataAddr = cip->ourCtlAddr;
@@ -1129,7 +1129,7 @@ tryPort:
 		if (Passive(cip, &cip->servDataAddr, &weirdPort) < 0) {
 			Error(cip, kDontPerror, "Passive mode refused.\n");
 			cip->hasPASV = kCommandNotAvailable;
-			
+
 			/* We can try using regular PORT commands, which are required
 			 * by all FTP protocol compliant programs, if you said so.
 			 *
@@ -1148,7 +1148,7 @@ tryPort:
 		cip->ourDataAddr.sin_port = 0;
 		if (Rbind(dataSocket, (struct sockaddr *) &cip->ourDataAddr,
 			(int) sizeof (cip->ourDataAddr),
-			cip->servCtlAddr.sin_addr.s_addr) < 0) 
+			cip->servCtlAddr.sin_addr.s_addr) < 0)
 #else
 		if (BindToEphemeralPortNumber(dataSocket, &cip->ourDataAddr, (int) cip->ephemLo, (int) cip->ephemHi) < 0)
 #endif
@@ -1213,7 +1213,7 @@ tryPort:
 			cip->errNo = kErrConnectDataSocket;
 			goto bad;
 		}
-	
+
 		/* Need to do this so we can figure out which port the system
 		 * gave to us.
 		 */
@@ -1300,7 +1300,7 @@ AcceptDataConnection(const FTPCIPtr cip)
 				return (kErrAcceptDataSocket);
 			}
 		}
-		
+
 		cip->dataSocket = newSocket;
 	}
 
@@ -1335,7 +1335,7 @@ SendTelnetInterrupt(const FTPCIPtr cip)
 
 	if (cip->cout != NULL)
 		(void) fflush(cip->cout);
-	
+
 	msg[0] = (char) (unsigned char) IAC;
 	msg[1] = (char) (unsigned char) IP;
 	(void) send(cip->ctrlSocketW, msg, 2, 0);

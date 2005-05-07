@@ -7,7 +7,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
 #include <config.h>
@@ -39,8 +39,8 @@ int win32_GetPlatform ()
     return (platform ? platform : (platform = win32_GetVersionEx()) );
 }
 
-/* int win32_GetVersionEx () 
-   intended for use by win32_GetPlatform only 
+/* int win32_GetVersionEx ()
+   intended for use by win32_GetPlatform only
 */
 int win32_GetVersionEx ()
 {
@@ -177,7 +177,7 @@ int win32_GetEXEType (const char* a_szFileName)
 	    return EXE_Unknown;			/* FIXME: what is "NATIVE??" */
 	default:
             win32Trace(("Unknown type %u.\n", image_optional_header.Subsystem));
-	    return EXE_Unknown;			
+	    return EXE_Unknown;
     }
 #else
     return EXE_Unknown;

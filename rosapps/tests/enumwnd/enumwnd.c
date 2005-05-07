@@ -17,7 +17,7 @@ const TCHAR* CLASS_NAME = "EnumWndTestClass";
 
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,

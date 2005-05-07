@@ -2,17 +2,17 @@
 /* config.h.in.  Generated automatically from configure.in by autoheader.  */
 /* This is the configuration file for the Midnight Commander. It was generated
    by autoconf's configure.
-   
+
    Configure for Midnight Commander
    Copyright (C) 1994, 1995 Janne Kukonlehto
    Copyright (C) 1994, 1995 Miguel de Icaza
    Copyright (C) 1995 Jakub Jelinek
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,7 +21,7 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
-   
+
 #include <VERSION>
 
 
@@ -172,7 +172,7 @@
 #define HAVE_SUBSHELL_SUPPORT 1
 
 /* If you don't have gcc, define this */
-/* #undef OLD_TOOLS */ 
+/* #undef OLD_TOOLS */
 
 /* Is the subshell the default or optional? */
 /* #undef SUBSHELL_OPTIONAL */
@@ -208,7 +208,7 @@
 #define USE_NETCODE 1
 
 /* If defined, use .netrc for FTP connections */
-/* #undef USE_NETRC */ 
+/* #undef USE_NETRC */
 
 /* If your operating system does not have enough space for a file name
  * in a struct dirent, then define this

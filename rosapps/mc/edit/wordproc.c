@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -133,8 +133,8 @@ static void strip_newlines (char *t, int size)
 #ifndef MIDNIGHT
 int edit_width_of_long_printable (int c);
 #endif
-/* 
-   This is a copy of the function 
+/*
+   This is a copy of the function
    int calc_text_pos (WEdit * edit, long b, long *q, int l)
    in propfont.c  :(
    It calculates the number of chars in a line specified to length l in pixels
@@ -228,8 +228,8 @@ static void format_this (char *t, int size, int indent)
 	    break;
 	p = word_start (t, q, size);
 	if (p == -1)
-	    q = next_word_start (t, q, size);	/* Return the end of the word if the beginning 
-						   of the word is at the beginning of a line 
+	    q = next_word_start (t, q, size);	/* Return the end of the word if the beginning
+						   of the word is at the beginning of a line
 						   (i.e. a very long word) */
 	else
 	    q = p;

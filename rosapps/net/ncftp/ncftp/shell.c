@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -168,7 +168,7 @@ GetCommandByName(const char *const name, int wantExactMatch)
 		 * to match only one name in the list.
 		 */
 		canp = (CommandPtr) bsearch(name, gCommands, gNumCommands, sizeof(Command), (bsearch_proc_t) CommandSubSearchCmp);
-		
+
 		if (canp != kNoCommand) {
 			/* Check the entry above us and see if the name we're looking
 			 * for would match that, too.
@@ -574,7 +574,7 @@ CommandShell(void)
 				ai.noglobargv, 0);
 			if (bUsed <= 0)
 				break;
-			tUsed += bUsed;	
+			tUsed += bUsed;
 			if (ai.cargc == 0)
 				continue;
 			gRunningCommand = 1;

@@ -1,7 +1,7 @@
 /* Widgets for the Midnight Commander
 
    Copyright (C) 1994, 1995, 1996 the Free Software Foundation
-   
+
    Authors: 1994, 1995 Radek Doulik
             1994, 1995 Miguel de Icaza
             1995 Jakub Jelinek
@@ -23,7 +23,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
  */
-/* "$Id: widget.c,v 1.1 2001/12/30 09:55:20 sedwards Exp $" */
+/* "$Id$" */
 
 #include <config.h>
 #include <string.h>
@@ -80,7 +80,7 @@ button_callback (Dlg_head *h, WButton *b, int Msg, int Par)
     char *txt, buf[256];
     int stop = 0;
     int off = 0;
-    
+
     switch (Msg){
     case WIDGET_INIT:
 	return x_create_button (h, h->wdata, b);
@@ -91,7 +91,7 @@ button_callback (Dlg_head *h, WButton *b, int Msg, int Par)
 	    return 1;
 	} else
 	    return 0;
-	
+
     case WIDGET_KEY:
 	if (Par != ' ' && Par != '\n')
 	    break;
@@ -109,13 +109,13 @@ button_callback (Dlg_head *h, WButton *b, int Msg, int Par)
     case WIDGET_CURSOR:
     {
 	char *s = b->action == B_ENTER ? ".button" : "";
-	
+
 	tk_evalf ("focus %s%s", (char *)(b->widget.wdata)+1, s);
 	/* Do not call default_proc: we did the tk focus command */
 	return 1;
     }
 #else
-	
+
     case WIDGET_CURSOR:
 	switch (b->flags) {
 	    case DEFPUSH_BUTTON:
@@ -138,9 +138,9 @@ button_callback (Dlg_head *h, WButton *b, int Msg, int Par)
     case WIDGET_UNFOCUS:
     case WIDGET_FOCUS:
     case WIDGET_DRAW:
-	if (Msg==WIDGET_UNFOCUS) 
+	if (Msg==WIDGET_UNFOCUS)
 	    b->selected = 0;
-	else if (Msg==WIDGET_FOCUS) 
+	else if (Msg==WIDGET_FOCUS)
 	    b->selected = 1;
 
 	switch (b->flags){
@@ -179,9 +179,9 @@ button_callback (Dlg_head *h, WButton *b, int Msg, int Par)
 	else
 	    return 1;
 	break;
-#endif	
+#endif
 #endif /* !HAVE_XVIEW */
-    }	
+    }
     return default_proc (h, Msg, Par);
 }
 
@@ -253,7 +253,7 @@ button_scan_hotkey(WButton* b)
 }
 
 WButton *
-button_new (int y, int x, int action, int flags, char *text, 
+button_new (int y, int x, int action, int flags, char *text,
 	    int (*callback)(int, void *), void *callback_data, char *tkname)
 {
     WButton *b = xmalloc (sizeof (WButton), "new_button");
@@ -261,7 +261,7 @@ button_new (int y, int x, int action, int flags, char *text,
     init_widget (&b->widget, y, x, 1, button_len (text, flags),
 		 (callback_fn) button_callback,
 		 (destroy_fn) button_destroy, (mouse_h)button_event, tkname);
-    
+
     b->action = action;
     b->flags  = flags;
     b->selected = 0;
@@ -298,22 +298,22 @@ static int
 radio_callback (Dlg_head *h, WRadio *r, int Msg, int Par)
 {
     int i;
-    
+
     switch (Msg) {
     case WIDGET_INIT:
 	return x_create_radio (h, h->wdata, r);
-	
+
 #ifndef HAVE_XVIEW
     case WIDGET_HOTKEY:
 	{
 	    int i, lp = tolower(Par);
 	    char *cp;
-	    
+
 	    for (i = 0; i < r->count; i++){
 		cp = strchr (r->texts [i], '&');
 		if (cp != NULL && cp[1] != '\0'){
 		    int c = tolower (cp [1]);
-		    
+
 		    if (c != lp)
 			continue;
 		    r->pos = i;
@@ -323,7 +323,7 @@ radio_callback (Dlg_head *h, WRadio *r, int Msg, int Par)
 	    }
 	}
 	return 0;
-	
+
     case WIDGET_KEY:
 	switch (Par){
 	case ' ':
@@ -341,7 +341,7 @@ radio_callback (Dlg_head *h, WRadio *r, int Msg, int Par)
 		return 1;
 	    }
 	    return 0;
-	    
+
 	case KEY_DOWN:
 	case KEY_RIGHT:
 	    if (r->count - 1 > r->pos) {
@@ -359,14 +359,14 @@ radio_callback (Dlg_head *h, WRadio *r, int Msg, int Par)
 	    return 1;
 #endif
 #endif
-	
+
 #ifndef HAVE_X
     case WIDGET_CURSOR:
 	(*h->callback) (h, h->current->dlg_id, DLG_ACTION);
 	radio_callback (h, r, WIDGET_FOCUS, ' ');
 	widget_move (&r->widget, r->pos, 1);
 	break;
-	    
+
     case WIDGET_UNFOCUS:
     case WIDGET_FOCUS:
     case WIDGET_DRAW:
@@ -380,7 +380,7 @@ radio_callback (Dlg_head *h, WRadio *r, int Msg, int Par)
 		{
 			if (*cp == '&')
 			{
-				attrset ((i==r->pos && Msg==WIDGET_FOCUS) 
+				attrset ((i==r->pos && Msg==WIDGET_FOCUS)
 					? HOT_FOCUSC : HOT_NORMALC);
 				addch(*++cp);
 				attrset ((i==r->pos && Msg==WIDGET_FOCUS) ? FOCUSC : NORMALC);
@@ -391,7 +391,7 @@ radio_callback (Dlg_head *h, WRadio *r, int Msg, int Par)
 	}
 	return 1;
 	break;
-#endif	
+#endif
     }
     return default_proc (h, Msg, Par);
 }
@@ -412,7 +412,7 @@ radio_event (Gpm_Event *event, WRadio *r)
 #ifndef HAVE_X
     if (event->type & (GPM_DOWN|GPM_UP)){
     	Dlg_head *h = r->widget.parent;
-	
+
 	r->pos = event->y - 1;
 	dlg_select_widget (h, r);
 	if (event->type & GPM_UP){
@@ -449,7 +449,7 @@ radio_new (int y, int x, int count, char **texts, int use_hotkey, char *tkname)
     r->texts = texts;
     r->upper_letter_is_hotkey = use_hotkey;
     widget_want_hotkey (r->widget, 1);
-    
+
     return r;
 }
 
@@ -483,13 +483,13 @@ check_callback (Dlg_head *h, WCheck *c, int Msg, int Par)
 	check_callback (h, c, WIDGET_FOCUS, ' ');
 	return 1;
 
-#ifndef HAVE_X	
+#ifndef HAVE_X
     case WIDGET_CURSOR:
 	widget_move (&c->widget, 0, 1);
 	break;
-	
+
     case WIDGET_FOCUS:
-    case WIDGET_UNFOCUS:	
+    case WIDGET_UNFOCUS:
     case WIDGET_DRAW:
 	attrset ((Msg == WIDGET_FOCUS) ? FOCUSC : NORMALC);
 	widget_move (&c->widget, 0, 0);
@@ -513,7 +513,7 @@ check_event (Gpm_Event *event, WCheck *c)
 #ifndef HAVE_X
     if (event->type & (GPM_DOWN|GPM_UP)){
     	Dlg_head *h = c->widget.parent;
-	
+
 	dlg_select_widget (h, c);
 	if (event->type & GPM_UP){
 	    check_callback (h, c, WIDGET_KEY, ' ');
@@ -538,7 +538,7 @@ check_new (int y, int x, int state, char *text, char *tkname)
 {
     WCheck *c =  xmalloc (sizeof (WCheck), "check_new");
     char *s, *t;
-    
+
     init_widget (&c->widget, y, x, 1, strlen (text),
 		 (callback_fn)check_callback,
 		 (destroy_fn)check_destroy, (mouse_h) check_event, tkname);
@@ -573,7 +573,7 @@ label_callback (Dlg_head *h, WLabel *l, int Msg, int Par)
 {
     if (Msg == WIDGET_INIT)
 	return x_create_label (h, h->wdata, l);
-    
+
     /* We don't want to get the focus */
     if (Msg == WIDGET_FOCUS)
 	return 0;
@@ -587,7 +587,7 @@ label_callback (Dlg_head *h, WLabel *l, int Msg, int Par)
 	    attrset (NORMALC);
 	for (;;){
 	    int xlen;
-		
+
 	    q = strchr (p, '\n');
 	    if (q){
 		c = *q;
@@ -606,7 +606,7 @@ label_callback (Dlg_head *h, WLabel *l, int Msg, int Par)
 	}
 	return 1;
     }
-#endif    
+#endif
     return default_proc (h, Msg, Par);
 }
 
@@ -614,7 +614,7 @@ void
 label_set_text (WLabel *label, char *text)
 {
     int newcols = label->widget.cols;
-    
+
     if (label->text && text && !strcmp (label->text, text))
         return; /* Flickering is not nice */
 
@@ -630,7 +630,7 @@ label_set_text (WLabel *label, char *text)
 	}
     } else
 	label->text = 0;
-    
+
     if (label->widget.parent)
 #ifdef HAVE_X
 	x_label_set_text (label, text);
@@ -675,7 +675,7 @@ gauge_callback (Dlg_head *h, WGauge *g, int Msg, int Par)
 
     if (Msg == WIDGET_INIT)
 	return x_create_gauge (h, h->wdata, g);
-    
+
     /* We don't want to get the focus */
     if (Msg == WIDGET_FOCUS)
 	return 0;
@@ -689,7 +689,7 @@ gauge_callback (Dlg_head *h, WGauge *g, int Msg, int Par)
 	else {
 	    long percentage, columns;
 	    long total = g->max, done = g->current;
-	    
+
 	    if (total <= 0 || done < 0) {
 	        done = 0;
 	        total = 100;
@@ -710,7 +710,7 @@ gauge_callback (Dlg_head *h, WGauge *g, int Msg, int Par)
 	}
 	return 1;
     }
-#endif    
+#endif
     return default_proc (h, Msg, Par);
 }
 
@@ -722,12 +722,12 @@ gauge_set_value (WGauge *g, int max, int current)
     if (max == 0)
         max = 1; /* I do not like division by zero :) */
 #ifdef HAVE_X
-/* NOTE: x_gauge_set_value has to be called before we change actual 
+/* NOTE: x_gauge_set_value has to be called before we change actual
  *       max and current values in g, since it assumes g->max and
  *       g->current as the previous values and max and current
  *       as the new ones :) */
     x_gauge_set_value (g, max, current);
-#endif    
+#endif
     g->current = current;
     g->max = max;
 #ifndef HAVE_X
@@ -745,7 +745,7 @@ gauge_show (WGauge *g, int shown)
     x_gauge_show (g);
 #else
     gauge_callback (g->widget.parent, g, WIDGET_DRAW, 0);
-#endif    
+#endif
 }
 
 static void
@@ -776,15 +776,15 @@ gauge_new (int y, int x, int shown, int max, int current, char *tkname)
 /* Input widget */
 
 /* {{{ history button */
- 
+
 #define LARGE_HISTORY_BUTTON 1
- 
+
 #ifdef LARGE_HISTORY_BUTTON
 #  define HISTORY_BUTTON_WIDTH 3
 #else
 #  define HISTORY_BUTTON_WIDTH 1
 #endif
- 
+
 #define should_show_history_button(in) \
 	    (in->history && in->field_len > HISTORY_BUTTON_WIDTH * 2 + 1 && in->widget.parent)
 
@@ -814,7 +814,7 @@ static void draw_history_button (WInput * in)
     addch (c);
 #endif
 }
- 
+
 /* }}} history button */
 
 
@@ -848,7 +848,7 @@ update_input (WInput *in, int clear_first)
     /* Adjust the mark */
     if (in->mark > buf_len)
 	in->mark = buf_len;
-    
+
 #ifdef HAVE_X
     if (clear_first && in->first)
 	    in->first = -1;
@@ -859,12 +859,12 @@ update_input (WInput *in, int clear_first)
 	draw_history_button (in);
 
     attrset (in->color);
-    
+
     widget_move (&in->widget, 0, 0);
     for (i = 0; i < in->field_len - has_history; i++)
 	addch (' ');
     widget_move (&in->widget, 0, 0);
-    
+
     for (i = 0, j = in->first_shown; i < in->field_len - has_history && in->buffer [j]; i++){
 	c = in->buffer [j++];
 	c = is_printable (c) ? c : '.';
@@ -909,7 +909,7 @@ Hist *history_get (char *input_name)
     int i;
     Hist *old = 0, *new = 0;
     char *profile;
-    
+
     if (!num_history_items_recorded)	/* this is how to disable */
 	return 0;
     if (!input_name)
@@ -947,7 +947,7 @@ void history_put (char *input_name, Hist *h)
 
     if (!*input_name)
 	return;
-    
+
     if (!h)
 	return;
 
@@ -959,7 +959,7 @@ void history_put (char *input_name, Hist *h)
 	h = h->next;
 
     /* go back 60 places */
-    for (i = 0; i < num_history_items_recorded - 1 && h->prev; i++)	
+    for (i = 0; i < num_history_items_recorded - 1 && h->prev; i++)
 	h = h->prev;
     i = 0;
 
@@ -1150,7 +1150,7 @@ push_history (WInput *in, char *text)
 {
     Hist *new;
     char *p;
-    
+
     for (p = text; *p == ' ' || *p == '\t'; p++);
     if (!*p)
         return 0;
@@ -1192,7 +1192,7 @@ insert_char (WInput *in, int c_code)
 
     if (c_code == -1)
 	return 0;
-    
+
     in->need_push = 1;
     if (strlen (in->buffer)+1 == in->current_max_len){
 	/* Expand the buffer */
@@ -1288,12 +1288,12 @@ key_right (WInput *in)
 #define key_left  backward_char
 #define key_right forward_char
 #endif
-    
+
 static void
 backward_delete (WInput *in)
 {
     int i;
-    
+
     if (!in->point)
 	return;
     for (i = in->point; in->buffer [i-1]; i++)
@@ -1317,13 +1317,13 @@ copy_region (WInput *in, int x_first, int x_last)
 {
     int first = min (x_first, x_last);
     int last  = max (x_first, x_last);
-    
+
     if (last == first)
 	return;
-    
+
     if (kill_buffer)
 	free (kill_buffer);
-    
+
     kill_buffer = xmalloc (last-first + 1, "copy_region");
     strncpy (kill_buffer, in->buffer+first, last-first);
     kill_buffer [last-first] = 0;
@@ -1394,7 +1394,7 @@ static void
 yank (WInput *in)
 {
     char *p;
-    
+
     if (!kill_buffer)
         return;
     for (p = kill_buffer; *p; p++)
@@ -1454,7 +1454,7 @@ hist_next (WInput *in)
             return;
         }
     }
-    
+
     if (!in->history)
 	return;
 
@@ -1462,7 +1462,7 @@ hist_next (WInput *in)
         assign_text (in, "");
 	return;
     }
-    
+
     in->history = in->history->next;
     assign_text (in, in->history->text);
     in->need_push = 0;
@@ -1485,8 +1485,8 @@ static struct {
     { KEY_RIGHT,          key_right },
     { XCTRL('f'),         forward_char },
     { ALT('f'),           forward_word },
-		          
-    /* Editing */         
+
+    /* Editing */
     { 0177,               backward_delete },
     { KEY_BACKSPACE,      backward_delete },
     { XCTRL('h'),         backward_delete },
@@ -1496,22 +1496,22 @@ static struct {
     { ALT(KEY_BACKSPACE), back_kill_word },
     { ALT(XCTRL('h')),    back_kill_word },
     { ALT(127),           back_kill_word },
-    
+
     /* Region manipulation */
     { 0,              	  set_mark },
     { XCTRL('w'),     	  kill_region },
     { ALT('w'),       	  kill_save },
     { XCTRL('y'),     	  yank },
     { XCTRL('k'),     	  kill_line },
-    		      	  
-    /* History */     	  
+
+    /* History */
     { ALT('p'),       	  hist_prev },
     { ALT('n'),       	  hist_next },
     { ALT('h'),       	  do_show_hist },
-    
+
     /* Completion */
     { ALT('\t'),	  complete },
-    
+
     { 0,            0 }
 };
 
@@ -1522,7 +1522,7 @@ int
 is_in_input_map (WInput *in, int c_code)
 {
     int i;
-    
+
     for (i = 0; input_map [i].fn; i++)
 	if (c_code == input_map [i].key_code)
 	    if (input_map [i].fn == complete)
@@ -1556,7 +1556,7 @@ handle_char (WInput *in, int c_code)
 
     v = 0;
 
-#ifdef HAVE_TK    
+#ifdef HAVE_TK
     in->inserted_one = 0;
 #endif
     if (quote){
@@ -1628,7 +1628,7 @@ input_callback (Dlg_head *h, WInput *in, int Msg, int Par)
     case WIDGET_KEY:
 	if (Par == XCTRL('q')){
 	    int v;
-	    
+
 	    quote = 1;
 	    v = handle_char (in, mi_getch ());
 	    quote = 0;
@@ -1646,7 +1646,7 @@ input_callback (Dlg_head *h, WInput *in, int Msg, int Par)
 	return handle_char (in, Par);
 
     case WIDGET_FOCUS:
-    case WIDGET_UNFOCUS:	
+    case WIDGET_UNFOCUS:
     case WIDGET_DRAW:
 	update_input (in, 0);
 	break;
@@ -1656,19 +1656,19 @@ input_callback (Dlg_head *h, WInput *in, int Msg, int Par)
 	widget_move (&in->widget, 0, in->point - in->first_shown);
 	return 1;
 #endif
-	
+
     }
     return default_proc (h, Msg, Par);
 }
 
 /* Not declared static, since we check against this value in dlg.c */
 /* FIXME: Declare static again and provide an identification mechanism */
-int 
-input_event (Gpm_Event *event, WInput *in) 
-{ 
+int
+input_event (Gpm_Event *event, WInput *in)
+{
 #ifndef HAVE_X
-    if (event->type & (GPM_DOWN|GPM_DRAG)){ 
-	dlg_select_widget (in->widget.parent, in); 
+    if (event->type & (GPM_DOWN|GPM_DRAG)){
+	dlg_select_widget (in->widget.parent, in);
 
 	if (event->x >= in->field_len - HISTORY_BUTTON_WIDTH + 1 && should_show_history_button (in)) {
 	    do_show_hist (in);
@@ -1681,11 +1681,11 @@ input_event (Gpm_Event *event, WInput *in)
 		in->point = 0;
 
 	    update_input (in, 1);
-	} 
-    } 
+	}
+    }
 #endif
-    return MOU_NORMAL; 
-} 
+    return MOU_NORMAL;
+}
 
 WInput *
 input_new (int y, int x, int color, int len, char *def_text, char *tkname)
@@ -1750,7 +1750,7 @@ listbox_drawscroll (WListbox *l)
     int line;
     int i, top;
     int max_line = l->height-1;
-    
+
     /* Are we at the top? */
     widget_move (&l->widget, 0, l->width);
     if (l->list == l->top)
@@ -1771,7 +1771,7 @@ listbox_drawscroll (WListbox *l)
 	line = 1+ ((l->pos * (l->height-2)) / l->count);
     else
 	line = 0;
-    
+
     for (i = 1; i < max_line; i++){
 	widget_move (&l->widget, i, l->width);
 	if (i != line)
@@ -1780,7 +1780,7 @@ listbox_drawscroll (WListbox *l)
 	    addch ('*');
     }
 }
-    
+
 static void
 listbox_draw (WListbox *l, Dlg_head *h, int focused)
 {
@@ -1788,7 +1788,7 @@ listbox_draw (WListbox *l, Dlg_head *h, int focused)
     int i;
     int sel_line;
     int normalc, selc;
-    char *text; 
+    char *text;
 
     if (focused){
 	normalc = NORMALC;
@@ -1800,7 +1800,7 @@ listbox_draw (WListbox *l, Dlg_head *h, int focused)
     sel_line = -1;
 
     for (e = l->top, i = 0; (i < l->height); i++){
-	
+
 	/* Display the entry */
 	if (e == l->current && sel_line == -1){
 	    sel_line = i;
@@ -1842,12 +1842,12 @@ listbox_check_hotkey (WListbox *l, int key)
 {
     int i;
     WLEntry *e;
-    
+
     i = 0;
     e = l->list;
     if (!e)
 	return 0;
-    
+
     while (1){
 
 	/* If we didn't find anything, return */
@@ -1856,7 +1856,7 @@ listbox_check_hotkey (WListbox *l, int key)
 
 	if (e->hotkey == key)
 	    return e;
-	
+
 	i++;
 	e = e->next;
     }
@@ -1891,7 +1891,7 @@ listbox_remove_list (WListbox *l)
     }
 #endif
     p = l->list;
-    
+
     while (l->count--) {
 	q = p->next;
 	free (p->text);
@@ -1911,11 +1911,11 @@ void
 listbox_remove_current (WListbox *l, int force)
 {
     WLEntry *p;
-    
+
     /* Ok, note: this won't allow for emtpy lists */
     if (!force && (!l->count || l->count == 1))
 	return;
-    
+
 #ifdef HAVE_X
     if (l->widget.wdata != (widget_data) NULL) {
         x_listbox_delete_nth (l, l->pos);
@@ -1937,10 +1937,10 @@ listbox_remove_current (WListbox *l, int force)
 	if (p->next == l->list) {
 	    l->current = p->prev;
 	    l->pos--;
-	}	
-	else 
+	}
+	else
 	    l->current = p->next;
-	
+
 	if (p == l->list)
 	    l->list = l->top = p->next;
     } else {
@@ -1959,15 +1959,15 @@ listbox_select_entry (WListbox *l, WLEntry *dest)
     WLEntry *e;
     int pos;
     int top_seen;
-    
+
     top_seen = 0;
-    
+
     /* Special case */
     for (pos = 0, e = l->list; pos < l->count; e = e->next, pos++){
 
 	if (e == l->top)
 	    top_seen = 1;
-	
+
 	if (e == dest){
 	    l->current = e;
 	    if (top_seen){
@@ -2032,14 +2032,14 @@ listbox_key (WListbox *l, int key)
 
     if (!l->list)
 	return 0;
-    
+
     switch (key){
     case KEY_HOME:
     case KEY_A1:
 	l->current = l->top = l->list;
 	l->pos = 0;
 	return 1;
-	
+
     case KEY_END:
     case KEY_C1:
 	l->current = l->top = l->list->prev;
@@ -2047,12 +2047,12 @@ listbox_key (WListbox *l, int key)
 	    l->top = l->top->prev;
 	l->pos = l->count - 1;
 	return 1;
-	
+
     case XCTRL('p'):
     case KEY_UP:
 	listbox_back (l);
 	return 1;
-	
+
     case XCTRL('n'):
     case KEY_DOWN:
 	listbox_fwd (l);
@@ -2063,7 +2063,7 @@ listbox_key (WListbox *l, int key)
 	for (i = 0; i < l->height-1; i++)
 	    j |= listbox_fwd (l);
 	return j > 0;
-	
+
     case KEY_PPAGE:
     case ALT('v'):
 	for (i = 0; i < l->height-1; i++)
@@ -2080,11 +2080,11 @@ listbox_callback (Dlg_head *h, WListbox *l, int msg, int par)
     WLEntry  *e;
     /* int selected_color; Never used */
     int ret_code;
-    
+
     switch (msg){
     case WIDGET_INIT:
 	return x_create_listbox (h, h->wdata, l);
-	
+
 #ifndef	HAVE_XVIEW
     case WIDGET_HOTKEY:
 	if ((e = listbox_check_hotkey (l, par)) != NULL){
@@ -2103,7 +2103,7 @@ listbox_callback (Dlg_head *h, WListbox *l, int msg, int par)
 	    return 1;
 	} else
 	    return 0;
-	
+
     case WIDGET_KEY:
 	if ((ret_code = listbox_key (l, par)))
 	    listbox_draw (l, h, 1);
@@ -2113,13 +2113,13 @@ listbox_callback (Dlg_head *h, WListbox *l, int msg, int par)
     case WIDGET_CURSOR:
 	widget_move (&l->widget, l->cursor_y, 0);
 	return 1;
-	
+
     case WIDGET_FOCUS:
     case WIDGET_UNFOCUS:
     case WIDGET_DRAW:
 	listbox_draw (l, h, msg != WIDGET_UNFOCUS);
 	return 1;
-#endif	
+#endif
 #endif /* !HAVE_XVIEW */
     }
     return default_proc (h, msg, par);
@@ -2130,9 +2130,9 @@ listbox_event (Gpm_Event *event, WListbox *l)
 {
 #ifndef HAVE_X
     int i;
-    
+
     Dlg_head *h = l->widget.parent;
-    
+
     /* Single click */
     if (event->type & GPM_DOWN)
 	dlg_select_widget (l->widget.parent, l);
@@ -2150,7 +2150,7 @@ listbox_event (Gpm_Event *event, WListbox *l)
 	else
             listbox_select_entry (l, listbox_select_pos (l, l->top,
 	      					         event->y - 1));
-	
+
 	/* We need to refresh ourselves since the dialog manager doesn't */
 	/* know about this event */
 	listbox_callback (h, l, WIDGET_DRAW, 0);
@@ -2164,9 +2164,9 @@ listbox_event (Gpm_Event *event, WListbox *l)
      	    return MOU_NORMAL;
      	if (event->y < 1 || event->y > l->height)
      	    return MOU_NORMAL;
-	
+
 	dlg_select_widget (l->widget.parent, l);
-	listbox_select_entry (l, listbox_select_pos (l, l->top, event->y - 1)); 
+	listbox_select_entry (l, listbox_select_pos (l, l->top, event->y - 1));
 
 	switch (l->action){
 	case listbox_nothing:
@@ -2182,7 +2182,7 @@ listbox_event (Gpm_Event *event, WListbox *l)
 		return MOU_ENDLOOP;
 	}
     }
-#endif    
+#endif
     return MOU_NORMAL;
 }
 
@@ -2207,7 +2207,7 @@ listbox_new (int y, int x, int width, int height,
 {
     WListbox *l = xmalloc (sizeof (WListbox), "listbox_new");
     extern int slow_terminal;
-    
+
     init_widget (&l->widget, y, x, height, width,
 		 (callback_fn)listbox_callback,
 		 (destroy_fn) listbox_destroy, (mouse_h)listbox_event, tkname);
@@ -2224,7 +2224,7 @@ listbox_new (int y, int x, int width, int height,
     l->allow_duplicates = 1;
     l->scrollbar = slow_terminal ? 0 : 1;
     widget_want_hotkey (l->widget, 1);
-    
+
     return l;
 }
 
@@ -2276,14 +2276,14 @@ listbox_add_item (WListbox *l, enum append_pos pos, int hotkey, char *text,
     if (!l->allow_duplicates)
 	if (listbox_search_text (l, text))
 	    return 0;
-	    
+
     entry = xmalloc (sizeof (WLEntry), "listbox_add_item");
     entry->text = strdup (text);
     entry->data = data;
     entry->hotkey = hotkey;
 
     listbox_append_item (l, entry, pos);
-    
+
     return entry->text;
 }
 
@@ -2302,7 +2302,7 @@ listbox_search_text (WListbox *l, char *text)
     e = l->list;
     if (!e)
 	return NULL;
-    
+
     do {
 	if(!strcmp (e->text, text))
 	    return e;
@@ -2330,7 +2330,7 @@ int
 buttonbar_callback (Dlg_head *h, WButtonBar *bb, int msg, int par)
 {
     int i;
-    
+
     switch (msg){
     case WIDGET_INIT:
 	return x_create_buttonbar (h, h->wdata, bb);
@@ -2347,7 +2347,7 @@ buttonbar_callback (Dlg_head *h, WButtonBar *bb, int msg, int par)
 	    }
 	}
 	return 0;
-	
+
 #ifndef HAVE_X
     case WIDGET_DRAW:
 	if (!bb->visible)
@@ -2409,7 +2409,7 @@ buttonbar_new (int visible)
     init_widget (&bb->widget, LINES-1, 0, 1, COLS,
 		 (callback_fn) buttonbar_callback,
 		 (destroy_fn) buttonbar_destroy, (mouse_h) buttonbar_event, NULL);
-    
+
     bb->visible = visible;
     for (i = 0; i < 10; i++){
 	bb->labels [i].text     = 0;
@@ -2450,7 +2450,7 @@ find_buttonbar (Dlg_head *h, Widget *paneletc)
 	        bb = 0;
 	        continue;
 	    }
-#endif	    
+#endif
 	    break;
 	}
     }
@@ -2464,7 +2464,7 @@ define_label_data (Dlg_head *h, Widget *paneletc, int idx, char *text,
     WButtonBar *bb = find_buttonbar (h, paneletc);
     if (!bb)
 	return;
-    
+
     set_label_text (bb, idx, text);
     bb->labels [idx-1].function = (void (*)(void *)) cback;
     bb->labels [idx-1].data = data;

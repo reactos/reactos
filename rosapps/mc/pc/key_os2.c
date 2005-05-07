@@ -7,7 +7,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 */
 
@@ -86,9 +86,9 @@ static int VKtoCurses (int vkcode);
                                                    ALT(F12): 8c00
 
            Mapping for ALT(key_code):
-                For Mapping with normal keys, only the scan code can be 
+                For Mapping with normal keys, only the scan code can be
                 used. (see struct ALT_table)
-        
+
    Special keys:
         ENTER (number block): 0xaaaaE00D
         + (number block):     0xaaaa4E2B        Normal: 1B2B
@@ -133,7 +133,7 @@ struct {
     { KEY_F(11), 0x85 },
     { KEY_F(12), 0x86 },
     { 0, 0}
-};		
+};
 
 
 struct {
@@ -181,7 +181,7 @@ struct {
     { ALT(KEY_F(11)),  0x8B },
     { ALT(KEY_F(12)),  0x8C },
     { 0, 0}
-};		
+};
 
 
 struct {
@@ -199,7 +199,7 @@ struct {
     { KEY_HOME,  0x47 },
     { KEY_END,	 0x4F },
     { 0, 0}
-};		
+};
 
 
 /*  init_key -- to make linker happy */
@@ -217,7 +217,7 @@ static int push_char (int c)
 {
     if (!seq_append)
 	seq_append = seq_buffer;
-    
+
     if (seq_append == &(seq_buffer [sizeof (seq_buffer)-2]))
 	return 0;
     *(seq_append++) = c;
@@ -236,7 +236,7 @@ int get_key_code (int no_delay)
         if (inp_ch == 0) {
            return 0;
         }
-    } 
+    }
 
     if (no_delay) {
        return (VKtoCurses(inp_ch));
@@ -255,7 +255,7 @@ static int VKtoCurses (int a_vkc)
 {
    int ctrlState = 0;
    int altState  = 0;
-   
+
    int  fsState;
    char scanCode;
    char asciiCode;
@@ -267,7 +267,7 @@ static int VKtoCurses (int a_vkc)
 
    scanCode = (char) ((a_vkc & 0x0000FFFF) >> 8);
    asciiCode = (char) (a_vkc & 0x000000FF);
-   
+
    ctrlState  = (fsState & CTRL_PRESSED);
    altState   = (fsState & ALT_PRESSED);
 
@@ -295,20 +295,20 @@ static int VKtoCurses (int a_vkc)
    /* Scan Movement codes */
    if (asciiCode == 0) {
       /* Replace key code with that in table */
-      for (i=0;  movement[i].vkcode != 0 || movement[i].key_code != 0; i++) 
-	if (scanCode == movement[i].vkcode) 
+      for (i=0;  movement[i].vkcode != 0 || movement[i].key_code != 0; i++)
+	if (scanCode == movement[i].vkcode)
   	     return (movement[i].key_code);
    }
 
    if (asciiCode == 0) {
       /* Function-key detected */
-      for (i=0;  fkt_table[i].vkcode != 0 || fkt_table[i].key_code != 0; i++) 
-	if (scanCode == fkt_table[i].vkcode) 
+      for (i=0;  fkt_table[i].vkcode != 0 || fkt_table[i].key_code != 0; i++)
+	if (scanCode == fkt_table[i].vkcode)
   	     return (fkt_table[i].key_code);
       /* ALT - KEY */
       /* if (altState) */ {
-         for (i=0;  ALT_table[i].vkcode != 0 || ALT_table[i].key_code != 0; i++) 
-                if (scanCode == ALT_table[i].vkcode) 
+         for (i=0;  ALT_table[i].vkcode != 0 || ALT_table[i].key_code != 0; i++)
+                if (scanCode == ALT_table[i].vkcode)
                  	     return (ALT_table[i].key_code);
       }
    }
@@ -348,7 +348,7 @@ int get_event (Gpm_Event *event, int redo_event, int block)
 	dirty++;
 
     vfs_timeout_handler ();
-    
+
     c = block ? getch_with_delay () : get_key_code (1);
     if (!c) {
 	/* Code is 0, so this is a Control key or mouse event */
@@ -364,17 +364,17 @@ int mi_getch ()
 {
     Gpm_Event ev;
     int       key;
-    
+
     while ((key = get_event (&ev, 0, 1)) == 0)
 	;
     return key;
 }
 
 
-/* 
+/*
    is_idle -    A function to check if we're idle.
-		It checks for any waiting event  (that can be a Key, Mouse event, 
-   		and other internal events like focus or menu) 
+		It checks for any waiting event  (that can be a Key, Mouse event,
+   		and other internal events like focus or menu)
 */
 int is_idle (void)
 {

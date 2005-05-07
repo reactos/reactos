@@ -11,7 +11,7 @@ VOID  htoa (unsigned int val, char *buf)
 {
    int i;
    buf += 7;
-   
+
    for (i=0;i<8;i++)
        {
             *buf-- = hexvals[val & 0x0000000F];

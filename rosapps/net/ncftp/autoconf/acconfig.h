@@ -286,7 +286,7 @@
 
 /* Define if scanning a "long long" with "%qd" works. */
 #undef SCANF_LONG_LONG_QD
-  
+
 /* Define to the type of arg1 for select(). */
 #undef SELECT_TYPE_ARG1
 

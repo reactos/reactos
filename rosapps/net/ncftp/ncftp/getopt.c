@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include <stdio.h>
@@ -68,7 +68,7 @@ Getopt(int nargc, const char **const nargv, const char *const ostr)
 			gOptArg = gOptPlace;
 		else if (nargc <= ++gOptInd) {  /* no arg */
 			gOptPlace = kGetoptErrMsg;
-			if (gOptErr) 
+			if (gOptErr)
 				(void) fprintf(stderr, "%s%s%c\n", *nargv, ": option requires an argument -- ", gOptOpt);
 			return(kGetoptBadChar);
 		} else						   /* white space */

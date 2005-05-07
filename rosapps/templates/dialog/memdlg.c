@@ -66,9 +66,9 @@ LRESULT CreateMemoryDialog(HINSTANCE hinst, HWND hwndOwner, LPSTR lpszMessage)
     hgbl = GlobalAlloc(GMEM_ZEROINIT, 1024);
     if (!hgbl)
         return -1;
- 
+
     lpdt = (LPDLGTEMPLATE)GlobalLock(hgbl);
- 
+
     // Define a dialog box.
     lpdt->style = WS_POPUP | WS_BORDER | WS_SYSMENU | DS_MODALFRAME | WS_CAPTION;
     lpdt->cdit = 3;  // number of controls
@@ -136,23 +136,23 @@ LRESULT CreateMemoryDialog(HINSTANCE hinst, HWND hwndOwner, LPSTR lpszMessage)
     *lpw++ = 0xFFFF;
     *lpw++ = 0x0082;                         // static class
 
-    for (lpwsz = (LPWSTR)lpw;    
+    for (lpwsz = (LPWSTR)lpw;
         *lpwsz++ = (WCHAR)*lpszMessage++;
     );
     lpw = (LPWORD)lpwsz;
     lpw = lpwAlign(lpw);  // align creation data on DWORD boundary
     *lpw++ = 0;           // no creation data
 
-    GlobalUnlock(hgbl); 
-    ret = DialogBoxIndirect(hinst, (LPDLGTEMPLATE)hgbl, hwndOwner, (DLGPROC)DialogWndProc); 
+    GlobalUnlock(hgbl);
+    ret = DialogBoxIndirect(hinst, (LPDLGTEMPLATE)hgbl, hwndOwner, (DLGPROC)DialogWndProc);
     if (ret == 0) {
         TRACE(_T("DialogBoxIndirect() failed due to invalid handle to parent window: 0x%08X"), hwndOwner);
     } else if (ret == -1) {
         DWORD error = GetLastError();
         TRACE(_T("DialogBoxIndirect() failed, GetLastError returned 0x%08X"), error);
     }
-    GlobalFree(hgbl); 
-    return ret; 
+    GlobalFree(hgbl);
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

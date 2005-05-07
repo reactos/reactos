@@ -1,10 +1,10 @@
 /* Ch-Drive command for Windows NT and OS/2
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -12,11 +12,11 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
-   
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
    Bug:
    	the code will not work if you have more drives than those that
-   	can fit in a panel.  
+   	can fit in a panel.
    */
 
 #include <config.h>
@@ -51,7 +51,7 @@ static void drive_cmd(void);
 #define B_DRIVE_BASE 100
 #define MAX_LGH 13		/* Length for drives */
 
-static void drive_cmd()			
+static void drive_cmd()
 {
     int  i, nNewDrive, nDrivesAvail;
     char szTempBuf[7], szDrivesAvail[27*4], *p;
@@ -86,7 +86,7 @@ static void drive_cmd()
 
     /* Create Dialog */
     do_refresh ();
-	
+
     m_drv = ((nDrivesAvail > MAX_LGH) ? MAX_LGH: nDrivesAvail);
     /* Center on x, relative to panel */
     x_pos = this_panel->widget.x + (this_panel->widget.cols - m_drv*3)/2 + 2;
@@ -128,14 +128,14 @@ static void drive_cmd()
 		XV_WLAY_RIGHTOF);
     }
 
-    run_dlg(drive_dlg);   
+    run_dlg(drive_dlg);
 
     /* do action */
     if (drive_dlg->ret_value != B_CANCEL) {
 	int  errocc = 0; /* no error */
 	int  rtn;
 	char drvLetter;
-	
+
 	/* Set the Panel to Directory listing mode first */
 	int is_right=(this_panel==right_panel);
 
@@ -155,7 +155,7 @@ static void drive_cmd()
 #else
 	rtn = DosSetDefaultDisk(nNewDrive + 1);
 #endif
-	if (rtn == -1) 
+	if (rtn == -1)
 		errocc = 1;
 	else {
 		getcwd (this_panel->cwd, sizeof (this_panel->cwd)-2);
@@ -191,7 +191,7 @@ void drive_cmd_a()
 }
 
 void drive_cmd_b()
-{                                  
+{
     this_panel = right_panel;
     drive_cmd();
 }

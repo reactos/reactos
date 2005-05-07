@@ -1,13 +1,13 @@
 //======================================================================
 //
-// $Id: chkdsk.c,v 1.3 2000/04/25 23:22:57 ea Exp $
+// $Id$
 //
 // Chkdskx
 //
 // Copyright (c) 1998 Mark Russinovich
 //	Systems Internals
 //	http://www.sysinternals.com/
-// 
+//
 // --------------------------------------------------------------------
 //
 // This software is free software; you can redistribute it and/or
@@ -23,16 +23,16 @@
 // You should have received a copy of the GNU Library General Public
 // License along with this software; see the file COPYING.LIB. If
 // not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-// Cambridge, MA 02139, USA.  
+// Cambridge, MA 02139, USA.
 //
 // --------------------------------------------------------------------
-// 
+//
 // Chkdsk clone that demonstrates the use of the FMIFS file system
 // utility library.
 //
 // 1999 February (Emanuele Aliberti)
 // 	Adapted for ReactOS and lcc-win32.
-// 	
+//
 // 1999 April (Emanuele Aliberti)
 // 	Adapted for ReactOS and egcs.
 //
@@ -87,7 +87,7 @@ CtrlCIntercept( DWORD dwCtrlType )
 
 
 //----------------------------------------------------------------------
-// 
+//
 // Usage
 //
 // Tell the user how to use the program
@@ -211,7 +211,7 @@ ChkdskCallback(
 	PBOOLEAN	status;
 	PTEXTOUTPUT	output;
 
-	// 
+	//
 	// We get other types of commands,
 	// but we don't have to pay attention to them
 	//
@@ -220,55 +220,55 @@ ChkdskCallback(
 	case UNKNOWN2:
 		wprintf(L"UNKNOWN2\r");
 		break;
-		
+
 	case UNKNOWN3:
 		wprintf(L"UNKNOWN3\r");
 		break;
-		
+
 	case UNKNOWN4:
 		wprintf(L"UNKNOWN4\r");
 		break;
-		
+
 	case UNKNOWN5:
 		wprintf(L"UNKNOWN5\r");
 		break;
-		
+
 	case UNKNOWN7:
 		wprintf(L"UNKNOWN7\r");
 		break;
-		
+
 	case UNKNOWN8:
 		wprintf(L"UNKNOWN8\r");
 		break;
-		
+
 	case UNKNOWN9:
 		wprintf(L"UNKNOWN9\r");
 		break;
-		
+
 	case UNKNOWNA:
 		wprintf(L"UNKNOWNA\r");
 		break;
-		
+
 	case UNKNOWNC:
 		wprintf(L"UNKNOWNC\r");
 		break;
-		
+
 	case UNKNOWND:
 		wprintf(L"UNKNOWND\r");
 		break;
-		
+
 	case INSUFFICIENTRIGHTS:
 		wprintf(L"INSUFFICIENTRIGHTS\r");
 		break;
-		
+
 	case STRUCTUREPROGRESS:
 		wprintf(L"STRUCTUREPROGRESS\r");
 		break;
-		
+
 	case DONEWITHSTRUCTURE:
 		wprintf(L"DONEWITHSTRUCTURE\r");
 		break;
-		
+
 	case PROGRESS:
 		percent = (PDWORD) Argument;
 		wprintf(L"%d percent completed.\r", *percent);
@@ -320,11 +320,11 @@ LoadFMIFSEntryPoints(VOID)
 
 
 //----------------------------------------------------------------------
-// 
+//
 // WMain
 //
-// Engine. Just get command line switches and fire off a chkdsk. This 
-// could also be done in a GUI like Explorer does when you select a 
+// Engine. Just get command line switches and fire off a chkdsk. This
+// could also be done in a GUI like Explorer does when you select a
 // drive and run a check on it.
 //
 // We do this in UNICODE because the chkdsk command expects PWCHAR
@@ -372,7 +372,7 @@ ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
 		return -1;
 	}
 
-	// 
+	//
 	// Get the drive's format
 	//
 	if( !Drive )
@@ -399,16 +399,16 @@ ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
 	Drive = CurrentDirectory;
 
 	//
-	// Determine the drive's file system format, which we need to 
+	// Determine the drive's file system format, which we need to
 	// tell chkdsk
 	//
 	if( !GetVolumeInformationW(
-		Drive, 
+		Drive,
 		volumeName,
-		sizeof volumeName, 
+		sizeof volumeName,
 		& serialNumber,
 		& maxComponent,
-		& flags, 
+		& flags,
 		fileSystem,
 		sizeof fileSystem
 		)
@@ -432,12 +432,12 @@ ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
 			);
 		volumeHandle = CreateFileW(
 				volumeName,
-				GENERIC_WRITE, 
+				GENERIC_WRITE,
 				0,
 				NULL,
-				OPEN_EXISTING, 
+				OPEN_EXISTING,
 				0,
-				0 
+				0
 				);
 		if( volumeHandle == INVALID_HANDLE_VALUE )
 		{

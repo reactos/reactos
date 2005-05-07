@@ -1,7 +1,7 @@
 /* {{{ Copyright */
 
 /* File managing.  Important notes on this file:
-   
+
    About the use of dialogs in this file:
      If you want to add a new dialog box (or call a routine that pops
      up a dialog box), you have to provide a wrapper for background
@@ -19,7 +19,7 @@
 
 /* File managing
    Copyright (C) 1994, 1995, 1996 The Free Software Foundation
-   
+
    Written by: 1994, 1995       Janne Kukonlehto
                1994, 1995       Fred Leeflang
                1994, 1995, 1996 Miguel de Icaza
@@ -40,7 +40,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -63,7 +63,7 @@
 #include <stdio.h>
 #ifdef OS2_NT
 #    include <io.h>
-#endif 
+#endif
 
 #include <errno.h>
 #include "tty.h"
@@ -129,8 +129,8 @@ int verbose = 1;
 int dive_into_subdirs = 0;
 
 /* When moving directories cross filesystem boundaries delete the successfull
-   copied files when all files below the directory and its subdirectories 
-   were processed. 
+   copied files when all files below the directory and its subdirectories
+   were processed.
    If erase_at_end is zero files will be deleted immediately after their
    successful copy (Note: this behaviour is not tested and at the moment
    it can't be changed at runtime) */
@@ -195,12 +195,12 @@ struct link *linklist = NULL;
 /* the files-to-be-erased list */
 struct link *erase_list;
 
-/* In copy_dir_dir we use two additional single linked lists: The first - 
-   variable name `parent_dirs' - holds information about already copied 
-   directories and is used to detect cyclic symbolic links. 
-   The second (`dest_dirs' below) holds information about just created 
-   target directories and is used to detect when an directory is copied 
-   into itself (we don't want to copy infinitly). 
+/* In copy_dir_dir we use two additional single linked lists: The first -
+   variable name `parent_dirs' - holds information about already copied
+   directories and is used to detect cyclic symbolic links.
+   The second (`dest_dirs' below) holds information about just created
+   target directories and is used to detect when an directory is copied
+   into itself (we don't want to copy infinitly).
    Both lists don't use the linkcount and name structure members of struct
    link. */
 struct link *dest_dirs = 0;
@@ -330,7 +330,7 @@ static int
 check_buttons (void)
 {
     x_flush_events ();
-    
+
     if (op_dlg->running)
         return FILE_CONT;
 
@@ -347,7 +347,7 @@ static int
 op_win_callback (struct Dlg_head *h, int id, int msg)
 {
     switch (msg){
-#ifndef HAVE_X    
+#ifndef HAVE_X
     case DLG_DRAW:
 	attrset (COLOR_NORMAL);
 	dlg_erase (h);
@@ -365,13 +365,13 @@ create_op_win (int op, int with_eta)
     int minus = verbose ? 0 : 3;
     int eta_offset = with_eta ? (WX_ETA_EXTRA) / 2 : 0;
 
-#ifdef HAVE_XVIEW    
+#ifdef HAVE_XVIEW
     char *sixty = "                                                                                   ";
     char *fifteen = "               ";
 #else
     char *sixty = "";
     char *fifteen = "";
-#endif    
+#endif
     replace_result = 0;
     recursive_result = 0;
     showing_eta = with_eta;
@@ -387,7 +387,7 @@ create_op_win (int op, int with_eta)
     if ((op_dlg->y + op_dlg->lines) > last_hint_line)
 	the_hint->widget.y = op_dlg->y + op_dlg->lines+1;
 #endif
-    
+
     x_set_dialog_title (op_dlg, "");
 
     tk_new_frame (op_dlg, "b.");
@@ -399,37 +399,37 @@ create_op_win (int op, int with_eta)
         XV_WLAY_CENTERROW);
 
     tk_new_frame (op_dlg, "2.");
-    add_widgetl (op_dlg, ProgressGauge [2] = gauge_new (7, FCOPY_GAUGE_X, 0, 100, 0, "g-1"), 
+    add_widgetl (op_dlg, ProgressGauge [2] = gauge_new (7, FCOPY_GAUGE_X, 0, 100, 0, "g-1"),
         XV_WLAY_RIGHTOF);
-    add_widgetl (op_dlg, ProgressLabel [2] = label_new (7, FCOPY_LABEL_X, fifteen, "l-1"), 
+    add_widgetl (op_dlg, ProgressLabel [2] = label_new (7, FCOPY_LABEL_X, fifteen, "l-1"),
         XV_WLAY_NEXTROW);
     add_widgetl (op_dlg, bps_label = label_new (7, WX, "", "bps-label"), XV_WLAY_NEXTROW);
 
         tk_new_frame (op_dlg, "1.");
-    add_widgetl (op_dlg, ProgressGauge [1] = gauge_new (8, FCOPY_GAUGE_X, 0, 100, 0, "g-2"), 
+    add_widgetl (op_dlg, ProgressGauge [1] = gauge_new (8, FCOPY_GAUGE_X, 0, 100, 0, "g-2"),
         XV_WLAY_RIGHTOF);
-    add_widgetl (op_dlg, ProgressLabel [1] = label_new (8, FCOPY_LABEL_X, fifteen, "l-2"), 
+    add_widgetl (op_dlg, ProgressLabel [1] = label_new (8, FCOPY_LABEL_X, fifteen, "l-2"),
         XV_WLAY_RIGHTOF);
     add_widgetl (op_dlg, stalled_label = label_new (8, WX, "", "stalled"), XV_WLAY_NEXTROW);
-	
+
     tk_new_frame (op_dlg, "0.");
-    add_widgetl (op_dlg, ProgressGauge [0] = gauge_new (6, FCOPY_GAUGE_X, 0, 100, 0, "g-3"), 
+    add_widgetl (op_dlg, ProgressGauge [0] = gauge_new (6, FCOPY_GAUGE_X, 0, 100, 0, "g-3"),
         XV_WLAY_RIGHTOF);
-    add_widgetl (op_dlg, ProgressLabel [0] = label_new (6, FCOPY_LABEL_X, fifteen, "l-3"), 
+    add_widgetl (op_dlg, ProgressLabel [0] = label_new (6, FCOPY_LABEL_X, fifteen, "l-3"),
         XV_WLAY_RIGHTOF);
     add_widgetl (op_dlg, eta_label = label_new (6, WX, "", "eta_label"), XV_WLAY_NEXTROW);
-    
+
     tk_new_frame (op_dlg, "f1.");
     add_widgetl (op_dlg, FileString [1] = label_new (4, FCOPY_GAUGE_X, sixty, "fs-l-1"),
         XV_WLAY_RIGHTOF);
-    add_widgetl (op_dlg, FileLabel [1] = label_new (4, FCOPY_LABEL_X, fifteen, "fs-l-2"), 
+    add_widgetl (op_dlg, FileLabel [1] = label_new (4, FCOPY_LABEL_X, fifteen, "fs-l-2"),
         XV_WLAY_NEXTROW);
     tk_new_frame (op_dlg, "f0.");
     add_widgetl (op_dlg, FileString [0] = label_new (3, FCOPY_GAUGE_X, sixty, "fs-x-1"),
         XV_WLAY_RIGHTOF);
-    add_widgetl (op_dlg, FileLabel [0] = label_new (3, FCOPY_LABEL_X, fifteen, "fs-x-2"), 
+    add_widgetl (op_dlg, FileLabel [0] = label_new (3, FCOPY_LABEL_X, fifteen, "fs-x-2"),
         XV_WLAY_NEXTROW);
-	
+
     /* We will manage the dialog without any help, that's why
        we have to call init_dlg */
     init_dlg (op_dlg);
@@ -477,12 +477,12 @@ show_source (char *s)
     	int i = strlen (cpanel->cwd);
 
 	/* We remove the full path we have added before */
-        if (!strncmp (s, cpanel->cwd, i)){ 
+        if (!strncmp (s, cpanel->cwd, i)){
             if (s[i] == PATH_SEP)
             	s += i + 1;
         }
 #endif /* WITH_FULL_PATHS */
-	
+
 	label_set_text (FileLabel [0], _("Source"));
 	label_set_text (FileString [0], truncFileString (s));
 	return check_buttons ();
@@ -531,7 +531,7 @@ file_eta_show ()
 
     if (!showing_eta)
 	return;
-    
+
     eta_hours = eta_secs / (60 * 60);
     eta_mins  = (eta_secs - (eta_hours * 60 * 60)) / 60;
     eta_s     = eta_secs - ((eta_hours * 60 * 60) + eta_mins * 60 );
@@ -552,7 +552,7 @@ file_bps_show ()
 		    sprintf (bps_buffer, "%.2f MBS", bps / (1024*1024.0));
 	    } else
 		    sprintf (bps_buffer, "%.2f KBS", bps / 1024.0);
-    } else 
+    } else
 	    sprintf (bps_buffer, "%ld BPS", bps);
     label_set_text (bps_label, bps_buffer);
 }
@@ -628,7 +628,7 @@ do_transform_source (char *source)
     int next_reg;
     enum CaseConvs case_conv = NO_CONV;
     static char fntarget [MC_MAXPATHLEN];
-    
+
     len = strlen (fnsource);
     j = re_match (&rx, fnsource, len, 0, &regs);
     if (j != len) {
@@ -669,7 +669,7 @@ do_transform_source (char *source)
 		next_reg = dest_mask [j] - '0';
 		/* Fall through */
 	    }
-                
+
 	case '*':
 	    if (next_reg < 0 || next_reg >= RE_NREGS
 		|| regs.start [next_reg] < 0) {
@@ -681,7 +681,7 @@ do_transform_source (char *source)
 		fntarget [k++] = convert_case (fnsource [l], &case_conv);
 	    next_reg ++;
 	    break;
-            	
+
 	default:
 	    fntarget [k++] = convert_case (dest_mask [j], &case_conv);
 	    break;
@@ -712,7 +712,7 @@ void
 free_linklist (struct link **linklist)
 {
     struct link *lp, *lp2;
-    
+
     for (lp = *linklist; lp != NULL; lp = lp2){
     	lp2 = lp -> next;
     	free (lp);
@@ -721,13 +721,13 @@ free_linklist (struct link **linklist)
 }
 
 #ifdef USE_VFS
-int 
+int
 is_in_linklist (struct link *lp, char *path, struct stat *sb)
 {
    ino_t ino = sb->st_ino;
    dev_t dev = sb->st_dev;
    vfs *vfs = vfs_type (path);
-   
+
    while (lp) {
       if (lp->vfs == vfs && lp->ino == ino && lp->dev == dev )
           return 1;
@@ -736,12 +736,12 @@ is_in_linklist (struct link *lp, char *path, struct stat *sb)
    return 0;
 }
 #else
-int 
+int
 is_in_linklist (struct link *lp, char *path, struct stat *sb)
 {
    ino_t ino = sb->st_ino;
    dev_t dev = sb->st_dev;
-   
+
    while (lp) {
       if (lp->ino == ino && lp->dev == dev )
           return 1;
@@ -781,7 +781,7 @@ check_hardlinks (char *src_name, char *dst_name, struct stat *pstat)
             /* FIXME: Announce we couldn't make the hardlink */
             return 0;
         }
-    lp = (struct link *) xmalloc (sizeof (struct link) + strlen (src_name) 
+    lp = (struct link *) xmalloc (sizeof (struct link) + strlen (src_name)
                                   + strlen (dst_name) + 1, "Hardlink cache");
     if (lp){
     	lp->vfs = my_vfs;
@@ -802,7 +802,7 @@ check_hardlinks (char *src_name, char *dst_name, struct stat *pstat)
    If dst_path is an existing symlink it will be deleted silently
    (upper levels take already care of existing files at dst_path).
   */
-static int 
+static int
 make_symlink (char *src_path, char *dst_path)
 {
     char link_target[MC_MAXPATHLEN];
@@ -810,8 +810,8 @@ make_symlink (char *src_path, char *dst_path)
     int return_status;
     struct stat sb;
     int dst_is_symlink;
-    
-    if (mc_lstat (dst_path, &sb) == 0 && S_ISLNK (sb.st_mode)) 
+
+    if (mc_lstat (dst_path, &sb) == 0 && S_ISLNK (sb.st_mode))
 	dst_is_symlink = 1;
     else
 	dst_is_symlink = 0;
@@ -827,14 +827,14 @@ make_symlink (char *src_path, char *dst_path)
     }
     link_target[len] = 0;
 
-    if (stable_symlinks && (!vfs_file_is_local (src_path) || 
+    if (stable_symlinks && (!vfs_file_is_local (src_path) ||
 			    !vfs_file_is_local (dst_path))) {
 	message_1s (1, MSG_ERROR, _(" Cannot make stable symlinks across "
 				    "non-local filesystems: \n\n"
 				    " Option Stable Symlinks will be disabled "));
 	stable_symlinks = 0;
     }
-    
+
     if (stable_symlinks && *link_target != PATH_SEP) {
 	char *p, *q, *r, *s;
 
@@ -906,9 +906,9 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
     int  return_status, temp_status;
     int do_remote_copy = 0;
     int appending = 0;
-    /* bitmask used to remember which resourses we should release on return 
-       A single goto label is much easier to handle than a bunch of gotos ;-). */ 
-    unsigned resources = 0; 
+    /* bitmask used to remember which resourses we should release on return
+       A single goto label is much easier to handle than a bunch of gotos ;-). */
+    unsigned resources = 0;
 
     return_status = FILE_RETRY;
 
@@ -936,8 +936,8 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 	if (return_status == FILE_RETRY)
 	    goto retry_src_xstat;
 	return return_status;
-    } 
-    
+    }
+
     if (dst_exists){
 	    /* .ado: For OS/2 or NT: no st_ino exists, it is better to just try to
 	     * overwrite the target file
@@ -958,7 +958,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 		do_reget = -1;
 	    else
 		do_reget = 0;
-		    
+
 	    return_status = query_replace (dst_path, &sb, &sb2);
 	    if (return_status != FILE_CONT)
 	        return return_status;
@@ -967,22 +967,22 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 
     if (!do_append) {
        /* .ado: OS2 and NT don't have hardlinks */
-#ifndef OS2_NT    
+#ifndef OS2_NT
         /* Check the hardlinks */
-        if (!op_follow_links && sb.st_nlink > 1 && 
+        if (!op_follow_links && sb.st_nlink > 1 &&
 	     check_hardlinks (src_path, dst_path, &sb) == 1) {
     	    /* We have made a hardlink - no more processing is necessary */
     	    return return_status;
         }
-	
+
         if (S_ISLNK (sb.st_mode))
 	    return make_symlink (src_path, dst_path);
-	    
+
 #endif /* !OS_NT */
 
         if (S_ISCHR (sb.st_mode) || S_ISBLK (sb.st_mode) || S_ISFIFO (sb.st_mode)
             || S_ISSOCK (sb.st_mode)){
-        retry_mknod:        
+        retry_mknod:
             if (mc_mknod (dst_path, sb.st_mode & umask_kill, sb.st_rdev) < 0){
 	        return_status = file_error
 		    (_(" Cannot create special file \"%s\" \n %s "), dst_path);
@@ -991,7 +991,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 		return return_status;
 	    }
 	    /* Success */
-	    
+
 #ifndef OS2_NT
 	retry_mknod_uidgid:
 	    if (preserve_uidgid && mc_chown (dst_path, sb.st_uid, sb.st_gid)){
@@ -1014,7 +1014,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 	    return FILE_CONT;
         }
     }
-    
+
     if (!do_append && !vfs_file_is_local (src_path) && vfs_file_is_local (dst_path)){
 	mc_setctl (src_path, MCCTL_SETREMOTECOPY, dst_path);
     }
@@ -1030,7 +1030,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 
     resources |= 1;
     do_remote_copy = mc_ctl (source_desc, MCCTL_ISREMOTECOPY, 0);
-    
+
     if (!do_remote_copy) {
  retry_src_fstat:
         if (mc_fstat (source_desc, &sb)){
@@ -1041,8 +1041,8 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 	    do_append = 0;
             goto ret;
         }
-#if 0	
-    /* Im not sure if we can delete this. sb is already filled by 
+#if 0
+    /* Im not sure if we can delete this. sb is already filled by
     (*xstat)() - Norbert. */
     } else {
  retry_src_rstat:
@@ -1054,7 +1054,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 	    do_append = 0;
             goto ret;
         }
-#endif    
+#endif
     }
     src_mode = sb.st_mode;
 #ifndef OS2_NT
@@ -1070,7 +1070,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 
     if (!do_remote_copy) {
  retry_dst_open:
-        if ((do_append && 
+        if ((do_append &&
             (dest_desc = mc_open (dst_path, O_WRONLY | O_APPEND)) < 0) ||
             (!do_append &&
             (dest_desc = mc_open (dst_path, O_WRONLY | O_CREAT | O_TRUNC, 0600)) < 0)) {
@@ -1145,11 +1145,11 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
         int    i, size, secs, update_secs;
 	long   dt;
 	char   *stalled_msg;
-	
+
 	gettimeofday (&tv_transfer_start, (struct timezone *) NULL);
 	tv_last_update = tv_transfer_start;
 	eta_secs = 0.0;
-	
+
         for (i = 1; i;) {
             switch (size = mc_ctl (source_desc, MCCTL_REMOTECOPYCHUNK, 8192)) {
                 case MCERR_TARGETOPEN:
@@ -1163,12 +1163,12 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 	        case MCERR_DATA_ON_STDIN:
 		    break;
                 case MCERR_FINISH:
-                    resources |= 8;  
+                    resources |= 8;
                     i = 0;
                     break;
             }
 
-            /* the first time we reach this line the target file has been created 
+            /* the first time we reach this line the target file has been created
 	       or truncated and we actually have a short target file.
 	       Do we really want to delete the target file when the ftp transfer
 	       fails? If we don't delete it we would be able to use reget later.
@@ -1187,7 +1187,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 		       |(S_IXOTH|S_IWOTH|S_IROTH)  /* other */
 		       |(S_IXGRP|S_IWGRP|S_IRGRP)))) /* group */
 		    src_mode = S_IRUSR|S_IWUSR|S_IROTH|S_IRGRP;
-		
+
 		gettimeofday (&tv_last_input, NULL);
 	    }
 	    /* Timed operations: */
@@ -1210,7 +1210,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 	    /* 3. Compute ETA */
 	    if (secs > 2 || eta_secs == 0.0){
 		dt = (tv_current.tv_sec - tv_transfer_start.tv_sec);
-		
+
 		if (n_read_total){
 		    eta_secs = ((dt / (double) n_read_total) * file_size) - dt;
 		    bps = n_read_total / ((dt < 1) ? 1 : dt);
@@ -1225,7 +1225,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 		    bps_time = 1;
 		bps = n_read_total / bps_time;
 	    }
-	    
+
 	    label_set_text (stalled_label, stalled_msg);
 
 	    return_status = show_file_progress (n_read_total, file_size);
@@ -1239,7 +1239,7 @@ copy_file_file (char *src_path, char *dst_path, int ask_overwrite)
 ret:
     if (buf)
 	free (buf);
-	
+
  retry_src_close:
     if ((resources & 1) && mc_close (source_desc) < 0){
 	temp_status = file_error
@@ -1258,7 +1258,7 @@ ret:
 	    goto retry_dst_close;
 	return_status = temp_status;
     }
-	
+
     if (resources & 4) {
         /* Remove short file */
 	mc_unlink (dst_path);
@@ -1267,7 +1267,7 @@ ret:
 	}
     } else if (resources & (2|8)) {
         /* no short file and destination file exists */
-#ifndef OS2_NT 
+#ifndef OS2_NT
 	if (!appending && preserve_uidgid) {
          retry_dst_chown:
     	    if (mc_chown (dst_path, src_uid, src_gid)){
@@ -1291,7 +1291,7 @@ ret:
 		goto retry_dst_chmod;
 	    return_status = temp_status;
 	}
-    
+
 	if (!appending && preserve)
 	    mc_utime (dst_path, &utb);
     }
@@ -1328,17 +1328,17 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
 	    goto retry_src_stat;
 	return return_status;
     }
-    
+
     if (is_in_linklist (dest_dirs, s, &cbuf)) {
-	/* Don't copy a directory we created before (we don't want to copy 
+	/* Don't copy a directory we created before (we don't want to copy
 	   infinitely if a directory is copied into itself) */
 	/* FIXME: should there be an error message and FILE_SKIP? - Norbert */
 	return FILE_CONT;
     }
 
-/* Hmm, hardlink to directory??? - Norbert */    
+/* Hmm, hardlink to directory??? - Norbert */
 /* FIXME: In this step we should do something
-   in case the destination already exist */    
+   in case the destination already exist */
     /* Check the hardlinks */
     if (preserve && cbuf.st_nlink > 1 && check_hardlinks (s, d, &cbuf) == 1) {
     	/* We have made a hardlink - no more processing is necessary */
@@ -1351,15 +1351,15 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
 	    goto retry_src_stat;
 	return return_status;
     }
-    
-#ifndef OS2_NT 
+
+#ifndef OS2_NT
     if (is_in_linklist (parent_dirs, s, &cbuf)) {
  	/* we found a cyclic symbolic link */
 	   message_2s (1, MSG_ERROR, _(" Cannot copy cyclic symbolic link \n `%s' "), s);
 	return FILE_SKIP;
     }
-#endif    
-    
+#endif
+
     lp = xmalloc (sizeof (struct link), "parent_dirs");
     lp->vfs = vfs_type (s);
     lp->ino = cbuf.st_ino;
@@ -1389,7 +1389,7 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
          */
 #if 1
 /* Again, I'm getting curious. Is not d already what we wanted, incl.
- *  masked source basename? Is not this just a relict of the past versions? 
+ *  masked source basename? Is not this just a relict of the past versions?
  *  I'm afraid this will lead into a two level deep dive :(
  *
  * I think this is indeed the problem.  I can not remember any case where
@@ -1400,7 +1400,7 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
  */
         if (toplevel && dive_into_subdirs){
 	    dest_dir = concat_dir_and_file (d, x_basename (s));
-	} else 
+	} else
 #endif
 	{
 	    dest_dir = copy_strings (d, 0);
@@ -1414,7 +1414,7 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
 	    goto retry_dst_mkdir;
 	goto ret;
     }
-    
+
     lp = xmalloc (sizeof (struct link), "dest_dirs");
     mc_stat (dest_dir, &buf);
     lp->vfs = vfs_type (dest_dir);
@@ -1422,8 +1422,8 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
     lp->dev = buf.st_dev;
     lp->next = dest_dirs;
     dest_dirs = lp;
-    
-#ifndef OS2_NT 
+
+#ifndef OS2_NT
     if (preserve_uidgid) {
      retry_dst_chown:
         if (mc_chown (dest_dir, cbuf.st_uid, cbuf.st_gid)){
@@ -1441,10 +1441,10 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
     if ((reading = mc_opendir (s)) == 0){
 	goto ret;
     }
-    
+
     while ((next = mc_readdir (reading)) && return_status != FILE_ABORT){
         /*
-         * Now, we don't want '.' and '..' to be created / copied at any time 
+         * Now, we don't want '.' and '..' to be created / copied at any time
          */
         if (!strcmp (next->d_name, "."))
             continue;
@@ -1453,7 +1453,7 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
 
         /* get the filename and add it to the src directory */
 	path = concat_dir_and_file (s, next->d_name);
-	
+
         (*xstat)(path, &buf);
         if (S_ISDIR (buf.st_mode)){
             mdpath = concat_dir_and_file (dest_dir, next->d_name);
@@ -1469,7 +1469,7 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
 	    dest_file = concat_dir_and_file (dest_dir, x_basename (path));
             return_status = copy_file_file (path, dest_file, 1);
 	    free (dest_file);
-	}    
+	}
 	if (delete && return_status == FILE_CONT) {
 	    if (erase_at_end) {
                 static struct link *tail;
@@ -1480,7 +1480,7 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
                 if (erase_list) {
                    tail->next = lp;
                    tail = lp;
-                } else 
+                } else
 		   erase_list = tail = lp;
 	    } else {
 	        if (S_ISDIR (buf.st_mode)) {
@@ -1489,7 +1489,7 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
 		    return_status = erase_file (path);
 	    }
 	}
-	
+
 #ifdef __os2__
 	/* The OS/2 mc_readdir returns a block of memory DIR
 	 * next should be freed: .ado
@@ -1500,7 +1500,7 @@ copy_dir_dir (char *s, char *d, int toplevel, int move_over, int delete,
         free (path);
     }
     mc_closedir (reading);
-    
+
     /* .ado: Directories can not have permission set in OS/2 */
 #ifndef __os2__
     if (preserve) {
@@ -1575,7 +1575,7 @@ move_file_file (char *s, char *d)
 		do_reget = -1;
 	    else
 		do_reget = 0;
-	    
+
 	    return_status = query_replace (d, &src_stats, &dst_stats);
 	    if (return_status != FILE_CONT)
 		return return_status;
@@ -1583,7 +1583,7 @@ move_file_file (char *s, char *d)
 	/* Ok to overwrite */
     }
 #if 0
- retry_rename: 
+ retry_rename:
 #endif
     if (!do_append) {
 	if (S_ISLNK (src_stats.st_mode) && stable_symlinks) {
@@ -1599,7 +1599,7 @@ move_file_file (char *s, char *d)
 #if 0
 /* Comparison to EXDEV seems not to work in nfs if you're moving from
    one nfs to the same, but on the server it is on two different
-   filesystems. Then nfs returns EIO instead of EXDEV. 
+   filesystems. Then nfs returns EIO instead of EXDEV.
    Hope it will not hurt if we always in case of error try to copy/delete. */
      else
     	errno = EXDEV; /* Hack to copy (append) the file and then delete it */
@@ -1610,7 +1610,7 @@ move_file_file (char *s, char *d)
 	    goto retry_rename;
 	return return_status;
     }
-#endif    
+#endif
 
     /* Failed because filesystem boundary -> copy the file instead */
     if ((return_status = copy_file_file (s, d, 0)) != FILE_CONT)
@@ -1674,7 +1674,7 @@ move_dir_dir (char *s, char *d)
         free (destdir);
         return return_status;
     }
-    
+
  retry_rename:
     if (mc_rename (s, destdir) == 0){
 	return_status = FILE_CONT;
@@ -1764,12 +1764,12 @@ recursive_erase (char *s)
 
     if (!strcmp (s, ".."))
 	return 1;
-    
+
     reading = mc_opendir (s);
-    
+
     if (!reading)
 	return 1;
-	
+
     while ((next = mc_readdir (reading)) && return_status == FILE_CONT){
 	if (!strcmp (next->d_name, "."))
 	    continue;
@@ -1779,7 +1779,7 @@ recursive_erase (char *s)
    	if (mc_lstat (path, &buf)){
 	    free (path);
 	    return 1;
-	} 
+	}
 	if (S_ISDIR (buf.st_mode))
 	    return_status = (recursive_erase (path) != FILE_CONT);
 	else
@@ -1807,9 +1807,9 @@ recursive_erase (char *s)
     return FILE_CONT;
 }
 
-/* Return -1 on error, 1 if there are no entries besides "." and ".." 
+/* Return -1 on error, 1 if there are no entries besides "." and ".."
    in the directory path points to, 0 else. */
-static int 
+static int
 check_dir_is_empty(char *path)
 {
     DIR *dir;
@@ -1916,10 +1916,10 @@ get_file (WPanel *panel, struct stat *stat_buf)
     /* No problem with Gnome, as get_current_type never returns view_tree there */
     if (get_current_type () == view_tree){
 	WTree *tree = (WTree *)get_panel_widget (get_current_index ());
-	
+
 	mc_stat (tree->selected_ptr->name, stat_buf);
 	return tree->selected_ptr->name;
-    } 
+    }
 
     if (panel->marked){
 	for (i = 0; i < panel->count; i++)
@@ -1948,7 +1948,7 @@ is_wildcarded (char *p)
     return 0;
 }
 
-/* Sets all global variables used by copy_file_file/move_file_file to a 
+/* Sets all global variables used by copy_file_file/move_file_file to a
    resonable default
    (file_mask_dialog sets these global variables interactively)
  */
@@ -1959,7 +1959,7 @@ file_mask_defaults (void)
     op_follow_links = 0;
     dive_into_subdirs = 0;
     xstat = mc_lstat;
-    
+
     preserve = 1;
     umask_kill = 0777777;
     preserve_uidgid = (geteuid () == 0) ? 1 : 0;
@@ -1976,28 +1976,28 @@ static QuickWidget fmd_widgets [] = {
 	/* follow symlinks and preserve Attributes must be the first */
     { quick_checkbox, 3, 64, 8, FMDY, N_("preserve &Attributes"), 9, 0,
       &op_preserve, 0, XV_WLAY_BELOWCLOSE, "preserve" },
-    { quick_checkbox, 3, 64, 7, FMDY, N_("follow &Links"), 7, 0, 
+    { quick_checkbox, 3, 64, 7, FMDY, N_("follow &Links"), 7, 0,
       &op_follow_links, 0, XV_WLAY_BELOWCLOSE, "follow" },
 #ifdef HAVE_XVIEW
 #define FMDI1 5
 #define FMDI2 2
 #define FMDC  4
-    { quick_input, 3, 64, 6, FMDY, "", 58, 0, 
+    { quick_input, 3, 64, 6, FMDY, "", 58, 0,
       0, 0, XV_WLAY_BELOWCLOSE, "input2" },
 #endif
     { quick_label, 3, 64, 5, FMDY, N_("to:"), 0, 0, 0, 0, XV_WLAY_BELOWOF,"to"},
-    { quick_checkbox, 37, 64, 4, FMDY, N_("&Using shell patterns"), 0, 0, 
+    { quick_checkbox, 37, 64, 4, FMDY, N_("&Using shell patterns"), 0, 0,
       0/* &source_easy_patterns */, 0, XV_WLAY_BELOWCLOSE, "using-shell" },
-    { quick_input, 3, 64, 3, FMDY, "", 58, 
+    { quick_input, 3, 64, 3, FMDY, "", 58,
       0, 0, 0, XV_WLAY_BELOWCLOSE, "input-def" },
-#ifndef HAVE_XVIEW      
+#ifndef HAVE_XVIEW
 #define FMDI1 4
 #define FMDI2 5
 #define FMDC 3
-    { quick_input, 3, 64, 6, FMDY, "", 58, 0, 
+    { quick_input, 3, 64, 6, FMDY, "", 58, 0,
       0, 0, XV_WLAY_BELOWCLOSE, "input2" },
-#endif      
-#define FMDI0 6	  
+#endif
+#define FMDI0 6
     { quick_label, 3, 64, 2, FMDY, "", 0, 0, 0, 0, XV_WLAY_DONTCARE, "ql" },
 #define	FMBRGT 7
     { quick_button, 42, 64, 9, FMDY, N_("&Cancel"), 0, B_CANCEL, 0, 0, XV_WLAY_DONTCARE,
@@ -2020,7 +2020,7 @@ static QuickWidget fmd_widgets [] = {
     { quick_button, 14, 64, 9, FMDY, N_("&Ok"), 0, B_ENTER, 0, 0, XV_WLAY_NEXTROW, "ok" },
     { quick_checkbox, 42, 64, 8, FMDY, N_("&Stable Symlinks"), 0, 0,
       &stable_symlinks, 0, XV_WLAY_BELOWCLOSE, "stab-sym" },
-    { quick_checkbox, 31, 64, 7, FMDY, N_("&Dive into subdir if exists"), 0, 0, 
+    { quick_checkbox, 31, 64, 7, FMDY, N_("&Dive into subdir if exists"), 0, 0,
       &dive_into_subdirs, 0, XV_WLAY_BELOWOF, "dive" },
     { 0 } };
 
@@ -2047,7 +2047,7 @@ fmd_init_i18n()
 	len = strlen (fmd_widgets [FMCB12].text)
 		+ strlen (fmd_widgets [FMCB22].text) + 15;
 	fmd_xlen = max (fmd_xlen, len);
-		
+
 	len = strlen (fmd_widgets [FMBRGT].text)
 		+ strlen (fmd_widgets [FMBLFT].text) + 11;
 
@@ -2098,7 +2098,7 @@ file_mask_dialog (int operation, char *text, char *def_text, int only_one, int *
     const char *error;
     struct stat buf;
     int val;
-    
+
     QuickDialog Quick_input;
 
 	if (!fmd_i18n_flag)
@@ -2113,7 +2113,7 @@ file_mask_dialog (int operation, char *text, char *def_text, int only_one, int *
     Quick_input.help  = "[Mask Copy/Rename]";
     Quick_input.ylen  = FMDY;
     Quick_input.i18n  = 1;
-    
+
     if (operation == OP_COPY) {
 	Quick_input.class = "quick_file_mask_copy";
 	Quick_input.widgets = fmd_widgets;
@@ -2136,7 +2136,7 @@ ask_file_mask:
 	xstat = mc_stat;
     else
 	xstat = mc_lstat;
-    
+
     if (op_preserve || operation == OP_MOVE) {
 	preserve = 1;
 	umask_kill = 0777777;
@@ -2278,14 +2278,14 @@ generate_prompt(char* cmd_buf, WPanel* panel, int operation, int only_one,
 					case 'f':
 						if (only_one)
 						{
-							cp = S_ISDIR (src_stat->st_mode) ? 
+							cp = S_ISDIR (src_stat->st_mode) ?
 								prompt_parts [2] : prompt_parts [0];
 						}
 						else
 						{
-							cp = (panel->marked == panel->dirs_marked) 
-							? prompt_parts [3] 
-							: (panel->dirs_marked ? prompt_parts [4] 
+							cp = (panel->marked == panel->dirs_marked)
+							? prompt_parts [3]
+							: (panel->dirs_marked ? prompt_parts [4]
 							: prompt_parts [1]);
 						}
 						break;
@@ -2356,13 +2356,13 @@ panel_operate (void *source_panel, int operation, char *thedefault)
 	    message (1, MSG_ERROR, _(" Can't operate on \"..\"! "));
 	    return 0;
 	}
-    
+
     if (operation < OP_COPY || operation > OP_DELETE)
 	return 0;
-    
+
     /* Generate confirmation prompt */
-    source = generate_prompt(cmd_buf, panel, operation, only_one, &src_stat);   
-    
+    source = generate_prompt(cmd_buf, panel, operation, only_one, &src_stat);
+
     /* Show confirmation dialog */
     if (operation == OP_DELETE && confirm_delete){
         if (know_not_what_am_i_doing)
@@ -2373,7 +2373,7 @@ panel_operate (void *source_panel, int operation, char *thedefault)
 	    return 0;
     } else if (operation != OP_DELETE) {
 	char *dest_dir;
-	
+
 	if (thedefault != NULL)
 	    dest_dir = thedefault;
 	else if (get_other_type () == view_listing)
@@ -2400,7 +2400,7 @@ panel_operate (void *source_panel, int operation, char *thedefault)
     /* Did the user select to do a background operation? */
     if (do_bg){
 	int v;
-	
+
 	v = do_background (copy_strings (operation_names [operation], ": ", panel->cwd, 0));
 	if (v == -1){
 	    message (1, MSG_ERROR, _(" Sorry, I could not put the job in background "));
@@ -2418,19 +2418,19 @@ panel_operate (void *source_panel, int operation, char *thedefault)
     /* We turn on ETA display if the source is an ftp file system */
     create_op_win (operation, vfs_file_is_ftp (panel->cwd));
     ftpfs_hint_reread (0);
-    
+
     /* Now, let's do the job */
     /* This code is only called by the tree and panel code */
     if (only_one){
 	/* One file: FIXME mc_chdir will take user out of any vfs */
 	if (operation != OP_COPY && get_current_type () == view_tree)
 	    mc_chdir (PATH_SEP_STR);
-	
+
 	/* The source and src_stat variables have been initialized before */
 #ifdef WITH_FULL_PATHS
 	source_with_path = concat_dir_and_file (panel->cwd, source);
 #endif
-	
+
 	if (operation == OP_DELETE){
 	    /* Delete operation */
 	    if (S_ISDIR (src_stat.st_mode))
@@ -2591,7 +2591,7 @@ panel_operate (void *source_panel, int operation, char *thedefault)
 	vfs_shut ();
 	tell_parent (MSG_CHILD_EXITING);
 	exit (1);
-    } 
+    }
 #endif
     return 1;
 }
@@ -2637,10 +2637,10 @@ files_error (char *format, char *file1, char *file2)
 {
     char nfile1 [16];
     char nfile2 [16];
-    
+
     strcpy (nfile1, name_trunc (file1, 15));
     strcpy (nfile2, name_trunc (file2, 15));
-    
+
     sprintf (cmd_buf, format, nfile1, nfile2, unix_error_string (errno));
     return do_file_error (cmd_buf);
 }
@@ -2674,7 +2674,7 @@ replace_callback (struct Dlg_head *h, int Id, int Msg)
 static struct
 {
 	char* text;
-	int   ypos, xpos;	
+	int   ypos, xpos;
 	int   value;		/* 0 for labels */
 	char* tkname;
 	WLay  layout;
@@ -2701,7 +2701,7 @@ rd_widgets [] =
 	                 6,      4,  0,              "target-date",XV_WLAY_CENTERROW},
 	{N_("Source date: %s, size %d"),
 	                 5,      4,  0,              "source-date",XV_WLAY_CENTERROW}
-}; 
+};
 
 #define ADD_RD_BUTTON(i)\
 	add_widgetl (replace_dlg,\
@@ -2726,12 +2726,12 @@ init_replace (enum OperationMode mode)
 	if (!i18n_flag)
 	{
 		int l1, l2, l, row;
-		register int i = sizeof (rd_widgets) / sizeof (rd_widgets [0]); 
+		register int i = sizeof (rd_widgets) / sizeof (rd_widgets [0]);
 		while (i--)
 			rd_widgets [i].text = _(rd_widgets [i].text);
 
-		/* 
-		 *longest of "Overwrite..." labels 
+		/*
+		 *longest of "Overwrite..." labels
 		 * (assume "Target date..." are short enough)
 		 */
 		l1 = max (strlen (rd_widgets [6].text), strlen (rd_widgets [11].text));
@@ -2758,7 +2758,7 @@ init_replace (enum OperationMode mode)
 		/* Now place buttons */
 		l1 += 5; /* start of first button in the row */
 		i = sizeof (rd_widgets) / sizeof (rd_widgets [0]);
-		
+
 		for (l = l1, row = 0; --i > 1;)
 		{
 			if (rd_widgets [i].value != 0)
@@ -2782,17 +2782,17 @@ init_replace (enum OperationMode mode)
     replace_colors [1] = COLOR_NORMAL;
     replace_colors [2] = ERROR_COLOR;
     replace_colors [3] = COLOR_NORMAL;
-    
+
     replace_dlg = create_dlg (0, 0, 16, rd_xlen, replace_colors, replace_callback,
 			      "[ Replace ]", "replace", DLG_CENTER);
-    
+
     x_set_dialog_title (replace_dlg,
         mode == Foreground ? _(" File exists ") : _(" Background process: File exists "));
 
 
 	ADD_RD_LABEL(0, name_trunc (replace_filename, rd_trunc - strlen (rd_widgets [0].text)), 0 );
-	ADD_RD_BUTTON(1);    
-    
+	ADD_RD_BUTTON(1);
+
     tk_new_frame (replace_dlg, "a.");
 
 	ADD_RD_BUTTON(2);
@@ -2812,7 +2812,7 @@ init_replace (enum OperationMode mode)
 	ADD_RD_BUTTON(9);
 	ADD_RD_BUTTON(10);
 	ADD_RD_LABEL(11,0,0);
-    
+
     tk_new_frame (replace_dlg, "i.");
 	ADD_RD_LABEL(12, file_date (d_stat->st_mtime), (int) d_stat->st_size);
 	ADD_RD_LABEL(13, file_date (s_stat->st_mtime), (int) s_stat->st_size);
@@ -2849,13 +2849,13 @@ real_query_replace (enum OperationMode mode, char *destname, struct stat *_s_sta
 	    return FILE_SKIP;
 	else
 	    return FILE_CONT;
-	
+
     case REPLACE_REGET:
 	do_reget = _d_stat->st_size;
-	
+
     case REPLACE_APPEND:
         do_append = 1;
-	
+
     case REPLACE_YES:
     case REPLACE_ALWAYS:
 	do_refresh ();
@@ -2885,8 +2885,8 @@ real_query_recursive (enum OperationMode mode, char *s)
 	    query_set_sel (1);
         recursive_result = query_dialog (text, msg, D_ERROR, 5,
 				     _("&Yes"), _("&No"), _("a&ll"), _("non&E"), _("&Abort"));
-	
-	
+
+
 	if (recursive_result != RECURSIVE_ABORT)
 	    do_refresh ();
 	free (text);

@@ -1,9 +1,9 @@
-/* tcpServer.c 
+/* tcpServer.c
  *
  * Simple Winsock TCP server test.
- * Later will be used as base for ReactOS telnetd  
- * 
- * HISTORY: 
+ * Later will be used as base for ReactOS telnetd
+ *
+ * HISTORY:
  * 6-15-02 - Added Winsock support to UNIX tcp test
  * 6-16-02 - Removed Unix support
  * 6-17-02 - Added extra comments to code
@@ -27,20 +27,20 @@
 int read_line();
 
 int main (int argc, char *argv[]) {
-  
+
   WORD       wVersionRequested;
   WSADATA    WsaData;
   INT	     Status;
   int sd, newSd, cliLen;
 
   struct sockaddr_in cliAddr, servAddr;
-  char line[MAX_MSG]; 
+  char line[MAX_MSG];
 
     wVersionRequested = MAKEWORD(2, 2);
- 
+
     Status = WSAStartup(wVersionRequested, &WsaData);
     if (Status != 0) {
-        printf("Could not initialize winsock dll.\n");	
+        printf("Could not initialize winsock dll.\n");
         return FALSE;
     }
 
@@ -51,12 +51,12 @@ int main (int argc, char *argv[]) {
     WSACleanup();
     return ERROR;
   }
-  
+
   /* bind server port */
   servAddr.sin_family = AF_INET;
   servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servAddr.sin_port = htons(SERVER_PORT);
-  
+
   if(bind(sd, (struct sockaddr *) &servAddr, sizeof(servAddr))<0) {
     perror("cannot bind port ");
     WSACleanup();
@@ -64,7 +64,7 @@ int main (int argc, char *argv[]) {
   }
 
   listen(sd,5);
-  
+
   while(1) {
 
     printf("%s: \n"
@@ -79,21 +79,21 @@ int main (int argc, char *argv[]) {
       WSACleanup();
       return ERROR;
     }
-    
+
     /* init line */
     memset(line,0x0,MAX_MSG);
-    
+
     /* receive segments */
     while(read_line(newSd,line)!=ERROR) {
-      
-      printf("%s: received from %s:TCP%d : %s\n", argv[0], 
+
+      printf("%s: received from %s:TCP%d : %s\n", argv[0],
 	     inet_ntoa(cliAddr.sin_addr),
 	     ntohs(cliAddr.sin_port), line);
       /* init line */
       memset(line,0x0,MAX_MSG);
-      
+
     } /* while(read_line) */
-    
+
   } /* while (1) */
 
 }
@@ -112,11 +112,11 @@ int main (int argc, char *argv[]) {
 /* You can set END_CHAR to whatever means endofline for you. (0x0A is \n)*/
 /* read_lin returns the number of bytes returned in line_to_return       */
 int read_line(int newSd, char *line_to_return) {
-  
+
   static int rcv_ptr=0;
   static char rcv_msg[MAX_MSG];
   static int n;
-  int offset;  
+  int offset;
 
   offset=0;
 
@@ -135,7 +135,7 @@ int read_line(int newSd, char *line_to_return) {
 	return ERROR;
       }
     }
-  
+
     /* if new data read on socket */
     /* OR */
     /* if another line is still in buffer */
@@ -146,15 +146,15 @@ int read_line(int newSd, char *line_to_return) {
       offset++;
       rcv_ptr++;
     }
-    
+
     /* end of line + end of buffer => return line */
-    if(rcv_ptr==n-1) { 
+    if(rcv_ptr==n-1) {
       /* set last byte to END_LINE */
       *(line_to_return+offset)=END_LINE;
       rcv_ptr=0;
       return ++offset;
-    } 
-    
+    }
+
     /* end of line but still some data in buffer => return line */
     if(rcv_ptr <n-1) {
       /* set last byte to END_LINE */
@@ -167,9 +167,9 @@ int read_line(int newSd, char *line_to_return) {
     /*  wait for more data to arrive on socket */
     if(rcv_ptr == n) {
       rcv_ptr = 0;
-    } 
-    
+    }
+
   } /* while */
 }
-  
-  
+
+

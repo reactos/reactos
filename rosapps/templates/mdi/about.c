@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-    
+
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
@@ -33,7 +33,7 @@
 #include <process.h>
 #include <stdio.h>
 #endif
-    
+
 #include "main.h"
 #include "about.h"
 

@@ -45,7 +45,7 @@ void DfBuildSystemMenu(DFWINDOW wnd)
 	int lf, tp, ht, wd;
     DFWINDOW SystemMenuWnd;
 
-    DfSystemMenu.PullDown[0].Selections[6].Accelerator = 
+    DfSystemMenu.PullDown[0].Selections[6].Accelerator =
         (DfGetClass(wnd) == DF_APPLICATION) ? DF_ALT_F4 : DF_CTRL_F4;
 
     lf = DfGetLeft(wnd)+1;

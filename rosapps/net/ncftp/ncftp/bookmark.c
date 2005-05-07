@@ -1,8 +1,8 @@
-/* bookmark.c 
+/* bookmark.c
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -296,14 +296,14 @@ OpenBookmarkFile(int *numBookmarks0)
 		}
 		return NULL;		/* Okay to not have one yet. */
 	}
-	
+
 	(void) chmod(pathName, 00600);
 	if (FGets(line, sizeof(line), fp) == NULL) {
 		(void) fprintf(stderr, "%s: invalid format.\n", pathName);
 		(void) fclose(fp);
 		return NULL;
 	}
-	
+
 	/* Sample line we're looking for:
 	 * "NcFTP bookmark-file version: 8"
 	 */
@@ -328,7 +328,7 @@ OpenBookmarkFile(int *numBookmarks0)
 	 * "Number of entries: 28" or "# # # 1"
 	 */
 	numBookmarks = -1;
-	
+
 	/* At the moment, we can't trust the number stored in the
 	 * file.  It's there for future use.
 	 */
@@ -481,7 +481,7 @@ GetBookmark(const char *const bmabbr, Bookmark *bmp)
 static int
 BookmarkSortProc(const void *a, const void *b)
 {
-	return (ISTRCMP((*(Bookmark *)a).bookmarkName, (*(Bookmark *)b).bookmarkName));	
+	return (ISTRCMP((*(Bookmark *)a).bookmarkName, (*(Bookmark *)b).bookmarkName));
 }	/* BookmarkSortProc */
 
 
@@ -489,7 +489,7 @@ BookmarkSortProc(const void *a, const void *b)
 static int
 BookmarkSearchProc(const void *key, const void *b)
 {
-	return (ISTRCMP((char *) key, (*(Bookmark *)b).bookmarkName));	
+	return (ISTRCMP((char *) key, (*(Bookmark *)b).bookmarkName));
 }	/* BookmarkSearchProc */
 
 
@@ -821,7 +821,7 @@ DefaultBookmarkName(char *dst, size_t siz, char *src)
 	const char *cp;
 
 	(void) STRNCPY(str, src);
-	
+
 	/* Pick the first "significant" part of the hostname.  Usually
 	 * this is the first word in the name, but if it's something like
 	 * ftp.unl.edu, we would want to choose "unl" and not "ftp."

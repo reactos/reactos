@@ -5,7 +5,7 @@
  * include this header, you have to move it to the group of HAVE_X dependant
  * modules in {xv|tk}/Makefile.in !!!
  */
- 
+
 #include "dlg.h"
 #include "widget.h"
 

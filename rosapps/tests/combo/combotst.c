@@ -257,7 +257,7 @@ Styles[] = {
 	{"WS_VSCROLL",WS_VSCROLL}
     };
 
-/* The number of check buttons we have. 
+/* The number of check buttons we have.
 * Maybe some calculations at compile time would be better
 */
 
@@ -284,7 +284,7 @@ CreateCheckButton(const char* lpWindowName, DWORD xSize, DWORD id)
         g_hwnd,
         (HMENU) id,
         g_hInst,
-        NULL    
+        NULL
         );
     yButPos += 21;
     return h;
@@ -367,7 +367,7 @@ ShowWindow(NextBut,SW_HIDE);
 LRESULT
 CALLBACK
 WndProc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
-    {   
+    {
     int i;
     switch ( msg )
         {

@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	wchar_t	** wargv;
 	int	i;
 	int	ec;
-	
+
 	wargv = (wchar_t **) GlobalAlloc(
 				sizeof(void*) * argc,
 				0

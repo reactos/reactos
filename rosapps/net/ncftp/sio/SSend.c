@@ -131,7 +131,7 @@ SSend(int sfd, char *buf0, size_t size, int fl, int tlen)
 				/* ready */
 				break;
 			} else if (result == 0) {
-				/* timeout */		
+				/* timeout */
 				nwrote = size - nleft;
 				if (nwrote > 0)
 					return (nwrote);

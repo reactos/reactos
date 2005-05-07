@@ -1,4 +1,4 @@
-/* $Id: Pattern.h,v 1.1 2001/01/10 01:25:29 narnaoud Exp $ */
+/* $Id$ */
 
 // Pattern.h: decalration for pattern functions
 

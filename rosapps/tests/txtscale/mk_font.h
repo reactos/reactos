@@ -6,7 +6,7 @@
 // Created by Damon Chandler <dmc27@ee.cornell.edu>
 // Updates can be downloaded at: <www.coriolis.com>
 //
-// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu 
+// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu
 // if you have any questions about this code.
 // ------------------------------------------------------------------
 
@@ -28,8 +28,8 @@ static const ULONG FS_UNDERLINE = 0x00000004;
 static const ULONG FS_STRIKEOUT = 0x00000008;
 
 // creates a logical font
-HFONT MakeFont(IN HDC hDestDC, IN LPCSTR typeface_name, 
-   IN int point_size, IN const BYTE charset = ANSI_CHARSET, 
+HFONT MakeFont(IN HDC hDestDC, IN LPCSTR typeface_name,
+   IN int point_size, IN const BYTE charset = ANSI_CHARSET,
    IN const DWORD style = FS_NONE);
 
 }

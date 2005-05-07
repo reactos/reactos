@@ -21,7 +21,7 @@ typedef struct {
     char *localcopy;
     int view_active;
     int have_frame;
-    
+
     unsigned char *data;	/* Memory area for the file to be viewed */
 
     /* File information */
@@ -40,30 +40,30 @@ typedef struct {
     long start_display;		/* First char displayed */
     int  start_col;		/* First displayed column, negative */
     int  edit_cursor;           /* HexEdit cursor position in file */
-    char hexedit_mode;          /* Hexidecimal editing mode flag */ 
+    char hexedit_mode;          /* Hexidecimal editing mode flag */
     char nib_shift;             /* A flag for inserting nibbles into bytes */
     enum ViewSide view_side;	/* A flag for the active editing panel */
     int  file_dirty;            /* Number of changes */
-    int  start_save;            /* Line start shift between Ascii and Hex */ 
+    int  start_save;            /* Line start shift between Ascii and Hex */
     int  cursor_col;		/* Cursor column */
     int  cursor_row;		/* Cursor row */
     struct hexedit_change_node *change_list;   /* Linked list of changes */
 
     int dirty;			/* Number of skipped updates */
     int wrap_mode;		/* wrap_mode */
-	
+
     /* Mode variables */
     int hex_mode;		/* Hexadecimal mode flag */
     int bytes_per_line;		/* Number of bytes per line in hex mode */
     int viewer_magic_flag;	/* Selected viewer */
     int viewer_nroff_flag;	/* Do we do nroff style highlighting? */
-    
+
     /* Growing buffers information */
     int growing_buffer;		/* Use the growing buffers? */
     block_ptr_t *block_ptr;	/* Pointer to the block pointers */
     int          blocks;	/* The number of blocks in *block_ptr */
 
-    
+
     /* Search variables */
     int search_start;		/* First character to start searching from */
     int found_len;		/* Length of found string or 0 if none was found */
@@ -77,7 +77,7 @@ typedef struct {
     /* Markers */
     int marker;			/* mark to use */
     int marks [10];		/* 10 marks: 0..9 */
-    
+
 #ifdef HAVE_TK
     /* Tk version, line cache */
     int  current_line;		/* The current screen line cached */
@@ -88,7 +88,7 @@ typedef struct {
     int  last_col;		/* last column used */
     int  status_shown;		/* Have we show the file information? */
 #endif
-	
+
 #ifdef HAVE_GNOME
     int  current_x, current_y;	/* Current x,y position */
     int  color;			/* Current color */
@@ -99,8 +99,8 @@ typedef struct {
     void *gtk_percent;		/* percent */
     void *sadj;			/* scrollbar adjustment */
 #endif
-	
-    int  move_dir;		/* return value from widget:  
+
+    int  move_dir;		/* return value from widget:
 				 * 0 do nothing
 				 * -1 view previous file
 				 * 1 view next file

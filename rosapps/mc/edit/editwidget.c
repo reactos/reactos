@@ -411,7 +411,7 @@ void link_hscrollbar_to_editor (CWidget * scrollbar, CWidget * editor, XEvent * 
     }
 }
 
-/* 
+/*
    This section comes from rxvt-2.21b1/src/screen.c by
    Robert Nation <nation@rocket.sanders.lockheed.com> &
    mods by mj olesen <olesen@me.QueensU.CA>

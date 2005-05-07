@@ -8,7 +8,7 @@ LRESULT WINAPI AnsiSubclassProc(HWND, UINT, WPARAM, LPARAM);
 static WNDPROC SavedWndProcW;
 static WNDPROC SavedWndProcA;
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,

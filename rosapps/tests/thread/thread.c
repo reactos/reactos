@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.1 2004/10/21 04:48:45 sedwards Exp $
+/* $Id$
  *
  *
  *
@@ -16,7 +16,7 @@ ULONG nr;
 DWORD WINAPI thread_main1(LPVOID param)
 {
    ULONG s;
-   
+
    printf("Thread %ld running\n", (DWORD)param);
    s = nr = ((nr * 1103515245) + 12345) & 0x7fffffff;
    s = s % 10;
@@ -51,11 +51,11 @@ int main (int argc, char* argv[])
    //		showHelp();
    //		return 1;
    //   }
-		
+
    //   nr = atoi(argv[1]);
    nr = 500;
    printf("Seed %ld\n", nr);
-   
+
    printf("Creating %d threads...\n",NR_THREADS*2);
    for (i=0;i<NR_THREADS;i++)
      {

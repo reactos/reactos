@@ -22,7 +22,7 @@ FTPChdir(const FTPCIPtr cip, const char *const cdCwd)
 		cip->errNo = kErrInvalidDirParam;
 	} else {
 		if (cdCwd[0] == '\0')	/* But allow FTPChdir(cip, ".") to go through. */
-			result = 2;	
+			result = 2;
 		else if (strcmp(cdCwd, "..") == 0)
 			result = FTPCmd(cip, "CDUP");
 		else
@@ -69,7 +69,7 @@ FTPChmod(const FTPCIPtr cip, const char *const pattern, const char *const mode, 
 			cip->errNo = kErrBadLineList;
 			break;
 		}
-		onceResult = FTPCmd(cip, "SITE CHMOD %s %s", mode, file); 	
+		onceResult = FTPCmd(cip, "SITE CHMOD %s %s", mode, file);
 		if (onceResult < 0) {
 			batchResult = onceResult;
 			break;
@@ -228,7 +228,7 @@ FTPDelete(const FTPCIPtr cip, const char *const pattern, const int recurse, cons
 				batchResult = kErrDELEFailed;
 				cip->errNo = kErrDELEFailed;
 			} else {
-				onceResult = FTPCmd(cip, "RMD %s", file); 	
+				onceResult = FTPCmd(cip, "RMD %s", file);
 				if (onceResult < 0) {
 					batchResult = onceResult;
 					break;
@@ -336,7 +336,7 @@ FTPChdirAndGetCWD(const FTPCIPtr cip, const char *const cdCwd, char *const newCw
 			Error(cip, kDontPerror, "Malloc failed.\n");
 		} else {
 			if (strcmp(cdCwd, "..") == 0)
-				result = RCmd(cip, rp, "CDUP"); 	
+				result = RCmd(cip, rp, "CDUP");
 			else
 				result = RCmd(cip, rp, "CWD %s", cdCwd);
 			if (result == 2) {
@@ -408,13 +408,13 @@ FTPChdir3(FTPCIPtr cip, const char *const cdCwd, char *const newCwd, const size_
 	}
 
 	/* else: (flags | kChdirOneSubdirAtATime) == true */
-	
+
 	cp = cip->buf;
 	cp[cip->bufSize - 1] = '\0';
 	(void) Strncpy(cip->buf, cdCwd, cip->bufSize);
 	if (cp[cip->bufSize - 1] != '\0')
 		return (kErrBadParameter);
-	
+
 	mkd = (flags & kChdirAndMkdir);
 	pwd = (flags & kChdirAndGetCWD);
 
@@ -713,7 +713,7 @@ FTPRename(const FTPCIPtr cip, const char *const oldname, const char *const newna
 	if ((newname == NULL) || (oldname[0] == '\0'))
 		return (kErrBadParameter);
 
-	
+
 	result = FTPCmd(cip, "RNFR %s", oldname);
 	if (result < 0)
 		return (result);
@@ -721,7 +721,7 @@ FTPRename(const FTPCIPtr cip, const char *const oldname, const char *const newna
 		cip->errNo = kErrRenameFailed;
 		return (cip->errNo);
 	}
-	
+
 	result = FTPCmd(cip, "RNTO %s", newname);
 	if (result < 0)
 		return (result);
@@ -807,7 +807,7 @@ FTPRmdir(const FTPCIPtr cip, const char *const pattern, const int recurse, const
 			cip->errNo = kErrBadLineList;
 			break;
 		}
-		onceResult = FTPCmd(cip, "RMD %s", file); 	
+		onceResult = FTPCmd(cip, "RMD %s", file);
 		if (onceResult < 0) {
 			batchResult = onceResult;
 			break;
@@ -1362,7 +1362,7 @@ FTPFileExists2(const FTPCIPtr cip, const char *const file, const int tryMDTM, co
 			cip->errNo = kErrNoSuchFileOrDirectory;
 			return (kErrNoSuchFileOrDirectory);
 		}
-		/* else keep going */	
+		/* else keep going */
 	}
 
 	if (trySIZE != 0) {
@@ -1375,7 +1375,7 @@ FTPFileExists2(const FTPCIPtr cip, const char *const file, const int tryMDTM, co
 		 * if (result == kErrSIZEFailed)
 		 *	return (kErrNoSuchFileOrDirectory);
 		 */
-		/* else keep going */	
+		/* else keep going */
 	}
 
 
@@ -1387,7 +1387,7 @@ FTPFileExists2(const FTPCIPtr cip, const char *const file, const int tryMDTM, co
 			cip->errNo = kErrNoSuchFileOrDirectory;
 			return (kErrNoSuchFileOrDirectory);
 		}
-		/* else keep going */	
+		/* else keep going */
 	}
 
 	if (trySTAT != 0) {
@@ -1398,7 +1398,7 @@ FTPFileExists2(const FTPCIPtr cip, const char *const file, const int tryMDTM, co
 			cip->errNo = kErrNoSuchFileOrDirectory;
 			return (kErrNoSuchFileOrDirectory);
 		}
-		/* else keep going */	
+		/* else keep going */
 	}
 
 	if (tryNLST != 0) {
@@ -1409,7 +1409,7 @@ FTPFileExists2(const FTPCIPtr cip, const char *const file, const int tryMDTM, co
 			cip->errNo = kErrNoSuchFileOrDirectory;
 			return (kErrNoSuchFileOrDirectory);
 		}
-		/* else keep going */	
+		/* else keep going */
 	}
 
 	cip->errNo = kErrCantTellIfFileExists;
@@ -1678,7 +1678,7 @@ FTPUtime(const FTPCIPtr cip, const char *const file, time_t actime, time_t modti
 			cip->errNo = kErrMallocFailed;
 			Error(cip, kDontPerror, "Malloc failed.\n");
 		} else {
-			result = RCmd(cip, rp, "SITE UTIME %s %s %s %s UTC", file, astr, mstr, cstr); 	
+			result = RCmd(cip, rp, "SITE UTIME %s %s %s %s UTC", file, astr, mstr, cstr);
 			if (result < 0) {
 				DoneWithResponse(cip, rp);
 				return (result);

@@ -1,4 +1,4 @@
-/* $Id: TextHistory.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+/* $Id$ */
 
 // TextHistory.h: interface for the CTextHistory class.
 //
@@ -7,7 +7,7 @@
 #if !defined(TEXTHISTORY_H__AD9C6555_1D97_11D4_9F58_204C4F4F5020__INCLUDED_)
 #define TEXTHISTORY_H__AD9C6555_1D97_11D4_9F58_204C4F4F5020__INCLUDED_
 
-class CTextHistory  
+class CTextHistory
 {
 public:
 	CTextHistory();

@@ -14,7 +14,7 @@ int StatusBarProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
 			if ((int)p1 == CTRL_F4)
 				return TRUE;
 			break;
-		case PAINT:	
+		case PAINT:
 			if (!isVisible(wnd))
 				break;
 			statusbar = DFcalloc(1, WindowWidth(wnd)+1);

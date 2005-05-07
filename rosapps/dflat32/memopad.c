@@ -125,7 +125,7 @@ static int MemoPadProc(DFWINDOW wnd,DFMESSAGE msg,DF_PARAM p1,DF_PARAM p2)
                 case DF_ID_PRINT:
                     PrintPad(DfInFocus);
                     return TRUE;
-				case DF_ID_EXIT:	
+				case DF_ID_EXIT:
 					if (!DfYesNoBox("Exit Memopad?"))
 						return FALSE;
 					break;
@@ -144,7 +144,7 @@ static int MemoPadProc(DFWINDOW wnd,DFMESSAGE msg,DF_PARAM p1,DF_PARAM p2)
 					FixTabMenu();
                     return TRUE;
 				case DF_ID_TAB6:
-					DfCfg.Tabs = 6;					
+					DfCfg.Tabs = 6;
 					FixTabMenu();
                     return TRUE;
 				case DF_ID_TAB8:
@@ -254,7 +254,7 @@ static void OpenPadWindow(DFWINDOW wnd, char *FileName)
     }
 	DfSendMessage(wwnd, DFM_CLOSE_WINDOW, 0, 0);
     DfSendMessage(wnd1, DFM_SETFOCUS, TRUE, 0);
-    DfSendMessage(wnd1, DFM_MAXIMIZE, 0, 0);    
+    DfSendMessage(wnd1, DFM_MAXIMIZE, 0, 0);
 }
 
 /* --- Load the notepad file into the editor text buffer --- */
@@ -414,7 +414,7 @@ static int EditorProc(DFWINDOW wnd,DFMESSAGE msg,DF_PARAM p1,DF_PARAM p2)
             rtn = DfDefaultWndProc(wnd, msg, p1, p2);
             if ((int)p1 == FALSE)
                 DfSendMessage(DfGetParent(wnd), DFM_ADDSTATUS, 0, 0);
-            else 
+            else
                 ShowPosition(wnd);
             return rtn;
         case DFM_KEYBOARD_CURSOR:

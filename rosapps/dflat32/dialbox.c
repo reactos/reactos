@@ -529,11 +529,11 @@ void DfSetScrollBars(DFWINDOW wnd)
     int oldattr = DfGetAttribute(wnd);
     if (wnd->wlines > DfClientHeight(wnd))
         DfAddAttribute(wnd, DF_VSCROLLBAR);
-    else 
+    else
         DfClearAttribute(wnd, DF_VSCROLLBAR);
     if (wnd->textwidth > DfClientWidth(wnd))
         DfAddAttribute(wnd, DF_HSCROLLBAR);
-    else 
+    else
         DfClearAttribute(wnd, DF_HSCROLLBAR);
     if (DfGetAttribute(wnd) != oldattr)
         DfSendMessage(wnd, DFM_BORDER, 0, 0);
@@ -643,15 +643,15 @@ static void FixColors(DFWINDOW wnd)
 	{
 		if (ct->class != DF_SPINBUTTON && ct->class != DF_COMBOBOX)
 		{
-			wnd->WindowColors[DF_FRAME_COLOR][DF_FG] = 
+			wnd->WindowColors[DF_FRAME_COLOR][DF_FG] =
 				DfGetParent(wnd)->WindowColors[DF_FRAME_COLOR][DF_FG];
-			wnd->WindowColors[DF_FRAME_COLOR][DF_BG] = 
+			wnd->WindowColors[DF_FRAME_COLOR][DF_BG] =
 				DfGetParent(wnd)->WindowColors[DF_FRAME_COLOR][DF_BG];
 			if (ct->class != DF_EDITBOX && ct->class != DF_LISTBOX)
 			{
-				wnd->WindowColors[DF_STD_COLOR][DF_FG] = 
+				wnd->WindowColors[DF_STD_COLOR][DF_FG] =
 					DfGetParent(wnd)->WindowColors[DF_STD_COLOR][DF_FG];
-				wnd->WindowColors[DF_STD_COLOR][DF_BG] = 
+				wnd->WindowColors[DF_STD_COLOR][DF_BG] =
 					DfGetParent(wnd)->WindowColors[DF_STD_COLOR][DF_BG];
 			}
 		}

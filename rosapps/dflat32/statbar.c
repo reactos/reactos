@@ -14,7 +14,7 @@ int DfStatusBarProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 			if ((int)p1 == DF_CTRL_F4)
 				return TRUE;
 			break;
-		case DFM_PAINT:	
+		case DFM_PAINT:
 			if (!DfIsVisible(wnd))
 				break;
 			statusbar = DfCalloc(1, DfWindowWidth(wnd)+1);

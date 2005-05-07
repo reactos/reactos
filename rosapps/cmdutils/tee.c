@@ -1,10 +1,10 @@
-/* 
+/*
  * TEE.C - external command.
  *
  * clone from 4nt tee command
  *
  * 01 Sep 1999 - Paolo Pantaleo <paolopan@freemail.it>
- *     started 
+ *     started
  *
  *
  */
@@ -69,7 +69,7 @@ INT main (int argc,char **p)
 
 	/*handle for file and console*/
 	HANDLE hConsoleIn,hConsoleOut;
-	
+
 	/*bytes written by WriteFile and ReadFile*/
 	DWORD dwRead,dwWritten;
 
@@ -82,7 +82,7 @@ INT main (int argc,char **p)
 	INT i;
 	BOOL bQuote;
 
-	/*file list implementation*/	
+	/*file list implementation*/
 	LPTSTR *files;
 	INT iFileCounter=0;
 	HANDLE *hFile;
@@ -140,7 +140,7 @@ INT main (int argc,char **p)
 /*
 		if(  iFileCounter >= sizeof(files) / sizeof(*files)  )
 		{
-			ConErrPrintf("too many files, maximum is %d\n",sizeof(files) / sizeof(*files));			
+			ConErrPrintf("too many files, maximum is %d\n",sizeof(files) / sizeof(*files));
 			return 1;
 		}
 		*/
@@ -150,7 +150,7 @@ INT main (int argc,char **p)
 
 	/*open file(s)*/
 	for(i=0;i<iFileCounter;i++)
-	{	
+	{
 		//l=0;
 		hFile[i] = CreateFile(files[i],GENERIC_WRITE,
 			0,NULL,

@@ -1,12 +1,12 @@
 /* Client interface for General purpose Win32 console save/restore server
    Having the same interface as its Linux counterpart:
-   	Copyright (C) 1994 Janne Kukonlehto <jtklehto@stekt.oulu.fi> 
-   
+   	Copyright (C) 1994 Janne Kukonlehto <jtklehto@stekt.oulu.fi>
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -14,8 +14,8 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
-   
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
    Note:
    	show_console_contents doesn't know how to write to its window
    	the rest works fine.
@@ -39,7 +39,7 @@ void show_console_contents (int starty, unsigned char begin_line,
 	unsigned char end_line)
 {
     COORD c0 = { 0, 0 };
-    COORD csize; 
+    COORD csize;
     SMALL_RECT rect;
     CHAR_INFO *pchar;
 
@@ -58,7 +58,7 @@ void show_console_contents (int starty, unsigned char begin_line,
     /* FIXME: this should've work,
        but refresh() is called after this write :-( */
     win32APICALL(WriteConsoleOutput (hNew, pchar, csize, c0, &rect));
-    
+
     free (pchar);
 }
 

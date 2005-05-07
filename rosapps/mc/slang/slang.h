@@ -3,7 +3,7 @@
 /* -*- mode: C; mode: fold; -*- */
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -96,13 +96,13 @@ extern "C" {
 #  define VOID unsigned char
 # endif
 #endif
-   
+
 #if 1
    typedef int (*FVOID_STAR)(void);
 #else
 # define FVOID_STAR VOID_STAR
 #endif
-   
+
 #if defined(msdos) && !defined(DOS386) && !defined(__GO32__) && !defined(__WIN32__)
 # define SLFREE(buf)  farfree((void far *)(buf))
 # define SLMALLOC(x) farmalloc((unsigned long) (x))
@@ -136,7 +136,7 @@ extern "C" {
 # define SLCALLOC(n, m) SLdebug_calloc((unsigned long) (n), (unsigned long)(m))
 # define SLREALLOC(p, x) SLdebug_realloc((unsigned char *)(p), (unsigned long)(x))
 #endif /* SL_MALLOC_DEBUG */
-   
+
    extern unsigned char *SLdebug_malloc (unsigned long);
    extern unsigned char *SLdebug_calloc (unsigned long, unsigned long);
    extern unsigned char *SLdebug_realloc (unsigned char *, unsigned long);
@@ -145,7 +145,7 @@ extern "C" {
    extern char *SLstrcpy(register char *, register char *);
    extern int SLstrcmp(register char *, register char *);
    extern char *SLstrncpy(char *, register char *, register  int);
-   
+
    extern void SLmemset (char *, char, int);
    extern char *SLmemchr (register char *, register char, register int);
    extern char *SLmemcpy (char *, char *, int);
@@ -154,7 +154,7 @@ extern "C" {
 #ifdef float64
 # undef float64
 #endif
-   
+
 #ifndef FLOAT64_TYPEDEFED
 # define FLOAT64_TYPEDEFED
   typedef double float64;
@@ -182,7 +182,7 @@ typedef struct SLang_Name_Type
      char name[SLANG_MAX_NAME_LEN + 2]; /* [0] is hash */
 
      unsigned char sub_type;
-     
+
 /* Values for main_type may be as follows.  The particlular values are
  * for compatability.
  */
@@ -204,9 +204,9 @@ typedef struct SLang_Load_Type
 {
    long name;			       /* file name, string address, ... */
    long handle;			       /* FILE *, string address, etc... */
-   
+
    char *ptr;			       /* input pointer to next line in object
-					* to be read. 
+					* to be read.
 					*/
    /* Things below here are used by S-Lang. */
    int type;			       /* 'F' = file, 'S' = String, etc.. */
@@ -215,7 +215,7 @@ typedef struct SLang_Load_Type
    int n;			       /* line number, etc... */
    char token[256];		       /* token to be parsed */
    int ofs;			       /* offset from buf where last read
-					* took place 
+					* took place
 					*/
    int top_level;		       /* 1 if at top level of parsing */
 } SLang_Load_Type;
@@ -225,8 +225,8 @@ typedef struct SLang_Load_Type
 #  define NO_PROTOTYPES
 # endif
 #endif
-   
-#ifndef NO_PROTOTYPES 
+
+#ifndef NO_PROTOTYPES
 # define _PROTO(x) x
 #else
 # define _PROTO(x) ()
@@ -235,14 +235,14 @@ typedef struct SLang_Load_Type
 typedef struct SL_OOBinary_Type
 {
    unsigned char sub_type;	       /* partner type for binary op */
-   
+
    /* The function take the binary op as first argument, the operand types
-    * form the second and third parameters and the last two parameters are 
+    * form the second and third parameters and the last two parameters are
     * pointers to the objects themselves.  It is up to the function to push
-    * the result on the stack.  It must return 1 if it handled the operation 
+    * the result on the stack.  It must return 1 if it handled the operation
     * return zero if the operation is not defined.
     */
-   int (*binary_function)_PROTO((int, unsigned char, unsigned char, 
+   int (*binary_function)_PROTO((int, unsigned char, unsigned char,
 				  VOID_STAR, VOID_STAR));
 
    struct SL_OOBinary_Type *next;
@@ -259,13 +259,13 @@ typedef struct
    int (*unary_function)_PROTO((int, unsigned char, VOID_STAR));
    /* unary operation function */
    SL_OOBinary_Type *binary_ops;
-   
+
    int (*copy_function)_PROTO((unsigned char, VOID_STAR));
    /* This function is called do make a copy of the object */
 } SLang_Class_Type;
 
 extern SLang_Class_Type *SLang_Registered_Types[256];
-   
+
 typedef struct
 {
    unsigned char main_type;	       /* SLANG_RVARIABLE, etc.. */
@@ -277,7 +277,7 @@ typedef struct
 }
 SLuser_Object_Type;
 
-   
+
 /*}}}*/
 /*{{{ Interpreter Function Prototypes */
 
@@ -285,7 +285,7 @@ SLuser_Object_Type;
   /* Non zero if error occurs.  Must be reset to zero to continue. */
 
   extern int SLang_Traceback;
-  /* If non-zero, dump an S-Lang traceback upon error.  Available as 
+  /* If non-zero, dump an S-Lang traceback upon error.  Available as
      _traceback in S-Lang. */
 
   extern char *SLang_User_Prompt;
@@ -299,16 +299,16 @@ SLuser_Object_Type;
   extern void (*SLang_Exit_Error_Hook)(char *);
   extern void SLang_exit_error (char *);
   extern void (*SLang_Dump_Routine)(char *);
-  /* Called if S-Lang traceback is enabled as well as other debugging 
+  /* Called if S-Lang traceback is enabled as well as other debugging
      routines (e.g., trace).  By default, these messages go to stderr. */
-  
+
   extern void (*SLang_Interrupt)(void);
-  /* function to call whenever inner interpreter is entered.  This is 
+  /* function to call whenever inner interpreter is entered.  This is
      a good place to set SLang_Error to USER_BREAK. */
 
   extern void (*SLang_User_Clear_Error)(void);
   /* function that gets called when '_clear_error' is called. */
-  extern int (*SLang_User_Open_Slang_Object)(SLang_Load_Type *); 
+  extern int (*SLang_User_Open_Slang_Object)(SLang_Load_Type *);
   extern int (*SLang_User_Close_Slang_Object)(SLang_Load_Type *);
   /* user defined loading routines. */
 
@@ -320,7 +320,7 @@ SLuser_Object_Type;
 
 /* Functions: */
 
-   extern int init_SLang(void);   
+   extern int init_SLang(void);
    /* This function is mandatory and must be called by all applications */
    extern int init_SLfiles(void);
    /* called if fputs, fgets, etc are need in S-Lang */
@@ -331,10 +331,10 @@ SLuser_Object_Type;
    /* unix system functions chmod, stat, etc... */
 
    extern int init_SLmatrix(void);
-   
+
    extern int SLang_add_table(SLang_Name_Type *, char *);
-   /* add application dependent function table p1 to S-Lang.  A name p2 less 
-    *  than 32 characters must also be supplied.      
+   /* add application dependent function table p1 to S-Lang.  A name p2 less
+    *  than 32 characters must also be supplied.
     * Returns 0 upon failure or 1 upon success. */
 
    extern int SLang_add_global_variable (char *);
@@ -345,28 +345,28 @@ SLuser_Object_Type;
 
    extern void SLang_restart(int);
    /* should be called if an error occurs.  If the passed integer is
-    * non-zero, items are popped off the stack; otherwise, the stack is 
+    * non-zero, items are popped off the stack; otherwise, the stack is
     * left intact.  Any time the stack is believed to be trashed, this routine
     * should be called with a non-zero argument (e.g., if setjmp/longjmp is
-    * called). */ 
+    * called). */
 
    extern void SLang_byte_compile_file(char *, int *);
    /* takes a file of S-Lang code and ``byte-compiles'' it for faster
     * loading.  The new filename is equivalent to the old except that a `c' is
-    * appended to the name.  (e.g., init.sl --> init.slc).  If the second 
+    * appended to the name.  (e.g., init.sl --> init.slc).  If the second
     * parameter is non-zero, preprocess the file only.
     */
 
    extern void SLang_autoload(char *, char *);
    /* Automatically load S-Lang function p1 from file p2.  This function
       is also available via S-Lang */
-   
+
    extern char *SLang_load_string(char *);
    /* Like SLang_load_file except input is from a null terminated string. */
-   
+
    extern void SLang_do_pop(void);
    /* pops item off stack and frees any memory associated with it */
-   
+
    extern int SLang_pop_integer(int *);
    /* pops integer *p0 from the stack.  Returns 0 upon success and non-zero
     * if the stack is empty or a type mismatch occurs, setting SLang_Error.
@@ -377,11 +377,11 @@ SLuser_Object_Type;
    /* pops string *p0 from stack.  If *p1 is non-zero, the string must be
     * freed after its use.  DO NOT FREE p0 if *p1 IS ZERO! Returns 0 upon
     * success */
-      
+
    extern int SLang_pop_float(float64 *, int *, int *);
    /* Pops float *p1 from stack.  If *p3 is non-zero, *p1 was derived
       from the integer *p2. Returns zero upon success. */
-      
+
    extern SLuser_Object_Type *SLang_pop_user_object (unsigned char);
    extern void SLang_free_user_object (SLuser_Object_Type *);
    extern void SLang_free_intrinsic_user_object (SLuser_Object_Type *);
@@ -392,14 +392,14 @@ SLuser_Object_Type;
 
    extern void SLang_push_user_object (SLuser_Object_Type *);
    extern SLuser_Object_Type *SLang_create_user_object (unsigned char);
-   
+
    extern int SLang_add_unary_op (unsigned char, FVOID_STAR);
    extern int SLang_add_binary_op (unsigned char, unsigned char, FVOID_STAR);
    extern int SLang_register_class (unsigned char, FVOID_STAR, FVOID_STAR);
    extern int SLang_add_copy_operation (unsigned char, FVOID_STAR);
 
    extern long *SLang_pop_pointer(unsigned char *, unsigned char *, int *);
-   /* Returns a pointer to object of type *p1,*p2 on top of stack. 
+   /* Returns a pointer to object of type *p1,*p2 on top of stack.
       If *p3 is non-zero, the Object must be freed after use. */
 
 
@@ -408,7 +408,7 @@ SLuser_Object_Type;
 
    extern void SLang_push_string(char *);
    /* Push string p1 onto stack */
-   
+
    extern void SLang_push_integer(int);
    /* push integer p1 on stack */
 
@@ -418,20 +418,20 @@ SLuser_Object_Type;
 
    extern int SLang_is_defined(char *);
    /* Return non-zero is p1 is defined otherwise returns 0. */
-   
+
    extern int SLang_run_hooks(char *, char *, char *);
    /* calls S-Lang function p1 pushing strings p2 and p3 onto the stack
     * first.  If either string is NULL, it is not pushed. If p1 is not
     * defined, 0 is returned. */
 
    extern int SLang_execute_function(char *);
-   /* Call S-Lang function p1.  Returns 0 if the function is not defined 
+   /* Call S-Lang function p1.  Returns 0 if the function is not defined
     * and 1 if it is.
     */
 
    extern char *SLang_find_name(char *);
    /* Return a pointer to p1 in table if it is defined.  Returns NULL
-    * otherwise.  This is useful when one wants to avoid redundant strings. 
+    * otherwise.  This is useful when one wants to avoid redundant strings.
     */
 
    extern char *SLang_rpn_interpret(char *);
@@ -439,14 +439,14 @@ SLuser_Object_Type;
 
    extern void SLang_doerror(char *);
    /* set SLang_Error and display p1 as error message */
-   
-   extern SLuser_Object_Type *SLang_add_array(char *, long *, 
-					      int, int, int, int, 
+
+   extern SLuser_Object_Type *SLang_add_array(char *, long *,
+					      int, int, int, int,
 					      unsigned char, unsigned char);
-   /* This function has not been tested thoroughly yet.  Its purpose is to 
-    * allow a S-Lang procedure to access a C array. For example, suppose that 
+   /* This function has not been tested thoroughly yet.  Its purpose is to
+    * allow a S-Lang procedure to access a C array. For example, suppose that
     * you have an array of 100 ints defined as:
-    *  
+    *
     *  int c_array[100];
     *
     * By calling something like:
@@ -454,39 +454,39 @@ SLuser_Object_Type;
     *   SLang_add_array ("array_name", (long *) c_array, 1, 100, 0, 0,
     *   		 'i', SLANG_IVARIABLE);
     *
-    * the array can be accessed by the name 'array_name'.  This function 
-    * returns -1 upon failure.  The 3rd argument specifies the dimension 
+    * the array can be accessed by the name 'array_name'.  This function
+    * returns -1 upon failure.  The 3rd argument specifies the dimension
     * of the array, the 4th, and 5th arguments specify how many elements
-    * there are in the x,y, and z directions.  The last argument must 
-    * be one of: 
-    * 
+    * there are in the x,y, and z directions.  The last argument must
+    * be one of:
+    *
     *        SLANG_IVARIABLE:  indicates array is writable
     *        SLANG_RVARIABLE:  indicates array is read only
-    * 
+    *
     * Returns NULL upon failure.
     */
 
 
 extern int SLang_free_array_handle (int);
-/* This routine may be called by application to free array handle created by 
+/* This routine may be called by application to free array handle created by
  * the application.  Returns 0 upon success, -1 if the handle is invalid and
  * -2 if the handle is not associated with a C array.
  */
 
    extern char *SLang_extract_list_element(char *, int *, int*);
-   extern void SLexpand_escaped_string (register char *, register char *, 
+   extern void SLexpand_escaped_string (register char *, register char *,
 					register char *);
 
 extern SLang_Name_Type *SLang_get_function (char *);
-/* The parameter is the name of a user defined S-Lang function.  This 
+/* The parameter is the name of a user defined S-Lang function.  This
  * routine returns NULL if the function does not exist or it returns the
  * a pointer to it in an internal S-Lang table.  This pointer can be used
  * by 'SLexecute_function' to call the function directly from C.
  */
-  
+
 extern void SLexecute_function(SLang_Name_Type *);
 /* This function allows an application to call a S-Lang function from within
- * the C program.  The parameter must be non-NULL and must have been 
+ * the C program.  The parameter must be non-NULL and must have been
  * previously obtained by a call to 'SLang_get_function'.
  */
 extern void SLroll_stack (int *);
@@ -514,9 +514,9 @@ extern char *SLcurrent_time_string (void);
 extern int SLatoi(unsigned char *);
 
 extern int SLang_extract_token(char **, char *, int);
-/* returns 0 upon failure and non-zero upon success.  The first parameter 
- * is a pointer to the input stream which this function will bump along.  
- * The second parameter is the buffer where the token is placed.  The third 
+/* returns 0 upon failure and non-zero upon success.  The first parameter
+ * is a pointer to the input stream which this function will bump along.
+ * The second parameter is the buffer where the token is placed.  The third
  * parameter is used internally by the S-Lang library and should be 0 for
  * user applications.
  */
@@ -524,12 +524,12 @@ extern int SLang_extract_token(char **, char *, int);
 /*}}}*/
 
 /*{{{ SLang getkey interface Functions */
-   
+
 #ifdef REAL_UNIX_SYSTEM
 extern int SLang_TT_Baud_Rate;
 extern int SLang_TT_Read_FD;
 #endif
-   
+
 extern int SLang_init_tty (int, int, int);
 /* Initializes the tty for single character input.  If the first parameter *p1
  * is in the range 0-255, it will be used for the abort character;
@@ -571,7 +571,7 @@ extern int SLang_Ignore_User_Abort;
 
 extern void SLang_set_abort_signal (void (*)(int));
 /* If SIGINT is generated, the function p1 will be called.  If p1 is NULL
- * the SLang_default signal handler is called.  This sets SLang_Error to 
+ * the SLang_default signal handler is called.  This sets SLang_Error to
  * USER_BREAK.  I suspect most users will simply want to pass NULL.
  */
 
@@ -635,19 +635,19 @@ extern SLKeyMap_List_Type SLKeyMap_List[SLANG_MAX_KEYMAPS];   /* these better be
 
 extern char *SLang_process_keystring(char *);
 
-#ifdef SLKEYMAP_OBSOLETE   
+#ifdef SLKEYMAP_OBSOLETE
 extern int SLang_define_key1(char *, VOID_STAR, unsigned int, SLKeyMap_List_Type *);
 /* define key p1 in keymap p4 to invoke function p2.  If type p3 is given by
  * SLKEY_F_INTRINSIC, p2 is an intrinsic function, else it is a string to be
  * passed to the interpreter for evaluation.  The return value is important.
- * It returns 0 upon success, -1 upon malloc error, and -2 if the key is 
+ * It returns 0 upon success, -1 upon malloc error, and -2 if the key is
  * inconsistent.  SLang_Error is set upon error. */
 #else
 extern int SLkm_define_key (char *, FVOID_STAR, SLKeyMap_List_Type *);
 #endif
-   
+
 extern int SLang_define_key(char *, char *, SLKeyMap_List_Type *);
-/* Like define_key1 except that p2 is a string that is to be associated with 
+/* Like define_key1 except that p2 is a string that is to be associated with
  * a function in the functions field of p3.  This routine calls define_key1.
  */
 
@@ -696,7 +696,7 @@ typedef struct SLang_Read_Line_Type
 /* Maximum size of display */
 #define SLRL_DISPLAY_BUFFER_SIZE 256
 
-typedef struct 
+typedef struct
 {
    SLang_Read_Line_Type *root, *tail, *last;
    unsigned char *buf;		       /* edit buffer */
@@ -704,14 +704,14 @@ typedef struct
    int point;			       /* current editing point */
    int tab;			       /* tab width */
    int len;			       /* current line size */
-   
+
    /* display variables */
    int edit_width;		       /* length of display field */
    int curs_pos;			       /* current column */
    int start_column;		       /* column offset of display */
    int dhscroll;		       /* amount to use for horiz scroll */
    char *prompt;
-   
+
    FVOID_STAR last_fun;		       /* last function executed by rl */
 
    /* These two contain an image of what is on the display */
@@ -719,7 +719,7 @@ typedef struct
    unsigned char upd_buf2[SLRL_DISPLAY_BUFFER_SIZE];
    unsigned char *old_upd, *new_upd;   /* pointers to previous two buffers */
    int new_upd_len, old_upd_len;       /* length of output buffers */
-   
+
    SLKeyMap_List_Type *keymap;
 
    /* tty variables */
@@ -731,7 +731,7 @@ typedef struct
    void (*tt_insert)(char);
    void (*update_hook)(unsigned char *, int, int);
    /* The update hook is called with a pointer to a buffer p1 that contains
-    * an image of what the update hook is suppoed to produce.  The length 
+    * an image of what the update hook is suppoed to produce.  The length
     * of the buffer is p2 and after the update, the cursor is to be placed
     * in column p3.
     */
@@ -743,7 +743,7 @@ extern SLang_Read_Line_Type * SLang_rline_save_line (SLang_RLine_Info_Type *);
 extern int SLang_init_readline (SLang_RLine_Info_Type *);
 extern int SLang_read_line (SLang_RLine_Info_Type *);
 extern int SLang_rline_insert (char *);
-extern void SLrline_redraw (SLang_RLine_Info_Type *);   
+extern void SLrline_redraw (SLang_RLine_Info_Type *);
 extern int SLang_Rline_Quit;
 
 /*}}}*/
@@ -770,7 +770,7 @@ extern int SLtt_Ignore_Beep;
 #if defined(REAL_UNIX_SYSTEM)
 extern int SLtt_Force_Keypad_Init;
 #endif
-   
+
 #ifndef __GO32__
 #if defined(VMS) || defined(REAL_UNIX_SYSTEM)
 extern int SLtt_Blink_Mode;
@@ -787,8 +787,8 @@ extern int SLtt_Try_Termcap;
 #ifdef msdos
 extern int SLtt_Msdos_Cheap_Video;
 #endif
-   
-   
+
+
 extern int SLtt_flush_output (void);
 extern void SLtt_set_scroll_region(int, int);
 extern void SLtt_reset_scroll_region(void);
@@ -813,7 +813,7 @@ extern void SLtt_reset_video (void);
 extern void SLtt_get_terminfo(void);
 extern void SLtt_get_screen_size (void);
 extern int SLtt_set_cursor_visibility (int);
-   
+
 #if defined(VMS) || defined(REAL_UNIX_SYSTEM)
 extern void SLtt_enable_cursor_keys(void);
 extern void SLtt_set_term_vtxxx(int *);
@@ -833,19 +833,19 @@ extern void SLtt_disable_status_line (void);
    extern int SLtt_tigetnum (char *, char **);
 # endif
 #endif
-   
+
 extern SLtt_Char_Type SLtt_get_color_object (int);
 extern void SLtt_set_color_object (int, SLtt_Char_Type);
 extern void SLtt_set_color (int, char *, char *, char *);
 extern void SLtt_set_mono (int, char *, SLtt_Char_Type);
 extern void SLtt_add_color_attribute (int, SLtt_Char_Type);
 extern void SLtt_set_color_fgbg (int, SLtt_Char_Type, SLtt_Char_Type);
-     
+
 /*}}}*/
 
 /*{{{ SLang Preprocessor Interface */
 
-typedef struct 
+typedef struct
 {
    int this_level;
    int exec_level;
@@ -865,8 +865,8 @@ extern int SLprep_line_ok (char *, SLPreprocess_Type *);
    /* Adds a string to the SLang #ifdef preparsing defines. SLang already
       defines MSDOS, UNIX, and VMS on the appropriate system. */
 extern int (*SLprep_exists_hook) (char *, char);
-      
-   
+
+
 /*}}}*/
 
 /*{{{ SLsmg Screen Management Functions */
@@ -909,7 +909,7 @@ extern void SLsmg_forward (int);
 extern void SLsmg_write_color_chars (unsigned short *, unsigned int);
 extern unsigned int SLsmg_read_raw (unsigned short *, unsigned int);
 extern unsigned int SLsmg_write_raw (unsigned short *, unsigned int);
-   
+
 extern int SLsmg_Display_Eight_Bit;
 extern int SLsmg_Tab_Width;
 extern int SLsmg_Newline_Moves;
@@ -999,7 +999,7 @@ int SLkp_define_keysym (char *, unsigned int);
 /* This function must be called AFTER SLtt_get_terminfo and not before. */
 extern int SLkp_init (void);
 
-/* This function uses SLang_getkey and assumes that what ever initialization 
+/* This function uses SLang_getkey and assumes that what ever initialization
  * is required for SLang_getkey has been performed.
  */
 extern int SLkp_getkey (void);
@@ -1016,7 +1016,7 @@ typedef struct _SLscroll_Type
 }
 SLscroll_Type;
 
-typedef struct 
+typedef struct
 {
    unsigned int flags;
    SLscroll_Type *top_window_line;   /* list element at top of window */
@@ -1088,8 +1088,8 @@ extern int SLsig_unblock_signals (void);
 /* This is not ready yet.  */
 # define SLANG_NOOP	9
 #endif
-   
-/* Everything above string should correspond to a pointer in the object 
+
+/* Everything above string should correspond to a pointer in the object
  * structure.  See do_binary (slang.c) for exploitation of this fact.
  */
 #define STRING_TYPE 	10
@@ -1154,14 +1154,14 @@ extern void SLadd_at_handler (long *, char *);
 
 #define MAKE_INTRINSIC(n, f, out, in)        \
     {0, n, (out | (in << 4)), SLANG_INTRINSIC, (long) f}
-       
+
 #define MAKE_VARIABLE(n, v, t, r)     \
     {0, n, t, (SLANG_IVARIABLE + r), (long) v}
 
 #else
 #define MAKE_INTRINSIC(n, f, out, in)        \
     {n, (out | (in << 4)), SLANG_INTRINSIC, (long) f}
-       
+
 #define MAKE_VARIABLE(n, v, t, r)     \
     {n, t, (SLANG_IVARIABLE + r), (long) v}
 #endif
@@ -1202,13 +1202,13 @@ typedef struct
    int beg_matches[10];		       /* offset of start of \( */
    unsigned int end_matches[10];       /* length of nth submatch
 					* Note that the entire match corresponds
-					* to \0 
+					* to \0
 					*/
    int offset;			       /* offset to be added to beg_matches */
 } SLRegexp_Type;
 
-extern unsigned char *SLang_regexp_match(unsigned char *, 
-					 unsigned int, 
+extern unsigned char *SLang_regexp_match(unsigned char *,
+					 unsigned int,
 					 SLRegexp_Type *);
 extern int SLang_regexp_compile (SLRegexp_Type *);
 extern char *SLregexp_quote_string (char *, char *, unsigned int);
@@ -1254,21 +1254,21 @@ typedef struct
 } SLsearch_Type;
 
 extern int SLsearch_init (char *, int, int, SLsearch_Type *);
-/* This routine must first be called before any search can take place. 
- * The second parameter specifies the direction of the search: greater than 
- * zero for a forwrd search and less than zero for a backward search.  The 
+/* This routine must first be called before any search can take place.
+ * The second parameter specifies the direction of the search: greater than
+ * zero for a forwrd search and less than zero for a backward search.  The
  * third parameter specifies whether the search is case sensitive or not.
- * The last parameter is a pointer to a structure that is filled by this 
+ * The last parameter is a pointer to a structure that is filled by this
  * function and it is this structure that must be passed to SLsearch.
  */
 
 unsigned char *SLsearch (unsigned char *, unsigned char *, SLsearch_Type *);
-/* To use this routine, you must first call 'SLsearch_init'.  Then the first 
+/* To use this routine, you must first call 'SLsearch_init'.  Then the first
  * two parameters p1 and p2 serve to define the region over which the search
  * is to take place.  The third parameter is the structure that was previously
  * initialized by SLsearch_init.
- * 
- * The routine returns a pointer to the match if found otherwise it returns 
+ *
+ * The routine returns a pointer to the match if found otherwise it returns
  * NULL.
  */
 

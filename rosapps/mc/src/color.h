@@ -57,18 +57,18 @@ extern int attr_pairs [];
 #define HELP_BOLD_COLOR    (PORT_COLOR (MY_COLOR_PAIR(18),A_REVERSE))
 #define HELP_LINK_COLOR    (PORT_COLOR (MY_COLOR_PAIR(19),0))
 #define HELP_SLINK_COLOR   (PORT_COLOR (MY_COLOR_PAIR(20),A_BOLD))
-			   
+
 extern int sel_mark_color  [4];
 extern int dialog_colors   [4];
-			   
+
 #define COLOR_NORMAL       (PORT_COLOR (MY_COLOR_PAIR (8),A_REVERSE))
 #define COLOR_FOCUS        (PORT_COLOR (MY_COLOR_PAIR (9),A_BOLD))
 #define COLOR_HOT_NORMAL   (PORT_COLOR (MY_COLOR_PAIR (10),0))
 #define COLOR_HOT_FOCUS    (PORT_COLOR (MY_COLOR_PAIR (11),0))
-			   
+
 /* Add this to color panel, on BW all pairs are normal */
 #define STALLED_COLOR      (PORT_COLOR (MY_COLOR_PAIR (12),0))
-			   
+
 #define DIRECTORY_COLOR    (PORT_COLOR (MY_COLOR_PAIR (23),0))
 #define EXECUTABLE_COLOR   (PORT_COLOR (MY_COLOR_PAIR (24),0))
 #define LINK_COLOR         (PORT_COLOR (MY_COLOR_PAIR (25),0))

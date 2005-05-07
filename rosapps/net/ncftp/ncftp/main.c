@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -202,7 +202,7 @@ SetStartupURL(const char *const urlgiven)
 		}
 
 		if (MayUseFirewall(gConn.host, gFirewallType, gFirewallExceptionList) != 0) {
-			gConn.firewallType = gFirewallType; 
+			gConn.firewallType = gFirewallType;
 			(void) STRNCPY(gConn.firewallHost, gFirewallHost);
 			(void) STRNCPY(gConn.firewallUser, gFirewallUser);
 			(void) STRNCPY(gConn.firewallPass, gFirewallPass);
@@ -217,7 +217,7 @@ SetStartupURL(const char *const urlgiven)
 		}
 		gURLMode = 1;
 		if (MayUseFirewall(gConn.host, gFirewallType, gFirewallExceptionList) != 0) {
-			gConn.firewallType = gFirewallType; 
+			gConn.firewallType = gFirewallType;
 			(void) STRNCPY(gConn.firewallHost, gFirewallHost);
 			(void) STRNCPY(gConn.firewallUser, gFirewallUser);
 			(void) STRNCPY(gConn.firewallPass, gFirewallPass);
@@ -334,7 +334,7 @@ PostInit(void)
 	if (gNumProgramRuns <= 1)
 		(void) printf("\n%s\n", gCopyright + 5);
 
-	Trace(0, "Fw: %s  Type: %d  User: %s  Pass: %s  Port: %u\n", 
+	Trace(0, "Fw: %s  Type: %d  User: %s  Pass: %s  Port: %u\n",
 		gFirewallHost,
 		gFirewallType,
 		gFirewallUser,
@@ -430,7 +430,7 @@ main(int argc, const char **const argv)
 
 	while ((c = Getopt(argc, argv, "P:u:p:j:J:rd:g:FVLD")) > 0) switch(c) {
 		case 'P':
-			gConn.port = atoi(gOptArg);	
+			gConn.port = atoi(gOptArg);
 			break;
 		case 'u':
 			(void) STRNCPY(gConn.user, gOptArg);

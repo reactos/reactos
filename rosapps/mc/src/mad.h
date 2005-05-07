@@ -2,7 +2,7 @@
 #define __MAD_H
 
 #ifdef HAVE_MAD
-#   define INLINE 
+#   define INLINE
 #else
 #   ifndef INLINE
 #       define INLINE inline

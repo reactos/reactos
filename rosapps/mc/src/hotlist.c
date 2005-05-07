@@ -10,7 +10,7 @@
    Janne did the original Hotlist code, Andrej made the groupable
    hotlist; the move hotlist and revamped the file format and made
    it stronger.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -23,7 +23,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -169,7 +169,7 @@ static struct hotlist *new_hotlist (void)
     hl->head =
 	hl->up =
 	    hl->next = 0;
-    
+
     return hl;
 }
 
@@ -178,7 +178,7 @@ static void hotlist_refresh (Dlg_head *dlg)
 {
     dialog_repaint (dlg, COLOR_NORMAL, COLOR_HOT_NORMAL);
     attrset (COLOR_NORMAL);
-    draw_box (dlg, 2, 5, 
+    draw_box (dlg, 2, 5,
 		dlg->lines - (hotlist_state.moving ? 6 : 10),
 		dlg->cols - (UX*2));
     if (!hotlist_state.moving)
@@ -196,12 +196,12 @@ static INLINE void update_path_name ()
     if (list->current){
 	if (list->current->data != 0) {
 	    struct hotlist *hlp = (struct hotlist *)list->current->data;
-	    
+
 	    if (hlp->type == HL_TYPE_ENTRY)
 		text = hlp->directory;
 	    else
 		text = _("Subgroup - press ENTER to see list");
-	    
+
 #ifndef HAVE_X
 	    p = copy_strings (" ", current_group->label, " ", (char *)0);
 	    if (!hotlist_state.moving)
@@ -282,7 +282,7 @@ unlink_entry (struct hotlist *entry)
     entry->next =
 	entry->up = 0;
 }
-    
+
 static void add_new_entry_cmd (void);
 static void init_movelist (int, struct hotlist *);
 
@@ -419,11 +419,11 @@ static int hotlist_button_callback (int action, void *data)
 static int hotlist_callback (Dlg_head * h, int Par, int Msg)
 {
     switch (Msg) {
-#ifndef HAVE_X    
+#ifndef HAVE_X
     case DLG_DRAW:
 	hotlist_refresh (h);
 	break;
-#endif	
+#endif
 
     case DLG_UNHANDLED_KEY:
 	switch (Par) {
@@ -583,11 +583,11 @@ init_i18n_stuff(int list_type, int cols)
 
 			row = hotlist_but [i].y;
 
-			if (hotlist_but [i].x != 0) 
+			if (hotlist_but [i].x != 0)
 			{
 				/* not first int the row */
 				if (!strcmp (hotlist_but [i].text, cancel_but))
-					hotlist_but [i].x = 
+					hotlist_but [i].x =
 						cols - strlen (hotlist_but [i].text) - 13;
 				else
 					hotlist_but [i].x = cur_x [row];
@@ -597,7 +597,7 @@ init_i18n_stuff(int list_type, int cols)
 				+ (hotlist_but [i].flags == DEFPUSH_BUTTON ? 5 : 3);
 		}
 	}
-	
+
 	return cols;
 }
 
@@ -612,7 +612,7 @@ static void init_hotlist (int list_type)
 			    "expanded_view_of_groups", 0, profile_name);
 
     hotlist_dlg = create_dlg (0, 0, LINES-2, hotlist_cols, dialog_colors,
-			      hotlist_callback, 
+			      hotlist_callback,
 			      list_type == LIST_VFSLIST ? "[vfshot]" : "[Hotlist]",
 			      list_type == LIST_VFSLIST ? "vfshot" : "hotlist",
 			      DLG_CENTER|DLG_GRID);
@@ -628,7 +628,7 @@ static void init_hotlist (int list_type)
     }
 #undef XTRACT
 
-    /* We add the labels. 
+    /* We add the labels.
      *    pname       will hold entry's pathname;
      *    pname_group will hold name of current group
      */
@@ -653,7 +653,7 @@ static void init_hotlist (int list_type)
     } else
 	fill_listbox ();
 
-    add_widgetl (hotlist_dlg, l_hotlist, XV_WLAY_EXTENDWIDTH); 
+    add_widgetl (hotlist_dlg, l_hotlist, XV_WLAY_EXTENDWIDTH);
     /* add listbox to the dialogs */
 }
 
@@ -690,13 +690,13 @@ static void init_movelist (int list_type, struct hotlist *item)
     add_widget (movelist_dlg, movelist_group);
 #endif
     /* get new listbox */
-    l_movelist = listbox_new (UY + 1, UX + 1, 
+    l_movelist = listbox_new (UY + 1, UX + 1,
 		movelist_dlg->cols - 2*UX - 2, movelist_dlg->lines - 8,
 		listbox_cback, l_call, "listbox");
 
     fill_listbox ();
 
-    add_widgetl (movelist_dlg, l_movelist, XV_WLAY_EXTENDWIDTH); 
+    add_widgetl (movelist_dlg, l_movelist, XV_WLAY_EXTENDWIDTH);
     /* add listbox to the dialogs */
 }
 
@@ -818,12 +818,12 @@ static int add_new_entry_input (char *header, char *text1, char *text2, char *he
     { quick_input,  4, 80, 3, 0, "", 58, 0, 0, 0, XV_WLAY_BELOWCLOSE, "input-lbl" },
     { quick_label,  3, 80, 2, 0, 0, 0, 0, 0, 0, XV_WLAY_DONTCARE, "label-lbl" },
     { 0 } };
-    
+
     int len;
     int i;
     int lines1, lines2;
     char *my_str1, *my_str2;
-    
+
 #ifdef ENABLE_NLS
 	static int i18n_flag = 0;
 #endif /* ENABLE_NLS */
@@ -863,7 +863,7 @@ static int add_new_entry_input (char *header, char *text1, char *text2, char *he
 
     quick_widgets [5].str_result = &my_str1;
     quick_widgets [3].str_result = &my_str2;
-    
+
     Quick_input.widgets = quick_widgets;
     if ((i = quick_dialog (&Quick_input)) != B_CANCEL){
 	 *r1 = *(quick_widgets [5].str_result);
@@ -909,7 +909,7 @@ static int add_new_group_input (char *header, char *label, char **result)
     { quick_input,  4, 80,  0, 0, "", 58, 0, 0, 0, XV_WLAY_BELOWCLOSE, "input" },
     { quick_label,  3, 80,  2, 0,  0,  0, 0, 0, 0, XV_WLAY_DONTCARE, "label" },
     { 0 } };
-    
+
     int len;
     int i;
     int lines;
@@ -918,7 +918,7 @@ static int add_new_group_input (char *header, char *label, char **result)
 #ifdef ENABLE_NLS
 	static int i18n_flag = 0;
 #endif /* ENABLE_NLS */
-    
+
     len = max (strlen (header), msglen (label, &lines)) + 4;
     len = max (len, 64);
 
@@ -947,7 +947,7 @@ static int add_new_group_input (char *header, char *label, char **result)
 
     quick_widgets [3].str_result = &my_str;
     quick_widgets [3].text       = "";
-    
+
     Quick_input.widgets = quick_widgets;
     if ((ret = quick_dialog (&Quick_input)) != B_CANCEL){
 	*result = *(quick_widgets [3].str_result);
@@ -1010,7 +1010,7 @@ static void remove_group (struct hotlist *grp)
     }
 
 }
-	
+
 static void remove_from_hotlist (struct hotlist *entry)
 {
     if (entry->type == HL_TYPE_GROUP) {
@@ -1086,7 +1086,7 @@ void load_group (struct hotlist *grp)
     char *key, *value;
     char *group_section;
     struct hotlist *current = 0;
-    
+
     group_section = find_group_section (grp);
 
     profile_keys = profile_init_iterator (group_section, profile_name);
@@ -1135,7 +1135,7 @@ static int hot_skip_blanks ()
     while ((c = getc (hotlist_file)) != EOF && c != '\n' && isspace (c))
 	;
     return c;
-    
+
 }
 
 static int hot_next_token ()
@@ -1355,7 +1355,7 @@ void load_hotlist (void)
 
     if (hotlist_state.loaded) {
 	stat (hotlist_file_name, &stat_buf);
-	if (hotlist_file_mtime < stat_buf.st_mtime) 
+	if (hotlist_file_mtime < stat_buf.st_mtime)
 	    done_hotlist ();
 	else
 	    return;
@@ -1363,7 +1363,7 @@ void load_hotlist (void)
 
     if (!hotlist_file_name)
 	hotlist_file_name = concat_dir_and_file (home_dir, HOTLIST_FILENAME);
-    
+
     hotlist	       = new_hotlist ();
     hotlist->type      = HL_TYPE_GROUP;
     hotlist->label     = strdup (_(" Top level group "));
@@ -1387,7 +1387,7 @@ void load_hotlist (void)
 			    _(" and then delete [Hotlist] section there"), NULL);
 	message (0, _(" Hotlist Load "), msg);
 	free (msg);
-	
+
 	load_group (hotlist);
 	hotlist_state.loaded   = 1;
 	/*
@@ -1477,7 +1477,7 @@ void save_group (struct hotlist *grp)
     char           *group_section;
 
     group_section = find_group_section (grp);
-    
+
     profile_clean_section (group_section, profile_name);
     for (;current && current->type == HL_TYPE_GROUP; current = current->next){
 	WritePrivateProfileString (group_section,
@@ -1491,7 +1491,7 @@ void save_group (struct hotlist *grp)
 	 current && current->type == HL_TYPE_GROUP;
 	 current = current->next)
 	 save_group (current);
-    
+
     profile_clean_section (grp->directory, profile_name);
     for (;current; current = current->next){
 	WritePrivateProfileString (grp->directory,
@@ -1565,7 +1565,7 @@ int save_hotlist (void)
 {
     int		saved = 0;
     struct      stat stat_buf;
-    
+
     if (!hotlist_state.readonly && hotlist_state.modified && hotlist_file_name) {
 	char	*fbak = copy_strings (hotlist_file_name, ".bak", 0);
 

@@ -6,12 +6,12 @@
                1994, 1995 Janne Kukonlehto.
 	       1995  Jakub Jelinek.
 	       1997  Norbert Warmuth
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -40,7 +40,7 @@
 #include "tty.h"
 #include <ctype.h>
 #include <errno.h>
-#include <malloc.h> 
+#include <malloc.h>
 #include "util.h"		/* For xmalloc prototype */
 #include "mad.h"		/* The memory debugger */
 #include "global.h"
@@ -63,13 +63,13 @@
 
 #include "x.h"
 
-/* "$Id: key.c,v 1.1 2001/12/30 09:55:25 sedwards Exp $" */
+/* "$Id$" */
 
 /* This macros were stolen from gpm 0.15 */
 #define GET_TIME(tv) (gettimeofday(&tv, (struct timezone *)NULL))
 #define DIF_TIME(t1,t2) ((t2.tv_sec -t1.tv_sec) *1000+ \
 			 (t2.tv_usec-t1.tv_usec)/1000)
-			 
+
 /* timeout for old_esc_mode in usec */
 #define ESCMODE_TIMEOUT 1000000
 
@@ -126,7 +126,7 @@ void delete_select_channel (int fd)
 {
     SelectList *p = select_list;
     SelectList *prev = 0;
-    
+
     while (p){
 	if (p->fd == fd){
 	    if (prev)
@@ -147,7 +147,7 @@ inline static int add_selects (fd_set *select_set)
 
     if (disabled_channels)
 	return 0;
-    
+
     for (p = select_list; p; p = p->next){
 	FD_SET (p->fd, select_set);
 	if (p->fd > top_fd)
@@ -162,7 +162,7 @@ static void check_selects (fd_set *select_set)
 
     if (disabled_channels)
 	return;
-    
+
     for (p = select_list; p; p = p->next)
 	if (FD_ISSET (p->fd, select_set))
 	    (*p->callback)(p->fd, p->info);
@@ -230,10 +230,10 @@ void define_sequences (key_define_t *kd)
 {
 #ifndef HAVE_X
     int i;
-    
+
     for (i = 0; kd [i].code; i++)
 	define_sequence(kd [i].code, kd [i].seq, kd [i].action);
-#endif	
+#endif
 }
 
 /* This has to be called before slang_init or whatever routine
@@ -242,31 +242,31 @@ void init_key (void)
 {
 #ifndef HAVE_X
     char *term = (char *) getenv ("TERM");
-    
+
     /* This has to be the first define_sequence */
     /* So, we can assume that the first keys member has ESC */
     define_sequences (mc_default_keys);
-    
+
     /* Terminfo on irix does not have some keys */
     if ((!strncmp (term, "iris-ansi", 9)) || (!strncmp (term, "xterm", 5)))
 	define_sequences (xterm_key_defines);
-    
+
     define_sequences (mc_bindings);
-    
+
     /* load some additional keys (e.g. direct Alt-? support) */
     load_xtra_key_defines();
-    
+
 #ifdef __QNX__
     if (strncmp(term, "qnx", 3) == 0){
 	/* Modify the default value of use_8th_bit_as_meta: we would
 	 * like to provide a working mc for a newbie who knows nothing
 	 * about [Options|Display bits|Full 8 bits input]...
-	 * 
-	 * Don't use 'meta'-bit, when we are dealing with a 
+	 *
+	 * Don't use 'meta'-bit, when we are dealing with a
 	 * 'qnx*'-type terminal: clear the default value!
 	 * These terminal types use 0xFF as an escape character,
 	 * so use_8th_bit_as_meta==1 must not be enabled!
-	 * 
+	 *
 	 * [mc-4.1.21+,slint.c/getch(): the DEC_8BIT_HACK stuff
 	 * is not used now (doesn't even depend on use_8th_bit_as_meta
 	 * as in mc-3.1.2)...GREAT!...no additional code is required!]
@@ -301,7 +301,7 @@ void xmouse_get_event (Gpm_Event *ev)
     /* Variable btn has following meaning: */
     /* 0 = btn1 dn, 1 = btn2 dn, 2 = btn3 dn, 3 = btn up */
     btn = xgetch () - 32;
-    
+
     /* There seems to be no way of knowing which button was released */
     /* So we assume all the buttons were released */
 
@@ -318,7 +318,7 @@ void xmouse_get_event (Gpm_Event *ev)
 	    clicks %= 3;
 	} else
 	    clicks = 0;
-	
+
         switch (btn) {
 	case 0:
             ev->buttons = GPM_B_LEFT;
@@ -348,7 +348,7 @@ static key_def *create_sequence (char *seq, int code, int action)
 	p = xmalloc (sizeof (key_def), "create_sequence");
 	if (!base) base = p;
 	if (attach) attach->child = p;
-	
+
 	p->ch   = *seq;
 	p->code = code;
 	p->child = p->next = NULL;
@@ -369,7 +369,7 @@ static int push_char (int c)
 {
     if (!seq_append)
 	seq_append = seq_buffer;
-    
+
     if (seq_append == &(seq_buffer [sizeof (seq_buffer)-2]))
 	return 0;
     *(seq_append++) = c;
@@ -385,7 +385,7 @@ void define_sequence (int code, char *seq, int action)
 
     if (strlen (seq) > sizeof (seq_buffer)-1)
 	return;
-    
+
     for (base = keys; (base != 0) && *seq; ){
 	if (*seq == base->ch){
 	    if (base->child == 0){
@@ -410,7 +410,7 @@ void define_sequence (int code, char *seq, int action)
 	}
     }
     keys = create_sequence (seq, code, action);
-#endif    
+#endif
 }
 
 #ifndef HAVE_X
@@ -432,7 +432,7 @@ int correct_key_code (int c)
     if (c == KEY_F(0))
 	return KEY_F(10);
 
-    if (!alternate_plus_minus) 
+    if (!alternate_plus_minus)
         switch (c) {
             case KEY_KP_ADD: c = '+'; break;
             case KEY_KP_SUBTRACT: c = '-'; break;
@@ -449,7 +449,7 @@ int get_key_code (int no_delay)
     static key_def *this = NULL, *parent;
     static struct timeval esctime = { -1, -1 };
     static int lastnodelay = -1;
-    
+
     if (no_delay != lastnodelay) {
         this = NULL;
         lastnodelay = no_delay;
@@ -489,10 +489,10 @@ int get_key_code (int no_delay)
         nodelay (stdscr, FALSE);
 #endif
         if (c == ERR) {
-            if (this != NULL && parent != NULL && 
+            if (this != NULL && parent != NULL &&
                 parent->action == MCKEY_ESCAPE && old_esc_mode) {
                 struct timeval current, timeout;
-                
+
                 if (esctime.tv_sec == -1)
                     return ERR;
                 GET_TIME (current);
@@ -504,7 +504,7 @@ int get_key_code (int no_delay)
                 }
                 if (current.tv_sec < timeout.tv_sec)
                     return ERR;
-                if (current.tv_sec == timeout.tv_sec && 
+                if (current.tv_sec == timeout.tv_sec &&
                     current.tv_usec < timeout.tv_usec)
                     return ERR;
                 this = NULL;
@@ -524,7 +524,7 @@ int get_key_code (int no_delay)
 	this = NULL;
 	return ERR;
     }
-    
+
     /* Search the key on the root */
     if (!no_delay || this == NULL) {
         this = keys;
@@ -572,7 +572,7 @@ int get_key_code (int no_delay)
 	    } else {
 		/* We got a complete match, return and reset search */
 		int code;
-		
+
 		pending_keys = seq_append = NULL;
 		code = this->code;
 		this = NULL;
@@ -587,7 +587,7 @@ int get_key_code (int no_delay)
 	            if (isalpha(c)
 			|| (c == '\n') || (c == '\t') || (c == XCTRL('h'))
 			|| (c == KEY_BACKSPACE) || (c == '!') || (c == '\r')
-			|| c == 127 || c == '+' || c == '-' || c == '\\' 
+			|| c == 127 || c == '+' || c == '-' || c == '\\'
 			|| c == '?')
 			c = ALT(c);
 		    else if (isdigit(c))
@@ -627,7 +627,7 @@ void try_channels (int set_timeout)
 	FD_ZERO (&select_set);
 	FD_SET  (input_fd, &select_set);	/* Add stdin */
 	add_selects (&select_set);
-	
+
 	if (set_timeout){
 	    timeout.tv_sec = 0;
 	    timeout.tv_usec = 100000;
@@ -699,7 +699,7 @@ int get_event (Gpm_Event *event, int redo_event, int block)
 	dirty++;
 
     vfs_timeout_handler ();
-    
+
     /* Ok, we use (event->x < 0) to signal that the event does not contain
        a suitable position for the mouse, so we can't use show_mouse_pointer
        on it.
@@ -732,7 +732,7 @@ int get_event (Gpm_Event *event, int redo_event, int block)
 		time_addr = &timeout;
 	    } else {
 		int seconds;
-		
+
 		if ((seconds = vfs_timeouts ())){
 		    /* the timeout could be improved and actually be
 		     * the number of seconds until the next vfs entry
@@ -754,7 +754,7 @@ int get_event (Gpm_Event *event, int redo_event, int block)
 	    enable_interrupt_key ();
 	    flag = select (FD_SETSIZE, &select_set, NULL, NULL, time_addr);
 	    disable_interrupt_key ();
-	    
+
 	    /* select timed out: it could be for any of the following reasons:
 	     * redo_event -> it was because of the MOU_REPEAT handler
 	     * !block     -> we did not block in the select call
@@ -771,7 +771,7 @@ int get_event (Gpm_Event *event, int redo_event, int block)
 		return EV_NONE;
 
 	    check_selects (&select_set);
-	    
+
 	    if (FD_ISSET (input_fd, &select_set))
 	        break;
 	}
@@ -792,12 +792,12 @@ int get_event (Gpm_Event *event, int redo_event, int block)
 #   endif
 
     c = block ? getch_with_delay () : get_key_code(1);
-    
+
 #   ifndef HAVE_SLANG
     if (flag)
         touchwin (stdscr);
 #   endif
-    
+
     if (c == MCKEY_MOUSE) { /* Mouse event */
         xmouse_get_event (event);
         return EV_MOUSE;
@@ -877,7 +877,7 @@ char *learn_key (void)
     int c = xgetch ();
     char buffer [256];
     char *p = buffer;
-    
+
     while (c == ERR)
         c = xgetch (); /* Sanity check, should be unnecessary */
     learn_store_key (buffer, &p, c);
@@ -908,7 +908,7 @@ char *learn_key (void)
         }
         if (c == ERR)
             break;
-	learn_store_key (buffer, &p, c);        
+	learn_store_key (buffer, &p, c);
     }
 #ifdef BUGGY_CURSES
     notimeout (stdscr, TRUE);
@@ -935,7 +935,7 @@ void
 application_keypad_mode (void)
 {
     if (console_flag || xterm_flag) {
-        fprintf (stdout, "\033="); 
+        fprintf (stdout, "\033=");
         fflush (stdout);
     }
 }
@@ -1014,7 +1014,7 @@ void done_key ()
 
 #else
 
-void done_key () 
+void done_key ()
 {
 }
 

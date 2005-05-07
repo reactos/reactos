@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -34,7 +34,7 @@ TruncBatchLog(void)
 	time_t t;
 	int fd;
 
-	if (gOurDirectoryPath[0] != '\0') { 
+	if (gOurDirectoryPath[0] != '\0') {
 		time(&t);
 		t -= 86400;
 		(void) OurDirectoryPath(f, sizeof(f), kSpoolLog);
@@ -59,7 +59,7 @@ MkSpoolDir(char *sdir, size_t size)
 	*sdir = '\0';
 
 	/* Don't create in root directory. */
-	if (gOurDirectoryPath[0] != '\0') { 
+	if (gOurDirectoryPath[0] != '\0') {
 		(void) OurDirectoryPath(sdir, size, kSpoolDir);
 		if ((stat(sdir, &st) < 0) && (MkDirs(sdir, 00700) < 0)) {
 			perror(sdir);
@@ -374,7 +374,7 @@ RunBatch(int Xstruct, const FTPCIPtr cip)
 	}
 	prog = ncftpbatch;
 	OurInstallationPath(ncftpbatch, sizeof(ncftpbatch), "ncftpbatch.exe");
-	
+
 	winExecResult = WinExec(prog, SW_SHOWNORMAL);
 	if (winExecResult <= 31) switch (winExecResult) {
 		case ERROR_BAD_FORMAT:

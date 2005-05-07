@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include <windowsx.h>
 
 #include "main.h"
@@ -74,7 +74,7 @@ Entry* read_tree_win(Root* root, LPCTSTR path, int sortOrder)
 #ifndef _NO_EXTENSIONS
 	entry->unix_dir = FALSE;
 #endif
-	
+
 	while(entry) {
 		while(*s && *s!=_T('\\') && *s!=_T('/'))
 			*d++ = *s++;

@@ -1,7 +1,7 @@
 /* $Id$
- * 
+ *
  * chklib.c
- * 
+ *
  * Copyright (C) 1998, 1999 Emanuele Aliberti.
  *
  * --------------------------------------------------------------------
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public
  * License along with this software; see the file COPYING. If
  * not, write to the Free Software Foundation, Inc., 675 Mass Ave,
- * Cambridge, MA 02139, USA.  
+ * Cambridge, MA 02139, USA.
  *
  * --------------------------------------------------------------------
  * Check a PE DLL for loading and get an exported symbol's address
@@ -54,7 +54,7 @@ DisplayVersion(
 		ModuleName,
 		& Zero
 		);
-	if (Size == 0) 
+	if (Size == 0)
 	{
 		PrintWin32Error(
 			L"GetFileVersionInfoSize",
@@ -80,8 +80,8 @@ DisplayVersion(
 	}
 /*
 	VerQueryValue(
-		vi, 
-		L"\\StringFileInfo\\040904E4\\FileDescription", 
+		vi,
+		L"\\StringFileInfo\\040904E4\\FileDescription",
 		& lpBuffer,
 		& dwBytes
 		);
@@ -99,7 +99,7 @@ DisplayEntryPoint(
 	)
 {
 	FARPROC	EntryPoint;
-	
+
 	printf(
 		"[%s]\n",
 		SymbolName
@@ -136,10 +136,10 @@ main(
 	HINSTANCE	dll;
 	TCHAR		ModuleName [_MAX_PATH];
 
-	if (argc < 2) 
+	if (argc < 2)
 	{
 		fprintf(
-			stderr, 
+			stderr,
 			"\
 ReactOS System Tools\n\
 Check a Dynamic Link Library (DLL) for loading\n\
@@ -161,7 +161,7 @@ usage: %s module [symbol [, ...]]\n",
 			"%s: loading %s failed (%d).\n",
 			argv[0],
 			argv[1],
-			LastError       
+			LastError
 			);
 		exit(EXIT_FAILURE);
 	}

@@ -25,7 +25,7 @@
 #include <tchar.h>
 #include <stdlib.h>
 #include <stdio.h>
-    
+
 #include "main.h"
 #include "framewnd.h"
 
@@ -109,7 +109,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     // Initialize global strings
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadString(hInstance, IDC_ZOOMIN, szFrameClass, MAX_LOADSTRING);
-    
+
     // Store instance handle in our global variable
     hInst = hInstance;
 

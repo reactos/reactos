@@ -1,7 +1,7 @@
 #ifndef _JD_MACROS_H_
 #define _JD_MACROS_H_
 
-/* This file defines some macros that I use with programs that link to 
+/* This file defines some macros that I use with programs that link to
  * the slang library.
  */
 
@@ -15,7 +15,7 @@
 
 #ifdef HAVE_MEMORY_H
 # include <memory.h>
-#endif 
+#endif
 
 #ifndef SLMEMSET
 # ifdef HAVE_MEMSET

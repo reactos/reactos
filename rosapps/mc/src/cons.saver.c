@@ -6,12 +6,12 @@
    This code requires root privileges.
    You may want to make the cons.saver setuid root.
    The code should be safe even if it is setuid but who knows?
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -102,11 +102,11 @@ int check_file (char *filename, int check_console, char **msg)
        both 'open' and 'stat' operate on the same file */
 
     *msg = 0;
-    
+
     fd = open (filename, O_RDWR);
     if (fd == -1)
 	return -1;
-    
+
     if (fstat (fd, &stat_buf) == -1)
 	return -1;
 
@@ -125,19 +125,19 @@ int check_file (char *filename, int check_console, char **msg)
 	    *msg = "Not a console";
 	    return -1;
 	}
-    
+
 	if ((stat_buf.st_rdev & 0x00ff) > 63){
 	    *msg = "Minor device number too big";
 	    return -1;
 	}
-	
+
 	/* Must be owned by the user */
 	if (stat_buf.st_uid != getuid ()){
 	    *msg = "Not a owner";
 	    return -1;
 	}
     }
-    
+
     /* Everything seems to be okay */
     return fd;
 }
@@ -150,7 +150,7 @@ char *detect_console (void)
 {
     char *msg;
     int  xlen;
-    
+
     /* Must be console */
     /* Handle the case for /dev/tty?? */
     if (tty_name[len-5] == 't')
@@ -174,7 +174,7 @@ char *detect_console (void)
 #ifdef DEBUG
     fprintf (stderr, "vcs_fd = %d console_fd = %d\n", vcs_fd, console_fd);
 #endif
-    
+
     if (vcs_fd != -1){
 	console_flag = 3;
     }
@@ -269,9 +269,9 @@ void send_contents ()
     unsigned char message;
     unsigned short bytes;
     int bytes_per_char;
-    
+
     bytes_per_char = console_flag == 1 ? 1 : 2;
-    
+
     /* Calculate the number of used lines */
     if (console_flag == 2 || console_flag == 1 || console_flag == 3){
 	index = (2 + rows * columns) * bytes_per_char;
@@ -327,7 +327,7 @@ int main (int argc, char **argv)
 
     /* Lose the control terminal */
     setsid ();
-    
+
     /* Check that the argument is a legal console */
     tty_name = argv [1];
     len = strlen(tty_name);
@@ -353,7 +353,7 @@ int main (int argc, char **argv)
     /* If using /dev/vcs*, we don't need anymore the console fd */
     if (console_flag == 3)
 	close (console_fd);
-    
+
     /* Inform the invoker about the result of the tests */
     write (cmd_output, &console_flag, 1);
 
@@ -374,14 +374,14 @@ int main (int argc, char **argv)
 	    send_contents ();
 	    break;
 	} /* switch (action) */
-		
+
 	/* Inform the invoker that command is handled */
 	write (cmd_output, &console_flag, 1);
     } /* while (read ...) */
 
     if (buffer)
 	free (buffer);
-    return 0;   
+    return 0;
 }
 
 #else

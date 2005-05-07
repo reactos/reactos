@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include "main.h"
 #include "network.h"
 
@@ -118,14 +118,14 @@ DWORD MapNetworkDrives(HWND hWnd, BOOL connect)
         NETRESOURCE netResouce;
         CONNECTDLGSTRUCT connectDlg;
 
-        //netResouce.dwScope; 
-        //netResouce.dwType; 
+        //netResouce.dwScope;
+        //netResouce.dwType;
         netResouce.dwDisplayType = 0;
-        //netResouce.dwUsage; 
-        //netResouce.lpLocalName; 
-        //netResouce.lpRemoteName; 
-        //netResouce.lpComment; 
-        //netResouce.lpProvider; 
+        //netResouce.dwUsage;
+        //netResouce.lpLocalName;
+        //netResouce.lpRemoteName;
+        //netResouce.lpComment;
+        //netResouce.lpProvider;
 
         //connectDlg.cbStructure;
         connectDlg.hwndOwner = hWnd;
@@ -195,7 +195,7 @@ static void DisplayStruct(HDC hdc, LPNETRESOURCE lpnrLocal)
 ////////////////////////////////////
 
 static BOOL WINAPI EnumerateFunc(HWND hwnd, HDC hdc, LPNETRESOURCE lpnr)
-{ 
+{
   DWORD dwResult;
   DWORD dwResultEnum;
   HANDLE hEnum;
@@ -214,7 +214,7 @@ static BOOL WINAPI EnumerateFunc(HWND hwnd, HDC hdc, LPNETRESOURCE lpnr)
                           lpnr,     // NULL first time the function is called
                           &hEnum);  // handle to the resource
 
-  if (dwResult != NO_ERROR) {  
+  if (dwResult != NO_ERROR) {
     // Process errors with an application-defined error handler.
     NetErrorHandler(hwnd, dwResult, (LPTSTR)_T("WNetOpenEnum"));
     return FALSE;
@@ -222,8 +222,8 @@ static BOOL WINAPI EnumerateFunc(HWND hwnd, HDC hdc, LPNETRESOURCE lpnr)
 
   // Call the GlobalAlloc function to allocate resources.
   lpnrLocal = (LPNETRESOURCE)GlobalAlloc(GPTR, cbBuffer);
- 
-  do {  
+
+  do {
     // Initialize the buffer.
     ZeroMemory(lpnrLocal, cbBuffer);
 
@@ -262,8 +262,8 @@ static BOOL WINAPI EnumerateFunc(HWND hwnd, HDC hdc, LPNETRESOURCE lpnr)
 
   // Call WNetCloseEnum to end the enumeration.
   dwResult = pWNetCloseEnum(hEnum);
-  
-  if (dwResult != NO_ERROR) { 
+
+  if (dwResult != NO_ERROR) {
     // Process errors.
     NetErrorHandler(hwnd, dwResult, (LPTSTR)_T("WNetCloseEnum"));
     return FALSE;

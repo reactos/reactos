@@ -13,36 +13,36 @@
  *		screenhack stuff.  There's still some work that could
  *		be done on this, particularly allowing a resource to
  *		specify how big the squares are.
- * modified:  [ 10-4-88 ]  Richard Hess    ...!uunet!cimshop!rhess  
+ * modified:  [ 10-4-88 ]  Richard Hess    ...!uunet!cimshop!rhess
  *              [ Revised primary execution loop within main()...
  *              [ Extended X event handler, check_events()...
- * modified:  [ 1-29-88 ]  Dave Lemke      lemke@sun.com  
+ * modified:  [ 1-29-88 ]  Dave Lemke      lemke@sun.com
  *              [ Hacked for X11...
- *              [  Note the word "hacked" -- this is extremely ugly, but at 
- *              [   least it does the job.  NOT a good programming example 
+ *              [  Note the word "hacked" -- this is extremely ugly, but at
+ *              [   least it does the job.  NOT a good programming example
  *              [   for X.
  * original:  [ 6/21/85 ]  Martin Weiss    Sun Microsystems  [ SunView ]
  *
  ******************************************************************************
  Copyright 1988 by Sun Microsystems, Inc. Mountain View, CA.
-  
+
  All Rights Reserved
-  
+
  Permission to use, copy, modify, and distribute this software and its
- documentation for any purpose and without fee is hereby granted, 
+ documentation for any purpose and without fee is hereby granted,
  provided that the above copyright notice appear in all copies and that
- both that copyright notice and this permission notice appear in 
+ both that copyright notice and this permission notice appear in
  supporting documentation, and that the names of Sun or MIT not be
  used in advertising or publicity pertaining to distribution of the
- software without specific prior written permission. Sun and M.I.T. 
- make no representations about the suitability of this software for 
+ software without specific prior written permission. Sun and M.I.T.
+ make no representations about the suitability of this software for
  any purpose. It is provided "as is" without any express or implied warranty.
- 
+
  SUN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
  ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  PURPOSE. IN NO EVENT SHALL SUN BE LIABLE FOR ANY SPECIAL, INDIRECT
  OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE
  OR PERFORMANCE OF THIS SOFTWARE.
  *****************************************************************************/
@@ -115,7 +115,7 @@ static struct {
   unsigned char x;
   unsigned char y;
   unsigned char dir;
-  unsigned char dummy;  
+  unsigned char dummy;
 } move_list[MOVE_LIST_SIZE], save_path[MOVE_LIST_SIZE], path[MOVE_LIST_SIZE];
 
 static int maze_size_x, maze_size_y;
@@ -139,50 +139,50 @@ static void
 initialize_maze()         /* draw the surrounding wall and start/end squares */
 {
   register int i, j, wall;
-  
+
   /* initialize all squares */
   for ( i=0; i<maze_size_x; i++) {
     for ( j=0; j<maze_size_y; j++) {
       maze[i][j] = 0;
     }
   }
-  
+
   /* top wall */
   for ( i=0; i<maze_size_x; i++ ) {
     maze[i][0] |= WALL_TOP;
   }
-  
+
   /* right wall */
   for ( j=0; j<maze_size_y; j++ ) {
     maze[maze_size_x-1][j] |= WALL_RIGHT;
   }
-  
+
   /* bottom wall */
   for ( i=0; i<maze_size_x; i++ ) {
     maze[i][maze_size_y-1] |= WALL_BOTTOM;
   }
-  
+
   /* left wall */
   for ( j=0; j<maze_size_y; j++ ) {
     maze[0][j] |= WALL_LEFT;
   }
-  
+
   /* set start square */
   wall = get_random(4);
   switch (wall) {
-  case 0:	
+  case 0:
     i = get_random(maze_size_x);
     j = 0;
     break;
-  case 1:	
+  case 1:
     i = maze_size_x - 1;
     j = get_random(maze_size_y);
     break;
-  case 2:	
+  case 2:
     i = get_random(maze_size_x);
     j = maze_size_y - 1;
     break;
-  case 3:	
+  case 3:
     i = 0;
     j = get_random(maze_size_y);
     break;
@@ -196,7 +196,7 @@ initialize_maze()         /* draw the surrounding wall and start/end squares */
   start_y = j;
   start_dir = wall;
   sqnum = 0;
-  
+
   /* set end square */
   wall = (wall + 2)%4;
   switch (wall) {
@@ -236,7 +236,7 @@ create_maze()             /* create a maze layout given the intiialized maze */
 {
   register int i, newdoor = 0;
   HDC hDC;
-  
+
   hDC = GetDC(hWnd);
   do {
     move_list[sqnum].x = cur_sq_x;
@@ -248,10 +248,10 @@ create_maze()             /* create a maze layout given the intiialized maze */
 		return; /* done ... return */
       }
     }
-    
+
     /* mark the out door */
     maze[cur_sq_x][cur_sq_y] |= ( DOOR_OUT_TOP >> newdoor );
-    
+
     switch (newdoor) {
     case 0: cur_sq_y--;
       break;
@@ -263,10 +263,10 @@ create_maze()             /* create a maze layout given the intiialized maze */
       break;
     }
     sqnum++;
-    
+
     /* mark the in door */
     maze[cur_sq_x][cur_sq_y] |= ( DOOR_IN_TOP >> ((newdoor+2)%4) );
-    
+
     /* if end square set path length and save path */
     if ( maze[cur_sq_x][cur_sq_y] & END_SQUARE ) {
       path_length = sqnum;
@@ -276,9 +276,9 @@ create_maze()             /* create a maze layout given the intiialized maze */
 	save_path[i].dir = move_list[i].dir;
       }
     }
-    
+
   } while (1);
-  
+
 }
 
 
@@ -287,9 +287,9 @@ choose_door(HDC hDC)                                    /* pick a new path */
 {
   int candidates[3];
   register int num_candidates;
-  
+
   num_candidates = 0;
-  
+
   /* top wall */
   if ( maze[cur_sq_x][cur_sq_y] & DOOR_IN_TOP )
     goto rightwall;
@@ -304,7 +304,7 @@ choose_door(HDC hDC)                                    /* pick a new path */
     goto rightwall;
   }
   candidates[num_candidates++] = 0;
-  
+
  rightwall:
   /* right wall */
   if ( maze[cur_sq_x][cur_sq_y] & DOOR_IN_RIGHT )
@@ -320,7 +320,7 @@ choose_door(HDC hDC)                                    /* pick a new path */
     goto bottomwall;
   }
   candidates[num_candidates++] = 1;
-  
+
  bottomwall:
   /* bottom wall */
   if ( maze[cur_sq_x][cur_sq_y] & DOOR_IN_BOTTOM )
@@ -336,7 +336,7 @@ choose_door(HDC hDC)                                    /* pick a new path */
     goto leftwall;
   }
   candidates[num_candidates++] = 2;
-  
+
  leftwall:
   /* left wall */
   if ( maze[cur_sq_x][cur_sq_y] & DOOR_IN_LEFT )
@@ -352,14 +352,14 @@ choose_door(HDC hDC)                                    /* pick a new path */
     goto donewall;
   }
   candidates[num_candidates++] = 3;
-  
+
  donewall:
   if (num_candidates == 0)
     return ( -1 );
   if (num_candidates == 1)
     return ( candidates[0] );
   return ( candidates[ get_random(num_candidates) ] );
-  
+
 }
 
 
@@ -385,19 +385,19 @@ draw_solid_square(i, j, dir, hDC, hBrush)          /* draw a solid square in a s
   RECT rc;
 
   switch (dir) {
-  case 0: 
+  case 0:
     rc.left = border_x + bw + grid_width * i;
 	rc.right = rc.left + grid_width - (bw + bw);
 	rc.top = border_y - bw + grid_height * j;
 	rc.bottom = rc.top + grid_height;
     break;
-  case 1: 
+  case 1:
 	rc.left = border_x + bw + grid_width * i;
 	rc.right = rc.left + grid_width;
 	rc.top = border_y + bw + grid_height * j;
 	rc.bottom = rc.top + grid_height - (bw + bw);
     break;
-  case 2: 
+  case 2:
     rc.left = border_x + bw + grid_width * i;
 	rc.right = rc.left + grid_width - (bw + bw);
 	rc.top = border_y + bw + grid_height * j;
@@ -418,8 +418,8 @@ draw_maze_border(HWND hWnd, HDC hDC)	/* draw the maze outline */
 {
   register int i, j;
   HBRUSH hBrush;
-  
-  
+
+
   for ( i=0; i<maze_size_x; i++) {
     if ( maze[i][0] & WALL_TOP ) {
 	  MoveToEx(hDC, border_x + grid_width * i, border_y, NULL);
@@ -459,7 +459,7 @@ draw_wall(i, j, dir, hDC)                                   /* draw a single wal
   switch (dir) {
   case 0:
   	MoveToEx(hDC, border_x + grid_width * i, border_y + grid_height * j, NULL);
-	(void) LineTo(hDC, border_x + grid_width * (i+1), 
+	(void) LineTo(hDC, border_x + grid_width * (i+1),
 	              border_y + grid_height * j);
     break;
   case 1:
@@ -471,13 +471,13 @@ draw_wall(i, j, dir, hDC)                                   /* draw a single wal
   case 2:
 	MoveToEx(hDC, border_x + grid_width * i, border_y + grid_height * (j+1),
 	         NULL);
-	(void) LineTo(hDC, border_x + grid_width * (i+1), 
+	(void) LineTo(hDC, border_x + grid_width * (i+1),
 	              border_y + grid_height * (j+1));
     break;
   case 3:
 	MoveToEx(hDC, border_x + grid_width * i, border_y + grid_height * j,
 	         NULL);
-	(void) LineTo(hDC, border_x + grid_width * i, 
+	(void) LineTo(hDC, border_x + grid_width * i,
 	              border_y + grid_height * (j+1));
     break;
   }
@@ -497,11 +497,11 @@ begin_solve_maze()                             /* solve it with graphical feedba
 	0xaaaaaaaa
   };
   static RGBQUAD argbq[] = {
-  	{ 0, 0, 255, 0 },	  
+  	{ 0, 0, 255, 0 },
 	{ 255, 255, 255, 0 }
   };
   BITMAPINFO *pbmi;
-  
+
   hDC = GetDC(hWnd);
   pbmi = malloc(sizeof(BITMAPINFOHEADER) + sizeof(argbq) + sizeof(grayPattern));
   pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -525,31 +525,31 @@ begin_solve_maze()                             /* solve it with graphical feedba
   /* plug up the surrounding wall */
   maze[start_x][start_y] |= (WALL_TOP >> start_dir);
   maze[end_x][end_y] |= (WALL_TOP >> end_dir);
-  
+
   /* initialize search path */
   pathi = 0;
   path[pathi].x = end_x;
   path[pathi].y = end_y;
   path[pathi].dir = -1;
 }
-  
+
 static int
 solve_maze()                             /* solve it with graphical feedback */
 {
   int ret;
   int action_done;
-                  
+
   do {
     action_done = 1;
     if ( ++path[pathi].dir >= 4 ) {
       pathi--;
-      draw_solid_square( (int)(path[pathi].x), (int)(path[pathi].y), 
+      draw_solid_square( (int)(path[pathi].x), (int)(path[pathi].y),
 	  	       (int)(path[pathi].dir), hDC, hBrushDead);
       ret = 0;
     }
-    else if ( ! (maze[path[pathi].x][path[pathi].y] & 
-	  	(WALL_TOP >> path[pathi].dir))  && 
-	     ( (pathi == 0) || ( (path[pathi].dir != 
+    else if ( ! (maze[path[pathi].x][path[pathi].y] &
+	  	(WALL_TOP >> path[pathi].dir))  &&
+	     ( (pathi == 0) || ( (path[pathi].dir !=
 		  	    (int)(path[pathi-1].dir+2)%4) ) ) ) {
       enter_square(pathi, hDC, hBrushLiving);
       pathi++;
@@ -567,15 +567,15 @@ solve_maze()                             /* solve it with graphical feedback */
   } while (! action_done);
 
   return ret;
-} 
+}
 
 
 static void
 enter_square(int n, HDC hDC, HBRUSH hBrush)  /* move into a neighboring square */
 {
-  draw_solid_square( (int)path[n].x, (int)path[n].y, 
+  draw_solid_square( (int)path[n].x, (int)path[n].y,
 		    (int)path[n].dir, hDC, hBrush);
-  
+
   path[n+1].dir = -1;
   switch (path[n].dir) {
   case 0: path[n+1].x = path[n].x;

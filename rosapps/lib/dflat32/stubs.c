@@ -8,7 +8,7 @@ int TestCriticalError(void)
 /* These are functions that are supposed to be part of the application
  * not part of the dflat32.dll
  *
- * - Fixme 
+ * - Fixme
  */
 
 char DFlatApplication[] = "none";   //edit.c

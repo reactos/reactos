@@ -72,7 +72,7 @@ main (int argc, char * argv [] )
 	{
 		char * NextDosDevice = SymbolicLinks;
 		char * NextDevice;
-		
+
 		while (TRUE == GetNextString (
 					SymbolicLinks,
 					DosDeviceName,
@@ -102,7 +102,7 @@ main (int argc, char * argv [] )
 			else
 			{
 				PrintWin32Error (
-					L"ldd: ", 
+					L"ldd: ",
 					GetLastError ()
 					);
 			}
@@ -112,7 +112,7 @@ main (int argc, char * argv [] )
 	else
 	{
 		PrintWin32Error (
-			L"ldd: ", 
+			L"ldd: ",
 			GetLastError ()
 			);
 		return EXIT_FAILURE;

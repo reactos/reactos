@@ -97,7 +97,7 @@
      KEY_F (17), CK_Find_Again,
      ALT ('<'), CK_Beginning_Of_Text,
      ALT ('>'), CK_End_Of_Text,
-     
+
      0, 0};
 
     static long key_pad_map[10] =
@@ -276,7 +276,7 @@
 	goto fin;
 
 /* Function still not found for this key, so try macro's */
-/* This allows the same macro to be 
+/* This allows the same macro to be
    enabled by either eg "ALT('f')" or "XCTRL('f')" or "XCTRL('a'), 'f'" */
 
 /* key.h: #define ALT(x) (0x200 | (x)) */

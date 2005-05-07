@@ -13,7 +13,7 @@ typedef struct {
     struct stat  buf;
 
     /* Flags */
-    struct { 
+    struct {
 	unsigned int marked:1;		/* File marked in pane window */
 	unsigned int exists:1;		/* Use for rereading file */
 	unsigned int link_to_dir:1;	/* If this is a link, does it point to directory? */
@@ -38,7 +38,7 @@ int set_zero_dir (dir_list *list);
 #ifdef DIR_H_INCLUDE_HANDLE_DIRENT
 int handle_dirent (dir_list *list, char *filter, struct dirent *dp,
 		   struct stat *buf1, int next_free, int *link_to_dir, int *stalled_link);
-int handle_path (dir_list *list, char *path, struct stat *buf1, int next_free, 
+int handle_path (dir_list *list, char *path, struct stat *buf1, int next_free,
 		   int *link_to_dir, int *stalled_link);
 #endif
 

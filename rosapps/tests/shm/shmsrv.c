@@ -1,4 +1,4 @@
-/* $Id: shmsrv.c,v 1.1 2004/10/21 04:59:01 sedwards Exp $
+/* $Id$
  *
  * FILE  : reactos/apps/shm/shmsrv.c
  * AUTHOR: David Welch
@@ -13,13 +13,13 @@ int main(int argc, char* argv[])
 {
    HANDLE Section;
    PVOID BaseAddress;
-   
+
    printf("Shm test server\n");
-   
+
    Section = CreateFileMappingW (
 			(HANDLE) 0xFFFFFFFF,
 			NULL,
-			PAGE_READWRITE, 
+			PAGE_READWRITE,
 			0,
 			8192,
 			L"TestSection"
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 	printf("Failed to create section (err=%d)", GetLastError());
 	return 1;
      }
-   
+
    printf("Mapping view of section\n");
    BaseAddress = MapViewOfFile(Section,
 			       FILE_MAP_ALL_ACCESS,
@@ -41,11 +41,11 @@ int main(int argc, char* argv[])
      {
 	printf("Failed to map section\n");
      }
-   
+
    printf("Copying to section\n");
    printf("Copying %s\n", GetCommandLineA());
    strcpy(BaseAddress, GetCommandLineA());
-   
+
    Sleep(INFINITE);
 
    return 0;

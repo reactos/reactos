@@ -33,7 +33,7 @@ void
 DisposeLineListContents(LineListPtr list)
 {
 	LinePtr lp, lp2;
-	
+
 	for (lp = list->first; lp != NULL; ) {
 		lp2 = lp;
 		lp = lp->next;
@@ -63,9 +63,9 @@ LinePtr
 RemoveLine(LineListPtr list, LinePtr killMe)
 {
 	LinePtr nextLine, prevLine;
-	
-	nextLine = killMe->next;	
-	prevLine = killMe->prev;	
+
+	nextLine = killMe->next;
+	prevLine = killMe->prev;
 	if (killMe->line != NULL) {
 		killMe->line[0] = '\0';		/* Make it useless just in case. */
 		free(killMe->line);
@@ -81,7 +81,7 @@ RemoveLine(LineListPtr list, LinePtr killMe)
 	if (prevLine != NULL)
 		prevLine->next = nextLine;
 
-	free(killMe);	
+	free(killMe);
 	list->nLines--;
 	return (nextLine);
 }	/* RemoveLine */
@@ -95,7 +95,7 @@ AddLine(LineListPtr list, const char *buf1)
 {
 	LinePtr lp;
 	char *buf;
-	
+
 	lp = (LinePtr) malloc(sizeof(Line));
 	if (lp != NULL) {
 		buf = StrDup(buf1);
@@ -127,7 +127,7 @@ int
 CopyLineList(LineListPtr dst, LineListPtr src)
 {
 	LinePtr lp, lp2;
-	
+
 	InitLineList(dst);
 	for (lp = src->first; lp != NULL; ) {
 		lp2 = lp;
@@ -152,7 +152,7 @@ void
 DisposeFileInfoListContents(FileInfoListPtr list)
 {
 	FileInfoPtr lp, lp2;
-	
+
 	for (lp = list->first; lp != NULL; ) {
 		lp2 = lp;
 		lp = lp->next;
@@ -483,9 +483,9 @@ FileInfoPtr
 RemoveFileInfo(FileInfoListPtr list, FileInfoPtr killMe)
 {
 	FileInfoPtr nextFileInfo, prevFileInfo;
-	
-	nextFileInfo = killMe->next;	
-	prevFileInfo = killMe->prev;	
+
+	nextFileInfo = killMe->next;
+	prevFileInfo = killMe->prev;
 	if (killMe->lname != NULL) {
 		killMe->lname[0] = '\0';		/* Make it useless just in case. */
 		free(killMe->lname);
@@ -517,7 +517,7 @@ RemoveFileInfo(FileInfoListPtr list, FileInfoPtr killMe)
 	if (prevFileInfo != NULL)
 		prevFileInfo->next = nextFileInfo;
 
-	free(killMe);	
+	free(killMe);
 	list->nFileInfos--;
 	return (nextFileInfo);
 }	/* RemoveFileInfo */
@@ -530,7 +530,7 @@ FileInfoPtr
 AddFileInfo(FileInfoListPtr list, FileInfoPtr src)
 {
 	FileInfoPtr lp;
-	
+
 	lp = (FileInfoPtr) malloc(sizeof(FileInfo));
 	if (lp != NULL) {
 		(void) memcpy(lp, src, sizeof(FileInfo));
@@ -557,7 +557,7 @@ ConcatFileInfoList(FileInfoListPtr dst, FileInfoListPtr src)
 {
 	FileInfoPtr lp, lp2;
 	FileInfo newfi;
-	
+
 	for (lp = src->first; lp != NULL; lp = lp2) {
 		lp2 = lp->next;
 		newfi = *lp;

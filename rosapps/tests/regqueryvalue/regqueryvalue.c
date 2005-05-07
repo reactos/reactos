@@ -18,8 +18,8 @@ int main( int argc, char **argv ) {
     printf( "Returns an HKEY_LOCAL_MACHINE value from the given key.\n" );
     return 1;
   }
-  
-  if ( RegOpenKeyExA( HKEY_LOCAL_MACHINE, argv[1], 0, KEY_READ, &RegKey ) 
+
+  if ( RegOpenKeyExA( HKEY_LOCAL_MACHINE, argv[1], 0, KEY_READ, &RegKey )
       != 0 ) {
     printf( "Could not open key %s\n", argv[1] );
     return 2;
@@ -33,17 +33,17 @@ int main( int argc, char **argv ) {
     printf( "The value %S does not exist.\n", ValueNameWC );
     return 5;
   }
-  
+
   WcharResult = malloc( (ResultSize + 1) * sizeof(WCHAR) );
-  
+
   if( !WcharResult ) {
     printf( "Could not alloc %d wchars\n", (int)(ResultSize + 1) );
     return 6;
   }
 
-  RegQueryValueExW( RegKey, ValueNameWC, NULL, NULL, (LPBYTE)WcharResult, 
+  RegQueryValueExW( RegKey, ValueNameWC, NULL, NULL, (LPBYTE)WcharResult,
 		    &ResultSize );
-  
+
   printf( "wchar Value: %S\n", WcharResult );
   fflush( stdout );
 
@@ -57,7 +57,7 @@ int main( int argc, char **argv ) {
   }
 
   RegQueryValueExA( RegKey, argv[2], NULL, NULL, CharResult, &ResultSize );
-  
+
   printf( " char Value: %s\n", CharResult );
   fflush( stdout );
 

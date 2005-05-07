@@ -1,14 +1,14 @@
 // $Id$
 //
-// This program was written by Sang Cho, assistant professor at 
-//                                       the department of 
+// This program was written by Sang Cho, assistant professor at
+//                                       the department of
 //                                                                               computer science and engineering
 //                                                                               chongju university
 // this program is based on the program pefile.c
 // which is written by Randy Kath(Microsoft Developmer Network Technology Group)
 // in june 12, 1993.
 // I have investigated P.E. file format as thoroughly as possible,
-// but I cannot claim that I am an expert yet, so some of its information  
+// but I cannot claim that I am an expert yet, so some of its information
 // may give you wrong results.
 //
 //
@@ -511,18 +511,18 @@ IMAGE_NORMAL_MENU_ITEM, *PIMAGE_NORMAL_MENU_ITEM;
 
 // Dialog Box Resources .................. added by sang cho.
 
-// A dialog box is contained in a single resource and has a header and 
+// A dialog box is contained in a single resource and has a header and
 // a portion repeated for each control in the dialog box.
 // The item DWORD IStyle is a standard window style composed of flags found
 // in WINDOWS.H.
 // The default style for a dialog box is:
 // WS_POPUP | WS_BORDER | WS_SYSMENU
-// 
+//
 // The itme marked "Name or Ordinal" are :
 // If the first word is an 0xffff, the next two bytes contain an ordinal ID.
 // Otherwise, the first one or more WORDS contain a double-null-terminated string.
 // An empty string is represented by a single WORD zero in the first location.
-// 
+//
 // The WORD wPointSize and WCHAR szFontName entries are present if the FONT
 // statement was included for the dialog box. This can be detected by checking
 // the entry IStyle. If IStyle & DS_SETFONT ( which is 0x40), then these
@@ -905,13 +905,13 @@ BOOL WINAPI GetSeparateDebugHeader (LPVOID, PIMAGE_SEPARATE_DEBUG_HEADER);
 
 /**********************************************************************
  * NAME
- * 
+ *
  * DESCRIPTION
  *	Copy DOS header information to structure.
  *
  * ARGUMENTS
  */
-BOOL WINAPI 
+BOOL WINAPI
 GetDosHeader (
 	       LPVOID lpFile,
 	       PIMAGE_DOS_HEADER pHeader
@@ -937,7 +937,7 @@ GetDosHeader (
 
 
 /* return file signature */
-DWORD WINAPI 
+DWORD WINAPI
 ImageFileType (
 		LPVOID lpFile)
 {
@@ -965,7 +965,7 @@ ImageFileType (
 
 
 /* copy file header information to structure */
-BOOL WINAPI 
+BOOL WINAPI
 GetPEFileHeader (
 		  LPVOID lpFile,
 		  PIMAGE_FILE_HEADER pHeader)
@@ -984,7 +984,7 @@ GetPEFileHeader (
 
 
 /* copy optional header info to structure */
-BOOL WINAPI 
+BOOL WINAPI
 GetPEOptionalHeader (
 		      LPVOID lpFile,
 		      PIMAGE_OPTIONAL_HEADER pHeader)
@@ -1003,7 +1003,7 @@ GetPEOptionalHeader (
 
 /* function returns the entry point for an exe module lpFile must
    be a memory mapped file pointer to the beginning of the image file */
-LPVOID WINAPI 
+LPVOID WINAPI
 GetModuleEntryPoint (
 		      LPVOID lpFile)
 {
@@ -1019,7 +1019,7 @@ GetModuleEntryPoint (
 
 
 /* return the total number of sections in the module */
-int WINAPI 
+int WINAPI
 NumOfSections (
 		LPVOID lpFile)
 {
@@ -1031,7 +1031,7 @@ NumOfSections (
 
 
 /* retrieve entry point */
-LPVOID WINAPI 
+LPVOID WINAPI
 GetImageBase (
 	       LPVOID lpFile)
 {
@@ -1051,7 +1051,7 @@ GetImageBase (
 //
 /* function returns the actual address of given RVA,      lpFile must
    be a memory mapped file pointer to the beginning of the image file */
-LPVOID WINAPI 
+LPVOID WINAPI
 GetActualAddress (
 		   LPVOID lpFile,
 		   DWORD dwRVA)
@@ -1093,7 +1093,7 @@ GetActualAddress (
 //
 //
 /* return offset to specified IMAGE_DIRECTORY entry */
-LPVOID WINAPI 
+LPVOID WINAPI
 ImageDirectoryOffset (
 		       LPVOID lpFile,
 		       DWORD dwIMAGE_DIRECTORY)
@@ -1132,7 +1132,7 @@ ImageDirectoryOffset (
 
 
 /* function retrieve names of all the sections in the file */
-int WINAPI 
+int WINAPI
 GetSectionNames (
 		  LPVOID lpFile,
 		  char **pszSections)
@@ -1168,7 +1168,7 @@ GetSectionNames (
 
 
 /* function gets the function header for a section identified by name */
-BOOL WINAPI 
+BOOL WINAPI
 GetSectionHdrByName (
 		      LPVOID lpFile,
 		      IMAGE_SECTION_HEADER * sh,
@@ -1204,7 +1204,7 @@ GetSectionHdrByName (
 //
 //
 /* get import modules names separated by null terminators, return module count */
-int WINAPI 
+int WINAPI
 GetImportModuleNames (
 		       LPVOID lpFile,
 		       char **pszModules)
@@ -1261,7 +1261,7 @@ GetImportModuleNames (
 //
 //
 /* get import module function names separated by null terminators, return function count */
-int WINAPI 
+int WINAPI
 GetImportFunctionNamesByModule (
 				 LPVOID lpFile,
 				 char *pszModule,
@@ -1378,7 +1378,7 @@ GetImportFunctionNamesByModule (
 //                                                         October 6, 1997
 //
 /* get numerically expressed string length */
-int WINAPI 
+int WINAPI
 GetStringLength (
 		  char *psz)
 {
@@ -1399,7 +1399,7 @@ GetStringLength (
 //
 
 /* translate parameter part of condensed name */
-void WINAPI 
+void WINAPI
 GetPreviousParamString (
 			 char *xpin,	// read-only source
 			  char *xpout)	// translated result
@@ -1464,7 +1464,7 @@ GetPreviousParamString (
 //
 
 /* translate parameter part of condensed name */
-void WINAPI 
+void WINAPI
 TranslateParameters (
 		      char **ppin,	// read-only source
 		       char **ppout,	// translated result
@@ -1675,7 +1675,7 @@ TranslateParameters (
 //
 
 /* translate parameter part of condensed name */
-BOOL WINAPI 
+BOOL WINAPI
 StringExpands (
 		char **ppin,	// read-only source
 		 char **ppout,	// translated result
@@ -1925,7 +1925,7 @@ StringExpands (
 //} Str_P;
 //----------------------------------------------------------------------
 //
-// I think I knocked it down finally. But who knows? 
+// I think I knocked it down finally. But who knows?
 //                            october 12, 1997 ... sang
 //
 // well I have to rewrite whole part of TranslateFunctionName..
@@ -1934,11 +1934,11 @@ StringExpands (
 // and i hope this will take care of every symptoms i have experienced..
 //                                                        october 10, 1997 .... sang
 // It took a lot of time for me to figure out what is all about....
-// but still some prefixes like z (static) 
+// but still some prefixes like z (static)
 //     -- or some types like b (byte) ,g (long double) ,s (short) --
 //         -- or postfix  like M ( * )
 //     -- or $or ( & ) which is pretty wierd.         .. added.. october 12
-//     -- also $t business is quite tricky too. (templates) 
+//     -- also $t business is quite tricky too. (templates)
 //             there may be a lot of things undiscovered yet....
 // I am not so sure my interpretation is correct or not
 // If I am wrong please let me know.
@@ -1949,7 +1949,7 @@ StringExpands (
 //                                                         October 5, 1997
 //
 /* translate condesed import function name */
-LPVOID WINAPI 
+LPVOID WINAPI
 TranslateFunctionName (
 			char *psz)
 {
@@ -1967,7 +1967,7 @@ TranslateFunctionName (
 
   Str_P tok;			// String token
 
-  Str_P c_str;			// current string 
+  Str_P c_str;			// current string
 
   int iend = 0;
   char *endTab[8];		// end of string position check
@@ -2088,7 +2088,7 @@ TranslateFunctionName (
 		  // string mode restored...
 		  else;
 		}
-	      else;		// do nothing.. 
+	      else;		// do nothing..
 
 	    }
 
@@ -2100,7 +2100,7 @@ TranslateFunctionName (
 	    break;
 
 	  //---------------------------------------------------------------
-	  // string part processing : no '$' met yet 
+	  // string part processing : no '$' met yet
 	  //                       or inside of '%' block
 	  //                       or inside of '#' block (numbered string)
 	  //---------------------------------------------------------------
@@ -2109,7 +2109,7 @@ TranslateFunctionName (
 	    *pout++ = *pin++;
 	  //else if (is > 1)         *pout++ = *pin++;
 
-	  //------------------------------------------------ 
+	  //------------------------------------------------
 	  // parameter part processing: '$' met
 	  //------------------------------------------------
 
@@ -2155,7 +2155,7 @@ TranslateFunctionName (
 
 	  if (tok.flag == '%')
 	    {
-	      // pop '%' token and set c_str 
+	      // pop '%' token and set c_str
 	      //if (*pin)
 	      //printf("\n pop percent token..next char = %c", *pin);
 	      //else printf("\n pop percent token..next char = NULL");
@@ -2195,7 +2195,7 @@ TranslateFunctionName (
       //
       // sometimes we need string to use as constructor name or destructor name
       //
-      else if (c == '@')	// get string from previous marker  upto here. 
+      else if (c == '@')	// get string from previous marker  upto here.
 
 	{
 	  pin++;
@@ -2360,7 +2360,7 @@ TranslateFunctionName (
 //
 //
 /* get exported function names separated by null terminators, return count of functions */
-int WINAPI 
+int WINAPI
 GetExportFunctionNames (
 			 LPVOID lpFile,
 			 char **pszFunctions)
@@ -2372,7 +2372,7 @@ GetExportFunctionNames (
 
   char *pfns[8192] =
   {NULL,};			// maximum number of functions
-  //=============================  
+  //=============================
 
   char buff[256];		// enough for any string ??
 
@@ -2488,7 +2488,7 @@ GetExportFunctionNames (
 
 
 /* determine the total number of resources in the section */
-int WINAPI 
+int WINAPI
 GetNumberOfResources (
 		       LPVOID lpFile)
 {
@@ -2531,7 +2531,7 @@ GetNumberOfResources (
 //
 //
 /* name each type of resource in the section */
-int WINAPI 
+int WINAPI
 GetListOfResourceTypes (
 			 LPVOID lpFile,
 			 char **pszResTypes)
@@ -2705,7 +2705,7 @@ GetListOfResourceTypes (
 //                                                         October 12, 1997
 //
 /* copy menu information */
-void WINAPI 
+void WINAPI
 StrangeMenuFill (
 		  char **psz,	// results
 		   WORD ** pMenu,	// read-only
@@ -2733,7 +2733,7 @@ StrangeMenuFill (
 //                                                         October 1, 1997
 //
 /* obtain menu information */
-int WINAPI 
+int WINAPI
 MenuScan (
 	   int *len,
 	   WORD ** pMenu)
@@ -2789,7 +2789,7 @@ MenuScan (
       if (flag1 & 0x0080)
 	break;
     }
-//  fill # of details to num above 
+//  fill # of details to num above
   //(*len) += 2;
   *pMenu = pwd;
   return flag;
@@ -2801,7 +2801,7 @@ MenuScan (
 //                                                         October 2, 1997
 //
 /* copy menu information */
-int WINAPI 
+int WINAPI
 MenuFill (
 	   char **psz,
 	   WORD ** pMenu)
@@ -2869,7 +2869,7 @@ MenuFill (
       if (flag1 & 0x0080)
 	break;
     }
-//  fill # of details to num above 
+//  fill # of details to num above
   //*(WORD *)pTemp = (WORD)num;
   *pMenu = pwd;
   *psz = ptr;
@@ -2880,7 +2880,7 @@ MenuFill (
 //
 //==============================================================================
 // The following program is based on preorder-tree-traversal.
-// once you understand how to traverse..... 
+// once you understand how to traverse.....
 // the rest is pretty straight forward.
 // still we need to scan it first and fill it next time.
 // and finally we can print it.
@@ -2897,14 +2897,14 @@ MenuFill (
 //     supermenuname                    null terminated string, only ascii is considered.
 //         flag                 tells : node is a leaf or a internal node.
 //         popupname                    null terminated string
-//              
+//
 //              flag                normal menu flag (leaf node)
 //                      id                                  normal menu id
 //              name                    normal menu name
 //         or                            or
 //              flag                        popup menu flag (internal node)
-//              popupname                   popup menu name 
-//             
+//              popupname                   popup menu name
+//
 //                 flag                             it may folows
 //                         id                                   normal menu id
 //                 name                                 normal menu name
@@ -2916,7 +2916,7 @@ MenuFill (
 //                                 but usually, it only goes a few steps,...
 // ------------------------------------------------------------------------------
 /* scan menu and copy menu */
-int WINAPI 
+int WINAPI
 GetContentsOfMenu (
 		    LPVOID lpFile,
 		    char **pszResTypes)
@@ -3004,7 +3004,7 @@ GetContentsOfMenu (
       // normally wVersion and cbHeaderSize should be zero
       // but if it is not then nothing is known to us...
       // so let's do our best ... namely guessing .... and trying ....
-      //                      ... and suffering   ... 
+      //                      ... and suffering   ...
       // it gave me many sleepless (not exactly but I like to say this) nights.
       //
 
@@ -3017,7 +3017,7 @@ GetContentsOfMenu (
 	  // expect to return the length needed to report.
 	  // sixteen more bytes to do something
 	  sLength += 16 + size;
-	  //StrangeMenuScan (&sLength, &pwd, size);   
+	  //StrangeMenuScan (&sLength, &pwd, size);
 	}
       // normal case
       else
@@ -3197,7 +3197,7 @@ GetContentsOfMenu (
 //                                                         October 12, 1997
 //
 /* print contents of menu */
-int WINAPI 
+int WINAPI
 PrintStrangeMenu (
 		   char **psz)
 {
@@ -3239,7 +3239,7 @@ PrintStrangeMenu (
 //                                                         October 2, 1997
 //
 /* print contents of menu */
-int WINAPI 
+int WINAPI
 PrintMenu (
 	    int indent,
 	    char **psz)
@@ -3271,7 +3271,7 @@ PrintMenu (
 	  PrintMenu (indent + 5, psz);
 	  ptr = *psz;
 	}
-      else			// ispopup == 0 
+      else			// ispopup == 0
 
 	{
 	  printf ("\n");
@@ -3322,7 +3322,7 @@ PrintMenu (
 //                                                         October 2, 1997
 //
 /* the format of menu is not known so I'll do my best */
-int WINAPI 
+int WINAPI
 dumpMenu (
 	   char **psz,
 	   int size)
@@ -3387,7 +3387,7 @@ dumpMenu (
 //                                                         October 13, 1997
 //
 /* scan dialog box and copy dialog box */
-int WINAPI 
+int WINAPI
 GetContentsOfDialog (
 		      LPVOID lpFile,
 		      char **pszResTypes)
@@ -3582,7 +3582,7 @@ GetContentsOfDialog (
 //                                                         October 14, 1997
 //
 /* print contents of dialog */
-void WINAPI 
+void WINAPI
 PrintNameOrOrdinal (
 		     char **psz)
 {
@@ -3615,7 +3615,7 @@ PrintNameOrOrdinal (
 //                                                         October 14, 1997
 //
 /* print contents of dialog */
-void WINAPI 
+void WINAPI
 PrintDialog (
 	      char **psz)
 {
@@ -3696,7 +3696,7 @@ PrintDialog (
       while (*(WORD *) ptr)
 	ptr += 2;		// WCHARs
 
-      ptr += 2;			// double null  
+      ptr += 2;			// double null
 
     }
 
@@ -3786,15 +3786,15 @@ PrintDialog (
      if (c<0) c+=256;
      buff[j] = c;
      printf ("%02X",c);
-     ptr++; 
+     ptr++;
      if (ptr >= pmax) break;
      n++;
-     if (n%4 == 0) printf (" "); 
+     if (n%4 == 0) printf (" ");
      }
      n++; if (n%4 == 0) printf (" ");
      l = j;
      j++;
-     for (; j<16; j++) 
+     for (; j<16; j++)
      { n++; if (n%4 == 0) printf ("   "); else printf ("  "); }
      printf ("   ");
      for (k=0; k<l; k++)
@@ -3814,7 +3814,7 @@ PrintDialog (
 
 
 /* function indicates whether debug  info has been stripped from file */
-BOOL WINAPI 
+BOOL WINAPI
 IsDebugInfoStripped (
 		      LPVOID lpFile)
 {
@@ -3829,7 +3829,7 @@ IsDebugInfoStripped (
 
 
 /* retrieve the module name from the debug misc. structure */
-int WINAPI 
+int WINAPI
 RetrieveModuleName (
 		     LPVOID lpFile,
 		     char **pszModule)
@@ -3868,7 +3868,7 @@ RetrieveModuleName (
 
 
 /* determine if this is a valid debug file */
-BOOL WINAPI 
+BOOL WINAPI
 IsDebugFile (
 	      LPVOID lpFile)
 {
@@ -3883,7 +3883,7 @@ IsDebugFile (
 
 
 /* copy separate debug header structure from debug file */
-BOOL WINAPI 
+BOOL WINAPI
 GetSeparateDebugHeader (
 			 LPVOID lpFile,
 			 PIMAGE_SEPARATE_DEBUG_HEADER psdh)
@@ -3904,7 +3904,7 @@ GetSeparateDebugHeader (
 //
 // I tried to immitate the output of w32dasm disassembler.
 // which is a pretty good program.
-// but I am disappointed with this program and I myself 
+// but I am disappointed with this program and I myself
 // am writting a disassembler.
 // This PEdump program is a byproduct of that project.
 // so enjoy this program and I hope we will have a little more
@@ -3913,7 +3913,7 @@ GetSeparateDebugHeader (
 
 #define  MAXSECTIONNUMBER 16
 #define  MAXNAMESTRNUMBER 40
-int 
+int
 main (
        int argc,
        char **argv
@@ -4190,7 +4190,7 @@ main (
 	  pst = pmNameBuff;
 	  printf ("\nNumber of Menus = %4d (decimal)", nMenus);
 
-	  //dumpMenu(&pst, 8096); 
+	  //dumpMenu(&pst, 8096);
 	  for (i = 0; i < nMenus; i++)
 	    {
 	      // menu ID print

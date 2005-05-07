@@ -1,4 +1,4 @@
-/* 
+/*
  * ReactOS DFLAT32.DLL
  */
 

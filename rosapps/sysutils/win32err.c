@@ -5,7 +5,7 @@
  * Copyright (c) 1998 Mark Russinovich
  *	Systems Internals
  *	http://www.sysinternals.com/
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -21,16 +21,16 @@
  * You should have received a copy of the GNU Library General Public
  * License along with this software; see the file COPYING.LIB. If
  * not, write to the Free Software Foundation, Inc., 675 Mass Ave,
- * Cambridge, MA 02139, USA.  
+ * Cambridge, MA 02139, USA.
  *
  * --------------------------------------------------------------------
- * 
+ *
  * Print a Win32 error.
  *
  * 1999 February (Emanuele Aliberti)
  * 	Taken from chkdskx.c and formatx.c by Mark Russinovich
  * 	to be used in all sysutils.
- */ 	
+ */
 #include <windows.h>
 #include <stdio.h>
 
@@ -48,11 +48,11 @@ PrintWin32Error(
 	)
 {
 	PVOID lpMsgBuf;
- 
+
 	FormatMessageW(
 		(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM),
 		NULL,
-		ErrorCode, 
+		ErrorCode,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPWSTR)& lpMsgBuf,
 		0,

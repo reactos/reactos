@@ -1,6 +1,6 @@
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -18,7 +18,7 @@ int SLang_Abort_Char = 7;
 int SLang_Ignore_User_Abort = 0;
 
 /* This has the effect of mapping all characters in the range 128-169 to
- * ESC [ something 
+ * ESC [ something
  */
 #ifndef __GO32__
 # if defined(__unix__) || defined(vms)
@@ -31,18 +31,18 @@ unsigned int SLang_getkey (void)
 {
    unsigned int imax;
    unsigned int ch;
-   
+
    if (SLang_Input_Buffer_Len)
      {
 	ch = (unsigned int) *SLang_Input_Buffer;
 	SLang_Input_Buffer_Len--;
 	imax = SLang_Input_Buffer_Len;
-   
-	SLMEMCPY ((char *) SLang_Input_Buffer, 
+
+	SLMEMCPY ((char *) SLang_Input_Buffer,
 		(char *) (SLang_Input_Buffer + 1), imax);
      }
    else if (0xFFFF == (ch = SLsys_getkey ())) return ch;
-   
+
 #ifdef DEC_8BIT_HACK
    if (ch & 0x80)
      {
@@ -78,8 +78,8 @@ void SLang_buffer_keystring (unsigned char *s, unsigned int n)
 {
 
    if (n + SLang_Input_Buffer_Len + 3 > MAX_INPUT_BUFFER_LEN) return;
-   
-   SLMEMCPY ((char *) SLang_Input_Buffer + SLang_Input_Buffer_Len, 
+
+   SLMEMCPY ((char *) SLang_Input_Buffer + SLang_Input_Buffer_Len,
 	   (char *) s, n);
    SLang_Input_Buffer_Len += n;
 }
@@ -95,14 +95,14 @@ int SLang_input_pending (int tsecs)
    int n;
    unsigned char c;
    if (SLang_Input_Buffer_Len) return (int) SLang_Input_Buffer_Len;
-   
+
    n = SLsys_input_pending (tsecs);
-   
+
    if (n <= 0) return 0;
-   
+
    c = (unsigned char) SLang_getkey ();
    SLang_ungetkey_string (&c, 1);
-   
+
    return n;
 }
 #endif /* OS2_NT */
@@ -110,10 +110,10 @@ int SLang_input_pending (int tsecs)
 void SLang_flush_input (void)
 {
    int quit = SLKeyBoard_Quit;
-   
+
    SLang_Input_Buffer_Len = 0;
-   SLKeyBoard_Quit = 0;   
-   while (SLsys_input_pending (0) > 0) 
+   SLKeyBoard_Quit = 0;
+   while (SLsys_input_pending (0) > 0)
      {
 	(void) SLsys_getkey ();
 	/* Set this to 0 because SLsys_getkey may stuff keyboard buffer if

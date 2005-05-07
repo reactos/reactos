@@ -7,7 +7,7 @@
 
 #define _libncftp_errno_c_ 1
 #include "syshdrs.h"
-	
+
 static const char *gErrList[kErrLast - kErrFirst + 2] = {
 	"gethostname() failed",						/* -100 */
 	"hostname does not include domain name",			/* -101 */
@@ -105,7 +105,7 @@ static const char *gErrList[kErrLast - kErrFirst + 2] = {
 	"timed out while waiting for server response",			/* -193 */
 	"data transfer timed out",					/* -194 */
 	"canceled by user",						/* -195 */
-	NULL,								
+	NULL,
 };
 
 int gLibNcFTP_Uses_Me_To_Quiet_Variable_Unused_Warnings = 0;
@@ -136,24 +136,24 @@ FTPPerror(const FTPCIPtr cip, const int err, const int eerr, const char *const s
 	if (err != kNoErr) {
 		if (err == eerr) {
 			if ((s2 == NULL) || (s2[0] == '\0')) {
-				if ((s1 == NULL) || (s1[0] == '\0')) { 
+				if ((s1 == NULL) || (s1[0] == '\0')) {
 					(void) fprintf(stderr, "server said: %s\n", cip->lastFTPCmdResultStr);
 				} else {
 					(void) fprintf(stderr, "%s: server said: %s\n", s1, cip->lastFTPCmdResultStr);
 				}
-			} else if ((s1 == NULL) || (s1[0] == '\0')) { 
+			} else if ((s1 == NULL) || (s1[0] == '\0')) {
 				(void) fprintf(stderr, "%s: server said: %s\n", s2, cip->lastFTPCmdResultStr);
 			} else {
 				(void) fprintf(stderr, "%s %s: server said: %s\n", s1, s2, cip->lastFTPCmdResultStr);
 			}
 		} else {
 			if ((s2 == NULL) || (s2[0] == '\0')) {
-				if ((s1 == NULL) || (s1[0] == '\0')) { 
+				if ((s1 == NULL) || (s1[0] == '\0')) {
 					(void) fprintf(stderr, "%s.\n", FTPStrError(cip->errNo));
 				} else {
 					(void) fprintf(stderr, "%s: %s.\n", s1, FTPStrError(cip->errNo));
 				}
-			} else if ((s1 == NULL) || (s1[0] == '\0')) { 
+			} else if ((s1 == NULL) || (s1[0] == '\0')) {
 				(void) fprintf(stderr, "%s: %s.\n", s2, FTPStrError(cip->errNo));
 			} else {
 				(void) fprintf(stderr, "%s %s: %s.\n", s1, s2, FTPStrError(cip->errNo));

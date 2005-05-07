@@ -196,7 +196,7 @@ static void KeyboardMsg(DFWINDOW wnd, DF_PARAM p1)
             if (mwnd != NULL)
                 DfSendMessage(wnd, DFM_MB_SELECTION,
                     DfActiveMenuBar->ActiveSelection, 0);
-            else 
+            else
                 DfSendMessage(wnd, DFM_PAINT, 0, 0);
             break;
         case DF_BS:
@@ -207,7 +207,7 @@ static void KeyboardMsg(DFWINDOW wnd, DF_PARAM p1)
             if (mwnd != NULL)
                 DfSendMessage(wnd, DFM_MB_SELECTION,
                     DfActiveMenuBar->ActiveSelection, 0);
-            else 
+            else
                 DfSendMessage(wnd, DFM_PAINT, 0, 0);
             break;
         default:

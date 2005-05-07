@@ -38,7 +38,7 @@ main(int argc, char *argv[])
   DWORD z = 0;
 
   context.ContextFlags=CONTEXT_CONTROL;
-  
+
   while (z < 50)
     {
       z++;
@@ -48,15 +48,15 @@ main(int argc, char *argv[])
 			  NULL,
 			  0,
 			  &thread_id);
-      
+
       if(!thread)
 	{
 	  printf("Error: could not create thread ...\n");
 	  ExitProcess(0);
 	}
-      
+
       Sleep(1000);
-      
+
       printf("T");
       if ((z % 5) == 0)
 	{
@@ -67,7 +67,7 @@ main(int argc, char *argv[])
       printf("S");
       SuspendThread(thread);
       printf("R");
-      ResumeThread(thread);      
+      ResumeThread(thread);
       TerminateThread(thread, 0);
     }
 

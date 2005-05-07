@@ -4,7 +4,7 @@
 
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -78,7 +78,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           GRADIENT_TRIANGLE    gTRi[3];
           GRADIENT_RECT        gRect[2];
 	  hDC = BeginPaint(hWnd, &ps);
-	  
+
 	  vert [0] .x       =  0;
 	  vert [0] .y       =  0;
 	  vert [0] .Red     =  0xff00;
@@ -92,23 +92,23 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  vert [1] .Green   =  0x0000;
 	  vert [1] .Blue    =  0xff00;
 	  vert [1] .Alpha   =  0x0000;
-	  
+
 	  vert [2] .x       =  100;
-	  vert [2] .y       =  200; 
+	  vert [2] .y       =  200;
 	  vert [2] .Red     =  0xff00;
 	  vert [2] .Green   =  0x0000;
 	  vert [2] .Blue    =  0x0000;
 	  vert [2] .Alpha   =  0x0000;
 
 	  vert [3] .x       =  250;
-	  vert [3] .y       =  300; 
+	  vert [3] .y       =  300;
 	  vert [3] .Red     =  0x8000;
 	  vert [3] .Green   =  0x8000;
 	  vert [3] .Blue    =  0x0000;
 	  vert [3] .Alpha   =  0x0000;
 
 	  vert [4] .x       =  325;
-	  vert [4] .y       =  300; 
+	  vert [4] .y       =  300;
 	  vert [4] .Red     =  0x0000;
 	  vert [4] .Green   =  0xff00;
 	  vert [4] .Blue    =  0x0000;
@@ -137,12 +137,12 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  vert [0] .Alpha  = 0x0000;
 
 	  vert [1] .x      = 90;
-	  vert [1] .y      = 240; 
+	  vert [1] .y      = 240;
 	  vert [1] .Red    = 0x0000;
 	  vert [1] .Green  = 0x0000;
 	  vert [1] .Blue   = 0xff00;
 	  vert [1] .Alpha  = 0x0000;
-	  
+
 	  vert [2] .x      = 5;
 	  vert [2] .y      = 245;
 	  vert [2] .Red    = 0x0000;
@@ -151,7 +151,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  vert [2] .Alpha  = 0x0000;
 
 	  vert [3] .x      = 90;
-	  vert [3] .y      = 300; 
+	  vert [3] .y      = 300;
 	  vert [3] .Red    = 0x0000;
 	  vert [3] .Green  = 0x0000;
 	  vert [3] .Blue   = 0xff00;
@@ -159,10 +159,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	  gRect[0].UpperLeft  = 0;
 	  gRect[0].LowerRight = 1;
-	  
+
 	  gRect[1].UpperLeft  = 2;
 	  gRect[1].LowerRight = 3;
-	  
+
 	  GdiGradientFill(hDC,vert,4,&gRect[0],1,GRADIENT_FILL_RECT_H);
 	  GdiGradientFill(hDC,vert,4,&gRect[1],1,GRADIENT_FILL_RECT_V);
 

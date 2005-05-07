@@ -6,7 +6,7 @@ int main(int argc, char* argv[])
 {
    int x;
    PTEB Teb;
-   
+
    printf("TEB dumpper\n");
    __asm__("movl %%fs:0x18, %0\n\t"
 	   : "=a" (x)

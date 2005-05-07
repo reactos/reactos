@@ -25,11 +25,11 @@ struct utimbuf {
 #endif
 
     /* Our virtual file system layer */
-    
+
     typedef void * vfsid;
 
     struct vfs_stamping;
-    
+
     typedef struct {
 	void  *(*open)(char *fname, int flags, int mode);
 	int   (*close)(void *vfs_info);
@@ -57,24 +57,24 @@ struct utimbuf {
 	int  (*ferrno)(void);
 	int  (*lseek)(void *vfs_info, off_t offset, int whence);
 	int  (*mknod)(char *path, int mode, int dev);
-	
+
 	vfsid (*getid)(char *path, struct vfs_stamping **parent);
 	int  (*nothingisopen)(vfsid id);
 	void (*free)(vfsid id);
-	
+
 	char *(*getlocalcopy)(char *filename);
 	void (*ungetlocalcopy)(char *filename, char *local, int has_changed);
 
 	int  (*mkdir)(char *path, mode_t mode);
 	int  (*rmdir)(char *path);
-	
+
 	int  (*ctl)(void *vfs_info, int ctlop, int arg);
 	int  (*setctl)(char *path, int ctlop, char *arg);
 	void (*forget_about)(char *path);
 #ifdef HAVE_MMAP
 	caddr_t (*mmap)(caddr_t addr, size_t len, int prot, int flags, void *vfs_info, off_t offset);
 	int (*munmap)(caddr_t addr, size_t len, void *vfs_info);
-#endif	
+#endif
     } vfs;
 
     /* Other file systems */
@@ -83,7 +83,7 @@ struct utimbuf {
 
     extern vfs ftpfs_vfs_ops;
     extern vfs mcfs_vfs_ops;
-    
+
     extern vfs extfs_vfs_ops;
 
     extern vfs undelfs_vfs_ops;
@@ -112,7 +112,7 @@ struct utimbuf {
     int vfs_file_is_local (char *name);
     int vfs_file_is_ftp (char *filename);
     char *vfs_get_current_dir (void);
-    
+
     void vfs_stamp (vfs *, vfsid);
     void vfs_rmstamp (vfs *, vfsid, int);
     void vfs_addstamp (vfs *, vfsid, struct vfs_stamping *);
@@ -136,16 +136,16 @@ struct utimbuf {
     void ftpfs_flushdir(void);
 #else
 #   define ftpfs_flushdir()
-#   define ftpfs_hint_reread(x) 
+#   define ftpfs_hint_reread(x)
 #endif
     /* They fill the file system names */
     void mcfs_fill_names (void (*)(char *));
     void ftpfs_fill_names (void (*)(char *));
     void tarfs_fill_names (void (*)(char *));
-    
+
     char *ftpfs_gethome (char *);
     char *mcfs_gethome (char *);
-    
+
     char *ftpfs_getupdir (char *);
     char *mcfs_getupdir (char *);
 
@@ -249,14 +249,14 @@ struct utimbuf {
 #   define vfs_free_resources()
 #   define vfs_timeout_handler()
 #   define vfs_timeouts() 0
-#   define vfs_force_expire () 
+#   define vfs_force_expire ()
 
     typedef int vfs;
-    
+
 #   define mc_getlocalcopy(x) NULL
 #   define mc_ungetlocalcopy(x,y,z)
 
-#   define ftpfs_hint_reread(x) 
+#   define ftpfs_hint_reread(x)
 #   define ftpfs_flushdir()
 
 #ifdef _OS_NT

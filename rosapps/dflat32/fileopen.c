@@ -183,7 +183,7 @@ static int DlgFnOpen(DFWINDOW wnd,DFMESSAGE msg,DF_PARAM p1,DF_PARAM p2)
 									DfGetItemText(wnd, DF_ID_PATH, FileSpec, 65);
 									strcat(FileSpec, FileName);
 								}
-								else 
+								else
 									strcpy(FileSpec, FileName);
 							}
 							break;

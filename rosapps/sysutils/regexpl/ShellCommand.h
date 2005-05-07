@@ -1,4 +1,4 @@
-/* $Id: ShellCommand.h,v 1.2 2001/01/13 23:55:36 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommand.h: interface for the CShellCommand class.
 //
@@ -11,7 +11,7 @@
 #include "ArgumentParser.h"
 
 // this class provides common interface to shell commands
-class CShellCommand  
+class CShellCommand
 {
 public:
 	CShellCommand();

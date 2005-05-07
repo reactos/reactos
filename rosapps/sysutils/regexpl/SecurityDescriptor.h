@@ -1,4 +1,4 @@
-/* $Id: SecurityDescriptor.h,v 1.3 2001/01/13 23:54:41 narnaoud Exp $ */
+/* $Id$ */
 
 // SecurityDescriptor.h: interface for the CSecurityDescriptor class.
 //
@@ -15,7 +15,7 @@ BOOL GetTextualSid(
 
 const TCHAR * GetSidTypeName(SID_NAME_USE Use);
 
-class CSecurityDescriptor  
+class CSecurityDescriptor
 {
 public:
 	void GetCurrentACE_Flags(BYTE& bFlags);

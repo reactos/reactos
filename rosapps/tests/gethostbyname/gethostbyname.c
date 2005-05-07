@@ -12,7 +12,7 @@ int main( int argc, char **argv ) {
       printf( "lookup of host %s failed: %d\n", argv[1], WSAGetLastError() );
       return 1;
     } else {
-      printf( "Lookup of host %s returned %s\n", 
+      printf( "Lookup of host %s returned %s\n",
 	      argv[1], inet_ntoa(*((struct in_addr *)he->h_addr_list[0])) );
       return 0;
     }

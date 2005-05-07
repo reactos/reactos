@@ -3,12 +3,12 @@
    Written 1995 by Miguel de Icaza
 
    Complete rewrote.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -161,12 +161,12 @@ find_parameters (char **start_dir, char **pattern, char **content)
 
 #ifdef ENABLE_NLS
 	static int i18n_flag = 0;
-	
+
 	if (!i18n_flag)
 	{
 		register int i = sizeof(labs)/sizeof(labs[0]);
 		int l1, maxlen = 0;
-		
+
 		while (i--)
 		{
 			l1 = strlen (labs [i] = _(labs [i]));
@@ -176,7 +176,7 @@ find_parameters (char **start_dir, char **pattern, char **content)
 		i = maxlen + ilen + 7;
 		if (i > FIND_X)
 			FIND_X = i;
-		
+
 		for (i = sizeof(buts)/sizeof(buts[0]), l1 = 0; i--; )
 		{
 			l1 += strlen (buts [i] = _(buts [i]));
@@ -187,13 +187,13 @@ find_parameters (char **start_dir, char **pattern, char **content)
 
 		ilen = FIND_X - 7 - maxlen; /* for the case of very long buttons :) */
 		istart = FIND_X - 3 - ilen;
-		
+
 		b1 = b0 + strlen(buts[0]) + 7;
 		b2 = FIND_X - (strlen(buts[2]) + 6);
-		
+
 		i18n_flag = 1;
 	}
-	
+
 #endif /* ENABLE_NLS */
 
 find_par_start:
@@ -203,7 +203,7 @@ find_par_start:
 	in_start_name = strdup (easy_patterns ? "*" : ".");
     if (!in_contents)
 	in_contents = strdup ("");
-    
+
     find_dlg = create_dlg (0, 0, FIND_Y, FIND_X, dialog_colors,
 			   common_dialog_callback, "[Find File]", "findfile",
 			   DLG_CENTER | DLG_GRID);
@@ -258,7 +258,7 @@ find_par_start:
 	if (in_with->buffer [0]){
 	    *content    = strdup (in_with->buffer);
 	    in_contents = strdup (*content);
-	} else 
+	} else
 	    *content = in_contents = NULL;
 
 	free (in_start_dir);
@@ -268,7 +268,7 @@ find_par_start:
     }
 
     destroy_dlg (find_dlg);
-			 
+
     return return_value;
 }
 
@@ -286,7 +286,7 @@ push_directory (char *dir)
 static char*
 pop_directory (void)
 {
-    char *name; 
+    char *name;
     dir_stack *next;
 
     if (dir_stack_base){
@@ -326,7 +326,7 @@ insert_file (char *dir, char *file)
 	old_dir = strdup (dir);
 	dirname = listbox_add_item (find_list, 0, 0, dir, 0);
     }
-    
+
     tmp_name = copy_strings ("    ", file, 0);
     listbox_add_item (find_list, 0, 0, tmp_name, dirname);
     free (tmp_name);
@@ -338,19 +338,19 @@ find_add_match (Dlg_head *h, char *dir, char *file)
     int p = ++matches & 7;
 
     insert_file (dir, file);
-    
+
     /* Scroll nicely */
     if (!p)
 	listbox_select_last (find_list, 1);
     else
 	listbox_select_last (find_list, 0);
-    
+
 #ifndef HAVE_X
 	/* Updates the current listing */
 	send_message (h, &find_list->widget, WIDGET_DRAW, 0);
 	if (p == 7)
 	    mc_refresh ();
-#endif	    
+#endif
 }
 
 char *
@@ -365,7 +365,7 @@ locate_egrep (void)
     };
     struct stat s;
     char **p;
-    
+
     for (p = &paths [0]; *p; p++){
 	if (stat (*p, &s) == 0)
 	    return *p;
@@ -373,7 +373,7 @@ locate_egrep (void)
     return "egrep";
 }
 
-/* 
+/*
  * search_content:
  *
  * Search with egrep the global (FIXME) content_pattern string in the
@@ -401,10 +401,10 @@ search_content (Dlg_head *h, char *directory, char *filename)
 	free (fname);
 	return;
     }
-    
+
     file_fd = mc_open (fname, O_RDONLY);
     free (fname);
-    
+
     if (file_fd == -1)
 	return;
 
@@ -416,36 +416,36 @@ search_content (Dlg_head *h, char *directory, char *filename)
 #else /* GREP_STDIN */
     pipe = mc_doublepopen (file_fd, -1, &pid, egrep_path, egrep_path, "-n", content_pattern, "-", NULL);
 #endif /* GREP STDIN */
-	
+
     if (pipe == -1){
 	mc_close (file_fd);
 	return;
     }
-    
+
     sprintf (buffer, _("Grepping in %s"), name_trunc (filename, FIND2_X_USE));
 
     label_set_text (status_label, buffer);
     mc_refresh ();
     p = buffer;
     ignoring = 0;
-    
+
     enable_interrupt_key ();
     got_interrupt ();
     while (1){
 	i = read (pipe, &c, 1);
 	if (i != 1)
 	    break;
-	
+
 	if (c == '\n'){
 	    p = buffer;
 	    ignoring = 0;
 	}
 	if (ignoring)
 	    continue;
-	
+
 	if (c == ':'){
 	    char *the_name;
-	    
+
 	    *p = 0;
 	    ignoring = 1;
 	    the_name = copy_strings (buffer, ":", filename, NULL);
@@ -456,7 +456,7 @@ search_content (Dlg_head *h, char *directory, char *filename)
 		*p++ = c;
 	    else
 		*p = 0;
-	} 
+	}
     }
     disable_interrupt_key ();
     if (i == -1)
@@ -488,16 +488,16 @@ do_search (struct Dlg_head *h)
 
  do_search_begin:
     while (!dp){
-	
+
 	if (dirp){
 	    mc_closedir (dirp);
 	    dirp = 0;
 	}
-	
+
 	while (!dirp){
 	    char *tmp;
 
-#ifndef HAVE_X	    
+#ifndef HAVE_X
 	    attrset (REVERSE_COLOR);
 #endif
 	    while (1) {
@@ -516,8 +516,8 @@ do_search (struct Dlg_head *h)
 			break;
 		} else
 		    break;
-	    } 
-	    
+	    }
+
 	    strcpy (directory, tmp);
 	    free (tmp);
 
@@ -543,10 +543,10 @@ do_search (struct Dlg_head *h)
 	dp = mc_readdir (dirp);
 #ifdef HAVE_XVIEW
 	xv_post_proc (h, (void (*)(void *))do_search, (void *)h);
-#endif		
+#endif
 	return;
     }
-    
+
     tmp_name = get_full_name (directory, dp->d_name);
 
     if (subdirs_left){
@@ -560,10 +560,10 @@ do_search (struct Dlg_head *h)
     if (regexp_match (find_pattern, dp->d_name, match_file)){
 	if (content_pattern)
 	    search_content (h, directory, dp->d_name);
-	else 
+	else
 	    find_add_match (h, directory, dp->d_name);
     }
-    
+
     free (tmp_name);
     dp = mc_readdir (dirp);
 
@@ -631,7 +631,7 @@ static int
 find_callback (struct Dlg_head *h, int id, int Msg)
 {
     switch (Msg){
-#ifndef HAVE_X    
+#ifndef HAVE_X
     case DLG_DRAW:
         common_dialog_repaint (h);
 	break;
@@ -688,7 +688,7 @@ static void
 init_find_vars (void)
 {
     char *dir;
-    
+
     if (old_dir){
 	free (old_dir);
 	old_dir = 0;
@@ -728,7 +728,7 @@ find_file (char *start_dir, char *pattern, char *content, char **dirname,  char 
 		int l1 = fbuts[2].len + fbuts[3].len + l0 + fbuts[4].len;
 		int l2 = fbuts[5].len + fbuts[6].len + fbuts[7].len;
 		int r1, r2;
-		
+
 		FIND2_X = COLS - 16;
 
 		/* Check, if both button rows fit within FIND2_X */
@@ -750,14 +750,14 @@ find_file (char *start_dir, char *pattern, char *content, char **dirname,  char 
 		fbuts [6].x = fbuts [5].x + fbuts [5].len + l2;
 		fbuts [7].x = fbuts [6].x + fbuts [6].len + l2;
 	}
-    
+
     find_dlg = create_dlg (0, 0, FIND2_Y, FIND2_X, dialog_colors,
 			   find_callback, "[Find File]", "mfind", DLG_CENTER | DLG_GRID);
-    
+
     x_set_dialog_title (find_dlg, _("Find file"));
 
 	add_widgetl (find_dlg,
-		button_new (FIND2_Y-3, fbuts[7].x, B_VIEW, NORMAL_BUTTON, 
+		button_new (FIND2_Y-3, fbuts[7].x, B_VIEW, NORMAL_BUTTON,
 			fbuts[7].text, find_do_edit_file, find_dlg, "button-edit"), 0);
 	add_widgetl (find_dlg,
 		button_new (FIND2_Y-3, fbuts[6].x, B_VIEW, NORMAL_BUTTON,
@@ -773,9 +773,9 @@ find_file (char *start_dir, char *pattern, char *content, char **dirname,  char 
 		fbuts[0].text, start_stop, find_dlg, "start-stop");
 	add_widgetl (find_dlg, stop_button, XV_WLAY_RIGHTOF);
 	add_widgetl (find_dlg,
-		button_new (FIND2_Y-4, fbuts[3].x, B_AGAIN, NORMAL_BUTTON, 
+		button_new (FIND2_Y-4, fbuts[3].x, B_AGAIN, NORMAL_BUTTON,
 			fbuts[3].text, 0, 0, "button-again"), XV_WLAY_RIGHTOF);
-	add_widgetl (find_dlg, 
+	add_widgetl (find_dlg,
 		button_new (FIND2_Y-4, fbuts[2].x, B_ENTER, DEFPUSH_BUTTON,
 			fbuts[2].text, 0, 0, "button-chdir"), XV_WLAY_CENTERROW);
 
@@ -788,14 +788,14 @@ find_file (char *start_dir, char *pattern, char *content, char **dirname,  char 
     /* FIXME: Need to cleanup this, this ought to be passed non-globaly */
     find_pattern    = pattern;
     content_pattern = content;
-    
+
     set_idle_proc (find_dlg, 1);
     init_find_vars ();
     push_directory (start_dir);
 
 #ifdef HAVE_XVIEW
     xv_post_proc (find_dlg, (void (*)(void *))do_search, (void *)find_dlg);
-#endif    
+#endif
     run_dlg (find_dlg);
 
     return_value = find_dlg->ret_value;
@@ -803,7 +803,7 @@ find_file (char *start_dir, char *pattern, char *content, char **dirname,  char 
     /* Remove all the items in the stack */
     while ((dir = pop_directory ()) != NULL)
 	free (dir);
-    
+
     listbox_get_current (find_list, &file_tmp, &dir_tmp);
 
     if (dir_tmp)
@@ -902,7 +902,7 @@ do_find (void)
     char *filename, *dirname;
     int  v, dir_and_file_set;
     int done = 0;
-    
+
     while (!done){
 	if (!find_parameters (&start_dir, &pattern, &content))
 	    break;
@@ -912,33 +912,33 @@ do_find (void)
 	v = find_file (start_dir, pattern, content, &dirname, &filename);
 	free (start_dir);
 	free (pattern);
-	
+
 	if (v == B_ENTER){
 	    if (dirname || filename){
 		if (dirname){
 		    do_cd (dirname, cd_exact);
 		    if (filename)
-			try_to_select (cpanel, filename + (content ? 
+			try_to_select (cpanel, filename + (content ?
 			   (strchr (filename + 4, ':') - filename + 1) : 4) );
 		} else if (filename)
 		    do_cd (filename, cd_exact);
 		paint_panel (cpanel);
 		select_item (cpanel);
 	    }
-	    if (dirname)  
+	    if (dirname)
 		free (dirname);
-	    if (filename) 
+	    if (filename)
 		free (filename);
 	    break;
 	}
-	if (content) 
+	if (content)
 	    free (content);
 	dir_and_file_set = dirname && filename;
 	if (dirname)  free (dirname);
 	if (filename) free (filename);
 	if (v == B_CANCEL)
 	    break;
-	
+
 	if (v == B_PANELIZE){
 	    if (dir_and_file_set){
 	        try_to_select (cpanel, NULL);

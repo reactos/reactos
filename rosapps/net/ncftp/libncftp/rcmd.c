@@ -38,7 +38,7 @@ ResponsePtr
 InitResponse(void)
 {
 	ResponsePtr rp;
-	
+
 	rp = (ResponsePtr) calloc(SZ(1), sizeof(Response));
 	if (rp != NULL)
 		InitLineList(&rp->msg);
@@ -55,7 +55,7 @@ void
 TraceResponse(const FTPCIPtr cip, ResponsePtr rp)
 {
 	LinePtr lp;
-	
+
 	if (rp != NULL)	{
 		lp = rp->msg.first;
 		if (lp != NULL) {
@@ -74,7 +74,7 @@ void
 PrintResponse(const FTPCIPtr cip, LineListPtr llp)
 {
 	LinePtr lp;
-	
+
 	if (llp != NULL) {
 		for (lp = llp->first; lp != NULL; lp = lp->next)
 			PrintF(cip, "%s\n", lp->line);
@@ -221,16 +221,16 @@ eof:
 			 * same numerical value of IAC, 255, the sender denotes
 			 * that by having an IAC followed by another IAC.
 			 */
-			
+
 			/* Get the telnet command. */
 			c = fgetc(cin);
-			
+
 			switch (c) {
 				case WILL:
 				case WONT:
 					/* Get the option code. */
 					c = fgetc(cin);
-					
+
 					/* Tell the other side that we don't want
 					 * to do what they're offering to do.
 					 */
@@ -241,7 +241,7 @@ eof:
 				case DONT:
 					/* Get the option code. */
 					c = fgetc(cin);
-					
+
 					/* The other side said they are DOing (or not)
 					 * something, which would happen if our side
 					 * asked them to.  Since we didn't do that,
@@ -264,7 +264,7 @@ eof:
 addChar:
 			/* If the buffer supplied has room, add this character to it. */
 			if (n < siz) {
-				*cp++ = c;				
+				*cp++ = c;
 				++n;
 			}
 		}
@@ -414,7 +414,7 @@ GetResponse(const FTPCIPtr cip, ResponsePtr rp)
 		/* Read reply, but EOF was there also. */
 		rp->hadEof = 1;
 	}
-	
+
 	while (continuation) {
 
 #ifdef NO_SIGNALS
@@ -781,7 +781,7 @@ FTPStartDataCmd(const FTPCIPtr cip, int netMode, int type, longest_int startPoin
 
 	/* To transfer data, we do these things in order as specifed by
 	 * the RFC.
-	 * 
+	 *
 	 * First, we tell the other side to set up a data line.  This
 	 * is done below by calling OpenDataConnection(), which sets up
 	 * the socket.  When we do that, the other side detects a connection
@@ -811,7 +811,7 @@ FTPStartDataCmd(const FTPCIPtr cip, int netMode, int type, longest_int startPoin
 #endif	/* NO_SIGNALS */
 	result = SendCommand(cip, cmdspec, ap);
 	va_end(ap);
-	if (result < 0) { 
+	if (result < 0) {
 #ifndef NO_SIGNALS
 		if (cip->ctrlTimeout > 0)
 			(void) alarm(0);
@@ -866,7 +866,7 @@ done:
 
 
 
-void 
+void
 FTPAbortDataTransfer(const FTPCIPtr cip)
 {
 	ResponsePtr rp;

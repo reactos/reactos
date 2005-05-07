@@ -31,13 +31,13 @@ int SocketTest()
    WORD wVersionRequested;
    WSADATA wsaData;
    int err;
-    
+
    /*
     * Initialization.
     */
-   
+
    wVersionRequested = MAKEWORD( 2, 2 );
-    
+
    DBG("Calling WSAStartup\n");
    err = WSAStartup( wVersionRequested, &wsaData );
    if ( err != 0 ) {
@@ -46,22 +46,22 @@ int SocketTest()
        DBG("WSAStartup failed\n");
        return 1;
    }
-    
+
    /* Confirm that the WinSock DLL supports 2.2.*/
    /* Note that if the DLL supports versions greater    */
    /* than 2.2 in addition to 2.2, it will still return */
    /* 2.2 in wVersion since that is the version we      */
    /* requested.                                        */
-    
+
    if ( LOBYTE( wsaData.wVersion ) != 2 ||
            HIBYTE( wsaData.wVersion ) != 2 ) {
        /* Tell the user that we could not find a usable */
        /* WinSock DLL.                                  */
        DBG("WSAStartup version unacceptable\n");
        WSACleanup( );
-       return 1; 
+       return 1;
    }
-    
+
    /* The WinSock DLL is acceptable. Proceed. */
 
    DBG("Calling socket\n");
@@ -71,7 +71,7 @@ int SocketTest()
        DBG("socket failed\n");
        goto failed;
    }
-   
+
    selfAddr.sin_family = AF_INET;
    selfAddr.sin_port = 0;
    selfAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); /* BugZilla: 35408 */

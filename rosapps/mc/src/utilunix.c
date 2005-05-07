@@ -11,7 +11,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -112,7 +112,7 @@ void init_groups (void)
 
     if (pwd == 0)
        return;
-    
+
     setgrent ();
     while ((grp = getgrent ()))
        for (i = 0; grp->gr_mem[i]; i++)
@@ -204,10 +204,10 @@ char *get_owner (int uid)
     static char ibuf [8];
     char   *name;
     static int uid_last;
-    
+
     if ((name = i_cache_match (uid, uid_cache, UID_CACHE_SIZE)) != NULL)
 	return name;
-    
+
     pwd = getpwuid (uid);
     if (pwd){
 	i_cache_add (uid, uid_cache, UID_CACHE_SIZE, pwd->pw_name, &uid_last);
@@ -225,10 +225,10 @@ char *get_group (int gid)
     static char gbuf [8];
     char *name;
     static int  gid_last;
-    
+
     if ((name = i_cache_match (gid, gid_cache, GID_CACHE_SIZE)) != NULL)
 	return name;
-    
+
     grp = getgrgid (gid);
     if (grp){
 	i_cache_add (gid, gid_cache, GID_CACHE_SIZE, grp->gr_name, &gid_last);
@@ -258,12 +258,12 @@ int my_system (int flags, const char *shell, const char *command)
     pid_t pid;
     int status = 0;
     int as_shell_command = flags & EXECUTE_AS_SHELL;
-    
+
     ignore.sa_handler = SIG_IGN;
     sigemptyset (&ignore.sa_mask);
     ignore.sa_flags = 0;
-    
-    sigaction (SIGINT, &ignore, &save_intr);    
+
+    sigaction (SIGINT, &ignore, &save_intr);
     sigaction (SIGQUIT, &ignore, &save_quit);
 
     /* Restore the original SIGTSTP handler, we don't want ncurses' */
@@ -281,7 +281,7 @@ int my_system (int flags, const char *shell, const char *command)
 #if 0
 	prepare_environment ();
 #endif
-	
+
 	if (as_shell_command)
 	    execl (shell, shell, "-c", command, (char *) 0);
 	else
@@ -299,7 +299,7 @@ int my_system (int flags, const char *shell, const char *command)
     sigaction (SIGQUIT, &save_quit, NULL);
     sigaction (SIGTSTP, &save_stop, NULL);
 
-#ifdef SCO_FLAVOR 
+#ifdef SCO_FLAVOR
 	waitpid(-1, NULL, WNOHANG);
 #endif /* SCO_FLAVOR */
 
@@ -314,14 +314,14 @@ char *tilde_expand (char *directory)
     char *p;
     char *name;
     int  len;
-    
+
     if (*directory != '~')
 	return strdup (directory);
 
     directory++;
-    
+
     p = strchr (directory, PATH_SEP);
-    
+
     /* d = "~" or d = "~/" */
     if (!(*directory) || (*directory == PATH_SEP)){
 	passwd = getpwuid (geteuid ());
@@ -462,12 +462,12 @@ int mc_doublepopen (int inhandle, int inlen, pid_t *the_pid, char *command, ...)
 
 #define closepipes() close(pipe0[0]);close(pipe0[1]);close(pipe1[0]);close(pipe1[1])
 #define is_a_pipe_fd(f) ((pipe0[0] == f) || (pipe0[1] == f) || (pipe1[0] == f) || (pipe1[1] == f))
-    
+
     pipe (pipe0); pipe (pipe1);
     ignore.sa_handler = SIG_IGN;
     sigemptyset (&ignore.sa_mask);
     ignore.sa_flags = 0;
-        
+
     sigaction (SIGINT, &ignore, &save_intr);
     sigaction (SIGQUIT, &ignore, &save_quit);
     sigaction (SIGTSTP, &startup_handler, &save_stop);
@@ -492,7 +492,7 @@ int mc_doublepopen (int inhandle, int inlen, pid_t *the_pid, char *command, ...)
 		     int nulldevice;
 
 		     port_shutdown_extra_fds ();
-	    
+
 		     nulldevice = open ("/dev/null", O_WRONLY);
 		     close (0);
 		     dup (pipe0 [0]);
@@ -522,7 +522,7 @@ int mc_doublepopen (int inhandle, int inlen, pid_t *the_pid, char *command, ...)
 	    	    	close (pipe1 [0]);
 	    	    	close (pipe1 [1]);
 	    	    	while ((i = mc_read (inhandle, buffer,
-                                             (inlen == -1 || inlen > 8192) 
+                                             (inlen == -1 || inlen > 8192)
                                              ? 8192 : inlen)) > 0) {
 	    	    	    write (pipe0 [1], buffer, i);
 	    	    	    if (inlen != -1) {
@@ -554,7 +554,7 @@ int mc_doublepopen (int inhandle, int inlen, pid_t *the_pid, char *command, ...)
 int mc_doublepclose (int pipe, pid_t pid)
 {
     int status = 0;
-    
+
     close (pipe);
     waitpid (pid, &status, 0);
 #ifdef SCO_FLAVOR
@@ -564,7 +564,7 @@ int mc_doublepclose (int pipe, pid_t pid)
     sigaction (SIGQUIT, &save_quit, NULL);
     sigaction (SIGTSTP, &save_stop, NULL);
 
-    return status;	
+    return status;
 }
 
 /* Canonicalize path, and return a new path. Do everything in situ.
@@ -654,7 +654,7 @@ char *canonicalize_pathname (char *path)
 	        continue;
 	    }
 
-	    /* Handle `../' or trailing `..' by itself. 
+	    /* Handle `../' or trailing `..' by itself.
 	       Remove the previous ?/ part with the exception of
 	       ../, which we should leave intact. */
 	    if (path[i + 1] == '.' && (path[i + 2] == PATH_SEP || !path[i + 2])) {
@@ -680,7 +680,7 @@ int gettimeofday( struct timeval * tv, struct timezone * tz)
 {
     struct timeb tb;
     struct tm * l;
-    
+
     ftime( &tb );
     if (errno == EFAULT)
 	return -1;
@@ -710,7 +710,7 @@ putenv (const char *string)
     const char *const name_end = strchr (string, '=');
     register size_t size;
     register char **ep;
-    
+
     if (name_end == NULL){
 	/* Remove the variable from the environment.  */
 	size = strlen (string);
@@ -724,7 +724,7 @@ putenv (const char *string)
 		return 0;
 	    }
     }
-    
+
     size = 0;
     for (ep = __environ; *ep != NULL; ++ep)
 	if (!strncmp (*ep, string, name_end - string) &&
@@ -732,7 +732,7 @@ putenv (const char *string)
 	    break;
 	else
 	    ++size;
-    
+
     if (*ep == NULL){
 	static char **last_environ = NULL;
 	char **new_environ = (char **) malloc ((size + 2) * sizeof (char *));
@@ -749,7 +749,7 @@ putenv (const char *string)
     }
     else
 	*ep = (char *) string;
-    
+
     return 0;
 }
 #endif /* !HAVE_PUTENV */
@@ -892,11 +892,11 @@ int s_pipe(int fd[2])
       #endif
       return -1;
    }
-   
+
    /*
     * Now link these two stream together with an I_FDINSERT ioctl.
     */
-   
+
    ins.ctlbuf.buf     = (char *) &pointer;   /* no control information, just the pointer */
    ins.ctlbuf.maxlen  = sizeof pointer;
    ins.ctlbuf.len     = sizeof pointer;

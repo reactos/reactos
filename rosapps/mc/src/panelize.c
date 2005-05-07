@@ -1,6 +1,6 @@
 /* External panelize
    Copyright (C) 1995 The Free Software Foundation
-   
+
    Written by: 1995 Janne Kukonlehto
                1995 Jakub Jelinek
 
@@ -16,7 +16,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -107,10 +107,10 @@ panelize_refresh (void)
 {
     attrset (COLOR_NORMAL);
     dlg_erase (panelize_dlg);
-    
+
     draw_box (panelize_dlg, 1, 2, panelize_dlg->lines-2, panelize_dlg->cols-4);
     draw_box (panelize_dlg, UY, UX, panelize_dlg->lines-10, panelize_dlg->cols-10);
-    
+
     attrset (COLOR_HOT_NORMAL);
     dlg_move (panelize_dlg, 1, (panelize_dlg->cols - strlen(panelize_title)) / 2);
     addstr (panelize_title);
@@ -122,7 +122,7 @@ update_command ()
 {
     if (l_panelize->pos != last_listitem) {
     	last_listitem = l_panelize->pos;
-        assign_text (pname, 
+        assign_text (pname,
             ((struct panelize *) l_panelize->current->data)->command);
 	pname->point = 0;
         update_input (pname, 1);
@@ -133,11 +133,11 @@ static int
 panelize_callback (Dlg_head * h, int Par, int Msg)
 {
     switch (Msg) {
-#ifndef HAVE_X    
+#ifndef HAVE_X
     case DLG_DRAW:
 	panelize_refresh ();
 	break;
-#endif	
+#endif
 
     case DLG_POST_KEY:
 	/* fall */
@@ -162,7 +162,7 @@ static void init_panelize (void)
 #ifdef ENABLE_NLS
 	static int i18n_flag = 0;
 	static int maxlen = 0;
-	
+
 	if (!i18n_flag)
 	{
 		i = sizeof(panelize_but) / sizeof(panelize_but[0]);
@@ -177,18 +177,18 @@ static void init_panelize (void)
 		i18n_flag = 1;
 	}
 	panelize_cols = max(panelize_cols, maxlen);
-		
-	panelize_but [2].x = panelize_but [3].x 
+
+	panelize_but [2].x = panelize_but [3].x
 		+ strlen (panelize_but [3].text) + 7;
-	panelize_but [1].x = panelize_but [2].x 
+	panelize_but [1].x = panelize_but [2].x
 		+ strlen (panelize_but [2].text) + 5;
-	panelize_but [0].x = panelize_cols 
+	panelize_but [0].x = panelize_cols
 		- strlen (panelize_but[0].text) - 8 - BX;
 
 #endif /* ENABLE_NLS */
-    
+
     last_listitem = 0;
-    
+
     do_refresh ();
 
     panelize_dlg = create_dlg (0, 0, 22, panelize_cols, dialog_colors,
@@ -216,9 +216,9 @@ static void init_panelize (void)
     }
 
     /* add listbox to the dialogs */
-    add_widgetl (panelize_dlg, l_panelize, XV_WLAY_EXTENDWIDTH); 
+    add_widgetl (panelize_dlg, l_panelize, XV_WLAY_EXTENDWIDTH);
 
-    listbox_select_entry (l_panelize, 
+    listbox_select_entry (l_panelize,
         listbox_search_text (l_panelize, _("Other command")));
 }
 
@@ -259,8 +259,8 @@ void add2panelize_cmd (void)
     char *label;
 
     if (pname->buffer && (*pname->buffer)) {
-	label = input_dialog (_(" Add to external panelize "), 
-		_(" Enter command label: "), 
+	label = input_dialog (_(" Add to external panelize "),
+		_(" Enter command label: "),
 			      "");
 	if (!label)
 	    return;
@@ -268,7 +268,7 @@ void add2panelize_cmd (void)
 	    free (label);
 	    return;
 	}
-	
+
 	add2panelize (label, strdup(pname->buffer));
     }
 }
@@ -304,7 +304,7 @@ void external_panelize (void)
     }
 
     init_panelize ();
-    
+
     /* display file info */
     attrset (SELECTED_COLOR);
 
@@ -342,9 +342,9 @@ void load_panelize (void)
 {
     void *profile_keys;
     char *key, *value;
-    
+
     profile_keys = profile_init_iterator (panelize_section, profile_name);
-    
+
     add2panelize (strdup (_("Other command")), strdup (""));
 
     if (!profile_keys){
@@ -353,7 +353,7 @@ void load_panelize (void)
 	add2panelize (strdup (_("Find SUID and SGID programs")), strdup ("find . \\( \\( -perm -04000 -a -perm +011 \\) -o \\( -perm -02000 -a -perm +01 \\) \\) -print"));
 	return;
     }
-    
+
     while (profile_keys){
 	profile_keys = profile_iterator_next (profile_keys, &key, &value);
 	add2panelize (strdup (key), strdup (value));
@@ -363,7 +363,7 @@ void load_panelize (void)
 void save_panelize (void)
 {
     struct panelize *current = panelize;
-    
+
     profile_clean_section (panelize_section, profile_name);
     for (;current; current = current->next){
     	if (strcmp (current->label, _("Other command")))

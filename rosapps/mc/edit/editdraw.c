@@ -96,7 +96,7 @@ void edit_status (WEdit * edit)
 extern int fixed_font;
 
 void rerender_text (CWidget * wdt);
-    
+
 void edit_status (WEdit * edit)
 {
     if ((edit->widget->options & EDITOR_NO_TEXT)) {
@@ -603,7 +603,7 @@ void edit_render (WEdit * edit, int page, int row_start, int col_start, int row_
 #endif
 
     render_edit_text (edit, row_start, col_start, row_end, col_end);
-    if (edit->force)		/* edit->force != 0 means a key was pending and the redraw 
+    if (edit->force)		/* edit->force != 0 means a key was pending and the redraw
 				   was halted, so next time we must redraw everything in case stuff
 				   was left undrawn from a previous key press */
 	edit->force |= REDRAW_PAGE;

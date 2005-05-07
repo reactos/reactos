@@ -1,4 +1,4 @@
-/* $Id: conport.c,v 1.1 2004/10/21 04:58:59 sedwards Exp $
+/* $Id$
  *
  * reactos/apps/lpc/conport.c
  *
@@ -6,7 +6,7 @@
  * "\SmApiPort" as argument. Do not try to
  * connect to "\Windows\ApiPort" since that
  * reboots immeditely.
- * 
+ *
  * Use Russinovich' HandleEx to verify
  * conport.exe owns two unnamed LPC ports:
  * the one created by kernel32.dll connecting
@@ -50,7 +50,7 @@ NTSTATUS
 	IN	ULONG	Length,
 	OUT	PULONG	ResultLength
 	);
-  
+
 NTSTATUS
 (STDCALL * YieldExecution)(VOID);
 

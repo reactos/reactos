@@ -1,6 +1,6 @@
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -18,11 +18,11 @@
  *  characters) can not be written directly to the terminal, when the
  *  alt-char-set is activated, because writing these characters doesn't cause
  *  an implicit/temporary switching-back to the standard char-set!
- *  
+ *
  *  The original code in SLang assumes that space, NL, CR, etc. can be
  *  printed when alt-char-set is activated. If SLTT_TRANSP_ACS_PATCH is
  *  defined, the modified code will not use this assumption.
- *  [Remark: the patch-code is not the most exact solution, but works...] 
+ *  [Remark: the patch-code is not the most exact solution, but works...]
  */
 /*#define SLTT_TRANSP_ACS_PATCH 1*/
 
@@ -125,7 +125,7 @@
 #include <signal.h>
 
 
-/* Colors:  These definitions are used for the display.  However, the 
+/* Colors:  These definitions are used for the display.  However, the
  * application only uses object handles which get mapped to this
  * internal representation.  The mapping is performed by the Color_Map
  * structure below. */
@@ -165,7 +165,7 @@ static int Automatic_Margins;
 static int Worthless_Highlight;
 #define HP_GLITCH_CODE
 #ifdef HP_GLITCH_CODE
-/* This glitch is exclusive to HP term.  Basically it means that to clear 
+/* This glitch is exclusive to HP term.  Basically it means that to clear
  * attributes, one has to erase to the end of the line.
  */
 static int Has_HP_Glitch;
@@ -177,14 +177,14 @@ static int Linux_Console;
 
 /* It is crucial that JMAX_COLORS must be less than 128 since the high bit
  * is used to indicate a character from the ACS (alt char set).  The exception
- * to this rule is if SLtt_Use_Blink_For_ACS is true.  This means that of 
- * the highbit is set, we interpret that as a blink character.  This is 
+ * to this rule is if SLtt_Use_Blink_For_ACS is true.  This means that of
+ * the highbit is set, we interpret that as a blink character.  This is
  * exploited by DOSemu.
  */
 #define JMAX_COLORS 256
 #define JNORMAL_COLOR 0
 
-typedef struct 
+typedef struct
 {
    SLtt_Char_Type fgbg;
    SLtt_Char_Type mono;
@@ -194,7 +194,7 @@ typedef struct
 #define RGB1(r, g, b)   ((r) | ((g) << 1) | ((b) << 2))
 #define RGB(r, g, b, br, bg, bb)  ((RGB1(r, g, b) << 8) | (RGB1(br, bg, bb) << 16))
 
-static Ansi_Color_Type Ansi_Color_Map[JMAX_COLORS] = 
+static Ansi_Color_Type Ansi_Color_Map[JMAX_COLORS] =
 {
    {RGB(1, 1, 1, 0, 0, 0), 0x00000000, NULL},   /* white/black */
    {RGB(0, 1, 0, 0, 0, 0), SLTT_REV_MASK, NULL},   /* green/black */
@@ -224,7 +224,7 @@ static Ansi_Color_Type Ansi_Color_Map[JMAX_COLORS] =
   static char *Color_Escape_Sequence = "\033[3%dm\033[4%dm";
 #else
 /* Believe it or not, this is what is in the linux terminfo database.  It
- * produces the same escape sequence but it is much more CPU intensive.  
+ * produces the same escape sequence but it is much more CPU intensive.
  * Why not just encode it as "\033[3%p1%dm\033[4%p2%dm" ???
  */
  /* static char *Color_Escape_Sequence = "\033[%p1%{30}%+%dm\033[%p2%{40}%+%dm"; */
@@ -233,7 +233,7 @@ static char *Color_Escape_Sequence = "\033[3%d;4%dm";
 
 char *SLtt_Graphics_Char_Pairs;	       /* ac termcap string -- def is vt100 */
 
-   
+
 /* 1 if terminal lacks the ability to do into insert mode or into delete
    mode. Currently controlled by S-Lang but later perhaps termcap. */
 
@@ -319,9 +319,9 @@ int SLtt_flush_output (void)
    int nwrite = 0;
    unsigned int total;
    int n = (int) (Output_Bufferp - Output_Buffer);
-   
+
    SLtt_Num_Chars_Output += n;
-   
+
    total = 0;
    while (n > 0)
      {
@@ -330,7 +330,7 @@ int SLtt_flush_output (void)
 	  {
 	     nwrite = 0;
 #ifdef EAGAIN
-	     if (errno == EAGAIN) 
+	     if (errno == EAGAIN)
 	       {
 		  sl_usleep (100000);   /* 1/10 sec */
 		  continue;
@@ -363,10 +363,10 @@ static void tt_write(char *str, unsigned int n)
    static int total;
    unsigned long now;
    unsigned int ndiff;
-   
+
    if ((str == NULL) || (n == 0)) return;
    total += n;
-   
+
    while (1)
      {
 	ndiff = MAX_OUTPUT_BUFFER_SIZE - (int) (Output_Bufferp - Output_Buffer);
@@ -378,14 +378,14 @@ static void tt_write(char *str, unsigned int n)
 	     n -= ndiff;
 	     str += ndiff;
 	  }
-	else 
+	else
 	  {
 	     SLMEMCPY ((char *) Output_Bufferp, str, n);
 	     Output_Bufferp += n;
 	     break;
 	  }
      }
-   
+
    if (((SLtt_Baud_Rate > 150) && (SLtt_Baud_Rate <= 9600))
        && (10 * total > SLtt_Baud_Rate))
      {
@@ -411,14 +411,14 @@ void SLtt_putchar (char ch)
 #ifdef SLTT_TRANSP_ACS_PATCH
    int restore_acs = 0;
 #endif
-    
+
    SLtt_normal_video ();
    if (Cursor_Set == 1)
      {
 	if (ch >= ' ') Cursor_c++;
 #ifndef SLTT_TRANSP_ACS_PATCH
 	else if (ch == '\b') Cursor_c--;
-#else 
+#else
 	if (ch <= ' ' && SLtt_ACS_Active)
 	  {
 	     SLtt_set_alt_char_set (0);
@@ -428,17 +428,17 @@ void SLtt_putchar (char ch)
 #endif
 	else if (ch == '\r') Cursor_c = 0;
 	else Cursor_Set = 0;
-	
-	if ((Cursor_c + 1 == SLtt_Screen_Cols) 
+
+	if ((Cursor_c + 1 == SLtt_Screen_Cols)
 	    && Automatic_Margins) Cursor_Set = 0;
      }
-   
+
    if (Output_Bufferp < Output_Buffer + MAX_OUTPUT_BUFFER_SIZE)
      {
 	*Output_Bufferp++ = (unsigned char) ch;
      }
    else tt_write (&ch, 1);
-   
+
 #ifdef SLTT_TRANSP_ACS_PATCH
    if (restore_acs)
      {
@@ -447,7 +447,7 @@ void SLtt_putchar (char ch)
 #endif
 }
 
-/* this is supposed to be fast--- also handles 
+/* this is supposed to be fast--- also handles
    termcap: %d, &i, %., %+, %r strings as well as terminfo stuff */
 static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
 {
@@ -456,12 +456,12 @@ static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
    int stack[10];
    int i = 0, z;
    stack[0] = y; stack[1] = x; i = 2;
-   
+
    b = (unsigned char *) buf;
    if (fmt != NULL) while ((ch = *f++) != 0)
      {
 	if (ch != '%') *b++ = ch;
-	else 
+	else
 	  {
 	     ch = *f++;
 	     if (tinfo)
@@ -471,14 +471,14 @@ static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
 		       /* map it to termcap.  Since this is terminfo,
 			* it must be one of:
 			*   %2d, %3d, %02d, %03d
-			* 
+			*
 			* I am assuming that a terminal that understands
 			* %2d form will also understand the %02d form.  These
 			* only differ by a space padding the field.
 			*/
-		       
+
 		       /* skip the 'd'-- hope it is there */
-		       if (ch == '0') 
+		       if (ch == '0')
 			 {
 			    ch = *f;
 			    f += 2;
@@ -486,7 +486,7 @@ static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
 		       else f++;
 		    }
 	       }
-	     
+
 	     switch (ch)
 	       {
 		case 'p':
@@ -494,12 +494,12 @@ static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
 		  ch = *f++;
 		  if (ch == '1') stack[i++] = x; else stack[i++] = y;
 		  break;
-		  
+
 		case '\'':   /* 'x' */
 		  stack[i++] = *f++;
 		  f++;
 		  break;
-		  
+
 		case '{':	       /* literal constant, e.g. {30} */
 		  z = 0;
 		  while (((ch = *f) <= '9') && (ch >= '0'))
@@ -510,7 +510,7 @@ static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
 		  stack[i++] = z;
 		  if (ch == '}') f++;
 		  break;
-		       
+
 		case 'd':
 		case '2':
 		case '3':
@@ -522,12 +522,12 @@ static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
 		       z = z % 100;
 		       goto ten;
 		    }
-		  else if (ch == 3) 
+		  else if (ch == 3)
 		    {
 		       *b++ = '0';
 		       ch = '2';
 		    }
-		  
+
 		  if (z >= 10)
 		    {
 		       ten:
@@ -535,16 +535,16 @@ static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
 		       z = z % 10;
 		    }
 		  else if (ch == 2) *b++ = '0';
-		  
+
 		  *b++ = z + '0';
 		  break;
-		  
+
 		case 'i':
 		  offset = 1;
 		  break;
-		  
+
 		case '+':
-		  if (tinfo) 
+		  if (tinfo)
 		    {
 		       z = stack[--i];
 		       stack[i-1] += z;
@@ -558,19 +558,19 @@ static unsigned int tt_sprintf(char *buf, char *fmt, int x, int y)
 		       *b++ = ch;
 		    }
 		  break;
-		 
+
 		case 'r':
 		  stack[0] = x;
 		  stack[1] = y;
 		  break;
-		  
+
 		case '.':
 		case 'c':
 		  ch = (unsigned char) stack[--i];
 		  if (ch == '\n') ch++;
 		  *b++ = ch;
 		  break;
-		  
+
 		default:
 		  *b++ = ch;
 	       }
@@ -607,12 +607,12 @@ int SLtt_set_cursor_visibility (int show)
 {
    if ((Cursor_Visible_Str == NULL) || (Cursor_Invisible_Str == NULL))
      return -1;
-   
+
    SLtt_write_string (show ? Cursor_Visible_Str : Cursor_Invisible_Str);
    return 0;
 }
 
-   
+
 /* the goto_rc function moves to row relative to scrolling region */
 void SLtt_goto_rc(int r, int c)
 {
@@ -622,31 +622,31 @@ void SLtt_goto_rc(int r, int c)
 #ifdef SLTT_TRANSP_ACS_PATCH
    int check_alt_acs = 0;
 #endif
-   
+
    if (c < 0)
      {
 	c = -c - 1;
 	Cursor_Set = 0;
      }
-   
+
    /* if (No_Move_In_Standout && Current_Fgbg) SLtt_normal_video (); */
    r += Scroll_r1;
-   
+
    if ((Cursor_Set > 0) || ((Cursor_Set < 0) && !Automatic_Margins))
      {
 	n = r - Cursor_r;
-	if ((n == -1) && (Cursor_Set > 0) && (Cursor_c == c) 
+	if ((n == -1) && (Cursor_Set > 0) && (Cursor_c == c)
 	    && (Curs_Up_Str != NULL))
 	  {
 	     s = Curs_Up_Str;
 	  }
 	else if ((n >= 0) && (n <= 4))
 	  {
-	     if ((n == 0) && (Cursor_Set == 1) 
+	     if ((n == 0) && (Cursor_Set == 1)
 		 && ((c > 1) || (c == Cursor_c)))
 	       {
 		  if (Cursor_c == c) return;
-		  if (Cursor_c == c + 1) 
+		  if (Cursor_c == c + 1)
 		    {
 		       s = buf;
 		       *s++ = '\b'; *s = 0;
@@ -673,7 +673,7 @@ void SLtt_goto_rc(int r, int c)
 	       }
 	     /* Will fail on VMS */
 #ifndef VMS
-	     else if (SLtt_Newline_Ok && (Cursor_Set == 1) && 
+	     else if (SLtt_Newline_Ok && (Cursor_Set == 1) &&
 		      (Cursor_c >= c) && (c + 3 > Cursor_c))
 	       {
 		  s = buf;
@@ -738,7 +738,7 @@ void SLtt_delete_nlines (int n)
 #ifdef SLTT_TRANSP_ACS_PATCH
    int restore_acs = 0;
 #endif
-   
+
    if (n <= 0) return;
    SLtt_normal_video ();
    if (Del_N_Lines_Str != NULL) tt_printf(Del_N_Lines_Str,n, 0);
@@ -777,7 +777,7 @@ void SLtt_cls (void)
 void SLtt_reverse_index (int n)
 {
    if (!n) return;
-   
+
    SLtt_normal_video();
    if (Add_N_Lines_Str != NULL) tt_printf(Add_N_Lines_Str,n, 0);
    else
@@ -793,7 +793,7 @@ static char *Visible_Bell_Str;
 void SLtt_beep (void)
 {
    if (SLtt_Ignore_Beep & 0x1) SLtt_putchar('\007');
-   
+
    if (SLtt_Ignore_Beep & 0x2)
      {
 	if (Visible_Bell_Str != NULL) SLtt_write_string (Visible_Bell_Str);
@@ -852,7 +852,7 @@ void SLtt_set_mono (int obj, char *what, SLtt_Char_Type mask)
    if ((obj < 0) || (obj >= JMAX_COLORS))
      {
 	return;
-     }   
+     }
    Ansi_Color_Map[obj].mono = mask & ATTR_MASK;
 }
 
@@ -860,20 +860,20 @@ static char *check_color_for_digit_form (char *color)
 {
    unsigned int i, ich;
    char *s = color;
-   
+
    i = 0;
    while ((ich = (int) *s) != 0)
      {
 	if ((ich < '0') || (ich > '9'))
 	  return color;
-	
+
 	i = i * 10 + (ich - '0');
 	s++;
      }
-   
+
    if (i < MAX_COLOR_NAMES)
      color = Color_Defs[i].name;
-   
+
    return color;
 }
 
@@ -882,7 +882,7 @@ static int get_default_colors (char **fgp, char **bgp)
    static char fg_buf[16], bg_buf[16], *bg, *fg;
    static int already_parsed;
    char *p, *pmax;
-   
+
    if (already_parsed == -1)
      return -1;
 
@@ -892,9 +892,9 @@ static int get_default_colors (char **fgp, char **bgp)
 	*bgp = bg;
 	return 0;
      }
-   
+
    already_parsed = -1;
-   
+
    bg = getenv ("COLORFGBG");
 
    if (bg == NULL)
@@ -903,22 +903,22 @@ static int get_default_colors (char **fgp, char **bgp)
 	if (bg == NULL)
 	  return -1;
      }
-   
+
    p = fg_buf;
    pmax = p + (sizeof (fg_buf) - 1);
-	
+
    while ((*bg != 0) && (*bg != ';'))
      {
 	if (p < pmax) *p++ = *bg;
 	bg++;
      }
    *p = 0;
-	
+
    if (*bg) bg++;
-	
+
    p = bg_buf;
    pmax = p + (sizeof (bg_buf) - 1);
-   
+
    /* Mark suggested allowing for extra spplication specific stuff following
     * the background color.  That is what the check for the semi-colon is for.
     */
@@ -950,17 +950,17 @@ static int Color_0_Modified = 0;
 void SLtt_set_color_object (int obj, SLtt_Char_Type attr)
 {
    char *cust_esc;
-   
+
    if ((obj < 0) || (obj >= JMAX_COLORS)) return;
-     
+
    cust_esc = Ansi_Color_Map[obj].custom_esc;
-   if (cust_esc != NULL) 
+   if (cust_esc != NULL)
      {
 	SLFREE (cust_esc);
 	FgBg_Stats[(Ansi_Color_Map[obj].fgbg >> 8) & 0x7F] -= 1;
 	Ansi_Color_Map[obj].custom_esc = NULL;
      }
-   
+
    Ansi_Color_Map[obj].fgbg = attr;
    if (obj == 0) Color_0_Modified = 1;
 }
@@ -975,13 +975,13 @@ SLtt_Char_Type SLtt_get_color_object (int obj)
 void SLtt_add_color_attribute (int obj, SLtt_Char_Type attr)
 {
    if ((obj < 0) || (obj >= JMAX_COLORS)) return;
-     
+
    Ansi_Color_Map[obj].fgbg |= (attr & ATTR_MASK);
    if (obj == 0) Color_0_Modified = 1;
 }
 
 static SLtt_Char_Type fb_to_fgbg (SLtt_Char_Type f, SLtt_Char_Type b)
-{   
+{
    SLtt_Char_Type attr = 0;
 
    if ((f & 0xF0) == 0)
@@ -990,14 +990,14 @@ static SLtt_Char_Type fb_to_fgbg (SLtt_Char_Type f, SLtt_Char_Type b)
 	f &= 0x7;
      }
    else f = 9;
-   
+
    if ((b & 0xF0) == 0)
      {
 	if (b & 0x8) attr |= SLTT_BLINK_MASK;
 	b &= 0x7;
      }
    else b = 9;
-   
+
    return ((f << 8) | (b << 16) | attr);
 }
 
@@ -1006,19 +1006,19 @@ static int make_color_fgbg (char *fg, char *bg, SLtt_Char_Type *fgbg)
    SLtt_Char_Type f = 0xFFFFFFFFU, b = 0xFFFFFFFFU;
    char *dfg, *dbg;
    unsigned int i;
-   
+
    if ((fg != NULL) && (*fg == 0)) fg = NULL;
    if ((bg != NULL) && (*bg == 0)) bg = NULL;
-   
+
    if ((fg == NULL) || (bg == NULL))
      {
 	if (-1 == get_default_colors (&dfg, &dbg))
 	  return -1;
-	
+
 	if (fg == NULL) fg = dfg;
 	if (bg == NULL) bg = dbg;
      }
-   
+
    for (i = 0; i < MAX_COLOR_NAMES; i++)
      {
 	if (strcmp(fg, Color_Defs[i].name)) continue;
@@ -1032,10 +1032,10 @@ static int make_color_fgbg (char *fg, char *bg, SLtt_Char_Type *fgbg)
 	b = Color_Defs[i].color;
 	break;
      }
-   
+
    if ((f == 0xFFFFFFFFU) || (b == 0xFFFFFFFFU))
      return -1;
-   
+
    *fgbg = fb_to_fgbg (f, b);
    return 0;
 }
@@ -1062,22 +1062,22 @@ void SLtt_set_color_esc (int obj, char *esc)
    char *cust_esc;
    SLtt_Char_Type fgbg = 0;
    int i;
-   
+
    if ((obj < 0) || (obj >= JMAX_COLORS))
      {
 	return;
      }
-   
+
    cust_esc = Ansi_Color_Map[obj].custom_esc;
-   if (cust_esc != NULL) 
+   if (cust_esc != NULL)
      {
 	SLFREE (cust_esc);
 	FgBg_Stats[(Ansi_Color_Map[obj].fgbg >> 8) & 0x7F] -= 1;
      }
-   
+
    cust_esc = (char *) SLMALLOC (strlen(esc) + 1);
    if (cust_esc != NULL) strcpy (cust_esc, esc);
-   
+
    Ansi_Color_Map[obj].custom_esc = cust_esc;
    if (cust_esc == NULL) fgbg = 0;
    else
@@ -1086,7 +1086,7 @@ void SLtt_set_color_esc (int obj, char *esc)
 	for (i = 0; i < JMAX_COLORS; i++)
 	  {
 	     if (FgBg_Stats[i] == 0) fgbg = i;
-	     
+
 	     if (obj == i) continue;
 	     if ((Ansi_Color_Map[i].custom_esc) == NULL) continue;
 	     if (!strcmp (Ansi_Color_Map[i].custom_esc, cust_esc))
@@ -1097,7 +1097,7 @@ void SLtt_set_color_esc (int obj, char *esc)
 	  }
 	FgBg_Stats[fgbg] += 1;
      }
-   
+
    fgbg |= 0x80;
    Ansi_Color_Map[obj].fgbg = (fgbg | (fgbg << 8)) << 8;
    if (obj == 0) Color_0_Modified = 1;
@@ -1113,7 +1113,7 @@ void SLtt_set_alt_char_set (int i)
    if (SLtt_Has_Alt_Charset == 0) return;
    if (i == last_i) return;
    SLtt_write_string (i ? Start_Alt_Chars_Str : End_Alt_Chars_Str );
-   /* if (i) Current_Fgbg |= SLTT_ALTC_MASK; 
+   /* if (i) Current_Fgbg |= SLTT_ALTC_MASK;
     else Current_Fgbg &= ~SLTT_ALTC_MASK; */
    last_i = i;
 #ifdef SLTT_TRANSP_ACS_PATCH
@@ -1127,7 +1127,7 @@ static void write_attributes (SLtt_Char_Type fgbg)
 
    if (Worthless_Highlight) return;
    if (fgbg == Current_Fgbg) return;
-   
+
    /* Before spitting out colors, fix attributes */
    if ((fgbg & ATTR_MASK) != (Current_Fgbg & ATTR_MASK))
      {
@@ -1135,17 +1135,17 @@ static void write_attributes (SLtt_Char_Type fgbg)
 	  {
 	     SLtt_write_string(Norm_Vid_Str);
 	     /* In case normal video turns off ALL attributes: */
-	     if (fgbg & SLTT_ALTC_MASK) 
+	     if (fgbg & SLTT_ALTC_MASK)
 	       Current_Fgbg &= ~SLTT_ALTC_MASK;
 	     SLtt_set_alt_char_set (0);
 	  }
-	
-	if ((fgbg & SLTT_ALTC_MASK) 
+
+	if ((fgbg & SLTT_ALTC_MASK)
 	    != (Current_Fgbg & SLTT_ALTC_MASK))
 	  {
 	     SLtt_set_alt_char_set ((int) (fgbg & SLTT_ALTC_MASK));
 	  }
-	
+
 	if (fgbg & SLTT_ULINE_MASK) SLtt_write_string (UnderLine_Vid_Str);
 	if (fgbg & SLTT_BOLD_MASK) SLtt_bold_video ();
 	if (fgbg & SLTT_REV_MASK) SLtt_write_string (Rev_Vid_Str);
@@ -1157,7 +1157,7 @@ static void write_attributes (SLtt_Char_Type fgbg)
 	     if (SLtt_Blink_Mode) SLtt_write_string (Blink_Vid_Str);
 	  }
      }
-   
+
    if (SLtt_Use_Ansi_Colors)
      {
 	fg0 = (int) GET_FG(fgbg);
@@ -1173,10 +1173,10 @@ void SLtt_reverse_video (int color)
 {
    SLtt_Char_Type fgbg;
    char *esc;
-   
+
    if (Worthless_Highlight) return;
    if ((color < 0) || (color >= JMAX_COLORS)) return;
-   
+
    if (Video_Initialized == 0)
      {
 	if (color == JNORMAL_COLOR)
@@ -1187,8 +1187,8 @@ void SLtt_reverse_video (int color)
 	Current_Fgbg = 0xFFFFFFFFU;
 	return;
      }
-   
-   if (SLtt_Use_Ansi_Colors) 
+
+   if (SLtt_Use_Ansi_Colors)
      {
 	fgbg = Ansi_Color_Map[color].fgbg;
 	if ((esc = Ansi_Color_Map[color].custom_esc) != NULL)
@@ -1251,9 +1251,9 @@ void SLtt_wide_width (void)
 static void write_string_with_care (char *str)
 {
    unsigned int len;
-   
+
    if (str == NULL) return;
-   
+
    len = strlen (str);
    if (Automatic_Margins && (Cursor_r + 1 == SLtt_Screen_Rows))
      {
@@ -1276,7 +1276,7 @@ static void send_attr_str (unsigned short *s)
    register SLtt_Char_Type attr;
    register unsigned short sh;
    int color, last_color = -1;
-   
+
    p = out;
    while (0 != (sh = *s++))
      {
@@ -1289,7 +1289,7 @@ static void send_attr_str (unsigned short *s)
 	  {
 	     if (SLtt_Use_Ansi_Colors) attr = Ansi_Color_Map[color & 0x7F].fgbg;
 	     else attr = Ansi_Color_Map[color & 0x7F].mono;
-	     
+
 	     /* sh => color */
 	     if (color & 0x80) /* alternate char set */
 	       {
@@ -1297,10 +1297,10 @@ static void send_attr_str (unsigned short *s)
 		    {
 		       if (SLtt_Blink_Mode) attr |= SLTT_BLINK_MASK;
 		    }
-		  else attr |= SLTT_ALTC_MASK;   
+		  else attr |= SLTT_ALTC_MASK;
 	       }
-	     
-	     
+
+
 	     if (attr != Current_Fgbg)
 	       {
 #ifndef SLTT_TRANSP_ACS_PATCH
@@ -1330,7 +1330,7 @@ static void send_attr_str (unsigned short *s)
 			    Current_Fgbg = attr;
 			 }
 		       else write_attributes (attr);
-		       
+
 		       last_color = color;
 		    }
 	       }
@@ -1345,9 +1345,9 @@ static void send_attr_str (unsigned short *s)
 static void forward_cursor (unsigned int n, int row)
 {
    char buf[30];
-   
-   
-   if (n <= 4) 
+
+
+   if (n <= 4)
      {
 	SLtt_normal_video ();
 	SLMEMSET (buf, ' ', n);
@@ -1365,7 +1365,7 @@ static void forward_cursor (unsigned int n, int row)
 }
 
 
-#define SPACE_CHAR (0x20 | (JNORMAL_COLOR << 8))                        
+#define SPACE_CHAR (0x20 | (JNORMAL_COLOR << 8))
 
 void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int row)
 {
@@ -1376,25 +1376,25 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 #ifdef HP_GLITCH_CODE
    int handle_hp_glitch = 0;
 #endif
-   
+
    q = oldd; p = neww;
    qmax = oldd + len;
    pmax = p + len;
-   
+
    /* Find out where to begin --- while they match, we are ok */
    while (1)
      {
 	if (q == qmax) return;
 #if SLANG_HAS_KANJI_SUPPORT
-	if (*p & 0x80) 
+	if (*p & 0x80)
 	  { /* new is kanji */
 	     if ((*q & 0x80) && ((q + 1) < qmax))
 	       { /* old is also kanji */
 		  if (((0xFF & *q) != (0xFF & *p))
 		      || ((0xFF & q[1]) != (0xFF & p[1])))
 		    break; /* both kanji, but not match */
-		  
-		  else 
+
+		  else
 		    { /* kanji match ! */
 		       if (!COLOR_EQS(*q, *p)) break;
 		       q++; p++;
@@ -1406,7 +1406,7 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 	       }
 	     else break; /* old is not kanji */
 	  }
-	else 
+	else
 	  { /* new is not kanji */
 	     if (*q & 0x80) break; /* old is kanji */
 	  }
@@ -1437,17 +1437,17 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
      }
 #endif
    /* Find where the last non-blank character on old/new screen is */
-   
+
    while (qmax > q)
      {
 	qmax--;
-	if (!CHAR_EQS(*qmax, SPACE_CHAR)) 
+	if (!CHAR_EQS(*qmax, SPACE_CHAR))
 	  {
 	     qmax++;
 	     break;
 	  }
      }
-   
+
    while (pmax > p)
      {
 	pmax--;
@@ -1457,7 +1457,7 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 	     break;
 	  }
      }
-   
+
    last_buffered_match = buf = buffer;		       /* buffer is empty */
 
 #ifdef HP_GLITCH_CODE
@@ -1479,14 +1479,14 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 	  {
 	     if (CHAR_EQS(*q,SPACE_CHAR) && CHAR_EQS(*p, SPACE_CHAR))
 	       {
-		  /* If *q is not a space, we would have to overwrite it.  
-		   * However, if *q is a space, then while *p is also one, 
+		  /* If *q is not a space, we would have to overwrite it.
+		   * However, if *q is a space, then while *p is also one,
 		   * we only need to skip over the blank field.
 		   */
 		  space_match = p;
 		  p++; q++;
-		  while ((p < pmax) 
-			 && CHAR_EQS(*q,SPACE_CHAR) 
+		  while ((p < pmax)
+			 && CHAR_EQS(*q,SPACE_CHAR)
 			 && CHAR_EQS(*p, SPACE_CHAR))
 		    {
 		       p++;
@@ -1498,9 +1498,9 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 #if SLANG_HAS_KANJI_SUPPORT
 	     if ((*p & 0x80) && ((p + 1) < pmax))
 	       { /* new is kanji */
-		  if (*q & 0x80) 
+		  if (*q & 0x80)
 		    { /* old is also kanji */
- 			  if (((0xFF & *q) != (0xFF & *p)) 
+ 			  if (((0xFF & *q) != (0xFF & *p))
 			      || ((0xFF & q[1]) != (0xFF & p[1])))
 			 {
 			    /* both kanji, but not match */
@@ -1509,9 +1509,9 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 			    q += 2;
 			    continue;
 			 }
-		       else 
+		       else
 			 { /* kanji match ? */
-			    if (!COLOR_EQS(*q, *p) || !COLOR_EQS(*(q+1), *(p+1))) 
+			    if (!COLOR_EQS(*q, *p) || !COLOR_EQS(*(q+1), *(p+1)))
 			      {
 				 /* code is match ,but color is diff */
 				 *buf++ = *p++;
@@ -1522,7 +1522,7 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 			    break;
 			 }
 		    }
- 		  else 
+ 		  else
 		    { /* old is not kanji */
 		       *buf++ = *p++;
 		       *buf++ = *p++;
@@ -1530,9 +1530,9 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 		       continue;
 		    }
 	       }
-	     else 
+	     else
 	       { /* new is not kanji */
- 		  if (*q & 0x80) 
+ 		  if (*q & 0x80)
 		    { /* old is kanji */
 		       *buf++ = *p++;
 		       q++;
@@ -1546,20 +1546,20 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 	     q++;
 	  }
 	*buf = 0;
-	
+
 	if (buf != buffer) send_attr_str (buffer);
 	buf = buffer;
-	
-	if (n_spaces && (p < pmax)) 
+
+	if (n_spaces && (p < pmax))
 	  {
 	     forward_cursor (n_spaces, row);
 	  }
-	
-	/* Now we overwrote what we could and cursor is placed at position 
-	 * of a possible match of new and old.  If this is the case, skip 
+
+	/* Now we overwrote what we could and cursor is placed at position
+	 * of a possible match of new and old.  If this is the case, skip
 	 * some more.
 	 */
-#if !SLANG_HAS_KANJI_SUPPORT	
+#if !SLANG_HAS_KANJI_SUPPORT
 	while ((p < pmax) && CHAR_EQS(*p, *q))
 	  {
 	     *buf++ = *p++;
@@ -1567,29 +1567,29 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 	  }
 #else
 	/* Kanji */
-	while (p < pmax) 
+	while (p < pmax)
 	  {
 	     if ((*p & 0x80) && ((p + 1) < pmax))
 	       { /* new is kanji */
-		  if (*q & 0x80) 
+		  if (*q & 0x80)
 		    { /* old is also kanji */
-		       if (((0xFF & *q) == (0xFF & *p)) 
+		       if (((0xFF & *q) == (0xFF & *p))
 			   && ((0xFF & q[1]) == (0xFF & p[1])))
 			 {
 			    /* kanji match ? */
-			    if (!COLOR_EQS(*q, *p) 
+			    if (!COLOR_EQS(*q, *p)
 				|| !COLOR_EQS(q[1], p[1]))
 			      break;
-			    
+
 			    *buf++ = *p++;
 			    q++;
-			    if (p >= pmax) 
+			    if (p >= pmax)
 			      {
 				 *buf++ = SPACE_CHAR;
 				 p++;
 				 break;
 			      }
-			    else 
+			    else
 			      {
 				 *buf++ = *p++;
 				 q++;
@@ -1600,7 +1600,7 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 		    }
 		  else break; /* old is not kanji */
 	       }
-	     else 
+	     else
 	       {  /* new is not kanji */
 		  if (*q & 0x80) break; /* old is kanji */
 		  if (!CHAR_EQS(*q, *p)) break;
@@ -1611,11 +1611,11 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
 #endif
 	last_buffered_match = buf;
 	if (p >= pmax) break;
-	
+
 	/* jump to new position is it is greater than 5 otherwise
 	 * let it sit in the buffer and output it later.
 	 */
-	if ((int) (buf - buffer) >= 5) 
+	if ((int) (buf - buffer) >= 5)
 	  {
 	     forward_cursor ((unsigned int) (buf - buffer), row);
 	     last_buffered_match = buf = buffer;
@@ -1626,7 +1626,7 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
      {
 	if (q < qmax)
 	  {
-	     if ((buf == last_buffered_match) 
+	     if ((buf == last_buffered_match)
 		 && ((int) (buf - buffer) >= 5))
 	       {
 		  forward_cursor ((unsigned int) (buf - buffer), row);
@@ -1640,22 +1640,22 @@ void SLtt_smart_puts(unsigned short *neww, unsigned short *oldd, int len, int ro
      }
    if (q < qmax) SLtt_del_eol ();
    if (Automatic_Margins && (Cursor_c + 1 >= SLtt_Screen_Cols)) Cursor_Set = 0;
-}  
+}
 
 
 static void get_color_info (void)
 {
    char *fg, *bg;
-   
+
    SLtt_Use_Ansi_Colors = (NULL != getenv ("COLORTERM"));
-   
+
    if (-1 == get_default_colors (&fg, &bg))
      return;
-     
+
    /* Check to see if application has already set them. */
    if (Color_0_Modified)
      return;
-   
+
    SLtt_set_color (0, NULL, fg, bg);
    SLtt_set_color (1, NULL, bg, fg);
 }
@@ -1695,13 +1695,13 @@ static char *my_tgetstr(char *what, char **p)
 	/* Check for AIX brain-damage */
 	if (*what == '@')
 	  return NULL;
-	
+
 	/* lose pad info --- with today's technology, term is a loser if
 	   it is really needed */
-	while ((*what == '.') || 
+	while ((*what == '.') ||
 	       ((*what >= '0') && (*what <= '9'))) what++;
-	if (*what == '*') what++;	
-	
+	if (*what == '*') what++;
+
 	/* lose terminfo padding--- looks like $<...> */
         w = what;
 	while (*w) if ((*w++ == '$') && (*w == '<'))
@@ -1714,7 +1714,7 @@ static char *my_tgetstr(char *what, char **p)
 	     while ((*w1++ = *w++) != 0);
 	     w = wsave;
 	  }
-	if (*what == 0) what = NULL; 
+	if (*what == 0) what = NULL;
      }
    return(what);
 }
@@ -1745,33 +1745,33 @@ void SLtt_get_terminfo (void)
    char *term, *t, ch;
    int is_xterm;
    int almost_vtxxx;
-   
+
    get_color_info ();
-   
+
    if (NULL == (term = (char *) getenv("TERM")))
      {
 	SLang_exit_error("TERM environment variable needs set.");
      }
-   
+
    Linux_Console = (!strncmp (term, "linux", 5)
 #ifdef linux
 		    || !strncmp(term, "con", 3)
 #endif
 		    );
-      
+
    t = term;
-   
+
    if (strcmp(t, "vt52") && (*t++ == 'v') && (*t++ == 't')
-       && (ch = *t, (ch >= '1') && (ch <= '9'))) Vt100_Like = 1; 
+       && (ch = *t, (ch >= '1') && (ch <= '9'))) Vt100_Like = 1;
 
    is_xterm = !strncmp (term, "xterm", 5);
    almost_vtxxx = (Vt100_Like
 		   || Linux_Console
 		   || is_xterm
 		   || !strcmp (term, "screen"));
-     
+
 #ifndef USE_TERMCAP
-   if (NULL == (Tbuf = tgetent (term))) 
+   if (NULL == (Tbuf = tgetent (term)))
      {
 	char err_buf[512];
 	if (almost_vtxxx) /* Special cases. */
@@ -1792,31 +1792,31 @@ termcap entry.", term);
 #else				       /* USE_TERMCAP */
    if (1 != tgetent(Tbuf, term)) SLang_exit_error("Unknown terminal.");
 #endif				       /* NOT USE_TERMCAP */
-   
-   if ((NULL == (Cls_Str = SLtt_tgetstr("cl"))) 
+
+   if ((NULL == (Cls_Str = SLtt_tgetstr("cl")))
        || (NULL == (Curs_Pos_Str = SLtt_tgetstr("cm"))))
      {
 	SLang_exit_error("Terminal not powerful enough for SLang.");
      }
-   
+
    if ((NULL == (Ins_Mode_Str = SLtt_tgetstr("im")))
        || ( NULL == (Eins_Mode_Str = SLtt_tgetstr("ei")))
        || ( NULL == (Del_Char_Str = SLtt_tgetstr("dc"))))
      SLtt_Term_Cannot_Insert = 1;
-   
+
    Visible_Bell_Str = SLtt_tgetstr ("vb");
    Curs_Up_Str = SLtt_tgetstr ("up");
    Rev_Scroll_Str = SLtt_tgetstr("sr");
    Del_N_Lines_Str = SLtt_tgetstr("DL");
    Add_N_Lines_Str = SLtt_tgetstr("AL");
-   
-   /* Actually these are used to initialize terminals that use cursor 
+
+   /* Actually these are used to initialize terminals that use cursor
     * addressing.  Hard to believe.
     */
    Term_Init_Str = SLtt_tgetstr ("ti");
    Term_Reset_Str = SLtt_tgetstr ("te");
 
-   /* If I do this for vtxxx terminals, arrow keys start sending ESC O A, 
+   /* If I do this for vtxxx terminals, arrow keys start sending ESC O A,
     * which I do not want.  This is mainly for HP terminals.
     */
    if ((almost_vtxxx == 0) || SLtt_Force_Keypad_Init)
@@ -1834,12 +1834,12 @@ termcap entry.", term);
 	if (Del_N_Lines_Str == NULL) Del_N_Lines_Str = "\033[%dM";
 	if (Add_N_Lines_Str == NULL) Add_N_Lines_Str = "\033[%dL";
      }
-   
+
    Scroll_R_Str = SLtt_tgetstr("cs");
-   
+
    SLtt_get_screen_size ();
 
-   if ((Scroll_R_Str == NULL) 
+   if ((Scroll_R_Str == NULL)
        || (((NULL == Del_N_Lines_Str) || (NULL == Add_N_Lines_Str))
 	   && (NULL == Rev_Scroll_Str)))
      {
@@ -1852,12 +1852,12 @@ termcap entry.", term);
 	  }
 	else SLtt_Term_Cannot_Scroll = 1;
      }
-   
+
    Del_Eol_Str = SLtt_tgetstr("ce");
 
    Rev_Vid_Str = SLtt_tgetstr("mr");
    if (Rev_Vid_Str == NULL) Rev_Vid_Str = SLtt_tgetstr("so");
-   
+
    Bold_Vid_Str = SLtt_tgetstr("md");
 
    /* Although xterm cannot blink, it does display the blinking characters
@@ -1866,9 +1866,9 @@ termcap entry.", term);
    if ((NULL == (Blink_Vid_Str = SLtt_tgetstr("mb")))
        && is_xterm)
      Blink_Vid_Str = "\033[5m";
-   
+
    UnderLine_Vid_Str = SLtt_tgetstr("us");
-   
+
    Start_Alt_Chars_Str = SLtt_tgetstr ("as");   /* smacs */
    End_Alt_Chars_Str = SLtt_tgetstr ("ae");   /* rmacs */
    Enable_Alt_Char_Set = SLtt_tgetstr ("eA");   /* enacs */
@@ -1877,7 +1877,7 @@ termcap entry.", term);
 #ifndef NCURSES_BRAIN_DAMAGE_CONTROL
 # define NCURSES_BRAIN_DAMAGE_CONTROL 0
 #endif
-   
+
 #if NCURSES_BRAIN_DAMAGE_CONTROL
    if (Linux_Console)
      {
@@ -1890,7 +1890,7 @@ termcap entry.", term);
 	Enable_Alt_Char_Set = NULL;
 # else
 	char *lgcp = "`\004a\261f\370g\361h\260j\331k\277l\332m\300n\305o\302q\304r\362s_t\303u\264v\301w\302x\263y\371z\372{\373|\374}\375~";
-	
+
 	SLtt_Graphics_Char_Pairs = lgcp;
 	Start_Alt_Chars_Str = "\033[11m";
 	End_Alt_Chars_Str = "\033[10m";
@@ -1898,7 +1898,7 @@ termcap entry.", term);
 # endif
      }
 #endif
-   
+
    if (NULL == SLtt_Graphics_Char_Pairs)
      {
 	/* make up for defective termcap/terminfo */
@@ -1909,7 +1909,7 @@ termcap entry.", term);
 	     Enable_Alt_Char_Set = "\033)0";
 	  }
      }
-   
+
     /* aixterm added by willi */
    if (is_xterm || !strncmp (term, "aixterm", 7))
      {
@@ -1917,15 +1917,15 @@ termcap entry.", term);
 	End_Alt_Chars_Str = "\017";
 	Enable_Alt_Char_Set = "\033(B\033)0";
      }
-   
-   if ((SLtt_Graphics_Char_Pairs == NULL) && 
+
+   if ((SLtt_Graphics_Char_Pairs == NULL) &&
        ((Start_Alt_Chars_Str == NULL) || (End_Alt_Chars_Str == NULL)))
      {
 	SLtt_Has_Alt_Charset = 0;
 	Enable_Alt_Char_Set = NULL;
      }
    else SLtt_Has_Alt_Charset = 1;
-   
+
 
    /* status line capabilities */
    if ((SLtt_Has_Status_Line == -1)
@@ -1938,17 +1938,17 @@ termcap entry.", term);
 	Num_Status_Line_Columns = TGETNUM("ws");
 	if (Num_Status_Line_Columns < 0) Num_Status_Line_Columns = 0;
      }
-   
-   if (NULL == (Norm_Vid_Str = SLtt_tgetstr("me"))) 
+
+   if (NULL == (Norm_Vid_Str = SLtt_tgetstr("me")))
      {
 	Norm_Vid_Str = SLtt_tgetstr("se");
      }
-   
+
    Cursor_Invisible_Str = SLtt_tgetstr("vi");
    Cursor_Visible_Str = SLtt_tgetstr("ve");
-   
+
    Curs_F_Str = SLtt_tgetstr("RI");
-   
+
 #if 0
    if (NULL != Curs_F_Str)
      {
@@ -1956,7 +1956,7 @@ termcap entry.", term);
      }
    else Len_Curs_F_Str = strlen(Curs_Pos_Str);
 #endif
-   
+
    Automatic_Margins = TGETFLAG ("am");
    /* No_Move_In_Standout = !TGETFLAG ("ms"); */
 #ifdef HP_GLITCH_CODE
@@ -1972,14 +1972,14 @@ termcap entry.", term);
 
    if (Worthless_Highlight)
      SLtt_Has_Alt_Charset = 0;
-   
+
    /* Check for color information in the termcap.  A program should not
     * rely on this information being accurate.
     */
    if (SLtt_Use_Ansi_Colors == 0)
      {
 	Reset_Color_String = SLtt_tgetstr ("op");
-	
+
 	SLtt_Use_Ansi_Colors = ((NULL != Reset_Color_String)
 				|| (NULL != SLtt_tgetstr ("Sf"))
 				|| (NULL != SLtt_tgetstr ("Sb"))
@@ -1987,9 +1987,9 @@ termcap entry.", term);
 				|| (NULL != SLtt_tgetstr ("AB"))
 				|| (-1 != SLtt_tgetnum ("Co"))
 				|| (-1 != SLtt_tgetnum ("pa")));
-	
+
      }
-   
+
 #if defined(__QNX__) && defined(QNX_QANSI_SLANG_COMPAT_ACS)
    /*
     * Override the alt-char-set handling string in case of a
@@ -2005,8 +2005,8 @@ termcap entry.", term);
         End_Alt_Chars_Str = "\017";   /* rmacs/ae (^O) */
         SLtt_Graphics_Char_Pairs =    /* acsc/ac */
 	    "``aaffggjjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~O\141";
-	
-	/* 
+
+	/*
 	 * it would be required to modify the sgr/sa entry also, if it
 	 * would be used (->embedded as/ae sequences)...
 	 */
@@ -2031,7 +2031,7 @@ void SLtt_enable_cursor_keys (void)
 void SLtt_get_terminfo ()
 {
    int zero = 0;
-   
+
    get_color_info ();
 
    SLtt_set_term_vtxxx(&zero);
@@ -2039,20 +2039,20 @@ void SLtt_get_terminfo ()
    End_Alt_Chars_Str = "\017";
    SLtt_Has_Alt_Charset = 1;
    SLtt_Graphics_Char_Pairs = "aaffgghhjjkkllmmnnooqqssttuuvvwwxx";
-   Enable_Alt_Char_Set = "\033(B\033)0"; 
+   Enable_Alt_Char_Set = "\033(B\033)0";
    SLtt_get_screen_size ();
 }
 #endif
 
 /* This sets term for vt102 terminals it parameter vt100 is 0.  If vt100
- * is non-zero, set terminal appropriate for a only vt100  
+ * is non-zero, set terminal appropriate for a only vt100
  * (no add line capability). */
-							   
+
 void SLtt_set_term_vtxxx(int *vt100)
 {
    Norm_Vid_Str = "\033[m";
-   
-   Scroll_R_Str = "\033[%i%d;%dr"; 
+
+   Scroll_R_Str = "\033[%i%d;%dr";
    Cls_Str = "\033[2J\033[H";
    Rev_Vid_Str = "\033[7m";
    Bold_Vid_Str = "\033[1m";
@@ -2104,7 +2104,7 @@ void SLtt_reset_video (void)
 
    Current_Fgbg = 0xFFFFFFFFU;
    SLtt_set_alt_char_set (0);
-   if (SLtt_Use_Ansi_Colors) 
+   if (SLtt_Use_Ansi_Colors)
      {
 	if (Reset_Color_String == NULL)
 	  {
@@ -2131,7 +2131,7 @@ void SLtt_bold_video (void)
 int SLtt_set_mouse_mode (int mode, int force)
 {
    char *term;
-   
+
    if (force == 0)
      {
 	if (NULL == (term = (char *) getenv("TERM"))) return -1;
@@ -2143,7 +2143,7 @@ int SLtt_set_mouse_mode (int mode, int force)
      SLtt_write_string ("\033[?9h");
    else
      SLtt_write_string ("\033[?9l");
-   
+
    return 0;
 }
 
@@ -2160,16 +2160,16 @@ int SLtt_write_to_status_line (char *s, int col)
        || (Goto_Status_Line_Str == NULL)
        || (Return_From_Status_Line_Str == NULL))
      return -1;
-   
+
    tt_printf (Goto_Status_Line_Str, col, 0);
    SLtt_write_string (s);
    SLtt_write_string (Return_From_Status_Line_Str);
    return 0;
 }
 
-   
+
 void SLtt_get_screen_size (void)
-{   
+{
 #ifdef VMS
    int status, code;
    unsigned short chan;
@@ -2179,10 +2179,10 @@ void SLtt_get_screen_size (void)
    VIOMODEINFO vioModeInfo;
 #endif
    int r = 0, c = 0;
-   
+
 #if defined(TIOCGWINSZ) && !defined(SCO_FLAVOR)
    struct winsize wind_struct;
-   
+
    do
      {
 	if ((ioctl(1,TIOCGWINSZ,&wind_struct) == 0)
@@ -2195,7 +2195,7 @@ void SLtt_get_screen_size (void)
 	  }
      }
    while (errno == EINTR);
-   
+
 #endif
 
 #ifdef VMS
@@ -2218,21 +2218,21 @@ void SLtt_get_screen_size (void)
    vioModeInfo.cb = sizeof(vioModeInfo);
    VioGetMode (&vioModeInfo, 0);
    c = vioModeInfo.col;
-   r = vioModeInfo.row;   
+   r = vioModeInfo.row;
 #endif
-   
+
    if (r <= 0)
      {
 	char *s = getenv ("LINES");
 	if (s != NULL) r = atoi (s);
      }
-   
+
    if (c <= 0)
      {
 	char *s = getenv ("COLUMNS");
 	if (s != NULL) c = atoi (s);
      }
-   
+
    if ((r <= 0) || (r > 200)) r = 24;
    if ((c <= 0) || (c > 250)) c = 80;
    SLtt_Screen_Rows = r;

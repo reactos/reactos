@@ -1,13 +1,13 @@
 /* Slang interface to the Midnight Commander for Windows NT and OS/2
    This emulates some features of ncurses on top of slang
    S-lang is not fully consistent between its Unix and non-Unix versions.
-   
-      
+
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -60,7 +60,7 @@ int got_interrupt ()
 void slang_init (void)
 {
     SLtt_get_terminfo ();
-    SLang_init_tty (XCTRL('c'), 1, 0);	
+    SLang_init_tty (XCTRL('c'), 1, 0);
     slang_prog_mode ();
     load_terminfo_keys ();
 }
@@ -109,7 +109,7 @@ void hline (int ch, int len)
 
     last_x = SLsmg_get_column ();
     last_y = SLsmg_get_row ();
-    
+
     if (ch == 0)
 	ch = ACS_HLINE;
 
@@ -145,7 +145,7 @@ int has_colors ()
     /* No terminals on NT, make default color */
     if (!disable_colors)
     	SLtt_Use_Ansi_Colors = 1;
-    
+
     /* Setup emulated colors */
     if (SLtt_Use_Ansi_Colors){
         /* DO NOT TRANSLATE WITH gettext SYNTAX coloring will be broken */
@@ -164,7 +164,7 @@ void attrset (int color)
 	SLsmg_set_color (color);
 	return;
     }
-    
+
     if (color & A_BOLD){
 	if (color == A_BOLD)
 	    SLsmg_set_color (A_BOLD);
@@ -178,7 +178,7 @@ void attrset (int color)
     else
 	SLsmg_set_color (color);
 }
-	
+
 void load_terminfo_keys ()
 {
 }

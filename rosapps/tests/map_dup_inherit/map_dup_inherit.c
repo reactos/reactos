@@ -18,46 +18,46 @@ int main( int argc, char **argv ) {
   if( argc == 2 ) {
     file_map = (void *)atoi(argv[1]);
   } else {
-    file_map = CreateFileMapping( INVALID_HANDLE_VALUE, 
-				  NULL, 
-				  PAGE_READWRITE | SEC_RESERVE, 
+    file_map = CreateFileMapping( INVALID_HANDLE_VALUE,
+				  NULL,
+				  PAGE_READWRITE | SEC_RESERVE,
 				  0, 0x1000, NULL );
-    if( !SetHandleInformation( file_map, 
-			       HANDLE_FLAG_INHERIT, 
+    if( !SetHandleInformation( file_map,
+			       HANDLE_FLAG_INHERIT,
 			       HANDLE_FLAG_INHERIT ) ) {
       fprintf( stderr, "%lu: Could not make handle inheritable.\n",
 	       GetCurrentProcessId() );
       return 100;
     }
   }
-   
+
   if( !file_map ) {
     fprintf( stderr, "%lu: Could not create anonymous file map.\n",
 	     GetCurrentProcessId() );
     return 1;
   }
-  
+
   file_view = MapViewOfFile( file_map,
 			     FILE_MAP_WRITE,
 			     0,
 			     0,
 			     0x1000 );
-  
+
   if( !file_view ) {
     fprintf( stderr, "%lu: Could not map view of file.\n",
 	     GetCurrentProcessId() );
     return 2;
   }
-  
+
   if( !VirtualAlloc( file_view, 0x1000, MEM_COMMIT, PAGE_READWRITE ) ) {
     fprintf( stderr, "%lu: VirtualAlloc failed to realize the page.\n",
 	     GetCurrentProcessId() );
     return 3;
   }
-  
+
   x = (int *)file_view;
   x[0] = 0x12345678;
-  
+
   if( x[0] != 0x12345678 ) {
     fprintf( stderr, "%lu: Can't write to the memory (%08x != 0x12345678)\n",
 	     GetCurrentProcessId(), x[0] );

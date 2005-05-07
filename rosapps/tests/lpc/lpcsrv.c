@@ -1,4 +1,4 @@
-/* $Id: lpcsrv.c,v 1.1 2004/10/21 04:58:59 sedwards Exp $
+/* $Id$
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
    HANDLE NamedPortHandle;
    HANDLE PortHandle;
    LPC_MAX_MESSAGE ConnectMsg;
-   
+
    printf("%s: Lpc test server\n", MyName);
 
    InitializeObjectAttributes(&ObjectAttributes,
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 			      0,
 			      NULL,
 			      NULL);
-   
+
    printf("%s: Creating port \"%s\"...\n", MyName, TEST_PORT_NAME);
    Status = NtCreatePort(&NamedPortHandle,
 			 &ObjectAttributes,
@@ -59,9 +59,9 @@ int main(int argc, char* argv[])
 	return EXIT_FAILURE;
      }
    printf("%s: Port \"%s\" created (0x%x).\n\n", MyName, TEST_PORT_NAME, NamedPortHandle);
-   
+
    for (;;)
-   { 
+   {
      printf("%s: Listening for connections requests on port 0x%x...\n", MyName, NamedPortHandle);
      Status = NtListenPort(NamedPortHandle,
 			 &ConnectMsg.Header);
@@ -75,8 +75,8 @@ int main(int argc, char* argv[])
         ConnectMsg.Header.MessageId, NamedPortHandle);
      printf("%s: Request from: PID=%x, TID=%x.\n", MyName,
         ConnectMsg.Header.ClientId.UniqueProcess, ConnectMsg.Header.ClientId.UniqueThread);
-   
-     printf("%s: Accepting connection request 0x%08x...\n", MyName, 
+
+     printf("%s: Accepting connection request 0x%08x...\n", MyName,
         ConnectMsg.Header.MessageId);
      Status = NtAcceptConnectPort(&PortHandle,
 				NamedPortHandle,
@@ -88,11 +88,11 @@ int main(int argc, char* argv[])
        {
          printf("%s: NtAcceptConnectPort() failed with status = 0x%08lX.\n", MyName, Status);
          return EXIT_FAILURE;
-       }   
-     printf("%s: Connection request 0x%08x accepted as port 0x%x.\n", MyName, 
+       }
+     printf("%s: Connection request 0x%08x accepted as port 0x%x.\n", MyName,
         ConnectMsg.Header.MessageId, PortHandle);
-   
-     printf("%s: Completing connection for port 0x%x (0x%08x).\n", MyName, 
+
+     printf("%s: Completing connection for port 0x%x (0x%08x).\n", MyName,
         PortHandle, ConnectMsg.Header.MessageId);
      Status = NtCompleteConnectPort(PortHandle);
      if (!NT_SUCCESS(Status))
@@ -100,12 +100,12 @@ int main(int argc, char* argv[])
          printf("%s: NtCompleteConnectPort() failed with status = 0x%08lX.\n", MyName, Status);
          return EXIT_FAILURE;
        }
-  
-     printf("%s: Entering server loop for port 0x%x...\n", MyName, PortHandle); 
+
+     printf("%s: Entering server loop for port 0x%x...\n", MyName, PortHandle);
      for(;;)
        {
          LPC_MAX_MESSAGE Request;
-	
+
          Status = NtReplyWaitReceivePort(PortHandle,
 					0,
 					NULL,
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
          if (LPC_DATAGRAM == PORT_MESSAGE_TYPE(Request))
            {
              printf("%s: Datagram message contents are <%s>.\n",
-               MyName, 
+               MyName,
 	       Request.Data);
            }
          else

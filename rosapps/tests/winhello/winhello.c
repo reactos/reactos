@@ -35,7 +35,7 @@ LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOLEAN bolWM_CHAR;
 BOOLEAN bolWM_KEYDOWN;
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -116,15 +116,15 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	switch(msg)
 	{
-	     
+
 	  case WM_CHAR:
-	  { 
-	    
+	  {
+
 	   hDC = GetDC(hWnd);
 	   TCHAR text[2];
  	   text[0] = (TCHAR)wParam;
 	   text[1] = _T('\0');
-	   	   
+
 	   //Write in window
 	   if( bolWM_KEYDOWN )
 	   {
@@ -136,8 +136,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	        TextOut(hDC, 400, 10, "WM_CHAR:", strlen("WM_CHAR:"));
 	        bolWM_KEYDOWN = 1;
 	   }
-	   TextOut(hDC, 530, 10, text, strlen(text)); 
-	   
+	   TextOut(hDC, 530, 10, text, strlen(text));
+
 #if 0
 	   // Make a line depending on the typed key
 	   Rect.left = 10;
@@ -145,11 +145,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   Rect.right = 610;
 	   Rect.bottom = 85;
 	   FillRect(hDC, &Rect, hbrWhite);
-	      
+
 	   Rect.left=308;
 	   Rect.right=312;
 	   FillRect(hDC, &Rect, hbrRed);
-	       
+
 	   Rect.left = 310;
 	   Rect.top = 75;
 	   Rect.right = 310 +text[0]*2;
@@ -165,15 +165,15 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	 }
 
 	  case WM_KEYDOWN:
-	  { 
-	    
+	  {
+
 	   hDC = GetDC(hWnd);
 	   RECT Rect;
 	   TCHAR text[2];
  	   text[0] = (TCHAR)wParam;
 	   text[1] = _T('\0');
-	   
-	   
+
+
 	   /* Write in window */
 	   Rect.left = 400;
 	   Rect.top = 50;
@@ -196,14 +196,14 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	 }
 
 	  case WM_KEYUP:
-	  { 
-	    
+	  {
+
 	   hDC = GetDC(hWnd);
 	   RECT Rect;
 	   TCHAR text[2];
  	   text[0] = (TCHAR)wParam;
 	   text[1] = _T('\0');
-	   
+
 
 	   /* Write in window */
 	   Rect.left = 400;
@@ -212,7 +212,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   Rect.bottom = 70;
 	   FillRect(hDC, &Rect, hbrWhite);
 	   TextOut(hDC, 400, 50, "WM_KEYUP:", strlen("WM_KEYUP:"));
-	   TextOut(hDC, 530, 50, text, strlen(text)); 
+	   TextOut(hDC, 530, 50, text, strlen(text));
 	   ReleaseDC(hWnd, hDC);
 	   return 0;
 	 }
@@ -225,13 +225,13 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   hDC = GetDC(hWnd);
 	   x = LOWORD(lParam);
 	   y = HIWORD(lParam);
-	   
+
 	   Rect.left = x - 5;
 	   Rect.top = y - 5;
 	   Rect.right = x + 5;
 	   Rect.bottom = y + 5;
 	   FillRect(hDC, &Rect, hbrRed);
-	   
+
 	   Rect.left = x - 3;
 	   Rect.top = y - 3;
 	   Rect.right = x + 3;
@@ -248,22 +248,22 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   hDC = GetDC(hWnd);
 	   x = LOWORD(lParam);
 	   y = HIWORD(lParam);
-	   
+
 	   Rect.left = x - 5;
 	   Rect.top = y - 5;
 	   Rect.right = x + 5;
 	   Rect.bottom = y + 5;
 	   FillRect(hDC, &Rect, hbrRed);
-	   
+
 	   Rect.left = x - 3;
 	   Rect.top = y - 3;
 	   Rect.right = x + 3;
 	   Rect.bottom = y + 3;
 	   FillRect(hDC, &Rect, hbrGray);
-	   
+
 	   ReleaseDC(hWnd, hDC);
 	   break;
-	 }	  
+	 }
         case WM_MBUTTONDOWN:
 	 {
 	   ULONG x, y;
@@ -271,19 +271,19 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   hDC = GetDC(hWnd);
 	   x = LOWORD(lParam);
 	   y = HIWORD(lParam);
-	   
+
 	   Rect.left = x - 5;
 	   Rect.top = y - 5;
 	   Rect.right = x + 5;
 	   Rect.bottom = y + 5;
 	   FillRect(hDC, &Rect, hbrBlue);
-	   
+
 	   Rect.left = x - 3;
 	   Rect.top = y - 3;
 	   Rect.right = x + 3;
 	   Rect.bottom = y + 3;
 	   FillRect(hDC, &Rect, hbrBlack);
-	   
+
 	   ReleaseDC(hWnd, hDC);
 	   break;
 	 }
@@ -294,20 +294,20 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   hDC = GetDC(hWnd);
 	   x = LOWORD(lParam);
 	   y = HIWORD(lParam);
-	   
+
 	   Rect.left = x - 5;
 	   Rect.top = y - 5;
 	   Rect.right = x + 5;
 	   Rect.bottom = y + 5;
 	   FillRect(hDC, &Rect, hbrBlue);
-	    	    
+
 	   Rect.left = x - 3;
 	   Rect.top = y - 3;
 	   Rect.right = x + 3;
 	   Rect.bottom = y + 3;
 	   FillRect(hDC, &Rect, hbrGray);
-	   
-	   ReleaseDC(hWnd, hDC);	    
+
+	   ReleaseDC(hWnd, hDC);
 	   break;
          }
         case WM_RBUTTONDOWN:
@@ -317,19 +317,19 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   hDC = GetDC(hWnd);
 	   x = LOWORD(lParam);
 	   y = HIWORD(lParam);
-	    
+
 	   Rect.left = x - 5;
 	   Rect.top = y - 5;
 	   Rect.right = x + 5;
 	   Rect.bottom = y + 5;
 	   FillRect(hDC, &Rect, hbrYellow);
-	    
+
 	   Rect.left = x - 3;
 	   Rect.top = y - 3;
 	   Rect.right = x + 3;
 	   Rect.bottom = y + 3;
 	   FillRect(hDC, &Rect, hbrBlack);
-	   
+
 	   ReleaseDC(hWnd, hDC);
 	   break;
 	 }
@@ -340,25 +340,25 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   hDC = GetDC(hWnd);
 	   x = LOWORD(lParam);
 	   y = HIWORD(lParam);
-	  
+
 	   Rect.left = x - 5;
 	   Rect.top = y - 5;
 	   Rect.right = x + 5;
 	   Rect.bottom = y + 5;
 	   FillRect(hDC, &Rect, hbrYellow);
-	  	    
+
 	   Rect.left = x - 3;
 	   Rect.top = y - 3;
 	   Rect.right = x + 3;
 	   Rect.bottom = y + 3;
 	   FillRect(hDC, &Rect, hbrGray);
-	   
-	   ReleaseDC(hWnd, hDC);	    
+
+	   ReleaseDC(hWnd, hDC);
 	   break;
 	 }
-	 
+
 	case WM_MOUSEMOVE:
-         {  
+         {
           int fwKeys;
           int x;
           int y;
@@ -367,16 +367,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  TCHAR text[256];
 
           hDC = GetDC(hWnd);
-          fwKeys = wParam;        // key flags 
-          x = LOWORD(lParam);  // horizontal position of cursor 
-          y = HIWORD(lParam);  // vertical position of cursor 
-          
+          fwKeys = wParam;        // key flags
+          x = LOWORD(lParam);  // horizontal position of cursor
+          y = HIWORD(lParam);  // vertical position of cursor
+
           Rect.left = 10;
 	  Rect.top = 100;
 	  Rect.right = 160;
 	  Rect.bottom = 300;
 	  FillRect(hDC, &Rect, hbrWhite);
-           
+
           temp = _sntprintf ( text, sizeof(text)/sizeof(*text), _T("x: %d"), x );
 	  TextOut(hDC,10,100,text,strlen(text));
           temp = _sntprintf ( text, sizeof(text)/sizeof(*text), _T("y: %d"), y );
@@ -386,32 +386,32 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           Rect.top = y - 2;
           Rect.right = x + 2;
           Rect.bottom = y + 2;
-         
+
           switch ( fwKeys )
           {
                 case MK_CONTROL:
-                       TextOut(hDC,10,140,"Control",strlen("Control"));       
+                       TextOut(hDC,10,140,"Control",strlen("Control"));
                        break;
                 case MK_SHIFT:
-                       TextOut(hDC,10,160,"Shift",strlen("Shift"));                     
+                       TextOut(hDC,10,160,"Shift",strlen("Shift"));
                        break;
                 case MK_LBUTTON:
-                       TextOut(hDC,10,180,"Left",strlen("Left"));       
-                       FillRect(hDC, &Rect, hbrRed); 
+                       TextOut(hDC,10,180,"Left",strlen("Left"));
+                       FillRect(hDC, &Rect, hbrRed);
                        break;
                 case MK_MBUTTON:
-                       TextOut(hDC,10,200,"Middle",strlen("Middle"));       
-	               FillRect(hDC, &Rect, hbrBlue); 
+                       TextOut(hDC,10,200,"Middle",strlen("Middle"));
+	               FillRect(hDC, &Rect, hbrBlue);
                        break;
                 case MK_RBUTTON:
-                       TextOut(hDC,10,220,"Right",strlen("Right"));       
-	               FillRect(hDC, &Rect, hbrYellow); 
+                       TextOut(hDC,10,220,"Right",strlen("Right"));
+	               FillRect(hDC, &Rect, hbrYellow);
                        break;
            }
                        ReleaseDC(hWnd, hDC);
           break;
          }
-         
+
 	case WM_HSCROLL:
 	 {
       int nPos;
@@ -421,52 +421,52 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  HWND hwndScrollBar;
 	  TCHAR text[256];
 	  SCROLLINFO Scrollparameter;
- 	  nScrollCode = (int) LOWORD(wParam);  // scroll bar value 
-	  nPos = (short int) HIWORD(wParam);   // scroll box position 
-	  hwndScrollBar = (HWND) lParam;       // handle to scroll bar 
+ 	  nScrollCode = (int) LOWORD(wParam);  // scroll bar value
+	  nPos = (short int) HIWORD(wParam);   // scroll box position
+	  hwndScrollBar = (HWND) lParam;       // handle to scroll bar
  	  hDC = GetDC(hWnd);
- 	  
+
           Scrollparameter.cbSize = sizeof(Scrollparameter);
-          Scrollparameter.fMask = SIF_ALL; 
+          Scrollparameter.fMask = SIF_ALL;
           GetScrollInfo ( hWnd, SB_HORZ, &Scrollparameter );
-          
+
           Rect.left = 200;
 	  Rect.top = 100;
 	  Rect.right = 350;
 	  Rect.bottom = 300;
 	  FillRect(hDC, &Rect, hbrWhite);
- 
+
           switch ( nScrollCode )
           {
-                case SB_ENDSCROLL: //Ends scroll. 
+                case SB_ENDSCROLL: //Ends scroll.
                         TextOut(hDC,200,120,"SB_ENDSCROLL    ",16);
 	    	        Scrollparameter.nPos = Scrollparameter.nPos;
                         break;
-                case SB_LEFT: //Scrolls to the upper left. 
+                case SB_LEFT: //Scrolls to the upper left.
                         TextOut(hDC,200,140,"SB_LEFT         ",16);
 	    	        Scrollparameter.nPos = Scrollparameter.nMin;
                         break;
-                case SB_RIGHT: //Scrolls to the lower right. 
+                case SB_RIGHT: //Scrolls to the lower right.
                         TextOut(hDC,200,160,"SB_RIGHT        ",16);
 	    	        Scrollparameter.nPos = Scrollparameter.nMax;
                         break;
-                case SB_LINELEFT: //Scrolls left by one unit. 
+                case SB_LINELEFT: //Scrolls left by one unit.
                         TextOut(hDC,200,180,"SB_LINELEFT     ",16);
 	    	        Scrollparameter.nPos--;
                         break;
-                case SB_LINERIGHT: //Scrolls right by one unit. 
+                case SB_LINERIGHT: //Scrolls right by one unit.
                         TextOut(hDC,200,200,"SB_LINERIGHT    ",16);
 	    	        Scrollparameter.nPos++;
                         break;
-                case SB_PAGELEFT: //Scrolls left by the width of the window. 
+                case SB_PAGELEFT: //Scrolls left by the width of the window.
                         TextOut(hDC,200,220,"SB_PAGELEFT     ",16);
                         Scrollparameter.nPos -= Scrollparameter.nPage;
                         break;
-                case SB_PAGERIGHT: //Scrolls right by the width of the window. 
+                case SB_PAGERIGHT: //Scrolls right by the width of the window.
                         TextOut(hDC,200,240,"PAGERIGHT       ",16);
                         Scrollparameter.nPos += Scrollparameter.nPage;
                         break;
-                case SB_THUMBPOSITION: //The user has dragged the scroll box (thumb) and released the mouse button. The nPos parameter indicates the position of the scroll box at the end of the drag operation. 
+                case SB_THUMBPOSITION: //The user has dragged the scroll box (thumb) and released the mouse button. The nPos parameter indicates the position of the scroll box at the end of the drag operation.
                         TextOut(hDC,200,260,"SB_THUMBPOSITION",16);
 	    	        Scrollparameter.nPos = Scrollparameter.nTrackPos;
                         break;
@@ -475,7 +475,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    	        Scrollparameter.nPos = Scrollparameter.nTrackPos;
                         break;
           }
-          
+
  	   SetScrollInfo(
                  hWnd,    // handle to window with scroll bar
                  SB_HORZ,    // scroll bar flag
@@ -487,7 +487,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           ReleaseDC(hWnd, hDC);
  	  return 0;
          }
- 	
+
  	case WM_VSCROLL:
 	 {
 	  int nPos;
@@ -497,52 +497,52 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  HWND hwndScrollBar;
 	  TCHAR text[256];
 	  SCROLLINFO Scrollparameter;
- 	  nScrollCode = (int) LOWORD(wParam);  // scroll bar value 
-	  nPos = (short int) HIWORD(wParam);   // scroll box position 
-	  hwndScrollBar = (HWND) lParam;       // handle to scroll bar 
+ 	  nScrollCode = (int) LOWORD(wParam);  // scroll bar value
+	  nPos = (short int) HIWORD(wParam);   // scroll box position
+	  hwndScrollBar = (HWND) lParam;       // handle to scroll bar
  	  hDC = GetDC(hWnd);
- 	  
+
           Scrollparameter.cbSize = sizeof(Scrollparameter);
-          Scrollparameter.fMask = SIF_ALL; 
+          Scrollparameter.fMask = SIF_ALL;
           GetScrollInfo ( hWnd, SB_VERT, &Scrollparameter );
-          
+
           Rect.left = 400;
 	  Rect.top = 100;
 	  Rect.right = 550;
 	  Rect.bottom = 300;
 	  FillRect(hDC, &Rect, hbrWhite);
- 
+
           switch ( nScrollCode )
           {
-                case SB_ENDSCROLL: //Ends scroll. 
+                case SB_ENDSCROLL: //Ends scroll.
                         TextOut(hDC,400,120,"SB_ENDSCROLL    ",16);
 	    	        Scrollparameter.nPos = Scrollparameter.nPos;
 	    	        break;
-                case SB_LEFT: //Scrolls to the upper left. 
+                case SB_LEFT: //Scrolls to the upper left.
                         TextOut(hDC,400,140,"SB_LEFT         ",16);
 	    	        Scrollparameter.nPos = Scrollparameter.nMin;
                         break;
-                case SB_RIGHT: //Scrolls to the lower right. 
+                case SB_RIGHT: //Scrolls to the lower right.
                         TextOut(hDC,400,160,"SB_RIGHT        ",16);
 	    	        Scrollparameter.nPos = Scrollparameter.nMax;
                         break;
-                case SB_LINELEFT: //Scrolls left by one unit. 
+                case SB_LINELEFT: //Scrolls left by one unit.
                         TextOut(hDC,400,180,"SB_LINELEFT     ",16);
 	    	        Scrollparameter.nPos--;
                         break;
-                case SB_LINERIGHT: //Scrolls right by one unit. 
+                case SB_LINERIGHT: //Scrolls right by one unit.
                         TextOut(hDC,400,200,"SB_LINERIGHT    ",16);
 	    	        Scrollparameter.nPos++;
                         break;
-                case SB_PAGELEFT: //Scrolls left by the width of the window. 
+                case SB_PAGELEFT: //Scrolls left by the width of the window.
                         TextOut(hDC,400,220,"SB_PAGELEFT     ",16);
                         Scrollparameter.nPos -= Scrollparameter.nPage;
                         break;
-                case SB_PAGERIGHT: //Scrolls right by the width of the window. 
+                case SB_PAGERIGHT: //Scrolls right by the width of the window.
                         TextOut(hDC,400,240,"PAGERIGHT       ",16);
                         Scrollparameter.nPos += Scrollparameter.nPage;
                         break;
-                case SB_THUMBPOSITION: //The user has dragged the scroll box (thumb) and released the mouse button. The nPos parameter indicates the position of the scroll box at the end of the drag operation. 
+                case SB_THUMBPOSITION: //The user has dragged the scroll box (thumb) and released the mouse button. The nPos parameter indicates the position of the scroll box at the end of the drag operation.
                         TextOut(hDC,400,260,"SB_THUMBPOSITION",16);
 	    	        Scrollparameter.nPos = Scrollparameter.nTrackPos;
                         break;
@@ -551,7 +551,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    	        Scrollparameter.nPos = Scrollparameter.nTrackPos;
                         break;
           }
-          
+
  	  SetScrollInfo(
                  hWnd,    // handle to window with scroll bar
                  SB_VERT,    // scroll bar flag
@@ -604,11 +604,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  SCROLLINFO si;
 	  si.cbSize = sizeof(si);
 	  si.fMask = SIF_ALL;
-          si.nMin = 0; 
-          si.nMax = 100; 
-          si.nPage = 5; 
+          si.nMin = 0;
+          si.nMax = 100;
+          si.nPage = 5;
 	  si.nPos = 0;
-	  
+
 	  SetScrollInfo ( hWnd, SB_HORZ, &si, FALSE );
 	  SetScrollInfo ( hWnd, SB_VERT, &si, FALSE );
 
@@ -637,16 +637,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	          ((LPCREATESTRUCT) lParam)->hInstance,
 	          NULL
 	          );
-	  
+
 	  return 0;
           break;
 	 }
 
 	 case WM_PAINT:
 	  hDC = BeginPaint(hWnd, &ps);
-	  TextOut(hDC, 10, 10, "Hello World from ReactOS!", 
+	  TextOut(hDC, 10, 10, "Hello World from ReactOS!",
 			strlen("Hello World from ReactOS!"));
-	  TextOut(hDC, 10, 80, "Press Ctrl+C or Ctrl+Alt+F1 to test Hotkey support.", 
+	  TextOut(hDC, 10, 80, "Press Ctrl+C or Ctrl+Alt+F1 to test Hotkey support.",
 			strlen("Press Ctrl+C or Ctrl+Alt+F1 to test Hotkey support."));
           GetClientRect(hWnd, &clr);
           GetWindowRect(hWnd, &wir);
@@ -695,7 +695,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  }
 	  return 0;
 	  break;
-  
+
 	default:
 	  return DefWindowProc(hWnd, msg, wParam, lParam);
 	}

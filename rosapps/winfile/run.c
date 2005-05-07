@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-	
+
 #include <shellapi.h>
 
 #include "main.h"
@@ -37,21 +37,21 @@
 
 
 typedef	void (WINAPI *RUNFILEDLG)(
-						HWND    hwndOwner, 
-						HICON   hIcon, 
-						LPCSTR  lpstrDirectory, 
-						LPCSTR  lpstrTitle, 
+						HWND    hwndOwner,
+						HICON   hIcon,
+						LPCSTR  lpstrDirectory,
+						LPCSTR  lpstrTitle,
 						LPCSTR  lpstrDescription,
-						UINT    uFlags); 
+						UINT    uFlags);
 
 //
 // Flags for RunFileDlg
 //
 
-#define	RFF_NOBROWSE		0x01	// Removes the browse button. 
-#define	RFF_NODEFAULT		0x02	// No default item selected. 
+#define	RFF_NOBROWSE		0x01	// Removes the browse button.
+#define	RFF_NODEFAULT		0x02	// No default item selected.
 #define	RFF_CALCDIRECTORY	0x04	// Calculates the working directory from the file name.
-#define	RFF_NOLABEL			0x08	// Removes the edit box label. 
+#define	RFF_NOLABEL			0x08	// Removes the edit box label.
 #define	RFF_NOSEPARATEMEM	0x20	// Removes the Separate Memory Space check box (Windows NT only).
 
 
@@ -85,27 +85,27 @@ void OnFileRun(void)
 
 /*
 typedef struct _SHELLEXECUTEINFO{
-    DWORD cbSize; 
-    ULONG fMask; 
-    HWND hwnd; 
-    LPCTSTR lpVerb; 
-    LPCTSTR lpFile; 
-    LPCTSTR lpParameters; 
-    LPCTSTR lpDirectory; 
-    int nShow; 
-    HINSTANCE hInstApp; 
- 
-    // Optional members 
-    LPVOID lpIDList; 
-    LPCSTR lpClass; 
-    HKEY hkeyClass; 
-    DWORD dwHotKey; 
+    DWORD cbSize;
+    ULONG fMask;
+    HWND hwnd;
+    LPCTSTR lpVerb;
+    LPCTSTR lpFile;
+    LPCTSTR lpParameters;
+    LPCTSTR lpDirectory;
+    int nShow;
+    HINSTANCE hInstApp;
+
+    // Optional members
+    LPVOID lpIDList;
+    LPCSTR lpClass;
+    HKEY hkeyClass;
+    DWORD dwHotKey;
 	union {
 		HANDLE hIcon;
 		HANDLE hMonitor;
 	};
-    HANDLE hProcess; 
-} SHELLEXECUTEINFO, *LPSHELLEXECUTEINFO; 
+    HANDLE hProcess;
+} SHELLEXECUTEINFO, *LPSHELLEXECUTEINFO;
  */
 
 BOOL OpenTarget(HWND hWnd, TCHAR* target)

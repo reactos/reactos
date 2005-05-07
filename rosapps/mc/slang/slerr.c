@@ -1,7 +1,7 @@
 /* error handling common to all routines. */
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -32,11 +32,11 @@ void SLang_doerror (char *error)
    char *str = NULL;
 
    *err = 0;
-   
+
    str = "Slang/Midnight Commander unknown error";
 
    sprintf(err, "S-Lang Error: %s", str);
-   
+
    if (SLang_Error_Routine == NULL)
      {
 	fputs (err, stderr);

@@ -1,7 +1,7 @@
 /* slutty.c --- Unix Low level terminal (tty) functions for S-Lang */
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -104,27 +104,27 @@ typedef struct termios TTY_Termio_Type;
 static TTY_Termio_Type Old_TTY;
 
 #ifdef HAVE_TERMIOS_H
-static struct 
+static struct
 {
     speed_t key;
     int value;
-} Baud_Rates[] = 
+} Baud_Rates[] =
 {
    {B0, 0},
-   {B50, 50}, 
-   {B75, 75}, 
-   {B110, 110}, 
-   {B134, 134}, 
-   {B150, 150}, 
-   {B200, 200}, 
-   {B300, 300}, 
-   {B600, 600}, 
-   {B1200, 1200}, 
-   {B1800, 1800}, 
-   {B2400, 2400}, 
-   {B4800, 4800}, 
-   {B9600, 9600}, 
-   {B19200, 19200}, 
+   {B50, 50},
+   {B75, 75},
+   {B110, 110},
+   {B134, 134},
+   {B150, 150},
+   {B200, 200},
+   {B300, 300},
+   {B600, 600},
+   {B1200, 1200},
+   {B1800, 1800},
+   {B2400, 2400},
+   {B4800, 4800},
+   {B9600, 9600},
+   {B19200, 19200},
    {B38400, 38400}
 #ifdef B57600
    , {B57600, 57600}
@@ -175,7 +175,7 @@ static int
 speed_t2baud_rate (speed_t s)
 {
     int i;
-    
+
     for (i = 0; i < sizeof (Baud_Rates)/sizeof (Baud_Rates[0]); i++)
 	if (Baud_Rates[i].key == s)
 	    return (Baud_Rates[i].value);
@@ -185,17 +185,17 @@ speed_t2baud_rate (speed_t s)
 int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 {
    TTY_Termio_Type newtty;
-   
+
    SLsig_block_signals ();
-   
-   if (TTY_Inited) 
+
+   if (TTY_Inited)
      {
 	SLsig_unblock_signals ();
 	return 0;
      }
-   
+
    TTY_Open = 0;
-   
+
    if ((SLang_TT_Read_FD == -1)
        || (1 != isatty (SLang_TT_Read_FD)))
      {
@@ -215,14 +215,14 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 #if 0
 /* In the Midnight Commander we bind stderr sometimes to a pipe. If we
    use stderr for terminal input and call SLang_getkey while stderr is
-   bound to a pipe MC will hang completly in SLsys_input_pending. 
+   bound to a pipe MC will hang completly in SLsys_input_pending.
    NOTE: There's an independent fix for this problem in src/slint.c for
-   the case that the Midnight Commander is linked against a shared slang 
+   the case that the Midnight Commander is linked against a shared slang
    library compiled from different sources.
  */
 	     SLang_TT_Read_FD = fileno (stderr);
 	     if (1 != isatty (SLang_TT_Read_FD))
-#endif	     
+#endif
 	       {
 		  SLang_TT_Read_FD = fileno (stdin);
 		  if (1 != isatty (SLang_TT_Read_FD))
@@ -233,10 +233,10 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 	       }
 	  }
      }
-   
+
    SLang_Abort_Char = abort_char;
-   
-   /* Some systems may not permit signals to be blocked.  As a result, the 
+
+   /* Some systems may not permit signals to be blocked.  As a result, the
     * return code must be checked.
     */
    while (-1 == GET_TERMIOS(SLang_TT_Read_FD, &Old_TTY))
@@ -247,7 +247,7 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 	     return -1;
 	  }
      }
-   
+
    while (-1 == GET_TERMIOS(SLang_TT_Read_FD, &newtty))
      {
 	if (errno != EINTR)
@@ -256,7 +256,7 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 	     return -1;
 	  }
      }
-   
+
 #ifndef HAVE_TERMIOS_H
    newtty.s.sg_flags &= ~(ECHO);
    newtty.s.sg_flags &= ~(CRMOD);
@@ -270,9 +270,9 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
    newtty.lt.t_lnextc = 255;
    newtty.s.sg_flags |= CBREAK;		/* do I want cbreak or raw????? */
 #else
-   
+
    /* get baud rate */
-   
+
    /* [not only QNX related !?!]
     * ECHO(0x08) is a c_lflag bit, it means here PARMRK(0x08) in c_iflag!!!
     */
@@ -285,11 +285,11 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 
    if (SLang_TT_Baud_Rate == 0)
      {
-/* Note:  if this generates an compiler error, simply remove 
+/* Note:  if this generates an compiler error, simply remove
    the statement */
 #ifdef HAVE_CFGETOSPEED
 	SLang_TT_Baud_Rate = cfgetospeed (&newtty);
-#endif	
+#endif
 	SLang_TT_Baud_Rate = speed_t2baud_rate (SLang_TT_Baud_Rate);
      }
    if (no_flow_control) newtty.c_iflag &= ~IXON; else newtty.c_iflag |= IXON;
@@ -306,7 +306,7 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
    newtty.c_cc[VSWTCH] = NULL_VALUE;   /* to ignore who knows what */
 #endif
 #endif /* NOT HAVE_TERMIOS_H */
-   
+
    while (-1 == SET_TERMIOS(SLang_TT_Read_FD, &newtty))
      {
 	if (errno != EINTR)
@@ -315,7 +315,7 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 	     return -1;
 	  }
      }
-   
+
    TTY_Inited = 1;
    SLsig_unblock_signals ();
    return 0;
@@ -324,19 +324,19 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
 void SLtty_set_suspend_state (int mode)
 {
    TTY_Termio_Type newtty;
-   
+
    SLsig_block_signals ();
-   
+
    if (TTY_Inited == 0)
      {
 	SLsig_unblock_signals ();
 	return;
      }
-      
+
    while ((-1 == GET_TERMIOS (SLang_TT_Read_FD, &newtty))
 	  && (errno == EINTR))
      ;
-   
+
 #ifndef HAVE_TERMIOS_H
    if (mode == 0) newtty.lt.t_suspc = 255;
    else newtty.lt.t_suspc = Old_TTY.lt.t_suspc;
@@ -344,7 +344,7 @@ void SLtty_set_suspend_state (int mode)
    if (mode == 0) newtty.c_cc[VSUSP] = NULL_VALUE;
    else newtty.c_cc[VSUSP] = Old_TTY.c_cc[VSUSP];
 #endif
-   
+
    while ((-1 == SET_TERMIOS (SLang_TT_Read_FD, &newtty))
 	  && (errno == EINTR))
      ;
@@ -355,27 +355,27 @@ void SLtty_set_suspend_state (int mode)
 void SLang_reset_tty (void)
 {
    SLsig_block_signals ();
-   
+
    if (TTY_Inited == 0)
      {
 	SLsig_unblock_signals ();
 	return;
      }
-   
+
    while ((-1 == SET_TERMIOS(SLang_TT_Read_FD, &Old_TTY))
 	  && (errno == EINTR))
      ;
-   
+
    if (TTY_Open)
      {
 	while ((-1 == close (SLang_TT_Read_FD))
 	       && (errno == EINTR))
 	  ;
-	  
+
 	TTY_Open = 0;
 	SLang_TT_Read_FD = -1;
      }
-   
+
    TTY_Inited = 0;
    SLsig_unblock_signals ();
 }
@@ -383,7 +383,7 @@ void SLang_reset_tty (void)
 static void default_sigint (int sig)
 {
    sig = errno;			       /* use parameter */
-   
+
    SLKeyBoard_Quit = 1;
    if (SLang_Ignore_User_Abort == 0) SLang_Error = USER_BREAK;
    SLsignal_intr (SIGINT, default_sigint);
@@ -393,10 +393,10 @@ static void default_sigint (int sig)
 void SLang_set_abort_signal (void (*hand)(int))
 {
    int save_errno = errno;
-   
+
    if (hand == NULL) hand = default_sigint;
    SLsignal_intr (SIGINT, hand);
-   
+
    errno = save_errno;
 }
 
@@ -418,7 +418,7 @@ int SLsys_input_pending(int tsecs)
    long usecs, secs;
 
    if (TTY_Inited == 0) return -1;
-   
+
    if (tsecs >= 0)
      {
 	secs = tsecs / 10;
@@ -430,13 +430,13 @@ int SLsys_input_pending(int tsecs)
 	secs = tsecs / 1000;
 	usecs = (tsecs % 1000) * 1000;
      }
-   
+
    wait.tv_sec = secs;
    wait.tv_usec = usecs;
 
    FD_ZERO(&Read_FD_Set);
    FD_SET(SLang_TT_Read_FD, &Read_FD_Set);
-   
+
    return select(SLang_TT_Read_FD + 1, &Read_FD_Set, NULL, NULL, &wait);
 }
 
@@ -448,69 +448,69 @@ static int handle_interrupt (void)
    if (SLang_getkey_intr_hook != NULL)
      {
 	int save_tty_fd = SLang_TT_Read_FD;
-   
+
 	if (-1 == (*SLang_getkey_intr_hook) ())
 	  return -1;
-	
+
 	if (save_tty_fd != SLang_TT_Read_FD)
 	  return -1;
      }
-   
+
    return 0;
 }
 
 unsigned int SLsys_getkey (void)
 {
    unsigned char c;
-   
+
    if (TTY_Inited == 0)
      {
 	int ic = fgetc (stdin);
 	if (ic == EOF) return SLANG_GETKEY_ERROR;
 	return (unsigned int) ic;
      }
-   
+
    while (1)
      {
 	int ret;
-	
-	if (SLKeyBoard_Quit) 
+
+	if (SLKeyBoard_Quit)
 	  return SLang_Abort_Char;
-	
+
 	if (0 == (ret = SLsys_input_pending (100)))
 	  continue;
-	
+
 	if (ret != -1)
 	  break;
-	
-	if (SLKeyBoard_Quit) 
+
+	if (SLKeyBoard_Quit)
 	  return SLang_Abort_Char;
-	
+
 	if (errno == EINTR)
 	  {
 	     if (-1 == handle_interrupt ())
 	       return SLANG_GETKEY_ERROR;
-	     
+
 	     continue;
 	  }
-	
+
 	break;			       /* let read handle it */
      }
-   
+
    while (-1 == read(SLang_TT_Read_FD, (char *) &c, 1))
      {
-	if (errno == EINTR) 
+	if (errno == EINTR)
 	  {
 	     if (-1 == handle_interrupt ())
 	       return SLANG_GETKEY_ERROR;
-	     
-	     if (SLKeyBoard_Quit) 
+
+	     if (SLKeyBoard_Quit)
 	       return SLang_Abort_Char;
-	     
+
 	     continue;
 	  }
 #ifdef EAGAIN
-	if (errno == EAGAIN) 
+	if (errno == EAGAIN)
 	  {
 	     sleep (1);
 	     continue;

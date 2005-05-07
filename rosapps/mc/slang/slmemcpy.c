@@ -1,6 +1,6 @@
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -10,7 +10,7 @@
    use system rouines.  For msdos, I use inline assembly. */
 
 /* The current versions only work in the forward direction only!! */
-      
+
 #include "config.h"
 
 #include <stdio.h>
@@ -32,20 +32,20 @@ char *SLmemcpy(char *s1, char *s2, int n)
    asm mov si, bx
    asm mov di, dx
    return(s1);
-   
+
 #else
    register char *smax, *s = s1;
    int n2;
-   
+
    n2 = n % 4;
    smax = s + (n - 4);
-   while (s <= smax) 
+   while (s <= smax)
      {
 	*s = *s2; *(s + 1) = *(s2 + 1); *(s + 2) = *(s2 + 2); *(s + 3) = *(s2 + 3);
 	s += 4;
 	s2 += 4;
      }
    while (n2--) *s++ = *s2++;
-   return(s1); 
+   return(s1);
 #endif
 }

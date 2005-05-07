@@ -5,7 +5,7 @@ LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 const TCHAR* CLASS_NAME = _T("LineTestClass");
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -144,7 +144,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   HDC hDC;
   RECT clr;
   HBRUSH hbr;
-  
+
   switch(msg)
   {
   case WM_PAINT:
@@ -169,11 +169,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     DrawLines(hDC);
     EndPaint(hWnd, &ps);
     break;
-    
+
   case WM_DESTROY:
     PostQuitMessage(0);
     break;
-    
+
   default:
     return DefWindowProc(hWnd, msg, wParam, lParam);
   }

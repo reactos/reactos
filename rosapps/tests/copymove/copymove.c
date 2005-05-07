@@ -45,15 +45,15 @@ CreateTestFile(LPCTSTR filename, DWORD attributes)
 	DWORD wrote;
 	int c;
 
-	DeleteTestFile(filename);   
-	file = CreateFile(filename, 
-	                  GENERIC_READ | GENERIC_WRITE, 
-	                  0, 
-	                  NULL, 
-	                  CREATE_ALWAYS, 
-	                  0, 
+	DeleteTestFile(filename);
+	file = CreateFile(filename,
+	                  GENERIC_READ | GENERIC_WRITE,
+	                  0,
+	                  NULL,
+	                  CREATE_ALWAYS,
+	                  0,
 	                  0);
-   
+
 	if (INVALID_HANDLE_VALUE == file) {
 		fprintf(stderr, "CreateFile failed with code %lu\n", GetLastError());
 		exit(1);
@@ -126,7 +126,7 @@ CheckTestFile(LPCTSTR filename, DWORD attributes)
 	}
 
 	CloseHandle(file);
-	
+
 	diskattr = GetFileAttributes(filename);
 	if (INVALID_FILE_ATTRIBUTES == diskattr) {
 		fprintf(stderr, "GetFileAttributes failed with code %lu\n", GetLastError());

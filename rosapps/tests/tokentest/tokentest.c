@@ -111,7 +111,7 @@ ZwCreateToken(
 
 #define INITIAL_PRIV_ENABLED SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED
 #define INITIAL_PRIV_DISABLED 0
-LUID_AND_ATTRIBUTES InitialPrivilegeSet[] = 
+LUID_AND_ATTRIBUTES InitialPrivilegeSet[] =
 {
 	{ { 0x00000007, 0x00000000 }, INITIAL_PRIV_ENABLED  },	// SeTcbPrivilege
 	{ { 0x00000002, 0x00000000 }, INITIAL_PRIV_DISABLED },	// SeCreateTokenPrivilege
@@ -286,7 +286,7 @@ GetFromToken(HANDLE hToken, TOKEN_INFORMATION_CLASS tic)
 		free(p);
 		return 0;
 	}
-	
+
 	return p;
 }
 

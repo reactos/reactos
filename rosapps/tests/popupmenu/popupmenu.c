@@ -5,7 +5,7 @@
 
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -77,11 +77,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
       POINT pos;
       HMENU Menu;
-      
+
       pos.x = LOWORD(lParam);
       pos.y = HIWORD(lParam);
       ClientToScreen(hWnd, &pos);
-      
+
       if((Menu = GetMenu(hWnd)) && (Menu = GetSubMenu(Menu, 1)))
       {
         TrackPopupMenu(Menu, 0, pos.x, pos.y, 0, hWnd, NULL);

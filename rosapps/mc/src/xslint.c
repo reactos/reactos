@@ -1,16 +1,16 @@
 /* Routines expected by the Midnight Commander
-   
+
    Copyright (C) 1999 The Free Software Foundation.
 
    Author Miguel de Icaza
 
    FIXME: This expects the user to always use slang instead of ncurses.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -32,7 +32,7 @@ interrupts_enabled (void) { return 0; }
 
 void
 enable_interrupt_key(void) {}
-   
+
 void
 disable_interrupt_key(void) {}
 

@@ -1,6 +1,6 @@
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -235,10 +235,10 @@ unsigned int SLsys_getkey ()
 {
    unsigned int c;
    unsigned char scan;
-   
+
    int tsecs = 300;
-   
-   if (!keyWaiting()) 
+
+   if (!keyWaiting())
      while (!SLsys_input_pending(tsecs));
 
    /* read codes from buffer */

@@ -1,11 +1,11 @@
 /* Dialog managing.
    Copyright (C) 1994 Miguel de Icaza.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -35,7 +35,7 @@
 #include "dlg.h"		/* draw_box, yes I know, it's silly */
 #include "background.h"		/* we_are_background definition */
 
-/* "$Id: dialog.c,v 1.1 2001/12/30 09:55:26 sedwards Exp $" */
+/* "$Id$" */
 
 Refresh *refresh_list = 0;
 
@@ -54,7 +54,7 @@ void push_refresh (void (*new_refresh)(void *), void *parameter, int flags)
 void pop_refresh (void)
 {
     Refresh *old;
-    
+
     if (!refresh_list)
 	fprintf (stderr, _("\n\n\nrefresh stack underflow!\n\n\n"));
     else {
@@ -71,7 +71,7 @@ static void do_complete_refresh (Refresh *refresh_list)
 
     if (refresh_list->flags != REFRESH_COVERS_ALL)
 	do_complete_refresh (refresh_list->next);
-    
+
     (*(refresh_list->refresh_fn))(refresh_list->parameter);
 }
 
@@ -99,7 +99,7 @@ void my_wputs (int y, int x, char *text)
     while ((p = *text++) != 0){
 	if (p == '\n')
 	    move (++y, x);
-	else 
+	else
 	    addch ((unsigned char)p);
     }
 }

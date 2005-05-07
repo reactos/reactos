@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include <windowsx.h>
 #include "main.h"
 #include "listview.h"
@@ -54,20 +54,20 @@ static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_RIGHT, LVC
 //
 
 static void AddEntryToList(HWND hwndLV, int idx, Entry* entry)
-{ 
+{
     LVITEM item;
 
-    item.mask = LVIF_TEXT | LVIF_PARAM; 
-    item.iItem = 0;//idx; 
-    item.iSubItem = 0; 
-    item.state = 0; 
-    item.stateMask = 0; 
-//    item.pszText = entry->data.cFileName; 
-//    item.cchTextMax = strlen(entry->data.cFileName); 
-    item.pszText = LPSTR_TEXTCALLBACK; 
-    item.cchTextMax = 0; 
-    item.iImage = 0; 
-//    item.iImage = I_IMAGECALLBACK; 
+    item.mask = LVIF_TEXT | LVIF_PARAM;
+    item.iItem = 0;//idx;
+    item.iSubItem = 0;
+    item.state = 0;
+    item.stateMask = 0;
+//    item.pszText = entry->data.cFileName;
+//    item.cchTextMax = strlen(entry->data.cFileName);
+    item.pszText = LPSTR_TEXTCALLBACK;
+    item.cchTextMax = 0;
+    item.iImage = 0;
+//    item.iImage = I_IMAGECALLBACK;
     item.lParam = (LPARAM)entry;
 #if (_WIN32_IE >= 0x0300)
     item.iIndent = 0;
@@ -89,7 +89,7 @@ static void InsertListEntries(HWND hWnd, Entry* entry, int idx)
     	if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	    	continue;
 #endif
-        AddEntryToList(hWnd, idx, entry); 
+        AddEntryToList(hWnd, idx, entry);
         ++idx;
     }
     ShowWindow(hWnd, SW_SHOW);
@@ -100,7 +100,7 @@ static void CreateListColumns(HWND hWndListView)
     TCHAR szText[50];
     int index;
     LV_COLUMN lvC;
- 
+
     // Create columns.
     lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
     lvC.pszText = szText;
@@ -118,7 +118,7 @@ static void CreateListColumns(HWND hWndListView)
     }
 }
 
-// OnGetDispInfo - processes the LVN_GETDISPINFO notification message. 
+// OnGetDispInfo - processes the LVN_GETDISPINFO notification message.
 static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 {
     SYSTEMTIME SystemTime;
@@ -130,8 +130,8 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
     plvdi->item.pszText = NULL;
     switch (plvdi->item.iSubItem) {
     case 0:
-        plvdi->item.pszText = entry->data.cFileName; 
-//    item.cchTextMax = strlen(entry->data.cFileName); 
+        plvdi->item.pszText = entry->data.cFileName;
+//    item.cchTextMax = strlen(entry->data.cFileName);
 //        plvdi->item.pszText = rgPetInfo[plvdi->item.iItem].szKind;
         break;
     case 1:
@@ -149,7 +149,7 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
             //entry->bhfi.nFileSizeHigh;
             //entry->bhfi.ftCreationTime
             wsprintf(buffer, _T("%u"), entry->bhfi.nFileSizeLow);
-            if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, buffer, &numFmt, 
+            if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, buffer, &numFmt,
                     buffer + sizeof(buffer)/2, sizeof(buffer)/2)) {
                 plvdi->item.pszText = buffer + sizeof(buffer)/2;
             } else {
@@ -203,40 +203,40 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         plvdi->item.pszText = buffer;
         break;
     }
-} 
+}
 /*
-FILE_ATTRIBUTE_ARCHIVE The file or directory is an archive file. Applications use this attribute to mark files for backup or removal. 
-FILE_ATTRIBUTE_COMPRESSED The file or directory is compressed. For a file, this means that all of the data in the file is compressed. For a directory, this means that compression is the default for newly created files and subdirectories. 
-FILE_ATTRIBUTE_DIRECTORY The handle identifies a directory. 
-FILE_ATTRIBUTE_ENCRYPTED The file or directory is encrypted. For a file, this means that all data in the file is encrypted. For a directory, this means that encryption is the default for newly created files and subdirectories. 
-FILE_ATTRIBUTE_HIDDEN The file or directory is hidden. It is not included in an ordinary directory listing. 
-FILE_ATTRIBUTE_NORMAL The file has no other attributes. This attribute is valid only if used alone. 
-FILE_ATTRIBUTE_OFFLINE The file data is not immediately available. This attribute indicates that the file data has been physically moved to offline storage. This attribute is used by Remote Storage, the hierarchical storage management software in Windows 2000. Applications should not arbitrarily change this attribute. 
-FILE_ATTRIBUTE_READONLY The file or directory is read-only. Applications can read the file but cannot write to it or delete it. In the case of a directory, applications cannot delete it. 
-FILE_ATTRIBUTE_REPARSE_POINT The file has an associated reparse point. 
-FILE_ATTRIBUTE_SPARSE_FILE The file is a sparse file. 
-FILE_ATTRIBUTE_SYSTEM The file or directory is part of the operating system or is used exclusively by the operating system. 
+FILE_ATTRIBUTE_ARCHIVE The file or directory is an archive file. Applications use this attribute to mark files for backup or removal.
+FILE_ATTRIBUTE_COMPRESSED The file or directory is compressed. For a file, this means that all of the data in the file is compressed. For a directory, this means that compression is the default for newly created files and subdirectories.
+FILE_ATTRIBUTE_DIRECTORY The handle identifies a directory.
+FILE_ATTRIBUTE_ENCRYPTED The file or directory is encrypted. For a file, this means that all data in the file is encrypted. For a directory, this means that encryption is the default for newly created files and subdirectories.
+FILE_ATTRIBUTE_HIDDEN The file or directory is hidden. It is not included in an ordinary directory listing.
+FILE_ATTRIBUTE_NORMAL The file has no other attributes. This attribute is valid only if used alone.
+FILE_ATTRIBUTE_OFFLINE The file data is not immediately available. This attribute indicates that the file data has been physically moved to offline storage. This attribute is used by Remote Storage, the hierarchical storage management software in Windows 2000. Applications should not arbitrarily change this attribute.
+FILE_ATTRIBUTE_READONLY The file or directory is read-only. Applications can read the file but cannot write to it or delete it. In the case of a directory, applications cannot delete it.
+FILE_ATTRIBUTE_REPARSE_POINT The file has an associated reparse point.
+FILE_ATTRIBUTE_SPARSE_FILE The file is a sparse file.
+FILE_ATTRIBUTE_SYSTEM The file or directory is part of the operating system or is used exclusively by the operating system.
 FILE_ATTRIBUTE_TEMPORARY The file is being used for temporary storage. File systems attempt to keep all the data in memory for quicker access, rather than flushing the data back to mass storage. A temporary file should be deleted by the application as soon as it is no longer needed.
  */
 
 
- // OnEndLabelEdit - processes the LVN_ENDLABELEDIT 
- // notification message. 
- // Returns TRUE if the label is changed, or FALSE otherwise. 
+ // OnEndLabelEdit - processes the LVN_ENDLABELEDIT
+ // notification message.
+ // Returns TRUE if the label is changed, or FALSE otherwise.
 
 static BOOL OnEndLabelEdit(NMLVDISPINFO* plvdi)
-{ 
-    if (plvdi->item.iItem == -1) 
-        return FALSE; 
- 
-    // Copy the new label text to the application-defined structure. 
+{
+    if (plvdi->item.iItem == -1)
+        return FALSE;
+
+    // Copy the new label text to the application-defined structure.
 //    lstrcpyn(rgPetInfo[plvdi->item.iItem].szKind, plvdi->item.pszText, 10);
-    
+
     return TRUE;
     // To make a more robust application you should send an EM_LIMITTEXT
     // message to the edit control to prevent the user from entering too
-    // many characters in the field. 
-} 
+    // many characters in the field.
+}
 
 static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
@@ -368,27 +368,27 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 	case WM_DISPATCH_COMMAND:
 		return _CmdWndProc(hWnd, message, wParam, lParam);
     case WM_NOTIFY:
-        switch (((LPNMHDR)lParam)->code) { 
-        case LVN_GETDISPINFO: 
-            OnGetDispInfo((NMLVDISPINFO*)lParam); 
+        switch (((LPNMHDR)lParam)->code) {
+        case LVN_GETDISPINFO:
+            OnGetDispInfo((NMLVDISPINFO*)lParam);
             return 0;
         case NM_DBLCLK:
             {
             NMITEMACTIVATE* nmitem = (LPNMITEMACTIVATE)lParam;
             LVHITTESTINFO info;
 
-            if (nmitem->hdr.hwndFrom != hWnd) break; 
-//            if (nmitem->hdr.idFrom != IDW_LISTVIEW) break; 
-//            if (nmitem->hdr.code != ???) break; 
+            if (nmitem->hdr.hwndFrom != hWnd) break;
+//            if (nmitem->hdr.idFrom != IDW_LISTVIEW) break;
+//            if (nmitem->hdr.code != ???) break;
 #ifdef _MSC_VER
             switch (nmitem->uKeyFlags) {
-            case LVKF_ALT:     //  The ALT key is pressed.  
+            case LVKF_ALT:     //  The ALT key is pressed.
                 // properties dialog box ?
                 break;
             case LVKF_CONTROL: //  The CTRL key is pressed.
                 // run dialog box for providing parameters...
                 break;
-            case LVKF_SHIFT:   //  The SHIFT key is pressed.   
+            case LVKF_SHIFT:   //  The SHIFT key is pressed.
                 break;
             }
 #endif
@@ -405,7 +405,7 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             }
             }
             return 0;
-        case LVN_ENDLABELEDIT: 
+        case LVN_ENDLABELEDIT:
             return OnEndLabelEdit((NMLVDISPINFO*)lParam);
         }
 		break;
@@ -428,23 +428,23 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
 void CreateListWnd(HWND parent, Pane* pane, int id, LPTSTR lpszPathName)
 {
-    RECT rcClient;  // dimensions of client area 
+    RECT rcClient;  // dimensions of client area
 	Entry* entry = pane->root;
 
 //	pane->treePane = 0;
 
-    GetClientRect(parent, &rcClient); 
-    pane->hWnd = CreateWindowEx(0, WC_LISTVIEW, _T("List View"), 
-        WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT/* | LVS_NOCOLUMNHEADER*/, 
-        0, 0, rcClient.right, rcClient.bottom, 
-        parent, (HMENU)id, hInst, NULL); 
-    // Initialize the image list, and add items to the control. 
+    GetClientRect(parent, &rcClient);
+    pane->hWnd = CreateWindowEx(0, WC_LISTVIEW, _T("List View"),
+        WS_VISIBLE | WS_CHILD | WS_BORDER | LVS_REPORT/* | LVS_NOCOLUMNHEADER*/,
+        0, 0, rcClient.right, rcClient.bottom,
+        parent, (HMENU)id, hInst, NULL);
+    // Initialize the image list, and add items to the control.
 /*
-    if (!InitListViewImageLists(pane->hWnd) || 
-            !InitListViewItems(pane->hWnd, lpszPathName)) { 
-        DestroyWindow(pane->hWnd); 
-        return FALSE; 
-    } 
+    if (!InitListViewImageLists(pane->hWnd) ||
+            !InitListViewItems(pane->hWnd, lpszPathName)) {
+        DestroyWindow(pane->hWnd);
+        return FALSE;
+    }
  */
     ListView_SetExtendedListViewStyle(pane->hWnd,  LVS_EX_FULLROWSELECT);
     CreateListColumns(pane->hWnd);
@@ -460,28 +460,28 @@ void CreateListWnd(HWND parent, Pane* pane, int id, LPTSTR lpszPathName)
 }
 
 HWND CreateListView(HWND hwndParent, ChildWnd* pChildWnd, int id)
-{ 
+{
     RECT rcClient;
     HWND hwndLV;
- 
-    // Get the dimensions of the parent window's client area, and create the list view control. 
-    GetClientRect(hwndParent, &rcClient); 
-    hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"), 
-        WS_VISIBLE | WS_CHILD | LVS_REPORT, 
-        0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)id, hInst, NULL); 
+
+    // Get the dimensions of the parent window's client area, and create the list view control.
+    GetClientRect(hwndParent, &rcClient);
+    hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"),
+        WS_VISIBLE | WS_CHILD | LVS_REPORT,
+        0, 0, rcClient.right, rcClient.bottom,
+        hwndParent, (HMENU)id, hInst, NULL);
     ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
- 
-    // Initialize the image list, and add items to the control. 
+
+    // Initialize the image list, and add items to the control.
 /*
-    if (!InitListViewImageLists(hwndLV) || 
-            !InitListViewItems(hwndLV, szName)) { 
-        DestroyWindow(hwndLV); 
-        return FALSE; 
-    } 
+    if (!InitListViewImageLists(hwndLV) ||
+            !InitListViewItems(hwndLV, szName)) {
+        DestroyWindow(hwndLV);
+        return FALSE;
+    }
  */
     CreateListColumns(hwndLV);
 	g_orgListWndProc = SubclassWindow(hwndLV, ListWndProc);
     return hwndLV;
-} 
+}
 

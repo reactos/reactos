@@ -103,7 +103,7 @@ SSendtoByName(int sfd, const char *const buf, size_t size, int fl, const char *c
 				/* ready */
 				break;
 			} else if (result == 0) {
-				/* timeout */		
+				/* timeout */
 				errno = ETIMEDOUT;
 				return (kTimeoutErr);
 			} else if (errno != EINTR) {

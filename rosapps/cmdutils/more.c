@@ -1,10 +1,10 @@
-/* 
+/*
  * MORE.C - external command.
  *
  * clone from 4nt more command
  *
  * 26 Sep 1999 - Paolo Pantaleo <paolopan@freemail.it>
- *     started 
+ *     started
  * Oct 2003 - Timothy Schepens <tischepe at fastmail dot fm>
  *     use window size instead of buffer size.
  */

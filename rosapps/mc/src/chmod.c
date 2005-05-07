@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -91,7 +91,7 @@ struct {
     char *text;
     int selected;
     WCheck *check;
-} check_perm[PERMISSIONS] = 
+} check_perm[PERMISSIONS] =
 {
     { S_IXOTH, N_("execute/search by others"), 0, 0, },
     { S_IWOTH, N_("write by others"), 0, 0, },
@@ -110,7 +110,7 @@ struct {
 struct {
     int ret_cmd, flags, y, x;
     char *text;
-} chmod_but[BUTTONS] = 
+} chmod_but[BUTTONS] =
 {
     { B_CANCEL, NORMAL_BUTTON,  2, 33, N_("&Cancel") },
     { B_ENTER,  DEFPUSH_BUTTON, 2, 17, N_("&Set") },
@@ -126,7 +126,7 @@ static void chmod_toggle_select (void)
 #ifdef HAVE_TK
     char *wn = (char *) ch_dlg->current->widget->wdata;
     int  id = ch_dlg->current->dlg_id -BUTTONS + single_set * 2;
-    
+
     check_perm [id].selected ^= 1;
 
     tk_evalf ("%s configure -color $setup(%s)",
@@ -151,7 +151,7 @@ static void chmod_refresh (void)
 {
     attrset (COLOR_NORMAL);
     dlg_erase (ch_dlg);
-    
+
     draw_box (ch_dlg, 1, 2, 20 - single_set, 66);
     draw_box (ch_dlg, PY, PX, PERMISSIONS + 2, 33);
     draw_box (ch_dlg, FY, FX, 10, 25);
@@ -164,7 +164,7 @@ static void chmod_refresh (void)
     addstr (_("Owner name"));
     dlg_move (ch_dlg, FY + 7, FX + 2);
     addstr (_("Group name"));
-    
+
     attrset (title_color);
     dlg_move (ch_dlg, 1, 28);
     addstr (_(" Chmod command "));
@@ -172,7 +172,7 @@ static void chmod_refresh (void)
     addstr (_(" Permission "));
     dlg_move (ch_dlg, FY, FX + 1);
     addstr (_(" File "));
-    
+
     attrset (selection_color);
 
     dlg_move (ch_dlg, TY, TX);
@@ -189,7 +189,7 @@ static void chmod_refresh (void)
 static int chmod_callback (Dlg_head *h, int Par, int Msg)
 {
     char buffer [10];
-    
+
     switch (Msg) {
     case DLG_ACTION:
 	if (Par >= BUTTONS - single_set * 2){
@@ -236,10 +236,10 @@ static void init_chmod (void)
 	title_color  = SELECTED_COLOR;
 	selection_color = SELECTED_COLOR;
     }
-    
+
     ch_dlg = create_dlg (0, 0, 22 - single_set, 70, dialog_colors,
 			 chmod_callback, "[Chmod]", "chmod", DLG_CENTER);
-			 
+
     x_set_dialog_title (ch_dlg, _("Chmod command"));
 
 #define XTRACT(i) BY+chmod_but[i].y-single_set, BX+chmod_but[i].x, \
@@ -347,7 +347,7 @@ void chmod_cmd (void)
 	    destroy_dlg (ch_dlg);
 	    break;
 	}
-	
+
 	c_stat = sf_stat.st_mode;
 	mode_change = 0;	/* clear changes flag */
 
@@ -369,9 +369,9 @@ void chmod_cmd (void)
 	statl = label_new (FY+4, FX+2, buffer, NULL);
 	add_widget (ch_dlg, statl);
 	tk_end_frame ();
-	
+
 	run_dlg (ch_dlg);	/* retrieve an action */
-	
+
 	/* do action */
 	switch (ch_dlg->ret_value){
 	case B_ENTER:
@@ -381,11 +381,11 @@ void chmod_cmd (void)
 	 		 fname, unix_error_string (errno));
 	    need_update = 1;
 	    break;
-	    
+
 	case B_CANCEL:
 	    end_chmod = 1;
 	    break;
-	    
+
 	case B_ALL:
 	case B_MARKED:
 	    and_mask = or_mask = 0;
@@ -401,7 +401,7 @@ void chmod_cmd (void)
 
 	    apply_mask (&sf_stat);
 	    break;
-	    
+
 	case B_SETMRK:
 	    and_mask = or_mask = 0;
 	    and_mask = ~and_mask;

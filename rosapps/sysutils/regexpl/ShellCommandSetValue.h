@@ -1,4 +1,4 @@
-/* $Id: ShellCommandSetValue.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommandSetValue.h: interface for the CShellCommandSetValue class.
 //
@@ -10,7 +10,7 @@
 #include "ShellCommand.h"
 #include "RegistryTree.h"
 
-class CShellCommandSetValue : public CShellCommand  
+class CShellCommandSetValue : public CShellCommand
 {
 public:
 	CShellCommandSetValue(CRegistryTree& rTree);

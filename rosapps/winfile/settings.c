@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include "main.h"
 #include "settings.h"
 

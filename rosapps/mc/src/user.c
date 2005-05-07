@@ -1,11 +1,11 @@
 /* User Menu implementation
    Copyright (C) 1994 Miguel de Icaza, Janne Kukonlehto
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -46,7 +46,7 @@
 
 #include "view.h" /* for default_* externs */
 
-/* "$Id: user.c,v 1.1 2001/12/30 09:55:20 sedwards Exp $" */
+/* "$Id$" */
 
 #define MAX_ENTRIES 40
 #define MAX_ENTRY_LEN 60
@@ -73,7 +73,7 @@ extern char *search_string (char *, char *);
        ascii, hex, nroff, unformated and
 
    If the format letter is in uppercase, it refers to the other panel.
-   
+
    With a number followed the % character you can turn quoting on (default)
    and off. For example:
        %f    quote expanded macro
@@ -103,7 +103,7 @@ int check_format_view (char *p)
     	    	} else if (!strncmp (q, "unformated", 10)){
     	    	    default_nroff_flag = 0;
     	    	    q += 9;
-    	    	} 
+    	    	}
     	    }
     	    if (*q == '}')
     	    	q++;
@@ -130,7 +130,7 @@ int check_format_var (char *p, char **v)
     char *var_name;
     char *value;
     char *dots;
-    
+
     *v = 0;
     dots = 0;
     if (!strncmp (p, "var{", 4)){
@@ -149,7 +149,7 @@ int check_format_var (char *p, char **v)
 		     :       " The %%var macros does not have a variable " );
 	    return 0;
 	}
-	
+
 	/* Copy the variable name */
 	var_name = xmalloc (dots - p, "check_format_var");
 	strncpy (var_name, p+4, dots-2 - (p+3));
@@ -188,7 +188,7 @@ char *expand_format (char c, int quote)
 {
     WPanel *panel;
     char *(*quote_func)(const char *, int);
-    
+
     if (quote)
 	quote_func = name_quote;
     else
@@ -196,7 +196,7 @@ char *expand_format (char c, int quote)
 
     if (c == '%')
 	return strdup ("%");
-    
+
     if (islower (c))
 	panel = cpanel;
     else {
@@ -209,9 +209,9 @@ char *expand_format (char c, int quote)
 	panel = cpanel;
 
     c = tolower (c);
-    
+
     switch (c){
-    case 'f': 
+    case 'f':
     case 'p': return (*quote_func) (panel->dir.list [panel->selected].fname, 0);
     case 'b':
 	return strip_ext((*quote_func) (panel->dir.list [panel->selected].fname, 0));
@@ -227,7 +227,7 @@ char *expand_format (char c, int quote)
     {
 	int length = 2, i;
 	char *block, *tmp;
-	
+
 	for (i = 0; i < panel->count; i++)
 	    if (panel->dir.list [i].f.marked)
 		length += strlen (panel->dir.list [i].fname) + 1;
@@ -476,7 +476,7 @@ static char *test_line (char *p, int *result)
 	} /* switch */
 	/* Add one debug statement */
 	debug_out (&operator, NULL, *result);
-	
+
     } /* while (*p != '\n') */
     /* Report debug message */
     debug_out (NULL, NULL, 1);
@@ -516,7 +516,7 @@ void execute_menu_command (char *s)
 	return;
     }
     commands++;
-    
+
     for (col = 0; *commands; commands++){
 	if (col == 0 && (*commands != ' ' && *commands != '\t'))
 	    break;
@@ -558,7 +558,7 @@ void execute_menu_command (char *s)
 	    if (isdigit (*commands)) {
 		do_quote = atoi (commands);
 		for ( ; isdigit (*commands); commands++)
-		    ;	    
+		    ;
 	    }
 	    if (*commands == '{')
 		parameter_found = 1;
@@ -581,11 +581,11 @@ void execute_menu_command (char *s)
     unlink (file_name);
 }
 
-/* 
+/*
 **	Check owner of the menu file. Using menu file is allowed, if
 **	owner of the menu is root or the actual user. In either case
 **	file should not be group and word-writable.
-**	
+**
 **	Q. Should we apply this routine to system and home menu (and .ext files)?
 */
 static int
@@ -620,13 +620,13 @@ void user_menu_cmd (void)
     int  col, i, accept_entry = 1;
     int  selected, old_patterns;
     Listbox *listbox;
-    
+
     if (!vfs_current_is_local ()){
 	message (1, _(" Oops... "),
 		 _(" I can't run programs while logged on a non local directory "));
 	return;
     }
-    
+
     menu = strdup (MC_LOCAL_MENU);
     if (!exist_file (menu) || !menu_file_own (menu)){
 	free (menu);
@@ -644,7 +644,7 @@ void user_menu_cmd (void)
 	return;
     }
     free (menu);
-    
+
     max_cols = 0;
     for (i = 0; i < MAX_ENTRIES; i++)
 	entries [i] = 0;
@@ -662,7 +662,7 @@ void user_menu_cmd (void)
 		if (*(p+1) == '='){
 		    /* Combined adding and default */
 		    char *q = p++;
-		    
+
 		    p = test_line (q, &accept_entry);
 		    if (selected == 0 && accept_entry)
 			selected = menu_lines;
@@ -712,7 +712,7 @@ void user_menu_cmd (void)
     /* Create listbox */
     listbox = create_listbox_window (max_cols+2, menu_lines, _(" User menu "),
 				     "[Menu File Edit]");
-    
+
     /* insert all the items found */
     for (i = 0; i < menu_lines; i++)
 	LISTBOX_APPEND_TEXT (listbox, entries [i][0],
@@ -722,7 +722,7 @@ void user_menu_cmd (void)
 
     /* Select the default entry */
     listbox_select_by_number (listbox->list, selected);
-    
+
     selected = run_listbox (listbox);
     if (selected >= 0)
 	execute_menu_command (entries [selected]);

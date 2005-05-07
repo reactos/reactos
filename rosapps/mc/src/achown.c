@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -163,7 +163,7 @@ static umode_t get_perm (char *s, int base)
 
     m |= (s [1] == '-') ? 0 :
 	((s[1] == '+') ? (1 << (base + 1)) : (1 << (base + 1)) & ch_cmode);
-    
+
     m |= (s [2] == '-') ? 0 :
 	((s[2] == '+') ? (1 << base) : (1 << base) & ch_cmode);
 
@@ -192,12 +192,12 @@ static void print_flags (void)
 	dlg_move (ch_dlg, BY+1, 9+i);
 	addch (ch_flags [i]);
     }
-    
+
     for (i = 0; i < 3; i++){
 	dlg_move (ch_dlg, BY + 1, 17 + i);
 	addch (ch_flags [i+3]);
     }
-    
+
     for (i = 0; i < 3; i++){
 	dlg_move (ch_dlg, BY + 1, 25 + i);
 	addch (ch_flags [i+6]);
@@ -239,7 +239,7 @@ static int chl_callback (Dlg_head * h, int Par, int Msg)
 	dlg_erase (h);
 	draw_box (h, 0, 0, 13, 17);
 	break;
-	
+
     case DLG_KEY:
 	switch (Par) {
 	case KEY_LEFT:
@@ -259,20 +259,20 @@ static void do_enter_key (Dlg_head *h, int f_pos)
     struct   group *chl_grp;
     WLEntry  *fe;
     int      lxx, lyy, chl_end, b_pos;
-    
+
     do {
 	lxx = (COLS - 74) / 2 + ((f_pos == 3) ? 35 : 53);
 	lyy = (LINES - 13) / 2;
 	chl_end = 0;
-	
+
 	chl_dlg = create_dlg (lyy, lxx, 13, 17, dialog_colors, chl_callback,
 			      "[Chown-advanced]", "achown_enter", DLG_NONE);
-	
+
 	/* get new listboxes */
 	chl_list = listbox_new (1, 1, 15, 11, 0, l_call, NULL);
-	
+
 	listbox_add_item (chl_list, 0, 0, "<Unknown>", NULL);
-	
+
 	if (f_pos == 3) {
 	    /* get and put user names in the listbox */
 	    setpwent ();
@@ -284,22 +284,22 @@ static void do_enter_key (Dlg_head *h, int f_pos)
 	else
 	{
 	    /* get and put group names in the listbox */
-	    setgrent ();	
+	    setgrent ();
 	    while ((chl_grp = getgrent ())) {
 		listbox_add_item (chl_list, 0, 0, chl_grp->gr_name, NULL);
 	    }
 	    endgrent ();
 	    fe = listbox_search_text (chl_list, get_group (sf_stat->st_gid));
 	}
-	
+
 	if (fe)
 	    listbox_select_entry (chl_list, fe);
-	
+
 	b_pos = chl_list->pos;
 	add_widget (chl_dlg, chl_list);
-	
+
 	run_dlg (chl_dlg);
-	
+
 	if (b_pos != chl_list->pos){
 	    int ok = 0;
 	    if (f_pos == 3){
@@ -352,19 +352,19 @@ static void chown_refresh (void)
     addstr (_("group"));
     dlg_move (ch_dlg, BY - 1, 24);
     addstr (_("other"));
-    
+
     dlg_move (ch_dlg, BY - 1, 35);
     addstr (_("owner"));
     dlg_move (ch_dlg, BY - 1, 53);
     addstr (_("group"));
-    
+
     dlg_move (ch_dlg, 3, 4);
     addstr (_("On"));
     dlg_move (ch_dlg, BY + 1, 4);
     addstr (_("Flag"));
     dlg_move (ch_dlg, BY + 2, 4);
     addstr (_("Mode"));
-    
+
 
     if (!single_set){
 	dlg_move (ch_dlg, 3, 54);
@@ -383,13 +383,13 @@ static void chown_info_update ()
 {
     /* display file info */
     attrset (COLOR_NORMAL);
-    
+
     /* name && mode */
     dlg_move (ch_dlg, 3, 8);
     printw ("%s", name_trunc (fname, 45));
     dlg_move (ch_dlg, BY + 2, 9);
     printw ("%12o", get_mode ());
-    
+
     /* permissions */
     set_perm (b_att[0]->text, sf_stat->st_mode >> 6);
     set_perm (b_att[1]->text, sf_stat->st_mode >> 3);
@@ -412,7 +412,7 @@ static int advanced_chown_callback (Dlg_head * h, int Par, int Msg)
 	chown_refresh ();
 	chown_info_update ();
 	return 1;
-	
+
     case DLG_POST_KEY:
 	if (f_pos < 3)
 		b_setpos (f_pos);
@@ -429,37 +429,37 @@ static int advanced_chown_callback (Dlg_head * h, int Par, int Msg)
 
     case DLG_KEY:
 	switch (Par) {
-	    
+
 	case XCTRL('b'):
 	case KEY_LEFT:
 	    if (f_pos < 5)
 		return (dec_flag_pos (f_pos));
 	    break;
-	    
+
 	case XCTRL('f'):
 	case KEY_RIGHT:
 	    if (f_pos < 5)
 		return (inc_flag_pos (f_pos));
 	    break;
-	    
+
 	case ' ':
 	    if (f_pos < 3)
 		return 1;
 	    break;
-	    
+
 	case '\n':
 	case KEY_ENTER:
 	    if (f_pos <= 2 || f_pos >= 5)
 		break;
 	    do_enter_key (h, f_pos);
 	    return 1;
-	    
+
 	case ALT ('x'):
 	    i++;
-	    
+
 	case ALT ('w'):
 	    i++;
-	    
+
 	case ALT ('r'):
 	    Par = i + 3;
 	    for (i = 0; i < 3; i++)
@@ -469,13 +469,13 @@ static int advanced_chown_callback (Dlg_head * h, int Par, int Msg)
 	    dlg_broadcast_msg (h, WIDGET_DRAW, 0);
 	    send_message (h, h->current->widget, WIDGET_FOCUS, 0);
 	    break;
-	    
+
 	case XCTRL ('x'):
 	    i++;
-	    
+
 	case XCTRL ('w'):
 	    i++;
-	    
+
 	case XCTRL ('r'):
 	    Par = i;
 	    for (i = 0; i < 3; i++)
@@ -485,13 +485,13 @@ static int advanced_chown_callback (Dlg_head * h, int Par, int Msg)
 	    dlg_broadcast_msg (h, WIDGET_DRAW, 0);
 	    send_message (h, h->current->widget, WIDGET_FOCUS, 0);
 	    break;
-	    
+
 	case 'x':
 	    i++;
-	    
+
 	case 'w':
 	    i++;
-	    
+
 	case 'r':
 	    if (f_pos > 2)
 		break;
@@ -505,10 +505,10 @@ static int advanced_chown_callback (Dlg_head * h, int Par, int Msg)
 
 	case '4':
 	    i++;
-	    
+
 	case '2':
 	    i++;
-	    
+
 	case '1':
 	    if (f_pos > 2)
 		break;
@@ -516,15 +516,15 @@ static int advanced_chown_callback (Dlg_head * h, int Par, int Msg)
 	    ch_flags[flag_pos] = '=';
 	    update_mode (h);
 	    break;
-	    
+
 	case '-':
 	    if (f_pos > 2)
 		break;
-	    
+
 	case '*':
 	    if (Par == '*')
 		Par = '=';
-	    
+
 	case '=':
 	case '+':
 	    if (f_pos > 4)

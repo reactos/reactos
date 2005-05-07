@@ -2,7 +2,7 @@
    need.  Use slang.h for that purpose. */
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -34,7 +34,7 @@
 
 
 /* These quantities are main_types for byte-compiled code.  They are used
- * by the inner_interp routine.  The ones commented out with a // are 
+ * by the inner_interp routine.  The ones commented out with a // are
  * actually defined in slang.h because they are also used as the main_type in
  * the name table.
  */
@@ -156,7 +156,7 @@ typedef struct SLBlock_Type
   {
      unsigned char main_type;
      unsigned char sub_type;
-     union 
+     union
        {
 	  struct SLBlock_Type *blk;
 	  int i_blk;
@@ -290,7 +290,7 @@ extern void SLang_push_float(float64);
 extern void SLadd_variable(char *);
 extern void SLang_clear_error(void);
 extern void SLarray_info (void);
-extern int SLPreprocess_Only;		        /* preprocess instead of 
+extern int SLPreprocess_Only;		        /* preprocess instead of
 						 * bytecompiling
 						 */
 

@@ -531,7 +531,7 @@ UnLslRLine(	char *const line,
 #else
 		{
 			long fsize2 = 0L;
-			
+
 			(void) sscanf(sizestart, "%ld", &fsize2);
 			*fsize = (longest_int) fsize2;
 		}
@@ -696,7 +696,7 @@ UnMlsT(const char *const line0, const MLstItemPtr mlip)
 	int ec;
 	size_t len;
 	char line[1024];
-	
+
 	memset(mlip, 0, sizeof(MLstItem));
 	mlip->mode = -1;
 	mlip->fsize = kSizeUnknown;
@@ -770,7 +770,7 @@ UnMlsT(const char *const line0, const MLstItemPtr mlip)
 		} else if (ISTREQ(fact, "UNIX.mode")) {
 			if (val[0] == '0')
 				sscanf(val, "%o", &mlip->mode);
-			else	
+			else
 				sscanf(val, "%i", &mlip->mode);
 			if (mlip->mode != (-1))
 				mlip->mode &= 00777;
@@ -1077,7 +1077,7 @@ goback:
 		if ((result = FTPChdir(cip, cwd)) < 0) {
 			return (result);
 		}
-	}	
+	}
 	return (kNoErr);
 }	/* FTPRemoteRecursiveFileList */
 
@@ -1133,7 +1133,7 @@ Traverse(FTPCIPtr cip, char *fullpath, struct Stat *st, char *relpath, FileInfoL
 		}
 
 		(void) strcpy(cp, file);	/* append name after slash */
-		(void) strcpy(c2, file);	
+		(void) strcpy(c2, file);
 
 		if (Lstat(fullpath, st) < 0) {
 			Error(cip, kDoPerror, "could not stat %s.\n", fullpath);
@@ -1219,7 +1219,7 @@ Traverse(FTPCIPtr cip, char *fullpath, struct Stat *st, char *relpath, FileInfoL
 			continue;	/* skip "." and ".." directories. */
 
 		(void) strcpy(cp, dirp->d_name);	/* append name after slash */
-		(void) strcpy(c2, dirp->d_name);	
+		(void) strcpy(c2, dirp->d_name);
 		if (Lstat(fullpath, st) < 0) {
 			Error(cip, kDoPerror, "could not stat %s.\n", fullpath);
 			continue;
@@ -1271,10 +1271,10 @@ FTPLocalRecursiveFileList2(FTPCIPtr cip, LineListPtr fileList, FileInfoListPtr f
 {
 	LinePtr filePtr, nextFilePtr;
 #if defined(WIN32) || defined(_WINDOWS)
-	char fullpath[_MAX_PATH + 1];	
+	char fullpath[_MAX_PATH + 1];
 	char relpath[_MAX_PATH + 1];
 #else
-	char fullpath[512];	
+	char fullpath[512];
 	char relpath[512];
 #endif
 	struct Stat st;
@@ -1358,7 +1358,7 @@ FTPRemoteGlob(FTPCIPtr cip, LineListPtr fileList, const char *pattern, int doGlo
 	if ((doGlob == 1) && (GLOBCHARSINSTR(pattern))) {
 		/* Use NLST, which lists files one per line. */
 		lsflags = "";
-		
+
 		/* Optimize for "NLST *" case which is same as "NLST". */
 		if (strcmp(pattern, "*") == 0) {
 			pattern = "";
@@ -1455,7 +1455,7 @@ ExpandTilde(char *pattern, size_t siz)
 				return;		/* Bad user -- leave it alone. */
 #endif
 		}
-		
+
 		(void) Strncpy(pattern, firstent, siz);
 		if (rest != NULL) {
 			(void) Strncat(pattern, LOCAL_PATH_DELIM_STR, siz);
@@ -1536,7 +1536,7 @@ LazyUnixLocalGlob(FTPCIPtr cip, LineListPtr fileList, const char *const pattern)
 	longstring gfile;
 	FILE *fp;
 	FTPSigProc sp;
-	
+
 	/* Do it the easy way and have the shell do the dirty
 	 * work for us.
 	 */
@@ -1548,7 +1548,7 @@ LazyUnixLocalGlob(FTPCIPtr cip, LineListPtr fileList, const char *const pattern)
 	(void) sprintf(cmd, "%s -c \"%s %s %s\"", "/bin/sh", "/bin/ls",
 		"-d", pattern);
 #endif
-	
+
 	fp = (FILE *) popen(cmd, "r");
 	if (fp == NULL) {
 		Error(cip, kDoPerror, "Could not Lglob: [%s]\n", cmd);
@@ -1589,8 +1589,8 @@ FTPLocalGlob(FTPCIPtr cip, LineListPtr fileList, const char *pattern, int doGlob
 		return (kErrBadParameter);
 
 	(void) STRNCPY(pattern2, pattern);	/* Don't nuke the original. */
-	
-	/* Pre-process for ~'s. */ 
+
+	/* Pre-process for ~'s. */
 	ExpandTilde(pattern2, sizeof(pattern2));
 	InitLineList(fileList);
 	result = kNoErr;

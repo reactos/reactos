@@ -208,7 +208,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// Send the TB_BUTTONSTRUCTSIZE message, which is required for
 			// backward compatibility.
 			SendMessage(hTool, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
-			
+
 			tbab.hInst = HINST_COMMCTRL;
 			tbab.nID = IDB_STD_SMALL_COLOR;
 			SendMessage(hTool, TB_ADDBITMAP, 0, (LPARAM)&tbab);
@@ -301,7 +301,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					HWND hChild = CreateNewMDIChild(g_hMDIClient);
 					if(hChild)
 					{
-						DoFileOpen(hChild);	
+						DoFileOpen(hChild);
 					}
 				}
 				break;
@@ -326,7 +326,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					{
 						DefFrameProc(hwnd, g_hMDIClient, WM_COMMAND, wParam, lParam);
 					}
-					else 
+					else
 					{
 						HWND hChild = (HWND)SendMessage(g_hMDIClient, WM_MDIGETACTIVE,0,0);
 						if(hChild)
@@ -354,8 +354,8 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 			// Create Edit Control
 
-			hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", 
-				WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL, 
+			hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
+				WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
 				0, 0, 100, 100, hwnd, (HMENU)IDC_CHILD_EDIT, GetModuleHandle(NULL), NULL);
 			if(hEdit == NULL)
 				MessageBox(hwnd, "Could not create edit box.", "Error", MB_OK | MB_ICONERROR);
@@ -426,7 +426,7 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		return DefMDIChildProc(hwnd, msg, wParam, lParam);
 		default:
 			return DefMDIChildProc(hwnd, msg, wParam, lParam);
-	
+
 	}
 	return 0;
 }

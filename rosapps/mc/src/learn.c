@@ -1,6 +1,6 @@
 /* Learn keys
    Copyright (C) 1995 The Free Software Foundation
-   
+
    Written by: 1995 Jakub Jelinek
 
    This program is free software; you can redistribute it and/or modify
@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -77,9 +77,9 @@ static void learn_refresh (void)
 {
     attrset (COLOR_NORMAL);
     dlg_erase (learn_dlg);
-    
+
     draw_box (learn_dlg, 1, 2, learn_dlg->lines - 2, learn_dlg->cols - 4);
-    
+
     attrset (COLOR_HOT_NORMAL);
     dlg_move (learn_dlg, 1, (learn_dlg->cols - strlen (learn_title)) / 2);
     addstr (learn_title);
@@ -95,7 +95,7 @@ _("Please press the %s\n"
 "Then, press it again to see if OK appears\n"
 "next to its button.\n\n"
 "If you want to escape, press a single Escape key\n"
-"and wait as well."), 
+"and wait as well."),
         _(key_name_conv_tab [action - B_USER].longname));
     mc_refresh ();
     if (learnkeys [action - B_USER].sequence != NULL) {
@@ -109,22 +109,22 @@ _("Please press the %s\n"
 	 * regular characters
 	 */
 	if (*seq && strcmp (seq, "\\e") && strcmp (seq, "\\e\\e")
-	    && strcmp (seq, "^m" ) 
+	    && strcmp (seq, "^m" )
             && (seq [1] || (*seq < ' ' || *seq > '~'))){
-	    
+
 	    learnchanged = 1;
 	    learnkeys [action - B_USER].sequence = seq;
 	    seq = convert_controls (seq);
-	    define_sequence (key_name_conv_tab [action - B_USER].code, seq, 
+	    define_sequence (key_name_conv_tab [action - B_USER].code, seq,
 			     MCKEY_NOACTION);
 	} else {
 	    message (0, _(" Cannot accept this key "),
 		_(" You have entered \"%s\""), seq);
 	}
-	
+
     	free (seq);
     }
-    
+
     dlg_run_done (d);
     destroy_dlg (d);
     dlg_select_widget (learn_dlg, learnkeys [action - B_USER].button);
@@ -134,14 +134,14 @@ _("Please press the %s\n"
 static int learn_move (int right)
 {
     int i, totalcols;
-    
+
     totalcols = (learn_total - 1) / ROWS + 1;
     for (i = 0; i < learn_total; i++)
         if (learnkeys [i].button == learn_dlg->current->widget) {
             if (right) {
                 if (i < learn_total - ROWS)
                     i += ROWS;
-                else 
+                else
                     i %= ROWS;
             } else {
                 if (i / ROWS)
@@ -172,7 +172,7 @@ static int learn_check_key (int c)
 	        if (learnok >= learn_total) {
 	            learn_dlg->ret_value = B_CANCEL;
 	            if (learnchanged) {
-	                if (query_dialog (learn_title, 
+	                if (query_dialog (learn_title,
 			    _("It seems that all your keys already\n"
 			      "work fine. That's great."),
 	                    1, 2, _("&Save"), _("&Discard")) == 0)
@@ -201,7 +201,7 @@ static int learn_check_key (int c)
         case 'k':
             dlg_one_up (learn_dlg);
             return 1;
-    }    
+    }
 
     /* Prevent from disappearing if a non-defined sequence is pressed
        and contains s or c. Use ALT('s') or ALT('c'). */
@@ -241,7 +241,7 @@ static void init_learn (void)
 	if (!i18n_flag)
 	{
 		char* cp;
-		
+
 		learn_but [0].text = _(learn_but [0].text);
 		learn_but [0].x = 78 / 2 + 4;
 
@@ -269,7 +269,7 @@ static void init_learn (void)
 
     for (i = 0; i < BUTTONS; i++)
 	add_widget (learn_dlg, button_new (XTRACT (i)));
-    
+
     x = UX;
     y = UY;
     for (key = key_name_conv_tab, j = 0; key->name != NULL &&
@@ -323,10 +323,10 @@ void learn_save (void)
         }
     }
 
-    /* On the one hand no good idea to save the complete setup but 
-     * without 'Auto save setup' the new key-definitions will not be 
-     * saved unless the user does an 'Options/Save Setup'. 
-     * On the other hand a save-button that does not save anything to 
+    /* On the one hand no good idea to save the complete setup but
+     * without 'Auto save setup' the new key-definitions will not be
+     * saved unless the user does an 'Options/Save Setup'.
+     * On the other hand a save-button that does not save anything to
      * disk is much worse.
      */
     if (profile_changed)
@@ -337,7 +337,7 @@ void learn_keys (void)
 {
     int save_old_esc_mode = old_esc_mode;
     int save_alternate_plus_minus = alternate_plus_minus;
-    
+
     old_esc_mode = 0; /* old_esc_mode cannot work in learn keys dialog */
     alternate_plus_minus = 1; /* don't translate KP_ADD, KP_SUBTRACT and
                                  KP_MULTIPLY to '+', '-' and '*' in
@@ -348,7 +348,7 @@ void learn_keys (void)
     init_learn ();
 
     run_dlg (learn_dlg);
-    
+
     old_esc_mode = save_old_esc_mode;
     alternate_plus_minus = save_alternate_plus_minus;
 
@@ -357,7 +357,7 @@ void learn_keys (void)
         numeric_keypad_mode ();
 
 #endif
-    
+
     switch (learn_dlg->ret_value) {
     case B_ENTER:
         learn_save ();

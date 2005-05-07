@@ -33,7 +33,7 @@
 #include <process.h>
 #include <stdio.h>
 #endif
-    
+
 #include "main.h"
 #include "framewnd.h"
 #include "childwnd.h"
@@ -156,7 +156,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         CheckMenuItem(hMenuOptions, ID_OPTIONS_TOOLBAR, MF_BYCOMMAND|MF_CHECKED);
 
         // Create the status bar
-        hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, 
+        hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS,
                                         "", hFrameWnd, IDC_STATUSBAR);
         if (!hStatusBar)
             return FALSE;
@@ -230,7 +230,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadString(hInstance, IDC_MDI_APP, szFrameClass, MAX_LOADSTRING);
     LoadString(hInstance, IDC_MDI_APP_CHILD, szChildClass, MAX_LOADSTRING);
-    
+
     // Allow only one running instance
     EnumWindows(EnumWndProc, (LPARAM)szFrameClass);
     if (g_foundPrevInstance)
@@ -247,13 +247,13 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     hMDIClient = GetWindow(hFrameWnd, GW_CHILD);
 
     // Main message loop:
-    while (GetMessage(&msg, (HWND)NULL, 0, 0)) { 
-        if (!TranslateMDISysAccel(hMDIClient, &msg) && 
-            !TranslateAccelerator(hFrameWnd, hAccel, &msg)) { 
-            TranslateMessage(&msg); 
-            DispatchMessage(&msg); 
-        } 
-    } 
+    while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
+        if (!TranslateMDISysAccel(hMDIClient, &msg) &&
+            !TranslateAccelerator(hFrameWnd, hAccel, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
     ExitInstance();
     return msg.wParam;
 }

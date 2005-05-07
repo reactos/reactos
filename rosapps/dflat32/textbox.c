@@ -713,7 +713,7 @@ void DfWriteTextLine(DFWINDOW wnd, DFRECT *rcc, int y, BOOL reverse)
     if (*(lp+i) && i < wnd->wleft+3)    {
         if (wnd->wleft+4 > lnlen)
             trunc = TRUE;
-        else 
+        else
             lp += 4;
     }
     else     {

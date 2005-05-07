@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -216,7 +216,7 @@ GetHostEntry(const char *host, struct in_addr *ip_address)
 {
 	struct in_addr ip;
 	struct hostent *hp;
-	
+
 	/* See if the host was given in the dotted IP format, like "36.44.0.2."
 	 * If it was, inet_addr will convert that to a 32-bit binary value;
 	 * it not, inet_addr will return (-1L).
@@ -524,11 +524,11 @@ InitOurDirectory(void)
 		dwSize = (DWORD) (sizeof(gOurInstallationPath) - 1);
 		dwType = 0;
 		if (RegQueryValueEx(
-			hkey, 
-			NULL, 
-			(DWORD *) 0, 
-			&dwType, 
-			(LPBYTE) gOurInstallationPath, 
+			hkey,
+			NULL,
+			(DWORD *) 0,
+			&dwType,
+			(LPBYTE) gOurInstallationPath,
 			&dwSize) == ERROR_SUCCESS)
 		{
 			// This gave us the path to ncftp.exe;
@@ -542,7 +542,7 @@ InitOurDirectory(void)
 		}
 		RegCloseKey(hkey);
 	}
-	
+
 	if (gOurInstallationPath[0] == '\0') {
 		if (GetModuleFileName(NULL, gOurInstallationPath, (DWORD) sizeof(gOurInstallationPath) - 1) <= 0) {
 			ZeroMemory(gOurInstallationPath, (DWORD) sizeof(gOurInstallationPath));
@@ -744,12 +744,12 @@ MayUseFirewall(const char *const hn, int firewallType, const char *const firewal
 
 
 
-int 
+int
 StrToBool(const char *const s)
 {
 	int c;
 	int result;
-	
+
 	c = *s;
 	if (isupper(c))
 		c = tolower(c);
@@ -941,7 +941,7 @@ time_t UnDate(char *dstr)
 		&ut.tm_hour,
 		&ut.tm_min,
 		&ut.tm_sec) == 6)
-	{	
+	{
 		--ut.tm_mon;
 		ut.tm_year -= 1900;
 		result = mktime(&ut);
@@ -1121,7 +1121,7 @@ DecodeDirectoryURL(
 void SysPerror(const char *const errMsg)
 {
 	char reason[128];
-	
+
 	FormatMessage(
 		FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL,

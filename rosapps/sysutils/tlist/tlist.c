@@ -151,7 +151,7 @@ int STDCALL PrintProcessInfoDepth (
   INT     d = 0;
   LPWSTR  Module = L"";
   LPWSTR  Title = L"";
-  
+
   for (d = 0; d < Depth; d ++) printf ("  ");
   GetProcessInfo (pInfo, & Module, & Title);
   wprintf (
@@ -204,7 +204,7 @@ PrintProcessAndDescendants (
     pInfo = (PSYSTEM_PROCESS_INFORMATION)((PBYTE)pInfo + pInfo->NextEntryOffset);
 
   } while (0 != pInfo->NextEntryOffset);
-  
+
   return EXIT_SUCCESS;
 }
 
@@ -234,7 +234,7 @@ int STDCALL PrintProcessList (BOOL DisplayTree)
 	  pInfo->InheritedFromUniqueProcessId
 	  );
       }
-      else 
+      else
       {
 	if (ALREADY_PROCESSED != (DWORD)pInfo->InheritedFromUniqueProcessId)
 	{
@@ -244,9 +244,9 @@ int STDCALL PrintProcessList (BOOL DisplayTree)
 
       pInfo = PsaWalkNextProcess(pInfo);
     }
-  
+
     PsaFreeCapture(pInfoBase);
-  
+
     return EXIT_SUCCESS;
 }
 
@@ -263,7 +263,7 @@ int STDCALL PrintThreads (PSYSTEM_PROCESS_INFORMATION pInfo)
   PSYSTEM_THREAD_INFORMATION          CurThread;
 
   if (NULL == pInfo) return EXIT_FAILURE;
-   
+
   CurThread = PsaWalkFirstThread(pInfo);
 
   wprintf (L"   NumberOfThreads: %d\n", pInfo->NumberOfThreads);
@@ -280,7 +280,7 @@ int STDCALL PrintThreads (PSYSTEM_PROCESS_INFORMATION pInfo)
     {
       continue;
     }
-    
+
     Status = NtQueryInformationThread (
                hThread,
 	       ThreadBasicInformation,
@@ -306,7 +306,7 @@ int STDCALL PrintThreads (PSYSTEM_PROCESS_INFORMATION pInfo)
       NtClose (hThread);
       continue;
     }
-    
+
     NtClose (hThread);
 
     /* Now print the collected information */
@@ -316,7 +316,7 @@ int STDCALL PrintThreads (PSYSTEM_PROCESS_INFORMATION pInfo)
       0 /* FIXME: ((PTEB) tInfo.TebBaseAddress)->LastErrorValue */,
       ThreadStateName[CurThread->ThreadState]
       );
-  } 
+  }
   return EXIT_SUCCESS;
 }
 
@@ -356,14 +356,14 @@ int STDCALL PrintProcess (char * PidStr)
   OBJECT_ATTRIBUTES           Oa = {0};
   CLIENT_ID                   ClientId = {0, 0};
 
-  
+
   ClientId.UniqueProcess = (PVOID) atol (PidStr);
- 
+
   if (FALSE == AcquirePrivileges ())
   {
     return EXIT_FAILURE;
   }
-  
+
   Status = NtOpenProcess (
              & hProcess,
              PROCESS_QUERY_INFORMATION,
@@ -380,7 +380,7 @@ int STDCALL PrintProcess (char * PidStr)
     LONG                        pInfoBaseLength = 0;
     LPWSTR                      Module = L"";
     LPWSTR                      Title = L"";
-    
+
     Status = NtQueryInformationProcess (
                hProcess,
 	       ProcessBasicInformation,
@@ -411,7 +411,7 @@ int STDCALL PrintProcess (char * PidStr)
     if (NULL == pInfo) return EXIT_FAILURE;
 
     GetProcessInfo (pInfo, & Module, & Title);
-    
+
     wprintf (L"%4d %s\n", ClientId.UniqueProcess, Module);
 #if 0
     printf ("   CWD:     %s\n", ""); /* it won't appear if empty */
@@ -425,15 +425,15 @@ int STDCALL PrintProcess (char * PidStr)
       ((LONG) PsVm.WorkingSetSize / 1024),
       ((LONG) PsVm.PeakWorkingSetSize / 1024)
       );
-    
+
     PrintThreads (pInfo);
 
     PrintModules ();
 
     PsaFreeCapture(pInfoBase);
-  
+
     NtClose (hProcess);
-    
+
     return EXIT_SUCCESS;
   }
   return EXIT_FAILURE;

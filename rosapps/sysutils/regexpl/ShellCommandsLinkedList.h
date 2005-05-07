@@ -1,4 +1,4 @@
-/* $Id: ShellCommandsLinkedList.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommandsLinkedList.h: interface for the CShellCommandsLinkedList class.
 //
@@ -12,7 +12,7 @@
 
 #define POSITION int *
 
-class CShellCommandsLinkedList  
+class CShellCommandsLinkedList
 {
 public:
 	CShellCommandsLinkedList(CConsole& rConsole);

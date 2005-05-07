@@ -25,9 +25,9 @@ WindowThreadProc(LPVOID lpParameter)
   MSG msg;
   char caption[64];
   PTHRDCREATEWIN cw = (PTHRDCREATEWIN)lpParameter;
-  
+
   sprintf(caption, cw->Caption, GetCurrentThreadId());
-  
+
   cw->Window = CreateWindow("MultiClass",
                             caption,
                             cw->Style | WS_VISIBLE,
@@ -39,9 +39,9 @@ WindowThreadProc(LPVOID lpParameter)
                             NULL,
                             hAppInstance,
                             NULL);
-  
+
   SetEvent(WinCreatedEvent);
-  
+
   if(!cw->Window)
   {
     fprintf(stderr, "CreateWindow failed (last error 0x%lX)\n",
@@ -57,11 +57,11 @@ WindowThreadProc(LPVOID lpParameter)
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
-  
+
   return 0;
 }
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -70,14 +70,14 @@ WinMain(HINSTANCE hInstance,
   WNDCLASS wc;
   int i;
   HANDLE Threads[3];
-  
+
   hAppInstance = hInstance;
-  
+
   WinCreatedEvent = CreateEvent(NULL,
                                 FALSE,
                                 FALSE,
                                 NULL);
-  
+
   if(!WinCreatedEvent)
   {
     fprintf(stderr, "Failed to create event (last error 0x%lX)\n",
@@ -108,14 +108,14 @@ WinMain(HINSTANCE hInstance,
   wnds[0].Position.x = wnds[0].Position.y = 0;
   wnds[0].Size.cx = 320;
   wnds[0].Size.cy = 240;
-  
+
   wnds[1].Caption = "Child1 of TopLevel1 (ThreadID: %d)";
   wnds[1].Parent = &wnds[0].Window;
   wnds[1].Style = WS_CHILD | WS_BORDER | WS_CAPTION | WS_VISIBLE | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
   wnds[1].Position.x = 20;
   wnds[1].Position.y = 120;
   wnds[1].Size.cx = wnds[1].Size.cy = 240;
-  
+
   wnds[2].Caption = "TopLevel2 (ThreadID: %d)";
   wnds[2].Parent = NULL;
   wnds[2].Style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
@@ -123,7 +123,7 @@ WinMain(HINSTANCE hInstance,
   wnds[2].Position.y = 0;
   wnds[2].Size.cx = 160;
   wnds[2].Size.cy = 490;
-  
+
   for(i = 0; i < (sizeof(wnds) / sizeof(THRDCREATEWIN)); i++)
   {
     wnds[i].hThread = CreateThread(NULL,
@@ -141,11 +141,11 @@ WinMain(HINSTANCE hInstance,
     }
     WaitForSingleObject(WinCreatedEvent, INFINITE);
   }
-  
+
   WaitForMultipleObjects(sizeof(Threads) / sizeof(HANDLE), &Threads[0], TRUE, INFINITE);
-  
+
   UnregisterClass("MultiClass", hInstance);
-  
+
   return 0;
 }
 
@@ -156,7 +156,7 @@ LRESULT CALLBACK MultiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   RECT Client;
   HBRUSH Brush;
   DWORD Ret;
-  
+
   static COLORREF Colors[] =
     {
       RGB(0x00, 0x00, 0x00),
@@ -192,7 +192,7 @@ LRESULT CALLBACK MultiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  }
 	EndPaint(hWnd, &ps);
 	break;
-      
+
       case WM_COMMAND:
         switch(LOWORD(wParam))
         {
@@ -223,7 +223,7 @@ LRESULT CALLBACK MultiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         }
         break;
-      
+
       case WM_DESTROY:
 	PostQuitMessage(0);
 	break;

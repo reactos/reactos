@@ -1,6 +1,6 @@
 #include "syshdrs.h"
 
-/* 
+/*
  * Return zero if the operation timed-out or erred-out, otherwise non-zero.
  */
 int
@@ -55,7 +55,7 @@ SWaitUntilReadyForReading(const int sfd, const int tlen)
 
 
 
-/* 
+/*
  * Return zero if the operation timed-out or erred-out, otherwise non-zero.
  */
 int

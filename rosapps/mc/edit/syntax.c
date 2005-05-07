@@ -1054,7 +1054,7 @@ void edit_free_syntax_rules (WEdit * edit)
 
 #define CURRENT_SYNTAX_RULES_VERSION "22"
 
-char *syntax_text = 
+char *syntax_text =
 "# syntax rules version " CURRENT_SYNTAX_RULES_VERSION "\n"
 "# Allowable colors for mc are\n"
 "# (after the slash is a Cooledit color, 0-26 or any of the X colors in rgb.txt)\n"

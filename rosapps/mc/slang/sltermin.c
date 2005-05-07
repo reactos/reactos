@@ -4,7 +4,7 @@
 
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -24,7 +24,7 @@
  * The majority of the comments found in the file were taken from the
  * term(4) man page on an SGI.
  */
- 
+
 /* Short integers are stored in two 8-bit bytes.  The first byte contains
  * the least significant 8 bits of the value, and the second byte contains
  * the most significant 8 bits.  (Thus, the value represented is
@@ -53,7 +53,7 @@ static int make_integer (unsigned char *buf)
  * tic, and read by the routine setupterm [see curses(3X).]  The file is
  * divided into six parts in the following order:  the header, terminal
  * names, boolean flags, numbers, strings, and string table.
- * 
+ *
  * The header section begins the file.  This section contains six short
  * integers in the format described below.  These integers are (1) the magic
  * number (octal 0432); (2) the size, in bytes, of the names section; (3)
@@ -65,7 +65,7 @@ static int make_integer (unsigned char *buf)
 
 #define MAGIC 0432
 
-/* In this structure, all char * fields are malloced EXCEPT if the 
+/* In this structure, all char * fields are malloced EXCEPT if the
  * structure is SLTERMCAP.  In that case, only terminal_names is malloced
  * and the other fields are pointers into it.
  */
@@ -77,19 +77,19 @@ typedef struct
 
    unsigned int name_section_size;
    char *terminal_names;
-   
+
    unsigned int boolean_section_size;
    unsigned char *boolean_flags;
-   
+
    unsigned int num_numbers;
    unsigned char *numbers;
-   
+
    unsigned int num_string_offsets;
    unsigned char *string_offsets;
-   
+
    unsigned int string_table_size;
    char *string_table;
-   
+
 } Terminfo_Type;
 
 static char *tcap_getstr (char *, Terminfo_Type *);
@@ -101,10 +101,10 @@ static FILE *open_terminfo (char *file, Terminfo_Type *h)
 {
    FILE *fp;
    unsigned char buf[12];
-   
+
    fp = fopen (file, "rb");
    if (fp == NULL) return NULL;
-   
+
    if ((12 == fread ((char *) buf, 1, 12, fp) && (MAGIC == make_integer (buf))))
      {
 	h->name_section_size = make_integer (buf + 2);
@@ -113,15 +113,15 @@ static FILE *open_terminfo (char *file, Terminfo_Type *h)
 	h->num_string_offsets = make_integer (buf + 8);
 	h->string_table_size = make_integer (buf + 10);
      }
-   else 
+   else
      {
 	fclose (fp);
 	fp = NULL;
      }
    return fp;
 }
-   
-/* 
+
+/*
  * The terminal names section comes next.  It contains the first line of the
  * terminfo description, listing the various names for the terminal,
  * separated by the bar ( | ) character (see term(5)).  The section is
@@ -132,7 +132,7 @@ static FILE *open_terminfo (char *file, Terminfo_Type *h)
 static unsigned char *read_terminfo_section (FILE *fp, unsigned int size)
 {
    char *s;
-   
+
    if (NULL == (s = (char *) SLMALLOC (size))) return NULL;
    if (size != fread (s, 1, size, fp))
      {
@@ -161,16 +161,16 @@ static unsigned char *read_boolean_flags (FILE *fp, Terminfo_Type *t)
     * even byte offset. All short integers are aligned on a short word
     * boundary.
     */
-   
+
    unsigned int size = (t->name_section_size + t->boolean_section_size) % 2;
    size += t->boolean_section_size;
-   
+
    return t->boolean_flags = read_terminfo_section (fp, size);
 }
 
 
 
-/* 
+/*
  * The numbers section is similar to the boolean flags section.  Each
  * capability takes up two bytes, and is stored as a short integer.  If the
  * value represented is -1 or -2, the capability is taken to be missing.
@@ -219,7 +219,7 @@ static char *read_string_table (FILE *fp, Terminfo_Type *t)
  */
 
 #define MAX_TI_DIRS 7
-static char *Terminfo_Dirs [MAX_TI_DIRS] = 
+static char *Terminfo_Dirs [MAX_TI_DIRS] =
 {
    NULL,
    "/usr/lib/terminfo",
@@ -232,25 +232,25 @@ static char *Terminfo_Dirs [MAX_TI_DIRS] =
 
 char *SLtt_tigetent (char *term)
 {
-   char *tidir; 
+   char *tidir;
    int i;
    FILE *fp = NULL;
    char file[256];
    Terminfo_Type *ti;
 
    if (
-       (term == NULL) 
+       (term == NULL)
 #ifdef SLANG_UNTIC
        && (SLang_Untic_Terminfo_File == NULL)
 #endif
        )
      return NULL;
-   
+
    if (NULL == (ti = (Terminfo_Type *) SLMALLOC (sizeof (Terminfo_Type))))
      {
 	return NULL;
      }
-   
+
 #ifdef SLANG_UNTIC
    if (SLang_Untic_Terminfo_File != NULL)
      {
@@ -261,7 +261,7 @@ char *SLtt_tigetent (char *term)
 #endif
    /* If we are on a termcap based system, use termcap */
    if (0 == tcap_getent (term, ti)) return (char *) ti;
-       
+
    Terminfo_Dirs[0] = getenv ("TERMINFO");
    i = 0;
    while (i < MAX_TI_DIRS)
@@ -277,8 +277,8 @@ char *SLtt_tigetent (char *term)
 #ifdef SLANG_UNTIC
    fp_open_label:
 #endif
-   
-   if (fp != NULL) 
+
+   if (fp != NULL)
      {
 	if (NULL != read_terminal_names (fp, ti))
 	  {
@@ -305,7 +305,7 @@ char *SLtt_tigetent (char *term)
 	  }
 	fclose (fp);
      }
-   
+
    SLFREE (ti);
    return NULL;
 }
@@ -316,7 +316,7 @@ char *SLtt_tigetent (char *term)
 # define UNTIC_COMMENT(x)
 #endif
 
-typedef struct 
+typedef struct
 {
    char name[3];
    int offset;
@@ -413,7 +413,7 @@ static int compute_cap_offset (char *cap, Terminfo_Type *t, Tgetstr_Map_Type *ma
 
    (void) t;
    cha = *cap++; chb = *cap;
-   
+
    while (*map->name != 0)
      {
 	if ((cha == *map->name) && (chb == *(map->name + 1)))
@@ -426,16 +426,16 @@ static int compute_cap_offset (char *cap, Terminfo_Type *t, Tgetstr_Map_Type *ma
    return -1;
 }
 
-   
+
 char *SLtt_tigetstr (char *cap, char **pp)
 {
    int offset;
    Terminfo_Type *t;
-   
+
    if ((pp == NULL) || (NULL == (t = (Terminfo_Type *) *pp))) return NULL;
-   
+
    if (t->flags == SLTERMCAP) return tcap_getstr (cap, t);
-   
+
    offset = compute_cap_offset (cap, t, Tgetstr_Map, t->num_string_offsets);
    if (offset < 0) return NULL;
    offset = make_integer (t->string_offsets + 2 * offset);
@@ -458,7 +458,7 @@ int SLtt_tigetnum (char *cap, char **pp)
 {
    int offset;
    Terminfo_Type *t;
-   
+
    if ((pp == NULL) || (NULL == (t = (Terminfo_Type *) *pp))) return -1;
 
    if (t->flags == SLTERMCAP) return tcap_getnum (cap, t);
@@ -483,13 +483,13 @@ int SLtt_tigetflag (char *cap, char **pp)
 {
    int offset;
    Terminfo_Type *t;
-   
+
    if ((pp == NULL) || (NULL == (t = (Terminfo_Type *) *pp))) return -1;
 
    if (t->flags == SLTERMCAP) return tcap_getflag (cap, t);
-   
+
    offset = compute_cap_offset (cap, t, Tgetflag_Map, t->boolean_section_size);
-   
+
    if (offset < 0) return -1;
    return (int) *(t->boolean_flags + offset);
 }
@@ -505,7 +505,7 @@ static int tcap_getflag (char *cap, Terminfo_Type *t)
    char a, b;
    char *f = (char *) t->boolean_flags;
    char *fmax;
-   
+
    if (f == NULL) return 0;
    fmax = f + t->boolean_section_size;
 
@@ -524,10 +524,10 @@ static char *tcap_get_cap (unsigned char *cap, unsigned char *caps, unsigned int
 {
    unsigned char c0, c1;
    unsigned char *caps_max;
-   
+
    c0 = cap[0];
    c1 = cap[1];
-   
+
    if (caps == NULL) return NULL;
    caps_max = caps + len;
    while (caps < caps_max)
@@ -541,7 +541,7 @@ static char *tcap_get_cap (unsigned char *cap, unsigned char *caps, unsigned int
    return NULL;
 }
 
-   
+
 static int tcap_getnum (char *cap, Terminfo_Type *t)
 {
    cap = tcap_get_cap ((unsigned char *) cap, t->numbers, t->num_numbers);
@@ -569,7 +569,7 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
    unsigned char *buf, *b;
    unsigned char *t;
    int len;
-   
+
    if (SLtt_Try_Termcap == 0) return -1;
 #if 1
    /* XFREE86 xterm sets the TERMCAP environment variable to an invalid
@@ -580,8 +580,8 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
 #endif
    termcap = (unsigned char *) getenv ("TERMCAP");
    if ((termcap == NULL) || (*termcap == '/')) return -1;
-   
-   /* We have a termcap so lets use it provided it does not have a reference 
+
+   /* We have a termcap so lets use it provided it does not have a reference
     * to another terminal via tc=.  In that case, user terminfo.  The alternative
     * would be to parse the termcap file which I do not want to do right now.
     * Besides, this is a terminfo based system and if the termcap were parsed
@@ -595,17 +595,17 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
 	  return -1;
 	t += (len + 1);
      }
-   
+
    /* malloc some extra space just in case it is needed. */
    len = strlen ((char *) termcap) + 256;
    if (NULL == (buf = (unsigned char *) SLMALLOC ((unsigned int) len))) return -1;
 
    b = buf;
-   
+
    /* The beginning of the termcap entry contains the names of the entry.
-    * It is terminated by a colon. 
+    * It is terminated by a colon.
     */
-   
+
    ti->terminal_names = (char *) b;
    t = termcap;
    len = tcap_extract_field (t);
@@ -618,14 +618,14 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
    b[len] = 0;
    b += len + 1;
    ti->name_section_size = len;
-   
-   
-   /* Now, we are really at the start of the termcap entries.  Point the 
+
+
+   /* Now, we are really at the start of the termcap entries.  Point the
     * termcap variable here since we want to refer to this a number of times.
     */
    termcap = t + (len + 1);
-   
-   
+
+
    /* Process strings first. */
    ti->string_table = (char *) b;
    t = termcap;
@@ -633,7 +633,7 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
      {
 	unsigned char *b1;
 	unsigned char *tmax;
-	
+
 	/* We are looking for: XX=something */
 	if ((len < 4) || (t[2] != '=') || (*t == '.'))
 	  {
@@ -642,7 +642,7 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
 	  }
 	tmax = t + len;
 	b1 = b;
-	
+
 	while (t < tmax)
 	  {
 	     ch = *t++;
@@ -664,7 +664,7 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
 	b1[2] = (unsigned char) len;    /* replace the = by the length */
 	/* skip colon to next field. */
 	t++;
-     }   
+     }
    ti->string_table_size = (int) (b - (unsigned char *) ti->string_table);
 
    /* Now process the numbers. */
@@ -675,7 +675,7 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
      {
 	unsigned char *b1;
 	unsigned char *tmax;
-	
+
 	/* We are looking for: XX#NUMBER */
 	if ((len < 4) || (t[2] != '#') || (*t == '.'))
 	  {
@@ -684,7 +684,7 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
 	  }
 	tmax = t + len;
 	b1 = b;
-	
+
 	while (t < tmax)
 	  {
 	     *b++ = *t++;
@@ -694,16 +694,16 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
 	len = (int) (b - b1);
 	b1[2] = (unsigned char) len;    /* replace the # by the length */
 	t++;
-     }   
+     }
    ti->num_numbers = (int) (b - ti->numbers);
-   
+
    /* Now process the flags. */
    t = termcap;
    ti->boolean_flags = b;
    while (-1 != (len = tcap_extract_field (t)))
      {
 	/* We are looking for: XX#NUMBER */
-	if ((len != 2) || (*t == '.') || (*t <= ' ')) 
+	if ((len != 2) || (*t == '.') || (*t <= ' '))
 	  {
 	     t += len + 1;
 	     continue;
@@ -712,7 +712,7 @@ static int tcap_getent (char *term, Terminfo_Type *ti)
 	b[1] = t[1];
 	t += 3;
 	b += 2;
-     }   
+     }
    ti->boolean_section_size = (int) (b - ti->boolean_flags);
    ti->flags = SLTERMCAP;
    return 0;

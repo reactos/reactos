@@ -19,10 +19,10 @@ int main( int argc, char **argv ) {
 
   GetNetworkParams(pFixedInfo,&OutBufLen);
 
-  for( Addr = &pFixedInfo->DnsServerList; 
+  for( Addr = &pFixedInfo->DnsServerList;
        Addr;
        Addr = Addr->Next ) {
-    printf( "%c%s\n", 
+    printf( "%c%s\n",
 	    Addr == pFixedInfo->CurrentDnsServer ? '*' : ' ',
 	    Addr->IpAddress.String );
   }

@@ -1,5 +1,5 @@
 /*
- * $Id: noexecute.c,v 1.1 2004/10/21 04:59:00 sedwards Exp $
+ * $Id$
  */
 
 #include <stdio.h>

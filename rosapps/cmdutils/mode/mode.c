@@ -32,7 +32,7 @@
 #define NUM_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 #define ASSERT(a)
 
-const TCHAR* const usage_strings[] = { 
+const TCHAR* const usage_strings[] = {
     _T("Device Status:     MODE [device] [/STATUS]"),
     _T("Select code page:  MODE CON[:] CP SELECT=yyy"),
     _T("Code page status:  MODE CON[:] CP [/STATUS]"),
@@ -45,7 +45,7 @@ const TCHAR* const usage_strings[] = {
     _T("                            [rts=on|off|hs|tg] [idsr=on|off]"),
 };
 
-const TCHAR* const parity_strings[] = { 
+const TCHAR* const parity_strings[] = {
     _T("None"),   // default
     _T("Odd"),    // only symbol in this set to have a 'd' in it
     _T("Even"),   // ... 'v' in it
@@ -75,7 +75,7 @@ int QueryDevices()
     TCHAR buffer[10240];
     int len;
     TCHAR* ptr = buffer;
-    
+
     *ptr = '\0';
     if (QueryDosDevice(NULL, buffer, NUM_ELEMENTS(buffer))) {
         while (*ptr != '\0') {
@@ -146,7 +146,7 @@ int ShowConsoleStatus()
     return 0;
 }
 
-static 
+static
 BOOL SerialPortQuery(int nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOOL bWrite)
 {
     BOOL result;
@@ -270,7 +270,7 @@ int SetConsoleState()
 	return 0;
 }
 
-static 
+static
 int ExtractModeSerialParams(const TCHAR* param)
 {
     if (       _tcsstr(param, _T("OFF"))) {
@@ -428,7 +428,7 @@ int main(int argc, TCHAR *argv[])
             goto show_status;
         } else if (_tcsstr(param1, _T("lpt"))) {
             nPortNum = find_portnum(param1);
-            if (nPortNum != -1) 
+            if (nPortNum != -1)
                 return ShowParallelStatus(nPortNum);
         } else if (_tcsstr(param1, _T("con"))) {
             return ShowConsoleStatus();

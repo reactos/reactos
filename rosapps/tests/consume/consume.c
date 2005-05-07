@@ -7,10 +7,10 @@
 ULONG x[SIZE / 4096];
 
 int main()
-{  
+{
    int i;
    PUCHAR BaseAddress;
-   
+
    BaseAddress = VirtualAlloc(NULL,
 			      SIZE,
 			      MEM_COMMIT,
@@ -26,6 +26,6 @@ int main()
 	printf("%.8x  ", i*4096);
 	x[i] = BaseAddress[i*4096];
      }
-   
+
    return(0);
 }

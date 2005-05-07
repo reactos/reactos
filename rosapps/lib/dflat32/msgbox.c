@@ -123,7 +123,7 @@ BOOL InputBox(DFWINDOW wnd,char *ttl,char *msg,char *text,int len)
     InputText = text;
     TextLength = len;
     InputBoxDB.dwnd.title = ttl;
-    InputBoxDB.dwnd.w = 4 + 
+    InputBoxDB.dwnd.w = 4 +
         max(20, max(len, max((int)strlen(ttl), (int)strlen(msg))));
     InputBoxDB.ctl[1].dwnd.x = (InputBoxDB.dwnd.w-2-len)/2;
     InputBoxDB.ctl[0].dwnd.w = strlen(msg);

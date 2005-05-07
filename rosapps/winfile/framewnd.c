@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 //#include <shellapi.h>
 #include <windowsx.h>
 #include <assert.h>
@@ -234,7 +234,7 @@ HWND CreateChildWindow(int drv_id)
             szChildClass, path, hInst,
 //            CW_USEDEFAULT, CW_USEDEFAULT,
 //            CW_USEDEFAULT, CW_USEDEFAULT,
-            20, 20, 200, 200, 
+            20, 20, 200, 200,
             WS_MAXIMIZE, (LPARAM)pChildWnd
 //            0/*style*/, 0/*lParam*/
 		};
@@ -343,8 +343,8 @@ static BOOL activate_drive_window(LPCTSTR path)
 	_tsplitpath(path, drv1, 0, 0, 0);
 
 	 // search for a already open window for the same drive
-	for (child_wnd = GetNextWindow(Globals.hMDIClient,GW_CHILD); 
-	     child_wnd; 
+	for (child_wnd = GetNextWindow(Globals.hMDIClient,GW_CHILD);
+	     child_wnd;
 		 child_wnd = GetNextWindow(child_wnd, GW_HWNDNEXT)) {
 		ChildWnd* pChildWnd = (ChildWnd*) GetWindowLong(child_wnd, GWL_USERDATA);
 		if (pChildWnd) {
@@ -429,7 +429,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	UINT cmd = LOWORD(wParam);
 	HWND hChildWnd;
 //	HWND hwndClient = (HWND)SendMessage(Globals.hMDIClient, WM_MDIGETACTIVE, 0, 0);
-//	if (hwndClient) 
+//	if (hwndClient)
 //	    if (SendMessage(hwndClient, WM_DISPATCH_COMMAND, wParam, lParam))
 //			return 0;
 
@@ -463,7 +463,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				SetErrorMode(OldMode & ~SEM_FAILCRITICALERRORS); // Force O/S to handle
 				// Call SHFormatDrive here.
 				SHFormatDrive(hWnd, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
-				SetErrorMode(OldMode); // Put it back the way it was. 			
+				SetErrorMode(OldMode); // Put it back the way it was.
 			}
 #endif
 			break;
@@ -600,7 +600,7 @@ static TBBUTTON tbButtonNew[] = {
 	{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
 	{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
 };
-        
+
 static LRESULT MsgNotify(HWND hwnd, UINT uMessage, WPARAM wparam, LPARAM lparam)
 {
     LPNMHDR     lpnmhdr;
@@ -610,17 +610,17 @@ static int             nResetCount;
 static LPTBBUTTON      lpSaveButtons;
 //LPARAM                 lParam;
 
-    
+
     lpnmhdr = (LPNMHDR)lparam;
 /*
-    // The following code allows the toolbar to be customized. 
+    // The following code allows the toolbar to be customized.
     // If you return FALSE the Customize Toolbar dialog flashes
     // and goes away.
-  
+
     if (lpnmhdr->code == TBN_QUERYINSERT || lpnmhdr->code == TBN_QUERYDELETE) {
         return TRUE;
     }
-        
+
     if (lpnmhdr->code == TBN_GETBUTTONINFO) {
         LPTBNOTIFY lpTbNotify = (LPTBNOTIFY)lparam;
         TCHAR szBuffer[20];
@@ -633,7 +633,7 @@ static LPTBBUTTON      lpSaveButtons;
 			{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
 			{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
 		};
-        
+
 		// 20 = total number of buttons.
 		// tbButton and tbButtonNew send information about
 		// the other 12 buttons in tbButtonNew.
@@ -660,13 +660,13 @@ static LPTBBUTTON      lpSaveButtons;
         TCHAR szBuffer[20];
 /*
 typedef struct _TBBUTTON {
-    int iBitmap; 
-    int idCommand; 
-    BYTE fsState; 
-    BYTE fsStyle; 
-    DWORD dwData; 
-    INT_PTR iString; 
-} TBBUTTON, NEAR* PTBBUTTON, FAR* LPTBBUTTON; 
+    int iBitmap;
+    int idCommand;
+    BYTE fsState;
+    BYTE fsStyle;
+    DWORD dwData;
+    INT_PTR iString;
+} TBBUTTON, NEAR* PTBBUTTON, FAR* LPTBBUTTON;
  */
 		// 20 = total number of buttons.
 		// tbButton and tbButtonNew send information about
@@ -687,11 +687,11 @@ typedef struct _TBBUTTON {
         {
 	    LPTBNOTIFY  lpTB = (LPTBNOTIFY)lparam;
         int i;
-	   
+
         // Allocate memory to store the button information.
         nResetCount = SendMessage(lpTB->hdr.hwndFrom, TB_BUTTONCOUNT, 0, 0);
         lpSaveButtons = (LPTBBUTTON)GlobalAlloc(GPTR, sizeof(TBBUTTON) * nResetCount);
-      
+
         // Save the current configuration so if the user presses
         // reset, the original toolbar can be restored.
         for (i = 0; i < nResetCount; i++) {
@@ -699,23 +699,23 @@ typedef struct _TBBUTTON {
         }
         }
         return TRUE;
-   
+
     case TBN_RESET:
         {
         LPTBNOTIFY  lpTB = (LPTBNOTIFY)lparam;
         int         nCount, i;
-	
+
         // Remove all of the existing buttons starting with the last and working down.
         nCount = SendMessage(lpTB->hdr.hwndFrom, TB_BUTTONCOUNT, 0, 0);
         for (i = nCount - 1; i >= 0; i--) {
             SendMessage(lpTB->hdr.hwndFrom, TB_DELETEBUTTON, i, 0);
         }
-      
+
         // Restore the buttons that were saved.
         SendMessage(lpTB->hdr.hwndFrom, TB_ADDBUTTONS, (WPARAM)nResetCount, (LPARAM)lpSaveButtons);
         }
         return TRUE;
-   
+
     case TBN_ENDADJUST:
         // Free the memory allocated during TBN_BEGINADJUST
         GlobalFree((HGLOBAL)lpSaveButtons);
@@ -730,8 +730,8 @@ static LRESULT OnDriveBoxNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 //    if (nmhdr->code == NM_HOVER || nmhdr->code == NM_NCHITTEST) return 0;
 
-//    switch (((LPNMHDR)lParam)->code) { 
-    switch (nmhdr->code) { 
+//    switch (((LPNMHDR)lParam)->code) {
+    switch (nmhdr->code) {
     case NM_OUTOFMEMORY:
     case NM_CLICK:
     case NM_DBLCLK:
@@ -804,23 +804,23 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             if (MsgNotify(hWnd, message, wParam, lParam)) return TRUE;
         }
 //        return MsgNotify(hWnd, message, wParam, lParam);
-        switch (((LPNMHDR)lParam)->code) { 
+        switch (((LPNMHDR)lParam)->code) {
 #ifdef _MSC_VER
-        case TTN_GETDISPINFO: 
-            { 
-            LPTOOLTIPTEXT lpttt; 
-            lpttt = (LPTOOLTIPTEXT)lParam; 
-            lpttt->hinst = hInst; 
+        case TTN_GETDISPINFO:
+            {
+            LPTOOLTIPTEXT lpttt;
+            lpttt = (LPTOOLTIPTEXT)lParam;
+            lpttt->hinst = hInst;
             // load appropriate string
-            lpttt->lpszText = MAKEINTRESOURCE(lpttt->hdr.idFrom); 
-            } 
-            break; 
+            lpttt->lpszText = MAKEINTRESOURCE(lpttt->hdr.idFrom);
+            }
+            break;
 #endif
         default:
             break;
         }
         break;
-   
+
 	case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
 //            if (LOWORD(wParam) > ID_CMD_FIRST && LOWORD(wParam) < ID_CMD_LAST) {

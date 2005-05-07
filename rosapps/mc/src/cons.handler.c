@@ -1,11 +1,11 @@
 /* Client interface for General purpose Linux console save/restore server
    Copyright (C) 1994 Janne Kukonlehto <jtklehto@stekt.oulu.fi>
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -194,7 +194,7 @@ void handle_console (unsigned char action)
 #endif /* #ifdef linux */
 
 #ifdef SCO_FLAVOR
-/* 
+/*
 **	SCO console save/restore handling routines
 **	Copyright (C) 1997 Alex Tkachenko <alex@bcs.zaporizhzhe.ua>
 */
@@ -271,7 +271,7 @@ console_save()
 	{
 		struct vt_mode smode;
 
-		/* 
+		/*
 		**	User switched out of our vt. Let's wait until we get SIG_ACQUIRE,
 		**	otherwise we could save wrong screen image
 		*/
@@ -364,7 +364,7 @@ handle_console (unsigned char action)
 			console_init();
 			break;
 
-		case CONSOLE_DONE: 
+		case CONSOLE_DONE:
 			console_shutdown();
 			break;
 

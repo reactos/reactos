@@ -74,7 +74,7 @@ static int FindVector(DFWINDOW wnd, DFRECT rc, int x, int y)
                         coll = 0;
                     else if (rc.lf+x == rcc.rt)
                         coll = 2;
-                    else 
+                    else
                         coll = 1;
                 }
             }
@@ -88,7 +88,7 @@ static int FindVector(DFWINDOW wnd, DFRECT rc, int x, int y)
                         coll = 0;
                     else if (rc.tp+y == rcc.bt)
                         coll = 2;
-                    else 
+                    else
                         coll = 1;
                 }
             }

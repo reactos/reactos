@@ -37,7 +37,7 @@ struct poptAlias {
 
 typedef struct poptContext_s * poptContext;
 
-poptContext poptGetContext(char * name, int argc, char ** argv, 
+poptContext poptGetContext(char * name, int argc, char ** argv,
 			   struct poptOption * options, int flags);
 void poptResetContext(poptContext con);
 
@@ -55,7 +55,7 @@ void poptFreeContext(poptContext con);
 int poptStuffArgs(poptContext con, char ** argv);
 int poptAddAlias(poptContext con, struct poptAlias alias, int flags);
 int poptReadConfigFile(poptContext con, char * fn);
-/* like above, but reads /etc/popt and $HOME/.popt along with environment 
+/* like above, but reads /etc/popt and $HOME/.popt along with environment
    vars */
 int poptReadDefaultConfig(poptContext con, int useEnv);
 /* argv should be freed -- this allows ', ", and \ quoting, but ' is treated

@@ -1,4 +1,4 @@
-/* $Id: ShellCommandDeleteValue.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommandDeleteValue.h: interface for the CShellCommandDeleteValue class.
 //
@@ -10,7 +10,7 @@
 #include "ShellCommand.h"
 #include "RegistryTree.h"
 
-class CShellCommandDeleteValue : public CShellCommand  
+class CShellCommandDeleteValue : public CShellCommand
 {
 public:
 	CShellCommandDeleteValue(CRegistryTree& rTree);

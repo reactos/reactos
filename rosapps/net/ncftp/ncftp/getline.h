@@ -1,8 +1,8 @@
 #ifndef GETLINE_H
 #define GETLINE_H
 
-/* unix systems can #define POSIX to use termios, otherwise 
- * the bsd or sysv interface will be used 
+/* unix systems can #define POSIX to use termios, otherwise
+ * the bsd or sysv interface will be used
  */
 
 #define GL_BUF_SIZE 1024

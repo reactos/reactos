@@ -9,7 +9,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -142,7 +142,7 @@ int my_system (int as_shell_command, const char *shell, const char *command)
 /* .ado: temp. turn out */
     if (as_shell_command) {
 		/* It is only the shell, /c will not work */
-		if (command) 
+		if (command)
 			spawnlp (P_WAIT, shell, shell, "/c", command, (char *) 0);
 		else
 			spawnlp (P_WAIT, shell, (char *) 0);
@@ -155,11 +155,11 @@ int my_system (int as_shell_command, const char *shell, const char *command)
 #endif
     if (as_shell_command) {
 	if (!access(command, 0)) {
-	    switch(win32_GetEXEType (shell)) {	
+	    switch(win32_GetEXEType (shell)) {
 		case EXE_win16:			/* Windows 3.x archive or OS/2 */
 		case EXE_win32GUI:		/* NT or Chicago GUI API */
 		    spawnlp (P_NOWAIT, shell, shell, "/c", command, (char *) 0);   /* don't wait for GUI programs to end */
-		    break;			
+		    break;
 		case EXE_otherCUI:		/* DOS COM, MZ, ZM, Phar Lap */
 		case EXE_win32CUI:		/* NT or Chicago Console API, also OS/2 */
 		case EXE_Unknown:
@@ -186,7 +186,7 @@ int my_system (int as_shell_command, const char *shell, const char *command)
 */
 char* get_default_shell()
 {
-    if (win32_GetPlatform() == OS_WinNT) 
+    if (win32_GetPlatform() == OS_WinNT)
 	return "cmd.exe";
     else
 	return "command.com";
@@ -269,7 +269,7 @@ char *canonicalize_pathname (char *path)
 	        continue;
 	    }
 
-	    /* Handle `../' or trailing `..' by itself. 
+	    /* Handle `../' or trailing `..' by itself.
 	       Remove the previous ?/ part with the exception of
 	       ../, which we should leave intact. */
 	    if (path[i + 1] == '.' && (path[i + 2] == PATH_SEP || !path[i + 2])) {
@@ -291,7 +291,7 @@ char *canonicalize_pathname (char *path)
 }
 
 #ifndef USE_VFS
-/* 
+/*
    int mc_rmdir (char *path);
    Fix for Win95 UGLY BUG in rmdir: it will return ENOACCESS instead
    of ENOTEMPTY.
@@ -354,7 +354,7 @@ static int conv_nt_unx_rc(int rc)
    return errCode;
 }
 
-/* 
+/*
    int mc_unlink (char *pathName)
    For Windows 95 and NT, files should be able to be deleted even
    if they don't have write-protection. We should build a question box
@@ -409,7 +409,7 @@ int mc_unlink (char *pathName)
 		}
 	}
 	if (rc == TRUE) return 0;
-	else 
+	else
 		return -1;
 }
 #endif /*USE_VFS*/
@@ -426,9 +426,9 @@ void my_statfs (struct my_statfs *myfs_stats, char *path)
 
        /* KBytes available */
        myfs_stats->avail = (unsigned int)( ((double)lpSectorsPerCluster * lpBytesPerSector * lpFreeClusters) / 1024 );
-       
+
        /* KBytes total */
-       myfs_stats->total = (unsigned int)( ((double)lpSectorsPerCluster * lpBytesPerSector * lpClusters) / 1024 ); 
+       myfs_stats->total = (unsigned int)( ((double)lpSectorsPerCluster * lpBytesPerSector * lpClusters) / 1024 );
        myfs_stats->nfree = lpFreeClusters;
        myfs_stats->nodes = lpClusters;
 
@@ -493,9 +493,9 @@ void my_statfs (struct my_statfs *myfs_stats, char *path)
 int gettimeofday (struct timeval* tvp, void *p)
 {
     if (p != NULL)
-	return 0;	
-    
- /* Since MC only calls this func from get_random_hint we return 
+	return 0;
+
+ /* Since MC only calls this func from get_random_hint we return
     some value, not exactly the "correct" one */
     tvp->tv_sec = GetTickCount()/1000; 	/* Number of milliseconds since Windows //started*/
     tvp->tv_usec = GetTickCount();
@@ -503,7 +503,7 @@ int gettimeofday (struct timeval* tvp, void *p)
 
 /* FAKE functions */
 
-int 
+int
 look_for_exe(const char* pathname)
 {
    int j;
@@ -517,9 +517,9 @@ look_for_exe(const char* pathname)
       for (j=0; j<lgh-4; j++) {
          p++;
       } /* endfor */
-      if (!stricmp(p, ".exe") || 
-          !stricmp(p, ".bat") || 
-          !stricmp(p, ".com") || 
+      if (!stricmp(p, ".exe") ||
+          !stricmp(p, ".bat") ||
+          !stricmp(p, ".com") ||
           !stricmp(p, ".cmd")) {
          return 1;
       }
@@ -527,7 +527,7 @@ look_for_exe(const char* pathname)
    return 0;
 }
 
-int 
+int
 lstat (const char* pathname, struct stat *buffer)
 {
    int rc = stat (pathname, buffer);
@@ -543,7 +543,7 @@ lstat (const char* pathname, struct stat *buffer)
    return rc;
 }
 
-int getuid ()	      
+int getuid ()
 {
 /*    SID sid;
     LookupAccountName (NULL, &sid...
@@ -552,7 +552,7 @@ int getuid ()
     return 0;
 }
 
-int getgid ()	      
+int getgid ()
 {
     return 0;
 }
@@ -638,13 +638,13 @@ int mc_doublepopen (int inhandle, int inlen, pid_t *the_pid, char *command, ...)
 	// Duplicate copy of original stdout back into stdout
 	if(_dup2(std_sav[1], _fileno(stdout)) != 0)
    	    exit (1);
-	// Close duplicate copy of original stdout  and stdin    
+	// Close duplicate copy of original stdout  and stdin
 	close(std_sav[0]);
 	close(std_sav[1]);
 
 
 	while ((i = _read (inhandle, buffer,
-							 (inlen == -1 || inlen > 8192) 
+							 (inlen == -1 || inlen > 8192)
 							 ? 8192 : inlen)) > 0) {
 		write (pipe0 [1], buffer, i);
 		if (inlen != -1) {
@@ -662,10 +662,10 @@ int mc_doublepopen (int inhandle, int inlen, pid_t *the_pid, char *command, ...)
 int mc_doublepclose (int pipe, pid_t pid)
 {
     int status = 0;
-    
+
     close (pipe);
     _cwait ( &status, pid, 0);
-    return status;	
+    return status;
 }
 
 /*hacks to get it compile, remove these after vfs works */

@@ -10,7 +10,7 @@ static HBITMAP CaretBitmap;
 
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -19,7 +19,7 @@ WinMain(HINSTANCE hInstance,
   WNDCLASS wc;
   MSG msg;
   HWND hWnd;
-  
+
   CaretBitmap = LoadBitmap(hInstance, (LPCTSTR)IDB_CARET);
 
   wc.lpszClassName = "CaretTestClass";
@@ -87,7 +87,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           break;
       }
       break;
-    
+
     case WM_KEYDOWN:
       if(!GetCaretPos(&pt))
       {
@@ -112,7 +112,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if(!SetCaretPos(pt.x, pt.y))
         DbgPrint("SetCaretPos() failed!\n");
       break;
-    
+
     case WM_RBUTTONDOWN:
       if(!CreateCaret(hWnd, CaretBitmap, 0, 0))
         DbgPrint("CreateCaret() for window 0x%x failed!\n", hWnd);
@@ -120,7 +120,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if(!ShowCaret(hWnd))
           DbgPrint("ShowCaret(0x%x)\n", hWnd);
       break;
-    
+
     case WM_LBUTTONDOWN:
       if(!CreateCaret(hWnd, (HBITMAP)0, CaretWidth, CaretHeight))
         DbgPrint("CreateCaret() for window 0x%x failed!\n", hWnd);
@@ -128,7 +128,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if(!ShowCaret(hWnd))
           DbgPrint("ShowCaret(0x%x)\n", hWnd);
       break;
-    
+
     case WM_CREATE:
       if(!CreateCaret(hWnd, (HBITMAP)0, CaretWidth, CaretHeight))
         DbgPrint("CreateCaret() for window 0x%x failed!\n", hWnd);
@@ -136,13 +136,13 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if(!SetCaretPos(1, 1))
           DbgPrint("SetCaretPos(%i, %i) failed!\n", 1, 1);
       break;
-    
+
     case WM_DESTROY:
       if(!DestroyCaret())
         DbgPrint("DestroyCaret() failed!\n");
       PostQuitMessage(0);
       break;
-    
+
     default:
       return DefWindowProc(hWnd, msg, wParam, lParam);
 	}

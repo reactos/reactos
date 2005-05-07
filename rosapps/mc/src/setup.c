@@ -1,11 +1,11 @@
 /* Setup loading/saving.
    Copyright (C) 1994 Miguel de Icaza
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -66,7 +66,7 @@ extern int ftpfs_use_passive_connections;
 extern int ftpfs_use_unix_list_options;
 #endif
 
-/* "$Id: setup.c,v 1.1 2001/12/30 09:55:21 sedwards Exp $" */
+/* "$Id$" */
 
 #ifdef USE_VFS
 extern int vfs_timeout;
@@ -131,7 +131,7 @@ static struct {
     { "tree",      view_tree },
     { 0, 0 }
 };
-    
+
 static struct {
     char *opt_name;
     int *opt_addr;
@@ -216,7 +216,7 @@ static struct {
        (follow links, stable symlinks) -Norbert */
     { "tree_navigation_flag", &tree_navigation_flag },
 #endif
-#ifdef USE_VFS    
+#ifdef USE_VFS
     { "tar_gzipped_memlimit", &tar_gzipped_memlimit },
     { "vfs_timeout", &vfs_timeout },
     { "vfs_use_targz_memlimit", &vfs_use_limit },
@@ -260,7 +260,7 @@ void panel_save_setup (WPanel *panel, char *section)
 {
     char buffer [40];
     int  i;
-    
+
     sprintf (buffer, "%d", panel->reverse);
     save_string (section, "reverse", buffer, profile_name);
     sprintf (buffer, "%d", panel->case_sensitive);
@@ -277,16 +277,16 @@ void panel_save_setup (WPanel *panel, char *section)
 	    save_string (section, PORT_LIST_MODE_NAME, list_types [i].key, profile_name);
 	    break;
 	}
-    
+
     save_string (section, "user_format",
 			       panel->user_format, profile_name);
-			       
+
     for (i = 0; i < LIST_TYPES; i++){
 	sprintf (buffer, "user_status%d", i);
-	save_string (section, buffer, 
+	save_string (section, buffer,
 	    panel->user_status_format [i], profile_name);
     }
-			       
+
     sprintf (buffer, "%d", panel->user_mini_status);
     save_string (section, "user_mini_status", buffer,
 			       profile_name);
@@ -326,7 +326,7 @@ void save_configure (void)
 static void panel_save_type (char *section, int type)
 {
     int i;
-    
+
     for (i = 0; panel_types [i].opt_name; i++)
 	if (panel_types [i].opt_type == type){
 	    save_string (section, "display", panel_types [i].opt_name,
@@ -374,7 +374,7 @@ void save_setup (void)
     save_panelize ();
     save_panel_types ();
 /*     directory_history_save (); */
-    
+
 #ifdef USE_VFS
 #ifdef USE_NETCODE
     WritePrivateProfileString ("Misc", "ftpfs_password",
@@ -392,10 +392,10 @@ void panel_load_setup (WPanel *panel, char *section)
 {
     int i;
     char buffer [40];
-    
+
     panel->reverse = load_int (section, "reverse", 0);
     panel->case_sensitive = load_int (section, "case_sensitive", OS_SORT_CASE_SENSITIVE_DEFAULT);
-    
+
     /* Load sort order */
     load_string (section, "sort_order", "name", buffer, sizeof (buffer));
     panel->sort_type = (sortfn *) sort_name;
@@ -433,7 +433,7 @@ void panel_load_setup (WPanel *panel, char *section)
 	    strdup (get_profile_string (section, buffer,
 			DEFAULT_USER_FORMAT, profile_name));
     }
-    
+
     panel->user_mini_status =
 	load_int (section, "user_mini_status", 0);
 
@@ -442,7 +442,7 @@ void panel_load_setup (WPanel *panel, char *section)
 static void load_layout (char *profile_name)
 {
     int i;
-    
+
     for (i = 0; layout [i].opt_name; i++)
 	*layout [i].opt_addr =
 	    load_int ("Layout", layout [i].opt_name,
@@ -453,9 +453,9 @@ static int load_mode (char *section)
 {
     char buffer [20];
     int  i;
-    
+
     int mode = view_listing;
-    
+
     /* Load the display mode */
     load_string (section, "display", "listing", buffer, sizeof (buffer));
 
@@ -472,7 +472,7 @@ char *do_load_string (char *s, char *ss, char *def)
 {
     char *buffer = xmalloc (128, "dls");
     char *p;
-    
+
     load_string (s, ss, def, buffer, 128);
 
     p = strdup (buffer);
@@ -500,7 +500,7 @@ void load_setup (void)
 	profile = buffer;
     }
     free (inifile);
-    
+
     profile_name = profile;
 
     /* Load integer boolean options */
@@ -518,7 +518,7 @@ void load_setup (void)
     /* At least one of the panels is a listing panel */
     if (startup_left_mode != view_listing && startup_right_mode!=view_listing)
 	startup_left_mode = view_listing;
-    
+
     if (!other_dir){
 	buffer = (char*) malloc (MC_MAXPATHLEN);
 	load_string ("Dirs", "other_dir", ".", buffer,
@@ -533,12 +533,12 @@ void load_setup (void)
 #endif
     boot_current_is_left =
 	GetPrivateProfileInt ("Dirs", "current_is_left", 1, profile);
-    
+
     load_string ("Misc", "find_ignore_dirs", "", setup_color_string,
 		 sizeof (setup_color_string));
     if (setup_color_string [0])
 	find_ignore_dirs = copy_strings (":", setup_color_string, ":", 0);
-    
+
     /* The default color and the terminal dependent color */
     load_string ("Colors", "base_color", "", setup_color_string,
 			     sizeof (setup_color_string));
@@ -598,7 +598,7 @@ void load_keys_from_section (char *terminal, char *profile_name)
 	free (section_name);
 	return;
     }
-    
+
     while (profile_keys){
 	profile_keys = profile_iterator_next (profile_keys, &key, &value);
 	key_code = lookup_key (key);

@@ -593,7 +593,7 @@ BOOL DfDispatchMessage (void)
 	while (EventQueueCtr > 0)
 	{
 		struct events ev;
-			
+
 		ev = EventQueue[EventQueueOffCtr];
 		if (++EventQueueOffCtr == MAXMESSAGES)
 			EventQueueOffCtr = 0;

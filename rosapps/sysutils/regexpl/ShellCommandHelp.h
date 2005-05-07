@@ -1,4 +1,4 @@
-/* $Id: ShellCommandHelp.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommandHelp.h: interface for the CShellCommandHelp class.
 //
@@ -10,7 +10,7 @@
 #include "ShellCommand.h"
 #include "ShellCommandsLinkedList.h"
 
-class CShellCommandHelp : public CShellCommand  
+class CShellCommandHelp : public CShellCommand
 {
 public:
 	CShellCommandHelp(CShellCommandsLinkedList& rCommandsLinkedList);

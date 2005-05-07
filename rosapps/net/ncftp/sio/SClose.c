@@ -60,7 +60,7 @@ SClose(int sfd, int tlen)
 		}
 		if (errno != EINTR)
 			break;
-	} 
+	}
 	alarm(0);
 	(void) SSignal(SIGALRM, (sio_sigproc_t) sigalrm);
 

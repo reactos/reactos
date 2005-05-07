@@ -1,14 +1,14 @@
 /* editor low level data handling and cursor fundamentals.
 
    Copyright (C) 1996, 1997 the Free Software Foundation
-   
+
    Authors: 1996, 1997 Paul Sheer
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,9 +36,9 @@
 /*
  *
  * here's a quick sketch of the layout: (don't run this through indent.)
- * 
+ *
  * (b1 is buffers1 and b2 is buffers2)
- * 
+ *
  *                                       |
  * \0\0\0\0\0m e _ f i l e . \nf i n . \n|T h i s _ i s _ s o\0\0\0\0\0\0\0\0\0
  * ______________________________________|______________________________________
@@ -55,7 +55,7 @@
  *                              file end|||file beginning
  *                                       |
  *                                       |
- * 
+ *
  *           _
  * This_is_some_file
  * fin.
@@ -100,14 +100,14 @@ char *edit_get_buffer_as_text (WEdit * e)
 /* cursor set to start of file */
 int init_dynamic_edit_buffers (WEdit * edit, const char *filename, const char *text)
 {
- 
+
 #if defined CR_LF_TRANSLATION
     /* Variables needed for safe handling of Translation from Microsoft CR/LF EOL to
        Unix Style LF EOL - Franco */
     long bytes_wanted,bytes_read,bytes_missing;
     char *p;
 #endif
- 
+
     long buf;
     int j, file = 0, buf2;
 
@@ -129,15 +129,15 @@ int init_dynamic_edit_buffers (WEdit * edit, const char *filename, const char *t
     edit->buffers2[buf2] = CMalloc (EDIT_BUF_SIZE);
 
 /*
-_read returns the number of bytes read, 
-which may be less than count if there are fewer than count bytes left in the file 
-or if the file was opened in text mode, 
-in which case each carriage return–linefeed (CR-LF) pair is replaced 
-with a single linefeed character. Only the single linefeed character is counted 
+_read returns the number of bytes read,
+which may be less than count if there are fewer than count bytes left in the file
+or if the file was opened in text mode,
+in which case each carriage return–linefeed (CR-LF) pair is replaced
+with a single linefeed character. Only the single linefeed character is counted
 in the return value. The replacement does not affect the file pointer.
 
-_eof returns 1 if the current position is end of file, or 0 if it is not. 
-A return value of -1 indicates an error; in this case, errno is set to EBADF, 
+_eof returns 1 if the current position is end of file, or 0 if it is not.
+A return value of -1 indicates an error; in this case, errno is set to EBADF,
 which indicates an invalid file handle.
 */
     if (filename){
@@ -381,7 +381,7 @@ int edit_renew (WEdit * edit)
 	dir = strdup (edit->dir);
     else
 	dir = 0;
-    
+
     edit_clean (edit);
     if (!edit_init (edit, lines, columns, 0, "", dir, 0))
 	return 0;
@@ -1163,7 +1163,7 @@ int line_is_blank (WEdit * edit, long line)
     return is_blank (edit, p);
 }
 
-/* moves up until a blank line is reached, or until just 
+/* moves up until a blank line is reached, or until just
    before a non-blank line is reached */
 static void edit_move_up_paragraph (WEdit * edit, int scroll)
 {
@@ -1638,7 +1638,7 @@ static void edit_tab_cmd (WEdit * edit)
     if (option_fake_half_tabs) {
 	if (is_in_indent (edit)) {
 	    /*insert a half tab (usually four spaces) unless there is a
-	       half tab already behind, then delete it and insert a 
+	       half tab already behind, then delete it and insert a
 	       full tab. */
 	    if (right_of_four_spaces (edit)) {
 		for (i = 1; i <= HALF_TAB_SIZE; i++)
@@ -1811,7 +1811,7 @@ void edit_set_user_command (void (*func) (WEdit *, int))
 
 void edit_mail_dialog (WEdit * edit);
 
-/* 
+/*
    This executes a command at a lower level than macro recording.
    It also does not push a key_press onto the undo stack. This means
    that if it is called many times, a single undo command will undo

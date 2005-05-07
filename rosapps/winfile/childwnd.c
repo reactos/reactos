@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include <windowsx.h>
 #include <ctype.h>
 #include <assert.h>
@@ -252,8 +252,8 @@ BOOL OnNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
         if ((int)wParam == TREE_WINDOW) {
 
-            switch (((LPNMHDR)lParam)->code) { 
-            case TVN_ITEMEXPANDING: 
+            switch (((LPNMHDR)lParam)->code) {
+            case TVN_ITEMEXPANDING:
 //                return !OnTreeExpanding(pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
                 OnTreeExpanding(pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
 				return FALSE;
@@ -269,9 +269,9 @@ BOOL OnNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
 //					UpdateStatus(hWnd, pChildWnd->left.cur->down);
 
                 }
-			case TVN_GETDISPINFO: 
-                OnGetDispInfo((NMTVDISPINFO*)lParam); 
-                break; 
+			case TVN_GETDISPINFO:
+                OnGetDispInfo((NMTVDISPINFO*)lParam);
+                break;
 /*
                     HKEY hKey;
                     TCHAR keyPath[1000];
@@ -439,7 +439,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		}
 /*
         {
-        int idCtrl = (int)wParam; 
+        int idCtrl = (int)wParam;
 		//NMHDR* pnmh = (NMHDR*)lParam;
 		//return pane_notify(pnmh->idFrom==IDW_HEADER_LEFT? &pChildWnd->left: &pChildWnd->right, pnmh);
         if ((int)wParam == TREE_WINDOW) {

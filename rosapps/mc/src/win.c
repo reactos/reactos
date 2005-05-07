@@ -1,11 +1,11 @@
 /* Curses utilities
    Copyright (C) 1995 Miguel de Icaza, Janne Kukonlehto
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -35,7 +35,7 @@
 #include "layout.h"
 #include "global.h"
 
-/* "$Id: win.c,v 1.1 2001/12/30 09:55:20 sedwards Exp $" */
+/* "$Id$" */
 
 typedef void (*fnptr)(void);
 
@@ -67,7 +67,7 @@ void sprint_bytesize (char *buffer, int size, int scale)
 void print_bytesize (int size, int scale)
 {
     char buffer [10];
-    
+
     sprint_bytesize (buffer, size, scale);
     printw (buffer);
 }
@@ -79,7 +79,7 @@ int check_fkeys (int c)
 
     if (!fkey_table_list)
 	return 0;
-    
+
     switch (c){
     case KEY_F(1):
 	fkey = 1;
@@ -132,22 +132,22 @@ int check_movement_keys (int c, int additional, int page_size, void *data,
     case XCTRL ('p'):
 	(*backfn)(data, 1);
 	return 1;
-	
+
     case KEY_DOWN:
     case XCTRL ('n'):
 	(*forfn)(data, 1);
 	return 1;
-	
+
     case KEY_PPAGE:
     case ALT('v'):
 	(*backfn)(data, page_size-1);
 	return 1;
-	
+
     case KEY_NPAGE:
     case XCTRL('v'):
 	(*forfn)(data, page_size-1);
 	return 1;
-	
+
     case KEY_HOME:
     case KEY_A1:
 	(*topfn)(data, 0);
@@ -159,7 +159,7 @@ int check_movement_keys (int c, int additional, int page_size, void *data,
     }
     if (additional)
         switch (c){
-	case 'b':  
+	case 'b':
 	case XCTRL('h'):
 	case KEY_BACKSPACE:
 	case 0177:
@@ -248,7 +248,7 @@ key_code_name_t key_name_conv_tab [] = {
     { KEY_KP_ADD,    "kpplus",     N_("+ on keypad") },
     { KEY_KP_SUBTRACT,"kpminus",   N_("- on keypad") },
     { KEY_KP_MULTIPLY,"kpasterix", N_("* on keypad") },
-/* From here on, these won't be shown in Learn keys (no space) */    
+/* From here on, these won't be shown in Learn keys (no space) */
     { KEY_LEFT,	     "kpleft",     N_("Left arrow keypad") },
     { KEY_RIGHT,     "kpright",    N_("Right arrow keypad") },
     { KEY_UP,	     "kpup",       N_("Up arrow keypad") },

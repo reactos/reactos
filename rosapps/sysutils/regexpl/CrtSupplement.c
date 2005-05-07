@@ -1,7 +1,7 @@
-/* $Id: CrtSupplement.c,v 1.2 2002/09/03 18:44:18 chorns Exp $
+/* $Id$
  *
  * Written by EA because ReactOS hasn't yet _ui64toa()
- * (it's in msvcrt.dll, and not in crtdll.dll). 
+ * (it's in msvcrt.dll, and not in crtdll.dll).
  */
 
 #include <stdlib.h>
@@ -41,7 +41,7 @@ _ui64toa (
 		string [i ++] = *(-- w);
 	}
 	string [len] = '\0';
-	
+
 	return string;
 }
 

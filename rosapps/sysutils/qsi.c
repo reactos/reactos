@@ -1,4 +1,4 @@
-/* $Id: qsi.c,v 1.7 2001/07/12 11:58:57 ekohl Exp $
+/* $Id$
  *
  * PROJECT    : ReactOS Operating System (see http://www.reactos.com/)
  * DESCRIPTION: Tool to query system information
@@ -6,7 +6,7 @@
  * AUTHOR     : Emanuele Aliberti
  * LICENSE    : GNU GPL (see http://www.gnu.org/)
  * DATE       : 1999-07-28
- * 
+ *
  * BUILD INSTRUCTIONS
  * 	If you got this code directly from the CVS repository on
  * 	mok.lcvm.com, it should be ok to run "make sqi.exe" from the
@@ -48,7 +48,7 @@ struct
 	BOOL	Active;
 	HANDLE	Heap;
 	INT	ExitCode;
-	
+
 } Application =
 {
 	{0, 0},
@@ -119,7 +119,7 @@ DumpData (int Size, PVOID pData )
 	{
 		return;
 	}
-	while (Size > 0) 
+	while (Size > 0)
 	{
 		printf ("%04x:  ", (Buffer - Base));
 		for (	i = 0;
@@ -224,7 +224,7 @@ FindRequiredBufferSize (int i, int step)
 	INT		Size;
 	LONG		Length = 0;
 
-	
+
 	Size = step = (step > 0 ? step : 1);
 	while	(	(Size < sizeof Buffer)
 			&& (Status == STATUS_INFO_LENGTH_MISMATCH)
@@ -267,7 +267,7 @@ STDCALL
 PrintStatus (NTSTATUS Status)
 {
 	LPCSTR StatusName = NULL;
-	
+
 	switch (Status)
 	{
 		case STATUS_INVALID_INFO_CLASS:
@@ -331,7 +331,7 @@ PrintUtcDateTime (LPCSTR Template, PTIME UtcTime)
 		UtcTimeFields.Minute,
 		UtcTimeFields.Second,
 		UtcTimeFields.Milliseconds
-		); 
+		);
 	printf (
 		Template,
 		UtcTimeString
@@ -345,7 +345,7 @@ PrintUtcDateTime (LPCSTR Template, PTIME UtcTime)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *	Dump whatever we get by calling NtQuerySystemInformation with
  *	a user provided system information class id.
@@ -360,7 +360,7 @@ CMD_DEF(unknown)
 	PBYTE		Buffer = NULL;
 	NTSTATUS	Status;
 
-	
+
 	printf ("SystemInformation %d:\n", _id);
 	/* Find buffer size */
 	Size = FindRequiredBufferSize (_id, 1);
@@ -400,7 +400,7 @@ CMD_DEF(unknown)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -443,7 +443,7 @@ CMD_DEF(0)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -453,7 +453,7 @@ CMD_DEF(1)
 {
 	NTSTATUS			Status;
 	SYSTEM_PROCESSOR_INFORMATION	Info;
-	
+
 	RtlZeroMemory (
 		(PVOID) & Info,
 		sizeof Info
@@ -481,10 +481,10 @@ CMD_DEF(1)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *	System performance information.
- *	
+ *
  * NOTE
  * 	Class 2.
  */
@@ -588,7 +588,7 @@ CMD_DEF(2)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -621,7 +621,7 @@ CMD_DEF(3)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -653,7 +653,7 @@ CMD_DEF(4)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *	A snapshot of the process+thread tables.
  *
@@ -669,7 +669,7 @@ CMD_DEF(5)
 
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 	/* FIXME: check NULL==pInfo */
-	
+
 	/*
 	 *	Obtain required buffer size
 	 */
@@ -814,7 +814,7 @@ CMD_DEF(5)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -852,7 +852,7 @@ CMD_DEF(6)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -889,7 +889,7 @@ CMD_DEF(7)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -900,7 +900,7 @@ CMD_DEF(8)
 	NTSTATUS			Status;
 	SYSTEM_PROCESSORTIME_INFO	Info;
 	ULONG				Length = 0;
-	
+
 	Status = NtQuerySystemInformation (
 			8,
 			& Info,
@@ -925,7 +925,7 @@ CMD_DEF(8)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -936,7 +936,7 @@ CMD_DEF(9)
 	NTSTATUS			Status;
 	SYSTEM_FLAGS_INFORMATION	Info;
 	ULONG				Length = 0;
-	
+
 	Status = NtQuerySystemInformation (
 			9,
 			& Info,
@@ -987,7 +987,7 @@ CMD_DEF(9)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -998,7 +998,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1033,7 +1033,7 @@ CMD_DEF(11)
 		/*
 		 *	Allocate buffer
 		 */
-		pInfo = GlobalAlloc (GMEM_ZEROINIT, Length); 
+		pInfo = GlobalAlloc (GMEM_ZEROINIT, Length);
 		if (NULL == pInfo)
 		{
 			printf ("Could not allocate memory.\n");
@@ -1084,7 +1084,7 @@ CMD_DEF(11)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1118,7 +1118,7 @@ CMD_DEF(12)
 			/*
 			 *	Allocate buffer
 			 */
-			pInfo = GlobalReAlloc (pInfo, Length, GMEM_ZEROINIT); 
+			pInfo = GlobalReAlloc (pInfo, Length, GMEM_ZEROINIT);
 			if (NULL == pInfo)
 			{
 				printf ("Could not allocate memory.\n");
@@ -1174,7 +1174,7 @@ CMD_DEF(12)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1185,7 +1185,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1196,7 +1196,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1207,7 +1207,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1242,7 +1242,7 @@ CMD_DEF(16)
 			/*
 			 *	Allocate buffer
 			 */
-			pInfo = GlobalReAlloc (pInfo, Length, GMEM_ZEROINIT); 
+			pInfo = GlobalReAlloc (pInfo, Length, GMEM_ZEROINIT);
 			if (NULL == pInfo)
 			{
 				printf ("\tCould not allocate memory.\n");
@@ -1303,7 +1303,7 @@ CMD_DEF(16)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1314,7 +1314,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1325,10 +1325,10 @@ CMD_DEF(18)
 	NTSTATUS			Status;
 	PSYSTEM_PAGEFILE_INFORMATION	pInfo = NULL;
 	LONG				Length = 0;
-	
+
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 	/* FIXME: check pInfo */
-	
+
 	Status = NtQuerySystemInformation(
 			18,
 			pInfo,
@@ -1342,7 +1342,7 @@ CMD_DEF(18)
 			/*
 			 *	Allocate buffer
 			 */
-			pInfo = GlobalReAlloc (pInfo, Length, GMEM_ZEROINIT); 
+			pInfo = GlobalReAlloc (pInfo, Length, GMEM_ZEROINIT);
 			if (NULL == pInfo)
 			{
 				printf ("Could not allocate memory.\n");
@@ -1386,7 +1386,7 @@ CMD_DEF(18)
 	}
 
 	DumpData (Length, pInfo);
-	
+
 	GlobalFree (pInfo);
 
 	return EXIT_SUCCESS;
@@ -1394,7 +1394,7 @@ CMD_DEF(18)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1457,7 +1457,7 @@ CMD_DEF(19)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1468,7 +1468,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1478,7 +1478,7 @@ CMD_DEF(21)
 {
 	NTSTATUS			Status;
 	SYSTEM_CACHE_INFORMATION	Si;
-	
+
 	RtlZeroMemory (
 		(PVOID) & Si,
 		sizeof Si
@@ -1507,7 +1507,7 @@ CMD_DEF(21)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  * 	Get statistic data about tagged pools. Not implemented in the
  * 	free build.
@@ -1524,7 +1524,7 @@ CMD_DEF(22)
 
 	pInfo = GlobalAlloc (GMEM_ZEROINIT, BUFFER_SIZE_DEFAULT);
 	/* FIXME: check pInfo */
-	
+
 	Status = NtQuerySystemInformation(
 			22,
 			pInfo,
@@ -1538,7 +1538,7 @@ CMD_DEF(22)
 			/*
 			 *	Allocate buffer
 			 */
-			pInfo = GlobalReAlloc (pInfo, Length, GMEM_ZEROINIT); 
+			pInfo = GlobalReAlloc (pInfo, Length, GMEM_ZEROINIT);
 			if (NULL == pInfo)
 			{
 				printf ("Could not allocate memory.\n");
@@ -1590,7 +1590,7 @@ CMD_DEF(22)
 	}
 
 	DumpData (Length, pInfo);
-	
+
 	GlobalFree (pInfo);
 
 	return EXIT_SUCCESS;
@@ -1598,7 +1598,7 @@ CMD_DEF(22)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1631,7 +1631,7 @@ CMD_DEF(23)
 	printf ("\tTimerResolution  = %ld\n", Info.TimerResolution);
 	printf ("\tnDPCBypasses     = %ld\n", Info.nDPCBypasses);
 	printf ("\tnAPCBypasses     = %ld\n", Info.nAPCBypasses);
-		
+
 	DumpData (sizeof Info, & Info);
 
 	return EXIT_SUCCESS;
@@ -1640,7 +1640,7 @@ CMD_DEF(23)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1683,7 +1683,7 @@ CMD_DEF(24)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1694,7 +1694,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1704,7 +1704,7 @@ CMD_DEF(26)
 CMD_NOT_IMPLEMENTED
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1715,7 +1715,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1747,7 +1747,7 @@ CMD_DEF(28)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1758,7 +1758,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1769,7 +1769,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1780,7 +1780,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1791,7 +1791,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1802,7 +1802,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1813,7 +1813,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1846,7 +1846,7 @@ CMD_DEF(35)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1857,7 +1857,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1889,7 +1889,7 @@ CMD_DEF(37)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1900,7 +1900,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1911,7 +1911,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1922,7 +1922,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1933,7 +1933,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1944,7 +1944,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -1955,7 +1955,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *	Dump the system TIME_ZONE_INFORMATION object.
  *
@@ -1984,7 +1984,7 @@ CMD_DEF(44)
 		"  Bias........: %ld'\n",
 		Tzi.Bias /* LONG */
 		);
-	
+
 	printf ("  Standard\n");
 	RtlZeroMemory (
 		(PVOID) Name,
@@ -1999,16 +1999,16 @@ CMD_DEF(44)
 		L"\tName: \"%s\"\n",
 		Name
 		);
-		
+
 	PrintUtcDateTime (
 		"\tDate: %s\n",
 		(PTIME) & Tzi.StandardDate	/* SYSTEMTIME */
 		);
-		
+
 	printf ("\tBias: %ld'\n",
 		Tzi.StandardBias /* LONG */
 		);
-	
+
 	printf ("  Daylight\n");
 	RtlZeroMemory (
 		(PVOID) Name,
@@ -2016,22 +2016,22 @@ CMD_DEF(44)
 		);
 	lstrcpynW (
 		Name,
-		Tzi.DaylightName, /* WCHAR [32] */ 
+		Tzi.DaylightName, /* WCHAR [32] */
 		32
 		);
 	wprintf (
 		L"\tName: \"%s\"\n",
 		Name
 		);
-		
+
 	PrintUtcDateTime (
 		"\tDate: %s\n",
-		(PTIME) & Tzi.DaylightDate /* SYSTEMTIME */ 
+		(PTIME) & Tzi.DaylightDate /* SYSTEMTIME */
 		);
-		
+
 	printf (
 		"\tBias: %ld'\n",
-		Tzi.DaylightBias /* LONG */ 
+		Tzi.DaylightBias /* LONG */
 		);
 
 	return EXIT_SUCCESS;
@@ -2039,7 +2039,7 @@ CMD_DEF(44)
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2050,7 +2050,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2061,7 +2061,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2072,7 +2072,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2083,7 +2083,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2094,7 +2094,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2105,7 +2105,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2116,7 +2116,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2127,7 +2127,7 @@ CMD_NOT_IMPLEMENTED
 
 
 /**********************************************************************
- * 
+ *
  * DESCRIPTION
  *
  * NOTE
@@ -2144,7 +2144,7 @@ CMD_NOT_IMPLEMENTED
 CMD_DEF(ver)
 {
 	INT	Total = 0;
-	
+
 	Total =
 	printf (
 	"ReactOS Operating System - http://www.reactos.com/\n"
@@ -2190,7 +2190,7 @@ extern COMMAND_DESCRIPTOR Commands [];
 CMD_DEF(help)
 {
 	int i;
-	
+
 	if (Application.Flag.Verbose)
 	{
 		printf ("Commands:\n");
@@ -2219,7 +2219,7 @@ CMD_DEF(credits)
 		"\nReactOS (http://www.reactos.com/):\n"
 		"\tEmanuele Aliberti\n"
 		"\tEric Kohl\n\n"
-		
+
 		"HandleEx:\n"
 		"\tMark Russinovich (http://www.sysinternals.com/)\n\n"
 
@@ -2228,7 +2228,7 @@ CMD_DEF(credits)
 
 		"Undocumented SYSTEM_POOL_INFORMATION:\n"
 		"\tKlaus P. Gerlicher\n\n"
-		
+
 		"Undocumented Windows NT:\n"
 		"\tPrasad Dabak, Sandeep Phadke, and Milind Borate\n\n"
 
@@ -2269,19 +2269,19 @@ COMMAND_DESCRIPTOR
 Commands [] =
 {
 /* System information classes */
-	
+
 	{						/* 0  Q  */
 		"basic",
 		CMD_REF(0),
 		"Basic system information"
 	},
 	{						/* 1  Q  */
-		"processor",	
+		"processor",
 		CMD_REF(1),
 		"Processor characteristics"
 	},
 	{						/* 2  Q  */
-		"perf",	
+		"perf",
 		CMD_REF(2),
 		"System performance data"
 	},
@@ -2376,7 +2376,7 @@ Commands [] =
 		"Bop (VDM)"
 	},
 	{						/* 21 QS */
-		"cache",	
+		"cache",
 		CMD_REF(21),
 		"File cache"
 	},
@@ -2577,7 +2577,7 @@ Commands [] =
 		CMD_REF(verbose),
 		"Enable/disable printing unused, unknown, and service fields"
 	},
-	
+
 	{ NULL, NULL }
 };
 
@@ -2672,7 +2672,7 @@ main (int argc, char * argv [])
 				printf ("Unknown command (type help for a list of valid commands).\n");
 			}
 		}
-		
+
 	}
 	if (! Application.Flag.Batch)
 	{

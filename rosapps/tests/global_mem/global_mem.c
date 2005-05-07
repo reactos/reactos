@@ -19,7 +19,7 @@
 
 /*
 ** This define controls the size of a memory allocation request.
-** For this test suite to really be comprehensive, we should 
+** For this test suite to really be comprehensive, we should
 ** probably be testing many different block sizes.
 */
 #define MEM_BLOCK_SIZE 0x80000
@@ -38,7 +38,7 @@ typedef enum TestStatus
 
 /*---------------------------------------------------------------------------
 ** This is a relation used to combine two test statuses.
-** The combine rules are as follows: 
+** The combine rules are as follows:
 **                   FAIL & Anything == FAIL
 **                SKIPPED & Anything == Anything
 **
@@ -53,7 +53,7 @@ TEST_STATUS TEST_CombineStatus(TEST_STATUS a, TEST_STATUS b)
     case FAILED:  result = FAILED; break;
     case SKIPPED: result = b; break;
     }
-     
+
     return result;
 }
 
@@ -83,7 +83,7 @@ void OUTPUT_Line(const char *szLine)
 
     memset(output, 0, DISPLAY_COLUMNS + 2);
 
-    /*If this line is longer than DISPLAY_COLUMNS, 
+    /*If this line is longer than DISPLAY_COLUMNS,
     * break it at the first space.
     */
     if (DISPLAY_COLUMNS - 2 < strlen(szLine))
@@ -101,7 +101,7 @@ void OUTPUT_Line(const char *szLine)
         output[1] = ' ';
         output[strlen(output)] = '\n';
         printf(output);
-        
+
         OUTPUT_Line(szLine + spaceIndex + 1);
     }
     else
@@ -109,7 +109,7 @@ void OUTPUT_Line(const char *szLine)
         sprintf(output,"| %s\n", szLine);
         printf(output);
     }
-   
+
 }
 
 /*---------------------------------------------------------------------------
@@ -159,7 +159,7 @@ void OutputAllocFlags(UINT pFlags)
     {
         OUTPUT_Line("Fixed Memory");
     }
-    
+
     if (pFlags & GMEM_ZEROINIT)
     {
         OUTPUT_Line("Zero Initialized Memory");
@@ -183,12 +183,12 @@ void OutputErrorCode()
 TEST_STATUS TEST_MemoryWrite(LPVOID mem, DWORD cbSize)
 {
     TEST_STATUS result = FAILED;
-    
+
     if (0 == IsBadWritePtr(mem, cbSize))
     {
         result = PASSED;
     }
-    return result;    
+    return result;
 }
 
 /*---------------------------------------------------------------------------
@@ -197,12 +197,12 @@ TEST_STATUS TEST_MemoryWrite(LPVOID mem, DWORD cbSize)
 TEST_STATUS TEST_MemoryRead(LPVOID mem, DWORD cbSize)
 {
     TEST_STATUS result = FAILED;
-    
+
     if (0 == IsBadReadPtr(mem, cbSize))
     {
         result = PASSED;
     }
-    return result;    
+    return result;
 }
 
 /*---------------------------------------------------------------------------
@@ -221,7 +221,7 @@ int IsMovable(HGLOBAL hMem)
         rc = 1;
     }
     GlobalUnlock(hMem);
-    
+
     return rc;
 }
 
@@ -233,7 +233,7 @@ TEST_STATUS TestGlobalAllocNFree(UINT allocFlags)
     TEST_STATUS status = SKIPPED;
     HGLOBAL hTest = 0;
     OUTPUT_Banner("Testing the GlobalAlloc and GlobalFree calls");
-    OUTPUT_Line("Allocate a buffer"); 
+    OUTPUT_Line("Allocate a buffer");
 
     OutputAllocFlags(allocFlags);
 
@@ -263,7 +263,7 @@ TEST_STATUS TestGlobalLockNUnlock(UINT allocFlags)
     LPVOID      pMem      = 0;
     TEST_STATUS subtest   = SKIPPED;
     TEST_STATUS result    = FAILED;
-    
+
     OUTPUT_Banner("Testing the GlobalLock/Unlock functions.");
     OutputAllocFlags(allocFlags);
     OUTPUT_Line("");
@@ -272,24 +272,24 @@ TEST_STATUS TestGlobalLockNUnlock(UINT allocFlags)
     if (0 != hMem)
     {
         OUTPUT_Line("Allocated a memory block");
-        
+
         OUTPUT_Line("Testing Lock");
         pMem = GlobalLock(hMem);
         if (0 != pMem)
         {
             OUTPUT_Result(PASSED);
-            
+
             OUTPUT_Line("Testing memory for read.");
             subtest = TEST_MemoryRead(pMem, MEM_BLOCK_SIZE);
             OUTPUT_Result(subtest);
             result = TEST_CombineStatus(PASSED, subtest);
-            
+
 
             OUTPUT_Line("Testing memory for write.");
             subtest = TEST_MemoryRead(pMem, MEM_BLOCK_SIZE);
             OUTPUT_Result(subtest);
             result = TEST_CombineStatus(result, subtest);
-            
+
 
             OUTPUT_Line("Unlocking memory");
             if (GlobalUnlock(hMem))
@@ -339,7 +339,7 @@ TEST_STATUS TestGlobalReAllocFixed()
     LPVOID      pMem       = 0;
     TEST_STATUS subtest    = SKIPPED;
     TEST_STATUS result     = SKIPPED;
-    
+
     OUTPUT_Line("Testing GlobalReAlloc() on memory allocated as GMEM_FIXED");
 
     /* Case 1: convert a fixed block to a movable block. */
@@ -417,9 +417,9 @@ TEST_STATUS TestGlobalReAllocFixed()
             OUTPUT_HexDword((DWORD)hReAlloced);
             if (hMem == hReAlloced)
             {
-                OUTPUT_Line("GlobalReAlloc returned the same pointer.  The documentation states that this is wrong, but Windows NT works this way.");    
+                OUTPUT_Line("GlobalReAlloc returned the same pointer.  The documentation states that this is wrong, but Windows NT works this way.");
             }
-            
+
             hMem = hReAlloced;
             subtest = TEST_CombineStatus(subtest, PASSED);
             subtest = TEST_CombineStatus(subtest, TEST_MemoryRead((LPVOID)hMem, MEM_BLOCK_SIZE - 100));
@@ -497,9 +497,9 @@ TEST_STATUS TestGlobalReAllocMovable()
     LPVOID      pMem       = 0;
     TEST_STATUS subtest    = SKIPPED;
     TEST_STATUS result     = SKIPPED;
-    
+
     OUTPUT_Line("Testing GlobalReAlloc() on memory allocated as GMGM_MOVEABLE");
-    
+
     /* case 1 test reallocing a movable block that is unlocked. */
     OUTPUT_Line("Allocating buffer");
     hMem = GlobalAlloc(GMEM_MOVEABLE, MEM_BLOCK_SIZE);
@@ -519,7 +519,7 @@ TEST_STATUS TestGlobalReAllocMovable()
             OUTPUT_HexDword((DWORD)hMem);
             OUTPUT_Line("ReAlloced Handle: ");
             OUTPUT_HexDword((DWORD)hReAlloced);
-            
+
             pMem = GlobalLock(hReAlloced);
             hMem = hReAlloced;
             subtest = TEST_CombineStatus(subtest, PASSED);
@@ -575,7 +575,7 @@ TEST_STATUS TestGlobalReAllocMovable()
         }
 
         GlobalUnlock(hMem);
-        
+
         GlobalFree(hMem);
     }
     else
@@ -587,7 +587,7 @@ TEST_STATUS TestGlobalReAllocMovable()
     OUTPUT_Line("");
 
     result = TEST_CombineStatus(result, subtest);
-    
+
     OUTPUT_Line("");
     return result;
 }
@@ -602,7 +602,7 @@ TEST_STATUS TestGlobalReAlloc()
 
     result = TEST_CombineStatus(result, TestGlobalReAllocFixed());
     result = TEST_CombineStatus(result, TestGlobalReAllocMovable());
-    
+
     OUTPUT_Line("GlobalReAlloc test result:");
     OUTPUT_Result(result);
     return result;
@@ -636,10 +636,10 @@ TEST_STATUS TestGlobalFlagsMoveable()
             result = TEST_CombineStatus(result, FAILED);
         }
         OUTPUT_Result(result);
-        
+
         OUTPUT_Line("Pointer from handle: ");
         OUTPUT_HexDword((DWORD)GlobalLock(hMem));
-        
+
         OUTPUT_Line("Testing after a lock");
         OUTPUT_Line("Testing for a lock of 1");
         uFlags = GlobalFlags(hMem);
@@ -683,7 +683,7 @@ TEST_STATUS TestGlobalFlagsMoveable()
         OUTPUT_Line("Testing for a discarded flag");
         uFlags = GlobalFlags(hMem);
         if (0 != (uFlags & GMEM_DISCARDED)) /*discarded*/
-        {   
+        {
             result = TEST_CombineStatus(result, PASSED);
         }
         else
@@ -759,7 +759,7 @@ TEST_STATUS TestGlobalFlagsFixed()
         OUTPUT_Line("GlobalAlloc failed!");
         result = TEST_CombineStatus(result, FAILED);
     }
-    
+
     return result;
 }
 /*---------------------------------------------------------------------------
@@ -769,10 +769,10 @@ TEST_STATUS TestGlobalFlags()
 {
     OUTPUT_Banner("Testing GlobalFlags()");
     TEST_STATUS result = SKIPPED;
-    
-    result = TEST_CombineStatus(result, TestGlobalFlagsFixed()); 
-    result = TEST_CombineStatus(result, TestGlobalFlagsMoveable()); 
-    
+
+    result = TEST_CombineStatus(result, TestGlobalFlagsFixed());
+    result = TEST_CombineStatus(result, TestGlobalFlagsMoveable());
+
     OUTPUT_Line("GlobalFlags result:");
     OUTPUT_Result(result);
     return result;
@@ -789,7 +789,7 @@ TEST_STATUS TestGlobalHandle()
     TEST_STATUS result  = SKIPPED;
 
     OUTPUT_Banner("Testing GlobalHandle()");
-    
+
     OUTPUT_Line("Testing GlobalHandle with a block of GMEM_FIXED memory");
     hMem = GlobalAlloc(GMEM_FIXED, MEM_BLOCK_SIZE);
     if (0 != hMem)
@@ -797,7 +797,7 @@ TEST_STATUS TestGlobalHandle()
 
         OUTPUT_Line("Allocation handle: ");
         OUTPUT_HexDword((DWORD)hMem);
-        
+
         hTest = GlobalHandle(hMem);
         if (hMem == hTest)
         {
@@ -856,7 +856,7 @@ TEST_STATUS TestGlobalHandle()
     OUTPUT_Line("Result from subtest:");
     OUTPUT_Result(subtest);
     result = TEST_CombineStatus(result, subtest);
-    
+
 
     OUTPUT_Line("Global Handle test results:");
     OUTPUT_Result(result);
@@ -873,7 +873,7 @@ TEST_STATUS TestGlobalSize()
     TEST_STATUS subtest = SKIPPED;
     TEST_STATUS result  = SKIPPED;
     OUTPUT_Banner("Testing GlobalSize()");
-    
+
     OUTPUT_Line("Testing GlobalSize with a block of GMEM_FIXED memory");
     hMem = GlobalAlloc(GMEM_FIXED, MEM_BLOCK_SIZE);
     if (0 != hMem)
@@ -905,7 +905,7 @@ TEST_STATUS TestGlobalSize()
     OUTPUT_Line("Testing GlobalSize with a block of GMEM_MOVEABLE memory");
     hMem = GlobalAlloc(GMEM_MOVEABLE, MEM_BLOCK_SIZE);
     if (0 != hMem)
-    {   
+    {
         size = GlobalSize(hMem);
         if (MEM_BLOCK_SIZE <= size)
         {
@@ -980,7 +980,7 @@ TEST_STATUS TestGlobalDiscard()
     {
         OUTPUT_Line("Allocation handle: ");
         OUTPUT_HexDword((DWORD)hMem);
-        
+
         hTest = GlobalDiscard(hMem);
         if (0 == hTest)
         {
@@ -1044,15 +1044,15 @@ int main(int argc, char ** argv)
     test_set = TEST_CombineStatus(test_set, TestGlobalLockNUnlock(GHND));
     test_set = TEST_CombineStatus(test_set, TestGlobalLockNUnlock(GMEM_FIXED));
     test_set = TEST_CombineStatus(test_set, TestGlobalLockNUnlock(GMEM_MOVEABLE));
-    
+
     test_set = TEST_CombineStatus(test_set, TestGlobalReAlloc());
 
     test_set = TEST_CombineStatus(test_set, TestGlobalFlags());
-    
+
     test_set = TEST_CombineStatus(test_set, TestGlobalHandle());
-    
+
     test_set = TEST_CombineStatus(test_set, TestGlobalSize());
-    
+
     test_set = TEST_CombineStatus(test_set, TestGlobalDiscard());
 
     /* output the result for the entire set of tests*/

@@ -45,7 +45,7 @@ void BuildSystemMenu(DFWINDOW wnd)
 	int lf, tp, ht, wd;
     DFWINDOW SystemMenuWnd;
 
-    SystemMenu.PullDown[0].Selections[6].Accelerator = 
+    SystemMenu.PullDown[0].Selections[6].Accelerator =
         (GetClass(wnd) == APPLICATION) ? ALT_F4 : CTRL_F4;
 
     lf = GetLeft(wnd)+1;

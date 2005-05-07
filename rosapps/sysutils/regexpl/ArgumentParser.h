@@ -1,4 +1,4 @@
-/* $Id: ArgumentParser.h,v 1.2 2001/01/13 23:53:46 narnaoud Exp $ */
+/* $Id$ */
 
 // ArgumentParser.h: interface for the CArgumentParser class.
 //

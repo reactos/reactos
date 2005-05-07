@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-    
+
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
@@ -78,5 +78,5 @@ LRESULT CALLBACK RosMDIChildProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 }
 
 
-/*    
+/*
 */

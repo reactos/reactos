@@ -2,14 +2,14 @@
 
 /* Background support.
    Copyright (C) 1996 The Free Software Foundation
-   
+
    Written by: 1996 Miguel de Icaza
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -78,7 +78,7 @@ static int parent_fd;
 #define mymsg "Desde el hijo\n\r"
 
 struct TaskList *task_list = NULL;
-    
+
 void
 register_task_running (pid_t pid, int fd, char *info)
 {
@@ -130,19 +130,19 @@ do_background (char *info)
 {
     int comm [2];		/* control connection stream */
     int pid;
-    
+
     if (socketpair (AF_UNIX, SOCK_STREAM, 0, comm) == -1)
 	return -1;
-    
+
     if ((pid = fork ()) == -1)
 	return -1;
-    
+
     if (pid == 0){
 	int nullfd;
 
 	parent_fd = comm [1];
 	we_are_background = 1;
-	
+
 	/* Make stdin/stdout/stderr point somewhere */
 	close (0);
 	close (1);
@@ -157,11 +157,11 @@ do_background (char *info)
 	/* To make it obvious if it fails, there is a bug report on this */
 	write (2, mymsg, sizeof (mymsg));
 	write (1, mymsg, sizeof (mymsg));
-	
+
 	/* Just for debugging the background back end */
 	if (background_wait){
 	    volatile int i = 1;
-	    
+
 	    while (i)
 		;
 	}
@@ -186,12 +186,12 @@ void
 real_message_1s (enum OperationMode mode, int *flags, char *title, char *str1)
 {
     char *full_title;
-    
+
     if (mode == Background)
 	full_title = background_title (title);
     else
         full_title = title;
-    
+
     message (*flags, title, str1);
 
     if (title != full_title)
@@ -202,14 +202,14 @@ void
 real_message_2s (enum OperationMode mode, int *flags, char *title, char *str1, char *str2)
 {
     char *full_title;
-    
+
     if (mode == Background)
 	full_title = background_title (title);
     else
         full_title = title;
-    
+
     message (*flags, title, str1, str2);
-    
+
     if (title != full_title)
 	free (full_title);
 }
@@ -218,14 +218,14 @@ void
 real_message_3s (enum OperationMode mode, int *flags, char *title, char *str1, char *str2, const char *str3)
 {
     char *full_title;
-    
+
     if (mode == Background)
 	full_title = background_title (title);
     else
         full_title = title;
-    
+
     message (*flags, title, str1, str2, str3);
-    
+
     if (title != full_title)
 	free (full_title);
 }
@@ -268,7 +268,7 @@ real_message_3s (enum OperationMode mode, int *flags, char *title, char *str1, c
  */
 /*
  * Receive requests from background process and invoke the
- * specified routine 
+ * specified routine
  */
 
 int
@@ -282,7 +282,7 @@ background_attention (int fd, void *xpid)
     int bytes;
     enum ReturnType type;
     char *background_process_error = _(" Background process error ");
-    
+
     bytes = read (fd, &routine, sizeof (routine));
     if (bytes < (sizeof (routine))){
 	if (errno == ECHILD)
@@ -300,7 +300,7 @@ background_attention (int fd, void *xpid)
 	waitpid (pid, &status, 0);
 	return 0;
     }
-    
+
     read (fd, &argc, sizeof (argc));
     if (argc > MAXCALLARGS){
 	message (1, _(" Background protocol error "),
@@ -308,14 +308,14 @@ background_attention (int fd, void *xpid)
 		 " than we can handle. \n"));
     }
     read (fd, &type, sizeof (type));
-    
+
     for (i = 0; i < argc; i++){
 	int size;
-	
+
 	read (fd, &size, sizeof (size));
 	data [i] = xmalloc (size+1, "RPC Arguments");
 	read (fd, data [i], size);
-	
+
 	data [i][size] = 0;	/* NULL terminate the blocks (they could be strings) */
     }
 
@@ -338,12 +338,12 @@ background_attention (int fd, void *xpid)
 		(Background, data [0], data [1], data [2], data [3]);
 	    break;
 	}
-	
+
 	/* Send the result code and the value for shared variables */
 	write (fd, &result,           sizeof (int));
 	write (fd, &do_append,        sizeof (do_append));
 	write (fd, &recursive_result, sizeof (recursive_result));
-	
+
     } else if (type == Return_String) {
 	int len;
 
@@ -407,7 +407,7 @@ parent_call (void *routine, int argc, ...)
 {
     va_list ap;
     int i;
-    
+
     va_start (ap, argc);
     parent_call_header (routine, argc, Return_Integer);
     for (i = 0; i < argc; i++){
@@ -419,7 +419,7 @@ parent_call (void *routine, int argc, ...)
 	write (parent_fd, &len, sizeof (int));
 	write (parent_fd, value, len);
     }
-    /* Besides the regular result, get the value for 
+    /* Besides the regular result, get the value for
      * variables that may be modified in the parent that affect our behaviour
      */
     read (parent_fd, &i,         sizeof (int));
@@ -434,7 +434,7 @@ parent_call_string (void *routine, int argc, ...)
     va_list ap;
     char *str;
     int i;
-    
+
     va_start (ap, argc);
     parent_call_header (routine, argc, Return_String);
     for (i = 0; i < argc; i++){
@@ -466,7 +466,7 @@ call_1s (int (*routine)(enum OperationMode, char *), char *str)
 {
     if (we_are_background)
 	return parent_call ((void *)routine, 1, strlen (str), str);
-    else 
+    else
 	return (*routine)(Foreground, str);
 }
 

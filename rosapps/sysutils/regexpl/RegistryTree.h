@@ -1,4 +1,4 @@
-/* $Id: RegistryTree.h,v 1.2 2001/01/10 01:25:29 narnaoud Exp $ */
+/* $Id$ */
 
 // RegistryTree.h: interface for the CRegistryTree class.
 //
@@ -12,7 +12,7 @@
 // Max size of error description.
 #define ERROR_MSG_BUFFER_SIZE	1024
 
-class CRegistryTree  
+class CRegistryTree
 {
 public:
 	// Constructor
@@ -77,9 +77,9 @@ public:
   //   TRUE - key opened successfully.
   //   FALSE - error. Call GetLastErrorDescription() to get error description.
 	BOOL DeleteSubkeys(const TCHAR *pszKeyPattern, const TCHAR *pszPath, BOOL blnRecursive = FALSE);
-  
+
 	BOOL NewKey(const TCHAR *pszKeyName, const TCHAR *pszPath, BOOL blnVolatile = FALSE);
-  
+
 	BOOL SetMachineName(LPCTSTR pszMachineName);
 
 // Internal methods
@@ -99,7 +99,7 @@ private:
   BOOL InternalGetSubkey(const TCHAR *pszSubkeyName, REGSAM DesiredAccess, CRegistryKey& rKey);
   void GotoRoot();
   BOOL DeleteSubkeys(CRegistryKey& rKey, const TCHAR *pszKeyPattern, BOOL blnRecursive);
-  
+
 private:
   class CNode
   {
@@ -107,7 +107,7 @@ private:
     CNode *m_pUp;
     CRegistryKey m_Key;
   } m_Root;
-  
+
 	CNode *m_pCurrentKey;              // The current key.
 	TCHAR m_ErrorMsg[ERROR_MSG_BUFFER_SIZE+1];   // Last error description buffer.
 	LPTSTR m_pszMachineName;                     // Pointer to buffer containing machine name with leading backslashes. NULL if local.

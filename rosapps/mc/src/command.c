@@ -55,7 +55,7 @@ ${var:-value}, etc. Use the eval cd 'path' command instead.
 Bugs: No quoting occurrs here, so ${VAR} and $VAR will be always
 substituted. I think we can encourage users to use in such extreme
 cases instead of >cd path< command a >eval cd 'path'< command, which works
-as they might expect :) 
+as they might expect :)
 FIXME: Perhaps we should do wildcard matching as well? */
 static int examine_cd (char *path)
 {
@@ -99,7 +99,7 @@ static int examine_cd (char *path)
         }
     }
     *r = 0;
-    
+
     result = do_cd (q, cd_parse_command);
 
     /* CDPATH handling */
@@ -143,7 +143,7 @@ void do_cd_command (char *cmd)
 	cmd [len] = 0;
 	len --;
     }
-    
+
     if (cmd [2] == 0)
 	cmd = "cd ";
 
@@ -180,7 +180,7 @@ void do_cd_command (char *cmd)
 static int enter (WCommand *cmdline)
 {
     Dlg_head *old_dlg;
-    
+
     if (command_prompt && strlen (input_w (cmdline)->buffer)){
 	char *cmd;
 
@@ -203,7 +203,7 @@ static int enter (WCommand *cmdline)
 	    new_input (input_w (cmdline));
 	    return MSG_HANDLED;
 	}
-#endif 
+#endif
 	else {
 	    char *command, *s;
 	    int i, j;
@@ -232,7 +232,7 @@ static int enter (WCommand *cmdline)
 	    new_input (input_w (cmdline));
 	    execute (command);
 	    free (command);
-	    
+
 #ifdef HAVE_SUBSHELL_SUPPORT
 	    if (quit & SUBSHELL_EXIT){
 	        quiet_quit_cmd ();
@@ -277,7 +277,7 @@ WCommand *command_new (int y, int x, int cols)
     cmd->old_callback = (callback_fn) cmd->input.widget.callback;
     cmd->input.widget.callback = (int (*) (Dlg_head *, void *, int, int))
     			command_callback;
-    
+
     cmd->input.completion_flags |= INPUT_COMPLETE_COMMANDS;
     return cmd;
 }

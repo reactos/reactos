@@ -53,7 +53,7 @@ enum {
     DLG_KEY,			/* Sent on keypress before sending to widget */
     DLG_INIT,			/* Sent on init */
     DLG_END,			/* Sent on shutdown */
-    DLG_ACTION,			
+    DLG_ACTION,
     DLG_DRAW,			/* Sent for updating dialog managed area */
     DLG_FOCUS,			/* Sent on give focus to a widget */
     DLG_UNFOCUS,		/* Sent on remove focus from widget */
@@ -77,10 +77,10 @@ typedef struct Dlg_head {
 
     void *previous_dialog;	/* Pointer to the previously running Dlg_head */
     int  refresh_pushed;	/* Did the dialog actually run? */
-    
+
     /* position */
     int x, y;			/* Position relative to screen origin */
-    
+
     /* Flags */
     int running;
     int direction;
@@ -92,7 +92,7 @@ typedef struct Dlg_head {
     /* Internal variables */
     struct Widget_Item *current, *first, *last;
     int (*callback) (struct Dlg_head *, int, int);
-    
+
     struct Widget_Item *initfocus;
 
     /* Hacks */
@@ -101,10 +101,10 @@ typedef struct Dlg_head {
     int cols;
     int lines;
     void *data;
-    
+
     int  has_menubar;	/* GrossHack: Send events on row 1 to a menubar? */
     int  raw;		/* Should the tab key be sent to the dialog? */
-    
+
     widget_data wdata;
     int  grided;	/* Does it use the automatic layout? */
 #ifdef HAVE_GNOME
@@ -114,30 +114,30 @@ typedef struct Dlg_head {
 
 /* XView widget layout */
 
-typedef enum { 
+typedef enum {
     XV_WLAY_DONTCARE, /* Place the widget wherever it is reasonable */
-    
+
     XV_WLAY_RIGHTOF,  /* Place the widget to the right of the last widget
 		       * created - note: add_widget creates widgets from
 		       *  the last to the first one.
 		       */
-    
+
     XV_WLAY_BELOWOF,  /* Place it in a column like style */
-    
+
     XV_WLAY_BELOWCLOSE,/* The same, but without any gap between them */
-    
+
     XV_WLAY_NEXTROW,  /* Place it on the left margin with Y bellow all the
 		       * previous widgets
 		       */
-    
+
     XV_WLAY_CENTERROW,/* The same as previous, but when the dialog is
 		       * ready to show, tries to center that row of widgets
 		       */
-    
+
     XV_WLAY_NEXTCOLUMN, /* Place it on the top margin with X behind all the
 		       * previous widgets
 		       */
-		       
+
     XV_WLAY_RIGHTDOWN, /* Place the widget to the right of the last one with
     		        * y set so that both y + h and yold + hold are equal.
     		          This is usefull if the previous widget was a radio,
@@ -213,20 +213,20 @@ int  add_widgetl          (Dlg_head *dest, void *Widget, WLay layout);
 int  remove_widget        (Dlg_head *dest, void *Widget);
 int  destroy_widget       (Widget *w);
 
-/* Runs dialog d */       
+/* Runs dialog d */
 void run_dlg              (Dlg_head *d);
-		          
+
 void dlg_run_done         (Dlg_head *h);
 void dlg_process_event    (Dlg_head *h, int key, Gpm_Event *event);
 void init_dlg             (Dlg_head *h);
 
 /* To activate/deactivate the idle message generation */
 void set_idle_proc        (Dlg_head *d, int state);
-		          
+
 void dlg_redraw           (Dlg_head *h);
 void dlg_refresh          (void *parameter);
 void destroy_dlg          (Dlg_head *h);
-		          
+
 void widget_set_size      (Widget *widget, int x1, int y1, int x2, int y2);
 
 void dlg_broadcast_msg_to (Dlg_head *h, int message, int reverse, int flags);

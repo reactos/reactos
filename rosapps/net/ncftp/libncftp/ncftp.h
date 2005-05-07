@@ -335,7 +335,7 @@ typedef struct MLstItem{
 /* Suggested timeout values, in seconds, if you use timeouts. */
 #define kSuggestedDefaultXferTimeout	(0)	/* No timeout on data blocks. */
 #define kSuggestedDefaultConnTimeout	30
-#define kSuggestedDefaultCtrlTimeout	135	/* 2*MSL, + slop */ 
+#define kSuggestedDefaultCtrlTimeout	135	/* 2*MSL, + slop */
 #define kSuggestedAbortTimeout		10
 
 #define kDefaultMaxDials		3

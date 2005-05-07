@@ -1,4 +1,4 @@
-/* $Id: ShellCommandDir.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommandDir.h: interface for the CShellCommandDir class.
 //
@@ -10,7 +10,7 @@
 #include "ShellCommand.h"
 #include "RegistryTree.h"
 
-class CShellCommandDir : public CShellCommand  
+class CShellCommandDir : public CShellCommand
 {
 public:
 	CShellCommandDir(CRegistryTree& rTree);

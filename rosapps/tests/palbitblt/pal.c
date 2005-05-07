@@ -50,7 +50,7 @@ void DoBlt(HBITMAP hBM)
 
 	hDC = GetDC(ActiveWindow);
 	GetClientRect(ActiveWindow,&dest);
-	
+
 	Context = CreateCompatibleDC(0);
 	dflBmp = SelectObject(Context, hBM);
 	BitBlt(hDC, 0, 0, dest.right, dest.bottom, Context, 0, 0, SRCCOPY);
@@ -73,7 +73,7 @@ void UpdatePalette(HBITMAP hBM){
 		else
 			c++; // It's operation of incrementing of c variable, not reference of a cool OO language :-)
 	}
-	
+
 	DoBlt(hBM);
 }
 
@@ -117,13 +117,13 @@ void InitBitmap(HANDLE *hBM){
 
 	// Create palette
 	PalHan = CreatePalette((LOGPALETTE*)&palInf);
-	
+
 	// Select it into hDC
 	SelectPalette(hDC,PalHan,FALSE);
-	
+
 	// Realize palette in hDC
 	RealizePalette(hDC);
-	
+
 	// Delete handle to palette
 	DeleteObject(PalHan);
 
@@ -179,14 +179,14 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance, LPSTR lpszCmdPar
 	ShowWindow(hWnd,nCmdShow);
 
 	// Prepare bitmap to be bitblt
-	InitBitmap(&hBM);	
+	InitBitmap(&hBM);
 
 	// Main message loop
 	while (!exit)
 	{
 		UpdatePalette(hBM);
 		Sleep(200);
-		
+
 		if(PeekMessage(&msg,0,0,0,PM_NOREMOVE) == TRUE)
 		{
 			if (!GetMessage(&msg,0,0,0))

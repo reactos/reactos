@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -478,7 +478,7 @@ HasSeenOneTimeMessage(const char *const msg)
 {
 	char buf[256];
 	char *a, *b;
-	
+
 	memcpy(buf, gOneTimeMessagesSeen, sizeof(buf));
 	for (a = buf; (b = strtok(a, ",\n")) != NULL; a = NULL) {
 		if (strcmp(msg, b) == 0)
@@ -499,7 +499,7 @@ SetSeenOneTimeMessage(const char *const msg)
 	else {
 		STRNCAT(gOneTimeMessagesSeen, ",");
 		STRNCAT(gOneTimeMessagesSeen, msg);
-	}	
+	}
 }	/* SetSeenOneTimeMessage */
 
 

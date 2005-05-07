@@ -1,6 +1,6 @@
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -105,9 +105,9 @@ int SLang_init_tty (int abort_char, int no_flow_control, int opost)
     if (flags & ENABLE_PROCESSED_INPUT) {
       return -1;
     }
-  } 
+  }
 
-  (void) SetConsoleCursorPosition(hStdout, newPosition);  
+  (void) SetConsoleCursorPosition(hStdout, newPosition);
 
   /* success */
   return 0;
@@ -136,17 +136,17 @@ int SLsys_input_pending (int tsecs)
 
    while (1)
      {
-	if (PeekConsoleInput(hStdin, &record, 1, &bytesRead)) 
+	if (PeekConsoleInput(hStdin, &record, 1, &bytesRead))
 	  {
-	     if (bytesRead == 1) 
+	     if (bytesRead == 1)
 	       {
 		  if ((record.EventType == KEY_EVENT)
-		      && record.Event.KeyEvent.bKeyDown) 
+		      && record.Event.KeyEvent.bKeyDown)
 		    {
 		       /* ok, there is a keypress here */
 		       return 1;
-		    } 
-		  else 
+		    }
+		  else
 		    {
 		       /* something else is here, so read it and try again */
 		       (void) ReadConsoleInput(hStdin, &record, 1, &bytesRead);
@@ -173,7 +173,7 @@ int SLsys_input_pending (int tsecs)
    if (keyWaiting()) return 1;
    while (count > 0)
      {
-	delay (20);	 20 ms or 1/50 sec 
+	delay (20);	 20 ms or 1/50 sec
 	if (keyWaiting()) break;
 	count--;
      }

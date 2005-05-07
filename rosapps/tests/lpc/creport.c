@@ -1,10 +1,10 @@
-/* $Id: creport.c,v 1.1 2004/10/21 04:58:59 sedwards Exp $
+/* $Id$
  *
  * reactos/apps/lpc/creport.c
  *
  * To be run in a real WNT 4.0 system to
  * create an LPC named port.
- * 
+ *
  * Use Russinovich' HandleEx to verify
  * creport.exe owns the named LPC port
  * you asked to create.
@@ -26,7 +26,7 @@ NTSTATUS
 (STDCALL * CreatePort)(
 	/*OUT	PHANDLE			PortHandle,*/
 	PVOID	Buffer,
-	IN	POBJECT_ATTRIBUTES	PortAttributes	OPTIONAL,  
+	IN	POBJECT_ATTRIBUTES	PortAttributes	OPTIONAL,
 	IN	ACCESS_MASK		DesiredAccess,
 	IN	DWORD			Unknown3,
 	IN	ULONG			Flags
@@ -40,7 +40,7 @@ NTSTATUS
 	IN	ULONG	Length,
 	OUT	PULONG	ResultLength
 	);
-  
+
 NTSTATUS
 (STDCALL * YieldExecution)(VOID);
 

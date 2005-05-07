@@ -1,14 +1,14 @@
 /* Extension dependent execution.
    Copyright (C) 1994, 1995 The Free Software Foundation
-   
+
    Written by: 1995 Jakub Jelinek
                1994 Miguel de Icaza
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -53,14 +53,14 @@
 #include <sys/wait.h>
 #endif /* SCO_FLAVOR */
 
-/* "$Id: ext.c,v 1.1 2001/12/30 09:55:26 sedwards Exp $" */
+/* "$Id$" */
 
 /* If set, we execute the file command to check the file type */
 int use_file_to_check_type = 1;
 
 /* This variable points to a copy of the mc.ext file in memory
- * With this we avoid loading/parsing the file each time we 
- * need it 
+ * With this we avoid loading/parsing the file each time we
+ * need it
  */
 static char *data = NULL;
 
@@ -83,7 +83,7 @@ char *gettmpcmdname(){
 	    break;
     }
     return tmpcmdfilename;
-} 
+}
 #endif
 
 void
@@ -93,7 +93,7 @@ flush_extension_file (void)
         free (data);
         data = NULL;
     }
-   
+
 }
 
 typedef char *(*quote_func_t)(const char *name, int i);
@@ -120,10 +120,10 @@ quote_block (quote_func_t quote_func, char **quoting_block)
 		tail += temp_len + 1;
 		free (temp);
 	}
-	
+
 	return result;
 }
-	     
+
 static void
 exec_extension (char *filename, char *data, char **drops, int *move_dir, int start_line)
 {
@@ -151,7 +151,7 @@ exec_extension (char *filename, char *data, char **drops, int *move_dir, int sta
 	do_local_copy = 1;
     else
 	do_local_copy = 0;
-    
+
     /* Note: this has to be done after the getlocalcopy call,
      * since it uses tmpnam as well
      */
@@ -159,7 +159,7 @@ exec_extension (char *filename, char *data, char **drops, int *move_dir, int sta
     file_name =  strdup (gettmpcmdname ());
 #else
     file_name =  strdup (tmpnam (NULL));
-#endif    
+#endif
     if ((cmd_file_fd = open (file_name, O_RDWR | O_CREAT | O_TRUNC | O_EXCL, 0600)) == -1){
 	message (1, MSG_ERROR, _(" Can't create temporary command file \n %s "),
 		 unix_error_string (errno));
@@ -206,7 +206,7 @@ exec_extension (char *filename, char *data, char **drops, int *move_dir, int sta
 	    else {
 	    	int i = check_format_view (data);
 		char *v;
-		
+
 	    	if (i){
 	    	    data += i - 1;
 	    	    run_view = 1;
@@ -275,11 +275,11 @@ exec_extension (char *filename, char *data, char **drops, int *move_dir, int sta
     	    changed_hex_mode = 1;
     	if (def_nroff_flag != default_nroff_flag)
     	    changed_nroff_flag = 1;
-	
+
     	/* If we've written whitespace only, then just load filename
 	 * into view
 	 */
-    	if (written_nonspace) 
+    	if (written_nonspace)
     	    view (file_name, filename, move_dir, start_line);
     	else
     	    view (0, filename, move_dir, start_line);
@@ -294,7 +294,7 @@ exec_extension (char *filename, char *data, char **drops, int *move_dir, int sta
     	p = buffer;
     	while (*p == ' ' && *p == '\t')
     	    p++;
-	    
+
 	/* Search last non-space character. Start search at the end in order
 	   not to short filenames containing spaces. */
     	q = p + strlen (p) - 1;
@@ -312,10 +312,10 @@ exec_extension (char *filename, char *data, char **drops, int *move_dir, int sta
 		show_console_contents (output_start_y,
 				       LINES-keybar_visible-output_lines-1,
 				       LINES-keybar_visible-1);
-		
+
 	    }
 	}
-	
+
 #ifdef OLD_CODE
 	if (vfs_current_is_local ())
 	    shell_execute (file_name, EXECUTE_INTERNAL);
@@ -376,12 +376,12 @@ char *regex_command (char *filename, char *action, char **drops, int *move_dir)
     int view_at_line_number;
     char *include_target;
     int include_target_len;
-    
+
 #ifdef FILE_STDIN
     int file_supports_stdin = 1;
 #else
     int file_supports_stdin = 0;
-#endif    
+#endif
 
     /* Check for the special View:%d parameter */
     if (action && strncmp (action, "View:", 5) == 0){
@@ -413,13 +413,13 @@ check_stock_mc_ext:
 	        data = NULL;
 	        if (extension_file == buffer) {
 		    home_error = 1;
-		    goto check_stock_mc_ext;            
+		    goto check_stock_mc_ext;
 	        } else {
                     char *msg;
                     char *msg2;
                     msg = copy_strings(" ", mc_home, MC_LIB_EXT, _(" file error"), NULL);
-                    msg2 = copy_strings(_("Format of the "), 
-                                         mc_home, 
+                    msg2 = copy_strings(_("Format of the "),
+                                         mc_home,
 ("mc.ext file has changed\n\
 with version 3.0. It seems that installation\n\
 failed. Please fetch a fresh new copy from the\n\
@@ -449,7 +449,7 @@ file as an example of how to write it.\n\
         free (buffer);
     }
     mc_stat (filename, &mystat);
-    
+
     if (regex_command_title){
 	free (regex_command_title);
 	regex_command_title = NULL;
@@ -473,11 +473,11 @@ file as an example of how to write it.\n\
 	               * keyword/descNL
 	               */
 	    if (found && action == NULL) /* We have already accumulated all
-	    				  * the user actions 
+	    				  * the user actions
 	    				  */
 	        break;
 	    found = 0;
-	    q = strchr (p, '\n'); 
+	    q = strchr (p, '\n');
 	    if (q == NULL)
 	        q = strchr (p, 0);
 	    c = *q;
@@ -499,7 +499,7 @@ file as an example of how to write it.\n\
 	    } else if (!strncmp (p, "shell/", 6)) {
 	        p += 6;
 	        if (*p == '.') {
-	            if (!strncmp (p, filename + file_len - (q - p), 
+	            if (!strncmp (p, filename + file_len - (q - p),
 	                q - p))
 	                found = 1;
 	        } else {
@@ -509,7 +509,7 @@ file as an example of how to write it.\n\
 	    } else if (!strncmp (p, "type/", 5)) {
 		int islocal = vfs_file_is_local (filename);
 	        p += 5;
-		
+
 	        if (islocal || file_supports_stdin) {
 	    	    char *pp;
 	    	    int hasread = use_file_to_check_type;
@@ -523,18 +523,18 @@ file as an example of how to write it.\n\
 	    	        char *command =
 			    copy_strings (FILE_CMD, tmp, NULL);
 	    	        FILE *f = popen (command, "r");
-	    	    
+
 			free (tmp);
 	    	        free (command);
 	    	        if (f != NULL) {
-	    	            hasread = (fgets (content_string, 2047, f) 
+	    	            hasread = (fgets (content_string, 2047, f)
 	    	                != NULL);
 	    	    	    if (!hasread)
 	    	    	        content_string [0] = 0;
 	    	    	    pclose (f);
 #ifdef SCO_FLAVOR
-	    	    	    /* 
-	    	    	    **	SCO 3.2 does has a buggy pclose(), so 
+	    	    	    /*
+	    	    	    **	SCO 3.2 does has a buggy pclose(), so
 	    	    	    **	<command> become zombie (alex)
 	    	    	    */
 	    	    	    waitpid(-1,NULL,WNOHANG);
@@ -546,18 +546,18 @@ file as an example of how to write it.\n\
 #else
 	    	        int pipehandle, remotehandle;
 	    	        pid_t p;
-		    
+
 	    	        remotehandle = mc_open (filename, O_RDONLY);
 		        if (remotehandle != -1) {
 		        /* 8192 is HOWMANY hardcoded value in the file-3.14
 		         * sources. Tell me if any other file uses larger
-		         * chunk from beginning 
+		         * chunk from beginning
 		         */
 	    	            pipehandle = mc_doublepopen
 			    (remotehandle, 8192, &p,"file", "file", "-", NULL);
 			    if (pipehandle != -1) {
 	    	                int i;
-	    	                while ((i = read (pipehandle, content_string 
+	    	                while ((i = read (pipehandle, content_string
 	    	                     + hasread, 2047 - hasread)) > 0)
 	    	                    hasread += i;
 	    	    	        mc_doublepclose (pipehandle, p);
@@ -572,22 +572,22 @@ match_file_output:
 	    	    if (hasread) {
 	    	        if ((pp = strchr (content_string, '\n')) != 0)
 	    	    	    *pp = 0;
-	    	        if (islocal && !strncmp (content_string, 
+	    	        if (islocal && !strncmp (content_string,
 	    	            filename, file_len)) {
 	    	    	    content_shift = file_len;
 	    	    	    if (content_string [content_shift] == ':')
-	    	    	        for (content_shift++; 
-	    	    	            content_string [content_shift] == ' '; 
+	    	    	        for (content_shift++;
+	    	    	            content_string [content_shift] == ' ';
 	    	    	            content_shift++);
-	    	        } else if (!islocal 
-				   && !strncmp (content_string, 
+	    	        } else if (!islocal
+				   && !strncmp (content_string,
 						"standard input:", 15)) {
 	    	            for (content_shift = 15;
 	    	                content_string [content_shift] == ' ';
 	    	                content_shift++);
 	    	        }
-	    		if (content_string && 
-	    		    regexp_match (p, content_string + 
+	    		if (content_string &&
+	    		    regexp_match (p, content_string +
 	    		        content_shift, match_normal)){
 	    		    found = 1;
 	    		}
@@ -623,13 +623,13 @@ match_file_output:
 			*r = c;
 			p = q;
 			found = 0;
-			
+
 			if (!*p)
 			    break;
 			continue;
 		    }
     	            if (action == NULL) {
-    	                if (strcmp (p, "Open") && 
+    	                if (strcmp (p, "Open") &&
     	                    strcmp (p, "View") &&
     	                    strcmp (p, "Edit") &&
     	                    strcmp (p, "Drop") &&
@@ -638,11 +638,11 @@ match_file_output:
     	                    strcmp (p, "Title")) {
     	                    /* I.e. this is a name of a user defined action */
     	                        static char *q;
-    	                        
+
     	                        if (to_return == NULL) {
     	                            to_return = xmalloc (512, "Action list");
     	                            q = to_return;
-    	                        } else 
+    	                        } else
     	                            *(q++) = '='; /* Mark separator */
     	                        strcpy (q, p);
     	                        q = strchr (q, 0);
@@ -679,11 +679,11 @@ match_file_output:
 			 * filename parameter invalid (ie, most of the time,
 			 * we get filename as a pointer from cpanel->dir).
 			 */
-    	                if (p < q) { 
+    	                if (p < q) {
 			    char *filename_copy = strdup (filename);
 			    exec_extension (filename_copy, r + 1, drops, move_dir, view_at_line_number);
 			    free (filename_copy);
-			    
+
     	                    to_return = "Success";
     	                }
     	                break;

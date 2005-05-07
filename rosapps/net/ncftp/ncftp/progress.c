@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -190,7 +190,7 @@ try \"get -T\" to resume the directory transfer.\n\n");
 
 				FileToURL(url, sizeof(url), cip->rname, gRemoteCWD, cip->startingWorkingDirectory, cip->user, cip->pass, cip->host, cip->port);
 				LogXfer((cip->netMode == kNetReading) ? "get" : "put", url);
-			}	
+			}
 #endif
 			break;
 	}
@@ -332,7 +332,7 @@ PrStatBar(const FTPCIPtr cip, int mode)
 
 				FileToURL(url, sizeof(url), cip->rname, gRemoteCWD, cip->startingWorkingDirectory, cip->user, cip->pass, cip->host, cip->port);
 				LogXfer((cip->netMode == kNetReading) ? "get" : "put", url);
-			}	
+			}
 #endif
 			break;
 	}
@@ -373,7 +373,7 @@ PrPhilBar(const FTPCIPtr cip, int mode)
 				(cip->netMode == kNetReading) ? "Receiving" : "Sending",
 				cip->lname
 			);
-			
+
 			for (i=0; i < (int) sizeof(bar) - 1; i++)
 				bar[i] = '=';
 			bar[i] = '\0';
@@ -386,11 +386,11 @@ PrPhilBar(const FTPCIPtr cip, int mode)
 			maxBarLen = gScreenColumns - 1 - 28;
 			for (s = cip->expectedSize; s > 0; s /= 10L)
 				maxBarLen--;
-			
+
 			/* Create a specification we can hand to printf. */
 #if defined(HAVE_LONG_LONG) && defined(PRINTF_LONG_LONG_LLD)
 			(void) sprintf(spec1, "      0 %%%ds %%lld bytes. ETA: --:--", maxBarLen);
-				
+
 			/* Print the first invocation, which is an empty graph
 			 * plus the other stuff.
 			 */
@@ -418,7 +418,7 @@ PrPhilBar(const FTPCIPtr cip, int mode)
 			 */
 			if (curBarLen < 1)
 				curBarLen = 1;
-			
+
 			bar[curBarLen - 1] = '>';
 			bar[curBarLen] = '\0';
 
@@ -426,27 +426,27 @@ PrPhilBar(const FTPCIPtr cip, int mode)
 			STRNCPY(spec1, "\r%3d%%  0 ");
 
 #if defined(HAVE_LONG_LONG) && defined(PRINTF_LONG_LONG_LLD)
-			(void) sprintf(spec3, "%%%ds %%lld bytes. %s%%3d:%%02d", 
+			(void) sprintf(spec3, "%%%ds %%lld bytes. %s%%3d:%%02d",
 				maxBarLen - curBarLen,
 				"ETA:"
 			);
 #elif defined(HAVE_LONG_LONG) && defined(PRINTF_LONG_LONG_QD)
-			(void) sprintf(spec3, "%%%ds %%qd bytes. %s%%3d:%%02d", 
+			(void) sprintf(spec3, "%%%ds %%qd bytes. %s%%3d:%%02d",
 				maxBarLen - curBarLen,
 				"ETA:"
 			);
 #elif defined(HAVE_LONG_LONG) && defined(PRINTF_LONG_LONG_I64D)
-			(void) sprintf(spec3, "%%%ds %%I64d bytes. %s%%3d:%%02d", 
+			(void) sprintf(spec3, "%%%ds %%I64d bytes. %s%%3d:%%02d",
 				maxBarLen - curBarLen,
 				"ETA:"
 			);
 #else
-			(void) sprintf(spec3, "%%%ds %%ld bytes. %s%%3d:%%02d", 
+			(void) sprintf(spec3, "%%%ds %%ld bytes. %s%%3d:%%02d",
 				maxBarLen - curBarLen,
 				"ETA:"
 			);
 #endif
-			
+
 			/* We also show the percentage as a number at the left side. */
 			perc = (int) (cip->percentCompleted);
 			secsLeft = (int) (cip->secLeft);
@@ -456,7 +456,7 @@ PrPhilBar(const FTPCIPtr cip, int mode)
 				minLeft = 999;
 				secsLeft = 59;
 			}
-			
+
 			/* Print the updated information. */
 			fprintf(stderr, spec1, perc);
 			fprintf(stderr, "%s%s%s", tcap_reverse, bar, tcap_normal);
@@ -491,7 +491,7 @@ PrPhilBar(const FTPCIPtr cip, int mode)
 
 				FileToURL(url, sizeof(url), cip->rname, gRemoteCWD, cip->startingWorkingDirectory, cip->user, cip->pass, cip->host, cip->port);
 				LogXfer((cip->netMode == kNetReading) ? "get" : "put", url);
-			}	
+			}
 #endif
 			break;
 	}

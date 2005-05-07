@@ -204,10 +204,10 @@ stime_arg1(char *arg, time_t *tvp)
 {
 	struct tm *t;
 	int yearset;
-	char *p; 
+	char *p;
 					/* Start with the current time. */
 	if ((t = localtime(&tvp[0])) == NULL)
-		err(1, "localtime"); DbgPrint("[%s]", "[23]"); 
+		err(1, "localtime"); DbgPrint("[%s]", "[23]");
 					/* [[CC]YY]MMDDhhmm[.SS] */
 	if ((p = strchr(arg, '.')) == NULL)
 		t->tm_sec = 0;		/* Seconds defaults to 0. */
@@ -217,7 +217,7 @@ stime_arg1(char *arg, time_t *tvp)
 		*p++ = '\0';
 		t->tm_sec = ATOI2(p);
 	}
-		
+
 	yearset = 0;
 	switch(strlen(arg)) {
 	case 12:			/* CCYYMMDDhhmm */

@@ -1,12 +1,12 @@
 /* Hypertext file browser.
    Copyright (C) 1994, 1995 Miguel de Icaza.
    Copyright (C) 1994, 1995 Janne Kukonlehto
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,7 +33,7 @@
    and uses mainly the dialog to achieve the help work.  there is only
    one specialized widget and it's only used to forward the mouse messages
    to the appropiate routine.
-   
+
 */
 
 #include <config.h>
@@ -65,7 +65,7 @@
 #define HISTORY_SIZE 20
 #define HELP_WINDOW_WIDTH 62
 
-/* "$Id: help.c,v 1.1 2001/12/30 09:55:25 sedwards Exp $" */
+/* "$Id$" */
 
 static char *data;		/* Pointer to the loaded data file */
 static int help_lines = 18;	/* Lines in help viewer */
@@ -162,7 +162,7 @@ static char *search_string_node (char *start, char *text)
 
     if (!start)
 	return 0;
-    
+
     for (; *e && *e != CHAR_NODE_END; e++){
 	if (*d == *e)
 	    d++;
@@ -181,7 +181,7 @@ static char *search_char_node (char *start, char the_char, int direction)
     char *e;
 
     e = start;
-    
+
     for (; *e && (*e != CHAR_NODE_END); e += direction){
 	if (*e == the_char)
 	    return e;
@@ -265,7 +265,7 @@ char *help_follow_link (char *start, char *selected_item)
 
     if (!selected_item)
 	return start;
-    
+
     for (p = selected_item; *p && *p != CHAR_NODE_END && *p != CHAR_LINK_POINTER; p++)
 	;
     if (*p == CHAR_LINK_POINTER){
@@ -303,11 +303,11 @@ static char *select_prev_link (char *start, char *current_link)
 
     if (!current_link)
 	return 0;
-    
+
     p = current_link - 1;
     if (p <= start)
 	return 0;
-    
+
     p = search_char_node (p, CHAR_LINK_START, -1);
     return p;
 }
@@ -367,13 +367,13 @@ static void show (Dlg_head *h, char *paint_start)
     int active_col, active_line;/* Active link position */
 
     do {
-	
+
 	line = col = acs = active_col = active_line = repeat_paint = 0;
-    
+
 	clear_link_areas ();
 	if (selected_item < paint_start)
 	    selected_item = NULL;
-	
+
 	for (p = paint_start; *p != CHAR_NODE_END && line < help_lines; p++){
 	    c = *p;
 	    switch (c){
@@ -441,7 +441,7 @@ static void show (Dlg_head *h, char *paint_start)
 		    continue;
 		if (col > HELP_WINDOW_WIDTH-1)
 		    continue;
-		
+
 		dlg_move (h, line+2, col+2);
 		if (acs){
 		    if (c == ' ' || c == '.')
@@ -489,14 +489,14 @@ static int help_event (Gpm_Event *event, Widget *w)
 
     /* The event is relative to the dialog window, adjust it: */
     event->y -= 2;
-    
+
     if (event->buttons & GPM_B_RIGHT){
 	currentpoint = startpoint = history [history_ptr].page;
 	selected_item = history [history_ptr].link;
 	history_ptr--;
 	if (history_ptr < 0)
 	    history_ptr = HISTORY_SIZE-1;
-	
+
 	help_callback (w->parent, 0, DLG_DRAW);
 	return 0;
     }
@@ -556,9 +556,9 @@ void help_help_cmd (Dlg_head *h)
     history [history_ptr].link = selected_item;
     currentpoint = startpoint = search_string (data, "[How to use help]") + 1;
     selected_item = NULL;
-#ifndef HAVE_XVIEW    
+#ifndef HAVE_XVIEW
     help_callback (h, 0, DLG_DRAW);
-#endif    
+#endif
 }
 
 void help_index_cmd (Dlg_head *h)
@@ -575,15 +575,15 @@ void help_index_cmd (Dlg_head *h)
     else
 	currentpoint = startpoint = new_item + 1;
     selected_item = NULL;
-#ifndef HAVE_XVIEW    
+#ifndef HAVE_XVIEW
     help_callback (h, 0, DLG_DRAW);
-#endif    
+#endif
 }
 
 static void quit_cmd (void *x)
 {
     Dlg_head *h = (Dlg_head *) x;
-    
+
     dlg_stop (x);
 }
 
@@ -594,10 +594,10 @@ static void prev_node_cmd (Dlg_head *h)
     history_ptr--;
     if (history_ptr < 0)
 	history_ptr = HISTORY_SIZE-1;
-    
-#ifndef HAVE_XVIEW    
+
+#ifndef HAVE_XVIEW
     help_callback (h, 0, DLG_DRAW);
-#endif    
+#endif
 }
 
 static int md_callback (Dlg_head *h, Widget *w, int msg, int par)
@@ -631,7 +631,7 @@ static int help_handle_key (struct Dlg_head *h, int c)
     case KEY_LEFT:
 	prev_node_cmd (h);
 	break;
-	
+
     case '\n':
     case KEY_RIGHT:
 	/* follow link */
@@ -645,7 +645,7 @@ static int help_handle_key (struct Dlg_head *h, int c)
 	    history_ptr--;
 	    if (history_ptr < 0)
 		history_ptr = HISTORY_SIZE-1;
-	    
+
 	    currentpoint = startpoint = history [history_ptr].page;
 	    selected_item   = history [history_ptr].link;
 #endif
@@ -657,7 +657,7 @@ static int help_handle_key (struct Dlg_head *h, int c)
 	}
 	selected_item = NULL;
 	break;
-	
+
     case KEY_DOWN:
     case '\t':
 	/* select next link */
@@ -675,7 +675,7 @@ static int help_handle_key (struct Dlg_head *h, int c)
 	else
 	    selected_item = NULL;
 	break;
-	
+
     case KEY_UP:
     case ALT ('\t'):
 	/* select previous link */
@@ -692,7 +692,7 @@ static int help_handle_key (struct Dlg_head *h, int c)
 	    }
 	}
 	break;
-	
+
     case 'n':
 	/* Next node */
 	new_item = currentpoint;
@@ -705,7 +705,7 @@ static int help_handle_key (struct Dlg_head *h, int c)
 	    selected_item = NULL;
 	}
 	break;
-	
+
     case 'p':
 	/* Previous node */
 	new_item = currentpoint;
@@ -719,11 +719,11 @@ static int help_handle_key (struct Dlg_head *h, int c)
 	currentpoint = new_item + 2;
 	selected_item = NULL;
 	break;
-	
+
     case 'c':
 	help_index_cmd (h);
 	break;
-	
+
     case ESC_CHAR:
     case XCTRL('g'):
 	dlg_stop (h);
@@ -731,7 +731,7 @@ static int help_handle_key (struct Dlg_head *h, int c)
 
     default:
 	return 0;
-	    
+
     }
     help_callback (h, 0, DLG_DRAW);
     return 1;
@@ -767,7 +767,7 @@ void interactive_display (char *filename, char *node)
 {
     WButtonBar *help_bar;
     Widget     *md;
-    
+
     if ((data = load_file (filename)) == 0){
 	message (1, MSG_ERROR, _(" Can't open file %s \n %s "),
 		 filename, unix_error_string (errno));
@@ -789,7 +789,7 @@ void interactive_display (char *filename, char *node)
     /* allow us to process the tab key */
     whelp->raw = 1;
 
-#endif    
+#endif
     selected_item = search_string_node (main, STRING_LINK_START) - 1;
     currentpoint = startpoint = main + 1;
 
@@ -803,9 +803,9 @@ void interactive_display (char *filename, char *node)
     help_bar = buttonbar_new (keybar_visible);
     help_bar->widget.y -= whelp->y;
     help_bar->widget.x -= whelp->x;
-    
+
     md       = mousedispatch_new (1, 1, help_lines, HELP_WINDOW_WIDTH-2);
-    
+
     add_widget (whelp, help_bar);
     add_widget (whelp, md);
 

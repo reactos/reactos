@@ -6,7 +6,7 @@ static GUITHREADINFO gti;
 //HFONT tf;
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -57,7 +57,7 @@ WinMain(HINSTANCE hInstance,
 
   gti.cbSize = sizeof(GUITHREADINFO);
   GetGUIThreadInfo(0, &gti);
-  
+
   SetTimer(hWnd, 1, 1000, NULL);
   ShowWindow(hWnd, nCmdShow);
 
@@ -91,7 +91,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  if(gti.flags & GUI_POPUPMENUMODE) lstrcat(str, "GUI_POPUPMENUMODE ");
 	  if(gti.flags & GUI_SYSTEMMENUMODE) lstrcat(str, "GUI_SYSTEMMENUMODE ");
 	  TextOut(hDC, 10, 10, str, strlen(str));
-	  
+
 	  wsprintf(str, "hwndActive == %08X", gti.hwndActive);
 	  TextOut(hDC, 10, 30, str, strlen(str));
 	  wsprintf(str, "hwndFocus == %08X", gti.hwndFocus);
@@ -106,7 +106,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  TextOut(hDC, 10, 130, str, strlen(str));
 	  wsprintf(str, "rcCaret == (%lu, %lu, %lu, %lu)", gti.rcCaret.left, gti.rcCaret.top, gti.rcCaret.right, gti.rcCaret.bottom);
 	  TextOut(hDC, 10, 150, str, strlen(str));
-	  
+
 	  wsprintf(str, "GetGuiResources for the current process: %08X", GetCurrentProcess());
 	  TextOut(hDC, 10, 180, str, strlen(str));
 	  wsprintf(str, "GetGuiResources: GR_GDIOBJECTS == %04X", GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS));
@@ -115,7 +115,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  TextOut(hDC, 10, 220, str, strlen(str));
 	  EndPaint(hWnd, &ps);
 	  break;
-    
+
     case WM_TIMER:
       GetGUIThreadInfo(0, &gti);
       InvalidateRect(hWnd, NULL, TRUE);

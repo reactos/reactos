@@ -57,7 +57,7 @@ edition_post_exec (void)
     /* FIXME: Missing on slang endwin? */
     reset_prog_mode ();
     flushinp ();
-    
+
     keypad (stdscr, TRUE);
     mc_raw_mode ();
     channels_up ();
@@ -80,13 +80,13 @@ edition_pre_exec (void)
     channels_down ();
     if (use_mouse_p)
 	shut_mouse ();
-    
+
     reset_shell_mode ();
     keypad (stdscr, FALSE);
     endwin ();
-    
+
     numeric_keypad_mode ();
-    
+
     /* on xterms: maybe endwin did not leave the terminal on the shell
      * screen page: do it now.
      *

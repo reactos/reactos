@@ -5,9 +5,9 @@
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: file concatenation tool
  * DATE       : 2004-01-21
- * LICENSE    : GPL 
+ * LICENSE    : GPL
  */
- 
+
 #include <stdio.h>
 #include <string.h>
 #define F_O_ERR "can not open file"
@@ -16,7 +16,7 @@ void help(void)
 {
  puts("File concatenation tool");
  puts("Usage: cat [file]");
-} 
+}
 
 int main(int argc, char *argv[])
 {
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
      if ((!strcmp(argv[1],keys[0]))||(!strcmp(argv[1],keys[1])))
       help();
      else
-      {  
+      {
       if((srcf=fopen(argv[1],"r"))!=NULL)
       {
        while(i!=EOF)
@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
           putchar(i);
         }
        fclose(srcf);
-      } 
-      else 
+      }
+      else
       {
        printf("%s %s %s\n",argv[0],F_O_ERR,argv[1]);
        ret=-1;

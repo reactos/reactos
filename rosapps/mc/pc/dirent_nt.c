@@ -15,7 +15,7 @@ DIR *opendir (const char * a_dir)
 	char *c_dir = malloc (strlen(a_dir) + 4);
 	strcpy (c_dir, a_dir);
 	strcat (c_dir, "\\*");
-			
+
 	dd_dir->d_handle = FindFirstFile (c_dir, &wfd);
 	if (dd_dir->d_handle == INVALID_HANDLE_VALUE)	{
 		err = GetLastError();
@@ -42,7 +42,7 @@ DIR *opendir (const char * a_dir)
 	dd_dir->d_size = wfd.nFileSizeLow;
 	strcpy (dd_dir->d_name, wfd.cFileName);
 	dd_dir->d_first = 1;
-	
+
 	free (c_dir);
 	return dd_dir;
 }
@@ -51,12 +51,12 @@ DIR *readdir( DIR * dd_dir)
 {
 	int err;
 	WIN32_FIND_DATA wfd;
-	
+
 	if (dd_dir->d_first) {
 		dd_dir->d_first = 0;
 		return dd_dir;
 	}
-			
+
 	if(!FindNextFile (dd_dir->d_handle, &wfd)) {
 		err = GetLastError();
 		switch (err) {
@@ -81,7 +81,7 @@ DIR *readdir( DIR * dd_dir)
 	dd_dir->d_size         = wfd.nFileSizeLow;
 	strcpy (dd_dir->d_name, wfd.cFileName);
 	return dd_dir;
-}		  
+}
 
 int closedir (DIR *dd_dir)
 {

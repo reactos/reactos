@@ -5,7 +5,7 @@
  * PROJECT:         ReactOS diskspeed.exe
  * FILE:            apps/tests/diskspeed/diskspeed.c
  * PURPOSE:         Determines disk transfer rates
- * PROGRAMMER:      Hartmut Birr 
+ * PROGRAMMER:      Hartmut Birr
  */
 
 #include <windows.h>
@@ -93,7 +93,7 @@ int main(void)
     INQUIRYDATA InquiryData;
 
 
-    Drive = 0; 
+    Drive = 0;
     while (1)
       {
         sprintf(Name, "\\\\.\\PHYSICALDRIVE%ld", Drive);
@@ -121,7 +121,7 @@ int main(void)
             printf("Transfer Size (kB)           1     2     4     8    16    32    64   128   256\n");
             printf("Transfer Rate (MB/s)\n");
             printf("-------------------------------------------------------------------------------\n");
-            
+
 	    Buffer = VirtualAlloc(NULL, 512 * 1024, MEM_COMMIT, PAGE_READWRITE);
 	  }
         Result = GetInquiryData(hDevice, &InquiryData);

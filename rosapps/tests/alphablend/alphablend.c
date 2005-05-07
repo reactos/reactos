@@ -7,10 +7,10 @@
 
 HINSTANCE HInst;
 const char* WndClassName = "GMainWnd";
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam);
-   
-WINBOOL 
+
+WINBOOL
 STDCALL
 GdiAlphaBlend(HDC hdcDst,LONG DstX,LONG DstY,LONG DstCx,LONG DstCy,HDC hdcSrc,LONG SrcX,LONG SrcY,LONG SrcCx,LONG SrcCy,BLENDFUNCTION BlendFunction);
 
@@ -24,7 +24,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
    HInst = HInstance;
 
    memset(&wc, 0, sizeof(WNDCLASS));
-    
+
    wc.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
    wc.lpfnWndProc = MainWndProc;
    wc.hInstance = HInstance;
@@ -35,15 +35,15 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
 
    if (RegisterClass(&wc))
    {
-      HWND HWnd = 
+      HWND HWnd =
          CreateWindow(
             WndClassName, TEXT("AlphaBlend Rendering Demo"),
-            WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | 
+            WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION |
             WS_VISIBLE | WS_CLIPSIBLINGS,
             0, 0, 320, 430,
             NULL, NULL, HInst, NULL
             );
-                                 
+
       if (HWnd)
       {
          ShowWindow(HWnd, nCmdShow);
@@ -53,7 +53,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
          {
              TranslateMessage(&msg);
              DispatchMessage(&msg);
-         }      
+         }
       }
     }
     return 0;
@@ -84,9 +84,9 @@ BOOL ConvertBitmapTo32Bpp(HDC hDC, BITMAP *bmp)
     HBITMAP bmpalpha;
     SelectObject(hDC, H32BppBitmap);
     BitBlt(hDC, 0, 0, bmp->bmWidth, bmp->bmHeight, HMemDC, 0, 0, SRCCOPY);
-    
+
     /* load and apply alpha channel */
-    bmpalpha = LoadImage(HInst, TEXT("lenaalpha.bmp"), IMAGE_BITMAP, 
+    bmpalpha = LoadImage(HInst, TEXT("lenaalpha.bmp"), IMAGE_BITMAP,
                             0, 0, LR_LOADFROMFILE);
     if(bmpalpha)
     {
@@ -99,7 +99,7 @@ BOOL ConvertBitmapTo32Bpp(HDC hDC, BITMAP *bmp)
         return FALSE;
       }
       SelectObject(hdcTemp, bmpalpha);
-      
+
       for(y = 0; y < bmp->bmHeight; y++)
       {
         for(x = 0; x < bmp->bmWidth; x++)
@@ -108,7 +108,7 @@ BOOL ConvertBitmapTo32Bpp(HDC hDC, BITMAP *bmp)
           *col++ |= Color;
         }
       }
-      
+
       DeleteObject(bmpalpha);
       DeleteDC(hdcTemp);
       return TRUE;
@@ -118,25 +118,25 @@ BOOL ConvertBitmapTo32Bpp(HDC hDC, BITMAP *bmp)
   return FALSE;
 }
 
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam)
 {
    switch (Msg)
    {
       case WM_CREATE:
-      {         
+      {
          /* create a memory DC */
          HMemDC = CreateCompatibleDC(NULL);
          if (HMemDC)
          {
             /* load a bitmap from file */
-            HBITMAP HBmp = 
+            HBITMAP HBmp =
                /* static_cast<HBITMAP> */(
-                  LoadImage(HInst, filename, IMAGE_BITMAP, 
+                  LoadImage(HInst, filename, IMAGE_BITMAP,
                             0, 0, LR_LOADFROMFILE)
-                            );  
+                            );
             if (HBmp)
-            { 
+            {
                /* extract dimensions of the bitmap */
                GetObject(HBmp, sizeof(BITMAP), &bmp);
 
@@ -151,7 +151,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
                   return 0;
                 }
             }
-         }         
+         }
       }
       case WM_PAINT:
       {
@@ -162,33 +162,33 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          try
 #endif
          {
-            
+
             BlendFunc.BlendOp = AC_SRC_OVER;
             BlendFunc.BlendFlags = 0;
             BlendFunc.SourceConstantAlpha = 128;
             BlendFunc.AlphaFormat = 0;
-            
-            BitBlt(Hdc, 100, 90, 
+
+            BitBlt(Hdc, 100, 90,
                    bmp.bmWidth, bmp.bmHeight,
-                   HMemDC2, 0, 0, 
-                   SRCCOPY); 
+                   HMemDC2, 0, 0,
+                   SRCCOPY);
             GdiAlphaBlend(Hdc, 0, 0, bmp.bmWidth, bmp.bmHeight,
                           HMemDC2, 0, 0, bmp.bmWidth, bmp.bmHeight,
                           BlendFunc);
             GdiAlphaBlend(Hdc, bmp.bmWidth - 15, 10, bmp.bmWidth / 2, bmp.bmHeight / 2,
                           HMemDC2, 0, 0, bmp.bmWidth, bmp.bmHeight,
                           BlendFunc);
-            
+
             BlendFunc.SourceConstantAlpha = 255;
             BlendFunc.AlphaFormat = AC_SRC_ALPHA;
-            
+
             GdiAlphaBlend(Hdc, 140, 200, bmp.bmWidth, bmp.bmHeight,
                           HMemDC2, 0, 0, bmp.bmWidth, bmp.bmHeight,
                           BlendFunc);
             GdiAlphaBlend(Hdc, 20, 210, (bmp.bmWidth / 3) * 2, (bmp.bmHeight / 3) * 2,
                           HMemDC2, 0, 0, bmp.bmWidth, bmp.bmHeight,
                           BlendFunc);
-         }           
+         }
 #if 0
          catch (...)
          {

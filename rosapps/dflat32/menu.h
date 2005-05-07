@@ -49,7 +49,7 @@ typedef struct DfMenuBar {
 #define DF_INACTIVE    1
 #define DF_CHECKED     2
 #define DF_TOGGLE      4
-#define DF_CASCADED    8    
+#define DF_CASCADED    8
 
 /* --------- the standard menus ---------- */
 extern DF_MBAR DfMainMenu;

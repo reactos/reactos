@@ -7,7 +7,7 @@ HENHMETAFILE EnhMetafile;
 SIZE EnhMetafileSize;
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -17,11 +17,11 @@ WinMain(HINSTANCE hInstance,
   MSG msg;
   HWND hWnd;
   ENHMETAHEADER emh;
-  
+
   EnhMetafile = GetEnhMetaFile("test.emf");
   if(!EnhMetafile)
   {
-    fprintf(stderr, "GetEnhMetaFile failed (last error 0x%lX)\n", 
+    fprintf(stderr, "GetEnhMetaFile failed (last error 0x%lX)\n",
         GetLastError());
     return(1);
   }
@@ -69,7 +69,7 @@ WinMain(HINSTANCE hInstance,
 	//tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
 	//	ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
 	//	DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
-  
+
   ShowWindow(hWnd, nCmdShow);
 
   while(GetMessage(&msg, NULL, 0, 0))
@@ -77,7 +77,7 @@ WinMain(HINSTANCE hInstance,
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
-  
+
   DeleteEnhMetaFile(EnhMetafile);
 
   //DeleteObject(tf);
@@ -97,7 +97,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  RECT rc;
       HDC hDC;
       int bk;
-      
+
 	  GetClientRect(hWnd, &rc);
 	  hDC = BeginPaint(hWnd, &ps);
 	  rc.left = (rc.right / 2) - (EnhMetafileSize.cx / 2);

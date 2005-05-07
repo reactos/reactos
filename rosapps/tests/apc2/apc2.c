@@ -5,13 +5,13 @@
 VOID CALLBACK TimerApcProc(
   LPVOID lpArg,
   DWORD dwTimerLowValue,
-  DWORD dwTimerHighValue ) 
+  DWORD dwTimerHighValue )
 {
   printf("APC Callback %lu\n", *(PDWORD)lpArg);
 }
 
 
-int main() 
+int main()
 {
   HANDLE          hTimer;
   BOOL            bSuccess;
@@ -19,12 +19,12 @@ int main()
   DWORD           value = 1;
 
   hTimer = CreateWaitableTimer(NULL, FALSE, NULL );
-  
+
   if (!hTimer)
   {
     printf("CreateWaitableTimer failed!\n");
     return 0;
-  } 
+  }
 
   DueTime.QuadPart = -(LONGLONG)(5 * 10000000);
 
@@ -42,7 +42,7 @@ int main()
     return 0;
   }
 
-  for (;value <= 10; value++ ) 
+  for (;value <= 10; value++ )
   {
     SleepEx(INFINITE, TRUE /*alertable*/ );
   }

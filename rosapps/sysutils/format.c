@@ -7,7 +7,7 @@
 // Copyright (c) 1998 Mark Russinovich
 //	Systems Internals
 //	http://www.sysinternals.com/
-//	
+//
 // This software is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Library General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -21,7 +21,7 @@
 // You should have received a copy of the GNU Library General Public
 // License along with this software; see the file COPYING.LIB. If
 // not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-// Cambridge, MA 02139, USA.  
+// Cambridge, MA 02139, USA.
 //
 // ---------------------------------------------------------------------
 // Format clone that demonstrates the use of the FMIFS file system
@@ -29,7 +29,7 @@
 //
 // 1999 February (Emanuele Aliberti)
 // 	Adapted for ReactOS and lcc-win32.
-// 	
+//
 // 1999 April (Emanuele Aliberti)
 // 	Adapted for ReactOS and egcs.
 //
@@ -79,7 +79,7 @@ struct
 {
 	WCHAR  SizeString [16];
 	DWORD  ClusterSize;
-	
+
 } SIZEDEFINITION, *PSIZEDEFINITION;
 
 
@@ -101,7 +101,7 @@ LegalSizes [] =
 
 
 //----------------------------------------------------------------------
-// 
+//
 // Usage
 //
 // Tell the user how to use the program
@@ -176,7 +176,7 @@ ParseCommandLine(
 			else if( !wcsnicmp( & argv[i][1], L"A:", 2 ))
 			{
 				if ( gotSize ) return -1;
-				j = 0; 
+				j = 0;
 				while (	LegalSizes[j].ClusterSize &&
 					wcsicmp(
 						LegalSizes[j].SizeString,
@@ -248,7 +248,7 @@ FormatExCallback(
 	PBOOLEAN	status;
 	//static createStructures = FALSE;
 
-	// 
+	//
 	// We get other types of commands, but we don't have to pay attention to them
 	//
 	switch ( Command )
@@ -318,11 +318,11 @@ LoadFMIFSEntryPoints(VOID)
 
 
 //----------------------------------------------------------------------
-// 
+//
 // WMain
 //
-// Engine. Just get command line switches and fire off a format. This 
-// could also be done in a GUI like Explorer does when you select a 
+// Engine. Just get command line switches and fire off a format. This
+// could also be done in a GUI like Explorer does when you select a
 // drive and run a check on it.
 //
 // We do this in UNICODE because the chkdsk command expects PWCHAR
@@ -333,23 +333,23 @@ int
 wmain( int argc, WCHAR *argv[] )
 {
 	int		badArg;
-	
+
 	DWORD		media = 0;
 	DWORD		driveType;
-	
+
 	WCHAR		fileSystem [1024];
 	WCHAR		volumeName [1024];
 	WCHAR		input [1024];
-	
+
 	DWORD		serialNumber;
 	DWORD		flags,
 			maxComponent;
-			
+
 	ULARGE_INTEGER	freeBytesAvailableToCaller,
 			totalNumberOfBytes,
 			totalNumberOfFreeBytes;
 
-			
+
 	wprintf( L"\
 \nFormatx v1.0 by Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\
@@ -378,7 +378,7 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 		Usage(argv[0]);
 		return -1;
 	}
-	// 
+	//
 	// Get the drive's format
 	//
 	if( !Drive )
@@ -414,12 +414,12 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 	// Determine the drive's file system format
 	//
 	if ( !GetVolumeInformationW(
-		RootDirectory, 
+		RootDirectory,
 		volumeName,
-		WBUFSIZE(volumeName), 
+		WBUFSIZE(volumeName),
 		& serialNumber,
 		& maxComponent,
-		& flags, 
+		& flags,
 		fileSystem,
 		WBUFSIZE(fileSystem) )
 	) {
@@ -430,7 +430,7 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 		return -1;
 	}
 	if( !GetDiskFreeSpaceExW(
-			RootDirectory, 
+			RootDirectory,
 			& freeBytesAvailableToCaller,
 			& totalNumberOfBytes,
 			& totalNumberOfFreeBytes )
@@ -465,7 +465,7 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 					stdin
 					);
 				input[ wcslen( input ) - 1 ] = 0;
-				
+
 				if ( !wcsicmp( input, volumeName ))
 				{
 					break;
@@ -486,30 +486,30 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 			if ( (input[0] == L'Y') || (input[0] == L'y') ) break;
 
 			if ( (input[0] == L'N') || (input[0] == L'n') )
-			{	
+			{
 				wprintf(L"\n");
 				return 0;
 			}
 		}
 		media = FMIFS_HARDDISK;
-	} 
+	}
 	//
 	// Tell the user we're doing a long format if appropriate
 	//
 	if ( !QuickFormat )
-	{	
+	{
 		if ( totalNumberOfBytes.QuadPart > 1024*1024*10 )
 		{
-			
+
 			wprintf(
 				L"Verifying %dM\n",
 				(DWORD) (totalNumberOfBytes.QuadPart/(1024*1024))
-				);	
+				);
 		}
 		else
 		{
 			wprintf(
-				L"Verifying %.1fM\n", 
+				L"Verifying %.1fM\n",
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0)
 				);
 		}
@@ -517,16 +517,16 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 	else
 	{
 		if ( totalNumberOfBytes.QuadPart > 1024*1024*10 )
-		{	
+		{
 			wprintf(
 				L"QuickFormatting %dM\n",
 				(DWORD) (totalNumberOfBytes.QuadPart / (1024 * 1024))
-				);	
+				);
 		}
 		else
 		{
 			wprintf(
-				L"QuickFormatting %.2fM\n", 
+				L"QuickFormatting %.2fM\n",
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart) / (float)(1024.0*1024.0)
 				);
 		}
@@ -534,7 +534,7 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 	}
 	//
 	// Format away!
-	//			
+	//
 	FormatEx(
 		RootDirectory,
 		media,
@@ -576,15 +576,15 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 				GetLastError()
 				);
 			return -1;
-		}	
+		}
 	}
 	if ( !GetVolumeInformationW(
-		RootDirectory, 
+		RootDirectory,
 		volumeName,
-		WBUFSIZE(volumeName), 
+		WBUFSIZE(volumeName),
 		& serialNumber,
 		& maxComponent,
-		& flags, 
+		& flags,
 		fileSystem,
 		WBUFSIZE(fileSystem) )
 	) {
@@ -594,16 +594,16 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 			);
 		return -1;
 	}
-	// 
+	//
 	// Print out some stuff including the formatted size
 	//
 	if ( !GetDiskFreeSpaceExW(
-		RootDirectory, 
+		RootDirectory,
 		& freeBytesAvailableToCaller,
 		& totalNumberOfBytes,
 		& totalNumberOfFreeBytes )
 	) {
-		PrintWin32Error( 
+		PrintWin32Error(
 			L"Could not query volume size",
 			GetLastError()
 			);
@@ -621,16 +621,16 @@ ReactOs adaptation 1999 by Emanuele Aliberti\n\n"
 	// Get the drive's serial number
 	//
 	if ( !GetVolumeInformationW(
-		RootDirectory, 
+		RootDirectory,
 		volumeName,
-		WBUFSIZE(volumeName), 
+		WBUFSIZE(volumeName),
 		& serialNumber,
 		& maxComponent,
-		& flags, 
+		& flags,
 		fileSystem,
 		WBUFSIZE(fileSystem) )
 	) {
-		PrintWin32Error( 
+		PrintWin32Error(
 			L"Could not query volume",
 			GetLastError()
 			);

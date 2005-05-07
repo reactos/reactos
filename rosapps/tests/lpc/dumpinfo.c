@@ -1,4 +1,4 @@
-/* $Id: dumpinfo.c,v 1.1 2004/10/21 04:58:59 sedwards Exp $
+/* $Id$
  *
  * reactos/apps/lpc/dumpinfo.c
  *
@@ -12,7 +12,7 @@
  * 	Added code to find the basic information buffer size
  * 	for the LPC port object.
  * 19990710 (EA)
- * 
+ *
  */
 #include <windows.h>
 #include <stdio.h>
@@ -77,7 +77,7 @@ DumpInfo (
 {
 	BYTE			ObjectInformation [BUF_SIZE] = {0};
 	ULONG			ResultLength;
-	
+
 	wprintf(
 		L"Port \"%s\" %s:\n",
 		Name,
@@ -102,7 +102,7 @@ DumpInfo (
 		PLPC_PORT_BASIC_INFORMATION	i;
 
 		i = (PLPC_PORT_BASIC_INFORMATION) ObjectInformation;
-	
+
 		printf( "\tUnknown01 = 0x%08X\n", i->Unknown0 );
 		printf( "\tUnknown02 = 0x%08X\n", i->Unknown1 );
 		printf( "\tUnknown03 = 0x%08X\n", i->Unknown2 );
@@ -135,7 +135,7 @@ DumpInfo (
 		OBJECT_TYPE_INFORMATION	* i;
 
 		i = (OBJECT_TYPE_INFORMATION *) ObjectInformation;
-		
+
 		wprintf(
 			L"\tName: \"%s\"\n",
 			(i->Name.Length ? i->Name.Buffer : L"")

@@ -74,10 +74,10 @@ SConnect(int sfd, const struct sockaddr_in *const addr, int tlen)
 	errno = 0;
 	result = connect(sfd, (struct sockaddr *) addr,
 			(int) sizeof(struct sockaddr_in));
-	if (result == 0) 
+	if (result == 0)
 		return 0;	/* Already?!? */
 
-	if ((result < 0) 
+	if ((result < 0)
 #if defined(WIN32) || defined(_WINDOWS)
 		&& ((wsaErrno = WSAGetLastError()) != WSAEWOULDBLOCK)
 		&& (wsaErrno != WSAEINPROGRESS)
@@ -105,7 +105,7 @@ SConnect(int sfd, const struct sockaddr_in *const addr, int tlen)
 			/* ready */
 			break;
 		} else if (result == 0) {
-			/* timeout */		
+			/* timeout */
 			errno = ETIMEDOUT;
 			SETWSATIMEOUTERR
 			/* Don't bother turning off FIONBIO */

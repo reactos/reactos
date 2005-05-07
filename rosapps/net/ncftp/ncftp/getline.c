@@ -1,10 +1,10 @@
-/* Based on: "$Id: getline.c,v 1.1 2001/12/30 06:30:21 sedwards Exp $"; */
+/* Based on: "$Id$"; */
 static const char copyright[] = "getline:  Copyright (C) 1991, 1992, 1993, Chris Thewalt";
 
 /*
  * Copyright (C) 1991, 1992, 1993 by Chris Thewalt (thewalt@ce.berkeley.edu)
  *
- * Permission to use, copy, modify, and distribute this software 
+ * Permission to use, copy, modify, and distribute this software
  * for any purpose and without fee is hereby granted, provided
  * that the above copyright notices appear in all copies and that both the
  * copyright notice and this permission notice appear in supporting
@@ -258,7 +258,7 @@ static void
 gl_char_cleanup(void)		/* undo effects of gl_char_init */
 {
 #ifdef __unix__
-#	ifdef HAVE_TERMIOS_H 
+#	ifdef HAVE_TERMIOS_H
 		tcsetattr(0, TCSANOW, &old_termios);
 #	elif defined(TIOCSETN)		/* BSD */
 		ioctl(0, TIOCSETN, &old_tty);
@@ -422,7 +422,7 @@ gl_getcx(int tlen)
 
 static int
 gl_getcx(int tlen)
-{	
+{
 	int i, c;
 
 	c = (-2);
@@ -466,8 +466,8 @@ gl_putc(int c)
 static void
 gl_puts(const char *const buf)
 {
-    int len; 
-    
+    int len;
+
     if (buf) {
         len = (int) strlen(buf);
         write(1, buf, len);
@@ -638,7 +638,7 @@ getline(char *prompt)
 			gl_check_inputrc_for_vi();
 	}
 
-    gl_init();	
+    gl_init();
     gl_prompt = (prompt)? prompt : "";
     gl_buf[0] = 0;
     if (gl_in_hook)
@@ -994,7 +994,7 @@ ansi:
 
 static void
 gl_addchar(int c)
-      
+
 /* adds the character c to the input buffer at current location */
 {
     int  i;
@@ -1022,7 +1022,7 @@ gl_yank(void)
     len = (int) strlen(gl_killbuf);
     if (len > 0) {
 	if (gl_overwrite == 0) {
-            if (gl_cnt + len >= GL_BUF_SIZE - 1) 
+            if (gl_cnt + len >= GL_BUF_SIZE - 1)
 	        gl_error("\n*** Error: getline(): input buffer overflow\n");
             for (i=gl_cnt; i >= gl_pos; i--)
                 gl_buf[i+len] = gl_buf[i];
@@ -1031,7 +1031,7 @@ gl_yank(void)
             gl_fixup(gl_prompt, gl_pos, gl_pos+len);
 	} else {
 	    if (gl_pos + len > gl_cnt) {
-                if (gl_pos + len >= GL_BUF_SIZE - 1) 
+                if (gl_pos + len >= GL_BUF_SIZE - 1)
 	            gl_error("\n*** Error: getline(): input buffer overflow\n");
 		gl_buf[gl_pos + len] = 0;
             }
@@ -1071,12 +1071,12 @@ gl_newline(void)
     int len = gl_cnt;
     int loc = gl_width - 5;	/* shifts line back to start position */
 
-    if (gl_cnt >= GL_BUF_SIZE - 1) 
+    if (gl_cnt >= GL_BUF_SIZE - 1)
         gl_error("\n*** Error: getline(): input buffer overflow\n");
     if (gl_out_hook) {
 	change = gl_out_hook(gl_buf);
         len = (int) strlen(gl_buf);
-    } 
+    }
     if (loc > len)
 	loc = len;
     gl_fixup(gl_prompt, change, loc);	/* must do this before appending \n */
@@ -1087,7 +1087,7 @@ gl_newline(void)
 
 static void
 gl_del(int loc, int killsave)
-        
+
 /*
  * Delete a character.  The loc variable can be:
  *    -1 : delete character to left of cursor
@@ -1112,7 +1112,7 @@ gl_del(int loc, int killsave)
 
 static void
 gl_kill(int pos)
-        
+
 /* delete from pos to the end of line */
 {
     if (pos < gl_cnt) {
@@ -1132,7 +1132,7 @@ gl_killword(int direction)
     int i;
 
     if (direction > 0) {		/* forward */
-        while (!isspace(gl_buf[pos]) && pos < gl_cnt) 
+        while (!isspace(gl_buf[pos]) && pos < gl_cnt)
 	    pos++;
 	while (isspace(gl_buf[pos]) && pos < gl_cnt)
 	    pos++;
@@ -1141,7 +1141,7 @@ gl_killword(int direction)
 	    pos--;
 	while (isspace(gl_buf[pos]) && pos > 0)
 	    pos--;
-        while (!isspace(gl_buf[pos]) && pos > 0) 
+        while (!isspace(gl_buf[pos]) && pos > 0)
 	    pos--;
 	if (pos < gl_cnt && isspace(gl_buf[pos]))   /* move onto word */
 	    pos++;
@@ -1162,13 +1162,13 @@ gl_killword(int direction)
 
 static void
 gl_word(int direction)
-              
+
 /* move forward or backword one word */
 {
     int pos = gl_pos;
 
     if (direction > 0) {		/* forward */
-        while (!isspace(gl_buf[pos]) && pos < gl_cnt) 
+        while (!isspace(gl_buf[pos]) && pos < gl_cnt)
 	    pos++;
 	while (isspace(gl_buf[pos]) && pos < gl_cnt)
 	    pos++;
@@ -1177,7 +1177,7 @@ gl_word(int direction)
 	    pos--;
 	while (isspace(gl_buf[pos]) && pos > 0)
 	    pos--;
-        while (!isspace(gl_buf[pos]) && pos > 0) 
+        while (!isspace(gl_buf[pos]) && pos > 0)
 	    pos--;
 	if (pos < gl_cnt && isspace(gl_buf[pos]))   /* move onto word */
 	    pos++;
@@ -1197,8 +1197,8 @@ gl_redraw(void)
 
 static void
 gl_fixup(const char *prompt, int change, int cursor)
-              
-                      
+
+
 /*
  * This function is used both for redrawing when input changes or for
  * moving within the input line.  The parameters are:
@@ -1263,7 +1263,7 @@ gl_fixup(const char *prompt, int change, int cursor)
     }
     if (off_right || (off_left && cursor < gl_shift + gl_width - gl_scroll / 2))
 	extra = 2;			/* shift the scrolling boundary */
-    else 
+    else
 	extra = 0;
     new_shift = cursor + extra + gl_scroll - gl_width;
     if (new_shift > 0) {
@@ -1286,7 +1286,7 @@ gl_fixup(const char *prompt, int change, int cursor)
 	}
 	off_right = (gl_cnt > gl_shift + gl_width - 1)? 1 : 0;
 	right = (off_right)? gl_shift + gl_width - 2 : gl_cnt;
-	new_right = (gl_extent && (right > left + gl_extent))? 
+	new_right = (gl_extent && (right > left + gl_extent))?
 	             left + gl_extent : right;
     }
     pad -= (off_right)? gl_width - 1 : gl_cnt - gl_shift;
@@ -1304,7 +1304,7 @@ gl_fixup(const char *prompt, int change, int cursor)
 	if (off_right && new_right == right) {
 	    gl_putc('$');
 	    gl_pos++;
-	} else { 
+	} else {
 	    for (i=0; i < pad; i++)	/* erase remains of prev line */
 		gl_putc(' ');
 	    gl_pos += pad;
@@ -1372,13 +1372,13 @@ gl_histadd(char *buf)
         hist_init();
         gl_init_done = 0;
     }
-    while (*p == ' ' || *p == '\t' || *p == '\n') 
+    while (*p == ' ' || *p == '\t' || *p == '\n')
 	p++;
     if (*p) {
 	len = (int) strlen(buf);
 	if (strchr(p, '\n')) 	/* previously line already has NL stripped */
 	    len--;
-	if ((prev == 0) || ((int) strlen(prev) != len) || 
+	if ((prev == 0) || ((int) strlen(prev) != len) ||
 			    strncmp(prev, buf, (size_t) len) != 0) {
             hist_buf[hist_last] = hist_save(buf);
 	    prev = hist_buf[hist_last];
@@ -1402,7 +1402,7 @@ hist_prev(void)
     if (hist_buf[hist_pos] != 0 && next != hist_last) {
         hist_pos = next;
         p = hist_buf[hist_pos];
-    } 
+    }
     if (p == 0) {
 	p = hist_empty_elem;
 	gl_beep();
@@ -1419,7 +1419,7 @@ hist_next(void)
     if (hist_pos != hist_last) {
         hist_pos = (hist_pos+1) % HIST_SIZE;
 	p = hist_buf[hist_pos];
-    } 
+    }
     if (p == 0) {
 	p = hist_empty_elem;
 	gl_beep();
@@ -1429,7 +1429,7 @@ hist_next(void)
 
 static char *
 hist_save(char *p)
-        
+
 /* makes a copy of the string */
 {
     char *s = 0;
@@ -1446,7 +1446,7 @@ hist_save(char *p)
             strcpy(s, p);
         }
     }
-    if (s == 0) 
+    if (s == 0)
 	gl_error("\n*** Error: hist_save() failed on malloc\n");
     return s;
 }
@@ -1477,7 +1477,7 @@ gl_histsavefile(const char *const path)
 			fprintf(fp, "%s\n", p);
 		}
 		fclose(fp);
-	}	
+	}
 }	/* gl_histsavefile */
 
 
@@ -1516,7 +1516,7 @@ static int   search_pos = 0;      /* current location in search_string */
 static int   search_forw_flg = 0; /* search direction flag */
 static int   search_last = 0;	  /* last match found */
 
-static void  
+static void
 search_update(int c)
 {
     if (c == 0) {
@@ -1547,7 +1547,7 @@ search_update(int c)
     }
 }
 
-static void 
+static void
 search_addchar(int c)
 {
     char *loc;
@@ -1575,7 +1575,7 @@ search_addchar(int c)
     }
 }
 
-static void     
+static void
 search_term(void)
 {
     gl_search_mode = 0;
@@ -1586,7 +1586,7 @@ search_term(void)
     gl_fixup(gl_prompt, 0, gl_pos);
 }
 
-static void     
+static void
 search_back(int new_search)
 {
     int    found = 0;
@@ -1594,8 +1594,8 @@ search_back(int new_search)
 
     search_forw_flg = 0;
     if (gl_search_mode == 0) {
-	search_last = hist_pos = hist_last;	
-	search_update(0);	
+	search_last = hist_pos = hist_last;
+	search_update(0);
 	gl_search_mode = 1;
         gl_buf[0] = 0;
 	gl_fixup(search_prompt, 0, 0);
@@ -1612,7 +1612,7 @@ search_back(int new_search)
 	       if (new_search)
 		   search_last = hist_pos;
 	       found = 1;
-	    } 
+	    }
 	}
 
     } else {
@@ -1620,7 +1620,7 @@ search_back(int new_search)
     }
 }
 
-static void     
+static void
 search_forw(int new_search)
 {
     int    found = 0;
@@ -1628,8 +1628,8 @@ search_forw(int new_search)
 
     search_forw_flg = 1;
     if (gl_search_mode == 0) {
-	search_last = hist_pos = hist_last;	
-	search_update(0);	
+	search_last = hist_pos = hist_last;
+	search_update(0);
 	gl_search_mode = 1;
         gl_buf[0] = 0;
 	gl_fixup(search_prompt, 0, 0);
@@ -1646,7 +1646,7 @@ search_forw(int new_search)
 	       if (new_search)
 		   search_last = hist_pos;
 	       found = 1;
-	    } 
+	    }
 	}
     } else {
         gl_beep();
@@ -1730,14 +1730,14 @@ gl_display_matches(int nused)
 		if (ncol < 1)
 			ncol = 1;
 
-		colw = (gl_termw - 8) / ncol; 
+		colw = (gl_termw - 8) / ncol;
 		nrow = nmax / ncol;
 		if ((nused % ncol) != 0)
 			nrow++;
 
 		if (nrow > (gl_termh - 4)) {
 			nrow = gl_termh - 4;
-			nmax = ncol * nrow; 
+			nmax = ncol * nrow;
 		}
 
 		for (i=0; i<(int) sizeof(buf2); i++)
@@ -1814,7 +1814,7 @@ gl_do_tab_completion(char *buf, int *loc, size_t bufsize, int tabtab)
 		gl_fixup(gl_prompt, gl_pos, gl_pos + 3);
 		memcpy(curposp, ellipsessave, (size_t) 4);
 	}
-	
+
 	qmode = 0;
 	qstart = NULL;
 	lastspacestart = NULL;
@@ -1851,7 +1851,7 @@ gl_do_tab_completion(char *buf, int *loc, size_t bufsize, int tabtab)
 		startp = lastspacestart + 1;
 	else
 		startp = buf;
-	
+
 	cp = startp;
 	mlen = (curposp - cp);
 
@@ -1873,7 +1873,7 @@ gl_do_tab_completion(char *buf, int *loc, size_t bufsize, int tabtab)
 	nalloced = ntoalloc;
 	for (i=nused; i<=nalloced; i++)
 		gl_matchlist[i] = NULL;
-	
+
 	gl_completion_exact_match_extra_char = ' ';
 	for (nprocused = 0;; nprocused++) {
 		if (nused == nalloced) {
@@ -2061,7 +2061,7 @@ gl_set_home_dir(const char *homedir)
 				return;
 			}
 		}
-		
+
 		wdir[0] = '\0';
 		if (GetWindowsDirectory(wdir, sizeof(wdir) - 1) < 1)
 			(void) strncpy(wdir, ".", sizeof(wdir));
@@ -2371,7 +2371,7 @@ gl_local_filename_completion_proc(const char *start, int idx)
 			memcpy(dirtoopen2 + len, "*.*", (size_t) 4);
 		else
 			memcpy(dirtoopen2 + len, "\\*.*", (size_t) 5);
-				
+
 		/* "Open" the directory. */
 		memset(&ffd, 0, sizeof(ffd));
 		searchHandle = FindFirstFile(dirtoopen2, &ffd);
@@ -2391,13 +2391,13 @@ gl_local_filename_completion_proc(const char *start, int idx)
 		filepfx = start + filepfxoffset;
 		goto next;
 	}
-	
+
 	for (;;) {
-		
+
 		name = ffd.cFileName;
 		if ((name[0] == '.') && ((name[1] == '\0') || ((name[1] == '.') && (name[2] == '\0'))))
 			goto next;	/* Skip . and .. */
-		
+
 		if ((filepfxlen == 0) || (strnicmp(name, filepfx, filepfxlen) == 0)) {
 			/* match */
 			len = strlen(name);
@@ -2429,11 +2429,11 @@ next:
 				searchHandle = NULL;
 				return NULL;
 			}
-				
+
 			/* no more items */
 			FindClose(searchHandle);
 			searchHandle = NULL;
-			
+
 			if (idx == 1) {
 				/* There was exactly one match.
 				 * In this special case, we

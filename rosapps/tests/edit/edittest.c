@@ -25,7 +25,7 @@
 #define BUFFERLEN 80 /* Size of buffer to hold result strings */
 
 /* Edit is created with this text */
-#define TestStr "The quick brown fox jumps over the lazy dog" 
+#define TestStr "The quick brown fox jumps over the lazy dog"
 
 #define TestStrW L"This is a WCHAR string" /*  Wide to support unicode edits */
 
@@ -68,7 +68,7 @@ PrintTextXY(char* Text,int x,int y,int len)
       HDC hdc;
       hdc = GetDC (g_hwnd);
       SelectObject (hdc, GetStockObject (SYSTEM_FIXED_FONT));
-      
+
       TextOut (hdc, x,y,Text,len);
       ReleaseDC (g_hwnd, hdc);
       ValidateRect (g_hwnd, &rect);
@@ -148,7 +148,7 @@ static
 VOID
 HandlePrintPasswdChar(HWND handle,DWORD Msg,WPARAM wParam,LPARAM lParam)
     {
-      HDC hdc; 
+      HDC hdc;
       int ret = SendMessage(handle,Msg,wParam,lParam);
 
       int s;
@@ -200,11 +200,11 @@ Msg[] =
 
 	{"EM_GETMODIFY",EM_GETMODIFY,0,0,&HandlePrintReturnHex},
 	{"EM_SETMODIFY",EM_SETMODIFY,TRUE,0,&HandlePrintReturnHex},
-     
+
 	{"EM_GETSEL",EM_GETSEL,(WPARAM)&StartP,(LPARAM)&EndP,&HandlePrintReturnHex},
 
 	{"EM_GETTHUMB",EM_GETTHUMB,0,0,&HandlePrintReturnHex},
-     
+
 	{"EM_LIMITTEXT",EM_LIMITTEXT,10,0,&HandlePrintReturnHex},
 	{"EM_LINEFROMCHAR",EM_LINEFROMCHAR,-1,0,&HandlePrintReturnHex},
 	{"EM_POSFROMCHAR",EM_POSFROMCHAR,10,0,&HandlePrintReturnHex},
@@ -240,7 +240,7 @@ Msg[] =
 
 	{"WM_CUT",WM_CUT,0,0,&HandlePrintReturnHex},
 	{"WM_COPY",WM_COPY,0,0,&HandlePrintReturnHex}
-     
+
 };
 
 DWORD EditStyles[] = {
@@ -279,7 +279,7 @@ CreateCheckButton(const char* lpWindowName, DWORD xSize, DWORD id)
 			  g_hwnd,
 			  (HMENU) id,
 			  g_hInst,
-			  NULL    
+			  NULL
                          );
     	yButPos += 21;
 	return h;
@@ -362,7 +362,7 @@ BackToInitialPage()
 LRESULT
 CALLBACK
 WndProc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
-{   
+{
     int i;
 	switch ( msg )
 	{
@@ -389,7 +389,7 @@ WndProc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
         Buttons[i++] = CreatePushButton("CreateWindowA",140,CREATEWINDOW,WS_VISIBLE);
         Buttons[i++] = CreatePushButton("CreateWindowExA",140,CREATEWINDOWEX,WS_VISIBLE);
         Buttons[i++] = CreatePushButton("CreateWindowExW",140,CREATEWINDOWW,WS_VISIBLE);
-        
+
 
         /* ---- The 1st page of buttons ---- */
 
@@ -591,7 +591,7 @@ RegisterAndCreateWindow (HINSTANCE hInst,
 	wc.lpfnWndProc = WndProc;   /* window procedure */
 	wc.hInstance = hInst;       /* owner of the class */
 
-	wc.lpszClassName = className; 
+	wc.lpszClassName = className;
 	wc.hCursor = LoadCursor ( 0, (LPCTSTR)IDC_ARROW );
 	wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 	wc.style = CS_HREDRAW | CS_VREDRAW;

@@ -1,7 +1,7 @@
-/* $Id: notevil.c,v 1.5 2001/02/18 19:31:38 phreak Exp $
+/* $Id$
  *
  * notevil.c
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Library General Public
  * License along with this software; see the file COPYING.LIB. If
  * not, write to the Free Software Foundation, Inc., 675 Mass Ave,
- * Cambridge, MA 02139, USA.  
+ * Cambridge, MA 02139, USA.
  *
  * --------------------------------------------------------------------
  * ReactOS Coders Console Parade
@@ -215,7 +215,7 @@ main(
         LARGE_INTEGER lint;
 	DWORD Written;
 	COORD Coord = { 0, 0 };
-	
+
 	myself = GetModuleHandle(NULL);
 
 	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE),

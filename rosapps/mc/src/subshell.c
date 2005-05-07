@@ -24,7 +24,7 @@
 
 /* {{{ Declarations */
 
-#include <stdio.h>      
+#include <stdio.h>
 #include <stdlib.h>	/* For errno, putenv, etc.	      */
 #include <errno.h>	/* For errno on SunOS systems	      */
 #include <termios.h>	/* tcgetattr(), struct termios, etc.  */
@@ -213,7 +213,7 @@ void init_subshell (void)
     /* Braindead tcsh can't redirect output to a file descriptor? */
     char tcsh_fifo[sizeof "/tmp/mc.pipe.1234567890"];
 
-    
+
 #ifdef SYNC_PTY_SIDES
 	/* Used to wait for a SIGUSR1 signal from the subprocess */
 	sigset_t sigusr1_mask, old_mask;
@@ -316,7 +316,7 @@ void init_subshell (void)
     subshell_alive = TRUE;
     subshell_stopped = FALSE;
     subshell_pid = fork ();
-    
+
     if (subshell_pid == -1)
     {
 	perror (__FILE__": couldn't spawn the subshell process");
@@ -330,7 +330,7 @@ void init_subshell (void)
     if (subshell_pid == 0)  /* We are in the child process */
     {
 	char *init_file = NULL;
-	
+
 	setsid ();  /* Get a fresh terminal session */
 
 	/* {{{ Open the slave side of the pty: again */
@@ -478,7 +478,7 @@ void init_subshell (void)
 
     init_sigchld ();
 
-    /* We could have received the SIGCHLD signal for the subshell 
+    /* We could have received the SIGCHLD signal for the subshell
      * before installing the init_sigchld */
     pid = waitpid (subshell_pid, &status, WUNTRACED | WNOHANG);
     if (pid == subshell_pid){
@@ -535,7 +535,7 @@ int invoke_subshell (const char *command, int how, char **new_dir)
     /* {{{ Fiddle with terminal modes */
 
     static struct termios raw_mode = {0};
-    
+
     /* MC calls reset_shell_mode() in pre_exec() to set the real tty to its */
     /* original settings.  However, here we need to make this tty very raw, */
     /* so that all keyboard signals, XON/XOFF, etc. will get through to the */
@@ -558,11 +558,11 @@ int invoke_subshell (const char *command, int how, char **new_dir)
     tcsetattr (STDOUT_FILENO, TCSANOW, &raw_mode);
 
     /* }}} */
-    
+
     /* Make the subshell change to MC's working directory */
     if (new_dir)
 	do_subshell_chdir (cpanel->cwd, TRUE, 1);
-    
+
     if (command == NULL)  /* The user has done "C-o" from MC */
     {
 	if (subshell_state == INACTIVE)
@@ -653,7 +653,7 @@ int read_subshell_prompt (int how)
 		clear_now = TRUE;
 		if (!pty_buffer [i])
 		    continue;
-		
+
 		subshell_prompt[prompt_pos++] = pty_buffer[i];
 		if (prompt_pos == prompt_size)
 		    subshell_prompt = (char *) realloc (subshell_prompt,
@@ -695,7 +695,7 @@ void resize_subshell (void)
 int exit_subshell (void)
 {
     int quit = TRUE;
-    
+
     if (subshell_state != INACTIVE && subshell_alive)
 	quit = !query_dialog (_(" Warning "), _(" The shell is still active. Quit anyway? "),
 			      0, 2, _("&Yes"), _("&No"));
@@ -739,7 +739,7 @@ int exit_subshell (void)
 	if (unlink (pty_buffer) == -1)
 	    perror (__FILE__": couldn't remove named pipe /tmp/mc.pipe.NNN");
     }
-    
+
     return quit;
 }
 
@@ -750,7 +750,7 @@ int exit_subshell (void)
 void do_subshell_chdir (char *directory, int do_update, int reset_prompt)
 {
     char *temp;
-    
+
     if (!(subshell_state == INACTIVE && strcmp (subshell_cwd, cpanel->cwd))){
 	/* We have to repaint the subshell prompt if we read it from
 	 * the main program.  Please note that in the code after this
@@ -760,22 +760,22 @@ void do_subshell_chdir (char *directory, int do_update, int reset_prompt)
 	    do_update_prompt ();
 	return;
     }
-    
+
     /* The initial space keeps this out of the command history (in bash
        because we set "HISTCONTROL=ignorespace") */
     write (subshell_pty, " cd ", 4);
     if (*directory) {
 	temp = name_quote (directory, 0);
-	write (subshell_pty, temp, strlen (temp));    
+	write (subshell_pty, temp, strlen (temp));
         free (temp);
     } else {
 	write (subshell_pty, "/", 1);
     }
     write (subshell_pty, "\n", 1);
-    
+
     subshell_state = RUNNING_COMMAND;
     feed_subshell (QUIETLY, FALSE);
-    
+
     if (subshell_alive && strcmp (subshell_cwd, cpanel->cwd) && strcmp (cpanel->cwd, "."))
 	fprintf (stderr, _("Warning: Couldn't change to %s.\n"), cpanel->cwd);
 
@@ -840,7 +840,7 @@ void sigchld_handler (int sig)
 #ifndef HAVE_X
 #ifndef SCO_FLAVOR
     pid = waitpid (cons_saver_pid, &status, WUNTRACED | WNOHANG);
-    
+
     if (pid == cons_saver_pid) {
 	/* {{{ Someone has stopped or killed cons.saver; restart it */
 
@@ -874,7 +874,7 @@ static int feed_subshell (int how, int fail_on_error)
     fd_set read_set;	/* For `select' */
     int bytes;		/* For the return value from `read' */
     int i;		/* Loop counter */
-    
+
     struct timeval wtime; /* Maximum time we wait for the subshell */
     struct timeval *wptr;
     /* }}} */
@@ -882,7 +882,7 @@ static int feed_subshell (int how, int fail_on_error)
     /* we wait up to 10 seconds if fail_on_error */
     wtime.tv_sec = 10;
     wtime.tv_usec = 0;
-    
+
     for (wptr = fail_on_error ? &wtime : NULL;;)
     {
 	if (!subshell_alive)
@@ -909,7 +909,7 @@ static int feed_subshell (int how, int fail_on_error)
 
 	/* From now on: block forever on the select call */
 	wptr = NULL;
-	
+
 	if (FD_ISSET (subshell_pty, &read_set))
 	    /* {{{ Read from the subshell, write to stdout */
 
@@ -1054,7 +1054,7 @@ static int pty_open_slave (const char *pty_name)
 {
     int pty_slave;
     struct group *group_info = getgrnam ("terminal");
-    
+
     if (group_info != NULL)
     {
 	/* The following two calls will only succeed if we are root */
@@ -1112,7 +1112,7 @@ static int pty_open_slave (const char *pty_name)
 	    close (pty_slave);
 	    return -1;
 	}
-	
+
     if (!ioctl (pty_slave, I_FIND, "ldterm"))
         if (ioctl (pty_slave, I_PUSH, "ldterm") == -1)
 	{

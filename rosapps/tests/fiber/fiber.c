@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.1 2004/10/21 05:12:02 sedwards Exp $
+/* $Id$
 */
 
 #include <assert.h>
@@ -239,7 +239,7 @@ void Fbt_Dispatch(struct FiberData * pfdCur, int bExit)
      ++ k;
      continue;
     }
- 
+
     ple = (PLIST_ENTRY)a_leQueues[nQueue].Flink;
    }
    else

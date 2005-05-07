@@ -6,7 +6,7 @@
 // Created by Damon Chandler <dmc27@ee.cornell.edu>
 // Updates can be downloaded at: <www.coriolis.com>
 //
-// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu 
+// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu
 // if you have any questions about this code.
 // ------------------------------------------------------------------
 
@@ -18,7 +18,7 @@
 
 
 const char* WndClassName = "GMainWnd";
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam);
 
 
@@ -28,7 +28,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
    MSG msg;
    WNDCLASS wc;
    memset(&wc, 0, sizeof(WNDCLASS));
-    
+
    wc.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
    wc.lpfnWndProc = MainWndProc;
    wc.hInstance = HInstance;
@@ -38,12 +38,12 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
 
    if (RegisterClass(&wc))
    {
-      HWND HWnd = 
+      HWND HWnd =
          CreateWindow(WndClassName, TEXT("WM_PAINT Demo"),
                       WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_VISIBLE,
                       CW_USEDEFAULT, CW_USEDEFAULT, 200, 150,
                       NULL, NULL, HInstance, NULL);
-                                 
+
       if (HWnd)
       {
          ShowWindow(HWnd, nCmdShow);
@@ -61,16 +61,16 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
 //------------------------------------------------------------------
 
 
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam)
 {
-  const char* text = "Persistent Text"; 
+  const char* text = "Persistent Text";
 
    switch (Msg)
    {
       case WM_PAINT:
       {
-         // determine the invalidated area of the window            
+         // determine the invalidated area of the window
          RECT RUpdate;
          HDC Hdc;
          GetUpdateRect(HWnd, &RUpdate, FALSE);
@@ -86,16 +86,16 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             GetClientRect(HWnd, &RClient);
 
             // set the clipping region
-            IntersectClipRect(Hdc, RUpdate.left, RUpdate.top, 
+            IntersectClipRect(Hdc, RUpdate.left, RUpdate.top,
                               RUpdate.right, RUpdate.bottom);
 
             // fill the client area with the background brush
-            //HBRUSH HBrush = 
+            //HBRUSH HBrush =
                //reinterpret_cast<HBRUSH>
                   (HBRUSH)(GetClassLong(HWnd, GCL_HBRBACKGROUND)
                   );
             FillRect(Hdc, &RClient, NULL);
-            
+
             // render the persistent text
             SetTextColor(Hdc, PALETTERGB(0, 0, 255));
             DrawText(Hdc, text, strlen(text), &RClient,
@@ -108,13 +108,13 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             // release the device context
             ReleaseDC(HWnd, Hdc);
 
-            // validate the update area            
+            // validate the update area
             ValidateRect(HWnd, &RUpdate);
          }
          // release the device context
          ReleaseDC(HWnd, Hdc);
 
-         // validate the update area            
+         // validate the update area
          ValidateRect(HWnd, &RUpdate);
 
          break;

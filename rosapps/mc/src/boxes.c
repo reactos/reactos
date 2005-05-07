@@ -1,15 +1,15 @@
 /* Some misc dialog boxes for the program.
-   
+
    Copyright (C) 1994, 1995 the Free Software Foundation
-   
+
    Authors: 1994, 1995 Miguel de Icaza
             1995 Jakub Jelinek
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -82,7 +82,7 @@ static int display_callback (struct Dlg_head *h, int id, int Msg)
 #ifndef HAVE_X
     char *text;
     WInput *input;
-    
+
     switch (Msg){
     case DLG_DRAW:
 	attrset (COLOR_NORMAL);
@@ -101,7 +101,7 @@ static int display_callback (struct Dlg_head *h, int id, int Msg)
 	    input_set_point (status, 0);
 	}
 	break;
-	
+
     case DLG_KEY:
 	if (id == '\n'){
 	    if((WRadio *) h->current->widget == my_radio){
@@ -109,13 +109,13 @@ static int display_callback (struct Dlg_head *h, int id, int Msg)
 		dlg_stop (h);
 		break;
 	    }
-	    
+
 	    if ((WInput *) h->current->widget == user){
 		h->ret_value = B_USER + 6;
 		dlg_stop (h);
 		break;
 	    }
-	
+
 	    if ((WInput *) h->current->widget == status){
 		h->ret_value = B_USER + 7;
 		dlg_stop (h);
@@ -131,7 +131,7 @@ static int display_callback (struct Dlg_head *h, int id, int Msg)
 	    return MSG_HANDLED;
 	}
     }
-#endif    
+#endif
     return MSG_NOT_HANDLED;
 }
 
@@ -141,9 +141,9 @@ static void display_init (int radio_sel, char *init_text,
 	char* user_mini_status = _("user &Mini status");
 	char* ok_button = _("&Ok");
 	char* cancel_button = _("&Cancel");
-	
+
 	static int button_start = 30;
-	
+
     displays_status = _status;
 
     if (!i18n_displays_flag){
@@ -169,13 +169,13 @@ static void display_init (int radio_sel, char *init_text,
 		i = strlen (user_mini_status) + 13;
 		if (i > DISPLAY_X)
 			DISPLAY_X = i;
-			
+
 		i = strlen (display_title) + 8;
 		if (i > DISPLAY_X)
 			DISPLAY_X = i;
 
 		button_start = DISPLAY_X - l - 5;
-		
+
 		/* get hotkey of user-defined format string */
 		cp = strchr(displays[LIST_TYPES-1],'&');
 		if (cp != NULL && *++cp != '\0')
@@ -189,12 +189,12 @@ static void display_init (int radio_sel, char *init_text,
 
     x_set_dialog_title (dd, _("Listing mode"));
     add_widgetl (dd,
-        button_new (4, button_start, B_CANCEL, 
+        button_new (4, button_start, B_CANCEL,
 			NORMAL_BUTTON, cancel_button, 0, 0, "cancel-button"),
 	XV_WLAY_RIGHTOF);
 
     add_widgetl (dd,
-		button_new (3, button_start, B_ENTER, 
+		button_new (3, button_start, B_ENTER,
 			DEFPUSH_BUTTON, ok_button, 0, 0, "ok-button"),
 	 XV_WLAY_CENTERROW);
 
@@ -204,7 +204,7 @@ static void display_init (int radio_sel, char *init_text,
 
     check_status = check_new (9, 5, _check_status, user_mini_status, "mini-status");
     add_widgetl (dd, check_status, XV_WLAY_NEXTROW);
-    
+
     user = input_new  (7, 9, INPUT_COLOR, DISPLAY_X-14, init_text, "user-fmt-input");
     add_widgetl (dd, user, XV_WLAY_RIGHTDOWN);
     input_set_point (user, 0);
@@ -243,20 +243,20 @@ int display_box (WPanel *panel, char **userp, char **minip, int *use_msformat,
     }
 
     current_mode = panel->list_type;
-    display_init (current_mode, panel->user_format, 
+    display_init (current_mode, panel->user_format,
 	panel->user_mini_status, panel->user_status_format);
-		  
+
     run_dlg (dd);
 
     result = -1;
-    
+
     if (section) {
         free (panel->user_format);
 	for (i = 0; i < LIST_TYPES; i++)
 	    free (panel->user_status_format [i]);
         free (panel);
     }
-    
+
     if (dd->ret_value != B_CANCEL){
 	result = my_radio->sel;
 	*userp = strdup (user->buffer);
@@ -303,12 +303,12 @@ sortfn *sort_box (sortfn *sort_fn, int *reverse, int *case_sensitive)
 		i = strlen (case_label) + 4;
 		if (i > r)
 			r = i;
-		
+
 		l = strlen (ok_button) + 6;
 		i = strlen (cancel_button) + 4;
 		if (i > l)
 			l = i;
-			
+
 		i = check_pos + max(r,l) + 2;
 
 		if (i > SORT_X)
@@ -324,23 +324,23 @@ sortfn *sort_box (sortfn *sort_fn, int *reverse, int *case_sensitive)
 	}
 
     result = 0;
-    
+
     for (i = 0; i < SORT_TYPES; i++)
 	if ((sortfn *) (sort_orders [i].sort_fn) == sort_fn){
 	    current_mode = i;
 	    break;
 	}
-    
+
     dd = create_dlg (0, 0, SORT_Y, SORT_X, dialog_colors, common_dialog_callback,
 		     "[Left and Right Menus]", "sort", DLG_CENTER | DLG_GRID);
-		     
+
     x_set_dialog_title (dd, sort_title);
 
-    add_widgetl (dd, 
-		button_new (10, button_pos, B_CANCEL, NORMAL_BUTTON, cancel_button, 
+    add_widgetl (dd,
+		button_new (10, button_pos, B_CANCEL, NORMAL_BUTTON, cancel_button,
 		0, 0, "cancel-button"), XV_WLAY_CENTERROW);
 
-    add_widgetl (dd, 
+    add_widgetl (dd,
 		button_new (9, button_pos, B_ENTER, DEFPUSH_BUTTON, ok_button,
 		0, 0, "ok-button"),	XV_WLAY_RIGHTDOWN);
 
@@ -351,7 +351,7 @@ sortfn *sort_box (sortfn *sort_fn, int *reverse, int *case_sensitive)
 
     my_radio = radio_new (3, 3, SORT_TYPES, sort_orders_names, 1, "radio-1");
     my_radio->sel = my_radio->pos = current_mode;
-    
+
     add_widget (dd, my_radio);
     run_dlg (dd);
 
@@ -401,7 +401,7 @@ void confirm_box ()
 
 #ifdef ENABLE_NLS
 	static int i18n_flag = 0;
-	
+
 	if (!i18n_flag)
 	{
 		register int i = sizeof(conf_widgets)/sizeof(QuickWidget) - 1;
@@ -434,7 +434,7 @@ void confirm_box ()
 			confirmation.xlen = i;
 
 		confirmation.title = _(confirmation.title);
-		
+
 		i18n_flag = confirmation.i18n = 1;
 	}
 
@@ -499,7 +499,7 @@ void display_bits_box ()
 		l1 = strlen (display_widgets [2].text);
 		if (l1 > maxlen)
 			maxlen = l1;
-		
+
 
 		display_bits.xlen = (maxlen + 5) * 6 / 4;
 
@@ -557,7 +557,7 @@ static int tree_callback (struct Dlg_head *h, int id, int msg)
 	    dlg_stop (h);
 	}
 	return MSG_HANDLED;
-	
+
     case DLG_DRAW:
 	common_dialog_repaint (h);
 	break;
@@ -574,7 +574,7 @@ char *tree (char *current_dir)
 
     tree_colors [3] = dialog_colors [0];
     tree_colors [1] = dialog_colors [1];
-    
+
     /* Create the components */
     dlg = create_dlg (0, 0, TREE_Y, TREE_X, tree_colors,
 		      tree_callback, "[Directory Tree]", "tree", DLG_CENTER);
@@ -584,13 +584,13 @@ char *tree (char *current_dir)
     add_widget (dlg, bar);
     bar->widget.x = 0;
     bar->widget.y = LINES - 1;
-    
+
     run_dlg (dlg);
     if (dlg->ret_value == B_ENTER)
 	val = strdup (mytree->selected_ptr->name);
     else
 	val = 0;
-    
+
     destroy_dlg (dlg);
     return val;
 }
@@ -662,17 +662,17 @@ static QuickWidget confvfs_widgets [] = {
 { quick_label,     4, VFSX, 8, VFSY, N_("ftp anonymous password:"),
       0, 0, 0, 0, XV_WLAY_NEXTROW, "label-pass"},
 #endif
-{ quick_input,    26, VFSX, 6, VFSY, "", 10, 0, 0, &ret_limit, 
+{ quick_input,    26, VFSX, 6, VFSY, "", 10, 0, 0, &ret_limit,
       XV_WLAY_RIGHTDOWN, "input-limit" },
 { quick_radio,    4, VFSX, 5, VFSY, "", 2, 0,
       &vfs_use_limit, confvfs_str, XV_WLAY_BELOWCLOSE, "radio" },
-{ quick_label,    4,  VFSX, 4, VFSY, N_("Gzipped tar archive extract:"), 
+{ quick_label,    4,  VFSX, 4, VFSY, N_("Gzipped tar archive extract:"),
       0, 0, 0, 0, XV_WLAY_NEXTROW, "label-tar" },
 { quick_label,    46, VFSX, 3, VFSY, "sec",
       0, 0, 0, 0, XV_WLAY_RIGHTOF, "label-sec2" },
-{ quick_input,    35, VFSX, 3, VFSY, "", 10, 0, 0, &ret_timeout, 
+{ quick_input,    35, VFSX, 3, VFSY, "", 10, 0, 0, &ret_timeout,
       XV_WLAY_RIGHTOF, "input-timo-vfs" },
-{ quick_label,    4,  VFSX, 3, VFSY, N_("Timeout for freeing VFSs:"), 
+{ quick_label,    4,  VFSX, 3, VFSY, N_("Timeout for freeing VFSs:"),
       0, 0, 0, 0, XV_WLAY_BELOWCLOSE, "label-vfs" },
 { 0,              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, XV_WLAY_DONTCARE, 0 }
 };
@@ -720,7 +720,7 @@ void configure_vfs ()
 
     if (quick_dialog (&confvfs_dlg) != B_CANCEL) {
         char *p;
-        
+
         vfs_timeout = atoi (ret_timeout);
         free (ret_timeout);
         if (vfs_timeout < 0 || vfs_timeout > 10000)
@@ -771,10 +771,10 @@ char *cd_dialog (void)
     { quick_input,  6, 57, 5, 0, "", 50, 0, 0, 0, XV_WLAY_RIGHTOF, "input" },
     { quick_label,  3, 57, 2, 0, "",  0, 0, 0, 0, XV_WLAY_DONTCARE, "label" },
     { 0 } };
-    
+
     char *my_str;
 	int len;
-    
+
     Quick_input.xlen  = 57;
     Quick_input.title = _("Quick cd");
     Quick_input.help  = "[Quick cd]";
@@ -788,7 +788,7 @@ char *cd_dialog (void)
 	len = strlen (quick_widgets [INPUT_INDEX+1].text);
 
 	quick_widgets [INPUT_INDEX+1].relative_x = 3;
-	quick_widgets [INPUT_INDEX].relative_x = 
+	quick_widgets [INPUT_INDEX].relative_x =
 		quick_widgets [INPUT_INDEX+1].relative_x + len + 1;
 
     Quick_input.xlen = len + quick_widgets [INPUT_INDEX].hotkey_pos + 7;
@@ -800,7 +800,7 @@ char *cd_dialog (void)
     Quick_input.ypos = LINES - 2 - Quick_input.ylen;
     quick_widgets [INPUT_INDEX].relative_y = 2;
     quick_widgets [INPUT_INDEX].str_result = &my_str;
-    
+
     Quick_input.widgets = quick_widgets;
     if (quick_dialog (&Quick_input) != B_CANCEL){
 	return *(quick_widgets [INPUT_INDEX].str_result);
@@ -808,7 +808,7 @@ char *cd_dialog (void)
 	return 0;
 }
 
-void symlink_dialog (char *existing, char *new, char **ret_existing, 
+void symlink_dialog (char *existing, char *new, char **ret_existing,
     char **ret_new)
 {
     QuickDialog Quick_input;
@@ -828,7 +828,7 @@ void symlink_dialog (char *existing, char *new, char **ret_existing,
     { quick_input,  6, 80, 3, 8, "", 58, 0, 0, 0, XV_WLAY_BELOWCLOSE, "input-2" },
     { quick_label,  6, 80, 2, 8, "", 0, 0, 0, 0, XV_WLAY_DONTCARE, "label-2" },
     { 0 } };
-    
+
     Quick_input.xlen  = 64;
     Quick_input.ylen  = 8;
     Quick_input.title = "Symbolic link";
@@ -842,7 +842,7 @@ void symlink_dialog (char *existing, char *new, char **ret_existing,
     Quick_input.xpos = -1;
     quick_widgets [INPUT_INDEX].str_result = ret_new;
     quick_widgets [INPUT_INDEX+2].str_result = ret_existing;
-    
+
     Quick_input.widgets = quick_widgets;
     if (quick_dialog (&Quick_input) == B_CANCEL){
         *ret_new = NULL;
@@ -870,7 +870,7 @@ jobs_fill_listbox (void)
        state_str [0] = _("Running ");
        state_str [1] = _("Stopped");
     }
-    
+
     while (tl){
 	char *s;
 
@@ -880,19 +880,19 @@ jobs_fill_listbox (void)
 	tl = tl->next;
     }
 }
-	
+
 static int
 task_cb (int action, void *ignored)
 {
     TaskList *tl;
     int sig;
-    
+
     if (!bg_list->list)
 	return 0;
 
     /* Get this instance information */
     tl = (TaskList *) bg_list->current->data;
-    
+
     if (action == B_STOP){
 	sig   = SIGSTOP;
 	tl->state = Task_Stopped;
@@ -902,7 +902,7 @@ task_cb (int action, void *ignored)
     } else if (action == B_KILL){
 	sig = SIGKILL;
     }
-    
+
     if (sig == SIGINT)
 	unregister_task_running (tl->pid, tl->fd);
 
@@ -912,18 +912,18 @@ task_cb (int action, void *ignored)
 
     /* This can be optimized to just redraw this widget :-) */
     dlg_redraw (jobs_dlg);
-    
+
     return 0;
 }
 
-static struct 
+static struct
 {
 	char* name;
 	int xpos;
 	int value;
 	int (*callback)();
 	char* tkname;
-} 
+}
 job_buttons [] =
 {
 	{N_("&Stop"),   3,  B_STOP,   task_cb, "button-stop"},
@@ -968,24 +968,24 @@ jobs_cmd (void)
 			   common_dialog_callback, "[Background jobs]", "jobs",
 			   DLG_CENTER | DLG_GRID);
     x_set_dialog_title (jobs_dlg, _("Background Jobs"));
-    
+
     bg_list = listbox_new (2, 3, JOBS_X-7, JOBS_Y-9, listbox_nothing, 0, "listbox");
     add_widget (jobs_dlg, bg_list);
 
 	i = n_buttons;
 	while (i--)
 	{
-		add_widget (jobs_dlg, button_new (JOBS_Y-4, 
+		add_widget (jobs_dlg, button_new (JOBS_Y-4,
 			job_buttons [i].xpos, job_buttons [i].value,
-			NORMAL_BUTTON, job_buttons [i].name, 
+			NORMAL_BUTTON, job_buttons [i].name,
 			job_buttons [i].callback, 0,
 			job_buttons [i].tkname));
 	}
-	
+
     /* Insert all of task information in the list */
     jobs_fill_listbox ();
     run_dlg (jobs_dlg);
-    
+
     destroy_dlg (jobs_dlg);
 }
 #endif

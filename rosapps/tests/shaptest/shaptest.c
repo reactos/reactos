@@ -164,7 +164,7 @@ void shaptest( HDC hdc )
 }
 
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
@@ -233,7 +233,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
   switch(msg)
   {
-  
+
   case WM_PAINT:
     hDC = BeginPaint(hWnd, &ps);
     shaptest( hDC );

@@ -17,7 +17,7 @@
  * strtok 4=[402] length=3
  * strtok 5=[573] length=3
  * strtok 6=[1000] length=4
- * 
+ *
  * (Strtok:)
  * Strtok 1=[] length=0
  * Strtok 2=[] length=0
@@ -50,7 +50,7 @@ Strtok(char *buf, const char *delims)
 		}
 		if (strchr(delims, (int) *end) != NULL) {
 			*end++ = '\0';
-			p = end; 
+			p = end;
 			break;
 		}
 	}
@@ -104,7 +104,7 @@ Strntok(char *dstTokenStart, size_t tokenSize, char *buf, const char *delims)
 		}
 		if (strchr(delims, (int) *end) != NULL) {
 			++end;
-			p = end; 
+			p = end;
 			break;
 		}
 		if (dst < lim)			/* Don't overrun token size. */

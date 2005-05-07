@@ -1,6 +1,6 @@
 #ifndef _FMIFS_H
 #define _FMIFS_H
-/* $Id: fmifs.h,v 1.1 1999/05/16 07:27:35 ea Exp $
+/* $Id$
  *
  * fmifs.h
  *
@@ -27,7 +27,7 @@ struct
 {
 	DWORD Lines;
 	PCHAR Output;
-	
+
 } TEXTOUTPUT, *PTEXTOUTPUT;
 
 
@@ -68,13 +68,13 @@ BOOL
 VOID
 STDCALL
 ChkDsk(
-	PWCHAR		DriveRoot, 
+	PWCHAR		DriveRoot,
 	PWCHAR		Format,
-	BOOL		CorrectErrors, 
-	BOOL		Verbose, 
+	BOOL		CorrectErrors,
+	BOOL		Verbose,
 	BOOL		CheckOnlyIfDirty,
-	BOOL		ScanDrive, 
-	PVOID		Unused2, 
+	BOOL		ScanDrive,
+	PVOID		Unused2,
 	PVOID		Unused3,
 	PFMIFSCALLBACK	Callback
 	);
@@ -83,13 +83,13 @@ ChkDsk(
 VOID
 STDCALL
 ChkDskEx(
-	PWCHAR		DriveRoot, 
+	PWCHAR		DriveRoot,
 	PWCHAR		Format,
-	BOOL		CorrectErrors, 
-	BOOL		Verbose, 
+	BOOL		CorrectErrors,
+	BOOL		Verbose,
 	BOOL		CheckOnlyIfDirty,
-	BOOL		ScanDrive, 
-	PVOID		Unused2, 
+	BOOL		ScanDrive,
+	PVOID		Unused2,
 	PVOID		Unused3,
 	PFMIFSCALLBACK	Callback
 	);

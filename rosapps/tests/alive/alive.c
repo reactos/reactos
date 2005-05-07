@@ -1,4 +1,4 @@
-/* $Id: alive.c,v 1.1 2004/10/21 04:48:44 sedwards Exp $
+/* $Id$
  *
  */
 #include <windows.h>

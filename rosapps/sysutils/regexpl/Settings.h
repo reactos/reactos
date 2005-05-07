@@ -1,4 +1,4 @@
-/* $Id: Settings.h,v 1.2 2001/04/24 22:53:00 narnaoud Exp $ */
+/* $Id$ */
 
 #ifndef OPTIONS_H__a7382d2d_96b4_4472_974d_801281bd5327___INCLUDED
 #define OPTIONS_H__a7382d2d_96b4_4472_974d_801281bd5327___INCLUDED

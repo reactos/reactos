@@ -410,8 +410,8 @@ int edit_save_as_cmd (WEdit * edit)
 		different_filename = 1;
 		if ((file = open ((char *) exp, O_RDONLY)) != -1) {	/* the file exists */
 		    close (file);
-		    if (edit_query_dialog2 (_(" Warning "), 
-		    _(" A file already exists with this name. "), 
+		    if (edit_query_dialog2 (_(" Warning "),
+		    _(" A file already exists with this name. "),
 /* Push buttons to over-write the current file, or cancel the operation */
 		    _("Overwrite"), _("Cancel")))
 			return 0;
@@ -423,7 +423,7 @@ int edit_save_as_cmd (WEdit * edit)
 		edit->modified = 0;
 #ifdef MIDNIGHT
 	        edit->delete_file = 0;
-#endif		
+#endif
 		if (different_filename && !edit->explicit_syntax)
 		    edit_load_syntax (edit, 0, 0);
 		return 1;
@@ -462,7 +462,7 @@ int raw_callback (struct Dlg_head *h, int key, int Msg)
 }
 
 /* gets a raw key from the keyboard. Passing cancel = 1 draws
-   a cancel button thus allowing c-c etc.. Alternatively, cancel = 0 
+   a cancel button thus allowing c-c etc.. Alternatively, cancel = 0
    will return the next key pressed */
 int edit_raw_key_query (char *heading, char *query, int cancel)
 {
@@ -624,7 +624,7 @@ void edit_delete_macro_cmd (WEdit * edit)
     command = CK_Macro (edit_raw_key_query (_(" Delete Macro "), _(" Press macro hotkey: "), 1));
 #else
 /* This heads the 'Delete Macro' dialog box */
-    command = CK_Macro (CKeySymMod (CRawkeyQuery (0, 0, 0, _(" Delete Macro "), 
+    command = CK_Macro (CKeySymMod (CRawkeyQuery (0, 0, 0, _(" Delete Macro "),
 /* Input line for a single key press follows the ':' */
     _(" Press macro hotkey: "))));
 #endif
@@ -708,7 +708,7 @@ int edit_save_cmd (WEdit * edit)
     edit->modified = 0;
 #ifdef MIDNIGHT
     edit->delete_file = 0;
-#endif		
+#endif
 
     return 1;
 }
@@ -850,7 +850,7 @@ void edit_block_move_cmd (WEdit * edit)
     }
     edit_scroll_screen_over_cursor (edit);
 
-    edit_cursor_move (edit, current - edit->curs1 
+    edit_cursor_move (edit, current - edit->curs1
 	- (((current - edit->curs1) > 0) ? end_mark - start_mark : 0));
     edit_scroll_screen_over_cursor (edit);
 
@@ -1011,7 +1011,7 @@ void edit_replace_dialog (WEdit * edit, char **search_text, char **replace_text,
 	 0, 0, XV_WLAY_DONTCARE, NULL},
 	{quick_checkbox, 25, 50, 9, REPLACE_DLG_HEIGHT, "Pr&ompt on replace", 0, 0,
 	 0, 0, XV_WLAY_DONTCARE, NULL},
-	{quick_checkbox, 4, 50, 11, REPLACE_DLG_HEIGHT, "&Backwards", 0, 0, 
+	{quick_checkbox, 4, 50, 11, REPLACE_DLG_HEIGHT, "&Backwards", 0, 0,
 	 0, 0, XV_WLAY_DONTCARE, NULL},
 	{quick_checkbox, 4, 50, 10, REPLACE_DLG_HEIGHT, "&Regular exprssn", 0, 0,
 	 0, 0, XV_WLAY_DONTCARE, NULL},
@@ -1314,9 +1314,9 @@ int edit_replace_prompt (WEdit * edit, char *replace_text, int xpos, int ypos)
 	    p++;
 	}
 	edit->force |= REDRAW_COMPLETELY;
-	q = edit_query_dialog4 (_(" Replace "), 
+	q = edit_query_dialog4 (_(" Replace "),
 /* This is for the confirm replace dialog box. The replaced string comes after the ':' */
-	catstrs (_(" Replace with: "), r, 0), 
+	catstrs (_(" Replace with: "), r, 0),
 /* Buttons for the confirm replace dialog box. */
 	_("Replace"), _("Skip"), _("Replace all"), _("Cancel"));
 	if (r)
@@ -1457,7 +1457,7 @@ long edit_find_string (long start, unsigned char *exp, int *len, long last_byte,
 	    }
 	} else {	/* regexp matching */
 	    long offset = 0;
-	    int found_start, match_bol, move_win = 0; 
+	    int found_start, match_bol, move_win = 0;
 
 	    while (start + offset < last_byte) {
 		match_bol = (offset == 0 || (*get_byte) (data, start + offset - 1) == '\n');
@@ -1846,7 +1846,7 @@ void edit_replace_cmd (WEdit * edit, int again)
 			while (repl_str[++i])
 			    edit_insert (edit, repl_str[i]);
 		    } else {
-			edit_error_dialog (_(" Replace "), 
+			edit_error_dialog (_(" Replace "),
 /* "Invalid regexp string or scanf string" */
 			_(" Error in replacement format string. "));
 			replace_continue = 0;
@@ -1988,7 +1988,7 @@ void edit_quit_cmd (WEdit * edit)
 	case -1:
 	    return;
 	}
-    } 
+    }
 #ifdef MIDNIGHT
     else if (edit->delete_file)
 	unlink (catstrs (edit->dir, edit->filename, 0));
@@ -2340,7 +2340,7 @@ int edit_sort_cmd (WEdit * edit)
 
     exp = old ? old : "";
 
-    exp = input_dialog (_(" Run Sort "), 
+    exp = input_dialog (_(" Run Sort "),
 /* Not essential to translate */
     _(" Enter sort options (see manpage) separated by whitespace: "), "");
 
@@ -2353,13 +2353,13 @@ int edit_sort_cmd (WEdit * edit)
     e = system (catstrs (" sort ", exp, " ", home_dir, BLOCK_FILE, " > ", home_dir, TEMP_FILE, 0));
     if (e) {
 	if (e == -1 || e == 127) {
-	    edit_error_dialog (_(" Sort "), 
+	    edit_error_dialog (_(" Sort "),
 /* Not essential to translate */
 	    get_sys_error (_(" Error trying to execute sort command ")));
 	} else {
 	    char q[8];
 	    sprintf (q, "%d ", e);
-	    edit_error_dialog (_(" Sort "), 
+	    edit_error_dialog (_(" Sort "),
 /* Not essential to translate */
 	    catstrs (_(" Sort returned non-zero: "), q, 0));
 	}
@@ -2385,7 +2385,7 @@ void edit_block_process_cmd (WEdit * edit, const char *shell_cmd, int block)
 
     if (block) {
 	if (eval_marks (edit, &start_mark, &end_mark)) {
-	    edit_error_dialog (_(" Process block "), 
+	    edit_error_dialog (_(" Process block "),
 /* Not essential to translate */
 		_(" You must first highlight a block of text. "));
 	    return;
@@ -2415,7 +2415,7 @@ void edit_block_process_cmd (WEdit * edit, const char *shell_cmd, int block)
 	    }
 	} else {
 /* Not essential to translate */
-	    edit_error_dialog (_(" Process block "), 
+	    edit_error_dialog (_(" Process block "),
 /* Not essential to translate */
 	    get_sys_error (_(" Error trying to stat file ")));
 	    return;

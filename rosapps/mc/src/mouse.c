@@ -1,11 +1,11 @@
 /* Mouse managing
    Copyright (C) 1994 Miguel de Icaza.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,7 +18,7 @@
 /* Events received by clients of this library have their coordinates 0 */
 /* based */
 
-/* "$Id: mouse.c,v 1.1 2001/12/30 09:55:23 sedwards Exp $" */
+/* "$Id$" */
 
 #include <config.h>
 #include <sys/types.h>
@@ -149,7 +149,7 @@ int mouse_handler (Gpm_Event *gpm_event)
     int x = last_x = gpm_event->x;
     int y = last_y = gpm_event->y;
     int redo = 0;
-    
+
 /*    DEBUGM ((log, "Mouse [%d, %d]\n", x, y)); */
 
     /* Call any registered event handlers */
@@ -231,14 +231,14 @@ void init_mouse (void)
 
 		fflush (stdout);
 		/* turn on */
-		xmouse_flag = 1; 
+		xmouse_flag = 1;
 		define_sequence (MCKEY_MOUSE, ESC_STR "[M", MCKEY_NOACTION);
 	    }
 	    break;
 	default:
 	    /* nothing */
 	break;
-    } /* switch (use_mouse_p) */ 
+    } /* switch (use_mouse_p) */
 }
 
 void shut_mouse (void)

@@ -25,9 +25,9 @@ main(int argc, char* argv[])
    HANDLE Section;
    PVOID BaseAddress;
    char buffer[256];
-   
+
    printf("Shm test server\n");
-   
+
    Section = OpenFileMappingW (
 //		PAGE_EXECUTE_READWRITE, invalid parameter
 		FILE_MAP_WRITE,
@@ -39,7 +39,7 @@ main(int argc, char* argv[])
 	printf("Failed to open section (err=%d)", GetLastError());
 	return 1;
      }
-   
+
    BaseAddress = MapViewOfFile(Section,
 			       FILE_MAP_ALL_ACCESS,
 			       0,
@@ -54,7 +54,7 @@ main(int argc, char* argv[])
    printf("Copying from section\n");
    strcpy(buffer, BaseAddress);
    printf("Copyed <%s>\n", buffer);
-   
+
 //   for(;;);
 	return 0;
 }

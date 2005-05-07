@@ -367,8 +367,8 @@ void EnumerateValueTest(void)
 void test1(void)
 {
  HKEY hKey = NULL, hKey1;
- OBJECT_ATTRIBUTES ObjectAttributes; 
- NTSTATUS Status; 
+ OBJECT_ATTRIBUTES ObjectAttributes;
+ NTSTATUS Status;
 #if 0
  UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry");
 #endif
@@ -494,9 +494,9 @@ void test1(void)
 void test3(void)
 {
  HKEY hKey;
- OBJECT_ATTRIBUTES ObjectAttributes; 
+ OBJECT_ATTRIBUTES ObjectAttributes;
  UNICODE_STRING KeyName;
- NTSTATUS Status; 
+ NTSTATUS Status;
  char Buffer[10];
  DWORD Result;
   dprintf("NtCreateKey non volatile: \n");
@@ -650,7 +650,7 @@ void test4(void)
                            L"System\\Setup",
                            0,
                            KEY_ALL_ACCESS,
-                           &hKey1); 
+                           &hKey1);
   dprintf("\t\tdwError =%x\n",dwError);
   if (dwError == ERROR_SUCCESS)
     {
@@ -679,7 +679,7 @@ void test4(void)
                            L"System\\ControlSet001\\Services\\Serial",
                            0,
                            KEY_ALL_ACCESS,
-                           &hKey); 
+                           &hKey);
    dprintf ("\t\t\t\t\tdwError %x\n", dwError);
    RegDataSize = sizeof(GlobalFifoEnable);
    if (dwError == ERROR_SUCCESS)
@@ -814,7 +814,7 @@ void test6(void)
   HKEY hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName,ValueName;
-  NTSTATUS Status; 
+  NTSTATUS Status;
   KEY_VALUE_FULL_INFORMATION KeyValueInformation[5];
   ULONG Length,i;
 
@@ -923,7 +923,7 @@ void test7(void)
   HKEY hKey;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName,ValueName;
-  NTSTATUS Status; 
+  NTSTATUS Status;
 
   dprintf("Open link key\n");
   dprintf("  Key: \\Registry\\Machine\\SOFTWARE\\Test\n");
@@ -968,9 +968,9 @@ void test8(void)
  UNICODE_STRING KeyName;
  NTSTATUS Status;
  LONG dwError;
- TOKEN_PRIVILEGES NewPrivileges; 
+ TOKEN_PRIVILEGES NewPrivileges;
  HANDLE Token,hKey;
- LUID Luid; 
+ LUID Luid;
  BOOLEAN bRes;
   Status=NtOpenProcessToken(GetCurrentProcess()
 	,TOKEN_ADJUST_PRIVILEGES,&Token);
@@ -978,24 +978,24 @@ void test8(void)
   dprintf("\t\t\t\tStatus =%x\n",Status);
 //  bRes=LookupPrivilegeValueA(NULL,SE_RESTORE_NAME,&Luid);
 //  dprintf("\t\t\t\tbRes =%x\n",bRes);
-  NewPrivileges.PrivilegeCount = 1; 
-  NewPrivileges.Privileges[0].Luid = Luid; 
+  NewPrivileges.PrivilegeCount = 1;
+  NewPrivileges.Privileges[0].Luid = Luid;
 //  NewPrivileges.Privileges[0].Luid.u.LowPart=18;
 //  NewPrivileges.Privileges[0].Luid.u.HighPart=0;
-  NewPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
- 
-//  Status = NtAdjustPrivilegesToken( 
-  bRes = AdjustTokenPrivileges( 
-            Token, 
-            FALSE, 
-            &NewPrivileges, 
-            0, 
-            NULL, 
-            NULL 
-            ); 
+  NewPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+//  Status = NtAdjustPrivilegesToken(
+  bRes = AdjustTokenPrivileges(
+            Token,
+            FALSE,
+            &NewPrivileges,
+            0,
+            NULL,
+            NULL
+            );
   dprintf("\t\t\t\tbRes =%x\n",bRes);
- 
-//  Status=NtClose(Token); 
+
+//  Status=NtClose(Token);
 //  dprintf("\t\t\t\tStatus =%x\n",Status);
 
 
@@ -1027,8 +1027,8 @@ void test8(void)
 void test9(void)
 {
     HKEY hKey = NULL, hKey1;
-    OBJECT_ATTRIBUTES ObjectAttributes; 
-    NTSTATUS Status; 
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
     UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry");
     ULONG Index,Length,i;
     KEY_BASIC_INFORMATION KeyInformation[5];

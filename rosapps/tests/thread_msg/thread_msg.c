@@ -91,7 +91,7 @@ int main( int argc, char **argv )
 	assert( PostThreadMessage( id, WM_QUIT, 0,0 ) );
 
 	WaitForSingleObject( hOkToTerminate, INFINITE );
-	printf( "Test complete.\n" );	
+	printf( "Test complete.\n" );
 
 	return 0;
 }

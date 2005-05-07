@@ -88,7 +88,7 @@ void mc_refresh (void);
 #   define ACS_MAP(x) '*'
 
 #   define NO_COLOR_SUPPORT
-#   define untouchwin(win) 
+#   define untouchwin(win)
 #   define xgetch x_getch
 #   define wtouchln(win,b,c,d) touchwin(win)
 #   define derwin(win,x,y,z,w) win

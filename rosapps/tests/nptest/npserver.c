@@ -91,7 +91,7 @@ VOID InstanceThread (LPVOID lpvParam)
    DWORD cbBytesRead, cbReplyBytes, cbWritten;
    BOOL fSuccess;
    HANDLE hPipe;
-   
+
    hPipe = (HANDLE)lpvParam;
    while (1)
      {

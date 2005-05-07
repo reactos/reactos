@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include <windowsx.h>
 #include <ctype.h>
 
@@ -253,7 +253,7 @@ void frame_get_clientspace(HWND hWnd, PRECT prect)
 		prect->bottom = wp.rcNormalPosition.bottom-wp.rcNormalPosition.top-
 						2*(GetSystemMetrics(SM_CYSIZEFRAME)+GetSystemMetrics(SM_CYEDGE))-
 						GetSystemMetrics(SM_CYCAPTION)-GetSystemMetrics(SM_CYMENUSIZE);
-	}   
+	}
 	if (IsWindowVisible(Globals.hToolBar)) {
 		GetClientRect(Globals.hToolBar, &rt);
 		prect->top += rt.bottom+2;

@@ -14,7 +14,7 @@ int main( int argc, char **argv ) {
   while( AddrResponse ) {
     if( AddrResponse->wType == DNS_TYPE_A ) {
       Addr = ntohl( AddrResponse->Data.A.IpAddress );
-      printf( "www.reactos.com == %d.%d.%d.%d\n", 
+      printf( "www.reactos.com == %d.%d.%d.%d\n",
 	      (int)(Addr >> 24) & 0xff,
 	      (int)(Addr >> 16) & 0xff,
 	      (int)(Addr >> 8) & 0xff,

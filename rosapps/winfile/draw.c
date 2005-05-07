@@ -33,7 +33,7 @@
 #include <process.h>
 #include <stdio.h>
 #endif
-    
+
 #include "main.h"
 #include "draw.h"
 

@@ -11,7 +11,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -88,7 +88,7 @@ int message (int error, char *header, char *text, ...);
 #include "user.h"		/* expand_format */
 #include "../vfs/vfs.h"
 
-/* "$Id: util.c,v 1.2 2003/06/27 21:10:35 gvg Exp $" */
+/* "$Id$" */
 
 char app_text [] = "Midnight-Commander";
 
@@ -142,7 +142,7 @@ int msglen (char *text, int *lines)
 {
     int max = 0;
     int line_len = 0;
-    
+
     for (*lines = 1;*text; text++){
 	if (*text == '\n'){
 	    line_len = 0;
@@ -159,7 +159,7 @@ int msglen (char *text, int *lines)
 char *trim (char *s, char *d, int len)
 {
     int source_len = strlen (s);
-    
+
     if (source_len > len){
 	strcpy (d, s+(source_len-len));
 	d [0] = '.';
@@ -174,7 +174,7 @@ char *
 name_quote (const char *s, int quote_percent)
 {
     char *ret, *d;
-    
+
     d = ret = xmalloc (strlen (s)*2 + 2 + 1, "quote_name");
     if (*s == '-') {
         *d++ = '.';
@@ -231,7 +231,7 @@ char *name_trunc (char *txt, int trunc_len)
 
     if (!txt)
 	txt = PATH_SEP_STR;
-    
+
     if (trunc_len > sizeof (x)-1){
 	fprintf (stderr, _("name_trunc: too big"));
 	trunc_len = sizeof (x)-1;
@@ -260,7 +260,7 @@ char *size_trunc (long int size)
     static char x [30];
     long int divisor = 1;
     char *xtra = "";
-    
+
     if (size > 999999999L){
 	divisor = 1024;
 	xtra = "kb";
@@ -341,7 +341,7 @@ static char *
 strip_password (char *path)
 {
     char *at, *inner_colon, *dir;
-    
+
     if ((dir = strchr (path, PATH_SEP)) != NULL)
 	*dir = '\0';
     /* search for any possible user */
@@ -368,8 +368,8 @@ char *strip_home_and_password(char *dir)
 	newdir [0] = '~';
 	strcpy (&newdir [1], &dir [strlen (home_dir)]);
 	return newdir;
-    } 
-#ifdef USE_NETCODE    
+    }
+#ifdef USE_NETCODE
     else if (!strncmp (dir, "ftp://", 6)) {
 	strip_password (strcpy (newdir, dir) + 6);
         if ((p = strchr (newdir + 6, PATH_SEP)) != NULL) {
@@ -385,10 +385,10 @@ char *strip_home_and_password(char *dir)
     } else if (!strncmp (dir, "mc:", 3)) {
         char  *pth;
 	strcpy (newdir, dir);
-	if (newdir[3] == '/' && newdir[4] == '/') { 
+	if (newdir[3] == '/' && newdir[4] == '/') {
 	    pth = newdir + 5;
     	    strip_password ( newdir + 5);
-	} else { 
+	} else {
 	    pth = newdir + 3;
 	    strip_password (newdir + 3);
 	}
@@ -396,17 +396,17 @@ char *strip_home_and_password(char *dir)
             *p = 0;
 	    q = mcfs_gethome (newdir);
             *p = PATH_SEP;
-            if (q != NULL ) { 
+            if (q != NULL ) {
 		if (strcmp (q, PATH_SEP_STR) && !strncmp (p, q, strlen (q) - 1)) {
                    strcpy (p, "/~");
                    strcat (newdir, p + strlen (q) - 1);
 		}
                 free (q);
-            }	    
+            }
         }
 	return (newdir);
     }
-#endif    
+#endif
     return dir;
 }
 
@@ -455,12 +455,12 @@ char *convert_pattern (char *pattern, int match_type, int do_group)
 		*d++ = '.';
 		*d   = '*';
 		break;
-		
+
 	    case '?':
 		d = maybe_start_group (d, do_group, &was_wildcard);
 		*d = '.';
 		break;
-		
+
 	    case '.':
 		d = maybe_end_group (d, do_group, &was_wildcard);
 		*d++ = '\\';
@@ -512,7 +512,7 @@ char *extension (char *filename)
 
     if (!strlen (filename))
 	return "";
-    
+
     d = filename + strlen (filename) - 1;
     for (;d >= filename; d--){
 	if (*d == '.')
@@ -526,13 +526,13 @@ char *split_extension (char *x, int pad)
 {
     return x;
 
-    /* Buggy code 
+    /* Buggy code
     if (!align_extensions)
 	return x;
 
     if (strlen (x) >= pad)
 	return x;
-    
+
     if ((ext = extension (x)) == x || *ext == 0)
 	return x;
 
@@ -544,7 +544,7 @@ char *split_extension (char *x, int pad)
     l = strlen (ext);
     for (i = 0; i < l; i++)
 	xbuf [pad-i] = *(ext+l-i-1);
-    for (i = xbuf + (ext - x); i < 
+    for (i = xbuf + (ext - x); i <
     return xbuf; */
 }
 
@@ -585,7 +585,7 @@ char *load_file (char *filename)
     struct stat s;
     char *data;
     long read_size,i;
-    
+
     if (stat (filename, &s) != 0){
 	return 0;
     }
@@ -652,7 +652,7 @@ char *extract_line (char *s, char *top)
 {
     static char tmp_line [500];
     char *t = tmp_line;
-    
+
     while (*s && *s != '\n' && (t - tmp_line) < sizeof (tmp_line)-1 && s < top)
 	*t++ = *s++;
     *t = 0;
@@ -749,7 +749,7 @@ char *unix_error_string (int error_num)
 {
     static char buffer [256];
     char *error_msg;
-	
+
 #ifdef HAVE_STRERROR
     error_msg = strerror (error_num);
 #else
@@ -772,7 +772,7 @@ char *copy_strings (const char *first,...)
 
     if (!first)
 	return 0;
-    
+
     len = strlen (first);
     va_start (ap, first);
 
@@ -791,7 +791,7 @@ char *copy_strings (const char *first,...)
 
     return result;
 }
-	
+
 long blocks2kilos (int blocks, int bsize)
 {
     if (bsize > 1024){
@@ -844,7 +844,7 @@ char *strip_ctrl_codes (char *s)
 
     if (!s)
 	return 0;
-    
+
     for (i = 0, j = 0; s [i+j]; ++i)
 	if (s [i+j] != ESC_CHAR){
 	    if (j)
@@ -913,15 +913,15 @@ long get_small_endian_long (int fd)
 long int is_gunzipable (int fd, int *type)
 {
     unsigned char magic [4];
-	
+
     *type = ISGUNZIPABLE_GUNZIP;
-	
+
     /* Read the magic signature */
     CHECK (mc_read (fd, &magic [0], 1));
     CHECK (mc_read (fd, &magic [1], 1));
     CHECK (mc_read (fd, &magic [2], 1));
     CHECK (mc_read (fd, &magic [3], 1));
-	
+
     /* GZIP_MAGIC and OLD_GZIP_MAGIC */
     if (magic [0] == 037 && (magic [1] == 0213 || magic [1] == 0236)){
 	/* Read the uncompressed size of the file */
@@ -935,7 +935,7 @@ long int is_gunzipable (int fd, int *type)
 	mc_lseek (fd, 8, SEEK_SET);
 	CHECK (mc_read (fd, &magic [0], 1));
 	CHECK (mc_read (fd, &magic [1], 1));
-	
+
 	/* Gzip can handle only deflated (8) or stored (0) files */
 	if ((magic [0] != 8 && magic [0] != 0) || magic [1] != 0)
 	     return 0;
@@ -960,7 +960,7 @@ long int is_gunzipable (int fd, int *type)
                 case '0':
                     *type = ISGUNZIPABLE_BZIP;
                     return 5*mc_lseek (fd, 0, SEEK_END);
-                case 'h': 
+                case 'h':
 	            *type = ISGUNZIPABLE_BZIP2;
 	            return 5*mc_lseek (fd, 0, SEEK_END);
             }
@@ -974,10 +974,10 @@ decompress_command (int type)
 	switch (type){
 	case ISGUNZIPABLE_GUNZIP:
 		return "gzip -cdf";
-		
+
 	case ISGUNZIPABLE_BZIP:
 		return "bzip -d";
-		
+
 	case ISGUNZIPABLE_BZIP2:
 		return "bzip2 -dc";
 	}
@@ -1000,7 +1000,7 @@ decompress_command_and_arg (int type, char **cmd, char **flags)
 		*flags = "-d";
 		return;
 
-		
+
 	case ISGUNZIPABLE_BZIP2:
 		*cmd   = "bzip2";
 		*flags = "-dc";
@@ -1008,7 +1008,7 @@ decompress_command_and_arg (int type, char **cmd, char **flags)
 	}
 	*cmd   = 0;
 	*flags = 0;
-	
+
 	/* Should never reach this place */
 	fprintf (stderr, "Fatal: decompress_command called with an unknown argument\n");
 }
@@ -1021,7 +1021,7 @@ void add_hook (Hook **hook_list, void (*hook_fn)(void *), void *data)
     new_hook->hook_fn = hook_fn;
     new_hook->next    = *hook_list;
     new_hook->hook_data = data;
-      
+
     *hook_list = new_hook;
 }
 
@@ -1033,18 +1033,18 @@ void execute_hooks (Hook *hook_list)
     /* We copy the hook list first so tahat we let the hook
      * function call delete_hook
      */
-    
+
     while (hook_list){
 	add_hook (&new_hook, hook_list->hook_fn, hook_list->hook_data);
 	hook_list = hook_list->next;
     }
     p = new_hook;
-    
+
     while (new_hook){
 	(*new_hook->hook_fn)(new_hook->hook_data);
 	new_hook = new_hook->next;
     }
-    
+
     for (hook_list = p; hook_list;){
 	p = hook_list;
 	hook_list = hook_list->next;
@@ -1057,7 +1057,7 @@ void delete_hook (Hook **hook_list, void (*hook_fn)(void *))
     Hook *current, *new_list, *next;
 
     new_list = 0;
-    
+
     for (current = *hook_list; current; current = next){
 	next = current->next;
 	if (current->hook_fn == hook_fn)
@@ -1071,7 +1071,7 @@ void delete_hook (Hook **hook_list, void (*hook_fn)(void *))
 int hook_present (Hook *hook_list, void (*hook_fn)(void *))
 {
     Hook *p;
-    
+
     for (p = hook_list; p; p = p->next)
 	if (p->hook_fn == hook_fn)
 	    return 1;
@@ -1081,7 +1081,7 @@ int hook_present (Hook *hook_list, void (*hook_fn)(void *))
 void wipe_password (char *passwd)
 {
     char *p = passwd;
-    
+
     for (;*p ; p++)
         *p = 0;
     free (passwd);
@@ -1128,10 +1128,10 @@ char *reverse_string (char *string)
     int len = strlen (string);
     int i;
     const int steps = len/2;
-    
+
     for (i = 0; i < steps; i++){
 	char c = string [i];
-    
+
 	string [i] = string [len-i-1];
 	string [len-i-1] = c;
     }
@@ -1143,11 +1143,11 @@ char *resolve_symlinks (char *path)
     char *buf, *buf2, *p, *q, *r, c;
     int len;
     struct stat mybuf;
-    
+
     if (*path != PATH_SEP)
         return NULL;
     r = buf = xmalloc (MC_MAXPATHLEN, "resolve symlinks");
-    buf2 = xmalloc (MC_MAXPATHLEN, "resolve symlinks"); 
+    buf2 = xmalloc (MC_MAXPATHLEN, "resolve symlinks");
     *r++ = PATH_SEP;
     *r = 0;
     p = path;
@@ -1203,11 +1203,11 @@ char *resolve_symlinks (char *path)
 
 /* Finds out a relative path from first to second, i.e. goes as many ..
  * as needed up in first and then goes down using second */
-char *diff_two_paths (char *first, char *second) 
+char *diff_two_paths (char *first, char *second)
 {
     char *p, *q, *r, *s, *buf = 0;
     int i, j, prevlen = -1, currlen;
-    
+
     first = resolve_symlinks (first);
     if (first == NULL)
         return NULL;
@@ -1266,15 +1266,15 @@ int my_ftruncate (int fd, long size)
 #ifdef OS2_NT
     if(_chsize(fd, size))
 	return -1;
-    else 
+    else
 	return 0;
 #else
     struct flock lk;
-    
+
     lk.l_whence = 0;
     lk.l_start = size;
     lk.l_len = 0;
-    
+
     return fcntl (fd, F_FREESP, &lk);
 #endif
 }
@@ -1283,7 +1283,7 @@ int truncate (const char *path, long size)
 {
     int fd;
     int res;
-    
+
     fd = open (path, O_RDWR, 0);
     if (fd < 0)
 	return fd;

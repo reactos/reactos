@@ -1,6 +1,6 @@
 /* Copyright (c) 1992, 1995 John E. Davis
  * All rights reserved.
- * 
+ *
  * You may distribute under the terms of either the GNU General Public
  * License or the Perl Artistic License.
  */
@@ -85,7 +85,7 @@ static int Blink_Killed;	/* high intensity background enabled */
 #define JNORMAL_COLOR	0
 #define JNO_COLOR	-1
 
-static unsigned char Color_Map [JMAX_COLORS] = 
+static unsigned char Color_Map [JMAX_COLORS] =
 {
    0x7, 0x70, 0x70, 0x70, 0x70, 0x7, 0x7, 0x7,
    0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7, 0x7,
@@ -210,24 +210,24 @@ static int Saved_Cursor_Row;
 static void save_screen (void)
 {
    int row, col;
-   
+
    if (Saved_Screen_Buffer != NULL)
      {
 	SLFREE (Saved_Screen_Buffer);
 	Saved_Screen_Buffer = NULL;
      }
-#ifdef GO32_VIDEO   
-   Saved_Screen_Buffer = SLMALLOC (sizeof (short) * 
+#ifdef GO32_VIDEO
+   Saved_Screen_Buffer = SLMALLOC (sizeof (short) *
 				   ScreenCols () * ScreenRows ());
 
    if (Saved_Screen_Buffer == NULL)
      return;
-   
+
    ScreenRetrieve (Saved_Screen_Buffer);
    ScreenGetCursor (&row, &col);
    Saved_Cursor_Row = row;
 #endif
-   
+
 }
 
 static void restore_screen (void)
@@ -237,7 +237,7 @@ static void restore_screen (void)
    ScreenUpdate (Saved_Screen_Buffer);
    SLtt_goto_rc (Saved_Cursor_Row, 0);
 #endif
-   
+
 }
 #endif				       /* HAS_SAVE_SCREEN */
 /*----------------------------------------------------------------------*\
@@ -249,7 +249,7 @@ void SLtt_write_string (char *str)
 {
 #ifdef WIN32
    unsigned long bytes;
-   
+
    (void) WriteConsole(hStdout, str, strlen(str), &bytes, NULL);
 #else
    fputs (str, stdout);
@@ -292,7 +292,7 @@ void SLtt_goto_rc (int row, int col)
    newPosition.X = col;
    newPosition.Y = row;
 #endif
-   
+
 #if !defined (USE_ASM)
    if (row > SLtt_Screen_Rows) row = SLtt_Screen_Rows;
    if (col > SLtt_Screen_Cols) col = SLtt_Screen_Cols;
@@ -398,10 +398,10 @@ static void slvid_deleol (int x)
    unsigned char *p, *pmax;
    int w = mkSpaceChar ();
    int count = SLtt_Screen_Cols - x;
-   
+
    p = Line_Buffer;
    pmax = p + 2 * count;
-   
+
    while (p < pmax)
      {
 	*p++ = (unsigned char) w;
@@ -430,7 +430,7 @@ void SLtt_begin_insert (void)
    slvid_getxy ();
    n = SLtt_Screen_Cols - Cursor_Col;
    /* Msdos_Insert_Mode = 1; */
-   
+
 # ifndef WIN32
 #  if defined (EMX_VIDEO)
    v_getline (Line_Buffer, Cursor_Col, Cursor_Row, n);
@@ -442,7 +442,7 @@ void SLtt_begin_insert (void)
    VioWrtCellStr ((PCH)Line_Buffer, n, Cursor_Row, Cursor_Col + 1, 0);
 #   else	/* __os2__ */
    p = mkScreenPointer (Cursor_Row, SLtt_Screen_Cols - 1);
-   
+
 #    if defined (HAS_LINEAR_SCREEN)
    /* pmin = p - (n-1); */
    pmin = mkScreenPointer (Cursor_Row, Cursor_Col);
@@ -452,23 +452,23 @@ void SLtt_begin_insert (void)
    asm  mov ax, ds
      asm  mov bx, di
      asm  mov dx, si
-     
+
      asm  mov cx, n
      asm  les di, p
      asm  lds si, p
      asm  sub si, 2
      asm  std
      asm  rep movsw
-     
+
      asm  mov ds, ax
      asm  mov di, bx
      asm  mov si, dx
 #    endif	/* HAS_LINEAR_SCREEN */
 #   endif  /* __os2__ */
 #  endif	/* EMX_VIDEO */
-     
+
 # endif  /* WIN32 */
-     
+
 #endif	/* not GO32_VIDEO */
 }
 
@@ -497,12 +497,12 @@ void SLtt_delete_char (void)
 #  endif
 # endif
    int n;
-   
+
    slvid_getxy ();
    n = SLtt_Screen_Cols - Cursor_Col - 1;
-   
+
 # ifndef WIN32
-   
+
 #  if defined (EMX_VIDEO)
    v_getline (Line_Buffer, Cursor_Col+1, Cursor_Row, n);
    v_putline (Line_Buffer, Cursor_Col, Cursor_Row, n);
@@ -514,7 +514,7 @@ void SLtt_delete_char (void)
    return;
 #   else	/* __os2__ */
    p = mkScreenPointer (Cursor_Row, Cursor_Col);
-   
+
 #    if defined (HAS_LINEAR_SCREEN)
    while (n--)
      {
@@ -527,23 +527,23 @@ void SLtt_delete_char (void)
    asm  mov ax, ds
      asm  mov bx, si
      asm  mov dx, di
-     
+
      asm  mov cx, n
      asm  les di, p
      asm  lds si, p
      asm  add si, 2
      asm  cld
      asm  rep movsw
-     
+
      asm  mov ds, ax
      asm  mov si, bx
      asm  mov di, dx
 #    endif	/* HAS_LINEAR_SCREEN */
 #   endif /* __os2__ */
 #  endif /* EMX_VIDEO */
-     
+
 # endif /* WIN32 */
-     
+
 #endif /* not GO32_VIDEO */
 }
 
@@ -555,9 +555,9 @@ void SLtt_delete_char (void)
 \*----------------------------------------------------------------------*/
 void SLtt_erase_line (void)
 {
-   
+
 #ifndef WIN32
-   
+
 # if defined (GO32_VIDEO) || defined (EMX_VIDEO)
    Attribute_Byte = 0x07;
    slvid_deleol (0);
@@ -572,7 +572,7 @@ void SLtt_erase_line (void)
    unsigned short *p = mkScreenPointer (Cursor_Row, 0);
 #   if defined (HAS_LINEAR_SCREEN)
    register unsigned short *pmax = p + SLtt_Screen_Cols;
-   
+
    Attribute_Byte = 0x07;
    w = mkSpaceChar ();
    while (p < pmax) *p++ = w;
@@ -591,9 +591,9 @@ void SLtt_erase_line (void)
 #  endif  /* __os2__ */
 # endif  /* GO32_VIDEO or EMX_VIDEO */
      Current_Color = JNO_COLOR;		/* since we messed with attribute byte */
-   
+
 #endif  /* WIN32 */
-   
+
 }
 
 /*----------------------------------------------------------------------*\
@@ -604,9 +604,9 @@ void SLtt_erase_line (void)
 void SLtt_delete_nlines (int nlines)
 {
    SLtt_normal_video ();
-   
+
 #ifndef WIN32
-   
+
 # if defined (EMX_VIDEO)
    v_attrib (Attribute_Byte);
    v_scroll (0, Scroll_r1, SLtt_Screen_Cols-1, Scroll_r2, nlines, V_SCROLL_UP);
@@ -649,9 +649,9 @@ void SLtt_delete_nlines (int nlines)
 #   endif	/* USE_ASM */
 #  endif /* __os2__ */
 # endif	/* EMX_VIDEO */
-   
+
 #endif  /* WIN32 */
-   
+
 }
 
 /*----------------------------------------------------------------------*\
@@ -662,9 +662,9 @@ void SLtt_delete_nlines (int nlines)
 void SLtt_reverse_index (int nlines)
 {
    SLtt_normal_video ();
-   
+
 #ifndef WIN32
-   
+
 # if defined (EMX_VIDEO)
    v_attrib (Attribute_Byte);
    v_scroll (0, Scroll_r1, SLtt_Screen_Cols-1, Scroll_r2, nlines,
@@ -706,9 +706,9 @@ void SLtt_reverse_index (int nlines)
 #   endif	/* USE_ASM */
 #  endif	/* __os2__ */
 # endif  /* EMX_VIDEO */
-   
+
 #endif  /* WIN32 */
-   
+
 }
 
 /*----------------------------------------------------------------------*\
@@ -718,12 +718,12 @@ void SLtt_reverse_index (int nlines)
 \*----------------------------------------------------------------------*/
 static void slvid_invert_region (int top_row, int bot_row)
 {
-   
+
 #ifndef WIN32
-   
+
 # if defined (EMX_VIDEO)
    int row, col;
-   
+
    for (row = top_row; row < bot_row; row++)
      {
 	v_getline (Line_Buffer, 0, row, SLtt_Screen_Cols);
@@ -735,7 +735,7 @@ static void slvid_invert_region (int top_row, int bot_row)
 #  ifdef __os2__
    int row, col;
    USHORT length = SLtt_Screen_Cols * 2;
-   
+
    for (row = top_row; row < bot_row; row++)
      {
 	VioReadCellStr ((PCH)Line_Buffer, &length, row, 0, 0);
@@ -747,7 +747,7 @@ static void slvid_invert_region (int top_row, int bot_row)
 #   if defined (__GO32__) || defined (__WATCOMC__)
    unsigned char buf [2 * 180 * 80];         /* 180 cols x 80 rows */
    unsigned char *b, *bmax;
-   
+
    b    = buf + 1 + 2 * SLtt_Screen_Cols * top_row;
    bmax = buf + 1 + 2 * SLtt_Screen_Cols * bot_row;
    ScreenRetrieve (buf);
@@ -761,7 +761,7 @@ static void slvid_invert_region (int top_row, int bot_row)
    register unsigned short ch, sh;
    register unsigned short *pmin = mkScreenPointer (top_row, 0);
    register unsigned short *pmax = mkScreenPointer (bot_row, 0);
-   
+
    while (pmin < pmax)
      {
 	sh = *pmin;
@@ -773,9 +773,9 @@ static void slvid_invert_region (int top_row, int bot_row)
 #   endif	/* __GO32__ or __WATCOMC__ */
 #  endif	/* __os2__ */
 # endif	/* EMX_VIDEO */
-   
+
 #endif  /* WIN32 */
-   
+
 }
 
 /*----------------------------------------------------------------------*\
@@ -800,7 +800,7 @@ void SLtt_beep (void)
    int special = 0;		/* first row to invert */
    int visual = 0;		/* final row to invert */
    if (!SLtt_Ignore_Beep) return;
-   
+
    audible = (SLtt_Ignore_Beep & 1);
    if ( (SLtt_Ignore_Beep & 4) )
      {
@@ -811,16 +811,16 @@ void SLtt_beep (void)
      {
 	visual = SLtt_Screen_Rows;
      }
-   
+
    if (visual) slvid_invert_region (special, visual);
 #if defined (EMX_VIDEO)
    if (audible) /*sound (1500)*/; _sleep2 (100); if (audible) /* nosound () */;
 #else
 # ifdef __os2__
    if (audible) DosBeep (1500, 100); else DosSleep (100);
-   
+
 # elif defined(WIN32)
-   
+
 # else
    if (audible) sound (1500); delay (100); if (audible) nosound ();
 # endif
@@ -835,9 +835,9 @@ void SLtt_beep (void)
 \*----------------------------------------------------------------------*/
 void SLtt_del_eol (void)
 {
-   
+
 #ifndef WIN32
-   
+
 # if defined (GO32_VIDEO) || defined (EMX_VIDEO)
    if (Current_Color != JNO_COLOR) SLtt_normal_video ();
    slvid_deleol (Cursor_Col);
@@ -854,7 +854,7 @@ void SLtt_del_eol (void)
    unsigned short w;
 #   if defined (HAS_LINEAR_SCREEN)
    unsigned short *pmax = p + n;
-   
+
    if (Current_Color != JNO_COLOR) SLtt_normal_video ();
    w = mkSpaceChar ();
    while (p < pmax) *p++ = w;
@@ -868,14 +868,14 @@ void SLtt_del_eol (void)
      asm  mov cx, n
      asm  cld
      asm  rep stosw
-     
+
      asm  mov di, dx
 #   endif	/* HAS_LINEAR_SCREEN */
 #  endif	/* __os2__ */
 # endif	/* GO32_VIDEO or EMX_VIDEO */
-     
+
 #endif  /* WIN32 */
-     
+
 }
 
 /*----------------------------------------------------------------------*\
@@ -918,57 +918,57 @@ static unsigned short *video_write (register unsigned char *pp,
 				    register unsigned short *pos)
 {
    int n = (int) (p - pp);	/* num of characters of PP to write */
-   
+
    asm  push si
      asm  push ds
      asm  push di
-     
+
    /* set up register for BOTH fast and slow */
      asm  mov bx, SLtt_Msdos_Cheap_Video
-     
+
    /* These are the registers needed for both fast AND slow */
      asm  mov ah, byte ptr Attribute_Byte
      asm  mov cx, n
      asm  lds si, dword ptr pp
      asm  les di, dword ptr pos
      asm  cld
-     
+
      asm  cmp bx, 0		       /* cheap video test */
      asm  je L_fast
      asm  mov bx, ax
      asm  mov dx, CGA_STATUS
      asm  jg L_slow_blank
-     
+
    /* slow video */
      asm  cli
-     
+
    /* wait for retrace */
      L_slow:
    asm  in al, dx
      asm  test al, 1
      asm  jnz L_slow
-     
+
      L_slow1:
    asm  in al, dx
      asm  test al, 1
      asm  jz L_slow1
-     
+
    /* move a character out */
      asm  mov ah, bh
      asm  lodsb
      asm  stosw
      asm  loop L_slow
-     
+
      asm  sti
      asm  jmp done
-     
+
 /* -------------- slow video, vertical retace and pump --------------*/
      L_slow_blank:
    L_slow_blank_loop:
    asm  in al, dx
      asm  test al, 8
      asm  jnz L_slow_blank_loop
-     
+
      L_slow_blank1:
    asm  in al, dx
      asm  test al, 8
@@ -979,10 +979,10 @@ static unsigned short *video_write (register unsigned char *pp,
    asm  lodsb
      asm  stosw
      asm  loop L_slow_blank2
-     
+
      asm jmp done
 /*-------------- Fast video --------------*/
-     
+
      L_fast:
    asm  lodsb
      asm  stosw
@@ -1026,7 +1026,7 @@ static void write_attributes (unsigned short *src, int count)
    register unsigned short *pos = mkScreenPointer (Cursor_Row, 0);
 # endif
    int n = count;
-   
+
    /* write into a character/attribute pair */
    while (n-- > 0)
      {
@@ -1044,7 +1044,7 @@ static void write_attributes (unsigned short *src, int count)
 #  endif
 # endif
      }
-   
+
 # if !defined (HAS_LINEAR_SCREEN)
 #  if defined (EMX_VIDEO)
    v_putline (Line_Buffer, Cursor_Col, Cursor_Row, count);
@@ -1058,12 +1058,12 @@ static void write_attributes (unsigned short *src, int count)
    coord.X = Cursor_Col;
    coord.Y = Cursor_Row;
    WriteConsoleOutputCharacter(hStdout, p, count, coord, &bytes);
-   
+
   /* write color attributes */
    p = Line_Buffer;
    n = count;
    src = (unsigned short*)org_src; /* restart the src pointer */
-   
+
   /* write into attributes only */
    while (n-- > 0)
      {
@@ -1072,7 +1072,7 @@ static void write_attributes (unsigned short *src, int count)
 	*(p++) = Attribute_Byte; /* attribute byte */
 	*(p++) = 0; /* what's this for? */
      }
-   
+
    WriteConsoleOutputAttribute(hStdout, (WORD*)Line_Buffer, count, coord, &bytes);
 #   else	/* __os2__ */
    /* ScreenUpdateLine (void *virtual_screen_line, int row); */
@@ -1089,7 +1089,7 @@ static void write_attributes (unsigned short *src, int count)
 #else	/* not USE_ASM */
    unsigned char ch, color;
    register unsigned short *pos = mkScreenPointer (Cursor_Row, 0);
-   
+
    while (count--)
      {
 	pair = *(src++);	/* character/color pair */
@@ -1181,15 +1181,15 @@ void SLtt_cls (void)
      /* clear the WIN32 screen in one shot */
    coord.X = 0;
    coord.Y = 0;
-   
+
    ch = ' ';
-   
+
    (void) FillConsoleOutputCharacter(hStdout,
 				     ch,
 				     csbiInfo.dwMaximumWindowSize.Y * csbiInfo.dwMaximumWindowSize.X,
 				     coord,
 				     &bytes);
-   
+
      /* now set screen to the current attribute */
    ch = Attribute_Byte;
    (void) FillConsoleOutputAttribute(hStdout,
@@ -1227,7 +1227,7 @@ void SLtt_putchar (char ch)
    long bytes;
 # endif
 #endif
-   
+
    if (Current_Color) SLtt_normal_video ();
    slvid_getxy ();		/* get current position */
    switch (ch)
@@ -1253,7 +1253,7 @@ void SLtt_putchar (char ch)
 #  else	/* GO32_VIDEO */
 	pp = mkScreenPointer (Cursor_Row, Cursor_Col);
 	p = (Attribute_Byte << 8) | (unsigned char) ch;
-	
+
 #   ifdef USE_ASM
 	SNOW_CHECK;
 #   endif
@@ -1280,12 +1280,12 @@ void SLtt_set_color (int obj, char *what, char *fg, char *bg)
 #ifdef WIN32
    int newcolor;
 #endif
-   
+
    (void) what;
-   
+
    if ( !IsColor || (obj < 0) || (obj >= JMAX_COLORS))
      return;
-   
+
    for (i = 0; i < JMAX_COLOR_NAMES; i++ )
      {
 	if (!strcmp (fg, Color_Names [i]))
@@ -1294,7 +1294,7 @@ void SLtt_set_color (int obj, char *what, char *fg, char *bg)
 	     break;
 	  }
      }
-   
+
    for (i = 0; i < JMAX_COLOR_NAMES; i++)
      {
 	if (!strcmp (bg, Color_Names [i]))
@@ -1307,7 +1307,7 @@ void SLtt_set_color (int obj, char *what, char *fg, char *bg)
 #if 1
    Color_Map [obj] = (b << 4) | f;
 #else
-   
+
    /*
      0        1       2        3
    "black", "blue", "green", "cyan",
@@ -1318,32 +1318,32 @@ void SLtt_set_color (int obj, char *what, char *fg, char *bg)
         12            13            14       15
    "brightred", "brightmagenta", "yellow", "white"
    */
-   
+
    /* these aren't all right yet */
-   switch (f) 
+   switch (f)
      {
       case 0: newcolor = 0; break;
       case 1: newcolor = FOREGROUND_BLUE; break;
       case 2: newcolor = FOREGROUND_GREEN; break;
       case 3: newcolor = FOREGROUND_GREEN | FOREGROUND_BLUE; break;
-	
+
       case 4: newcolor = FOREGROUND_RED; break;
       case 5: newcolor = FOREGROUND_RED | FOREGROUND_BLUE; break;
       case 6: newcolor = FOREGROUND_GREEN | FOREGROUND_RED; break;
       case 7: newcolor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
-	
+
       case 8: newcolor = FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_GREEN; break;
       case 9: newcolor = FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
       case 10: newcolor = FOREGROUND_GREEN | FOREGROUND_INTENSITY; break;
       case 11: newcolor = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
-	
+
       case 12: newcolor = FOREGROUND_RED | FOREGROUND_INTENSITY; break;
       case 13: newcolor = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
       case 14: newcolor = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
       case 15: newcolor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
      }
    // switch
-   
+
    /*
      0        1       2        3
    "black", "blue", "green", "cyan",
@@ -1354,37 +1354,37 @@ void SLtt_set_color (int obj, char *what, char *fg, char *bg)
         12            13            14       15
    "brightred", "brightmagenta", "yellow", "white"
    */
-   
-   switch (b) 
+
+   switch (b)
      {
       case 0: newcolor |= 0; break;
       case 1: newcolor |= BACKGROUND_BLUE; break;
       case 2: newcolor |= BACKGROUND_GREEN; break;
       case 3: newcolor |= BACKGROUND_GREEN | BACKGROUND_BLUE; break;
-	
+
       case 4: newcolor |= BACKGROUND_RED; break;
       case 5: newcolor |= BACKGROUND_RED | BACKGROUND_BLUE; break;
       case 6: newcolor |= BACKGROUND_GREEN | BACKGROUND_RED; break;
       case 7: newcolor |= BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY; break;
-	
+
       case 8: newcolor |= BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE; break;
       case 9: newcolor |= BACKGROUND_BLUE | BACKGROUND_INTENSITY; break;
       case 10: newcolor |= BACKGROUND_GREEN | BACKGROUND_INTENSITY; break;
       case 11: newcolor |= BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY; break;
-	
+
       case 12: newcolor |= BACKGROUND_RED | BACKGROUND_INTENSITY; break;
       case 13: newcolor |= BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_INTENSITY; break;
       case 14: newcolor |= BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY; break;
       case 15: newcolor |= BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY; break;
      }
    // switch
-   
+
    Color_Map [obj] = newcolor;
-   
+
 #endif
     /* if we're setting the normal color, and the attribute byte hasn't
      been set yet, set it to the new color */
-   if ((obj == 0) && (Attribute_Byte == 0)) 
+   if ((obj == 0) && (Attribute_Byte == 0))
      SLtt_reverse_video (0);
 }
 
@@ -1411,15 +1411,15 @@ void SLtt_init_video (void)
 #if defined (EMX_VIDEO)
    int OldCol, OldRow;
 #endif
-   
+
 #ifdef HAS_SAVE_SCREEN
    save_screen ();
 #endif
 
    Cursor_Row = Cursor_Col = 0;
-   
+
 #if defined (EMX_VIDEO)
-   
+
    v_init ();
    if ( v_hardware () != V_MONOCHROME ) IsColor = 1; else IsColor = 0;
 
@@ -1444,7 +1444,7 @@ void SLtt_init_video (void)
 	     Blink_Killed = 1;	/* seems to work */
 	  }
      }
-   
+
    if (!Attribute_Byte)
      {
 	/* find the attribute currently under the cursor */
@@ -1452,7 +1452,7 @@ void SLtt_init_video (void)
 	Attribute_Byte = Line_Buffer[1];
 	set_color_from_attribute (Attribute_Byte);
      }
-   
+
    v_attrib (Attribute_Byte);
    /*   SLtt_Term_Cannot_Insert = 1; */
 #else	/* EMX_VIDEO */
@@ -1466,7 +1466,7 @@ void SLtt_init_video (void)
 	VioSetState (&RequestBlock, 0);	/* nop if !fullscreen */
 	Blink_Killed = 1;
      }
-   
+
    if (!Attribute_Byte)
      {
 	/* find the attribute currently under the cursor */
@@ -1488,7 +1488,7 @@ void SLtt_init_video (void)
 #   endif
    if (!Attribute_Byte) Attribute_Byte = 0x17;
    IsColor = 1;			/* is it really? */
-   
+
    if (IsColor)
      {
 	union REGS r;
@@ -1516,11 +1516,11 @@ void SLtt_init_video (void)
 	     IsColor = 1;
 	  }
      }
-   
+
    /* test for video adapter type.  Of primary interest is whether there is
     * snow or not.  Assume snow if the card is color and not EGA or greater.
     */
-   
+
    /* Use Ralf Brown test for EGA or greater */
    asm  mov ah, 0x12
      asm  mov bl, 0x10
@@ -1528,7 +1528,7 @@ void SLtt_init_video (void)
      asm  int 10h
      asm  cmp bh, 0xFF
      asm  je L1
-     
+
    /* (V)EGA */
      asm  xor bx, bx
      asm  mov SLtt_Msdos_Cheap_Video, bx
@@ -1538,7 +1538,7 @@ void SLtt_init_video (void)
      asm  mov ax, 0x17
      asm  mov Attribute_Byte, ax
      asm  jmp L2
-     
+
      L1:
    /* Not (V)EGA */
    asm  mov ah, 0x0F

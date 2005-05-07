@@ -1,6 +1,6 @@
 /* Panel layout module for the Midnight Commander
    Copyright (C) 1995 the Free Software Foundation
-   
+
    Written: 1995 Janne Kukonlehto
             1995 Miguel de Icaza
 
@@ -16,7 +16,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -75,7 +75,7 @@
 
 #include "x.h"
 
-/* "$Id: layout.c,v 1.1 2001/12/30 09:55:24 sedwards Exp $" */
+/* "$Id$" */
 
 /* Controls the display of the rotating dash on the verbose mode */
 int nice_rotating_dash = 1;
@@ -157,7 +157,7 @@ static int height;
 static Dlg_head *layout_dlg;
 
 static char *s_split_direction [2] = {
-    N_("&Vertical"), 
+    N_("&Vertical"),
     N_("&Horizontal")
 };
 WRadio *radio_widget;
@@ -209,7 +209,7 @@ static void update_split (void)
     /* Check split has to be done before testing if it changed, since
        it can change due to calling _check_split() as well*/
     _check_split ();
-    
+
     /* To avoid setting the cursor to the wrong place */
     if ((old_first_panel_size == _first_panel_size) &&
 	(old_horizontal_split == _horizontal_split)){
@@ -217,8 +217,8 @@ static void update_split (void)
     }
 
     old_first_panel_size = _first_panel_size;
-    old_horizontal_split = _horizontal_split; 
-   
+    old_horizontal_split = _horizontal_split;
+
     attrset (COLOR_NORMAL);
     dlg_move (layout_dlg, 6, 6);
     printw ("%03d", _first_panel_size);
@@ -371,19 +371,19 @@ static void init_layout (void)
 	char* ok_button = _("&Ok");
 	char* cancel_button = _("&Cancel");
 	char* save_button = _("&Save");
-    
+
     if (!i18n_layt_flag)
     {
 		register int l1;
-		
+
 		first_width = 19; /* length of line with '<' '>' buttons */
-		
+
 		layout_title = _(" Layout ");
 		title1 = _(" Panel split ");
 		title2 = _(" Highlight... ");
 		title3 = _(" Other options ");
 		output_lines_label = _("output lines");
-		
+
 		while (i--)
 		{
 		    s_split_direction [i] = _(s_split_direction [i]);
@@ -403,11 +403,11 @@ static void init_layout (void)
 		l1 = strlen (title1) + 1;
 		if (l1 > first_width)
 			first_width = l1;
-		
+
 		l1 = strlen (title2) + 1;
 		if (l1 > first_width)
 			first_width = l1;
-		
+
 
 		second_width = strlen (title3) + 1;
 		for (i = 0; i < 6; i++)
@@ -424,7 +424,7 @@ static void init_layout (void)
 				second_width = l1;
 		}
 
-		/* 
+		/*
 		 * alex@bcs.zp.ua:
 		 * To be completely correct, one need to check if layout_title
 		 * does not exceed dialog length and total length of 3 buttons
@@ -436,7 +436,7 @@ static void init_layout (void)
 		l1 = 11 + strlen (ok_button)   /* 14 - all brackets and inner space */
 		 	+ strlen (save_button)     /* notice: it is 3 char less because */
 			+ strlen (cancel_button);  /* of '&' char in button text */
-		
+
 		i = (first_width + second_width - l1) / 4;
 		b1 = 5 + i;
 		b2 = b1 + strlen(ok_button) + i + 6;
@@ -445,14 +445,14 @@ static void init_layout (void)
 		i18n_layt_flag = 1;
     }
 
-    layout_dlg = create_dlg (0, 0, 15, first_width + second_width + 9, 
+    layout_dlg = create_dlg (0, 0, 15, first_width + second_width + 9,
 		dialog_colors, layout_callback,
 		"[Layout]", "layout", DLG_CENTER | DLG_GRID);
-			     
+
     x_set_dialog_title (layout_dlg, _("Layout"));
 
     add_widgetl (layout_dlg,
-		button_new (BY, b3, B_CANCEL, NORMAL_BUTTON, cancel_button, 0, 0, "c"), 
+		button_new (BY, b3, B_CANCEL, NORMAL_BUTTON, cancel_button, 0, 0, "c"),
 		XV_WLAY_RIGHTOF);
     add_widgetl (layout_dlg,
 		button_new (BY, b2, B_EXIT, NORMAL_BUTTON, save_button, 0, 0, "s"),
@@ -466,10 +466,10 @@ static void init_layout (void)
 		    button_new (9, 12 + first_width, B_MINUS, NARROW_BUTTON, "&-",
 			bminus_cback, 0, NULL));
 	add_widget (layout_dlg,
-		    button_new (9, 7 + first_width, B_PLUS, NARROW_BUTTON, "&+", 
+		    button_new (9, 7 + first_width, B_PLUS, NARROW_BUTTON, "&+",
 			bplus_cback, 0, NULL));
     }
-#endif    
+#endif
 
 #define XTRACT(i) *check_options[i].variable, check_options[i].text, check_options[i].tkname
 
@@ -484,7 +484,7 @@ static void init_layout (void)
         XV_WLAY_NEXTCOLUMN);
     add_widgetl (layout_dlg, label_new (2, 5, _("Panel split"), "ps"),
         XV_WLAY_NEXTCOLUMN);
-#endif        
+#endif
     check_options [8].widget = check_new (10, 6, XTRACT(8));
     add_widgetl (layout_dlg, check_options [8].widget, XV_WLAY_BELOWCLOSE);
     check_options [7].widget = check_new (9, 6, XTRACT(7));
@@ -508,7 +508,7 @@ static void init_layout (void)
     old_first_panel_size = -1;
     old_horizontal_split = -1;
     old_output_lines     = -1;
-    
+
     _first_panel_size = first_panel_size;
     _output_lines = output_lines;
 #ifndef HAVE_X
@@ -524,7 +524,7 @@ void layout_change (void)
     setup_panels ();
     layout_do_change = 0;
 #ifndef HAVE_X
-    /* re-init the menu, because perhaps there was a change in the way 
+    /* re-init the menu, because perhaps there was a change in the way
 	how the panel are split (horizontal/vertical). */
     done_menu();
     init_menu();
@@ -545,12 +545,12 @@ void layout_cmd (void)
 	for (i = 0; check_options [i].text; i++)
 	    if (check_options [i].widget)
 		*check_options [i].variable = check_options [i].widget->state & C_BOOL;
-#ifndef HAVE_X		
+#ifndef HAVE_X
 	horizontal_split = radio_widget->sel;
 	first_panel_size = _first_panel_size;
 	output_lines = _output_lines;
 	layout_do_change = 1;
-#endif	
+#endif
     }
     if (result == B_EXIT){
 	save_layout ();
@@ -615,16 +615,16 @@ void init_curses (void)
     init_colors ();
 }
 #endif /* ! HAVE_SLANG */
-void done_screen ()                                                      
-{                                                                               
-    if (!(quit & SUBSHELL_EXIT))                                                
-	clr_scr ();                                                             
-    reset_shell_mode ();                                                        
-    mc_noraw_mode ();                                                           
-    if (use_mouse_p)                                                            
-	shut_mouse ();                                                          
-    keypad (stdscr, FALSE);                                                     
-}                                                                               
+void done_screen ()
+{
+    if (!(quit & SUBSHELL_EXIT))
+	clr_scr ();
+    reset_shell_mode ();
+    mc_noraw_mode ();
+    if (use_mouse_p)
+	shut_mouse ();
+    keypad (stdscr, FALSE);
+}
 #else
 void init_curses ()
 {
@@ -655,7 +655,7 @@ setup_panels (void)
     if (panels [0].type == view_listing){
 	x_panel_set_size (0);
     }
-    
+
     if (panels [1].type == view_listing){
 	x_panel_set_size (1);
     }
@@ -664,7 +664,7 @@ setup_panels (void)
 #ifdef HAVE_XVIEW
     panel_do_cols (0);
     panel_do_cols (1);
-#endif    
+#endif
 }
 
 #else
@@ -696,9 +696,9 @@ void setup_panels (void)
 
     /* The column computing is defered until panel_do_cols */
     if (horizontal_split){
-	widget_set_size (panels [0].widget, start_y, 0, 
+	widget_set_size (panels [0].widget, start_y, 0,
 			 first_panel_size, 0);
-			
+
 	widget_set_size (panels [1].widget, start_y+first_panel_size, 0,
 			 height-first_panel_size, 0);
     } else {
@@ -709,11 +709,11 @@ void setup_panels (void)
 
 	widget_set_size (panels [1].widget, start_y, first_x,
 			 height, 0);
-			
+
     }
     panel_do_cols (0);
     panel_do_cols (1);
-    
+
     promptl = strlen (prompt);
 
     widget_set_size (&the_menubar->widget, 0, 0, 1, COLS);
@@ -730,11 +730,11 @@ void setup_panels (void)
 	    widget_set_size (&cmdline->input.widget, 0, 0, 0, 0);
 	    winput_set_origin (&cmdline->input, 0, 0);
 	    widget_set_size (&the_prompt->widget, LINES, COLS, 0, 0);
-    }			     
+    }
 
     widget_set_size (&the_bar->widget, LINES-1, 0, 1, COLS);
     the_bar->visible = keybar_visible;
-    
+
     /* Output window */
     if (console_flag && output_lines){
 	output_start_y = LINES -command_prompt-keybar_visible-
@@ -742,12 +742,12 @@ void setup_panels (void)
 	show_console_contents (output_start_y,
 			       LINES-output_lines-keybar_visible-1,
 			       LINES-keybar_visible-1);
-    } 
+    }
     if (message_visible && (!xterm_hintbar || !xterm_flag))
 	widget_set_size (&the_hint->widget, height+start_y, 0, 1,COLS);
     else
 	widget_set_size (&the_hint->widget, 0, 0, 0, 0);
-    
+
     load_hint ();
 }
 #endif
@@ -791,7 +791,7 @@ void change_screen_size (void)
 #if defined TIOCGWINSZ && !defined SCO_FLAVOR
     extern Dlg_head *view_dlg;
     extern Dlg_head *edit_dlg;
-    
+
 #ifndef NCURSES_VERSION
     mc_noraw_mode ();
     endwin ();
@@ -814,11 +814,11 @@ void change_screen_size (void)
     if (current_dlg == edit_dlg)
 	edit_adjust_size (edit_dlg);
 #endif
-    
+
 #ifdef RESIZABLE_MENUBAR
 	menubar_arrange(the_menubar);
 #endif
-		
+
     /* Now, force the redraw */
     do_refresh ();
     touchwin (stdscr);
@@ -839,7 +839,7 @@ void use_dash (int flag)
 	ok_to_refresh--;
 }
 
-void set_hintbar(char *str) 
+void set_hintbar(char *str)
 {
 #ifndef HAVE_X
     if (xterm_flag && xterm_hintbar) {
@@ -863,7 +863,7 @@ void print_vfs_message(char *msg, ...)
     va_end(ap);
     if (midnight_shutdown || !the_hint || !the_hint->widget.parent)
 	return;
-    
+
     if (message_visible || (xterm_flag && xterm_hintbar)) {
         set_hintbar(str);
     }
@@ -900,16 +900,16 @@ void remove_dash (void)
        send a draw message only to the affected views.  But for now
        this is fine.
     */
-    
+
     move (0, COLS-1);
     addch (' ');
-#endif    
+#endif
 }
 
 char *get_nth_panel_name (int num)
 {
     static char buffer [20];
-    
+
     if (!num)
         return "New Left Panel";
     else if (num == 1)
@@ -955,12 +955,12 @@ void set_display_type (int num, int type)
 	    return;
 
     }
-    
+
     /* Get rid of it */
     if (panels [num].widget){
 	Widget *w = panels [num].widget;
 	WPanel *panel = (WPanel *) panels [num].widget;
-	
+
 	x = w->x;
 	y = w->y;
 	cols  = w->cols;
@@ -980,15 +980,15 @@ void set_display_type (int num, int type)
     }
 
     new_widget = 0;
-    
+
     switch (type){
     case view_listing:
 	new_widget = (Widget *) panel_new (get_nth_panel_name (num));
 	break;
-	
+
     case view_info:
 	new_widget = (Widget *) info_new ();
-	
+
 	break;
 
     case view_tree:
@@ -1003,16 +1003,16 @@ void set_display_type (int num, int type)
 		the_other_panel->dir.list[the_other_panel->selected].fname;
 	else
 	    file_name = "";
-	
+
 	view_init ((WView *) new_widget, 0, file_name, 0);
 	break;
     }
     panels [num].type = type;
     panels [num].widget = (Widget *) new_widget;
-    
+
     /* We set the same size the old widget had */
     widget_set_size ((Widget *) new_widget, y, x, lines, cols);
-    
+
     /* We wanna the new widget at the same position */
     /* XView sets wcontainer to !0 <- Not XView, but we, when we create it */
     /* Ok, the XView support code does it */
@@ -1061,7 +1061,7 @@ void swap_panels ()
     WPanel panel;
     WPanel *panel1, *panel2;
     int tmp_type;
-    
+
 #if 0
 #ifdef HAVE_PORTABLE_TOKEN_PASTING
 #define panelswap(e) panel.##e = panel1->##e; panel1->##e = panel2->##e; panel2->##e = panel.##e;
@@ -1093,7 +1093,7 @@ void swap_panels ()
         panelswap (selected);
         panelswap (is_panelized);
         panelswap (dir_stat);
-	
+
         panel1->searching = 0;
         panel2->searching = 0;
         if (cpanel == panel1)
@@ -1106,11 +1106,11 @@ void swap_panels ()
             dlg_select_widget (midnight_dlg, (void *) panels [0].widget);
     } else {
 	WPanel *tmp_panel;
-	
+
 	tmp_panel=right_panel;
 	right_panel=left_panel;
 	left_panel=tmp_panel;
-	
+
 	if (panels [0].type == view_listing) {
             if (!strcmp (panel1->panel_name, get_nth_panel_name (0))) {
                 free (panel1->panel_name);
@@ -1123,7 +1123,7 @@ void swap_panels ()
                 panel2->panel_name = strdup (get_nth_panel_name (0));
             }
         }
-        
+
         tmp.x = panels [0].widget->x;
         tmp.y = panels [0].widget->y;
         tmp.cols = panels [0].widget->cols;
@@ -1138,7 +1138,7 @@ void swap_panels ()
         panels [1].widget->y = tmp.y;
         panels [1].widget->cols = tmp.cols;
         panels [1].widget->lines = tmp.lines;
-        
+
         tmp_widget = panels [0].widget;
         panels [0].widget = panels [1].widget;
         panels [1].widget = tmp_widget;

@@ -81,7 +81,7 @@ static void AddStatusMsg(DFWINDOW wnd, PARAM p1)
     if (wnd->StatusBar != NULL)    {
         if (p1 && *(char *)p1)
             DfSendMessage(wnd->StatusBar, SETTEXT, p1, 0);
-        else 
+        else
             DfSendMessage(wnd->StatusBar, CLEARTEXT, 0, 0);
         DfSendMessage(wnd->StatusBar, PAINT, 0, 0);
     }
@@ -95,7 +95,7 @@ static void SetFocusMsg(DFWINDOW wnd, BOOL p1)
     inFocus = p1 ? wnd : NULL;
 	if (isVisible(wnd))
 	    DfSendMessage(wnd, BORDER, 0, 0);
-	else 
+	else
 	    DfSendMessage(wnd, SHOW_WINDOW, 0, 0);
 }
 
@@ -195,7 +195,7 @@ static void CommandMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
             if (DfDialogBox(wnd, &Display, TRUE, NULL))    {
 				if (inFocus == wnd->MenuBarWnd || inFocus == wnd->StatusBar)
 					oldFocus = ApplicationWindow;
-				else 
+				else
 					oldFocus = inFocus;
                 DfSendMessage(wnd, DFM_HIDE_WINDOW, 0, 0);
                 SelectColors(wnd);
@@ -389,7 +389,7 @@ static char *WindowName(DFWINDOW wnd)
     {
         if (GetClass(wnd) == DIALOG)
             return ((DBOX *)(wnd->extension))->HelpName;
-        else 
+        else
             return "Untitled";
     }
     else

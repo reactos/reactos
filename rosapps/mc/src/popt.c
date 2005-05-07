@@ -48,7 +48,7 @@ struct poptContext_s {
     int flags;
 };
 
-poptContext poptGetContext(char * name ,int argc, char ** argv, 
+poptContext poptGetContext(char * name ,int argc, char ** argv,
 			   struct poptOption * options, int flags) {
     poptContext con = malloc(sizeof(*con));
 
@@ -72,7 +72,7 @@ poptContext poptGetContext(char * name ,int argc, char ** argv,
     con->aliases = NULL;
     con->numAliases = 0;
     con->flags = 0;
-    
+
     if (!name)
 	con->appName = NULL;
     else
@@ -105,14 +105,14 @@ int poptGetNextOpt(poptContext con) {
     int i;
 
     while (!done) {
-	while (!con->os->nextCharArg && con->os->next == con->os->argc 
+	while (!con->os->nextCharArg && con->os->next == con->os->argc
 		&& con->os > con->optionStack)
 	    con->os--;
 	if (!con->os->nextCharArg && con->os->next == con->os->argc)
 	    return -1;
 
 	if (!con->os->nextCharArg) {
-		
+
 	    origOptString = con->os->argv[con->os->next++];
 
 	    if (con->restLeftover || *origOptString != '-') {
@@ -124,8 +124,8 @@ int poptGetNextOpt(poptContext con) {
 		return POPT_ERROR_BADOPT;
 
 	    /* Make a copy we can hack at */
-	    localOptString = optString = 
-			strcpy(malloc(strlen(origOptString) + 1), 
+	    localOptString = optString =
+			strcpy(malloc(strlen(origOptString) + 1),
 			origOptString);
 
 	    if (optString[1] == '-' && !optString[2]) {
@@ -135,7 +135,7 @@ int poptGetNextOpt(poptContext con) {
 	    } else if (optString[1] == '-') {
 		optString += 2;
 
-		if (!con->os->currAlias || !con->os->currAlias->longName || 
+		if (!con->os->currAlias || !con->os->currAlias->longName ||
 		    strcmp(con->os->currAlias->longName, optString)) {
 
 		    i = con->numAliases - 1;
@@ -144,7 +144,7 @@ int poptGetNextOpt(poptContext con) {
 
 		    if (i >= 0) {
 			free(localOptString);
-			if ((con->os - con->optionStack + 1) 
+			if ((con->os - con->optionStack + 1)
 				== POPT_OPTION_DEPTH)
 			    return POPT_ERROR_OPTSTOODEEP;
 
@@ -176,17 +176,17 @@ int poptGetNextOpt(poptContext con) {
                     free(localOptString);
                     return POPT_ERROR_BADOPT;
                 }
-	    } else 
+	    } else
 		con->os->nextCharArg = origOptString + 1;
     	    free(localOptString);
 	}
-	
+
 	if (con->os->nextCharArg) {
 	    origOptString = con->os->nextCharArg;
 
 	    con->os->nextCharArg = NULL;
 
-	    if (!con->os->currAlias || *origOptString != 
+	    if (!con->os->currAlias || *origOptString !=
 		con->os->currAlias->shortName) {
 
 		i = con->numAliases - 1;
@@ -213,7 +213,7 @@ int poptGetNextOpt(poptContext con) {
 	    }
 
 	    opt = con->options;
-	    while ((opt->longName || opt->shortName) && 
+	    while ((opt->longName || opt->shortName) &&
 		    *origOptString != opt->shortName) opt++;
 	    if (!opt->longName && !opt->shortName) return POPT_ERROR_BADOPT;
 
@@ -222,7 +222,7 @@ int poptGetNextOpt(poptContext con) {
 		con->os->nextCharArg = origOptString;
 	}
 
-	if (opt->arg && opt->argInfo == POPT_ARG_NONE) 
+	if (opt->arg && opt->argInfo == POPT_ARG_NONE)
 	    *((int *)opt->arg) = 1;
 	else if (opt->argInfo != POPT_ARG_NONE) {
 	    if (longArg) {
@@ -230,8 +230,8 @@ int poptGetNextOpt(poptContext con) {
 	    } else if (con->os->nextCharArg) {
 		con->os->nextArg = con->os->nextCharArg;
 		con->os->nextCharArg = NULL;
-	    } else { 
-		while (con->os->next == con->os->argc && 
+	    } else {
+		while (con->os->next == con->os->argc &&
 		       con->os > con->optionStack)
 		    con->os--;
 		if (con->os->next == con->os->argc)
@@ -249,7 +249,7 @@ int poptGetNextOpt(poptContext con) {
 		  case POPT_ARG_INT:
 		  case POPT_ARG_LONG:
 		    aLong = strtol(con->os->nextArg, &end, 0);
-		    if (*end) 
+		    if (*end)
 			return POPT_ERROR_BADNUMBER;
 
 		    if (aLong == LONG_MIN || aLong == LONG_MAX)
@@ -323,13 +323,13 @@ int poptAddAlias(poptContext con, struct poptAlias newAlias, int flags) {
     if (!con->aliases)
 	con->aliases = malloc(sizeof(newAlias) * con->numAliases);
     else
-	con->aliases = realloc(con->aliases, 
+	con->aliases = realloc(con->aliases,
 			       sizeof(newAlias) * con->numAliases);
     alias = con->aliases + aliasNum;
-    
+
     *alias = newAlias;
     if (alias->longName)
-	alias->longName = strcpy(malloc(strlen(alias->longName) + 1), 
+	alias->longName = strcpy(malloc(strlen(alias->longName) + 1),
 				    alias->longName);
     else
 	alias->longName = NULL;
@@ -424,7 +424,7 @@ static void configLine(poptContext con, char * line) {
     int nameLength = strlen(con->appName);
     char * opt;
     struct poptAlias alias;
-    
+
     if (strncmp(line, con->appName, nameLength)) return;
     line += nameLength;
     if (!*line || !isspace(*line)) return;
@@ -469,7 +469,7 @@ int poptReadConfigFile(poptContext con, char * fn) {
     if (fd < 0) {
 	if (errno == ENOENT)
 	    return 0;
-	else 
+	else
 	    return POPT_ERROR_ERRNO;
     }
 
@@ -521,8 +521,8 @@ int poptReadConfigFile(poptContext con, char * fn) {
 	  case '\\':
 	    *dst++ = *chptr++;
 	    if (chptr < end) {
-		if (*chptr == '\n') 
-		    dst--, chptr++;	
+		if (*chptr == '\n')
+		    dst--, chptr++;
 		    /* \ at the end of a line does not insert a \n */
 		else
 		    *dst++ = *chptr++;
@@ -586,7 +586,7 @@ int poptReadDefaultConfig(poptContext con, int useEnv) {
 		alias.longName = envValue + 2;
 		alias.shortName = '\0';
 	    } else if (*envValue == '-' && strlen(envValue) == 2) {
-		alias.longName = NULL;	
+		alias.longName = NULL;
 		alias.shortName = envValue[1];
 	    } else {
 		skip = 1;

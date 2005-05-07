@@ -1,7 +1,7 @@
-/* $Id: shutdown.c,v 1.2 2000/04/25 23:22:57 ea Exp $
- * 
+/* $Id$
+ *
  * EAU shutdown.c 1.4.1
- * 
+ *
  * Copyright (C) 1997,1998,1999 Emanuele Aliberti
  *
  * --------------------------------------------------------------------
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Library General Public
  * License along with this software; see the file COPYING.LIB. If
  * not, write to the Free Software Foundation, Inc., 675 Mass Ave,
- * Cambridge, MA 02139, USA.  
+ * Cambridge, MA 02139, USA.
  *
  * --------------------------------------------------------------------
  * 1999-05-14 (Emanuele Aliberti)
@@ -40,7 +40,7 @@
 #endif
 
 
-struct _EWX 
+struct _EWX
 {
 	CHAR	mode;
 	UINT	id;
@@ -81,7 +81,7 @@ DecodeArg( CHAR * modestr )
 
 
 static
-const 
+const
 char * usage = "\
 Shutdown ver. 1.4.1  (compiled on %s, at %s)\n\
 Copyright (C) 1997-1999 Emanuele Aliberti\n\n\
@@ -104,7 +104,7 @@ main(
 	HANDLE           h;
 	TOKEN_PRIVILEGES tp;
 
-	mode = (argc == 2) 
+	mode = (argc == 2)
 		? DecodeArg(argv[1])
 		: DecodeArg("-?");
 	if (mode == (UINT) -1)
@@ -114,13 +114,13 @@ main(
 			usage,
 			__DATE__,
 			__TIME__,
-			argv[0]	
+			argv[0]
 			);
 		return EXIT_SUCCESS;
 	}
-	/* 
-	 * Get the current process token handle 
-	 * so we can get shutdown privilege. 
+	/*
+	 * Get the current process token handle
+	 * so we can get shutdown privilege.
 	 */
 	if (FALSE == OpenProcessToken(
 		GetCurrentProcess(),
@@ -139,7 +139,7 @@ main(
 	 */
 	if (FALSE == LookupPrivilegeValue(
 			NULL,
-			SE_SHUTDOWN_NAME, 
+			SE_SHUTDOWN_NAME,
 			& tp.Privileges[0].Luid
 			)
 	) {

@@ -1,7 +1,7 @@
 /* Declarations for the extfs.
 
    Copyright (C) 1995 The Free Software Foundation
-   
+
    Written by: 1995 Jakub Jelinek
 
 This program is free software; you can redistribute it and/or modify

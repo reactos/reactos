@@ -220,7 +220,7 @@ FTPLoginHost(const FTPCIPtr cip)
 			case 421:	/* 421 Service not available, closing control connection. */
 				result = kErrHostDisconnectedDuringLogin;
 				goto done;
-				
+
 			case 331:	/* 331 User name okay, need password. */
 				if ((cip->firewallType == kFirewallNotInUse) || (fwloggedin != 0)) {
 					if ((cip->pass[0] == '\0') && (cip->passphraseProc != NoGetPassphraseProc))
@@ -271,7 +271,7 @@ FTPLoginHost(const FTPCIPtr cip)
 			case 503:	/* Bad sequence of commands. */
 			case 550:	/* Can't set guest privileges. */
 				goto done;
-				
+
 			default:
 			unknown:
 				if (rp->msg.first == NULL) {
@@ -547,7 +547,7 @@ FTPCloseHost(const FTPCIPtr cip)
 			DoneWithResponse(cip, rp);
 		}
 	}
-	
+
 	CloseControlConnection(cip);
 
 	/* Dispose dynamic data structures, so you won't leak
@@ -700,7 +700,7 @@ FTPDecodeURL(
 		if (*cp == '@') {
 			if (at1 == NULL)
 				at1 = cp;
-			else 
+			else
 				return (kMalformedURL);
 		} else if ((*cp == '\0') || (*cp == '/')) {
 			hend = cp;
@@ -755,7 +755,7 @@ FTPDecodeURL(
 	if (lastslash == NULL) {
 		/* no path, okay */
 		return (0);
-	}	
+	}
 	*lastslash = '\0';
 
 	if ((semi = strchr(lastslash + 1, ';')) != NULL) {
@@ -1109,7 +1109,7 @@ FTPRebuildConnectionInfo(const FTPLIPtr lip, const FTPCIPtr cip)
 int
 FTPInitLibrary(const FTPLIPtr lip)
 {
-	struct servent *ftp;	
+	struct servent *ftp;
 
 	if (lip == NULL)
 		return (kErrBadParameter);

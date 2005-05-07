@@ -94,7 +94,7 @@ SSendto(int sfd, const char *const buf, size_t size, int fl, const struct sockad
 				/* ready */
 				break;
 			} else if (result == 0) {
-				/* timeout */		
+				/* timeout */
 				errno = ETIMEDOUT;
 				SETWSATIMEOUTERR
 				return (kTimeoutErr);

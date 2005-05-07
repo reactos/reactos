@@ -8,7 +8,7 @@
 HANDLE OutputHandle;
 HANDLE InputHandle;
 
-VOID STDCALL 
+VOID STDCALL
 ApcRoutine(PVOID Context,
 	   PIO_STATUS_BLOCK IoStatus,
 	   ULONG Reserved)
@@ -27,13 +27,13 @@ int main(int argc, char* argv[])
    CHAR Buffer[256];
    HANDLE EventHandle;
    LARGE_INTEGER off;
-  
+
    AllocConsole();
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
 
    printf("APC test program\n");
-   
+
    EventHandle = CreateEventW(NULL,
 			      FALSE,
 			      FALSE,
@@ -43,14 +43,14 @@ int main(int argc, char* argv[])
 	printf("Failed to create event\n");
 	return 0;
      }
-   
+
    printf("Opening file\n");
    InitializeObjectAttributes(&ObjectAttributes,
 			      &FileName,
 			      0,
 			      NULL,
 			      NULL);
-   
+
    printf("Creating file\n");
    FileHandle = CreateFileW(L"C:\\a.txt",
 			    FILE_GENERIC_READ | FILE_GENERIC_WRITE,
@@ -59,16 +59,16 @@ int main(int argc, char* argv[])
 			    OPEN_EXISTING,
 			    FILE_FLAG_OVERLAPPED,
 			    NULL);
-         
+
    if (FileHandle == INVALID_HANDLE_VALUE)
      {
 
   printf("Open failed last err 0x%lu\n",GetLastError());
 	return 0;
      }
-     
+
      off.QuadPart = 0;
-     
+
    printf("Reading file\n");
    Status = ZwReadFile(FileHandle,
 			NULL,
@@ -77,9 +77,9 @@ int main(int argc, char* argv[])
 			&IoStatus,
 			Buffer,
 			256,//len
-			&off ,//offset must exist if file was opened for asynch. i/o aka. OVERLAPPED 
-			NULL); 
-      
+			&off ,//offset must exist if file was opened for asynch. i/o aka. OVERLAPPED
+			NULL);
+
    if (!NT_SUCCESS(Status))
      {
 	printf("Read failed status 0x%lu\n",Status);

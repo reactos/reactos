@@ -208,7 +208,7 @@ FTPList(const FTPCIPtr cip, const int outfd, const int longMode, const char *con
 			Error(cip, kDoPerror, "Could not fdopen.\n");
 			return (result);
 		}
-		
+
 		for (;;) {
 			result = SReadline(&lsSrl, line, sizeof(line) - 2);
 			if (result == kTimeoutErr) {
@@ -243,7 +243,7 @@ FTPList(const FTPCIPtr cip, const int outfd, const int longMode, const char *con
 
 
 #else	/* NO_SIGNALS */
-	
+
 	if (result == 0) {
 		/* This line sets the buffer pointer so that the first thing
 		 * BufferGets will do is reset and fill the buffer using
@@ -447,7 +447,7 @@ FTPListToMemory2(const FTPCIPtr cip, const char *const pattern, const LineListPt
 			Error(cip, kDoPerror, "Could not fdopen.\n");
 			return (result);
 		}
-		
+
 		for (;;) {
 			result = SReadline(&lsSrl, line, sizeof(line) - 1);
 			if (result == kTimeoutErr) {
@@ -787,14 +787,14 @@ FTPPutOneF(
 				 * for Windows' file timestamps being
 				 * imprecise to one second.
 				 */
-				zaction = kConfirmResumeProcSaidOverwrite; 
+				zaction = kConfirmResumeProcSaidOverwrite;
 			} else if ((longest_int) st.st_size == startPoint) {
 				/* Already sent file, done. */
-				zaction = kConfirmResumeProcSaidSkip; 
+				zaction = kConfirmResumeProcSaidSkip;
 			} else if ((startPoint != kSizeUnknown) && ((longest_int) st.st_size > startPoint)) {
-				zaction = kConfirmResumeProcSaidResume; 
+				zaction = kConfirmResumeProcSaidResume;
 			} else {
-				zaction = kConfirmResumeProcSaidOverwrite; 
+				zaction = kConfirmResumeProcSaidOverwrite;
 			}
 		}
 
@@ -1280,7 +1280,7 @@ FTPPutOneFile3(
 		return (kErrBadParameter);
 	if (strcmp(cip->magic, kLibraryMagic))
 		return (kErrBadMagic);
-	
+
 	if ((dstfile == NULL) || (dstfile[0] == '\0'))
 		return (kErrBadParameter);
 	if (fdtouse < 0) {
@@ -2349,7 +2349,7 @@ FTPGetOneF(
 			} else if (nread == 0) {
 				break;
 			}
-#else			
+#else
 			gCanBrokenDataJmp = 1;
 			if (cip->xferTimeout > 0)
 				(void) alarm(cip->xferTimeout);
@@ -2467,7 +2467,7 @@ FTPGetOneFile3(
 		return (kErrBadParameter);
 	if (strcmp(cip->magic, kLibraryMagic))
 		return (kErrBadMagic);
-	
+
 	if ((file == NULL) || (file[0] == '\0'))
 		return (kErrBadParameter);
 	if (fdtouse < 0) {

@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include <shellapi.h>
 //#include <winspool.h>
 #include <windowsx.h>
@@ -167,24 +167,24 @@ BOOL CALLBACK ViewFileTypeWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-TotalFileSize           [in] Specifies the total size of the file, in bytes. 
-TotalBytesTransferred   [in] Specifies the total number of bytes transferred from the source file to the destination file since the copy operation began. 
-StreamSize              [in] Specifies the total size of the current file stream, in bytes. 
-StreamBytesTransferred  [in] Specifies the total number of bytes in the current stream that have been transferred from the source file to the destination file since the copy operation began. 
-dwStreamNumber          [in] Handle to the current stream. The stream number is 1 the first time CopyProgressRoutine is called. 
-dwCallbackReason        [in] Specifies the reason that CopyProgressRoutine was called. This parameter can be one of the following values. Value Meaning 
-                             CALLBACK_CHUNK_FINISHED Another part of the data file was copied. 
-                             CALLBACK_STREAM_SWITCH  Another stream was created and is about to be copied. This is the callback reason given when the callback routine is first invoked. 
-hSourceFile             [in] Handle to the source file. 
-hDestinationFile        [in] Handle to the destination file 
-lpData                  [in] The argument passed to CopyProgressRoutine by the CopyFileEx or MoveFileWithProgress function. 
+TotalFileSize           [in] Specifies the total size of the file, in bytes.
+TotalBytesTransferred   [in] Specifies the total number of bytes transferred from the source file to the destination file since the copy operation began.
+StreamSize              [in] Specifies the total size of the current file stream, in bytes.
+StreamBytesTransferred  [in] Specifies the total number of bytes in the current stream that have been transferred from the source file to the destination file since the copy operation began.
+dwStreamNumber          [in] Handle to the current stream. The stream number is 1 the first time CopyProgressRoutine is called.
+dwCallbackReason        [in] Specifies the reason that CopyProgressRoutine was called. This parameter can be one of the following values. Value Meaning
+                             CALLBACK_CHUNK_FINISHED Another part of the data file was copied.
+                             CALLBACK_STREAM_SWITCH  Another stream was created and is about to be copied. This is the callback reason given when the callback routine is first invoked.
+hSourceFile             [in] Handle to the source file.
+hDestinationFile        [in] Handle to the destination file
+lpData                  [in] The argument passed to CopyProgressRoutine by the CopyFileEx or MoveFileWithProgress function.
 
 Return Values           The CopyProgressRoutine function should return one of the following values.
-  Value Meaning 
-         PROGRESS_CONTINUE Continue the copy operation. 
-         PROGRESS_CANCEL Cancel the copy operation and delete the destination file. 
-         PROGRESS_STOP Stop the copy operation. It can be restarted at a later time. 
-         PROGRESS_QUIET Continue the copy operation, but stop invoking CopyProgressRoutine to report progress. 
+  Value Meaning
+         PROGRESS_CONTINUE Continue the copy operation.
+         PROGRESS_CANCEL Cancel the copy operation and delete the destination file.
+         PROGRESS_STOP Stop the copy operation. It can be restarted at a later time.
+         PROGRESS_QUIET Continue the copy operation, but stop invoking CopyProgressRoutine to report progress.
  */
 DWORD CALLBACK CopyProgressRoutine(
   LARGE_INTEGER TotalFileSize,          // file size
@@ -289,10 +289,10 @@ void ShowFixedFileInfo(HWND hDlg, VS_FIXEDFILEINFO* pFixedFileInfo)
     case VFT_FONT:
         str = _T("The file contains a font. If dwFileType is VFT_FONT, dwFileSubtype contains a more specific description of the font file.");
         switch (pFixedFileInfo->dwFileSubtype) {
-        case VFT2_UNKNOWN: str = _T("The font type is unknown the system."); break; 
-        case VFT2_FONT_RASTER: str = _T("The file contains a raster font."); break; 
-        case VFT2_FONT_VECTOR: str = _T("The file contains a vector font."); break; 
-        case VFT2_FONT_TRUETYPE: str = _T("The file contains a TrueType font."); break; 
+        case VFT2_UNKNOWN: str = _T("The font type is unknown the system."); break;
+        case VFT2_FONT_RASTER: str = _T("The file contains a raster font."); break;
+        case VFT2_FONT_VECTOR: str = _T("The file contains a vector font."); break;
+        case VFT2_FONT_TRUETYPE: str = _T("The file contains a TrueType font."); break;
 
         }
         break;
@@ -317,9 +317,9 @@ void AddFileInfoValue(HWND hDlg, void* pVersionData, struct LANGANDCODEPAGE lpTr
     TCHAR* pVal;
     UINT nValLen;
 
-    wsprintf(SubBlock, TEXT("\\StringFileInfo\\%04x%04x\\%s"), 
+    wsprintf(SubBlock, TEXT("\\StringFileInfo\\%04x%04x\\%s"),
              lpTranslate.wLanguage, lpTranslate.wCodePage, info_str);
-    // Retrieve file description for language and code page "i". 
+    // Retrieve file description for language and code page "i".
     if (VerQueryValue(pVersionData, SubBlock, (PVOID)&pVal, &nValLen)) {
         ListBox_InsertItemData(GetDlgItem(hDlg, IDC_LIST_PROP_VERSION_TYPES), i, info_str);
 //		ListBox_InsertItemData(pane->hwnd, idx, entry);
@@ -327,18 +327,18 @@ void AddFileInfoValue(HWND hDlg, void* pVersionData, struct LANGANDCODEPAGE lpTr
     }
 }
 
-static TCHAR* InfoStrings[] = { 
-                TEXT("Comments"), 
-                TEXT("InternalName"), 
-                TEXT("ProductName"), 
-                TEXT("CompanyName"), 
-                TEXT("LegalCopyright"), 
-                TEXT("ProductVersion"), 
-                TEXT("FileDescription"), 
-                TEXT("LegalTrademarks"), 
-                TEXT("PrivateBuild"), 
-                TEXT("FileVersion"), 
-                TEXT("OriginalFilename"), 
+static TCHAR* InfoStrings[] = {
+                TEXT("Comments"),
+                TEXT("InternalName"),
+                TEXT("ProductName"),
+                TEXT("CompanyName"),
+                TEXT("LegalCopyright"),
+                TEXT("ProductVersion"),
+                TEXT("FileDescription"),
+                TEXT("LegalTrademarks"),
+                TEXT("PrivateBuild"),
+                TEXT("FileVersion"),
+                TEXT("OriginalFilename"),
                 TEXT("SpecialBuild"),
                 TEXT(""),
                 NULL
@@ -402,7 +402,7 @@ void CheckForFileInfo(HWND hDlg, TCHAR* strFilename)
 /*
             wsprintf(SubBlock, TEXT("\\StringFileInfo\\%04x%04x\\FileDescription"),
                      lpTranslate[i].wLanguage, lpTranslate[i].wCodePage);
-            // Retrieve file description for language and code page "i". 
+            // Retrieve file description for language and code page "i".
             if (VerQueryValue(pVersionData, SubBlock, &pVal, &nValLen)) {
                 ListBox_InsertItemData(GetDlgItem(hDlg, IDC_LIST_PROP_VERSION_TYPES), i, _T("FileDescription"));
                 SendMessage(GetDlgItem(hDlg, IDC_LIST_PROP_VERSION_VALUES), WM_SETTEXT, 0, pVal);
@@ -456,7 +456,7 @@ BOOL CALLBACK PropertiesDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             //entry->bhfi.nFileSizeHigh;
             //entry->bhfi.ftCreationTime
             wsprintf(buffer, _T("%u"), entry->bhfi.nFileSizeLow);
-            if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, buffer, &numFmt, 
+            if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, buffer, &numFmt,
                     buffer + MAX_PATH/2, MAX_PATH/2)) {
                 SetDlgItemText(hDlg, IDC_STATIC_PROP_SIZE, buffer + MAX_PATH/2);
             } else {

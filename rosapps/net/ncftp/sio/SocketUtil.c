@@ -182,7 +182,7 @@ SetSocketLinger(const int fd, const int l_onoff, const int l_linger)
  * if l_onoff == 0:
  *    close(2) returns immediately; any buffered data is sent later
  *    (default)
- * 
+ *
  * if l_onoff != 0:
  *    if l_linger == 0, close(2) returns after discarding any unsent data
  *    if l_linger != 0, close(2) does not return until buffered data is sent

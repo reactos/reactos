@@ -1,13 +1,13 @@
 /* Client interface for General purpose OS/2 console save/restore server.
         1997 Alexander Dong <ado@software-ag.de>
    Having the same interface as its Linux counterpart:
-   	Copyright (C) 1994 Janne Kukonlehto <jtklehto@stekt.oulu.fi> 
-   
+   	Copyright (C) 1994 Janne Kukonlehto <jtklehto@stekt.oulu.fi>
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -15,8 +15,8 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
-   
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
 */
 
 #include <config.h>
@@ -101,7 +101,7 @@ void handle_console (unsigned char action)
       n = col * row * 2;
       VioWrtCellStr ((PCH) scr_buffer, (USHORT) n, 0, 0, 0); /* Write it back */
       break;
-   default: 
+   default:
       /* This is not possible, but if we are here, just save the screen */
       handle_console(CONSOLE_SAVE);
      break;

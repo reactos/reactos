@@ -21,15 +21,15 @@ omain (void)
     enum states state = header;
     int prev = 0;
     int c;
-    
+
     while ((c = getchar ()) != EOF){
 	if (c != '\n'){
-	    switch (state){ 
+	    switch (state){
 	    case header:
 		putchar ('_');
 		putchar ('\b');
 		break;
-		
+
 	    case definition:
 		putchar (c);
 		putchar ('\b');
@@ -47,7 +47,7 @@ omain (void)
 
 	if (state == definition && c == '\n')
 	    state = header;
-	
+
 	prev = c;
     }
 }
@@ -58,7 +58,7 @@ main (void)
     int state = newline;
     int space_seen;
     int c;
-    
+
     while ((c = getchar ()) != EOF){
 	switch (state){
 	case plain:
@@ -66,7 +66,7 @@ main (void)
 		state = newline;
 	    putchar (c);
 	    break;
-	    
+
 	case newline:
 	    if (c == 'F')
 		state = seen_f;
@@ -75,7 +75,7 @@ main (void)
 		putchar (c);
 	    }
 	    break;
-	    
+
 	case seen_f:
 	    if (c == 'r')
 		state = seen_r;
@@ -91,7 +91,7 @@ main (void)
 	    else {
 		state = plain;
 		printf ("Fr%c", c);
-	    } 
+	    }
 	    break;
 
 	case seen_o:
@@ -112,7 +112,7 @@ main (void)
 		printf ("From%c", c);
 	    }
 	    break;
-		
+
 	case header_new:
 	    space_seen = 0;
             if (c == ' ' || c == '\t') {
@@ -125,7 +125,7 @@ main (void)
 		putchar (c);
 		break;
 	    }
-	    
+
 	case header:
 	    if (c == '\n'){
 		putchar (c);

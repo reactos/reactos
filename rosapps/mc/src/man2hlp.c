@@ -1,11 +1,11 @@
 /* Man page to help file converter
    Copyright (C) 1994, 1995 Janne Kukonlehto
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -66,7 +66,7 @@ int string_len (char *buffer)
     for (i = 0; i < strlen (buffer); i ++)
     {
 	c = buffer [i];
-	if (c == CHAR_LINK_POINTER) 
+	if (c == CHAR_LINK_POINTER)
 	    link_flag = 1;	/* Link target name starts */
 	else if (c == CHAR_LINK_END)
 	    link_flag = 0;	/* Link target name ends */
@@ -118,7 +118,7 @@ void print_string (char *buffer)
 	buffer = strtok (buffer, " \t\n");
 	/* Repeat for each word */
 	while (buffer){
-	    /* Skip empty strings */  
+	    /* Skip empty strings */
 	    if (strlen (buffer) > 0){
 		len = string_len (buffer);
 		/* Change the line if about to break the right margin */
@@ -326,8 +326,8 @@ void handle_command (char *buffer)
 		printf_string ("<%c>%s</%c>", type, buffer, type);
 		newline ();
 	    } else /* HLP format */
-		printf_string ("%c%s%c", 
-		    (type == 'I') ? CHAR_ITALIC_ON : CHAR_BOLD_ON, 
+		printf_string ("%c%s%c",
+		    (type == 'I') ? CHAR_ITALIC_ON : CHAR_BOLD_ON,
 		    buffer, CHAR_BOLD_OFF);
 	}
     }

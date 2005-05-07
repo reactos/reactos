@@ -1,5 +1,5 @@
-/* $Id: Console.h,v 1.4 2001/01/13 23:54:07 narnaoud Exp $ */
- 
+/* $Id$ */
+
 // Console.h: interface for the CConsole class.
 //
 //////////////////////////////////////////////////////////////////////
@@ -10,7 +10,7 @@
 #include "TextHistory.h"
 #include "Completion.h"
 
-class CConsole  
+class CConsole
 {
 public:
 	void EnableWrite();

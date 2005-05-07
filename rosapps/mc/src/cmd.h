@@ -5,7 +5,7 @@ void ftplink_cmd (void);
 void undelete_cmd (void);
 void help_cmd (void);
 void dirsizes_cmd (void);
-int view_file_at_line (char *filename, int plain_view, int internal, 
+int view_file_at_line (char *filename, int plain_view, int internal,
                        int start_line);
 int view_file (char *filename, int normal, int internal);
 void view_cmd (WPanel *panel);

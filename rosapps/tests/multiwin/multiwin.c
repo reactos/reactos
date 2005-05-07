@@ -4,7 +4,7 @@
 static UINT WindowCount;
 LRESULT WINAPI MultiWndProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI 
+int WINAPI
 WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,

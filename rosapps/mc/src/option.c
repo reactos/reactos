@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <config.h>
@@ -107,7 +107,7 @@ static int configure_callback (struct Dlg_head *h, int Id, int Msg)
 {
     switch (Msg) {
     case DLG_DRAW:
-#ifndef HAVE_X    
+#ifndef HAVE_X
 	attrset (COLOR_NORMAL);
 	dlg_erase (h);
 	draw_box (h, 1, 2, h->lines - 2, h->cols - 4);
@@ -190,7 +190,7 @@ static void init_configure (void)
 		l1 = 11 + strlen (ok_button)
 		 	+ strlen (save_button)
 			+ strlen (cancel_button);
-		
+
 		i = (first_width + second_width - l1) / 4;
 		b1 = 5 + i;
 		b2 = b1 + strlen(ok_button) + i + 6;
@@ -212,7 +212,7 @@ static void init_configure (void)
     add_widgetl (conf_dlg,
 	button_new (BY, b2, B_EXIT, NORMAL_BUTTON, save_button, 0, 0, "button-save"),
 	XV_WLAY_RIGHTOF);
-    
+
     add_widgetl (conf_dlg,
         button_new (BY, b1, B_ENTER, DEFPUSH_BUTTON, ok_button, 0, 0, "button-ok"),
         XV_WLAY_CENTERROW);
@@ -251,7 +251,7 @@ static void init_configure (void)
 void configure_box (void)
 {
     int result, i;
-    
+
     init_configure ();
     run_dlg (conf_dlg);
 

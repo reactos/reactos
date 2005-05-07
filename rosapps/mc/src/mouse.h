@@ -15,7 +15,7 @@
 #define GPM_B_LEFT      4
 #define GPM_B_MIDDLE    2
 #define GPM_B_RIGHT     1
- 
+
 /* Xterm mouse support supports only GPM_DOWN and GPM_UP */
 /* If you use others make sure your code also works without them */
 enum Gpm_Etype {
@@ -29,7 +29,7 @@ enum Gpm_Etype {
   GPM_SINGLE=16,            /* at most one in three is set */
   GPM_DOUBLE=32,
   GPM_TRIPLE=64,
-      
+
   GPM_MFLAG=128,            /* motion during click? */
   GPM_HARD=256             /* if set in the defaultMask, force an already
                               used event to pass over to another handler */
@@ -73,7 +73,7 @@ int redo_mouse (Gpm_Event *event);
 #ifdef DEBUGMOUSE
 #define DEBUGM(data) fprintf data
 #else
-#define DEBUGM(data) 
+#define DEBUGM(data)
 #endif
 
 #ifdef HAVE_LIBGPM

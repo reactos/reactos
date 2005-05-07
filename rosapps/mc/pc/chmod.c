@@ -103,7 +103,7 @@ struct {
     WCheck      *check;
 } check_perm[PERMISSIONS] = {
 
-    {	
+    {
 	FILE_ARCHIVED, N_("Archive"), 0, 0,
     },
     {
@@ -245,7 +245,7 @@ static void init_chmod (void)
 
     ch_dlg = create_dlg (0, 0, 22 - single_set, 70, dialog_colors,
 			 chmod_callback, _("[Chmod]"), _("chmod"), DLG_CENTER);
-			
+
     x_set_dialog_title (ch_dlg, _("Chmod command"));
 
 #define XTRACT(i) BY+chmod_but[i].y-single_set, BX+chmod_but[i].x, \
@@ -430,9 +430,9 @@ void chmod_cmd (void)
 	statl = label_new (FY+4, FX+2, buffer, NULL);
 	add_widget (ch_dlg, statl);
 	tk_end_frame ();
-	
+
 	run_dlg (ch_dlg);	/* retrieve an action */
-	
+
 	/* do action */
 	switch (ch_dlg->ret_value){
 	case B_ENTER:
@@ -440,11 +440,11 @@ void chmod_cmd (void)
 		mk_chmod (fname, c_stat);  /*.ado */
 	    need_update = 1;
 	    break;
-	
+
 	case B_CANCEL:
 	    end_chmod = 1;
 	    break;
-	
+
 	case B_ALL:
 	case B_MARKED:
 	    and_mask = or_mask = 0;
@@ -460,7 +460,7 @@ void chmod_cmd (void)
 
 	    apply_mask (sf_stat);
 	    break;
-	
+
 	case B_SETMRK:
 	    and_mask = or_mask = 0;
 	    and_mask = ~and_mask;

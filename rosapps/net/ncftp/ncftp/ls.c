@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -198,7 +198,7 @@ LsC(FileInfoListPtr dirp, int endChars, FILE *stream)
 	ncol = (screenColumns - 1) / ((int) dirp->maxFileLen + 2 + /*1or0*/ endChars);
 	if (ncol < 1)
 		ncol = 1;
-	colw = (screenColumns - 1) / ncol; 
+	colw = (screenColumns - 1) / ncol;
 	n = dirp->nFileInfos;
 	nrow = n / ncol;
 	if ((n % ncol) != 0)
@@ -599,15 +599,15 @@ Ls(const char *const item, int listmode, const char *const options, FILE *stream
 	}
 
 	if (rlisted != 0) {
-		Trace(0, "Remote listing contents {\n");	
+		Trace(0, "Remote listing contents {\n");
 		for (linePtr = dirContents.first;
 			linePtr != NULL;
 			linePtr = nextLinePtr)
 		{
 			nextLinePtr = linePtr->next;
-			Trace(0, "    %s\n", linePtr->line);	
+			Trace(0, "    %s\n", linePtr->line);
 		}
-		Trace(0, "}\n");	
+		Trace(0, "}\n");
 	}
 
 	if (parsed >= 0) {
@@ -629,16 +629,16 @@ Ls(const char *const item, int listmode, const char *const options, FILE *stream
 			linePtr = nextLinePtr)
 		{
 			nextLinePtr = linePtr->next;
-			(void) fprintf(stream, "%s\n", linePtr->line);	
-			Trace(0, "    %s\n", linePtr->line);	
+			(void) fprintf(stream, "%s\n", linePtr->line);
+			Trace(0, "    %s\n", linePtr->line);
 		}
 	}
 
 	DisposeLineListContents(&dirContents);
 }	/* Ls */
 
-	
-	
+
+
 #if defined(WIN32) || defined(_WINDOWS)
 /* Prints a local directory listing in the specified format on the specified
  * output stream.
@@ -716,7 +716,7 @@ LLs(const char *const item, int listmode, const char *const options, FILE *strea
 		if (strpbrk(itempath, "*?") == NULL)
 			STRNCAT(itempath, "\\*.*");
 	}
-	
+
 	InitLineList(&ll);
 	result = FTPLocalGlob(&gConn, &ll, itempath, kGlobYes);
 	if (result < 0) {
@@ -727,7 +727,7 @@ LLs(const char *const item, int listmode, const char *const options, FILE *strea
 	if (LineListToFileInfoList(&ll, &fil) < 0)
 		return;
 	DisposeLineListContents(&ll);
-	
+
 	for (fip = fil.first; fip != NULL; fip = fip2) {
 		fip2 = fip->next;
 		if (Stat(fip->relname, &st) < 0) {
@@ -772,7 +772,7 @@ LLs(const char *const item, int listmode, const char *const options, FILE *strea
 		else
 			LsC(&fil, endChars, stream);
 	}
-	
+
 	DisposeFileInfoListContents(&fil);
 }	/* LLs */
 #endif

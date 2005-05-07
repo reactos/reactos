@@ -228,7 +228,7 @@ static BOOL KeyboardMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
         case F1:
             if (ActivePopDown == NULL)
                 DfSendMessage(GetParent(wnd), KEYBOARD, p1, p2);
-            else 
+            else
                 DisplayHelp(wnd,
                     (ActivePopDown+wnd->selection)->help);
             return TRUE;

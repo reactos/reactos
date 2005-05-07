@@ -5,7 +5,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -13,7 +13,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
   Bugs:
     Have trouble with non-US keyboards, "Alt-gr"+keys (API tells CTRL-ALT is pressed)
@@ -61,15 +61,15 @@ struct {
     { KEY_F(10), VK_F10 },
     { KEY_F(11), VK_F11 },
     { KEY_F(12), VK_F12 },
-    { KEY_F(13), VK_F13 }, 
+    { KEY_F(13), VK_F13 },
     { KEY_F(14), VK_F14 },
     { KEY_F(15), VK_F15 },
     { KEY_F(16), VK_F16 },
     { KEY_F(17), VK_F17 },
     { KEY_F(18), VK_F18 },
     { KEY_F(19), VK_F19 },
-    { KEY_F(20), VK_F20 },	
-    { KEY_IC,    VK_INSERT },		
+    { KEY_F(20), VK_F20 },
+    { KEY_IC,    VK_INSERT },
     { KEY_DC,    VK_DELETE },
     { KEY_BACKSPACE, VK_BACK },
 
@@ -85,13 +85,13 @@ struct {
     { ALT('*'),  VK_MULTIPLY },
     { ALT('+'),  VK_ADD },
     { ALT('-'),  VK_SUBTRACT },
-    
+
     { ALT('\t'), VK_PAUSE }, /* Added to make Complete work press Pause */
 
     { ESC_CHAR, VK_ESCAPE },
 
     { 0, 0}
-};		
+};
 
 /*  init_key  - Called in main.c to initialize ourselves
 		Get handle to console input
@@ -103,14 +103,14 @@ void init_key (void)
 
 int ctrl_pressed ()
 {
-    if(dwSaved_ControlState & RIGHT_ALT_PRESSED) return 0; 
+    if(dwSaved_ControlState & RIGHT_ALT_PRESSED) return 0;
     /* The line above fixes the BUG with the AltGr Keys*/
     return dwSaved_ControlState & (RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED);
 }
 
 int shift_pressed ()
 {
-    if(dwSaved_ControlState & RIGHT_ALT_PRESSED) return 0; 
+    if(dwSaved_ControlState & RIGHT_ALT_PRESSED) return 0;
     /* The line above fixes the BUG with the AltGr Keys*/
     return dwSaved_ControlState & SHIFT_PRESSED;
 }
@@ -124,7 +124,7 @@ static int VKtoCurses (int a_vkc)
 {
     int i;
 
-    for (i = 0; key_table[i].vkcode != 0; i++) 
+    for (i = 0; key_table[i].vkcode != 0; i++)
 	if (a_vkc == key_table[i].vkcode) {
 	    return key_table[i].key_code;
 	}
@@ -183,7 +183,7 @@ int get_key_code (int no_delay)
 	if (!dw)
 	    return 0;
     }
- 
+
     do {
 	win32APICALL(ReadConsoleInput(hConsoleInput, &ir, 1, &dw));
 	switch (ir.EventType) {
@@ -219,7 +219,7 @@ int get_key_code (int no_delay)
 			evSaved_Event.type = GPM_DOWN | GPM_DOUBLE;
 			break;
 		};
-		return 0;	
+		return 0;
 	}
     } while (!no_delay);
     return 0;
@@ -254,7 +254,7 @@ int get_event (Gpm_Event *event, int redo_event, int block)
 	dirty++;
 
     vfs_timeout_handler ();
-    
+
     c = block ? getch_with_delay () : get_key_code (1);
 
     if (!c) {
@@ -270,16 +270,16 @@ int mi_getch ()
 {
     Gpm_Event ev;
     int       key;
-    
+
     while ((key = get_event (&ev, 0, 1)) == 0)
 	;
     return key;
 }
 
-/* 
+/*
    is_idle -    A function to check if we're idle.
-		It checks for any waiting event  (that can be a Key, Mouse event, 
-   		and other internal events like focus or menu) 
+		It checks for any waiting event  (that can be a Key, Mouse event,
+   		and other internal events like focus or menu)
 */
 int is_idle (void)
 {

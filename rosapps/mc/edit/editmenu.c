@@ -36,7 +36,7 @@ extern WMenu *edit_menubar;
 
 #undef edit_message_dialog
 #define edit_message_dialog(w,x,y,h,s) query_dialog (h, s, 0, 1, "&Ok")
-#define CFocus(x) 
+#define CFocus(x)
 
 static void menu_cmd (int i)
 {
@@ -53,7 +53,7 @@ void edit_wrap_cmd ()
     char *f;
     char s[12];
     sprintf (s, "%d", option_word_wrap_line_length);
-    f = input_dialog (_(" Word wrap "), 
+    f = input_dialog (_(" Word wrap "),
 /* Not essential to translate */
     _(" Enter line length, 0 for off: "), s);
     if (f) {

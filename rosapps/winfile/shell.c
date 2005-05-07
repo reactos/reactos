@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include "main.h"
 #include "shell.h"
 #include "format.h"
@@ -69,7 +69,7 @@ void FormatDisk(HWND hWnd)
 		    UINT OldMode = SetErrorMode(0); // Get the current Error Mode settings.
 		    SetErrorMode(OldMode & ~SEM_FAILCRITICALERRORS); // Force O/S to handle
             pSHFormatDrive(0/*hWnd*/, 0 /* A: */, SHFMT_ID_DEFAULT, 0);
-		    SetErrorMode(OldMode); // Put it back the way it was. 			
+		    SetErrorMode(OldMode); // Put it back the way it was.
         }
         FreeLibrary(hShell32);
 	}

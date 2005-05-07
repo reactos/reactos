@@ -5,12 +5,12 @@
    Copyright (C) 1998 the Free Software Foundation.
 
    Written by: 1998, Gyorgy Tamasi
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,14 +24,14 @@
 
 /*
  * PURPOSE:
- * 
+ *
  *   We would like to support the direct ALT-?/META-? and some other 'extra'
  *   keyboard functionality provided by some terminals under some OSes (and
  *   not supported by the 'learn keys...' facility of 'mc'.
  *   (First target platform: QNX.)
- * 
+ *
  * REMARK:
- * 
+ *
  *   Implementation strategy: we don't want to rely on a specific terminal
  *   information database management API (termcap,terminfo,SLang,...), so we
  *   try to define a superset of the possible key identifiers here.
@@ -65,24 +65,24 @@
 
 /* define the OS/implementation-specific __TK() format */
 #define __TK(_tis,_tcs,_tisx,_qtisn)  __QTISX(_qtisn)
-    
+
 #endif /* __USE_QNX_TI */
-    
+
 #endif /* __QNX__ */
 
 
 /* {{{ */
-    
+
 /* general key definitions:
- * 
+ *
  * format:
- * 
+ *
  *   terminfo name,
  *   termcap name,
  *   index in the terminfo string table (ncurses),
  *   field name in the QNX terminfo strings struct
  */
-    
+
 #define Key_backspace   __TK("kbs",   "kb",  55, _ky_backspace )
 #define Key_catab       __TK("ktbc",  "ka",  56, _ky_catab )
 #define Key_clear       __TK("kclr",  "kC",  57, _ky_clear )
@@ -239,7 +239,7 @@
 
 /* don't force pre-defining of base keys under QNX */
 #define FORCE_BASE_KEY_DEFS 0
-    
+
 /* OS specific key aliases */
 #define Key_alt_a       Key_clear
 #define Key_alt_b       Key_stab
@@ -275,7 +275,7 @@
 #define Key_alt_enter   Key_ctl_enter       /* map ALT-ENTER to CTRL-ENTER */
 
 #ifdef __USE_QNX_TI
-    
+
 /* OS/implementation specific key-define struct */
 typedef struct qnx_key_define_s {
     int mc_code;
@@ -385,7 +385,7 @@ void load_qnx_key_defines (void)
         if (term_setup_ok != 1)
             return;
 
-        for (idx = 0; 
+        for (idx = 0;
              idx < sizeof(xtra_key_defines) / sizeof(xtra_key_defines[0]);
              idx++) {
             str_idx = xtra_key_defines[idx].str_idx;

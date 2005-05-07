@@ -131,10 +131,10 @@ void init_pair (int, char *, char *);
     /* This is fast, but unusefull if ! pc_system - doesn't use
        Alt_Char_Pairs [] :( */
 #else
-    /* This is slow, but works well :| */ 
-#   define one_vline() SLsmg_draw_object (SLsmg_get_row(), SLsmg_get_column(), slow_terminal ? ' ' : ACS_VLINE) 
-#   define one_hline() SLsmg_draw_object (SLsmg_get_row(), SLsmg_get_column(), slow_terminal ? ' ' : ACS_HLINE) 
-#endif    
+    /* This is slow, but works well :| */
+#   define one_vline() SLsmg_draw_object (SLsmg_get_row(), SLsmg_get_column(), slow_terminal ? ' ' : ACS_VLINE)
+#   define one_hline() SLsmg_draw_object (SLsmg_get_row(), SLsmg_get_column(), slow_terminal ? ' ' : ACS_HLINE)
+#endif
 
 void enable_interrupt_key ();
 void disable_interrupt_key ();

@@ -72,7 +72,7 @@ DisposeSReadlineInfo(SReadlineInfo *srl)
  * set buf[nread - 1] = '\0', if nread > 0.
  */
 
-int 
+int
 SReadline(SReadlineInfo *srl, char *const linebuf, size_t linebufsize)
 {
 	int err;

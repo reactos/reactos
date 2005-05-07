@@ -6,7 +6,7 @@
  * Note: It should still be simple to backport the old GNU Readline
  * support in here.  Feel free to do that if you hate NcFTP's built-in
  * implementation.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -163,7 +163,7 @@ InitTermcap(void)
 	gXterm = gXtermTitle = 1;
 #else
 	const char *term;
-	
+
 	gXterm = gXtermTitle = 0;
 	gCurXtermTitleStr[0] = '\0';
 
@@ -595,7 +595,7 @@ CompletionFunction(const char *text, int state)
 	} else if ((flags & kCompletePrefOpt) != 0) {
 		cp = PrefOptCompletionFunction(text, state);
 		return cp;
-	}	
+	}
 	return NULL;
 }	/* CompletionFunction */
 

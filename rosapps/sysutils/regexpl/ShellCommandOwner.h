@@ -1,4 +1,4 @@
-/* $Id: ShellCommandOwner.h,v 1.2 2001/01/13 23:55:37 narnaoud Exp $ */
+/* $Id$ */
 
 // ShellCommandOwner.h: interface for the CShellCommandOwner class.
 //
@@ -10,7 +10,7 @@
 #include "ShellCommand.h"
 #include "RegistryTree.h"
 
-class CShellCommandOwner : public CShellCommand  
+class CShellCommandOwner : public CShellCommand
 {
 public:
 	CShellCommandOwner(CRegistryTree& rTree);

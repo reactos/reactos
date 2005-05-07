@@ -1,14 +1,14 @@
 /* Routines invoked by a function key
    They normally operate on the current panel.
-   
+
    Copyright (C) 1994, 1995 Miguel de Icaza
    Copyright (C) 1994, 1995 Janne Kukonlehto
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -151,7 +151,7 @@ int view_file_at_line (char *filename, int plain_view, int internal, int start_l
         int changed_hex_mode = 0;
         int changed_nroff_flag = 0;
         int changed_magic_flag = 0;
-    
+
         altered_hex_mode = 0;
         altered_nroff_flag = 0;
         altered_magic_flag = 0;
@@ -181,14 +181,14 @@ int view_file_at_line (char *filename, int plain_view, int internal, int start_l
 	    sprintf (view_entry, "View:%d", start_line);
 	else
 	    strcpy (view_entry, "View");
-	
+
 	if (!regex_command (filename, view_entry, NULL, &move_dir)){
 	    view (0, filename, &move_dir, start_line);
 	    repaint_screen ();
 	}
     } else {
 	char *localcopy;
-	
+
 	if (!viewer){
 	    viewer = getenv ("PAGER");
 	    if (!viewer)
@@ -203,7 +203,7 @@ int view_file_at_line (char *filename, int plain_view, int internal, int start_l
 	    }
 	    execute_internal (viewer, localcopy);
 	    mc_ungetlocalcopy (filename, localcopy, 0);
-	} else 
+	} else
 	    execute_internal (viewer, filename);
     }
     return move_dir;
@@ -243,7 +243,7 @@ static void do_view_cmd (WPanel *panel, int normal)
 {
     int dir, file_idx;
     panel = get_a_panel (panel);
-    
+
     /* Directories are viewed by changing to them */
     if (S_ISDIR (selection (panel)->buf.st_mode) ||
 	link_isdir (selection (panel))){
@@ -255,7 +255,7 @@ static void do_view_cmd (WPanel *panel, int normal)
 	}
 	do_cd (selection (panel)->fname, cd_exact);
 	return;
-	
+
     }
 
     file_idx = panel->selected;
@@ -369,10 +369,10 @@ void copymove_cmd_with_default (int copy, char *thedefault)
 void mkdir_cmd (WPanel *panel)
 {
     char *dir;
-    
+
     panel = get_a_panel (panel);
     dir = input_expand_dialog (_(" Mkdir "), _(" Enter directory name:") , "");
-    
+
     if (!dir)
 	return;
 
@@ -423,9 +423,9 @@ void set_panel_filter (WPanel *p)
 {
     char *reg_exp;
     char *x;
-    
+
     x = p->filter ? p->filter : easy_patterns ? "*" : ".";
-	
+
     reg_exp = input_dialog (_(" Filter "), _(" Set expression for filtering filenames"), x);
     if (!reg_exp)
 	return;
@@ -454,7 +454,7 @@ void reread_cmd (void)
 	flag = strcmp (cpanel->cwd, opanel->cwd) ? UP_ONLY_CURRENT : 0;
     else
 	flag = UP_ONLY_CURRENT;
-	
+
     update_panels (UP_RELOAD|flag, UP_KEEPSEL);
     repaint_screen ();
 }
@@ -513,7 +513,7 @@ void select_cmd_panel (WPanel *panel)
     reg_exp = input_dialog (_(" Select "), "", easy_patterns ? "*" : ".");
     if (!reg_exp)
 	return;
-    
+
     reg_exp_t = reg_exp;
 
     /* Check if they specified a directory */
@@ -565,9 +565,9 @@ void unselect_cmd_panel (WPanel *panel)
     reg_exp = input_dialog (_(" Unselect "),"", easy_patterns ? "*" : ".");
     if (!reg_exp)
 	return;
-    
+
     reg_exp_t = reg_exp;
-    
+
     /* Check if they specified directory matching */
     if (*reg_exp_t == PATH_SEP){
         dirflag = 1;
@@ -578,7 +578,7 @@ void unselect_cmd_panel (WPanel *panel)
         reg_exp_t [strlen(reg_exp_t) - 1] = 0;
     }
     for (i = 0; i < panel->count; i++){
-        if (!strcmp (panel->dir.list [i].fname, "..")) 
+        if (!strcmp (panel->dir.list [i].fname, ".."))
             continue;
 	if (S_ISDIR (panel->dir.list [i].buf.st_mode)){
 	    if (!dirflag)
@@ -654,10 +654,10 @@ void menu_edit_cmd (void)
     char *buffer;
     char *menufile;
     int dir = 0;
-    
+
     dir = query_dialog (
 	_("Menu file edit"),
-	_(" Which menu file will you edit? "), 
+	_(" Which menu file will you edit? "),
 	0, geteuid() ? 2 : 3,
 	_("&Local"), _("&Home"), _("&System Wide")
     );
@@ -674,7 +674,7 @@ void menu_edit_cmd (void)
 	    buffer = concat_dir_and_file (home_dir, MC_HOME_MENU);
 	    check_for_default (menufile, buffer);
 	    break;
-	
+
 	case 2:
 	    buffer = concat_dir_and_file (mc_home, MC_GLOBAL_MENU);
 	    break;
@@ -771,12 +771,12 @@ compare_dir (WPanel *panel, WPanel *other, enum CompareMode mode)
     char *src_name, *dst_name;
 
     panel = get_a_panel (panel);
-    
+
     /* No marks by default */
     panel->marked = 0;
     panel->total = 0;
     panel->dirs_marked = 0;
-    
+
     /* Handle all files in the panel */
     for (i = 0; i < panel->count; i++){
 	file_entry *source = &panel->dir.list[i];
@@ -806,16 +806,16 @@ compare_dir (WPanel *panel, WPanel *other, enum CompareMode mode)
 		if (source->buf.st_mtime < target->buf.st_mtime)
 		    continue;
 	    }
-	    
+
 	    /* Newer version with different size is marked */
 	    if (source->buf.st_size != target->buf.st_size){
 		do_file_mark (panel, i, 1);
 		continue;
-		
+
 	    }
 	    if (mode == compare_size_only)
 		continue;
-	    
+
 	    if (mode == compare_quick){
 		/* Thorough compare off, compare only time stamps */
 		/* Mark newer version, don't mark version with the same date */
@@ -963,12 +963,12 @@ view_other_cmd (void)
 
 	reset_prog_mode ();
 	keypad(stdscr, TRUE);
-#ifndef HAVE_X	
+#ifndef HAVE_X
 	if (use_mouse_p)
 	    init_mouse ();
         if (alternate_plus_minus)
             application_keypad_mode ();
-#endif	    
+#endif
 
 #ifdef HAVE_SUBSHELL_SUPPORT
 	if (use_subshell){
@@ -1008,9 +1008,9 @@ do_link (int symbolic_link, char *fname)
 	if (!S_ISREG (s.st_mode))
 	    return;
     }
-    
+
     if (!symbolic_link){
-        src = copy_strings (_(" Link "), name_trunc (fname, 46), 
+        src = copy_strings (_(" Link "), name_trunc (fname, 46),
             _(" to:"), NULL);
 	dest = input_expand_dialog (_(" Link "), src, "");
 	free (src);
@@ -1030,7 +1030,7 @@ do_link (int symbolic_link, char *fname)
 	/* suggest the full path for symlink */
         char s[MC_MAXPATHLEN];
         char d[MC_MAXPATHLEN];
-	
+
         strcpy(s, cpanel->cwd);
         if ( ! ((s[0] == '/') && (s[1] == 0)))
             strcat(s, "/");
@@ -1039,7 +1039,7 @@ do_link (int symbolic_link, char *fname)
 	    strcpy(d, opanel->cwd);
 	else
 	    strcpy (d,"");
-	
+
         if ( ! ((d[0] == '/') && (d[1] == 0)))
             strcat(d, "/");
         symlink_dialog (s, d, &dest, &src);
@@ -1082,7 +1082,7 @@ void edit_symlink_cmd (void)
 	char buffer [MC_MAXPATHLEN], *p = selection (cpanel)->fname;
 	int i;
 	char *dest, *q = copy_strings (_(" Symlink "), name_trunc (p, 32), _(" points to:"), NULL);
-	
+
 	i = readlink (p, buffer, MC_MAXPATHLEN);
 	if (i > 0) {
 	    buffer [i] = 0;
@@ -1115,7 +1115,7 @@ void other_symlink_cmd (void)
         return;
     p = concat_dir_and_file (cpanel->cwd, selection (cpanel)->fname);
     r = concat_dir_and_file (opanel->cwd, selection (cpanel)->fname);
-    
+
     q = copy_strings (_(" Link symbolically "), name_trunc (p, 32), _(" to:"), NULL);
     dest = input_expand_dialog (_(" Relative symlink "), q, r);
     if (dest) {
@@ -1173,7 +1173,7 @@ char *get_random_hint (void)
     char *hintfile;
     int  len;
     int start;
-    
+
     /* Do not change hints more often than one minute */
 
 #ifdef SCO_FLAVOR
@@ -1187,10 +1187,10 @@ char *get_random_hint (void)
 #else
     static int last_sec;
     static struct timeval tv;
-    
+
     gettimeofday (&tv, NULL);
     if (!(tv.tv_sec> last_sec+60))
-	return strdup (""); 
+	return strdup ("");
     last_sec = tv.tv_sec;
 #endif
 
@@ -1208,7 +1208,7 @@ char *get_random_hint (void)
     /* get a random entry */
     len = strlen (data);
     start = rand () % len;
-    
+
     for (;start; start--){
 	if (data [start] == '\n'){
 	    start++;
@@ -1249,9 +1249,9 @@ static void nice_cd (char *text, char *xtext, char *help, char *prefix, int to_h
 
     if (strncmp (prefix, machine, strlen (prefix)) == 0)
 	cd_path = copy_strings (machine, to_home ? "/~/" : NULL, NULL);
-    else 
+    else
 	cd_path = copy_strings (prefix, machine, to_home ? "/~/" : NULL, NULL);
-    
+
     if (do_panel_cd (MENU_PANEL, cd_path, 0))
 	directory_history_add (MENU_PANEL, (MENU_PANEL)->cwd);
     else
@@ -1277,7 +1277,7 @@ void source_routing (void)
 {
     char *source;
     struct hostent *hp;
-    
+
     source = input_dialog (_(" Socket source routing setup "),
 			   _(" Enter host name to use as a source routing hop: ")n,
 			   "");
@@ -1310,7 +1310,7 @@ void quick_cd_cmd (void)
 
     if (p && *p) {
         char *q = copy_strings ("cd ", p, NULL);
-        
+
         do_cd_command (q);
         free (q);
     }
@@ -1350,7 +1350,7 @@ void dirsizes_cmd (void)
     strcpy (cmd, dirsizes_command);
     p = strchr (cmd, 0);
     for (i = 0; i < panel->count; i++)
-        if (S_ISDIR (panel->dir.list [i].buf.st_mode) && 
+        if (S_ISDIR (panel->dir.list [i].buf.st_mode) &&
             strcmp (panel->dir.list [i].fname, "..")) {
             strcpy (p, panel->dir.list [i].fname);
             p = strchr (p, 0);
@@ -1361,8 +1361,8 @@ void dirsizes_cmd (void)
     f = popen (cmd, "r");
     free (cmd);
     if (f != NULL) {
-        /* Assume that du will display the directories in the order 
-         * I've passed to it :( 
+        /* Assume that du will display the directories in the order
+         * I've passed to it :(
          */
         i = 0;
         p = xmalloc (1024, "dirsizes_cmd");
@@ -1379,8 +1379,8 @@ void dirsizes_cmd (void)
                     if (!strncmp (q, panel->dir.list [i].fname,
                         r - q)) {
                         if (panel->dir.list [i].f.marked)
-                            panel->total += j - 
-			    ((panel->has_dir_sizes) ? panel->dir.list [i].buf.st_size : 0); 
+                            panel->total += j -
+			    ((panel->has_dir_sizes) ? panel->dir.list [i].buf.st_size : 0);
                         panel->dir.list [i].buf.st_size = j;
                         break;
                     }
@@ -1393,7 +1393,7 @@ void dirsizes_cmd (void)
 	    message (0, _("Show directory sizes"), _("Pipe close failed"));
 	else
 #else /* SCO_FLAVOR */
- 	/* 
+ 	/*
  	**	SCO reports about error while all seems to be ok. Just ignore it...
  	**	(alex@bcs.zaporizhzhe.ua)
  	*/
@@ -1411,11 +1411,11 @@ void
 save_setup_cmd (void)
 {
     char *str;
-    
+
     save_setup ();
     sync_profiles ();
     str = copy_strings ( _(" Setup saved to ~/"), PROFILE_NAME, NULL);
-    
+
 #ifdef HAVE_GNOME
     set_hintbar (str);
 #else
@@ -1428,25 +1428,25 @@ void
 configure_panel_listing (WPanel *p, int view_type, int use_msformat, char *user, char *status)
 {
     int err;
-    
-    p->user_mini_status = use_msformat; 
+
+    p->user_mini_status = use_msformat;
     p->list_type = view_type;
-    
+
     if (view_type == list_user || use_msformat){
 	free (p->user_format);
 	p->user_format = user;
-    
+
 	free (p->user_status_format [view_type]);
 	p->user_status_format [view_type] = status;
-    
+
 	err = set_panel_formats (p);
-	
+
 	if (err){
 	    if (err & 0x01){
 	    	free (p->user_format);
 		p->user_format  = strdup (DEFAULT_USER_FORMAT);
 	    }
-		
+
 	    if (err & 0x02){
 		free (p->user_status_format [view_type]);
 		p->user_status_format [view_type]  = strdup (DEFAULT_USER_FORMAT);
@@ -1460,7 +1460,7 @@ configure_panel_listing (WPanel *p, int view_type, int use_msformat, char *user,
 
     set_panel_formats (p);
     paint_panel (p);
-    
+
     do_refresh ();
 }
 
@@ -1541,7 +1541,7 @@ set_basic_panel_listing_to (int panel_index, int listing_mode)
     p->list_type = listing_mode;
     if (set_panel_formats (p))
 	return 0;
-	
+
     paint_panel (p);
     do_refresh ();
     return 1;
@@ -1554,7 +1554,7 @@ toggle_listing_cmd (void)
     WPanel *p = (WPanel *) get_panel_widget (current);
     int list_mode = p->list_type;
     int m;
-    
+
     switch (list_mode){
     case list_full:
     case list_brief:

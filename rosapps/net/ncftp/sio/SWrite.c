@@ -133,7 +133,7 @@ SWrite(int sfd, const char *const buf0, size_t size, int tlen, int swopts)
 					/* ready */
 					break;
 				} else if (result == 0) {
-					/* timeout */		
+					/* timeout */
 					nwrote = size - nleft;
 					if (nwrote > 0)
 						return (nwrote);
@@ -146,7 +146,7 @@ SWrite(int sfd, const char *const buf0, size_t size, int tlen, int swopts)
 			}
 			firstWrite = 0;
 		}
-		
+
 #if defined(WIN32) || defined(_WINDOWS)
 		nwrote = send(sfd, buf, size, 0);
 #else

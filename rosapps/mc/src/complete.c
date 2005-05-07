@@ -1,15 +1,15 @@
 /* Input line filename/username/hostname/variable/command completion.
    (Let mc type for you...)
-   
+
    Copyright (C) 1995 The Free Software Foundation
-   
+
    Written by: 1995 Jakub Jelinek
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -96,7 +96,7 @@ char *filename_completion_function (char *text, int state)
 
         if (dirname)
             free (dirname);
-        if (filename) 
+        if (filename)
             free (filename);
         if (users_dirname)
             free (users_dirname);
@@ -161,7 +161,7 @@ char *filename_completion_function (char *text, int state)
 	{
 	    char *tmp = xmalloc (3 + strlen (dirname) + NLENGTH (entry), "Filename completion");
 	    struct stat tempstat;
-	    
+
 	    strcpy (tmp, dirname);
 	    strcat (tmp, PATH_SEP_STR);
 	    strcat (tmp, entry->d_name);
@@ -170,7 +170,7 @@ char *filename_completion_function (char *text, int state)
 	    if (!stat (tmp, &tempstat)){
 	    	uid_t my_uid = getuid ();
 	    	gid_t my_gid = getgid ();
-	    	
+
 	        if (!S_ISDIR (tempstat.st_mode)){
 	            isdir = 0;
 	            if ((!my_uid && (tempstat.st_mode & 0111)) ||
@@ -268,7 +268,7 @@ char *username_completion_function (char *text, int state)
         return NULL;
     } else {
         char *temp = xmalloc (3 + strlen (entry->pw_name), "Username completion");
-        
+
         *temp = '~';
         strcpy (temp + 1, entry->pw_name);
         strcat (temp, PATH_SEP_STR);
@@ -374,10 +374,10 @@ static void fetch_hosts (char *filename)
 	    name [i - start] = 0;
 	    {
 	    	char **host_p;
-	    	
+
 	    	if (hosts_p - hosts >= hosts_alloclen){
 	    	    int j = hosts_p - hosts;
-	    	
+
 	    	    hosts = realloc ((void *)hosts, ((hosts_alloclen += 30) + 1) * sizeof (char *));
 	    	    hosts_p = hosts + j;
 	        }
@@ -402,7 +402,7 @@ char *hostname_completion_function (char *text, int state)
 
     if (!state){ /* Initialization stuff */
         char *p;
-        
+
     	if (hosts != NULL){
     	    for (host_p = hosts; *host_p; host_p++)
     	    	free (*host_p);
@@ -416,7 +416,7 @@ char *hostname_completion_function (char *text, int state)
     	textstart = (*text == '@') ? 1 : 0;
     	textlen = strlen (text + textstart);
     }
-    
+
     while (*host_p){
     	if (!textlen)
     	    break; /* Match all of them */
@@ -424,7 +424,7 @@ char *hostname_completion_function (char *text, int state)
     	    break;
     	host_p++;
     }
-    
+
     if (!*host_p){
     	for (host_p = hosts; *host_p; host_p++)
     	    free (*host_p);
@@ -460,13 +460,13 @@ char *command_completion_function (char *text, int state)
                                       "case", "esac", "for", "select", "while",
                                       "until", "do", "done", "in", "function" , 0};
     static char *bash_builtins [] = { "alias", "bg", "bind", "break", "builtin",
-    				      "cd", "command", "continue", "declare", 
+    				      "cd", "command", "continue", "declare",
     				      "dirs", "echo", "enable", "eval", "exec",
     				      "exit", "export", "fc", "fg", "getopts",
     				      "hash", "help", "history", "jobs", "kill",
     				      "let", "local", "logout", "popd", "pushd",
     				      "pwd", "read", "readonly", "return", "set",
-    				      "shift", "source", "suspend", "test", 
+    				      "shift", "source", "suspend", "test",
     				      "times", "trap", "type", "typeset",
     				      "ulimit", "umask", "unalias", "unset",
     				      "wait" , 0};
@@ -494,7 +494,7 @@ char *command_completion_function (char *text, int state)
 	    }
 	}
     }
-    
+
     if (isabsolute){
         p = filename_completion_function (text, state);
         if (!p)
@@ -502,7 +502,7 @@ char *command_completion_function (char *text, int state)
         return p;
     }
 
-    found = NULL;    
+    found = NULL;
     switch (phase){
     	case 0: /* Reserved words */
 	    while (*words){
@@ -527,7 +527,7 @@ char *command_completion_function (char *text, int state)
 	    while (!found){
 	        if (!cur_word){
 		    char *expanded;
-		    
+
 	            if (!*cur_path)
 	            	break;
 		    expanded = tilde_expand (cur_path);
@@ -553,7 +553,7 @@ char *command_completion_function (char *text, int state)
 	        }
 	    }
     }
-    
+
     if (!found){
         look_for_executables = 0;
         if (path)
@@ -567,7 +567,7 @@ char *command_completion_function (char *text, int state)
         return p;
     }
     return found;
-    
+
 }
 
 int match_compare (const void *a, const void *b)
@@ -580,7 +580,7 @@ int match_compare (const void *a, const void *b)
    completions follows.
    You have to supply your own CompletionFunction with the word you
    want to complete as the first argument and an count of previous matches
-   as the second. 
+   as the second.
    In case no matches were found we return NULL. */
 char **completion_matches (char *text, CompletionFunction entry_function)
 {
@@ -618,11 +618,11 @@ char **completion_matches (char *text, CompletionFunction entry_function)
 	    match_list[1] = (char *)NULL;
         } else {
             int j;
-            
+
 	    qsort (match_list + 1, matches, sizeof (char *), match_compare);
 
 	    /* And compare each member of the list with
-	       the next, finding out where they stop matching. 
+	       the next, finding out where they stop matching.
 	       If we find two equal strings, we have to put one away... */
 
 	    j = i + 1;
@@ -632,7 +632,7 @@ char **completion_matches (char *text, CompletionFunction entry_function)
 
 		for (si = 0;(c1 = match_list [i][si]) && (c2 = match_list [j][si]); si++)
 		    if (c1 != c2) break;
-		
+
 		if (!c1 && !match_list [j][si]){ /* Two equal strings */
 		    free (match_list [j]);
 		    j++;
@@ -660,10 +660,10 @@ char **completion_matches (char *text, CompletionFunction entry_function)
 int check_is_cd (char *text, int start, int flags)
 {
     char *p, *q = text + start;
-    	    
+
     for (p = text; *p && p < q && (*p == ' ' || *p == '\t'); p++);
-    if (((flags & INPUT_COMPLETE_COMMANDS) && 
-        !strncmp (p, "cd", 2) && (p [2] == ' ' || p [2] == '\t') && 
+    if (((flags & INPUT_COMPLETE_COMMANDS) &&
+        !strncmp (p, "cd", 2) && (p [2] == ' ' || p [2] == '\t') &&
         p + 2 < q) ||
         (flags & INPUT_COMPLETE_CD))
         return 1;
@@ -700,7 +700,7 @@ char **try_complete (char *text, int *start, int *end, int flags)
             register int this_char, prev_char;
 
             in_command_position++;
-            
+
             if (i){
                 /* Handle the two character tokens `>&', `<&', and `>|'.
                    We are not in a command position after one of these. */
@@ -720,14 +720,14 @@ char **try_complete (char *text, int *start, int *end, int flags)
     	p = strrchr (word, '`');
     if (flags & (INPUT_COMPLETE_COMMANDS | INPUT_COMPLETE_VARIABLES))
         q = strrchr (word, '$');
-    if (flags & INPUT_COMPLETE_HOSTNAMES)    
+    if (flags & INPUT_COMPLETE_HOSTNAMES)
         r = strrchr (word, '@');
     if (q && q [1] == '(' && INPUT_COMPLETE_COMMANDS){
     	if (q > p)
     	    p = q + 1;
     	q = NULL;
     }
-    
+
     /* Command substitution? */
     if (p > q && p > r){
         matches = completion_matches (p + 1, command_completion_function);
@@ -742,14 +742,14 @@ char **try_complete (char *text, int *start, int *end, int flags)
             *start += q - word;
     }
 
-    /* Starts with '@', then look through the known hostnames for 
+    /* Starts with '@', then look through the known hostnames for
        completion first. */
     else if (r > p && r > q){
         matches = completion_matches (r, hostname_completion_function);
         if (matches)
             *start += r - word;
     }
-        
+
     /* Starts with `~' and there is no slash in the word, then
        try completing this word as a username. */
     if (!matches && *word == '~' && (flags & INPUT_COMPLETE_USERNAMES) && !strchr (word, PATH_SEP))
@@ -761,7 +761,7 @@ char **try_complete (char *text, int *start, int *end, int flags)
        and command names. */
     if (!matches && in_command_position)
         matches = completion_matches (word, command_completion_function);
-        
+
     else if (!matches && (flags & INPUT_COMPLETE_FILENAMES)){
     	if (is_cd)
     	    ignore_filenames = 1;
@@ -769,7 +769,7 @@ char **try_complete (char *text, int *start, int *end, int flags)
     	ignore_filenames = 0;
     	if (!matches && is_cd && *word != PATH_SEP && *word != '~'){
     	    char *p, *q = text + *start;
-    	    
+
     	    for (p = text; *p && p < q && (*p == ' ' || *p == '\t'); p++);
     	    if (!strncmp (p, "cd", 2))
     	        for (p += 2; *p && p < q && (*p == ' ' || *p == '\t'); p++);
@@ -785,7 +785,7 @@ char **try_complete (char *text, int *start, int *end, int flags)
 		    s = strchr (cdpath, ':');
 		    if (s == NULL)
 		        s = strchr (cdpath, 0);
-		    c = *s; 
+		    c = *s;
 		    *s = 0;
 		    if (*cdpath){
 			r = concat_dir_and_file (cdpath, word);
@@ -800,7 +800,7 @@ char **try_complete (char *text, int *start, int *end, int flags)
     	    }
     	}
     }
-    	
+
     if (word)
     	free (word);
 
@@ -810,7 +810,7 @@ char **try_complete (char *text, int *start, int *end, int flags)
 void free_completions (WInput *in)
 {
     char **p;
-    
+
     if (!in->completions)
     	return;
     for (p=in->completions; *p; p++)
@@ -861,7 +861,7 @@ static int query_callback (Dlg_head * h, int Par, int Msg)
 	    dlg_erase (h);
     	    draw_box (h, 0, 0, query_height, query_width);
     	    break;
-    	    
+
     	case DLG_KEY:
 	    switch (Par) {
 		case KEY_LEFT:
@@ -869,7 +869,7 @@ static int query_callback (Dlg_head * h, int Par, int Msg)
 	    	    h->ret_value = 0;
 		    dlg_stop (h);
 	    	    return 1;
-	    	    
+
 	    	case 0177:
 	    	case KEY_BACKSPACE:
 	    	case XCTRL('h'):
@@ -879,7 +879,7 @@ static int query_callback (Dlg_head * h, int Par, int Msg)
 	    	    	return 1;
 	    	    } else {
 	    	    	WLEntry *e, *e1;
-	    	    	
+
 	    	    	e1 = e = ((WListbox *)(h->current->widget))->list;
 	    	    	do {
 	    	    	    if (!strncmp (input->buffer + start, e1->text, end - start - 1)){
@@ -894,7 +894,7 @@ static int query_callback (Dlg_head * h, int Par, int Msg)
 	    	    	} while (e != e1);
 	    	    }
 	    	    return 1;
-	    	    
+
                 default:
 	    	    if (Par > 0xff || !is_printable (Par)){
 	    	    	if (is_in_input_map (input, Par) == 2){
@@ -911,20 +911,20 @@ static int query_callback (Dlg_head * h, int Par, int Msg)
 	    	    	int need_redraw = 0;
 	    	    	int low = 4096;
 	    	    	char *last_text = NULL;
-	    	    	
+
 	    	    	e1 = e = ((WListbox *)(h->current->widget))->list;
 	    	    	do {
 	    	    	    if (!strncmp (input->buffer + start, e1->text, end - start)){
 	    	    	        if (e1->text [end - start] == Par){
 	    	    	            if (need_redraw){
 	    	    	            	register int c1, c2, si;
-	    	    	            	
-					for (si = end - start + 1; 
+
+					for (si = end - start + 1;
 					     (c1 = last_text [si]) &&
 					     (c2 = e1->text [si]); si++)
 		    			    if (c1 != c2)
 		    			    	break;
-	        			if (low > si) 
+	        			if (low > si)
 	        			    low = si;
 					last_text = e1->text;
 					need_redraw = 2;
@@ -988,7 +988,7 @@ int complete_engine (WInput *in, int what_to_do)
     	    char **p, *q;
     	    Dlg_head *query_dlg;
     	    WListbox *query_list;
-    	    
+
     	    for (p=in->completions + 1; *p; count++, p++)
     	    	if ((i = strlen (*p)) > maxlen)
     	    	    maxlen = i;

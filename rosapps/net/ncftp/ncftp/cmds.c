@@ -2,7 +2,7 @@
  *
  * Copyright (c) 1992-2001 by Mike Gleason.
  * All rights reserved.
- * 
+ *
  */
 
 #include "syshdrs.h"
@@ -396,7 +396,7 @@ void
 PrintResp(LineListPtr llp)
 {
 	LinePtr lp;
-	
+
 	if (llp != NULL) {
 		for (lp = llp->first; lp != NULL; lp = lp->next) {
 			if ((lp == llp->first) && (ISTRNCMP(lp->line, "CWD command", 11) == 0))
@@ -441,7 +441,7 @@ nFTPChdirAndGetCWD(const FTPCIPtr cip, const char *cdCwd, const int quietMode)
 		} else {
 			cdCwdLen = strlen(cdCwd);
 			if (strcmp(cdCwd, "..") == 0) {
-				result = RCmd(cip, rp, "CDUP"); 	
+				result = RCmd(cip, rp, "CDUP");
 			} else {
 				result = RCmd(cip, rp, "CWD %s", cdCwd);
 			}
@@ -517,7 +517,7 @@ Chdirs(FTPCIPtr cip, const char *const cdCwd)
 		cip->errNo = kErrInvalidDirParam;
 		return result;
 	}
-	
+
 	if ((cdCwd[0] == '\0') || (strcmp(cdCwd, ".") == 0)) {
 		result = 0;
 		return (result);
@@ -723,7 +723,7 @@ EchoCmd(const int argc, const char **const argv, const CommandPtr cmdp, const Ar
 					if (np > 0)
 						(void) printf(" ");
 					(void) printf("%s", lp->line);
-					np++;	
+					np++;
 				}
 			}
 		}
@@ -756,7 +756,7 @@ NcFTPConfirmResumeDownloadProc(
 		return (kConfirmResumeProcSaidBestGuess);
 
 	tstr[sizeof(tstr) - 1] = '\0';
-	(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &localmtime)); 
+	(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &localmtime));
 	(void) printf(
 #if defined(HAVE_LONG_LONG) && defined(PRINTF_LONG_LONG_LLD)
 		"\nThe local file \"%s\" already exists.\n\tLocal:  %12lld bytes, dated %s.\n",
@@ -773,7 +773,7 @@ NcFTPConfirmResumeDownloadProc(
 	);
 
 	if ((remotemtime != kModTimeUnknown) && (remotesize != kSizeUnknown)) {
-		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &remotemtime)); 
+		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &remotemtime));
 		(void) printf(
 #if defined(HAVE_LONG_LONG) && defined(PRINTF_LONG_LONG_LLD)
 			"\tRemote: %12lld bytes, dated %s.\n",
@@ -805,7 +805,7 @@ NcFTPConfirmResumeDownloadProc(
 			remotesize
 		);
 	} else if (remotemtime != kModTimeUnknown) {
-		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &remotemtime)); 
+		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &remotemtime));
 		(void) printf(
 			"\tRemote: size unknown, dated %s.\n",
 			tstr
@@ -1091,7 +1091,7 @@ commands.  'help <command>' gives a brief description of <command>.\n\n");
 
 		/* Leave an extra bit of whitespace for the margins between columns. */
 		widestName += 2;
-		
+
 		nCols = (screenColumns + 0) / widestName;
 		nRows = nCmds2Print / nCols;
 		if ((nCmds2Print % nCols) > 0)
@@ -1205,7 +1205,7 @@ RunBookmarkEditor(char *selectedBmName, size_t dsize)
 	OurInstallationPath(ncftpbookmarks, sizeof(ncftpbookmarks), "ncftpbookmarks.exe");
 
 
-	hMailSlot = CreateMailslot(kNcFTPBookmarksMailslot, kNcFTPBookmarksMailslotMsgSize, MAILSLOT_WAIT_FOREVER, NULL); 
+	hMailSlot = CreateMailslot(kNcFTPBookmarksMailslot, kNcFTPBookmarksMailslotMsgSize, MAILSLOT_WAIT_FOREVER, NULL);
 
 	if (hMailSlot == INVALID_HANDLE_VALUE) {
 		SysPerror("CreateMailslot");
@@ -1213,7 +1213,7 @@ RunBookmarkEditor(char *selectedBmName, size_t dsize)
 		(void) fprintf(stderr, "%s", "This means if you select a bookmark to connect to that NcFTP\n");
 		(void) fprintf(stderr, "%s", "will not get the message from %s.\n", "ncftpbookmarks.exe");
 	}
- 
+
 	winExecResult = WinExec(prog, SW_SHOWNORMAL);
 	if (winExecResult <= 31) switch (winExecResult) {
 		case ERROR_BAD_FORMAT:
@@ -1241,7 +1241,7 @@ RunBookmarkEditor(char *selectedBmName, size_t dsize)
 			&dwRead,
 			NULL
 			);
-		
+
 		if (!rc) {
 			SysPerror("ReadFile");
 		} else {
@@ -1895,7 +1895,7 @@ LookupCmd(const int argc, const char **const argv, const CommandPtr cmdp, const 
 
 	ARGSUSED(gUnusedArg);
 	shortMode = 1;
-	
+
 	GetoptReset();
 	while ((opt = Getopt(argc, argv, "v")) >= 0) {
 		if (opt == 'v')
@@ -1922,7 +1922,7 @@ LookupCmd(const int argc, const char **const argv, const CommandPtr cmdp, const 
 				Trace(-1, "    Alias:    %s\n", *cpp);
 			for (j = 0, cpp = hp->h_addr_list; *cpp != NULL; cpp++, ++j) {
 				MyInetAddr(ipStr, sizeof(ipStr), hp->h_addr_list, j);
-				Trace(-1, "    Address:  %s\n", ipStr);	
+				Trace(-1, "    Address:  %s\n", ipStr);
 			}
 		}
 	}
@@ -1975,8 +1975,8 @@ MlsCmd(const int argc, const char **const argv, const CommandPtr cmdp, const Arg
 				linePtr = nextLinePtr)
 			{
 				nextLinePtr = linePtr->next;
-				(void) fprintf(stdout, "%s\n", linePtr->line);	
-				Trace(0, "%s\n", linePtr->line);	
+				(void) fprintf(stdout, "%s\n", linePtr->line);
+				Trace(0, "%s\n", linePtr->line);
 			}
 		}
 	}
@@ -1996,8 +1996,8 @@ MlsCmd(const int argc, const char **const argv, const CommandPtr cmdp, const Arg
 				linePtr = nextLinePtr)
 			{
 				nextLinePtr = linePtr->next;
-				(void) fprintf(stdout, "%s\n", linePtr->line);	
-				Trace(0, "%s\n", linePtr->line);	
+				(void) fprintf(stdout, "%s\n", linePtr->line);
+				Trace(0, "%s\n", linePtr->line);
 			}
 		}
 	}
@@ -2198,7 +2198,7 @@ DoOpen(void)
 		OpenMsg("Connecting to %s...", ipstr);
 	} else {
 		OpenMsg("Connecting to %s via %s...", gConn.host, gConn.firewallHost);
-		Trace(0, "Fw: %s  Type: %d  User: %s  Pass: %s  Port: %u\n", 
+		Trace(0, "Fw: %s  Type: %d  User: %s  Pass: %s  Port: %u\n",
 			gConn.firewallHost,
 			gConn.firewallType,
 			gConn.firewallUser,
@@ -2245,7 +2245,7 @@ DoOpen(void)
 	gConn.printResponseProc = NcFTPOpenPrintResponseProc;
 	gConn.onConnectMsgProc = NcFTPOnConnectMessageProc;
 	gConn.onLoginMsgProc = NcFTPOnLoginMessageProc;
-	gConn.redialStatusProc = NcFTPRedialStatusProc; 
+	gConn.redialStatusProc = NcFTPRedialStatusProc;
 
 #ifdef SIGALRM
 	osigalrm = NcSignal(SIGALRM, (FTPSigProc) SIG_IGN);
@@ -2254,7 +2254,7 @@ DoOpen(void)
 #else
 	result = FTPOpenHost(&gConn);
 #endif
-	
+
 	if (gConn.firewallType == kFirewallNotInUse)
 		(void) STRNCPY(gConn.host, ohost);		/* Put it back. */
 	if (result >= 0) {
@@ -2416,7 +2416,7 @@ OpenCmd(const int argc, const char **const argv, const CommandPtr cmdp, const Ar
 	}
 
 	if (MayUseFirewall(gConn.host, gFirewallType, gFirewallExceptionList) != 0) {
-		gConn.firewallType = gFirewallType; 
+		gConn.firewallType = gFirewallType;
 		(void) STRNCPY(gConn.firewallHost, gFirewallHost);
 		(void) STRNCPY(gConn.firewallUser, gFirewallUser);
 		(void) STRNCPY(gConn.firewallPass, gFirewallPass);
@@ -2435,7 +2435,7 @@ OpenCmd(const int argc, const char **const argv, const CommandPtr cmdp, const Ar
 			(void) STRNCPY(gConn.acct, "");
 			break;
 		case 'P':
-			gConn.port = atoi(gOptArg);	
+			gConn.port = atoi(gOptArg);
 			break;
 		case 'u':
 			if (uOptInd <= argc)
@@ -2588,7 +2588,7 @@ NcFTPConfirmResumeUploadProc(
 	printf("\nThe remote file \"%s\" already exists.\n", *remotepath);
 
 	if ((localmtime != kModTimeUnknown) && (localsize != kSizeUnknown)) {
-		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &localmtime)); 
+		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &localmtime));
 		(void) printf(
 #if defined(HAVE_LONG_LONG) && defined(PRINTF_LONG_LONG_LLD)
 			"\tLocal:  %12lld bytes, dated %s.\n",
@@ -2620,7 +2620,7 @@ NcFTPConfirmResumeUploadProc(
 			localsize
 		);
 	} else if (localmtime != kModTimeUnknown) {
-		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &localmtime)); 
+		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &localmtime));
 		(void) printf(
 			"\tLocal:  size unknown, dated %s.\n",
 			tstr
@@ -2629,7 +2629,7 @@ NcFTPConfirmResumeUploadProc(
 
 	tstr[sizeof(tstr) - 1] = '\0';
 	if ((remotemtime != kModTimeUnknown) && (remotesize != kSizeUnknown)) {
-		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &remotemtime)); 
+		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &remotemtime));
 		(void) printf(
 #if defined(HAVE_LONG_LONG) && defined(PRINTF_LONG_LONG_LLD)
 			"\tRemote: %12lld bytes, dated %s.\n",
@@ -2657,7 +2657,7 @@ NcFTPConfirmResumeUploadProc(
 			remotesize
 		);
 	} else if (remotemtime != kModTimeUnknown) {
-		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &remotemtime)); 
+		(void) strftime(tstr, sizeof(tstr) - 1, "%c", localtime((time_t *) &remotemtime));
 		(void) printf(
 			"\tRemote: size unknown, dated %s.\n",
 			tstr
@@ -2971,7 +2971,7 @@ RGlobCmd(const int argc, const char **const argv, const CommandPtr cmdp, const A
 					if (np > 0)
 						(void) printf(" ");
 					(void) printf("%s", lp->line);
-					np++;	
+					np++;
 				}
 			}
 		}
@@ -3173,7 +3173,7 @@ GetStartSpoolDate(const char *s)
 	STRNCPY(s2, s);
 	cp = strchr(s2, ':');
 	if ((s2[0] == 'n') || (s2[0] == '+')) {
-		/* "now + XX hours" or 
+		/* "now + XX hours" or
 		 * "+ XX hours"
 		 */
 		cp = strchr(s2, '+');

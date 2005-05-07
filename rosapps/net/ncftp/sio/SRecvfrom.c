@@ -81,7 +81,7 @@ SRecvfrom(int sfd, char *const buf, size_t size, int fl, struct sockaddr_in *con
 	nread = 0;
 	forever {
 		alen = sizeof(struct sockaddr_in);
-				
+
 		forever {
 			errno = 0;
 			FD_ZERO(&ss);

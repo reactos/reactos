@@ -12,7 +12,7 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -93,7 +93,7 @@
 #endif
 
 /* Maxlimit for skipping updates */
-int max_dirt_limit = 
+int max_dirt_limit =
 #ifdef OS2_NT
 0;
 #else
@@ -124,7 +124,7 @@ int altered_magic_flag = 0;
 int altered_nroff_flag = 0;
 /* }}} */
 
-/* "$Id: view.c,v 1.1 2001/12/30 09:55:20 sedwards Exp $" */
+/* "$Id$" */
 
 static char hex_char[] = "0123456789ABCDEF";
 
@@ -144,24 +144,24 @@ void
 free_file (WView *view)
 {
     int i;
-    
+
 #ifdef HAVE_MMAP
 
     if (view->mmapping){
 	mc_munmap (view->data, view->s.st_size);
 	close_view_file (view);
-    } else 
+    } else
 #endif /* HAVE_MMAP */
     {
 	if (view->reading_pipe){
 	    /* Check error messages */
 	    if (!view->have_frame)
 		check_error_pipe ();
-	    
+
 	    /* Close pipe */
 	    pclose (view->stdfile);
 	    view->stdfile = NULL;
-	    
+
 	    /* Ignore errors because we don't want to hear about broken pipe */
 	    close_error_pipe (-1, NULL);
 	} else
@@ -225,7 +225,7 @@ get_byte (WView *view, int byte_index)
     int offset = byte_index % VIEW_PAGE_SIZE;
     int i, n;
     block_ptr_t *tmp;
-    
+
     if (view->growing_buffer){
 	if (page > view->blocks){
 	    tmp = xmalloc (sizeof (block_ptr_t) * page, "get_byte");
@@ -233,7 +233,7 @@ get_byte (WView *view, int byte_index)
 		bcopy (view->block_ptr, tmp, sizeof (block_ptr_t) *
 		       view->blocks);
 		free (view->block_ptr);
-	    } 
+	    }
 	    view->block_ptr = tmp;
 	    for (i = view->blocks; i < page; i++){
 		char *p = malloc (VIEW_PAGE_SIZE);
@@ -300,10 +300,10 @@ put_editkey (WView *view, unsigned char key)
 
     if (!view->hexedit_mode || view->growing_buffer != 0)
         return;
- 
+
     /* Has there been a change at this position ? */
     node = view->change_list;
-    while (node) { 
+    while (node) {
         if (node->offset != view->edit_cursor)
             node = node->next;
         else
@@ -342,7 +342,7 @@ put_editkey (WView *view, unsigned char key)
 
         if (node) {
 #ifndef HAVE_MMAP
-			/* 
+			/*
 			**	alex@bcs.zaporizhzhe.ua: here we are using file copy
 			**	completely loaded into memory, so we can replace bytes
 			**	in view->data array to allow changes to be reflected
@@ -381,7 +381,7 @@ save_edit_changes (WView *view)
 {
     struct hexedit_change_node *node = view->change_list;
     int fp;
-    
+
     fp = open (view->filename, O_WRONLY);
     if (fp >= 0) {
         while (node) {
@@ -399,17 +399,17 @@ view_ok_to_quit (WView *view)
 {
     int r;
     char *text;
-    
+
     if (!view->change_list)
 	return 1;
-    
+
     query_set_sel (1);
     text = copy_strings (_("File: \n\n    "), view->filename,
 			 _("\n\nhas been modified, do you want to save the changes?\n"), NULL);
-	    
+
     r = query_dialog (_(" Save changes "), text, 2, 3, _("&Yes"), _("&No"), _("&Cancel"));
     free (text);
-    
+
     switch (r) {
     case 0:
 	save_edit_changes (view);
@@ -438,7 +438,7 @@ set_view_init_error (WView *view, char *msg)
 
 /* return values: 0 for success, else points to error message */
 static char *
-init_growing_view (WView *view, char *name, char *filename) 
+init_growing_view (WView *view, char *name, char *filename)
 {
     view->growing_buffer = 1;
 
@@ -505,7 +505,7 @@ static char *load_view_file (WView *view, char *filename)
 	close_view_file (view);
 	return init_growing_view (view, 0, filename);
     }
-    
+
     /* First, try to open a compressed file */
     if (view->viewer_magic_flag && (is_gunzipable (view->file, &type)) != 0){
 	close_view_file (view);
@@ -535,7 +535,7 @@ static char *load_view_file (WView *view, char *filename)
 	return copy_strings (" Can't mmap file \n ",
 			     unix_error_string (errno), " ", 0);*/
 	return init_growing_view (view, 0, filename);
-			     
+
     }
 
     view->first = 0;
@@ -543,7 +543,7 @@ static char *load_view_file (WView *view, char *filename)
     view->mmapping = 1;
     return 0;
 #else /* ! HAVE_MMAP */
-	/* 
+	/*
 	**	For those OS that dont provide mmap call. Try to load all the file
 	**	into memory (alex@bcs.zaporizhzhe.ua)
 	*/
@@ -592,7 +592,7 @@ do_view_init (WView *view, char *_command, char *_file, int start_line)
     view->marker = 0;
     for (i = 0; i < 10; i++)
 	view->marks [i] = 0;
-    
+
 
     if (!view->have_frame){
 	view->start_col = 0;
@@ -627,7 +627,7 @@ do_view_init (WView *view, char *_command, char *_file, int start_line)
 	view->s.st_size = view->bytes_read = strlen (view->data);
     }
     view->last_byte = view->first + view->s.st_size;
-    
+
     if (start_line > 1 && !error){
         int saved_wrap_mode = view->wrap_mode;
 
@@ -657,7 +657,7 @@ view_init (WView *view, char *_command, char *_file, int start_line)
 	cols = view->widget.cols - 2;
     else
 	cols = view->widget.cols;
-    
+
     view->bottom_first = -1;
     view->bytes_per_line = 2 * (cols - 7) / 9;
     view->bytes_per_line &= 0xfffc;
@@ -688,7 +688,7 @@ view_percent (WView *view, int p, int w)
 	(view->last_byte == view->last ? 100 :
 	 (p)*100 / view->s.st_size);
 #endif
-    
+
     widget_move (view, view->have_frame, w - 5);
     printw ("%3d%% ", percent);
 }
@@ -739,7 +739,7 @@ view_display_clean (WView *view, int height, int width)
     /* FIXME: Should I use widget_erase only and repaint the box? */
     if (view->have_frame){
 	int i;
-	
+
 	draw_double_box (view->widget.parent, view->widget.y, view->widget.x,
 		         view->widget.lines, view->widget.cols);
 	for (i = 1; i < height; i++){
@@ -792,7 +792,7 @@ display (WView *view)
     int c;
     int boldflag = 0;
     struct hexedit_change_node *curr = view->change_list;
- 
+
     height = view->widget.lines - frame_shift;
     width = view->widget.cols - frame_shift;
     from = view->start_display;
@@ -805,20 +805,20 @@ display (WView *view)
     if ((!view->hex_mode) && (ruler)){
 	char r_buff[4];
 	int cl;
-	
+
 	view_set_color (view, BOLD_COLOR);
 	for (c = frame_shift; c < width; c++) {
-	    cl = c-view->start_col;  
+	    cl = c-view->start_col;
 	    if (ruler == 1)
 		view_gotoyx (view, row, c);
 	    else
 		view_gotoyx (view, row+height-2, c);
 	    r_buff[0] = '-';
 	    if ((cl % 10) == 0)
-		r_buff[0] = '|'; 
+		r_buff[0] = '|';
 	    else
 		if ((cl % 5) == 0)
-		    r_buff[0] = '*'; 
+		    r_buff[0] = '*';
 	    view_add_character (view, r_buff[0]);
 	    if ((cl != 0) && (cl % 10) == 0){
 		sprintf(r_buff, "%03d", cl);
@@ -827,15 +827,15 @@ display (WView *view)
 		else
 		    widget_move (view, row + height - 3, c - 1);
                 view_add_string (view, r_buff);
-	    }   
-	}    
+	    }
+	}
 	view_set_color (view, DEF_COLOR);
-	if (ruler == 1) 
+	if (ruler == 1)
 	    row += 2;
 	else
-	    height -= 2;    
+	    height -= 2;
     }
-    
+
     /* Find the first displayable changed byte */
     while (curr) {
         if (curr->offset < from)
@@ -846,19 +846,19 @@ display (WView *view)
     if (view->hex_mode){
         char hex_buff[10];   /* A temporary buffer for sprintf and mvwaddstr */
         int bytes;	     /* Number of bytes already printed on the line */
-	
+
 	/* Start of text column */
         int text_start = width - view->bytes_per_line - 1 + frame_shift;
-	
+
         for (;row < height && from < view->last_byte; row++){
             /* Print the hex offset */
             sprintf (hex_buff, "%05X", (int) (from - view->first));
 	    widget_move (view, row, frame_shift);
             view_add_string (view, hex_buff);
-	    
+
             /* Hex dump starts from column seven */
             col = 7;
-	    
+
             /* Each hex number is two digits */
             hex_buff[2] = 0;
             for (bytes = 0; bytes < view->bytes_per_line
@@ -871,7 +871,7 @@ display (WView *view)
                     view_set_color (view, 7);
                 } else
                 c = (unsigned char) get_byte (view, from);
-		
+
 	    	if (view->found_len && from >= view->search_start
 		    && from < view->search_start + view->found_len){
 	    	    boldflag = 1;
@@ -901,26 +901,26 @@ display (WView *view)
                     if (boldflag == 1 &&
                             from == view->search_start + view->found_len - 1)
                         view_set_color (view, DEF_COLOR);
-		    
+
                     /* Hex numbers are printed in the groups of four */
                     /* Groups are separated by a vline */
-		    
+
                     view_add_character (view, ' ');
                     one_vline ();
 		    view_gotoyx (view, row, col + 1);
                     col += 2;
-                    
+
                     if (boldflag && from==view->search_start+view->found_len-1)
                     	view_set_color (view, BOLD_COLOR);
-		    
+
                 }
-                if (boldflag && from < view->search_start + view->found_len - 1 
+                if (boldflag && from < view->search_start + view->found_len - 1
                     && bytes != view->bytes_per_line - 1)
                     view_add_character (view, ' ');
-		
+
                 /* Print the corresponding ascii character */
 		view_gotoyx (view, row, text_start + bytes);
-		
+
                 if (!is_printable (c))
                     c = '.';
                 switch (boldflag) {
@@ -942,7 +942,7 @@ display (WView *view)
 		    }
 		}
 		view_add_character (view, c);
-		
+
                 if (boldflag){
                     boldflag = 0;
                     view_set_color (view, DEF_COLOR);
@@ -1004,7 +1004,7 @@ display (WView *view)
 		    c = '.';
 
 		view_add_character (view, c);
-       	    } 
+       	    }
 	    col++;
 	    if (boldflag){
 		boldflag = 0;
@@ -1033,7 +1033,7 @@ view_place_cursor (WView *view)
 	shift = view->nib_shift;
     else
 	shift = 0;
-    
+
     widget_move (&view->widget, view->cursor_row, view->cursor_col + shift);
 }
 
@@ -1115,12 +1115,12 @@ move_forward2 (WView *view, long current, int lines, long upto)
 	    q++;
         for (line = col = 0, p = current; p < q; p++){
 	    int c;
-	    
+
 	    if (lines != -1 && line >= lines)
 	        return p;
 
 	    c = get_byte (view, p);
-	    
+
 	    if (view->wrap_mode){
 	    	if (c == '\r')
 	    	    continue; /* This characters is never displayed */
@@ -1139,12 +1139,12 @@ move_forward2 (WView *view, long current, int lines, long upto)
 		       I suspect I got that fix from Jakub, same applies
 		       for d. */
 		    int d = get_byte (view, p+2);
-		    
-		    if (p + 2 >= view->last_byte || !is_printable (c) || 
-		        !view->viewer_nroff_flag || get_byte (view, p + 1) != '\b' || 
+
+		    if (p + 2 >= view->last_byte || !is_printable (c) ||
+		        !view->viewer_nroff_flag || get_byte (view, p + 1) != '\b' ||
 		        !is_printable (d)){
 		        col = 0;
-			
+
 		        if (c == '\n' || get_byte (view, p+1) != '\n')
 		            line++;
 		    }
@@ -1174,7 +1174,7 @@ move_backward2 (WView *view, long current, int lines)
 
     if (!view->hex_mode && current == view->first)
         return current;
-    
+
     if (view->hex_mode){
 	p = current - lines * view->bytes_per_line;
         p = (p < view->first) ? view->first : p;
@@ -1235,7 +1235,7 @@ get_bottom_first (WView *view, int do_not_cache, int really)
 
     if (!have_fast_cpu && !really)
 	return INT_MAX;
-    
+
     if (!do_not_cache && view->bottom_first != -1)
     	return view->bottom_first;
 
@@ -1251,12 +1251,12 @@ get_bottom_first (WView *view, int do_not_cache, int really)
     }
 
     bottom_first = move_backward2 (view, view->last_byte, vheight - 1);
-    
+
     if (view->hex_mode)
     	bottom_first = (bottom_first + view->bytes_per_line - 1)
 	    / view->bytes_per_line * view->bytes_per_line;
     view->bottom_first = bottom_first;
-    
+
     return view->bottom_first;
 }
 
@@ -1280,7 +1280,7 @@ move_to_top (WView *view)
     view->found_len = 0;
     view->last = view->first + ((LINES-2) * view->bytes_per_line);
     view->nib_shift = 0;
-    view->edit_cursor = view->start_display; 
+    view->edit_cursor = view->start_display;
     view->dirty++;
 }
 
@@ -1308,7 +1308,7 @@ move_right (WView *view)
             view->nib_shift = 1 - view->nib_shift;
             if (view->nib_shift == 1)
                 return;
-        } 
+        }
         view->edit_cursor = (++view->edit_cursor <  view->last_byte) ?
             view->edit_cursor : view->last_byte - 1;
         if (view->edit_cursor >= view->last) {
@@ -1331,7 +1331,7 @@ move_left (WView *view)
             view->nib_shift = 1 - view->nib_shift;
             if (view->nib_shift == 0)
                 return;
-        } 
+        }
         view->edit_cursor = (--view->edit_cursor < view->first) ?
             view->first : view->edit_cursor;
         if (view->edit_cursor < view->start_display) {
@@ -1354,7 +1354,7 @@ icase_search_p (WView *view, char *text, char *data, int nothing)
     int p = 0, lng;
     char *q;
 
-    p = (q = _icase_search (text, data, &lng)) != 0; 
+    p = (q = _icase_search (text, data, &lng)) != 0;
     if (p) {
 	view->found_len = lng;
 	view->search_start = q - data - view->found_len;
@@ -1392,7 +1392,7 @@ get_line_at (WView *view, long *p)
 
     direction = view->direction;
     buffer_size = usable_size = 0;
-    
+
     i = ch = 0;
     for (;pos >= 0 && (ch = get_byte (view, pos))!= -1; pos += direction, i++){
 
@@ -1418,7 +1418,7 @@ get_line_at (WView *view, long *p)
 	i--;
 	buffer [0] = ' ';
 	buffer [i+1] = 0;
-	
+
 	/* If we are searching backwards, reverse the string */
 	if (view->direction < 0)
 	    reverse_string (buffer);
@@ -1469,7 +1469,7 @@ search (WView *view, char *text, int (*search)(WView *, char *, char *, int))
     long t;
     /* Clear interrupt status */
     got_interrupt ();
-    
+
     if (verbose){
 	d = message (D_INSERT, _(" Search "), _("Searching %s"), text);
 	mc_refresh ();
@@ -1515,7 +1515,7 @@ search (WView *view, char *text, int (*search)(WView *, char *, char *, int))
 	enable_interrupt_key ();
 	if (!s)
 	    break;
-	
+
 	search_status = (*search) (view, text, s + 1, match_normal);
 	if (search_status < 0)
 	    break;
@@ -1524,9 +1524,9 @@ search (WView *view, char *text, int (*search)(WView *, char *, char *, int))
 	    continue;
 
 	/* We found the string */
-	
+
 	if (!isatbeg && !view->search_start){
-	    
+
 	    /* We do not want to match a
 	     * ^ regexp when not at the real
 	     * beginning of some line
@@ -1550,7 +1550,7 @@ search (WView *view, char *text, int (*search)(WView *, char *, char *, int))
 	    else
 		view->start_display = t;
 	}
-	
+
 	free (s);
 	break;
     }
@@ -1582,7 +1582,7 @@ block_search (WView *view, char *buffer, int len)
 
     search_update_steps (view);
     update_activate = 0;
-    
+
     for (; e < view->last_byte; e++){
 	if (e >= update_activate){
 	    update_activate += update_steps;
@@ -1594,7 +1594,7 @@ block_search (WView *view, char *buffer, int len)
 		break;
 	}
 	b = get_byte (view, e);
-	
+
 	if (*d == b){
 	    d++;
 	} else {
@@ -1630,7 +1630,7 @@ hex_search (WView *view, char *text)
     long pos;			/* Where did we found the string */
     char *p;			/* Temporary */
     int  state = normal;	/* Initial state of the micro-scanner */
-    
+
     /* First convert the string to a stream of bytes */
     for (i = block_len = 0; text [i] && block_len < sizeof (buffer); i++){
 	switch (state){
@@ -1687,13 +1687,13 @@ hex_search (WView *view, char *text)
 	view->found_len = 0;
 	return;
     }
-    
+
     view->search_start = pos + 1;
     view->found_len = block_len;
     /* Set the edit cursor to the search position, left nibble */
     view->edit_cursor = view->search_start;
     view->nib_shift = 0;
-    
+
     /* Adjust the file offset */
     view->start_display = (pos & (~(view->bytes_per_line-1)));
     if (view->start_display > get_bottom_first (view, 0, 0))
@@ -1738,7 +1738,7 @@ static int regexp_view_search (WView *view, char *pattern, char *string, int mat
 static void do_regexp_search (void *xview, char *regexp)
 {
     WView *view = (WView *) xview;
-    
+
     view->search_exp = regexp;
     search (view, regexp, regexp_view_search);
     /* Had a refresh here */
@@ -1749,11 +1749,11 @@ static void do_regexp_search (void *xview, char *regexp)
 static void do_normal_search (void *xview, char *text)
 {
     WView *view = (WView *) xview;
-    
+
     view->search_exp = text;
     if (view->hex_mode)
 	hex_search (view, text);
-    else 
+    else
 	search (view, text, icase_search_p);
     /* Had a refresh here */
     view->dirty++;
@@ -1791,7 +1791,7 @@ void toggle_wrap_mode (WView *view)
         view->dirty++;
         view_update (view);
 		return;
-    } 
+    }
     view->wrap_mode = 1 - view->wrap_mode;
     get_bottom_first (view, 1, 1);
     if (view->wrap_mode)
@@ -1880,7 +1880,7 @@ regexp_search (WView *view, int direction)
         save_edit_changes(view);
 	return;
     }
-    
+
     regexp = old ? old : regexp;
     regexp = input_dialog (_(" Search "), _(" Enter regexp:"), regexp);
     if ((!regexp) || (!*regexp)){
@@ -1983,9 +1983,9 @@ void
 view_labels (WView *view)
 {
     Dlg_head *h = view->widget.parent;
-    
+
     define_label (h, (Widget *) view, 1, _("Help"), help_cmd);
-    
+
     my_define (h, 10, _("Quit"), view_quit_cmd, view);
     my_define (h, 4, view->hex_mode ? _("Ascii"): _("Hex"), toggle_hex_mode, view);
     my_define (h, 5, _("Line"), goto_line, view);
@@ -1996,10 +1996,10 @@ view_labels (WView *view)
                      view->growing_buffer ? "" : _("Edit") :
                      view->wrap_mode ? _("UnWrap") : _("Wrap"),
                      toggle_wrap_mode, view);
-   
+
     my_define (h, 7, view->hex_mode ? _("HxSrch") : _("Search"),
 	       normal_search_cmd, view);
-    
+
     my_define (h, 8, view->viewer_magic_flag ? _("Raw") : _("Parse"),
 	       change_viewer, view);
 
@@ -2008,7 +2008,7 @@ view_labels (WView *view)
 		   change_nroff, view);
 	my_define (h, 3, _("Quit"), view_quit_cmd, view);
     }
-    
+
     redraw_labels (h, (Widget *) view);
 }
 
@@ -2029,9 +2029,9 @@ void
 set_monitor (WView *view, int set_on)
 {
     int old = view->monitor;
-    
+
     view->monitor = set_on;
-    
+
     if (view->monitor){
 	move_to_bottom (view);
 	view->bottom_first = -1;
@@ -2060,7 +2060,7 @@ view_handle_key (WView *view, int c)
     int prev_monitor = view->monitor;
 
     set_monitor (view, off);
-    
+
     if (view->hex_mode) {
         switch (c) {
         case 0x09:		/* Tab key */
@@ -2072,7 +2072,7 @@ view_handle_key (WView *view, int c)
             view->edit_cursor -= view->edit_cursor % view->bytes_per_line;
             view->dirty++;
             return 1;
-    
+
         case XCTRL('b'):        /* Character back */
             move_left(view);
             return 1;
@@ -2082,23 +2082,23 @@ view_handle_key (WView *view, int c)
             view->edit_cursor += view->bytes_per_line - 1;
             view->dirty++;
             return 1;
-    
+
         case XCTRL('f'):        /* Character forward */
             move_right(view);
             return 1;
         }
-    
+
 	/* Trap 0-9,A-F,a-f for left side data entry (hex editing) */
         if (view->view_side == view_side_left){
-            if ((c >= '0' && c <= '9') || 
+            if ((c >= '0' && c <= '9') ||
                 (c >= 'A' && c <= 'F') ||
                 (c >= 'a' && c <= 'f')){
-        
+
                 put_editkey (view, c);
                 return 1;
             }
         }
-	
+
 	/* Trap all printable characters for right side data entry */
 	/* Also enter the value of the Enter key */
 	if (view->view_side == view_side_right){
@@ -2108,10 +2108,10 @@ view_handle_key (WView *view, int c)
 	    }
 	}
     }
-    
+
     if (check_left_right_keys (view, c))
 	return 1;
-    
+
     if (check_movement_keys (c, 1, vheight, view, (movefn) view_move_backward, (movefn) view_move_forward,
 			     (movefn) move_to_top, (movefn) move_to_bottom)){
 	return 1;
@@ -2121,7 +2121,7 @@ view_handle_key (WView *view, int c)
     case '?':
 	regexp_search (view, -1);
 	return 1;
-	
+
     case '/':
 	regexp_search (view, 1);
 	return 1;
@@ -2157,30 +2157,30 @@ view_handle_key (WView *view, int c)
     case 'h':
         move_left (view);
         return 1;
-        
+
     case 'j':
     case '\n':
     case 'e':
     	view_move_forward (view, 1);
     	return 1;
-    	
+
     case 'd':
         view_move_forward (view, vheight / 2);
         return 1;
-        
+
     case 'u':
         view_move_backward (view, vheight / 2);
         return 1;
-    	
+
     case 'k':
     case 'y':
         view_move_backward (view, 1);
         return 1;
-        
+
     case 'l':
         move_right (view);
         return 1;
-        
+
     case ' ':
     case 'f':
         view_move_forward (view, vheight - 1);
@@ -2189,19 +2189,19 @@ view_handle_key (WView *view, int c)
     case '!':
 	exec_shell ();
 	return 1;
-	
+
     case 'F':
 	set_monitor (view, on);
 	return 1;
-	
+
     case 'b':
     	view_move_backward (view, vheight - 1);
     	return 1;
-        
+
     case KEY_IC:
         view_move_backward (view, 2);
         return 1;
-        
+
     case KEY_DC:
         view_move_forward (view, 2);
         return 1;
@@ -2214,7 +2214,7 @@ view_handle_key (WView *view, int c)
 	view->start_display = view->marks [view->marker];
 	view->dirty++;
 	return 1;
-	
+
 	/*  Use to indicate parent that we want to see the next/previous file */
 	/* Only works on full screen mode */
     case XCTRL('f'):
@@ -2236,7 +2236,7 @@ view_handle_key (WView *view, int c)
 
     /* Restore the monitor status */
     set_monitor (view, prev_monitor);
-    
+
     /* Key not used */
     return 0;
 }
@@ -2272,7 +2272,7 @@ view_event (WView *view, Gpm_Event *event, int *result)
 	    	view_move_forward (view, vheight / 2 - 1);
 	    else
 	    	view_move_forward (view, 1);
-	    *result = MOU_REPEAT; 
+	    *result = MOU_REPEAT;
 	    return 1;
 	}
     }
@@ -2284,7 +2284,7 @@ int
 real_view_event (Gpm_Event *event, void *x)
 {
     int result;
-    
+
     if (view_event ((WView *) x, event, &result))
     	view_update ((WView *) x);
     return result;
@@ -2318,7 +2318,7 @@ view (char *_command, char *_file, int *move_dir_p, int start_line)
 
     error = view_init (wview, _command, _file, start_line);
     if (!error){
-	x_view (wview);	
+	x_view (wview);
     }
     *move_dir_p = 0;
     return !error;
@@ -2351,7 +2351,7 @@ view (char *_command, char *_file, int *move_dir_p, int start_line)
     WView *wview;
     WButtonBar *bar;
     Dlg_head *our_dlg;
-    
+
     /* Create dialog and widgets, put them on the dialog */
     our_dlg = create_dlg (0, 0, LINES, COLS, midnight_colors,
 			   view_mode_callback, "[Internal File Viewer]",
@@ -2382,7 +2382,7 @@ view (char *_command, char *_file, int *move_dir_p, int start_line)
 	    *move_dir_p = wview->move_dir;
     }
     destroy_dlg (our_dlg);
-    
+
     return !error;
 }
 #endif
@@ -2403,7 +2403,7 @@ view_hook (void *v)
     }
 
     delete_hook (&idle_hook, view_hook);
-    
+
     if (get_current_type () == view_listing)
 	panel = cpanel;
     else if (get_other_type () == view_listing)
@@ -2420,7 +2420,7 @@ view_hook (void *v)
         if (!S_ISREG (panel->dir.list [panel->selected].buf.st_mode))
 	    return;
     }
-    
+
     view_init (view, 0, panel->dir.list [panel->selected].fname, 0);
     display (view);
     view_status (view);
@@ -2431,7 +2431,7 @@ view_callback (Dlg_head *h, WView *v, int msg, int par)
 {
     WView *view = (WView *) v;
     int i;
-    
+
     switch (msg){
     case WIDGET_INIT:
 	x_create_viewer (view);
@@ -2440,7 +2440,7 @@ view_callback (Dlg_head *h, WView *v, int msg, int par)
 	else
 	    view_labels (view);
 	break;
-	
+
     case WIDGET_DRAW:
 	display (view);
 	view_status (view);
@@ -2468,12 +2468,12 @@ view_callback (Dlg_head *h, WView *v, int msg, int par)
 	view_status (view);
 	sleep (1);
 	return 1;
-	
+
     case WIDGET_FOCUS:
 	x_focus_view (view);
 	view_labels (view);
 	return 1;
-	
+
     }
     return default_proc (h, msg, par);
 }
@@ -2482,7 +2482,7 @@ WView *
 view_new (int y, int x, int cols, int lines, int is_panel)
 {
     WView *view = xmalloc (sizeof (WView), "view_new");
-    
+
     init_widget (&view->widget, y, x, lines, cols,
 		 (callback_fn) view_callback,
 		 (destroy_fn) view_destroy,
@@ -2503,7 +2503,7 @@ view_new (int y, int x, int cols, int lines, int is_panel)
     view->last_byte = -1;
     view->monitor = 0;
     view->wrap_mode = global_wrap_mode;
-    
+
     x_init_view (view);
 
     widget_want_cursor (view->widget, 0);

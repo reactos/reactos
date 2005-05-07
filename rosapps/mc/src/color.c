@@ -1,11 +1,11 @@
 /* Color setup
    Copyright (C) 1994 Miguel de Icaza.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,7 @@
 #include "color.h"
 #include "x.h"
 
-/* "$Id: color.c,v 1.1 2001/12/30 09:55:26 sedwards Exp $" */
+/* "$Id$" */
 
 /* To avoid excessive calls to ncurses' has_colors () */
 int   hascolors = 0;
@@ -80,21 +80,21 @@ struct colorpair color_map [] = {
     { "dfocus=",     0, 0 },	/* Dialog focused */
     { "dhotnormal=", 0, 0 },	/* Dialog normal/hot */
     { "dhotfocus=",  0, 0 },	/* Dialog focused/hot */
-    
+
     { "viewunderline=", 0, 0 },	/* _\b? sequence in view */
     { "menusel=",    0, 0 },	/* Menu selected color */
     { "menuhot=",    0, 0 },    /* Color for menu hotkeys */
     { "menuhotsel=", 0, 0 },    /* Menu hotkeys/selected entry */
-    
+
     { "helpnormal=", 0, 0 },    /* Help normal */
     { "helpitalic=", 0, 0 },    /* Italic in help */
     { "helpbold=",   0, 0 },    /* Bold in help */
     { "helplink=",   0, 0 },    /* Not selected hyperlink */
     { "helpslink=",  0, 0 },    /* Selected hyperlink */
-    
+
     { "gauge=",      0, 0 },    /* Color of the progress bar (percentage) */
     { "input=",      0, 0 },
- 
+
     /* Per file types colors */
     { "directory=",  0, 0 },
     { "execute=",    0, 0 },
@@ -143,7 +143,7 @@ void get_color (char *cpp, CTYPE *colp);
 static void get_color (char *cpp, CTYPE *colp)
 {
     int i;
-    
+
     for (i = 0; i < ELEMENTS(color_table); i++){
 	if (strcmp (cpp, color_name (i)) == 0){
 	    *colp = color_value (i);
@@ -159,7 +159,7 @@ static void get_two_colors (char **cpp, struct colorpair *colorpairp)
     int state;
 
     state = 0;
-    
+
     for (; *p; p++){
 	if (*p == ':'){
 	    *p = 0;
@@ -219,7 +219,7 @@ static void configure_colors (void)
 #ifndef HAVE_TK
 #ifndef HAVE_XVIEW
     extern char *default_edition_colors;
-    
+
     configure_colors_string (default_edition_colors);
 #endif
 #endif
@@ -248,7 +248,7 @@ void
 init_colors (void)
 {
 	int i;
-	
+
 	use_colors = 1;
 	start_color ();
 	configure_colors ();
@@ -260,7 +260,7 @@ init_colors (void)
 void init_colors (void)
 {
     int i;
-    
+
     hascolors = has_colors ();
 
     if (!disable_colors && hascolors){
@@ -284,14 +284,14 @@ void init_colors (void)
 	if (use_colors) { /* Hack to make COLOR_PAIR(31) be the default fg/bg
 	                     of the terminal */
 	    char *Norm_Vid = SLtt_tgetstr ("me");
-	    
+
 	    if (Norm_Vid == NULL)
 	        Norm_Vid = SLtt_tgetstr ("se");
 	    if (Norm_Vid == NULL)
 	        Norm_Vid = "\033[0m";
 	    SLtt_set_color_esc (31, Norm_Vid);
 	}
-#endif	
+#endif
 
 	for (i = 0; i < ELEMENTS (color_map); i++){
 	    init_pair (i+1, color_map_fg(i), color_map_bg(i));

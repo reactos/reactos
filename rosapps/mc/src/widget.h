@@ -41,7 +41,7 @@ typedef struct WCheck {
     Widget widget;
     unsigned int state;		/* check button state */
     char *text;			/* text of check button */
-    int hotkey;                 /* hot KEY */                    
+    int hotkey;                 /* hot KEY */
     int hotpos;			/* offset hot KEY char in text */
 } WCheck;
 
@@ -147,7 +147,7 @@ typedef struct {
 } WButtonBar;
 
 /* Constructors */
-WButton *button_new   (int y, int x, int action, int flags, char *text, 
+WButton *button_new   (int y, int x, int action, int flags, char *text,
 			int (*callback)(int, void *), void *extra, char *tkname);
 WRadio  *radio_new    (int y, int x, int count, char **text, int use_hotkey, char *tkname);
 WCheck  *check_new    (int y, int x, int state,  char *text, char *tkname);

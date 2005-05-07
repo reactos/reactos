@@ -1,12 +1,12 @@
 /* Panel managing.
    Copyright (C) 1994, 1995 Janne Kukonlehto
    Copyright (C) 1995 Miguel de Icaza
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -88,7 +88,7 @@ void info_show_info (WInfo *info)
 
     if (!info->ready)
 	return;
-    
+
     my_statfs (&myfs_stats, cpanel->cwd);
     buf = cpanel->dir.list [cpanel->selected].buf;
 #ifdef OS2_NT
@@ -96,12 +96,12 @@ void info_show_info (WInfo *info)
     if ((signed char) buf.st_dev < 0)
 	    return;
 #endif
-    
+
 #ifndef HAVE_X
     /* Print only lines which fit */
     switch (info->widget.y-2){
 	/* Note: all cases are fall-throughs */
-	
+
     default:
 
     case 16:
@@ -114,7 +114,7 @@ void info_show_info (WInfo *info)
 		    myfs_stats.nodes);
 	else
 	    addstr (_("No node information"));
-	
+
     case 15:
 	widget_move (&info->widget, 15, 3);
 	if (myfs_stats.avail > 0 || myfs_stats.total > 0){
@@ -144,11 +144,11 @@ void info_show_info (WInfo *info)
     case 11:
 	widget_move (&info->widget, 11, 3);
 	printw (_("Accessed:  %s"), file_date (buf.st_atime));
-	
+
     case 10:
 	widget_move (&info->widget, 10, 3);
 	printw (_("Modified:  %s"), file_date (buf.st_mtime));
-	
+
     case 9:
 	widget_move (&info->widget, 9, 3);
 	printw (_("Created:   %s"), file_date (buf.st_ctime));
@@ -170,25 +170,25 @@ void info_show_info (WInfo *info)
 	    printw (_(" (%d blocks)"), buf.st_blocks);
 #endif
 	}
-	
+
     case 7:
 	widget_move (&info->widget, 7, 3);
 	printw (_("Owner:     %s/%s"), get_owner (buf.st_uid),
 		get_group (buf.st_gid));
-	
+
     case 6:
 	widget_move (&info->widget, 6, 3);
 	printw (_("Links:     %d"), buf.st_nlink);
-	
+
     case 5:
 	widget_move (&info->widget, 5, 3);
 	printw (_("Mode:      %s (%04o)"),
 		string_perm (buf.st_mode), buf.st_mode & 07777);
-	
+
     case 4:
 	widget_move (&info->widget, 4, 3);
 	printw (_("Location:  %Xh:%Xh"), buf.st_dev, buf.st_ino);
-	
+
     case 3:
 	widget_move (&info->widget, 3, 2);
 	/* .ado: fname is invalid if selected == 0 && ifno called from current panel */
@@ -198,7 +198,7 @@ void info_show_info (WInfo *info)
 				    info->widget.cols - 15));
 	} else
 		printw (_("File:       None"));
-     
+
     case 2:
     case 1:
     case 0:
@@ -213,13 +213,13 @@ static void info_hook (void *data)
 {
     WInfo *info = (WInfo *) data;
     Widget *other_widget;
-    
+
     other_widget = get_panel_widget (get_current_index ());
     if (!other_widget)
 	return;
     if (dlg_overlap (&info->widget, other_widget))
 	return;
-    
+
     info->ready = 1;
     info_show_info (info);
 }
@@ -241,19 +241,19 @@ static int info_callback (Dlg_head *h, WInfo *info, int msg, int par)
 #endif
 	break;
 
-#ifndef HAVE_X		  
+#ifndef HAVE_X
     case WIDGET_DRAW:
 	info_hook (info);
 	info_show_info (info);
 	return 1;
-#endif	
+#endif
 
     case WIDGET_FOCUS:
 	return 0;
     }
     return default_proc (h, msg, par);
 }
-			   
+
 WInfo *info_new ()
 {
     WInfo *info = xmalloc (sizeof (WInfo), "panel_info");
