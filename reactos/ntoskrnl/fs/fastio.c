@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/fs/mdl.c
- * PURPOSE:         Cached MDL Access Helper Routines for File System Drivers
+ * FILE:            ntoskrnl/fs/fastio.c
+ * PURPOSE:         File System Routines which support Fast I/O or Cc Access.
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
@@ -58,6 +58,125 @@ STDCALL
 FsRtlIncrementCcFastReadNoWait( VOID )
 {
     CcFastReadNoWait++;
+}
+
+/*
+ * NAME    EXPORTED
+ * FsRtlCopyRead@32
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ *
+ * NOTE
+ *  From Bo Branten's ntifs.h v12.
+ * 
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+FsRtlCopyRead(IN  PFILE_OBJECT FileObject,
+              IN  PLARGE_INTEGER FileOffset,
+              IN  ULONG Length,
+              IN  BOOLEAN Wait,
+              IN  ULONG LockKey,
+              OUT PVOID Buffer,
+              OUT PIO_STATUS_BLOCK IoStatus,
+              IN  PDEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * NAME    EXPORTED
+ * FsRtlCopyWrite@32
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ * NOTE
+ *  From Bo Branten's ntifs.h v12.
+ *
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+FsRtlCopyWrite(IN  PFILE_OBJECT FileObject,
+               IN  PLARGE_INTEGER FileOffset,
+               IN  ULONG Length,
+               IN  BOOLEAN Wait,
+               IN  ULONG LockKey,
+               OUT PVOID Buffer,
+               OUT PIO_STATUS_BLOCK IoStatus,
+               IN  PDEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * NAME    EXPORTED
+ * FsRtlGetFileSize@8
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
+                 IN OUT PLARGE_INTEGER FileSize)
+{
+    FILE_STANDARD_INFORMATION Info;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    ULONG Length;
+    PDEVICE_OBJECT DeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+    
+    /* Get Device Object and Fast Calls */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+    
+    /* Check if we support Fast Calls, and check this one */
+    if (FastDispatch && FastDispatch->FastIoQueryStandardInfo)    
+    {
+        /* Fast Path */
+        FastDispatch->FastIoQueryStandardInfo(FileObject,    
+                                              TRUE,
+                                              &Info,
+                                              &IoStatusBlock,
+                                              DeviceObject);
+        Status = IoStatusBlock.Status;
+    }
+    else
+    {
+        /* Slow Path */
+        Status = IoQueryFileInformation(FileObject,
+                                        FileStandardInformation,
+                                        sizeof(Info),
+                                        &Info,
+                                        &Length);
+    }
+    
+    /* Check success */
+    if (NT_SUCCESS(Status))
+    {
+        *FileSize = Info.EndOfFile;
+    }
+
+    /* Return status */
+    return Status;
 }
 
 /*
@@ -390,6 +509,5 @@ FsRtlPrepareMdlWriteDev(IN  PFILE_OBJECT FileObject,
     UNIMPLEMENTED;
     return FALSE;
 }
-
 
 /* EOF */

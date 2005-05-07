@@ -1,350 +1,242 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/fs/util.c
- * PURPOSE:         No purpose listed.
+ * PURPOSE:         Misc Utility Functions for File System Drivers
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
+
+/* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <internal/debug.h>
 
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlIsTotalDeviceFailure@4
+#define FSRTL_MAX_RESOURCES 16
+
+#define FTTYPE  ((ULONG)'f') 
+#define FT_BALANCED_READ_MODE \
+    CTL_CODE(FTTYPE, 6, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+/* GLOBALS *******************************************************************/
+
+BOOLEAN STDCALL MmIsFileAPagingFile(PFILE_OBJECT FileObject);
+static ULONG FsRtlpAllocatedResources = 0;
+static PERESOURCE FsRtlpResources;
+
+/* PRIVATE FUNCTIONS**********************************************************/
+
+VOID
+STDCALL
+INIT_FUNCTION
+RtlpInitializeResources(VOID)
+{
+    ULONG i;
+    
+    /* Allocate the Resource Buffer */
+    FsRtlpResources = FsRtlAllocatePool(NonPagedPool, 
+                                        FSRTL_MAX_RESOURCES*sizeof(ERESOURCE));
+                                        
+    /* Initialize the Resources */
+    for (i = 0; i < FSRTL_MAX_RESOURCES; i++)
+    {
+        ExInitializeResource(&FsRtlpResources[i]);
+    }
+}
+
+/* FUNCTIONS *****************************************************************/
+
+/*++
+ * @name FsRtlIsTotalDeviceFailure 
+ * @implemented NT 4.0
  *
- * DESCRIPTION
- *	Check if an NTSTATUS error code represents a
- *	disk hardware failure.
- *	
- * ARGUMENTS
- *	NtStatus
- *		NTSTATUS to test.
+ *     The FsRtlIsTotalDeviceFailure routine checks if an NTSTATUS error code
+ *     represents a disk hardware failure.
  *
- * RETURN VALUE
- *	FALSE if either (NtStatus >= STATUS_SUCCESS), 
- *	STATUS_CRC_ERROR, STATUS_DEVICE_DATA_ERROR;
- *	TRUE otherwise.
+ * @param NtStatus
+ *        The NTSTATUS Code to Test
  *
- * @implemented
- */
+ * @return TRUE in case of Hardware Failure, FALSE otherwise.
+ *
+ * @remarks None.
+ *
+ *--*/
 BOOLEAN
 STDCALL
-FsRtlIsTotalDeviceFailure (
-	IN	NTSTATUS	NtStatus
-	)
+FsRtlIsTotalDeviceFailure(IN NTSTATUS NtStatus)
 {
-	return (
-		(NT_SUCCESS(NtStatus))
-		|| (STATUS_CRC_ERROR == NtStatus)
-		|| (STATUS_DEVICE_DATA_ERROR == NtStatus)
-		? FALSE
-		: TRUE
-		);
+    return((NT_SUCCESS(NtStatus)) || 
+           (STATUS_CRC_ERROR == NtStatus) ||
+           (STATUS_DEVICE_DATA_ERROR == NtStatus) ? FALSE : TRUE);
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlIsNtstatusExpected/1
- *	stack32 = 4
+/*++
+ * @name FsRtlIsNtstatusExpected 
+ * @implemented NT 4.0
  *
- * DESCRIPTION
- *	Check an NTSTATUS value is expected by the FS kernel
- *	subsystem.
+ *     The FsRtlIsNtstatusExpected routine checks if an NTSTATUS error code
+ *     is expected by the File System Support Library.
  *
- * ARGUMENTS
- *	NtStatus
- *		NTSTATUS to test.
+ * @param NtStatus
+ *        The NTSTATUS Code to Test
  *
- * RETURN VALUE
- *	TRUE if NtStatus is NOT one out of:
- *	- STATUS_ACCESS_VIOLATION
- *	- STATUS_ILLEGAL_INSTRUCTION
- *	- STATUS_DATATYPE_MISALIGNMENT
- *	- STATUS_INSTRUCTION_MISALIGNMENT
- *	which are the forbidden return stati in the FsRtl
- *	subsystem; FALSE otherwise.
+ * @return TRUE if the Value is Expected, FALSE otherwise.
  *
- * REVISIONS
- *	2002-01-17 Fixed a bad bug reported by Bo Brantén.
- *	Up to version 1.8, this function's semantics was
- *	exactly the opposite! Thank you Bo.
+ * @remarks None.
  *
- * @implemented
- */
+ *--*/
 BOOLEAN
 STDCALL
-FsRtlIsNtstatusExpected (
-	IN	NTSTATUS	NtStatus
-	)
+FsRtlIsNtstatusExpected(IN NTSTATUS NtStatus)
 {
-	return (
-		(STATUS_DATATYPE_MISALIGNMENT == NtStatus)
-		|| (STATUS_ACCESS_VIOLATION == NtStatus)
-		|| (STATUS_ILLEGAL_INSTRUCTION == NtStatus)
-		|| (STATUS_INSTRUCTION_MISALIGNMENT == NtStatus)
-		)
-		? FALSE
-		: TRUE;
-}
-	
-/*
- * @unimplemented
- */
-ULONG
-FsRtlIsPagingFile (
-    IN PFILE_OBJECT FileObject
-    )
-{
-	UNIMPLEMENTED;
-	return 0;
+    return((STATUS_DATATYPE_MISALIGNMENT == NtStatus) ||
+           (STATUS_ACCESS_VIOLATION == NtStatus) || 
+           (STATUS_ILLEGAL_INSTRUCTION == NtStatus) || 
+           (STATUS_INSTRUCTION_MISALIGNMENT == NtStatus)) ? FALSE : TRUE;
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlNormalizeNtstatus@8
+/*++
+ * @name FsRtlIsPagingFile 
+ * @implemented NT 4.0
  *
- * DESCRIPTION
- *	Normalize an NTSTATUS value for using in the FS subsystem.
+ *     The FsRtlIsPagingFile routine checks if the FileObject is a Paging File.
  *
- * ARGUMENTS
- *	NtStatusToNormalize
- *		NTSTATUS to normalize.
- *	NormalizedNtStatus
- *		NTSTATUS to return if the NtStatusToNormalize
- *		value is unexpected by the FS kernel subsystem.
+ * @param FileObject
+ *        A pointer to the File Object to be tested.
  *
- * RETURN VALUE
- * 	NtStatusToNormalize if it is an expected value,
- * 	otherwise NormalizedNtStatus.
+ * @return TRUE if the File is a Paging File, FALSE otherwise.
  *
- * @implemented
- */
-NTSTATUS
-STDCALL
-FsRtlNormalizeNtstatus (
-	IN	NTSTATUS	NtStatusToNormalize,
-	IN	NTSTATUS	NormalizedNtStatus
-	)
-{
-	return
-		(TRUE == FsRtlIsNtstatusExpected(NtStatusToNormalize))
-		? NtStatusToNormalize
-		: NormalizedNtStatus;
-}
-
-
-/**********************************************************************
- *	Miscellanea (they may fit somewhere else)
- *********************************************************************/
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlAllocateResource@0
+ * @remarks None.
  *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- * 
- *
- * @unimplemented
- */
-DWORD
-STDCALL
-FsRtlAllocateResource (VOID)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED; 
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlBalanceReads@4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- * 
- *
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-FsRtlBalanceReads (PDEVICE_OBJECT TargetDevice)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED; 
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlCopyRead@32
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- * 	From Bo Branten's ntifs.h v12.
- * 
- * @unimplemented
- */
+ *--*/
 BOOLEAN
 STDCALL
-FsRtlCopyRead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	BOOLEAN			Wait,
-	IN	ULONG			LockKey,
-	OUT	PVOID			Buffer,
-	OUT	PIO_STATUS_BLOCK	IoStatus,
-	IN	PDEVICE_OBJECT		DeviceObject
-	)
+FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    return MmIsFileAPagingFile(FileObject);
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlCopyWrite@32
+/*++
+ * @name FsRtlNormalizeNtstatus 
+ * @implemented NT 4.0
  *
- * DESCRIPTION
+ *     The FsRtlNormalizeNtstatus routine normalizes an NTSTATUS error code.
  *
- * ARGUMENTS
+ * @param NtStatusToNormalize
+ *        The NTSTATUS error code to Normalize.
  *
- * RETURN VALUE
- * 
- * NOTE
- * 	From Bo Branten's ntifs.h v12.
+ * @param NormalizedNtStatus
+ *        The NTSTATUS error code to return if the NtStatusToNormalize is not
+ *        a proper expected error code by the File System Library.
  *
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-FsRtlCopyWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	BOOLEAN			Wait,
-	IN	ULONG			LockKey,
-	IN	PVOID			Buffer,
-	OUT	PIO_STATUS_BLOCK	IoStatus,
-	IN	PDEVICE_OBJECT		DeviceObject
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlGetFileSize@8
+ * @return NtStatusToNormalize if it is an expected value, otherwise 
+ *         NormalizedNtStatus.
  *
- * DESCRIPTION
+ * @remarks None.
  *
- * ARGUMENTS
- *
- * RETURN VALUE
- * 
- * @implemented
- */
+ *--*/
 NTSTATUS
 STDCALL
-FsRtlGetFileSize (
-    IN PFILE_OBJECT         FileObject,
-    IN OUT PLARGE_INTEGER   FileSize
-    )
+FsRtlNormalizeNtstatus(IN NTSTATUS NtStatusToNormalize,
+                       IN NTSTATUS NormalizedNtStatus)
 {
-	FILE_STANDARD_INFORMATION Info;
-	NTSTATUS Status;
-	ULONG Length;
-
-	Status = IoQueryFileInformation(FileObject,
-		FileStandardInformation,
-		sizeof(Info),
-		&Info,
-		&Length);
-	if (NT_SUCCESS(Status))
-		{
-			FileSize->QuadPart = Info.EndOfFile.QuadPart;
-		}
-
-	return Status;
+    return(TRUE == FsRtlIsNtstatusExpected(NtStatusToNormalize)) ? 
+           NtStatusToNormalize : NormalizedNtStatus;
 }
 
-/*
- * @unimplemented
- */
+/*++
+ * @name FsRtlAllocateResource 
+ * @implemented NT 4.0
+ *
+ *     The FsRtlAllocateResource routine returns a pre-initialized ERESOURCE
+ *     for use by a File System Driver.
+ *
+ * @return A Pointer to a pre-initialized ERESOURCE.
+ *
+ * @remarks The File System Library only provides up to 16 Resources.
+ *
+ *--*/
+PERESOURCE
+STDCALL
+FsRtlAllocateResource(VOID)
+{
+    /* Return a pre-allocated ERESOURCE */
+    return &FsRtlpResources[FsRtlpAllocatedResources++ & FSRTL_MAX_RESOURCES];
+}
+
+/*++
+ * @name FsRtlBalanceReads 
+ * @implemented NT 4.0
+ *
+ *     The FsRtlBalanceReads routine sends an IRP to an FTDISK Driver
+ *     requesting the driver to balance read requests across a mirror set. 
+ *
+ * @param TargetDevice
+ *        A pointer to an FTDISK Device Object.
+ *
+ * @return The NTSTATUS error code returned by the FTDISK Driver.
+ *
+ * @remarks FTDISK is a Software RAID Implementation.
+ *
+ *--*/
 NTSTATUS
 STDCALL
-FsRtlInsertPerStreamContext (
-    IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
-    IN PFSRTL_PER_STREAM_CONTEXT Ptr
-    )
+FsRtlBalanceReads(PDEVICE_OBJECT TargetDevice)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    PIRP Irp;
+    KEVENT Event;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+    
+    /* Initialize the Local Event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    
+    /* Build the special IOCTL */
+    Irp = IoBuildDeviceIoControlRequest(FT_BALANCED_READ_MODE,
+                                        TargetDevice,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+                                        
+    /* Send it */
+    Status = IoCallDriver(TargetDevice, Irp);
+    
+    /* Wait if needed */
+    if (Status == STATUS_PENDING)
+    {
+        Status = KeWaitForSingleObject(&Event,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       NULL);
+        /* Return Status */
+        Status = IoStatusBlock.Status;
+    }
+    
+    return Status;
 }
 
-/*
- * @unimplemented
- */
-PFSRTL_PER_STREAM_CONTEXT
-STDCALL
-FsRtlRemovePerStreamContext (
-    IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
-    IN PVOID OwnerId OPTIONAL,
-    IN PVOID InstanceId OPTIONAL
-    )
-{
-	UNIMPLEMENTED;
-	return NULL;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-FsRtlInsertPerFileObjectContext (
-    IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
-    IN PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/ Ptr
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlPostPagingFileStackOverflow@12
+/*++
+ * @name FsRtlPostPagingFileStackOverflow 
+ * @unimplemented NT 4.0
  *
- * DESCRIPTION
+ *     The FsRtlPostPagingFileStackOverflow routine
  *
- * ARGUMENTS
+ * @param Context     
  *
- * RETURN VALUE
- * 
- * @unimplemented
- */
+ * @param Event
+ *        
+ * @param StackOverflowRoutine       
+ *
+ * @return 
+ *
+ * @remarks None.
+ *
+ *--*/
 VOID
 STDCALL
 FsRtlPostPagingFileStackOverflow(IN PVOID Context, 
@@ -354,80 +246,50 @@ FsRtlPostPagingFileStackOverflow(IN PVOID Context,
     UNIMPLEMENTED;
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlPostStackOverflow@12
+/*++
+ * @name FsRtlPostStackOverflow 
+ * @unimplemented NT 4.0
  *
- * DESCRIPTION
+ *     The FsRtlPostStackOverflow routine
  *
- * ARGUMENTS
+ * @param Context
  *
- * RETURN VALUE
- * 
- * @unimplemented
- */
+ * @param Event
+ *        
+ * @param StackOverflowRoutine       
+ *
+ * @return 
+ *
+ * @remarks None.
+ *
+ *--*/
 VOID
 STDCALL
-FsRtlPostStackOverflow (IN PVOID Context, 
-                        IN PKEVENT Event, 
-                        IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine) 
+FsRtlPostStackOverflow(IN PVOID Context, 
+                       IN PKEVENT Event, 
+                       IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine) 
 {
     UNIMPLEMENTED;
 }
 
-
-/*
- * @unimplemented
- */
-PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
-STDCALL
-FsRtlRemovePerFileObjectContext (
-   IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
-    IN PVOID OwnerId OPTIONAL,
-    IN PVOID InstanceId OPTIONAL
-    )
-{
-	UNIMPLEMENTED;
-	return NULL;
-}
-
-/**********************************************************************
- * NAME							EXPORTED
- *	FsRtlSyncVolumes@12
+/*++
+ * @name FsRtlSyncVolumes 
+ * @implemented NT 4.0
  *
- * DESCRIPTION
- *	Obsolete function.
+ *     The FsRtlSyncVolumes routine is deprecated.     
  *
- * ARGUMENTS
+ * @return Always returns STATUS_SUCCESS.
  *
- * RETURN VALUE
- *	It always returns STATUS_SUCCESS.
+ * @remarks Deprecated.
  *
- * @implemented
- */
+ *--*/
 NTSTATUS
 STDCALL
-FsRtlSyncVolumes (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+FsRtlSyncVolumes(DWORD Unknown0,
+                 DWORD Unknown1,
+                 DWORD Unknown2)
 {
-	return STATUS_SUCCESS;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-FsRtlTeardownPerStreamContexts (
-  IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader
-  )
-{
-	UNIMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

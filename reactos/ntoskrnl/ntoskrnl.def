@@ -220,7 +220,7 @@ FsRtlIsFatDbcsLegal@20
 FsRtlIsHpfsDbcsLegal@20
 FsRtlIsNameInExpression@16
 FsRtlIsNtstatusExpected@4
-FsRtlIsPagingFile
+FsRtlIsPagingFile@4
 FsRtlIsTotalDeviceFailure@4
 FsRtlLegalAnsiCharacterArray DATA
 FsRtlLookupLargeMcbEntry@32

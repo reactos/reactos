@@ -239,10 +239,10 @@ OBJECTS_EX = \
 
 # Installable File System Run-Time Library (FsRtl)
 OBJECTS_FS = \
-	fs/dbcsname.o \
+	fs/context.o \
+	fs/fastio.o \
 	fs/filelock.o \
 	fs/mcb.o \
-	fs/mdl.o \
 	fs/name.o \
 	fs/notify.o \
 	fs/oplock.o \

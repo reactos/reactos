@@ -84,7 +84,7 @@ FsRtlAllocatePoolWithTag (
 	IN	ULONG		NumberOfBytes,
 	IN	ULONG		Tag
 	);
-DWORD
+PERESOURCE
 STDCALL
 FsRtlAllocateResource (
 	VOID
@@ -351,7 +351,7 @@ FsRtlIsNameInExpression (
 BOOLEAN STDCALL
 FsRtlIsNtstatusExpected(IN NTSTATUS NtStatus);
 
-ULONG
+BOOLEAN STDCALL
 FsRtlIsPagingFile (
     IN PFILE_OBJECT FileObject
     );

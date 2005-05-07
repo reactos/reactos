@@ -117,6 +117,23 @@ static BOOLEAN MmSwapSpaceMessage = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
+BOOLEAN
+STDCALL
+MmIsFileAPagingFile(PFILE_OBJECT FileObject)
+{
+    ULONG i;
+    
+    /* Loop through all the paging files */
+    for (i = 0; i < MiPagingFileCount; i++)
+    {
+        /* Check if this is one of them */
+        if (PagingFileList[i]->FileObject == FileObject) return TRUE;
+    }
+    
+    /* Nothing found */
+    return FALSE;
+}
+
 VOID
 MmShowOutOfSpaceMessagePagingFile(VOID)
 {
