@@ -19,13 +19,15 @@
  *                          and improve reusability
  */
 
+#include <windows.h>
+
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 
 #define NDEBUG
-#include <debug.h>
+#include <reactos/debug.h>
 
-#include <epsapi.h>
+#include <reactos/epsapi.h>
 
 NTSTATUS NTAPI
 PsaEnumerateProcessModules(IN HANDLE ProcessHandle,

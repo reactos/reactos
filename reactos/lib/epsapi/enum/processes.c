@@ -30,12 +30,16 @@
  *                          isolated in its own library to clear the confusion
  *                          and improve reusability
  */
-
-#include <ddk/ntddk.h>
-#include <debug.h>
+#include <windows.h>
 #include <stddef.h>
 
-#include <epsapi.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
+#define NDEBUG
+#include <reactos/debug.h>
+
+#include <reactos/epsapi.h>
 
 NTSTATUS NTAPI
 PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESS_INFORMATION *ProcessesAndThreads)
