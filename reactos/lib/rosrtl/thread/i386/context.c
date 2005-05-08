@@ -3,15 +3,10 @@
 /*
 */
 
-#include <string.h>
-
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
-
-#include <napi/i386/segment.h>
-#include <napi/i386/floatsave.h>
-
-#include <rosrtl/thread.h>
+#include <ndk/ntndk.h>
+#include <reactos/rosrtl/thread.h>
 
 NTSTATUS NTAPI
 RtlRosInitializeContext

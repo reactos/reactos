@@ -3,14 +3,10 @@
 /*
 */
 
-#include <stdarg.h>
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
-
-#define NDEBUG
-#include <ntdll/ntdll.h>
-
-#include <rosrtl/thread.h>
+#include <ndk/ntndk.h>
+#include <reactos/rosrtl/thread.h>
 
 NTSTATUS STDCALL
 RtlRosCreateUserThread

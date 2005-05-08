@@ -3863,6 +3863,39 @@ typedef enum _THREADINFOCLASS {
   MaxThreadInfoClass
 } THREADINFOCLASS;
 
+typedef struct _VM_COUNTERS 
+{
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+} VM_COUNTERS;
+typedef VM_COUNTERS *PVM_COUNTERS;
+
+typedef struct _VM_COUNTERS_EX 
+{
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PrivateUsage;
+} VM_COUNTERS_EX;
+typedef VM_COUNTERS_EX *PVM_COUNTERS_EX;
+
 #define ES_SYSTEM_REQUIRED                0x00000001
 #define ES_DISPLAY_REQUIRED               0x00000002
 #define ES_USER_PRESENT                   0x00000004
@@ -4340,6 +4373,32 @@ typedef enum _INTERLOCKED_RESULT {
   ResultZero = RESULT_ZERO,
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
+
+#define MAXIMUM_LEADBYTES 12
+
+typedef struct _CPTABLEINFO 
+{
+    USHORT CodePage;                    
+    USHORT MaximumCharacterSize;
+    USHORT DefaultChar;
+    USHORT UniDefaultChar;
+    USHORT TransDefaultChar;
+    USHORT TransUniDefaultChar;
+    USHORT DBCSCodePage;
+    UCHAR  LeadByte[MAXIMUM_LEADBYTES];
+    PUSHORT MultiByteTable;
+    PVOID   WideCharTable;
+    PUSHORT DBCSRanges;
+    PUSHORT DBCSOffsets;
+} CPTABLEINFO, *PCPTABLEINFO;
+
+typedef struct _NLSTABLEINFO 
+{
+    CPTABLEINFO OemTableInfo;
+    CPTABLEINFO AnsiTableInfo;
+    PUSHORT UpperCaseTable;
+    PUSHORT LowerCaseTable;
+} NLSTABLEINFO, *PNLSTABLEINFO;
 
 NTOSAPI
 KIRQL

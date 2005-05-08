@@ -1,6 +1,6 @@
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <rosrtl/recmutex.h>
+#include <ddk/ntddk.h>
+
+#include <reactos/rosrtl/recmutex.h>
 
 VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
     RtlZeroMemory( RecMutex, sizeof(*RecMutex) );

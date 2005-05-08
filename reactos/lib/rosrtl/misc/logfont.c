@@ -1,6 +1,5 @@
 #include <windows.h>
-#include <string.h>
-#include <rosrtl/logfont.h>
+#include <reactos/rosrtl/logfont.h>
 
 void
 RosRtlLogFontA2W ( LPLOGFONTW pW, const LOGFONTA *pA )

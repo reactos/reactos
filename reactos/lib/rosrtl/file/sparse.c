@@ -1,7 +1,6 @@
 #include <windows.h>
-#include <ddk/ntifs.h>
-#include <string.h>
-#include <rosrtl/sparse.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 /*
  * Utility to convert a file to a sparse file

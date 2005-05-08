@@ -3,13 +3,10 @@
 /*
 */
 
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
-
-#define NDEBUG
-#include <ntdll/ntdll.h>
-
-#include <rosrtl/thread.h>
+#include <ndk/ntndk.h>
+#include <reactos/rosrtl/thread.h>
 
 static VOID NTAPI RtlRosExitUserThread_Stage2
 (

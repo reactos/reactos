@@ -743,7 +743,41 @@ typedef struct _KUSER_SHARED_DATA {
     };
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
+typedef struct _CPTABLEINFO *PCPTABLEINFO;
+typedef struct _NLSTABLEINFO *PNLSTABLEINFO;
 
+typedef struct _VM_COUNTERS 
+{
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+} VM_COUNTERS;
+typedef VM_COUNTERS *PVM_COUNTERS;
+
+typedef struct _VM_COUNTERS_EX 
+{
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PrivateUsage;
+} VM_COUNTERS_EX;
+typedef VM_COUNTERS_EX *PVM_COUNTERS_EX;
 
 #endif
 

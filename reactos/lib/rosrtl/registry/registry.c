@@ -1,6 +1,7 @@
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
-#include <rosrtl/string.h>
+#include <ndk/ntndk.h>
+#include <reactos/rosrtl/string.h>
 
 /*
  * Utility function to read a value from the registry more easily.
