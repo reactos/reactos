@@ -696,7 +696,7 @@ typedef enum SHUTDOWN_ACTION_TAG {
 
 typedef struct _ATOM_TABLE_INFORMATION {
 	ULONG NumberOfAtoms;
-	RTL_ATOM Atoms[1];
+	USHORT Atoms[1];
 } ATOM_TABLE_INFORMATION, *PATOM_TABLE_INFORMATION;
 
 // mutant information
@@ -932,6 +932,28 @@ typedef struct _SYSTEM_QUOTA_INFORMATION {
 
 // SystemAddVerifier (52)
 // UNKNOWN
+
+typedef struct _SECTION_BASIC_INFORMATION {
+    PVOID           BaseAddress;
+    ULONG           Attributes;
+    LARGE_INTEGER   Size;
+} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
+
+typedef struct _SECTION_IMAGE_INFORMATION {
+    ULONG     EntryPoint;
+    ULONG     Unknown1;
+    ULONG_PTR StackReserve;
+    ULONG_PTR StackCommit;
+    ULONG     Subsystem;
+    USHORT    MinorSubsystemVersion;
+    USHORT    MajorSubsystemVersion;
+    ULONG     Unknown2;
+    ULONG     Characteristics;
+    USHORT    ImageNumber;
+    BOOLEAN   Executable;
+    UCHAR     Unknown3;
+    ULONG     Unknown4[3];
+} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 // wait type
 

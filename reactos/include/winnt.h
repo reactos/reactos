@@ -1343,6 +1343,9 @@ typedef struct _GUID {
 } GUID, *REFGUID, *LPGUID;
 #define SYSTEM_LUID { QuadPart:999 }
 #endif /* GUID_DEFINED */
+
+#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
+
 typedef struct _GENERIC_MAPPING {
 	ACCESS_MASK GenericRead;
 	ACCESS_MASK GenericWrite;
@@ -1416,12 +1419,12 @@ typedef struct _ACL {
 } ACL,*PACL;
 typedef struct _ACL_REVISION_INFORMATION {
 	DWORD AclRevision;
-} ACL_REVISION_INFORMATION;
+} ACL_REVISION_INFORMATION, *PACL_REVISION_INFORMATION;
 typedef struct _ACL_SIZE_INFORMATION {
 	DWORD   AceCount;
 	DWORD   AclBytesInUse;
 	DWORD   AclBytesFree;
-} ACL_SIZE_INFORMATION;
+} ACL_SIZE_INFORMATION, *PACL_SIZE_INFORMATION;
 
 /* FIXME: add more machines */
 #ifdef _X86_

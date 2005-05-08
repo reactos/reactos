@@ -1169,6 +1169,56 @@ typedef struct _GENERATE_NAME_CONTEXT {
     ULONG   LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
 
+typedef enum _RTL_GENERIC_COMPARE_RESULTS
+{
+    GenericLessThan,
+    GenericGreaterThan,
+    GenericEqual
+} RTL_GENERIC_COMPARE_RESULTS;
+
+typedef
+RTL_GENERIC_COMPARE_RESULTS STDCALL
+(*PRTL_GENERIC_COMPARE_ROUTINE)(
+    struct _RTL_GENERIC_TABLE *Table,
+    PVOID FirstStruct,
+    PVOID SecondStruct
+);
+
+typedef
+PVOID STDCALL
+(*PRTL_GENERIC_ALLOCATE_ROUTINE)(
+    struct _RTL_GENERIC_TABLE *Table,
+    LONG ByteSize
+);
+
+typedef
+VOID STDCALL
+(*PRTL_GENERIC_FREE_ROUTINE)(
+    struct _RTL_GENERIC_TABLE *Table,
+    PVOID Buffer
+);
+
+typedef struct _RTL_SPLAY_LINKS {
+    struct _RTL_SPLAY_LINKS *Parent;
+    struct _RTL_SPLAY_LINKS *LeftChild;
+    struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS;
+typedef RTL_SPLAY_LINKS *PRTL_SPLAY_LINKS;
+
+typedef struct _RTL_GENERIC_TABLE 
+{
+    PRTL_SPLAY_LINKS TableRoot;
+    LIST_ENTRY InsertOrderList;
+    PLIST_ENTRY OrderedPointer;
+    ULONG WhichOrderedElement;
+    ULONG NumberGenericTableElements;
+    PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine;
+    PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine;
+    PRTL_GENERIC_FREE_ROUTINE FreeRoutine;
+    PVOID TableContext;
+} RTL_GENERIC_TABLE;
+typedef RTL_GENERIC_TABLE *PRTL_GENERIC_TABLE;
+    
 typedef struct _HANDLE_TABLE_ENTRY_INFO {
     ULONG AuditMask;
 } HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
@@ -1443,28 +1493,6 @@ typedef struct _SE_EXPORTS {
     LUID    SeEnableDelegationPrivilege;
 
 } SE_EXPORTS, *PSE_EXPORTS;
-
-typedef struct _SECTION_BASIC_INFORMATION {
-    PVOID           BaseAddress;
-    ULONG           Attributes;
-    LARGE_INTEGER   Size;
-} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
-
-typedef struct _SECTION_IMAGE_INFORMATION {
-    ULONG     EntryPoint;
-    ULONG     Unknown1;
-    ULONG_PTR StackReserve;
-    ULONG_PTR StackCommit;
-    ULONG     Subsystem;
-    USHORT    MinorSubsystemVersion;
-    USHORT    MajorSubsystemVersion;
-    ULONG     Unknown2;
-    ULONG     Characteristics;
-    USHORT    ImageNumber;
-    BOOLEAN   Executable;
-    UCHAR     Unknown3;
-    ULONG     Unknown4[3];
-} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #if (VER_PRODUCTBUILD >= 2600)
 

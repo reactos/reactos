@@ -19,16 +19,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-
 #define __NTDRIVER__
-#include <ddk/ntddk.h>
-
-#include <ntdll/rtl.h>
-
-#include <ntos/minmax.h>
-#define __NO_CTYPE_INLINES
-#include <ctype.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>

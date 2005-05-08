@@ -24,7 +24,7 @@
  * FILE:              lib/rtl/unicodeprfx.c
  */
 
-#include <ddk/ntddk.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>

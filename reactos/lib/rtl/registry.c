@@ -18,12 +18,10 @@
 /* INCLUDES ****************************************************************/
 
 #define __NTDRIVER__
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/minmax.h>
+#include "rtl.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 
 /* FUNCTIONS ***************************************************************/

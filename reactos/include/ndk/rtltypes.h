@@ -28,6 +28,8 @@
 #ifndef _RTLTYPES_H
 #define _RTLTYPES_H
 
+#include "zwtypes.h"
+
 #define MAXIMUM_LEADBYTES 12
 #define PPF_NORMALIZED (1)
 #define PEB_BASE        (0x7FFDF000)
@@ -128,7 +130,30 @@ typedef struct _EXCEPTION_REGISTRATION {
 
 typedef EXCEPTION_REGISTRATION EXCEPTION_REGISTRATION_RECORD;
 typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
+
+typedef struct _RTL_PROCESS_INFO
+{
+   ULONG Size;
+   HANDLE ProcessHandle;
+   HANDLE ThreadHandle;
+   CLIENT_ID ClientId;
+   SECTION_IMAGE_INFORMATION ImageInfo;
+} RTL_PROCESS_INFO, *PRTL_PROCESS_INFO;
        
+typedef struct _RTL_BITMAP 
+{
+    ULONG SizeOfBitMap;
+    PULONG Buffer;
+} RTL_BITMAP;
+typedef RTL_BITMAP *PRTL_BITMAP;
+
+typedef struct _RTL_BITMAP_RUN
+{
+    ULONG StartingIndex;
+    ULONG NumberOfBits;
+} RTL_BITMAP_RUN;
+typedef RTL_BITMAP_RUN *PRTL_BITMAP_RUN;
+
 typedef unsigned short RTL_ATOM;
 typedef unsigned short *PRTL_ATOM;
 

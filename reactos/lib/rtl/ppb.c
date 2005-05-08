@@ -11,14 +11,10 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/ldr.h>
-#include <napi/teb.h>
-#include <ntdll/base.h>
-#include <ntdll/rtl.h>
+#include "rtl.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* MACROS ****************************************************************/
 

@@ -12,8 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <string.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -84,7 +83,7 @@ RtlCompareMemoryUlong (
    return (ULONG)((PCHAR)ptr - (PCHAR)Source);
 }
 
-
+#undef RtlFillMemory
 /*
  * @implemented
  */
@@ -98,7 +97,6 @@ RtlFillMemory (
 {
    memset(Destination, Fill, Length);
 }
-
 
 
 /*
@@ -124,7 +122,7 @@ RtlFillMemoryUlong (
 }
 
 
-
+#undef RtlMoveMemory
 /*
  * @implemented
  */
@@ -156,6 +154,7 @@ RtlPrefetchMemoryNonTemporal(
 	UNIMPLEMENTED;
 }
 
+#undef RtlZeroMemory
 /*
  * @implemented
  */

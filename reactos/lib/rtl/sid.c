@@ -10,12 +10,8 @@
  */
 
 /* INCLUDES *****************************************************************/
-
 #define __NTDRIVER__
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <string.h>
-
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>

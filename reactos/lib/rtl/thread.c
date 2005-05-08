@@ -18,10 +18,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
+#include "rtl.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 

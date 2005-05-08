@@ -284,6 +284,15 @@ typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 typedef ULONG WAIT_TYPE;
 typedef struct _PEB                             *PPEB;
 typedef CONST char *PCSZ;
+typedef ULONG KPROCESSOR_MODE;
+typedef PVOID PTHREAD_START_ROUTINE;
+
+typedef enum _MODE 
+{
+    KernelMode,
+    UserMode,
+    MaximumMode
+} MODE;
 
 typedef struct _UNICODE_STRING {
   USHORT Length;
@@ -743,8 +752,31 @@ typedef struct _KUSER_SHARED_DATA {
     };
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
-typedef struct _CPTABLEINFO *PCPTABLEINFO;
-typedef struct _NLSTABLEINFO *PNLSTABLEINFO;
+#define MAXIMUM_LEADBYTES 12
+
+typedef struct _CPTABLEINFO 
+{
+    USHORT CodePage;                    
+    USHORT MaximumCharacterSize;
+    USHORT DefaultChar;
+    USHORT UniDefaultChar;
+    USHORT TransDefaultChar;
+    USHORT TransUniDefaultChar;
+    USHORT DBCSCodePage;
+    UCHAR  LeadByte[MAXIMUM_LEADBYTES];
+    PUSHORT MultiByteTable;
+    PVOID   WideCharTable;
+    PUSHORT DBCSRanges;
+    PUSHORT DBCSOffsets;
+} CPTABLEINFO, *PCPTABLEINFO;
+
+typedef struct _NLSTABLEINFO 
+{
+    CPTABLEINFO OemTableInfo;
+    CPTABLEINFO AnsiTableInfo;
+    PUSHORT UpperCaseTable;
+    PUSHORT LowerCaseTable;
+} NLSTABLEINFO, *PNLSTABLEINFO;
 
 typedef struct _VM_COUNTERS 
 {
@@ -778,6 +810,143 @@ typedef struct _VM_COUNTERS_EX
     SIZE_T PrivateUsage;
 } VM_COUNTERS_EX;
 typedef VM_COUNTERS_EX *PVM_COUNTERS_EX;
+
+typedef struct _COMPRESSED_DATA_INFO 
+{
+    USHORT  CompressionFormatAndEngine;
+    UCHAR   CompressionUnitShift;
+    UCHAR   ChunkShift;
+    UCHAR   ClusterShift;
+    UCHAR   Reserved;
+    USHORT  NumberOfChunks;
+    ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
+} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
+
+typedef struct _GENERATE_NAME_CONTEXT 
+{
+    USHORT  Checksum;
+    BOOLEAN CheckSumInserted;
+    UCHAR   NameLength;
+    WCHAR   NameBuffer[8];
+    ULONG   ExtensionLength;
+    WCHAR   ExtensionBuffer[4];
+    ULONG   LastIndexValue;
+} GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
+
+typedef struct _RTL_SPLAY_LINKS {
+    struct _RTL_SPLAY_LINKS *Parent;
+    struct _RTL_SPLAY_LINKS *LeftChild;
+    struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS;
+typedef RTL_SPLAY_LINKS *PRTL_SPLAY_LINKS;
+
+struct _RTL_AVL_TABLE;
+struct _RTL_GENERIC_TABLE;
+
+typedef enum _TABLE_SEARCH_RESULT{
+    TableEmptyTree,
+    TableFoundNode,
+    TableInsertAsLeft,
+    TableInsertAsRight
+} TABLE_SEARCH_RESULT;
+
+typedef
+NTSTATUS STDCALL (*PRTL_AVL_MATCH_FUNCTION)(
+    struct _RTL_AVL_TABLE *Table,
+    PVOID UserData,
+    PVOID MatchData
+);
+
+typedef enum _RTL_GENERIC_COMPARE_RESULTS 
+{
+    GenericLessThan,
+    GenericGreaterThan,
+    GenericEqual
+} RTL_GENERIC_COMPARE_RESULTS;
+
+typedef
+RTL_GENERIC_COMPARE_RESULTS STDCALL
+(*PRTL_AVL_COMPARE_ROUTINE) (
+    struct _RTL_AVL_TABLE *Table,
+    PVOID FirstStruct,
+    PVOID SecondStruct
+);
+
+typedef
+RTL_GENERIC_COMPARE_RESULTS STDCALL
+(*PRTL_GENERIC_COMPARE_ROUTINE)(
+    struct _RTL_GENERIC_TABLE *Table,
+    PVOID FirstStruct,
+    PVOID SecondStruct
+);
+
+typedef
+PVOID STDCALL
+(*PRTL_GENERIC_ALLOCATE_ROUTINE) (
+    struct _RTL_GENERIC_TABLE *Table,
+    LONG ByteSize
+);
+
+typedef
+VOID STDCALL
+(*PRTL_GENERIC_FREE_ROUTINE) (
+    struct _RTL_GENERIC_TABLE *Table,
+    PVOID Buffer
+);
+    
+typedef
+VOID STDCALL
+(*PRTL_AVL_ALLOCATE_ROUTINE) (
+    struct _RTL_AVL_TABLE *Table,
+    LONG ByteSize
+);
+
+typedef
+VOID STDCALL
+(*PRTL_AVL_FREE_ROUTINE) (
+    struct _RTL_AVL_TABLE *Table,
+    PVOID Buffer
+);
+
+typedef struct _RTL_GENERIC_TABLE 
+{
+    PRTL_SPLAY_LINKS TableRoot;
+    LIST_ENTRY InsertOrderList;
+    PLIST_ENTRY OrderedPointer;
+    ULONG WhichOrderedElement;
+    ULONG NumberGenericTableElements;
+    PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine;
+    PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine;
+    PRTL_GENERIC_FREE_ROUTINE FreeRoutine;
+    PVOID TableContext;
+} RTL_GENERIC_TABLE;
+typedef RTL_GENERIC_TABLE *PRTL_GENERIC_TABLE;
+
+typedef struct _RTL_BALANCED_LINKS 
+{
+    struct _RTL_BALANCED_LINKS *Parent;
+    struct _RTL_BALANCED_LINKS *LeftChild;
+    struct _RTL_BALANCED_LINKS *RightChild;
+    CHAR Balance;
+    UCHAR Reserved[3];
+} RTL_BALANCED_LINKS;
+typedef RTL_BALANCED_LINKS *PRTL_BALANCED_LINKS;
+   
+typedef struct _RTL_AVL_TABLE 
+{
+    RTL_BALANCED_LINKS BalancedRoot;
+    PVOID OrderedPointer;
+    ULONG WhichOrderedElement;
+    ULONG NumberGenericTableElements;
+    ULONG DepthOfTree;
+    PRTL_BALANCED_LINKS RestartKey;
+    ULONG DeleteCount;
+    PRTL_AVL_COMPARE_ROUTINE CompareRoutine;
+    PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine;
+    PRTL_AVL_FREE_ROUTINE FreeRoutine;
+    PVOID TableContext;
+} RTL_AVL_TABLE;
+typedef RTL_AVL_TABLE *PRTL_AVL_TABLE;
 
 #endif
 

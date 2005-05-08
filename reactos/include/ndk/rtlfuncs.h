@@ -109,6 +109,16 @@
   InsertTailList(current, &((NewEntry)->ListEntryField));\
 }
 
+ULONG
+STDCALL
+DbgPrint(
+  IN PCH  Format,
+  IN ...);
+
+VOID
+STDCALL
+DbgBreakPoint(VOID);
+
 NTSTATUS
 STDCALL
 RtlAbsoluteToSelfRelativeSD (
@@ -168,6 +178,22 @@ RtlCopySidAndAttributesArray(
     PVOID* RemainingSidArea,
     PULONG RemainingSidAreaSize
 );
+
+LONG
+STDCALL
+RtlCompareUnicodeString (
+    PUNICODE_STRING String1,
+    PUNICODE_STRING String2,
+    BOOLEAN CaseInsensitive
+);
+    
+BOOLEAN
+STDCALL
+RtlEqualUnicodeString (
+    PUNICODE_STRING String1,
+    PUNICODE_STRING String2,
+    BOOLEAN CaseInsensitive
+);
                  
 VOID
 STDCALL
@@ -225,6 +251,21 @@ RtlCreateAtomTable(
     IN OUT PRTL_ATOM_TABLE *AtomTable
 );
 
+NTSTATUS
+STDCALL
+RtlCreateUserThread (
+    IN HANDLE ProcessHandle,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN BOOLEAN CreateSuspended,
+    IN LONG StackZeroBits,
+    IN OUT PULONG StackReserve,
+    IN OUT PULONG StackCommit,
+    IN PTHREAD_START_ROUTINE StartAddress,
+    IN PVOID Parameter,
+    IN OUT PHANDLE ThreadHandle,
+    IN OUT PCLIENT_ID ClientId
+);
+
 BOOLEAN
 STDCALL
 RtlCreateUnicodeString(
@@ -241,6 +282,18 @@ RtlDecompressBuffer (
     IN PUCHAR   CompressedBuffer,
     IN ULONG    CompressedBufferSize,
     OUT PULONG  FinalUncompressedSize
+);
+
+PRTL_USER_PROCESS_PARAMETERS
+STDCALL
+RtlDeNormalizeProcessParams (
+    IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters
+);
+
+PRTL_USER_PROCESS_PARAMETERS
+STDCALL
+RtlNormalizeProcessParams (
+    IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters
 );
 
 NTSTATUS
@@ -288,7 +341,7 @@ RtlEqualSid (
     IN PSID Sid2
 );
 
-NTSTATUS
+VOID
 STDCALL
 RtlFillMemoryUlong (
     IN PVOID    Destination,
@@ -493,6 +546,14 @@ RtlSecondsSince1970ToTime (
     OUT PLARGE_INTEGER  Time
 );
 
+VOID
+STDCALL
+RtlSetBits (
+    PRTL_BITMAP BitMapHeader,
+    ULONG StartingIndex,
+    ULONG NumberToSet
+);
+    
 #if (VER_PRODUCTBUILD >= 2195)
 
 NTSTATUS

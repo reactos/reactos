@@ -11,14 +11,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <napi/teb.h>
-#include <ntos/minmax.h>
-#include <string.h>
+#include "rtl.h"
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 PPEB STDCALL RtlpCurrentPeb(VOID);
 /* FUNCTIONS *****************************************************************/

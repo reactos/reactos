@@ -15,10 +15,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <string.h>
-#include <napi/teb.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>

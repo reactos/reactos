@@ -24,8 +24,7 @@
  * FILE:              lib/rtl/network.c
  */
 
-#include <ddk/ntddk.h>
-#include <stdio.h>
+#include "rtl.h"
 
 #define NDEBUG
 #include <debug.h>
