@@ -299,7 +299,7 @@ Overwrite (LPTSTR fn)
 	LPTSTR p;
 	TCHAR szOptions[4];
 
-	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szOptions, 4);
+	LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szOptions, sizeof(szOptions) / sizeof(szOptions[0]) );
 
 	ConOutResPuts(STRING_COPY_HELP1);
 
@@ -760,7 +760,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	DeleteFileList (sources);
 	freep ((VOID*)p);
 	
-	LoadString( CMD_ModuleHandle, STRING_COPY_FILE, (LPTSTR) szMsg,sizeof(szMsg));
+	LoadString( CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
     ConOutPrintf (szMsg, copied);
 
 	return 1;

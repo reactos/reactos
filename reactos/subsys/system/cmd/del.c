@@ -71,9 +71,9 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
 		HANDLE fh;
 		WIN32_FIND_DATA f;
 		LONGLONG FileSize;
-        TCHAR szMsg[RC_STRING_MAX_SIZE]; 
+		TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-		LoadString( CMD_ModuleHandle, STRING_DELETE_WIPE, (LPTSTR) szMsg,sizeof(szMsg));
+		LoadString( CMD_ModuleHandle, STRING_DELETE_WIPE, szMsg, RC_STRING_MAX_SIZE);
 
 		fh = FindFirstFile(lpFileName, &f);
 		FileSize = ((LONGLONG)f.nFileSizeHigh * ((LONGLONG)MAXDWORD+1)) + (LONGLONG)f.nFileSizeLow;

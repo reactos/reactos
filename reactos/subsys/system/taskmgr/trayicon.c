@@ -149,7 +149,7 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     nid.hIcon = hIcon;
 
 	      
-	LoadString( GetModuleHandle(NULL), IDS_MSG_TRAYICONCPUUSAGE, (LPTSTR) szMsg,sizeof(szMsg));
+    LoadString( GetModuleHandle(NULL), IDS_MSG_TRAYICONCPUUSAGE, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
     wsprintf(nid.szTip, szMsg, PerfDataGetProcessorUsage());
 
     bRetVal = Shell_NotifyIcon(NIM_ADD, &nid);

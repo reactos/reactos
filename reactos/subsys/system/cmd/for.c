@@ -68,7 +68,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	/* Check that first element is % then an alpha char followed by space */
 	if ((*param != _T('%')) || !_istalpha (*(param + 1)) || !_istspace (*(param + 2)))
 	{
-		LoadString( CMD_ModuleHandle, STRING_FOR_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
+		LoadString( CMD_ModuleHandle, STRING_FOR_ERROR, szMsg, RC_STRING_MAX_SIZE);
 		error_syntax (szMsg);
 		return 1;
 	}

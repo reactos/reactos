@@ -489,7 +489,7 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
     LPNM_LISTVIEW   pnmv;
     LV_DISPINFO*    pnmdi;
     LPAPPLICATION_PAGE_LIST_ITEM pAPLI;
-	TCHAR szMsg[256];
+    TCHAR szMsg[256];
 
 
     idctrl = (int) wParam;
@@ -516,15 +516,15 @@ void ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam)
             else if (pnmdi->item.iSubItem == 1)
             {
                 if (pAPLI->bHung)
-				{
-					LoadString( GetModuleHandle(NULL), IDS_Not_Responding , (LPTSTR) szMsg,sizeof(szMsg));
+                {
+                    LoadString( GetModuleHandle(NULL), IDS_Not_Responding , szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
                     _tcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
-				}
+                }
                 else
-				{
-                    LoadString( GetModuleHandle(NULL), IDS_Running, (LPTSTR) szMsg,sizeof(szMsg));
+                {
+                    LoadString( GetModuleHandle(NULL), IDS_Running, (LPTSTR) szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
                     _tcsncpy(pnmdi->item.pszText, szMsg, pnmdi->item.cchTextMax);
-				}
+                }
             }
 
             break;
