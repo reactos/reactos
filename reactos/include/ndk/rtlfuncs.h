@@ -531,6 +531,12 @@ STDCALL
 RtlFreeUnicodeString(
   IN PUNICODE_STRING  UnicodeString);
 
+VOID 
+STDCALL
+RtlFreeOemString(
+    IN POEM_STRING OemString
+);
+
 NTSTATUS
 STDCALL
 RtlGetCompressionWorkSpaceSize (
@@ -772,6 +778,14 @@ RtlSubAuthoritySid (
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeStringToCountedOemString (
+	IN OUT	POEM_STRING	DestinationString,
+	IN	PUNICODE_STRING	SourceString,
+	IN	BOOLEAN		AllocateDestinationString
+	);
+
+NTSTATUS
+STDCALL
+RtlUnicodeStringToOemString (
 	IN OUT	POEM_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString,
 	IN	BOOLEAN		AllocateDestinationString

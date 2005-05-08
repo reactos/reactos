@@ -7,8 +7,7 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#define NTOSAPI
-#include <roskrnl.h>
+#include <ddk/ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"
 

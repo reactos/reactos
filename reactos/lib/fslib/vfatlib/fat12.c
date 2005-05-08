@@ -8,13 +8,10 @@
  * REVISIONS:
  *   EK 05/04-2003 Created
  */
+#include "vfatlib.h"
+
 #define NDEBUG
 #include <debug.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <ddk/ntddscsi.h>
-#include <mem.h>
-#include "vfatlib.h"
 
 
 static ULONG
